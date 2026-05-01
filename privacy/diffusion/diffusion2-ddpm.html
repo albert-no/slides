@@ -174,7 +174,7 @@
   <div class="section-num">02</div>
   <h1>DDPM Reverse Model</h1>
   <div class="divider"></div>
-  <p class="subtitle">Gaussian approximation via Tweedie</p>
+  <p class="subtitle">Plug in a network — and choose a training objective</p>
 </div>
 
 <!-- SLIDE: DDPM reverse formulation -->
@@ -183,20 +183,43 @@
   <div class="divider"></div>
   <p>By the Bayes-plus-Tweedie argument (Lecture 1), for small $\beta_n$:</p>
   <div class="math-block">$$X^{(n-1)}\,|\,X^{(n)} \;\approx\; \mathcal{N}\bigl(\mu(X^{(n)}, n),\; \beta_n\bigr),$$</div>
-  <p>where the mean is:</p>
+  <p>where the mean is</p>
   <div class="math-block">$$\mu(X^{(n)}, n) = \frac{1}{\sqrt{1-\beta_n}}\left(X^{(n)} + \beta_n\,\frac{\partial}{\partial x}\log P_{X^{(n)}}(X^{(n)})\right).$$</div>
   <div class="cite">Ho, Jain &amp; Abbeel, "Denoising Diffusion Probabilistic Models", NeurIPS 2020.</div>
 </div>
 
-<!-- SLIDE: Learned mean -->
+<!-- SLIDE: Why not learn mu directly? -->
 <div class="slide">
-  <h2>What the Network Learns</h2>
+  <h2>Why Not Train $\mu$ Directly?</h2>
   <div class="divider"></div>
-  <p>Replace unknown score by neural approximation $s_\theta(X^{(n)}, n)$:</p>
-  <div class="math-block">$$\mu_\theta(X^{(n)}, n) = \frac{1}{\sqrt{1-\beta_n}}\left(X^{(n)} + \beta_n\,s_\theta(X^{(n)}, n)\right).$$</div>
-  <p>Sampling uses:</p>
-  <div class="math-block">$$p_\theta(X^{(n-1)}\,|\,X^{(n)}) = \mathcal{N}\bigl(\mu_\theta(X^{(n)}, n),\; \beta_n\bigr).$$</div>
-  <p>Loss for $s_\theta$: derived from <strong>maximum likelihood</strong>.</p>
+  <p>Tempting: parameterize $\mu_\theta(X^{(n)}, n)$ as a network, regress on data.</p>
+  <p>The mean's only unknown is the score:</p>
+  <div class="math-block">$$\mu(X^{(n)}, n) = \tfrac{1}{\sqrt{1-\beta_n}}\bigl(X^{(n)} + \beta_n\,\underbrace{\partial_x\log P_{X^{(n)}}(X^{(n)})}_{\text{unknown}}\bigr).$$</div>
+  <div class="highlight">
+    <p>Learning $\mu_\theta$ <strong>is</strong> learning the score — same obstacle, different name.</p>
+    <p>Data gives us samples, not score values: no direct supervision target.</p>
+  </div>
+</div>
+
+<!-- SLIDE: Two routes -->
+<div class="slide">
+  <h2>Two Routes to the Score</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="margin-top: 14px;">
+    <div class="card">
+      <h3>(a) Denoiser + Tweedie</h3>
+      <p>Train $f_\theta(X^{(n)}; n) \approx \mathbb{E}[X^{(0)}\,|\,X^{(n)}]$ by squared-loss regression.</p>
+      <p>Tweedie converts the denoiser into a score.</p>
+      <p><em>Lecture 1.</em></p>
+    </div>
+    <div class="card">
+      <h3>(b) Variational lower bound</h3>
+      <p>Start from MLE on data, bound the intractable likelihood, optimize the bound.</p>
+      <p>Yields $\epsilon$-prediction — plain regression.</p>
+      <p><em>This lecture (DDPM).</em></p>
+    </div>
+  </div>
+  <p style="text-align: center; margin-top: 18px;">Both routes train networks; they differ in the loss derivation.</p>
 </div>
 
 <!-- ====================================================================
@@ -206,54 +229,40 @@
   <div class="section-num">03</div>
   <h1>Variational Lower Bound</h1>
   <div class="divider"></div>
-  <p class="subtitle">Jensen, Markov identity, three-term decomposition</p>
+  <p class="subtitle">MLE → forward Markov factorization → $\epsilon$-prediction</p>
 </div>
 
-<!-- SLIDE: The generative model -->
+<!-- SLIDE: MLE objective -->
 <div class="slide">
-  <h2>The Generative Model</h2>
+  <h2>Maximum Likelihood Objective</h2>
   <div class="divider"></div>
-  <p>We want to <strong>maximize the marginal</strong> $p_\theta(X^{(0)})$ on data — first we must compute it.</p>
+  <p>Data $X^{(0)}_1,\ldots,X^{(0)}_M \sim q$ i.i.d. Fit $p_\theta$ by MLE — equivalently, minimize the NLL (entropy is $\theta$-free):</p>
+  <div class="math-block">$$\min_\theta \;\mathbb{E}_{X^{(0)}\sim q}\bigl[-\log p_\theta(X^{(0)})\bigr] \;=\; D_{\mathrm{KL}}\!\bigl(q\,\Vert\,p_\theta\bigr) \;+\; H(q).$$</div>
+  <div class="highlight">
+    <p>Maximize $\log p_\theta$ $\Leftrightarrow$ minimize NLL $\Leftrightarrow$ close the KL gap to the data law.</p>
+  </div>
+</div>
+
+<!-- SLIDE: Marginal is intractable -->
+<div class="slide">
+  <h2>Marginal Is Intractable</h2>
+  <div class="divider"></div>
   <p>Reverse chain ($p(X^{(N)}) = \mathcal{N}(0,1)$, $X^{(i:j)} = (X^{(i)},\ldots,X^{(j)})$):</p>
   <div class="math-block">$$\begin{aligned}
     p_\theta\bigl(X^{(0:N)}\bigr) &= p\bigl(X^{(N)}\bigr)\prod_{n=1}^{N} p_\theta\bigl(X^{(n-1)}\,|\,X^{(n)}\bigr), \\
     p_\theta\bigl(X^{(0)}\bigr) &= \int p_\theta\bigl(X^{(0:N)}\bigr)\,dX^{(1:N)}.
   \end{aligned}$$</div>
   <div class="highlight">
-    <p>Marginal: <strong>intractable</strong> integral.</p>
+    <p>Marginal: <strong>high-dimensional integral</strong>, not directly computable.</p>
+    <p>Strategy: minimize a tractable upper bound on $-\log p_\theta(X^{(0)})$.</p>
   </div>
 </div>
 
-<!-- SLIDE: Why maximize the marginal -->
+<!-- SLIDE: Forward chain is Markov -->
 <div class="slide">
-  <h2>Why Maximize the Marginal?</h2>
+  <h2>Forward Chain Is Markov</h2>
   <div class="divider"></div>
-  <p>MLE on data $\equiv$ closing the KL gap to the data law:</p>
-  <div class="math-block">$$\mathbb{E}_{X^{(0)}\sim q}\bigl[-\log p_\theta(X^{(0)})\bigr] \;=\; D_{\mathrm{KL}}\!\bigl(q(X^{(0)})\,\Vert\,p_\theta(X^{(0)})\bigr) + H(q).$$</div>
-  <p>Entropy $H(q)$ is constant in $\theta$; only the KL term moves.</p>
-  <div class="highlight">
-    <p>Closing the marginal gap = matching the data distribution.</p>
-  </div>
-</div>
-
-<!-- SLIDE: Jensen bound -->
-<div class="slide">
-  <h2>Likelihood to VLB</h2>
-  <div class="divider"></div>
-  <p>Insert forward joint $q(X^{(1:N)}\,|\,X^{(0)}) = \prod_{n=1}^{N} q(X^{(n)}\,|\,X^{(n-1)})$ in num/denom — the $q$'s cancel — then apply Jensen:</p>
-  <div class="math-block">$$\begin{aligned}
-    -\log p_\theta\bigl(X^{(0)}\bigr)
-      &= -\log \int q\bigl(X^{(1:N)}\,|\,X^{(0)}\bigr)\,\frac{p_\theta(X^{(0:N)})}{q(X^{(1:N)}\,|\,X^{(0)})}\,dX^{(1:N)} \\
-      &= -\log \mathbb{E}_q\!\left[\frac{p_\theta(X^{(0:N)})}{q(X^{(1:N)}\,|\,X^{(0)})}\,\middle|\,X^{(0)}\right] \\
-      &\leq \mathbb{E}_q\!\left[-\log \frac{p_\theta(X^{(0:N)})}{q(X^{(1:N)}\,|\,X^{(0)})}\,\middle|\,X^{(0)}\right].
-  \end{aligned}$$</div>
-</div>
-
-<!-- SLIDE: Markov identity -->
-<div class="slide">
-  <h2>A Markov Rewrite</h2>
-  <div class="divider"></div>
-  <p>Forward chain is Markov: $X^{(n)}$ depends only on $X^{(n-1)}$.</p>
+  <p>$X^{(n)}$ depends only on $X^{(n-1)}$:</p>
   <div style="display:flex; justify-content:center; align-items:center; gap:14px; margin:18px 0; font-size:1.55rem;">
     <span>$X^{(0)}$</span>
     <span style="color:var(--gray-text);">$\to$</span>
@@ -269,16 +278,39 @@
     <span style="color:var(--gray-text);">$\to$</span>
     <span>$X^{(N)}$</span>
   </div>
-  <p>Bayes inside the chain conditional on $X^{(0)}$ ($n \geq 2$):</p>
-  <div class="math-block">$$q\bigl(X^{(n)}\,|\,X^{(n-1)}\bigr)\,q\bigl(X^{(n-1)}\,|\,X^{(0)}\bigr) = q\bigl(X^{(n-1)}\,|\,X^{(n)}, X^{(0)}\bigr)\,q\bigl(X^{(n)}\,|\,X^{(0)}\bigr).$$</div>
-  <p><strong>Exercise.</strong> Prove this identity from the chain rule.</p>
+  <p>Chain rule on $(X^{(n-1)}, X^{(n)})$ given $X^{(0)}$ ($n \geq 2$):</p>
+  <div class="math-block">$$q\bigl(X^{(n)}\,|\,X^{(n-1)}\bigr)\,q\bigl(X^{(n-1)}\,|\,X^{(0)}\bigr) \;=\; q\bigl(X^{(n-1)}\,|\,X^{(n)}, X^{(0)}\bigr)\,q\bigl(X^{(n)}\,|\,X^{(0)}\bigr).$$</div>
+  <p><strong>Exercise.</strong> Prove this identity from Bayes plus the Markov property.</p>
+</div>
+
+<!-- SLIDE: Likelihood to VLB -->
+<div class="slide">
+  <h2>Likelihood to VLB (Jensen)</h2>
+  <div class="divider"></div>
+  <p>Insert forward joint $q(X^{(1:N)}\,|\,X^{(0)}) = \prod_{n=1}^{N} q(X^{(n)}\,|\,X^{(n-1)})$ in num/denom — the $q$'s cancel — then apply Jensen:</p>
+  <div class="math-block">$$\begin{aligned}
+    -\log p_\theta\bigl(X^{(0)}\bigr)
+      &= -\log \int q\bigl(X^{(1:N)}\,|\,X^{(0)}\bigr)\,\frac{p_\theta(X^{(0:N)})}{q(X^{(1:N)}\,|\,X^{(0)})}\,dX^{(1:N)} \\
+      &= -\log \mathbb{E}_q\!\left[\frac{p_\theta(X^{(0:N)})}{q(X^{(1:N)}\,|\,X^{(0)})}\,\middle|\,X^{(0)}\right] \\
+      &\leq \mathbb{E}_q\!\left[-\log \frac{p_\theta(X^{(0:N)})}{q(X^{(1:N)}\,|\,X^{(0)})}\,\middle|\,X^{(0)}\right] \;=:\; \mathrm{VLB}(X^{(0)}).
+  \end{aligned}$$</div>
+</div>
+
+<!-- SLIDE: Factor and telescope (bridge to three-term) -->
+<div class="slide">
+  <h2>Factor and Telescope</h2>
+  <div class="divider"></div>
+  <p>Expand both products inside the VLB ratio (split off the $n=1$ factors):</p>
+  <div class="math-block">$$\frac{p_\theta(X^{(0:N)})}{q(X^{(1:N)}|X^{(0)})} \;=\; \frac{p(X^{(N)})\,p_\theta(X^{(0)}|X^{(1)})\,\prod_{n=2}^{N} p_\theta(X^{(n-1)}|X^{(n)})}{q(X^{(1)}|X^{(0)})\,\prod_{n=2}^{N} q(X^{(n)}|X^{(n-1)})}.$$</div>
+  <p>For $n \geq 2$, the Markov identity replaces $q(X^{(n)}|X^{(n-1)})$ with the posterior form. Telescoping cancels $q(X^{(1)}|X^{(0)})$ and leaves $q(X^{(N)}|X^{(0)})$:</p>
+  <div class="math-block">$$=\; \underbrace{\frac{p(X^{(N)})}{q(X^{(N)}|X^{(0)})}}_{\to\,L_N}\;\cdot\;\prod_{n=2}^{N}\underbrace{\frac{p_\theta(X^{(n-1)}|X^{(n)})}{q(X^{(n-1)}|X^{(n)}, X^{(0)})}}_{\to\,L_{n-1}}\;\cdot\;\underbrace{p_\theta(X^{(0)}|X^{(1)})}_{\to\,L_0}.$$</div>
 </div>
 
 <!-- SLIDE: Three-term decomposition -->
 <div class="slide">
   <h2>Three-Term Decomposition</h2>
   <div class="divider"></div>
-  <p>Apply the Markov identity inside the bound:</p>
+  <p>Take $-\log$ inside $\mathbb{E}_q$ — the product becomes a sum:</p>
   <div class="math-block">$$\mathbb{E}_q\!\left[\underbrace{-\log\frac{p(X^{(N)})}{q(X^{(N)}|X^{(0)})}}_{L_N}\; +\sum_{n=2}^{N}\underbrace{\biggl(-\log\frac{p_\theta(X^{(n-1)}|X^{(n)})}{q(X^{(n-1)}|X^{(n)}, X^{(0)})}\biggr)}_{L_{n-1}}\; \underbrace{-\log p_\theta(X^{(0)}|X^{(1)})}_{L_0}\right].$$</div>
   <p>Three groups: <strong>prior match</strong> ($L_N$), <strong>reverse-step KL</strong> ($L_{n-1}$, summed), <strong>boundary</strong> ($L_0$).</p>
 </div>
@@ -339,61 +371,84 @@
   <p>Complete the square in $X^{(n-1)}$ for mean $\mu_n(X^{(n)},X^{(0)})$ and variance $\beta_n$.</p>
 </div>
 
-<!-- SLIDE: KL between Gaussians + simplification -->
+<!-- SLIDE: KL → mean matching, but non-trivial -->
 <div class="slide">
-  <h2>KL for Matched-Variance Gaussians</h2>
+  <h2>Not Ordinary Mean Matching</h2>
   <div class="divider"></div>
-  <p>Both distributions have variance $\beta_n$: KL reduces to squared-mean mismatch:</p>
-  <div class="math-block">$$L_{n-1} = \frac{1}{2\beta_n}\,\bigl\|\mu_n(X^{(n)}, X^{(0)}) - \mu_\theta(X^{(n)}, n)\bigr\|^2.$$</div>
-  <p>Using $\partial_x \log q(X^{(n)}\,|\,X^{(0)}) = -(X^{(n)} - \sqrt{\bar{\alpha}_n}X^{(0)})/(1-\bar{\alpha}_n)$:</p>
-  <div class="math-block">$$L_{n-1} = \frac{\beta_n}{2(1-\beta_n)}\left\|\frac{\partial}{\partial X^{(n)}}\log q(X^{(n)}\,|\,X^{(0)}) - s_\theta(X^{(n)}, n)\right\|^2.$$</div>
+  <p>Same variance $\beta_n$ on both sides — KL collapses to a squared-mean mismatch:</p>
+  <div class="math-block">$$L_{n-1} \;=\; \frac{1}{2\beta_n}\,\mathbb{E}_q\bigl[\bigl\|\mu_n(X^{(n)}, X^{(0)}) - \mu_\theta(X^{(n)}, n)\bigr\|^2\bigr].$$</div>
+  <div class="highlight">
+    <p><strong>Asymmetric inputs:</strong> $\mu_n$ sees $X^{(0)}$; $\mu_\theta$ does not.</p>
+    <p>Optimal $\mu_\theta(X^{(n)}) = \mathbb{E}_q[\mu_n(X^{(n)}, X^{(0)})\,|\,X^{(n)}]$ — exactly the score (Tweedie).</p>
+    <p>Rigorous link to <strong>score matching</strong> in Lecture 3.</p>
+  </div>
+</div>
+
+<!-- SLIDE: Mean matching → score matching -->
+<div class="slide">
+  <h2>Mean Matching $\to$ Score Matching</h2>
+  <div class="divider"></div>
+  <p>The conditional score is closed-form:</p>
+  <div class="math-block">$$\partial_{X^{(n)}} \log q\bigl(X^{(n)}\,|\,X^{(0)}\bigr) \;=\; -\,\frac{X^{(n)} - \sqrt{\bar\alpha_n}\,X^{(0)}}{1-\bar\alpha_n}.$$</div>
+  <p>Substituting Bayes-derived $\mu_n$ and $\mu_\theta = (X^{(n)}+\beta_n s_\theta)/\sqrt{1-\beta_n}$:</p>
+  <div class="math-block">$$L_{n-1} \;=\; \frac{\beta_n}{2(1-\beta_n)}\,\mathbb{E}_q\!\left\|\partial_{X^{(n)}}\log q(X^{(n)}\,|\,X^{(0)}) \;-\; s_\theta(X^{(n)}, n)\right\|^2.$$</div>
 </div>
 
 <!-- SLIDE: epsilon and score visual -->
 <div class="slide">
-  <h2>$\epsilon$ and Score: Same Information</h2>
+  <h2>$\epsilon$ and Score: Same Vector</h2>
   <div class="divider"></div>
 
-  <div style="position: relative; max-width: 900px; margin: 8px auto 0;">
-    <svg viewBox="0 0 900 340" style="display: block; width: 100%;">
+  <div class="math-block">$$\nabla_{X^{(n)}}\log q\bigl(X^{(n)}\,|\,X^{(0)}\bigr) \;=\; -\,\frac{X^{(n)}-\sqrt{\bar{\alpha}_n}\,X^{(0)}}{1-\bar{\alpha}_n} \;=\; -\,\frac{\epsilon}{\sqrt{1-\bar{\alpha}_n}}.$$</div>
+
+  <div style="position: relative; width: 100%; max-width: 1040px; height: 240px; margin: 18px auto 6px;">
+    <svg viewBox="0 0 1040 240" preserveAspectRatio="xMidYMid meet" style="display: block; width: 100%; height: 100%;">
       <defs>
-        <marker id="d2es-eps" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#003876"/></marker>
-        <marker id="d2es-sco" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2e8b57"/></marker>
+        <marker id="d2es-eps" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="11" markerHeight="11" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#003876"/></marker>
+        <marker id="d2es-sco" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="11" markerHeight="11" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2e8b57"/></marker>
       </defs>
       <!-- Reference axis -->
-      <line x1="80" y1="170" x2="820" y2="170" stroke="#bbb" stroke-width="1.5" stroke-dasharray="6,5"/>
+      <line x1="100" y1="120" x2="940" y2="120" stroke="#ccc" stroke-width="1.5" stroke-dasharray="6,5"/>
       <!-- Two anchor dots -->
-      <circle cx="200" cy="170" r="9" fill="#003876"/>
-      <circle cx="700" cy="170" r="9" fill="#1a1a1a"/>
-      <!-- ε curve: arcs ABOVE from left dot to right dot -->
-      <path d="M 209,164 Q 450,55 691,164" stroke="#003876" stroke-width="3" fill="none" marker-end="url(#d2es-eps)"/>
-      <!-- Score curve: arcs BELOW from right dot back to left dot -->
-      <path d="M 691,176 Q 450,285 209,176" stroke="#2e8b57" stroke-width="3" fill="none" marker-end="url(#d2es-sco)"/>
+      <circle cx="220" cy="120" r="11" fill="#003876"/>
+      <circle cx="820" cy="120" r="11" fill="#1a1a1a"/>
+      <!-- ε arc (top): clean → noisy. peak ≈ y=40 -->
+      <path d="M 231,112 Q 520,40 809,112" stroke="#003876" stroke-width="3.5" fill="none" marker-end="url(#d2es-eps)"/>
+      <!-- score arc (bottom): noisy → clean. trough ≈ y=200 -->
+      <path d="M 809,128 Q 520,200 231,128" stroke="#2e8b57" stroke-width="3.5" fill="none" marker-end="url(#d2es-sco)"/>
     </svg>
-    <!-- Dot labels (below each dot) -->
-    <span style="position: absolute; left: 22.2%; top: 58.5%; transform: translate(-50%, 0); font-size: 1.2rem; font-weight: 600;">$\sqrt{\bar{\alpha}_n}\,X^{(0)}$</span>
-    <span style="position: absolute; left: 77.8%; top: 58.5%; transform: translate(-50%, 0); font-size: 1.2rem; font-weight: 600;">$X^{(n)}$</span>
-    <!-- Top label (above ε arc) -->
-    <span style="position: absolute; left: 50%; top: 4%; transform: translate(-50%, 0); font-size: 1.15rem; color: var(--yonsei-blue); font-weight: 700;">noise &nbsp;$+\,\sqrt{1-\bar{\alpha}_n}\,\epsilon$</span>
-    <!-- Bottom label (below score arc) -->
-    <span style="position: absolute; left: 50%; top: 88%; transform: translate(-50%, 0); font-size: 1.15rem; color: var(--success); font-weight: 700;">score &nbsp;$-\,\epsilon\,/\,\sqrt{1-\bar{\alpha}_n}$</span>
+    <!-- Dot labels (axis at y=120 in 240 → 50%; label below at y≈150 → 62.5%) -->
+    <span style="position: absolute; left: 21.2%; top: 62%; transform: translate(-50%, 0); font-size: 1.3rem; font-weight: 700;">$\sqrt{\bar{\alpha}_n}\,X^{(0)}$</span>
+    <span style="position: absolute; left: 78.8%; top: 62%; transform: translate(-50%, 0); font-size: 1.3rem; font-weight: 700;">$X^{(n)}$</span>
+    <!-- Arc labels: top at y≈12 → 5%; bottom at y≈218 → 91% -->
+    <span style="position: absolute; left: 50%; top: 2%; transform: translate(-50%, 0); font-size: 1.25rem; color: var(--yonsei-blue); font-weight: 700;">noise: $+\,\sqrt{1-\bar{\alpha}_n}\,\epsilon$</span>
+    <span style="position: absolute; left: 50%; top: 90%; transform: translate(-50%, 0); font-size: 1.25rem; color: var(--success); font-weight: 700;">score: $-\,\epsilon\,/\,\sqrt{1-\bar{\alpha}_n}$</span>
   </div>
 
-  <div class="math-block" style="max-width: 880px; margin: 0 auto;">$$\nabla\log q\bigl(X^{(n)}\,|\,X^{(0)}\bigr) \;=\; -\,\frac{X^{(n)}-\sqrt{\bar{\alpha}_n}\,X^{(0)}}{1-\bar{\alpha}_n} \;=\; -\,\frac{\epsilon}{\sqrt{1-\bar{\alpha}_n}}.$$</div>
-
-  <p style="text-align: center;"><strong>Same vector</strong> — anti-parallel, scaled by $\sqrt{1-\bar{\alpha}_n}$.</p>
+  <p style="text-align: center;"><strong>Anti-parallel</strong>, scaled by $\sqrt{1-\bar{\alpha}_n}$.</p>
 </div>
 
-<!-- SLIDE: epsilon-prediction final form -->
+<!-- SLIDE: epsilon reparameterization -->
 <div class="slide">
-  <h2>$\epsilon$-Prediction Reparameterization</h2>
+  <h2>$\epsilon$-Reparameterization</h2>
   <div class="divider"></div>
-  <p>Write $X^{(n)} \stackrel{(d)}{=} \sqrt{\bar{\alpha}_n}\,X^{(0)} + \sqrt{1-\bar{\alpha}_n}\,\epsilon_n$. Reparameterize:</p>
-  <div class="math-block">$$s_\theta(X^{(n)}, n) = -\,\frac{\epsilon_\theta(X^{(n)}, n)}{\sqrt{1-\bar{\alpha}_n}}.$$</div>
-  <p>Per-step loss becomes <strong>noise matching</strong>:</p>
-  <div class="math-block">$$L_{n-1} = \frac{\beta_n}{2(1-\beta_n)(1-\bar{\alpha}_n)}\left\|\epsilon_n - \epsilon_\theta\!\bigl(\sqrt{\bar{\alpha}_n}\,X^{(0)} + \sqrt{1-\bar{\alpha}_n}\,\epsilon_n,\; n\bigr)\right\|^2.$$</div>
+  <p>Forward identity: $X^{(n)} \stackrel{(d)}{=} \sqrt{\bar{\alpha}_n}\,X^{(0)} + \sqrt{1-\bar{\alpha}_n}\,\epsilon_n$ with $\epsilon_n \sim \mathcal{N}(0,1)$.</p>
+  <p>Switch the network from score to noise prediction:</p>
+  <div class="math-block">$$s_\theta(X^{(n)}, n) \;=\; -\,\frac{\epsilon_\theta(X^{(n)}, n)}{\sqrt{1-\bar{\alpha}_n}}.$$</div>
   <div class="highlight">
-    <p>$\epsilon_\theta$ predicts the Gaussian noise mixed into $X^{(0)}$. Plain regression.</p>
+    <p>Predicting the noise $\epsilon$ <strong>is</strong> predicting the score, up to a known scale.</p>
+  </div>
+</div>
+
+<!-- SLIDE: epsilon-prediction loss -->
+<div class="slide">
+  <h2>$\epsilon$-Prediction Loss</h2>
+  <div class="divider"></div>
+  <p>Substitute the score-noise identity into $L_{n-1}$:</p>
+  <div class="math-block">$$L_{n-1} \;=\; \frac{\beta_n}{2(1-\beta_n)(1-\bar{\alpha}_n)}\,\bigl\|\epsilon_n - \epsilon_\theta\!\bigl(\sqrt{\bar{\alpha}_n}\,X^{(0)} + \sqrt{1-\bar{\alpha}_n}\,\epsilon_n,\; n\bigr)\bigr\|^2.$$</div>
+  <div class="highlight">
+    <p>$\epsilon_\theta$ predicts the Gaussian noise mixed into $X^{(0)}$.</p>
+    <p><strong>Plain regression</strong> on $(X^{(n)}, n) \mapsto \epsilon$.</p>
   </div>
 </div>
 
@@ -448,68 +503,43 @@
   <h2>Three Approximation Errors</h2>
   <div class="divider"></div>
 
-  <div style="position: relative; max-width: 1100px; margin: 22px auto 0; height: 380px;">
-    <!-- Forward chain -->
-    <div style="position: absolute; top: 6px; left: 0; right: 0; display: grid; grid-template-columns: 150px repeat(9, 1fr); align-items: center; font-size: 1.3rem;">
-      <span style="color: var(--gray-text); font-weight: 600;">Forward $q$:</span>
-      <span style="text-align: center;">$X^{(0)}$</span>
-      <span style="text-align: center;">$\to$</span>
-      <span style="text-align: center;">$X^{(1)}$</span>
-      <span style="text-align: center;">$\to$</span>
-      <span style="text-align: center; color: var(--gray-text);">$\cdots$</span>
-      <span style="text-align: center;">$\to$</span>
-      <span style="text-align: center;">$X^{(N-1)}$</span>
-      <span style="text-align: center;">$\to$</span>
-      <span style="text-align: center; color: var(--yonsei-blue); font-weight: 700;">$X^{(N)}$</span>
-    </div>
-    <!-- Reverse chain (uses bar X) -->
-    <div style="position: absolute; top: 70px; left: 0; right: 0; display: grid; grid-template-columns: 150px repeat(9, 1fr); align-items: center; font-size: 1.3rem;">
-      <span style="color: var(--gray-text); font-weight: 600;">Reverse $p_\theta$:</span>
-      <span style="text-align: center;">$\bar{X}^{(0)}$</span>
-      <span style="text-align: center; color: var(--yonsei-blue);">$\leftarrow$</span>
-      <span style="text-align: center;">$\bar{X}^{(1)}$</span>
-      <span style="text-align: center; color: var(--yonsei-blue);">$\leftarrow$</span>
-      <span style="text-align: center; color: var(--gray-text);">$\cdots$</span>
-      <span style="text-align: center; color: var(--yonsei-blue);">$\leftarrow$</span>
-      <span style="text-align: center;">$\bar{X}^{(N-1)}$</span>
-      <span style="text-align: center; color: var(--yonsei-blue);">$\leftarrow$</span>
-      <span style="text-align: center;">$\bar{X}^{(N)}$</span>
-    </div>
+  <div style="display: flex; align-items: center; justify-content: center; gap: 14px; margin: 26px 0 8px; font-size: 1.5rem;">
+    <span style="color: var(--gray-text); font-weight: 600; min-width: 130px; text-align: right;">Forward $q$:</span>
+    <span>$X^{(0)}$</span>
+    <span style="color: var(--gray-text);">$\to$</span>
+    <span>$X^{(1)}$</span>
+    <span style="color: var(--gray-text);">$\to$</span>
+    <span style="color: var(--gray-text);">$\cdots$</span>
+    <span style="color: var(--gray-text);">$\to$</span>
+    <span>$X^{(N-1)}$</span>
+    <span style="color: var(--gray-text);">$\to$</span>
+    <span style="color: var(--yonsei-blue); font-weight: 700;">$X^{(N)}$</span>
+  </div>
+  <div style="display: flex; align-items: center; justify-content: center; gap: 14px; margin: 0 0 30px; font-size: 1.5rem;">
+    <span style="color: var(--gray-text); font-weight: 600; min-width: 130px; text-align: right;">Reverse $p_\theta$:</span>
+    <span>$\bar{X}^{(0)}$</span>
+    <span style="color: var(--yonsei-blue);">$\leftarrow$</span>
+    <span>$\bar{X}^{(1)}$</span>
+    <span style="color: var(--yonsei-blue);">$\leftarrow$</span>
+    <span style="color: var(--gray-text);">$\cdots$</span>
+    <span style="color: var(--yonsei-blue);">$\leftarrow$</span>
+    <span>$\bar{X}^{(N-1)}$</span>
+    <span style="color: var(--yonsei-blue);">$\leftarrow$</span>
+    <span>$\bar{X}^{(N)}$</span>
+  </div>
 
-    <!-- SVG arrows from cards (below) up to chain positions (above) -->
-    <svg viewBox="0 0 1100 380" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
-      <defs>
-        <marker id="d2err-mk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto">
-          <path d="M0,0 L10,5 L0,10 z" fill="#003876"/>
-        </marker>
-      </defs>
-      <g stroke="#003876" stroke-width="2.4" fill="none" marker-end="url(#d2err-mk)">
-        <!-- card 1 (x≈175) → reverse arrow ← between bar X^(0) and bar X^(1) at (x≈309, y≈90) -->
-        <path d="M 175,232 Q 220,170 305,98"/>
-        <!-- card 2 (x≈550) → reverse arrow ← in middle (x≈525, y≈90) -->
-        <path d="M 550,232 Q 538,170 528,98"/>
-        <!-- card 3 (x≈925) → forward X^(N) at (x≈1046, y≈30) -->
-        <path d="M 925,232 Q 995,150 1042,38"/>
-      </g>
-    </svg>
-
-    <!-- Three labeled cards -->
-    <div style="position: absolute; top: 250px; left: 0; right: 0; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 26px;">
-      <div class="card" style="text-align: center;">
-        <h3>Gaussian reverse</h3>
-        <p>Reverse step $\approx \mathcal{N}$.</p>
-        <p>Needs $\beta_n$ small.</p>
-      </div>
-      <div class="card" style="text-align: center;">
-        <h3>Imperfect score</h3>
-        <p>$\epsilon_\theta \neq \epsilon$ in practice.</p>
-        <p>Errors compound.</p>
-      </div>
-      <div class="card" style="text-align: center;">
-        <h3>Prior mismatch</h3>
-        <p>$X^{(N)} \not\sim \mathcal{N}(0,I)$.</p>
-        <p>Need $\bar{\alpha}_N \to 0$.</p>
-      </div>
+  <div class="grid-3">
+    <div class="card" style="text-align: center;">
+      <h3>① Gaussian reverse</h3>
+      <p>$p_\theta \approx \mathcal{N}$ needs $\beta_n$ small.</p>
+    </div>
+    <div class="card" style="text-align: center;">
+      <h3>② Imperfect score</h3>
+      <p>$\epsilon_\theta \neq \epsilon$. Errors compound.</p>
+    </div>
+    <div class="card" style="text-align: center;">
+      <h3>③ Prior mismatch</h3>
+      <p>$\bar{\alpha}_N \not\to 0$ exactly.</p>
     </div>
   </div>
 </div>
@@ -534,7 +564,7 @@
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 30</div>
+<div class="slide-num" id="slideNum">1 / 34</div>
 
 </div><!-- end deck -->
 

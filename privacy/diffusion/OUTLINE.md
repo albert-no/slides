@@ -61,28 +61,32 @@ Master-level course on diffusion: Bayes-route foundations → DDPM → SDE → D
 | | n steps in one shot, `ᾱ_n = ∏(1−β_i)` | `:126, :129` |
 | | **MGF definition + Lévy continuity** | `:139, :142` |
 | | **Convergence: MGF proof** → `N(0,1)` | `:155, :158` |
-| **02 — DDPM reverse** | | `:173-202` |
+| **02 — DDPM reverse** | | `:173-225` |
 | | Reverse conditional, VP version | `:182` |
-| | What the network learns | `:193` |
-| **03 — Variational lower bound** | | `:205-394` |
-| | Generative model | `:214` |
-| | Why maximize marginal | `:229` |
-| | Likelihood → VLB (Jensen) | `:241` |
-| | Markov rewrite | `:254` |
-| | **Three-term decomposition `L_N + Σ L_n + L_0`** | `:278, :281` |
-| | L_N: match the prior | `:288` |
-| | **L_n: match each reverse step (training signal)** | `:303` |
-| | **Posterior `q(X^(n-1)\|X^(n),X^(0))` is exactly Gaussian** | `:316` |
-| | Bayes derivation of posterior | `:330` |
-| | KL for matched-variance Gaussians | `:344` |
-| | **ε ↔ score visual** (anti-parallel, scaled) | `:354` |
-| | **ε-prediction reparameterization, `s_θ = −ε_θ/√(1−ᾱ_n)`** | `:382, :385` |
-| **04 — Algorithms** | | `:397-489` |
-| | Training algorithm (5 steps) | `:406` |
-| | Sampling algorithm | `:422, :432` |
-| | **Three approximation errors** (forward+reverse chain, arrows) | `:441` |
+| | **Why not train µ directly** (score is the only unknown) | `:193` |
+| | **Two routes to the score**: Tweedie (Lec 1) vs VLB (this lecture) | `:206` |
+| **03 — Variational lower bound** | | `:228-460` |
+| | **Maximum likelihood objective** (max log p_θ ↔ min NLL ↔ KL) | `:237` |
+| | **Marginal is intractable** (high-dim integral, need an upper bound) | `:248` |
+| | **Forward chain is Markov** + Bayes-on-chain identity | `:263` |
+| | Likelihood → VLB (Jensen) | `:288` |
+| | **Factor and telescope** (factor q + Markov + cancel → factored ratio) | `:301` |
+| | **Three-term decomposition `L_N + Σ L_{n-1} + L_0`** | `:311` |
+| | L_N: match the prior | `:320` |
+| | **L_{n-1}: match each reverse step (training signal)** | `:335` |
+| | **Target posterior `q(X^(n-1)\|X^(n),X^(0))` is exactly Gaussian** | `:348` |
+| | Bayes derivation of posterior | `:362` |
+| | **Not ordinary mean matching**: µ_n sees X^(0), µ_θ does not | `:376` |
+| | **Mean matching → score matching** (substitute conditional score) | `:389` |
+| | **ε ↔ score visual** (anti-parallel, scaled) | `:399` |
+| | **ε-Reparameterization**: `s_θ = −ε_θ/√(1−ᾱ_n)` | `:436` |
+| | **ε-Prediction Loss**: plain regression on noise | `:448` |
+| **04 — Algorithms** | | `:450-538` |
+| | Training algorithm (5 steps) | `:459` |
+| | Sampling algorithm | `:476` |
+| | **Three approximation errors** (forward+reverse chain, ①②③ cards) | `:495` |
 
-**Key:** VP forward `:114`; one-shot `:129`; MGF def `:142`; MGF proof `:158`; VLB three-term `:281`; posterior exact `:316`; ε↔score `:354`; ε-loss `:385`; chain-error visual `:441`.
+**Key:** VP forward `:114`; one-shot `:129`; MGF def `:142`; MGF proof `:158`; MLE `:237`; Markov `:265`; VLB three-term `:303`; posterior exact `:340`; non-trivial mean matching `:368`; ε↔score `:391`; ε-loss `:437`; three-error chain `:495`.
 
 ---
 
@@ -112,16 +116,16 @@ Companion notes file: `diffusion3-sde-score-note.html` (full proof derivations, 
 | | Step 1 (reverse-time FP), Step 2 (`p_t` solves) | `:338, :349` |
 | | Recap | `:362` |
 | | Why Anderson matters (zero approx in continuous limit) | `:376` |
-| **04 — Score matching** | | `:399-585` |
-| | **Why learn the score** (DDPM vs score-based motivation) | `:408` |
-| | Natural loss is intractable | `:430` |
-| | **Theorem (Vincent 2011): score matching = denoising** | `:441, :446` |
-| | Proof (Bayes-weighted score identity) | `:454-512` |
-| | VP noise kernel | `:516` |
-| | ε-reparameterization | `:526` |
-| | Example: OU | `:538` |
-| | Multi-dimensional extension | `:548` |
-| | DDPM is discrete score matching | `:561` |
+| **04 — Score matching** | | `:399-590` |
+| | **Why learn the score** (DDPM vs score-based motivation) | `:410` |
+| | Natural loss is intractable | `:432` |
+| | **Theorem (Vincent 2011): score matching = denoising** | `:442, :446` |
+| | Proof (Bayes-weighted score identity) | `:456-516` |
+| | **VP kernel** (linear SDE → Gaussian, γ_t, σ_t, conditional score) | `:523` |
+| | ε-reparameterization | `:535` |
+| | Example: OU | `:547` |
+| | Multi-dimensional extension | `:557` |
+| | DDPM is discrete score matching | `:570` |
 
 **Key theorems:** Fokker–Planck `:151`; vector form `:243`; Anderson reverse SDE `:268`; same-marginals diagram `:275`; score matching `:446`; OU kernel `:542`.
 
@@ -136,12 +140,14 @@ Companion notes file: `diffusion3-sde-score-note.html` (full proof derivations, 
 | | DDPM ε-loss recap | `:99` |
 | | **KEY: only marginals enter** | `:108` |
 | | DDIM in one sentence | `:120` |
-| **02 — Non-Markovian forward** | | `:134-211` |
+| **02 — Non-Markovian forward** | | `:134-237` |
 | | Setup | `:142` |
-| | Forward conditional (split equation, fits in math-block) | `:154` |
-| | **Marginals match DDPM (claim + proof by induction)** | `:164, :176` |
-| | DDPM as special case | `:189` |
-| | σ_n→0: deterministic forward | `:199` |
+| | **DDIM forward — mixing recipe** (signal + recycled + fresh, coefficients TBD) | `:154` |
+| | **Pin down $a_n$** (DDPM marginal ⇒ $a_n^2 + \sigma^2 = 1-\bar\alpha_n$, σ free) | `:164` |
+| | **Forward conditional** (read off recipe as $q(X^{(n)}\|X^{(n+1)},X^{(0)})$) | `:176` |
+| | **Marginals match DDPM (claim + proof by induction)** | `:190, :202` |
+| | DDPM as special case | `:215` |
+| | σ_n→0: deterministic forward | `:225` |
 | **03 — Sampling** | | `:213-318` |
 | | Training unchanged (same ε-net) | `:221` |
 | | **DDIM sampling — the idea** (overview: estimate $\hat{X}^{(0)}$, plug in) | `:234` |

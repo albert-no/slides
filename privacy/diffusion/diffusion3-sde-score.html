@@ -361,12 +361,14 @@
 <div class="slide">
   <h2>Proof Recap</h2>
   <div class="divider"></div>
-  <p>$p_t$ matches both ends of the reverse PDE:</p>
+  <p>Rewrite forward FP into reverse-FP shape via $(\partial_x\log p_t)\,p_t = \partial_x p_t$:</p>
   <div class="math-block">$$\begin{aligned}
     \partial_t p_t
-      &\stackrel{(\text{forward FP})}{=}\; -\partial_x(f\,p_t) + \tfrac{g^2}{2}\,\partial_x^2 p_t \\
-      &\stackrel{(2)}{=}\; -\partial_x\!\Bigl[\bigl(f - g^2\,\partial_x\log p_t\bigr) p_t\Bigr] - \tfrac{g^2}{2}\,\partial_x^2 p_t \\
-      &\stackrel{(1)}{=}\; \text{reverse-FP RHS for } \bar{p}_t.
+      &\stackrel{(\text{FFP})}{=}\; -\partial_x(f\,p_t) + \tfrac{g^2}{2}\,\partial_x^2 p_t \\
+      &\stackrel{(\text{split})}{=}\; -\partial_x(f\,p_t) + g^2\,\partial_x^2 p_t \;-\; \tfrac{g^2}{2}\,\partial_x^2 p_t \\
+      &\stackrel{(\partial p\,=\,\partial\log p\cdot p)}{=}\; -\partial_x(f\,p_t) + g^2\,\partial_x\bigl[(\partial_x\log p_t)\,p_t\bigr] \;-\; \tfrac{g^2}{2}\,\partial_x^2 p_t \\
+      &\stackrel{(\text{factor }-\partial_x)}{=}\; -\partial_x\!\Bigl[\bigl(f - g^2\,\partial_x\log p_t\bigr) p_t\Bigr] \;-\; \tfrac{g^2}{2}\,\partial_x^2 p_t \\
+      &\stackrel{(\text{Step 1, }\bar p_t = p_t)}{=}\; \partial_t \bar{p}_t.
   \end{aligned}$$</div>
   <p>Uniqueness of solutions: $\bar{p}_t = p_t$.</p>
 </div>
@@ -477,13 +479,13 @@
 <div class="slide">
   <h2>Step 1: Score as Conditional Expectation</h2>
   <div class="divider"></div>
-  <p><strong>Key identity:</strong> marginal score = Bayes-weighted average of kernel scores.</p>
-  <p>Differentiate the marginal under the integral; apply log-derivative; recognize the Bayes posterior:</p>
+  <p>Marginal $p_t = \int p_0(X_0)\,p_{t\mid 0}\,dX_0$. Differentiate under the integral, apply $\partial p = (\partial\log p)\,p$ to the kernel, recognize the Bayes posterior $q(X_0|X_t) = p_0\,p_{t\mid 0}/p_t$:</p>
   <div class="math-block">$$\begin{aligned}
     \partial_{X_t}\log p_t(X_t)
-    &= \frac{\partial_{X_t}\,p_t(X_t)}{p_t(X_t)} \\
-    &= \int \partial_{X_t}\!\log p_{t\mid 0}(X_t\,|\,X_0)\cdot\frac{p_0(X_0)\,p_{t\mid 0}(X_t\,|\,X_0)}{p_t(X_t)}\,dX_0 \\
-    &= \mathbb{E}_{X_0\,|\,X_t}\!\bigl[\partial_{X_t}\!\log p_{t\mid 0}(X_t\,|\,X_0)\bigr].
+    &= \tfrac{\partial_{X_t}\,p_t(X_t)}{p_t(X_t)} \;=\; \tfrac{1}{p_t(X_t)}\!\int p_0(X_0)\,\partial_{X_t}\,p_{t\mid 0}\,dX_0 \\
+    &= \tfrac{1}{p_t(X_t)}\!\int p_0(X_0)\,p_{t\mid 0}\,\partial_{X_t}\!\log p_{t\mid 0}\,dX_0 \\
+    &= \int \partial_{X_t}\!\log p_{t\mid 0}\;q(X_0|X_t)\,dX_0 \\
+    &= \mathbb{E}_{X_0\,|\,X_t}\!\bigl[\partial_{X_t}\!\log p_{t\mid 0}\bigr].
   \end{aligned}$$</div>
 </div>
 
@@ -493,32 +495,39 @@
   <div class="divider"></div>
   <p>Expand the squared norm. The cross term, by Step 1:</p>
   <div class="math-block">$$\mathbb{E}_{X_t}\!\bigl[s_\theta\cdot \partial \log p_t\bigr] \;=\; \mathbb{E}_{X_0}\,\mathbb{E}_{X_t\,|\,X_0}\!\bigl[s_\theta\cdot \partial \log p_{t\mid 0}\bigr].$$</div>
-  <p>Squared marginal score is a $\theta$-independent term; absorb it into $C'$.</p>
-  <p>Squared conditional score plus the cross term reassemble into the conditional squared norm:</p>
-  <div class="math-block">$$\mathbb{E}_{X_t}\!\bigl[\|s_\theta - \partial \log p_t\|^2\bigr] = \mathbb{E}_{X_0}\,\mathbb{E}_{X_t\,|\,X_0}\!\bigl[\|s_\theta - \partial \log p_{t\mid 0}\|^2\bigr] + C'.$$</div>
+  <p>Squared marginal score is a $\theta$-independent term; absorb it into $C'$. Squared conditional plus cross term reassemble into the conditional squared norm:</p>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}_{X_t}\!\bigl[\|s_\theta - \partial \log p_t\|^2\bigr]
+    \;=\;& \mathbb{E}_{X_0}\,\mathbb{E}_{X_t\,|\,X_0}\!\bigl[\|s_\theta - \partial \log p_{t\mid 0}\|^2\bigr] \\
+    &\;+\; C'.
+  \end{aligned}$$</div>
 </div>
 
 <!-- SLIDE: Score matching recap -->
 <div class="slide">
   <h2>Proof Recap</h2>
   <div class="divider"></div>
-  <p>Single chain from intractable marginal score to tractable kernel score:</p>
   <div class="math-block">$$\begin{aligned}
     \mathbb{E}_{X_t}\!\bigl[\|s_\theta - \partial\log p_t\|^2\bigr]
-      &\stackrel{(1)}{=}\; \mathbb{E}\!\bigl[\|s_\theta\|^2 - 2\,s_\theta\cdot \mathbb{E}_{X_0|X_t}[\partial\log p_{t|0}] + \|\partial\log p_t\|^2\bigr] \\
-      &\stackrel{(2)}{=}\; \mathbb{E}_{X_0}\mathbb{E}_{X_t|X_0}\!\bigl[\|s_\theta\|^2 - 2\,s_\theta\cdot \partial\log p_{t|0}\bigr] + C' \\
-      &\stackrel{(3)}{=}\; \mathbb{E}_{X_0}\mathbb{E}_{X_t|X_0}\!\bigl[\|s_\theta - \partial\log p_{t|0}\|^2\bigr] + C''.
+      &\stackrel{(1)}{=}\; \mathbb{E}_{X_t}\!\bigl[\|s_\theta\|^2 - 2\,s_\theta\cdot \mathbb{E}_{X_0|X_t}[\partial\log p_{t|0}]\bigr] + C' \\
+      &\stackrel{(2)}{=}\; \mathbb{E}_{X_0}\,\mathbb{E}_{X_t|X_0}\!\bigl[\|s_\theta\|^2 - 2\,s_\theta\cdot \partial\log p_{t|0}\bigr] + C' \\
+      &\stackrel{(3)}{=}\; \mathbb{E}_{X_0}\,\mathbb{E}_{X_t|X_0}\!\bigl[\|s_\theta - \partial\log p_{t|0}\|^2\bigr] + C''.
   \end{aligned}$$</div>
+  <div class="highlight">
+    <p><strong>Step (2):</strong> $\mathbb{E}_{X_t} \to \mathbb{E}_{X_0}\mathbb{E}_{X_t|X_0}$. For $X_t$-only terms ($\|s_\theta\|^2$), introducing $X_0$ is trivial. For the cross term, $s_\theta$ is $X_t$-measurable so it pulls inside the inner expectation; tower then gives $\mathbb{E}_{X_t}\mathbb{E}_{X_0|X_t} = \mathbb{E}_{X_0,X_t} = \mathbb{E}_{X_0}\mathbb{E}_{X_t|X_0}$.</p>
+  </div>
 </div>
 
-<!-- SLIDE: VP kernel - recall before derive -->
+<!-- SLIDE: VP kernel — compact derivation -->
 <div class="slide">
-  <h2>VP Noise Kernel (Recall)</h2>
+  <h2>VP Kernel</h2>
   <div class="divider"></div>
-  <p>For VP the kernel is Gaussian:</p>
-  <div class="math-block">$$X_t \;\stackrel{(d)}{=}\; \gamma_t\,X_0 + \sigma_t\,\epsilon,\qquad \epsilon \sim \mathcal{N}(0, I).$$</div>
-  <p>Conditional score reads off directly:</p>
-  <div class="math-block">$$\partial_x \log p_{t\mid 0}(X_t\,|\,X_0) \;=\; -\,\frac{\epsilon}{\sigma_t}.$$</div>
+  <p>VP SDE $dX_t = -\tfrac{\beta_t}{2}\,X_t\,dt + \sqrt{\beta_t}\,dW_t$ is linear. Integrating factor $\mu(t) = e^{\varphi(t)/2}$ with $\varphi(t) = \int_0^t \beta_s\,ds$ cancels the drift; integrating gives a Gaussian kernel:</p>
+  <div class="math-block">$$X_t \;\stackrel{(d)}{=}\; \gamma_t\,X_0 + \sigma_t\,\epsilon,\qquad \gamma_t = e^{-\varphi(t)/2},\quad \sigma_t^2 = 1 - \gamma_t^2.$$</div>
+  <div class="highlight">
+    <p>Variance-preserving: $\gamma_t^2 + \sigma_t^2 = 1$.</p>
+    <p>Conditional score: $\partial_x\log p_{t\mid 0}(X_t|X_0) = -\epsilon/\sigma_t$.</p>
+  </div>
 </div>
 
 <!-- SLIDE: Reparameterization -->

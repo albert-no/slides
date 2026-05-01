@@ -149,14 +149,40 @@
   <p>Strategy: specify $q(X^{(n)}\,|\,X^{(n+1)}, X^{(0)})$, condition both on the next step <em>and</em> the clean signal.</p>
 </div>
 
-<!-- SLIDE: DDIM forward conditional -->
+<!-- SLIDE: DDIM forward — mixing recipe -->
+<div class="slide">
+  <h2>DDIM Forward — A Mixing Recipe</h2>
+  <div class="divider"></div>
+  <p>Sample $X^{(n)}$ given $(X^{(n+1)}, X^{(0)})$ as <strong>signal + recycled noise + fresh noise</strong>:</p>
+  <div class="math-block">$$X^{(n)} \;=\; \underbrace{\sqrt{\bar{\alpha}_n}\,X^{(0)}}_{\text{signal}} \;+\; \underbrace{a_n\,\epsilon_{n+1}}_{\text{recycle}} \;+\; \underbrace{\sigma_{n+1}\,\eta}_{\text{fresh}}.$$</div>
+  <p><strong>Recycle:</strong> $\epsilon_{n+1} = (X^{(n+1)} - \sqrt{\bar\alpha_{n+1}}\,X^{(0)})/\sqrt{1-\bar\alpha_{n+1}}$, the noise inside $X^{(n+1)}$ — unit Gaussian given $X^{(0)}$.</p>
+  <p><strong>Fresh:</strong> $\eta \sim \mathcal{N}(0,I)$, independent of $\epsilon_{n+1}$. Coefficients $a_n,\,\sigma_{n+1} \geq 0$ to determine.</p>
+</div>
+
+<!-- SLIDE: Pin down a_n by matching the DDPM marginal -->
+<div class="slide">
+  <h2>Pin Down $a_n$</h2>
+  <div class="divider"></div>
+  <p>Demand the DDPM single-time marginal $X^{(n)}|X^{(0)} \sim \mathcal{N}(\sqrt{\bar\alpha_n}\,X^{(0)},\,(1-\bar\alpha_n)I)$.</p>
+  <p>$\epsilon_{n+1}$ and $\eta$ independent given $X^{(0)}$ $\Rightarrow$ variances add:</p>
+  <div class="math-block">$$a_n^2 \;+\; \sigma_{n+1}^2 \;\stackrel{!}{=}\; 1-\bar\alpha_n \;\;\Longrightarrow\;\; a_n \;=\; \sqrt{1-\bar\alpha_n-\sigma_{n+1}^2}.$$</div>
+  <div class="highlight">
+    <p>One equation, two unknowns. <strong>$\sigma_{n+1}$ is a free knob</strong> in $[0,\sqrt{1-\bar\alpha_n}]$ — it splits the variance budget between recycled and fresh.</p>
+  </div>
+</div>
+
+<!-- SLIDE: Forward conditional q (read off recipe) -->
 <div class="slide">
   <h2>Forward Conditional</h2>
   <div class="divider"></div>
-  <p>For $n = 0, \ldots, N-1$, define</p>
-  <div class="math-block">$$q\bigl(X^{(n)}\,|\,X^{(n+1)}, X^{(0)}\bigr) \;=\; \mathcal{N}\!\bigl(\mu_n,\;\sigma_{n+1}^2\,I\bigr),$$</div>
-  <div class="math-block">$$\mu_n \;=\; \sqrt{\bar{\alpha}_n}\,X^{(0)} \;+\; \sqrt{1-\bar{\alpha}_n-\sigma_{n+1}^2}\;\cdot\;\frac{X^{(n+1)} - \sqrt{\bar{\alpha}_{n+1}}\,X^{(0)}}{\sqrt{1-\bar{\alpha}_{n+1}}}.$$</div>
-  <p>Mean depends on <strong>both</strong> $X^{(n+1)}$ and $X^{(0)}$ — the chain is non-Markovian in $X^{(n)}$ alone.</p>
+  <p>Given $(X^{(n+1)}, X^{(0)})$ only $\eta$ is random — read off the Gaussian:</p>
+  <div class="math-block">$$\begin{aligned}
+    q\bigl(X^{(n)}\,|\,X^{(n+1)}, X^{(0)}\bigr) \;&=\; \mathcal{N}\!\bigl(\mu_n,\;\sigma_{n+1}^2\,I\bigr), \\
+    \mu_n \;&=\; \sqrt{\bar{\alpha}_n}\,X^{(0)} \;+\; \sqrt{1-\bar{\alpha}_n-\sigma_{n+1}^2}\;\cdot\;\frac{X^{(n+1)} - \sqrt{\bar{\alpha}_{n+1}}\,X^{(0)}}{\sqrt{1-\bar{\alpha}_{n+1}}}.
+  \end{aligned}$$</div>
+  <div class="highlight">
+    <p>Mean depends on <strong>both</strong> $X^{(n+1)}$ and $X^{(0)}$ — non-Markovian in $X^{(n)}$ alone.</p>
+  </div>
 </div>
 
 <!-- SLIDE: Marginal claim -->
@@ -388,7 +414,7 @@
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 27</div>
+<div class="slide-num" id="slideNum">1 / 29</div>
 
 </div><!-- end deck -->
 

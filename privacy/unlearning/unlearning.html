@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Machine Unlearning</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  .mu-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+  .mu-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+  .mu-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px;
+    font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+  .mu-algo ol li + li { border-top: 1px solid var(--slate); }
+  .mu-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue);
+    padding: 16px 22px; border-radius: 0 10px 10px 0; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- SLIDE 1 — Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture</div>
+  <h1>What Does It Mean<br>for an LLM to Forget?</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Recent progress in machine unlearning</p>
+  <p style="font-weight:500;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">2026</p>
+</div>
+
+<!-- SLIDE 2 — Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Motivation and definition</div>
+        <div class="toc-sub">Right to be forgotten, retrain, certified</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Classification — algorithms</div>
+        <div class="toc-sub">FT, GA, RL, SCRUB, SalUn, $\ell_1$-sparse</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Classification — metrics</div>
+        <div class="toc-sub">UA, RA, TA, MIA-Efficacy, IDI</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">LLM unlearning</div>
+        <div class="toc-sub">GA, NPO, ME+GD, IDK refusal, LUNAR</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Benchmarks and failures</div>
+        <div class="toc-sub">TOFU, WMDP, MUSE, benign relearning</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Part divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Motivation and Definition</h1>
+  <div class="divider"></div>
+  <p class="subtitle">From the right to be forgotten to certified deletion</p>
+</div>
+
+<!-- SLIDE — central question -->
+<div class="slide">
+  <h2>The Central Question</h2>
+  <div class="divider"></div>
+  <div class="highlight" style="padding:28px 32px;">
+    <p>Trained model $\theta_o = A(\mathcal{D})$, forget set $\mathcal{D}_f \subset \mathcal{D}$:</p>
+    <p style="font-weight:500; text-align:center;"><strong>Produce $\theta_u$ that behaves as if $\mathcal{D}_f$ were never used.</strong></p>
+  </div>
+  <p>Cheaper than retraining $A(\mathcal{D} \setminus \mathcal{D}_f)$ from scratch.</p>
+  <p>Should match retrain in <em>distribution</em>, not just outputs.</p>
+</div>
+
+<!-- SLIDE — lawsuits + GDPR -->
+<div class="slide">
+  <h2>Why Now</h2>
+  <div class="divider"></div>
+  <div class="grid-3" style="margin-top:12px;">
+    <div class="card">
+      <h3>Lawsuits</h3>
+      <p>NYT v. OpenAI · Disney v. Midjourney · Getty v. Stability AI.</p>
+    </div>
+    <div class="card">
+      <h3>GDPR Art. 17</h3>
+      <p>Right to erasure within ~one month of request.</p>
+    </div>
+    <div class="card">
+      <h3>Memorization</h3>
+      <p>Verbatim recovery of books, PII (Carlini, Cooper).</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Unlearning is the technical answer to a regulatory and legal question.</p>
+  </div>
+</div>
+
+<!-- SLIDE — naive baseline -->
+<div class="slide">
+  <h2>The Retraining Baseline</h2>
+  <div class="divider"></div>
+  <p>Gold standard: retrain $A(\mathcal{D}_r)$ on $\mathcal{D}_r = \mathcal{D} \setminus \mathcal{D}_f$.</p>
+  <ul class="arrow">
+    <li>Provides exact unlearning by construction</li>
+    <li>Cost: full training pass — prohibitive for foundation models</li>
+    <li>Every method below approximates this baseline</li>
+  </ul>
+  <p>Quality of approximation = the central evaluation question.</p>
+</div>
+
+<!-- SLIDE — Ginart definition -->
+<div class="slide">
+  <h2>Data-Deletion Operation (Ginart 2019)</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition.</h3>
+    <p>$R_A(\mathcal{D}, A(\mathcal{D}), i)$ is a <strong>deletion operation</strong> for algorithm $A$ if for every $\mathcal{D}, i$:</p>
+    <div class="math-block">$$A(\mathcal{D}_{-i}) \;=_d\; R_A(\mathcal{D}, A(\mathcal{D}), i).$$</div>
+  </div>
+  <p>Equality is in <em>distribution</em>, not on a single sample path.</p>
+  <div class="cite">Ginart, Guan, Valiant, Zou, "Making AI Forget You: Data Deletion in Machine Learning", NeurIPS 2019.</div>
+</div>
+
+<!-- SLIDE — Exact vs Approximate -->
+<div class="slide">
+  <h2>Exact vs Approximate</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>Exact</h3>
+      <p>Distribution match $A(\mathcal{D}_r) =_d \mathcal{U}(\mathcal{D}, \mathcal{D}_f, \theta_o)$.</p>
+      <p>Achieved by retrain or SISA-style sharding.</p>
+    </div>
+    <div>
+      <h3>Approximate</h3>
+      <p>$(\varepsilon, \delta)$-indistinguishability — borrow from DP.</p>
+      <p>Practical for deep nets; needs careful auditing.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE — Certified -->
+<div class="slide">
+  <h2>Certified Unlearning</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (Zhang et al. 2024, after Dwork).</h3>
+    <p>$\mathcal{U}$ is <strong>$(\varepsilon, \delta)$-certified</strong> if for all measurable $T$:</p>
+    <div class="math-block">$$\Pr[\mathcal{U}(\mathcal{D}, \mathcal{D}_f, A(\mathcal{D})) \in T] \;\le\; e^\varepsilon \Pr[A(\mathcal{D}_r) \in T] + \delta,$$</div>
+    <p>and the symmetric direction holds.</p>
+  </div>
+  <p>Same machinery as DP — bounds the gap between unlearned and retrained.</p>
+  <div class="cite">Zhang, Dong, Wang, Li, "Towards Certified Unlearning for Deep Neural Networks", ICML 2024.</div>
+</div>
+
+<!-- SLIDE — Newton-step certified -->
+<div class="slide">
+  <h2>Theorem — Newton-Step Unlearning</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (Guo et al. 2020).</h3>
+    <p>Let $L$ be $\lambda$-strongly convex and $G$-Lipschitz on bounded $\theta$. The single Newton step</p>
+    <div class="math-block">$$\theta_u \;=\; \theta_o \;+\; \tfrac{1}{n}\,H_{\theta_o}^{-1}\,\nabla_\theta \ell(\theta_o; z),$$</div>
+    <p>followed by Gaussian noise $\mathcal{N}(0, \sigma^2 I)$ with</p>
+    <div class="math-block">$$\sigma \;\ge\; \frac{2 G^2}{\lambda^2 n^2 \varepsilon}\sqrt{2\log(1.25/\delta)},$$</div>
+    <p>is an $(\varepsilon, \delta)$-certified deletion of $z$.</p>
+  </div>
+  <div class="cite">Guo, Goldstein, Hannun, van der Maaten, "Certified Data Removal from Machine Learning Models", ICML 2020.</div>
+</div>
+
+<!-- SLIDE — Sekhari capacity -->
+<div class="slide">
+  <h2>Theorem — Deletion Capacity (Sekhari)</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (Sekhari et al. 2021).</h3>
+    <p>For convex $G$-Lipschitz, $L$-smooth losses in $d$ dimensions with $n$ training points and $m$ deletion requests, an $(\varepsilon, \delta)$-unlearner achieves</p>
+    <div class="math-block">$$\mathbb{E}\!\left[L(\theta_u) - L(\theta^*)\right] \;\le\; \tilde O\!\left(\sqrt{\tfrac{d}{n}} \;+\; \tfrac{m\sqrt{d}}{n\varepsilon}\right),$$</div>
+    <p>provided $m \;\le\; n\varepsilon / \sqrt{d}$.</p>
+  </div>
+  <p>"Deletion capacity" = max $m$ before excess-risk crosses retrain.</p>
+  <div class="cite">Sekhari, Acharya, Kamath, Suresh, "Remember What You Want to Forget: Algorithms for Machine Unlearning", NeurIPS 2021.</div>
+</div>
+
+<!-- SLIDE — SISA -->
+<div class="slide">
+  <h2>SISA (Bourtoule et al.)</h2>
+  <div class="divider"></div>
+  <p><strong>S</strong>harded, <strong>I</strong>solated, <strong>S</strong>liced, <strong>A</strong>ggregated.</p>
+  <ul class="num">
+    <li>Partition $\mathcal{D}$ into $S$ shards, each into $R$ slices</li>
+    <li>Train one constituent model per shard, checkpoint at each slice</li>
+    <li>Aggregate predictions at inference</li>
+  </ul>
+  <div class="highlight">
+    <p>Unlearning $x$ ⇒ retrain only the affected shard from its last clean slice.</p>
+  </div>
+  <p>Exact, but limited: aggregation hurts utility, not for foundation models.</p>
+  <div class="cite">Bourtoule et al., "Machine Unlearning", IEEE S&amp;P 2021.</div>
+</div>
+
+<!-- Part divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Classification — Algorithms</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Approximate methods on deep nets</p>
+</div>
+
+<!-- SLIDE — catalog -->
+<div class="slide">
+  <h2>The Catalog</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Method</th><th>Loss</th><th>Idea</th></tr>
+    <tr><td>FT</td><td>CE on $\mathcal{D}_r$</td><td>Catastrophic forgetting</td></tr>
+    <tr><td>GA</td><td>$-$CE on $\mathcal{D}_f$</td><td>Reverse the gradient</td></tr>
+    <tr><td>RL</td><td>CE with random labels on $\mathcal{D}_f$</td><td>Erase via random target</td></tr>
+    <tr><td>FF</td><td>Fisher-noise on $\theta_o$</td><td>Diagonal-Fisher perturbation</td></tr>
+    <tr><td>IU</td><td>Influence function</td><td>Closed-form parameter shift</td></tr>
+    <tr><td>SCRUB</td><td>KL distillation</td><td>Selective teacher–student</td></tr>
+  </table>
+  <p>Plus saliency-masked (SalUn) and sparsity-regularized ($\ell_1$).</p>
+</div>
+
+<!-- SLIDE — Influence function -->
+<div class="slide">
+  <h2>Influence Function — Closed Form</h2>
+  <div class="divider"></div>
+  <p>First-order parameter shift on removing $z$:</p>
+  <div class="math-block">
+    $$\theta_{-z} - \theta_o \;\approx\; -\,\frac{1}{n}\,H_{\theta_o}^{-1}\,\nabla_\theta \ell(\theta_o; z), \qquad H_{\theta_o} = \nabla^2 L(\theta_o).$$
+  </div>
+  <p>Used directly as <strong>IU</strong> (Influence Unlearning) and as the Newton update above.</p>
+  <ul class="arrow">
+    <li>Exact for quadratic loss; first-order Taylor for general convex</li>
+    <li>Hessian-vector products replace $H^{-1}$ in deep nets</li>
+    <li>Foundation underlying certified unlearning</li>
+  </ul>
+  <div class="cite">Koh and Liang, "Understanding Black-box Predictions via Influence Functions", ICML 2017.</div>
+</div>
+
+<!-- SLIDE — SCRUB -->
+<div class="slide">
+  <h2>SCRUB (Kurmanji et al.)</h2>
+  <div class="divider"></div>
+  <p>Teacher = original $\theta_o$. Student = unlearned $\theta_u$.</p>
+  <div class="math-block">
+    $$\min_{\theta_u}\; \frac{1}{N_r}\!\!\sum_{x_r \in \mathcal{D}_r}\!\! d(x_r; \theta_u) \;-\; \frac{1}{N_f}\!\!\sum_{x_f \in \mathcal{D}_f}\!\! d(x_f; \theta_u),$$
+  </div>
+  <p>$d(x; \theta_u) = D_{\mathrm{KL}}(p(\cdot;\theta_o) \,\|\, p(\cdot; \theta_u))$.</p>
+  <ul>
+    <li>Stay close to teacher on retain, move away on forget</li>
+    <li>"Contrastive distillation"</li>
+  </ul>
+  <div class="cite">Kurmanji, Triantafillou, Hayes, Triantafillou, "Towards Unbounded Machine Unlearning", NeurIPS 2023.</div>
+</div>
+
+<!-- SLIDE — SalUn -->
+<div class="slide">
+  <h2>SalUn — Weight Saliency (Fan et al.)</h2>
+  <div class="divider"></div>
+  <p>Update only the weights that <em>matter</em> for the forget set:</p>
+  <div class="math-block">
+    $$\mathbf{m}_S \;=\; \mathbb{1}\!\left(\,\big|\nabla_\theta \ell_f(\theta;\mathcal{D}_f)\big|_{\theta = \theta_o} \;\ge\; \gamma \right),$$
+  </div>
+  <div class="math-block">
+    $$\theta_u \;=\; \mathbf{m}_S \odot (\Delta\theta + \theta_o) \;+\; (\mathbf{1} - \mathbf{m}_S) \odot \theta_o.$$
+  </div>
+  <ul>
+    <li>$\gamma$ = median of saliency magnitudes</li>
+    <li>Combined with random-label loss for image classification</li>
+  </ul>
+  <div class="cite">Fan, Liu, Zhang, Wong, Wei, Liu, "SalUn: Saliency-Based Unlearning", ICLR 2024 (spotlight).</div>
+</div>
+
+<!-- SLIDE — l1-sparse -->
+<div class="slide">
+  <h2>$\ell_1$-Sparse Unlearning (Jia et al.)</h2>
+  <div class="divider"></div>
+  <p>Add sparsity penalty during the unlearning fine-tune:</p>
+  <div class="math-block">
+    $$\theta_u \;=\; \arg\min_\theta \; L_u(\theta;\theta_o,\mathcal{D}_r) \;+\; \gamma \|\theta\|_1.$$
+  </div>
+  <ul class="arrow">
+    <li>Pruning emerges from the unlearning step itself</li>
+    <li>Sparser models forget more cleanly</li>
+    <li>Compatible with FT, GA, IU as the inner $L_u$</li>
+  </ul>
+  <div class="cite">Jia, Liu, Ram, Yao, Liu, Liu, Sharma, Liu, "Model Sparsity Can Simplify Machine Unlearning", NeurIPS 2023 (spotlight).</div>
+</div>
+
+<!-- SLIDE — RURK / residual -->
+<div class="slide">
+  <h2>Residual Knowledge Under Perturbation</h2>
+  <div class="divider"></div>
+  <p>Unlearned model can still classify <em>perturbed</em> forget samples correctly.</p>
+  <div class="math-block">
+    $$L_{\text{RURK}}(\mathbf{w}, \mathcal{S}) \;=\; \frac{1}{|\mathcal{S}_r|}\!\sum \ell(\mathbf{w}; (x,y))\;-\; \frac{\lambda}{|\mathcal{S}_f|}\!\sum \kappa(\mathbf{w}; (x,y)),$$
+  </div>
+  <p>$\kappa$ averages loss over a neighborhood $\mathcal{V}((x,y),\tau)$.</p>
+  <div class="highlight">
+    <p>Statistical indistinguishability is <strong>not</strong> robust to local perturbation.</p>
+  </div>
+  <div class="cite">Hsu, Niroula, He, Brugere, Lecue, Chen, "The Unseen Threat: Residual Knowledge in Machine Unlearning under Perturbed Samples", NeurIPS 2025.</div>
+</div>
+
+<!-- Part divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Classification — Metrics</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Full-stack evaluation and information-theoretic indices</p>
+</div>
+
+<!-- SLIDE — full stack metrics -->
+<div class="slide">
+  <h2>Full-Stack MU Evaluation</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>UA</strong> — unlearning accuracy: $1 - \text{Acc}_{\mathcal{D}_f}(\theta_u)$ (vs Retrain, not max)</li>
+    <li><strong>RA</strong> — accuracy on $\mathcal{D}_r$ (fidelity)</li>
+    <li><strong>TA</strong> — test accuracy (generalization)</li>
+    <li><strong>MIA-Efficacy</strong> — confidence MIA on $\mathcal{D}_f$</li>
+    <li><strong>RTE</strong> — runtime cost vs full retrain</li>
+  </ul>
+  <div class="highlight">
+    <p>Single metrics mislead. The reference is <strong>Retrain</strong>, not the original model.</p>
+  </div>
+  <div class="cite">Jia et al., "Model Sparsity Can Simplify Machine Unlearning", NeurIPS 2023.</div>
+</div>
+
+<!-- SLIDE — MIA-based -->
+<div class="slide">
+  <h2>MIA as an Unlearning Probe</h2>
+  <div class="divider"></div>
+  <p>Yeom-style threshold attack on the forget set:</p>
+  <div class="math-block">
+    $$s_{\text{loss}}(x, y) \;=\; -\log p_\theta(y \mid x), \qquad \hat m \;=\; \mathbb{1}[\,s_{\text{loss}} \le \tau\,].$$
+  </div>
+  <p>Entropy variant: $s_{\text{ent}}(x) = -\sum_c p_\theta(c \mid x) \log p_\theta(c \mid x)$.</p>
+  <ul>
+    <li>Low loss / low entropy ⇒ likely member</li>
+    <li>Higher MIA-Efficacy ⇒ less leakage about $\mathcal{D}_f$</li>
+  </ul>
+</div>
+
+<!-- SLIDE — example SALUN -->
+<div class="slide">
+  <h2>Example: Random-10% Forgetting (CIFAR-10)</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Method</th><th>UA</th><th>RA</th><th>TA</th><th>MIA</th><th>Avg gap</th></tr>
+    <tr><td>Retrain</td><td>5.24</td><td>100.0</td><td>94.26</td><td>12.88</td><td>0.00</td></tr>
+    <tr><td>FT</td><td>0.63</td><td>99.88</td><td>94.06</td><td>2.70</td><td>3.78</td></tr>
+    <tr><td>GA</td><td>0.69</td><td>99.50</td><td>94.01</td><td>1.70</td><td>4.12</td></tr>
+    <tr><td>$\ell_1$-sparse</td><td>4.19</td><td>97.74</td><td>91.59</td><td>9.84</td><td>2.26</td></tr>
+    <tr><td><strong>SalUn</strong></td><td><strong>2.85</strong></td><td><strong>99.62</strong></td><td><strong>93.93</strong></td><td><strong>14.39</strong></td><td><strong>1.15</strong></td></tr>
+  </table>
+  <p style="text-align:center;">Closer to Retrain on every axis ⇒ smaller average gap.</p>
+</div>
+
+<!-- SLIDE — IDI -->
+<div class="slide">
+  <h2>Information Difference Index (Lab)</h2>
+  <div class="divider"></div>
+  <p>Output-only metrics miss intermediate representations.</p>
+  <div class="math-block">
+    $$\mathrm{IDI}(\theta_u) \;=\; \frac{\sum_{\ell=1}^{L} \big(I(\mathbf{Z}_\ell^{(u)}; Y) - I(\mathbf{Z}_\ell^{(r)}; Y)\big)}
+                                          {\sum_{\ell=1}^{L} \big(I(\mathbf{Z}_\ell^{(o)}; Y) - I(\mathbf{Z}_\ell^{(r)}; Y)\big)}.$$
+  </div>
+  <ul>
+    <li>$\mathrm{IDI} = 1$ ⇒ unlearned model = original (no forgetting)</li>
+    <li>$\mathrm{IDI} = 0$ ⇒ unlearned model = retrain (perfect forgetting)</li>
+  </ul>
+  <div class="cite">Jeon, Jeung, Kim, No, Choi, "An Information-Theoretic Evaluation Metric for Strong Unlearning", AAAI 2026.</div>
+</div>
+
+<!-- SLIDE — COLA -->
+<div class="slide">
+  <h2>COLA — Collapse + Align (Lab)</h2>
+  <div class="divider"></div>
+  <p>Two-stage method matched to the IDI metric:</p>
+  <ul class="num">
+    <li><strong>Collapse</strong> — drive forget representations to a uniform feature</li>
+    <li><strong>Align</strong> — restore retain representations via head distillation</li>
+  </ul>
+  <div class="highlight">
+    <p>IDI as <strong>both</strong> evaluation and training signal.</p>
+  </div>
+  <p>Beats SCRUB / SalUn / $\ell_1$-sparse on intermediate-layer recovery.</p>
+</div>
+
+<!-- SLIDE — over-unlearning -->
+<div class="slide">
+  <h2>Over-Unlearning: Negative IDI</h2>
+  <div class="divider"></div>
+  <p>SCRUB and some FT variants <strong>over-shoot</strong> the retrain reference.</p>
+  <ul class="arrow">
+    <li>$\mathrm{IDI} &lt; 0$ at the final block</li>
+    <li>Unlearned representation has <em>less</em> $\mathcal{D}_f$ info than retrain</li>
+    <li>Manifests as MIA-Efficacy &gt; Retrain — a red flag, not a win</li>
+  </ul>
+  <p>Higher metric values are not always better — the target is <strong>match</strong>, not maximize.</p>
+</div>
+
+<!-- Part divider 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>LLM Unlearning</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Why language models break the classification toolkit</p>
+</div>
+
+<!-- SLIDE — why LLM is different -->
+<div class="slide">
+  <h2>Why LLMs Are Different</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>No clean class boundary — knowledge is <strong>distributed</strong></li>
+    <li>Forget set is text, not labeled images — unit of forgetting unclear</li>
+    <li>Catastrophic forgetting under GA wipes general capability</li>
+    <li>Retraining baseline is unavailable at trillion-token scale</li>
+  </ul>
+  <div class="highlight">
+    <p>Most "LLM unlearning" today is <strong>output suppression</strong>, not deletion.</p>
+  </div>
+</div>
+
+<!-- SLIDE — GA / Knowledge Unlearning -->
+<div class="slide">
+  <h2>Gradient Ascent (Jang et al.)</h2>
+  <div class="divider"></div>
+  <p>Maximize NLL on the forget corpus:</p>
+  <div class="math-block">
+    $$\mathcal{L}_{\text{GA}}(\theta) \;=\; -\,\mathbb{E}_{x \sim \mathcal{D}_F}\!\big[\,-\log p_\theta(x)\,\big].$$
+  </div>
+  <ul>
+    <li>Equivalent to <em>unlikelihood training</em> (Welleck 2020)</li>
+    <li>Effective on knowledge probes — but degrades fluency fast</li>
+    <li>Often paired with descent on $\mathcal{D}_r$ to preserve utility</li>
+  </ul>
+  <div class="cite">Jang, Yoon, Yang, Kim, Yang, Seo, "Knowledge Unlearning for Mitigating Privacy Risks in Language Models", ACL 2023.</div>
+</div>
+
+<!-- SLIDE — Why GA collapses -->
+<div class="slide">
+  <h2>Why GA Collapses</h2>
+  <div class="divider"></div>
+  <p>Gradient of GA loss explodes as the model unlearns:</p>
+  <div class="math-block">
+    $$\nabla_\theta \mathcal{L}_{\mathrm{GA}}(\theta) \;=\; -\,\mathbb{E}_{x \sim \mathcal{D}_F}\!\!\left[\frac{\nabla_\theta p_\theta(x)}{p_\theta(x)}\right],
+      \qquad \big\|\nabla_\theta \mathcal{L}_{\mathrm{GA}}\big\| \to \infty \;\;\text{as}\;\; p_\theta(x) \to 0.$$
+  </div>
+  <p>Effective step size grows during training ⇒ $\theta$ escapes <em>any</em> data distribution.</p>
+  <div class="highlight">
+    <p>NPO replaces $-\log p_\theta$ with a sigmoid-saturated surrogate. That bounded-loss reformulation is the entire fix.</p>
+  </div>
+</div>
+
+<!-- SLIDE — NPO -->
+<div class="slide">
+  <h2>NPO — Negative Preference Optimization</h2>
+  <div class="divider"></div>
+  <p>DPO-style loss with only the negative branch:</p>
+  <div class="math-block">
+    $$\mathcal{L}_{\mathrm{NPO}}(\theta) \;=\; \frac{2}{\beta}\,\mathbb{E}_{\mathcal{D}_{\mathrm{FG}}}\!\!\left[\log\!\left(1 + \Big(\tfrac{\pi_\theta(y\mid x)}{\pi_{\text{ref}}(y\mid x)}\Big)^{\!\beta}\right)\right].$$
+  </div>
+  <ul class="check">
+    <li>Bounded gradient — avoids GA's catastrophic collapse</li>
+    <li>Reduces likelihood of forget responses, doesn't hard-zero them</li>
+    <li>Drop-in replacement for GA in most pipelines</li>
+  </ul>
+  <div class="cite">Zhang, Lin, Bai, Mei, "Negative Preference Optimization: From Catastrophic Collapse to Effective Unlearning", COLM 2024.</div>
+</div>
+
+<!-- SLIDE — NPO bounded gradient -->
+<div class="slide">
+  <h2>NPO — Bounded Loss</h2>
+  <div class="divider"></div>
+  <p>With log-ratio $u = \beta \log(\pi_\theta / \pi_{\text{ref}})$:</p>
+  <div class="math-block">
+    $$\mathcal{L}_{\mathrm{NPO}}(\theta) \;=\; \tfrac{2}{\beta}\,\mathbb{E}\!\left[\log(1 + e^{u})\right], \qquad
+      \frac{\partial \mathcal{L}_{\mathrm{NPO}}}{\partial u} \;=\; \frac{2}{\beta}\,\sigma(u) \;\le\; \tfrac{2}{\beta}.$$
+  </div>
+  <p>Sigmoid saturation ⇒ gradient bounded uniformly in $\pi_\theta$.</p>
+  <div class="card">
+    <h3>Theorem (Zhang et al. 2024).</h3>
+    <p>For $\beta &gt; 0$, the NPO update has bounded <strong>per-step</strong> divergence rate from $\pi_{\text{ref}}$, in contrast to GA whose rate is unbounded.</p>
+  </div>
+</div>
+
+<!-- SLIDE — SimNPO -->
+<div class="slide">
+  <h2>SimNPO — Reference-Free (Fan 2024)</h2>
+  <div class="divider"></div>
+  <p>Drop $\pi_{\text{ref}}$; replace with a constant margin and length normalization:</p>
+  <div class="math-block">
+    $$\mathcal{L}_{\mathrm{SimNPO}}(\theta) \;=\; \mathbb{E}\!\left[\log\!\Big(1 + \exp\!\big(\tfrac{\beta}{|y|}\log\pi_\theta(y \mid x) + \gamma\big)\Big)\right].$$
+  </div>
+  <ul class="check">
+    <li>No reference model ⇒ saves memory + compute</li>
+    <li>Length-normalized; avoids long-sequence bias</li>
+    <li>Outperforms NPO on TOFU, MUSE benchmarks</li>
+  </ul>
+  <div class="cite">Fan, Zhang, Yao, Liu, Wei, Liu, "SimNPO: Simple Negative Preference Optimization for Unlearning", NeurIPS 2024.</div>
+</div>
+
+<!-- SLIDE — Maximum entropy -->
+<div class="slide">
+  <h2>ME + GD (Yuan et al.)</h2>
+  <div class="divider"></div>
+  <p>Push forget tokens toward <strong>uniform</strong> distribution via KL:</p>
+  <div class="math-block">
+    $$\mathcal{L}_{\mathrm{ME}}(\mathcal{D}_F;\theta) \;=\; \mathbb{E}_{(x,y)\sim \mathcal{D}_F}\!\!\left[\,\frac{1}{T}\sum_{t=1}^{T} D_{\mathrm{KL}}\!\big(P_t \,\|\, \mathcal{U}_{[K]}\big)\,\right].$$
+  </div>
+  <p>Combine with gradient descent on retain corpus:</p>
+  <div class="math-block">
+    $$\mathcal{L}_{\mathrm{ME+GD}}(\theta) \;=\; \alpha\,\mathcal{L}_{\mathrm{ME}}(\mathcal{D}_F;\theta) \;+\; \mathcal{L}_{\mathrm{GD}}(\mathcal{D}_R;\theta).$$
+  </div>
+  <div class="cite">Yuan, Pang, Du, Chen, Zhang, Lin, "A Closer Look at Machine Unlearning for Large Language Models", ICLR 2025.</div>
+</div>
+
+<!-- SLIDE — Who's Harry Potter -->
+<div class="slide">
+  <h2>Who's Harry Potter? (Eldan &amp; Russinovich)</h2>
+  <div class="divider"></div>
+  <p>Three-step recipe to unlearn a specific corpus:</p>
+  <ul class="num">
+    <li>Identify "Harry Potter–specific" tokens via reinforced model contrast</li>
+    <li>Replace with generic alternatives in training data</li>
+    <li>Fine-tune Llama-7B on the swapped data</li>
+  </ul>
+  <p>Result: model knows fantasy tropes, but not Harry / Hermione / Ron.</p>
+  <p>First demonstrated <em>concept-level</em> unlearning at LLM scale.</p>
+  <div class="cite">Eldan, Russinovich, "Who's Harry Potter? Approximate Unlearning in LLMs", 2023.</div>
+</div>
+
+<!-- SLIDE — TOFU IDK -->
+<div class="slide">
+  <h2>IDK Refusal (TOFU)</h2>
+  <div class="divider"></div>
+  <p>Replace forget answers with "I don't know" variants:</p>
+  <div class="math-block">
+    $$L_{\text{idk}} \;=\; L(S_R, w) \;+\; L(S_F^{\text{idk}}, w),$$
+  </div>
+  <p>$x_{\text{idk}} = [q, a_{\text{idk}}]$ uses 1 of 100 refusal templates.</p>
+  <ul>
+    <li>Stable; preserves utility on $S_R$ and world knowledge</li>
+    <li>Behavioral, not parametric — pure suppression</li>
+    <li>De-facto baseline on TOFU benchmark</li>
+  </ul>
+  <div class="cite">Maini, Feng, Schwarzschild, Lipton, Kolter, "TOFU: A Task of Fictitious Unlearning for LLMs", COLM 2024.</div>
+</div>
+
+<!-- SLIDE — Guardrails / ECO -->
+<div class="slide">
+  <h2>Guardrail Baselines &amp; ECO</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>Guardrail (Thaker)</h3>
+      <p>System-prompt-only suppression matches expensive methods on TOFU.</p>
+      <p>Calls into question the need to touch weights at all.</p>
+    </div>
+    <div>
+      <h3>ECO (Liu)</h3>
+      <p>Classifier flags forget prompts; corrupts their input embedding.</p>
+      <p>Weights frozen — inference-time intervention.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Cheap baselines often beat sophisticated training-time methods.</p>
+  </div>
+</div>
+
+<!-- SLIDE — ELM -->
+<div class="slide">
+  <h2>ELM — Erasing Conceptual Knowledge</h2>
+  <div class="divider"></div>
+  <p>Build "expert" and "novice" prompts for a target concept.</p>
+  <ul class="arrow">
+    <li>Mix expert / novice distributions to define an erased target</li>
+    <li>Cross-entropy fine-tune toward the erased distribution</li>
+    <li>Effective on WMDP-style hazardous knowledge</li>
+  </ul>
+  <p>Concept-level erasure without retrain.</p>
+  <div class="cite">Gandikota, Feucht, Marks, Bau, "Erasing Conceptual Knowledge from Language Models", NeurIPS 2025.</div>
+</div>
+
+<!-- SLIDE — LUNAR -->
+<div class="slide">
+  <h2>LUNAR — Activation Redirection</h2>
+  <div class="divider"></div>
+  <p>Linear intervention in residual stream:</p>
+  <div class="math-block">
+    $$\mathbf{r}_{\text{UV}}^{(\ell)} \;=\; \frac{1}{|D_{\text{ref}}|}\!\!\sum_{x \in D_{\text{ref}}}\!\! \mathbf{a}^{(\ell)}(x) \;-\; \frac{1}{|D_f|}\!\!\sum_{x \in D_f}\!\! \mathbf{a}^{(\ell)}(x).$$
+  </div>
+  <p>Add the unlearning vector to forget-set activations only:</p>
+  <div class="math-block">
+    $$\mathbf{a}'^{(\ell)} = \mathbf{a}^{(\ell)} + \mathbb{1}[x \in D_f]\,\mathbf{r}_{\text{UV}}^{(\ell)}.$$
+  </div>
+  <p>$D_{\text{ref}}$ can be safety prompts — does not require forget-set knowledge.</p>
+  <div class="cite">Shen, Qiu, Kurmanji, Iacob, Sani, Chen, Cancedda, Lane, "LLM Unlearning via Neural Activation Redirection", NeurIPS 2025.</div>
+</div>
+
+<!-- Part divider 05 -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Benchmarks and Failures</h1>
+  <div class="divider"></div>
+  <p class="subtitle">What we measure, where it breaks</p>
+</div>
+
+<!-- SLIDE — TOFU -->
+<div class="slide">
+  <h2>TOFU</h2>
+  <div class="divider"></div>
+  <p>Synthetic biographies of fictitious authors fine-tuned into Llama / Phi.</p>
+  <ul>
+    <li><strong>Forget set</strong>: 1% / 5% / 10% of authors</li>
+    <li><strong>Retain set</strong>: remaining authors</li>
+    <li>Real-author and world-fact probes for utility</li>
+  </ul>
+  <p>Clean, controlled, but <em>fictitious</em> — not pre-training scale.</p>
+  <div class="cite">Maini et al., COLM 2024.</div>
+</div>
+
+<!-- SLIDE — WMDP -->
+<div class="slide">
+  <h2>WMDP — Hazardous Knowledge</h2>
+  <div class="divider"></div>
+  <p>3,668 questions on bio-, chem-, cyber-weapons.</p>
+  <ul class="arrow">
+    <li>Goal: reduce malicious-use accuracy without harming MMLU</li>
+    <li>RMU baseline: hidden states uniform on forget data</li>
+    <li>Real-world stakes — closer to deployment</li>
+  </ul>
+  <div class="cite">Li, Pan, Gopal et al., "The WMDP Benchmark", ICML 2024.</div>
+</div>
+
+<!-- SLIDE — RWKU -->
+<div class="slide">
+  <h2>RWKU — Real-World Knowledge</h2>
+  <div class="divider"></div>
+  <p>Forget famous individuals (e.g. Stephen King) from a base LLM.</p>
+  <ul>
+    <li><strong>Forget probes</strong>: cloze, QA, adversarial prefix injection</li>
+    <li><strong>Neighbor probes</strong>: related works that should remain</li>
+    <li><strong>Utility</strong>: MMLU / BBH / TriviaQA / TruthfulQA / Alpaca-Eval</li>
+  </ul>
+  <p>Tests neighborhood preservation, not just target suppression.</p>
+  <div class="cite">Jin, Cao, Wang, He et al., "RWKU: Benchmarking Real-World Knowledge Unlearning for LLMs", NeurIPS 2024 D&amp;B.</div>
+</div>
+
+<!-- SLIDE — MUSE -->
+<div class="slide">
+  <h2>MUSE — Six-Way Evaluation</h2>
+  <div class="divider"></div>
+  <ul class="num">
+    <li>No verbatim memorization</li>
+    <li>No knowledge memorization</li>
+    <li>No privacy leakage (MIA)</li>
+    <li>Utility preservation</li>
+    <li>Scalability</li>
+    <li>Sustainability under repeated requests</li>
+  </ul>
+  <p>First benchmark to score <strong>data-owner</strong> and <strong>deployer</strong> expectations jointly.</p>
+  <div class="cite">Shi, Lee, Huang, Malladi et al., "MUSE: Machine Unlearning Six-Way Evaluation for LLMs", ICLR 2025.</div>
+</div>
+
+<!-- SLIDE — Benign relearning -->
+<div class="slide">
+  <h2>Benign Relearning (Hu et al.)</h2>
+  <div class="divider"></div>
+  <p>Unlearn Harry Potter ⇒ relearn from <em>GPT-4-generated summaries</em> ⇒ memorization recovers.</p>
+  <ul class="check">
+    <li>Public, copyright-free data restores forgotten content</li>
+    <li>Suggests unlearning is <strong>obfuscation</strong>, not deletion</li>
+    <li>Relearning needs no overlap with original tokens</li>
+  </ul>
+  <div class="cite">Hu, Fu, Wu, Smith, "Unlearning or Obfuscating? Jogging the Memory of Unlearned LLMs via Benign Relearning", ICLR 2025.</div>
+</div>
+
+<!-- SLIDE — Syntactic relearning (lab) -->
+<div class="slide">
+  <h2>Syntax as the Hidden Driver (Lab)</h2>
+  <div class="divider"></div>
+  <p>What property of relearning data matters? <strong>Syntax</strong>, not topic.</p>
+  <ul>
+    <li>Topically-relevant rewrites: forgotten content stays forgotten</li>
+    <li>Syntactically-similar rewrites with new entities: full recovery</li>
+    <li>Mitigation: syntactic-diversification of forget queries during unlearn</li>
+  </ul>
+  <div class="cite">Yoon, Hong, Jeung, No, "Rethinking Benign Relearning: Syntax as the Hidden Driver of Unlearning Failures", ICLR 2026.</div>
+</div>
+
+<!-- SLIDE — Cooper position -->
+<div class="slide">
+  <h2>Five Mismatches (Cooper et al.)</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Output suppression $\ne$ removal of training data</li>
+    <li>Removal of training data $\ne$ meaningful output suppression</li>
+    <li>Models $\ne$ their outputs</li>
+    <li>Models $\ne$ how outputs are used downstream</li>
+    <li>Unlearning has unintended consequences</li>
+  </ul>
+  <div class="highlight">
+    <p>"Machine unlearning" doesn't do what policymakers think it does.</p>
+  </div>
+  <div class="cite">Cooper, Choquette-Choo, Bogen, Klyman et al., "Machine Unlearning Doesn't Do What You Think", NeurIPS 2025.</div>
+</div>
+
+<!-- SLIDE — Pawelczyk hardness -->
+<div class="slide">
+  <h2>Theorem — Black-Box Verification Hardness</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (Pawelczyk et al. 2024).</h3>
+    <p>For black-box LLMs without weight access, no auditor with $q$ queries can $(1-\alpha)$-distinguish $\theta_u$ from $\theta_o$ when</p>
+    <div class="math-block">$$q \;\le\; \tilde\Omega\!\left(\tfrac{1}{\alpha^2}\,\mathrm{TV}(\theta_u, \theta_o)^{-2}\right).$$</div>
+  </div>
+  <p>Single-prompt audits are <strong>provably</strong> insufficient — verification needs distributional probes.</p>
+  <p>Implication: regulators relying on output-level checks under-detect failed unlearning.</p>
+  <div class="cite">Pawelczyk, Neel, Lakkaraju, "On the Privacy Risk of In-Context Learning and Unlearning Audits", 2024.</div>
+</div>
+
+<!-- SLIDE — Triantafillou progress -->
+<div class="slide">
+  <h2>Are We Making Progress? (Triantafillou 2024)</h2>
+  <div class="divider"></div>
+  <p>NeurIPS 2023 unlearning competition — 1,000+ submissions across 4 GPUs.</p>
+  <ul class="arrow">
+    <li>Best entries beat naive FT by &lt; 5% MIA gap</li>
+    <li>Score saturates near retrain on the held-out forget set</li>
+    <li>Cross-distribution generalization to other forget sets is poor</li>
+  </ul>
+  <div class="highlight">
+    <p>Performance on a fixed forget set $\ne$ a property of the unlearner.</p>
+  </div>
+  <div class="cite">Triantafillou, Pedregosa, Hayes, Kairouz et al., "Are We Making Progress in Unlearning?", ICLR 2024.</div>
+</div>
+
+<!-- SLIDE — Position (lab) -->
+<div class="slide">
+  <h2>Position (Lab): the Term Is Overused</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Proposal.</h3>
+    <p>"Machine unlearning" should mean <strong>retraining indistinguishability</strong> on a precisely defined forget set.</p>
+    <p>Other goals deserve different names:</p>
+  </div>
+  <ul class="arrow">
+    <li>Output likelihood suppression</li>
+    <li>Internal-representation obfuscation</li>
+    <li>Knowledge editing</li>
+    <li>Behavioral refusal</li>
+    <li>Inference-time interventions</li>
+  </ul>
+  <div class="cite">Yoon, Jun (anon. preview), "Position: The Term Machine Unlearning Is Overused in LLMs", ICML 2026 (under review).</div>
+</div>
+
+<!-- SLIDE — DUSK -->
+<div class="slide">
+  <h2>DUSK — Do Not Unlearn Shared Knowledge (Lab)</h2>
+  <div class="divider"></div>
+  <p>$\mathcal{D}_f$ and $\mathcal{D}_r$ overlap in concepts. Naive unlearning destroys shared knowledge.</p>
+  <ul class="check">
+    <li>Forget <strong>unique</strong> facts in $\mathcal{D}_f$</li>
+    <li>Preserve <strong>shared</strong> knowledge across $\mathcal{D}_r^{(i)}$</li>
+    <li>Benchmark: Venn-style retain partitions</li>
+  </ul>
+  <div class="cite">Jeung, Yoon, Hong, Kim, Han, Yu, No, "DUSK: Do Not Unlearn Shared Knowledge", 2025.</div>
+</div>
+
+<!-- SLIDE — R-TOFU -->
+<div class="slide">
+  <h2>R-TOFU — Reasoning Models (Lab)</h2>
+  <div class="divider"></div>
+  <p>LRMs unlearn both the answer <em>and</em> the chain-of-thought.</p>
+  <ul class="num">
+    <li>Answer-only unlearning leaves CoT residue</li>
+    <li>CoT-only is the best gradient-ascent variant</li>
+    <li>Decoding-time tricks (ZeroThink, LessThink) reveal residual knowledge</li>
+  </ul>
+  <div class="cite">Yoon, Jeung, No, "R-TOFU: Unlearning in Large Reasoning Models", EMNLP 2025 (oral).</div>
+</div>
+
+<!-- SLIDE — SEPS -->
+<div class="slide">
+  <h2>SEPS — Separability Measure (Lab)</h2>
+  <div class="divider"></div>
+  <p>Mixed-prompt evaluation: forget + retain queries in one input.</p>
+  <ul>
+    <li><strong>RIS $\approx \underline{F}$</strong> — untargeted unlearning collapses retain to forget baseline</li>
+    <li><strong>$\underline{FF} &gt; \underline{F} &gt; R\underline{R}$</strong> — targeted unlearning fails on multi-query</li>
+  </ul>
+  <p>Single-query benchmarks systematically <strong>overestimate</strong> unlearning quality.</p>
+  <div class="cite">Jeung, Yoon, No, "SEPS: A Separability Measure for Robust Unlearning in LLMs", EMNLP 2025.</div>
+</div>
+
+<!-- SLIDE — closing thoughts -->
+<div class="slide">
+  <h2>Random Thoughts</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Unlearning vs <strong>data valuation</strong>, influence functions, NN invariance, MIA — adjacent problems</li>
+    <li><strong>Impossibility</strong>: $X \sim P$ vs $Y \sim Q$ with one sample, neither distribution given</li>
+    <li>Corpus data is harder than image+label — no clean "remove sample $i$" semantics</li>
+  </ul>
+  <div class="highlight">
+    <p>The hardest open question: <strong>what is the unit of forgetting</strong> in an LLM?</p>
+  </div>
+</div>
+
+<!-- SLIDE — takeaways -->
+<div class="slide">
+  <h2>Takeaways</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li>Definition: distributional match to retrain — anything else is suppression</li>
+    <li>Classification: SCRUB / SalUn / $\ell_1$-sparse all approximate retrain on different axes</li>
+    <li>Evaluate against Retrain, not against original — match is the goal</li>
+    <li>LLM "unlearning" is mostly behavioral; benign relearning recovers content</li>
+    <li>Benchmarks (TOFU, WMDP, MUSE) help, but single-query suites mislead — see SEPS</li>
+  </ul>
+</div>
+
+<!-- Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">Q&amp;A</div>
+  <p class="big-word-sub">Thank you.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 1</div>
+
+</div>
+<script src="../../reference/deck.js"></script>
+</body>
+</html>

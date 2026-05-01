@@ -18,6 +18,9 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
   - `diffusion/` — Diffusion generative models from scratch (5 lectures, no companion notes; `note/2_difffusion.tex` is LaTeX source for Lectures 1–2)
   - `dp/` — Differential privacy + federated learning (1 NeurIPS 2023 talk: RRSC result)
   - `mia/` — Membership inference attacks (5 lectures, paired notes; legacy `old/MIA.html`)
+  - `memorization/` — LLM memorization (1 deck: Carlini extraction, scaling laws, books, copyright)
+  - `unlearning/` — Machine unlearning (1 deck: definitions, classification, LLM, benchmarks, lab work; sourced from `slide.pdf`)
+  - `watermark/` — LLM watermarking (1 deck: green-list, distortion-free, undetectable, robust, radioactivity)
 
 ## Quick lookup — where does X live?
 
@@ -50,6 +53,28 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | MIA theory (Yeom / Sablayrolles / ML-Leaks / Nasr) | `privacy/mia/mia3-theory.html` |
 | LiRA, RMIA, label-only, attack hierarchy | `privacy/mia/mia4-modern.html` |
 | LLM MIA (perplexity, neighbourhood, SPV, InfoRMIA) | `privacy/mia/mia5-llm.html` |
+| Memorization — canary entropy, exposure, $k$-extractable | `privacy/memorization/memorization.html:194-241` |
+| Counterfactual memorization + long-tail theorem (Feldman) | `privacy/memorization/memorization.html:277-302` |
+| Repetition scaling formal law | `privacy/memorization/memorization.html:369` |
+| Min-K%++ probe | `privacy/memorization/memorization.html:412` |
+| Cooper book extraction (open-weight LLMs) | `privacy/memorization/memorization.html:453` |
+| Certified $(\varepsilon,\delta)$-unlearning | `privacy/unlearning/unlearning.html:175` |
+| Newton-step + Sekhari capacity theorems | `privacy/unlearning/unlearning.html:189-216` |
+| Influence function (IU) | `privacy/unlearning/unlearning.html:259` |
+| SCRUB / SalUn / $\ell_1$-sparse classification unlearn | `privacy/unlearning/unlearning.html:276-318` |
+| IDI / COLA (lab unlearning eval) | `privacy/unlearning/unlearning.html:396-424` |
+| GA collapse + NPO bounded + SimNPO | `privacy/unlearning/unlearning.html:479-538` |
+| ME+GD / IDK / LUNAR (LLM unlearn) | `privacy/unlearning/unlearning.html:542-639` |
+| TOFU / WMDP / RWKU / MUSE benchmarks | `privacy/unlearning/unlearning.html:648-702` |
+| Benign + syntactic relearning (lab) | `privacy/unlearning/unlearning.html:705-728` |
+| Pawelczyk black-box verification hardness | `privacy/unlearning/unlearning.html:748` |
+| Kirchenbauer green-list + z-test + entropy bound | `privacy/watermark/watermark.html:164-222` |
+| Gumbel distribution + Gumbel-max trick + proof | `privacy/watermark/watermark.html:252-295` |
+| Aaronson distortion-free + proof | `privacy/watermark/watermark.html:309-337` |
+| Kuditipudi edit-distance robustness theorem | `privacy/watermark/watermark.html:356` |
+| Christ–Gunn–Zamir undetectable + PRF construction | `privacy/watermark/watermark.html:386-419` |
+| Adaptive watermark + WaterMax | `privacy/watermark/watermark.html:486-516` |
+| SynthID-Text production watermark | `privacy/watermark/watermark.html:542` |
 | DP definition / LDP vs central / PrivUnit | `privacy/dp/DP-FL.html:364-569` |
 | RRSC + k-closest exact-optimality (NeurIPS 2023) | `privacy/dp/DP-FL.html:571-822` |
 | DP-SGD / DP-Diffusion / DP-RDM | `privacy/dp/DP-FL.html:827-1004` |

@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memorization in Language Models</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- SLIDE 1 — Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture</div>
+  <h1>Memorization in<br>Language Models</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Definition, extraction, scaling, copyright</p>
+  <p style="font-weight:500;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">2026</p>
+</div>
+
+<!-- SLIDE 2 — Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Why memorization matters</div>
+        <div class="toc-sub">Copyright lawsuits, privacy, the central question</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Defining memorization</div>
+        <div class="toc-sub">Generalization, canaries, exposure</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Extraction attacks</div>
+        <div class="toc-sub">Carlini GPT-2, scaling laws, deduplication</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Books, production, non-adversarial</div>
+        <div class="toc-sub">Probabilistic extraction at scale</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Copyright and defenses</div>
+        <div class="toc-sub">NYT v. OpenAI, dedup, DP, unlearning</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Part divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Why Memorization Matters</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Lawsuits, privacy, the central question</p>
+</div>
+
+<!-- SLIDE — Central question -->
+<div class="slide">
+  <h2>The Central Question</h2>
+  <div class="divider"></div>
+  <div class="highlight" style="padding:28px 32px;">
+    <p>Model $f_\theta$ trained on corpus $\mathcal{D}$, sequence $x \in \mathcal{D}$:</p>
+    <p style="font-weight:500; text-align:center;"><strong>Can a query recover $x$ verbatim?</strong></p>
+  </div>
+  <p><strong>Memorization</strong>: training data resurfacing through prompts.</p>
+  <p>Distinct from generalization. Distinct from membership inference.</p>
+</div>
+
+<!-- SLIDE — Why care -->
+<div class="slide">
+  <h2>Three Stakeholders</h2>
+  <div class="divider"></div>
+  <div class="grid-3" style="margin-top:12px;">
+    <div class="card">
+      <h3>Privacy</h3>
+      <p>PII, medical, secrets in training corpora.</p>
+    </div>
+    <div class="card">
+      <h3>Copyright</h3>
+      <p>Books, code, news verbatim from a prompt.</p>
+    </div>
+    <div class="card">
+      <h3>Security</h3>
+      <p>Canaries, credentials, system prompts leak.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Memorization is the <strong>empirical signature</strong> of all three risks.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Lawsuits -->
+<div class="slide">
+  <h2>Live Lawsuits (2023–2026)</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li><strong>NYT v. OpenAI</strong> — verbatim article reproduction from prompts</li>
+    <li><strong>Authors Guild v. OpenAI</strong> — copyrighted books</li>
+    <li><strong>Getty v. Stability AI</strong> — image reproduction with watermark</li>
+    <li><strong>Disney v. Midjourney</strong> — character likeness</li>
+  </ul>
+  <p>Plaintiffs cite verbatim reproductions as evidence of infringement.</p>
+  <p>Defense relies on transformative use and statistical-learning framing.</p>
+</div>
+
+<!-- SLIDE — GDPR -->
+<div class="slide">
+  <h2>Regulatory Frame</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>GDPR — Art. 17</h3>
+      <p>Right to erasure of personal data.</p>
+      <p>Triggers <em>unlearning</em> requirement when memorization holds PII.</p>
+    </div>
+    <div>
+      <h3>Copyright — DMCA &amp; EU AI Act</h3>
+      <p>Training data disclosure obligations.</p>
+      <p>Output filtering does not equal removal.</p>
+    </div>
+  </div>
+  <div class="cite">EU GDPR Art. 17; EU AI Act Art. 53; Henderson et al., "Foundation Models and Fair Use", 2023.</div>
+</div>
+
+<!-- Part divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Defining Memorization</h1>
+  <div class="divider"></div>
+  <p class="subtitle">From random labels to extractable strings</p>
+</div>
+
+<!-- SLIDE — Zhang 2017 -->
+<div class="slide">
+  <h2>Generalization vs Memorization</h2>
+  <div class="divider"></div>
+  <p><strong>Zhang et al. 2017</strong> — deep nets fit pure random labels.</p>
+  <ul>
+    <li>Capacity to memorize is not in dispute</li>
+    <li>Question is what is <em>retained</em> after training</li>
+    <li>Generalization can coexist with memorization of rare points</li>
+  </ul>
+  <div class="highlight">
+    <p>Memorization is a <strong>per-sample</strong> property, not an aggregate.</p>
+  </div>
+  <div class="cite">Zhang, Bengio, Hardt, Recht, Vinyals, "Understanding Deep Learning Requires Rethinking Generalization", ICLR 2017.</div>
+</div>
+
+<!-- SLIDE — Secret Sharer canary -->
+<div class="slide">
+  <h2>Canaries (Carlini 2019)</h2>
+  <div class="divider"></div>
+  <p>Inject a synthetic secret $s$ into training:</p>
+  <div class="math-block">$$s = \text{"My SSN is 281-26-5017"}$$</div>
+  <p>After training, query the model: does it complete the prefix?</p>
+  <ul class="arrow">
+    <li>Construct a canary set $\{s_r\}$ with random fillers</li>
+    <li>Compute log-perplexity rank of the true canary</li>
+    <li>Score quantifies <strong>unintended memorization</strong></li>
+  </ul>
+  <div class="cite">Carlini, Liu, Erlingsson, Kos, Song, "The Secret Sharer", USENIX Security 2019.</div>
+</div>
+
+<!-- SLIDE — Canary entropy formal -->
+<div class="slide">
+  <h2>Canary Threat Model — Formal</h2>
+  <div class="divider"></div>
+  <p>Insert canary $s$ from a structured space:</p>
+  <div class="math-block">
+    $$s \;\sim\; \mathrm{Unif}(\mathcal{R}), \qquad H(s) \;=\; \log_2 |\mathcal{R}|.$$
+  </div>
+  <p>$\mathcal{R}$ = product of slot alphabets (e.g. 9-digit SSN ⇒ $|\mathcal{R}|=10^9$, $H \approx 30$ bits).</p>
+  <ul class="arrow">
+    <li>Adversary holds the prefix template, samples completions</li>
+    <li>Without memorization: rank of $s$ uniform in $\{1,\dots,|\mathcal{R}|\}$</li>
+    <li>With memorization: rank concentrates near 1</li>
+  </ul>
+</div>
+
+<!-- SLIDE — Exposure metric -->
+<div class="slide">
+  <h2>Exposure Metric</h2>
+  <div class="divider"></div>
+  <p>Rank-based score: where does true canary $s$ fall vs random alternates?</p>
+  <div class="math-block">
+    $$\text{exposure}(s) = \log_2 |\mathcal{R}| - \log_2 \text{rank}_\theta(s)$$
+  </div>
+  <p>$\mathcal{R}$ = randomness space of the canary template.</p>
+  <ul>
+    <li><strong>Exposure = 0</strong>: canary is unmemorized (random rank)</li>
+    <li><strong>Exposure = $\log_2 |\mathcal{R}|$</strong>: canary is the top completion</li>
+  </ul>
+  <p>Calibrates against the prior — not raw perplexity.</p>
+</div>
+
+<!-- SLIDE — Exposure null distribution -->
+<div class="slide">
+  <h2>Exposure — Null Distribution</h2>
+  <div class="divider"></div>
+  <p>Under $H_0$ (no memorization), rank $\rho_\theta(s)$ is uniform on $\{1,\dots,|\mathcal{R}|\}$.</p>
+  <div class="math-block">
+    $$\mathbb{E}_{H_0}[\text{exposure}(s)] \;=\; \log_2 |\mathcal{R}| \;-\; \mathbb{E}_{H_0}[\log_2 \rho] \;\le\; \tfrac{1}{\ln 2}.$$
+  </div>
+  <p>Bounded by the harmonic-sum approximation. Tail bound: for any $t &gt; 0$,</p>
+  <div class="math-block">
+    $$\Pr_{H_0}[\text{exposure}(s) \ge t] \;\le\; 2^{-t}.$$
+  </div>
+  <p>Calibrated FPR — the metric is bits, not log-perplexity.</p>
+</div>
+
+<!-- SLIDE — Extractable definition -->
+<div class="slide">
+  <h2>Extractable Memorization</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (Carlini et al. 2021).</h3>
+    <p>A string $s$ of length $\ell$ is <strong>$k$-extractable</strong> from $f_\theta$ if a prefix $p$ of length $\le k$ exists such that</p>
+    <div class="math-block">$$f_\theta(\text{greedy}, p) = s.$$</div>
+  </div>
+  <p>Captures the threat model: an adversary holds a short prefix.</p>
+  <div class="cite">Carlini, Tramer, Wallace, Jagielski et al., "Extracting Training Data from Large Language Models", USENIX Security 2021.</div>
+</div>
+
+<!-- SLIDE — Three regimes -->
+<div class="slide">
+  <h2>Three Regimes</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Counterfactual</h3>
+      <p>Influence of a single training point.</p>
+      <p>Theoretically clean, costly to verify.</p>
+    </div>
+    <div class="card">
+      <h3>Verbatim / extractable</h3>
+      <p>Greedy completion matches training string.</p>
+      <p>Operational, used in audits.</p>
+    </div>
+    <div class="card">
+      <h3>Probabilistic</h3>
+      <p>$\Pr_\theta(s \mid p) > \tau$ under sampling.</p>
+      <p>Captures soft memorization.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE — Counterfactual memorization -->
+<div class="slide">
+  <h2>Counterfactual Memorization (Feldman)</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (Feldman 2020).</h3>
+    <p>Memorization of $z$ in algorithm $A$:</p>
+    <div class="math-block">$$\mathrm{mem}(A, \mathcal{D}, z) \;=\; \Pr_A[A(\mathcal{D})\;\text{predicts}\;z] \;-\; \Pr_A[A(\mathcal{D}\!\setminus\! z)\;\text{predicts}\;z].$$</div>
+  </div>
+  <p>Difference between with-and-without — analogous to leave-one-out influence.</p>
+  <p>Empirically estimated via twin-pair training (Zhang et al. 2023).</p>
+  <div class="cite">Feldman, "Does Learning Require Memorization? A Short Tale About a Long Tail", STOC 2020. &nbsp; Zhang et&nbsp;al., "Counterfactual Memorization in Neural Language Models", NeurIPS 2023.</div>
+</div>
+
+<!-- SLIDE — Long-tail theorem -->
+<div class="slide">
+  <h2>Theorem — Long-Tail Memorization</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (Feldman 2020).</h3>
+    <p>For an instance distribution with singleton mass $\pi_1$, every learner that achieves expected loss within $\varepsilon$ of optimal must satisfy</p>
+    <div class="math-block">$$\mathbb{E}_{z \sim \mathcal{D}}[\mathrm{mem}(A, \mathcal{D}, z)] \;=\; \Omega(\pi_1 \;-\; \varepsilon).$$</div>
+  </div>
+  <p>For natural-language data $\pi_1 = \Theta(1/n)$ — singletons are ubiquitous.</p>
+  <div class="highlight">
+    <p>Memorization is <strong>necessary</strong>, not incidental, on long-tailed distributions.</p>
+  </div>
+</div>
+
+<!-- Part divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Extraction Attacks</h1>
+  <div class="divider"></div>
+  <p class="subtitle">From GPT-2 to scaling laws</p>
+</div>
+
+<!-- SLIDE — Carlini 2021 GPT-2 -->
+<div class="slide">
+  <h2>Extracting GPT-2 (2021)</h2>
+  <div class="divider"></div>
+  <p><strong>Black-box</strong>, public model, no access to training data.</p>
+  <ul>
+    <li>Prompt with internet-style prefixes</li>
+    <li>Rank generations by perplexity ratio vs reference model</li>
+    <li>Manually verify against the open web</li>
+  </ul>
+  <div class="highlight">
+    <p>Recovered <strong>names, emails, phone numbers, code, UUIDs</strong> — present once in training.</p>
+  </div>
+  <p>Single-occurrence memorization ⇒ DP-style worst case is real.</p>
+</div>
+
+<!-- SLIDE — Extraction pipeline -->
+<div class="slide">
+  <h2>The Extraction Pipeline</h2>
+  <div class="divider"></div>
+  <div style="background:var(--light); border-left:3px solid var(--yonsei-blue); padding:16px 22px; border-radius:0 10px 10px 0; max-width:900px; margin:24px auto;">
+    <ol style="margin:0; padding-left:0; list-style:none; counter-reset:step;">
+      <li style="counter-increment:step; padding:8px 0 8px 56px; position:relative; line-height:1.45;">
+        <span style="position:absolute; left:12px; top:8px; font-weight:700; color:var(--yonsei-blue); width:36px; text-align:right;">1.</span>
+        <strong>Generate</strong> $N$ samples with diverse prompts
+      </li>
+      <li style="counter-increment:step; padding:8px 0 8px 56px; position:relative; line-height:1.45; border-top:1px solid var(--slate);">
+        <span style="position:absolute; left:12px; top:8px; font-weight:700; color:var(--yonsei-blue); width:36px; text-align:right;">2.</span>
+        <strong>Rank</strong> by membership signal $\Lambda(x) = \log p_\theta(x) / \log p_{\text{ref}}(x)$
+      </li>
+      <li style="counter-increment:step; padding:8px 0 8px 56px; position:relative; line-height:1.45; border-top:1px solid var(--slate);">
+        <span style="position:absolute; left:12px; top:8px; font-weight:700; color:var(--yonsei-blue); width:36px; text-align:right;">3.</span>
+        <strong>Verify</strong> top candidates against the corpus or web
+      </li>
+    </ol>
+  </div>
+  <p style="text-align:center;">Same pipeline reused by every later extraction paper.</p>
+</div>
+
+<!-- SLIDE — Quantifying memorization scaling -->
+<div class="slide">
+  <h2>Three Scaling Laws (Carlini 2022)</h2>
+  <div class="divider"></div>
+  <p>Memorization grows log-linearly with three axes:</p>
+  <ul class="num">
+    <li><strong>Model size</strong> — larger models memorize more</li>
+    <li><strong>Repetitions in data</strong> — duplicates dominate</li>
+    <li><strong>Context length</strong> — longer prefix, easier extraction</li>
+  </ul>
+  <div class="highlight">
+    <p>Even <strong>singletons</strong> are memorized at sufficient scale.</p>
+  </div>
+  <div class="cite">Carlini, Ippolito, Jagielski, Lee, Tramer, Zhang, "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
+</div>
+
+<!-- SLIDE — Repetition scaling formal -->
+<div class="slide">
+  <h2>Repetition Scaling — Empirical Law</h2>
+  <div class="divider"></div>
+  <p>Memorization probability under $k$ duplications fits</p>
+  <div class="math-block">
+    $$\Pr[s\;\text{is}\;k\text{-extractable}] \;\approx\; 1 - \big(1 - p_0(s, \theta)\big)^{k},$$
+  </div>
+  <p>$p_0$ = base per-occurrence rate, log-linear in three axes:</p>
+  <div class="math-block">
+    $$\log p_0(s, \theta) \;\propto\; \log N_\theta \;+\; \log L_{\mathrm{ctx}} \;-\; \log \tfrac{1}{\mathrm{rarity}(s)}.$$
+  </div>
+  <p>Coefficients calibrated empirically; <em>additive</em> after log — composition of independent risks.</p>
+</div>
+
+<!-- SLIDE — Deduplication -->
+<div class="slide">
+  <h2>Deduplication Helps</h2>
+  <div class="divider"></div>
+  <p><strong>Lee et al. 2021</strong> — near-duplicate removal in C4 / Wiki40B.</p>
+  <ul class="check">
+    <li>Memorized emissions drop by <strong>10×</strong></li>
+    <li>Validation perplexity unchanged or improved</li>
+    <li>Cheap mitigation; orthogonal to DP</li>
+  </ul>
+  <p>Underpins most production data pipelines today.</p>
+  <div class="cite">Lee, Ippolito, Nystrom, Zhang, Eck, Callison-Burch, Carlini, "Deduplicating Training Data Makes Language Models Better", ACL 2022.</div>
+</div>
+
+<!-- SLIDE — Aligned production scalable extraction -->
+<div class="slide">
+  <h2>Aligned Models Still Leak</h2>
+  <div class="divider"></div>
+  <p><strong>Nasr et al. 2023</strong> — "scalable extraction" against aligned ChatGPT.</p>
+  <ul class="arrow">
+    <li>Divergence attack: <em>"Repeat the word 'poem' forever"</em></li>
+    <li>Model breaks chat persona, emits training fragments</li>
+    <li>Hundreds of MB recovered for $200 of API spend</li>
+  </ul>
+  <p>RLHF alignment is a <strong>filter</strong>, not memory removal.</p>
+  <div class="cite">Nasr, Carlini, Hayase, Jagielski et al., "Scalable Extraction of Training Data from (Production) Language Models", 2023.</div>
+</div>
+
+<!-- SLIDE — Min-K%++ -->
+<div class="slide">
+  <h2>Min-K%++ Probe (Zhang 2025)</h2>
+  <div class="divider"></div>
+  <p>Detect membership via lowest-probability tokens, calibrated per position:</p>
+  <div class="math-block">
+    $$s_{\min K\%++}(x) \;=\; \frac{1}{|S|}\!\!\sum_{x_t \in S}\!\!\frac{\log p_\theta(x_t \mid x_{&lt;t}) \;-\; \mu_t}{\sigma_t},$$
+  </div>
+  <p>$S$ = bottom-$K\%$ token positions; $\mu_t, \sigma_t$ = next-token mean/std under $p_\theta$.</p>
+  <ul class="check">
+    <li>$z$-score per token — robust to position-wise scale</li>
+    <li>SOTA pretraining-data MIA on WikiMIA / MIMIR</li>
+    <li>Bridges memorization-detection and MIA literatures</li>
+  </ul>
+  <div class="cite">Zhang, Liu, Lyu, He, Lin, "Min-K%++: Improved Baseline for Detecting Pre-Training Data", ICLR 2025.</div>
+</div>
+
+<!-- Part divider 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Books, Production, Non-Adversarial</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Probabilistic extraction at scale</p>
+</div>
+
+<!-- SLIDE — Probabilistic extraction -->
+<div class="slide">
+  <h2>Probabilistic Extraction (Hayes 2024)</h2>
+  <div class="divider"></div>
+  <p>Greedy verbatim is too narrow — sampled completions also leak.</p>
+  <div class="math-block">
+    $$M_n(s, p) \;=\; \mathbb{E}_{\hat s \sim f_\theta(\cdot \mid p)}\!\left[\,\mathbb{1}\!\left[\text{LCS}(s, \hat s) \ge n\right]\,\right]$$
+  </div>
+  <p>$n$-gram overlap probability under the model's own sampler.</p>
+  <ul>
+    <li>Greedy = corner case ($\tau = 1$, full match)</li>
+    <li>Probabilistic = realistic decoding</li>
+  </ul>
+  <div class="cite">Hayes, Cooper, Lee, Choquette-Choo et al., "Measuring Memorization via Probabilistic Extraction", 2024.</div>
+</div>
+
+<!-- SLIDE — Cooper books -->
+<div class="slide">
+  <h2>Books from Open-Weight LLMs</h2>
+  <div class="divider"></div>
+  <p><strong>Cooper et al. 2025</strong> — 50 books, 17 open-weight models.</p>
+  <ul class="arrow">
+    <li>Most LLMs do <em>not</em> memorize most books</li>
+    <li>LLAMA 3.1 70B memorizes <strong>Harry Potter 1</strong> and <strong>1984</strong> nearly verbatim</li>
+    <li>Memorization is <strong>book-specific and model-specific</strong></li>
+  </ul>
+  <div class="highlight">
+    <p>Polarized lawsuit positions oversimplify reality.</p>
+  </div>
+  <div class="cite">Cooper, Gokaslan, Ahmed, Cyphert, De&nbsp;Sa, Lemley, Ho, Liang, "Extracting Memorized Pieces of (Copyrighted) Books from Open-Weight LLMs", 2025.</div>
+</div>
+
+<!-- SLIDE — Production extraction -->
+<div class="slide">
+  <h2>Production Models Compared</h2>
+  <div class="divider"></div>
+  <p>Same probabilistic pipeline run on Claude, GPT-4.1, Gemini, Grok.</p>
+  <ul>
+    <li>Book-level extraction rates vary by an <strong>order of magnitude</strong> across vendors</li>
+    <li>Alignment + retrieval blocking reduces but does not eliminate</li>
+    <li>Per-book risk is highly skewed — long tail of safe books, short tail of memorized</li>
+  </ul>
+  <div class="cite">Cooper et al., "Extracting Books from Production Language Models", 2026.</div>
+</div>
+
+<!-- SLIDE — Non-adversarial reproduction -->
+<div class="slide">
+  <h2>Non-Adversarial Reproduction</h2>
+  <div class="divider"></div>
+  <p>Even <strong>benign</strong> user prompts produce overlap with training data.</p>
+  <ul class="check">
+    <li>~1% of natural-prompt outputs share &gt; 50-token spans with the web</li>
+    <li>Higher in code-completion and Q&amp;A traffic</li>
+    <li>No adversarial intent required</li>
+  </ul>
+  <p>Memorization is not just an attacker's concern — it leaks in normal use.</p>
+  <div class="cite">Aerni, Rando, Debenedetti, Carlini, Ippolito, Tramer, "Measuring Non-Adversarial Reproduction of Training Data", 2024.</div>
+</div>
+
+<!-- Part divider 05 -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Copyright and Defenses</h1>
+  <div class="divider"></div>
+  <p class="subtitle">From extraction evidence to mitigation</p>
+</div>
+
+<!-- SLIDE — Copyright frame -->
+<div class="slide">
+  <h2>Copyright as Verbatim Test</h2>
+  <div class="divider"></div>
+  <p>Extraction is the courtroom-ready evidence of memorization.</p>
+  <ul class="arrow">
+    <li><strong>NYT v. OpenAI</strong> — 100+ verbatim article reproductions filed as exhibits</li>
+    <li>Plaintiff: extraction proves model "stores" the work</li>
+    <li>Defense: low extraction rate, transformative aggregate use</li>
+  </ul>
+  <p>Cooper et al. argue both views <strong>oversimplify</strong>: memorization is per-book.</p>
+</div>
+
+<!-- SLIDE — Defenses -->
+<div class="slide">
+  <h2>Defenses</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Deduplication</h3>
+      <p>Cheap, orthogonal, partial.</p>
+      <p>10× drop in emissions.</p>
+    </div>
+    <div class="card">
+      <h3>DP training</h3>
+      <p>Provable per-sample bound.</p>
+      <p>Utility cost; rare in production LLMs.</p>
+    </div>
+    <div class="card">
+      <h3>Unlearning</h3>
+      <p>Targeted removal of $\mathcal{D}_f$.</p>
+      <p>Open whether it deletes vs suppresses.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>None is a silver bullet. Stack them.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Memorization vs MIA -->
+<div class="slide">
+  <h2>Memorization vs Membership Inference</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>MIA</h3>
+      <p>Was $x \in \mathcal{D}$?</p>
+      <p>Distinguishability between two posteriors.</p>
+      <p>Bit of leakage per query.</p>
+    </div>
+    <div>
+      <h3>Memorization</h3>
+      <p>Can $x$ be reproduced verbatim?</p>
+      <p>Constructive recovery of content.</p>
+      <p>String-level leakage.</p>
+    </div>
+  </div>
+  <p>MIA is necessary; memorization is the <strong>stronger</strong> signal.</p>
+</div>
+
+<!-- SLIDE — Open problems -->
+<div class="slide">
+  <h2>Open Problems</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Sharp definitions for <strong>concept</strong> memorization (style, character, code idiom)</li>
+    <li>Scalable per-sample auditing on $10^{12}$-token corpora</li>
+    <li>Extraction in <strong>multi-modal</strong> models (image regurgitation, voice cloning)</li>
+    <li>Memorization in <strong>agents / RAG</strong> — caches, tool outputs, retrieval store</li>
+    <li>Provable extraction <strong>lower bounds</strong> for closed models</li>
+  </ul>
+</div>
+
+<!-- SLIDE — Takeaways -->
+<div class="slide">
+  <h2>Takeaways</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li>Memorization is per-sample, not aggregate</li>
+    <li>Extraction is real at production scale</li>
+    <li>Scaling laws: bigger / more reps / longer context all hurt</li>
+    <li>Deduplication is the cheapest meaningful defense</li>
+    <li>Unlearning and DP are partial — verify, don't trust</li>
+  </ul>
+</div>
+
+<!-- Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">Q&amp;A</div>
+  <p class="big-word-sub">Thank you.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 1</div>
+
+</div>
+<script src="../../reference/deck.js"></script>
+</body>
+</html>

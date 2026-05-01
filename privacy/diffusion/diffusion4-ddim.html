@@ -146,17 +146,25 @@
     <li>Free parameters $\{\sigma_n \geq 0\}_{n=1}^N$.</li>
     <li>Target: define $q$ on $X^{(0:N)}$ with the DDPM marginals.</li>
   </ul>
-  <p>Strategy: specify $q(X^{(n)}\,|\,X^{(n+1)}, X^{(0)})$, condition both on the next step <em>and</em> the clean signal.</p>
+  <p>Strategy: specify $q(X^{(n)}\,|\,X^{(n+1)}, X^{(0)})$ — condition both on the next step <em>and</em> the clean signal.</p>
+  <div class="highlight">
+    <p><strong>Construction order (data $X^{(0)}$ given):</strong></p>
+    <p style="margin-left:14px;">① Sample $X^{(N)} \sim q(X^{(N)}\,|\,X^{(0)})$ — the DDPM endpoint marginal.</p>
+    <p style="margin-left:14px;">② For $n = N{-}1, \ldots, 0$: sample $X^{(n)} \sim q(X^{(n)}\,|\,X^{(n+1)}, X^{(0)})$.</p>
+    <p>The forward joint is generated <em>backward in $n$</em>, anchored at both ends.</p>
+  </div>
 </div>
 
 <!-- SLIDE: DDIM forward — mixing recipe -->
 <div class="slide">
   <h2>DDIM Forward — A Mixing Recipe</h2>
   <div class="divider"></div>
-  <p>Sample $X^{(n)}$ given $(X^{(n+1)}, X^{(0)})$ as <strong>signal + recycled noise + fresh noise</strong>:</p>
+  <p>Step ② of the construction: sample $X^{(n)}$ given $(X^{(n+1)}, X^{(0)})$ as <strong>signal + recycled noise + fresh noise</strong>:</p>
   <div class="math-block">$$X^{(n)} \;=\; \underbrace{\sqrt{\bar{\alpha}_n}\,X^{(0)}}_{\text{signal}} \;+\; \underbrace{a_n\,\epsilon_{n+1}}_{\text{recycle}} \;+\; \underbrace{\sigma_{n+1}\,\eta}_{\text{fresh}}.$$</div>
-  <p><strong>Recycle:</strong> $\epsilon_{n+1} = (X^{(n+1)} - \sqrt{\bar\alpha_{n+1}}\,X^{(0)})/\sqrt{1-\bar\alpha_{n+1}}$, the noise inside $X^{(n+1)}$ — unit Gaussian given $X^{(0)}$.</p>
-  <p><strong>Fresh:</strong> $\eta \sim \mathcal{N}(0,I)$, independent of $\epsilon_{n+1}$. Coefficients $a_n,\,\sigma_{n+1} \geq 0$ to determine.</p>
+  <p><strong>Recycle:</strong> $\epsilon_{n+1} = (X^{(n+1)} - \sqrt{\bar\alpha_{n+1}}\,X^{(0)})/\sqrt{1-\bar\alpha_{n+1}}$<br>
+  the noise inside $X^{(n+1)}$, unit Gaussian given $X^{(0)}$.</p>
+  <p><strong>Fresh:</strong> $\eta \sim \mathcal{N}(0,I)$, independent of $\epsilon_{n+1}$.<br>
+  Coefficients $a_n,\,\sigma_{n+1} \geq 0$ to determine.</p>
 </div>
 
 <!-- SLIDE: Pin down a_n by matching the DDPM marginal -->
@@ -167,7 +175,9 @@
   <p>$\epsilon_{n+1}$ and $\eta$ independent given $X^{(0)}$ $\Rightarrow$ variances add:</p>
   <div class="math-block">$$a_n^2 \;+\; \sigma_{n+1}^2 \;\stackrel{!}{=}\; 1-\bar\alpha_n \;\;\Longrightarrow\;\; a_n \;=\; \sqrt{1-\bar\alpha_n-\sigma_{n+1}^2}.$$</div>
   <div class="highlight">
-    <p>One equation, two unknowns. <strong>$\sigma_{n+1}$ is a free knob</strong> in $[0,\sqrt{1-\bar\alpha_n}]$ — it splits the variance budget between recycled and fresh.</p>
+    <p>One equation, two unknowns.</p>
+    <p><strong>$\sigma_{n+1}$ is a free knob</strong> in $[0,\sqrt{1-\bar\alpha_n}]$.</p>
+    <p>Splits the variance budget between recycled and fresh.</p>
   </div>
 </div>
 
@@ -187,22 +197,26 @@
 
 <!-- SLIDE: Marginal claim -->
 <div class="slide">
-  <h2>Marginals Match DDPM</h2>
+  <h2>Same Marginals, Different Joints</h2>
   <div class="divider"></div>
   <p>For every $n$ and every choice of $\{\sigma_n\}$:</p>
-  <div class="math-block">$$q\bigl(X^{(n)}\,|\,X^{(0)}\bigr) = \mathcal{N}\!\bigl(\sqrt{\bar{\alpha}_n}\,X^{(0)},\;(1-\bar{\alpha}_n)\,I\bigr).$$</div>
+  <div class="math-block">$$q_{\text{DDIM}}\bigl(X^{(n)}\,|\,X^{(0)}\bigr) \;=\; q_{\text{DDPM}}\bigl(X^{(n)}\,|\,X^{(0)}\bigr) \;=\; \mathcal{N}\!\bigl(\sqrt{\bar{\alpha}_n}\,X^{(0)},\;(1-\bar{\alpha}_n)\,I\bigr).$$</div>
+  <ul>
+    <li><strong>Same pair</strong> $(X^{(0)}, X^{(n)})$ for every $n$ — DDPM and DDIM agree.</li>
+    <li><strong>Different triple</strong> $(X^{(0)}, X^{(n)}, X^{(n+1)})$ — the conditional $q(X^{(n)}\,|\,X^{(n+1)},\,X^{(0)})$ depends on $\sigma_{n+1}$.</li>
+  </ul>
   <div class="highlight">
-    <p>Identical to the DDPM single-time marginal.</p>
-    <p>A DDPM-trained $\epsilon_\theta$ is directly usable in DDIM.</p>
+    <p>Loss sees only the pair $\Rightarrow$ DDPM-trained $\epsilon_\theta$ is directly usable in DDIM.</p>
   </div>
 </div>
 
 <!-- SLIDE: Induction (proof sketch) -->
 <div class="slide">
-  <h2>Proof by Backward Induction</h2>
+  <h2>Proof: DDPM and DDIM Share the Pair $(X^{(0)},X^{(n)})$</h2>
   <div class="divider"></div>
-  <p>Base case $n=N$: by construction.</p>
-  <p>Inductive step: assume $X^{(n+1)}\,|\,X^{(0)} \sim \mathcal{N}\!\bigl(\sqrt{\bar{\alpha}_{n+1}}\,X^{(0)},\;(1-\bar{\alpha}_{n+1})\,I\bigr)$. Sum of two independent Gaussians conditional on $X^{(0)}$:</p>
+  <p>Backward induction in $n$. Base case $n=N$: by construction.</p>
+  <p>Inductive step: assume $X^{(n+1)}\,|\,X^{(0)} \sim \mathcal{N}\!\bigl(\sqrt{\bar{\alpha}_{n+1}}\,X^{(0)},\;(1-\bar{\alpha}_{n+1})\,I\bigr)$.</p>
+  <p>Sum of two independent Gaussians conditional on $X^{(0)}$:</p>
   <div class="math-block">$$\begin{aligned}
     \mathbb{E}[X^{(n)}|X^{(0)}] &= \sqrt{\bar{\alpha}_n}\,X^{(0)}, \\
     \mathrm{Var}(X^{(n)}|X^{(0)}) &= (1-\bar{\alpha}_n - \sigma_{n+1}^2) + \sigma_{n+1}^2 = 1-\bar{\alpha}_n.
@@ -319,10 +333,14 @@
 <div class="slide">
   <h2>Continuous-Time Limit</h2>
   <div class="divider"></div>
-  <p>Re-arrange the σ=0 update around the rescaled state $X^{(n)}/\sqrt{\bar{\alpha}_n}$:</p>
-  <div class="math-block">$$\frac{X^{(n)}}{\sqrt{\bar{\alpha}_n}} \;-\; \frac{X^{(n+1)}}{\sqrt{\bar{\alpha}_{n+1}}} \;=\; \Bigl(\sqrt{\tfrac{1-\bar{\alpha}_n}{\bar{\alpha}_n}} \;-\; \sqrt{\tfrac{1-\bar{\alpha}_{n+1}}{\bar{\alpha}_{n+1}}}\Bigr)\,\epsilon_\theta.$$</div>
-  <p>Set $\tau_t = \sqrt{(1-\bar{\alpha}_t)/\bar{\alpha}_t}$. Index step $\to dt$:</p>
-  <div class="math-block">$$d\!\left(\frac{X_t}{\sqrt{\bar{\alpha}_t}}\right) \;=\; d\tau_t \cdot \epsilon_\theta(X_t, t).$$</div>
+  <p>Re-arrange around $X^{(n)}/\sqrt{\bar{\alpha}_n}$. With $\tau_t = \sqrt{(1-\bar{\alpha}_t)/\bar{\alpha}_t}$ and $\beta_t = -\,d\log\bar{\alpha}_t/dt$:</p>
+  <div class="math-block">$$\begin{aligned}
+    d\!\left(\tfrac{X_t}{\sqrt{\bar{\alpha}_t}}\right) \;&=\; d\tau_t \cdot \epsilon_\theta(X_t, t), \\[2pt]
+    \frac{dX_t}{dt} \;&=\; -\tfrac{\beta_t}{2}\,X_t \;+\; \tfrac{\beta_t}{2\sqrt{1-\bar{\alpha}_t}}\,\epsilon_\theta(X_t, t).
+  \end{aligned}$$</div>
+  <div class="highlight">
+    <p>Complete ODE in $\epsilon$-form: VP drift, noise term scaled by $\beta_t$.</p>
+  </div>
 </div>
 
 <!-- SLIDE: Probability-flow ODE -->
@@ -337,6 +355,37 @@
     <li>Same marginals $\{p_t\}$ — deterministic flow with stochastic equivalents.</li>
   </ul>
   <div class="cite">Song et al., "Score-Based Generative Modeling through SDEs," ICLR 2021.</div>
+</div>
+
+<!-- SLIDE: Forward SDE / Reverse SDE / Reverse ODE side-by-side -->
+<div class="slide">
+  <h2>Three Dynamics, One Marginal Law</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \text{Forward SDE:}\quad &dX_t \;=\; f\,dt \;+\; g\,dW_t \\
+    \text{Reverse SDE (Anderson):}\quad &dX_t \;=\; \bigl(f - g^2\,\nabla\log p_t\bigr)\,dt \;+\; g\,d\bar{W}_t \\
+    \text{Reverse ODE (PF):}\quad &dX_t \;=\; \bigl(f - \tfrac{1}{2}g^2\,\nabla\log p_t\bigr)\,dt
+  \end{aligned}$$</div>
+  <div class="highlight">
+    <p><strong>Same one-time marginals</strong> $\{p_t\}$ for all three.</p>
+    <p>First two share noise paths; ODE is deterministic.</p>
+  </div>
+</div>
+
+<!-- SLIDE: Why ODE matches via Fokker–Planck -->
+<div class="slide">
+  <h2>Why the ODE Matches: Fokker–Planck</h2>
+  <div class="divider"></div>
+  <p>Reverse-ODE flow $v = f - \tfrac{1}{2}g^2\,\nabla\log p_t$ obeys the continuity equation.</p>
+  <p>Use $p_t\,\nabla\log p_t = \nabla p_t$:</p>
+  <div class="math-block">$$\begin{aligned}
+    \partial_t p_t \;&\stackrel{(\text{FP})}{=}\; -\nabla\!\cdot\!(f\,p_t) \;+\; \tfrac{g^2}{2}\,\Delta\,p_t \\
+    -\nabla\!\cdot\!(v\,p_t) \;&=\; -\nabla\!\cdot\!\bigl(f p_t - \tfrac{1}{2}g^2\,\nabla p_t\bigr) \;=\; -\nabla\!\cdot\!(f p_t) \;+\; \tfrac{g^2}{2}\,\Delta\,p_t.
+  \end{aligned}$$</div>
+  <div class="highlight">
+    <p><strong>Same FP</strong> $\Rightarrow$ same $\{p_t\}$ as the forward SDE.</p>
+    <p>Anderson: full $g^2$ score (stochastic). PF-ODE: half $g^2$ score (deterministic).</p>
+  </div>
 </div>
 
 <!-- ====================================================================
@@ -414,7 +463,7 @@
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 29</div>
+<div class="slide-num" id="slideNum">1 / 31</div>
 
 </div><!-- end deck -->
 

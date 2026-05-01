@@ -140,28 +140,31 @@ Companion notes file: `diffusion3-sde-score-note.html` (full proof derivations, 
 | | DDPM ε-loss recap | `:99` |
 | | **KEY: only marginals enter** | `:108` |
 | | DDIM in one sentence | `:120` |
-| **02 — Non-Markovian forward** | | `:134-237` |
-| | Setup | `:142` |
-| | **DDIM forward — mixing recipe** (signal + recycled + fresh, coefficients TBD) | `:154` |
-| | **Pin down $a_n$** (DDPM marginal ⇒ $a_n^2 + \sigma^2 = 1-\bar\alpha_n$, σ free) | `:164` |
-| | **Forward conditional** (read off recipe as $q(X^{(n)}\|X^{(n+1)},X^{(0)})$) | `:176` |
-| | **Marginals match DDPM (claim + proof by induction)** | `:190, :202` |
-| | DDPM as special case | `:215` |
-| | σ_n→0: deterministic forward | `:225` |
-| **03 — Sampling** | | `:213-318` |
-| | Training unchanged (same ε-net) | `:221` |
-| | **DDIM sampling — the idea** (overview: estimate $\hat{X}^{(0)}$, plug in) | `:234` |
-| | **Predicted clean signal** $\hat{X}^{(0)}$ | `:245` |
-| | DDIM reverse update | `:254` |
-| | Sampling algorithm | `:263` |
-| | **Deterministic DDIM ($\sigma_n=0$)** — explicit map | `:284` |
-| | **Continuous-time limit** ($\tau_t$ change of variable) | `:293` |
-| | **Probability-flow ODE** | `:303` |
-| **04 — Consequences** | | `:319-385` |
-| | **Three benefits of determinism** (fewer steps, inversion, interpolation) | `:327` |
-| | DDPM or DDIM? | `:353` |
+| **02 — Non-Markovian forward** | | `:134-250` |
+| | **Setup** (construction order: $X^{(N)}|X^{(0)}$ first, then $X^{(n)}|X^{(n+1)},X^{(0)}$) | `:142` |
+| | **DDIM forward — mixing recipe** (signal + recycled + fresh, coefficients TBD) | `:160` |
+| | **Pin down $a_n$** (DDPM marginal ⇒ $a_n^2 + \sigma^2 = 1-\bar\alpha_n$, σ free) | `:172` |
+| | **Forward conditional** (read off recipe as $q(X^{(n)}\|X^{(n+1)},X^{(0)})$) | `:186` |
+| | **Same pair $(X^{(0)},X^{(n)})$, different triple $(X^{(0)},X^{(n)},X^{(n+1)})$** | `:200` |
+| | Proof: DDPM/DDIM share the pair (backward induction) | `:215` |
+| | DDPM as special case | `:229` |
+| | σ_n→0: deterministic forward | `:239` |
+| **03 — Sampling** | | `:252-393` |
+| | Training unchanged (same ε-net) | `:261` |
+| | **DDIM sampling — the idea** (overview: estimate $\hat{X}^{(0)}$, plug in) | `:274` |
+| | **Predicted clean signal** $\hat{X}^{(0)}$ | `:285` |
+| | DDIM reverse update | `:294` |
+| | Sampling algorithm | `:303` |
+| | **Deterministic DDIM ($\sigma_n=0$)** — explicit map | `:324` |
+| | **Continuous-time limit** (complete ODE in ε-form, $\beta_t$ schedule) | `:334` |
+| | **Probability-flow ODE** (score form) | `:348` |
+| | **Three dynamics one marginal** (forward SDE, reverse SDE, reverse ODE) | `:362` |
+| | **Why ODE matches via Fokker–Planck** (continuity equation = forward FP) | `:377` |
+| **04 — Consequences** | | `:394-460` |
+| | **Three benefits of determinism** (fewer steps, inversion, interpolation) | `:403` |
+| | DDPM or DDIM? | `:429` |
 
-**Key:** Marginal invariance `:164-167`; sampling overview `:234`; predicted-clean inversion `:245`; PF-ODE derivation `:284, :293, :303`.
+**Key:** Same pair / different triple `:200`; proof of pair invariance `:215`; complete ε-form ODE `:334`; PF-ODE in score form `:348`; three-dynamics comparison `:362`; FP equivalence `:377`.
 
 ---
 

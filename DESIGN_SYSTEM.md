@@ -17,6 +17,7 @@ Canonical rules for slide decks. **Audience**: academic conference talks and mas
 | Show a proof rigorously | Math-heavy → Proof |
 | Show proof intuition (color, build-up) | Math-heavy → Intuition + Build-up |
 | Bracket a multi-step proof | Math-heavy → Multi-step proof pattern |
+| Introduce a parameterized formula (DDIM-style) | Math-heavy → Recipe-first derivation |
 | Stack two related equations | Math-heavy → Stacked equations |
 | Substitute variables back into a result | Math-heavy → Substitution |
 | Label terms in a long equation | Math-heavy → Underbrace labels |
@@ -307,6 +308,29 @@ For derivations that span 4+ logical steps, bracket the sequence. Definitions pr
     &\stackrel{(4)}{=}\; \mathcal{N}(\mu_*, \sigma^2)(x).
 \end{aligned}$$</div>
 ```
+
+**Recap label choice — descriptive over numeric.** Numeric `\stackrel{(k)}{=}` cross-references step slides — useful when the steps were big and named. But when the *algebraic move* on a relation symbol is itself non-obvious (e.g., "split $g^2/2 = g^2 - g^2/2$", "use $\partial p = (\partial \log p)\,p$", "factor $-\partial_x$"), label that move directly so the recap is self-contained:
+
+```latex
+\partial_t p_t
+  &\stackrel{(\text{FFP})}{=}\; -\partial_x(f\,p_t) + \tfrac{g^2}{2}\,\partial_x^2 p_t \\
+  &\stackrel{(\text{split})}{=}\; -\partial_x(f\,p_t) + g^2\,\partial_x^2 p_t - \tfrac{g^2}{2}\,\partial_x^2 p_t \\
+  &\stackrel{(\partial p\,=\,\partial\log p\cdot p)}{=}\; \cdots
+```
+
+Use `\text{...}` to keep the label in upright Roman; keep each label under ~25 characters so it doesn't widen the relation symbol's column. Mix-and-match is fine — numeric where a step needs a callback, descriptive where the move is the explanation.
+
+### Recipe-first derivation
+
+When introducing a parameterized formula whose specific shape isn't obvious (DDIM's $\mu_n = \sqrt{\bar\alpha_n}\,X^{(0)} + \sqrt{1-\bar\alpha_n-\sigma^2}\,\epsilon_{n+1}$, score-network reparameterizations, …), don't open with the formula and prove that it works. Open with a **recipe** carrying named unknowns, **derive the unknowns** from the property you want, then **read off** the resulting parameterization.
+
+Three-slide arc:
+
+1. **Recipe.** State the construction with placeholders for the unknown coefficients. Use `\underbrace` to label each ingredient (signal / recycled / fresh, or whatever the decomposition is). Identify what you'll determine.
+2. **Constraint.** Impose the property you actually want (variance budget, marginal match, normalization). One equation per unknown ⇒ solve. Surface the *free* parameters explicitly.
+3. **Read-off.** Substitute the solved coefficients back; convert from the recipe to the standard form (e.g., the conditional density).
+
+The student sees *why* the formula has its specific shape — every coefficient came from a constraint, none was hand-picked. Reverse order ("here's the formula, now let's verify it has the right marginal") teaches the algebra but obscures the design intent. Don't apply when the formula has a clean independent motivation (Bayes' rule, KL, an established theorem) — recipe-first is for parameterizations whose form is otherwise opaque.
 
 ### Substitution
 

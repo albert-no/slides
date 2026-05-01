@@ -313,6 +313,32 @@ Cause: `<svg ... style="max-width: 240px">` (or similar) caps the rendered size 
 
 Fix: remove `max-width` from the SVG. If you need to constrain size, put `max-width` on the wrapper `<div>` instead — the SVG inherits the wrapper's width, and the absolute-positioned KaTeX overlay spans (which use `top: %; left: %;` of the wrapper) keep their alignment.
 
+## Wrapper with `max-width` only collapses to SVG intrinsic width
+
+Symptom: an SVG with `style="display: block; width: 100%"` renders at a few hundred px instead of filling its wrapper. Labels positioned `top: %; left: %;` on the wrapper appear bunched in a tiny region.
+
+Cause: the wrapper has `max-width: 1040px; margin: ... auto;` but no explicit `width`. Inside `.slide` (flex column with `align-items: center`), a child with no width sizes to its content; the SVG with `width: 100%` then sizes to the wrapper. The two enter a circular sizing dance and the browser falls back to the SVG's intrinsic dimensions (small).
+
+Fix: put `width: 100%` on the wrapper alongside `max-width`. The wrapper now stretches to the slide's content width, capped at `max-width`, and the SVG fills it.
+
+```html
+<!-- yes -->
+<div style="position: relative; width: 100%; max-width: 1040px; margin: 18px auto;">
+
+<!-- no — wrapper collapses to SVG intrinsic -->
+<div style="position: relative; max-width: 1040px; margin: 18px auto;">
+```
+
+If the wrapper hosts absolute-positioned KaTeX overlay spans (`top: %`, `left: %`) on top of an SVG with a fixed `viewBox`, also pin the wrapper's height: `height: NNNpx` matching the viewBox aspect ratio. Otherwise the wrapper height includes margin/padding noise and `top: 86%` no longer lands at SVG `y = 0.86·viewBoxH`.
+
+## Underbrace labels eat ~30 px of vertical budget
+
+Symptom: a slide with two stacked math-blocks plus a `.highlight` overflows past the brand-footer, even though "two math-blocks + highlight" was supposed to fit per the visual element budget.
+
+Cause: each `\underbrace{expression}_{label}` adds the label height *below* the equation baseline — roughly 25–30 px of extra vertical real estate the planner forgot. Two underbraced math-blocks ≈ 60 px of hidden cost.
+
+Fix: when budgeting, treat each underbraced equation as a half-line bonus on top of the standard `math-block` height (~80 px → ~110 px). If two underbraced math-blocks plus a highlight don't fit, inline one of the equations into prose (e.g., `Variances add: $(1-\bar\alpha-\sigma^2) + \sigma^2 = 1-\bar\alpha$.`) or drop one underbrace pair. Pattern complements (does not replace) the "Aligned line-count budget" GOTCHA — that one bounds rows; this one bounds row *decoration*.
+
 ## Empty bottom half of slide is not a layout bug
 
 Symptom: a slide with a sparse body (h2 + 1 paragraph + 1 short list) has 200+ px of empty space at the bottom. User says "use the empty space".

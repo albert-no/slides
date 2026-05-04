@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM — Brief Overview</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- SLIDE 1 — Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture</div>
+  <h1>Large Language Models:<br>Brief Overview</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Tokens, transformer, training, sampling — what privacy attacks touch</p>
+  <p style="font-weight:500;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">2026</p>
+</div>
+
+<!-- SLIDE 2 — Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Setup</div>
+        <div class="toc-sub">Tokens, sequences, autoregressive factorization</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Architecture</div>
+        <div class="toc-sub">Decoder-only transformer, logits, softmax</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Training</div>
+        <div class="toc-sub">Pretraining NLL, scale, alignment</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Sampling and privacy hooks</div>
+        <div class="toc-sub">Where memorization, MIA, watermark, unlearning enter</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================
+     PART 01 — Setup
+     ==================================================================== -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Setup</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Tokens, sequences, autoregressive factorization</p>
+</div>
+
+<!-- SLIDE — Why this lecture -->
+<div class="slide">
+  <h2>Why a Brief LLM Pass</h2>
+  <div class="divider"></div>
+  <p>Privacy series covers <strong>generative-model risks</strong>.</p>
+  <p>Diffusion lectures: continuous, score-based generators.</p>
+  <p>This lecture: the <strong>discrete autoregressive</strong> counterpart.</p>
+  <ul>
+    <li>Assume ML / DL / transformer basics</li>
+    <li>Pin down notation used in MIA, memorization, watermarking, unlearning</li>
+    <li>Identify <strong>which piece</strong> each attack/defense touches</li>
+  </ul>
+</div>
+
+<!-- SLIDE — Tokens -->
+<div class="slide">
+  <h2>Tokens and Sequences</h2>
+  <div class="divider"></div>
+  <p>Tokenizer maps text to integer IDs (BPE, SentencePiece).</p>
+  <div class="math-block">$$\text{text} \;\longmapsto\; x_{1:T} = (x_1, \ldots, x_T) \in \mathcal{V}^T,\qquad |\mathcal{V}| \approx 5\!\times\!10^4.$$</div>
+  <ul>
+    <li>$\mathcal{V}$: fixed vocabulary (subword units)</li>
+    <li>Training, sampling, loss — all per-token</li>
+  </ul>
+  <div class="highlight">
+    <p>Every privacy quantity in this course is <strong>token-level</strong>.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Autoregressive factorization -->
+<div class="slide">
+  <h2>Autoregressive Factorization</h2>
+  <div class="divider"></div>
+  <p>Chain rule on a discrete sequence:</p>
+  <div class="math-block">$$p(x_{1:T}) \;=\; \prod_{t=1}^{T} p(x_t \mid x_{&lt;t}),\qquad x_{&lt;t} := (x_1, \ldots, x_{t-1}).$$</div>
+  <p>An <strong>LLM</strong> is a parameterized next-token distribution:</p>
+  <div class="math-block">$$p_\theta(\,\cdot \mid x_{&lt;t}\,) \;\in\; \Delta^{|\mathcal{V}|-1}.$$</div>
+  <div class="highlight">
+    <p>The whole model collapses to one object: $p_\theta(\cdot \mid \text{prefix})$.</p>
+  </div>
+</div>
+
+<!-- ====================================================================
+     PART 02 — Architecture
+     ==================================================================== -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Architecture</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Decoder-only transformer, logits, softmax</p>
+</div>
+
+<!-- SLIDE — Decoder-only pipeline -->
+<div class="slide">
+  <h2>Decoder-Only Transformer</h2>
+  <div class="divider"></div>
+  <div class="diagram-flow" style="justify-content:center;">
+    <div class="diagram-box">tokens $x_{&lt;t}$</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">embed</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">block × $N$</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">unembed</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box filled">logits $z_t$</div>
+  </div>
+  <ul>
+    <li>Each block: <strong>causal self-attention</strong> + MLP + residual + LN</li>
+    <li><strong>Causal mask</strong>: position $t$ sees only $x_{&lt;t}$</li>
+    <li>$z_t \in \mathbb{R}^{|\mathcal{V}|}$ at every position, in one forward pass</li>
+  </ul>
+  <div class="cite">Vaswani et al., "Attention Is All You Need", NeurIPS 2017; Radford et al., GPT-2, OpenAI 2019.</div>
+</div>
+
+<!-- SLIDE — Logits to distribution -->
+<div class="slide">
+  <h2>Logits to Next-Token Distribution</h2>
+  <div class="divider"></div>
+  <p>Softmax over the vocabulary:</p>
+  <div class="math-block">$$p_\theta(v \mid x_{&lt;t}) \;=\; \frac{\exp(z_{t,v})}{\sum_{v' \in \mathcal{V}} \exp(z_{t,v'})}, \qquad v \in \mathcal{V}.$$</div>
+  <ul>
+    <li>Training: all $T$ conditionals computed in parallel (causal mask)</li>
+    <li>Inference: sample $\hat x_t$, append, repeat</li>
+  </ul>
+  <div class="highlight">
+    <p>Logits $z_t$ and probabilities $p_\theta(\cdot\mid x_{&lt;t})$ are the <strong>privacy signals</strong>.</p>
+  </div>
+</div>
+
+<!-- ====================================================================
+     PART 03 — Training
+     ==================================================================== -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Training</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Pretraining NLL, scale, alignment</p>
+</div>
+
+<!-- SLIDE — Pretraining objective -->
+<div class="slide">
+  <h2>Pretraining Objective</h2>
+  <div class="divider"></div>
+  <p>Maximum likelihood on corpus $\mathcal{D}$ — sum of per-token cross-entropies:</p>
+  <div class="math-block">$$\mathcal{L}(\theta) \;=\; -\,\frac{1}{|\mathcal{D}|}\sum_{x \in \mathcal{D}}\;\sum_{t=1}^{T} \log p_\theta(x_t \mid x_{&lt;t}).$$</div>
+  <ul>
+    <li>Each token position contributes one loss term</li>
+    <li>Per-token loss $\ell_t(x;\theta) = -\log p_\theta(x_t \mid x_{&lt;t})$ is a <strong>core observable</strong></li>
+  </ul>
+  <div class="highlight">
+    <p>Low $\ell_t$ on a member sample $\Rightarrow$ MIA / memorization signal.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Scale -->
+<div class="slide">
+  <h2>Scale Makes Memorization Real</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>Corpus</h3>
+      <p>$\sim 10^{12}\text{–}10^{13}$ tokens.</p>
+      <p>Web scrape, books, code, dialogues.</p>
+    </div>
+    <div>
+      <h3>Parameters</h3>
+      <p>$\sim 10^{10}\text{–}10^{12}$.</p>
+      <p>Capacity to store rare strings verbatim.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Pretraining data <strong>does</strong> resurface — extractable, attackable, suable.</p>
+  </div>
+  <div class="cite">Hoffmann et al., "Training Compute-Optimal LLMs" (Chinchilla), NeurIPS 2022; Carlini et al., "Quantifying Memorization", ICLR 2023.</div>
+</div>
+
+<!-- SLIDE — Post-training -->
+<div class="slide">
+  <h2>Post-Training</h2>
+  <div class="divider"></div>
+  <p>Pretrained model is a generic next-token predictor. Two alignment stages:</p>
+  <ul class="num">
+    <li><strong>SFT</strong> — supervised fine-tune on curated $(prompt, response)$</li>
+    <li><strong>RLHF / DPO</strong> — preference optimization toward helpful, safe outputs</li>
+  </ul>
+  <div class="highlight">
+    <p>Alignment shapes <strong>outputs</strong>; pretraining memory stays in the <strong>weights</strong>.</p>
+  </div>
+  <div class="cite">Ouyang et al., InstructGPT, NeurIPS 2022; Rafailov et al., DPO, NeurIPS 2023.</div>
+</div>
+
+<!-- ====================================================================
+     PART 04 — Sampling and privacy hooks
+     ==================================================================== -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Sampling and Privacy Hooks</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Where memorization, MIA, watermark, unlearning enter</p>
+</div>
+
+<!-- SLIDE — Sampling rules -->
+<div class="slide">
+  <h2>Sampling Rules</h2>
+  <div class="divider"></div>
+  <p>Given $p_\theta(\cdot\mid x_{&lt;t})$, draw $\hat x_t$ by:</p>
+  <ul>
+    <li><strong>Greedy</strong>: $\hat x_t = \arg\max_v\, p_\theta(v\mid x_{&lt;t})$</li>
+    <li><strong>Temperature</strong>: $p^{(\tau)}(v) \propto \exp(z_{t,v}/\tau)$</li>
+    <li><strong>Top-$k$</strong> / <strong>top-$p$</strong>: truncate the tail before renormalizing</li>
+  </ul>
+  <p>Each is a <strong>post-hoc transform</strong> of $p_\theta$ — weights unchanged.</p>
+  <div class="highlight">
+    <p>Watermarks live <strong>here</strong>: rewrite the sampling step, leave the model alone.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Per-token signals → privacy series -->
+<div class="slide">
+  <h2>Where Each Privacy Topic Plugs In</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="margin-top:8px;">
+    <div class="card">
+      <h3>Per-token loss $\ell_t$</h3>
+      <p><strong>MIA</strong>: low $\ell_t$ on members vs non-members.</p>
+      <p><strong>Memorization</strong>: $\ell_t \approx 0$ on extractable spans.</p>
+    </div>
+    <div class="card">
+      <h3>Verbatim completion</h3>
+      <p><strong>Memorization</strong>: prefix $\to$ training-data suffix.</p>
+      <p>Carlini extraction, copyright lawsuits.</p>
+    </div>
+    <div class="card">
+      <h3>Sampling distribution</h3>
+      <p><strong>Watermarking</strong>: bias / re-sample from $p_\theta(\cdot\mid x_{&lt;t})$.</p>
+      <p>Green-list, Gumbel-max, distortion-free.</p>
+    </div>
+    <div class="card">
+      <h3>Conditional $p_\theta(\cdot\mid x_{&lt;t})$</h3>
+      <p><strong>Unlearning</strong>: edit $\theta$ so forget-set conditionals look uninformed.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE — Roadmap -->
+<div class="slide">
+  <h2>Next Lectures</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li><strong>MIA</strong> — token-level loss as membership test (Shokri $\to$ LiRA $\to$ InfoRMIA)</li>
+    <li><strong>Memorization</strong> — canary, exposure, extraction, scaling laws</li>
+    <li><strong>Unlearning</strong> — certified, GA / NPO / SimNPO, TOFU / WMDP / RWKU</li>
+    <li><strong>Watermarking</strong> — green-list, distortion-free, undetectable, radioactivity</li>
+  </ul>
+  <div class="highlight">
+    <p>Each one rewrites a different piece of the LLM stack.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">Q&amp;A</div>
+  <p class="big-word-sub">Onward to the privacy stack.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 18</div>
+
+</div><!-- end deck -->
+
+<script src="../../reference/deck.js"></script>
+</body>
+</html>

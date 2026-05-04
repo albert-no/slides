@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Diffusion 1 — Notes</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  body { max-width: 880px; margin: 40px auto; padding: 0 32px 80px; color: var(--charcoal); line-height: 1.55; }
+  h1 { color: var(--yonsei-blue); font-size: 2.2rem; border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+  h2 { color: var(--yonsei-blue); margin-top: 40px; font-size: 1.6rem; }
+  h3 { font-size: 1.2rem; margin-top: 20px; }
+  article { margin-bottom: 40px; }
+  .math-block { background: var(--light); padding: 12px 16px; border-radius: 8px; margin: 14px 0; overflow-x: auto; }
+  .key { background: #f4f6f9; border-left: 3px solid var(--yonsei-blue); padding: 10px 14px; margin: 14px 0; }
+  .defn, .thm, .prop, .lem, .cor { background: #f4f6f9; border-left: 3px solid var(--yonsei-blue); padding: 10px 14px; margin: 14px 0; }
+  .thm-name { font-weight: 700; color: var(--yonsei-blue); }
+  p, li { font-size: 1.05rem; }
+</style>
+</head>
+<body>
+
+<h1>Diffusion 1 — Companion Notes</h1>
+<p>Speaker's reading companion. Formal definitions, theorem statements, and full proof derivations for the foundations deck (generative-model setup, VE forward, Bayes-route reverse, score, Tweedie).</p>
+
+<!-- =================================================== -->
+<article>
+  <h2>1. Generative model — formal setup</h2>
+
+  <h3>1.1 Distribution learning</h3>
+  <p>Let $X$ be a random variable on $\mathbb{R}^d$ (or on a measurable space) with unknown distribution $P_X$. We have access to a finite set of i.i.d. samples $\mathcal{D} = \{x^{(0)}_1, \ldots, x^{(0)}_M\} \overset{\text{i.i.d.}}{\sim} P_X$. A <em>generative model</em> $G_\theta : \mathbb{R}^k \to \mathbb{R}^d$ pushes a tractable prior $\pi$ on $\mathbb{R}^k$ to a model distribution $P_\theta := (G_\theta)_* \pi$. The goal is</p>
+  <div class="math-block">$$P_\theta \;\approx\; P_X \quad \text{(in some divergence — KL, total variation, Wasserstein, etc.)}$$</div>
+
+  <p>Two aspects must hold simultaneously:</p>
+  <ul>
+    <li><strong>Realism</strong>: $\mathrm{supp}(P_\theta) \subset \mathrm{supp}(P_X)$ — samples look like data.</li>
+    <li><strong>Diversity</strong>: $P_\theta$ matches the spread of $P_X$ — does not collapse to a few modes.</li>
+  </ul>
+  <p>A delta at one realistic image satisfies the first but fails the second; this is "mode collapse" and is what motivates the distribution-matching framing.</p>
+
+  <h3>1.2 Sampling is non-trivial even when the density is known</h3>
+  <p>Knowing a closed-form density $f_X$ does not imply a computable sampler. The <em>Cauchy distribution</em> with scale $\gamma > 0$ has density</p>
+  <div class="math-block">$$f(x) = \frac{1}{\pi}\,\frac{\gamma}{x^2 + \gamma^2}, \qquad x \in \mathbb{R}.$$</div>
+  <p><strong>Exercise (validity).</strong> Show $\int_{-\infty}^\infty f(x)\,dx = 1$. <em>Hint:</em> $\int dx/(x^2+\gamma^2) = \gamma^{-1}\arctan(x/\gamma)$.</p>
+
+  <h3>1.3 Inverse-transform sampling (1D)</h3>
+  <div class="thm"><span class="thm-name">Proposition (inverse-transform sampling).</span> Let $X$ be real with continuous, strictly increasing CDF $F_X$. If $U \sim \mathrm{Unif}[0,1]$, then $F_X^{-1}(U) \overset{(d)}{=} X$.</div>
+  <p><strong>Proof.</strong> $\Pr\!\bigl(F_X^{-1}(U) \le x\bigr) = \Pr\!\bigl(U \le F_X(x)\bigr) = F_X(x)$, since $F_X$ is strictly increasing and $\Pr(U \le u) = u$ for $u \in [0,1]$. $\square$</p>
+
+  <h3>1.4 Generating a uniform via fair coin flips</h3>
+  <p>Let $U_1, U_2, \ldots \overset{\text{i.i.d.}}{\sim} \mathrm{Bernoulli}(1/2)$. The binary expansion</p>
+  <div class="math-block">$$U \;=\; \sum_{i=1}^{\infty} U_i \, 2^{-i}$$</div>
+  <p>is uniform on $[0,1]$. Truncating after $n$ bits gives an approximation with error $\le 2^{-n}$.</p>
+
+  <h3>1.5 Why higher dimensions break this</h3>
+  <ol>
+    <li>For $\mathbf{X} \in \mathbb{R}^d$ with $d \ge 2$, there is no scalar CDF to invert.</li>
+    <li>Rejection sampling from a tractable proposal $q$ requires $f/q \le M$; the constant $M$ scales exponentially with $d$ for typical proposals.</li>
+    <li>MCMC mixes slowly when $P_X$ is multimodal — exactly the regime of natural-image data.</li>
+  </ol>
+  <p>Consequently, modern generative models <em>do not learn $f_X$ explicitly</em>. They learn a transformation from a tractable noise prior (Gaussian, uniform) to data — this is the central design of GANs, normalizing flows, VAEs, and diffusion.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>2. Variance-exploding (VE) forward process</h2>
+
+  <h3>2.1 Definition</h3>
+  <div class="defn"><span class="thm-name">Definition (VE forward chain).</span> Fix step variance $\sigma^2 > 0$ and length $N \in \mathbb{N}$. Set $X^{(0)} = X$ and, for $n = 1, \ldots, N$,
+  <div class="math-block">$$X^{(n)} \;=\; X^{(n-1)} + Z^{(n)}, \qquad Z^{(n)} \overset{\text{i.i.d.}}{\sim} \mathcal{N}(0, \sigma^2),$$</div>
+  with $\{Z^{(n)}\}_{n=1}^N$ independent of $X$.</div>
+
+  <h3>2.2 One-shot marginal</h3>
+  <p>Independent Gaussian increments accumulate:</p>
+  <div class="math-block">$$X^{(n)} \;\stackrel{(d)}{=}\; X^{(0)} + \sqrt{n}\,Z, \qquad Z \sim \mathcal{N}(0,\sigma^2).$$</div>
+  <p>This is the <em>training trick</em>: we never have to simulate the whole chain to access $X^{(n)}$ — one sample of $Z$ suffices.</p>
+
+  <h3>2.3 Terminal distribution</h3>
+  <p>Let $\mu_0 = \mathbb{E}[X^{(0)}]$, $\sigma_0^2 = \mathrm{Var}(X^{(0)})$. Linearity of expectation and independence give</p>
+  <div class="math-block">$$\mathbb{E}[X^{(N)}] = \mu_0,\qquad \mathrm{Var}(X^{(N)}) = \sigma_0^2 + N\sigma^2.$$</div>
+  <p>For large $N$, $N\sigma^2$ dominates $\sigma_0^2$. Heuristically, $X^{(N)} \approx \mathcal{N}(\mu_0,\,\sigma_0^2 + N\sigma^2)$. This is informal for VE because the variance grows unboundedly. The variance-preserving (VP) chain in Lecture 2 admits a clean MGF-based proof of Gaussianity in the limit.</p>
+
+  <h3>2.4 Reverse goal</h3>
+  <p>If we can compute the family of conditionals $\bigl\{ P_{X^{(n-1)}\,|\,X^{(n)}} \bigr\}_{n=1}^N$, sampling proceeds backward: draw $\tilde X^{(N)} \sim \mathcal{N}(\mu_0, \sigma_0^2 + N\sigma^2)$ and apply the conditionals to obtain $\tilde X^{(N-1)}, \ldots, \tilde X^{(0)}$. The hope (verified below approximately, and rigorously in continuous time in Lecture 3) is</p>
+  <div class="math-block">$$\tilde X^{(0)} \;\overset{(d)}{\approx}\; X.$$</div>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>3. Reverse process via Bayes (Taylor + complete-the-square)</h2>
+
+  <h3>3.1 Setup</h3>
+  <p>Drop indices: write $X = \tilde X^{(n-1)}$, $Z = \tilde Z^{(n)}$, $Y = \tilde X^{(n)} = X + Z$ with $Z \sim \mathcal{N}(0,\sigma^2)$ independent of $X$. Let $P_X$ denote the density of $X$ (we now switch from $f_X$ to $P_X$ to match the deck). Bayes' rule:</p>
+  <div class="math-block">$$P_{X|Y}(x|y) \;=\; \frac{P_{Y|X}(y|x)\,P_X(x)}{P_Y(y)} \;=\; \frac{1}{P_Y(y)}\cdot \frac{1}{\sqrt{2\pi\sigma^2}}\exp\!\left(-\frac{(y-x)^2}{2\sigma^2}\right) P_X(x).$$</div>
+
+  <p>The likelihood $P_{Y|X}(y|x)$ concentrates on $|x - y| \lesssim \sigma$. We will exploit this when $\sigma^2$ is small.</p>
+
+  <h3>3.2 Step 1 — Taylor-expand $P_X$ around $y$</h3>
+  <p>Assume $P_X \in C^2$ on a neighborhood of $y$. By Taylor's theorem,</p>
+  <div class="math-block">$$P_X(x) \;=\; P_X(y) + P'_X(y)(x-y) + O\!\bigl((x-y)^2\bigr).$$</div>
+  <p>Since $|x-y| = O(\sigma)$ in the effective domain of integration, the remainder is $O(\sigma^2)$, negligible to leading order:</p>
+  <div class="math-block">$$P_X(x) \;\approx\; P_X(y) + P'_X(y)(x-y).$$</div>
+
+  <h3>3.3 Step 2 — Approximate $P_Y(y)$</h3>
+  <p>Convolve the Taylor expansion against the Gaussian likelihood:</p>
+  <div class="math-block">$$\begin{aligned}
+    P_Y(y)
+      &= \int P_{Y|X}(y|x)\,P_X(x)\,dx \\
+      &\approx \int \tfrac{1}{\sqrt{2\pi\sigma^2}}\,e^{-(x-y)^2/(2\sigma^2)}\bigl[P_X(y) + P'_X(y)(x-y)\bigr]\,dx \\
+      &= P_X(y) \cdot 1 \;+\; P'_X(y)\,\mathbb{E}_{X \sim \mathcal{N}(y,\sigma^2)}[X-y] \\
+      &= P_X(y).
+  \end{aligned}$$</div>
+  <p>The cross-term vanishes because the centered Gaussian has zero mean.</p>
+
+  <h3>3.4 Step 3 — Substitute back into Bayes</h3>
+  <div class="math-block">$$\begin{aligned}
+    P_{X|Y}(x|y)
+      &\approx \frac{P_{Y|X}(y|x)\,\bigl[P_X(y) + P'_X(y)(x-y)\bigr]}{P_X(y)} \\
+      &= P_{Y|X}(y|x)\!\left[1 + \frac{P'_X(y)}{P_X(y)}(x-y)\right] \\
+      &\approx P_{Y|X}(y|x)\,\exp\!\left(\frac{P'_X(y)}{P_X(y)}(x-y)\right),
+  \end{aligned}$$</div>
+  <p>using $1 + a \approx e^{a}$ for small $a$; the higher-order error stays $O(\sigma^2)$.</p>
+
+  <h3>3.5 Step 4 — Complete the square</h3>
+  <p>Substitute $P_{Y|X}(y|x) = (2\pi\sigma^2)^{-1/2}\,e^{-(x-y)^2/(2\sigma^2)}$ and merge exponents. Let $\rho := P'_X(y)/P_X(y)$. The exponent becomes</p>
+  <div class="math-block">$$-\frac{(x-y)^2}{2\sigma^2} + \rho(x-y) \;=\; -\frac{1}{2\sigma^2}\!\left[(x-y)^2 - 2\sigma^2 \rho(x-y)\right].$$</div>
+  <p>Add and subtract $(\sigma^2 \rho)^2$ inside the bracket:</p>
+  <div class="math-block">$$(x-y)^2 - 2\sigma^2 \rho(x-y) + (\sigma^2 \rho)^2 - (\sigma^2 \rho)^2 \;=\; \bigl(x - y - \sigma^2 \rho\bigr)^2 - (\sigma^2 \rho)^2.$$</div>
+  <p>The constant $(\sigma^2 \rho)^2$ is $\theta$-independent (here $x$-independent) and absorbs into normalization. Therefore</p>
+  <div class="math-block">$$P_{X|Y}(x|y) \;\approx\; \frac{1}{\sqrt{2\pi\sigma^2}}\exp\!\left(-\frac{1}{2\sigma^2}\bigl(x - y - \sigma^2 \rho\bigr)^2\right).$$</div>
+
+  <h3>3.6 Reverse conditional, compactly</h3>
+  <p>Recognize $\rho = \partial_y \log P_X(y)$. We obtain</p>
+  <div class="thm"><span class="thm-name">Theorem 1 (small-noise reverse conditional).</span> For $Y = X + Z$ with $Z \sim \mathcal{N}(0,\sigma^2)$ and $P_X \in C^2$, in the regime $\sigma^2 \ll 1$:
+  <div class="math-block">$$X \mid Y = y \;\overset{\text{approx.}}{\sim}\; \mathcal{N}\!\left(y + \sigma^2\,\partial_y \log P_X(y),\; \sigma^2\right).$$</div>
+  Approximation error is $O(\sigma^2)$ in TV (for densities with bounded $C^2$-norm).</div>
+
+  <p><strong>Reverse sampling rule.</strong> Setting $X = \tilde X^{(n-1)}$, $Y = \tilde X^{(n)}$, sampling proceeds via</p>
+  <div class="math-block">$$\tilde x^{(n-1)} \;=\; \tilde x^{(n)} + \sigma^2\,\partial \log P_{X^{(n)}}\!\bigl(\tilde x^{(n)}\bigr) + \tilde z^{(n)}, \qquad \tilde z^{(n)} \sim \mathcal{N}(0,\sigma^2).$$</div>
+
+  <h3>3.7 Why we cannot just subtract noise</h3>
+  <p>A naive guess: $\tilde x^{(n-1)} \stackrel{?}{=} \tilde x^{(n)} - \tilde z^{(n)}$ with fresh $\tilde z^{(n)} \sim \mathcal{N}(0,\sigma^2)$. By Gaussian symmetry $-Z \stackrel{(d)}{=} Z$, so subtracting an <em>independent</em> Gaussian noise has the same distribution as adding it. Variances add:</p>
+  <div class="math-block">$$\mathrm{Var}\!\bigl(\tilde X^{(n)} - \tilde Z^{(n)}\bigr) \;=\; \mathrm{Var}\!\bigl(\tilde X^{(n)}\bigr) + \sigma^2,$$</div>
+  <p>so the chain corrupts further rather than denoising. The score-shifted Gaussian above is the correct correction.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>4. Estimation vs distribution matching</h2>
+
+  <h3>4.1 The MMSE estimator</h3>
+  <div class="thm"><span class="thm-name">Proposition (MMSE).</span> Let $X, Y$ be jointly distributed with $\mathbb{E}[X^2] &lt; \infty$. The minimizer of $\mathbb{E}\bigl[(\hat X(Y) - X)^2\bigr]$ over measurable $\hat X$ is $\hat X^\star(Y) = \mathbb{E}[X \mid Y]$.</div>
+  <p><strong>Proof.</strong> Decompose using the orthogonality identity $\mathbb{E}[X \mid Y] - X \perp$ any function of $Y$:</p>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}[(\hat X(Y) - X)^2] &= \mathbb{E}\bigl[((\hat X(Y) - \mathbb{E}[X|Y]) + (\mathbb{E}[X|Y] - X))^2\bigr] \\
+    &= \mathbb{E}\bigl[(\hat X(Y) - \mathbb{E}[X|Y])^2\bigr] + \mathbb{E}\bigl[(\mathbb{E}[X|Y] - X)^2\bigr] \\
+    & \quad + 2\,\mathbb{E}\bigl[(\hat X(Y) - \mathbb{E}[X|Y])(\mathbb{E}[X|Y] - X)\bigr].
+  \end{aligned}$$</div>
+  <p>The cross term equals $2\,\mathbb{E}\bigl[(\hat X(Y) - \mathbb{E}[X|Y])\,\mathbb{E}[(\mathbb{E}[X|Y] - X)\,|\,Y]\bigr] = 0$. The first term is $\ge 0$ and zero iff $\hat X(Y) = \mathbb{E}[X|Y]$. $\square$</p>
+
+  <h3>4.2 MMSE shrinks variance — Gaussian example</h3>
+  <p>Let $X \sim \mathcal{N}(0,\sigma_x^2)$, $Z \sim \mathcal{N}(0,\sigma_z^2)$ independent, $Y = X + Z$. Joint Gaussianity gives</p>
+  <div class="math-block">$$\hat X(Y) = \mathbb{E}[X|Y] = \frac{\sigma_x^2}{\sigma_x^2 + \sigma_z^2}\,Y \;\sim\; \mathcal{N}\!\left(0,\, \frac{\sigma_x^4}{\sigma_x^2 + \sigma_z^2}\right).$$</div>
+  <p>The variance $\sigma_x^4/(\sigma_x^2+\sigma_z^2)$ is strictly less than $\sigma_x^2$ — the MMSE estimator's distribution does <em>not</em> match $P_X$.</p>
+
+  <h3>4.3 Restoring the spread</h3>
+  <p>Add fresh independent noise to recover $\sigma_x^2$:</p>
+  <div class="math-block">$$\tilde X = \mathbb{E}[X|Y] + \tilde Z, \qquad \tilde Z \sim \mathcal{N}\!\left(0, \frac{\sigma_x^2 \sigma_z^2}{\sigma_x^2 + \sigma_z^2}\right) \;\Longrightarrow\; \tilde X \sim \mathcal{N}(0, \sigma_x^2).$$</div>
+  <p>This is exactly the score-shifted Gaussian of Theorem 1 in the linear-Gaussian special case. <em>Reverse-process sampling is distribution matching, not denoising.</em></p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>5. Score function and Tweedie's formula</h2>
+
+  <h3>5.1 The score function</h3>
+  <div class="defn"><span class="thm-name">Definition (score).</span> For each noise level $n$, the score of the marginal is
+  <div class="math-block">$$s(x;n) \;:=\; \frac{\partial}{\partial x}\log P_{X^{(n)}}(x).$$</div>
+  When $P_{X^{(n)}}$ has a density, $s(x;n) = \nabla P_{X^{(n)}}(x) / P_{X^{(n)}}(x)$.</div>
+  <p>If $s(\,\cdot\,;n)$ is known for every $n$, the reverse process needs no neural network — sampling is a closed-form Gaussian step. The bottleneck is <em>estimating</em> $s$.</p>
+
+  <h3>5.2 Tweedie's formula</h3>
+  <div class="thm"><span class="thm-name">Theorem 2 (Robbins 1956 / Tweedie).</span> Let $X$ be a random variable, $Z \sim \mathcal{N}(0,\sigma^2)$ independent of $X$, and $Y = X + Z$. Then
+  <div class="math-block">$$\mathbb{E}[X \mid Y = y] \;=\; y + \sigma^2\,\frac{\partial}{\partial y}\log P_Y(y).$$</div></div>
+
+  <p><strong>Proof.</strong> Convolution: $P_Y(y) = \int P_X(x)\,\varphi_\sigma(y-x)\,dx$ where $\varphi_\sigma(\cdot) = (2\pi\sigma^2)^{-1/2} e^{-(\cdot)^2/(2\sigma^2)}$. Note</p>
+  <div class="math-block">$$\partial_y \varphi_\sigma(y - x) \;=\; -\frac{(y-x)}{\sigma^2}\,\varphi_\sigma(y-x).$$</div>
+  <p>Differentiate $P_Y$ under the integral:</p>
+  <div class="math-block">$$\begin{aligned}
+    \partial_y P_Y(y) &= \int P_X(x)\,\partial_y \varphi_\sigma(y-x)\,dx \\
+                     &= -\frac{1}{\sigma^2}\int (y-x)\,P_X(x)\,\varphi_\sigma(y-x)\,dx \\
+                     &= -\frac{1}{\sigma^2}\bigl[y\,P_Y(y) - \int x\,P_X(x)\varphi_\sigma(y-x)\,dx\bigr].
+  \end{aligned}$$</div>
+  <p>Recognize the second integral as $P_Y(y)\,\mathbb{E}[X|Y=y]$ via Bayes ($P_{X|Y}(x|y) = P_X(x)\varphi_\sigma(y-x)/P_Y(y)$). Thus</p>
+  <div class="math-block">$$\partial_y P_Y(y) \;=\; -\frac{1}{\sigma^2}\bigl[\,y\,P_Y(y) - P_Y(y)\,\mathbb{E}[X|Y=y]\,\bigr].$$</div>
+  <p>Divide by $P_Y(y)$ and rearrange:</p>
+  <div class="math-block">$$\sigma^2\,\partial_y \log P_Y(y) \;=\; -y + \mathbb{E}[X|Y=y]. \qquad \square$$</div>
+
+  <h3>5.3 Equivalent form for VE at level $n$</h3>
+  <p>Apply Theorem 2 with $\sigma^2 \leftarrow n\sigma^2$ (the effective noise variance in $X^{(n)} = X^{(0)} + \sqrt{n}Z$, $Z \sim \mathcal{N}(0,\sigma^2)$):</p>
+  <div class="math-block">$$\mathbb{E}[X^{(0)} \mid X^{(n)} = x] \;=\; x + n\sigma^2\,\partial_x \log P_{X^{(n)}}(x).$$</div>
+
+  <h3>5.4 Train a denoiser — recover the score</h3>
+  <p>Define the squared-error denoising objective</p>
+  <div class="math-block">$$\mathcal{L}_{\mathrm{denoise}}(\theta) \;=\; \mathbb{E}\!\left[\bigl\|f_\theta(X^{(n)}; n) - X^{(0)}\bigr\|^2\right].$$</div>
+  <p>By the MMSE proposition (§4.1), the unique global minimizer over measurable $f$ is</p>
+  <div class="math-block">$$f^\star(x; n) \;=\; \mathbb{E}[X^{(0)} \mid X^{(n)} = x] \;\overset{(\text{Tweedie})}{=}\; x + n\sigma^2\,\partial_x \log P_{X^{(n)}}(x).$$</div>
+  <p>If $f_\theta \approx f^\star$, solve algebraically for the score:</p>
+  <div class="math-block">$$s_\theta(x; n) \;=\; \frac{f_\theta(x; n) - x}{n\sigma^2} \;\approx\; \partial_x \log P_{X^{(n)}}(x).$$</div>
+  <div class="key">A denoising network is a score network. Training reduces to a regression on $L^2$, requires no knowledge of $P_X$, and uses only paired samples $(X^{(0)}, X^{(n)})$ from the forward chain.</div>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>6. Summary and bridge to Lecture 2</h2>
+  <ul>
+    <li><strong>Forward.</strong> VE chain pushes data toward Gaussian. One-shot identity $X^{(n)} = X^{(0)} + \sqrt{n}Z$ enables single-step training.</li>
+    <li><strong>Reverse.</strong> Conditional $X^{(n-1)} \mid X^{(n)}$ is approximately $\mathcal{N}(\,Y + \sigma^2 s,\; \sigma^2)$ to leading order in $\sigma^2$.</li>
+    <li><strong>Score.</strong> The only data-dependent quantity in the reverse step. Bottleneck: estimation.</li>
+    <li><strong>Tweedie</strong> bridges denoising and score estimation: a denoiser plus an algebraic transform yields the score.</li>
+  </ul>
+  <p><strong>Open issues addressed in Lecture 2.</strong></p>
+  <ol>
+    <li>Variance of $X^{(N)}$ is unbounded under VE — replace by VP, which converges in MGF to a clean Gaussian.</li>
+    <li>The Bayes route is local ($\sigma^2 \ll 1$); a maximum-likelihood/VLB route gives a global objective.</li>
+    <li>The squared-error denoising loss matches the VLB up to scaling — reconciled in the ε-prediction reparameterization.</li>
+  </ol>
+</article>
+
+</body>
+</html>

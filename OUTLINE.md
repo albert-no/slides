@@ -15,7 +15,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
   - `lossy/` — Rate–distortion + LLM compression (4 lectures)
   - `mi/` — Variational MI bounds, InfoNCE/CLIP (2 lectures)
 - **`privacy/`** — Privacy series:
-  - `diffusion/` — Diffusion generative models from scratch (5 lectures, no companion notes; `note/2_difffusion.tex` is LaTeX source for Lectures 1–2)
+  - `generative/` — Generative-model review opener: 5 diffusion lectures (Bayes-route, DDPM, SDE, DDIM, guidance + discrete) + 1 brief LLM deck. `note/2_difffusion.tex` is LaTeX source for Diffusion Lectures 1–2
   - `dp/` — Differential privacy + federated learning (1 NeurIPS 2023 talk: RRSC result)
   - `mia/` — Membership inference attacks (5 lectures, paired notes; legacy `old/MIA.html`)
   - `memorization/` — LLM memorization (1 deck: Carlini extraction, scaling laws, books, copyright)
@@ -35,12 +35,14 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Differential entropy + bin discretization | `infotheory/diffentropy/diffentropy1-foundations.html:84, :96` |
 | Gaussian MaxEnt / Hadamard / EPI | `infotheory/diffentropy/diffentropy2-maxent-gaussian.html:165, :248, :367` |
 | Shannon–Hartley / water-filling / I-MMSE | `infotheory/diffentropy/diffentropy3-mi-awgn.html:177, :293, :385` |
-| Score function / Tweedie's formula | `privacy/diffusion/diffusion1-foundations.html:362-425`; theorem at `infotheory/diffusion/diff3-parameterizations.html:121` |
-| DDPM forward + VLB derivation | `privacy/diffusion/diffusion2-ddpm.html:189-333`; `infotheory/diffusion/diff2-diffusion.html:153-212` |
-| SDE / Fokker–Planck / Anderson reverse | `privacy/diffusion/diffusion3-sde-score.html` (FP `:148`, Anderson `:234`, score matching `:339`) |
-| DDIM (non-Markovian, deterministic, ODE) | `privacy/diffusion/diffusion4-ddim.html` (marginal invariance `:164`, predicted clean `:234`) |
-| Classifier guidance + CFG | `privacy/diffusion/diffusion5-guidance-discrete.html:202-282` |
-| Discrete diffusion / score-entropy loss | `privacy/diffusion/diffusion5-guidance-discrete.html:287-425`; `dllm/dllm.html:192-205` (SEDD) |
+| Score function / Tweedie's formula | `privacy/generative/diffusion1-foundations.html:362-425`; theorem at `infotheory/diffusion/diff3-parameterizations.html:121` |
+| DDPM forward + VLB derivation | `privacy/generative/diffusion2-ddpm.html:189-333`; `infotheory/diffusion/diff2-diffusion.html:153-212` |
+| SDE / Fokker–Planck / Anderson reverse | `privacy/generative/diffusion3-sde-score.html` (FP `:148`, Anderson `:234`, score matching `:339`) |
+| DDIM (non-Markovian, deterministic, ODE) | `privacy/generative/diffusion4-ddim.html` (marginal invariance `:164`, predicted clean `:234`) |
+| Classifier guidance + CFG | `privacy/generative/diffusion5-guidance-discrete.html:202-282` |
+| Discrete diffusion / score-entropy loss | `privacy/generative/diffusion5-guidance-discrete.html:287-425`; `dllm/dllm.html:192-205` (SEDD) |
+| LLM brief overview (autoregressive, transformer, NLL, sampling) | `privacy/generative/llm.html:72-296` |
+| LLM privacy-hook map (loss / verbatim / sampling / conditional) | `privacy/generative/llm.html:258-281` |
 | Rate–distortion theorem (Shannon) | `infotheory/lossy/lossy1-foundations.html:258-311` |
 | Lloyd–Max / scalar quantization | `infotheory/lossy/lossy1-foundations.html:143-199` |
 | Gaussian R(D), Shannon lower bound, pruning | `infotheory/lossy/lossy2-gaussian-laplacian.html:63-232` |
@@ -87,8 +89,8 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 Same topic, different decks (use the more recent / more detailed):
 - **VAE / ELBO**: rigorous derivation `infotheory/diffusion/diff1-vae-elbo.html`
 - **Hierarchical-VAE view of diffusion**: `infotheory/diffusion/diff2-diffusion.html` (information-theoretic, Markov rewrite)
-- **Diffusion from-scratch (Bayes route)**: `privacy/diffusion/diffusion1-foundations.html` (Taylor + complete-square proof, less abstract)
-- **Tweedie**: brief `privacy/diffusion/diffusion1-foundations.html:374`; with proof `infotheory/diffusion/diff3-parameterizations.html:130`
+- **Diffusion from-scratch (Bayes route)**: `privacy/generative/diffusion1-foundations.html` (Taylor + complete-square proof, less abstract)
+- **Tweedie**: brief `privacy/generative/diffusion1-foundations.html:374`; with proof `infotheory/diffusion/diff3-parameterizations.html:130`
 
 ## Companion notes pattern
 
@@ -98,7 +100,7 @@ Same topic, different decks (use the more recent / more detailed):
 - Edge cases, comparison tables, references
 - Look in the `-note.html` for "why does this hold" / "what's the precise statement" detail.
 
-`infotheory/` has notes for every deck. `privacy/mia/` has notes for every deck. `privacy/diffusion/` and `dllm/` and `privacy/dp/` do **not** have companion notes — proof detail is in-deck or in `note/2_difffusion.tex` (privacy/diffusion only).
+`infotheory/` has notes for every deck. `privacy/mia/` has notes for every deck. `privacy/generative/` has notes for every diffusion lecture (1–5); `llm.html` has no note. `dllm/` and `privacy/dp/` do **not** have companion notes — proof detail is in-deck or in `note/2_difffusion.tex` (under `privacy/generative/`).
 
 ## Authoring conventions
 

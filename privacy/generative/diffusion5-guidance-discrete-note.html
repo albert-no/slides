@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Diffusion 5 — Notes</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  body { max-width: 880px; margin: 40px auto; padding: 0 32px 80px; color: var(--charcoal); line-height: 1.55; }
+  h1 { color: var(--yonsei-blue); font-size: 2.2rem; border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+  h2 { color: var(--yonsei-blue); margin-top: 40px; font-size: 1.6rem; }
+  h3 { font-size: 1.2rem; margin-top: 20px; }
+  article { margin-bottom: 40px; }
+  .math-block { background: var(--light); padding: 12px 16px; border-radius: 8px; margin: 14px 0; overflow-x: auto; }
+  .key { background: #f4f6f9; border-left: 3px solid var(--yonsei-blue); padding: 10px 14px; margin: 14px 0; }
+  .defn, .thm, .prop, .lem, .cor { background: #f4f6f9; border-left: 3px solid var(--yonsei-blue); padding: 10px 14px; margin: 14px 0; }
+  .thm-name { font-weight: 700; color: var(--yonsei-blue); }
+  p, li { font-size: 1.05rem; }
+</style>
+</head>
+<body>
+
+<h1>Diffusion 5 — Companion Notes</h1>
+<p>Speaker's reading companion. Formal statements and full proofs for the guidance + discrete-diffusion deck (classifier guidance, inpainting, CFG, transition-matrix forward, ratio score, score-entropy loss).</p>
+
+<!-- =================================================== -->
+<article>
+  <h2>1. Classifier guidance</h2>
+
+  <h3>1.1 Bayes decomposition of the conditional score</h3>
+  <div class="prop"><span class="thm-name">Proposition 1 (conditional score).</span> Let $p_t(\mathbf{x})$ be the marginal of the forward diffusion at time $t$, and let $p_t(y \mid \mathbf{x})$ denote the (time-dependent) likelihood of label $y$ given the noisy state. Then
+  <div class="math-block">$$\nabla_{\mathbf{x}} \log p_t(\mathbf{x} \mid y) \;=\; \nabla_{\mathbf{x}} \log p_t(\mathbf{x}) + \nabla_{\mathbf{x}} \log p_t(y \mid \mathbf{x}).$$</div></div>
+  <p><strong>Proof.</strong> Bayes: $p_t(\mathbf{x} \mid y) = p_t(y \mid \mathbf{x})\,p_t(\mathbf{x}) / p_t(y)$. Take $\log$: $\log p_t(\mathbf{x} \mid y) = \log p_t(y \mid \mathbf{x}) + \log p_t(\mathbf{x}) - \log p_t(y)$. The last term is independent of $\mathbf{x}$; gradient drops it. $\square$</p>
+
+  <h3>1.2 Time-dependent classifier</h3>
+  <p>Sampling occurs on the noisy state $\mathbf{X}^{(n)}$, so the classifier must consume noisy inputs. Train</p>
+  <div class="math-block">$$c_\phi(\mathbf{x}, y, n) \;\approx\; p_n(y \mid \mathbf{x}) \;=\; \Pr(Y = y \mid \mathbf{X}^{(n)} = \mathbf{x}),$$</div>
+  <p>where the conditional law is computed under the joint $(X^{(0)}, Y) \sim p_{\mathrm{data}}, X^{(n)} \mid X^{(0)}$ via the forward chain. Implementation: standard classifier with $n$ as an extra input, trained on $\{(X^{(n)}_i, Y_i, n_i)\}$ with $n_i \sim \mathrm{Unif}$. The classifier supplies $\nabla_{\mathbf{x}} \log c_\phi(\mathbf{x}, y, n)$ as the second term in Proposition 1.</p>
+
+  <h3>1.3 Guided reverse SDE</h3>
+  <p>Anderson's reverse SDE (Lecture 3) uses the marginal score $\nabla \log p_t$. To sample from $p_t(\,\cdot\,\mid y)$, replace the marginal score with the conditional one. Optionally amplify the classifier term by $\omega \geq 1$:</p>
+  <div class="math-block">$$d\bar{\mathbf{X}}_t \;=\; \Bigl[f - g^2\bigl(\nabla\log p_t(\bar{\mathbf{X}}_t) + \omega\,\nabla \log c_\phi(\bar{\mathbf{X}}_t, y, t)\bigr)\Bigr]\,dt + g\,d\bar W_t.$$</div>
+
+  <h3>1.4 What $\omega$ does, formally</h3>
+  <p>Setting $\omega \neq 1$ samples not from $p_t(\,\cdot\,\mid y)$ but from a tilted distribution $\propto p_t(\mathbf{x})\,p_t(y \mid \mathbf{x})^\omega$. As $\omega \uparrow$, the classifier term dominates: the sampler concentrates on $\mathbf{x}$ values the classifier confidently labels $y$. This trades sample diversity for class fidelity (FID often improves up to $\omega \approx 4$, then degrades).</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>2. Inpainting</h2>
+
+  <h3>2.1 Setup</h3>
+  <p>Let $\mathcal{I}$ be the set of pixel indices and $\Omega \subset \mathcal{I}$ the observed indices, with $\bar\Omega = \mathcal{I} \setminus \Omega$ the unknowns. Write $\Omega(\cdot)$ for the projection onto observed coordinates. Given an observation $Y = \Omega(X^{(0)})$, the inpainting task is to sample</p>
+  <div class="math-block">$$X^{(0)}_{\bar\Omega} \;\sim\; p_{\mathrm{data}}\bigl(\,\cdot\, \mid \Omega(X^{(0)}) = Y\bigr).$$</div>
+
+  <h3>2.2 The ideal conditional score is unavailable</h3>
+  <p>For a reverse-SDE sampler restricted to the unknowns $Z^{(t)} := \bar\Omega(X^{(t)})$, the required object is</p>
+  <div class="math-block">$$\nabla_{Z^{(t)}}\,\log p_t\bigl(Z^{(t)} \mid \Omega(X^{(0)}) = Y\bigr).$$</div>
+  <p>The conditioning event lives at the <em>clean</em> end ($t = 0$) of the forward chain; the score network was trained on inputs sampled from the noisy marginal $p_t$. Plugging $Y$ into the network gives an out-of-distribution input. This is the core obstacle.</p>
+
+  <h3>2.3 The standard approximation</h3>
+  <p>Replace the clean-conditioning event by a <em>noised</em> conditioning at level $t$:</p>
+  <div class="math-block">$$p_t\bigl(Z^{(t)} \mid \Omega(X^{(0)}) = Y\bigr) \;\approx\; p_t\bigl(Z^{(t)} \mid \Omega(X^{(t)}) = \zeta_t\bigr),\qquad \zeta_t = \sqrt{\bar\alpha_t}\,Y + \sqrt{1-\bar\alpha_t}\,\eta_t,$$</div>
+  <p>with $\eta_t \sim \mathcal{N}(0, I)$ fresh at each time. $\zeta_t$ has the same forward-marginal law as $\Omega(X^{(t)})$ would, so concatenating $\zeta_t$ with the current $\bar\Omega$-state produces an in-domain input for the score network.</p>
+
+  <p>Why this is reasonable: the forward kernel factors across coordinates (Gaussian noise is independent per pixel), so $\Omega(X^{(t)}) \mid \Omega(X^{(0)})$ has exactly the marginal we used to sample $\zeta_t$. The approximation lies in <em>independence</em>: in the true joint $p_t(\bar\Omega, \Omega)$, the noised parts are correlated through $X^{(0)}$, while the substituted $\zeta_t$ is sampled with a fresh noise unrelated to the running $Z^{(t)}$. The error vanishes at $t = 0$ (since $\zeta_0 = Y$) and grows at most linearly in step size for stable score networks.</p>
+
+  <h3>2.4 Inpainting sampler</h3>
+  <ol>
+    <li>Sample $X^{(N)} \sim \mathcal{N}(0, I)$.</li>
+    <li>For $n = N, N-1, \ldots, 1$:
+      <ol>
+        <li>Sample $\eta_n \sim \mathcal{N}(0, I)$ and form $\zeta_n = \sqrt{\bar\alpha_n}\,Y + \sqrt{1-\bar\alpha_n}\,\eta_n$.</li>
+        <li>Splice: replace observed pixels in $X^{(n)}$ by $\zeta_n$.</li>
+        <li>Run one reverse-SDE step on the unknown coordinates using the score-network output evaluated on the spliced state.</li>
+      </ol>
+    </li>
+    <li>Return $X^{(0)}$ (with $\Omega(X^{(0)}) = Y$).</li>
+  </ol>
+  <p>Variants: RePaint (Lugmayr et al. 2022) re-inserts and re-noises across multiple iterations of each step to reduce boundary artifacts; ILVR (Choi et al. 2021) and DPS (Chung et al. 2023) generalize to nonlinear measurement operators.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>3. Classifier-free guidance</h2>
+
+  <h3>3.1 The CFG identity</h3>
+  <p>Use Bayes (Proposition 1 in reverse) to express the classifier gradient in terms of conditional and unconditional scores:</p>
+  <div class="math-block">$$\nabla_{\mathbf{x}} \log p_t(y \mid \mathbf{x}) \;=\; \nabla_{\mathbf{x}} \log p_t(\mathbf{x} \mid y) - \nabla_{\mathbf{x}} \log p_t(\mathbf{x}).$$</div>
+  <p>Substitute into the classifier-guided combined score:</p>
+  <div class="math-block">$$\begin{aligned}
+    \nabla_{\mathbf{x}}\log p_t(\mathbf{x}) + \omega\,\nabla_{\mathbf{x}}\log p_t(y \mid \mathbf{x}) &= \nabla_{\mathbf{x}}\log p_t(\mathbf{x}) + \omega\bigl[\nabla_{\mathbf{x}}\log p_t(\mathbf{x} \mid y) - \nabla_{\mathbf{x}}\log p_t(\mathbf{x})\bigr] \\
+    &= \omega\,\nabla_{\mathbf{x}}\log p_t(\mathbf{x} \mid y) + (1-\omega)\,\nabla_{\mathbf{x}}\log p_t(\mathbf{x}).
+  \end{aligned}$$</div>
+  <p>So the classifier-guided score is a convex combination (extrapolation when $\omega &gt; 1$) of the conditional score and the unconditional score. No classifier appears.</p>
+
+  <h3>3.2 Dual-role network</h3>
+  <p>Train a single network $\epsilon_\theta(\mathbf{x}, y, n)$ that accepts a class label $y$ <em>or</em> a null token $\varnothing$. Training procedure:</p>
+  <ol>
+    <li>Sample $(X^{(0)}, Y) \sim p_{\mathrm{data}}$.</li>
+    <li>With probability $p_{\mathrm{drop}} \in [0.1, 0.2]$ replace $Y$ by $\varnothing$.</li>
+    <li>Sample $n \sim \mathrm{Unif}$, $\epsilon \sim \mathcal{N}(0, I)$; form $X^{(n)} = \sqrt{\bar\alpha_n}\,X^{(0)} + \sqrt{1-\bar\alpha_n}\,\epsilon$.</li>
+    <li>Gradient step on $\|\epsilon - \epsilon_\theta(X^{(n)}, Y \text{ or } \varnothing, n)\|^2$.</li>
+  </ol>
+  <p>The network simultaneously learns:</p>
+  <ul>
+    <li>$\epsilon_\theta(\mathbf{x}, y, n)$ = noise prediction under class $y$ — a proxy for $-\sqrt{1-\bar\alpha_n}\,\nabla_{\mathbf{x}}\log p_n(\mathbf{x} \mid y)$.</li>
+    <li>$\epsilon_\theta(\mathbf{x}, \varnothing, n)$ = noise prediction unconditionally — a proxy for $-\sqrt{1-\bar\alpha_n}\,\nabla_{\mathbf{x}}\log p_n(\mathbf{x})$.</li>
+  </ul>
+
+  <h3>3.3 CFG sampling rule</h3>
+  <p>Translate the CFG identity from scores to ε-predictions using $\epsilon = -\sqrt{1-\bar\alpha_n}\,\nabla\log p$:</p>
+  <div class="math-block">$$\tilde\epsilon(X^{(n)}, y, n) \;=\; \omega\,\epsilon_\theta(X^{(n)}, y, n) - (\omega - 1)\,\epsilon_\theta(X^{(n)}, \varnothing, n).$$</div>
+  <p>Use $\tilde\epsilon$ in place of $\epsilon_\theta$ in any DDPM/DDIM sampler. Two forward passes per step, twice the inference cost — but no auxiliary model.</p>
+
+  <h3>3.4 What guidance does to the sampling distribution</h3>
+  <p>For $\omega \neq 1$, CFG samples from a <em>tilted</em> distribution proportional to $p_t(\mathbf{x})\,p_t(y \mid \mathbf{x})^\omega$, never from $p_t(\,\cdot\,\mid y)$ exactly. The tilt sharpens around the high-confidence region of the classifier. Pragmatically, $\omega \in [3, 7.5]$ is typical for image generation — tuning trades fidelity for diversity.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>4. Discrete diffusion — forward process</h2>
+
+  <h3>4.1 Why additive noise fails</h3>
+  <p>Discrete-state data $X \in \{1, \ldots, K\}$ does not admit Gaussian additive noise. Instead, the forward process is a <em>continuous-time Markov chain</em> (CTMC) with values in $\{1, \ldots, K\}$.</p>
+
+  <h3>4.2 Discrete-time forward</h3>
+  <p>Let $p_t(x) = \Pr(X_t = x) \in [0, 1]^K$. Transition matrices $Q_t \in \mathbb{R}^{K \times K}$ with $Q_t(y, x) = \Pr(X_{t+1} = y \mid X_t = x)$ satisfy $\sum_y Q_t(y, x) = 1$. The marginal evolves linearly:</p>
+  <div class="math-block">$$p_{t+1}(y) \;=\; \sum_x Q_t(y, x)\,p_t(x), \quad\text{i.e.,}\quad p_{t+1} = Q_t\,p_t.$$</div>
+
+  <h3>4.3 Two canonical noisings</h3>
+  <ul>
+    <li><strong>Uniform.</strong> $Q_t = (1-\epsilon_t) I + \epsilon_t \cdot \tfrac{1}{K}\,\mathbf{1}\mathbf{1}^\top$. Stay with probability $1-\epsilon_t$, otherwise jump uniformly. Stationary distribution: $\mathrm{Unif}\{1,\ldots,K\}$.</li>
+    <li><strong>Absorbing (mask).</strong> Augment alphabet with $[\mathrm{M}]$. With probability $\epsilon_t$ replace by $[\mathrm{M}]$; once masked, stay masked. Stationary: $\delta_{[\mathrm{M}]}$. This is the form used by SEDD and most LLM-style discrete diffusion.</li>
+  </ul>
+
+  <h3>4.4 Continuous-time limit</h3>
+  <p>Take $\Delta t \to 0$. Discrete updates become a linear ODE on the simplex:</p>
+  <div class="math-block">$$\frac{dp_t}{dt} \;=\; Q_t\,p_t, \qquad p_0 = p_{\mathrm{data}},$$</div>
+  <p>where now $Q_t$ is a <em>rate matrix</em> (a.k.a. generator): $Q_t(y, x) \geq 0$ for $y \neq x$ and $Q_t(x, x) = -\sum_{y \neq x} Q_t(y, x)$, ensuring $\sum_y Q_t(y, x) \cdot \Delta t \cdot \mathbf{1}_{\Delta t \to 0}$ has unit mass to leading order.</p>
+
+  <h3>4.5 Heuristic derivation of the rate matrix</h3>
+  <p>Discrete-time matrix $Q_t^{(\Delta t)} = I + \Delta t\,Q_t + O(\Delta t^2)$. Then $p_{t+\Delta t} = Q_t^{(\Delta t)}\,p_t = p_t + \Delta t\,Q_t\,p_t + O(\Delta t^2)$. Subtract $p_t$ and divide by $\Delta t$ → ODE.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>5. Reverse rate matrix and the discrete score</h2>
+
+  <h3>5.1 Reverse generator</h3>
+  <div class="thm"><span class="thm-name">Theorem 1 (reverse rate matrix, Sun et al. 2022 / Campbell et al. 2022).</span> If the forward CTMC has rate matrix $Q_t$ and marginals $\{p_t\}$, then the time-reversed process $\bar X_t = X_{T-t}$ is a CTMC with rate matrix
+  <div class="math-block">$$\overline{Q}_t(y, x) \;=\; \frac{p_t(y)}{p_t(x)}\,Q_t(x, y) \quad (y \neq x), \qquad \overline{Q}_t(x, x) = -\sum_{y \neq x}\overline{Q}_t(y, x).$$</div></div>
+
+  <h3>5.2 Heuristic derivation</h3>
+  <p>For small $\Delta t$, the joint $(X_t, X_{t+\Delta t})$ has probability $p_t(x)\,Q_t(y, x)\,\Delta t$ at $y \neq x$. Reversing roles, $(X_{t+\Delta t}, X_t)$ has probability $p_{t+\Delta t}(y)\,\overline{Q}_t(x, y)\,\Delta t$. Equating and using $p_{t+\Delta t}(y) \to p_t(y)$:</p>
+  <div class="math-block">$$p_t(x)\,Q_t(y, x) \;=\; p_t(y)\,\overline{Q}_t(x, y) \quad\Longrightarrow\quad \overline{Q}_t(x, y) = \frac{p_t(x)}{p_t(y)}\,Q_t(y, x).$$</div>
+  <p>Relabeling indices yields the form in Theorem 1. (A rigorous derivation uses the time-reversal of the Kolmogorov forward equation; see Anderson 1991, §4.)</p>
+
+  <h3>5.3 The discrete score is a ratio</h3>
+  <p>The reverse generator depends on the marginals only through the <em>ratio vector</em></p>
+  <div class="math-block">$$s(x, t) \;:=\; \bigl(p_t(1)/p_t(x),\; p_t(2)/p_t(x),\; \ldots,\; p_t(K)/p_t(x)\bigr)^\top \in [0, \infty)^K.$$</div>
+  <p>This is the discrete analog of the continuous score $\nabla\log p_t$:</p>
+  <ul>
+    <li>Continuous: gradient of log-density at a single state.</li>
+    <li>Discrete: ratio of densities between adjacent states (where adjacency is determined by which $Q_t(x, y) \neq 0$).</li>
+  </ul>
+  <p>A neural network $s_\theta(x, t) \in \mathbb{R}^K$ approximates the ratio vector. The reverse rate matrix is then $\overline{Q}_t(y, x) = s_\theta(x, t)_y\,Q_t(x, y)$.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>6. Score-entropy loss</h2>
+
+  <h3>6.1 Why squared loss fails</h3>
+  <p>The naive regression</p>
+  <div class="math-block">$$\mathcal{L}_{\mathrm{sq}}(\theta) \;=\; \mathbb{E}_{x \sim p_t}\!\left[\sum_{y \neq x}\!\Bigl(s_\theta(x, t)_y - \tfrac{p_t(y)}{p_t(x)}\Bigr)^2\right]$$</div>
+  <p>has the right minimizer in expectation but does <em>not</em> enforce $s_\theta \geq 0$. The optimizer can — and does, in practice — overshoot to negative outputs, which produce invalid (negative-rate) reverse generators and unstable sampling.</p>
+
+  <h3>6.2 Score entropy</h3>
+  <div class="thm"><span class="thm-name">Theorem 2 (score entropy, Lou–Meng–Ermon 2024).</span> Define the per-pair Bregman divergence
+  <div class="math-block">$$\ell(s, r) \;=\; s - r\,\log s + r\,(\log r - 1), \qquad s &gt; 0,\ r \geq 0.$$</div>
+  Then $\ell(s, r) \geq 0$ with equality iff $s = r$. The <em>score-entropy</em> loss
+  <div class="math-block">$$\mathcal{L}_{\mathrm{SE}}(\theta) \;=\; \mathbb{E}_{x \sim p_t}\!\left[\sum_{y \neq x} w_{x,y}\,\ell\!\bigl(s_\theta(x, t)_y,\; \tfrac{p_t(y)}{p_t(x)}\bigr)\right]$$</div>
+  is non-negative and uniquely minimized (over $\theta$) at $s_{\theta^\star}(x, t)_y = p_t(y)/p_t(x)$ whenever the weights $w_{x,y} &gt; 0$.</div>
+
+  <h3>6.3 Proof that $\ell \geq 0$ with equality at $s = r$</h3>
+  <p>For fixed $r \geq 0$, treat $\ell$ as a function of $s &gt; 0$. Differentiate:</p>
+  <div class="math-block">$$\partial_s \ell(s, r) \;=\; 1 - r/s, \qquad \partial_s^2 \ell(s, r) \;=\; r/s^2 \geq 0.$$</div>
+  <p>Stationary point at $s = r$; second derivative non-negative ⇒ minimum. Plug in: $\ell(r, r) = r - r\log r + r\log r - r = 0$. So $\ell(s, r) \geq 0$ with equality iff $s = r$ (when $r &gt; 0$). For $r = 0$, $\ell(s, 0) = s \geq 0$ with equality iff $s = 0$ — but we restrict $s &gt; 0$, so equality is approached but not attained; this corresponds to entries that should be exactly $0$, handled by structure of $Q_t$. $\square$</p>
+
+  <h3>6.4 The $\log s_\theta$ term forces positivity</h3>
+  <p>$\ell$ blows up as $s \to 0^+$ (because $-r\log s \to +\infty$ for $r &gt; 0$). The optimizer has a barrier preventing $s_\theta$ from approaching zero where the target is positive — automatic positivity, no projection needed.</p>
+
+  <h3>6.5 Implementation note: the $C(r)$ term is a $\theta$-constant</h3>
+  <p>The constant $r(\log r - 1)$ inside $\ell$ does not depend on $\theta$; it could be dropped without changing optima. It is kept so that $\mathcal{L}_{\mathrm{SE}}$ is non-negative and reaches $0$ at the optimum — useful for monitoring training. Practically, computing $r = p_t(y)/p_t(x)$ at training time uses the same forward kernel as continuous diffusion: for absorbing/uniform forward, the ratio is closed-form given $X^{(0)}$ (analog of the conditional score in continuous diffusion).</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>7. Sequence space and Hamming-sparsity</h2>
+
+  <h3>7.1 The combinatorial blowup</h3>
+  <p>For length-$L$ sequences over alphabet of size $K$, $|\mathcal{X}| = K^L$. A naive transition matrix has $K^{2L}$ entries, intractable for $K = 30000$ (LLM vocab) and $L = 1024$.</p>
+
+  <h3>7.2 Token-factored forward</h3>
+  <p>Restrict each token to perturb independently. Then the rate matrix factors:</p>
+  <div class="math-block">$$Q_t^{(\mathrm{seq})}(\mathbf{y}, \mathbf{x}) \;=\; \begin{cases} Q_t^{(\mathrm{tok})}(y_i, x_i) & \text{if } d_H(\mathbf{y}, \mathbf{x}) = 1 \text{ at position } i, \\ -\sum_{i, y'_i \neq x_i} Q_t^{(\mathrm{tok})}(y'_i, x_i) & \text{if } \mathbf{y} = \mathbf{x}, \\ 0 & \text{if } d_H(\mathbf{y}, \mathbf{x}) \geq 2, \end{cases}$$</div>
+  <p>where $d_H$ is Hamming distance. This is the <strong>Hamming-sparsity condition</strong>: at most one token changes per infinitesimal step.</p>
+
+  <h3>7.3 Reverse process is also sparse</h3>
+  <p>Theorem 1 preserves sparsity: $\overline{Q}_t(\mathbf{y}, \mathbf{x}) = \tfrac{p_t(\mathbf{y})}{p_t(\mathbf{x})}\,Q_t(\mathbf{x}, \mathbf{y})$ is zero whenever $Q_t(\mathbf{x}, \mathbf{y}) = 0$, i.e. for $d_H \geq 2$. So the network only needs to predict ratios on Hamming-distance-1 pairs:</p>
+  <div class="math-block">$$s_\theta(\mathbf{x}, t)_{\mathbf{y}} \;=\; \frac{p_t(\mathbf{y})}{p_t(\mathbf{x})}\quad\text{for } d_H(\mathbf{y}, \mathbf{x}) = 1.$$</div>
+  <p>This drops the prediction problem from $K^L$ outputs to $L \cdot (K-1)$ outputs per input — tractable.</p>
+
+  <h3>7.4 Sampling</h3>
+  <p>Tau-leaping or first-reaction-time methods evolve the CTMC backward. At each step, the reverse generator gives the rate of each single-token flip; standard CTMC simulation suffices. This is the algorithmic heart of SEDD (Lou et al. 2024) and follow-ups.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>8. Series recap</h2>
+  <ul>
+    <li><strong>Lecture 1.</strong> Generative-model setup, VE forward, Bayes-route reverse with Taylor + complete-the-square, Tweedie's formula linking denoiser and score.</li>
+    <li><strong>Lecture 2.</strong> VP forward with MGF convergence, DDPM variational lower bound, ε-prediction loss as plain regression.</li>
+    <li><strong>Lecture 3.</strong> Continuous-time SDE, Fokker–Planck, Anderson's exact reverse SDE, Vincent's score-matching theorem.</li>
+    <li><strong>Lecture 4.</strong> DDIM: same single-time marginals, non-Markovian forward, deterministic limit, probability-flow ODE matching forward FP.</li>
+    <li><strong>Lecture 5.</strong> Conditional sampling (classifier guidance, inpainting, CFG), and discrete diffusion (transition matrices, ratio score, score-entropy loss, Hamming sparsity).</li>
+  </ul>
+  <p><strong>Single thread.</strong> Forward process corrupts; reverse process is driven by the score. The score may be a gradient (continuous), a ratio (discrete), or a denoiser (Tweedie). Loss derivations differ — VLB, score matching, score entropy — but each minimizer recovers the same fundamental object: the score of the forward marginal.</p>
+</article>
+
+</body>
+</html>

@@ -56,4 +56,4 @@ Invited talk: **Why Diffusion LLMs Behave Differently, and How to Control Them.*
 
 ### Companion content
 
-None. All material on slide. For deeper diffusion theory, see `infotheory/diffusion/` (VAE/ELBO derivations, parameterizations) and `privacy/diffusion/` (Bayes-route, SDE, score-matching theorem, discrete diffusion).
+None. All material on slide. For deeper diffusion theory, see `infotheory/diffusion/` (VAE/ELBO derivations, parameterizations) and `privacy/generative/` (Bayes-route, SDE, score-matching theorem, discrete diffusion).

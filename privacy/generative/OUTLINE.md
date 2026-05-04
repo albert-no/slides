@@ -1,17 +1,25 @@
-# privacy/diffusion/ — Diffusion generative models (5-lecture series)
+# privacy/generative/ — Generative-model review (diffusion + LLM)
 
-Master-level course on diffusion: Bayes-route foundations → DDPM → SDE → DDIM → guidance + discrete diffusion. Companion notes: `diffusion3-sde-score-note.html` (off-slide proof detail for Lecture 3). `note/2_difffusion.tex` is LaTeX source covering Lectures 1–2.
+The privacy series opens with a **review of generative models**, then moves to the privacy stack (DP, MIA, memorization, unlearning, watermarking). This folder bundles both reviews:
+
+- **Diffusion (5 lectures)** — continuous, score-based generation, from scratch.
+- **LLM (1 deck)** — discrete autoregressive counterpart, brief.
+
+Both fix the notation and observables that the downstream privacy decks attack or defend.
+
+Companion notes: every diffusion lecture now has a paired `<deck>-note.html` with formal definitions, theorem statements, and full proof derivations beyond what the slides carry. `note/2_difffusion.tex` is LaTeX source covering Diffusion Lectures 1–2.
 
 ## Files
 
-| Deck | Topic |
-|---|---|
-| `diffusion1-foundations.html` | Generative models, VE forward, Bayes-route reverse, Tweedie |
-| `diffusion2-ddpm.html` | VP forward, DDPM, VLB three-term decomposition, ε-loss |
-| `diffusion3-sde-score.html` | Continuous-time SDE, Fokker–Planck, Anderson reverse, score matching |
-| `diffusion4-ddim.html` | Non-Markovian forward, deterministic sampling, probability-flow ODE |
-| `diffusion5-guidance-discrete.html` | Classifier guidance, CFG, inpainting, discrete diffusion |
-| `note/2_difffusion.tex` | LaTeX source for Lectures 1–2 (rigorous mathematical write-up) |
+| Deck | Companion notes | Topic |
+|---|---|---|
+| `diffusion1-foundations.html` | `diffusion1-foundations-note.html` | Generative models, VE forward, Bayes-route reverse, Tweedie |
+| `diffusion2-ddpm.html` | `diffusion2-ddpm-note.html` | VP forward, DDPM, VLB three-term decomposition, ε-loss |
+| `diffusion3-sde-score.html` | `diffusion3-sde-score-note.html` | Continuous-time SDE, Fokker–Planck, Anderson reverse, score matching |
+| `diffusion4-ddim.html` | `diffusion4-ddim-note.html` | Non-Markovian forward, deterministic sampling, probability-flow ODE |
+| `diffusion5-guidance-discrete.html` | `diffusion5-guidance-discrete-note.html` | Classifier guidance, CFG, inpainting, discrete diffusion |
+| `llm.html` | — | Tokens, decoder-only transformer, NLL pretraining, sampling, privacy hooks |
+| `note/2_difffusion.tex` | | LaTeX source for Diffusion Lectures 1–2 (rigorous mathematical write-up) |
 
 ---
 
@@ -207,10 +215,42 @@ Companion notes file: `diffusion3-sde-score-note.html` (full proof derivations, 
 
 ---
 
+## llm.html — Brief LLM Overview
+
+| Section | Slide | Line |
+|---|---|---|
+| Title / Contents | | `:1-67` |
+| **01 — Setup** | | `:72-117` |
+| | Why this brief LLM pass | `:80` |
+| | Tokens and sequences ($\mathcal{V}$, BPE) | `:93` |
+| | **Autoregressive factorization** + LLM = $p_\theta(\cdot\mid x_{<t})$ | `:106` |
+| **02 — Architecture** | | `:124-167` |
+| | **Decoder-only transformer pipeline** (causal mask, $z_t$) | `:132` |
+| | Logits → softmax next-token distribution | `:152` |
+| **03 — Training** | | `:174-227` |
+| | **Pretraining objective** (per-token NLL / cross-entropy) | `:182` |
+| | Scale (corpus, params) → memorization is real | `:197` |
+| | Post-training: SFT + RLHF / DPO | `:215` |
+| **04 — Sampling and privacy hooks** | | `:234-303` |
+| | Sampling rules (greedy, temperature, top-k, top-p) | `:242` |
+| | **Per-token signals → privacy** (4-card map) | `:258` |
+| | Roadmap to next four lectures | `:285` |
+| Closer (Q&A) | | `:299` |
+
+**Key references:** autoregressive factorization `:108`; pretraining loss `:184`; per-token loss as MIA / memorization signal `:188`; sampling-step watermark hook `:251`; 4-card privacy map `:261-281`.
+
+**Privacy-series hooks established here:**
+- $p_\theta(\cdot\mid x_{<t})$ — central object referenced by every subsequent deck
+- Per-token loss $\ell_t$ — the leak signal in MIA (`privacy/mia/mia5-llm.html`) and memorization (`privacy/memorization/memorization.html`)
+- Sampling step — where watermarks (`privacy/watermark/watermark.html`) modify outputs
+- Weight edit on conditionals — unlearning (`privacy/unlearning/unlearning.html`)
+
+---
+
 ## note/2_difffusion.tex
 
-LaTeX source — rigorous write-up of foundational material:
+LaTeX source — rigorous write-up of foundational diffusion material:
 - Sec 1: Generative models (distribution learning, sampling, Cauchy, inverse transform)
 - Sec 2: 1D diffusion — VE forward + Bayes-route reverse
 
-Underlying material for Lectures 1–2 (the deck versions are condensed presentations of this).
+Underlying material for Diffusion Lectures 1–2 (the deck versions are condensed presentations of this).

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Diffusion 4 — Notes</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  body { max-width: 880px; margin: 40px auto; padding: 0 32px 80px; color: var(--charcoal); line-height: 1.55; }
+  h1 { color: var(--yonsei-blue); font-size: 2.2rem; border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+  h2 { color: var(--yonsei-blue); margin-top: 40px; font-size: 1.6rem; }
+  h3 { font-size: 1.2rem; margin-top: 20px; }
+  article { margin-bottom: 40px; }
+  .math-block { background: var(--light); padding: 12px 16px; border-radius: 8px; margin: 14px 0; overflow-x: auto; }
+  .key { background: #f4f6f9; border-left: 3px solid var(--yonsei-blue); padding: 10px 14px; margin: 14px 0; }
+  .defn, .thm, .prop, .lem, .cor { background: #f4f6f9; border-left: 3px solid var(--yonsei-blue); padding: 10px 14px; margin: 14px 0; }
+  .thm-name { font-weight: 700; color: var(--yonsei-blue); }
+  p, li { font-size: 1.05rem; }
+</style>
+</head>
+<body>
+
+<h1>Diffusion 4 — Companion Notes</h1>
+<p>Speaker's reading companion. Formal statements and full proofs for the DDIM deck (non-Markovian forward, σ-budget, pair-vs-triple invariance, deterministic sampling, probability-flow ODE).</p>
+
+<!-- =================================================== -->
+<article>
+  <h2>1. What the DDPM loss actually sees</h2>
+
+  <h3>1.1 The training loss</h3>
+  <p>The DDPM ε-prediction loss reads</p>
+  <div class="math-block">$$L(\theta) \;=\; \mathbb{E}_{n,\,X^{(0)},\,\epsilon}\!\left[\tilde\lambda_n\,\bigl\|\epsilon - \epsilon_\theta\bigl(\sqrt{\bar\alpha_n}\,X^{(0)} + \sqrt{1-\bar\alpha_n}\,\epsilon,\,n\bigr)\bigr\|^2\right].$$</div>
+  <p>Both inputs to $\epsilon_\theta$ are sampled by drawing $X^{(0)} \sim p_{\mathrm{data}}$, $\epsilon \sim \mathcal{N}(0,I)$, $n \sim \mathrm{Unif}\{1,\ldots,N\}$, and forming $X^{(n)}$ as a single linear combination.</p>
+
+  <h3>1.2 Only the single-time marginal enters</h3>
+  <div class="prop"><span class="thm-name">Proposition 1 (loss invariance to joint structure).</span> Suppose two forward laws $q_1$ and $q_2$ on $X^{(0:N)}$ share the conditional marginal
+  <div class="math-block">$$q_1(X^{(n)} \mid X^{(0)}) \;=\; q_2(X^{(n)} \mid X^{(0)}) \quad\text{for every } n = 1, \ldots, N.$$</div>
+  Then $L(\theta)$ takes the same value under either forward law.</div>
+  <p><strong>Proof.</strong> The expectation in $L(\theta)$ marginalizes over $(X^{(0)}, n, X^{(n)})$ with $X^{(n)} \mid X^{(0)} \sim q_i$. The integrand depends only on $(X^{(0)}, n, X^{(n)})$, not on the rest of the chain. By assumption, the joint $(X^{(0)}, n, X^{(n)})$ has the same law under $q_1$ and $q_2$. $\square$</p>
+
+  <h3>1.3 Consequence — design freedom</h3>
+  <p>Any forward law that preserves the DDPM single-time conditional marginals $\mathcal{N}(\sqrt{\bar\alpha_n}\,X^{(0)},\,(1-\bar\alpha_n)I)$ admits the same trained ε-network. DDIM exploits this: it constructs a non-Markovian joint with the same marginals but a tunable joint structure parameterized by $\{\sigma_n\}_{n=1}^N$.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>2. The non-Markovian forward construction</h2>
+
+  <h3>2.1 Construction order</h3>
+  <p>For each $X^{(0)}$, the DDIM forward joint $q_\sigma(X^{(0:N)})$ is built <em>backward in $n$</em>:</p>
+  <ol>
+    <li>Sample the endpoint marginal $X^{(N)} \mid X^{(0)} \sim \mathcal{N}\!\bigl(\sqrt{\bar\alpha_N}\,X^{(0)},\,(1-\bar\alpha_N) I\bigr)$.</li>
+    <li>For $n = N{-}1, N{-}2, \ldots, 0$, sample $X^{(n)} \mid (X^{(n+1)}, X^{(0)})$ from a Gaussian to be specified.</li>
+  </ol>
+  <p>The joint conditions on <em>both</em> the next step and the clean signal — this is what makes it non-Markovian in $X^{(n)}$ alone (Markov in the augmented state $(X^{(n)}, X^{(0)})$).</p>
+
+  <h3>2.2 Mixing recipe (signal + recycle + fresh)</h3>
+  <p>Given $(X^{(n+1)}, X^{(0)})$, define</p>
+  <div class="math-block">$$X^{(n)} \;=\; \underbrace{\sqrt{\bar\alpha_n}\,X^{(0)}}_{\text{signal}} \;+\; \underbrace{a_n\,\epsilon_{n+1}}_{\text{recycle}} \;+\; \underbrace{\sigma_{n+1}\,\eta}_{\text{fresh}},$$</div>
+  <p>where</p>
+  <ul>
+    <li>$\epsilon_{n+1} := \dfrac{X^{(n+1)} - \sqrt{\bar\alpha_{n+1}}\,X^{(0)}}{\sqrt{1-\bar\alpha_{n+1}}}$ — the noise inside $X^{(n+1)}$ given $X^{(0)}$. Distribution: $\mathcal{N}(0, I)$ given $X^{(0)}$.</li>
+    <li>$\eta \sim \mathcal{N}(0, I)$, independent of $\epsilon_{n+1}$ given $X^{(0)}$.</li>
+    <li>$a_n,\,\sigma_{n+1} \geq 0$ are coefficients to be determined.</li>
+  </ul>
+  <p>The "recycle" term reuses the noise already injected at step $n+1$; the "fresh" term adds new noise. The coefficient $\sigma_{n+1}$ controls how much fresh noise enters; $\sigma_{n+1} = 0$ means the step is purely deterministic given $(X^{(n+1)}, X^{(0)})$.</p>
+
+  <h3>2.3 Pinning down $a_n$</h3>
+  <p>Demand the DDPM single-time marginal $X^{(n)} \mid X^{(0)} \sim \mathcal{N}\!\bigl(\sqrt{\bar\alpha_n}\,X^{(0)},\,(1-\bar\alpha_n) I\bigr)$. The mean of the recipe is $\sqrt{\bar\alpha_n}\,X^{(0)}$ (matching). Variance, conditional on $X^{(0)}$, by independence:</p>
+  <div class="math-block">$$\mathrm{Var}(X^{(n)} \mid X^{(0)}) \;=\; a_n^2 + \sigma_{n+1}^2 \;\stackrel{!}{=}\; 1-\bar\alpha_n.$$</div>
+  <p>Solving for $a_n$ in terms of $\sigma_{n+1}$:</p>
+  <div class="math-block">$$a_n \;=\; \sqrt{1 - \bar\alpha_n - \sigma_{n+1}^2}, \qquad \sigma_{n+1} \in \bigl[0,\,\sqrt{1-\bar\alpha_n}\bigr].$$</div>
+  <p>One linear equation in two unknowns leaves $\sigma_{n+1}$ as a <em>free knob</em>: it splits the variance budget $1-\bar\alpha_n$ between recycled and fresh noise.</p>
+
+  <h3>2.4 Forward conditional in closed form</h3>
+  <p>Given $(X^{(n+1)}, X^{(0)})$, only $\eta$ is random. Reading off the recipe:</p>
+  <div class="math-block">$$\begin{aligned}
+    q_\sigma\bigl(X^{(n)} \mid X^{(n+1)}, X^{(0)}\bigr) &= \mathcal{N}\!\bigl(\mu_n,\, \sigma_{n+1}^2 I\bigr), \\
+    \mu_n &= \sqrt{\bar\alpha_n}\,X^{(0)} + \sqrt{1-\bar\alpha_n-\sigma_{n+1}^2}\,\frac{X^{(n+1)} - \sqrt{\bar\alpha_{n+1}}\,X^{(0)}}{\sqrt{1-\bar\alpha_{n+1}}}.
+  \end{aligned}$$</div>
+  <p>The mean depends on <em>both</em> $X^{(n+1)}$ and $X^{(0)}$, so $q_\sigma$ is not a simple chain conditioned on $X^{(n+1)}$ alone — it is non-Markovian in the unaugmented state.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>3. Pair invariance: same pair, different triple</h2>
+
+  <h3>3.1 Theorem</h3>
+  <div class="thm"><span class="thm-name">Theorem 1 (pair invariance).</span> For every $n \in \{0, 1, \ldots, N\}$ and every choice of $\{\sigma_n\}$,
+  <div class="math-block">$$q_\sigma\bigl(X^{(n)} \mid X^{(0)}\bigr) \;=\; \mathcal{N}\!\bigl(\sqrt{\bar\alpha_n}\,X^{(0)},\,(1-\bar\alpha_n) I\bigr) \;=\; q_{\mathrm{DDPM}}\bigl(X^{(n)} \mid X^{(0)}\bigr).$$</div>
+  In particular, the joint law of the pair $(X^{(0)}, X^{(n)})$ under $q_\sigma$ matches its DDPM counterpart.</div>
+
+  <h3>3.2 Proof — backward induction</h3>
+  <p><strong>Base case ($n = N$).</strong> By construction, $X^{(N)} \mid X^{(0)} \sim \mathcal{N}(\sqrt{\bar\alpha_N}\,X^{(0)},\,(1-\bar\alpha_N) I)$.</p>
+  <p><strong>Inductive step.</strong> Assume $X^{(n+1)} \mid X^{(0)} \sim \mathcal{N}(\sqrt{\bar\alpha_{n+1}}\,X^{(0)},\,(1-\bar\alpha_{n+1}) I)$. Conditional on $X^{(0)}$, $\epsilon_{n+1}$ and $\eta$ are independent standard Gaussians. The recipe gives</p>
+  <div class="math-block">$$\mathbb{E}[X^{(n)} \mid X^{(0)}] = \sqrt{\bar\alpha_n}\,X^{(0)},\qquad \mathrm{Var}(X^{(n)} \mid X^{(0)}) = a_n^2 + \sigma_{n+1}^2 = (1-\bar\alpha_n - \sigma_{n+1}^2) + \sigma_{n+1}^2 = 1-\bar\alpha_n.$$</div>
+  <p>Note the cancellation: $\sigma_{n+1}^2$ enters $a_n^2$ with a minus and $\sigma_{n+1}^2 \cdot 1$ with a plus, leaving $1-\bar\alpha_n$ independent of $\sigma_{n+1}$. $\square$</p>
+
+  <h3>3.3 Triple — what changes with $\sigma$</h3>
+  <p>The joint $(X^{(0)}, X^{(n+1)}, X^{(n)})$ does depend on $\sigma_{n+1}$: the conditional mean $\mu_n$ above and the conditional variance $\sigma_{n+1}^2$ both vary. So:</p>
+  <ul>
+    <li>The DDPM ε-loss, which depends only on the pair, is invariant to $\sigma$. ε-networks trained on DDPM are reusable for any DDIM sampler.</li>
+    <li>The sampler's behavior — degree of stochasticity, step accuracy, inversion property — depends entirely on $\sigma$.</li>
+  </ul>
+
+  <h3>3.4 DDPM as a special case</h3>
+  <p>Choose</p>
+  <div class="math-block">$$\sigma_{n+1}^2 \;=\; \beta_{n+1}\,\frac{1-\bar\alpha_n}{1-\bar\alpha_{n+1}} \;=\; \tilde\beta_{n+1}.$$</div>
+  <p>This is exactly the closed-form posterior variance from Lecture 2 (Theorem 5). One can verify that with this choice, the DDIM mean $\mu_n$ collapses to the DDPM posterior mean $\tilde\mu_{n+1}(X^{(n+1)}, X^{(0)})$, and the joint becomes Markov.</p>
+
+  <h3>3.5 The deterministic limit</h3>
+  <p>Set $\sigma_n = 0$ for all $n$. Then $a_n = \sqrt{1-\bar\alpha_n}$ and $q_\sigma(X^{(n)} \mid X^{(n+1)}, X^{(0)})$ is a Dirac at</p>
+  <div class="math-block">$$X^{(n)} \;=\; \sqrt{\bar\alpha_n}\,X^{(0)} + \sqrt{1-\bar\alpha_n}\,\epsilon_{n+1},$$</div>
+  <p>the recycled noise alone. Pair invariance still holds — the marginal stays Gaussian — but the joint is now <em>functional</em>: given $X^{(0)}$ and any one $X^{(n)}$, every other $X^{(k)}$ is determined.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>4. Sampling: predicted clean signal</h2>
+
+  <h3>4.1 Setup</h3>
+  <p>At sampling time, $X^{(0)}$ is unknown. The forward conditional $q_\sigma(X^{(n)} \mid X^{(n+1)}, X^{(0)})$ requires it. DDIM substitutes a network-derived estimate.</p>
+
+  <h3>4.2 The estimator</h3>
+  <p>Invert the marginal $X^{(n+1)} = \sqrt{\bar\alpha_{n+1}}\,X^{(0)} + \sqrt{1-\bar\alpha_{n+1}}\,\epsilon$ for $X^{(0)}$ and substitute the network's noise prediction $\epsilon_\theta(X^{(n+1)}, n+1)$ for $\epsilon$:</p>
+  <div class="math-block">$$\hat X^{(0)}\bigl(X^{(n+1)}\bigr) \;=\; \frac{X^{(n+1)} - \sqrt{1-\bar\alpha_{n+1}}\,\epsilon_\theta(X^{(n+1)}, n+1)}{\sqrt{\bar\alpha_{n+1}}}.$$</div>
+  <p>If $\epsilon_\theta$ were exact, $\hat X^{(0)}$ would equal the true conditional mean $\mathbb{E}[X^{(0)} \mid X^{(n+1)}]$ (this is Tweedie applied at level $n+1$). In practice, $\hat X^{(0)}$ is the network's running guess for the clean sample.</p>
+
+  <h3>4.3 The DDIM reverse update</h3>
+  <p>Substitute $\hat X^{(0)}$ into the forward conditional. The "recycle" term simplifies:</p>
+  <div class="math-block">$$\frac{X^{(n+1)} - \sqrt{\bar\alpha_{n+1}}\,\hat X^{(0)}}{\sqrt{1-\bar\alpha_{n+1}}} \;=\; \epsilon_\theta(X^{(n+1)}, n+1).$$</div>
+  <p>So the update reads</p>
+  <div class="math-block">$$X^{(n)} \;=\; \underbrace{\sqrt{\bar\alpha_n}\,\hat X^{(0)}}_{\text{toward data}} \;+\; \underbrace{\sqrt{1-\bar\alpha_n - \sigma_{n+1}^2}\,\epsilon_\theta(X^{(n+1)}, n+1)}_{\text{noise direction}} \;+\; \underbrace{\sigma_{n+1}\,Z^{(n)}}_{\text{fresh noise}},$$</div>
+  <p>with $Z^{(n)} \sim \mathcal{N}(0, I)$ independent of all else.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>5. Deterministic DDIM and the probability-flow ODE</h2>
+
+  <h3>5.1 Deterministic update</h3>
+  <p>Set $\sigma_n = 0$. The reverse step is</p>
+  <div class="math-block">$$X^{(n)} \;=\; \sqrt{\bar\alpha_n}\,\hat X^{(0)} + \sqrt{1-\bar\alpha_n}\,\epsilon_\theta(X^{(n+1)}, n+1).$$</div>
+  <p>Substituting $\hat X^{(0)} = (X^{(n+1)} - \sqrt{1-\bar\alpha_{n+1}}\,\epsilon_\theta)/\sqrt{\bar\alpha_{n+1}}$:</p>
+  <div class="math-block">$$X^{(n)} \;=\; \sqrt{\frac{\bar\alpha_n}{\bar\alpha_{n+1}}}\,X^{(n+1)} + \!\left(\sqrt{1-\bar\alpha_n} - \sqrt{\frac{\bar\alpha_n(1-\bar\alpha_{n+1})}{\bar\alpha_{n+1}}}\right)\epsilon_\theta(X^{(n+1)}, n+1).$$</div>
+  <p>This is a deterministic map from $X^{(n+1)}$ to $X^{(n)}$ — a discrete dynamical system with no randomness once $X^{(N)}$ is sampled.</p>
+
+  <h3>5.2 Continuous-time limit</h3>
+  <p>Introduce continuous time $t \in [0, T]$ via $\bar\alpha_t$, identify $X_t = X^{(\lfloor tN/T \rfloor)}$, and Taylor-expand the deterministic update around $\Delta t = T/N \to 0$. A standard manipulation (see e.g. Song et al. 2021) gives the ODE in $\epsilon$-form:</p>
+  <div class="math-block">$$\frac{dX_t}{dt} \;=\; -\frac{\beta_t}{2}\,X_t \;+\; \frac{\beta_t}{2\sqrt{1-\bar\alpha_t}}\,\epsilon_\theta(X_t, t), \qquad \beta_t = -\frac{d\log\bar\alpha_t}{dt}.$$</div>
+  <p>Equivalently, with the change of variable $Y_t = X_t / \sqrt{\bar\alpha_t}$ and $\tau_t = \sqrt{(1-\bar\alpha_t)/\bar\alpha_t}$,</p>
+  <div class="math-block">$$dY_t \;=\; d\tau_t \cdot \epsilon_\theta(X_t, t),$$</div>
+  <p>i.e. $Y_t$ is a deterministic function of the cumulative noise-to-signal ratio.</p>
+
+  <h3>5.3 Probability-flow ODE in score form</h3>
+  <p>Use the score-noise identity $\epsilon_\theta = -\sqrt{1-\bar\alpha_t}\,s_\theta$. The ODE rewrites as</p>
+  <div class="thm"><span class="thm-name">Theorem 2 (probability-flow ODE).</span> For the VP forward SDE $dX_t = f(X_t,t)\,dt + g(t)\,dW_t$ with marginals $\{p_t\}$, the deterministic ODE
+  <div class="math-block">$$\frac{dX_t}{dt} \;=\; f(X_t, t) - \tfrac{1}{2}\,g^2(t)\,\nabla\log p_t(X_t)$$</div>
+  has the same marginal law $\{p_t\}$ as the forward SDE.</div>
+
+  <p>Comparison to Anderson's reverse SDE (Lecture 3): the SDE uses drift $f - g^2\,\nabla\log p_t$ and adds noise $g\,d\bar W_t$. The ODE uses <em>half</em> the score correction and zero noise. Both produce the same one-time marginals.</p>
+
+  <h3>5.4 Why the marginals match — Fokker–Planck</h3>
+  <p>Forward FP (Lecture 3, Theorem):</p>
+  <div class="math-block">$$\partial_t p_t \;=\; -\nabla\!\cdot(f\,p_t) + \tfrac{g^2}{2}\,\Delta p_t.$$</div>
+  <p>Continuity equation for the deterministic flow with velocity $v(x,t) = f - \tfrac{1}{2}g^2\,\nabla\log p_t$:</p>
+  <div class="math-block">$$\partial_t p_t \;=\; -\nabla\!\cdot(v\,p_t).$$</div>
+  <p>Using $p_t\,\nabla\log p_t = \nabla p_t$:</p>
+  <div class="math-block">$$-\nabla\!\cdot\!\bigl[(f - \tfrac{1}{2}g^2\,\nabla\log p_t)\,p_t\bigr] \;=\; -\nabla\!\cdot(f\,p_t) + \tfrac{1}{2}g^2\,\nabla\!\cdot(\nabla p_t) \;=\; -\nabla\!\cdot(f\,p_t) + \tfrac{g^2}{2}\,\Delta p_t.$$</div>
+  <p>This is exactly forward FP. Both dynamics share the same evolution equation for $p_t$, hence the same marginals (with matching initial condition). $\square$</p>
+
+  <h3>5.5 Three dynamics, one marginal law</h3>
+  <p>Summarizing:</p>
+  <div class="math-block">$$\begin{aligned}
+    \text{Forward SDE:}\quad &dX_t \;=\; f\,dt + g\,dW_t, \\
+    \text{Reverse SDE (Anderson):}\quad &dX_t \;=\; \bigl(f - g^2\,\nabla\log p_t\bigr)\,dt + g\,d\bar W_t, \\
+    \text{Reverse ODE (PF):}\quad &dX_t \;=\; \bigl(f - \tfrac{1}{2}g^2\,\nabla\log p_t\bigr)\,dt.
+  \end{aligned}$$</div>
+  <p>All three share $\{p_t\}$. The first two are stochastic and "share noise paths" only in distribution; the ODE is a single deterministic flow once $X_T$ is fixed.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>6. Consequences of determinism</h2>
+
+  <h3>6.1 Acceleration via coarse Euler</h3>
+  <p>Discretize the PF-ODE with a Runge–Kutta or higher-order solver. Empirically, $\sim 50$ function evaluations of $\epsilon_\theta$ approach the FID of $\sim 1000$-step DDPM. The reason: deterministic ODEs admit higher-order solvers (RK4, DPM-Solver), while stochastic SDEs are stuck at $O(\sqrt{\Delta t})$ for Euler–Maruyama.</p>
+
+  <h3>6.2 Inversion</h3>
+  <p>The deterministic update $X^{(n+1)} \mapsto X^{(n)}$ is a function. Run the recursion in reverse to obtain $X^{(0)} \mapsto X^{(N)}$ — image to latent. Used in editing, faithful reconstruction, and prompt-to-prompt manipulation.</p>
+
+  <h3>6.3 Smooth latent interpolation</h3>
+  <p>Given two latents $X^{(N)}_a, X^{(N)}_b \sim \mathcal{N}(0, I)$, spherical interpolation $X^{(N)}_t = \mathrm{slerp}(X^{(N)}_a, X^{(N)}_b, t)$ followed by deterministic decoding produces semantically smooth interpolations between $X^{(0)}_a$ and $X^{(0)}_b$. This requires the decoding map to be a continuous function — exactly what $\sigma \equiv 0$ provides.</p>
+
+  <h3>6.4 DDPM vs DDIM — choosing $\sigma$</h3>
+  <ul>
+    <li><strong>$\sigma = \tilde\beta$ (DDPM)</strong>: maximum stochasticity, diversity of samples, slowest convergence.</li>
+    <li><strong>$\sigma = 0$ (deterministic)</strong>: fewest steps, invertibility, smoothest latent space; potentially less sample diversity per latent budget.</li>
+    <li><strong>Intermediate $\sigma$</strong>: tunes the bias–variance / diversity–speed trade-off.</li>
+  </ul>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>7. Summary and bridge to Lecture 5</h2>
+  <ul>
+    <li>The DDPM training loss only sees single-time conditional marginals.</li>
+    <li>DDIM constructs a non-Markovian forward joint with the same marginals, indexed by $\{\sigma_n\}$.</li>
+    <li>Pair invariance ($X^{(0)}, X^{(n)}$) lets DDIM reuse DDPM-trained networks. Triple invariance fails — sampler behavior depends on $\sigma$.</li>
+    <li>$\sigma_n \equiv 0$ yields a deterministic flow: the probability-flow ODE, with half the score correction of the reverse SDE.</li>
+    <li>Determinism unlocks ODE solvers, inversion, and latent interpolation.</li>
+  </ul>
+  <p><strong>Lecture 5 preview.</strong> So far, sampling is unconditional. Lecture 5 introduces conditioning — classifier guidance, classifier-free guidance — and tackles the discrete state space, where additive noise is no longer well-defined.</p>
+</article>
+
+</body>
+</html>

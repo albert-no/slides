@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Diffusion 2 — Notes</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  body { max-width: 880px; margin: 40px auto; padding: 0 32px 80px; color: var(--charcoal); line-height: 1.55; }
+  h1 { color: var(--yonsei-blue); font-size: 2.2rem; border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+  h2 { color: var(--yonsei-blue); margin-top: 40px; font-size: 1.6rem; }
+  h3 { font-size: 1.2rem; margin-top: 20px; }
+  article { margin-bottom: 40px; }
+  .math-block { background: var(--light); padding: 12px 16px; border-radius: 8px; margin: 14px 0; overflow-x: auto; }
+  .key { background: #f4f6f9; border-left: 3px solid var(--yonsei-blue); padding: 10px 14px; margin: 14px 0; }
+  .defn, .thm, .prop, .lem, .cor { background: #f4f6f9; border-left: 3px solid var(--yonsei-blue); padding: 10px 14px; margin: 14px 0; }
+  .thm-name { font-weight: 700; color: var(--yonsei-blue); }
+  p, li { font-size: 1.05rem; }
+</style>
+</head>
+<body>
+
+<h1>Diffusion 2 — Companion Notes</h1>
+<p>Speaker's reading companion. Formal statements and full proofs for the DDPM deck (VP forward, MGF convergence, VLB three-term decomposition, ε-prediction).</p>
+
+<!-- =================================================== -->
+<article>
+  <h2>1. Variance-preserving forward process</h2>
+
+  <h3>1.1 Definition</h3>
+  <div class="defn"><span class="thm-name">Definition 1 (VP forward chain).</span> Fix a noise schedule $\{\beta_n\}_{n=1}^N \subset (0,1)$. Let $X^{(0)} = X$ and, for $n = 1, \ldots, N$,
+  <div class="math-block">$$X^{(n)} \;=\; \sqrt{1-\beta_n}\,X^{(n-1)} + \sqrt{\beta_n}\,Z^{(n)},\qquad Z^{(n)} \overset{\text{i.i.d.}}{\sim} \mathcal{N}(0, 1),$$</div>
+  with $\{Z^{(n)}\}_{n=1}^N$ independent of $X$. Equivalently $X^{(n)} \mid X^{(n-1)} \sim \mathcal{N}(\sqrt{1-\beta_n}\,X^{(n-1)}, \beta_n)$.</div>
+
+  <h3>1.2 Variance is preserved</h3>
+  <div class="prop"><span class="thm-name">Proposition 1.</span> If $\mathrm{Var}(X^{(0)}) = 1$, then $\mathrm{Var}(X^{(n)}) = 1$ for every $n$.</div>
+  <p><strong>Proof.</strong> By induction. Suppose $\mathrm{Var}(X^{(n-1)}) = 1$. Independence of $Z^{(n)}$ from $X^{(n-1)}$ gives</p>
+  <div class="math-block">$$\mathrm{Var}(X^{(n)}) = (1-\beta_n)\,\mathrm{Var}(X^{(n-1)}) + \beta_n\,\mathrm{Var}(Z^{(n)}) = (1-\beta_n) + \beta_n = 1. \qquad\square$$</div>
+
+  <h3>1.3 One-shot identity</h3>
+  <div class="prop"><span class="thm-name">Proposition 2 (one-shot corruption).</span> Define the cumulative product $\bar\alpha_n := \prod_{i=1}^n (1-\beta_i)$. For every $n \geq 1$,
+  <div class="math-block">$$X^{(n)} \;\overset{(d)}{=}\; \sqrt{\bar\alpha_n}\,X^{(0)} + \sqrt{1-\bar\alpha_n}\,Z, \qquad Z \sim \mathcal{N}(0, 1),$$</div>
+  with $Z$ independent of $X^{(0)}$.</div>
+
+  <p><strong>Proof.</strong> By induction. The case $n=1$ holds with $\bar\alpha_1 = 1-\beta_1$ and $Z = Z^{(1)}$. Assume the claim for $n-1$, with the representing variable $Z'$:</p>
+  <div class="math-block">$$X^{(n-1)} \;\overset{(d)}{=}\; \sqrt{\bar\alpha_{n-1}}\,X^{(0)} + \sqrt{1-\bar\alpha_{n-1}}\,Z'.$$</div>
+  <p>Apply the recursion:</p>
+  <div class="math-block">$$X^{(n)} = \sqrt{1-\beta_n}\,X^{(n-1)} + \sqrt{\beta_n}\,Z^{(n)} = \sqrt{(1-\beta_n)\bar\alpha_{n-1}}\,X^{(0)} + \sqrt{(1-\beta_n)(1-\bar\alpha_{n-1})}\,Z' + \sqrt{\beta_n}\,Z^{(n)}.$$</div>
+  <p>The first coefficient is $\sqrt{\bar\alpha_n}$. The remaining sum is a linear combination of independent standard Gaussians, hence Gaussian with variance</p>
+  <div class="math-block">$$(1-\beta_n)(1-\bar\alpha_{n-1}) + \beta_n = 1 - (1-\beta_n)\bar\alpha_{n-1} = 1 - \bar\alpha_n.$$</div>
+  <p>So $X^{(n)} \overset{(d)}{=} \sqrt{\bar\alpha_n}\,X^{(0)} + \sqrt{1-\bar\alpha_n}\,Z$ for $Z \sim \mathcal{N}(0,1)$. $\square$</p>
+
+  <p>This justifies the conditional density</p>
+  <div class="math-block">$$q\bigl(X^{(n)} \mid X^{(0)}\bigr) \;=\; \mathcal{N}\!\bigl(\sqrt{\bar\alpha_n}\,X^{(0)},\; 1-\bar\alpha_n\bigr).$$</div>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>2. Convergence to the standard Gaussian (MGF proof)</h2>
+
+  <h3>2.1 Moment generating function</h3>
+  <div class="defn"><span class="thm-name">Definition 2 (MGF).</span> The moment generating function of a real random variable $X$ is $M_X(t) = \mathbb{E}[e^{tX}]$ on the interval where this expectation is finite.</div>
+  <p>Two facts we will use:</p>
+  <ul>
+    <li>For independent $X, Y$: $M_{X+Y}(t) = M_X(t)\,M_Y(t)$.</li>
+    <li>For $\mathcal{N}(\mu, \sigma^2)$: $M(t) = \exp(\mu t + \tfrac{1}{2}\sigma^2 t^2)$.</li>
+  </ul>
+
+  <div class="thm"><span class="thm-name">Theorem 3 (Lévy continuity).</span> Let $\{X_n\}$ be real random variables with MGFs $M_{X_n}$ finite on a common open neighborhood of $0$. If $M_{X_n}(t) \to M(t)$ pointwise on that neighborhood and $M$ is the MGF of a probability law $\mu$, then $X_n \xrightarrow{d} \mu$.</div>
+
+  <h3>2.2 MGF of $X^{(n)}$ in closed form</h3>
+  <div class="prop"><span class="thm-name">Proposition 3.</span> For VP with schedule $\{\beta_n\}$,
+  <div class="math-block">$$M_{X^{(n)}}(t) \;=\; M_{X^{(0)}}\!\bigl(\sqrt{\bar\alpha_n}\,t\bigr)\,\exp\!\left(\tfrac{1-\bar\alpha_n}{2}\,t^2\right).$$</div></div>
+
+  <p><strong>Proof.</strong> By induction. For $n=1$, independence gives</p>
+  <div class="math-block">$$M_{X^{(1)}}(t) = \mathbb{E}\!\bigl[e^{t \sqrt{1-\beta_1}\,X^{(0)} + t\sqrt{\beta_1}\,Z^{(1)}}\bigr] = M_{X^{(0)}}\!\bigl(\sqrt{1-\beta_1}\,t\bigr)\,e^{\beta_1 t^2/2}.$$</div>
+  <p>This matches the claim with $\bar\alpha_1 = 1-\beta_1$. Assume the formula for $n-1$. Then</p>
+  <div class="math-block">$$\begin{aligned}
+    M_{X^{(n)}}(t) &= \mathbb{E}\!\bigl[e^{t \sqrt{1-\beta_n}\,X^{(n-1)}}\bigr]\,e^{\beta_n t^2/2} \\
+    &= M_{X^{(n-1)}}\!\bigl(\sqrt{1-\beta_n}\,t\bigr)\,e^{\beta_n t^2/2} \\
+    &= M_{X^{(0)}}\!\bigl(\sqrt{(1-\beta_n)\bar\alpha_{n-1}}\,t\bigr)\,\exp\!\left(\tfrac{1-\bar\alpha_{n-1}}{2}(1-\beta_n) t^2 + \tfrac{\beta_n}{2} t^2\right).
+  \end{aligned}$$</div>
+  <p>Simplify exponents: $(1-\beta_n)(1-\bar\alpha_{n-1}) + \beta_n = 1 - \bar\alpha_n$. The square-root coefficient is $\sqrt{\bar\alpha_n}$. $\square$</p>
+
+  <h3>2.3 Convergence theorem</h3>
+  <div class="thm"><span class="thm-name">Theorem 4 (Gaussian terminal).</span> Suppose $X^{(0)}$ has finite MGF on a neighborhood of $0$, and the schedule satisfies $\bar\alpha_n \to 0$ as $n \to \infty$. Then
+  <div class="math-block">$$X^{(n)} \xrightarrow{d} \mathcal{N}(0,1).$$</div></div>
+
+  <p><strong>Proof.</strong> By Proposition 3,</p>
+  <div class="math-block">$$M_{X^{(n)}}(t) \;=\; M_{X^{(0)}}\!\bigl(\sqrt{\bar\alpha_n}\,t\bigr)\,\exp\!\left(\tfrac{1-\bar\alpha_n}{2}t^2\right).$$</div>
+  <p>For each fixed $t$, $\sqrt{\bar\alpha_n}\,t \to 0$, so $M_{X^{(0)}}(\sqrt{\bar\alpha_n}\,t) \to M_{X^{(0)}}(0) = 1$ by continuity of the MGF on its open domain. The exponent factor tends to $e^{t^2/2}$. Hence $M_{X^{(n)}}(t) \to e^{t^2/2}$, which is the MGF of $\mathcal{N}(0,1)$. By Lévy continuity, $X^{(n)} \xrightarrow{d} \mathcal{N}(0,1)$. $\square$</p>
+
+  <p><strong>Remarks.</strong> (i) The convergence is independent of the data law (modulo finite MGF). (ii) The schedule design $\beta_n$ matters only through $\bar\alpha_n \to 0$; common choices (linear, cosine) achieve this. (iii) For practical $N \approx 1000$ schedules, $\bar\alpha_N \approx 10^{-4}$ — small but nonzero, contributing to the prior-mismatch error in the deck's three-error chain.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>3. Reverse conditional and two routes to the score</h2>
+
+  <h3>3.1 Bayes derivation of the mean</h3>
+  <p>Apply the small-$\beta_n$ analogue of Lecture 1 (Theorem 1) to the VP transition $X^{(n)} \mid X^{(n-1)} \sim \mathcal{N}(\sqrt{1-\beta_n}\,X^{(n-1)}, \beta_n)$. The "rescaled" version of the step lets us reuse the same Taylor-+-complete-square argument, yielding</p>
+  <div class="math-block">$$X^{(n-1)} \mid X^{(n)} \;\approx\; \mathcal{N}\!\bigl(\mu(X^{(n)}, n),\, \beta_n\bigr),\qquad \mu(X^{(n)}, n) = \frac{1}{\sqrt{1-\beta_n}}\!\left(X^{(n)} + \beta_n\,\partial_x \log P_{X^{(n)}}(X^{(n)})\right).$$</div>
+  <p>The unknown is the score $s(\,\cdot\,;n) = \partial_x \log P_{X^{(n)}}$. Two complementary derivations of the training loss recover this score:</p>
+  <ul>
+    <li><strong>Lecture 1 route.</strong> Train a denoiser $f_\theta$ for squared error; convert via Tweedie.</li>
+    <li><strong>This lecture (DDPM).</strong> Maximum likelihood + Jensen → variational lower bound → ε-prediction.</li>
+  </ul>
+  <p>Both routes train networks; they differ in the loss derivation and weighting. Lecture 3 shows they are the same loss up to time-dependent reweighting.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>4. Maximum-likelihood / variational lower bound</h2>
+
+  <h3>4.1 MLE as KL closing</h3>
+  <p>Let $q$ denote the data law and $p_\theta$ the model. From data $X^{(0)}_1, \ldots, X^{(0)}_M \overset{\text{i.i.d.}}{\sim} q$, the empirical NLL converges (Glivenko–Cantelli / SLLN) to</p>
+  <div class="math-block">$$\mathbb{E}_{q}\!\bigl[-\log p_\theta(X^{(0)})\bigr] \;=\; D_{\mathrm{KL}}\!\bigl(q\,\Vert\,p_\theta\bigr) + H(q).$$</div>
+  <p>Since $H(q)$ is independent of $\theta$, MLE on samples (in the population limit) is equivalent to KL minimization.</p>
+
+  <h3>4.2 Why the marginal is intractable</h3>
+  <p>The reverse model is a Markov chain initialized at $p(X^{(N)}) = \mathcal{N}(0,1)$:</p>
+  <div class="math-block">$$p_\theta(X^{(0:N)}) = p(X^{(N)})\,\prod_{n=1}^N p_\theta(X^{(n-1)} \mid X^{(n)}),\qquad p_\theta(X^{(0)}) = \int p_\theta(X^{(0:N)})\,dX^{(1:N)}.$$</div>
+  <p>The marginal is a $Nd$-dimensional integral with no closed form, so we cannot evaluate $-\log p_\theta(X^{(0)})$ directly.</p>
+
+  <h3>4.3 Jensen → variational lower bound</h3>
+  <p>Insert the (data-conditional) forward joint $q(X^{(1:N)} \mid X^{(0)}) = \prod_{n=1}^N q(X^{(n)} \mid X^{(n-1)})$ in numerator and denominator:</p>
+  <div class="math-block">$$\begin{aligned}
+    -\log p_\theta(X^{(0)}) &= -\log \int q(X^{(1:N)} \mid X^{(0)})\,\frac{p_\theta(X^{(0:N)})}{q(X^{(1:N)} \mid X^{(0)})}\,dX^{(1:N)} \\
+    &= -\log \mathbb{E}_q\!\left[\frac{p_\theta(X^{(0:N)})}{q(X^{(1:N)} \mid X^{(0)})}\,\middle|\,X^{(0)}\right] \\
+    &\leq \mathbb{E}_q\!\left[-\log\frac{p_\theta(X^{(0:N)})}{q(X^{(1:N)} \mid X^{(0)})}\,\middle|\,X^{(0)}\right] \;=:\; \mathrm{VLB}(X^{(0)}),
+  \end{aligned}$$</div>
+  <p>where the inequality is Jensen applied to the concave $-\log$.</p>
+
+  <h3>4.4 Markov / Bayes-on-chain identity</h3>
+  <div class="lem"><span class="thm-name">Lemma 1.</span> If $\{X^{(n)}\}$ is a Markov chain (forward direction), then for $n \geq 1$
+  <div class="math-block">$$q(X^{(n)} \mid X^{(n-1)})\,q(X^{(n-1)} \mid X^{(0)}) = q(X^{(n-1)} \mid X^{(n)}, X^{(0)})\,q(X^{(n)} \mid X^{(0)}).$$</div></div>
+  <p><strong>Proof.</strong> By the chain rule, $q(X^{(n-1)}, X^{(n)} \mid X^{(0)}) = q(X^{(n-1)} \mid X^{(n)}, X^{(0)})\,q(X^{(n)} \mid X^{(0)})$. By Markov, the same joint equals $q(X^{(n)} \mid X^{(n-1)}, X^{(0)})\,q(X^{(n-1)} \mid X^{(0)}) = q(X^{(n)} \mid X^{(n-1)})\,q(X^{(n-1)} \mid X^{(0)})$. Equate. $\square$</p>
+
+  <h3>4.5 Telescope — three-term decomposition</h3>
+  <p>Inside the VLB, expand both products and split off the $n=1$ factors:</p>
+  <div class="math-block">$$\frac{p_\theta(X^{(0:N)})}{q(X^{(1:N)} \mid X^{(0)})} = \frac{p(X^{(N)})\,p_\theta(X^{(0)} \mid X^{(1)})\,\prod_{n=2}^{N} p_\theta(X^{(n-1)} \mid X^{(n)})}{q(X^{(1)} \mid X^{(0)})\,\prod_{n=2}^{N} q(X^{(n)} \mid X^{(n-1)})}.$$</div>
+  <p>Use Lemma 1 on each $q(X^{(n)} \mid X^{(n-1)})$ for $n \geq 2$:</p>
+  <div class="math-block">$$q(X^{(n)} \mid X^{(n-1)}) = q(X^{(n-1)} \mid X^{(n)}, X^{(0)})\,\frac{q(X^{(n)} \mid X^{(0)})}{q(X^{(n-1)} \mid X^{(0)})}.$$</div>
+  <p>The fraction telescopes across $n = 2, \ldots, N$, leaving $q(X^{(N)} \mid X^{(0)}) / q(X^{(1)} \mid X^{(0)})$. Cancel the $q(X^{(1)} \mid X^{(0)})$ in the original denominator:</p>
+  <div class="math-block">$$=\;\underbrace{\frac{p(X^{(N)})}{q(X^{(N)} \mid X^{(0)})}}_{\to\,L_N}\;\cdot\;\prod_{n=2}^{N}\underbrace{\frac{p_\theta(X^{(n-1)} \mid X^{(n)})}{q(X^{(n-1)} \mid X^{(n)}, X^{(0)})}}_{\to\,L_{n-1}}\;\cdot\;\underbrace{p_\theta(X^{(0)} \mid X^{(1)})}_{\to\,L_0}.$$</div>
+  <p>Take $-\log$ inside the expectation; the product becomes a sum:</p>
+  <div class="math-block">$$\mathrm{VLB} = \mathbb{E}_q\!\left[\,L_N \;+\; \sum_{n=2}^{N} L_{n-1} \;+\; L_0 \,\right],$$</div>
+  <p>with</p>
+  <div class="math-block">$$\begin{aligned}
+    L_N &= -\log\frac{p(X^{(N)})}{q(X^{(N)} \mid X^{(0)})} \\
+    L_{n-1} &= -\log\frac{p_\theta(X^{(n-1)} \mid X^{(n)})}{q(X^{(n-1)} \mid X^{(n)}, X^{(0)})} \quad (n = 2, \ldots, N)\\
+    L_0 &= -\log p_\theta(X^{(0)} \mid X^{(1)}).
+  \end{aligned}$$</div>
+
+  <h3>4.6 Identifying KL divergences</h3>
+  <p>Take the outer expectation $\mathbb{E}_q[\cdot]$. The $L_N$ term, after expectation over $X^{(0)} \sim q$ and $X^{(N)} \mid X^{(0)} \sim q$, is</p>
+  <div class="math-block">$$\mathbb{E}_q[L_N] = \mathbb{E}_{X^{(0)}}\!\bigl[D_{\mathrm{KL}}\bigl(q(X^{(N)} \mid X^{(0)})\,\Vert\,p(X^{(N)})\bigr)\bigr].$$</div>
+  <p>This is $\theta$-independent and tends to $0$ by Theorem 4 ($q(X^{(N)} \mid X^{(0)}) \approx \mathcal{N}(0, 1) = p(X^{(N)})$). The $L_{n-1}$ term becomes</p>
+  <div class="math-block">$$\mathbb{E}_q[L_{n-1}] = \mathbb{E}_{X^{(0)}, X^{(n)}}\!\bigl[D_{\mathrm{KL}}\bigl(q(X^{(n-1)} \mid X^{(n)}, X^{(0)})\,\Vert\,p_\theta(X^{(n-1)} \mid X^{(n)})\bigr)\bigr].$$</div>
+  <p>This is the actual training signal — both arguments are Gaussian (proven below), so the KL has a closed form. The boundary $L_0$ is small and routinely dropped in DDPM training.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>5. Target posterior is exactly Gaussian</h2>
+
+  <h3>5.1 Statement</h3>
+  <div class="thm"><span class="thm-name">Theorem 5 (data-conditional posterior).</span> For the VP forward chain, $q(X^{(n-1)} \mid X^{(n)}, X^{(0)})$ is exactly Gaussian:
+  <div class="math-block">$$q(X^{(n-1)} \mid X^{(n)}, X^{(0)}) \;=\; \mathcal{N}\bigl(\tilde\mu_n(X^{(n)}, X^{(0)}),\, \tilde\beta_n\bigr),$$</div>
+  with closed-form mean and variance:
+  <div class="math-block">$$\tilde\mu_n = \frac{\sqrt{1-\beta_n}\,(1-\bar\alpha_{n-1})}{1-\bar\alpha_n}\,X^{(n)} + \frac{\sqrt{\bar\alpha_{n-1}}\,\beta_n}{1-\bar\alpha_n}\,X^{(0)}, \qquad \tilde\beta_n = \frac{1-\bar\alpha_{n-1}}{1-\bar\alpha_n}\,\beta_n.$$</div></div>
+
+  <h3>5.2 Proof — Gaussian product</h3>
+  <p>By Bayes (within the data-conditional law),</p>
+  <div class="math-block">$$q(X^{(n-1)} \mid X^{(n)}, X^{(0)}) \;\propto\; q(X^{(n)} \mid X^{(n-1)}, X^{(0)})\,q(X^{(n-1)} \mid X^{(0)}) = q(X^{(n)} \mid X^{(n-1)})\,q(X^{(n-1)} \mid X^{(0)}),$$</div>
+  <p>using Markov for the second equality. Both factors are Gaussian in $X^{(n-1)}$:</p>
+  <ul>
+    <li>$q(X^{(n)} \mid X^{(n-1)}) = \mathcal{N}\bigl(\sqrt{1-\beta_n}\,X^{(n-1)},\,\beta_n\bigr)$. As a function of $X^{(n-1)}$, density $\propto \exp(-\tfrac{1}{2\beta_n}(X^{(n)} - \sqrt{1-\beta_n}\,X^{(n-1)})^2)$.</li>
+    <li>$q(X^{(n-1)} \mid X^{(0)}) = \mathcal{N}\bigl(\sqrt{\bar\alpha_{n-1}}\,X^{(0)},\,1-\bar\alpha_{n-1}\bigr)$. Density $\propto \exp(-\tfrac{1}{2(1-\bar\alpha_{n-1})}(X^{(n-1)} - \sqrt{\bar\alpha_{n-1}}\,X^{(0)})^2)$.</li>
+  </ul>
+  <p>The product of two Gaussians (in the same variable) is Gaussian. Collect quadratic and linear terms in $X^{(n-1)}$:</p>
+  <div class="math-block">$$-\frac{1}{2}\!\left[\frac{(\sqrt{1-\beta_n})^2}{\beta_n} + \frac{1}{1-\bar\alpha_{n-1}}\right] (X^{(n-1)})^2 + \!\left[\frac{\sqrt{1-\beta_n}\,X^{(n)}}{\beta_n} + \frac{\sqrt{\bar\alpha_{n-1}}\,X^{(0)}}{1-\bar\alpha_{n-1}}\right] X^{(n-1)} + \text{const}.$$</div>
+  <p>The precision (coefficient of $-\tfrac{1}{2}(X^{(n-1)})^2$) is</p>
+  <div class="math-block">$$\frac{1-\beta_n}{\beta_n} + \frac{1}{1-\bar\alpha_{n-1}} = \frac{(1-\beta_n)(1-\bar\alpha_{n-1}) + \beta_n}{\beta_n(1-\bar\alpha_{n-1})} = \frac{1-\bar\alpha_n}{\beta_n(1-\bar\alpha_{n-1})}.$$</div>
+  <p>So $\tilde\beta_n = \dfrac{\beta_n(1-\bar\alpha_{n-1})}{1-\bar\alpha_n}$, matching the claim. The mean $\tilde\mu_n$ is the linear coefficient divided by the precision; algebra gives the stated expressions. $\square$</p>
+
+  <h3>5.3 Score-function form of the mean</h3>
+  <p>Substituting $X^{(0)}$ from the one-shot identity $X^{(n)} = \sqrt{\bar\alpha_n}\,X^{(0)} + \sqrt{1-\bar\alpha_n}\,\epsilon$ and using the conditional score</p>
+  <div class="math-block">$$\partial_{x} \log q(X^{(n)} \mid X^{(0)}) \;=\; -\frac{X^{(n)} - \sqrt{\bar\alpha_n}\,X^{(0)}}{1-\bar\alpha_n} \;=\; -\frac{\epsilon}{\sqrt{1-\bar\alpha_n}},$$</div>
+  <p>one can rewrite</p>
+  <div class="math-block">$$\tilde\mu_n(X^{(n)}, X^{(0)}) \;=\; \frac{1}{\sqrt{1-\beta_n}}\!\left[X^{(n)} + \beta_n\,\partial_x \log q(X^{(n)} \mid X^{(0)})\right].$$</div>
+  <p>This matches the small-$\beta_n$ Bayes-derivation form, but with the <em>data-conditional</em> score in place of the marginal score. The DDPM model parameterizes</p>
+  <div class="math-block">$$\mu_\theta(X^{(n)}, n) = \frac{1}{\sqrt{1-\beta_n}}\!\left[X^{(n)} + \beta_n\,s_\theta(X^{(n)}, n)\right],$$</div>
+  <p>using the marginal score. Mean matching of $\tilde\mu_n \approx \mu_\theta$ thus reduces to score matching.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>6. KL between Gaussians, mean matching, ε-loss</h2>
+
+  <h3>6.1 KL formula</h3>
+  <div class="lem"><span class="thm-name">Lemma 2.</span> For multivariate Gaussians with isotropic covariances of the same scale,
+  <div class="math-block">$$D_{\mathrm{KL}}\!\bigl(\mathcal{N}(\mu_0, \sigma^2 I_d)\,\Vert\,\mathcal{N}(\mu_1, \sigma^2 I_d)\bigr) \;=\; \frac{\|\mu_1 - \mu_0\|^2}{2\sigma^2}.$$</div></div>
+  <p>(Standard exercise. The general formula carries trace and log-det terms; isotropic-equal-variance kills both.)</p>
+
+  <h3>6.2 Reverse-step loss collapses to mean matching</h3>
+  <p>By Theorem 5, $q(X^{(n-1)} \mid X^{(n)}, X^{(0)})$ has variance $\tilde\beta_n$. The DDPM model fixes its reverse covariance also to $\tilde\beta_n$ (or $\beta_n$ — both are common; here use $\beta_n$ for the deck-aligned form). Apply Lemma 2:</p>
+  <div class="math-block">$$L_{n-1} \;=\; \frac{1}{2\beta_n}\,\mathbb{E}_q\bigl[\,\bigl\|\tilde\mu_n(X^{(n)}, X^{(0)}) - \mu_\theta(X^{(n)}, n)\bigr\|^2\,\bigr].$$</div>
+
+  <h3>6.3 Why this is not "ordinary" mean matching</h3>
+  <p>$\tilde\mu_n$ depends on $X^{(0)}$; $\mu_\theta$ does not. So we are matching a network's prediction to a quantity it cannot fully observe. This is exactly score matching in disguise: the $X^{(0)}$-dependence is averaged out in expectation, leaving the score of the marginal as the optimal target. (Formal proof in Lecture 3, Theorem 6 (Vincent 2011).)</p>
+
+  <h3>6.4 Mean matching → score matching</h3>
+  <p>Substitute the score forms of $\tilde\mu_n$ and $\mu_\theta$ from §5.3:</p>
+  <div class="math-block">$$L_{n-1} = \frac{\beta_n}{2(1-\beta_n)}\,\mathbb{E}_q\!\left\|\partial_x\log q(X^{(n)} \mid X^{(0)}) - s_\theta(X^{(n)}, n)\right\|^2.$$</div>
+
+  <h3>6.5 ε-reparameterization</h3>
+  <p>Use the conditional-score identity</p>
+  <div class="math-block">$$\partial_x \log q(X^{(n)} \mid X^{(0)}) = -\frac{\epsilon}{\sqrt{1-\bar\alpha_n}}, \qquad X^{(n)} = \sqrt{\bar\alpha_n}\,X^{(0)} + \sqrt{1-\bar\alpha_n}\,\epsilon.$$</div>
+  <p>Reparameterize the network as a noise predictor: $s_\theta(x, n) = -\epsilon_\theta(x, n) / \sqrt{1-\bar\alpha_n}$. Then</p>
+  <div class="math-block">$$L_{n-1} \;=\; \frac{\beta_n}{2(1-\beta_n)(1-\bar\alpha_n)}\,\mathbb{E}\!\left[\bigl\|\epsilon - \epsilon_\theta(\sqrt{\bar\alpha_n}\,X^{(0)} + \sqrt{1-\bar\alpha_n}\,\epsilon,\;n)\bigr\|^2\right].$$</div>
+  <p>The DDPM paper drops the $n$-dependent prefactor (replaces it with $1$), giving</p>
+  <div class="math-block">$$\mathcal{L}_{\mathrm{simple}}(\theta) = \mathbb{E}_{X^{(0)}, n, \epsilon}\!\left[\bigl\|\epsilon - \epsilon_\theta(X^{(n)}, n)\bigr\|^2\right].$$</div>
+  <p>This unweighted form is plain regression, sample-efficient, and matches what is implemented in practice.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>7. Algorithms and approximation errors</h2>
+
+  <h3>7.1 Training algorithm</h3>
+  <ol>
+    <li>Sample $X^{(0)} \sim p_{\mathrm{data}}$.</li>
+    <li>Sample $n \sim \mathrm{Unif}\{1, \ldots, N\}$.</li>
+    <li>Sample $\epsilon \sim \mathcal{N}(0, I)$.</li>
+    <li>Form $X^{(n)} = \sqrt{\bar\alpha_n}\,X^{(0)} + \sqrt{1-\bar\alpha_n}\,\epsilon$.</li>
+    <li>Update by gradient on $\|\epsilon - \epsilon_\theta(X^{(n)}, n)\|^2$ (with optional weighting $\tilde\lambda_n$).</li>
+  </ol>
+
+  <h3>7.2 Sampling algorithm</h3>
+  <p>Initialize $X^{(N)} \sim \mathcal{N}(0, I)$. For $n = N, N-1, \ldots, 1$, draw $Z^{(n)} \sim \mathcal{N}(0, I)$ and set</p>
+  <div class="math-block">$$X^{(n-1)} \;=\; \frac{1}{\sqrt{1-\beta_n}}\!\left(X^{(n)} - \frac{\beta_n}{\sqrt{1-\bar\alpha_n}}\,\epsilon_\theta(X^{(n)}, n)\right) + \sqrt{\beta_n}\,Z^{(n)}.$$</div>
+  <p>Return $X^{(0)}$.</p>
+
+  <h3>7.3 Three sources of approximation error</h3>
+  <ol>
+    <li><strong>① Reverse Gaussianity.</strong> $p_\theta(X^{(n-1)} \mid X^{(n)})$ is taken Gaussian. Exact only as $\beta_n \to 0$ uniformly; for finite $N$, error is $O(\beta_n^{3/2})$ in TV per step, accumulating to $O(N\,\beta_n^{3/2}) = O(N^{-1/2})$ if $\beta_n = O(1/N)$.</li>
+    <li><strong>② Score / ε estimation.</strong> $\epsilon_\theta \neq \epsilon$. Errors enter every reverse step and compound through the chain. Quantifying the propagation requires assumptions on Lipschitz constants of the score; see Chen et al. (NeurIPS 2023) for sharp rates.</li>
+    <li><strong>③ Prior mismatch.</strong> $\bar\alpha_N \neq 0$ exactly, so $q(X^{(N)} \mid X^{(0)}) \neq \mathcal{N}(0, I)$. Initializing the reverse from $\mathcal{N}(0, I)$ contributes a $D_{\mathrm{KL}}$ at the top of the chain — the $L_N$ term, which is small but nonzero.</li>
+  </ol>
+  <p>The continuous-time SDE view (Lecture 3) eliminates ①: in the $\Delta t \to 0$ limit, the reverse process is exact (Anderson 1982). ② and ③ remain — they are intrinsic to score estimation and to schedule design.</p>
+</article>
+
+<!-- =================================================== -->
+<article>
+  <h2>8. Bridge to Lecture 3</h2>
+  <ul>
+    <li>The discrete VP chain becomes a linear OU SDE in the $\Delta t \to 0$ limit.</li>
+    <li>Anderson's theorem replaces the small-$\beta_n$ Gaussian-reverse approximation by an <em>exact</em> reverse SDE.</li>
+    <li>Vincent's theorem proves the equivalence between marginal and conditional score matching, formalizing the "non-trivial mean matching" intuition of §6.3.</li>
+    <li>The Fokker–Planck equation is the technical hinge for both Anderson and the probability-flow ODE (Lecture 4).</li>
+  </ul>
+</article>
+
+</body>
+</html>

@@ -1,10 +1,10 @@
 # privacy/ — Privacy series
 
-Six sub-tracks: diffusion (foundations course, no notes), DP (single NeurIPS 2023 talk), MIA (5-lecture series with paired notes), plus three single-deck topics — memorization, unlearning, watermarking. Together they form the privacy / copyright / provenance stack.
+Six sub-tracks: a unified generative-model review (`generative/` — diffusion + LLM) followed by the privacy stack — DP (single NeurIPS 2023 talk), MIA (5-lecture series with paired notes), plus three single-deck topics (memorization, unlearning, watermarking). Together they form the privacy / copyright / provenance stack.
 
 ## Subfolders
 
-- **`diffusion/`** — Diffusion generative models from scratch (5 lectures). No companion `-note.html` files; proofs are in-deck. `note/2_difffusion.tex` is LaTeX source covering Lectures 1–2. See `diffusion/OUTLINE.md`.
+- **`generative/`** — Generative-model review. **Diffusion** (5 lectures, from-scratch Bayes-route, SDE, DDIM, guidance, discrete) and **LLM** (1 brief deck: tokens, decoder-only transformer, NLL pretraining, sampling, privacy hooks). Companion notes: `diffusion3-sde-score-note.html` and `note/2_difffusion.tex` (LaTeX). See `generative/OUTLINE.md`.
 - **`dp/`** — Differential privacy + federated learning (NeurIPS 2023 talk). Single deck `DP-FL.html` plus `dp-fl.txt` (compressed handout) and `figs/`. See `dp/OUTLINE.md`.
 - **`mia/`** — Membership inference attacks (5 lectures, paired notes). Plus legacy `old/MIA.html`. See `mia/OUTLINE.md`.
 - **`memorization/`** — Memorization in language models (single deck). Carlini extraction, scaling laws, books/production extraction, copyright. See `memorization/OUTLINE.md`.
@@ -15,14 +15,16 @@ Six sub-tracks: diffusion (foundations course, no notes), DP (single NeurIPS 202
 
 | Topic | Where | Lines |
 |---|---|---|
-| Bayes-route reverse derivation | `diffusion/diffusion1-foundations.html` | `:194-345` |
-| Tweedie's formula | `diffusion/diffusion1-foundations.html` | `:374` |
-| DDPM VP forward + VLB + ε-loss | `diffusion/diffusion2-ddpm.html` | `:90-333` |
-| Fokker–Planck + Anderson reverse SDE | `diffusion/diffusion3-sde-score.html` | `:135-315` |
-| Score-matching theorem | `diffusion/diffusion3-sde-score.html` | `:339` |
-| DDIM (deterministic, ODE, inversion) | `diffusion/diffusion4-ddim.html` | `:134-281` |
-| Classifier-free guidance | `diffusion/diffusion5-guidance-discrete.html` | `:202-282` |
-| Discrete diffusion + score-entropy loss | `diffusion/diffusion5-guidance-discrete.html` | `:287-425` |
+| Bayes-route reverse derivation | `generative/diffusion1-foundations.html` | `:194-345` |
+| Tweedie's formula | `generative/diffusion1-foundations.html` | `:374` |
+| DDPM VP forward + VLB + ε-loss | `generative/diffusion2-ddpm.html` | `:90-333` |
+| Fokker–Planck + Anderson reverse SDE | `generative/diffusion3-sde-score.html` | `:135-315` |
+| Score-matching theorem | `generative/diffusion3-sde-score.html` | `:339` |
+| DDIM (deterministic, ODE, inversion) | `generative/diffusion4-ddim.html` | `:134-281` |
+| Classifier-free guidance | `generative/diffusion5-guidance-discrete.html` | `:202-282` |
+| Discrete diffusion + score-entropy loss | `generative/diffusion5-guidance-discrete.html` | `:287-425` |
+| LLM brief overview (tokens, transformer, NLL, sampling) | `generative/llm.html` | `:72-296` |
+| LLM privacy-hook map (per-token loss / verbatim / sampling / conditional) | `generative/llm.html` | `:258-281` |
 | (ε,δ)-DP definition | `dp/DP-FL.html` | `:375-395` |
 | Local DP minimax rate | `dp/DP-FL.html` | `:483` |
 | PrivUnit mechanism | `dp/DP-FL.html` | `:523` |
@@ -57,10 +59,12 @@ Six sub-tracks: diffusion (foundations course, no notes), DP (single NeurIPS 202
 
 ## Theme connections
 
-- **diffusion ↔ MIA**: diffusion-model MIA is a research frontier — `mia/mia4-modern.html:731-789` covers it. The diffusion-models theory in `privacy/diffusion/` provides the substrate.
+- **generative review ↔ everything downstream**: `generative/` is the unified review opener for the privacy series. Diffusion lectures pin down score, sampling, discrete-space generation; `llm.html` pins down $p_\theta(\cdot\mid x_{<t})$, per-token loss $\ell_t$, the sampling step. MIA / memorization / watermarking / unlearning each plug into one of those pieces (LLM 4-card map at `generative/llm.html:258-281`).
+- **diffusion ↔ llm (within `generative/`)**: parallel reviews. Diffusion = continuous score-based generation; LLM = discrete autoregressive counterpart. Privacy attacks differ in mechanism but share targets (training-data leakage, provenance, removal).
+- **diffusion ↔ MIA**: diffusion-model MIA is a research frontier — `mia/mia4-modern.html:731-789` covers it. The diffusion-models theory in `privacy/generative/` provides the substrate.
 - **DP ↔ MIA**: `mia/mia1-foundations.html:601-617` shows DP as MIA bound (`Adv ≤ e^ε−1+δ`); `dp/DP-FL.html` builds the DP machinery. DP-SGD is referenced from `mia/mia4-modern.html:117`.
 - **DP ↔ unlearning**: certified $(\varepsilon,\delta)$-unlearning reuses the DP definition from `dp/DP-FL.html:375` — same bound, different distribution comparison.
 - **memorization ↔ unlearning ↔ MIA**: memorization is the *signal* unlearning aims to remove and MIA aims to detect. `memorization/memorization.html` motivates the other two; defenses slide flows directly into `unlearning/`. `unlearning/unlearning.html:317` reuses the SALUN MIA-Efficacy column.
 - **memorization ↔ watermark**: both about provenance under copyright pressure, but opposite directions — memorization detects unintended retention, watermarking adds intended traceability. Same lawsuits motivate both.
 - **dgMARK ↔ watermark**: lab thread for diffusion LLMs — full context in `dllm/dllm.html:524-569`, broader watermark survey here.
-- **Theoretical diffusion (`infotheory/diffusion/`) vs from-scratch (`privacy/diffusion/`)**: same math, different presentation. The infotheory series uses information-theoretic / hierarchical-VAE framing (cleaner for theory students); the privacy series uses the Bayes-+-Taylor route and goes further (5 lectures including SDE, DDIM, CFG, discrete).
+- **Theoretical diffusion (`infotheory/diffusion/`) vs from-scratch (`privacy/generative/`)**: same math, different presentation. The infotheory series uses information-theoretic / hierarchical-VAE framing (cleaner for theory students); the privacy series uses the Bayes-+-Taylor route and goes further (5 lectures including SDE, DDIM, CFG, discrete).

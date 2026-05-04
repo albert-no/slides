@@ -25,7 +25,7 @@ Master-level series with paired `<deck>.html` + `<deck>-note.html`. Notes hold f
 - **entropy / lossless / diffentropy** establish the discrete- and continuous-domain toolkits.
 - **lossy** ramps from classical R(D) to **applied compression of LLM weights and KV caches** (QUIP#, TURBOQUANT).
 - **mi** culminates in the MI view of CLIP — the bridge between variational-bound theory and contrastive learning.
-- **diffusion** is the *theoretical* side of diffusion (see `privacy/diffusion/` for the from-scratch Bayes-route version).
+- **diffusion** is the *theoretical* side of diffusion (see `privacy/generative/` for the from-scratch Bayes-route version).
 
 ## Cross-deck pointers
 

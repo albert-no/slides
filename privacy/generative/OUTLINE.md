@@ -220,24 +220,30 @@ Companion notes file: `diffusion3-sde-score-note.html` (full proof derivations, 
 | Section | Slide | Line |
 |---|---|---|
 | Title / Contents | | `:1-67` |
-| **01 — Setup** | | `:72-117` |
+| **01 — Setup** | | `:72-119` |
 | | Why this brief LLM pass | `:80` |
 | | Tokens and sequences ($\mathcal{V}$, BPE) | `:93` |
-| | **Autoregressive factorization** + LLM = $p_\theta(\cdot\mid x_{<t})$ | `:106` |
-| **02 — Architecture** | | `:124-167` |
-| | **Decoder-only transformer pipeline** (causal mask, $z_t$) | `:132` |
-| | Logits → softmax next-token distribution | `:152` |
-| **03 — Training** | | `:174-227` |
-| | **Pretraining objective** (per-token NLL / cross-entropy) | `:182` |
-| | Scale (corpus, params) → memorization is real | `:197` |
-| | Post-training: SFT + RLHF / DPO | `:215` |
-| **04 — Sampling and privacy hooks** | | `:234-303` |
-| | Sampling rules (greedy, temperature, top-k, top-p) | `:242` |
-| | **Per-token signals → privacy** (4-card map) | `:258` |
-| | Roadmap to next four lectures | `:285` |
-| Closer (Q&A) | | `:299` |
+| | **Autoregressive factorization** + LLM = $p_\theta(\cdot\mid x_{<t})$ | `:108` |
+| **02 — Architecture** | | `:121-180` |
+| | **Decoder-only transformer (allyouneed.png)** | `:131` |
+| | Logits → softmax next-token distribution | `:151` |
+| | **Sequential generation (cascade.png)** — autoregressive inference loop | `:166` |
+| **03 — Training** | | `:181-278` |
+| | **Pretraining objective** (per-token NLL / cross-entropy) | `:191` |
+| | Scale (corpus, params) → memorization is real | `:206` |
+| | **Post-training I — SFT** (data / loss / effect / output bullets, masked NLL) | `:231` |
+| | **Post-training II — Preference setup** (RLHF vs DPO motivation) | `:246` |
+| | **DPO loss** (full formula, implicit reward, NPO preview for unlearning) | `:263` |
+| **04 — Sampling and privacy hooks** | | `:279-369` |
+| | **Sampling — Temperature** (logit def, $\tau\to 0,1,\infty$ limits) | `:289` |
+| | **Sampling — Truncation** (top-$k$, top-$p$ nucleus) | `:305` |
+| | **Per-token signals → privacy** (4-card map) | `:322` |
+| | Roadmap to next four lectures | `:349` |
+| Closer (Q&A) | | `:364` |
 
-**Key references:** autoregressive factorization `:108`; pretraining loss `:184`; per-token loss as MIA / memorization signal `:188`; sampling-step watermark hook `:251`; 4-card privacy map `:261-281`.
+**Key references:** autoregressive factorization `:113`; decoder-only image `:135`; sequential-generation cascade `:171`; pretraining loss `:194`; SFT loss `:241`; **preference setup** `:246`; **DPO loss + NPO preview** `:263-275`; temperature sampling `:294`; truncation rules `:309`; 4-card privacy map `:326-346`.
+
+**Image assets:** `allyouneed.png` (Vaswani et al. transformer figure), `cascade.png` (converted from `cascade.webp`, autoregressive decoding cascade) — both in this folder, inlined by `scripts/bundle.py`.
 
 **Privacy-series hooks established here:**
 - $p_\theta(\cdot\mid x_{<t})$ — central object referenced by every subsequent deck

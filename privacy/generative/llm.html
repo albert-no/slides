@@ -110,10 +110,10 @@
   <h2>Autoregressive Factorization</h2>
   <div class="divider"></div>
   <p>Chain rule on a discrete sequence:</p>
-  <div class="math-block">$$p(x_{1:T}) \;=\; \prod_{t=1}^{T} p(x_t \mid x_{&lt;t}),\qquad x_{&lt;t} := (x_1, \ldots, x_{t-1}).$$</div>
+  <div class="math-block" style="margin:10px 0;padding:14px 28px;">$$p(x_{1:T}) \;=\; \prod_{t=1}^{T} p(x_t \mid x_{&lt;t}),\qquad x_{&lt;t} := (x_1, \ldots, x_{t-1}).$$</div>
   <p>An <strong>LLM</strong> is a parameterized next-token distribution:</p>
-  <div class="math-block">$$p_\theta(\,\cdot \mid x_{&lt;t}\,) \;\in\; \Delta^{|\mathcal{V}|-1}.$$</div>
-  <div class="highlight">
+  <div class="math-block" style="margin:10px 0;padding:14px 28px;">$$p_\theta(\,\cdot \mid x_{&lt;t}\,) \;\in\; \Delta^{|\mathcal{V}|-1}.$$</div>
+  <div class="highlight" style="margin-top:10px;">
     <p>The whole model collapses to one object: $p_\theta(\cdot \mid \text{prefix})$.</p>
   </div>
 </div>
@@ -132,22 +132,19 @@
 <div class="slide">
   <h2>Decoder-Only Transformer</h2>
   <div class="divider"></div>
-  <div class="diagram-flow" style="justify-content:center;">
-    <div class="diagram-box">tokens $x_{&lt;t}$</div>
-    <div class="diagram-arrow">→</div>
-    <div class="diagram-box">embed</div>
-    <div class="diagram-arrow">→</div>
-    <div class="diagram-box">block × $N$</div>
-    <div class="diagram-arrow">→</div>
-    <div class="diagram-box">unembed</div>
-    <div class="diagram-arrow">→</div>
-    <div class="diagram-box filled">logits $z_t$</div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:40px;align-items:start;margin-top:6px;">
+    <div style="display:flex;justify-content:center;">
+      <img src="allyouneed.png" alt="Transformer architecture (Vaswani et al., 2017)" style="max-height:470px;width:auto;display:block;">
+    </div>
+    <div>
+      <ul>
+        <li>Stack of $N$ blocks:<br><strong>masked self-attention</strong> + <strong>FFN</strong>,<br>each wrapped in residual + LayerNorm</li>
+        <li><strong>Causal mask</strong>:<br>position $t$ attends only to $x_{&lt;t}$</li>
+        <li>$z_t \in \mathbb{R}^{|\mathcal{V}|}$ at every position in one forward pass<br>— softmax gives $p_\theta(\cdot\mid x_{&lt;t})$</li>
+        <li>Decoder-only since GPT-2<br>— drop the encoder, keep the right half</li>
+      </ul>
+    </div>
   </div>
-  <ul>
-    <li>Each block: <strong>causal self-attention</strong> + MLP + residual + LN</li>
-    <li><strong>Causal mask</strong>: position $t$ sees only $x_{&lt;t}$</li>
-    <li>$z_t \in \mathbb{R}^{|\mathcal{V}|}$ at every position, in one forward pass</li>
-  </ul>
   <div class="cite">Vaswani et al., "Attention Is All You Need", NeurIPS 2017; Radford et al., GPT-2, OpenAI 2019.</div>
 </div>
 
@@ -164,6 +161,21 @@
   <div class="highlight">
     <p>Logits $z_t$ and probabilities $p_\theta(\cdot\mid x_{&lt;t})$ are the <strong>privacy signals</strong>.</p>
   </div>
+</div>
+
+<!-- SLIDE — Sequential generation (cascade) -->
+<div class="slide">
+  <h2>Sequential Generation</h2>
+  <div class="divider"></div>
+  <p>Training is parallel; <strong>inference is sequential</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <img src="cascade.png" alt="Autoregressive cascade: each new token feeds back into the next forward pass" style="max-width:96%;max-height:300px;width:auto;display:block;">
+  </div>
+  <ul style="margin-top:4px;">
+    <li>Step $t$: forward pass on $x_{&lt;t}$ → $p_\theta(\cdot\mid x_{&lt;t})$ → sample $\hat x_t$ → append</li>
+    <li>One <strong>full forward pass</strong> per token (KV-cache reuses past activations)</li>
+    <li>$O(T)$ sequential steps — the inference-latency bottleneck</li>
+  </ul>
 </div>
 
 <!-- ====================================================================
@@ -210,22 +222,58 @@
   <div class="highlight">
     <p>Pretraining data <strong>does</strong> resurface — extractable, attackable, suable.</p>
   </div>
-  <div class="cite">Hoffmann et al., "Training Compute-Optimal LLMs" (Chinchilla), NeurIPS 2022; Carlini et al., "Quantifying Memorization", ICLR 2023.</div>
+  <div class="cite">
+    Hoffmann et al., "Training Compute-Optimal LLMs" (Chinchilla), NeurIPS 2022.<br>
+    Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.
+  </div>
 </div>
 
-<!-- SLIDE — Post-training -->
+<!-- SLIDE — Post-training: SFT -->
 <div class="slide">
-  <h2>Post-Training</h2>
+  <h2>Post-Training I — Supervised Fine-Tuning</h2>
   <div class="divider"></div>
-  <p>Pretrained model is a generic next-token predictor. Two alignment stages:</p>
-  <ul class="num">
-    <li><strong>SFT</strong> — supervised fine-tune on curated $(prompt, response)$</li>
-    <li><strong>RLHF / DPO</strong> — preference optimization toward helpful, safe outputs</li>
+  <p>Align the pretrained model on curated $(x, y)$ pairs — prompt and demonstration response.</p>
+  <ul>
+    <li><strong>Data</strong>: human demonstrations or distillation from stronger models</li>
+    <li><strong>Loss</strong>: per-token NLL, masked to response tokens only</li>
+    <li><strong>Effect</strong>: shifts surface behavior; pretraining memory stays in the weights</li>
+    <li><strong>Output</strong>: reference model $\pi_\text{ref}$ for the next stage</li>
+  </ul>
+  <div class="math-block" style="font-size:1.35rem;margin:14px 0;padding:14px 28px;">$$\mathcal{L}_{\text{SFT}}(\theta) \;=\; -\!\!\sum_{(x,y)\,\in\,\mathcal{D}_{\text{SFT}}}\;\sum_{t=1}^{|y|} \log p_\theta(y_t \mid x,\, y_{&lt;t}).$$</div>
+  <div class="cite">Ouyang et al., InstructGPT, NeurIPS 2022.</div>
+</div>
+
+<!-- SLIDE — Post-training: Preference setup -->
+<div class="slide">
+  <h2>Post-Training II — Preference Optimization</h2>
+  <div class="divider"></div>
+  <p>Move the model from imitating demonstrations to matching <strong>preferences</strong>.</p>
+  <ul>
+    <li><strong>Data</strong>: triples $(x,\,y_w,\,y_l)$ — prompt, preferred $y_w$, dispreferred $y_l$</li>
+    <li><strong>Goal</strong>: prefer $y_w$ over $y_l$, while staying close to $\pi_\text{ref}$ (the SFT model)</li>
+    <li><strong>Classic RLHF</strong>: learn reward $r_\phi$, then PPO with KL anchor to $\pi_\text{ref}$</li>
+    <li><strong>DPO</strong>: closed-form solution to the same problem — direct loss on $\pi_\theta$, no reward model</li>
   </ul>
   <div class="highlight">
-    <p>Alignment shapes <strong>outputs</strong>; pretraining memory stays in the <strong>weights</strong>.</p>
+    <p>Pretraining sets capability; SFT + preference optimization sets behavior.</p>
   </div>
-  <div class="cite">Ouyang et al., InstructGPT, NeurIPS 2022; Rafailov et al., DPO, NeurIPS 2023.</div>
+  <div class="cite">Christiano et al., NeurIPS 2017; Rafailov et al., DPO, NeurIPS 2023.</div>
+</div>
+
+<!-- SLIDE — Post-training: DPO loss -->
+<div class="slide">
+  <h2>DPO Loss</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="font-size:1.2rem;margin:14px 0;padding:14px 22px;">$$\mathcal{L}_{\text{DPO}}(\theta) \;=\; -\,\mathbb{E}_{(x,y_w,y_l)}\!\left[\,\log \sigma\!\left(\beta \log \tfrac{\pi_\theta(y_w\mid x)}{\pi_\text{ref}(y_w\mid x)} \;-\; \beta \log \tfrac{\pi_\theta(y_l\mid x)}{\pi_\text{ref}(y_l\mid x)}\right)\right]$$</div>
+  <ul>
+    <li>$\pi_\text{ref}$: frozen reference. $\beta$: KL-regularization strength.</li>
+    <li>Implicit reward $\;r_\theta(x,y) = \beta \log \pi_\theta(y\mid x)/\pi_\text{ref}(y\mid x)$</li>
+    <li>Push $y_w$ <strong>up</strong>, push $y_l$ <strong>down</strong> — only log-ratios relative to $\pi_\text{ref}$ matter</li>
+  </ul>
+  <div class="highlight">
+    <p><strong>Preview (unlearning):</strong> NPO keeps only the $y_l$ term — DPO without preferred examples, on a forget set.</p>
+  </div>
+  <div class="cite">Rafailov et al., DPO, NeurIPS 2023.</div>
 </div>
 
 <!-- ====================================================================
@@ -238,20 +286,37 @@
   <p class="subtitle">Where memorization, MIA, watermark, unlearning enter</p>
 </div>
 
-<!-- SLIDE — Sampling rules -->
+<!-- SLIDE — Sampling: temperature -->
 <div class="slide">
-  <h2>Sampling Rules</h2>
+  <h2>Sampling — Temperature</h2>
   <div class="divider"></div>
-  <p>Given $p_\theta(\cdot\mid x_{&lt;t})$, draw $\hat x_t$ by:</p>
+  <p>Logit $z_{t,v} \in \mathbb{R}$ — <strong>pre-softmax</strong> score per vocab item.</p>
+  <div class="math-block" style="font-size:1.4rem;margin:14px 0;padding:14px 24px;">$$p^{(\tau)}(v\mid x_{&lt;t}) \;\propto\; \exp(z_{t,v}/\tau),\qquad \tau > 0.$$</div>
   <ul>
-    <li><strong>Greedy</strong>: $\hat x_t = \arg\max_v\, p_\theta(v\mid x_{&lt;t})$</li>
-    <li><strong>Temperature</strong>: $p^{(\tau)}(v) \propto \exp(z_{t,v}/\tau)$</li>
-    <li><strong>Top-$k$</strong> / <strong>top-$p$</strong>: truncate the tail before renormalizing</li>
+    <li>$\tau \to 0^+$: <strong>greedy</strong>, $\hat x_t = \arg\max_v z_{t,v}$ — sharpest, deterministic</li>
+    <li>$\tau = 1$: the model's own distribution</li>
+    <li>$\tau \to \infty$: <strong>uniform</strong> over $\mathcal{V}$ — flattest</li>
   </ul>
-  <p>Each is a <strong>post-hoc transform</strong> of $p_\theta$ — weights unchanged.</p>
   <div class="highlight">
-    <p>Watermarks live <strong>here</strong>: rewrite the sampling step, leave the model alone.</p>
+    <p>Temperature reshapes the same logits — no weight change.</p>
   </div>
+</div>
+
+<!-- SLIDE — Sampling: truncation -->
+<div class="slide">
+  <h2>Sampling — Truncation</h2>
+  <div class="divider"></div>
+  <p>Cut the long tail before sampling.</p>
+  <ul>
+    <li><strong>Top-$k$</strong>: keep $k$ largest logits, renormalize, sample</li>
+    <li><strong>Top-$p$ (nucleus)</strong>: smallest set $S \subseteq \mathcal{V}$ with $\sum_{v\in S} p(v) \ge p$, sample within $S$</li>
+    <li>Top-$k$: fixed support size; top-$p$: fixed mass — top-$p$ adapts to entropy</li>
+    <li>Combined with temperature in practice</li>
+  </ul>
+  <div class="highlight">
+    <p>All sampling rules are <strong>post-hoc transforms</strong> of $p_\theta$ — watermarks live here.</p>
+  </div>
+  <div class="cite">Holtzman et al., "The Curious Case of Neural Text Degeneration", ICLR 2020.</div>
 </div>
 
 <!-- SLIDE — Per-token signals → privacy series -->
@@ -303,7 +368,7 @@
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 18</div>
+<div class="slide-num" id="slideNum">1 / 22</div>
 
 </div><!-- end deck -->
 

@@ -101,6 +101,10 @@ Empty space at the *bottom* of a slide is fine. Empty space *in the middle* is n
 4. **Key insight** → `<div class="highlight">` (HTML) or `>` blockquote (Marp). Max one per slide.
 5. **Math.** Inline `$…$`, display `$$…$$` inside `<div class="math-block">`.
 6. **Paper attribution** → `<div class="cite">` footnote at the bottom. Not a side card.
+   - **One dedicated line per citation.** Each citation must fit on a single line of the rendered slide (`.cite` is capped at 60% width). If a slide cites two papers, give each its own `<br>`-separated line *or* its own `<div class="cite">`. Never let a citation wrap mid-title.
+   - **Two length tiers** by slide density:
+     - **Theorem / lemma slide** — full citation: `Author et al., "Title", Venue YYYY.`
+     - **Abstract-bullet slide** — short form: `Author et al., NameOrAcronym, Venue YYYY.` (e.g., `Rafailov et al., DPO, NeurIPS 2023.`). Use when the slide is dense and the full title would wrap.
 7. **Ghost deck test.** Read only the `h2` titles in sequence. They should outline the lecture arc clearly. If they don't, fix the outline before drafting bodies. Titles stay short and abstract — not full sentences.
 
 ---
@@ -394,6 +398,19 @@ When you edit, prefer matching slides by content (`<h2>` text, distinctive class
 <div class="cite">Isik et al., arXiv:2102.08329.</div>
 ```
 
+**One dedicated line per citation.** Each citation must render on a single line. The `.cite` block is centered and capped at 60% slide width — anything longer wraps and looks like a stray paragraph.
+
+- If two papers share a slide: each gets its own line, joined inside one `.cite` with `<br>` (or use two adjacent `.cite` blocks):
+  ```html
+  <div class="cite">
+    Hoffmann et al., "Training Compute-Optimal LLMs" (Chinchilla), NeurIPS 2022.<br>
+    Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.
+  </div>
+  ```
+- **Length tiers** by slide density:
+  - **Theorem / lemma slide** — full citation: `Author et al., "Title", Venue YYYY.`
+  - **Abstract-bullet slide** — short form: `Author et al., NameOrAcronym, Venue YYYY.` (e.g., `Rafailov et al., DPO, NeurIPS 2023.`). Use when a long title would wrap.
+
 ---
 
 ## Recipes
@@ -448,7 +465,31 @@ Tokens: `.kw` (keyword, blue, 700), `.fn` (function name, accent, 600), `.cm` (c
 ```html
 <div class="cite">Author(s), "Paper Title", Venue Year</div>
 ```
-One citation per slide. Don't wrap title in `<em>` (gray-on-gray is mud).
+One citation per line (see "Citations" above). Don't wrap title in `<em>` (gray-on-gray is mud).
+
+**Image + bullets** (figure on the left, supporting bullets on the right)
+```html
+<div class="slide">
+  <h2>Heading</h2><div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:40px;align-items:start;">
+    <div style="display:flex;justify-content:center;">
+      <img src="figure.png" alt="…" style="max-height:470px;width:auto;display:block;">
+    </div>
+    <div>
+      <ul>
+        <li>First phrase<br>continuation</li>
+        …
+      </ul>
+    </div>
+  </div>
+  <div class="cite">Author et al., Name, Venue Year.</div>
+</div>
+```
+Notes:
+- **`align-items: start`** — keep bullets top-aligned; `center` floats short bullet lists midway down a tall figure (looks like an empty void on top).
+- **`max-height: 470px`** when the slide also carries a `.cite`; otherwise `.cite` (and the brand footer) get clipped. See GOTCHAS → "Tall image collides with `.cite` + footer".
+- **`<br>` inside `<li>`** is allowed for clean wrap-control next to a narrow column (Priority 1 step 2b: one-shot internal break).
+- Figure stays in the talk folder (`<talk>/<file>.png`); `bundle.py` inlines local `<img>` references as data URIs.
 
 **Section divider (left, numbered)**
 ```html

@@ -357,3 +357,35 @@ Symptom: user corrects you — "the citation should read Author A, Author B, Aut
 Cause: arXiv preprints sometimes list authors in a different order than the official venue (PMLR / NeurIPS proceedings / journal). The arXiv abstract page or Google Scholar entry doesn't always match the canonical proceedings ordering. Authors do reshuffle.
 
 Fix: when adding `.cite`, use the **venue's** listing (PMLR page, NeurIPS proceedings page, journal TOC), not the arXiv abstract page. Default format: `Authors (in venue order), "Title", Venue YYYY` — no arXiv ID unless explicitly requested. If unsure, ask before drafting.
+
+## Citation wraps to two lines
+
+Symptom: a `.cite` block wraps mid-title; the second line orphans a venue or year. Worse when two papers are joined with a `;` — the eye loses where one ends and the next begins.
+
+Cause: `.cite` is centered and capped at 60% slide width. Long titles or two concatenated citations overflow that cap.
+
+Fix:
+- **One dedicated line per citation.** One paper → one short line. Two papers → two `<br>`-separated lines inside one `.cite` (or two adjacent `.cite` blocks).
+- If the title is long and the slide is dense bullets, drop to short form: `Author et al., NameOrAcronym, Venue YYYY.` (e.g., `Rafailov et al., DPO, NeurIPS 2023.`). Reserve the full `Author et al., "Title", Venue YYYY.` form for theorem / lemma slides where the cite anchors the formal statement.
+- Full rule in DESIGN_SYSTEM → §"Citations".
+
+## Tall image collides with `.cite` + brand footer
+
+Symptom: a portrait figure rendered with `max-height: 540px` overlaps the citation line at the bottom of the slide; the cite text disappears under the image, or the image clips the brand footer.
+
+Cause: `.cite` (bottom:18px, centered) and `.brand-footer` (bottom:18px, left) both sit absolutely positioned at the slide bottom. The flex column inside `.slide` doesn't reserve space for them — a tall image in the flow can extend right over them.
+
+Fix:
+- When a slide has both a tall figure AND a `.cite`, cap the image at `max-height: 470px` (leaves ~80 px clear for cite + footer breathing room).
+- On the wrapping `.grid-2`, use `align-items: start` rather than `center`. With `center`, a 4-bullet column floats vertically halfway down a 470 px figure — reads as a void above the bullets and the figure-bullet pair stops aligning at the top.
+- Image-with-bullets recipe: see DESIGN_SYSTEM → §"Recipes" → "Image + bullets".
+
+## WebP works in `bundle.py`, but convert when you want a `.png` file
+
+`scripts/bundle.py` inlines `.webp` natively (alongside `.png`, `.jpg`, `.svg`, `.gif`) — base64 data URI in the standalone bundle. So a deck with `<img src="cascade.webp">` bundles fine.
+
+When you want an actual `.png` file (e.g., to preview outside the deck, share in a slack thread, or use in a Marp `<file>.md`-derived PDF), convert with macOS's `sips`:
+```bash
+sips -s format png input.webp --out input.png
+```
+No external tool needed; works on every recent macOS shell.

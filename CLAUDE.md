@@ -25,11 +25,12 @@ scripts/
   lint-deck.py              validate against canonical CSS
 <talk>/<talk>.html          authoring source (committed)
 <talk>/<talk>-note.html     companion notes for off-slide detail
+<talk>/*.png|jpg|svg|webp   per-talk image assets (committed; inlined by bundle.py)
 OUTLINE.md                  per-folder content index — root, every topic folder,
                             and every leaf subfolder. See "Outlines" below.
 ```
 
-Only the authoring source is committed. `<talk>.standalone.html` is a build artifact (gitignored).
+Only the authoring source (and its image assets) are committed. `<talk>.standalone.html` is a build artifact (gitignored). `bundle.py` base64-inlines local `<img>` references (`.png`, `.jpg`, `.svg`, `.webp`, `.gif`) into the standalone file.
 
 ## Design rules
 

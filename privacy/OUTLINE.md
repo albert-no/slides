@@ -35,11 +35,15 @@ Six sub-tracks: a unified generative-model review (`generative/` — diffusion +
 | LiRA | `mia/mia4-modern.html` | `:264-503` |
 | RMIA | `mia/mia4-modern.html` | `:647-720` |
 | InfoRMIA (LLM token-level) | `mia/mia5-llm.html` | `:427-590` |
-| Memorization — canary entropy + exposure null | `memorization/memorization.html` | `:194-235` |
-| Counterfactual + long-tail (Feldman) | `memorization/memorization.html` | `:277-302` |
-| Carlini scaling laws + repetition formal | `memorization/memorization.html` | `:353-380` |
-| Min-K%++ probe | `memorization/memorization.html` | `:412` |
-| Cooper book extraction | `memorization/memorization.html` | `:453` |
+| Diffusion memorization — Carlini 2023 / Somepalli / Webster / Wen / Ross | `memorization/memorization.html` | `:158-238` |
+| **SAIL — sharpness Lemmas 4.1–4.3 + objective** | `memorization/memorization.html` | `:248-407` |
+| **CLIP padding-embedding memorization** (Kim & No, CVPR 2026 Findings) | `memorization/memorization.html` | `:409-484` |
+| Secret Sharer canary + exposure null | `memorization/memorization.html` | `:510-547` |
+| Counterfactual + long-tail (Feldman) | `memorization/memorization.html` | `:549` |
+| Carlini scaling laws + repetition formal | `memorization/memorization.html` | `:609-633` |
+| Min-K% / Min-K%++ probes | `memorization/memorization.html` | `:663, :678` |
+| **Adversarial Compression Ratio (ACR)** | `memorization/memorization.html` | `:717-772` |
+| Cooper book extraction | `memorization/memorization.html` | `:788` |
 | Certified $(\varepsilon,\delta)$ unlearning | `unlearning/unlearning.html` | `:175` |
 | Newton-step / Sekhari capacity theorems | `unlearning/unlearning.html` | `:189-216` |
 | Influence function | `unlearning/unlearning.html` | `:259` |

@@ -229,39 +229,50 @@ Lecture-mode rewrite: encoder bottleneck spelled out (codebook table at low $d$)
 
 ## lossy4-turboquant.html — TURBOQUANT (online VQ for KV cache)
 
-KV-cache motivation moved to the front of the deck.
+Front motivation now opens with self-attention (Q/K/V) before the KV cache, so the inner-product structure is established before we ask what to quantize. Part 06 spells out the actual implementation: K and V both use TURBOQUANT_prod (one composed call, not two parallel quantizers), with a slide on practical pieces (RHT, precomputed codebook, seeded sketch).
 
 | Section | Slide | Line |
 |---|---|---|
-| Title / Contents | | `:57, :67` |
-| **KV cache intro** | What it is, why compress | `:105-130` |
-| | What is the KV cache? | `:105` |
-| | Why compress the KV cache? | `:119` |
-| **01 — Setup, rotation idea** | Random rotation → known coordinate distribution | `:132-189` |
-| | Why scalar quantization fails | `:140` |
-| | Random rotation creates a known law | `:151` |
-| | **Lemma 1 — coordinate of a sphere point** | `:160` |
-| | Two distortions | `:171` |
-| **02 — MSE TURBOQUANT** | Lloyd–Max on f_d, 4^{−b} exponent | `:191-236` |
-| | Algorithm: TURBOQUANT_mse (algorithmic style) | `:199` |
-| | One-bit anchor 1−2/π | `:214` |
-| | **Theorem and proof outline** | `:222` |
-| **03 — Lower bound** | Sphere SLB + Yao | `:238-262` |
-| | Sphere SLB | `:246` |
-| | Yao + constant gap | `:255` |
-| **04 — Inner-product bias** | Good MSE ≠ good projections | `:264-288` |
-| | One-bit MSE shrinks projections | `:272` |
-| | Geometric reason — shrunken norm | `:280` |
-| **05 — QJL & inner-product TURBOQUANT** | Two-stage decomposition | `:290-340` |
-| | QJL definition | `:298` |
-| | **Lemma — QJL unbiased, 1/d variance** | `:305` |
-| | Two-stage decomposition | `:315` |
-| | **Algorithm and theorem (TURBOQUANT_prod)** | `:324` |
-| **06 — KV cache** | Why TURBOQUANT fits the KV cache | `:342-363` |
-| | Online, data-oblivious, attention-preserving | `:350` |
-| Recap | | `:365` |
+| Title / Contents | | `:67, :84` |
+| **KV cache intro** | Attention foundation / cache / vs weights / constraints | `:122-184` |
+| | Self-attention: Query, Key, Value (Q/K/V projections + attention formula) | `:122` |
+| | What is the KV cache? (growing-cache flow, 50 GB) | `:131` |
+| | KV cache vs weight quantization (storage vs memory, visual contrast) | `:146` |
+| | Compression constraints (online / data-obl / attention-preserving) | `:174` |
+| **01 — Setup, rotation idea** | Random rotation → known coordinate distribution | `:185-271` |
+| | Why scalar quantization fails | `:194` |
+| | Random rotation creates a known law | `:205` |
+| | **Picture: Slicing the sphere** (SVG sphere + chord) | `:214` |
+| | **Lemma 1 — coordinate of a sphere point** | `:243` |
+| | Two metrics, two quantizers (MSE vs IP design) | `:254` |
+| **02 — MSE TURBOQUANT** | Target 4^{−b}, pipeline, algorithm, theorem | `:272-365` |
+| | **Target: 4^{−b} — the Gaussian limit** (R(D) plug-in) | `:281` |
+| | Pipeline: rotate, quantize, derotate (4-box diagram) | `:291` |
+| | Algorithm: TURBOQUANT_mse | `:322` |
+| | One-bit anchor 1−2/π | `:337` |
+| | **Theorem: TURBOQUANT_mse** | `:345` |
+| | **Proof — orthogonal invariance + Panter–Dite** | `:356` |
+| **03 — Lower bound** | Sphere SLB + Yao | `:366-422` |
+| | **Picture: covering the sphere** (codepoints + balls) | `:375` |
+| | Sphere SLB — formal | `:407` |
+| | Yao + constant gap | `:415` |
+| **04 — Inner-product bias** | Good MSE ≠ good projections | `:423-472` |
+| | One-bit MSE shrinks projections | `:432` |
+| | Geometric reason — shrunken norm (vector visual) | `:440` |
+| **05 — QJL & inner-product TURBOQUANT** | Two-stage decomposition | `:473-562` |
+| | QJL definition | `:482` |
+| | **Lemma — QJL unbiased, 1/d variance** | `:489` |
+| | Two-stage decomposition (residual-arrow visual) | `:499` |
+| | Algorithm: TURBOQUANT_prod | `:537` |
+| | **Theorem: TURBOQUANT_prod** | `:551` |
+| **06 — KV cache implementation** | What/how it actually runs | `:563-627` |
+| | **Which quantizer for K and V?** (both → TURBOQUANT_prod) | `:572` |
+| | **TURBOQUANT_prod wraps TURBOQUANT_mse** (composition, not parallel) | `:589` |
+| | Practical pieces (RHT rotation, precomputed codebook, seeded sketch) | `:604` |
+| | Empirical behavior (~3.5 bits/channel matches FP16) | `:614` |
+| Recap / End | | `:628` |
 
-**Key:** Lemma 1 `:160`; TURBOQUANT_mse theorem `:222`; sphere SLB `:246`; QJL lemma `:305`; TURBOQUANT_prod `:324`.
+**Key:** Q/K/V attention `:122`; Lemma 1 `:243`; Gaussian limit `:281`; pipeline diagram `:291`; TURBOQUANT_mse theorem `:345`; sphere-cover picture `:375`; sphere SLB `:407`; QJL lemma `:489`; two-stage visual `:499`; TURBOQUANT_prod theorem `:551`; **K/V composition `:589`**.
 
 ### Note (`lossy4-turboquant-note.html`)
 - KV cache — what and why (cache size formula, online/data-oblivious/attention-preserving constraints)
@@ -272,3 +283,5 @@ KV-cache motivation moved to the front of the deck.
 - Panter–Dite formula and ∫ f_d^{1/3}
 - QJL lemma — unbiasedness and variance proof
 - Inner-product TURBOQUANT — two-stage decomposition derivation and bit-budget split
+
+**Audit (2026-05-11):** Slide screenshots verified at 1280×720. Fixed: `K_t\!,V_t` thin-space squashes commas → use plain comma; `QUIP\#` literal backslash → `QUIP#`; Two-Metrics highlight overlapping brand footer → trimmed intro + part-arrows; Theorem+proof one-slide overflow → split into theorem slide and proof slide; Geometric Reason `x̃` label on top of arrow → moved into wedge below arrow; Two-Stage `x̃_mse`/`r` labels cramped → repositioned with widened SVG; Algorithm+Theorem one-slide overflow → split into algorithm slide and theorem slide with aligned math block.

@@ -149,56 +149,84 @@ Section 05 collapsed: the binary toy now lives inside section 04 as the worked r
 
 ## lossy3-lattice-quip.html — Lattice codes, QUIP, QUIP#
 
-Lecture-mode rewrite: encoder bottleneck spelled out (codebook table at low $d$), new arithmetic-in-quantized-space section, lattice section with basis-vector / Voronoi / Coxeter-plane $E_8$ visualizations, lattice encode + decode shown explicitly, QUIP reframed from output → trace-trick → proxy, LDLQ shown as styled algorithm, Hadamard with $H_8$ visualization.
+Lecture-mode rewrite: encoder bottleneck spelled out (codebook table at low $d$, codebook size denoted $M = 2^{dR}$); arithmetic-in-quantized-space section opens with the naive dequant→add→requant baseline before the integer-add identity; lattice section with basis-vector / no-overlap-hex Voronoi / `e8.jpg` Coxeter image; explicit $\mathbb{Z}^8$-is-scalar vs $E_8$-coset comparison; dedicated slides on **how to pick the ball radius** (match typical set) and **$\mathcal{O}(d)$ $E_8$ rounding** (two-coset trick); QUIP uses $W_\Delta = \widehat W - W$ (not just $\Delta$).
+
+**LDLQ section is reorganized** for pedagogical flow (2026-05-11 rewrite):
+
+1. **Proxy setup.** Output objective → surrogate $W_\Delta$ → trace trick → proxy $\ell = \mathrm{tr}(W_\Delta H W_\Delta^\top)$ → what $H$ is (calibration covariance, *not* loss Hessian) → Hessian-tells-what-matters.
+2. **Build the family, then pick $U$.** DPCM intuition → introduce the **linear-feedback family** $\widehat W = Q(W + (W-\widehat W)\,U)$ with $U$ str. upper triangular → why upper-triangular = causal feedback → **proxy in feedback form** $\widehat W - W = \eta\,(I+U)^{-1}$, giving $\ell = \mathrm{tr}(\eta\,(I+U)^{-1}\,H\,(I+U)^{-\top}\,\eta^\top)$ → **LDL of $H$ cancels** the cross-terms when $U \leftarrow \bar U$, leaving $\ell = \mathrm{tr}(\eta\,D\,\eta^\top)$.
+3. **Algorithm + theorem.** LDLQ card → what $\bar U, D$ mean (Gram-Schmidt under $H$-inner-product) → Theorem 1 (worst-case $(m/4)\,\mathrm{tr}(D)$, average $(m/c)\,\mathrm{tr}(D)$, $c=12$ nearest / $6$ stochastic) → what Theorem 1 means ($\mathrm{tr}(D)/\mathrm{tr}(H) \le 0.65$ on OPT).
+4. **Then add rotation.** Why outliers wreck quantization → incoherence definition → conjugation preserves the proxy (rotation orthogonals $U, V$ + $\widetilde H = V H V^\top$) → random rotation erases outliers (CLT; run LDLQ on $\widetilde W$ with $\widetilde H$).
+5. **QUIP end-to-end** diagram $x \to V \to \widehat W \to U^\top \to y$.
+
+**Key rewrite move:** the proxy is rewritten in the feedback variable $\eta$ *before* the LDL factorization is introduced, so the LDL choice $U \leftarrow \bar U$ visibly *derives* from the cancellation requirement instead of being asserted. Dropped slides: standalone "Factorizing $H$" (subsumed by "LDL Cancels"), "Gauss-Seidel on the Proxy" (duplicates DPCM), "LDLQ — Why the Correction" (subsumed by feedback-form + LDL-cancels). New slides: **Linear-Feedback Family**, **Proxy in Feedback Form**, **LDL of $H$ Cancels the Cross-Terms**.
+
+QUIP\# section: BlockLDLQ broken into scalar-vs-block comparison + Theorem 4.1 bound slide; BlockLDLQ comparison cards use tight math-block margins.
 
 | Section | Slide | Line |
 |---|---|---|
 | Title / Contents | | `:19, :30` |
-| **01 — The encoder problem** | Codebook size + search are both gigantic | `:63-143` |
+| **01 — The encoder problem** | Codebook size + search are both gigantic | `:63-141` |
 | | What a real quantizer must do | `:71` |
-| | Optimal VQ — what the encoder does | `:83` |
-| | **The codebook is gigantic** (table, d=2,4,6,8 at R=4) | `:92` |
-| | Encoding — a search you cannot run | `:113` |
-| | Two escape routes | `:126` |
-| **02 — Computing in quantized space** | Linear quantization preserves arithmetic | `:144-198` |
-| | Uniform quantization (definition) | `:152` |
-| | Quantized values still add | `:164` |
-| | Quantized values multiply (by integers) | `:173` |
-| | Matrix-vector product, integer GEMM | `:182` |
-| | The MSE penalty is small (≤1.53 dB) | `:190` |
-| **03 — Lattice codes** | High-level; algebra replaces search | `:199-384` |
-| | From cube grid to lattice (basis-vector viz) | `:207` |
-| | **Voronoi cells — round beats square** (viz) | `:252` |
-| | **Encoding: round, don't search** (worked $\mathbb{Z}^d$ example) | `:291` |
-| | **Decoding: index → codeword** | `:300` |
-| | Why dimension 8? (Viazovska 2017) | `:316` |
-| | **Visualizing $E_8$ — 240 tangent neighbors** (Coxeter plane) | `:335` |
-| | Finite codebook from a lattice | `:355` |
-| | Is it OK to use a lattice codebook? | `:367` |
-| **04 — QUIP: incoherence processing** | Chee, Cai, Kuleshov, De Sa 2023 | `:385-529` |
-| | We care about output, not weights | `:393` |
-| | Surrogate — one layer at a time | `:402` |
-| | **The trace trick** (step-by-step derivation) | `:412` |
-| | The proxy loss | `:424` |
-| | The Hessian tells us what matters | `:433` |
-| | Why outliers wreck quantization (viz) | `:444` |
-| | Incoherence — no outliers | `:466` |
-| | Random rotation erases outliers | `:475` |
-| | **LDLQ — round with memory** (algorithm card) | `:485` |
-| | LDLQ — why the correction (matrix form) | `:497` |
-| | LDLQ — why it's optimal (Theorem 1) | `:506` |
-| | QUIP — end to end | `:518` |
-| **05 — QUIP#: Hadamard + lattice** | Tseng, Chee, Sun, Kuleshov, De Sa 2024 | `:530-641` |
-| | Two upgrades over QUIP | `:538` |
-| | **What is a Hadamard matrix?** ($H_8$ viz, bullets right) | `:555` |
-| | Why Hadamard is fast enough | `:586` |
-| | Random signs make it incoherent | `:595` |
-| | $E_8$ codebook — decoded by index | `:604` |
-| | BlockLDLQ — LDLQ with vector quantizers | `:615` |
-| | Two-faced effective codebook | `:624` |
-| Recap / End | | `:642, :655` |
+| | Optimal VQ — what the encoder does (single $\mathcal{C}$+argmin block) | `:83` |
+| | **The codebook is gigantic** ($M = 2^{dR}$ table, d=2,4,6,8 at R=4) | `:91` |
+| | Encoding — a search you cannot run | `:111` |
+| | Two escape routes | `:124` |
+| **02 — Computing in quantized space** | Linear quantization preserves arithmetic | `:142-207` |
+| | Uniform quantization (definition) | `:150` |
+| | **The naive path — dequant → add → requant** (the wasteful baseline) | `:162` |
+| | Quantized values still add (integer add on the grid) | `:173` |
+| | Quantized values multiply (by integers) | `:182` |
+| | Matrix-vector product, integer GEMM | `:191` |
+| | The MSE penalty is small (≤1.53 dB) | `:199` |
+| **03 — Lattice codes** | High-level; algebra replaces search | `:208-446` |
+| | From cube grid to lattice (basis-vector viz) | `:216` |
+| | **Voronoi cells — round beats square** (hex tiling redrawn, no overlap) | `:261` |
+| | **Encoding: round, don't search** (worked $\mathbb{Z}^d$ example) | `:300` |
+| | **Decoding: index → codeword** (E_8 ∩ ball = Gaussian typical set) | `:309` |
+| | **$\mathbb{Z}^8$ is just scalar quantization** (cube cells, kissing 16) | `:326` |
+| | **$E_8$ — one extra coset buys a round cell** ($E_8 = D_8 \cup (D_8 + \tfrac12\mathbf{1})$) | `:336` |
+| | Why dimension 8? (Viazovska 2017, sweet spot) | `:348` |
+| | **Visualizing $E_8$** — 240 tangent neighbors (`e8.jpg` right, kissing-number card left) | `:366` |
+| | Finite codebook from a lattice | `:391` |
+| | **Picking the ball — match the typical set** (ball radius $\sigma\sqrt{d}$) | `:403` |
+| | **Rounding to $E_8$ in $\mathcal{O}(d)$** (two-coset algorithm spelled out) | `:415` |
+| | Is it OK to use a lattice codebook? | `:427` |
+| **04 — QUIP: incoherence processing** | Chee, Cai, Kuleshov, De Sa 2023 | `:447-715` |
+| | We care about output, not weights | `:455` |
+| | Surrogate — one layer at a time ($W_\Delta = \widehat W - W$, not $\Delta$) | `:464` |
+| | **The trace trick** (step-by-step derivation, all in $W_\Delta$) | `:474` |
+| | The proxy loss (linebreak-split highlight) | `:486` |
+| | **What is $H$?** — calibration input covariance, *not* loss Hessian | `:498` |
+| | The Hessian tells us what matters | `:506` |
+| | **The idea — predict and correct (DPCM)** (high-level motivation, no math) | `:517` |
+| | **The linear-feedback family** ($\widehat W = Q(W + (W-\widehat W)U)$, $U$ str. upper-triangular) | `:529` |
+| | **Why "upper triangular"?** (causal-feedback intuition) | `:541` |
+| | **Quantization residual $\eta$** — recall $\ell(\widehat W)$, define $\eta = Q(z) - z$, $\widehat W = z + \eta$ | `:549` |
+| | **Proxy in feedback form** ($\widehat W - W = \eta(I+U)^{-1}$ → $\ell = \mathrm{tr}(\eta(I+U)^{-1}H(I+U)^{-\top}\eta^\top)$) | `:558` |
+| | **LDL of $H$ cancels the cross-terms** ($H=(I+\bar U)D(I+\bar U)^\top$ → $\ell=\mathrm{tr}(\eta D\eta^\top)$) | `:567` |
+| | **LDLQ — round with memory** (algorithm card; factorization spelled out) | `:576` |
+| | **What $\bar U$ and $D$ mean** (Gram-Schmidt under $H$-inner-product) | `:588` |
+| | **Worst-case and average proxy loss** (definitions; $\mathbb E\eta_{ij}^2 = \tfrac14, \tfrac1{12}, \tfrac16$) | `:607` |
+| | **LDLQ is optimal (Theorem 1)** — worst $(m/4)\mathrm{tr}(D)$, avg $(m/c)\mathrm{tr}(D)$ | `:619` |
+| | **What Theorem 1 means** — empirical $\mathrm{tr}(D)/\mathrm{tr}(H) \le 0.65$ across every OPT 125m–2.7b layer | `:632` |
+| | Why outliers wreck quantization (motivates incoherence) | `:644` |
+| | Incoherence — no outliers | `:666` |
+| | **Conjugation preserves the proxy** (rotation $U, V$ + definition of $\widetilde H$) | `:675` |
+| | Random rotation erases outliers (CLT half; LDLQ on $\widetilde W$ with $\widetilde H$) | `:686` |
+| | QUIP — end to end ($V \to \widehat W \to U^\top$ inference diagram) | `:694` |
+| **05 — QUIP#: Hadamard + lattice** | Tseng, Chee, Sun, Kuleshov, De Sa 2024 | `:718-841` |
+| | Two upgrades over QUIP | `:726` |
+| | **What is a Hadamard matrix?** ($H_8$ viz, bullets right) | `:743` |
+| | Why Hadamard is fast enough | `:774` |
+| | Random signs make it incoherent | `:783` |
+| | $E_8$ codebook — decoded by index | `:792` |
+| | **Scalar LDLQ vs BlockLDLQ** (stacked cards, equations on single lines) | `:803` |
+| | BlockLDLQ — bound (Theorem 4.1) | `:819` |
+| | Two-faced effective codebook | `:829` |
+| Recap / End | | `:847, :857` |
 
-**Key:** Codebook table `:92`; quantized arithmetic `:164-189`; lattice basis viz `:207`; Voronoi cells `:252`; encode/decode pair `:291, :300`; **$E_8$ Coxeter viz** `:335`; **trace trick** `:412`; LDLQ algorithm `:485`; **$H_8$ Hadamard viz** `:555`.
+**Key:** Codebook table (M, not K) `:91`; naive dequant→add→requant `:162`; integer add identity `:173`; hex Voronoi tiling fix `:261`; Z^8 vs E_8 coset intuition `:326, :336`; **e8.jpg viz** `:366`; **ball radius + O(d) rounding** `:403, :415`; **trace trick in $W_\Delta$** `:474`; **DPCM intuition** `:517`; **linear-feedback family** `:529`; **quantization residual $\eta$ + proxy in feedback form** `:549, :558`; **LDL cancels cross-terms** (the key derivation) `:567`; **LDLQ algorithm card** `:576`; **worst-case + avg definitions** `:607`; **Theorem 1 + interpretation** `:619, :632`; **conjugation preserves proxy** `:675`; **QUIP inference diagram** `:694`; **$H_8$ Hadamard viz** `:743`; scalar-vs-block LDLQ comparison `:803`.
 
 **Papers:**
 - QUIP — Chee, Cai, Kuleshov, De Sa, NeurIPS 2023 (arXiv:2307.13304)
@@ -233,46 +261,49 @@ Front motivation now opens with self-attention (Q/K/V) before the KV cache, so t
 
 | Section | Slide | Line |
 |---|---|---|
-| Title / Contents | | `:67, :84` |
-| **KV cache intro** | Attention foundation / cache / vs weights / constraints | `:122-184` |
-| | Self-attention: Query, Key, Value (Q/K/V projections + attention formula) | `:122` |
-| | What is the KV cache? (growing-cache flow, 50 GB) | `:131` |
-| | KV cache vs weight quantization (storage vs memory, visual contrast) | `:146` |
-| | Compression constraints (online / data-obl / attention-preserving) | `:174` |
-| **01 — Setup, rotation idea** | Random rotation → known coordinate distribution | `:185-271` |
-| | Why scalar quantization fails | `:194` |
-| | Random rotation creates a known law | `:205` |
-| | **Picture: Slicing the sphere** (SVG sphere + chord) | `:214` |
-| | **Lemma 1 — coordinate of a sphere point** | `:243` |
-| | Two metrics, two quantizers (MSE vs IP design) | `:254` |
-| **02 — MSE TURBOQUANT** | Target 4^{−b}, pipeline, algorithm, theorem | `:272-365` |
-| | **Target: 4^{−b} — the Gaussian limit** (R(D) plug-in) | `:281` |
-| | Pipeline: rotate, quantize, derotate (4-box diagram) | `:291` |
-| | Algorithm: TURBOQUANT_mse | `:322` |
-| | One-bit anchor 1−2/π | `:337` |
-| | **Theorem: TURBOQUANT_mse** | `:345` |
-| | **Proof — orthogonal invariance + Panter–Dite** | `:356` |
-| **03 — Lower bound** | Sphere SLB + Yao | `:366-422` |
-| | **Picture: covering the sphere** (codepoints + balls) | `:375` |
-| | Sphere SLB — formal | `:407` |
-| | Yao + constant gap | `:415` |
-| **04 — Inner-product bias** | Good MSE ≠ good projections | `:423-472` |
-| | One-bit MSE shrinks projections | `:432` |
-| | Geometric reason — shrunken norm (vector visual) | `:440` |
-| **05 — QJL & inner-product TURBOQUANT** | Two-stage decomposition | `:473-562` |
-| | QJL definition | `:482` |
-| | **Lemma — QJL unbiased, 1/d variance** | `:489` |
-| | Two-stage decomposition (residual-arrow visual) | `:499` |
-| | Algorithm: TURBOQUANT_prod | `:537` |
-| | **Theorem: TURBOQUANT_prod** | `:551` |
-| **06 — KV cache implementation** | What/how it actually runs | `:563-627` |
-| | **Which quantizer for K and V?** (both → TURBOQUANT_prod) | `:572` |
-| | **TURBOQUANT_prod wraps TURBOQUANT_mse** (composition, not parallel) | `:589` |
-| | Practical pieces (RHT rotation, precomputed codebook, seeded sketch) | `:604` |
-| | Empirical behavior (~3.5 bits/channel matches FP16) | `:614` |
-| Recap / End | | `:628` |
+| Title / Contents | | `:71, :84` |
+| **KV cache intro** | Attention foundation / cache / vs weights / constraints | `:122-195` |
+| | Self-attention: Q/K/V (`qkv.png` large + Levine CS182sp21 cite; no "two-IP" trailing line) | `:122` |
+| | What is the KV cache? (growing-cache flow, 50 GB; sentences split across lines) | `:138` |
+| | KV cache vs weight quantization (storage vs memory, visual contrast) | `:155` |
+| | Compression constraints (online / data-obl / attention-preserving) | `:183` |
+| **01 — Setup, rotation idea** | Random rotation → known coordinate distribution | `:196-282` |
+| | Why scalar quantization fails | `:203` |
+| | Random rotation creates a known law | `:214` |
+| | **Picture: Slicing the sphere** (SVG sphere + chord) | `:223` |
+| | **Lemma 1 — coordinate of a sphere point** | `:252` |
+| | Two metrics, two quantizers (MSE vs IP design) | `:263` |
+| **02 — MSE TURBOQUANT** | Target 4^{−b}, pipeline, algorithm, theorem | `:283-376` |
+| | **Target: 4^{−b} — the Gaussian limit** (R(D) plug-in) | `:290` |
+| | Pipeline: rotate, quantize, derotate (4-box diagram) | `:300` |
+| | Algorithm: TURBOQUANT_mse | `:331` |
+| | One-bit anchor 1−2/π | `:346` |
+| | **Theorem: TURBOQUANT_mse** | `:354` |
+| | **Proof — orthogonal invariance + Panter–Dite** | `:365` |
+| **03 — Lower bound** | Yao + constant gap | `:377-394` |
+| | Yao + constant gap (Sphere SLB *formal* + Picture: Covering both dropped; converse cited from Lec 2) | `:384` |
+| **04 — Inner-product bias** | Good MSE ≠ good projections | `:395-444` |
+| | One-bit MSE shrinks projections | `:402` |
+| | Geometric reason — shrunken norm (vector visual) | `:410` |
+| **05 — JL, QJL & inner-product TURBOQUANT** | JL lemma → QJL → two-stage | `:476-602` |
+| | **Johnson–Lindenstrauss lemma (formal)** — $k = \mathcal{O}(\varepsilon^{-2}\log n)$ pairwise distances | `:452` |
+| | **JL intuition** — $\chi^2$ concentration; broken into separate single-claim paragraphs | `:463` |
+| | **JL preserves inner products** — polarization identity | `:476` |
+| | **From JL to QJL** — 1-bit sign quantization of the sketch | `:485` |
+| | QJL definition | `:493` |
+| | **Lemma — QJL unbiased, 1/d variance** | `:500` |
+| | Two-stage decomposition (residual-arrow visual) | `:510` |
+| | Algorithm: TURBOQUANT_prod | `:548` |
+| | **Theorem: TURBOQUANT_prod** | `:562` |
+| **06 — KV cache implementation** | What/how it actually runs | `:576-657` |
+| | **Which quantizer for K and V?** (both → TURBOQUANT_prod) | `:583` |
+| | **TURBOQUANT_prod wraps TURBOQUANT_mse** (composition, not parallel) | `:600` |
+| | Practical pieces (RHT $\Pi \in \mathbb R^{d\times d}$, precomputed codebook, seeded sketch) | `:615` |
+| | **Dimensions used in the paper** — KV: head_dim $d{=}128$ (Llama-3.1-8B); NN: $d \in \{200, 1536, 3072\}$ | `:625` |
+| | Empirical behavior (~3.5 bits/channel matches FP16; Llama-3.1-8B head dim $128$) | `:644` |
+| Recap / End | | `:658, :668` |
 
-**Key:** Q/K/V attention `:122`; Lemma 1 `:243`; Gaussian limit `:281`; pipeline diagram `:291`; TURBOQUANT_mse theorem `:345`; sphere-cover picture `:375`; sphere SLB `:407`; QJL lemma `:489`; two-stage visual `:499`; TURBOQUANT_prod theorem `:551`; **K/V composition `:589`**.
+**Key:** Q/K/V attention with large `qkv.png` (Levine CS182sp21) `:122`; Lemma 1 `:252`; Gaussian limit `:290`; pipeline diagram `:300`; TURBOQUANT_mse theorem `:354`; Yao + constant gap `:384` (Sphere SLB *and* Picture: Covering dropped — converse cited from Lec 2); **JL lemma + intuition + IP preservation + JL→QJL bridge** `:452, :463, :476, :485`; QJL lemma `:500`; two-stage visual `:510`; TURBOQUANT_prod theorem `:562`; **K/V composition `:600`**; **dimensions table** `:625` (head dim $d{=}128$ per attention head for KV; $d \in \{200, 1536, 3072\}$ for NN search).
 
 ### Note (`lossy4-turboquant-note.html`)
 - KV cache — what and why (cache size formula, online/data-oblivious/attention-preserving constraints)

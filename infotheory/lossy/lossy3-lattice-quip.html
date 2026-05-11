@@ -82,21 +82,19 @@
 <div class="slide">
   <h2>Optimal VQ — What the Encoder Does</h2><div class="divider"></div>
   <p>Group $d$ scalars into $\mathbf{w}\in\mathbb{R}^d$. Encoder finds the nearest codeword.</p>
-  <div class="math-block">$$\mathcal{C} = \{\mathbf{c}_1,\ldots,\mathbf{c}_K\}\subset\mathbb{R}^d, \qquad K = 2^{dR}.$$</div>
-  <div class="math-block">$$\widehat{\mathbf{w}} \;=\; \arg\min_{k=1,\ldots,K}\,\|\mathbf{w} - \mathbf{c}_k\|^2.$$</div>
+  <div class="math-block">$$\mathcal{C} = \{\mathbf{c}_1,\ldots,\mathbf{c}_M\}\subset\mathbb{R}^d, \;\; M = 2^{dR}, \qquad \widehat{\mathbf{w}} \;=\; \arg\min_{k=1,\ldots,M}\,\|\mathbf{w} - \mathbf{c}_k\|^2.$$</div>
   <p>Encoder picks index $k$; decoder looks up $\mathbf{c}_k$.</p>
   <div class="highlight">Decoder is trivial (one lookup). The encoder is the wall.</div>
 </div>
 
 <div class="slide">
   <h2>The Codebook Is Gigantic</h2><div class="divider"></div>
-  <p>$K = 2^{dR}$ codewords, each a $d$-dim vector (4-byte floats).</p>
-  <div class="math-block">$$\text{Storage} \;=\; d \cdot 2^{dR} \cdot 4\;\text{bytes}.$$</div>
-  <table style="margin: 18px auto; border-collapse: collapse;">
+  <p>$M = 2^{dR}$ codewords, each a $d$-dim vector (4-byte floats). Storage $= d \cdot 2^{dR} \cdot 4$ bytes.</p>
+  <table style="margin: 8px auto 14px; border-collapse: collapse;">
     <thead><tr style="border-bottom: 2px solid var(--yonsei-blue);">
       <th style="padding:6px 18px; text-align:left;">$d$</th>
       <th style="padding:6px 18px; text-align:left;">$R$</th>
-      <th style="padding:6px 18px; text-align:left;">$K = 2^{dR}$</th>
+      <th style="padding:6px 18px; text-align:left;">$M = 2^{dR}$</th>
       <th style="padding:6px 18px; text-align:left;">Codebook size</th>
     </tr></thead>
     <tbody>
@@ -111,7 +109,7 @@
 
 <div class="slide">
   <h2>Encoding — A Search You Cannot Run</h2><div class="divider"></div>
-  <p>Per block: scan all $K$ codewords, compute $\|\mathbf{w}-\mathbf{c}_k\|^2$, take the min.</p>
+  <p>Per block: scan all $M$ codewords, compute $\|\mathbf{w}-\mathbf{c}_k\|^2$, take the min.</p>
   <div class="math-block">$$\text{Per-block cost} \;=\; \mathcal{O}(d \cdot 2^{dR}) \;\;\text{ops} \;+\; \mathcal{O}(d \cdot 2^{dR}) \;\;\text{memory reads}.$$</div>
   <p>For $d=8$, $R=4$, one LLM forward pass over $10^{10}$ weights:</p>
   <ul>
@@ -119,7 +117,7 @@
     <li>$\approx 5 \times 10^{18}$ operations per layer, per token.</li>
     <li>Plus: streaming $137$ GB of codebook through the cache.</li>
   </ul>
-  <div class="highlight">No clever indexing rescues this — search is fundamentally linear in $K$.</div>
+  <div class="highlight">No clever indexing rescues this — search is fundamentally linear in $M$.</div>
 </div>
 
 <div class="slide">
@@ -136,7 +134,7 @@
       <p>Encode in $\mathcal{O}(d)$ via algebra, decode by index.</p>
     </div>
   </div>
-  <div class="highlight">Both replace the $K$-way search with an algebraic step.</div>
+  <div class="highlight">Both replace the $M$-way search with an algebraic step.</div>
 </div>
 
 
@@ -161,10 +159,21 @@
 </div>
 
 <div class="slide">
+  <h2>The Naive Path — Round-Trip Through Floats</h2><div class="divider"></div>
+  <p>Stored as integers $n_a, n_b$. To add, the natural reflex:</p>
+  <div class="math-block">$$n_a \xrightarrow{\text{dequant}} \hat a = n_a\Delta \;\xrightarrow{+}\; \hat a + \hat b \;\xrightarrow{\text{requant}}\; \mathrm{round}\!\left(\tfrac{\hat a + \hat b}{\Delta}\right)\,\Delta.$$</div>
+  <ul>
+    <li>Two float multiplies per add.</li>
+    <li>A second rounding $\Rightarrow$ extra error.</li>
+  </ul>
+  <div class="highlight">Dequantize $\to$ add $\to$ requantize. Slow, and lossy on a step that shouldn't lose anything.</div>
+</div>
+
+<div class="slide">
   <h2>Quantized Values Still Add</h2><div class="divider"></div>
   <p>If $\hat a = n_a \Delta$ and $\hat b = n_b \Delta$, then</p>
   <div class="math-block">$$\hat a + \hat b \;=\; (n_a + n_b)\Delta \;\in\; \Delta\,\mathbb{Z}.$$</div>
-  <p>The sum is exactly on the grid — no re-quantization needed.</p>
+  <p>The sum is exactly on the grid — integer add in the index domain, no dequant, no requant.</p>
   <div class="highlight">Integer addition in the index domain $\Leftrightarrow$ exact sum in the value domain.</div>
   <p>For weights $\hat w_i = n_i \Delta_w$ and inputs $\hat x_i = m_i \Delta_x$, partial sums stay in integers until the final $\Delta_w \Delta_x$ scale-out.</p>
 </div>
@@ -271,12 +280,12 @@
       <h3 style="text-align:center;">$A_2$ — hex cell</h3>
       <svg viewBox="0 0 220 200" width="100%" style="background:var(--light);border-radius:8px;display:block;max-height:220px;">
         <g stroke="#cbd5dc" stroke-width="1" fill="none">
-          <polygon points="80,68 110,50 140,68 140,102 110,120 80,102"/>
-          <polygon points="80,102 110,120 140,102 140,136 110,154 80,136"/>
-          <polygon points="140,68 170,50 200,68 200,102 170,120 140,102"/>
-          <polygon points="140,102 170,120 200,102 200,136 170,154 140,136"/>
+          <polygon points="170,50 200,68 200,102 170,120 140,102 140,68"/>
+          <polygon points="50,50 80,68 80,102 50,120 20,102 20,68"/>
+          <polygon points="140,102 170,120 170,155 140,172 110,155 110,120"/>
+          <polygon points="80,102 110,120 110,155 80,172 50,155 50,120"/>
         </g>
-        <polygon points="110,120 140,102 140,68 110,50 80,68 80,102" fill="#003876" fill-opacity="0.18" stroke="#003876" stroke-width="2"/>
+        <polygon points="110,50 140,68 140,102 110,120 80,102 80,68" fill="#003876" fill-opacity="0.18" stroke="#003876" stroke-width="2"/>
         <circle cx="110" cy="85" r="3" fill="#003876"/>
         <line x1="110" y1="85" x2="140" y2="68" stroke="#d94040" stroke-width="2.2"/>
         <text x="143" y="66" font-size="12" fill="#d94040" font-weight="700">corner</text>
@@ -289,7 +298,7 @@
 
 <div class="slide">
   <h2>Encoding: Round, Don't Search</h2><div class="divider"></div>
-  <p>The lattice's algebra picks the closest point. No list of $K$ codewords is ever consulted.</p>
+  <p>The lattice's algebra picks the closest point. No list of $M$ codewords is ever consulted.</p>
   <p><strong>$\mathbb{Z}^d$.</strong> Round each coordinate independently:</p>
   <div class="math-block" style="margin: 8px 0;">$$\widehat{n}_i \;=\; \lfloor x_i + \tfrac12 \rfloor, \quad i = 1, \ldots, d.$$</div>
   <p>e.g.&nbsp;$x = (1.7,\, -0.4,\, 2.9,\, 1.1) \;\Rightarrow\; \widehat n = (2,\, 0,\, 3,\, 1)$. Cost: $d$ rounds.</p>
@@ -306,26 +315,48 @@
     </div>
     <div>
       <h3 style="color:var(--blue-light);">$E_8 \cap$ ball</h3>
-      <p>Small lookup table — $\sim 256$ codewords at $R{=}2$, $\sim 1$ KB. Fits in L1.</p>
+      <p>Keep only lattice points inside a ball — the <em>shape</em> that matches the typical set of $\mathcal{N}(0, I_8)$.</p>
+      <p>$\sim 256$ codewords at $R{=}2$, $\sim 1$ KB table. Fits in L1.</p>
     </div>
   </div>
   <div class="highlight">Encode: $\mathcal{O}(d)$ algebra. Decode: $\mathcal{O}(1)$ index lookup. Both cheap.</div>
 </div>
 
 <div class="slide">
+  <h2>$\mathbb{Z}^8$ Is Just Scalar Quantization</h2><div class="divider"></div>
+  <p>$\mathbb{Z}^8 = \{(n_1,\ldots,n_8) : n_i \in \mathbb{Z}\}$. Round each coordinate independently.</p>
+  <ul>
+    <li>Voronoi cell is an 8-D <strong>cube</strong> — corners stick far from the center.</li>
+    <li>Kissing number $16$ ($\pm e_i$). Sparse for 8 dimensions.</li>
+  </ul>
+  <div class="highlight">8-D scalar quant. No gain over per-coordinate rounding.</div>
+</div>
+
+<div class="slide">
+  <h2>$E_8$ — One Extra Coset Buys a Round Cell</h2><div class="divider"></div>
+  <p>Take $\mathbb{Z}^8$ and add the half-shifted copy (only when all coords sum to an even integer):</p>
+  <div class="math-block">$$E_8 \;=\; D_8 \;\cup\; \bigl(D_8 + \tfrac12 \mathbf{1}\bigr), \qquad D_8 = \bigl\{n \in \mathbb{Z}^8 : \textstyle\sum_i n_i \text{ even}\bigr\}.$$</div>
+  <ul>
+    <li>Points fall into the gaps left by $\mathbb{Z}^8$ $\Rightarrow$ <strong>denser</strong> packing.</li>
+    <li>Voronoi cell becomes nearly a ball; corner distance shrinks.</li>
+    <li>Kissing number jumps $16 \to 240$.</li>
+  </ul>
+  <div class="highlight">Same dim, same encode cost — but cells are round instead of cubic.</div>
+</div>
+
+<div class="slide">
   <h2>Why Dimension 8?</h2><div class="divider"></div>
-  <p>Higher $d$ rounds the Voronoi cell more — less MSE per bit. But the codebook and rounding both get more expensive.</p>
+  <p>Higher $d$ rounds the Voronoi cell more. But codebook and rounding both get more expensive.</p>
   <div class="grid-2">
     <div class="card">
       <h3 style="color:var(--blue-light);">$E_8$ is special</h3>
-      <p>240 nearest neighbors (vs. 16 for $\mathbb{Z}^8$).</p>
-      <p>Viazovska, 2017 (Fields Medal): $E_8$ is the <strong>densest sphere packing in&nbsp;$\mathbb{R}^8$</strong>.</p>
-      <p>Voronoi cell is essentially a ball.</p>
+      <p>$240$ tangent neighbors, vs. $16$ for $\mathbb{Z}^8$.</p>
+      <p>Viazovska (2017, Fields Medal): densest sphere packing in $\mathbb{R}^8$.</p>
     </div>
     <div class="card">
       <h3 style="color:var(--blue-light);">Why not 16 or 24?</h3>
-      <p>Leech in 24D is tighter, but the codebook and rounding cost much more.</p>
-      <p>$E_8$ at $R{=}2$: $K{=}256$, 1&nbsp;KB. Sweet spot for LLM weights.</p>
+      <p>Leech in 24-D is tighter, but encode and table costs blow up.</p>
+      <p>$E_8$ at $R{=}2$: $M{=}256$, 1&nbsp;KB. Sweet spot for LLMs.</p>
     </div>
   </div>
   <div class="cite">Viazovska, "The sphere packing problem in dimension 8", Ann. of Math. 2017.</div>
@@ -333,20 +364,25 @@
 
 <div class="slide">
   <h2>Visualizing $E_8$ — 240 Tangent Neighbors</h2><div class="divider"></div>
-  <div class="cols">
-    <div class="col-1-3">
-      <p>Kissing number = neighbors at the minimum distance.</p>
-      <ul>
-        <li>$\mathbb{Z}^2$: $4$</li>
-        <li>$A_2$ (hex): $6$</li>
-        <li>$\mathbb{Z}^8$: $16$</li>
-        <li>$E_8$: <strong>$240$</strong></li>
+  <div style="display:flex; gap:40px; align-items:flex-start; flex:1;">
+    <div style="flex: 1.6;">
+      <div class="card" style="padding: 22px 28px;">
+        <h3 style="color:var(--blue-light); margin-top:0;">Kissing number</h3>
+        <p style="margin: 6px 0 0 0;">Number of neighbors at the minimum distance.</p>
+        <p style="margin: 4px 0 0 0;">How many spheres can touch one sphere.</p>
+      </div>
+      <ul style="margin-top: 18px;">
+        <li>$\mathbb{Z}^2$ $\;\to\;$ $4$</li>
+        <li>$A_2$ (hex) $\;\to\;$ $6$</li>
+        <li>$\mathbb{Z}^8$ $\;\to\;$ $16$</li>
+        <li>$E_8$ $\;\to\;$ <strong>$240$</strong></li>
       </ul>
-      <p>More tangent neighbors $\Rightarrow$ rounder Voronoi cell $\Rightarrow$ smaller MSE.</p>
+      <p style="margin-top: 14px;">$\to$ rounder Voronoi cell</p>
+      <p>$\to$ smaller MSE per bit</p>
     </div>
-    <div class="col-2-3">
-      <svg viewBox="0 0 300 300" width="100%" style="background:var(--light); border-radius:8px; display:block; max-height:430px;"><circle cx="180.0" cy="150.0" r="2.3" fill="#003876"/><circle cx="179.3" cy="156.2" r="2.3" fill="#003876"/><circle cx="177.4" cy="162.2" r="2.3" fill="#003876"/><circle cx="174.3" cy="167.6" r="2.3" fill="#003876"/><circle cx="170.1" cy="172.3" r="2.3" fill="#003876"/><circle cx="165.0" cy="176.0" r="2.3" fill="#003876"/><circle cx="159.3" cy="178.5" r="2.3" fill="#003876"/><circle cx="153.1" cy="179.8" r="2.3" fill="#003876"/><circle cx="146.9" cy="179.8" r="2.3" fill="#003876"/><circle cx="140.7" cy="178.5" r="2.3" fill="#003876"/><circle cx="135.0" cy="176.0" r="2.3" fill="#003876"/><circle cx="129.9" cy="172.3" r="2.3" fill="#003876"/><circle cx="125.7" cy="167.6" r="2.3" fill="#003876"/><circle cx="122.6" cy="162.2" r="2.3" fill="#003876"/><circle cx="120.7" cy="156.2" r="2.3" fill="#003876"/><circle cx="120.0" cy="150.0" r="2.3" fill="#003876"/><circle cx="120.7" cy="143.8" r="2.3" fill="#003876"/><circle cx="122.6" cy="137.8" r="2.3" fill="#003876"/><circle cx="125.7" cy="132.4" r="2.3" fill="#003876"/><circle cx="129.9" cy="127.7" r="2.3" fill="#003876"/><circle cx="135.0" cy="124.0" r="2.3" fill="#003876"/><circle cx="140.7" cy="121.5" r="2.3" fill="#003876"/><circle cx="146.9" cy="120.2" r="2.3" fill="#003876"/><circle cx="153.1" cy="120.2" r="2.3" fill="#003876"/><circle cx="159.3" cy="121.5" r="2.3" fill="#003876"/><circle cx="165.0" cy="124.0" r="2.3" fill="#003876"/><circle cx="170.1" cy="127.7" r="2.3" fill="#003876"/><circle cx="174.3" cy="132.4" r="2.3" fill="#003876"/><circle cx="177.4" cy="137.8" r="2.3" fill="#003876"/><circle cx="179.3" cy="143.8" r="2.3" fill="#003876"/><circle cx="194.8" cy="154.7" r="2.3" fill="#003876"/><circle cx="192.8" cy="163.9" r="2.3" fill="#003876"/><circle cx="189.0" cy="172.5" r="2.3" fill="#003876"/><circle cx="183.4" cy="180.1" r="2.3" fill="#003876"/><circle cx="176.5" cy="186.4" r="2.3" fill="#003876"/><circle cx="168.3" cy="191.1" r="2.3" fill="#003876"/><circle cx="159.4" cy="194.0" r="2.3" fill="#003876"/><circle cx="150.0" cy="195.0" r="2.3" fill="#003876"/><circle cx="140.6" cy="194.0" r="2.3" fill="#003876"/><circle cx="131.7" cy="191.1" r="2.3" fill="#003876"/><circle cx="123.5" cy="186.4" r="2.3" fill="#003876"/><circle cx="116.6" cy="180.1" r="2.3" fill="#003876"/><circle cx="111.0" cy="172.5" r="2.3" fill="#003876"/><circle cx="107.2" cy="163.9" r="2.3" fill="#003876"/><circle cx="105.2" cy="154.7" r="2.3" fill="#003876"/><circle cx="105.2" cy="145.3" r="2.3" fill="#003876"/><circle cx="107.2" cy="136.1" r="2.3" fill="#003876"/><circle cx="111.0" cy="127.5" r="2.3" fill="#003876"/><circle cx="116.6" cy="119.9" r="2.3" fill="#003876"/><circle cx="123.5" cy="113.6" r="2.3" fill="#003876"/><circle cx="131.7" cy="108.9" r="2.3" fill="#003876"/><circle cx="140.6" cy="106.0" r="2.3" fill="#003876"/><circle cx="150.0" cy="105.0" r="2.3" fill="#003876"/><circle cx="159.4" cy="106.0" r="2.3" fill="#003876"/><circle cx="168.3" cy="108.9" r="2.3" fill="#003876"/><circle cx="176.5" cy="113.6" r="2.3" fill="#003876"/><circle cx="183.4" cy="119.9" r="2.3" fill="#003876"/><circle cx="189.0" cy="127.5" r="2.3" fill="#003876"/><circle cx="192.8" cy="136.1" r="2.3" fill="#003876"/><circle cx="194.8" cy="145.3" r="2.3" fill="#003876"/><circle cx="208.7" cy="162.5" r="2.3" fill="#003876"/><circle cx="204.8" cy="174.4" r="2.3" fill="#003876"/><circle cx="198.5" cy="185.3" r="2.3" fill="#003876"/><circle cx="190.1" cy="194.6" r="2.3" fill="#003876"/><circle cx="180.0" cy="202.0" r="2.3" fill="#003876"/><circle cx="168.5" cy="207.1" r="2.3" fill="#003876"/><circle cx="156.3" cy="209.7" r="2.3" fill="#003876"/><circle cx="143.7" cy="209.7" r="2.3" fill="#003876"/><circle cx="131.5" cy="207.1" r="2.3" fill="#003876"/><circle cx="120.0" cy="202.0" r="2.3" fill="#003876"/><circle cx="109.9" cy="194.6" r="2.3" fill="#003876"/><circle cx="101.5" cy="185.3" r="2.3" fill="#003876"/><circle cx="95.2" cy="174.4" r="2.3" fill="#003876"/><circle cx="91.3" cy="162.5" r="2.3" fill="#003876"/><circle cx="90.0" cy="150.0" r="2.3" fill="#003876"/><circle cx="91.3" cy="137.5" r="2.3" fill="#003876"/><circle cx="95.2" cy="125.6" r="2.3" fill="#003876"/><circle cx="101.5" cy="114.7" r="2.3" fill="#003876"/><circle cx="109.9" cy="105.4" r="2.3" fill="#003876"/><circle cx="120.0" cy="98.0" r="2.3" fill="#003876"/><circle cx="131.5" cy="92.9" r="2.3" fill="#003876"/><circle cx="143.7" cy="90.3" r="2.3" fill="#003876"/><circle cx="156.3" cy="90.3" r="2.3" fill="#003876"/><circle cx="168.5" cy="92.9" r="2.3" fill="#003876"/><circle cx="180.0" cy="98.0" r="2.3" fill="#003876"/><circle cx="190.1" cy="105.4" r="2.3" fill="#003876"/><circle cx="198.5" cy="114.7" r="2.3" fill="#003876"/><circle cx="204.8" cy="125.6" r="2.3" fill="#003876"/><circle cx="208.7" cy="137.5" r="2.3" fill="#003876"/><circle cx="210.0" cy="150.0" r="2.3" fill="#003876"/><circle cx="221.3" cy="173.2" r="2.3" fill="#003876"/><circle cx="215.0" cy="187.5" r="2.3" fill="#003876"/><circle cx="205.7" cy="200.2" r="2.3" fill="#003876"/><circle cx="194.1" cy="210.7" r="2.3" fill="#003876"/><circle cx="180.5" cy="218.5" r="2.3" fill="#003876"/><circle cx="165.6" cy="223.4" r="2.3" fill="#003876"/><circle cx="150.0" cy="225.0" r="2.3" fill="#003876"/><circle cx="134.4" cy="223.4" r="2.3" fill="#003876"/><circle cx="119.5" cy="218.5" r="2.3" fill="#003876"/><circle cx="105.9" cy="210.7" r="2.3" fill="#003876"/><circle cx="94.3" cy="200.2" r="2.3" fill="#003876"/><circle cx="85.0" cy="187.5" r="2.3" fill="#003876"/><circle cx="78.7" cy="173.2" r="2.3" fill="#003876"/><circle cx="75.4" cy="157.8" r="2.3" fill="#003876"/><circle cx="75.4" cy="142.2" r="2.3" fill="#003876"/><circle cx="78.7" cy="126.8" r="2.3" fill="#003876"/><circle cx="85.0" cy="112.5" r="2.3" fill="#003876"/><circle cx="94.3" cy="99.8" r="2.3" fill="#003876"/><circle cx="105.9" cy="89.3" r="2.3" fill="#003876"/><circle cx="119.5" cy="81.5" r="2.3" fill="#003876"/><circle cx="134.4" cy="76.6" r="2.3" fill="#003876"/><circle cx="150.0" cy="75.0" r="2.3" fill="#003876"/><circle cx="165.6" cy="76.6" r="2.3" fill="#003876"/><circle cx="180.5" cy="81.5" r="2.3" fill="#003876"/><circle cx="194.1" cy="89.3" r="2.3" fill="#003876"/><circle cx="205.7" cy="99.8" r="2.3" fill="#003876"/><circle cx="215.0" cy="112.5" r="2.3" fill="#003876"/><circle cx="221.3" cy="126.8" r="2.3" fill="#003876"/><circle cx="224.6" cy="142.2" r="2.3" fill="#003876"/><circle cx="224.6" cy="157.8" r="2.3" fill="#003876"/><circle cx="232.2" cy="186.6" r="2.3" fill="#003876"/><circle cx="222.8" cy="202.9" r="2.3" fill="#003876"/><circle cx="210.2" cy="216.9" r="2.3" fill="#003876"/><circle cx="195.0" cy="227.9" r="2.3" fill="#003876"/><circle cx="177.8" cy="235.6" r="2.3" fill="#003876"/><circle cx="159.4" cy="239.5" r="2.3" fill="#003876"/><circle cx="140.6" cy="239.5" r="2.3" fill="#003876"/><circle cx="122.2" cy="235.6" r="2.3" fill="#003876"/><circle cx="105.0" cy="227.9" r="2.3" fill="#003876"/><circle cx="89.8" cy="216.9" r="2.3" fill="#003876"/><circle cx="77.2" cy="202.9" r="2.3" fill="#003876"/><circle cx="67.8" cy="186.6" r="2.3" fill="#003876"/><circle cx="62.0" cy="168.7" r="2.3" fill="#003876"/><circle cx="60.0" cy="150.0" r="2.3" fill="#003876"/><circle cx="62.0" cy="131.3" r="2.3" fill="#003876"/><circle cx="67.8" cy="113.4" r="2.3" fill="#003876"/><circle cx="77.2" cy="97.1" r="2.3" fill="#003876"/><circle cx="89.8" cy="83.1" r="2.3" fill="#003876"/><circle cx="105.0" cy="72.1" r="2.3" fill="#003876"/><circle cx="122.2" cy="64.4" r="2.3" fill="#003876"/><circle cx="140.6" cy="60.5" r="2.3" fill="#003876"/><circle cx="159.4" cy="60.5" r="2.3" fill="#003876"/><circle cx="177.8" cy="64.4" r="2.3" fill="#003876"/><circle cx="195.0" cy="72.1" r="2.3" fill="#003876"/><circle cx="210.2" cy="83.1" r="2.3" fill="#003876"/><circle cx="222.8" cy="97.1" r="2.3" fill="#003876"/><circle cx="232.2" cy="113.4" r="2.3" fill="#003876"/><circle cx="238.0" cy="131.3" r="2.3" fill="#003876"/><circle cx="240.0" cy="150.0" r="2.3" fill="#003876"/><circle cx="238.0" cy="168.7" r="2.3" fill="#003876"/><circle cx="240.9" cy="202.5" r="2.3" fill="#003876"/><circle cx="228.0" cy="220.3" r="2.3" fill="#003876"/><circle cx="211.7" cy="234.9" r="2.3" fill="#003876"/><circle cx="192.7" cy="245.9" r="2.3" fill="#003876"/><circle cx="171.8" cy="252.7" r="2.3" fill="#003876"/><circle cx="150.0" cy="255.0" r="2.3" fill="#003876"/><circle cx="128.2" cy="252.7" r="2.3" fill="#003876"/><circle cx="107.3" cy="245.9" r="2.3" fill="#003876"/><circle cx="88.3" cy="234.9" r="2.3" fill="#003876"/><circle cx="72.0" cy="220.3" r="2.3" fill="#003876"/><circle cx="59.1" cy="202.5" r="2.3" fill="#003876"/><circle cx="50.1" cy="182.4" r="2.3" fill="#003876"/><circle cx="45.6" cy="161.0" r="2.3" fill="#003876"/><circle cx="45.6" cy="139.0" r="2.3" fill="#003876"/><circle cx="50.1" cy="117.6" r="2.3" fill="#003876"/><circle cx="59.1" cy="97.5" r="2.3" fill="#003876"/><circle cx="72.0" cy="79.7" r="2.3" fill="#003876"/><circle cx="88.3" cy="65.1" r="2.3" fill="#003876"/><circle cx="107.3" cy="54.1" r="2.3" fill="#003876"/><circle cx="128.2" cy="47.3" r="2.3" fill="#003876"/><circle cx="150.0" cy="45.0" r="2.3" fill="#003876"/><circle cx="171.8" cy="47.3" r="2.3" fill="#003876"/><circle cx="192.7" cy="54.1" r="2.3" fill="#003876"/><circle cx="211.7" cy="65.1" r="2.3" fill="#003876"/><circle cx="228.0" cy="79.7" r="2.3" fill="#003876"/><circle cx="240.9" cy="97.5" r="2.3" fill="#003876"/><circle cx="249.9" cy="117.6" r="2.3" fill="#003876"/><circle cx="254.4" cy="139.0" r="2.3" fill="#003876"/><circle cx="254.4" cy="161.0" r="2.3" fill="#003876"/><circle cx="249.9" cy="182.4" r="2.3" fill="#003876"/><circle cx="247.1" cy="220.5" r="2.3" fill="#003876"/><circle cx="230.3" cy="239.2" r="2.3" fill="#003876"/><circle cx="210.0" cy="253.9" r="2.3" fill="#003876"/><circle cx="187.1" cy="264.1" r="2.3" fill="#003876"/><circle cx="162.5" cy="269.3" r="2.3" fill="#003876"/><circle cx="137.5" cy="269.3" r="2.3" fill="#003876"/><circle cx="112.9" cy="264.1" r="2.3" fill="#003876"/><circle cx="90.0" cy="253.9" r="2.3" fill="#003876"/><circle cx="69.7" cy="239.2" r="2.3" fill="#003876"/><circle cx="52.9" cy="220.5" r="2.3" fill="#003876"/><circle cx="40.4" cy="198.8" r="2.3" fill="#003876"/><circle cx="32.6" cy="174.9" r="2.3" fill="#003876"/><circle cx="30.0" cy="150.0" r="2.3" fill="#003876"/><circle cx="32.6" cy="125.1" r="2.3" fill="#003876"/><circle cx="40.4" cy="101.2" r="2.3" fill="#003876"/><circle cx="52.9" cy="79.5" r="2.3" fill="#003876"/><circle cx="69.7" cy="60.8" r="2.3" fill="#003876"/><circle cx="90.0" cy="46.1" r="2.3" fill="#003876"/><circle cx="112.9" cy="35.9" r="2.3" fill="#003876"/><circle cx="137.5" cy="30.7" r="2.3" fill="#003876"/><circle cx="162.5" cy="30.7" r="2.3" fill="#003876"/><circle cx="187.1" cy="35.9" r="2.3" fill="#003876"/><circle cx="210.0" cy="46.1" r="2.3" fill="#003876"/><circle cx="230.3" cy="60.8" r="2.3" fill="#003876"/><circle cx="247.1" cy="79.5" r="2.3" fill="#003876"/><circle cx="259.6" cy="101.2" r="2.3" fill="#003876"/><circle cx="267.4" cy="125.1" r="2.3" fill="#003876"/><circle cx="270.0" cy="150.0" r="2.3" fill="#003876"/><circle cx="267.4" cy="174.9" r="2.3" fill="#003876"/><circle cx="259.6" cy="198.8" r="2.3" fill="#003876"/><circle cx="250.3" cy="240.3" r="2.3" fill="#003876"/><circle cx="229.4" cy="259.2" r="2.3" fill="#003876"/><circle cx="204.9" cy="273.3" r="2.3" fill="#003876"/><circle cx="178.1" cy="282.0" r="2.3" fill="#003876"/><circle cx="150.0" cy="285.0" r="2.3" fill="#003876"/><circle cx="121.9" cy="282.0" r="2.3" fill="#003876"/><circle cx="95.1" cy="273.3" r="2.3" fill="#003876"/><circle cx="70.6" cy="259.2" r="2.3" fill="#003876"/><circle cx="49.7" cy="240.3" r="2.3" fill="#003876"/><circle cx="33.1" cy="217.5" r="2.3" fill="#003876"/><circle cx="21.6" cy="191.7" r="2.3" fill="#003876"/><circle cx="15.7" cy="164.1" r="2.3" fill="#003876"/><circle cx="15.7" cy="135.9" r="2.3" fill="#003876"/><circle cx="21.6" cy="108.3" r="2.3" fill="#003876"/><circle cx="33.1" cy="82.5" r="2.3" fill="#003876"/><circle cx="49.7" cy="59.7" r="2.3" fill="#003876"/><circle cx="70.6" cy="40.8" r="2.3" fill="#003876"/><circle cx="95.1" cy="26.7" r="2.3" fill="#003876"/><circle cx="121.9" cy="18.0" r="2.3" fill="#003876"/><circle cx="150.0" cy="15.0" r="2.3" fill="#003876"/><circle cx="178.1" cy="18.0" r="2.3" fill="#003876"/><circle cx="204.9" cy="26.7" r="2.3" fill="#003876"/><circle cx="229.4" cy="40.8" r="2.3" fill="#003876"/><circle cx="250.3" cy="59.7" r="2.3" fill="#003876"/><circle cx="266.9" cy="82.5" r="2.3" fill="#003876"/><circle cx="278.4" cy="108.3" r="2.3" fill="#003876"/><circle cx="284.3" cy="135.9" r="2.3" fill="#003876"/><circle cx="284.3" cy="164.1" r="2.3" fill="#003876"/><circle cx="278.4" cy="191.7" r="2.3" fill="#003876"/><circle cx="266.9" cy="217.5" r="2.3" fill="#003876"/></svg>
-      <p style="text-align:center; font-size:1.05rem; margin-top:4px;">240 minimum vectors of $E_8$ projected to its Coxeter plane</p>
+    <div style="flex: 1; display:flex; flex-direction:column; align-items:flex-end; margin-left: auto;">
+      <img src="e8.jpg" alt="E_8 lattice 240 minimum vectors projected to Coxeter plane" style="width:100%; max-width: 340px; max-height:360px; object-fit:contain; display:block; background:var(--light); border-radius:8px;">
+      <p style="text-align:right; font-size:1.05rem; margin-top:6px; max-width: 340px;">240 minimum vectors of $E_8$, Coxeter plane.</p>
     </div>
   </div>
 </div>
@@ -364,20 +400,46 @@
 </div>
 
 <div class="slide">
+  <h2>Picking the Ball — Match the Typical Set</h2><div class="divider"></div>
+  <p>For $X \sim \mathcal{N}(0, \sigma^2 I_d)$, the squared norm concentrates:</p>
+  <div class="math-block">$$\|X\|^2 \;\approx\; d\sigma^2 \;\;(\text{std.\ dev.\ } O(\sigma^2\sqrt d)).$$</div>
+  <p>So pick the ball radius $r = \sigma\sqrt{d\,(1+\epsilon)}$:</p>
+  <ul>
+    <li>Almost all data lives inside &mdash; tiny clipping loss.</li>
+    <li>Almost no lattice points outside &mdash; no wasted codewords.</li>
+  </ul>
+  <div class="highlight">The ball is just big enough to cover the typical set, no bigger.</div>
+</div>
+
+<div class="slide">
+  <h2>Rounding to $E_8$ in $\mathcal{O}(d)$</h2><div class="divider"></div>
+  <p>$E_8 = \mathbb{Z}^8 \;\cup\; (\mathbb{Z}^8 + \tfrac12 \mathbf{1})$. Two cosets, round each, keep the closer.</p>
+  <div class="card" style="max-width: 920px; margin: 8px auto;">
+    <p style="margin: 2px 0;"><strong>1.</strong> $a \;=\; \mathrm{round}(x)$ &nbsp;&nbsp;($d$ scalar rounds, $\mathcal{O}(d)$).</p>
+    <p style="margin: 2px 0;"><strong>2.</strong> $b \;=\; \mathrm{round}(x - \tfrac12 \mathbf{1}) + \tfrac12 \mathbf{1}$ &nbsp;&nbsp;($d$ scalar rounds, $\mathcal{O}(d)$).</p>
+    <p style="margin: 2px 0;"><strong>3.</strong> Return $a$ if $\|x - a\|^2 \le \|x - b\|^2$, else $b$ &nbsp;&nbsp;($\mathcal{O}(d)$).</p>
+  </div>
+  <p>Total: $\mathcal{O}(d)$ &mdash; no codeword scan, no $2^{dR}$ search.</p>
+  <div class="highlight">Same cost as scalar rounding, but the cell is round instead of cubic.</div>
+</div>
+
+<div class="slide">
   <h2>Is It OK to Use a Lattice Codebook?</h2><div class="divider"></div>
   <div class="grid-2">
     <div>
-      <h3 style="color:var(--blue-light);">Encode (the hard part)</h3>
-      <p>Algebraic rounding in $\mathcal{O}(d)$: no codeword list, no search.</p>
-      <p>Output: an integer index $k$.</p>
+      <h3 style="color:var(--blue-light); margin-top:0;">Encode (the hard part)</h3>
+      <p style="margin: 4px 0;">Algebraic rounding in $\mathcal{O}(d)$.</p>
+      <p style="margin: 4px 0;">For $E_8$: two cosets, $\mathcal{O}(d)$ rounds each, keep the closer.</p>
+      <p style="margin: 4px 0;">Output: integer index $k$.</p>
     </div>
     <div>
-      <h3 style="color:var(--blue-light);">Decode (the easy part)</h3>
-      <p>Lookup $\widehat{\mathbf{w}} = \mathbf{c}_k$ from a <strong>small</strong> table — $|\Lambda \cap \mathcal{S}|$ entries.</p>
-      <p>$E_8$ at $R=2$: 256 entries, 1&nbsp;KB. Fits in L1 cache.</p>
+      <h3 style="color:var(--blue-light); margin-top:0;">Decode (the easy part)</h3>
+      <p style="margin: 4px 0;">Lookup $\widehat{\mathbf{w}} = \mathbf{c}_k$ from a small table.</p>
+      <p style="margin: 4px 0;">Table size $= |\Lambda \cap \mathcal{S}|$ entries.</p>
+      <p style="margin: 4px 0;">$E_8$ at $R=2$: 256 entries, 1&nbsp;KB. Fits in L1.</p>
     </div>
   </div>
-  <div class="highlight">Lattice = small codebook + cheap encoder + decoder by index. All three.</div>
+  <div class="highlight">Small codebook $+$ cheap encoder $+$ decoder by index. All three.</div>
 </div>
 
 
@@ -401,32 +463,43 @@
 <div class="slide">
   <h2>Surrogate — One Layer at a Time</h2><div class="divider"></div>
   <p>If every layer's output stays close to the original, the network's output does too.</p>
-  <p>For one linear layer $y = Wx$, replace $W$ with $\widehat W$. Set $\Delta = \widehat W - W$.</p>
+  <p>For one linear layer $y = Wx$, replace $W$ with $\widehat W$. Set the <em>weight error</em> $W_\Delta = \widehat W - W$ (a matrix, not "small change in $x$").</p>
   <p>Per-input output error:</p>
-  <div class="math-block" style="margin: 8px 0;">$$\bigl\|f_{\widehat W}(x) - f_W(x)\bigr\|^2 \;=\; \bigl\|\Delta\,x\bigr\|^2.$$</div>
-  <p>Average over the data distribution to get a per-layer proxy loss $\ell(\widehat W) = \mathbb{E}_x \|\Delta x\|^2$.</p>
-  <div class="highlight">Goal of next slide: rewrite $\mathbb{E}_x\|\Delta x\|^2$ in a form that depends on $\Delta$ and a <em>fixed</em> matrix $H$.</div>
+  <div class="math-block" style="margin: 8px 0;">$$\bigl\|f_{\widehat W}(x) - f_W(x)\bigr\|^2 \;=\; \bigl\|W_\Delta\,x\bigr\|^2.$$</div>
+  <p>Average over the data distribution to get a per-layer proxy loss $\ell(\widehat W) = \mathbb{E}_x \|W_\Delta\, x\|^2$.</p>
+  <div class="highlight">Next: rewrite $\mathbb{E}_x\|W_\Delta\, x\|^2$ in a form that depends on $W_\Delta$ and a <em>fixed</em> matrix $H$.</div>
 </div>
 
 <div class="slide">
   <h2>The Trace Trick</h2><div class="divider"></div>
-  <p>Expand $\|\Delta x\|^2$ and pull the expectation inside the trace.</p>
+  <p>Expand $\|W_\Delta\, x\|^2$ and pull the expectation inside the trace.</p>
   <div class="math-block" style="margin: 6px 0;">$$\begin{aligned}
-    \|\Delta x\|^2 &\;\stackrel{(1)}{=}\; (\Delta x)^\top (\Delta x) \;=\; x^\top \Delta^\top \Delta\, x \\
-    &\;\stackrel{(2)}{=}\; \mathrm{tr}\!\bigl(x^\top \Delta^\top \Delta\, x\bigr) \;\stackrel{(3)}{=}\; \mathrm{tr}\!\bigl(\Delta\, x x^\top\, \Delta^\top\bigr).
+    \|W_\Delta\, x\|^2 &\;\stackrel{(1)}{=}\; (W_\Delta\, x)^\top (W_\Delta\, x) \;=\; x^\top W_\Delta^\top W_\Delta\, x \\
+    &\;\stackrel{(2)}{=}\; \mathrm{tr}\!\bigl(x^\top W_\Delta^\top W_\Delta\, x\bigr) \;\stackrel{(3)}{=}\; \mathrm{tr}\!\bigl(W_\Delta\, x x^\top\, W_\Delta^\top\bigr).
   \end{aligned}$$</div>
-  <p>Now take the expectation. $\Delta$ is non-random; pull it out:</p>
-  <div class="math-block" style="margin: 6px 0;">$$\mathbb{E}_x\,\|\Delta x\|^2 \;\stackrel{(4)}{=}\; \mathrm{tr}\!\bigl(\Delta\, \mathbb{E}_x[xx^\top]\, \Delta^\top\bigr) \;=\; \mathrm{tr}\!\bigl(\Delta\, H\, \Delta^\top\bigr).$$</div>
-  <p style="font-size:1.1rem;">(1) definition $\|v\|^2 = v^\top v$. (2) scalar = its own trace. (3) cyclic. (4) linearity, $\Delta$ outside.</p>
+  <p>Now take the expectation. $W_\Delta$ is non-random; pull it out:</p>
+  <div class="math-block" style="margin: 6px 0;">$$\mathbb{E}_x\,\|W_\Delta\, x\|^2 \;\stackrel{(4)}{=}\; \mathrm{tr}\!\bigl(W_\Delta\, \mathbb{E}_x[xx^\top]\, W_\Delta^\top\bigr) \;=\; \mathrm{tr}\!\bigl(W_\Delta\, H\, W_\Delta^\top\bigr).$$</div>
+  <p style="font-size:1.1rem;">(1) definition $\|v\|^2 = v^\top v$. (2) scalar = its own trace. (3) cyclic. (4) linearity, $W_\Delta$ outside.</p>
 </div>
 
 <div class="slide">
   <h2>The Proxy Loss</h2><div class="divider"></div>
-  <p>Collecting:</p>
-  <div class="math-block" style="margin: 6px 0;">$$\ell(\widehat W) \;=\; \mathbb{E}_x\,\bigl\|(\widehat W - W)\,x\bigr\|^2 \;=\; \mathrm{tr}\!\bigl((\widehat W - W)\,H\,(\widehat W - W)^\top\bigr),$$</div>
-  <div class="math-block" style="margin: 6px 0;">$$H \;=\; \mathbb{E}_x[xx^\top] \quad\text{(positive semi-definite, fixed by calibration data).}$$</div>
-  <div class="highlight">Per-layer Hessian-weighted MSE. Depends on $\widehat W$ through $\Delta = \widehat W - W$ only. Decouples across rows.</div>
+  <p>Collecting, with $W_\Delta = \widehat W - W$:</p>
+  <div class="math-block" style="margin: 6px 0;">$$\ell(\widehat W) \;=\; \mathbb{E}_x\,\|W_\Delta\, x\|^2 \;=\; \mathrm{tr}\!\bigl(W_\Delta\, H\, W_\Delta^\top\bigr),$$</div>
+  <div class="math-block" style="margin: 6px 0;">$$H \;=\; \mathbb{E}_x[xx^\top] \quad\text{(PSD, fixed by calibration data).}$$</div>
+  <div class="highlight">
+    <p style="margin:0 0 6px 0;">Per-layer Hessian-weighted MSE.</p>
+    <p style="margin:0;">Depends on $\widehat W$ only through $W_\Delta$. Decouples across rows.</p>
+  </div>
   <div class="cite">Chee et al., "QuIP", NeurIPS 2023.</div>
+</div>
+
+<div class="slide">
+  <h2>What Is $H$?</h2><div class="divider"></div>
+  <p><strong>$H$ is the input covariance from calibration data</strong> &mdash; <em>not</em> a loss Hessian.</p>
+  <div class="math-block" style="margin: 4px 0;">$$H \;=\; \mathbb{E}_{x \sim \text{calib}}\bigl[\,x x^\top\,\bigr] \;\in\; \mathbb{R}^{n\times n}, \;\; \text{PSD}.$$</div>
+  <p>Compute once from a few hundred forward passes on a calibration corpus &mdash; same $H$ used by every quantization step of the layer.</p>
+  <div class="highlight">$H$ encodes which input directions matter to the layer's output.</div>
 </div>
 
 <div class="slide">
@@ -441,10 +514,137 @@
 </div>
 
 <div class="slide">
+  <h2>The Idea — Predict and Correct</h2><div class="divider"></div>
+  <p>Quantize columns of $W$ in order $1, 2, \ldots, n$ — one at a time.</p>
+  <p>Before rounding column $k$, <strong>predict</strong> it from the already-rounded $\widehat W_1, \ldots, \widehat W_{k-1}$.</p>
+  <p>Round the <em>residual</em>, not the raw column.</p>
+  <ul>
+    <li>Correlated inputs $\Rightarrow$ residual is small $\Rightarrow$ less MSE.</li>
+    <li>Same idea as <strong>DPCM</strong> in speech/image coding (differential PCM).</li>
+  </ul>
+  <div class="highlight">LDLQ = DPCM for columns of $W$, with prediction tuned to $H$.</div>
+</div>
+
+<div class="slide">
+  <h2>The Linear-Feedback Family</h2><div class="divider"></div>
+  <p>Round columns sequentially with a linear correction from past errors:</p>
+  <div class="math-block" style="margin: 4px 0;">$$\widehat W_k \;=\; Q\!\left(\,W_k \;+\; \sum_{j\,<\,k}\,(W_j - \widehat W_j)\,U_{jk}\,\right), \qquad k = 1, \ldots, n.$$</div>
+  <p>Stack the coefficients into a strictly upper-triangular $U \in \mathbb R^{n\times n}$:</p>
+  <div class="math-block" style="margin: 4px 0;">$$\widehat W \;=\; Q\!\bigl(\,W \;+\; (W - \widehat W)\,U\,\bigr).$$</div>
+  <ul>
+    <li>$U = 0$ &nbsp;$\Rightarrow$&nbsp; plain per-coordinate round-to-nearest.</li>
+    <li><strong>Goal.</strong> Choose $U$ (as a function of $H$, not $W$) to minimize the proxy.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Why "Upper Triangular"?</h2><div class="divider"></div>
+  <p>The feedback must be <strong>causal</strong>: when rounding column $k$, only $\widehat W_1, \ldots, \widehat W_{k-1}$ are known.</p>
+  <div class="math-block" style="margin: 6px 0;">$$U_{jk} \neq 0 \iff j \;<\; k.$$</div>
+  <p>Equivalently, $U$ is strictly upper triangular &mdash; $(W - \widehat W)\,U$ at column $k$ depends only on columns $1, \ldots, k-1$.</p>
+  <div class="highlight">"Only past errors influence the next decision."</div>
+</div>
+
+<div class="slide">
+  <h2>Quantization Residual $\eta$</h2><div class="divider"></div>
+  <p>Recall the goal — minimize the per-layer <strong>proxy loss</strong>:</p>
+  <div class="math-block" style="margin: 4px 0;">$$\ell(\widehat W) \;=\; \mathrm{tr}\!\bigl((\widehat W - W)\,H\,(\widehat W - W)^\top\bigr).$$</div>
+  <p>Inside the linear-feedback update, let $z = W + (W - \widehat W)\,U$ be the pre-rounded matrix. The <strong>per-coordinate quantization error</strong> is</p>
+  <div class="math-block" style="margin: 4px 0;">$$\eta_{ij} \;=\; Q(z_{ij}) - z_{ij}, \qquad |\eta_{ij}| \;\le\; \tfrac12.$$</div>
+  <p>So $\widehat W = z + \eta$. We will express the proxy in terms of $\eta$.</p>
+</div>
+
+<div class="slide">
+  <h2>Proxy in Feedback Form</h2><div class="divider"></div>
+  <p>From $\widehat W = W + (W - \widehat W)\,U + \eta$, rearrange:</p>
+  <div class="math-block" style="margin: 4px 0;">$$(\widehat W - W)\,(I + U) \;=\; \eta \qquad\Longrightarrow\qquad \widehat W - W \;=\; \eta\,(I + U)^{-1}.$$</div>
+  <p>Plug into $\ell(\widehat W) = \mathrm{tr}\bigl((\widehat W - W)\,H\,(\widehat W - W)^\top\bigr)$:</p>
+  <div class="math-block" style="margin: 4px 0;">$$\ell(\widehat W) \;=\; \mathrm{tr}\!\bigl(\,\eta\,(I+U)^{-1}\,H\,(I+U)^{-\top}\,\eta^\top\,\bigr).$$</div>
+  <div class="highlight">Same proxy loss — rewritten as a quadratic in the quantization error $\eta$. Which $U$ makes the middle matrix small?</div>
+</div>
+
+<div class="slide">
+  <h2>LDL of $H$ Cancels the Cross-Terms</h2><div class="divider"></div>
+  <p>$H$ is PSD, so it has an <strong>upper-LDL$^\top$</strong> factorization:</p>
+  <div class="math-block" style="margin: 4px 0;">$$H \;=\; (I + \bar U)\,D\,(I + \bar U)^\top, \qquad \bar U \text{ str. upper-triangular},\;\; D \succeq 0 \text{ diagonal}.$$</div>
+  <p>Set $U \leftarrow \bar U$: the $(I+U)^{\pm 1}$ factors collapse against $H$ and the proxy decouples,</p>
+  <div class="math-block" style="margin: 4px 0;">$$\ell(\widehat W) \;=\; \mathrm{tr}\!\bigl(\eta\,D\,\eta^\top\bigr) \;=\; \sum_{k=1}^n D_{kk}\,\|\eta_{\,\cdot\, k}\|^2.$$</div>
+  <p>Cross-terms gone — column $k$ of the quantization error $\eta$ is paid for at rate $D_{kk}$ alone.</p>
+</div>
+
+<div class="slide">
+  <h2>LDLQ — Round With Memory</h2><div class="divider"></div>
+  <p>The choice $U \leftarrow \bar U$ defines the <strong>LDLQ</strong> algorithm.</p>
+  <div class="card" style="max-width: 980px; margin: 14px auto;">
+    <p style="margin: 4px 0;"><strong>1.</strong> Factor $H = (I + \bar U)\, D\, (I + \bar U)^\top$ once from calibration.</p>
+    <p style="margin: 4px 0;"><strong>2.</strong> For $k = 1, 2, \ldots, n$:</p>
+    <p style="margin: 4px 0; padding-left: 56px;">$\circ$ &nbsp;correction &nbsp; $\;c_k \;=\; \sum_{j\,&lt;\,k}\, (W_j - \widehat W_j)\,\bar U_{jk}$</p>
+    <p style="margin: 4px 0; padding-left: 56px;">$\circ$ &nbsp;round &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $\;\widehat W_k \;=\; Q\bigl(W_k + c_k\bigr)$ &nbsp; (per-coordinate nearest)</p>
+  </div>
+  <div class="highlight">Sequential rounding with linear feedback — DPCM in matrix form.</div>
+</div>
+
+<div class="slide">
+  <h2>What $\bar U$ and $D$ Mean</h2><div class="divider"></div>
+  <p>The LDL$^\top$ of $H$ is Gram-Schmidt under the $H$-inner-product:</p>
+  <ul>
+    <li>$\bar U_{jk}$ ($j &lt; k$) = best <em>linear predictor</em> coefficient of coord $k$ from coord $j$.</li>
+    <li>$D_{kk}$ = residual variance of coord $k$ after removing the influence of $1, \ldots, k-1$.</li>
+  </ul>
+  <div class="grid-2" style="margin-top: 6px;">
+    <div>
+      <p style="margin: 2px 0;"><strong>$H$ diagonal</strong> $\Rightarrow$ $\bar U = 0$.</p>
+      <p style="margin: 2px 0;">No prediction possible &mdash; LDLQ collapses to round-to-nearest.</p>
+    </div>
+    <div>
+      <p style="margin: 2px 0;"><strong>$H$ off-diagonal mass</strong> $\Rightarrow$ $\bar U \ne 0$.</p>
+      <p style="margin: 2px 0;">Subtract the predictable part of column $k$ before rounding.</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Worst-Case and Average Proxy Loss</h2><div class="divider"></div>
+  <p>For a rounding rule $A$ (taking $W, H$ and returning $\widehat W$), define two losses:</p>
+  <div class="math-block" style="margin: 2px 0;">$$\mathcal{L}_\text{worst}(A, H) \;=\; \sup_{W \in \mathbb{R}^{m\times n}}\, \mathbb{E}\,\mathrm{tr}\!\bigl((A(W,H) - W)\,H\,(A(W,H) - W)^\top\bigr),$$</div>
+  <div class="math-block" style="margin: 2px 0;">$$\mathcal{L}_\text{avg}(A, H) \;=\; \mathbb{E}_{W \sim \text{Unif}[0,1]^{m\times n}}\,\mathrm{tr}\!\bigl((A(W,H) - W)\,H\,(A(W,H) - W)^\top\bigr).$$</div>
+  <p>Both reduce to $\sum_k D_{kk} \,\mathbb{E}\|\eta_{\cdot k}\|^2$ for LDLQ. With $|\eta_{ij}| \le \tfrac12$:</p>
+  <ul style="margin: 2px 0;">
+    <li><strong>Worst:</strong> $\eta_{ij}^2 = \tfrac14$ at $W_{ij} = k+\tfrac12$ &nbsp;$\Rightarrow$&nbsp; $\mathcal{L}_\text{worst} = \tfrac{m}{4}\,\mathrm{tr}(D)$.</li>
+    <li><strong>Average:</strong> $\mathbb{E}\,\eta_{ij}^2 = \tfrac1{12}$ (nearest) or $\tfrac16$ (stochastic) &nbsp;$\Rightarrow$&nbsp; $\mathcal{L}_\text{avg} = \tfrac{m}{c}\,\mathrm{tr}(D)$.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>LDLQ Is Optimal (Theorem)</h2><div class="divider"></div>
+  <p>Within the linear-feedback family with $U$ chosen as a function of $H$ (not $W$):</p>
+  <div class="card">
+    <h3 style="margin-top:0;">Theorem 1 (Chee et al., 2023).</h3>
+    <p style="margin: 2px 0;">For any PSD $H$ and any rounding rule $A$ in the family,</p>
+    <div class="math-block" style="margin: 2px 0;">$$\tfrac{m}{4}\,\mathrm{tr}(D) \;=\; \mathcal{L}_\text{worst}(\text{LDLQ}, H) \;\le\; \mathcal{L}_\text{worst}(A, H),$$</div>
+    <div class="math-block" style="margin: 2px 0;">$$\tfrac{m}{c}\,\mathrm{tr}(D) \;=\; \mathcal{L}_\text{avg}(\text{LDLQ}, H) \;\le\; \mathcal{L}_\text{avg}(A, H),$$</div>
+    <p style="margin: 2px 0;">$c = 12$ for nearest, $c = 6$ for stochastic. Moreover $\mathrm{tr}(D) \le \mathrm{tr}(H)$, equality iff $H$ diagonal.</p>
+  </div>
+  <div class="cite">Chee, Cai, Kuleshov, De Sa, "QuIP", NeurIPS 2023.</div>
+</div>
+
+<div class="slide">
+  <h2>What Theorem 1 Means</h2><div class="divider"></div>
+  <ul>
+    <li>$\mathrm{tr}(H)$ = total input variance — the cost paid by round-to-nearest.</li>
+    <li>$\mathrm{tr}(D)$ = <em>residual</em> variance after LDL strips cross-coordinate predictability.</li>
+    <li>Gap is strict whenever $H$ has off-diagonal mass.</li>
+  </ul>
+  <div class="math-block" style="margin: 4px 0;">$$\underbrace{\tfrac{m}{4}\,\mathrm{tr}(H)}_{\text{round-to-nearest}} \quad \text{vs.} \quad \underbrace{\tfrac{m}{4}\,\mathrm{tr}(D)}_{\text{LDLQ}}.$$</div>
+  <p>Empirically, across <em>every layer</em> of OPT 125m–2.7b, $\;\mathrm{tr}(D)/\mathrm{tr}(H) \le 0.65$ (Chee et al., 2023, Supplement C).</p>
+  <div class="highlight">LDLQ wins whenever inputs are correlated — i.e., every real LLM layer.</div>
+</div>
+
+<div class="slide">
   <h2>Why Outliers Wreck Quantization</h2><div class="divider"></div>
   <p>Uniform quantizer needs a step $\Delta$ that covers the whole range $[-W_{\max}, W_{\max}]$.</p>
-  <p>With $K = 2^{R}$ bins:</p>
-  <div class="math-block">$$\Delta \;=\; \frac{2 W_{\max}}{K} \;\propto\; W_{\max}.$$</div>
+  <p>With $M = 2^{R}$ bins:</p>
+  <div class="math-block">$$\Delta \;=\; \frac{2 W_{\max}}{M} \;\propto\; W_{\max}.$$</div>
   <div class="grid-2" style="margin-top:8px;">
     <div>
       <svg viewBox="0 0 280 140" width="100%" style="background:var(--light);border-radius:8px;display:block;">
@@ -456,7 +656,7 @@
       <p style="text-align:center;">One big entry $\Rightarrow$ huge $\Delta$.</p>
     </div>
     <div>
-      <p>Most weights live in a small region — but $\Delta$ is sized for the outlier.</p>
+      <p>Most weights live in a small region &mdash; but $\Delta$ is sized for the outlier.</p>
       <p>Almost every bit of resolution is wasted.</p>
     </div>
   </div>
@@ -472,55 +672,43 @@
 </div>
 
 <div class="slide">
+  <h2>Conjugation Preserves the Proxy</h2><div class="divider"></div>
+  <p>Two independent random orthogonals: &nbsp;$U \in O(m)$ rotates <em>outputs</em>, &nbsp;$V \in O(n)$ rotates <em>inputs</em>.</p>
+  <div class="math-block" style="margin: 4px 0;">$$\widetilde W \;=\; U\, W\, V^\top \quad\text{(rows by $U$, columns by $V$).}$$</div>
+  <p>$H = \mathbb{E}[xx^\top]$ depends only on the input $x$. After rotation $x \to V x$:</p>
+  <div class="math-block" style="margin: 4px 0;">$$\widetilde H \;=\; \mathbb{E}\bigl[(Vx)(Vx)^\top\bigr] \;=\; V\, H\, V^\top.$$</div>
+  <p>$U$ never enters $\widetilde H$ — $H$ has no output index. Cyclic trace then gives</p>
+  <div class="math-block" style="margin: 4px 0;">$$\mathrm{tr}\bigl(\widetilde W\,\widetilde H\,\widetilde W^\top\bigr) \;=\; \mathrm{tr}\bigl(W\, H\, W^\top\bigr).$$</div>
+  <div class="highlight">Rotation $U, V$ are <em>different objects</em> from LDLQ's $\bar U$ (the upper-triangular factor of $H$).</div>
+</div>
+
+<div class="slide">
   <h2>Random Rotation Erases Outliers</h2><div class="divider"></div>
-  <p>Conjugate $W$ and $H$ by orthogonal $U, V$:</p>
-  <div class="math-block">$$\widetilde W \;=\; U W V^\top, \qquad \widetilde H \;=\; V H V^\top.$$</div>
-  <p>Proxy is invariant: $\mathrm{tr}(\widetilde W \widetilde H \widetilde W^\top) = \mathrm{tr}(W H W^\top)$.</p>
-  <p>For a random orthogonal $V$, each entry of $\widetilde W$ is a weighted sum of all of $W$:</p>
+  <p>Pick $U, V$ random orthogonal: each entry of $\widetilde W = U W V^\top$ is a weighted sum of all of $W$.</p>
   <div class="math-block">$$\widetilde W_{ij} \;=\; \sum_{k,\ell} U_{ik}\,V_{j\ell}\,W_{k\ell} \;\approx\; \mathcal{N}\!\bigl(0,\, \tfrac{\|W\|_F^2}{mn}\bigr).$$</div>
-  <p>Outliers diffuse across all entries. QUIP uses Kronecker $V = V_1 \otimes V_2$: polylog-$\mu$, $\Theta(n\sqrt n)$ multiply.</p>
-</div>
-
-<div class="slide">
-  <h2>LDLQ — Round With Memory</h2><div class="divider"></div>
-  <p>Round columns one at a time. Use past errors to <strong>correct</strong> the next column.</p>
-  <div class="card" style="max-width: 980px; margin: 14px auto;">
-    <p style="margin: 4px 0;"><strong>1.</strong> Factor $H \;=\; (\bar U + I)\,D\,(\bar U + I)^\top$ &nbsp;($\bar U$ strictly upper triangular, $D$ diagonal).</p>
-    <p style="margin: 4px 0;"><strong>2.</strong> For $k = 1, 2, \ldots, n$:</p>
-    <p style="margin: 4px 0; padding-left: 56px;">$\circ$ &nbsp;correction $\;c_k \;=\; \sum_{j\,&lt;\,k}\, (W_j - \widehat W_j)\,(\bar U)_{jk}$</p>
-    <p style="margin: 4px 0; padding-left: 56px;">$\circ$ &nbsp;round &nbsp; $\;\widehat W_k \;=\; Q\bigl(W_k + c_k\bigr)$ &nbsp; (per-coordinate nearest)</p>
-  </div>
-  <div class="highlight">Sequential rounding with linear feedback — DPCM, or Gauss-Seidel on the proxy loss.</div>
-</div>
-
-<div class="slide">
-  <h2>LDLQ — Why the Correction</h2><div class="divider"></div>
-  <p>Stack columns into a matrix update:</p>
-  <div class="math-block" style="margin: 6px 0;">$$\widehat W \;=\; Q\bigl(\,W \;+\; (W - \widehat W)\,\bar U\,\bigr).$$</div>
-  <p>$\bar U$ comes from the $LDL^\top$ of $H$ — it predicts the part of the next column's error that couples to past errors via $H$.</p>
-  <div class="math-block" style="margin: 6px 0;">$$\text{post-quantization residual} \;\perp_H\; \text{all past residuals.}$$</div>
-  <p>This is the loss-minimizing choice among linear-feedback rules.</p>
-</div>
-
-<div class="slide">
-  <h2>LDLQ — Why It's Optimal</h2><div class="divider"></div>
-  <p>Among all linear-feedback rounding methods, LDLQ minimizes worst- and average-case proxy loss.</p>
-  <div class="card">
-    <h3>Theorem 1 (Chee et al., 2023).</h3>
-    <p>Worst-case proxy loss of LDLQ equals $\tfrac{m}{4}\mathrm{tr}(D)$, and</p>
-    <div class="math-block">$$\mathrm{tr}(D) \;\le\; \mathrm{tr}(H), \quad\text{with strict inequality when $H$ is not diagonal.}$$</div>
-  </div>
-  <p>Per-coordinate round-to-nearest pays $\tfrac{m}{12}\mathrm{tr}(H)$. LDLQ beats it whenever $H$ has off-diagonal mass — i.e.&nbsp;always.</p>
-  <div class="cite">Chee et al., "QuIP", NeurIPS 2023.</div>
+  <p>Outliers diffuse across all entries; QUIP uses Kronecker $V = V_1 \otimes V_2$: polylog-$\mu$, $\Theta(n\sqrt n)$ multiply.</p>
+  <div class="highlight">Random rotation turns any $W$ into a "boring" $\widetilde W$ that a coarse quantizer handles. Now run LDLQ on $\widetilde W$ using $\widetilde H$.</div>
 </div>
 
 <div class="slide">
   <h2>QUIP — End to End</h2><div class="divider"></div>
   <ol class="num">
-    <li><strong>Rotate.</strong> $\widetilde W = U W V^\top$, $\widetilde H = V H V^\top$ — Kronecker random orthogonals.</li>
+    <li><strong>Rotate.</strong> $\widetilde W = U W V^\top$, $\widetilde H = V H V^\top$ &mdash; Kronecker random orthogonals.</li>
     <li><strong>Round.</strong> LDLQ on $\widetilde W$ using $\widetilde H$.</li>
     <li><strong>Inference.</strong> Apply $V$ to inputs, $U^\top$ to outputs around the quantized layer.</li>
   </ol>
+  <div class="diagram-flow" style="justify-content: center; margin: 14px 0 6px;">
+    <div style="font-weight:700; color:var(--yonsei-blue); font-size:1.3rem;">$x$</div>
+    <span class="diagram-arrow">→</span>
+    <div class="diagram-box filled">$V$</div>
+    <span class="diagram-arrow">→</span>
+    <div class="diagram-box" style="border-style: dashed;">$\widehat W$ &nbsp;(quantized)</div>
+    <span class="diagram-arrow">→</span>
+    <div class="diagram-box filled">$U^\top$</div>
+    <span class="diagram-arrow">→</span>
+    <div style="font-weight:700; color:var(--yonsei-blue); font-size:1.3rem;">$y$</div>
+  </div>
+  <p style="text-align:center; margin: 0 0 6px;">$y \;\approx\; U^\top\,\widehat W\,V\,x \;=\; W x$</p>
   <div class="highlight">First viable 2-bit LLM quantization with theoretical guarantees.</div>
   <div class="cite">Chee, Cai, Kuleshov, De Sa, "QuIP", NeurIPS 2023.</div>
 </div>
@@ -612,12 +800,29 @@
 </div>
 
 <div class="slide">
-  <h2>BlockLDLQ — LDLQ with Vector Quantizers</h2><div class="divider"></div>
-  <p>LDLQ rounds one column at a time. With $E_8$, we round $g=8$ columns at once.</p>
-  <div class="math-block">$$\widehat W_k \;=\; Q_{E_8}\bigl(W_k \;+\; (W_{1:k-g} - \widehat W_{1:k-g})\,A_k\bigr).$$</div>
-  <p>$A_k$ from a block $LDL^\top$ of $H$ (block size $g$). Theorem 4.1:</p>
-  <div class="math-block">$$\mathbb{E}\,\ell(\widehat W) \;\le\; \frac{g\,m\,\mu^2}{n}\,\sigma^2\,\mathrm{tr}(H^{1/2})^2.$$</div>
-  <p>Same $\mathrm{tr}(H) \to \mathrm{tr}(H^{1/2})^2/n$ improvement as scalar QUIP — now with VQ.</p>
+  <h2>Scalar LDLQ vs. BlockLDLQ</h2><div class="divider"></div>
+  <p>QUIP rounds one column at a time. To use $E_8$, round $g=8$ columns at once.</p>
+  <div class="card" style="margin: 8px 0;">
+    <h3 style="color:var(--blue-light); margin: 0 0 2px 0;">Scalar LDLQ &nbsp;(QUIP, $g = 1$)</h3>
+    <div class="math-block" style="margin: 0;">$$\widehat W_k \;=\; Q\bigl(W_k + R_{1:k-1}\,\bar U_{\,\cdot,k}\bigr), \qquad R_j = W_j - \widehat W_j.$$</div>
+    <p style="margin: 2px 0 0 0;">Per-coordinate round.</p>
+  </div>
+  <div class="card" style="margin: 8px 0;">
+    <h3 style="color:var(--blue-light); margin: 0 0 2px 0;">BlockLDLQ &nbsp;(QUIP#, $g = 8$)</h3>
+    <div class="math-block" style="margin: 0;">$$\widehat W_k \;=\; Q_{E_8}\bigl(W_k + R_{1:k-g}\,A_k\bigr).$$</div>
+    <p style="margin: 2px 0 0 0;">Group of 8 rounded by $E_8$ nearest-point.</p>
+  </div>
+  <div class="highlight">Same predict-and-correct &mdash; only the per-step rounder changes.</div>
+</div>
+
+<div class="slide">
+  <h2>BlockLDLQ — Bound</h2><div class="divider"></div>
+  <p>$A_k$ from a <em>block</em> LDL$^\top$ of $H$ (block size $g$).</p>
+  <div class="card">
+    <h3 style="margin: 0 0 2px 0;">Theorem 4.1 (Tseng et&nbsp;al., 2024).</h3>
+    <div class="math-block" style="margin: 0;">$$\mathbb{E}\,\ell(\widehat W) \;\le\; \frac{g\,m\,\mu^2}{n}\,\sigma^2\,\mathrm{tr}(H^{1/2})^2.$$</div>
+  </div>
+  <p>Same $\mathrm{tr}(H) \to \mathrm{tr}(H^{1/2})^2/n$ improvement as scalar QUIP &mdash; now with vector quantization.</p>
 </div>
 
 <div class="slide">

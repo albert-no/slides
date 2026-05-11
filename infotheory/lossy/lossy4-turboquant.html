@@ -120,16 +120,24 @@
 <!-- KV CACHE — MOTIVATION -->
 <div class="slide">
   <h2>Self-Attention: Query, Key, Value</h2><div class="divider"></div>
-  <p>Each token $s$ produces three vectors from its hidden state $h_s$:</p>
-  <div class="math-block" style="margin: 8px 0;">$$q_s = W_Q h_s, \qquad k_s = W_K h_s, \qquad v_s = W_V h_s.$$</div>
-  <p>Query scores past keys; softmax-weighted sum reads past values:</p>
-  <div class="math-block" style="margin: 8px 0;">$$\alpha_{t,s} \propto \exp\!\bigl(\langle q_t, k_s\rangle/\sqrt d\bigr), \qquad o_t = \sum_{s \le t} \alpha_{t,s}\,v_s.$$</div>
-  <p>Two <strong>inner products</strong>: $\langle q, k\rangle$ in softmax, $\sum \alpha v$ in output.</p>
+  <div style="display:flex; gap:28px; align-items:flex-start;">
+    <div style="flex: 1.05;">
+      <p style="margin-top:0;">Each token $s$ projects its hidden state $h_s$ to three vectors:</p>
+      <div class="math-block" style="margin: 6px 0;">$$q_s = W_Q h_s,\;\; k_s = W_K h_s,\;\; v_s = W_V h_s.$$</div>
+      <p style="margin: 6px 0;">Query scores past keys; softmax-weighted sum reads past values:</p>
+      <div class="math-block" style="margin: 6px 0;">$$\alpha_{t,s} \propto \exp\!\bigl(\langle q_t, k_s\rangle/\sqrt d\bigr),\quad o_t = \sum_{s \le t}\alpha_{t,s}\,v_s.$$</div>
+    </div>
+    <div style="flex: 0.95; display:flex; flex-direction:column; align-items:center; margin-top: -4px;">
+      <img src="qkv.png" alt="Self-attention Q/K/V diagram" style="width:100%; max-width: 420px; max-height: 520px; object-fit:contain; display:block;">
+    </div>
+  </div>
+  <div class="cite">Figure: Sergey Levine, CS182sp21 &mdash; <a href="https://cs182sp21.github.io/" style="color: inherit;">cs182sp21.github.io</a>.</div>
 </div>
 
 <div class="slide">
   <h2>What Is the KV Cache?</h2><div class="divider"></div>
-  <p>Decoder runs token-by-token. Past $k_s, v_s$ <strong>never change</strong> &mdash; cache them.</p>
+  <p>Decoder runs token-by-token.</p>
+  <p>Past keys and values <strong>never change</strong> &mdash; cache them.</p>
   <p>At step $t{+}1$: compute only $q_{t+1}, k_{t+1}, v_{t+1}$; reuse the rest.</p>
   <div class="l4-kv-flow">
     <span class="node">$K_1, V_1$</span>
@@ -139,7 +147,8 @@
     <span class="node">$K_t, V_t$</span>
     <span class="node" style="border-left-color: var(--gray-text); color: var(--gray-text); border-style: dashed;">$K_{t+1}, V_{t+1}$&nbsp;new</span>
   </div>
-  <p>Cache size: $\;2 \cdot L \cdot H \cdot d \cdot T$ scalars. &nbsp;70B model @ $T{=}128$K $\Rightarrow$ $\sim 50$ GB.</p>
+  <p>Cache size: $\;2 \cdot L \cdot H \cdot d \cdot T$ scalars.</p>
+  <p>70B model @ $T{=}128$K $\;\Rightarrow\;$ $\sim 50$ GB.</p>
 </div>
 
 <div class="slide">
@@ -372,48 +381,9 @@
 </div>
 
 <div class="slide">
-  <h2>Picture: Covering the Sphere</h2><div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns: 1fr 1.05fr; gap: 24px; align-items: center;">
-    <div style="position: relative; max-width: 320px; margin: 0 auto;">
-      <svg viewBox="0 0 360 320" style="width:100%; display: block;">
-        <circle cx="180" cy="160" r="130" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
-        <circle cx="180" cy="40"  r="32" fill="#1a5296" opacity="0.22" stroke="#1a5296" stroke-width="1.5"/>
-        <circle cx="284" cy="100" r="32" fill="#1a5296" opacity="0.22" stroke="#1a5296" stroke-width="1.5"/>
-        <circle cx="284" cy="220" r="32" fill="#1a5296" opacity="0.22" stroke="#1a5296" stroke-width="1.5"/>
-        <circle cx="180" cy="280" r="32" fill="#1a5296" opacity="0.22" stroke="#1a5296" stroke-width="1.5"/>
-        <circle cx="76"  cy="220" r="32" fill="#1a5296" opacity="0.22" stroke="#1a5296" stroke-width="1.5"/>
-        <circle cx="76"  cy="100" r="32" fill="#1a5296" opacity="0.22" stroke="#1a5296" stroke-width="1.5"/>
-        <circle cx="180" cy="40"  r="4" fill="#003876"/>
-        <circle cx="284" cy="100" r="4" fill="#003876"/>
-        <circle cx="284" cy="220" r="4" fill="#003876"/>
-        <circle cx="180" cy="280" r="4" fill="#003876"/>
-        <circle cx="76"  cy="220" r="4" fill="#003876"/>
-        <circle cx="76"  cy="100" r="4" fill="#003876"/>
-        <line x1="180" y1="40" x2="208" y2="56" stroke="#d94040" stroke-width="2"/>
-      </svg>
-      <span style="position: absolute; left: 63%; top: 17%; font-size: 1.05rem; font-weight: 700; color: var(--warn);">$\sqrt{D}$</span>
-      <span style="position: absolute; left: 47%; top: 51%; font-size: 1.1rem; font-weight: 700; color: var(--yonsei-blue);">$S^{d-1}$</span>
-    </div>
-    <div>
-      <p>Quantizer = $2^B$ codepoints on the sphere.</p>
-      <p>Each point of $S^{d-1}$ must sit in a ball of radius $\sqrt{D}$ around some codepoint:</p>
-      <div class="math-block" style="margin: 6px 0;">$$2^B \cdot \mathrm{vol}\bigl(B_{\sqrt D}\bigr) \;\ge\; \mathrm{Area}(S^{d-1}).$$</div>
-      <p>Take logs $\Rightarrow$ $D \ge 4^{-b}$ at $B = b d$.</p>
-    </div>
-  </div>
-</div>
-
-<div class="slide">
-  <h2>Sphere SLB &mdash; Formal</h2><div class="divider"></div>
-  <p>Shannon Lower Bound (Lecture 2), specialized to $X \sim \mathrm{Unif}(S^{d-1})$:</p>
-  <div class="math-block">$$D \;\ge\; \dfrac{d}{2\pi e} \cdot 2^{2(h(X) - B)/d}.$$</div>
-  <p>$h(X) = \log_2 A_d$ where $A_d = 2\pi^{d/2}/\Gamma(d/2)$; Stirling $\Rightarrow A_d^{2/d} \to 2\pi e / d$.</p>
-  <div class="math-block">$$D(B) \;\ge\; 2^{-2B/d}, \qquad B = b d \;\Longrightarrow\; D \;\ge\; 4^{-b}.$$</div>
-</div>
-
-<div class="slide">
   <h2>Yao + Constant Gap</h2><div class="divider"></div>
-  <p><strong>Yao's principle.</strong> Worst-input randomized cost $\ge$ best deterministic cost on hardest input distribution.</p>
+  <p>Lecture 2's converse on $X \sim \mathrm{Unif}(S^{d-1})$ gives $D \ge 4^{-b}$ at $b$ bits/coord.</p>
+  <p><strong>Yao's principle.</strong> Worst-input randomized cost $\ge$ best deterministic cost on the hardest input distribution.</p>
   <p>Apply with $\mathrm{Unif}(S^{d-1})$: some $x$ forces $\mathbb{E}\|x - \widehat x\|^2 \ge 4^{-b}$ for every $bd$-bit quantizer.</p>
   <div class="math-block">$$4^{-b} \;\le\; D_{\mathrm{mse}}^\star(b) \;\le\; \tfrac{\sqrt{3}\,\pi}{2} \cdot 4^{-b}.$$</div>
   <div class="highlight">Constant gap $\Rightarrow$ exponent $4^{-b}$ is <strong>optimal</strong>.</div>
@@ -476,6 +446,47 @@
   <h1>QJL and Inner-Product TURBOQUANT</h1>
   <div class="divider"></div>
   <p class="subtitle">One-bit unbiased sketch, applied to the residual</p>
+</div>
+
+<div class="slide">
+  <h2>Johnson&ndash;Lindenstrauss Lemma</h2><div class="divider"></div>
+  <div class="card">
+    <h3 style="margin-top:0;">Theorem (JL, 1984).</h3>
+    <p style="margin:4px 0;">For any $n$ points $x_1, \ldots, x_n \in \mathbb{R}^d$ and any $\varepsilon \in (0, 1)$, there exists a linear map $A: \mathbb{R}^d \to \mathbb{R}^k$ with $k = \mathcal{O}\!\bigl(\varepsilon^{-2}\log n\bigr)$ such that</p>
+    <div class="math-block" style="margin: 4px 0;">$$(1-\varepsilon)\,\|x_i - x_j\|^2 \;\le\; \|A x_i - A x_j\|^2 \;\le\; (1+\varepsilon)\,\|x_i - x_j\|^2 \quad \forall i, j.$$</div>
+  </div>
+  <p>A random Gaussian matrix $A = \tfrac{1}{\sqrt k}\,S$ with $S_{ij} \sim \mathcal{N}(0,1)$ works with high probability.</p>
+  <div class="highlight">Pairwise distances survive an $\mathcal{O}(\log n)$-dim sketch &mdash; <em>independent</em> of the ambient dim $d$.</div>
+</div>
+
+<div class="slide">
+  <h2>JL Intuition</h2><div class="divider"></div>
+  <p>Fix any unit $u \in \mathbb{R}^d$.</p>
+  <p>For $s \sim \mathcal{N}(0, I_d)$: &nbsp;$\langle s, u\rangle \sim \mathcal{N}(0, 1)$.</p>
+  <p>Stack $k$ rows of $S$. Then $\|S u\|^2 \sim \chi^2_k$.</p>
+  <p>Concentrates around $k$ with relative deviation $\mathcal{O}\!\bigl(1/\sqrt k\bigr)$.</p>
+  <ul>
+    <li>$k = \Theta(\varepsilon^{-2}\log n)$ $\;\Rightarrow\;$ each of $\binom n2$ pairs survives w.p. $\ge 1 - 1/n^2$.</li>
+    <li>Union bound $\Rightarrow$ all pairs simultaneously.</li>
+  </ul>
+  <div class="highlight">Random projection preserves distances because $\chi^2$ concentrates &mdash; geometry of i.i.d.\ Gaussian rows.</div>
+</div>
+
+<div class="slide">
+  <h2>JL Preserves Inner Products Too</h2><div class="divider"></div>
+  <p>From the polarization identity</p>
+  <div class="math-block" style="margin: 4px 0;">$$\langle u, v\rangle \;=\; \tfrac14\bigl(\|u+v\|^2 - \|u-v\|^2\bigr),$$</div>
+  <p>a distance-preserving sketch is also an inner-product-preserving sketch:</p>
+  <div class="math-block" style="margin: 4px 0;">$$\bigl|\langle A u, A v\rangle - \langle u, v\rangle\bigr| \;\le\; \varepsilon\,\|u\|\,\|v\|.$$</div>
+  <div class="highlight">For TURBOQUANT we only care about $\langle q, k\rangle$ &mdash; JL is exactly the right tool.</div>
+</div>
+
+<div class="slide">
+  <h2>From JL to QJL (1 bit / coord)</h2><div class="divider"></div>
+  <p>Plain JL stores $k$ floats per vector. To compress further, quantize the sketch with one bit per coordinate:</p>
+  <div class="math-block" style="margin: 4px 0;">$$Q_{\mathrm{qjl}}(u) \;=\; \operatorname{sign}(S\, u) \;\in\; \{-1, +1\}^d.$$</div>
+  <p>Throws away magnitudes &mdash; keeps only the <em>sign pattern</em> of the projection. Strikingly, with the right decoder $Q_{\mathrm{qjl}}^{-1}$, this still gives an <em>unbiased</em> estimator of $\langle y, u\rangle$.</p>
+  <div class="highlight">QJL = JL + 1-bit sign quantization. Next slide: precise statement.</div>
 </div>
 
 <div class="slide">
@@ -603,7 +614,7 @@
 <div class="slide">
   <h2>Practical Pieces</h2><div class="divider"></div>
   <ul>
-    <li><strong>Rotation $\Pi$</strong> &mdash; <em>random Hadamard transform</em> (RHT): $\mathcal{O}(d \log d)$, not $d^2$.</li>
+    <li><strong>Rotation $\Pi \in \mathbb{R}^{d \times d}$</strong> &mdash; <em>random Hadamard transform</em> (RHT): $\mathcal{O}(d \log d)$, not $d^2$.</li>
     <li><strong>Scalar codebook $\{c_i\}$</strong> &mdash; precomputed offline by Lloyd&ndash;Max on $f_d$; shipped once with the model. No calibration.</li>
     <li><strong>Sketch matrix $S$</strong> &mdash; deterministic from a PRNG seed; regenerated on the fly, never stored.</li>
     <li><strong>Per-token storage</strong> &mdash; $(b{-}1)\cdot d$-bit indices, $d$-bit sign vector, scalar $\gamma$. About $b\cdot d$ bits.</li>
@@ -611,8 +622,27 @@
 </div>
 
 <div class="slide">
+  <h2>Dimensions Used in the Paper</h2><div class="divider"></div>
+  <p>$\Pi \in \mathbb{R}^{d \times d}$ is applied <em>per attention head</em> &mdash; <strong>$d$ = head dimension</strong>, not the full model dim.</p>
+  <div class="grid-2" style="margin-top: 8px;">
+    <div class="card">
+      <h3 style="color:var(--blue-light); margin-top: 0;">KV cache</h3>
+      <p style="margin: 4px 0;">Llama-3.1-8B-Instruct, Ministral-7B-Instruct.</p>
+      <p style="margin: 4px 0;">Head dim $\;d = 128\;$ for Llama-3.1.</p>
+      <p style="margin: 4px 0;">Rotation block size $= 128$.</p>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--blue-light); margin-top: 0;">Nearest-neighbor search</h3>
+      <p style="margin: 4px 0;">GloVe &mdash; $d = 200$.</p>
+      <p style="margin: 4px 0;">OpenAI3 embeddings &mdash; $d = 1536$ and $d = 3072$.</p>
+    </div>
+  </div>
+  <div class="highlight">RHT is cheap because the rotated block is small ($d{=}128$ per head) &mdash; $\mathcal{O}(d \log d)$ per head, per token.</div>
+</div>
+
+<div class="slide">
   <h2>Empirical Behavior</h2><div class="divider"></div>
-  <p>Long-context decoding with TURBOQUANT-quantized KV cache:</p>
+  <p>Long-context decoding with TURBOQUANT-quantized KV cache (Llama-3.1-8B-Instruct, head dim&nbsp;$128$):</p>
   <ul>
     <li><strong>$\sim 3.5$ bits/channel</strong> &mdash; quality matches FP16 within noise.</li>
     <li><strong>$\sim 2.5$ bits/channel</strong> &mdash; gradual degradation begins.</li>

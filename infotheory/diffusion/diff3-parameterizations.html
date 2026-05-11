@@ -50,6 +50,11 @@
       <div><div class="toc-label">Channel view</div>
       <div class="toc-sub">Forward as noise channel, reverse as decoding</div></div>
     </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Score-matching equivalence</div>
+      <div class="toc-sub">ELBO MSE $\equiv$ denoising score matching</div></div>
+    </div>
   </div>
 </div>
 
@@ -171,7 +176,7 @@
 
 <div class="slide">
   <h2>Successive Refinement Analogy</h2><div class="divider"></div>
-  <p>Rate–distortion successive refinement: nested codebooks describe a source at decreasing distortion.</p>
+  <p>Rate&ndash;distortion successive refinement: nested codebooks describe a source at decreasing distortion.</p>
   <p>Diffusion matches this structure layer by layer:</p>
   <ul>
     <li>$X_T$: coarsest description (pure noise).</li>
@@ -181,6 +186,50 @@
   <p>Shared $\theta$ across $t$ amortizes one network across all refinement levels.</p>
 </div>
 
+
+<!-- ════ PART 05 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Score-Matching Equivalence</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Diffusion ELBO $\equiv$ denoising score matching</p>
+</div>
+
+<div class="slide">
+  <h2>Overview &mdash; A Second Divergence Behind Diffusion</h2><div class="divider"></div>
+  <p>So far: diffusion is trained by maximizing an <strong>ELBO</strong> &mdash; a KL-based bound.</p>
+  <p>Tweedie's formula reveals a parallel view: the per-step MSE is also a <strong>Fisher divergence</strong> between the true conditional score and the model score.</p>
+  <ul>
+    <li>ELBO sees the <em>density</em>; Fisher sees the <em>score gradient</em>.</li>
+    <li>The two coincide here because the reverse kernels are Gaussian.</li>
+    <li>Same network, same loss &mdash; two derivations.</li>
+  </ul>
+  <div class="highlight"><p>Diffusion training $=$ ELBO maximization $=$ score matching.</p></div>
+</div>
+
+<div class="slide">
+  <h2>Theorem &mdash; ELBO Term $\equiv$ Denoising Score Matching</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (Vincent 2011; Song et al. 2021).</h3>
+    <p>Up to $\theta$-free constants, the per-step ELBO MSE equals a denoising score-matching objective:</p>
+    <div class="math-block">$$\mathbb{E}\!\left[\,\|\mathbf{m}_t(X_0, X_t) - \boldsymbol\mu_t(X_t)\|^2\right] \;=\; \sigma_t^4\,\mathbb{E}\!\left[\,\Bigl\|\tfrac{\sqrt{\bar\alpha_t}\,X_0 - X_t}{1-\bar\alpha_t} - s_\theta(X_t)\Bigr\|^2\right].$$</div>
+  </div>
+  <p><strong>Proof.</strong> Apply Tweedie's formula to both $\mathbf{m}_t = \mathbb{E}[X_{t-1}\,|\,X_t, X_0]$ and $\boldsymbol\mu_t = \mathbb{E}_\theta[X_{t-1}\,|\,X_t]$; the score difference falls out (full derivation: Divergence Lecture 2).</p>
+  <div class="cite">Vincent, Score matching $\equiv$ denoising AE, Neural Comp. 2011.</div>
+</div>
+
+<div class="slide">
+  <h2>Recap of Section 05 &mdash; Two Routes, One Network</h2><div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+\text{Diffusion ELBO MSE}
+&amp;\stackrel{(\text{Tweedie})}{=}\;\sigma_t^4\,\bigl\|\nabla\log g_t(\,\cdot\,|\,x_0) - \nabla\log f_\theta\bigr\|^2 \\
+&amp;\stackrel{(\text{Fisher def.})}{=}\;\text{(rescaled) Fisher divergence at level } t \\
+&amp;\stackrel{(\text{DSM})}{=}\;\mathbb{E}\bigl\|\text{noise scale} - s_\theta(X_t)\bigr\|^2.
+\end{aligned}$$</div>
+  <p>See <code>infotheory/divergence/div2-fisher-score.html</code> for: full denoising score-matching theorem, Fisher divergence properties, and the proof that the entire diffusion ELBO is a sum of $T-1$ DSM objectives.</p>
+</div>
+
+
 <div class="slide">
   <h2>Recap</h2><div class="divider"></div>
   <ul>
@@ -189,12 +238,13 @@
     <li><strong>Tweedie:</strong> ties posterior mean to the score by an affine rescaling.</li>
     <li><strong>$\varepsilon$-prediction:</strong> unit-variance target, well-conditioned, DDPM default.</li>
     <li><strong>Channel view:</strong> forward = noisy channel; reverse = decoding; chain = successive refinement.</li>
+    <li><strong>Score-matching equivalence:</strong> ELBO MSE $=$ denoising score matching $=$ Fisher divergence.</li>
   </ul>
 </div>
 
 <div class="slide end-slide no-footer">
   <div class="big-word">End of Module 2</div>
-  <p class="big-word-sub">Up next: mutual information estimation.</p>
+  <p class="big-word-sub">Next: mutual information estimation &mdash; or the Divergence series for the full Fisher / score-matching story.</p>
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>

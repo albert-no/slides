@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Divergence 1 — f-Divergence and GAN</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- TITLE -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Divergence · Lecture 1 of 2</div>
+  <h1>$f$-Divergence and<br>Generative Adversarial Nets</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A unified family beyond KL; GAN $\equiv$ Jensen&ndash;Shannon minimization</p>
+  <p style="font-weight:500;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Information Theory · 2026</p>
+</div>
+
+<!-- TOC -->
+<div class="slide">
+  <h2>Contents</h2><div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Beyond KL</div>
+      <div class="toc-sub">Why ML alone is not enough</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">$f$-Divergence</div>
+      <div class="toc-sub">Definition, examples, Jensen&ndash;Shannon</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Properties</div>
+      <div class="toc-sub">DPI, info inequality, joint vs marginal</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">GAN $\equiv$ JS</div>
+      <div class="toc-sub">Optimal discriminator and the JS theorem</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Recap</div>
+      <div class="toc-sub">Divergence catalogue; what comes next</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════ PART 01 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Beyond KL</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Likelihood alone fails; a broader family helps</p>
+</div>
+
+<div class="slide">
+  <h2>Recall &mdash; ML as KL Minimization</h2><div class="divider"></div>
+  <p>Given i.i.d. samples from $p_{\mathrm{data}}$, maximum likelihood picks</p>
+  <div class="math-block">$$\hat\theta \;=\; \arg\min_{\theta}\, D_{\mathrm{KL}}\!\bigl(p_{\mathrm{data}}\,\Vert\,p_\theta\bigr) \;=\; \arg\min_{\theta}\,\mathbb{E}_{p_{\mathrm{data}}}\!\bigl[-\log p_\theta(X)\bigr].$$</div>
+  <p>Two questions follow.</p>
+  <ul>
+    <li>Does high likelihood imply <strong>good samples</strong>?</li>
+    <li>Is KL the <strong>only sensible</strong> training distance?</li>
+  </ul>
+  <div class="highlight"><p>Answer to both: <strong>no</strong>. The rest of this lecture explains why.</p></div>
+</div>
+
+<div class="slide">
+  <h2>Pathology 1 &mdash; High Likelihood, Bad Samples</h2><div class="divider"></div>
+  <p>Let $p_\theta(x) \;=\; 0.01\,p_{\mathrm{data}}(x) + 0.99\,p_{\mathrm{noise}}(x)$. Then</p>
+  <div class="math-block">$$\log p_\theta(x) \;\ge\; \log\bigl(0.01\,p_{\mathrm{data}}(x)\bigr) \;=\; \log p_{\mathrm{data}}(x) - \log 100.$$</div>
+  <p>Taking $\mathbb{E}_{p_{\mathrm{data}}}$ gives the two-sided bound</p>
+  <div class="math-block">$$-H(p_{\mathrm{data}}) - \log 100 \;\le\; \mathbb{E}_{p_{\mathrm{data}}}\!\bigl[\log p_\theta(X)\bigr] \;\le\; -H(p_{\mathrm{data}}).$$</div>
+  <div class="highlight"><p><strong>Sample from $p_\theta$</strong> &rArr; $99\%$ noise. <strong>Likelihood</strong> off by only $\log 100$.</p></div>
+  <div class="cite">Theis, van&nbsp;den&nbsp;Oord, and Bethge, ICLR 2016.</div>
+</div>
+
+<div class="slide">
+  <h2>Pathology 2 &mdash; Overfit Wins on Likelihood, Loses on Sampling</h2><div class="divider"></div>
+  <p>Uniform $p_{\mathrm{data}}$ on $N$ atoms; $n &lt; N$ samples observed; model is uniform on those $n$:</p>
+  <div class="math-block">$$\mathbb{E}_{p_{\mathrm{data}}}\!\bigl[\log p_\theta(X)\bigr] \;=\; \tfrac{n}{N}\log\tfrac{1}{n} \;+\; \tfrac{N-n}{N}\log 0 \;=\; -\infty.$$</div>
+  <p>Yet every sample of $p_\theta$ is a real data point.</p>
+  <div class="highlight"><p>ML <em>punishes</em> the model that memorizes; quality and likelihood point in opposite directions.</p></div>
+</div>
+
+<div class="slide">
+  <h2>Plan &mdash; a Family of Divergences</h2><div class="divider"></div>
+  <p>KL is one member of a much larger family parameterized by a convex $f$.</p>
+  <div class="math-block">$$D_f(p\,\Vert\,q) \;=\; \mathbb{E}_q\!\left[\, f\!\Bigl(\tfrac{p(X)}{q(X)}\Bigr)\,\right].$$</div>
+  <ul>
+    <li><strong>Catalogue.</strong> KL, reverse KL, TV, $\chi^2$, hockey-stick, JS.</li>
+    <li><strong>Properties.</strong> Non-negativity, monotonicity, DPI &mdash; all once.</li>
+    <li><strong>Application.</strong> GAN training minimizes the JS divergence.</li>
+  </ul>
+</div>
+
+
+<!-- ════ PART 02 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>$f$-Divergence</h1>
+  <div class="divider"></div>
+  <p class="subtitle">One definition; six familiar instances</p>
+</div>
+
+<div class="slide">
+  <h2>Definition</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Definition ($f$-divergence).</h3>
+    <p>Let $f:(0,\infty)\to\mathbb{R}$ be convex with $f(1)=0$. For pmfs $p,q$ on $\mathcal{X}$,</p>
+    <div class="math-block">$$D_f(p\,\Vert\,q) \;=\; \sum_{x\in\mathcal{X}} q(x)\, f\!\Bigl(\frac{p(x)}{q(x)}\Bigr).$$</div>
+    <p>Conventions: $0\cdot f(0/0) = 0$, &nbsp; $f(0) = \lim_{t\to 0^+} f(t)$, &nbsp; $0\cdot f(a/0) = \lim_{t\to 0^+} t\,f(a/t)$ for $a&gt;0$.</p>
+  </div>
+  <p>For pdfs replace the sum by an integral against $q(x)\,dx$.</p>
+</div>
+
+<div class="slide">
+  <h2>Reading the Definition</h2><div class="divider"></div>
+  <ul>
+    <li><strong>Reference measure</strong> $q$ &mdash; expectation is taken under $q$.</li>
+    <li><strong>Likelihood ratio</strong> $r(x)=p(x)/q(x)$ &mdash; the random object $f$ acts on.</li>
+    <li><strong>$f(1)=0$</strong> &mdash; if $p=q$ then $r\equiv 1$ and the divergence vanishes.</li>
+    <li><strong>Convexity of $f$</strong> &mdash; gives $D_f(p\,\Vert\,q)\ge 0$ by Jensen.</li>
+    <li><strong>Asymmetric</strong> in general &mdash; swapping $p\leftrightarrow q$ uses $\widetilde f(t)=t\,f(1/t)$.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Example 1 &mdash; Relative Entropy</h2><div class="divider"></div>
+  <p>Take $f(t) = t\log t$. Then $f(1)=0$, $f''(t)=1/t&gt;0$, and</p>
+  <div class="math-block">$$D_f(p\,\Vert\,q) \;=\; \sum_x q(x)\,\frac{p(x)}{q(x)}\log\frac{p(x)}{q(x)} \;=\; \sum_x p(x)\log\frac{p(x)}{q(x)} \;=\; D_{\mathrm{KL}}(p\,\Vert\,q).$$</div>
+  <p>The familiar KL divergence is the prototypical $f$-divergence.</p>
+</div>
+
+<div class="slide">
+  <h2>Example 2 &mdash; Reverse KL and Total Variation</h2><div class="divider"></div>
+  <p><strong>Reverse KL.</strong> Take $f(t)=-\log t$:</p>
+  <div class="math-block">$$D_f(p\,\Vert\,q) \;=\; -\sum_x q(x)\log\frac{p(x)}{q(x)} \;=\; D_{\mathrm{KL}}(q\,\Vert\,p).$$</div>
+  <p><strong>Total variation.</strong> Take $f(t)=\tfrac{1}{2}|t-1|$:</p>
+  <div class="math-block">$$D_f(p\,\Vert\,q) \;=\; \tfrac{1}{2}\sum_x q(x)\Bigl|\tfrac{p(x)}{q(x)} - 1\Bigr| \;=\; \tfrac{1}{2}\sum_x |p(x)-q(x)| \;=\; \mathrm{TV}(p,q).$$</div>
+</div>
+
+<div class="slide">
+  <h2>Example 3 &mdash; $\chi^2$ Divergence</h2><div class="divider"></div>
+  <p>Take $f(t)=(t-1)^2$, convex with $f(1)=0$. Then</p>
+  <div class="math-block">$$\chi^2(p\,\Vert\,q) \;=\; \sum_x q(x)\Bigl(\tfrac{p(x)}{q(x)} - 1\Bigr)^{\!2} \;=\; \sum_x \frac{(p(x)-q(x))^2}{q(x)}.$$</div>
+  <p>Quadratic in the gap $p-q$; dominates KL via Pinsker-type bounds.</p>
+  <div class="highlight"><p>$\chi^2$ is the second-order Taylor of $D_{\mathrm{KL}}$ around $p=q$.</p></div>
+</div>
+
+<div class="slide">
+  <h2>Example 4 &mdash; Hockey-Stick Divergence</h2><div class="divider"></div>
+  <p>For $\gamma \ge 1$, take $f(t)=[t-\gamma]_+ = \max\{t-\gamma,\,0\}$:</p>
+  <div class="math-block">$$E_\gamma(p\,\Vert\,q) \;=\; \sum_x q(x)\bigl[\tfrac{p(x)}{q(x)} - \gamma\bigr]_+ \;=\; \sum_x \bigl[p(x) - \gamma\,q(x)\bigr]_+.$$</div>
+  <p>At $\gamma=1$ this reduces to TV. <strong>Key role:</strong> $(\varepsilon,\delta)$-DP characterized by $E_{e^\varepsilon}(p\,\Vert\,q) \le \delta$.</p>
+  <div class="cite">Barthe and Olmedo, $f$-divergence composition, ICALP 2013.</div>
+</div>
+
+<div class="slide">
+  <h2>Example 5 &mdash; Jensen&ndash;Shannon Divergence</h2><div class="divider"></div>
+  <p>Define</p>
+  <div class="math-block">$$D_{\mathrm{JS}}(p\,\Vert\,q) \;=\; D_{\mathrm{KL}}\!\Bigl(p\,\Bigl\Vert\,\tfrac{p+q}{2}\Bigr) \;+\; D_{\mathrm{KL}}\!\Bigl(q\,\Bigl\Vert\,\tfrac{p+q}{2}\Bigr).$$</div>
+  <p>Symmetric in $(p,q)$; bounded above by $2\log 2$; $\sqrt{D_{\mathrm{JS}}}$ is a metric.</p>
+  <div class="highlight"><p>JS is the <strong>divergence GAN actually minimizes</strong> &mdash; see Section 04.</p></div>
+</div>
+
+<div class="slide">
+  <h2>JS as an $f$-Divergence</h2><div class="divider"></div>
+  <p>Take $f(t) = t\log\tfrac{2t}{t+1} + \log\tfrac{2}{t+1}$. Substitute $r=p/q$ into $\sum_x q\,f(r)$:</p>
+  <div class="math-block">$$\begin{aligned}
+\sum_x q(x)\,f\!\bigl(\tfrac{p(x)}{q(x)}\bigr)
+&amp;= \sum_x p(x)\log\frac{2p(x)}{p(x)+q(x)} + \sum_x q(x)\log\frac{2q(x)}{p(x)+q(x)} \\
+&amp;= D_{\mathrm{KL}}\!\Bigl(p\,\Bigl\Vert\,\tfrac{p+q}{2}\Bigr) + D_{\mathrm{KL}}\!\Bigl(q\,\Bigl\Vert\,\tfrac{p+q}{2}\Bigr) \\
+&amp;= D_{\mathrm{JS}}(p\,\Vert\,q).
+\end{aligned}$$</div>
+  <p>$f$ is convex with $f(1)=0$; the JS divergence is therefore an $f$-divergence.</p>
+</div>
+
+<div class="slide">
+  <h2>Worked Example &mdash; Two Bernoullis</h2><div class="divider"></div>
+  <p>$p = \mathrm{Bern}(0.9)$, $q = \mathrm{Bern}(0.5)$.</p>
+  <div class="math-block">$$\begin{array}{l|c}
+\text{Divergence} &amp; \text{Value (nats)} \\\hline
+D_{\mathrm{KL}}(p\,\Vert\,q) = 0.9\log\tfrac{0.9}{0.5}+0.1\log\tfrac{0.1}{0.5} &amp; 0.368 \\
+D_{\mathrm{KL}}(q\,\Vert\,p) = 0.5\log\tfrac{0.5}{0.9}+0.5\log\tfrac{0.5}{0.1} &amp; 0.510 \\
+\mathrm{TV}(p,q) = \tfrac12(|0.9-0.5|+|0.1-0.5|) &amp; 0.400 \\
+\chi^2(p\,\Vert\,q) = \tfrac{(0.9-0.5)^2}{0.5}+\tfrac{(0.1-0.5)^2}{0.5} &amp; 0.640 \\
+D_{\mathrm{JS}}(p\,\Vert\,q) &amp; 0.187
+\end{array}$$</div>
+  <p>Asymmetry of KL is visible (0.368 vs 0.510); JS sits between TV and $\chi^2$ in magnitude.</p>
+</div>
+
+
+<!-- ════ PART 03 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Properties</h1>
+  <div class="divider"></div>
+  <p class="subtitle">DPI, information inequality, joint vs marginal</p>
+</div>
+
+<div class="slide">
+  <h2>Overview &mdash; Four Properties at Once</h2><div class="divider"></div>
+  <p>Convexity of $f$ delivers four results that each held for $D_{\mathrm{KL}}$:</p>
+  <ul class="num">
+    <li><strong>Joint $=$ marginal</strong> under a shared conditional &mdash; $D_f(p(x)p(y|x)\,\Vert\,q(x)p(y|x)) = D_f(p\,\Vert\,q)$.</li>
+    <li><strong>Monotonicity in extension</strong> &mdash; adding a $Y$ coordinate can only increase $D_f$.</li>
+    <li><strong>Data processing inequality</strong> &mdash; pushing $p,q$ through a channel cannot increase $D_f$.</li>
+    <li><strong>Information inequality</strong> &mdash; $D_f(p\,\Vert\,q)\ge 0$, equality iff $p=q$ when $f$ is strictly convex at $1$.</li>
+  </ul>
+  <div class="highlight"><p>All four follow from Jensen on the convex $f$ &mdash; proved in the next four slides.</p></div>
+</div>
+
+<div class="slide">
+  <h2>Theorem &mdash; Properties of $f$-Divergence</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (Csisz&aacute;r, 1967).</h3>
+    <p>Let $f:(0,\infty)\to\mathbb{R}$ be convex with $f(1)=0$. For pmfs $p,q$ on $\mathcal{X}$ and channel $p(y|x)$ on $\mathcal{X}\to\mathcal{Y}$:</p>
+    <ol>
+      <li>$D_f\!\bigl(p(x)p(y|x)\,\Vert\,q(x)p(y|x)\bigr) \;=\; D_f(p\,\Vert\,q)$.</li>
+      <li>$D_f\!\bigl(p(x,y)\,\Vert\,q(x,y)\bigr) \;\ge\; D_f(p\,\Vert\,q)$.</li>
+      <li>$D_f\!\bigl(p(y)\,\Vert\,q(y)\bigr) \;\le\; D_f(p\,\Vert\,q)$ &nbsp;<em>(DPI)</em>.</li>
+      <li>$D_f(p\,\Vert\,q) \ge 0$; $=0$ iff $p=q$ when $f$ is strictly convex at $1$.</li>
+    </ol>
+  </div>
+  <div class="cite">Csisz&aacute;r, Information-type measures of difference, Studia Sci. Math. Hungar. 1967.</div>
+</div>
+
+<div class="slide">
+  <h2>Proof &mdash; Part 1 (Joint via Product Conditional)</h2><div class="divider"></div>
+  <p>Let $r(x,y) = \tfrac{p(x)p(y|x)}{q(x)p(y|x)} = \tfrac{p(x)}{q(x)}$. Expand the joint $f$-divergence:</p>
+  <div class="math-block">$$\begin{aligned}
+D_f\!\bigl(p(x)p(y|x)\,\Vert\,q(x)p(y|x)\bigr)
+&amp;= \sum_{x,y} q(x)p(y|x)\,f\!\bigl(\tfrac{p(x)}{q(x)}\bigr) \\
+&amp;= \sum_{x} q(x)\,f\!\bigl(\tfrac{p(x)}{q(x)}\bigr)\,\underbrace{\sum_y p(y|x)}_{=1} \\
+&amp;= D_f(p\,\Vert\,q).
+\end{aligned}$$</div>
+  <p>The conditional $p(y|x)$ cancels because it appears in numerator and denominator.</p>
+</div>
+
+<div class="slide">
+  <h2>Proof &mdash; Part 2 (Joint $\ge$ Marginal)</h2><div class="divider"></div>
+  <p>For any joints $p(x,y), q(x,y)$ on $\mathcal{X}\times\mathcal{Y}$:</p>
+  <div class="math-block">$$\begin{aligned}
+D_f\!\bigl(p(x,y)\,\Vert\,q(x,y)\bigr)
+&amp;= \sum_{x,y} q(x,y)\,f\!\bigl(\tfrac{p(x,y)}{q(x,y)}\bigr) \\
+&amp;\stackrel{(\star)}{=}\; \sum_x q(x)\sum_y q(y|x)\,f\!\bigl(\tfrac{p(x,y)}{q(x,y)}\bigr) \\
+&amp;\stackrel{(\dagger)}{\ge}\; \sum_x q(x)\,f\!\Bigl(\sum_y q(y|x)\tfrac{p(x,y)}{q(x,y)}\Bigr) \\
+&amp;= \sum_x q(x)\,f\!\bigl(\tfrac{p(x)}{q(x)}\bigr) \;=\; D_f(p\,\Vert\,q).
+\end{aligned}$$</div>
+  <p>$(\star)$ chain rule on $q$; $(\dagger)$ Jensen on convex $f$ against $q(y|x)$.</p>
+</div>
+
+<div class="slide">
+  <h2>Proof &mdash; Part 3 (DPI)</h2><div class="divider"></div>
+  <p>Push $p,q$ through channel $p(y|x)$ to get marginals $p(y)=\sum_x p(x)p(y|x)$ and $q(y)$. Combine Parts 1 and 2:</p>
+  <div class="math-block">$$\begin{aligned}
+D_f\!\bigl(p(y)\,\Vert\,q(y)\bigr)
+&amp;\stackrel{(\text{Part 2})}{\le} D_f\!\bigl(p(x,y)\,\Vert\,q(x,y)\bigr) \\
+&amp;= D_f\!\bigl(p(x)p(y|x)\,\Vert\,q(x)p(y|x)\bigr) \\
+&amp;\stackrel{(\text{Part 1})}{=} D_f(p\,\Vert\,q).
+\end{aligned}$$</div>
+  <p>Processing cannot increase distinguishability under any $f$-divergence.</p>
+</div>
+
+<div class="slide">
+  <h2>Proof &mdash; Part 4 (Information Inequality)</h2><div class="divider"></div>
+  <p>By Jensen and $\sum_x p(x) = 1$:</p>
+  <div class="math-block">$$D_f(p\,\Vert\,q) \;=\; \sum_x q(x)\,f\!\bigl(\tfrac{p(x)}{q(x)}\bigr) \;\ge\; f\!\Bigl(\sum_x q(x)\,\tfrac{p(x)}{q(x)}\Bigr) \;=\; f(1) \;=\; 0.$$</div>
+  <p>If $f$ is strictly convex at $1$, equality in Jensen forces $p(x)/q(x)$ constant on $\mathrm{supp}(q)$ &mdash; that constant must be $1$, so $p=q$.</p>
+</div>
+
+<div class="slide">
+  <h2>Recap &mdash; Properties of $D_f$</h2><div class="divider"></div>
+  <p>All four properties follow from a single tool &mdash; <strong>Jensen on the convex $f$</strong>:</p>
+  <div class="math-block">$$\begin{aligned}
+\text{Part 1 (joint = marginal)} &amp;\;\Leftarrow\;\text{conditional cancels in } r=p/q, \\
+\text{Part 2 (joint } \ge \text{ marginal)} &amp;\;\Leftarrow\;\text{Jensen on } q(y|x), \\
+\text{Part 3 (DPI)} &amp;\;\Leftarrow\;\text{Parts 1 and 2}, \\
+\text{Part 4 (info inequality)} &amp;\;\Leftarrow\;\text{Jensen on } q(x).
+\end{aligned}$$</div>
+  <div class="highlight"><p>Every $f$-divergence inherits the structure of KL &mdash; cheap generalization, identical machinery.</p></div>
+</div>
+
+
+<!-- ════ PART 04 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>GAN $\equiv$ Jensen&ndash;Shannon</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A minimax game over $f$-divergence</p>
+</div>
+
+<div class="slide">
+  <h2>Setup &mdash; Generative Adversarial Net</h2><div class="divider"></div>
+  <p>Two networks compete:</p>
+  <ul>
+    <li><strong>Generator</strong> $g_\theta$ &mdash; samples $\tilde X = g_\theta(Z)$ for $Z\sim\mathcal{N}(0,I)$, induces $p_\theta$.</li>
+    <li><strong>Discriminator</strong> $d_\phi : \mathcal{X}\to[0,1]$ &mdash; estimates probability of "real".</li>
+  </ul>
+  <p>The minimax value function:</p>
+  <div class="math-block">$$V(g_\theta, d_\phi) \;=\; \mathbb{E}_{p_{\mathrm{data}}}\!\bigl[\log d_\phi(X)\bigr] + \mathbb{E}_{p_\theta}\!\bigl[\log(1-d_\phi(X))\bigr].$$</div>
+  <div class="cite">Goodfellow et al., "Generative Adversarial Networks", NeurIPS 2014.</div>
+</div>
+
+<div class="slide">
+  <h2>Overview &mdash; The JS Theorem</h2><div class="divider"></div>
+  <p>For any fixed generator $g_\theta$, the best discriminator picks</p>
+  <div class="math-block">$$d_{\phi^*}(x) \;=\; \frac{p_{\mathrm{data}}(x)}{p_{\mathrm{data}}(x) + p_\theta(x)}.$$</div>
+  <p>Plugging $d_{\phi^*}$ back into $V$ gives exactly</p>
+  <div class="math-block">$$V(g_\theta, d_{\phi^*}) \;=\; 2\,D_{\mathrm{JS}}(p_{\mathrm{data}}\,\Vert\,p_\theta) \;-\; 2\log 2.$$</div>
+  <p>Inner max is a divergence; outer min is JS minimization.</p>
+</div>
+
+<div class="slide">
+  <h2>Theorem &mdash; GAN Optimal Value</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (Goodfellow et al., 2014).</h3>
+    <p>For any fixed generator $g_\theta$ inducing $p_\theta$,</p>
+    <div class="math-block">$$\max_{d_\phi}\, V(g_\theta, d_\phi) \;=\; 2\,D_{\mathrm{JS}}(p_{\mathrm{data}}\,\Vert\,p_\theta) \;-\; 2\log 2.$$</div>
+    <p>Equivalently, the minimax problem $\min_\theta \max_\phi V(g_\theta, d_\phi)$ minimizes the Jensen&ndash;Shannon divergence between data and model.</p>
+  </div>
+  <div class="cite">Goodfellow, Pouget-Abadie, Mirza, Xu, Warde-Farley, Ozair, Courville, and Bengio, NeurIPS 2014.</div>
+</div>
+
+<div class="slide">
+  <h2>Proof &mdash; Step 1 (Optimal Discriminator)</h2><div class="divider"></div>
+  <p>Write the value pointwise &mdash; integrand at $x$:</p>
+  <div class="math-block">$$p_{\mathrm{data}}(x)\log d(x) + p_\theta(x)\log\bigl(1-d(x)\bigr).$$</div>
+  <p>Differentiate in $d\in(0,1)$, set to zero:</p>
+  <div class="math-block">$$\frac{p_{\mathrm{data}}(x)}{d(x)} - \frac{p_\theta(x)}{1-d(x)} \;=\; 0 \;\;\Longrightarrow\;\; d_{\phi^*}(x) \;=\; \frac{p_{\mathrm{data}}(x)}{p_{\mathrm{data}}(x) + p_\theta(x)}.$$</div>
+  <p>Concavity of $a\log d + b\log(1-d)$ in $d$ confirms a maximum.</p>
+</div>
+
+<div class="slide">
+  <h2>Proof &mdash; Step 2 (Substitute Back)</h2><div class="divider"></div>
+  <p>Write $m(x) = \tfrac{p_{\mathrm{data}}(x)+p_\theta(x)}{2}$. Then $1 - d_{\phi^*}(x) = \tfrac{p_\theta(x)}{p_{\mathrm{data}}(x)+p_\theta(x)}$, and</p>
+  <div class="math-block">$$\begin{aligned}
+V(g_\theta, d_{\phi^*})
+&amp;= \mathbb{E}_{p_{\mathrm{data}}}\!\bigl[\log\tfrac{p_{\mathrm{data}}}{p_{\mathrm{data}}+p_\theta}\bigr] + \mathbb{E}_{p_\theta}\!\bigl[\log\tfrac{p_\theta}{p_{\mathrm{data}}+p_\theta}\bigr] \\
+&amp;= \mathbb{E}_{p_{\mathrm{data}}}\!\bigl[\log\tfrac{p_{\mathrm{data}}}{2m}\bigr] + \mathbb{E}_{p_\theta}\!\bigl[\log\tfrac{p_\theta}{2m}\bigr] \\
+&amp;= D_{\mathrm{KL}}(p_{\mathrm{data}}\,\Vert\,m) + D_{\mathrm{KL}}(p_\theta\,\Vert\,m) - 2\log 2.
+\end{aligned}$$</div>
+  <p>The first two terms are exactly $D_{\mathrm{JS}}(p_{\mathrm{data}}\,\Vert\,p_\theta)$. Hence $V(g_\theta, d_{\phi^*}) = 2\,D_{\mathrm{JS}} - 2\log 2$. $\quad\blacksquare$</p>
+</div>
+
+<div class="slide">
+  <h2>Recap &mdash; What the Proof Says</h2><div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+\max_{d_\phi}\,V(g_\theta, d_\phi)
+&amp;\stackrel{(1)}{=}\; \mathbb{E}_{p_{\mathrm{data}}}\!\bigl[\log\tfrac{p_{\mathrm{data}}}{p_{\mathrm{data}}+p_\theta}\bigr] + \mathbb{E}_{p_\theta}\!\bigl[\log\tfrac{p_\theta}{p_{\mathrm{data}}+p_\theta}\bigr] \\
+&amp;\stackrel{(2)}{=}\; D_{\mathrm{KL}}\!\bigl(p_{\mathrm{data}}\,\Vert\,m\bigr) + D_{\mathrm{KL}}\!\bigl(p_\theta\,\Vert\,m\bigr) - 2\log 2 \\
+&amp;\stackrel{(3)}{=}\; 2\,D_{\mathrm{JS}}(p_{\mathrm{data}}\,\Vert\,p_\theta) - 2\log 2.
+\end{aligned}$$</div>
+  <ul>
+    <li>$(1)$ &mdash; pointwise optimal $d^*=p_{\mathrm{data}}/(p_{\mathrm{data}}+p_\theta)$.</li>
+    <li>$(2)$ &mdash; rewrite ratios against $m=(p_{\mathrm{data}}+p_\theta)/2$.</li>
+    <li>$(3)$ &mdash; recognize the two KL terms as JS.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Training Algorithm</h2><div class="divider"></div>
+  <style>
+.div1-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); padding: 16px 22px; border-radius: 0 10px 10px 0; }
+.div1-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.div1-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.div1-algo ol li::before {
+  content: counter(step) ".";
+  position: absolute; left: 12px; top: 8px;
+  font-weight: 700; color: var(--yonsei-blue);
+  width: 36px; text-align: right;
+}
+.div1-algo ol li + li { border-top: 1px solid var(--slate); }
+</style>
+  <div class="div1-algo" style="max-width:920px; margin:24px auto 18px;">
+    <ol>
+      <li>Initialize $\phi^{(0)}, \theta^{(0)}$.</li>
+      <li>For $t = 1,\dots,T$: sample $x^{(t)} \sim p_{\mathrm{data}}$ and $z^{(t)} \sim \mathcal{N}(0,I)$.</li>
+      <li>Ascend $\phi$ on $\log d_\phi(x^{(t)}) + \log(1 - d_\phi(g_{\theta^{(t-1)}}(z^{(t)})))$.</li>
+      <li>Descend $\theta$ on $\log\bigl(1 - d_{\phi^{(t)}}(g_\theta(z^{(t)}))\bigr)$.</li>
+    </ol>
+  </div>
+  <p style="text-align:center;">Mini-batches in practice; alternation approximates the inner max.</p>
+</div>
+
+<div class="slide">
+  <h2>Beyond JS &mdash; The $f$-GAN Family</h2><div class="divider"></div>
+  <p>Replacing $\log$ with another convex pair gives a different divergence. Each $f$-divergence has a <strong>variational (Fenchel-dual) representation</strong></p>
+  <div class="math-block">$$D_f(p\,\Vert\,q) \;=\; \sup_{T:\,\mathcal{X}\to\mathbb{R}} \;\mathbb{E}_p[T(X)] - \mathbb{E}_q[f^*(T(X))],$$</div>
+  <p>where $f^*(s) = \sup_t (st - f(t))$. Each choice of $f$ produces a different GAN: KL-GAN, $\chi^2$-GAN, Hellinger-GAN, ...</p>
+  <div class="cite">Nowozin, Cseke, and Tomioka, $f$-GAN, NeurIPS 2016.</div>
+</div>
+
+
+<!-- ════ PART 05 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Recap</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Divergence catalogue and the road to Lecture&nbsp;2</p>
+</div>
+
+<div class="slide">
+  <h2>The Catalogue, at a Glance</h2><div class="divider"></div>
+  <div class="math-block">$$\begin{array}{l|c|c}
+\text{Divergence} &amp; f(t) &amp; \text{Where it appears} \\\hline
+\text{KL} &amp; t\log t &amp; \text{ML, ELBO, MI bounds} \\
+\text{Reverse KL} &amp; -\log t &amp; \text{VI, mode-seeking} \\
+\text{TV} &amp; \tfrac12|t-1| &amp; \text{Hypothesis testing} \\
+\chi^2 &amp; (t-1)^2 &amp; \text{NWJ bound, } \chi^2\text{-GAN} \\
+\text{Hockey-stick} &amp; [t-\gamma]_+ &amp; (\varepsilon,\delta)\text{-DP} \\
+\text{JS} &amp; t\log\tfrac{2t}{t+1}+\log\tfrac{2}{t+1} &amp; \text{Vanilla GAN}
+\end{array}$$</div>
+  <p>One convex $f$, one definition, one set of properties.</p>
+</div>
+
+<div class="slide">
+  <h2>Where This Lecture Sits</h2><div class="divider"></div>
+  <ul>
+    <li><strong>Lossless / lossy / MI:</strong> KL was the operational distance &mdash; encoding cost.</li>
+    <li><strong>This lecture:</strong> $D_f$ generalizes; GAN training is JS minimization.</li>
+    <li><strong>Next lecture:</strong> <em>Fisher divergence</em> &mdash; a different family entirely, defined on $\nabla\log p$ rather than $p/q$. Drives score-based and diffusion models.</li>
+  </ul>
+  <div class="highlight"><p>Three divergence families &mdash; $f$, Fisher, and (later) Wasserstein &mdash; cover modern generative training.</p></div>
+</div>
+
+<div class="slide end-slide no-footer">
+  <div class="big-word">End of Lecture 1</div>
+  <p class="big-word-sub">Next: Fisher divergence and score-based models.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 1</div>
+
+</div><!-- end deck -->
+
+<script src="../../reference/deck.js"></script>
+</body>
+</html>

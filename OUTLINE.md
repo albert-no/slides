@@ -11,9 +11,10 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
   - `entropy/` — Foundations: entropy, KL, joint/conditional MI, DPI, Fano (2 lectures)
   - `lossless/` — Codes/Kraft/Huffman, AEP/arithmetic, Markov/LZ (3 lectures)
   - `diffentropy/` — Differential entropy, MaxEnt/Gaussian/EPI, AWGN/water-filling/I-MMSE (3 lectures)
-  - `diffusion/` — Diffusion as hierarchical VAE (3 lectures)
+  - `diffusion/` — Diffusion as hierarchical VAE; closes with score-matching equivalence (3 lectures)
   - `lossy/` — Rate–distortion + LLM compression (4 lectures)
-  - `mi/` — Variational MI bounds, InfoNCE/CLIP (2 lectures)
+  - `mi/` — Variational MI bounds, InfoNCE/CLIP (2 lectures); closes with $f$-divergence unification
+  - `divergence/` — $f$-divergence + GAN ($\equiv$ JS), Fisher divergence + score matching ($\equiv$ diffusion) (2 lectures)
 - **`privacy/`** — Privacy series:
   - `generative/` — Generative-model review opener: 5 diffusion lectures (Bayes-route, DDPM, SDE, DDIM, guidance + discrete) + 1 brief LLM deck. `note/2_difffusion.tex` is LaTeX source for Diffusion Lectures 1–2
   - `dp/` — Differential privacy + federated learning (1 NeurIPS 2023 talk: RRSC result)
@@ -49,7 +50,14 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Lattice / E8 / QUIP# | `infotheory/lossy/lossy3-lattice-quip.html` |
 | TURBOQUANT (online VQ for KV cache) | `infotheory/lossy/lossy4-turboquant.html` |
 | Variational MI lower bounds (BA, DV, NWJ, MINE) | `infotheory/mi/mi1-bounds.html` |
+| $f$-divergence unification of MI bounds | `infotheory/mi/mi1-bounds.html:261-280` |
 | InfoNCE / CLIP | `infotheory/mi/mi2-infonce-clip.html` |
+| $f$-divergence definition + properties (DPI, info inequality) | `infotheory/divergence/div1-fdivergence-gan.html:121, :229` |
+| GAN $\equiv$ Jensen–Shannon minimization (theorem + proof) | `infotheory/divergence/div1-fdivergence-gan.html:330, :341-350` |
+| Hockey-stick divergence (DP connection) | `infotheory/divergence/div1-fdivergence-gan.html:166` |
+| Fisher divergence + score function | `infotheory/divergence/div2-fisher-score.html:91, :141` |
+| Denoising score matching theorem (Vincent 2011) | `infotheory/divergence/div2-fisher-score.html:200, :211-235` |
+| Diffusion ELBO $\equiv$ DSM theorem | `infotheory/divergence/div2-fisher-score.html:315`; cross-ref `infotheory/diffusion/diff3-parameterizations.html:211` |
 | MIA foundations (Homer, evaluation metrics) | `privacy/mia/mia1-foundations.html` |
 | Shadow models (Shokri / LOGAN / seq2seq) | `privacy/mia/mia2-shadow.html` |
 | MIA theory (Yeom / Sablayrolles / ML-Leaks / Nasr) | `privacy/mia/mia3-theory.html` |
@@ -95,7 +103,9 @@ Same topic, different decks (use the more recent / more detailed):
 - **VAE / ELBO**: rigorous derivation `infotheory/diffusion/diff1-vae-elbo.html`
 - **Hierarchical-VAE view of diffusion**: `infotheory/diffusion/diff2-diffusion.html` (information-theoretic, Markov rewrite)
 - **Diffusion from-scratch (Bayes route)**: `privacy/generative/diffusion1-foundations.html` (Taylor + complete-square proof, less abstract)
-- **Tweedie**: brief `privacy/generative/diffusion1-foundations.html:374`; with proof `infotheory/diffusion/diff3-parameterizations.html:130`
+- **Tweedie**: brief `privacy/generative/diffusion1-foundations.html:374`; with proof `infotheory/diffusion/diff3-parameterizations.html:135`
+- **$f$-divergence variational dual**: brief in `infotheory/mi/mi1-bounds.html:261` (KL instances); full development in `infotheory/divergence/div1-fdivergence-gan.html:121-300`
+- **Score matching $\equiv$ diffusion training**: brief cross-ref `infotheory/diffusion/diff3-parameterizations.html:211`; full proof `infotheory/divergence/div2-fisher-score.html:200-326`
 
 ## Companion notes pattern
 

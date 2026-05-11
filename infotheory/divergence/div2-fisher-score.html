@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Divergence 2 — Fisher Divergence and Score Matching</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- TITLE -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Divergence · Lecture 2 of 2</div>
+  <h1>Fisher Divergence and<br>Score Matching</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Energy models, denoising score matching, diffusion equivalence</p>
+  <p style="font-weight:500;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Information Theory · 2026</p>
+</div>
+
+<!-- TOC -->
+<div class="slide">
+  <h2>Contents</h2><div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Beyond $f$-divergence</div>
+      <div class="toc-sub">Energy models and the score function</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Fisher divergence</div>
+      <div class="toc-sub">Definition, identifiability, properties</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Denoising score matching</div>
+      <div class="toc-sub">Tractable objective via Gaussian smoothing</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Diffusion $\equiv$ score matching</div>
+      <div class="toc-sub">Tweedie bridges ELBO and Fisher</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Recap</div>
+      <div class="toc-sub">Three divergence families</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════ PART 01 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Beyond $f$-Divergence</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Energy models and the score function</p>
+</div>
+
+<div class="slide">
+  <h2>Why Another Divergence?</h2><div class="divider"></div>
+  <p>Every $f$-divergence reads the ratio $p(x)/q(x)$ &mdash; requires <strong>normalized</strong> densities.</p>
+  <p>Many useful models are specified up to an unknown constant:</p>
+  <div class="math-block">$$f(x) \;=\; \tfrac{1}{Z}\,e^{\phi(x)}, \qquad Z = \int e^{\phi(x)}\,dx.$$</div>
+  <p>$Z$ is high-dimensional, generally intractable. Need a divergence that <strong>ignores $Z$</strong>.</p>
+  <div class="highlight"><p>Use $\nabla_x \log f$ instead of $f$ &mdash; the gradient kills the constant.</p></div>
+</div>
+
+<div class="slide">
+  <h2>Energy-Based Density</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Definition (energy-based pdf).</h3>
+    <p>A pdf on $\mathbb{R}^K$ is <em>energy-based</em> if</p>
+    <div class="math-block">$$f(\mathbf{x}) \;=\; \frac{1}{Z}\,e^{\phi(\mathbf{x})}, \qquad Z = \int_{\mathbb{R}^K} e^{\phi(\mathbf{x})}\,d\mathbf{x},$$</div>
+    <p>for some integrable $e^{\phi}$. Includes every exponential family; covers Markov random fields, Boltzmann machines, neural energy models.</p>
+  </div>
+  <p><strong>Difficulty.</strong> $Z$ requires integrating in $\mathbb{R}^K$ &mdash; closed form only for special $\phi$ (Gaussian, exponential).</p>
+</div>
+
+<div class="slide">
+  <h2>Score Function</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Definition (score).</h3>
+    <p>For a differentiable pdf $f$ on $\mathbb{R}^K$,</p>
+    <div class="math-block">$$s_f(\mathbf{x}) \;=\; \nabla_{\mathbf{x}}\log f(\mathbf{x}) \quad \text{(taken } = \mathbf{0} \text{ where } f = 0\text{).}$$</div>
+  </div>
+  <p><strong>Energy form &mdash; $Z$ disappears:</strong> $\;s_f(\mathbf{x}) = \nabla_{\mathbf{x}}[\phi(\mathbf{x}) - \log Z] = \nabla_{\mathbf{x}}\phi(\mathbf{x})$. Computing the score never touches $Z$.</p>
+</div>
+
+<div class="slide">
+  <h2>Example &mdash; Gaussian Score</h2><div class="divider"></div>
+  <p>For $f(\mathbf{x}) = \mathcal{N}(\mathbf{x};\boldsymbol\mu,\sigma^2 I)$,</p>
+  <div class="math-block">$$\log f(\mathbf{x}) \;=\; -\tfrac{1}{2\sigma^2}\|\mathbf{x}-\boldsymbol\mu\|^2 + \text{const}, \qquad s_f(\mathbf{x}) \;=\; -\tfrac{1}{\sigma^2}(\mathbf{x}-\boldsymbol\mu).$$</div>
+  <p>The score is a linear "pull to the mean" with stiffness $1/\sigma^2$. Same role a force field plays in physics.</p>
+  <div class="highlight"><p>Score, not density, is the right object when normalization is intractable.</p></div>
+</div>
+
+
+<!-- ════ PART 02 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Fisher Divergence</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A score-based distance between distributions</p>
+</div>
+
+<div class="slide">
+  <h2>Overview &mdash; Where We Are Going</h2><div class="divider"></div>
+  <p>Goal: a divergence that compares <strong>scores</strong>, not densities.</p>
+  <ul class="num">
+    <li><strong>Lemma.</strong> Score determines the pdf (up to measure-zero).</li>
+    <li><strong>Definition.</strong> Fisher divergence $=$ expected squared score gap.</li>
+    <li><strong>Properties.</strong> Non-negative, asymmetric, well-defined on energy models.</li>
+    <li><strong>Drawback.</strong> Direct minimization needs $\nabla\log p_{\mathrm{data}}$ &mdash; intractable. Section 03 fixes this.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Lemma &mdash; Score Identifies the Density</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Lemma.</h3>
+    <p>If $f, g$ are differentiable pdfs on $\mathbb{R}^K$ with $s_f(\mathbf{x}) = s_g(\mathbf{x})$ almost everywhere, then $f(\mathbf{x}) = g(\mathbf{x})$ almost everywhere.</p>
+  </div>
+  <p><strong>Proof.</strong> $s_f = s_g$ means $\nabla\log(f/g)=\mathbf{0}$, so $f(\mathbf{x})/g(\mathbf{x}) = c$ a.e. Both integrate to $1$, so $c=1$. $\quad\blacksquare$</p>
+  <div class="highlight"><p>Comparing scores is a faithful surrogate for comparing densities.</p></div>
+</div>
+
+<div class="slide">
+  <h2>Definition &mdash; Fisher Divergence</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Definition (Hyv&auml;rinen, 2005).</h3>
+    <p>For differentiable pdfs $f, g$ on $\mathbb{R}^K$,</p>
+    <div class="math-block">$$D_F(f\,\Vert\,g) \;=\; \tfrac{1}{2}\,\int f(\mathbf{x})\,\bigl\|\,s_f(\mathbf{x}) - s_g(\mathbf{x})\,\bigr\|_2^2\,d\mathbf{x}.$$</div>
+    <p>Equivalently $D_F(f\,\Vert\,g) = \tfrac12\,\mathbb{E}_f\!\bigl[\,\|\nabla\log f - \nabla\log g\|^2\,\bigr]$.</p>
+  </div>
+  <div class="cite">Hyv&auml;rinen, "Estimation of Non-Normalized Statistical Models by Score Matching", JMLR 2005.</div>
+</div>
+
+<div class="slide">
+  <h2>Theorem &mdash; Properties of Fisher Divergence</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Theorem.</h3>
+    <ol>
+      <li>$D_F(f\,\Vert\,g) \ge 0$, with equality iff $f = g$ almost everywhere.</li>
+      <li>Asymmetric in general: $D_F(f\,\Vert\,g) \ne D_F(g\,\Vert\,f)$.</li>
+      <li><strong>Scaling.</strong> If $Y = aX$ with $a\ne 0$, then $D_F(f_Y\,\Vert\,g_Y) = \tfrac{1}{a^2}\,D_F(f_X\,\Vert\,g_X)$.</li>
+      <li><strong>Gaussian comparator.</strong> If $g = \mathcal{N}(0,1)$ and $X\sim f$,</li>
+    </ol>
+    <div class="math-block">$$D_F(f\,\Vert\,g) \;=\; \tfrac{1}{2}\,\mathbb{E}_f\!\Bigl[\bigl\|X + \nabla\log f(X)\bigr\|^2\Bigr].$$</div>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Proof &mdash; Non-Negativity and Scaling</h2><div class="divider"></div>
+  <p><strong>(1) Non-negativity.</strong> Integrand is a squared norm weighted by $f\ge 0$. Zero iff scores agree $f$-a.e.; combined with the Lemma, iff $f=g$ a.e.</p>
+  <p><strong>(3) Scaling.</strong> $Y=aX$ gives $f_Y(y) = \tfrac{1}{|a|}f_X(y/a)$. Differentiating:</p>
+  <div class="math-block">$$\nabla_y \log f_Y(y) \;=\; \tfrac{1}{a}\,\nabla_x\log f_X(y/a).$$</div>
+  <p>Substitute into $D_F$, change variables $\mathbf{y} = a\mathbf{x}$ (Jacobian $|a|^K$ cancels), pull out $1/a^2$ from the squared score difference. $\quad\blacksquare$</p>
+</div>
+
+
+<!-- ════ PART 03 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Denoising Score Matching</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Gaussian smoothing makes the score tractable</p>
+</div>
+
+<div class="slide">
+  <h2>The Problem &mdash; Direct Score Matching is Intractable</h2><div class="divider"></div>
+  <p>Match $s_\theta$ to the data score:</p>
+  <div class="math-block">$$\theta^* \;=\; \arg\min_\theta\; \tfrac{1}{2}\,\mathbb{E}_{p_{\mathrm{data}}}\!\bigl[\,\|s_\theta(X) - \nabla\log p_{\mathrm{data}}(X)\|^2\,\bigr].$$</div>
+  <p>The data score $\nabla\log p_{\mathrm{data}}$ is <strong>unknown</strong>. Hyv&auml;rinen 2005 gave a partial fix (integration by parts) requiring second derivatives.</p>
+  <div class="highlight"><p>Vincent 2011: <strong>smooth the data with Gaussian noise</strong> &mdash; the new score becomes a tractable conditional expectation.</p></div>
+</div>
+
+<div class="slide">
+  <h2>Setup &mdash; Add Gaussian Noise</h2><div class="divider"></div>
+  <p>Let $X\sim p_{\mathrm{data}}$ and $Z\sim\mathcal{N}(\mathbf{0},\sigma^2 I)$ independent. Define</p>
+  <div class="math-block">$$\mathbf{Y} \;=\; \mathbf{X} + \mathbf{Z}.$$</div>
+  <p>$f_{\mathrm{data}}(\mathbf{y})$ is the convolution; <strong>always differentiable</strong> because of the Gaussian smoothing, with score</p>
+  <div class="math-block">$$\nabla_{\mathbf{y}} \log f_{\mathrm{data}}(\mathbf{y}) \;=\; \tfrac{1}{f_{\mathrm{data}}(\mathbf{y})}\,\nabla_{\mathbf{y}} \int f_{\mathrm{data}}(\mathbf{x})\, \mathcal{N}(\mathbf{y};\mathbf{x},\sigma^2 I)\,d\mathbf{x}.$$</div>
+  <p>Goal: learn $s_\theta(\mathbf{y}) \approx \nabla\log f_{\mathrm{data}}(\mathbf{y})$ using samples $(\mathbf{x}_i, \mathbf{y}_i)$.</p>
+</div>
+
+<div class="slide">
+  <h2>Theorem &mdash; Denoising Score Matching</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (Vincent, 2011).</h3>
+    <p>Up to an additive constant independent of $\theta$,</p>
+    <div class="math-block">$$D_F\!\bigl(f_{\mathrm{data}}(\mathbf{y})\,\Vert\,f_\theta(\mathbf{y})\bigr) \;=\; \tfrac{1}{2}\,\mathbb{E}_{\mathbf{x},\mathbf{y}}\!\left[\,\Bigl\|\,\tfrac{\mathbf{x} - \mathbf{y}}{\sigma^2} \;-\; s_\theta(\mathbf{y})\,\Bigr\|^2\,\right] + c.$$</div>
+    <p>The expectation is over $(\mathbf{X},\mathbf{Y}) = (\mathbf{X}, \mathbf{X}+\mathbf{Z})$ with $\mathbf{X}\sim p_{\mathrm{data}}$, $\mathbf{Z}\sim\mathcal{N}(\mathbf{0},\sigma^2 I)$.</p>
+  </div>
+  <div class="cite">Vincent, Score matching $\equiv$ denoising AE, Neural Comp. 2011.</div>
+</div>
+
+<div class="slide">
+  <h2>Proof &mdash; Step 1 (Expand the Square)</h2><div class="divider"></div>
+  <p>Expand $D_F$:</p>
+  <div class="math-block">$$\begin{aligned}
+D_F\!\bigl(f_{\mathrm{data}}\,\Vert\,f_\theta\bigr)
+&amp;= \tfrac12 \int f_{\mathrm{data}}(\mathbf{y})\,\bigl\|\nabla\log f_{\mathrm{data}}(\mathbf{y}) - s_\theta(\mathbf{y})\bigr\|^2\,d\mathbf{y} \\
+&amp;= \underbrace{\tfrac12 \int f_{\mathrm{data}}\,\|\nabla\log f_{\mathrm{data}}\|^2}_{c_1\,(\theta\text{-free})} \\
+&amp;\quad + \tfrac12 \int f_{\mathrm{data}}\,\|s_\theta\|^2\,d\mathbf{y} - \int f_{\mathrm{data}}\,\bigl(\nabla\log f_{\mathrm{data}}\bigr)^{\!\top} s_\theta\,d\mathbf{y}.
+\end{aligned}$$</div>
+  <p>The first term is independent of $\theta$ &mdash; absorb into $c$. The hard term is the cross term.</p>
+</div>
+
+<div class="slide">
+  <h2>Proof &mdash; Step 2 (Rewrite the Cross Term)</h2><div class="divider"></div>
+  <p>Use $f_{\mathrm{data}}(\mathbf{y})\,\nabla\log f_{\mathrm{data}}(\mathbf{y}) = \nabla f_{\mathrm{data}}(\mathbf{y})$, then condition on $\mathbf{X}$:</p>
+  <div class="math-block">$$\begin{aligned}
+\int f_{\mathrm{data}}(\mathbf{y})\,\bigl(\nabla\log f_{\mathrm{data}}\bigr)^{\!\top} s_\theta\,d\mathbf{y}
+&amp;= \int \bigl(\nabla f_{\mathrm{data}}(\mathbf{y})\bigr)^{\!\top} s_\theta(\mathbf{y})\,d\mathbf{y} \\
+&amp;= \int \Bigl[\nabla_{\mathbf{y}}\!\!\int p_{\mathrm{data}}(\mathbf{x})\,\mathcal{N}(\mathbf{y};\mathbf{x},\sigma^2 I)\,d\mathbf{x}\Bigr]^{\!\top} s_\theta\,d\mathbf{y} \\
+&amp;= \iint p_{\mathrm{data}}(\mathbf{x})\,\mathcal{N}(\mathbf{y};\mathbf{x},\sigma^2 I)\,\tfrac{\mathbf{x}-\mathbf{y}}{\sigma^2}^{\!\top}\!s_\theta(\mathbf{y})\,d\mathbf{x}\,d\mathbf{y}.
+\end{aligned}$$</div>
+  <p>Used $\nabla_{\mathbf{y}}\log\mathcal{N}(\mathbf{y};\mathbf{x},\sigma^2 I) = (\mathbf{x}-\mathbf{y})/\sigma^2$.</p>
+</div>
+
+<div class="slide">
+  <h2>Proof &mdash; Step 3 (Assemble)</h2><div class="divider"></div>
+  <p>Recombine the $\|s_\theta\|^2$ term (also a $p_{\mathrm{data}}\,\mathcal{N}$ expectation by marginalization):</p>
+  <div class="math-block">$$\begin{aligned}
+D_F &amp;= c_1 + \tfrac12\iint p_{\mathrm{data}}\mathcal{N}\,\|s_\theta(\mathbf{y})\|^2 - \iint p_{\mathrm{data}}\mathcal{N}\,\tfrac{\mathbf{x}-\mathbf{y}}{\sigma^2}^{\!\top}\!s_\theta(\mathbf{y}) \\
+&amp;= c + \tfrac12\iint p_{\mathrm{data}}(\mathbf{x})\,\mathcal{N}(\mathbf{y};\mathbf{x},\sigma^2 I)\,\Bigl\|\tfrac{\mathbf{x}-\mathbf{y}}{\sigma^2} - s_\theta(\mathbf{y})\Bigr\|^2 d\mathbf{x}\,d\mathbf{y}.
+\end{aligned}$$</div>
+  <p>$c = c_1 - \tfrac{1}{2}\iint p_{\mathrm{data}}\mathcal{N}\,\|(\mathbf{x}-\mathbf{y})/\sigma^2\|^2$ is also $\theta$-free. $\quad\blacksquare$</p>
+</div>
+
+<div class="slide">
+  <h2>Recap &mdash; the Denoising Form</h2><div class="divider"></div>
+  <p>The training objective becomes a <strong>conditional MSE on $\mathbf{x}-\mathbf{y}$</strong>:</p>
+  <div class="math-block">$$\theta^* \;=\; \arg\min_\theta\;\mathbb{E}_{\mathbf{x},\mathbf{y}}\!\left[\,\Bigl\|\tfrac{\mathbf{x}-\mathbf{y}}{\sigma^2} - s_\theta(\mathbf{y})\Bigr\|^2\,\right].$$</div>
+  <ul>
+    <li>Both sides are <strong>known from data</strong>: sample $\mathbf{x}\sim p_{\mathrm{data}}$, $\mathbf{y} = \mathbf{x}+\sigma\mathbf{z}$.</li>
+    <li>No partition function. No second derivatives.</li>
+    <li>Reduces score matching to <strong>least-squares denoising</strong> &mdash; the practical recipe of every score-based generative model.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Recall &mdash; Tweedie's Formula</h2><div class="divider"></div>
+  <div class="card" style="padding: 12px 18px;">
+    <p><strong>Recall (Tweedie).</strong> If $\mathbf{Y} = \mathbf{X} + \mathbf{Z}$ with $\mathbf{Z}\sim\mathcal{N}(\mathbf{0},\sigma^2 I)$,</p>
+    <div class="math-block">$$\mathbb{E}[\mathbf{X}\mid\mathbf{Y}=\mathbf{y}] \;=\; \mathbf{y} + \sigma^2\,\nabla_{\mathbf{y}}\log f_{\mathrm{data}}(\mathbf{y}).$$</div>
+  </div>
+  <p>Rearrange: $\nabla\log f_{\mathrm{data}}(\mathbf{y}) = \mathbb{E}[(\mathbf{X}-\mathbf{y})/\sigma^2 \mid \mathbf{y}]$. So the denoising target $(\mathbf{x}-\mathbf{y})/\sigma^2$ is an <strong>unbiased estimate of the score</strong>.</p>
+  <p>Cross-reference: <code>infotheory/diffusion/diff3-parameterizations.html:121</code>.</p>
+</div>
+
+
+<!-- ════ PART 04 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Diffusion $\equiv$ Score Matching</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Tweedie bridges ELBO and Fisher</p>
+</div>
+
+<div class="slide">
+  <h2>Recall &mdash; Diffusion ELBO Term</h2><div class="divider"></div>
+  <div class="card" style="padding: 12px 18px;">
+    <p><strong>Recall (Lecture 2 of Diffusion track).</strong> The diffusion ELBO contains the per-step MSE</p>
+    <div class="math-block">$$\sum_{t=2}^{T}\mathbb{E}_{g(\mathbf{z}_t\mid\mathbf{x})}\!\left[\tfrac{\log e}{2\sigma_t^2}\,\bigl\|\mathbf{m}_t(\mathbf{x},\mathbf{Z}_t) - \boldsymbol\mu_t(\mathbf{Z}_t)\bigr\|^2\right],$$</div>
+    <p>where $\mathbf{m}_t(\mathbf{x},\mathbf{z}_t) = \mathbb{E}[\mathbf{Z}_{t-1}\mid\mathbf{Z}_t = \mathbf{z}_t, \mathbf{X} = \mathbf{x}]$ and $\boldsymbol\mu_t = \mathbb{E}[\mathbf{Z}_{t-1}\mid\mathbf{Z}_t]$ (modelled).</p>
+  </div>
+  <p>Question: what is this MSE, viewed through Fisher?</p>
+</div>
+
+<div class="slide">
+  <h2>Step 1 &mdash; Apply Tweedie to $\mathbf{m}_t$ and $\boldsymbol\mu_t$</h2><div class="divider"></div>
+  <p>Both conditional means are denoising estimates &mdash; apply Tweedie:</p>
+  <div class="math-block">$$\begin{aligned}
+\mathbf{m}_t(\mathbf{x},\mathbf{z}_t)
+&amp;= \mathbb{E}\bigl[\mathbf{Z}_{t-1}\,\big|\,\mathbf{Z}_t=\mathbf{z}_t,\mathbf{X}=\mathbf{x}\bigr] \;=\; \mathbf{z}_t + \sigma_t^2\,\nabla_{\mathbf{z}_t}\log g(\mathbf{z}_t\,|\,\mathbf{x}), \\
+\boldsymbol\mu_t(\mathbf{z}_t)
+&amp;= \mathbb{E}\bigl[\mathbf{Z}_{t-1}\,\big|\,\mathbf{Z}_t=\mathbf{z}_t\bigr] \;=\; \mathbf{z}_t + \sigma_t^2\,\nabla_{\mathbf{z}_t}\log f_\theta(\mathbf{z}_t).
+\end{aligned}$$</div>
+  <p>Both lines have the same anchor $\mathbf{z}_t$ &mdash; the difference is a score difference, rescaled by $\sigma_t^2$.</p>
+</div>
+
+<div class="slide">
+  <h2>Step 2 &mdash; The MSE Becomes a Fisher Divergence</h2><div class="divider"></div>
+  <p>Substitute Step 1 into the per-step ELBO term:</p>
+  <div class="math-block">$$\bigl\|\mathbf{m}_t - \boldsymbol\mu_t\bigr\|^2 \;=\; \sigma_t^4\,\bigl\|\nabla\log g(\mathbf{z}_t\,|\,\mathbf{x}) - \nabla\log f_\theta(\mathbf{z}_t)\bigr\|^2.$$</div>
+  <p>Then for each $t$,</p>
+  <div class="math-block">$$\int g(\mathbf{z}_t\,|\,\mathbf{x})\,\Bigl\|\nabla\log g(\mathbf{z}_t\,|\,\mathbf{x}) - \nabla\log f_\theta(\mathbf{z}_t)\Bigr\|^2 d\mathbf{z}_t \;=\; 2\,D_F\!\bigl(g(\,\cdot\,|\,\mathbf{x})\,\Vert\,f_\theta\bigr).$$</div>
+  <p>Each ELBO term is (a rescaled) Fisher divergence.</p>
+</div>
+
+<div class="slide">
+  <h2>Step 3 &mdash; Recognize the Denoising Form</h2><div class="divider"></div>
+  <p>Recall the forward marginal $g(\mathbf{z}_t\,|\,\mathbf{x}) = \mathcal{N}(\mathbf{z}_t;\sqrt{\bar\alpha_t}\,\mathbf{x},(1-\bar\alpha_t)I)$. Its score is</p>
+  <div class="math-block">$$\nabla_{\mathbf{z}_t}\log g(\mathbf{z}_t\,|\,\mathbf{x}) \;=\; -\,\tfrac{\mathbf{z}_t - \sqrt{\bar\alpha_t}\,\mathbf{x}}{1-\bar\alpha_t}.$$</div>
+  <p>Substitute, drop terms independent of $\theta$:</p>
+  <div class="math-block">$$\text{(per-step ELBO term)} \;=\; \tfrac{\log e}{2}\int g(\mathbf{z}_t\,|\,\mathbf{x})\,\Bigl\|\tfrac{\sqrt{\bar\alpha_t}\,\mathbf{x}-\mathbf{z}_t}{1-\bar\alpha_t} - s_\theta(\mathbf{z}_t)\Bigr\|^2 d\mathbf{z}_t.$$</div>
+  <p>This is exactly Vincent's denoising score matching at noise level $1-\bar\alpha_t$.</p>
+</div>
+
+<div class="slide">
+  <h2>Theorem &mdash; Diffusion ELBO $\equiv$ Sum of DSM Objectives</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Theorem.</h3>
+    <p>Training the diffusion model by ELBO maximization is equivalent (up to $\theta$-free constants) to minimizing</p>
+    <div class="math-block">$$\sum_{t=2}^{T}\;\mathbb{E}_{\mathbf{X},\mathbf{Z}_t}\!\left[\tfrac{\log e}{2}\,\Bigl\|\tfrac{\sqrt{\bar\alpha_t}\,\mathbf{X} - \mathbf{Z}_t}{1-\bar\alpha_t} - s_\theta(\mathbf{Z}_t)\Bigr\|^2\right],$$</div>
+    <p>i.e., the sum over $t$ of denoising score-matching objectives at noise level $1-\bar\alpha_t$.</p>
+  </div>
+  <div class="cite">Song et al., Score-based generative modeling, ICLR 2021.</div>
+</div>
+
+<div class="slide">
+  <h2>Recap &mdash; Two Trainings, One Objective</h2><div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+\text{Diffusion ELBO}
+&amp;\stackrel{(\text{Tweedie})}{=}\;\text{rescaled Fisher divergence at each } t \\
+&amp;\stackrel{(\text{Vincent})}{=}\;\text{denoising score matching at each } t \\
+&amp;\stackrel{(\text{sum})}{=}\;\sum_t \mathbb{E}\bigl\|\text{noise/scale} - s_\theta(\mathbf{Z}_t)\bigr\|^2.
+\end{aligned}$$</div>
+  <ul>
+    <li>Tweedie converts a conditional mean to a score &mdash; one rewrite.</li>
+    <li>Denoising score matching closes the gap to a tractable MSE.</li>
+    <li>Reverse parameterization (predict noise) $=$ score parameterization, up to scaling. <em>Diff3 channel view.</em></li>
+  </ul>
+</div>
+
+
+<!-- ════ PART 05 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Recap</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Three families of divergence</p>
+</div>
+
+<div class="slide">
+  <h2>Three Divergence Families</h2><div class="divider"></div>
+  <div class="math-block">$$\begin{array}{l|c|c}
+\text{Family} &amp; \text{Sees} &amp; \text{Drives} \\\hline
+\text{$f$-divergence} &amp; \text{ratio } p/q &amp; \text{ML, VI, ELBO, GAN, MI bounds} \\
+\text{Fisher} &amp; \text{score } \nabla\log p &amp; \text{Score matching, diffusion, EBM} \\
+\text{Wasserstein} &amp; \text{transport cost} &amp; \text{WGAN (not this course)}
+\end{array}$$</div>
+  <p>Choice of divergence selects which models are tractable to train.</p>
+  <div class="highlight"><p>Energy-based and diffusion models exist <strong>because</strong> Fisher divergence lets us train without normalization.</p></div>
+</div>
+
+<div class="slide">
+  <h2>Where This Lecture Sits</h2><div class="divider"></div>
+  <ul>
+    <li><strong>Lecture 1 ($f$-divergence):</strong> general framework + JS-GAN.</li>
+    <li><strong>Lecture 2 (Fisher):</strong> score-based view + diffusion equivalence.</li>
+    <li><strong>Diffusion lecture series:</strong> ELBO derivation (Diff 2), parameterizations and Tweedie (Diff 3).</li>
+    <li><strong>MI bounds (mi1):</strong> variational $f$-divergence machinery (DV, NWJ).</li>
+  </ul>
+  <div class="highlight"><p>All three connect through the same dual: <em>density ratio</em> for $f$-divergence, <em>score gradient</em> for Fisher.</p></div>
+</div>
+
+<div class="slide end-slide no-footer">
+  <div class="big-word">Thank You</div>
+  <p class="big-word-sub">Questions &amp; discussion.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 1</div>
+
+</div><!-- end deck -->
+
+<script src="../../reference/deck.js"></script>
+</body>
+</html>

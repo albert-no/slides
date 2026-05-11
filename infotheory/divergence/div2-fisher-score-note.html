@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Divergence 2 — Fisher Divergence and Score Matching · Notes</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload='renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false},{left:"\\[",right:"\\]",display:true}]});'></script>
+<style>
+  body { max-width: 760px; margin: 48px auto; padding: 0 24px 96px; color: var(--charcoal); background: var(--white); font-family: 'Yonsei', 'Noto Sans', Arial, sans-serif; font-weight: 300; line-height: 1.65; }
+  h1 { font-size: 2rem; color: var(--yonsei-blue); margin-bottom: 4px; }
+  h2 { font-size: 1.4rem; color: var(--yonsei-blue); margin-top: 40px; border-bottom: 1px solid var(--slate); padding-bottom: 6px; }
+  p, li { font-size: 1rem; }
+  code { background: var(--light); padding: 1px 6px; border-radius: 4px; font-size: 0.92em; }
+  strong { color: var(--yonsei-blue); font-weight: 600; }
+  .deriv { background: var(--light); border-left: 3px solid var(--yonsei-blue); padding: 12px 18px; margin: 14px 0; border-radius: 0 6px 6px 0; }
+</style>
+</head>
+<body>
+<h1>Divergence 2 · Fisher Divergence and Score Matching &mdash; Notes</h1>
+
+<section>
+  <h2>Why $f$-divergences don't work for energy-based models</h2>
+  <p>The $f$-divergence ratio $p(x)/q(x)$ requires both $p$ and $q$ to be properly normalized. If $p_\theta(x) = e^{\phi_\theta(x)}/Z(\theta)$, evaluating <em>any</em> $f$-divergence requires knowing $Z(\theta)$. Estimating $Z$ is the central computational problem of energy-based models &mdash; importance sampling, annealed importance sampling, contrastive divergence, all are workarounds for the intractable partition function.</p>
+  <p>Fisher divergence side-steps the problem at the formulation level, not the algorithm level. The score function $\nabla_x \log p_\theta(x) = \nabla_x \phi_\theta(x)$ doesn't see $Z$ at all &mdash; the gradient kills the constant. This is the philosophical reason Fisher divergence exists: it's the divergence that <em>can</em> see energy-based models without first solving normalization.</p>
+</section>
+
+<section>
+  <h2>The original score-matching trick (Hyv&auml;rinen 2005)</h2>
+  <p>Before Vincent's denoising version, Hyv&auml;rinen handled the unknown data score by integration by parts. The Fisher divergence (after expanding the square and dropping $\theta$-free constants) reduces to:</p>
+  <div class="deriv">
+    \[
+    J(\theta) = \mathbb{E}_{p_{\mathrm{data}}}\!\left[\tfrac12 \|s_\theta(X)\|^2 + \mathrm{tr}\bigl(\nabla s_\theta(X)\bigr)\right].
+    \]
+  </div>
+  <p>The trace-of-Jacobian term is $\sum_i \partial s_{\theta,i}/\partial x_i$ &mdash; the divergence (in the differential-geometry sense) of the score field. This works in principle but requires $K$ second-derivative evaluations per sample, which is prohibitive for neural networks with $K$ in the millions.</p>
+  <p>Vincent's denoising form replaces the trace term with a single noise sample and a stop-gradient on the noisy input. The price: a bias proportional to the smoothing $\sigma^2$.</p>
+</section>
+
+<section>
+  <h2>Why integration by parts works for Gaussian smoothing</h2>
+  <p>In the proof, Step 2 uses $\nabla f_{\mathrm{data}}(\mathbf{y}) = \int p_{\mathrm{data}}(\mathbf{x}) \nabla_{\mathbf{y}}\mathcal{N}(\mathbf{y};\mathbf{x},\sigma^2 I)\,d\mathbf{x}$. The gradient passes inside the integral because $\mathcal{N}$ is differentiable in $\mathbf{y}$. For the Gaussian, $\nabla_{\mathbf{y}}\log\mathcal{N}(\mathbf{y};\mathbf{x},\sigma^2 I) = (\mathbf{x}-\mathbf{y})/\sigma^2$ &mdash; a closed form.</p>
+  <p>The trick fails for other smoothing kernels (e.g., uniform): you'd still get a tractable identity, but the conditional MSE form $\|(\mathbf{x}-\mathbf{y})/\sigma^2 - s_\theta(\mathbf{y})\|^2$ depends on the Gaussian's specific score. This is why denoising score matching is intimately tied to Gaussian noise &mdash; it's the kernel that gives a clean closed form.</p>
+</section>
+
+<section>
+  <h2>Tweedie's formula &mdash; full statement and proof</h2>
+  <p><strong>Theorem (Tweedie / Robbins 1956 / Miyasawa 1961).</strong> Let $\mathbf{Y} = \mathbf{X} + \mathbf{Z}$ with $\mathbf{Z}\sim\mathcal{N}(\mathbf{0},\sigma^2 I)$ independent of $\mathbf{X}\sim p_X$. Then</p>
+  <div class="deriv">
+    \[
+    \mathbb{E}[\mathbf{X}\mid\mathbf{Y}=\mathbf{y}] = \mathbf{y} + \sigma^2\nabla_{\mathbf{y}}\log p_Y(\mathbf{y}).
+    \]
+  </div>
+  <p><strong>Proof.</strong> $p_Y(\mathbf{y}) = \int p_X(\mathbf{x})\,\mathcal{N}(\mathbf{y};\mathbf{x},\sigma^2 I)\,d\mathbf{x}$. Compute</p>
+  <div class="deriv">
+    \[
+    \nabla_{\mathbf{y}} p_Y(\mathbf{y}) = \int p_X(\mathbf{x})\,\mathcal{N}(\mathbf{y};\mathbf{x},\sigma^2 I)\,\tfrac{\mathbf{x}-\mathbf{y}}{\sigma^2}\,d\mathbf{x} = \tfrac{1}{\sigma^2}\bigl(\mathbb{E}[\mathbf{X}\mid\mathbf{y}] - \mathbf{y}\bigr)\,p_Y(\mathbf{y}),
+    \]
+  </div>
+  <p>where the last equality uses Bayes' rule $p_X(\mathbf{x})\,\mathcal{N}(\mathbf{y};\mathbf{x},\sigma^2 I)/p_Y(\mathbf{y}) = p_{X\mid Y}(\mathbf{x}\mid\mathbf{y})$. Divide by $p_Y$ to get $\sigma^2\nabla\log p_Y = \mathbb{E}[\mathbf{X}\mid\mathbf{y}] - \mathbf{y}$. $\quad\blacksquare$</p>
+  <p>Tweedie is the bridge: the conditional mean of the clean signal, an object you can <em>train</em> (it's a denoising regression target), equals the score of the noisy marginal, an object you <em>want</em> (it generates samples by Langevin dynamics).</p>
+</section>
+
+<section>
+  <h2>Why diffusion training $=$ score matching $=$ denoising</h2>
+  <p>The three equivalences in the deck collapse onto one chain:</p>
+  <div class="deriv">
+    \[
+    \underbrace{\text{ELBO MSE on } (\mathbf{m}_t, \boldsymbol\mu_t)}_{\text{Lecture 2 of Diffusion track}}
+    \;\stackrel{\text{Tweedie}}{=}\;
+    \underbrace{\sigma_t^4\,\|\Delta\text{score}\|^2}_{\text{Fisher divergence at } t}
+    \;\stackrel{\text{Vincent}}{=}\;
+    \underbrace{\mathbb{E}\,\|(\mathbf{x}-\mathbf{z}_t)/\sigma_t^2 - s_\theta(\mathbf{z}_t)\|^2}_{\text{denoising score matching}}.
+    \]
+  </div>
+  <p>The reason this matters in practice: <em>every</em> diffusion implementation that "predicts noise $\hat\varepsilon_\theta(\mathbf{z}_t,t)$" is, by the second equality, an implicit score model up to scaling. The score-matching literature and the diffusion literature train identical networks with identical losses &mdash; just under different framings.</p>
+  <p>Sliced score matching (Song et&nbsp;al. 2019), conditional score matching (Song &amp; Ermon 2019, NCSN), and the DDPM noise-prediction parameterization (Ho et&nbsp;al. 2020) are all instances of this equivalence. The "right" framing depends on what you want to compute next: ELBO bounds (variational), sampling (Langevin / SDE), or simply training loss (DSM).</p>
+</section>
+
+<section>
+  <h2>Why sampling from a score model is Langevin dynamics</h2>
+  <p>Once $s_\theta \approx \nabla\log p_{\mathrm{data}}$ is trained, sampling proceeds via discretized Langevin:</p>
+  <div class="deriv">
+    \[
+    \mathbf{x}_{k+1} = \mathbf{x}_k + \tfrac{\eta}{2}\,s_\theta(\mathbf{x}_k) + \sqrt{\eta}\,\boldsymbol\varepsilon_k, \qquad \boldsymbol\varepsilon_k\sim\mathcal{N}(\mathbf{0},I).
+    \]
+  </div>
+  <p>The stationary distribution of this chain (in the continuous-time limit) is exactly the pdf whose score is $s_\theta$ (Fokker&ndash;Planck argument). This is why score-based generative models <em>generate</em>: training fits the score, and the Langevin SDE turns the score field into samples.</p>
+  <p>The chain is also a continuous-time view of diffusion's reverse process &mdash; see <code>privacy/generative/diffusion3-sde-score.html:339</code> for the SDE formulation.</p>
+</section>
+
+<section>
+  <h2>Comparison &mdash; $f$, Fisher, Wasserstein</h2>
+  <div class="deriv">
+    <p><strong>$f$-divergence.</strong> $D_f(p\Vert q) = \mathbb{E}_q\,f(p/q)$. Needs normalized $p,q$. Family includes KL, JS, $\chi^2$, TV. Variational dual gives BA / DV / NWJ bounds (MI) and $f$-GAN.</p>
+    <p><strong>Fisher divergence.</strong> $D_F(p\Vert q) = \tfrac12\,\mathbb{E}_p\,\|\nabla\log p - \nabla\log q\|^2$. Works on energy models. Trainable by denoising score matching. Drives diffusion, NCSN, EBM training.</p>
+    <p><strong>Wasserstein-$1$.</strong> $W_1(p,q) = \inf_\pi\,\mathbb{E}_\pi\|X-Y\|$. Cares about transport, not ratios. Survives disjoint supports. Drives WGAN; not covered in this course.</p>
+  </div>
+  <p>The choice is dictated by what the model class lets you compute: ratios (normalized models), scores (energy / diffusion), or distances (geometric models). The training algorithm follows from the divergence, not the other way around.</p>
+</section>
+
+<section>
+  <h2>Closing thread &mdash; where this course goes next</h2>
+  <p>Across the infotheory series, divergences have anchored every operational result: KL for source coding (Lecture 1&ndash;3), differential KL for AWGN capacity (Lecture 6&ndash;8), KL for rate&ndash;distortion (Lecture 9&ndash;12), KL again for ELBO and diffusion (Diffusion 1&ndash;3), variational KL for MI bounds (MI 1&ndash;2), and now the $f$-family and Fisher for modern generative training.</p>
+  <p>The unifying view: every operational task (compress, communicate, estimate, sample) is "match a distribution to a target", and the choice of divergence dictates the algorithm. Information theory gives you the divergence; statistical learning gives you the optimizer.</p>
+</section>
+
+</body>
+</html>

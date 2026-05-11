@@ -32,19 +32,23 @@ Variational MI bounds → contrastive learning (InfoNCE/CLIP). Each deck paired 
 | **04 — NWJ** | Linear-surrogate variant | `:185-220` |
 | | Theorem (Nguyen, Wainwright, Jordan 2010) | `:198, :199` |
 | | NWJ vs DV variance trade | `:205` |
-| **05 — Tradeoffs** | High MI is fundamentally hard | `:222-262` |
+| **05 — Tradeoffs & unification** | High MI barrier; $f$-divergence variational view | `:222-301` |
 | | High-MI barrier (McAllester–Stratos) | `:230, :232` |
 | | Three bounds side-by-side | `:239` |
 | | Choosing your bound | `:251` |
+| | Overview — unifying view via $f$-divergence | `:261` |
+| | Recovering DV and NWJ from Fenchel dual | `:270` |
+| | Forward pointer to Divergence Lectures 1–2 | `:280` |
+| | Recap (now includes $f$-divergence framing) | `:291` |
 
-**Key theorems:** BA bound `:107`; DV representation `:151`; DV→MI bound `:159`; NWJ bound `:199`; McAllester–Stratos variance bound `:232`.
+**Key theorems:** BA bound `:107`; DV representation `:151`; DV→MI bound `:159`; NWJ bound `:199`; McAllester–Stratos variance bound `:232`; $f$-divergence Fenchel dual `:261`; DV, NWJ as KL instances `:270`.
 
 ### Note (`mi1-bounds-note.html`)
 - Density ratio as unifying view `:25`
 - MINE estimator bias `:31`
 - McAllester–Stratos lower bound `:37`
 - Toy bivariate Gaussian detail `:43`
-- f-divergences and f-GAN connection `:55`
+- f-divergences and f-GAN connection (with forward pointer to `divergence/`) `:55`
 - Why CLIP/InfoNCE is different from these `:67`
 
 ---

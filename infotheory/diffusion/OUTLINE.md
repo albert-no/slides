@@ -97,16 +97,21 @@ Information-theoretic treatment: VAE/ELBO → hierarchical VAE = diffusion → p
 | | Predict x₀ | `:84` |
 | | Predict ε | `:92` |
 | | Predict score | `:101` |
-| **03 — Tweedie's bridge** | Posterior mean = rescaled score | `:111-149` |
-| | **Theorem (Robbins/Tweedie)** | `:121` |
-| | **Proof — differentiate the marginal** | `:130` |
-| | Three names, one object | `:141, :144` |
-| **04 — Channel view** | Forward = noise channel, reverse = decoding | `:150-212` |
-| | Each step is additive Gaussian channel | `:158` |
-| | Reverse = approximate decoding | `:166` |
-| | Successive refinement analogy | `:173` |
+| **03 — Tweedie's bridge** | Posterior mean = rescaled score | `:116-154` |
+| | **Theorem (Robbins/Tweedie)** | `:124` |
+| | **Proof — differentiate the marginal** | `:135` |
+| | Three names, one object | `:146` |
+| **04 — Channel view** | Forward = noise channel, reverse = decoding | `:155-190` |
+| | Each step is additive Gaussian channel | `:163` |
+| | Reverse = approximate decoding | `:171` |
+| | Successive refinement analogy | `:178` |
+| **05 — Score-matching equivalence** | ELBO MSE $\equiv$ denoising score matching | `:191-232` |
+| | Overview — a second divergence behind diffusion | `:199` |
+| | **Theorem — ELBO term $\equiv$ DSM (Vincent / Song et al.)** | `:211` |
+| | Recap of Section 05 — Tweedie $\to$ Fisher $\to$ DSM chain | `:222` |
+| | Forward pointer to `divergence/div2-fisher-score.html` | (inline in `:222`) |
 
-**Key:** Master identity `:68`; Tweedie theorem `:121`; Tweedie proof `:130`; equivalence of three predictions `:144`.
+**Key:** Master identity `:68`; Tweedie theorem `:124`; Tweedie proof `:135`; equivalence of three predictions `:146`; ELBO $\equiv$ DSM theorem `:211`.
 
 ### Note (`diff3-parameterizations-note.html`)
 - Why ε-prediction wins (loss conditioning at noise level) `:25`
@@ -116,3 +121,4 @@ Information-theoretic treatment: VAE/ELBO → hierarchical VAE = diffusion → p
 - Channel-coding view detail (SNR, successive refinement) `:71`
 - Log-SNR view (Salimans & Ho) `:83`
 - Connection to rate–distortion `:94`
+- Score-matching equivalence (forward pointer to `divergence/div2`) `:102`

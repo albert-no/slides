@@ -7,9 +7,10 @@ Master-level series with paired `<deck>.html` + `<deck>-note.html`. Notes hold f
 - **`entropy/`** — Foundations: entropy and basic information-theoretic quantities (2 lectures): entropy + KL → joint, conditional, MI, Fano. See `entropy/OUTLINE.md`.
 - **`lossless/`** — Lossless compression (3 lectures): codes/Kraft/Huffman → AEP/arithmetic → Markov/universal/LZ. See `lossless/OUTLINE.md`.
 - **`diffentropy/`** — Differential entropy and continuous-domain MI (3 lectures): foundations → MaxEnt/Gaussian/EPI → MI/AWGN/water-filling/I-MMSE. See `diffentropy/OUTLINE.md`.
-- **`diffusion/`** — Diffusion through the information-theory lens (3 lectures): VAE/ELBO → hierarchical VAE → parameterizations + Tweedie. See `diffusion/OUTLINE.md`.
+- **`diffusion/`** — Diffusion through the information-theory lens (3 lectures): VAE/ELBO → hierarchical VAE → parameterizations + Tweedie + score-matching equivalence. See `diffusion/OUTLINE.md`.
 - **`lossy/`** — Rate–distortion theory + modern LLM compression (4 lectures): foundations → Gaussian/Laplacian + pruning + CROM → lattice codes & QUIP# → TURBOQUANT. See `lossy/OUTLINE.md`.
-- **`mi/`** — Mutual-information estimation (2 lectures): variational lower bounds (BA, DV, NWJ, MINE) → InfoNCE & CLIP. See `mi/OUTLINE.md`.
+- **`mi/`** — Mutual-information estimation (2 lectures): variational lower bounds (BA, DV, NWJ, MINE) → InfoNCE & CLIP; closes with $f$-divergence unification. See `mi/OUTLINE.md`.
+- **`divergence/`** — Divergence families behind modern generative training (2 lectures): $f$-divergence + GAN $\equiv$ JS minimization → Fisher divergence + score matching + diffusion equivalence. See `divergence/OUTLINE.md`.
 
 ## Reading order (suggested for a full master's course)
 
@@ -19,6 +20,7 @@ Master-level series with paired `<deck>.html` + `<deck>-note.html`. Notes hold f
 4. **`lossy/`** — rate–distortion theory; classical R(D) and modern LLM compression.
 5. **`mi/`** — variational MI bounds; InfoNCE/CLIP.
 6. **`diffusion/`** — generative modeling through the info-theoretic lens.
+7. **`divergence/`** — $f$-divergence + GAN, Fisher + score matching; closes the loop with diffusion.
 
 ## Themes
 
@@ -26,6 +28,7 @@ Master-level series with paired `<deck>.html` + `<deck>-note.html`. Notes hold f
 - **lossy** ramps from classical R(D) to **applied compression of LLM weights and KV caches** (QUIP#, TURBOQUANT).
 - **mi** culminates in the MI view of CLIP — the bridge between variational-bound theory and contrastive learning.
 - **diffusion** is the *theoretical* side of diffusion (see `privacy/generative/` for the from-scratch Bayes-route version).
+- **divergence** synthesizes: $f$-divergences unify MI/ELBO/GAN; Fisher closes the diffusion picture via score matching.
 
 ## Cross-deck pointers
 
@@ -70,7 +73,16 @@ Master-level series with paired `<deck>.html` + `<deck>-note.html`. Notes hold f
 | QJL lemma | `lossy/lossy4-turboquant.html` | `:233` |
 | Barber–Agakov bound | `mi/mi1-bounds.html` | `:107` |
 | Donsker–Varadhan representation | `mi/mi1-bounds.html` | `:151` |
+| $f$-divergence variational view (DV, NWJ as KL instances) | `mi/mi1-bounds.html` | `:261, :270` |
 | InfoNCE bound | `mi/mi2-infonce-clip.html` | `:91` |
+| $f$-divergence definition | `divergence/div1-fdivergence-gan.html` | `:121` |
+| $f$-divergence properties theorem (DPI, info inequality) | `divergence/div1-fdivergence-gan.html` | `:229` |
+| GAN $\equiv$ Jensen–Shannon theorem | `divergence/div1-fdivergence-gan.html` | `:330` |
+| Energy-based pdf + score function | `divergence/div2-fisher-score.html` | `:80, :91` |
+| Fisher divergence definition (Hyvärinen) | `divergence/div2-fisher-score.html` | `:141` |
+| Denoising score matching theorem (Vincent) | `divergence/div2-fisher-score.html` | `:200` |
+| Diffusion ELBO $\equiv$ DSM theorem | `divergence/div2-fisher-score.html` | `:315` |
+| Score-matching equivalence (cross-reference in diffusion) | `diffusion/diff3-parameterizations.html` | `:211` |
 
 ## Pairing convention
 

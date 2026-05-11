@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Divergence 1 — f-Divergence and GAN · Notes</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload='renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false},{left:"\\[",right:"\\]",display:true}]});'></script>
+<style>
+  body { max-width: 760px; margin: 48px auto; padding: 0 24px 96px; color: var(--charcoal); background: var(--white); font-family: 'Yonsei', 'Noto Sans', Arial, sans-serif; font-weight: 300; line-height: 1.65; }
+  h1 { font-size: 2rem; color: var(--yonsei-blue); margin-bottom: 4px; }
+  h2 { font-size: 1.4rem; color: var(--yonsei-blue); margin-top: 40px; border-bottom: 1px solid var(--slate); padding-bottom: 6px; }
+  p, li { font-size: 1rem; }
+  code { background: var(--light); padding: 1px 6px; border-radius: 4px; font-size: 0.92em; }
+  strong { color: var(--yonsei-blue); font-weight: 600; }
+  .deriv { background: var(--light); border-left: 3px solid var(--yonsei-blue); padding: 12px 18px; margin: 14px 0; border-radius: 0 6px 6px 0; }
+</style>
+</head>
+<body>
+<h1>Divergence 1 · $f$-Divergence and GAN &mdash; Notes</h1>
+
+<section>
+  <h2>Why these two pathologies matter</h2>
+  <p>The Theis&ndash;van&nbsp;den&nbsp;Oord&ndash;Bethge note (ICLR 2016) makes a sharper version of the "high likelihood, bad samples" claim: in image space, every density estimator with finite support on the data manifold can be mixed with an ambient noise floor and still have likelihood within $\log(1/\alpha)$ of the optimum. So <em>any</em> evaluation that compares models by held-out likelihood alone is asking the wrong question for sample quality.</p>
+  <p>The overfit pathology is the symmetric failure: a model that memorizes the empirical distribution achieves <em>perfect sample quality</em> (every sample is data) but $-\infty$ held-out likelihood. The two failures sit on opposite sides of the bias&ndash;variance trade-off. Both motivate divergences that don't reduce to maximum likelihood.</p>
+</section>
+
+<section>
+  <h2>Conventions in the $f$-divergence definition, in detail</h2>
+  <p>The three conventions in the definition handle the degenerate cases that arise on supports of $p$ and $q$ that don't agree:</p>
+  <ul>
+    <li>$0 \cdot f(0/0) = 0$ &mdash; both densities vanish at $x$; the point contributes nothing.</li>
+    <li>$f(0) = \lim_{t\to 0^+} f(t)$ &mdash; for $f(t)=t\log t$ this is $0$; for $f(t)=-\log t$ it's $+\infty$; this is why $D_{\mathrm{KL}}(q\Vert p)$ blows up whenever $p$ misses mass that $q$ has.</li>
+    <li>$0 \cdot f(a/0) = a \lim_{t\to 0^+} t\,f(a/t) = a\,f'(\infty)$ &mdash; controls the contribution at $q(x)=0$, $p(x)&gt;0$. For KL, $f'(\infty)=\infty$, so any such $x$ blows up KL. For TV, $f'(\infty)=1/2$ &mdash; finite.</li>
+  </ul>
+  <p>These edge-case conventions are why $D_{\mathrm{KL}}(p\Vert q)$ is finite iff $p \ll q$, but $\mathrm{TV}$ is always finite. Important when the model class doesn't cover the data support (a real concern in deep generative models).</p>
+</section>
+
+<section>
+  <h2>The "asymmetry partner" $\widetilde f(t) = t\,f(1/t)$</h2>
+  <p>Given $f$, define $\widetilde f(t) = t\,f(1/t)$. Then $\widetilde f$ is also convex with $\widetilde f(1)=0$, and</p>
+  <div class="deriv">
+    \[
+    D_{\widetilde f}(p\Vert q) = D_f(q\Vert p).
+    \]
+  </div>
+  <p>Proof: $\sum_x q(x)\widetilde f(p/q) = \sum_x q(x)(p/q)\,f(q/p) = \sum_x p(x)\,f(q/p) = D_f(q\Vert p)$.</p>
+  <p>So $f(t)=t\log t$ (KL) has partner $\widetilde f(t)=-\log t$ (reverse KL). $f(t)=(t-1)^2$ ($\chi^2$) has partner $\widetilde f(t)=(t-1)^2/t$. TV is self-partnered: $\widetilde f = f$, which is why TV is symmetric.</p>
+</section>
+
+<section>
+  <h2>Pinsker's inequality and the chain $\mathrm{TV} \le \sqrt{\tfrac12 D_{\mathrm{KL}}} \le \sqrt{\tfrac12 \chi^2}$</h2>
+  <p>The three divergences interrelate quantitatively. Pinsker's inequality says $\mathrm{TV}(p,q) \le \sqrt{\tfrac12 D_{\mathrm{KL}}(p\Vert q)}$. A standard Taylor expansion at $p=q$ gives $D_{\mathrm{KL}}(p\Vert q) \le \chi^2(p\Vert q)$ (whenever both are small). So</p>
+  <div class="deriv">
+    \[
+    \mathrm{TV}(p,q) \;\le\; \sqrt{\tfrac12 D_{\mathrm{KL}}(p\Vert q)} \;\le\; \sqrt{\tfrac12 \chi^2(p\Vert q)}.
+    \]
+  </div>
+  <p>For the Bernoulli example in the deck ($p=\mathrm{Bern}(0.9)$, $q=\mathrm{Bern}(0.5)$): $\mathrm{TV}=0.4$, $\sqrt{\tfrac12 D_{\mathrm{KL}}}=\sqrt{0.184}\approx 0.43$, $\sqrt{\tfrac12\chi^2}=\sqrt{0.32}\approx 0.57$. Chain confirmed numerically.</p>
+</section>
+
+<section>
+  <h2>Hockey-stick divergence and differential privacy</h2>
+  <p>For $\gamma\ge 1$ and $\delta\in[0,1]$, a randomized mechanism $\mathcal{M}$ is $(\varepsilon,\delta)$-DP if and only if</p>
+  <div class="deriv">
+    \[
+    E_{e^\varepsilon}\!\bigl(\mathcal{M}(D)\,\Vert\,\mathcal{M}(D')\bigr) \;\le\; \delta
+    \]
+  </div>
+  <p>for every pair of neighbouring datasets $D \sim D'$. The hockey-stick literally measures "how often does the privacy loss exceed $\varepsilon$, weighted by the excess". Composition theorems for DP are easier in this language than in the original $(\varepsilon,\delta)$ form (Kairouz, Oh, Viswanath 2015; Balle and Wang 2018).</p>
+  <p>See <code>privacy/dp/DP-FL.html</code> for the DP track; that deck uses the hockey-stick formulation when stating advanced-composition results.</p>
+</section>
+
+<section>
+  <h2>Why JS is bounded above by $\log 2$</h2>
+  <p>Each KL term in $D_{\mathrm{JS}}(p\Vert q) = D_{\mathrm{KL}}(p\Vert m) + D_{\mathrm{KL}}(q\Vert m)$, with $m=(p+q)/2$, is bounded by $\log 2$:</p>
+  <div class="deriv">
+    \[
+    D_{\mathrm{KL}}(p\Vert m) = \sum_x p(x)\log\frac{p(x)}{(p(x)+q(x))/2} \le \sum_x p(x)\log\frac{p(x)}{p(x)/2} = \log 2.
+    \]
+  </div>
+  <p>The inequality is $q(x)\ge 0$. Equality is approached when $p,q$ have disjoint supports. So $D_{\mathrm{JS}}(p\Vert q) \in [0, 2\log 2]$ &mdash; bounded, unlike KL.</p>
+  <p>Some texts normalize JS to lie in $[0,\log 2]$ by halving the definition: $\tfrac12 D_{\mathrm{KL}}(p\Vert m) + \tfrac12 D_{\mathrm{KL}}(q\Vert m)$. The deck uses Goodfellow's convention (sum without the half) so that the GAN theorem reads $V = 2D_{\mathrm{JS}} - 2\log 2$ rather than $V = D_{\mathrm{JS}} - \log 2$.</p>
+</section>
+
+<section>
+  <h2>Why we proved DPI through joint $\ge$ marginal</h2>
+  <p>The cleanest proof of DPI for $f$-divergences proceeds by sandwich: the joint $D_f(p(x,y)\Vert q(x,y))$ is between the marginal-only and conditional-only values. Two equalities and one Jensen, no calculus.</p>
+  <p>This is the same shape as the DPI proof for $D_{\mathrm{KL}}$ via mutual information ($I(X;Y) = I(X;f(Y))$ for invertible $f$, etc.) but works without any KL-specific machinery. The argument generalizes verbatim to integral form for densities.</p>
+</section>
+
+<section>
+  <h2>The $f$-GAN minimax in detail</h2>
+  <p>Plugging the variational representation $D_f(p\Vert q) = \sup_T\{\mathbb{E}_p T - \mathbb{E}_q f^*(T)\}$ into a generative training loop:</p>
+  <div class="deriv">
+    \[
+    \min_\theta\, D_f(p_{\mathrm{data}}\Vert p_\theta) \;=\; \min_\theta\,\sup_T\,\bigl\{\mathbb{E}_{p_{\mathrm{data}}}[T(X)] - \mathbb{E}_{p_\theta}[f^*(T(X))]\bigr\}.
+    \]
+  </div>
+  <p>For $f(t)=t\log t$ (KL): $f^*(s)=e^{s-1}$, recovering the NWJ-style critic. For $f(t)=(t-1)^2$ ($\chi^2$): $f^*(s) = s^2/4 + s$, a quadratic critic. For $f(t)=t\log\tfrac{2t}{t+1}+\log\tfrac{2}{t+1}$ (JS): $f^*(s) = -\log(2-e^s)$, recovering Goodfellow's GAN after a reparameterization.</p>
+  <p>This is also exactly the same machinery as the variational MI lower bounds in <code>infotheory/mi/mi1-bounds.html</code> &mdash; DV is the KL variational form, NWJ is its tightened linear surrogate. The "MI estimation" and "GAN training" frames are two views of the same dual representation.</p>
+</section>
+
+<section>
+  <h2>Practical instability of vanilla GAN training</h2>
+  <p>The clean JS theorem hides the practical reality. When the supports of $p_{\mathrm{data}}$ and $p_\theta$ are nearly disjoint (typical at initialization in image space), $D_{\mathrm{JS}}$ saturates at $\log 2$ and its gradient with respect to $\theta$ vanishes. The discriminator wins decisively, no signal flows to the generator, training stalls.</p>
+  <p>This is the motivation for <strong>Wasserstein GAN</strong> (Arjovsky, Chintala, Bottou 2017), which replaces JS with the Earth-Mover (1-Wasserstein) distance &mdash; not an $f$-divergence, so it lies outside this lecture's family. Wasserstein has a useful gradient even when supports are disjoint.</p>
+</section>
+
+<section>
+  <h2>Forward connection to Lecture 2</h2>
+  <p>Lecture 2 introduces a divergence that <em>doesn't</em> fit in the $f$-divergence family: the Fisher divergence, defined on score functions $\nabla\log p$. It applies even when $p$ is only known up to a normalization constant (energy-based models), and its sample form is the foundation of score matching and diffusion training. The "denoising score matching $\equiv$ diffusion training" equivalence proved in Lecture 2 uses Tweedie's formula from <code>infotheory/diffusion/diff3-parameterizations.html</code> as a bridge.</p>
+</section>
+
+</body>
+</html>

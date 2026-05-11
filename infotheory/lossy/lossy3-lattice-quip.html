@@ -21,7 +21,7 @@
   <div class="pill pill-fill" style="margin-bottom:28px;">Lossy Compression · Lecture 3 of 4</div>
   <h1>Lattice Codes, QUIP, and QUIP#:<br>Structured Codebooks for LLMs</h1>
   <div class="divider"></div>
-  <p class="subtitle">From the complexity wall of VQ to incoherence processing</p>
+  <p class="subtitle">From the encoder wall of VQ to incoherence processing</p>
   <p style="font-weight:500;">Albert No &nbsp;·&nbsp; Yonsei University</p>
   <p style="margin-top:6px;">Information Theory · 2026</p>
 </div>
@@ -32,28 +32,28 @@
   <div class="toc-list">
     <div class="toc-item">
       <div class="toc-num">01</div><div class="toc-rule"></div>
-      <div><div class="toc-label">Why structure</div>
-      <div class="toc-sub">Optimal VQ is intractable</div></div>
+      <div><div class="toc-label">The encoder problem</div>
+      <div class="toc-sub">Optimal VQ has a gigantic codebook and intractable search</div></div>
     </div>
     <div class="toc-item">
       <div class="toc-num">02</div><div class="toc-rule"></div>
-      <div><div class="toc-label">Lattice codes</div>
-      <div class="toc-sub">Voronoi cells, packing gain, fast rounding</div></div>
+      <div><div class="toc-label">Computing in quantized space</div>
+      <div class="toc-sub">Uniform quantization preserves arithmetic</div></div>
     </div>
     <div class="toc-item">
       <div class="toc-num">03</div><div class="toc-rule"></div>
-      <div><div class="toc-label">Finite codebook</div>
-      <div class="toc-sub">Base lattice, scaling, shaping</div></div>
+      <div><div class="toc-label">Lattice codes</div>
+      <div class="toc-sub">Linear structure replaces nearest-neighbor search</div></div>
     </div>
     <div class="toc-item">
       <div class="toc-num">04</div><div class="toc-rule"></div>
       <div><div class="toc-label">QUIP</div>
-      <div class="toc-sub">Incoherence processing, LDLQ</div></div>
+      <div class="toc-sub">Layer-wise proxy, incoherence, LDLQ</div></div>
     </div>
     <div class="toc-item">
       <div class="toc-num">05</div><div class="toc-rule"></div>
       <div><div class="toc-label">QUIP#</div>
-      <div class="toc-sub">Hadamard rotation + E8 lattice</div></div>
+      <div class="toc-sub">Randomized Hadamard rotation + E8 codebook</div></div>
     </div>
   </div>
 </div>
@@ -62,124 +62,322 @@
 <!-- ════ PART 01 ════ -->
 <div class="slide section-slide left">
   <div class="section-num">01</div>
-  <h1>Why Structure</h1>
+  <h1>The Encoder Problem</h1>
   <div class="divider"></div>
-  <p class="subtitle">Optimal VQ is rate-distortion right and operationally dead.</p>
+  <p class="subtitle">Shannon-optimal VQ is rate-distortion right and operationally dead.</p>
 </div>
 
 <div class="slide">
   <h2>What a Real Quantizer Must Do</h2><div class="divider"></div>
-  <p>Production setting: $10^{10}$+ LLM weights, every layer, every forward pass.</p>
+  <p>LLM inference: $\sim 10^{10}$ weights, every layer, every forward pass.</p>
   <ul>
-    <li>Encode in $\mathcal{O}(d)$ per block, not $\mathcal{O}(2^{dR})$.</li>
-    <li>No codebook to store or fetch from RAM.</li>
-    <li>Embarrassingly parallel across blocks.</li>
-    <li>MSE close to the rate-distortion optimum.</li>
+    <li><strong>Encode</strong> in $\mathcal{O}(d)$ per block — not $\mathcal{O}(2^{dR})$.</li>
+    <li><strong>Tiny codebook</strong> — fits in cache, no GB-scale lookups.</li>
+    <li><strong>Embarrassingly parallel</strong> across blocks and rows.</li>
+    <li><strong>MSE</strong> close to the rate-distortion optimum.</li>
   </ul>
-  <div class="highlight">Compression is not enough. The quantizer has to be cheap.</div>
+  <div class="highlight">Compression is not enough. The encoder has to be cheap.</div>
 </div>
 
 <div class="slide">
-  <h2>Standard VQ Recap</h2><div class="divider"></div>
-  <p>Group $d$ scalars into $\mathbf{w}\in\mathbb{R}^d$; map to nearest of $K=2^{dR}$ centroids.</p>
-  <div class="math-block">$$\mathcal{C} = \{\mathbf{c}_1,\ldots,\mathbf{c}_K\}\subset\mathbb{R}^d.$$</div>
-  <p>Larger $d$ buys rounder cells, lower distortion at fixed rate. Shannon's theorem says push $d \to \infty$.</p>
+  <h2>Optimal VQ — What the Encoder Does</h2><div class="divider"></div>
+  <p>Group $d$ scalars into $\mathbf{w}\in\mathbb{R}^d$. Encoder finds the nearest codeword.</p>
+  <div class="math-block">$$\mathcal{C} = \{\mathbf{c}_1,\ldots,\mathbf{c}_K\}\subset\mathbb{R}^d, \qquad K = 2^{dR}.$$</div>
+  <div class="math-block">$$\widehat{\mathbf{w}} \;=\; \arg\min_{k=1,\ldots,K}\,\|\mathbf{w} - \mathbf{c}_k\|^2.$$</div>
+  <p>Encoder picks index $k$; decoder looks up $\mathbf{c}_k$.</p>
+  <div class="highlight">Decoder is trivial (one lookup). The encoder is the wall.</div>
 </div>
 
 <div class="slide">
-  <h2>The Complexity Wall</h2><div class="divider"></div>
+  <h2>The Codebook Is Gigantic</h2><div class="divider"></div>
+  <p>$K = 2^{dR}$ codewords, each a $d$-dim vector (4-byte floats).</p>
+  <div class="math-block">$$\text{Storage} \;=\; d \cdot 2^{dR} \cdot 4\;\text{bytes}.$$</div>
+  <table style="margin: 18px auto; border-collapse: collapse;">
+    <thead><tr style="border-bottom: 2px solid var(--yonsei-blue);">
+      <th style="padding:6px 18px; text-align:left;">$d$</th>
+      <th style="padding:6px 18px; text-align:left;">$R$</th>
+      <th style="padding:6px 18px; text-align:left;">$K = 2^{dR}$</th>
+      <th style="padding:6px 18px; text-align:left;">Codebook size</th>
+    </tr></thead>
+    <tbody>
+      <tr><td style="padding:6px 18px;">$2$</td><td style="padding:6px 18px;">$4$</td><td style="padding:6px 18px;">$256$</td><td style="padding:6px 18px;">$2$ KB &nbsp;<span style="color:var(--success);">fits in L1</span></td></tr>
+      <tr><td style="padding:6px 18px;">$4$</td><td style="padding:6px 18px;">$4$</td><td style="padding:6px 18px;">$65{,}536$</td><td style="padding:6px 18px;">$1$ MB</td></tr>
+      <tr><td style="padding:6px 18px;">$6$</td><td style="padding:6px 18px;">$4$</td><td style="padding:6px 18px;">$16.7 \times 10^6$</td><td style="padding:6px 18px;">$400$ MB</td></tr>
+      <tr><td style="padding:6px 18px;">$8$</td><td style="padding:6px 18px;">$4$</td><td style="padding:6px 18px;">$4.3 \times 10^9$</td><td style="padding:6px 18px;">$137$ GB &nbsp;<span style="color:var(--warn);">won't fit anywhere</span></td></tr>
+    </tbody>
+  </table>
+  <p>Shannon says $d \to \infty$. Storage says $d$ stops at single digits.</p>
+</div>
+
+<div class="slide">
+  <h2>Encoding — A Search You Cannot Run</h2><div class="divider"></div>
+  <p>Per block: scan all $K$ codewords, compute $\|\mathbf{w}-\mathbf{c}_k\|^2$, take the min.</p>
+  <div class="math-block">$$\text{Per-block cost} \;=\; \mathcal{O}(d \cdot 2^{dR}) \;\;\text{ops} \;+\; \mathcal{O}(d \cdot 2^{dR}) \;\;\text{memory reads}.$$</div>
+  <p>For $d=8$, $R=4$, one LLM forward pass over $10^{10}$ weights:</p>
+  <ul>
+    <li>$1.25 \times 10^9$ blocks $\times$ $4.3 \times 10^9$ codeword checks.</li>
+    <li>$\approx 5 \times 10^{18}$ operations per layer, per token.</li>
+    <li>Plus: streaming $137$ GB of codebook through the cache.</li>
+  </ul>
+  <div class="highlight">No clever indexing rescues this — search is fundamentally linear in $K$.</div>
+</div>
+
+<div class="slide">
+  <h2>Two Escape Routes</h2><div class="divider"></div>
   <div class="grid-2">
     <div class="card">
-      <h3 style="color:var(--blue-light);">Storage</h3>
-      <p>$d \cdot 2^{dR}$ floats in the codebook.</p>
-      <p>$d=8$, $R=4$: $\approx 34$ billion floats.</p>
+      <h3 style="color:var(--blue-light);">Uniform quantization</h3>
+      <p>Round each coordinate to a fixed grid. No codebook, no search.</p>
+      <p>Cheap; small MSE penalty vs. optimal VQ.</p>
     </div>
     <div class="card">
-      <h3 style="color:var(--blue-light);">Search</h3>
-      <p>$\mathcal{O}(d \cdot 2^{dR})$ per nearest-neighbor query.</p>
-      <p>Per-weight, per-forward-pass: infeasible.</p>
+      <h3 style="color:var(--blue-light);">Lattice codes</h3>
+      <p>Codebook with linear algebraic structure.</p>
+      <p>Encode in $\mathcal{O}(d)$ via algebra, decode by index.</p>
     </div>
   </div>
-  <div class="highlight">Both grow exponentially in $d$. Optimal VQ is operationally dead at LLM scale.</div>
-</div>
-
-<div class="slide">
-  <h2>Uniform Quantization Buys Speed</h2><div class="divider"></div>
-  <p>Fix a step $\Delta$, round each coordinate: $\hat w_i = \Delta\cdot\lfloor w_i/\Delta + \tfrac12\rfloor$.</p>
-  <ul>
-    <li><strong>$\mathcal{O}(d)$ encode:</strong> arithmetic, no search.</li>
-    <li><strong>Zero codebook:</strong> only the rule $(\Delta)$ is stored.</li>
-    <li><strong>Parallel:</strong> coordinates are independent.</li>
-    <li><strong>Penalty:</strong> small constant factor of MSE vs. optimal VQ at high $d$.</li>
-  </ul>
-  <div class="highlight">Lattices generalize this: fast and structured, with smaller MSE penalty.</div>
+  <div class="highlight">Both replace the $K$-way search with an algebraic step.</div>
 </div>
 
 
 <!-- ════ PART 02 ════ -->
 <div class="slide section-slide left">
   <div class="section-num">02</div>
-  <h1>Lattice Codes</h1>
+  <h1>Computing in Quantized Space</h1>
   <div class="divider"></div>
-  <p class="subtitle">A regular grid: uniform Voronoi cells, algebraic rounding</p>
+  <p class="subtitle">Uniform quantization preserves linear arithmetic.</p>
 </div>
 
 <div class="slide">
-  <h2>Definition</h2><div class="divider"></div>
-  <p>Lattice $\Lambda\subset\mathbb{R}^d$: additive subgroup, integer combinations of a basis.</p>
-  <div class="math-block">$$\Lambda \;=\; B\mathbb{Z}^d, \qquad B = [\,b_1\,|\,b_2\,|\,\cdots\,|\,b_d\,].$$</div>
-  <p>Voronoi region $\mathcal{V}(\lambda) = \{x : \|x-\lambda\|\le\|x-\lambda'\|\;\forall\lambda'\in\Lambda\}$.</p>
-  <div class="highlight">Translation symmetry: every Voronoi region is <strong>congruent</strong> — one cell shape, repeated.</div>
-</div>
-
-<div class="slide">
-  <h2>Packing Gain — Regularity Buys Distortion</h2><div class="divider"></div>
-  <p>Normalized second moment of $\Lambda$:</p>
-  <div class="math-block">$$G(\Lambda) \;=\; \dfrac{1}{V^{1+2/d}}\int_\mathcal{V}\|x\|^2\,dx, \qquad V = |\mathcal{V}|.$$</div>
-  <p>Smaller $G$ means rounder cells, less MSE per unit volume:</p>
+  <h2>Uniform Quantization</h2><div class="divider"></div>
+  <p>Fix a step $\Delta &gt; 0$. Round to the nearest multiple of $\Delta$:</p>
+  <div class="math-block">$$\hat x \;=\; Q_\Delta(x) \;=\; \Delta \cdot \mathrm{round}(x/\Delta).$$</div>
+  <p>Store the integer $n = \mathrm{round}(x/\Delta)$; the decoder multiplies by $\Delta$.</p>
   <ul>
-    <li>$\mathbb{Z}^d$ (cube): $G = 1/12$, any $d$.</li>
-    <li>$E_8$ ($d=8$): $G \approx 0.0717$, near-optimal.</li>
-    <li>Sphere bound: $G\to 1/(2\pi e)\approx 0.0585$.</li>
+    <li><strong>Codebook:</strong> implicit — just the step $\Delta$.</li>
+    <li><strong>Encode:</strong> $\mathcal{O}(1)$ per coordinate, no search.</li>
+    <li><strong>Quantization error:</strong> $|x - \hat x| \le \Delta/2$.</li>
   </ul>
 </div>
 
 <div class="slide">
-  <h2>Fast Rounding — $\mathcal{O}(d)$ via Algebra</h2><div class="divider"></div>
-  <p>Lattice nearest-neighbor uses the algebra of $\Lambda$, not a list search.</p>
-  <ul>
-    <li>$\mathbb{Z}^d$: $\lfloor x + \tfrac12\rfloor$ coordinate-wise.</li>
-    <li>$D_d$ (even-sum integers): round, then fix parity.</li>
-    <li>$E_8$: $D_8$ rounding plus a half-integer shift; pick the closer.</li>
-  </ul>
-  <div class="highlight">Codebook size $2^{dR}$ in principle; encoding $\mathcal{O}(d)$ in practice.</div>
+  <h2>Quantized Values Still Add</h2><div class="divider"></div>
+  <p>If $\hat a = n_a \Delta$ and $\hat b = n_b \Delta$, then</p>
+  <div class="math-block">$$\hat a + \hat b \;=\; (n_a + n_b)\Delta \;\in\; \Delta\,\mathbb{Z}.$$</div>
+  <p>The sum is exactly on the grid — no re-quantization needed.</p>
+  <div class="highlight">Integer addition in the index domain $\Leftrightarrow$ exact sum in the value domain.</div>
+  <p>For weights $\hat w_i = n_i \Delta_w$ and inputs $\hat x_i = m_i \Delta_x$, partial sums stay in integers until the final $\Delta_w \Delta_x$ scale-out.</p>
+</div>
+
+<div class="slide">
+  <h2>Quantized Values Multiply (by Integers)</h2><div class="divider"></div>
+  <p>For any integer $k$:</p>
+  <div class="math-block">$$k \cdot \hat a \;=\; (k\,n_a)\Delta \;\in\; \Delta\,\mathbb{Z}.$$</div>
+  <p>Pairwise integer multiply, then scale by $\Delta_w \Delta_x$ at the end:</p>
+  <div class="math-block">$$\hat w_i \cdot \hat x_i \;=\; (n_i\,m_i)\,\Delta_w \Delta_x.$$</div>
+  <p>The inner sum $\sum_i n_i m_i$ runs in integer arithmetic.</p>
+</div>
+
+<div class="slide">
+  <h2>Matrix-Vector Product, Integer GEMM</h2><div class="divider"></div>
+  <p>A linear layer with quantized $W$ and quantized activation $x$:</p>
+  <div class="math-block">$$\hat y_j \;=\; \sum_i \hat W_{ji}\,\hat x_i \;=\; \Delta_w \Delta_x \sum_i n_{ji}\, m_i.$$</div>
+  <p>Inner sum: pure integer MAC (multiply-accumulate). GPU INT8 cores run this $\sim 4\times$ faster than FP16 with $\sim 4\times$ less memory traffic.</p>
+  <div class="highlight">Uniform quantization is what makes quantized inference fast — not just compact.</div>
+</div>
+
+<div class="slide">
+  <h2>The MSE Penalty Is Small</h2><div class="divider"></div>
+  <p>Uniform grid $\Delta \mathbb{Z}^d$ on i.i.d.&nbsp;data: MSE $= \Delta^2/12$ per coord, any $d$.</p>
+  <p>Best possible at fixed rate (high-$d$ sphere bound): $\sim \Delta^2/(2\pi e)$ per coord.</p>
+  <div class="math-block">$$\text{Penalty ratio} \;=\; \frac{1/12}{1/(2\pi e)} \;=\; \frac{\pi e}{6} \;\approx\; 1.42 \;\;(\le 1.53\text{ dB}).$$</div>
+  <div class="highlight">$\le 1.53$ dB MSE penalty buys you $\mathcal{O}(d)$ encode and zero codebook RAM.</div>
 </div>
 
 
 <!-- ════ PART 03 ════ -->
 <div class="slide section-slide left">
   <div class="section-num">03</div>
-  <h1>Finite Codebook</h1>
+  <h1>Lattice Codes</h1>
   <div class="divider"></div>
-  <p class="subtitle">Base lattice $\Lambda$, scaling $\Delta$, spherical shaping</p>
+  <p class="subtitle">A regular grid: linear structure replaces search.</p>
 </div>
 
 <div class="slide">
-  <h2>Three Components</h2><div class="divider"></div>
+  <h2>From Cube Grid to Lattice</h2><div class="divider"></div>
+  <p>A <strong>lattice</strong> $\Lambda$ is the integer span of a basis $\{b_1, \ldots, b_d\}$:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\Lambda \;=\; \{\,n_1 b_1 + n_2 b_2 + \cdots + n_d b_d \;:\; n_i \in \mathbb{Z}\,\}.$$</div>
+  <div class="grid-2" style="margin-top:6px;">
+    <div>
+      <h3 style="text-align:center;">$\mathbb{Z}^2$ — cube basis</h3>
+      <svg viewBox="0 0 220 200" width="100%" style="background:var(--light);border-radius:8px;display:block;max-height:220px;">
+        <g fill="#003876">
+          <circle cx="40" cy="40" r="3"/><circle cx="80" cy="40" r="3"/><circle cx="120" cy="40" r="3"/><circle cx="160" cy="40" r="3"/><circle cx="200" cy="40" r="3"/>
+          <circle cx="40" cy="80" r="3"/><circle cx="80" cy="80" r="3"/><circle cx="120" cy="80" r="3"/><circle cx="160" cy="80" r="3"/><circle cx="200" cy="80" r="3"/>
+          <circle cx="40" cy="120" r="3"/><circle cx="80" cy="120" r="3"/><circle cx="120" cy="120" r="3"/><circle cx="160" cy="120" r="3"/><circle cx="200" cy="120" r="3"/>
+          <circle cx="40" cy="160" r="3"/><circle cx="80" cy="160" r="3"/><circle cx="120" cy="160" r="3"/><circle cx="160" cy="160" r="3"/><circle cx="200" cy="160" r="3"/>
+        </g>
+        <defs>
+          <marker id="z2-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#d94040"/></marker>
+        </defs>
+        <line x1="80" y1="120" x2="118" y2="120" stroke="#d94040" stroke-width="2.5" marker-end="url(#z2-ar)"/>
+        <line x1="80" y1="120" x2="80" y2="82" stroke="#d94040" stroke-width="2.5" marker-end="url(#z2-ar)"/>
+        <text x="100" y="115" font-size="13" fill="#d94040" font-weight="700">b₁</text>
+        <text x="58" y="103" font-size="13" fill="#d94040" font-weight="700">b₂</text>
+      </svg>
+    </div>
+    <div>
+      <h3 style="text-align:center;">$A_2$ — hex basis</h3>
+      <svg viewBox="0 0 220 200" width="100%" style="background:var(--light);border-radius:8px;display:block;max-height:220px;">
+        <g fill="#003876">
+          <circle cx="40" cy="40" r="3"/><circle cx="80" cy="40" r="3"/><circle cx="120" cy="40" r="3"/><circle cx="160" cy="40" r="3"/><circle cx="200" cy="40" r="3"/>
+          <circle cx="60" cy="75" r="3"/><circle cx="100" cy="75" r="3"/><circle cx="140" cy="75" r="3"/><circle cx="180" cy="75" r="3"/>
+          <circle cx="40" cy="110" r="3"/><circle cx="80" cy="110" r="3"/><circle cx="120" cy="110" r="3"/><circle cx="160" cy="110" r="3"/><circle cx="200" cy="110" r="3"/>
+          <circle cx="60" cy="145" r="3"/><circle cx="100" cy="145" r="3"/><circle cx="140" cy="145" r="3"/><circle cx="180" cy="145" r="3"/>
+          <circle cx="40" cy="180" r="3"/><circle cx="80" cy="180" r="3"/><circle cx="120" cy="180" r="3"/><circle cx="160" cy="180" r="3"/><circle cx="200" cy="180" r="3"/>
+        </g>
+        <defs>
+          <marker id="a2-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#d94040"/></marker>
+        </defs>
+        <line x1="80" y1="110" x2="118" y2="110" stroke="#d94040" stroke-width="2.5" marker-end="url(#a2-ar)"/>
+        <line x1="80" y1="110" x2="98" y2="77" stroke="#d94040" stroke-width="2.5" marker-end="url(#a2-ar)"/>
+        <text x="100" y="105" font-size="13" fill="#d94040" font-weight="700">b₁</text>
+        <text x="68" y="92" font-size="13" fill="#d94040" font-weight="700">b₂</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Voronoi Cells — Round Beats Square</h2><div class="divider"></div>
+  <p>By translation symmetry, every Voronoi cell has the <strong>same shape</strong> — one fundamental cell, repeated.</p>
+  <div class="grid-2" style="margin-top:6px;">
+    <div>
+      <h3 style="text-align:center;">$\mathbb{Z}^2$ — square cell</h3>
+      <svg viewBox="0 0 220 200" width="100%" style="background:var(--light);border-radius:8px;display:block;max-height:220px;">
+        <g stroke="#cbd5dc" stroke-width="1" fill="none">
+          <rect x="60" y="60" width="40" height="40"/><rect x="100" y="60" width="40" height="40"/><rect x="140" y="60" width="40" height="40"/>
+          <rect x="60" y="100" width="40" height="40"/><rect x="140" y="100" width="40" height="40"/>
+          <rect x="60" y="140" width="40" height="40"/><rect x="100" y="140" width="40" height="40"/><rect x="140" y="140" width="40" height="40"/>
+        </g>
+        <rect x="100" y="100" width="40" height="40" fill="#003876" fill-opacity="0.18" stroke="#003876" stroke-width="2"/>
+        <circle cx="120" cy="120" r="3" fill="#003876"/>
+        <line x1="120" y1="120" x2="140" y2="100" stroke="#d94040" stroke-width="2.2"/>
+        <text x="143" y="98" font-size="12" fill="#d94040" font-weight="700">corner</text>
+      </svg>
+      <p style="text-align:center; font-size:1.1rem;">corner dist $\approx 0.71\,a$</p>
+    </div>
+    <div>
+      <h3 style="text-align:center;">$A_2$ — hex cell</h3>
+      <svg viewBox="0 0 220 200" width="100%" style="background:var(--light);border-radius:8px;display:block;max-height:220px;">
+        <g stroke="#cbd5dc" stroke-width="1" fill="none">
+          <polygon points="80,68 110,50 140,68 140,102 110,120 80,102"/>
+          <polygon points="80,102 110,120 140,102 140,136 110,154 80,136"/>
+          <polygon points="140,68 170,50 200,68 200,102 170,120 140,102"/>
+          <polygon points="140,102 170,120 200,102 200,136 170,154 140,136"/>
+        </g>
+        <polygon points="110,120 140,102 140,68 110,50 80,68 80,102" fill="#003876" fill-opacity="0.18" stroke="#003876" stroke-width="2"/>
+        <circle cx="110" cy="85" r="3" fill="#003876"/>
+        <line x1="110" y1="85" x2="140" y2="68" stroke="#d94040" stroke-width="2.2"/>
+        <text x="143" y="66" font-size="12" fill="#d94040" font-weight="700">corner</text>
+      </svg>
+      <p style="text-align:center; font-size:1.1rem;">corner dist $\approx 0.62\,a$</p>
+    </div>
+  </div>
+  <div class="highlight">Same cell area; smaller worst-case distance $\Rightarrow$ smaller MSE per bit.</div>
+</div>
+
+<div class="slide">
+  <h2>Encoding: Round, Don't Search</h2><div class="divider"></div>
+  <p>The lattice's algebra picks the closest point. No list of $K$ codewords is ever consulted.</p>
+  <p><strong>$\mathbb{Z}^d$.</strong> Round each coordinate independently:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\widehat{n}_i \;=\; \lfloor x_i + \tfrac12 \rfloor, \quad i = 1, \ldots, d.$$</div>
+  <p>e.g.&nbsp;$x = (1.7,\, -0.4,\, 2.9,\, 1.1) \;\Rightarrow\; \widehat n = (2,\, 0,\, 3,\, 1)$. Cost: $d$ rounds.</p>
+  <p><strong>$E_8$.</strong> Round $x$ to $\mathbb{Z}^8$ and to $\mathbb{Z}^8 + \tfrac12\mathbf{1}$ (two cosets); return the closer of the two. Cost: $\sim 2d$ rounds.</p>
+</div>
+
+<div class="slide">
+  <h2>Decoding: Index $\to$ Codeword</h2><div class="divider"></div>
+  <p>Stored per block: one integer index $\widehat n$ (or $k$). Decoder reconstructs $\widehat{\mathbf{w}}$.</p>
+  <div class="grid-2" style="margin-top:8px;">
+    <div>
+      <h3 style="color:var(--blue-light);">$\mathbb{Z}^d$ — no table</h3>
+      <p>$\widehat{\mathbf{w}} \;=\; \Delta \cdot \widehat n$. Zero codebook RAM.</p>
+    </div>
+    <div>
+      <h3 style="color:var(--blue-light);">$E_8 \cap$ ball</h3>
+      <p>Small lookup table — $\sim 256$ codewords at $R{=}2$, $\sim 1$ KB. Fits in L1.</p>
+    </div>
+  </div>
+  <div class="highlight">Encode: $\mathcal{O}(d)$ algebra. Decode: $\mathcal{O}(1)$ index lookup. Both cheap.</div>
+</div>
+
+<div class="slide">
+  <h2>Why Dimension 8?</h2><div class="divider"></div>
+  <p>Higher $d$ rounds the Voronoi cell more — less MSE per bit. But the codebook and rounding both get more expensive.</p>
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="color:var(--blue-light);">$E_8$ is special</h3>
+      <p>240 nearest neighbors (vs. 16 for $\mathbb{Z}^8$).</p>
+      <p>Viazovska, 2017 (Fields Medal): $E_8$ is the <strong>densest sphere packing in&nbsp;$\mathbb{R}^8$</strong>.</p>
+      <p>Voronoi cell is essentially a ball.</p>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--blue-light);">Why not 16 or 24?</h3>
+      <p>Leech in 24D is tighter, but the codebook and rounding cost much more.</p>
+      <p>$E_8$ at $R{=}2$: $K{=}256$, 1&nbsp;KB. Sweet spot for LLM weights.</p>
+    </div>
+  </div>
+  <div class="cite">Viazovska, "The sphere packing problem in dimension 8", Ann. of Math. 2017.</div>
+</div>
+
+<div class="slide">
+  <h2>Visualizing $E_8$ — 240 Tangent Neighbors</h2><div class="divider"></div>
+  <div class="cols">
+    <div class="col-1-3">
+      <p>Kissing number = neighbors at the minimum distance.</p>
+      <ul>
+        <li>$\mathbb{Z}^2$: $4$</li>
+        <li>$A_2$ (hex): $6$</li>
+        <li>$\mathbb{Z}^8$: $16$</li>
+        <li>$E_8$: <strong>$240$</strong></li>
+      </ul>
+      <p>More tangent neighbors $\Rightarrow$ rounder Voronoi cell $\Rightarrow$ smaller MSE.</p>
+    </div>
+    <div class="col-2-3">
+      <svg viewBox="0 0 300 300" width="100%" style="background:var(--light); border-radius:8px; display:block; max-height:430px;"><circle cx="180.0" cy="150.0" r="2.3" fill="#003876"/><circle cx="179.3" cy="156.2" r="2.3" fill="#003876"/><circle cx="177.4" cy="162.2" r="2.3" fill="#003876"/><circle cx="174.3" cy="167.6" r="2.3" fill="#003876"/><circle cx="170.1" cy="172.3" r="2.3" fill="#003876"/><circle cx="165.0" cy="176.0" r="2.3" fill="#003876"/><circle cx="159.3" cy="178.5" r="2.3" fill="#003876"/><circle cx="153.1" cy="179.8" r="2.3" fill="#003876"/><circle cx="146.9" cy="179.8" r="2.3" fill="#003876"/><circle cx="140.7" cy="178.5" r="2.3" fill="#003876"/><circle cx="135.0" cy="176.0" r="2.3" fill="#003876"/><circle cx="129.9" cy="172.3" r="2.3" fill="#003876"/><circle cx="125.7" cy="167.6" r="2.3" fill="#003876"/><circle cx="122.6" cy="162.2" r="2.3" fill="#003876"/><circle cx="120.7" cy="156.2" r="2.3" fill="#003876"/><circle cx="120.0" cy="150.0" r="2.3" fill="#003876"/><circle cx="120.7" cy="143.8" r="2.3" fill="#003876"/><circle cx="122.6" cy="137.8" r="2.3" fill="#003876"/><circle cx="125.7" cy="132.4" r="2.3" fill="#003876"/><circle cx="129.9" cy="127.7" r="2.3" fill="#003876"/><circle cx="135.0" cy="124.0" r="2.3" fill="#003876"/><circle cx="140.7" cy="121.5" r="2.3" fill="#003876"/><circle cx="146.9" cy="120.2" r="2.3" fill="#003876"/><circle cx="153.1" cy="120.2" r="2.3" fill="#003876"/><circle cx="159.3" cy="121.5" r="2.3" fill="#003876"/><circle cx="165.0" cy="124.0" r="2.3" fill="#003876"/><circle cx="170.1" cy="127.7" r="2.3" fill="#003876"/><circle cx="174.3" cy="132.4" r="2.3" fill="#003876"/><circle cx="177.4" cy="137.8" r="2.3" fill="#003876"/><circle cx="179.3" cy="143.8" r="2.3" fill="#003876"/><circle cx="194.8" cy="154.7" r="2.3" fill="#003876"/><circle cx="192.8" cy="163.9" r="2.3" fill="#003876"/><circle cx="189.0" cy="172.5" r="2.3" fill="#003876"/><circle cx="183.4" cy="180.1" r="2.3" fill="#003876"/><circle cx="176.5" cy="186.4" r="2.3" fill="#003876"/><circle cx="168.3" cy="191.1" r="2.3" fill="#003876"/><circle cx="159.4" cy="194.0" r="2.3" fill="#003876"/><circle cx="150.0" cy="195.0" r="2.3" fill="#003876"/><circle cx="140.6" cy="194.0" r="2.3" fill="#003876"/><circle cx="131.7" cy="191.1" r="2.3" fill="#003876"/><circle cx="123.5" cy="186.4" r="2.3" fill="#003876"/><circle cx="116.6" cy="180.1" r="2.3" fill="#003876"/><circle cx="111.0" cy="172.5" r="2.3" fill="#003876"/><circle cx="107.2" cy="163.9" r="2.3" fill="#003876"/><circle cx="105.2" cy="154.7" r="2.3" fill="#003876"/><circle cx="105.2" cy="145.3" r="2.3" fill="#003876"/><circle cx="107.2" cy="136.1" r="2.3" fill="#003876"/><circle cx="111.0" cy="127.5" r="2.3" fill="#003876"/><circle cx="116.6" cy="119.9" r="2.3" fill="#003876"/><circle cx="123.5" cy="113.6" r="2.3" fill="#003876"/><circle cx="131.7" cy="108.9" r="2.3" fill="#003876"/><circle cx="140.6" cy="106.0" r="2.3" fill="#003876"/><circle cx="150.0" cy="105.0" r="2.3" fill="#003876"/><circle cx="159.4" cy="106.0" r="2.3" fill="#003876"/><circle cx="168.3" cy="108.9" r="2.3" fill="#003876"/><circle cx="176.5" cy="113.6" r="2.3" fill="#003876"/><circle cx="183.4" cy="119.9" r="2.3" fill="#003876"/><circle cx="189.0" cy="127.5" r="2.3" fill="#003876"/><circle cx="192.8" cy="136.1" r="2.3" fill="#003876"/><circle cx="194.8" cy="145.3" r="2.3" fill="#003876"/><circle cx="208.7" cy="162.5" r="2.3" fill="#003876"/><circle cx="204.8" cy="174.4" r="2.3" fill="#003876"/><circle cx="198.5" cy="185.3" r="2.3" fill="#003876"/><circle cx="190.1" cy="194.6" r="2.3" fill="#003876"/><circle cx="180.0" cy="202.0" r="2.3" fill="#003876"/><circle cx="168.5" cy="207.1" r="2.3" fill="#003876"/><circle cx="156.3" cy="209.7" r="2.3" fill="#003876"/><circle cx="143.7" cy="209.7" r="2.3" fill="#003876"/><circle cx="131.5" cy="207.1" r="2.3" fill="#003876"/><circle cx="120.0" cy="202.0" r="2.3" fill="#003876"/><circle cx="109.9" cy="194.6" r="2.3" fill="#003876"/><circle cx="101.5" cy="185.3" r="2.3" fill="#003876"/><circle cx="95.2" cy="174.4" r="2.3" fill="#003876"/><circle cx="91.3" cy="162.5" r="2.3" fill="#003876"/><circle cx="90.0" cy="150.0" r="2.3" fill="#003876"/><circle cx="91.3" cy="137.5" r="2.3" fill="#003876"/><circle cx="95.2" cy="125.6" r="2.3" fill="#003876"/><circle cx="101.5" cy="114.7" r="2.3" fill="#003876"/><circle cx="109.9" cy="105.4" r="2.3" fill="#003876"/><circle cx="120.0" cy="98.0" r="2.3" fill="#003876"/><circle cx="131.5" cy="92.9" r="2.3" fill="#003876"/><circle cx="143.7" cy="90.3" r="2.3" fill="#003876"/><circle cx="156.3" cy="90.3" r="2.3" fill="#003876"/><circle cx="168.5" cy="92.9" r="2.3" fill="#003876"/><circle cx="180.0" cy="98.0" r="2.3" fill="#003876"/><circle cx="190.1" cy="105.4" r="2.3" fill="#003876"/><circle cx="198.5" cy="114.7" r="2.3" fill="#003876"/><circle cx="204.8" cy="125.6" r="2.3" fill="#003876"/><circle cx="208.7" cy="137.5" r="2.3" fill="#003876"/><circle cx="210.0" cy="150.0" r="2.3" fill="#003876"/><circle cx="221.3" cy="173.2" r="2.3" fill="#003876"/><circle cx="215.0" cy="187.5" r="2.3" fill="#003876"/><circle cx="205.7" cy="200.2" r="2.3" fill="#003876"/><circle cx="194.1" cy="210.7" r="2.3" fill="#003876"/><circle cx="180.5" cy="218.5" r="2.3" fill="#003876"/><circle cx="165.6" cy="223.4" r="2.3" fill="#003876"/><circle cx="150.0" cy="225.0" r="2.3" fill="#003876"/><circle cx="134.4" cy="223.4" r="2.3" fill="#003876"/><circle cx="119.5" cy="218.5" r="2.3" fill="#003876"/><circle cx="105.9" cy="210.7" r="2.3" fill="#003876"/><circle cx="94.3" cy="200.2" r="2.3" fill="#003876"/><circle cx="85.0" cy="187.5" r="2.3" fill="#003876"/><circle cx="78.7" cy="173.2" r="2.3" fill="#003876"/><circle cx="75.4" cy="157.8" r="2.3" fill="#003876"/><circle cx="75.4" cy="142.2" r="2.3" fill="#003876"/><circle cx="78.7" cy="126.8" r="2.3" fill="#003876"/><circle cx="85.0" cy="112.5" r="2.3" fill="#003876"/><circle cx="94.3" cy="99.8" r="2.3" fill="#003876"/><circle cx="105.9" cy="89.3" r="2.3" fill="#003876"/><circle cx="119.5" cy="81.5" r="2.3" fill="#003876"/><circle cx="134.4" cy="76.6" r="2.3" fill="#003876"/><circle cx="150.0" cy="75.0" r="2.3" fill="#003876"/><circle cx="165.6" cy="76.6" r="2.3" fill="#003876"/><circle cx="180.5" cy="81.5" r="2.3" fill="#003876"/><circle cx="194.1" cy="89.3" r="2.3" fill="#003876"/><circle cx="205.7" cy="99.8" r="2.3" fill="#003876"/><circle cx="215.0" cy="112.5" r="2.3" fill="#003876"/><circle cx="221.3" cy="126.8" r="2.3" fill="#003876"/><circle cx="224.6" cy="142.2" r="2.3" fill="#003876"/><circle cx="224.6" cy="157.8" r="2.3" fill="#003876"/><circle cx="232.2" cy="186.6" r="2.3" fill="#003876"/><circle cx="222.8" cy="202.9" r="2.3" fill="#003876"/><circle cx="210.2" cy="216.9" r="2.3" fill="#003876"/><circle cx="195.0" cy="227.9" r="2.3" fill="#003876"/><circle cx="177.8" cy="235.6" r="2.3" fill="#003876"/><circle cx="159.4" cy="239.5" r="2.3" fill="#003876"/><circle cx="140.6" cy="239.5" r="2.3" fill="#003876"/><circle cx="122.2" cy="235.6" r="2.3" fill="#003876"/><circle cx="105.0" cy="227.9" r="2.3" fill="#003876"/><circle cx="89.8" cy="216.9" r="2.3" fill="#003876"/><circle cx="77.2" cy="202.9" r="2.3" fill="#003876"/><circle cx="67.8" cy="186.6" r="2.3" fill="#003876"/><circle cx="62.0" cy="168.7" r="2.3" fill="#003876"/><circle cx="60.0" cy="150.0" r="2.3" fill="#003876"/><circle cx="62.0" cy="131.3" r="2.3" fill="#003876"/><circle cx="67.8" cy="113.4" r="2.3" fill="#003876"/><circle cx="77.2" cy="97.1" r="2.3" fill="#003876"/><circle cx="89.8" cy="83.1" r="2.3" fill="#003876"/><circle cx="105.0" cy="72.1" r="2.3" fill="#003876"/><circle cx="122.2" cy="64.4" r="2.3" fill="#003876"/><circle cx="140.6" cy="60.5" r="2.3" fill="#003876"/><circle cx="159.4" cy="60.5" r="2.3" fill="#003876"/><circle cx="177.8" cy="64.4" r="2.3" fill="#003876"/><circle cx="195.0" cy="72.1" r="2.3" fill="#003876"/><circle cx="210.2" cy="83.1" r="2.3" fill="#003876"/><circle cx="222.8" cy="97.1" r="2.3" fill="#003876"/><circle cx="232.2" cy="113.4" r="2.3" fill="#003876"/><circle cx="238.0" cy="131.3" r="2.3" fill="#003876"/><circle cx="240.0" cy="150.0" r="2.3" fill="#003876"/><circle cx="238.0" cy="168.7" r="2.3" fill="#003876"/><circle cx="240.9" cy="202.5" r="2.3" fill="#003876"/><circle cx="228.0" cy="220.3" r="2.3" fill="#003876"/><circle cx="211.7" cy="234.9" r="2.3" fill="#003876"/><circle cx="192.7" cy="245.9" r="2.3" fill="#003876"/><circle cx="171.8" cy="252.7" r="2.3" fill="#003876"/><circle cx="150.0" cy="255.0" r="2.3" fill="#003876"/><circle cx="128.2" cy="252.7" r="2.3" fill="#003876"/><circle cx="107.3" cy="245.9" r="2.3" fill="#003876"/><circle cx="88.3" cy="234.9" r="2.3" fill="#003876"/><circle cx="72.0" cy="220.3" r="2.3" fill="#003876"/><circle cx="59.1" cy="202.5" r="2.3" fill="#003876"/><circle cx="50.1" cy="182.4" r="2.3" fill="#003876"/><circle cx="45.6" cy="161.0" r="2.3" fill="#003876"/><circle cx="45.6" cy="139.0" r="2.3" fill="#003876"/><circle cx="50.1" cy="117.6" r="2.3" fill="#003876"/><circle cx="59.1" cy="97.5" r="2.3" fill="#003876"/><circle cx="72.0" cy="79.7" r="2.3" fill="#003876"/><circle cx="88.3" cy="65.1" r="2.3" fill="#003876"/><circle cx="107.3" cy="54.1" r="2.3" fill="#003876"/><circle cx="128.2" cy="47.3" r="2.3" fill="#003876"/><circle cx="150.0" cy="45.0" r="2.3" fill="#003876"/><circle cx="171.8" cy="47.3" r="2.3" fill="#003876"/><circle cx="192.7" cy="54.1" r="2.3" fill="#003876"/><circle cx="211.7" cy="65.1" r="2.3" fill="#003876"/><circle cx="228.0" cy="79.7" r="2.3" fill="#003876"/><circle cx="240.9" cy="97.5" r="2.3" fill="#003876"/><circle cx="249.9" cy="117.6" r="2.3" fill="#003876"/><circle cx="254.4" cy="139.0" r="2.3" fill="#003876"/><circle cx="254.4" cy="161.0" r="2.3" fill="#003876"/><circle cx="249.9" cy="182.4" r="2.3" fill="#003876"/><circle cx="247.1" cy="220.5" r="2.3" fill="#003876"/><circle cx="230.3" cy="239.2" r="2.3" fill="#003876"/><circle cx="210.0" cy="253.9" r="2.3" fill="#003876"/><circle cx="187.1" cy="264.1" r="2.3" fill="#003876"/><circle cx="162.5" cy="269.3" r="2.3" fill="#003876"/><circle cx="137.5" cy="269.3" r="2.3" fill="#003876"/><circle cx="112.9" cy="264.1" r="2.3" fill="#003876"/><circle cx="90.0" cy="253.9" r="2.3" fill="#003876"/><circle cx="69.7" cy="239.2" r="2.3" fill="#003876"/><circle cx="52.9" cy="220.5" r="2.3" fill="#003876"/><circle cx="40.4" cy="198.8" r="2.3" fill="#003876"/><circle cx="32.6" cy="174.9" r="2.3" fill="#003876"/><circle cx="30.0" cy="150.0" r="2.3" fill="#003876"/><circle cx="32.6" cy="125.1" r="2.3" fill="#003876"/><circle cx="40.4" cy="101.2" r="2.3" fill="#003876"/><circle cx="52.9" cy="79.5" r="2.3" fill="#003876"/><circle cx="69.7" cy="60.8" r="2.3" fill="#003876"/><circle cx="90.0" cy="46.1" r="2.3" fill="#003876"/><circle cx="112.9" cy="35.9" r="2.3" fill="#003876"/><circle cx="137.5" cy="30.7" r="2.3" fill="#003876"/><circle cx="162.5" cy="30.7" r="2.3" fill="#003876"/><circle cx="187.1" cy="35.9" r="2.3" fill="#003876"/><circle cx="210.0" cy="46.1" r="2.3" fill="#003876"/><circle cx="230.3" cy="60.8" r="2.3" fill="#003876"/><circle cx="247.1" cy="79.5" r="2.3" fill="#003876"/><circle cx="259.6" cy="101.2" r="2.3" fill="#003876"/><circle cx="267.4" cy="125.1" r="2.3" fill="#003876"/><circle cx="270.0" cy="150.0" r="2.3" fill="#003876"/><circle cx="267.4" cy="174.9" r="2.3" fill="#003876"/><circle cx="259.6" cy="198.8" r="2.3" fill="#003876"/><circle cx="250.3" cy="240.3" r="2.3" fill="#003876"/><circle cx="229.4" cy="259.2" r="2.3" fill="#003876"/><circle cx="204.9" cy="273.3" r="2.3" fill="#003876"/><circle cx="178.1" cy="282.0" r="2.3" fill="#003876"/><circle cx="150.0" cy="285.0" r="2.3" fill="#003876"/><circle cx="121.9" cy="282.0" r="2.3" fill="#003876"/><circle cx="95.1" cy="273.3" r="2.3" fill="#003876"/><circle cx="70.6" cy="259.2" r="2.3" fill="#003876"/><circle cx="49.7" cy="240.3" r="2.3" fill="#003876"/><circle cx="33.1" cy="217.5" r="2.3" fill="#003876"/><circle cx="21.6" cy="191.7" r="2.3" fill="#003876"/><circle cx="15.7" cy="164.1" r="2.3" fill="#003876"/><circle cx="15.7" cy="135.9" r="2.3" fill="#003876"/><circle cx="21.6" cy="108.3" r="2.3" fill="#003876"/><circle cx="33.1" cy="82.5" r="2.3" fill="#003876"/><circle cx="49.7" cy="59.7" r="2.3" fill="#003876"/><circle cx="70.6" cy="40.8" r="2.3" fill="#003876"/><circle cx="95.1" cy="26.7" r="2.3" fill="#003876"/><circle cx="121.9" cy="18.0" r="2.3" fill="#003876"/><circle cx="150.0" cy="15.0" r="2.3" fill="#003876"/><circle cx="178.1" cy="18.0" r="2.3" fill="#003876"/><circle cx="204.9" cy="26.7" r="2.3" fill="#003876"/><circle cx="229.4" cy="40.8" r="2.3" fill="#003876"/><circle cx="250.3" cy="59.7" r="2.3" fill="#003876"/><circle cx="266.9" cy="82.5" r="2.3" fill="#003876"/><circle cx="278.4" cy="108.3" r="2.3" fill="#003876"/><circle cx="284.3" cy="135.9" r="2.3" fill="#003876"/><circle cx="284.3" cy="164.1" r="2.3" fill="#003876"/><circle cx="278.4" cy="191.7" r="2.3" fill="#003876"/><circle cx="266.9" cy="217.5" r="2.3" fill="#003876"/></svg>
+      <p style="text-align:center; font-size:1.05rem; margin-top:4px;">240 minimum vectors of $E_8$ projected to its Coxeter plane</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Finite Codebook from a Lattice</h2><div class="divider"></div>
+  <p>Three knobs:</p>
   <ol class="num">
-    <li><strong>Base lattice</strong> $\Lambda$ (e.g., $E_8$). Stored implicitly as basis $B$.</li>
-    <li><strong>Scaling</strong> $\Delta$: $\Lambda_\Delta = \Delta\cdot\Lambda$. Distortion variance $\propto \Delta^2 G(\Lambda)$.</li>
-    <li><strong>Shaping</strong>: intersect with a region $\mathcal{S}$. For Gaussian-like data, take $\mathcal{S}$ a $d$-ball.</li>
+    <li><strong>Base lattice</strong> $\Lambda$ — e.g.&nbsp;$E_8$. Stored implicitly.</li>
+    <li><strong>Scale</strong> $\Delta$ — distortion variance $\propto \Delta^2$.</li>
+    <li><strong>Shape</strong> $\mathcal{S}$ — intersect with a ball that matches the data.</li>
   </ol>
-  <div class="math-block">$$\mathcal{C}_{\text{lattice}} \;=\; \Lambda_\Delta \cap \mathcal{S}(r).$$</div>
+  <div class="math-block">$$\mathcal{C} \;=\; (\Delta\,\Lambda) \cap \mathcal{S}.$$</div>
+  <p>For Gaussian-like data $X\sim\mathcal{N}(0,I_d)$, $\|X\|^2 \approx d$ — a ball $\mathcal{S}$ matches the typical set.</p>
 </div>
 
 <div class="slide">
-  <h2>Why a Sphere — Match the Typical Set</h2><div class="divider"></div>
-  <p>For $X\sim\mathcal{N}(0, I_d)$, $\|X\|^2$ concentrates at $\sqrt d$:</p>
-  <div class="math-block">$$\Pr\bigl[\,|\|X\|^2 - d|\ge\varepsilon d\,\bigr] \;\le\; 2 e^{-\Omega(\varepsilon^2 d)}.$$</div>
-  <p>A spherical $\mathcal{S}$ of radius $\sqrt d + O(1)$ covers nearly all probability with no wasted codepoints.</p>
-  <div class="highlight">Cubic shaping wastes a $(d^{-1/2})^d$ fraction near the typical sphere.</div>
+  <h2>Is It OK to Use a Lattice Codebook?</h2><div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3 style="color:var(--blue-light);">Encode (the hard part)</h3>
+      <p>Algebraic rounding in $\mathcal{O}(d)$: no codeword list, no search.</p>
+      <p>Output: an integer index $k$.</p>
+    </div>
+    <div>
+      <h3 style="color:var(--blue-light);">Decode (the easy part)</h3>
+      <p>Lookup $\widehat{\mathbf{w}} = \mathbf{c}_k$ from a <strong>small</strong> table — $|\Lambda \cap \mathcal{S}|$ entries.</p>
+      <p>$E_8$ at $R=2$: 256 entries, 1&nbsp;KB. Fits in L1 cache.</p>
+    </div>
+  </div>
+  <div class="highlight">Lattice = small codebook + cheap encoder + decoder by index. All three.</div>
 </div>
 
 
@@ -188,50 +386,143 @@
   <div class="section-num">04</div>
   <h1>QUIP: Incoherence Processing</h1>
   <div class="divider"></div>
-  <p class="subtitle">Chee, Cai, Kuleshov, De Sa &mdash; NeurIPS 2023</p>
+  <p class="subtitle">Make weights "boring" so a coarse quantizer works.</p>
+</div>
+
+<div class="slide">
+  <h2>We Care About Output, Not Weights</h2><div class="divider"></div>
+  <p>Natural objective:</p>
+  <div class="math-block">$$\mathbb{E}\bigl\|\widehat W - W\bigr\|_F^2 \quad\text{(weight MSE — easy to measure, wrong target)}.$$</div>
+  <p>Real objective:</p>
+  <div class="math-block">$$\mathbb{E}_{x \sim \text{data}}\,\bigl\|f_{\widehat W}(x) - f_W(x)\bigr\|^2 \quad\text{(output MSE — what we actually want)}.$$</div>
+  <p>The full network $f$ is nonlinear and intractable to characterize. We need a tractable surrogate.</p>
+</div>
+
+<div class="slide">
+  <h2>Surrogate — One Layer at a Time</h2><div class="divider"></div>
+  <p>If every layer's output stays close to the original, the network's output does too.</p>
+  <p>For one linear layer $y = Wx$, replace $W$ with $\widehat W$. Set $\Delta = \widehat W - W$.</p>
+  <p>Per-input output error:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\bigl\|f_{\widehat W}(x) - f_W(x)\bigr\|^2 \;=\; \bigl\|\Delta\,x\bigr\|^2.$$</div>
+  <p>Average over the data distribution to get a per-layer proxy loss $\ell(\widehat W) = \mathbb{E}_x \|\Delta x\|^2$.</p>
+  <div class="highlight">Goal of next slide: rewrite $\mathbb{E}_x\|\Delta x\|^2$ in a form that depends on $\Delta$ and a <em>fixed</em> matrix $H$.</div>
+</div>
+
+<div class="slide">
+  <h2>The Trace Trick</h2><div class="divider"></div>
+  <p>Expand $\|\Delta x\|^2$ and pull the expectation inside the trace.</p>
+  <div class="math-block" style="margin: 6px 0;">$$\begin{aligned}
+    \|\Delta x\|^2 &\;\stackrel{(1)}{=}\; (\Delta x)^\top (\Delta x) \;=\; x^\top \Delta^\top \Delta\, x \\
+    &\;\stackrel{(2)}{=}\; \mathrm{tr}\!\bigl(x^\top \Delta^\top \Delta\, x\bigr) \;\stackrel{(3)}{=}\; \mathrm{tr}\!\bigl(\Delta\, x x^\top\, \Delta^\top\bigr).
+  \end{aligned}$$</div>
+  <p>Now take the expectation. $\Delta$ is non-random; pull it out:</p>
+  <div class="math-block" style="margin: 6px 0;">$$\mathbb{E}_x\,\|\Delta x\|^2 \;\stackrel{(4)}{=}\; \mathrm{tr}\!\bigl(\Delta\, \mathbb{E}_x[xx^\top]\, \Delta^\top\bigr) \;=\; \mathrm{tr}\!\bigl(\Delta\, H\, \Delta^\top\bigr).$$</div>
+  <p style="font-size:1.1rem;">(1) definition $\|v\|^2 = v^\top v$. (2) scalar = its own trace. (3) cyclic. (4) linearity, $\Delta$ outside.</p>
 </div>
 
 <div class="slide">
   <h2>The Proxy Loss</h2><div class="divider"></div>
-  <p>Per-layer post-training quantization: replace $W \in \mathbb{R}^{m\times n}$ by $\widehat W$.</p>
-  <p>Calibration data gives $H = \mathbb{E}_x[xx^\top]$. Output error becomes</p>
-  <div class="math-block">$$\ell(\widehat W) \;=\; \mathbb{E}_x\bigl\|(\widehat W - W)x\bigr\|^2 \;=\; \mathrm{tr}\bigl((\widehat W - W)\,H\,(\widehat W - W)^\top\bigr).$$</div>
-  <p>Hessian-weighted MSE on the weights, decoupled across rows.</p>
-  <div class="cite">Chee et al., "QuIP: 2-Bit Quantization of Large Language Models With Guarantees", NeurIPS 2023 (arXiv:2307.13304).</div>
+  <p>Collecting:</p>
+  <div class="math-block" style="margin: 6px 0;">$$\ell(\widehat W) \;=\; \mathbb{E}_x\,\bigl\|(\widehat W - W)\,x\bigr\|^2 \;=\; \mathrm{tr}\!\bigl((\widehat W - W)\,H\,(\widehat W - W)^\top\bigr),$$</div>
+  <div class="math-block" style="margin: 6px 0;">$$H \;=\; \mathbb{E}_x[xx^\top] \quad\text{(positive semi-definite, fixed by calibration data).}$$</div>
+  <div class="highlight">Per-layer Hessian-weighted MSE. Depends on $\widehat W$ through $\Delta = \widehat W - W$ only. Decouples across rows.</div>
+  <div class="cite">Chee et al., "QuIP", NeurIPS 2023.</div>
 </div>
 
 <div class="slide">
-  <h2>Incoherence — A Spectral Outlier Bound</h2><div class="divider"></div>
-  <p>$H = Q\Lambda Q^\top$ is $\mu$-incoherent if</p>
-  <div class="math-block">$$\max_{i,j} |Q_{ij}| \;\le\; \mu/\sqrt{n}.$$</div>
-  <p>$W$ is $\mu$-incoherent if $\max_{i,j} |W_{ij}| \le \mu \|W\|_F / \sqrt{mn}$.</p>
-  <div class="highlight">Incoherent = no entry much larger than the typical scale. A principled outlier suppression.</div>
+  <h2>The Hessian Tells Us What Matters</h2><div class="divider"></div>
+  <p>Diagonal $H_{ii} = \mathbb{E}[x_i^2]$: variance of input coordinate&nbsp;$i$.</p>
+  <p>Off-diagonal $H_{ij} = \mathbb{E}[x_i x_j]$: how inputs correlate.</p>
+  <ul>
+    <li>Error along high-variance directions of $H$ hurts the output more.</li>
+    <li>Error along directions with $H \approx 0$ is invisible to the output.</li>
+  </ul>
+  <div class="highlight">A good quantizer should be careful where $H$ is large and sloppy where $H$ is small.</div>
 </div>
 
 <div class="slide">
-  <h2>Make Things Incoherent — Random Rotations</h2><div class="divider"></div>
-  <p>Conjugate by random orthogonal $U\in\mathbb{R}^{m\times m}$, $V\in\mathbb{R}^{n\times n}$:</p>
+  <h2>Why Outliers Wreck Quantization</h2><div class="divider"></div>
+  <p>Uniform quantizer needs a step $\Delta$ that covers the whole range $[-W_{\max}, W_{\max}]$.</p>
+  <p>With $K = 2^{R}$ bins:</p>
+  <div class="math-block">$$\Delta \;=\; \frac{2 W_{\max}}{K} \;\propto\; W_{\max}.$$</div>
+  <div class="grid-2" style="margin-top:8px;">
+    <div>
+      <svg viewBox="0 0 280 140" width="100%" style="background:var(--light);border-radius:8px;display:block;">
+        <line x1="20" y1="100" x2="260" y2="100" stroke="#333" stroke-width="1"/>
+        <g fill="#003876"><rect x="60" y="80" width="6" height="20"/><rect x="80" y="70" width="6" height="30"/><rect x="100" y="60" width="6" height="40"/><rect x="120" y="65" width="6" height="35"/><rect x="140" y="75" width="6" height="25"/><rect x="160" y="85" width="6" height="15"/></g>
+        <rect x="230" y="20" width="6" height="80" fill="#d94040"/>
+        <text x="237" y="18" font-size="12" fill="#d94040" font-weight="700">outlier</text>
+      </svg>
+      <p style="text-align:center;">One big entry $\Rightarrow$ huge $\Delta$.</p>
+    </div>
+    <div>
+      <p>Most weights live in a small region — but $\Delta$ is sized for the outlier.</p>
+      <p>Almost every bit of resolution is wasted.</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Incoherence — No Outliers</h2><div class="divider"></div>
+  <p>$W \in \mathbb{R}^{m\times n}$ is <strong>$\mu$-incoherent</strong> if</p>
+  <div class="math-block">$$\max_{i,j} |W_{ij}| \;\le\; \mu \cdot \frac{\|W\|_F}{\sqrt{mn}}.$$</div>
+  <p>RHS is the average magnitude. So the maximum is within a factor $\mu$ of the typical scale.</p>
+  <div class="highlight">Incoherent = max-to-typical bounded. Quantizer step $\Delta$ stops being dominated by a few entries.</div>
+  <p>Analogous definition for the Hessian $H = Q\Lambda Q^\top$: eigenbasis is spread out, $\max_{ij}|Q_{ij}| \le \mu/\sqrt n$.</p>
+</div>
+
+<div class="slide">
+  <h2>Random Rotation Erases Outliers</h2><div class="divider"></div>
+  <p>Conjugate $W$ and $H$ by orthogonal $U, V$:</p>
   <div class="math-block">$$\widetilde W \;=\; U W V^\top, \qquad \widetilde H \;=\; V H V^\top.$$</div>
-  <p>The proxy is invariant: $\mathrm{tr}(\widetilde W\,\widetilde H\,\widetilde W^\top) = \mathrm{tr}(W H W^\top)$.</p>
-  <p>QUIP uses a Kronecker product $U = U_1 \otimes U_2$ (and same for $V$): $\widetilde\mathcal{O}(1)$-incoherent w.h.p., multiply in $\Theta(n\sqrt n)$.</p>
+  <p>Proxy is invariant: $\mathrm{tr}(\widetilde W \widetilde H \widetilde W^\top) = \mathrm{tr}(W H W^\top)$.</p>
+  <p>For a random orthogonal $V$, each entry of $\widetilde W$ is a weighted sum of all of $W$:</p>
+  <div class="math-block">$$\widetilde W_{ij} \;=\; \sum_{k,\ell} U_{ik}\,V_{j\ell}\,W_{k\ell} \;\approx\; \mathcal{N}\!\bigl(0,\, \tfrac{\|W\|_F^2}{mn}\bigr).$$</div>
+  <p>Outliers diffuse across all entries. QUIP uses Kronecker $V = V_1 \otimes V_2$: polylog-$\mu$, $\Theta(n\sqrt n)$ multiply.</p>
 </div>
 
 <div class="slide">
-  <h2>LDLQ — Adaptive Per-Coordinate Rounding</h2><div class="divider"></div>
-  <p>After rotation, round one column at a time with linear feedback from past errors:</p>
-  <div class="math-block">$$\widehat W_k \;=\; Q\bigl(W_k + (W_{1:k-1} - \widehat W_{1:k-1})\,a_k\bigr).$$</div>
-  <p>$Q$ is per-coordinate (nearest or stochastic). Choose $a_k$ from the $LDL^\top$ decomposition $H = (\bar U + I)\,D\,(\bar U + I)^\top$.</p>
-  <div class="highlight">Worst- and average-case optimal among rounding methods with linear feedback (Theorem 1).</div>
+  <h2>LDLQ — Round With Memory</h2><div class="divider"></div>
+  <p>Round columns one at a time. Use past errors to <strong>correct</strong> the next column.</p>
+  <div class="card" style="max-width: 980px; margin: 14px auto;">
+    <p style="margin: 4px 0;"><strong>1.</strong> Factor $H \;=\; (\bar U + I)\,D\,(\bar U + I)^\top$ &nbsp;($\bar U$ strictly upper triangular, $D$ diagonal).</p>
+    <p style="margin: 4px 0;"><strong>2.</strong> For $k = 1, 2, \ldots, n$:</p>
+    <p style="margin: 4px 0; padding-left: 56px;">$\circ$ &nbsp;correction $\;c_k \;=\; \sum_{j\,&lt;\,k}\, (W_j - \widehat W_j)\,(\bar U)_{jk}$</p>
+    <p style="margin: 4px 0; padding-left: 56px;">$\circ$ &nbsp;round &nbsp; $\;\widehat W_k \;=\; Q\bigl(W_k + c_k\bigr)$ &nbsp; (per-coordinate nearest)</p>
+  </div>
+  <div class="highlight">Sequential rounding with linear feedback — DPCM, or Gauss-Seidel on the proxy loss.</div>
 </div>
 
 <div class="slide">
-  <h2>QUIP — End-to-End</h2><div class="divider"></div>
+  <h2>LDLQ — Why the Correction</h2><div class="divider"></div>
+  <p>Stack columns into a matrix update:</p>
+  <div class="math-block" style="margin: 6px 0;">$$\widehat W \;=\; Q\bigl(\,W \;+\; (W - \widehat W)\,\bar U\,\bigr).$$</div>
+  <p>$\bar U$ comes from the $LDL^\top$ of $H$ — it predicts the part of the next column's error that couples to past errors via $H$.</p>
+  <div class="math-block" style="margin: 6px 0;">$$\text{post-quantization residual} \;\perp_H\; \text{all past residuals.}$$</div>
+  <p>This is the loss-minimizing choice among linear-feedback rules.</p>
+</div>
+
+<div class="slide">
+  <h2>LDLQ — Why It's Optimal</h2><div class="divider"></div>
+  <p>Among all linear-feedback rounding methods, LDLQ minimizes worst- and average-case proxy loss.</p>
+  <div class="card">
+    <h3>Theorem 1 (Chee et al., 2023).</h3>
+    <p>Worst-case proxy loss of LDLQ equals $\tfrac{m}{4}\mathrm{tr}(D)$, and</p>
+    <div class="math-block">$$\mathrm{tr}(D) \;\le\; \mathrm{tr}(H), \quad\text{with strict inequality when $H$ is not diagonal.}$$</div>
+  </div>
+  <p>Per-coordinate round-to-nearest pays $\tfrac{m}{12}\mathrm{tr}(H)$. LDLQ beats it whenever $H$ has off-diagonal mass — i.e.&nbsp;always.</p>
+  <div class="cite">Chee et al., "QuIP", NeurIPS 2023.</div>
+</div>
+
+<div class="slide">
+  <h2>QUIP — End to End</h2><div class="divider"></div>
   <ol class="num">
-    <li>Rotate: $\widetilde W = UWV^\top$, $\widetilde H = VHV^\top$ via Kronecker random orthogonals.</li>
-    <li>Round: per-coordinate LDLQ on $\widetilde W$ using $\widetilde H$.</li>
-    <li>Inference: undo the rotation around the quantized linear layer.</li>
+    <li><strong>Rotate.</strong> $\widetilde W = U W V^\top$, $\widetilde H = V H V^\top$ — Kronecker random orthogonals.</li>
+    <li><strong>Round.</strong> LDLQ on $\widetilde W$ using $\widetilde H$.</li>
+    <li><strong>Inference.</strong> Apply $V$ to inputs, $U^\top$ to outputs around the quantized layer.</li>
   </ol>
   <div class="highlight">First viable 2-bit LLM quantization with theoretical guarantees.</div>
+  <div class="cite">Chee, Cai, Kuleshov, De Sa, "QuIP", NeurIPS 2023.</div>
 </div>
 
 
@@ -240,7 +531,7 @@
   <div class="section-num">05</div>
   <h1>QUIP#: Hadamard + Lattice</h1>
   <div class="divider"></div>
-  <p class="subtitle">Tseng, Chee, Sun, Kuleshov, De Sa &mdash; ICML 2024</p>
+  <p class="subtitle">Faster rotation, ball-shaped codebook.</p>
 </div>
 
 <div class="slide">
@@ -249,54 +540,98 @@
     <div class="card">
       <h3 style="color:var(--blue-light);">Rotation</h3>
       <p>Kronecker $\to$ <strong>Randomized Hadamard Transform</strong>.</p>
-      <p>$\Theta(n \log n)$ time, sign-only multiplies, sharper incoherence bound.</p>
+      <p>$\Theta(n \log n)$ time, sign-only multiplies, tighter incoherence bound.</p>
     </div>
     <div class="card">
-      <h3 style="color:var(--blue-light);">Quantizer</h3>
-      <p>Per-coordinate $\to$ <strong>$E_8$ lattice on blocks of 8</strong>.</p>
-      <p>Ball-shaped codebook matches the post-rotation Gaussian.</p>
+      <h3 style="color:var(--blue-light);">Codebook</h3>
+      <p>Scalar $\to$ <strong>$E_8$ lattice on blocks of 8</strong>.</p>
+      <p>Ball-shaped codebook matches the post-rotation Gaussian data.</p>
     </div>
   </div>
-  <div class="cite">Tseng et al., "QuIP\#: Even Better LLM Quantization with Hadamard Incoherence and Lattice Codebooks", ICML 2024 (arXiv:2402.04396).</div>
+  <div class="cite">Tseng, Chee, Sun, Kuleshov, De Sa, "QuIP#", ICML 2024.</div>
 </div>
 
 <div class="slide">
-  <h2>Step 1: Randomized Hadamard Transform</h2><div class="divider"></div>
-  <p>$H_n$: scaled Hadamard ($\pm 1$ entries, orthogonal). $S_U, S_V$: diagonals of independent $\pm 1$ signs.</p>
-  <div class="math-block">$$\widetilde W \;=\; (H_m S_U)\,W\,(H_n S_V)^\top.$$</div>
-  <p>Each entry is a sign-randomized linear combination of all of $W$ $\Rightarrow$ marginally Gaussian (CLT):</p>
-  <div class="math-block">$$\mu_W \;=\; \mathcal{O}\bigl(\sqrt{\log(mn/\delta)}\bigr), \qquad \widetilde W_{ij} \;\approx\; \mathcal{N}\!\bigl(0,\tfrac{\|W\|_F^2}{mn}\bigr).$$</div>
-  <p>Multiply via Fast Walsh-Hadamard: $\Theta(n\log n)$, no float multiplies.</p>
-</div>
-
-<div class="slide">
-  <h2>Step 2: $E_8$ Lattice Codebook</h2><div class="divider"></div>
-  <p>$E_8$: integer or half-integer 8-vectors with even sum. Best sphere packing in $\mathbb{R}^8$ (Viazovska 2017).</p>
-  <div class="math-block">$$E_8 \;=\; \bigl(\mathbb{Z}^8 \cup (\mathbb{Z}^8 + \tfrac12)\bigr) \cap \{x : \mathbf{1}^\top x \in 2\mathbb{Z}\}.$$</div>
-  <p>QUIP\# groups rotated weights into 8-vectors; each block quantized to a 2-bit per weight $E_8$ codebook (E8P).</p>
-  <div class="highlight">$E_8$ near-spherical Voronoi $\Rightarrow$ minimal MSE for ball-shaped post-RHT data.</div>
-</div>
-
-<div class="slide">
-  <h2>BlockLDLQ — Adaptive Block Rounding</h2><div class="divider"></div>
-  <p>LDLQ rounds one column; vector quantization rounds $g$ columns at once. Generalize:</p>
-  <div class="math-block">$$\widehat W_k \;=\; Q_{E_8}\bigl(W_k + (W_{1:k-g} - \widehat W_{1:k-g})\,A_k\bigr).$$</div>
-  <p>$A_k$ from a $g$-block $LDL^\top$ of $H$. Theorem 4.1: error scales as $\frac{g m \mu^2}{n}\sigma^2 \mathrm{tr}(H^{1/2})^2$.</p>
-  <div class="highlight">Same $\mathrm{tr}(H) \to \mathrm{tr}(H^{1/2})^2/n$ improvement as scalar QUIP, now with VQ.</div>
-</div>
-
-<div class="slide">
-  <h2>The Two-Faced Effective Codebook</h2><div class="divider"></div>
-  <div class="grid-2">
-    <div class="card">
-      <h3 style="color:var(--blue-light);">To the data</h3>
-      <p>Pseudo-random scattering matched to incoherent Gaussian weights.</p>
-      <p>Approaches Shannon-optimal random Gaussian codebook.</p>
+  <h2>What Is a Hadamard Matrix?</h2><div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns: 0.9fr 1.1fr; gap: 40px; align-items: start; margin-top: 6px;">
+    <div>
+      <p style="text-align:center; margin: 0 0 6px 0;"><strong>$H_8$</strong></p>
+      <svg viewBox="0 0 200 200" width="100%" style="background:var(--light);border-radius:6px;display:block; max-width: 320px; margin: 0 auto;">
+        <g>
+          <rect x="6" y="6" width="22" height="22" fill="#003876"/><rect x="28" y="6" width="22" height="22" fill="#003876"/><rect x="50" y="6" width="22" height="22" fill="#003876"/><rect x="72" y="6" width="22" height="22" fill="#003876"/><rect x="94" y="6" width="22" height="22" fill="#003876"/><rect x="116" y="6" width="22" height="22" fill="#003876"/><rect x="138" y="6" width="22" height="22" fill="#003876"/><rect x="160" y="6" width="22" height="22" fill="#003876"/>
+          <rect x="6" y="28" width="22" height="22" fill="#003876"/><rect x="28" y="28" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="50" y="28" width="22" height="22" fill="#003876"/><rect x="72" y="28" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="94" y="28" width="22" height="22" fill="#003876"/><rect x="116" y="28" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="138" y="28" width="22" height="22" fill="#003876"/><rect x="160" y="28" width="22" height="22" fill="#ffffff" stroke="#003876"/>
+          <rect x="6" y="50" width="22" height="22" fill="#003876"/><rect x="28" y="50" width="22" height="22" fill="#003876"/><rect x="50" y="50" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="72" y="50" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="94" y="50" width="22" height="22" fill="#003876"/><rect x="116" y="50" width="22" height="22" fill="#003876"/><rect x="138" y="50" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="160" y="50" width="22" height="22" fill="#ffffff" stroke="#003876"/>
+          <rect x="6" y="72" width="22" height="22" fill="#003876"/><rect x="28" y="72" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="50" y="72" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="72" y="72" width="22" height="22" fill="#003876"/><rect x="94" y="72" width="22" height="22" fill="#003876"/><rect x="116" y="72" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="138" y="72" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="160" y="72" width="22" height="22" fill="#003876"/>
+          <rect x="6" y="94" width="22" height="22" fill="#003876"/><rect x="28" y="94" width="22" height="22" fill="#003876"/><rect x="50" y="94" width="22" height="22" fill="#003876"/><rect x="72" y="94" width="22" height="22" fill="#003876"/><rect x="94" y="94" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="116" y="94" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="138" y="94" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="160" y="94" width="22" height="22" fill="#ffffff" stroke="#003876"/>
+          <rect x="6" y="116" width="22" height="22" fill="#003876"/><rect x="28" y="116" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="50" y="116" width="22" height="22" fill="#003876"/><rect x="72" y="116" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="94" y="116" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="116" y="116" width="22" height="22" fill="#003876"/><rect x="138" y="116" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="160" y="116" width="22" height="22" fill="#003876"/>
+          <rect x="6" y="138" width="22" height="22" fill="#003876"/><rect x="28" y="138" width="22" height="22" fill="#003876"/><rect x="50" y="138" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="72" y="138" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="94" y="138" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="116" y="138" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="138" y="138" width="22" height="22" fill="#003876"/><rect x="160" y="138" width="22" height="22" fill="#003876"/>
+          <rect x="6" y="160" width="22" height="22" fill="#003876"/><rect x="28" y="160" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="50" y="160" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="72" y="160" width="22" height="22" fill="#003876"/><rect x="94" y="160" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="116" y="160" width="22" height="22" fill="#003876"/><rect x="138" y="160" width="22" height="22" fill="#003876"/><rect x="160" y="160" width="22" height="22" fill="#ffffff" stroke="#003876"/>
+        </g>
+      </svg>
+      <p style="text-align:center; font-size:1.1rem; margin-top: 8px;">Blue $= +1$, &nbsp;white $= -1$</p>
     </div>
-    <div class="card">
+    <div>
+      <p>$H_n \in \{-1,+1\}^{n\times n}$, $H_n H_n^\top = n I$.</p>
+      <div class="math-block" style="margin: 8px 0;">$$H_1 = [1], \;\;\; H_{2n} = \begin{bmatrix} H_n & H_n \\ H_n & -H_n \end{bmatrix}.$$</div>
+      <ul>
+        <li>Built recursively (Sylvester).</li>
+        <li>Rows orthogonal $\Rightarrow$ $\tfrac{1}{\sqrt n} H_n$ is a rotation.</li>
+        <li>$H_n x$ in $\Theta(n\log n)$ via FWHT.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Why Hadamard Is Fast Enough</h2><div class="divider"></div>
+  <p>$\frac{1}{\sqrt n} H_n$ is orthogonal — so it's a valid rotation.</p>
+  <p>Fast Walsh-Hadamard: pair up entries, sum and difference, recurse.</p>
+  <div class="math-block">$$H_n x \;\text{in}\; \Theta(n\log n) \;\text{additions} \;\;(\text{no float multiplies}).$$</div>
+  <p>Cf. Kronecker rotation: $\Theta(n\sqrt n)$ multiplies. Hadamard is asymptotically faster <em>and</em> simpler in hardware.</p>
+  <div class="highlight">$\Theta(n\log n)$ sign-only ops — essentially free next to the quantized matmul.</div>
+</div>
+
+<div class="slide">
+  <h2>Random Signs Make It Incoherent</h2><div class="divider"></div>
+  <p>Plain $H_n$ alone fails on adversarial $W$ (e.g.&nbsp;$W$ aligned with a Hadamard column). Fix: random sign flips.</p>
+  <div class="math-block">$$\widetilde W \;=\; \bigl(\tfrac{1}{\sqrt m} H_m S_U\bigr)\,W\,\bigl(\tfrac{1}{\sqrt n} H_n S_V\bigr)^\top, \quad S_U, S_V \sim \mathrm{Unif}\{\pm 1\}^{\text{diag}}.$$</div>
+  <p>Each entry $\widetilde W_{ij}$ is a sign-randomized sum of $mn$ terms $\Rightarrow$ CLT.</p>
+  <div class="math-block">$$\widetilde W_{ij} \;\approx\; \mathcal{N}\!\bigl(0,\,\tfrac{\|W\|_F^2}{mn}\bigr), \qquad \mu \;=\; \mathcal{O}\!\bigl(\sqrt{\log(mn/\delta)}\bigr).$$</div>
+  <div class="highlight">RHT gives $\sqrt{\log}$ incoherence, vs.&nbsp;$\log^2$ for Kronecker. Strictly tighter.</div>
+</div>
+
+<div class="slide">
+  <h2>$E_8$ Codebook — Decoded by Index</h2><div class="divider"></div>
+  <p>Group rotated weights into blocks of 8. Each block quantizes to one of $\sim 256$ codewords from a scaled $E_8$ lattice (called E8P).</p>
+  <ul>
+    <li><strong>Encode:</strong> $E_8$ nearest point in $\mathcal{O}(8)$ — round to $\mathbb{Z}^8$ and the half-shift coset, pick the closer.</li>
+    <li><strong>Decode:</strong> table lookup by 8-bit index. 1 KB table, fits in L1.</li>
+    <li><strong>Rate:</strong> 8 bits / 8 weights $= 1$ bit / weight, plus a sign-flip bit $\to$ 2 bits / weight effective.</li>
+  </ul>
+  <div class="highlight">The codebook is allowed to be a lattice because both encode and decode are cheap.</div>
+</div>
+
+<div class="slide">
+  <h2>BlockLDLQ — LDLQ with Vector Quantizers</h2><div class="divider"></div>
+  <p>LDLQ rounds one column at a time. With $E_8$, we round $g=8$ columns at once.</p>
+  <div class="math-block">$$\widehat W_k \;=\; Q_{E_8}\bigl(W_k \;+\; (W_{1:k-g} - \widehat W_{1:k-g})\,A_k\bigr).$$</div>
+  <p>$A_k$ from a block $LDL^\top$ of $H$ (block size $g$). Theorem 4.1:</p>
+  <div class="math-block">$$\mathbb{E}\,\ell(\widehat W) \;\le\; \frac{g\,m\,\mu^2}{n}\,\sigma^2\,\mathrm{tr}(H^{1/2})^2.$$</div>
+  <p>Same $\mathrm{tr}(H) \to \mathrm{tr}(H^{1/2})^2/n$ improvement as scalar QUIP — now with VQ.</p>
+</div>
+
+<div class="slide">
+  <h2>Two-Faced Effective Codebook</h2><div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3 style="color:var(--blue-light);">To the data</h3>
+      <p>Random rotation + ball-shaped $E_8$ codebook.</p>
+      <p>Looks like an i.i.d.&nbsp;random Gaussian codebook (Shannon-optimal).</p>
+    </div>
+    <div>
       <h3 style="color:var(--blue-light);">To the hardware</h3>
-      <p>A rigid $E_8$ grid. <strong>1 KiB codebook</strong>, fits in L1.</p>
-      <p>$\mathcal{O}(d)$ rounding, $\mathcal{O}(n\log n)$ rotation.</p>
+      <p>Rigid $E_8$ grid. 1 KB table fits in L1.</p>
+      <p>Encode $\mathcal{O}(8)$, rotate $\Theta(n\log n)$.</p>
     </div>
   </div>
   <div class="highlight">Rate-distortion benefits without the exponential cost of unstructured VQ.</div>
@@ -306,11 +641,11 @@
 <div class="slide">
   <h2>Recap</h2><div class="divider"></div>
   <ul>
-    <li><strong>Wall:</strong> optimal VQ at high $d$ needs $2^{dR}$ codewords; encoding cost matches.</li>
-    <li><strong>Lattices:</strong> congruent Voronoi, $\mathcal{O}(d)$ rounding; $E_8$ near-spherical.</li>
-    <li><strong>Shaping:</strong> base lattice + scaling + spherical $\mathcal{S}$.</li>
-    <li><strong>QUIP:</strong> Kronecker random rotation $+$ per-coordinate LDLQ.</li>
-    <li><strong>QUIP\#:</strong> Randomized Hadamard rotation $+$ $E_8$ BlockLDLQ. Sub-2-bit/weight.</li>
+    <li><strong>Wall:</strong> optimal VQ has $2^{dR}$ codewords and a $2^{dR}$-way search.</li>
+    <li><strong>Linear quantization:</strong> add and multiply stay on the grid $\Rightarrow$ integer GEMM.</li>
+    <li><strong>Lattices:</strong> linear structure replaces search; $E_8$ is the round one in 8D.</li>
+    <li><strong>QUIP:</strong> output-aware proxy $+$ random rotation $+$ LDLQ feedback.</li>
+    <li><strong>QUIP#:</strong> RHT $+$ $E_8$ BlockLDLQ. Sub-2-bit per weight in practice.</li>
   </ul>
 </div>
 

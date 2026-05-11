@@ -149,59 +149,81 @@ Section 05 collapsed: the binary toy now lives inside section 04 as the worked r
 
 ## lossy3-lattice-quip.html — Lattice codes, QUIP, QUIP#
 
-Restructured: dedicated section for original QUIP separate from QUIP#. Heavy material moved to note.
+Lecture-mode rewrite: encoder bottleneck spelled out (codebook table at low $d$), new arithmetic-in-quantized-space section, lattice section with basis-vector / Voronoi / Coxeter-plane $E_8$ visualizations, lattice encode + decode shown explicitly, QUIP reframed from output → trace-trick → proxy, LDLQ shown as styled algorithm, Hadamard with $H_8$ visualization.
 
 | Section | Slide | Line |
 |---|---|---|
 | Title / Contents | | `:19, :30` |
-| **01 — Why structure** | Cost says you can't search 2^{nR} | `:63-117` |
-| | What a real quantizer must do (motivation) | `:71` |
-| | Standard VQ recap | `:83` |
-| | The complexity wall | `:90` |
-| | Uniform quantization buys speed | `:107` |
-| **02 — Lattice codes** | Core concept only | `:120-158` |
-| | Definition | `:128` |
-| | **Packing gain — regularity buys distortion** | `:136` |
-| | Fast O(d) rounding via algebra | `:148` |
-| **03 — Finite codebook** | Base lattice Λ, scaling Δ, spherical shaping | `:160-185` |
-| | Three components | `:168` |
-| | Why a sphere — match the typical set | `:178` |
-| **04 — QUIP: incoherence processing** | Chee, Cai, Kuleshov, De Sa 2023 | `:187-237` |
-| | The proxy loss | `:195` |
-| | Incoherence — spectral outlier bound | `:204` |
-| | Random rotations make weights incoherent | `:212` |
-| | **LDLQ — adaptive per-coordinate rounding** | `:220` |
-| | QUIP — end-to-end | `:228` |
-| **05 — QUIP#: Hadamard + lattice** | Tseng, Chee, Sun, Kuleshov, De Sa 2024 | `:239-305` |
-| | Two upgrades over QUIP | `:247` |
-| | Step 1: Randomized Hadamard Transform | `:264` |
-| | Step 2: E8 lattice codebook | `:273` |
-| | BlockLDLQ — adaptive block rounding | `:281` |
-| | The two-faced effective codebook | `:289` |
-| Recap | | `:307` |
+| **01 — The encoder problem** | Codebook size + search are both gigantic | `:63-143` |
+| | What a real quantizer must do | `:71` |
+| | Optimal VQ — what the encoder does | `:83` |
+| | **The codebook is gigantic** (table, d=2,4,6,8 at R=4) | `:92` |
+| | Encoding — a search you cannot run | `:113` |
+| | Two escape routes | `:126` |
+| **02 — Computing in quantized space** | Linear quantization preserves arithmetic | `:144-198` |
+| | Uniform quantization (definition) | `:152` |
+| | Quantized values still add | `:164` |
+| | Quantized values multiply (by integers) | `:173` |
+| | Matrix-vector product, integer GEMM | `:182` |
+| | The MSE penalty is small (≤1.53 dB) | `:190` |
+| **03 — Lattice codes** | High-level; algebra replaces search | `:199-384` |
+| | From cube grid to lattice (basis-vector viz) | `:207` |
+| | **Voronoi cells — round beats square** (viz) | `:252` |
+| | **Encoding: round, don't search** (worked $\mathbb{Z}^d$ example) | `:291` |
+| | **Decoding: index → codeword** | `:300` |
+| | Why dimension 8? (Viazovska 2017) | `:316` |
+| | **Visualizing $E_8$ — 240 tangent neighbors** (Coxeter plane) | `:335` |
+| | Finite codebook from a lattice | `:355` |
+| | Is it OK to use a lattice codebook? | `:367` |
+| **04 — QUIP: incoherence processing** | Chee, Cai, Kuleshov, De Sa 2023 | `:385-529` |
+| | We care about output, not weights | `:393` |
+| | Surrogate — one layer at a time | `:402` |
+| | **The trace trick** (step-by-step derivation) | `:412` |
+| | The proxy loss | `:424` |
+| | The Hessian tells us what matters | `:433` |
+| | Why outliers wreck quantization (viz) | `:444` |
+| | Incoherence — no outliers | `:466` |
+| | Random rotation erases outliers | `:475` |
+| | **LDLQ — round with memory** (algorithm card) | `:485` |
+| | LDLQ — why the correction (matrix form) | `:497` |
+| | LDLQ — why it's optimal (Theorem 1) | `:506` |
+| | QUIP — end to end | `:518` |
+| **05 — QUIP#: Hadamard + lattice** | Tseng, Chee, Sun, Kuleshov, De Sa 2024 | `:530-641` |
+| | Two upgrades over QUIP | `:538` |
+| | **What is a Hadamard matrix?** ($H_8$ viz, bullets right) | `:555` |
+| | Why Hadamard is fast enough | `:586` |
+| | Random signs make it incoherent | `:595` |
+| | $E_8$ codebook — decoded by index | `:604` |
+| | BlockLDLQ — LDLQ with vector quantizers | `:615` |
+| | Two-faced effective codebook | `:624` |
+| Recap / End | | `:642, :655` |
 
-**Key:** Lattice definition `:128`; packing gain `:136`; QUIP proxy loss `:195`; LDLQ `:220`; RHT `:264`; E8 codebook `:273`; BlockLDLQ `:281`.
+**Key:** Codebook table `:92`; quantized arithmetic `:164-189`; lattice basis viz `:207`; Voronoi cells `:252`; encode/decode pair `:291, :300`; **$E_8$ Coxeter viz** `:335`; **trace trick** `:412`; LDLQ algorithm `:485`; **$H_8$ Hadamard viz** `:555`.
 
 **Papers:**
-- QUIP — arXiv:2307.13304 (Chee et al, 2023)
-- QUIP# — arXiv:2402.04396 (Tseng et al, 2024)
+- QUIP — Chee, Cai, Kuleshov, De Sa, NeurIPS 2023 (arXiv:2307.13304)
+- QUIP# — Tseng, Chee, Sun, Kuleshov, De Sa, ICML 2024 (arXiv:2402.04396)
+- Viazovska, Ann. of Math. 2017 (E₈ sphere packing)
 
 ### Note (`lossy3-lattice-quip-note.html`)
-- Storage/search numerics for the complexity wall
-- Linear-quantization MSE penalty (≤1.53 dB across all d)
+- Codebook size — concrete numbers (4 KB → 275 GB)
+- Why encoder search is intractable (LSH/kd-trees don't save it)
+- Uniform quantization arithmetic — addition, integer scaling, inner product
+- 1.53 dB high-resolution penalty
 - Lattice as additive subgroup, translation symmetry
-- Packing-gain scale invariance, Zador lower bound
-- E8 construction, 240 minimum vectors, Viazovska 8D optimality
-- E8 fast-rounding algorithm (4 steps)
-- Proxy loss derivation, orthogonal invariance
+- E₈ construction, kissing number 240, Viazovska 8D optimality
+- E₈ fast-rounding algorithm (4 steps)
+- Proxy loss derivation, layer-wise greedy, orthogonal invariance
+- Why outliers wreck quantization (dynamic range argument)
 - Formal incoherence definition
-- Why Kronecker rotation; why RHT requires sign-flip diagonal
-- LDLQ exact theorem, tr(D) vs tr(H) comparison
+- Why Kronecker rotation (cost vs uniform random)
+- **LDLQ — full statement, feedback intuition, DPCM analogy, Theorem 1**
 - LDLQ ↔ OPTQ/GPTQ equivalence
-- Berry–Esseen + union-bound argument for RHT incoherence
-- BlockLDLQ Theorem 4.1 statement
-- E8P codebook compression (16 → 8 bit lookup)
-- Practical caveats (calibration, per-channel scales, RVQ, fine-tuning, activation quantization, non-power-of-2 dims, RFFT fallback)
+- Hadamard basics, FWHT, why random signs are necessary
+- Berry-Esseen + union-bound argument for RHT incoherence
+- BlockLDLQ Theorem 4.1
+- E8P codebook compression (16 → 8-bit lookup, 1 KB)
+- Practical caveats (calibration, scales, RVQ, fine-tuning, non-power-of-2)
 
 ---
 

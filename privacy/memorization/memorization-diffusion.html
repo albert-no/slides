@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memorization in Diffusion Models</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.cite-wide { max-width: 92% !important; }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+.cite-right { max-width: 92% !important; left: auto !important; right: 28px !important; transform: none !important; text-align: right !important; bottom: 18px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- SLIDE 1 — Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture &mdash; Part I</div>
+  <h1>Memorization in<br>Diffusion Models</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Detection, sharpness, CLIP embeddings &middot; with LLM preview</p>
+  <p style="font-weight:500;">Albert No &nbsp;&middot;&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">2026</p>
+</div>
+
+<!-- SLIDE 2 — Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Why memorization matters</div>
+        <div class="toc-sub">Lawsuits, Anthropic settlement, central question</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Detection in diffusion</div>
+        <div class="toc-sub">Carlini, Somepalli, Webster, Wen, LID</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Our method: SAIL</div>
+        <div class="toc-sub">Hessian sharpness theory + noise optimization</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">CLIP embeddings drive memorization</div>
+        <div class="toc-sub">Padding tokens, not prompt tokens</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Bridge to LLM memorization</div>
+        <div class="toc-sub">Why LLMs need their own framework (Part II)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================
+     PART 01 — Why memorization matters
+     ==================================================================== -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Why Memorization Matters</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Lawsuits, Anthropic settlement, the central question</p>
+</div>
+
+<!-- SLIDE — Central question -->
+<div class="slide">
+  <h2>The Central Question</h2>
+  <div class="divider"></div>
+  <div class="highlight" style="padding:28px 32px;">
+    <p>Generator $f_\theta$ trained on corpus $\mathcal{D}$, sample $x \in \mathcal{D}$.</p>
+    <p style="font-weight:500; text-align:center;"><strong>Can a query recover $x$ verbatim?</strong></p>
+  </div>
+  <p><strong>Memorization</strong>: training samples resurfacing through prompts.</p>
+  <p>Distinct from generalization. Distinct from membership inference.</p>
+</div>
+
+<!-- SLIDE — Three stakeholders -->
+<div class="slide">
+  <h2>Three Stakeholders</h2>
+  <div class="divider"></div>
+  <div class="grid-3" style="margin-top:12px;">
+    <div class="card">
+      <h3>Privacy</h3>
+      <p>PII, medical records, secrets.</p>
+    </div>
+    <div class="card">
+      <h3>Copyright</h3>
+      <p>Books, code, news, images, characters.</p>
+    </div>
+    <div class="card">
+      <h3>Security</h3>
+      <p>Canaries, credentials, system prompts.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Memorization is the <strong>empirical signature</strong> of all three risks.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Lawsuits -->
+<div class="slide">
+  <h2>Live Lawsuits (2023&ndash;2026)</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li><strong>Bartz v. Anthropic</strong> &mdash; $1.5B settlement over pirated books</li>
+    <li><strong>NYT v. OpenAI</strong> &mdash; verbatim article reproduction</li>
+    <li><strong>Authors Guild v. OpenAI</strong> &mdash; copyrighted books</li>
+    <li><strong>Getty v. Stability AI</strong> &mdash; image regurgitation with watermark</li>
+    <li><strong>Disney v. Midjourney</strong> &mdash; character likeness</li>
+    <li><strong>Andersen v. Stability AI</strong> &mdash; class action over training art</li>
+  </ul>
+  <p>Plaintiffs cite extracted reproductions as direct evidence.</p>
+</div>
+
+<!-- SLIDE — Anthropic settlement -->
+<div class="slide">
+  <h2>Bartz v. Anthropic &mdash; $1.5B</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>What happened</h3>
+      <p>Authors sued over Claude trained on books from LibGen and PiLiMi.</p>
+      <p>Judge Alsup (N.D. Cal., June 2025): training on legally-acquired books is fair use; <strong>piracy is not</strong>.</p>
+    </div>
+    <div class="card">
+      <h3>Settlement</h3>
+      <p>$1.5B class-action settlement &mdash; largest copyright payout on record.</p>
+      <p>~500K books, ~$3K per title to rightsholders.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Source of training data &mdash; not just the model output &mdash; now carries financial liability.</p>
+  </div>
+  <div class="cite cite-wide">Brittain, "Authors' lawyers in $1.5 billion Anthropic settlement seek $300 million", Reuters, December 4, 2025.</div>
+</div>
+
+<!-- SLIDE — Privacy + copyright lens -->
+<div class="slide">
+  <h2>Two Lenses on the Same Signal</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>Copyright</h3>
+      <ul>
+        <li><strong>Question:</strong> did the model reproduce a protected work?</li>
+        <li><strong>Evidence:</strong> verbatim extraction $\Rightarrow$ derivative use</li>
+        <li><strong>Targets:</strong> books, news, code, characters, art style</li>
+        <li><strong>Damages:</strong> per-title statutory fees &mdash; scale with class size</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Privacy</h3>
+      <ul>
+        <li><strong>Question:</strong> did the model leak personal data?</li>
+        <li><strong>Evidence:</strong> extraction $\Rightarrow$ identifiable individual</li>
+        <li><strong>Targets:</strong> PII, medical, faces, credentials, secrets</li>
+        <li><strong>Liability:</strong> GDPR Art. 17 / HIPAA / state breach law</li>
+      </ul>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Same technical phenomenon (memorization) &mdash; two regulatory frames, both triggered by extraction.</p>
+  </div>
+</div>
+
+<!-- ====================================================================
+     PART 02 — Detection in diffusion
+     ==================================================================== -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Detection in Diffusion</h1>
+  <div class="divider"></div>
+  <p class="subtitle">From extraction attacks to score-based metrics</p>
+</div>
+
+<!-- SLIDE — Diffusion preliminaries recap -->
+<div class="slide">
+  <h2>Diffusion Recap</h2>
+  <div class="divider"></div>
+  <p>Forward kernel (variance preserving):</p>
+  <div class="math-block">$$q_{t\mid 0}(x_t \mid x_0) \;=\; \mathcal{N}\!\big(\sqrt{\alpha_t}\,x_0,\;(1-\alpha_t) I\big).$$</div>
+  <p>Reverse SDE driven by the score:</p>
+  <div class="math-block">$$dx_t \;=\; \big[f(x_t,t) - g^2(t)\,\underbrace{\nabla_{x_t}\!\log p_t(x_t)}_{s(x_t)}\big]\,dt + g(t)\,d\bar w_t.$$</div>
+  <p>Conditional score $s(x_t, c) = \nabla_{x_t} \log p_t(x_t \mid c)$ via classifier-free guidance.</p>
+</div>
+
+<!-- SLIDE — Carlini 2023 #1 overview -->
+<div class="slide">
+  <h2>Extracting Training Images (Carlini 2023)</h2>
+  <div class="divider"></div>
+  <p>First demonstration that diffusion models <strong>memorize verbatim</strong>.</p>
+  <ul class="arrow">
+    <li><strong>Stable Diffusion v1.4</strong> &mdash; hundreds of training images recovered</li>
+    <li>Iconic example: prompt &quot;Ann Graham Lotz&quot; regenerates the LAION training photo to within $\ell_2 = 0.031$</li>
+    <li>Also Imagen and toy models &mdash; memorization scales with capacity and duplication</li>
+  </ul>
+  <div class="highlight">
+    <p>Memorization is not a bug of a single model &mdash; it is a property of the training regime.</p>
+  </div>
+  <div class="cite cite-left">Carlini, Hayes, Nasr, Jagielski, Sehwag, Tram&egrave;r, Balle, Ippolito, Wallace, "Extracting Training Data from Diffusion Models", USENIX Security 2023.</div>
+</div>
+
+<!-- SLIDE — Carlini visual: memorized vs diverse -->
+<div class="slide">
+  <h2>Verbatim Copy vs Diverse Generation</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:1fr 1fr;gap:30px;align-items:start;">
+    <div>
+      <p style="text-align:center;font-weight:600;">Memorized prompt</p>
+      <div style="display:flex;justify-content:center;">
+        <img src="figs/calrini-ann.png" alt="Carlini Ann Graham Lotz training vs generated" style="max-height:330px;width:auto;display:block;">
+      </div>
+      <p style="text-align:center;">Generated image matches the training photo &mdash; $\ell_2 = 0.031$.</p>
+    </div>
+    <div>
+      <p style="text-align:center;font-weight:600;">Non-memorized prompt</p>
+      <div style="display:flex;justify-content:center;">
+        <img src="figs/calrini-obama.png" alt="Carlini Obama generations show variation" style="max-height:330px;width:auto;display:block;">
+      </div>
+      <p style="text-align:center;">Generations of "Obama" vary widely &mdash; no fixed training target.</p>
+    </div>
+  </div>
+  <div class="cite cite-left">Carlini et al., USENIX Security 2023 &mdash; Figure 1 (memorized) and Figure 2 (non-memorized comparison).</div>
+</div>
+
+<!-- SLIDE — Carlini 2023 #2 methodology -->
+<div class="slide">
+  <h2>Carlini 2023 &mdash; Extraction Pipeline</h2>
+  <div class="divider"></div>
+  <div style="background:var(--light); border-left:3px solid var(--yonsei-blue); padding:16px 22px; border-radius:0 10px 10px 0; max-width:920px; margin:18px auto;">
+    <ol style="margin:0; padding-left:0; list-style:none; counter-reset:step;">
+      <li style="counter-increment:step; padding:10px 0 10px 56px; position:relative; line-height:1.55;">
+        <span style="position:absolute; left:12px; top:10px; font-weight:700; color:var(--yonsei-blue); width:36px; text-align:right;">1.</span>
+        <strong>Identify candidate prompts</strong><br>LAION captions with $k \ge 100$ duplicates in training
+      </li>
+      <li style="counter-increment:step; padding:10px 0 10px 56px; position:relative; line-height:1.55; border-top:1px solid var(--slate);">
+        <span style="position:absolute; left:12px; top:10px; font-weight:700; color:var(--yonsei-blue); width:36px; text-align:right;">2.</span>
+        <strong>Generate $N=500$ images</strong> per caption under CFG<br>different random seeds, fixed prompt
+      </li>
+      <li style="counter-increment:step; padding:10px 0 10px 56px; position:relative; line-height:1.55; border-top:1px solid var(--slate);">
+        <span style="position:absolute; left:12px; top:10px; font-weight:700; color:var(--yonsei-blue); width:36px; text-align:right;">3.</span>
+        <strong>Cluster generations</strong> by tiled $\ell_2$ on non-overlapping patches<br>a clique $\Rightarrow$ many seeds collapsing to the same image
+      </li>
+      <li style="counter-increment:step; padding:10px 0 10px 56px; position:relative; line-height:1.55; border-top:1px solid var(--slate);">
+        <span style="position:absolute; left:12px; top:10px; font-weight:700; color:var(--yonsei-blue); width:36px; text-align:right;">4.</span>
+        <strong>Verify</strong> top clusters against LAION (CLIP $+\,\ell_2$)<br>confirm verbatim or near-verbatim copy
+      </li>
+    </ol>
+  </div>
+  <p style="text-align:center;">Clique-finding is the cheap signal &mdash; memorization fingerprint.</p>
+</div>
+
+<!-- SLIDE — Carlini 2023 #3 results plots -->
+<div class="slide">
+  <h2>Carlini 2023 &mdash; What They Found</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:1fr 1fr; gap:24px; align-items:start; margin-top:4px;">
+    <div style="display:flex;justify-content:center;">
+      <img src="figs/carlini_precision.png" alt="Attack precision curve" style="max-height:310px;width:auto;display:block;">
+    </div>
+    <div style="display:flex;justify-content:center;">
+      <img src="figs/carlini_duplicates.png" alt="Duplicate count histogram" style="max-height:310px;width:auto;display:block;">
+    </div>
+  </div>
+  <ul class="check" style="margin-top:6px;">
+    <li>~94 confirmed verbatim extractions out of 175M generations</li>
+    <li>Almost all memorized images had &gt; 100 LAION duplicates</li>
+    <li>Iconic case: &quot;Ann Graham Lotz&quot; portrait reproduced near-perfectly</li>
+  </ul>
+  <div class="cite cite-right">Carlini et al., USENIX Security 2023 &mdash; Figures 4 and 5.</div>
+</div>
+
+<!-- SLIDE — Carlini gallery of memorized examples -->
+<div class="slide">
+  <h2>Carlini 2023 &mdash; Gallery of Extractions</h2>
+  <div class="divider"></div>
+  <p>Top row: LAION training images. Bottom row: SD v1.4 generations from short prompts.</p>
+  <div style="display:flex;justify-content:center;margin:14px 0;">
+    <img src="figs/calrini3.png" alt="Carlini extraction examples — Original vs Generated row" style="max-width:100%;height:auto;max-height:340px;display:block;">
+  </div>
+  <ul class="check">
+    <li>Each pair is a verbatim or near-verbatim match</li>
+    <li>Categories span portraits, characters, posters, branded content</li>
+    <li>Memorization is <strong>not</strong> rare or isolated &mdash; it spans the visual vocabulary of the training set</li>
+  </ul>
+  <div class="cite cite-left">Carlini et al., USENIX Security 2023 &mdash; Figure 3 (Original vs Generated pairs from SD v1.4).</div>
+</div>
+
+<!-- SLIDE — Somepalli 2023 visual examples -->
+<div class="slide">
+  <h2>Replication Detection (Somepalli 2023)</h2>
+  <div class="divider"></div>
+  <p>Quantify <em>copy</em> via <strong>SSCD</strong> (Self-Supervised Copy Detection) descriptors. Top row: SD generations; bottom row: top-1 LAION match.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <img src="figs/somepali.png" alt="Somepalli verbatim memorization examples - generation vs LAION match" style="max-width:100%;height:auto;max-height:280px;display:block;">
+  </div>
+  <ul class="check" style="margin-top:6px;">
+    <li>Generation and top-1 match are visually indistinguishable &mdash; verbatim replication</li>
+    <li><strong>RTA</strong> (Random Token Addition) / <strong>RNA</strong> (Random Number Addition) mitigations break the collapse</li>
+  </ul>
+  <div class="cite cite-left">Somepalli, Singla, Goldblum, Geiping, Goldstein, "Diffusion Art or Digital Forgery? Investigating Data Replication in Diffusion Models", CVPR 2023.</div>
+</div>
+
+<!-- SLIDE — Somepalli histograms -->
+<div class="slide">
+  <h2>Somepalli &mdash; Similarity Distribution</h2>
+  <div class="divider"></div>
+  <p>Compare SSCD similarity sim(gen,&nbsp;train) vs sim(train,&nbsp;train) as training set grows:</p>
+  <div style="display:flex;justify-content:center;margin:0;">
+    <img src="figs/somepalli_histograms.png" alt="Top-1 similarity histograms across training-set sizes" style="max-height:300px;width:auto;display:block;">
+  </div>
+  <ul class="check" style="margin-top:8px;">
+    <li>Small training set: generations collapse onto duplicates &mdash; gen $\gg$ train self-similarity</li>
+    <li>Full training set: distributions overlap &mdash; copying confined to a tail</li>
+  </ul>
+  <div class="cite cite-left">Somepalli et al., CVPR 2023 &mdash; Figure 5 (top-1 SSCD similarity across training-set sizes).</div>
+</div>
+
+<!-- SLIDE — Webster 2023 -->
+<div class="slide">
+  <h2>Reproducible Extraction (Webster 2023)</h2>
+  <div class="divider"></div>
+  <p>500 memorized prompts for SD v1.4 + 219 for SD v2.0. Three verbatim categories:</p>
+  <div class="grid-3" style="margin-top:8px;">
+    <div class="card">
+      <h3>Matching Verbatim</h3>
+      <p>Generated image $\approx$ a single LAION training image.</p>
+      <p><em>Example:</em> celebrity portraits, book covers, logos.</p>
+    </div>
+    <div class="card">
+      <h3>Retrieval Verbatim</h3>
+      <p>Composite of <strong>several</strong> training images.</p>
+      <p><em>Example:</em> stock photo arrangements, character merch.</p>
+    </div>
+    <div class="card">
+      <h3>Template Verbatim</h3>
+      <p>Same layout / template, different content.</p>
+      <p><em>Example:</em> posters, magazine covers, repeated frames.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Public prompt set $\Rightarrow$ third-party detection and mitigation can be benchmarked.</p>
+  </div>
+  <div class="cite cite-left">Webster, "A Reproducible Extraction of Training Images from Diffusion Models", arXiv 2305.08694, 2023.</div>
+</div>
+
+<!-- SLIDE — Wen motivation A: image -->
+<div class="slide">
+  <h2>Wen 2024 &mdash; Seed Tells the Story</h2>
+  <div class="divider"></div>
+  <p>Fix the seed, vary the prompt. Compare normal vs memorized prompts:</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <img src="figs/wen-seed.png" alt="Same-seed generations: normal prompts vary, memorized prompt collapses" style="max-width:100%;height:auto;max-height:480px;display:block;">
+  </div>
+  <div class="cite cite-left">Wen, Liu, Chen, Lyu, "Detecting, Explaining, and Mitigating Memorization in Diffusion Models", ICLR 2024.</div>
+</div>
+
+<!-- SLIDE — Wen motivation B: analysis -->
+<div class="slide">
+  <h2>Wen 2024 &mdash; Reading the Seed Plot</h2>
+  <div class="divider"></div>
+  <ul class="arrow" style="line-height:1.7;">
+    <li><strong>Normal prompts</strong> (tiger / cat / dog / portrait): seed controls structure, angle, lighting &mdash; same prompt yields a recognizable family of variations across seeds</li>
+    <li><strong>Memorized prompt</strong> ("The Happy Scientist" poster, the curtained-window scene): output ignores the seed &mdash; the model produces the same training image every time</li>
+    <li><strong>Independence from initialization</strong> is itself a memorization signature</li>
+  </ul>
+  <div class="highlight">
+    <p>Memorization $\Leftrightarrow$ the prompt embedding overwhelms the noise; the trajectory becomes deterministic in $c$.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Wen 2024 #1 score-norm metric -->
+<div class="slide">
+  <h2>Score-Norm Metric (Wen 2024)</h2>
+  <div class="divider"></div>
+  <p>Memorized prompts steer generation hard via classifier-free guidance.</p>
+  <div class="math-block">$$\big\| s_\theta^\Delta(x_t) \big\| \;:=\; \big\| s_\theta(x_t, c) - s_\theta(x_t) \big\|.$$</div>
+  <ul class="check">
+    <li>Large $\|s_\theta^\Delta\|$ &Rightarrow; strong text guidance &Rightarrow; memorization</li>
+    <li>Cheap, model-only, runs at any sampling step</li>
+    <li>Heuristic: no theoretical justification provided</li>
+  </ul>
+  <div class="cite cite-left">Wen et al., ICLR 2024.</div>
+</div>
+
+<!-- SLIDE — Wen verbatim memorization example -->
+<div class="slide">
+  <h2>Wen &mdash; Verbatim Memorization</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:2px 0 6px;">
+    <img src="figs/wen-1.png" alt="Wen verbatim memorization example with metric" style="max-width:100%;height:auto;max-height:320px;display:block;">
+  </div>
+  <ul class="check" style="margin-top:4px;">
+    <li>All four generations identical to the training image</li>
+    <li>$\|s_\theta^\Delta\|$ spikes sharply at the final denoising steps</li>
+    <li>Metric value $\gg$ non-memorized baseline</li>
+  </ul>
+  <div class="cite cite-left">Wen et al., ICLR 2024 &mdash; Figure 1 row 1 (memorized prompt).</div>
+</div>
+
+<!-- SLIDE — Wen partial memorization example -->
+<div class="slide">
+  <h2>Wen &mdash; Partial Memorization</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:2px 0 6px;">
+    <img src="figs/wen-2.png" alt="Wen partial memorization example with metric" style="max-width:100%;height:auto;max-height:320px;display:block;">
+  </div>
+  <ul class="check" style="margin-top:4px;">
+    <li>Generations share dominant elements with training but vary in details</li>
+    <li>$\|s_\theta^\Delta\|$ elevated but lower than verbatim case</li>
+    <li>Intermediate metric value &mdash; threshold choice matters</li>
+  </ul>
+  <div class="cite cite-left">Wen et al., ICLR 2024 &mdash; Figure 1 row 2 (partial memorization).</div>
+</div>
+
+<!-- SLIDE — Wen non-memorized example -->
+<div class="slide">
+  <h2>Wen &mdash; Non-Memorized (Regular)</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:2px 0 6px;">
+    <img src="figs/wen-3.png" alt="Wen non-memorized example with metric" style="max-width:100%;height:auto;max-height:320px;display:block;">
+  </div>
+  <ul class="check" style="margin-top:4px;">
+    <li>Each generation differs &mdash; no anchoring training image</li>
+    <li>$\|s_\theta^\Delta\|$ stays flat and low across all $t$</li>
+    <li>Metric clearly separates from the memorized cases</li>
+  </ul>
+  <div class="cite cite-left">Wen et al., ICLR 2024 &mdash; Figure 1 row 3 (non-memorized prompt).</div>
+</div>
+
+<!-- SLIDE — Wen 2024 #3 aggregate (Fig 2) -->
+<div class="slide">
+  <h2>Aggregate Magnitude Separates Cleanly (Wen Fig 2)</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <img src="figs/wen_fig2.png" alt="Magnitude line plot and density histogram" style="max-height:340px;width:auto;display:block;">
+  </div>
+  <ul class="check" style="margin-top:6px;">
+    <li><strong>Left:</strong> aggregate $\|s_\theta^\Delta\|$ over time-step &mdash; memorized stays $4\!-\!8\times$ above non-memorized across all $t$</li>
+    <li><strong>Right:</strong> density over LAION / COCO / Lexica / random &mdash; memorized forms a clearly separated mode (AUC 0.993)</li>
+  </ul>
+  <div class="cite cite-left">Wen et al., ICLR 2024 &mdash; Figure 2 (line plot over time-step + histogram over datasets).</div>
+</div>
+
+<!-- SLIDE — Wen 2024 #3 findings -->
+<div class="slide">
+  <h2>Wen 2024 &mdash; Three Empirical Findings</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li><strong>Early-step signal.</strong> Magnitude gap visible from the <em>first</em> denoising step &mdash; no need to sample to completion</li>
+    <li><strong>Initialization irrelevance.</strong> Generations from memorized prompts converge to the same image across initializations &mdash; trajectory determined by prompt embedding</li>
+    <li><strong>Mitigation by suppression.</strong> Add a negative-magnitude term to the loss at inference &mdash; reduces memorization without retraining</li>
+  </ul>
+  <div class="highlight">
+    <p>Score difference $\|s_\theta^\Delta\|$ is the cheap proxy used everywhere downstream.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Wen mitigation A: image -->
+<div class="slide">
+  <h2>Wen &mdash; Mitigation by Suppression</h2>
+  <div class="divider"></div>
+  <p>Penalize $\|s_\theta^\Delta\|$ at inference. Top: original memorized output; bottom: after suppression.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <img src="figs/wen-mitigate.png" alt="Wen mitigation: before/after suppression of memorized prompt" style="max-width:100%;height:auto;max-height:460px;display:block;">
+  </div>
+  <div class="cite cite-left">Wen et al., ICLR 2024 &mdash; mitigation results (Section 4).</div>
+</div>
+
+<!-- SLIDE — Wen mitigation B: analysis -->
+<div class="slide">
+  <h2>Wen Mitigation &mdash; What Changes</h2>
+  <div class="divider"></div>
+  <ul class="check" style="line-height:1.7;">
+    <li><strong>Before:</strong> all seeds collapse to the training image &mdash; verbatim copy at every seed</li>
+    <li><strong>After:</strong> outputs respect the prompt while sampling diverse variations across seeds</li>
+    <li><strong>No retraining:</strong> only an inference-time loss term on the score-difference magnitude</li>
+    <li><strong>Prompt unchanged:</strong> user intent preserved; only the noise prediction is shaped</li>
+  </ul>
+  <div class="highlight">
+    <p>Suppressing the magnitude removes the deterministic anchor that the memorized prompt installs.</p>
+  </div>
+</div>
+
+<!-- SLIDE — LID geometric view -->
+<div class="slide">
+  <h2>Geometric View &mdash; LID (Ross 2024)</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:0.85fr 1.3fr;gap:48px;align-items:start;">
+    <div style="display:flex;justify-content:flex-start;">
+      <img src="figs/ross_lid_schematic.png" alt="LID manifold schematic" style="max-height:340px;width:auto;display:block;">
+    </div>
+    <div>
+      <p style="margin-bottom:12px;">Local Intrinsic Dimensionality of a generated sample.</p>
+      <ul style="line-height:1.85;">
+        <li>$\text{LID} \approx 0$: pure copy of a training point</li>
+        <li>Small LID: partial / approximate memorization</li>
+        <li>Moderate LID: generalized sample on the data manifold</li>
+        <li>Manifold poorly fit: LIDs become uninformative</li>
+      </ul>
+      <p style="margin-top:12px;">Limit: only sharp at the <strong>final</strong> step $t \approx 0$.</p>
+    </div>
+  </div>
+  <div class="cite cite-left">Ross, Kamkari, Wu, Hosseinzadeh, Liu, Stein, Cresswell, Loaiza-Ganem, "A Geometric Framework for Understanding Memorization in Generative Models", arXiv 2411.00113, 2024.</div>
+</div>
+
+<!-- ====================================================================
+     SAIL — Our work
+     ==================================================================== -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Our Method: SAIL</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Hessian eigenvalues &middot; score-norm justification &middot; noise optimization</p>
+</div>
+
+<!-- SLIDE — Sharpness in the probability landscape (image first) -->
+<div class="slide">
+  <h2>Sharpness in the Probability Landscape</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <img src="figs/sail-sharpness.png" alt="Sharpness in distribution landscape - score field and peaks" style="max-width:100%;height:auto;max-height:430px;display:block;">
+  </div>
+  <p style="text-align:center;">Memorized prompts produce <strong>sharp, isolated peaks</strong> in $\log p_t(x \mid c)$. Non-memorized prompts produce smooth basins.</p>
+  <div class="cite cite-left">Jeon, Kim, No, "Understanding and Mitigating Memorization in Generative Models via Sharpness of Probability Landscapes", ICML 2025.</div>
+</div>
+
+<!-- SLIDE — Sharpness definition (description) -->
+<div class="slide">
+  <h2>Sharpness of $\log p_t$ &mdash; Definition</h2>
+  <div class="divider"></div>
+  <p>Hessian of the log-density (Jacobian of the score):</p>
+  <div class="math-block">$$H(x_t) \;:=\; \nabla_{x_t}^2 \log p_t(x_t),\qquad H(x_t, c) \;:=\; \nabla_{x_t}^2 \log p_t(x_t \mid c).$$</div>
+  <ul>
+    <li>Eigenvectors: principal axes of curvature</li>
+    <li>Negative eigenvalues: local concavity (peaked density)</li>
+    <li>Large $|\lambda|$: steep change in $\log p_t$</li>
+  </ul>
+  <div class="highlight">
+    <p>Sharpness = magnitude of negative eigenvalues of $H(x_t)$.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Eigenvalue concentration on Stable Diffusion (image) -->
+<div class="slide">
+  <h2>Eigenvalue Concentration &mdash; Stable Diffusion</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <img src="figs/sail-eigen.png" alt="Eigenvalue concentration across memorization categories on SD" style="max-width:100%;height:auto;max-height:480px;display:block;">
+  </div>
+  <div class="cite cite-left">Jeon, Kim, No, ICML 2025 &mdash; Figure 3 (eigenvalue distributions at $t = T-1$ vs $t = 1$ across Exact / Partial / Non Mem).</div>
+</div>
+
+<!-- SLIDE — SD eigen analysis -->
+<div class="slide">
+  <h2>Reading the SD Eigenvalue Plots</h2>
+  <div class="divider"></div>
+  <ul class="arrow" style="line-height:1.7;">
+    <li><strong>Exact Mem (top row):</strong> heavy negative-eigenvalue tail at both $t=T-1$ and $t=1$ &mdash; persistent sharp peaks</li>
+    <li><strong>Partial Mem (middle):</strong> moderate tail at $t=T-1$, narrows at $t=1$</li>
+    <li><strong>Non Mem (bottom):</strong> eigenvalues near zero throughout &mdash; smooth basin</li>
+    <li>Separation is visible at the <strong>very first</strong> sampling step ($t=T-1$) &mdash; no need to sample to completion</li>
+  </ul>
+  <div class="highlight">
+    <p>Sharpness stratifies memorization categories from the first denoising step.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Eigenvalue concentration on MNIST -->
+<div class="slide">
+  <h2>Eigenvalue Concentration &mdash; MNIST</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <img src="figs/sail-eigen-mnist.png" alt="MNIST eigenvalue concentration: memorized digit 9 vs non-memorized digit 3" style="max-width:100%;height:auto;max-height:430px;display:block;">
+  </div>
+  <p style="text-align:center;">Toy MNIST training: digit 9 inserted once (memorized); digit 3 abundant (non-memorized). Eigenvalue tails reproduce the SD pattern.</p>
+  <div class="cite cite-left">Jeon, Kim, No, ICML 2025 &mdash; Figure 2 (MNIST eigenvalue analysis).</div>
+</div>
+
+<!-- SLIDE — Score norm as sharpness -->
+<div class="slide">
+  <h2>Score Norm as Sharpness</h2>
+  <div class="divider"></div>
+  <p>Computing the full Hessian spectrum is intractable in latent space ($d = 16{,}384$).</p>
+  <div class="card">
+    <h3>Lemma 4.1 (Jeon, Kim, No 2025).</h3>
+    <p>For Gaussian $x \sim \mathcal{N}(\mu, \Sigma)$ with $H(x) = -\Sigma^{-1}$:</p>
+    <div class="math-block">$$\mathbb{E}\big[\,\| s(x) \|^2\,\big] \;=\; -\,\mathrm{tr}\big( H(x) \big).$$</div>
+  </div>
+  <p>Score norm $\|s_\theta(x_t)\|^2$ tracks $-\mathrm{tr}(H_\theta(x_t))$ &mdash; tractable proxy.</p>
+</div>
+
+<!-- SLIDE — Wen as sharpness -->
+<div class="slide">
+  <h2>Wen's Metric Is a Sharpness Measure</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Lemma 4.2 (Jeon, Kim, No 2025).</h3>
+    <p>For $x \sim \mathcal{N}(\mu, \Sigma)$ and $x \mid c \sim \mathcal{N}(\mu_c, \Sigma_c)$ with commuting covariances and $\mu = \mu_c$:</p>
+    <div class="math-block">$$\mathbb{E}\!\left[\,\| s(x, c) - s(x) \|^2\,\right] \;=\; \sum_{i=1}^{d} \frac{(\lambda_i - \lambda_{i,c})^2}{\lambda_{i,c}},$$</div>
+    <p>$\lambda_i, \lambda_{i,c}$: eigenvalues of $H(x), H_c(x)$.</p>
+  </div>
+  <p>Wen's $\|s_\theta^\Delta\|$ measures the <strong>squared eigenvalue gap</strong> between conditional and unconditional Hessians.</p>
+</div>
+
+<!-- SLIDE — Cubic amplification -->
+<div class="slide">
+  <h2>Hessian-Score Product &mdash; Cubic Amplification</h2>
+  <div class="divider"></div>
+  <p>At $t = T-1$ the latent is near-isotropic Gaussian &mdash; Wen's gap shrinks.</p>
+  <div class="card">
+    <h3>Lemma 4.3 (Jeon, Kim, No 2025).</h3>
+    <p>For Gaussian $x \sim \mathcal{N}(\mu, \Sigma)$:</p>
+    <div class="math-block">$$\mathbb{E}\!\left[\,\| H(x)\,s(x) \|^2\,\right] \;=\; -\,\mathrm{tr}\!\big( H(x)^3 \big).$$</div>
+  </div>
+  <p>Multiply score by Hessian &Rightarrow; <strong>cube</strong> the eigenvalues &mdash; high-curvature directions amplified.</p>
+</div>
+
+<!-- SLIDE — Proposed metric -->
+<div class="slide">
+  <h2>Proposed Detection Metric</h2>
+  <div class="divider"></div>
+  <p>Hessian-score product on the conditional gap, with $H^\Delta = H_\theta(x_t,c) - H_\theta(x_t)$ and $s^\Delta = s_\theta(x_t,c) - s_\theta(x_t)$:</p>
+  <div class="math-block">$$\mathcal{M}(x_t, c) \;:=\; \big\| H^\Delta\,s^\Delta \big\|^2,\qquad \mathbb{E}[\mathcal{M}] \;=\; \sum_{i=1}^{d} \frac{(\lambda_i - \lambda_{i,c})^4}{\lambda_{i,c}}.$$</div>
+  <div class="highlight">
+    <p>Quartic eigenvalue gap &mdash; sharper signal at the first step.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Theory vs empirical (sail-vs-wen) -->
+<div class="slide">
+  <h2>Theory Matches Practice</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <img src="figs/sail-vs-wen.png" alt="Score norm vs trace of Hessian and Hessian-score product on MNIST and SD" style="max-width:100%;height:auto;max-height:430px;display:block;">
+  </div>
+  <p style="text-align:center;">Top: MNIST. Bottom: SD v1.4. <strong>Left:</strong> $\|s_\theta\|^2 \approx -\mathrm{tr}(H)$. <strong>Right:</strong> $\|Hs\|^2 \approx -\mathrm{tr}(H^3)$.</p>
+  <div class="cite cite-left">Jeon, Kim, No, ICML 2025 &mdash; empirical validation of Lemmas 4.1 and 4.3.</div>
+</div>
+
+<!-- SLIDE — Detection results -->
+<div class="slide">
+  <h2>Detection Results &mdash; Stable Diffusion</h2>
+  <div class="divider"></div>
+  <p>500 memorized prompts (Webster) vs 500 non-memorized (COCO / Lexica / Tuxemon / GPT-4).</p>
+  <div class="grid-2">
+    <div class="card">
+      <h3>SD v1.4, $n = 4$, step 1</h3>
+      <p>Wen: AUC 0.832 / TPR@1% 0.124</p>
+      <p><strong>Ours: AUC 0.998 / TPR@1% 0.982</strong></p>
+    </div>
+    <div class="card">
+      <h3>SD v2.0, $n = 4$, step 1</h3>
+      <p>Wen: AUC 0.851 / TPR@1% 0.000</p>
+      <p><strong>Ours: AUC 0.991 / TPR@1% 0.949</strong></p>
+    </div>
+  </div>
+  <p>One Hessian-vector product, one step &mdash; matches Wen's full 50-step performance.</p>
+</div>
+
+<!-- SLIDE — SAIL motivation -->
+<div class="slide">
+  <h2>SAIL &mdash; Mitigation by Initialization</h2>
+  <div class="divider"></div>
+  <p>DDIM is a deterministic noise-to-image map.</p>
+  <p>Sharp $x_T$ &Rightarrow; sharp trajectory &Rightarrow; memorized image.</p>
+  <p>Search instead for $x_T$ in a <strong>smooth</strong> region of $p_T(\cdot \mid c)$.</p>
+  <div class="math-block">$$\min_{x_T}\;\; \big\| H_\theta^\Delta(x_T)\,s_\theta^\Delta(x_T) \big\|^2 \;-\; \alpha \log p_G(x_T),$$</div>
+  <p>$p_G$: isotropic Gaussian prior, $\alpha$: prior weight.</p>
+  <p>No retraining, no prompt edit &mdash; only the seed moves.</p>
+</div>
+
+<!-- SLIDE — Taylor approximation -->
+<div class="slide">
+  <h2>Taylor Approximation</h2>
+  <div class="divider"></div>
+  <p>Backprop through a Hessian-vector product is expensive. Replace with finite difference:</p>
+  <div class="math-block">$$\big\| H_\theta^\Delta(x_T)\,s_\theta^\Delta(x_T) \big\|^2 \;\approx\; \frac{\big\| s_\theta^\Delta\!\big(x_T + \delta\,s_\theta^\Delta(x_T)\big) \;-\; s_\theta^\Delta(x_T) \big\|^2}{\delta^2}.$$</div>
+  <p>One additional forward pass, no second-order autograd.</p>
+  <p>$\delta$ small: Hessian-vector product; $\delta$ large: still curvature-sensitive.</p>
+</div>
+
+<!-- SLIDE — Final SAIL objective -->
+<div class="slide">
+  <h2>Final SAIL Objective</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\mathcal{L}_{\text{SAIL}}(x_T) \;=\; \big\| s_\theta^\Delta\!\big(x_T + \delta\,s_\theta^\Delta(x_T)\big) - s_\theta^\Delta(x_T) \big\|^2 \;+\; \alpha\,\| x_T \|^2.$$</div>
+  <ul class="num">
+    <li>Initialize $x_T \sim \mathcal{N}(0, I)$</li>
+    <li>Adam steps on $\mathcal{L}_{\text{SAIL}}$ at lr $0.05$</li>
+    <li>Early stop on threshold $\ell_{\text{thres}}$ to keep $x_T$ Gaussian-typical</li>
+    <li>Run normal DDIM with the optimized seed</li>
+  </ul>
+  <div class="cite cite-wide">Jeon, Kim, No, "Understanding and Mitigating Memorization in Generative Models via Sharpness of Probability Landscapes", ICML 2025.</div>
+</div>
+
+<!-- SLIDE — SAIL visual mitigation examples -->
+<div class="slide">
+  <h2>Mitigation &mdash; Visual Examples</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <img src="figs/sail-example.png" alt="SAIL mitigation: Original vs Ours vs prior methods across four prompts" style="max-width:100%;height:auto;max-height:460px;display:block;">
+  </div>
+  <p style="text-align:center;"><strong>Ours</strong>: subject preserved with novel composition. Prior methods either copy (no change) or break the prompt.</p>
+  <div class="cite cite-left">Jeon, Kim, No, ICML 2025 &mdash; Figure 6 right (qualitative comparison across four memorized prompts).</div>
+</div>
+
+<!-- SLIDE — SAIL quality/memorization tradeoff -->
+<div class="slide">
+  <h2>Mitigation Results &mdash; Quality vs Memorization</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:40px;align-items:start;">
+    <div style="display:flex;justify-content:center;">
+      <img src="figs/sail-tradeoff.png" alt="SSCD vs CLIP Pareto plot, SD v1.4 and v2.0" style="max-height:480px;width:auto;display:block;">
+    </div>
+    <div>
+      <p>Lower SSCD = less copy. Higher CLIP = better prompt fidelity.</p>
+      <ul class="check">
+        <li><strong>SAIL (ours):</strong> bottom-right corner across both SD versions</li>
+        <li>RTA / RNA / Wen / Ren cluster up and to the left &mdash; SSCD drops only by trading prompt alignment</li>
+        <li>Seed-only intervention: prompt and weights untouched</li>
+      </ul>
+      <div class="highlight">
+        <p>Best Pareto front on SSCD vs CLIP &mdash; user intent fully preserved.</p>
+      </div>
+    </div>
+  </div>
+  <div class="cite cite-left">Jeon, Kim, No, ICML 2025 &mdash; SSCD vs CLIP, SD v1.4 (top) and v2.0 (bottom).</div>
+</div>
+
+<!-- ====================================================================
+     CLIP embeddings drive memorization
+     ==================================================================== -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>CLIP Embeddings Drive Memorization</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Padding tokens, not prompt tokens, do the work</p>
+</div>
+
+<!-- SLIDE — Token embedding structure -->
+<div class="slide">
+  <h2>SD Text Conditioning &mdash; Tokenize, Encode, Attend</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <img src="figs/kim-token.png" alt="CLIP tokenize + encode pipeline showing EoT and pad slots" style="max-width:100%;height:auto;max-height:380px;display:block;">
+  </div>
+  <ul class="check" style="margin-top:6px;">
+    <li>Prompt tokens $v^{\text{pr}}$: hope, for, the, best &mdash; carry user content</li>
+    <li>$\langle\text{EoT}\rangle$ vector: the <strong>only</strong> embedding optimized in CLIP contrastive loss</li>
+    <li>$\langle\text{pad}\rangle$ slots: default pad token = $\langle\text{EoT}\rangle$ &mdash; many copies of the trained vector</li>
+  </ul>
+  <div class="cite cite-left">Kim &amp; No, CVPR 2026 Findings &mdash; architecture diagram (arXiv 2605.02908).</div>
+</div>
+
+<!-- SLIDE — The structural duplication -->
+<div class="slide">
+  <h2>Padding Embedding $\approx$ EoT Embedding</h2>
+  <div class="divider"></div>
+  <p>SD's tokenizer pads with the EoT id. CLIP is causal:</p>
+  <div class="math-block">$$e_t \;=\; \mathrm{Transformer}\big( e_{\le t}\big),\qquad e_{\text{pad}_k} \;\approx\; e_{\text{EoT}} \quad \text{for many } k.$$</div>
+  <ul class="arrow">
+    <li>Padding slots inherit the <strong>EoT representation</strong> almost identically</li>
+    <li>One trained vector ($e_{\text{EoT}}$) is replicated across $\sim 60$ slots</li>
+    <li>Cross-attention over-weights this vector during generation</li>
+  </ul>
+  <div class="highlight">
+    <p>For memorized prompts: prompt-token embeddings contribute <strong>negligibly</strong>.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Attention bar chart -->
+<div class="slide">
+  <h2>Attention Drop &mdash; Pad / EoT Dominates</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:1fr 1fr;gap:32px;align-items:start;">
+    <div style="display:flex;justify-content:center;">
+      <img src="figs/clippad_attention.png" alt="Attention score drop across token positions" style="max-height:460px;width:100%;height:auto;display:block;">
+    </div>
+    <div>
+      <p>Replace $\langle$pad$\rangle$ with neutral <code>!</code>; measure attention-score drop per slot.</p>
+      <ul class="arrow">
+        <li>Prompt tokens $v^{\text{pr}}$: tiny drop &mdash; do not steer generation</li>
+        <li>$v^{\text{eot}}$ and $v^{\text{pad}}$: 5&ndash;7$\times$ larger drop</li>
+        <li>Memorization signal lives entirely in EoT + padding slots</li>
+      </ul>
+    </div>
+  </div>
+  <div class="cite cite-wide">Kim and No, CVPR 2026 Findings &mdash; Figure 8 (attention score drop, $\langle$pad$\rangle\to\,$<code>!</code> intervention).</div>
+</div>
+
+<!-- SLIDE — Kim-No CVPR 2026 illustrative example -->
+<div class="slide">
+  <h2>CLIP-Pad &mdash; Mitigation Restores Diversity</h2>
+  <div class="divider"></div>
+  <p>Same prompt, same model. Left column: SD v1.4 default. Right columns: with our pad replacement + EoT masking.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <img src="figs/kim-1.png" alt="Kim-No mitigation diverse generations vs memorized" style="max-width:100%;height:auto;max-height:430px;display:block;">
+  </div>
+  <ul class="check" style="margin-top:6px;">
+    <li><strong>Original (left):</strong> verbatim reproduction across seeds</li>
+    <li><strong>Ours (right):</strong> five diverse generations preserving subject and style</li>
+    <li>Prompt and weights untouched &mdash; only tokenizer and EoT cross-attention changed</li>
+  </ul>
+  <div class="cite cite-left">Kim &amp; No, "Memorization in Stable Diffusion Is Unexpectedly Driven by CLIP Embeddings", CVPR 2026 Findings (arXiv 2605.02908).</div>
+</div>
+
+<!-- SLIDE — Mitigation 1 — pad token + EoT mask -->
+<div class="slide">
+  <h2>Mitigation I &mdash; Replace Pad + Mask EoT</h2>
+  <div class="divider"></div>
+  <ul class="num">
+    <li>Replace tokenizer's default pad id from $\langle\text{EoT}\rangle$ to a neutral token (e.g. <code>!</code>)</li>
+    <li>Mask the EoT embedding in cross-attention (zero its key/value)</li>
+  </ul>
+  <p>Padding slots no longer carry the EoT vector; cross-attention loses its memorization anchor.</p>
+  <div class="highlight">
+    <p>No retraining, no prompt edit, no detection step.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Mitigation 2 — partial padding mask -->
+<div class="slide">
+  <h2>Mitigation II &mdash; Partial Padding Mask</h2>
+  <div class="divider"></div>
+  <p>Lighter intervention: keep tokenizer; mask only padding embeddings beyond a cutoff.</p>
+  <ul class="check">
+    <li>Reduces SSCD copy on Webster's memorized prompt set</li>
+    <li>Preserves CLIP prompt alignment</li>
+    <li>Drop-in replacement at inference time</li>
+  </ul>
+  <div class="cite cite-wide">Kim and No, "Memorization in Stable Diffusion Is Unexpectedly Driven by CLIP Embeddings", CVPR 2026 Findings (arXiv 2605.02908).</div>
+</div>
+
+<!-- ====================================================================
+     PART 05 — Bridge to LLM memorization
+     ==================================================================== -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Bridge to LLM Memorization</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Why LLMs need their own framework &mdash; Part II</p>
+</div>
+
+<!-- SLIDE — Why LLMs are different -->
+<div class="slide">
+  <h2>Why a Separate Framework for LLMs?</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>Diffusion</h3>
+      <p>Continuous latent, score $\nabla\log p_t$ in closed form.</p>
+      <p>Per-sample <em>geometric</em> signal (Hessian sharpness).</p>
+      <p>Output: image &mdash; perceptual similarity (SSCD, CLIP).</p>
+    </div>
+    <div>
+      <h3>Autoregressive LLM</h3>
+      <p>Discrete tokens, sequential probability product.</p>
+      <p>Per-string <em>combinatorial</em> signal (extractability).</p>
+      <p>Output: text &mdash; exact match, perplexity, $n$-gram.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Same legal exposure (Bartz v. Anthropic). Different technical handle.</p>
+  </div>
+</div>
+
+<!-- SLIDE — LLM teaser -->
+<div class="slide">
+  <h2>What's Coming in Part II</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li><strong>Defining memorization.</strong> Zhang 2017 capacity, Carlini 2019 Secret Sharer, exposure, Feldman long-tail</li>
+    <li><strong>Extraction attacks.</strong> Carlini 2021 on GPT-2, scaling laws, Lee 2022 deduplication, Nasr 2023 divergence</li>
+    <li><strong>Modern MIA.</strong> Min-K%, Min-K%++</li>
+    <li><strong>Adversarial compression.</strong> ACR, MiniPrompt, compliance theatre</li>
+    <li><strong>Reality on the ground.</strong> Cooper 2025 books, Aerni 2024 non-adversarial reproduction</li>
+  </ul>
+  <p style="text-align:center;">See <code>memorization-llm.html</code>.</p>
+</div>
+
+<!-- SLIDE — Takeaways -->
+<div class="slide">
+  <h2>Takeaways &mdash; Diffusion</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li>Memorization in diffusion = <strong>sharp peaks</strong> of $\log p_t$</li>
+    <li>Carlini 2023 set the agenda; Wen's score-norm is the cheap proxy</li>
+    <li><strong>SAIL</strong>: Hessian-score product, quartic eigenvalue gap, noise optimization &mdash; detection and mitigation at the very first step</li>
+    <li><strong>CLIP-pad</strong>: padding embeddings are the actual memorization channel in SD</li>
+    <li>Legal stakes &mdash; copyright and privacy &mdash; are real (Bartz, Getty, NYT, Disney)</li>
+  </ul>
+</div>
+
+<!-- Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">Q&amp;A</div>
+  <p class="big-word-sub">Thank you. &nbsp;&middot;&nbsp; Part II: LLM memorization.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 1</div>
+
+</div>
+<script src="../../reference/deck.js"></script>
+</body>
+</html>

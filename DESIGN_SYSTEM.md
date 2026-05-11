@@ -106,6 +106,7 @@ Empty space at the *bottom* of a slide is fine. Empty space *in the middle* is n
      - **Theorem / lemma slide** — full citation: `Author et al., "Title", Venue YYYY.`
      - **Abstract-bullet slide** — short form: `Author et al., NameOrAcronym, Venue YYYY.` (e.g., `Rafailov et al., DPO, NeurIPS 2023.`). Use when the slide is dense and the full title would wrap.
 7. **Ghost deck test.** Read only the `h2` titles in sequence. They should outline the lecture arc clearly. If they don't, fix the outline before drafting bodies. Titles stay short and abstract — not full sentences.
+8. **Spell out acronyms on first appearance.** The first slide that introduces a method/metric must expand the acronym inline — `SSCD (Self-Supervised Copy Detection)`, `RTA (Random Token Addition)`, `MV / RV / TV (Matching / Retrieval / Template Verbatim)`. After that, the bare acronym is fine. Applies to per-deck acronyms; canonical ones the audience already knows (LLM, MIA, DP, KL, MSE) don't need expansion. The expansion goes in the slide body where the term first appears, not in a separate glossary slide.
 
 ---
 
@@ -398,7 +399,20 @@ When you edit, prefer matching slides by content (`<h2>` text, distinctive class
 <div class="cite">Isik et al., arXiv:2102.08329.</div>
 ```
 
-**One dedicated line per citation.** Each citation must render on a single line. The `.cite` block is centered and capped at 60% slide width — anything longer wraps and looks like a stray paragraph.
+**One dedicated line per citation.** Each citation must render on a single line.
+
+**Position rule.** The citation lives at the **bottom** of the slide. The default is centered with a 60%-width cap (single line). The constraints, in priority order, are:
+
+1. Citation stays inside the slide rectangle (no horizontal clipping).
+2. Citation does not overlap with body text or images above.
+3. Citation does not overlap the auto-injected `.brand-footer` at bottom-left (~28 px from corner, ~180 px wide).
+
+When the default centered cap forces a wrap, escape hatches are available — pick the lightest one that satisfies the three constraints:
+
+- `class="cite cite-left"` — left-aligned, full-width (capped at 92%), bottom: 48px so it clears the brand footer. Use when the citation is long but the slide isn't dense on the right.
+- `class="cite cite-right"` — right-aligned, full-width (capped at 92%), bottom: 18px. Use only when the slide's lower-left region needs to stay clear (rare).
+
+Both classes live in the deck's local `<style>`; copy the definitions from any deck that already uses them. Default centered cite is still the preferred form — only reach for `.cite-left`/`.cite-right` when constraint #1 forces it.
 
 - If two papers share a slide: each gets its own line, joined inside one `.cite` with `<br>` (or use two adjacent `.cite` blocks):
   ```html
@@ -487,9 +501,40 @@ One citation per line (see "Citations" above). Don't wrap title in `<em>` (gray-
 ```
 Notes:
 - **`align-items: start`** — keep bullets top-aligned; `center` floats short bullet lists midway down a tall figure (looks like an empty void on top).
-- **`max-height: 470px`** when the slide also carries a `.cite`; otherwise `.cite` (and the brand footer) get clipped. See GOTCHAS → "Tall image collides with `.cite` + footer".
+- **Image height ceiling by layout** (tighter than the old "always 470px" rule):
+  - **Side column with bullets** (figure left, ≤4 short bullets right): `max-height: 380–430px`.
+  - **Stacked (bullets below image)** with **1–3 short bullets** below: `max-height: 380px`.
+  - **Stacked with 4+ bullets** or a `.highlight` below: `max-height: 320–340px` — past that, bullets push into the `.cite` and brand footer.
+  - **Single-figure slide** (only `h2 + divider + img + cite`, no bullets): `max-height: 470px`.
+  - When `max-height` is at the lower end and the image still feels small, prefer the **Image-first / description-follows pattern** below rather than removing bullets to enlarge the image.
 - **`<br>` inside `<li>`** is allowed for clean wrap-control next to a narrow column (Priority 1 step 2b: one-shot internal break).
 - Figure stays in the talk folder (`<talk>/<file>.png`); `bundle.py` inlines local `<img>` references as data URIs.
+
+**Image-first / description-follows pattern.** When a single image+bullets slide overflows — image cramped, bullets clipping the brand footer, or both — split into two consecutive slides: a full-bleed image slide with at most one orienting sentence, then a follow-up "Reading the plot" slide that carries the bullets. Lets the image breathe at `max-height: 460–500px` while keeping the analysis at body size. Use when the figure is information-dense (multi-panel plots, eigenvalue distributions, qualitative comparison grids).
+
+```html
+<!-- Slide A: image first -->
+<div class="slide">
+  <h2>Eigenvalue Concentration — Stable Diffusion</h2><div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <img src="figs/sail-eigen.png" alt="…" style="max-width:100%;height:auto;max-height:480px;display:block;">
+  </div>
+  <div class="cite cite-left">Author et al., Venue YYYY — Figure N.</div>
+</div>
+
+<!-- Slide B: description follows -->
+<div class="slide">
+  <h2>Reading the SD Eigenvalue Plots</h2><div class="divider"></div>
+  <ul class="arrow" style="line-height:1.7;">
+    <li><strong>Exact Mem:</strong> heavy negative-eigenvalue tail …</li>
+    <li><strong>Non Mem:</strong> eigenvalues near zero …</li>
+    …
+  </ul>
+  <div class="highlight"><p>One-line takeaway here.</p></div>
+</div>
+```
+
+Don't apply when the figure is simple (single plot, simple schematic) — one slide handles it. Reach for the split *after* the layout under "Image height ceiling by layout" above can't fit; before then, just tighten the bullets or shrink the image.
 
 **Section divider (left, numbered)**
 ```html

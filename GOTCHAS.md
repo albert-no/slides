@@ -389,3 +389,29 @@ When you want an actual `.png` file (e.g., to preview outside the deck, share in
 sips -s format png input.webp --out input.png
 ```
 No external tool needed; works on every recent macOS shell.
+
+## Capturing figures from third-party papers
+
+When pulling figures from arxiv papers into a deck, follow this protocol so the slide is clean and the legal posture is defensible:
+
+- **Crop the main figure caption out.** The "Figure N: …" line below a paper figure is meant for the paper reader, not the audience. The speaker narrates the figure; on-slide caption is redundant and pushes the figure off the slide. Keep subcaption labels `(a)`, `(b)` only when they carry meaning the speaker references.
+- **Cite the source figure number** in `.cite`: `Author et al., Venue YYYY — Figure N.` Gives the audience and reviewer a way back to the source.
+- **Prefer methodology figures** (plots, schematics, algorithm diagrams) over panels that reproduce extracted training images or other third-party copyrighted content. For those panels, describe the example in text with a strong attribution rather than embedding the panel.
+- **Crop tightly.** Drop page headers ("Published as a conference paper at…"), running titles, and adjacent figure/table content that the slide doesn't reference. Use `sips --cropToHeightWidth H W --cropOffset Y X` after `pdftoppm -r 200 paper.pdf prefix` — eyeball the offsets, iterate twice.
+- **Store under `<talk>/figs/`.** `bundle.py` inlines `.png`/`.jpg`/`.svg`/`.webp`/`.gif` from any path relative to the deck.
+- **Render at ≥180 DPI** when extracting via `pdftoppm`; lower DPI looks pixelated when the slide scales up on a projector.
+
+## Standalone bundle bloat from full-resolution paper captures
+
+Symptom: `bundle.py` produces a `<talk>.standalone.html` larger than ~10 MB — sometimes 40–60 MB.
+
+Cause: paper figures captured at full PDF resolution (`pdftoppm -r 220` or higher) commonly land at 2000–3500 px wide. Base64-inlined into the standalone, each one bloats by ~33% over the raw PNG. Five of those in one deck pushes the bundle past 50 MB.
+
+Fix:
+- **Downsample paper-figure PNGs to ~1200 px max width** before bundling. They're going to render at 600–960 px on the slide anyway:
+  ```bash
+  sips --resampleWidth 1200 figs/big-figure.png --out figs/big-figure.png
+  ```
+- The authoring source (`<talk>/<talk>.html` reading `figs/*.png`) is unaffected — only the bundled distribution shrinks.
+- After downsampling, re-run `python3 scripts/bundle.py <talk>/<talk>.html` and confirm slides still look sharp at projector zoom.
+- Authoring decks with full-res captures are fine; the rule only applies before distributing the standalone.

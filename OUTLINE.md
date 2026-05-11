@@ -18,7 +18,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
   - `generative/` — Generative-model review opener: 5 diffusion lectures (Bayes-route, DDPM, SDE, DDIM, guidance + discrete) + 1 brief LLM deck. `note/2_difffusion.tex` is LaTeX source for Diffusion Lectures 1–2
   - `dp/` — Differential privacy + federated learning (1 NeurIPS 2023 talk: RRSC result)
   - `mia/` — Membership inference attacks (5 lectures, paired notes; legacy `old/MIA.html`)
-  - `memorization/` — LLM memorization (1 deck: Carlini extraction, scaling laws, books, copyright)
+  - `memorization/` — Memorization in generative models (2 decks split 2026-05: `memorization-diffusion.html` covers intro/lawsuits/Bartz, diffusion detection, SAIL, CLIP-pad; `memorization-llm.html` covers canary→ACR). Paper-figure assets in `figs/`
   - `unlearning/` — Machine unlearning (1 deck: definitions, classification, LLM, benchmarks, lab work; sourced from `slide.pdf`)
   - `watermark/` — LLM watermarking (1 deck: green-list, distortion-free, undetectable, robust, radioactivity)
 
@@ -55,11 +55,16 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | MIA theory (Yeom / Sablayrolles / ML-Leaks / Nasr) | `privacy/mia/mia3-theory.html` |
 | LiRA, RMIA, label-only, attack hierarchy | `privacy/mia/mia4-modern.html` |
 | LLM MIA (perplexity, neighbourhood, SPV, InfoRMIA) | `privacy/mia/mia5-llm.html` |
-| Memorization — canary entropy, exposure, $k$-extractable | `privacy/memorization/memorization.html:194-241` |
-| Counterfactual memorization + long-tail theorem (Feldman) | `privacy/memorization/memorization.html:277-302` |
-| Repetition scaling formal law | `privacy/memorization/memorization.html:369` |
-| Min-K%++ probe | `privacy/memorization/memorization.html:412` |
-| Cooper book extraction (open-weight LLMs) | `privacy/memorization/memorization.html:453` |
+| Bartz v. Anthropic $1.5B settlement (Reuters cite) | `privacy/memorization/memorization-diffusion.html:140` |
+| Diffusion memorization — Carlini/Somepalli/Webster/Wen/Ross | `privacy/memorization/memorization-diffusion.html:206-365` |
+| SAIL — Lemmas 4.1–4.3 + eigenvalue figure + objective | `privacy/memorization/memorization-diffusion.html:377-540` |
+| CLIP padding-embedding memorization (Kim & No 2026) | `privacy/memorization/memorization-diffusion.html:542-631` |
+| Memorization — canary entropy, exposure, $k$-extractable | `privacy/memorization/memorization-llm.html:105-142` |
+| Counterfactual memorization + long-tail theorem (Feldman) | `privacy/memorization/memorization-llm.html:144` |
+| Repetition scaling formal law | `privacy/memorization/memorization-llm.html:222` |
+| Min-K%++ probe | `privacy/memorization/memorization-llm.html:274` |
+| ACR (Schwarzschild 2024) + MiniPrompt | `privacy/memorization/memorization-llm.html:313-354` |
+| Cooper book extraction (open-weight LLMs) | `privacy/memorization/memorization-llm.html:384` |
 | Certified $(\varepsilon,\delta)$-unlearning | `privacy/unlearning/unlearning.html:175` |
 | Newton-step + Sekhari capacity theorems | `privacy/unlearning/unlearning.html:189-216` |
 | Influence function (IU) | `privacy/unlearning/unlearning.html:259` |

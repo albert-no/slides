@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reconstruction Attacks — DP Lecture 1</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 22px 28px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.thm-card { background: #fff; border: 2px solid var(--yonsei-blue); border-radius: 12px; padding: 22px 28px; }
+.thm-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.proof-card { background: var(--light); border-left: 3px solid #888; border-radius: 0 8px 8px 0; padding: 14px 22px; font-size: 1.4rem; }
+.proof-card h4 { font-size: 1.2rem; color: var(--gray-text); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">DP Lecture 1 · Foundations</div>
+  <h1>Reconstruction Attacks<br>and the Need for Privacy</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Why aggregate statistics alone are not safe</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500; font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item"><div class="toc-num">01</div><div class="toc-rule"></div><div><div class="toc-label">Motivating attacks</div><div class="toc-sub">Difference attacks on suppressed counts</div></div></div>
+    <div class="toc-item"><div class="toc-num">02</div><div class="toc-rule"></div><div><div class="toc-label">Formal setup</div><div class="toc-sub">Counting queries on binary datasets</div></div></div>
+    <div class="toc-item"><div class="toc-num">03</div><div class="toc-rule"></div><div><div class="toc-label">Dinur–Nissim theorems</div><div class="toc-sub">All queries, and polynomially many random queries</div></div></div>
+    <div class="toc-item"><div class="toc-num">04</div><div class="toc-rule"></div><div><div class="toc-label">Efficient attack</div><div class="toc-sub">Linear-programming relaxation</div></div></div>
+  </div>
+</div>
+
+<!-- 3. Section 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Motivating Attacks</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Aggregate answers can still expose individuals.</p>
+</div>
+
+<!-- 4. Motivating example -->
+<div class="slide">
+  <h2>A Single Sensitive Query</h2>
+  <div class="divider"></div>
+  <p>A company offers health insurance and queries the insurer:</p>
+  <div class="highlight">
+    <em>"How many employees born on [date], living in [ZIP], suffer from [condition]?"</em>
+  </div>
+  <ul style="margin-top:12px;">
+    <li>If the answer is <strong>1</strong>, and only one employee fits the (date, ZIP), the company learns that person's diagnosis.</li>
+    <li>Even <em>"fewer than 5"</em> still leaks information when combined with other queries.</li>
+  </ul>
+</div>
+
+<!-- 5. Difference attack -->
+<div class="slide">
+  <h2>Difference Attack</h2>
+  <div class="divider"></div>
+  <p>Two near-duplicate queries can isolate one record:</p>
+  <ol style="padding-left:24px; margin-top:8px;">
+    <li>How many employees joined <strong>before date $t$</strong> and have the condition?</li>
+    <li>How many employees joined <strong>before date $t+1$</strong> and have the condition?</li>
+  </ol>
+  <div class="math-block" style="margin-top:14px;">$$a_2 - a_1 \in \{0,1\} \;\Longrightarrow\; \text{status of the single employee who joined on day } t.$$</div>
+  <div class="highlight">Aggregate statistics can hide nothing if the adversary controls the query set.</div>
+</div>
+
+<!-- 6. Definition -->
+<div class="slide">
+  <h2>Reconstruction Attack</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Definition (Reconstruction Attack).</h3>
+    <p>An attacker is given aggregate statistical query responses $a_1, \dots, a_m$ (possibly noisy) and infers most or all individual entries of the private dataset $D$.</p>
+  </div>
+  <p style="margin-top:14px;">DP emerges from a tight question: <em>how accurately can we answer many queries while preventing reconstruction?</em></p>
+</div>
+
+<!-- 7. Section 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Formal Setup</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Binary datasets, counting queries, bounded-error answers.</p>
+</div>
+
+<!-- 8. Formal setup -->
+<div class="slide">
+  <h2>Setup: Binary Dataset and Counting Queries</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Dataset.</strong> $D = (d_1, \dots, d_n) \in \{0,1\}^n$; $d_i$ marks whether individual $i$ has a sensitive attribute.</li>
+    <li><strong>Counting query.</strong> For $S \subseteq \{1,\dots,n\}$, $\,q_S(D) = \sum_{i \in S} d_i$.</li>
+    <li><strong>Curator answers.</strong> $a_1, \dots, a_m$ with $|a_j - q_{S_j}(D)| \le E$ for all $j$.</li>
+    <li><strong>Adversary model.</strong> Answers can be random <em>or</em> chosen adversarially within the error bound.</li>
+  </ul>
+</div>
+
+<!-- 9. Reconstruction attack form -->
+<div class="slide">
+  <h2>The Reconstruction Optimization</h2>
+  <div class="divider"></div>
+  <p>Given $(S_j, a_j)$, the attacker solves:</p>
+  <div class="math-block">$$\hat D \;=\; \arg\min_{D \in \{0,1\}^n} \;\max_{1 \le j \le m} |q_{S_j}(D) - a_j|.$$</div>
+  <ul>
+    <li>Exhaustive search: $2^n$ candidates → exponential complexity.</li>
+    <li>Returns the candidate that is most consistent with the (noisy) answers.</li>
+  </ul>
+  <div class="highlight">A polynomial-time attack via LP relaxation will appear later in the deck.</div>
+</div>
+
+<!-- 10. Trivial claim -->
+<div class="slide">
+  <h2>Trivial Consistency Bound</h2>
+  <div class="divider"></div>
+  <div class="thm-card">
+    <h3>Claim.</h3>
+    <p>If every query is answered to within error $\le \alpha n$, i.e. $\max_S |q_S(D) - a_S| \le \alpha n$, then the reconstruction $\hat D$ satisfies</p>
+    <div class="math-block" style="margin:4px 0; padding:10px 16px; font-size:1.5rem;">$$\max_S |q_S(\hat D) - a_S| \;\le\; \alpha n.$$</div>
+  </div>
+  <p style="margin-top:12px;" class="muted">The true $D$ is feasible, so the minimizer is at least as good. The work is in turning consistency into a closeness bound on $\hat D$.</p>
+</div>
+
+<!-- 11. Section 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Dinur–Nissim Theorems</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Quantitative limits on aggregate-noise privacy.</p>
+</div>
+
+<!-- 12. Theorem 1 -->
+<div class="slide">
+  <h2>Theorem 1 — All Queries, Bounded Error</h2>
+  <div class="divider"></div>
+  <div class="thm-card">
+    <h3>Theorem (Dinur–Nissim 2003).</h3>
+    <p>If <em>every</em> subset query is answered with error at most $\alpha n$, then the reconstruction error of $\hat D$ is at most $4\alpha n$:</p>
+    <div class="math-block" style="margin-top:6px;">$$\sum_{i=1}^n |D_i - \hat D_i| \;\le\; 4\alpha n.$$</div>
+  </div>
+  <div class="cite">Dinur &amp; Nissim, "Revealing Information While Preserving Privacy", PODS 2003.</div>
+</div>
+
+<!-- 13. Theorem 1 proof -->
+<div class="slide">
+  <h2>Proof of Theorem 1</h2>
+  <div class="divider"></div>
+  <div class="proof-card">
+    <h4>Proof.</h4>
+    <p>Define $A_{01} = \{i : \hat D_i = 0,\, D_i = 1\}$ and $A_{10} = \{i : \hat D_i = 1,\, D_i = 0\}$.</p>
+    <p>If $\hat D$ and $D$ disagree on $> 4\alpha n$ bits, WLOG $|A_{10}| > 2\alpha n$. Then</p>
+    <div class="math-block" style="margin:4px 0; padding:10px 16px; font-size:1.5rem;">$$|q_{A_{10}}(D) - q_{A_{10}}(\hat D)| \;=\; |A_{10}| \;>\; 2\alpha n.$$</div>
+    <p>By triangle inequality and the per-query error bound:</p>
+    <div class="math-block" style="margin:4px 0; padding:10px 16px; font-size:1.5rem;">$$|q_{A_{10}}(D) - q_{A_{10}}(\hat D)| \;\le\; |q_{A_{10}}(D) - a_{A_{10}}| + |a_{A_{10}} - q_{A_{10}}(\hat D)| \;\le\; 2\alpha n,$$</div>
+    <p>a contradiction. So disagreement $\le 4\alpha n$. $\blacksquare$</p>
+  </div>
+  <p style="margin-top:10px;" class="muted">The attacker does not need to know $A_{10}$ — answers to all subsets are available.</p>
+</div>
+
+<!-- 14. Corollary -->
+<div class="slide">
+  <h2>Corollary: 1%-Error → 96%-Recovery</h2>
+  <div class="divider"></div>
+  <div class="thm-card">
+    <h3>Corollary.</h3>
+    <p>If all queries have error at most $\tfrac{1}{100}n$, then the reconstruction $\hat D$ matches $D$ on at least $\tfrac{96}{100} n$ entries.</p>
+  </div>
+  <div class="highlight">
+    <strong>Take-away:</strong> Worst-case error per query of $o(n)$ across <em>all</em> subsets is fatal — most records are recovered.
+  </div>
+  <p class="muted">Assumption — answering every one of the $2^n$ subset queries — is unrealistic. Next: relax to polynomially many random queries.</p>
+</div>
+
+<!-- 15. Random queries setup -->
+<div class="slide">
+  <h2>Realistic Regime: $m = 20 n$ Random Queries</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>The attacker chooses $S_1, \dots, S_m$ uniformly at random, $m = 20n$.</li>
+    <li>Same reconstruction $\hat D = \arg\min_D \max_j |q_{S_j}(D) - a_j|$.</li>
+    <li>Curator guarantees $\max_j |q_{S_j}(D) - a_j| \le \alpha n$.</li>
+  </ul>
+  <p class="muted">The constants 20 and 256 (next slide) are convenient; tighter constants exist.</p>
+</div>
+
+<!-- 16. Theorem 2 -->
+<div class="slide">
+  <h2>Theorem 2 — Polynomially Many Random Queries</h2>
+  <div class="divider"></div>
+  <div class="thm-card">
+    <h3>Theorem (Dinur–Nissim 2003).</h3>
+    <p>With $m = 20n$ uniformly random queries each answered to within $\alpha n$, with probability $\ge 1 - 2^{-n}$ the reconstruction error obeys</p>
+    <div class="math-block" style="margin:4px 0; padding:10px 16px; font-size:1.5rem;">$$\sum_i |D_i - \hat D_i| \;\le\; 256\, \alpha^2 n^2.$$</div>
+    <p>Meaningful when $\alpha \ll 1/\sqrt n$.</p>
+  </div>
+</div>
+
+<!-- 17. Theorem 2 proof setup -->
+<div class="slide">
+  <h2>Proof Outline — Bad Set $B$</h2>
+  <div class="divider"></div>
+  <p>Let $B = \{\hat D : \hat D \text{ and } D \text{ disagree on } \ge 256\alpha^2 n^2 \text{ coords}\}$.</p>
+  <p>For any $D' \in B$, if $|q_{S_j}(D) - q_{S_j}(D')| \ge 4\alpha n$ then $D'$ cannot be the reconstruction:</p>
+  <div class="math-block" style="margin:4px 0; padding:10px 16px; font-size:1.5rem;">$$|q_{S_j}(D') - a_j| \;\ge\; |q_{S_j}(D') - q_{S_j}(D)| - |q_{S_j}(D) - a_j| \;\ge\; 3\alpha n.$$</div>
+  <p>Goal: show with high probability <em>every</em> $D' \in B$ has some $j$ with $|q_{S_j}(D) - q_{S_j}(D')| \ge 4\alpha n$.</p>
+</div>
+
+<!-- 18. Theorem 2 proof tail -->
+<div class="slide">
+  <h2>Proof — Random Subset Concentration</h2>
+  <div class="divider"></div>
+  <div class="proof-card">
+    <p>Let $Z = D - D_0 \in \{-1, 0, 1\}^n$ for $D_0 \in B$; $Z$ has $\ge 256 \alpha^2 n^2$ nonzero entries.</p>
+    <p>For a uniformly random subset $S_j$:</p>
+    <div class="math-block" style="margin:4px 0; padding:10px 16px; font-size:1.5rem;">$$\Pr\bigl[|q_{S_j}(D) - q_{S_j}(D_0)| \le 4\alpha n\bigr] \;\le\; \tfrac{9}{10}.$$</div>
+    <p class="muted" style="text-align:center; margin-top:-4px;">(Exercise: variance bound + Chebyshev.)</p>
+    <p>By independence across $j$:</p>
+    <div class="math-block" style="margin:4px 0; padding:10px 16px; font-size:1.5rem;">$$\Pr\bigl[\forall j,\; |q_{S_j}(D) - q_{S_j}(D_0)| \le 4\alpha n\bigr] \;\le\; (9/10)^m \;\le\; 2^{-2n}.$$</div>
+    <p>Union bound over $|B| \le 2^n$:</p>
+    <div class="math-block" style="margin:4px 0; padding:10px 16px; font-size:1.5rem;">$$\Pr\bigl[\exists D_0 \in B \text{ surviving}\bigr] \;\le\; 2^{-2n} \cdot 2^n \;=\; 2^{-n}. \quad\blacksquare$$</div>
+  </div>
+</div>
+
+<!-- 19. Section 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Efficient Attack</h1>
+  <div class="divider"></div>
+  <p class="subtitle">From exponential search to a polynomial LP.</p>
+</div>
+
+<!-- 20. LP relaxation -->
+<div class="slide">
+  <h2>Linear-Programming Relaxation</h2>
+  <div class="divider"></div>
+  <p>Relax $D \in \{0,1\}^n$ to $D \in [0,1]^n$:</p>
+  <div class="math-block">$$\tilde D \;=\; \arg\min_{D \in [0,1]^n} \;\max_j |q_{S_j}(D) - a_j|,$$</div>
+  <p>then round each $\tilde D_i$ to $\{0,1\}$ to obtain $\hat D$.</p>
+  <ul>
+    <li>The relaxed problem is a <strong>linear program</strong> in $n$ variables and $m$ constraints — solvable in polynomial time.</li>
+    <li>Rounding only inflates the error by a constant, preserving the Dinur–Nissim guarantees.</li>
+  </ul>
+</div>
+
+<!-- 21. LP refresher -->
+<div class="slide">
+  <h2>Linear Program (Refresher)</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Definition (Linear Program).</h3>
+    <p>Given $c \in \mathbb{R}^d$, $a_1, \dots, a_m \in \mathbb{R}^d$, and $b_1, \dots, b_m \in \mathbb{R}$:</p>
+    <div class="math-block" style="font-size:1.5rem; margin-top:6px;">$$\max_{x \in \mathbb{R}^d} \; c \cdot x \quad\text{s.t.}\quad a_i \cdot x \le b_i, \; 1 \le i \le m.$$</div>
+  </div>
+  <p style="margin-top:10px;">LPs can be solved in polynomial time (simplex, interior-point). The reconstruction min–max recasts into LP form by introducing a slack variable for the max.</p>
+</div>
+
+<!-- 22. Implications -->
+<div class="slide">
+  <h2>Implications</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>"Too accurate" aggregates leak.</strong> Sub-$\sqrt n$ per-query error suffices for catastrophic reconstruction.</li>
+    <li><strong>Noise calibration is essential.</strong> Privacy versus accuracy is a fundamental, quantitative trade-off.</li>
+    <li><strong>Worst-case adversary.</strong> The attacker chooses both queries and exploits any error pattern.</li>
+  </ul>
+  <div class="highlight">
+    These limits motivate <strong>Differential Privacy</strong>: a rigorous, composable framework for noise calibration — the subject of the next deck.
+  </div>
+</div>
+
+<!-- 23. Closer -->
+<div class="slide end-slide">
+  <div class="big-word">Next</div>
+  <p class="big-word-sub">Randomized response, $\varepsilon$-DP, and the Laplace mechanism.</p>
+</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

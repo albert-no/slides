@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pure Differential Privacy — DP Lecture 2</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 22px 28px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.thm-card { background: #fff; border: 2px solid var(--yonsei-blue); border-radius: 12px; padding: 22px 28px; }
+.thm-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.ex-card { background: #fff8e6; border-left: 5px solid #d4a83a; border-radius: 0 8px 8px 0; padding: 16px 22px; }
+.ex-card h3 { color: #8a6510; margin-bottom: 6px; font-size: 1.3rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.proof-card { background: var(--light); border-left: 3px solid #888; border-radius: 0 8px 8px 0; padding: 14px 22px; font-size: 1.4rem; }
+.proof-card h4 { font-size: 1.2rem; color: var(--gray-text); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">DP Lecture 2 · Foundations</div>
+  <h1>Pure Differential Privacy<br>and Basic Mechanisms</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Randomized response, $\varepsilon$-DP, Laplace, exponential, and noisy max</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500; font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item"><div class="toc-num">01</div><div class="toc-rule"></div><div><div class="toc-label">Randomized response</div><div class="toc-sub">Local privacy via per-user bit flipping</div></div></div>
+    <div class="toc-item"><div class="toc-num">02</div><div class="toc-rule"></div><div><div class="toc-label">$\varepsilon$-DP definition</div><div class="toc-sub">Neighboring datasets, multiplicative bound</div></div></div>
+    <div class="toc-item"><div class="toc-num">03</div><div class="toc-rule"></div><div><div class="toc-label">Laplace mechanism</div><div class="toc-sub">Sensitivity, noise scale, DP proof</div></div></div>
+    <div class="toc-item"><div class="toc-num">04</div><div class="toc-rule"></div><div><div class="toc-label">Selection: exponential &amp; noisy max</div><div class="toc-sub">DP for non-numeric outputs</div></div></div>
+  </div>
+</div>
+
+<!-- 3. Section 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Randomized Response</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A 1960s survey trick that already realizes local DP.</p>
+</div>
+
+<!-- 4. RR definition -->
+<div class="slide">
+  <h2>Randomized Response (RR)</h2>
+  <div class="divider"></div>
+  <p>Each of $n$ users holds a sensitive bit $D_i \in \{0,1\}$ and reports</p>
+  <div class="math-block">$$Y_i \;=\; \begin{cases} D_i & \text{w.p. } \tfrac12 + \gamma \\ 1 - D_i & \text{w.p. } \tfrac12 - \gamma \end{cases}, \qquad 0 < \gamma \le \tfrac12.$$</div>
+  <ul>
+    <li>$\gamma = \tfrac12$: no flipping — no privacy (true bit released).</li>
+    <li>$\gamma = 0$: full flipping (uniform output) — perfect privacy, zero utility.</li>
+    <li>$\gamma$ is the <strong>privacy/utility knob</strong>.</li>
+  </ul>
+</div>
+
+<!-- 5. Unbiased estimator -->
+<div class="slide">
+  <h2>Unbiased Estimate of $D_i$</h2>
+  <div class="divider"></div>
+  <p>Mean of the response:</p>
+  <div class="math-block">$$\mathbb{E}[Y_i] \;=\; D_i \bigl(\tfrac12+\gamma\bigr) + (1-D_i)\bigl(\tfrac12-\gamma\bigr) \;=\; 2\gamma D_i + \tfrac12 - \gamma.$$</div>
+  <p>Solving for $D_i$ yields the debiased estimator</p>
+  <div class="math-block">$$\hat D_i \;=\; \frac{Y_i - \tfrac12 + \gamma}{2\gamma}, \qquad \mathbb{E}[\hat D_i] = D_i.$$</div>
+</div>
+
+<!-- 6. Estimating the population mean -->
+<div class="slide">
+  <h2>Estimating the Fraction $p$</h2>
+  <div class="divider"></div>
+  <p>The curator wants to release</p>
+  <div class="math-block">$$p \;=\; \frac{1}{n}\sum_{i=1}^n D_i \quad\text{privately} \;\Longrightarrow\; \hat p = \frac{1}{n}\sum_{i=1}^n \frac{Y_i - \tfrac12 + \gamma}{2\gamma}.$$</div>
+  <ul>
+    <li>$\hat p$ is <strong>unbiased</strong>: $\mathbb{E}[\hat p] = p$.</li>
+    <li>Variance bound (independent $Y_i \in \{0,1\}$):</li>
+  </ul>
+  <div class="math-block" style="margin:4px 0; padding:10px 16px; font-size:1.5rem;">$$\mathrm{Var}[\hat p] \;=\; \frac{1}{4 n^2 \gamma^2}\sum_{i=1}^n \mathrm{Var}[Y_i] \;\le\; \frac{1}{16 n \gamma^2}.$$</div>
+</div>
+
+<!-- 7. Chebyshev / sample complexity -->
+<div class="slide">
+  <h2>Sample Complexity via Chebyshev</h2>
+  <div class="divider"></div>
+  <div class="thm-card">
+    <h3>Chebyshev's inequality.</h3>
+    <p>For $\mathbb{E}[X] = \mu$, $\mathrm{Var}(X) = \sigma^2$, $\Pr[|X - \mu| > k\sigma] \le 1/k^2$.</p>
+  </div>
+  <p style="margin-top:8px;">Applied to $\hat p$ with $\sigma = 1/(4\gamma\sqrt n)$:</p>
+  <div class="math-block" style="margin:6px 0; padding:10px 16px;">$$\Pr\!\left[|\hat p - p| > \frac{k}{4\gamma\sqrt n}\right] \;\le\; \frac{1}{k^2}.$$</div>
+  <p style="margin-top:6px;">To guarantee $\Pr[|\hat p - p| > \alpha] \le \beta$ take $\alpha = k/(4\gamma\sqrt n)$, $\beta = 1/k^2$:</p>
+  <div class="math-block" style="margin:6px 0; padding:10px 16px; font-size:1.6rem;">$$n \;=\; \frac{1}{16\, \gamma^2\, \beta\, \alpha^2}.$$</div>
+</div>
+
+<!-- 8. Sample size trade-offs -->
+<div class="slide">
+  <h2>Trade-off Summary</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Accuracy $\alpha \downarrow$</h3>
+      <p>Tighter $\hat p \approx p$ band requires $n \propto 1/\alpha^2$.</p>
+    </div>
+    <div class="card">
+      <h3>Confidence $\beta \downarrow$</h3>
+      <p>Stronger probability guarantee needs $n \propto 1/\beta$.</p>
+    </div>
+    <div class="card">
+      <h3>Privacy $\gamma \downarrow$</h3>
+      <p>More privacy needs $n \propto 1/\gamma^2$.</p>
+    </div>
+  </div>
+  <div class="highlight" style="margin-top:14px;">Three knobs: accuracy, confidence, privacy — all priced in sample size.</div>
+</div>
+
+<!-- 9. Section 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>$\varepsilon$-Differential Privacy</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A formal, worst-case privacy guarantee.</p>
+</div>
+
+<!-- 10. Neighboring datasets -->
+<div class="slide">
+  <h2>Neighboring Datasets</h2>
+  <div class="divider"></div>
+  <p>Datasets $D, D' \in \mathcal{X}^n$ are <strong>neighbors</strong> if they differ in one individual's record:</p>
+  <div class="math-block" style="font-size:1.5rem;">$$D = (X_1, \dots, X_i, \dots, X_n), \quad D' = (X_1, \dots, X_i', \dots, X_n).$$</div>
+  <ul>
+    <li><strong>Replace</strong>: change one record (used in this course).</li>
+    <li><strong>Add / delete</strong>: insert or remove one record. Replace = delete + insert, so the variants are essentially equivalent under composition.</li>
+  </ul>
+</div>
+
+<!-- 11. DP definition -->
+<div class="slide">
+  <h2>$\varepsilon$-Differential Privacy</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Definition (Dwork–McSherry–Nissim–Smith, 2006).</h3>
+    <p>A randomized mechanism $\mathcal{M}: \mathcal{X}^n \to \mathcal{Y}$ is <strong>$\varepsilon$-DP</strong> if for every pair of neighboring datasets $D, D'$ and every measurable $O \subseteq \mathcal{Y}$,</p>
+    <div class="math-block">$$\Pr[\mathcal{M}(D) \in O] \;\le\; e^{\varepsilon}\, \Pr[\mathcal{M}(D') \in O].$$</div>
+  </div>
+  <p style="margin-top:8px;">By symmetry $e^{-\varepsilon} \le \Pr[\mathcal{M}(D) \in O]/\Pr[\mathcal{M}(D') \in O] \le e^{\varepsilon}$.</p>
+  <div class="cite">Dwork, McSherry, Nissim, Smith, "Calibrating Noise to Sensitivity in Private Data Analysis", TCC 2006. Test-of-time TCC 2016; Gödel Prize 2017.</div>
+</div>
+
+<!-- 12. Why randomization -->
+<div class="slide">
+  <h2>Why Randomization is Necessary</h2>
+  <div class="divider"></div>
+  <div class="ex-card">
+    <h3>Example.</h3>
+    <p>Let $f(D) = \tfrac{1}{n}\sum_i X_i$ and $\mathcal{M}(D) = f(D)$. Then for neighboring $D, D'$,</p>
+    <div class="math-block" style="margin-top:6px;">$$\mathcal{M}(D') = f(D) + \frac{X_i' - X_i}{n},$$</div>
+    <p>so observing both reveals $X_i' - X_i$ exactly and identifies which dataset is which.</p>
+  </div>
+  <div class="highlight">Any deterministic $\mathcal{M}$ has the same problem. <strong>DP requires randomization.</strong></div>
+</div>
+
+<!-- 13. Notes on DP -->
+<div class="slide">
+  <h2>Notes on the Definition</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$\varepsilon = 0$ ⇒ perfect privacy; smaller $\varepsilon$ ⇒ stronger privacy.</li>
+    <li><strong>Worst case</strong>: must hold for every neighboring $(D, D')$ and every event $O$.</li>
+    <li><strong>Multiplicative</strong>: additive-slack-only definitions fail (see Lecture 3).</li>
+    <li>$e^{\varepsilon} \approx 1 + \varepsilon$ for small $\varepsilon$; exponential form simplifies composition.</li>
+    <li>DP is a notion of <em>similarity between distributions</em> $\mathcal{M}(D)$ and $\mathcal{M}(D')$ — alternative divergences yield related definitions (KL-DP, RDP, $f$-DP).</li>
+  </ul>
+</div>
+
+<!-- 14. Hypothesis-testing interpretation -->
+<div class="slide">
+  <h2>Hypothesis-Testing Interpretation</h2>
+  <div class="divider"></div>
+  <p>Adversary chooses an event $O$ and tests</p>
+  <ul>
+    <li>$H_0$: data is $D$ &nbsp;&nbsp;vs.&nbsp;&nbsp; $H_1$: data is $D'$;</li>
+    <li>declares $H_1$ if $\mathcal{M}(D) \in O$.</li>
+  </ul>
+  <p>Let $q$ = false-positive rate, $p$ = false-negative rate. $\varepsilon$-DP implies</p>
+  <div class="math-block" style="font-size:1.5rem;">$$1 \le q + p\, e^{\varepsilon}, \qquad 1 \le p + q\, e^{\varepsilon}.$$</div>
+  <p class="muted">Both errors cannot be small simultaneously — privacy = indistinguishability.</p>
+</div>
+
+<!-- 15. FP/FN example -->
+<div class="slide">
+  <h2>Aside: False Positive vs False Negative</h2>
+  <div class="divider"></div>
+  <div class="ex-card">
+    <h3>Example (Covid test).</h3>
+    <p>Covid patient: $T \sim \mathrm{Lap}(39, b)$; healthy: $T \sim \mathrm{Lap}(38, b)$. Best test: declare Covid if $T > 38.5$.</p>
+    <ul style="margin-top:6px;">
+      <li><strong>False positive (FP)</strong>: healthy person flagged as Covid.</li>
+      <li><strong>False negative (FN)</strong>: Covid patient declared healthy.</li>
+    </ul>
+    <p>Reducing one inflates the other — the same trade-off DP imposes on adversaries.</p>
+  </div>
+</div>
+
+<!-- 16. RR is 4γ-DP -->
+<div class="slide">
+  <h2>RR Satisfies $4\gamma$-DP</h2>
+  <div class="divider"></div>
+  <p>Let $f(D) = D$ and $\mathcal{M}(D) = Y = (Y_1, \dots, Y_n)$ from RR. For neighbors $D, D'$ differing at index $i$:</p>
+  <div class="math-block" style="font-size:1.5rem;">$$\frac{\Pr[\mathcal{M}(D) = y]}{\Pr[\mathcal{M}(D') = y]} \;=\; \frac{\Pr[Y_i = y_i \mid D_i]}{\Pr[Y_i = y_i \mid D_i']} \;\le\; \frac{\tfrac12+\gamma}{\tfrac12-\gamma} \;\le\; e^{4\gamma}.$$</div>
+  <p>Hence RR is $\varepsilon$-DP with $\varepsilon = 4\gamma$. As $\gamma \to 0$, $\varepsilon \to 0$ (more privacy, more noise).</p>
+  <p class="muted">Exercise: extend the bound to arbitrary measurable $O$.</p>
+</div>
+
+<!-- 17. Section 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Laplace Mechanism</h1>
+  <div class="divider"></div>
+  <p class="subtitle">$\varepsilon$-DP for numeric queries via noise calibrated to sensitivity.</p>
+</div>
+
+<!-- 18. Sensitivity -->
+<div class="slide">
+  <h2>$\ell_1$ Sensitivity</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Definition.</h3>
+    <p>For $f : \mathcal{X}^n \to \mathbb{R}^k$, the $\ell_1$-sensitivity is</p>
+    <div class="math-block">$$\Delta_1 \;=\; \max_{D, D' \text{ neighbors}} \|f(D) - f(D')\|_1.$$</div>
+  </div>
+  <p style="margin-top:10px;">Large $\Delta_1$ ⇒ one record can move $f$ a lot ⇒ more noise needed.</p>
+  <div class="ex-card" style="margin-top:10px;">
+    <h3>Example.</h3>
+    <p>For $f(D) = \tfrac{1}{n}\sum_{i} X_i$ with $X_i \in [a, b]$, $\Delta_1 = (b-a)/n$.</p>
+  </div>
+</div>
+
+<!-- 19. Laplace mechanism -->
+<div class="slide">
+  <h2>Laplace Mechanism</h2>
+  <div class="divider"></div>
+  <div class="thm-card">
+    <h3>Mechanism (Dwork et al. 2006).</h3>
+    <p>Release $\mathcal{M}(D) = f(D) + (Y_1, \dots, Y_k)$ where $Y_i \overset{\text{iid}}\sim \mathrm{Lap}(0, \Delta_1/\varepsilon)$. Then $\mathcal{M}$ is $\varepsilon$-DP.</p>
+  </div>
+  <p style="margin-top:8px;">Laplace pdf: $f_{Y}(y) = \frac{1}{2b}\exp(-|y|/b)$ with scale $b = \Delta_1/\varepsilon$.</p>
+  <div class="highlight">Noise scale $\Delta_1/\varepsilon$ hides any single-record change of magnitude $\le \Delta_1$.</div>
+</div>
+
+<!-- 20. Laplace proof -->
+<div class="slide">
+  <h2>Proof — Density Ratio</h2>
+  <div class="divider"></div>
+  <div class="proof-card">
+    <p>For neighbors $D, D'$ and any $z \in \mathbb{R}^k$:</p>
+    <div class="math-block" style="font-size:1.3rem; margin:6px 0;">$$f_{\mathcal{M}(D)}(z) = \prod_{i=1}^k \frac{1}{2b}\exp\!\Bigl(-\frac{|z_i - f(D)_i|}{b}\Bigr), \quad f_{\mathcal{M}(D')}(z) \text{ similarly.}$$</div>
+    <p>Ratio:</p>
+    <div class="math-block" style="font-size:1.3rem; margin:6px 0;">$$\frac{f_{\mathcal{M}(D)}(z)}{f_{\mathcal{M}(D')}(z)} = \prod_i \exp\!\Bigl(\frac{|z_i - f(D')_i| - |z_i - f(D)_i|}{b}\Bigr) \le \exp\!\Bigl(\frac{\|f(D) - f(D')\|_1}{b}\Bigr).$$</div>
+    <p>By definition $\|f(D) - f(D')\|_1 \le \Delta_1$, so ratio $\le e^{\Delta_1/b} = e^{\varepsilon}$. Integrating over any event $T$ preserves the bound. $\blacksquare$</p>
+  </div>
+</div>
+
+<!-- 21. Variance / noise remark -->
+<div class="slide">
+  <h2>Noise Variance</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$\mathrm{Var}(Y_i) = 2 b^2 = 2 \Delta_1^2 / \varepsilon^2$.</li>
+    <li>Large $\Delta_1$ ⇒ more sensitive $f$ ⇒ louder noise.</li>
+    <li>Small $\varepsilon$ ⇒ tighter privacy ⇒ louder noise.</li>
+  </ul>
+  <div class="highlight">Two equivalent intuitions: noise hides a single record's worst-case impact; noise budget scales with the function's worst-case influence.</div>
+</div>
+
+<!-- 22. Section 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>DP Selection</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Exponential mechanism &amp; noisy max for non-numeric outputs.</p>
+</div>
+
+<!-- 23. Motivating selection -->
+<div class="slide">
+  <h2>Selection Problems</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="ex-card">
+      <h3>Voting.</h3>
+      <p>$d$ candidates, $n$ users, $X_i \subseteq \{1, \dots, d\}$. Score: $q(j; D) = |\{i: j \in X_i\}|$. Non-private: $\arg\max_j q(j; D)$.</p>
+    </div>
+    <div class="ex-card">
+      <h3>Pricing.</h3>
+      <p>Set price $p$ given thresholds $X_i$. Revenue $q(p; D) = p \cdot |\{i: p \le X_i\}|$. Adding Laplace noise to $p$ can crash revenue to $0$.</p>
+    </div>
+  </div>
+  <div class="highlight" style="margin-top:14px;">Both are <strong>selection</strong> over a discrete (or discretized) set — Laplace on the output is wrong. Need a DP mechanism that respects the discrete structure.</div>
+</div>
+
+<!-- 24. Exponential mechanism -->
+<div class="slide">
+  <h2>Exponential Mechanism</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Definition.</h3>
+    <p>Given utility $q : \mathcal{X}^n \times \mathcal{Y} \to \mathbb{R}$ with sensitivity $\Delta = \max_{D, D'} \max_y |q(D, y) - q(D', y)|$, the Exponential Mechanism outputs</p>
+    <div class="math-block">$$\Pr[\mathcal{M}_{\mathrm{EM}}(D) = y] \;\propto\; \exp\!\Bigl(\frac{\varepsilon\, q(D, y)}{2 \Delta}\Bigr).$$</div>
+  </div>
+  <p style="margin-top:8px;">$\mathcal{M}_{\mathrm{EM}}$ is <strong>$\varepsilon$-DP</strong>. High-utility outputs are exponentially more likely; the $2\Delta$ scaling absorbs single-record perturbations.</p>
+</div>
+
+<!-- 25. EM utility prob -->
+<div class="slide">
+  <h2>Exponential Mechanism — Utility (High Probability)</h2>
+  <div class="divider"></div>
+  <div class="thm-card">
+    <h3>Theorem.</h3>
+    <p>Let $q_{\max} = \max_y q(D, y)$ and $d = |\mathcal{Y}|$. For $t \ge 0$,</p>
+    <div class="math-block" style="margin:4px 0; padding:10px 16px; font-size:1.4rem;">$$\Pr\!\Bigl[q(D, Y) < q_{\max} - \tfrac{2\Delta(\log d + t)}{\varepsilon}\Bigr] \;\le\; e^{-t}.$$</div>
+  </div>
+  <div class="proof-card" style="margin-top:10px;">
+    <h4>Proof.</h4>
+    <p>Let $B_t = \{y : q(D, y) < q_{\max} - \tfrac{2\Delta(\log d + t)}{\varepsilon}\}$. Then</p>
+    <div class="math-block" style="margin:4px 0; padding:10px 16px; font-size:1.35rem;">$$\Pr[Y \in B_t] \le \tfrac{\sum_{y\in B_t} \exp(\tfrac{\varepsilon}{2\Delta} q(y;D))}{\exp(\tfrac{\varepsilon}{2\Delta} q_{\max})} \le |B_t|\, e^{-(\log d + t)} \le e^{-t}. \;\blacksquare$$</div>
+  </div>
+</div>
+
+<!-- 26. EM utility expectation -->
+<div class="slide">
+  <h2>Exponential Mechanism — Utility (Expectation)</h2>
+  <div class="divider"></div>
+  <div class="thm-card">
+    <h3>Theorem.</h3>
+    <p>$\mathbb{E}[q_{\max} - q(D, Y)] \;\le\; \tfrac{2\Delta}{\varepsilon} (\log d + 1)$.</p>
+  </div>
+  <div class="proof-card" style="margin-top:10px;">
+    <h4>Proof.</h4>
+    <p>Let $Z = \tfrac{\varepsilon}{2\Delta}(q_{\max} - q(D, Y))$. With $z = \log d + t$,</p>
+    <div class="math-block" style="margin:4px 0; padding:10px 16px; font-size:1.4rem;">$$\mathbb{E}[Z] = \int_0^\infty \Pr[Z > z]\, dz \le \log d + \int_0^\infty e^{-t}\, dt = \log d + 1. \;\blacksquare$$</div>
+  </div>
+  <p style="margin-top:8px;">Logarithmic in $|\mathcal{Y}|$ — well-suited for large finite output spaces.</p>
+</div>
+
+<!-- 27. Concrete EM example -->
+<div class="slide">
+  <h2>Example: Most-Frequent Item (Voting)</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$\Delta = 1$ (one voter changes one count by at most 1).</li>
+    <li>$d = 100$, $\varepsilon = 0.5$, target $\beta = e^{-t} = 0.01$ ⇒ $t = \ln 100 \approx 4.6$.</li>
+    <li>Utility gap bound: $\tfrac{2\Delta}{\varepsilon}(\log d + t) \approx 36.8$.</li>
+  </ul>
+  <div class="math-block">$$\Pr[q_{\max} - q(D; Y) > 36.8] \le 0.01.$$</div>
+  <p>If winner leads runner-up by $> 36.8$ votes, winner is selected w.p. $\ge 99\%$.</p>
+</div>
+
+<!-- 28. Noisy Max -->
+<div class="slide">
+  <h2>Noisy Max (Report Noisy Max)</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Definition.</h3>
+    <p>Let $q$ have sensitivity $\Delta$. For each $y \in \mathcal{Y}$:</p>
+    <ol style="padding-left:24px; margin-top:6px;">
+      <li>Sample $Z_y \sim \mathrm{Exp}(2\Delta/\varepsilon)$ (i.i.d.).</li>
+      <li>Compute $s_y = q(y; D) + Z_y$.</li>
+      <li>Output $y^* = \arg\max_y s_y$.</li>
+    </ol>
+  </div>
+  <p style="margin-top:8px;">Same flavor as the exponential mechanism, but operates on noisy scores directly.</p>
+</div>
+
+<!-- 29. Noisy Max DP -->
+<div class="slide">
+  <h2>Theorem — Noisy Max is $\varepsilon$-DP</h2>
+  <div class="divider"></div>
+  <div class="proof-card">
+    <h4>Proof sketch.</h4>
+    <p>For neighbors $X, X'$ and any $y$, condition on $Z^{d\setminus y} = z^{d\setminus y}$:</p>
+    <div class="math-block" style="font-size:1.25rem; margin:6px 0;">$$\Pr[\mathcal{M}_{\mathrm{NM}}(X) = y \mid z^{d\setminus y}] \;=\; \Pr\!\bigl[Z_y \ge \max_{j \ne y} q(j;X) - q(y;X) + z_j\bigr].$$</div>
+    <p>$|q(j;X) - q(j;X')| \le \Delta$ and similarly for $q(y;\cdot)$ shifts the threshold by at most $2\Delta$. The key inequality for $Z_y \sim \mathrm{Exp}(2\Delta/\varepsilon)$ is</p>
+    <div class="math-block" style="margin:4px 0; padding:10px 16px; font-size:1.4rem;">$$\Pr[Z_y \ge K - 2\Delta] \;\le\; e^{\varepsilon}\, \Pr[Z_y \ge K].$$</div>
+    <p>Integrating over $z^{d\setminus y}$ yields $\Pr[\mathcal{M}_{\mathrm{NM}}(X) = y] \le e^{\varepsilon} \Pr[\mathcal{M}_{\mathrm{NM}}(X') = y]$. $\blacksquare$</p>
+  </div>
+</div>
+
+<!-- 30. Noisy Max utility -->
+<div class="slide">
+  <h2>Noisy Max — Utility</h2>
+  <div class="divider"></div>
+  <div class="thm-card">
+    <h3>Theorem.</h3>
+    <p>$\Pr\!\bigl[q_{\max} - q(Y; X) > \tfrac{2\Delta(\log d + t)}{\varepsilon}\bigr] \le e^{-t}$.</p>
+  </div>
+  <div class="proof-card" style="margin-top:10px;">
+    <h4>Proof.</h4>
+    <p>Let $c = \tfrac{2\Delta(\log d + t)}{\varepsilon}$. By optimality, $q(Y; X) + Z_Y \ge q_{\max} + Z_{y^*}$ so $q_{\max} - q(Y; X) \le Z_Y - Z_{y^*}$. Union bound + exponential tail:</p>
+    <div class="math-block" style="margin:4px 0; padding:10px 16px; font-size:1.4rem;">$$\Pr[\exists j: Z_j - Z_{y^*} > c] \;\le\; d \cdot \exp\!\bigl(-\tfrac{\varepsilon c}{2\Delta}\bigr) \;=\; e^{-t}. \;\blacksquare$$</div>
+  </div>
+  <p style="margin-top:8px;">Same logarithmic regret as the exponential mechanism.</p>
+</div>
+
+<!-- 31. Recap -->
+<div class="slide">
+  <h2>Recap</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Randomized response</strong>: $4\gamma$-DP via per-user bit flipping; sample complexity $\Theta(1/(\gamma^2 \alpha^2 \beta))$.</li>
+    <li><strong>$\varepsilon$-DP</strong>: $\Pr[\mathcal{M}(D)\in O] \le e^\varepsilon \Pr[\mathcal{M}(D')\in O]$ for all neighboring $D, D'$.</li>
+    <li><strong>Laplace mechanism</strong>: $\Delta_1/\varepsilon$-scale noise on numeric queries.</li>
+    <li><strong>Exponential mechanism &amp; Noisy Max</strong>: DP selection over discrete $\mathcal{Y}$ with $O(\log |\mathcal{Y}|/\varepsilon)$ regret.</li>
+  </ul>
+  <div class="highlight">Next deck: properties of DP — composition, post-processing, group privacy, subsampling, and DP $k$-means.</div>
+</div>
+
+<!-- 32. Closer -->
+<div class="slide end-slide">
+  <div class="big-word">Next</div>
+  <p class="big-word-sub">Composition, post-processing, and DP $k$-means.</p>
+</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

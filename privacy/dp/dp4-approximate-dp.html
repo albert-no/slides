@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Approximate DP and the Gaussian Mechanism — DP Lecture 4</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 22px 28px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.thm-card { background: #fff; border: 2px solid var(--yonsei-blue); border-radius: 12px; padding: 22px 28px; }
+.thm-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.proof-card { background: var(--light); border-left: 3px solid #888; border-radius: 0 8px 8px 0; padding: 14px 22px; font-size: 1.35rem; }
+.proof-card h4 { font-size: 1.2rem; color: var(--gray-text); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+.lem-card { background: #fff; border: 1.5px dashed var(--yonsei-blue); border-radius: 10px; padding: 16px 22px; }
+.lem-card h3 { color: var(--yonsei-blue); font-size: 1.3rem; margin-bottom: 4px; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">DP Lecture 4 · Foundations</div>
+  <h1>Approximate DP and<br>the Gaussian Mechanism</h1>
+  <div class="divider"></div>
+  <p class="subtitle">$(\varepsilon, \delta)$-DP, privacy-loss random variables, and Gaussian noise</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500; font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item"><div class="toc-num">01</div><div class="toc-rule"></div><div><div class="toc-label">$(\varepsilon, \delta)$-DP</div><div class="toc-sub">Approximate DP &amp; the privacy-loss RV</div></div></div>
+    <div class="toc-item"><div class="toc-num">02</div><div class="toc-rule"></div><div><div class="toc-label">Truncated Laplace</div><div class="toc-sub">Bounded-noise variant</div></div></div>
+    <div class="toc-item"><div class="toc-num">03</div><div class="toc-rule"></div><div><div class="toc-label">Gaussian mechanism</div><div class="toc-sub">$\ell_2$-sensitivity, $\sigma = \Delta_2\sqrt{2\ln(1.25/\delta)}/\varepsilon$</div></div></div>
+    <div class="toc-item"><div class="toc-num">04</div><div class="toc-rule"></div><div><div class="toc-label">Properties of approx. DP</div><div class="toc-sub">Composition, group, subsampling — restated</div></div></div>
+  </div>
+</div>
+
+<!-- 3. Section 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>$(\varepsilon, \delta)$-DP</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A small failure probability enables Gaussian noise and tighter bounds.</p>
+</div>
+
+<!-- 4. Definition -->
+<div class="slide">
+  <h2>Approximate Differential Privacy</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Definition ($(\varepsilon,\delta)$-DP, Dwork et al. 2006).</h3>
+    <p>$\mathcal{M}: \mathcal{X}^n \to \mathcal{Y}$ is <strong>$(\varepsilon, \delta)$-DP</strong> if for every neighboring $D, D'$ and every measurable $O \subseteq \mathcal{Y}$,</p>
+    <div class="math-block">$$\Pr[\mathcal{M}(D) \in O] \;\le\; e^{\varepsilon}\, \Pr[\mathcal{M}(D') \in O] + \delta.$$</div>
+  </div>
+  <ul style="margin-top:10px;">
+    <li>$\delta = 0$: <strong>pure</strong> $\varepsilon$-DP (Lecture 2).</li>
+    <li>$\delta > 0$ (e.g. $10^{-6}$): <strong>approximate</strong> DP — slack for tail events.</li>
+    <li>$\delta$ should be cryptographically small (e.g. $\ll 1/n$).</li>
+  </ul>
+</div>
+
+<!-- 5. Interpretation -->
+<div class="slide">
+  <h2>Interpretations</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Membership inference.</strong> An adversary's odds ratio is bounded by $e^\varepsilon$ except with probability $\delta$.</li>
+    <li><strong>Hypothesis testing.</strong> For $H_0$: individual $i$ in $D$ vs $H_1$: $i$ replaced — log-likelihood ratio $\le \varepsilon$ except for a $\delta$-mass event.</li>
+    <li><strong>Worst-case.</strong> Holds for every $(D, D')$ pair and every event $O$.</li>
+  </ul>
+  <div class="highlight">$\delta$ allows a small "catastrophic event" probability — must be controlled.</div>
+</div>
+
+<!-- 6. Privacy-loss random variable -->
+<div class="slide">
+  <h2>Privacy-Loss Random Variable</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Definition.</h3>
+    <p>For neighbors $X, X'$, the <em>privacy loss</em> at output $y$ is</p>
+    <div class="math-block">$$I_{X, X'}(y) \;=\; \log \frac{\Pr[\mathcal{M}(X) = y]}{\Pr[\mathcal{M}(X') = y]}.$$</div>
+    <p>The privacy-loss random variable is $I_{X, X'}(Y)$ with $Y = \mathcal{M}(X)$.</p>
+  </div>
+  <p style="margin-top:8px;">$\mathcal{M}$ is $(\varepsilon, \delta)$-DP iff a controlled tail bound on $I_{X, X'}(Y)$ holds for all neighboring $(X, X')$.</p>
+</div>
+
+<!-- 7. Standard proof technique -->
+<div class="slide">
+  <h2>Standard Proof Technique — Good/Bad Split</h2>
+  <div class="divider"></div>
+  <p>Partition the output space:</p>
+  <div class="math-block" style="font-size:1.4rem;">$$G = \{y \in \mathcal{Y} : I_{X, X'}(y) \le \varepsilon\}, \qquad B = \mathcal{Y} \setminus G.$$</div>
+  <p>For any $S \subseteq \mathcal{Y}$:</p>
+  <div class="math-block" style="font-size:1.4rem;">$$\Pr[\mathcal{M}(X) \in S] = \Pr[\mathcal{M}(X) \in S \cap G] + \Pr[\mathcal{M}(X) \in S \cap B] \;\le\; e^{\varepsilon}\Pr[\mathcal{M}(X') \in S] + \Pr[\mathcal{M}(X) \in B].$$</div>
+  <p>It suffices to show <strong>$\Pr[\mathcal{M}(X) \in B] \le \delta$</strong>, i.e. tail of $I_{X, X'}$ is $\le \delta$.</p>
+</div>
+
+<!-- 8. Section 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Truncated Laplace</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A bounded variant of the Laplace mechanism.</p>
+</div>
+
+<!-- 9. Truncated Laplace -->
+<div class="slide">
+  <h2>Truncated Laplacian Mechanism</h2>
+  <div class="divider"></div>
+  <p>Define $Z \sim \mathrm{LapTr}(\lambda, \tau)$ with pdf</p>
+  <div class="math-block">$$f_Z(z) \;=\; \begin{cases} \tfrac{1}{Z_0}\, e^{-|z|/\lambda} & |z| \le \tau \\ 0 & \text{otherwise} \end{cases}$$</div>
+  <p>The mechanism: $\mathcal{M}(X) = f(X) + (Z_1, \dots, Z_d)$ with $Z_i \overset{\text{iid}}\sim \mathrm{LapTr}(\Delta/\varepsilon, \tau)$ for appropriate $\tau$.</p>
+  <ul>
+    <li>Utility is comparable to standard Laplace.</li>
+    <li>Gives a <strong>worst-case bound</strong> on noise magnitude — important when downstream code cannot handle outliers.</li>
+  </ul>
+</div>
+
+<!-- 10. Section 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Gaussian Mechanism</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Gaussian noise on $\ell_2$-sensitivity — the workhorse of DP-ML.</p>
+</div>
+
+<!-- 11. Gaussian mechanism definition -->
+<div class="slide">
+  <h2>Gaussian Mechanism</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Definition.</h3>
+    <p>For $f : \mathcal{X}^n \to \mathbb{R}^d$ with $\ell_2$-sensitivity $\Delta_2 = \max_{D, D'} \|f(D) - f(D')\|_2$, release</p>
+    <div class="math-block">$$\mathcal{M}(D) \;=\; f(D) + \mathcal{N}(0, \sigma^2 I), \qquad \sigma \ge \frac{\Delta_2\, \sqrt{2 \ln(1.25/\delta)}}{\varepsilon}.$$</div>
+  </div>
+  <div class="thm-card" style="margin-top:10px;">
+    <h3>Theorem.</h3>
+    <p>The Gaussian mechanism with this $\sigma$ is $(\varepsilon, \delta)$-DP.</p>
+  </div>
+  <div class="cite">Dwork &amp; Roth, "Algorithmic Foundations of Differential Privacy", 2014.</div>
+</div>
+
+<!-- 12. Proof 1D part 1 -->
+<div class="slide">
+  <h2>Proof — 1-D Privacy Loss</h2>
+  <div class="divider"></div>
+  <div class="proof-card">
+    <p>1-D case. Let $K = f(X) - f(X')$ with $|K| \le \Delta$. Privacy loss at output $y$:</p>
+    <div class="math-block" style="font-size:1.25rem; margin:4px 0;">$$I_{X, X'}(y) = \log\frac{\exp(-(y - f(X))^2 / 2\sigma^2)}{\exp(-(y - f(X'))^2 / 2\sigma^2)} = \frac{(y - f(X'))^2 - (y - f(X))^2}{2\sigma^2}.$$</div>
+    <p>Expanding the squares:</p>
+    <div class="math-block" style="font-size:1.25rem; margin:4px 0;">$$I_{X, X'}(y) \;=\; \frac{K\,(K + 2(y - f(X)))}{2\sigma^2}.$$</div>
+    <p>Under $\mathcal{M}(X) = f(X) + \mathcal{N}(0, \sigma^2)$, $(Y - f(X))/\sigma \sim \mathcal{N}(0, 1)$.</p>
+  </div>
+</div>
+
+<!-- 13. Proof 1D part 2 -->
+<div class="slide">
+  <h2>Proof — Tail Bound on Privacy Loss</h2>
+  <div class="divider"></div>
+  <div class="proof-card">
+    <p>Use $\Pr[\mathcal{N}(0, 1) \ge t] \le e^{-t^2/2}$:</p>
+    <div class="math-block" style="font-size:1.2rem; margin:4px 0;">$$\begin{aligned} \Pr[I_{X, X'}(Y) > \varepsilon] &= \Pr\!\Bigl[\frac{Y - f(X)}{\sigma} > \frac{\varepsilon\sigma}{K} - \frac{K}{2\sigma}\Bigr] \\ &\le \exp\!\Bigl(-\tfrac12 \bigl(\tfrac{\varepsilon\sigma}{\Delta} - \tfrac{\Delta}{2\sigma}\bigr)^2\Bigr) \\ &\le \exp\!\Bigl(-\tfrac12 \tfrac{\varepsilon^2\sigma^2}{\Delta^2}\Bigr) \;\le\; \delta. \end{aligned}$$</div>
+    <p>The last step uses $\sigma \ge \Delta \sqrt{2\ln(1.25/\delta)}/\varepsilon$. Combine with the good/bad split ⇒ $(\varepsilon, \delta)$-DP. $\blacksquare$</p>
+  </div>
+</div>
+
+<!-- 14. Multi-dim lemma -->
+<div class="slide">
+  <h2>Multi-Dim — Useful Lemma</h2>
+  <div class="divider"></div>
+  <div class="lem-card">
+    <h3>Lemma.</h3>
+    <p>If $Z = (Z_1, \dots, Z_d) \sim \mathcal{N}(0, \sigma^2 I)$, then for any $v \in \mathbb{R}^d$, $v \cdot Z \sim \mathcal{N}(0, \sigma^2 \|v\|^2)$.</p>
+  </div>
+  <p style="margin-top:10px;">This reduces the multi-dimensional privacy loss to a 1-D Gaussian — exactly the situation handled above.</p>
+</div>
+
+<!-- 15. Multi-dim proof -->
+<div class="slide">
+  <h2>Proof — Multi-Dim Privacy Loss</h2>
+  <div class="divider"></div>
+  <div class="proof-card">
+    <p>Let $v = f(X) - f(X') \in \mathbb{R}^d$ with $\|v\|_2 \le \Delta_2$. For $Y = f(X) + \mathcal{N}(0, \sigma^2 I)$:</p>
+    <div class="math-block" style="font-size:1.2rem; margin:4px 0;">$$I_{X, X'}(y) = \frac{\|y - f(X')\|^2 - \|y - f(X)\|^2}{2\sigma^2} = \frac{\|v\|^2}{2\sigma^2} + \frac{v \cdot (y - f(X))}{\sigma^2}.$$</div>
+    <p>By the lemma, $v \cdot (Y - f(X)) \sim \mathcal{N}(0, \|v\|^2 \sigma^2)$. The 1-D analysis then bounds the tail by $\delta$. $\blacksquare$</p>
+  </div>
+</div>
+
+<!-- 16. ℓ_1 vs ℓ_2 sensitivity -->
+<div class="slide">
+  <h2>$\ell_2$ vs $\ell_1$ Sensitivity</h2>
+  <div class="divider"></div>
+  <p>For $d$ binary queries, $f(X) \in \{0, 1\}^d$:</p>
+  <div class="grid-2">
+    <div class="card">
+      <h3>$\ell_1$ sensitivity</h3>
+      <p>$\Delta_1 = d$ — one record can change every answer.</p>
+    </div>
+    <div class="card">
+      <h3>$\ell_2$ sensitivity</h3>
+      <p>$\Delta_2 = \sqrt d$ — combining the per-coordinate changes in $L^2$.</p>
+    </div>
+  </div>
+  <div class="highlight" style="margin-top:14px;">Gaussian noise calibrated to $\Delta_2$ uses $\sqrt{d}$-scale vs the $d$-scale required by Laplace — Gaussian wins in high dimension.</div>
+</div>
+
+<!-- 17. Section 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Properties of Approximate DP</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Post-processing, composition, group privacy, subsampling — restated for $(\varepsilon,\delta)$.</p>
+</div>
+
+<!-- 18. Post-processing (ε, δ) -->
+<div class="slide">
+  <h2>Post-Processing for $(\varepsilon, \delta)$-DP</h2>
+  <div class="divider"></div>
+  <div class="thm-card">
+    <h3>Theorem.</h3>
+    <p>If $\mathcal{M}$ is $(\varepsilon, \delta)$-DP and $f$ is any (possibly randomized) function, $f \circ \mathcal{M}$ is also $(\varepsilon, \delta)$-DP.</p>
+  </div>
+  <div class="proof-card" style="margin-top:10px;">
+    <h4>Proof.</h4>
+    <p>For neighbors $D, D'$ and any $O' \subseteq \mathcal{Y}'$,</p>
+    <div class="math-block" style="margin:4px 0; padding:8px 12px; font-size:1.15rem;">$$\Pr[f(\mathcal{M}(D)) \in O'] = \Pr[\mathcal{M}(D) \in f^{-1}(O')] \le e^\varepsilon \Pr[\mathcal{M}(D') \in f^{-1}(O')] + \delta = e^\varepsilon \Pr[f(\mathcal{M}(D')) \in O'] + \delta. \;\blacksquare$$</div>
+  </div>
+</div>
+
+<!-- 19. Basic composition -->
+<div class="slide">
+  <h2>Basic Composition for $(\varepsilon, \delta)$-DP</h2>
+  <div class="divider"></div>
+  <div class="thm-card">
+    <h3>Theorem.</h3>
+    <p>If $\mathcal{M}_1, \mathcal{M}_2$ are $(\varepsilon_1, \delta_1)$- and $(\varepsilon_2, \delta_2)$-DP respectively, then $(\mathcal{M}_1, \mathcal{M}_2)$ is $(\varepsilon_1 + \varepsilon_2,\, \delta_1 + \delta_2)$-DP.</p>
+  </div>
+  <ul style="margin-top:10px;">
+    <li>$k$-fold: $(\sum_i \varepsilon_i,\, \sum_i \delta_i)$-DP. Linear in $k$.</li>
+    <li><strong>Advanced composition</strong> (Lecture 5) replaces $k\varepsilon$ with $\sqrt{2 k \ln(1/\delta')}\,\varepsilon$ at the cost of an extra $\delta'$.</li>
+  </ul>
+</div>
+
+<!-- 20. Group privacy -->
+<div class="slide">
+  <h2>Group Privacy for $(\varepsilon, \delta)$-DP</h2>
+  <div class="divider"></div>
+  <div class="thm-card">
+    <h3>Theorem.</h3>
+    <p>If $\mathcal{M}$ is $(\varepsilon, \delta)$-DP, it is $(t\varepsilon,\; \tfrac{e^{t\varepsilon} - 1}{e^{\varepsilon} - 1} \delta)$-DP for any group of $t$ individuals.</p>
+    <p style="margin-top:6px;" class="muted">For small $\varepsilon$, the $\delta$ factor is $\approx t\delta$.</p>
+  </div>
+  <p style="margin-top:10px;">Iterate the single-record composition $t$ times; both privacy parameters grow with $t$.</p>
+</div>
+
+<!-- 21. Subsampling (ε, δ) -->
+<div class="slide">
+  <h2>Subsampling Amplification for $(\varepsilon, \delta)$-DP</h2>
+  <div class="divider"></div>
+  <p>Apply Poisson subsampling with rate $q$ before $\mathcal{M}$ (each user included i.i.d. with prob $q$). If $\mathcal{M}$ is $(\varepsilon, \delta)$-DP, then $\mathcal{M}'$ is $(\varepsilon', \delta')$-DP with</p>
+  <div class="math-block" style="font-size:1.5rem;">$$\varepsilon' \;=\; \ln(1 + q(e^\varepsilon - 1)), \qquad \delta' \;=\; q\,\delta.$$</div>
+  <ul>
+    <li>Pure DP ($\delta = 0$) ⇒ subsampled mechanism remains pure DP.</li>
+    <li>For small $q, \varepsilon$: $\varepsilon' \approx q\varepsilon$, $\delta' = q\delta$.</li>
+  </ul>
+</div>
+
+<!-- 22. Many-iteration accounting -->
+<div class="slide">
+  <h2>From Single-Step to Many-Step Accounting</h2>
+  <div class="divider"></div>
+  <p>Exact formulas above bound <strong>one application</strong> of a subsampled mechanism.</p>
+  <p>For repeated applications (e.g. DP-SGD training over thousands of steps), use:</p>
+  <ul>
+    <li><strong>Moments Accountant</strong> [Abadi et al. 2016]: tracks higher moments of the privacy-loss RV.</li>
+    <li><strong>Rényi DP</strong> [Mironov 2017]: composition becomes additive in $\varepsilon$ at fixed Rényi order $\alpha$ (Lecture 6).</li>
+  </ul>
+  <div class="highlight">These tools achieve the tight $\sqrt T$ scaling needed for practical DP-SGD.</div>
+</div>
+
+<!-- 23. Recap -->
+<div class="slide">
+  <h2>Recap</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>$(\varepsilon, \delta)$-DP</strong>: additive slack $\delta$ controls the tail of the privacy-loss RV.</li>
+    <li><strong>Good/bad split</strong> is the standard proof skeleton: bound $\Pr[\mathcal{M}(X) \in B] \le \delta$.</li>
+    <li><strong>Gaussian mechanism</strong>: $\sigma = \Delta_2 \sqrt{2 \ln(1.25/\delta)}/\varepsilon$ yields $(\varepsilon, \delta)$-DP; preferred in high $d$.</li>
+    <li><strong>Properties</strong>: post-processing, composition, group, subsampling — all carry over with appropriate $\delta$ scaling.</li>
+  </ul>
+  <div class="highlight">Next: turning these mechanisms into a private learning algorithm — DP-SGD.</div>
+</div>
+
+<!-- 24. Closer -->
+<div class="slide end-slide">
+  <div class="big-word">Next</div>
+  <p class="big-word-sub">DP empirical risk minimization &amp; DP-SGD.</p>
+</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

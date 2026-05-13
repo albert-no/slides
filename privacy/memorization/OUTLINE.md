@@ -113,37 +113,57 @@ User-captured visual examples (placed per instruction):
 | Part | Topic | Line |
 |---|---|---|
 | Title / Contents / Recall | | `:18-79` |
-| **01** — Defining LLM memorization | Zhang, Carlini 2019, exposure, Feldman | `:80-157` |
-| | Zhang 2017 — random labels | `:90` |
-| | **Carlini 2019** — Secret Sharer (canary) | `:105` |
-| | Exposure — calibrated memorization score | `:119` |
-| | Null distribution tail $\Pr[\mathrm{exp}\ge t]\le 2^{-t}$ | `:132` |
-| | **Feldman 2020** — long-tail theorem | `:144` |
-| **02** — Extraction attacks | Carlini 2021, scaling, dedup, Nasr, Min-K | `:158-288` |
-| | **Carlini 2021** — $k$-extractable, GPT-2 | `:168` |
-| | Extraction pipeline | `:181` |
-| | **Carlini 2022** — three scaling laws | `:204` |
-| | Repetition empirical law | `:220` |
-| | Lee 2022 — deduplication | `:231` |
-| | Nasr 2023 — divergence attack | `:245` |
-| | **Min-K% Prob** (Shi 2024) | `:259` |
-| | **Min-K%++** (Zhang 2025) | `:274` |
-| **03** — Adversarial compression and beyond | ACR, books, defenses | `:289-478` |
-| | Why a new definition | `:299` |
-| | **ACR formal definition** (Schwarzschild 2024) | `:313` |
-| | MiniPrompt — search by GCG | `:327` |
-| | ACR — what it reveals | `:355` |
-| | Hayes 2024 — probabilistic extraction | `:370` |
-| | Cooper 2025 — books from open-weight LLMs | `:384` |
-| | Aerni 2024 — non-adversarial reproduction | `:400` |
-| | Defenses (dedup / DP / unlearning) | `:414` |
-| | Memorization vs MIA | `:440` |
-| | Open problems | `:461` |
-| | Takeaways (LLMs) | `:473` |
+| **Training objective** — next-token prediction + why it memorizes | `:82-104` |
+| | Autoregressive factorization + NLL loss | `:82` |
+| | Why this objective memorizes | `:93` |
+| **01** — Defining LLM memorization | Zhang, Carlini 2019, exposure, Feldman | `:110-231` |
+| | Zhang 2017 — random labels | `:118` |
+| | **Carlini 2019** — Secret Sharer (canary, R = 10^9 example) | `:133` |
+| | Exposure — calibrated memorization score | `:147` |
+| | Null distribution tail $\Pr[\mathrm{exp}\ge t]\le 2^{-t}$ (derivation) | `:160` |
+| | Long-tail intuition | `:176` |
+| | Counterfactual memorization (definition) | `:191` |
+| | **Feldman 2020** — long-tail theorem | `:204` |
+| | Implication — memorization is necessary | `:217` |
+| **02** — Extraction attacks | Carlini 2021, scaling, dedup, Nasr, Min-K | `:233-442` |
+| | **Carlini 2021** — $k$-extractable, $k$-eidetic, GPT-2 | `:241` |
+| | $f_\theta(\mathrm{greedy}, p)$ diagram | `:255` |
+| | Extraction pipeline | `:285` |
+| | $p_{\text{ref}}$ reference-model variants | `:308` |
+| | **Carlini 2022** — three scaling laws | `:323` |
+| | Repetition empirical law | `:339` |
+| | Term-by-term ($p_0$, $N_\theta$, $L_{\text{ctx}}$, rarity) | `:350` |
+| | Lee 2022 — deduplication | `:366` |
+| | Nasr 2023 — divergence attack | `:380` |
+| | What came out (PII, code, copyrighted text) | `:397` |
+| | **Min-K% Prob** (Shi 2024) — lowest-$K\%$ tokens | `:413` |
+| | **Min-K%++** (Zhang 2025) | `:427` |
+| **03** — Adversarial compression and beyond | ACR, books, defenses | `:444-770` |
+| | Why a new definition (Zhang et al. 2023 counterfactual cited) | `:452` |
+| | Retraining cost — counterfactual is infeasible | `:467` |
+| | **ACR formal definition** (Schwarzschild 2024) | `:483` |
+| | Reading ACR — compression as storage | `:497` |
+| | GCG primer (Zou 2023) | `:511` |
+| | GCG one iteration | `:525` |
+| | MiniPrompt — search by GCG | `:552` |
+| | ACR — what it reveals | `:580` |
+| | Hayes 2024 — probabilistic extraction $(n,q)$-extractable | `:595` |
+| | Approximate match — LCS variant (longest common substring) | `:606` |
+| | Cooper 2025 — books from open-weight LLMs (setup) | `:620` |
+| | Cooper 2025 — headline results (Llama 3.1 70B, HP1, 1984) | `:634` |
+| | Cooper 2025 — lawsuit discourse implications | `:648` |
+| | Aerni 2024 — non-adversarial reproduction (benign prompts) | `:663` |
+| | Aerni 2024 — findings (15% avg, 100% worst-case) | `:677` |
+| | Defenses (dedup / DP / unlearning) | `:692` |
+| | Memorization vs MIA | `:718` |
+| | Open problems — measurement | `:739` |
+| | Open problems — scope | `:750` |
+| | Open problems — theory and defense | `:762` |
+| | Takeaways (LLMs) | `:774` |
 
-**Key formulas:** Exposure `:124`; Null tail bound `:136`; Long-tail mem `:149`; $k$-extractable `:173`; Repetition law `:224`; Min-K% `:265`; Min-K%++ `:279`; ACR `:319`.
+**Key formulas:** Next-token NLL `:88`; Exposure `:152`; Null tail derivation `:165`; Counterfactual mem `:196`; Long-tail theorem `:210`; $k$-extractable `:246`; Repetition law `:343`; Min-K% `:418`; Min-K%++ `:432`; ACR `:489`; Probabilistic extraction `:600`; LCS variant `:611`.
 
-**Key theorems / lemmas:** Long-tail (Feldman 2020) `:149`; ACR definition (Schwarzschild 2024) `:319`.
+**Key theorems / lemmas:** Long-tail (Feldman 2020) `:210`; ACR definition (Schwarzschild 2024) `:489`; Counterfactual memorization (Zhang et al. 2023) `:472`.
 
 ---
 

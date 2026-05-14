@@ -38,7 +38,7 @@ Symptom: math inside a diagram renders as `$g_1$` instead of italic *g* with a s
 
 Cause: KaTeX auto-render walks the HTML DOM but doesn't descend into SVG text nodes.
 
-Fix: build diagram structure in HTML (flex/grid layout, div boxes, CSS-styled circles) with a thin SVG overlay for arrows only. Pattern: `.fl4-*` (slide 4), `.ldp-*` (slide 9), `.rdm-*` (slide 30) in `privacy/DP-FL.html`.
+Fix: build diagram structure in HTML (flex/grid layout, div boxes, CSS-styled circles) with a thin SVG overlay for arrows only. Pattern: `.fl4-*` (slide 4), `.ldp-*` (slide 9), `.rdm-*` (slide 30) in `privacy/dp/dp8-fl.html`.
 
 ## `\begin{cases}` clipped at right edge
 

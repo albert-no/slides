@@ -90,9 +90,10 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Christ–Gunn–Zamir undetectable + PRF construction | `privacy/watermark/watermark.html:386-419` |
 | Adaptive watermark + WaterMax | `privacy/watermark/watermark.html:486-516` |
 | SynthID-Text production watermark | `privacy/watermark/watermark.html:542` |
-| DP definition / LDP vs central / PrivUnit | `privacy/dp/DP-FL.html:364-569` |
-| RRSC + k-closest exact-optimality (NeurIPS 2023) | `privacy/dp/DP-FL.html:571-822` |
-| DP-SGD / DP-Diffusion / DP-RDM | `privacy/dp/DP-FL.html:827-1004` |
+| **DP foundations series (dp1–dp7)** | `privacy/dp/dp1`…`dp7-ml-paradigms.html` |
+| DP definition / LDP vs central / PrivUnit | `privacy/dp/dp8-fl.html:364-569` |
+| RRSC + k-closest exact-optimality (NeurIPS 2023) | `privacy/dp/dp8-fl.html:571-822` |
+| DP-SGD / DP-Diffusion / DP-RDM | `privacy/dp/dp8-fl.html:827-1004` |
 | Diffusion-LLM safety (A2D) | `dllm/dllm.html:429-522` |
 | Rainbow Padding (EOS overflow) | `dllm/dllm.html:323-427` |
 | dgMARK (diffusion-LLM watermarking) | `dllm/dllm.html:524-569` |

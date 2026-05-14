@@ -1,11 +1,11 @@
 # privacy/ — Privacy series
 
-Six sub-tracks: a unified generative-model review (`generative/` — diffusion + LLM) followed by the privacy stack — DP (single NeurIPS 2023 talk), MIA (5-lecture series with paired notes), plus three single-deck topics (memorization, unlearning, watermarking). Together they form the privacy / copyright / provenance stack.
+Six sub-tracks: a unified generative-model review (`generative/` — diffusion + LLM) followed by the privacy stack — DP (8-deck lecture series ending in the NeurIPS 2023 DP-FL talk), MIA (5-lecture series with paired notes), plus three single-deck topics (memorization, unlearning, watermarking). Together they form the privacy / copyright / provenance stack.
 
 ## Subfolders
 
 - **`generative/`** — Generative-model review. **Diffusion** (5 lectures, from-scratch Bayes-route, SDE, DDIM, guidance, discrete) and **LLM** (1 brief deck: tokens, decoder-only transformer, NLL pretraining, sampling, privacy hooks). Companion notes: `diffusion3-sde-score-note.html` and `note/2_difffusion.tex` (LaTeX). See `generative/OUTLINE.md`.
-- **`dp/`** — Differential privacy + federated learning (NeurIPS 2023 talk). Single deck `DP-FL.html` plus `dp-fl.txt` (compressed handout) and `figs/`. See `dp/OUTLINE.md`.
+- **`dp/`** — Differential privacy lecture series (8 decks). `dp1`–`dp7` build foundations: reconstruction attacks → pure DP → properties → approximate DP → DP-SGD → RDP → DP in ML / PATE. `dp8-fl.html` is the capstone applied talk (NeurIPS 2023). Source LaTeX in `tex/dp.tex`. See `dp/OUTLINE.md`.
 - **`mia/`** — Membership inference attacks (5 lectures, paired notes). Plus legacy `old/MIA.html`. See `mia/OUTLINE.md`.
 - **`memorization/`** — Memorization in generative models. **Two decks (split 2026-05)**: `memorization-diffusion.html` (intro + lawsuits + Bartz/Anthropic, diffusion detection, SAIL, CLIP-pad, LLM bridge) and `memorization-llm.html` (canary→ACR). Captured paper figures in `figs/`. See `memorization/OUTLINE.md`.
 - **`unlearning/`** — Machine unlearning (single comprehensive deck). Definitions, classification methods, LLM methods, benchmarks, lab work. Source: `slide.pdf` (the talk Albert gave on this topic). See `unlearning/OUTLINE.md`.
@@ -25,11 +25,27 @@ Six sub-tracks: a unified generative-model review (`generative/` — diffusion +
 | Discrete diffusion + score-entropy loss | `generative/diffusion5-guidance-discrete.html` | `:287-425` |
 | LLM brief overview (tokens, transformer, NLL, sampling) | `generative/llm.html` | `:72-296` |
 | LLM privacy-hook map (per-token loss / verbatim / sampling / conditional) | `generative/llm.html` | `:258-281` |
-| (ε,δ)-DP definition | `dp/DP-FL.html` | `:375-395` |
-| Local DP minimax rate | `dp/DP-FL.html` | `:483` |
-| PrivUnit mechanism | `dp/DP-FL.html` | `:523` |
-| **RRSC + k-closest exact-optimality (NeurIPS 2023)** | `dp/DP-FL.html` | `:571-822` |
-| DP-Diffusion / DP-RDM | `dp/DP-FL.html` | `:852-1004` |
+| Reconstruction attack (Dinur–Nissim) | `dp/dp1-reconstruction.html` | `:181-244` |
+| Randomized response + sample complexity | `dp/dp2-pure-dp.html` | `:78-148` |
+| **$\varepsilon$-DP definition + Laplace mechanism + proof** | `dp/dp2-pure-dp.html` | `:172, :275-298` |
+| Exponential mechanism + Noisy Max (with proofs) | `dp/dp2-pure-dp.html` | `:349-450` |
+| Composition + post-processing + group privacy | `dp/dp3-properties.html` | `:84-194` |
+| **Subsampling amplification proof** | `dp/dp3-properties.html` | `:205-273` |
+| Why additive DP fails (counterexamples) | `dp/dp3-properties.html` | `:296-340` |
+| DP $k$-means + privacy proof | `dp/dp3-properties.html` | `:354-415` |
+| **$(\varepsilon,\delta)$-DP + privacy-loss RV** | `dp/dp4-approximate-dp.html` | `:84-128` |
+| **Gaussian mechanism + 1-D / multi-D proofs** | `dp/dp4-approximate-dp.html` | `:172-244` |
+| DP-ERM via exponential mechanism + utility proof | `dp/dp5-erm.html` | `:113-160` |
+| Advanced composition ($\sqrt k$) | `dp/dp5-erm.html` | `:171-201` |
+| **DP-SGD algorithm + privacy + utility** | `dp/dp5-erm.html` | `:254-315` |
+| **Rényi DP definition + Gaussian via RDP proof** | `dp/dp6-rdp.html` | `:138-285` |
+| Input / Inference / Model DP paradigms | `dp/dp7-ml-paradigms.html` | `:78-141` |
+| **PATE three-phase architecture** | `dp/dp7-ml-paradigms.html` | `:151-220` |
+| (ε,δ)-DP definition (capstone restatement) | `dp/dp8-fl.html` | `:375-395` |
+| Local DP minimax rate | `dp/dp8-fl.html` | `:483` |
+| PrivUnit mechanism | `dp/dp8-fl.html` | `:523` |
+| **RRSC + k-closest exact-optimality (NeurIPS 2023)** | `dp/dp8-fl.html` | `:571-822` |
+| DP-Diffusion / DP-RDM | `dp/dp8-fl.html` | `:852-1004` |
 | Yeom overfitting bound | `mia/mia3-theory.html` | `:143` |
 | Sablayrolles BB≈WB | `mia/mia3-theory.html` | `:436` |
 | LiRA | `mia/mia4-modern.html` | `:264-503` |
@@ -74,8 +90,8 @@ Six sub-tracks: a unified generative-model review (`generative/` — diffusion +
 - **generative review ↔ everything downstream**: `generative/` is the unified review opener for the privacy series. Diffusion lectures pin down score, sampling, discrete-space generation; `llm.html` pins down $p_\theta(\cdot\mid x_{<t})$, per-token loss $\ell_t$, the sampling step. MIA / memorization / watermarking / unlearning each plug into one of those pieces (LLM 4-card map at `generative/llm.html:258-281`).
 - **diffusion ↔ llm (within `generative/`)**: parallel reviews. Diffusion = continuous score-based generation; LLM = discrete autoregressive counterpart. Privacy attacks differ in mechanism but share targets (training-data leakage, provenance, removal).
 - **diffusion ↔ MIA**: diffusion-model MIA is a research frontier — `mia/mia4-modern.html:731-789` covers it. The diffusion-models theory in `privacy/generative/` provides the substrate.
-- **DP ↔ MIA**: `mia/mia1-foundations.html:601-617` shows DP as MIA bound (`Adv ≤ e^ε−1+δ`); `dp/DP-FL.html` builds the DP machinery. DP-SGD is referenced from `mia/mia4-modern.html:117`.
-- **DP ↔ unlearning**: certified $(\varepsilon,\delta)$-unlearning reuses the DP definition from `dp/DP-FL.html:375` — same bound, different distribution comparison.
+- **DP ↔ MIA**: `mia/mia1-foundations.html:601-617` shows DP as MIA bound (`Adv ≤ e^ε−1+δ`); `dp/dp8-fl.html` builds the DP machinery. DP-SGD is referenced from `mia/mia4-modern.html:117`.
+- **DP ↔ unlearning**: certified $(\varepsilon,\delta)$-unlearning reuses the DP definition from `dp/dp8-fl.html:375` — same bound, different distribution comparison.
 - **memorization ↔ unlearning ↔ MIA**: memorization is the *signal* unlearning aims to remove and MIA aims to detect. `memorization/memorization-diffusion.html` + `memorization-llm.html` motivate the other two; defenses slide flows directly into `unlearning/`. `unlearning/unlearning.html:317` reuses the SALUN MIA-Efficacy column.
 - **memorization ↔ watermark**: both about provenance under copyright pressure, but opposite directions — memorization detects unintended retention, watermarking adds intended traceability. Same lawsuits motivate both.
 - **dgMARK ↔ watermark**: lab thread for diffusion LLMs — full context in `dllm/dllm.html:524-569`, broader watermark survey here.

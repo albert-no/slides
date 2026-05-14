@@ -568,7 +568,7 @@ Don't apply when the figure is simple (single plot, simple schematic) — one sl
 </div>
 ```
 
-**Diagram with math labels.** Build structure in HTML (flex/grid + divs), use SVG only for arrows. Reference: `.fl4-*` / `.ldp-*` / `.rdm-*` in `privacy/DP-FL.html`. Never put `$…$` inside SVG `<text>` — KaTeX skips it (see GOTCHAS).
+**Diagram with math labels.** Build structure in HTML (flex/grid + divs), use SVG only for arrows. Reference: `.fl4-*` / `.ldp-*` / `.rdm-*` in `privacy/dp/dp8-fl.html`. Never put `$…$` inside SVG `<text>` — KaTeX skips it (see GOTCHAS).
 
 **Algorithm slide.** A single styled box, centered. Don't pad with a right-column auxiliary diagram — the algorithm is the exhibit. Per-deck define `.<deck>-algo` once if reused (background `--light`, left border 3px `--yonsei-blue`, padding `16px 22px`, radius `0 10px 10px 0`).
 
@@ -716,7 +716,7 @@ Every folder carries an `OUTLINE.md`: root navigator, folder overview, leaf subf
 
 **Before writing or substantively rewriting any slide content, read the relevant `OUTLINE.md` files.** The cost is a few seconds; the reward is avoiding redefinition, contradiction, or duplication. Two scenarios trigger this:
 
-1. **In-track continuity (same lecture series).** When extending a multi-deck series — e.g., writing `privacy/mia/mia3-theory.html` — open `privacy/mia/OUTLINE.md` and `privacy/OUTLINE.md` first. Confirm what notation, definitions, attacks, theorems, and benchmarks earlier decks already established. Do not redefine $(\varepsilon, \delta)$-DP if `privacy/dp/DP-FL.html` covered it; refer back via a brief "Recall (Lecture X)" instead. Conversely, if a prerequisite has *not* been covered, decide whether to (a) add a one-slide recap, (b) point students to the prior deck, or (c) defer the topic. Skipping this check produces decks that talk past each other.
+1. **In-track continuity (same lecture series).** When extending a multi-deck series — e.g., writing `privacy/mia/mia3-theory.html` — open `privacy/mia/OUTLINE.md` and `privacy/OUTLINE.md` first. Confirm what notation, definitions, attacks, theorems, and benchmarks earlier decks already established. Do not redefine $(\varepsilon, \delta)$-DP if `privacy/dp/dp4-approximate-dp.html` (or the capstone `dp8-fl.html`) covered it; refer back via a brief "Recall (Lecture X)" instead. Conversely, if a prerequisite has *not* been covered, decide whether to (a) add a one-slide recap, (b) point students to the prior deck, or (c) defer the topic. Skipping this check produces decks that talk past each other.
 
 2. **Cross-folder reuse (same topic, different track).** When writing on a topic that may already live elsewhere — diffusion (`infotheory/diffusion/` vs `privacy/generative/` vs `dllm/dllm.html`), DP (`privacy/dp/` vs `privacy/mia/mia1-foundations.html`), MI bounds (`infotheory/mi/` vs anywhere CLIP/InfoNCE comes up) — open the **root `OUTLINE.md` quick-lookup table** and the relevant leaf files in the *other* folder. Decide explicitly: reuse the derivation as-is, adapt to the new framing, link via "see also", or deliberately contradict (with rationale). Do not rederive a theorem in track B that already has a clean statement and proof in track A's notes — link to `<file>:<line>` instead.
 

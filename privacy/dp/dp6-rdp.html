@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rényi Differential Privacy — DP Lecture 6</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 22px 28px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.thm-card { background: #fff; border: 2px solid var(--yonsei-blue); border-radius: 12px; padding: 22px 28px; }
+.thm-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.proof-card { background: var(--light); border-left: 3px solid #888; border-radius: 0 8px 8px 0; padding: 14px 22px; font-size: 1.3rem; }
+.proof-card h4 { font-size: 1.2rem; color: var(--gray-text); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+.lem-card { background: #fff; border: 1.5px dashed var(--yonsei-blue); border-radius: 10px; padding: 16px 22px; }
+.lem-card h3 { color: var(--yonsei-blue); font-size: 1.3rem; margin-bottom: 4px; }
+.page-num { position: absolute; bottom: 14px; right: 28px; font-size: 1rem; color: var(--gray-text); letter-spacing: 0.04em; font-weight: 400; z-index: 5; }
+.title-slide .page-num { display: none; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">DP Lecture 6 · Alternative Definitions</div>
+  <h1>Rényi Differential<br>Privacy</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A divergence-based DP that composes additively</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500; font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item"><div class="toc-num">01</div><div class="toc-rule"></div><div><div class="toc-label">KL-DP</div><div class="toc-sub">DP via KL divergence</div></div></div>
+    <div class="toc-item"><div class="toc-num">02</div><div class="toc-rule"></div><div><div class="toc-label">Rényi divergence</div><div class="toc-sub">A one-parameter family</div></div></div>
+    <div class="toc-item"><div class="toc-num">03</div><div class="toc-rule"></div><div><div class="toc-label">RDP &amp; properties</div><div class="toc-sub">Composition, conversion to $(\varepsilon,\delta)$</div></div></div>
+    <div class="toc-item"><div class="toc-num">04</div><div class="toc-rule"></div><div><div class="toc-label">Gaussian via RDP</div><div class="toc-sub">Closed-form analysis</div></div></div>
+  </div>
+</div>
+
+<!-- 3. Section 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>KL-Differential Privacy</h1>
+  <div class="divider"></div>
+  <p class="subtitle">DP as a distributional similarity.</p>
+</div>
+
+<!-- 4. KL-DP definition -->
+<div class="slide">
+  <h2>From Pure DP to Distributional Similarity</h2>
+  <div class="divider"></div>
+  <p>Pure / approximate DP bound</p>
+  <div class="math-block">$$\Pr[\mathcal{M}(X) \in S] \;\le\; e^\varepsilon \Pr[\mathcal{M}(X') \in S] \;(+ \delta)$$</div>
+  <p>for <em>all events</em> $S$. A natural alternative: compare the <strong>distributions</strong> of $\mathcal{M}(X), \mathcal{M}(X')$ directly via a divergence.</p>
+  <div class="def-card" style="margin-top:14px;">
+    <h3>Definition (KL-DP).</h3>
+    <p>$\mathcal{M}$ is <strong>$\varepsilon$ KL-DP</strong> if $D(\mathcal{M}(X) \| \mathcal{M}(X')) \le \varepsilon$ for all neighboring $X, X'$.</p>
+  </div>
+</div>
+
+<!-- 5. Section 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Rényi Divergence</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A one-parameter family interpolating KL and $\ell_\infty$.</p>
+</div>
+
+<!-- 6. Rényi divergence -->
+<div class="slide">
+  <h2>Rényi Divergence</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Definition.</h3>
+    <p>For $\alpha > 1$ and distributions $P, Q$,</p>
+    <div class="math-block">$$D_\alpha(P \| Q) \;=\; \frac{1}{\alpha - 1} \ln \mathbb{E}_{x \sim Q}\!\left[\Bigl(\frac{P(x)}{Q(x)}\Bigr)^\alpha\right].$$</div>
+  </div>
+  <p style="margin-top:10px;">$D_\alpha$ is non-negative; $D_\alpha(P \| P) = 0$. Larger $\alpha$ ⇒ more weight on rare-but-large likelihood-ratio events.</p>
+</div>
+
+<!-- 7. Limits -->
+<div class="slide">
+  <h2>Limiting Cases</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>$\alpha \to 1^+$</h3>
+      <p>$D_\alpha(P \| Q) \to D(P \| Q)$, the KL divergence. By convention $D_1 = D$.</p>
+    </div>
+    <div class="card">
+      <h3>$\alpha \to \infty$</h3>
+      <p>$D_\alpha(P \| Q) \to \max_x \log \tfrac{P(x)}{Q(x)}$, the worst-case log-likelihood ratio — i.e. pure DP.</p>
+    </div>
+  </div>
+  <div class="highlight" style="margin-top:14px;">RDP at high $\alpha$ recovers pure DP; at $\alpha = 1$ it becomes the average-case KL bound.</div>
+</div>
+
+<!-- 8. Section 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Rényi DP &amp; Properties</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A family that composes additively.</p>
+</div>
+
+<!-- 9. RDP definition -->
+<div class="slide">
+  <h2>Rényi Differential Privacy</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Definition (Mironov 2017).</h3>
+    <p>$\mathcal{M}$ satisfies <strong>$(\alpha, \varepsilon)$-RDP</strong> if for all neighboring $X, X'$,</p>
+    <div class="math-block">$$D_\alpha\bigl(\mathcal{M}(X) \,\big\|\, \mathcal{M}(X')\bigr) \;\le\; \varepsilon.$$</div>
+  </div>
+  <p style="margin-top:10px;">Indexed by Rényi order $\alpha$; small $\alpha$ ≈ KL, large $\alpha$ ≈ pure DP.</p>
+  <div class="cite">Mironov, "Rényi Differential Privacy", CSF 2017.</div>
+</div>
+
+<!-- 10. Composition property -->
+<div class="slide">
+  <h2>RDP — Additive Composition</h2>
+  <div class="divider"></div>
+  <div class="thm-card">
+    <h3>Composition.</h3>
+    <p>If $\mathcal{M}_1$ is $(\alpha, \varepsilon_1)$-RDP and $\mathcal{M}_2$ is $(\alpha, \varepsilon_2)$-RDP (adaptive), then $(\mathcal{M}_1, \mathcal{M}_2)$ is $(\alpha, \varepsilon_1 + \varepsilon_2)$-RDP.</p>
+  </div>
+  <ul style="margin-top:10px;">
+    <li>Composition is <strong>linear in $\varepsilon$ at a fixed $\alpha$</strong> — no extra $\delta$, no $\sqrt{2k\ln(1/\delta')}$ term.</li>
+    <li>To get an $(\varepsilon, \delta)$ bound after $k$ steps, compose first at order $\alpha$, then convert.</li>
+  </ul>
+  <div class="highlight">RDP is the cleanest accounting tool for iterative mechanisms (DP-SGD, PATE).</div>
+</div>
+
+<!-- 11. Conversion theorem -->
+<div class="slide">
+  <h2>Conversion: RDP ⇒ $(\varepsilon, \delta)$-DP</h2>
+  <div class="divider"></div>
+  <div class="thm-card">
+    <h3>Theorem.</h3>
+    <p>If $\mathcal{M}$ is $(\alpha, \varepsilon)$-RDP, then for any $0 < \delta < 1$,</p>
+    <div class="math-block">$$\mathcal{M} \text{ is } \Bigl(\varepsilon + \tfrac{\ln(1/\delta)}{\alpha - 1},\; \delta\Bigr)\text{-DP}.$$</div>
+  </div>
+  <p style="margin-top:8px;">Standard Markov / Chernoff bound on the $\alpha$-moment of the privacy-loss RV. Optimize over $\alpha$ to get the tightest $(\varepsilon, \delta)$ trade-off.</p>
+  <ul>
+    <li>Example: $(2, \varepsilon)$-RDP with $\delta = e^{-m}$ ⇒ $(\varepsilon + m,\; e^{-m})$-DP.</li>
+  </ul>
+</div>
+
+<!-- 12. RDP lemma -->
+<div class="slide">
+  <h2>Lemma — $\infty$-Divergence Tames All Orders</h2>
+  <div class="divider"></div>
+  <div class="lem-card">
+    <h3>Lemma.</h3>
+    <p>If $D_\infty(P \| Q) \le \varepsilon$ and $D_\infty(Q \| P) \le \varepsilon$, then for $\alpha \ge 0$,</p>
+    <div class="math-block" style="margin-top:6px;">$$D_\alpha(P \| Q) \;\le\; 2 \alpha\, \varepsilon^2.$$</div>
+  </div>
+  <p style="margin-top:10px;">$\varepsilon$-DP (a worst-case bound) implies an average-case Rényi bound that scales as $\alpha\varepsilon^2$ — the key inequality for tight composition.</p>
+</div>
+
+<!-- 13. Advanced comp via RDP -->
+<div class="slide">
+  <h2>Advanced Composition via RDP</h2>
+  <div class="divider"></div>
+  <p>Composing $k$ $(\varepsilon, \delta)$-DP mechanisms:</p>
+  <ol style="padding-left:24px;">
+    <li>Each one is $(\alpha, 2\alpha \varepsilon^2)$-RDP by the lemma.</li>
+    <li>By additive RDP composition, total is $(\alpha, 2\alpha k \varepsilon^2)$-RDP.</li>
+    <li>Set $2\alpha k \varepsilon^2 \approx 2(\sqrt k \varepsilon)^2 \cdot \alpha$ — the $\sqrt k$ scaling pops out.</li>
+  </ol>
+  <p>Converting back:</p>
+  <div class="math-block">$$\Pr[\mathcal{M}(X) \in S] \;\le\; \exp\!\Bigl(2\varepsilon \sqrt{k\, \log(1/\Pr[\mathcal{M}(X) \in S])}\Bigr) \Pr[\mathcal{M}(X') \in S].$$</div>
+  <p>This yields the advanced-composition $\sqrt k\,\varepsilon$ growth from Lecture 5.</p>
+</div>
+
+<!-- 14. Section 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Gaussian via RDP</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A closed-form RDP guarantee for the Gaussian mechanism.</p>
+</div>
+
+<!-- 15. Gaussian RDP theorem -->
+<div class="slide">
+  <h2>Gaussian Mechanism — RDP</h2>
+  <div class="divider"></div>
+  <p>Setup: $f : \mathcal{X}^n \to \mathbb{R}^d$ with $\ell_2$-sensitivity $\Delta$; $\mathcal{M}(X) = f(X) + \mathcal{N}(0, \sigma^2 I)$.</p>
+  <div class="thm-card" style="margin-top:8px;">
+    <h3>Theorem (Mironov 2017).</h3>
+    <p>For all $\alpha > 1$, the Gaussian mechanism is $(\alpha, \varepsilon(\alpha))$-RDP with</p>
+    <div class="math-block">$$\varepsilon(\alpha) \;=\; \frac{\alpha\, \Delta^2}{2\, \sigma^2}.$$</div>
+  </div>
+  <p style="margin-top:10px;" class="muted">RDP $\varepsilon$ is linear in $\alpha$ — composition over $k$ steps just multiplies by $k$.</p>
+</div>
+
+<!-- 16. Conversion to (ε, δ) -->
+<div class="slide">
+  <h2>From Gaussian RDP to $(\varepsilon, \delta)$-DP</h2>
+  <div class="divider"></div>
+  <p>Using $\varepsilon = \varepsilon(\alpha) + \tfrac{\log(1/\delta)}{\alpha - 1}$:</p>
+  <div class="math-block">$$\varepsilon \;=\; \frac{\alpha\, \Delta^2}{2\, \sigma^2} \;+\; \frac{\log(1/\delta)}{\alpha - 1}.$$</div>
+  <p>Optimizing over $\alpha$:</p>
+  <div class="math-block">$$\sigma \;\ge\; \frac{\Delta}{\varepsilon}\sqrt{2 \log(1.25/\delta)}.$$</div>
+  <p>This recovers exactly the classic Gaussian-mechanism guarantee from Lecture 4 — the $1.25$ constant absorbs the optimization slack.</p>
+</div>
+
+<!-- 17. Proof setup -->
+<div class="slide">
+  <h2>Proof — Step 1: Set Up the Integral</h2>
+  <div class="divider"></div>
+  <div class="proof-card">
+    <p>For $Y \sim \mathcal{N}(f(X'), \sigma^2 I)$,</p>
+    <div class="math-block" style="font-size:1.2rem; margin:4px 0;">$$D_\alpha(\mathcal{M}(X) \| \mathcal{M}(X')) = \tfrac{1}{\alpha - 1} \log \int f_{\mathcal{M}(X)}(y)^\alpha\, f_{\mathcal{M}(X')}(y)^{1-\alpha}\, dy.$$</div>
+    <p>Substituting the Gaussian densities ($\sigma^2 I$ covariance, means $f(X)$ and $f(X')$):</p>
+    <div class="math-block" style="font-size:1.2rem; margin:4px 0;">$$= \tfrac{1}{\alpha-1}\log \int \tfrac{1}{\sqrt{(2\pi\sigma^2)^d}}\, \exp\!\Bigl(-\tfrac{\alpha\|y - f(X)\|^2 + (1-\alpha)\|y - f(X')\|^2}{2\sigma^2}\Bigr)\, dy.$$</div>
+  </div>
+</div>
+
+<!-- 18. Proof step 2 -->
+<div class="slide">
+  <h2>Proof — Step 2: Complete the Square</h2>
+  <div class="divider"></div>
+  <div class="proof-card">
+    <p>Inside the exponent, separate the quadratic-in-$y$ part from the constant:</p>
+    <div class="math-block" style="font-size:1.15rem; margin:4px 0;">$$\alpha\|y - f(X)\|^2 + (1-\alpha)\|y - f(X')\|^2 = \|y\|^2 - 2\langle y, \alpha f(X) + (1-\alpha) f(X')\rangle + \alpha\|f(X)\|^2 + (1-\alpha)\|f(X')\|^2.$$</div>
+    <p>Integrating the Gaussian over $y$ contributes $\exp\!\bigl(\tfrac{1}{2\sigma^2}\|\alpha f(X) + (1-\alpha) f(X')\|^2\bigr)$.</p>
+  </div>
+</div>
+
+<!-- 19. Proof step 3 -->
+<div class="slide">
+  <h2>Proof — Step 3: Algebra</h2>
+  <div class="divider"></div>
+  <div class="proof-card">
+    <p>Combining:</p>
+    <div class="math-block" style="font-size:1.2rem; margin:4px 0;">$$D_\alpha(\mathcal{M}(X)\|\mathcal{M}(X')) = \tfrac{1}{\alpha - 1}\cdot \tfrac{\alpha(\alpha-1)}{2\sigma^2}\|f(X) - f(X')\|^2 = \tfrac{\alpha\,\|f(X) - f(X')\|^2}{2\sigma^2}.$$</div>
+    <p>Bounding $\|f(X) - f(X')\|_2 \le \Delta$:</p>
+    <div class="math-block" style="font-size:1.3rem;">$$D_\alpha \;\le\; \frac{\alpha\, \Delta^2}{2\sigma^2}. \;\blacksquare$$</div>
+  </div>
+</div>
+
+<!-- 20. Recap -->
+<div class="slide">
+  <h2>Recap</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>KL-DP</strong>: $D(\mathcal{M}(X) \| \mathcal{M}(X')) \le \varepsilon$ — distributional similarity, but composes poorly alone.</li>
+    <li><strong>Rényi DP $(\alpha, \varepsilon)$</strong>: bounds $D_\alpha$. Composition is additive in $\varepsilon$ at fixed $\alpha$.</li>
+    <li><strong>Conversion</strong>: $(\alpha, \varepsilon)$-RDP ⇒ $(\varepsilon + \tfrac{\ln(1/\delta)}{\alpha - 1},\, \delta)$-DP; optimize $\alpha$.</li>
+    <li><strong>Gaussian mechanism</strong>: closed-form $(\alpha,\, \tfrac{\alpha\Delta^2}{2\sigma^2})$-RDP — the engine behind tight DP-SGD accounting.</li>
+  </ul>
+  <div class="highlight">Next: DP paradigms in ML, including PATE.</div>
+</div>
+
+<!-- 21. Closer -->
+<div class="slide end-slide">
+  <div class="big-word">Next</div>
+  <p class="big-word-sub">DP paradigms in ML &amp; PATE.</p>
+</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  const slides = document.querySelectorAll('.deck > .slide');
+  const total = slides.length;
+  slides.forEach((s, i) => {
+    if (s.classList.contains('title-slide')) return;
+    if (s.querySelector(':scope > .page-num')) return;
+    const n = document.createElement('div');
+    n.className = 'page-num';
+    n.textContent = (i + 1) + ' / ' + total;
+    s.appendChild(n);
+  });
+});
+</script>
+</body>
+</html>

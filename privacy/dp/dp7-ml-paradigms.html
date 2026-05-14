@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DP in ML & PATE — DP Lecture 7</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 22px 28px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.thm-card { background: #fff; border: 2px solid var(--yonsei-blue); border-radius: 12px; padding: 22px 28px; }
+.thm-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.warn-card { background: #fff4f0; border-left: 5px solid #d94040; border-radius: 0 8px 8px 0; padding: 18px 24px; }
+.warn-card h3 { color: #b03030; margin-bottom: 6px; }
+.good-card { background: #f3f9f3; border-left: 5px solid #2e8b57; border-radius: 0 8px 8px 0; padding: 18px 24px; }
+.good-card h3 { color: #1b6b3f; margin-bottom: 6px; }
+.pate-box { background: #fff; border: 2px solid var(--yonsei-blue); border-radius: 10px; padding: 14px 18px; text-align: center; font-weight: 500; }
+.pate-row { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 12px; align-items: center; }
+.pate-arrow { font-size: 1.6rem; color: var(--gray-text); text-align: center; }
+.page-num { position: absolute; bottom: 14px; right: 28px; font-size: 1rem; color: var(--gray-text); letter-spacing: 0.04em; font-weight: 400; z-index: 5; }
+.title-slide .page-num { display: none; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">DP Lecture 7 · ML Paradigms</div>
+  <h1>DP Paradigms in ML<br>and PATE</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Where to inject noise; consensus learning via teacher ensembles</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500; font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item"><div class="toc-num">01</div><div class="toc-rule"></div><div><div class="toc-label">Where to inject noise?</div><div class="toc-sub">Output, objective, gradient</div></div></div>
+    <div class="toc-item"><div class="toc-num">02</div><div class="toc-rule"></div><div><div class="toc-label">Input vs Inference vs Model DP</div><div class="toc-sub">Three places to draw the privacy boundary</div></div></div>
+    <div class="toc-item"><div class="toc-num">03</div><div class="toc-rule"></div><div><div class="toc-label">PATE</div><div class="toc-sub">Teacher ensemble + noisy aggregation + student</div></div></div>
+    <div class="toc-item"><div class="toc-num">04</div><div class="toc-rule"></div><div><div class="toc-label">Privacy accounting &amp; trade-offs</div><div class="toc-sub">RDP for PATE; advantages and limits</div></div></div>
+  </div>
+</div>
+
+<!-- 3. Section 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Where to Inject Noise?</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Three training-time strategies for DP-ERM.</p>
+</div>
+
+<!-- 4. Three strategies -->
+<div class="slide">
+  <h2>Three Training-Time Strategies</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>1. Parameter / Output</h3>
+      <p>Solve $w^* = \arg\min L(w; D)$ exactly; release $w^* + Z$ with calibrated $Z$. Works for simple, strongly convex losses with bounded global sensitivity.</p>
+    </div>
+    <div class="card">
+      <h3>2. Objective</h3>
+      <p>Add a random linear term: $L(w; D) + \langle b, w\rangle$; fully optimize the noisy objective. Yields a private optimum analytically.</p>
+    </div>
+    <div class="card">
+      <h3>3. Gradient (DP-SGD)</h3>
+      <p>Clip per-example gradients, add Gaussian noise, account privacy across steps. Default for deep learning.</p>
+    </div>
+  </div>
+  <div class="highlight" style="margin-top:14px;">For convex losses, all three give excess risk $\;O\bigl(\tfrac{d \log(1/\delta)}{n\varepsilon}\bigr)$.</div>
+</div>
+
+<!-- 5. Section 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Where to Draw the Privacy Boundary?</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Input, inference, or the model itself.</p>
+</div>
+
+<!-- 6. Input DP -->
+<div class="slide">
+  <h2>Input Perturbation — Local DP</h2>
+  <div class="divider"></div>
+  <div class="warn-card">
+    <h3>Setup.</h3>
+    <p>Noise is added to raw data $z_i$ <em>before</em> any model sees it (e.g. randomized response).</p>
+  </div>
+  <ul style="margin-top:10px;">
+    <li><strong>Strongest trust model</strong>: server never sees real data.</li>
+    <li><strong>Severe utility loss</strong> in high-dimensional tasks (vision, NLP) — noise destroys signal.</li>
+    <li>Discussed in detail in the DP-FL deck (Lecture 8).</li>
+  </ul>
+</div>
+
+<!-- 7. Inference DP -->
+<div class="slide">
+  <h2>Inference DP — One-Off Output Perturbation</h2>
+  <div class="divider"></div>
+  <p>Train $f_\theta$ <strong>non-privately</strong>; at inference release $f_\theta(x) + Z$ with $Z$ scaled to global sensitivity.</p>
+  <div class="warn-card" style="margin-top:10px;">
+    <h3>Critical flaw.</h3>
+    <p>Composition: $k$ queries cost $\approx k\varepsilon$. After enough queries, the privacy budget is exhausted and the model must be shut down.</p>
+    <p>Unsuitable for public-facing or high-throughput APIs.</p>
+  </div>
+</div>
+
+<!-- 8. Model DP -->
+<div class="slide">
+  <h2>Model DP (Global DP) — The Goal</h2>
+  <div class="divider"></div>
+  <div class="good-card">
+    <h3>Idea.</h3>
+    <p>Bake the privacy guarantee into the model parameters $\theta$ (DP-SGD, PATE-trained students).</p>
+  </div>
+  <ul style="margin-top:10px;">
+    <li>By <strong>post-processing immunity</strong>, the deployed model can be queried infinitely without further leakage.</li>
+    <li>Avoids the rapid budget exhaustion of inference DP and the utility loss of local DP.</li>
+    <li>Modern DP-ML targets Model DP.</li>
+  </ul>
+</div>
+
+<!-- 9. Section 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>PATE</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Private Aggregation of Teacher Ensembles.</p>
+</div>
+
+<!-- 10. PATE intuition -->
+<div class="slide">
+  <h2>PATE — Core Intuition</h2>
+  <div class="divider"></div>
+  <p>DP-SGD interferes with the optimizer; <strong>PATE</strong> shifts the paradigm:</p>
+  <div class="highlight">
+    If many independent models agree on a prediction, that prediction does <strong>not</strong> depend on any single sensitive record.
+  </div>
+  <p style="margin-top:10px;">PATE replaces gradient perturbation with <strong>ensemble learning</strong> + <strong>noisy aggregation</strong> + <strong>knowledge transfer</strong>.</p>
+  <div class="cite">Papernot, Abadi, Erlingsson, Goodfellow, Talwar, "Semi-supervised Knowledge Transfer for Deep Learning from Private Training Data", ICLR 2017.</div>
+</div>
+
+<!-- 11. PATE phase 1 -->
+<div class="slide">
+  <h2>Phase 1 — Teacher Ensemble</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Partition the sensitive dataset $X = \bigcup_{i=1}^n X_i$ into <strong>disjoint subsets</strong>.</li>
+    <li>Train teacher $T_i$ on $X_i$ independently. Architectures may differ.</li>
+  </ul>
+  <div class="good-card" style="margin-top:14px;">
+    <h3>Privacy property.</h3>
+    <p>Adding/removing one individual changes exactly one subset $X_i$ — and thus exactly one teacher $T_i$.</p>
+  </div>
+</div>
+
+<!-- 12. PATE phase 2 -->
+<div class="slide">
+  <h2>Phase 2 — Noisy Aggregation of Votes</h2>
+  <div class="divider"></div>
+  <p>For a public input $x$, each teacher casts a vote $y_i = T_i(x) \in \mathcal{Y}$. Tally:</p>
+  <div class="math-block">$$v_y \;=\; |\{i : T_i(x) = y\}| \qquad \text{for each } y \in \mathcal{Y}.$$</div>
+  <ul>
+    <li><strong>Laplace PATE</strong>: $\tilde v_y = v_y + \mathrm{Lap}(1/\varepsilon)$.</li>
+    <li><strong>PATE-G (Gaussian)</strong>: $\tilde v_y = v_y + \mathcal{N}(0, \sigma^2)$.</li>
+    <li>Aggregated label: $\hat y = \arg\max_y \tilde v_y$ (a noisy-max query, sensitivity 1).</li>
+  </ul>
+</div>
+
+<!-- 13. PATE phase 3 -->
+<div class="slide">
+  <h2>Phase 3 — Train a Student Model</h2>
+  <div class="divider"></div>
+  <div class="warn-card">
+    <h3>Problem.</h3>
+    <p>If end-users query the teacher ensemble directly, every query consumes privacy budget — Inference-DP trap.</p>
+  </div>
+  <div class="good-card" style="margin-top:10px;">
+    <h3>Solution.</h3>
+    <p>Train a <strong>Student</strong> on the public-data examples labeled by the noisy ensemble. Deploy the student.</p>
+  </div>
+  <p style="margin-top:10px;">By post-processing immunity, the student is <strong>Model DP</strong> — query it forever.</p>
+</div>
+
+<!-- 14. PATE pipeline diagram -->
+<div class="slide">
+  <h2>PATE Pipeline</h2>
+  <div class="divider"></div>
+  <div class="pate-row">
+    <div class="pate-box">Sensitive data $X = \bigcup X_i$</div>
+    <div class="pate-arrow">→</div>
+    <div class="pate-box">Teachers $T_1, \dots, T_n$</div>
+    <div class="pate-arrow">→</div>
+    <div class="pate-box">Vote $v_y$ + noise</div>
+  </div>
+  <div class="pate-row" style="margin-top:18px;">
+    <div class="pate-box">Public unlabeled $x^{\mathrm{pub}}$</div>
+    <div class="pate-arrow">→</div>
+    <div class="pate-box">Noisy labels $\hat y$</div>
+    <div class="pate-arrow">→</div>
+    <div class="pate-box" style="background:var(--yonsei-blue); color:var(--white);">Student (Model DP)</div>
+  </div>
+  <div class="highlight" style="margin-top:14px;">Only the student is deployed. The teacher ensemble — and the sensitive data — never leave the trusted boundary.</div>
+</div>
+
+<!-- 15. Section 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Accounting &amp; Trade-offs</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Composition, advantages, and limitations.</p>
+</div>
+
+<!-- 16. PATE accounting -->
+<div class="slide">
+  <h2>Privacy Accounting</h2>
+  <div class="divider"></div>
+  <p>Labeling $m$ public examples requires composing $m$ noisy-aggregation queries. Advanced composition:</p>
+  <div class="math-block">$$\varepsilon' \;=\; \sqrt{2 m \log(1/\delta')}\, \varepsilon \;+\; m\, \varepsilon (e^\varepsilon - 1).$$</div>
+  <ul>
+    <li>Scales poorly for moderate $m$.</li>
+    <li>Modern PATE uses <strong>Rényi DP</strong>: when teachers strongly agree (large vote margin), the per-query RDP cost is much smaller than worst-case — <em>data-dependent accounting</em>.</li>
+  </ul>
+  <div class="highlight">RDP exploits consensus: high-agreement queries cost much less than the worst-case bound suggests.</div>
+</div>
+
+<!-- 17. Advantages -->
+<div class="slide">
+  <h2>PATE — Advantages</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Architecture-agnostic.</strong> Teachers can be SVMs, decision trees, or NNs; student can be a different architecture entirely.</li>
+    <li><strong>Intuitive guarantee.</strong> One person affects one teacher; consensus implies robustness.</li>
+    <li><strong>Parallelizable.</strong> Teachers train independently; no cross-batch communication.</li>
+    <li><strong>Inherits post-processing.</strong> Deployed student is Model DP.</li>
+  </ul>
+</div>
+
+<!-- 18. Limitations -->
+<div class="slide">
+  <h2>PATE — Limitations</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Needs a public unlabeled dataset</strong> in the same domain as the sensitive data.</li>
+    <li><strong>Needs a large sensitive dataset</strong>: $n$ subsets must each be big enough to train an accurate teacher.</li>
+    <li><strong>Scales poorly with $|\mathcal{Y}|$</strong>: noisy max over many classes spreads noise — degraded utility for $|\mathcal{Y}|$ in the hundreds.</li>
+  </ul>
+  <div class="warn-card" style="margin-top:14px;">
+    <h3>Bottom line.</h3>
+    <p>PATE shines when teachers actually agree. When agreement is rare (long-tail classes, distribution shift), DP-SGD typically wins.</p>
+  </div>
+</div>
+
+<!-- 19. Recap -->
+<div class="slide">
+  <h2>Recap</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Three perturbation strategies</strong> for DP-ERM: parameter, objective, gradient.</li>
+    <li><strong>Privacy boundary</strong>: input (local DP), inference (composes badly), <strong>model</strong> (the goal).</li>
+    <li><strong>PATE</strong>: teacher ensemble → noisy aggregation → student. Model DP via post-processing.</li>
+    <li><strong>Accounting</strong>: RDP makes data-dependent (consensus-aware) bounds practical.</li>
+  </ul>
+  <div class="highlight">Next deck (Lecture 8, <code>dp8-fl</code>): putting it all together for federated learning — LDP, communication, and exact-optimal mean estimation.</div>
+</div>
+
+<!-- 20. Closer -->
+<div class="slide end-slide">
+  <div class="big-word">Next</div>
+  <p class="big-word-sub">Lecture 8 — DP-FL: federated learning under local privacy.</p>
+</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  const slides = document.querySelectorAll('.deck > .slide');
+  const total = slides.length;
+  slides.forEach((s, i) => {
+    if (s.classList.contains('title-slide')) return;
+    if (s.querySelector(':scope > .page-num')) return;
+    const n = document.createElement('div');
+    n.className = 'page-num';
+    n.textContent = (i + 1) + ' / ' + total;
+    s.appendChild(n);
+  });
+});
+</script>
+</body>
+</html>

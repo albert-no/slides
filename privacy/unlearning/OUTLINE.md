@@ -80,6 +80,6 @@ Single comprehensive deck on machine unlearning. ~50-slide pass with theory (New
 
 - **Memorization** is the motivating signal — see `privacy/memorization/memorization.html`. Lawsuits and Cooper's framing reused.
 - **MIA-Efficacy** as evaluation reuses the threshold attacks defined in `privacy/mia/mia1-foundations.html` and the LiRA-style calibration from `privacy/mia/mia4-modern.html`.
-- **DP** as the parent of certified unlearning — see `privacy/dp/DP-FL.html:375`. Newton-step theorem reuses DP-Gaussian noise calibration.
+- **DP** as the parent of certified unlearning — see `privacy/dp/dp8-fl.html:375` (or the $(\varepsilon,\delta)$-DP definition in `privacy/dp/dp4-approximate-dp.html:81`). Newton-step theorem reuses DP-Gaussian noise calibration.
 - **Influence function** also referenced in unlearning literature beyond IU — Sekhari capacity follows from same first-order analysis.
 - **Diffusion-LLM watermarking (dgMARK)** is a sibling lab thread — see `dllm/dllm.html:524-569`. Watermark deck `privacy/watermark/watermark.html` is the broader context.

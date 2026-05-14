@@ -95,10 +95,10 @@
     </div>
     <div>
       <h3>Timeline</h3>
-      <p><strong>2023</strong>: MDLM, SEDD (principled training)</p>
-      <p><strong>2024</strong>: RADD (connection to AR)</p>
+      <p><strong>2023</strong>: SEDD (concrete score, score entropy)</p>
+      <p><strong>2024</strong>: MDLM, RADD (simplified objective, AR bridge)</p>
       <p><strong>Feb 2025</strong>: LLaDA 8B (first competitive dLLM)</p>
-      <p><strong>2025</strong>: Dream 7B, LLaDA 2.0 (rapid scaling)</p>
+      <p><strong>2025</strong>: Dream 7B, LLaDA 2.0 (100B MoE)</p>
     </div>
   </div>
 </div>
@@ -190,52 +190,47 @@
 <!-- SLIDE 8 — SEDD -->
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide">
-  <h2>SEDD: Score Entropy</h2>
+  <div class="pill" style="margin-bottom:12px;">SEDD</div>
+  <h2>Score Entropy Discrete Diffusion</h2>
   <div class="divider"></div>
-  <p>Novel loss for discrete diffusion: directly parameterizes the <strong>concrete score</strong> (ratio of transition probabilities).</p>
+  <p><strong>Motivation:</strong> continuous diffusion built on score matching; no discrete analogue gave matching gains.</p>
+  <p><strong>Key idea:</strong> parameterize the <strong>concrete score</strong> $s_\theta(y\mid x_t) \approx p_t(y)/p_t(x_t)$; train with score entropy.</p>
   <div class="math-block">$$\mathcal{L}_{\text{SE}} = \mathbb{E}_{t,x_0,x_t}\!\left[\sum_{y \neq x_t} s_\theta(y \mid x_t, t) - \log s_\theta(x_0 \mid x_t, t)\right]$$</div>
-  <ul>
-    <li>Principled connection to continuous diffusion score matching</li>
-    <li>First discrete diffusion competitive on language modeling</li>
-    <li>Foundation for all subsequent scaling work</li>
-  </ul>
-  <div class="cite">Lou et al., "Discrete Diffusion Modeling by Estimating the Ratios of the Data Distribution", ICML 2024.</div>
+  <p>First discrete diffusion competitive with GPT-2; <strong>25–75% perplexity</strong> drop over prior LM diffusion.</p>
+  <div class="cite">Lou, Meng, Ermon, SEDD, ICML 2024.</div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
 <!-- SLIDE 9 — RADD -->
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide">
-  <h2>RADD: Absorbing Diffusion = Any-Order AR</h2>
+  <div class="pill" style="margin-bottom:12px;">RADD</div>
+  <h2>Absorbing Diffusion = Any-Order AR</h2>
   <div class="divider"></div>
-  <p>Clean-data conditionals reveal that absorbing diffusion and any-order autoregressive modeling share the same conditional family.</p>
+  <p><strong>Motivation:</strong> SEDD's concrete score is time-conditional and expensive — can it be simplified?</p>
+  <p><strong>Key idea:</strong> in absorbing diffusion, the concrete score factors as a <strong>time-independent</strong> conditional times a known scalar.</p>
+  <div class="math-block">$$s_\theta(y \mid x_t, t) \;=\; \underbrace{p(y \mid x_t^{\text{unmasked}})}_{\text{time-free clean-data conditional}} \cdot\; \lambda(t)$$</div>
   <div class="highlight">
-    <strong>Bridge result:</strong> optimal absorbing-diffusion denoiser = any-order AR model.
+    <strong>Bridge:</strong> absorbing-diffusion ELBO equals expected NLL of an <strong>any-order autoregressive</strong> model.
   </div>
-  <ul>
-    <li>Unifies two seemingly different paradigms</li>
-    <li>Justifies AR-style training tricks for diffusion</li>
-    <li>Clean theoretical foundation for subsequent scaling</li>
-  </ul>
-  <div class="cite">Ou et al., "Absorption Diffusion Revisited", 2024.</div>
+  <div class="cite">Ou et al., RADD, NeurIPS 2024.</div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
 <!-- SLIDE 10 — LLaDA -->
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide">
-  <h2>LLaDA: Diffusion at 8B Scale</h2>
+  <div class="pill" style="margin-bottom:12px;">LLaDA</div>
+  <h2>Diffusion at 8B Scale</h2>
   <div class="divider"></div>
-  <p>First diffusion LLM trained at <strong>8B&nbsp;parameter scale</strong> with competitive general-purpose performance.</p>
+  <p><strong>Motivation:</strong> challenge the assumption that LLM capabilities <strong>require</strong> autoregressive modeling.</p>
+  <p><strong>Method:</strong> forward random masking; Transformer predicts masked tokens; trained from scratch under PT + SFT.</p>
   <ul>
-    <li>Masked diffusion objective, large-scale training data</li>
-    <li>Instruction-tuned variant (LLaDA-8B-Instruct)</li>
-    <li>Competitive with AR models on math, code, QA</li>
+    <li>8B params, competitive with LLaMA3-8B on in-context learning</li>
+    <li>Strong instruction following after SFT (multi-turn dialogue)</li>
+    <li>Surpasses GPT-4o on a reversal poem completion task</li>
   </ul>
-  <div class="highlight">
-    <strong>Favorable scaling laws:</strong> dLLM quality tracks compute.
-  </div>
-  <div class="cite">Nie et al., "LLaDA: Large Language Diffusion with mAsking", 2025.</div>
+  <div class="cite">Nie et al., "Large Language Diffusion Models", arXiv:2502.09992, 2025.</div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
@@ -246,20 +241,21 @@
   <div class="divider"></div>
   <div class="grid-2">
     <div>
-      <h3>Dream 7B (2025)</h3>
-      <p>Open-weight 7B masked diffusion model.</p>
-      <p>Strong reasoning; compatible with standard fine-tuning.</p>
-      <p>Community adoption accelerated research.</p>
+      <h3>Dream 7B</h3>
+      <p>Open 7B masked diffusion model.</p>
+      <p><strong>Recipe:</strong> AR-LLM initialization + context-adaptive token-level noise rescheduling.</p>
+      <p>Arbitrary-order generation, infilling, tunable quality–speed trade-off.</p>
     </div>
     <div>
-      <h3>LLaDA 2.0 (2025)</h3>
-      <p>Improved training recipes and data curation.</p>
-      <p>Better instruction following and reasoning.</p>
-      <p>Narrowing the gap with frontier AR models.</p>
+      <h3>LLaDA 2.0 (MoE)</h3>
+      <p>First diffusion LLM at <strong>100B</strong> scale (16B-mini, 100B-flash, MoE).</p>
+      <p>Parallel decoding engine: up to <strong>535 tok/s</strong>.</p>
+      <p>Closes the gap with frontier AR models on reasoning.</p>
     </div>
   </div>
-  <div class="highlight">
-    With LLaDA and Dream, dLLMs became a <strong>viable family</strong>, not a curiosity.
+  <div class="cite">
+    Ye et al., Dream 7B, arXiv:2508.15487, 2025.<br>
+    Zhu et al., LLaDA 2.0, arXiv:2512.15745, 2025.
   </div>
 </div>
 
@@ -274,16 +270,15 @@
       <tr><th>Model</th><th>Key contribution</th></tr>
     </thead>
     <tbody>
-      <tr><td><strong>SEDD</strong></td><td>Score-entropy training for discrete diffusion</td></tr>
-      <tr><td><strong>RADD</strong></td><td>Absorbing diffusion = any-order AR (theory)</td></tr>
-      <tr><td><strong>LLaDA 8B</strong></td><td>Proved scaling feasibility at 8B</td></tr>
-      <tr><td><strong>Dream 7B</strong></td><td>Open 7B dLLM, community catalyst</td></tr>
-      <tr><td><strong>LLaDA 2.0</strong></td><td>Next-generation training, closing AR gap</td></tr>
+      <tr><td><strong>SEDD</strong> (2023)</td><td>Concrete score + score-entropy loss</td></tr>
+      <tr><td><strong>MDLM</strong> (2024)</td><td>Simplified Rao–Blackwellized masked objective</td></tr>
+      <tr><td><strong>RADD</strong> (2024)</td><td>Absorbing diffusion = any-order AR</td></tr>
+      <tr><td><strong>LLaDA 8B</strong> (2025)</td><td>First competitive 8B dLLM</td></tr>
+      <tr><td><strong>Dream 7B</strong> (2025)</td><td>AR-init + adaptive noise; open weights</td></tr>
+      <tr><td><strong>LLaDA 2.0</strong> (2025)</td><td>MoE, 100B scale, 535 tok/s</td></tr>
     </tbody>
   </table>
-  <div class="highlight">
-    18 months: from interesting-but-impractical to competitive 7–8B systems. Question shifts: not "can they work?" but "what can they uniquely do?"
-  </div>
+  <div class="cite">Sahoo et al., "Simple and Effective Masked Diffusion Language Models", NeurIPS 2024.</div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
@@ -309,9 +304,9 @@
     <tbody>
       <tr><td><strong>Robustness</strong></td><td>Rainbow Padding</td><td>ICLR 2026</td></tr>
       <tr><td><strong>Safety</strong></td><td>A2D</td><td>ICLR 2026</td></tr>
-      <tr><td><strong>Attribution</strong></td><td>dgMARK</td><td>arXiv 2025</td></tr>
-      <tr><td><strong>Understanding</strong></td><td>Reversal Curse</td><td>arXiv 2025</td></tr>
-      <tr><td><strong>Decoding</strong></td><td>DAPD</td><td>arXiv 2025</td></tr>
+      <tr><td><strong>Attribution</strong></td><td>dgMARK</td><td>preprint 2026</td></tr>
+      <tr><td><strong>Understanding</strong></td><td>Reversal Curse</td><td>arXiv 2026</td></tr>
+      <tr><td><strong>Decoding</strong></td><td>DAPD</td><td>arXiv 2026</td></tr>
     </tbody>
   </table>
   <p>Common thread: all exploit <strong>unique properties of the diffusion paradigm</strong> to solve problems that don't arise the same way in AR models.</p>
@@ -324,12 +319,8 @@
   <div class="pill" style="margin-bottom:12px;">Rainbow Padding</div>
   <h2>The EOS Overflow Problem</h2>
   <div class="divider"></div>
-  <p>Instruction-tuned dLLMs: as allocated sequence length grows, responses <strong>paradoxically shorten</strong>.</p>
-  <ul>
-    <li>Responses collapse into streams of <span class="token token-eos">&lt;eos&gt;</span> tokens</li>
-    <li>Severity increases with generation budget</li>
-    <li>Affects math, code, and general tasks</li>
-  </ul>
+  <p><strong>Motivation:</strong> instruction-tuned dLLMs are deployed with a fixed canvas — longer canvas should help, not hurt.</p>
+  <p>Yet as allocated length grows, responses <strong>paradoxically shorten</strong> and collapse into <span class="token token-eos">&lt;eos&gt;</span> streams.</p>
   <div class="grid-2" style="margin-top:8px;">
     <div class="card">
       <h3>Expected</h3>
@@ -344,6 +335,7 @@
       </div>
     </div>
   </div>
+  <p>Severity grows with generation budget; hits math, code, and general tasks.</p>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
@@ -353,13 +345,13 @@
   <div class="pill" style="margin-bottom:12px;">Rainbow Padding</div>
   <h2>Root Cause: Dual Role of &lt;eos&gt;</h2>
   <div class="divider"></div>
-  <p>Standard instruction-tuning pads sequences with <span class="token token-eos">&lt;eos&gt;</span>, giving it a <strong>dual role:</strong> termination signal and padding token.</p>
-  <div class="math-block">$$p(\texttt{eos} \mid \text{position } i) \uparrow \;\text{as}\; i \to N$$</div>
+  <p>SFT pipelines pad variable-length sequences with <span class="token token-eos">&lt;eos&gt;</span> — assigning it <strong>two jobs:</strong> end-of-sequence marker <em>and</em> placeholder.</p>
+  <div class="math-block">$$p_\theta(\texttt{eos} \mid \text{position } i) \;\uparrow\; \text{as}\; i \to N$$</div>
   <ul>
-    <li>EOS dominates later positions in training data</li>
-    <li>Model learns strong positional bias toward EOS</li>
-    <li>Confidence-based decoding selects EOS early</li>
-    <li>EOS propagates backward; response collapses</li>
+    <li>EOS dominates later positions in SFT data</li>
+    <li>Confidence-based decoding unmasks EOS first</li>
+    <li>Bidirectional context propagates EOS backward</li>
+    <li>Response collapses, length shrinks with budget</li>
   </ul>
 </div>
 
@@ -368,9 +360,9 @@
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide">
   <div class="pill" style="margin-bottom:12px;">Rainbow Padding</div>
-  <h2>Solution: Cyclic Distinct Pad Tokens</h2>
+  <h2>Scheme: Cyclic Distinct Pad Tokens</h2>
   <div class="divider"></div>
-  <p>Replace repeated <span class="token token-eos">&lt;eos&gt;</span> padding with a <strong>cycling sequence of distinct pad tokens</strong>, reserving one &lt;eos&gt; for true termination.</p>
+  <p>Replace repeated <span class="token token-eos">&lt;eos&gt;</span> with a <strong>deterministic cycle of distinct pad tokens</strong>; reserve one &lt;eos&gt; for genuine termination.</p>
   <div class="grid-2" style="margin-top:8px;">
     <div class="card">
       <h3>Before</h3>
@@ -385,11 +377,7 @@
       </div>
     </div>
   </div>
-  <ul>
-    <li>Decouples termination from padding</li>
-    <li>Distributes probability mass; no single token dominates</li>
-  </ul>
-  <div class="highlight">As few as <strong>7 distinct pad tokens</strong> resolve the issue.</div>
+  <div class="highlight">Decouples termination from padding. <strong>7 distinct pad tokens</strong> kill the overflow; LoRA, 1 epoch, drop-in.</div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
@@ -413,14 +401,14 @@
     </div>
     <div>
       <ul class="check">
+        <li>Up to <strong>+30%</strong> on MATH after one LoRA epoch</li>
         <li>Robust across decoding strategies</li>
         <li>Architecture and dataset agnostic</li>
-        <li>LoRA fine-tuning, 1 epoch, minimal data</li>
         <li>Works on LLaDA, Dream, and beyond</li>
       </ul>
     </div>
   </div>
-  <div class="cite">Kim, Jeon, Kim, Jeung, No, "Rainbow Padding", ICLR 2026.</div>
+  <div class="cite">Kim, Jeon, Kim, Jeung, No, Rainbow Padding, ICLR 2026.</div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
@@ -430,15 +418,16 @@
   <div class="pill" style="margin-bottom:12px;">A2D</div>
   <h2>The Enlarged Safety Attack Surface</h2>
   <div class="divider"></div>
-  <p>dLLMs' any-order generation: a <strong>fundamentally different safety challenge.</strong></p>
+  <p><strong>Motivation:</strong> AR safety relies on refusal at the <strong>beginning</strong> of a response — dLLMs unmask in any order, so initial refusal can be bypassed.</p>
   <ul>
     <li>Harmful spans appear at <strong>arbitrary positions</strong></li>
-    <li>Template-based <strong>prefilling attacks</strong> (DIJA) bypass response-level refusals</li>
-    <li>Standard AR safety alignment fails: &gt;80% attack success rate on baseline dLLMs</li>
+    <li><strong>DIJA</strong>: interleaved mask-text prompts force harmful infills</li>
+    <li>Standard AR alignment fails: &gt;80% ASR on LLaDA / Dream</li>
   </ul>
   <div class="highlight">
-    AR safety relies on refusal at the <strong>beginning</strong> of a response. dLLMs generate in any order, so initial refusal can be bypassed.
+    Safety must be enforced at <strong>every token, every step</strong>, not just at the response opening.
   </div>
+  <div class="cite">Wen et al., "The Devil behind the mask" (DIJA), arXiv:2507.11097, 2025.</div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
@@ -446,13 +435,13 @@
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide">
   <div class="pill" style="margin-bottom:12px;">A2D</div>
-  <h2>A2D: Any-Order, Any-Step Defense</h2>
+  <h2>Scheme: Token-Level [EOS] Alignment</h2>
   <div class="divider"></div>
-  <p>Train dLLMs to emit an <span class="token token-eos">[EOS]</span> refusal at <strong>any masked position</strong> when harmful content is encountered.</p>
-  <div class="math-block">$$\text{A2D}: \; p_\theta(\texttt{[EOS]} \mid x_t, \text{pos}_i) \uparrow \;\text{if harmful}$$</div>
+  <p><strong>Key idea:</strong> teach the model to emit <span class="token token-eos">[EOS]</span> at <strong>any masked position</strong> whenever harmful content would emerge.</p>
+  <div class="math-block">$$\max_\theta \; \mathbb{E}_{x_t, i \in \mathcal{M}}\!\left[\,\log p_\theta(\texttt{[EOS]} \mid x_t, i)\,\right] \quad \text{on harmful spans}$$</div>
   <ul class="num">
     <li>Align at <strong>token level</strong>, not response level</li>
-    <li>Train under <strong>randomized masking</strong>: robust to any decoding order</li>
+    <li>Train under <strong>randomized masking</strong>: any-order robust</li>
     <li>Use <strong>[EOS] probability</strong> as real-time safety monitor</li>
   </ul>
 </div>
@@ -515,7 +504,7 @@
       </div>
     </div>
   </div>
-  <div class="cite">Jeung, Yoon, Cho, Jeon, Shin, Hong, No, "A2D", ICLR 2026.</div>
+  <div class="cite">Jeung et al., A2D, ICLR 2026.</div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
@@ -525,19 +514,19 @@
   <div class="pill" style="margin-bottom:12px;">dgMARK</div>
   <h2>Watermarking for Diffusion LLMs</h2>
   <div class="divider"></div>
-  <p>AR watermarking: bias next-token distribution; requires <strong>sequential generation.</strong> Doesn't apply to dLLMs.</p>
-  <p>dLLMs generate tokens in arbitrary order. Need a new paradigm.</p>
+  <p><strong>Motivation:</strong> AR watermarks bias next-token distributions, assuming a fixed left-to-right context — dLLMs have no such context.</p>
+  <p>dLLMs unmask in arbitrary order; a token's neighbors may still be masked when it is decoded.</p>
   <div class="highlight">
-    <strong>Key observation:</strong> practical dLLMs are sensitive to unmasking order, opening a new watermarking channel.
+    <strong>Key observation:</strong> the <em>unmasking schedule</em> itself carries entropy — a new, AR-free watermarking channel.
   </div>
   <div class="grid-2" style="margin-top:8px;">
     <div class="card" style="border-color:var(--warn);">
       <h3>AR watermarking</h3>
-      <p>Bias next-token distribution. Sequential only.</p>
+      <p>Re-weight next-token logits. Sequential only.</p>
     </div>
     <div class="card" style="border-color:var(--success);">
       <h3>dgMARK</h3>
-      <p>Steer <strong>unmasking order.</strong> Works with any-order generation.</p>
+      <p>Steer <strong>which position</strong> unmasks next. Probabilities untouched.</p>
     </div>
   </div>
 </div>
@@ -547,22 +536,22 @@
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide">
   <div class="pill" style="margin-bottom:12px;">dgMARK</div>
-  <h2>Decoding-Guided Watermarking</h2>
+  <h2>Scheme: Decoding-Order Steering</h2>
   <div class="divider"></div>
   <ul class="num">
-    <li>Define a <strong>binary hash function</strong> mapping tokens to {0, 1}</li>
-    <li>Rank candidate positions by decoding score</li>
-    <li>Steer unmasking toward positions satisfying a <strong>parity constraint</strong></li>
-    <li>Detect via elevated <strong>parity-matching statistics</strong></li>
+    <li>Hash each candidate token to a parity bit $h(y) \in \{0,1\}$</li>
+    <li>Rank masked positions by model confidence</li>
+    <li>Among top-$k$, prefer the one whose <strong>parity matches the schedule</strong></li>
+    <li>Detect by counting parity hits in a sliding window</li>
   </ul>
   <div class="highlight">
-    <strong>Never reweights probabilities</strong>: changes only which positions unmask first.
+    <strong>Logits untouched:</strong> dgMARK reorders unmaskings; the sample distribution is preserved.
   </div>
   <ul class="check">
     <li>Plug-and-play with any decoding strategy</li>
-    <li>Sliding-window detector: robust to insertion, deletion, substitution, paraphrasing</li>
+    <li>Robust to insertion, deletion, substitution, paraphrasing</li>
   </ul>
-  <div class="cite">Hong, No, "dgMARK", arXiv:2601.22985, 2025.</div>
+  <div class="cite">Hong, No, dgMARK, preprint, 2026.</div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
@@ -570,9 +559,9 @@
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide">
   <div class="pill" style="margin-bottom:12px;">Reversal Curse</div>
-  <h2>The Reversal Curse</h2>
+  <h2>Reversal Curse: Phenomenon</h2>
   <div class="divider"></div>
-  <p>AR models trained on "A is B" <strong>fail catastrophically</strong> on "B is A."</p>
+  <p><strong>Motivation:</strong> AR models trained on "$A$ is $B$" <strong>fail</strong> on "$B$ is $A$"; MDMs do not. The folk story blames any-order training — but observing "[M] is $B$" only teaches one positional config.</p>
   <div class="grid-2" style="margin-top:8px;">
     <div class="card" style="border-color:var(--warn);">
       <h3 style="color:var(--warn);">Autoregressive</h3>
@@ -585,7 +574,7 @@
     </div>
   </div>
   <div class="highlight">
-    <strong>Our question:</strong> if not the training objective alone, what explains the mitigation?
+    <strong>Our question:</strong> why does forward evidence transfer to the reverse query?
   </div>
 </div>
 
@@ -594,23 +583,20 @@
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide">
   <div class="pill" style="margin-bottom:12px;">Reversal Curse</div>
-  <h2>Architecture + Training Dynamics</h2>
+  <h2>Scheme: Parameter-Level Coupling</h2>
   <div class="divider"></div>
-  <p>Mitigation arises from <strong>architectural structure</strong> and its interaction with training, not the objective alone.</p>
+  <p><strong>Key idea:</strong> shared Transformer parameters store token-pair evidence in <em>values</em>; relative position encodings route attention through queries/keys. Forward step <strong>provably</strong> decreases reverse loss to first order.</p>
   <div class="grid-2" style="margin-top:8px;">
     <div class="card">
-      <h3>Mechanism 1: weight sharing</h3>
-      <p>Shared $W_Q, W_K, W_V$ couple forward and reverse attention patterns.</p>
+      <h3>Mechanism 1: shared storage</h3>
+      <p>Shared $W_V$ stores token-pair evidence reusable in either direction.</p>
       <div class="math-block">$$\alpha_{A \to B} = \text{softmax}(q_A^\top k_B)$$</div>
     </div>
     <div class="card">
       <h3>Mechanism 2: gradient alignment</h3>
-      <p>Forward and reverse gradients align:</p>
+      <p>One-layer MDM: $\nabla \mathcal{L}_{\text{fwd}}$ and $\nabla \mathcal{L}_{\text{rev}}$ are positively aligned.</p>
       <div class="math-block">$$\nabla_\theta \mathcal{L}_{\text{fwd}} \cdot \nabla_\theta \mathcal{L}_{\text{rev}} > 0$$</div>
     </div>
-  </div>
-  <div class="highlight">
-    A gradient step reducing forward loss also reduces reverse loss.
   </div>
 </div>
 
@@ -642,7 +628,7 @@
   <div class="highlight">
     Both masked objective AND bidirectional architecture are needed; architecture is the critical piece.
   </div>
-  <div class="cite">Shin, Kim, Lee, Jeon, No, "Reversal Curse in Masked Diffusion Models", arXiv:2602.02133, 2025.</div>
+  <div class="cite">Jeon, Shin, Kim, Lee, No, Reversal Curse in MDMs, arXiv:2602.02133, 2026.</div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
@@ -652,12 +638,12 @@
   <div class="pill" style="margin-bottom:12px;">DAPD</div>
   <h2>The Parallel Decoding Challenge</h2>
   <div class="divider"></div>
-  <p><strong>Promise:</strong> dLLMs can unmask multiple tokens per step, enabling faster generation.</p>
-  <p><strong>Problem:</strong> each step provides only token-wise marginals. Parallel unmasking ignores <strong>inter-token dependencies.</strong></p>
+  <p><strong>Motivation:</strong> dLLMs <em>could</em> unmask many tokens per step, but each step yields only token-wise marginals, not the joint.</p>
+  <p>Naive parallel unmasking ignores <strong>inter-token dependencies</strong>; errors accumulate.</p>
   <div class="highlight">
-    Naive parallel decoding: unmask tokens independently, ignoring dependencies. Errors accumulate; quality degrades.
+    "The [M] [M] is blue." Marginals say "big" and "sky" are both likely — joint sampling can give "The big sky is blue."
   </div>
-  <p>Example: "The [M] [M] is blue." Tokens "big" and "sky" are strongly dependent. Unmasking both simultaneously can produce incoherent text.</p>
+  <p>Goal: keep parallelism without paying the joint-sampling cost.</p>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
@@ -665,19 +651,19 @@
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide">
   <div class="pill" style="margin-bottom:12px;">DAPD</div>
-  <h2>Dependency-Aware Parallel Decoding</h2>
+  <h2>Scheme: Attention-Induced Independent Sets</h2>
   <div class="divider"></div>
-  <p>Use <strong>self-attention</strong> to build a dependency graph; unmask <strong>independent sets</strong> in parallel.</p>
+  <p><strong>Key idea:</strong> the model's self-attention <em>already</em> exposes which masked tokens are strongly coupled — use it as a dependency oracle.</p>
   <ul class="num">
-    <li>Extract attention weights between masked positions</li>
-    <li>Build dependency graph: edge = strong interaction</li>
-    <li>Find independent set: non-adjacent nodes</li>
-    <li>Unmask independent tokens in parallel; repeat</li>
+    <li>Extract attention scores between masked positions</li>
+    <li>Threshold to a <strong>dependency graph</strong> (edges = strong coupling)</li>
+    <li>Pick an <strong>independent set</strong>: pairwise weak-dependence tokens</li>
+    <li>Unmask the set in parallel; repeat</li>
   </ul>
   <div class="highlight">
-    <strong>Training-free:</strong> no auxiliary models, no retraining. Fully plug-and-play.
+    <strong>Training-free.</strong> No auxiliary model, no retraining, no schedule tuning.
   </div>
-  <div class="cite">Kim, Jeon, Jeon, No, "DAPD", arXiv:2603.12996, 2025.</div>
+  <div class="cite">Kim, Jeon, Jeon, No, DAPD, arXiv:2603.12996, 2026.</div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->

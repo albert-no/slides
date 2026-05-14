@@ -44,38 +44,42 @@ Two decks (split 2026-05): **Part I** covers diffusion memorization end-to-end w
 | | **Wen mitigation (image)** wen-mitigate | `:486` |
 | | **Wen mitigation (analysis)** what changes | `:497` |
 | | **Ross 2024 LID** schematic (smaller, more bullet room) | `:512` |
-| **03** — Our Method: SAIL | sharpness theory + noise optimization | `:536-760` |
+| **03** — Our Method: SAIL | sharpness theory + noise optimization | `:537-775` |
 | | **Sharpness in landscape** sail-sharpness image | `:546` |
 | | Sharpness definition (Hessian, eigenvalues) | `:557` |
-| | **Eigen concentration (SD)** sail-eigen | `:573` |
-| | Reading the SD eigen plots | `:583` |
-| | **Eigen concentration (MNIST)** sail-eigen-mnist | `:598` |
-| | **Lemma 4.1** — score norm $= -\mathrm{tr}(H)$ | `:609` |
-| | **Lemma 4.2** — Wen's metric = squared eigenvalue gap | `:622` |
-| | **Lemma 4.3** — Hessian-score product $= -\mathrm{tr}(H^3)$ | `:635` |
-| | **Proposed metric** $\|H^\Delta s^\Delta\|^2$ | `:648` |
-| | **Theory vs practice** sail-vs-wen | `:659` |
-| | Detection Results (SD v1.4 / v2.0) | `:670` |
-| | SAIL — mitigation by initialization | `:690` |
-| | Taylor approximation | `:702` |
-| | Final SAIL objective | `:712` |
-| | **Visual mitigation examples** sail-example | `:726` |
-| | **Quality vs memorization** sail-tradeoff (Pareto) | `:737` |
-| **04** — CLIP Embeddings Drive Memorization | padding-token cause + mitigations | `:761-866` |
-| | Tokenize / encode / attend (kim-token) | `:770` |
-| | **Padding embedding ≈ EoT embedding** | `:785` |
-| | **Attention drop bar chart (CLIP-pad Fig 8)** | `:801` |
-| | **CLIP-pad mitigation example (kim-1)** | `:821` |
-| | Mitigation I — replace pad + mask EoT | `:837` |
-| | Mitigation II — partial padding mask | `:851` |
-| **05** — Bridge to LLM | why LLMs need their own framework | `:867-920` |
-| | Diffusion vs autoregressive | `:874` |
-| | What's in Part II | `:897` |
-| | Takeaways (diffusion) | `:911` |
+| | **Why Hessian measures sharpness** (Gaussian intuition) | `:573` |
+| | **Eigen concentration (SD)** sail-eigen | `:589` |
+| | Reading the SD eigen plots | `:599` |
+| | **Eigen concentration (MNIST)** sail-eigen-mnist | `:614` |
+| | **Lemma 4.1** — score norm $= -\mathrm{tr}(H)$ | `:625` |
+| | **Lemma 4.2** — Wen's metric = squared eigenvalue gap | `:638` |
+| | **Lemma 4.3** — Hessian-score product $= -\mathrm{tr}(H^3)$ | `:651` |
+| | **Proposed metric** $\|H^\Delta s^\Delta\|^2$ | `:664` |
+| | **Theory vs practice** sail-vs-wen | `:675` |
+| | Detection Results (SD v1.4 / v2.0) | `:686` |
+| | SAIL — mitigation by initialization | `:706` |
+| | Taylor approximation | `:718` |
+| | Final SAIL objective | `:728` |
+| | **Visual mitigation examples** sail-example | `:742` |
+| | **Quality vs memorization** sail-tradeoff (Pareto) | `:753` |
+| **04** — CLIP Embeddings Drive Memorization | training + padding-token cause + mitigations | `:777-923` |
+| | **How CLIP is trained** (contrastive image/text) | `:786` |
+| | **$\langle$EoT$\rangle$ is the only token CLIP optimizes** | `:799` |
+| | **Cross-attention in Stable Diffusion** | `:815` |
+| | Tokenize / encode / attend (kim-token) | `:831` |
+| | **Padding embedding ≈ EoT embedding** | `:846` |
+| | **Attention drop bar chart (CLIP-pad Fig 8)** | `:862` |
+| | **CLIP-pad mitigation example (kim-1)** | `:882` |
+| | Mitigation I — replace pad + mask EoT | `:896` |
+| | Mitigation II — partial padding mask | `:910` |
+| **05** — Bridge to LLM | why LLMs need their own framework | `:924-981` |
+| | Diffusion vs autoregressive | `:933` |
+| | What's in Part II | `:956` |
+| | Takeaways (diffusion) | `:970` |
 
-**Key formulas:** Sharpness Hessian `:561`; Lemma 4.1 `:614`; Lemma 4.2 `:627`; Lemma 4.3 `:640`; Proposed $\|H^\Delta s^\Delta\|^2$ `:653`; Padding ≈ EoT `:790`.
+**Key formulas:** Sharpness Hessian `:561`; Gaussian sharpness intuition `:577`; Lemma 4.1 `:630`; Lemma 4.2 `:643`; Lemma 4.3 `:656`; Proposed $\|H^\Delta s^\Delta\|^2$ `:669`; CLIP contrastive loss `:790`; CLIP EoT vector `:803`; Cross-attention `:819`; Padding ≈ EoT `:851`.
 
-**Key theorems / lemmas:** Lemmas 4.1 / 4.2 / 4.3 (Jeon-Kim-No 2025) `:614, :627, :640`.
+**Key theorems / lemmas:** Lemmas 4.1 / 4.2 / 4.3 (Jeon-Kim-No 2025) `:630, :643, :656`.
 
 **Figures (in `figs/`)** — mix of methodology plots and user-captured visual examples placed per explicit instructions:
 
@@ -112,58 +116,65 @@ User-captured visual examples (placed per instruction):
 
 | Part | Topic | Line |
 |---|---|---|
-| Title / Contents / Recall | | `:18-79` |
-| **Training objective** — next-token prediction + why it memorizes | `:82-104` |
-| | Autoregressive factorization + NLL loss | `:82` |
-| | Why this objective memorizes | `:93` |
-| **01** — Defining LLM memorization | Zhang, Carlini 2019, exposure, Feldman | `:110-231` |
-| | Zhang 2017 — random labels | `:118` |
-| | **Carlini 2019** — Secret Sharer (canary, R = 10^9 example) | `:133` |
-| | Exposure — calibrated memorization score | `:147` |
-| | Null distribution tail $\Pr[\mathrm{exp}\ge t]\le 2^{-t}$ (derivation) | `:160` |
-| | Long-tail intuition | `:176` |
-| | Counterfactual memorization (definition) | `:191` |
-| | **Feldman 2020** — long-tail theorem | `:204` |
-| | Implication — memorization is necessary | `:217` |
-| **02** — Extraction attacks | Carlini 2021, scaling, dedup, Nasr, Min-K | `:233-442` |
-| | **Carlini 2021** — $k$-extractable, $k$-eidetic, GPT-2 | `:241` |
-| | $f_\theta(\mathrm{greedy}, p)$ diagram | `:255` |
-| | Extraction pipeline | `:285` |
-| | $p_{\text{ref}}$ reference-model variants | `:308` |
-| | **Carlini 2022** — three scaling laws | `:323` |
-| | Repetition empirical law | `:339` |
-| | Term-by-term ($p_0$, $N_\theta$, $L_{\text{ctx}}$, rarity) | `:350` |
-| | Lee 2022 — deduplication | `:366` |
-| | Nasr 2023 — divergence attack | `:380` |
+| Title / Contents / Recall | | `:22-79` |
+| **Training objective** — next-token prediction + why it memorizes | `:82-105` |
+| | Autoregressive factorization + NLL loss | `:83` |
+| | Why this objective memorizes | `:94` |
+| **01** — Defining LLM memorization | Zhang, Carlini 2019, exposure, Feldman | `:110-226` |
+| | Zhang 2017 — random labels | `:119` |
+| | **Carlini 2019** — Secret Sharer (canary, R = 10^9 example) | `:134` |
+| | Exposure — calibrated memorization score | `:148` |
+| | Null distribution tail $\Pr[\mathrm{exp}\ge t]\le 2^{-t}$ (derivation) | `:161` |
+| | Long-tail intuition | `:175` |
+| | Counterfactual memorization (definition) | `:190` |
+| | **Feldman 2020** — long-tail theorem | `:203` |
+| | Implication — memorization is necessary | `:216` |
+| **02** — Extraction attacks | Carlini 2021, scaling, dedup, Nasr, Min-K (MIA bridge) | `:228-462` |
+| | **Carlini 2021** — $k$-extractable, $k$-eidetic, GPT-2 | `:240` |
+| | $f_\theta(\mathrm{greedy}, p)$ diagram | `:254` |
+| | Extraction pipeline | `:284` |
+| | $p_{\text{ref}}$ reference-model variants | `:307` |
+| | **Carlini 2022** — three scaling laws | `:322` |
+| | Repetition empirical law | `:338` |
+| | Term-by-term ($p_0$, $N_\theta$, $L_{\text{ctx}}$, rarity) | `:349` |
+| | Lee 2022 — deduplication | `:365` |
+| | **Nasr 2023** — divergence attack, takeaway lead | `:379` |
 | | What came out (PII, code, copyrighted text) | `:397` |
-| | **Min-K% Prob** (Shi 2024) — lowest-$K\%$ tokens | `:413` |
-| | **Min-K%++** (Zhang 2025) | `:427` |
-| **03** — Adversarial compression and beyond | ACR, books, defenses | `:444-770` |
-| | Why a new definition (Zhang et al. 2023 counterfactual cited) | `:452` |
-| | Retraining cost — counterfactual is infeasible | `:467` |
-| | **ACR formal definition** (Schwarzschild 2024) | `:483` |
-| | Reading ACR — compression as storage | `:497` |
-| | GCG primer (Zou 2023) | `:511` |
-| | GCG one iteration | `:525` |
-| | MiniPrompt — search by GCG | `:552` |
-| | ACR — what it reveals | `:580` |
-| | Hayes 2024 — probabilistic extraction $(n,q)$-extractable | `:595` |
-| | Approximate match — LCS variant (longest common substring) | `:606` |
-| | Cooper 2025 — books from open-weight LLMs (setup) | `:620` |
-| | Cooper 2025 — headline results (Llama 3.1 70B, HP1, 1984) | `:634` |
-| | Cooper 2025 — lawsuit discourse implications | `:648` |
-| | Aerni 2024 — non-adversarial reproduction (benign prompts) | `:663` |
-| | Aerni 2024 — findings (15% avg, 100% worst-case) | `:677` |
-| | Defenses (dedup / DP / unlearning) | `:692` |
-| | Memorization vs MIA | `:718` |
-| | Open problems — measurement | `:739` |
-| | Open problems — scope | `:750` |
-| | Open problems — theory and defense | `:762` |
-| | Takeaways (LLMs) | `:774` |
+| | **MIA teaser** — why Min-K% is MIA-flavored | `:413` |
+| | **Min-K% Prob** (Shi 2024) — MIA probe | `:433` |
+| | **Min-K%++** (Zhang 2025) — MIA probe | `:447` |
+| **03** — Adversarial compression and beyond | ACR, books (3 visuals), defenses | `:463-790` |
+| | **Counterfactual (Zhang 2023) — Recap + drawback** | `:472` |
+| | Why a new definition | `:490` |
+| | **ACR formal definition** (Schwarzschild 2024) | `:504` |
+| | Reading ACR — compression as storage | `:518` |
+| | GCG primer (Zou 2023) | `:532` |
+| | **GCG — Gradient surrogate detail** | `:546` |
+| | GCG one iteration | `:561` |
+| | MiniPrompt — search by GCG | `:588` |
+| | ACR — what it reveals | `:616` |
+| | Hayes 2024 — probabilistic extraction $(n,q)$-extractable | `:631` |
+| | Approximate match — LCS variant | `:642` |
+| | Cooper 2025 — books from open-weight LLMs (setup) | `:656` |
+| | **Cooper Fig 3** — bars + per-book table (HP vs Sandman Slim) | `:670` |
+| | Cooper headline results (Llama 3.1 70B, HP1, 1984) | `:684` |
+| | **Cooper Fig 2** — 1984 sliding-window heatmap | `:698` |
+| | **Cooper Fig 8** — books × models memorization heatmap | `:712` |
+| | Cooper — lawsuit discourse implications | `:723` |
+| | **Aerni 2024** — non-adversarial reproduction (motivation lead) | `:738` |
+| | Aerni — findings (15% avg, 100% worst-case) | `:755` |
+| | Defenses (dedup / DP / unlearning) | `:770` |
+| | Memorization vs MIA | `:796` |
+| | Open problems — measurement | `:817` |
+| | Open problems — scope | `:828` |
+| | Open problems — theory and defense | `:840` |
+| | Takeaways (LLMs) | `:852` |
 
-**Key formulas:** Next-token NLL `:88`; Exposure `:152`; Null tail derivation `:165`; Counterfactual mem `:196`; Long-tail theorem `:210`; $k$-extractable `:246`; Repetition law `:343`; Min-K% `:418`; Min-K%++ `:432`; ACR `:489`; Probabilistic extraction `:600`; LCS variant `:611`.
+**Key formulas:** Next-token NLL `:86`; Exposure `:151`; Null tail derivation `:164`; Counterfactual mem `:193`; Long-tail theorem `:208`; $k$-extractable `:245`; Repetition law `:343`; Counterfactual mem (recap) `:476`; Min-K% `:436`; Min-K%++ `:450`; ACR `:507`; GCG one-hot gradient `:551`; Probabilistic extraction `:635`; LCS variant `:646`.
 
-**Key theorems / lemmas:** Long-tail (Feldman 2020) `:210`; ACR definition (Schwarzschild 2024) `:489`; Counterfactual memorization (Zhang et al. 2023) `:472`.
+**Key theorems / lemmas:** Long-tail (Feldman 2020) `:208`; ACR definition (Schwarzschild 2024) `:507`; Counterfactual memorization (Zhang et al. 2023) recap `:476`.
+
+**Cooper 2025 figures (in `figs/`):** `cooper_rates.png` (Fig 3, bars + table), `cooper_1984.png` (Fig 2, sliding-window), `cooper_heatmap.png` (Fig 8, books × models).
 
 ---
 

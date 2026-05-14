@@ -52,14 +52,14 @@
 | | Shadow data strategies | `:165` |
 | | **Per-class attack models** `A_c: R^\|C\| → {0,1}` | `:212` |
 | | Results: 93% precision, 91% recall (Purchase-100) | `:243` |
-| | Pseudocode | `:316` |
-| | Confidence-threshold baseline `1[max_c f(x)_c > τ]` | `:342` |
-| **02** — LOGAN (Hayes et al.): MIA on GANs | | `:368-451` |
-| | Discriminator + reconstruction-based attacks | `:398` |
-| | Results: MNIST DCGAN ~74%, CIFAR ~69% | `:437` |
-| **03** — Seq2seq (Hisamoto et al.): MT models | | `:452-575` |
-| | **Perplexity** `PPL(x,y)=exp(-1/T Σ log p(y_t\|y_{<t},x))` | `:478, :505` |
-| | seq2seq vs LLM MIA comparison | `:532` |
+| | Pseudocode (split: build+train, then attack) | `:311, :330` |
+| | Confidence-threshold baseline `1[max_c f(x)_c > τ]` | `:343` |
+| **02** — LOGAN (Hayes et al.): MIA on GANs | | `:379-458` |
+| | Discriminator + reconstruction-based attacks | `:399` |
+| | Results: MNIST DCGAN ~74%, CIFAR ~69% | `:440` |
+| **03** — Seq2seq (Hisamoto et al.): MT models | | `:459-575` |
+| | **Perplexity** `PPL(x,y)=exp(-1/T Σ log p(y_t\|y_{<t},x))` | `:489, :518` |
+| | seq2seq vs LLM MIA comparison | `:534` |
 
 **Note (`mia2-shadow-note.html`):** Full Google results table including Texas-100 `:42-50`; calibration for LLMs vs seq2seq `:53-63`.
 

@@ -56,17 +56,17 @@ Creates `<talk-name>/<talk-name>.html` linking to `../reference/`. For Marp, cop
 
 ## Screenshot audit (on request)
 
-The lint script catches structural issues (unknown classes, hardcoded colors) but not visual ones (overflow, overlap, awkward line breaks). For visual audits, use the **`/audit-slides`** slash command (see `.claude/commands/audit-slides.md`).
+The lint script catches structural issues (unknown classes, hardcoded colors) but not visual ones (overflow, overlap, awkward line breaks). For visual audits, use the **`/audit-and-edit-deck`** slash command (see `.claude/commands/audit-and-edit-deck.md`).
 
 ```
-/audit-slides <deck>.html      # audit one deck
-/audit-slides <folder>/        # audit every deck under the folder
-/audit-slides                  # default to the single deck in the cwd
+/audit-and-edit-deck <deck>.html      # audit one deck
+/audit-and-edit-deck <folder>/        # audit every deck under the folder
+/audit-and-edit-deck                  # default to the single deck in the cwd
 ```
 
 The command renders each slide to PNG via headless Chrome + `pdftoppm`, reads the images, and fixes overflow, overlap, line-break, and squashed-math issues — splitting slides when needed, never shrinking type.
 
-Trigger phrases that should invoke `/audit-slides` even if the user doesn't type the slash form: *"audit this slide"*, *"screenshot check"*, *"visual audit"*, *"check for overflow/overlap"*, *"render check"*, *"layout check"*. Not part of the standard editing workflow above — only on explicit request.
+Trigger phrases that should invoke `/audit-and-edit-deck` even if the user doesn't type the slash form: *"audit this slide"*, *"screenshot check"*, *"visual audit"*, *"check for overflow/overlap"*, *"render check"*, *"layout check"*. Not part of the standard editing workflow above — only on explicit request.
 
 ## Outlines
 

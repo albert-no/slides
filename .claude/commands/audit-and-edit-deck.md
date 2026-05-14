@@ -1,4 +1,4 @@
-# /audit-slides
+# /audit-and-edit-deck
 
 Visually audit one or more decks by rendering every slide to PNG and checking for overflow, overlap, awkward line breaks, and other layout flaws that the static lint cannot catch. Then fix the issues found.
 

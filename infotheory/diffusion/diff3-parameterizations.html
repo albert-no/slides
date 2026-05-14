@@ -69,10 +69,12 @@
 
 <div class="slide">
   <h2>Three Variables, Two Free</h2><div class="divider"></div>
-  <p>From Lecture 2:</p>
-  <div class="math-block">$$x_t \;=\; \sqrt{\bar\alpha_t}\,x_0 \;+\; \sqrt{1-\bar\alpha_t}\,\varepsilon, \qquad \varepsilon\sim\mathcal{N}(0,I).$$</div>
-  <p>Knowing any two of $(x_t, x_0, \varepsilon)$ recovers the third:</p>
-  <div class="math-block">$$x_0 \;=\; \frac{x_t - \sqrt{1-\bar\alpha_t}\,\varepsilon}{\sqrt{\bar\alpha_t}}, \qquad \varepsilon \;=\; \frac{x_t - \sqrt{\bar\alpha_t}\,x_0}{\sqrt{1-\bar\alpha_t}}.$$</div>
+  <p>From Lecture 2, with $\varepsilon\sim\mathcal{N}(0,I)$:</p>
+  <div class="math-block">$$\begin{aligned}
+    x_t &\;=\; \sqrt{\bar\alpha_t}\,x_0 + \sqrt{1-\bar\alpha_t}\,\varepsilon, \\
+    x_0 &\;=\; \tfrac{x_t - \sqrt{1-\bar\alpha_t}\,\varepsilon}{\sqrt{\bar\alpha_t}}, \qquad
+    \varepsilon \;=\; \tfrac{x_t - \sqrt{\bar\alpha_t}\,x_0}{\sqrt{1-\bar\alpha_t}}.
+  \end{aligned}$$</div>
   <div class="highlight">Predicting $x_0$ and predicting $\varepsilon$ are the same network up to a $t$-dependent affine map.</div>
 </div>
 
@@ -89,7 +91,7 @@
   <h2>Predict $x_0$</h2><div class="divider"></div>
   <p>Train $x_{0,\theta}(x_t,t)$ against the clean target:</p>
   <div class="math-block">$$\mathcal{L}_{x_0} \;=\; \mathbb{E}_{(x_0,t,\varepsilon)}\!\bigl[\,\|x_0 - x_{0,\theta}(x_t,t)\|^2\,\bigr].$$</div>
-  <p>Bayes-optimal predictor: $x_{0,\theta}^\star(x_t,t) = \mathbb{E}[X_0\mid X_t = x_t]$ — the posterior mean.</p>
+  <p>Bayes-optimal predictor is the posterior mean: $x_{0,\theta}^\star(x_t,t) = \mathbb{E}[X_0\mid X_t = x_t]$.</p>
   <div class="highlight">Pro: interpretable target. Con: very noisy regression at large $t$ (input nearly noise, target clean).</div>
 </div>
 
@@ -132,14 +134,18 @@
 </div>
 
 <div class="slide">
-  <h2>Proof — Differentiate the Marginal</h2><div class="divider"></div>
+  <h2>Proof: Differentiate the Marginal</h2><div class="divider"></div>
   <p>Marginal as a Gaussian mixture in $X_0$:</p>
   <div class="math-block">$$p_t(x_t) \;=\; \int p_0(x_0)\,\mathcal{N}\!\bigl(x_t;\,\sqrt{\bar\alpha_t}x_0,\,(1-\bar\alpha_t)I\bigr)\,dx_0.$$</div>
-  <p>Differentiate $\log p_t$. Inside the integral, the Gaussian score in $x_t$ is:</p>
-  <div class="math-block">$$-\,\dfrac{x_t - \sqrt{\bar\alpha_t}\,x_0}{1-\bar\alpha_t}.$$</div>
-  <p>Pulling the differentiation through gives an expectation over the posterior:</p>
+  <p>Gaussian score in $x_t$, inside the integral:</p>
+  <div class="math-block">$$\nabla_{x_t}\log\mathcal{N}(x_t;\sqrt{\bar\alpha_t}x_0,(1-\bar\alpha_t)I) \;=\; -\,\dfrac{x_t - \sqrt{\bar\alpha_t}\,x_0}{1-\bar\alpha_t}.$$</div>
+</div>
+
+<div class="slide">
+  <h2>Proof (continued)</h2><div class="divider"></div>
+  <p>Differentiate $\log p_t$ and pull through; the integrand reweights to the posterior of $X_0\mid x_t$:</p>
   <div class="math-block">$$\nabla_{x_t}\log p_t(x_t) \;=\; -\,\dfrac{x_t - \sqrt{\bar\alpha_t}\,\mathbb{E}[X_0\mid x_t]}{1-\bar\alpha_t}.$$</div>
-  <p>Solve for $\mathbb{E}[X_0\mid x_t]$ to recover the formula.</p>
+  <p>Solve for $\mathbb{E}[X_0\mid x_t]$ to recover Tweedie's formula. $\square$</p>
 </div>
 
 <div class="slide">
@@ -196,19 +202,18 @@
 </div>
 
 <div class="slide">
-  <h2>Overview &mdash; A Second Divergence Behind Diffusion</h2><div class="divider"></div>
-  <p>So far: diffusion is trained by maximizing an <strong>ELBO</strong> &mdash; a KL-based bound.</p>
-  <p>Tweedie's formula reveals a parallel view: the per-step MSE is also a <strong>Fisher divergence</strong> between the true conditional score and the model score.</p>
+  <h2>A Second Divergence Behind Diffusion</h2><div class="divider"></div>
+  <p>So far: diffusion is trained by maximizing an <strong>ELBO</strong>, a KL-based bound.</p>
+  <p>Tweedie's formula reveals a parallel view: the per-step MSE is a <strong>Fisher divergence</strong> between true and model scores.</p>
   <ul>
     <li>ELBO sees the <em>density</em>; Fisher sees the <em>score gradient</em>.</li>
-    <li>The two coincide here because the reverse kernels are Gaussian.</li>
-    <li>Same network, same loss &mdash; two derivations.</li>
+    <li>Both coincide here: reverse kernels are Gaussian.</li>
   </ul>
   <div class="highlight"><p>Diffusion training $=$ ELBO maximization $=$ score matching.</p></div>
 </div>
 
 <div class="slide">
-  <h2>Theorem &mdash; ELBO Term $\equiv$ Denoising Score Matching</h2><div class="divider"></div>
+  <h2>ELBO Term $\equiv$ Denoising Score Matching</h2><div class="divider"></div>
   <div class="card">
     <h3>Theorem (Vincent 2011; Song et al. 2021).</h3>
     <p>Up to $\theta$-free constants, the per-step ELBO MSE equals a denoising score-matching objective:</p>
@@ -219,14 +224,14 @@
 </div>
 
 <div class="slide">
-  <h2>Recap of Section 05 &mdash; Two Routes, One Network</h2><div class="divider"></div>
+  <h2>Two Routes, One Network</h2><div class="divider"></div>
   <div class="math-block">$$\begin{aligned}
 \text{Diffusion ELBO MSE}
 &amp;\stackrel{(\text{Tweedie})}{=}\;\sigma_t^4\,\bigl\|\nabla\log g_t(\,\cdot\,|\,x_0) - \nabla\log f_\theta\bigr\|^2 \\
 &amp;\stackrel{(\text{Fisher def.})}{=}\;\text{(rescaled) Fisher divergence at level } t \\
 &amp;\stackrel{(\text{DSM})}{=}\;\mathbb{E}\bigl\|\text{noise scale} - s_\theta(X_t)\bigr\|^2.
 \end{aligned}$$</div>
-  <p>See <code>infotheory/divergence/div2-fisher-score.html</code> for: full denoising score-matching theorem, Fisher divergence properties, and the proof that the entire diffusion ELBO is a sum of $T-1$ DSM objectives.</p>
+  <p>Full DSM theorem and Fisher properties: <code>infotheory/divergence/div2-fisher-score.html</code>.</p>
 </div>
 
 
@@ -244,7 +249,7 @@
 
 <div class="slide end-slide no-footer">
   <div class="big-word">End of Module 2</div>
-  <p class="big-word-sub">Next: mutual information estimation &mdash; or the Divergence series for the full Fisher / score-matching story.</p>
+  <p class="big-word-sub">Next: mutual information estimation, or the Divergence series for Fisher and score matching.</p>
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>

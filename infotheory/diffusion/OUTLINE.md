@@ -90,28 +90,28 @@ Information-theoretic treatment: VAE/ELBO → hierarchical VAE = diffusion → p
 
 | Section | Slide content | Line |
 |---|---|---|
-| Title / Contents | | `:19, :30` |
-| **01 — Master identity** | One linear relation | `:58-75` |
-| | Three variables, two free | `:66, :68` |
-| **02 — Three parameterizations** | x₀ / ε / score | `:76-110` |
-| | Predict x₀ | `:84` |
-| | Predict ε | `:92` |
-| | Predict score | `:101` |
-| **03 — Tweedie's bridge** | Posterior mean = rescaled score | `:116-154` |
-| | **Theorem (Robbins/Tweedie)** | `:124` |
-| | **Proof — differentiate the marginal** | `:135` |
-| | Three names, one object | `:146` |
-| **04 — Channel view** | Forward = noise channel, reverse = decoding | `:155-190` |
-| | Each step is additive Gaussian channel | `:163` |
-| | Reverse = approximate decoding | `:171` |
-| | Successive refinement analogy | `:178` |
-| **05 — Score-matching equivalence** | ELBO MSE $\equiv$ denoising score matching | `:191-232` |
-| | Overview — a second divergence behind diffusion | `:199` |
-| | **Theorem — ELBO term $\equiv$ DSM (Vincent / Song et al.)** | `:211` |
-| | Recap of Section 05 — Tweedie $\to$ Fisher $\to$ DSM chain | `:222` |
-| | Forward pointer to `divergence/div2-fisher-score.html` | (inline in `:222`) |
+| Title / Contents | | `:19, :31` |
+| **01 — Master identity** | One linear relation | `:62-77` |
+| | Three variables, two free | `:71` |
+| **02 — Three parameterizations** | x₀ / ε / score | `:82-115` |
+| | Predict x₀ | `:91` |
+| | Predict ε | `:99` |
+| | Predict score | `:108` |
+| **03 — Tweedie's bridge** | Posterior mean = rescaled score | `:117-158` |
+| | **Theorem (Robbins/Tweedie)** | `:126` |
+| | **Proof — differentiate the marginal** (split: setup + continued) | `:137, :145` |
+| | Three names, one object | `:152` |
+| **04 — Channel view** | Forward = noise channel, reverse = decoding | `:160-194` |
+| | Each step is additive Gaussian channel | `:169` |
+| | Reverse = approximate decoding | `:177` |
+| | Successive refinement analogy | `:184` |
+| **05 — Score-matching equivalence** | ELBO MSE $\equiv$ denoising score matching | `:196-237` |
+| | A second divergence behind diffusion | `:205` |
+| | **Theorem — ELBO term $\equiv$ DSM (Vincent / Song et al.)** | `:216` |
+| | Two routes, one network (recap chain) | `:227` |
+| | Forward pointer to `divergence/div2-fisher-score.html` | (inline in `:227`) |
 
-**Key:** Master identity `:68`; Tweedie theorem `:124`; Tweedie proof `:135`; equivalence of three predictions `:146`; ELBO $\equiv$ DSM theorem `:211`.
+**Key:** Master identity `:71`; Tweedie theorem `:126`; Tweedie proof `:137, :145`; equivalence of three predictions `:152`; ELBO $\equiv$ DSM theorem `:216`.
 
 ### Note (`diff3-parameterizations-note.html`)
 - Why ε-prediction wins (loss conditioning at noise level) `:25`

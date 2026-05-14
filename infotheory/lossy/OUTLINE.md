@@ -52,35 +52,36 @@ Section 05 collapsed: the binary toy now lives inside section 04 as the worked r
 | | **Solving the optimization (binary)** — α derivation of $1{-}H_b(D)$ | `:747` |
 | | Binary R(D) and the test channel | `:755` |
 | | One source, many candidates (X has 12 ones) | `:764` |
-| | **Codebook of 24 candidates** ($R \approx 0.191 > R(D)$, match at $m=18$) | `:792` |
-| | Empirical joint matches the test channel — exact $9,3,3,9$ | `:834` |
-| | Ball volume = typical-set size | `:866` |
-| | Threshold rate from ball volume | `:877` |
-| | **What if we pick a wrong marginal?** — Sanov rate $\rho(p,D)$ | `:886` |
-| | **Penalty in numbers** — Bern(1/2) vs Bern(1/4) vs Bern(1/8) | `:898` |
-| | From binary toy to general recipe | `:913` |
-| | Generalization — the optimal test channel | `:924` |
-| | Achievability — random codebook | `:938` |
-| | Achievability — joint AEP | `:947` |
-| | **Biased binary — setup** | `:958` |
-| | **Biased binary — lower bound** (chain of inequalities) | `:969` |
-| | **Biased binary — achievability** ($q = (p-D)/(1-2D)$) | `:985` |
-| | **Biased binary — $R(D)$ and codebook law** | `:995` |
-| | **Biased binary — plug in: $p=0.2, D=0.1$** | `:1006` |
-| | **Biased binary — trivial regime $D \ge p$** | `:1017` |
-| | **Forbidden reproduction — setup** (distortion table) | `:1029` |
-| | **Forbidden — constraint forces structure** ($p(0,1)=0$) | `:1045` |
-| | **Forbidden — marginal & $I(\alpha)$** | `:1054` |
-| | **Forbidden — solving the optimization** (derivative) | `:1063` |
-| | **Forbidden — compared to symmetric** (numerics table) | `:1072` |
-| | **Uniform ternary — setup** ($Z = U\ominus V$) | `:1089` |
-| | **Uniform ternary — chain of inequalities** | `:1097` |
-| | **Uniform ternary — Shannon lower bound** | `:1113` |
-| | **Uniform ternary — computing $\phi(D)$** | `:1122` |
-| | **Uniform ternary — achievability** | `:1133` |
-| Recap / End | | `:1147` |
+| | **Codebook — candidates 1–12 of 24** ($R \approx 0.191 > R(D)$) | `:792` |
+| | **Codebook — candidates 13–24 (match at $m=18$)** | `:822` |
+| | Empirical joint matches the test channel — exact $9,3,3,9$ | `:852` |
+| | Ball volume = typical-set size | `:884` |
+| | Threshold rate from ball volume | `:895` |
+| | **What if we pick a wrong marginal?** — Sanov rate $\rho(p,D)$ | `:904` |
+| | **Penalty in numbers** — Bern(1/2) vs Bern(1/4) vs Bern(1/8) | `:916` |
+| | From binary toy to general recipe | `:933` |
+| | Generalization — the optimal test channel | `:944` |
+| | Achievability — random codebook | `:958` |
+| | Achievability — joint AEP | `:967` |
+| | **Biased binary — setup** | `:975` |
+| | **Biased binary — lower bound** (chain of inequalities) | `:986` |
+| | **Biased binary — achievability** ($q = (p-D)/(1-2D)$) | `:998` |
+| | **Biased binary — $R(D)$ and codebook law** | `:1009` |
+| | **Biased binary — plug in: $p=0.2, D=0.1$** | `:1020` |
+| | **Biased binary — trivial regime $D \ge p$** | `:1031` |
+| | **Forbidden reproduction — setup** (distortion table) | `:1042` |
+| | **Forbidden — constraint forces structure** ($p(0,1)=0$) | `:1058` |
+| | **Forbidden — marginal & $I(\alpha)$** | `:1067` |
+| | **Forbidden — solving the optimization** (derivative) | `:1076` |
+| | **Forbidden — compared to symmetric** (numerics table) | `:1085` |
+| | **Uniform ternary — setup** ($Z = U\ominus V$) | `:1102` |
+| | **Uniform ternary — chain of inequalities** | `:1110` |
+| | **Uniform ternary — Shannon lower bound** | `:1121` |
+| | **Uniform ternary — computing $\phi(D)$** | `:1130` |
+| | **Uniform ternary — achievability** | `:1141` |
+| Recap / End | | `:1155` |
 
-**Key:** Achievable region `:160`; Lloyd–Max examples `:245, :275, :305, :335`; Shannon theorem `:637`; what we optimize `:648`; converse `:677–:723`; binary worked example `:735–:877`; binary optimization `:747`; suboptimal codebook penalty `:886, :898`; achievability `:938, :947`; biased binary `:958–:1017` (6 slides); forbidden reproduction `:1029–:1072` (5 slides); ternary uniform `:1089–:1133` (5 slides).
+**Key:** Achievable region `:161`; Lloyd–Max examples `:245, :275, :305, :335`; Shannon theorem `:637`; what we optimize `:648`; converse `:677–:723`; binary worked example `:735–:895`; binary optimization `:747`; suboptimal codebook penalty `:904, :916`; achievability `:957, :966`; biased binary `:975–:1031` (6 slides); forbidden reproduction `:1042–:1085` (5 slides); ternary uniform `:1102–:1141` (5 slides).
 
 ### Note (`lossy1-foundations-note.html`)
 - Lossless vs lossy continuous sources
@@ -205,28 +206,28 @@ QUIP\# section: BlockLDLQ broken into scalar-vs-block comparison + Theorem 4.1 b
 | | **Quantization residual $\eta$** — recall $\ell(\widehat W)$, define $\eta = Q(z) - z$, $\widehat W = z + \eta$ | `:549` |
 | | **Proxy in feedback form** ($\widehat W - W = \eta(I+U)^{-1}$ → $\ell = \mathrm{tr}(\eta(I+U)^{-1}H(I+U)^{-\top}\eta^\top)$) | `:558` |
 | | **LDL of $H$ cancels the cross-terms** ($H=(I+\bar U)D(I+\bar U)^\top$ → $\ell=\mathrm{tr}(\eta D\eta^\top)$) | `:567` |
-| | **LDLQ — round with memory** (algorithm card; factorization spelled out) | `:576` |
-| | **What $\bar U$ and $D$ mean** (Gram-Schmidt under $H$-inner-product) | `:588` |
-| | **Worst-case and average proxy loss** (definitions; $\mathbb E\eta_{ij}^2 = \tfrac14, \tfrac1{12}, \tfrac16$) | `:607` |
-| | **LDLQ is optimal (Theorem 1)** — worst $(m/4)\mathrm{tr}(D)$, avg $(m/c)\mathrm{tr}(D)$ | `:619` |
-| | **What Theorem 1 means** — empirical $\mathrm{tr}(D)/\mathrm{tr}(H) \le 0.65$ across every OPT 125m–2.7b layer | `:632` |
-| | Why outliers wreck quantization (motivates incoherence) | `:644` |
-| | Incoherence — no outliers | `:666` |
-| | **Conjugation preserves the proxy** (rotation $U, V$ + definition of $\widetilde H$) | `:675` |
-| | Random rotation erases outliers (CLT half; LDLQ on $\widetilde W$ with $\widetilde H$) | `:686` |
-| | QUIP — end to end ($V \to \widehat W \to U^\top$ inference diagram) | `:694` |
-| **05 — QUIP#: Hadamard + lattice** | Tseng, Chee, Sun, Kuleshov, De Sa 2024 | `:718-841` |
-| | Two upgrades over QUIP | `:726` |
-| | **What is a Hadamard matrix?** ($H_8$ viz, bullets right) | `:743` |
-| | Why Hadamard is fast enough | `:774` |
-| | Random signs make it incoherent | `:783` |
-| | $E_8$ codebook — decoded by index | `:792` |
-| | **Scalar LDLQ vs BlockLDLQ** (stacked cards, equations on single lines) | `:803` |
-| | BlockLDLQ — bound (Theorem 4.1) | `:819` |
-| | Two-faced effective codebook | `:829` |
-| Recap / End | | `:847, :857` |
+| | **LDLQ — round with memory** (algorithm card; factorization spelled out) | `:571` |
+| | **What $\bar U$ and $D$ mean** (Gram-Schmidt under $H$-inner-product) | `:583` |
+| | **Worst-case and average proxy loss** (definitions; $\mathbb E\eta_{ij}^2 = \tfrac14, \tfrac1{12}, \tfrac16$) | `:602` |
+| | **LDLQ is optimal (Theorem 1)** — worst $(m/4)\mathrm{tr}(D)$, avg $(m/c)\mathrm{tr}(D)$ | `:614` |
+| | **What Theorem 1 means** — empirical $\mathrm{tr}(D)/\mathrm{tr}(H) \le 0.65$ across every OPT 125m–2.7b layer | `:629` |
+| | Why outliers wreck quantization (motivates incoherence) | `:641` |
+| | Incoherence — no outliers | `:663` |
+| | **Conjugation preserves the proxy** (rotation $U, V$ + definition of $\widetilde H$) | `:672` |
+| | Random rotation erases outliers (CLT half; LDLQ on $\widetilde W$ with $\widetilde H$) | `:683` |
+| | QUIP — end to end ($V \to \widehat W \to U^\top$ inference diagram) | `:691` |
+| **05 — QUIP#: Hadamard + lattice** | Tseng, Chee, Sun, Kuleshov, De Sa 2024 | `:715-832` |
+| | Two upgrades over QUIP | `:723` |
+| | **What is a Hadamard matrix?** ($H_8$ viz, bullets right) | `:740` |
+| | Why Hadamard is fast enough | `:771` |
+| | Random signs make it incoherent | `:780` |
+| | $E_8$ codebook — decoded by index | `:789` |
+| | **Scalar LDLQ vs BlockLDLQ** (stacked cards, equations on single lines) | `:800` |
+| | BlockLDLQ — bound (Theorem 4.1) | `:810` |
+| | Two-faced effective codebook | `:820` |
+| Recap / End | | `:838, :848` |
 
-**Key:** Codebook table (M, not K) `:91`; naive dequant→add→requant `:162`; integer add identity `:173`; hex Voronoi tiling fix `:261`; Z^8 vs E_8 coset intuition `:326, :336`; **e8.jpg viz** `:366`; **ball radius + O(d) rounding** `:403, :415`; **trace trick in $W_\Delta$** `:474`; **DPCM intuition** `:517`; **linear-feedback family** `:529`; **quantization residual $\eta$ + proxy in feedback form** `:549, :558`; **LDL cancels cross-terms** (the key derivation) `:567`; **LDLQ algorithm card** `:576`; **worst-case + avg definitions** `:607`; **Theorem 1 + interpretation** `:619, :632`; **conjugation preserves proxy** `:675`; **QUIP inference diagram** `:694`; **$H_8$ Hadamard viz** `:743`; scalar-vs-block LDLQ comparison `:803`.
+**Key:** Codebook table (M, not K) `:91`; naive dequant→add→requant `:162`; integer add identity `:173`; hex Voronoi tiling fix `:261`; Z^8 vs E_8 coset intuition `:326, :336`; **e8.jpg viz** `:366`; **ball radius + O(d) rounding** `:403, :415`; **trace trick in $W_\Delta$** `:474`; **DPCM intuition** `:517`; **linear-feedback family** `:529`; **quantization residual $\eta$ + proxy in feedback form** `:549, :558`; **LDL cancels cross-terms** (the key derivation) `:567`; **LDLQ algorithm card** `:571`; **worst-case + avg definitions** `:602`; **Theorem 1 + interpretation** `:614, :629`; **conjugation preserves proxy** `:672`; **QUIP inference diagram** `:691`; **$H_8$ Hadamard viz** `:740`; scalar-vs-block LDLQ comparison `:800`.
 
 **Papers:**
 - QUIP — Chee, Cai, Kuleshov, De Sa, NeurIPS 2023 (arXiv:2307.13304)

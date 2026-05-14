@@ -59,7 +59,7 @@ Two-lecture series on the divergences that drive modern generative training. Lec
 - Conventions $0\cdot f(0/0)$, $f(0)$, $0\cdot f(a/0)$ — when $D_f$ blows up
 - Asymmetry partner $\widetilde f(t) = t\,f(1/t)$
 - Pinsker chain: $\mathrm{TV} \le \sqrt{\tfrac12 D_{\mathrm{KL}}} \le \sqrt{\tfrac12 \chi^2}$ (verified on Bernoulli example)
-- Hockey-stick and $(\varepsilon,\delta)$-DP — pointer to `privacy/dp/DP-FL.html`
+- Hockey-stick and $(\varepsilon,\delta)$-DP — pointer to `privacy/dp/dp8-fl.html`
 - Why $D_{\mathrm{JS}} \le 2\log 2$
 - $f$-GAN minimax for KL, $\chi^2$, JS (conjugate worked out)
 - Wasserstein motivation (out of family, mentioned briefly)
@@ -128,5 +128,5 @@ Same as the rest of the series: deck = rigorous statement + intuition; note = ex
 | Tweedie's formula | `infotheory/diffusion/diff3-parameterizations.html` | `:124` (statement), `:135` (proof) |
 | Variational MI bounds (DV, NWJ as KL-instances) | `infotheory/mi/mi1-bounds.html` | `:148, :193` |
 | ELBO + diffusion training | `infotheory/diffusion/diff2-diffusion.html` | `:153-212` |
-| Hockey-stick and $(\varepsilon,\delta)$-DP | `privacy/dp/DP-FL.html` | — |
+| Hockey-stick and $(\varepsilon,\delta)$-DP | `privacy/dp/dp8-fl.html` | — |
 | SDE / Langevin sampling view of score | `privacy/generative/diffusion3-sde-score.html` | `:339` |

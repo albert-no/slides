@@ -117,34 +117,34 @@ Three-lecture series. Variable-length codes, AEP and Shannon source coding, Mark
 
 | Section | Slide | Line |
 |---|---|---|
-| Title / Contents | | `:23, :34` |
-| **01 — Sources with memory** | Markov chains, stationarity | `:64-150` |
-| | i.i.d. is not enough | `:72` |
+| Title / Contents | | `:25, :36` |
+| **01 — Sources with memory** | Markov chains, stationarity | `:64-116` |
+| | i.i.d. is not enough | `:71` |
 | | **First-order Markov definition** | `:82` |
-| | Example — two-state chain | `:95` |
-| | Joint entropy of Markov chain | `:108` |
-| | $k$-th order Markov | `:120` |
-| **02 — Entropy rate** | Fundamental limit | `:154-235` |
-| | **Definition — entropy rate** | `:162` |
-| | **Theorem — limits exist and agree** | `:175` |
-| | Stationary Markov — closed form | `:188` |
-| | Example — two-state chain | `:200` |
-| | Coding a Markov source | `:213` |
-| **03 — Universal coding** | Two-pass schemes, redundancy | `:239-303` |
-| | The universal problem | `:247` |
-| | Two-pass scheme | `:259` |
-| | Redundancy = mismatch cost | `:272` |
-| | Lower bound on redundancy | `:283` |
-| **04 — Lempel–Ziv** | LZ78, optimality | `:307-405` |
-| | The LZ idea | `:315` |
-| | LZ78 algorithm | `:329` |
-| | Worked example | `:340` |
-| | **Theorem — asymptotic optimality** | `:355` |
-| | Proof idea — LZ78 | `:368` |
-| | Practical note — what real codecs do | `:380` |
-| Recap series + Next | | `:395, :409` |
+| | Example — two-state chain | `:89` |
+| | Joint entropy of Markov chain | `:97` |
+| | $k$-th order Markov | `:105` |
+| **02 — Entropy rate** | Fundamental limit | `:120-178` |
+| | **Definition — entropy rate** | `:131` |
+| | **Theorem — limits exist and agree** | `:143` |
+| | Stationary Markov — closed form | `:152` |
+| | Example — two-state chain | `:160` |
+| | Coding a Markov source | `:171` |
+| **03 — Universal coding** | Two-pass schemes, redundancy | `:181-225` |
+| | The universal problem | `:189` |
+| | Two-pass scheme | `:199` |
+| | Redundancy = mismatch cost | `:210` |
+| | Lower bound on redundancy | `:218` |
+| **04 — Lempel–Ziv** | LZ78, optimality | `:227-303` |
+| | The LZ idea | `:234` |
+| | LZ78 algorithm | `:246` |
+| | Worked example | `:257` |
+| | **Theorem — asymptotic optimality** | `:270` |
+| | Proof idea — LZ78 | `:281` |
+| | Practical note — what real codecs do | `:293` |
+| Recap series + Next | | `:305, :317` |
 
-**Key:** Markov definition `:82`; entropy rate `:162`; Markov entropy rate closed form `:188`; LZ78 algorithm `:329`; LZ78 optimality `:355`.
+**Key:** Markov definition `:82`; entropy rate `:131`; Markov entropy rate closed form `:152`; LZ78 algorithm `:246`; LZ78 optimality `:270`. Stationary process notation $\mathbf{X}$ (KaTeX doesn't render `\mathscr`).
 
 ### Note (`lossless3-markov-universal-note.html`)
 - Stationarity vs ergodicity

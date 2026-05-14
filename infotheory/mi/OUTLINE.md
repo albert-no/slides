@@ -29,19 +29,20 @@ Variational MI bounds → contrastive learning (InfoNCE/CLIP). Each deck paired 
 | | DV bound on MI | `:159` |
 | | Proof — tilt Q by e^T | `:166` |
 | | MINE — neural DV estimator | `:172` |
-| **04 — NWJ** | Linear-surrogate variant | `:185-220` |
-| | Theorem (Nguyen, Wainwright, Jordan 2010) | `:198, :199` |
-| | NWJ vs DV variance trade | `:205` |
-| **05 — Tradeoffs & unification** | High MI barrier; $f$-divergence variational view | `:222-301` |
-| | High-MI barrier (McAllester–Stratos) | `:230, :232` |
-| | Three bounds side-by-side | `:239` |
-| | Choosing your bound | `:251` |
-| | Overview — unifying view via $f$-divergence | `:261` |
-| | Recovering DV and NWJ from Fenchel dual | `:270` |
-| | Forward pointer to Divergence Lectures 1–2 | `:280` |
-| | Recap (now includes $f$-divergence framing) | `:291` |
+| **04 — NWJ** | Linear-surrogate variant | `:185-222` |
+| | From DV to NWJ (log inequality) | `:192` |
+| | **Theorem (Nguyen, Wainwright, Jordan 2010)** | `:199, :202` |
+| | NWJ vs DV variance trade | `:209` |
+| **05 — Tradeoffs & unification** | High MI barrier; $f$-divergence variational view | `:225-304` |
+| | High-MI barrier (McAllester–Stratos) | `:233, :235` |
+| | Three bounds side-by-side | `:241` |
+| | Choosing your bound | `:254` |
+| | Overview — unifying view via $f$-divergence | `:264` |
+| | Recovering DV and NWJ from Fenchel dual | `:273` |
+| | Forward pointer to Divergence Lectures 1–2 | `:283` |
+| | Recap (now includes $f$-divergence framing) | `:294` |
 
-**Key theorems:** BA bound `:107`; DV representation `:151`; DV→MI bound `:159`; NWJ bound `:199`; McAllester–Stratos variance bound `:232`; $f$-divergence Fenchel dual `:261`; DV, NWJ as KL instances `:270`.
+**Key theorems:** BA bound `:109`; DV representation `:151`; DV→MI bound `:159`; NWJ bound `:203`; McAllester–Stratos variance bound `:232`; $f$-divergence Fenchel dual `:264`; DV, NWJ as KL instances `:273`.
 
 ### Note (`mi1-bounds-note.html`)
 - Density ratio as unifying view `:25`

@@ -39,20 +39,21 @@ Two-lecture series on the divergences that drive modern generative training. Lec
 | | Proof Part 3 — DPI (combines Parts 1 and 2) | `:269` |
 | | Proof Part 4 — info inequality | `:281` |
 | | Recap — Jensen-on-$f$ drives all four | `:288` |
-| **04 — GAN $\equiv$ JS** | Minimax over $f$-divergence | `:301-410` |
+| **04 — GAN $\equiv$ JS** | Minimax over $f$-divergence | `:302-432` |
 | | Setup — generator, discriminator, minimax value | `:309` |
-| | Overview — the JS theorem | `:321` |
-| | **Theorem (Goodfellow et al., 2014)** — max value $=2D_{\mathrm{JS}}-2\log 2$ | `:330` |
-| | Proof Step 1 — optimal $d^*(x) = p_{\mathrm{data}}/(p_{\mathrm{data}}+p_\theta)$ | `:341` |
-| | Proof Step 2 — substitute back, identify two KL terms as JS | `:350` |
-| | Recap — three labelled steps | `:362` |
-| | Training algorithm (alternating ascent/descent) | `:377` |
-| | Beyond JS — $f$-GAN via Fenchel dual (+ back-pointer to mi1 DV/NWJ) | `:402` |
-| **05 — Recap** | | `:411-441` |
-| | Catalogue table — KL/rev-KL/TV/$\chi^2$/hockey/JS | `:419` |
-| | Where this lecture sits; pointer to div2 | `:433` |
+| | Reading the minimax — discriminator vs generator perspectives | `:321` |
+| | Overview — the JS theorem | `:342` |
+| | **Theorem (Goodfellow et al., 2014)** — max value $=2D_{\mathrm{JS}}-2\log 2$ | `:351` |
+| | Proof Step 1 — optimal $d^*(x) = p_{\mathrm{data}}/(p_{\mathrm{data}}+p_\theta)$ | `:362` |
+| | Proof Step 2 — substitute back, identify two KL terms as JS | `:371` |
+| | Recap — three labelled steps | `:383` |
+| | Training algorithm (alternating ascent/descent) | `:398` |
+| | Beyond JS — $f$-GAN via Fenchel dual (+ back-pointer to mi1 DV/NWJ) | `:423` |
+| **05 — Recap** | | `:434-463` |
+| | Catalogue table — KL/rev-KL/TV/$\chi^2$/hockey/JS | `:441` |
+| | Where this lecture sits; pointer to div2 | `:455` |
 
-**Key theorems and definitions:** $f$-divergence definition `:121`; Csiszár properties theorem `:229`; DPI proof `:269`; info inequality `:281`; GAN $\equiv$ $2D_{\mathrm{JS}}$ theorem `:330`; optimal discriminator `:341`; $f$-GAN variational form `:402`.
+**Key theorems and definitions:** $f$-divergence definition `:121`; Csiszár properties theorem `:229`; DPI proof `:269`; info inequality `:281`; GAN $\equiv$ $2D_{\mathrm{JS}}$ theorem `:351`; optimal discriminator `:362`; $f$-GAN variational form `:423`.
 
 ### Note (`div1-fdivergence-gan-note.html`)
 - Why both pathologies matter (Theis et al. discussion)

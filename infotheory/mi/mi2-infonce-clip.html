@@ -69,6 +69,29 @@
 </div>
 
 
+<!-- MOTIVATION (preamble before §01) -->
+<div class="slide">
+  <h2>Why Another Bound?</h2><div class="divider"></div>
+  <p>From Lecture 1:</p>
+  <ul>
+    <li><strong>DV:</strong> tight, but variance $\sim e^{I}/N$ &mdash; explodes at high MI.</li>
+    <li><strong>NWJ:</strong> stable mean, but variance also exponential in $I$.</li>
+    <li><strong>BA:</strong> requires $H(X)$, usually unknown.</li>
+  </ul>
+  <p>None was designed for <strong>large-batch SGD</strong> on millions of pairs.</p>
+</div>
+
+<div class="slide">
+  <h2>What We Want</h2><div class="divider"></div>
+  <ul>
+    <li><strong>Bounded loss</strong> &rarr; bounded variance, stable gradients.</li>
+    <li><strong>Cheap per step</strong> &mdash; one forward pass per minibatch.</li>
+    <li><strong>Tighter with more negatives</strong> &mdash; bound improves with batch size $K$.</li>
+  </ul>
+  <div class="highlight"><strong>InfoNCE</strong> hits all three &mdash; at the price of a ceiling at $\log K$.</div>
+</div>
+
+
 <!-- ════ PART 01 ════ -->
 <div class="slide section-slide left">
   <div class="section-num">01</div>
@@ -156,12 +179,34 @@
 </div>
 
 <div class="slide">
+  <h2>Is the Separable Critic Enough?</h2><div class="divider"></div>
+  <p>Separable $f(x,y) = g(x)^\top h(y) / \tau$ is restrictive. By Mercer / universal approximation, it suffices.</p>
+  <div class="card">
+    <h3>Mercer-style decomposition.</h3>
+    <p>Any continuous $f^\star$ on a compact domain admits</p>
+    <div class="math-block">$$f^\star(x,y) \;=\; \sum_{k=1}^{\infty} \lambda_k\,\phi_k(x)\,\psi_k(y).$$</div>
+    <p>Truncate to dim $d$ (= embedding size): rank-$d$ separable approximation, error $\to 0$ as $d\to\infty$. With deep encoders, $\phi_k, \psi_k$ are <em>learned</em>.</p>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Why We Live with the Restriction</h2><div class="divider"></div>
+  <ul>
+    <li><strong>Compute.</strong> $N^2$ similarities from $2N$ encoder calls + one matmul. A general $f(x,y)$ would need $N^2$ joint forward passes.</li>
+    <li><strong>Inference reuse.</strong> Image and text embeddings are independent &mdash; cache them once, swap one side at query time.</li>
+    <li><strong>Empirical headroom.</strong> $d = 512$ (RN50) or $d = 768$ (ViT-L) matches supervised baselines; the rank-$d$ approximation is good enough.</li>
+  </ul>
+  <div class="highlight">Asymptotically lossless, two orders of magnitude cheaper.</div>
+</div>
+
+<div class="slide">
   <h2>$N\times N$ Similarity Matrix</h2><div class="divider"></div>
   <div class="cols">
     <div>
-      <p><strong>Diagonal:</strong> true pairs, should rank highest in their row and column.</p>
-      <p><strong>Off-diagonal:</strong> contrastive negatives — random shufflings within the batch.</p>
-      <p>$N$ row + $N$ column classifications, optimized simultaneously by one matrix multiply.</p>
+      <p>Encode each modality once: $g_i = g_\mu(x_i)$, $h_j = h_\phi(y_j)$. Then</p>
+      <div class="math-block">$$S_{ij} \;=\; \tfrac{1}{\tau}\,g_i^\top h_j.$$</div>
+      <p><strong>Diagonal:</strong> true pairs &mdash; should rank highest in their row and column.</p>
+      <p><strong>Off-diagonal:</strong> contrastive negatives. $N$ row-softmaxes + $N$ column-softmaxes from a single $N\times N$ matmul.</p>
     </div>
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
       <div class="mi2-simmat">
@@ -188,11 +233,11 @@
 <div class="slide">
   <h2>CLIP as a Classifier</h2><div class="divider"></div>
   <p>$K$-way classification with labels $\{c_1,\ldots,c_K\}$:</p>
-  <ol class="num">
-    <li>Build prompts: $y_k = $ "A photo of a $\{c_k\}$.".</li>
-    <li>Embed prompts: $h_k = h_\phi(y_k)$.</li>
-    <li>Embed test image: $g = g_\mu(x)$.</li>
-    <li>Predict $\hat c = \arg\max_k\; g^\top h_k$.</li>
+  <ol class="num" style="line-height: 2.1;">
+    <li style="margin-bottom: 0.9em;">Build prompts: $y_k = $ "A photo of a $\{c_k\}$.".</li>
+    <li style="margin-bottom: 0.9em;">Embed prompts: $h_k = h_\phi(y_k)$.</li>
+    <li style="margin-bottom: 0.9em;">Embed test image: $g = g_\mu(x)$.</li>
+    <li style="margin-bottom: 0.9em;">Predict $\hat c = \arg\max_k\; g^\top h_k$.</li>
   </ol>
   <p>No retraining. Classifier built from text alone.</p>
 </div>

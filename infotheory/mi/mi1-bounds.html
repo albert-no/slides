@@ -33,7 +33,7 @@
     <div class="toc-item">
       <div class="toc-num">01</div><div class="toc-rule"></div>
       <div><div class="toc-label">Setup</div>
-      <div class="toc-sub">MI as KL; samples-only; density-ratio framing</div></div>
+      <div class="toc-sub">Motivation (CLIP); MI as KL; what is computable</div></div>
     </div>
     <div class="toc-item">
       <div class="toc-num">02</div><div class="toc-rule"></div>
@@ -68,28 +68,56 @@
 </div>
 
 <div class="slide">
-  <h2>MI as a KL Divergence</h2><div class="divider"></div>
-  <div class="math-block">$$I(X;Y) \;=\; D_{\mathrm{KL}}\!\bigl(p_{X,Y}\,\Vert\,p_X p_Y\bigr) \;=\; \mathbb{E}\!\left[\log\dfrac{p(X,Y)}{p(X)p(Y)}\right].$$</div>
-  <p>Three uses across modern ML:</p>
+  <h2>Why Estimate Mutual Information?</h2><div class="divider"></div>
+  <p>MI captures dependence that correlation misses — nonlinear, multimodal, high-dimensional.</p>
   <ul>
-    <li><strong>Representation learning:</strong> maximize $I(T;Y)$.</li>
-    <li><strong>Contrastive learning:</strong> maximize $I(T_1;T_2)$ across views.</li>
-    <li><strong>Information bottleneck:</strong> minimize $I(T;X)$ at fixed fidelity.</li>
+    <li><strong>CLIP:</strong> maximize $I(\text{image};\text{caption})$ over 400M web pairs — one shared embedding for vision and language.</li>
+    <li><strong>Contrastive SSL:</strong> maximize $I(\text{view}_1;\text{view}_2)$ across augmentations (SimCLR, MoCo, BYOL).</li>
+    <li><strong>Information bottleneck:</strong> learn $T$ with high $I(T;Y)$ and low $I(T;X)$.</li>
+    <li><strong>Feature selection / independence testing:</strong> rank by $I(X_j;Y)$; $I = 0 \iff X \perp Y$.</li>
   </ul>
+  <div class="highlight">Modern setting: $X,Y$ are images, text, embeddings &mdash; high-dimensional, no closed-form density.</div>
 </div>
 
 <div class="slide">
-  <h2>Samples-Only Setting</h2><div class="divider"></div>
-  <p>Given iid pairs $(x_i, y_i)\sim p_{X,Y}$. Shuffling indices gives pairs from $p_X p_Y$.</p>
-  <div class="math-block">$$P = p_{X,Y}\quad\text{(joint)},\qquad Q = p_X p_Y\quad\text{(product)}.$$</div>
-  <div class="highlight">Estimate $I(X;Y) = D_{\mathrm{KL}}(P\,\Vert\,Q)$ from samples of both — no density estimation.</div>
+  <h2>MI as a KL Divergence</h2><div class="divider"></div>
+  <div class="math-block">$$I(X;Y) \;=\; D_{\mathrm{KL}}\!\bigl(p_{X,Y}\,\Vert\,p_X p_Y\bigr) \;=\; \mathbb{E}_{p_{X,Y}}\!\left[\log\dfrac{p(X,Y)}{p(X)p(Y)}\right].$$</div>
+  <p>The MI estimation problem reduces to: estimate a KL between two distributions, given only samples.</p>
+  <div class="math-block">$$P \;=\; p_{X,Y}\quad\text{(joint)},\qquad Q \;=\; p_X p_Y\quad\text{(product of marginals)}.$$</div>
+</div>
+
+<div class="slide">
+  <h2>Why Is It Hard?</h2><div class="divider"></div>
+  <p>The integrand is a <strong>density ratio</strong> &mdash; we have samples, not densities.</p>
+  <div class="math-block">$$I(X;Y) \;=\; \int\!\!\int p(x,y)\,\log\frac{p(x,y)}{p(x)p(y)}\,dx\,dy.$$</div>
+  <ul>
+    <li>Plug-in via KDE / $k$-NN density estimation: $O(n^{-2/(4+d)})$ rate &mdash; useless past $d \approx 5$.</li>
+    <li>CLIP embeddings live in $\mathbb{R}^{512}$. No hope of estimating $p(x,y)$ directly.</li>
+    <li>Even when $r$ is known, variance of any MC estimate grows as $\sim e^{I}/n$ (we return to this in &sect;05).</li>
+  </ul>
+  <div class="highlight">Need: a sample-based, dimension-agnostic estimator that side-steps density estimation.</div>
+</div>
+
+<div class="slide">
+  <h2>What We Can &mdash; and Cannot &mdash; Compute</h2><div class="divider"></div>
+  <p>Given iid pairs $(x_i, y_i) \sim p_{X,Y}$:</p>
+  <table>
+    <thead><tr><th>Operation</th><th>Available?</th></tr></thead>
+    <tbody>
+      <tr><td>Sample from joint $P = p_{X,Y}$</td><td>&check;&nbsp;&nbsp;the data</td></tr>
+      <tr><td>Sample from product $Q = p_X p_Y$</td><td>&check;&nbsp;&nbsp;shuffle $y$'s within a batch</td></tr>
+      <tr><td>Evaluate $H(X)$</td><td>Sometimes &mdash; if marginal is discrete or analytic</td></tr>
+      <tr><td>Evaluate $p(x,y)$, $p(x)$, $p(y)$ pointwise</td><td>&times;</td></tr>
+      <tr><td>Evaluate density ratio $r(x,y) = p(x,y)/p(x)p(y)$</td><td>&times;</td></tr>
+    </tbody>
+  </table>
 </div>
 
 <div class="slide">
   <h2>Density-Ratio Framing</h2><div class="divider"></div>
   <p>Define</p>
   <div class="math-block">$$r(x,y) \;=\; \dfrac{p(x,y)}{p(x)p(y)}, \qquad I(X;Y) \;=\; \mathbb{E}_{p_{X,Y}}[\log r(X,Y)].$$</div>
-  <p>If $r$ were known, MI is one expectation under $p_{X,Y}$. Strategy: train a critic $T_\theta\approx\log r$ by maximizing a variational lower bound.</p>
+  <p>If $r$ were known, MI is a single expectation under the joint. <strong>Strategy:</strong> train a critic $T_\theta \approx \log r$ by maximizing a variational lower bound on $I(X;Y)$.</p>
 </div>
 
 
@@ -169,14 +197,14 @@
 </div>
 
 <div class="slide">
-  <h2>MINE — Neural DV Estimator</h2><div class="divider"></div>
-  <p>Parameterize $T_\theta(x,y)$ by a neural network. Use minibatches:</p>
+  <h2>MINE &mdash; Neural DV Estimator</h2><div class="divider"></div>
+  <p>Parameterize $T_\theta(x,y)$ as a neural net. Replace each expectation by a <strong>sample mean</strong> (Monte Carlo):</p>
+  <div class="math-block">$$\widehat{I}_{\mathrm{DV}}(T_\theta) \;=\; \underbrace{\dfrac{1}{n}\sum_{i=1}^{n} T_\theta(x_i, y_i)}_{\approx\,\mathbb{E}_P[T]} \;-\; \log\underbrace{\dfrac{1}{n}\sum_{i=1}^{n} e^{T_\theta(x_i, y'_i)}}_{\approx\,\mathbb{E}_Q[e^T]}.$$</div>
   <ul>
-    <li><strong>Positives:</strong> $(x_i, y_i)\sim p_{X,Y}$.</li>
-    <li><strong>Negatives:</strong> shuffled pairs $(x_i, y_j)$, $j\ne i$.</li>
+    <li><strong>Positives</strong> $(x_i,y_i) \sim p_{X,Y}$: data pairs &rarr; first average.</li>
+    <li><strong>Negatives</strong> $(x_i,y'_i)$: shuffle $y$'s within the minibatch &mdash; same marginals, broken pairing &rarr; second average.</li>
   </ul>
-  <p>Gradient-ascend $I_{\mathrm{DV}}(T_\theta)$ on $\theta$.</p>
-  <div class="highlight"><strong>Catch:</strong> $\log\mathbb{E}_Q[e^T]$ is dominated by the largest $T$ value. Variance grows <strong>exponentially</strong> in MI.</div>
+  <p>Gradient-ascend $\widehat{I}_{\mathrm{DV}}$ on $\theta$. Variance of the log-sum-exp term &mdash; revisited in &sect;05.</p>
   <div class="cite">Belghazi et al., "MINE: Mutual Information Neural Estimation", ICML 2018.</div>
 </div>
 
@@ -262,33 +290,25 @@
 </div>
 
 <div class="slide">
-  <h2>Overview &mdash; Unifying View via $f$-Divergence</h2><div class="divider"></div>
-  <p>BA, DV, NWJ all bound a <em>KL divergence</em>: $I(X;Y) = D_{\mathrm{KL}}(P\,\Vert\,Q)$.</p>
-  <p>KL is one $f$-divergence ($f(t) = t\log t$). The same construction extends to <strong>any</strong> $f$-divergence via Fenchel duality.</p>
-  <div class="math-block">$$D_f(P\,\Vert\,Q) \;=\; \sup_{T:\,\mathcal{X}\to\mathbb{R}} \;\mathbb{E}_P[T(X)] \;-\; \mathbb{E}_Q[f^{*}(T(X))],$$</div>
-  <p>where $f^*(s) = \sup_t (st - f(t))$ is the convex conjugate.</p>
-  <div class="highlight"><p>One framework, infinitely many bounds &mdash; choose $f$ to control variance, support, or robustness.</p></div>
-</div>
-
-<div class="slide">
-  <h2>Recovering DV and NWJ</h2><div class="divider"></div>
-  <p>For $f(t) = t\log t$ (KL): convex conjugate is $f^*(s) = e^{s-1}$. Substitute:</p>
-  <div class="math-block">$$D_{\mathrm{KL}}(P\,\Vert\,Q) \;\ge\; \mathbb{E}_P[T(X)] - \mathbb{E}_Q[e^{T(X)-1}] \quad\text{(NWJ).}$$</div>
-  <p>Tighten by maximizing $T \mapsto T - c$ over the constant $c$:</p>
-  <div class="math-block">$$D_{\mathrm{KL}}(P\,\Vert\,Q) \;\ge\; \mathbb{E}_P[T(X)] - \log\mathbb{E}_Q[e^{T(X)}] \quad\text{(DV).}$$</div>
-  <p>NWJ comes from the bare conjugate; DV from the tightened version. Other $f$ give $\chi^2$-, JS-, hockey-stick-MI bounds.</p>
-  <div class="cite">Nguyen, Wainwright, and Jordan, NWJ, IEEE Trans. IT 2010.</div>
+  <h2>One Machine &mdash; KL Is the Tip of It</h2><div class="divider"></div>
+  <p>Every $f$-divergence has a Fenchel-dual variational form. Substitute $f(t) = t\log t$, conjugate $f^*(s) = e^{s-1}$:</p>
+  <div class="math-block">$$\underbrace{\mathbb{E}_P[T] - \mathbb{E}_Q[e^{T-1}]}_{\text{NWJ (bare conjugate)}} \;\;\le\;\; D_{\mathrm{KL}}(P\,\Vert\,Q) \;\;=\;\; \sup_T\bigl\{\underbrace{\mathbb{E}_P[T] - \log\mathbb{E}_Q[e^T]}_{\text{DV (tighten over constants)}}\bigr\}.$$</div>
+  <p>Other $f$ give $\chi^2$-, JS-, hockey-stick-MI bounds. Derivation and $f$-GAN: <code>div1</code> &sect;04.</p>
 </div>
 
 <div class="slide">
   <h2>Forward Pointer &mdash; Divergence Lectures</h2><div class="divider"></div>
-  <p>The same Fenchel machinery drives generative training:</p>
-  <ul>
-    <li><strong>$f$-GAN:</strong> minimize $D_f(p_{\mathrm{data}}\,\Vert\,p_\theta)$ via critic $T$ (Nowozin et al. 2016).</li>
-    <li><strong>Vanilla GAN:</strong> the $f=$ JS instance &mdash; optimal discriminator gives $2D_{\mathrm{JS}} - 2\log 2$.</li>
-    <li><strong>Score-based / diffusion:</strong> a different divergence entirely (<em>Fisher</em>) &mdash; reads $\nabla\log p$, not $p/q$.</li>
-  </ul>
-  <p>See the <strong>Divergence series</strong>: <code>infotheory/divergence/div1</code> ($f$-divergence + GAN) and <code>div2</code> (Fisher + score matching).</p>
+  <p>Same Fenchel machinery, different downstream uses:</p>
+  <table>
+    <thead><tr><th>Lecture</th><th>$f$ / object</th><th>Application</th></tr></thead>
+    <tbody>
+      <tr><td><code>div1</code></td><td>$f$-divergence definition + 6 examples (KL, $\chi^2$, JS, &hellip;)</td><td>Catalogue</td></tr>
+      <tr><td><code>div1</code></td><td>Csisz&aacute;r properties (DPI, info inequality)</td><td>One Jensen, four theorems</td></tr>
+      <tr><td><code>div1</code></td><td>$f = $ JS, optimal critic $\Rightarrow 2D_{\mathrm{JS}} - 2\log 2$</td><td>Vanilla GAN</td></tr>
+      <tr><td><code>div2</code></td><td>Fisher divergence (reads $\nabla\log p$, not $p/q$)</td><td>Score matching, diffusion</td></tr>
+    </tbody>
+  </table>
+  <p>The current lecture is the <strong>KL row</strong> of this picture, with $P = p_{X,Y}$, $Q = p_X p_Y$.</p>
 </div>
 
 <div class="slide">

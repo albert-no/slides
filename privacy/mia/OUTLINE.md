@@ -19,25 +19,46 @@
 
 | Part | Topic | Line |
 |---|---|---|
-| **01** — Why MIA matters | central question, real-world stakes | `:78-140` |
-| **02** — Homer et al. 2008 | distance statistic, t-test, NIH closure | `:141-276` |
-| | Distance `D(Y_{i,j}) = \|Y_{i,j}-M_j\|-\|Y_{i,j}-Pop_j\|` | `:195` |
-| | Aggregation t-test | `:224` |
-| | NIH database closure | `:263` |
-| **03** — Reconstruction → distinguishability | | `:277-442` |
-| | IND-CPA cryptographic analogy | `:382` |
-| | Privacy = indistinguishability → MIA | `:422` |
-| **04** — The MI game | challenger, adversary, neighboring DBs | `:443-592` |
-| | **Neighboring DBs** `D_1=D∪{x}, D_0=D\{x}` | `:471` |
-| | **Advantage** `\|Pr[A=1\|b=1]-Pr[A=1\|b=0]\|` | `:489` |
-| | **Neyman–Pearson lemma** `Λ(x) = p(T\|H1)/p(T\|H0)` | `:558` |
-| | Error types | `:576` |
-| **05** — DP, MI, taxonomy | | `:593-794` |
-| | **DP bounds MI advantage** `Adv ≤ e^ε−1+δ` | `:606` |
-| | Privacy attack taxonomy (membership/attribute/extraction/inversion) | `:682` |
-| | Threat model spectrum | `:705` |
-| | ROC, AUC, **TPR @ low FPR (Carlini critique)** | `:722-763` |
-| | Standard benchmarks (CIFAR, Purchase, Texas, WikiMIA) | `:794` |
+| **01** — Why MIA matters | central question, IND-CPA analogy, real-world stakes | `:78-141` |
+| | Inline notation table (M, D, x, θ, f_θ, ℓ) | `:91` |
+| | IND-CPA defined inline | `:115` |
+| **02** — Homer et al. 2008 | motivation, GWAS aggregates, MIA framing | `:142-310` |
+| | "Why this paper existed" (GWAS publication norms) | `:149` |
+| | **Homer attack in MIA language** (mapping table) | `:166` |
+| | **Genomics in 60 seconds** (SNP, allele, frequencies) | `:184` |
+| | Three ingredients (`Y_i`, `M_j`, `Pop_j`) with descriptions | `:198` |
+| | Distance `D(Y_{i,j}) = \|Y_{i,j}-M_j\|-\|Y_{i,j}-Pop_j\|` | `:228` |
+| | Aggregation t-test | `:257` |
+| | NIH database closure | `:296` |
+| **03** — Reconstruction → distinguishability | | `:311-476` |
+| | IND-CPA cryptographic analogy (full) | `:412` |
+| | Privacy = indistinguishability → MIA | `:454` |
+| **04** — The MI game | challenger, adversary, neighboring DBs | `:477-687` |
+| | **MI game** (with `A` defined inline) | `:483` |
+| | **Neighboring DBs** `D_1=D∪{x}, D_0=D\{x}` | `:500` |
+| | **Advantage** `\|Pr[A=1\|b=1]-Pr[A=1\|b=0]\|` | `:517` |
+| | HT connection (refers back to DP2 HT interpretation) | `:545` |
+| | **Neyman–Pearson setup** (size, power, level) | `:584` |
+| | **Neyman–Pearson statement** `Λ(T) = p_1/p_0 ≷ τ` | `:605` |
+| | **NP proof** (one-line sign-trick argument) | `:623` |
+| | **NP → MIA**: every optimal MIA is a likelihood-ratio test | `:641` |
+| | Error types (FPR, FNR) | `:663` |
+| **05** — DP, MI, taxonomy | | `:688-1029` |
+| | **HT interpretation of DP** (from DP2) `1≤α+βe^ε` | `:693` |
+| | **DP caps the MIA ROC** `TPR ≤ e^ε FPR + δ` | `:707` |
+| | **Corollary: Advantage bound** `Adv ≤ e^ε−1+δ` (with numerical table) | `:723` |
+| | MI as auditing tool | `:740` |
+| | Privacy attack taxonomy (membership/attribute/extraction/inversion, each defined) | `:788` |
+| | Threat model spectrum | `:817` |
+| | **Sablayrolles 2019** (dedicated slide): BB ≈ WB, loss is sufficient | `:832` |
+| | **ROC curve — definition** (full-width equations) | `:848` |
+| | **ROC curve — large diagram** (perfect / attack / random) | `:863` |
+| | **AUC — formulas** (integral + probabilistic) | `:897` |
+| | **AUC — diagram + reference values** | `:911` |
+| | **Why AUC misses MIA risk** + Attack A vs B diagram | `:948` |
+| | **TPR @ low FPR (Carlini critique)** + log-log ROC diagram | `:984` |
+| | Metrics comparison table | `:1020` |
+| | Standard benchmarks (CIFAR, Purchase, Texas, WikiMIA) | `:1035` |
 
 **Note (`mia1-foundations-note.html`):** DP→MI bound full proof `:57-72`; why log-log ROC matters `:45`; metric pitfalls `:49-53`.
 
@@ -47,19 +68,25 @@
 
 | Part | Topic | Line |
 |---|---|---|
-| **01** — Shokri et al. 2017 | shadow model paradigm | `:62-367` |
-| | 3-stage architecture (shadows → labeled data → attack net) | `:99` |
-| | Shadow data strategies | `:165` |
-| | **Per-class attack models** `A_c: R^\|C\| → {0,1}` | `:212` |
-| | Results: 93% precision, 91% recall (Purchase-100) | `:243` |
-| | Pseudocode (split: build+train, then attack) | `:311, :330` |
-| | Confidence-threshold baseline `1[max_c f(x)_c > τ]` | `:343` |
-| **02** — LOGAN (Hayes et al.): MIA on GANs | | `:379-458` |
-| | Discriminator + reconstruction-based attacks | `:399` |
-| | Results: MNIST DCGAN ~74%, CIFAR ~69% | `:440` |
-| **03** — Seq2seq (Hisamoto et al.): MT models | | `:459-575` |
-| | **Perplexity** `PPL(x,y)=exp(-1/T Σ log p(y_t\|y_{<t},x))` | `:489, :518` |
-| | seq2seq vs LLM MIA comparison | `:534` |
+| **01** — Shokri et al. 2017 | shadow model paradigm | `:62-481` |
+| | **Attack architecture — training pipeline** (SVG: D_jˢ → Shadow j → labeled dataset → A_c) | `:94` |
+| | **Attack architecture — inference** (SVG: x → f_θ → σ → A_c → IN/OUT) | `:166` |
+| | Detailed pipeline (numbered steps) | `:215` |
+| | Shadow data strategies | `:258` |
+| | **Attack data collection** (Member/Non-member grid + labeled dataset card) | `:282` |
+| | **Per-class attack models** `A_c: R^\|C\| → {0,1}` | `:311` |
+| | Attack inference | `:327` |
+| | Results: 93% precision, 91% recall (Purchase-100) | `:344` |
+| | Pseudocode (split: build+train, then attack) | `:417, :436` |
+| | Confidence-threshold baseline `1[max_c f(x)_c > τ]` | `:449` |
+| **02** — LOGAN (Hayes et al.): MIA on GANs | | `:482-619` |
+| | LOGAN overview | `:487` |
+| | **GAN refresher** (G, D, minimax, SVG diagram) | `:504` |
+| | Discriminator + reconstruction-based attacks | `:561` |
+| | Results: MNIST DCGAN ~74%, CIFAR ~69% | `:601` |
+| **03** — Seq2seq (Hisamoto et al.): MT models | | `:620-737` |
+| | **Perplexity** `PPL(x,y)=exp(-1/T Σ log p(y_t\|y_{<t},x))` | `:632, :659` |
+| | seq2seq vs LLM MIA comparison | `:675` |
 
 **Note (`mia2-shadow-note.html`):** Full Google results table including Texas-100 `:42-50`; calibration for LLMs vs seq2seq `:53-63`.
 
@@ -67,33 +94,33 @@
 
 ## mia3-theory.html
 
+Lightened from 45 → 28 slides: Yeom 3-part proof, redundant intuition slides, and individual Salem relaxation slides folded into single takeaway/summary slides. Full Yeom proof lives in `mia3-theory-note.html`.
+
 | Part | Topic | Line |
 |---|---|---|
-| **01** — Yeom et al. 2018 (overfitting) | | `:78-325` |
+| **01** — Yeom et al. 2018 (overfitting) | | `:78-216` |
 | | **Generalization gap** `Δ = R_pop − R_train` | `:104` |
-| | **Threshold attack** `A(z) = 1[ℓ(f,z) ≤ τ]`, `τ = R_pop` | `:124` |
-| | **Theorem: Adv_MI ≤ Δ** | `:143` |
-| | Proof (3 parts: Markov on TPR, Markov on FPR, subtract) | `:156, :174, :192` |
-| | Limitations (avg vs per-sample, threshold-only) | `:307` |
-| **02** — Sablayrolles et al. 2019 (BB vs WB) | | `:326-520` |
-| | **Bayes-optimal MI** `Λ(z) = p(Φ\|z∈D)/p(Φ\|z∉D)` | `:358` |
-| | White-box features (loss, gradients, activations) | `:396` |
-| | **Theorem: Λ_BB → Λ_WB** | `:436` |
-| | Loss sufficiency intuition | `:451` |
-| | Experimental validation (BB-WB gap < 1% AUC) | `:486` |
-| **03** — Salem et al. (ML-Leaks) | three relaxations | `:521-657` |
-| | No-shadow baseline `1[max_c > τ]` | `:606` |
-| | Graceful degradation (~5% drop) | `:631` |
-| **04** — Nasr et al. 2019 (white-box + FL) | | `:659-773` |
-| | Per-layer gradients as features | `:685` |
-| | Why gradients (members → small structured grads) | `:709` |
-| | FL vulnerability: shared Δθ exposes WB info | `:728` |
-| | Passive vs active attacks in FL | `:751` |
-| **05** — Synthesis | timeline 2008–2019 | `:775-836` |
+| | **Threshold attack** `A(z) = 1[ℓ(f,z) ≤ τ]`, `τ = R_pop` | `:118` |
+| | **Theorem: Adv_MI ≤ Δ** (proof in note) | `:137` |
+| | Loss-distribution intuition (members vs non-members) | `:147` |
+| | Takeaway (what works / where it falls short) | `:187` |
+| **02** — Sablayrolles et al. 2019 (BB vs WB) | | `:217-322` |
+| | **Bayes-optimal MI** `Λ(z) = p(Φ\|z∈D)/p(Φ\|z∉D)` | `:240` |
+| | White-box features (loss, gradients, activations) | `:276` |
+| | **Theorem: Λ_BB → Λ_WB** with merged intuition | `:291` |
+| | Experimental validation (BB-WB gap < 1% AUC) | `:306` |
+| **03** — Salem et al. (ML-Leaks) — single consolidated slide + results | | `:323-368` |
+| | Three relaxations (different arch / different distribution / no shadows) | `:329` |
+| | Graceful degradation (~5% drop) | `:353` |
+| **04** — Nasr et al. 2019 (white-box + FL) | | `:369-460` |
+| | Per-layer gradients as features | `:395` |
+| | FL vulnerability: shared Δθ exposes WB info | `:416` |
+| | Passive vs active attacks in FL | `:438` |
+| **05** — Synthesis | timeline 2008–2019 | `:461-525` |
 
-**Key theorems:** Yeom bound `:143`; Bayes-optimal `:358`; BB→WB convergence `:436`.
+**Key theorems:** Yeom bound `:137`; Bayes-optimal `:240`; BB→WB convergence `:291`.
 
-**Note (`mia3-theory-note.html`):** Full Yeom proof `:40-61`; per-sample vulnerability `:64-68`; bound tightness `:78-87`; ML-Leaks results table `:90-100`; Sablayrolles validation `:103-113`.
+**Note (`mia3-theory-note.html`):** Full Yeom proof `:40-61` (moved off slides as part of lightening); per-sample vulnerability `:64-68`; bound tightness `:78-87`; ML-Leaks results table `:90-100`; Sablayrolles validation `:103-113`.
 
 ---
 

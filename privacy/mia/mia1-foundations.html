@@ -86,11 +86,12 @@
   <h2>The Central Question</h2>
   <div class="divider"></div>
   <div class="highlight" style="padding:28px 32px;">
-    <p>Mechanism $M$ trained on $D$, data point $x$:</p>
+    <p>Mechanism $M$ (training algorithm or query) on dataset $D$, target record $x$:</p>
     <p style="font-weight:500; text-align:center;"><strong>Was $x$ used to produce $M$'s output?</strong></p>
   </div>
   <p><strong>Membership inference</strong>: fundamental privacy attack against ML systems.</p>
   <p>Spans genomics, statistics, ML. Foundation for extraction and inversion.</p>
+  <p class="muted">Throughout: $M$ = mechanism, $D$ = training dataset, $x$ (or $z$) = target record, $\theta$ = model parameters, $f_\theta$ = trained model, $\ell(f_\theta,z)$ = loss at $z$.</p>
 </div>
 
 <!-- SLIDE 3 — Why Should You Care? -->
@@ -114,6 +115,7 @@
   </div>
   <div class="highlight">
     <p>MIA is to ML privacy what <strong>IND-CPA</strong> is to crypto: the minimal attack any private system must resist.</p>
+    <p class="muted"><strong>IND-CPA</strong> (indistinguishability under chosen-plaintext attack): adversary picks $m_0,m_1$, sees one ciphertext, cannot tell which message was encrypted.</p>
   </div>
 </div>
 
@@ -144,24 +146,54 @@
   <div class="divider"></div>
   <p class="subtitle">The genomic attack that started it all</p>
 </div>
-<!-- SLIDE 7 — Homer et al. Overview -->
+<!-- SLIDE 7 — Homer et al.: Motivation -->
 <div class="slide bg-dark">
   <div class="pill">Homer et al. 2008</div>
-  <h2>Homer et al.: The Attack</h2>
+  <h2>Why This Paper Existed</h2>
   <div class="divider"></div>
-  <p><strong>Individuals identifiable</strong> from aggregate allele frequencies, even in 40+ person mixtures.</p>
+  <p>Genome-wide association studies (GWAS) published <strong>aggregate allele frequencies</strong> for cases (e.g., cancer patients) so other labs could replicate findings.</p>
   <ul class="arrow">
-    <li>Input: person's genotype + published study allele frequencies</li>
-    <li>Output: was this person in the study?</li>
-    <li>Detected contributions as low as <strong>0.1%</strong> of total DNA</li>
+    <li>NIH-funded GWAS routinely posted these summary tables on public portals (dbGaP).</li>
+    <li>Conventional wisdom: aggregates over hundreds of people reveal nothing about individuals.</li>
+    <li>Homer et al. asked: <strong>is that actually true?</strong></li>
   </ul>
   <div class="highlight">
-    <p><strong>Conceptual foundation</strong> for all membership inference work.</p>
+    <p>This is the <strong>first membership inference attack</strong>: given the mechanism's output (published frequencies) and a target individual, decide $x \in D$ or $x \notin D$.</p>
   </div>
   <div class="cite">Homer et al., "Resolving Individuals Contributing Trace Amounts of DNA...", PLoS Genetics 2008</div>
 </div>
 
-<!-- SLIDE 8 — Homer: Setup -->
+<!-- SLIDE 7b — Homer: Attack Summary + MIA framing -->
+<div class="slide bg-deep">
+  <div class="pill">Homer et al. 2008</div>
+  <h2>Attack in MIA Language</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>MIA component</th><th>Homer instance</th></tr>
+    <tr><td>Database $D$</td><td>Cohort of GWAS participants</td></tr>
+    <tr><td>Mechanism $M(D)$</td><td>Published allele frequencies</td></tr>
+    <tr><td>Target $x$</td><td>Person's genotype (often obtained separately)</td></tr>
+    <tr><td>Adversary $\mathcal{A}$</td><td>Distance statistic + $t$-test</td></tr>
+    <tr><td>Output</td><td>$x \in D$? (was this person in the study)</td></tr>
+  </table>
+  <p class="muted">Quantitative results (0.1% contribution, 40+ pools) on the Key Results slide.</p>
+</div>
+
+<!-- SLIDE 8 — Bio primer -->
+<div class="slide bg-dark">
+  <div class="pill">Homer et al. 2008</div>
+  <h2>Genomics in 60 Seconds</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li><strong>SNP</strong> (single-nucleotide polymorphism): a position in the genome where individuals often differ — e.g., one person has A, another has G.</li>
+    <li><strong>Allele</strong>: which letter you carry at that position. Each person has two copies (one from each parent), so the allele <em>count</em> at a SNP is $0$, $1$, or $2$.</li>
+    <li><strong>Genotype array</strong>: ~500,000 SNPs measured per individual.</li>
+    <li><strong>Allele frequency</strong> at SNP $j$: average allele count across some set of people — a single number in $[0,1]$ (after scaling).</li>
+  </ul>
+  <p class="muted">GWAS published the per-SNP frequencies for the case cohort — that's the aggregate Homer attacked.</p>
+</div>
+
+<!-- SLIDE 8b — Three Ingredients (formal) -->
 <div class="slide bg-deep">
   <div class="pill">Homer et al. 2008</div>
   <h2>Three Ingredients</h2>
@@ -169,19 +201,19 @@
   <div class="grid-3">
     <div class="card">
       <h3>Individual</h3>
-      <p>$Y_{i,j}$: allele at SNP $j$</p>
+      <p>$Y_{i,j}$: target's allele at SNP $j$ (their own DNA).</p>
     </div>
     <div class="card">
-      <h3>Mixture</h3>
-      <p>$M_j$: study frequency</p>
+      <h3>Mixture / Study</h3>
+      <p>$M_j$: <strong>published</strong> allele frequency at SNP $j$ — average over the study cohort.</p>
     </div>
     <div class="card">
       <h3>Population</h3>
-      <p>$\text{Pop}_j$: baseline</p>
+      <p>$\text{Pop}_j$: allele frequency at SNP $j$ in a <strong>reference population</strong> (e.g., HapMap).</p>
     </div>
   </div>
   <div class="highlight">
-    <p>Member: genotype <strong>closer to mixture</strong> than to population.</p>
+    <p>Member: target's genotype $Y_i$ on average <strong>closer to mixture $M$</strong> than to population $\text{Pop}$ (they helped shape $M$).</p>
   </div>
 </div>
 
@@ -450,13 +482,13 @@
 <div class="slide bg-dark">
   <h2>The Membership Inference Game</h2>
   <div class="divider"></div>
-  <p>MIA as a game: <strong>challenger</strong> vs <strong>adversary</strong>.</p>
+  <p>MIA as a game: <strong>challenger</strong> (system, with secret membership bit) vs <strong>adversary $\mathcal{A}$</strong> (an algorithm with some access to the mechanism's output).</p>
   <div class="card" style="padding:20px 28px;">
     <ul class="num">
       <li><strong>Challenger</strong> holds database $D$, target $x$</li>
       <li>Coin flip: $b \xleftarrow{\$} \{0, 1\}$</li>
       <li>$b = 1$: run on $D_1 = D \cup \{x\}$. $b = 0$: run on $D_0 = D \setminus \{x\}$</li>
-      <li>Adversary $\mathcal{A}$ observes $M(D_b)$, outputs guess $\hat{b}$</li>
+      <li><strong>Adversary $\mathcal{A}$</strong> observes $M(D_b)$, outputs guess $\hat{b}\in\{0,1\}$</li>
       <li>Wins if $\hat{b} = b$</li>
     </ul>
   </div>
@@ -508,27 +540,28 @@
   <p><strong>Total variation distance</strong> between $M(D_1)$ and $M(D_0)$ as seen by $\mathcal{A}$.</p>
 </div>
 
-<!-- SLIDE 24 — Hypothesis Testing Connection (merged with prior 24b) -->
+<!-- SLIDE 24 — Hypothesis Testing Connection -->
 <div class="slide bg-deep">
   <h2>Connection to Hypothesis Testing</h2>
   <div class="divider"></div>
-  <p>MIA as <strong>binary hypothesis test</strong>:</p>
+  <p>MIA is a <strong>binary hypothesis test</strong> against the mechanism's output distribution:</p>
   <div class="grid-2">
     <div>
       <h3>$H_0$: Non-member</h3>
-      <p>$x \notin D$, output $\sim M(D_0)$</p>
+      <p>$x \notin D$, observation $\sim M(D_0)$</p>
     </div>
     <div>
       <h3>$H_1$: Member</h3>
-      <p>$x \in D$, output $\sim M(D_1)$</p>
+      <p>$x \in D$, observation $\sim M(D_1)$</p>
     </div>
   </div>
-  <p>Adversary observes $s = g(M(D_b))$, decides hypothesis.</p>
+  <p>Adversary observes $T = g(M(D_b))$, decides hypothesis.</p>
   <ul class="arrow">
-    <li><strong>Type I</strong> (FPR): $\Pr[\hat{b}=1 \mid b=0] = \alpha$</li>
-    <li><strong>Type II</strong> (FNR): $\Pr[\hat{b}=0 \mid b=1] = \beta$</li>
+    <li><strong>Type I</strong> (FPR): $\alpha = \Pr[\hat{b}=1 \mid b=0]$</li>
+    <li><strong>Type II</strong> (FNR): $\beta = \Pr[\hat{b}=0 \mid b=1]$</li>
     <li><strong>Power</strong> (TPR) $= 1 - \beta$</li>
   </ul>
+  <p class="muted">Exactly the framing from <strong>DP Lecture 2</strong> (HT interpretation of DP) — now we run the adversary's test against the mechanism, not the other way around.</p>
 </div>
 
 <!-- SLIDE 25 — Test Statistic -->
@@ -546,22 +579,83 @@
   </table>
 </div>
 
-<!-- SLIDE 26 — Neyman-Pearson -->
+<!-- SLIDE 26 — Neyman-Pearson: Setup -->
 <div class="slide bg-deep">
-  <h2>Neyman-Pearson Lemma</h2>
+  <h2>Neyman–Pearson: Setup</h2>
   <div class="divider"></div>
-  <p><strong>Most powerful</strong> test at significance $\alpha$?</p>
-  <div class="highlight" style="padding:24px 28px;">
-    <p><strong>Neyman-Pearson Lemma:</strong> most powerful test is the <strong>likelihood ratio test</strong>:</p>
-    <div class="math-block">
-      $$\Lambda(x) = \frac{p(T(x) \mid H_1)}{p(T(x) \mid H_0)} = \frac{p(T(x) \mid x \in D)}{p(T(x) \mid x \notin D)} \quad \gtrless \quad \tau$$
+  <p>Simple-vs-simple test: observation $T$, two hypotheses with known densities $p_0, p_1$.</p>
+  <p>A (randomized) test is a function $\phi(T)\in[0,1]$ — the probability of declaring $H_1$.</p>
+  <div class="grid-2">
+    <div>
+      <h3>Size (FPR)</h3>
+      <p>$\alpha(\phi) = \mathbb{E}_{H_0}[\phi(T)]$</p>
+    </div>
+    <div>
+      <h3>Power (TPR)</h3>
+      <p>$\beta(\phi) = \mathbb{E}_{H_1}[\phi(T)]$</p>
     </div>
   </div>
+  <div class="highlight">
+    <p><strong>Goal:</strong> at significance level $\alpha_0$, find $\phi$ maximizing power $\beta(\phi)$ subject to $\alpha(\phi)\le\alpha_0$.</p>
+  </div>
+</div>
+
+<!-- SLIDE 26b — Neyman-Pearson: Statement -->
+<div class="slide bg-dark">
+  <h2>Neyman–Pearson Lemma</h2>
+  <div class="divider"></div>
+  <div class="highlight" style="padding:22px 26px;">
+    <p>The <strong>most powerful</strong> test at level $\alpha_0$ is the <strong>likelihood-ratio test</strong>:</p>
+    <div class="math-block">
+      $$\phi^*(T) \;=\; \mathbb{1}\!\left[\;\Lambda(T) \;=\; \frac{p_1(T)}{p_0(T)} \;>\; \tau\;\right],$$
+    </div>
+    <p>with threshold $\tau$ chosen so $\alpha(\phi^*) = \alpha_0$.</p>
+  </div>
   <ul class="arrow">
-    <li>No test achieves higher TPR at same FPR</li>
-    <li>Optimal attack: always a <strong>likelihood ratio</strong> (recurs in every attack)</li>
-    <li>Practical challenge: $p(T \mid H_1)$, $p(T \mid H_0)$ unknown</li>
+    <li>No other test achieves higher TPR at the same FPR.</li>
+    <li>The shape of the optimal decision boundary is a <strong>level set of $\Lambda$</strong>.</li>
+    <li>Ties on $\{\Lambda = \tau\}$ may be broken with a randomized fraction $\gamma$ to hit $\alpha_0$ exactly.</li>
   </ul>
+</div>
+
+<!-- SLIDE 26c — Neyman-Pearson: Proof -->
+<div class="slide bg-deep">
+  <h2>Neyman–Pearson: One-Line Proof</h2>
+  <div class="divider"></div>
+  <p>Compare $\phi^*$ to any test $\phi$ with $\alpha(\phi)\le\alpha_0=\alpha(\phi^*)$. For every $T$:</p>
+  <div class="math-block">
+    $$\big(\phi^*(T)-\phi(T)\big)\,\big(p_1(T)-\tau\, p_0(T)\big) \;\ge\; 0.$$
+  </div>
+  <ul class="arrow">
+    <li>If $\Lambda(T)>\tau$: $\phi^*=1\ge\phi$ and $p_1-\tau p_0>0$ — product $\ge 0$.</li>
+    <li>If $\Lambda(T)<\tau$: $\phi^*=0\le\phi$ and $p_1-\tau p_0<0$ — product $\ge 0$.</li>
+  </ul>
+  <p>Integrate over $T$:</p>
+  <div class="math-block">
+    $$\beta(\phi^*)-\beta(\phi)\;\ge\;\tau\big(\alpha(\phi^*)-\alpha(\phi)\big)\;\ge\;0.\quad\square$$
+  </div>
+</div>
+
+<!-- SLIDE 26d — Neyman-Pearson: MIA implications -->
+<div class="slide bg-dark">
+  <h2>What This Means for MIA</h2>
+  <div class="divider"></div>
+  <p>Plug in the MIA hypotheses: $p_b(T)=$ density of test statistic $T$ when $b\in\{0,1\}$.</p>
+  <div class="math-block">
+    $$\Lambda(T) \;=\; \frac{p(T\mid x\in D)}{p(T\mid x\notin D)}\;\gtrless\;\tau$$
+  </div>
+  <div class="grid-2">
+    <div>
+      <h3 style="color:var(--success);">Take-away</h3>
+      <p>Every "optimal" MIA, at any access level, is a <strong>likelihood-ratio test</strong>.</p>
+      <p>Each later attack just <em>estimates</em> $p_0,p_1$ differently.</p>
+    </div>
+    <div>
+      <h3 style="color:var(--warn);">Practical challenge</h3>
+      <p>$p_0,p_1$ unknown — depend on $D$, training algorithm, target $x$.</p>
+      <p>Drives <strong>shadow models</strong> (Lecture 2) and <strong>LiRA</strong> (Lecture 4).</p>
+    </div>
+  </div>
 </div>
 
 <!-- SLIDE 27 — Type I / Type II in MIA -->
@@ -594,32 +688,51 @@
   <div class="divider"></div>
   <p class="subtitle">Connections to differential privacy and evaluation</p>
 </div>
-<!-- SLIDE 28 — DP implies MI hardness -->
+<!-- SLIDE 28 — Recap: HT interpretation of DP -->
 <div class="slide bg-deep">
-  <h2>DP Bounds MI Advantage</h2>
+  <h2>Recap: HT Interpretation of DP</h2>
   <div class="divider"></div>
-  <p>If $M$ is $(\varepsilon, \delta)$-DP, then for <strong>any</strong> adversary $\mathcal{A}$:</p>
+  <p>From DP Lecture 2: if $M$ is $\varepsilon$-DP, then for <strong>any</strong> binary test between $M(D_1)$ and $M(D_0)$ with errors $(\alpha, \beta)$ (= FPR, FNR):</p>
   <div class="math-block">
-    $$\text{Adv}_{\text{MI}}(\mathcal{A}) \leq e^\varepsilon - 1 + \delta$$
+    $$1 \;\le\; \alpha + \beta\, e^{\varepsilon}, \qquad 1 \;\le\; \beta + \alpha\, e^{\varepsilon}.$$
   </div>
+  <p>For $(\varepsilon,\delta)$-DP, the same bounds hold with an extra $\delta$ slack on each side.</p>
   <div class="highlight">
-    <p><strong>Proof sketch:</strong> DP gives $\Pr[\mathcal{A}(M(D_1))=1] \leq e^\varepsilon \Pr[\mathcal{A}(M(D_0))=1] + \delta$; rearrange.</p>
+    <p>Both errors cannot be small at once — exactly what a defender wants against MIA.</p>
   </div>
 </div>
 
-<!-- SLIDE 28b — DP-MI numerical bound (split from prior slide) -->
+<!-- SLIDE 28b — DP → ROC upper bound -->
 <div class="slide bg-dark">
-  <h2>DP-MI Bound: Numerical</h2>
+  <h2>DP Caps the MIA ROC</h2>
   <div class="divider"></div>
-  <table>
-    <tr><th>$\varepsilon$</th><th>$\delta$</th><th>Max MI Advantage</th></tr>
-    <tr><td>0.1</td><td>$10^{-5}$</td><td>$\leq 0.105$</td></tr>
-    <tr><td>1.0</td><td>$10^{-5}$</td><td>$\leq 1.718$</td></tr>
-    <tr><td>8.0</td><td>$10^{-5}$</td><td>$\leq 2980$ (vacuous)</td></tr>
-  </table>
-  <div class="highlight">
-    <p>Small $\varepsilon$: <strong>strong MI protection</strong>. Large $\varepsilon$: vacuous bound.</p>
+  <p>Rearrange the second inequality with $\text{TPR}=1-\beta$:</p>
+  <div class="math-block">
+    $$\text{TPR} \;\le\; e^{\varepsilon}\,\text{FPR} + \delta.$$
   </div>
+  <ul class="arrow">
+    <li>Under $(\varepsilon,\delta)$-DP, the ROC of <strong>every</strong> adversary lies below the line $y = e^{\varepsilon} x + \delta$.</li>
+    <li>The other inequality gives a symmetric upper bound from the top: $\text{TPR}\le 1-(1-\text{FPR})e^{-\varepsilon}+\delta$.</li>
+    <li>Intersected, these define the <strong>Kairouz–Oh–Viswanath</strong> privacy region (also $f$-DP).</li>
+  </ul>
+  <p class="muted">Auditing flip: if measured (FPR, TPR) violates the inequality, the claimed $\varepsilon$ is wrong.</p>
+</div>
+
+<!-- SLIDE 28c — DP bounds MI advantage (corollary) -->
+<div class="slide bg-deep">
+  <h2>Corollary: Advantage Bound</h2>
+  <div class="divider"></div>
+  <p>Setting $|\text{TPR}-\text{FPR}|$ over all thresholds:</p>
+  <div class="math-block">
+    $$\text{Adv}_{\text{MI}}(\mathcal{A}) \;\le\; e^{\varepsilon}-1+\delta.$$
+  </div>
+  <table>
+    <tr><th style="text-transform:none;">$\varepsilon$</th><th style="text-transform:none;">$\delta$</th><th>Max MI Advantage</th></tr>
+    <tr><td>0.1</td><td>$10^{-5}$</td><td>$\le 0.105$</td></tr>
+    <tr><td>1.0</td><td>$10^{-5}$</td><td>$\le 1.718$</td></tr>
+    <tr><td>8.0</td><td>$10^{-5}$</td><td>$\le 2980$ (vacuous)</td></tr>
+  </table>
+  <p class="muted">Small $\varepsilon$: strong MIA protection. Large $\varepsilon$: bound is vacuous — but the ROC bound on the previous slide may still be useful at <strong>low FPR</strong>.</p>
 </div>
 
 <!-- SLIDE 29 — MI yields DP lower bounds -->
@@ -677,22 +790,26 @@
   <div class="grid-2" style="margin-top:8px;">
     <div class="card" style="border-color:var(--yonsei-blue);">
       <h3>Membership Inference</h3>
-      <p>Was $x$ in training?</p>
+      <p><strong>Was $x$ in training?</strong></p>
+      <p class="muted">Binary decision on a known target.</p>
     </div>
     <div class="card">
       <h3>Attribute Inference</h3>
-      <p>Given $x_{\setminus s}$, infer sensitive $s$.</p>
+      <p><strong>Given partial record $x_{\setminus s}$, infer sensitive attribute $s$.</strong></p>
+      <p class="muted">E.g.: adversary knows ZIP+age of a training patient, queries the model to recover diagnosis.</p>
     </div>
     <div class="card">
       <h3>Data Extraction</h3>
-      <p>Extract verbatim training records.</p>
+      <p><strong>Recover verbatim training records</strong> from the model alone.</p>
+      <p class="muted">E.g.: prompt GPT-2 to regurgitate a memorised email/phone number.</p>
     </div>
     <div class="card">
       <h3>Model Inversion</h3>
-      <p>Reconstruct representatives per class.</p>
+      <p><strong>Reconstruct a representative input</strong> for a given class/label.</p>
+      <p class="muted">E.g.: synthesise an "average face" of class $y$ from a face-recognition model.</p>
     </div>
   </div>
-  <p>MIA: weakest (easiest) attack. Fail MIA, fail all others.</p>
+  <p>MIA is the <strong>weakest (easiest) of the four</strong>: any system that fails MIA also fails the rest.</p>
 </div>
 
 <!-- SLIDE 32 — Threat Model Spectrum -->
@@ -707,83 +824,174 @@
     <tr><td><strong>Gray-box</strong></td><td>Architecture + partial info</td><td>Published model card</td></tr>
     <tr><td><strong>White-box</strong></td><td>Full parameters $\theta$, gradients</td><td>Open-source model</td></tr>
   </table>
-  <div class="highlight">
-    <p>Sablayrolles et al. 2019: <strong>black-box $\approx$ white-box</strong> asymptotically.</p>
-    <p>Loss is a near-sufficient statistic.</p>
-  </div>
+  <p class="muted">Loss is a near-sufficient statistic — see next slide.</p>
 </div>
 
-<!-- SLIDE 33 — Evaluation: ROC -->
+<!-- SLIDE 32b — Sablayrolles et al. 2019 -->
 <div class="slide bg-dark">
-  <h2>Evaluation Metrics: ROC &amp; AUC</h2>
+  <div class="pill">Sablayrolles et al. 2019</div>
+  <h2>Black-box ≈ White-box</h2>
   <div class="divider"></div>
-  <div class="cols">
-    <div>
-      <p><strong>ROC curve</strong>: TPR vs FPR as threshold varies.</p>
-      <ul class="arrow">
-        <li><strong>AUC = 0.5</strong>: random guess (no attack)</li>
-        <li><strong>AUC = 1.0</strong>: perfect separation</li>
-        <li><strong>AUC = 0.6</strong>: typical weak MIA</li>
-      </ul>
-      <p><strong>Problem:</strong> AUC averages all thresholds, including impractical high-FPR regime.</p>
+  <p>Under a Bayesian model of training (posterior on $\theta$ given $D$), the optimal MI test reduces to:</p>
+  <div class="math-block">
+    $$\Lambda(z) \;\approx\; \frac{p(\theta\mid z\in D)}{p(\theta\mid z\notin D)} \;\propto\; \exp\!\big(-\beta\,[\ell(\theta,z)-\tau(z)]\big).$$
+  </div>
+  <ul class="arrow">
+    <li>Optimal attack depends on $\theta$ <strong>only through the loss $\ell(\theta,z)$</strong> at $z$.</li>
+    <li>Extra white-box features (gradients, activations, full $\theta$) add no asymptotic advantage.</li>
+    <li>The per-sample threshold $\tau(z)$ calibrates difficulty — foreshadows <strong>LiRA</strong>.</li>
+    <li>Empirical: black-box and white-box attacks track within $&lt;1\%$ AUC.</li>
+  </ul>
+  <div class="cite">Sablayrolles et al., "White-box vs Black-box: Bayes Optimal Strategies for Membership Inference", ICML 2019</div>
+</div>
+
+<!-- SLIDE 33 — ROC curve: definition (equations only) -->
+<div class="slide bg-dark">
+  <h2>ROC Curve — Definition</h2>
+  <div class="divider"></div>
+  <p>Score-based attack uses a real-valued statistic $T$ and threshold $\tau$:</p>
+  <div class="math-block">
+    $$\hat b \;=\; \mathbb{1}[\,T > \tau\,].$$
+  </div>
+  <p>Sweeping $\tau$ traces the <strong>ROC curve</strong>:</p>
+  <div class="math-block">
+    $$\text{ROC} \;=\; \{(\text{FPR}(\tau),\;\text{TPR}(\tau)) \,:\, \tau\in\mathbb{R}\}.$$
+  </div>
+  <p class="muted">Starts at $(0,0)$, ends at $(1,1)$ — each point is one operating threshold.</p>
+</div>
+
+<!-- SLIDE 33b — ROC diagram (large) -->
+<div class="slide bg-deep">
+  <h2>ROC Curve — Diagram</h2>
+  <div class="divider"></div>
+  <div style="text-align:center;">
+    <svg viewBox="0 0 640 460" style="width:100%; max-width:760px;">
+      <!-- axes -->
+      <line x1="80" y1="400" x2="600" y2="400" stroke="#333" stroke-width="3"/>
+      <line x1="80" y1="400" x2="80" y2="40" stroke="#333" stroke-width="3"/>
+      <!-- random diagonal -->
+      <line x1="80" y1="400" x2="600" y2="40" stroke="#999" stroke-width="1.5" stroke-dasharray="6 6"/>
+      <!-- perfect step -->
+      <polyline points="80,400 80,40 600,40" fill="none" stroke="#999" stroke-width="2" stroke-dasharray="3 5"/>
+      <!-- attack curve -->
+      <path d="M 80 400 Q 100 130, 600 40" fill="none" stroke="#003876" stroke-width="4"/>
+      <!-- threshold dot ON the curve (t ≈ 0.4 on the Bezier) + label -->
+      <circle cx="173" cy="213" r="7" fill="#003876"/>
+      <text x="186" y="208" font-size="20" fill="#003876">threshold τ</text>
+      <text x="186" y="232" font-size="16" fill="#666">(one operating point)</text>
+      <!-- axis labels -->
+      <text x="340" y="445" text-anchor="middle" font-size="24" font-weight="600">FPR</text>
+      <text x="38" y="220" text-anchor="middle" font-size="24" font-weight="600" transform="rotate(-90, 38, 220)">TPR</text>
+      <!-- tick labels -->
+      <text x="80" y="425" text-anchor="middle" font-size="18">0</text>
+      <text x="600" y="425" text-anchor="middle" font-size="18">1</text>
+      <text x="65" y="405" text-anchor="end" font-size="18">0</text>
+      <text x="65" y="46" text-anchor="end" font-size="18">1</text>
+      <!-- curve annotations -->
+      <text x="430" y="170" font-size="22" fill="#003876" font-weight="600">attack</text>
+      <text x="360" y="252" font-size="20" fill="#666">random</text>
+      <text x="150" y="68" font-size="20" fill="#666">perfect</text>
+    </svg>
+  </div>
+</div>
+
+<!-- SLIDE 33c — AUC: formulas -->
+<div class="slide bg-dark">
+  <h2>AUC: Area Under the ROC</h2>
+  <div class="divider"></div>
+  <p><strong>Integral form:</strong></p>
+  <div class="math-block">
+    $$\text{AUC} \;=\; \int_0^1 \text{TPR}(\text{FPR})\,d(\text{FPR}).$$
+  </div>
+  <p><strong>Equivalent probabilistic form</strong> — pick a random member $z^+$ and non-member $z^-$:</p>
+  <div class="math-block">
+    $$\text{AUC} \;=\; \Pr\!\big[\,T(z^{+}) > T(z^{-})\,\big].$$
+  </div>
+</div>
+
+<!-- SLIDE 33d — AUC: diagram + reference values -->
+<div class="slide bg-deep">
+  <h2>AUC — Diagram &amp; Reference Values</h2>
+  <div class="divider"></div>
+  <div class="cols" style="align-items:center;">
+    <div style="text-align:center;">
+      <svg viewBox="0 0 640 460" style="width:100%; max-width:560px;">
+        <defs>
+          <linearGradient id="aucfill" x1="0" x2="0" y1="1" y2="0">
+            <stop offset="0%" stop-color="#003876" stop-opacity="0.18"/>
+            <stop offset="100%" stop-color="#003876" stop-opacity="0.35"/>
+          </linearGradient>
+        </defs>
+        <path d="M 80 400 Q 100 130, 600 40 L 600 400 Z" fill="url(#aucfill)" stroke="none"/>
+        <line x1="80" y1="400" x2="600" y2="400" stroke="#333" stroke-width="3"/>
+        <line x1="80" y1="400" x2="80" y2="40" stroke="#333" stroke-width="3"/>
+        <line x1="80" y1="400" x2="600" y2="40" stroke="#999" stroke-width="1.5" stroke-dasharray="6 6"/>
+        <path d="M 80 400 Q 100 130, 600 40" fill="none" stroke="#003876" stroke-width="4"/>
+        <text x="360" y="320" font-size="32" fill="#003876" font-weight="700">AUC</text>
+        <text x="340" y="445" text-anchor="middle" font-size="24" font-weight="600">FPR</text>
+        <text x="38" y="220" text-anchor="middle" font-size="24" font-weight="600" transform="rotate(-90, 38, 220)">TPR</text>
+        <text x="80" y="425" text-anchor="middle" font-size="18">0</text>
+        <text x="600" y="425" text-anchor="middle" font-size="18">1</text>
+        <text x="65" y="405" text-anchor="end" font-size="18">0</text>
+        <text x="65" y="46" text-anchor="end" font-size="18">1</text>
+      </svg>
     </div>
-    <div class="card">
-      <h3 style="text-align:center;">Misleading Accuracy</h3>
-      <p>55% balanced accuracy can hide:</p>
-      <ul>
-        <li>10% TPR at 0.1% FPR (some)</li>
-        <li>0% TPR at 0.1% FPR (others)</li>
+    <div>
+      <ul class="arrow">
+        <li>$\text{AUC}=0.5$: random — score gives no info.</li>
+        <li>$\text{AUC}=1.0$: every member scores above every non-member.</li>
+        <li>Typical reported MIA: $0.55$–$0.7$.</li>
       </ul>
-      <p>Average hides the <strong>vulnerable subpopulation</strong>.</p>
     </div>
   </div>
 </div>
 
-<!-- SLIDE 34 — TPR at Low FPR (motivation) -->
-<div class="slide bg-deep">
-  <h2>TPR at Low FPR</h2>
+<!-- SLIDE 33c — Why AUC misses MIA risk -->
+<div class="slide bg-dark">
+  <h2>Why AUC Misses MIA Risk</h2>
   <div class="divider"></div>
-  <div class="highlight" style="padding:20px 24px;">
+  <p>AUC <strong>averages</strong> over all thresholds. Most of that area lives at high FPR — useless for privacy.</p>
+  <p>Two attacks with the same AUC can differ wildly in the low-FPR regime auditors care about.</p>
+  <div class="highlight">
+    <p><strong>55% balanced accuracy can hide:</strong></p>
+    <ul>
+      <li>10% TPR at 0.1% FPR (one attack)</li>
+      <li>0% TPR at 0.1% FPR (another)</li>
+    </ul>
+    <p>Average hides the <strong>vulnerable subpopulation</strong>.</p>
+  </div>
+</div>
+
+<!-- SLIDE 33d — TPR@FPR and log-log ROC -->
+<div class="slide bg-deep">
+  <h2>TPR @ Low FPR — The Right Metric</h2>
+  <div class="divider"></div>
+  <div class="highlight" style="padding:18px 22px;">
     <p><strong>Carlini et al. 2022:</strong> "60% balanced accuracy with 0% TPR at 0.1% FPR is useless in practice."</p>
   </div>
   <ul class="arrow">
-    <li>Average accuracy hides the <strong>vulnerable tail</strong></li>
-    <li>Threats at <strong>low FPR</strong>: high-confidence positives</li>
-    <li>Plot ROC on a <strong>log-log scale</strong></li>
+    <li>Threat model: auditor flags <strong>high-confidence positives</strong> — only low FPR matters.</li>
+    <li>Report <strong>TPR @ FPR = $10^{-3}$</strong> (and $10^{-4}$, $10^{-5}$).</li>
+    <li>Plot ROC on <strong>log-log axes</strong> — stretches the low-FPR regime instead of compressing it.</li>
   </ul>
 </div>
 
-<!-- SLIDE 34b — TPR at Low FPR (metrics comparison) -->
-<div class="slide bg-deep">
+<!-- SLIDE 33e — Metrics comparison -->
+<div class="slide bg-dark">
   <h2>Evaluation Metrics for MIA</h2>
   <div class="divider"></div>
   <table>
     <tr><th>Metric</th><th>What It Measures</th><th>When to Use</th></tr>
     <tr><td>Balanced Accuracy</td><td>Average of TPR and TNR</td><td>Quick comparison only</td></tr>
-    <tr><td>AUC</td><td>Overall separability</td><td>General method ranking</td></tr>
-    <tr><td><strong>TPR @ FPR=0.1%</strong></td><td>Power at high confidence</td><td><strong>Primary metric for MIA</strong></td></tr>
-    <tr><td>TPR @ FPR=0.01%</td><td>Power at very high confidence</td><td>Strongest privacy claims</td></tr>
-    <tr><td>Log-scale ROC</td><td>Low-FPR regime behavior</td><td>Visualization standard</td></tr>
+    <tr><td>AUC</td><td>$\Pr[T(z^+)>T(z^-)]$ — overall separability</td><td>General method ranking</td></tr>
+    <tr><td><strong>TPR @ FPR = $10^{-3}$</strong></td><td>Power at high confidence</td><td><strong>Primary metric for MIA</strong></td></tr>
+    <tr><td>TPR @ FPR = $10^{-4}$</td><td>Power at very high confidence</td><td>Strongest privacy claims</td></tr>
+    <tr><td>Log-scale ROC</td><td>Low-FPR regime behaviour</td><td>Visualisation standard</td></tr>
   </table>
   <div class="cite">See <code>mia1-foundations-note.html</code> for log-log ROC examples and metric pitfalls.</div>
 </div>
 
-<!-- SLIDE 35 — Notation -->
-<div class="slide bg-dark">
-  <h2>Notation</h2>
-  <div class="divider"></div>
-  <table>
-    <tr><td>$D_{\text{train}}, D_{\text{test}}$</td><td>Training / test sets</td></tr>
-    <tr><td>$f_\theta$</td><td>Model with parameters $\theta$</td></tr>
-    <tr><td>$\ell(f_\theta, z)$</td><td>Loss of model on point $z$</td></tr>
-    <tr><td>$\mathcal{A}$</td><td>Adversary / attack algorithm</td></tr>
-    <tr><td>$\sigma(\cdot)$</td><td>Softmax output (confidence)</td></tr>
-    <tr><td>$\Lambda(z)$</td><td>Likelihood ratio statistic</td></tr>
-    <tr><td>$M(\cdot)$</td><td>Mechanism (training algorithm)</td></tr>
-  </table>
-</div>
-
-<!-- SLIDE 35b — Standard Benchmarks -->
+<!-- SLIDE 35 — Standard Benchmarks -->
 <div class="slide bg-dark">
   <h2>Standard Benchmarks</h2>
   <div class="divider"></div>
@@ -812,7 +1020,7 @@
 </div><!-- end deck -->
 
 <!-- Slide number + progress bar (fixed to viewport) -->
-<div class="slide-num" id="slideNum">1 / 43</div>
+<div class="slide-num" id="slideNum">1 / 54</div>
 <div class="progress-bar" id="progressBar" style="width:0.5%;"></div>
 
 <!-- Navigation -->

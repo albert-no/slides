@@ -204,23 +204,63 @@
 <div class="slide">
   <h2>A Second Divergence Behind Diffusion</h2><div class="divider"></div>
   <p>So far: diffusion is trained by maximizing an <strong>ELBO</strong>, a KL-based bound.</p>
-  <p>Tweedie's formula reveals a parallel view: the per-step MSE is a <strong>Fisher divergence</strong> between true and model scores.</p>
+  <p>From <strong>Lecture 6</strong> (Fisher divergence): a different divergence sees only $\nabla\log p$. Using Tweedie, the per-step ELBO MSE is a <strong>Fisher divergence</strong> in disguise.</p>
   <ul>
     <li>ELBO sees the <em>density</em>; Fisher sees the <em>score gradient</em>.</li>
     <li>Both coincide here: reverse kernels are Gaussian.</li>
   </ul>
-  <div class="highlight"><p>Diffusion training $=$ ELBO maximization $=$ score matching.</p></div>
+  <div class="highlight"><p>Goal: prove diffusion ELBO maximization $\equiv$ sum of denoising score-matching objectives.</p></div>
 </div>
 
 <div class="slide">
-  <h2>ELBO Term $\equiv$ Denoising Score Matching</h2><div class="divider"></div>
+  <h2>Recall &mdash; Diffusion ELBO Term</h2><div class="divider"></div>
+  <div class="card" style="padding: 12px 18px;">
+    <p>From Lecture 2 (Diff 2), the diffusion ELBO contains the per-step MSE</p>
+    <div class="math-block">$$\sum_{t=2}^{T}\mathbb{E}_{g(\mathbf{z}_t\mid\mathbf{x})}\!\left[\tfrac{\log e}{2\sigma_t^2}\,\bigl\|\mathbf{m}_t(\mathbf{x},\mathbf{Z}_t) - \boldsymbol\mu_t(\mathbf{Z}_t)\bigr\|^2\right],$$</div>
+    <p>with $\mathbf{m}_t(\mathbf{x},\mathbf{z}_t) = \mathbb{E}[\mathbf{Z}_{t-1}\mid\mathbf{Z}_t = \mathbf{z}_t, \mathbf{X} = \mathbf{x}]$ and $\boldsymbol\mu_t = \mathbb{E}_\theta[\mathbf{Z}_{t-1}\mid\mathbf{Z}_t]$.</p>
+  </div>
+  <p>Question: what is this MSE, viewed through Fisher?</p>
+</div>
+
+<div class="slide">
+  <h2>Step 1 &mdash; Apply Tweedie to $\mathbf{m}_t$ and $\boldsymbol\mu_t$</h2><div class="divider"></div>
+  <p>Both conditional means are denoising estimates; apply Tweedie (Section 03):</p>
+  <div class="math-block">$$\begin{aligned}
+\mathbf{m}_t(\mathbf{x},\mathbf{z}_t)
+&amp;= \mathbb{E}\bigl[\mathbf{Z}_{t-1}\,\big|\,\mathbf{Z}_t=\mathbf{z}_t,\mathbf{X}=\mathbf{x}\bigr] \;=\; \mathbf{z}_t + \sigma_t^2\,\nabla_{\mathbf{z}_t}\log g(\mathbf{z}_t\,|\,\mathbf{x}), \\
+\boldsymbol\mu_t(\mathbf{z}_t)
+&amp;= \mathbb{E}_\theta\bigl[\mathbf{Z}_{t-1}\,\big|\,\mathbf{Z}_t=\mathbf{z}_t\bigr] \;=\; \mathbf{z}_t + \sigma_t^2\,\nabla_{\mathbf{z}_t}\log f_\theta(\mathbf{z}_t).
+\end{aligned}$$</div>
+  <p>Both share the anchor $\mathbf{z}_t$; the difference is a score gap, rescaled by $\sigma_t^2$.</p>
+</div>
+
+<div class="slide">
+  <h2>Step 2 &mdash; The MSE Becomes a Fisher Divergence</h2><div class="divider"></div>
+  <p>Substitute Step 1 into the per-step ELBO term:</p>
+  <div class="math-block">$$\bigl\|\mathbf{m}_t - \boldsymbol\mu_t\bigr\|^2 \;=\; \sigma_t^4\,\bigl\|\nabla\log g(\mathbf{z}_t\,|\,\mathbf{x}) - \nabla\log f_\theta(\mathbf{z}_t)\bigr\|^2.$$</div>
+  <p>Averaging over $g(\mathbf{z}_t\,|\,\mathbf{x})$ gives a <strong>Fisher divergence</strong> (definition: Lecture 6):</p>
+  <div class="math-block">$$\int g(\mathbf{z}_t\,|\,\mathbf{x})\,\Bigl\|\nabla\log g(\mathbf{z}_t\,|\,\mathbf{x}) - \nabla\log f_\theta(\mathbf{z}_t)\Bigr\|^2 d\mathbf{z}_t \;=\; 2\,D_F\!\bigl(g(\,\cdot\,|\,\mathbf{x})\,\Vert\,f_\theta\bigr).$$</div>
+  <p>Each ELBO term is (a rescaled) Fisher divergence at noise level $t$.</p>
+</div>
+
+<div class="slide">
+  <h2>Step 3 &mdash; Recognize the Denoising Form</h2><div class="divider"></div>
+  <p>The forward marginal $g(\mathbf{z}_t\,|\,\mathbf{x}) = \mathcal{N}(\mathbf{z}_t;\sqrt{\bar\alpha_t}\,\mathbf{x},(1-\bar\alpha_t)I)$ has Gaussian score</p>
+  <div class="math-block">$$\nabla_{\mathbf{z}_t}\log g(\mathbf{z}_t\,|\,\mathbf{x}) \;=\; -\,\tfrac{\mathbf{z}_t - \sqrt{\bar\alpha_t}\,\mathbf{x}}{1-\bar\alpha_t}.$$</div>
+  <p>Substitute, drop $\theta$-free terms:</p>
+  <div class="math-block">$$\text{(per-step ELBO term)} \;=\; \tfrac{\log e}{2}\int g(\mathbf{z}_t\,|\,\mathbf{x})\,\Bigl\|\tfrac{\sqrt{\bar\alpha_t}\,\mathbf{x}-\mathbf{z}_t}{1-\bar\alpha_t} - s_\theta(\mathbf{z}_t)\Bigr\|^2 d\mathbf{z}_t.$$</div>
+  <p>This is exactly Vincent's DSM (Lecture 6) at noise level $1-\bar\alpha_t$.</p>
+</div>
+
+<div class="slide">
+  <h2>Theorem &mdash; Diffusion ELBO $\equiv$ Sum of DSM</h2><div class="divider"></div>
   <div class="card">
     <h3>Theorem (Vincent 2011; Song et al. 2021).</h3>
-    <p>Up to $\theta$-free constants, the per-step ELBO MSE equals a denoising score-matching objective:</p>
-    <div class="math-block">$$\mathbb{E}\!\left[\,\|\mathbf{m}_t(X_0, X_t) - \boldsymbol\mu_t(X_t)\|^2\right] \;=\; \sigma_t^4\,\mathbb{E}\!\left[\,\Bigl\|\tfrac{\sqrt{\bar\alpha_t}\,X_0 - X_t}{1-\bar\alpha_t} - s_\theta(X_t)\Bigr\|^2\right].$$</div>
+    <p>Training the diffusion model by ELBO maximization is equivalent (up to $\theta$-free constants) to minimizing</p>
+    <div class="math-block">$$\sum_{t=2}^{T}\;\mathbb{E}_{\mathbf{X},\mathbf{Z}_t}\!\left[\tfrac{\log e}{2}\,\Bigl\|\tfrac{\sqrt{\bar\alpha_t}\,\mathbf{X} - \mathbf{Z}_t}{1-\bar\alpha_t} - s_\theta(\mathbf{Z}_t)\Bigr\|^2\right],$$</div>
+    <p>i.e., the sum over $t$ of denoising score-matching objectives at noise level $1-\bar\alpha_t$.</p>
   </div>
-  <p><strong>Proof.</strong> Apply Tweedie's formula to both $\mathbf{m}_t = \mathbb{E}[X_{t-1}\,|\,X_t, X_0]$ and $\boldsymbol\mu_t = \mathbb{E}_\theta[X_{t-1}\,|\,X_t]$; the score difference falls out (full derivation: Divergence Lecture 2).</p>
-  <div class="cite">Vincent, Score matching $\equiv$ denoising AE, Neural Comp. 2011.</div>
+  <div class="cite">Vincent, Neural Comp. 2011; Song et al., Score-based generative modeling, ICLR 2021.</div>
 </div>
 
 <div class="slide">
@@ -229,9 +269,13 @@
 \text{Diffusion ELBO MSE}
 &amp;\stackrel{(\text{Tweedie})}{=}\;\sigma_t^4\,\bigl\|\nabla\log g_t(\,\cdot\,|\,x_0) - \nabla\log f_\theta\bigr\|^2 \\
 &amp;\stackrel{(\text{Fisher def.})}{=}\;\text{(rescaled) Fisher divergence at level } t \\
-&amp;\stackrel{(\text{DSM})}{=}\;\mathbb{E}\bigl\|\text{noise scale} - s_\theta(X_t)\bigr\|^2.
+&amp;\stackrel{(\text{DSM})}{=}\;\mathbb{E}\bigl\|\text{noise scale} - s_\theta(\mathbf{Z}_t)\bigr\|^2.
 \end{aligned}$$</div>
-  <p>Full DSM theorem and Fisher properties: <code>infotheory/divergence/div2-fisher-score.html</code>.</p>
+  <ul>
+    <li>Tweedie (Section 03) converts a conditional mean to a score.</li>
+    <li>Vincent's DSM (Lecture 6) closes the gap to a tractable MSE.</li>
+    <li>$\varepsilon$-prediction $=$ score prediction up to scaling &mdash; the channel view of Section 04.</li>
+  </ul>
 </div>
 
 
@@ -248,8 +292,8 @@
 </div>
 
 <div class="slide end-slide no-footer">
-  <div class="big-word">End of Module 2</div>
-  <p class="big-word-sub">Next: mutual information estimation, or the Divergence series for Fisher and score matching.</p>
+  <div class="big-word">End of Diffusion Series</div>
+  <p class="big-word-sub">ELBO, hierarchical VAE, parameterizations, Tweedie, and the diffusion $\equiv$ DSM equivalence &mdash; built on the divergence machinery of Lecture 6.</p>
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>

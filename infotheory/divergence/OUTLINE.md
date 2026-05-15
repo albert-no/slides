@@ -1,13 +1,13 @@
 # infotheory/divergence/ — Divergence families (2 lectures)
 
-Two-lecture series on the divergences that drive modern generative training. Lecture 1 develops the $f$-divergence family (KL, JS, $\chi^2$, TV, hockey-stick) and the GAN-as-JS-minimization theorem. Lecture 2 covers Fisher divergence, denoising score matching, and proves diffusion training $\equiv$ score matching.
+Two-lecture series on the divergences that drive modern generative training. Lecture 1 develops the $f$-divergence family (KL, JS, $\chi^2$, TV, hockey-stick) and the GAN-as-JS-minimization theorem. Lecture 2 covers Fisher divergence and Vincent's denoising score matching theorem. The diffusion-specific equivalence ELBO $\equiv$ DSM is proved in the next series (`diffusion/diff3-parameterizations.html`), citing this lecture for Fisher and DSM.
 
 ## Files
 
 | Deck | Note | Topic |
 |---|---|---|
 | `div1-fdivergence-gan.html` | `div1-fdivergence-gan-note.html` | $f$-divergences, properties, GAN $\equiv$ JS minimization |
-| `div2-fisher-score.html` | `div2-fisher-score-note.html` | Fisher divergence, denoising score matching, diffusion equivalence |
+| `div2-fisher-score.html` | `div2-fisher-score-note.html` | Fisher divergence and denoising score matching |
 
 ---
 
@@ -47,7 +47,7 @@ Two-lecture series on the divergences that drive modern generative training. Lec
 | | Proof Step 2 — substitute back, identify two KL terms as JS | `:350` |
 | | Recap — three labelled steps | `:362` |
 | | Training algorithm (alternating ascent/descent) | `:377` |
-| | Beyond JS — $f$-GAN via Fenchel dual | `:402` |
+| | Beyond JS — $f$-GAN via Fenchel dual (+ back-pointer to mi1 DV/NWJ) | `:402` |
 | **05 — Recap** | | `:411-441` |
 | | Catalogue table — KL/rev-KL/TV/$\chi^2$/hockey/JS | `:419` |
 | | Where this lecture sits; pointer to div2 | `:433` |
@@ -72,48 +72,40 @@ Two-lecture series on the divergences that drive modern generative training. Lec
 | Section | Slide | Line |
 |---|---|---|
 | Title / Contents | | `:19, :30` |
-| **01 — Beyond $f$-divergence** | Energy models, score function | `:63-111` |
-| | Why another divergence? | `:71` |
-| | **Definition (energy-based pdf)** | `:80` |
-| | **Definition (score function)** — gradient kills $Z$ | `:91` |
-| | Example — Gaussian score | `:103` |
-| **02 — Fisher divergence** | Score-based distance | `:112-174` |
-| | Overview — where we are going (4 steps) | `:120` |
-| | **Lemma** — score identifies the density | `:131` |
-| | **Definition (Hyvärinen, 2005)** — Fisher divergence | `:141` |
-| | **Theorem** — non-neg, asymmetric, scaling, Gaussian comparator | `:152` |
-| | Proof — non-negativity and scaling | `:166` |
-| **03 — Denoising score matching** | Gaussian smoothing makes it tractable | `:175-266` |
-| | Problem — direct score matching is intractable | `:183` |
-| | Setup — $\mathbf{Y} = \mathbf{X} + \mathbf{Z}$ | `:191` |
-| | **Theorem (Vincent, 2011)** — DSM equivalence | `:200` |
-| | Proof Step 1 — expand the square | `:211` |
-| | Proof Step 2 — rewrite cross term using $\nabla_{\mathbf{y}}\mathcal{N}$ | `:223` |
-| | Proof Step 3 — assemble | `:235` |
-| | Recap — conditional MSE on $\mathbf{x}-\mathbf{y}$ | `:245` |
-| | Recall — Tweedie's formula (cross-ref `diff3:121`) | `:256` |
-| **04 — Diffusion $\equiv$ score matching** | Tweedie bridges ELBO and Fisher | `:267-341` |
-| | Recall — diffusion ELBO MSE term | `:275` |
-| | Step 1 — apply Tweedie to $\mathbf{m}_t$ and $\boldsymbol\mu_t$ | `:285` |
-| | Step 2 — MSE becomes Fisher divergence | `:297` |
-| | Step 3 — recognize denoising form | `:306` |
-| | **Theorem** — diffusion ELBO $\equiv$ sum of DSM | `:315` |
-| | Recap — Tweedie $\to$ Fisher $\to$ DSM chain | `:326` |
-| **05 — Recap** | Three divergence families | `:342-371` |
-| | Three families table ($f$, Fisher, Wasserstein) | `:350` |
-| | Where this lecture sits | `:362` |
+| **01 — Beyond $f$-divergence** | Energy models, score function | `:58-103` |
+| | Why another divergence? | `:65` |
+| | **Definition (energy-based pdf)** | `:74` |
+| | **Definition (score function)** — gradient kills $Z$ | `:85` |
+| | Example — Gaussian score | `:95` |
+| **02 — Fisher divergence** | Score-based distance | `:104-166` |
+| | Overview — where we are going (4 steps) | `:112` |
+| | **Lemma** — score identifies the density | `:123` |
+| | **Definition (Hyvärinen, 2005)** — Fisher divergence | `:133` |
+| | **Theorem** — non-neg, asymmetric, scaling, Gaussian comparator | `:144` |
+| | Proof — non-negativity and scaling | `:158` |
+| **03 — Denoising score matching** | Gaussian smoothing makes it tractable | `:167-247` |
+| | Problem — direct score matching is intractable | `:175` |
+| | Setup — $\mathbf{Y} = \mathbf{X} + \mathbf{Z}$ | `:183` |
+| | **Theorem (Vincent, 2011)** — DSM equivalence | `:192` |
+| | Proof Step 1 — expand the square | `:203` |
+| | Proof Step 2 — rewrite cross term using $\nabla_{\mathbf{y}}\mathcal{N}$ | `:215` |
+| | Proof Step 3 — assemble | `:227` |
+| | Recap — conditional MSE on $\mathbf{x}-\mathbf{y}$ | `:237` |
+| **04 — Recap** | Three divergence families | `:248-278` |
+| | Three families table ($f$, Fisher, Wasserstein) | `:256` |
+| | Where this lecture sits | `:268` |
 
-**Key theorems and definitions:** energy-based pdf `:80`; score function `:91`; score-determines-pdf lemma `:131`; Fisher divergence `:141`; properties theorem `:152`; Vincent DSM theorem `:200`; diffusion-$\equiv$-DSM theorem `:315`.
+**Key theorems and definitions:** energy-based pdf `:74`; score function `:85`; score-determines-pdf lemma `:123`; Fisher divergence `:133`; properties theorem `:144`; Vincent DSM theorem `:192`.
+
+The diffusion-specific equivalence (per-step ELBO MSE $\equiv$ DSM at noise level $1-\bar\alpha_t$) is proved in `diffusion/diff3-parameterizations.html` Section 05, citing this lecture for the Fisher and DSM machinery.
 
 ### Note (`div2-fisher-score-note.html`)
 - Why $f$-divergences fail on energy-based models
 - Hyvärinen's original (non-denoising) score matching via integration by parts
 - Why Gaussian smoothing is the kernel that gives a closed form
-- Tweedie's formula — full statement and proof
-- Three-equivalence chain (Tweedie → Fisher → DSM) in detail
 - Sampling from a score model = Langevin dynamics (Fokker–Planck)
 - Comparison: $f$ / Fisher / Wasserstein
-- Closing thread — divergences as the organizing principle of the course
+- Closing thread — pointer forward to diffusion lectures where DSM is applied
 
 ---
 
@@ -125,8 +117,9 @@ Same as the rest of the series: deck = rigorous statement + intuition; note = ex
 
 | Topic | Other folder | Line |
 |---|---|---|
-| Tweedie's formula | `infotheory/diffusion/diff3-parameterizations.html` | `:124` (statement), `:135` (proof) |
-| Variational MI bounds (DV, NWJ as KL-instances) | `infotheory/mi/mi1-bounds.html` | `:148, :193` |
+| Variational MI bounds (DV, NWJ as KL-instances) — *previous lecture* | `infotheory/mi/mi1-bounds.html` | `:176, :221` (DV/NWJ); `:293` (unifying slide); `:300` (forward-pointer table) |
+| Tweedie's formula — *next lecture (Diff 3) uses + proves it* | `infotheory/diffusion/diff3-parameterizations.html` | `:125` (statement), `:136` (proof) |
+| Diffusion ELBO $\equiv$ DSM theorem — *Diff 3 capstone (cites Vincent from this lecture)* | `infotheory/diffusion/diff3-parameterizations.html` | `:256` |
 | ELBO + diffusion training | `infotheory/diffusion/diff2-diffusion.html` | `:153-212` |
 | Hockey-stick and $(\varepsilon,\delta)$-DP | `privacy/dp/dp8-fl.html` | — |
 | SDE / Langevin sampling view of score | `privacy/generative/diffusion3-sde-score.html` | `:339` |

@@ -7,10 +7,10 @@ Master-level series with paired `<deck>.html` + `<deck>-note.html`. Notes hold f
 - **`entropy/`** — Foundations: entropy and basic information-theoretic quantities (2 lectures): entropy + KL → joint, conditional, MI, Fano. See `entropy/OUTLINE.md`.
 - **`lossless/`** — Lossless compression (3 lectures): codes/Kraft/Huffman → AEP/arithmetic → Markov/universal/LZ. See `lossless/OUTLINE.md`.
 - **`diffentropy/`** — Differential entropy and continuous-domain MI (3 lectures): foundations → MaxEnt/Gaussian/EPI → MI/AWGN/water-filling/I-MMSE. See `diffentropy/OUTLINE.md`.
-- **`diffusion/`** — Diffusion through the information-theory lens (3 lectures): VAE/ELBO → hierarchical VAE → parameterizations + Tweedie + score-matching equivalence. See `diffusion/OUTLINE.md`.
 - **`lossy/`** — Rate–distortion theory + modern LLM compression (4 lectures): foundations → Gaussian/Laplacian + pruning + CROM → lattice codes & QUIP# → TURBOQUANT. See `lossy/OUTLINE.md`.
 - **`mi/`** — Mutual-information estimation (2 lectures): variational lower bounds (BA, DV, NWJ, MINE) → InfoNCE & CLIP; closes with $f$-divergence unification. See `mi/OUTLINE.md`.
-- **`divergence/`** — Divergence families behind modern generative training (2 lectures): $f$-divergence + GAN $\equiv$ JS minimization → Fisher divergence + score matching + diffusion equivalence. See `divergence/OUTLINE.md`.
+- **`divergence/`** — Divergence families behind modern generative training (2 lectures): $f$-divergence + GAN $\equiv$ JS minimization → Fisher divergence + denoising score matching. See `divergence/OUTLINE.md`.
+- **`diffusion/`** — Diffusion through the information-theory lens (3 lectures): VAE/ELBO → hierarchical VAE → parameterizations + Tweedie; closes by showing diffusion ELBO $\equiv$ score matching (using machinery from `divergence/`). See `diffusion/OUTLINE.md`.
 
 ## Reading order (suggested for a full master's course)
 
@@ -19,16 +19,16 @@ Master-level series with paired `<deck>.html` + `<deck>-note.html`. Notes hold f
 3. **`diffentropy/`** — continuous-domain analogue; Gaussian as MaxEnt; AWGN capacity.
 4. **`lossy/`** — rate–distortion theory; classical R(D) and modern LLM compression.
 5. **`mi/`** — variational MI bounds; InfoNCE/CLIP.
-6. **`diffusion/`** — generative modeling through the info-theoretic lens.
-7. **`divergence/`** — $f$-divergence + GAN, Fisher + score matching; closes the loop with diffusion.
+6. **`divergence/`** — $f$-divergence + GAN, Fisher + denoising score matching.
+7. **`diffusion/`** — generative modeling through the info-theoretic lens; closes the loop by showing diffusion ELBO $\equiv$ score matching.
 
 ## Themes
 
 - **entropy / lossless / diffentropy** establish the discrete- and continuous-domain toolkits.
 - **lossy** ramps from classical R(D) to **applied compression of LLM weights and KV caches** (QUIP#, TURBOQUANT).
 - **mi** culminates in the MI view of CLIP — the bridge between variational-bound theory and contrastive learning.
-- **diffusion** is the *theoretical* side of diffusion (see `privacy/generative/` for the from-scratch Bayes-route version).
-- **divergence** synthesizes: $f$-divergences unify MI/ELBO/GAN; Fisher closes the diffusion picture via score matching.
+- **divergence** synthesizes the divergence families: $f$-divergences unify MI/GAN; Fisher + DSM sets up the score-based view.
+- **diffusion** is the *theoretical* side of diffusion (see `privacy/generative/` for the from-scratch Bayes-route version); closes by showing diffusion ELBO $\equiv$ DSM, using `divergence/` machinery.
 
 ## Cross-deck pointers
 
@@ -81,8 +81,7 @@ Master-level series with paired `<deck>.html` + `<deck>-note.html`. Notes hold f
 | Energy-based pdf + score function | `divergence/div2-fisher-score.html` | `:80, :91` |
 | Fisher divergence definition (Hyvärinen) | `divergence/div2-fisher-score.html` | `:141` |
 | Denoising score matching theorem (Vincent) | `divergence/div2-fisher-score.html` | `:200` |
-| Diffusion ELBO $\equiv$ DSM theorem | `divergence/div2-fisher-score.html` | `:315` |
-| Score-matching equivalence (cross-reference in diffusion) | `diffusion/diff3-parameterizations.html` | `:211` |
+| Diffusion ELBO $\equiv$ DSM theorem | `diffusion/diff3-parameterizations.html` | `:256` |
 
 ## Pairing convention
 

@@ -21,7 +21,7 @@
   <div class="pill pill-fill" style="margin-bottom:28px;">Divergence · Lecture 2 of 2</div>
   <h1>Fisher Divergence and<br>Score Matching</h1>
   <div class="divider"></div>
-  <p class="subtitle">Energy models, denoising score matching, diffusion equivalence</p>
+  <p class="subtitle">Energy models and denoising score matching</p>
   <p style="font-weight:500;">Albert No &nbsp;·&nbsp; Yonsei University</p>
   <p style="margin-top:6px;">Information Theory · 2026</p>
 </div>
@@ -47,11 +47,6 @@
     </div>
     <div class="toc-item">
       <div class="toc-num">04</div><div class="toc-rule"></div>
-      <div><div class="toc-label">Diffusion $\equiv$ score matching</div>
-      <div class="toc-sub">Tweedie bridges ELBO and Fisher</div></div>
-    </div>
-    <div class="toc-item">
-      <div class="toc-num">05</div><div class="toc-rule"></div>
       <div><div class="toc-label">Recap</div>
       <div class="toc-sub">Three divergence families</div></div>
     </div>
@@ -250,95 +245,9 @@ D_F &amp;= c_1 + \tfrac12\iint p_{\mathrm{data}}\mathcal{N}\,\|s_\theta(\mathbf{
   </ul>
 </div>
 
-<div class="slide">
-  <h2>Recall &mdash; Tweedie's Formula</h2><div class="divider"></div>
-  <div class="card" style="padding: 12px 18px;">
-    <p><strong>Recall (Tweedie).</strong> If $\mathbf{Y} = \mathbf{X} + \mathbf{Z}$ with $\mathbf{Z}\sim\mathcal{N}(\mathbf{0},\sigma^2 I)$,</p>
-    <div class="math-block">$$\mathbb{E}[\mathbf{X}\mid\mathbf{Y}=\mathbf{y}] \;=\; \mathbf{y} + \sigma^2\,\nabla_{\mathbf{y}}\log f_{\mathrm{data}}(\mathbf{y}).$$</div>
-  </div>
-  <p>Rearrange: $\nabla\log f_{\mathrm{data}}(\mathbf{y}) = \mathbb{E}[(\mathbf{X}-\mathbf{y})/\sigma^2 \mid \mathbf{y}]$. So the denoising target $(\mathbf{x}-\mathbf{y})/\sigma^2$ is an <strong>unbiased estimate of the score</strong>.</p>
-  <p>Cross-reference: <code>infotheory/diffusion/diff3-parameterizations.html:121</code>.</p>
-</div>
-
-
 <!-- ════ PART 04 ════ -->
 <div class="slide section-slide left">
   <div class="section-num">04</div>
-  <h1>Diffusion $\equiv$ Score Matching</h1>
-  <div class="divider"></div>
-  <p class="subtitle">Tweedie bridges ELBO and Fisher</p>
-</div>
-
-<div class="slide">
-  <h2>Recall &mdash; Diffusion ELBO Term</h2><div class="divider"></div>
-  <div class="card" style="padding: 12px 18px;">
-    <p><strong>Recall (Lecture 2 of Diffusion track).</strong> The diffusion ELBO contains the per-step MSE</p>
-    <div class="math-block">$$\sum_{t=2}^{T}\mathbb{E}_{g(\mathbf{z}_t\mid\mathbf{x})}\!\left[\tfrac{\log e}{2\sigma_t^2}\,\bigl\|\mathbf{m}_t(\mathbf{x},\mathbf{Z}_t) - \boldsymbol\mu_t(\mathbf{Z}_t)\bigr\|^2\right],$$</div>
-    <p>where $\mathbf{m}_t(\mathbf{x},\mathbf{z}_t) = \mathbb{E}[\mathbf{Z}_{t-1}\mid\mathbf{Z}_t = \mathbf{z}_t, \mathbf{X} = \mathbf{x}]$ and $\boldsymbol\mu_t = \mathbb{E}[\mathbf{Z}_{t-1}\mid\mathbf{Z}_t]$ (modelled).</p>
-  </div>
-  <p>Question: what is this MSE, viewed through Fisher?</p>
-</div>
-
-<div class="slide">
-  <h2>Step 1 &mdash; Apply Tweedie to $\mathbf{m}_t$ and $\boldsymbol\mu_t$</h2><div class="divider"></div>
-  <p>Both conditional means are denoising estimates; apply Tweedie:</p>
-  <div class="math-block">$$\begin{aligned}
-\mathbf{m}_t(\mathbf{x},\mathbf{z}_t)
-&amp;= \mathbb{E}\bigl[\mathbf{Z}_{t-1}\,\big|\,\mathbf{Z}_t=\mathbf{z}_t,\mathbf{X}=\mathbf{x}\bigr] \;=\; \mathbf{z}_t + \sigma_t^2\,\nabla_{\mathbf{z}_t}\log g(\mathbf{z}_t\,|\,\mathbf{x}), \\
-\boldsymbol\mu_t(\mathbf{z}_t)
-&amp;= \mathbb{E}\bigl[\mathbf{Z}_{t-1}\,\big|\,\mathbf{Z}_t=\mathbf{z}_t\bigr] \;=\; \mathbf{z}_t + \sigma_t^2\,\nabla_{\mathbf{z}_t}\log f_\theta(\mathbf{z}_t).
-\end{aligned}$$</div>
-  <p>Both lines share the anchor $\mathbf{z}_t$; the difference is a score difference, rescaled by $\sigma_t^2$.</p>
-</div>
-
-<div class="slide">
-  <h2>Step 2 &mdash; The MSE Becomes a Fisher Divergence</h2><div class="divider"></div>
-  <p>Substitute Step 1 into the per-step ELBO term:</p>
-  <div class="math-block">$$\bigl\|\mathbf{m}_t - \boldsymbol\mu_t\bigr\|^2 \;=\; \sigma_t^4\,\bigl\|\nabla\log g(\mathbf{z}_t\,|\,\mathbf{x}) - \nabla\log f_\theta(\mathbf{z}_t)\bigr\|^2.$$</div>
-  <p>Then for each $t$,</p>
-  <div class="math-block">$$\int g(\mathbf{z}_t\,|\,\mathbf{x})\,\Bigl\|\nabla\log g(\mathbf{z}_t\,|\,\mathbf{x}) - \nabla\log f_\theta(\mathbf{z}_t)\Bigr\|^2 d\mathbf{z}_t \;=\; 2\,D_F\!\bigl(g(\,\cdot\,|\,\mathbf{x})\,\Vert\,f_\theta\bigr).$$</div>
-  <p>Each ELBO term is (a rescaled) Fisher divergence.</p>
-</div>
-
-<div class="slide">
-  <h2>Step 3 &mdash; Recognize the Denoising Form</h2><div class="divider"></div>
-  <p>Recall the forward marginal $g(\mathbf{z}_t\,|\,\mathbf{x}) = \mathcal{N}(\mathbf{z}_t;\sqrt{\bar\alpha_t}\,\mathbf{x},(1-\bar\alpha_t)I)$. Its score is</p>
-  <div class="math-block">$$\nabla_{\mathbf{z}_t}\log g(\mathbf{z}_t\,|\,\mathbf{x}) \;=\; -\,\tfrac{\mathbf{z}_t - \sqrt{\bar\alpha_t}\,\mathbf{x}}{1-\bar\alpha_t}.$$</div>
-  <p>Substitute, drop terms independent of $\theta$:</p>
-  <div class="math-block">$$\text{(per-step ELBO term)} \;=\; \tfrac{\log e}{2}\int g(\mathbf{z}_t\,|\,\mathbf{x})\,\Bigl\|\tfrac{\sqrt{\bar\alpha_t}\,\mathbf{x}-\mathbf{z}_t}{1-\bar\alpha_t} - s_\theta(\mathbf{z}_t)\Bigr\|^2 d\mathbf{z}_t.$$</div>
-  <p>This is exactly Vincent's denoising score matching at noise level $1-\bar\alpha_t$.</p>
-</div>
-
-<div class="slide">
-  <h2>Theorem &mdash; Diffusion ELBO $\equiv$ Sum of DSM Objectives</h2><div class="divider"></div>
-  <div class="card">
-    <h3>Theorem.</h3>
-    <p>Training the diffusion model by ELBO maximization is equivalent (up to $\theta$-free constants) to minimizing</p>
-    <div class="math-block">$$\sum_{t=2}^{T}\;\mathbb{E}_{\mathbf{X},\mathbf{Z}_t}\!\left[\tfrac{\log e}{2}\,\Bigl\|\tfrac{\sqrt{\bar\alpha_t}\,\mathbf{X} - \mathbf{Z}_t}{1-\bar\alpha_t} - s_\theta(\mathbf{Z}_t)\Bigr\|^2\right],$$</div>
-    <p>i.e., the sum over $t$ of denoising score-matching objectives at noise level $1-\bar\alpha_t$.</p>
-  </div>
-  <div class="cite">Song et al., Score-based generative modeling, ICLR 2021.</div>
-</div>
-
-<div class="slide">
-  <h2>Recap &mdash; Two Trainings, One Objective</h2><div class="divider"></div>
-  <div class="math-block">$$\begin{aligned}
-\text{Diffusion ELBO}
-&amp;\stackrel{(\text{Tweedie})}{=}\;\text{rescaled Fisher divergence at each } t \\
-&amp;\stackrel{(\text{Vincent})}{=}\;\text{denoising score matching at each } t \\
-&amp;\stackrel{(\text{sum})}{=}\;\sum_t \mathbb{E}\bigl\|\text{noise/scale} - s_\theta(\mathbf{Z}_t)\bigr\|^2.
-\end{aligned}$$</div>
-  <ul>
-    <li>Tweedie converts a conditional mean to a score: one rewrite.</li>
-    <li>Denoising score matching closes the gap to a tractable MSE.</li>
-    <li>Reverse parameterization (predict noise) $=$ score parameterization, up to scaling. <em>Diff3 channel view.</em></li>
-  </ul>
-</div>
-
-
-<!-- ════ PART 05 ════ -->
-<div class="slide section-slide left">
-  <div class="section-num">05</div>
   <h1>Recap</h1>
   <div class="divider"></div>
   <p class="subtitle">Three families of divergence</p>
@@ -359,12 +268,12 @@ D_F &amp;= c_1 + \tfrac12\iint p_{\mathrm{data}}\mathcal{N}\,\|s_\theta(\mathbf{
 <div class="slide">
   <h2>Where This Lecture Sits</h2><div class="divider"></div>
   <ul>
+    <li><strong>Previous &mdash; MI bounds (mi1, mi2):</strong> variational $f$-divergence machinery (BA, DV, NWJ).</li>
     <li><strong>Lecture 1 ($f$-divergence):</strong> general framework + JS-GAN.</li>
-    <li><strong>Lecture 2 (Fisher):</strong> score-based view + diffusion equivalence.</li>
-    <li><strong>Diffusion lecture series:</strong> ELBO derivation (Diff 2), parameterizations and Tweedie (Diff 3).</li>
-    <li><strong>MI bounds (mi1):</strong> variational $f$-divergence machinery (DV, NWJ).</li>
+    <li><strong>Lecture 2 (Fisher):</strong> score-based view + denoising score matching.</li>
+    <li><strong>Next &mdash; Diffusion series (Diff 1&ndash;3):</strong> hierarchical VAE; closes by showing diffusion ELBO $\equiv$ sum of DSM (uses Vincent's theorem from this lecture).</li>
   </ul>
-  <div class="highlight"><p>All three connect through the same dual: <em>density ratio</em> for $f$-divergence, <em>score gradient</em> for Fisher.</p></div>
+  <div class="highlight"><p>All three families connect through the same dual: <em>density ratio</em> for $f$-divergence, <em>score gradient</em> for Fisher.</p></div>
 </div>
 
 <div class="slide end-slide no-footer">

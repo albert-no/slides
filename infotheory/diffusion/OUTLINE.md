@@ -105,13 +105,16 @@ Information-theoretic treatment: VAE/ELBO → hierarchical VAE = diffusion → p
 | | Each step is additive Gaussian channel | `:169` |
 | | Reverse = approximate decoding | `:177` |
 | | Successive refinement analogy | `:184` |
-| **05 — Score-matching equivalence** | ELBO MSE $\equiv$ denoising score matching | `:196-237` |
-| | A second divergence behind diffusion | `:205` |
-| | **Theorem — ELBO term $\equiv$ DSM (Vincent / Song et al.)** | `:216` |
-| | Two routes, one network (recap chain) | `:227` |
-| | Forward pointer to `divergence/div2-fisher-score.html` | (inline in `:227`) |
+| **05 — Score-matching equivalence** | ELBO MSE $\equiv$ denoising score matching (full proof) | `:196-281` |
+| | A second divergence behind diffusion (cite Lecture 6) | `:204` |
+| | Recall — diffusion ELBO MSE term | `:215` |
+| | Step 1 — apply Tweedie to $\mathbf{m}_t$ and $\boldsymbol\mu_t$ | `:225` |
+| | Step 2 — MSE becomes Fisher divergence (cite Lecture 6) | `:237` |
+| | Step 3 — recognize denoising form (cite Vincent, Lecture 6) | `:246` |
+| | **Theorem — Diffusion ELBO $\equiv$ Sum of DSM** | `:255` |
+| | Two routes, one network (recap chain) | `:266` |
 
-**Key:** Master identity `:71`; Tweedie theorem `:126`; Tweedie proof `:137, :145`; equivalence of three predictions `:152`; ELBO $\equiv$ DSM theorem `:216`.
+**Key:** Master identity `:71`; Tweedie theorem `:126`; Tweedie proof `:137, :145`; equivalence of three predictions `:152`; Diffusion ELBO $\equiv$ DSM theorem `:255` (capstone of series).
 
 ### Note (`diff3-parameterizations-note.html`)
 - Why ε-prediction wins (loss conditioning at noise level) `:25`
@@ -121,4 +124,4 @@ Information-theoretic treatment: VAE/ELBO → hierarchical VAE = diffusion → p
 - Channel-coding view detail (SNR, successive refinement) `:71`
 - Log-SNR view (Salimans & Ho) `:83`
 - Connection to rate–distortion `:94`
-- Score-matching equivalence (forward pointer to `divergence/div2`) `:102`
+- Score-matching equivalence (Section 05; cites Lecture 6 / `divergence/div2` for Fisher + DSM) `:99`

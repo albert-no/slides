@@ -1,17 +1,17 @@
 # privacy/mia/ — Membership inference attacks (5 lectures)
 
-5-lecture series, paired `<deck>.html` + `<deck>-note.html`. Plus legacy `old/MIA.html` (single-file deck superseded by mia1+mia2). Notes contain extra proof detail and tables.
+5-lecture series, paired `<deck>.html` + `<deck>-note.html`. Lectures 4 and 5 also have single-page `<deck>-overview.html` summaries. Plus legacy `old/MIA.html` (single-file deck superseded by mia1+mia2). Notes contain extra proof detail and tables.
 
 ## Files
 
-| Deck | Note | Topic |
-|---|---|---|
-| `mia1-foundations.html` | `mia1-foundations-note.html` | Foundations (2008–2019): Homer, MI game, DP bounds, evaluation |
-| `mia2-shadow.html` | `mia2-shadow-note.html` | Shadow models: Shokri, LOGAN (GANs), Hisamoto (seq2seq) |
-| `mia3-theory.html` | `mia3-theory-note.html` | Theory: Yeom (overfitting), Sablayrolles (BB≈WB), Salem (relaxed), Nasr (FL) |
-| `mia4-modern.html` | `mia4-modern-note.html` | Modern: LiRA, Ye hierarchy, RMIA, label-only, defenses |
-| `mia5-llm.html` | `mia5-llm-note.html` | LLMs: perplexity, neighbourhood, SPV, context-aware, InfoRMIA |
-| `old/MIA.html` | — | Legacy consolidated deck (Lectures 1–2 era) |
+| Deck | Note | Overview | Topic |
+|---|---|---|---|
+| `mia1-foundations.html` | `mia1-foundations-note.html` | — | Foundations (2008–2019): Homer, MI game, DP bounds, evaluation |
+| `mia2-shadow.html` | `mia2-shadow-note.html` | — | Shadow models: Shokri, LOGAN (GANs), Hisamoto (seq2seq) |
+| `mia3-theory.html` | `mia3-theory-note.html` | — | Theory: Yeom (overfitting), Sablayrolles (BB≈WB), Salem (relaxed), Nasr (FL) |
+| `mia4-modern.html` | `mia4-modern-note.html` | `mia4-overview.html` | Modern: LiRA, Ye hierarchy, RMIA, label-only, defenses |
+| `mia5-llm.html` | `mia5-llm-note.html` | `mia5-overview.html` | LLMs: perplexity, neighbourhood, SPV, context-aware, InfoRMIA |
+| `old/MIA.html` | — | — | Legacy consolidated deck (Lectures 1–2 era) |
 
 ---
 

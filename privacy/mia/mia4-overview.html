@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MIA 4 — Modern Likelihood-Ratio Attacks · Overview</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload='renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false},{left:"\\[",right:"\\]",display:true}]});'></script>
+<style>
+  body {
+    max-width: 820px;
+    margin: 48px auto;
+    padding: 0 24px 96px;
+    color: var(--charcoal);
+    background: var(--white);
+    font-family: 'Yonsei', 'Noto Sans', Arial, sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+  }
+  h1 { font-size: 2.1rem; color: var(--yonsei-blue); margin-bottom: 4px; }
+  h2 { font-size: 1.35rem; color: var(--yonsei-blue); margin-top: 36px; border-bottom: 1px solid var(--slate); padding-bottom: 6px; }
+  h3 { font-size: 1.05rem; color: var(--blue-light); margin-top: 20px; }
+  p, li { font-size: 1rem; }
+  .meta { color: var(--gray-text); font-size: 0.95rem; margin-bottom: 24px; }
+  code { background: var(--light); padding: 1px 6px; border-radius: 4px; font-size: 0.92em; }
+  table { border-collapse: collapse; margin: 12px 0; width: 100%; }
+  th, td { border: 1px solid var(--slate); padding: 6px 10px; text-align: left; font-size: 0.95rem; }
+  th { background: var(--light); }
+  strong { color: var(--yonsei-blue); font-weight: 600; }
+  .tldr {
+    background: var(--light);
+    border-left: 4px solid var(--yonsei-blue);
+    padding: 14px 18px;
+    margin: 14px 0;
+    border-radius: 4px;
+  }
+  .pill { display: inline-block; padding: 2px 10px; border: 1px solid var(--yonsei-blue); color: var(--yonsei-blue); border-radius: 999px; font-size: 0.82rem; margin-right: 6px; }
+  ul.takeaways li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+<h1>MIA 4 · Modern Likelihood-Ratio Attacks — Overview</h1>
+<p class="meta">A one-page tour of Lecture 4. For full slides see <code>mia4-modern.html</code>; for detailed derivations see <code>mia4-modern-note.html</code>.</p>
+
+<div class="tldr">
+  <strong>One-line summary.</strong> Lecture 4 traces the shift from balanced-accuracy MIA evaluations to per-example likelihood-ratio attacks (LiRA), then to the cost-reduced relative-comparison attack (RMIA). All modern MIAs share the same shape: a likelihood ratio over a per-example statistic, calibrated either by shadow models, reference models, or population samples.
+</div>
+
+<h2><span class="pill">§1</span> Defenses recap</h2>
+<p>Four families: regularization, output perturbation, training-time, architecture design. Only training-time defenses change the model's information content; everything else is an arms race that adaptive attackers undo. <strong>DP-SGD</strong> is the unique defense with formal guarantees: clipped gradients plus Gaussian noise yield an $(\varepsilon, \delta)$-DP bound, which in turn upper-bounds MIA advantage by $e^{\varepsilon}-1+\delta$.</p>
+
+<h2><span class="pill">§2</span> Why early evaluations misled</h2>
+<p>Balanced accuracy at the 50% threshold hides the vulnerable subpopulation. The right metric is <strong>TPR at low FPR</strong> (typically $10^{-3}$ or lower), evaluated on log-log ROC. Label-only attacks (Choquette-Choo et al. 2020) sweep away the "just hide the confidence vector" defense — even with predicted-class-only access, boundary-distance probes recover membership signal.</p>
+
+<h2><span class="pill">§3</span> LiRA (Carlini et al. 2022)</h2>
+<p>The Neyman–Pearson optimal attack, executed per example.</p>
+<ul class="takeaways">
+  <li><strong>Idea.</strong> For each target $z$, train $N$ shadow models with $z$ in/out of their training sets. Fit Gaussians to the resulting "in" and "out" loss distributions. Compute the per-example LLR for the actual target model.</li>
+  <li><strong>Score.</strong> $\Lambda(z) = p(\ell^* \mid z \in D) / p(\ell^* \mid z \notin D)$, where $\ell^*$ is the target's loss on $z$.</li>
+  <li><strong>Cost.</strong> 64–256 shadow models per attack budget — research-grade compute.</li>
+  <li><strong>Result.</strong> 8–10% TPR at 0.1% FPR on CIFAR-10, vs. &lt;1% for prior attacks. The 10–50× gain is what made the community accept per-example calibration as the new default.</li>
+  <li><strong>Online vs. offline.</strong> Online retrains shadows per query (best); offline reuses a fixed shadow set (practical).</li>
+</ul>
+
+<h2><span class="pill">§4</span> Ye et al. 2022 — the unified hierarchy</h2>
+<p>All MIA variants fit into a three-level hierarchy by what they are allowed to know:</p>
+<table>
+  <tr><th>Level</th><th>Calibration source</th><th>Cost</th><th>Power</th></tr>
+  <tr><td>Population</td><td>Target model + population sample</td><td>Cheap</td><td>★★☆☆</td></tr>
+  <tr><td>Reference</td><td>+ reference models (no $z$)</td><td>Moderate</td><td>★★★☆</td></tr>
+  <tr><td>LiRA</td><td>+ per-example in/out shadows</td><td>Expensive</td><td>★★★★</td></tr>
+</table>
+<p>Provably monotone: LiRA dominates Reference dominates Population. The <strong>Privacy Meter</strong> tool implements all three as the standard auditing pipeline.</p>
+
+<h2><span class="pill">§5</span> RMIA (Zarifzadeh et al. 2024)</h2>
+<p>Cuts LiRA's cost by 30–100× while preserving most of the power.</p>
+<ul class="takeaways">
+  <li><strong>Idea.</strong> Replace the per-example Gaussian fit with a <em>population-relative percentile rank</em>.</li>
+  <li><strong>Score.</strong> For each candidate $z$, compute $r(z) = p_\theta(z) / \frac{1}{R}\sum_r p_{\theta_r}(z)$ for a few reference models, then rank against the same ratio on a population sample.</li>
+  <li><strong>Cost.</strong> 2–8 reference models, independent of how many points you query.</li>
+  <li><strong>Result.</strong> ~11% TPR at 0.1% FPR on CIFAR-10 with 8 reference models — within a couple of points of LiRA at a fraction of the compute.</li>
+</ul>
+
+<h2><span class="pill">§6</span> Beyond classification — diffusion models</h2>
+<p>Diffusion training minimises a denoising loss across timesteps $t \in [0, T]$. Membership signal lives in the intermediate timesteps (small $t$ is too easy, large $t$ is pure noise). Aggregating the per-timestep reconstruction loss and applying LiRA-style per-example calibration recovers the same per-record auditing power as in classification. The lecture's "One Framework: All Attacks" slide makes this universality explicit: every modern attack is a likelihood ratio over some chosen statistic $\phi(z)$.</p>
+
+<h2>Take-home matrix</h2>
+<table>
+  <tr><th>Attack</th><th>Shadows</th><th>Calibration</th><th>TPR@0.1%FPR (CIFAR-10)</th></tr>
+  <tr><td>Threshold (Yeom)</td><td>0</td><td>None</td><td>~0.1%</td></tr>
+  <tr><td>Shadow class (Shokri)</td><td>10–100</td><td>Global</td><td>~0.5%</td></tr>
+  <tr><td>RMIA</td><td>2–8</td><td>Population rank</td><td>~9%</td></tr>
+  <tr><td>LiRA (offline)</td><td>64–256</td><td>Per-example Gaussian</td><td>~10%</td></tr>
+</table>
+
+<h2>Three things to remember</h2>
+<ol>
+  <li><strong>Per-example calibration is the entire game.</strong> A global threshold cannot distinguish a memorized outlier from an easy non-member.</li>
+  <li><strong>Evaluate at low FPR.</strong> Balanced accuracy is the wrong number for any threat model auditors actually care about.</li>
+  <li><strong>DP-SGD is still the only formal defense.</strong> Everything else loses to an adaptive attacker.</li>
+</ol>
+
+<h2>Bridge to Lecture 5</h2>
+<p>The LiRA recipe — "train many shadow models, fit per-example densities" — collapses for large language models. Pre-training a single 7B-parameter LLM costs millions of dollars; 256 shadows is impossible. Lecture 5 builds MIA techniques engineered around that constraint: shadow-free (neighbourhood, self-prompt, context-aware) and token-weighted (InfoRMIA).</p>
+
+</body>
+</html>

@@ -94,9 +94,14 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | DP definition / LDP vs central / PrivUnit | `privacy/dp/dp8-fl.html:364-569` |
 | RRSC + k-closest exact-optimality (NeurIPS 2023) | `privacy/dp/dp8-fl.html:571-822` |
 | DP-SGD / DP-Diffusion / DP-RDM | `privacy/dp/dp8-fl.html:827-1004` |
-| Diffusion-LLM safety (A2D) | `dllm/dllm.html:429-522` |
-| Rainbow Padding (EOS overflow) | `dllm/dllm.html:323-427` |
-| dgMARK (diffusion-LLM watermarking) | `dllm/dllm.html:524-569` |
+| Continuous SDE diffusion at a glance (Song et al.) | `dllm/dllm.html:99` |
+| Masked diffusion at a glance | `dllm/dllm.html:115` |
+| Reverse process needs a ratio (concrete score) | `dllm/dllm.html:179` |
+| Rainbow Padding (EOS overflow, ICLR 2026) | `dllm/dllm.html:319-461` |
+| DAPD (attention dependency graph, ICML 2026) | `dllm/dllm.html:463-669` |
+| Diffusion-LLM safety (A2D) | `dllm/dllm.html:694` |
+| dgMARK (diffusion-LLM watermarking, ICML 2026) | `dllm/dllm.html:707` |
+| Reversal curse in MDMs | `dllm/dllm.html:720` |
 
 ## Cross-references
 

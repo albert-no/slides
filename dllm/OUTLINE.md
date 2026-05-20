@@ -11,7 +11,7 @@ Invited talk: **Why Diffusion LLMs Behave Differently, and How to Control Them.*
 
 **Topic:** Inductive biases, failure modes, and control surfaces of masked discrete diffusion LLMs.
 
-### Sections (33 slides total)
+### Sections (34 slides total)
 
 All citations positioned beside the brand footer (bottom-left), left-aligned and full-width — see local `<style>` override at top of `dllm.html`.
 
@@ -37,7 +37,7 @@ All citations positioned beside the brand footer (bottom-left), left-aligned and
   | Topic | Slides | Citation |
   |---|---|---|
   | **Rainbow Padding** (02·a divider + 5) | confidence decoding example (Kim et al. ICML 2025 Outstanding), setup, EOS overflow, root cause, scheme | Kim, Jeon, Kim, Jeung, No, ICLR 2026 |
-  | **DAPD** (02·b divider + 5) | parallel as dLLM-native (diagrammatic), dependency-graph sampling, graph coloring, attention oracle, coloring algorithm | Kim, Jeon, Jeon, No, ICML 2026 |
+  | **DAPD** (02·b divider + 6) | why parallel decoding (NFE motivation), independence challenge, dependency-graph sampling (two-option diagram), graph coloring, attention oracle (nodes=masks, edges=deps), coloring algorithm (not greedy MIS) | Kim, Jeon, Jeon, No, ICML 2026 |
   | **More from the lab** (02·c divider + 4) | **info-theoretic discrete diffusion (lead)**, A2D, dgMARK, reversal curse — image-only with citations | see below |
 
 - Q&A end slide

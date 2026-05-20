@@ -242,6 +242,17 @@
   <div class="divider"></div>
   <p>Any observed $S \subseteq \{1,\ldots,N\}$, any masked $i \notin S$:</p>
   <div class="math-block">$$p_\theta\bigl(x_i \,\big|\, x_S\bigr)$$</div>
+  <div style="display:flex; justify-content:center; margin:14px 0 8px;">
+    <div class="big-tokens" style="display:flex; align-items:center; gap:10px;">
+      <span class="token token-fixed">The</span>
+      <span class="token token-mask">[M]</span>
+      <span class="token token-mask">[M]</span>
+      <span class="token token-fixed">is</span>
+      <span class="token token-fixed">blue</span>
+      <span class="token token-mask">[M]</span>
+    </div>
+  </div>
+  <p style="text-align:center; color:var(--gray-text); margin-top:0;">$S = \{1, 4, 5\}$ &nbsp;→&nbsp; predict at $i \in \{2, 3, 6\}$.</p>
   <div class="highlight">
     <p>A dLLM is a <strong>universal marginal predictor</strong>. The decoder is now a degree of freedom.</p>
   </div>
@@ -287,7 +298,8 @@
     <img src="scaling.png" alt="Pareto frontier — diffusion vs AR under data constraint" style="max-width:100%;height:auto;max-height:340px;display:block;">
   </div>
   <div class="highlight">
-    <p>Past a <strong>critical compute point</strong>, diffusion's Pareto frontier overtakes AR. <strong>Compute-bound → AR; data-bound → diffusion.</strong></p>
+    <p>Past a <strong>critical compute point</strong>, diffusion's Pareto frontier overtakes AR.</p>
+    <p><strong>Compute-bound → AR; data-bound → diffusion.</strong></p>
   </div>
   <div class="cite">Prabhudesai, Wu, Zadeh, Fragkiadaki, Pathak, "Diffusion Beats Autoregressive in Data-Constrained Settings", NeurIPS 2025.</div>
 </div>
@@ -370,7 +382,8 @@
     </div>
   </div>
   <div class="highlight">
-    <p>Decode where most confident. Re-condition. Repeat. ICML 2025 <strong>Outstanding Paper Award</strong>.</p>
+    <p>Decode where most confident. Re-condition. Repeat.</p>
+    <p>ICML 2025 <strong>Outstanding Paper Award</strong>.</p>
   </div>
   <div class="cite">Kim, Shah et al., "Train for the Worst, Plan for the Best", ICML 2025.</div>
 </div>
@@ -386,8 +399,15 @@
     <li>Instruction-tuned dLLMs decode into a <strong>fixed canvas</strong> of $N$ slots.</li>
     <li>Place the answer; pad the rest.</li>
   </ul>
-  <div style="text-align:center; margin:18px 0;">
-    <span class="token token-gen">The</span><span class="token token-gen">answer</span><span class="token token-gen">is</span><span class="token token-gen">42</span><span class="token token-eos">eos</span><span class="token token-mask">pad</span><span class="token token-mask">pad</span><span class="token token-mask">pad</span><span class="token token-mask">pad</span>
+  <div style="display:flex; flex-direction:column; align-items:center; gap:10px; margin:18px 0;">
+    <div style="display:flex; align-items:center; gap:14px;">
+      <span style="color:var(--gray-text); font-size:1rem; font-weight:600; letter-spacing:0.06em;">PROMPT</span>
+      <span class="token token-fixed">What</span><span class="token token-fixed">is</span><span class="token token-fixed">6</span><span class="token token-fixed">×</span><span class="token token-fixed">7</span><span class="token token-fixed">?</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <span style="color:var(--gray-text); font-size:1rem; font-weight:600; letter-spacing:0.06em;">RESPONSE</span>
+      <span class="token token-gen">The</span><span class="token token-gen">answer</span><span class="token token-gen">is</span><span class="token token-gen">42</span><span class="token token-eos">eos</span><span class="token token-mask">pad</span><span class="token token-mask">pad</span><span class="token token-mask">pad</span><span class="token token-mask">pad</span>
+    </div>
   </div>
   <ul>
     <li>A <strong>longer canvas should never hurt</strong>.</li>
@@ -403,7 +423,7 @@
   <div class="pill" style="margin-bottom:12px;">Rainbow Padding</div>
   <h2>EOS Overflow: The Price of Confidence Decoding</h2>
   <div class="divider"></div>
-  <p>Apply confidence decoding to an instruction-tuned dLLM and grow the canvas — responses <strong>paradoxically shrink</strong> into a stream of <span class="token token-eos">&lt;eos&gt;</span>.</p>
+  <p>Responses <strong>paradoxically shrink</strong> into a stream of <span class="token token-eos">&lt;eos&gt;</span>.</p>
   <div class="card" style="margin-top:8px;">
     <h3>Expected</h3>
     <div style="margin:8px 0; line-height:2.1;">
@@ -470,13 +490,40 @@
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
-<!-- SLIDE 19 — DAPD: The Parallel Decoding Challenge -->
+<!-- SLIDE — Why Parallel Decoding (motivation) -->
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide">
   <div class="pill" style="margin-bottom:12px;">DAPD</div>
-  <h2>Parallel Decoding: A dLLM-Native Mode</h2>
+  <h2>Why Parallel Decoding?</h2>
   <div class="divider"></div>
-  <p>Per step the model gives <strong>marginals</strong> $p_\theta(x_i \mid x_S)$, not the joint.</p>
+  <p>One forward pass returns <strong>every</strong> marginal $p_\theta(x_i \mid x_S)$ at once — across <strong>all</strong> masked positions.</p>
+  <div class="big-tokens" style="display:flex; flex-direction:column; align-items:center; gap:14px; margin:22px 0 16px;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span class="token token-fixed">The</span>
+      <span class="token token-mask">[M]</span>
+      <span class="token token-mask">[M]</span>
+      <span class="token token-fixed">is</span>
+      <span class="token token-fixed">blue</span>
+    </div>
+    <div style="color:var(--gray-text); font-size:1.1rem;">single inference &nbsp;→&nbsp; $p_\theta(x_2\mid x_S),\; p_\theta(x_3\mid x_S)$</div>
+  </div>
+  <ul>
+    <li>Unmasking <strong>one</strong> token per step wastes the other marginals.</li>
+    <li>Unmasking <strong>many</strong> per step cuts NFE — fewer forward passes, faster sampling.</li>
+  </ul>
+  <div class="highlight">
+    <p>Parallel decoding is the <strong>natural</strong> dLLM-native mode.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE — DAPD: The Parallel Decoding Challenge -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="pill" style="margin-bottom:12px;">DAPD</div>
+  <h2>The Challenge: Marginals, not the Joint</h2>
+  <div class="divider"></div>
+  <p>Per step the model gives <strong>marginals</strong> $p_\theta(x_i \mid x_S)$, <strong>not</strong> the joint.</p>
   <div class="big-tokens" style="display:flex; flex-direction:column; align-items:center; gap:18px; margin:24px 0 18px;">
     <div style="display:flex; align-items:center; gap:10px;">
       <span class="token token-fixed">The</span>
@@ -485,7 +532,7 @@
       <span class="token token-fixed">is</span>
       <span class="token token-fixed">blue</span>
     </div>
-    <div style="color:var(--gray-text); font-size:1.2rem;">↓ independent sampling</div>
+    <div style="color:var(--gray-text); font-size:1.2rem;">↓ sample positions 2 and 3 <strong>independently</strong></div>
     <div style="display:flex; align-items:center; gap:10px;">
       <span class="token token-fixed">The</span>
       <span class="token token-gen">big</span>
@@ -496,7 +543,7 @@
     </div>
   </div>
   <div class="highlight">
-    <p>Independent marginals → <strong>incoherent joints</strong>.</p>
+    <p>Independence <strong>breaks</strong> coupling. Independent marginals → incoherent joint.</p>
   </div>
   <div class="cite">Kim, Jeon, Jeon, No, "Dependency-Aware Parallel Decoding via Attention for Diffusion LLMs", ICML 2026.</div>
 </div>
@@ -508,85 +555,98 @@
   <div class="pill" style="margin-bottom:12px;">DAPD</div>
   <h2>Sampling on a Dependency Graph</h2>
   <div class="divider"></div>
-  <div style="display:flex; justify-content:space-around; align-items:center; gap:8px; margin:24px 0 10px;">
+  <div style="display:flex; justify-content:flex-start; align-items:flex-start; gap:18px; margin:4px 0 0;">
 
-    <!-- 1) Base graph (no B-C edge) -->
-    <svg viewBox="0 0 540 340" style="display:block;width:33%;max-width:380px;">
-      <g stroke="#003876" stroke-width="1.8" fill="none">
-        <line x1="157" y1="98"  x2="103" y2="172"/>
-        <line x1="185" y1="96"  x2="255" y2="174"/>
-        <line x1="355" y1="96"  x2="285" y2="174"/>
-        <line x1="383" y1="98"  x2="437" y2="172"/>
-        <line x1="106" y1="206" x2="164" y2="264"/>
-        <line x1="254" y1="206" x2="196" y2="264"/>
-        <line x1="287" y1="204" x2="363" y2="266"/>
-        <line x1="436" y1="207" x2="394" y2="263"/>
-      </g>
-      <g font-family="Yonsei, Noto Sans, Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle">
-        <circle cx="170" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="170" y="89">B</text>
-        <circle cx="370" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="370" y="89">C</text>
-        <circle cx="90"  cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="90"  y="199">D</text>
-        <circle cx="270" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="270" y="199">E</text>
-        <circle cx="450" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="450" y="199">F</text>
-        <circle cx="180" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="180" y="289">G</text>
-        <circle cx="380" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="380" y="289">H</text>
-      </g>
-    </svg>
-
-    <!-- 2) E faded; edges to E dashed -->
-    <svg viewBox="0 0 540 340" style="display:block;width:33%;max-width:380px;">
-      <g stroke="#003876" stroke-width="1.8" fill="none">
-        <line x1="157" y1="98"  x2="103" y2="172"/>
-        <line x1="383" y1="98"  x2="437" y2="172"/>
-        <line x1="106" y1="206" x2="164" y2="264"/>
-        <line x1="436" y1="207" x2="394" y2="263"/>
-      </g>
-      <g stroke="#003876" stroke-width="1.8" fill="none" stroke-dasharray="6 5" opacity="0.55">
-        <line x1="185" y1="96"  x2="255" y2="174"/>
-        <line x1="355" y1="96"  x2="285" y2="174"/>
-        <line x1="254" y1="206" x2="196" y2="264"/>
-        <line x1="287" y1="204" x2="363" y2="266"/>
-      </g>
-      <g font-family="Yonsei, Noto Sans, Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle">
-        <circle cx="170" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="170" y="89">B</text>
-        <circle cx="370" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="370" y="89">C</text>
-        <circle cx="90"  cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="90"  y="199">D</text>
-        <g opacity="0.3">
-          <circle cx="270" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="270" y="199">E</text>
+    <!-- LEFT: Base graph (slightly smaller) -->
+    <div style="display:flex; flex-direction:column; align-items:flex-start; flex:0 0 44%;">
+      <svg viewBox="0 0 540 340" style="display:block;width:100%;max-width:460px;">
+        <g stroke="#003876" stroke-width="1.8" fill="none">
+          <line x1="157" y1="98"  x2="103" y2="172"/>
+          <line x1="185" y1="96"  x2="255" y2="174"/>
+          <line x1="355" y1="96"  x2="285" y2="174"/>
+          <line x1="383" y1="98"  x2="437" y2="172"/>
+          <line x1="106" y1="206" x2="164" y2="264"/>
+          <line x1="254" y1="206" x2="196" y2="264"/>
+          <line x1="287" y1="204" x2="363" y2="266"/>
+          <line x1="436" y1="207" x2="394" y2="263"/>
         </g>
-        <circle cx="450" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="450" y="199">F</text>
-        <circle cx="180" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="180" y="289">G</text>
-        <circle cx="380" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="380" y="289">H</text>
-      </g>
-    </svg>
-
-    <!-- 3) D faded; edges to D dashed -->
-    <svg viewBox="0 0 540 340" style="display:block;width:33%;max-width:380px;">
-      <g stroke="#003876" stroke-width="1.8" fill="none">
-        <line x1="185" y1="96"  x2="255" y2="174"/>
-        <line x1="355" y1="96"  x2="285" y2="174"/>
-        <line x1="383" y1="98"  x2="437" y2="172"/>
-        <line x1="254" y1="206" x2="196" y2="264"/>
-        <line x1="287" y1="204" x2="363" y2="266"/>
-        <line x1="436" y1="207" x2="394" y2="263"/>
-      </g>
-      <g stroke="#003876" stroke-width="1.8" fill="none" stroke-dasharray="6 5" opacity="0.55">
-        <line x1="157" y1="98"  x2="103" y2="172"/>
-        <line x1="106" y1="206" x2="164" y2="264"/>
-      </g>
-      <g font-family="Yonsei, Noto Sans, Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle">
-        <circle cx="170" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="170" y="89">B</text>
-        <circle cx="370" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="370" y="89">C</text>
-        <g opacity="0.3">
+        <g font-family="Yonsei, Noto Sans, Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle">
+          <circle cx="170" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="170" y="89">B</text>
+          <circle cx="370" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="370" y="89">C</text>
           <circle cx="90"  cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="90"  y="199">D</text>
+          <circle cx="270" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="270" y="199">E</text>
+          <circle cx="450" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="450" y="199">F</text>
+          <circle cx="180" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="180" y="289">G</text>
+          <circle cx="380" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="380" y="289">H</text>
         </g>
-        <circle cx="270" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="270" y="199">E</text>
-        <circle cx="450" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="450" y="199">F</text>
-        <circle cx="180" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="180" y="289">G</text>
-        <circle cx="380" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="380" y="289">H</text>
-      </g>
-    </svg>
+      </svg>
+      <p style="text-align:center; color:var(--gray-text); margin-top:2px;">dependency graph</p>
+    </div>
 
+    <!-- RIGHT: two stacked options (caption left of diagram), shifted up -->
+    <div style="display:flex; flex-direction:column; gap:18px; flex:1 1 auto; margin-top:-70px;">
+
+      <!-- Option 1: sample E first (E faded) -->
+      <div style="display:flex; align-items:center; gap:8px;">
+        <p style="margin:0; font-weight:600; color:var(--yonsei-blue); flex:0 0 28%; text-align:right;">Sample E&nbsp;first?</p>
+        <svg viewBox="0 50 540 264" style="display:block;flex:1;max-width:460px;">
+          <g stroke="#003876" stroke-width="1.8" fill="none">
+            <line x1="157" y1="98"  x2="103" y2="172"/>
+            <line x1="383" y1="98"  x2="437" y2="172"/>
+            <line x1="106" y1="206" x2="164" y2="264"/>
+            <line x1="436" y1="207" x2="394" y2="263"/>
+          </g>
+          <g stroke="#003876" stroke-width="1.8" fill="none" stroke-dasharray="6 5" opacity="0.55">
+            <line x1="185" y1="96"  x2="255" y2="174"/>
+            <line x1="355" y1="96"  x2="285" y2="174"/>
+            <line x1="254" y1="206" x2="196" y2="264"/>
+            <line x1="287" y1="204" x2="363" y2="266"/>
+          </g>
+          <g font-family="Yonsei, Noto Sans, Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle">
+            <circle cx="170" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="170" y="89">B</text>
+            <circle cx="370" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="370" y="89">C</text>
+            <circle cx="90"  cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="90"  y="199">D</text>
+            <g opacity="0.3">
+              <circle cx="270" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="270" y="199">E</text>
+            </g>
+            <circle cx="450" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="450" y="199">F</text>
+            <circle cx="180" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="180" y="289">G</text>
+            <circle cx="380" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="380" y="289">H</text>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Option 2: sample D first (D faded) -->
+      <div style="display:flex; align-items:center; gap:8px;">
+        <p style="margin:0; font-weight:600; color:var(--yonsei-blue); flex:0 0 28%; text-align:right;">Sample D&nbsp;first?</p>
+        <svg viewBox="0 50 540 264" style="display:block;flex:1;max-width:460px;">
+          <g stroke="#003876" stroke-width="1.8" fill="none">
+            <line x1="185" y1="96"  x2="255" y2="174"/>
+            <line x1="355" y1="96"  x2="285" y2="174"/>
+            <line x1="383" y1="98"  x2="437" y2="172"/>
+            <line x1="254" y1="206" x2="196" y2="264"/>
+            <line x1="287" y1="204" x2="363" y2="266"/>
+            <line x1="436" y1="207" x2="394" y2="263"/>
+          </g>
+          <g stroke="#003876" stroke-width="1.8" fill="none" stroke-dasharray="6 5" opacity="0.55">
+            <line x1="157" y1="98"  x2="103" y2="172"/>
+            <line x1="106" y1="206" x2="164" y2="264"/>
+          </g>
+          <g font-family="Yonsei, Noto Sans, Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle">
+            <circle cx="170" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="170" y="89">B</text>
+            <circle cx="370" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="370" y="89">C</text>
+            <g opacity="0.3">
+              <circle cx="90"  cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="90"  y="199">D</text>
+            </g>
+            <circle cx="270" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="270" y="199">E</text>
+            <circle cx="450" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="450" y="199">F</text>
+            <circle cx="180" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="180" y="289">G</text>
+            <circle cx="380" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="380" y="289">H</text>
+          </g>
+        </svg>
+      </div>
+
+    </div>
   </div>
 </div>
 
@@ -597,10 +657,9 @@
   <div class="pill" style="margin-bottom:12px;">DAPD</div>
   <h2>Parallel Sampling = Graph Coloring</h2>
   <div class="divider"></div>
-  <div style="display:flex; justify-content:center; margin:20px 0 14px;">
-    <svg viewBox="0 0 540 340" style="display:block;width:100%;max-width:560px;">
+  <div style="display:flex; justify-content:center; margin:8px 0 6px;">
+    <svg viewBox="0 0 540 340" style="display:block;width:100%;max-width:440px;">
       <g stroke="#003876" stroke-width="1.8" fill="none">
-        <line x1="192" y1="80"  x2="348" y2="80"/>
         <line x1="157" y1="98"  x2="103" y2="172"/>
         <line x1="185" y1="96"  x2="255" y2="174"/>
         <line x1="355" y1="96"  x2="285" y2="174"/>
@@ -621,7 +680,7 @@
       </g>
     </svg>
   </div>
-  <div class="highlight">
+  <div class="highlight" style="margin-top:0;">
     <p>One color class per step. Total steps $\approx$ <strong>chromatic number</strong>.</p>
   </div>
 </div>
@@ -633,6 +692,10 @@
   <div class="pill" style="margin-bottom:12px;">DAPD</div>
   <h2>Attention = Dependency Oracle</h2>
   <div class="divider"></div>
+  <ul>
+    <li><strong>Nodes</strong> = masked positions (random variables $x_i$).</li>
+    <li><strong>Edges</strong> = dependencies between them — <em>that</em> is the dependency graph.</li>
+  </ul>
   <p>Use the model's own self-attention as the coupling signal:</p>
   <div class="math-block">$$s_{ij} \;=\; \tfrac{1}{2}\bigl(a_{ij} + a_{ji}\bigr)$$</div>
   <p>Edge $(i,j)$ when $s_{ij} > \tau_t$.</p>
@@ -657,6 +720,7 @@
     </ol>
   </div>
   <p style="text-align:center;">Lookahead minimizes <em>total</em> steps, not just the current batch size.</p>
+  <p style="text-align:center; color:var(--gray-text); margin-top:4px;">(<strong>Not</strong> greedy maximum independent set — that minimizes the current step, not the total.)</p>
 </div>
 
 <style>
@@ -742,7 +806,7 @@
 
 </div><!-- end deck -->
 
-<div class="slide-num" id="slideNum">1 / 33</div>
+<div class="slide-num" id="slideNum">1 / 34</div>
 
 <script defer src="../reference/deck.js"></script>
 </body>

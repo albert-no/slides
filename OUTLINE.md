@@ -6,6 +6,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 
 ## Folders
 
+- **`icml2026/`** — ICML 2026 5-min SlidesLive recording for the position paper "The Term 'Machine Unlearning' Is Overused in LLMs" (Yoon, Jun, No). 10 slides. Poster ID 67198.
 - **`dllm/`** — Diffusion LLMs: invited talk on masked-discrete diffusion (Rainbow Padding, A2D, dgMARK, Reversal Curse, DAPD). 1 deck, no notes.
 - **`infotheory/`** — Information-theory lecture series (paired decks + `-note.html` companions):
   - `entropy/` — Foundations: entropy, KL, joint/conditional MI, DPI, Fano (2 lectures)
@@ -83,6 +84,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | TOFU / WMDP / RWKU / MUSE benchmarks | `privacy/unlearning/unlearning.html:648-702` |
 | Benign + syntactic relearning (lab) | `privacy/unlearning/unlearning.html:705-728` |
 | Pawelczyk black-box verification hardness | `privacy/unlearning/unlearning.html:748` |
+| Position: "Unlearning" overused in LLMs (5-min ICML talk) | `icml2026/icml2026.html` |
 | Kirchenbauer green-list + z-test + entropy bound | `privacy/watermark/watermark.html:164-222` |
 | Gumbel distribution + Gumbel-max trick + proof | `privacy/watermark/watermark.html:252-295` |
 | Aaronson distortion-free + proof | `privacy/watermark/watermark.html:309-337` |

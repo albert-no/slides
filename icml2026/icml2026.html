@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Position: "Machine Unlearning" Is Overused in LLMs — ICML 2026</title>
+<link rel="stylesheet" href="../reference/colors_and_type.css">
+<link rel="stylesheet" href="../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  /* Long-cite escape for paper attributions */
+  .cite-left { left: 72px !important; right: auto !important; transform: none !important;
+    text-align: left !important; max-width: 92% !important; bottom: 48px !important; }
+  /* Poster slide */
+  .poster-card { background: var(--light); border: 2px solid var(--yonsei-blue);
+    border-radius: 14px; padding: 22px 30px; max-width: 940px; margin: 18px auto; }
+  .poster-link { font-family: 'Yonsei','Noto Sans',Arial,sans-serif; word-break: break-all;
+    color: var(--yonsei-blue); font-weight: 700; }
+</style>
+</head>
+<body data-brand-logo="../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- SLIDE 1 — Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">ICML 2026 · Position Paper</div>
+  <h1>The Term &ldquo;Machine Unlearning&rdquo;<br>Is Overused in LLMs</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A call for terminology tied to guarantees</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Sangyeon Yoon &nbsp;·&nbsp; Yeachan Jun &nbsp;·&nbsp; Albert No</p>
+  <p style="margin-top:6px;">Yonsei University &nbsp;·&nbsp; ICML 2026</p>
+</div>
+
+<!-- SLIDE 2 — Hook: one word, many meanings -->
+<div class="slide">
+  <h2>One Word, Many Meanings</h2>
+  <div class="divider"></div>
+  <p>LLM deletion requests are everywhere: <strong>privacy, copyright, safety, policy</strong>.</p>
+  <p>The literature labels all of them &ldquo;<strong>unlearning</strong>.&rdquo;</p>
+  <div class="spacer"></div>
+  <div class="grid-2" style="gap:18px;">
+    <div class="card"><h3>Same label</h3><p>Refusal &nbsp;·&nbsp; entity removal &nbsp;·&nbsp; output suppression &nbsp;·&nbsp; representation obfuscation &nbsp;·&nbsp; knowledge editing.</p></div>
+    <div class="card"><h3>Different guarantees</h3><p>Indistinguishability from retraining vs. non-disclosure vs. behavior change.</p></div>
+  </div>
+  <div class="highlight"><p><strong>Position.</strong> Reserve &ldquo;machine unlearning&rdquo; for <em>dataset-defined deletion</em>; everything else needs a different name.</p></div>
+</div>
+
+<!-- SLIDE 3 — Definition of what unlearning SHOULD mean -->
+<div class="slide">
+  <h2>What &ldquo;Unlearning&rdquo; Should Mean</h2>
+  <div class="divider"></div>
+  <p>Training set $D$, forget set $F \subset D$, retain set $R = D \setminus F$.</p>
+  <p>An unlearning procedure produces $\Theta' \leftarrow \mathrm{Unlearn}(\Theta_D, F)$.</p>
+  <div class="math-block">$$\mathrm{Dist}\!\left(\mathcal{L}(\Theta'),\; \mathcal{L}(\Theta_R)\right) \;\le\; \tau,
+    \qquad \Theta_R \sim \mathrm{Train}(R).$$</div>
+  <p><strong>Baseline:</strong> retraining on $R$. &nbsp; <strong>Target:</strong> indistinguishability, not non-disclosure.</p>
+  <div class="cite">Izzo et al., AISTATS 2021 &nbsp;·&nbsp; Ginart et al., NeurIPS 2019 &nbsp;·&nbsp; Guo et al., ICML 2020.</div>
+</div>
+
+<!-- SLIDE 4 — Taxonomy of what people call "unlearning" -->
+<div class="slide">
+  <h2>What Today&rsquo;s Papers Actually Do</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="gap:18px;">
+    <div class="card"><h3>Output suppression</h3><p>GA, NPO — drive likelihood on forget targets down.</p></div>
+    <div class="card"><h3>Representation obfuscation</h3><p>Distort internal activations on probe queries.</p></div>
+    <div class="card"><h3>Knowledge editing</h3><p>Rewrite specific facts or associations.</p></div>
+    <div class="card"><h3>Behavioral refusal</h3><p>IDK templates, LUNAR, DPO-style abstention.</p></div>
+  </div>
+  <p style="margin-top:14px;">All useful. None match <strong>retrain-indistinguishability</strong>.</p>
+</div>
+
+<!-- SLIDE 5 — Benchmarks reward surface non-disclosure -->
+<div class="slide">
+  <h2>Benchmarks Reward Surface Suppression</h2>
+  <div class="divider"></div>
+  <p>Common scores: lower ROUGE on forget queries, lower QA accuracy, lower likelihood.</p>
+  <p>None of these <strong>compare to a retrained reference</strong>.</p>
+  <div class="spacer"></div>
+  <ul class="arrow">
+    <li><strong>TOFU</strong> — uses a retrained reference. Some follow-ups drop it.</li>
+    <li><strong>MUSE / RWKU / WMDP</strong> — score output failure on probes.</li>
+    <li>Refusal beats deletion on these scores.</li>
+  </ul>
+  <div class="highlight"><p>Optimizing the benchmark $\ne$ removing training influence.</p></div>
+</div>
+
+<!-- SLIDE 6 — Derived capabilities -->
+<div class="slide">
+  <h2>The Hidden Gap: Derived Capabilities</h2>
+  <div class="divider"></div>
+  <p>Training on $F$ can induce <strong>transferable</strong> behavior, not just memorized strings.</p>
+  <div class="grid-2" style="gap:18px;">
+    <div class="card"><h3>Synthetic reasoning traces</h3><p>Refusing the originals leaves the reasoning skill intact.</p></div>
+    <div class="card"><h3>Data poisoning</h3><p>Backdoors and biases persist after surface forgetting.</p></div>
+  </div>
+  <p>A retrained model would <em>lose</em> these capabilities; a suppressed model keeps them.</p>
+  <div class="cite">Pawelczyk et al., ICLR 2025 &nbsp;·&nbsp; Thaker et al., 2025 &nbsp;·&nbsp; Jia et al., 2025.</div>
+</div>
+
+<!-- SLIDE 7 — Adversarial probes -->
+<div class="slide">
+  <h2>Surface Success Breaks Easily</h2>
+  <div class="divider"></div>
+  <p>Methods that pass output-failure metrics often fail under perturbation.</p>
+  <ul class="arrow">
+    <li><strong>Paraphrase / multilingual</strong> probes recover &ldquo;forgotten&rdquo; content.</li>
+    <li><strong>Benign fine-tuning</strong> on unrelated data un-suppresses.</li>
+    <li><strong>Quantization</strong> alone can re-expose targets.</li>
+  </ul>
+  <div class="highlight"><p>Training influence is still there &mdash; just hidden by the prompting protocol.</p></div>
+  <div class="cite cite-left">Maini et al., COLM 2024 &nbsp;·&nbsp; Lynch et al., 2024 &nbsp;·&nbsp; Łucki et al., TMLR 2025 &nbsp;·&nbsp; Zhang et al., 2025 &nbsp;·&nbsp; Yoon et al., 2026.</div>
+</div>
+
+<!-- SLIDE 8 — Call for action -->
+<div class="slide">
+  <h2>Call for Action</h2>
+  <div class="divider"></div>
+  <p>When a paper claims <strong>unlearning</strong>, report:</p>
+  <ul class="num">
+    <li><strong>A reference model</strong> with provenance &mdash; $\mathrm{Train}(D \setminus F)$ or a stated proxy.</li>
+    <li><strong>Distributional distances</strong> to that reference, not just forget-query scores.</li>
+    <li><strong>Derived-capability probes</strong> &mdash; held-out tasks that test transferable skills.</li>
+    <li><strong>Intervention-based recovery</strong> &mdash; benign fine-tuning, quantization, paraphrase.</li>
+  </ul>
+  <p>For policy-driven goals, name the goal: <em>suppression</em>, <em>refusal</em>, <em>editing</em>.</p>
+</div>
+
+<!-- SLIDE 9 — Restate position -->
+<div class="slide">
+  <h2>Our Position, Restated</h2>
+  <div class="divider"></div>
+  <div class="highlight" style="padding:28px 32px;">
+    <p><strong>&ldquo;Machine unlearning&rdquo;</strong> &nbsp;=&nbsp; retrain-indistinguishability for a precisely defined forget set.</p>
+    <p>Other &ldquo;forgetting&rdquo; goals are valuable &mdash; <strong>but they are different problems</strong> and need different terms.</p>
+  </div>
+  <p>Without this distinction, benchmarks reward what is easy to measure, not what we set out to achieve.</p>
+</div>
+
+<!-- SLIDE 10 — See you at the poster -->
+<div class="slide end-slide no-footer">
+  <div class="big-word" style="color:var(--yonsei-blue);">See you at the poster!</div>
+  <div class="poster-card">
+    <p style="margin:0 0 6px 0;"><strong>Poster ID 67198 &middot; ICML 2026</strong></p>
+    <p style="margin:0 0 10px 0;">The Term &ldquo;Machine Unlearning&rdquo; Is Overused in LLMs</p>
+    <p style="margin:0;" class="poster-link">https://icml.cc/virtual/2026/poster/67198</p>
+    <p style="margin:10px 0 0 0; color:var(--gray-text);"><em>Exact time and location: TBA.</em></p>
+  </div>
+  <p class="big-word-sub" style="margin-top:14px;">Yoon &middot; Jun &middot; No &nbsp;·&nbsp; Yonsei University</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 10</div>
+
+</div><!-- end deck -->
+
+<script src="../reference/deck.js"></script>
+</body>
+</html>

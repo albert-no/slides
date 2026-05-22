@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Data Privacy: Homework #4</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+  html, body { background:#fff; color:#111; }
+  body {
+    font-family: "Latin Modern Roman", "Computer Modern Serif", Georgia, "Times New Roman", serif;
+    max-width: 720px;
+    margin: 48px auto 96px;
+    padding: 0 32px;
+    font-size: 16.5px;
+    line-height: 1.45;
+  }
+  h1.title { text-align: center; font-size: 1.5rem; font-weight: 700; margin: 0 0 4px; }
+  p.duedate { text-align: center; margin: 0 0 8px; font-size: 0.98rem; }
+  p.note { margin: 0 0 28px; font-size: 0.95rem; }
+  ol.problems { list-style: none; padding: 0; counter-reset: prob; }
+  ol.problems > li {
+    counter-increment: prob;
+    margin: 22px 0 28px;
+    padding-left: 28px;
+    position: relative;
+  }
+  ol.problems > li::before {
+    content: counter(prob) ".";
+    position: absolute;
+    left: 0;
+    font-weight: 700;
+  }
+  .probname { font-weight: 700; }
+  ol.parts { list-style: none; padding-left: 22px; counter-reset: part; margin: 6px 0 0; }
+  ol.parts > li {
+    counter-increment: part;
+    margin: 8px 0;
+    padding-left: 28px;
+    position: relative;
+  }
+  ol.parts > li::before {
+    content: "(" counter(part, lower-alpha) ")";
+    position: absolute;
+    left: 0;
+  }
+  .hint { font-size: 0.94rem; color: #333; }
+  .hint::before { content: "Hint: "; font-style: italic; }
+  hr.footer { border: none; border-top: 1px solid #999; margin: 64px 0 6px; }
+  .pageno { text-align: right; font-size: 0.85rem; color: #555; }
+  mjx-container { overflow-x: auto; overflow-y: hidden; }
+</style>
+</head>
+<body>
+
+<h1 class="title">Data Privacy: Homework #4</h1>
+<p class="duedate">Due on Wednesday 11PM, June 17, 2026</p>
+<p class="note"><strong>Note:</strong> Submit homework via LearnUS. Topics: membership inference attacks and machine unlearning.</p>
+
+<ol class="problems">
+
+<li>
+<span class="probname">Neyman–Pearson Lemma (Detailed Proof).</span>
+Let $T$ be a random variable taking values in a measurable space $(\mathcal{T}, \mathcal{B})$. Consider two simple hypotheses
+$$H_0: T \sim p_0, \qquad H_1: T \sim p_1,$$
+where $p_0, p_1$ are densities with respect to a common dominating measure $\mu$. A (randomized) test is a measurable function $\phi: \mathcal{T} \to [0, 1]$, where $\phi(t)$ is the probability of rejecting $H_0$ after observing $T = t$. Define
+$$\alpha(\phi) = \mathbb{E}_{H_0}[\phi(T)] \quad \text{(size, type-I error)}, \qquad \beta(\phi) = \mathbb{E}_{H_1}[\phi(T)] \quad \text{(power)}.$$
+Fix a level $\alpha_0 \in (0, 1)$. Prove the following three claims.
+<ol class="parts">
+<li><span class="probname">Existence.</span> Show that there exist a threshold $\tau \ge 0$ and a randomization $\gamma \in [0, 1]$ such that the test
+$$\phi^*(t) \;=\; \begin{cases} 1 & \text{if } p_1(t) > \tau\, p_0(t),\\ \gamma & \text{if } p_1(t) = \tau\, p_0(t),\\ 0 & \text{if } p_1(t) < \tau\, p_0(t),\end{cases}$$
+satisfies $\alpha(\phi^*) = \alpha_0$ exactly.
+<span class="hint">Consider the function $G(\tau) = \Pr_{H_0}[\Lambda(T) > \tau]$ where $\Lambda(t) = p_1(t)/p_0(t)$. Show $G$ is right-continuous and non-increasing, then pick $\tau$ so that $G(\tau) \le \alpha_0 \le G(\tau-)$, and choose $\gamma$ to hit equality.</span></li>
+
+<li><span class="probname">Optimality.</span> Show that for every test $\phi$ with $\alpha(\phi) \le \alpha_0$, we have $\beta(\phi) \le \beta(\phi^*)$.
+<span class="hint">Verify that for all $t$, $(\phi^*(t) - \phi(t))\,(p_1(t) - \tau\, p_0(t)) \ge 0$, then integrate.</span></li>
+
+<li><span class="probname">Uniqueness.</span> Suppose $\phi$ is any most-powerful level-$\alpha_0$ test. Show that on the set $\{t : p_1(t) \ne \tau\, p_0(t)\}$ we have $\phi(t) = \phi^*(t)$ for $\mu$-almost every $t$.
+<span class="hint">The integrand in part (b) is non-negative and integrates to $0$.</span></li>
+</ol>
+</li>
+
+<li>
+<span class="probname">DP $\Rightarrow$ MIA Bounds.</span>
+Let $M : \mathcal{X}^n \to \mathcal{Y}$ be $(\varepsilon, \delta)$-differentially private, and let $D_0, D_1$ be neighboring datasets. Consider any (possibly randomized) binary test $\mathcal{A} : \mathcal{Y} \to \{0, 1\}$ that tries to distinguish $M(D_0)$ from $M(D_1)$. Write
+$$\mathrm{FPR}(\mathcal{A}) = \Pr[\mathcal{A}(M(D_0)) = 1], \qquad \mathrm{TPR}(\mathcal{A}) = \Pr[\mathcal{A}(M(D_1)) = 1].$$
+<ol class="parts">
+<li>Show that
+$$\mathrm{TPR}(\mathcal{A}) \;\le\; e^{\varepsilon}\,\mathrm{FPR}(\mathcal{A}) + \delta, \qquad 1 - \mathrm{FPR}(\mathcal{A}) \;\le\; e^{\varepsilon}\,(1 - \mathrm{TPR}(\mathcal{A})) + \delta.$$</li>
+<li>Define the MI advantage $\mathrm{Adv}(\mathcal{A}) = \mathrm{TPR}(\mathcal{A}) - \mathrm{FPR}(\mathcal{A})$. Show the loose bound
+$$\mathrm{Adv}(\mathcal{A}) \;\le\; e^{\varepsilon} - 1 + \delta.$$
+Then, by combining both inequalities of part (a), derive the tighter Kairouz–Oh–Viswanath bound
+$$\mathrm{Adv}(\mathcal{A}) \;\le\; \frac{e^{\varepsilon} - 1 + 2\delta}{e^{\varepsilon} + 1}.$$</li>
+<li>Conclude that for $\varepsilon = 0.1$ and $\delta = 10^{-5}$, no adversary can exceed advantage $\approx 0.105$, but for $\varepsilon = 8$ the bound is vacuous.</li>
+</ol>
+</li>
+
+<li>
+<span class="probname">Bayes-Optimal Membership Test.</span>
+Let $B \in \{0, 1\}$ be a Bernoulli$(\pi)$ membership indicator and let $T$ be an observed statistic with conditional density $p_b(t)$ given $B = b$. Define the loss of any decision rule $\hat B : \mathcal{T} \to \{0, 1\}$ by the $0$-$1$ error $\Pr[\hat B(T) \ne B]$.
+<ol class="parts">
+<li>Compute the posterior $\Pr[B = 1 \mid T = t]$ in terms of $p_0, p_1, \pi$.</li>
+<li>Show that the Bayes-optimal rule (the MAP rule) is
+$$\hat B_{\mathrm{MAP}}(t) = \mathbf{1}\!\left[\Lambda(t) \ge \frac{1-\pi}{\pi}\right], \qquad \Lambda(t) = \frac{p_1(t)}{p_0(t)},$$
+and connect this to Problem 1: the Bayes-optimal MIA is a likelihood-ratio test, only the threshold changes with the prior.</li>
+<li>Suppose $T = \ell(f_\theta, z)$, the loss of model $f_\theta$ on the queried point $z$, and that $\ell \mid B = 1 \sim \mathcal{N}(\mu_{\mathrm{in}}, \sigma^2)$, $\ell \mid B = 0 \sim \mathcal{N}(\mu_{\mathrm{out}}, \sigma^2)$ with $\mu_{\mathrm{in}} < \mu_{\mathrm{out}}$. Show that the optimal rule reduces to a single-threshold loss test $\hat B = \mathbf{1}[\ell \le c]$ and compute $c$ explicitly when $\pi = 1/2$.</li>
+</ol>
+</li>
+
+<li>
+<span class="probname">Generalization Gap as a Leakage Lower Bound (Yeom).</span>
+Let $\ell(f_\theta, z) \in [0, B]$ for all $\theta, z$. Define
+$$R_{\mathrm{train}} = \mathbb{E}_{z \sim \mathrm{Unif}(D)}[\ell(f_\theta, z)], \qquad R_{\mathrm{pop}} = \mathbb{E}_{z \sim \mathcal{P}}[\ell(f_\theta, z)], \qquad \Delta = R_{\mathrm{pop}} - R_{\mathrm{train}} \ge 0.$$
+The MIA game: sample $b \sim \mathrm{Uniform}\{0, 1\}$. If $b = 1$, return $z$ uniform over $D$; else, return $z \sim \mathcal{P}$. The adversary may use any threshold attack $\mathcal{A}_\tau(z) = \mathbf{1}[\ell(f_\theta, z) \le \tau]$. Let $F_1(\tau) = \Pr[\ell \le \tau \mid b=1]$ and $F_0(\tau) = \Pr[\ell \le \tau \mid b=0]$.
+<ol class="parts">
+<li>Show that the advantage of $\mathcal{A}_\tau$ equals
+$$\mathrm{Adv}(\mathcal{A}_\tau) \;=\; F_1(\tau) - F_0(\tau).$$</li>
+<li>Using the layer-cake identity $\mathbb{E}[X] = \int_0^B (1 - F_X(t))\,\mathrm{d}t$ for $X \in [0, B]$, prove
+$$\int_0^B (F_1(t) - F_0(t))\,\mathrm{d}t \;=\; \Delta.$$</li>
+<li>Conclude that there exists a threshold $\tau^\star \in [0, B]$ for which the threshold attack achieves advantage
+$$\mathrm{Adv}(\mathcal{A}_{\tau^\star}) \;\ge\; \frac{\Delta}{B}.$$
+In other words, the generalization gap is a <em>lower</em> bound on the leakage of the best threshold attack — not an upper bound, contrary to a common informal slogan.
+<span class="hint">$\Delta = \int_0^B (F_1 - F_0)\,\mathrm{d}t \le B \cdot \sup_t (F_1(t) - F_0(t))$.</span></li>
+<li>Now suppose additionally that under each hypothesis the loss is Gaussian:
+$$\ell \mid b=1 \sim \mathcal{N}(R_{\mathrm{train}}, \sigma^2), \qquad \ell \mid b=0 \sim \mathcal{N}(R_{\mathrm{pop}}, \sigma^2).$$
+Show that the maximum-advantage threshold attack has $\tau^\star = (R_{\mathrm{train}} + R_{\mathrm{pop}})/2$ and achieves
+$$\mathrm{Adv}^\star = 2\Phi\!\left(\frac{\Delta}{2\sigma}\right) - 1.$$
+For small $\Delta/\sigma$, derive the linear approximation $\mathrm{Adv}^\star \approx \Delta/(\sigma\sqrt{2\pi})$ and explain why noisier loss distributions reduce leakage.</li>
+</ol>
+</li>
+
+<li>
+<span class="probname">LiRA Closed Form and Decision Boundary.</span>
+Assume that for a target record $z$, the per-shadow-model loss has Gaussian distributions under the two membership hypotheses:
+$$\ell \mid (z \in D) \sim \mathcal{N}(\mu_{\mathrm{in}}, \sigma_{\mathrm{in}}^2), \qquad \ell \mid (z \notin D) \sim \mathcal{N}(\mu_{\mathrm{out}}, \sigma_{\mathrm{out}}^2).$$
+<ol class="parts">
+<li>Derive the log-likelihood ratio
+$$\log \Lambda(\ell) \;=\; \log \frac{\mathcal{N}(\ell ; \mu_{\mathrm{in}}, \sigma_{\mathrm{in}}^2)}{\mathcal{N}(\ell ; \mu_{\mathrm{out}}, \sigma_{\mathrm{out}}^2)} \;=\; \frac{(\ell - \mu_{\mathrm{out}})^2}{2\sigma_{\mathrm{out}}^2} - \frac{(\ell - \mu_{\mathrm{in}})^2}{2\sigma_{\mathrm{in}}^2} + \log\frac{\sigma_{\mathrm{out}}}{\sigma_{\mathrm{in}}}.$$</li>
+<li>Show that for general $\sigma_{\mathrm{in}} \ne \sigma_{\mathrm{out}}$ the optimal decision region $\{\log \Lambda > \log \tau\}$ is the complement of an interval (or a single half-line, or empty) on the loss axis. Identify when it is the complement of a bounded interval vs.\ a half-line.</li>
+<li>Show that in the homoscedastic case $\sigma_{\mathrm{in}} = \sigma_{\mathrm{out}} = \sigma$, the optimal MIA reduces to the single threshold $\mathcal{A}(z) = \mathbf{1}[\ell \le c]$, and express $c$ in terms of $\mu_{\mathrm{in}}, \mu_{\mathrm{out}}, \sigma, \tau$.</li>
+<li>In the homoscedastic case, derive the closed-form ROC: at false-positive rate $\alpha$, the optimal true-positive rate is
+$$\mathrm{TPR}(\alpha) \;=\; \Phi\!\left(\Phi^{-1}(\alpha) + \frac{\mu_{\mathrm{out}} - \mu_{\mathrm{in}}}{\sigma}\right),$$
+where $\Phi$ is the standard normal CDF.</li>
+</ol>
+</li>
+
+<li>
+<span class="probname">Concrete MIA on a Gaussian Mean Model.</span>
+A "training" algorithm maps $D = (z_1, \ldots, z_n)$ with $z_i \in \mathbb{R}$ to the parameter
+$$\theta(D) \;=\; \bar z + W, \quad \bar z = \frac{1}{n}\sum_{i=1}^n z_i, \quad W \sim \mathcal{N}(0, \rho^2) \text{ independent}.$$
+Assume the population $\mathcal{P}$ is $\mathcal{N}(0, 1)$, and the adversary observes $\theta$ plus a candidate point $z^*$. The MIA game: $b \sim \mathrm{Uniform}\{0,1\}$. If $b=1$, $z^* = z_1$ (a fresh training sample, included in $D$); if $b=0$, $z^* \sim \mathcal{P}$ independent of $D$.
+<ol class="parts">
+<li>Derive the conditional density of $\theta$ given $z^*$ in each hypothesis. Show that, conditional on $z^*$,
+$$\theta \mid (b=1) \sim \mathcal{N}\!\left(\tfrac{z^*}{n}, \tfrac{n-1}{n^2} + \rho^2\right), \qquad \theta \mid (b=0) \sim \mathcal{N}\!\left(0, \tfrac{1}{n} + \rho^2\right).$$</li>
+<li>Show that the optimal adversary's test statistic is the (conditional) likelihood ratio $\Lambda(\theta, z^*) = p(\theta \mid b=1, z^*)/p(\theta \mid b=0, z^*)$, and write down $\log \Lambda$ as a quadratic in $\theta$.</li>
+<li>Now suppose the inputs are clipped, $|z_i| \le 1$, so the $L_2$-sensitivity of $\bar z$ under one-element neighbors is $2/n$. The Gaussian mechanism with $\rho \ge (2/n\varepsilon)\sqrt{2\log(1.25/\delta)}$ makes the release $(\varepsilon, \delta)$-DP. Using Problem 2(b), give a numerical upper bound on the optimal MIA advantage for $\varepsilon = 0.1$, $\delta = 10^{-5}$, and comment on why $\varepsilon = 1$ already gives a vacuous bound.</li>
+</ol>
+</li>
+
+<li>
+<span class="probname">Influence-Function Unlearning (Closed Form).</span>
+Let $L(\theta; D) = \frac{1}{n}\sum_{i=1}^n \ell(\theta; z_i)$ be a twice-differentiable, $\lambda$-strongly convex loss in $\theta \in \mathbb{R}^d$ (so the Hessian $H_\theta = \nabla^2 L(\theta; D) \succeq \lambda I$). Let $\theta_o = \arg\min_\theta L(\theta; D)$ and $\theta_{-z} = \arg\min_\theta L(\theta; D \setminus \{z\})$.
+<ol class="parts">
+<li>Consider the parametric family $L_t(\theta) = L(\theta; D) - \frac{t}{n}\,\ell(\theta; z)$ for $t \in [0, 1]$ and let $\theta(t) = \arg\min L_t(\theta)$ (so $\theta(0) = \theta_o$ and $\theta(1) = \theta_{-z}$ up to a normalization factor). Use the first-order optimality condition and the implicit function theorem to derive
+$$\frac{\mathrm{d}\theta(t)}{\mathrm{d} t}\bigg|_{t=0} \;=\; \frac{1}{n}\,H_{\theta_o}^{-1}\,\nabla_\theta \ell(\theta_o; z).$$</li>
+<li>Conclude the first-order Newton-step approximation
+$$\theta_{-z} - \theta_o \;\approx\; \frac{1}{n}\,H_{\theta_o}^{-1}\,\nabla_\theta \ell(\theta_o; z).$$
+Hence the "unlearned" parameter is $\theta_u = \theta_o + \frac{1}{n}H_{\theta_o}^{-1}\nabla_\theta \ell(\theta_o; z)$.</li>
+<li>Assume in addition that $\ell$ is $G$-Lipschitz in $\theta$ (so $\|\nabla_\theta \ell\| \le G$). Show that the $L_2$-sensitivity of the unlearned parameter to the choice of deleted point $z$ versus its neighbor $z'$ is bounded:
+$$\sup_{z, z'} \|\theta_u(D, z) - \theta_u(D, z')\| \;\le\; \frac{2 G}{\lambda n}.$$
+(Treat $H_{\theta_o}^{-1}$ as fixed with operator norm $\le 1/\lambda$; this is the first-order sensitivity used in certified unlearning.)</li>
+</ol>
+</li>
+
+<li>
+<span class="probname">Certified $(\varepsilon, \delta)$-Unlearning by Gaussian Noise.</span>
+Building on Problem 7, let $A(D) = \arg\min_\theta L(\theta; D)$ be the (deterministic) retrain map, and let
+$$\mathcal{U}(D, z) \;=\; \theta_o(D) + \frac{1}{n} H^{-1}_{\theta_o(D)} \nabla_\theta \ell(\theta_o(D); z) + N, \qquad N \sim \mathcal{N}(0, \sigma^2 I_d).$$
+Assume $\ell$ is $\lambda$-strongly convex and $G$-Lipschitz, and that the first-order approximation in Problem 7(b) has $L_2$-error bounded by $\eta := \|\theta_u^{\text{1st-order}} - A(D \setminus \{z\})\| \le C_2 G^2/(\lambda^2 n^2)$ for some universal constant $C_2$ (a known second-order bound; you may use this without proof).
+<ol class="parts">
+<li>Show that the total $L_2$-sensitivity (relative to retrain) is bounded:
+$$\Big\| \mathcal{U}(D, z) - N - A(D \setminus \{z\}) \Big\| \;\le\; \eta \;\le\; \frac{C_2\,G^2}{\lambda^2 n^2}.$$</li>
+<li>Apply the Gaussian mechanism privacy bound: if $\sigma \ge \eta\sqrt{2 \log(1.25/\delta)}/\varepsilon$, then $\mathcal{U}(D, z)$ is $(\varepsilon, \delta)$-indistinguishable from $A(D \setminus \{z\}) + N$. Conclude
+$$\sigma \;\ge\; \frac{C_2\, G^2}{\lambda^2 n^2 \varepsilon}\sqrt{2\log(1.25/\delta)}$$
+gives an $(\varepsilon, \delta)$-certified unlearning algorithm.</li>
+<li>How does the required noise scale with $n$? Compare to the Gaussian-mechanism noise needed for $(\varepsilon, \delta)$-DP of the trained model itself ($\sigma \propto 1/(n\varepsilon)$). Explain in one or two sentences why the unlearning noise is smaller for large $n$.</li>
+</ol>
+</li>
+
+<li>
+<span class="probname">NPO Has a Bounded Gradient; GA Does Not.</span>
+For LLM unlearning, let $\pi_\theta(y \mid x)$ denote the model's likelihood of completion $y$ given prompt $x$, and let $\pi_{\mathrm{ref}}$ be a fixed reference model. The forget set is $\mathcal{D}_F$. Two unlearning losses:
+<div style="margin: 6px 0 6px 18px;">
+$\mathcal{L}_{\mathrm{GA}}(\theta) = -\,\mathbb{E}_{(x,y)\sim\mathcal{D}_F}\!\left[-\log \pi_\theta(y \mid x)\right] = \mathbb{E}\!\left[\log \pi_\theta(y \mid x)\right],$<br>
+$\mathcal{L}_{\mathrm{NPO}}(\theta) = \tfrac{2}{\beta}\,\mathbb{E}\!\left[\log\!\left(1 + \big(\tfrac{\pi_\theta(y\mid x)}{\pi_{\mathrm{ref}}(y\mid x)}\big)^{\beta}\right)\right] \quad (\beta > 0).$
+</div>
+<ol class="parts">
+<li>Compute $\nabla_\theta \mathcal{L}_{\mathrm{GA}}$. Using the identity $\nabla_\theta \log\pi_\theta = \nabla_\theta \pi_\theta / \pi_\theta$, show that for any sample with $\pi_\theta(y\mid x) \to 0$ (and $\|\nabla_\theta \pi_\theta\|$ bounded away from zero in some direction), $\|\nabla_\theta \mathcal{L}_{\mathrm{GA}}\| \to \infty$. Explain in one sentence why this drives the GA optimization to escape the data distribution ("GA collapse").</li>
+<li>Let $u(\theta) = \beta \log(\pi_\theta(y\mid x)/\pi_{\mathrm{ref}}(y\mid x))$. Show that
+$$\mathcal{L}_{\mathrm{NPO}}(\theta) = \frac{2}{\beta}\,\mathbb{E}[\log(1 + e^{u(\theta)})], \qquad \frac{\partial \mathcal{L}_{\mathrm{NPO}}}{\partial u} = \frac{2}{\beta}\,\sigma(u) \;\in\; \left(0, \tfrac{2}{\beta}\right),$$
+where $\sigma$ is the logistic sigmoid. Conclude that
+$$\big\| \nabla_\theta \mathcal{L}_{\mathrm{NPO}} \big\| \;\le\; 2\,\mathbb{E}\big[\|\nabla_\theta \log \pi_\theta(y\mid x)\|\big].$$</li>
+<li>Show that this gradient bound is uniform in $\theta$ (it does not blow up as $\pi_\theta \to 0$), in sharp contrast to part (a). State briefly why this bounded-per-step divergence is what makes NPO "safe" for unlearning.</li>
+</ol>
+</li>
+
+<li>
+<span class="probname">Black-Box Unlearning Audits Require Many Queries.</span>
+Let $\theta_o$ and $\theta_u$ be two LLMs with output distributions $P_0$ and $P_1$ on prompts $x \in \mathcal{X}$. Let $\mathrm{TV}(P_0, P_1) = \tfrac{1}{2}\int |p_0(y\mid x) - p_1(y\mid x)|\, \mathrm{d}\mu(y, x) \le \eta$ (averaged over a fixed query distribution). An auditor draws $q$ i.i.d. prompts $x_1, \ldots, x_q$, observes one sample $y_i \sim P_b(\cdot \mid x_i)$ per prompt, and outputs $\hat b \in \{0, 1\}$.
+<ol class="parts">
+<li><span class="probname">(Le Cam two-point lower bound.)</span> Show that for any test based on $q$ samples,
+$$\Pr_{b=0}[\hat b \ne 0] + \Pr_{b=1}[\hat b \ne 1] \;\ge\; 1 - \mathrm{TV}(P_0^{\otimes q}, P_1^{\otimes q}).$$
+<span class="hint">For any test $\psi$ and any pair of distributions $P, Q$, $\mathbb{E}_P[\psi] - \mathbb{E}_Q[\psi] \le \mathrm{TV}(P, Q)$.</span></li>
+
+<li>Show that $\mathrm{TV}(P_0^{\otimes q}, P_1^{\otimes q}) \le q \cdot \mathrm{TV}(P_0, P_1) \le q\eta$ by a hybrid (telescoping) argument over the $q$ coordinates.</li>
+
+<li>Conclude that to guarantee total error $\le \alpha$ (i.e., $\Pr_0[\hat b \ne 0] + \Pr_1[\hat b \ne 1] \le 2\alpha$), the auditor needs
+$$q \;\ge\; \frac{1 - 2\alpha}{\eta}.$$
+Tighter $\chi^2$-style bounds give $q = \Omega(1/\eta^2)$. Why does this make single-prompt audits of LLM unlearning fundamentally insufficient when $\theta_u, \theta_o$ differ only by a small distributional perturbation?</li>
+</ol>
+</li>
+
+</ol>
+
+<hr class="footer">
+<p class="pageno">Page 1 of 1</p>
+
+</body>
+</html>

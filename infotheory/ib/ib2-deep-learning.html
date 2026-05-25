@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IB 2 — IB and Deep Learning</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- TITLE -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Information Bottleneck · Lecture 2 of 2</div>
+  <h1>IB and<br>Deep Learning</h1>
+  <div class="divider"></div>
+  <p class="subtitle">From theory to neural networks and back</p>
+  <p style="font-weight:500;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Information Theory · 2026</p>
+</div>
+
+<!-- TOC -->
+<div class="slide">
+  <h2>Contents</h2><div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">DNN as Markov chain</div>
+      <div class="toc-sub">DPI constrains every layer</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Information plane hypothesis</div>
+      <div class="toc-sub">Fitting, then compressing</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Variational Information Bottleneck</div>
+      <div class="toc-sub">Tractable IB for neural networks</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The debate</div>
+      <div class="toc-sub">What survives scrutiny</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════ PART 01 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>DNN as Markov Chain</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Each layer processes, each layer loses</p>
+</div>
+
+<div class="slide">
+  <h2>Why IT for Deep Learning?</h2><div class="divider"></div>
+  <p>Information theory offers tools that <strong>classical learning theory lacks:</strong></p>
+  <ul>
+    <li><strong>DPI:</strong> fundamental limits on what any representation can achieve</li>
+    <li><strong>MI:</strong> a single quantity that measures both compression and prediction</li>
+    <li><strong>Variational bounds:</strong> tractable surrogates for intractable MI (BA, DV, NWJ from Lectures MI-1,2)</li>
+  </ul>
+  <p>The IB gives deep learning a <strong>principled objective</strong>: not just "minimize the loss," but "minimize the loss <strong>while compressing the representation.</strong>"</p>
+  <div class="highlight"><p>Classical IT asks: how many bits to describe data?<br>IB asks: <strong>which bits matter?</strong></p></div>
+</div>
+
+<div class="slide">
+  <h2>Layer Representations</h2><div class="divider"></div>
+  <p>An $L$-layer network maps input $X$ to output $\hat Y$ through hidden representations:</p>
+  <div style="display:flex; justify-content:center; align-items:center; gap:14px; margin:22px 0; font-size:1.55rem;">
+    <span>$X$</span>
+    <span style="color:var(--yonsei-blue); font-weight:700;">$\to$</span>
+    <span>$T_1$</span>
+    <span style="color:var(--yonsei-blue); font-weight:700;">$\to$</span>
+    <span>$T_2$</span>
+    <span style="color:var(--yonsei-blue); font-weight:700;">$\to$</span>
+    <span>$\cdots$</span>
+    <span style="color:var(--yonsei-blue); font-weight:700;">$\to$</span>
+    <span>$T_L$</span>
+    <span style="color:var(--yonsei-blue); font-weight:700;">$\to$</span>
+    <span>$\hat Y$</span>
+  </div>
+  <p>Each $T_l = f_l(T_{l-1})$ is a <strong>deterministic function</strong> of the previous layer.</p>
+  <p>Together with target $Y$: the chain $Y - X - T_1 - T_2 - \cdots - T_L$ is <strong>Markov</strong>.</p>
+</div>
+
+<div class="slide">
+  <h2>DPI for Every Layer</h2><div class="divider"></div>
+  <div class="card" style="padding: 10px 16px; margin-bottom: 10px;">
+    <p><strong>Recall (DPI).</strong> $Y - X - T$ Markov $\implies$ $I(T;Y) \le I(X;Y)$.</p>
+  </div>
+  <p>Applied layer-by-layer:</p>
+  <div class="math-block">$$I(X;Y) \ge I(T_1;Y) \ge I(T_2;Y) \ge \cdots \ge I(T_L;Y).$$</div>
+  <p>Deeper layers can only <strong>lose</strong> information about $Y$.</p>
+  <p>A good network loses <strong>as little as possible</strong> about $Y$ while discarding irrelevant information about $X$.</p>
+</div>
+
+<div class="slide">
+  <h2>Layers in the Information Plane</h2><div class="divider"></div>
+  <p>Each layer $l$ maps to a point $(I(X;T_l),\; I(T_l;Y))$.</p>
+  <p>DPI constrains both coordinates monotonically:</p>
+  <div class="math-block">$$\begin{aligned}
+  I(X;T_1) &\ge I(X;T_2) \ge \cdots \ge I(X;T_L), \\
+  I(T_1;Y) &\ge I(T_2;Y) \ge \cdots \ge I(T_L;Y).
+\end{aligned}$$</div>
+  <p>Layers trace a <strong>path from upper-right to lower-left</strong> in the plane.</p>
+  <div class="highlight"><p>An ideal network: layers <strong>hug the IB curve</strong>, shedding $I(X;T)$ without losing $I(T;Y)$.</p></div>
+</div>
+
+
+<!-- ════ PART 02 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Information Plane Hypothesis</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Does training drive compression?</p>
+</div>
+
+<div class="slide">
+  <h2>The Hypothesis</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Conjecture (Shwartz-Ziv and Tishby, 2017).</h3>
+    <p>DNN training via SGD has <strong>two distinct phases</strong> in the information plane:</p>
+    <p><strong>Phase 1 (fitting):</strong> $I(T_l;Y)$ increases rapidly for all layers.</p>
+    <p><strong>Phase 2 (compression):</strong> $I(X;T_l)$ decreases for hidden layers.</p>
+  </div>
+  <p>Phase 1 learns the task. Phase 2 discards irrelevant features.</p>
+  <div class="cite">Shwartz-Ziv and Tishby, "Opening the Black Box of DNNs via Information", 2017.</div>
+</div>
+
+<div class="slide">
+  <h2>The Fitting Phase</h2><div class="divider"></div>
+  <p><strong>Early training epochs:</strong></p>
+  <ul>
+    <li>Gradients are large, weights change rapidly</li>
+    <li>$I(T_l; Y)$ increases for all layers: the network <strong>learns to predict</strong></li>
+    <li>$I(X; T_l)$ also increases: representations become more informative about $X$</li>
+  </ul>
+  <p>Both coordinates move <strong>up and to the right</strong> in the information plane.</p>
+  <p>Duration: typically short (few hundred iterations).</p>
+</div>
+
+<div class="slide">
+  <h2>The Compression Phase</h2><div class="divider"></div>
+  <p><strong>Later training epochs:</strong></p>
+  <ul>
+    <li>Gradients shrink, SGD noise dominates the signal</li>
+    <li>$I(T_l; Y)$ stays roughly constant: prediction quality is stable</li>
+    <li>$I(X; T_l)$ <strong>decreases</strong>: hidden layers forget irrelevant input details</li>
+  </ul>
+  <p>Layers drift <strong>leftward</strong> in the information plane, approaching the IB curve.</p>
+  <div class="highlight"><p>Claim: <strong>SGD noise</strong> acts as a natural regularizer, driving representations toward the IB-optimal tradeoff.</p></div>
+</div>
+
+<div class="slide">
+  <h2>Why Compression Might Help</h2><div class="divider"></div>
+  <p>Compressed representations generalize better. The IB perspective explains why:</p>
+  <ul>
+    <li><strong>Low $I(X;T)$:</strong> fewer bits to memorize = fewer training-specific patterns</li>
+    <li><strong>High $I(T;Y)$:</strong> bits that remain are predictive of the target</li>
+  </ul>
+  <p>The IB curve is the <strong>Pareto frontier</strong>: any representation not on the curve either wastes bits or loses prediction quality.</p>
+  <p><strong>Generalization bound</strong> (informal): excess risk $\lesssim \sqrt{I(S;W)/n}$, where $S$ is the training set and $W$ are the weights.</p>
+  <div class="cite">Xu and Raginsky, "Information-Theoretic Analysis of Generalization", ISIT 2017.</div>
+</div>
+
+
+<!-- ════ PART 03 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Variational Information Bottleneck</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Making the IB objective tractable for neural networks</p>
+</div>
+
+<div class="slide">
+  <h2>The Tractability Problem</h2><div class="divider"></div>
+  <p>The IB objective $\min I(X;T) - \beta\, I(T;Y)$ requires computing two MI terms.</p>
+  <p>For continuous neural representations, <strong>both are intractable:</strong></p>
+  <ul>
+    <li>$I(X;T)$: requires the marginal $p(t) = \mathbb{E}_{p(x)}[p(t|x)]$ (expectation over data)</li>
+    <li>$I(T;Y)$: requires the posterior $p(y|t)$ (Bayes with intractable marginal)</li>
+  </ul>
+  <p>Solution: <strong>variational bounds</strong> on each term. The same bounds we derived in Lectures MI-1 and Diffusion-1.</p>
+</div>
+
+<div class="slide">
+  <h2>Upper Bound on $I(X;T)$</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Lemma (Rate Upper Bound).</h3>
+    <p>For any distribution $r(t)$:</p>
+    <div class="math-block">$$I(X;T) \le \mathbb{E}_{p(x)}\!\left[D_{\mathrm{KL}}\!\left(p(t|x)\,\big\|\, r(t)\right)\right].$$</div>
+    <p>Equality iff $r(t) = p(t)$.</p>
+  </div>
+  <p><strong>Proof.</strong> $\;\mathbb{E}_{p(x)}[D_{\mathrm{KL}}(p(t|x)\| r(t))] - I(X;T) = D_{\mathrm{KL}}(p(t)\| r(t)) \ge 0. \;\square$</p>
+  <p>Choose $r(t) = \mathcal{N}(0, I)$: the bound becomes a <strong>closed-form KL</strong>.</p>
+</div>
+
+<div class="slide">
+  <h2>Lower Bound on $I(T;Y)$</h2><div class="divider"></div>
+  <div class="card" style="padding: 10px 16px; margin-bottom: 10px;">
+    <p><strong>Recall (Barber-Agakov, Lecture MI-1).</strong> $I(T;Y) \ge \mathbb{E}_{p(t,y)}[\log q(y|t)] + H(Y).$</p>
+  </div>
+  <p>For any variational decoder $q_\psi(y|t)$:</p>
+  <div class="math-block">$$I(T;Y) \ge \mathbb{E}_{p(t,y)}[\log q_\psi(y|t)] + H(Y).$$</div>
+  <p>Equality iff $q_\psi(y|t) = p(y|t)$.</p>
+  <p>For classification: $q_\psi(y|t) = \mathrm{Cat}(y;\, \mathrm{softmax}(W_\psi t))$.</p>
+  <p>The bound becomes the <strong>negative cross-entropy loss</strong>.</p>
+</div>
+
+<div class="slide">
+  <h2>VIB Objective</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Definition (Variational Information Bottleneck, Alemi et al., 2017).</h3>
+    <p>Combining both bounds, the VIB objective is:</p>
+    <div class="math-block">$$\mathcal{L}_{\mathrm{VIB}} = \underbrace{\mathbb{E}_{p(x,y)}\,\mathbb{E}_{p_\phi(t|x)}\!\left[\log q_\psi(y|t)\right]}_{\text{prediction}} - \beta\,\underbrace{\mathbb{E}_{p(x)}\!\left[D_{\mathrm{KL}}\!\left(p_\phi(t|x)\,\big\|\, r(t)\right)\right]}_{\text{compression}}.$$</div>
+    <p>Maximize over encoder $\phi$ and decoder $\psi$.</p>
+  </div>
+  <div class="cite">Alemi, Fischer, Dillon, and Murphy, "Deep Variational Information Bottleneck", ICLR 2017.</div>
+</div>
+
+<div class="slide">
+  <h2>VIB Architecture</h2><div class="divider"></div>
+  <p>Instantiate with Gaussian encoder $p_\phi(t|x) = \mathcal{N}(\mu_\phi(x),\, \sigma^2_\phi(x)\,I)$ and prior $r(t) = \mathcal{N}(0, I)$:</p>
+  <div class="math-block">$$\mathcal{L}_{\mathrm{VIB}} = \frac{1}{n}\sum_{i=1}^{n}\left[\log q_\psi(y_i | t_i) - \frac{\beta}{2}\sum_{k=1}^{K}\!\left(1 + \log\sigma^2_{\phi,k}(x_i) - \mu^2_{\phi,k}(x_i) - \sigma^2_{\phi,k}(x_i)\right)\right],$$</div>
+  <p>where $t_i = \mu_\phi(x_i) + \sigma_\phi(x_i) \odot \varepsilon$, $\;\varepsilon \sim \mathcal{N}(0,I)$ (reparameterization trick).</p>
+</div>
+
+<div class="slide">
+  <h2>Connection to the VAE</h2><div class="divider"></div>
+  <div class="card" style="padding: 10px 16px; margin-bottom: 10px;">
+    <p><strong>Recall (VAE loss, Lecture Diff-1).</strong> $\mathcal{L}_{\mathrm{VAE}} = \mathbb{E}[\log f_\theta(x|z)] - D_{\mathrm{KL}}(g_\phi(z|x)\| f(z)).$</p>
+  </div>
+  <table style="width:100%; margin:16px 0; border-collapse:collapse;">
+    <tr style="border-bottom:2px solid var(--slate);">
+      <th style="text-align:left; padding:8px;"></th>
+      <th style="text-align:left; padding:8px;">VAE</th>
+      <th style="text-align:left; padding:8px;">VIB</th>
+    </tr>
+    <tr style="border-bottom:1px solid var(--slate);">
+      <td style="padding:8px;"><strong>First term</strong></td>
+      <td style="padding:8px;">$\log f_\theta(x|z)$ (reconstruction)</td>
+      <td style="padding:8px;">$\log q_\psi(y|t)$ (prediction)</td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--slate);">
+      <td style="padding:8px;"><strong>KL term</strong></td>
+      <td style="padding:8px;">$D_{\mathrm{KL}}(g_\phi \| f)$</td>
+      <td style="padding:8px;">$\beta\, D_{\mathrm{KL}}(p_\phi \| r)$</td>
+    </tr>
+    <tr>
+      <td style="padding:8px;"><strong>Goal</strong></td>
+      <td style="padding:8px;">Reconstruct $X$</td>
+      <td style="padding:8px;">Predict $Y$</td>
+    </tr>
+  </table>
+  <div class="highlight"><p>VIB = VAE with a <strong>classifier decoder</strong> instead of a reconstruction decoder. Same architecture, different objective.</p></div>
+</div>
+
+<div class="slide">
+  <h2>What $\beta$ Controls</h2><div class="divider"></div>
+  <ul>
+    <li><strong>$\beta = 0$:</strong> standard cross-entropy training, no compression</li>
+    <li><strong>Small $\beta$:</strong> mild regularization, representations slightly compressed</li>
+    <li><strong>Large $\beta$:</strong> heavy compression, representations approach the prior $r(t) = \mathcal{N}(0,I)$</li>
+  </ul>
+  <p><strong>Empirical finding (Alemi et al.):</strong></p>
+  <ul>
+    <li>Moderate $\beta$ improves <strong>robustness</strong> to adversarial examples</li>
+    <li>Compressed representations generalize better to distribution shifts</li>
+    <li>Too large $\beta$ degrades accuracy (over-compression)</li>
+  </ul>
+</div>
+
+
+<!-- ════ PART 04 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>The Debate</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Does compression really happen in deep networks?</p>
+</div>
+
+<div class="slide">
+  <h2>The Estimation Problem</h2><div class="divider"></div>
+  <p>For <strong>deterministic</strong> layers $T_l = f_l(T_{l-1})$ with continuous input:</p>
+  <div class="math-block">$$I(X; T_l) = H(T_l) - \underbrace{H(T_l | X)}_{= 0} = H(T_l).$$</div>
+  <p>Differential entropy $H(T_l)$ of a deterministic function can be <strong>infinite</strong> (or undefined).</p>
+  <p>Shwartz-Ziv &amp; Tishby used <strong>binning</strong> to estimate $I(X;T_l)$: discretize $T_l$ into bins, compute discrete MI.</p>
+  <div class="highlight"><p>Binning introduces a <strong>resolution parameter</strong>. The observed compression may reflect the binning, not the network.</p></div>
+</div>
+
+<div class="slide">
+  <h2>Activation Function Dependence</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Key Finding (Saxe et al., 2019).</h3>
+    <p>The compression phase <strong>depends on the activation function:</strong></p>
+    <p><strong>tanh:</strong> compression observed (saturating nonlinearity clusters activations).</p>
+    <p><strong>ReLU:</strong> no clear compression phase.</p>
+  </div>
+  <p><strong>Why?</strong> Saturating activations like tanh map many inputs to similar outputs, effectively discretizing the representation. ReLU preserves the input structure.</p>
+  <div class="cite">Saxe, Bansal, Dapello, Advani, and Kolchinsky, "On the IB Theory of Deep Learning", JSTAT 2019.</div>
+</div>
+
+<div class="slide">
+  <h2>What Does Not Survive</h2><div class="divider"></div>
+  <ul>
+    <li><strong>Universal two-phase claim:</strong> compression is not a general property of DNN training with SGD</li>
+    <li><strong>SGD noise as the driver:</strong> compression occurs with full-batch gradient descent for tanh networks too</li>
+    <li><strong>Binned MI as a diagnostic:</strong> the value depends on bin size, making comparisons fragile</li>
+  </ul>
+  <p>The <strong>specific mechanism</strong> (SGD noise → compression) does not hold in general.</p>
+</div>
+
+<div class="slide">
+  <h2>What Survives</h2><div class="divider"></div>
+  <ul>
+    <li><strong>The information plane as a diagnostic:</strong> plotting $(I(X;T_l), I(T_l;Y))$ remains a useful visualization, even if the values are approximate</li>
+    <li><strong>VIB as a training objective:</strong> well-motivated, practical, and provably controls the rate-relevance tradeoff</li>
+    <li><strong>Geometric compression:</strong> hidden representations do become more clustered by class, even without MI compression</li>
+    <li><strong>Generalization bounds via MI:</strong> the $I(S;W)$ framework provides valid (if loose) bounds</li>
+  </ul>
+  <div class="highlight"><p>The IB <strong>principle</strong> is sound. The debate is about whether standard training <strong>implicitly</strong> solves IB, or whether we need to do so <strong>explicitly</strong> (via VIB).</p></div>
+</div>
+
+<div class="slide">
+  <h2>IT Implications for Deep Learning</h2><div class="divider"></div>
+  <p>Regardless of the compression debate, the IB framework yields concrete insights:</p>
+  <ul>
+    <li><strong>Generalization $\leftrightarrow$ compression:</strong> $I(S;W)$ bounds the generalization gap. Lower MI between data and weights means better generalization</li>
+    <li><strong>Representation quality:</strong> the IB curve defines the <strong>Pareto frontier</strong>. Representations below the curve are suboptimal</li>
+    <li><strong>Regularization as rate control:</strong> dropout, weight decay, and noise injection all reduce $I(X;T)$. The IB explains <strong>why</strong> they help</li>
+    <li><strong>Sufficient statistics:</strong> the optimal representation at $\beta \to \infty$ is a minimal sufficient statistic. Feature selection $\equiv$ IT compression</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>The IB Arc</h2><div class="divider"></div>
+  <p>This two-lecture series connects five information-theoretic tools:</p>
+  <table style="width:100%; margin:12px 0; border-collapse:collapse;">
+    <tr style="border-bottom:2px solid var(--slate);">
+      <th style="text-align:left; padding:6px;">Tool</th>
+      <th style="text-align:left; padding:6px;">From lecture</th>
+      <th style="text-align:left; padding:6px;">Role in IB</th>
+    </tr>
+    <tr style="border-bottom:1px solid var(--slate);">
+      <td style="padding:6px;">MI</td>
+      <td style="padding:6px;">Entropy (Lec 2)</td>
+      <td style="padding:6px;">Both terms in the Lagrangian</td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--slate);">
+      <td style="padding:6px;">DPI</td>
+      <td style="padding:6px;">Entropy (Lec 2)</td>
+      <td style="padding:6px;">Constrains the information plane</td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--slate);">
+      <td style="padding:6px;">R(D)</td>
+      <td style="padding:6px;">Lossy (Lec 1)</td>
+      <td style="padding:6px;">IB = R(D) with log-loss</td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--slate);">
+      <td style="padding:6px;">BA bound</td>
+      <td style="padding:6px;">MI (Lec 1)</td>
+      <td style="padding:6px;">Lower bound on relevance in VIB</td>
+    </tr>
+    <tr>
+      <td style="padding:6px;">ELBO/VAE</td>
+      <td style="padding:6px;">Diffusion (Lec 1)</td>
+      <td style="padding:6px;">VIB = VAE with classifier decoder</td>
+    </tr>
+  </table>
+</div>
+
+<!-- RECAP -->
+<div class="slide">
+  <h2>Summary</h2><div class="divider"></div>
+  <p><strong>DNN layers</strong> form a Markov chain: DPI constrains each layer in the information plane.</p>
+  <p><strong>Fitting-then-compressing</strong> (Shwartz-Ziv &amp; Tishby): observed for saturating activations, not universal.</p>
+  <p><strong>Variational IB:</strong> tractable IB for neural networks via variational bounds on both MI terms. Same architecture as VAE, different objective.</p>
+  <p><strong>The IB principle</strong> is a valid lens for representation learning, whether or not training implicitly implements it.</p>
+</div>
+
+<!-- CLOSER -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">Q&amp;A</div>
+  <p class="big-word-sub">Thank you.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 30</div>
+
+</div><!-- end deck -->
+
+<script src="../../reference/deck.js"></script>
+</body>
+</html>

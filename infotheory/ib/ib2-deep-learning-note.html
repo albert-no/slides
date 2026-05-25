@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>IB 2 — Notes: IB and Deep Learning</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  body { max-width: 780px; margin: 40px auto; padding: 0 24px; font-family: 'Noto Sans', Arial, sans-serif; color: #1a1a1a; line-height: 1.7; }
+  h1 { font-size: 2rem; border-bottom: 3px solid #003876; padding-bottom: 8px; }
+  h2 { font-size: 1.5rem; color: #003876; margin-top: 2em; }
+  h3 { font-size: 1.2rem; margin-top: 1.5em; }
+  .note-section { margin-bottom: 2em; }
+  .math-block { margin: 16px 0; padding: 12px 16px; background: #f4f6f9; border-radius: 8px; overflow-x: auto; }
+  hr { border: none; border-top: 1px solid #e8ecf0; margin: 2em 0; }
+  code { background: #f4f6f9; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+</style>
+</head>
+<body>
+
+<h1>IB 2 — Notes: IB and Deep Learning</h1>
+<p>Companion notes for <code>ib2-deep-learning.html</code>.</p>
+
+<hr>
+
+<div class="note-section">
+<h2>§01 — DNN as Markov chain</h2>
+
+<h3>DPI for deterministic functions</h3>
+<p>For a deterministic function $T = f(X)$, the Markov chain $Y - X - T$ holds trivially (T is a function of X, so $p(t|x,y) = p(t|x)$). DPI then gives $I(T;Y) \le I(X;Y)$.</p>
+<p>For <strong>invertible</strong> functions, equality holds: $I(f(X);Y) = I(X;Y)$ when $f$ is bijective. This is why the first layer of a network (if it has more units than the input dimension) can preserve all information. Only layers that reduce dimension or apply non-invertible nonlinearities lose information.</p>
+
+<h3>When does DPI give strict inequality?</h3>
+<p>Strict inequality $I(T;Y) &lt; I(X;Y)$ occurs when $T = f(X)$ is <strong>not</strong> a sufficient statistic of $X$ for $Y$. In practice, most hidden layers are not sufficient statistics, so strict inequality is the norm.</p>
+
+<h3>The ReLU subtlety</h3>
+<p>ReLU($a$) = max(0, $a$) is not invertible (negative values map to 0), so information is lost. However, for wide layers with many neurons, the <em>layer-wise</em> mapping $T_l = \text{ReLU}(W_l T_{l-1} + b_l)$ may lose very little information in practice if most activations are positive.</p>
+</div>
+
+<hr>
+
+<div class="note-section">
+<h2>§02 — Information plane hypothesis</h2>
+
+<h3>Original experimental setup (Shwartz-Ziv &amp; Tishby)</h3>
+<p>Network: 5 fully-connected hidden layers (12-10-7-5-4-3-2 architecture), tanh activations, trained on a synthetic binary classification task (12-dimensional input, 2 classes defined by a spherical boundary).</p>
+<p>MI estimation: activations were binned into 30 equal-width bins per dimension. Discrete MI was computed from the binned joint distributions.</p>
+<p>Key observation: in the information plane, layers first move right and up (fitting), then move left while staying roughly at the same height (compression).</p>
+
+<h3>The SGD noise argument</h3>
+<p>Shwartz-Ziv &amp; Tishby argued that SGD noise drives compression via a diffusion-like process in weight space. The argument is that once the network is near a good solution, gradients are small and SGD noise dominates, causing a random walk that effectively averages out input-specific information.</p>
+<p>This argument has parallels to the stochastic relaxation view: if the dynamics of the weights are diffusive (Brownian), then by the second law of thermodynamics (entropy increase), the mutual information $I(X;T)$ should decrease over time.</p>
+
+<h3>Generalization bounds via MI</h3>
+<p>The Xu-Raginsky (2017) bound states:</p>
+<div class="math-block">$$|\text{gen}(\mu, P_{S})| \le \sqrt{\frac{2\sigma^2\, I(S; W)}{n}},$$</div>
+<p>where $S$ is the training set, $W$ is the learned weights, $\sigma^2$ is a sub-Gaussian parameter of the loss, and $n$ is the sample size. This is a PAC-Bayes-style bound connecting MI to generalization.</p>
+<p>The bound is typically loose for practical networks but establishes the <em>principle</em> that lower MI between training data and weights correlates with better generalization.</p>
+</div>
+
+<hr>
+
+<div class="note-section">
+<h2>§03 — Variational Information Bottleneck</h2>
+
+<h3>Proof of the rate upper bound</h3>
+<p>We need to show $I(X;T) \le \mathbb{E}_{p(x)}[D_{\mathrm{KL}}(p(t|x) \| r(t))]$ for any $r(t)$.</p>
+<div class="math-block">$$\begin{aligned}
+\mathbb{E}_{p(x)}[D_{\mathrm{KL}}(p(t|x) \| r(t))]
+&= \mathbb{E}_{p(x)}\left[\sum_t p(t|x) \log \frac{p(t|x)}{r(t)}\right] \\
+&= \mathbb{E}_{p(x)}\left[\sum_t p(t|x) \log \frac{p(t|x)}{p(t)} + \sum_t p(t|x) \log \frac{p(t)}{r(t)}\right] \\
+&= I(X;T) + \mathbb{E}_{p(x)}\left[\sum_t p(t|x) \log \frac{p(t)}{r(t)}\right] \\
+&= I(X;T) + \sum_t p(t) \log \frac{p(t)}{r(t)} \\
+&= I(X;T) + D_{\mathrm{KL}}(p(t) \| r(t)) \\
+&\ge I(X;T).
+\end{aligned}$$</div>
+<p>The key step is that $\mathbb{E}_{p(x)}[\sum_t p(t|x) \cdot g(t)] = \sum_t p(t) \cdot g(t)$ by the tower property.</p>
+
+<h3>Why $r(t) = \mathcal{N}(0,I)$?</h3>
+<p>With Gaussian encoder $p_\phi(t|x) = \mathcal{N}(\mu_\phi(x), \text{diag}(\sigma^2_\phi(x)))$ and standard Gaussian prior, the KL has a closed form (same as the VAE, see <code>diffusion/diff1-vae-elbo-note.html</code>):</p>
+<div class="math-block">$$D_{\mathrm{KL}}(p_\phi(t|x) \| r(t)) = \frac{1}{2}\sum_{k=1}^K \left(\mu_{\phi,k}^2(x) + \sigma_{\phi,k}^2(x) - 1 - \log \sigma_{\phi,k}^2(x)\right).$$</div>
+
+<h3>Connection to Barber-Agakov</h3>
+<p>The lower bound on $I(T;Y)$ used in VIB is exactly the Barber-Agakov bound from <code>mi/mi1-bounds.html</code>:</p>
+<div class="math-block">$$I(T;Y) = H(Y) - H(Y|T) = H(Y) + \mathbb{E}_{p(t,y)}[\log p(y|t)].$$</div>
+<p>Since $p(y|t)$ is unknown, replace with a variational approximation $q_\psi(y|t) \le p(y|t)$ in cross-entropy sense. The gap is exactly $\mathbb{E}_{p(t)}[D_{\mathrm{KL}}(p(y|t) \| q_\psi(y|t))] \ge 0$.</p>
+
+<h3>VIB vs $\beta$-VAE</h3>
+<p>The $\beta$-VAE (Higgins et al., 2017) also multiplies the KL term by a coefficient $\beta$. The parallel is exact:</p>
+<ul>
+<li>$\beta$-VAE: trades reconstruction quality against disentanglement of the latent code.</li>
+<li>VIB: trades prediction quality against compression of the representation.</li>
+</ul>
+<p>Both are instances of the IB principle applied to different decoders.</p>
+
+<h3>Reparameterization trick</h3>
+<p>Same as in the VAE (see <code>diffusion/diff1-vae-elbo.html</code>): to backpropagate through the sampling $t \sim p_\phi(t|x) = \mathcal{N}(\mu_\phi(x), \sigma^2_\phi(x) I)$, reparameterize as $t = \mu_\phi(x) + \sigma_\phi(x) \odot \varepsilon$ where $\varepsilon \sim \mathcal{N}(0,I)$.</p>
+</div>
+
+<hr>
+
+<div class="note-section">
+<h2>§04 — The debate</h2>
+
+<h3>Saxe et al. (2019) in detail</h3>
+<p>Key experiments:</p>
+<ol>
+<li><strong>Linear networks:</strong> no compression phase at all (MI is constant after convergence). This shows compression is not a generic property of gradient-based training.</li>
+<li><strong>tanh networks:</strong> compression observed, but it also occurs with full-batch gradient descent (no SGD noise needed). The saturation of tanh effectively bins the activations.</li>
+<li><strong>ReLU networks:</strong> no clear compression phase. Since ReLU is piecewise linear (not saturating), activations are not discretized.</li>
+</ol>
+
+<h3>The binning critique</h3>
+<p>For a deterministic layer $T_l = f(X)$, if $X$ is continuous and $f$ is smooth and injective on a set of positive measure, then $I(X;T_l) = \infty$ (the function is invertible, so knowing $T_l$ determines $X$ exactly).</p>
+<p>Binning regularizes: $I_{\Delta}(X;T_l) = I(X; \lfloor T_l / \Delta \rfloor)$ is finite and depends on the bin width $\Delta$. As $\Delta \to 0$, $I_{\Delta} \to \infty$. The observed "compression" in the information plane may reflect the network's activations concentrating into fewer bins, not genuine information loss.</p>
+
+<h3>Geometric compression</h3>
+<p>Even when MI-based compression is not observed, hidden representations do undergo <strong>geometric compression</strong>: within-class variance decreases relative to between-class variance. This is measurable without binning and correlates with generalization.</p>
+<p>Goldfeld et al. (2019) proposed using neural network-based MI estimators (building on the bounds from <code>mi/mi1-bounds.html</code>) to avoid binning artifacts. The results are more nuanced: some compression is observed, but the magnitude and timing depend on architecture, activation, and estimator choice.</p>
+
+<h3>Current consensus (as of 2025)</h3>
+<ul>
+<li>The IB <em>objective</em> is a principled regularizer (VIB). This is not in dispute.</li>
+<li>Whether standard training <em>implicitly</em> solves IB is architecture- and activation-dependent.</li>
+<li>The information plane is a useful <em>visualization tool</em>, but MI values for deterministic networks require careful estimation.</li>
+<li>Information-theoretic generalization bounds ($I(S;W)$) provide valid theoretical guarantees, independent of the compression debate.</li>
+</ul>
+</div>
+
+<hr>
+
+<div class="note-section">
+<h2>References</h2>
+<ul>
+<li>Shwartz-Ziv and Tishby, "Opening the Black Box of Deep Neural Networks via Information", 2017.</li>
+<li>Alemi, Fischer, Dillon, and Murphy, "Deep Variational Information Bottleneck", ICLR 2017.</li>
+<li>Saxe, Bansal, Dapello, Advani, and Kolchinsky, "On the Information Bottleneck Theory of Deep Learning", JSTAT 2019.</li>
+<li>Xu and Raginsky, "Information-Theoretic Analysis of Generalization Capability of Learning Algorithms", ISIT 2017.</li>
+<li>Goldfeld, van den Berg, Greenewald, Melnyk, Nguyen, Elenberg, and Wornell, "Estimating Information Flow in Deep Neural Networks", ICML 2019.</li>
+<li>Higgins, Matthey, Pal, Burgess, Glorot, Botvinick, Mohamed, and Lerchner, "beta-VAE: Learning Basic Visual Concepts with a Constrained Variational Framework", ICLR 2017.</li>
+<li>Steinke and Zakynthinou, "Reasoning About Generalization via Conditional Mutual Information", COLT 2020.</li>
+</ul>
+</div>
+
+</body>
+</html>

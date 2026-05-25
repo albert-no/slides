@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IB 1 — The Information Bottleneck</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- TITLE -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Information Bottleneck · Lecture 1 of 2</div>
+  <h1>The Information<br>Bottleneck</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Optimal compression for relevance</p>
+  <p style="font-weight:500;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Information Theory · 2026</p>
+</div>
+
+<!-- TOC -->
+<div class="slide">
+  <h2>Contents</h2><div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Compression for relevance</div>
+      <div class="toc-sub">The IB Lagrangian and its Markov constraint</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Self-consistent equations</div>
+      <div class="toc-sub">Optimal encoder via variational calculus</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">IB as rate-distortion</div>
+      <div class="toc-sub">Log-loss distortion unifies the two problems</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The information plane</div>
+      <div class="toc-sub">DPI, phase transitions, and DNN layers</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════ PART 01 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Compression for Relevance</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Not all bits are worth keeping</p>
+</div>
+
+<div class="slide">
+  <h2>The Central Question</h2><div class="divider"></div>
+  <p>Observe <strong>input</strong> $X$. Care about <strong>target</strong> $Y$.</p>
+  <p>Compress $X$ into a <strong>representation</strong> $T$.</p>
+  <p>Goal: keep what $T$ says about $Y$, discard the rest.</p>
+  <div class="highlight"><p><strong>Classic compression</strong> minimizes $I(X;T)$ for fixed distortion on $X$.<br><strong>IB compression</strong> minimizes $I(X;T)$ for fixed information about $Y$.</p></div>
+</div>
+
+<div class="slide">
+  <h2>From Source Coding to Relevance</h2><div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>Rate-distortion (lossy/)</h3>
+      <p>Minimize $I(X;T)$</p>
+      <p>Subject to $\mathbb{E}[d(X,T)] \le D$</p>
+      <p>Distortion on <strong>input space</strong></p>
+      <p>Reconstruct $X$ from $T$</p>
+    </div>
+    <div>
+      <h3>Information Bottleneck</h3>
+      <p>Minimize $I(X;T)$</p>
+      <p>Subject to $I(T;Y) \ge I_0$</p>
+      <p>Relevance in <strong>target space</strong></p>
+      <p>Predict $Y$ from $T$</p>
+    </div>
+  </div>
+  <p><strong>Both are MI minimization problems.</strong> The difference: what the representation must preserve.</p>
+  <p>$I(X;T)$ is the <strong>rate</strong>: the number of bits the representation carries about the input. This is the same rate as in Shannon's source coding theorem.</p>
+</div>
+
+<div class="slide">
+  <h2>The Markov Constraint</h2><div class="divider"></div>
+  <p>$T$ depends on $X$ only, not on $Y$ directly:</p>
+  <div style="display:flex; justify-content:center; align-items:center; gap:14px; margin:22px 0; font-size:1.55rem;">
+    <span>$Y$</span>
+    <span style="color:var(--gray-text);">$\longleftrightarrow$</span>
+    <span>$X$</span>
+    <span style="color:var(--yonsei-blue); font-weight:700;">$\longrightarrow$</span>
+    <span>$T$</span>
+  </div>
+  <p>The encoder $p(t|x)$ is a <strong>stochastic map</strong> from $X$ to $T$.</p>
+  <p>Markov chain $Y - X - T$: all information $T$ has about $Y$ flows through $X$.</p>
+</div>
+
+<div class="slide">
+  <h2>IB Lagrangian</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Definition (Information Bottleneck, Tishby et al., 2000).</h3>
+    <p>The <strong>IB problem</strong> minimizes over all stochastic maps $p(t|x)$:</p>
+    <div class="math-block">$$\mathcal{L}_{\mathrm{IB}} = I(X;T) - \beta\, I(T;Y), \qquad \beta \ge 0.$$</div>
+  </div>
+  <p>$I(X;T)$: <strong>compression cost</strong> (rate in the source coding sense).</p>
+  <p>$I(T;Y)$: <strong>relevance reward</strong> (bits $T$ preserves about $Y$).</p>
+  <p>$\beta$ trades rate against prediction. Single-letter: no block length, no asymptotics.</p>
+  <div class="cite">Tishby, Pereira, and Bialek, "The Information Bottleneck Method", 1999.</div>
+</div>
+
+<div class="slide">
+  <h2>Two Extremes of $\beta$</h2><div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>$\beta \to 0$: maximum compression</h3>
+      <p>Only $I(X;T)$ matters.</p>
+      <p>Optimal: $T \perp X$ (trivial map).</p>
+      <p>$I(T;Y) = 0$: no prediction.</p>
+    </div>
+    <div>
+      <h3>$\beta \to \infty$: maximum relevance</h3>
+      <p>Only $I(T;Y)$ matters.</p>
+      <p>Optimal: $T$ is a <strong>sufficient statistic</strong> of $X$ for $Y$.</p>
+      <p>$I(T;Y) = I(X;Y)$: full information.</p>
+    </div>
+  </div>
+  <div class="highlight"><p>Finite $\beta$ interpolates: a controlled <strong>lossy summary</strong> that keeps the relevant bits.</p></div>
+</div>
+
+<div class="slide">
+  <h2>DPI Constrains the Problem</h2><div class="divider"></div>
+  <div class="card" style="padding: 10px 16px; margin-bottom: 10px;">
+    <p><strong>Recall (Data Processing Inequality).</strong> If $Y - X - T$ is Markov, then $I(T;Y) \le I(X;Y)$.</p>
+  </div>
+  <p>The ceiling on relevance is $I(X;Y)$: <strong>no representation can create information.</strong></p>
+  <p>The IB problem asks: among all $T$ with $I(X;T) \le R$, which achieves the highest $I(T;Y)$?</p>
+  <p><strong>Exercise.</strong> Show that DPI also gives $I(T;Y) \le I(X;T)$ when $Y - X - T$. <em>Hint: apply DPI to the Markov chain $Y - X - T$, then to $T - X - Y$.</em></p>
+</div>
+
+
+<!-- ════ PART 02 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Self-Consistent Equations</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The optimal encoder is a Gibbs distribution</p>
+</div>
+
+<div class="slide">
+  <h2>Optimization Setup</h2><div class="divider"></div>
+  <p>Minimize over all stochastic maps $p(t|x)$:</p>
+  <div class="math-block">$$\mathcal{L}_{\mathrm{IB}}[p(t|x)] = I(X;T) - \beta\, I(T;Y),$$</div>
+  <p>subject to normalization $\sum_t p(t|x) = 1$ for each $x$.</p>
+  <p>The joint $p(x,y)$ is <strong>fixed and known</strong>. The only free variable is the encoder $p(t|x)$.</p>
+  <p>Both MI terms depend on $p(t|x)$, but also on $p(t)$ and $p(y|t)$, which are <strong>derived quantities.</strong></p>
+</div>
+
+<div class="slide">
+  <h2>Derived Quantities</h2><div class="divider"></div>
+  <p>Given the encoder $p(t|x)$ and the known joint $p(x,y)$:</p>
+  <div class="math-block">$$\begin{aligned}
+  p(t) &= \sum_x p(x)\, p(t|x), \\[6pt]
+  p(y|t) &= \sum_x p(y|x)\, \frac{p(x)\, p(t|x)}{p(t)}.
+\end{aligned}$$</div>
+  <p>The <strong>cluster marginal</strong> $p(t)$ and the <strong>cluster-conditional</strong> $p(y|t)$ are both functions of the encoder.</p>
+</div>
+
+<div class="slide">
+  <h2>Optimal Encoder</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (IB Optimal Encoder, Tishby et al., 2000).</h3>
+    <p>The encoder that minimizes $\mathcal{L}_{\mathrm{IB}}$ has the form:</p>
+    <div class="math-block">$$p(t|x) = \frac{p(t)}{Z(x,\beta)}\, \exp\!\bigl(-\beta\, D_{\mathrm{KL}}\!\left(p(y|x)\,\big\|\, p(y|t)\right)\bigr),$$</div>
+    <p>where $Z(x,\beta) = \sum_t p(t)\, \exp\!\bigl(-\beta\, D_{\mathrm{KL}}(p(y|x)\| p(y|t))\bigr)$ is the partition function.</p>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Proof — Variational Derivative</h2><div class="divider"></div>
+  <p>Lagrange multipliers $\lambda(x)$ for normalization. Set $\frac{\delta\mathcal{L}}{\delta p(t|x)} = 0$.</p>
+  <p>The $I(X;T)$ term contributes:</p>
+  <div class="math-block">$$\frac{\partial\, I(X;T)}{\partial\, p(t|x)} = p(x)\,\log \frac{p(t|x)}{p(t)}.$$</div>
+  <p>The $I(T;Y)$ term contributes:</p>
+  <div class="math-block">$$\frac{\partial\, I(T;Y)}{\partial\, p(t|x)} = p(x)\sum_y p(y|x)\,\log \frac{p(y|t)}{p(y)}.$$</div>
+</div>
+
+<div class="slide">
+  <h2>Proof — Isolate $p(t|x)$</h2><div class="divider"></div>
+  <p>Set derivative to zero, solve for $\log p(t|x)$:</p>
+  <div class="math-block">$$\log p(t|x) = \log p(t) + \beta \sum_y p(y|x)\,\log \frac{p(y|t)}{p(y)} + c(x).$$</div>
+  <p>Rewrite the sum via KL decomposition:</p>
+  <div class="math-block">$$\sum_y p(y|x)\log\frac{p(y|t)}{p(y)} = -D_{\mathrm{KL}}(p(y|x)\|p(y|t)) + D_{\mathrm{KL}}(p(y|x)\|p(y)).$$</div>
+</div>
+
+<div class="slide">
+  <h2>Proof — Conclusion</h2><div class="divider"></div>
+  <p>$D_{\mathrm{KL}}(p(y|x)\|p(y))$ does not depend on $t$: absorb into $Z(x,\beta)$.</p>
+  <p>Exponentiate:</p>
+  <div class="math-block">$$p(t|x) = \frac{p(t)}{Z(x,\beta)}\,\exp\!\bigl(-\beta\, D_{\mathrm{KL}}(p(y|x)\| p(y|t))\bigr). \quad\square$$</div>
+  <div class="highlight"><p>The encoder is a <strong>Gibbs distribution</strong>: assignment cost = KL between the input's and the cluster's predictive distributions.</p></div>
+</div>
+
+<div class="slide">
+  <h2>Self-Consistency</h2><div class="divider"></div>
+  <p>The theorem gives three coupled equations:</p>
+  <div class="math-block">$$\begin{aligned}
+  p(t|x) &= \frac{p(t)}{Z(x,\beta)}\,\exp\!\bigl(-\beta\, D_{\mathrm{KL}}(p(y|x)\|p(y|t))\bigr), \\[6pt]
+  p(t) &= \sum_x p(x)\, p(t|x), \\[6pt]
+  p(y|t) &= \sum_x p(y|x)\, p(x|t).
+\end{aligned}$$</div>
+  <p>Each equation depends on the output of the others.</p>
+  <p>Solve by <strong>alternating iteration</strong>, exactly like Blahut–Arimoto for rate-distortion.</p>
+</div>
+
+<div class="slide">
+  <h2>Reading the Encoder</h2><div class="divider"></div>
+  <p><strong>Gibbs form:</strong> $p(t|x) \propto p(t)\,e^{-\beta\, D_{\mathrm{KL}}}$.</p>
+  <ul>
+    <li><strong>$D_{\mathrm{KL}}(p(y|x)\|p(y|t))$</strong> = cost of assigning $x$ to cluster $t$</li>
+    <li>Low KL: the cluster predicts $Y$ almost as well as $x$ does</li>
+    <li>High KL: the cluster distorts $x$'s predictive structure</li>
+  </ul>
+  <p><strong>$\beta$ controls softness:</strong> large $\beta$ sharpens the encoder toward hard assignment; small $\beta$ spreads mass across clusters.</p>
+  <div class="highlight"><p>The encoder is a <strong>soft relevance-weighted clustering</strong> of the input space.</p></div>
+</div>
+
+
+<!-- ════ PART 03 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>IB as Rate-Distortion</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Log-loss distortion unifies the two problems</p>
+</div>
+
+<div class="slide">
+  <h2>Recall — Rate-Distortion</h2><div class="divider"></div>
+  <div class="card" style="padding: 10px 16px; margin-bottom: 10px;">
+    <p><strong>Recall (Rate-distortion function).</strong> $R(D) = \min_{p(t|x):\, \mathbb{E}[d(X,T)] \le D}\; I(X;T).$</p>
+  </div>
+  <p>Minimizes the rate $I(X;T)$ subject to a distortion constraint $\mathbb{E}[d(X,T)] \le D$.</p>
+  <p>The Lagrangian: $I(X;T) + \beta\,\mathbb{E}[d(X,T)]$.</p>
+  <p>Classical distortions: squared error, Hamming distance.</p>
+  <p><strong>Question:</strong> is there a distortion that turns R(D) into the IB problem?</p>
+</div>
+
+<div class="slide">
+  <h2>Key Identity</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Lemma (Relevance Decomposition).</h3>
+    <p>For $Y - X - T$ Markov:</p>
+    <div class="math-block">$$I(T;Y) = I(X;Y) - \mathbb{E}_{p(x,t)}\!\left[D_{\mathrm{KL}}\!\left(p(y|x)\,\big\|\,p(y|t)\right)\right].$$</div>
+  </div>
+  <p>Relevance = input MI minus expected prediction distortion.</p>
+  <p>The gap $\mathbb{E}[D_{\mathrm{KL}}]$ measures how much $T$ degrades prediction of $Y$ relative to $X$.</p>
+</div>
+
+<div class="slide">
+  <h2>Proof of Relevance Decomposition</h2><div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+  \mathbb{E}_{p(x,t)}\!\left[D_{\mathrm{KL}}(p(y|x)\|p(y|t))\right]
+    &= \sum_{x,t} p(x,t)\sum_y p(y|x)\log\frac{p(y|x)}{p(y|t)} \\
+    &= -H(Y|X) + H(Y|T) \\
+    &= I(X;Y) - I(T;Y). \quad\square
+\end{aligned}$$</div>
+  <p>Split the log ratio. First sum gives $-H(Y|X)$ (marginalizing over $t$).</p>
+  <p>Second sum: $\sum_x p(x|t) p(y|x) = p(y|t)$, so the cross-entropy becomes $H(Y|T)$.</p>
+</div>
+
+<div class="slide">
+  <h2>IB = R(D) with Log-Loss</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (IB-RD Equivalence).</h3>
+    <p>Define the <strong>log-loss distortion</strong>:</p>
+    <div class="math-block">$$d_{\mathrm{IB}}(x,t) = D_{\mathrm{KL}}\!\left(p(y|x)\,\big\|\,p(y|t)\right).$$</div>
+    <p>Then the IB Lagrangian $I(X;T) - \beta\,I(T;Y)$ is equivalent to the R(D) Lagrangian $I(X;T) + \beta\,\mathbb{E}[d_{\mathrm{IB}}(X,T)]$, up to a constant $\beta\, I(X;Y)$.</p>
+  </div>
+  <p><strong>Proof.</strong> Substitute the Relevance Decomposition Lemma:</p>
+  <div class="math-block">$$I(X;T) - \beta\, I(T;Y) = I(X;T) + \beta\,\mathbb{E}[d_{\mathrm{IB}}] - \beta\, I(X;Y). \quad\square$$</div>
+</div>
+
+<div class="slide">
+  <h2>Why Log-Loss Is Natural</h2><div class="divider"></div>
+  <ul>
+    <li>$d_{\mathrm{IB}}(x,t) = 0 \;\Longleftrightarrow\; p(y|x) = p(y|t)$: <strong>zero distortion</strong> iff the cluster predicts $Y$ perfectly from $x$'s perspective</li>
+    <li>Cross-entropy loss in supervised learning measures the same gap</li>
+    <li>The <strong>Blahut–Arimoto</strong> iteration for R(D) with $d_{\mathrm{IB}}$ recovers the IB self-consistent equations</li>
+  </ul>
+  <div class="highlight"><p><strong>IB is rate-distortion where the distortion measures prediction quality, not reconstruction fidelity.</strong></p></div>
+</div>
+
+
+<!-- ════ PART 04 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>The Information Plane</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Visualizing the compression-relevance tradeoff</p>
+</div>
+
+<div class="slide">
+  <h2>The Information Plane</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Definition (Information Plane).</h3>
+    <p>For a representation $T$ of $X$ with target $Y$, the <strong>information plane</strong> is the space $(I(X;T),\; I(T;Y))$.</p>
+  </div>
+  <p>Every encoder $p(t|x)$ maps to a <strong>single point</strong> in this plane.</p>
+  <p>$x$-axis: compression cost. $y$-axis: relevance reward.</p>
+  <p>Goal: move <strong>up</strong> (more relevance) and <strong>left</strong> (more compression).</p>
+</div>
+
+<div class="slide">
+  <h2>DPI Constrains the Region</h2><div class="divider"></div>
+  <p>The Markov chain $Y - X - T$ imposes two ceilings:</p>
+  <div class="math-block">$$\begin{aligned}
+  I(T;Y) &\le I(X;Y), \\
+  I(T;Y) &\le I(X;T).
+\end{aligned}$$</div>
+  <p>The <strong>achievable region</strong> lies below both lines.</p>
+  <p>The identity $T = X$ sits at the corner $(H(X),\; I(X;Y))$: maximum cost, maximum relevance.</p>
+  <p>The trivial $T \perp X$ sits at the origin $(0, 0)$.</p>
+</div>
+
+<div class="slide">
+  <h2>The IB Curve</h2><div class="divider"></div>
+  <p>The <strong>IB curve</strong> is the <strong>optimal frontier</strong> in the information plane:</p>
+  <div class="math-block">$$I_{\mathrm{IB}}(R) = \max_{p(t|x):\; I(X;T) \le R}\; I(T;Y).$$</div>
+  <p><strong>Properties:</strong></p>
+  <ul>
+    <li>Concave and monotonically non-decreasing</li>
+    <li>Starts at $(0,0)$ and ends at $(H(X), I(X;Y))$</li>
+    <li>Slope at each point is $1/\beta$ (Lagrange multiplier)</li>
+  </ul>
+  <p>Analogous to the R(D) curve: a <strong>fundamental limit</strong> on the tradeoff.</p>
+</div>
+
+<div class="slide">
+  <h2>Phase Transitions</h2><div class="divider"></div>
+  <p>As $\beta$ increases from $0$, the IB solution undergoes <strong>structural phase transitions:</strong></p>
+  <ul>
+    <li><strong>$\beta &lt; \beta_1$:</strong> trivial solution, $T \perp X$, single cluster</li>
+    <li><strong>$\beta = \beta_1$:</strong> first bifurcation, two clusters emerge</li>
+    <li><strong>$\beta$ increases:</strong> successive bifurcations, finer clustering</li>
+    <li><strong>$\beta \to \infty$:</strong> each $x$ maps to its own cluster</li>
+  </ul>
+  <p>The critical $\beta_1$ depends on the <strong>spectral gap</strong> of $p(y|x)$.</p>
+  <div class="highlight"><p>IB produces a <strong>hierarchy of representations</strong> at different resolutions, controlled by a single parameter.</p></div>
+</div>
+
+<div class="slide">
+  <h2>DNN Layers in the Plane</h2><div class="divider"></div>
+  <p>An $L$-layer network produces representations $T_1, \ldots, T_L$:</p>
+  <div style="display:flex; justify-content:center; align-items:center; gap:14px; margin:18px 0; font-size:1.55rem;">
+    <span>$Y$</span>
+    <span style="color:var(--gray-text);">$\longleftrightarrow$</span>
+    <span>$X$</span>
+    <span style="color:var(--yonsei-blue); font-weight:700;">$\to$</span>
+    <span>$T_1$</span>
+    <span style="color:var(--yonsei-blue); font-weight:700;">$\to$</span>
+    <span>$T_2$</span>
+    <span style="color:var(--yonsei-blue); font-weight:700;">$\to$</span>
+    <span>$\cdots$</span>
+    <span style="color:var(--yonsei-blue); font-weight:700;">$\to$</span>
+    <span>$T_L$</span>
+  </div>
+  <p>DPI gives a <strong>monotone chain</strong> in the plane:</p>
+  <div class="math-block">$$I(X;T_1) \ge I(X;T_2) \ge \cdots \ge I(X;T_L).$$</div>
+  <p>Each layer can only <strong>lose</strong> information about $X$ (and hence about $Y$).</p>
+  <p>Layers trace a path from $(H(X), I(X;Y))$ toward the origin.</p>
+</div>
+
+<div class="slide">
+  <h2>Toward Deep Learning</h2><div class="divider"></div>
+  <p>The information plane gives a <strong>diagnostic lens</strong> for deep networks:</p>
+  <ul>
+    <li>Does training move layers toward the IB curve?</li>
+    <li>Do networks <strong>compress</strong> during training?</li>
+    <li>How to <strong>compute</strong> $I(X;T)$ for continuous, high-dimensional $T$?</li>
+  </ul>
+  <p><strong>Next lecture:</strong></p>
+  <ul>
+    <li>Shwartz-Ziv &amp; Tishby (2017): the <strong>fitting-then-compressing</strong> hypothesis</li>
+    <li>Alemi et al. (2017): the <strong>Variational Information Bottleneck</strong></li>
+    <li>The debate: what survives and what doesn't</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>The IT Perspective</h2><div class="divider"></div>
+  <p>The IB reframes <strong>representation learning</strong> as an information-theoretic optimization:</p>
+  <ul>
+    <li><strong>MI as currency:</strong> both cost and reward measured in bits</li>
+    <li><strong>DPI as constraint:</strong> no representation can exceed $I(X;Y)$</li>
+    <li><strong>R(D) as structure:</strong> the IB curve is a rate-distortion function</li>
+    <li><strong>Blahut-Arimoto as algorithm:</strong> the same iteration solves both problems</li>
+  </ul>
+  <div class="highlight"><p>Every concept in the IB was <strong>already in the course</strong>: the IB is the bridge that connects classical information theory to modern deep learning.</p></div>
+</div>
+
+<!-- RECAP -->
+<div class="slide">
+  <h2>Summary</h2><div class="divider"></div>
+  <p><strong>IB problem:</strong> $\min_{p(t|x)} I(X;T) - \beta\, I(T;Y)$ subject to $Y - X - T$ Markov.</p>
+  <p><strong>Optimal encoder:</strong> Gibbs form $p(t|x) \propto p(t)\,\exp\!\bigl(-\beta\, D_{\mathrm{KL}}(p(y|x)\|p(y|t))\bigr)$.</p>
+  <p><strong>Rate-distortion view:</strong> IB $\equiv$ R(D) with log-loss $d(x,t) = D_{\mathrm{KL}}(p(y|x)\|p(y|t))$.</p>
+  <p><strong>Information plane:</strong> $(I(X;T), I(T;Y))$ bounded by DPI; IB curve is the optimal frontier.</p>
+</div>
+
+<!-- CLOSER -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">Q&amp;A</div>
+  <p class="big-word-sub">Thank you.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 35</div>
+
+</div><!-- end deck -->
+
+<script src="../../reference/deck.js"></script>
+</body>
+</html>

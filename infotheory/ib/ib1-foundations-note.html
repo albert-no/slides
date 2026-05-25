@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>IB 1 — Notes: The Information Bottleneck</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  body { max-width: 780px; margin: 40px auto; padding: 0 24px; font-family: 'Noto Sans', Arial, sans-serif; color: #1a1a1a; line-height: 1.7; }
+  h1 { font-size: 2rem; border-bottom: 3px solid #003876; padding-bottom: 8px; }
+  h2 { font-size: 1.5rem; color: #003876; margin-top: 2em; }
+  h3 { font-size: 1.2rem; margin-top: 1.5em; }
+  .note-section { margin-bottom: 2em; }
+  .math-block { margin: 16px 0; padding: 12px 16px; background: #f4f6f9; border-radius: 8px; overflow-x: auto; }
+  hr { border: none; border-top: 1px solid #e8ecf0; margin: 2em 0; }
+  code { background: #f4f6f9; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+</style>
+</head>
+<body>
+
+<h1>IB 1 — Notes: The Information Bottleneck</h1>
+<p>Companion notes for <code>ib1-foundations.html</code>. Full derivations and context that don't fit on the slides.</p>
+
+<hr>
+
+<div class="note-section">
+<h2>§01 — Compression for relevance</h2>
+
+<h3>Why IB, not just rate-distortion?</h3>
+<p>Classical rate-distortion theory (covered in <code>lossy/lossy1-foundations.html</code>) measures how well $T$ <em>reconstructs</em> $X$ under a distortion $d(x,t)$. The distortion is defined on the input space and doesn't reference any target $Y$.</p>
+<p>The IB shifts the question: we don't care how well $T$ reconstructs $X$; we care how well $T$ <em>predicts</em> $Y$. Two inputs $x_1, x_2$ that induce the same $p(y|x)$ should map to the same cluster, even if they're far apart in input space.</p>
+
+<h3>Sufficiency and the IB</h3>
+<p>A <strong>sufficient statistic</strong> $T = S(X)$ for $Y$ satisfies $p(y|x) = p(y|S(x))$ for all $x$, i.e., $Y - S(X) - X$ is also Markov (in addition to $Y - X - S(X)$). For a sufficient statistic, $I(T;Y) = I(X;Y)$ — no information is lost.</p>
+<p>The IB at $\beta \to \infty$ seeks the <strong>minimal sufficient statistic</strong>: the most compressed $T$ with $I(T;Y) = I(X;Y)$. For finite $\beta$, the IB relaxes sufficiency — it tolerates some loss in $I(T;Y)$ in exchange for compression.</p>
+
+<h3>Connection to Fano's inequality</h3>
+<p>Recall from <code>entropy/entropy2-joint-mi-fano.html</code> that Fano's inequality gives:</p>
+<div class="math-block">$$P_e \ge 1 - \frac{I(X;T) + 1}{\log|\mathcal{X}|}.$$</div>
+<p>The IB can be seen as a refinement: instead of bounding error from rate, it directly trades rate against relevance (MI with the target $Y$).</p>
+</div>
+
+<hr>
+
+<div class="note-section">
+<h2>§02 — Self-consistent equations</h2>
+
+<h3>Full variational derivative</h3>
+<p>We expand the $I(X;T)$ derivative in detail. Write:</p>
+<div class="math-block">$$I(X;T) = \sum_{x,t} p(x)\, p(t|x)\, \log\frac{p(t|x)}{p(t)}.$$</div>
+<p>Taking $\frac{\partial}{\partial p(t|x)}$ for a specific $(x,t)$ pair:</p>
+<div class="math-block">$$\frac{\partial}{\partial p(t|x)}\left[p(x)\, p(t|x)\,\log\frac{p(t|x)}{p(t)}\right] = p(x)\left(\log\frac{p(t|x)}{p(t)} + 1\right).$$</div>
+<p>We also need the effect through $p(t) = \sum_{x'} p(x')\, p(t|x')$, so $\frac{\partial p(t)}{\partial p(t|x)} = p(x)$. This gives an additional contribution from all $(x', t)$ terms:</p>
+<div class="math-block">$$-\sum_{x'} p(x')\, p(t|x')\,\frac{p(x)}{p(t)} = -p(x).$$</div>
+<p>Total: $p(x)\left(\log\frac{p(t|x)}{p(t)} + 1 - 1\right) = p(x)\log\frac{p(t|x)}{p(t)}$.</p>
+
+<h3>The $I(T;Y)$ derivative</h3>
+<p>Write $I(T;Y) = \sum_{t,y} p(t,y)\log\frac{p(y|t)}{p(y)}$, where $p(t,y) = \sum_{x'} p(x')\, p(t|x')\, p(y|x')$.</p>
+<p>Direct contribution from $\frac{\partial p(t,y)}{\partial p(t|x)} = p(x)\, p(y|x)$:</p>
+<div class="math-block">$$\sum_y p(x)\, p(y|x)\,\log\frac{p(y|t)}{p(y)}.$$</div>
+<p>The contribution from $p(y|t)$'s implicit dependence on $p(t|x)$ telescopes to zero (analogous to the $I(X;T)$ calculation). The cancellation follows from $\sum_y \frac{\partial}{\partial p(t|x)}\left[p(t,y)\log p(y|t)\right]$ simplifying via $p(y|t) = p(t,y)/p(t)$.</p>
+
+<h3>KL decomposition step</h3>
+<p>The key algebraic step in the proof:</p>
+<div class="math-block">$$\sum_y p(y|x)\log\frac{p(y|t)}{p(y)} = \sum_y p(y|x)\log\frac{p(y|x)}{p(y)} - \sum_y p(y|x)\log\frac{p(y|x)}{p(y|t)}$$</div>
+<div class="math-block">$$= D_{\mathrm{KL}}(p(y|x)\|p(y)) - D_{\mathrm{KL}}(p(y|x)\|p(y|t)).$$</div>
+<p>Since $D_{\mathrm{KL}}(p(y|x)\|p(y))$ is independent of $t$, it is absorbed into the normalization constant $Z(x,\beta)$.</p>
+
+<h3>Blahut-Arimoto connection</h3>
+<p>The iterative algorithm to solve the self-consistent equations mirrors the Blahut-Arimoto algorithm for rate-distortion (covered in <code>lossy/lossy1-foundations.html</code>):</p>
+<ol>
+<li>Initialize $p^{(0)}(t|x)$ (e.g., random soft assignment).</li>
+<li>Compute $p^{(k)}(t) = \sum_x p(x)\, p^{(k)}(t|x)$.</li>
+<li>Compute $p^{(k)}(y|t) = \sum_x p(y|x)\, p^{(k)}(x|t)$.</li>
+<li>Update $p^{(k+1)}(t|x) \propto p^{(k)}(t)\,\exp\!\bigl(-\beta\, D_{\mathrm{KL}}(p(y|x)\|p^{(k)}(y|t))\bigr)$.</li>
+<li>Repeat until convergence.</li>
+</ol>
+<p>Convergence to a local minimum is guaranteed by the same double-minimization argument as Blahut-Arimoto: each step monotonically decreases $\mathcal{L}_{\mathrm{IB}}$.</p>
+</div>
+
+<hr>
+
+<div class="note-section">
+<h2>§03 — IB as rate-distortion</h2>
+
+<h3>Relevance decomposition proof detail</h3>
+<p>We expand:</p>
+<div class="math-block">$$\mathbb{E}_{p(x,t)}[D_{\mathrm{KL}}(p(y|x)\|p(y|t))] = \sum_{x,t} p(x,t)\sum_y p(y|x)\log\frac{p(y|x)}{p(y|t)}.$$</div>
+<p>Split the log:</p>
+<div class="math-block">$$= \sum_{x,t} p(x,t)\left[-H(Y|X=x) + H_{p(y|x)}(p(y|t))\right]$$</div>
+<p>where $H_{p(y|x)}(p(y|t)) = -\sum_y p(y|x)\log p(y|t)$ is the cross-entropy.</p>
+<p>The first term: $\sum_{x,t} p(x,t)[-H(Y|X=x)] = -H(Y|X)$ (marginalizing over $t$).</p>
+<p>The second term:</p>
+<div class="math-block">$$-\sum_t p(t)\sum_y \left[\sum_x p(x|t)\, p(y|x)\right]\log p(y|t) = -\sum_t p(t)\sum_y p(y|t)\log p(y|t) = H(Y|T).$$</div>
+<p>Total: $-H(Y|X) + H(Y|T) = I(X;Y) - I(T;Y)$.</p>
+
+<h3>Properties of the log-loss distortion</h3>
+<ul>
+<li>$d_{\mathrm{IB}}(x,t) \ge 0$ with equality iff $p(y|x) = p(y|t)$.</li>
+<li>Not symmetric: $d_{\mathrm{IB}}(x,t) \ne d_{\mathrm{IB}}(t,x)$ in general (KL divergence is asymmetric).</li>
+<li>The distortion depends on the <em>encoder</em> through $p(y|t)$, making the IB R(D) problem non-standard: the distortion itself is a function of the optimization variable.</li>
+</ul>
+</div>
+
+<hr>
+
+<div class="note-section">
+<h2>§04 — The information plane</h2>
+
+<h3>Properties of the IB curve</h3>
+<p>The IB curve $I_{\mathrm{IB}}(R)$ as a function of rate $R = I(X;T)$:</p>
+<ul>
+<li><strong>Concavity:</strong> follows from the concavity of MI in the conditional distribution (the set of achievable $(R, I_Y)$ pairs is convex; the upper boundary of a convex set is concave).</li>
+<li><strong>Monotonicity:</strong> increasing $R$ allows more expressive encoders, so $I_{\mathrm{IB}}(R)$ is non-decreasing.</li>
+<li><strong>Slope:</strong> at the optimal point for a given $\beta$, the slope of the IB curve is $1/\beta$ (standard Lagrangian duality).</li>
+</ul>
+
+<h3>Phase transitions — critical $\beta_1$</h3>
+<p>For $\beta &lt; \beta_1$, the only solution is the trivial one: $p(t|x) = p(t)$ for all $x$ (i.e., $T \perp X$).</p>
+<p>At $\beta = \beta_1$, this solution becomes unstable and a non-trivial solution bifurcates. The critical value can be computed by linearizing the self-consistent equations around the trivial solution:</p>
+<div class="math-block">$$\beta_1 = \frac{1}{\lambda_{\max}(M)},$$</div>
+<p>where $M$ is the matrix with entries $M_{yy'} = \sum_x p(x)\, p(y|x)\, p(y'|x) / p(y)$ and $\lambda_{\max}$ is its largest non-trivial eigenvalue. This is related to the $\chi^2$ divergence between $p(y|x)$ and $p(y)$ averaged over $x$.</p>
+
+<h3>DPI monotonicity for DNN layers</h3>
+<p>For deterministic layers $T_l = f_l(T_{l-1})$, the Markov chain $Y - X - T_1 - \cdots - T_L$ gives:</p>
+<div class="math-block">$$I(X;Y) \ge I(T_1;Y) \ge I(T_2;Y) \ge \cdots \ge I(T_L;Y).$$</div>
+<p><strong>Caveat:</strong> for deterministic functions of continuous variables, $I(X;T_l) = H(T_l)$ can be infinite. The discrete-input case is clean; the continuous case requires careful regularization or binning — a key challenge addressed by the Variational IB in Lecture 2.</p>
+
+<h3>Connection to the next lecture</h3>
+<p>Lecture 2 addresses three questions left open here:</p>
+<ol>
+<li>Do trained DNNs actually move toward the IB curve? (Shwartz-Ziv &amp; Tishby, 2017)</li>
+<li>How to make the IB objective tractable for deep learning? (Variational IB, Alemi et al., 2017)</li>
+<li>What survives scrutiny? (Saxe et al., 2019: the compression phase depends on activation function and input structure)</li>
+</ol>
+</div>
+
+<hr>
+
+<div class="note-section">
+<h2>References</h2>
+<ul>
+<li>Tishby, Pereira, and Bialek, "The Information Bottleneck Method", 1999 (allerton).</li>
+<li>Slonim and Tishby, "Agglomerative Information Bottleneck", NIPS 1999.</li>
+<li>Chechik, Globerson, Tishby, and Weiss, "Information Bottleneck for Gaussian Variables", JMLR 2005.</li>
+<li>Shwartz-Ziv and Tishby, "Opening the Black Box of Deep Neural Networks via Information", 2017.</li>
+<li>Alemi, Fischer, Dillon, and Murphy, "Deep Variational Information Bottleneck", ICLR 2017.</li>
+<li>Saxe, Bansal, Dapello, Advani, and Kolchinsky, "On the Information Bottleneck Theory of Deep Learning", JSTAT 2019.</li>
+<li>Goldfeld, van den Berg, Greenewald, Melnyk, Nguyen, Elenberg, and Wornell, "Estimating Information Flow in Deep Neural Networks", ICML 2019.</li>
+</ul>
+</div>
+
+</body>
+</html>

@@ -11,6 +11,7 @@ Master-level series with paired `<deck>.html` + `<deck>-note.html`. Notes hold f
 - **`mi/`** — Mutual-information estimation (2 lectures): variational lower bounds (BA, DV, NWJ, MINE) → InfoNCE & CLIP; closes with $f$-divergence unification. See `mi/OUTLINE.md`.
 - **`divergence/`** — Divergence families behind modern generative training (2 lectures): $f$-divergence + GAN $\equiv$ JS minimization → Fisher divergence + denoising score matching. See `divergence/OUTLINE.md`.
 - **`diffusion/`** — Diffusion through the information-theory lens (3 lectures): VAE/ELBO → hierarchical VAE → parameterizations + Tweedie; closes by showing diffusion ELBO $\equiv$ score matching (using machinery from `divergence/`). See `diffusion/OUTLINE.md`.
+- **`ib/`** — Information Bottleneck (2 lectures): IB Lagrangian + self-consistent equations → Variational IB + deep learning. Connects MI bounds from `mi/`, rate-distortion from `lossy/`, DPI from `entropy/`. See `ib/OUTLINE.md`.
 
 ## Reading order (suggested for a full master's course)
 
@@ -21,6 +22,7 @@ Master-level series with paired `<deck>.html` + `<deck>-note.html`. Notes hold f
 5. **`mi/`** — variational MI bounds; InfoNCE/CLIP.
 6. **`divergence/`** — $f$-divergence + GAN, Fisher + denoising score matching.
 7. **`diffusion/`** — generative modeling through the info-theoretic lens; closes the loop by showing diffusion ELBO $\equiv$ score matching.
+8. **`ib/`** — the information bottleneck: compression for relevance; connects MI, R(D), and deep learning.
 
 ## Themes
 
@@ -29,6 +31,7 @@ Master-level series with paired `<deck>.html` + `<deck>-note.html`. Notes hold f
 - **mi** culminates in the MI view of CLIP — the bridge between variational-bound theory and contrastive learning.
 - **divergence** synthesizes the divergence families: $f$-divergences unify MI/GAN; Fisher + DSM sets up the score-based view.
 - **diffusion** is the *theoretical* side of diffusion (see `privacy/generative/` for the from-scratch Bayes-route version); closes by showing diffusion ELBO $\equiv$ DSM, using `divergence/` machinery.
+- **ib** bridges information theory and deep learning: IB Lagrangian reuses MI from `entropy/` and rate-distortion from `lossy/`; the information plane gives a diagnostic lens for DNN representations.
 
 ## Cross-deck pointers
 
@@ -82,6 +85,13 @@ Master-level series with paired `<deck>.html` + `<deck>-note.html`. Notes hold f
 | Fisher divergence definition (Hyvärinen) | `divergence/div2-fisher-score.html` | `:141` |
 | Denoising score matching theorem (Vincent) | `divergence/div2-fisher-score.html` | `:200` |
 | Diffusion ELBO $\equiv$ DSM theorem | `diffusion/diff3-parameterizations.html` | `:256` |
+| IB Lagrangian (definition) | `ib/ib1-foundations.html` | `:112` |
+| IB optimal encoder (Gibbs form) | `ib/ib1-foundations.html` | `:182` |
+| Relevance decomposition lemma | `ib/ib1-foundations.html` | `:261` |
+| IB $\equiv$ R(D) with log-loss | `ib/ib1-foundations.html` | `:284` |
+| Information plane definition | `ib/ib1-foundations.html` | `:315` |
+| VIB definition | `ib/ib2-deep-learning.html` | `:225` |
+| Rate upper bound (variational) | `ib/ib2-deep-learning.html` | `:200` |
 
 ## Pairing convention
 

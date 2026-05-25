@@ -30,7 +30,7 @@ Master-level series with paired `<deck>.html` + `<deck>-note.html`. Notes hold f
 - **lossy** ramps from classical R(D) to **applied compression of LLM weights and KV caches** (QUIP#, TURBOQUANT).
 - **mi** culminates in the MI view of CLIP — the bridge between variational-bound theory and contrastive learning.
 - **divergence** synthesizes the divergence families: $f$-divergences unify MI/GAN; Fisher + DSM sets up the score-based view.
-- **diffusion** is the *theoretical* side of diffusion (see `privacy/generative/` for the from-scratch Bayes-route version); closes by showing diffusion ELBO $\equiv$ DSM, using `divergence/` machinery.
+- **diffusion** is the *theoretical* side of diffusion (see `courses/privacy/generative/` for the from-scratch Bayes-route version); closes by showing diffusion ELBO $\equiv$ DSM, using `divergence/` machinery.
 - **ib** bridges information theory and deep learning: IB Lagrangian reuses MI from `entropy/` and rate-distortion from `lossy/`; the information plane gives a diagnostic lens for DNN representations.
 
 ## Cross-deck pointers

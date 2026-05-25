@@ -119,16 +119,15 @@ def lint_one(path: Path, defined_classes: set[str]) -> int:
 
 def discover() -> list[Path]:
     paths: list[Path] = [ROOT / "reference" / "deck-skeleton.html"]
-    skip_dirs = {"reference", "scripts", "design", "notes", "figs"}
-    for sub in sorted(ROOT.iterdir()):
-        if not sub.is_dir() or sub.name.startswith((".", "_")):
+    skip_dirs = {"notes", "figs", "latex"}
+    content_dirs = [ROOT / "courses", ROOT / "talks"]
+    for cdir in content_dirs:
+        if not cdir.is_dir():
             continue
-        if sub.name in skip_dirs:
-            continue
-        for html in sorted(sub.rglob("*.html")):
+        for html in sorted(cdir.rglob("*.html")):
             if html.name.endswith(".standalone.html"):
                 continue
-            if any(part in skip_dirs for part in html.relative_to(sub).parts[:-1]):
+            if any(part in skip_dirs for part in html.relative_to(cdir).parts):
                 continue
             paths.append(html)
     return [p for p in paths if p.exists()]

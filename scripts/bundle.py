@@ -250,12 +250,11 @@ def bundle(html_path: Path, out_path: Path) -> None:
 
 def discover_decks() -> list[Path]:
     decks: list[Path] = []
-    for sub in sorted(ROOT.iterdir()):
-        if not sub.is_dir() or sub.name.startswith((".", "_")):
+    content_dirs = [ROOT / "courses", ROOT / "talks"]
+    for cdir in content_dirs:
+        if not cdir.is_dir():
             continue
-        if sub.name in {"reference", "scripts", "design"}:
-            continue
-        for html in sorted(sub.glob("*.html")):
+        for html in sorted(cdir.rglob("*.html")):
             if html.name.endswith(".standalone.html"):
                 continue
             decks.append(html)

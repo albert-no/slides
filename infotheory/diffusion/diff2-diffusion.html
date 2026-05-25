@@ -131,21 +131,40 @@
 </div>
 
 <div class="slide">
+  <h2>Write Out the Two Exponents</h2><div class="divider"></div>
+  <p>Product $\propto q(x_t\mid x_{t-1})\cdot q(x_{t-1}\mid x_0)$ means add log-densities. In $x_{t-1}$:</p>
+  <div class="math-block">$$\begin{aligned}
+\log q(x_t\mid x_{t-1}) &amp;\ni\; -\frac{\alpha_t}{2\beta_t}\,x_{t-1}^2 \;+\; \frac{\sqrt{\alpha_t}}{\beta_t}\,x_t\,x_{t-1} \\[4pt]
+\log q(x_{t-1}\mid x_0) &amp;\ni\; -\frac{1}{2(1-\bar\alpha_{t-1})}\,x_{t-1}^2 \;+\; \frac{\sqrt{\bar\alpha_{t-1}}}{1-\bar\alpha_{t-1}}\,x_0\,x_{t-1}
+\end{aligned}$$</div>
+  <p>Quadratic in $x_{t-1}$: read off precision and linear term.</p>
+</div>
+
+<div class="slide">
   <h2>Complete the Square — Variance</h2><div class="divider"></div>
-  <p>Collect coefficients of $x_{t-1}^2$ in the exponent:</p>
-  <div class="math-block">$$\frac{\alpha_t}{\beta_t} \;+\; \frac{1}{1-\bar\alpha_{t-1}} \;=\; \frac{1-\bar\alpha_t}{\beta_t(1-\bar\alpha_{t-1})}.$$</div>
-  <p>Posterior variance is the reciprocal:</p>
+  <p>Sum the $x_{t-1}^2$ coefficients (precisions add):</p>
+  <div class="math-block">$$\frac{1}{\tilde\beta_t} \;=\; \frac{\alpha_t}{\beta_t} \;+\; \frac{1}{1-\bar\alpha_{t-1}} \;=\; \frac{1-\bar\alpha_t}{\beta_t(1-\bar\alpha_{t-1})}.$$</div>
+  <p>Invert to get the posterior variance:</p>
   <div class="math-block">$$\tilde\beta_t \;=\; \dfrac{1-\bar\alpha_{t-1}}{1-\bar\alpha_t}\,\beta_t.$$</div>
 </div>
 
 <div class="slide">
   <h2>Complete the Square — Mean</h2><div class="divider"></div>
-  <p>Collect linear coefficient; divide by $1/\tilde\beta_t$:</p>
-  <div class="math-block">$$\mu_q(x_t, x_0) \;=\; \frac{\sqrt{\bar\alpha_{t-1}}\,\beta_t}{1-\bar\alpha_t}\,x_0 \;+\; \frac{\sqrt{\alpha_t}(1-\bar\alpha_{t-1})}{1-\bar\alpha_t}\,x_t.$$</div>
+  <p>Sum the linear coefficients, multiply by $\tilde\beta_t$:</p>
+  <div class="math-block">$$\mu_q(x_t, x_0) \;=\; \tilde\beta_t\!\left(\frac{\sqrt{\alpha_t}}{\beta_t}\,x_t \;+\; \frac{\sqrt{\bar\alpha_{t-1}}}{1-\bar\alpha_{t-1}}\,x_0\right).$$</div>
+  <p>Simplify:</p>
+  <div class="math-block">$$\mu_q(x_t, x_0) \;=\; \frac{\sqrt{\alpha_t}(1-\bar\alpha_{t-1})}{1-\bar\alpha_t}\,x_t \;+\; \frac{\sqrt{\bar\alpha_{t-1}}\,\beta_t}{1-\bar\alpha_t}\,x_0.$$</div>
+</div>
+
+<div class="slide">
+  <h2>True Reverse — Closed Form</h2><div class="divider"></div>
   <div class="card">
-    <h3>Closed form.</h3>
+    <h3>Lemma (reverse conditional).</h3>
     <div class="math-block">$$q(x_{t-1}\mid x_t, x_0) \;=\; \mathcal{N}\!\bigl(\mu_q(x_t,x_0),\,\tilde\beta_t I\bigr).$$</div>
   </div>
+  <p>$\mu_q$: weighted average of $x_t$ (current noisy) and $x_0$ (clean data).</p>
+  <p>$\tilde\beta_t$: shrinks as $\bar\alpha_{t-1} \to 0$ (less noise $\Rightarrow$ tighter reverse).</p>
+  <div class="highlight">The <strong>target</strong> the learned reverse $p_\theta(x_{t-1}\mid x_t)$ must match.</div>
 </div>
 
 
@@ -166,20 +185,18 @@
 </div>
 
 <div class="slide">
-  <h2>Boundary Terms: $L_T$ and $L_0$</h2><div class="divider"></div>
-  <div class="grid-2">
-    <div>
-      <h3>$L_T$: prior matching</h3>
-      <p>$D_{\mathrm{KL}}\!\bigl(q(x_T\mid x_0)\,\Vert\,\mathcal{N}(0,I)\bigr)$.</p>
-      <p>Constant in $\theta$. Vanishes as $\bar\alpha_T\to 0$.</p>
-    </div>
-    <div>
-      <h3>$L_0$: final reconstruction</h3>
-      <p>$-\mathbb{E}_{q(x_1\mid x_0)}[\log p_\theta(x_0\mid x_1)]$.</p>
-      <p>Negligible for discrete pixel models; absorbed in practice.</p>
-    </div>
-  </div>
-  <p>Training signal lives in the interior terms.</p>
+  <h2>$L_T$: Prior Matching (No Training)</h2><div class="divider"></div>
+  <div class="math-block">$$L_T \;=\; D_{\mathrm{KL}}\!\bigl(q(x_T\mid x_0)\,\Vert\,p(x_T)\bigr) \;=\; D_{\mathrm{KL}}\!\bigl(\mathcal{N}(\sqrt{\bar\alpha_T}\,x_0,\,(1-\bar\alpha_T)I)\,\Vert\,\mathcal{N}(0,I)\bigr).$$</div>
+  <p>No $\theta$: entirely determined by the noise schedule.</p>
+  <p>As $T\to\infty$, $\bar\alpha_T\to 0$, so $q(x_T\mid x_0)\to\mathcal{N}(0,I) = p(x_T)$ and $L_T\to 0$.</p>
+</div>
+
+<div class="slide">
+  <h2>$L_0$: Final Reconstruction</h2><div class="divider"></div>
+  <div class="math-block">$$L_0 \;=\; -\mathbb{E}_{q(x_1\mid x_0)}\!\bigl[\log p_\theta(x_0\mid x_1)\bigr].$$</div>
+  <p>Decoder log-likelihood of the clean data given the least-noisy latent $x_1$.</p>
+  <p>In practice: small relative to $\sum L_t$; absorbed into the training loss.</p>
+  <div class="highlight">All training signal lives in the <strong>interior terms</strong> $L_1, \ldots, L_{T-1}$.</div>
 </div>
 
 <div class="slide">

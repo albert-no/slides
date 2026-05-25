@@ -48,7 +48,7 @@
     <div class="toc-item">
       <div class="toc-num">04</div><div class="toc-rule"></div>
       <div><div class="toc-label">The VAE</div>
-      <div class="toc-sub">Gaussian encoder, reparameterization, training</div></div>
+      <div class="toc-sub">Instantiating the ELBO with concrete choices</div></div>
     </div>
   </div>
 </div>
@@ -135,6 +135,17 @@
 </div>
 
 <div class="slide">
+  <h2>Two Seams of the Joint</h2><div class="divider"></div>
+  <p>Both forms below are the <strong>same ELBO</strong>, opened along different factorizations of $p_\theta(x,z)$:</p>
+  <div class="math-block">$$\begin{array}{l|c|c}
+\text{Split } p_\theta(x,z) \text{ as} & \text{Gives} & \text{Purpose} \\\hline
+p_\theta(z\mid x)\cdot p_\theta(x) & \text{KL gap identity} & \text{names the gap} \\
+p(z)\cdot p_\theta(x\mid z) & \text{recon} - \text{rate} & \text{trainable loss}
+\end{array}$$</div>
+  <div class="highlight">Same bound, two algebraic moves. Path 2 names the gap; the next slide gives the loss.</div>
+</div>
+
+<div class="slide">
   <h2>ELBO Decomposes</h2><div class="divider"></div>
   <p>Expand $p_\theta(x,z) = p(z)\,p_\theta(x\mid z)$ inside the ELBO:</p>
   <div class="math-block">$$\mathcal{L}_{\mathrm{ELBO}} \;=\; \underbrace{\mathbb{E}_{q_\phi}[\log p_\theta(x\mid z)]}_{\text{reconstruction}} \;-\; \underbrace{D_{\mathrm{KL}}\!\bigl(q_\phi(\cdot\mid x)\,\Vert\,p(\cdot)\bigr)}_{\text{rate}}.$$</div>
@@ -142,20 +153,42 @@
 </div>
 
 <div class="slide">
+  <h2>Reconstruction &mdash; What It Computes</h2><div class="divider"></div>
+  <p>Encoder maps $x \mapsto z$. Decoder outputs $p_\theta(\cdot\mid z)$. Evaluate on the <strong>original</strong> $x$:</p>
+  <div class="math-block">$$\mathbb{E}_{q_\phi(z\mid x)}[\log p_\theta(x\mid z)].$$</div>
+  <p>How much probability does the decoder place on the true $x$, given the latent $z$?</p>
+</div>
+
+<div class="slide">
+  <h2>Gaussian Decoder &mdash; Reconstruction Is MSE</h2><div class="divider"></div>
+  <p>For $p_\theta(x\mid z) = \mathcal{N}(\mu_\theta(z),\,\sigma^2 I)$:</p>
+  <div class="math-block">$$\log p_\theta(x\mid z) \;=\; -\frac{\|x - \mu_\theta(z)\|^2}{2\sigma^2} + \mathrm{const}.$$</div>
+  <div class="highlight">Maximizing reconstruction $=$ minimizing <strong>MSE between input and decoded output</strong>.</div>
+</div>
+
+<div class="slide">
   <h2>Rate vs. Distortion</h2><div class="divider"></div>
   <div class="grid-2">
     <div>
       <h3>Reconstruction</h3>
-      <p>Decoder log-likelihood under encoder samples.</p>
-      <p>Negative distortion.</p>
+      <p>Can the decoder recover $x$ from the latent $z$?</p>
+      <p>Negative distortion (MSE).</p>
     </div>
     <div>
       <h3>Rate (prior KL)</h3>
+      <p>How far does the encoder drift from $p(z)$?</p>
       <p>Bits the latent carries about $x$.</p>
-      <p>Penalty for using the encoder.</p>
     </div>
   </div>
-  <div class="highlight">ELBO is a variational <strong>rate–distortion functional</strong>.</div>
+  <div class="highlight">ELBO is a variational <strong>rate&ndash;distortion functional</strong>.</div>
+</div>
+
+<div class="slide">
+  <h2>Why Prior KL $=$ Rate</h2><div class="divider"></div>
+  <p>Average the KL-to-prior over $x\sim p_{\mathrm{data}}$:</p>
+  <div class="math-block">$$\mathbb{E}_x\!\bigl[D_{\mathrm{KL}}(q_\phi(\cdot\mid x)\,\Vert\,p)\bigr] \;=\; \underbrace{I_{q_\phi}(X;Z)}_{\text{rate (bits)}} \;+\; \underbrace{D_{\mathrm{KL}}\!\bigl(q_\phi(z)\,\Vert\,p(z)\bigr)}_{\text{marginal mismatch}}.$$</div>
+  <p>$I(X;Z)$: bits the latent carries about data $=$ rate in the R-D sense.</p>
+  <p>Prior KL $\ge I(X;Z)$, tight when aggregate posterior $q_\phi(z) = p(z)$.</p>
 </div>
 
 
@@ -164,53 +197,78 @@
   <div class="section-num">04</div>
   <h1>The VAE</h1>
   <div class="divider"></div>
-  <p class="subtitle">Gaussian encoder, reparameterization, training</p>
+  <p class="subtitle">Instantiating the ELBO with concrete choices</p>
+</div>
+
+<div class="slide">
+  <h2>From ELBO to Algorithm</h2><div class="divider"></div>
+  <p>We have a loss. To train it, three design choices remain:</p>
+  <div class="math-block">$$\mathcal{L}_{\mathrm{ELBO}} \;=\; \underbrace{\mathbb{E}_{q_\phi}[\log p_\theta(x\mid z)]}_{\text{need gradient through } q_\phi} \;-\; \underbrace{D_{\mathrm{KL}}(q_\phi\,\Vert\,p)}_{\text{need closed form}}.$$</div>
+  <ul>
+    <li><strong>Encoder</strong> $q_\phi(z\mid x)$: what family? &rarr; Gaussian</li>
+    <li><strong>KL term:</strong> analytic or Monte Carlo? &rarr; analytic (Gaussian vs Gaussian)</li>
+    <li><strong>Gradient through sampling:</strong> how? &rarr; reparameterization trick</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>VAE Architecture</h2><div class="divider"></div>
+  <div class="diagram-flow" style="justify-content:center; gap:10px; margin:18px 0 14px;">
+    <div class="diagram-box" style="min-width:100px;">$x$<br><span style="font-size:1.05rem;color:var(--gray-text);">data</span></div>
+    <span style="font-size:2rem;color:var(--yonsei-blue);align-self:center;">$\to$</span>
+    <div class="diagram-box" style="min-width:170px;border-color:var(--yonsei-blue);">Encoder $q_\phi$<br><span style="font-size:1.05rem;color:var(--gray-text);">$x \mapsto (\mu, \sigma)$</span></div>
+    <span style="font-size:2rem;color:var(--yonsei-blue);align-self:center;">$\to$</span>
+    <div class="diagram-box" style="min-width:80px;border-color:var(--blue-light);">$z$<br><span style="font-size:1.05rem;color:var(--gray-text);">latent</span></div>
+    <span style="font-size:2rem;color:var(--yonsei-blue);align-self:center;">$\to$</span>
+    <div class="diagram-box" style="min-width:170px;border-color:var(--yonsei-blue);">Decoder $p_\theta$<br><span style="font-size:1.05rem;color:var(--gray-text);">$z \mapsto \hat x$</span></div>
+    <span style="font-size:2rem;color:var(--yonsei-blue);align-self:center;">$\to$</span>
+    <div class="diagram-box" style="min-width:100px;">$\hat x$<br><span style="font-size:1.05rem;color:var(--gray-text);">output</span></div>
+  </div>
+  <div class="grid-2" style="margin-top:12px;">
+    <div><p><strong>Encoder</strong> (learned): compresses $x$ into a distribution over $z$.</p></div>
+    <div><p><strong>Decoder</strong> (learned): reconstructs $x$ from a sampled $z$.</p></div>
+  </div>
 </div>
 
 <div class="slide">
   <h2>Gaussian Encoder</h2><div class="divider"></div>
-  <p>Network outputs $\mu_\phi(x)$, $\sigma_\phi(x)$:</p>
+  <p>Network outputs mean and variance per dimension:</p>
   <div class="math-block">$$q_\phi(z\mid x) \;=\; \mathcal{N}\!\bigl(\mu_\phi(x),\,\operatorname{diag}\sigma_\phi(x)^2\bigr).$$</div>
-  <p>KL against $\mathcal{N}(0,I)$ is closed form:</p>
+  <p>Both $\mu_\phi$ and $\sigma_\phi$ are neural networks parameterized by $\phi$.</p>
+  <p>Sampling $z \sim q_\phi(z\mid x)$ is stochastic: same $x$ gives different $z$.</p>
+</div>
+
+<div class="slide">
+  <h2>Closed-Form KL</h2><div class="divider"></div>
+  <p>Prior is $p(z) = \mathcal{N}(0,I)$. KL from encoder to prior:</p>
   <div class="math-block">$$D_{\mathrm{KL}}\!\bigl(q_\phi\,\Vert\,p\bigr) \;=\; \tfrac{1}{2}\sum_j\!\bigl(\mu_{\phi,j}^2 + \sigma_{\phi,j}^2 - 1 - \log\sigma_{\phi,j}^2\bigr).$$</div>
+  <p>Each term $= 0$ iff $\mu_j = 0$ and $\sigma_j = 1$ (encoder $=$ prior).</p>
+  <div class="highlight">Rate term is <strong>analytic</strong>: no Monte Carlo needed.</div>
 </div>
 
 <div class="slide">
   <h2>The Gradient Problem</h2><div class="divider"></div>
-  <p>Reconstruction term:</p>
-  <div class="math-block">$$\mathbb{E}_{z\sim q_\phi(z\mid x)}[\log p_\theta(x\mid z)].$$</div>
-  <p>Sampling distribution depends on $\phi$. Cannot pull $\nabla_\phi$ inside $\mathbb{E}_{q_\phi}$ directly.</p>
-  <div class="highlight">Reparameterize so randomness is <strong>parameter-free</strong>.</div>
+  <p>Reconstruction requires differentiating through a sample:</p>
+  <div class="math-block">$$\nabla_\phi\;\mathbb{E}_{z\sim q_\phi(z\mid x)}[\log p_\theta(x\mid z)] \;=\; \text{?}$$</div>
+  <p>$z$ is drawn from $q_\phi$. The sampling distribution depends on $\phi$.</p>
+  <p>Cannot move $\nabla_\phi$ inside $\mathbb{E}_{q_\phi}$ directly.</p>
 </div>
 
 <div class="slide">
   <h2>Reparameterization Trick</h2><div class="divider"></div>
-  <p>Push noise through a deterministic map:</p>
+  <p>Separate randomness from parameters:</p>
   <div class="math-block">$$z = \mu_\phi(x) + \sigma_\phi(x)\odot\varepsilon, \qquad \varepsilon\sim\mathcal{N}(0,I).$$</div>
-  <p>Expectation rewrites against the parameter-free $\varepsilon$:</p>
-  <div class="math-block">$$\mathbb{E}_{z\sim q_\phi}[f(z)] \;=\; \mathbb{E}_{\varepsilon}\!\bigl[f\!\bigl(\mu_\phi(x)+\sigma_\phi(x)\odot\varepsilon\bigr)\bigr].$$</div>
-  <p>Now $\nabla_\phi$ commutes with $\mathbb{E}_\varepsilon$. One $\varepsilon$ gives an unbiased gradient.</p>
+  <p>Now $\varepsilon$ is <strong>parameter-free</strong>. Rewrite the expectation:</p>
+  <div class="math-block">$$\nabla_\phi\;\mathbb{E}_{q_\phi}[f(z)] \;=\; \mathbb{E}_{\varepsilon}\!\bigl[\nabla_\phi\, f\!\bigl(\mu_\phi(x)+\sigma_\phi(x)\odot\varepsilon\bigr)\bigr].$$</div>
+  <div class="highlight">All $\phi$-dependence flows through $\mu_\phi, \sigma_\phi$. Standard backprop applies.</div>
 </div>
 
 <div class="slide">
-  <h2>Pathwise Gradient — Why It Works</h2><div class="divider"></div>
-  <div class="card">
-    <h3>Lemma (pushforward).</h3>
-    <p>Let $z = g_\phi(\varepsilon)$ push $p_\varepsilon$ to $q_\phi$. For differentiable $f$:</p>
-    <div class="math-block">$$\nabla_\phi\,\mathbb{E}_{q_\phi}[f(z)] \;=\; \mathbb{E}_{\varepsilon\sim p_\varepsilon}\!\bigl[\nabla_\phi\, f(g_\phi(\varepsilon))\bigr].$$</div>
-  </div>
-  <p>Change-of-variables on the LHS, then $p_\varepsilon$ is $\phi$-free, so $\nabla_\phi$ enters the expectation.</p>
-</div>
-
-<div class="slide">
-  <h2>VAE Training Loop</h2><div class="divider"></div>
-  <ol class="num">
-    <li>Encoder: $\mu_\phi(x)$, $\sigma_\phi(x)$.</li>
-    <li>Sample: $\varepsilon\sim\mathcal{N}(0,I)$, $\;z = \mu_\phi(x)+\sigma_\phi(x)\odot\varepsilon$.</li>
-    <li>Decoder: log-likelihood $\log p_\theta(x\mid z)$.</li>
-    <li>Loss: $-\log p_\theta(x\mid z) + D_{\mathrm{KL}}(q_\phi\,\Vert\,p)$.</li>
-    <li>Backprop through encoder and decoder.</li>
-  </ol>
+  <h2>VAE Loss = Negative ELBO</h2><div class="divider"></div>
+  <p>Per sample $x$, one $\varepsilon$ draw gives a single-sample estimate:</p>
+  <div class="math-block">$$\mathcal{L}(\theta,\phi;x) \;=\; \underbrace{-\log p_\theta(x\mid z)}_{\text{reconstruction (MSE)}} \;+\; \underbrace{D_{\mathrm{KL}}\!\bigl(q_\phi(\cdot\mid x)\,\Vert\,p\bigr)}_{\text{rate (closed form)}}.$$</div>
+  <p>First term: Monte Carlo (one $\varepsilon$). Second term: analytic.</p>
+  <p>Backprop through both encoder and decoder jointly.</p>
 </div>
 
 <div class="slide">
@@ -226,8 +284,8 @@
   <ul>
     <li><strong>Latent model:</strong> $p_\theta(x)=\int p(z)\,p_\theta(x\mid z)\,dz$, intractable.</li>
     <li><strong>ELBO:</strong> $\log p_\theta(x) = \mathcal{L}_{\mathrm{ELBO}} + D_{\mathrm{KL}}(q_\phi\Vert p_\theta(\cdot\mid x))$.</li>
-    <li><strong>Decomposition:</strong> reconstruction minus rate.</li>
-    <li><strong>VAE:</strong> Gaussian encoder, reparameterization, pathwise gradient.</li>
+    <li><strong>Decomposition:</strong> reconstruction (MSE) minus rate (KL to prior).</li>
+    <li><strong>VAE:</strong> Gaussian encoder, reparameterization, joint backprop.</li>
     <li><strong>Collapse:</strong> learned encoder can drop $x$; diffusion freezes it.</li>
   </ul>
 </div>

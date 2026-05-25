@@ -22,20 +22,27 @@ Information-theoretic treatment: VAE/ELBO → hierarchical VAE = diffusion → p
 | | Maximum likelihood is blocked | `:74` |
 | | Plan: variational posterior | `:82` |
 | **02 — ELBO: two paths, one bound** | Jensen + KL identity | `:91-128` |
-| | Path 1 (Jensen on log-expectation) | `:99` |
-| | Path 2 (KL identity) | `:106` |
-| | Same bound, different stories | `:113` |
-| **03 — What the bound asks** | Reconstruction − rate | `:130-161` |
-| | ELBO decomposes | `:138` |
-| | Rate vs distortion | `:145` |
-| **04 — The VAE** | Gaussian encoder, reparam, training | `:163-227` |
-| | Gaussian encoder | `:171` |
-| | Reparameterization trick | `:187` |
-| | **Lemma (pushforward / pathwise gradient)** | `:198` |
-| | VAE training loop | `:206` |
-| | Posterior collapse | `:217` |
+| | Path 1 (Jensen on log-expectation) | `:98` |
+| | Path 2 (KL identity) | `:105` |
+| | Same bound, different stories | `:112` |
+| **03 — What the bound asks** | Reconstruction − rate | `:130-194` |
+| | Two seams of the joint (factorization table) | `:137` |
+| | ELBO decomposes | `:148` |
+| | Reconstruction — what it computes | `:155` |
+| | Gaussian decoder — reconstruction is MSE | `:162` |
+| | Rate vs distortion | `:169` |
+| | Why prior KL = rate ($I(X;Z)$ + marginal mismatch) | `:186` |
+| **04 — The VAE** | Instantiating the ELBO with concrete choices | `:196-291` |
+| | From ELBO to algorithm (three design choices) | `:203` |
+| | VAE architecture (diagram: $x \to$ encoder $\to z \to$ decoder $\to \hat x$) | `:214` |
+| | Gaussian encoder | `:233` |
+| | Closed-form KL (prior explicit) | `:241` |
+| | Gradient problem | `:249` |
+| | Reparameterization trick (consolidated) | `:257` |
+| | VAE loss = negative ELBO (recon + rate) | `:266` |
+| | Posterior collapse | `:274` |
 
-**Key formulas:** ELBO `:101`; reparameterization identity `:189`; Lemma `:198`; Gaussian KL `:175`.
+**Key formulas:** ELBO `:101`; two seams of the joint `:137`; reconstruction = MSE `:162`; prior KL = rate `:186`; Gaussian KL `:241`; reparameterization `:257`; VAE loss `:266`.
 
 ### Note (`diff1-vae-elbo-note.html`)
 - Why intractable integral matters (MC variance, importance sampling) `:29`
@@ -43,8 +50,9 @@ Information-theoretic treatment: VAE/ELBO → hierarchical VAE = diffusion → p
 - Reparameterization as pathwise derivative; Gumbel-softmax / score-function alternatives `:51`
 - Closed-form Gaussian KL `:68`
 - Posterior collapse diagnostics (per-dim KL, free bits) `:80`
-- Information-theoretic ELBO interpretation, β-VAE tradeoff `:90`
-- Bridge to diffusion `:109`
+- The ELBO: one quantity, six faces (Forms 1–6 map) `:90`
+- Information-theoretic ELBO interpretation, β-VAE tradeoff `:149`
+- Bridge to diffusion `:168`
 
 ---
 
@@ -60,20 +68,21 @@ Information-theoretic treatment: VAE/ELBO → hierarchical VAE = diffusion → p
 | **02 — Reverse chain** | Learned Gaussian kernels | `:92-118` |
 | | Generative model | `:100` |
 | | Diffusion is hierarchical VAE | `:107` |
-| **03 — True reverse conditional** | Two Gaussians, complete the square | `:119-152` |
-| | Goal and Bayes | `:127` |
-| | Variance | `:134` |
-| | Mean | `:142` |
-| | **Lemma (Gaussian reverse conditional)** | `:145, :147` |
-| **04 — ELBO decomposition** | L_T + Σ L_t + L_0; KL → MSE on mean | `:153-211` |
-| | Apply Lecture 1 ELBO | `:161` |
-| | Three-term decomposition | `:163, :165` |
-| | L_T and L_0 boundary | `:169` |
-| | Interior L_t | `:186` |
-| | KL → MSE on mean | `:193, :195` |
-| | Three parameterizations of μ_θ | `:200` |
+| **03 — True reverse conditional** | Two Gaussians, complete the square | `:119-170` |
+| | Goal and Bayes | `:126` |
+| | Write out the two exponents | `:133` |
+| | Variance (precisions add) | `:143` |
+| | Mean (linear coefficients) | `:151` |
+| | **Lemma (reverse conditional, closed form)** | `:159` |
+| **04 — ELBO decomposition** | L_T + Σ L_t + L_0; KL → MSE on mean | `:172-235` |
+| | Apply Lecture 1 ELBO | `:179` |
+| | $L_T$: prior matching (no training) | `:187` |
+| | $L_0$: final reconstruction | `:194` |
+| | Interior $L_t$ | `:202` |
+| | KL → MSE on mean | `:209` |
+| | Three parameterizations of $\mu_\theta$ | `:216` |
 
-**Key:** q(x_t\|x_0) `:76`; reverse conditional Gaussian `:147`; ELBO three-term `:163`.
+**Key:** q(x_t\|x_0) `:76`; two exponents `:133`; reverse conditional Gaussian `:159`; ELBO three-term `:179`.
 
 ### Note (`diff2-diffusion-note.html`)
 - Variance-preserving vs variance-exploding `:25`
@@ -86,35 +95,35 @@ Information-theoretic treatment: VAE/ELBO → hierarchical VAE = diffusion → p
 
 ---
 
-## diff3-parameterizations.html — Parameterizations + Tweedie
+## diff3-parameterizations.html — Three Tools, One Model
+
+Reframed: diffusion as a working example of three information-theoretic techniques (ELBO, Tweedie, Fisher divergence), not a self-contained diffusion tutorial.
 
 | Section | Slide content | Line |
 |---|---|---|
-| Title / Contents | | `:19, :31` |
-| **01 — Master identity** | One linear relation | `:62-77` |
-| | Three variables, two free | `:71` |
-| **02 — Three parameterizations** | x₀ / ε / score | `:82-115` |
-| | Predict x₀ | `:91` |
-| | Predict ε | `:99` |
-| | Predict score | `:108` |
-| **03 — Tweedie's bridge** | Posterior mean = rescaled score | `:117-158` |
+| Title / Contents | | `:19, :30` |
+| **01 — Diffusion recap** | The model we will analyze | `:63-85` |
+| | The forward-reverse machine | `:70` |
+| | Three predictions, one object | `:78` |
+| **02 — Tool 1: Variational bound** | ELBO reduces training to MSE | `:87-117` |
+| | Recall — ELBO bounds the intractable | `:94` |
+| | Diffusion ELBO decomposes ($L_T + \sum L_t + L_0$) | `:103` |
+| | Interior term = MSE on the mean | `:110` |
+| **03 — Tool 2: Tweedie's formula** | Posterior mean = rescaled score | `:119-154` |
 | | **Theorem (Robbins/Tweedie)** | `:126` |
-| | **Proof — differentiate the marginal** (split: setup + continued) | `:137, :145` |
-| | Three names, one object | `:152` |
-| **04 — Channel view** | Forward = noise channel, reverse = decoding | `:160-194` |
-| | Each step is additive Gaussian channel | `:169` |
-| | Reverse = approximate decoding | `:177` |
-| | Successive refinement analogy | `:184` |
-| **05 — Score-matching equivalence** | ELBO MSE $\equiv$ denoising score matching (full proof) | `:196-281` |
-| | A second divergence behind diffusion (cite Lecture 6) | `:204` |
-| | Recall — diffusion ELBO MSE term | `:215` |
-| | Step 1 — apply Tweedie to $\mathbf{m}_t$ and $\boldsymbol\mu_t$ | `:225` |
-| | Step 2 — MSE becomes Fisher divergence (cite Lecture 6) | `:237` |
-| | Step 3 — recognize denoising form (cite Vincent, Lecture 6) | `:246` |
-| | **Theorem — Diffusion ELBO $\equiv$ Sum of DSM** | `:255` |
-| | Two routes, one network (recap chain) | `:266` |
+| | **Proof — differentiate the marginal** | `:137` |
+| | Tweedie unifies the predictions (bridge to Tool 3) | `:146` |
+| **04 — Tool 3: Fisher divergence** | ELBO MSE = score gap = DSM | `:156-209` |
+| | Recall — Fisher divergence (Lecture 6) | `:163` |
+| | Step 1 — apply Tweedie to both means | `:172` |
+| | Step 2 — MSE becomes Fisher | `:182` |
+| | Step 3 — recognize denoising form (Vincent DSM) | `:190` |
+| | **Theorem — ELBO $\equiv$ Sum of DSM** | `:198` |
+| **05 — Convergence** | Three roads, one objective | `:211-253` |
+| | Three tools, one loss (chained equation) | `:218` |
+| | The information-theoretic arc | `:233` |
 
-**Key:** Master identity `:71`; Tweedie theorem `:126`; Tweedie proof `:137, :145`; equivalence of three predictions `:152`; Diffusion ELBO $\equiv$ DSM theorem `:255` (capstone of series).
+**Key:** Tweedie theorem `:126`; Tweedie proof `:137`; three predictions unified `:146`; ELBO $\equiv$ DSM theorem `:198` (capstone); three-tool convergence `:218`.
 
 ### Note (`diff3-parameterizations-note.html`)
 - Why ε-prediction wins (loss conditioning at noise level) `:25`
@@ -122,6 +131,6 @@ Information-theoretic treatment: VAE/ELBO → hierarchical VAE = diffusion → p
 - Score-matching vs denoising loss (Vincent 2011) `:53`
 - Why all three give same model `:65`
 - Channel-coding view detail (SNR, successive refinement) `:71`
-- Log-SNR view (Salimans & Ho) `:83`
-- Connection to rate–distortion `:94`
-- Score-matching equivalence (Section 05; cites Lecture 6 / `divergence/div2` for Fisher + DSM) `:99`
+- Log-SNR view (Salimans &amp; Ho) `:83`
+- Connection to rate-distortion `:94`
+- Score-matching equivalence (cites Lecture 6 / `divergence/div2` for Fisher + DSM) `:99`

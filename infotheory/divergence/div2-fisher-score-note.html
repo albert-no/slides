@@ -40,6 +40,30 @@
 </section>
 
 <section>
+  <h2>Intuition: why match $(x-y)/\sigma^2$ against $s_\theta(y)$?</h2>
+  <p>The target $(\mathbf{x}-\mathbf{y})/\sigma^2$ is the <strong>score of the Gaussian kernel</strong>. Given $\mathbf{y}=\mathbf{x}+\sigma\mathbf{z}$, the conditional $p(\mathbf{y}\mid\mathbf{x})=\mathcal{N}(\mathbf{x},\sigma^2 I)$ has score</p>
+  <div class="deriv">
+    \[
+    \nabla_{\mathbf{y}}\log\mathcal{N}(\mathbf{y};\mathbf{x},\sigma^2 I) \;=\; \frac{\mathbf{x}-\mathbf{y}}{\sigma^2}.
+    \]
+  </div>
+  <p>Geometrically, this is the <em>denoising direction</em>: it points from the noisy observation $\mathbf{y}$ back toward the clean sample $\mathbf{x}$, scaled inversely by noise variance. Larger noise means a gentler gradient; smaller noise means a sharper pull.</p>
+
+  <h3>Why per-sample scores average to the marginal score</h3>
+  <p>The marginal score $\nabla_{\mathbf{y}}\log f_{\mathrm{data}}(\mathbf{y})$ is a posterior-weighted average of these per-sample directions:</p>
+  <div class="deriv">
+    \[
+    \nabla_{\mathbf{y}}\log f_{\mathrm{data}}(\mathbf{y}) \;=\; \mathbb{E}\!\left[\frac{\mathbf{x}-\mathbf{y}}{\sigma^2}\;\middle|\;\mathbf{y}\right].
+    \]
+  </div>
+  <p>This is <strong>Tweedie's formula</strong>: the posterior mean of the conditional score equals the marginal score. In the proof (Step 2), this emerges when $\nabla f_{\mathrm{data}}(\mathbf{y})$ is written as $\int p_{\mathrm{data}}(\mathbf{x})\,\nabla_{\mathbf{y}}\mathcal{N}(\mathbf{y};\mathbf{x},\sigma^2 I)\,d\mathbf{x}$, and the gradient passes inside the integral to produce $(\mathbf{x}-\mathbf{y})/\sigma^2$.</p>
+
+  <h3>Why MSE over data pairs recovers the correct objective</h3>
+  <p>The Fisher divergence asks $s_\theta(\mathbf{y})$ to match the <em>marginal</em> score, which is an expectation conditioned on $\mathbf{y}$. But we never compute that conditional expectation explicitly. Instead, the MSE loss $\|(\mathbf{x}-\mathbf{y})/\sigma^2 - s_\theta(\mathbf{y})\|^2$ is evaluated on individual pairs $(\mathbf{x},\mathbf{y})$. The law of total expectation does the rest: averaging this per-sample MSE over the joint $(X,Y)$ automatically integrates out $X$ for each $\mathbf{y}$, making the optimal $s_\theta(\mathbf{y})$ equal to the conditional mean &mdash; which is exactly the marginal score.</p>
+  <p>In short: the unknown marginal score is replaced by the known per-sample denoising direction $(\mathbf{x}-\mathbf{y})/\sigma^2$, and the MSE over data pairs automatically averages these into the correct target. No partition function, no second derivatives &mdash; just regression toward clean data.</p>
+</section>
+
+<section>
   <h2>Why integration by parts works for Gaussian smoothing</h2>
   <p>In the proof, Step 2 uses $\nabla f_{\mathrm{data}}(\mathbf{y}) = \int p_{\mathrm{data}}(\mathbf{x}) \nabla_{\mathbf{y}}\mathcal{N}(\mathbf{y};\mathbf{x},\sigma^2 I)\,d\mathbf{x}$. The gradient passes inside the integral because $\mathcal{N}$ is differentiable in $\mathbf{y}$. For the Gaussian, $\nabla_{\mathbf{y}}\log\mathcal{N}(\mathbf{y};\mathbf{x},\sigma^2 I) = (\mathbf{x}-\mathbf{y})/\sigma^2$ &mdash; a closed form.</p>
   <p>The trick fails for other smoothing kernels (e.g., uniform): you'd still get a tractable identity, but the conditional MSE form $\|(\mathbf{x}-\mathbf{y})/\sigma^2 - s_\theta(\mathbf{y})\|^2$ depends on the Gaussian's specific score. This is why denoising score matching is intimately tied to Gaussian noise &mdash; it's the kernel that gives a clean closed form.</p>

@@ -84,24 +84,27 @@ Two-lecture series on the divergences that drive modern generative training. Lec
 | | **Definition (Hyvärinen, 2005)** — Fisher divergence | `:133` |
 | | **Theorem** — non-neg, asymmetric, scaling, Gaussian comparator | `:144` |
 | | Proof — non-negativity and scaling | `:158` |
-| **03 — Denoising score matching** | Gaussian smoothing makes it tractable | `:167-247` |
+| **03 — Denoising score matching** | Gaussian smoothing makes it tractable | `:168-263` |
 | | Problem — direct score matching is intractable | `:175` |
 | | Setup — $\mathbf{Y} = \mathbf{X} + \mathbf{Z}$ | `:183` |
 | | **Theorem (Vincent, 2011)** — DSM equivalence | `:192` |
-| | Proof Step 1 — expand the square | `:203` |
-| | Proof Step 2 — rewrite cross term using $\nabla_{\mathbf{y}}\mathcal{N}$ | `:215` |
-| | Proof Step 3 — assemble | `:227` |
-| | Recap — conditional MSE on $\mathbf{x}-\mathbf{y}$ | `:237` |
-| **04 — Recap** | Three divergence families | `:248-278` |
-| | Three families table ($f$, Fisher, Wasserstein) | `:256` |
-| | Where this lecture sits | `:268` |
+| | Intuition — the denoising direction (kernel score) | `:203` |
+| | Intuition — Tweedie's bridge (marginal score = posterior mean) | `:211` |
+| | Proof Step 1 — expand the square | `:219` |
+| | Proof Step 2 — rewrite cross term using $\nabla_{\mathbf{y}}\mathcal{N}$ | `:231` |
+| | Proof Step 3 — assemble | `:243` |
+| | Recap — conditional MSE on $\mathbf{x}-\mathbf{y}$ | `:253` |
+| **04 — Recap** | Three divergence families | `:265-295` |
+| | Three families table ($f$, Fisher, Wasserstein) | `:272` |
+| | Where this lecture sits | `:284` |
 
-**Key theorems and definitions:** energy-based pdf `:74`; score function `:85`; score-determines-pdf lemma `:123`; Fisher divergence `:133`; properties theorem `:144`; Vincent DSM theorem `:192`.
+**Key theorems and definitions:** energy-based pdf `:74`; score function `:85`; score-determines-pdf lemma `:123`; Fisher divergence `:133`; properties theorem `:144`; Vincent DSM theorem `:192`; Tweedie bridge intuition `:211`.
 
 The diffusion-specific equivalence (per-step ELBO MSE $\equiv$ DSM at noise level $1-\bar\alpha_t$) is proved in `diffusion/diff3-parameterizations.html` Section 05, citing this lecture for the Fisher and DSM machinery.
 
 ### Note (`div2-fisher-score-note.html`)
 - Why $f$-divergences fail on energy-based models
+- Intuition: why match $(x-y)/\sigma^2$ against $s_\theta(y)$ (denoising direction, Tweedie, MSE averaging)
 - Hyvärinen's original (non-denoising) score matching via integration by parts
 - Why Gaussian smoothing is the kernel that gives a closed form
 - Sampling from a score model = Langevin dynamics (Fokker–Planck)

@@ -87,6 +87,65 @@
 </section>
 
 <section>
+  <h2>The ELBO: one quantity, six faces</h2>
+  <p>The slides present the ELBO in several forms across Lectures 1 and 2. They are all the same number, rewritten by choosing different factorizations of the joint $p_\theta(x,z)$. Here is the complete map.</p>
+
+  <h3>Form 1 &mdash; Definition (log importance ratio)</h3>
+  <div class="deriv">
+    \[
+    \mathcal{L}_{\mathrm{ELBO}} \;=\; \mathbb{E}_{q_\phi(z\mid x)}\!\left[\log\frac{p_\theta(x,z)}{q_\phi(z\mid x)}\right].
+    \]
+  </div>
+  <p>Origin: Jensen on $\log p_\theta(x) = \log\mathbb{E}_{q_\phi}[p_\theta(x,z)/q_\phi(z\mid x)] \ge \mathbb{E}_{q_\phi}[\log(\cdots)]$. This is the master form.</p>
+
+  <h3>Form 2 &mdash; KL gap identity</h3>
+  <div class="deriv">
+    \[
+    \log p_\theta(x) \;=\; \mathcal{L}_{\mathrm{ELBO}} \;+\; D_{\mathrm{KL}}\!\bigl(q_\phi(\cdot\mid x)\,\Vert\,p_\theta(\cdot\mid x)\bigr).
+    \]
+  </div>
+  <p>Derivation: split $\log p_\theta(x,z) = \log p_\theta(z\mid x) + \log p_\theta(x)$ inside Form 1. The marginal $\log p_\theta(x)$ is constant under $\mathbb{E}_{q_\phi}$ and pulls out; what remains is $-D_{\mathrm{KL}}(q_\phi \,\Vert\, p_\theta(\cdot\mid x))$. Names the gap: ELBO is loose by exactly the posterior KL.</p>
+
+  <h3>Form 3 &mdash; Reconstruction minus Rate</h3>
+  <div class="deriv">
+    \[
+    \mathcal{L}_{\mathrm{ELBO}} \;=\; \underbrace{\mathbb{E}_{q_\phi}[\log p_\theta(x\mid z)]}_{\text{reconstruction}} \;-\; \underbrace{D_{\mathrm{KL}}\!\bigl(q_\phi(z\mid x)\,\Vert\,p(z)\bigr)}_{\text{rate}}.
+    \]
+  </div>
+  <p>Derivation: split $p_\theta(x,z) = p(z)\,p_\theta(x\mid z)$ (the <em>other</em> factorization &mdash; prior times likelihood) inside Form 1. The $\log p(z) - \log q_\phi(z\mid x)$ piece becomes $-D_{\mathrm{KL}}(q_\phi\,\Vert\,p)$. This is the trainable decomposition: explain $x$ well, but stay close to the prior.</p>
+
+  <h3>Key relationship: Forms 2 and 3 use different seams of the joint</h3>
+  <p>Form 2 splits $p_\theta(x,z)$ as $p_\theta(z\mid x)\cdot p_\theta(x)$ (posterior $\times$ marginal), giving the gap identity. Form 3 splits it as $p(z)\cdot p_\theta(x\mid z)$ (prior $\times$ likelihood), giving the trainable loss. Same ELBO, different algebra.</p>
+
+  <h3>Form 4 &mdash; Hierarchical ELBO (Lecture 2)</h3>
+  <div class="deriv">
+    \[
+    \log p_\theta(x_0) \;\ge\; \mathbb{E}_q\!\bigl[\log p_\theta(x_{0:T}) - \log q(x_{1:T}\mid x_0)\bigr].
+    \]
+  </div>
+  <p>Literally Form 1 with $z \to (x_1,\ldots,x_T)$.</p>
+
+  <h3>Form 5 &mdash; Telescoped: $L_T + \sum L_t + L_0$</h3>
+  <div class="deriv">
+    \[
+    -\log p_\theta(x_0) \;\le\; \underbrace{D_{\mathrm{KL}}(q(x_T\mid x_0)\,\Vert\,p(x_T))}_{L_T} + \sum_{t=2}^{T} L_{t-1} + \underbrace{(-\log p_\theta(x_0\mid x_1))}_{L_0}.
+    \]
+  </div>
+  <p>Derivation: expand both the forward chain $q(x_{1:T}\mid x_0)=\prod_t q(x_t\mid x_{t-1})$ and the reverse chain $p_\theta(x_{0:T})=p(x_T)\prod_t p_\theta(x_{t-1}\mid x_t)$ inside Form 4. Products telescope, leaving one KL per timestep plus boundary terms.</p>
+
+  <h3>Form 6 &mdash; MSE on the mean</h3>
+  <div class="deriv">
+    \[
+    L_t \;=\; \mathbb{E}_{q(x_t\mid x_0)}\!\bigl[D_{\mathrm{KL}}\!\bigl(q(x_{t-1}\mid x_t,x_0)\,\Vert\,p_\theta(x_{t-1}\mid x_t)\bigr)\bigr] \;=\; \frac{1}{2\tilde\beta_t}\,\mathbb{E}\!\bigl[\|\mu_q(x_t,x_0)-\mu_\theta(x_t,t)\|^2\bigr].
+    \]
+  </div>
+  <p>Both sides Gaussian with the same covariance $\tilde\beta_t I$. KL between same-covariance Gaussians is Mahalanobis distance between means, which is scaled MSE. This is the actual loss: predict $\mu_q(x_t,x_0)$ from $(x_t,t)$.</p>
+
+  <h3>Summary: the derivation chain</h3>
+  <p>Form 1 (definition) $\to$ Form 2 (split as posterior $\times$ marginal $\Rightarrow$ KL gap) or Form 3 (split as prior $\times$ likelihood $\Rightarrow$ recon $-$ rate). Form 4 = Form 1 with $T$ latents $\to$ Form 5 (telescope products $\Rightarrow$ $L_T+\sum L_t+L_0$) $\to$ Form 6 (both Gaussians, same $\Sigma$ $\Rightarrow$ MSE on mean). Each arrow is one algebraic step.</p>
+</section>
+
+<section>
   <h2>The information-theoretic ELBO interpretation in more detail</h2>
   <p>Rewrite the ELBO over the data distribution:</p>
   <div class="deriv">

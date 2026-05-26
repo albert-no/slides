@@ -42,13 +42,40 @@
     -\log p_\theta(x_0)\le \underbrace{D_{\mathrm{KL}}(q(x_T|x_0)\Vert p(x_T))}_{L_T}+\sum_{t=2}^T \underbrace{\mathbb{E}_q D_{\mathrm{KL}}(q(x_{t-1}|x_t,x_0)\Vert p_\theta(x_{t-1}|x_t))}_{L_{t-1}}\underbrace{-\mathbb{E}_{q(x_1|x_0)}\log p_\theta(x_0|x_1)}_{L_0}.
     \]
   </div>
-  <p>Each $L_t$ is a per-step contribution. Training a single network $\mu_\theta(x_t,t)$ over all $t$ shares parameters across the chain.</p>
+  <p>Each $L_{t-1}$ is a per-step contribution. Training a single network $\mu_\theta(x_t,t)$ over all $t$ shares parameters across the chain.</p>
 </section>
 
 <section>
   <h2>Why the true reverse $q(x_{t-1}\mid x_t,x_0)$ is Gaussian</h2>
   <p>This is special to <em>linear-Gaussian</em> forward processes. In general, $p(x_{t-1}\mid x_t)$ (without conditioning on $x_0$) is not Gaussian for arbitrary data. But conditioning on $x_0$ makes both factors $q(x_t\mid x_{t-1})$ and $q(x_{t-1}\mid x_0)$ Gaussian in $x_{t-1}$, and the product of two Gaussians is Gaussian. The forward process being linear is what gives us a closed form.</p>
   <p>For non-linear forward processes (e.g. discrete diffusion), the analogous derivation yields a categorical or other simple form, but the closed-form reverse conditional remains the centerpiece of the analysis.</p>
+</section>
+
+<section>
+  <h2>Complete the square — full derivation</h2>
+  <p>From the slide: $q(x_{t-1}\mid x_t,x_0)\propto q(x_t\mid x_{t-1})\cdot q(x_{t-1}\mid x_0)$. Add log-densities and collect terms in $x_{t-1}$:</p>
+  <div class="deriv">
+    \[
+    \begin{aligned}
+    \log q(x_t\mid x_{t-1}) &amp;\ni -\frac{\alpha_t}{2\beta_t}\,x_{t-1}^2 + \frac{\sqrt{\alpha_t}}{\beta_t}\,x_t\,x_{t-1}, \\[4pt]
+    \log q(x_{t-1}\mid x_0) &amp;\ni -\frac{1}{2(1-\bar\alpha_{t-1})}\,x_{t-1}^2 + \frac{\sqrt{\bar\alpha_{t-1}}}{1-\bar\alpha_{t-1}}\,x_0\,x_{t-1}.
+    \end{aligned}
+    \]
+  </div>
+  <p><strong>Precision (variance).</strong> The $x_{t-1}^2$ coefficient gives the precision $1/\tilde\beta_t$:</p>
+  <div class="deriv">
+    \[
+    \frac{1}{\tilde\beta_t}=\frac{\alpha_t}{\beta_t}+\frac{1}{1-\bar\alpha_{t-1}}=\frac{1-\bar\alpha_t}{\beta_t(1-\bar\alpha_{t-1})},\qquad
+    \tilde\beta_t=\frac{1-\bar\alpha_{t-1}}{1-\bar\alpha_t}\,\beta_t.
+    \]
+  </div>
+  <p><strong>Mean.</strong> The linear coefficient (in $x_{t-1}$) times $\tilde\beta_t$ gives the mean:</p>
+  <div class="deriv">
+    \[
+    \tilde\mu_t(x_t,x_0)=\tilde\beta_t\!\left(\frac{\sqrt{\alpha_t}}{\beta_t}\,x_t+\frac{\sqrt{\bar\alpha_{t-1}}}{1-\bar\alpha_{t-1}}\,x_0\right)=\frac{\sqrt{\alpha_t}(1-\bar\alpha_{t-1})}{1-\bar\alpha_t}\,x_t+\frac{\sqrt{\bar\alpha_{t-1}}\,\beta_t}{1-\bar\alpha_t}\,x_0.
+    \]
+  </div>
+  <p>The two coefficients on $x_t$ and $x_0$ sum to a quantity close to $1$ in the small-$\beta_t$ limit, matching the interpretation of $\tilde\mu_t$ as a weighted average.</p>
 </section>
 
 <section>
@@ -60,7 +87,7 @@
 <section>
   <h2>Treatment of $L_0$ in practice</h2>
   <p>$L_0=-\mathbb{E}_{q(x_1\mid x_0)}\log p_\theta(x_0\mid x_1)$ is the final-step decoder likelihood. For continuous data, often replaced by a Gaussian likelihood with unit variance. For pixel data with discrete intensities $\{0,1,\ldots,255\}/255$, Ho et&nbsp;al. (2020) use a discretized Gaussian decoder that integrates the Gaussian density over each pixel-value bin.</p>
-  <p>$L_0$ is typically small relative to the sum $\sum L_t$ for large $T$, so a simple approximation is acceptable.</p>
+  <p>$L_0$ is typically small relative to the sum $\sum L_{t-1}$ for large $T$, so a simple approximation is acceptable.</p>
 </section>
 
 <section>

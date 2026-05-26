@@ -109,9 +109,9 @@
 
 <div class="slide">
   <h2>Interior Term = MSE on the Mean</h2><div class="divider"></div>
-  <p>Both sides of $L_t = D_{\mathrm{KL}}\!\bigl(q(x_{t-1}\mid x_t,x_0)\,\Vert\,p_\theta(x_{t-1}\mid x_t)\bigr)$ are Gaussian, same covariance:</p>
-  <div class="math-block">$$L_t \;=\; \frac{1}{2\tilde\beta_t}\,\|\mu_q(x_t, x_0) - \mu_\theta(x_t, t)\|^2.$$</div>
-  <div class="highlight">Tool 1 alone reduces training to: <strong>predict the posterior mean</strong> $\mu_q$ from $(x_t, t)$.</div>
+  <p>Both sides of $L_{t-1} = D_{\mathrm{KL}}\!\bigl(q(x_{t-1}\mid x_t,x_0)\,\Vert\,p_\theta(x_{t-1}\mid x_t)\bigr)$ are Gaussian, same covariance:</p>
+  <div class="math-block">$$L_{t-1} \;=\; \frac{1}{2\tilde\beta_t}\,\|\tilde\mu_t(x_t, x_0) - \mu_\theta(x_t, t)\|^2.$$</div>
+  <div class="highlight">Tool 1 alone reduces training to: <strong>predict the posterior mean</strong> $\tilde\mu_t$ from $(x_t, t)$.</div>
 </div>
 
 
@@ -172,26 +172,26 @@ p_t(x_t) &amp;\;=\; \int p_0(x_0)\,\mathcal{N}\!\bigl(x_t;\,\sqrt{\bar\alpha_t}\
 
 <div class="slide">
   <h2>Step 1 &mdash; Apply Tweedie to Both Means</h2><div class="divider"></div>
-  <p>Both the true mean $\mathbf{m}_t$ and the model mean $\boldsymbol\mu_t$ are denoising estimates:</p>
+  <p>Both the true mean $\tilde\mu_t$ and the model mean $\mu_\theta$ can be written as denoising estimates with variance $1-\bar\alpha_t$:</p>
   <div class="math-block">$$\begin{aligned}
-\mathbf{m}_t &amp;= \mathbf{z}_t + \sigma_t^2\,\nabla_{\mathbf{z}_t}\log g(\mathbf{z}_t\,|\,\mathbf{x}), \\
-\boldsymbol\mu_t &amp;= \mathbf{z}_t + \sigma_t^2\,\nabla_{\mathbf{z}_t}\log f_\theta(\mathbf{z}_t).
+\tilde\mu_t &amp;= x_t + (1-\bar\alpha_t)\,\nabla_{x_t}\log q(x_t\mid x_0), \\
+\mu_\theta  &amp;= x_t + (1-\bar\alpha_t)\,\nabla_{x_t}\log p_\theta^{(t)}(x_t).
 \end{aligned}$$</div>
-  <p>Difference: a <strong>score gap</strong> scaled by $\sigma_t^2$.</p>
+  <p>Difference: a <strong>score gap</strong> scaled by $(1-\bar\alpha_t)$.</p>
 </div>
 
 <div class="slide">
   <h2>Step 2 &mdash; MSE Becomes Fisher</h2><div class="divider"></div>
   <p>Substitute Step 1 into the per-step ELBO term:</p>
-  <div class="math-block">$$\bigl\|\mathbf{m}_t - \boldsymbol\mu_t\bigr\|^2 \;=\; \sigma_t^4\,\bigl\|\nabla\log g(\mathbf{z}_t\,|\,\mathbf{x}) - \nabla\log f_\theta(\mathbf{z}_t)\bigr\|^2.$$</div>
-  <p>Average over $g(\mathbf{z}_t\mid\mathbf{x})$:</p>
-  <div class="math-block">$$\mathbb{E}_{g}\!\bigl[\|\mathbf{m}_t - \boldsymbol\mu_t\|^2\bigr] \;=\; 2\,\sigma_t^4\;\underbrace{D_F\!\bigl(g(\,\cdot\,|\,\mathbf{x})\,\Vert\,f_\theta\bigr)}_{\text{Fisher divergence (Tool 3)}}.$$</div>
+  <div class="math-block">$$\bigl\|\tilde\mu_t - \mu_\theta\bigr\|^2 \;=\; (1-\bar\alpha_t)^2\,\bigl\|\nabla_{x_t}\log q(x_t\mid x_0) - \nabla_{x_t}\log p_\theta^{(t)}(x_t)\bigr\|^2.$$</div>
+  <p>Average over $q(x_t\mid x_0)$:</p>
+  <div class="math-block">$$\mathbb{E}_{q}\!\bigl[\|\tilde\mu_t - \mu_\theta\|^2\bigr] \;=\; 2\,(1-\bar\alpha_t)^2\;\underbrace{D_F\!\bigl(q(\,\cdot\,\mid x_0)\,\Vert\,p_\theta^{(t)}\bigr)}_{\text{Fisher divergence (Tool 3)}}.$$</div>
 </div>
 
 <div class="slide">
   <h2>Step 3 &mdash; Recognize the Denoising Form</h2><div class="divider"></div>
-  <p>Forward marginal $g(\mathbf{z}_t\mid\mathbf{x}) = \mathcal{N}(\sqrt{\bar\alpha_t}\,\mathbf{x},(1-\bar\alpha_t)I)$ has Gaussian score:</p>
-  <div class="math-block">$$\nabla_{\mathbf{z}_t}\log g(\mathbf{z}_t\mid\mathbf{x}) \;=\; -\,\frac{\mathbf{z}_t - \sqrt{\bar\alpha_t}\,\mathbf{x}}{1-\bar\alpha_t}.$$</div>
+  <p>Forward marginal $q(x_t\mid x_0) = \mathcal{N}(\sqrt{\bar\alpha_t}\,x_0,(1-\bar\alpha_t)I)$ has Gaussian score:</p>
+  <div class="math-block">$$\nabla_{x_t}\log q(x_t\mid x_0) \;=\; -\,\frac{x_t - \sqrt{\bar\alpha_t}\,x_0}{1-\bar\alpha_t}.$$</div>
   <p>Substitute, drop $\theta$-free terms: exactly <strong>Vincent's DSM</strong> at noise level $1-\bar\alpha_t$.</p>
   <div class="cite">Vincent, "A Connection Between Score Matching and Denoising Autoencoders", Neural Comp. 2011.</div>
 </div>
@@ -201,7 +201,7 @@ p_t(x_t) &amp;\;=\; \int p_0(x_0)\,\mathcal{N}\!\bigl(x_t;\,\sqrt{\bar\alpha_t}\
   <div class="card">
     <h3>Theorem (Vincent 2011; Song et al. 2021).</h3>
     <p>Diffusion ELBO maximization is equivalent (up to $\theta$-free constants) to minimizing</p>
-    <div class="math-block">$$\sum_{t=2}^{T}\;\mathbb{E}_{\mathbf{X},\mathbf{Z}_t}\!\left[\tfrac{\log e}{2}\,\Bigl\|\tfrac{\sqrt{\bar\alpha_t}\,\mathbf{X} - \mathbf{Z}_t}{1-\bar\alpha_t} - s_\theta(\mathbf{Z}_t)\Bigr\|^2\right],$$</div>
+    <div class="math-block">$$\sum_{t=2}^{T}\;\mathbb{E}_{X_0,X_t}\!\left[\tfrac{\log e}{2}\,\Bigl\|\tfrac{\sqrt{\bar\alpha_t}\,X_0 - X_t}{1-\bar\alpha_t} - s_\theta(X_t, t)\Bigr\|^2\right],$$</div>
     <p>the sum of denoising score-matching objectives at noise level $1-\bar\alpha_t$.</p>
   </div>
   <div class="cite">Vincent, Neural Comp. 2011; Song et al., "Score-Based Generative Modeling", ICLR 2021.</div>
@@ -219,10 +219,10 @@ p_t(x_t) &amp;\;=\; \int p_0(x_0)\,\mathcal{N}\!\bigl(x_t;\,\sqrt{\bar\alpha_t}\
 <div class="slide">
   <h2>Three Tools, One Loss</h2><div class="divider"></div>
   <div class="math-block">$$\begin{aligned}
-\text{ELBO MSE}
-&amp;\stackrel{(\text{Tweedie})}{=}\;\sigma_t^4\,\bigl\|\nabla\log g_t(\,\cdot\,|\,x_0) - \nabla\log f_\theta\bigr\|^2 \\
+\text{ELBO MSE} \quad
+&amp;\stackrel{(\text{Tweedie})}{=}\;(1-\bar\alpha_t)^2\,\bigl\|\nabla_{x_t}\log q(x_t\mid x_0) - \nabla_{x_t}\log p_\theta^{(t)}(x_t)\bigr\|^2 \\
 &amp;\stackrel{(\text{Fisher})}{=}\;\text{Fisher divergence at level } t \\
-&amp;\stackrel{(\text{DSM})}{=}\;\mathbb{E}\bigl\|\text{denoising direction} - s_\theta(\mathbf{Z}_t)\bigr\|^2.
+&amp;\stackrel{(\text{DSM})}{=}\;\mathbb{E}\bigl\|\text{denoising direction} - s_\theta(x_t, t)\bigr\|^2.
 \end{aligned}$$</div>
   <ul>
     <li><strong>Tool 1</strong> (ELBO): intractable likelihood $\to$ tractable MSE surrogate.</li>

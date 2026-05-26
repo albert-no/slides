@@ -42,13 +42,13 @@
     </div>
     <div class="toc-item">
       <div class="toc-num">03</div><div class="toc-rule"></div>
-      <div><div class="toc-label">True reverse conditional</div>
-      <div class="toc-sub">Two Gaussians multiply, square completes</div></div>
+      <div><div class="toc-label">ELBO decomposition</div>
+      <div class="toc-sub">$L_T + \sum L_{t-1} + L_0$ — what each term asks for</div></div>
     </div>
     <div class="toc-item">
       <div class="toc-num">04</div><div class="toc-rule"></div>
-      <div><div class="toc-label">ELBO decomposition</div>
-      <div class="toc-sub">$L_T + \sum L_t + L_0$, MSE on the mean</div></div>
+      <div><div class="toc-label">DDPM target</div>
+      <div class="toc-sub">Closed-form $q(x_{t-1}\mid x_t,x_0)$, KL → MSE</div></div>
     </div>
   </div>
 </div>
@@ -105,83 +105,69 @@
 
 <div class="slide">
   <h2>Diffusion Is a Hierarchical VAE</h2><div class="divider"></div>
-  <ul>
-    <li>Data $x_0$; latents $(x_1,\ldots,x_T)$.</li>
-    <li>Encoder $q(x_{1:T}\mid x_0)$: <strong>fixed</strong>, not learned.</li>
-    <li>Decoder $p_\theta(x_{0:T})$: learned Gaussian kernels.</li>
-    <li>Prior $p(x_T)=\mathcal{N}(0,I)$ over the deepest latent.</li>
-  </ul>
-  <div class="highlight">Frozen encoder: <strong>posterior collapse impossible</strong>.</div>
+
+  <div style="margin:28px 0 22px;">
+    <div style="text-align:center; color:var(--yonsei-blue); font-weight:600; font-size:1.4rem; margin-bottom:12px;">
+      forward $q(x_t\mid x_{t-1})$ — <strong>fixed</strong> (encoder) &nbsp; $\longrightarrow$
+    </div>
+    <div class="diagram-flow" style="justify-content:center; gap:14px; align-items:center; margin:10px 0; font-size:1.6rem;">
+      <div class="diagram-box" style="min-width:110px; padding:18px 14px;">$x_0$<br><span style="font-size:1rem;color:var(--gray-text);">data</span></div>
+      <span style="font-size:2.2rem; color:var(--yonsei-blue);">$\to$</span>
+      <div class="diagram-box" style="min-width:90px; padding:18px 14px;">$x_1$</div>
+      <span style="font-size:2.2rem; color:var(--yonsei-blue);">$\to$</span>
+      <div class="diagram-box" style="min-width:90px; padding:18px 14px;">$x_2$</div>
+      <span style="font-size:2.2rem; color:var(--yonsei-blue);">$\to$</span>
+      <span style="font-size:1.8rem;">$\cdots$</span>
+      <span style="font-size:2.2rem; color:var(--yonsei-blue);">$\to$</span>
+      <div class="diagram-box" style="min-width:130px; padding:18px 14px;">$x_T$<br><span style="font-size:1rem;color:var(--gray-text);">$\mathcal{N}(0,I)$</span></div>
+    </div>
+    <div style="text-align:center; color:var(--yonsei-blue); font-weight:600; font-size:1.4rem; margin-top:12px;">
+      $\longleftarrow$ &nbsp; reverse $p_\theta(x_{t-1}\mid x_t)$ — <strong>learned</strong> (decoder)
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:22px; font-size:1.15rem;">
+    <div><p><strong>VAE:</strong> $x \to z \to \hat x$ &nbsp;(one latent).</p></div>
+    <div><p><strong>Diffusion:</strong> $T$ Gaussian latents $x_1,\ldots,x_T$.</p></div>
+  </div>
+
+  <div class="highlight">Encoder is fixed $\Rightarrow$ <strong>posterior collapse impossible</strong>.</div>
 </div>
 
 
 <!-- ════ PART 03 ════ -->
 <div class="slide section-slide left">
   <div class="section-num">03</div>
-  <h1>True Reverse Conditional</h1>
-  <div class="divider"></div>
-  <p class="subtitle">Two Gaussians multiply; the square completes</p>
-</div>
-
-<div class="slide">
-  <h2>Goal and Bayes</h2><div class="divider"></div>
-  <p>Want $q(x_{t-1}\mid x_t, x_0)$, the law of $x_{t-1}$ given both endpoints.</p>
-  <div class="math-block">$$q(x_{t-1}\mid x_t, x_0) \;\propto\; \underbrace{q(x_t\mid x_{t-1})}_{\text{forward step}}\cdot\underbrace{q(x_{t-1}\mid x_0)}_{\text{closed form}}.$$</div>
-  <p>Both factors are Gaussian in $x_{t-1}$, so the product is Gaussian.</p>
-</div>
-
-<div class="slide">
-  <h2>Write Out the Two Exponents</h2><div class="divider"></div>
-  <p>Product $\propto q(x_t\mid x_{t-1})\cdot q(x_{t-1}\mid x_0)$ means add log-densities. In $x_{t-1}$:</p>
-  <div class="math-block">$$\begin{aligned}
-\log q(x_t\mid x_{t-1}) &amp;\ni\; -\frac{\alpha_t}{2\beta_t}\,x_{t-1}^2 \;+\; \frac{\sqrt{\alpha_t}}{\beta_t}\,x_t\,x_{t-1} \\[4pt]
-\log q(x_{t-1}\mid x_0) &amp;\ni\; -\frac{1}{2(1-\bar\alpha_{t-1})}\,x_{t-1}^2 \;+\; \frac{\sqrt{\bar\alpha_{t-1}}}{1-\bar\alpha_{t-1}}\,x_0\,x_{t-1}
-\end{aligned}$$</div>
-  <p>Quadratic in $x_{t-1}$: read off precision and linear term.</p>
-</div>
-
-<div class="slide">
-  <h2>Complete the Square — Variance</h2><div class="divider"></div>
-  <p>Sum the $x_{t-1}^2$ coefficients (precisions add):</p>
-  <div class="math-block">$$\frac{1}{\tilde\beta_t} \;=\; \frac{\alpha_t}{\beta_t} \;+\; \frac{1}{1-\bar\alpha_{t-1}} \;=\; \frac{1-\bar\alpha_t}{\beta_t(1-\bar\alpha_{t-1})}.$$</div>
-  <p>Invert to get the posterior variance:</p>
-  <div class="math-block">$$\tilde\beta_t \;=\; \dfrac{1-\bar\alpha_{t-1}}{1-\bar\alpha_t}\,\beta_t.$$</div>
-</div>
-
-<div class="slide">
-  <h2>Complete the Square — Mean</h2><div class="divider"></div>
-  <p>Sum the linear coefficients, multiply by $\tilde\beta_t$:</p>
-  <div class="math-block">$$\mu_q(x_t, x_0) \;=\; \tilde\beta_t\!\left(\frac{\sqrt{\alpha_t}}{\beta_t}\,x_t \;+\; \frac{\sqrt{\bar\alpha_{t-1}}}{1-\bar\alpha_{t-1}}\,x_0\right).$$</div>
-  <p>Simplify:</p>
-  <div class="math-block">$$\mu_q(x_t, x_0) \;=\; \frac{\sqrt{\alpha_t}(1-\bar\alpha_{t-1})}{1-\bar\alpha_t}\,x_t \;+\; \frac{\sqrt{\bar\alpha_{t-1}}\,\beta_t}{1-\bar\alpha_t}\,x_0.$$</div>
-</div>
-
-<div class="slide">
-  <h2>True Reverse — Closed Form</h2><div class="divider"></div>
-  <div class="card">
-    <h3>Lemma (reverse conditional).</h3>
-    <div class="math-block">$$q(x_{t-1}\mid x_t, x_0) \;=\; \mathcal{N}\!\bigl(\mu_q(x_t,x_0),\,\tilde\beta_t I\bigr).$$</div>
-  </div>
-  <p>$\mu_q$: weighted average of $x_t$ (current noisy) and $x_0$ (clean data).</p>
-  <p>$\tilde\beta_t$: shrinks as $\bar\alpha_{t-1} \to 0$ (less noise $\Rightarrow$ tighter reverse).</p>
-  <div class="highlight">The <strong>target</strong> the learned reverse $p_\theta(x_{t-1}\mid x_t)$ must match.</div>
-</div>
-
-
-<!-- ════ PART 04 ════ -->
-<div class="slide section-slide left">
-  <div class="section-num">04</div>
   <h1>ELBO Decomposition</h1>
   <div class="divider"></div>
-  <p class="subtitle">$L_T + \sum L_t + L_0$: what the model is asked to do</p>
+  <p class="subtitle">$L_T + \sum L_{t-1} + L_0$: what the model is asked to do</p>
 </div>
 
 <div class="slide">
   <h2>Apply Lecture 1 to the Hierarchy</h2><div class="divider"></div>
-  <p>Plug $p_\theta(x_{0:T})$ and $q(x_{1:T}\mid x_0)$ into the ELBO:</p>
-  <div class="math-block">$$\log p_\theta(x_0) \;\ge\; \mathbb{E}_{q}\!\bigl[\log p_\theta(x_{0:T}) - \log q(x_{1:T}\mid x_0)\bigr].$$</div>
-  <p>Telescope and collect by index:</p>
-  <div class="math-block">$$-\log p_\theta(x_0) \;\le\; \underbrace{D_{\mathrm{KL}}(q(x_T\mid x_0)\,\Vert\,p(x_T))}_{L_T} + \sum_{t=2}^{T} L_{t-1} + \underbrace{\bigl(-\log p_\theta(x_0\mid x_1)\bigr)}_{L_0}.$$</div>
+  <p>Lecture 1 ELBO with chain factorizations $p_\theta(x_{0:T})=p(x_T)\prod_t p_\theta(x_{t-1}\mid x_t)$ and $q(x_{1:T}\mid x_0)=\prod_t q(x_t\mid x_{t-1})$:</p>
+  <div class="math-block">$$-\log p_\theta(x_0) \;\le\; \mathbb{E}_q\!\left[-\log p(x_T) \;+\; \sum_{t=1}^{T}\log\frac{q(x_t\mid x_{t-1})}{p_\theta(x_{t-1}\mid x_t)}\right].$$</div>
+  <p>Forward $q(x_t\mid x_{t-1})$ has no $x_0$. Markov $\Rightarrow$ condition on $x_0$ is free; then Bayes flips the direction:</p>
+  <div class="math-block">$$q(x_t\mid x_{t-1}) \;=\; q(x_t\mid x_{t-1}, x_0) \;=\; \dfrac{q(x_{t-1}\mid x_t, x_0)\,q(x_t\mid x_0)}{q(x_{t-1}\mid x_0)}.$$</div>
+</div>
+
+<div class="slide">
+  <h2>Split and Telescope</h2><div class="divider"></div>
+  <p>For $t\ge 2$, substitute Bayes and split each log:</p>
+  <div class="math-block" style="margin:10px 0;">$$\log\frac{q(x_t\mid x_{t-1})}{p_\theta(x_{t-1}\mid x_t)} \;=\; \underbrace{\log\frac{q(x_{t-1}\mid x_t, x_0)}{p_\theta(x_{t-1}\mid x_t)}}_{\to\,L_{t-1}} \;+\; \log\frac{q(x_t\mid x_0)}{q(x_{t-1}\mid x_0)}.$$</div>
+  <p>Sum the right ratio across $t=2,\ldots,T$ &mdash; it telescopes:</p>
+  <div class="math-block" style="margin:10px 0;">$$\sum_{t=2}^{T}\log\frac{q(x_t\mid x_0)}{q(x_{t-1}\mid x_0)} \;=\; \log\frac{q(x_T\mid x_0)}{q(x_1\mid x_0)}.$$</div>
+</div>
+
+<div class="slide">
+  <h2>Collect into Three Terms</h2><div class="divider"></div>
+  <p>Combine the telescoped log with $-\log p(x_T)$ to form $L_T$; the $t=1$ boundary becomes $L_0$; the per-step KLs collect into $\sum L_{t-1}$:</p>
+  <div class="math-block" style="margin:10px 0;">$$-\log p_\theta(x_0) \;\le\; L_T \;+\; \sum_{t=2}^{T} L_{t-1} \;+\; L_0,$$</div>
+  <ul style="margin-top:6px; line-height:1.5;">
+    <li>$L_T = D_{\mathrm{KL}}\bigl(q(x_T\mid x_0)\,\Vert\,p(x_T)\bigr)$ &mdash; no $\theta$.</li>
+    <li>$L_{t-1} = \mathbb{E}_{q(x_t\mid x_0)}\,D_{\mathrm{KL}}\bigl(q(x_{t-1}\mid x_t,x_0)\,\Vert\,p_\theta(x_{t-1}\mid x_t)\bigr)$.</li>
+    <li>$L_0 = -\mathbb{E}_{q(x_1\mid x_0)}\log p_\theta(x_0\mid x_1)$.</li>
+  </ul>
 </div>
 
 <div class="slide">
@@ -195,22 +181,43 @@
   <h2>$L_0$: Final Reconstruction</h2><div class="divider"></div>
   <div class="math-block">$$L_0 \;=\; -\mathbb{E}_{q(x_1\mid x_0)}\!\bigl[\log p_\theta(x_0\mid x_1)\bigr].$$</div>
   <p>Decoder log-likelihood of the clean data given the least-noisy latent $x_1$.</p>
-  <p>In practice: small relative to $\sum L_t$; absorbed into the training loss.</p>
+  <p>In practice: small relative to $\sum L_{t-1}$; absorbed into the training loss.</p>
   <div class="highlight">All training signal lives in the <strong>interior terms</strong> $L_1, \ldots, L_{T-1}$.</div>
 </div>
 
 <div class="slide">
-  <h2>Interior Term $L_t$ Is the Whole Game</h2><div class="divider"></div>
-  <p>For $t = 1,\ldots,T-1$:</p>
-  <div class="math-block">$$L_t \;=\; \mathbb{E}_{q(x_t\mid x_0)}\!\bigl[D_{\mathrm{KL}}\!\bigl(q(x_{t-1}\mid x_t, x_0)\,\Vert\,p_\theta(x_{t-1}\mid x_t)\bigr)\bigr].$$</div>
-  <p>Both arguments Gaussian; numerator known in closed form.</p>
+  <h2>Interior Term $L_{t-1}$ Is the Whole Game</h2><div class="divider"></div>
+  <p>$L_T$ has no $\theta$; $L_0$ is a boundary term. <strong>Only $L_{t-1}$ carries training signal</strong>:</p>
+  <div class="math-block">$$L_{t-1} \;=\; \mathbb{E}_{q(x_t\mid x_0)}\,D_{\mathrm{KL}}\!\bigl(\underbrace{q(x_{t-1}\mid x_t, x_0)}_{\text{true posterior — target}}\,\Vert\,\underbrace{p_\theta(x_{t-1}\mid x_t)}_{\text{model}}\bigr).$$</div>
+  <p>Model is Gaussian by design. To evaluate the KL we need the true posterior $q(x_{t-1}\mid x_t, x_0)$ in closed form too.</p>
+  <div class="highlight">Derive $q(x_{t-1}\mid x_t, x_0)$ &mdash; the <strong>DDPM target</strong> &mdash; in Section 04.</div>
+</div>
+
+
+<!-- ════ PART 04 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>The DDPM Target</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Closed-form $q(x_{t-1}\mid x_t,x_0)$ turns KL into MSE</p>
 </div>
 
 <div class="slide">
-  <h2>$L_t$ Becomes MSE on the Mean</h2><div class="divider"></div>
-  <p>Pin both covariances to $\tilde\beta_t I$. KL between same-covariance Gaussians:</p>
-  <div class="math-block">$$D_{\mathrm{KL}}\!\bigl(\mathcal{N}(\mu_q,\Sigma)\,\Vert\,\mathcal{N}(\mu_\theta,\Sigma)\bigr) \;=\; \tfrac{1}{2}(\mu_q - \mu_\theta)^\top\Sigma^{-1}(\mu_q - \mu_\theta).$$</div>
-  <div class="highlight">Training reduces to: <strong>predict the posterior mean</strong> $\mu_q(x_t, x_0)$ from $(x_t, t)$.</div>
+  <h2>Closed Form by Complete-the-Square</h2><div class="divider"></div>
+  <p>Rearrange Bayes (Sec 03) to isolate the target: $q(x_{t-1}\mid x_t, x_0) \propto q(x_t\mid x_{t-1})\,q(x_{t-1}\mid x_0)$. Both factors Gaussian in $x_{t-1}$ &rArr; product Gaussian.</p>
+  <div class="card" style="padding:12px 20px; margin:10px 0;">
+    <h3 style="margin:0 0 6px;">Lemma (DDPM reverse conditional).</h3>
+    <div class="math-block" style="margin:4px 0;">$$q(x_{t-1}\mid x_t, x_0) \;=\; \mathcal{N}\!\bigl(\tilde\mu_t(x_t,x_0),\,\tilde\beta_t I\bigr),$$</div>
+    <div class="math-block" style="margin:4px 0;">$$\tilde\beta_t = \dfrac{1-\bar\alpha_{t-1}}{1-\bar\alpha_t}\beta_t, \quad \tilde\mu_t = \dfrac{\sqrt{\alpha_t}(1-\bar\alpha_{t-1})}{1-\bar\alpha_t}x_t + \dfrac{\sqrt{\bar\alpha_{t-1}}\beta_t}{1-\bar\alpha_t}x_0.$$</div>
+  </div>
+  <p>$\tilde\mu_t$: weighted average of $x_t$ and $x_0$; $\tilde\beta_t$ shrinks as $\bar\alpha_{t-1}\to 0$. Algebra in the note.</p>
+</div>
+
+<div class="slide">
+  <h2>$L_{t-1}$ Becomes MSE on the Mean</h2><div class="divider"></div>
+  <p>Plug the closed form into $L_{t-1}$. Pin both covariances to $\tilde\beta_t I$. KL between same-covariance Gaussians:</p>
+  <div class="math-block">$$D_{\mathrm{KL}}\!\bigl(\mathcal{N}(\tilde\mu_t,\tilde\beta_t I)\,\Vert\,\mathcal{N}(\mu_\theta,\tilde\beta_t I)\bigr) \;=\; \tfrac{1}{2\tilde\beta_t}\,\|\tilde\mu_t - \mu_\theta\|^2.$$</div>
+  <div class="highlight">Training reduces to: <strong>predict the posterior mean</strong> $\tilde\mu_t(x_t, x_0)$ from $(x_t, t)$.</div>
 </div>
 
 <div class="slide">
@@ -229,8 +236,8 @@
     <li><strong>Forward:</strong> $q(x_t\mid x_0)=\mathcal{N}(\sqrt{\bar\alpha_t}x_0,(1-\bar\alpha_t)I)$.</li>
     <li><strong>Reverse:</strong> learned Gaussian kernels $p_\theta(x_{t-1}\mid x_t)$.</li>
     <li><strong>Hierarchical VAE:</strong> fixed encoder, deepest latent matched to $\mathcal{N}(0,I)$.</li>
-    <li><strong>True reverse:</strong> Gaussian, $\mathcal{N}(\mu_q, \tilde\beta_t I)$, closed form.</li>
-    <li><strong>ELBO:</strong> $L_T + \sum L_t + L_0$; interior terms are MSE on the mean.</li>
+    <li><strong>True reverse:</strong> Gaussian, $\mathcal{N}(\tilde\mu_t, \tilde\beta_t I)$, closed form.</li>
+    <li><strong>ELBO:</strong> $L_T + \sum_{t=2}^{T} L_{t-1} + L_0$; interior terms are MSE on the mean.</li>
   </ul>
 </div>
 

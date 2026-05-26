@@ -65,33 +65,32 @@ Information-theoretic treatment: VAE/ELBO → hierarchical VAE = diffusion → p
 | | VP setup | `:66` |
 | | **Lemma — q(x_t\|x_0) closed form** | `:76` |
 | | Master reparameterization | `:83` |
-| **02 — Reverse chain** | Learned Gaussian kernels | `:92-118` |
+| **02 — Reverse chain** | Learned Gaussian kernels | `:92-138` |
 | | Generative model | `:100` |
-| | Diffusion is hierarchical VAE | `:107` |
-| **03 — True reverse conditional** | Two Gaussians, complete the square | `:119-170` |
-| | Goal and Bayes | `:126` |
-| | Write out the two exponents | `:133` |
-| | Variance (precisions add) | `:143` |
-| | Mean (linear coefficients) | `:151` |
-| | **Lemma (reverse conditional, closed form)** | `:159` |
-| **04 — ELBO decomposition** | L_T + Σ L_t + L_0; KL → MSE on mean | `:172-235` |
-| | Apply Lecture 1 ELBO | `:179` |
-| | $L_T$: prior matching (no training) | `:187` |
-| | $L_0$: final reconstruction | `:194` |
-| | Interior $L_t$ | `:202` |
-| | KL → MSE on mean | `:209` |
-| | Three parameterizations of $\mu_\theta$ | `:216` |
+| | Diffusion is hierarchical VAE (diagram) | `:107` |
+| **03 — ELBO decomposition** | $L_T + \sum L_{t-1} + L_0$; derive via Bayes + telescope | `:139-194` |
+| | Apply Lecture 1 ELBO; chain factorization + Bayes trick | `:147` |
+| | Split and telescope (Bayes-split log; telescoping identity) | `:155` |
+| | **Collect into three terms** (defines $L_T, L_{t-1}, L_0$) | `:163` |
+| | $L_T$: prior matching (no training) | `:174` |
+| | $L_0$: final reconstruction | `:181` |
+| | Interior $L_{t-1}$ — only $\theta$-dependent term; need closed-form posterior | `:188` |
+| **04 — DDPM target** | Closed-form $q(x_{t-1}\mid x_t,x_0)$; KL → MSE on mean | `:198-232` |
+| | **Closed form by complete-the-square** (merged Bayes + lemma) | `:206` |
+| | $L_{t-1}$ becomes MSE on the mean | `:217` |
+| | Three parameterizations of $\mu_\theta$ | `:224` |
 
-**Key:** q(x_t\|x_0) `:76`; two exponents `:133`; reverse conditional Gaussian `:159`; ELBO three-term `:179`.
+**Key:** q(x_t\|x_0) `:76`; chain-factor ELBO + Bayes substitution `:147`; split + telescope `:155`; three-term ELBO `:163`; interior $L_{t-1}$ `:189`; reverse conditional Gaussian (DDPM) `:206`; KL→MSE `:217`. Complete-the-square algebra lives in `diff2-diffusion-note.html`.
 
 ### Note (`diff2-diffusion-note.html`)
 - Variance-preserving vs variance-exploding `:25`
 - Detailed ELBO expansion `:31`
 - Why linear-Gaussian reverse stays Gaussian `:49`
-- Why L_T vanishes `:55`
-- L_0 treatment `:61`
-- Numerical sanity check `:67`
-- Connection to rate–distortion `:74`
+- **Complete the square — full derivation** (algebra for $\tilde\mu_t, \tilde\beta_t$) `:55`
+- Why L_T vanishes `:82`
+- L_0 treatment `:88`
+- Numerical sanity check `:94`
+- Connection to rate–distortion `:101`
 
 ---
 

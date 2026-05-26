@@ -213,37 +213,47 @@ p(z)\cdot p_\theta(x\mid z) & \text{recon} - \text{rate} & \text{trainable loss}
 
 <div class="slide">
   <h2>VAE Architecture</h2><div class="divider"></div>
-  <div class="diagram-flow" style="justify-content:center; gap:10px; margin:18px 0 14px;">
-    <div class="diagram-box" style="min-width:100px;">$x$<br><span style="font-size:1.05rem;color:var(--gray-text);">data</span></div>
-    <span style="font-size:2rem;color:var(--yonsei-blue);align-self:center;">$\to$</span>
-    <div class="diagram-box" style="min-width:170px;border-color:var(--yonsei-blue);">Encoder $q_\phi$<br><span style="font-size:1.05rem;color:var(--gray-text);">$x \mapsto (\mu, \sigma)$</span></div>
-    <span style="font-size:2rem;color:var(--yonsei-blue);align-self:center;">$\to$</span>
-    <div class="diagram-box" style="min-width:80px;border-color:var(--blue-light);">$z$<br><span style="font-size:1.05rem;color:var(--gray-text);">latent</span></div>
-    <span style="font-size:2rem;color:var(--yonsei-blue);align-self:center;">$\to$</span>
-    <div class="diagram-box" style="min-width:170px;border-color:var(--yonsei-blue);">Decoder $p_\theta$<br><span style="font-size:1.05rem;color:var(--gray-text);">$z \mapsto \hat x$</span></div>
-    <span style="font-size:2rem;color:var(--yonsei-blue);align-self:center;">$\to$</span>
-    <div class="diagram-box" style="min-width:100px;">$\hat x$<br><span style="font-size:1.05rem;color:var(--gray-text);">output</span></div>
-  </div>
-  <div class="grid-2" style="margin-top:12px;">
-    <div><p><strong>Encoder</strong> (learned): compresses $x$ into a distribution over $z$.</p></div>
-    <div><p><strong>Decoder</strong> (learned): reconstructs $x$ from a sampled $z$.</p></div>
+  <div class="grid-2" style="gap:32px; margin-top:24px;">
+    <div>
+      <h3 style="text-align:center;">Encoder</h3>
+      <div class="diagram-flow" style="justify-content:center; gap:8px; margin:18px 0 14px;">
+        <div class="diagram-box" style="min-width:60px;">$x$</div>
+        <span style="font-size:1.7rem;color:var(--yonsei-blue);align-self:center;">$\to$</span>
+        <div class="diagram-box" style="min-width:120px;border-color:var(--yonsei-blue);">$q_\phi$</div>
+        <span style="font-size:1.7rem;color:var(--yonsei-blue);align-self:center;">$\to$</span>
+        <div class="diagram-box" style="min-width:60px;">$z$</div>
+      </div>
+      <p style="text-align:center;">$z \sim \mathcal{N}\!\bigl(\mu_\phi(x),\,\sigma_\phi(x)^2\bigr)$</p>
+      <p style="text-align:center;">Mean and std are <strong>functions of $x$</strong>.</p>
+    </div>
+    <div>
+      <h3 style="text-align:center;">Decoder</h3>
+      <div class="diagram-flow" style="justify-content:center; gap:8px; margin:18px 0 14px;">
+        <div class="diagram-box" style="min-width:60px;">$z$</div>
+        <span style="font-size:1.7rem;color:var(--yonsei-blue);align-self:center;">$\to$</span>
+        <div class="diagram-box" style="min-width:120px;border-color:var(--yonsei-blue);">$p_\theta$</div>
+        <span style="font-size:1.7rem;color:var(--yonsei-blue);align-self:center;">$\to$</span>
+        <div class="diagram-box" style="min-width:60px;">$\hat x$</div>
+      </div>
+      <p style="text-align:center;">Reconstructs $x$ from a sampled $z$.</p>
+    </div>
   </div>
 </div>
 
 <div class="slide">
   <h2>Gaussian Encoder</h2><div class="divider"></div>
-  <p>Network outputs mean and variance per dimension:</p>
+  <p>For $z\in\mathbb{R}^d$, network outputs per-coordinate mean and variance:</p>
   <div class="math-block">$$q_\phi(z\mid x) \;=\; \mathcal{N}\!\bigl(\mu_\phi(x),\,\operatorname{diag}\sigma_\phi(x)^2\bigr).$$</div>
-  <p>Both $\mu_\phi$ and $\sigma_\phi$ are neural networks parameterized by $\phi$.</p>
-  <p>Sampling $z \sim q_\phi(z\mid x)$ is stochastic: same $x$ gives different $z$.</p>
+  <p>$\mu_{\phi,j},\,\sigma_{\phi,j}$: $j$-th coordinates of $\mu_\phi(x),\,\sigma_\phi(x)$, for $j=1,\dots,d$.</p>
+  <div class="highlight">Gaussian choice $\Rightarrow$ <strong>closed-form KL</strong> and <strong>reparameterization</strong>.</div>
 </div>
 
 <div class="slide">
   <h2>Closed-Form KL</h2><div class="divider"></div>
-  <p>Prior is $p(z) = \mathcal{N}(0,I)$. KL from encoder to prior:</p>
-  <div class="math-block">$$D_{\mathrm{KL}}\!\bigl(q_\phi\,\Vert\,p\bigr) \;=\; \tfrac{1}{2}\sum_j\!\bigl(\mu_{\phi,j}^2 + \sigma_{\phi,j}^2 - 1 - \log\sigma_{\phi,j}^2\bigr).$$</div>
-  <p>Each term $= 0$ iff $\mu_j = 0$ and $\sigma_j = 1$ (encoder $=$ prior).</p>
-  <div class="highlight">Rate term is <strong>analytic</strong>: no Monte Carlo needed.</div>
+  <p>Prior $p(z) = \mathcal{N}(0,I)$. KL from encoder to prior:</p>
+  <div class="math-block">$$D_{\mathrm{KL}}\!\bigl(q_\phi\,\Vert\,p\bigr) \;=\; \tfrac{1}{2}\sum_{j=1}^{d}\!\bigl(\mu_{\phi,j}^2 + \sigma_{\phi,j}^2 - 1 - \log\sigma_{\phi,j}^2\bigr).$$</div>
+  <p>Each term $= 0$ iff $\mu_{\phi,j} = 0$ and $\sigma_{\phi,j} = 1$.</p>
+  <div class="highlight">Rate term is <strong>analytic</strong> — no Monte Carlo.</div>
 </div>
 
 <div class="slide">
@@ -273,7 +283,7 @@ p(z)\cdot p_\theta(x\mid z) & \text{recon} - \text{rate} & \text{trainable loss}
 
 <div class="slide">
   <h2>Failure Mode: Posterior Collapse</h2><div class="divider"></div>
-  <p>If the decoder is too powerful, the encoder can ignore $x$:</p>
+  <p>If the decoder can fit $x$ without help from $z$, the encoder has no reason to encode $x$:</p>
   <div class="math-block">$$D_{\mathrm{KL}}(q_\phi\,\Vert\,p) = 0 \;\Longleftrightarrow\; q_\phi(z\mid x) = p(z) \;\Longrightarrow\; z\perp x.$$</div>
   <p>Latent carries no information. Mitigations: KL annealing, free bits, weaker decoder.</p>
   <div class="highlight"><strong>Diffusion</strong> sidesteps this: encoder is fixed, $z$ is forced to carry $x$.</div>

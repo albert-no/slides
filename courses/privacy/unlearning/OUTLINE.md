@@ -1,6 +1,6 @@
 # privacy/unlearning/ — Machine unlearning
 
-Single comprehensive deck on machine unlearning. ~50-slide pass with theory (Newton-step certified, Sekhari deletion capacity, influence function, GA collapse, NPO bounded-loss, Pawelczyk verification hardness) plus full classification + LLM + benchmark + lab thread. Source: `privacy/slide.pdf` and `privacy/privacy.md` reference table.
+Single comprehensive deck on machine unlearning. ~57-slide pass with theory (Newton-step certified, Sekhari deletion capacity, influence function, GA collapse, NPO bounded-loss, Pawelczyk verification hardness) plus full classification + LLM + benchmark + lab thread. Source: `privacy/slide.pdf` and `privacy/privacy.md` reference table.
 
 ## Files
 
@@ -14,65 +14,66 @@ Single comprehensive deck on machine unlearning. ~50-slide pass with theory (New
 
 | Part | Topic | Line |
 |---|---|---|
-| **01** — Motivation, definition | RTBF, Ginart, certified, Newton, Sekhari, SISA | `:86-233` |
+| **01** — Motivation, definition | RTBF, Ginart, certified, Newton, Sekhari, SISA | `:86-243` |
 | | Central question | `:96` |
 | | Why now (lawsuits + GDPR + memorization) | `:108` |
 | | Retraining baseline | `:131` |
 | | **Ginart data deletion** $A(\mathcal{D}_{-i}) =_d R_A(\cdot)$ | `:144` |
 | | Exact vs approximate | `:157` |
 | | **$(\varepsilon,\delta)$-certified unlearning** | `:175` |
-| | **Theorem — Newton-step unlearning** (Guo 2020) | `:189` |
-| | **Theorem — deletion capacity** (Sekhari 2021) | `:204` |
-| | SISA (sharded, isolated, sliced, aggregated) | `:218` |
-| **02** — Classification algorithms | catalog, IU, SCRUB, SalUn, $\ell_1$, RURK | `:235-339` |
-| | Method catalog table | `:243` |
-| | **Influence function — closed form** (IU) | `:259` |
-| | **SCRUB** contrastive distillation | `:276` |
-| | **SalUn** weight-saliency mask | `:292` |
-| | **$\ell_1$-sparse** unlearning | `:310` |
-| | RURK — residual under perturbation | `:326` |
-| **03** — Classification metrics | UA/RA/TA/MIA/RTE, IDI, COLA | `:341-438` |
-| | Full-stack evaluation | `:349` |
-| | MIA loss/entropy probes | `:366` |
-| | SALUN benchmark table | `:381` |
-| | **IDI** (lab, AAAI 2026) | `:396` |
-| | COLA — collapse + align (lab) | `:412` |
-| | Over-unlearning (negative IDI) | `:427` |
-| **04** — LLM unlearning | GA collapse, NPO, SimNPO, ME+GD, IDK, ECO, ELM, LUNAR | `:440-639` |
-| | Why LLMs are different | `:448` |
-| | **GA / Knowledge Unlearning** | `:463` |
-| | **Why GA collapses** — gradient blow-up | `:479` |
-| | **NPO** (DPO-style negative branch) | `:494` |
-| | **NPO bounded loss** — sigmoid saturation | `:510` |
-| | **SimNPO** (reference-free, length-normalized) | `:526` |
-| | **ME+GD** (uniform KL) | `:542` |
-| | Who's Harry Potter (Eldan) | `:557` |
-| | TOFU IDK refusal | `:572` |
-| | Guardrail / ECO | `:589` |
-| | ELM concept erasure | `:610` |
-| | LUNAR activation redirection | `:624` |
-| **05** — Benchmarks and failures | TOFU/WMDP/RWKU/MUSE, Pawelczyk, position, lab | `:640-849` |
-| | TOFU | `:648` |
-| | WMDP | `:662` |
-| | RWKU | `:675` |
-| | MUSE six-way | `:689` |
-| | Benign relearning (Hu) | `:705` |
-| | Syntactic relearning (lab) | `:718` |
-| | Cooper "doesn't do what you think" — 5 mismatches | `:731` |
-| | **Theorem — verification hardness** (Pawelczyk 2024) | `:748` |
-| | Are we making progress? (Triantafillou 2024 NeurIPS competition) | `:762` |
-| | Position (lab) — term overused | `:778` |
-| | DUSK — shared knowledge (lab) | `:797` |
-| | R-TOFU — reasoning models (lab) | `:810` |
-| | SEPS — multi-query separability (lab) | `:823` |
-| | Random thoughts | `:836` |
-| | Takeaways | `:850` |
+| | **Theorem — Newton-step unlearning** (Guo 2020), split: setup `:189`, noise `:202` |
+| | **Theorem — deletion capacity** (Sekhari 2021) | `:214` |
+| | SISA (sharded, isolated, sliced, aggregated) | `:228` |
+| **02** — Classification algorithms | catalog, IU, SCRUB, SalUn, $\ell_1$, RURK | `:245-349` |
+| | Method catalog table | `:253` |
+| | **Influence function — closed form** (IU) | `:269` |
+| | **SCRUB** contrastive distillation | `:286` |
+| | **SalUn** weight-saliency mask | `:302` |
+| | **$\ell_1$-sparse** unlearning | `:320` |
+| | RURK — residual under perturbation | `:336` |
+| **03** — Classification metrics | UA/RA/TA/MIA/RTE, IDI, COLA | `:351-448` |
+| | Full-stack evaluation | `:359` |
+| | MIA loss/entropy probes | `:376` |
+| | SalUn benchmark table | `:391` |
+| | **IDI** (lab, AAAI 2026) | `:406` |
+| | COLA — collapse + align (lab) | `:422` |
+| | Over-unlearning (negative IDI) | `:437` |
+| **04** — LLM unlearning | GA collapse, NPO, SimNPO, ME+GD, IDK, ECO, ELM, LUNAR | `:450-647` |
+| | Why LLMs are different | `:458` |
+| | **GA / Knowledge Unlearning** | `:473` |
+| | **Why GA collapses** — gradient blow-up | `:489` |
+| | **NPO** (DPO-style negative branch) | `:504` |
+| | **NPO bounded loss** — sigmoid saturation | `:520` |
+| | **SimNPO** (reference-free, length-normalized) | `:536` |
+| | **ME+GD** (uniform KL) | `:552` |
+| | Who's Harry Potter (Eldan) | `:567` |
+| | TOFU IDK refusal | `:582` |
+| | Guardrail / ECO | `:599` |
+| | ELM concept erasure | `:620` |
+| | LUNAR activation redirection (consolidated math) | `:634` |
+| **05** — Benchmarks and failures | TOFU/WMDP/RWKU/MUSE, Pawelczyk, position, lab | `:649-858` |
+| | TOFU | `:657` |
+| | WMDP | `:671` |
+| | RWKU | `:684` |
+| | MUSE six-way | `:698` |
+| | Benign relearning (Hu) | `:714` |
+| | Syntactic relearning (lab) | `:727` |
+| | Cooper "doesn't do what you think" — 5 mismatches | `:740` |
+| | **Theorem — verification hardness** (Pawelczyk 2024) | `:757` |
+| | Are we making progress? (Triantafillou 2024 NeurIPS competition) | `:771` |
+| | Position (lab) — term overused | `:787` |
+| | DUSK — shared knowledge (lab) | `:806` |
+| | R-TOFU — reasoning models (lab) | `:819` |
+| | SEPS — multi-query separability (lab) | `:832` |
+| | Random thoughts | `:845` |
 
-**Key formulas:** Certified $(\varepsilon,\delta)$ `:179`; Newton step + noise `:193-201`; Sekhari capacity `:209-211`; influence function `:262`; SCRUB KL `:278`; SalUn mask `:297-300`; $\ell_1$-sparse `:313`; RURK `:329`; IDI `:400`; GA gradient blow-up `:483`; NPO `:497`; NPO bounded gradient `:514`; SimNPO `:530`; ME+GD `:548`; LUNAR redirection `:628-632`; Pawelczyk hardness `:752`.
+**Key formulas:** Certified $(\varepsilon,\delta)$ `:179`; Newton step `:194`; Newton noise `:206`; Sekhari capacity `:219`; influence function `:272`; SCRUB KL `:288`; SalUn mask `:307-310`; $\ell_1$-sparse `:323`; RURK `:339`; IDI `:410`; GA gradient blow-up `:493`; NPO `:507`; NPO bounded gradient `:524`; SimNPO `:540`; ME+GD `:558`; LUNAR redirection (aligned) `:638`; Pawelczyk hardness `:761`.
 
-**Key theorems:** Newton-step certified (Guo 2020) `:191`; deletion capacity (Sekhari 2021) `:206`; NPO bounded-divergence `:518`; black-box verification hardness (Pawelczyk 2024) `:750`.
+**Key theorems:** Newton-step certified (Guo 2020), 2-slide statement `:189, :202`; deletion capacity (Sekhari 2021) `:214`; NPO bounded-divergence `:528`; black-box verification hardness (Pawelczyk 2024) `:757`.
 
 **Lab papers cited:** IDI/COLA (AAAI 2026); R-TOFU (EMNLP 2025); SEPS (EMNLP 2025); DUSK; syntactic relearning (ICLR 2026); position paper (ICML 2026 under review).
+
+**Audit history.** 2026-05 visual audit: split Newton-Step theorem from 1 slide into 2 (was overflowing at bottom); consolidated LUNAR's two math blocks into one `aligned` env (citation was colliding with trailing prose). Total slide count 56 → 57.
 
 ---
 

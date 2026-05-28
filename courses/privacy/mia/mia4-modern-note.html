@@ -101,17 +101,59 @@
 <section>
   <h2><span class="pill">§4</span> Ye et al. 2022 — the unified hierarchy</h2>
 
-  <h3>What changed when</h3>
-  <p>By 2022 there were already half a dozen MIA variants in active use (threshold, shadow-class, LR, LiRA, label-only). Ye et al. organize them in a single hierarchy based on what each attack is allowed to know:</p>
+  <h3>The problem Ye et al. set out to solve</h3>
+  <p>By 2022 the MIA literature was a zoo: Yeom's loss threshold, Shokri's shadow classifier, Song's entropy attack, Sablayrolles' Bayes-optimal, LiRA, label-only attacks. Each paper proposed a new attack and a new evaluation. Two questions had no clean answer.</p>
   <ol>
-    <li><strong>Population</strong> — only sees the target model and a population sample.</li>
-    <li><strong>Reference</strong> — adds reference models trained without $z$.</li>
-    <li><strong>LiRA</strong> — adds per-example "in" shadow models.</li>
+    <li><em>Are these attacks fundamentally different, or are they the same idea with different approximations?</em></li>
+    <li><em>If I am auditing a model, which attack should I run?</em> Different attacks give different numbers; without a hierarchy, the audit number is arbitrary.</li>
   </ol>
-  <p>The hierarchy is provably monotone: LiRA dominates Reference dominates Population. The deck's "Attack Power Hierarchy" slide encodes this; the deck's Privacy Meter library implements it as the standard auditing tool.</p>
+  <p>Ye et al. answer both at once. They show every MIA in the literature is the same Neyman–Pearson likelihood-ratio test, and they differ only in <strong>how the null distribution is estimated</strong>. That single observation orders the attacks and tells you what you sacrifice by going cheaper.</p>
+
+  <h3>The one template every attack instantiates</h3>
+  <p>Pick a signal $\phi(f_\theta, z)$ — typically the loss $\ell(f_\theta, z)$, or a transformation like the predicted-class logit $\log\frac{p_c}{1-p_c}$. The MIA decision is</p>
+  $$\Lambda(z) \;=\; \frac{p(\phi(f_\theta, z) \mid z \in D)}{p(\phi(f_\theta, z) \mid z \notin D)} \;\gtrless\; \tau.$$
+  <p>The numerator and denominator are <em>distributions over $\phi$</em>, not point values. Every modern attack is some way of estimating those two distributions. The denominator — what loss we would see if $z$ had <em>not</em> been trained on — is the hard one, and it is where the four attack tiers diverge.</p>
+
+  <h3>The four tiers — concretely, what does each one compute?</h3>
+  <p>Fix a target record $z$ and a target model $f_\theta$. Each tier estimates $p(\phi \mid z \notin D)$ differently.</p>
+
+  <p><strong>Tier 0 — Threshold (Yeom).</strong> Pick one global scalar $\tau$ (e.g., the average training loss). Decide "member" iff $\ell(f_\theta, z) < \tau$. Implicitly assumes $p(\phi \mid z \notin D)$ is the <em>same distribution for every $z$</em>, with a single mode at $\tau$. This is wrong for any non-trivial model: a textbook example near the class manifold has low loss whether or not it was trained on, while an outlier has high loss in both cases. The threshold misclassifies the textbook example as a member and the outlier as a non-member.</p>
+
+  <p><strong>Tier 1 — Population.</strong> Take a sample of records $\{z_1', \ldots, z_n'\}$ from the population (an auxiliary unlabelled set, assumed disjoint from training). Evaluate the <em>same target model</em> on each: $\phi_i = \phi(f_\theta, z_i')$. Use the empirical distribution $\hat p_{\text{pop}}(\phi) = \frac{1}{n}\sum_i \delta_{\phi_i}$ as the estimate of $p(\phi \mid z \notin D)$. Decision: how surprising is $\phi(f_\theta, z)$ as a draw from $\hat p_{\text{pop}}$? Concretely, compute the quantile of $\phi(f_\theta, z)$ within $\{\phi_i\}$; low quantile → likely member.</p>
+  <p>This is much better than the threshold: it gives a <em>distribution</em>, not a single number, so you can extract calibrated TPR at any FPR. But it is still <em>not z-specific</em> — it treats $z$ as a generic population sample. The textbook/outlier asymmetry above is still mishandled.</p>
+
+  <p><strong>Tier 2 — Reference.</strong> Train $R$ <em>reference models</em> $\theta_1, \ldots, \theta_R$ on data drawn from the population, where $z \notin$ training set of any reference. Evaluate each on $z$: $\phi_r = \phi(f_{\theta_r}, z)$. Fit a distribution (typically a Gaussian) to $\{\phi_r\}$ and use it as the estimate of $p(\phi \mid z \notin D)$. The numerator $p(\phi \mid z \in D)$ is either taken to be a constant (offline) or also estimated from $R$ models trained <em>with</em> $z$ (online — and at this point you are basically running LiRA).</p>
+  <p>This is the qualitative jump: the null is now <strong>per-$z$</strong>. The textbook example has its own narrow null centred at low loss; the outlier has its own null centred at high loss. A target loss "low compared to <em>this $z$'s</em> null" is the real membership signal.</p>
+
+  <p><strong>Tier 3 — LiRA.</strong> Same idea as Reference, but estimate both numerator and denominator with separate Gaussian fits from $R$ "in" and $R$ "out" shadow models. Fully per-$z$ on both sides of the LR test. This is the most expensive and most powerful instance.</p>
+
+  <h3>The "Population vs. Reference" slide, decoded</h3>
+  <p>This is the slide that the original audience finds most confusing because both names sound vague. The crisp distinction is:</p>
+  <ul>
+    <li><strong>Population</strong> uses the <em>same target model</em> but evaluates it on <em>many different records</em> $z_i'$. The null distribution is built from "what does $f_\theta$ score on records it presumably never trained on?"</li>
+    <li><strong>Reference</strong> uses <em>many different models</em> and evaluates each on the <em>same target $z$</em>. The null distribution is built from "what would generic models trained without $z$ score on this specific $z$?"</li>
+  </ul>
+  <p>Population sweeps over $z$'s with one model fixed. Reference sweeps over models with one $z$ fixed. Reference is more powerful because it captures the $z$-specific signal, which is exactly what the textbook/outlier example demands.</p>
+
+  <h3>Why the hierarchy is monotone (sketch)</h3>
+  <p>Each tier strictly enlarges the information available to the LR test:</p>
+  <ul>
+    <li>Threshold uses only a scalar summary of the population null.</li>
+    <li>Population uses the full empirical distribution of the population null but still pools across $z$.</li>
+    <li>Reference replaces the pooled null with a $z$-specific null.</li>
+    <li>LiRA adds a $z$-specific alternative to match.</li>
+  </ul>
+  <p>By Neyman–Pearson, the optimal test at any FPR uses the true $p(\phi \mid z \in D)$ and $p(\phi \mid z \notin D)$. Tier $k$'s distributional estimates are weakly better approximations than tier $k-1$'s, so its TPR at fixed FPR is weakly higher. Ye et al. confirm this empirically across CIFAR-10/100 and Purchase-100: holding the signal $\phi$ fixed, ranks are Threshold &lt; Population &lt; Reference &lt; LiRA at every FPR they evaluate.</p>
+
+  <h3>Why this framework is the actual contribution</h3>
+  <p>Before Ye et al., a new MIA paper would propose attack $X$ and show $X$ beats some prior baselines. There was no way to tell whether $X$ was a fundamentally new test or a re-implementation of an existing tier with a slightly different signal $\phi$. After Ye et al., every new attack has to declare its tier (what auxiliary information does it use?) and its signal (what $\phi$ does it compute?). Two attacks in the same tier with the same $\phi$ are essentially the same attack, regardless of branding. This is what lets RMIA (next section) credibly claim to be "near-LiRA at a fraction of the cost": it is a Reference-tier attack with a clever population-relative signal, not a fundamentally new construction.</p>
 
   <h3>Why the hierarchy matters for auditing</h3>
-  <p>If you are a deployer and want to certify "MIA risk against the strongest known attack is below $X$", you must evaluate at the top of the hierarchy. Using Population-only attacks for certification is a known overestimate of privacy. This connects back to the MI-as-DP-auditing slide in Lecture 1: empirical MIA gives a lower bound on leakage, but only if you actually run the strongest attack.</p>
+  <p>If you are a deployer and want to certify "MIA risk against the strongest known attack is below $X$", you must evaluate at the top of the hierarchy. Using Population-only attacks for certification is a known <em>overestimate of privacy</em>: you will report TPR-at-low-FPR numbers that are lower than what an adversary with reference models would actually achieve. This connects back to the MI-as-DP-auditing slide in Lecture 1: empirical MIA gives a lower bound on the true leakage, but the bound is only tight if you run the strongest attack in the threat model.</p>
+  <p>The Privacy Meter library exists precisely to enforce this. Rather than letting practitioners pick whichever attack reports the friendliest number, Privacy Meter runs Population, Reference, and LiRA-style attacks side by side and exposes the per-sample risk score from each tier. The hierarchy makes "which attack to run" no longer a research-taste question but a checklist item.</p>
+
+  <h3>One subtlety: per-record vs. per-sample games</h3>
+  <p>Ye et al. also formalize a distinction the earlier literature blurred. The <strong>per-sample</strong> game (Yeom-style) draws $z$ randomly from the dataset and asks the adversary to guess membership averaged over $z$. The <strong>per-record</strong> game (LiRA-style) fixes a specific worst-case $z$ chosen in advance, and asks the adversary to guess for that $z$. Most outlier-driven leakage shows up only in the per-record game; averaging over $z$ in the per-sample game hides it under the bulk of well-behaved examples. The TPR-at-low-FPR critique from Lecture 4's earlier slides is essentially the per-record game in metric form.</p>
 </section>
 
 <section>

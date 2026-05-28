@@ -10,7 +10,7 @@
 | `mia2-shadow.html` | `mia2-shadow-note.html` | — | Shadow models: Shokri, LOGAN (GANs), Hisamoto (seq2seq) |
 | `mia3-theory.html` | `mia3-theory-note.html` | — | Theory: Yeom (overfitting), Sablayrolles (BB≈WB), Salem (relaxed), Nasr (FL) |
 | `mia4-modern.html` | `mia4-modern-note.html` | `mia4-overview.html` | Modern: LiRA, Ye hierarchy, RMIA, label-only, defenses |
-| `mia5-llm.html` | `mia5-llm-note.html` | `mia5-overview.html` | LLMs: perplexity, neighbourhood, SPV, context-aware, InfoRMIA |
+| `mia5-llm.html` | `mia5-llm-note.html` | `mia5-overview.html` | LLMs (high-level): calibration strategies, **empirical wall** (Hayes 2025), fine-tuning, extraction |
 | `old/MIA.html` | — | — | Legacy consolidated deck (Lectures 1–2 era) |
 
 ---
@@ -162,45 +162,49 @@ Lightened from 45 → 28 slides: Yeom 3-part proof, redundant intuition slides, 
 
 ## mia5-llm.html
 
+**Restructured 2026-05** to ~38 slides — high-level overview rather than per-paper deep dive. New §03 "Empirical wall" featuring Hayes et al. 2025 limits-of-strong-attacks paper, Duan et al. 2024, and Maini et al. blind baselines. Detailed per-paper material now lives in `mia5-llm-note.html`.
+
 | Part | Topic | Line |
 |---|---|---|
-| **01** — Why LLMs are different | | `:102-220` |
-| | Three threat models (pre-train/FT/context) | `:139` |
-| | **Perplexity baseline** `PPL(x) = exp(-1/T Σ log p_θ(x_t\|x_{<t}))` | `:166` |
-| | Calibration challenge (5 strategies) | `:208` |
-| **02** — Neighbourhood attack | | `:221-306` |
-| | Mask-and-fill with T5 | `:245` |
-| | **Score** `s(x) = log p_θ(x) − (1/K) Σ log p_θ(x̃^k)` | `:263` |
-| **03** — SPV-MIA & context-aware | | `:307-426` |
-| | SPV-MIA (target generates own calibration data) | `:316` |
-| | Self-prompting strategies | `:330` |
-| | LLaMA 0.85 AUC, GPT-2 0.80 (fine-tuning) | `:358` |
-| | **Context-aware**: `s(x) = Var_c[log p_θ(x\|c)]` | `:395` |
-| **04** — InfoRMIA | token-level | `:427-592` |
-| | **Token surprise** `I_t = −log p_θ(x_t\|x_{<t})` | `:455` |
-| | **Formulation** `s(x) = Σ w_t log(p_θ/p_ref)` | `:475` |
-| | Identifying informative tokens (entities) | `:490` |
-| | **Information-theoretic foundation** `I(z∈D; x_t \| x_{<t})` | `:545` |
-| | SOTA: WikiMIA 0.74 AUC, 12% TPR@1% FPR | `:572` |
-| **05** — Evaluation & scale | | `:593-683` |
-| | Calibration zoo summary | `:618` |
-| | Benchmarks: WikiMIA, MIMIR | `:656` |
-| | **Larger models memorize more** | `:673` |
-| **06** — MIA → extraction | | `:684-764` |
-| | Chain: generate → rank by MIA → extract | `:696` |
-| | Pseudocode: perplexity+neighbourhood `:733`, InfoRMIA `:751` |
-| **07** — Defenses & governance | | `:765-894` |
-| | DP fine-tuning | `:776` |
-| | Deduplication (Carlini scaling laws) | `:795` |
-| | Machine unlearning + MIA verification | `:812` |
-| | GDPR / NYT v OpenAI | `:835` |
-| **08** — Synthesis | timeline 2008–2025, four eras | `:895-1180` |
-| | Open problems: pre-training detection, multi-modal, reference-free, agents/RAG | `:1000-1043` |
-| | Key equations summary | `:1145-1175` |
+| **01** — What makes LLM MIA hard | | `:82-198` |
+| | From classifiers to LLMs (one-pass, no shadows, unknown data) | `:90` |
+| | Three threat models (pre-train/FT/context) | `:116` |
+| | **Perplexity baseline** `PPL(x) = exp(-1/T Σ log p_θ(x_t\|x_{<t}))` | `:140` |
+| | The calibration challenge (need a per-example null) | `:155` |
+| | Two knobs: **signal × reference** | `:175` |
+| **02** — Calibration strategies | | `:199-325` |
+| | Reference model (Carlini 2021) — smaller LM as null | `:206` |
+| | **Neighbourhood** (Mattern 2023) — paraphrase null | `:221` |
+| | **SPV-MIA** (Fu 2023) — self-prompted null | `:236` |
+| | **Context-aware** (Chang 2024) — `s(x) = Var_c[log p_θ(x\|c)]` | `:253` |
+| | Token-level: which tokens carry signal (visualization) | `:269` |
+| | **Min-K% / InfoRMIA** — token-weighted log-ratio | `:293` |
+| | Calibration zoo summary table | `:306` |
+| **03** — The empirical wall (NEW) | | `:326-441` |
+| | The headline question (gap vs classifier MIA) | `:333` |
+| | **Duan et al. 2024** — MIA barely beats random on Pythia/Pile | `:348` |
+| | **Hayes et al. 2025** — scaled LiRA on GPT-2: AUC < 0.7 ceiling | `:364` |
+| | Per-record instability (training-seed noise > membership signal) | `:378` |
+| | **Maini et al. 2024** — blind baselines beat published MIAs | `:395` |
+| | Why pre-training MIA is structurally hard (4 reasons) | `:411` |
+| **04** — Where the signal still lives | | `:442-563` |
+| | Fine-tuning MIA works (multi-epoch, small data) | `:449` |
+| | Extractable vs. inferable memorization | `:471` |
+| | MIA as extraction's ranker (generate → rank → verify) | `:491` |
+| | Defenses (DP-FT, dedup, curation) | `:509` |
+| | Legal landscape (GDPR, NYT v OpenAI) | `:537` |
+| **05** — Synthesis | | `:564-655` |
+| | Unified LR template `Λ(z) = p(signal\|in)/p(signal\|out)` | `:571` |
+| | Instances table (Homer 2008 → InfoRMIA 2025) | `:582` |
+| | Four eras (2008–2017, 2018–2019, 2020–2023, 2023–2025) | `:597` |
+| | Key takeaways + open problems | `:610, :625` |
+| | Essential reading (Hayes et al. featured) | `:640` |
 
-**Key formulas:** Perplexity `:166`; Neighbourhood score `:263`; SPV `:348`; Context-aware variance `:395`; **InfoRMIA** `:475`; MI `:545`.
+**Key formulas:** Perplexity `:147`; Neighbourhood score `:228`; Context-aware variance `:259`; InfoRMIA `:300`; Unified LR `:575`.
 
-**Note (`mia5-llm-note.html`):** Side-by-side pseudocode perplexity/neighbourhood/InfoRMIA `:43-72`; full calibration zoo with InfoRMIA row `:74-79`.
+**Featured limitations papers (§03):** Duan 2024 `:348`; **Hayes 2025** `:364, :378`; Maini 2024 `:395`.
+
+**Note (`mia5-llm-note.html`):** Side-by-side pseudocode perplexity/neighbourhood/InfoRMIA `:43-72`; full calibration zoo with InfoRMIA row `:74-79`. (Per-paper deep-dive material — InfoRMIA token-selection strategies, SPV self-prompting strategies, full results tables — was moved out of the slides in the 2026-05 restructure and now belongs in the note.)
 
 ---
 

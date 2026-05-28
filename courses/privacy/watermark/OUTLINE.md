@@ -25,7 +25,7 @@ Single deck on watermarking for large language models. Detection, distortion-fre
 | | **Detection z-test** | `:192` |
 | | **Detection power — entropy bound** | `:207` |
 | | Quality–detect tradeoff | `:224` |
-| **03** — Distortion-free / undetectable | Gumbel, Aaronson proof, edit-distance, CGZ | `:244-419` |
+| **03** — Distortion-free / undetectable | Gumbel, Aaronson proof, edit-distance, CGZ | `:244-417` |
 | | **Recall — Gumbel distribution** | `:252` |
 | | **Theorem — Gumbel-max trick** | `:268` |
 | | **Proof — Gumbel-max** | `:283` |
@@ -34,26 +34,28 @@ Single deck on watermarking for large language models. Detection, distortion-fre
 | | **Aaronson is distortion-free** (proof) | `:325` |
 | | Kuditipudi inverse-transform + edit distance | `:340` |
 | | **Theorem — edit-distance robustness** | `:356` |
-| | Hu unbiased family | `:372` |
-| | **Undetectable** definition (CGZ) | `:386` |
-| | **CGZ construction** — PRF-based | `:403` |
-| **04** — Robustness and semantics | paraphrase, fixed-list, semantic, adaptive | `:421-516` |
-| | Paraphrase attack | `:429` |
-| | Provable robust (Zhao) | `:445` |
-| | **Semantic-invariant** watermark (Liu) | `:459` |
-| | Permute-and-flip | `:473` |
-| | **Adaptive watermark** (Liu 2024) | `:486` |
-| | **WaterMax** (Giboulot 2024) | `:502` |
-| **05** — Beyond standard LLMs | radioactivity, SynthID, dgMARK | `:518-595` |
-| | **Radioactive** watermarks (training tracer) | `:526` |
-| | SynthID-Text (Nature 2024) | `:542` |
-| | dgMARK — diffusion-LLM (lab) | `:556` |
-| | Open problems | `:570` |
-| | Takeaways | `:583` |
+| | Hu unbiased family | `:371` |
+| | **Undetectable** definition (CGZ) | `:385` |
+| | **CGZ construction** — PRF-based | `:402` |
+| **04** — Robustness and semantics | paraphrase, fixed-list, semantic, adaptive | `:419-514` |
+| | Paraphrase attack | `:427` |
+| | Provable robust (Zhao) | `:443` |
+| | **Semantic-invariant** watermark (Liu) | `:457` |
+| | Permute-and-flip | `:471` |
+| | **Adaptive watermark** (Liu 2024) | `:484` |
+| | **WaterMax** (Giboulot 2024) | `:500` |
+| **05** — Beyond standard LLMs | radioactivity, SynthID, dgMARK | `:516-593` |
+| | **Radioactive** watermarks (training tracer) | `:524` |
+| | SynthID-Text (Nature 2024) | `:540` |
+| | dgMARK — diffusion-LLM (lab) | `:554` |
+| | Open problems | `:568` |
+| | Takeaways | `:581` |
 
-**Key formulas:** Watermarked sampling `:180`; z-test `:194`; entropy bound on power `:210`; Gumbel density / construction `:256`; Aaronson rule `:317`; Gumbel-max equivalence `:333`; CGZ score `:415`; adaptive bias `:490`.
+**Key formulas:** Watermarked sampling `:180`; z-test `:194`; entropy bound on power `:210`; Gumbel density / construction `:256`; Aaronson rule `:317`; Gumbel-max equivalence `:333`; CGZ score `:410`; adaptive bias `:488`.
 
-**Key theorems:** Gumbel-max trick + proof `:271 + :286`; Aaronson distortion-free `:325`; Edit-distance robustness (Kuditipudi) `:359`; Undetectable definition (CGZ) `:389`.
+**Key theorems:** Gumbel-max trick + proof `:271 + :286`; Aaronson distortion-free `:325`; Edit-distance robustness (Kuditipudi) `:359`; Undetectable definition (CGZ) `:388`.
+
+**Audit history.** 2026-05 visual audit: trimmed edit-distance robustness bullets (merged "tight in c" into prior bullet) and compressed CGZ construction prose + highlight to clear brand-footer collisions on slides 22 and 25. No slide added/removed.
 
 ---
 

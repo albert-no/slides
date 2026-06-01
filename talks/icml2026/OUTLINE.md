@@ -23,18 +23,18 @@ Reworked for the 5-min slot: hook-first order, and the three "field does output 
 |---|---|---|
 | 1 | Title — Yoon\*, Jun\*, No (with photos for co-first authors) | 86 |
 | 2 | One Term, Many Tasks — diagram of 4 task branches (hook) | 109 |
-| 3 | What Unlearning *Should* Mean — retrain-indist. definition | 158 |
+| 3 | What Unlearning *Initially* Means — retrain-indist. definition | 158 |
 | 4 | But the Field Does Something Else — methods + benchmarks + mismatch flow | 175 |
-| 5 | Why It's Not Just Semantics — derived capabilities (math example) | 199 |
-| 6 | Surface Success Breaks Easily — adversarial probes | 234 |
+| 5 | Surface Success Breaks Easily — adversarial probes | 186 |
+| 6 | A Matter of Removing Influence — derived capabilities (math example) | 205 |
 | 7 | A Call for Action — reserve the term, reference-based eval, derived-capability probes | 252 |
 | 8 | **See you at the poster!** (URL, ID 67198, time/location) | 275 |
 
 ### Key claims
 
-- Machine unlearning $=$ $\mathrm{Dist}(\mathcal{L}(\Theta'), \mathcal{L}(\Theta_R)) \le \tau$ with $\Theta_R \sim \mathrm{Train}(D \setminus F)$ (slide 3 — initial definition from Ginart / Guo / Izzo).
+- Machine unlearning $=$ $\mathrm{Dist}(\mathcal{L}(\Theta_{\mathrm{unlearned}}), \mathcal{L}(\Theta_R)) \le \tau$ with $\Theta_R \sim \mathrm{Train}(D \setminus F)$ (slide 3 — initial definition from Ginart / Guo / Izzo).
 - Four reuses of "unlearning" by intent: output suppression, representation obfuscation, knowledge editing, behavioral refusal (slide 4 — all manual output control).
-- Output-failure benchmarks (lower ROUGE / QA acc / likelihood) without a retrain reference $\ne$ removing training influence (slide 5).
+- Output-failure benchmarks (lower ROUGE / QA acc / likelihood) without a retrain reference $\ne$ removing training influence (slide 6).
 - Derived capabilities (transferable skills induced by $F$) survive surface forgetting (slide 6).
 - Mismatch in the literature: papers cite retrain-indistinguishability but implement output suppression and score with output metrics (slide 8).
 - Recommendation: pick a lane — either compare to retrained reference (indistinguishability) or state the goal is output control / alignment and stop claiming indistinguishability (slide 9).

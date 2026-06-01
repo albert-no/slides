@@ -5,28 +5,30 @@ Poster ID 67198 · <https://icml.cc/virtual/2026/poster/67198> (time/location TB
 
 ## Files
 
-- `icml2026.html` — the deck (10 slides, ~30 sec each)
+- `icml2026.html` — the deck (8 slides, hook-first, ~35 sec each)
+- `script.html` — per-slide speaker script for the 5-min recording (verbatim + timing; printable)
 - `unlearning_position.pdf` — the position paper (Yoon, Jun, No, ICML 2026)
 - `instruction.pdf` — SlidesLive recording instructions (deadline 2026-06-01 AOE)
+- `backup/icml2026.v1-10slide.html` — prior 10-slide, definition-first version
 
 ## icml2026.html
 
 **Topic:** Position paper — "machine unlearning" should be reserved for dataset-defined deletion (retrain-indistinguishability); other usages need different terminology.
 
-### Sections (10 slides total)
+Reworked for the 5-min slot: hook-first order, and the three "field does output control" slides (methods / benchmarks / mismatch) collapsed into one. Per-benchmark detail (TOFU/MUSE/RWKU/WMDP) moved to the poster.
+
+### Sections (8 slides total)
 
 | # | Slide | Line |
 |---|---|---|
-| 1 | Title — Yoon\*, Jun\*, No (with photos for co-first authors) | 58 |
-| 2 | The Initial Definition of Unlearning (formal, retrain-indist.) | 81 |
-| 3 | One Term, Many Tasks — diagram of 4 task branches | 99 |
-| 4 | What Today's Papers Actually Do — manual output control | 139 |
-| 5 | Benchmarks Check Output Failure — no retrained reference | 155 |
-| 6 | Suppressing Output Is Not Enough — derived capabilities | 189 |
-| 7 | Surface Success Breaks Easily — adversarial probes | 213 |
-| 8 | The Mismatch in the Literature — frame vs method vs metric | 233 |
-| 9 | Pick a Lane — indistinguishability OR output control | 258 |
-| 10 | **See you at the poster!** (URL, ID 67198, time/location) | 281 |
+| 1 | Title — Yoon\*, Jun\*, No (with photos for co-first authors) | 86 |
+| 2 | One Term, Many Tasks — diagram of 4 task branches (hook) | 109 |
+| 3 | What Unlearning *Should* Mean — retrain-indist. definition | 158 |
+| 4 | But the Field Does Something Else — methods + benchmarks + mismatch flow | 175 |
+| 5 | Why It's Not Just Semantics — derived capabilities (math example) | 199 |
+| 6 | Surface Success Breaks Easily — adversarial probes | 234 |
+| 7 | A Call for Action — reserve the term, reference-based eval, derived-capability probes | 252 |
+| 8 | **See you at the poster!** (URL, ID 67198, time/location) | 275 |
 
 ### Key claims
 

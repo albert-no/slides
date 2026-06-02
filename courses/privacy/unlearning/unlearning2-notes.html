@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Speaker Notes — Machine Unlearning Part II (LLM)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  :root{
+    --blue:#003876; --ink:#1a1a1a; --muted:#5a6473; --light:#f3f5f8;
+    --slate:#dde3ea; --accent:#003876;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;
+    color:var(--ink); line-height:1.6; margin:0; background:#fff;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:56px 28px 120px;}
+  header.doc{border-bottom:3px solid var(--blue); padding-bottom:22px; margin-bottom:14px;}
+  header.doc .kicker{color:var(--blue); font-weight:700; letter-spacing:.08em; text-transform:uppercase; font-size:.72rem;}
+  header.doc h1{font-size:2rem; line-height:1.2; margin:.35rem 0 .5rem; color:var(--blue);}
+  header.doc p{color:var(--muted); margin:.2rem 0; font-size:.95rem;}
+  .toc{background:var(--light); border-radius:10px; padding:18px 24px; margin:24px 0 40px; font-size:.9rem;}
+  .toc h2{font-size:.8rem; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin:0 0 10px;}
+  .toc ol{margin:0; padding-left:1.4em; columns:2; column-gap:34px;}
+  .toc li{margin:2px 0; break-inside:avoid;}
+  .toc a{color:var(--ink); text-decoration:none;}
+  .toc a:hover{color:var(--blue); text-decoration:underline;}
+  .slide-note{margin:0 0 38px; padding-top:8px; border-top:1px solid var(--slate);}
+  .slide-note:first-of-type{border-top:none;}
+  .snum{display:inline-block; background:var(--blue); color:#fff; font-weight:700; font-size:.78rem;
+    border-radius:6px; padding:3px 10px; margin-bottom:8px; letter-spacing:.03em;}
+  .stag{display:inline-block; color:var(--muted); font-size:.72rem; text-transform:uppercase;
+    letter-spacing:.07em; margin-left:8px; vertical-align:middle;}
+  .slide-note h3{color:var(--blue); font-size:1.28rem; margin:.1rem 0 .6rem; line-height:1.25;}
+  .slide-note p{margin:.55rem 0;}
+  .slide-note ul{margin:.5rem 0; padding-left:1.3em;}
+  .slide-note li{margin:.32rem 0;}
+  .say{background:#fbfcfe; border-left:3px solid var(--blue); padding:12px 18px; border-radius:0 8px 8px 0; margin:14px 0;}
+  .say::before{content:"Say it like this"; display:block; font-size:.68rem; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--blue); font-weight:700; margin-bottom:5px;}
+  .say p{margin:.3rem 0; font-style:italic; color:#33404f;}
+  .board{background:var(--light); border-radius:8px; padding:12px 18px; margin:14px 0; font-size:.92rem;}
+  .board::before{content:"On the board / derivation"; display:block; font-size:.68rem; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--muted); font-weight:700; margin-bottom:6px;}
+  .ask{border:1px dashed var(--slate); border-radius:8px; padding:10px 16px; margin:14px 0; font-size:.9rem;}
+  .ask::before{content:"Anticipated question"; display:block; font-size:.68rem; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--muted); font-weight:700; margin-bottom:5px;}
+  .key{font-weight:600; color:var(--blue);}
+  strong{color:#11203a;}
+  code{background:var(--light); padding:1px 5px; border-radius:4px; font-size:.88em;}
+  .timing{float:right; color:var(--muted); font-size:.78rem; font-weight:500; margin-top:6px;}
+  hr.sec{border:none; border-top:2px solid var(--blue); margin:46px 0 30px; opacity:.5;}
+  .sec-label{color:var(--blue); font-weight:700; letter-spacing:.05em; font-size:1rem; margin:0 0 4px;}
+  @media print{
+    .wrap{max-width:none; padding:0 12mm;}
+    .slide-note{break-inside:avoid;}
+    a{color:var(--ink); text-decoration:none;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc">
+  <div class="kicker">Speaker Notes · Lecture companion</div>
+  <h1>What Does It Mean for an LLM to Forget?<br>Part II — LLM Unlearning &amp; Benchmarks</h1>
+  <p>Machine unlearning at language-model scale · Albert No · Yonsei University</p>
+  <p>Detailed per-slide notes for <code>unlearning2-llm.html</code> (32 slides). Same format as Part I: the point of each slide, the spoken line, the derivation, and likely questions.</p>
+</header>
+
+<div class="toc">
+  <h2>Slides</h2>
+  <ol>
+    <li><a href="#s1">Title</a></li>
+    <li><a href="#s2">Contents</a></li>
+    <li><a href="#s3">§01 — LLM Unlearning</a></li>
+    <li><a href="#s4">Why LLMs Are Different</a></li>
+    <li><a href="#s5">Gradient Ascent (Jang)</a></li>
+    <li><a href="#s6">Why GA Collapses</a></li>
+    <li><a href="#s7">NPO</a></li>
+    <li><a href="#s8">NPO — Bounded Loss</a></li>
+    <li><a href="#s9">SimNPO</a></li>
+    <li><a href="#s10">ME + GD</a></li>
+    <li><a href="#s11">Who's Harry Potter</a></li>
+    <li><a href="#s12">IDK Refusal (TOFU)</a></li>
+    <li><a href="#s13">Guardrail &amp; ECO</a></li>
+    <li><a href="#s14">ELM</a></li>
+    <li><a href="#s15">LUNAR</a></li>
+    <li><a href="#s16">§02 — Benchmarks &amp; Failures</a></li>
+    <li><a href="#s17">TOFU</a></li>
+    <li><a href="#s18">WMDP</a></li>
+    <li><a href="#s19">RWKU</a></li>
+    <li><a href="#s20">MUSE</a></li>
+    <li><a href="#s21">Benign Relearning</a></li>
+    <li><a href="#s22">Syntax as Hidden Driver</a></li>
+    <li><a href="#s23">Five Mismatches (Cooper)</a></li>
+    <li><a href="#s24">Verification Hardness (Pawelczyk)</a></li>
+    <li><a href="#s25">Are We Making Progress?</a></li>
+    <li><a href="#s26">Position — Term Overused</a></li>
+    <li><a href="#s27">DUSK</a></li>
+    <li><a href="#s28">R-TOFU</a></li>
+    <li><a href="#s29">SEPS</a></li>
+    <li><a href="#s30">Random Thoughts</a></li>
+    <li><a href="#s31">Takeaways</a></li>
+    <li><a href="#s32">Closer — Q&amp;A</a></li>
+  </ol>
+</div>
+
+<!-- 1 -->
+<div class="slide-note" id="s1">
+  <span class="snum">Slide 1</span><span class="stag">Title</span>
+  <span class="timing">~0:30</span>
+  <h3>What Does It Mean for an LLM to Forget?</h3>
+  <p>Same title question as Part I, now aimed at language models. The arc today is darker: Part I built up to a clean theorem; Part II is largely a catalogue of methods that <em>seem</em> to work and benchmarks that reveal they mostly don't. The honest thesis to plant up front: almost all "LLM unlearning" is output suppression, not deletion.</p>
+  <div class="say"><p>"Last time we proved we could delete a point. Today the same question has no clean answer — we'll see lots of methods, lots of benchmarks, and a growing suspicion that the field is measuring the wrong thing."</p></div>
+</div>
+
+<!-- 2 -->
+<div class="slide-note" id="s2">
+  <span class="snum">Slide 2</span><span class="stag">Contents</span>
+  <span class="timing">~0:40</span>
+  <h3>Contents — Part II</h3>
+  <p>Two sections. <strong>(01) LLM unlearning methods</strong> — the loss-function lineage GA → NPO → SimNPO → ME+GD, plus behavioral and inference-time approaches (IDK, guardrails/ECO, ELM, LUNAR). <strong>(02) Benchmarks and failures</strong> — TOFU/WMDP/RWKU/MUSE, then the skeptical literature: relearning, Cooper's mismatches, Pawelczyk's hardness theorem, and our lab's papers.</p>
+  <p>Reconnect to Part I: the definition (distributional match to retrain) and the lesson (match, don't maximize) carry over — but the retrain baseline that anchored everything is now gone.</p>
+</div>
+
+<!-- 3 -->
+<div class="slide-note" id="s3">
+  <span class="snum">Slide 3</span><span class="stag">Section divider 01</span>
+  <span class="timing">~0:10</span>
+  <p class="sec-label">01 — LLM Unlearning</p>
+  <h3>Why language models break the classification toolkit</h3>
+  <p>A breath. The framing: every assumption from Part I — clean forget set, retrain baseline, strong convexity — fails here. The section is organized as a response to each failure.</p>
+</div>
+
+<!-- 4 -->
+<div class="slide-note" id="s4">
+  <span class="snum">Slide 4</span><span class="stag">Framing</span>
+  <span class="timing">~2:30</span>
+  <h3>Why LLMs Are Different</h3>
+  <p>Four structural reasons the Part I toolkit doesn't transfer:</p>
+  <ul>
+    <li><strong>No class boundary.</strong> In classification, "forget class 3" is well-defined. In an LLM, knowledge of "Harry Potter" is <em>distributed</em> across countless weights and entangled with everything else.</li>
+    <li><strong>The forget unit is unclear.</strong> The forget set is text, not labeled images. Is the unit a document? A fact? A token span? Nobody agrees — and this is the open question we end on.</li>
+    <li><strong>GA wrecks the model.</strong> Catastrophic forgetting under gradient ascent doesn't just remove $\mathcal{D}_f$ — it destroys general capability. (Next two slides.)</li>
+    <li><strong>No retrain baseline.</strong> You cannot retrain a frontier model on $\mathcal{D}\setminus\mathcal{D}_f$ to check your work. The answer key from Part I is gone.</li>
+  </ul>
+  <div class="say"><p>"In Part I retrain was our ground truth. At trillion-token scale we can't compute it — so we literally cannot grade ourselves. That single fact poisons everything downstream, including every benchmark in section two."</p></div>
+  <p>End on the boxed line: most LLM "unlearning" is output suppression, not deletion. This is the thesis the whole lecture defends.</p>
+</div>
+
+<!-- 5 -->
+<div class="slide-note" id="s5">
+  <span class="snum">Slide 5</span><span class="stag">GA · Jang 2023</span>
+  <span class="timing">~2:00</span>
+  <h3>Gradient Ascent (Jang et al.)</h3>
+  <p>The simplest idea, and the baseline everything else reacts to. To forget, do the opposite of training — <em>maximize</em> the negative log-likelihood on the forget corpus:</p>
+  <div class="board">
+    $$\mathcal{L}_{\text{GA}}(\theta) = -\,\mathbb{E}_{x\sim\mathcal{D}_F}\big[-\log p_\theta(x)\big].$$
+  </div>
+  <ul>
+    <li>It's equivalent to <em>unlikelihood training</em> (Welleck 2020) — push probability mass off the forget sequences.</li>
+    <li>Effective on knowledge probes in the short term, but fluency degrades fast.</li>
+    <li>In practice always paired with descent on the retain set $\mathcal{D}_r$ to slow the damage (this is the "+GD" you'll see attached to many methods).</li>
+  </ul>
+  <div class="say"><p>"Training maximizes likelihood; the obvious way to forget is to minimize it — ascend the loss. It works just long enough to be tempting, then it explodes. Next slide: why."</p></div>
+</div>
+
+<!-- 6 -->
+<div class="slide-note" id="s6">
+  <span class="snum">Slide 6</span><span class="stag">Failure mechanism</span>
+  <span class="timing">~3:00</span>
+  <h3>Why GA Collapses</h3>
+  <p>The key diagnostic — show the gradient, not just assert instability. The GA gradient is</p>
+  <div class="board">
+    $$\nabla_\theta\mathcal{L}_{\mathrm{GA}}(\theta) = -\,\mathbb{E}_{x\sim\mathcal{D}_F}\!\left[\frac{\nabla_\theta p_\theta(x)}{p_\theta(x)}\right],\qquad \|\nabla_\theta\mathcal{L}_{\mathrm{GA}}\|\to\infty \text{ as } p_\theta(x)\to 0.$$
+  </div>
+  <p>Trace the feedback loop out loud: ascent <em>drives</em> $p_\theta(x)\to 0$; but $p_\theta(x)$ sits in the <em>denominator</em> of the gradient; so as the model succeeds at forgetting, its own gradient blows up; the effective step size grows without bound; and $\theta$ is flung out of <em>any</em> sensible data distribution — general capability dies. It's a self-reinforcing divergence: the better it works, the worse it gets.</p>
+  <div class="say"><p>"GA has a built-in death spiral: the more it forgets, the larger its gradient, the bigger its steps, until the model is destroyed. The fix is to bound that gradient — which is exactly what NPO does."</p></div>
+  <p>The boxed line is the bridge: NPO replaces $-\log p_\theta$ with a sigmoid-saturated surrogate, and that bounded-loss reformulation <em>is the entire fix</em>. Set this up so NPO lands as the obvious answer.</p>
+</div>
+
+<!-- 7 -->
+<div class="slide-note" id="s7">
+  <span class="snum">Slide 7</span><span class="stag">NPO · Zhang 2024</span>
+  <span class="timing">~2:30</span>
+  <h3>NPO — Negative Preference Optimization</h3>
+  <p>The most important method in this section. Take DPO (direct preference optimization) and keep only the <em>negative</em> branch — every forget example is a "rejected" response with no paired "chosen":</p>
+  <div class="board">
+    $$\mathcal{L}_{\mathrm{NPO}}(\theta) = \frac{2}{\beta}\,\mathbb{E}_{\mathcal{D}_{\mathrm{FG}}}\!\left[\log\!\Big(1+\big(\tfrac{\pi_\theta(y\mid x)}{\pi_{\text{ref}}(y\mid x)}\big)^{\beta}\Big)\right].$$
+  </div>
+  <ul>
+    <li><strong>Bounded gradient</strong> — the structural fix for GA's collapse (proved next slide).</li>
+    <li>It <em>reduces</em> the likelihood of forget responses rather than hard-zeroing them — a softer, controllable push.</li>
+    <li>Drop-in replacement for GA in almost every pipeline; $\pi_{\text{ref}}$ is the original frozen model.</li>
+  </ul>
+  <div class="say"><p>"NPO is 'DPO with only the bad examples.' Because it's framed as a preference loss against a reference, the gradient saturates instead of exploding."</p></div>
+</div>
+
+<!-- 8 -->
+<div class="slide-note" id="s8">
+  <span class="snum">Slide 8</span><span class="stag">Theorem · bounded gradient</span>
+  <span class="timing">~3:00</span>
+  <h3>NPO — Bounded Loss</h3>
+  <p>Make the "bounded" claim precise — this is the slide that explains <em>why</em> NPO doesn't blow up. Substitute the log-ratio $u=\beta\log(\pi_\theta/\pi_{\text{ref}})$:</p>
+  <div class="board">
+    $$\mathcal{L}_{\mathrm{NPO}}(\theta) = \tfrac{2}{\beta}\,\mathbb{E}[\log(1+e^u)],\qquad \frac{\partial\mathcal{L}_{\mathrm{NPO}}}{\partial u} = \tfrac{2}{\beta}\,\sigma(u) \le \tfrac{2}{\beta}.$$
+  </div>
+  <p>The loss is a softplus in $u$; its derivative is the <strong>sigmoid</strong> $\sigma(u)$, which is bounded by 1. So the gradient magnitude is capped at $2/\beta$ <em>uniformly</em> — no matter how far $\pi_\theta$ drifts. Contrast directly with slide 6: GA's gradient had $p_\theta$ in the denominator and diverged; NPO's gradient saturates. Same goal, bounded dynamics.</p>
+  <p>The boxed theorem (Zhang et al. 2024): for $\beta>0$ the NPO update has bounded <em>per-step</em> divergence rate from $\pi_{\text{ref}}$, whereas GA's rate is unbounded. That's the formal statement of "no collapse."</p>
+  <div class="say"><p>"Softplus in, sigmoid out — and a sigmoid never exceeds one. That single bound is the whole reason NPO is stable where GA detonates."</p></div>
+</div>
+
+<!-- 9 -->
+<div class="slide-note" id="s9">
+  <span class="snum">Slide 9</span><span class="stag">SimNPO · Fan 2024</span>
+  <span class="timing">~2:30</span>
+  <h3>SimNPO — Reference-Free (Fan 2024)</h3>
+  <p>An engineering simplification of NPO. Drop the reference model $\pi_{\text{ref}}$ entirely; replace it with a constant margin $\gamma$ and length normalization $1/|y|$:</p>
+  <div class="board">
+    $$\mathcal{L}_{\mathrm{SimNPO}}(\theta) = \mathbb{E}\!\left[\log\!\Big(1+\exp\big(\tfrac{\beta}{|y|}\log\pi_\theta(y\mid x)+\gamma\big)\Big)\right].$$
+  </div>
+  <ul>
+    <li><strong>No reference model</strong> → no second copy of the LLM in memory; saves compute and memory.</li>
+    <li><strong>Length-normalized</strong> ($\tfrac{\beta}{|y|}$) — removes NPO's bias toward long sequences (long $y$ has small $\log\pi$, distorting the unweighted version).</li>
+    <li>Empirically beats NPO on TOFU and MUSE.</li>
+  </ul>
+  <div class="say"><p>"SimNPO keeps NPO's bounded shape but throws away the reference model and fixes a length bias. Cheaper and, somewhat surprisingly, better."</p></div>
+</div>
+
+<!-- 10 -->
+<div class="slide-note" id="s10">
+  <span class="snum">Slide 10</span><span class="stag">ME+GD · Yuan 2025</span>
+  <span class="timing">~2:30</span>
+  <h3>ME + GD (Yuan et al.)</h3>
+  <p>A different forget signal: instead of pushing likelihood down (which invites collapse), push the forget-token distribution toward <strong>uniform</strong> — maximum entropy.</p>
+  <div class="board">
+    $$\mathcal{L}_{\mathrm{ME}}(\mathcal{D}_F;\theta) = \mathbb{E}_{(x,y)\sim\mathcal{D}_F}\!\left[\tfrac{1}{T}\sum_{t=1}^T D_{\mathrm{KL}}\big(P_t\,\|\,\mathcal{U}_{[K]}\big)\right],$$
+    <p>then combine with descent on the retain corpus:</p>
+    $$\mathcal{L}_{\mathrm{ME+GD}}(\theta) = \alpha\,\mathcal{L}_{\mathrm{ME}}(\mathcal{D}_F;\theta) + \mathcal{L}_{\mathrm{GD}}(\mathcal{D}_R;\theta).$$
+  </div>
+  <p>The intuition: a forgotten fact should make the model maximally <em>uncertain</em> (uniform over the vocabulary $K$), not confidently wrong. KL to uniform is bounded — no $1/p$ blow-up — so it inherits GA's goal without GA's instability. The $+$GD term is the now-familiar retain regularizer; $\alpha$ trades off forget vs utility.</p>
+  <div class="say"><p>"Don't drive the probability to zero — drive it to 'I have no idea,' a flat distribution. Uniform is a finite target, so the loss stays bounded."</p></div>
+</div>
+
+<!-- 11 -->
+<div class="slide-note" id="s11">
+  <span class="snum">Slide 11</span><span class="stag">Concept-level · Eldan 2023</span>
+  <span class="timing">~2:30</span>
+  <h3>Who's Harry Potter? (Eldan &amp; Russinovich)</h3>
+  <p>The famous proof-of-concept that put LLM unlearning on the map. A three-step data-rewriting recipe rather than a loss function:</p>
+  <ul>
+    <li>Use a "reinforced" model (trained to know Harry Potter <em>more</em>) and contrast it with the base model to identify Potter-specific tokens.</li>
+    <li>Replace those tokens with generic alternatives in the training data ("Harry" → a generic name, etc.).</li>
+    <li>Fine-tune Llama-7B on the swapped corpus.</li>
+  </ul>
+  <p>Result: the model still understands wizards and fantasy tropes but can no longer complete "Harry, Hermione, and Ron…" — first demonstration of <em>concept-level</em> unlearning at LLM scale.</p>
+  <div class="say"><p>"This is the paper that made everyone believe LLM unlearning was possible. Hold the applause though — in section two, Hu shows you can relearn Harry Potter from GPT-4 summaries. It was suppression, not deletion."</p></div>
+</div>
+
+<!-- 12 -->
+<div class="slide-note" id="s12">
+  <span class="snum">Slide 12</span><span class="stag">Behavioral · TOFU baseline</span>
+  <span class="timing">~2:00</span>
+  <h3>IDK Refusal (TOFU)</h3>
+  <p>The de-facto behavioral baseline. Don't change what the model <em>knows</em>; change what it <em>says</em> — replace forget answers with "I don't know" variants and fine-tune:</p>
+  <div class="board">
+    $$L_{\text{idk}} = L(S_R,w) + L(S_F^{\text{idk}},w),\qquad x_{\text{idk}}=[q,a_{\text{idk}}],$$
+    <p>where $a_{\text{idk}}$ is sampled from 1 of 100 refusal templates.</p>
+  </div>
+  <ul>
+    <li>Stable, preserves utility on the retain set and world knowledge.</li>
+    <li><strong>Behavioral, not parametric</strong> — pure suppression. The fact is still in the weights; the model just declines to state it.</li>
+    <li>It is the baseline on TOFU precisely because it's so simple and hard to beat.</li>
+  </ul>
+  <div class="say"><p>"This is honestly just teaching the model to say 'I don't know.' It's the clearest example of suppression masquerading as forgetting — and it's competitive, which should worry us."</p></div>
+</div>
+
+<!-- 13 -->
+<div class="slide-note" id="s13">
+  <span class="snum">Slide 13</span><span class="stag">Cheap baselines</span>
+  <span class="timing">~2:00</span>
+  <h3>Guardrail Baselines &amp; ECO</h3>
+  <p>Two inference-time methods that touch <em>no</em> weights — and embarrass the expensive methods.</p>
+  <ul>
+    <li><strong>Guardrail (Thaker).</strong> A system prompt — "do not reveal anything about X" — matches expensive training-time methods on TOFU. Raises the question: why touch weights at all?</li>
+    <li><strong>ECO (Liu).</strong> A classifier detects forget-related prompts at inference and corrupts their <em>input embedding</em>, so the model can't answer. Weights stay frozen; it's an intervention on the input.</li>
+  </ul>
+  <p>The boxed message: cheap baselines often beat sophisticated training-time methods on these benchmarks. That's a damning statement about either the methods or the benchmarks — and section two argues it's the benchmarks.</p>
+  <div class="say"><p>"If a system prompt ties your fancy gradient method, your benchmark probably isn't measuring deletion — it's measuring whether the model stays quiet."</p></div>
+</div>
+
+<!-- 14 -->
+<div class="slide-note" id="s14">
+  <span class="snum">Slide 14</span><span class="stag">Concept erasure · ELM</span>
+  <span class="timing">~2:00</span>
+  <h3>ELM — Erasing Conceptual Knowledge</h3>
+  <p>A more principled concept-erasure method. Construct "expert" prompts (elicit deep knowledge of the target concept) and "novice" prompts (shallow/no knowledge).</p>
+  <ul>
+    <li>Mix the expert and novice distributions to <em>define</em> an erased target distribution — what the model should look like as a believable novice.</li>
+    <li>Cross-entropy fine-tune toward that erased target.</li>
+    <li>Effective on WMDP-style hazardous knowledge (bioweapons, etc.).</li>
+  </ul>
+  <p>The appeal over IDK refusal: it aims to make the model <em>actually</em> ignorant (a plausible novice) rather than evasive. Whether it succeeds at the parametric level is exactly what the benchmarks in section two stress-test. NeurIPS 2025.</p>
+  <div class="say"><p>"ELM tries to manufacture genuine ignorance — make the model indistinguishable from someone who never learned the concept, not someone refusing to discuss it."</p></div>
+</div>
+
+<!-- 15 -->
+<div class="slide-note" id="s15">
+  <span class="snum">Slide 15</span><span class="stag">Activation steering · LUNAR</span>
+  <span class="timing">~3:00</span>
+  <h3>LUNAR — Activation Redirection</h3>
+  <p>The mechanistic / interpretability-flavored approach: a single linear intervention in the residual stream. Compute one <strong>unlearning vector</strong> per layer as the difference of mean activations, then add it only to forget activations:</p>
+  <div class="board">
+    $$\mathbf r_{\text{UV}}^{(\ell)} = \tfrac{1}{|D_{\text{ref}}|}\sum_{x\in D_{\text{ref}}}\mathbf a^{(\ell)}(x) - \tfrac{1}{|D_f|}\sum_{x\in D_f}\mathbf a^{(\ell)}(x),$$
+    $$\mathbf a'^{(\ell)} = \mathbf a^{(\ell)} + \mathbb{1}[x\in D_f]\,\mathbf r_{\text{UV}}^{(\ell)}.$$
+  </div>
+  <p>Read it: $\mathbf r_{\text{UV}}$ points from the forget-activation centroid <em>toward</em> the reference centroid. Adding it to a forget input's activation <em>redirects</em> it to look like a reference (e.g. safety / refusal) input. Weights are untouched — this is steering, not training.</p>
+  <ul>
+    <li>$D_{\text{ref}}$ can be generic safety prompts, so the method <strong>does not even need forget-set knowledge</strong> to build the vector — a notable practical advantage.</li>
+    <li>It's an inference-time intervention, so it sits philosophically with ECO and guardrails: behavior changes, parametric knowledge does not.</li>
+  </ul>
+  <div class="say"><p>"One vector, one addition, no gradient steps — push the forget activations toward 'safe' territory. Elegant, but again: the knowledge is still in the weights, we're just steering around it."</p></div>
+</div>
+
+<!-- 16 -->
+<div class="slide-note" id="s16">
+  <span class="snum">Slide 16</span><span class="stag">Section divider 02</span>
+  <span class="timing">~0:10</span>
+  <p class="sec-label">02 — Benchmarks and Failures</p>
+  <h3>What we measure, where it breaks</h3>
+  <p>The turn from "methods" to "do they actually work?" Tell them the shape of the section: first the standard benchmarks (TOFU/WMDP/RWKU/MUSE), then a sustained critique — relearning, Cooper's mismatches, the hardness theorem, and our lab's diagnoses.</p>
+</div>
+
+<!-- 17 -->
+<div class="slide-note" id="s17">
+  <span class="snum">Slide 17</span><span class="stag">Benchmark · TOFU</span>
+  <span class="timing">~2:00</span>
+  <h3>TOFU</h3>
+  <p>The cleanest and most-used benchmark. <strong>Fictitious</strong> authors with synthetic biographies, fine-tuned into Llama/Phi.</p>
+  <ul>
+    <li>Forget set = 1% / 5% / 10% of the authors; retain set = the rest.</li>
+    <li>Utility probed with real-author and world-fact questions.</li>
+  </ul>
+  <p>Why fictitious is clever: the model <em>only</em> knows these authors from the fine-tune, so there's no pretraining contamination — you know exactly what should be forgotten. Why it's limited: it's a small fine-tuning task, not pretraining-scale knowledge, so success on TOFU may not transfer to real deployment.</p>
+  <div class="say"><p>"TOFU's trick is using made-up people, so the forget target is perfectly clean. The cost is that it's a toy fine-tune, not the trillion-token problem we actually care about."</p></div>
+</div>
+
+<!-- 18 -->
+<div class="slide-note" id="s18">
+  <span class="snum">Slide 18</span><span class="stag">Benchmark · WMDP</span>
+  <span class="timing">~2:00</span>
+  <h3>WMDP — Hazardous Knowledge</h3>
+  <p>The high-stakes, safety-motivated benchmark: 3,668 multiple-choice questions on bio-, chem-, and cyber-weapons.</p>
+  <ul>
+    <li>Goal: drive down malicious-use accuracy <em>without</em> harming general capability (MMLU).</li>
+    <li>The reference method is <strong>RMU</strong> — push the hidden states on forget data toward a uniform/random target (note the family resemblance to ME+GD and LUNAR).</li>
+    <li>Real-world stakes — this is the unlearning use case policymakers actually care about.</li>
+  </ul>
+  <div class="say"><p>"WMDP reframes unlearning as a safety tool — can we make a model unable to help build a bioweapon while staying a good general assistant? The dual objective is the hard part."</p></div>
+</div>
+
+<!-- 19 -->
+<div class="slide-note" id="s19">
+  <span class="snum">Slide 19</span><span class="stag">Benchmark · RWKU</span>
+  <span class="timing">~2:00</span>
+  <h3>RWKU — Real-World Knowledge</h3>
+  <p>Forgetting <em>real</em> entities (e.g. Stephen King) already baked into the base model — no fine-tuning step, so it tests forgetting of genuine pretraining knowledge.</p>
+  <ul>
+    <li><strong>Forget probes:</strong> cloze completion, QA, and adversarial prefix injection (jailbreak-style attempts to surface the knowledge).</li>
+    <li><strong>Neighbor probes:</strong> related entities/works that should <em>survive</em> — tests collateral damage.</li>
+    <li><strong>Utility:</strong> the full general suite — MMLU, BBH, TriviaQA, TruthfulQA, Alpaca-Eval.</li>
+  </ul>
+  <p>The contribution beyond TOFU: it explicitly measures <em>neighborhood preservation</em>, not just target suppression — and uses adversarial probes, anticipating the relearning attacks coming next.</p>
+  <div class="say"><p>"RWKU's key idea: forgetting Stephen King shouldn't damage your knowledge of horror novels in general. The collateral damage is as important as the target."</p></div>
+</div>
+
+<!-- 20 -->
+<div class="slide-note" id="s20">
+  <span class="snum">Slide 20</span><span class="stag">Benchmark · MUSE</span>
+  <span class="timing">~2:30</span>
+  <h3>MUSE — Six-Way Evaluation</h3>
+  <p>The most comprehensive benchmark — six axes covering both stakeholders. Walk the list:</p>
+  <ul>
+    <li>No verbatim memorization (can't reproduce exact forget text).</li>
+    <li>No knowledge memorization (can't answer questions about it).</li>
+    <li>No privacy leakage (MIA fails on forget data).</li>
+    <li>Utility preservation (retain knowledge intact).</li>
+    <li>Scalability (works on large forget sets).</li>
+    <li>Sustainability under <em>repeated</em> deletion requests (echoes Sekhari's deletion capacity from Part I).</li>
+  </ul>
+  <p>The framing: the first three serve the <strong>data owner</strong> (who wants their data gone), the last three serve the <strong>deployer</strong> (who wants a usable, durable model). MUSE scores both jointly — and most methods fail at least one axis, which is the point.</p>
+  <div class="say"><p>"MUSE's lesson is that there's no single 'unlearned' — there are six demands, and they trade off. A method that nails forgetting often tanks utility or fails after the third request."</p></div>
+</div>
+
+<!-- 21 -->
+<div class="slide-note" id="s21">
+  <span class="snum">Slide 21</span><span class="stag">Failure · benign relearning</span>
+  <span class="timing">~2:30</span>
+  <h3>Benign Relearning (Hu et al.)</h3>
+  <p>The result that punctures the optimism. Unlearn Harry Potter, then fine-tune on <em>GPT-4-generated summaries</em> of Harry Potter — and the memorization comes <em>back</em>.</p>
+  <ul>
+    <li>The relearning data is public and copyright-free — a benign, legal source restores the "forgotten" content.</li>
+    <li>Strong implication: unlearning was <strong>obfuscation</strong>, not deletion. The knowledge was dormant in the weights, not removed; a light touch reactivates it.</li>
+    <li>Crucially, the relearning data <em>need not overlap</em> with the original tokens — it just has to be about the same thing.</li>
+  </ul>
+  <div class="say"><p>"If a few benign summaries bring it all back, you never deleted anything — you hid it. This is the empirical heart of the whole skeptical case."</p></div>
+  <p>Callback to Part I slide 26 (RURK): residual knowledge survives perturbation there too. Same disease, LLM scale.</p>
+</div>
+
+<!-- 22 -->
+<div class="slide-note" id="s22">
+  <span class="snum">Slide 22</span><span class="stag">Lab · ICLR 2026</span>
+  <span class="timing">~2:30</span>
+  <h3>Syntax as the Hidden Driver (Lab)</h3>
+  <p>Our follow-up to Hu: <em>what property</em> of the relearning data triggers recovery? The answer is <strong>syntax, not topic</strong>.</p>
+  <ul>
+    <li>Topically-relevant rewrites (same subject, different sentence structure): the forgotten content <em>stays</em> forgotten.</li>
+    <li>Syntactically-similar rewrites with <em>new</em> entities: <em>full recovery</em>. The structural scaffold is what reactivates the knowledge.</li>
+    <li>Mitigation: diversify the <em>syntax</em> of forget queries during unlearning, not just the content.</li>
+  </ul>
+  <div class="say"><p>"Hu showed relearning works; we show it's the sentence <em>shape</em>, not the topic, that does it. The model stored the knowledge along syntactic patterns — so to truly forget, you have to attack those patterns."</p></div>
+  <div class="ask"><p>"Why would syntax matter more than meaning?" — Because the unlearning only perturbed the specific surface forms it saw; a familiar syntactic frame provides a re-entry path to the still-present underlying representation.</p></div>
+</div>
+
+<!-- 23 -->
+<div class="slide-note" id="s23">
+  <span class="snum">Slide 23</span><span class="stag">Position · Cooper 2025</span>
+  <span class="timing">~3:00</span>
+  <h3>Five Mismatches (Cooper et al.)</h3>
+  <p>The influential position paper that names <em>why</em> "unlearning" misleads policymakers. Five gaps between what's promised and what's delivered:</p>
+  <ul>
+    <li><strong>Output suppression ≠ removal of training data</strong> — the IDK/guardrail problem.</li>
+    <li><strong>Removal of training data ≠ meaningful output suppression</strong> — you can delete the data and the behavior persists (generalization).</li>
+    <li><strong>Models ≠ their outputs</strong> — auditing outputs doesn't audit the weights (this is exactly Pawelczyk, next slide).</li>
+    <li><strong>Models ≠ how outputs are used downstream</strong> — deletion upstream doesn't control downstream harm.</li>
+    <li><strong>Unlearning has unintended consequences</strong> — collateral capability loss, fairness shifts.</li>
+  </ul>
+  <p>The boxed line is the thesis of the entire skeptical literature: "machine unlearning doesn't do what policymakers think it does." Deliver it as the intellectual center of gravity for section two.</p>
+  <div class="say"><p>"Cooper's five mismatches are the vocabulary for everything that's gone wrong today. When a regulator says 'just unlearn it,' point them at this list."</p></div>
+</div>
+
+<!-- 24 -->
+<div class="slide-note" id="s24">
+  <span class="snum">Slide 24</span><span class="stag">Theorem · Pawelczyk 2024</span>
+  <span class="timing">~3:00</span>
+  <h3>Theorem — Black-Box Verification Hardness</h3>
+  <p>The one hard theorem of Part II — formalizes Cooper's "models ≠ their outputs." For a black-box LLM (no weight access), no auditor with $q$ queries can $(1-\alpha)$-distinguish the unlearned $\theta_u$ from the original $\theta_o$ when</p>
+  <div class="board">
+    $$q \;\le\; \tilde\Omega\!\Big(\tfrac{1}{\alpha^2}\,\mathrm{TV}(\theta_u,\theta_o)^{-2}\Big).$$
+  </div>
+  <p>Read it: if the two models are close in total variation, you need an enormous number of queries to tell them apart — so a handful of prompts <em>cannot</em> certify unlearning. The query budget scales like the inverse-square of the TV distance.</p>
+  <ul>
+    <li><strong>Single-prompt audits are provably insufficient</strong> — verification requires <em>distributional</em> probing, many correlated queries.</li>
+    <li>Policy implication: regulators relying on output-level spot-checks will systematically under-detect failed unlearning.</li>
+  </ul>
+  <div class="say"><p>"This is the impossibility result behind the skepticism: from the outside, with few queries, you literally cannot prove a model forgot. Output checks are not enough, and now we have a theorem saying so."</p></div>
+</div>
+
+<!-- 25 -->
+<div class="slide-note" id="s25">
+  <span class="snum">Slide 25</span><span class="stag">Meta · Triantafillou 2024</span>
+  <span class="timing">~2:30</span>
+  <h3>Are We Making Progress? (Triantafillou)</h3>
+  <p>A sobering meta-result from the NeurIPS 2023 unlearning competition — 1,000+ submissions, 4-GPU budget.</p>
+  <ul>
+    <li>The best entries beat naive fine-tuning by less than 5% on the MIA gap — marginal.</li>
+    <li>Scores saturate near retrain <em>on the held-out forget set used in the competition</em>.</li>
+    <li>But cross-distribution generalization — to <em>different</em> forget sets — is poor.</li>
+  </ul>
+  <p>The boxed lesson: performance on a fixed forget set is not a property of the <em>unlearner</em>. Methods overfit the benchmark's specific forget set rather than learning to forget in general — directly motivating our lab's robustness papers (SEPS, syntactic relearning).</p>
+  <div class="say"><p>"A thousand teams, and the headline is humility: we're tuning to one forget set, not building general forgetters. Good at the test, bad at the task."</p></div>
+</div>
+
+<!-- 26 -->
+<div class="slide-note" id="s26">
+  <span class="snum">Slide 26</span><span class="stag">Lab position · ICML 2026</span>
+  <span class="timing">~2:30</span>
+  <h3>Position (Lab): the Term Is Overused</h3>
+  <p>Our constructive response to Cooper. The proposal: reserve "machine unlearning" for its strict meaning — <strong>retraining indistinguishability</strong> on a precisely defined forget set (the Part I definition). Everything else deserves its own honest name:</p>
+  <ul>
+    <li>Output likelihood suppression (GA, NPO)</li>
+    <li>Internal-representation obfuscation (LUNAR, RMU)</li>
+    <li>Knowledge editing</li>
+    <li>Behavioral refusal (IDK, guardrails)</li>
+    <li>Inference-time interventions (ECO)</li>
+  </ul>
+  <p>The point isn't pedantry — it's that lumping these under one word lets weak methods borrow the strong word's guarantees, which is exactly how policymakers get misled (Cooper). Naming honestly is a safety measure. ICML 2026, under review.</p>
+  <div class="say"><p>"Half the methods today aren't unlearning — they're suppression, obfuscation, or refusal. Calling them all 'unlearning' is how a system prompt ends up claiming GDPR compliance. Names matter."</p></div>
+</div>
+
+<!-- 27 -->
+<div class="slide-note" id="s27">
+  <span class="snum">Slide 27</span><span class="stag">Lab · DUSK</span>
+  <span class="timing">~2:00</span>
+  <h3>DUSK — Do Not Unlearn Shared Knowledge (Lab)</h3>
+  <p>A subtle failure mode the standard benchmarks miss: the forget and retain sets <em>overlap in concepts</em>. Naive unlearning destroys the shared knowledge along with the unique facts.</p>
+  <ul>
+    <li>Goal: forget the <strong>unique</strong> facts in $\mathcal{D}_f$ while preserving knowledge <strong>shared</strong> with the retain partitions $\mathcal{D}_r^{(i)}$.</li>
+    <li>Benchmark design: Venn-style retain partitions that share content with the forget set, so you can measure whether the method surgically removes only the unique part.</li>
+  </ul>
+  <div class="say"><p>"If you forget one person's biography, you shouldn't forget the city they lived in — other people live there too. DUSK measures whether unlearning can be that surgical, and mostly it can't."</p></div>
+</div>
+
+<!-- 28 -->
+<div class="slide-note" id="s28">
+  <span class="snum">Slide 28</span><span class="stag">Lab · R-TOFU · EMNLP 2025</span>
+  <span class="timing">~2:30</span>
+  <h3>R-TOFU — Reasoning Models (Lab)</h3>
+  <p>Unlearning for large <em>reasoning</em> models (LRMs), where the chain-of-thought is a second surface that can leak.</p>
+  <ul>
+    <li>Answer-only unlearning leaves <strong>CoT residue</strong> — the model refuses the final answer but reasons its way to the knowledge in the trace.</li>
+    <li>CoT-only unlearning turns out to be the best gradient-ascent variant — forget the reasoning, not just the answer.</li>
+    <li>Decoding-time tricks (<em>ZeroThink</em>, <em>LessThink</em> — forcing the model to skip or shorten reasoning) reveal residual knowledge that hides in the CoT.</li>
+  </ul>
+  <div class="say"><p>"Reasoning models give you two leaks for the price of one — the answer and the thinking. Forget the answer and the model just reasons back to it. You have to unlearn the chain of thought too."</p></div>
+</div>
+
+<!-- 29 -->
+<div class="slide-note" id="s29">
+  <span class="snum">Slide 29</span><span class="stag">Lab · SEPS · EMNLP 2025</span>
+  <span class="timing">~2:30</span>
+  <h3>SEPS — Separability Measure (Lab)</h3>
+  <p>The evaluation-methodology critique: real users mix forget and retain queries in <em>one</em> prompt, but benchmarks test them in isolation. SEPS measures <em>separability</em> — can the model forget one thing while answering another in the same input?</p>
+  <ul>
+    <li><strong>RIS $\approx \underline F$</strong> — under untargeted unlearning, a mixed prompt collapses the <em>retain</em> response down to the forget baseline; the model over-refuses.</li>
+    <li><strong>$\underline{FF} > \underline F > R\underline R$</strong> — under targeted unlearning, performance degrades on multi-query inputs; it fails to keep the two cleanly separated.</li>
+  </ul>
+  <p>The headline: single-query benchmarks <strong>systematically overestimate</strong> unlearning quality. A method that looks clean on TOFU breaks when forget and retain are interleaved.</p>
+  <div class="say"><p>"Ask a forget question and a retain question in the same breath and the model falls apart — either refusing both or leaking both. Single-query suites never see this, so they flatter every method."</p></div>
+</div>
+
+<!-- 30 -->
+<div class="slide-note" id="s30">
+  <span class="snum">Slide 30</span><span class="stag">Open problems</span>
+  <span class="timing">~2:30</span>
+  <h3>Random Thoughts</h3>
+  <p>Open the floor — connect unlearning to adjacent problems and pose the genuinely hard questions.</p>
+  <ul>
+    <li><strong>Adjacent fields:</strong> data valuation, influence functions (Part I!), neural-network invariance, MIA — all are different views of "how does one data point affect the model?"</li>
+    <li><strong>An impossibility flavor:</strong> distinguishing $X\sim P$ from $Y\sim Q$ given one sample and neither distribution is, in general, impossible — a clean way to feel why verifying single-point deletion is so hard (ties to Pawelczyk).</li>
+    <li><strong>Corpus vs image+label:</strong> classification had clean "remove sample $i$" semantics; text has none. This is the crux.</li>
+  </ul>
+  <p>The boxed open question is where to leave them thinking: <span class="key">what is the unit of forgetting in an LLM?</span> A token? A fact? A capability? Until we answer that, "unlearning" is ill-posed.</p>
+  <div class="say"><p>"The honest state of the field: we don't even agree on what the atom of forgetting is. That's not a gap in methods — it's a gap in the definition, and it's the most interesting open problem here."</p></div>
+</div>
+
+<!-- 31 -->
+<div class="slide-note" id="s31">
+  <span class="snum">Slide 31</span><span class="stag">Takeaways</span>
+  <span class="timing">~1:30</span>
+  <h3>Takeaways</h3>
+  <p>Tie both lectures together:</p>
+  <ul>
+    <li><strong>Definition</strong> (from Part I) — distributional match to retrain; anything weaker is suppression.</li>
+    <li><strong>Classification</strong> — SCRUB / SalUn / $\ell_1$-sparse approximate retrain on different axes; we had certified methods there.</li>
+    <li><strong>Evaluate against Retrain</strong>, not the original — match is the goal.</li>
+    <li><strong>LLM "unlearning" is mostly behavioral</strong> — benign relearning recovers the content, so most of it is obfuscation.</li>
+    <li><strong>Benchmarks help but mislead</strong> — TOFU/WMDP/MUSE are useful, but single-query suites overestimate (SEPS), and black-box verification is provably hard (Pawelczyk).</li>
+  </ul>
+  <div class="say"><p>"Part I: we could define it and prove it. Part II: we can barely define it and can't verify it. The work is to close that gap — starting with naming the unit of forgetting."</p></div>
+</div>
+
+<!-- 32 -->
+<div class="slide-note" id="s32">
+  <span class="snum">Slide 32</span><span class="stag">Closer</span>
+  <span class="timing">~0:20</span>
+  <h3>Q&amp;A</h3>
+  <p>Thank the audience and open questions. Good prompts to seed discussion if the room is quiet: <em>Should regulators accept output-level audits at all, given Pawelczyk? Is exact unlearning (SISA-style) the only honest path, and is it feasible for foundation models? What would a satisfying definition of "the unit of forgetting" even look like?</em></p>
+  <div class="say"><p>"I'll stop there — happy to argue about whether any of this is really 'forgetting.' Questions?"</p></div>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Speaker Notes — Machine Unlearning Part I (Foundations)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  :root{
+    --blue:#003876; --ink:#1a1a1a; --muted:#5a6473; --light:#f3f5f8;
+    --slate:#dde3ea; --accent:#003876;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;
+    color:var(--ink); line-height:1.6; margin:0; background:#fff;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:56px 28px 120px;}
+  header.doc{border-bottom:3px solid var(--blue); padding-bottom:22px; margin-bottom:14px;}
+  header.doc .kicker{color:var(--blue); font-weight:700; letter-spacing:.08em; text-transform:uppercase; font-size:.72rem;}
+  header.doc h1{font-size:2rem; line-height:1.2; margin:.35rem 0 .5rem; color:var(--blue);}
+  header.doc p{color:var(--muted); margin:.2rem 0; font-size:.95rem;}
+  .toc{background:var(--light); border-radius:10px; padding:18px 24px; margin:24px 0 40px; font-size:.9rem;}
+  .toc h2{font-size:.8rem; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin:0 0 10px;}
+  .toc ol{margin:0; padding-left:1.4em; columns:2; column-gap:34px;}
+  .toc li{margin:2px 0; break-inside:avoid;}
+  .toc a{color:var(--ink); text-decoration:none;}
+  .toc a:hover{color:var(--blue); text-decoration:underline;}
+  .slide-note{margin:0 0 38px; padding-top:8px; border-top:1px solid var(--slate);}
+  .slide-note:first-of-type{border-top:none;}
+  .snum{display:inline-block; background:var(--blue); color:#fff; font-weight:700; font-size:.78rem;
+    border-radius:6px; padding:3px 10px; margin-bottom:8px; letter-spacing:.03em;}
+  .stag{display:inline-block; color:var(--muted); font-size:.72rem; text-transform:uppercase;
+    letter-spacing:.07em; margin-left:8px; vertical-align:middle;}
+  .slide-note h3{color:var(--blue); font-size:1.28rem; margin:.1rem 0 .6rem; line-height:1.25;}
+  .slide-note p{margin:.55rem 0;}
+  .slide-note ul{margin:.5rem 0; padding-left:1.3em;}
+  .slide-note li{margin:.32rem 0;}
+  .say{background:#fbfcfe; border-left:3px solid var(--blue); padding:12px 18px; border-radius:0 8px 8px 0; margin:14px 0;}
+  .say::before{content:"Say it like this"; display:block; font-size:.68rem; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--blue); font-weight:700; margin-bottom:5px;}
+  .say p{margin:.3rem 0; font-style:italic; color:#33404f;}
+  .board{background:var(--light); border-radius:8px; padding:12px 18px; margin:14px 0; font-size:.92rem;}
+  .board::before{content:"On the board / derivation"; display:block; font-size:.68rem; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--muted); font-weight:700; margin-bottom:6px;}
+  .ask{border:1px dashed var(--slate); border-radius:8px; padding:10px 16px; margin:14px 0; font-size:.9rem;}
+  .ask::before{content:"Anticipated question"; display:block; font-size:.68rem; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--muted); font-weight:700; margin-bottom:5px;}
+  .key{font-weight:600; color:var(--blue);}
+  strong{color:#11203a;}
+  code{background:var(--light); padding:1px 5px; border-radius:4px; font-size:.88em;}
+  .timing{float:right; color:var(--muted); font-size:.78rem; font-weight:500; margin-top:6px;}
+  hr.sec{border:none; border-top:2px solid var(--blue); margin:46px 0 30px; opacity:.5;}
+  .sec-label{color:var(--blue); font-weight:700; letter-spacing:.05em; font-size:1rem; margin:0 0 4px;}
+  @media print{
+    .wrap{max-width:none; padding:0 12mm;}
+    .slide-note{break-inside:avoid;}
+    a{color:var(--ink); text-decoration:none;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc">
+  <div class="kicker">Speaker Notes · Lecture companion</div>
+  <h1>What Does It Mean for a Model to Forget?<br>Part I — Foundations &amp; Classification</h1>
+  <p>Machine unlearning before LLMs · Albert No · Yonsei University</p>
+  <p>Detailed per-slide notes for <code>unlearning1-foundations.html</code> (36 slides). Each entry gives the point of the slide, the spoken line, the derivation to put on the board, and likely questions.</p>
+</header>
+
+<div class="toc">
+  <h2>Slides</h2>
+  <ol>
+    <li><a href="#s1">Title</a></li>
+    <li><a href="#s2">Contents</a></li>
+    <li><a href="#s3">§01 — Motivation &amp; Definition</a></li>
+    <li><a href="#s4">The Central Question</a></li>
+    <li><a href="#s5">Why Now</a></li>
+    <li><a href="#s6">The Retraining Baseline</a></li>
+    <li><a href="#s7">Data-Deletion Operation (Ginart)</a></li>
+    <li><a href="#s8">Exact vs Approximate</a></li>
+    <li><a href="#s9">Certified Unlearning</a></li>
+    <li><a href="#s10">Influence Function — Closed Form</a></li>
+    <li><a href="#s11">Why a Newton Step? The Target</a></li>
+    <li><a href="#s12">A Continuous Path</a></li>
+    <li><a href="#s13">Differentiating Optimality</a></li>
+    <li><a href="#s14">Theorem — Newton-Step Unlearning</a></li>
+    <li><a href="#s15">Why One Step Suffices</a></li>
+    <li><a href="#s16">$L_2$-Sensitivity</a></li>
+    <li><a href="#s17">Theorem — Certified Deletion (Gaussian)</a></li>
+    <li><a href="#s18">Unlearning Noise vs DP Noise</a></li>
+    <li><a href="#s19">Theorem — Deletion Capacity (Sekhari)</a></li>
+    <li><a href="#s20">SISA</a></li>
+    <li><a href="#s21">§02 — Classification Algorithms</a></li>
+    <li><a href="#s22">The Catalog</a></li>
+    <li><a href="#s23">SCRUB</a></li>
+    <li><a href="#s24">SalUn</a></li>
+    <li><a href="#s25">$\ell_1$-Sparse</a></li>
+    <li><a href="#s26">Residual Knowledge (RURK)</a></li>
+    <li><a href="#s27">§03 — Classification Metrics</a></li>
+    <li><a href="#s28">Full-Stack Evaluation</a></li>
+    <li><a href="#s29">MIA as a Probe</a></li>
+    <li><a href="#s30">MIA: Optimal Test &amp; Limits</a></li>
+    <li><a href="#s31">Example — Random-10% (CIFAR-10)</a></li>
+    <li><a href="#s32">Information Difference Index</a></li>
+    <li><a href="#s33">COLA</a></li>
+    <li><a href="#s34">Over-Unlearning</a></li>
+    <li><a href="#s35">Takeaways — Part I</a></li>
+    <li><a href="#s36">Closer → Part II</a></li>
+  </ol>
+</div>
+
+<!-- 1 -->
+<div class="slide-note" id="s1">
+  <span class="snum">Slide 1</span><span class="stag">Title</span>
+  <span class="timing">~0:30</span>
+  <h3>What Does It Mean for a Model to Forget?</h3>
+  <p>Open with the framing of the whole two-part lecture. The title is a question on purpose: the rest of the course is an attempt to give it a <em>precise</em> answer. Part I is everything we knew about unlearning <strong>before</strong> large language models — clean definitions, a fully certified deletion procedure, and the classification algorithms and metrics that the field cut its teeth on.</p>
+  <div class="say">
+    <p>"For the next two lectures we ask one question — what does it actually mean for a trained model to forget a piece of its training data? Today, Part I: the foundations, where the math is clean and we can even prove things. Part II takes the same question to LLMs, where almost everything breaks."</p>
+  </div>
+  <p>Set the expectation early: by the end of today they should be able to define unlearning rigorously, derive the Newton-step deletion method from scratch, and read an unlearning evaluation table critically.</p>
+</div>
+
+<!-- 2 -->
+<div class="slide-note" id="s2">
+  <span class="snum">Slide 2</span><span class="stag">Contents</span>
+  <span class="timing">~0:40</span>
+  <h3>Contents — Part I</h3>
+  <p>Three movements. <strong>(01) Motivation and definition</strong> — why this is suddenly urgent, then the formal definitions building up to a certified deletion procedure (the Newton step). <strong>(02) Classification algorithms</strong> — the practical menu of approximate methods for deep nets. <strong>(03) Metrics</strong> — how we actually measure success, ending on our own lab's information-theoretic index.</p>
+  <p>Flag the spine of section 01: it is one long derivation. Influence function → leave-one-out target → continuous path → Newton step → sensitivity → Gaussian certification. Tell them to hold on; eight slides later they will have proved certified deletion.</p>
+  <div class="say"><p>"Section one is really a single eight-slide proof dressed up as several slides — don't lose the thread."</p></div>
+</div>
+
+<!-- 3 -->
+<div class="slide-note" id="s3">
+  <span class="snum">Slide 3</span><span class="stag">Section divider 01</span>
+  <span class="timing">~0:10</span>
+  <p class="sec-label">01 — Motivation and Definition</p>
+  <h3>From the right to be forgotten to certified deletion</h3>
+  <p>Just a breath. Name the arc of the section: we start with a legal right ("be forgotten") and end with a mathematical guarantee ("certified deletion"). The whole point is to turn a fuzzy social demand into something a theorem can address.</p>
+</div>
+
+<!-- 4 -->
+<div class="slide-note" id="s4">
+  <span class="snum">Slide 4</span><span class="stag">Core setup</span>
+  <span class="timing">~2:00</span>
+  <h3>The Central Question</h3>
+  <p>This is the definitional anchor for everything. We have a trained model $\theta_o = A(\mathcal{D})$ produced by a (possibly randomized) learning algorithm $A$ on dataset $\mathcal{D}$. Someone asks us to remove a forget set $\mathcal{D}_f \subset \mathcal{D}$. We must produce $\theta_u$ that behaves <em>as if $\mathcal{D}_f$ had never been in the training set</em>.</p>
+  <p>Two things to hammer:</p>
+  <ul>
+    <li><strong>Cheaper than retraining.</strong> The trivial correct answer is $A(\mathcal{D}\setminus\mathcal{D}_f)$ — retrain from scratch. Unlearning only earns its name if it is meaningfully cheaper than that.</li>
+    <li><strong>Match in distribution, not outputs.</strong> This is the subtle and most important point on the slide. $A$ is randomized (initialization, SGD order). So "looks like it never saw $\mathcal{D}_f$" cannot mean "identical weights" — it means the <em>distribution</em> over $\theta_u$ matches the distribution over a freshly retrained model. Hiding one output is not forgetting.</li>
+  </ul>
+  <div class="say"><p>"The target is not a number, it's a distribution. We want $\theta_u$ to be a plausible draw from the retraining process — indistinguishable from a model that genuinely never saw the forget data."</p></div>
+  <div class="ask"><p>"Why not just delete the data and keep the model?" — Because the model <em>is</em> a lossy function of the data; the information about $\mathcal{D}_f$ is baked into the weights. Deleting the row in the database does nothing to the weights.</p></div>
+</div>
+
+<!-- 5 -->
+<div class="slide-note" id="s5">
+  <span class="snum">Slide 5</span><span class="stag">Motivation</span>
+  <span class="timing">~2:00</span>
+  <h3>Why Now</h3>
+  <p>Three forces converging make this a 2020s problem, not a 2010s one.</p>
+  <ul>
+    <li><strong>Lawsuits.</strong> NYT v. OpenAI, Disney v. Midjourney, Getty v. Stability AI. Plaintiffs argue their copyrighted data is inside the model and want it out. "Just retrain" is not a satisfying legal remedy.</li>
+    <li><strong>GDPR Article 17</strong> — the "right to erasure." A data subject can demand deletion, and the controller has roughly one month. If the data lives in model weights, compliance is a technical unlearning problem.</li>
+    <li><strong>Memorization.</strong> The empirical fact that makes this real: Carlini et al. extracted verbatim training text and PII from production LLMs. The data really is recoverable, so the right to be forgotten really is being violated.</li>
+  </ul>
+  <div class="say"><p>"Unlearning is the technical answer to what is fundamentally a legal and regulatory question. The lawyers showed up, the regulators wrote Article 17, and Carlini showed the data is genuinely extractable — so now we need the math."</p></div>
+  <p>Carlini 2021 (USENIX) and Cooper 2025 are the cites; Cooper comes back hard in Part II as the skeptical voice.</p>
+</div>
+
+<!-- 6 -->
+<div class="slide-note" id="s6">
+  <span class="snum">Slide 6</span><span class="stag">Baseline</span>
+  <span class="timing">~1:30</span>
+  <h3>The Retraining Baseline</h3>
+  <p>Establish the gold standard explicitly so the rest of the lecture has a reference. Retrain on $\mathcal{D}_r = \mathcal{D}\setminus\mathcal{D}_f$. By construction this is exactly correct — it is what "never saw $\mathcal{D}_f$" literally means.</p>
+  <ul>
+    <li>It gives exact unlearning for free.</li>
+    <li>Its cost is a full training run — fine for logistic regression, catastrophic for a foundation model.</li>
+    <li><span class="key">Every method in this lecture is an approximation to this one baseline.</span></li>
+  </ul>
+  <div class="say"><p>"Keep retrain in your head as the answer key. The entire field is: how close can I get to retrain, how much cheaper, and how do I prove I got close?"</p></div>
+  <p>Foreshadow Part II: at LLM scale even this answer key is unavailable — you cannot afford to retrain to grade yourself, which is why LLM evaluation is so much harder.</p>
+</div>
+
+<!-- 7 -->
+<div class="slide-note" id="s7">
+  <span class="snum">Slide 7</span><span class="stag">Definition · Ginart 2019</span>
+  <span class="timing">~2:30</span>
+  <h3>Data-Deletion Operation (Ginart 2019)</h3>
+  <p>The first formal definition. $R_A(\mathcal{D}, A(\mathcal{D}), i)$ is a deletion operation if for every dataset and every index,</p>
+  <div class="board">
+    $$A(\mathcal{D}_{-i}) \;=_d\; R_A(\mathcal{D}, A(\mathcal{D}), i).$$
+  </div>
+  <p>Read it slowly. The <strong>left side</strong> is "train fresh without point $i$." The <strong>right side</strong> is "run the deletion operator $R$ on the already-trained model." The $=_d$ is equality <em>in distribution</em>.</p>
+  <ul>
+    <li>$R$ gets to see the trained model $A(\mathcal{D})$ and the point to remove — that is its whole job, to be a cheap shortcut.</li>
+    <li>Equality in distribution, not on a sample path: re-emphasize slide 4's point. Two random processes; we ask their laws to coincide, not their realizations.</li>
+  </ul>
+  <div class="ask"><p>"Why index $i$ and not a set?" — Single-point deletion is the clean case; sets follow by the same machinery (and Sekhari's capacity result, slide 19, handles $m$ deletions). Start with one.</p></div>
+</div>
+
+<!-- 8 -->
+<div class="slide-note" id="s8">
+  <span class="snum">Slide 8</span><span class="stag">Taxonomy</span>
+  <span class="timing">~1:30</span>
+  <h3>Exact vs Approximate</h3>
+  <p>Two regimes split the whole field.</p>
+  <ul>
+    <li><strong>Exact:</strong> the distributions match <em>exactly</em>, $A(\mathcal{D}_r) =_d \mathcal{U}(\cdot)$. Achievable by retraining or by clever architectures — SISA (slide 20) is the canonical trick, structuring training so you only retrain a small shard.</li>
+    <li><strong>Approximate:</strong> the distributions are merely $(\varepsilon,\delta)$-close. We borrow the indistinguishability notion straight from differential privacy. This is the only realistic option for deep nets, and it requires careful auditing because "close" can hide leakage.</li>
+  </ul>
+  <div class="say"><p>"Exact unlearning is an architecture problem — you design training so deletion is cheap. Approximate unlearning is an analysis problem — you take an arbitrary model and prove you got close enough."</p></div>
+</div>
+
+<!-- 9 -->
+<div class="slide-note" id="s9">
+  <span class="snum">Slide 9</span><span class="stag">Definition · certified</span>
+  <span class="timing">~2:30</span>
+  <h3>Certified Unlearning</h3>
+  <p>Make the approximate notion precise. $\mathcal{U}$ is <strong>$(\varepsilon,\delta)$-certified</strong> if for every measurable set of outcomes $T$,</p>
+  <div class="board">
+    $$\Pr[\mathcal{U}(\mathcal{D},\mathcal{D}_f,A(\mathcal{D})) \in T] \;\le\; e^\varepsilon\,\Pr[A(\mathcal{D}_r)\in T] + \delta,$$
+    <p>and symmetrically with the two sides swapped.</p>
+  </div>
+  <p>This is <em>literally the $(\varepsilon,\delta)$-DP inequality</em>, with "neighboring datasets" replaced by "unlearned vs retrained." If they have seen DP, this slide is one sentence: same definition, different pair of distributions.</p>
+  <ul>
+    <li>$\varepsilon$ controls the multiplicative gap, $\delta$ the additive slack (a small failure probability).</li>
+    <li>The payoff: all the DP machinery — composition, the Gaussian mechanism — transfers. We will use the Gaussian mechanism on slide 17.</li>
+  </ul>
+  <div class="say"><p>"If you remember one thing from DP, it's this inequality. Certified unlearning is the same inequality with retrain on the right-hand side."</p></div>
+</div>
+
+<!-- 10 -->
+<div class="slide-note" id="s10">
+  <span class="snum">Slide 10</span><span class="stag">Influence function · Newton lead-in</span>
+  <span class="timing">~3:00</span>
+  <h3>Influence Function — Closed Form</h3>
+  <p>This slide starts the eight-slide derivation. The question: when we drop one point $z$, where does the optimum move? To first order,</p>
+  <div class="board">
+    $$\theta_{-z} - \theta_o \;\approx\; \frac{1}{n}\,H_{\theta_o}^{-1}\,\nabla_\theta\ell(\theta_o;z),\qquad H_{\theta_o}=\nabla^2 L(\theta_o).$$
+  </div>
+  <p>This shift <em>is</em> the influence function (Koh &amp; Liang 2017), and used directly it is the <strong>IU</strong> (Influence Unlearning) method.</p>
+  <p><strong>Sign note — say this out loud:</strong> the sign is <span class="key">$+\tfrac1n H^{-1}\nabla\ell$</span>. We are <em>removing</em> $z$, so we move the optimum in the direction that adding $z$ pulled us <em>away</em> from — i.e., we undo $z$'s pull. (This sign was an audit fix; the deck is now correct. If a student has Koh &amp; Liang's "up-weighting" form in mind, theirs has the opposite sign because they up-weight rather than remove.)</p>
+  <ul>
+    <li>Exact for quadratic loss; first-order Taylor otherwise.</li>
+    <li>In deep nets you never form $H^{-1}$ — you use Hessian-vector products / conjugate gradients.</li>
+  </ul>
+  <div class="say"><p>"The influence function answers 'where would the optimum have been without $z$?' and it has a closed form. The next three slides earn that formula honestly — and show it's exactly one Newton step."</p></div>
+</div>
+
+<!-- 11 -->
+<div class="slide-note" id="s11">
+  <span class="snum">Slide 11</span><span class="stag">Newton derivation 1/4</span>
+  <span class="timing">~2:30</span>
+  <h3>Why a Newton Step? The Target</h3>
+  <p>Set the stage. Empirical loss $L(\theta;\mathcal{D}) = \tfrac1n\sum_i \ell(\theta;z_i)$, assumed twice differentiable and <strong>$\lambda$-strongly convex</strong>. Exact deletion of $z$ means landing on the leave-one-out optimum $\theta_{-z} = \arg\min_\theta L(\theta;\mathcal{D}\setminus\{z\})$.</p>
+  <p>Two consequences of strong convexity, both load-bearing later:</p>
+  <ul>
+    <li>$H_\theta = \nabla^2 L \succeq \lambda I$ is invertible with $\|H_\theta^{-1}\|_{\mathrm{op}} \le 1/\lambda$ — so the $H^{-1}$ in the influence formula is well-defined and bounded.</li>
+    <li>Removing 1 of $n$ points perturbs the loss by $O(1/n)$, so it moves the optimum only $O(1/n)$ — a small, correctable nudge.</li>
+  </ul>
+  <div class="say"><p>"The optimum barely moves — it's $1/n$ away. That's the whole reason a single analytic step can work: we don't need to travel far, we just need to travel in exactly the right direction."</p></div>
+  <div class="ask"><p>"What if the loss isn't strongly convex?" — Then add an $\ell_2$ regularizer to make it so (standard), or the guarantees become approximate. Deep nets violate this; that's why the deep-net methods in §02 are heuristic.</p></div>
+</div>
+
+<!-- 12 -->
+<div class="slide-note" id="s12">
+  <span class="snum">Slide 12</span><span class="stag">Newton derivation 2/4</span>
+  <span class="timing">~2:30</span>
+  <h3>A Continuous Path $\theta_o \to \theta_{-z}$</h3>
+  <p>The trick that makes the derivation clean: don't jump from "with $z$" to "without $z$" — build a continuous dial $t\in[0,1]$ that smoothly removes $z$.</p>
+  <div class="board">
+    $$L_t(\theta) = L(\theta;\mathcal{D}) - \tfrac{t}{n}\,\ell(\theta;z),\qquad \theta(t)=\arg\min_\theta L_t(\theta).$$
+  </div>
+  <ul>
+    <li>At $t=0$: $L_0 = L(\cdot;\mathcal{D})$, so $\theta(0)=\theta_o$ — the original model.</li>
+    <li>At $t=1$: the $z$ term is fully removed, $L_1 \propto L(\cdot;\mathcal{D}\setminus\{z\})$, so $\theta(1)=\theta_{-z}$ — the retrain target. (Proportional, not equal, because of the $1/n$ vs $1/(n{-}1)$ normalization — wave at this; it's a lower-order effect.)</li>
+  </ul>
+  <p>So the path $\theta(t)$ literally interpolates from the model we have to the model we want. The next slide differentiates it.</p>
+  <div class="say"><p>"Instead of teleporting from $\theta_o$ to $\theta_{-z}$, we walk a smooth path as we turn the weight on $z$ down from one to zero — and then we just need the velocity at the start."</p></div>
+</div>
+
+<!-- 13 -->
+<div class="slide-note" id="s13">
+  <span class="snum">Slide 13</span><span class="stag">Newton derivation 3/4</span>
+  <span class="timing">~3:00</span>
+  <h3>Differentiating Optimality (IFT)</h3>
+  <p>The heart of the derivation. Along the path, $\theta(t)$ is a minimizer, so stationarity holds for <em>every</em> $t$:</p>
+  <div class="board">
+    $$\nabla_\theta L_t(\theta(t)) = \nabla L(\theta(t);\mathcal{D}) - \tfrac{t}{n}\nabla\ell(\theta(t);z) = 0.$$
+  </div>
+  <p>Now differentiate this identity in $t$ (implicit function theorem) and evaluate at $t=0$, where $\nabla^2 L_0(\theta_o)=H_{\theta_o}$:</p>
+  <div class="board">
+    $$H_{\theta_o}\,\theta'(0) - \tfrac1n\nabla\ell(\theta_o;z) = 0 \;\;\Longrightarrow\;\; \theta'(0)=\tfrac1n H_{\theta_o}^{-1}\nabla\ell(\theta_o;z).$$
+  </div>
+  <p>Walk the chain rule explicitly: differentiating the first term gives $\nabla^2 L\cdot\theta'(t)$; differentiating the second gives $-\tfrac1n\nabla\ell - \tfrac{t}{n}(\ldots)\theta'$, and at $t=0$ the last piece vanishes. <span class="key">The velocity at the start of the path is exactly the influence function from slide 10.</span></p>
+  <div class="say"><p>"We never solved the optimization — we differentiated the optimality condition. That's the implicit function theorem doing all the work. The rate the optimum moves as $z$ leaves is the influence direction."</p></div>
+</div>
+
+<!-- 14 -->
+<div class="slide-note" id="s14">
+  <span class="snum">Slide 14</span><span class="stag">Theorem · Guo 2020</span>
+  <span class="timing">~2:00</span>
+  <h3>Theorem — Newton-Step Unlearning</h3>
+  <p>Now cash it in. A first-order Taylor expansion of the path, $\theta_{-z}-\theta_o = \theta(1)-\theta(0) \approx \theta'(0)$, gives the single <strong>Newton step</strong>:</p>
+  <div class="board">
+    $$\theta_u = \theta_o + \tfrac1n H_{\theta_o}^{-1}\nabla_\theta\ell(\theta_o;z),$$
+  </div>
+  <p>which recovers the leave-one-out retrain $\theta_{-z}$ to first order (Guo et al. 2020, "Certified Data Removal").</p>
+  <p>Emphasize: this is not a new idea pulled from a hat — it is the velocity from the previous slide times the unit step $\Delta t = 1$. The name "Newton step" is justified on the next slide.</p>
+  <div class="say"><p>"One closed-form update — a Hessian inverse times a gradient — moves the model along the deleted point's influence direction and lands on retrain, to first order. No retraining loop."</p></div>
+</div>
+
+<!-- 15 -->
+<div class="slide-note" id="s15">
+  <span class="snum">Slide 15</span><span class="stag">Why one step</span>
+  <span class="timing">~2:30</span>
+  <h3>Why One Step Suffices</h3>
+  <p>Justify the word "Newton" and the "one step." The update is exactly <strong>one Newton iteration</strong> on the objective $L(\cdot;\mathcal{D}\setminus\{z\})$, started from $\theta_o$. Two facts combine:</p>
+  <ul>
+    <li><strong>We start close.</strong> $\theta_o$ is only $O(1/n)$ from $\theta_{-z}$ (slide 11) — we removed just one of $n$ points.</li>
+    <li><strong>Newton converges quadratically</strong> near a strongly convex optimum: error after a step $\sim$ (error before)$^2$.</li>
+  </ul>
+  <p>So the residual after one step is $\|\theta_u-\theta_{-z}\| = O\!\big((1/n)^2\big) = O(1/n^2)$. Start close, square the error, land within $1/n^2$. A plain gradient step would need many iterations and never exactly close the gap because it doesn't use curvature.</p>
+  <div class="say"><p>"Newton's quadratic convergence is usually a footnote. Here it's the whole result: starting $1/n$ away and squaring gives $1/n^2$ in a single step. That leftover $1/n^2$ is what we'll hide with noise."</p></div>
+</div>
+
+<!-- 16 -->
+<div class="slide-note" id="s16">
+  <span class="snum">Slide 16</span><span class="stag">Sensitivity</span>
+  <span class="timing">~2:30</span>
+  <h3>$L_2$-Sensitivity of the Update</h3>
+  <p>To certify with the Gaussian mechanism we need the <em>sensitivity</em> — how much the released parameter can move when the deleted point changes. For two candidate deleted points $z,z'$:</p>
+  <div class="board">
+    $$\theta_u(\mathcal{D},z)-\theta_u(\mathcal{D},z') = \tfrac1n H_{\theta_o}^{-1}\big(\nabla\ell(\theta_o;z)-\nabla\ell(\theta_o;z')\big).$$
+  </div>
+  <p>With $G$-Lipschitz loss ($\|\nabla\ell\|\le G$) and $\|H^{-1}\|_{\mathrm{op}}\le 1/\lambda$, take norms and use the triangle inequality:</p>
+  <div class="board">
+    $$\sup_{z,z'}\big\|\theta_u(\mathcal{D},z)-\theta_u(\mathcal{D},z')\big\| \;\le\; \frac{2G}{\lambda n}.$$
+  </div>
+  <p>The factor 2 is the two gradient terms; the $1/\lambda$ is the Hessian inverse; the $1/n$ is the per-point weight. This $2G/(\lambda n)$ is the first-order sensitivity a privacy mechanism would otherwise have to mask.</p>
+  <div class="ask"><p>"Why bound over $z,z'$ rather than the residual?" — Because certification is about indistinguishability across <em>which</em> point was deleted; the relevant quantity is how much the output can swing. (The residual gap drives the noise scale on the next slide.)</p></div>
+</div>
+
+<!-- 17 -->
+<div class="slide-note" id="s17">
+  <span class="snum">Slide 17</span><span class="stag">Theorem · Gaussian certification</span>
+  <span class="timing">~3:00</span>
+  <h3>Theorem — Certified Deletion by Gaussian Noise</h3>
+  <p>The capstone of the derivation. The Newton step leaves a second-order residual $\eta = \|\theta_u-\theta_{-z}\| \le C\,G^2/(\lambda^2 n^2)$. Release $\theta_u + N$ with $N\sim\mathcal{N}(0,\sigma^2 I)$ and</p>
+  <div class="board">
+    $$\sigma \;\ge\; \frac{\eta}{\varepsilon}\sqrt{2\log(1.25/\delta)} \;=\; \frac{C\,G^2}{\lambda^2 n^2\varepsilon}\sqrt{2\log(1.25/\delta)}.$$
+  </div>
+  <p>Then the release is an $(\varepsilon,\delta)$-certified deletion of $z$. This is precisely the <strong>Gaussian mechanism</strong> from DP, applied to the pair $f=\theta_u$ and $g=\theta_{-z}$: the noise only has to mask the <em>residual gap</em> $\eta$ between the approximate unlearned model and the true retrain, not the whole sensitivity.</p>
+  <p>Connect the pieces visibly: $\eta$ comes from slide 15 (the $1/n^2$ residual), the noise formula is the DP Gaussian mechanism from slide 9's machinery. This is why we did all that work — to know exactly how small the gap is, so we can add the minimum noise.</p>
+  <div class="say"><p>"We don't hide the model; we hide the tiny $1/n^2$ gap between our one-step approximation and true retrain. Small gap, small noise."</p></div>
+</div>
+
+<!-- 18 -->
+<div class="slide-note" id="s18">
+  <span class="snum">Slide 18</span><span class="stag">Punchline</span>
+  <span class="timing">~2:00</span>
+  <h3>Unlearning Noise vs DP Noise</h3>
+  <p>The intuitive payoff — why deletion is genuinely easier than full privacy.</p>
+  <ul>
+    <li><strong>Full DP of the model</strong> must mask <em>every</em> point's $O(1/n)$ influence, so $\sigma_{\mathrm{DP}}\propto 1/(n\varepsilon)$.</li>
+    <li><strong>Newton unlearning</strong> already removed the first-order influence analytically; only the $O(1/n^2)$ residual remains, so $\sigma\propto 1/(n^2\varepsilon)$.</li>
+  </ul>
+  <p>An extra factor of $n$ less noise. For large $n$ that is a big deal — certified deletion is far cheaper in utility than training privately from the start.</p>
+  <div class="say"><p>"DP pays to hide each point forever. Unlearning only pays to hide the leftover after we've already done the work analytically — one factor of $n$ cheaper. Deletion is the easier task."</p></div>
+  <div class="ask"><p>"Then why not always DP-train?" — DP protects all points always; unlearning targets a specific request after the fact. Different problems; the comparison is about the cost of the deletion guarantee specifically.</p></div>
+</div>
+
+<!-- 19 -->
+<div class="slide-note" id="s19">
+  <span class="snum">Slide 19</span><span class="stag">Theorem · Sekhari 2021</span>
+  <span class="timing">~2:30</span>
+  <h3>Theorem — Deletion Capacity (Sekhari)</h3>
+  <p>Scale the story up from one deletion to $m$. For convex, $G$-Lipschitz, $L$-smooth losses in $d$ dimensions, $n$ training points, $m$ deletion requests, an $(\varepsilon,\delta)$-unlearner achieves excess risk</p>
+  <div class="board">
+    $$\mathbb{E}[L(\theta_u)-L(\theta^*)] \le \tilde O\!\Big(\sqrt{\tfrac{d}{n}} + \tfrac{m\sqrt d}{n\varepsilon}\Big),\qquad \text{provided } m \le n\varepsilon/\sqrt d.$$
+  </div>
+  <p>Read the two terms: $\sqrt{d/n}$ is the irreducible <em>statistical</em> error you'd pay even with retrain; $m\sqrt d/(n\varepsilon)$ is the <em>price of deletion</em>, growing linearly in the number of requests.</p>
+  <p><strong>Deletion capacity</strong> is the headline: the maximum number of deletions $m \le n\varepsilon/\sqrt d$ you can serve before the deletion term overwhelms the statistical term — i.e., before unlearning stops being better than just retraining. It scales with $n$ and shrinks with dimension.</p>
+  <div class="say"><p>"You don't get infinite free deletions. There's a budget — roughly $n\varepsilon/\sqrt d$ of them — after which you should just retrain. That budget is the deletion capacity."</p></div>
+</div>
+
+<!-- 20 -->
+<div class="slide-note" id="s20">
+  <span class="snum">Slide 20</span><span class="stag">Exact unlearning · SISA</span>
+  <span class="timing">~2:30</span>
+  <h3>SISA (Bourtoule et al.)</h3>
+  <p>The canonical <em>exact</em> method, and an architecture trick rather than an analysis. <strong>S</strong>harded, <strong>I</strong>solated, <strong>S</strong>liced, <strong>A</strong>ggregated:</p>
+  <ul>
+    <li>Partition $\mathcal{D}$ into $S$ shards, each into $R$ slices; train one model per shard, checkpointing after each slice.</li>
+    <li>Aggregate the $S$ models' predictions at inference (vote / average).</li>
+    <li>To unlearn point $x$: find its shard, roll back to the checkpoint <em>before</em> the slice containing $x$, retrain only that shard from there.</li>
+  </ul>
+  <p>So you retrain $\approx 1/S$ of the data instead of all of it — exact unlearning at a fraction of the cost.</p>
+  <p><strong>The catch:</strong> each shard sees only $1/S$ of the data, so the constituent models are weaker and aggregation costs accuracy. It does not survive contact with foundation models — you can't shard a trillion-token pretraining run this way. Good transition into §02 (approximate methods) and Part II (where even this fails).</p>
+  <div class="say"><p>"SISA is the clever exact answer: structure training so deletion is local. It works beautifully until the model is too big to shard — which is exactly where LLMs live."</p></div>
+</div>
+
+<!-- 21 -->
+<div class="slide-note" id="s21">
+  <span class="snum">Slide 21</span><span class="stag">Section divider 02</span>
+  <span class="timing">~0:10</span>
+  <p class="sec-label">02 — Classification: Algorithms</p>
+  <h3>Approximate methods on deep nets</h3>
+  <p>Transition: we leave the convex world where we could prove certification. Deep nets are non-convex, the Hessian is huge, and strong convexity fails — so these methods are <em>heuristic approximations</em> to retrain, evaluated empirically rather than certified. Set that expectation honestly.</p>
+</div>
+
+<!-- 22 -->
+<div class="slide-note" id="s22">
+  <span class="snum">Slide 22</span><span class="stag">Catalog</span>
+  <span class="timing">~2:30</span>
+  <h3>The Catalog</h3>
+  <p>Orient them with the menu before diving into specifics. Walk the table:</p>
+  <ul>
+    <li><strong>FT</strong> (fine-tune on retain only) — relies on catastrophic forgetting of $\mathcal{D}_f$. Cheap, weak.</li>
+    <li><strong>GA</strong> (gradient ascent on forget) — reverse the gradient to "un-train." This is the method that <em>explodes</em> in Part II.</li>
+    <li><strong>RL</strong> (random labels on forget) — teach the model nonsense for $\mathcal{D}_f$.</li>
+    <li><strong>FF</strong> (Fisher forgetting) — add noise scaled by the diagonal Fisher information.</li>
+    <li><strong>IU</strong> (influence unlearning) — the closed-form Newton shift from §01, applied without strong-convexity guarantees.</li>
+    <li><strong>SCRUB</strong> — KL distillation, the next slide.</li>
+  </ul>
+  <p>Plus the two we detail: SalUn (saliency-masked) and $\ell_1$-sparse. The taxonomy axis: most are a <em>forget term</em> plus a <em>retain term</em>; they differ in how each is realized.</p>
+</div>
+
+<!-- 23 -->
+<div class="slide-note" id="s23">
+  <span class="snum">Slide 23</span><span class="stag">SCRUB</span>
+  <span class="timing">~2:30</span>
+  <h3>SCRUB (Kurmanji et al.)</h3>
+  <p>A teacher–student distillation. Teacher = original $\theta_o$ (it knows everything). Student = unlearned $\theta_u$. The objective is <strong>contrastive</strong>:</p>
+  <div class="board">
+    $$\min_{\theta_u}\; \frac{1}{N_r}\!\sum_{x_r\in\mathcal{D}_r} d(x_r;\theta_u) \;-\; \frac{1}{N_f}\!\sum_{x_f\in\mathcal{D}_f} d(x_f;\theta_u),$$
+    <p>with $d(x;\theta_u) = D_{\mathrm{KL}}\big(p(\cdot;\theta_o)\,\|\,p(\cdot;\theta_u)\big)$.</p>
+  </div>
+  <p>Two opposite pulls: <strong>minimize</strong> KL on the retain set (stay close to the teacher where we should remember) and <strong>maximize</strong> KL on the forget set (move away from the teacher where we should forget). The minus sign is the whole idea — "contrastive distillation."</p>
+  <div class="ask"><p>"Doesn't maximizing KL blow up, like GA?" — Yes, in principle; SCRUB controls it with min/max alternation and early stopping. This instability is the through-line that NPO fixes in Part II.</p></div>
+</div>
+
+<!-- 24 -->
+<div class="slide-note" id="s24">
+  <span class="snum">Slide 24</span><span class="stag">SalUn</span>
+  <span class="timing">~2:30</span>
+  <h3>SalUn — Weight Saliency (Fan et al.)</h3>
+  <p>Idea: don't touch all the weights, only the ones that <em>matter</em> for the forget set. Build a saliency mask from the forget-loss gradient at $\theta_o$:</p>
+  <div class="board">
+    $$\mathbf{m}_S = \mathbb{1}\big(|\nabla_\theta \ell_f(\theta;\mathcal{D}_f)|_{\theta=\theta_o} \ge \gamma\big),\qquad \gamma = \text{median saliency}.$$
+    $$\theta_u = \mathbf{m}_S\odot(\Delta\theta+\theta_o) + (\mathbf{1}-\mathbf{m}_S)\odot\theta_o.$$
+  </div>
+  <p>Read the second line: where the mask is 1 (salient weights), apply the unlearning update $\Delta\theta$; where it's 0, freeze at the original. So you surgically edit only the forget-relevant subnetwork and leave the rest of the model untouched, which protects utility.</p>
+  <ul>
+    <li>$\gamma$ = median of saliency magnitudes — a clean, parameter-light threshold.</li>
+    <li>Paired with random-label loss as the inner $\Delta\theta$ for image classification.</li>
+    <li>ICLR 2024 spotlight; strong on the benchmark table coming up (slide 31).</li>
+  </ul>
+</div>
+
+<!-- 25 -->
+<div class="slide-note" id="s25">
+  <span class="snum">Slide 25</span><span class="stag">l1-sparse</span>
+  <span class="timing">~2:00</span>
+  <h3>$\ell_1$-Sparse Unlearning (Jia et al.)</h3>
+  <p>A one-line modification with an outsized effect: add an $\ell_1$ penalty during the unlearning fine-tune,</p>
+  <div class="board">
+    $$\theta_u = \arg\min_\theta\; L_u(\theta;\theta_o,\mathcal{D}_r) + \gamma\|\theta\|_1.$$
+  </div>
+  <ul>
+    <li>The $\ell_1$ term induces <strong>sparsity</strong> — pruning emerges from the unlearning step itself, no separate prune stage.</li>
+    <li>Empirical finding: <em>sparser models forget more cleanly</em> — fewer active weights means less redundant storage of the forget data.</li>
+    <li>It's a wrapper: $L_u$ can be FT, GA, or IU. Composable with the rest of the catalog.</li>
+  </ul>
+  <div class="say"><p>"The surprising empirical message: make the model sparse and unlearning gets easier. Redundancy is what lets a model 'remember anyway' — kill the redundancy and forgetting sticks."</p></div>
+</div>
+
+<!-- 26 -->
+<div class="slide-note" id="s26">
+  <span class="snum">Slide 26</span><span class="stag">RURK · failure mode</span>
+  <span class="timing">~2:30</span>
+  <h3>Residual Knowledge Under Perturbation (RURK)</h3>
+  <p>First crack in the armor. A model can pass statistical indistinguishability on $\mathcal{D}_f$ yet still classify <em>perturbed</em> forget samples correctly — the knowledge is still there, just nudged off the exact test points.</p>
+  <div class="board">
+    $$L_{\text{RURK}}(\mathbf w,\mathcal S) = \frac{1}{|\mathcal S_r|}\sum \ell(\mathbf w;(x,y)) - \frac{\lambda}{|\mathcal S_f|}\sum \kappa(\mathbf w;(x,y)),$$
+    <p>where $\kappa$ averages the loss over a neighborhood $\mathcal V((x,y),\tau)$ of each forget point.</p>
+  </div>
+  <p>The takeaway box is the message: <span class="key">statistical indistinguishability is not robust to local perturbation.</span> If you only check the exact forget points, you over-credit the unlearner. This previews the entire skepticism thread of Part II (benign relearning, SEPS).</p>
+  <div class="say"><p>"Forgetting the exact data point is not the same as forgetting the concept. Jiggle the input and the knowledge comes right back."</p></div>
+</div>
+
+<!-- 27 -->
+<div class="slide-note" id="s27">
+  <span class="snum">Slide 27</span><span class="stag">Section divider 03</span>
+  <span class="timing">~0:10</span>
+  <p class="sec-label">03 — Classification: Metrics</p>
+  <h3>Full-stack evaluation and information-theoretic indices</h3>
+  <p>Pivot from "how to unlearn" to "how to <em>measure</em> unlearning." The recurring warning of this section: no single number works, and the reference is always Retrain, never the original model.</p>
+</div>
+
+<!-- 28 -->
+<div class="slide-note" id="s28">
+  <span class="snum">Slide 28</span><span class="stag">Metrics</span>
+  <span class="timing">~3:00</span>
+  <h3>Full-Stack MU Evaluation</h3>
+  <p>The standard five-axis report card. Define each and, crucially, what direction is "good":</p>
+  <ul>
+    <li><strong>UA</strong> — unlearning accuracy, $1-\text{Acc}_{\mathcal{D}_f}$. Higher means more forgetting — but the target is Retrain's UA, <em>not</em> 100%.</li>
+    <li><strong>RA</strong> — accuracy on the retain set; fidelity. Should stay high.</li>
+    <li><strong>TA</strong> — test accuracy; generalization. Should stay high.</li>
+    <li><strong>MIA-Efficacy</strong> — a membership-inference attack on $\mathcal{D}_f$; how hard it is to tell the forget points were trained on.</li>
+    <li><strong>RTE</strong> — run-time efficiency vs full retrain; the cost axis.</li>
+  </ul>
+  <p>The boxed warning is the whole point: <span class="key">single metrics mislead, and the reference is Retrain.</span> A method can ace UA by destroying the model (great forgetting, useless model) — which is why you need all five, compared to retrain.</p>
+  <div class="say"><p>"Don't maximize any one of these. Match all five to what retraining would have given. Forgetting <em>too</em> much is also a failure — we'll see negative IDI in a few slides."</p></div>
+</div>
+
+<!-- 29 -->
+<div class="slide-note" id="s29">
+  <span class="snum">Slide 29</span><span class="stag">MIA probe</span>
+  <span class="timing">~2:30</span>
+  <h3>MIA as an Unlearning Probe</h3>
+  <p>Spell out the MIA-Efficacy metric. Yeom-style threshold attack: a point is guessed to be a member if its loss is low.</p>
+  <div class="board">
+    $$s_{\text{loss}}(x,y) = -\log p_\theta(y\mid x),\qquad \hat m = \mathbb{1}[s_{\text{loss}}\le\tau].$$
+    <p>Entropy variant: $s_{\text{ent}}(x) = -\sum_c p_\theta(c\mid x)\log p_\theta(c\mid x)$.</p>
+  </div>
+  <ul>
+    <li>Members are typically fit better → lower loss / lower entropy → flagged as "in."</li>
+    <li>For unlearning: after we forget $\mathcal{D}_f$, the attack should <em>fail</em> on $\mathcal{D}_f$ — higher MIA-Efficacy means less residual membership signal.</li>
+  </ul>
+  <p>Connect back: this is exactly the threshold attack from the MIA deck; here it's repurposed as an unlearning audit. Next slide gives its theoretical optimum and limits.</p>
+</div>
+
+<!-- 30 -->
+<div class="slide-note" id="s30">
+  <span class="snum">Slide 30</span><span class="stag">Theory · NP / Yeom / DP</span>
+  <span class="timing">~3:30</span>
+  <h3>MIA: Optimal Test and Its Limits</h3>
+  <p>The most theory-dense metric slide — and the place the homework's MIA problems live. Three statements bracket what any membership attack can do:</p>
+  <ul>
+    <li><strong>Optimal test (Neyman–Pearson).</strong> The best possible membership test is a likelihood-ratio threshold $\mathbf{1}[\Lambda>\tau^*]$. Loss and entropy probes are just calibrated approximations to this. Nothing beats the likelihood ratio.</li>
+    <li><strong>Floor (Yeom).</strong> The train–test gap forces leakage from <em>below</em>: the best loss-threshold attack achieves advantage $\ge \Delta/B$, where $\Delta$ is the train–test loss gap and $B$ bounds the loss. The proof is a layer-cake / Fubini argument on $F_1-F_0$ — overfitting <em>guarantees</em> leakage.</li>
+    <li><strong>Ceiling (DP).</strong> Differential privacy caps it from <em>above</em>: advantage $\le \frac{e^\varepsilon-1+2\delta}{e^\varepsilon+1}$. The same $(\varepsilon,\delta)$ machinery that certified unlearning also bounds the probe.</li>
+  </ul>
+  <div class="say"><p>"Overfitting pushes a floor under leakage; DP and certified unlearning put a ceiling over it. The attacker lives in between, and the optimal attacker uses the likelihood ratio."</p></div>
+  <p>This is the in-deck home of the homework's three MIA problems — Neyman–Pearson optimal test, the Yeom $\Delta/B$ gap, and the DP$\Rightarrow$MIA cap. Don't label it "Homework 4," but if a student is doing the problem set, point them here.</p>
+</div>
+
+<!-- 31 -->
+<div class="slide-note" id="s31">
+  <span class="snum">Slide 31</span><span class="stag">Worked example</span>
+  <span class="timing">~3:00</span>
+  <h3>Example — Random-10% Forgetting (CIFAR-10)</h3>
+  <p>Make the metrics concrete. Random 10% of CIFAR-10 is the forget set; read the table <em>against the Retrain row</em>, not down a column.</p>
+  <ul>
+    <li><strong>Retrain</strong> sets the reference: UA 5.24, RA 100, TA 94.26, MIA 12.88, gap 0 by definition.</li>
+    <li><strong>FT and GA</strong> look "good" on UA (low) but their MIA collapses to ~2 — far below retrain's 12.88. They under-forget in the MIA sense; average gap ~3.8–4.1.</li>
+    <li><strong>$\ell_1$-sparse</strong> is closer (gap 2.26).</li>
+    <li><strong>SalUn</strong> wins: MIA 14.39 (essentially matching retrain), smallest average gap 1.15.</li>
+  </ul>
+  <p>The lesson to draw aloud: SalUn is best not because any single number is extreme, but because <em>every</em> axis is close to retrain. Closeness, not extremity.</p>
+  <div class="say"><p>"Notice GA's MIA is 1.7 versus retrain's 12.88 — that's not 'great privacy,' that's a sign GA distorted the model differently than retrain would. Match, don't beat."</p></div>
+</div>
+
+<!-- 32 -->
+<div class="slide-note" id="s32">
+  <span class="snum">Slide 32</span><span class="stag">Lab · IDI · AAAI 2026</span>
+  <span class="timing">~3:00</span>
+  <h3>Information Difference Index (Lab)</h3>
+  <p>Our lab's contribution. The complaint: all the metrics so far are <em>output-only</em>; two models can give identical outputs while their internal representations still encode the forget data. Probe the intermediate layers instead.</p>
+  <div class="board">
+    $$\mathrm{IDI}(\theta_u) = \frac{\sum_{\ell=1}^L \big(I(\mathbf Z_\ell^{(u)};Y)-I(\mathbf Z_\ell^{(r)};Y)\big)}{\sum_{\ell=1}^L \big(I(\mathbf Z_\ell^{(o)};Y)-I(\mathbf Z_\ell^{(r)};Y)\big)}.$$
+  </div>
+  <p>Read it as a normalized interpolation: numerator is how far the <em>unlearned</em> model's layer-wise mutual information sits from <em>retrain</em>; denominator normalizes by how far the <em>original</em> sits from retrain. So:</p>
+  <ul>
+    <li>$\mathrm{IDI}=1$ → unlearned looks like the original → <em>no</em> forgetting.</li>
+    <li>$\mathrm{IDI}=0$ → unlearned looks like retrain → <em>perfect</em> forgetting.</li>
+  </ul>
+  <p>"Strong unlearning" = matching retrain layer by layer, not just at the output. AAAI 2026.</p>
+  <div class="say"><p>"Output match is weak unlearning. We want the internal representations to match retrain too — that's what IDI measures, and it's a stricter test."</p></div>
+</div>
+
+<!-- 33 -->
+<div class="slide-note" id="s33">
+  <span class="snum">Slide 33</span><span class="stag">Lab · COLA</span>
+  <span class="timing">~2:00</span>
+  <h3>COLA — Collapse + Align (Lab)</h3>
+  <p>The method that pairs with the IDI metric — using IDI as both the yardstick and the training objective. Two stages:</p>
+  <ul>
+    <li><strong>Collapse</strong> — drive the forget-set representations to a single uniform/degenerate feature (kill their information).</li>
+    <li><strong>Align</strong> — restore the retain-set representations via head distillation (put the useful structure back).</li>
+  </ul>
+  <p>Beats SCRUB / SalUn / $\ell_1$-sparse specifically on intermediate-layer recovery — which is exactly what IDI rewards and the others ignore. The narrative: define the right metric, then design the method that optimizes it.</p>
+  <div class="say"><p>"Collapse forgets, align remembers. Because we measure at every layer, we also have to <em>act</em> at every layer."</p></div>
+</div>
+
+<!-- 34 -->
+<div class="slide-note" id="s34">
+  <span class="snum">Slide 34</span><span class="stag">Over-unlearning</span>
+  <span class="timing">~2:00</span>
+  <h3>Over-Unlearning: Negative IDI</h3>
+  <p>The conceptual payoff of having a signed, reference-anchored metric. Some methods (SCRUB, certain FT variants) <em>overshoot</em> retrain:</p>
+  <ul>
+    <li>$\mathrm{IDI}<0$ at the final block — the unlearned representation holds <em>less</em> $\mathcal{D}_f$ information than retrain does.</li>
+    <li>This shows up as MIA-Efficacy <em>above</em> Retrain — which a naive reader would cheer as "extra privacy."</li>
+    <li>It is actually a <strong>red flag</strong>: the model is distorted away from the retrain distribution, just in the other direction. It is not a model that "never saw" $\mathcal{D}_f$; it's a model that was actively pushed against $\mathcal{D}_f$.</li>
+  </ul>
+  <p>Reinforce the whole section: the goal is <span class="key">match, not maximize</span>. Both under- and over-shooting fail the distributional definition from slide 4.</p>
+  <div class="say"><p>"Beating retrain on a privacy metric isn't winning — it means you've left the retrain distribution. A signed metric like IDI is what lets you even see that you overshot."</p></div>
+</div>
+
+<!-- 35 -->
+<div class="slide-note" id="s35">
+  <span class="snum">Slide 35</span><span class="stag">Takeaways</span>
+  <span class="timing">~1:30</span>
+  <h3>Takeaways — Part I</h3>
+  <p>Recap the spine:</p>
+  <ul>
+    <li><strong>Definition</strong> — distributional match to retrain; anything weaker is suppression, not deletion.</li>
+    <li><strong>Certified deletion</strong> — one Newton step removes a point's $O(1/n)$ influence; Gaussian noise masks the $O(1/n^2)$ residual. We proved this end-to-end.</li>
+    <li><strong>Classification methods</strong> — SCRUB / SalUn / $\ell_1$-sparse approximate retrain on different axes; none is certified.</li>
+    <li><strong>Evaluate against Retrain</strong>, not the original; match is the goal, not maximization (over-unlearning is real).</li>
+    <li><strong>Bridge</strong> — at LLM scale the entire toolkit breaks, because the retrain baseline itself is unavailable.</li>
+  </ul>
+  <div class="say"><p>"Today we had clean definitions and even a theorem. Hold onto that comfort — Part II takes it all away."</p></div>
+</div>
+
+<!-- 36 -->
+<div class="slide-note" id="s36">
+  <span class="snum">Slide 36</span><span class="stag">Closer</span>
+  <span class="timing">~0:20</span>
+  <h3>Part II →</h3>
+  <p>One-line bridge. Everything today assumed we could name the forget set cleanly, that the loss was nice, and that we could retrain to check our work. LLMs violate all three. End on the question that opens Part II: what even <em>is</em> the unit of forgetting in a language model?</p>
+  <div class="say"><p>"Next time: the same question, no convexity, no retrain baseline, and knowledge smeared across a trillion tokens. See you in Part II."</p></div>
+</div>
+
+</div>
+</body>
+</html>

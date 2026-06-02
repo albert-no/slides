@@ -184,8 +184,8 @@ User-captured visual examples (placed per instruction):
 - **SAIL** (Jeon, Kim, No 2025) is the lab's main contribution and motivates the diffusion sharpness framing. Detection metric extends Wen 2024 via the Hessian-score product (Lemma 4.3 cubic amplification). Mitigation is inference-time noise optimization, leaving prompt and weights untouched.
 - **CLIP-pad mitigation** (Kim, No 2026 CVPR Findings, arXiv 2605.02908) is a complementary inference-time fix — different mechanism, same target prompt set.
 - **Carlini 2021** extraction also appears in `privacy/mia/mia5-llm.html:166` (perplexity baseline).
-- **Cooper 2025** book extraction motivates the unlearning lectures — see `privacy/unlearning/unlearning.html:108`.
-- **ACR** is referenced as the audit benchmark in `privacy/unlearning/unlearning.html` (compliance theatre slide).
+- **Cooper 2025** book extraction motivates the unlearning lectures — see `privacy/unlearning/unlearning1-foundations.html:91` ("Why Now").
+- **ACR** is referenced as the audit benchmark in `privacy/unlearning/unlearning2-llm.html` (benchmarks/failures, Part II).
 - **Memorization vs MIA** comparison links to `privacy/mia/mia1-foundations.html`; Min-K%/Min-K%++ are explicit bridges.
 - **Bartz v. Anthropic** is the new copyright anchor (replaces NYT-only framing). Reuters Dec 4 2025 article cited.
-- **Defenses → unlearning** flows directly into `privacy/unlearning/unlearning.html`.
+- **Defenses → unlearning** flows directly into `privacy/unlearning/unlearning1-foundations.html` (Part I).

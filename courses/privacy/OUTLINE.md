@@ -68,15 +68,16 @@ Six sub-tracks: a unified generative-model review (`generative/` — diffusion +
 | Min-K% / Min-K%++ probes | `memorization/memorization-llm.html` | `:259, :274` |
 | **Adversarial Compression Ratio (ACR)** | `memorization/memorization-llm.html` | `:313-368` |
 | Cooper book extraction | `memorization/memorization-llm.html` | `:384` |
-| Certified $(\varepsilon,\delta)$ unlearning | `unlearning/unlearning.html` | `:175` |
-| Newton-step / Sekhari capacity theorems | `unlearning/unlearning.html` | `:189-216` |
-| Influence function | `unlearning/unlearning.html` | `:259` |
-| SCRUB / SalUn / $\ell_1$-sparse | `unlearning/unlearning.html` | `:276-318` |
-| IDI / COLA (lab) | `unlearning/unlearning.html` | `:396-424` |
-| GA collapse + NPO bounded + SimNPO | `unlearning/unlearning.html` | `:479-538` |
-| TOFU / WMDP / RWKU / MUSE benchmarks | `unlearning/unlearning.html` | `:648-702` |
-| Benign + syntactic relearning | `unlearning/unlearning.html` | `:705-728` |
-| Pawelczyk verification hardness | `unlearning/unlearning.html` | `:748` |
+| Certified $(\varepsilon,\delta)$ unlearning | `unlearning/unlearning1-foundations.html` | `:160` |
+| Influence function (leads into Newton) | `unlearning/unlearning1-foundations.html` | `:174` |
+| Newton-step (8-slide) / Sekhari capacity theorems | `unlearning/unlearning1-foundations.html` | `:191-312` |
+| MIA optimal test + DP cap + Yeom gap (HW4 woven in) | `unlearning/unlearning1-foundations.html` | `:472` |
+| SCRUB / SalUn / $\ell_1$-sparse | `unlearning/unlearning1-foundations.html` | `:367-431` |
+| IDI / COLA (lab) | `unlearning/unlearning1-foundations.html` | `:502-533` |
+| GA collapse + NPO bounded + SimNPO | `unlearning/unlearning2-llm.html` | `:103-165` |
+| TOFU / WMDP / RWKU / MUSE benchmarks | `unlearning/unlearning2-llm.html` | `:271-327` |
+| Benign + syntactic relearning | `unlearning/unlearning2-llm.html` | `:328-353` |
+| Pawelczyk verification hardness | `unlearning/unlearning2-llm.html` | `:371` |
 | Kirchenbauer green-list + entropy bound | `watermark/watermark.html` | `:164-222` |
 | Gumbel-max trick + proof | `watermark/watermark.html` | `:252-295` |
 | Aaronson distortion-free proof | `watermark/watermark.html` | `:325` |
@@ -92,7 +93,7 @@ Six sub-tracks: a unified generative-model review (`generative/` — diffusion +
 - **diffusion ↔ MIA**: diffusion-model MIA is a research frontier — `mia/mia4-modern.html:731-789` covers it. The diffusion-models theory in `privacy/generative/` provides the substrate.
 - **DP ↔ MIA**: `mia/mia1-foundations.html:601-617` shows DP as MIA bound (`Adv ≤ e^ε−1+δ`); `dp/dp8-fl.html` builds the DP machinery. DP-SGD is referenced from `mia/mia4-modern.html:117`.
 - **DP ↔ unlearning**: certified $(\varepsilon,\delta)$-unlearning reuses the DP definition from `dp/dp8-fl.html:375` — same bound, different distribution comparison.
-- **memorization ↔ unlearning ↔ MIA**: memorization is the *signal* unlearning aims to remove and MIA aims to detect. `memorization/memorization-diffusion.html` + `memorization-llm.html` motivate the other two; defenses slide flows directly into `unlearning/`. `unlearning/unlearning.html:317` reuses the SALUN MIA-Efficacy column.
+- **memorization ↔ unlearning ↔ MIA**: memorization is the *signal* unlearning aims to remove and MIA aims to detect. `memorization/memorization-diffusion.html` + `memorization-llm.html` motivate the other two; defenses slide flows directly into `unlearning/`. `unlearning/unlearning1-foundations.html:487` reuses the SALUN MIA-Efficacy column.
 - **memorization ↔ watermark**: both about provenance under copyright pressure, but opposite directions — memorization detects unintended retention, watermarking adds intended traceability. Same lawsuits motivate both.
 - **dgMARK ↔ watermark**: lab thread for diffusion LLMs — full context in `talks/dllm/dllm.html:524-569`, broader watermark survey here.
 - **Theoretical diffusion (`courses/infotheory/diffusion/`) vs from-scratch (`courses/privacy/generative/`)**: same math, different presentation. The infotheory series uses information-theoretic / hierarchical-VAE framing (cleaner for theory students); the privacy series uses the Bayes-+-Taylor route and goes further (5 lectures including SDE, DDIM, CFG, discrete).

@@ -51,4 +51,4 @@ None. Paper PDF lives next to the deck for reference.
 
 ### Cross-reference
 
-- Background lecture: `privacy/unlearning/unlearning.html` — full lecture-length treatment of unlearning definitions, classification, LLM unlearning, benchmarks. The ICML 2026 deck distills the *position* into 10 slides.
+- Background lecture: `privacy/unlearning/unlearning1-foundations.html` (Part I — definitions, certified/Newton, classification) and `privacy/unlearning/unlearning2-llm.html` (Part II — LLM unlearning, benchmarks). The ICML 2026 deck distills the *position* into 10 slides.

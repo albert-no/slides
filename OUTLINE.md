@@ -80,16 +80,17 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Min-K%++ probe | `courses/privacy/memorization/memorization-llm.html:274` |
 | ACR (Schwarzschild 2024) + MiniPrompt | `courses/privacy/memorization/memorization-llm.html:313-354` |
 | Cooper book extraction (open-weight LLMs) | `courses/privacy/memorization/memorization-llm.html:384` |
-| Certified $(\varepsilon,\delta)$-unlearning | `courses/privacy/unlearning/unlearning.html:175` |
-| Newton-step + Sekhari capacity theorems | `courses/privacy/unlearning/unlearning.html:189-216` |
-| Influence function (IU) | `courses/privacy/unlearning/unlearning.html:259` |
-| SCRUB / SalUn / $\ell_1$-sparse classification unlearn | `courses/privacy/unlearning/unlearning.html:276-318` |
-| IDI / COLA (lab unlearning eval) | `courses/privacy/unlearning/unlearning.html:396-424` |
-| GA collapse + NPO bounded + SimNPO | `courses/privacy/unlearning/unlearning.html:479-538` |
-| ME+GD / IDK / LUNAR (LLM unlearn) | `courses/privacy/unlearning/unlearning.html:542-639` |
-| TOFU / WMDP / RWKU / MUSE benchmarks | `courses/privacy/unlearning/unlearning.html:648-702` |
-| Benign + syntactic relearning (lab) | `courses/privacy/unlearning/unlearning.html:705-728` |
-| Pawelczyk black-box verification hardness | `courses/privacy/unlearning/unlearning.html:748` |
+| Certified $(\varepsilon,\delta)$-unlearning | `courses/privacy/unlearning/unlearning1-foundations.html:160` |
+| Influence function (IU) — leads into the Newton block | `courses/privacy/unlearning/unlearning1-foundations.html:174` |
+| Newton-step (8-slide derivation) + Sekhari capacity theorems | `courses/privacy/unlearning/unlearning1-foundations.html:191-312` |
+| MIA: optimal test + DP cap + Yeom gap (HW4 woven in) | `courses/privacy/unlearning/unlearning1-foundations.html:472` |
+| SCRUB / SalUn / $\ell_1$-sparse classification unlearn | `courses/privacy/unlearning/unlearning1-foundations.html:367-431` |
+| IDI / COLA (lab unlearning eval) | `courses/privacy/unlearning/unlearning1-foundations.html:502-533` |
+| GA collapse + NPO bounded + SimNPO | `courses/privacy/unlearning/unlearning2-llm.html:103-165` |
+| ME+GD / IDK / LUNAR (LLM unlearn) | `courses/privacy/unlearning/unlearning2-llm.html:166-262` |
+| TOFU / WMDP / RWKU / MUSE benchmarks | `courses/privacy/unlearning/unlearning2-llm.html:271-327` |
+| Benign + syntactic relearning (lab) | `courses/privacy/unlearning/unlearning2-llm.html:328-353` |
+| Pawelczyk black-box verification hardness | `courses/privacy/unlearning/unlearning2-llm.html:371` |
 | Position: "Unlearning" overused in LLMs (5-min ICML talk) | `talks/icml2026/icml2026.html` |
 | Kirchenbauer green-list + z-test + entropy bound | `courses/privacy/watermark/watermark.html:164-222` |
 | Gumbel distribution + Gumbel-max trick + proof | `courses/privacy/watermark/watermark.html:252-295` |

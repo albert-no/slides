@@ -86,12 +86,10 @@
 <div class="slide">
   <h2>The Central Question</h2>
   <div class="divider"></div>
-  <div class="highlight" style="padding:28px 32px;">
-    <p>Given text $x$ and a secret key $k$:</p>
-    <p style="font-weight:500; text-align:center;"><strong>Was $x$ produced by a watermarked LLM?</strong></p>
+  <div class="highlight" style="padding:32px;">
+    <p style="text-align:center; font-weight:500;"><strong>Given only text $x$ and key $k$ — was $x$ written by a watermarked LLM?</strong></p>
   </div>
-  <p>Detector returns <strong>yes / no</strong> with calibrated false-positive rate.</p>
-  <p>No model access, no prompt — just the output.</p>
+  <p>Detector answers <strong>yes / no</strong>. No model, no prompt — just the text.</p>
 </div>
 
 <!-- SLIDE — uses -->
@@ -101,19 +99,16 @@
   <div class="grid-3" style="margin-top:12px;">
     <div class="card">
       <h3>Provenance</h3>
-      <p>Detect AI-written essays, news, reviews.</p>
+      <p>Is this essay or review AI-written?</p>
     </div>
     <div class="card">
       <h3>Disinformation</h3>
-      <p>Audit at-scale generated propaganda.</p>
+      <p>Flag mass-produced fake news and propaganda.</p>
     </div>
     <div class="card">
       <h3>Data hygiene</h3>
-      <p>Filter AI text from next-generation training corpora.</p>
+      <p>Keep AI text out of training corpora.</p>
     </div>
-  </div>
-  <div class="highlight">
-    <p>Detection beats classification — provenance is <strong>cryptographic</strong>, not statistical.</p>
   </div>
 </div>
 
@@ -129,26 +124,27 @@
   <div class="highlight">
     <p>Pick any two — every scheme makes a tradeoff.</p>
   </div>
-  <p>The taxonomy below is organized by which two each method optimizes.</p>
 </div>
 
 <!-- SLIDE — threat model -->
 <div class="slide">
-  <h2>Adversary Model</h2>
+  <h2>Two Kinds of Attack</h2>
   <div class="divider"></div>
   <div class="grid-2">
-    <div>
-      <h3>Removal attacks</h3>
-      <p>User edits, paraphrases, translates.</p>
-      <p>Goal: pass detector with high probability.</p>
+    <div class="card">
+      <h3>Removal</h3>
+      <p>Edit or paraphrase to <strong>erase</strong> the mark.</p>
+      <p>So AI text reads as human-written.</p>
     </div>
-    <div>
-      <h3>Spoofing attacks</h3>
-      <p>Forge watermark on human text.</p>
-      <p>Goal: frame the model for content it didn't write.</p>
+    <div class="card">
+      <h3>Spoofing</h3>
+      <p><strong>Forge</strong> the mark onto human text.</p>
+      <p>To falsely blame the model for words it never wrote.</p>
     </div>
   </div>
-  <p>Both matter. Spoofing is often <strong>under-evaluated</strong>.</p>
+  <div class="highlight">
+    <p>Spoofing is the <strong>under-studied</strong> threat.</p>
+  </div>
 </div>
 
 <!-- Part divider 02 -->
@@ -159,18 +155,35 @@
   <p class="subtitle">Kirchenbauer et al. 2023 — the workhorse method</p>
 </div>
 
+<!-- SLIDE — green-list intuition / token visual -->
+<div class="slide">
+  <h2>The Core Idea — Tilt Toward Green</h2>
+  <div class="divider"></div>
+  <p>Split the vocabulary into a secret <span class="token token-safe" style="padding:2px 10px;">green</span> half and a <span class="token token-eos" style="padding:2px 10px;">red</span> half. Then nudge sampling toward green.</p>
+  <p style="margin-top:18px;"><strong>Regular generation</strong> — green by chance (~half):</p>
+  <div style="margin:4px 0 14px;">
+    <span class="token token-eos">The</span><span class="token token-safe">model</span><span class="token token-eos">writes</span><span class="token token-eos">a</span><span class="token token-safe">short</span><span class="token token-eos">reply</span><span class="token token-safe">to</span><span class="token token-eos">the</span><span class="token token-safe">user</span>
+  </div>
+  <p><strong>Watermarked</strong> — green dominates:</p>
+  <div style="margin:4px 0 14px;">
+    <span class="token token-safe">The</span><span class="token token-safe">model</span><span class="token token-safe">drafts</span><span class="token token-eos">a</span><span class="token token-safe">brief</span><span class="token token-safe">reply</span><span class="token token-safe">for</span><span class="token token-safe">each</span><span class="token token-safe">user</span>
+  </div>
+  <div class="highlight">
+    <p>Detector just counts green tokens — too many ⇒ watermarked.</p>
+  </div>
+</div>
+
 <!-- SLIDE — setup -->
 <div class="slide">
   <h2>Setup</h2>
   <div class="divider"></div>
-  <p>At each decoding step $t$ with context $x_{&lt;t}$:</p>
+  <p>At each step $t$, using context $x_{&lt;t}$ and key $k$:</p>
   <ul class="arrow">
-    <li>Hash $x_{t-h:t-1}$ with key $k$ to seed a PRG</li>
-    <li>Partition vocabulary $\mathcal{V}$ into <strong>green</strong> $G_t$ ($\gamma|\mathcal{V}|$) and <strong>red</strong> $R_t$</li>
+    <li>Hash recent tokens with $k$ ⇒ a fresh <strong>green list</strong> $G_t$ (fraction $\gamma$)</li>
     <li>Add bias $\delta &gt; 0$ to green logits before softmax</li>
   </ul>
   <p>Default: $\gamma = 0.25$, $\delta = 2$.</p>
-  <div class="cite">Kirchenbauer, Geiping, Wen, Katz, Miers, Goldstein, "A Watermark for Large Language Models", ICML 2023.</div>
+  <div class="cite">Kirchenbauer et al., "A Watermark for Large Language Models", ICML 2023.</div>
 </div>
 
 <!-- SLIDE — sampling rule -->
@@ -180,10 +193,10 @@
   <div class="math-block">
     $$\hat p_\theta(v \mid x_{&lt;t}) \;=\; \frac{\exp\!\big(\ell_t(v) + \delta\,\mathbb{1}[v \in G_t]\big)}{\sum_{w} \exp\!\big(\ell_t(w) + \delta\,\mathbb{1}[w \in G_t]\big)}$$
   </div>
-  <p>$\ell_t(v)$ are vanilla logits; bias only on green tokens.</p>
-  <ul>
-    <li>High-entropy steps: green tokens get sampled with elevated probability</li>
-    <li>Low-entropy steps: bias swamped — quality preserved at "obvious" tokens</li>
+  <p>Vanilla logits $\ell_t$, plus $\delta$ on green tokens only.</p>
+  <ul class="arrow">
+    <li>High entropy ⇒ bias steers toward green</li>
+    <li>Low entropy ⇒ bias swamped, quality kept</li>
   </ul>
 </div>
 
@@ -195,10 +208,10 @@
   <div class="math-block">
     $$z \;=\; \frac{|s|_G - \gamma T}{\sqrt{T \gamma (1-\gamma)}} \;\sim\; \mathcal{N}(0, 1).$$
   </div>
-  <p>Reject when $z &gt; z_\alpha$. False-positive rate is exactly $\alpha$ under $H_0$.</p>
-  <ul>
-    <li>$T = 25$ tokens already gives $z &gt; 4$ for typical generations</li>
-    <li>No model access at detection time — only key $k$</li>
+  <p>Reject when $z &gt; z_\alpha$ — false-positive rate exactly $\alpha$.</p>
+  <ul class="arrow">
+    <li>~25 tokens often already give $z &gt; 4$</li>
+    <li>Detection needs only key $k$ — no model</li>
   </ul>
 </div>
 
@@ -206,37 +219,38 @@
 <div class="slide">
   <h2>Detection Power — Entropy Bound</h2>
   <div class="divider"></div>
-  <p>Under watermarked alternative $H_1$:</p>
+  <p>Watermarked text beats the chance baseline by an entropy-weighted margin:</p>
   <div class="math-block">
-    $$\mathbb{E}_{H_1}\!\big[|s|_G\big] \;\ge\; T\!\left(\gamma \;+\; \frac{(1-\gamma)\,(e^\delta - 1)}{e^\delta + 1}\,\bar H\right),$$
+    $$\mathbb{E}\big[|s|_G\big] \;\ge\; T\!\left(\gamma \;+\; \underbrace{\tfrac{(1-\gamma)\,(e^\delta - 1)}{e^\delta + 1}}_{\text{bias strength}}\,\bar H\right), \qquad \bar H = \text{avg. spike entropy}.$$
   </div>
-  <p>$\bar H$ = average per-step <strong>spike entropy</strong> of $p_\theta$.</p>
   <ul class="arrow">
-    <li>Detection power $\propto$ <strong>text entropy</strong>, not length alone</li>
-    <li>Low-entropy steps (boilerplate, code) waste the bias budget</li>
-    <li>Tokens needed: $T \;\gtrsim\; \big(z_\alpha + z_\beta\big)^2 / \mathrm{var}_{H_1}(|s|_G/T)$</li>
+    <li>Signal tracks <strong>text entropy</strong>, not length alone</li>
+    <li>Low-entropy spans — boilerplate, code — carry no watermark</li>
   </ul>
-  <p>Information-theoretic ceiling: text with $\bar H = 0$ cannot be watermarked.</p>
+  <div class="highlight">
+    <p>Ceiling: deterministic text ($\bar H = 0$) <strong>cannot</strong> be watermarked.</p>
+  </div>
 </div>
 
 <!-- SLIDE — quality vs detect -->
 <div class="slide">
-  <h2>Quality–Detectability Tradeoff</h2>
+  <h2>The Core Tradeoff — One Knob, $\delta$</h2>
   <div class="divider"></div>
   <div class="grid-2">
-    <div>
-      <h3>Larger $\delta$</h3>
-      <p>Stronger detection, fewer tokens needed.</p>
-      <p>Distribution shift away from $p_\theta$.</p>
+    <div class="card">
+      <h3>Turn $\delta$ up</h3>
+      <p>✓ Stronger signal, detect in fewer tokens</p>
+      <p>✗ Output drifts from $p_\theta$ — quality drops</p>
     </div>
-    <div>
-      <h3>Smaller $\gamma$</h3>
-      <p>Sharper z-test under $H_0$.</p>
-      <p>Smaller green list ⇒ more vocabulary distortion.</p>
+    <div class="card">
+      <h3>Keep $\delta$ low</h3>
+      <p>✓ Stays close to the vanilla LLM</p>
+      <p>✗ Needs longer text to detect</p>
     </div>
   </div>
-  <p>Distortion is <strong>per-token</strong>: KL divergence from vanilla decoder.</p>
-  <p>Open question for next section: can we get $\delta &gt; 0$ <em>without</em> distortion?</p>
+  <div class="highlight">
+    <p>Detection vs quality — opposite pulls. <strong>Next:</strong> can we keep $\delta &gt; 0$ yet add zero distortion?</p>
+  </div>
 </div>
 
 <!-- Part divider 03 -->
@@ -251,16 +265,15 @@
 <div class="slide">
   <h2>Recall — Gumbel Distribution</h2>
   <div class="divider"></div>
-  <p>$G \sim \mathrm{Gumbel}(0)$ has density and equivalent construction</p>
+  <p>$G \sim \mathrm{Gumbel}(0)$ — the noise you get from a uniform via</p>
   <div class="math-block">
-    $$f_G(g) \;=\; \exp\!\big(-g - e^{-g}\big), \qquad G \;=\; -\log(-\log U), \;\; U \sim \mathrm{Unif}(0,1).$$
+    $$G \;=\; -\log(-\log U), \qquad U \sim \mathrm{Unif}(0,1).$$
   </div>
   <ul>
-    <li>$\mathbb{E}[G] = \gamma_E \approx 0.577$ (Euler–Mascheroni)</li>
-    <li>CDF: $F_G(g) = \exp(-e^{-g})$ — double-exponential tail</li>
-    <li>Stable under maximization of independent shifts</li>
+    <li>Double-exponential tail: CDF $F_G(g) = \exp(-e^{-g})$</li>
+    <li>Well-behaved under maximization — the key property next</li>
   </ul>
-  <p>Building block for the next theorem and for Aaronson's scheme.</p>
+  <p>One building block underlies <em>all</em> the cryptographic schemes below.</p>
 </div>
 
 <!-- SLIDE — Gumbel-max theorem -->
@@ -272,23 +285,24 @@
     <p>Let $\ell_v = \log p_\theta(v)$ for $v \in \mathcal{V}$ and let $G_v \stackrel{\text{iid}}{\sim} \mathrm{Gumbel}(0)$. Then</p>
     <div class="math-block">$$\arg\max_{v}\;(\ell_v + G_v) \;\sim\; p_\theta.$$</div>
   </div>
-  <p>Sampling from softmax = adding Gumbel noise to logits + arg-max.</p>
+  <p><strong>Idea:</strong> softmax sampling = add Gumbel noise to each logit, take arg-max.</p>
   <div class="highlight">
-    <p>Replace the $G_v$ with key-derived noise ⇒ <strong>derandomized</strong> sampling whose marginal still matches $p_\theta$.</p>
+    <p>Generate the noise $G_v$ from the <strong>secret key</strong> (not fresh randomness): marginal stays $p_\theta$, yet the key-holder can recompute it to detect.</p>
   </div>
 </div>
 
-<!-- SLIDE — Gumbel-max proof -->
+<!-- SLIDE — Gumbel-max rough proof / intuition -->
 <div class="slide">
-  <h2>Proof — Gumbel-Max</h2>
+  <h2>Why It Works — Proof Sketch</h2>
   <div class="divider"></div>
-  <p>Compute $\Pr[\arg\max_w (\ell_w + G_w) = v]$. Condition on $\ell_v + G_v = m$:</p>
-  <div class="math-block">
-    $$\Pr[\forall w \ne v:\;\ell_w + G_w &lt; m] \;=\; \prod_{w \ne v} F_G(m - \ell_w) \;=\; \exp\!\Big(\!-\!\sum_{w \ne v}\! e^{-(m - \ell_w)}\Big).$$
-  </div>
-  <p>Integrate against $f_G(m - \ell_v)$ in $m$. Substitute $u = e^{-m}\sum_w e^{\ell_w}$:</p>
-  <div class="math-block">
-    $$\Pr[\arg\max = v] \;=\; \frac{e^{\ell_v}}{\sum_{w} e^{\ell_w}} \;=\; p_\theta(v). \qquad \blacksquare$$
+  <p>Reduce the arg-max to a minimum of independent exponentials.</p>
+  <ul class="num">
+    <li>Gumbel in disguise: $e^{-G_v} \sim \mathrm{Exp}(1)$</li>
+    <li>$\arg\max_v(\ell_v + G_v) = \arg\min_v\, e^{-G_v}/p_\theta(v)$, &nbsp;with&nbsp; $e^{-G_v}/p_\theta(v) \sim \mathrm{Exp}\big(p_\theta(v)\big)$</li>
+    <li>The minimum is attained at $v$ with prob $\propto$ rate $= p_\theta(v)$</li>
+  </ul>
+  <div class="highlight">
+    <p>So the winner follows $p_\theta$ <strong>exactly</strong>. $\;\blacksquare$</p>
   </div>
 </div>
 
@@ -314,25 +328,23 @@
   </div>
   <p>Equivalent to Gumbel sampling — <strong>exactly</strong> follows $p_\theta$.</p>
   <ul class="arrow">
-    <li>Detector recomputes $r_v$ from key, sums $-\log(1 - r_{x_t})$</li>
-    <li>Under $H_0$: $\sim \text{Exp}(1)$ per token</li>
-    <li>Under watermark: shifted toward small values</li>
+    <li>Detector recomputes $r_v$ from the key, scores each token</li>
+    <li>Watermarked text ⇒ scores skew telltale small</li>
   </ul>
 </div>
 
-<!-- SLIDE — Aaronson distortion-free proof -->
+<!-- SLIDE — Aaronson distortion-free intuition -->
 <div class="slide">
-  <h2>Aaronson Is Distortion-Free</h2>
+  <h2>Why It Is Distortion-Free</h2>
   <div class="divider"></div>
-  <p>Note that $-\log r_v \sim \mathrm{Exp}(1)$, hence</p>
+  <p>The key uniforms hide a Gumbel in disguise:</p>
   <div class="math-block">
-    $$-\log(-\log r_v) \;\sim\; \mathrm{Gumbel}(0).$$
+    $$-\log(-\log r_v) \;\sim\; \mathrm{Gumbel}(0) \quad\Longrightarrow\quad \arg\max_v r_v^{1/p_\theta(v)} \;=\; \arg\max_v\,(\ell_v + G_v).$$
   </div>
-  <p>The Aaronson rule rewrites as</p>
-  <div class="math-block">
-    $$\arg\max_v \, r_v^{1/p_\theta(v)} \;=\; \arg\max_v\,\big(\log p_\theta(v) - \log(-\log r_v)\big) \;=\; \arg\max_v\,(\ell_v + G_v).$$
+  <p>So Aaronson's rule <em>is</em> Gumbel-max — just with key-seeded noise.</p>
+  <div class="highlight">
+    <p>By the Gumbel-max theorem, averaging over the key reproduces $p_\theta$ <strong>exactly</strong> — zero quality loss, yet detectable with the key.</p>
   </div>
-  <p>By the Gumbel-max theorem, marginal over key gives $x_t \sim p_\theta$. <strong>Distortion-free.</strong> $\blacksquare$</p>
 </div>
 
 <!-- SLIDE — Kuditipudi -->
@@ -348,7 +360,7 @@
   <div class="highlight">
     <p>First scheme that is <strong>provably</strong> distortion-free <em>and</em> robust to edits.</p>
   </div>
-  <div class="cite">Kuditipudi, Thickstun, Hashimoto, Liang, "Robust Distortion-Free Watermarks for Language Models", TMLR 2024.</div>
+  <div class="cite">Kuditipudi et al., "Robust Distortion-Free Watermarks", TMLR 2024.</div>
 </div>
 
 <!-- SLIDE — Edit-distance robustness theorem -->
@@ -357,27 +369,26 @@
   <div class="divider"></div>
   <div class="card">
     <h3>Theorem (Kuditipudi et al. 2024).</h3>
-    <p>Let $\tilde x$ be obtained from watermarked $x$ by Levenshtein edits of budget $\eta$. The aligned-key detector satisfies</p>
-    <div class="math-block">$$\Pr_{H_1}\!\big[\,\text{detect}(\tilde x) = 1\,\big] \;\ge\; 1 - 2\exp\!\left(-\,c\,\frac{(T - 2\eta)^2}{T}\right).$$</div>
+    <p>Edit watermarked $x$ into $\tilde x$ with Levenshtein budget $\eta$. The aligned-key detector still fires with high probability:</p>
+    <div class="math-block">$$\Pr\!\big[\,\text{detect}(\tilde x) = 1\,\big] \;\ge\; 1 - 2\exp\!\left(-\,c\,\frac{(T - 2\eta)^2}{T}\right).$$</div>
   </div>
   <ul class="check">
-    <li>Robust whenever $\eta = o(T)$ — paraphrase / delete / insert all bounded; tight in $c$</li>
-    <li>Detection cost $O(T \log T)$ via dynamic-programming alignment</li>
+    <li><strong>Reading:</strong> as long as edits touch a small fraction of tokens ($\eta \ll T$), detection stays near-certain</li>
+    <li>Alignment found by dynamic programming, $O(T \log T)$</li>
   </ul>
 </div>
 
 <!-- SLIDE — Unbiased -->
 <div class="slide">
-  <h2>Unbiased Watermark</h2>
+  <h2>One Family: Unbiased Watermarks</h2>
   <div class="divider"></div>
-  <p>Hu et al. 2024 — formalize a family of <strong>unbiased</strong> schemes.</p>
+  <p>Hu et al. 2024 unify the cryptographic schemes under one umbrella:</p>
   <ul>
-    <li>Token marginal preserved exactly (not just on average)</li>
-    <li>Includes Gumbel, inverse-transform, exponential mechanisms</li>
-    <li>Detection power scales with text entropy</li>
+    <li>Token marginal preserved <strong>exactly</strong>, not just on average</li>
+    <li>Gumbel, inverse-transform, exponential — all special cases</li>
   </ul>
-  <p>Bridges Kirchenbauer-style biased and Aaronson-style cryptographic.</p>
-  <div class="cite">Hu, Chen, Lin, Goldstein, Huang, "Unbiased Watermark for Large Language Models", ICLR 2024.</div>
+  <p>The common thread linking Aaronson, Kuditipudi, and CGZ.</p>
+  <div class="cite">Hu et al., "Unbiased Watermark for Language Models", ICLR 2024.</div>
 </div>
 
 <!-- SLIDE — Undetectable -->
@@ -386,13 +397,11 @@
   <div class="divider"></div>
   <div class="card">
     <h3>Definition (Christ, Gunn, Zamir 2023).</h3>
-    <p>A watermark is <strong>undetectable</strong> if no PPT distinguisher without $k$ can tell watermarked from unwatermarked outputs with non-negligible advantage.</p>
+    <p>A watermark is <strong>undetectable</strong> if no efficient (polynomial-time) algorithm without $k$ can tell watermarked from unwatermarked outputs with non-negligible advantage.</p>
   </div>
-  <p>Cryptographic standard — based on PRFs and hardness assumptions.</p>
-  <ul>
-    <li>Stronger than distortion-free</li>
-    <li>Embed via secret-key PRF on context hashes</li>
-    <li>Detection: with $k$, use same PRF to score</li>
+  <ul class="arrow">
+    <li>Cryptographic gold standard — stronger than distortion-free</li>
+    <li>Built on PRFs and hardness assumptions</li>
   </ul>
   <div class="cite">Christ, Gunn, Zamir, "Undetectable Watermarks for Language Models", COLT 2024.</div>
 </div>
@@ -401,16 +410,13 @@
 <div class="slide">
   <h2>CGZ Construction — PRF</h2>
   <div class="divider"></div>
-  <p>Pseudo-random function $F_k$ replaces uniform randomness in inverse-CDF sampling:</p>
-  <ul class="num">
-    <li>At step $t$, set $r_v = F_k(x_{&lt;t}, v)$; sample $x_t$ via inverse CDF on $p_\theta(\cdot \mid x_{&lt;t})$</li>
-    <li>Detection: recompute $F_k$, accumulate score across positions</li>
+  <p>Drive the sampling with a secret pseudo-random function $F_k$ instead of true randomness:</p>
+  <ul class="arrow">
+    <li><strong>Generate:</strong> $F_k$ supplies the "coin flips" at each step</li>
+    <li><strong>Detect:</strong> recompute $F_k$ with the key, sum a per-token score</li>
   </ul>
-  <div class="math-block">
-    $$\text{score}(x) \;=\; \sum_{t=1}^T \log\!\frac{1}{1 - F_k(x_{&lt;t}, x_t)}.$$
-  </div>
   <div class="highlight">
-    <p>Without $k$, PRF $\approx$ uniform ⇒ output distribution unchanged.</p>
+    <p>Without $k$, a PRF is <strong>indistinguishable</strong> from random ⇒ output looks unchanged.</p>
   </div>
 </div>
 
@@ -435,80 +441,48 @@
   <div class="highlight">
     <p>Vanilla Kirchenbauer at $\delta=2$: paraphrased text drops to $z \approx 1.5$.</p>
   </div>
-  <div class="cite">Kirchenbauer et al., "On the Reliability of Watermarks for Large Language Models", 2023.</div>
+  <div class="cite">Kirchenbauer et al., "On the Reliability of Watermarks", 2023.</div>
 </div>
 
-<!-- SLIDE — Provable robust -->
+<!-- SLIDE — robustness by construction -->
 <div class="slide">
-  <h2>Provable Robust (Zhao et al.)</h2>
+  <h2>Making the Signal Survive Edits</h2>
   <div class="divider"></div>
-  <p>Use a <strong>fixed</strong> green list (no context hashing).</p>
-  <ul>
-    <li>Loses local entropy but gains <strong>edit-distance</strong> stability</li>
-    <li>Detection power degrades smoothly with edit budget $\eta$</li>
-    <li>Theorem: TPR $\ge 1 - \exp(-c(T - \eta))$</li>
-  </ul>
-  <p>Tradeoff: easier to spoof when key is reused.</p>
-  <div class="cite">Zhao, Ananth, Li, Wang, "Provable Robust Watermarking for AI-Generated Text", 2023.</div>
-</div>
-
-<!-- SLIDE — Semantic invariant -->
-<div class="slide">
-  <h2>Semantic-Invariant Watermark</h2>
-  <div class="divider"></div>
-  <p>Hash <strong>sentence embeddings</strong>, not token n-grams.</p>
-  <ul class="check">
-    <li>Synonym substitution leaves the embedding stable</li>
-    <li>Green list now indexed by semantic clusters</li>
-    <li>Recovers $z &gt; 4$ after aggressive paraphrase</li>
-  </ul>
-  <p>Embedding model becomes part of the trusted base.</p>
-  <div class="cite">Liu, Bu, Zhao, Yang et al., "A Semantic Invariant Robust Watermark for Large Language Models", ICLR 2024.</div>
-</div>
-
-<!-- SLIDE — Permute and flip -->
-<div class="slide">
-  <h2>Permute-and-Flip Decoding</h2>
-  <div class="divider"></div>
-  <p>Replace softmax sampling with <strong>permute-and-flip</strong> rule.</p>
-  <ul>
-    <li>Robust to adversarial decoding perturbations</li>
-    <li>Watermark embedded in the random permutation seed</li>
-    <li>Optimal under specific notions of regret + detectability</li>
-  </ul>
-  <div class="cite">Zhao, Sezavar, Steinke, Su, "Permute-and-Flip: An Optimally Robust and Watermarkable Decoder for LLMs", 2024.</div>
-</div>
-
-<!-- SLIDE — Adaptive watermark -->
-<div class="slide">
-  <h2>Adaptive Watermark (Liu 2024)</h2>
-  <div class="divider"></div>
-  <p>Apply bias only at high-entropy steps:</p>
-  <div class="math-block">
-    $$\delta_t \;=\; \delta \cdot \mathbb{1}\!\big[\,H\!\big(p_\theta(\cdot \mid x_{&lt;t})\big) \;\ge\; \tau_H\,\big].$$
+  <div class="grid-3" style="margin-top:12px;">
+    <div class="card">
+      <h3>Fixed green list</h3>
+      <p>Drop context hashing — detection degrades gracefully with edits.</p>
+    </div>
+    <div class="card">
+      <h3>Semantic hash</h3>
+      <p>Seed from sentence <strong>embeddings</strong> — synonyms keep the signal.</p>
+    </div>
+    <div class="card">
+      <h3>Permute-and-flip</h3>
+      <p>Watermark the decoding rule itself; resists perturbation.</p>
+    </div>
   </div>
-  <ul class="arrow">
-    <li>Skip low-entropy decisions where bias would hurt quality</li>
-    <li>Detector re-weights z-test by skip mask: $|s|_G - \gamma T_{\text{eff}}$</li>
-    <li>Pareto-improves Kirchenbauer at fixed quality</li>
-  </ul>
-  <div class="cite">Liu, Bu, Zhao, Wei, Yan, "An Entropy-Based Adaptive Text Watermark for Large Language Models", ICML 2024.</div>
+  <p>Each buys robustness at a cost — lost entropy, a trusted embedder, or easier spoofing.</p>
+  <div class="cite">Zhao et al. 2023 · Liu et al. ICLR 2024 · Zhao et al. 2024.</div>
 </div>
 
-<!-- SLIDE — WaterMax recent -->
+<!-- SLIDE — quality-first decoding -->
 <div class="slide">
-  <h2>WaterMax — Quality-First (Giboulot 2024)</h2>
+  <h2>Quality-First Decoding</h2>
   <div class="divider"></div>
-  <p>Generate $N$ candidate continuations; pick the one maximizing detection score subject to quality threshold.</p>
-  <div class="math-block">
-    $$\hat x \;=\; \arg\max_{x \in \mathcal{C}_N(p)}\; \text{score}_k(x) \quad \text{s.t.} \quad \log p_\theta(x) \ge \tau_q.$$
+  <div class="grid-2">
+    <div class="card">
+      <h3>Adaptive (Liu 2024)</h3>
+      <p>Bias only the high-entropy steps; skip "obvious" tokens.</p>
+      <p>Better quality at the same detection.</p>
+    </div>
+    <div class="card">
+      <h3>WaterMax (Giboulot 2024)</h3>
+      <p>Generate several candidates, keep the most detectable one.</p>
+      <p>No bias on-path, but several-fold cost.</p>
+    </div>
   </div>
-  <ul>
-    <li>Decouples quality and detectability — no logit bias on the path of generation</li>
-    <li>Cost: $N$-fold inference, but parallelizable</li>
-    <li>SOTA at low edit-budget regimes</li>
-  </ul>
-  <div class="cite">Giboulot, Furon, "WaterMax: Breaking the LLM Watermark Detectability–Robustness–Quality Trade-off", NeurIPS 2024.</div>
+  <div class="cite">Liu et al., ICML 2024 · Giboulot &amp; Furon, NeurIPS 2024.</div>
 </div>
 
 <!-- Part divider 05 -->
@@ -525,28 +499,28 @@
   <div class="divider"></div>
   <p>Watermarked text is used to train a <strong>downstream</strong> LLM.</p>
   <ul class="arrow">
-    <li>Statistical residue persists in the student's output distribution</li>
-    <li>Detect <em>training-data contamination</em>, not just direct generation</li>
-    <li>Audit pipeline: did model X train on watermarked outputs of Y?</li>
+    <li>The mark survives into the student model's outputs</li>
+    <li>Detects: did model X train on Y's watermarked text?</li>
   </ul>
   <div class="highlight">
     <p>Watermarks become a <strong>training-set tracer</strong>.</p>
   </div>
-  <div class="cite">Sander, Yu, Faille, Furon, Jegou, "Watermarking Makes Language Models Radioactive", NeurIPS 2024.</div>
+  <div class="cite">Sander et al., "Watermarking Makes Language Models Radioactive", NeurIPS 2024.</div>
 </div>
 
 <!-- SLIDE — SynthID -->
 <div class="slide">
   <h2>SynthID-Text (Production)</h2>
   <div class="divider"></div>
-  <p>Google DeepMind, <em>Nature</em> 2024 — deployed watermark for Gemini outputs.</p>
-  <ul>
-    <li>Tournament-style sampling ⇒ approximately distortion-free</li>
-    <li>Live A/B over millions of users — quality unchanged in human eval</li>
-    <li>Open-source detector for non-adversarial provenance</li>
+  <p>Google DeepMind, <em>Nature</em> 2024 — deployed on Gemini.</p>
+  <ul class="arrow">
+    <li>Tournament sampling ⇒ approximately distortion-free</li>
+    <li>Quality unchanged in live human eval, millions of users</li>
   </ul>
-  <p>Production watermarking is no longer hypothetical.</p>
-  <div class="cite">Dathathri, See, Ghaisas, Huang et al., "Scalable Watermarking for Identifying Large Language Model Outputs", Nature 2024.</div>
+  <div class="highlight">
+    <p>Production watermarking is no longer hypothetical.</p>
+  </div>
+  <div class="cite">Dathathri et al., "Scalable Watermarking for LLM Outputs", Nature 2024.</div>
 </div>
 
 <!-- SLIDE — dgMARK -->
@@ -554,25 +528,23 @@
   <h2>Diffusion-LLM Watermarking (dgMARK)</h2>
   <div class="divider"></div>
   <p>Lab work: watermark for <strong>masked discrete diffusion</strong> LLMs.</p>
-  <ul>
-    <li>AR token-by-token rule does not fit any-order unmasking</li>
-    <li>Embed signal at each remasking step, accumulate across passes</li>
-    <li>First scheme tailored to non-autoregressive decoding</li>
+  <ul class="arrow">
+    <li>AR token-by-token rule doesn't fit any-order unmasking</li>
+    <li>Embed at each remasking step — first for non-AR decoding</li>
   </ul>
   <p>See companion deck <code>dllm/</code> for the dLLM substrate.</p>
-  <div class="cite">Hong and No, "dgMARK: Decoding-Guided Watermarking for Diffusion Language Models", 2026.</div>
+  <div class="cite">Hong &amp; No, "dgMARK: Watermarking for Diffusion Language Models", ICML 2026.</div>
 </div>
 
 <!-- SLIDE — open problems -->
 <div class="slide">
   <h2>Open Problems</h2>
   <div class="divider"></div>
-  <ul>
-    <li>Adversarial-robust + distortion-free + short text — pick three?</li>
-    <li>Multi-key, multi-vendor detection — federated provenance</li>
-    <li>Watermark in <strong>code</strong> (low entropy) and <strong>structured outputs</strong></li>
-    <li>Multi-modal: image + text + voice provenance under one key</li>
-    <li>Spoofing audits — public watermark verifier without key leak</li>
+  <ul class="arrow">
+    <li>Robust + distortion-free + short text — can we get all three?</li>
+    <li>Low-entropy domains: <strong>code</strong> and structured outputs</li>
+    <li>Multi-modal provenance — image + text + voice under one key</li>
+    <li>Public verifiers that resist <strong>spoofing</strong> without leaking the key</li>
   </ul>
 </div>
 

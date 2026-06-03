@@ -87,10 +87,9 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | SCRUB / SalUn / $\ell_1$-sparse classification unlearn | `courses/privacy/unlearning/unlearning1-foundations.html:367-431` |
 | IDI / COLA (lab unlearning eval) | `courses/privacy/unlearning/unlearning1-foundations.html:502-533` |
 | GA collapse + NPO bounded + SimNPO | `courses/privacy/unlearning/unlearning2-llm.html:103-165` |
-| ME+GD / IDK / LUNAR (LLM unlearn) | `courses/privacy/unlearning/unlearning2-llm.html:166-262` |
-| TOFU / WMDP / RWKU / MUSE benchmarks | `courses/privacy/unlearning/unlearning2-llm.html:271-327` |
-| Benign + syntactic relearning (lab) | `courses/privacy/unlearning/unlearning2-llm.html:328-353` |
-| Pawelczyk black-box verification hardness | `courses/privacy/unlearning/unlearning2-llm.html:371` |
+| ME+GD / IDK / ELM / LUNAR (LLM unlearn) | `courses/privacy/unlearning/unlearning2-llm.html:166-241` |
+| TOFU / WMDP / RWKU / MUSE benchmarks (main-figure images) | `courses/privacy/unlearning/unlearning2-llm.html:250-302` |
+| Benign + syntactic relearning (lab) | `courses/privacy/unlearning/unlearning2-llm.html:303-328` |
 | Position: "Unlearning" overused in LLMs (5-min ICML talk) | `talks/icml2026/icml2026.html` |
 | Kirchenbauer green-list + z-test + entropy bound | `courses/privacy/watermark/watermark.html:164-222` |
 | Gumbel distribution + Gumbel-max trick + proof | `courses/privacy/watermark/watermark.html:252-295` |

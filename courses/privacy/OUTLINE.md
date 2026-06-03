@@ -75,9 +75,8 @@ Six sub-tracks: a unified generative-model review (`generative/` — diffusion +
 | SCRUB / SalUn / $\ell_1$-sparse | `unlearning/unlearning1-foundations.html` | `:367-431` |
 | IDI / COLA (lab) | `unlearning/unlearning1-foundations.html` | `:502-533` |
 | GA collapse + NPO bounded + SimNPO | `unlearning/unlearning2-llm.html` | `:103-165` |
-| TOFU / WMDP / RWKU / MUSE benchmarks | `unlearning/unlearning2-llm.html` | `:271-327` |
-| Benign + syntactic relearning | `unlearning/unlearning2-llm.html` | `:328-353` |
-| Pawelczyk verification hardness | `unlearning/unlearning2-llm.html` | `:371` |
+| TOFU / WMDP / RWKU / MUSE benchmarks (main-figure images) | `unlearning/unlearning2-llm.html` | `:250-302` |
+| Benign + syntactic relearning | `unlearning/unlearning2-llm.html` | `:303-328` |
 | Kirchenbauer green-list + entropy bound | `watermark/watermark.html` | `:164-222` |
 | Gumbel-max trick + proof | `watermark/watermark.html` | `:252-295` |
 | Aaronson distortion-free proof | `watermark/watermark.html` | `:325` |

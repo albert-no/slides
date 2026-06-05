@@ -1,0 +1,316 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\setlength{\parskip}{0.55em}
+\setlength{\parindent}{0pt}
+\setlist[itemize]{topsep=2pt,itemsep=2pt,leftmargin=1.4em}
+\setlist[enumerate]{topsep=2pt,itemsep=2pt,leftmargin=1.6em}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{exercise}{Exercise}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+\newcommand{\bits}{\,\mathrm{bits}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\KL}{\mathrm{D_{KL}}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\given}{\,|\,}
+\newcommand{\seq}[1]{#1_{1:n}}
+
+\title{Lecture Note: Large Language Models for Lossless Compression}
+\author{Master-level Information Theory Note}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{center}
+\fbox{\parbox{0.94\linewidth}{\textbf{Positioning.} The uploaded paper by Li et al. studies \emph{semantic/context compression}: an LLM compresses text into discrete variable-length latent codes called \emph{Z-tokens}, reconstructs from them, and can even reason in the Z-token space. Their system reports exact reconstruction in the autoencoding setting and up to $18\times$ token reduction on several long-context tasks \cite{li2026}. For \textbf{strict lossless compression} in the classical source-coding sense, however, the clean information-theoretic route is different: use the LLM as a \emph{probability model} and combine it with an \emph{arithmetic encoder}.}}
+\end{center}
+
+\section{Why LLMs belong in a lossless compression course}
+
+You have already covered entropy, entropy rate, arithmetic coding, and Lempel-Ziv. The one new idea needed here is simple:
+
+\begin{quote}
+\textbf{Any causal language model is also a sequential probability assignment.}\
+Once we have probabilities, arithmetic coding turns them into a nearly optimal lossless code.
+\end{quote}
+
+This is why ``language modeling is compression'' is not just a slogan but an operational statement \cite{deletang2024}. If an LLM predicts the next symbol well, then arithmetic coding converts that predictive skill into short descriptions.
+
+The uploaded paper is helpful as motivation because it explicitly treats an LLM as a compressor/decompressor pair, introduces a discrete internal code, and argues that LLMs are good at semantic abstraction and conceptual distillation \cite{li2026}. It also contrasts this with fixed-length learned context vectors such as AutoCompressor, ICAE, and Gist Tokens \cite{chevalier2023,ge2024,mu2024}. That semantic viewpoint is useful, but for strict losslessness we must keep exact symbol-by-symbol decodability at every step.
+
+\section{The clean lossless pipeline: LLM + arithmetic coding}
+
+Let $x_{1:n} = (x_1,\dots,x_n)$ be a sequence over a finite alphabet $\A$. Here $\A$ can be:
+\begin{itemize}
+    \item bytes, if we want conceptual cleanliness and exact recovery of the original file;
+    \item reversible tokenizer symbols, if we want to exploit LLM tokenization directly.
+\end{itemize}
+
+A causal LLM defines conditionals
+\[
+q_\theta(x_t \mid x_{<t}), \qquad t=1,\dots,n,
+\]
+and therefore a joint model
+\[
+q_\theta(x_{1:n}) = \prod_{t=1}^n q_\theta(x_t \mid x_{<t}).
+\]
+
+Now feed these conditionals into an arithmetic encoder.
+
+\subsection*{Encoder}
+For $t=1,\dots,n$:
+\begin{enumerate}
+    \item run the LLM on the already known prefix $x_{<t}$;
+    \item obtain the predictive distribution $q_\theta(\cdot\mid x_{<t})$ over the next symbol;
+    \item arithmetic-code the realized symbol $x_t$ using that distribution;
+    \item append $x_t$ to the context and continue.
+\end{enumerate}
+
+\subsection*{Decoder}
+For $t=1,\dots,n$:
+\begin{enumerate}
+    \item run the same LLM on the already decoded prefix $x_{<t}$;
+    \item obtain the same distribution $q_\theta(\cdot\mid x_{<t})$;
+    \item arithmetic-decode the next symbol $x_t$;
+    \item append it to the prefix and continue.
+\end{enumerate}
+
+The encoder and decoder stay synchronized because they share the same model, tokenizer, context-update rule, and arithmetic-coding convention.
+
+\begin{proposition}[Code length induced by an LLM]
+If arithmetic coding uses the LLM distribution $q_\theta$, then for every sequence $x_{1:n}$,
+\[
+-\log_2 q_\theta(x_{1:n}) \le \ell(x_{1:n}) < -\log_2 q_\theta(x_{1:n}) + 2,
+\]
+where $\ell(x_{1:n})$ is the produced code length in bits.
+\end{proposition}
+
+So the LLM contributes the \emph{probability model}; arithmetic coding contributes the \emph{lossless code construction}. This is the seamless combination the user asked about.
+
+\section{Connection to entropy rate and model mismatch}
+
+Suppose the true source law is $p$. Then the expected code length satisfies
+\[
+\E_p[\ell(X_{1:n})] \lesssim \E_p[-\log_2 q_\theta(X_{1:n})]
+= H_p(X_{1:n}) + \KL\!\bigl(p_{1:n}\Vert q_{\theta,1:n}\bigr).
+\]
+Dividing by $n$ gives
+\[
+\frac{1}{n}\E_p[\ell(X_{1:n})]
+\lesssim
+\frac{1}{n}H_p(X_{1:n})
++
+\frac{1}{n}\KL\!\bigl(p_{1:n}\Vert q_{\theta,1:n}\bigr).
+\]
+
+This is the master formula for LLM-based lossless compression:
+\begin{center}
+\fbox{\parbox{0.88\linewidth}{
+\textbf{rate} $\approx$ \textbf{entropy rate} $+$ \textbf{per-symbol modeling error}.
+}}
+\end{center}
+
+Hence:
+\begin{itemize}
+    \item if $q_\theta$ is close to the true source law, the compression rate approaches the entropy rate;
+    \item the \emph{only} reason an LLM can outperform a weaker compressor is that it lowers predictive cross-entropy.
+\end{itemize}
+
+This connects directly to your earlier lecture material: arithmetic coding is still the coding engine, but the source model has changed from a hand-designed finite-context model to a huge pretrained predictor.
+
+\section{What an LLM changes relative to LZ or PPM}
+
+Compared with classical universal compressors, an LLM brings a different kind of prior:
+\begin{itemize}
+    \item \textbf{Long context.} LLMs can exploit dependencies far beyond the finite windows used by traditional models.
+    \item \textbf{Semantic regularity.} The uploaded paper emphasizes that LLMs act as engines for semantic abstraction and conceptual distillation \cite{li2026}. In compression language, that means the model may assign higher probability to globally coherent continuations that a local model would miss.
+    \item \textbf{Pretrained world knowledge.} Repeated factual or stylistic patterns may be predictable even when they do not repeat verbatim inside the current file.
+\end{itemize}
+
+But the price is equally clear:
+\begin{itemize}
+    \item very high computational cost per coded symbol;
+    \item model-sharing overhead (encoder and decoder must both have the same weights);
+    \item fragility under domain shift;
+    \item implementation details must be exactly synchronized.
+\end{itemize}
+
+So the correct comparison is:
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Method & Strength & Weakness \\
+\midrule
+LZ-family & universal, fast, no training & weak long-range semantics \\
+PPM / context models & good local prediction & finite-memory bias \\
+LLM + arithmetic coding & rich long-range prior & expensive and heavy \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{A crucial implementation detail: what exactly is lossless?}
+
+There are two different notions of ``exactness'':
+\begin{enumerate}
+    \item \textbf{Lossless over bytes.} Decode the exact original file.
+    \item \textbf{Lossless over tokens.} Decode the exact tokenizer output, then invert the tokenizer.
+\end{enumerate}
+
+For a theory lecture, byte-level coding is the cleanest. For practical LLM use, token-level coding is often more natural, but only if the tokenizer is perfectly reversible and all normalization rules are shared. If there is any ambiguity in tokenization, byte-level coding is safer.
+
+\begin{remark}
+Sampling is irrelevant here. The encoder and decoder do \emph{not} sample from the LLM. They only query its probability table. Determinism matters: same model, same floating-point or quantized arithmetic, same tokenizer, same end-of-sequence convention.
+\end{remark}
+
+\section{How the uploaded paper fits into this story}
+
+Li et al. do \emph{not} primarily propose an arithmetic-coded lossless compressor. Instead, they train an LLM to map text to discrete variable-length latent codes, called Z-tokens, and then reconstruct or reason from those codes \cite{li2026}. Their framework has three particularly relevant lessons for a lossless-compression lecture:
+
+\begin{enumerate}
+    \item \textbf{Discrete latent structure is plausible.} The paper shows that an LLM can internally represent text using a compact symbolic language of Z-tokens \cite{li2026}.
+    \item \textbf{Variable-length compression matters.} Semantically dense segments receive more Z-tokens and predictable segments fewer; this is the right qualitative bias for compression \cite{li2026}.
+    \item \textbf{Reasoning and compression can share a representation.} They even allow inference in Z-token space before reconstruction, reducing attention cost from $O(N^2)$ to about $O(K^2)$ when $K \ll N$ \cite{li2026}.
+\end{enumerate}
+
+At the same time, their own discussion of \emph{polysemy} is a warning sign for strict losslessness: the same Z-token can play different semantic roles in different contexts, and meaning is resolved only jointly through the full Z-sequence, autoregressive prefixes, and lexical constraints in the decoder \cite{li2026}. That is perfectly acceptable for semantic compression, but it means that Z-tokens alone are not automatically a classical lossless codebook.
+
+So the uploaded paper should be read as a \textbf{motivation for latent structured compression}, not as the final arithmetic-coding solution.
+
+\section{A hybrid design inspired by the uploaded paper}
+
+Here is the most natural way to connect their Z-token idea to strict lossless coding.
+
+\subsection*{Two-part code}
+Given text $x$:
+\begin{enumerate}
+    \item use an LLM compressor to produce a semantic scaffold $z = f_\phi(x)$;
+    \item decode a prediction $\hat{x} = g_\psi(z)$;
+    \item encode the exact residual information needed to turn $\hat{x}$ into $x$ using arithmetic coding.
+\end{enumerate}
+
+This yields a valid lossless description of the form
+\[
+L(x) = L(z) + L(r \mid z),
+\]
+where $r$ is an edit script, residual token stream, or conditional correction sequence.
+
+If $z$ is a deterministic function of $x$, then information theory gives
+\[
+H(X) = H(Z) + H(X \mid Z).
+\]
+This identity says there is no mystery: the latent code helps only if it makes the conditional uncertainty $H(X\mid Z)$ small enough to compensate for the cost of transmitting $Z$ itself.
+
+\subsection*{Why this can help}
+The uploaded paper argues that Z-tokens serve as a semantic scaffold and can preserve high-level structure efficiently \cite{li2026}. If that scaffold captures topic, discourse plan, entities, or argument structure, then the residual coder only has to transmit lexical detail and local corrections. In principle, that can be much easier than coding from scratch.
+
+\subsection*{Why it is still hard}
+There are three real difficulties:
+\begin{itemize}
+    \item the latent code $z$ itself must be entropy-coded efficiently;
+    \item the encoder must choose $z$ so that total rate, not just reconstruction quality, is minimized;
+    \item the residual model $q(r\mid z)$ must be calibrated well enough that arithmetic coding actually benefits.
+\end{itemize}
+
+So the hybrid scheme is promising, but it is a \emph{research problem}, not yet a drop-in replacement for classical compressors.
+
+\section{A compact theoretical summary}
+
+There are really two LLM-based routes:
+
+\subsection*{Route A: direct probabilistic coding}
+\[
+q_\theta(x_{1:n}) = \prod_{t=1}^n q_\theta(x_t\mid x_{<t})
+\quad \Longrightarrow \quad
+\ell(x_{1:n}) \approx -\log_2 q_\theta(x_{1:n}).
+\]
+This is the clean, fully classical lossless route.
+
+\subsection*{Route B: latent-variable coding}
+\[
+q(x) = \sum_z q_\phi(z)q_\psi(x\mid z).
+\]
+In exact Bayesian coding one would ideally code under this marginal. In practice, one often approximates with a two-part code
+\[
+L(x) \approx -\log_2 q_\phi(z^*) - \log_2 q_\psi(x\mid z^*),
+\]
+where $z^*$ is a chosen latent explanation. The uploaded paper supplies exactly the kind of discrete variable-length latent space that makes this route plausible \cite{li2026}.
+
+\section{Take-home messages for students}
+
+\begin{itemize}
+    \item An LLM becomes a \textbf{lossless compressor} only after we combine its predictive distribution with a coder such as arithmetic coding.
+    \item The ideal code length is the model surprisal: $-\log_2 q_\theta(x_{1:n})$.
+    \item The expected redundancy above entropy rate is the model mismatch term $\frac{1}{n}\KL(p_{1:n}\Vert q_{\theta,1:n})$.
+    \item The uploaded paper is best viewed as evidence that LLMs can learn compact \textbf{discrete semantic scaffolds}; this suggests hybrid latent-plus-residual compressors.
+    \item For strict losslessness, ambiguity must be removed completely. Semantic compression alone is not enough; exact residual information must still be coded.
+\end{itemize}
+
+\section{Exercises}
+
+\begin{exercise}
+Let $p$ be the true source and $q$ the LLM model. Show that
+\[
+\E_p[-\log_2 q(X_{1:n})] = H_p(X_{1:n}) + \KL(p_{1:n}\Vert q_{1:n})/\log 2.
+\]
+Interpret the extra term operationally.
+\end{exercise}
+
+\begin{exercise}
+Suppose $Z=f(X)$ is deterministic. Prove that any two-part lossless scheme that first codes $Z$ and then codes $X$ given $Z$ must satisfy
+\[
+\E[L(X)] \ge H(X).
+\]
+When can such a scheme be competitive with direct coding of $X$?
+\end{exercise}
+
+\begin{exercise}
+Design a byte-level version of LLM + arithmetic coding. List every piece of side information that must be identical at the encoder and decoder in order for the system to be truly lossless.
+\end{exercise}
+
+\begin{thebibliography}{9}
+
+\bibitem{li2026}
+Wenbing Li, Zikai Song, Jielei Zhang, Tianhao Zhao, Junkai Lin, Huipeng Guo, Yiran Wang, and Wei Yang.
+\newblock Large Language Model as Token Compressor and Decompressor.
+\newblock arXiv preprint arXiv:2603.25340, 2026.
+
+\bibitem{deletang2024}
+Gregoire Deletang, Anian Ruoss, Paul-Ambroise Duquenne, Elliot Catt, Tim Genewein, Christopher Mattern, Jordi Grau-Moya, Li Kevin Wenliang, Matthew Aitchison, Laurent Orseau, Marcus Hutter, and Joel Veness.
+\newblock Language Modeling is Compression.
+\newblock 2024.
+
+\bibitem{chevalier2023}
+Alexis Chevalier, Alexander Wettig, Anirudh Ajith, and Danqi Chen.
+\newblock Adapting Language Models to Compress Contexts.
+\newblock 2023.
+
+\bibitem{ge2024}
+Tao Ge, Jing Hu, Lei Wang, Xun Wang, Si-Qing Chen, and Furu Wei.
+\newblock In-Context Autoencoder for Context Compression in a Large Language Model.
+\newblock 2024.
+
+\bibitem{mu2024}
+Jesse Mu, Xiang Lisa Li, and Noah Goodman.
+\newblock Learning to Compress Prompts with Gist Tokens.
+\newblock 2024.
+
+\bibitem{shannon1948}
+Claude E. Shannon.
+\newblock A Mathematical Theory of Communication.
+\newblock Bell System Technical Journal, 27(3):379--423, 1948.
+
+\end{thebibliography}
+
+\end{document}

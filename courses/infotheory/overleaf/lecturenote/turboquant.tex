@@ -1,0 +1,84 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath, amssymb, amsthm, bm}
+\usepackage{geometry}
+\geometry{a4paper, margin=1.2in}
+\usepackage{hyperref}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{corollary}{Corollary}
+
+\title{Advanced LLM Efficiency: The TurboQuant Architecture}
+\author{Lecture Notes for Master's Students in Information Theory}
+\date{Spring 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This lecture note formalizes Google's TurboQuant suite (released March 2026), an advanced Key-Value (KV) cache compression architecture. We examine its two primary mathematical engines: \textbf{PolarQuant}, which eliminates dynamic quantization overhead via random preconditioning and polar transformations, and \textbf{Quantized Johnson-Lindenstrauss (QJL)}, a 1-bit residual error-corrector enabling unbiased inner-product estimation for attention mechanisms.
+\end{abstract}
+
+\section{The Information-Theoretic Bottleneck in KV Caches}
+In autoregressive transformers, traditional asymmetric quantization maps block-wise activations to lower bit-widths, requiring the storage of full-precision scaling factors and zero-points. Let block size be $B$. The memory overhead for storing FP16 constants scales as $\mathcal{O}(1/B)$. In extreme sub-4-bit compression regimes, this per-block metadata constitutes a severe memory overhead, strictly bounding theoretical compression limits. The TurboQuant architecture achieves data-oblivious quantization, eliminating this overhead entirely.
+
+\section{Component 1: PolarQuant}
+PolarQuant alters the underlying geometry of the embedding space to achieve uniform isotropy, allowing for globally fixed quantization codebooks.
+
+\subsection{Random Preconditioning}
+Let $\mathbf{x} \in \mathbb{R}^d$ be a KV embedding vector. We apply a random orthogonal projection matrix $\mathbf{S} \in \mathbb{R}^{d \times d}$ where entries are sampled i.i.d. from a normal distribution. The preconditioned vector $\tilde{\mathbf{x}} = \mathbf{S}\mathbf{x}$ behaves as an isotropic Gaussian vector:
+\begin{equation}
+\tilde{\mathbf{x}} \sim \mathcal{N}(\mathbf{0}, \sigma^2\mathbf{I}_d)
+\end{equation}
+This isotropization neutralizes channel-wise outliers (often exacerbated by Rotary Position Embeddings), creating a geometrically smooth target.
+
+\subsection{Recursive Polar Transformation}
+By transforming $\tilde{\mathbf{x}}$ into polar coordinates, the distributions of its components become analytically deterministic. We partition the $d$-dimensional vector into 2D sub-vectors $(x_i, y_i)$. 
+
+\begin{definition}[Polar Transformation]
+For a 2D sub-vector $(x_i, y_i)$, the radius $r_i = \sqrt{x_i^2 + y_i^2}$ follows a Rayleigh distribution, and the angle $\theta_i = \arctan2(y_i, x_i)$ follows a uniform distribution $\mathcal{U}(-\pi, \pi]$.
+\end{definition}
+
+Because the distribution of $\theta_i$ is perfectly uniform and universally known, the optimal quantization bins (e.g., via Lloyd-Max) are simply evenly spaced intervals. We quantize $\theta_i \to \hat{\theta}_i$ using $b$ bits. Zero-points are eliminated natively since $r_i \ge 0$. The primary reconstruction is denoted as $\hat{\mathbf{x}}_{PQ}$.
+
+\subsection{Table-Lookup (LUT) Attention}
+During autoregressive decoding, the attention logit between a query $\mathbf{q}$ and a quantized key $\hat{\mathbf{x}}_{PQ}$ must be computed. Instead of dequantizing $\hat{\mathbf{x}}_{PQ}$, PolarQuant computes the inner product directly in the quantized space. 
+
+Let $\mathcal{C}$ be the fixed global codebook of quantized polar states. For a given query sub-vector $\mathbf{q}_i$, the dot products $\langle \mathbf{q}_i, \mathbf{c} \rangle$ for all $\mathbf{c} \in \mathcal{C}$ are pre-computed and stored in SRAM. The attention computation reduces to:
+\begin{equation}
+\langle \mathbf{q}, \hat{\mathbf{x}}_{PQ} \rangle = \sum_{i=1}^{d/2} \text{LUT}(\mathbf{q}_i, \hat{\theta}_i, \hat{r}_i)
+\end{equation}
+transforming FLOP-heavy matrix multiplications into highly efficient, memory-bound reads.
+
+\section{Component 2: Quantized Johnson-Lindenstrauss (QJL)}
+While PolarQuant captures the primary signal, sub-3-bit quantization leaves a residual error vector $\mathbf{e} = \tilde{\mathbf{x}} - \hat{\mathbf{x}}_{PQ}$. QJL acts as a 1-bit residual corrector optimized strictly for inner-product fidelity.
+
+\subsection{The JLT Projection}
+We apply the Johnson-Lindenstrauss Transform (JLT) to the residual $\mathbf{e}$. Let $\mathbf{\Phi} \in \mathbb{R}^{k \times d}$ be a random projection matrix with entries $\Phi_{ij} \sim \mathcal{N}(0, 1/k)$, where $k < d$. The projected residual is $\mathbf{z} = \mathbf{\Phi}\mathbf{e}$.
+
+\subsection{1-Bit Sign Quantization and Unbiased Estimation}
+The projected residual is quantized to a single bit using the signum function: $\hat{\mathbf{z}} = \text{sgn}(\mathbf{z}) \in \{-1, +1\}^k$. No scaling factors are stored.
+
+To compute the correction term for the attention logit, we apply the same projection $\mathbf{\Phi}$ to the query vector to get $\mathbf{q}' = \mathbf{\Phi}\mathbf{q}$. 
+
+\begin{theorem}[QJL Unbiased Estimator]
+Let $\mathbf{e}$ be the residual vector and $\mathbf{q}$ be the query. Using the 1-bit quantized projected residual $\hat{\mathbf{z}} = \text{sgn}(\mathbf{\Phi}\mathbf{e})$, an asymptotically unbiased estimator for the residual inner product $\langle \mathbf{q}, \mathbf{e} \rangle$ is given by:
+\begin{equation}
+\mathbb{E} \left[ \gamma \sum_{j=1}^k q'_j \hat{z}_j \right] \approx \langle \mathbf{q}, \mathbf{e} \rangle
+\end{equation}
+where $\gamma = \sqrt{\frac{\pi}{2}} \frac{\|\mathbf{e}\|_2}{\sqrt{k}}$ is a global scaling constant that can be absorbed into the attention scaling factor.
+\end{theorem}
+
+\begin{proof}[Proof Sketch]
+By the rotational invariance of the Gaussian distribution, the projection $\Phi_{j} \mathbf{e}$ is distributed as $\mathcal{N}(0, \|\mathbf{e}\|_2^2/k)$. The expectation of the sign of a Gaussian variable multiplied by a correlated Gaussian variable relates to their covariance via Grothendieck's identity (or price's theorem). Scaling by $\gamma$ linearly recovers the expected covariance, which precisely equals the dot product $\langle \mathbf{q}, \mathbf{e} \rangle$ in the original high-dimensional space.
+\end{proof}
+
+\section{The Complete TurboQuant Pipeline}
+The final attention logit is computed as the sum of the primary PolarQuant LUT retrieval and the QJL 1-bit correction:
+\begin{equation}
+\text{Logit}(\mathbf{q}, \mathbf{x}) = \langle \mathbf{q}, \hat{\mathbf{x}}_{PQ} \rangle_{\text{LUT}} + \gamma \langle \mathbf{\Phi}\mathbf{q}, \text{sgn}(\mathbf{\Phi}\mathbf{e}) \rangle
+\end{equation}
+This architecture strictly bounds the residual error via random projection while completely eliminating dynamic, block-wise normalization metadata, achieving theoretical limits of KV cache compression at 3 bits per value.
+
+\end{document}

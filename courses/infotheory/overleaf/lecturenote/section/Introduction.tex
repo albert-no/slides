@@ -1,0 +1,104 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Introduction
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{From Log Loss to KL Divergence}
+\label{sec:intro-logloss}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.33\textwidth]{classification.png}
+    \caption{A probabilistic classifier maps an input $x$ to a probability distribution over labels.}
+    \label{fig:intro-classification}
+\end{figure}
+
+Information theory enters modern machine learning largely through \emph{logarithms of probabilities}.
+This subsection explains why the standard classification objective
+\( -\log q_\theta(y\mid x) \) is natural, and how it is exactly a KL divergence.
+
+\paragraph{Setup.}
+Let $X\in\cX$ denote an input (e.g., $\cX=\fR^d$) and $Y\in[M]=\{1,2,\dots,M\}$ a label.
+A probabilistic classifier is a map
+\[
+    f_\theta:\cX\to\cM,
+\]
+where $\cM$ is the set of probability mass functions on $[M]$.
+We write $f_\theta(x)=(f_\theta(x)_1,\dots,f_\theta(x)_M)$ and interpret
+\(f_\theta(x)_i\approx \Pr{Y=i\mid X=x}\).
+Equivalently, define the model conditional distribution
+\(q_\theta(y\mid x)=f_\theta(x)_y\).
+
+\paragraph{Negative log-likelihood (log loss).}
+For one labeled example $(x,y)$, the standard loss is
+\begin{equation}
+    \ell_\theta(x,y) \coloneqq -\log q_\theta(y\mid x)= -\log f_\theta(x)_y.
+\end{equation}
+This choice is not arbitrary:
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Maximum likelihood.}
+    Minimizing the empirical average of $-\log q_\theta(y\mid x)$ is exactly maximum likelihood estimation for a conditional model.
+
+    \item \textbf{A coding interpretation.}
+    If we were to encode the label $Y$ using a code designed for the distribution $q_\theta(\cdot\mid x)$, the ideal (Shannon) code length for outcome $y$ is $-\log q_\theta(y\mid x)$ bits.
+    Thus training with log loss is equivalent to learning a model that assigns short codewords to the true labels.
+
+    \item \textbf{Additivity over independent samples.}
+    For i.i.d. data, likelihoods multiply while log-likelihoods add:
+    \( -\log \prod_i q_\theta(y_i\mid x_i) = \sum_i -\log q_\theta(y_i\mid x_i)\).
+\end{itemize}
+
+\paragraph{KL divergence viewpoint.}
+Represent the true label $y$ as a one-hot distribution $\delta_y\in\cM$:
+\[
+\delta_y(i)=\begin{cases}
+1 & i=y,\\
+0 & i\neq y.
+\end{cases}
+\]
+The KL divergence between two pmfs $P,Q\in\cM$ is
+\[
+\KL{P}{Q}=\sum_{i:P(i)>0} P(i)\log\frac{P(i)}{Q(i)}.
+\]
+A direct computation gives
+\begin{equation}
+    \KL{\delta_y}{f_\theta(x)}
+    =\log\frac{1}{f_\theta(x)_y}
+    =\ell_\theta(x,y).
+\end{equation}
+So the log loss is exactly the KL divergence from the empirical (one-hot) label distribution to the model prediction.
+
+However, the concern remains.
+The KL divergence is also weird looking.
+Why are we measuring ``distance'' between distributions in such way?
+Is there another way of measuring ``distance''?
+Why is it called divergence? instead of ``distance''?
+
+To answer these questions, we need to understand the basic information measures in information theory
+from entropy, mutual information, to KL divergence (or often called relative entropy).
+
+
+
+\paragraph{Soft labels and cross entropy.}
+If the target for an example is itself a distribution $p\in\cM$ (e.g., label smoothing or distillation), the natural generalization is the \emph{cross entropy}
+\begin{equation}
+    H(p,f_\theta(x)) \coloneqq \sum_{i=1}^M p(i)\log\frac{1}{f_\theta(x)_i}.
+\end{equation}
+We will prove in Section~\ref{sec:entropy-cross-entropy} that
+\begin{equation}
+    H(p,f_\theta(x)) = H(p) + \KL{p}{f_\theta(x)}.
+\end{equation}
+Since $H(p)$ is fixed by the data, minimizing cross entropy is equivalent to minimizing a KL divergence.
+
+\subsection{Notation and Conventions}
+\label{subsec:notation}
+
+\begin{itemize}[leftmargin=2em]
+    \item We use uppercase letters (e.g., $X$) for random variables and lowercase letters (e.g., $x$) for realizations.
+
+    \item For a discrete $X$, the pmf is $p_X(x)=\Pr{X=x}$. For a continuous $X$, the pdf is $f_X(x)$.
+
+    \item Unless stated otherwise, $\log$ is base $2$ (information measured in \emph{bits}). We write $\ln$ for the natural logarithm.
+
+    \item Expectations and probabilities are written as $\E{\cdot}$ and $\Pr{\cdot}$.
+\end{itemize}

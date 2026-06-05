@@ -1,0 +1,1139 @@
+\documentclass{article}
+\usepackage{aai5016}
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{mathtools}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\numberwithin{equation}{section}
+
+\newcommand{\mathify}[1]{\ifmmode{#1}\else\mbox{$#1$}\fi}
+\newcommand{\Esub}[2]{\mathify{\mathbb{E}_{#1}\left[#2\right]}}
+\newcommand{\Var}[1]{\mathify{{\rm VAR}\left[#1\right]}}
+\newcommand{\Cov}{\mathify{{\rm Cov}}}
+\newcommand{\KL}[2]{D\!\left(#1\,\middle\|\,#2\right)}
+\newcommand{\Hent}[1]{H\!\left(#1\right)}
+\newcommand{\hent}[1]{h\!\left(#1\right)}
+\newcommand{\Hcond}[2]{H\!\left(#1\,\middle|\,#2\right)}
+\newcommand{\hcond}[2]{h\!\left(#1\,\middle|\,#2\right)}
+\newcommand{\MI}[2]{I\!\left(#1\,;\,#2\right)}
+\newcommand{\CMI}[3]{I\!\left(#1\,;\,#2\,\middle|\,#3\right)}
+
+\newcommand{\Bern}{{\mbox{Bern}}}
+\newcommand{\Lap}{{\mbox{Lap}}}
+
+% --- Additional helpers specific to this lecture note ---
+\newcommand{\kl}[2]{\mathrm{kl}\!\left(#1\,\middle\|\,#2\right)}
+\newcommand{\KLnat}[2]{D_{\mathrm{e}}\!\left(#2\,\middle\|\,#2\right)}
+\newcommand{\MInat}[2]{I_{\mathrm{e}}\!\left(#1\,;\,#2\right)}
+\DeclareMathOperator{\sg}{sg}
+
+\newcommand{\SpLap}{{\mbox{SpLap}}}
+\newcommand{\sgn}{{\mbox{sign}}}
+\newcommand{\iid}{\stackrel{iid}{\sim}}
+\newcommand{\deq}{\stackrel{(d)}{=}}
+
+
+\newcommand{\field}[1]{\mathbb{#1}}
+\newcommand{\fC}{\field{C}} 
+\newcommand{\fE}{\field{E}} 
+\newcommand{\fN}{\field{N}} % natural numbers
+\newcommand{\fR}{\field{R}} % real numbers
+\newcommand{\fS}{\field{S}}
+\newcommand{\fZ}{\field{Z}} % integers
+%% some caligraphic symbols
+\newcommand{\cA}{{\cal A}}
+\newcommand{\cB}{{\cal B}}
+\newcommand{\cC}{{\cal C}}
+\newcommand{\cD}{{\cal D}}
+\newcommand{\cE}{{\cal E}}
+\newcommand{\cF}{{\cal F}}
+\newcommand{\cG}{{\cal G}}
+\newcommand{\cH}{{\cal H}}
+\newcommand{\cI}{{\cal I}}
+\newcommand{\cJ}{{\cal J}}
+\newcommand{\cK}{{\cal K}}
+\newcommand{\cL}{{\cal L}}
+\newcommand{\cM}{{\cal M}}
+\newcommand{\cN}{{\cal N}}
+\newcommand{\cO}{{\cal O}}
+\newcommand{\cP}{{\cal P}}
+\newcommand{\cQ}{{\cal Q}}
+\newcommand{\cR}{{\cal R}}
+\newcommand{\cS}{{\cal S}}
+\newcommand{\cT}{{\cal T}}
+\newcommand{\cU}{{\cal U}}
+\newcommand{\cV}{{\cal V}}
+\newcommand{\cW}{{\cal W}}
+\newcommand{\cX}{{\cal X}}
+\newcommand{\cY}{{\cal Y}}
+\newcommand{\cZ}{{\cal Z}}
+
+\title{AAI5016: Lecture Note 2\\Information-Theoretic Tools for Machine Learning}
+\author{Albert No}
+\date{Spring 2026}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Conventions and Setup}
+\label{sec:ln2-setup}
+
+\paragraph{Logarithms and information units.}
+Unless stated otherwise, $\log$ is base $2$ (information is measured in \emph{bits}), consistent with the main course notes.
+We write $\ln$ for the natural logarithm.
+In several learning-theory proofs it is convenient to work with natural exponentials $e^{(\cdot)}$.
+Accordingly, we will sometimes use the \emph{natural} KL divergence
+\begin{equation}
+    \KLnat{P}{Q} \coloneqq \Esub{X\sim P}{\ln\frac{P(X)}{Q(X)}}
+    \qquad\text{and}\qquad
+    \MInat{X}{Y} \coloneqq \KLnat{p_{X,Y}}{p_Xp_Y}.
+\end{equation}
+These are related to the bit-based quantities by a constant factor:
+\begin{equation}
+    \KLnat{P}{Q} = (\ln 2)\,\KL{P}{Q},
+    \qquad
+    \MInat{X}{Y} = (\ln 2)\,\MI{X}{Y}.
+\end{equation}
+Thus, switching between ``nats'' and ``bits'' only rescales information-theoretic terms.
+
+\paragraph{Entropy with natural logarithms.}
+When we use natural logarithms, we will denote the corresponding entropy by
+\begin{equation}
+    H_{\mathrm{e}}(X) \coloneqq \E\left[-\ln p_X(X)\right],
+\end{equation}
+and similarly for conditional entropy.
+With this notation, $\KLnat{P}{Q}=\E_P[\ln(P/Q)]$ and
+\(\MInat{X}{Y}=H_{\mathrm{e}}(X)-H_{\mathrm{e}}(X\mid Y)\).
+
+\paragraph{Supervised learning as a channel.}
+Let $\cZ$ be an example space and let $\cD$ be a distribution on $\cZ$.
+We observe an i.i.d. training sample
+\begin{equation}
+    S \coloneqq (Z_1,\dots,Z_n) \iid \cD^n.
+\end{equation}
+A (possibly randomized) learning algorithm is a conditional distribution
+\begin{equation}
+    A(\cdot\mid S) \in \cP(\cW),
+\end{equation}
+where $\cW$ is the parameter space (e.g., network weights).
+We write
+\begin{equation}
+    W \sim A(\cdot\mid S)
+\end{equation}
+for the learned parameters.
+The pair $(S\to W)$ can be viewed as a (random) \emph{channel}: the algorithm converts the dataset into a model.
+
+\paragraph{Risk and generalization.}
+Let $\ell: \cW\times\cZ\to\fR$ be a loss.
+Define the population (test) risk and empirical (training) risk as
+\begin{equation}
+    L(w) \coloneqq \Esub{Z\sim\cD}{\ell(w,Z)},
+    \qquad
+    \hat L_S(w) \coloneqq \frac1n\sum_{i=1}^n \ell(w,Z_i).
+\end{equation}
+The (random) \emph{generalization gap} is
+\begin{equation}
+    \mathrm{gen}(W,S) \coloneqq L(W) - \hat L_S(W).
+\end{equation}
+
+\section{Generalization Bounds via Mutual Information}
+\label{sec:mi-generalization}
+
+This section develops a clean and rigorous statement: the \emph{expected} generalization error of a (randomized) learning algorithm can be controlled by the mutual information between the output $W$ and the sample $S$.
+This is one precise sense in which ``compression'' (small information extraction from data) helps generalization.
+
+\subsection{Sub-Gaussian losses}
+
+\begin{definition}[Sub-Gaussian random variable]
+A real random variable $X$ is called \emph{$\sigma$-sub-Gaussian} if for all $\lambda\in\fR$,
+\begin{equation}
+    \E{\exp\big(\lambda(X-\E{X})\big)} \le \exp\Big(\tfrac{\lambda^2\sigma^2}{2}\Big).
+\end{equation}
+\end{definition}
+
+\begin{lemma}[Bounded implies sub-Gaussian (Hoeffding's lemma)]
+\label{lem:hoeffding-lemma}
+If $X\in[a,b]$ almost surely, then $X$ is $(b-a)/2$-sub-Gaussian.
+In particular, if $X\in[0,1]$, then $X$ is $1/2$-sub-Gaussian.
+\end{lemma}
+\begin{proof}
+This is Hoeffding's lemma.
+For completeness, let $Y\coloneqq X-\E{X}$ so $\E{Y}=0$ and $Y\in[a-\E{X},\,b-\E{X}]\subseteq[a-b,\,b-a]$.
+By convexity of $e^{\lambda y}$ and the fact that a mean-zero bounded random variable is dominated by a two-point distribution at the endpoints, one can show
+\(\E{e^{\lambda Y}}\le \exp(\lambda^2(b-a)^2/8)\).
+(See any standard concentration reference.)
+Thus $X$ is $(b-a)/2$-sub-Gaussian.
+\end{proof}
+
+\begin{assumption}[Sub-Gaussian loss]
+\label{ass:subgaussian-loss}
+There exists $\sigma\ge 0$ such that for every $w\in\cW$, the random variable $\ell(w,Z)$ (with $Z\sim\cD$) is $\sigma$-sub-Gaussian.
+\end{assumption}
+
+\subsection{A change-of-measure inequality}
+
+A key technical tool is a variational inequality that upper bounds an expectation under one distribution by an exponential moment under another distribution plus a KL term.
+
+\begin{lemma}[Change of measure / entropy inequality]
+\label{lem:change-of-measure}
+Let $P$ and $Q$ be probability measures on the same measurable space, and let $f$ be any measurable function such that $\E_Q[e^{f}]<\infty$.
+Then
+\begin{equation}
+    \E_P[f] \le \KLnat{P}{Q} + \ln \E_Q\big[e^{f}\big].
+\end{equation}
+\end{lemma}
+\begin{proof}
+Define the \emph{tilted} distribution $Q_f$ by
+\begin{equation}
+    \frac{dQ_f}{dQ}(x) \coloneqq \frac{e^{f(x)}}{\E_Q[e^{f}]},
+\end{equation}
+so $Q_f$ is a probability measure.
+Non-negativity of KL divergence gives
+\begin{equation}
+    0 \le \KLnat{P}{Q_f} = \E_P\Big[\ln\frac{dP}{dQ_f}\Big]
+    = \E_P\Big[\ln\frac{dP}{dQ}\Big] - \E_P[f] + \ln\E_Q[e^{f}].
+\end{equation}
+Rearranging yields the claim.
+\end{proof}
+
+\subsection{A one-sample decoupling bound}
+
+The next lemma bounds the extent to which the expectation of a sub-Gaussian loss changes when we replace the joint law of $(W,Z)$ by the product of marginals.
+This is exactly where mutual information appears.
+
+\begin{lemma}[Decoupling bound via mutual information]
+\label{lem:decouple-mi}
+Let $(W,Z)$ be any pair of random variables with joint law $P_{WZ}$ and marginals $P_W, P_Z$.
+Assume that for every $w$, the random variable $\ell(w,Z)$ is $\sigma$-sub-Gaussian under $Z\sim P_Z$.
+Then
+\begin{equation}
+    \Big|\E_{P_{WZ}}[\ell(W,Z)] - \E_{P_WP_Z}[\ell(W,Z)]\Big|
+    \le \sqrt{2\sigma^2\, \MInat{W}{Z}}.
+\end{equation}
+Equivalently, in bits,
+\begin{equation}
+    \Big|\E_{P_{WZ}}[\ell(W,Z)] - \E_{P_WP_Z}[\ell(W,Z)]\Big|
+    \le \sqrt{2\sigma^2\,(\ln 2)\, \MI{W}{Z}}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Let $\mu(w)\coloneqq \Esub{Z\sim P_Z}{\ell(w,Z)}$.
+Fix $\lambda\in\fR$.
+Apply Lemma~\ref{lem:change-of-measure} to
+\(P=P_{WZ}\), \(Q=P_WP_Z\), and
+\begin{equation}
+    f(w,z) \coloneqq \lambda\big(\ell(w,z)-\mu(w)\big).
+\end{equation}
+We obtain
+\begin{equation}
+\label{eq:decouple-step1}
+    \lambda\,\E_{P_{WZ}}[\ell(W,Z)-\mu(W)]
+    \le \KLnat{P_{WZ}}{P_WP_Z} + \ln \E_{P_WP_Z}\Big[\exp\big(\lambda(\ell(W,Z)-\mu(W))\big)\Big].
+\end{equation}
+By the sub-Gaussian assumption, for every fixed $w$,
+\(\E_{Z\sim P_Z}[\exp(\lambda(\ell(w,Z)-\mu(w)))] \le \exp(\lambda^2\sigma^2/2)\).
+Taking expectation over $W\sim P_W$ preserves the bound, so the second term in \eqref{eq:decouple-step1} is at most $\lambda^2\sigma^2/2$.
+Thus
+\begin{equation}
+\label{eq:decouple-step2}
+    \E_{P_{WZ}}[\ell(W,Z)-\mu(W)]
+    \le \frac{\MInat{W}{Z}}{\lambda} + \frac{\lambda\sigma^2}{2},
+\end{equation}
+where we used $\MInat{W}{Z}=\KLnat{P_{WZ}}{P_WP_Z}$.
+Optimizing the right-hand side over $\lambda>0$ gives $\lambda^* = \sqrt{2\MInat{W}{Z}}/\sigma$ and yields
+\begin{equation}
+    \E_{P_{WZ}}[\ell(W,Z)-\mu(W)] \le \sqrt{2\sigma^2\,\MInat{W}{Z}}.
+\end{equation}
+Applying the same argument to $-\ell$ gives the absolute value bound.
+Finally, since $\MInat{W}{Z}=(\ln 2)\MI{W}{Z}$, the ``bits'' version follows.
+\end{proof}
+
+\subsection{Expected generalization bound}
+
+We now apply the decoupling lemma to each training example $Z_i$.
+
+\begin{lemma}[Mutual information subadditivity for independent samples]
+\label{lem:mi-subadd}
+Let $S=(Z_1,\dots,Z_n)$ with $Z_1,\dots,Z_n$ independent.
+Then for any random variable $W$ (possibly dependent on $S$),
+\begin{equation}
+    \sum_{i=1}^n \MInat{W}{Z_i} \le \MInat{W}{S}.
+\end{equation}
+Equivalently, $\sum_i \MI{W}{Z_i} \le \MI{W}{S}$ in bits.
+\end{lemma}
+\begin{proof}
+By the chain rule for mutual information,
+\begin{equation}
+    \MInat{W}{S} = \sum_{i=1}^n I_{\mathrm{e}}(W;Z_i\mid Z^{i-1}),
+\end{equation}
+where $Z^{i-1}=(Z_1,\dots,Z_{i-1})$.
+For each $i$,
+\begin{align}
+I_{\mathrm{e}}(W;Z_i\mid Z^{i-1})
+&= H_{\mathrm{e}}(Z_i\mid Z^{i-1}) - H_{\mathrm{e}}(Z_i\mid W, Z^{i-1}).
+\end{align}
+Since the $Z_i$ are independent, $H_{\mathrm{e}}(Z_i\mid Z^{i-1})=H_{\mathrm{e}}(Z_i)$.
+Also, conditioning cannot increase entropy, so
+$H_{\mathrm{e}}(Z_i\mid W,Z^{i-1}) \le H_{\mathrm{e}}(Z_i\mid W)$.
+Therefore
+\begin{equation}
+    I_{\mathrm{e}}(W;Z_i\mid Z^{i-1})
+    \ge H_{\mathrm{e}}(Z_i) - H_{\mathrm{e}}(Z_i\mid W)
+    = \MInat{W}{Z_i}.
+\end{equation}
+Summing over $i$ gives the claim.
+\end{proof}
+
+\begin{theorem}[Expected generalization bound via mutual information]
+\label{thm:mi-gen}
+Assume Assumption~\ref{ass:subgaussian-loss}.
+Let $S\iid \cD^n$ and let $W\sim A(\cdot\mid S)$ be the output of a (possibly randomized) learning algorithm.
+Then
+\begin{equation}
+    \Big|\E[\mathrm{gen}(W,S)]\Big|
+    \le \sqrt{\frac{2\sigma^2}{n}\,\MInat{W}{S}}
+    = \sqrt{\frac{2\sigma^2\,\ln 2}{n}\,\MI{W}{S}}.
+\end{equation}
+\end{theorem}
+\begin{proof}
+Let $Z\sim\cD$ be an independent ``test'' example, independent of $(S,W)$.
+Then
+\begin{equation}
+    \E[\mathrm{gen}(W,S)]
+    = \E\big[L(W)\big] - \E\big[\hat L_S(W)\big]
+    = \E\big[\ell(W,Z)\big] - \frac1n\sum_{i=1}^n \E\big[\ell(W,Z_i)\big].
+\end{equation}
+For each $i$, the marginal law of $Z_i$ equals the law of $Z$.
+Thus we may rewrite each term as a difference between an expectation under the product of marginals and under the joint law:
+\begin{equation}
+\label{eq:gen-decompose}
+    \E\big[\ell(W,Z)\big] - \E\big[\ell(W,Z_i)\big]
+    = \E_{P_WP_Z}[\ell(W,Z)] - \E_{P_{WZ_i}}[\ell(W,Z_i)],
+\end{equation}
+where $P_{WZ_i}$ is the joint distribution induced by the algorithm and sampling.
+Taking absolute values and applying Lemma~\ref{lem:decouple-mi} to each pair $(W,Z_i)$ yields
+\begin{equation}
+    \Big|\E[\mathrm{gen}(W,S)]\Big|
+    \le \frac1n\sum_{i=1}^n \sqrt{2\sigma^2\,\MInat{W}{Z_i}}.
+\end{equation}
+By Cauchy--Schwarz,
+\begin{equation}
+    \frac1n\sum_{i=1}^n \sqrt{\MInat{W}{Z_i}}
+    \le \frac1n\sqrt{n\sum_{i=1}^n \MInat{W}{Z_i}}
+    = \sqrt{\frac{1}{n}\sum_{i=1}^n \MInat{W}{Z_i}}.
+\end{equation}
+Finally, Lemma~\ref{lem:mi-subadd} gives $\sum_i \MInat{W}{Z_i}\le \MInat{W}{S}$.
+Combining these inequalities yields
+\(\big|\E[\mathrm{gen}(W,S)]\big|\le \sqrt{2\sigma^2\MInat{W}{S}/n}\).
+The ``bits'' form follows from $\MInat{W}{S}=(\ln 2)\MI{W}{S}$.
+\end{proof}
+
+\begin{corollary}[Bounded loss case]
+\label{cor:mi-gen-bounded}
+If $\ell(w,Z)\in[0,1]$ for all $w$ and all $Z$, then by Lemma~\ref{lem:hoeffding-lemma} we may take $\sigma=1/2$ in Theorem~\ref{thm:mi-gen} and obtain
+\begin{equation}
+    \Big|\E[\mathrm{gen}(W,S)]\Big|
+    \le \sqrt{\frac{\MInat{W}{S}}{2n}}
+    = \sqrt{\frac{\ln 2}{2n}\,\MI{W}{S}}.
+\end{equation}
+\end{corollary}
+
+\begin{remark}[Interpretation]
+Theorem~\ref{thm:mi-gen} provides a quantitative statement:
+if the algorithm output $W$ contains little information about the particular sample $S$ (small $\MI{W}{S}$), then the expected generalization gap is small.
+Noise injection (e.g., SGD minibatching, dropout, DP noise) typically reduces $\MI{W}{S}$ and therefore improves generalization in this sense.
+\end{remark}
+
+\section{PAC-Bayes Bounds}
+\label{sec:pac-bayes}
+
+PAC-Bayes bounds control generalization for \emph{randomized predictors} (Gibbs classifiers) via a KL divergence between a data-dependent \emph{posterior} and a data-independent \emph{prior}.
+This section presents a standard theorem in a form that admits a clean proof from first principles.
+
+\subsection{Hypotheses, priors, and Gibbs risk}
+
+Let $\cH$ be a countable hypothesis class.
+For concreteness, consider binary classification: each example is $Z=(X,Y)$ with $Y\in\{0,1\}$ and $h\in\cH$ predicts $\hat Y=h(X)$.
+The $0$--$1$ loss is
+\begin{equation}
+    \ell(h,(x,y)) \coloneqq \I{h(x)\neq y} \in \{0,1\}.
+\end{equation}
+The population risk and empirical risk are
+\begin{equation}
+    L(h) \coloneqq \Esub{Z\sim\cD}{\ell(h,Z)},
+    \qquad
+    \hat L_S(h) \coloneqq \frac1n\sum_{i=1}^n \ell(h,Z_i).
+\end{equation}
+
+\begin{definition}[Prior, posterior, and Gibbs classifier]
+A \emph{prior} is a distribution $P\in\cP(\cH)$ chosen before observing $S$.
+A \emph{posterior} is a distribution $Q\in\cP(\cH)$ that may depend on $S$.
+The \emph{Gibbs classifier} associated with $Q$ predicts by first sampling $h\sim Q$ and then predicting with $h$.
+Its population and empirical risks are
+\begin{equation}
+    L(Q) \coloneqq \Esub{h\sim Q}{L(h)},
+    \qquad
+    \hat L_S(Q) \coloneqq \Esub{h\sim Q}{\hat L_S(h)}.
+\end{equation}
+\end{definition}
+
+\begin{definition}[Binary KL]
+For $p,q\in(0,1)$, define
+\begin{equation}
+    \kl{p}{q} \coloneqq p\ln\frac{p}{q} + (1-p)\ln\frac{1-p}{1-q}.
+\end{equation}
+We extend $\kl{p}{q}$ continuously to the boundary points $0,1$.
+\end{definition}
+
+\begin{remark}
+In PAC-Bayes, it is standard to use $\kl(\cdot\|\cdot)$ with \emph{natural} logarithms.
+This keeps the statement clean when paired with exponentials.
+One may convert to base-2 logarithms by dividing by $\ln 2$.
+\end{remark}
+
+\subsection{Two technical lemmas}
+
+\begin{lemma}[Joint convexity of KL for Bernoulli]
+\label{lem:bern-kl-convex}
+The function $(p,q)\mapsto \kl{p}{q}$ is jointly convex on $(0,1)^2$.
+Consequently, for any distribution $Q$ on $\cH$,
+\begin{equation}
+    \kl{\hat L_S(Q)}{L(Q)} \le \Esub{h\sim Q}{\kl{\hat L_S(h)}{L(h)}}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Joint convexity of KL divergence is standard.
+For Bernoulli distributions, $\kl{p}{q}=\KLnat(\Bern(p)\|\Bern(q))$, and KL is jointly convex in its pair of arguments.
+Applying Jensen's inequality to the convex function $(p,q)\mapsto \kl{p}{q}$ gives
+\begin{equation}
+    \kl{\E_Q[\hat L_S(h)]}{\E_Q[L(h)]}
+    \le \E_Q\big[\kl{\hat L_S(h)}{L(h)}\big],
+\end{equation}
+which is exactly the claim.
+\end{proof}
+
+\begin{lemma}[Exponential moment bound for Bernoulli averages]
+\label{lem:bern-moment}
+Let $X_1,\dots,X_n\iid\Bern(p)$ and let $\hat p\coloneqq \frac1n\sum_{i=1}^n X_i$.
+Then
+\begin{equation}
+\label{eq:bern-moment}
+    \E\Big[\exp\big(n\,\kl{\hat p}{p}\big)\Big] \le n+1.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Write $K\coloneqq \sum_{i=1}^n X_i$, so $K\sim\mathrm{Binomial}(n,p)$ and $\hat p=K/n$.
+Expanding the expectation over $K$ gives
+\begin{equation}
+\label{eq:bern-moment-expand}
+\E\Big[e^{n\kl{\hat p}{p}}\Big]
+= \sum_{k=0}^n \Pr{K=k}\exp\Big(n\kl{\tfrac{k}{n}}{p}\Big)
+= \sum_{k=0}^n \binom{n}{k} p^k(1-p)^{n-k}\exp\Big(n\kl{\tfrac{k}{n}}{p}\Big).
+\end{equation}
+
+Let $q\coloneqq k/n$.
+Using the identity
+\begin{equation}
+    \kl{q}{p}
+    = q\ln\frac{q}{p} + (1-q)\ln\frac{1-q}{1-p}
+    = -H_{\mathrm{e}}(q) - \big(q\ln p + (1-q)\ln(1-p)\big),
+\end{equation}
+where $H_{\mathrm{e}}(q)\coloneqq -q\ln q-(1-q)\ln(1-q)$ is the (natural) binary entropy,
+we can rewrite the $k$th summand in \eqref{eq:bern-moment-expand} as
+\begin{align}
+    \binom{n}{k} p^k(1-p)^{n-k}\exp\big(n\kl{q}{p}\big)
+    &= \binom{n}{k}\exp\Big(n\big(q\ln p+(1-q)\ln(1-p)\big)\Big)\,\exp\big(n\kl{q}{p}\big)\\
+    &= \binom{n}{k}\exp\big(-n H_{\mathrm{e}}(q)\big).
+\end{align}
+Therefore
+\begin{equation}
+\label{eq:bern-moment-sum}
+    \E\Big[e^{n\kl{\hat p}{p}}\Big]
+    = \sum_{k=0}^n \binom{n}{k}\exp\big(-n H_{\mathrm{e}}(k/n)\big).
+\end{equation}
+
+We now bound each term in \eqref{eq:bern-moment-sum} by $1$.
+Fix $k$ and let $q=k/n$.
+Consider i.i.d. draws from Bernoulli$(q)$.
+Every binary sequence with exactly $k$ ones has probability $q^k(1-q)^{n-k}$, and there are $\binom{n}{k}$ such sequences.
+Since the total probability of all sequences is $1$,
+\begin{equation}
+    \binom{n}{k} q^k(1-q)^{n-k} \le 1.
+\end{equation}
+Rearranging gives
+\begin{equation}
+\label{eq:binom-bound}
+    \binom{n}{k}
+    \le \frac{1}{q^k(1-q)^{n-k}}
+    = \exp\Big(-k\ln q - (n-k)\ln(1-q)\Big)
+    = \exp\big(n H_{\mathrm{e}}(q)\big).
+\end{equation}
+Substituting \eqref{eq:binom-bound} into \eqref{eq:bern-moment-sum} yields
+\begin{equation}
+    \binom{n}{k}\exp\big(-n H_{\mathrm{e}}(k/n)\big) \le 1
+\end{equation}
+for every $k$.
+Since there are $n+1$ values of $k$, we conclude
+\(\E[e^{n\kl{\hat p}{p}}]\le n+1\).
+\end{proof}
+
+\subsection{PAC-Bayes--kl inequality}
+
+\begin{theorem}[PAC-Bayes--kl bound]
+\label{thm:pacbayes-kl}
+Fix a prior $P$ on $\cH$ that is independent of the sample.
+For any $\delta\in(0,1)$, with probability at least $1-\delta$ over $S\sim\cD^n$, the following holds simultaneously for all posteriors $Q$ on $\cH$:
+\begin{equation}
+\label{eq:pacbayes-kl}
+    \kl{\hat L_S(Q)}{L(Q)}
+    \le \frac{\KLnat{Q}{P} + \ln\frac{n+1}{\delta}}{n}.
+\end{equation}
+\end{theorem}
+\begin{proof}
+\textbf{Step 1: A high-probability event controlling the prior average.}
+For each fixed $h\in\cH$, $\hat L_S(h)$ is the average of $n$ i.i.d. Bernoulli variables with mean $L(h)$.
+Thus, by Lemma~\ref{lem:bern-moment},
+\begin{equation}
+    \E_{S}\Big[\exp\big(n\kl{\hat L_S(h)}{L(h)}\big)\Big] \le n+1.
+\end{equation}
+Taking expectation over $h\sim P$ and using Fubini/Tonelli,
+\begin{equation}
+\label{eq:prior-mgf}
+    \E_{S}\E_{h\sim P}\Big[\exp\big(n\kl{\hat L_S(h)}{L(h)}\big)\Big] \le n+1.
+\end{equation}
+Define the random variable
+\(\Xi(S) \coloneqq \E_{h\sim P}[\exp(n\kl{\hat L_S(h)}{L(h)})]\).
+Markov's inequality applied to \eqref{eq:prior-mgf} yields
+\begin{equation}
+    \Pr{\Xi(S) \ge \frac{n+1}{\delta}} \le \delta.
+\end{equation}
+Therefore, with probability at least $1-\delta$ over $S$,
+\begin{equation}
+\label{eq:Xi-event}
+    \E_{h\sim P}\Big[\exp\big(n\kl{\hat L_S(h)}{L(h)}\big)\Big]
+    \le \frac{n+1}{\delta}.
+\end{equation}
+Fix any sample $S$ satisfying \eqref{eq:Xi-event} for the remainder of the proof.
+
+\textbf{Step 2: Change of measure from $P$ to an arbitrary posterior $Q$.}
+Apply Lemma~\ref{lem:change-of-measure} on the discrete space $\cH$ with
+\(f(h)=n\kl{\hat L_S(h)}{L(h)}\).
+We obtain
+\begin{equation}
+\label{eq:pacbayes-step2}
+    \E_{h\sim Q}\Big[n\kl{\hat L_S(h)}{L(h)}\Big]
+    \le \KLnat{Q}{P} + \ln \E_{h\sim P}\Big[\exp\big(n\kl{\hat L_S(h)}{L(h)}\big)\Big].
+\end{equation}
+Using \eqref{eq:Xi-event} on the last term gives
+\begin{equation}
+\label{eq:pacbayes-step3}
+    \E_{h\sim Q}\Big[n\kl{\hat L_S(h)}{L(h)}\Big]
+    \le \KLnat{Q}{P} + \ln\frac{n+1}{\delta}.
+\end{equation}
+
+\textbf{Step 3: Move from the average over $h$ to the Gibbs risks.}
+By Lemma~\ref{lem:bern-kl-convex},
+\begin{equation}
+    n\kl{\hat L_S(Q)}{L(Q)}
+    \le \E_{h\sim Q}\Big[n\kl{\hat L_S(h)}{L(h)}\Big].
+\end{equation}
+Combining with \eqref{eq:pacbayes-step3} yields \eqref{eq:pacbayes-kl}.
+\end{proof}
+
+\begin{corollary}[A simpler (but looser) PAC-Bayes deviation bound]
+\label{cor:pacbayes-sqrt}
+Under the assumptions of Theorem~\ref{thm:pacbayes-kl}, with probability at least $1-\delta$ over $S$,
+for all posteriors $Q$,
+\begin{equation}
+    \big|L(Q)-\hat L_S(Q)\big|
+    \le \sqrt{\frac{\KLnat{Q}{P} + \ln\frac{n+1}{\delta}}{2n}}.
+\end{equation}
+\end{corollary}
+\begin{proof}
+Pinsker's inequality implies that for Bernoulli parameters $p,q$,
+\(|p-q|\le \sqrt{\kl{p}{q}/2}\).
+Apply this to $p=\hat L_S(Q)$ and $q=L(Q)$ and then use \eqref{eq:pacbayes-kl}.
+\end{proof}
+
+\section{MDL/Occam: Compression Implies Generalization}
+\label{sec:mdl-occam}
+
+The PAC-Bayes framework immediately yields a crisp version of the intuition
+\emph{``a hypothesis that can be described in few bits generalizes.''}
+This connects source coding ideas (prefix codes and Kraft inequality) to learning.
+
+\subsection{From codes to priors}
+
+\begin{definition}[Prefix code and code length]
+A \emph{prefix code} for a countable set $\cH$ assigns to each $h\in\cH$ a finite binary string $C(h)\in\{0,1\}^*$ such that no codeword is a prefix of another.
+The \emph{code length} is $\ell(h)\coloneqq |C(h)|$.
+\end{definition}
+
+\begin{theorem}[Kraft inequality]
+\label{thm:kraft-lecture2}
+If $\ell(\cdot)$ comes from a prefix code, then
+\begin{equation}
+    \sum_{h\in\cH} 2^{-\ell(h)} \le 1.
+\end{equation}
+Conversely, any length function satisfying Kraft's inequality can be realized by a prefix code.
+\end{theorem}
+\begin{proof}
+\textbf{(Prefix code $\Rightarrow$ Kraft).}
+For a binary string $c=c_1\cdots c_m\in\{0,1\}^m$, define the dyadic interval
+\begin{equation}
+    I(c) \coloneqq \Big[\sum_{j=1}^m \frac{c_j}{2^j},\ \sum_{j=1}^m \frac{c_j}{2^j} + 2^{-m}\Big) \subset [0,1).
+\end{equation}
+Intuitively, $I(c)$ is the set of numbers in $[0,1)$ whose binary expansion begins with the prefix $c$.
+The length of this interval is exactly $|I(c)|=2^{-m}$.
+
+If the code is prefix-free, then the family $\{I(C(h))\}_{h\in\cH}$ is disjoint: if two codewords shared a prefix relation, their dyadic intervals would be nested rather than disjoint.
+Therefore,
+\begin{equation}
+    \sum_{h\in\cH} 2^{-\ell(h)}
+    = \sum_{h\in\cH} |I(C(h))|
+    = \Big|\bigcup_{h\in\cH} I(C(h))\Big|
+    \le |[0,1)| = 1.
+\end{equation}
+
+\textbf{(Kraft $\Rightarrow$ prefix code).}
+We sketch an explicit construction for a finite set; the countable case follows by a limiting argument.
+Suppose we are given lengths $\ell_1,\dots,\ell_m$ with
+\(\sum_{i=1}^m 2^{-\ell_i}\le 1\).
+Let $L\coloneqq \max_i \ell_i$ and consider the complete binary tree of depth $L$.
+There are $2^L$ leaves, corresponding to all binary strings of length $L$.
+
+A codeword of length $\ell$ corresponds to an internal node at depth $\ell$.
+Such a node ``covers'' exactly $2^{L-\ell}$ leaves (all length-$L$ strings that share that prefix).
+Thus, selecting prefix-free codewords of lengths $\ell_i$ is equivalent to selecting $m$ nodes in the tree such that their covered leaf-sets are disjoint.
+
+The Kraft inequality implies there is enough leaf capacity:
+\begin{equation}
+    \sum_{i=1}^m 2^{L-\ell_i} = 2^L\sum_{i=1}^m 2^{-\ell_i} \le 2^L.
+\end{equation}
+Now perform a greedy assignment.
+Process the codewords in nondecreasing order of length.
+At step $i$, pick the leftmost available node at depth $\ell_i$ whose descendants are all currently unassigned leaves, and assign it as the $i$th codeword.
+Mark all $2^{L-\ell_i}$ leaves under that node as used.
+Because shorter codewords are placed first, no chosen node can be a prefix of a later one.
+
+We claim the greedy procedure never gets stuck.
+Indeed, after placing the first $(i-1)$ codewords, the number of used leaves is exactly
+\(\sum_{j=1}^{i-1} 2^{L-\ell_j}\).
+By the inequality above, this is at most $2^L-2^{L-\ell_i}$, so at least $2^{L-\ell_i}$ leaves remain.
+These remaining leaves must include the descendants of some node at depth $\ell_i$ (otherwise every node at depth $\ell_i$ would have at least one used leaf, forcing more than $2^L-2^{L-\ell_i}$ leaves to be used).
+Hence an available node exists at each step.
+
+This constructs a prefix-free set of codewords of the prescribed lengths.
+\end{proof}
+
+By Kraft's inequality, any prefix code induces a valid prior
+\begin{equation}
+    P(h) \coloneqq 2^{-\ell(h)} \Big/ \sum_{h'\in\cH} 2^{-\ell(h')}.
+\end{equation}
+(If the sum is strictly less than $1$, one may add a dummy symbol; in any case, normalization is harmless.)
+
+\subsection{Occam bound (as a corollary of PAC-Bayes)}
+
+\begin{corollary}[Occam/MDL generalization bound]
+\label{cor:occam}
+Fix a prefix code on $\cH$ with lengths $\ell(h)$.
+Let $P$ be the induced prior.
+Then for any $\delta\in(0,1)$, with probability at least $1-\delta$ over $S\sim\cD^n$, the following holds for \emph{all} hypotheses $h\in\cH$:
+\begin{equation}
+\label{eq:occam-kl}
+    \kl{\hat L_S(h)}{L(h)}
+    \le \frac{\ln\frac{1}{P(h)} + \ln\frac{n+1}{\delta}}{n}.
+\end{equation}
+In particular, since $\ln\frac{1}{P(h)} = \ell(h)\ln 2 + \ln\Big(\sum_{h'}2^{-\ell(h')}\Big)$,
+this bound scales essentially like $(\ell(h)+\log(1/\delta))/n$.
+\end{corollary}
+\begin{proof}
+Apply Theorem~\ref{thm:pacbayes-kl} with posterior $Q=\delta_h$ (a point mass at $h$).
+Then $\hat L_S(Q)=\hat L_S(h)$ and $L(Q)=L(h)$.
+Moreover,
+\(\KLnat{\delta_h}{P} = \ln\frac{1}{P(h)}\).
+Substitute into \eqref{eq:pacbayes-kl}.
+\end{proof}
+
+\begin{remark}[Why this is ``compression implies generalization'']
+If we can encode a learned model $h$ in $\ell(h)$ bits (e.g., by quantizing weights, pruning, entropy coding, etc.), then the Occam bound shows that the complexity penalty is proportional to $\ell(h)/n$.
+Thus, compressible models are constrained enough to generalize.
+This is one rigorous way to formalize the idea behind MDL and network compression guarantees.
+\end{remark}
+
+\section{Fano's Inequality and Information-Theoretic Lower Bounds}
+\label{sec:fano}
+
+So far we have derived \emph{upper bounds} (guarantees) on generalization.
+Information theory also provides sharp \emph{lower bounds}: limits on what any algorithm can do given finite data.
+A fundamental tool is Fano's inequality.
+
+\subsection{Multi-way hypothesis testing model}
+
+Let $\Theta$ be an unknown parameter taking values in $\{1,\dots,M\}$.
+We assume a uniform prior $\Theta\sim\mathrm{Unif}\{1,\dots,M\}$.
+Conditioned on $\Theta=\theta$, we observe data
+\begin{equation}
+    X^n \coloneqq (X_1,\dots,X_n) \iid P_\theta,
+\end{equation}
+where $\{P_\theta\}_{\theta=1}^M$ is a family of distributions on some observation space.
+An estimator (decoder) is any function $\hat\Theta=\hat\Theta(X^n)$.
+The probability of error is
+\begin{equation}
+    P_e \coloneqq \Pr{\hat\Theta\neq \Theta}.
+\end{equation}
+
+\subsection{Fano's inequality}
+
+\begin{theorem}[Fano's inequality]
+\label{thm:fano}
+Under the model above,
+\begin{equation}
+\label{eq:fano}
+    P_e \ge 1 - \frac{\MInat{\Theta}{X^n} + \ln 2}{\ln M}.
+\end{equation}
+Equivalently, in bits,
+\begin{equation}
+    P_e \ge 1 - \frac{(\ln 2)\,\MI{\Theta}{X^n} + \ln 2}{\ln M}.
+\end{equation}
+\end{theorem}
+\begin{proof}
+Let $E\coloneqq \I{\hat\Theta\neq \Theta}$ be the error indicator.
+We begin from the identity
+\begin{equation}
+    H_{\mathrm{e}}(\Theta\mid X^n) = H_{\mathrm{e}}(\Theta,E\mid X^n) - H_{\mathrm{e}}(E\mid \Theta, X^n),
+\end{equation}
+where $H_{\mathrm{e}}$ denotes entropy with natural logarithms.
+Since $E$ is a function of $(\Theta,X^n)$, we have $H_{\mathrm{e}}(E\mid \Theta,X^n)=0$, hence
+\begin{equation}
+\label{eq:fano-step1}
+    H_{\mathrm{e}}(\Theta\mid X^n) = H_{\mathrm{e}}(\Theta,E\mid X^n).
+\end{equation}
+Apply the chain rule to the right-hand side:
+\begin{equation}
+\label{eq:fano-step2}
+    H_{\mathrm{e}}(\Theta,E\mid X^n)
+    = H_{\mathrm{e}}(E\mid X^n) + H_{\mathrm{e}}(\Theta\mid E, X^n).
+\end{equation}
+We upper bound each term.
+
+\textbf{1) Bound $H_{\mathrm{e}}(E\mid X^n)$.}
+Since conditioning reduces entropy, $H_{\mathrm{e}}(E\mid X^n)\le H_{\mathrm{e}}(E)$.
+Because $E$ is Bernoulli with mean $P_e$, we have $H_{\mathrm{e}}(E)\le \ln 2$ (the maximum entropy of a Bernoulli).
+Thus
+\begin{equation}
+\label{eq:fano-step3}
+    H_{\mathrm{e}}(E\mid X^n) \le \ln 2.
+\end{equation}
+
+\textbf{2) Bound $H_{\mathrm{e}}(\Theta\mid E, X^n)$.}
+Condition on $E$.
+If $E=0$, then $\hat\Theta=\Theta$ so $H_{\mathrm{e}}(\Theta\mid E=0,X^n)=0$.
+If $E=1$, then $\Theta$ can be any of the other $M-1$ values, so trivially
+\(H_{\mathrm{e}}(\Theta\mid E=1,X^n)\le \ln(M-1)\).
+Therefore,
+\begin{equation}
+\label{eq:fano-step4}
+    H_{\mathrm{e}}(\Theta\mid E,X^n)
+    = \Pr{E=0}\,H_{\mathrm{e}}(\Theta\mid E=0,X^n) + \Pr{E=1}\,H_{\mathrm{e}}(\Theta\mid E=1,X^n)
+    \le P_e\,\ln(M-1).
+\end{equation}
+
+Combining \eqref{eq:fano-step1}--\eqref{eq:fano-step4} yields
+\begin{equation}
+    H_{\mathrm{e}}(\Theta\mid X^n)
+    \le \ln 2 + P_e\,\ln(M-1)
+    \le \ln 2 + P_e\,\ln M.
+\end{equation}
+Rearrange to obtain
+\begin{equation}
+\label{eq:fano-step5}
+    P_e \ge \frac{H_{\mathrm{e}}(\Theta\mid X^n) - \ln 2}{\ln M}.
+\end{equation}
+Finally, use the mutual information identity
+\(\MInat{\Theta}{X^n} = H_{\mathrm{e}}(\Theta) - H_{\mathrm{e}}(\Theta\mid X^n)\)
+and the fact that $\Theta$ is uniform so $H_{\mathrm{e}}(\Theta)=\ln M$.
+Thus $H_{\mathrm{e}}(\Theta\mid X^n)=\ln M-\MInat{\Theta}{X^n}$.
+Plugging into \eqref{eq:fano-step5} gives \eqref{eq:fano}.
+\end{proof}
+
+\subsection{Upper bounding $I(\Theta;X^n)$ by KL averages}
+
+To turn Fano's inequality into sample complexity lower bounds, we need tractable upper bounds on $\MInat{\Theta}{X^n}$.
+
+\begin{lemma}[Mutual information bounded by average pairwise KL]
+\label{lem:mi-pairwise-kl}
+Let $\Theta\sim\mathrm{Unif}\{1,\dots,M\}$ and $X^n\mid(\Theta=\theta)\sim P_\theta^{\otimes n}$.
+Then
+\begin{equation}
+\label{eq:mi-pairwise-kl}
+    \MInat{\Theta}{X^n}
+    \le \frac{1}{M^2}\sum_{\theta=1}^M\sum_{\theta'=1}^M \KLnat{P_\theta^{\otimes n}}{P_{\theta'}^{\otimes n}}
+    = \frac{n}{M^2}\sum_{\theta,\theta'} \KLnat{P_\theta}{P_{\theta'}}.
+\end{equation}
+In particular, if $\KLnat{P_\theta}{P_{\theta'}}\le \alpha$ for all $\theta\neq\theta'$, then $\MInat{\Theta}{X^n}\le n\alpha$.
+\end{lemma}
+\begin{proof}
+Let $\bar P^{(n)}$ be the mixture distribution of $X^n$:
+\begin{equation}
+    \bar P^{(n)} \coloneqq \frac1M\sum_{\theta=1}^M P_\theta^{\otimes n}.
+\end{equation}
+By definition of mutual information,
+\begin{equation}
+\label{eq:mi-mixture}
+    \MInat{\Theta}{X^n} = \E_{\Theta}\Big[\KLnat{P_\Theta^{\otimes n}}{\bar P^{(n)}}\Big]
+    = \frac1M\sum_{\theta=1}^M \KLnat{P_\theta^{\otimes n}}{\bar P^{(n)}}.
+\end{equation}
+KL divergence is convex in its second argument, so for each fixed $\theta$,
+\begin{equation}
+    \KLnat{P_\theta^{\otimes n}}{\bar P^{(n)}}
+    = \KLnat{P_\theta^{\otimes n}}{\frac1M\sum_{\theta'} P_{\theta'}^{\otimes n}}
+    \le \frac1M\sum_{\theta'} \KLnat{P_\theta^{\otimes n}}{P_{\theta'}^{\otimes n}}.
+\end{equation}
+Substitute this into \eqref{eq:mi-mixture} to obtain the first inequality in \eqref{eq:mi-pairwise-kl}.
+For product measures, KL adds across independent samples:
+\(\KLnat{P_\theta^{\otimes n}}{P_{\theta'}^{\otimes n}} = n\KLnat{P_\theta}{P_{\theta'}}\).
+The final bound $\MInat{\Theta}{X^n}\le n\alpha$ follows immediately.
+\end{proof}
+
+\subsection{A clean sample complexity lower bound}
+
+\begin{corollary}[Fano lower bound with KL control]
+\label{cor:fano-sample}
+Under the same model, suppose $\KLnat{P_\theta}{P_{\theta'}}\le \alpha$ for all $\theta\neq\theta'$.
+Then for any estimator $\hat\Theta$,
+\begin{equation}
+    P_e \ge 1 - \frac{n\alpha + \ln 2}{\ln M}.
+\end{equation}
+In particular, if an algorithm achieves $P_e\le 1/2$, then necessarily
+\begin{equation}
+    n \ge \frac{\frac12\ln M - \ln 2}{\alpha}.
+\end{equation}
+\end{corollary}
+\begin{proof}
+Combine Theorem~\ref{thm:fano} and Lemma~\ref{lem:mi-pairwise-kl}.
+\end{proof}
+
+\begin{remark}[How this is used in learning theory]
+To lower bound the sample size needed for a learning problem, one often:
+\begin{enumerate}[leftmargin=2em]
+    \item Constructs $M$ well-separated ``hard'' hypotheses or parameters $\{\theta\}$.
+    \item Shows that any algorithm that learns must (implicitly) identify $\Theta$.
+    \item Upper bounds the per-sample KL divergence between the induced data distributions.
+    \item Applies Corollary~\ref{cor:fano-sample}.
+\end{enumerate}
+This yields minimax lower bounds and impossibility results.
+\end{remark}
+
+\section{Information Bottleneck as Rate--Distortion}
+\label{sec:ib}
+
+The \emph{information bottleneck} (IB) formalizes representation learning as a tradeoff between
+(i) compressing the input $X$ and (ii) preserving information about a target $Y$.
+It is also a direct bridge between learning objectives and rate--distortion theory.
+
+\subsection{Problem definition}
+
+Let $(X,Y)\sim p(x,y)$ be a pair of discrete random variables.
+A (stochastic) representation is another random variable $T$ generated from $X$ via an encoder $p(t\mid x)$.
+We assume the Markov condition
+\begin{equation}
+    T - X - Y,
+\end{equation}
+meaning $p(t\mid x,y)=p(t\mid x)$.
+
+\begin{definition}[Information bottleneck tradeoff]
+The \emph{compression} of $X$ into $T$ is measured by $\MI{X}{T}$.
+The \emph{relevance} of $T$ for predicting $Y$ is measured by $\MI{T}{Y}$.
+\end{definition}
+
+There are two equivalent formulations.
+
+\begin{definition}[Constrained IB problem]
+For a target relevance level $R\in[0,\MI{X}{Y}]$, the constrained IB problem is
+\begin{equation}
+\label{eq:ib-constrained}
+    \min_{p(t\mid x)}\ \MI{X}{T}
+    \qquad \text{subject to}\qquad
+    \MI{T}{Y} \ge R,
+    \quad T-X-Y.
+\end{equation}
+\end{definition}
+
+\begin{definition}[Lagrangian IB problem]
+For $\beta\ge 0$, the Lagrangian IB problem is
+\begin{equation}
+\label{eq:ib-lagrangian}
+    \min_{p(t\mid x)}\ \MI{X}{T} - \beta\,\MI{T}{Y}
+    \qquad \text{subject to}\qquad T-X-Y.
+\end{equation}
+\end{definition}
+
+\begin{remark}
+As in rate--distortion theory, the constrained and Lagrangian forms are related by Lagrange multipliers:
+for every attainable constraint level $R$ there exists a $\beta$ such that a solution of \eqref{eq:ib-lagrangian} also solves \eqref{eq:ib-constrained}.
+We will work mainly with \eqref{eq:ib-lagrangian}.
+\end{remark}
+
+\subsection{An IB ``distortion'' identity}
+
+The bridge to rate--distortion emerges once we identify the right distortion measure.
+
+\begin{lemma}[Conditional information equals an expected KL distortion]
+\label{lem:ib-distortion}
+Assume $T-X-Y$.
+Then
+\begin{equation}
+\label{eq:ib-distortion}
+    I(X;Y\mid T)
+    = \Esub{(X,T)}{\KL{p_{Y\mid X}(\cdot\mid X)}{p_{Y\mid T}(\cdot\mid T)}}
+    = \sum_{x,t} p(x,t)\sum_{y} p(y\mid x)\log\frac{p(y\mid x)}{p(y\mid t)}.
+\end{equation}
+Moreover, by the chain rule,
+\begin{equation}
+\label{eq:ib-chain}
+    I(X;Y\mid T) = I(X;Y) - I(T;Y).
+\end{equation}
+\end{lemma}
+\begin{proof}
+We prove \eqref{eq:ib-distortion}.
+By definition,
+\begin{equation}
+    I(X;Y\mid T)
+    = \E\Big[\log\frac{p(Y\mid X,T)}{p(Y\mid T)}\Big].
+\end{equation}
+Under the Markov condition $T-X-Y$, we have $p(y\mid x,t)=p(y\mid x)$.
+Therefore
+\begin{equation}
+    I(X;Y\mid T)
+    = \E\Big[\log\frac{p(Y\mid X)}{p(Y\mid T)}\Big]
+    = \Esub{(X,T)}{\Esub{Y\sim p(\cdot\mid X)}{\log\frac{p(Y\mid X)}{p(Y\mid T)}}}
+    = \Esub{(X,T)}{\KL{p_{Y\mid X}(\cdot\mid X)}{p_{Y\mid T}(\cdot\mid T)}}.
+\end{equation}
+This gives \eqref{eq:ib-distortion}.
+
+For \eqref{eq:ib-chain}, apply the chain rule to $(T,X)$:
+\begin{equation}
+    I(X;Y) = I(X,T;Y) = I(T;Y) + I(X;Y\mid T),
+\end{equation}
+where we used $I(X;Y\mid T)$ is defined unconditionally.
+Rearrange.
+\end{proof}
+
+\subsection{IB as a rate--distortion problem}
+
+Define a distortion function between $x$ and $t$:
+\begin{equation}
+\label{eq:ib-distortion-def}
+    d(x,t) \coloneqq \KL{p_{Y\mid X}(\cdot\mid x)}{p_{Y\mid T}(\cdot\mid t)}.
+\end{equation}
+This distortion measures how well $t$ preserves the label-relevant conditional distribution.
+
+\begin{theorem}[IB Lagrangian equals rate--distortion with KL distortion]
+\label{thm:ib-rd}
+Assume $T-X-Y$.
+Then minimizing the IB Lagrangian \eqref{eq:ib-lagrangian} is equivalent (up to an additive constant) to a rate--distortion objective:
+\begin{equation}
+\label{eq:ib-rd-equivalence}
+    \MI{X}{T} - \beta\,\MI{T}{Y}
+    = \MI{X}{T} + \beta\,\E[d(X,T)] - \beta\,\MI{X}{Y}.
+\end{equation}
+In particular, since $\MI{X}{Y}$ does not depend on the encoder $p(t\mid x)$, the minimizers of \eqref{eq:ib-lagrangian} coincide with the minimizers of
+\begin{equation}
+\label{eq:ib-rd-form}
+    \min_{p(t\mid x)}\ \MI{X}{T} + \beta\,\E[d(X,T)].
+\end{equation}
+\end{theorem}
+\begin{proof}
+By Lemma~\ref{lem:ib-distortion}, $\E[d(X,T)] = I(X;Y\mid T) = I(X;Y)-I(T;Y)$.
+Substitute into the right-hand side:
+\begin{align}
+\MI{X}{T} + \beta\,\E[d(X,T)] - \beta\,\MI{X}{Y}
+&= \MI{X}{T} + \beta\,(\MI{X}{Y}-\MI{T}{Y}) - \beta\,\MI{X}{Y}\\
+&= \MI{X}{T} - \beta\,\MI{T}{Y},
+\end{align}
+which is exactly \eqref{eq:ib-rd-equivalence}.
+Since $\MI{X}{Y}$ is constant in $p(t\mid x)$, minimizing \eqref{eq:ib-lagrangian} is equivalent to minimizing \eqref{eq:ib-rd-form}.
+\end{proof}
+
+\subsection{Self-consistent equations (IB ``Blahut--Arimoto'' updates)}
+
+We now derive the stationarity conditions for the Lagrangian IB problem.
+Throughout we assume finite alphabets and optimize over conditional pmfs $p(t\mid x)$.
+
+\begin{theorem}[IB fixed-point equations]
+\label{thm:ib-fixed-point}
+Fix $\beta\ge 0$.
+A stationary point of \eqref{eq:ib-lagrangian} under the Markov constraint $T-X-Y$ satisfies
+\begin{equation}
+\label{eq:ib-update}
+    p(t\mid x)
+    = \frac{p(t)\,\exp\big(-\beta\,\KLnat{p_{Y\mid X}(\cdot\mid x)}{p_{Y\mid T}(\cdot\mid t)}\big)}{Z_\beta(x)},
+\end{equation}
+where $Z_\beta(x)$ is the normalizing constant making $\sum_t p(t\mid x)=1$, and
+\begin{equation}
+\label{eq:ib-consistency}
+    p(t) = \sum_x p(x)p(t\mid x),
+    \qquad
+    p(y\mid t) = \sum_x p(y\mid x)\,p(x\mid t),
+    \qquad
+    p(x\mid t)=\frac{p(x)p(t\mid x)}{p(t)}.
+\end{equation}
+\end{theorem}
+\begin{proof}
+We derive the optimality condition by Lagrange multipliers.
+Write the IB Lagrangian (using natural logs for convenience in the exponential form) as
+\begin{equation}
+\label{eq:ib-L}
+    \cL \coloneqq I_{\mathrm{e}}(X;T) - \beta I_{\mathrm{e}}(T;Y) + \sum_x \lambda(x)\Big(\sum_t p(t\mid x)-1\Big),
+\end{equation}
+where $I_{\mathrm{e}}$ denotes mutual information with natural logs.
+(Stationary points are unchanged by switching between bits and nats.)
+
+We express $I_{\mathrm{e}}(X;T)$ in terms of $p(t\mid x)$:
+\begin{equation}
+\label{eq:IXT}
+    I_{\mathrm{e}}(X;T) = \sum_{x,t} p(x)p(t\mid x)\ln\frac{p(t\mid x)}{p(t)}.
+\end{equation}
+Similarly,
+\begin{equation}
+\label{eq:ITY}
+    I_{\mathrm{e}}(T;Y) = \sum_{t,y} p(t,y)\ln\frac{p(y\mid t)}{p(y)},
+\end{equation}
+where $p(t,y)=\sum_x p(x,y)p(t\mid x)$.
+
+\textbf{Step 1: Functional derivative of $I_{\mathrm{e}}(X;T)$.}
+First rewrite \eqref{eq:IXT} in a form where the dependence on $p(t\mid x)$ is explicit:
+\begin{align}
+    I_{\mathrm{e}}(X;T)
+    &= \sum_{x,t} p(x)p(t\mid x)\ln p(t\mid x)
+       - \sum_{x,t} p(x)p(t\mid x)\ln p(t)\\
+    &= \sum_{x,t} p(x)p(t\mid x)\ln p(t\mid x)
+       - \sum_t p(t)\ln p(t),
+\end{align}
+where $p(t)=\sum_x p(x)p(t\mid x)$.
+
+Fix $(x,t)$ and differentiate with respect to $p(t\mid x)$ (treating the remaining variables as constants).
+Since $\frac{d}{du}(u\ln u)=\ln u+1$ and $\frac{\partial}{\partial p(t\mid x)}p(t)=p(x)$, we obtain
+\begin{align}
+    \frac{\partial}{\partial p(t\mid x)}\sum_{x',t'} p(x')p(t'\mid x')\ln p(t'\mid x')
+    &= p(x)\big(\ln p(t\mid x)+1\big),\\
+    \frac{\partial}{\partial p(t\mid x)}\Big(-\sum_{t'} p(t')\ln p(t')\Big)
+    &= -p(x)\big(\ln p(t)+1\big).
+\end{align}
+Subtracting yields
+\begin{equation}
+\label{eq:var-IXT}
+    \frac{\partial}{\partial p(t\mid x)} I_{\mathrm{e}}(X;T)
+    = p(x)\Big(\ln p(t\mid x) - \ln p(t)\Big)
+    = p(x)\ln\frac{p(t\mid x)}{p(t)}.
+\end{equation}
+Any additive term depending only on $x$ (not on $t$) can be absorbed into the Lagrange multiplier $\lambda(x)$.
+
+\textbf{Step 2: Functional derivative of $I_{\mathrm{e}}(T;Y)$.}
+Start from
+\begin{equation}
+    I_{\mathrm{e}}(T;Y)
+    = \sum_{t,y} p(t,y)\ln\frac{p(t,y)}{p(t)p(y)}
+    = \sum_{t,y} p(t,y)\ln p(t,y) - \sum_t p(t)\ln p(t) - \sum_y p(y)\ln p(y).
+\end{equation}
+Here $p(y)$ is fixed because the joint $p(x,y)$ is fixed.
+Also $p(t,y)=\sum_{x'} p(x',y)p(t\mid x')$ and $p(t)=\sum_{x'} p(x')p(t\mid x')$.
+Therefore
+\(\frac{\partial}{\partial p(t\mid x)}p(t,y)=p(x,y)\) and \(\frac{\partial}{\partial p(t\mid x)}p(t)=p(x)\).
+Using $\frac{d}{du}(u\ln u)=\ln u+1$ again, we get
+\begin{align}
+    \frac{\partial}{\partial p(t\mid x)}\sum_{t',y} p(t',y)\ln p(t',y)
+    &= \sum_y p(x,y)\big(\ln p(t,y)+1\big),\\
+    \frac{\partial}{\partial p(t\mid x)}\Big(-\sum_{t'} p(t')\ln p(t')\Big)
+    &= -p(x)\big(\ln p(t)+1\big),\\
+    \frac{\partial}{\partial p(t\mid x)}\Big(-\sum_y p(y)\ln p(y)\Big)
+    &= 0.
+\end{align}
+Adding these pieces and using $\sum_y p(x,y)=p(x)$ shows the ``$+1$'' terms cancel, leaving
+\begin{align}
+    \frac{\partial}{\partial p(t\mid x)} I_{\mathrm{e}}(T;Y)
+    &= \sum_y p(x,y)\ln p(t,y) - p(x)\ln p(t).
+\end{align}
+Finally, use $p(t,y)=p(t)p(y\mid t)$ to write $\ln p(t,y)=\ln p(t)+\ln p(y\mid t)$.
+Then
+\begin{align}
+    \sum_y p(x,y)\ln p(t,y)
+    &= \sum_y p(x,y)\big(\ln p(t)+\ln p(y\mid t)\big)
+     = p(x)\ln p(t) + \sum_y p(x,y)\ln p(y\mid t).
+\end{align}
+Subtracting $p(x)\ln p(t)$ yields
+\begin{equation}
+\label{eq:var-ITY}
+    \frac{\partial}{\partial p(t\mid x)} I_{\mathrm{e}}(T;Y)
+    = \sum_y p(x,y)\ln p(y\mid t)
+    = p(x)\sum_y p(y\mid x)\ln p(y\mid t).
+\end{equation}
+Replacing $\ln p(y\mid t)$ by $\ln\frac{p(y\mid t)}{p(y)}$ only adds the term
+\(-p(x)\sum_y p(y\mid x)\ln p(y)\), which depends on $x$ but not on $t$ and can be absorbed into $\lambda(x)$.
+
+\textbf{Step 3: Stationarity.}
+Set the derivative of \eqref{eq:ib-L} with respect to $p(t\mid x)$ to zero:
+\begin{equation}
+    0 = p(x)\ln\frac{p(t\mid x)}{p(t)}
+        - \beta\,p(x)\sum_y p(y\mid x)\ln\frac{p(y\mid t)}{p(y)}
+        + \lambda(x).
+\end{equation}
+Divide by $p(x)>0$ (restrict to $x$ in the support) and rearrange:
+\begin{equation}
+\label{eq:ib-stationary}
+    \ln\frac{p(t\mid x)}{p(t)}
+    = \beta\sum_y p(y\mid x)\ln\frac{p(y\mid t)}{p(y)} - \tilde\lambda(x),
+\end{equation}
+where $\tilde\lambda(x)\coloneqq \lambda(x)/p(x)$.
+Now separate the $t$-dependent part.
+Write
+\begin{equation}
+    \sum_y p(y\mid x)\ln\frac{p(y\mid t)}{p(y)}
+    = \sum_y p(y\mid x)\ln p(y\mid t) + c(x),
+\end{equation}
+where $c(x)\coloneqq -\sum_y p(y\mid x)\ln p(y)$ is independent of $t$.
+Also,
+\begin{equation}
+    -\KLnat{p_{Y\mid X}(\cdot\mid x)}{p_{Y\mid T}(\cdot\mid t)}
+    = \sum_y p(y\mid x)\ln p(y\mid t) + c'(x),
+\end{equation}
+where $c'(x)\coloneqq -\sum_y p(y\mid x)\ln p(y\mid x)$ is again independent of $t$.
+Therefore, the $t$-dependent term in \eqref{eq:ib-stationary} can be rewritten (up to an $x$-dependent constant) as
+\(-\beta\KLnat{p_{Y\mid X}(\cdot\mid x)}{p_{Y\mid T}(\cdot\mid t)}\).
+Absorbing all $x$-only constants into the normalization, we obtain
+\begin{equation}
+    \ln\frac{p(t\mid x)}{p(t)} = -\beta\,\KLnat{p_{Y\mid X}(\cdot\mid x)}{p_{Y\mid T}(\cdot\mid t)} - \ln Z_\beta(x).
+\end{equation}
+Exponentiating yields \eqref{eq:ib-update}.
+The consistency relations \eqref{eq:ib-consistency} are simply the definitions of $p(t)$, $p(y\mid t)$, and Bayes' rule.
+\end{proof}
+
+\begin{remark}[IB algorithm]
+The fixed-point equations \eqref{eq:ib-update}--\eqref{eq:ib-consistency} suggest an iterative algorithm:
+start from an initial encoder $p^{(0)}(t\mid x)$, compute $p^{(k)}(t)$ and $p^{(k)}(y\mid t)$ via \eqref{eq:ib-consistency}, and then update the encoder by \eqref{eq:ib-update}.
+This is the information bottleneck analogue of the Blahut--Arimoto algorithm for rate--distortion.
+\end{remark}
+
+\section*{Suggested Exercises}
+\begin{exercise}[MI bound for bounded loss]
+Assume $\ell(w,Z)\in[0,1]$.
+Prove Corollary~\ref{cor:mi-gen-bounded} directly from Theorem~\ref{thm:mi-gen} by showing that $\ell(w,Z)$ is $1/2$-sub-Gaussian.
+\end{exercise}
+
+\begin{exercise}[Occam bound via union bound]
+Give a proof of Corollary~\ref{cor:occam} that does not use PAC-Bayes.
+Hint: allocate failure probabilities $\delta_h\propto 2^{-\ell(h)}$ and apply Hoeffding's inequality + union bound.
+\end{exercise}
+
+\begin{exercise}[Using Fano]
+Construct a family of $M$ distributions $\{P_\theta\}$ for which $\KLnat{P_\theta}{P_{\theta'}}\le \alpha$ and interpret Corollary~\ref{cor:fano-sample} as a sample complexity lower bound.
+\end{exercise}
+
+\begin{exercise}[IB as RD]
+Verify the equivalence \eqref{eq:ib-rd-equivalence} by expanding $I(X;T)$ and $I(T;Y)$ and simplifying.
+\end{exercise}
+
+\end{document}

@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lossy Compression 4 — TURBOQUANT</title>
+<link rel="stylesheet" href="../../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.l4-algo {
+  background: var(--light);
+  border: 1px solid var(--slate);
+  border-left: 3px solid var(--yonsei-blue);
+  border-radius: 0 10px 10px 0;
+  padding: 16px 22px;
+}
+.l4-algo-title {
+  font-weight: 600;
+  color: var(--yonsei-blue);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.l4-algo ol { padding-left: 24px; margin: 0; }
+.l4-algo li { margin-bottom: 6px; line-height: 1.5; }
+.l4-kv-flow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin: 22px 0 8px;
+  font-size: 1.45rem;
+}
+.l4-kv-flow .node {
+  background: var(--light);
+  border: 1px solid var(--slate);
+  border-left: 3px solid var(--yonsei-blue);
+  border-radius: 0 8px 8px 0;
+  padding: 8px 14px;
+  font-weight: 500;
+}
+.l4-kv-flow .arr { color: var(--gray-text); font-size: 1.55rem; }
+.l4-tok {
+  display: inline-block;
+  height: 26px;
+  width: 24px;
+  background: var(--yonsei-blue);
+  border-radius: 3px;
+  margin: 0 2px;
+  vertical-align: middle;
+}
+.l4-bar {
+  display: inline-block;
+  height: 26px;
+  width: 240px;
+  background: var(--yonsei-blue);
+  border-radius: 4px;
+  vertical-align: middle;
+}
+</style>
+</head>
+<body data-brand-logo="../../../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- TITLE -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lossy Compression · Lecture 4 of 4</div>
+  <h1>TURBOQUANT:<br>Online VQ via Random Rotations</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Rotate, scalar-quantize, sketch the residual</p>
+  <p style="font-weight:500;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Information Theory · 2026</p>
+  <div class="cite">Daliri, Musco, Sinha, Sherman, "TurboQuant: Online Vector Quantization with Optimal Distortion", arXiv:2504.19874 (2025).</div>
+</div>
+
+<!-- TOC -->
+<div class="slide">
+  <h2>Contents</h2><div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Setup and rotation idea</div>
+      <div class="toc-sub">Sphere coordinate density, two distortions</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">MSE TURBOQUANT</div>
+      <div class="toc-sub">Lloyd&ndash;Max on $f_d$, $4^{-b}$ exponent</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Lower bound</div>
+      <div class="toc-sub">Sphere SLB and Yao's minimax</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Inner-product bias</div>
+      <div class="toc-sub">MSE quantizer shrinks projections by $2/\pi$</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">QJL and IP TURBOQUANT</div>
+      <div class="toc-sub">One-bit unbiased sketch, two-stage estimator</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div><div class="toc-rule"></div>
+      <div><div class="toc-label">KV cache</div>
+      <div class="toc-sub">Online, data-oblivious quantization</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- KV CACHE — MOTIVATION -->
+<div class="slide">
+  <h2>Self-Attention: Query, Key, Value</h2><div class="divider"></div>
+  <div style="display:flex; gap:28px; align-items:flex-start;">
+    <div style="flex: 1.05;">
+      <p style="margin-top:0;">Each token $s$ projects its hidden state $h_s$ to three vectors:</p>
+      <div class="math-block" style="margin: 6px 0;">$$q_s = W_Q h_s,\;\; k_s = W_K h_s,\;\; v_s = W_V h_s.$$</div>
+      <p style="margin: 6px 0;">Query scores past keys; softmax-weighted sum reads past values:</p>
+      <div class="math-block" style="margin: 6px 0;">$$\alpha_{t,s} \propto \exp\!\bigl(\langle q_t, k_s\rangle/\sqrt d\bigr),\quad o_t = \sum_{s \le t}\alpha_{t,s}\,v_s.$$</div>
+    </div>
+    <div style="flex: 0.95; display:flex; flex-direction:column; align-items:center; margin-top: -4px;">
+      <img src="qkv.png" alt="Self-attention Q/K/V diagram" style="width:100%; max-width: 420px; max-height: 520px; object-fit:contain; display:block;">
+    </div>
+  </div>
+  <div class="cite">Figure: Sergey Levine, CS182sp21 &mdash; <a href="https://cs182sp21.github.io/" style="color: inherit;">cs182sp21.github.io</a>.</div>
+</div>
+
+<div class="slide">
+  <h2>What Is the KV Cache?</h2><div class="divider"></div>
+  <p>Decoder runs token-by-token.</p>
+  <p>Past keys and values <strong>never change</strong> &mdash; cache them.</p>
+  <p>At step $t{+}1$: compute only $q_{t+1}, k_{t+1}, v_{t+1}$; reuse the rest.</p>
+  <div class="l4-kv-flow">
+    <span class="node">$K_1, V_1$</span>
+    <span class="node">$K_2, V_2$</span>
+    <span class="node">$K_3, V_3$</span>
+    <span class="arr">$\cdots$</span>
+    <span class="node">$K_t, V_t$</span>
+    <span class="node" style="border-left-color: var(--gray-text); color: var(--gray-text); border-style: dashed;">$K_{t+1}, V_{t+1}$&nbsp;new</span>
+  </div>
+  <p>Cache size: $\;2 \cdot L \cdot H \cdot d \cdot T$ scalars.</p>
+  <p>70B model @ $T{=}128$K $\;\Rightarrow\;$ $\sim 50$ GB.</p>
+</div>
+
+<div class="slide">
+  <h2>KV Cache vs Weight Quantization</h2><div class="divider"></div>
+  <p>Two compression problems, two different bottlenecks.</p>
+  <div class="grid-2" style="margin-top: 10px;">
+    <div class="card">
+      <h3 style="color:var(--blue-light);">Weights &mdash; Lecture 3</h3>
+      <div style="text-align:center; margin: 14px 0 4px;">
+        <span class="l4-bar"></span>
+      </div>
+      <p style="text-align:center; color:var(--gray-text); margin: 0 0 10px;">$\sim 10^{10}$ params, fixed</p>
+      <p><strong>Storage</strong>: disk + load-time HBM.</p>
+      <p>Quantize <strong>once, offline</strong>, with calibration.</p>
+      <p>$\Rightarrow$ QUIP / QUIP#.</p>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--blue-light);">KV cache &mdash; Lecture 4</h3>
+      <div style="text-align:center; margin: 14px 0 4px;">
+        <span class="l4-tok"></span><span class="l4-tok"></span><span class="l4-tok"></span><span class="l4-tok"></span><span class="l4-tok"></span><span class="l4-tok"></span>&nbsp;<span style="color: var(--gray-text);">$\cdots$</span>
+      </div>
+      <p style="text-align:center; color:var(--gray-text); margin: 0 0 10px;">grows linearly in $T$</p>
+      <p><strong>Memory</strong>: lives in HBM at decode.</p>
+      <p>Quantize <strong>per token, online</strong>, no calibration.</p>
+      <p>$\Rightarrow$ TURBOQUANT.</p>
+    </div>
+  </div>
+  <div class="highlight">Different bottleneck $\Rightarrow$ different algorithm.</div>
+</div>
+
+<div class="slide">
+  <h2>Compression Constraints</h2><div class="divider"></div>
+  <p>Long context ($32\text{K}, 128\text{K}, 1\text{M}$ tokens) $\Rightarrow$ KV $>$ GPU memory.</p>
+  <ul>
+    <li><strong>Online</strong> &mdash; quantize each $K_s, V_s$ as it arrives, no second look.</li>
+    <li><strong>Data-oblivious</strong> &mdash; one codebook, no per-model calibration.</li>
+    <li><strong>Attention-preserving</strong> &mdash; what matters: $\langle q_t, k_s\rangle$, not $\|k - \widetilde k\|$.</li>
+  </ul>
+  <div class="highlight">Lossy scalar quantization on rotated coordinates &mdash; TURBOQUANT.</div>
+</div>
+
+
+<!-- ════ PART 01 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Setup and the Rotation Idea</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Rotation alone produces a known coordinate distribution</p>
+</div>
+
+<div class="slide">
+  <h2>Why Scalar Quantization Fails</h2><div class="divider"></div>
+  <ul>
+    <li>Round each coordinate independently.</li>
+    <li>Implicit assumption: <strong>energy spread evenly</strong>.</li>
+    <li>Reality (KV, embeddings): a few outliers dominate.</li>
+    <li>Low-bit SQ burns resolution on outliers.</li>
+  </ul>
+  <div class="highlight">Random rotation flattens energy &mdash; every coordinate $\sim 1/\sqrt{d}$, same law.</div>
+</div>
+
+<div class="slide">
+  <h2>Random Rotation Creates a Known Law</h2><div class="divider"></div>
+  <p>Haar-uniform $\Pi \in \mathbb{R}^{d\times d}$. Any fixed $x \in S^{d-1}$:</p>
+  <div class="math-block">$$Y \;=\; \Pi x \;\sim\; \mathrm{Unif}(S^{d-1}), \qquad \sqrt{d}\,Y_j \;\Rightarrow\; \mathcal{N}(0, 1).$$</div>
+  <p><strong>Why Gaussian-like.</strong> $\Pi$ Haar $\Rightarrow$ $\Pi x$ uniform on the sphere.</p>
+  <p>Marginal of one coordinate $=$ classical sphere&ndash;Gaussian duality (Poincar&eacute;'s lemma).</p>
+  <div class="highlight">Law depends only on $\|x\| = 1$. Algorithm is data-oblivious.</div>
+</div>
+
+<div class="slide">
+  <h2>Picture: Slicing the Sphere</h2><div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns: 0.9fr 1.1fr; gap: 28px; align-items: center;">
+    <div style="position: relative; max-width: 320px; margin: 0 auto;">
+      <svg viewBox="0 0 360 320" style="width:100%; display: block;">
+        <circle cx="180" cy="170" r="130" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+        <line x1="50" y1="170" x2="310" y2="170" stroke="#999" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="180" y1="30" x2="180" y2="310" stroke="#999" stroke-width="1" stroke-dasharray="2,2"/>
+        <line x1="62" y1="110" x2="298" y2="110" stroke="#666" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="66" y1="110" x2="294" y2="110" stroke="#003876" stroke-width="4"/>
+        <line x1="180" y1="110" x2="293" y2="110" stroke="#d94040" stroke-width="2.5"/>
+        <circle cx="180" cy="110" r="3.5" fill="#003876"/>
+        <line x1="180" y1="170" x2="180" y2="110" stroke="#1a5296" stroke-width="2.5"/>
+      </svg>
+      <span style="position: absolute; left: 53%; top: 39%; font-size: 1.3rem; font-weight: 700; color: var(--yonsei-blue);">$t$</span>
+      <span style="position: absolute; left: 79%; top: 28%; font-size: 1.05rem; font-weight: 700; color: var(--warn);">$\sqrt{1-t^2}$</span>
+      <span style="position: absolute; left: 50%; top: 99%; transform: translate(-50%,-50%); font-size: 1.1rem; font-weight: 700; color: var(--yonsei-blue);">$S^{d-1}$</span>
+      <span style="position: absolute; left: 52%; top: 5%; font-size: 1.0rem; font-weight: 600; color: var(--gray-text);">$Y_1$ axis</span>
+    </div>
+    <div>
+      <p><strong>Fix $Y_1 = t$.</strong></p>
+      <p>Remaining $d{-}1$ coordinates $\Rightarrow$ a $(d{-}2)$-sphere of radius $\sqrt{1-t^2}$.</p>
+      <p>Slice volume $\propto (1 - t^2)^{(d-2)/2}$; Jacobian adds one $\sqrt{1-t^2}$:</p>
+      <div class="math-block" style="margin: 8px 0;">$$f_d(t) \;\propto\; (1 - t^2)^{(d-3)/2}.$$</div>
+      <p>Mass concentrates near $t = 0$ — coordinates are <strong>small</strong>.</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Lemma &mdash; Coordinate of a Sphere Point</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Lemma 1.</h3>
+    <p>$Y \sim \mathrm{Unif}(S^{d-1})$. Marginal density of each $Y_j$:</p>
+    <div class="math-block">$$f_d(t) \;=\; \dfrac{\Gamma(d/2)}{\sqrt{\pi}\,\Gamma((d-1)/2)}\,(1 - t^2)^{(d-3)/2}, \quad t \in [-1, 1].$$</div>
+    <p>Large $d$: $\;\sqrt{d}\,Y_j \;\Rightarrow\; \mathcal{N}(0, 1)$.</p>
+  </div>
+  <p><em>(Picture above gives the slice argument; Gaussian limit derived in the note file.)</em></p>
+</div>
+
+<div class="slide">
+  <h2>Two Metrics, Two Quantizers</h2><div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="color:var(--blue-light);">MSE distortion</h3>
+      <div class="math-block" style="margin: 6px 0;">$$D_{\mathrm{mse}} \;=\; \mathbb{E}\|x - \widetilde x\|^2.$$</div>
+      <p>Reconstruct the vector.</p>
+      <p><strong>Lloyd&ndash;Max on $f_d$</strong>: scalar codebook for the rotated-coord density.</p>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--blue-light);">Inner-product distortion</h3>
+      <div class="math-block" style="margin: 6px 0;">$$D_{\mathrm{prod}} \;=\; \mathbb{E}\bigl(\langle y, x\rangle - \langle y, \widetilde x\rangle\bigr)^{\!2}.$$</div>
+      <p>Reconstruct linear functionals.</p>
+      <p><strong>QJL random sketch</strong>: $1$ bit/coord, unbiased projection.</p>
+    </div>
+  </div>
+  <div class="highlight">MSE-optimal codebook is <strong>biased</strong> for inner products. Need a separate design.</div>
+</div>
+
+<!-- ════ PART 02 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>MSE TURBOQUANT</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Target $4^{-b}$ (Gaussian limit), algorithm, anchor, theorem</p>
+</div>
+
+<div class="slide">
+  <h2>Target: $\;4^{-b}$ &mdash; the Gaussian Limit</h2><div class="divider"></div>
+  <p>What is the best MSE exponent we can hope for at $b$ bits/coordinate?</p>
+  <p>Lemma 1: each rotated coordinate $\;Y_j \;\dot\sim\; \mathcal{N}(0, 1/d)$.</p>
+  <p>Gaussian rate$\,$&ndash;$\,$distortion under squared error (Lecture 2):</p>
+  <div class="math-block">$$\sigma^2 = \tfrac{1}{d}, \;\; R = b \quad\Longrightarrow\quad D(R) \;=\; \sigma^2 \cdot 2^{-2R} \;=\; \tfrac{1}{d}\cdot 4^{-b}.$$</div>
+  <p>Sum over $d$ coordinates: $\;D_{\mathrm{mse}}(b) \;\asymp\; 4^{-b}$.</p>
+  <div class="highlight">$4^{-b}$ is the Gaussian limit (Shannon LB, Lecture 2). TURBOQUANT must hit it.</div>
+</div>
+
+<div class="slide">
+  <h2>Pipeline: Rotate, Quantize, Derotate</h2><div class="divider"></div>
+  <div class="diagram-flow" style="justify-content: space-between; flex-wrap: nowrap; gap: 10px; margin: 28px 0 14px;">
+    <div class="diagram-box" style="border-color: var(--yonsei-blue);">
+      <div style="font-weight: 700; color: var(--yonsei-blue);">input</div>
+      <div style="margin-top: 4px;">$x \in S^{d-1}$</div>
+    </div>
+    <div style="color: var(--yonsei-blue); font-size: 1.6rem; align-self: center;">$\to$</div>
+    <div class="diagram-box">
+      <div style="font-weight: 700; color: var(--yonsei-blue);">rotate</div>
+      <div style="margin-top: 4px;">$y = \Pi x$</div>
+      <div style="font-size: 1.0rem; color: var(--gray-text);">flatten energy</div>
+    </div>
+    <div style="color: var(--yonsei-blue); font-size: 1.6rem; align-self: center;">$\to$</div>
+    <div class="diagram-box">
+      <div style="font-weight: 700; color: var(--yonsei-blue);">scalar quantize</div>
+      <div style="margin-top: 4px;">$\widetilde y_j = c_{i(j)}$</div>
+      <div style="font-size: 1.0rem; color: var(--gray-text);">codebook for $f_d$</div>
+    </div>
+    <div style="color: var(--yonsei-blue); font-size: 1.6rem; align-self: center;">$\to$</div>
+    <div class="diagram-box" style="border-color: var(--yonsei-blue);">
+      <div style="font-weight: 700; color: var(--yonsei-blue);">derotate</div>
+      <div style="margin-top: 4px;">$\widetilde x = \Pi^\top \widetilde y$</div>
+    </div>
+  </div>
+  <ul>
+    <li><strong>One codebook</strong> works for every input — rotation gives the same coordinate law.</li>
+    <li><strong>$d\cdot b$ bits</strong> total; orthogonal invariance preserves squared error.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Algorithm: TURBOQUANT$_{\mathrm{mse}}$</h2><div class="divider"></div>
+  <p style="text-align:center;">Public state: rotation $\Pi$, scalar codebook $\{c_1, \ldots, c_K\}$ for $f_d$, $K = 2^b$.</p>
+  <div class="l4-algo" style="max-width:980px; margin:24px auto 14px;">
+    <div class="l4-algo-title">TURBOQUANT$_{\mathrm{mse}}$</div>
+    <ol>
+      <li><strong>Encode$(x)$:</strong> rotate $y = \Pi \cdot x$.</li>
+      <li>For each $j$: $\mathrm{idx}[j] = \arg\min_i |y_j - c_i|$.</li>
+      <li>Return $\mathrm{idx}$ &nbsp; $\bigl(d \cdot b$ bits$\bigr)$.</li>
+      <li><strong>Decode$(\mathrm{idx})$:</strong> $\widetilde y_j = c_{\mathrm{idx}[j]}$, then $\widetilde x = \Pi^\top \widetilde y$.</li>
+    </ol>
+  </div>
+  <p style="text-align:center;">Codebook offline via Lloyd&ndash;Max on $f_d$. No data-dependent training.</p>
+</div>
+
+<div class="slide">
+  <h2>One-Bit Anchor: $1 - 2/\pi$</h2><div class="divider"></div>
+  <p>For $Y \sim \mathcal{N}(0, 1/d)$ and sign quantizer $\widehat Y = a \cdot \operatorname{sign}(Y)$:</p>
+  <div class="math-block">$$\mathbb{E}[(Y - a \cdot \operatorname{sign} Y)^2] = \mathbb{E} Y^2 - 2 a \cdot \mathbb{E}|Y| + a^2, \qquad a^\star = \mathbb{E}|Y| = \sqrt{\tfrac{2}{\pi d}}.$$</div>
+  <p>At the optimum: $\mathbb{E}[(Y - a^\star \cdot \operatorname{sign} Y)^2] = \tfrac{1}{d}(1 - \tfrac{2}{\pi})$.</p>
+  <div class="math-block">$$\text{total MSE at } b = 1 \;=\; 1 - \tfrac{2}{\pi} \;\approx\; 0.363.$$</div>
+</div>
+
+<div class="slide">
+  <h2>Theorem: TURBOQUANT$_{\mathrm{mse}}$</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (TURBOQUANT$_{\mathrm{mse}}$).</h3>
+    <p>For every unit $x \in S^{d-1}$:</p>
+    <div class="math-block">$$\mathbb{E}\|x - \widetilde x\|^2 \;\le\; \tfrac{\sqrt{3}\,\pi}{2} \cdot 4^{-b} \;\approx\; 2.72 \cdot 4^{-b}.$$</div>
+  </div>
+  <p>Matches the Gaussian limit $4^{-b}$ up to a small constant.</p>
+  <p>Proof: orthogonal invariance + Panter&ndash;Dite on $f_d$ (next slide).</p>
+</div>
+
+<div class="slide">
+  <h2>Proof &mdash; Orthogonal Invariance + Panter&ndash;Dite</h2><div class="divider"></div>
+  <p><strong>Step 1.</strong> Orthogonal invariance: $\;\|x - \widetilde x\|^2 = \|Y - \widetilde Y\|^2 = d \cdot C(f_d, b).$</p>
+  <p><strong>Step 2.</strong> Panter&ndash;Dite, evaluated on $f_d$:</p>
+  <div class="math-block">$$\begin{aligned}
+    C(f, b) &\;\le\; \tfrac{1}{12}\Bigl(\!\int f^{1/3}\Bigr)^{\!3} \cdot 4^{-b}, \\
+    \Bigl(\!\int f_d^{1/3}\Bigr)^{\!3} &\;=\; \tfrac{6\sqrt{3}\,\pi}{d} \;\;\Rightarrow\;\; \text{constant } \tfrac{\sqrt{3}\,\pi}{2}.
+  \end{aligned}$$</div>
+</div>
+
+
+<!-- ════ PART 03 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Lower Bound</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Sphere SLB + Yao $\;\Rightarrow\;$ exponent $4^{-b}$ unbeatable</p>
+</div>
+
+<div class="slide">
+  <h2>Yao + Constant Gap</h2><div class="divider"></div>
+  <p>Lecture 2's converse on $X \sim \mathrm{Unif}(S^{d-1})$ gives $D \ge 4^{-b}$ at $b$ bits/coord.</p>
+  <p><strong>Yao's principle.</strong> Worst-input randomized cost $\ge$ best deterministic cost on the hardest input distribution.</p>
+  <p>Apply with $\mathrm{Unif}(S^{d-1})$: some $x$ forces $\mathbb{E}\|x - \widehat x\|^2 \ge 4^{-b}$ for every $bd$-bit quantizer.</p>
+  <div class="math-block">$$4^{-b} \;\le\; D_{\mathrm{mse}}^\star(b) \;\le\; \tfrac{\sqrt{3}\,\pi}{2} \cdot 4^{-b}.$$</div>
+  <div class="highlight">Constant gap $\Rightarrow$ exponent $4^{-b}$ is <strong>optimal</strong>.</div>
+</div>
+
+
+<!-- ════ PART 04 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Inner-Product Bias</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Good MSE doesn't imply good linear-functional preservation</p>
+</div>
+
+<div class="slide">
+  <h2>One-Bit MSE Shrinks Projections</h2><div class="divider"></div>
+  <p>Sign quantizer $\widetilde Y_j = a \cdot \operatorname{sign}(Y_j)$, $a = \sqrt{2/(\pi d)}$.</p>
+  <p>Rotational symmetry $\Rightarrow \mathbb{E}[\widetilde x \mid x] = \alpha \cdot x$.</p>
+  <div class="math-block">$$\alpha \;=\; \mathbb{E}\langle x, \widetilde x\rangle \;=\; d \cdot a \cdot \mathbb{E}|Y_1| \;=\; d \cdot \dfrac{2}{\pi d} \;=\; \dfrac{2}{\pi}.$$</div>
+  <p>Hence $\mathbb{E}\langle y, \widetilde x\rangle = \tfrac{2}{\pi} \cdot \langle y, x\rangle$ &mdash; biased low.</p>
+</div>
+
+<div class="slide">
+  <h2>Geometric Reason &mdash; Shrunken Norm</h2><div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns: 0.95fr 1.05fr; gap: 24px; align-items: center;">
+    <div style="position: relative; max-width: 360px; margin: 0 auto;">
+      <svg viewBox="0 0 380 280" style="width:100%; display: block;">
+        <defs>
+          <marker id="arr-blue4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <polygon points="0,0 8,3 0,6" fill="#003876"/>
+          </marker>
+          <marker id="arr-gray4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <polygon points="0,0 8,3 0,6" fill="#666"/>
+          </marker>
+        </defs>
+        <circle cx="50" cy="240" r="190" fill="none" stroke="#999" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="50" y1="240" x2="50" y2="40" stroke="#999" stroke-width="1"/>
+        <line x1="50" y1="240" x2="370" y2="240" stroke="#999" stroke-width="1"/>
+        <line x1="50" y1="240" x2="230" y2="60" stroke="#003876" stroke-width="3.5" marker-end="url(#arr-blue4)"/>
+        <line x1="50" y1="240" x2="165" y2="125" stroke="#666" stroke-width="3.5" marker-end="url(#arr-gray4)"/>
+      </svg>
+      <span style="position: absolute; left: 64%; top: 16%; font-size: 1.5rem; font-weight: 700; color: var(--yonsei-blue);">$x$</span>
+      <span style="position: absolute; left: 48%; top: 60%; font-size: 1.5rem; font-weight: 700; color: var(--gray-text);">$\widetilde x$</span>
+      <span style="position: absolute; left: 78%; top: 88%; font-size: 1.0rem; font-weight: 600; color: var(--gray-text);">$\|x\|=1$</span>
+    </div>
+    <div>
+      <p>$1$-bit reconstruction has constant magnitude per coordinate:</p>
+      <div class="math-block" style="margin: 6px 0;">$$\|\widetilde x\|^2 \;=\; \|\widetilde Y\|^2 \;=\; d \cdot a^2 \;=\; \tfrac{2}{\pi}.$$</div>
+      <p>Same direction as $x$, but only $\sqrt{2/\pi} \approx 0.80$ as long.</p>
+      <p>Every projection shrunk by the same factor $\Rightarrow$ multiplicative bias.</p>
+      <div class="highlight" style="margin-top: 10px;">Need an unbiased estimator &mdash; enter QJL.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════ PART 05 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>QJL and Inner&#8209;Product TURBOQUANT</h1>
+  <div class="divider"></div>
+  <p class="subtitle">One-bit unbiased sketch, applied to the residual</p>
+</div>
+
+<div class="slide">
+  <h2>Johnson&ndash;Lindenstrauss Lemma</h2><div class="divider"></div>
+  <div class="card">
+    <h3 style="margin-top:0;">Theorem (JL, 1984).</h3>
+    <p style="margin:4px 0;">For any $n$ points $x_1, \ldots, x_n \in \mathbb{R}^d$ and any $\varepsilon \in (0, 1)$, there exists a linear map $A: \mathbb{R}^d \to \mathbb{R}^k$ with $k = \mathcal{O}\!\bigl(\varepsilon^{-2}\log n\bigr)$ such that</p>
+    <div class="math-block" style="margin: 4px 0;">$$(1-\varepsilon)\,\|x_i - x_j\|^2 \;\le\; \|A x_i - A x_j\|^2 \;\le\; (1+\varepsilon)\,\|x_i - x_j\|^2 \quad \forall i, j.$$</div>
+  </div>
+  <p>A random Gaussian matrix $A = \tfrac{1}{\sqrt k}\,S$ with $S_{ij} \sim \mathcal{N}(0,1)$ works with high probability.</p>
+  <div class="highlight">Pairwise distances survive an $\mathcal{O}(\log n)$-dim sketch &mdash; <em>independent</em> of the ambient dim $d$.</div>
+</div>
+
+<div class="slide">
+  <h2>JL Intuition</h2><div class="divider"></div>
+  <p>Fix any unit $u \in \mathbb{R}^d$.</p>
+  <p>For $s \sim \mathcal{N}(0, I_d)$: &nbsp;$\langle s, u\rangle \sim \mathcal{N}(0, 1)$.</p>
+  <p>Stack $k$ rows of $S$. Then $\|S u\|^2 \sim \chi^2_k$.</p>
+  <p>Concentrates around $k$ with relative deviation $\mathcal{O}\!\bigl(1/\sqrt k\bigr)$.</p>
+  <ul>
+    <li>$k = \Theta(\varepsilon^{-2}\log n)$ $\;\Rightarrow\;$ each of $\binom n2$ pairs survives w.p. $\ge 1 - 1/n^2$.</li>
+    <li>Union bound $\Rightarrow$ all pairs simultaneously.</li>
+  </ul>
+  <div class="highlight">Random projection preserves distances because $\chi^2$ concentrates &middot; geometry of i.i.d. Gaussian rows.</div>
+</div>
+
+<div class="slide">
+  <h2>JL Preserves Inner Products Too</h2><div class="divider"></div>
+  <p>From the polarization identity</p>
+  <div class="math-block" style="margin: 4px 0;">$$\langle u, v\rangle \;=\; \tfrac14\bigl(\|u+v\|^2 - \|u-v\|^2\bigr),$$</div>
+  <p>a distance-preserving sketch is also an inner-product-preserving sketch:</p>
+  <div class="math-block" style="margin: 4px 0;">$$\bigl|\langle A u, A v\rangle - \langle u, v\rangle\bigr| \;\le\; \varepsilon\,\|u\|\,\|v\|.$$</div>
+  <div class="highlight">For TURBOQUANT we only care about $\langle q, k\rangle$ &mdash; JL is exactly the right tool.</div>
+</div>
+
+<div class="slide">
+  <h2>From JL to QJL (1 bit / coord)</h2><div class="divider"></div>
+  <p>Plain JL stores $k$ floats per vector. To compress further, quantize the sketch with one bit per coordinate:</p>
+  <div class="math-block" style="margin: 4px 0;">$$Q_{\mathrm{qjl}}(u) \;=\; \operatorname{sign}(S\, u) \;\in\; \{-1, +1\}^d.$$</div>
+  <p>Throws away magnitudes &mdash; keeps only the <em>sign pattern</em> of the projection. Strikingly, with the right decoder $Q_{\mathrm{qjl}}^{-1}$, this still gives an <em>unbiased</em> estimator of $\langle y, u\rangle$.</p>
+  <div class="highlight">QJL = JL + 1-bit sign quantization. Next slide: precise statement.</div>
+</div>
+
+<div class="slide">
+  <h2>QJL Definition</h2><div class="divider"></div>
+  <p>Let $S \in \mathbb{R}^{d\times d}$ have i.i.d. $\mathcal{N}(0, 1)$ entries. For $u \in S^{d-1}$:</p>
+  <div class="math-block">$$Q_{\mathrm{qjl}}(u) \;=\; \operatorname{sign}(S u) \;\in\; \{-1, +1\}^d, \qquad Q_{\mathrm{qjl}}^{-1}(z) \;=\; \dfrac{\sqrt{\pi/2}}{d} \cdot S^\top z.$$</div>
+  <p>One bit per coordinate. Unbiased estimator of $u$.</p>
+</div>
+
+<div class="slide">
+  <h2>Lemma — Unbiased with $1/d$ Variance</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Lemma (QJL).</h3>
+    <div class="math-block">$$\mathbb{E}_S\langle y,Q_{\mathrm{qjl}}^{-1}(Q_{\mathrm{qjl}}(u))\rangle = \langle y,u\rangle, \qquad \operatorname{Var}_S(\cdot)\;\le\;\dfrac{\pi}{2d}\|y\|^2.$$</div>
+  </div>
+  <p><strong>Unbiasedness.</strong> Gaussian identity $\mathbb{E}\bigl[s\operatorname{sign}(s^\top u)\bigr] = \sqrt{2/\pi}\,u$ for $s\sim\mathcal{N}(0,I)$.</p>
+  <p><strong>Variance.</strong> Each summand $\le\tfrac{\pi}{2}\|y\|^2$ in second moment; $d$-fold averaging gives $\tfrac{\pi}{2d}\|y\|^2$.</p>
+</div>
+
+<div class="slide">
+  <h2>Two-Stage Decomposition</h2><div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns: 0.95fr 1.05fr; gap: 24px; align-items: center;">
+    <div style="position: relative; max-width: 360px; margin: 0 auto;">
+      <svg viewBox="0 0 380 260" style="width:100%; display:block;">
+        <defs>
+          <marker id="arr-x5" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <polygon points="0,0 8,3 0,6" fill="#003876"/>
+          </marker>
+          <marker id="arr-mse5" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <polygon points="0,0 8,3 0,6" fill="#1a5296"/>
+          </marker>
+          <marker id="arr-r5" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <polygon points="0,0 8,3 0,6" fill="#d94040"/>
+          </marker>
+        </defs>
+        <line x1="40" y1="220" x2="40" y2="20" stroke="#999" stroke-width="1"/>
+        <line x1="40" y1="220" x2="370" y2="220" stroke="#999" stroke-width="1"/>
+        <line x1="40" y1="220" x2="340" y2="65" stroke="#003876" stroke-width="3.5" marker-end="url(#arr-x5)"/>
+        <line x1="40" y1="220" x2="295" y2="155" stroke="#1a5296" stroke-width="3" marker-end="url(#arr-mse5)"/>
+        <line x1="295" y1="155" x2="335" y2="68" stroke="#d94040" stroke-width="3" marker-end="url(#arr-r5)"/>
+      </svg>
+      <span style="position: absolute; left: 53%; top: 20%; font-size: 1.5rem; font-weight: 700; color: var(--yonsei-blue);">$x$</span>
+      <span style="position: absolute; left: 37%; top: 75%; font-size: 1.4rem; font-weight: 700; color: var(--blue-light);">$\widetilde x_{\mathrm{mse}}$</span>
+      <span style="position: absolute; left: 92%; top: 43%; font-size: 1.4rem; font-weight: 700; color: var(--warn);">$r$</span>
+    </div>
+    <div>
+      <p>$x = \widetilde x_{\mathrm{mse}} + r$. &nbsp;Estimate each piece separately:</p>
+      <div class="math-block" style="margin: 8px 0;">$$\langle y, x\rangle \;=\; \langle y, \widetilde x_{\mathrm{mse}}\rangle \;+\; \langle y, r\rangle.$$</div>
+      <ul>
+        <li><strong>MSE term</strong> ($b{-}1$ bits) &mdash; deterministic, biased.</li>
+        <li><strong>QJL on $r$</strong> ($1$ bit) &mdash; unbiased; variance $\propto \|r\|^2$.</li>
+      </ul>
+      <div class="highlight" style="margin-top: 10px;">Spend bits on MSE first &mdash; shrink $\|r\|$, then sketch.</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Algorithm: TURBOQUANT$_{\mathrm{prod}}$</h2><div class="divider"></div>
+  <div class="l4-algo" style="max-width:1040px; margin:30px auto 14px;">
+    <div class="l4-algo-title">TURBOQUANT$_{\mathrm{prod}}$</div>
+    <ol>
+      <li><strong>Encode$(x, b)$:</strong> $\mathrm{idx} = \mathrm{TQ}_{\mathrm{mse}}(x, b{-}1)$ &nbsp; $\bigl((b{-}1) \cdot d$ bits$\bigr)$.</li>
+      <li>$r = x - \mathrm{TQ}_{\mathrm{mse}}^{-1}(\mathrm{idx})$, &nbsp; $\gamma = \|r\|$.</li>
+      <li>$q = \operatorname{sign}(S \cdot r) \in \{-1, +1\}^d$ &nbsp; $\bigl(d$ bits$\bigr)$. Return $(\mathrm{idx}, q, \gamma)$.</li>
+      <li><strong>Decode:</strong> $\widetilde x = \mathrm{TQ}_{\mathrm{mse}}^{-1}(\mathrm{idx}) + \gamma \cdot \tfrac{\sqrt{\pi/2}}{d} \cdot S^\top q$.</li>
+    </ol>
+  </div>
+  <p style="text-align:center;">Total budget: $b \cdot d$ bits. Stage 1 deterministic; stage 2 random.</p>
+</div>
+
+<div class="slide">
+  <h2>Theorem: TURBOQUANT$_{\mathrm{prod}}$</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (TURBOQUANT$_{\mathrm{prod}}$).</h3>
+    <div class="math-block">$$\begin{aligned}
+      \mathbb{E}\langle y, \widetilde x\rangle &\;=\; \langle y, x\rangle, \\
+      D_{\mathrm{prod}} &\;\le\; \tfrac{\sqrt{3}\,\pi^2\,\|y\|^2}{d} \cdot 4^{-b}.
+    \end{aligned}$$</div>
+  </div>
+  <p>Unbiased; variance shrinks as $4^{-b}/d$.</p>
+</div>
+
+
+<!-- ════ PART 06 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>KV Cache Quantization</h1>
+  <div class="divider"></div>
+  <p class="subtitle">What's actually quantized, and how</p>
+</div>
+
+<div class="slide">
+  <h2>Which Quantizer for $K$ and $V$?</h2><div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="color:var(--blue-light);">Keys $k_s$</h3>
+      <div class="math-block" style="margin: 6px 0;">$$\alpha_{t,s} \propto \exp\!\bigl(\langle q_t, k_s\rangle/\sqrt d\bigr).$$</div>
+      <p>Score is $\langle q, k\rangle$ &mdash; preserve inner product.</p>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--blue-light);">Values $v_s$</h3>
+      <div class="math-block" style="margin: 6px 0;">$$o_t = \sum_s \alpha_{t,s}\,v_s = \langle\alpha_{t,\cdot},V_{:}\rangle.$$</div>
+      <p>Output is linear in $v$ &mdash; preserve inner product.</p>
+    </div>
+  </div>
+  <div class="highlight">Both $K$ and $V$ quantized via <strong>TURBOQUANT$_{\mathrm{prod}}$</strong>.</div>
+</div>
+
+<div class="slide">
+  <h2>TURBOQUANT$_{\mathrm{prod}}$ Wraps TURBOQUANT$_{\mathrm{mse}}$</h2><div class="divider"></div>
+  <p>The two quantizers are <strong>not run separately</strong> &mdash; the IP version <em>composes</em> the MSE version.</p>
+  <div class="l4-algo" style="max-width:1000px; margin:18px auto 12px;">
+    <div class="l4-algo-title">One call to TURBOQUANT$_{\mathrm{prod}}(x, b)$</div>
+    <ol>
+      <li><strong>Stage 1.</strong> $\mathrm{idx} \leftarrow \mathrm{TQ}_{\mathrm{mse}}(x, b{-}1)$. &nbsp; Deterministic, biased.</li>
+      <li><strong>Residual.</strong> $r \leftarrow x - \mathrm{TQ}_{\mathrm{mse}}^{-1}(\mathrm{idx})$. &nbsp; $\gamma \leftarrow \|r\|$.</li>
+      <li><strong>Stage 2.</strong> $q \leftarrow \operatorname{sign}(S r)$ (QJL, 1 bit). &nbsp; Unbiased, variance $\propto \gamma^2$.</li>
+      <li><strong>Output.</strong> $(\mathrm{idx}, q, \gamma)$. &nbsp; $b\cdot d$ bits total.</li>
+    </ol>
+  </div>
+  <p style="text-align:center; color: var(--gray-text);">No separate $Q_{\mathrm{mse}}$ vs $Q_{\mathrm{prod}}$ choice at runtime &mdash; one composed call per vector.</p>
+</div>
+
+<div class="slide">
+  <h2>Practical Pieces</h2><div class="divider"></div>
+  <ul>
+    <li><strong>Rotation $\Pi \in \mathbb{R}^{d \times d}$</strong> &mdash; <em>random Hadamard transform</em> (RHT): $\mathcal{O}(d \log d)$, not $d^2$.</li>
+    <li><strong>Scalar codebook $\{c_i\}$</strong> &mdash; precomputed offline by Lloyd&ndash;Max on $f_d$; shipped once with the model. No calibration.</li>
+    <li><strong>Sketch matrix $S$</strong> &mdash; deterministic from a PRNG seed; regenerated on the fly, never stored.</li>
+    <li><strong>Per-token storage</strong> &mdash; $(b{-}1)\cdot d$-bit indices, $d$-bit sign vector, scalar $\gamma$. About $b\cdot d$ bits.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Dimensions Used in the Paper</h2><div class="divider"></div>
+  <p>$\Pi \in \mathbb{R}^{d \times d}$ is applied <em>per attention head</em> &mdash; <strong>$d$ = head dimension</strong>, not the full model dim.</p>
+  <div class="grid-2" style="margin-top: 8px;">
+    <div class="card">
+      <h3 style="color:var(--blue-light); margin-top: 0;">KV cache</h3>
+      <p style="margin: 4px 0;">Llama-3.1-8B-Instruct, Ministral-7B-Instruct.</p>
+      <p style="margin: 4px 0;">Head dim $\;d = 128\;$ for Llama-3.1.</p>
+      <p style="margin: 4px 0;">Rotation block size $= 128$.</p>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--blue-light); margin-top: 0;">Nearest-neighbor search</h3>
+      <p style="margin: 4px 0;">GloVe &mdash; $d = 200$.</p>
+      <p style="margin: 4px 0;">OpenAI3 embeddings &mdash; $d = 1536$ and $d = 3072$.</p>
+    </div>
+  </div>
+  <div class="highlight">RHT is cheap because the rotated block is small ($d{=}128$ per head) &mdash; $\mathcal{O}(d \log d)$ per head, per token.</div>
+</div>
+
+<div class="slide">
+  <h2>Empirical Behavior</h2><div class="divider"></div>
+  <p>Long-context decoding with TURBOQUANT-quantized KV cache (Llama-3.1-8B-Instruct, head dim&nbsp;$128$):</p>
+  <ul>
+    <li><strong>$\sim 3.5$ bits/channel</strong> &mdash; quality matches FP16 within noise.</li>
+    <li><strong>$\sim 2.5$ bits/channel</strong> &mdash; gradual degradation begins.</li>
+    <li><strong>Online + data-oblivious</strong> &mdash; the codebook never sees the user prompt.</li>
+  </ul>
+  <div class="highlight">Distortion exponent is information-theoretically optimal; quality numbers depend on the model and benchmark.</div>
+  <div class="cite">Daliri et al., "TurboQuant: Online Vector Quantization with Optimal Distortion", arXiv:2504.19874 (2025).</div>
+</div>
+
+
+<!-- RECAP -->
+<div class="slide">
+  <h2>Recap</h2><div class="divider"></div>
+  <ul>
+    <li><strong>Rotation:</strong> turns any unit vector into a sphere point with known coordinate density $f_d$.</li>
+    <li><strong>MSE TURBOQUANT:</strong> Lloyd&ndash;Max on $f_d$ achieves $D_{\mathrm{mse}}\le\tfrac{\sqrt 3\pi}{2}\cdot 4^{-b}$.</li>
+    <li><strong>Lower bound:</strong> sphere SLB + Yao $\Rightarrow$ exponent $4^{-b}$ optimal.</li>
+    <li><strong>Bias:</strong> MSE shrinks projections by $2/\pi$ at one bit.</li>
+    <li><strong>QJL:</strong> one-bit unbiased linear-functional estimator with $\mathcal{O}(1/d)$ variance.</li>
+    <li><strong>IP TURBOQUANT:</strong> two-stage; unbiased, $D_{\mathrm{prod}} \le \tfrac{\sqrt 3\pi^2\|y\|^2}{d}\cdot 4^{-b}$.</li>
+  </ul>
+</div>
+
+<div class="slide end-slide">
+  <div class="big-word">End of Module 1</div>
+  <p class="big-word-sub">Next module: diffusion models and the variational bound.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 1</div>
+
+</div><!-- end deck -->
+
+<script defer src="../../../../reference/deck.js"></script>
+</body>
+</html>

@@ -1,0 +1,290 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Information measures (discrete)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Surprisal and Entropy}
+\label{sec:entropy-entropy}
+
+\begin{definition}[Surprisal / self-information]
+Let $X$ be a discrete random variable with pmf $p_X$ on a finite alphabet $\cX$.
+The \emph{surprisal} (self-information) of an outcome $x\in\cX$ is
+\begin{equation}
+    S_X(x) \coloneqq \log\frac{1}{p_X(x)} = -\log p_X(x).
+\end{equation}
+\end{definition}
+
+Rare events carry more information: if $p_X(x)$ is small, then $S_X(x)$ is large.
+
+\begin{definition}[Entropy]
+The (Shannon) entropy of $X$ is the expected surprisal:
+\begin{equation}
+    H(X)
+    \coloneqq \E{S_X(X)}
+    = \sum_{x\in\cX} p_X(x)\log\frac{1}{p_X(x)}
+    = -\sum_{x\in\cX} p_X(x)\log p_X(x).
+\end{equation}
+\end{definition}
+
+\paragraph{Interpretation.}
+Entropy is the fundamental limit of lossless compression: roughly speaking, $H(X)$ is the minimum achievable average number of bits needed to describe one draw of $X$.
+We make this precise in Section~\ref{sec:lossless-intro}.
+
+\begin{example}[A highly biased coin]
+Let $X\in\{0,1\}$ with $\Pr{X=1}=0.01$.
+Then
+\[
+H(X)= -0.01\log 0.01 - 0.99\log 0.99 \approx 0.0808\ \text{bits}.
+\]
+Although there are two outcomes, the uncertainty is far below $1$ bit.
+\end{example}
+
+\subsubsection*{Basic properties}
+
+\begin{theorem}[Jensen's Inequality]
+Let $f$ be a concave function, then
+\begin{align}
+    \E{f(X)} \leq f(\E{X}).
+\end{align}
+\end{theorem}
+Since the definition of concave function is that
+\begin{align}
+    \lambda f(x) + (1-\lambda) f(y) \leq f(\lambda x + (1-\lambda) y)
+\end{align}
+for all $x, y$ and $0\leq \lambda \leq 1$,
+in other words, weighted average of $f$ is smaller or equal to $f$ at weighted averaged input.
+Then, Jensen's inequality is a generalized version of it,
+where $\E{f(X)}$ is weighted average of $f$ and $f(\E{X})$ is a function value at weighted average input.
+For strictly concave function $f$, Jensen's inequality holds with equality if and only if $f(x)$ is constant.
+
+
+\begin{theorem}[Non-negativity]
+$H(X)\ge 0$, with equality if and only if $X$ is deterministic.
+\end{theorem}
+\begin{proof}
+For $0<p\le 1$ we have $\log(1/p)\ge 0$.
+Thus each term $p_X(x)\log(1/p_X(x))$ is nonnegative, so their sum is nonnegative.
+If $H(X)=0$, every term with $p_X(x)>0$ must satisfy $\log(1/p_X(x))=0$, hence $p_X(x)=1$ on the support.
+\end{proof}
+
+\begin{theorem}[Maximum entropy on a finite alphabet]
+If $|\cX|=M$, then $H(X)\le \log M$, with equality if and only if $X$ is uniform on $\cX$.
+\end{theorem}
+\begin{proof}
+Let $U$ be the uniform pmf on $\cX$, so $U(x)=1/M$.
+Using the KL divergence (defined in Section~\ref{sec:entropy-kl}) and its non-negativity,
+\[
+0\le \KL{p_X}{U}=\sum_x p_X(x)\log\frac{p_X(x)}{1/M} = -H(X)+\log M.
+\]
+Rearrange.
+\end{proof}
+
+\subsection{KL Divergence and Cross Entropy}
+\label{sec:entropy-kl}
+
+\begin{definition}[Kullback--Leibler (KL) divergence]
+Let $P$ and $Q$ be pmfs on the same finite alphabet $\cX$.
+The KL divergence from $P$ to $Q$ is
+\begin{equation}
+    \KL{P}{Q}
+    \coloneqq \sum_{x:P(x)>0} P(x)\log\frac{P(x)}{Q(x)},
+\end{equation}
+with the convention that if $P(x)>0$ and $Q(x)=0$, then $\KL{P}{Q}=+\infty$.
+\end{definition}
+
+\paragraph{How to read $\KL{P}{Q}$.}
+$\KL{P}{Q}$ is not symmetric and is not a metric.
+Operationally, it measures the \emph{extra average code length} incurred when coding samples from $P$ using a code optimized for $Q$.
+
+\begin{theorem}[Gibbs' inequality / KL non-negativity]
+\label{thm:gibbs}
+For pmfs $P,Q$ on the same finite alphabet,
+\(\KL{P}{Q}\ge 0\), with equality if and only if $P=Q$ (with matching support).
+\end{theorem}
+\begin{proof}
+Write
+\[
+-\KL{P}{Q} = \sum_x P(x)\log\frac{Q(x)}{P(x)} = \Esub{X\sim P}{\log\frac{Q(X)}{P(X)}}.
+\]
+Since $\log$ is concave, Jensen's inequality gives
+\[
+\Esub{X\sim P}{\log\frac{Q(X)}{P(X)}}
+\le \log \Esub{X\sim P}{\frac{Q(X)}{P(X)}}
+= \log \sum_x P(x)\frac{Q(x)}{P(x)}
+= \log \sum_x Q(x)
+= \log 1 =0.
+\]
+Thus $-\KL{P}{Q}\le 0$.
+\end{proof}
+
+\subsection{Cross Entropy Decomposition}
+\label{sec:entropy-cross-entropy}
+
+Let $X\sim P$ be the true distribution on $\cX$, and let $Q$ be a model distribution.
+The expected log loss when using $Q$ is
+\begin{equation}
+    H(P,Q) \coloneqq \Esub{X\sim P}{\log\frac{1}{Q(X)}}
+    = \sum_{x\in\cX} P(x)\log\frac{1}{Q(x)}.
+\end{equation}
+This quantity is often called the \emph{cross entropy} of $P$ relative to $Q$.
+
+\begin{theorem}[Cross entropy decomposition]
+\label{thm:cross-entropy-decomp}
+For any pmfs $P,Q$ on the same alphabet,
+\begin{equation}
+    H(P,Q) = H(P) + \KL{P}{Q}.
+\end{equation}
+In particular, $H(P,Q)\ge H(P)$ with equality iff $P=Q$.
+\end{theorem}
+\begin{proof}
+Expand and regroup:
+\[
+H(P,Q)-H(P)
+= \sum_x P(x)\log\frac{1}{Q(x)} - \sum_x P(x)\log\frac{1}{P(x)}
+= \sum_x P(x)\log\frac{P(x)}{Q(x)}
+= \KL{P}{Q}.
+\]
+Apply Theorem~\ref{thm:gibbs}.
+\end{proof}
+
+\paragraph{Connection to classification.}
+Section~\ref{sec:intro-logloss} showed that the standard log loss is a KL divergence.
+Theorem~\ref{thm:cross-entropy-decomp} explains why minimizing cross entropy is the same as minimizing KL divergence up to an additive constant.
+
+\subsection{Joint and Conditional Entropy}
+\label{sec:entropy-conditional}
+
+\begin{definition}[Joint entropy]
+For jointly distributed discrete random variables $(X,Y)$ with joint pmf $p_{X,Y}$,
+\begin{equation}
+    H(X,Y)\coloneqq -\sum_{x,y} p_{X,Y}(x,y)\log p_{X,Y}(x,y).
+\end{equation}
+\end{definition}
+
+\begin{definition}[Conditional entropy]
+For $(X,Y)$ with conditional pmf $p_{X\mid Y}$, the conditional entropy of $X$ given $Y$ is
+\begin{equation}
+    H(X\mid Y)
+    \coloneqq \E\!\left[\log\frac{1}{p_{X\mid Y}(X\mid Y)}\right]
+    = \sum_{y} p_Y(y)\,H(X\mid Y=y).
+\end{equation}
+\end{definition}
+
+\begin{theorem}[Chain rule for entropy]
+\label{thm:entropy-chain-rule}
+\begin{equation}
+    H(X,Y) = H(Y) + H(X\mid Y).
+\end{equation}
+More generally, for $X^n=(X_1,\dots,X_n)$,
+\begin{equation}
+    H(X^n)=\sum_{i=1}^n H\bigl(X_i\mid X^{i-1}\bigr),\qquad X^{i-1}=(X_1,\dots,X_{i-1}).
+\end{equation}
+\end{theorem}
+\begin{proof}
+Use $p_{X,Y}(x,y)=p_Y(y)p_{X\mid Y}(x\mid y)$ and expand:
+\[
+\begin{aligned}
+H(X,Y)
+&=-\sum_{x,y}p_{X,Y}(x,y)\log\bigl(p_Y(y)p_{X\mid Y}(x\mid y)\bigr)\\
+&=-\sum_{x,y}p_{X,Y}(x,y)\log p_Y(y)\; -\sum_{x,y}p_{X,Y}(x,y)\log p_{X\mid Y}(x\mid y)\\
+&=H(Y)+H(X\mid Y).
+\end{aligned}
+\]
+The multi-variable case follows by iterating the two-variable identity.
+\end{proof}
+
+\begin{theorem}[Conditioning reduces entropy]
+\label{thm:conditioning-reduces-entropy}
+For discrete $X,Y$,
+\begin{equation}
+    H(X\mid Y)\le H(X),
+\end{equation}
+with equality if and only if $X$ and $Y$ are independent.
+\end{theorem}
+\begin{proof}
+Using Theorem~\ref{thm:entropy-chain-rule},
+\(
+H(X)-H(X\mid Y) = I(X;Y)
+\)
+where $I(X;Y)$ is mutual information (defined next) and is always nonnegative.
+Independence is exactly the equality condition.
+\end{proof}
+
+\subsection{Mutual Information}
+\label{sec:entropy-mi}
+
+\begin{definition}[Mutual information]
+\label{def:mi}
+For jointly distributed discrete $(X,Y)$,
+\begin{equation}
+    I(X;Y)
+    \coloneqq \KL{p_{X,Y}}{p_Xp_Y}
+    = \sum_{x,y} p_{X,Y}(x,y)\log\frac{p_{X,Y}(x,y)}{p_X(x)p_Y(y)}.
+\end{equation}
+\end{definition}
+
+\paragraph{Equivalent forms.}
+Using the chain rule,
+\begin{equation}
+    I(X;Y)=H(X)-H(X\mid Y)=H(Y)-H(Y\mid X).
+\end{equation}
+
+\begin{theorem}[Basic properties]
+\label{thm:mi-basic}
+Mutual information satisfies:
+\begin{enumerate}[leftmargin=2em]
+    \item \textbf{Non-negativity:} $I(X;Y)\ge 0$, with equality iff $X$ and $Y$ are independent.
+    \item \textbf{Symmetry:} $I(X;Y)=I(Y;X)$.
+    \item \textbf{Upper bounds:} $I(X;Y)\le H(X)$ and $I(X;Y)\le H(Y)$.
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+(1) is Theorem~\ref{thm:gibbs} applied to $\KL{p_{X,Y}}{p_Xp_Y}$.
+(2) follows by swapping $X$ and $Y$ in the definition.
+For (3), use $I(X;Y)=H(X)-H(X\mid Y)$ and $H(X\mid Y)\ge 0$.
+\end{proof}
+
+\begin{definition}[Conditional mutual information]
+For $(X,Y,Z)$,
+\begin{equation}
+    I(X;Z\mid Y)
+    \coloneqq H(X\mid Y)-H(X\mid Y,Z).
+\end{equation}
+Equivalently,
+\begin{equation}
+    I(X;Z\mid Y)=\Esub{Y}{\KL{p_{X,Z\mid Y}}{p_{X\mid Y}p_{Z\mid Y}}}\ge 0.
+\end{equation}
+\end{definition}
+
+\begin{theorem}[Data processing inequality]
+\label{thm:dpi}
+If $X\to Y\to Z$ form a Markov chain (i.e., $X$ and $Z$ are conditionally independent given $Y$), then
+\begin{equation}
+    I(X;Z)\le I(X;Y).
+\end{equation}
+\end{theorem}
+\begin{proof}
+A standard identity is
+\(I(X;Y,Z)=I(X;Y)+I(X;Z\mid Y)\).
+Under the Markov condition, $I(X;Z\mid Y)=0$, so $I(X;Y,Z)=I(X;Y)$.
+Finally, $I(X;Z)\le I(X;Y,Z)$ because observing $(Y,Z)$ cannot reveal less about $X$ than observing $Z$ alone.
+\end{proof}
+
+\begin{remark}[Why DPI matters]
+DPI formalizes the idea that deterministic or stochastic post-processing cannot create information about the original source.
+In deep learning, it is often invoked to reason about learned representations $X\to T\to \widehat Y$.
+\end{remark}
+
+
+\begin{remark}
+Note that there are no ordering between $I(X;Z)$ and $I(X;Z|Y)$.
+More interestingly, $I(X;Z)=0$ does not imply $I(X;Z|Y)=0$.
+Consider the following example:
+\[
+X,Z\sim\text{Bernoulli}(1/2)\quad\text{and}\quad Y=X\oplus Z.
+\]
+Then:
+\[
+I(X;Z)=0,\quad\text{but}\quad I(X;Z\,|\,Y)=1,
+\]
+showing explicitly how conditioning can increase mutual information.
+\end{remark}

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diffusion 3 — Three Tools, One Model</title>
+<link rel="stylesheet" href="../../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- TITLE -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Diffusion · Lecture 3 of 3</div>
+  <h1>Three Tools,<br>One Model</h1>
+  <div class="divider"></div>
+  <p class="subtitle">ELBO, Tweedie, and Fisher divergence meet in diffusion</p>
+  <p style="font-weight:500;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Information Theory · 2026</p>
+</div>
+
+<!-- TOC -->
+<div class="slide">
+  <h2>Contents</h2><div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Diffusion recap</div>
+      <div class="toc-sub">The model we will analyze</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Tool 1: Variational bound</div>
+      <div class="toc-sub">ELBO reduces training to MSE</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Tool 2: Tweedie's formula</div>
+      <div class="toc-sub">Posterior mean = score, rescaled</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Tool 3: Fisher divergence</div>
+      <div class="toc-sub">ELBO MSE = score gap = denoising loss</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Convergence</div>
+      <div class="toc-sub">Three roads, one objective</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════ PART 01 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Diffusion Recap</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The model we will analyze with three tools</p>
+</div>
+
+<div class="slide">
+  <h2>The Forward-Reverse Machine</h2><div class="divider"></div>
+  <p>Forward (fixed): $x_t = \sqrt{\bar\alpha_t}\,x_0 + \sqrt{1-\bar\alpha_t}\,\varepsilon$, $\;\varepsilon\sim\mathcal{N}(0,I)$.</p>
+  <p>Reverse (learned): $p_\theta(x_{t-1}\mid x_t) = \mathcal{N}(\mu_\theta(x_t,t),\,\tilde\beta_t I)$.</p>
+  <p>Hierarchical VAE: $T$ latents $(x_1,\ldots,x_T)$, frozen encoder, learned decoder.</p>
+  <div class="highlight">Diffusion is the worked example; the <strong>tools</strong> are the subject.</div>
+</div>
+
+<div class="slide">
+  <h2>Three Predictions, One Object</h2><div class="divider"></div>
+  <p>The master identity $x_t = \sqrt{\bar\alpha_t}\,x_0 + \sqrt{1-\bar\alpha_t}\,\varepsilon$ can be solved for any of three targets:</p>
+  <div class="math-block">$$\underbrace{x_0}_{\text{clean data}}, \qquad \underbrace{\varepsilon}_{\text{noise}}, \qquad \underbrace{\nabla_{x_t}\log p_t(x_t)}_{\text{score}}.$$</div>
+  <p>All equivalent up to $t$-dependent rescaling. Why? Tweedie (Section 03).</p>
+</div>
+
+
+<!-- ════ PART 02 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Tool 1: Variational Bound</h1>
+  <div class="divider"></div>
+  <p class="subtitle">ELBO gives training a tractable surrogate</p>
+</div>
+
+<div class="slide">
+  <h2>Recall &mdash; ELBO Bounds the Intractable</h2><div class="divider"></div>
+  <div class="card" style="padding: 10px 16px; margin-bottom: 10px;">
+    <p><strong>Recall (Lecture 1).</strong> $\log p_\theta(x) = \mathcal{L}_{\mathrm{ELBO}} + D_{\mathrm{KL}}(q\,\Vert\,p_\theta(\cdot\mid x)) \;\ge\; \mathcal{L}_{\mathrm{ELBO}}.$</p>
+  </div>
+  <p>Likelihood intractable. Maximize the ELBO instead.</p>
+  <p>Gap vanishes iff variational posterior matches the true posterior.</p>
+</div>
+
+<div class="slide">
+  <h2>Diffusion ELBO Decomposes</h2><div class="divider"></div>
+  <p>Plug the hierarchical VAE structure into the ELBO (Lecture 2):</p>
+  <div class="math-block">$$-\log p_\theta(x_0) \;\le\; \underbrace{D_{\mathrm{KL}}(q(x_T\mid x_0)\,\Vert\,p(x_T))}_{L_T\,(\text{no }\theta)} + \sum_{t=2}^{T} L_{t-1} + \underbrace{(-\log p_\theta(x_0\mid x_1))}_{L_0\,(\text{small})}.$$</div>
+  <p>All training signal is in the <strong>interior terms</strong> $L_1,\ldots,L_{T-1}$.</p>
+</div>
+
+<div class="slide">
+  <h2>Interior Term = MSE on the Mean</h2><div class="divider"></div>
+  <p>Both sides of $L_{t-1} = D_{\mathrm{KL}}\!\bigl(q(x_{t-1}\mid x_t,x_0)\,\Vert\,p_\theta(x_{t-1}\mid x_t)\bigr)$ are Gaussian, same covariance:</p>
+  <div class="math-block">$$L_{t-1} \;=\; \frac{1}{2\tilde\beta_t}\,\|\tilde\mu_t(x_t, x_0) - \mu_\theta(x_t, t)\|^2.$$</div>
+  <div class="highlight">Tool 1 alone reduces training to: <strong>predict the posterior mean</strong> $\tilde\mu_t$ from $(x_t, t)$.</div>
+</div>
+
+
+<!-- ════ PART 03 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Tool 2: Tweedie's Formula</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Posterior mean of clean data = rescaled score</p>
+</div>
+
+<div class="slide">
+  <h2>Tweedie's Formula</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (Robbins, 1956 / Tweedie).</h3>
+    <p>For $X_t = \sqrt{\bar\alpha_t}\,X_0 + \sqrt{1-\bar\alpha_t}\,\varepsilon$:</p>
+    <div class="math-block">$$\mathbb{E}[X_0\mid X_t=x_t] \;=\; \frac{1}{\sqrt{\bar\alpha_t}}\bigl(x_t + (1-\bar\alpha_t)\,\nabla_{x_t}\log p_t(x_t)\bigr).$$</div>
+  </div>
+  <p>Posterior mean of clean $X_0$ = noisy $x_t$ + score correction, all rescaled.</p>
+  <div class="cite">Robbins, "An Empirical Bayes Approach to Statistics", Berkeley Symp. 1956.</div>
+</div>
+
+<div class="slide">
+  <h2>Proof &mdash; Differentiate the Marginal</h2><div class="divider"></div>
+  <p>Marginal as Gaussian mixture; differentiate $\log p_t$:</p>
+  <div class="math-block">$$\begin{aligned}
+p_t(x_t) &amp;\;=\; \int p_0(x_0)\,\mathcal{N}\!\bigl(x_t;\,\sqrt{\bar\alpha_t}\,x_0,\,(1-\bar\alpha_t)I\bigr)\,dx_0. \\[6pt]
+\nabla_{x_t}\log p_t(x_t) &amp;\;=\; -\,\dfrac{x_t - \sqrt{\bar\alpha_t}\,\mathbb{E}[X_0\mid x_t]}{1-\bar\alpha_t}.
+\end{aligned}$$</div>
+  <p>Gradient passes inside; hits the Gaussian kernel. Solve for $\mathbb{E}[X_0\mid x_t]$. $\quad\square$</p>
+</div>
+
+<div class="slide">
+  <h2>Tweedie Unifies the Predictions</h2><div class="divider"></div>
+  <p>Combine Tweedie with the master identity:</p>
+  <div class="math-block">$$\mathbb{E}[\varepsilon\mid x_t] \;=\; -\sqrt{1-\bar\alpha_t}\,\nabla_{x_t}\log p_t(x_t).$$</div>
+  <p>Optimal $x_0$-predictor, $\varepsilon$-predictor, and score: <strong>three rescalings of the same function</strong>.</p>
+  <div class="highlight">Tool 2 converts the ELBO's <strong>mean prediction</strong> (Tool 1) into a <strong>score estimation</strong> problem &mdash; bridging to Tool 3.</div>
+</div>
+
+
+<!-- ════ PART 04 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Tool 3: Fisher Divergence</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The ELBO MSE is a score gap in disguise</p>
+</div>
+
+<div class="slide">
+  <h2>Recall &mdash; Fisher Divergence</h2><div class="divider"></div>
+  <div class="card" style="padding: 10px 16px; margin-bottom: 10px;">
+    <p><strong>Recall (Lecture 6).</strong> $D_F(f\,\Vert\,g) = \tfrac{1}{2}\,\mathbb{E}_f\!\bigl[\|\nabla\log f - \nabla\log g\|^2\bigr].$</p>
+  </div>
+  <p>Compares <strong>scores</strong>, not densities. Ignores normalization constants.</p>
+  <p>Vincent (2011): minimizing Fisher divergence $\equiv$ denoising score matching.</p>
+</div>
+
+<div class="slide">
+  <h2>Step 1 &mdash; Apply Tweedie to Both Means</h2><div class="divider"></div>
+  <p>Both the true mean $\tilde\mu_t$ and the model mean $\mu_\theta$ can be written as denoising estimates with variance $1-\bar\alpha_t$:</p>
+  <div class="math-block">$$\begin{aligned}
+\tilde\mu_t &amp;= x_t + (1-\bar\alpha_t)\,\nabla_{x_t}\log q(x_t\mid x_0), \\
+\mu_\theta  &amp;= x_t + (1-\bar\alpha_t)\,\nabla_{x_t}\log p_\theta^{(t)}(x_t).
+\end{aligned}$$</div>
+  <p>Difference: a <strong>score gap</strong> scaled by $(1-\bar\alpha_t)$.</p>
+</div>
+
+<div class="slide">
+  <h2>Step 2 &mdash; MSE Becomes Fisher</h2><div class="divider"></div>
+  <p>Substitute Step 1 into the per-step ELBO term:</p>
+  <div class="math-block">$$\bigl\|\tilde\mu_t - \mu_\theta\bigr\|^2 \;=\; (1-\bar\alpha_t)^2\,\bigl\|\nabla_{x_t}\log q(x_t\mid x_0) - \nabla_{x_t}\log p_\theta^{(t)}(x_t)\bigr\|^2.$$</div>
+  <p>Average over $q(x_t\mid x_0)$:</p>
+  <div class="math-block">$$\mathbb{E}_{q}\!\bigl[\|\tilde\mu_t - \mu_\theta\|^2\bigr] \;=\; 2\,(1-\bar\alpha_t)^2\;\underbrace{D_F\!\bigl(q(\,\cdot\,\mid x_0)\,\Vert\,p_\theta^{(t)}\bigr)}_{\text{Fisher divergence (Tool 3)}}.$$</div>
+</div>
+
+<div class="slide">
+  <h2>Step 3 &mdash; Recognize the Denoising Form</h2><div class="divider"></div>
+  <p>Forward marginal $q(x_t\mid x_0) = \mathcal{N}(\sqrt{\bar\alpha_t}\,x_0,(1-\bar\alpha_t)I)$ has Gaussian score:</p>
+  <div class="math-block">$$\nabla_{x_t}\log q(x_t\mid x_0) \;=\; -\,\frac{x_t - \sqrt{\bar\alpha_t}\,x_0}{1-\bar\alpha_t}.$$</div>
+  <p>Substitute, drop $\theta$-free terms: exactly <strong>Vincent's DSM</strong> at noise level $1-\bar\alpha_t$.</p>
+  <div class="cite">Vincent, "A Connection Between Score Matching and Denoising Autoencoders", Neural Comp. 2011.</div>
+</div>
+
+<div class="slide">
+  <h2>Theorem &mdash; ELBO $\equiv$ Sum of DSM</h2><div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (Vincent 2011; Song et al. 2021).</h3>
+    <p>Diffusion ELBO maximization is equivalent (up to $\theta$-free constants) to minimizing</p>
+    <div class="math-block">$$\sum_{t=2}^{T}\;\mathbb{E}_{X_0,X_t}\!\left[\tfrac{\log e}{2}\,\Bigl\|\tfrac{\sqrt{\bar\alpha_t}\,X_0 - X_t}{1-\bar\alpha_t} - s_\theta(X_t, t)\Bigr\|^2\right],$$</div>
+    <p>the sum of denoising score-matching objectives at noise level $1-\bar\alpha_t$.</p>
+  </div>
+  <div class="cite">Vincent, Neural Comp. 2011; Song et al., "Score-Based Generative Modeling", ICLR 2021.</div>
+</div>
+
+
+<!-- ════ PART 05 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Convergence</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Three roads, one objective</p>
+</div>
+
+<div class="slide">
+  <h2>Three Tools, One Loss</h2><div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+\text{ELBO MSE} \quad
+&amp;\stackrel{(\text{Tweedie})}{=}\;(1-\bar\alpha_t)^2\,\bigl\|\nabla_{x_t}\log q(x_t\mid x_0) - \nabla_{x_t}\log p_\theta^{(t)}(x_t)\bigr\|^2 \\
+&amp;\stackrel{(\text{Fisher})}{=}\;\text{Fisher divergence at level } t \\
+&amp;\stackrel{(\text{DSM})}{=}\;\mathbb{E}\bigl\|\text{denoising direction} - s_\theta(x_t, t)\bigr\|^2.
+\end{aligned}$$</div>
+  <ul>
+    <li><strong>Tool 1</strong> (ELBO): intractable likelihood $\to$ tractable MSE surrogate.</li>
+    <li><strong>Tool 2</strong> (Tweedie): MSE on means $\to$ MSE on scores.</li>
+    <li><strong>Tool 3</strong> (Fisher / DSM): score MSE $\to$ denoising regression.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>The Information-Theoretic Arc</h2><div class="divider"></div>
+  <p>Three independently developed techniques, each from a different era:</p>
+  <ul>
+    <li><strong>Variational bounds</strong> (Jordan et al., 1999): approximate intractable posteriors.</li>
+    <li><strong>Tweedie's formula</strong> (Robbins, 1956): posterior mean from the marginal score.</li>
+    <li><strong>Fisher divergence</strong> (Hyv&auml;rinen, 2005): score-based training without normalization.</li>
+  </ul>
+  <div class="highlight">Diffusion is the model where all three <strong>converge to the same $\varepsilon$-prediction loss</strong>.</div>
+</div>
+
+<div class="slide">
+  <h2>Recap</h2><div class="divider"></div>
+  <ul>
+    <li><strong>Diffusion:</strong> hierarchical VAE; three equivalent parameterizations ($x_0$, $\varepsilon$, score).</li>
+    <li><strong>Tool 1 (ELBO):</strong> variational bound $\to$ MSE on posterior mean.</li>
+    <li><strong>Tool 2 (Tweedie):</strong> posterior mean $=$ score, rescaled; bridges ELBO to Fisher.</li>
+    <li><strong>Tool 3 (Fisher):</strong> per-step ELBO MSE $=$ Fisher divergence $=$ denoising score matching.</li>
+    <li><strong>Convergence:</strong> three information-theoretic tools $\to$ one $\varepsilon$-prediction loss.</li>
+  </ul>
+</div>
+
+<div class="slide end-slide no-footer">
+  <div class="big-word">End of Diffusion Series</div>
+  <p class="big-word-sub">Three information-theoretic tools &mdash; variational bounds, Tweedie, Fisher divergence &mdash; converge in one model.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 1</div>
+
+</div><!-- end deck -->
+
+<script src="../../../../reference/deck.js"></script>
+</body>
+</html>

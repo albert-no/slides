@@ -13,7 +13,7 @@ White background. Yonsei Blue (`#003876`) accent. Yonsei TTFs (`reference/fonts/
 
 ```
 courses/                    semester-long lecture series
-  <course>/<topic>/<deck>.html    e.g. courses/infotheory/entropy/entropy1-entropy-kl.html
+  <course>/<topic>/<deck>.html    e.g. courses/infotheory/lectures/01-entropy/entropy1-entropy-kl.html
 talks/                      standalone research presentations
   <name>/<deck>.html              e.g. talks/icml2026/icml2026.html
 reference/                  canonical CSS/JS/fonts/logo (single source of truth)
@@ -81,7 +81,7 @@ Each folder has an `OUTLINE.md`. Three tiers:
 **Read outlines before writing slides** (full rule in `DESIGN_SYSTEM.md` → "OUTLINE.md → Read-side rule"). Two checks:
 
 - **Series continuity.** When working on a deck, scan the leaf `OUTLINE.md` for earlier decks in the same series — and the parent folder's `OUTLINE.md` for adjacent topics — to see what has already been defined or proved. Refer back; don't redefine.
-- **Cross-folder reuse.** When the topic you're writing on may live in another folder (diffusion in `courses/infotheory/` vs `courses/privacy/`; DP in `courses/privacy/dp/` vs `courses/privacy/mia/`; MI bounds in `courses/infotheory/mi/` vs anywhere CLIP comes up), check the root `OUTLINE.md` quick-lookup table first, then the relevant leaf file. Reuse, link, or differentiate — explicit choice.
+- **Cross-folder reuse.** When the topic you're writing on may live in another folder (diffusion in `courses/infotheory/` vs `courses/privacy/`; DP in `courses/privacy/dp/` vs `courses/privacy/mia/`; MI bounds in `courses/infotheory/lectures/05-mi/` vs anywhere CLIP comes up), check the root `OUTLINE.md` quick-lookup table first, then the relevant leaf file. Reuse, link, or differentiate — explicit choice.
 
 When a new deck is created (via `scripts/new-talk.sh` or by hand), add a stub for it in the leaf `OUTLINE.md` *immediately* — even before writing slides — so the deck is discoverable.
 

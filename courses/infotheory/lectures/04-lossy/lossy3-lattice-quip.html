@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lossy Compression 3 — Lattice Codes, QUIP, and QUIP#</title>
+<link rel="stylesheet" href="../../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- TITLE -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lossy Compression · Lecture 3 of 4</div>
+  <h1>Lattice Codes, QUIP, and QUIP#:<br>Structured Codebooks for LLMs</h1>
+  <div class="divider"></div>
+  <p class="subtitle">From the encoder wall of VQ to incoherence processing</p>
+  <p style="font-weight:500;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Information Theory · 2026</p>
+</div>
+
+<!-- TOC -->
+<div class="slide">
+  <h2>Contents</h2><div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The encoder problem</div>
+      <div class="toc-sub">Optimal VQ has a gigantic codebook and intractable search</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Computing in quantized space</div>
+      <div class="toc-sub">Uniform quantization preserves arithmetic</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Lattice codes</div>
+      <div class="toc-sub">Linear structure replaces nearest-neighbor search</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">QUIP</div>
+      <div class="toc-sub">Layer-wise proxy, incoherence, LDLQ</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">QUIP#</div>
+      <div class="toc-sub">Randomized Hadamard rotation + E8 codebook</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════ PART 01 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>The Encoder Problem</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Shannon-optimal VQ is rate-distortion right and operationally dead.</p>
+</div>
+
+<div class="slide">
+  <h2>What a Real Quantizer Must Do</h2><div class="divider"></div>
+  <p>LLM inference: $\sim 10^{10}$ weights, every layer, every forward pass.</p>
+  <ul>
+    <li><strong>Encode</strong> in $\mathcal{O}(d)$ per block — not $\mathcal{O}(2^{dR})$.</li>
+    <li><strong>Tiny codebook</strong> — fits in cache, no GB-scale lookups.</li>
+    <li><strong>Embarrassingly parallel</strong> across blocks and rows.</li>
+    <li><strong>MSE</strong> close to the rate-distortion optimum.</li>
+  </ul>
+  <div class="highlight">Compression is not enough. The encoder has to be cheap.</div>
+</div>
+
+<div class="slide">
+  <h2>Optimal VQ — What the Encoder Does</h2><div class="divider"></div>
+  <p>Group $d$ scalars into $\mathbf{w}\in\mathbb{R}^d$. Encoder finds the nearest codeword.</p>
+  <div class="math-block">$$\mathcal{C} = \{\mathbf{c}_1,\ldots,\mathbf{c}_M\}\subset\mathbb{R}^d, \;\; M = 2^{dR}, \qquad \widehat{\mathbf{w}} \;=\; \arg\min_{k=1,\ldots,M}\,\|\mathbf{w} - \mathbf{c}_k\|^2.$$</div>
+  <p>Encoder picks index $k$; decoder looks up $\mathbf{c}_k$.</p>
+  <div class="highlight">Decoder is trivial (one lookup). The encoder is the wall.</div>
+</div>
+
+<div class="slide">
+  <h2>The Codebook Is Gigantic</h2><div class="divider"></div>
+  <p>$M = 2^{dR}$ codewords, each a $d$-dim vector (4-byte floats). Storage $= d \cdot 2^{dR} \cdot 4$ bytes.</p>
+  <table style="margin: 8px auto 14px; border-collapse: collapse;">
+    <thead><tr style="border-bottom: 2px solid var(--yonsei-blue);">
+      <th style="padding:6px 18px; text-align:left;">$d$</th>
+      <th style="padding:6px 18px; text-align:left;">$R$</th>
+      <th style="padding:6px 18px; text-align:left;">$M = 2^{dR}$</th>
+      <th style="padding:6px 18px; text-align:left;">Codebook size</th>
+    </tr></thead>
+    <tbody>
+      <tr><td style="padding:6px 18px;">$2$</td><td style="padding:6px 18px;">$4$</td><td style="padding:6px 18px;">$256$</td><td style="padding:6px 18px;">$2$ KB &nbsp;<span style="color:var(--success);">fits in L1</span></td></tr>
+      <tr><td style="padding:6px 18px;">$4$</td><td style="padding:6px 18px;">$4$</td><td style="padding:6px 18px;">$65{,}536$</td><td style="padding:6px 18px;">$1$ MB</td></tr>
+      <tr><td style="padding:6px 18px;">$6$</td><td style="padding:6px 18px;">$4$</td><td style="padding:6px 18px;">$16.7 \times 10^6$</td><td style="padding:6px 18px;">$400$ MB</td></tr>
+      <tr><td style="padding:6px 18px;">$8$</td><td style="padding:6px 18px;">$4$</td><td style="padding:6px 18px;">$4.3 \times 10^9$</td><td style="padding:6px 18px;">$137$ GB &nbsp;<span style="color:var(--warn);">won't fit anywhere</span></td></tr>
+    </tbody>
+  </table>
+  <p>Shannon says $d \to \infty$. Storage says $d$ stops at single digits.</p>
+</div>
+
+<div class="slide">
+  <h2>Encoding — A Search You Cannot Run</h2><div class="divider"></div>
+  <p>Per block: scan all $M$ codewords, compute $\|\mathbf{w}-\mathbf{c}_k\|^2$, take the min.</p>
+  <div class="math-block">$$\text{Per-block cost} \;=\; \mathcal{O}(d \cdot 2^{dR}) \;\;\text{ops} \;+\; \mathcal{O}(d \cdot 2^{dR}) \;\;\text{memory reads}.$$</div>
+  <p>For $d=8$, $R=4$, one LLM forward pass over $10^{10}$ weights:</p>
+  <ul>
+    <li>$1.25 \times 10^9$ blocks $\times$ $4.3 \times 10^9$ codeword checks.</li>
+    <li>$\approx 5 \times 10^{18}$ operations per layer, per token.</li>
+    <li>Plus: streaming $137$ GB of codebook through the cache.</li>
+  </ul>
+  <div class="highlight">No clever indexing rescues this — search is fundamentally linear in $M$.</div>
+</div>
+
+<div class="slide">
+  <h2>Two Escape Routes</h2><div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="color:var(--blue-light);">Uniform quantization</h3>
+      <p>Round each coordinate to a fixed grid. No codebook, no search.</p>
+      <p>Cheap; small MSE penalty vs. optimal VQ.</p>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--blue-light);">Lattice codes</h3>
+      <p>Codebook with linear algebraic structure.</p>
+      <p>Encode in $\mathcal{O}(d)$ via algebra, decode by index.</p>
+    </div>
+  </div>
+  <div class="highlight">Both replace the $M$-way search with an algebraic step.</div>
+</div>
+
+
+<!-- ════ PART 02 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Computing in Quantized Space</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Uniform quantization preserves linear arithmetic.</p>
+</div>
+
+<div class="slide">
+  <h2>Uniform Quantization</h2><div class="divider"></div>
+  <p>Fix a step $\Delta &gt; 0$. Round to the nearest multiple of $\Delta$:</p>
+  <div class="math-block">$$\hat x \;=\; Q_\Delta(x) \;=\; \Delta \cdot \mathrm{round}(x/\Delta).$$</div>
+  <p>Store the integer $n = \mathrm{round}(x/\Delta)$; the decoder multiplies by $\Delta$.</p>
+  <ul>
+    <li><strong>Codebook:</strong> implicit — just the step $\Delta$.</li>
+    <li><strong>Encode:</strong> $\mathcal{O}(1)$ per coordinate, no search.</li>
+    <li><strong>Quantization error:</strong> $|x - \hat x| \le \Delta/2$.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>The Naive Path — Round-Trip Through Floats</h2><div class="divider"></div>
+  <p>Stored as integers $n_a, n_b$. To add, the natural reflex:</p>
+  <div class="math-block">$$n_a \xrightarrow{\text{dequant}} \hat a = n_a\Delta \;\xrightarrow{+}\; \hat a + \hat b \;\xrightarrow{\text{requant}}\; \mathrm{round}\!\left(\tfrac{\hat a + \hat b}{\Delta}\right)\,\Delta.$$</div>
+  <ul>
+    <li>Two float multiplies per add.</li>
+    <li>A second rounding $\Rightarrow$ extra error.</li>
+  </ul>
+  <div class="highlight">Dequantize $\to$ add $\to$ requantize. Slow, and lossy on a step that shouldn't lose anything.</div>
+</div>
+
+<div class="slide">
+  <h2>Quantized Values Still Add</h2><div class="divider"></div>
+  <p>If $\hat a = n_a \Delta$ and $\hat b = n_b \Delta$, then</p>
+  <div class="math-block">$$\hat a + \hat b \;=\; (n_a + n_b)\Delta \;\in\; \Delta\,\mathbb{Z}.$$</div>
+  <p>The sum is exactly on the grid — integer add in the index domain, no dequant, no requant.</p>
+  <div class="highlight">Integer addition in the index domain $\Leftrightarrow$ exact sum in the value domain.</div>
+  <p>For weights $\hat w_i = n_i \Delta_w$ and inputs $\hat x_i = m_i \Delta_x$, partial sums stay in integers until the final $\Delta_w \Delta_x$ scale-out.</p>
+</div>
+
+<div class="slide">
+  <h2>Quantized Values Multiply (by Integers)</h2><div class="divider"></div>
+  <p>For any integer $k$:</p>
+  <div class="math-block">$$k \cdot \hat a \;=\; (k\,n_a)\Delta \;\in\; \Delta\,\mathbb{Z}.$$</div>
+  <p>Pairwise integer multiply, then scale by $\Delta_w \Delta_x$ at the end:</p>
+  <div class="math-block">$$\hat w_i \cdot \hat x_i \;=\; (n_i\,m_i)\,\Delta_w \Delta_x.$$</div>
+  <p>The inner sum $\sum_i n_i m_i$ runs in integer arithmetic.</p>
+</div>
+
+<div class="slide">
+  <h2>Matrix-Vector Product, Integer GEMM</h2><div class="divider"></div>
+  <p>A linear layer with quantized $W$ and quantized activation $x$:</p>
+  <div class="math-block">$$\hat y_j \;=\; \sum_i \hat W_{ji}\,\hat x_i \;=\; \Delta_w \Delta_x \sum_i n_{ji}\, m_i.$$</div>
+  <p>Inner sum: pure integer MAC (multiply-accumulate). GPU INT8 cores run this $\sim 4\times$ faster than FP16 with $\sim 4\times$ less memory traffic.</p>
+  <div class="highlight">Uniform quantization is what makes quantized inference fast — not just compact.</div>
+</div>
+
+<div class="slide">
+  <h2>The MSE Penalty Is Small</h2><div class="divider"></div>
+  <p>Uniform grid $\Delta \mathbb{Z}^d$ on i.i.d.&nbsp;data: MSE $= \Delta^2/12$ per coord, any $d$.</p>
+  <p>Best possible at fixed rate (high-$d$ sphere bound): $\sim \Delta^2/(2\pi e)$ per coord.</p>
+  <div class="math-block">$$\text{Penalty ratio} \;=\; \frac{1/12}{1/(2\pi e)} \;=\; \frac{\pi e}{6} \;\approx\; 1.42 \;\;(\le 1.53\text{ dB}).$$</div>
+  <div class="highlight">$\le 1.53$ dB MSE penalty buys you $\mathcal{O}(d)$ encode and zero codebook RAM.</div>
+</div>
+
+
+<!-- ════ PART 03 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Lattice Codes</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A regular grid: linear structure replaces search.</p>
+</div>
+
+<div class="slide">
+  <h2>From Cube Grid to Lattice</h2><div class="divider"></div>
+  <p>A <strong>lattice</strong> $\Lambda$ is the integer span of a basis $\{b_1, \ldots, b_d\}$:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\Lambda \;=\; \{\,n_1 b_1 + n_2 b_2 + \cdots + n_d b_d \;:\; n_i \in \mathbb{Z}\,\}.$$</div>
+  <div class="grid-2" style="margin-top:6px;">
+    <div>
+      <h3 style="text-align:center;">$\mathbb{Z}^2$ — cube basis</h3>
+      <svg viewBox="0 0 220 200" width="100%" style="background:var(--light);border-radius:8px;display:block;max-height:220px;">
+        <g fill="#003876">
+          <circle cx="40" cy="40" r="3"/><circle cx="80" cy="40" r="3"/><circle cx="120" cy="40" r="3"/><circle cx="160" cy="40" r="3"/><circle cx="200" cy="40" r="3"/>
+          <circle cx="40" cy="80" r="3"/><circle cx="80" cy="80" r="3"/><circle cx="120" cy="80" r="3"/><circle cx="160" cy="80" r="3"/><circle cx="200" cy="80" r="3"/>
+          <circle cx="40" cy="120" r="3"/><circle cx="80" cy="120" r="3"/><circle cx="120" cy="120" r="3"/><circle cx="160" cy="120" r="3"/><circle cx="200" cy="120" r="3"/>
+          <circle cx="40" cy="160" r="3"/><circle cx="80" cy="160" r="3"/><circle cx="120" cy="160" r="3"/><circle cx="160" cy="160" r="3"/><circle cx="200" cy="160" r="3"/>
+        </g>
+        <defs>
+          <marker id="z2-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#d94040"/></marker>
+        </defs>
+        <line x1="80" y1="120" x2="118" y2="120" stroke="#d94040" stroke-width="2.5" marker-end="url(#z2-ar)"/>
+        <line x1="80" y1="120" x2="80" y2="82" stroke="#d94040" stroke-width="2.5" marker-end="url(#z2-ar)"/>
+        <text x="100" y="115" font-size="13" fill="#d94040" font-weight="700">b₁</text>
+        <text x="58" y="103" font-size="13" fill="#d94040" font-weight="700">b₂</text>
+      </svg>
+    </div>
+    <div>
+      <h3 style="text-align:center;">$A_2$ — hex basis</h3>
+      <svg viewBox="0 0 220 200" width="100%" style="background:var(--light);border-radius:8px;display:block;max-height:220px;">
+        <g fill="#003876">
+          <circle cx="40" cy="40" r="3"/><circle cx="80" cy="40" r="3"/><circle cx="120" cy="40" r="3"/><circle cx="160" cy="40" r="3"/><circle cx="200" cy="40" r="3"/>
+          <circle cx="60" cy="75" r="3"/><circle cx="100" cy="75" r="3"/><circle cx="140" cy="75" r="3"/><circle cx="180" cy="75" r="3"/>
+          <circle cx="40" cy="110" r="3"/><circle cx="80" cy="110" r="3"/><circle cx="120" cy="110" r="3"/><circle cx="160" cy="110" r="3"/><circle cx="200" cy="110" r="3"/>
+          <circle cx="60" cy="145" r="3"/><circle cx="100" cy="145" r="3"/><circle cx="140" cy="145" r="3"/><circle cx="180" cy="145" r="3"/>
+          <circle cx="40" cy="180" r="3"/><circle cx="80" cy="180" r="3"/><circle cx="120" cy="180" r="3"/><circle cx="160" cy="180" r="3"/><circle cx="200" cy="180" r="3"/>
+        </g>
+        <defs>
+          <marker id="a2-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#d94040"/></marker>
+        </defs>
+        <line x1="80" y1="110" x2="118" y2="110" stroke="#d94040" stroke-width="2.5" marker-end="url(#a2-ar)"/>
+        <line x1="80" y1="110" x2="98" y2="77" stroke="#d94040" stroke-width="2.5" marker-end="url(#a2-ar)"/>
+        <text x="100" y="105" font-size="13" fill="#d94040" font-weight="700">b₁</text>
+        <text x="68" y="92" font-size="13" fill="#d94040" font-weight="700">b₂</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Voronoi Cells — Round Beats Square</h2><div class="divider"></div>
+  <p>By translation symmetry, every Voronoi cell has the <strong>same shape</strong> — one fundamental cell, repeated.</p>
+  <div class="grid-2" style="margin-top:6px;">
+    <div>
+      <h3 style="text-align:center;">$\mathbb{Z}^2$ — square cell</h3>
+      <svg viewBox="0 0 220 200" width="100%" style="background:var(--light);border-radius:8px;display:block;max-height:220px;">
+        <g stroke="#cbd5dc" stroke-width="1" fill="none">
+          <rect x="60" y="60" width="40" height="40"/><rect x="100" y="60" width="40" height="40"/><rect x="140" y="60" width="40" height="40"/>
+          <rect x="60" y="100" width="40" height="40"/><rect x="140" y="100" width="40" height="40"/>
+          <rect x="60" y="140" width="40" height="40"/><rect x="100" y="140" width="40" height="40"/><rect x="140" y="140" width="40" height="40"/>
+        </g>
+        <rect x="100" y="100" width="40" height="40" fill="#003876" fill-opacity="0.18" stroke="#003876" stroke-width="2"/>
+        <circle cx="120" cy="120" r="3" fill="#003876"/>
+        <line x1="120" y1="120" x2="140" y2="100" stroke="#d94040" stroke-width="2.2"/>
+        <text x="143" y="98" font-size="12" fill="#d94040" font-weight="700">corner</text>
+      </svg>
+      <p style="text-align:center; font-size:1.1rem;">corner dist $\approx 0.71\,a$</p>
+    </div>
+    <div>
+      <h3 style="text-align:center;">$A_2$ — hex cell</h3>
+      <svg viewBox="0 0 220 200" width="100%" style="background:var(--light);border-radius:8px;display:block;max-height:220px;">
+        <g stroke="#cbd5dc" stroke-width="1" fill="none">
+          <polygon points="170,50 200,68 200,102 170,120 140,102 140,68"/>
+          <polygon points="50,50 80,68 80,102 50,120 20,102 20,68"/>
+          <polygon points="140,102 170,120 170,155 140,172 110,155 110,120"/>
+          <polygon points="80,102 110,120 110,155 80,172 50,155 50,120"/>
+        </g>
+        <polygon points="110,50 140,68 140,102 110,120 80,102 80,68" fill="#003876" fill-opacity="0.18" stroke="#003876" stroke-width="2"/>
+        <circle cx="110" cy="85" r="3" fill="#003876"/>
+        <line x1="110" y1="85" x2="140" y2="68" stroke="#d94040" stroke-width="2.2"/>
+        <text x="143" y="66" font-size="12" fill="#d94040" font-weight="700">corner</text>
+      </svg>
+      <p style="text-align:center; font-size:1.1rem;">corner dist $\approx 0.62\,a$</p>
+    </div>
+  </div>
+  <div class="highlight">Same cell area; smaller worst-case distance $\Rightarrow$ smaller MSE per bit.</div>
+</div>
+
+<div class="slide">
+  <h2>Encoding: Round, Don't Search</h2><div class="divider"></div>
+  <p>The lattice's algebra picks the closest point. No list of $M$ codewords is ever consulted.</p>
+  <p><strong>$\mathbb{Z}^d$.</strong> Round each coordinate independently:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\widehat{n}_i \;=\; \lfloor x_i + \tfrac12 \rfloor, \quad i = 1, \ldots, d.$$</div>
+  <p>e.g.&nbsp;$x = (1.7,\, -0.4,\, 2.9,\, 1.1) \;\Rightarrow\; \widehat n = (2,\, 0,\, 3,\, 1)$. Cost: $d$ rounds.</p>
+  <p><strong>$E_8$.</strong> Round $x$ to $\mathbb{Z}^8$ and to $\mathbb{Z}^8 + \tfrac12\mathbf{1}$ (two cosets); return the closer of the two. Cost: $\sim 2d$ rounds.</p>
+</div>
+
+<div class="slide">
+  <h2>Decoding: Index $\to$ Codeword</h2><div class="divider"></div>
+  <p>Stored per block: one integer index $\widehat n$ (or $k$). Decoder reconstructs $\widehat{\mathbf{w}}$.</p>
+  <div class="grid-2" style="margin-top:8px;">
+    <div>
+      <h3 style="color:var(--blue-light);">$\mathbb{Z}^d$ — no table</h3>
+      <p>$\widehat{\mathbf{w}} \;=\; \Delta \cdot \widehat n$. Zero codebook RAM.</p>
+    </div>
+    <div>
+      <h3 style="color:var(--blue-light);">$E_8 \cap$ ball</h3>
+      <p>Keep only lattice points inside a ball — the <em>shape</em> that matches the typical set of $\mathcal{N}(0, I_8)$.</p>
+      <p>$\sim 256$ codewords at $R{=}2$, $\sim 1$ KB table. Fits in L1.</p>
+    </div>
+  </div>
+  <div class="highlight">Encode: $\mathcal{O}(d)$ algebra. Decode: $\mathcal{O}(1)$ index lookup. Both cheap.</div>
+</div>
+
+<div class="slide">
+  <h2>$\mathbb{Z}^8$ Is Just Scalar Quantization</h2><div class="divider"></div>
+  <p>$\mathbb{Z}^8 = \{(n_1,\ldots,n_8) : n_i \in \mathbb{Z}\}$. Round each coordinate independently.</p>
+  <ul>
+    <li>Voronoi cell is an 8-D <strong>cube</strong> — corners stick far from the center.</li>
+    <li>Kissing number $16$ ($\pm e_i$). Sparse for 8 dimensions.</li>
+  </ul>
+  <div class="highlight">8-D scalar quant. No gain over per-coordinate rounding.</div>
+</div>
+
+<div class="slide">
+  <h2>$E_8$ — One Extra Coset Buys a Round Cell</h2><div class="divider"></div>
+  <p>Take $\mathbb{Z}^8$ and add the half-shifted copy (only when all coords sum to an even integer):</p>
+  <div class="math-block">$$E_8 \;=\; D_8 \;\cup\; \bigl(D_8 + \tfrac12 \mathbf{1}\bigr), \qquad D_8 = \bigl\{n \in \mathbb{Z}^8 : \textstyle\sum_i n_i \text{ even}\bigr\}.$$</div>
+  <ul>
+    <li>Points fall into the gaps left by $\mathbb{Z}^8$ $\Rightarrow$ <strong>denser</strong> packing.</li>
+    <li>Voronoi cell becomes nearly a ball; corner distance shrinks.</li>
+    <li>Kissing number jumps $16 \to 240$.</li>
+  </ul>
+  <div class="highlight">Same dim, same encode cost — but cells are round instead of cubic.</div>
+</div>
+
+<div class="slide">
+  <h2>Why Dimension 8?</h2><div class="divider"></div>
+  <p>Higher $d$ rounds the Voronoi cell more. But codebook and rounding both get more expensive.</p>
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="color:var(--blue-light);">$E_8$ is special</h3>
+      <p>$240$ tangent neighbors, vs. $16$ for $\mathbb{Z}^8$.</p>
+      <p>Viazovska (2017, Fields Medal): densest sphere packing in $\mathbb{R}^8$.</p>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--blue-light);">Why not 16 or 24?</h3>
+      <p>Leech in 24-D is tighter, but encode and table costs blow up.</p>
+      <p>$E_8$ at $R{=}2$: $M{=}256$, 1&nbsp;KB. Sweet spot for LLMs.</p>
+    </div>
+  </div>
+  <div class="cite">Viazovska, "The sphere packing problem in dimension 8", Ann. of Math. 2017.</div>
+</div>
+
+<div class="slide">
+  <h2>Visualizing $E_8$ — 240 Tangent Neighbors</h2><div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns: 1.4fr 1fr; gap: 40px; align-items: start;">
+    <div>
+      <div class="card" style="padding: 14px 22px;">
+        <h3 style="color:var(--blue-light); margin: 0;">Kissing number</h3>
+        <p style="margin: 6px 0 0 0;">Number of neighbors at the minimum distance.</p>
+      </div>
+      <ul style="margin-top: 14px;">
+        <li>$\mathbb{Z}^2$ $\;\to\;$ $4$</li>
+        <li>$A_2$ (hex) $\;\to\;$ $6$</li>
+        <li>$\mathbb{Z}^8$ $\;\to\;$ $16$</li>
+        <li>$E_8$ $\;\to\;$ <strong>$240$</strong></li>
+      </ul>
+      <p style="margin-top: 8px;">$\to$ rounder Voronoi cell &middot; smaller MSE per bit</p>
+    </div>
+    <div style="text-align: center;">
+      <img src="e8.jpg" alt="E_8 lattice 240 minimum vectors projected to Coxeter plane" style="max-width: 100%; max-height: 360px; display: block; margin: 0 auto; background: var(--light); border-radius: 8px;">
+      <p style="font-size:1.05rem; margin-top:6px;">240 minimum vectors of $E_8$, Coxeter plane.</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Finite Codebook from a Lattice</h2><div class="divider"></div>
+  <p>Three knobs:</p>
+  <ol class="num">
+    <li><strong>Base lattice</strong> $\Lambda$ — e.g.&nbsp;$E_8$. Stored implicitly.</li>
+    <li><strong>Scale</strong> $\Delta$ — distortion variance $\propto \Delta^2$.</li>
+    <li><strong>Shape</strong> $\mathcal{S}$ — intersect with a ball that matches the data.</li>
+  </ol>
+  <div class="math-block">$$\mathcal{C} \;=\; (\Delta\,\Lambda) \cap \mathcal{S}.$$</div>
+  <p>For Gaussian-like data $X\sim\mathcal{N}(0,I_d)$, $\|X\|^2 \approx d$ — a ball $\mathcal{S}$ matches the typical set.</p>
+</div>
+
+<div class="slide">
+  <h2>Picking the Ball — Match the Typical Set</h2><div class="divider"></div>
+  <p>For $X \sim \mathcal{N}(0, \sigma^2 I_d)$, the squared norm concentrates:</p>
+  <div class="math-block">$$\|X\|^2 \;\approx\; d\sigma^2 \;\;(\text{std.\ dev.\ } O(\sigma^2\sqrt d)).$$</div>
+  <p>So pick the ball radius $r = \sigma\sqrt{d\,(1+\epsilon)}$:</p>
+  <ul>
+    <li>Almost all data lives inside &mdash; tiny clipping loss.</li>
+    <li>Almost no lattice points outside &mdash; no wasted codewords.</li>
+  </ul>
+  <div class="highlight">The ball is just big enough to cover the typical set, no bigger.</div>
+</div>
+
+<div class="slide">
+  <h2>Rounding to $E_8$ in $\mathcal{O}(d)$</h2><div class="divider"></div>
+  <p>$E_8 = \mathbb{Z}^8 \;\cup\; (\mathbb{Z}^8 + \tfrac12 \mathbf{1})$. Two cosets, round each, keep the closer.</p>
+  <div class="card" style="max-width: 920px; margin: 8px auto;">
+    <p style="margin: 2px 0;"><strong>1.</strong> $a \;=\; \mathrm{round}(x)$ &nbsp;&nbsp;($d$ scalar rounds, $\mathcal{O}(d)$).</p>
+    <p style="margin: 2px 0;"><strong>2.</strong> $b \;=\; \mathrm{round}(x - \tfrac12 \mathbf{1}) + \tfrac12 \mathbf{1}$ &nbsp;&nbsp;($d$ scalar rounds, $\mathcal{O}(d)$).</p>
+    <p style="margin: 2px 0;"><strong>3.</strong> Return $a$ if $\|x - a\|^2 \le \|x - b\|^2$, else $b$ &nbsp;&nbsp;($\mathcal{O}(d)$).</p>
+  </div>
+  <p>Total: $\mathcal{O}(d)$ &mdash; no codeword scan, no $2^{dR}$ search.</p>
+  <div class="highlight">Same cost as scalar rounding, but the cell is round instead of cubic.</div>
+</div>
+
+<div class="slide">
+  <h2>Is It OK to Use a Lattice Codebook?</h2><div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3 style="color:var(--blue-light); margin-top:0;">Encode (the hard part)</h3>
+      <p style="margin: 4px 0;">Algebraic rounding in $\mathcal{O}(d)$.</p>
+      <p style="margin: 4px 0;">For $E_8$: two cosets, $\mathcal{O}(d)$ rounds each, keep the closer.</p>
+      <p style="margin: 4px 0;">Output: integer index $k$.</p>
+    </div>
+    <div>
+      <h3 style="color:var(--blue-light); margin-top:0;">Decode (the easy part)</h3>
+      <p style="margin: 4px 0;">Lookup $\widehat{\mathbf{w}} = \mathbf{c}_k$ from a small table.</p>
+      <p style="margin: 4px 0;">Table size $= |\Lambda \cap \mathcal{S}|$ entries.</p>
+      <p style="margin: 4px 0;">$E_8$ at $R=2$: 256 entries, 1&nbsp;KB. Fits in L1.</p>
+    </div>
+  </div>
+  <div class="highlight">Small codebook $+$ cheap encoder $+$ decoder by index. All three.</div>
+</div>
+
+
+<!-- ════ PART 04 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>QUIP: Incoherence Processing</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Make weights "boring" so a coarse quantizer works.</p>
+</div>
+
+<div class="slide">
+  <h2>We Care About Output, Not Weights</h2><div class="divider"></div>
+  <p>Natural objective:</p>
+  <div class="math-block">$$\mathbb{E}\bigl\|\widehat W - W\bigr\|_F^2 \quad\text{(weight MSE — easy to measure, wrong target)}.$$</div>
+  <p>Real objective:</p>
+  <div class="math-block">$$\mathbb{E}_{x \sim \text{data}}\,\bigl\|f_{\widehat W}(x) - f_W(x)\bigr\|^2 \quad\text{(output MSE — what we actually want)}.$$</div>
+  <p>The full network $f$ is nonlinear and intractable to characterize. We need a tractable surrogate.</p>
+</div>
+
+<div class="slide">
+  <h2>Surrogate — One Layer at a Time</h2><div class="divider"></div>
+  <p>If every layer's output stays close to the original, the network's output does too.</p>
+  <p>For one linear layer $y = Wx$, replace $W$ with $\widehat W$. Set the <em>weight error</em> $W_\Delta = \widehat W - W$ (a matrix, not "small change in $x$").</p>
+  <p>Per-input output error:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\bigl\|f_{\widehat W}(x) - f_W(x)\bigr\|^2 \;=\; \bigl\|W_\Delta\,x\bigr\|^2.$$</div>
+  <p>Average over the data distribution to get a per-layer proxy loss $\ell(\widehat W) = \mathbb{E}_x \|W_\Delta\, x\|^2$.</p>
+  <div class="highlight">Next: rewrite $\mathbb{E}_x\|W_\Delta\, x\|^2$ in a form that depends on $W_\Delta$ and a <em>fixed</em> matrix $H$.</div>
+</div>
+
+<div class="slide">
+  <h2>The Trace Trick</h2><div class="divider"></div>
+  <p>Expand $\|W_\Delta\, x\|^2$ and pull the expectation inside the trace.</p>
+  <div class="math-block" style="margin: 6px 0;">$$\begin{aligned}
+    \|W_\Delta\, x\|^2 &\;\stackrel{(1)}{=}\; (W_\Delta\, x)^\top (W_\Delta\, x) \;=\; x^\top W_\Delta^\top W_\Delta\, x \\
+    &\;\stackrel{(2)}{=}\; \mathrm{tr}\!\bigl(x^\top W_\Delta^\top W_\Delta\, x\bigr) \;\stackrel{(3)}{=}\; \mathrm{tr}\!\bigl(W_\Delta\, x x^\top\, W_\Delta^\top\bigr).
+  \end{aligned}$$</div>
+  <p>Now take the expectation. $W_\Delta$ is non-random; pull it out:</p>
+  <div class="math-block" style="margin: 6px 0;">$$\mathbb{E}_x\,\|W_\Delta\, x\|^2 \;\stackrel{(4)}{=}\; \mathrm{tr}\!\bigl(W_\Delta\, \mathbb{E}_x[xx^\top]\, W_\Delta^\top\bigr) \;=\; \mathrm{tr}\!\bigl(W_\Delta\, H\, W_\Delta^\top\bigr).$$</div>
+  <p style="font-size:1.1rem;">(1) definition $\|v\|^2 = v^\top v$. (2) scalar = its own trace. (3) cyclic. (4) linearity, $W_\Delta$ outside.</p>
+</div>
+
+<div class="slide">
+  <h2>The Proxy Loss</h2><div class="divider"></div>
+  <p>Collecting, with $W_\Delta = \widehat W - W$:</p>
+  <div class="math-block" style="margin: 6px 0;">$$\ell(\widehat W) \;=\; \mathbb{E}_x\,\|W_\Delta\, x\|^2 \;=\; \mathrm{tr}\!\bigl(W_\Delta\, H\, W_\Delta^\top\bigr),$$</div>
+  <div class="math-block" style="margin: 6px 0;">$$H \;=\; \mathbb{E}_x[xx^\top] \quad\text{(PSD, fixed by calibration data).}$$</div>
+  <div class="highlight">
+    <p style="margin:0 0 6px 0;">Per-layer Hessian-weighted MSE.</p>
+    <p style="margin:0;">Depends on $\widehat W$ only through $W_\Delta$. Decouples across rows.</p>
+  </div>
+  <div class="cite">Chee et al., "QuIP", NeurIPS 2023.</div>
+</div>
+
+<div class="slide">
+  <h2>What Is $H$?</h2><div class="divider"></div>
+  <p><strong>$H$ is the input covariance from calibration data</strong> &mdash; <em>not</em> a loss Hessian.</p>
+  <div class="math-block" style="margin: 4px 0;">$$H \;=\; \mathbb{E}_{x \sim \text{calib}}\bigl[\,x x^\top\,\bigr] \;\in\; \mathbb{R}^{n\times n}, \;\; \text{PSD}.$$</div>
+  <p>Compute once from a few hundred forward passes on a calibration corpus &mdash; same $H$ used by every quantization step of the layer.</p>
+  <div class="highlight">$H$ encodes which input directions matter to the layer's output.</div>
+</div>
+
+<div class="slide">
+  <h2>The Hessian Tells Us What Matters</h2><div class="divider"></div>
+  <p>Diagonal $H_{ii} = \mathbb{E}[x_i^2]$: variance of input coordinate&nbsp;$i$.</p>
+  <p>Off-diagonal $H_{ij} = \mathbb{E}[x_i x_j]$: how inputs correlate.</p>
+  <ul>
+    <li>Error along high-variance directions of $H$ hurts the output more.</li>
+    <li>Error along directions with $H \approx 0$ is invisible to the output.</li>
+  </ul>
+  <div class="highlight">A good quantizer should be careful where $H$ is large and sloppy where $H$ is small.</div>
+</div>
+
+<div class="slide">
+  <h2>The Idea — Predict and Correct</h2><div class="divider"></div>
+  <p>Quantize columns of $W$ in order $1, 2, \ldots, n$ — one at a time.</p>
+  <p>Before rounding column $k$, <strong>predict</strong> it from the already-rounded $\widehat W_1, \ldots, \widehat W_{k-1}$.</p>
+  <p>Round the <em>residual</em>, not the raw column.</p>
+  <ul>
+    <li>Correlated inputs $\Rightarrow$ residual is small $\Rightarrow$ less MSE.</li>
+    <li>Same idea as <strong>DPCM</strong> in speech/image coding (differential PCM).</li>
+  </ul>
+  <div class="highlight">LDLQ = DPCM for columns of $W$, with prediction tuned to $H$.</div>
+</div>
+
+<div class="slide">
+  <h2>The Linear-Feedback Family</h2><div class="divider"></div>
+  <p>Round columns sequentially with a linear correction from past errors:</p>
+  <div class="math-block" style="margin: 4px 0;">$$\widehat W_k \;=\; Q\!\left(\,W_k \;+\; \sum_{j\,<\,k}\,(W_j - \widehat W_j)\,U_{jk}\,\right), \qquad k = 1, \ldots, n.$$</div>
+  <p>Stack the coefficients into a strictly upper-triangular $U \in \mathbb R^{n\times n}$:</p>
+  <div class="math-block" style="margin: 4px 0;">$$\widehat W \;=\; Q\!\bigl(\,W \;+\; (W - \widehat W)\,U\,\bigr).$$</div>
+  <p>$U = 0 \Rightarrow$ plain round-to-nearest &middot; <strong>Goal:</strong> choose $U$ from $H$ (not $W$) to minimize the proxy.</p>
+</div>
+
+<div class="slide">
+  <h2>Why "Upper Triangular"?</h2><div class="divider"></div>
+  <p>The feedback must be <strong>causal</strong>: when rounding column $k$, only $\widehat W_1, \ldots, \widehat W_{k-1}$ are known.</p>
+  <div class="math-block" style="margin: 6px 0;">$$U_{jk} \neq 0 \iff j \;<\; k.$$</div>
+  <p>Equivalently, $U$ is strictly upper triangular &mdash; $(W - \widehat W)\,U$ at column $k$ depends only on columns $1, \ldots, k-1$.</p>
+  <div class="highlight">"Only past errors influence the next decision."</div>
+</div>
+
+<div class="slide">
+  <h2>Quantization Residual $\eta$</h2><div class="divider"></div>
+  <p>Recall the goal — minimize the per-layer <strong>proxy loss</strong>:</p>
+  <div class="math-block" style="margin: 4px 0;">$$\ell(\widehat W) \;=\; \mathrm{tr}\!\bigl((\widehat W - W)\,H\,(\widehat W - W)^\top\bigr).$$</div>
+  <p>Inside the linear-feedback update, let $z = W + (W - \widehat W)\,U$ be the pre-rounded matrix. The <strong>per-coordinate quantization error</strong> is</p>
+  <div class="math-block" style="margin: 4px 0;">$$\eta_{ij} \;=\; Q(z_{ij}) - z_{ij}, \qquad |\eta_{ij}| \;\le\; \tfrac12.$$</div>
+  <p>So $\widehat W = z + \eta$. We will express the proxy in terms of $\eta$.</p>
+</div>
+
+<div class="slide">
+  <h2>Proxy in Feedback Form</h2><div class="divider"></div>
+  <p>From $\widehat W = W + (W - \widehat W)\,U + \eta$, rearrange:</p>
+  <div class="math-block" style="margin: 4px 0;">$$(\widehat W - W)\,(I + U) \;=\; \eta \qquad\Longrightarrow\qquad \widehat W - W \;=\; \eta\,(I + U)^{-1}.$$</div>
+  <p>Plug into $\ell(\widehat W) = \mathrm{tr}\bigl((\widehat W - W)\,H\,(\widehat W - W)^\top\bigr)$:</p>
+  <div class="math-block" style="margin: 4px 0;">$$\ell(\widehat W) \;=\; \mathrm{tr}\!\bigl(\,\eta\,(I+U)^{-1}\,H\,(I+U)^{-\top}\,\eta^\top\,\bigr).$$</div>
+  <div class="highlight">Same proxy, rewritten as a quadratic in $\eta$ &middot; which $U$ shrinks the middle matrix?</div>
+</div>
+
+<div class="slide">
+  <h2>LDL of $H$ Cancels the Cross-Terms</h2><div class="divider"></div>
+  <p>$H$ is PSD, so it has an <strong>upper-LDL$^\top$</strong> factorization:</p>
+  <div class="math-block" style="margin: 4px 0;">$$H \;=\; (I + \bar U)\,D\,(I + \bar U)^\top, \qquad \bar U \text{ str. upper-triangular},\;\; D \succeq 0 \text{ diagonal}.$$</div>
+  <p>Set $U \leftarrow \bar U$: the $(I+U)^{\pm 1}$ factors collapse against $H$ and the proxy decouples,</p>
+  <div class="math-block" style="margin: 4px 0;">$$\ell(\widehat W) \;=\; \mathrm{tr}\!\bigl(\eta\,D\,\eta^\top\bigr) \;=\; \sum_{k=1}^n D_{kk}\,\|\eta_{\,\cdot\, k}\|^2.$$</div>
+  <p>Cross-terms gone — column $k$ of the quantization error $\eta$ is paid for at rate $D_{kk}$ alone.</p>
+</div>
+
+<div class="slide">
+  <h2>LDLQ — Round With Memory</h2><div class="divider"></div>
+  <p>The choice $U \leftarrow \bar U$ defines the <strong>LDLQ</strong> algorithm.</p>
+  <div class="card" style="max-width: 980px; margin: 14px auto;">
+    <p style="margin: 4px 0;"><strong>1.</strong> Factor $H = (I + \bar U)\, D\, (I + \bar U)^\top$ once from calibration.</p>
+    <p style="margin: 4px 0;"><strong>2.</strong> For $k = 1, 2, \ldots, n$:</p>
+    <p style="margin: 4px 0; padding-left: 56px;">$\circ$ &nbsp;correction &nbsp; $\;c_k \;=\; \sum_{j\,&lt;\,k}\, (W_j - \widehat W_j)\,\bar U_{jk}$</p>
+    <p style="margin: 4px 0; padding-left: 56px;">$\circ$ &nbsp;round &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $\;\widehat W_k \;=\; Q\bigl(W_k + c_k\bigr)$ &nbsp; (per-coordinate nearest)</p>
+  </div>
+  <div class="highlight">Sequential rounding with linear feedback — DPCM in matrix form.</div>
+</div>
+
+<div class="slide">
+  <h2>What $\bar U$ and $D$ Mean</h2><div class="divider"></div>
+  <p>The LDL$^\top$ of $H$ is Gram-Schmidt under the $H$-inner-product:</p>
+  <ul>
+    <li>$\bar U_{jk}$ ($j &lt; k$) = best <em>linear predictor</em> coefficient of coord $k$ from coord $j$.</li>
+    <li>$D_{kk}$ = residual variance of coord $k$ after removing the influence of $1, \ldots, k-1$.</li>
+  </ul>
+  <div class="grid-2" style="margin-top: 6px;">
+    <div>
+      <p style="margin: 2px 0;"><strong>$H$ diagonal</strong> $\Rightarrow$ $\bar U = 0$.</p>
+      <p style="margin: 2px 0;">No prediction possible &mdash; LDLQ collapses to round-to-nearest.</p>
+    </div>
+    <div>
+      <p style="margin: 2px 0;"><strong>$H$ off-diagonal mass</strong> $\Rightarrow$ $\bar U \ne 0$.</p>
+      <p style="margin: 2px 0;">Subtract the predictable part of column $k$ before rounding.</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Worst-Case and Average Proxy Loss</h2><div class="divider"></div>
+  <p>For a rounding rule $A$ (taking $W, H$ and returning $\widehat W$), define two losses:</p>
+  <div class="math-block" style="margin: 2px 0;">$$\mathcal{L}_\text{worst}(A, H) \;=\; \sup_{W \in \mathbb{R}^{m\times n}}\, \mathbb{E}\,\mathrm{tr}\!\bigl((A(W,H) - W)\,H\,(A(W,H) - W)^\top\bigr),$$</div>
+  <div class="math-block" style="margin: 2px 0;">$$\mathcal{L}_\text{avg}(A, H) \;=\; \mathbb{E}_{W \sim \text{Unif}[0,1]^{m\times n}}\,\mathrm{tr}\!\bigl((A(W,H) - W)\,H\,(A(W,H) - W)^\top\bigr).$$</div>
+  <p>Both reduce to $\sum_k D_{kk} \,\mathbb{E}\|\eta_{\cdot k}\|^2$ for LDLQ. With $|\eta_{ij}| \le \tfrac12$:</p>
+  <ul style="margin: 2px 0;">
+    <li><strong>Worst:</strong> $\eta_{ij}^2 = \tfrac14$ at $W_{ij} = k+\tfrac12$ &nbsp;$\Rightarrow$&nbsp; $\mathcal{L}_\text{worst} = \tfrac{m}{4}\,\mathrm{tr}(D)$.</li>
+    <li><strong>Average:</strong> $\mathbb{E}\,\eta_{ij}^2 = \tfrac1{12}$ (nearest) or $\tfrac16$ (stochastic) &nbsp;$\Rightarrow$&nbsp; $\mathcal{L}_\text{avg} = \tfrac{m}{c}\,\mathrm{tr}(D)$.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>LDLQ Is Optimal (Theorem)</h2><div class="divider"></div>
+  <p>Within the linear-feedback family with $U$ a function of $H$ (not $W$):</p>
+  <div class="card">
+    <h3 style="margin-top:0;">Theorem 1 (Chee et al., 2023).</h3>
+    <p style="margin: 2px 0;">For any PSD $H$ and any rule $A$ in the family,</p>
+    <div class="math-block" style="margin: 2px 0;">$$\begin{aligned}
+      \tfrac{m}{4}\,\mathrm{tr}(D) &= \mathcal{L}_\text{worst}(\text{LDLQ}, H) \le \mathcal{L}_\text{worst}(A, H), \\
+      \tfrac{m}{c}\,\mathrm{tr}(D) &= \mathcal{L}_\text{avg}(\text{LDLQ}, H) \le \mathcal{L}_\text{avg}(A, H).
+    \end{aligned}$$</div>
+    <p style="margin: 2px 0;">$c = 12$ nearest, $6$ stochastic &middot; $\mathrm{tr}(D) \le \mathrm{tr}(H)$, equality iff $H$ diagonal.</p>
+  </div>
+  <div class="cite">Chee, Cai, Kuleshov, De Sa, "QuIP", NeurIPS 2023.</div>
+</div>
+
+<div class="slide">
+  <h2>What Theorem 1 Means</h2><div class="divider"></div>
+  <ul>
+    <li>$\mathrm{tr}(H)$ = total input variance — the cost paid by round-to-nearest.</li>
+    <li>$\mathrm{tr}(D)$ = <em>residual</em> variance after LDL strips cross-coordinate predictability.</li>
+    <li>Gap is strict whenever $H$ has off-diagonal mass.</li>
+  </ul>
+  <div class="math-block" style="margin: 4px 0;">$$\underbrace{\tfrac{m}{4}\,\mathrm{tr}(H)}_{\text{round-to-nearest}} \quad \text{vs.} \quad \underbrace{\tfrac{m}{4}\,\mathrm{tr}(D)}_{\text{LDLQ}}.$$</div>
+  <p>Empirically, across <em>every layer</em> of OPT 125m–2.7b, $\;\mathrm{tr}(D)/\mathrm{tr}(H) \le 0.65$ (Chee et al., 2023, Supplement C).</p>
+  <div class="highlight">LDLQ wins whenever inputs are correlated — i.e., every real LLM layer.</div>
+</div>
+
+<div class="slide">
+  <h2>Why Outliers Wreck Quantization</h2><div class="divider"></div>
+  <p>Uniform quantizer needs a step $\Delta$ that covers the whole range $[-W_{\max}, W_{\max}]$.</p>
+  <p>With $M = 2^{R}$ bins:</p>
+  <div class="math-block">$$\Delta \;=\; \frac{2 W_{\max}}{M} \;\propto\; W_{\max}.$$</div>
+  <div class="grid-2" style="margin-top:8px;">
+    <div>
+      <svg viewBox="0 0 280 140" width="320" style="max-width:100%;background:var(--light);border-radius:8px;display:block;margin:0 auto;">
+        <line x1="20" y1="100" x2="260" y2="100" stroke="#333" stroke-width="1"/>
+        <g fill="#003876"><rect x="60" y="80" width="6" height="20"/><rect x="80" y="70" width="6" height="30"/><rect x="100" y="60" width="6" height="40"/><rect x="120" y="65" width="6" height="35"/><rect x="140" y="75" width="6" height="25"/><rect x="160" y="85" width="6" height="15"/></g>
+        <rect x="230" y="20" width="6" height="80" fill="#d94040"/>
+        <text x="237" y="18" font-size="12" fill="#d94040" font-weight="700">outlier</text>
+      </svg>
+      <p style="text-align:center;">One big entry $\Rightarrow$ huge $\Delta$.</p>
+    </div>
+    <div>
+      <p>Most weights live in a small region &mdash; but $\Delta$ is sized for the outlier.</p>
+      <p>Almost every bit of resolution is wasted.</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Incoherence — No Outliers</h2><div class="divider"></div>
+  <p>$W \in \mathbb{R}^{m\times n}$ is <strong>$\mu$-incoherent</strong> if</p>
+  <div class="math-block">$$\max_{i,j} |W_{ij}| \;\le\; \mu \cdot \frac{\|W\|_F}{\sqrt{mn}}.$$</div>
+  <p>RHS is the average magnitude. So the maximum is within a factor $\mu$ of the typical scale.</p>
+  <div class="highlight">Incoherent = max-to-typical bounded. Quantizer step $\Delta$ stops being dominated by a few entries.</div>
+  <p>Analogous definition for the Hessian $H = Q\Lambda Q^\top$: eigenbasis is spread out, $\max_{ij}|Q_{ij}| \le \mu/\sqrt n$.</p>
+</div>
+
+<div class="slide">
+  <h2>Conjugation Preserves the Proxy</h2><div class="divider"></div>
+  <p>Two independent random orthogonals: &nbsp;$U \in O(m)$ rotates <em>outputs</em>, &nbsp;$V \in O(n)$ rotates <em>inputs</em>.</p>
+  <div class="math-block" style="margin: 4px 0;">$$\widetilde W \;=\; U\, W\, V^\top \quad\text{(rows by $U$, columns by $V$).}$$</div>
+  <p>$H = \mathbb{E}[xx^\top]$ depends only on the input $x$. After rotation $x \to V x$:</p>
+  <div class="math-block" style="margin: 4px 0;">$$\widetilde H \;=\; \mathbb{E}\bigl[(Vx)(Vx)^\top\bigr] \;=\; V\, H\, V^\top.$$</div>
+  <p>$U$ never enters $\widetilde H$ — $H$ has no output index. Cyclic trace then gives</p>
+  <div class="math-block" style="margin: 4px 0;">$$\mathrm{tr}\bigl(\widetilde W\,\widetilde H\,\widetilde W^\top\bigr) \;=\; \mathrm{tr}\bigl(W\, H\, W^\top\bigr).$$</div>
+  <div class="highlight">Rotation $U, V$ are <em>different objects</em> from LDLQ's $\bar U$ (the upper-triangular factor of $H$).</div>
+</div>
+
+<div class="slide">
+  <h2>Random Rotation Erases Outliers</h2><div class="divider"></div>
+  <p>Pick $U, V$ random orthogonal: each entry of $\widetilde W = U W V^\top$ is a weighted sum of all of $W$.</p>
+  <div class="math-block">$$\widetilde W_{ij} \;=\; \sum_{k,\ell} U_{ik}\,V_{j\ell}\,W_{k\ell} \;\approx\; \mathcal{N}\!\bigl(0,\, \tfrac{\|W\|_F^2}{mn}\bigr).$$</div>
+  <p>Outliers diffuse across all entries; QUIP uses Kronecker $V = V_1 \otimes V_2$: polylog-$\mu$, $\Theta(n\sqrt n)$ multiply.</p>
+  <div class="highlight">Random rotation turns any $W$ into a "boring" $\widetilde W$ that a coarse quantizer handles. Now run LDLQ on $\widetilde W$ using $\widetilde H$.</div>
+</div>
+
+<div class="slide">
+  <h2>QUIP — End to End</h2><div class="divider"></div>
+  <ol class="num">
+    <li><strong>Rotate.</strong> $\widetilde W = U W V^\top$, $\widetilde H = V H V^\top$ &mdash; Kronecker random orthogonals.</li>
+    <li><strong>Round.</strong> LDLQ on $\widetilde W$ using $\widetilde H$.</li>
+    <li><strong>Inference.</strong> Apply $V$ to inputs, $U^\top$ to outputs around the quantized layer.</li>
+  </ol>
+  <div class="diagram-flow" style="justify-content: center; margin: 14px 0 6px;">
+    <div style="font-weight:700; color:var(--yonsei-blue); font-size:1.3rem;">$x$</div>
+    <span class="diagram-arrow">→</span>
+    <div class="diagram-box filled">$V$</div>
+    <span class="diagram-arrow">→</span>
+    <div class="diagram-box" style="border-style: dashed;">$\widehat W$ &nbsp;(quantized)</div>
+    <span class="diagram-arrow">→</span>
+    <div class="diagram-box filled">$U^\top$</div>
+    <span class="diagram-arrow">→</span>
+    <div style="font-weight:700; color:var(--yonsei-blue); font-size:1.3rem;">$y$</div>
+  </div>
+  <p style="text-align:center; margin: 0 0 6px;">$y \;\approx\; U^\top\,\widehat W\,V\,x \;=\; W x$</p>
+  <div class="highlight">First viable 2-bit LLM quantization with theoretical guarantees.</div>
+  <div class="cite">Chee, Cai, Kuleshov, De Sa, "QuIP", NeurIPS 2023.</div>
+</div>
+
+
+<!-- ════ PART 05 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>QUIP#: Hadamard + Lattice</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Faster rotation, ball-shaped codebook.</p>
+</div>
+
+<div class="slide">
+  <h2>Two Upgrades Over QUIP</h2><div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="color:var(--blue-light);">Rotation</h3>
+      <p>Kronecker $\to$ <strong>Randomized Hadamard Transform</strong>.</p>
+      <p>$\Theta(n \log n)$ time, sign-only multiplies, tighter incoherence bound.</p>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--blue-light);">Codebook</h3>
+      <p>Scalar $\to$ <strong>$E_8$ lattice on blocks of 8</strong>.</p>
+      <p>Ball-shaped codebook matches the post-rotation Gaussian data.</p>
+    </div>
+  </div>
+  <div class="cite">Tseng, Chee, Sun, Kuleshov, De Sa, "QuIP#", ICML 2024.</div>
+</div>
+
+<div class="slide">
+  <h2>What Is a Hadamard Matrix?</h2><div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns: 0.9fr 1.1fr; gap: 40px; align-items: start; margin-top: 6px;">
+    <div>
+      <p style="text-align:center; margin: 0 0 6px 0;"><strong>$H_8$</strong></p>
+      <svg viewBox="0 0 200 200" width="100%" style="background:var(--light);border-radius:6px;display:block; max-width: 320px; margin: 0 auto;">
+        <g>
+          <rect x="6" y="6" width="22" height="22" fill="#003876"/><rect x="28" y="6" width="22" height="22" fill="#003876"/><rect x="50" y="6" width="22" height="22" fill="#003876"/><rect x="72" y="6" width="22" height="22" fill="#003876"/><rect x="94" y="6" width="22" height="22" fill="#003876"/><rect x="116" y="6" width="22" height="22" fill="#003876"/><rect x="138" y="6" width="22" height="22" fill="#003876"/><rect x="160" y="6" width="22" height="22" fill="#003876"/>
+          <rect x="6" y="28" width="22" height="22" fill="#003876"/><rect x="28" y="28" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="50" y="28" width="22" height="22" fill="#003876"/><rect x="72" y="28" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="94" y="28" width="22" height="22" fill="#003876"/><rect x="116" y="28" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="138" y="28" width="22" height="22" fill="#003876"/><rect x="160" y="28" width="22" height="22" fill="#ffffff" stroke="#003876"/>
+          <rect x="6" y="50" width="22" height="22" fill="#003876"/><rect x="28" y="50" width="22" height="22" fill="#003876"/><rect x="50" y="50" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="72" y="50" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="94" y="50" width="22" height="22" fill="#003876"/><rect x="116" y="50" width="22" height="22" fill="#003876"/><rect x="138" y="50" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="160" y="50" width="22" height="22" fill="#ffffff" stroke="#003876"/>
+          <rect x="6" y="72" width="22" height="22" fill="#003876"/><rect x="28" y="72" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="50" y="72" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="72" y="72" width="22" height="22" fill="#003876"/><rect x="94" y="72" width="22" height="22" fill="#003876"/><rect x="116" y="72" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="138" y="72" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="160" y="72" width="22" height="22" fill="#003876"/>
+          <rect x="6" y="94" width="22" height="22" fill="#003876"/><rect x="28" y="94" width="22" height="22" fill="#003876"/><rect x="50" y="94" width="22" height="22" fill="#003876"/><rect x="72" y="94" width="22" height="22" fill="#003876"/><rect x="94" y="94" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="116" y="94" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="138" y="94" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="160" y="94" width="22" height="22" fill="#ffffff" stroke="#003876"/>
+          <rect x="6" y="116" width="22" height="22" fill="#003876"/><rect x="28" y="116" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="50" y="116" width="22" height="22" fill="#003876"/><rect x="72" y="116" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="94" y="116" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="116" y="116" width="22" height="22" fill="#003876"/><rect x="138" y="116" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="160" y="116" width="22" height="22" fill="#003876"/>
+          <rect x="6" y="138" width="22" height="22" fill="#003876"/><rect x="28" y="138" width="22" height="22" fill="#003876"/><rect x="50" y="138" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="72" y="138" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="94" y="138" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="116" y="138" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="138" y="138" width="22" height="22" fill="#003876"/><rect x="160" y="138" width="22" height="22" fill="#003876"/>
+          <rect x="6" y="160" width="22" height="22" fill="#003876"/><rect x="28" y="160" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="50" y="160" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="72" y="160" width="22" height="22" fill="#003876"/><rect x="94" y="160" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="116" y="160" width="22" height="22" fill="#003876"/><rect x="138" y="160" width="22" height="22" fill="#003876"/><rect x="160" y="160" width="22" height="22" fill="#ffffff" stroke="#003876"/>
+        </g>
+      </svg>
+      <p style="text-align:center; font-size:1.1rem; margin-top: 8px;">Blue $= +1$, &nbsp;white $= -1$</p>
+    </div>
+    <div>
+      <p>$H_n \in \{-1,+1\}^{n\times n}$, $H_n H_n^\top = n I$.</p>
+      <div class="math-block" style="margin: 8px 0;">$$H_1 = [1], \;\;\; H_{2n} = \begin{bmatrix} H_n & H_n \\ H_n & -H_n \end{bmatrix}.$$</div>
+      <ul>
+        <li>Built recursively (Sylvester).</li>
+        <li>Rows orthogonal $\Rightarrow$ $\tfrac{1}{\sqrt n} H_n$ is a rotation.</li>
+        <li>$H_n x$ in $\Theta(n\log n)$ via FWHT.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Why Hadamard Is Fast Enough</h2><div class="divider"></div>
+  <p>$\frac{1}{\sqrt n} H_n$ is orthogonal — so it's a valid rotation.</p>
+  <p>Fast Walsh-Hadamard: pair up entries, sum and difference, recurse.</p>
+  <div class="math-block">$$H_n x \;\text{in}\; \Theta(n\log n) \;\text{additions} \;\;(\text{no float multiplies}).$$</div>
+  <p>Cf. Kronecker rotation: $\Theta(n\sqrt n)$ multiplies. Hadamard is asymptotically faster <em>and</em> simpler in hardware.</p>
+  <div class="highlight">$\Theta(n\log n)$ sign-only ops — essentially free next to the quantized matmul.</div>
+</div>
+
+<div class="slide">
+  <h2>Random Signs Make It Incoherent</h2><div class="divider"></div>
+  <p>Plain $H_n$ alone fails on adversarial $W$ &middot; fix: random sign flips.</p>
+  <div class="math-block" style="margin: 6px 0;">$$\widetilde W \;=\; \bigl(\tfrac{1}{\sqrt m} H_m S_U\bigr)\,W\,\bigl(\tfrac{1}{\sqrt n} H_n S_V\bigr)^\top, \quad S_U, S_V \sim \mathrm{Unif}\{\pm 1\}^{\text{diag}}.$$</div>
+  <p>Each entry $\widetilde W_{ij}$ is a sign-randomized sum of $mn$ terms $\Rightarrow$ CLT:</p>
+  <div class="math-block" style="margin: 6px 0;">$$\widetilde W_{ij} \;\approx\; \mathcal{N}\!\bigl(0,\,\tfrac{\|W\|_F^2}{mn}\bigr), \qquad \mu \;=\; \mathcal{O}\!\bigl(\sqrt{\log(mn/\delta)}\bigr).$$</div>
+  <div class="highlight">RHT: $\sqrt{\log}$ incoherence vs.&nbsp;$\log^2$ for Kronecker &middot; strictly tighter.</div>
+</div>
+
+<div class="slide">
+  <h2>$E_8$ Codebook — Decoded by Index</h2><div class="divider"></div>
+  <p>Group rotated weights into blocks of 8. Each block quantizes to one of $\sim 256$ codewords from a scaled $E_8$ lattice (called E8P).</p>
+  <ul>
+    <li><strong>Encode:</strong> $E_8$ nearest point in $\mathcal{O}(8)$ — round to $\mathbb{Z}^8$ and the half-shift coset, pick the closer.</li>
+    <li><strong>Decode:</strong> table lookup by 8-bit index. 1 KB table, fits in L1.</li>
+    <li><strong>Rate:</strong> 8 bits / 8 weights $= 1$ bit / weight, plus a sign-flip bit $\to$ 2 bits / weight effective.</li>
+  </ul>
+  <div class="highlight">The codebook is allowed to be a lattice because both encode and decode are cheap.</div>
+</div>
+
+<div class="slide">
+  <h2>Scalar LDLQ vs. BlockLDLQ</h2><div class="divider"></div>
+  <p>QUIP rounds one column at a time &middot; to use $E_8$, round $g{=}8$ at once.</p>
+  <div class="math-block" style="margin: 6px 0;">$$\begin{aligned}
+    \text{Scalar LDLQ } (g{=}1) &:\; \widehat W_k = Q\bigl(W_k + R_{1:k-1}\,\bar U_{\,\cdot,k}\bigr), \quad R_j = W_j - \widehat W_j. \\
+    \text{BlockLDLQ } (g{=}8) &:\; \widehat W_k = Q_{E_8}\bigl(W_k + R_{1:k-g}\,A_k\bigr).
+  \end{aligned}$$</div>
+  <div class="highlight">Same predict-and-correct, only the per-step rounder changes.</div>
+</div>
+
+<div class="slide">
+  <h2>BlockLDLQ — Bound</h2><div class="divider"></div>
+  <p>$A_k$ from a <em>block</em> LDL$^\top$ of $H$ (block size $g$).</p>
+  <div class="card">
+    <h3 style="margin: 0 0 2px 0;">Theorem 4.1 (Tseng et&nbsp;al., 2024).</h3>
+    <div class="math-block" style="margin: 0;">$$\mathbb{E}\,\ell(\widehat W) \;\le\; \frac{g\,m\,\mu^2}{n}\,\sigma^2\,\mathrm{tr}(H^{1/2})^2.$$</div>
+  </div>
+  <p>Same $\mathrm{tr}(H) \to \mathrm{tr}(H^{1/2})^2/n$ improvement as scalar QUIP &mdash; now with vector quantization.</p>
+</div>
+
+<div class="slide">
+  <h2>Two-Faced Effective Codebook</h2><div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3 style="color:var(--blue-light);">To the data</h3>
+      <p>Random rotation + ball-shaped $E_8$ codebook.</p>
+      <p>Looks like an i.i.d.&nbsp;random Gaussian codebook (Shannon-optimal).</p>
+    </div>
+    <div>
+      <h3 style="color:var(--blue-light);">To the hardware</h3>
+      <p>Rigid $E_8$ grid. 1 KB table fits in L1.</p>
+      <p>Encode $\mathcal{O}(8)$, rotate $\Theta(n\log n)$.</p>
+    </div>
+  </div>
+  <div class="highlight">Rate-distortion benefits without the exponential cost of unstructured VQ.</div>
+</div>
+
+
+<div class="slide">
+  <h2>Recap</h2><div class="divider"></div>
+  <ul>
+    <li><strong>Wall:</strong> optimal VQ has $2^{dR}$ codewords and a $2^{dR}$-way search.</li>
+    <li><strong>Linear quantization:</strong> add and multiply stay on the grid $\Rightarrow$ integer GEMM.</li>
+    <li><strong>Lattices:</strong> linear structure replaces search; $E_8$ is the round one in 8D.</li>
+    <li><strong>QUIP:</strong> output-aware proxy $+$ random rotation $+$ LDLQ feedback.</li>
+    <li><strong>QUIP#:</strong> RHT $+$ $E_8$ BlockLDLQ. Sub-2-bit per weight in practice.</li>
+  </ul>
+</div>
+
+<div class="slide end-slide">
+  <div class="big-word">End of Lecture 3</div>
+  <p class="big-word-sub">Up next: TURBOQUANT, online VQ via random rotations.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 1</div>
+
+</div><!-- end deck -->
+
+<script defer src="../../../../reference/deck.js"></script>
+</body>
+</html>

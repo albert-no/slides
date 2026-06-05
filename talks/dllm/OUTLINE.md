@@ -77,4 +77,4 @@ Lab papers (full titles per `ai-isl.yonsei.ac.kr/publications.html`):
 
 ### Companion content
 
-None. All material on slide. For deeper diffusion theory, see `infotheory/diffusion/` (VAE/ELBO derivations, parameterizations) and `privacy/generative/` (Bayes-route, SDE, score-matching theorem, discrete diffusion).
+None. All material on slide. For deeper diffusion theory, see `infotheory/lectures/07-diffusion/` (VAE/ELBO derivations, parameterizations) and `privacy/generative/` (Bayes-route, SDE, score-matching theorem, discrete diffusion).

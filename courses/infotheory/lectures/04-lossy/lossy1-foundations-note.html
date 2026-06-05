@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lossy 1 — Foundations · Notes</title>
+<link rel="stylesheet" href="../../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload='renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false},{left:"\\[",right:"\\]",display:true}]});'></script>
+<style>
+  body {
+    max-width: 760px;
+    margin: 48px auto;
+    padding: 0 24px 96px;
+    color: var(--charcoal);
+    background: var(--white);
+    font-family: 'Yonsei', 'Noto Sans', Arial, sans-serif;
+    font-weight: 300;
+    line-height: 1.65;
+  }
+  h1 { font-size: 2rem; color: var(--yonsei-blue); margin-bottom: 4px; }
+  h2 { font-size: 1.4rem; color: var(--yonsei-blue); margin-top: 40px; border-bottom: 1px solid var(--slate); padding-bottom: 6px; }
+  h3 { font-size: 1.1rem; color: var(--blue-light); margin-top: 24px; }
+  p, li { font-size: 1rem; }
+  .meta { color: var(--gray-text); font-size: 0.95rem; margin-bottom: 24px; }
+  code { background: var(--light); padding: 1px 6px; border-radius: 4px; font-size: 0.92em; }
+  table { border-collapse: collapse; margin: 12px 0; width: 100%; }
+  th, td { border: 1px solid var(--slate); padding: 6px 10px; text-align: left; font-size: 0.95rem; }
+  th { background: var(--light); }
+  strong { color: var(--yonsei-blue); font-weight: 600; }
+  .deriv { background: var(--light); border-left: 3px solid var(--yonsei-blue); padding: 12px 18px; margin: 14px 0; border-radius: 0 6px 6px 0; }
+</style>
+</head>
+<body>
+
+<h1>Lossy Compression 1 · Foundations &mdash; Notes</h1>
+<p class="meta">Companion to <code>lossy1-foundations.html</code>. The slides carry only the visual anchors; the long-form derivations and worked numerics live here.</p>
+
+<section>
+  <h2>Slide &mdash; Lossless is not enough</h2>
+  <p>For a discrete random variable on a finite alphabet, Shannon's source coding theorem says we can encode i.i.d. samples at rate arbitrarily close to $H(X)$ bits per symbol. For continuous random variables, the analogous quantity is the <em>differential entropy</em> $h(X)$, but $h$ is not the number of bits we need to store $X$ &mdash; in fact $H(X)=\infty$ for any continuous $X$, because describing a real number to infinite precision takes infinitely many bits.</p>
+  <p>This is not a defect of the source &mdash; it is the price of asking for perfect reconstruction of a real-valued object. The lossy formulation accepts a controlled error in exchange for a finite rate, and the question becomes: how small must this error be for a given rate, in the asymptotic regime of long blocks?</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; Distortion functions</h2>
+  <p>The squared error and Hamming distortions are by far the most common, but the choice of distortion function is itself a modeling choice. For example, in image compression a perceptual metric (e.g. SSIM) gives wildly different optimal codes than MSE, because the human visual system is more sensitive to certain spatial frequencies than others.</p>
+  <p>For this lecture we mostly work with the three single-letter distortions on the slide. <em>Single-letter</em> means $d^{(n)}(x^n,\hat x^n)=\frac{1}{n}\sum_{i=1}^n d(x_i,\hat x_i)$ &mdash; the per-block distortion is the average of per-coordinate distortions. Most theorems below assume this structure.</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; Block code</h2>
+  <p>Note that $R$ is measured in bits per source symbol, not bits per block. A block code of size $2^{nR}$ stores an index using $nR$ bits to describe a block of $n$ source samples. If $R$ is in nats instead, the message set has size $e^{nR}$.</p>
+  <p>The encoder $f$ and decoder $g$ are arbitrary deterministic maps. They may be jointly designed; the only thing fixed is the rate $R$ and the requirement that the index alphabet has size at most $2^{nR}$. We will see later that randomness in the codebook design (random coding) is a powerful proof technique even when the final code is deterministic.</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; Achievable region</h2>
+  <p>The $\varepsilon$ in the definition matters. We allow the actual rate to exceed $R$ by any positive $\varepsilon$ and the actual distortion to exceed $D$ by any positive $\varepsilon$, provided $n$ can be chosen large enough. In the limit $\varepsilon\downarrow 0$, $n\to\infty$, this becomes "the" rate&ndash;distortion function. Without these slack parameters, the operational $R(D)$ would not be a clean function of $D$.</p>
+  <p>The achievable region is closed and "upper-monotone": if $(R,D)$ is achievable, so is $(R',D')$ for any $R'\ge R$ and $D'\ge D$. The function $R(D)$ is non-increasing, convex, and continuous on $D\in (D_{\min}, D_{\max})$. The convexity comes from a time-sharing argument: a code that mixes a $(R_1,D_1)$ code with a $(R_2,D_2)$ code achieves $(\lambda R_1+(1-\lambda)R_2, \lambda D_1+(1-\lambda)D_2)$ for any $\lambda\in[0,1]$.</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; Distortion balls cover the typical set</h2>
+  <p>Lossless coding asks: how many distinct strings carry typical-set probability mass? The answer is roughly $2^{nH(X)}$, leading to rate $H(X)$.</p>
+  <p>Lossy coding asks instead: how many distortion-$D$ balls cover the typical set? Each ball "absorbs" all typical strings within distortion $D$ of its center, and a single index is enough to point to the ball. The smallest log-count of such balls is exactly $R(D)$. This is more than an analogy &mdash; the achievability proof literally counts random codewords against typical-set volumes.</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; Heights toy and $R=0$</h2>
+  <p>If we send no bits, the decoder must output a fixed deterministic value $c$. Under squared error, $\mathbb{E}[(X-c)^2]$ is minimized over $c$ by the mean (this is one of the few useful facts in statistics that survives all generalizations). The minimum value is the variance.</p>
+  <p>So already at $R=0$ we have a non-trivial code: output $c=\mu$. Any source with finite variance has $R(\sigma^2)=0$ &mdash; we don't need to send anything if we are allowed distortion at least the variance.</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; $R=1$ Gaussian computation</h2>
+  <p>For a Gaussian, the optimal 1-bit threshold is at the median, which is $\mu$. Conditional on $X&gt;\mu$, $X$ has a half-Gaussian distribution. Its mean is</p>
+  <div class="deriv">
+    \[
+    \mathbb{E}[X\mid X&gt;\mu]=\mu + \sigma\sqrt{\frac{2}{\pi}}.
+    \]
+  </div>
+  <p>By symmetry, the lower-cell mean is $\mu-\sigma\sqrt{2/\pi}$. The remaining variance within each cell is $\sigma^2(1-2/\pi)$, and by symmetry the total expected squared error is the same:</p>
+  <div class="deriv">
+    \[
+    D(1)=\sigma^2\!\left(1-\frac{2}{\pi}\right)\approx 0.363\sigma^2.
+    \]
+  </div>
+  <p>Compare to $D(0)=\sigma^2$. One bit cuts distortion by a factor of $\approx 2.75$. This is far from the rate&ndash;distortion limit $D(1)=\sigma^2 \cdot 4^{-1}=0.25\sigma^2$ achievable in the limit of long blocks &mdash; scalar quantization leaves a lot on the table.</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; Lloyd&ndash;Max</h2>
+  <p>The Lloyd&ndash;Max algorithm is the special case of $k$-means in 1D, applied to the source distribution rather than to a sample. The two updates are necessary conditions for local optimality; they are not jointly sufficient for global optimality, and Lloyd&ndash;Max can converge to local optima that depend on the initial thresholds. In practice this matters less for unimodal sources (Gaussian, Laplace) than for multimodal ones.</p>
+  <p>Each step monotonically decreases the squared-error objective:</p>
+  <ol>
+    <li>Centroid update is the global minimizer of $\sum_i \int_{C_i}(x-c_i)^2 p(x)\,dx$ over $\{c_i\}$ at fixed cells.</li>
+    <li>Boundary update is the global minimizer of the same objective over $\{\tau_i\}$ at fixed reps, because the optimal Voronoi tessellation under squared error places thresholds at midpoints of adjacent representatives.</li>
+  </ol>
+  <p>So the algorithm is a coordinate descent on a non-negative bounded objective, hence convergent.</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; Vector vs. scalar quantization</h2>
+  <p>The slide claim that VQ beats scalar quantization even for i.i.d. components has two distinct sources:</p>
+  <ol>
+    <li><strong>Cell shape gain</strong> ("space-filling gain"): the disk minimizes second moment among all 2D shapes of fixed area; scalar quantizers force rectangular cells. This effect is small in 2D (about 8%) but grows with dimension.</li>
+    <li><strong>Shape gain from non-uniform sources</strong>: a vector quantizer can put more codepoints where the source is denser. Scalar quantizers do this too, per coordinate, but they cannot adapt to <em>joint</em> structure (e.g. the typical shell of a high-dim Gaussian).</li>
+  </ol>
+  <p>In high dimension, both effects together let VQ approach the rate&ndash;distortion bound; scalar quantization is bounded away.</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; What are we optimizing over?</h2>
+  <p>The information rate&ndash;distortion function $R^{(I)}(D)$ is defined as a constrained minimization over a probability object. It is worth being explicit about what is fixed, what is free, and what is derived:</p>
+  <ul>
+    <li><strong>Fixed.</strong> The source marginal $P_X$ (handed to us by the world), the distortion measure $d(\cdot,\cdot)$, and the budget $D$.</li>
+    <li><strong>Free.</strong> The conditional distribution $P_{\widehat X\mid X}$ &mdash; equivalently, a stochastic transition kernel from the source alphabet to the reproduction alphabet. Each row $P_{\widehat X\mid X}(\cdot\mid x)$ is a probability vector. This object is also called the <em>test channel</em>.</li>
+    <li><strong>Derived.</strong> Once $P_{\widehat X\mid X}$ is chosen, the joint $P_{X,\widehat X}=P_X\,P_{\widehat X\mid X}$, the output marginal $P_{\widehat X}=\sum_x P_X(x)P_{\widehat X\mid X}(\cdot\mid x)$, and the mutual information $I(X;\widehat X)$ are all determined.</li>
+  </ul>
+  <p>The optimization is a convex program: $I(X;\widehat X)$ is a convex function of $P_{\widehat X\mid X}$ when $P_X$ is held fixed (a standard fact in information theory). The distortion constraint $\mathbb{E}\,d \le D$ is linear in $P_{\widehat X\mid X}$. Hence Lagrangian / KKT methods apply, and the solution can be characterized by stationarity conditions.</p>
+  <p>The Blahut&ndash;Arimoto algorithm is one numerical procedure for solving this optimization for arbitrary discrete sources; for many continuous sources of interest (Gaussian, Laplacian) the solution can be found in closed form, as we will see in Lecture 2.</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; Solving the optimization (binary)</h2>
+  <p>For $X\sim\mathrm{Bern}(1/2)$ under Hamming distortion, the test channel is a $2\times 2$ row-stochastic matrix with two free entries:</p>
+  <div class="deriv">
+    \[
+    P_{\widehat X\mid X} = \begin{pmatrix} 1-\alpha_0 & \alpha_0 \\ \alpha_1 & 1-\alpha_1 \end{pmatrix}, \qquad \mathbb{E}\,d_H = \tfrac{\alpha_0+\alpha_1}{2}.
+    \]
+  </div>
+  <p>By the symmetry of source and distortion under $X\leftrightarrow 1-X$, the optimum is symmetric: $\alpha_0=\alpha_1=\alpha$. (More formally, if $(\alpha_0^\star,\alpha_1^\star)$ is optimal then so is $(\alpha_1^\star,\alpha_0^\star)$ by relabeling, and the average $(\bar\alpha,\bar\alpha)$ is at least as good by convexity.) With this reduction:</p>
+  <div class="deriv">
+    \[
+    \widehat X\sim\mathrm{Bern}(1/2),\qquad H(\widehat X\mid X) = H_b(\alpha),\qquad I(X;\widehat X) = 1 - H_b(\alpha).
+    \]
+  </div>
+  <p>Since $1-H_b(\alpha)$ is strictly decreasing on $\alpha\in[0,1/2]$, the constrained minimum is attained at the boundary $\alpha=D$ (assuming $D\le 1/2$). This gives $R^{(I)}(D)=1-H_b(D)$ and the optimal joint $P^\star_{X,\widehat X}$ described by $X=\widehat X\oplus Z$ with $\widehat X\sim\mathrm{Bern}(1/2)$ and $Z\sim\mathrm{Bern}(D)$ independent.</p>
+  <p>Note that the optimal output marginal $P^\star_{\widehat X}=\mathrm{Bern}(1/2)$ <em>matches</em> the source marginal here. This is a coincidence of the binary symmetric setup; for general sources the optimal $P^\star_{\widehat X}$ does not equal $P_X$ (e.g. for Laplacian sources $P^\star_{\widehat X}$ has a Dirac atom at zero &mdash; see Lecture 2).</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; Suboptimal codebook (wrong marginal)</h2>
+  <p>The achievability theorem says: draw codewords iid from $P^\star_{\widehat X}$ and rate $R&gt;R(D)$ suffices. What if we instead drew codewords from a different product distribution &mdash; say $\mathrm{Bern}(p)^n$ with $p\ne 1/2$? The codebook still works, but at a strictly worse rate.</p>
+  <p>Fix a typical $X^n$ with $k\approx n/2$ ones. The bits of the disagreement vector $X^n\oplus\widehat X^n$ are independent: rate $p$ at zeros-positions of $X^n$, rate $1-p$ at ones-positions. By Sanov's theorem, the probability that the empirical disagreement rate is at most $D$ decays exponentially with rate</p>
+  <div class="deriv">
+    \[
+    \rho(p,D) \;=\; \min_{\substack{q_0,q_1\\ (q_0+q_1)/2\,\le\,D}} \tfrac{1}{2}\bigl[D_{\mathrm{KL}}(q_0\|p) + D_{\mathrm{KL}}(q_1\|1-p)\bigr],
+    \]
+  </div>
+  <p>where $q_0$ is the optimal exponent on zeros-positions and $q_1$ on ones-positions. By Lagrangian stationarity, $q_0$ and $q_1$ satisfy</p>
+  <div class="deriv">
+    \[
+    \frac{q_0(1-p)}{p(1-q_0)} \;=\; \frac{q_1\,p}{(1-p)(1-q_1)} \qquad\text{and}\qquad \tfrac{q_0+q_1}{2} = D.
+    \]
+  </div>
+  <p>For $p=1/2$ the system is symmetric: $q_0=q_1=D$, $\rho(1/2,D)=1-H_b(D)=R(D)$. For $p\ne 1/2$ the symmetry is broken &mdash; on zeros-positions a flip is the unlikely event ($p$ small), so $q_0$ stays small; on ones-positions a "flip" means agreeing with $X_i=1$ when the codeword has bias $p$ for ones, which is the unlikely event when $p&lt;1/2$, so $q_1$ is pushed up.</p>
+  <p>Worked numbers for $D=1/4$:</p>
+  <ul>
+    <li><strong>$p=1/4$:</strong> $16q_0^2+12q_0-1=0$ gives $q_0\approx 0.0757$, $q_1\approx 0.4243$. Plugging in: $\rho\approx 0.246$ bits, vs $R(D)\approx 0.189$ bits. Codebook size threshold rises from $2^{n\cdot 0.189}\approx 23$ to $2^{n\cdot 0.246}\approx 60$ at $n=24$.</li>
+    <li><strong>$p=1/8$:</strong> $96q_0^2+52q_0-1=0$ gives $q_0\approx 0.0186$, $q_1\approx 0.4814$. $\rho\approx 0.381$ bits. Codebook threshold $\approx 565$ at $n=24$ &mdash; an order of magnitude over the optimal $\sim 23$.</li>
+  </ul>
+  <p>The penalty grows as $p$ moves away from $1/2$, and at $p=0$ or $p=1$ the codebook becomes a deterministic constant string: the only disagreement-rate distribution achievable is $(q_0,q_1)=(p,1-p)$, which gives mean disagreement $1/2$ and no slack to dip below $D&lt;1/2$ &mdash; $\rho\to\infty$.</p>
+  <p>Operationally: every codeword law that is not the optimal $P^\star_{\widehat X}$ wastes bits. The information &ndash; theoretic optimization $\arg\inf I(X;\widehat X)$ is exactly the codebook law that minimizes the rate needed to find a match.</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; The mutual information formula</h2>
+  <p>Shannon's theorem is in two parts:</p>
+  <ul>
+    <li><strong>Achievability:</strong> for any test channel $P_{\widehat X\mid X}$ achieving distortion $\le D$ and information $I$, every rate $R&gt;I$ is achievable. We sketch this via random coding on the next slides.</li>
+    <li><strong>Converse:</strong> no code achieves rate below $R^{(I)}(D)$. This is the inequality $nR\ge I(X^n;\widehat X^n)\ge n\inf I(X;\widehat X)$, where the last step is by the i.i.d. structure and a single-letterization step that needs the convexity of mutual information in the conditional.</li>
+  </ul>
+  <p>For continuous sources we replace $H$ with $h$ (differential entropy) and the formulas continue to hold.</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; Random coding rare-event bound</h2>
+  <p>Joint typicality with respect to $P_{X,\widehat X}$ asks for the empirical joint distribution to be close (in some norm) to the target joint distribution. By the asymptotic equipartition property,</p>
+  <div class="deriv">
+    \[
+    \Pr_{P_X^{\otimes n}\,\otimes\, P_{\widehat X}^{\otimes n}}\bigl[(X^n,\widehat X^n)\in T_\varepsilon^{(n)}\bigr]\;\approx\;2^{-nI(X;\widehat X)}.
+    \]
+  </div>
+  <p>The "approx" hides $\varepsilon$ slack and lower-order terms. The bound is exponentially tight for large $n$.</p>
+  <p>The reason is geometric: the joint typical set has volume $\approx 2^{n H(X,\widehat X)}$, while the product of the marginals has volume $\approx 2^{n H(X)}\cdot 2^{n H(\widehat X)}=2^{n(H(X)+H(\widehat X))}$. Their ratio is $2^{-nI(X;\widehat X)}$.</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; Search creates dependence</h2>
+  <p>The key conceptual point: the encoder is allowed to <em>look at $X^n$</em> when picking $m$. If we had to commit to an index without seeing the source, we could not do better than chance, and the average distortion would be $\mathbb{E}[d(X,\widehat X)]$ where $X$ and $\widehat X$ are independent &mdash; usually no better than the $R=0$ bound.</p>
+  <p>By searching, we condition on the rare event that some particular codeword is jointly typical with $X^n$. Conditioning on a rare event with the right structure pushes the conditional joint towards the desired $P_{X,\widehat X}$. This is the same phenomenon as posterior concentration in Bayesian statistics: a rare event with the right shape effectively reweights the prior into the posterior.</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; Binary toy details</h2>
+  <p>The bit strings on the slide are illustrative and were chosen so that one of the four "quick draws" lies relatively far from $X^n$ (Hamming distance 14) and the eventual successful candidate (#14 of 64) lies exactly on the radius-6 ball. In a real run with a fresh random seed the exact distances will differ, but the qualitative behavior is robust:</p>
+  <ul>
+    <li>Most random Bernoulli$(1/2)$ codewords lie at Hamming distance close to $n/2$ from any fixed source $X^n$.</li>
+    <li>The fraction within distance $nD$ of $X^n$ is $|B(X^n,nD)|/2^n\approx 2^{-n(1-H_b(D))}$, which is the inverse of $2^{nR(D)}$.</li>
+    <li>So a codebook of size $2^{nR}$ contains a successful match with probability $1-(1-2^{-nR(D)})^{2^{nR}}\approx 1-\exp(-2^{n(R-R(D))})$, which is small if $R&lt;R(D)$ and close to 1 if $R&gt;R(D)$.</li>
+  </ul>
+  <p>For $n=24, D=1/4$: the threshold rate is $R(D)\approx 0.189$ bits/symbol, so we need $2^{0.189\cdot 24}\approx 23$ codewords to have a $\sim 63\%$ chance of finding a match (at the threshold), and $\sim 64$ codewords to be almost sure. The slide's table at 64 codewords is the "almost sure" regime.</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; Volume counting threshold</h2>
+  <p>The Hamming-ball volume formula is asymptotic:</p>
+  <div class="deriv">
+    \[
+    |B(0,nD)|=\sum_{k=0}^{nD}\binom{n}{k}\;\le\;2^{nH_b(D)},\qquad D\le 1/2,
+    \]
+  </div>
+  <p>and the bound is exponentially tight: $|B(0,nD)|\sim 2^{nH_b(D)}/\sqrt{n}$ up to polynomial factors. Plugging into the cover bound gives the threshold rate $R(D)=1-H_b(D)$.</p>
+  <p>For non-uniform Bernoulli sources (Bernoulli$(p)$ with $p\ne 1/2$), the analogous threshold is $R(D)=H_b(p)-H_b(D)$ for $D\le p$, which reflects the smaller entropy of a biased source.</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; Worked example: biased binary</h2>
+  <p>The binary symmetric source ($p=1/2$) is the simplest case but somewhat misleading: source and codebook share the same marginal $\mathrm{Bern}(1/2)$. The biased case $p&lt;1/2$ breaks this coincidence and is the cleanest illustration that the optimal codebook law is <em>different</em> from the source law.</p>
+  <h3>Lower bound (converse).</h3>
+  <p>For any $P_{X,\widehat X}$ with $X\sim\mathrm{Bern}(p)$ and $\mathbb E[d_H(X,\widehat X)]=\Pr(X\ne\widehat X)\le D$,</p>
+  <div class="deriv">
+    \[
+    \begin{aligned}
+    I(X;\widehat X) &= H(X) - H(X\mid\widehat X) \\
+                    &= H_b(p) - H(X\oplus\widehat X\mid\widehat X) \\
+                    &\ge H_b(p) - H(X\oplus\widehat X) \\
+                    &\ge H_b(p) - H_b\!\bigl(\Pr(X\ne\widehat X)\bigr) \\
+                    &\ge H_b(p) - H_b(D),
+    \end{aligned}
+    \]
+  </div>
+  <p>where the inequalities use (i) conditioning reduces entropy, (ii) the binary entropy is concave and increasing on $[0,1/2]$, and (iii) the distortion constraint $\Pr(X\ne\widehat X)\le D\le p\le 1/2$.</p>
+  <h3>Achievability (matching upper bound).</h3>
+  <p>Set $X=\widehat X\oplus Z$ with $\widehat X\sim\mathrm{Bern}(q)$, $Z\sim\mathrm{Bern}(D)$, $\widehat X\perp Z$. The constraint $\Pr(X=1)=p$ gives one equation in one unknown:</p>
+  <div class="deriv">
+    \[
+    q(1-D) + (1-q)D = p \;\Longrightarrow\; q = \frac{p-D}{1-2D}.
+    \]
+  </div>
+  <p>Note $q\le p$ for $D\ge 0$, with equality only at $D=0$ (no compression). The mutual information is</p>
+  <div class="deriv">
+    \[
+    I(X;\widehat X) = H(X) - H(X\mid\widehat X) = H_b(p) - H(Z) = H_b(p) - H_b(D),
+    \]
+  </div>
+  <p>matching the lower bound. Hence $R(D)=H_b(p)-H_b(D)$ for $0\le D\le p$, and $R(D)=0$ for $D\ge p$ (output the constant $\widehat X=0$ and accept distortion $p$).</p>
+  <h3>Why the codeword law differs from the source law.</h3>
+  <p>The optimal output marginal is $P^\star_{\widehat X}=\mathrm{Bern}(q)$ with $q=(p-D)/(1-2D)$. For $D&gt;0$ this is strictly less than $p$ &mdash; the codewords are <em>sparser</em> than the source. Intuitively, the encoder relies on the noise $Z$ (rate $D$) to flip a fraction $D$ of the bits up to the source rate $p$; the codeword only needs to carry the "remaining" ones, which are scarcer. This is the simplest example of a phenomenon that becomes dramatic for the Laplacian source in Lecture 2, where the optimal output marginal develops a Dirac atom at zero (sparse reproduction) even though the source itself has full support.</p>
+  <h3>Numerics for $p=0.2,D=0.1$.</h3>
+  <p>$H_b(0.2)=-0.2\log_2 0.2 - 0.8\log_2 0.8 \approx 0.7219$ bits. $H_b(0.1)\approx 0.4690$ bits. $R(D)\approx 0.2529$ bits/symbol. The optimal $\widehat X^\star\sim\mathrm{Bern}(1/8)$. Codebook size for block length $n$: $M=\lceil 2^{n\cdot 0.253}\rceil$.</p>
+  <p>For comparison, the symmetric case ($p=1/2,D=0.1$) would give $R(D)=1-H_b(0.1)\approx 0.531$ bits &mdash; more than double. A biased source has lower entropy and is therefore easier to compress, which the formula $H_b(p)-H_b(D)$ captures cleanly.</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; Forbidden reproduction (infinite distortion)</h2>
+  <p>This example illustrates what happens when one direction of the distortion is <em>infinite</em> &mdash; an absolute prohibition on certain reproduction choices &mdash; while the symmetric source is unchanged. The asymmetry forces structural changes in the optimal joint.</p>
+  <h3>Why the joint becomes triangular.</h3>
+  <p>The expected distortion is</p>
+  <div class="deriv">
+    \[
+    \mathbb{E}[d(X,\widehat X)] = \sum_{x,\hat x} p(x,\hat x)\,d(x,\hat x).
+    \]
+  </div>
+  <p>If $d(0,1)=\infty$ and we want a finite expected distortion, the only way is to set the coefficient $p(0,1) = 0$ exactly. Any positive mass there would produce $0\cdot\infty = \infty$ (or, more carefully: the limit makes the constraint infeasible). So the joint matrix has a hard zero in the $(0,1)$ corner.</p>
+  <p>The other three entries must sum to $1$ and respect the source marginal $p(X{=}0)=p(X{=}1)=1/2$. After accounting for these constraints, only one parameter remains, namely $D = p(1,0)$, and the joint takes the triangular form on the slide.</p>
+  <h3>The output marginal is biased.</h3>
+  <p>The output marginal is $\Pr(\widehat X{=}0) = 1/2 + D$ and $\Pr(\widehat X{=}1) = 1/2 - D$. For any $D\in(0,1/2)$ this is strictly biased toward $0$ &mdash; intuitively, the encoder &ldquo;dumps&rdquo; the lossy bits onto the safe side ($\widehat X{=}0$ is a permitted reproduction for both source values), and only carefully sets $\widehat X{=}1$ when the source is actually $1$.</p>
+  <h3>The mutual information.</h3>
+  <p>Using $H(X)=1$ and computing the conditional entropy:</p>
+  <div class="deriv">
+    \[
+    \begin{aligned}
+    H(X\mid\widehat X{=}0) &= H_b\!\Bigl(\tfrac{1/2}{1/2+D}\Bigr), \\
+    H(X\mid\widehat X{=}1) &= 0 \quad \text{(deterministic)}, \\
+    H(X\mid\widehat X) &= \bigl(\tfrac{1}{2}+D\bigr)\,H_b\!\Bigl(\tfrac{1/2}{1/2+D}\Bigr) \;+\; \bigl(\tfrac{1}{2}-D\bigr)\cdot 0.
+    \end{aligned}
+    \]
+  </div>
+  <p>Subtracting from $H(X)=1$ gives the formula on the slide. After algebraic simplification using $H_b(q) = -q\log q - (1-q)\log(1-q)$:</p>
+  <div class="deriv">
+    \[
+    R(D) = \tfrac{1}{2} \;-\; \bigl(\tfrac{1}{2}+D\bigr)\log\!\bigl(\tfrac{1}{2}+D\bigr) \;+\; D\log D.
+    \]
+  </div>
+  <h3>Numerical comparison to the symmetric Hamming case.</h3>
+  <table>
+    <thead><tr><th>$D$</th><th>$R(D)$ (forbidden)</th><th>$R(D) = 1 - H_b(D)$ (symmetric)</th></tr></thead>
+    <tbody>
+      <tr><td>$0$</td><td>$1$</td><td>$1$</td></tr>
+      <tr><td>$1/8$</td><td>$\approx 0.594$</td><td>$\approx 0.456$</td></tr>
+      <tr><td>$1/4$</td><td>$\approx 0.311$</td><td>$\approx 0.189$</td></tr>
+      <tr><td>$1/2$</td><td>$0$</td><td>$0$</td></tr>
+    </tbody>
+  </table>
+  <p>The asymmetric (&ldquo;forbidden&rdquo;) version always requires <em>more</em> bits at the same distortion. The geometric reason: the test channel has a hard wall on one side, so the encoder can&rsquo;t use both halves of the reproduction alphabet symmetrically.</p>
+  <h3>Why this matters.</h3>
+  <p>This is the simplest concrete example where $P^\star_{\widehat X} \ne P_X$ even though $P_X$ is uniform. The classical &ldquo;binary symmetric&rdquo; case has $P^\star_{\widehat X}=\mathrm{Bern}(1/2)=P_X$ as a coincidence; the forbidden-reproduction case breaks the coincidence cleanly. It also sets up intuition for the Laplacian case (Lecture 2), where the optimal output develops a hard atom at zero &mdash; the continuous analogue of dumping mass onto a &ldquo;safe&rdquo; reproduction.</p>
+</section>
+
+<section>
+  <h2>Slide &mdash; Uniform ternary source &amp; the Shannon lower bound</h2>
+  <p>This example introduces the <em>Shannon lower bound</em> in a discrete setting: a tight, conditional-entropy-style bound on $R(D)$ that doesn&rsquo;t require any explicit construction. For the uniform ternary source under Hamming distortion the bound is tight; for non-uniform sources it is generally a strict bound but still useful.</p>
+  <h3>The chain of inequalities.</h3>
+  <p>Let $V$ be the reproduction. The four steps in the slide&rsquo;s derivation:</p>
+  <ol>
+    <li><strong>(i)</strong>: $I(U;V) = H(U) - H(U\mid V)$ by definition.</li>
+    <li><strong>(ii)</strong>: $H(U\mid V) = H(U\ominus V\mid V)$ because, conditional on $V=v$, the map $u\mapsto u\ominus v$ is a bijection on $\{0,1,2\}$ &mdash; it just relabels symbols, leaving the conditional entropy unchanged.</li>
+    <li><strong>(iii)</strong>: $H(U\ominus V \mid V) \le H(U\ominus V)$ because conditioning never increases entropy.</li>
+    <li><strong>(iv)</strong>: $H(U\ominus V) \le \phi(D)$ because the marginal of $Z := U\ominus V$ has $\Pr(Z\ne 0) = \Pr(U\ne V) = \mathbb{E}[d_H(U,V)] \le D$, so it lies in the feasible set defining $\phi$.</li>
+  </ol>
+  <p>The chain holds for <em>every</em> joint $P_{U,V}$ in the feasible set, so the infimum over feasible joints is also bounded below by $H(U)-\phi(D)$. That gives $R(D) \ge H(U) - \phi(D)$.</p>
+  <h3>Computing $\phi(D)$ explicitly.</h3>
+  <p>$\phi(D)$ asks: among ternary distributions $Z$ with $\Pr(Z\ne 0) \le D$, which has the largest entropy? Write the law as $(p_0, p_1, p_2)$ with $p_1+p_2 \le D$ and $p_0 = 1-(p_1+p_2)$. Concavity of entropy says we should</p>
+  <ul>
+    <li>Push the constraint to the boundary: $p_1+p_2 = D$ exactly (giving $p_0 = 1-D$).</li>
+    <li>Distribute the remaining mass $D$ uniformly over the two symbols $\{1,2\}$: $p_1 = p_2 = D/2$.</li>
+  </ul>
+  <p>Plugging in:</p>
+  <div class="deriv">
+    \[
+    \begin{aligned}
+    \phi(D) &= -(1-D)\log(1-D) - 2\cdot\tfrac{D}{2}\log\tfrac{D}{2} \\
+            &= H_b(D) - D\log\tfrac{1}{2} \\
+            &= H_b(D) + D.
+    \end{aligned}
+    \]
+  </div>
+  <p>This formula holds for $0 \le D \le 2/3$. For $D \ge 2/3$ the unconstrained max is achieved at uniform $Z$ with $H(Z) = \log 3$, so $\phi(D) = \log 3$ and $R(D) = 0$.</p>
+  <h3>Why the bound is tight for uniform $U$.</h3>
+  <p>Tightness requires <em>simultaneous</em> equality in (iii) and (iv):</p>
+  <ul>
+    <li><strong>(iii)</strong> is tight iff $U \ominus V$ is independent of $V$.</li>
+    <li><strong>(iv)</strong> is tight iff $U \ominus V$ has the maximizing law $(1-D, D/2, D/2)$.</li>
+  </ul>
+  <p>Construction: pick $V$ uniform on $\{0,1,2\}$, $Z_D \sim (1-D, D/2, D/2)$ independent of $V$, and set $U = V \oplus Z_D$. Then</p>
+  <ul>
+    <li>$U$ is uniform: convolving uniform with anything on a finite group stays uniform (this is special to uniform $U$ and is the reason the bound is tight in this case).</li>
+    <li>$U \ominus V = Z_D$ is independent of $V$ &mdash; (iii) tight.</li>
+    <li>$Z_D$ has the maximizing law &mdash; (iv) tight.</li>
+  </ul>
+  <p>Therefore $R(D) = \log 3 - \phi(D) = \log 3 - H_b(D) - D$ on $[0, 2/3]$.</p>
+  <h3>Numerics.</h3>
+  <table>
+    <thead><tr><th>$D$</th><th>$\phi(D)$</th><th>$R(D)$ (bits)</th></tr></thead>
+    <tbody>
+      <tr><td>$0$</td><td>$0$</td><td>$\log 3 \approx 1.585$</td></tr>
+      <tr><td>$1/3$</td><td>$\approx 1.252$</td><td>$\approx 0.334$</td></tr>
+      <tr><td>$2/3$</td><td>$\log 3$</td><td>$0$</td></tr>
+    </tbody>
+  </table>
+  <h3>Generalization.</h3>
+  <p>For a $k$-ary uniform source under Hamming distortion, the same argument gives $R(D) = \log k - H_b(D) - D\log(k-1)$ for $0\le D\le 1-1/k$, by setting $\phi(D) = H_b(D) + D\log(k-1)$ &mdash; spread the mismatch mass uniformly over the $k-1$ non-zero symbols. At $k=2$ this recovers $R(D) = 1 - H_b(D)$ (the binary symmetric case), and at $k=3$ we get $R(D) = \log 3 - H_b(D) - D$ with $\log(k-1) = \log 2 = 1$. So the ternary formula is one slot in a family.</p>
+  <p>For non-uniform sources the Shannon lower bound is generally <em>not</em> tight; an additional term involving $D_{\mathrm{KL}}$ from a balancing distribution appears. The uniform case is special because the convolution argument preserves uniformity exactly.</p>
+</section>
+
+<section>
+  <h2>Looking ahead</h2>
+  <p>Lecture 2 makes the rate&ndash;distortion function explicit for two important continuous sources:</p>
+  <ul>
+    <li>Gaussian under squared error: $R(D)=\frac{1}{2}\log(\sigma^2/D)$, with the backward Gaussian test channel and the Shannon lower bound (Gaussian is the worst case at fixed variance).</li>
+    <li>Laplacian under absolute error: $R(D)=-\log(\lambda D)$, with the surprising consequence that the optimal reproduction has a Dirac atom at zero &mdash; pruning falls out of the rate&ndash;distortion theorem.</li>
+  </ul>
+  <p>Both will be derived from the mutual-information formula, using the maximum-entropy property of Gaussians and a clever auxiliary-density trick for Laplace.</p>
+</section>
+
+</body>
+</html>

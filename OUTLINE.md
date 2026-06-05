@@ -8,14 +8,17 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 
 ### `courses/` — semester-long lecture series
 
-- **`courses/infotheory/`** — Information-theory lecture series (paired decks + `-note.html` companions):
-  - `entropy/` — Foundations: entropy, KL, joint/conditional MI, DPI, Fano (2 lectures)
-  - `lossless/` — Codes/Kraft/Huffman, AEP/arithmetic, Markov/LZ (3 lectures)
-  - `diffentropy/` — Differential entropy, MaxEnt/Gaussian/EPI, AWGN/water-filling/I-MMSE (3 lectures)
-  - `diffusion/` — Diffusion as hierarchical VAE; closes with score-matching equivalence (3 lectures)
-  - `lossy/` — Rate–distortion + LLM compression (4 lectures)
-  - `mi/` — Variational MI bounds, InfoNCE/CLIP (2 lectures); closes with $f$-divergence unification
-  - `divergence/` — $f$-divergence + GAN ($\equiv$ JS), Fisher divergence + score matching ($\equiv$ diffusion) (2 lectures)
+- **`courses/infotheory/`** — Information-theory course. Four artifact types: `lectures/` (slides), `notes/` (LaTeX notes), `exam/`, and `overleaf/` (frozen archive). See `courses/infotheory/OUTLINE.md`.
+  - `lectures/` — slide series, 8 numbered topic folders (paired decks + `-note.html`):
+    - `01-entropy/` — Foundations: entropy, KL, joint/conditional MI, DPI, Fano (2 lectures)
+    - `02-lossless/` — Codes/Kraft/Huffman, AEP/arithmetic, Markov/LZ (3 lectures)
+    - `03-diffentropy/` — Differential entropy, MaxEnt/Gaussian/EPI, AWGN/water-filling/I-MMSE (3 lectures)
+    - `04-lossy/` — Rate–distortion + LLM compression (4 lectures)
+    - `05-mi/` — Variational MI bounds, InfoNCE/CLIP (2 lectures); closes with $f$-divergence unification
+    - `06-divergence/` — $f$-divergence + GAN ($\equiv$ JS), Fisher divergence + score matching ($\equiv$ diffusion) (2 lectures)
+    - `07-diffusion/` — Diffusion as hierarchical VAE; closes with score-matching equivalence (3 lectures)
+    - `08-ib/` — Information Bottleneck: IB Lagrangian, VIB, information plane (2 lectures)
+  - `notes/` — canonical LaTeX notes (2026); `exam/` — finals 2024–26; `overleaf/` — frozen legacy source
 - **`courses/privacy/`** — Privacy series:
   - `generative/` — Generative-model review opener: 5 diffusion lectures (Bayes-route, DDPM, SDE, DDIM, guidance + discrete) + 1 brief LLM deck. `note/2_difffusion.tex` is LaTeX source for Diffusion Lectures 1–2
   - `dp/` — Differential privacy + federated learning (1 NeurIPS 2023 talk: RRSC result)
@@ -34,37 +37,37 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 
 | Topic | Location |
 |---|---|
-| Entropy definition / Gibbs / log-sum | `courses/infotheory/entropy/entropy1-entropy-kl.html:97, :379, :437` |
-| Chain rule / DPI / Fano | `courses/infotheory/entropy/entropy2-joint-mi-fano.html:118, :368, :438` |
-| Mutual information (discrete) | `courses/infotheory/entropy/entropy2-joint-mi-fano.html:227` |
-| Kraft / Kraft–McMillan / Shannon / Huffman | `courses/infotheory/lossless/lossless1-codes.html:157, :198, :268, :413` |
-| AEP / source coding theorem / arithmetic coding | `courses/infotheory/lossless/lossless2-aep-arithmetic.html:84, :204, :405` |
-| Markov entropy rate / LZ78 | `courses/infotheory/lossless/lossless3-markov-universal.html:188, :355` |
-| Differential entropy + bin discretization | `courses/infotheory/diffentropy/diffentropy1-foundations.html:84, :96` |
-| Gaussian MaxEnt / Hadamard / EPI | `courses/infotheory/diffentropy/diffentropy2-maxent-gaussian.html:165, :248, :367` |
-| Shannon–Hartley / water-filling / I-MMSE | `courses/infotheory/diffentropy/diffentropy3-mi-awgn.html:177, :293, :385` |
-| Score function / Tweedie's formula | `courses/privacy/generative/diffusion1-foundations.html:362-425`; theorem at `courses/infotheory/diffusion/diff3-parameterizations.html:121` |
-| DDPM forward + VLB derivation | `courses/privacy/generative/diffusion2-ddpm.html:189-333`; `courses/infotheory/diffusion/diff2-diffusion.html:153-212` |
+| Entropy definition / Gibbs / log-sum | `courses/infotheory/lectures/01-entropy/entropy1-entropy-kl.html:97, :379, :437` |
+| Chain rule / DPI / Fano | `courses/infotheory/lectures/01-entropy/entropy2-joint-mi-fano.html:118, :368, :438` |
+| Mutual information (discrete) | `courses/infotheory/lectures/01-entropy/entropy2-joint-mi-fano.html:227` |
+| Kraft / Kraft–McMillan / Shannon / Huffman | `courses/infotheory/lectures/02-lossless/lossless1-codes.html:157, :198, :268, :413` |
+| AEP / source coding theorem / arithmetic coding | `courses/infotheory/lectures/02-lossless/lossless2-aep-arithmetic.html:84, :204, :405` |
+| Markov entropy rate / LZ78 | `courses/infotheory/lectures/02-lossless/lossless3-markov-universal.html:188, :355` |
+| Differential entropy + bin discretization | `courses/infotheory/lectures/03-diffentropy/diffentropy1-foundations.html:84, :96` |
+| Gaussian MaxEnt / Hadamard / EPI | `courses/infotheory/lectures/03-diffentropy/diffentropy2-maxent-gaussian.html:165, :248, :367` |
+| Shannon–Hartley / water-filling / I-MMSE | `courses/infotheory/lectures/03-diffentropy/diffentropy3-mi-awgn.html:177, :293, :385` |
+| Score function / Tweedie's formula | `courses/privacy/generative/diffusion1-foundations.html:362-425`; theorem at `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:121` |
+| DDPM forward + VLB derivation | `courses/privacy/generative/diffusion2-ddpm.html:189-333`; `courses/infotheory/lectures/07-diffusion/diff2-diffusion.html:153-212` |
 | SDE / Fokker–Planck / Anderson reverse | `courses/privacy/generative/diffusion3-sde-score.html` (FP `:148`, Anderson `:234`, score matching `:339`) |
 | DDIM (non-Markovian, deterministic, ODE) | `courses/privacy/generative/diffusion4-ddim.html` (marginal invariance `:164`, predicted clean `:234`) |
 | Classifier guidance + CFG | `courses/privacy/generative/diffusion5-guidance-discrete.html:202-282` |
 | Discrete diffusion / score-entropy loss | `courses/privacy/generative/diffusion5-guidance-discrete.html:287-425`; `talks/dllm/dllm.html:192-205` (SEDD) |
 | LLM brief overview (autoregressive, transformer, NLL, sampling) | `courses/privacy/generative/llm.html:72-296` |
 | LLM privacy-hook map (loss / verbatim / sampling / conditional) | `courses/privacy/generative/llm.html:258-281` |
-| Rate–distortion theorem (Shannon) | `courses/infotheory/lossy/lossy1-foundations.html:258-311` |
-| Lloyd–Max / scalar quantization | `courses/infotheory/lossy/lossy1-foundations.html:143-199` |
-| Gaussian R(D), Shannon lower bound, pruning | `courses/infotheory/lossy/lossy2-gaussian-laplacian.html:63-232` |
-| Lattice / E8 / QUIP# | `courses/infotheory/lossy/lossy3-lattice-quip.html` |
-| TURBOQUANT (online VQ for KV cache) | `courses/infotheory/lossy/lossy4-turboquant.html` |
-| Variational MI lower bounds (BA, DV, NWJ, MINE) | `courses/infotheory/mi/mi1-bounds.html` |
-| $f$-divergence unification of MI bounds | `courses/infotheory/mi/mi1-bounds.html:261-280` |
-| InfoNCE / CLIP | `courses/infotheory/mi/mi2-infonce-clip.html` |
-| $f$-divergence definition + properties (DPI, info inequality) | `courses/infotheory/divergence/div1-fdivergence-gan.html:121, :229` |
-| GAN $\equiv$ Jensen–Shannon minimization (theorem + proof) | `courses/infotheory/divergence/div1-fdivergence-gan.html:330, :341-350` |
-| Hockey-stick divergence (DP connection) | `courses/infotheory/divergence/div1-fdivergence-gan.html:166` |
-| Fisher divergence + score function | `courses/infotheory/divergence/div2-fisher-score.html:91, :141` |
-| Denoising score matching theorem (Vincent 2011) | `courses/infotheory/divergence/div2-fisher-score.html:200, :211-235` |
-| Diffusion ELBO $\equiv$ DSM theorem | `courses/infotheory/divergence/div2-fisher-score.html:315`; cross-ref `courses/infotheory/diffusion/diff3-parameterizations.html:211` |
+| Rate–distortion theorem (Shannon) | `courses/infotheory/lectures/04-lossy/lossy1-foundations.html:258-311` |
+| Lloyd–Max / scalar quantization | `courses/infotheory/lectures/04-lossy/lossy1-foundations.html:143-199` |
+| Gaussian R(D), Shannon lower bound, pruning | `courses/infotheory/lectures/04-lossy/lossy2-gaussian-laplacian.html:63-232` |
+| Lattice / E8 / QUIP# | `courses/infotheory/lectures/04-lossy/lossy3-lattice-quip.html` |
+| TURBOQUANT (online VQ for KV cache) | `courses/infotheory/lectures/04-lossy/lossy4-turboquant.html` |
+| Variational MI lower bounds (BA, DV, NWJ, MINE) | `courses/infotheory/lectures/05-mi/mi1-bounds.html` |
+| $f$-divergence unification of MI bounds | `courses/infotheory/lectures/05-mi/mi1-bounds.html:261-280` |
+| InfoNCE / CLIP | `courses/infotheory/lectures/05-mi/mi2-infonce-clip.html` |
+| $f$-divergence definition + properties (DPI, info inequality) | `courses/infotheory/lectures/06-divergence/div1-fdivergence-gan.html:121, :229` |
+| GAN $\equiv$ Jensen–Shannon minimization (theorem + proof) | `courses/infotheory/lectures/06-divergence/div1-fdivergence-gan.html:330, :341-350` |
+| Hockey-stick divergence (DP connection) | `courses/infotheory/lectures/06-divergence/div1-fdivergence-gan.html:166` |
+| Fisher divergence + score function | `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:91, :141` |
+| Denoising score matching theorem (Vincent 2011) | `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:200, :211-235` |
+| Diffusion ELBO $\equiv$ DSM theorem | `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:315`; cross-ref `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:211` |
 | MIA foundations (Homer, evaluation metrics) | `courses/privacy/mia/mia1-foundations.html` |
 | Shadow models (Shokri / LOGAN / seq2seq) | `courses/privacy/mia/mia2-shadow.html` |
 | MIA theory (Yeom / Sablayrolles / ML-Leaks / Nasr) | `courses/privacy/mia/mia3-theory.html` |
@@ -114,12 +117,12 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 ## Cross-references
 
 Same topic, different decks (use the more recent / more detailed):
-- **VAE / ELBO**: rigorous derivation `courses/infotheory/diffusion/diff1-vae-elbo.html`
-- **Hierarchical-VAE view of diffusion**: `courses/infotheory/diffusion/diff2-diffusion.html` (information-theoretic, Markov rewrite)
+- **VAE / ELBO**: rigorous derivation `courses/infotheory/lectures/07-diffusion/diff1-vae-elbo.html`
+- **Hierarchical-VAE view of diffusion**: `courses/infotheory/lectures/07-diffusion/diff2-diffusion.html` (information-theoretic, Markov rewrite)
 - **Diffusion from-scratch (Bayes route)**: `courses/privacy/generative/diffusion1-foundations.html` (Taylor + complete-square proof, less abstract)
-- **Tweedie**: brief `courses/privacy/generative/diffusion1-foundations.html:374`; with proof `courses/infotheory/diffusion/diff3-parameterizations.html:135`
-- **$f$-divergence variational dual**: brief in `courses/infotheory/mi/mi1-bounds.html:261` (KL instances); full development in `courses/infotheory/divergence/div1-fdivergence-gan.html:121-300`
-- **Score matching $\equiv$ diffusion training**: brief cross-ref `courses/infotheory/diffusion/diff3-parameterizations.html:211`; full proof `courses/infotheory/divergence/div2-fisher-score.html:200-326`
+- **Tweedie**: brief `courses/privacy/generative/diffusion1-foundations.html:374`; with proof `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:135`
+- **$f$-divergence variational dual**: brief in `courses/infotheory/lectures/05-mi/mi1-bounds.html:261` (KL instances); full development in `courses/infotheory/lectures/06-divergence/div1-fdivergence-gan.html:121-300`
+- **Score matching $\equiv$ diffusion training**: brief cross-ref `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:211`; full proof `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:200-326`
 
 ## Companion notes pattern
 

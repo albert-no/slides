@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diffusion 1 — Variational Bound and the VAE</title>
+<link rel="stylesheet" href="../../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- TITLE -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Diffusion · Lecture 1 of 3</div>
+  <h1>Variational Bound<br>and the VAE</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Maximum likelihood, ELBO, reparameterization</p>
+  <p style="font-weight:500;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Information Theory · 2026</p>
+</div>
+
+<!-- TOC -->
+<div class="slide">
+  <h2>Contents</h2><div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Why a bound</div>
+      <div class="toc-sub">Latent-variable models, intractable likelihood</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">ELBO, two paths</div>
+      <div class="toc-sub">Jensen and the KL identity, same bound</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">What the bound asks</div>
+      <div class="toc-sub">Reconstruction minus rate</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The VAE</div>
+      <div class="toc-sub">Instantiating the ELBO with concrete choices</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════ PART 01 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Why a Bound</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Likelihood is intractable; we minimize a surrogate</p>
+</div>
+
+<div class="slide">
+  <h2>Latent-Variable Model</h2><div class="divider"></div>
+  <p>Prior $p(z)=\mathcal{N}(0,I)$. Decoder $p_\theta(x\mid z)$.</p>
+  <div class="math-block">$$p_\theta(x) = \int p(z)\,p_\theta(x\mid z)\,dz.$$</div>
+  <p>Sampling is easy: draw $z\sim p(z)$, then $x\sim p_\theta(x\mid z)$.</p>
+  <p>Computing $p_\theta(x)$ is not.</p>
+</div>
+
+<div class="slide">
+  <h2>Maximum Likelihood Is Blocked</h2><div class="divider"></div>
+  <p>Average negative log-likelihood:</p>
+  <div class="math-block">$$\theta^\star \in \arg\min_\theta \frac{1}{N}\sum_{i=1}^N -\log p_\theta(x_i).$$</div>
+  <p>Each $\log p_\theta(x_i) = \log\!\int p_\theta(x_i, z)\,dz$: integral over $z$, not closed form.</p>
+  <div class="highlight">Replace the intractable log-marginal with a tractable <strong>lower bound</strong>.</div>
+</div>
+
+<div class="slide">
+  <h2>Plan: A Variational Posterior</h2><div class="divider"></div>
+  <p>Pick an encoder family $q_\phi(z\mid x)$, tractable, parameterized by $\phi$.</p>
+  <p>Importance-sampling identity:</p>
+  <div class="math-block">$$p_\theta(x) = \mathbb{E}_{z\sim q_\phi(\cdot\mid x)}\!\left[\frac{p_\theta(x,z)}{q_\phi(z\mid x)}\right].$$</div>
+  <p>Take $\log$. Two ways to bound it.</p>
+</div>
+
+
+<!-- ════ PART 02 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>ELBO: Two Paths, One Bound</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Jensen and the KL identity</p>
+</div>
+
+<div class="slide">
+  <h2>Path 1: Jensen on $\log\mathbb{E}$</h2><div class="divider"></div>
+  <p>Concavity of $\log$ gives $\log\mathbb{E}[X]\ge\mathbb{E}[\log X]$. Apply to the importance ratio:</p>
+  <div class="math-block">$$\log p_\theta(x) \ge \mathbb{E}_{q_\phi}\!\left[\log\frac{p_\theta(x,z)}{q_\phi(z\mid x)}\right] \;=:\; \mathcal{L}_{\mathrm{ELBO}}(\theta,\phi;x).$$</div>
+  <p>Tight when $\log$ acts linearly on the ratio. Gap is opaque.</p>
+</div>
+
+<div class="slide">
+  <h2>Path 2: KL Identity</h2><div class="divider"></div>
+  <p>Bayes: $p_\theta(z\mid x) = p_\theta(x,z)/p_\theta(x)$. Multiply, divide, take expectation:</p>
+  <div class="math-block">$$\log p_\theta(x) = \mathcal{L}_{\mathrm{ELBO}}(\theta,\phi;x) + D_{\mathrm{KL}}\!\bigl(q_\phi(\cdot\mid x)\,\Vert\,p_\theta(\cdot\mid x)\bigr).$$</div>
+  <p>$D_{\mathrm{KL}}\ge 0$ recovers the bound. The gap has a name: posterior KL.</p>
+</div>
+
+<div class="slide">
+  <h2>Same Bound, Different Stories</h2><div class="divider"></div>
+  <div class="math-block">$$\log p_\theta(x) \;=\; \mathcal{L}_{\mathrm{ELBO}} \;+\; \underbrace{D_{\mathrm{KL}}\!\bigl(q_\phi\,\Vert\,p_\theta(\cdot\mid x)\bigr)}_{\ge\,0}.$$</div>
+  <div class="grid-2">
+    <div>
+      <h3>Jensen</h3>
+      <p>Gap from concavity. Vanishes when ratio is constant in $z$.</p>
+    </div>
+    <div>
+      <h3>KL identity</h3>
+      <p>Gap is posterior KL. Vanishes iff $q_\phi = p_\theta(\cdot\mid x)$.</p>
+    </div>
+  </div>
+  <div class="highlight">Closing the gap means the encoder matches the true posterior.</div>
+</div>
+
+
+<!-- ════ PART 03 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>What the Bound Asks</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Reconstruction minus rate</p>
+</div>
+
+<div class="slide">
+  <h2>Two Seams of the Joint</h2><div class="divider"></div>
+  <p>Both forms below are the <strong>same ELBO</strong>, opened along different factorizations of $p_\theta(x,z)$:</p>
+  <div class="math-block">$$\begin{array}{l|c|c}
+\text{Split } p_\theta(x,z) \text{ as} & \text{Gives} & \text{Purpose} \\\hline
+p_\theta(z\mid x)\cdot p_\theta(x) & \text{KL gap identity} & \text{names the gap} \\
+p(z)\cdot p_\theta(x\mid z) & \text{recon} - \text{rate} & \text{trainable loss}
+\end{array}$$</div>
+  <div class="highlight">Same bound, two algebraic moves. Path 2 names the gap; the next slide gives the loss.</div>
+</div>
+
+<div class="slide">
+  <h2>ELBO Decomposes</h2><div class="divider"></div>
+  <p>Expand $p_\theta(x,z) = p(z)\,p_\theta(x\mid z)$ inside the ELBO:</p>
+  <div class="math-block">$$\mathcal{L}_{\mathrm{ELBO}} \;=\; \underbrace{\mathbb{E}_{q_\phi}[\log p_\theta(x\mid z)]}_{\text{reconstruction}} \;-\; \underbrace{D_{\mathrm{KL}}\!\bigl(q_\phi(\cdot\mid x)\,\Vert\,p(\cdot)\bigr)}_{\text{rate}}.$$</div>
+  <p>Two competing pressures: explain $x$, but stay close to the prior.</p>
+</div>
+
+<div class="slide">
+  <h2>Reconstruction &mdash; What It Computes</h2><div class="divider"></div>
+  <p>Encoder maps $x \mapsto z$. Decoder outputs $p_\theta(\cdot\mid z)$. Evaluate on the <strong>original</strong> $x$:</p>
+  <div class="math-block">$$\mathbb{E}_{q_\phi(z\mid x)}[\log p_\theta(x\mid z)].$$</div>
+  <p>How much probability does the decoder place on the true $x$, given the latent $z$?</p>
+</div>
+
+<div class="slide">
+  <h2>Gaussian Decoder &mdash; Reconstruction Is MSE</h2><div class="divider"></div>
+  <p>For $p_\theta(x\mid z) = \mathcal{N}(\mu_\theta(z),\,\sigma^2 I)$:</p>
+  <div class="math-block">$$\log p_\theta(x\mid z) \;=\; -\frac{\|x - \mu_\theta(z)\|^2}{2\sigma^2} + \mathrm{const}.$$</div>
+  <div class="highlight">Maximizing reconstruction $=$ minimizing <strong>MSE between input and decoded output</strong>.</div>
+</div>
+
+<div class="slide">
+  <h2>Rate vs. Distortion</h2><div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>Reconstruction</h3>
+      <p>Can the decoder recover $x$ from the latent $z$?</p>
+      <p>Negative distortion (MSE).</p>
+    </div>
+    <div>
+      <h3>Rate (prior KL)</h3>
+      <p>How far does the encoder drift from $p(z)$?</p>
+      <p>Bits the latent carries about $x$.</p>
+    </div>
+  </div>
+  <div class="highlight">ELBO is a variational <strong>rate&ndash;distortion functional</strong>.</div>
+</div>
+
+<div class="slide">
+  <h2>Why Prior KL $=$ Rate</h2><div class="divider"></div>
+  <p>Average the KL-to-prior over $x\sim p_{\mathrm{data}}$:</p>
+  <div class="math-block">$$\mathbb{E}_x\!\bigl[D_{\mathrm{KL}}(q_\phi(\cdot\mid x)\,\Vert\,p)\bigr] \;=\; \underbrace{I_{q_\phi}(X;Z)}_{\text{rate (bits)}} \;+\; \underbrace{D_{\mathrm{KL}}\!\bigl(q_\phi(z)\,\Vert\,p(z)\bigr)}_{\text{marginal mismatch}}.$$</div>
+  <p>$I(X;Z)$: bits the latent carries about data $=$ rate in the R-D sense.</p>
+  <p>Prior KL $\ge I(X;Z)$, tight when aggregate posterior $q_\phi(z) = p(z)$.</p>
+</div>
+
+
+<!-- ════ PART 04 ════ -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>The VAE</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Instantiating the ELBO with concrete choices</p>
+</div>
+
+<div class="slide">
+  <h2>From ELBO to Algorithm</h2><div class="divider"></div>
+  <p>We have a loss. To train it, three design choices remain:</p>
+  <div class="math-block">$$\mathcal{L}_{\mathrm{ELBO}} \;=\; \underbrace{\mathbb{E}_{q_\phi}[\log p_\theta(x\mid z)]}_{\text{need gradient through } q_\phi} \;-\; \underbrace{D_{\mathrm{KL}}(q_\phi\,\Vert\,p)}_{\text{need closed form}}.$$</div>
+  <ul>
+    <li><strong>Encoder</strong> $q_\phi(z\mid x)$: what family? &rarr; Gaussian</li>
+    <li><strong>KL term:</strong> analytic or Monte Carlo? &rarr; analytic (Gaussian vs Gaussian)</li>
+    <li><strong>Gradient through sampling:</strong> how? &rarr; reparameterization trick</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>VAE Architecture</h2><div class="divider"></div>
+  <div class="grid-2" style="gap:32px; margin-top:24px;">
+    <div>
+      <h3 style="text-align:center;">Encoder</h3>
+      <div class="diagram-flow" style="justify-content:center; gap:8px; margin:18px 0 14px;">
+        <div class="diagram-box" style="min-width:60px;">$x$</div>
+        <span style="font-size:1.7rem;color:var(--yonsei-blue);align-self:center;">$\to$</span>
+        <div class="diagram-box" style="min-width:120px;border-color:var(--yonsei-blue);">$q_\phi$</div>
+        <span style="font-size:1.7rem;color:var(--yonsei-blue);align-self:center;">$\to$</span>
+        <div class="diagram-box" style="min-width:60px;">$z$</div>
+      </div>
+      <p style="text-align:center;">$z \sim \mathcal{N}\!\bigl(\mu_\phi(x),\,\sigma_\phi(x)^2\bigr)$</p>
+      <p style="text-align:center;">Mean and std are <strong>functions of $x$</strong>.</p>
+    </div>
+    <div>
+      <h3 style="text-align:center;">Decoder</h3>
+      <div class="diagram-flow" style="justify-content:center; gap:8px; margin:18px 0 14px;">
+        <div class="diagram-box" style="min-width:60px;">$z$</div>
+        <span style="font-size:1.7rem;color:var(--yonsei-blue);align-self:center;">$\to$</span>
+        <div class="diagram-box" style="min-width:120px;border-color:var(--yonsei-blue);">$p_\theta$</div>
+        <span style="font-size:1.7rem;color:var(--yonsei-blue);align-self:center;">$\to$</span>
+        <div class="diagram-box" style="min-width:60px;">$\hat x$</div>
+      </div>
+      <p style="text-align:center;">Reconstructs $x$ from a sampled $z$.</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Gaussian Encoder</h2><div class="divider"></div>
+  <p>For $z\in\mathbb{R}^d$, network outputs per-coordinate mean and variance:</p>
+  <div class="math-block">$$q_\phi(z\mid x) \;=\; \mathcal{N}\!\bigl(\mu_\phi(x),\,\operatorname{diag}\sigma_\phi(x)^2\bigr).$$</div>
+  <p>$\mu_{\phi,j},\,\sigma_{\phi,j}$: $j$-th coordinates of $\mu_\phi(x),\,\sigma_\phi(x)$, for $j=1,\dots,d$.</p>
+  <div class="highlight">Gaussian choice $\Rightarrow$ <strong>closed-form KL</strong> and <strong>reparameterization</strong>.</div>
+</div>
+
+<div class="slide">
+  <h2>Closed-Form KL</h2><div class="divider"></div>
+  <p>Prior $p(z) = \mathcal{N}(0,I)$. KL from encoder to prior:</p>
+  <div class="math-block">$$D_{\mathrm{KL}}\!\bigl(q_\phi\,\Vert\,p\bigr) \;=\; \tfrac{1}{2}\sum_{j=1}^{d}\!\bigl(\mu_{\phi,j}^2 + \sigma_{\phi,j}^2 - 1 - \log\sigma_{\phi,j}^2\bigr).$$</div>
+  <p>Each term $= 0$ iff $\mu_{\phi,j} = 0$ and $\sigma_{\phi,j} = 1$.</p>
+  <div class="highlight">Rate term is <strong>analytic</strong> — no Monte Carlo.</div>
+</div>
+
+<div class="slide">
+  <h2>The Gradient Problem</h2><div class="divider"></div>
+  <p>Reconstruction requires differentiating through a sample:</p>
+  <div class="math-block">$$\nabla_\phi\;\mathbb{E}_{z\sim q_\phi(z\mid x)}[\log p_\theta(x\mid z)] \;=\; \text{?}$$</div>
+  <p>$z$ is drawn from $q_\phi$. The sampling distribution depends on $\phi$.</p>
+  <p>Cannot move $\nabla_\phi$ inside $\mathbb{E}_{q_\phi}$ directly.</p>
+</div>
+
+<div class="slide">
+  <h2>Reparameterization Trick</h2><div class="divider"></div>
+  <p>Separate randomness from parameters:</p>
+  <div class="math-block">$$z = \mu_\phi(x) + \sigma_\phi(x)\odot\varepsilon, \qquad \varepsilon\sim\mathcal{N}(0,I).$$</div>
+  <p>Now $\varepsilon$ is <strong>parameter-free</strong>. Rewrite the expectation:</p>
+  <div class="math-block">$$\nabla_\phi\;\mathbb{E}_{q_\phi}[f(z)] \;=\; \mathbb{E}_{\varepsilon}\!\bigl[\nabla_\phi\, f\!\bigl(\mu_\phi(x)+\sigma_\phi(x)\odot\varepsilon\bigr)\bigr].$$</div>
+  <div class="highlight">All $\phi$-dependence flows through $\mu_\phi, \sigma_\phi$. Standard backprop applies.</div>
+</div>
+
+<div class="slide">
+  <h2>VAE Loss = Negative ELBO</h2><div class="divider"></div>
+  <p>Per sample $x$, one $\varepsilon$ draw gives a single-sample estimate:</p>
+  <div class="math-block">$$\mathcal{L}(\theta,\phi;x) \;=\; \underbrace{-\log p_\theta(x\mid z)}_{\text{reconstruction (MSE)}} \;+\; \underbrace{D_{\mathrm{KL}}\!\bigl(q_\phi(\cdot\mid x)\,\Vert\,p\bigr)}_{\text{rate (closed form)}}.$$</div>
+  <p>First term: Monte Carlo (one $\varepsilon$). Second term: analytic.</p>
+  <p>Backprop through both encoder and decoder jointly.</p>
+</div>
+
+<div class="slide">
+  <h2>Failure Mode: Posterior Collapse</h2><div class="divider"></div>
+  <p>If the decoder can fit $x$ without help from $z$, the encoder has no reason to encode $x$:</p>
+  <div class="math-block">$$D_{\mathrm{KL}}(q_\phi\,\Vert\,p) = 0 \;\Longleftrightarrow\; q_\phi(z\mid x) = p(z) \;\Longrightarrow\; z\perp x.$$</div>
+  <p>Latent carries no information. Mitigations: KL annealing, free bits, weaker decoder.</p>
+  <div class="highlight"><strong>Diffusion</strong> sidesteps this: encoder is fixed, $z$ is forced to carry $x$.</div>
+</div>
+
+<div class="slide">
+  <h2>Recap</h2><div class="divider"></div>
+  <ul>
+    <li><strong>Latent model:</strong> $p_\theta(x)=\int p(z)\,p_\theta(x\mid z)\,dz$, intractable.</li>
+    <li><strong>ELBO:</strong> $\log p_\theta(x) = \mathcal{L}_{\mathrm{ELBO}} + D_{\mathrm{KL}}(q_\phi\Vert p_\theta(\cdot\mid x))$.</li>
+    <li><strong>Decomposition:</strong> reconstruction (MSE) minus rate (KL to prior).</li>
+    <li><strong>VAE:</strong> Gaussian encoder, reparameterization, joint backprop.</li>
+    <li><strong>Collapse:</strong> learned encoder can drop $x$; diffusion freezes it.</li>
+  </ul>
+</div>
+
+<div class="slide end-slide no-footer">
+  <div class="big-word">End of Lecture 1</div>
+  <p class="big-word-sub">Up next: diffusion as a hierarchical VAE.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 1</div>
+
+</div><!-- end deck -->
+
+<script src="../../../../reference/deck.js"></script>
+</body>
+</html>

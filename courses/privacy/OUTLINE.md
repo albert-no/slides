@@ -10,8 +10,10 @@ and exams.
   6-deck review (5 diffusion + 1 LLM); memorization/unlearning are short 2-deck series and
   watermark is a single deck. Full section tables, cross-deck theorem pointers, reading order,
   and the quick-lookup table live in **`lectures/OUTLINE.md`**.
-- **`exam/`** — homework / exam set: `hw1sol`–`hw4` (`.tex`/`.pdf`), `hw4.html` + `hw4sol.html`,
-  and shared style (`math_hw.sty`, `versions.sty`, `math_commands.tex`).
+- **`exam/`** — homework / exam set: `hw1sol`–`hw4` (`.tex`/`.pdf`), `hw4.html` + `hw4sol.html`
+  (current 5-problem HW4), `hw4old.tex` (prior 10-problem draft), `backup-problems/` (the 5
+  problems cut from HW4, statements + solutions), and shared style (`math_hw.sty`,
+  `versions.sty`, `math_commands.tex`).
 - **`privacy.md`**, **`slide.pdf`** — loose course material (syllabus notes; the unlearning
   source talk).
 

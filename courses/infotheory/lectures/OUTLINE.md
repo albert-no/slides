@@ -32,7 +32,7 @@ The companion LaTeX lecture notes live one level up in `../notes/`; exams in `..
 - **lossy** ramps from classical R(D) to **applied compression of LLM weights and KV caches** (QUIP#, TURBOQUANT).
 - **mi** culminates in the MI view of CLIP — the bridge between variational-bound theory and contrastive learning.
 - **divergence** synthesizes the divergence families: $f$-divergences unify MI/GAN; Fisher + DSM sets up the score-based view.
-- **diffusion** is the *theoretical* side of diffusion (see `courses/privacy/generative/` for the from-scratch Bayes-route version); closes by showing diffusion ELBO $\equiv$ DSM, using `06-divergence/` machinery.
+- **diffusion** is the *theoretical* side of diffusion (see `courses/privacy/lectures/02-generative/` for the from-scratch Bayes-route version); closes by showing diffusion ELBO $\equiv$ DSM, using `06-divergence/` machinery.
 - **ib** bridges information theory and deep learning: IB Lagrangian reuses MI from `01-entropy/` and rate-distortion from `04-lossy/`; the information plane gives a diagnostic lens for DNN representations.
 
 ## Cross-deck pointers

@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIA 5 — LLM Membership Inference</title>
+<link rel="stylesheet" href="../../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- SLIDE 1: Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 5 of 5</div>
+  <h1>Membership Inference<br>in LLMs</h1>
+  <div class="divider"></div>
+  <p class="subtitle">High-level view: what works, what doesn&rsquo;t, and why</p>
+  <p style="font-weight:500;">Albert No &nbsp;&middot;&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">2026</p>
+</div>
+
+<!-- SLIDE 2: Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">What makes LLM MIA hard</div>
+        <div class="toc-sub">Threat models, perplexity, calibration</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Calibration strategies</div>
+        <div class="toc-sub">A tour: neighbourhood, SPV, context, token-level</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">The empirical wall</div>
+        <div class="toc-sub">Limits of MIA on pre-trained LLMs</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Where the signal still lives</div>
+        <div class="toc-sub">Fine-tuning, extraction, governance</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Synthesis</div>
+        <div class="toc-sub">Unified framework, open problems</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!--  §01 — What makes LLM MIA hard                                     -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<!-- Part divider -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>What Makes LLM MIA Hard</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Threat models, perplexity, the calibration challenge</p>
+</div>
+
+<!-- SLIDE — What changes from classifier MIA -->
+<div class="slide bg-dark">
+  <h2>From Classifiers to LLMs</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="margin-top:8px;">
+    <div class="card">
+      <h3>One-pass training</h3>
+      <p>Trillions of tokens, each seen <strong>~once</strong>.</p>
+      <p>No multi-epoch overfit to lean on.</p>
+    </div>
+    <div class="card">
+      <h3>Unknown training data</h3>
+      <p>Web crawl; no clean "in/out" partition.</p>
+    </div>
+    <div class="card">
+      <h3>Shadows infeasible</h3>
+      <p>Cannot retrain a 7B model 256 times.</p>
+      <p>LiRA template breaks.</p>
+    </div>
+    <div class="card">
+      <h3>Variable-length text</h3>
+      <p>Score is a per-token NLL summary, not a scalar loss.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE — Three threat models -->
+<div class="slide bg-deep">
+  <h2>Three Threat Models</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Pre-training</h3>
+      <p>"In Pile / C4 / web crawl?"</p>
+      <p style="color:var(--warn);">Hardest. Very weak signal.</p>
+    </div>
+    <div class="card">
+      <h3>Fine-tuning</h3>
+      <p>"In RLHF / instruction set?"</p>
+      <p style="color:var(--accent);">Moderate signal &mdash; multi-epoch, small data.</p>
+    </div>
+    <div class="card">
+      <h3>Context</h3>
+      <p>"In current prompt?"</p>
+      <p style="color:var(--success);">Easiest. Strong signal.</p>
+    </div>
+  </div>
+  <p>Research focus: <strong>pre-training</strong> (hardest) and <strong>fine-tuning</strong>.</p>
+</div>
+
+<!-- SLIDE — Perplexity baseline -->
+<div class="slide bg-dark">
+  <h2>The Perplexity Baseline</h2>
+  <div class="divider"></div>
+  <p>Per-token NLL summary &mdash; LLM analogue of the loss threshold:</p>
+  <div class="math-block">
+    $$\text{PPL}(x) \;=\; \exp\!\left(-\tfrac{1}{T}\sum_{t=1}^T \log p_\theta(x_t \mid x_{&lt;t})\right)$$
+  </div>
+  <p>Attack: $\mathcal{A}(x) = \mathbf{1}[\text{PPL}(x) &lt; \tau]$. Low PPL $\Rightarrow$ member.</p>
+  <div class="highlight">
+    <p><strong>Failure:</strong> low PPL on "Hello, how are you?" &mdash; trained or not.</p>
+    <p>Conflates <strong>memorization</strong> with <strong>fluency</strong>.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Calibration challenge -->
+<div class="slide bg-deep">
+  <h2>The Calibration Challenge</h2>
+  <div class="divider"></div>
+  <p>Need a per-example <strong>null</strong>: how surprised would the model be if $x$ were <em>not</em> trained on?</p>
+  <div class="grid-2">
+    <div>
+      <h3 style="color:var(--warn);">Low PPL $\neq$ Member</h3>
+      <p>Common boilerplate is low-PPL by design.</p>
+    </div>
+    <div>
+      <h3 style="color:var(--success);">High PPL $\neq$ Non-member</h3>
+      <p>Rare jargon stays high-PPL even after training.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Every modern LLM MIA is one question: <strong>how do we build that null cheaply?</strong></p>
+  </div>
+</div>
+
+<!-- SLIDE — Signal vs reference -->
+<div class="slide bg-dark">
+  <h2>Two Knobs Every Attack Turns</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="margin-top:8px;">
+    <div class="card">
+      <h3>Signal</h3>
+      <p>Per-sequence PPL, per-token NLL, variance across contexts, &hellip;</p>
+    </div>
+    <div class="card">
+      <h3>Reference (null)</h3>
+      <p>Smaller LM, paraphrases, self-generations, population of texts.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>The lecture is a tour of <strong>signal $\times$ reference</strong> choices.</p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!--  §02 — Calibration strategies                                      -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Calibration Strategies</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Four key ideas for building the null</p>
+</div>
+
+<!-- SLIDE — Reference model -->
+<div class="slide bg-dark">
+  <h2>Reference Model (Carlini et al. 2021)</h2>
+  <div class="divider"></div>
+  <p>Use a <strong>different</strong> LM as the null. Compare ratios.</p>
+  <div class="math-block">
+    $$s(x) \;=\; \log p_\theta(x) \;-\; \log p_{\text{ref}}(x)$$
+  </div>
+  <ul class="arrow">
+    <li>$p_{\text{ref}}$ &mdash; smaller LM, or zlib compression length</li>
+    <li>Cancels per-sequence intrinsic difficulty</li>
+    <li>Cheap; signal still weak on pre-training</li>
+  </ul>
+</div>
+
+<!-- SLIDE — Neighbourhood -->
+<div class="slide bg-deep">
+  <div class="pill">Mattern et al. 2023</div>
+  <h2>Neighbourhood: Paraphrases as Null</h2>
+  <div class="divider"></div>
+  <p>Mask-and-fill with T5 to make $K$ paraphrases $\tilde{x}^{(k)}$.</p>
+  <div class="math-block">
+    $$s(x) \;=\; \log p_\theta(x) \;-\; \tfrac{1}{K}\sum_{k=1}^K \log p_\theta(\tilde{x}^{(k)})$$
+  </div>
+  <div class="highlight">
+    <p><strong>Memorized:</strong> $\log p_\theta(x) \gg$ paraphrases.</p>
+    <p><strong>Generic:</strong> $\log p_\theta(x) \approx$ paraphrases.</p>
+  </div>
+</div>
+
+<!-- SLIDE — SPV-MIA -->
+<div class="slide bg-dark">
+  <div class="pill">Fu et al. 2023</div>
+  <h2>SPV-MIA: Self-Prompted Null</h2>
+  <div class="divider"></div>
+  <p>The target LLM generates its own reference text.</p>
+  <ul class="arrow">
+    <li>Prefix-complete $x$ &mdash; members regenerate close to original</li>
+    <li>No external reference model needed</li>
+    <li>Strong for <strong>fine-tuning</strong> detection: 0.80&ndash;0.90 AUC</li>
+  </ul>
+  <div class="highlight">
+    <p>Key idea: <strong>fine-tuning collapses the model toward training texts</strong>.</p>
+    <p>Self-generations reveal the collapse.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Context-aware -->
+<div class="slide bg-deep">
+  <div class="pill">Chang et al. 2024</div>
+  <h2>Context-Aware: Variance as Signal</h2>
+  <div class="divider"></div>
+  <p>Score $x$ under many prefixes $c \in \mathcal{C}$:</p>
+  <div class="math-block">
+    $$s(x) \;=\; \text{Var}_{c \in \mathcal{C}}\bigl[\log p_\theta(x \mid c)\bigr]$$
+  </div>
+  <ul class="arrow">
+    <li>Members: loss <em>drops</em> under the right context &mdash; high variance</li>
+    <li>Non-members: insensitive to context &mdash; low variance</li>
+    <li>Memorization is <strong>text-in-context</strong>, not text alone</li>
+  </ul>
+</div>
+
+<!-- SLIDE — Token-level surprise -->
+<div class="slide bg-dark">
+  <h2>Token-Level: Not All Tokens Are Equal</h2>
+  <div class="divider"></div>
+  <p>Per-token surprise $I_t = -\log p_\theta(x_t \mid x_{&lt;t})$. Common tokens carry no signal.</p>
+  <div class="card" style="padding:16px 20px; line-height:1.4; white-space:nowrap; text-align:center;">
+    <span class="token token-fixed">The</span>
+    <span class="token token-fixed">study</span>
+    <span class="token token-fixed">was</span>
+    <span class="token token-fixed">at</span>
+    <span class="token token-gen">Stanford</span>
+    <span class="token token-fixed">by</span>
+    <span class="token token-gen">Dr.</span>
+    <span class="token token-gen">Sarah</span>
+    <span class="token token-gen">Chen</span>
+    <span class="token token-fixed">in</span>
+    <span class="token token-gen">2019</span>
+    <span class="token token-fixed">with</span>
+    <span class="token token-gen">1,247</span>
+    <span class="token token-fixed">participants</span>
+  </div>
+  <p><span class="token token-fixed">filler</span> predictable for anyone &nbsp;&nbsp; <span class="token token-gen">specific</span> predictable only if memorized</p>
+  <div class="highlight">
+    <p><strong>Takeaway:</strong> averaging over all tokens <em>dilutes</em> the signal.</p>
+    <p>Weighting or selecting high-surprise tokens <em>amplifies</em> it &mdash; motivates Min-K% &amp; InfoRMIA next.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Min-K% and InfoRMIA -->
+<div class="slide bg-deep">
+  <div class="pill">Shi et al. 2024 &middot; Tao &amp; Shokri 2025</div>
+  <h2>Min-K% and InfoRMIA</h2>
+  <div class="divider"></div>
+  <p><strong>Min-K% (Shi et al.):</strong> average the surprise of the $K\%$ <em>least</em> likely tokens.</p>
+  <p><strong>InfoRMIA (Tao &amp; Shokri):</strong> weighted token-wise log-ratio against a reference:</p>
+  <div class="math-block">
+    $$s(x) \;=\; \sum_{t \,\in\, \mathcal{T}_{\text{info}}} w_t \,\log \frac{p_\theta(x_t \mid x_{&lt;t})}{p_{\text{ref}}(x_t \mid x_{&lt;t})}$$
+  </div>
+  <p>$\mathcal{T}_{\text{info}}$: high reference-surprise positions (entities, numbers, rare words).</p>
+  <p>$w_t$: informativeness weight.</p>
+  <p>Info-theoretic view: pick $\mathcal{T}_{\text{info}}, w_t$ to maximise total $I(z \in D ;\, x_t \mid x_{&lt;t})$.</p>
+</div>
+
+<!-- SLIDE — Calibration zoo summary -->
+<div class="slide bg-dark">
+  <h2>The Calibration Zoo</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Method</th><th>Signal</th><th>Reference / Null</th></tr>
+    <tr><td>Raw PPL</td><td>Sequence NLL</td><td>Global threshold</td></tr>
+    <tr><td>Reference model</td><td>Sequence NLL</td><td>Smaller LM, zlib</td></tr>
+    <tr><td>Neighbourhood</td><td>Sequence NLL</td><td>Paraphrases of $x$</td></tr>
+    <tr><td>SPV-MIA</td><td>Sequence NLL</td><td>Self-generations</td></tr>
+    <tr><td>Context-aware</td><td>Variance across $c$</td><td>(none &mdash; signal is the spread)</td></tr>
+    <tr><td>Min-K% / InfoRMIA</td><td>Per-token NLL</td><td>Token-weighted, or vs. reference</td></tr>
+  </table>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!--  §03 — The empirical wall (impossibility / limits)                 -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>The Empirical Wall</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Limits of MIA on pre-trained LLMs</p>
+</div>
+
+<!-- SLIDE — Setup -->
+<div class="slide bg-dark">
+  <h2>The Headline Question</h2>
+  <div class="divider"></div>
+  <p>Modern LLM MIA papers publish steady AUC gains. Are these real?</p>
+  <ul class="arrow">
+    <li>Classifier MIA at scale: TPR@0.1% FPR around 10% (LiRA on CIFAR-10)</li>
+    <li>Pre-trained LLM MIA: TPR@1% FPR around 1&ndash;5%, AUC 0.55&ndash;0.70</li>
+    <li>The gap is large &mdash; and it does not close with bigger attacks</li>
+  </ul>
+  <div class="highlight">
+    <p>Three 2024&ndash;2025 papers argue the gap is <strong>structural</strong>, not just under-optimised.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Duan et al. -->
+<div class="slide bg-deep">
+  <div class="pill">Duan et al. 2024 &middot; COLM</div>
+  <h2>"Do MIAs Work on LLMs?"</h2>
+  <div class="divider"></div>
+  <p>Evaluated 5 leading MIAs against Pythia / GPT-Neo on the Pile.</p>
+  <ul class="arrow">
+    <li>AUC <strong>barely above 0.5</strong> across settings</li>
+    <li>Apparent wins on WikiMIA came from <strong>temporal shift</strong> (older members vs. newer non-members)</li>
+    <li style="list-style:none; margin-left:1.4em; font-size:0.92em; color:var(--gray-text);">model trained <em>between</em> the two &mdash; attack detects pre/post-cutoff style, not membership</li>
+    <li>Controlling for distribution: signal vanishes</li>
+  </ul>
+  <div class="highlight">
+    <p>Diagnosis: <strong>one-pass training over trillions of tokens leaves almost no overfit signal</strong>.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Hayes et al. impossibility -->
+<div class="slide bg-dark">
+  <div class="pill">Hayes et al. 2025</div>
+  <h2>Limits of Strong Attacks at Scale</h2>
+  <div class="divider"></div>
+  <p>Scaled LiRA &mdash; <em>the</em> strongest known attack &mdash; to GPT-2 (10M&ndash;1B params), 20B+ tokens on C4.</p>
+  <ul class="check">
+    <li>256 shadow models, full per-example calibration</li>
+    <li>Best case: <strong>AUC &lt; 0.7 in practical settings</strong></li>
+    <li>Stronger attacks don&rsquo;t close the gap &mdash; ceiling is structural</li>
+  </ul>
+  <div class="cite">Hayes, Shumailov, Choquette-Choo, Jagielski, Kaissis, Nasr et&nbsp;al., <em>Exploring the limits of strong membership inference attacks on large language models</em>, 2025.</div>
+</div>
+
+<!-- SLIDE — Hayes et al. instability -->
+<div class="slide bg-deep">
+  <div class="pill">Hayes et al. 2025</div>
+  <h2>Per-Record Instability</h2>
+  <div class="divider"></div>
+  <p>Even when AUC is above chance, <strong>individual predictions are unstable</strong>.</p>
+  <ul class="arrow">
+    <li>Re-running the same attack on the same record flips many calls</li>
+    <li>Training-seed variability swamps the membership signal</li>
+    <li>"Person $X$&rsquo;s data is in the model" is not a reliable claim</li>
+  </ul>
+  <div class="highlight">
+    <p>Average AUC overstates what a real auditor can act on.</p>
+    <p>For high-stakes per-record claims, pre-training MIA is <strong>not reliable</strong>.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Maini et al. blind baselines -->
+<div class="slide bg-dark">
+  <div class="pill">Maini et al. 2024</div>
+  <h2>Blind Baselines Beat MIA</h2>
+  <div class="divider"></div>
+  <p>You can separate member / non-member sets <strong>without touching the model</strong>:</p>
+  <ul class="arrow">
+    <li>Text length, n-gram statistics, source domain</li>
+    <li>These features alone often beat published MIAs on benchmarks</li>
+    <li>Many "MIA wins" measure dataset construction, not memorization</li>
+  </ul>
+  <div class="highlight">
+    <p>If a blind baseline matches your attack, your benchmark has a distribution leak.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Why pretraining is structurally hard -->
+<div class="slide bg-deep">
+  <h2>Why Pre-Training MIA Is Hard</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="margin-top:8px;">
+    <div class="card">
+      <h3>No overfit</h3>
+      <p>Yeom: $\text{Adv} \le R_{\text{pop}} - R_{\text{train}}$.</p>
+      <p>That gap is tiny for a one-pass LLM.</p>
+    </div>
+    <div class="card">
+      <h3>Massive class</h3>
+      <p>Member &amp; non-member texts both drawn from the same web.</p>
+      <p>Distributions overlap.</p>
+    </div>
+    <div class="card">
+      <h3>Seed noise</h3>
+      <p>Training stochasticity perturbs per-record losses more than membership does.</p>
+    </div>
+    <div class="card">
+      <h3>No clean ground truth</h3>
+      <p>Training data unknown, deduplication blurs "membership".</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!--  §04 — Where the signal still lives                                -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Where the Signal Still Lives</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Fine-tuning, extraction, defenses, law</p>
+</div>
+
+<!-- SLIDE — Fine-tuning works -->
+<div class="slide bg-dark">
+  <h2>Fine-Tuning MIA Works</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>Why it&rsquo;s easier</h3>
+      <p>Multi-epoch training on small data.</p>
+      <p>Members are seen many times; non-members never.</p>
+      <p>Classical overfit signal returns.</p>
+    </div>
+    <div>
+      <h3>What works</h3>
+      <p>SPV-MIA, neighbourhood, reference-LM.</p>
+      <p>AUC 0.80&ndash;0.90 on LLaMA / GPT-2 fine-tunes.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Real privacy risk lives in <strong>fine-tuning</strong>, not pre-training.</p>
+  </div>
+</div>
+
+<!-- SLIDE — Extractable vs Inferable -->
+<div class="slide bg-deep">
+  <h2>Extractable $\subset$ Inferable $\subset$ Trained-on</h2>
+  <div class="divider"></div>
+  <p>Two notions of "the model saw $x$" &mdash; one strictly stronger than the other.</p>
+
+  <div style="display:flex; justify-content:center; margin: 14px 0 10px;">
+    <div style="border:2px dashed var(--slate); padding: 22px 28px; border-radius:10px; text-align:center; min-width: 560px;">
+      <div style="color:var(--gray-text); font-size:0.9em; margin-bottom:10px;">Trained-on &mdash; every $x$ the model saw during training</div>
+      <div style="border:2px solid var(--accent); padding: 16px 22px; border-radius:8px; background: var(--yonsei-blue-05);">
+        <div style="color:var(--accent); font-weight:600; margin-bottom:8px; font-size:0.95em;">Inferable: $\exists$ test that calls $x$ a member &gt; chance</div>
+        <div style="border:2px solid var(--yonsei-blue); padding: 12px 18px; border-radius:6px; background: var(--yonsei-blue-12);">
+          <div style="color:var(--yonsei-blue); font-weight:700; font-size:0.95em;">Extractable: $\exists$ prompt $p$ with $f_\theta(p) = x$ verbatim</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight">
+    <p><strong>Point:</strong> extraction is a <em>demonstration</em>, MIA is a <em>test</em>.</p>
+    <p>After §03 &mdash; per-record MIA unreliable &mdash; <strong>extraction is the only signal that survives the calibration problem</strong>.</p>
+  </div>
+</div>
+
+<!-- SLIDE — MIA → extraction pipeline -->
+<div class="slide bg-dark">
+  <h2>MIA as Extraction&rsquo;s Ranker</h2>
+  <div class="divider"></div>
+  <div class="diagram-flow" style="justify-content:center;">
+    <div class="diagram-box">Generate candidates</div>
+    <span class="diagram-arrow">&rarr;</span>
+    <div class="diagram-box">Rank by MIA score</div>
+    <span class="diagram-arrow">&rarr;</span>
+    <div class="diagram-box filled">Verify top-$k$ as training text</div>
+  </div>
+  <ul class="arrow">
+    <li>MIA can fail per-record but still rank well in bulk</li>
+    <li>Top-of-distribution leakage: rare, repeated, distinctive</li>
+    <li>This is the operational use of MIA on pre-trained LLMs</li>
+  </ul>
+</div>
+
+<!-- SLIDE — Defenses -->
+<div class="slide bg-deep">
+  <h2>Defenses</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="margin-top:8px;">
+    <div class="card">
+      <h3>DP fine-tuning</h3>
+      <p>DP-SGD on the fine-tuning step.</p>
+      <p>Practical; bounds MIA advantage by $e^\varepsilon - 1 + \delta$.</p>
+    </div>
+    <div class="card">
+      <h3>DP pre-training</h3>
+      <p>Open challenge.</p>
+      <p>Trade-off too severe at trillion-token scale.</p>
+    </div>
+    <div class="card">
+      <h3>Deduplication</h3>
+      <p>Memorization scales with repetition (Carlini).</p>
+      <p>Dedup the corpus before training.</p>
+    </div>
+    <div class="card">
+      <h3>Curation &amp; filtering</h3>
+      <p>Strip PII, IDs, secrets pre-training.</p>
+      <p>Necessary; not sufficient.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE — Legal landscape -->
+<div class="slide bg-dark">
+  <h2>Legal Landscape</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>GDPR Right to Erasure</h3>
+      <p>Article 17: request deletion of personal data.</p>
+      <p>What does "delete from a trained model" mean?</p>
+      <p>MIA as <strong>test</strong> &mdash; if still detectable, not deleted.</p>
+    </div>
+    <div>
+      <h3>NYT v. OpenAI</h3>
+      <p>ChatGPT reproduces NYT articles verbatim.</p>
+      <p>Extraction (not MIA) provides clean legal evidence.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>MIA &rarr; legal verification: useful, but the empirical wall bounds what auditors can claim.</p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!--  §05 — Synthesis                                                   -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Synthesis</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Unified framework, open problems</p>
+</div>
+
+<!-- SLIDE — Unified framework -->
+<div class="slide bg-dark">
+  <h2>Every Attack: One Template</h2>
+  <div class="divider"></div>
+  <div class="math-block">
+    $$\mathcal{A}(z) \;=\; \mathbf{1}\!\left[\frac{p(\text{signal} \mid z \in D)}{p(\text{signal} \mid z \notin D)} > \tau\right]$$
+  </div>
+  <p>Methods differ in two choices &mdash; <strong>signal</strong> and <strong>null</strong>.</p>
+  <p>Classifier vs. LLM: the template is the same; only what you can build the null from changes.</p>
+</div>
+
+<!-- SLIDE — Instances table -->
+<div class="slide bg-deep">
+  <h2>Instances Across 17 Years</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Method</th><th>Signal</th><th>Null</th></tr>
+    <tr><td>Homer 2008</td><td>Allele distance</td><td>Population frequencies</td></tr>
+    <tr><td>Shokri 2017</td><td>Confidence vector</td><td>Shadow classifier</td></tr>
+    <tr><td>Yeom 2018</td><td>Loss</td><td>Global mean</td></tr>
+    <tr><td>LiRA 2022</td><td>Loss</td><td>Per-example Gaussian (shadows)</td></tr>
+    <tr><td>RMIA 2023</td><td>Loss ratio</td><td>Population percentile</td></tr>
+    <tr><td>InfoRMIA 2025</td><td>Per-token log-ratio</td><td>Token-weighted vs. ref</td></tr>
+  </table>
+</div>
+
+<!-- SLIDE — Four eras -->
+<div class="slide bg-dark">
+  <h2>Four Eras</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Era</th><th>Focus</th><th>Key advance</th></tr>
+    <tr><td>2008&ndash;2017</td><td>Empirical attacks</td><td>Shadow models, confidence thresholding</td></tr>
+    <tr><td>2018&ndash;2019</td><td>Theory</td><td>Yeom bound, BB $\approx$ WB</td></tr>
+    <tr><td>2020&ndash;2023</td><td>Modern MIA</td><td>LiRA, per-example calibration, RMIA</td></tr>
+    <tr><td>2023&ndash;2025</td><td>LLM MIA</td><td>Calibration strategies &mdash; and limits</td></tr>
+  </table>
+</div>
+
+<!-- SLIDE — Key takeaways -->
+<div class="slide bg-deep">
+  <h2>Key Takeaways</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li>LLM MIA = same LR template, harder null estimation</li>
+    <li>Four signature ideas: <strong>paraphrase</strong>, <strong>self-prompt</strong>, <strong>context variance</strong>, <strong>token weighting</strong></li>
+    <li>On <strong>pre-training</strong>: AUC ceiling around 0.7 even with strong attacks (Hayes et al.)</li>
+    <li>On <strong>fine-tuning</strong>: AUC 0.80&ndash;0.90 &mdash; the practical risk</li>
+    <li>For legal evidence: prefer <strong>extraction</strong> over MIA when possible</li>
+  </ul>
+</div>
+
+<!-- SLIDE — Open problems -->
+<div class="slide bg-dark">
+  <h2>Open Problems</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="margin-top:8px;">
+    <div class="card">
+      <h3>Beat the AUC wall</h3>
+      <p>Can any attack reach AUC 0.8 on pre-training without distribution-shift artefacts?</p>
+    </div>
+    <div class="card">
+      <h3>Per-record reliability</h3>
+      <p>Auditing needs stable per-record calls, not just average AUC.</p>
+    </div>
+    <div class="card">
+      <h3>Multi-modal MIA</h3>
+      <p>CLIP, GPT-4V, Gemini &mdash; almost unexplored.</p>
+    </div>
+    <div class="card">
+      <h3>MIA on agents / RAG</h3>
+      <p>Training set vs. retrieval corpus &mdash; new threat models.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE — Essential reading -->
+<div class="slide bg-deep">
+  <h2>Essential Reading</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Paper</th><th>Contribution</th></tr>
+    <tr><td>Carlini et al. 2021</td><td>GPT-2 extraction</td></tr>
+    <tr><td>Mattern et al. 2023</td><td>Neighbourhood attack</td></tr>
+    <tr><td>Shi et al. 2024</td><td>Min-K% probing</td></tr>
+    <tr><td>Duan et al. 2024</td><td>"Do MIAs work on LLMs?"</td></tr>
+    <tr><td>Maini et al. 2024</td><td>Blind baselines</td></tr>
+    <tr><td><strong>Hayes et al. 2025</strong></td><td><strong>Limits of strong attacks at scale</strong></td></tr>
+    <tr><td>Tao &amp; Shokri 2025</td><td>InfoRMIA</td></tr>
+  </table>
+</div>
+
+
+<!-- Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">End of Lecture 5</div>
+  <p class="big-word-sub">Thank you.</p>
+</div>
+
+</div><!-- end deck -->
+
+<!-- Slide number + progress bar (fixed to viewport) -->
+<div class="slide-num" id="slideNum">1 / 38</div>
+<div class="progress-bar" id="progressBar" style="width:0.5%;"></div>
+
+<!-- Navigation -->
+<script src="../../../../reference/deck.js"></script>
+</body>
+</html>

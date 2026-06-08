@@ -53,7 +53,7 @@ For Marp, copy `template.md` and run `marp <file>.md --pdf`.
 1. Edit `<talk>/<talk>.html`.
 2. Open the file in Chrome to preview (`reference/` must be alongside, which it is in this repo).
 3. `python3 scripts/lint-deck.py --all` catches unknown classes and hardcoded colors.
-4. **Update `OUTLINE.md`.** Whenever you add a slide, remove a slide, rename a section, change a section's line range, or add/remove a theorem the outline cites, update the leaf-subfolder `OUTLINE.md` (e.g. `courses/privacy/mia/OUTLINE.md`). If the change introduces a new topic, file, or cross-reference, also update the parent folder's `OUTLINE.md` and the root `OUTLINE.md` quick-lookup table. Line numbers must stay accurate — outlines are read as authoritative pointers.
+4. **Update `OUTLINE.md`.** Whenever you add a slide, remove a slide, rename a section, change a section's line range, or add/remove a theorem the outline cites, update the leaf-subfolder `OUTLINE.md` (e.g. `courses/privacy/lectures/04-mia/OUTLINE.md`). If the change introduces a new topic, file, or cross-reference, also update the parent folder's `OUTLINE.md` and the root `OUTLINE.md` quick-lookup table. Line numbers must stay accurate — outlines are read as authoritative pointers.
 5. To distribute: `python3 scripts/bundle.py <talk>/<talk>.html` produces `<talk>.standalone.html` — single self-contained file (~4 MB, gitignored), no network deps.
 
 ## Screenshot audit (on request)
@@ -81,7 +81,7 @@ Each folder has an `OUTLINE.md`. Three tiers:
 **Read outlines before writing slides** (full rule in `DESIGN_SYSTEM.md` → "OUTLINE.md → Read-side rule"). Two checks:
 
 - **Series continuity.** When working on a deck, scan the leaf `OUTLINE.md` for earlier decks in the same series — and the parent folder's `OUTLINE.md` for adjacent topics — to see what has already been defined or proved. Refer back; don't redefine.
-- **Cross-folder reuse.** When the topic you're writing on may live in another folder (diffusion in `courses/infotheory/` vs `courses/privacy/`; DP in `courses/privacy/dp/` vs `courses/privacy/mia/`; MI bounds in `courses/infotheory/lectures/05-mi/` vs anywhere CLIP comes up), check the root `OUTLINE.md` quick-lookup table first, then the relevant leaf file. Reuse, link, or differentiate — explicit choice.
+- **Cross-folder reuse.** When the topic you're writing on may live in another folder (diffusion in `courses/infotheory/` vs `courses/privacy/`; DP in `courses/privacy/lectures/01-dp/` vs `courses/privacy/lectures/04-mia/`; MI bounds in `courses/infotheory/lectures/05-mi/` vs anywhere CLIP comes up), check the root `OUTLINE.md` quick-lookup table first, then the relevant leaf file. Reuse, link, or differentiate — explicit choice.
 
 When a new deck is created (via `scripts/new-talk.sh` or by hand), add a stub for it in the leaf `OUTLINE.md` *immediately* — even before writing slides — so the deck is discoverable.
 

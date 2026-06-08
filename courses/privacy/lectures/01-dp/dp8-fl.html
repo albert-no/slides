@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DP in Federated Learning — DP Lecture 8</title>
+<link rel="stylesheet" href="../../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+/* ─────────────────────────────────────────────────────────────
+   Deck-local CSS: diagram primitives ONLY.
+   Canonical type scale (p, li, h1-h3, .small, .math-block, .subtitle)
+   lives in reference/deck.css — DO NOT override here.
+   ───────────────────────────────────────────────────────────── */
+
+/* ── utility ── */
+.muted { color: var(--gray-text); }
+
+/* ── trust bars (LDP vs central DP diagram) ── */
+.trust-bar {
+  width: 100%; padding: 10px 14px; border-radius: 8px;
+  text-align: center; font-size: 1.15rem; font-weight: 500;
+  letter-spacing: 0.04em;
+}
+.trust-bar.ok  { background: rgba(46,139,87,0.12); color: var(--success); border: 1px solid rgba(46,139,87,0.3); }
+.trust-bar.bad { background: rgba(217,64,64,0.10); color: var(--warn);    border: 1px solid rgba(217,64,64,0.3); }
+
+/* ── mini label ── */
+.mini-label {
+  font-size: 1.05rem; color: var(--gray-text);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  font-weight: 500; margin-bottom: 6px;
+}
+
+/* ════════════════════════════════════════════════════════
+   SLIDE 4 — FL diagram (HTML-native; KaTeX renders $g_1$, $D_1$)
+   ════════════════════════════════════════════════════════ */
+.fl4-wrap {
+  position: relative; display: flex; flex-direction: column; align-items: center;
+  gap: 6px; padding: 8px 4px;
+}
+.fl4-server {
+  background: var(--yonsei-blue); color: #fff; border-radius: 10px;
+  padding: 12px 28px; text-align: center; min-width: 240px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.fl4-server .title { font-size: 1.5rem; font-weight: 500; }
+.fl4-server .sub   { font-size: 1.25rem; color: #dfe5ed; }
+.fl4-step3 {
+  font-size: 1.2rem; color: var(--yonsei-blue); font-weight: 600; text-align: center;
+}
+.fl4-arrows { width: 100%; height: 110px; display: block; }
+.fl4-clients {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  width: 100%; gap: 4px; place-items: center; margin-top: 4px;
+}
+.fl4-client { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.fl4-client .dot {
+  width: 70px; height: 70px; border-radius: 50%;
+  background: #fff; border: 2px solid var(--yonsei-blue);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--yonsei-blue); font-size: 1.3rem;
+}
+.fl4-client .lbl {
+  font-size: 1.2rem; color: var(--yonsei-blue); text-align: center;
+  line-height: 1.2; white-space: nowrap;
+}
+
+/* ════════════════════════════════════════════════════════
+   SLIDE 9 — LDP vs. central DP diagram (HTML-native; KaTeX labels)
+   ════════════════════════════════════════════════════════ */
+.ldp-diagram {
+  position: relative; display: flex; flex-direction: column; align-items: center;
+  gap: 4px; margin: 8px 0 4px;
+}
+.ldp-server {
+  padding: 10px 24px; border-radius: 10px; text-align: center;
+  min-width: 210px; display: flex; flex-direction: column; gap: 2px;
+}
+.ldp-server.central   { background: var(--yonsei-blue); color: #fff; }
+.ldp-server.central .server-sub { color: #dfe5ed; }
+.ldp-server.untrusted { background: #fff; border: 2px solid var(--warn); color: var(--warn); }
+.ldp-server.untrusted .server-sub { color: var(--warn); }
+.ldp-server .server-title { font-size: 1.35rem; font-weight: 500; }
+.ldp-server .server-sub   { font-size: 1.1rem; }
+.ldp-arrows { width: 100%; height: 80px; display: block; }
+.ldp-clients {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  width: 100%; gap: 0; place-items: center;
+}
+.ldp-client { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ldp-client .client-dot {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: #fff; border: 2px solid var(--yonsei-blue);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--yonsei-blue); font-size: 1.2rem;
+}
+.ldp-client .client-label { font-size: 1.15rem; color: var(--yonsei-blue); white-space: nowrap; }
+
+/* shared-randomness diagram */
+.sr-diagram {
+  display: grid; gap: 14px; padding: 18px 20px;
+  background: #fff; border: 1px solid var(--slate); border-radius: 12px;
+}
+.sr-seed {
+  text-align: center; padding: 10px 14px; border-radius: 8px;
+  border: 1px dashed var(--yonsei-blue); background: var(--light);
+  color: var(--yonsei-blue); font-weight: 500;
+}
+.sr-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+.sr-box {
+  padding: 14px 16px; border-radius: 10px; min-height: 96px;
+  display: flex; flex-direction: column; gap: 4px; text-align: center;
+}
+.sr-box.client { background: #fff; border: 1.5px solid var(--yonsei-blue); color: var(--yonsei-blue); }
+.sr-box.server { background: var(--yonsei-blue); color: #fff; }
+.sr-box h4     { margin: 0 0 4px 0; font-size: 1.3rem; }
+.sr-box p      { margin: 0; font-size: 1.2rem; line-height: 1.4; }
+.sr-box.server p { color: #dfe5ed; }
+.sr-arrow      { text-align: center; color: var(--yonsei-blue); font-weight: 500; }
+.sr-arrow .lbl { font-size: 1rem; color: var(--gray-text); display: block; }
+.sr-note {
+  text-align: center; font-size: 1.1rem; color: var(--gray-text);
+  padding-top: 6px; border-top: 1px dashed var(--slate);
+}
+
+/* ════════════════════════════════════════════════════════
+   SLIDE 30 — DP-RDM pipeline (HTML flex; KaTeX renders inside boxes)
+   ════════════════════════════════════════════════════════ */
+.rdm-pipeline {
+  display: grid; grid-template-columns: 170px 1fr; gap: 14px; align-items: start;
+  margin-top: 8px;
+}
+.rdm-private {
+  position: relative;
+  border: 2px dashed var(--warn); border-radius: 10px;
+  background: #fff6f0;
+  padding: 22px 16px 14px;
+}
+.rdm-private-label {
+  position: absolute; top: -11px; left: 20px;
+  background: #fff; padding: 0 8px;
+  color: var(--warn); font-size: 0.95rem; font-weight: 600; letter-spacing: 0.08em;
+}
+.rdm-private-inner {
+  display: flex; align-items: stretch; gap: 10px; justify-content: space-between;
+}
+.rdm-public-row {
+  display: flex; align-items: stretch; gap: 10px; justify-content: center; flex-wrap: nowrap;
+}
+.rdm-pipeline > .rdm-box.input { grid-row: 1 / span 2; align-self: center; }
+.rdm-private   { grid-column: 2; }
+.rdm-public-row { grid-column: 2; }
+.rdm-box {
+  flex: 1 1 0; min-width: 0;
+  padding: 10px 14px; border-radius: 8px; background: #fff;
+  border: 1.8px solid var(--yonsei-blue);
+  display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px;
+  text-align: center;
+}
+.rdm-box.input   { max-width: 180px; }
+.rdm-box.private { border-color: var(--warn); color: var(--warn); }
+.rdm-box.private .rdm-sub { color: var(--warn); }
+.rdm-box.noisy   { border-color: var(--warn); background: var(--warn); color: #fff; }
+.rdm-box.noisy .rdm-sub { color: #fff; }
+.rdm-box.public  { border-color: #2c8a3c; color: #2c8a3c; }
+.rdm-box.public .rdm-sub { color: #2c8a3c; }
+.rdm-box.combine { border-color: var(--yonsei-blue); color: var(--yonsei-blue); }
+.rdm-box.combine .rdm-sub { color: var(--yonsei-blue); }
+.rdm-box.model   { background: var(--yonsei-blue); color: #fff; border-color: var(--yonsei-blue); }
+.rdm-box.model .rdm-sub { color: #dfe5ed; }
+.rdm-box .rdm-title { font-size: 1.15rem; font-weight: 500; }
+.rdm-box .rdm-sub   { font-size: 1.05rem; }
+.rdm-arrow {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gray-text); font-size: 1.4rem; font-weight: 500;
+  padding: 0 4px;
+}
+
+/* two-column compare layout for LDP vs central DP slide */
+.two-col-compare {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px; flex: 1;
+}
+.panel {
+  background: #fff; border: 1px solid var(--slate);
+  border-radius: 12px; padding: 22px 26px;
+  display: flex; flex-direction: column;
+}
+.panel.alt { background: var(--light); }
+.panel h3  { margin-bottom: 6px; }
+.page-num { position: absolute; bottom: 14px; right: 28px; font-size: 1rem; color: var(--gray-text); letter-spacing: 0.04em; font-weight: 400; z-index: 5; }
+.title-slide .page-num { display: none; }
+</style>
+</head>
+<body data-brand-logo="../../../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 1. TITLE                                              -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">DP Lecture 8 · Capstone (NeurIPS 2023)</div>
+  <h1>Differential Privacy<br>in Federated Learning</h1>
+  <div class="divider"></div>
+  <p class="subtitle">LDP, optimal mean estimation, and DP in modern ML</p>
+  <p style="font-weight:500;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">2026</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 2. AGENDA                                             -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Federated learning and mean estimation</div>
+        <div class="toc-sub">Setup, challenges, and the core primitive</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">LDP vs. central DP</div>
+        <div class="toc-sub">Trust model, Gaussian mechanism, PrivUnit</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Exact optimality (NeurIPS 2023)</div>
+        <div class="toc-sub">Canonical protocols, RRSC, k-closest encoding</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">DP in modern ML</div>
+        <div class="toc-sub">DP-Diffusion, DP-RDM, realistic models</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 1                                             -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>FL and Mean Estimation</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Why a simple sum is the heart of the problem.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 4. FL overview                                        -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Federated Learning</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div class="col-2-3">
+      <div class="fl4-step3">③ aggregate and update</div>
+      <div class="fl4-wrap">
+        <div class="fl4-server">
+          <div class="title">Server</div>
+          <div class="sub">holds $\theta$</div>
+        </div>
+        <svg class="fl4-arrows" viewBox="0 0 600 110" preserveAspectRatio="none">
+          <defs>
+            <marker id="arUp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#003876"/></marker>
+            <marker id="arDn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#888"/></marker>
+          </defs>
+          <g stroke="#003876" stroke-width="2" fill="none" marker-end="url(#arUp)">
+            <path d="M70,100 Q160,60 255,8"/>
+            <path d="M220,105 Q245,60 275,8"/>
+            <path d="M380,105 Q355,60 325,8"/>
+            <path d="M530,100 Q440,60 345,8"/>
+          </g>
+          <g stroke="#888" stroke-width="1.6" fill="none" stroke-dasharray="5,4" marker-end="url(#arDn)">
+            <path d="M265,12 Q200,60 85,100"/>
+            <path d="M285,12 Q255,60 220,102"/>
+            <path d="M315,12 Q345,60 380,102"/>
+            <path d="M335,12 Q430,60 515,100"/>
+          </g>
+          <g font-size="16" fill="#003876" text-anchor="middle">
+            <text x="128" y="42">② send</text>
+            <text x="472" y="42">② send</text>
+          </g>
+          <g font-size="15" fill="#555" text-anchor="middle">
+            <text x="170" y="95">④ receive &#x3b8;</text>
+            <text x="430" y="95">④ receive &#x3b8;</text>
+          </g>
+        </svg>
+        <div class="fl4-clients">
+          <div class="fl4-client"><div class="dot">$C_1$</div><div class="lbl">① compute $g_1$ from $D_1$</div></div>
+          <div class="fl4-client"><div class="dot">$C_2$</div><div class="lbl">① compute $g_2$ from $D_2$</div></div>
+          <div class="fl4-client"><div class="dot">$C_3$</div><div class="lbl">① compute $g_3$ from $D_3$</div></div>
+          <div class="fl4-client"><div class="dot">$C_n$</div><div class="lbl">① compute $g_n$ from $D_n$</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p>Train a shared model across many clients <strong>without</strong> moving raw data off-device.</p>
+      <ol style="padding-left:24px; margin-top:14px;">
+        <li>Each client computes a local gradient.</li>
+        <li>Clients upload gradients to the server.</li>
+        <li>Server aggregates and updates the model.</li>
+        <li>Server broadcasts the update back.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 5. FL three challenges                                -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Three Challenges in FL</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Compression</h3>
+      <p>Millions of clients, millions of parameters. Uplink bandwidth is the bottleneck.</p>
+    </div>
+    <div class="card">
+      <h3>Privacy</h3>
+      <p>Gradients leak training data. Need formal guarantees on each user's contribution.</p>
+    </div>
+    <div class="card">
+      <h3>Utility</h3>
+      <p>After compression and privatization, the aggregate must still train a useful model.</p>
+    </div>
+  </div>
+  <div class="highlight">This talk: the <strong>three-way tradeoff</strong> between these axes.</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 6. Mean estimation as the core primitive              -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>The Core Primitive</h2>
+  <div class="divider"></div>
+  <p>Each of $n$ clients holds $x_{i} \in \mathbb{R}^{d}$ with $\|x_{i}\| \le 1$. The server estimates:</p>
+  <div class="math-block">$$\hat\mu \;\approx\; \frac{1}{n}\sum_{i} x_i$$</div>
+  <ul>
+    <li><strong>Compression:</strong> each message uses at most $b$ bits.</li>
+    <li><strong>Privacy:</strong> each message is $\varepsilon$-LDP.</li>
+    <li><strong>Utility:</strong> minimize $\mathbb{E}\|\hat\mu - \mu\|^2$.</li>
+  </ul>
+  <div class="highlight">A gradient step <em>is</em> a mean of per-client gradients. Nail mean estimation, nail DP-SGD&nbsp;in&nbsp;FL.</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 2                                             -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>LDP vs. Central DP</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Different trust models, different achievable rates.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 8. DP definition                                      -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Differential Privacy</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (Dwork, McSherry, Nissim, Smith, 2006).</h3>
+    <p>A randomized mechanism $M$ is <strong>$(\varepsilon, \delta)$-DP</strong> if for any two datasets $D, D'$ differing in one record, and any event $S$:</p>
+    <div class="math-block">$$\Pr[M(D)\in S] \le e^{\varepsilon}\cdot \Pr[M(D')\in S] + \delta$$</div>
+  </div>
+  <ul style="margin-top:14px;">
+    <li>Small $\varepsilon$: output distribution barely shifts when one person's data changes.</li>
+    <li>Post-processing immunity, strong composition, group-privacy scaling.</li>
+    <li><strong>Where</strong> it runs matters: raw data vs. each user's own device.</li>
+  </ul>
+  <div class="cite">Dwork, McSherry, Nissim, Smith, "Calibrating Noise to Sensitivity in Private Data Analysis", TCC 2006.</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 9. LDP vs central DP (diagram preserved)             -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Local DP vs. Central DP</h2>
+  <div class="divider"></div>
+  <div class="two-col-compare">
+    <div class="panel">
+      <div class="mini-label">Central DP — trusted server</div>
+      <div class="trust-bar ok">Server sees raw $x_i$ — adds noise on the aggregate</div>
+      <div class="ldp-diagram">
+        <div class="ldp-server central">
+          <div class="server-title">Server</div>
+          <div class="server-sub">③ aggregate + noise</div>
+        </div>
+        <svg class="ldp-arrows" viewBox="0 0 440 80" preserveAspectRatio="none">
+          <defs>
+            <marker id="ar9a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#003876"/></marker>
+          </defs>
+          <g stroke="#003876" stroke-width="2" fill="none" marker-end="url(#ar9a)">
+            <path d="M55,75 Q130,40 198,6"/>
+            <path d="M165,75 Q200,40 218,6"/>
+            <path d="M275,75 Q240,40 222,6"/>
+            <path d="M385,75 Q310,40 242,6"/>
+          </g>
+        </svg>
+        <div class="ldp-clients">
+          <div class="ldp-client"><div class="client-dot">$C_1$</div><div class="client-label">① holds $x_1$</div></div>
+          <div class="ldp-client"><div class="client-dot">$C_2$</div><div class="client-label">① holds $x_2$</div></div>
+          <div class="ldp-client"><div class="client-dot">$C_3$</div><div class="client-label">① holds $x_3$</div></div>
+          <div class="ldp-client"><div class="client-dot">$C_n$</div><div class="client-label">① holds $x_n$</div></div>
+        </div>
+      </div>
+      <p style="margin-top:10px;">Noise scales as $O(1/(n\varepsilon))$. Best utility — requires trusting the aggregator.</p>
+    </div>
+
+    <div class="panel alt">
+      <div class="mini-label">Local DP — untrusted server</div>
+      <div class="trust-bar bad">Noise added on-device — server never sees raw $x_i$</div>
+      <div class="ldp-diagram">
+        <div class="ldp-server untrusted">
+          <div class="server-title">Server</div>
+          <div class="server-sub">③ aggregate only</div>
+        </div>
+        <svg class="ldp-arrows" viewBox="0 0 440 80" preserveAspectRatio="none">
+          <defs>
+            <marker id="ar9b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#003876"/></marker>
+          </defs>
+          <g stroke="#003876" stroke-width="2" fill="none" marker-end="url(#ar9b)">
+            <path d="M55,75 Q130,40 198,6"/>
+            <path d="M165,75 Q200,40 218,6"/>
+            <path d="M275,75 Q240,40 222,6"/>
+            <path d="M385,75 Q310,40 242,6"/>
+          </g>
+        </svg>
+        <div class="ldp-clients">
+          <div class="ldp-client"><div class="client-dot">$C_1$</div><div class="client-label">① send $M(x_1)$</div></div>
+          <div class="ldp-client"><div class="client-dot">$C_2$</div><div class="client-label">① send $M(x_2)$</div></div>
+          <div class="ldp-client"><div class="client-dot">$C_3$</div><div class="client-label">① send $M(x_3)$</div></div>
+          <div class="ldp-client"><div class="client-dot">$C_n$</div><div class="client-label">① send $M(x_n)$</div></div>
+        </div>
+      </div>
+      <p style="margin-top:10px;">Noise scales as $O(\sqrt{d}/(\sqrt{n}\,\varepsilon))$. <strong>Much worse</strong> — every outgoing message must be DP.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 10. Local DP definition                              -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Local DP, Formally</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding-top:14px; padding-bottom:14px;">
+    <h3>Definition (Local Differential Privacy).</h3>
+    <p>Client $i$ runs its own randomized mechanism $Q(\cdot \mid x_i)$ satisfying:</p>
+    <div class="math-block">$$\frac{Q(y\mid x)}{Q(y\mid x')} \le e^{\varepsilon} \quad \text{for all } x, x', y.$$</div>
+  </div>
+  <div class="grid-2" style="gap:20px; margin-top:10px;">
+    <div>
+      <h3>Why it is hard</h3>
+      <p>No trusted aggregator. Every message is $\varepsilon$-LDP, so noise accumulates instead of canceling.</p>
+    </div>
+    <div>
+      <h3>Why it is required</h3>
+      <p>If the aggregator is untrusted or compellable, central DP fails. LDP gives deniability on-device.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 11. LDP minimax rate                                 -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>LDP Mean Estimation: Minimax Rate</h2>
+  <div class="divider"></div>
+  <p>$n$ clients each hold $x_i \in \mathbb{R}^d$ with $\|x_i\| \le 1$; each sends an $\varepsilon$-LDP message $Y_i = M(x_i)$.</p>
+  <div class="card" style="margin-top:12px;">
+    <h3>Theorem (Duchi, Jordan, Wainwright, 2013).</h3>
+    <p>The minimax MSE for $\varepsilon$-LDP mean estimation is:</p>
+    <div class="math-block">$$\Theta\!\left(\frac{d}{n \cdot \min(\varepsilon,\varepsilon^2)}\right).$$</div>
+  </div>
+  <div class="highlight" style="margin-top:12px;">
+    Compare central DP: $\Theta(1/(n^2\varepsilon^2))$. LDP pays an extra factor of $d$ — the price of no trusted aggregator.
+  </div>
+  <div class="cite">Duchi, Jordan, Wainwright, "Local Privacy and Statistical Minimax Rates", FOCS 2013.</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 12. Gaussian mechanism suboptimal                    -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Gaussian Mechanism is Suboptimal for LDP</h2>
+  <div class="divider"></div>
+  <p>Natural first try: $M(x) = x + \mathcal{N}(0,\sigma^2 I_d)$. Works well for <em>central</em> DP — but under LDP wastes privacy budget along irrelevant directions. MSE scales as $d/\varepsilon^2$, off by a factor linear in $d$ in the high-privacy regime.</p>
+  <svg viewBox="0 0 640 310" width="100%" style="max-height:380px; margin-top:10px;">
+    <line x1="60" y1="260" x2="610" y2="260" stroke="#999" stroke-width="1"/>
+    <line x1="60" y1="30"  x2="60"  y2="260" stroke="#999" stroke-width="1"/>
+    <text x="335" y="295" text-anchor="middle" font-size="18" fill="#555">privacy budget &#x3b5; &#x2192;</text>
+    <text x="24"  y="145" font-size="18" fill="#555" transform="rotate(-90,24,145)">MSE</text>
+    <path d="M80,55 Q160,85 240,130 Q340,180 460,215 Q540,235 605,245" stroke="#d94040" stroke-width="2.8" fill="none"/>
+    <path d="M80,115 Q180,170 300,210 Q430,240 605,252" stroke="#003876" stroke-width="2.8" fill="none"/>
+    <path d="M80,55 Q160,85 240,130 Q340,180 460,215 Q540,235 605,245 L605,252 Q430,240 300,210 Q180,170 80,115 Z" fill="#d94040" opacity="0.08"/>
+    <text x="330" y="82"  font-size="18" fill="#d94040" font-weight="500">Gaussian: d/&#x3b5;&#xb2;</text>
+    <text x="330" y="200" font-size="18" fill="#003876" font-weight="500">Optimal: d/min(&#x3b5;,&#x3b5;&#xb2;)</text>
+    <line x1="170" y1="96" x2="170" y2="155" stroke="#666" stroke-dasharray="3,2"/>
+    <text x="180" y="135" font-size="15" fill="#555">gap grows with d</text>
+  </svg>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 13. PrivUnit                                         -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>PrivUnit: Optimal LDP Mechanism</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div class="col-2-3">
+      <div class="card">
+        <h3>PrivUnit (Bhowmick et al., 2018).</h3>
+        <p>For input $v \in \mathbb{S}^{d-1}$, sample $W \sim \mathrm{Uni}(\mathbb{S}^{d-1})$. Choose $(p, \gamma)$ so the density ratio equals $e^{\varepsilon}$:</p>
+        <div class="math-block">$$\mathrm{PrivUnit}(p,\gamma) \sim \begin{cases} W \mid \langle W, v\rangle \ge \gamma & \text{w.p. } p \\ W \mid \langle W, v\rangle < \gamma & \text{w.p. } 1{-}p \end{cases}$$</div>
+        <ul style="margin-top:6px; margin-bottom:0;">
+          <li>Output stays on $\mathbb{S}^{d-1}$: no wasted Gaussian tails.</li>
+          <li><strong>Exact optimal constant</strong> for $\ell_2$ LDP mean estimation.</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <img src="figs/sphereical_cap.jpg" alt="PrivUnit spherical cap" style="width:100%; height:auto; max-width:280px; display:block; margin-top:30px;">
+    </div>
+  </div>
+  <div class="cite">Asi, Feldman, Talwar, "Optimal Algorithms for Mean Estimation under LDP", ICML 2022.</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 14. PrivUnit limitation — communication              -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>The Missing Axis: Communication</h2>
+  <div class="divider"></div>
+  <p>PrivUnit is optimal in privacy, but its output is a <em>continuous</em> point on the sphere — requires many bits to transmit.</p>
+  <div class="grid-2" style="gap:20px; margin-top:14px;">
+    <div>
+      <h3>What was known</h3>
+      <ul>
+        <li>Privacy alone: PrivUnit optimal.</li>
+        <li>Communication alone: randomized coding optimal.</li>
+        <li><strong>Both together?</strong> Open until our work.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Prior work (rate-matching only)</h3>
+      <ul>
+        <li>SQKR — Chen, Kairouz, Ozgur, NeurIPS 2020</li>
+        <li>FT21 — Feldman, Talwar, ICML 2021</li>
+        <li>MMRC — Shah et al., AISTATS 2022</li>
+      </ul>
+      <p><em>All match the right rate but none are exactly optimal.</em></p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 3                                             -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Exact Optimality</h1>
+  <div class="divider"></div>
+  <p class="subtitle">NeurIPS 2023: privacy, communication, and utility — exactly.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 16. Problem setup                                    -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Problem Setup</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div>
+      <p><strong>Goal:</strong> jointly optimize rate, utility, and privacy.</p>
+      <ul style="margin-top:12px;">
+        <li><strong>Rate:</strong> minimum bits per user.</li>
+        <li><strong>Utility:</strong> minimum MSE on the aggregate.</li>
+        <li><strong>Privacy:</strong> each message is $\varepsilon$-LDP.</li>
+      </ul>
+      <p style="margin-top:14px;">Clients share <strong>common randomness</strong> (public seed) with the server. Free in practice — and, as we show, very powerful.</p>
+    </div>
+    <div class="col-1-3">
+      <div class="card">
+        <h3>Protocol parameters</h3>
+        <ul style="margin-top:6px;">
+          <li>$x_{i} \in \mathbb{S}^{d-1}$</li>
+          <li>Budget: $\varepsilon$ LDP, $b$ bits</li>
+          <li>Shared seed $U$</li>
+        </ul>
+        <p style="margin-top:10px;"><strong>Output:</strong> $\hat\mu$ minimizing $\mathbb{E}\|\hat\mu - \mu\|^2$</p>
+      </div>
+    </div>
+  </div>
+  <div class="cite">Isik, Chen, Ozgur, Weissman, No, "Exact Optimality of Communication-Privacy-Utility Tradeoffs in Distributed Mean Estimation", NeurIPS 2023.</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 17. Shared randomness                                -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>LDP with Shared Randomness</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div>
+      <p>Shared randomness <em>does not</em> weaken privacy. The seed $U$ is public, so privacy is measured conditional on $U$.</p>
+      <ul style="margin-top:12px;">
+        <li>Client encoder: $m = f(x, U)$, at most $b$ bits.</li>
+        <li>Server decoder: $\hat{v} = g(m, U)$.</li>
+        <li>For every fixed $U$: the map $x \mapsto m$ must be $\varepsilon$-LDP.</li>
+      </ul>
+      <div class="highlight" style="margin-top:12px;">A shared codebook lets every bit carry information about direction, not spend on noise.</div>
+    </div>
+    <div class="col-1-3">
+      <div class="sr-diagram">
+        <div class="sr-seed">shared seed $U$</div>
+        <div class="sr-row">
+          <div class="sr-box client">
+            <h4>Client</h4>
+            <p>input $x \in \mathbb{S}^{d-1}$</p>
+            <p>$m = f(x, U)$</p>
+          </div>
+          <div class="sr-arrow">
+            $\longrightarrow$
+            <span class="lbl">$b$ bits</span>
+            <span class="lbl">message $m$</span>
+          </div>
+          <div class="sr-box server">
+            <h4>Server</h4>
+            <p>$\hat{\mu} = g(m, U)$</p>
+          </div>
+        </div>
+        <div class="sr-note">For every fixed $U$: $x \mapsto m$ is $\varepsilon$-LDP</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 18. Main Result I — Canonical protocols              -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Result I: Canonical Protocols</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (Canonical reduction).</h3>
+    <p>Without loss of optimality, restrict to protocols of the form:</p>
+    <ul style="margin-top:8px;">
+      <li><strong>Single encoder:</strong> all $n$ clients use the same randomized encoder.</li>
+      <li><strong>Single decoder:</strong> server decodes each $Y_i$ separately, then averages.</li>
+      <li><strong>Unbiased:</strong> $\mathbb{E}[\mathrm{Dec}(Y) \mid x] = x$.</li>
+    </ul>
+  </div>
+  <div class="highlight" style="margin-top:14px;">
+    Designing a good <em>single-user</em> scheme suffices. The $n$-user MSE then scales as $(1/n) \cdot \mathrm{Var}_{\text{single}}$.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 19. Main Result II — Codebook schemes optimal        -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Result II: Codebook Schemes are Optimal</h2>
+  <div class="divider"></div>
+  <p>For any canonical, unbiased, $\varepsilon$-LDP protocol $(f, g, P_U)$, there exists a codebook-based scheme achieving the same error.</p>
+  <div class="math-block">$$\text{Codebook}\quad U^{M} = (U_1, \ldots, U_M) \in (\mathbb{R}^d)^M$$
+$$\text{Encoder: } m = f(v, U^{M}), \qquad \text{Decoder: } \hat v = U_m$$</div>
+  <ul style="margin-top:10px;">
+    <li>Codebook drawn from the shared seed — known to client and server.</li>
+    <li>Client sends one index $m \in [M]$: costs $\lceil \log_{2} M \rceil$ bits.</li>
+  </ul>
+  <div class="highlight" style="margin-top:10px;">Index $m$ identifies a codeword; privacy is enforced at the encoder.</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 20. Main Result III — RRSC                          -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Result III: Rotationally Symmetric Simplex Codebook</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div>
+      <p>Take a regular $(M{-}1)$-simplex $\{s_1, \ldots, s_M\}$ inscribed in $\mathbb{S}^{d-1}$, then Haar-rotate it:</p>
+      <div class="math-block">$$(s_i)_j = \begin{cases} \dfrac{M-1}{\sqrt{M(M-1)}} & i = j \\ -\dfrac{1}{\sqrt{M(M-1)}} & i \ne j,\ j \le M \\ 0 & j > M \end{cases}$$</div>
+      <div class="math-block">$$(U_1, \ldots, U_M) \stackrel{d}{=} (rA s_1, \ldots, rA s_M)$$</div>
+      <p>where $A \sim \mathrm{Haar}(\mathrm{O}(d))$ and $r$ is chosen so the decoder is unbiased.</p>
+    </div>
+    <div class="col-1-3">
+      <svg viewBox="0 0 300 300" width="100%" style="max-height:300px;">
+        <defs>
+          <radialGradient id="sph-g" cx="40%" cy="35%" r="70%">
+            <stop offset="0%"   stop-color="#f4f7fb"/>
+            <stop offset="100%" stop-color="#e2e8f1"/>
+          </radialGradient>
+        </defs>
+        <circle cx="150" cy="150" r="115" fill="url(#sph-g)" stroke="#b8c1d0" stroke-width="1.2"/>
+        <ellipse cx="150" cy="150" rx="115" ry="30" fill="none" stroke="#b8c1d0" stroke-width="1" stroke-dasharray="3,3"/>
+        <ellipse cx="150" cy="150" rx="30"  ry="115" fill="none" stroke="#b8c1d0" stroke-width="1" stroke-dasharray="3,3"/>
+        <g>
+          <line x1="150" y1="40"  x2="75"  y2="205" stroke="#003876" stroke-width="1.5"/>
+          <line x1="150" y1="40"  x2="225" y2="205" stroke="#003876" stroke-width="1.5"/>
+          <line x1="75"  y1="205" x2="225" y2="205" stroke="#003876" stroke-width="1.5"/>
+          <line x1="150" y1="40"  x2="150" y2="245" stroke="#003876" stroke-width="1.3" stroke-dasharray="4,3" opacity="0.6"/>
+          <line x1="75"  y1="205" x2="150" y2="245" stroke="#003876" stroke-width="1.3" stroke-dasharray="4,3" opacity="0.6"/>
+          <line x1="225" y1="205" x2="150" y2="245" stroke="#003876" stroke-width="1.3" stroke-dasharray="4,3" opacity="0.6"/>
+          <polygon points="150,40 75,205 225,205" fill="#003876" opacity="0.10"/>
+          <circle cx="150" cy="40"  r="5" fill="#003876"/>
+          <circle cx="75"  cy="205" r="5" fill="#003876"/>
+          <circle cx="225" cy="205" r="5" fill="#003876"/>
+          <circle cx="150" cy="245" r="5" fill="#003876"/>
+        </g>
+        <text x="150" y="28"  text-anchor="middle" font-size="18" fill="#003876">U&#x2081;</text>
+        <text x="58"  y="215" text-anchor="end"    font-size="18" fill="#003876">U&#x2082;</text>
+        <text x="242" y="215"                      font-size="18" fill="#003876">U&#x2083;</text>
+        <text x="164" y="256"                      font-size="18" fill="#003876">U&#x2084;</text>
+        <path d="M30,80 A40,15 0 0 1 85,65" stroke="#888" fill="none" stroke-dasharray="2,2"/>
+        <text x="10" y="60" font-size="15" fill="#888">random A</text>
+        <text x="150" y="290" text-anchor="middle" font-size="14" fill="#555">Regular simplex, Haar-rotated onto S^(d-1)</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 21. Main Result IV — k-closest encoding              -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Result IV: k-Closest Encoding is Optimal</h2>
+  <div class="divider"></div>
+  <p>Under RRSC, the optimal encoder $Q_f(m \mid v, U^{M})$ is two-level:</p>
+  <div class="card" style="margin-top:10px;">
+    <h3>Theorem (k-closest optimality).</h3>
+    <div class="math-block">$$Q_f(m \mid v, U^{M}) = \begin{cases} \dfrac{e^{\varepsilon}}{k e^{\varepsilon} + M - k} & m \in \text{top-}k \\ \dfrac{1}{k e^{\varepsilon} + M - k} & \text{otherwise} \end{cases}$$</div>
+  </div>
+  <ul style="margin-top:8px;">
+    <li>Density ratio $= e^{\varepsilon}$: exactly $\varepsilon$-LDP.</li>
+    <li>Top-$k$ query on the codebook; optimal $k = k(\varepsilon, M)$.</li>
+  </ul>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 22. RRSC recovers PrivUnit                           -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>RRSC Converges to PrivUnit</h2>
+  <div class="divider"></div>
+  <div class="highlight">
+    <p><strong>As $M \to \infty$, RRSC + $k$-closest $\longrightarrow$ PrivUnit.</strong></p>
+  </div>
+  <ul style="margin-top:18px;">
+    <li>As $M$ grows, rotated simplex vertices densify uniformly on $\mathbb{S}^{d-1}$.</li>
+    <li>Top-$k$ codewords converge to a <strong>spherical cap</strong> around $v$.</li>
+    <li>Two-level mass keeps density ratio at exactly $e^{\varepsilon}$: that is PrivUnit.</li>
+  </ul>
+  <img src="figs/sphereical_cap.jpg" alt="Spherical cap"
+       style="position:absolute; right:56px; bottom:60px; width:28%; max-width:300px; height:auto;">
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 23. Unified framework                                -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>A Unified Framework</h2>
+  <div class="divider"></div>
+  <div class="grid-3" style="gap:14px;">
+    <div class="card">
+      <h3>SQKR — NeurIPS 2020</h3>
+      <p>Chen, Kairouz, Ozgur. First matching-rate bounds using $\Theta(\varepsilon)$ bits with shared randomness.</p>
+    </div>
+    <div class="card">
+      <h3>FT21 — ICML 2021</h3>
+      <p>Feldman, Talwar. Simulating an LDP mechanism in $\Theta(\varepsilon)$ bits via channel simulation.</p>
+    </div>
+    <div class="card">
+      <h3>MMRC — AISTATS 2022</h3>
+      <p>Shah et al. Minimal random coding — simulates PrivUnit with shared randomness.</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px; border-color:var(--yonsei-blue); border-width:2px;">
+    <h3>RRSC — NeurIPS 2023 (this talk)</h3>
+    <p>Isik, Chen, Ozgur, Weissman, No. RRSC + $k$-closest matches the PrivUnit lower bound <strong>exactly</strong>, with finite bits.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 24. Experiments                                      -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Experiments</h2>
+  <div class="divider"></div>
+  <p>RRSC vs. SQKR, MMRC, PrivUnitG on synthetic mean estimation over $\mathbb{S}^{d-1}$, varying $\varepsilon$, $b$, and $n$. RRSC matches PrivUnit utility at a fraction of the bits.</p>
+  <div style="display:flex; align-items:center; justify-content:center; margin-top:14px; flex:1;">
+    <img src="figs/rrsc.png" alt="RRSC vs baselines" style="width:88%; max-width:1100px; height:auto; display:block;">
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 25. Open question                                    -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Open Question</h2>
+  <div class="divider"></div>
+  <p>Is RRSC + $k$-closest exactly optimal among <em>all</em> canonical protocols, not just rotationally-symmetric codebooks?</p>
+  <div class="highlight" style="margin-top:14px;">
+    <strong>Conjecture.</strong> Yes: any exactly-optimal finite-bit LDP mean-estimation protocol is equivalent, up to post-processing, to RRSC with some $M$.
+  </div>
+  <ul style="margin-top:16px;">
+    <li>Extensions to heavy-tailed $x_i$ and to shuffled DP are open.</li>
+    <li>Adaptive $M$ per round?</li>
+  </ul>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 4                                             -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>DP in Modern ML</h1>
+  <div class="divider"></div>
+  <p class="subtitle">From mean estimation to realistic generative models.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 27. DP in ML overview                               -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>From Primitives to Real Models</h2>
+  <div class="divider"></div>
+  <p>Clipping, private aggregation, and privacy accounting plug directly into training pipelines for real models.</p>
+  <ul style="margin-top:12px;">
+    <li><strong>DP-SGD:</strong> clip per-example gradients, add Gaussian noise, account the privacy cost.</li>
+    <li>Key trick: large <strong>public pre-training</strong>, then private fine-tuning on sensitive data.</li>
+    <li>Bigger backbones absorb noise better; better accountants (PRV, f-DP) tighten bounds.</li>
+  </ul>
+  <div class="highlight" style="margin-top:14px;">Public pre-training gives a strong prior — spending the privacy budget on fine-tuning only.</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 28. DP-Diffusion                                    -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>DP-Diffusion</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div>
+      <p><strong>Ghalebikesabi et al. (2023).</strong> Diffusion models trained with DP-SGD can still produce high-quality samples.</p>
+      <ul style="margin-top:12px;">
+        <li>Pretrain on public data; fine-tune on sensitive data with DP-SGD.</li>
+        <li>Per-example gradient clipping over the noise-prediction loss at each diffusion step.</li>
+        <li>State-of-the-art FID for DP image generation on CIFAR-10 and Camelyon17.</li>
+      </ul>
+    </div>
+    <div class="col-1-3">
+      <div class="card">
+        <div class="mini-label">2023 — Google DeepMind</div>
+        <p>Differentially Private Diffusion Models Generate Useful Synthetic Images</p>
+        <p style="margin-top:8px;"><em>First DP synthetic data strong enough to train downstream classifiers near par with real data.</em></p>
+      </div>
+    </div>
+  </div>
+  <div class="cite">Ghalebikesabi et al., "Differentially Private Diffusion Models Generate Useful Synthetic Images", arXiv:2210.09929, 2023.</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 29. DP-RDM overview                                 -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>DP-RDM: Retrieval-Augmented DP Generation</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div>
+      <p><strong>Lebensold et al. (2024).</strong> Instead of fine-tuning the backbone with DP-SGD, make the retrieval step differentially private.</p>
+      <ul style="margin-top:12px;">
+        <li>Keep a public diffusion model frozen.</li>
+        <li>Retrieve from a <em>private</em> datastore using DP aggregation of retrieved embeddings.</li>
+        <li>Strong sample quality without fully privatizing backbone training.</li>
+      </ul>
+      <p style="margin-top:12px;">The embedding average at retrieval time is exactly a <strong>mean-estimation problem</strong> — directly applicable to our framework.</p>
+    </div>
+    <div class="col-1-3">
+      <div class="card">
+        <div class="mini-label">2024 — Meta AI / McGill</div>
+        <p>Differentially Private Retrieval-Augmented Diffusion Models</p>
+        <p style="margin-top:8px;"><em>The generator is public; privacy is spent only on the retrieval aggregate.</em></p>
+      </div>
+    </div>
+  </div>
+  <div class="cite">Lebensold et al., "Differentially Private Retrieval-Augmented Diffusion Models", arXiv:2403.14421, 2024.</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 30. DP-RDM pipeline (HTML diagram, KaTeX in boxes)  -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>DP-RDM Pipeline</h2>
+  <div class="divider"></div>
+
+  <div class="rdm-pipeline">
+    <div class="rdm-box input">
+      <div class="rdm-title">text prompt</div>
+      <div class="rdm-sub">$y$</div>
+    </div>
+    <div class="rdm-private">
+      <div class="rdm-private-label">PRIVACY BOUNDARY</div>
+      <div class="rdm-private-inner">
+        <div class="rdm-box private">
+          <div class="rdm-title">private DB $D$</div>
+          <div class="rdm-sub">subsample $D' \subset D$</div>
+        </div>
+        <div class="rdm-arrow">&#x2192;</div>
+        <div class="rdm-box private">
+          <div class="rdm-title">$k$-NN search</div>
+          <div class="rdm-sub">$N_k \subset D'$</div>
+        </div>
+        <div class="rdm-arrow">&#x2192;</div>
+        <div class="rdm-box noisy">
+          <div class="rdm-title">noisy aggregate</div>
+          <div class="rdm-sub">$z$</div>
+        </div>
+      </div>
+    </div>
+    <div class="rdm-public-row">
+      <div class="rdm-box public">
+        <div class="rdm-title">public DB $U$</div>
+        <div class="rdm-sub">$O_k = k\text{-NN}(U, y)$</div>
+      </div>
+      <div class="rdm-arrow">&#x2192;</div>
+      <div class="rdm-box combine">
+        <div class="rdm-title">interpolate</div>
+        <div class="rdm-sub">$e = (1{-}\lambda)O_k + \lambda z$</div>
+      </div>
+      <div class="rdm-arrow">&#x2192;</div>
+      <div class="rdm-box model">
+        <div class="rdm-title">frozen diffusion $\phi$</div>
+        <div class="rdm-sub">sample $= \phi(e, \xi)$</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight" style="margin-top:12px;">
+    <strong>Sampled Gaussian Mechanism:</strong> private data enters only via $z = \tfrac{1}{k}\sum_{j=1}^{k} N_k^{(j)} + \mathcal{N}(0, \sigma^2 I)$.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 31. DP-RDM intuition                                -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>DP-RDM Intuition</h2>
+  <div class="divider"></div>
+  <div class="highlight">
+    Private data influences the output <strong>only through retrieval.</strong> Make that one channel DP — post-processing through a frozen $\phi$ stays DP — no DP fine-tuning of the backbone.
+  </div>
+  <div class="grid-2" style="gap:20px; margin-top:18px;">
+    <div>
+      <h3>Why DP-SGD is avoided</h3>
+      <p>DP-SGD needs huge batches and retraining from scratch. DP-RDM freezes $\phi$ and spends privacy budget only on the retrieval mean.</p>
+    </div>
+    <div>
+      <h3>The $\lambda$ knob</h3>
+      <p>$\lambda = 0$: rely only on public neighbors $O_k$ — no privacy cost, domain gap. $\lambda \to 1$: rely on noisy private $z$ — more adaptation, more noise. The SGM accountant composes the $(\alpha, \varepsilon)$ cost over queries.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 32. Recent DP in ML                                 -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>DP at Realistic Scale</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="gap:14px;">
+    <div class="card" style="padding:14px 20px;">
+      <h3>DP-SGD at scale</h3>
+      <p>Li, Yu, Anil et al.: DP-SGD on BERT/GPT with ghost clipping and LoRA-style adapters.</p>
+    </div>
+    <div class="card" style="padding:14px 20px;">
+      <h3>DP synthetic text</h3>
+      <p>Wu, Tang et al.: DP in-context learning, private aggregation of teacher prompts (DP-PATE for text).</p>
+    </div>
+    <div class="card" style="padding:14px 20px;">
+      <h3>DP foundation models</h3>
+      <p>Tan, De et al.: closing the gap to non-private ImageNet accuracy via large public pretraining.</p>
+    </div>
+    <div class="card" style="padding:14px 20px;">
+      <h3>Deployed DP</h3>
+      <p>LDP in telemetry (iOS, Chrome); central DP in Census 2020; shuffled DP in federated analytics.</p>
+    </div>
+  </div>
+  <p style="margin-top:10px; color:var(--gray-text); font-style:italic;">Common thread: lean on public priors; spend the budget where it matters.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 33. Q&A                                              -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="slide end-slide">
+  <div class="big-word">Q&amp;A</div>
+  <p class="big-word-sub">Thank you.</p>
+</div>
+
+</div><!-- .deck -->
+
+<script defer src="../../../../reference/deck.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  const slides = document.querySelectorAll('.deck > .slide');
+  const total = slides.length;
+  slides.forEach((s, i) => {
+    if (s.classList.contains('title-slide')) return;
+    if (s.querySelector(':scope > .page-num')) return;
+    const n = document.createElement('div');
+    n.className = 'page-num';
+    n.textContent = (i + 1) + ' / ' + total;
+    s.appendChild(n);
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,380 @@
+\documentclass[12pt]{article}
+\usepackage{math_hw}
+\usepackage{amsmath, amssymb}
+\input{math_commands}
+
+\excludeversion{problem}
+\includeversion{solution}
+
+\begin{document}
+
+\begin{center}
+{\bf Mathematical Problems in Deep Learning: Homeworks \#1 \begin{solution}Solutions\end{solution}}\\ \medskip
+\begin{problem}Due on Tuesday 11PM, March 31, 2026 \end{problem}
+\end{center}
+
+\begin{problem}
+\noindent 
+Note: Submit homework via LearnUS.
+% Also, we have some extra problems in Problem 7 (3-5).
+\LeftFoot{Homework 1}
+\end{problem}
+
+\begin{solution}
+\LeftFoot{Homework 1 Solution}
+\end{solution}
+
+\begin{enumerate}
+%%%%%%%%%%%%%% Problem
+\item \textbf{Probability Bound on Query Differences:}  
+Consider a data \( D=(d_1, d_2, ..., d_n) \) which is a \( n \) dimensional binary vector and another data \( \tilde{D}=(\tilde{d}_1, \tilde{d}_2, ..., \tilde{d}_n) \). The difference between datasets is measured by  
+\[
+l(D, \tilde{D})=\sum_{i=1}^n \boldsymbol{1}(d_i \neq \tilde{d}_i).
+\]  
+
+Define \( q_{s_j}(D) \) as the response obtained by querying a subset of indices \( s_j \). Let  
+\[
+B = \{\tilde{D} \mid l(D, \tilde{D}) \geq 256\alpha^2 n^2\}.
+\]  
+Prove that for \( D_0 \in B \)
+\[
+\Pr(|q_{s_j}(D_0) - q_{s_j}(D)| \leq 4\alpha n) \leq \frac{9}{10}.
+\]
+
+\begin{solution}
+{\bf Solution:}\\
+Assume that two data $D = (d_1, \dots, d_n)$ and $D_0=(d_{0, 1}, \dots, d_{0, n})$ differ in at least 
+\[
+k \ge 256\,\alpha^2 n^2
+\]
+positions.
+Let $F = (f_1, \dots, f_n)$ be a $n$ dimensional binary vector where $f_i=1$ if and only if $i\in s_j$.
+Then,
+\begin{align*}
+ X =& \left|q_{s_j}(D_0) - q_{s_j}(D)\right|\\   
+ =& | F \cdot (D_0 - D)|.
+\end{align*}
+Note that $D_0-D_1\in\{-1, 0, 1\}^n$ is an $n$ dimensional vector at least $k = 256 \alpha^2n^2$ of elements are nonzero.
+Then, for large enough $n$, the $F \cdot (D_0- D)$ behaves like Gaussian with variance $\sigma^2$ at least $k/4 = 64\alpha^2 n^2$.
+This is because
+\begin{align*}
+    \mbox{Var} (F \cdot (D_0 - D)) =& \sum_{i=1}^n\mbox{Var}(f_i(d_{0, i} - d_i))\\
+    =& \sum_{d_{0, i} \neq d_i} \frac{1}{4}\\
+    \geq& k/4=64\alpha^2n^2.
+\end{align*}
+
+Finally, for $Z\sim \cN(0, (8\alpha n)^2)$
+\begin{align*}
+    \Pr[|F \cdot (D_0 - D)| \leq 4\alpha n]
+    \leq& \Pr[|Z|\leq 4\alpha n]\\
+    =& \Pr[|Z|\leq \sigma/2]\\
+    \leq& \frac{9}{10}
+\end{align*}
+\end{solution}
+
+
+\vskip .2in
+%%%%%%%%%%%%%% Problem
+\item \textbf{Differential Privacy Amplification via Subsampling:}  
+Suppose we have an algorithm $M: X^m \to Y$ which is $\epsilon$-DP. Consider the following algorithm $M': X^n \to Y$, where $n > m$. When run on an input $X \in X^n$, it chooses a random subset of the input $X' \in X^m$ of size $m$, and outputs $M(X')$. Let $q = m/n$. 
+
+Let $X, X' \in X^n$ be neighboring datasets. Without loss of generality, assume that:
+\[
+X = (x_1, x_2, \dots, x_n), \quad X' = (x'_1, x_2, \dots, x_n).
+\]
+Define the sampling process:
+Let $I = (I_1, \dots, I_m)$ be a random vector of size $m$, uniformly sampled (without replacement) from $\{1, \dots, n\}$.
+Define the sampling function:
+\[
+s(X; I) = (x_{I_1}, \dots, x_{I_m}).
+\]
+The new mechanism $M'$ operates as: $M'(X) = M(s(X; I))$.
+
+Prove the following inequality:
+\[
+\Pr(M (s(X; I)) \in T \mid 1 \in I) \leq e^{\epsilon} \Pr(M (s(X; I)) \in T \mid 1 \notin I).
+\]
+For a pair of neighboring subsets $I_1, I_2\subset \{1, \dots, n\}$ of size $m$ 
+\begin{solution}
+{\bf Solution:}\\
+where $1\in I_1$ and $1\notin I_2$, we say $I_1 \sim_m^{(1)} I_2$.
+In other words, $I_2$ is replacing element `1' of $I_1$ with other index.
+Then, we have
+\begin{align}
+    \Pr[M(s(X;I_1))\in T] \leq e^\epsilon \Pr[M(s(X;I_2)\in T].
+\end{align}
+Consider all possible such pair of $(I_1, I_2)$ and sum them up, then
+\begin{align}
+    \sum_{I_1\sim_m^{(1)} I_2} \Pr[M(s(X;I_1))\in T] \leq e^\epsilon \sum_{I_1\sim_m^{(1)} I_2} \Pr[M(s(X;I_2)\in T].
+\end{align}
+For each subset of size $m$ set $1\in I_1$, there are $n-m$ possible $I_2$'s
+since the element `1' can be replaced by elements in $I_1^c$.
+For each subset of size $m$ set $1\notin I_2$, there are $m$ possible $I_1$'s
+since every element can be replaced by element `1'.
+\begin{align}
+    \sum_{I_1: |I_1|=m, 1\in I_1} \Pr[M(s(X;I_1))\in T] m 
+    \leq e^\epsilon \sum_{I_2: |I_2|=m, 1\notin I_2} \Pr[M(s(X;I_2)\in T] (n-m).
+\end{align}
+Thus, we have
+\begin{align}
+    \Pr[M(s(X;I_1))\in T, 1\in I_1] m 
+    \leq
+     e^\epsilon \Pr[M(s(X;I_2)\in T, 1\notin I_2] (n-m).
+\end{align}
+This is equivalent to 
+\begin{align}
+    \Pr[M(s(X;I_1))\in T| 1\in I_1] \frac{1}{\binom{n-1}{m-1}} m 
+    \leq
+    e^\epsilon \Pr[M(s(X;I_2)\in T| 1\notin I_2] \frac{1}{\binom{n-1}{m}} (n-m),
+\end{align}
+and finally we get
+\begin{align}
+    \Pr[M(s(X;I_1))\in T| 1\in I_1] 
+    \leq
+    e^\epsilon \Pr[M(s(X;I_2)\in T| 1\notin I_2].
+\end{align}
+\end{solution}
+
+
+
+\vskip .2in
+%%%%%%%%%%%%%% Problem
+\item \textbf{Sensitivity of K-Means Algorithm:}  
+Consider a K-means clustering algorithm where $d$-dimensional data points $X_1, \dots, X_n \in U$, where $U = \{ x \in \mathbb{R}^d \mid \|x\|_1 \leq 1 \}$.
+Given the centers $C_1, \dots, C_k$, the mechanism $f$ first group $X_j$'s by
+\begin{align*}
+    G_i = \{X_j : d(X_j, C_i) \leq d(X_j, C_m) \mbox{ for all $m\neq i$}\}
+\end{align*}
+Then, the mechanism $f$ outputs $f(C_1, \dots, C_k) = (C'_1, \dots, C'_k)$ where
+\[
+C'_i = \frac{1}{|G_i|} \sum_{X_j \in G_i} X_j.
+\]
+
+Determine the sensitivity of $f$.
+
+\begin{solution}
+{\bf Solution:}\\
+Let $x, x' \in \mathbb{R}^d$ be two data points such that $\|x\|_1 \le 1$ and $\|x'\|_1 \le 1$. Consider the worst-case scenario where the data set $D$ and its neighboring data set $D'$ differ in exactly one data point, and this data point belongs to a cluster that contains only that point.
+
+In this case, the cluster mean in $f(D)$ is simply $x$, and the cluster mean in $f(D')$ is $x'$. Therefore, the change in output is:
+\[
+\|f(D) - f(D')\|_1 = \|x - x'\|_1 \le \|x\|_1 + \|x'\|_1 \le 2.
+\]
+
+Thus, the maximum possible change in the output (i.e., the global sensitivity) is $2$, which occurs when a singleton cluster's data point is replaced by another point at $L_1$ distance 2.
+
+\medskip
+
+Hence, the global sensitivity of $f$ is $\boxed{2}$.
+\end{solution}
+
+
+
+\vskip .2in
+%%%%%%%%%%%%%% Problem
+\item \textbf{Proof of Additive $\delta$-DP:}  
+We aim to show that $M$ satisfies additive $\delta$-Differential Privacy ($\delta$-DP), which is defined as:
+\[
+|\Pr(M(D) \in S) - \Pr(M(D') \in S)| \leq \delta,
+\]
+for any neighboring datasets $D$ and $D'$ differing by at most one element and for any subset $S$ of the output space.
+\begin{enumerate}
+    \item  Consider a mechanism $M(X)$ defined for a dataset $X = (X_1, \dots, X_n)$ as follows:
+\[
+M(X) = \begin{cases} 
+X & \text{with probability } \delta, \\
+\perp & \text{with probability } 1-\delta.
+\end{cases}
+\]
+Show that $M$ is additive $\delta$-DP.
+
+\item  Consider a mechanism $M(x)$ defined for a dataset $X = (X_1, \dots, X_n)$ as follows:
+\[
+M(X) = (Y_1, \dots, Y_n), \quad \text{where } Y_i = \begin{cases} 
+X_i & \text{with probability } \delta, \\
+\perp & \text{with probability } 1-\delta.
+\end{cases}
+\]
+Show that $M$ is additive $\delta$-DP.
+\end{enumerate}
+\begin{solution}
+{\bf Solution:}\\
+(a)
+Consider two neighboring datasets $X$ and $X'$ that differ in exactly one element. Let $T$ be any subset of the output space, and define the event $E$ as ``the mechanism outputs either $X$ or $X'$''. The complement event $\bar{E}$ corresponds to the mechanism outputting $\bot$, which occurs with probability $1 - \delta$ regardless of the input.
+
+Since the output is always $\bot$ under $\bar{E}$, the distributions of $M(X)$ and $M(X')$ are identical in this case. Therefore, we can write:
+\[
+\Pr[M(X) \in T] = \Pr[M(X) \in T \mid \bar{E}] \cdot \Pr[\bar{E}] + \Pr[M(X) \in T \mid E] \cdot \Pr[E].
+\]
+Because $\Pr[E] = \delta$, we have:
+\[
+\Pr[M(X) \in T] = \Pr[M(X') \in T \mid \bar{E}] \cdot \Pr[\bar{E}] + \Pr[M(X) \in T \mid E] \cdot \delta.
+\]
+Since $\Pr[M(X) \in T \mid E] \leq 1$, we get:
+\[
+\Pr[M(X) \in T] \leq \Pr[M(X') \in T \mid \bar{E}] \cdot \Pr[\bar{E}] + \delta \leq \Pr[M(X') \in T] + \delta.
+\]
+By symmetry, the same inequality holds with $X$ and $X'$ reversed. Hence:
+\[
+\left| \Pr[M(X) \in T] - \Pr[M(X') \in T] \right| \leq \delta.
+\]
+Therefore, the mechanism satisfies additive $\delta$-differential privacy.
+
+(b)
+Consider two neighboring datasets $X$ and $X'$, which differ only at the $i$-th position. Let $T$ be any subset of the output space (i.e., a set of possible outputs), and define the event $E$ as ``the $i$-th coordinate is revealed (i.e., not replaced by $\bot$)''. Then the complement $\bar{E}$ corresponds to the case where the $i$-th coordinate is replaced by $\bot$.
+
+Conditioned on $\bar{E}$, the output distributions of $M(X)$ and $M(X')$ are identical, since all other coordinates are the same between $X$ and $X'$. Therefore, we can write:
+\[
+\Pr[M(X) \in T] = \Pr[M(X) \in T \mid \bar{E}] \cdot \Pr[\bar{E}] + \Pr[M(X) \in T \mid E] \cdot \Pr[E].
+\]
+Note that $\Pr[E] = \delta$, and similarly, we get:
+\[
+\Pr[M(X) \in T] \leq \Pr[M(X') \in T \mid \bar{E}] \cdot \Pr[\bar{E}] + 1 \cdot \delta.
+\]
+But $\Pr[M(X') \in T \mid \bar{E}] \cdot \Pr[\bar{E}] = \Pr[M(X') \in T] - \Pr[M(X') \in T \mid E] \cdot \delta \leq \Pr[M(X') \in T]$. So we conclude:
+\[
+\Pr[M(X) \in T] \leq \Pr[M(X') \in T] + \delta.
+\]
+
+Thus, the mechanism satisfies additive $\delta$-differential privacy.
+
+\end{solution}
+
+
+
+\vskip .2in
+%%%%%%%%%%%%%% Problem
+\item \textbf{A different private algorithm:}
+Suppose that we wanted to answer a count query: $f(X) =\sum_{i=1}^n X_i$, where $X_i \in \{0, 1\}$.
+In class, we learned the Laplace mechanism: simply add Laplace noise with scale parameter $1/\epsilon$.
+But what if we do not have access to Laplace noise?
+Suppose $Z$ is a continuous uniform random variable, drawn uniformly from the interval $[-3/\epsilon, 3/\epsilon]$.
+Consider the statistic $\tilde{f}(X) = \sum_{i=1}^n X_i + Z$.
+Is $\tilde{f}$ $O(\epsilon)$-differentially private? If yes, prove it, with the best constant you can give in the privacy guarantee.
+If no, explain why not.
+
+\begin{solution}
+{\bf Solution:}\\
+No it is not, let $X = (0, \dots, 0)$ and $X'=(1, 0, \dots, 0)$.
+Then, the density around $1+3/\epsilon$ of $\tilde{f}(X)$ would be zero,
+while the density around  $1+3/\epsilon$ of $\tilde{f}(X)$ is strictly positive.
+\end{solution}
+
+
+
+\vskip .2in
+%%%%%%%%%%%%%% Problem
+    \item \textbf{Mechanisms:} Consider the following mechanisms $M$ that takes a dataset $x\in [0,1]^n$ and returns
+    an estimate of the mean $\bar{x} = (\sum_{i=1}^n x_i)/n$.
+
+    \begin{enumerate}[(M1)]
+        \item $M_1(x) = [\bar{x}+Z]^1_0$, for $Z\sim \mathrm{Lap}(2/n)$,
+        where for real numbers $y$ and $a\leq b$, $[y]^b_a$ denotes the ``clamping'' function:
+        $$[y]^b_a =
+        \begin{cases}
+            a & \text{if } y < a\\
+            y & \text{if } a\leq y\leq b\\
+            b & \text{if } y >b
+        \end{cases}.$$
+        \item
+        $$M_2(x) = \begin{cases} 1 & \text{w.p. } \overline{x}\\
+        0 & \text{w.p. } 1-\overline{x}.
+        \end{cases}.$$
+
+    \end{enumerate}
+        Which of the above mechanisms meet the definition of $\epsilon$-differential privacy for a finite value of $\epsilon$, and what is the smallest value of $\epsilon$ (possibly as a function of $n$) for which they do? \label{part:epsilon}
+        As in class, here we are treating $n$ as public knowledge (so it is not a privacy violation to reveal $n$), and working with the ``change-one'' definition of DP.
+
+\begin{solution}
+{\bf Solution:}\\
+\begin{enumerate}
+    \item 
+The maximum probability difference happens when $\bar{x}=1$ and the minimum $\bar{x}=1-1/n$.
+Thus, for $M_1$,
+\begin{align*}
+    \frac{Pr(M_1(X)\in T)}{Pr(M_1(X')\in T)} 
+    \leq& \frac{f_X(1)}{f_X(1-1/n)}\\ 
+    &= e^{n/2 (1/n)} = e^{1/2}.
+\end{align*}
+where $f_X$ is a pdf of Laplace distribution with parameter $2/n$.
+Thus, the minimum $\epsilon$ for $M_1$ is $1/2$.
+
+\item Without loss of generality, it is enough to check the maximum ratio of probabilities at $M_2(X)=1$.
+\begin{align*}
+    \frac{Pr(M_1(X)=1)}{Pr(M_1(X')=1)} 
+    =& \frac{\bar{X}}{\bar{X'}}.
+\end{align*}
+This is unbounded since $\bar{X'}$ can be 0.
+Thus, it cannot be $\epsilon$-DP for finite $\epsilon$.
+\end{enumerate}
+\end{solution}
+
+\vskip .2in
+%%%%%%%%%%%%%% Problem 
+\item \textbf{Mean estimation with non-binary data:}
+In class, we saw how to estimate the mean of a dataset $\frac{1}{n}\sum_{i=1}^n X_i$ in the case when the $X_i$'s are binary.
+Here, we will see how to estimate the mean of a dataset when this may not be the case.
+\begin{enumerate}
+\item Suppose we only knew the $X_i \in \fR$ were real numbers.
+Prove that, for all $t \geq 0$, there is no $\epsilon$-DP algorithm $M : \fR^n \rightarrow \fR$ such that 
+\begin{align*}
+\Pr (|M(X) - f(X)| \leq t) \geq 0.9,
+\end{align*}
+where $\epsilon=1$.
+\item  The previous problem showed that, in general, we can’t privately estimate the mean of an unbounded dataset.
+Let’s see how we can circumvent this issue. 
+Give an algorithm $A_2:\fR^n\rightarrow \fR$ with the following guarantees.
+The algorithm is $\epsilon$-DP, for all possible datasets $(X_1, \dots, X_n)\in \fR^n$
+If all $X_i \in [-R, R]$, then there exists some constant $C > 0$ such that 
+\begin{align*}
+    \Pr(|A_2(X) - f(X)| \leq \frac{CR}{n\epsilon}) \geq 0.9.
+\end{align*}
+The parameter $R$ is known to the algorithm.
+Observe that this algorithm must always be private, but only needs to be accurate when the input dataset satisfies some additional properties
+\end{enumerate}
+
+\begin{solution}
+{\bf Solution:}\\
+\begin{enumerate}
+\item Without any bound, we can set $X = (0, \dots, 0)$ and $X' = (2nt, 0, \dots, 0)$.
+Note that $f(X) = 0$ and $f(X') = 2t$.
+First, due to $\epsilon$-DP, we have
+\begin{align*}
+    \frac{Pr(M(X) \in [-t, t])}{Pr(M(X')\in [-t, t])} \leq&  e^\epsilon
+\end{align*}
+which implies $Pr(|M(X')|\leq t) \geq e^{-\epsilon} Pr(|M(X)|\leq t)$.
+
+Also, the following should be true for both $X$ and $X'$,
+\begin{align*}
+    Pr(|M(X) | \leq t) \geq&  0.9\\
+    Pr(|M(X') - 2t| \leq t) \geq&  0.9
+\end{align*}
+This cannot be true since
+\begin{align*}
+    0.1 \geq& Pr(|M(X')-2t| > t)\\
+        \geq& Pr(|M(X')| \leq t)\\
+        \geq & e^{-\epsilon}Pr(|M(X')| \leq t)\\
+        \geq & e^{-\epsilon} 0.
+\end{align*}
+This is contradiction.
+
+\item The sensitivity of $f$ is $2R/n$.
+Thus, if we apply Laplace mechanism with Laplacian parameter $2R/n\epsilon$, we can achieve $\epsilon$-DP.
+The probability of error is
+\begin{align*}
+    Pr(|A_2(X) - f(X)| > CR/n\epsilon) =& Pr (|Y| > CR/n\epsilon)\\
+    =& e^{-C/2}.
+\end{align*}
+where $Y$ is Laplace random variable of parameter $2R/n\epsilon$
+Thus, we can set $C = 2 \log 10$ to get probaility of error equals to 0.1.
+In other words,
+\begin{align*}
+    Pr(|A_2(X) - f(X)| \leq (2\log 10) R/n\epsilon) =0.1
+\end{align*}
+\end{enumerate}
+\end{solution}
+
+
+
+\end{enumerate}
+\end{document}

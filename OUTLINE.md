@@ -19,14 +19,15 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
     - `07-diffusion/` — Diffusion as hierarchical VAE; closes with score-matching equivalence (3 lectures)
     - `08-ib/` — Information Bottleneck: IB Lagrangian, VIB, information plane (2 lectures)
   - `notes/` — canonical LaTeX notes (2026); `exam/` — finals 2024–26; `overleaf/` — frozen legacy source
-- **`courses/privacy/`** — Privacy series. Two artifact types: `lectures/` (slides, 6 numbered topic folders) and `exam/` (homework/exam set). See `courses/privacy/OUTLINE.md`.
+- **`courses/privacy/`** — Privacy series. Three artifact types: `lectures/` (slides, 6 numbered topic folders), `exam/` (homework/midterm/final set), and `overleaf/` (frozen legacy source). See `courses/privacy/OUTLINE.md`.
   - `lectures/01-dp/` — Differential privacy: 8 decks, `dp1`–`dp7` foundations + `dp8-fl.html` capstone (NeurIPS 2023: RRSC result). LaTeX source in `tex/dp.tex`
   - `lectures/02-generative/` — Generative-model review: 5 diffusion lectures (Bayes-route, DDPM, SDE, DDIM, guidance + discrete) + 1 brief LLM deck. `note/2_difffusion.tex` is LaTeX source for Diffusion Lectures 1–2
   - `lectures/03-memorization/` — Memorization in generative models (2 decks split 2026-05: `memorization-diffusion.html` covers intro/lawsuits/Bartz, diffusion detection, SAIL, CLIP-pad; `memorization-llm.html` covers canary→ACR). Paper-figure assets in `figs/`
   - `lectures/04-mia/` — Membership inference attacks (5 lectures, paired notes; legacy `old/MIA.html`)
   - `lectures/05-unlearning/` — Machine unlearning (definitions, classification, LLM, benchmarks, lab work; sourced from `slide.pdf`)
   - `lectures/06-watermark/` — LLM watermarking (1 deck: green-list, distortion-free, undetectable, robust, radioactivity)
-  - `exam/` — homework/exam set (`hw1sol`–`hw4`, `.tex`/`.pdf`/`.html`, shared style files)
+  - `exam/` — homework (HW1–4), midterms 2025–26, finals 2024–25 + 2026/27 drafts (`.tex`/`.pdf`/`.html`, shared style files)
+  - `overleaf/` — frozen Overleaf archive: lecture-note `.tex` (`1_dp`/`2_difffusion`/`3_watermark`/`4_MIA`), `hw_exam/` (all HW + exams), `images/`, `old/` drafts, `.bib`/style files
 
 ### `talks/` — standalone research presentations
 

@@ -1,0 +1,343 @@
+\documentclass[12pt]{article}
+\usepackage{math_hw}
+\usepackage{amssymb}
+
+\input{math_commands}
+\usepackage{geometry, booktabs}
+
+\newcommand{\Exp}{\mathrm{E}}
+\newcommand{\reals}{\fR}
+
+\excludeversion{problem}
+\includeversion{solution}
+
+\begin{document}
+
+\begin{center}
+{\bf Data Privacy: Midterm\begin{solution} Solutions\end{solution}} \\ \medskip
+\begin{problem}April 16, 2026 \end{problem}
+\end{center}
+
+\begin{problem}
+\noindent 
+% Note: Submit homework via LearnUS.
+% Also, we have some extra problems in Problem 7 (3-5).
+\LeftFoot{Midterm}
+\end{problem}
+
+\begin{solution}
+\LeftFoot{Midterm Solution}
+\end{solution}
+
+\begin{problem}
+
+    \vskip .3in
+    {\bf ID : \underline{\hspace{6cm}}}\\
+    \vskip .3in
+    {\bf Name : \underline{\hspace{5.5cm}}}\\
+    ~
+    \vskip 2in
+    \begin{table}[h]
+        \Large
+        \begin{tabular}{c|c}
+           1 &\textcolor{white}{aaaaaaaa}/~20\\
+           2 &\textcolor{white}{aaaaaaaa}/~40 \\
+           3 &\textcolor{white}{aaaaaaaa}/~40 \\
+            \hline
+           Total &  \textcolor{white}{aaaaaaaa}/~100 \\
+        \end{tabular}
+    \end{table}
+    \newpage
+    {\bf extra sheet}
+    \newpage
+\end{problem}
+
+\begin{enumerate}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Problem 1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\item {\bf The Statistical Price of Local Privacy (20 pts)}
+A medical researcher wishes to estimate the fraction $p = \frac{1}{n} \sum_{i=1}^n x_i$ of individuals in a population of size $n$ who carry a specific rare gene, where $x_i \in \{0, 1\}$ represents the true status of individual $i$. The study must satisfy $\varepsilon$-Differential Privacy.
+
+We will analyze the statistical utility (measured by the variance of the error) in two different trust models: the \textbf{Central Model} and the \textbf{Local Model}.
+
+\begin{enumerate}
+\item {\bf (5 pts)}
+Assume there is a completely trusted curator who collects the true bits $x_1, \dots, x_n$, computes the exact fraction $p$, and uses the Laplace Mechanism to release a private estimate $\hat{p}_{\text{central}}$.
+\begin{enumerate}
+    \item[1.] State the exact distribution of the noise that should be added to $p$.
+    \item[2.] Calculate the exact variance of $\hat{p}_{\text{central}}$.
+\end{enumerate}
+
+\item {\bf (5 pts)}
+Now assume there is no trusted curator. Each user $i$ must locally perturb their bit $x_i$ before sending it to the researcher. They randomized their bit, and sending a bit $Y_i \in \{0, 1\}$ where:
+\[
+\Pr[Y_i = 1 \mid x_i = 1] = \frac{e^\varepsilon}{1 + e^\varepsilon} \quad \text{and} \quad \Pr[Y_i = 1 \mid x_i = 0] = \frac{1}{1 + e^\varepsilon}
+\]
+The researcher calculates the sum of the noisy reports $S = \sum_{i=1}^n Y_i$, and constructs the unbiased estimator $\hat{p}_{\text{local}}$ for the true fraction $p$:
+\[
+\hat{p}_{\text{local}} = \frac{S}{n} \left( \frac{e^\varepsilon + 1}{e^\varepsilon - 1} \right) - \frac{1}{e^\varepsilon - 1}
+\]
+Calculate the exact variance of $\hat{p}_{\text{local}}$. 
+
+
+\item {\bf (10 pts)}
+Using the approximation $e^\varepsilon \approx 1 + \varepsilon$ for small $\varepsilon$, find the approximate asymptotic variances for both $\hat{p}_{\text{central}}$ and $\hat{p}_{\text{local}}$. 
+If the researcher wants the Local DP estimator to achieve the \textit{exact same variance} as the Central DP estimator for a fixed $\varepsilon$, how much larger must the dataset size $n_{\text{local}}$ be compared to $n_{\text{central}}$? Express $n_{\text{local}}$ in terms of $n_{\text{central}}$.
+\end{enumerate}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% Problem 1 Solution %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{solution}
+\textbf{Solution.}\\
+\begin{enumerate}
+\item 
+\textbf{1.} The query is the fraction $p = \frac{1}{n} \sum_{i=1}^n x_i$. Changing one person's bit $x_i$ from $0$ to $1$ (or vice versa) changes the total sum by $1$, so it changes the fraction $p$ by exactly $\Delta = \frac{1}{n}$.
+Therefore, the noise added is drawn from $\text{Lap}\left( \frac{\Delta}{\varepsilon} \right) = \text{Lap}\left( \frac{1}{n\varepsilon} \right)$. \\
+\textbf{2.} The variance of a Laplace distribution $\text{Lap}(b)$ is $2b^2$. Thus, the variance of the central estimator is:
+\[
+\text{Var}(\hat{p}_{\text{central}}) = 2 \left( \frac{1}{n\varepsilon} \right)^2 = \frac{2}{n^2 \varepsilon^2}
+\]
+
+\item 
+First, we find the variance of a single user's report $Y_i$. Since $Y_i \in \{0, 1\}$, it is a Bernoulli random variable. The variance of a Bernoulli variable with success probability $q$ is $q(1-q)$. 
+
+Let $q = \frac{e^\varepsilon}{1 + e^\varepsilon}$. 
+If $x_i = 1$, $Y_i \sim \text{Bernoulli}(q)$. Its variance is $q(1-q)$.
+If $x_i = 0$, $Y_i \sim \text{Bernoulli}(1-q)$. Its variance is $(1-q)(q) = q(1-q)$.
+Notice the variance is identical regardless of the underlying bit $x_i$:
+\[
+\text{Var}(Y_i) = \left( \frac{e^\varepsilon}{1 + e^\varepsilon} \right) \left( \frac{1}{1 + e^\varepsilon} \right) = \frac{e^\varepsilon}{(1 + e^\varepsilon)^2}
+\]
+Because the $Y_i$ reports are independent, the variance of the sum $S = \sum Y_i$ is simply $n$ times the individual variance:
+\[
+\text{Var}(S) = n \frac{e^\varepsilon}{(1 + e^\varepsilon)^2}
+\]
+Now we find the variance of the estimator $\hat{p}_{\text{local}}$. Using the variance property $\text{Var}(aX + c) = a^2 \text{Var}(X)$:
+\[
+\text{Var}(\hat{p}_{\text{local}}) = \text{Var}\left( \frac{S}{n} \left( \frac{e^\varepsilon + 1}{e^\varepsilon - 1} \right) - \frac{1}{e^\varepsilon - 1} \right) = \frac{1}{n^2} \left( \frac{e^\varepsilon + 1}{e^\varepsilon - 1} \right)^2 \text{Var}(S)
+\]
+Substitute $\text{Var}(S)$ into the equation:
+\[
+\text{Var}(\hat{p}_{\text{local}}) = \frac{1}{n^2} \frac{(e^\varepsilon + 1)^2}{(e^\varepsilon - 1)^2} \cdot n \frac{e^\varepsilon}{(1 + e^\varepsilon)^2}
+\]
+The $(e^\varepsilon + 1)^2$ terms cancel out, leaving:
+\[
+\text{Var}(\hat{p}_{\text{local}}) = \frac{e^\varepsilon}{n (e^\varepsilon - 1)^2}
+\]
+
+\item 
+Using the approximation $e^\varepsilon \approx 1 + \varepsilon$ for small $\varepsilon$:
+\begin{itemize}
+    \item $\hat{p}_{\text{central}}$ variance is already independent of this approximation: $\approx \mathcal{O}\left( \frac{1}{n^2 \varepsilon^2} \right)$
+    \item $\hat{p}_{\text{local}}$ variance simplifies to: $\frac{1 + \varepsilon}{n (1 + \varepsilon - 1)^2} = \frac{1 + \varepsilon}{n \varepsilon^2} \approx \frac{1}{n \varepsilon^2}$
+\end{itemize}
+To find how much more data is required for the Local model to match the Central model's accuracy, we equate the variances:
+\[
+\text{Var}(\hat{p}_{\text{local}}) = \text{Var}(\hat{p}_{\text{central}})
+\]
+\[
+\frac{1}{n_{\text{local}} \varepsilon^2} = \frac{2}{n_{\text{central}}^2 \varepsilon^2}
+\]
+Solving for $n_{\text{local}}$:
+\[
+n_{\text{local}} = \frac{1}{2} n_{\text{central}}^2
+\]
+\end{enumerate}
+\end{solution}
+
+\begin{problem}
+    \newpage
+    {\bf extra sheet}
+    \newpage
+\end{problem}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Problem 3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\item {\bf Hypothesis Testing and Approximate Differential Privacy (40 pts)}
+Let $D$ and $D'$ be adjacent datasets. An adversary observes the output of a mechanism $\mathcal{M}$ and conducts a hypothesis test to guess the true dataset:
+\[
+H_0\colon \text{The dataset is } D, \quad H_1\colon \text{The dataset is } D'.
+\]
+Using a rejection region $S$, the adversary declares $H_1$ if the output falls in $S$, and $H_0$ otherwise. We formally define the error probabilities:
+\begin{itemize}
+    \item \textbf{False Positive ($q$):} $\Pr(\text{declare } H_1 \mid H_0 \text{ is true}) = \Pr[\mathcal{M}(D) \in S]$
+    \item \textbf{False Negative ($p$):} $\Pr(\text{declare } H_0 \mid H_1 \text{ is true}) = \Pr[\mathcal{M}(D') \notin S]$
+\end{itemize}
+For pure $\epsilon$-DP, the trade-off between these errors is strictly bounded by $q + p e^\epsilon \ge 1$ and $p + q e^\epsilon \ge 1$. We now extend this to approximate $(\epsilon, \delta)$-DP.
+
+\begin{enumerate}
+    \item[(a)] \textbf{(8 pts)} Suppose $\mathcal{M}$ satisfies $(\epsilon, \delta)$-DP. 
+    Using the definition of $(\epsilon,\delta)$-DP, derive the new lower bounds for $q + p e^\epsilon$ and $p + q e^\epsilon$ in terms of $\epsilon$ and $\delta$.
+    
+    \item[(b)] \textbf{(8 pts)} Suppose a mechanism satisfies $(0, 1)$-DP. Plug $\epsilon=0$ and $\delta=1$ into your bounds. Briefly explain what this implies about the adversary's ability to achieve $p=0$ and $q=0$ simultaneously, and why this confirms $\delta=1$ provides no privacy.
+    
+    \item[(c)] \textbf{(8 pts)} Consider a mechanism $\mathcal{M}$ outputting values in $\{0, 1, 2\}$ with the following probabilities:
+    \begin{align*}
+        \Pr[\mathcal{M}(D) = z] &= \{0.5,\ 0.5,\ 0\} \quad \text{for } z \in \{0, 1, 2\} \\
+        \Pr[\mathcal{M}(D') = z] &= \{0,\ 0.5,\ 0.5\} \quad \text{for } z \in \{0, 1, 2\}
+    \end{align*}
+    Assume the adversary uses the rejection region $S = \{1, 2\}$. Calculate the exact False Positive rate $q$ and False Negative rate $p$ for this specific test.
+    
+    \item[(d)] \textbf{(8 pts)} Prove that the mechanism defined in part (c) cannot satisfy pure $\epsilon$-DP for any finite $\epsilon$.
+    
+    \item[(e)] \textbf{(8 pts)} Find the minimum $\delta$ such that the mechanism from part (c) satisfies $(\ln 2, \delta)$-DP. Verify that your $p$ and $q$ values mathematically satisfy the bounds you derived in part (a).
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% Problem 3 Solution %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{solution}
+\textbf{Solution.}\\
+\begin{enumerate}
+    \item[(a)] 
+    By the definition of $(\epsilon, \delta)$-DP, for any subset of outputs $S$:
+    \[ \Pr[\mathcal{M}(D) \in S] \le e^\epsilon \Pr[\mathcal{M}(D') \in S] + \delta \]
+    Substituting our error probabilities $q = \Pr[\mathcal{M}(D) \in S]$ and $(1-p) = \Pr[\mathcal{M}(D') \in S]$:
+    \[ q \le e^\epsilon (1-p) + \delta \]
+    Rearranging the terms yields the first bound:
+    \[ q + p e^\epsilon \ge 1 - \delta \]
+    By symmetry, applying the DP definition from $D'$ to $D$ for the event $S^c$:
+    \[ \Pr[\mathcal{M}(D') \in S^c] \le e^\epsilon \Pr[\mathcal{M}(D) \in S^c] + \delta \]
+    Substituting $p = \Pr[\mathcal{M}(D') \in S^c]$ and $(1-q) = \Pr[\mathcal{M}(D) \in S^c]$:
+    \[ p \le e^\epsilon (1-q) + \delta \implies p + q e^\epsilon \ge 1 - \delta \]
+
+    \item[(b)] 
+    Substituting $\epsilon = 0$ and $\delta = 1$ into the bound $q + p e^\epsilon \ge 1 - \delta$ gives:
+    \[ q + p(1) \ge 1 - 1 \implies q + p \ge 0 \]
+    Because probabilities are always non-negative, $q + p \ge 0$ is a mathematical triviality that places absolutely no restriction on the adversary. An adversary could design a perfect test where $q=0$ and $p=0$ (100\% accuracy in distinguishing $D$ from $D'$), and it would still satisfy this inequality. Thus, $\delta=1$ offers zero privacy protection.
+
+    \item[(c)] 
+    The rejection region is $S = \{1, 2\}$.
+    \begin{align*}
+        q &= \Pr[\mathcal{M}(D) \in \{1, 2\}] = 0.5 + 0 = 0.5 \\
+        p &= \Pr[\mathcal{M}(D') \notin \{1, 2\}] = \Pr[\mathcal{M}(D') = 0] = 0
+    \end{align*}
+    Thus, $p = 0$ and $q = 0.5$.
+    
+    \item[(d)] 
+    For pure DP to hold, the ratio of probabilities for any event must be bounded by $e^\epsilon$. Consider the output $z=2$:
+    \[ \Pr[\mathcal{M}(D') = 2] \le e^\epsilon \Pr[\mathcal{M}(D) = 2] \implies 0.5 \le e^\epsilon \cdot 0 \]
+    This requires $0.5 \le 0$, which is mathematically impossible for any finite $\epsilon$. Thus, it cannot satisfy pure $\epsilon$-DP.
+    
+    \item[(e)] 
+    To find the minimum $\delta$ for $\epsilon = \ln 2$ (which means $e^\epsilon = 2$), we check the DP condition $\Pr[D'] \le 2\Pr[D] + \delta$ and $\Pr[D] \le 2\Pr[D'] + \delta$ across all subsets $T$:
+    \begin{itemize}
+        \item For $T = \{0\}$: $\Pr[\mathcal{M}(D) = 0] = 0.5$ and $\Pr[\mathcal{M}(D') = 0] = 0$. \\
+        $0.5 \le 2(0) + \delta \implies \delta \ge 0.5$.
+        \item For $T = \{2\}$: $\Pr[\mathcal{M}(D') = 2] = 0.5$ and $\Pr[\mathcal{M}(D) = 2] = 0$. \\
+        $0.5 \le 2(0) + \delta \implies \delta \ge 0.5$.
+    \end{itemize}
+    Other subsets yield less strict bounds (e.g., $T=\{1,2\}$ gives $1 \le 2(0.5) + \delta \implies \delta \ge 0$). 
+    Thus, the minimum $\delta$ is $0.5$.
+    
+    Now, verify the $(p,q)$ bounds using $p=0$, $q=0.5$, $e^\epsilon=2$, and $\delta=0.5$:
+    \begin{align*}
+        q + p e^\epsilon &= 0.5 + 0(2) = 0.5 \\
+        1 - \delta &= 1 - 0.5 = 0.5
+    \end{align*}
+    Since $0.5 \ge 0.5$, the bound $q + p e^\epsilon \ge 1 - \delta$ holds perfectly.
+\end{enumerate}
+\end{solution}
+
+
+
+\begin{problem}
+    \newpage
+    {\bf extra sheet}
+    \newpage
+\end{problem}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Problem 4 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\item {\bf Tightness of the Exponential Mechanism (40 pts)}
+Consider an election with $d$ candidates.
+The scoring function $q(D, y)$ is the number of votes candidate $y$ receives in dataset $D$.
+The sensitivity is $\Delta = 1$.
+
+To understand the theoretical limits of differential privacy, we will construct a family of extreme, ``easy'' datasets:
+$D^{(1)}, D^{(2)}, \dots, D^{(d)}$.
+In a specific dataset $D^{(j)}$, exactly one candidate $j$ receives all $n$ votes,
+and all other $d-1$ candidates receive $0$ votes. 
+For this entire problem, assume the number of voters $n$ is fixed such that
+$n = \frac{\ln(d)}{2\varepsilon}$.
+
+\begin{enumerate}
+    \item[(a)] \textbf{(10 pts)} Suppose we run the standard Exponential Mechanism $\mathcal{A}_{EM}$ on the dataset $D^{(j)}$. Write down the unnormalized weight $w_j$ of the winning candidate $j$, and the weight $w_k$ of any losing candidate $k$. (Simplify your answers using the given value of $n$).
+    
+    \item[(b)] \textbf{(10 pts)} Using your weights from part (a), show that $\mathcal{A}_{EM}$ outputs a candidate \textit{other} than $j$ with at least some constant probability, independent of $d$ (for $d \ge 2$). 
+    
+    \item[(c)] \textbf{(10 pts)} Now we want to show that \textbf{no} $\varepsilon$-DP algorithm can do much better. Let $\mathcal{A}$ be an arbitrary $\varepsilon$-DP algorithm. Let $x_{\emptyset}$ be the completely empty dataset where all candidates have $0$ votes. 
+    
+    Using the group privacy property of DP, find an upper bound for the probability $\Pr[\mathcal{A}(D^{(j)}) = j]$ strictly in terms of $d$ and $\Pr[\mathcal{A}(x_{\emptyset}) = j]$.
+    
+    \item[(d)] \textbf{(10 pts)} Finally, let's evaluate the average accuracy of $\mathcal{A}$ across all $d$ extreme datasets. Equivalently, imagine an adversary chooses a true winning candidate $J$ uniformly at random from $[d]$, and feeds the corresponding dataset $D^{(J)}$ to your algorithm. 
+    Using your bound from part (c), prove that the algorithm fails to output $J$ with at least a constant probability. \\
+    \textit{Hint: Since the algorithm must output \textit{some} candidate when run on $x_{\emptyset}$, the sum of probabilities $\sum_{j=1}^d \Pr[\mathcal{A}(x_{\emptyset}) = j]$ must equal 1.}
+\end{enumerate}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% Problem 4 Solution %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{solution}
+\textbf{Solution.}\\
+\begin{enumerate}
+    \item[(a)] 
+    The Exponential Mechanism outputs a candidate $y$ with probability proportional to $\exp\left(\frac{\varepsilon q(D,y)}{2\Delta}\right)$. With $\Delta = 1$:
+    \begin{itemize}
+        \item Weight of the winning candidate $j$: 
+        \[ w_j = \exp\left(\frac{\varepsilon n}{2}\right) = \exp\left(\frac{\varepsilon}{2} \cdot \frac{\ln(d)}{2\varepsilon}\right) = \exp\left(\frac{\ln(d)}{4}\right) = d^{1/4} \]
+        \item Weight of any other candidate $k \neq j$: 
+        \[ w_k = \exp\left(\frac{\varepsilon \cdot 0}{2}\right) = \exp(0) = 1 \]
+    \end{itemize}
+
+    \item[(b)] 
+    The probability of outputting a candidate other than $j$ is the sum of the weights of the $d-1$ losing candidates divided by the total partition weight:
+    \[
+    \Pr[\mathcal{A}_{EM}(D^{(j)}) \neq j] = \frac{d-1}{d^{1/4} + d - 1}
+    \]
+    To show this is bounded below by a constant independent of $d$, we evaluate the worst-case minimum at $d=2$:
+    \[
+    \Pr[\mathcal{A}_{EM}(D^{(j)}) \neq j] \ge \frac{1}{2^{1/4} + 1} \approx 0.456
+    \]
+    Thus, the algorithm fails with at least a $\sim 45.6\%$ probability, independent of $d$.
+
+    \item[(c)] 
+    The $L_1$ distance (number of differing votes) between $D^{(j)}$ and $x_{\emptyset}$ is exactly $n = \frac{\ln(d)}{2\varepsilon}$. By the group privacy property, for any specific candidate $j$:
+    \begin{align*}
+    \Pr[\mathcal{A}(D^{(j)}) = j] &\le e^{\varepsilon n} \Pr[\mathcal{A}(x_{\emptyset}) = j]\\
+    &= \exp\left(\varepsilon \cdot \frac{\ln(d)}{2\varepsilon}\right) \Pr[\mathcal{A}(x_{\emptyset}) = j] \\
+    &= \sqrt{d} \Pr[\mathcal{A}(x_{\emptyset}) = j]
+    \end{align*}
+
+    \item[(d)] 
+    We want to find the expected probability of success when $J$ is chosen uniformly at random:
+    \[
+    \mathbb{E}_{J} \left[ \Pr[\mathcal{A}(D^{(J)}) = J] \right] = \frac{1}{d} \sum_{j=1}^d \Pr[\mathcal{A}(D^{(j)}) = j]
+    \]
+    Substituting the group privacy bound from part (c) into the sum:
+    \[
+    \mathbb{E}_{J} \left[ \Pr[\mathcal{A}(D^{(J)}) = J] \right] \le \frac{1}{d} \sum_{j=1}^d \sqrt{d} \Pr[\mathcal{A}(x_{\emptyset}) = j] = \frac{1}{\sqrt{d}} \sum_{j=1}^d \Pr[\mathcal{A}(x_{\emptyset}) = j]
+    \]
+    Since the algorithm must output exactly one candidate, $\sum_{j=1}^d \Pr[\mathcal{A}(x_{\emptyset}) = j] = 1$. Therefore:
+    \[
+    \mathbb{E}_{J} \left[ \Pr[\mathcal{A}(D^{(J)}) = J] \right] \le \frac{1}{\sqrt{d}} \cdot 1 = \frac{1}{\sqrt{d}}
+    \]
+    The probability that the algorithm \textit{fails} to identify $J$ is the complement:
+    \[
+    \Pr[\mathcal{A}(D^{(J)}) \neq J] = 1 - \Pr[\mathcal{A}(D^{(J)}) = J] \ge 1 - \frac{1}{\sqrt{d}}
+    \]
+    For any $d \ge 2$, this failure probability is at least $1 - \frac{1}{\sqrt{2}} \approx 0.293$. Thus, any $\varepsilon$-DP algorithm fails with at least a strictly positive constant probability.
+\end{enumerate}
+\end{solution}
+
+
+\begin{problem}
+    \newpage
+    {\bf extra sheet}
+    \newpage
+    {\bf extra sheet}
+    \newpage
+    {\bf extra sheet}
+    \newpage
+\end{problem}
+
+\end{enumerate}
+
+
+
+\end{document}

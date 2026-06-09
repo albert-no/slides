@@ -1,0 +1,693 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+% \usepackage{cleveref}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{xcolor}
+\usepackage{booktabs,tabularx,array,longtable}
+
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+
+\newcommand{\fA}{\field{A}} 
+\newcommand{\fB}{\field{B}} 
+
+
+\setlength{\parskip}{0.45em}
+\setlength{\parindent}{0pt}
+\setlist[itemize]{topsep=2pt,itemsep=2pt,leftmargin=1.5em}
+\setlist[enumerate]{topsep=2pt,itemsep=2pt,leftmargin=1.6em}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{exercise}[theorem]{Exercise}
+
+\DeclareMathOperator{\softmax}{softmax}
+\DeclareMathOperator{\TV}{TV}
+\DeclareMathOperator{\Exp}{Exp}
+\DeclareMathOperator{\Gumbel}{Gumbel}
+
+\newcommand{\PrK}{\Pr}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\1}{\mathbf{1}}
+
+
+
+\include{macro}
+
+\renewcommand{\blue}[1]{\textcolor{blue}{#1}}
+
+
+\begin{document}
+
+\title{LLM Watermarking\\[0.35em]
+\large From Green/Red Token Watermarks to Gumbel-Max and Modern Variants}
+\author{}
+\date{}
+\maketitle
+
+\section{Introduction and motivation}
+
+Large language model (LLM) watermarking is a \emph{provenance} mechanism. The generator intentionally perturbs its decoding procedure so that later a detector can test whether a piece of text is statistically consistent with having been produced by that generator. This is different from generic AI-text detection. A watermark is inserted \emph{by the generator itself}, whereas a post-hoc detector tries to infer machine generation without cooperation from the generator.
+
+The modern literature on text watermarking began with the green/red token scheme of Kirchenbauer, Geiping, Wen, Katz, Miers, and Goldstein \cite{kirchenbauer2023watermark}. The basic idea is deceptively simple: at each decoding step, a secret key and the local context pseudorandomly partition the vocabulary into a \emph{green list} and a \emph{red list}; the decoder is then biased toward green tokens. A detector with the same key later checks whether the realized sequence uses too many green tokens to be explained by chance. The method comes with an explicit null hypothesis and a natural $p$-value based on a one-sided test \cite{kirchenbauer2023watermark}.
+
+The topic matters because provenance is now a practical governance problem rather than a purely academic one. Google DeepMind's SynthID-Text is a production-ready watermarking system that modifies only the sampling procedure, can be integrated with speculative sampling, and was reported as deployed on Gemini and Gemini Advanced after large-scale evaluation on roughly 20 million live responses \cite{dathathri2024synthid,deepmind2024blog}. At the same time, recent conference policies show that provenance and auditability are becoming part of scientific process design. ICML 2025 declared that hidden prompts intended to obtain favorable LLM reviews are scientific misconduct, while explicitly distinguishing such misconduct from hidden prompts used to \emph{detect} prohibited LLM use by reviewers \cite{icml2025ethics}. ICML 2026 went further: the organizers report desk-rejecting 497 submissions after detecting that 506 reciprocal reviewers who had agreed to a no-LLM reviewing policy used LLMs in 795 reviews; the detection method used watermarked PDFs containing hidden instructions that induced two random phrases to appear in an LLM-generated review, with subsequent manual verification \cite{icml2026violations,icml2026faq,icml2026policy}. ICLR 2026 likewise announced desk rejections for undisclosed substantial LLM use in papers and for low-quality or LLM-generated reviews, using automated detectors only as a triage tool before human judgment \cite{iclr2026response,iclr2026authorguide}.
+
+\begin{remark}
+The ICML 2026 incident is \emph{not} the same as decoder-level LLM watermarking. In the usual watermarking literature, the signal is embedded in the sampled \emph{output distribution} of the LLM. In the ICML case, the signal was embedded in the \emph{input document} as hidden machine-readable instructions. Nevertheless, it is a useful motivation: in both cases one inserts a detectable signal to enable later auditing.
+\end{remark}
+
+\begin{remark}
+Watermarking and differential privacy address almost opposite objectives. Differential privacy tries to make outputs \emph{insensitive} to microscopic changes in the data. Watermarking tries to make outputs \emph{sensitive} to a hidden source identity or key. In this sense, output watermarking is a provenance primitive, not a privacy primitive.
+\end{remark}
+
+\section{Formal setup}
+
+Let $\cV = \{1,\dots,N\}$ be the vocabulary. Fix a prompt $\pi$. At decoding step $t$, the base language model produces logits
+\[
+\ell_t(i) \in \mathbb{R}, \qquad i \in \cV,
+\]
+and therefore a next-token distribution
+\[
+p_t(i) = \frac{e^{\ell_t(i)}}{\sum_{j \in \cV} e^{\ell_t(j)}}.
+\]
+A decoder samples a token $X_t \in \cV$ from $p_t$ (or approximately from $p_t$, depending on the decoding rule), appends it to the prefix, and continues.
+
+\begin{definition}[Zero-bit watermarking scheme]
+A zero-bit watermarking scheme is a pair $(\mathsf{Gen},\mathsf{Det})$ with a secret key $K$ such that:
+\begin{enumerate}
+    \item $\mathsf{Gen}_K$ is a keyed generation procedure that takes a prompt and outputs text.
+    \item $\mathsf{Det}_K$ takes a text and outputs either a real-valued score or a reject / accept decision for the null hypothesis that the text was produced without the watermark.
+\end{enumerate}
+The watermark is \emph{publicly detectable} if detection can be run without secret information; otherwise it is \emph{private} or \emph{secret-key} detection.
+\end{definition}
+
+\begin{definition}[Soundness, completeness, robustness]
+Fix a prompt distribution and a class of non-watermarked generators. A detector is \emph{$\alpha$-sound} if its false positive probability is at most $\alpha$. It is \emph{$(1-\beta)$-complete} if its true positive probability on watermarked text is at least $1-\beta$. Against an attack class $\mathcal{A}$, the watermark is \emph{$(\alpha,\beta)$-robust} if the same guarantees hold after the text is transformed by any attack $A \in \mathcal{A}$.
+\end{definition}
+
+\begin{definition}[Distortion and non-distortion]
+Let $P_{\pi}^{(T)}$ be the distribution of the first $T$ generated tokens under the base decoder, and let $Q_{\pi,K}^{(T)}$ be the corresponding distribution under the watermarked decoder. A natural distortion measure is
+\[
+\TV\bigl(P_{\pi}^{(T)}, Q_{\pi,K}^{(T)}\bigr).
+\]
+A watermark is \emph{distortion-free up to horizon $T$} if $P_{\pi}^{(T)} = Q_{\pi,K}^{(T)}$ for every prompt $\pi$.
+\end{definition}
+
+\begin{remark}
+The literature often distinguishes \emph{zero-bit} watermarks (detect yes / no) from \emph{multi-bit} watermarks (embed a message such as a model ID, user ID, or timestamp). Zero-bit schemes are statistically cleaner and easier to analyze; multi-bit schemes are more useful for attribution.
+\end{remark}
+
+\section{The green/red token watermark of the Goldstein lab}
+
+We follow the conceptual framework of \cite{kirchenbauer2023watermark}. Let $K$ be a secret key, and let $c_t$ denote a context derived from the already-generated prefix (for example the last $h$ tokens). A pseudorandom function of $(K,c_t)$ partitions the vocabulary into a green set $G_t \subseteq \cV$ and a red set $R_t = \cV \setminus G_t$ of sizes
+\[
+|G_t| = \gamma N, \qquad |R_t| = (1-\gamma)N,
+\]
+where $\gamma \in (0,1)$ is fixed.
+
+\subsection{Hard red-list watermark}
+
+The proof-of-concept version is the \emph{hard red-list} rule: the decoder samples only from $G_t$. This makes detection very easy but can badly harm quality on low-entropy prompts \cite{kirchenbauer2023watermark}. Formally,
+\[
+\Pr[X_t = i \mid c_t, K] = \frac{p_t(i)\,\1\{i\in G_t\}}{\sum_{j\in G_t} p_t(j)}.
+\]
+If the green list is chosen uniformly at random and independently of the non-watermarked next token, then a non-watermarked generator lands in the green list with probability exactly $\gamma$.
+
+\begin{definition}[Green count statistic]
+For a realized sequence $x_{1:T}$, define
+\[
+Y_t = \1\{x_t \in G_t\}, \qquad C_T = \sum_{t=1}^T Y_t.
+\]
+The quantity $C_T$ is the number of green tokens in the observed text.
+\end{definition}
+
+\begin{proposition}[Ideal null model]
+Assume the green partitions are i.i.d. uniform subject to $|G_t|=\gamma N$, and the unwatermarked token $X_t$ is independent of the partition given the past. Then under the null hypothesis,
+\[
+Y_t \sim \mathrm{Bernoulli}(\gamma), \qquad C_T \sim \mathrm{Binomial}(T,\gamma),
+\]
+so
+\[
+\E[C_T]=\gamma T,\qquad \Var(C_T)=\gamma(1-\gamma)T.
+\]
+\end{proposition}
+
+\begin{proof}
+Condition on the past. Since $G_t$ is a uniformly random subset of size $\gamma N$, any fixed token falls in $G_t$ with probability $\gamma$. Therefore
+\[
+\Pr[X_t \in G_t \mid \cF_{t-1}] = \gamma.
+\]
+The claim about the mean and variance follows from Bernoulli / binomial algebra.
+\end{proof}
+
+This yields the familiar one-sided $z$-statistic
+\[
+Z_T = \frac{C_T-\gamma T}{\sqrt{\gamma(1-\gamma)T}}.
+\]
+In the special case $\gamma = 1/2$, this reduces to the statistic emphasized in \cite{kirchenbauer2023watermark}.
+
+\begin{remark}
+In practice the $G_t$ are not i.i.d.; they are pseudorandom functions of the prefix. Exact binomiality is therefore only an idealization. However, the conditional-mean statement under the null,
+\[
+\E[Y_t\mid \cF_{t-1}] = \gamma,
+\]
+is enough for concentration via martingale inequalities, which is the right level of generality for theory.
+\end{remark}
+
+\subsection{Soft red-list watermark}
+
+The hard rule is too brittle. The more useful scheme is the \emph{soft red-list} watermark. Let $\delta>0$ be the logit bias and define $\alpha=e^{\delta}$. At each step the watermark adds $\delta$ to every green-token logit:
+\[
+\ell_t'(i) = \ell_t(i) + \delta\,\1\{i\in G_t\}.
+\]
+The new next-token distribution is
+\[
+q_t(i) = \frac{e^{\ell_t'(i)}}{\sum_{j \in \cV} e^{\ell_t'(j)}}.
+\]
+Let
+\[
+P_t := \sum_{i\in G_t} p_t(i)
+\]
+be the original probability mass on the green list.
+
+\begin{proposition}[Exact green-mass formula]
+Under the soft red-list rule,
+\[
+Q_t := \sum_{i\in G_t} q_t(i) = \frac{\alpha P_t}{1+(\alpha-1)P_t}.
+\]
+Consequently,
+\[
+Q_t-P_t = \frac{(\alpha-1)P_t(1-P_t)}{1+(\alpha-1)P_t}.
+\]
+\end{proposition}
+
+\begin{proof}
+For $i\in G_t$,
+\[
+q_t(i) = \frac{\alpha p_t(i)}{\sum_{j\notin G_t} p_t(j) + \alpha \sum_{j\in G_t} p_t(j)}
+      = \frac{\alpha p_t(i)}{1-P_t + \alpha P_t}
+      = \frac{\alpha p_t(i)}{1+(\alpha-1)P_t}.
+\]
+Summing over $i\in G_t$ gives
+\[
+Q_t = \frac{\alpha P_t}{1+(\alpha-1)P_t}.
+\]
+Subtracting $P_t$ yields the second formula.
+\end{proof}
+
+\begin{remark}[Why high-entropy tokens matter]
+The gain $Q_t-P_t$ is close to $0$ when $P_t$ is close to $0$ or $1$. Hence the soft watermark barely changes nearly deterministic decisions. The watermark is strongest when many next-token candidates are plausible, because then the green/red partition can steer the sample without much semantic damage. This is the intuition formalized by the entropy analysis in \cite{kirchenbauer2023watermark}.
+\end{remark}
+
+\subsection{Detection as a martingale test}
+
+A useful abstraction is to assume that under the null,
+\[
+\E[Y_t\mid\cF_{t-1}] = \gamma,
+\]
+and under the watermark,
+\[
+\E[Y_t\mid\cF_{t-1}] \ge \gamma + \varepsilon
+\]
+for some effective bias $\varepsilon>0$. Here $\varepsilon$ is the average amount by which the watermark increases green-token frequency.
+
+\begin{theorem}[Simple sample-complexity bound]
+Suppose $Y_t \in [0,1]$ for all $t$.
+\begin{enumerate}
+    \item Under the null, assume $\E[Y_t\mid \cF_{t-1}] = \gamma$.
+    \item Under the alternative, assume $\E[Y_t\mid \cF_{t-1}] \ge \gamma+\varepsilon$.
+\end{enumerate}
+Consider the detector that rejects the null when
+\[
+C_T \ge \gamma T + \frac{\varepsilon T}{2}.
+\]
+Then both the false positive and false negative probabilities are at most
+\[
+\exp\Bigl(-\frac{\varepsilon^2 T}{2}\Bigr).
+\]
+In particular, $T \ge 2\varepsilon^{-2}\log(1/\beta)$ suffices to make both errors at most $\beta$.
+\end{theorem}
+
+\begin{proof}
+Define the martingale differences
+\[
+D_t = Y_t - \E[Y_t\mid \cF_{t-1}], \qquad M_T = \sum_{t=1}^T D_t.
+\]
+Since $Y_t\in[0,1]$, we have $D_t\in[-1,1]$, so the range width is at most $1$. Azuma-Hoeffding therefore gives
+\[
+\PrK(M_T \ge a) \le \exp\Bigl(-\frac{2a^2}{T}\Bigr),
+\qquad
+\PrK(M_T \le -a) \le \exp\Bigl(-\frac{2a^2}{T}\Bigr).
+\]
+Under the null,
+\[
+C_T-\gamma T = M_T,
+\]
+so the false positive event implies $M_T\ge \varepsilon T/2$, hence
+\[
+\PrK_{H_0}\Bigl(C_T \ge \gamma T + \frac{\varepsilon T}{2}\Bigr)
+\le \exp\Bigl(-\frac{2(\varepsilon T/2)^2}{T}\Bigr)
+= \exp\Bigl(-\frac{\varepsilon^2T}{2}\Bigr).
+\]
+Under the alternative, let $\mu_t=\E[Y_t\mid \cF_{t-1}]$. Then $\sum_t \mu_t \ge (\gamma+\varepsilon)T$, and
+\[
+C_T - \sum_{t=1}^T \mu_t = M_T.
+\]
+If the detector fails, then
+\[
+C_T \le \gamma T + \frac{\varepsilon T}{2}
+\le \sum_{t=1}^T \mu_t - \frac{\varepsilon T}{2},
+\]
+so $M_T \le -\varepsilon T/2$. Another application of Azuma-Hoeffding yields the same bound.
+\end{proof}
+
+\begin{corollary}[Expected $z$-score scaling]
+Under the heuristic approximation that $\Var(C_T) \approx \gamma(1-\gamma)T$, the watermark shifts the expected $z$-score by roughly
+\[
+\E[Z_T \mid H_1] \approx \frac{\varepsilon T}{\sqrt{\gamma(1-\gamma)T}}
+= \varepsilon\sqrt{\frac{T}{\gamma(1-\gamma)}}.
+\]
+Thus the detection length scales on the order of $1/\varepsilon^2$.
+\end{corollary}
+
+\begin{remark}[Dilution by mixing or editing]
+Suppose only an $\eta$ fraction of the observed tokens come from a watermarked source and the remaining $1-\eta$ fraction are unwatermarked. Then the mean shift drops from $\varepsilon$ to approximately $\eta\varepsilon$, so the number of tokens needed for the same power grows like $1/\eta^2$. This is why long documents containing only short watermarked spans are harder to detect, and why paraphrasing or insertion of unwatermarked text weakens the signal.
+\end{remark}
+
+\subsection{Spike entropy and the main theorem of Kirchenbauer et al.}
+
+The analysis in \cite{kirchenbauer2023watermark} uses a customized entropy proxy.
+
+\begin{definition}[Spike entropy]
+For a probability vector $p=(p_1,\dots,p_N)$ and modulus $z\ge 0$, define
+\[
+S(p,z) = \sum_{i=1}^N \frac{p_i}{1+z p_i}.
+\]
+\end{definition}
+
+The quantity $S(p,z)$ is small for spiky, low-entropy distributions and larger when mass is spread across many plausible tokens.
+
+\begin{theorem}[Kirchenbauer et al.; entropy lower bound]\label{thm:kgw-main}
+Let $\alpha=e^{\delta}$. Consider text of length $T$ generated with the soft red-list watermark, green fraction $\gamma$, and random green lists. If
+\[
+\frac1T\sum_{t=1}^T S\!\left(p_t,\frac{(1-\gamma)(\alpha-1)}{1+(\alpha-1)\gamma}\right) \ge S_\star,
+\]
+then the number $C_T$ of green tokens satisfies
+\[
+\E[C_T] \ge \frac{\gamma\alpha T}{1+(\alpha-1)\gamma} S_\star,
+\]
+and
+\[
+\Var(C_T) \le
+T\,\frac{\gamma\alpha S_\star}{1+(\alpha-1)\gamma}
+\left(1-\frac{\gamma\alpha S_\star}{1+(\alpha-1)\gamma}\right).
+\]
+A simpler but looser bound is $\Var(C_T)\le T\gamma(1-\gamma)$ when $\gamma\ge 1/2$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+For a fixed step $t$, let $P_t=\sum_{i\in G_t} p_t(i)$ denote the pre-watermark green mass. By the previous proposition, the conditional probability of sampling a green token after watermarking is
+\[
+Q_t = \frac{\alpha P_t}{1+(\alpha-1)P_t}.
+\]
+Hence the problem is to lower bound $\E[Q_t]$ over the random green-list partition. Kirchenbauer et al. prove a one-step lower bound of the form
+\[
+\E[Q_t] \ge \frac{\gamma\alpha}{1+(\alpha-1)\gamma}
+S\!\left(p_t,\frac{(1-\gamma)(\alpha-1)}{1+(\alpha-1)\gamma}\right)
+\]
+by exploiting convexity / symmetry of the random partition and applying Jensen's inequality to a carefully symmetrized function of the token probabilities. Summing this lower bound over $t$ gives the expectation bound. The variance bound follows because, conditional on the past, $C_T$ is a sum of Bernoulli variables with success probabilities bounded below as above.
+\end{proof}
+
+\begin{remark}
+\Cref{thm:kgw-main} is the technical heart of the green/red paper. It formalizes the intuition that the watermark is strong only when the model has enough \emph{choice} in the next token. In low-entropy regions, the watermark must remain weak in order not to damage quality.
+\end{remark}
+
+\subsection{Public versus private detection}
+
+The green/red framework admits at least two modes.
+
+\begin{itemize}
+    \item \textbf{Public detection.} The partitioning rule and key are public, so anyone can run the detector.
+    \item \textbf{Private detection.} The scheme is public but the key is secret; only the model owner can evaluate the watermark or offer an API.
+\end{itemize}
+
+Public detection improves transparency but can facilitate adaptive attacks and spoofing. Private detection improves security but requires trust in the entity that controls the detector. This public/private trade-off has driven a substantial literature on public verifiability and cryptographic formulations \cite{fairoze2024public,liu2024upv,christ2024undetectable}.
+
+\section{The Gumbel-Max trick and the distortion-free viewpoint}
+
+The green/red scheme is \emph{distortionary}: it changes the token distribution. A different line of work asks whether one can watermark while preserving the output distribution exactly or almost exactly. The key technical tool is the Gumbel-Max trick.
+
+\begin{theorem}[Gumbel-Max trick]
+Let $\phi_1,\dots,\phi_N\in\mathbb{R}$ and let $G_1,\dots,G_N$ be i.i.d. standard Gumbel random variables with CDF
+\[
+F(x)=\exp(-e^{-x}).
+\]
+Then
+\[
+I := \argmax_{1\le i\le N} \{\phi_i + G_i\}
+\]
+satisfies
+\[
+\PrK(I=j)=\frac{e^{\phi_j}}{\sum_{i=1}^N e^{\phi_i}}.
+\]
+Equivalently, if $p_j \propto e^{\phi_j}$ then $I\sim p$.
+\end{theorem}
+
+\begin{proof}
+Let $E_i\sim \Exp(1)$ be i.i.d. Since $-\log E_i$ has the standard Gumbel law, we may write $G_i=-\log E_i$. Then
+\[
+\phi_i + G_i = \phi_i - \log E_i = -\log\bigl(E_i e^{-\phi_i}\bigr).
+\]
+Therefore
+\[
+\argmax_i (\phi_i+G_i) = \argmin_i \bigl(E_i e^{-\phi_i}\bigr).
+\]
+Now $E_i e^{-\phi_i}$ is exponential with rate $e^{\phi_i}$: scaling an $\Exp(1)$ variable by $c>0$ gives an exponential with rate $1/c$. Hence if we define
+\[
+T_i := E_i e^{-\phi_i},
+\]
+then $T_i\sim \Exp(e^{\phi_i})$ independently. For independent exponentials, the probability that index $j$ achieves the minimum equals its rate divided by the sum of all rates:
+\[
+\PrK\bigl(T_j = \min_i T_i\bigr)=\frac{e^{\phi_j}}{\sum_i e^{\phi_i}}.
+\]
+Since the minimizer of the $T_i$ is the maximizer of $\phi_i+G_i$, the theorem follows.
+\end{proof}
+
+\begin{remark}
+This theorem says that ordinary multinomial decoding can be viewed as an \emph{argmax over logits plus external randomness}. The green/red watermark modifies the logits. Distortion-free watermarks instead try to preserve the logits and manipulate the \emph{sampling randomness} in a keyed way.
+\end{remark}
+
+A second equivalent viewpoint is inverse-CDF sampling. If $U\sim \mathrm{Unif}[0,1]$ and $F^{-1}$ is the discrete inverse CDF of $p_t$, then $F^{-1}(U)\sim p_t$. This yields an immediate principle.
+
+\begin{proposition}[Measure-preserving watermark principle]
+Suppose a decoder samples $X_t = F_t^{-1}(U_t)$ where $U_t\sim \mathrm{Unif}[0,1]$. If we replace $U_t$ by
+\[
+U_t' = \psi_{K,t}(U_t),
+\]
+where for each $t$ the map $\psi_{K,t}:[0,1]\to[0,1]$ is measure-preserving, then $U_t'\sim\mathrm{Unif}[0,1]$ and therefore the one-step token law remains exactly $p_t$.
+\end{proposition}
+
+\begin{proof}
+A measure-preserving transformation sends the uniform measure on $[0,1]$ to itself. Hence $U_t'$ is still uniform, and inverse-CDF sampling from $U_t'$ has the same law as inverse-CDF sampling from $U_t$.
+\end{proof}
+
+This principle is the conceptual basis for \emph{distortion-free} or \emph{unbiased} watermarking schemes. They encode the watermark in a secret coupling of the random numbers rather than by moving the model's probabilities. Kuditipudi et al. instantiate this idea with inverse-transform and exponential-minimum samplers, proving exact distribution preservation up to a generation budget and good robustness to edit perturbations in some regimes \cite{kuditipudi2024distortionfree}. Christ, Gunn, and Zamir develop a cryptographic notion of \emph{undetectable} watermarking: without the secret key, even an efficient adversary should be unable to distinguish watermarked from unwatermarked outputs \cite{christ2024undetectable}. Later work studies public detection, public verifiability, and multi-bit extensions \cite{fairoze2024public,liu2024upv,qu2024multibit}.
+
+\begin{definition}[Distortion-free watermark at horizon $T$]
+A watermarked generator $\mathsf{Gen}_K$ is distortion-free up to horizon $T$ if for every prompt $\pi$ and every measurable set $A\subseteq \cV^T$,
+\[
+\PrK\bigl(\mathsf{Gen}_K(\pi)_{1:T}\in A\bigr)
+=
+\PrK\bigl(\mathsf{LM}(\pi)_{1:T}\in A\bigr).
+\]
+\end{definition}
+
+\begin{remark}
+Exact distribution preservation is powerful: if the user only sees outputs, then no statistical test without the key can detect quality degradation or even the presence of the watermark. The difficulty is robustness: if an adversary is allowed to rewrite the text while preserving meaning, the keyed correlations that enable detection may be weakened or destroyed.
+\end{remark}
+
+\section{Beyond the original green/red scheme: important directions in the literature}
+
+The literature has diversified quickly. A useful taxonomy is shown in \cref{tab:literature}.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.9cm} >{\raggedright\arraybackslash}p{2.6cm} X@{}}
+\toprule
+Paper & Main idea & Main takeaway \\
+\midrule
+Kirchenbauer et al. (ICML 2023) \cite{kirchenbauer2023watermark} & Secret green/red partitions; logit bias; $z$-test & Canonical practical zero-bit watermark; explicit statistical test. \\
+Kirchenbauer et al. (ICLR 2024) \cite{kirchenbauer2024reliability} & Reliability under edits and mixed documents & Watermarks often survive paraphrase / mixing if enough tokens remain observable. \\
+Zhao et al. (ICLR 2024) \cite{zhao2024provable} & Fixed unigram grouping with proofs & Provable quality and robustness guarantees under formal edit models. \\
+Kuditipudi et al. (TMLR 2024) \cite{kuditipudi2024distortionfree} & Distortion-free sampling keyed through randomness & Exact distribution preservation up to a horizon; robust in some edit regimes. \\
+Christ et al. (COLT 2024) \cite{christ2024undetectable} & Cryptographic undetectability & Watermarks can be invisible without the key, at least computationally. \\
+Liu et al. (ICLR 2024) \cite{liu2024sir} & Semantic-invariant watermarking & Better robustness to paraphrase by keying on semantic context rather than short lexical context. \\
+He et al. (ACL 2024) \cite{he2024translation} & Cross-lingual robustness study and attack & Translation can erase many existing watermarks; motivates cross-lingual designs. \\
+Fairoze et al. (ICML 2024 Workshop / arXiv) \cite{fairoze2024public} and Liu et al. (ICLR 2024) \cite{liu2024upv} & Public detectability / public verifiability & Important when third parties must verify provenance without trusting the model owner. \\
+Dathathri et al. (Nature 2024) \cite{dathathri2024synthid} & SynthID-Text, tournament sampling, production deployment & First large-scale deployed LLM text watermarking system. \\
+Feng et al. (2024) \cite{feng2024certified} & Randomized smoothing & First certified-robust detector in this line of work. \\
+Zhang et al. (ICML 2024) \cite{zhang2024watermarkssand} & Impossibility of strong watermarking & No ``silver bullet'' under sufficiently strong, realistic rewriting oracles. \\
+Lee et al. (ACL 2024) \cite{lee2024code} & Code-specific watermarking & Low-entropy code generation is a special challenge. \\
+Piet et al. (2023) \cite{piet2023markmywords} & Systematic benchmark & Practical evaluation requires quality, size, and tamper resistance together. \\
+\bottomrule
+\end{tabularx}
+\caption{A compact map of the literature.}
+\label{tab:literature}
+\end{table}
+
+\subsection{Robustness under paraphrasing and mixed documents}
+
+Kirchenbauer et al. show that watermarks can remain detectable after human and machine paraphrasing and after mixing watermarked spans into larger documents, although the required text length increases as the signal is diluted \cite{kirchenbauer2024reliability}. A clean way to remember this is the dilution law from earlier: if only an $\eta$ fraction of the final document still carries the watermark, then the effective signal shrinks by a factor of about $\eta$.
+
+\subsection{Provable robustness with simpler partitions}
+
+The original green/red scheme uses context-dependent partitions. Zhao et al. instead study a \emph{unigram} watermark in which the vocabulary partition is fixed once and for all \cite{zhao2024provable}. This gives up some stealth, but makes rigorous robustness analysis substantially easier. Their contribution is especially valuable pedagogically: it shows how to frame edit and paraphrase robustness as a statistical hypothesis-testing problem with explicit guarantees.
+
+\subsection{Semantic and cross-lingual robustness}
+
+A core weakness of lexical watermarks is that paraphrasing can rewrite the very tokens on which detection depends. Liu et al. propose semantic-invariant watermarking, using semantic information from the prefix to determine the watermark signal \cite{liu2024sir}. He et al. show that translation can destroy several existing watermarks and formalize this as a cross-lingual consistency problem \cite{he2024translation}. These papers make an important conceptual point: \emph{robustness depends on the invariances one expects the attack channel to preserve}. If the attacker preserves semantics but not surface form, a purely lexical watermark will often be fragile.
+
+\subsection{Public verifiability and trust}
+
+A private detector is easier to secure, but difficult to audit. Fairoze et al. construct a publicly-detectable watermark based on cryptographic signatures and rejection sampling \cite{fairoze2024public}. Liu et al. propose a publicly verifiable neural detector (UPV) as a different route to the same governance objective \cite{liu2024upv}. These works matter when a school, court, journal, or platform wants to verify provenance without trusting a vendor's secret API.
+
+\subsection{Benchmarking and code generation}
+
+Piet et al. argue convincingly that watermark evaluation needs at least three axes: text quality, detection size (how many tokens are needed), and tamper resistance \cite{piet2023markmywords}. This is particularly relevant for code, where next-token entropy is often much lower than in ordinary prose. Lee et al. show that entropy-aware methods are needed for code generation because the naive green/red mechanism can easily harm correctness or become too weak to detect \cite{lee2024code}.
+
+\section{Production watermarking: SynthID-Text}
+
+A major milestone is SynthID-Text by DeepMind \cite{dathathri2024synthid,deepmind2024blog}. At a high level, SynthID-Text modifies sampling but leaves model training unchanged. The Nature paper emphasizes four practical properties:
+\begin{enumerate}
+    \item detection without access to the underlying LLM,
+    \item minimal latency overhead,
+    \item compatibility with speculative sampling used in production systems, and
+    \item configurable \emph{distortionary} and \emph{non-distortionary} modes.
+\end{enumerate}
+The paper further reports a large live experiment on nearly 20 million Gemini responses, concluding that watermarking preserved user-perceived quality while remaining detectable \cite{dathathri2024synthid}. This is the first clear evidence that text watermarking can be deployed at product scale.
+
+\begin{remark}
+Theoretical analysis of SynthID-Text is still catching up to practice. A very recent independent analysis studies its robustness and detection rules more formally \cite{omidi2026synthid}. This is a good example of a field where engineering deployment and mathematical understanding are evolving together.
+\end{remark}
+
+\section{Limits: attacks and impossibility}
+
+No lecture on watermarking is complete without a sober discussion of what watermarking \emph{cannot} do.
+
+\begin{theorem}[Informal; ``Watermarks in the Sand'']
+Under natural assumptions giving an attacker access to:
+\begin{enumerate}
+    \item a quality oracle that can tell whether a rewritten response remains good, and
+    \item a perturbation oracle that can make local high-quality edits and induces sufficient mixing over good outputs,
+\end{enumerate}
+strong watermarking for generative models is impossible in the sense that a computationally bounded attacker can remove the watermark with only minor quality degradation \cite{zhang2024watermarkssand}.
+\end{theorem}
+
+\begin{remark}
+This theorem does \emph{not} say watermarking is useless. It says that no watermark simultaneously achieves all of the strongest possible goals against very capable rewriting attackers. In practice, watermarking can still be valuable against weaker adversaries, short editing budgets, policy enforcement settings, and source-attribution tasks where the attacker does not fully rewrite the text.
+\end{remark}
+
+A second limitation is \emph{low entropy}. If the next token is nearly forced, the watermark should not change it, so little signal is gained. A third is \emph{cross-lingual or semantic rewriting}. If the attacker can preserve meaning while changing nearly every token, zero-bit lexical detectors can fail. A fourth is \emph{trust}. Private detectors are hard to audit; public detectors are easier to reverse engineer. Finally, repeated-query behavior creates subtler issues even for some ``unbiased'' schemes, which is now an active area of study \cite{wu2025unbiased}.
+
+\section{A course-level synthesis}
+
+For teaching purposes, I recommend emphasizing the following conceptual ladder.
+
+\begin{enumerate}
+    \item \textbf{Statistical idea.} A watermark is a secret perturbation that creates a detectable excess of some event (green-token hits, score increments, signature consistency, etc.).
+    \item \textbf{Green/red mechanism.} The KGW scheme is the cleanest first example because the detector is a one-sided hypothesis test on the count of green tokens.
+    \item \textbf{Entropy dependence.} The watermark is only strong where the model has genuine freedom to choose among many tokens. This is why spike entropy enters the analysis.
+    \item \textbf{Gumbel-Max perspective.} Decoding already uses randomness. Distortionary watermarks modify probabilities; non-distortionary watermarks encode information in the randomness while preserving marginals.
+    \item \textbf{Threat models matter.} Public vs private detection, edit robustness, cross-lingual robustness, and semantic rewriting all change the correct design objective.
+    \item \textbf{No silver bullet.} Watermarking is valuable but not absolute. The right promise is auditability and source tracing under realistic attacks, not perfect identification of ``AI text'' in the wild.
+\end{enumerate}
+
+\section{Exercises}
+
+\begin{exercise}
+Let $P_t=\sum_{i\in G_t} p_t(i)$. Verify directly that under the soft red-list rule,
+\[
+Q_t-P_t = \frac{(e^{\delta}-1)P_t(1-P_t)}{1+(e^{\delta}-1)P_t}.
+\]
+Interpret this formula when $P_t\approx 0$, $P_t\approx 1$, and $P_t\approx 1/2$.
+\end{exercise}
+
+\begin{exercise}
+Under the ideal null model with green fraction $\gamma$, derive the exact one-sided binomial $p$-value for observing $C_T=c$. Compare it with the Gaussian $z$-approximation.
+\end{exercise}
+
+\begin{exercise}
+Give a second proof of the Gumbel-Max trick by differentiating
+\[
+\PrK\bigl(\argmax_i (\phi_i+G_i)=j\bigr)
+= \int_{-\infty}^{\infty} f_G(x-\phi_j) \prod_{i\ne j} F_G(x-\phi_i)\,dx.
+\]
+\end{exercise}
+
+\begin{exercise}
+Suppose a detector rejects when $Z_T > z_0$. Under the heuristic alternative $\E[Y_t]\approx \gamma+\varepsilon$ and $\Var(C_T)\approx \gamma(1-\gamma)T$, show that the expected $z$-score exceeds $z_0$ once
+\[
+T \gtrsim \frac{z_0^2\gamma(1-\gamma)}{\varepsilon^2}.
+\]
+\end{exercise}
+
+\begin{exercise}
+Why is the ICML 2026 review-policy incident not an example of decoder-level watermarking? Give a precise answer using the formal setup of these notes.
+\end{exercise}
+
+\begin{exercise}
+Formulate a multi-bit version of the watermarking problem. What should the correctness, false-positive, and message-recovery guarantees look like?
+\end{exercise}
+
+\section{Bibliographic notes}
+
+These notes are centered on the green/red framework of Kirchenbauer et al. \cite{kirchenbauer2023watermark}. For a broader survey of the space, see Liu et al. \cite{liu2024survey} and the later systematization in the SoK of AI-generated-content watermarking \cite{ren2024sok}. The current field is moving quickly, especially in cryptographic formulations, certified robustness, and production deployment.
+
+\begin{thebibliography}{99}
+
+\bibitem{kirchenbauer2023watermark}
+John Kirchenbauer, Jonas Geiping, Yuxin Wen, Jonathan Katz, Ian Miers, and Tom Goldstein.
+\newblock A watermark for large language models.
+\newblock In \emph{Proceedings of the 40th International Conference on Machine Learning (ICML)}, 2023.
+
+\bibitem{kirchenbauer2024reliability}
+John Kirchenbauer, Jonas Geiping, Yuxin Wen, Manli Shu, Khalid Saifullah, Kezhi Kong, Kasun Fernando, Aniruddha Saha, Micah Goldblum, and Tom Goldstein.
+\newblock On the reliability of watermarks for large language models.
+\newblock In \emph{International Conference on Learning Representations (ICLR)}, 2024.
+
+\bibitem{zhao2024provable}
+Xuandong Zhao, Prabhanjan Ananth, Lei Li, and Yu-Xiang Wang.
+\newblock Provable robust watermarking for AI-generated text.
+\newblock In \emph{International Conference on Learning Representations (ICLR)}, 2024.
+
+\bibitem{kuditipudi2024distortionfree}
+Rohith Kuditipudi, John Thickstun, Tatsunori Hashimoto, and Percy Liang.
+\newblock Robust distortion-free watermarks for language models.
+\newblock \emph{Transactions on Machine Learning Research}, 2024.
+
+\bibitem{christ2024undetectable}
+Miranda Christ, Sam Gunn, and Or Zamir.
+\newblock Undetectable watermarks for language models.
+\newblock In \emph{Conference on Learning Theory (COLT)}, 2024.
+
+\bibitem{liu2024sir}
+Aiwei Liu, Leyi Pan, Xuming Hu, Shiao Meng, and Lijie Wen.
+\newblock A semantic invariant robust watermark for large language models.
+\newblock In \emph{International Conference on Learning Representations (ICLR)}, 2024.
+
+\bibitem{he2024translation}
+Zhiwei He, Binglin Zhou, Hongkun Hao, Aiwei Liu, Xing Wang, Zhaopeng Tu, Zhuosheng Zhang, and Rui Wang.
+\newblock Can watermarks survive translation? On the cross-lingual consistency of text watermark for large language models.
+\newblock In \emph{Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (ACL)}, 2024.
+
+\bibitem{fairoze2024public}
+Javed Fairoze, Pratyush Maini, Nicolas Papernot, and others.
+\newblock Publicly-detectable watermarking for language models.
+\newblock arXiv:2310.18491, 2024.
+
+\bibitem{liu2024upv}
+Aiwei Liu, Leyi Pan, Shuang Li, Xuming Hu, Lijie Wen, Irwin King, and Philip S. Yu.
+\newblock An unforgeable publicly verifiable watermark for large language models.
+\newblock In \emph{International Conference on Learning Representations (ICLR)}, 2024.
+
+\bibitem{piet2023markmywords}
+Julien Piet, Chawin Sitawarin, Vivian Fang, Norman Mu, and David Wagner.
+\newblock Mark my words: Analyzing and evaluating language model watermarks.
+\newblock arXiv:2312.00273, 2023.
+
+\bibitem{lee2024code}
+Taehyun Lee, Seokhee Hong, Jaewoo Ahn, Ilgee Hong, Hwaran Lee, Sangdoo Yun, Jamin Shin, and Gunhee Kim.
+\newblock Who wrote this code? Watermarking for code generation.
+\newblock In \emph{Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (ACL)}, 2024.
+
+\bibitem{dathathri2024synthid}
+Sumanth Dathathri, Nicholas Carlini, Eshaan Nichani, et al.
+\newblock Scalable watermarking for identifying large language model outputs.
+\newblock \emph{Nature}, 634, 2024.
+
+\bibitem{deepmind2024blog}
+Google DeepMind.
+\newblock Watermarking AI-generated text and video with SynthID.
+\newblock Blog post, 2024. Available at \url{https://deepmind.google/blog/watermarking-ai-generated-text-and-video-with-synthid/}.
+
+\bibitem{omidi2026synthid}
+Romina Omidi, Yun Dong, and Binghui Wang.
+\newblock On Google's SynthID-Text LLM watermarking system: Theoretical analysis and empirical validation.
+\newblock arXiv:2603.03410, 2026.
+
+\bibitem{feng2024certified}
+Xianheng Feng, Jian Liu, Kui Ren, and Chun Chen.
+\newblock A certified robust watermark for large language models.
+\newblock arXiv:2409.19708, 2024.
+
+\bibitem{zhang2024watermarkssand}
+Hanlin Zhang, Benjamin L. Edelman, Danilo Francati, Daniele Venturi, Giuseppe Ateniese, and Boaz Barak.
+\newblock Watermarks in the sand: Impossibility of strong watermarking for generative models.
+\newblock In \emph{Proceedings of the 41st International Conference on Machine Learning (ICML)}, 2024.
+
+\bibitem{qu2024multibit}
+Wenjie Qu, Wengrui Zheng, Tianyang Tao, Dong Yin, Yanze Jiang, Zhihua Tian, Wei Zou, Jinyuan Jia, and Jiaheng Zhang.
+\newblock Provably robust multi-bit watermarking for AI-generated text.
+\newblock arXiv:2401.16820, 2024.
+
+\bibitem{liu2024survey}
+Aiwei Liu, Leyi Pan, Yijian Lu, Jingjing Li, Xuming Hu, Xi Zhang, Lijie Wen, Irwin King, Hui Xiong, and Philip S. Yu.
+\newblock A survey of text watermarking in the era of large language models.
+\newblock \emph{ACM Computing Surveys}, 2024.
+
+\bibitem{ren2024sok}
+Kui Ren, Jiaxin Gu, and others.
+\newblock SoK: Watermarking for AI-generated content.
+\newblock arXiv:2411.18479, 2024.
+
+\bibitem{wu2025unbiased}
+Yihan Wu, Xuehao Cui, Ruibo Chen, and Heng Huang.
+\newblock Analyzing and evaluating unbiased language model watermark.
+\newblock arXiv:2509.24048, 2025.
+
+\bibitem{icml2025ethics}
+ICML 2025 Organizing Committee.
+\newblock Publication Ethics 2025.
+\newblock Conference policy page, 2025. Available at \url{https://icml.cc/Conferences/2025/PublicationEthics}.
+
+\bibitem{icml2026violations}
+ICML 2026 Program Chairs and Integrity Chair.
+\newblock On violations of LLM review policies.
+\newblock ICML Blog, 2026. Available at \url{https://blog.icml.cc/2026/03/18/on-violations-of-llm-review-policies/}.
+
+\bibitem{icml2026faq}
+ICML 2026 Organizing Committee.
+\newblock ICML 2026 Peer Review FAQ.
+\newblock Conference FAQ, 2026. Available at \url{https://icml.cc/Conferences/2026/PeerReviewFAQ}.
+
+\bibitem{icml2026policy}
+ICML 2026 Organizing Committee.
+\newblock ICML 2026 policy for LLM use in reviewing.
+\newblock Conference policy page, 2026. Available at \url{https://icml.cc/Conferences/2026/LLM-Policy}.
+
+\bibitem{iclr2026response}
+ICLR 2026 Program Chairs.
+\newblock ICLR 2026 response to LLM-generated papers and reviews.
+\newblock ICLR Blog, 2025. Available at \url{https://blog.iclr.cc/2025/11/19/iclr-2026-response-to-llm-generated-papers-and-reviews/}.
+
+\bibitem{iclr2026authorguide}
+ICLR 2026 Organizing Committee.
+\newblock ICLR 2026 Author Guide.
+\newblock Conference guide, 2026. Available at \url{https://iclr.cc/Conferences/2026/AuthorGuide}.
+
+\end{thebibliography}
+\end{document}

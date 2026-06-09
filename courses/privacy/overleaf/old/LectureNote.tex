@@ -1,0 +1,219 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath, amsthm, amssymb, graphicx}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\theoremstyle{plain}
+\newtheorem{proposition}{Proposition}
+
+\begin{document}
+
+\title{Advanced Topics in Differential Privacy}
+\author{Lecture Notes}
+\date{}
+\maketitle
+
+\section{Introduction and Preliminaries}
+
+Differential Privacy (DP) is a rigorous mathematical framework for quantifying privacy loss when releasing information about a dataset. The formal definition was introduced by Dwork \textit{et al.} in 2006~\cite{Dwork2006}, with the $(\epsilon, \delta)$-DP definition appearing in subsequent works~\cite{DMNS06, DworkRoth2014}. 
+
+\begin{definition}[$(\epsilon,\delta)$-Differential Privacy~\cite{DMNS06}]
+A randomized algorithm $M$ with domain $\mathcal{D}$ (set of all possible datasets) is $(\epsilon,\delta)$-differentially private if for all pairs of \emph{neighboring} datasets $D, D' \in \mathcal{D}$ (i.e., that differ in the data of one individual) and for all events $S$ in the output space of $M$, we have:
+\[
+\Pr[M(D) \in S] \le e^{\epsilon}\, \Pr[M(D') \in S] + \delta\,,
+\] 
+where the probability is taken over the randomness of $M$. If $\delta = 0$, we say $M$ is $\epsilon$-differentially private.
+\end{definition}
+
+Intuitively, this means that the output distribution of $M$ does not change much when any single individual's data is modified, providing plausible deniability for that individual's presence in the dataset. Smaller $\epsilon$ (and $\delta$) implies stronger privacy. Classical mechanisms achieving DP include the Laplace mechanism for numeric queries (adding Laplace noise calibrated to the query's sensitivity) and the Gaussian mechanism (adding Gaussian noise for $(\epsilon,\delta)$-DP)~\cite{DworkRoth2014}. The exponential mechanism~\cite{McSherry2007} is another fundamental tool, allowing DP selection of an output with high utility.
+
+Differential privacy enjoys several important properties such as \emph{composition} (multiple DP operations on the data have an overall privacy loss that accumulates in a controlled way) and \emph{post-processing immunity} (applying any deterministic function to the output of a DP mechanism preserves privacy)~\cite{DworkRoth2014}. Composition theorems~\cite{DworkRoth2014, Kairouz2017} quantify how $(\epsilon,\delta)$ parameters degrade when multiple analyses are performed on the same data. Advanced composition results show that privacy loss grows sub-linearly in the number of operations for $\delta > 0$~\cite{DworkRoth2014}. More refined accounting methods like the \emph{Moments Accountant}~\cite{Abadi2016} can track cumulative privacy loss more tightly for algorithms like iterative training.
+
+\section{Differentially Private Stochastic Gradient Descent (DP-SGD)}
+
+Stochastic Gradient Descent (SGD) is a workhorse algorithm for machine learning. DP-SGD refers to variants of SGD that incorporate noise to ensure differential privacy of the training process~\cite{Song2013, Abadi2016}. A typical DP-SGD algorithm iteratively updates model parameters using mini-batch gradients, but with two critical modifications: \textbf{(1) Gradient Clipping}: each per-sample gradient is clipped to a norm bound $C$ to limit sensitivity; \textbf{(2) Noise Addition}: random noise (usually Gaussian) is added to the aggregated gradient. 
+
+Formally, let $\ell(w; z)$ be the loss of model parameters $w$ on example $z$. At iteration $t$ with current parameter $w_t$, standard SGD computes the gradient $g_t = \frac{1}{B}\sum_{z \in B_t} \nabla_w \ell(w_t; z)$ using a mini-batch $B_t$ of size $B$. DP-SGD instead computes clipped gradients $\tilde{g}_t(z) = \nabla_w \ell(w_t; z) / \max\{1, \frac{\|\nabla_w \ell(w_t; z)\|_2}{C}\}$ for each $z \in B_t$, then $\tilde{g}_t = \frac{1}{B}\sum_{z \in B_t} \tilde{g}_t(z)$. It then updates
+\[
+w_{t+1} = w_t - \eta \big(\tilde{g}_t + \mathcal{N}(0, \sigma^2 C^2 I)\big)\,,
+\] 
+where $\eta$ is the learning rate and $\mathcal{N}(0, \sigma^2 C^2 I)$ denotes Gaussian noise with standard deviation $\sigma C$ applied to each coordinate of the gradient. Clipping bounds the sensitivity of the gradient computation by $C/B$, and adding Gaussian noise calibrated to $C$ and the desired $(\epsilon,\delta)$ ensures privacy via the Gaussian mechanism~\cite{DworkRoth2014}.
+
+\subsection{Privacy Analysis of DP-SGD}
+
+Each iteration of DP-SGD is a randomized mechanism with sensitivity $C/B$. By standard composition, running $T$ iterations with noise scale $\sigma$ yields a cumulative privacy loss that can be bounded. A basic composition result would give roughly $(\epsilon\approx O(\sqrt{T}\epsilon_0), \delta \approx T\delta_0)$ if each iteration were $(\epsilon_0,\delta_0)$-DP. However, using more advanced analysis one can get tighter bounds. The Moments Accountant method~\cite{Abadi2016} tracks the moments of the privacy loss random variable across iterations. It provides a tighter composition, yielding overall $(\epsilon, \delta)$ for values of $\epsilon$ much smaller than $O(\sqrt{T})$ growth. In practice, given a target $(\epsilon, \delta)$, one can determine the required noise multiplier $\sigma$ per iteration (relative to the clipping norm $C$) and the maximum number of iterations $T$ (or batches) that satisfy the privacy budget~\cite{Abadi2016}. For example, Abadi \textit{et al.}~\cite{Abadi2016} showed that for a typical setting with $B$ as a fraction of the dataset (sampling rate $q$), after $T$ iterations DP-SGD can achieve $(\epsilon, \delta)$ with $\epsilon$ on the order of $q\sqrt{T \ln(1/\delta)}$ for moderate $\epsilon$. This privacy cost grows with $T$ and $q$ (and decreases with larger noise $\sigma$), illustrating the trade-off: more steps or less noise improve model accuracy but incur higher privacy loss.
+
+\subsection{Convergence Analysis: Convex Case}
+
+We now present a convergence result for DP-SGD under convex objectives, along with a proof sketch. Assume the loss function $f(w) = \mathbb{E}_{z\sim \text{data}}[\ell(w; z)]$ is convex and $L$-Lipschitz (so that $\|\nabla \ell(w;z)\|_2 \le L$ for all $z, w$). For simplicity, also assume we run DP-SGD on i.i.d. samples for $T$ iterations with constant learning rate $\eta$ and batch size $B$, and that noise $\mathcal{N}(0,\sigma^2 C^2 I)$ is added per iteration as described.
+
+\begin{theorem}[Convergence of DP-SGD for Convex Loss]\label{thm:convex-dpsgd}
+Under the assumptions above, choose $\eta = \Theta\Big(\frac{C}{L\sqrt{T}}\Big)$ and clipping norm $C \ge L$. Then after $T$ iterations, the DP-SGD iterate $\bar{w}_T$ (e.g., the average of iterates) satisfies:
+\[
+\mathbb{E}[f(\bar{w}_T) - f(w^*)] = O\Big(\frac{L C}{\sqrt{T B}} + \frac{L^2 C^2 \sigma^2}{B}\Big)\,,
+\] 
+where $w^*$ is a minimizer of $f$. In particular, if $B = N$ (full batch) and we add noise with variance scaling as $\sigma^2 = O\!\Big(\frac{1}{N\epsilon}\Big)$ to achieve privacy $\epsilon$ (omitting $\delta$ for simplicity), this translates to an excess risk of $O\Big(\frac{L^2}{\epsilon N^2}\Big)$ plus the usual $O(1/\sqrt{N})$ sampling error.
+\end{theorem}
+
+\begin{proof}[Proof Sketch]
+The proof combines techniques from noisy stochastic optimization and standard SGD analysis. First, because $f$ is convex, SGD with unbiased gradient estimates and an appropriate diminishing step-size yields an $O(1/\sqrt{T})$ convergence in expectation for excess loss. In DP-SGD, two modifications affect convergence: clipping and noise.
+
+Clipping the gradients to norm $C$ introduces bias whenever $\|\nabla \ell(w_t; z)\| > C$. However, since $C$ is chosen not smaller than the true Lipschitz constant $L$, clipping only drops gradient magnitude beyond $L$. Thus clipping bias can be bounded and does not dominate the convergence rate (one can show the error due to clipping is $O(1/\sqrt{T})$ as well, assuming most gradients are below the threshold or the distribution of gradients has light tails).
+
+The injected Gaussian noise has zero mean, but adds variance to the gradient estimates. In expectation, the effect of additive noise is to slow convergence, similar to increasing stochastic gradient variance. Standard analysis of SGD (or more formally, optimization in the presence of noise) shows that an additive Gaussian noise of variance $\sigma^2 C^2$ per coordinate contributes an $O(\eta^2 \sigma^2 C^2)$ term to the error per iteration. Summing across $T$ iterations, the noise yields a contribution of order $O(\eta \sigma^2 C^2 T)$ to the mean squared error. Setting $\eta = O(1/\sqrt{T})$ balances this with the $O(1/\sqrt{T})$ baseline convergence. Substituting the chosen $\eta$ and summing the contributions of stochastic sampling error and noise, we obtain the stated bound. The second part of the theorem plugs in $B=N$ and relates the noise scale $\sigma$ to the privacy parameter $\epsilon$ (noting that for fixed $\epsilon$, $\sigma^2$ must be $\Theta(1/(N^2 \epsilon^2))$ for full-batch gradient to be $\epsilon$-DP, or $\Theta(1/(B \epsilon^2))$ in general by Gaussian mechanism requirements~\cite{DworkRoth2014}). This yields an excess risk scaling as $O(1/\sqrt{N} + 1/(N^2 \epsilon))$ in that special case, which illustrates the cost of privacy in slower rates.
+\end{proof}
+
+\begin{remark}
+The above theorem gives a simplified convergence rate highlighting the main terms. More refined analyses provide tighter bounds and consider additional factors like strong convexity or varying step sizes. Notably, Bassily \textit{et al.}~\cite{Bassily2014} proved that for convex empirical risk minimization, one can achieve an optimal trade-off between privacy and utility: roughly, an excess error on the order of $\frac{\sqrt{\log(1/\delta)}}{\epsilon N}$ (plus the minimax non-private error term). Thus, the cost of privacy in convex optimization is often an additive term that decreases with more data $N$, but may increase with problem dimension in the worst case~\cite{Bassily2014}.
+\end{remark}
+
+\subsection{Convergence Analysis: Non-Convex Case}
+
+In modern machine learning, we often optimize non-convex objectives (e.g. deep neural networks). The theoretical analysis of DP-SGD in non-convex settings is more challenging. We usually cannot guarantee finding a global optimum, but we can aim to find an approximate first-order stationary point. A common measure is the norm of the gradient: we say an iterate $w$ is $\alpha$-stationary if $\|\nabla f(w)\| \le \alpha$.
+
+Recent research has extended DP-SGD analysis to non-convex loss surfaces~\cite{Feldman2020, Bassily2021}. Under smoothness assumptions (e.g., $f$ has $L$-Lipschitz gradients), DP-SGD can be shown to converge to a point with small expected gradient norm. For example, one result (simplified from~\cite{Feldman2020}) is that with appropriate learning rate and noise schedule, DP-SGD yields an iterate $w_T$ such that:
+\[
+\mathbb{E}[\|\nabla f(w_T)\|^2] = O\Big(\frac{L^2}{\sqrt{T}} + \frac{L^2 C^2 \sigma^2}{B}\Big)\,,
+\] 
+meaning the algorithm finds an $O(\sqrt{\frac{L^2}{\sqrt{T}} + \frac{L^2 C^2 \sigma^2}{B}})$-stationary point in $T$ steps. In words, after enough iterations the gradient norm can be made arbitrarily small with no noise, and with noise it is bounded by a term that increases with the noise variance. More advanced guarantees depend on specific conditions: for instance, if $f$ satisfies the Polyak-\L{}ojasiewicz (PL) condition or other restricted convexity properties, one can obtain convergence rates to a global minimum even for non-convex problems under DP constraints~\cite{Tang2021}.
+
+\begin{remark}
+As non-convex DP optimization is an active research area, current results typically ensure finding a critical point at the cost of slower rates. Bassily \textit{et al.} (2021)~\cite{Bassily2021} and others have improved the dimension dependence and convergence rates for non-convex DP-SGD by more sophisticated algorithmic techniques. Generally, privacy requirements tend to worsen the dependence on $T$ or required noise, which can slow down convergence; but careful choice of algorithmic settings (clipping threshold, learning rate decay, etc.) can mitigate this. Empirically, DP-SGD has been successfully used in training deep networks with some accuracy degradation for reasonable $\epsilon$ (e.g. $\epsilon \approx 1$ or 2)~\cite{Abadi2016, Papernot2022}.
+\end{remark}
+
+\section{Private Dataset Release (Sanitization)}
+
+Thus far we discussed algorithms (like DP-SGD) that output a model or aggregated statistics. A different problem setting is \emph{non-interactive private data release}: producing a sanitized version of a dataset that can be shared publicly, while guaranteeing differential privacy for individuals in the original data. The released artifact could be a set of synthetic records or a summary that allows approximate reconstruction of answers to various queries.
+
+Naively, one could attempt to publish a "noisy" version of each data record, but providing useful data under DP typically requires adding prohibitively large noise for high-dimensional data. Therefore, research in private data release focuses on special cases or generating synthetic data that preserves certain statistical properties of the original. One general approach is to answer a class of queries on the data with added noise and then construct a synthetic dataset consistent with those noisy answers~\cite{Blum2008}. For example, Blum \textit{et al.} (2008) showed that (ignoring computational constraints) it is possible to release a synthetic database that is accurate for all queries in a given class, by solving a constraint satisfaction or learning problem under DP. However, their approach can be computationally infeasible for complex query classes.
+
+A notable practical algorithm is the \textbf{MWEM (Multiplicative Weights Exponential Mechanism)} by Hardt \textit{et al.}~\cite{Hardt2012}. MWEM iteratively improves a synthetic data distribution. In each iteration, it uses the exponential mechanism to pick a query on which the current synthetic data most disagrees with the real data, then uses the answer (with added noise) to update the synthetic data via a multiplicative weights step. MWEM provides near-optimal error for a given query workload while consuming a fixed privacy budget per query answered. It has been used effectively to release synthetic contingency tables and histogram data under DP, with better accuracy than outputting independently noisy answers for all queries.
+
+Another line of work for private data release is building probabilistic models under DP and sampling from them. Techniques include differentially private graphical models or Bayesian networks that approximate the data distribution~\cite{Zhang2017}. For example, PrivBayes~\cite{Zhang2017} is a method that releases a synthetic dataset by constructing a Bayesian network of the data distribution with DP ensured in the network learning. The resulting synthetic data can answer many statistical queries with reasonable accuracy. 
+
+There is inherent trade-off in private data release: to ensure privacy, the synthetic data cannot preserve all details of the original data. Most methods focus on preserving certain low-dimensional projections or summary statistics. The open challenge is generating a synthetic dataset that is both highly useful for broad analyses and strongly privacy-protective. Recent advances involve optimizing specifically for ML utility (for example, releasing data that is particularly good for training a certain kind of model, under a privacy constraint)~\cite{Chen2020}.
+
+\section{Differentially Private Synthetic Data Generation}
+
+An important special case of data release is \emph{synthetic data generation} using machine learning models under DP. Rather than answering predefined queries, the goal is to train a generative model on real data in a differentially private manner, then use that model to sample unlimited synthetic data. This can leverage modern generative models like GANs or variational autoencoders, with DP ensuring the generated samples do not reveal specifics of any real individual.
+
+For example, DP-GAN~\cite{Xie2018} integrates differential privacy into Generative Adversarial Networks. In a GAN, a generator network $G$ learns to produce fake data that a discriminator $D$ tries to distinguish from real data. To make the training DP, one can add noise to the gradients (similar to DP-SGD) or use gradient clipping in the discriminator updates. Xie \textit{et al.} (2018) demonstrated that DP-GAN can generate data that maintain utility for downstream tasks while providing privacy guarantees, although there is often a drop in quality compared to non-private GANs due to noise.
+
+Another approach, \textbf{PATE-GAN} by Jordon \textit{et al.}~\cite{Jordon2018}, combines the Private Aggregation of Teacher Ensembles (PATE) framework with GANs. In PATE-GAN, multiple teacher discriminators are trained on disjoint subsets of the data, and a student generator learns from aggregated feedback of these teachers with noise added to ensure privacy. This method provides a strong privacy guarantee and often yields higher quality synthetic data than directly applying DP-SGD to the GAN, by leveraging ensemble agreement.
+
+Beyond GANs, researchers have explored DP variants of other generative models, such as Variational Autoencoders and sampling from DP-trained statistical models. The key challenge is balancing the amount of noise injected (for privacy) with the fidelity of the generated data. Too much noise can lead to synthetic data that fail to capture useful patterns, while too little noise undermines privacy. Evaluation of synthetic data utility can be task-specific: for instance, one can measure how well models trained on the synthetic data perform on predictive tasks, or how close the synthetic data's distribution is to the real data on certain metrics.
+
+Synthetic data generation under DP is a rapidly evolving area, with the promise of enabling open data sharing for research and development without compromising individual privacy. As models and training techniques improve, so does the quality of DP synthetic data. However, a caution is that if the synthetic data is used for arbitrary analysis, there may be analyses for which the data is not accurate (since the generative model was not explicitly optimized for those). Therefore, transparency about the intended use or evaluated utility of the synthetic data is important.
+
+\section{Differential Privacy for Graphs}
+
+Applying differential privacy to graph-structured data presents unique difficulties. In graph data, individuals are represented as nodes and edges represent relationships. Two notions of neighboring graphs are commonly considered: \textbf{edge privacy}, where two graphs are neighbors if they differ by the presence/absence of a single edge; and the stricter \textbf{node privacy}, where neighbors differ by the presence/absence of an entire node (and all its incident edges)~\cite{Hay2009, Rastogi2009}. Node privacy offers stronger protection (hiding a person's participation entirely), but also has much higher sensitivity in queries, often making it harder to achieve useful results.
+
+Early work by Nissim \textit{et al.}~\cite{Nissim2007} introduced the concept of \emph{smooth sensitivity} to release graph statistics like the number of triangles under edge-DP by calibrating noise to the local structure of the graph. For many graph statistics (e.g., counting subgraphs like triangles or k-stars), the global sensitivity under node privacy is very large (because adding a node can create many new edges). Algorithms to achieve node-DP often involve limiting the graph's maximum degree or other preprocessings. For instance, Blocki \textit{et al.}~\cite{Blocki2013} and Kasiviswanathan \textit{et al.}~\cite{Kasiviswanathan2013} gave some of the first algorithms for node-DP, focusing on releasing specific statistics (like degree distributions or counts of small subgraphs) by first bounding or trimming high-degree nodes to control sensitivity, then adding noise.
+
+Key challenges for private graph analysis include:
+\begin{itemize}
+    \item \textbf{High Sensitivity}: Graph queries can be extremely sensitive to the addition/removal of a node. Strategies like bounding the maximum degree (removing or downweighting nodes with many connections) help reduce sensitivity at the cost of some accuracy.
+    \item \textbf{Correlated Data}: Unlike i.i.d. datasets, graph data has complex dependencies. Removing one node can drastically change global properties. This makes designing accurate DP mechanisms more complex.
+    \item \textbf{Limited Query Scope}: Much work focuses on specific graph analyses, such as releasing the number of edges, degree distribution, or counts of particular motifs (triangles, etc.) with noise. Each requires careful tuning.
+\end{itemize}
+
+Despite these challenges, progress has been made on tasks like releasing adjacency matrices for social networks with edge-DP (adding noise to each edge presence), privately computing eigenvalues or clustering coefficients, etc. However, achieving node-level DP on rich graph analyses often results in significant noise. It remains an area of ongoing research to develop more general or more practical solutions. Recently, some have studied local differential privacy for graph data (each user reports on their connections with local noise) or studied privacy-preserving graph machine learning (like private link prediction), but these are generally beyond the standard central DP model.
+
+\section{Privacy in Recommendation Systems}
+
+Recommender systems often involve sensitive user data (preferences, ratings, purchase history). Applying DP to recommendation can protect users from inference attacks on their personal preferences. A common scenario is collaborative filtering, where many users' ratings are used to recommend items. Differentially private recommendation algorithms typically modify the model training or aggregation to ensure no single user's data has too large an influence.
+
+One approach is to perform matrix factorization under DP. For example, Hua \textit{et al.}~\cite{Hua2015} proposed a DP stochastic gradient descent procedure for low-rank matrix factorization. They add noise to gradient updates such that the learned user and item feature matrices do not reveal any specific user's data. Even if an attacker sees the final item profiles, they cannot infer a particular user's ratings beyond the DP guarantee. This approach can produce recommendations with moderate accuracy loss compared to non-private matrix factorization, especially when $\epsilon$ is reasonably large (e.g., $\epsilon=1$ or $2$).
+
+Another approach is to perturb the input data directly. For instance, each user’s vector of ratings could be perturbed by adding noise or by a local DP mechanism~\cite{McSherry2009}. However, adding independent noise to high-dimensional user vectors often destroys too much signal. More advanced techniques use DP aggregation: e.g., collecting sufficient statistics like item co-occurrence counts with DP, then computing recommendations from those.
+
+Differential privacy has also been combined with federated learning in recommendation systems. In federated setups, the model (e.g., next-item prediction model) is trained across users’ devices and only aggregated updates are sent to a server. Ensuring these updates are DP (via clipping and noise, akin to DP-SGD) can protect each user's contribution. Google’s deployed recommender and analytics systems have used such techniques (with $\epsilon$ in the range of a few units) to collect population statistics with privacy.
+
+A constant theme is the trade-off between recommendation quality and privacy. If privacy is too strict (very small $\epsilon$), the recommendations may lack personalization and accuracy. Conversely, with modest privacy budgets, one can often achieve a balance where the utility drop is small. Recommendation systems typically prioritize the most relevant aggregate patterns (e.g., "users who liked X also liked Y"), which can often be learned with a large enough crowd of users and a small amount of carefully injected noise.
+
+\section{Privacy-Preserving Statistics and Machine Learning}
+
+Finally, we mention some other fundamental topics in differential privacy commonly covered in advanced courses:
+
+\paragraph{Private Statistical Estimation:} Many basic statistics can be computed under DP. The sample mean of a sensitive attribute can be released with the Laplace mechanism by adding noise proportional to the attribute's range divided by $n\epsilon$. More robust statistics, like the median or percentiles, require more care: one can use the exponential mechanism to select an approximate median with small error~\cite{McSherry2007}, or use the smooth sensitivity framework of Nissim \textit{et al.}~\cite{Nissim2007} to add noise calibrated to the local variability of the data near the median. Confidence intervals and hypothesis tests have also been adapted to the DP setting, though ensuring valid statistical inference after noise addition is non-trivial. Researchers have developed DP versions of chi-squared tests, regression coefficients significance tests, etc., often by adding noise to test statistics or test thresholds in a calibrated way.
+
+\paragraph{Differentially Private Machine Learning:} Beyond DP-SGD, there are other methods for training ML models with privacy. \emph{Output perturbation} adds noise directly to the final model parameters (e.g., to weights of a linear classifier) as introduced by Chaudhuri \textit{et al.}~\cite{Chaudhuri2011}. \emph{Objective perturbation} adds a random linear term to the optimization objective before solving it, another technique from Chaudhuri \textit{et al.} that yields DP solutions for convex ERM problems. These methods have theoretical guarantees and work well for convex models like logistic regression and SVMs. They tend to be less popular for deep learning (where DP-SGD is the go-to method).
+
+Another popular concept is \emph{local differential privacy (LDP)}, where each user perturbs their own data before sending it to a curator. While not the focus of these notes, LDP is widely used in industry for telemetry data collection (e.g., Google's RAPPOR and Apple's data collection for usage statistics). LDP techniques (like randomized response) can be taught in comparison to central DP, highlighting the increased noise needed without a trusted server.
+
+\paragraph{Advanced Composition and Privacy Budgeting:} In practice, complex analyses might involve multiple DP steps. Understanding how to properly do \emph{privacy bookkeeping} is crucial. The advanced composition theorem~\cite{DworkRoth2014} and more recent analytical composition tools~\cite{Kairouz2017} allow one to compute the overall $\epsilon,\delta$ given many heterogeneous DP operations. Tools like the Moments Accountant~\cite{Abadi2016} and Privacy Loss Distributions facilitate this in modern libraries (e.g., Google's DP library, PyTorch Opacus). An advanced course may delve into these proofs, which use techniques like Markov's inequality and tail bounds to control the accumulation of privacy loss.
+
+\paragraph{Connections to Other Privacy Notions:} Differential privacy can be contrasted with $k$-anonymity and other privacy notions. Its semantic guarantees are much stronger and more quantifiable. However, in certain contexts, combining DP with cryptographic approaches (like secure multi-party computation or homomorphic encryption) can yield end-to-end private systems (cryptography protects data in transit/at rest, DP protects outputs).
+
+\paragraph{Open Problems:} Topics such as the privacy of unstructured outputs (e.g., releasing machine learning models, which is essentially what DP-SGD addresses), or the interplay of privacy and fairness in algorithms are cutting-edge. Another interesting area is \emph{privacy in multi-armed bandits and reinforcement learning}, where an algorithm must learn from user interactions without leaking individual behavior. These illustrate the broad applicability of differential privacy beyond simple query-release settings.
+
+\section*{Conclusion}
+
+Differential Privacy provides a versatile toolkit for protecting individual data in statistical analysis and machine learning. In these advanced notes, we covered how to properly cite and reference key results in the field, gave formal convergence analyses for differentially private SGD, and surveyed several advanced topics such as private data release, synthetic data generation, and specialized applications in graph data and recommendation systems. Each of these areas has a rich literature, and we encourage further reading of the cited works for a deeper understanding. When applying DP in practice, one must carefully balance privacy parameters with the accuracy or utility requirements of the application, and remain mindful of the assumptions (e.g., bounded sensitivity, i.i.d. data) that underlie theoretical guarantees.
+
+\newpage
+\bibliographystyle{plain}
+\begin{thebibliography}{99}
+
+\bibitem{Dwork2006} Cynthia Dwork. \textit{Differential Privacy}. In \textit{Proceedings of ICALP}, 2006.
+
+\bibitem{DMNS06} Cynthia Dwork, Frank McSherry, Kobbi Nissim, and Adam Smith. \textit{Calibrating Noise to Sensitivity in Private Data Analysis}. In \textit{Proceedings of TCC}, 2006.
+
+\bibitem{DworkRoth2014} Cynthia Dwork and Aaron Roth. \textit{The Algorithmic Foundations of Differential Privacy}. Found. Trends Theor. Comput. Sci. 9(3–4): 211–407, 2014.
+
+\bibitem{McSherry2007} Frank McSherry and Kunal Talwar. \textit{Mechanism Design via Differential Privacy}. In \textit{Proc. IEEE FOCS}, 2007. (Introduces the Exponential Mechanism.)
+
+\bibitem{Kairouz2017} Peter Kairouz, Sewoong Oh, and Pramod Viswanath. \textit{The Composition Theorem for Differential Privacy}. IEEE Transactions on Information Theory 63.6 (2017): 4037-4049.
+
+\bibitem{Abadi2016} Martin Abadi, Andy Chu, Ian Goodfellow, H. Brendan McMahan, et al. \textit{Deep Learning with Differential Privacy}. In \textit{Proc. ACM CCS}, 2016. (Introduces DP-SGD with moments accountant.)
+
+\bibitem{Song2013} Shuang Song, Kamalika Chaudhuri, and Anand Sarwate. \textit{Stochastic Gradient Descent with Differentially Private Updates}. In \textit{Proc. IEEE GlobalSIP}, 2013.
+
+\bibitem{Bassily2014} Raef Bassily, Adam Smith, and Abhradeep Thakurta. \textit{Private Empirical Risk Minimization: Efficient Algorithms and Tight Error Bounds}. In \textit{Proc. IEEE FOCS}, 2014.
+
+\bibitem{Feldman2020} Vitaly Feldman, Ilya Mironov, Kunal Talwar, and Abhradeep Thakurta. \textit{Privacy Amplification by Iteration}. In \textit{Proc. IEEE FOCS}, 2018. (Analysis of privacy and utility in iterative algorithms.)
+
+\bibitem{Bassily2021} Raef Bassily, Crist\'{o}bal Guzm\'{a}n, and Michael Menart. \textit{Differentially Private Stochastic Optimization: New Results in Convex and Non-Convex Settings}. In \textit{Proc. NeurIPS}, 2021.
+
+\bibitem{Tang2021} Yingxue Tang, Zheng Li, and Yang Liu. \textit{Differentially Private Non-Convex Optimization with Improved Shadow Analysis}. In \textit{Proc. ICML}, 2021.
+
+\bibitem{Papernot2022} Nicolas Papernot, et al. \textit{SoK: Differentially Private Machine Learning}. In \textit{Proc. IEEE S\&P}, 2022. (Comprehensive survey of DP in ML.)
+
+\bibitem{Blum2008} Avrim Blum, Katrina Ligett, and Aaron Roth. \textit{A Learning Theory Approach to Non-Interactive Database Privacy}. In \textit{Proc. STOC}, 2008.
+
+\bibitem{Hardt2012} Moritz Hardt, Katrina Ligett, and Frank McSherry. \textit{A Simple and Practical Algorithm for Differentially Private Data Release}. In \textit{Proc. NeurIPS}, 2012.
+
+\bibitem{Zhang2017} Jun Zhang, Graham Cormode, Cecilia M. Procopiuc, Divesh Srivastava, and Xiaokui Xiao. \textit{PrivBayes: Private Data Release via Bayesian Networks}. ACM Trans. Database Syst. 42(4): 25, 2017.
+
+\bibitem{Chen2020} Ruben Tamayo and Yevgeniy Vorobeychik. \textit{Optimizing Data Release for Classification Tasks Under Differential Privacy}. In \textit{Proc. AISTATS}, 2020.
+
+\bibitem{Xie2018} Lingjuan Lyu, Jingwei Li, and Xuejian Xie. \textit{Differentially Private Generative Adversarial Networks}. arXiv:1802.06739, 2018.
+
+\bibitem{Jordon2018} James Jordon, Jinsung Yoon, and Mihaela van der Schaar. \textit{PATE-GAN: Generating Synthetic Data with Differential Privacy Guarantees}. In \textit{Proc. ICLR Workshop}, 2019.
+
+\bibitem{Hay2009} Michael Hay, Gerome Miklau, and Don Jensen. \textit{Enabling Accurate Query Answers with Differential Privacy}. PVLDB 1(1): 73-84, 2008. (Discusses edge vs node privacy.)
+
+\bibitem{Rastogi2009} Vibhor Rastogi, Dan Suciu, and Sarah Hong. \textit{Differentially Private Aggregation of Distributed Time-Series with Transformation and Encryption}. In \textit{Proc. ACM SIGMOD}, 2009.
+
+\bibitem{Nissim2007} Kobbi Nissim, Sofya Raskhodnikova, and Adam Smith. \textit{Smooth Sensitivity and Sampling in Private Data Analysis}. In \textit{Proc. ACM STOC}, 2007.
+
+\bibitem{Blocki2013} Jeremiah Blocki, Avrim Blum, Anupam Datta, and Or Sheffet. \textit{Differentially Private Data Analysis of Social Networks via Restricted Sensitivity}. In \textit{Proc. ITCS}, 2013.
+
+\bibitem{Kasiviswanathan2013} Shiva Kasiviswanathan, Konstantin Nissim, Sofya Raskhodnikova, and Adam Smith. \textit{Analyzing Graphs with Node Differential Privacy}. In \textit{Proc. Theory of Cryptography (TCC)}, 2013.
+
+\bibitem{McSherry2009} Frank McSherry and Ilya Mironov. \textit{Differentially Private Recommender Systems: Building Privacy into the Netflix Prize Contenders}. In \textit{Proc. KDD}, 2009.
+
+\bibitem{Hua2015} Jingyu Hua, Chang Xia, and Sheng Zhong. \textit{Differentially Private Matrix Factorization}. In \textit{Proc. IJCAI}, 2015.
+
+\bibitem{Chaudhuri2011} Kamalika Chaudhuri, Claire Monteleoni, and Anand D. Sarwate. \textit{Differentially Private Empirical Risk Minimization}. JMLR 12: 1069-1109, 2011.
+
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,781 @@
+\documentclass{article}
+\input{style}
+\bibliographystyle{alpha}
+\title{gaussian mechanism}
+\author{albert.no0 }
+\date{January 2025}
+\begin{document}
+\maketitle
+
+\section{Differential Privacy}
+Differential Privacy (DP), first introduced in \cite{dwork2006}, provides a rigorous guarantee of privacy. For a given mechanism $\gM$, the output distributions for two datasets $D$ and $D'$, which differ by only one data point, must have a probability ratio bounded by $e^\varepsilon$. However, this strict definition can be overly restrictive, as it guarantees privacy only within a narrow range. To address this limitation, $\delta$ is introduced to account for the probability of worst-case scenarios, enabling a more practical and flexible privacy guarantee. Two datasets that differ by a single data point are referred to as neighboring datasets, denoted as $D\sim D'$.
+\begin{definition}[($\varepsilon,\delta$)-Differential Privacy]\label{DP}
+A randomized mechanism $\gM$ satisfied $(\varepsilon,\delta)$-DP under neighboring relation $\sim$ if and only if for all $D\sim D'$ and all measurable sets of outputs $Z$ we have 
+\begin{equation}
+    \Pr[\gM(D) \in Z] \le e^\varepsilon \Pr[\gM (D') \in Z] + \delta
+\end{equation}    
+\end{definition}
+Neighboring datasets can be created in various ways. If a single data point is added to the dataset, this is called an add relation, denoted as $D \sim_A D'$. Similarly, if a data point is removed, it is referred to as a remove relation, denoted as $D \sim_R D'$. These two cases are collectively expressed as an add/remove relation, represented as $D \sim_{A/R} D'$. Additionally, neighboring datasets can also result from replacing one data point with another, a case known as a substitution relation, denoted as $D \sim_S D'$.
+
+Neighboring datasets can be created in various ways. If a single data point is added to the dataset, this is called an add relation, denoted as $D \sim_A D'$. Similarly, if a data point is removed, it is referred to as a remove relation, denoted as $D \sim_R D'$. These two cases are collectively expressed as an add/remove relation, represented as $D \sim_{A/R} D'$. Additionally, neighboring datasets can also result from replacing one data point with another, a case known as a substitution relation, denoted as $D \sim_S D'$. 
+
+
+\section{Privacy Loss Random Variable}
+Privacy loss random variable(PLRV) is based in the divergence. To represent the tight privacy guarantee, \cite{dwork2016concentrated} introduces the PLRV and \cite{sommer2018privacy} makes it useful by using the hockey-stick divergence.
+\begin{definition}[Hockey-stick Divergence]\label{HSdivergence}
+For any $\alpha \ge 0$ the hockey-stick divergence between two distributions $P$ and $Q$ is defined as 
+\begin{equation}
+    H_\alpha (P \Vert Q) := \mathbb{E}_{y \sim Q} \left[\max \left\{ \frac{dP}{dQ}(y) - \alpha, 0 \right\} \right] 
+\end{equation}
+where $\frac{dP}{dQ}$ is the Radon-Nikodym derivation (the density ratio when density exists for $P$ and $Q$).
+\end{definition}
+
+The hockey-stick divergence provides a convenient way to express $(\varepsilon,\delta)$-DP. For example, given a random mechanism $\gM$ satisfies $(\varepsilon,\delta)$-DP if and only if $H_{e^\varepsilon} (\gM(D) \Vert \gM (D')) \le \delta$ holds for all pairs of neighboring dataset $D\sim D'$.
+
+\begin{definition}[Privacy Curves]
+The privacy curve of a randomized mechanism $\gM$ under neighboring relation $\sim$ is the function $\delta_\gM ^\sim : \sR \to [0,1]$ given by
+\begin{equation}
+    \delta_\gM ^\sim(\varepsilon) := \min \{ \delta \in [0,1] : \text{$\gM$ is $(\varepsilon,\delta)$-DP\}}.
+\end{equation}
+\end{definition}
+
+By using the privacy curve, the tightest privacy guarantee can be determined. For example, if there is a single dataset pair of neighboring datasets $D \sim D'$, $H_{e^\varepsilon} (\gM(D) \Vert \gM (D')) = \delta_\gM^\sim$ for all $\varepsilon \ge 0$ we can say that such neighboring datasets $D \sim D'$ satisfy the worst-case.
+
+\begin{definition}[Privacy Loss Random Variable]\label{PLRV}
+The privacy loss random variable of for a pair of neighboring datasets $D, D'$ under mechanism $\gM$ is defined as
+\begin{equation}
+    L_{\gM (D\Vert D')}(o) := \ln \frac{\gM (D)(o)}{\gM (D')(o)} = \ln \frac{\Pr[\gM(D) =o]}{\Pr[\gM(D') = o]}
+\end{equation}
+where $o \sim \gM (D)$
+\end{definition}
+
+A key characteristic of this definition is that it is formulated for a pair of neighboring datasets, rather than all neighboring datasets. In this context, when the privacy loss random variable is represented as a density function, the Privacy Loss Distribution(PLD) is defined as
+\begin{equation}
+    L_\gM (D \Vert D') := \ln \frac{d \gM(D)}{d \gM(D')}(o) 
+\end{equation} 
+where $y \sim \gM(D)$ and $\frac{d \gM(D)}{d \gM(D')}$ means the density of $\gM(D)$ with respect to $\gM(D')$. Using this distribution, the privacy curve can be used to find the tightest bound across all neighboring datasets. We can converse the hockey-stick divergence to the PLD via
+\begin{align*}
+    H_{e^\varepsilon}(\gM(D) \Vert \gM(D')) &=\mathbb{E}_{Y \sim \gM (D')}\left[\max\left\{\frac{d\gM(D)}{d\gM(D')}(o) - e^{\varepsilon},0\right\}\right]  \\ 
+    &=\mathbb{E}_{Y \sim L_\gM(D \Vert D')}\left[\max\left\{\ln\frac{d\gM(D)(o)}{d\gM(D')(o)}- e^{\varepsilon} ,0 \right\} \right]\\ 
+    &=\mathbb{E}_{Y \sim L_\gM (D \Vert D')}\left[\max\left\{(1- e^{\varepsilon-y})d\gM(D)(o),0 \right\} \right] \\
+    &\left(\because y = \ln\frac{d\gM(D)(o)}{d\gM(D')(o)} \iff d\gM(D')(o) = e^{-y} d\gM(D)(o)\right)\\
+    &=\mathbb{E}_{Y \sim L_\gM (D \Vert D')} [1-e^{\varepsilon-y}] (\text{If $y>\varepsilon$)},    
+\end{align*}
+And by using this equation, we can achieve the following equation,
+\begin{equation}
+    \delta_\gM^\sim (\varepsilon) = \max_{D\sim D'} \mathbb{E}_{Y \sim L_\gM (D \Vert D')} [1-e^{\varepsilon-Y}]
+\end{equation}
+
+\begin{lemma}\label{transfertoed}
+    The following statements about a randomized algorithm $\gM$ are equivalent to Definition \ref{DP}
+\begin{enumerate}
+    \item $\sup_{D\sim D'} H_{e^\varepsilon}(\gM(D) \Vert \gM(D')) \le \delta$
+    \item $\Pr_{o\sim \gM(D)}[L_{\gM(D\Vert D')}>\varepsilon] - e^\varepsilon \Pr_{o\sim \gM(D')} [L_{\gM(D'\Vert D)} <-\varepsilon] \le \delta$ for all neighboring $D,D'$ 
+\end{enumerate}
+\begin{proof}[Proof of 1.]
+From the definition \ref{HSdivergence}, we can get the following equation.
+\begin{align*} 
+    \sup_{D\sim D'}H_{e^\varepsilon}(\gM(D) \Vert \gM(D')) \le \delta &\iff \sup_{D \sim D'} \mathbb{E}_{Y \sim \gM (D')}\left[\max\left\{\frac{d\gM(D)}{d\gM(D')}(o) - e^{\varepsilon},0\right\}\right] \le \delta \\ 
+    &\iff \sup_{D \sim D'}\max\left\{ \frac{\Pr[\gM(D) =o]}{\Pr[\gM(D') = o]} - e^\varepsilon,0\right\} \le \delta\\
+    &\iff \Pr[\gM(D) \in Z] -e^\varepsilon\Pr[\gM(D') \in Z] \le \delta\\
+    &\text{(for $o\in Z$ and neighboring datasets $D,D'$)}\\
+    &\iff \Pr[\gM(D) \in Z] \le e^\varepsilon\Pr[\gM(D') \in Z] + \delta
+\end{align*}
+\end{proof}
+\begin{proof}[Proof of 2.]
+From $\Pr_{o\sim \gM(D)}[L_{\gM(D\Vert D')}>\varepsilon] - e^\varepsilon \Pr_{o\sim \gM(D')} [L_{\gM(D'\Vert D)} <-\varepsilon] \le \delta$, if we use the definition \ref{PLRV}, we can get the equation $\Pr_{o\sim \gM(D)}\left[\ln \frac{\Pr[\gM(D) = o]}{\Pr[\gM(D')=o]}>\varepsilon\right] - e^\varepsilon \Pr_{o\sim \gM(D')} \left[\ln \frac{\Pr[\gM(D') = o]}{\Pr[\gM(D)=o]}<-\varepsilon\right] \le \delta $. Here, $\Pr_{o\sim \gM(D)}\left[\ln \frac{\Pr[\gM(D) = o]}{\Pr[\gM(D')=o]}>\varepsilon\right]$ means that for the output from $\gM(D)$, the difference between the probability of the output from $\gM(D)$ and the probability of the output from $\gM(D')$ is greater than $e^\varepsilon$. For the output $o \in Z$, it means $\Pr[\gM(D) \in Z]$ because for randomized mechanism $\gM$, the difference of all neighboring datasets $D, D'$ of outputs is smaller than $e^\varepsilon$. In the same manner, we can get the equation $\Pr[\gM(D') \in Z]$ from the equation $\Pr_{o\sim \gM(D')} \left[\ln \frac{\Pr[\gM(D') = o]}{\Pr[\gM(D)=o]}<-\varepsilon\right]$. Thus we can say that statement 2. is true.
+
+\end{proof}
+\end{lemma}
+
+
+\section{\texorpdfstring{$f$}{f}-Differential Privacy}
+\subsection{DP based on Hypothesis test}
+Differential Privacy is defined based on where the output comes from with respect to the neighboring datasets $D$ and $D'$. Therefore, we can construct the hypothesis test based on the differential privacy. For the two datasets $D$ and $D'$, we can construct the null hypothesis($H_0$) that the output comes from the dataset $D$, and alternative hypothesis($H_1$) that the output comes from the dataset $D'$. For the output $o \in Z$, it can be simply expressed as follows.
+
+\begin{equation*}
+H_0 : \text{$o$ came from the dataset $D$}, \quad H_1: \text{$o$ came from the dataset $D'$}    
+\end{equation*}
+
+In this setting, we can think about the type I error(here it is denoted by $\alpha$), which is the mistaken rejection of a null hypothesis as the result of a test procedure. It means that the output came from the dataset $D$, but we say that the output came from $D'$. In the same manner, the type II error(here it is denoted by $\beta$) is the mistaken failure to reject the null hypothesis as the result of a test procedure, which means the output came from the dataset $D'$, but we say that the output came from $D$. Using this concept, we can represent the ($\varepsilon,\delta$)-differential privacy.
+
+In the differential privacy concept, we want to hide the result about where the output came from. In terms of the hypothesis test concept, if the output came from the dataset $D$, we can construct the definition \ref{DP} using $\alpha$ and $\beta$.
+\begin{equation*}
+    1-\alpha \le e^\varepsilon \beta +\delta
+\end{equation*}
+Here, $1- \alpha$ represents the probability that the test procedure is correct. Similarly, $\beta$ denotes the probability that the output originates from $D$, ;if we instead assume that the output comes from $D'$, this probability becomes $\beta$.For the output from $D'$, we can construct following equation.
+\begin{equation*}
+    1-\beta \le e^\varepsilon \alpha + \delta
+\end{equation*}
+Combining two equation, we can get the following equation.
+
+\begin{align*}
+    1-\delta \le \alpha + e^\varepsilon \beta \\
+    1-\delta \le \beta + e^\varepsilon \alpha
+\end{align*}
+
+\begin{figure}[t]
+	\begin{center}
+		\includegraphics[width=.4\textwidth]{region}
+		\put(-150,128){\footnotesize$\beta$ (type II error)}
+		\put(-35,-3){\footnotesize$\alpha$ (type I error)}
+		\put(-190,109){\footnotesize$(0,1-\delta)$}
+		\put(-190,44){\footnotesize$(0,\frac{2(1-\delta)}{1+e^{\varepsilon}})$}
+		\put(-110,54){\footnotesize$(\frac{(1-\delta)}{1+e^{\varepsilon}},\frac{(1-\delta)}{1+e^{\varepsilon}})$}
+		\put(-110,40){$\swarrow$}
+		\put(-153,55){$\nearrow$}
+		\put(-153,108){$\rightarrow$}
+	\end{center}
+	\caption{Privacy region for ($\varepsilon,\delta$)-differential privacy. The gray area represents the region where privacy is preserved. The line corresponding to $\alpha + \beta = 1$ represents the result when the output is chosen randomly, which provides the highest level of privacy but the lowest accuracy. Meanwhile, the region where the two lower lines appear indicates the minimum range required to satisfy$(\varepsilon,\delta)$-DP, and all areas above these lines comply with $(\varepsilon,\delta)$ \cite{kairouz2015composition}}
+	\label{fig:region}
+\end{figure}
+
+And using the two equations, \cite{kairouz2015composition} defines the privacy region as shown in Figure \ref{fig:region}.
+
+\begin{equation}\label{equ:region}
+    \gR(\varepsilon,\delta) = \left\{(\alpha,\beta)| \alpha + e^\varepsilon \beta \ge 1- \delta, \quad\text{and} \quad \beta + e^\varepsilon \alpha \ge 1-\delta \right\}.
+\end{equation}
+In Figure \ref{fig:region}, the privacy region that guarantees the $(\varepsilon, \delta)$-DP can be identified. But the privacy is always guaranteed if the $\gR(\varepsilon, \delta)$ can be covered. So finding the optimal line is important. In \cite{dong2022gaussian}, the authors introduced the concept of the trade-off function to solve this problem.
+
+\begin{definition}[Trade-off function]
+Let $\phi$ be a classifier to distinguish two distribution $P$ and $Q$ using a sample. $\alpha_\phi$ be its Type I error (false positive rate) and $\beta_\phi$ be its Type II error (false negative rate). The trade-off function $T(P,Q)(\alpha):[0,1] \to [0,1]$ is defined as
+\begin{equation}
+    T(P,Q)(\alpha) := \inf_\phi \{ \beta_\phi | \alpha_\phi \le \alpha\}
+\end{equation}
+\end{definition}
+
+Using this definition, the optimal $\beta$ for a given $\alpha$ can be found. By applying this concept, $(\varepsilon,\delta)$-DP can be represented through the following lemma.
+\begin{lemma}\label{fdptoadp}
+      The following statements about a randomized algorithm $\gM$ are equivalent to Definition \ref{DP}
+      \begin{equation*}
+          \sup_{D\sim D'} T(\gM(D),\gM(D'))(\alpha) \ge \max\{0,1-\delta-e^\varepsilon\alpha,e^{-\varepsilon}(1-\delta-\alpha) \}.
+      \end{equation*}
+      \begin{proof}
+          Rearranging the equation given in (\ref{equ:region}), we obtain the following expression for $\beta$. 
+          \begin{equation*}
+              \{(\alpha,\beta)|\beta \ge e^{-\varepsilon}(1-\delta-\alpha), \quad \text{and} \quad \beta \ge 1-\delta-e^\varepsilon \alpha \}
+          \end{equation*}
+          As seen in Figure \ref{fig:region}, if the value obtained from the above equation is exceeded, $(\varepsilon,\delta)$-DP can be satisfied. By using the trade-off function, $\sup_{D\sim D'} T(\gM(D),\gM(D'))(\alpha)$ can be represented by setting the trade-off value to its supremum across all neighboring datasets. This ensures the optimal $\beta$ for the worst-case scenario which should be prevented, and satisfying this condition guarantees $(\varepsilon,\delta)$-DP.
+      \end{proof}
+\end{lemma}
+The following proposition presents an important property of the trade-off function; however, its proof is omitted here.
+\begin{proposition}\label{maketradeoff}
+    A function f: $[0,1] \to [0,1]$ is a trade-off function if and only if f is convex, continuous, non-increasing, and $f(x) \le 1-x$ for $x \in [0,1]$.
+\end{proposition}
+
+\subsection{Gaussian Differential Privacy}
+From this perspective, \cite{dong2022gaussian} introduced a new concept of differential privacy.
+
+\begin{definition}[$f$-differential privacy]\label{fDP}
+    Let $f$ be a trade-off function. A randomized mechanism $\gM$ is said to be $f$-differential privacy if 
+    \begin{equation*}
+        T((\gM(D),\gM(D'))(\alpha) \ge f
+    \end{equation*}
+    for all neighboring datasets $D$ and $D'$
+\end{definition}
+
+Using $f$-DP, various differential privacy scenarios can be expressed. Based on the result obtained from Lemma (\ref{fdptoadp}), it can be expressed as $(\varepsilon,\delta)$-DP, if $f$ is defined as $f_{\varepsilon,\delta}(\alpha) = \max\{0, 1-\delta-e^\varepsilon\alpha, e^{-\varepsilon} (1-\delta-\alpha)\}$.  
+Moreover, since $f$-DP is based on probability distributions, it offers significant advantages in the application of differential privacy. In machine learning, differential privacy is typically enforced by adding noise to the data during the training process. The most commonly used noise follows a Gaussian distribution. This mechanism $\gM$ is referred to as the Gaussian mechanism and is one of the most widely used mechanisms in differential privacy.
+
+\begin{definition}[Gaussian Mechanism]
+    Let $f: \gX^n \to \mathbb{R}^k.$ The Gaussian Mechanism is defined as
+    \begin{equation*}
+        \gM(X) = f(X) + (Y_1, \dots,Y_k)
+    \end{equation*}
+    where the $Y_i$ are independent $\gN(0,\sigma)$ random variables.
+\end{definition}
+Since the Gaussian mechanism relies on the Gaussian distribution, it is important to express it using the same distribution. In this regard, $f$-DP can also be formulated using the Gaussian distribution. This formulation is referred to as Gaussian Differential Privacy (GDP). In $f$-DP, an essential aspect is determining the function $f$. GDP can be defined by using two Gaussian distributions in this process. In the trade-off function, these two distributions represent the outputs corresponding to neighboring datasets. They are expressed as two Gaussian distributions with a mean difference of $\mu$ and a variance of $1$, which are then used as the trade-off function. For $\mu \ge 0$, let
+\begin{equation*}
+    G_\mu := T(\gN(0,1),\gN(\mu,1)).
+\end{equation*}
+Then, the explicit expression for the trade-off function $G_\mu$ can be given as follows.
+\begin{equation}\label{equ:G_mu}
+    G_\mu(\alpha) = \Phi(\Phi^{-1}(1-\alpha)-\mu)
+\end{equation}
+where $\Phi$ denotes the standard normal CDF.
+\begin{proof}[proof of (\ref{equ:G_mu})]
+When $\mu \ge 0$, likelihood ratio of $\gN(\mu,1)$ and $\gN(0,1)$ is $\frac{\varphi(x-\mu)}{\varphi(x)} = e^{\mu x- \frac{1}{2}\mu^2}$, a monotone increasing function in $x$. So the likelihood ratio tests must have thresholds: reject if the sample is greater than some $t$ and accept otherwise. Assuming $X \sim \gN(0,1)$, the corresponding type I and type II errors are
+\begin{equation*}
+    \alpha(t) = \mathbb{P}[X > t]= 1-\Phi(t), \quad \beta(t) = \mathbb{P}[X+\mu \le t] = \Phi(t-\mu).
+\end{equation*}
+Solving $\alpha$ from $t$, $t=\Phi^{-1}(1-\alpha)$. So 
+\begin{equation*}
+    G_\mu(\alpha) = \beta(\alpha) = \Phi(\Phi^{-1}(1-\alpha)-\mu).
+\end{equation*}
+\end{proof}
+In this result, this trade-off function is decreasing in $\mu$ in the sense that $G_\mu \le G_{\mu'}$ if $\mu \ge \mu'$. From the perspective of the privacy region, as $\mu$ increases, a wider range of the privacy region is covered. This, in turn, implies a lower privacy guarantee. Therefore, Gaussian Differential Privacy can be defined as follows.
+\begin{definition}[Gaussian Differential Privacy]
+    A mechanism $\gM$ is said to satisfy $\mu$-Gaussian Differential Privacy ($\mu$-GDP) if it is $G_\mu (=f)$-DP. That is,
+    \begin{equation*}
+        T(\gM(D), \gM(D')) \ge G_\mu
+    \end{equation*}
+    for all neighboring datasets $D$ and $D'$. 
+\end{definition}
+
+Before presenting various theorems using GDP, we first define sensitivity, a fundamental concept in differential privacy. When defining differential privacy, the worst case is considered as the maximum difference in output values among all neighboring datasets. This difference is called sensitivity.
+
+\begin{definition}[Sensitivity]
+    Let $f: \gX^n \to \mathbb{R}^k$. The sensitivity of $f$ is
+    \begin{equation*}
+        \Delta^{(f)} = \max_{D,D'} |f(D)-f(D')|
+    \end{equation*}
+    for all neighboring datasets $D$ and $D'$.
+\end{definition}
+The concept of sensitivity is used to determine the noise magnitude in mechanisms such as the Gaussian mechanism. By adding noise drawn from a distribution with variance corresponding to the largest difference among neighboring datasets, sensitivity, it becomes impossible to distinguish which dataset produced a given output, thereby preserving privacy. When applying the Gaussian mechanism to the two resulting distributions, we can express it using GDP.
+
+\begin{theorem}
+    Let $\gM$ be the Gaussian mechanism that operates on a function $f$ as $\gM(X) = f(X) + \xi$, where $\xi \sim \gN(0, \Delta^{(f)}/\mu^2)$. Then, $\gM$ is $\mu$-GDP.
+
+\begin{proof}
+    $\gM(D)$ and $\gM(D')$ follow normal distributions with means $f(D)$ and $f(D')$, respectively, and a common variance of $\sigma^2 = \Delta^{(f)}/\mu^2$. Thus, we get the following equation,
+    \begin{equation*}
+        T(\gM(D),\gM(D')) = T(\gN(f(D),\sigma^2),\gN(f(D'),\sigma^2) = G_{|f(D)-f(D')|/\sigma}. 
+    \end{equation*}
+By the definition of sensitivity, $|f(D)-f(D')|/\sigma \le \Delta^{(f)}/\sigma = \mu$. And so, we get
+\begin{equation*}
+    T(\gM(D),\gM(D')) = G_{|f(D)-f(D')|/\sigma} \ge G_\mu.
+\end{equation*}
+Therefore $\gM$ is $\mu$-GDP.
+\end{proof}
+\end{theorem}
+
+Expressing  $f$-DP as a primal-dual problem allows the representation of all $(\varepsilon, \delta)$-DP guarantees. Here, consider $f$-DP as the primal problem and the set of all $(\varepsilon, \delta)$-DP constraints as the dual problem. Then, the following relationship holds.
+
+\begin{theorem}[Dual to Primal]\label{DtoP}
+    Let I be an arbitrary index set such that each $i\in I$ is associated with $\varepsilon_i \in (0,\infty]$ and $\delta_i \in [0,1]$. A mechanism is $(\varepsilon_i, \delta_i)$-DP for all $i \in I$ if and only if it is $f$-DP with $f = \sup_{i\in I} f_{\varepsilon_i,\delta_i}$
+\end{theorem}
+This theorem can be easily understood using the properties of  $f$-DP from Definition \ref{fDP}. More importantly, it allows expressing $f$-DP in terms of $(\varepsilon, \delta)$-DP. Here, the convex conjugate of a function $g$ defined on $(-\infty,\infty)$ is defined as 
+\begin{equation}
+    g^*(y) = \sup_{-\infty < x < \infty} yx - g(x).
+\end{equation}
+
+\begin{theorem}[Primal to Dual]\label{PtoD}
+    For a symmetric trade-off function $f$, a mechanism is $f$-DP if and only if it is $(\varepsilon,\delta(\varepsilon))$-DP for all $\varepsilon \ge 0$ with $\delta(\varepsilon) = 1 + f^*(-e^\varepsilon)$.
+
+    \begin{proof}
+        The tangent line of $f$ with slope $k$ is given by $y = kx - f^*(k)$. Substituting $e^\varepsilon$, the slope of the line observed in Figure \ref{fig:region}, we obtain the equation $y= -e^\varepsilon x - f^*(-e^\varepsilon)$. By the equation (\ref{equ:region}) and Theorem \ref{DtoP}, we can get $1-\delta = -f^*(-e^\varepsilon)$. By symmetric, the collection $\{ f_{\varepsilon,1+f^*(-e^\varepsilon)}\}_{\varepsilon \ge 0}$ envelopes the function $f$.
+    \end{proof}
+\end{theorem}
+
+\begin{corollary}
+    A mechanism is $\mu$-GDP if and only if it is $(\varepsilon, \delta(\varepsilon))$-DP for all $\varepsilon \ge 0$, where
+    \begin{equation*}
+        \delta(\varepsilon) = \Phi\left(\frac{\mu}{2}-\frac{\varepsilon} {\mu}\right) -e^\varepsilon\Phi\left(-\frac{\mu}{2}- \frac{\varepsilon}{\mu}\right)
+    \end{equation*}
+
+    \begin{proof}
+        By Theorem \ref{PtoD}, $\mu$-GDP is equivalent to $(\varepsilon, 1+ G^*_\mu (-e^\varepsilon))$-DP, so it suffices to compute the expression of $G_\mu^*(-e^\varepsilon)$. By (\ref{equ:G_mu}) and the definition of convex conjugate,
+        \begin{equation*}
+            G_\mu^*(y) =\sup_{x \in [0,1]}yx - \Phi(\Phi^{-1}(1-x)-\mu).
+        \end{equation*}
+        Let $t = \Phi^{-1}(1-x)$. By the property of CDF of Normal distribution, $x = 1- \Phi(t) = \Phi(-t)$. Do the change of variable and we get 
+        \begin{equation*}
+            G^*_\mu (y) = \sup_{t\in \mathbb{R}}y \Phi(-t) - \Phi(t-\mu)
+        \end{equation*}
+        To find the supremum value of $G_\mu$, we differentiate with respect to $t$.
+        \begin{align*}
+            \frac{d}{dt}[y\Phi(-t)-\Phi(t-\mu)] &= 0\\
+            -y\varphi(-t) - \varphi(t-\mu) &= 0\\
+            ye^{-\frac{1}{2}t^2} + e^{-\frac{1}{2}(t-\mu)^2} &= 0\\
+            y &= - e^{\mu t - \frac{1}{2}\mu^2}\\
+            t &= \frac{\mu}{2} + \frac{\ln(-y)}{\mu}
+        \end{align*}
+        Thus we can get the following result,
+        \begin{equation*}
+            G_\mu^*(y) = y \Phi\left(-\frac{\mu}{2}-\frac{1}{\mu}\ln(-y)\right)-\Phi\left(-\frac{\mu}{2} + \frac{1}{\mu}\ln(-y)\right) 
+        \end{equation*}
+        For the line with slope $y = -e^\varepsilon$,
+        \begin{equation*}
+            G_\mu ^* (-e^\varepsilon) = -e^\varepsilon\Phi\left(-\frac{\mu}{2}- \frac{\varepsilon}{\mu}\right) - \Phi\left(-\frac{\mu}{2}+\frac{\varepsilon}{\mu}\right).
+        \end{equation*}
+        By the result of Theorem \ref{PtoD}, $\delta = 1 + G_\mu^*(-e^\varepsilon)$. Thus we can get 
+        \begin{align*}
+            1 + G_\mu^*(-e^\varepsilon) &= 1- \Phi\left(-\frac{\mu}{2}+\frac{\varepsilon} {\mu}\right) -e^\varepsilon\Phi\left(-\frac{\mu}{2}- \frac{\varepsilon}{\mu}\right)\\
+            &=\Phi\left(\frac{\mu}{2}-\frac{\varepsilon} {\mu}\right) -e^\varepsilon\Phi\left(-\frac{\mu}{2}- \frac{\varepsilon}{\mu}\right).
+        \end{align*}
+    Therefore we get the result, $\delta(\varepsilon) =\Phi\left(\frac{\mu}{2}-\frac{\varepsilon} {\mu}\right) -e^\varepsilon\Phi\left(-\frac{\mu}{2}- \frac{\varepsilon}{\mu}\right)$.
+    \end{proof}
+\end{corollary}
+
+\subsection{A Composition Theorem of \texorpdfstring{$f$}{f}-DP}
+$f$-DP has the advantage of providing a tight bound for the composition theorem. Based on the previously defined trade-off function,$f$-DP defines composition by utilizing the tensor product of individual distributions. This approach allows for deriving tight bounds, particularly in the case of GDP, where Gaussian distributions lead to optimal guarantees.
+
+\begin{definition}[Composition of two trade-off functions]
+    The tensor product of two trade-off functions $f= T(P,Q)$ and $g = T(P',Q')$ is defined as 
+    \begin{equation*} 
+        f\otimes g := T(P \times P', Q \times Q').
+    \end{equation*}
+    And this tensor product corresponds to the composition of two trade-off functions $f$ and $g$.
+\end{definition}
+
+The operation defined by the tensor product satisfies various algebraic properties. The following are the key properties it fulfills.
+
+\begin{theorem}[Properties of tensor product]
+The tensor product $\otimes$ has the following properties:
+    \begin{enumerate}
+        \item The product $\otimes$ is well-defined.
+        \item The product $\otimes$ is commutative and associative.
+        \item If $g_1 \ge g_2$, then $f \otimes g_1 \ge f \otimes g_2$.
+        \item $f \otimes \text{Id} =\text{Id} \otimes f = f$, where the identity trade-off function $\text{Id}(x) = 1-x$ for $0\le x \le 1$.
+        \item $(f \otimes g)^{-1} = f^{-1} \otimes g^{-1}$.
+    \end{enumerate}
+
+
+    \begin{proof}
+        In this paper, we just prove 2 and 4. The remaining proofs can be found in Appendix C and D of \cite{dong2022gaussian}.
+        Let $f = T(P,P')$ and $g = T(Q,Q')$ be the trade-off function according to four distributions $P,P',Q,Q'$. Then,
+    \begin{equation*}
+        f \otimes g = T(P,P') \otimes T(Q,Q') = T(P \times Q, P' \times Q')
+    \end{equation*}
+    2. Commutativity:
+    \begin{equation*}
+        f \otimes g = T(P \times Q, P' \times Q') \overset{(a)}{=} T(Q \times P, Q' \times P') = g \otimes f.
+    \end{equation*}
+    In (a), the equation holds because the trade-off function remains unchanged even if the order of the two distributions is reversed.\\
+    Associativity: Let $h= T(R,R')$
+    
+    \begin{align*}
+        &(f\otimes g) \otimes h = T(P\times Q, P' \times Q') \otimes T(R, R') = T(P \times Q \times R, P' \times Q' \times R') \\
+        &f \otimes (g \otimes h)= T(P,P')  \otimes T(Q\times R, Q' \times R') = T(P\times Q \times R, P' \times Q' \times R')
+    \end{align*}
+    Thus $(f \otimes g) \otimes h = f \otimes (g\otimes h)$.   \newline
+    4. Let $R$ be the arbitrary degenerate distribution, i.e. $R$ puts mass 1 on a single point. Then $\text{Id} = T(R,R)$ and we can get 
+    \begin{equation*}
+        f\otimes \text{Id} = T(P \times R,P' \times R') = T(P,P') = f.
+    \end{equation*}
+    \end{proof}
+\end{theorem}
+
+By leveraging these two properties, we can derive a tight composition bound for GDP as follows.
+\begin{theorem}[Composition theorem of GDP]
+The $n$-fold composition of $\mu_i$-GDP mechanisms is $\sqrt{\mu_1^2+\cdots+\mu_n^2}$-GDP. 
+\begin{proof}
+Let $\boldsymbol{\mu} = (\mu_1, \mu_2) \in \mathbb{R}^2$ and $I_2$ be the $2 \times 2$ identity matrix. Then 
+\begin{align*}
+    G_{\mu_1} \otimes G_{\mu_2} &= T(\gN(0,1), \gN(\mu_1,1)) \otimes T(\gN(0,1), \gN(\mu_2,1))\\ 
+    &= T(\gN(0,1) \times \gN(0,1) ,\gN(\mu_1,1) \times \gN(\mu_2,1))\\
+    &= T(\gN(0,I_2),T(\boldsymbol{\mu},I_2))
+\end{align*}
+Using the property of the normal distribution, we can get $\gN(\boldsymbol{\mu},I_2) = \gN(\sqrt{\mu_1^2+\mu_2^2},I_2)$. Thus,
+\begin{align*}
+    G_{\mu_1} \otimes G_{\mu_2} &= T(\gN(0,I_2),T(\boldsymbol{\mu},I_2))\\
+    & = T(\gN(0,1) \times \gN(0,1),\gN(\sqrt{\mu_1^2 + \mu_2^2}, 1) \times \gN(0,1)) \\
+    & = T(\gN(0,1) , \gN(\sqrt{\mu_1^2 + \mu_2^2}, 1)) \otimes T(\gN(0,1), \gN(0,1)) \\
+    & = G_{\sqrt{\mu_1^2 + \mu_2^2}} \otimes \text{Id}\\
+    &= G_{\sqrt{\mu_1^2 + \mu_2^2}}
+\end{align*}
+Therefore, repeating this process $n$ times, we can get the result.
+\end{proof}
+\end{theorem}
+
+\section{Dominating pair of distribution}
+PLD can be used to compute a tight privacy bound for all neighboring datasets, but what if we could find a single worst-case dataset? This idea led to the concept of the dominating pair of distributions.
+\begin{definition}[Dominating pair of distributions]
+    $(P,Q)$ is a dominating pair of distributions for $\gM$ if for all $\alpha \ge 0$,
+    \begin{equation*}
+        \sup_{D\sim D'} H_\alpha(\gM(D)\Vert\gM(D')) \le H_\alpha (P\Vert Q)
+    \end{equation*}
+\end{definition}
+
+If equality holds, the pair is called a tight dominating pair, and the relationship is referred to as tightly dominating. Furthermore, if a specific neighboring dataset pair $(\tilde{D}, \tilde{D'})$ is tightly dominating for a mechanism $\gM$, that is, if $(\gM(\tilde{D}),\gM(\tilde{D'}))$ is tightly dominating, it is termed the worst-case pair of datasets for a mechanism $\gM$.
+
+A worst-case pair may not always exist. However, \cite{zhu2022optimal} demonstrated that a dominating pair always exists.
+\begin{proposition}\label{domiexist}
+    Any mechanism has a tightly dominating pair of distributions.
+\end{proposition}
+\cite{zhu2022optimal} proved this proposition through the following lemma, which constructs a dominating pair of distributions.
+
+\begin{lemma}\label{makedomi}
+    For a given $H: \mathbb{R}_{\ge0} \to \mathbb{R}$, there exists $P,Q$ such that $H(\alpha) = H_\alpha(P\Vert Q)$ if and only if $H \in \gH$ where 
+    \begin{equation*}
+        \gH := \left\{H: \mathbb{R}_{\ge 0} \to \mathbb{R} \bigg|\ \begin{aligned}
+            &\textit{H is convex, decreasing,}\\
+            &H(0) = 1 \textit{ and } H(x)\ge(1-x)_+
+        \end{aligned}  \right\}
+    \end{equation*}
+Moreover, one can explicitly construct such $P$ and $Q:$ $P$ has $CDF$ $1+H^*(x-1)$ in $[0,1)$ and $Q =\text{Uniform}([0,1])$.
+
+\begin{proof}
+    Let 
+    \begin{align*}
+    &\gH := \{h: \mathbb{R}_{\ge 0} \to \mathbb{R}_{\ge 0} | \exists P,Q\text{ s.t. }h(\alpha) = H_\alpha(P\Vert Q)\},\\    
+    &\gF := \{f:[0,1] \to [0,1] | \exists P,Q \text{ s.t. }f = T[P,Q]\}.
+    \end{align*}
+    Then, by the Theorem \ref{PtoD} and Lemma \ref{transfertoed}, for $H_\alpha(P\Vert Q)$ and $f= T[Q,P]$, we can get the following equation.
+    \begin{equation*}
+        H_{e^\varepsilon}(P \Vert Q) = 1+ f^*(-e^\varepsilon)
+    \end{equation*}
+    where $\varepsilon \in \mathbb{R}$. Therefore, using the change of variation, we obtain the following $\gH$.
+\begin{equation*}
+\gH = \{h: \mathbb{R}_{\ge 0} \to \mathbb{R}_{\ge 0} | \exists P,Q\text{ s.t. }h(\alpha) = 1 + f^*(-\alpha)\}.
+\end{equation*}
+By Proposition \ref{maketradeoff}, $\gF$ can be expressed as follows.
+\begin{equation*}
+    \gF = \{f : [0,1] \to [0,1]| f\text{ is convex, decreasing, continuous and }f(x) \le 1-x \}.
+\end{equation*}
+Furthermore, we consider the following convex conjugate $\gG$ of $\gF$. We then establish that the convex conjugacy between $\gF$ and $\gG$ forms a bijection, which allows us to analyze the relationship between $\gG$ and $\gH$ to complete the proof.
+Since both $\gF$ and $\gG$ consist of convex functions, double convex conjugacy brings back the function, thus it suffices to show that $f \in \gF \implies f^* \in \gG$ and $g \in \gG \implies g^* \in \gF$. So suppose $f \in \gF$. Because $f$ is convex and decreasing, we can extend the $f$ to be $\infty$ in $(-\infty, 0)$ and $0$ in $(1, \infty)$. Then by definition of $f^*$, we can calculate 
+\begin{equation*}
+    f^*(y) = \sup_{x\in \mathbb{R}}yx - f(x) = \sup_{x\ge 0} yx - f(x) = \begin{cases}
+        \infty &\text{if } y>0  \\ 0 &\text{if } y=0 
+    \end{cases}
+\end{equation*}
+Then, for $y_1 < y_2$, we can get $y_1x - f(x) \le y_2x - f(x)$ and taking supremum over $x \ge 0$, we can get $f^*(y_1) \le f^*(y_2)$. This shows $f^*$ is increasing and finite on $(-\infty,0]$. Let
+\begin{equation*}
+    I(x) = \begin{cases}
+        \infty &\text{if } x < 0 \\
+        \max\{1-x,0\} &\text{if } x\ge0 
+    \end{cases}
+\end{equation*}
+Then, we can calculate the $I^*(y)$ as following,
+\begin{equation*}
+    I^*(y) = \begin{cases}
+        \max\{y,-1\} &\text{if } y\le 0\\
+        \infty &\text{if } y>0
+    \end{cases}
+\end{equation*}
+Since $f(x) \le 1-x \le I(x)$ for $x\in [0,1]$ and otherwise $f(x) = I(x)$, we can say that $f^*(x) \ge I^*(x) = \max\{x,1\}$. Thus $f^* \in \gG$. \newline
+Now suppose $g \in \gG$. Similarly, $g$ is extended to be $\infty$ in $(0,\infty)$. $g^*(y) = \sup_{x\le 0}yx-g(x)$ and $g^*(y) =\infty$ if $y<0$. By a similar argument, $g^*$ is increasing. Since $g \ge I^*$, we can get $g^* \le I^{**} = I$. That is, $g^*(x) \le 1-x$. And let
+\begin{equation*}
+    J(x) = \begin{cases}
+        0 & \text{if }x<0\\
+        \infty &\text{if }x\ge 0
+    \end{cases}
+\end{equation*}
+And we can also calculate the $J^*(y)$ as following,
+\begin{equation*}
+    J^*(y) = \begin{cases}
+        \infty &\text{if } x<0 \\
+        0 &\text{if } x\ge0
+    \end{cases}
+\end{equation*}
+We know that $g(0) = 0$ and $g$ is increasing so $g \le J$. Hence $g^* \ge J^*$, i.e. $g^*(y) \ge 0$ if $y\ge 0$. This justifies $g^*(y) \in [0,1]$ if $y\in [0,1]$ and $g^*(y) = 0$ if $y\ge1$. Thus $g^* \in \gF$.
+Using this property, for $H \in \gH$ we know there is a $f \in \gF$ such that $H(\alpha) = 1+f^*(-\alpha)$. And let $g(\alpha) = H(-\alpha) -1 $. we can say that $g = f^*$ and also $f=g^*$ as $f$ is convex. Therefore, 
+\begin{equation*}
+    f(x) = g^*(x) = \sup_y yx - H(-y)+1 = \sup_z z(-x)-h(z) + 1 = 1 +H^*(-x).
+\end{equation*}
+We know that $f = T(Q,P)$ where $Q = U[0,1]$ is the uniform distribution over $[0,1]$ and $P$ has CDF
+\begin{equation*}
+    F_P(x) = \begin{cases}
+        0 &\text{if } x<0\\
+        f(1-x) &\text{if } x\in [0,1)\\
+        1 &\text{if } x \ge 1 
+    \end{cases}
+\end{equation*}
+By substituting $f(x) = 1+H^*(-x)$, we can get the CDF of P being
+
+\begin{equation*}
+    F_P(x) = \begin{cases}
+        0 &\text{if } x<0\\
+        1+H^*(x-1) &\text{if } x\in [0,1)\\
+        1 &\text{if } x \ge 1 
+    \end{cases}
+\end{equation*}
+Because the infimum of $H$ is positive so $H^*(x-1)<0$, thus $P$ has an atom at $1$. This completes the proof.
+
+\end{proof}
+\end{lemma}
+
+Using Lemma \ref{makedomi}, we can establish Proposition \ref{domiexist}. This lemma provides a powerful insight as it guarantees the ability to find a tight distribution under any condition. By leveraging this lemma, we can analyze tight privacy bounds. To extend its applicability, we now define composition within the framework of the dominating pair.
+
+\begin{theorem}
+    If $(P,Q)$ dominates $\gM$ and $(P',Q')$ dominates $\gM'$, then $(P\times P', Q \times Q')$ dominates the composed mechanism $(\gM,\gM')$.
+
+    \begin{proof}
+        From the perspective of continuous probability, we can express the hockey-stick divergence in an integral form as follows.
+        \begin{equation*}
+            H_\alpha(P\Vert Q) = \int_\Omega [p(\omega)-q(\omega)]_+ d\omega
+        \end{equation*}
+        Here, $p$  and $q$ represent the Radon-Nikodym derivatives of $P$ and $Q$, respectively. For a mechanism $M = (\gM, \gM')$ and probability distributions $(D,D') =(P_1 \times P_2, Q_1 \times Q_2)$, interpreting this in terms of a joint probability distribution over two variables, we obtain the following representation.
+    \begin{align*}
+        H_\alpha(M(D),M(D')) &= \iint_{X\times Y}[p_1(x)p_2(x,y) - \alpha q_1(x)q_2(x,y) ]dxdy\\
+        &= \int_X p_1(x) \cdot \left(\int_Y\left[p_2(x,y) - \alpha\cdot\frac{q_1(x)}{p_1(x)}\cdot q_2(x,y)  \right]dy \right)dx\\
+        &=\int_X p_1(x) \cdot\left( H_{\alpha \cdot \frac{q_1(x)}{p_1(x)}}(\gM'(x,P_2)\Vert \gM'(x,Q_2) \right)dx \\
+        &\le \int_X p_1(x) \cdot\left( H_{\alpha \cdot \frac{q_1(x)}{p_1(x)}} (P'\Vert Q')\right)dx \quad (\because (P',Q') \text{ dominates } \gM')\\
+        &= \int_X p_1(x) \cdot \left(\int_{\Omega_2} \left[p'(\omega_2) - \alpha\frac{q_1(x)}{p_1(x)}\cdot q'(\omega_2) \right]_+ d\omega_2 \right)dx \\
+        &=\iint _{X \times \Omega_2}[p_1(x)p'(\omega_2) - \alpha q_1(x)q'(\omega_2)]_+ dxd\omega_2 \\
+        &= H_\alpha (\gM(D) \times P', \gM(D') \times Q').
+    \end{align*}
+    Continuing same argument for $x$, we can get the following result.
+    \begin{align*}
+      H_\alpha (\gM(D) \times P', \gM(D') \times Q') 
+      &= \iint _{X \times \Omega_2}[p_1(x)p'(\omega_2) - \alpha q_1(x)q'(\omega_2)]_+ dxd\omega_2\\
+      &= \int_{\Omega_2}p'(\omega_2)\cdot \left( \int_X\left[p_1(x) - \alpha \frac{q'(\omega_2)}{p'(\omega_2)} q_1(x) \right]_+dx \right) d\omega_2\\
+      &= \int_{\Omega_2}p'(\omega_2)\cdot \left(H_{\alpha\frac{q'(\omega_2)}{p'(\omega_2)} }(\gM(D)\Vert\gM(D')) \right) d\omega_2\\
+      &\le \int_{\Omega_2} p'(\omega_2) \cdot \left(H_{\alpha\frac{q'(\omega_2)}{p'(\omega_2)} }(\gM(P)\Vert\gM(Q)) \right) d\omega_2 \quad (\because (P,Q) \text{ dominates } \gM)\\
+      & = \int_{\Omega_2} p'(\omega_2) \cdot \left( \int_X \left[p(\omega_1) - \alpha \frac{q'(\omega_2)}{p'(\omega_2)}q(\omega_1) \right]_+ d\omega_1 \right)d\omega_2\\
+      & = \iint_{\Omega_1 \times \Omega_2} [p(\omega_1)p'(\omega_2) - \alpha q(\omega_1)q'(\omega_2)]_+ d\omega_1 d\omega_2\\
+      &= H_\alpha(P\times P', Q \times Q').
+    \end{align*}
+    The proof is complete.
+    \end{proof}
+\end{theorem}
+\subsection{Privacy Amplification by Sampling}
+The primary reason for defining composition in this way is that machine learning relies on iterative training. Since each iteration is independent, it can be considered as employing a different mechanism. Consequently, the learning process in machine learning can be viewed as the composition of multiple distinct mechanisms, making it crucial to derive tight privacy bounds for composition.  
+
+When considering iterative training from a privacy perspective, another equally important aspect alongside composition is sampling. Since sampling selects a subset of data from the original dataset, the inclusion or exclusion of a particular data point remains uncertain, providing an additional privacy guarantee. This phenomenon is referred to as privacy amplification by sampling, and it can also be analyzed using the previously mentioned GDP framework. However, in this paper, we will analyze it solely from the perspective of dominating pairs.
+
+In the early stages of analyzing privacy through sampling, the specific sampling method was not given much consideration. As a result, privacy analysis was often conducted using Poisson sampling, which is easier to analyze, while experiments were typically designed using without-replacement random sampling, which is more practical for implementation. However, \cite{chua2024private} demonstrated that the privacy guarantee could differ by more than a factor of 10 between Poisson sampling and without-replacement random sampling. Following this, studies such as \cite{lebeda2024avoiding} have focused on analyzing the privacy guarantees of these two sampling methods separately.  
+
+Therefore, in this paper, we also distinguish between these two methods using different notations, as defined below.
+
+\begin{definition}[Subsampling]
+    Let $\gM$ take datasets of size $b \ge 1$. The $\binom{n}{b}$-subsampled mechanism $\gM_{WOR}$ is defined on datasets of size $n \ge b$ as 
+    \begin{equation*}
+        \gM_{WOR}(D) := \gM(D|_I),
+    \end{equation*}
+    where $I$ is a uniform random $b$-subset of $\{1,\dots , n\}$.
+    
+    On the other hand, given a mechanism $\gM$ taking datasets of any size, the $\gamma$-subsampled mechanism $\gM_{Poisson}$ is defined on datasets of arbitrary size as
+    \begin{equation*}
+        \gM_{Poisson}(D) := \gM(D|_I),
+    \end{equation*}
+    which $I$ includes each element of $\{1, \dots , |D|\}$ independently with probability $\gamma$.
+\end{definition}
+
+For a dominating pair, results can be derived based on the differences in the subsampling  distinguished earlier in the context of neighboring dataset definitions. The following theorem provides significant insights into the relationship between the sampling method and the choice of neighboring datasets.
+
+\begin{theorem}\label{samplingandneighbor}
+    Let $\gM$ be a randomized algorithm.
+    \begin{enumerate}
+        \item If $(P,Q)$ dominates $\gM$ for add neighbors then $(P,(1-\gamma)P + \gamma Q)$ dominates $\gM_{Poisson}$ for add neighbors and $((1-\gamma)Q+\gamma P,Q)$ dominates $\gM_{Poisson}$ for removal neighbors.
+        \item If $(P,Q)$ dominates $\gM$ for replacing neighbors then $(P,(1-\gamma)P + \gamma Q)$ dominates $\gM_{WOR}$ for add neighbors and $((1-\gamma)P+\gamma Q,Q)$ dominates $\gM_{WOR}$ for removal neighbors.
+    \end{enumerate}
+\end{theorem}
+
+While the structure of the dominating pair remains the same, applying Poisson sampling leads to its definition in terms of add neighboring, whereas without-replacement random sampling defines it in terms of replacing neighbors. This distinction yields highly interesting results. In general, modifying a single data point through replacing neighbors is equivalent to performing both an add and a remove operation—i.e., applying either add or remove twice. Consequently, this results in a larger $\varepsilon$ compared to a single add or remove operation. From this perspective, it becomes evident why Poisson sampling provides a tighter privacy guarantee.
+
+Before proving this theorem, we introduce two key lemmas that will simplify the proof.
+
+\begin{lemma}\label{samplinglemma1}
+    The followings are equivalent
+    \begin{enumerate}
+        \item $(P,Q)$ dominates mechanism $\gM$ for add neighbors.
+        \item $(Q,P)$ dominates mechanism $\gM$ for removal neighbors.
+        \item $T[M(D),M(D\cup \{x\})] \ge T(P,Q)$ for any dataset $D$ and data entry $x$.
+    \end{enumerate}
+
+    \begin{proof}
+        By the Theorem \ref{PtoD}, we can get the following equation, for all $\alpha >0$.
+        \begin{equation*}
+            H_\alpha(P\Vert Q) = 1+T[Q,P]^*(-\alpha).
+        \end{equation*}
+        Thus we can get the following equations.
+        \begin{align*}
+            \text{condition 1} &\iff H_\alpha(M(D) \Vert M(D \cup \{x\}) \le H_\alpha(P\Vert Q)\\
+            &\iff T[M(D \cup \{x\}),M(D)] \ge T(Q,P) \quad (\because \text{Lemma \ref{PtoD} and the property of convex conjugate.})\\
+            &\iff T[M(D), T(D\cup \{x\})] \ge T(P,Q) \iff \text{condition 3}\quad(*)\\
+            &\iff H_\alpha(M(D \cup \{x\}),M(D)) \le H_\alpha(Q\Vert P) \iff \text{condition 2}
+        \end{align*}
+        Here, (*) holds because of the property of symmetric of trade-off function.
+    \end{proof}
+\end{lemma}
+To further analyze sampling, we introduce an additional lemma. Here, we define probability distributions $P_1, \dots, P_n$ and $Q_1, \dots, Q_n$ over the same domain and let $\bar{P} = \sum^n_{i=1}p_iP_i$ and $\bar{Q} = \sum^n_{i=1}p_iQ_i$ be the corresponding mixture distributions with the same coefficients $p_1,\dots, p_n$ where $\sum^n_{i=1}p_i = 1$ and all $p_i \ge 0$. In this setting we can get the following lemma.
+
+\begin{lemma}\label{samplinglemma2}
+    If $T[P_i,Q_i] \ge T[P,Q]$ for all $i \in [n]$, then for any $\gamma \in [0,1]$, we have
+    \begin{equation*}
+        T[\bar{P}, (1-\gamma)\bar{P}+\gamma\bar{Q}] \ge T[P,(1-\gamma)P+\gamma Q].
+    \end{equation*}
+    \begin{proof}
+        Let $f= T[P,Q]$. First we want to show that
+        \begin{equation*}
+            T[P,(1-\gamma) P+\gamma Q](x) = (1-\gamma)(1-x) + \gamma f(x).
+        \end{equation*}
+        To prove this equation, consider any testing rule $\phi$ such that $\mathbb{E}_P[\phi] = x$. Then, we need to show the following equation.
+        \begin{equation*}
+            \inf_{\phi:\mathbb{E}_P[\phi] = x}\mathbb{E}_{(1-\gamma)P +\gamma Q}[1-\phi] = (1-\gamma)(1-x) +\gamma f(x).
+        \end{equation*}
+        By the definition of $f = T[P,Q]$, we have $\inf_{\phi : \mathbb{E}_P[\phi] = x}\mathbb{E}_Q[1-\phi] = f(x)$. Therefore, we get the following equations,
+        \begin{align*}
+            \mathbb{E}_{(1-\gamma)P +\gamma Q}[1-\phi] &= (1-\gamma)\mathbb{E}_P[1-\phi] + \gamma \mathbb{E}_Q[1-\phi]\\
+            &=(1-\gamma)(1-x) + \gamma \mathbb{E}_Q[1-\phi] \quad(\because \mathbb{E}_P[\phi]= x)
+        \end{align*}
+        Taking the infimum on both sides, we obtain the following.
+        \begin{align*}
+            \inf_{\phi:\mathbb{E}_P[\phi] = x}\mathbb{E}_{(1-\gamma)P +\gamma Q}[1-\phi] &= (1-\gamma)(1-x) + \gamma   \inf_{\phi:\mathbb{E}_P[\phi] = x} \mathbb{E}_Q[1-\phi]\\
+            &=(1- \gamma)(1-x) + \gamma f(x).
+        \end{align*}
+    Thus,
+    \begin{equation*}
+         \inf_{\phi:\mathbb{E}_P[\phi] = x}\mathbb{E}_{(1-\gamma)P +\gamma Q}[1-\phi] = (1-\gamma)(1-x) +\gamma f(x).
+    \end{equation*}
+    Similarly, let us consider a testing rule $\phi$ such that $\mathbb{E}_{\bar{P}}[\phi] \le x$ for $\bar{P}$. and it suffices to show the following equation.
+    \begin{equation*}
+        \mathbb{E}_{(1-\gamma)\bar{P} + \gamma \bar{Q}}[1-\phi] \ge T[P,(1-\gamma)P +\gamma Q](x) = (1-\gamma)(1-x) +\gamma f(x)
+    \end{equation*}
+    For the left side in above equation, we can expand the equation by the convex combination. Then,
+    \begin{align*}
+         \mathbb{E}_{(1-\gamma)\bar{P} + \gamma \bar{Q}}[1-\phi] &= (1-\gamma)\mathbb{E}_{\bar{P}}[1-\phi] + \gamma \sum p_i \mathbb{E}_{Q_i}[1-\phi]\\
+         & \ge (1-\gamma)(1-x) + \gamma \sum p_i \mathbb{E}_{Q_i}[1-\phi]
+    \end{align*}
+    And it suffices to show the following equation,
+    
+    \begin{equation*}
+        \sum p_i \mathbb{E}_{Q_i}[1-\phi] \ge f(x)
+    \end{equation*}
+   
+    We know that $T[P_i,Q_i] \ge T[P,Q] =f$, by the property of trade-off function, we get $\mathbb{E}_{Q_i}[1-\phi] \ge f(\mathbb{E}_{P_i}[\phi])$. And by convexity of $f$, 
+    \begin{equation*}
+        \sum p_i \mathbb{E}_{Q_i}[1-\phi] \ge \sum p_i f(\mathbb{E}_{P_i}[\phi]) \ge f\left( \sum p_i\mathbb{E}_{P_i}[\phi]\right) = f(\mathbb{E}_{\bar{P}}[\phi]) \ge f(x).
+    \end{equation*}
+    The last inequality follows from the monotonicity fo trade-off function. Therefore the proof is complete.
+    \end{proof}
+\end{lemma}
+
+Now we prove Theorem \ref{samplingandneighbor} using Lemma \ref{samplinglemma1} and Lemma \ref{samplinglemma2}.
+\begin{proof}[proof of Theorem \ref{samplingandneighbor} 1]
+First, we prove the first case. By lemma \ref{samplinglemma1}, it suffices to prove
+\begin{equation*}
+    T[\gM_{Poisson}(D),\gM_{Poisson}(D')] \ge T[P,(1-\gamma)P +\gamma Q]
+\end{equation*}
+where $D = \{x_1,\dots,x_{n-1}\}$ and $D' = D \cup \{x_n\}$. Let $\vec{b} = \{0,1\}^n$ be an output of repeated coin flip. We use $D_{\vec{b}}$ to denote the corresponding subset of $D$ and $D_{\vec{b}0}'$ or $D_{\vec{b}1}'$ for that of $D'$, depending on whether $x_n$ is included. Then we know that $D_{\vec{b}} =D_{\vec{b}0}'$. And let $p_{\vec{b}} = \Pi_{i = 1}^{n-1}$ be the probability of the outcome $\vec{b}$ (Here, $\gamma$ is a Bernoulli random variable of each coin). Then we can get the following decompositions,
+\begin{align*}
+    \gM_{Poisson}(D) &= \sum_{\vec{b} \in \{0,1\}^{n-1}} p_{\vec{b}} \gM(D_{\vec{b}})\\
+    \gM_{Poisson}(D') &= \sum_{\vec{b} \in \{0,1\}^{n-1}} (1-\gamma)p_{\vec{b}} \gM(D'_{\vec{b}0}) + \gamma p_{\vec{b}} \gM(D'_{\vec{b}1})\\
+    &= (1-\gamma) \gM_{Poisson}(D)  + \gamma \sum_{\vec{b} \in \{0,1\}^{n-1}} p_{\vec{b}} \gM(D'_{\vec{b}1})
+\end{align*}
+In Lemma \ref{samplinglemma2}, we can think $\gM(D_{\vec{b}})$ as the family of $P_i$ and $\gM(D'_{\vec{b}1})$ as the family of $Q_i$. Then, $\gM_{Poisson}(D)$ will be $\bar{P}$ and $\gM_{Poisson}(D')$ will be $(1-\gamma) \bar{P} + \gamma \bar{Q}$ in Lemma \ref{samplinglemma2}. Also in in the condition of Lemma \ref{samplinglemma2}, $(P,Q)$ dominates $\gM$ for add neighbors, we can get the following equation,
+\begin{equation*}
+    T[\gM(D_{\vec{b}}), \gM(D'_{\vec{b}1})] \ge T[P,Q]
+\end{equation*}
+Therefore we can get the final result,
+\begin{equation*}
+    T[\gM_{Poisson}(D),\gM_{Poisson}(D')] \ge T[P,(1-\gamma)P +\gamma Q]
+\end{equation*}
+
+\end{proof}
+
+\begin{proof}[proof of Theorem \ref{samplingandneighbor} 2]
+By lemma \ref{samplinglemma1}, it suffices to prove
+\begin{equation*}
+    T[\gM_{WOR}(D),\gM_{WOR}(D')] \ge T[P,(1-\gamma)P +\gamma Q]
+\end{equation*}
+where $D = \{x_1,\dots,x_{n-1}\}$ and $D' = D \cup \{x_n\}$.
+When sampling from $D$ using the WOR (Without Replacement) method, selecting $m$ samples can be simply represented as a subset $I \subseteq [n-1]$ of $D$ with probability $\binom{n-1}{m}$. We denote this as $D_I$, where $|I| = m$. For $D'$, the situation is slightly more complex. Using the properties of combinations, we have: $\binom{n}{m} = \binom{n-1}{m} + \binom{n-1}{m-1}$. Thus, $D'$ can be expressed as the sum of two subsets $I$ and $J$ of another subset $J \subseteq [n-1]$ and $|J| = m-1$. Here, the probability of a sample being selected from $D$ is $\binom{n-1}{m}$, while the probability of a sample being selected from $D'$ is $\binom{n}{m}$. As a result, we obtain the following equation:
+\begin{align}
+    M_{WOR}(D) &= \sum_{|I|=m} \frac{1}{\binom{n-1}{m}}M_{WOR}(D_I)\\
+    M_{WOR}(D') &= \sum_{|J|=m-1} \frac{1}{\binom{n}{m}}M_{WOR}(D_{J\cup \{n\}}) +\sum_{|I|=m} \frac{1}{\binom{n}{m}}M_{WOR}(D_I)\label{equ:the25}
+\end{align}
+Since the previous Lemma \ref{samplinglemma2} cannot be directly applied to this equation, we define two sets consisting of $m$ copies of each subset of $[n-1]$ of cardinality $m$ collect as $\gI$ and $n-m$ copies of each subset of $[n]$ of cardinality $m$ collect as $\gJ$. Then express them as follows.
+\begin{align*}
+    \gI &:= \{I^{(k)} : I \subseteq [n-1], |I| = m, 1\le k \le m \}\\
+    \gJ &:= \{J^{(l)}\cup \{n\}: J \subseteq [n-1], |J| = m-1, 1\le l \le n-m \} .
+\end{align*}
+For these two sets, we want to show the following two things.
+\begin{enumerate}
+    \item There is a bijection $F: \gI \to \gJ$ such that $F(I)$ differs from $I$ by one element for all $I \in \gI$.
+    \item Let $p_I = \frac{1}{\binom{n-1}{m}m}$ for all $I \in \gI$ and $\gamma = \frac{m}{n}$. Then
+    \begin{align*}
+        M_{WOR}(D) &= \sum_{I\in \gI}p_I M(D_I)\\
+        M_{WOR}(D') &= \gamma \sum_{I\in \gI}p_I M(D_{F(I)}) + (1-\gamma) \sum_{I\in \gI}p_I M(D_I)
+    \end{align*}
+\end{enumerate}
+For these two things, if we express $\{P_i\} = \{D_I\}$ and $\{Q_i\} = \{D_{F(I)}\}$, we can apply Lemma \ref{samplinglemma2}. Thus, we first prove the two statements above. In the first case, let's construct a $(n-m)$-to-one surjective map $\tilde{F}: \gI \to \tilde{\gJ}$ where $\tilde{\gJ} = \{ J \cup \{n\} : J \subseteq [n-1],|J| = m - 1 \}$. By considering a function that replaces the $k$-th element of $I$ with $n$, we can obtain the $\tilde{F}(I^{(k)}) = \tilde{\gJ}$. Because for any $J\cup \{n\} \in \tilde{\gJ}$, it is hit by $\tilde{F}$ exactly $n-m$ times since the $n$ could have been any of the $(n-1) - (m-1) =  n-m$ indices not already in $J$. And $\gJ$ contains $n-m$ copies of $\tilde{\gJ}$, the $(n-m)$-to-one mapping $\tilde{F}: \gI \to \tilde{\gJ}$ can be reconstructed to a bijection between $\gI$ and $\gJ$. Thus $F(I)$ and $I$ differ in exactly one element.
+For the second case, first equation is easily proved by the definition of without replacement sampling, and so we only show the second equation. By the equation \ref{equ:the25} and the preceding proof, we can get the following equations.
+\begin{align*}
+    M_{WOR}(D') &= \sum_{|J|= m-1} \frac{1}{\binom{n}{m}}M_{WOR}(D_{J\cup {n}}) + \sum_{|I| = m} \frac{1}{\binom{n}{m}}M_{WOR}(D_I)\\
+    &= \sum_{J \in \gJ} \frac{1}{\binom{n}{m} \cdot (n-m)}M_{WOR}(D_J) + \sum_{I \in \gI}\frac{1}{\binom{n}{m}m} M_{WOR}(D_I) \\
+    &= \sum_{I\in \gI}\frac{1}{\binom{n}{m} \cdot (n-m)}M_{WOR}(D_{F(I)}) + \sum_{I \in \gI}\frac{1}{\binom{n}{m}m} M_{WOR}(D_I)
+\end{align*}
+Thus we can get the following result,
+\begin{equation*}
+    \gamma p_I = \frac{1}{\binom{n}{m} \cdot (n-m)} \text{ and } (1- \gamma)p_I = \frac{1}{\binom{n}{m}m},
+\end{equation*}
+which are elementary combination identities.
+\end{proof}
+
+This theorem presents a highly intriguing result. In the case of Poisson sampling, we can use $\gamma$ to define $D'$ as simply adding a single data point $\{n\}$. However, the situation is different for without-replacement random sampling. Since $\gamma$ cannot be directly applied in this case, we had to define the function $\tilde{F}$. During the construction of this function, a data point was replaced, leading to the formulation of the theorem based on replaced datasets for WOR sampling. As a result, a fundamental difference arises between the two sampling methods, and as previously mentioned, this difference accounts for nearly a twofold variation in privacy guarantees.
+
+Moreover, this result confirms that add neighbors and removal neighbors form distinct dominating pairs. This distinction not only reinforces the previously discussed relationship between add and replacing neighbors but also highlights the necessity of differentiating between add and remove operations. Consequently, this leads to the following interesting theorem.
+
+\begin{theorem}\label{maintheorem}
+    IF $(P,Q)$ is a dominating pair of $\gM$ under "Add/Remove" relation, then
+    \begin{equation*}
+        \delta_{\gM_{Poisson}}(\alpha) \le \begin{cases}
+            H_\alpha((1-\gamma)Q+\gamma P, Q) \quad \text{for } \alpha \ge 1\\
+            H_\alpha(P, (1-\gamma)P+\gamma Q) \quad \text{for } 0 < \alpha < 1.
+        \end{cases}
+    \end{equation*}
+    under the "Add/Remove" relation. Similarly, if (P,Q) is a dominating pair of $\gM$ under "Replace" relation for dataset of size $\gamma n$, then
+    \begin{equation*}
+        \delta_{\gM_{WOR}}(\alpha) \le \begin{cases}
+            H_\alpha((1-\gamma)Q+\gamma P, Q) \quad \text{for } \alpha \ge 1\\
+            H_\alpha(P, (1-\gamma)P+\gamma Q) \quad \text{for } 0 < \alpha < 1.
+        \end{cases}
+    \end{equation*}
+    under "Replace" relation for dataset of size $n$.
+\end{theorem}
+
+In the standard formulation of hockey-stick divergence, the value corresponding to $\alpha$ in DP is set as $e^\varepsilon$. Since $\alpha < 1$ implies that $\varepsilon$ is negative, we must consider the case where $\alpha > 1$. Under this condition, the theorem suggests that, in the general case, removal neighbors represent a worse-case scenario compared to add neighbors. This observation raises an important question from this perspective. Before proving this theorem, we first establish a lemma concerning the properties of symmetric neighbors.
+
+\begin{lemma}\label{symmetriclemma}
+    Let $\gM$ be a mechanism and $\simeq$ be a symmetric neighboring relation, i.e., $D\simeq D' \Leftrightarrow D\simeq D'$. Then
+    \begin{enumerate}
+        \item If $(P,Q)$ is a dominating pair of $\gM$, then $(Q,P)$ is also a dominating pair of $\gM$.
+        \item If $\sup_{D\simeq D'}H_\alpha(\gM(D) \Vert \gM (D')) \le \min\{ H_\alpha(P\Vert Q), H_\alpha(Q \Vert P)\} $ for all $\alpha \ge 1$, then $(P,Q)$ and $(Q,P)$ are both dominating pairs of $\gM$.
+        \item The following two statements are equivalent.
+        \begin{enumerate}
+            \item $\sup_{D\simeq D'}H_\alpha(\gM(D) \Vert \gM (D')) \le H_\alpha(P \Vert Q)$ for all $\alpha \ge 1$
+            \item $\sup_{D\simeq D'}H_\alpha(\gM(D) \Vert \gM (D')) \le H_\alpha(Q \Vert P)$ for all $0< \alpha < 1$
+        \end{enumerate}
+    \end{enumerate}
+    \begin{proof}
+        First we prove the third statement. Let $p,q$ be the Radon-Nikodym derivative of $P$ and $Q$ with respect to a common dominating measure $\mu$ (say $\frac{1}{2}P + \frac{1}{2}Q$). Then $H_\alpha(P\Vert Q) = \int(p-\alpha q)_+ d\mu$ and $H_\alpha(Q\Vert P) = \int (q-\alpha p)_+ d\mu$. Then we can get the following result.
+        \begin{align*}
+            H_\alpha(Q\Vert P) &= \int(q-\alpha p)_+ d\mu = \alpha \int (\alpha^{-1} q - p)_+ d\mu \\ 
+            &= \alpha \int (\alpha^{-1} q - p) d\mu + \alpha \int (p - \alpha^{-1}q)_+ d\mu \\
+            &=\alpha(\alpha^{-1} - 1 ) + \alpha H_{\alpha^{-1}}(P\Vert Q)  = \alpha H_{\alpha^{-1}}(P\Vert Q) - \alpha +1
+        \end{align*}
+    where we used the fact that $a_+ = a + (-a)_+$ on the second line. And so we can get the following equation.
+    \begin{equation*}
+        H_\alpha(Q \Vert P) = \alpha H_{\alpha^{-1}}(P\Vert Q) - \alpha +1
+    \end{equation*}
+    By using this equation, for any pair of neighboring $D, D'$ and $0< \alpha \le 1$,
+    \begin{align*}
+        H_\alpha(\gM(D) \Vert \gM(D')) &= \alpha H_{\alpha^{-1}}(\gM(D') \Vert \gM(D)) - \alpha + 1\\ &\le \alpha H_{\alpha^{-1}}(P \Vert Q) - \alpha + 1\\
+        &= H_\alpha(Q \Vert P)
+    \end{align*}
+where the inequality used the fact that $\simeq$ is symmetric, $\alpha^{-1} \ge 1$, and $(P,Q)$ dominates for $\alpha \ge 1$. The converse follows the same argument but starts with $\alpha > 1$. 
+The first and second statements are both implied by the third. For the first statement, by the definition of the dominating pair, we can apply the upper bound for all $\alpha > 0$. Thus by applying $(a) \Rightarrow (b)$ and $(b) \Rightarrow (a)$ for $(P,Q)$, we can get the result that $(Q,P)$ is also a dominating pair. 
+For the second statement, if we apply $(a) \Rightarrow (b)$ for both $(P,Q)$ and $(Q,P)$, then the result extends the bound to the full range.
+    \end{proof}
+    \end{lemma}
+To prove Theorem \ref{maintheorem}, we use the Theorem 8 and 9 of \cite{balle2018privacy} which are about  the amplification of Poisson subsampling and WOR subsampling respectively.
+\begin{theorem}[Theorem 8 of \cite{balle2018privacy}]
+    Let $\gM'$ be the Poisson subsampled mechanism with probability $\gamma$. For any $\varepsilon \ge 0$ we have $\delta_\gM'(\varepsilon') \le \gamma \delta_\gM(\varepsilon)$, where $\varepsilon' = \log(1+\gamma(e^\varepsilon - 1))$.  
+\end{theorem}
+
+
+\begin{proof}[Proof of Poisson sampling case of Theorem \ref{maintheorem} ]
+First prove the case for $\alpha \ge 1$. By Theorem 8 of \cite{balle2018privacy}, we know that for any $D\sim_{A/R} D'$, and all $\varepsilon \ge 0$($\alpha \ge 1$),
+\begin{align*}
+    H_{e^\varepsilon}(\gM_{Poisson}(D) \Vert \gM_{Poisson}(D') &\le \gamma \sup_{\tilde{D} \sim_{A/R}\tilde{D'}}H_{1+ \frac{e
+    ^\varepsilon-1}{\gamma}}(\gM(\tilde{D} \Vert \gM(\tilde{D'}))\\
+    &\le \gamma H_{1+ \frac{e^\varepsilon - 1}{\gamma}} (P \Vert Q) \quad(\because (P,Q) \text{ is the dominating pair of }\gM) \\
+    &= \gamma \int \left(p(x) - (1+ \frac{e^\varepsilon - 1}{\gamma}q(x) \right)_+ dx \\
+    &= \int ((1-\gamma)q(x) + \gamma p(x) - e^\varepsilon q(x))_+ dx \\
+    &= H_{e^\varepsilon}((1-\gamma)Q +\gamma P \Vert Q).
+\end{align*}
+Next for $0< \alpha < 1$, we can apply Lemma \ref{symmetriclemma} because $\sim_{A/R}$ is symmetric. By the third statement of Lemma \ref{symmetriclemma} and above result, we know $(Q,(1-\gamma)Q + \gamma P)$ dominates the subsampled mechanism for $0 < \alpha < 1$. Also by the first statement of Lemma \ref{symmetriclemma}, $(Q,P)$ is also a dominating pair of $\gM$ thus by repeating the same argument, we can get the result that $(P,(1-\gamma)P+\gamma Q)$ dominates the subsampled mechanism for $0 <\alpha<1$. Therefore the proof is completed for the Poisson sampling.
+\end{proof}
+\begin{theorem}[Theorem 9 of \cite{balle2018privacy}]
+     Let $\gM'$ be the WOR subsampled mechanism. For any $\varepsilon \ge 0$ we have $\delta_\gM'(\varepsilon') \le (m/n) \delta_\gM(\varepsilon)$, where $\varepsilon' = \log(1+(m/n)(e^\varepsilon - 1))$.  
+\end{theorem}
+And by Theorem 9 of \cite{balle2018privacy}, we can prove easily by replacing $\gamma$ to $m/n$. Because $\sim_{WOR}$ is also symmetric, the proof follows the same approach as the one above. Therefore, we omit the proof here. 
+
+Theorem \ref{maintheorem} states that, in the general case $(\varepsilon > 0)$, the remove relation always forms the worst-case dominating pair. However, \cite{lebeda2024avoiding} demonstrated that for certain mechanisms, this result does not hold under $k$-fold composition. In \cite{lebeda2024avoiding}, they present a counterexample and propose the following proposition.
+
+\begin{proposition}
+    For some mechanism $\gM$, the privacy curve of the $\binom{n}{m}$-subsampled mechanism $\gM_{WOR}$ is realized by a pair datasets under $\sim_{A/R}$, yet no pair of datasets realizes the privacy curve of $\gM_{WOR}^k$ for all $k>1$.
+\end{proposition}
+In \cite{lebeda2024avoiding}, a counterexample was provided by showing that, for $k = 2$, the value of $\delta$ for add and remove relations in randomized response and the Laplace mechanism varies depending on $\varepsilon$. This demonstrated that Theorem \ref{maintheorem} may not always hold under composition. However, when attempting to find a similar counterexample for the Gaussian mechanism, results showed that, over a sufficiently large range of parameters, the remove relation remained the worst-case. Consequently, the paper left this as a conjecture. In this work, we resolve this conjecture using GDP.
+
+\begin{conjecture}
+    Let $\gM$ be the Gaussian mechanism with any $\sigma$. Then for all $k>0$, $\gamma \in [0,1]$, and $\varepsilon \ge 0$ we have
+    \begin{equation*}
+        \delta^{\sim_{A/R}}_{\gM_{Poisson}^k}(\varepsilon) = \delta^{\sim_{R}}_{\gM_{Poisson}^k}(\varepsilon) \ge \delta^{\sim_{A}}_{\gM_{Poisson}^k}(\varepsilon)
+    \end{equation*}
+\end{conjecture}
+\bibliography{references}
+\end{document}

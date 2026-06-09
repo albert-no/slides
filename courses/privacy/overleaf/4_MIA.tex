@@ -1,0 +1,653 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+% \usepackage{cleveref}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{xcolor}
+\usepackage{booktabs,tabularx,array,longtable}
+
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+
+\newcommand{\fA}{\field{A}} 
+\newcommand{\fB}{\field{B}} 
+
+
+\setlength{\parskip}{0.45em}
+\setlength{\parindent}{0pt}
+\setlist[itemize]{topsep=2pt,itemsep=2pt,leftmargin=1.5em}
+\setlist[enumerate]{topsep=2pt,itemsep=2pt,leftmargin=1.6em}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{exercise}[theorem]{Exercise}
+
+
+\newcommand{\PrK}{\Pr}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\1}{\mathbf{1}}
+
+\newcommand{\Train}{\mathsf{Train}}
+\newcommand{\Obs}{\mathsf{Obs}}
+\newcommand{\Member}{\mathsf{Member}}
+\newcommand{\NonMember}{\mathsf{NonMember}}
+\newcommand{\Loss}{\ell}
+\newcommand{\TPR}{\mathrm{TPR}}
+\newcommand{\FPR}{\mathrm{FPR}}
+\newcommand{\PPV}{\mathrm{PPV}}
+\newcommand{\Adv}{\mathrm{Adv}}
+\newcommand{\acc}{\mathrm{acc}}
+\newcommand{\KL}{\mathrm{KL}}
+\newcommand{\Ind}[1]{\mathbf{1}\!\left\{#1\right\}}
+\newcommand{\Pbb}{\mathbb{P}}
+
+
+
+\include{macro}
+
+\renewcommand{\blue}[1]{\textcolor{blue}{#1}}
+
+
+\begin{document}
+
+\title{Membership Inference Attacks}
+\author{}
+\date{}
+\maketitle
+
+
+\section{Motivation and big picture}
+
+Suppose a hospital trains a model only on patients with a stigmatized condition. If an attacker can determine that Alice's record was in the training set, then the attacker learns something sensitive about Alice even if the model never outputs her record verbatim. This is the core danger of membership inference.
+
+Conceptually, MIAs sit at the intersection of three ideas:
+\begin{itemize}
+    \item \textbf{generalization and memorization:} training points often receive lower loss or higher confidence than unseen points;
+    \item \textbf{hypothesis testing:} the attacker is deciding between ``member'' and ``non-member'' worlds;
+    \item \textbf{differential privacy:} a training algorithm that is stable under the inclusion or exclusion of one point limits the power of any such test.
+\end{itemize}
+
+The literature evolved roughly as follows. Shokri et al.~\cite{shokri2017} introduced the first widely used black-box attack based on shadow models. Yeom et al.~\cite{yeom2018} gave a much simpler loss-based perspective and connected attack advantage to generalization. Carlini et al.~\cite{carlini2022} argued that average-case metrics such as accuracy and AUC can hide severe privacy leakage, and proposed a per-example likelihood-ratio attack optimized for \emph{low false-positive rates}. Several follow-up works broadened the attack surface to label-only access, white-box access, federated learning, realistic priors, and fine-grained per-example privacy auditing \cite{salem2019,sablayrolles2019,nasr2019,songmittal2021,choquette2021,jayaraman2021,ye2022}.
+
+\section{Formal problem statement}
+
+\subsection{Training algorithm, observation model, and attack}
+
+Let $\cZ = \cX \times \cY$ be the example space and let $\cD$ be an unknown data distribution on $\cZ$. A randomized learning algorithm is a map
+\[
+\Train : \cZ^n \to \cF,
+\]
+where $\cF$ is the space of trained models.
+
+Fix a candidate example $z \in \cZ$. We compare two worlds:
+\begin{align*}
+H_1 &: \text{``$z$ is a member''}, \qquad f \leftarrow \Train(S \cup \{z\}), \quad S \sim \cD^{n-1},\\
+H_0 &: \text{``$z$ is a non-member''}, \qquad f \leftarrow \Train(S), \qquad\quad\, S \sim \cD^n.
+\end{align*}
+The attacker does not necessarily observe the whole model $f$. Instead, the attacker observes some view
+\[
+V = \Obs(f,z) \in \cV.
+\]
+This abstraction is important because different attack settings correspond to different choices of $\Obs$:
+\begin{itemize}
+    \item \textbf{posterior black-box:} $\Obs(f,z) = f(x)$, the confidence vector;
+    \item \textbf{label-only black-box:} $\Obs(f,z)$ contains only predicted labels, perhaps on perturbed versions of $x$;
+    \item \textbf{loss oracle:} $\Obs(f,z) = \Loss(f,z)$;
+    \item \textbf{white-box:} $\Obs(f,z)$ may include gradients, activations, logits, or parameters.
+\end{itemize}
+
+\begin{definition}[Membership attack]
+For a fixed target example $z$, a membership attack is a measurable function
+\[
+A_z : \cV \to \{0,1\},
+\]
+where $A_z(V)=1$ means ``declare member.''
+\end{definition}
+
+Write $P_1^z$ and $P_0^z$ for the laws of $V$ under $H_1$ and $H_0$, respectively. The standard operating characteristics are:
+\[
+\TPR_z(A) = P_1^z[A_z(V)=1],
+\qquad
+\FPR_z(A) = P_0^z[A_z(V)=1].
+\]
+The true-positive rate is the fraction of actual members caught by the attack; the false-positive rate is the fraction of non-members incorrectly flagged.
+
+\begin{definition}[Advantage, ROC, and per-example privacy curve]
+The \emph{membership advantage} of $A_z$ is
+\[
+\Adv_z(A) = \TPR_z(A) - \FPR_z(A).
+\]
+The ROC curve is the set of all attainable pairs $(\FPR_z(A),\TPR_z(A))$. The \emph{per-example privacy curve} is
+\[
+R_z(\alpha) = \sup\{\TPR_z(A): \FPR_z(A) \le \alpha\}, \qquad \alpha \in [0,1].
+\]
+\end{definition}
+
+The function $R_z$ captures the privacy risk of \emph{one particular} example. This per-example viewpoint is central in LiRA: different examples can have drastically different risk even when the target model is fixed \cite{carlini2022}.
+
+\subsection{Why membership is hypothesis testing}
+
+Membership inference is a binary testing problem between the two distributions $P_1^z$ and $P_0^z$. The following classical theorem gives the optimal test at a fixed false-positive rate.
+
+\begin{theorem}[Neyman-Pearson, specialized form]
+Assume that $P_1^z$ and $P_0^z$ admit densities $p_1^z$ and $p_0^z$ with respect to a common dominating measure. Define the likelihood ratio
+\[
+\Lambda_z(v) = \frac{p_1^z(v)}{p_0^z(v)}.
+\]
+For every target false-positive level $\alpha \in [0,1]$, the attack maximizing $\TPR_z$ subject to $\FPR_z \le \alpha$ is obtained by thresholding $\Lambda_z$ (with randomized tie-breaking if necessary).
+\end{theorem}
+
+\begin{proof}
+Let $A^* = \{v : \Lambda_z(v) > \tau\}$, where $\tau$ is chosen so that $P_0^z(A^*) \le \alpha$ and equality holds after randomized tie-breaking on $\{\Lambda_z = \tau\}$ if needed. For any other measurable set $A$ with $P_0^z(A) \le \alpha$, the integrand $\Lambda_z(v)-\tau$ is nonnegative on $A^*\setminus A$ and nonpositive on $A\setminus A^*$. Therefore,
+\[
+\int_{A^*} (\Lambda_z-\tau) p_0^z \, dv \ge \int_A (\Lambda_z-\tau) p_0^z \, dv.
+\]
+Rearranging,
+\[
+P_1^z(A^*) - \tau P_0^z(A^*) \ge P_1^z(A) - \tau P_0^z(A).
+\]
+Since $P_0^z(A^*) \ge P_0^z(A)$ by construction, it follows that $P_1^z(A^*) \ge P_1^z(A)$. Hence $A^*$ is optimal.
+\end{proof}
+
+\begin{remark}
+The theorem is conceptually more important than any specific attack. Shokri's attack, Yeom's loss threshold, LiRA, Merlin/Morgan, label-only attacks, and white-box attacks can all be interpreted as approximations to an optimal test between a ``member'' distribution and a ``non-member'' distribution, but using different observables and different approximations of the likelihood ratio.
+\end{remark}
+
+\subsection{Notation summary}
+
+\begin{center}
+\begin{tabularx}{0.96\linewidth}{@{}>{\raggedright\arraybackslash}p{0.18\linewidth}X@{}}
+\toprule
+Symbol & Meaning \\
+\midrule
+$z=(x,y)$ & Candidate example whose membership is being tested \\
+$\Train$ & Randomized training algorithm \\
+$\Obs(f,z)$ & What the attacker can observe from model $f$ on query $z$ \\
+$H_1, H_0$ & Member and non-member worlds \\
+$P_1^z, P_0^z$ & Laws of the observation under $H_1$ and $H_0$ \\
+$\TPR_z, \FPR_z$ & True-positive and false-positive rates for example $z$ \\
+$R_z(\alpha)$ & Best achievable $\TPR$ at false-positive budget $\alpha$ \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{The original black-box attack of Shokri et al.}
+
+Shokri et al.~\cite{shokri2017} considered the black-box setting where the attacker can query a target classifier and obtain its posterior probability vector. Their key idea is to learn a separate \emph{attack model} that distinguishes the target model's outputs on training points from its outputs on non-training points.
+
+\subsection{Threat model}
+
+The target model is a classifier $f : \cX \to [0,1]^C$. For a query $x$, the attacker receives the confidence vector $f(x)$ and also knows the true class label $y$. The task is to infer whether $(x,y)$ was part of the training set of $f$.
+
+The attack is difficult because the attacker does not know the target model's training set. Shokri et al. therefore train \emph{shadow models} on auxiliary datasets drawn from a similar distribution. Since the attacker knows whether a point was used to train a shadow model, the attacker can manufacture labeled examples for a binary classifier that predicts \texttt{in} or \texttt{out} from the shadow model's output vector.
+
+\subsection{Shadow-model pipeline}
+
+A stylized version of the Shokri attack is:
+\begin{enumerate}
+    \item Construct auxiliary datasets $S_1^{\mathrm{sh}},\dots,S_k^{\mathrm{sh}}$ similar in format and distribution to the target training set.
+    \item Train shadow models $f_1^{\mathrm{sh}},\dots,f_k^{\mathrm{sh}}$ using the same learning pipeline as the target, if possible.
+    \item For each shadow model, query it on points from its own training set and label the resulting outputs as \texttt{in}; query it on a disjoint test set and label the outputs as \texttt{out}.
+    \item Pool these labeled posterior vectors into an attack-training set, optionally split by class label.
+    \item Train one binary attack classifier per class, and apply it to the target model's posterior on the candidate point.
+\end{enumerate}
+
+The original paper emphasized several ways to obtain shadow data: model-based synthesis from the target model itself, statistics-based synthesis using feature marginals, and noisy real data when some auxiliary records are available \cite{shokri2017}. The class-specific design matters because the posterior distributions depend heavily on the true class label.
+
+\begin{remark}[What the attack is really learning]
+At a high level, the attack model is trying to detect whether the target model treats $(x,y)$ as ``familiar.'' Training points often induce a more peaked posterior vector, lower loss, or larger margin than non-members. Shadow models turn this into a supervised learning problem.
+\end{remark}
+
+\subsection{Main lessons from the original paper}
+
+The main conceptual lessons of Shokri et al.~\cite{shokri2017} are still worth teaching.
+\begin{itemize}
+    \item \textbf{Black-box access can be enough.} One need not recover model parameters or gradients.
+    \item \textbf{Overfitting helps, but is not the whole story.} The attack gets stronger when the target model behaves differently on train vs test data, but architectural choices matter too.
+    \item \textbf{Class imbalance matters.} Underrepresented classes and tasks with many output classes often leak more.
+\end{itemize}
+
+Shokri et al. explicitly observed that larger train-test gaps tend to correlate with stronger attacks, while also noting that model structure contributes additional leakage beyond simple overfitting \cite{shokri2017}.
+
+\section{Loss-based attacks and the connection to generalization}
+
+A major simplification came from Yeom et al.~\cite{yeom2018}: instead of learning a complex attack model, use the training loss itself as the attack signal.
+
+\subsection{Generalization gap}
+
+Let $\Loss : \cF \times \cZ \to [0,B]$ be a bounded loss function. For a random training set $S \sim \cD^n$, define the expected training and population losses:
+\[
+L_{\mathrm{train}} = \E_{S \sim \cD^n}\!\left[\frac{1}{n}\sum_{z \in S} \Loss(\Train(S),z)\right],
+\qquad
+L_{\mathrm{test}} = \E_{S \sim \cD^n,\, z \sim \cD}[\Loss(\Train(S),z)].
+\]
+The expected generalization gap is
+\[
+\mathrm{gen} = L_{\mathrm{test}} - L_{\mathrm{train}}.
+\]
+A large positive value means the model performs systematically better on its training points than on fresh samples.
+
+\subsection{A theorem of Yeom type}
+
+The cleanest theorem uses a slightly randomized attack.
+
+\begin{theorem}[Bounded-loss attack; Yeom-style]\label{thm:yeom-bounded}
+Assume $0 \le \Loss(f,z) \le B$ for all $f,z$. Consider the attack that, on input $(f,z)$, outputs \texttt{member} with probability
+\[
+1 - \frac{\Loss(f,z)}{B}.
+\]
+Then its membership advantage equals
+\[
+\Adv = \frac{\mathrm{gen}}{B}.
+\]
+\end{theorem}
+
+\begin{proof}
+Under the member world $H_1$, the attack outputs \texttt{member} with probability
+\[
+\TPR = 1 - \frac{L_{\mathrm{train}}}{B}.
+\]
+Under the non-member world $H_0$, it outputs \texttt{member} with probability
+\[
+\FPR = 1 - \frac{L_{\mathrm{test}}}{B}.
+\]
+Subtracting gives
+\[
+\Adv = \TPR - \FPR = \frac{L_{\mathrm{test}} - L_{\mathrm{train}}}{B} = \frac{\mathrm{gen}}{B}.
+\]
+\end{proof}
+
+The theorem is simple, but it makes an important point: \emph{overfitting is sufficient for membership leakage}. Whenever train loss is noticeably smaller than test loss, a loss-based attacker can exploit it.
+
+\begin{corollary}[Gap attack for $0$-$1$ loss]\label{cor:gap}
+Suppose $\Loss(f,(x,y)) = \Ind{f(x) \ne y}$ is the $0$-$1$ classification loss. Then the Yeom-style attack from Theorem~\ref{thm:yeom-bounded} becomes deterministic: it outputs \texttt{member} iff $f(x)=y$. Its advantage is exactly
+\[
+\acc_{\mathrm{train}} - \acc_{\mathrm{test}}.
+\]
+\end{corollary}
+
+\begin{proof}
+For $0$-$1$ loss we have $B=1$ and $1-\Loss(f,(x,y)) = \Ind{f(x)=y}$. Therefore the attack predicts \texttt{member} exactly on correctly classified points. Moreover,
+\[
+L_{\mathrm{train}} = 1-\acc_{\mathrm{train}},
+\qquad
+L_{\mathrm{test}} = 1-\acc_{\mathrm{test}}.
+\]
+Apply Theorem~\ref{thm:yeom-bounded}.
+\end{proof}
+
+\subsection{Practical deterministic threshold attack}
+
+The widely used practical variant is deterministic: predict \texttt{member} iff the observed loss is below a threshold,
+\[
+A_\tau(f,z) = \Ind{\Loss(f,z) \le \tau}.
+\]
+A natural threshold is the average training loss. This attack is cheap: one query and one scalar comparison. Yeom et al. showed that such simple loss-based attacks can match or exceed the original shadow-model attack in many settings, while requiring much less attacker knowledge and computation \cite{yeom2018}.
+
+\begin{remark}
+The converse to Theorem~\ref{thm:yeom-bounded} is false. Small generalization gap does \emph{not} imply security. Yeom et al. also exhibit colluding training procedures that leak membership information while remaining stable on ordinary generalization metrics, and later white-box attacks show leakage even on well-generalized deep networks \cite{yeom2018,nasr2019}.
+\end{remark}
+
+\section{Why low false-positive rates matter}
+
+Early papers often summarized attack performance by accuracy or ROC-AUC. Carlini et al.~\cite{carlini2022} argue that this misses the point: privacy failures often concern a small vulnerable subset of examples, and a practically meaningful attack must make \emph{very few false accusations}.
+
+\subsection{Positive predictive value and prevalence}
+
+Suppose the base rate of membership among the attacker's candidate pool is
+\[
+\pi = \Pbb[B=1].
+\]
+For example, if the attacker screens a huge external population for inclusion in one training set, then $\pi$ can be tiny.
+
+\begin{proposition}[Bayes formula for attack precision]\label{prop:ppv}
+For any attack with true-positive rate $\TPR$ and false-positive rate $\FPR$, the positive predictive value is
+\[
+\PPV = \Pbb[B=1 \mid A=1] = \frac{\pi\,\TPR}{\pi\,\TPR + (1-\pi)\,\FPR}.
+\]
+\end{proposition}
+
+\begin{proof}
+Use Bayes' rule:
+\[
+\Pbb[B=1 \mid A=1] = \frac{\Pbb[A=1 \mid B=1]\Pbb[B=1]}{\Pbb[A=1]}.
+\]
+Now expand $\Pbb[A=1]$ by conditioning on $B \in \{0,1\}$.
+\end{proof}
+
+\begin{corollary}[Why small $\FPR$ is essential]
+Fix a target precision level $\eta \in (0,1)$. Any attack satisfying $\PPV \ge \eta$ must obey
+\[
+\FPR \le \frac{\pi(1-\eta)}{\eta(1-\pi)}\, \TPR.
+\]
+In particular, when $\pi \ll 1$, the false-positive rate must be of order $\pi$ or smaller.
+\end{corollary}
+
+\begin{proof}
+Rearrange the expression from Proposition~\ref{prop:ppv}.
+\end{proof}
+
+This corollary explains Carlini et al.'s insistence on metrics like ``TPR at $0.1\%$ FPR'' or even lower. A respectable AUC does not imply high-confidence privacy breaches when prevalence is low.
+
+\subsection{The critique of average-case evaluation}
+
+Carlini et al.~\cite{carlini2022} show that a standard global loss threshold can look acceptable in AUC terms while being useless in the low-FPR regime. They recommend evaluating MIAs by ROC curves in log-log scale and reporting $\TPR$ at operationally relevant false-positive budgets. This perspective lines up with later work by Jayaraman et al.~\cite{jayaraman2021}, who emphasize realistic priors and positive predictive value.
+
+\section{LiRA: membership inference from first principles}
+
+Carlini et al.~\cite{carlini2022} revisit membership inference from the testing viewpoint and ask: if the objective is low-FPR detection of the \emph{most vulnerable} members, how should we build the attack?
+
+\subsection{Per-example in/out distributions}
+
+Fix a target point $z=(x,y)$. Ideally, one would like to compare the distribution of trained models when $z$ is included against the distribution when $z$ is excluded. Carlini et al.~\cite{carlini2022} denote these by
+\[
+Q_{\mathrm{in}}^z = \{ f \leftarrow \Train(S \cup \{z\}) : S \sim \cD^{n-1} \},
+\qquad
+Q_{\mathrm{out}}^z = \{ f \leftarrow \Train(S) : S \sim \cD^n \}.
+\]
+The exact likelihood-ratio test over model parameters is intractable, so the attack uses a scalar statistic $S_z = s(f,z)$ extracted from the target model's response to $z$.
+
+The key move is \emph{per-example calibration}: instead of one global threshold for every example, estimate separate in/out distributions for each $z$. This matters because some points are inherently easier or harder for the model, and some are memorized more strongly than others.
+
+\subsection{The LiRA statistic}
+
+In classification, a natural observation is the model's confidence on the correct label, $p_y = f(x)_y$. Carlini et al. found that neither the raw confidence nor the raw cross-entropy loss is especially well approximated by a Gaussian; they therefore apply the logit transform
+\[
+\phi(p_y) = \log\frac{p_y}{1-p_y}.
+\]
+For a fixed target point $z$, they train shadow models with and without $z$, collect the resulting logit confidences, fit parametric in/out distributions, and then compute the likelihood ratio for the target model's observed confidence. This is LiRA.
+
+\subsection{Online and offline LiRA}
+
+\paragraph{Online LiRA.}
+For each target point $z$:
+\begin{enumerate}
+    \item Sample many shadow datasets.
+    \item Train ``IN'' shadow models that include $z$ and ``OUT'' shadow models that exclude $z$.
+    \item Query each shadow model on $z$ and record a statistic $s$ (typically logit confidence).
+    \item Fit densities $q_{\mathrm{in}}^z$ and $q_{\mathrm{out}}^z$ from these samples.
+    \item Query the target model on $z$, obtain $s_{\mathrm{obs}}$, and return the likelihood ratio
+    \[
+    \Lambda_z(s_{\mathrm{obs}}) = \frac{q_{\mathrm{in}}^z(s_{\mathrm{obs}})}{q_{\mathrm{out}}^z(s_{\mathrm{obs}})}.
+    \]
+\end{enumerate}
+
+\paragraph{Offline LiRA.}
+The online variant is expensive because it retrains models after the target point is known. The offline variant trains shadow models only once, estimates the non-member distribution $q_{\mathrm{out}}^z$, and then uses a one-sided tail probability under that null model. This is cheaper and often almost as good in practice \cite{carlini2022}.
+
+\subsection{Gaussian LiRA}
+
+The simplest parametric model assumes
+\[
+S_z \mid H_1 \sim \mathcal{N}(\mu_{\mathrm{in}},\sigma_{\mathrm{in}}^2),
+\qquad
+S_z \mid H_0 \sim \mathcal{N}(\mu_{\mathrm{out}},\sigma_{\mathrm{out}}^2).
+\]
+
+\begin{proposition}[Gaussian likelihood-ratio score]\label{prop:lira-gaussian}
+Under the Gaussian model,
+\[
+\log \Lambda_z(s)
+= \log\frac{\sigma_{\mathrm{out}}}{\sigma_{\mathrm{in}}}
+- \frac{(s-\mu_{\mathrm{in}})^2}{2\sigma_{\mathrm{in}}^2}
++ \frac{(s-\mu_{\mathrm{out}})^2}{2\sigma_{\mathrm{out}}^2}.
+\]
+If $\sigma_{\mathrm{in}} = \sigma_{\mathrm{out}} = \sigma$ and $\mu_{\mathrm{in}} > \mu_{\mathrm{out}}$, then thresholding $\Lambda_z$ is equivalent to thresholding $s$ itself, because
+\[
+\log \Lambda_z(s)
+= \frac{\mu_{\mathrm{in}} - \mu_{\mathrm{out}}}{\sigma^2}
+\left(s - \frac{\mu_{\mathrm{in}}+\mu_{\mathrm{out}}}{2}\right).
+\]
+\end{proposition}
+
+\begin{proof}
+Substitute the Gaussian densities into the definition of $\Lambda_z$. In the equal-variance case, expand the squares and cancel the quadratic terms in $s$.
+\end{proof}
+
+\begin{remark}
+The equal-variance case clarifies the main departure from global-threshold attacks. LiRA is still a threshold test, but the threshold is \emph{example-dependent}: it depends on the local calibration parameters $(\mu_{\mathrm{in}},\mu_{\mathrm{out}},\sigma)$ for the target point. This is why LiRA can detect outlier members at very low FPR while ordinary global loss thresholds fail.
+\end{remark}
+
+\subsection{Why LiRA is stronger}
+
+Carlini et al. report three ingredients behind LiRA's improvement \cite{carlini2022}:
+\begin{itemize}
+    \item \textbf{low-FPR objective:} optimize for the regime that matters in privacy auditing;
+    \item \textbf{per-example calibration:} avoid one global threshold for all points;
+    \item \textbf{parametric modeling on logit scale:} this generalizes better from limited shadow models and supports efficient likelihood-ratio testing.
+\end{itemize}
+
+They also show that the attack remains useful when the attacker mismatches the target architecture, optimizer, or augmentation pipeline, although the best performance occurs when these guesses are correct \cite{carlini2022}.
+
+\section{Important extensions and related literature}
+
+The papers below make a good ``second layer'' of reading after Shokri, Yeom, and Carlini.
+
+\begin{center}
+\small
+\begin{longtable}{@{}p{0.22\linewidth}p{0.17\linewidth}p{0.53\linewidth}@{}}
+\toprule
+Paper & Access model & Main contribution \\
+\midrule
+\endfirsthead
+\toprule
+Paper & Access model & Main contribution \\
+\midrule
+\endhead
+Salem et al. (ML-Leaks)~\cite{salem2019} & Black-box & Relaxes strong assumptions of the original shadow-model framework; shows attacks can remain effective with much less attacker knowledge. \\
+Sablayrolles et al.~\cite{sablayrolles2019} & Black-box / white-box & Derive an asymptotic Bayes-optimal perspective; under their assumptions, the optimal rule depends only on loss, suggesting that black-box and white-box access can be equivalent in the limit. \\
+Nasr et al.~\cite{nasr2019} & White-box, federated & Design passive and active white-box attacks using gradients, activations, and parameter updates; show leakage even for well-generalized deep models and in federated learning. \\
+Song and Mittal~\cite{songmittal2021} & Black-box & Systematic evaluation framework; propose modified entropy and the privacy risk score, emphasizing that privacy risk is highly heterogeneous across samples. \\
+Choquette-Choo et al.~\cite{choquette2021} & Label-only & Show that confidence masking is not a real defense: one can infer membership from the robustness of predicted labels under perturbations. \\
+Jayaraman et al.~\cite{jayaraman2021} & Black-box & Stress realistic priors and positive predictive value; propose Merlin/Morgan attacks and threshold selection aimed at operational constraints. \\
+Ye et al.~\cite{ye2022} & Reference-based & Present a unified hypothesis-testing framework, clarify sources of attack uncertainty, and design stronger reference-model attacks for privacy auditing. \\
+Mattern et al.~\cite{mattern2023} & Language models & Study MIAs for large autoregressive language models and highlight the fragility of reference-based attacks when the reference model is poorly matched. \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\section{Provable defenses: what differential privacy guarantees}
+
+Empirical defenses such as early stopping, dropout, confidence perturbation, or adversarial regularization can reduce leakage, but only differential privacy provides a worst-case theorem against \emph{all} membership attacks.
+
+\subsection{Pure differential privacy}
+
+For this section, let us assume the training algorithm is $\epsilon$-DP under add/remove adjacency. That is, for any neighboring datasets $S$ and $S'$ differing by the presence of one point, and any measurable event $E$ in model space,
+\[
+\Pbb[\Train(S) \in E] \le e^{\epsilon} \Pbb[\Train(S') \in E].
+\]
+By post-processing, the same inequality holds for any observable view $\Obs(\Train(S),z)$.
+
+\begin{theorem}[DP upper-bounds every membership test]\label{thm:dp-roc}
+Assume $\Train$ is $\epsilon$-DP under add/remove adjacency. Fix any target point $z$ and any attack $A_z$. Then
+\[
+\TPR_z(A) \le e^{\epsilon} \FPR_z(A)
+\qquad\text{and}\qquad
+\TPR_z(A) \le 1 - e^{-\epsilon}(1-\FPR_z(A)).
+\]
+In particular, if an attacker is constrained to false-positive rate at most $\alpha$, then
+\[
+\TPR_z(A) \le \min\!\left\{e^{\epsilon}\alpha,\; 1 - e^{-\epsilon}(1-\alpha)\right\}.
+\]
+\end{theorem}
+
+\begin{proof}
+Let $E = \{v \in \cV : A_z(v)=1\}$ be the event that the attack declares membership. Since the observation is a post-processing of the trained model, differential privacy gives
+\[
+P_1^z(E) \le e^{\epsilon} P_0^z(E),
+\]
+which is exactly $\TPR_z(A) \le e^{\epsilon} \FPR_z(A)$. Apply the same argument to the complement event $E^c$:
+\[
+1-\FPR_z(A) = P_0^z(E^c) \le e^{\epsilon} P_1^z(E^c) = e^{\epsilon}(1-\TPR_z(A)).
+\]
+Rearranging gives the second bound.
+\end{proof}
+
+\begin{corollary}[Balanced-accuracy bound]
+Under the assumptions of Theorem~\ref{thm:dp-roc}, every attack satisfies
+\[
+\Adv_z(A) = \TPR_z(A)-\FPR_z(A) \le \frac{e^{\epsilon}-1}{e^{\epsilon}+1},
+\]
+and therefore the balanced accuracy obeys
+\[
+\frac{\TPR_z(A) + 1 - \FPR_z(A)}{2} \le \frac{e^{\epsilon}}{e^{\epsilon}+1}.
+\]
+\end{corollary}
+
+\begin{proof}
+Write $p=\TPR_z(A)$ and $q=\FPR_z(A)$. By Theorem~\ref{thm:dp-roc},
+\[
+p \le e^{\epsilon} q, \qquad p \le 1 - e^{-\epsilon}(1-q).
+\]
+Hence
+\[
+p-q \le \min\{(e^{\epsilon}-1)q,\; (1-e^{-\epsilon})(1-q)\}.
+\]
+The right-hand side is maximized when the two terms are equal, namely at $q=1/(e^{\epsilon}+1)$, giving
+\[
+p-q \le \frac{e^{\epsilon}-1}{e^{\epsilon}+1}.
+\]
+The balanced-accuracy bound is immediate.
+\end{proof}
+
+\subsection{Approximate differential privacy}
+
+\begin{theorem}[(\(\epsilon,\delta\))-DP upper-bound]
+Assume $\Train$ is $(\epsilon,\delta)$-DP under add/remove adjacency. Then every membership attack satisfies
+\[
+\TPR_z(A) \le e^{\epsilon} \FPR_z(A) + \delta,
+\qquad
+\TPR_z(A) \le 1 - e^{-\epsilon}(1-\FPR_z(A)-\delta).
+\]
+\end{theorem}
+
+\begin{proof}
+Repeat the proof of Theorem~\ref{thm:dp-roc}, now using the inequality
+\[
+P_1^z(E) \le e^{\epsilon} P_0^z(E) + \delta,
+\]
+and similarly for $E^c$.
+\end{proof}
+
+\begin{remark}[Replace-one adjacency]
+Many texts, including standard differential privacy lecture notes, define neighboring datasets by replacing one record rather than adding or removing one. The two notions are equivalent up to constant factors in the privacy parameters, so the theorems above still apply after the standard conversion. For teaching purposes, it is best to state the MIA theorem in add/remove form because that is exactly the membership question.
+\end{remark}
+
+\begin{remark}[What this does and does not say]
+The theorem does \emph{not} imply that every non-DP model is vulnerable to a strong practical MIA. It says that if training is differentially private, then every MIA is limited. The converse fails: some non-DP models leak very little to current attacks, while others are highly vulnerable.
+\end{remark}
+
+\section{Suggested lecture narrative}
+
+A good master-level presentation is:
+\begin{enumerate}
+    \item Start from the testing formulation: a member and non-member world induce two distributions over observables.
+    \item Explain Shokri et al. as the first successful black-box instantiation of this idea.
+    \item Show Yeom's theorem to connect attack power with generalization gap and overfitting.
+    \item Motivate why average-case metrics are not enough; introduce $\PPV$ and low-FPR evaluation.
+    \item Present LiRA as the natural likelihood-ratio attack with per-example calibration.
+    \item End with the differential privacy theorem as the cleanest worst-case defense.
+\end{enumerate}
+
+Pedagogically, the key conceptual transition is from ``membership as one more black-box attack'' to ``membership as a generic hypothesis-testing lens on memorization.'' That framing makes the later literature much easier to organize.
+
+\section{Take-home messages}
+
+\begin{itemize}
+    \item Membership inference is best understood as binary hypothesis testing between two nearby training worlds.
+    \item The original shadow-model attack is historically important because it showed that black-box prediction vectors already leak membership.
+    \item Loss-based attacks reveal a precise link between overfitting and privacy leakage, but overfitting is only part of the story.
+    \item Low-FPR metrics are essential: privacy is not an average-case notion.
+    \item LiRA is strong because it calibrates risk \emph{per example} using likelihood ratios estimated from reference or shadow models.
+    \item Differential privacy provides a theorem against all MIAs, not just the ones we currently know how to implement.
+\end{itemize}
+
+\section{Exercises}
+
+\begin{exercise}
+Using Proposition~\ref{prop:ppv}, derive the minimum false-positive budget needed to achieve $\PPV \ge 0.9$ when the base rate is $\pi = 10^{-4}$.
+\end{exercise}
+
+\begin{exercise}
+Assume the LiRA statistic satisfies the equal-variance Gaussian model from Proposition~\ref{prop:lira-gaussian}. Derive the threshold on $s$ that achieves false-positive rate exactly $\alpha$.
+\end{exercise}
+
+\begin{exercise}
+Show that Corollary~\ref{cor:gap} implies the following: if a classifier has training accuracy $0.98$ and test accuracy $0.90$, then the deterministic correctness-based attack achieves membership advantage $0.08$.
+\end{exercise}
+
+\begin{exercise}
+Suppose a training algorithm is $\epsilon$-DP with $\epsilon = 1$. Use Theorem~\ref{thm:dp-roc} to upper-bound the achievable $\TPR$ at false-positive budget $\alpha = 10^{-3}$.
+\end{exercise}
+
+\begin{thebibliography}{99}
+
+\bibitem{shokri2017}
+Reza Shokri, Marco Stronati, Congzheng Song, and Vitaly Shmatikov.
+\newblock Membership Inference Attacks Against Machine Learning Models.
+\newblock In \emph{IEEE Symposium on Security and Privacy}, 2017.
+
+\bibitem{yeom2018}
+Samuel Yeom, Irene Giacomelli, Matt Fredrikson, and Somesh Jha.
+\newblock Privacy Risk in Machine Learning: Analyzing the Connection to Overfitting.
+\newblock In \emph{IEEE Computer Security Foundations Symposium}, 2018.
+
+\bibitem{salem2019}
+Ahmed Salem, Yang Zhang, Mathias Humbert, Pascal Berrang, Mario Fritz, and Michael Backes.
+\newblock ML-Leaks: Model and Data Independent Membership Inference Attacks and Defenses on Machine Learning Models.
+\newblock In \emph{NDSS}, 2019.
+
+\bibitem{sablayrolles2019}
+Alexandre Sablayrolles, Matthijs Douze, Yann Ollivier, Cordelia Schmid, and Herve Jegou.
+\newblock White-box vs Black-box: Bayes Optimal Strategies for Membership Inference.
+\newblock In \emph{ICML}, 2019.
+
+\bibitem{nasr2019}
+Milad Nasr, Reza Shokri, and Amir Houmansadr.
+\newblock Comprehensive Privacy Analysis of Deep Learning: Passive and Active White-box Inference Attacks against Centralized and Federated Learning.
+\newblock In \emph{IEEE Symposium on Security and Privacy}, 2019.
+
+\bibitem{songmittal2021}
+Liwei Song and Prateek Mittal.
+\newblock Systematic Evaluation of Privacy Risks of Machine Learning Models.
+\newblock In \emph{USENIX Security Symposium}, 2021.
+
+\bibitem{choquette2021}
+Christopher A. Choquette-Choo, Florian Tramer, Nicholas Carlini, and Nicolas Papernot.
+\newblock Label-Only Membership Inference Attacks.
+\newblock In \emph{ICML}, 2021.
+
+\bibitem{jayaraman2021}
+Bargav Jayaraman, Lingxiao Wang, Katherine Knipmeyer, Quanquan Gu, and David Evans.
+\newblock Revisiting Membership Inference Under Realistic Assumptions.
+\newblock \emph{Proceedings on Privacy Enhancing Technologies}, 2021(2), 2021.
+
+\bibitem{carlini2022}
+Nicholas Carlini, Steve Chien, Milad Nasr, Shuang Song, Andreas Terzis, and Florian Tramer.
+\newblock Membership Inference Attacks From First Principles.
+\newblock In \emph{IEEE Symposium on Security and Privacy}, 2022.
+
+\bibitem{ye2022}
+Jiayuan Ye, Aadyaa Maddi, Sasi Kumar Murakonda, Vincent Bindschaedler, and Reza Shokri.
+\newblock Enhanced Membership Inference Attacks against Machine Learning Models.
+\newblock In \emph{ACM CCS}, 2022.
+
+\bibitem{mattern2023}
+Justus Mattern, Fatemehsadat Mireshghallah, Zhijing Jin, Bernhard Schlotterer, Steffen Friedrich, and Taylor Berg-Kirkpatrick.
+\newblock Membership Inference Attacks Against Language Models via Neighbourhood Comparison.
+\newblock In \emph{Findings of ACL}, 2023.
+
+\end{thebibliography}
+
+\end{document}

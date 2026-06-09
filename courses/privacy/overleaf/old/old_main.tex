@@ -1,0 +1,114 @@
+\documentclass{article}
+\input{style}
+\bibliographystyle{alpha}
+\title{gaussianmechanism}
+\author{albert.no0 }
+\date{January 2025}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+When training machine learning models, a large amount of data is required. During this process, personal data may be used, which can cause privacy problems. To address this issue, the concept of Differential Privacy (DP) was introduced in \cite{dwork2006}. DP is based on the principle that a single data point should not significantly affect the outcome. A dataset where only one data point is modified is referred to as Neighboring Datasets, and the results of such datasets are compared for analysis.
+
+Neighboring datasets can be created by adding, removing, or swapping a single data point. Although earlier studies did not clearly define this relationship, recent researches \cite{chua2024private,lebeda2024avoiding} have analyzed differences in outcomes depending on how neighboring datasets are constructed, emphasizing its importance.
+
+One of the most representative methods for applying Differential Privacy (DP) in machine learning is Differential Privacy Stochastic Gradient Descent (DP-SGD). DP-SGD, first introduced in \cite{abadi2016deep}, ensures DP by adding noise to the Stochastic Gradient Descent (SGD) process.
+
+In DP-SGD, sampling is applied during the SGD procedure, and the sampling method plays a crucial role. While earlier studies paid little attention to the sampling method, recent researches have shown that the level of privacy guarantee can vary significantly depending on the sampling approach\cite{chua2024private,lebeda2024avoiding}. Consequently, analyzing privacy with respect to different sampling methods has become increasingly important.
+
+DP-SGD typically involves multiple epochs, not just a single iteration. This iterative process has a significant impact on the application of DP. The Composition Theorem calculates the cumulative privacy guarantees when DP is applied repeatedly. In \cite{kairouz2015composition}, a more precise composition for ($\varepsilon,\delta$)-DP was developed.
+
+To efficiently apply the composition theorem, \cite{dong2022gaussian} proposed a new approach called Gaussian Differential Privacy (GDP). GDP simplifies composition by expressing it as the $L_2$-norm of  means of multiple Gaussian distributions. However, since GDP expresses ($\varepsilon,\delta$)-DP using Gaussian distributions, it struggles to provide tight privacy bounds for cases that cannot be represented by Gaussian distributions.
+
+To obtain the tight privacy bounds, the concept of Privacy Loss Random Variable (PLRV) \cite{dwork2016concentrated,sommer2018privacy} is introduced. PLRV uses the definition of DP to represent the difference in probability values between distributions in logarithmic form. This enables the derivation of tighter DP bounds. However, calculating the PLRV for all possible cases requires an impractical amount of computation. Thus, analyzing the worst-case scenario has become a focus of research. In \cite{zhu2022optimal}, data sets representing the worst-case conditions were proposed under various scenarios.
+
+To efficiently compute the PLRV, the privacy curve is utilized. The privacy curve is a function of $\delta$ that is defined based on minimizing $\delta$ under the same conditions, effectively identifying scenarios where the probability of the worst-case outcome is smallest. This function is calculated in relation to the PLRV, and under identical conditions, a smaller privacy curve guarantees stronger privacy.
+
+Extensive research has been conducted to leverage privacy curves in identifying tight privacy bounds. Among these efforts, analyzing the privacy curve based on sampling methods or the construction of neighboring datasets has emerged as a particularly intriguing field. In \cite{zhu2022optimal}, the method of selecting the worst-case dataset for PLRV was demonstrated, showing that adding datasets produces a smaller privacy curve in Poisson sampling compared to deleting or replacing datasets.
+
+However, \cite{lebeda2024avoiding} revealed that this inequality does not hold for certain mechanisms. For example, when the Laplace mechanism is applied with two iterations, cases involving data deletion exhibited smaller $\delta$ values under lower $\varepsilon$. Nevertheless, the study could not verify whether these results hold for the Gaussian mechanism and left this as an open conjecture. This paper addresses the conjecture employing Gaussian Differential Privacy (GDP) to provide a solution.
+
+\section{Preliminary}
+\subsection{Differential Privacy}
+Differential Privacy (DP), first introduced in \cite{dwork2006}, provides a rigorous guarantee of privacy. For a given mechanism $\gM$, the output distributions for two datasets $D$ and $D'$, which differ by only one data point, must have a probability ratio bounded by $e^\varepsilon$. However, this strict definition can be overly restrictive, as it guarantees privacy only within a narrow range. To address this limitation, $\delta$ is introduced to account for the probability of worst-case scenarios, enabling a more practical and flexible privacy guarantee. Two datasets that differ by a single data point are referred to as neighboring datasets, denoted as $D\sim D'$.
+\begin{definition}[($\varepsilon,\delta$)-Differential Privacy]\label{DP}
+A randomized mechanism $\gM$ satisfied $(\varepsilon,\delta)$-DP under neighboring relation $\sim$ if and only if for all $D\sim D'$ and all measurable sets of outputs $Z$ we have 
+\begin{equation*}
+    \Pr[\gM(D) \in Z] \le e^\varepsilon \Pr[\gM (D') \in Z] + \delta
+\end{equation*}    
+\end{definition}
+Neighboring datasets can be created in various ways. If a single data point is added to the dataset, this is called an add relation, denoted as $D \sim_A D'$. Similarly, if a data point is removed, it is referred to as a remove relation, denoted as $D \sim_R D'$. These two cases are collectively expressed as an add/remove relation, represented as $D \sim_{A/R} D'$. Additionally, neighboring datasets can also result from replacing one data point with another, a case known as a substitution relation, denoted as $D \sim_S D'$.
+
+\subsection{Privacy Loss Distribution}
+
+\begin{definition}[Hockey-stick Divergence]
+For any $\alpha \ge 0$ the hockey-stick divergence between two distributions $P$ and $Q$ is defined as 
+\begin{equation*}
+    H_\alpha (P \Vert Q) := \mathbb{E}_{y \sim Q} \left[\max \left\{ \frac{dP}{dQ}(y) - \alpha, 0 \right\} \right] 
+\end{equation*}
+where $\frac{dP}{dQ}$ is the Radon-Nikodym derivation.
+\end{definition}
+
+The hockey-stick divergence provides a convenient way to express $(\varepsilon,\delta)$-DP. For example, given a random mechanism $\gM$ satisfies $(\varepsilon,\delta)$-DP if and only if $H_{e^\varepsilon} (\gM(D) \Vert \gM (D')) \le \delta$ holds for all pairs of neighboring dataset $D\sim D'$.
+
+\begin{definition}[Privacy Curves]
+The privacy curve of a randomized mechanism $\gM$ under neighboring relation $\sim$ is the function $\delta_\gM ^\sim : \sR \to [0,1]$ given by
+\begin{equation*}
+    \delta_\gM ^\sim(\varepsilon) := \min \{ \delta \in [0,1] : \text{$\gM$ is $(\varepsilon,\delta)$-DP\}}.
+\end{equation*}
+\end{definition}
+
+By using the privacy curve, the tightest privacy guarantee can be determined. For example, if there is a single dataset pair of neighboring datasets $D \sim D'$, $H_{e^\varepsilon} (\gM(D) \Vert \gM (D')) = \delta_\gM^\sim$ for all $\varepsilon \ge 0$ we can say that such neighboring datasets $D \sim D'$ satisfy the worst-case.
+
+\begin{definition}[Privacy Loss Random Variable]
+The privacy loss random variable of for a pair of neighboring datasets $D, D'$ under mechanism $\gM$ is defined as
+\begin{equation*}
+    L_\gM (D\Vert D') := \ln \frac{\gM (D)(o)}{\gM (D')(o)}
+\end{equation*}
+where $o \sim \gM (D)$
+\end{definition}
+
+A key characteristic of this definition is that it is formulated for a pair of neighboring datasets, rather than all neighboring datasets. In this context, when the privacy loss random variable is represented as a density function, the Privacy Loss Distribution(PLD) is denied as
+\begin{equation*}
+    L_\gM (D \Vert D') := \ln \frac{d \gM(D)}{d \gM(D')}(y)
+\end{equation*} 
+where $y \sim \gM(D)$ and $\frac{d \gM(D)}{d \gM(D')}$ means the density of $\gM(D)$ with respect to $\gM(D')$. Using this distribution, the privacy curve can be used to find the tightest bound across all neighboring datasets. We can converse the hockey-stick divergence to the PLD via
+\begin{equation*}
+    H_{e^\varepsilon}(\gM(D) \Vert \gM(D')) = \mathbb{E}_{Y \sim L_\gM (D \Vert D') [1-e^{\varepsilon-Y}]},
+\end{equation*}
+And by using this equation, we can achieve the following equation,
+\begin{equation*}
+    \delta_\gM^\sim (\varepsilon) = \max_{D\sim D'} \mathbb{E}_{Y \sim L_\gM (D \Vert D') [1-e^{\varepsilon-Y}]}
+\end{equation*}
+
+\subsection{Gaussian Differential Privacy}
+Utilizing hypothesis testing for privacy analysis is one of the key methodologies in Differential Privacy (DP). In DP, the goal is to ensure that the difference in outputs between neighboring datasets $D$ and $D'$ remains small. Therefore, when formulated as a hypothesis testing problem, the following two sets of null and alternative hypotheses can be established for the output $Y$.
+\begin{equation*}
+    \text{$H_0$ : Y came from the dataset $D$, $H_1$: Y came from the dataset $D'$}  
+\end{equation*}
+
+Let $\phi$ be a classifier to distinguish two distributions $D$ and $D'$ using a sample. $\alpha_\phi$ be its Type I error (false positive rate) and $\beta_\phi$ be its Type II error (false negative rate). Now, consider the case where we choose $H_0$. In this scenario, we can describe two possible outcomes:
+\begin{enumerate}
+\item The dataset is $D$, and it is correctly identified as $D$, which occurs with probability $1-\alpha_\phi$.
+\item The dataset is $D'$, but it is incorrectly identified as $D$, which occurs with probability $\beta_\phi$. 
+\end{enumerate}
+By applying these concepts to the Definition \ref{DP} and combining the case of $D'$, we obtain the following result.
+\begin{align*}
+    1-\alpha_\phi \le e^\varepsilon \beta_\phi + \delta\; &and \;  1-\beta_\phi \le e^\varepsilon \alpha_\phi + \delta \\
+    1-\delta \le  \alpha_\phi + e^\varepsilon \beta_\phi\; &and \;1-\delta \le  \beta_\phi + e^\varepsilon \alpha_\phi 
+\end{align*}
+
+Therefore, the level of privacy guarantee varies depending on $\alpha_\phi$ and $\beta_\phi$. To achieve the optimal privacy guarantee, we define the following trade-off function.
+
+\begin{definition}[Trade-off function]
+ For any two probability distributions $P$ and $Q$ on the same space, The trade-off function $T(P,Q): [0,1] \to [0.1]$ is defined as 
+\begin{equation*}
+    T(P,Q)(\alpha) = \inf\{\beta_\phi:\alpha_\phi \leqslant \alpha\}
+\end{equation*}
+where the infimum is taken over all (measurable) rejection rules.
+\end{definition}
+
+\bibliography{references}
+\end{document}

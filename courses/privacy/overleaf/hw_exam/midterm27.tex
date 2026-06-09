@@ -1,0 +1,438 @@
+
+\documentclass[12pt]{article}
+\usepackage{math_hw}
+\usepackage{amssymb, booktabs}
+
+\input{math_commands}
+
+\newcommand{\Exp}{\mathrm{E}}
+\newcommand{\reals}{\fR}
+
+\includeversion{problem}
+\excludeversion{solution}
+
+\begin{document}
+
+\begin{center}
+{\bf Data Privacy: Midterm\begin{solution} Solutions\end{solution}} \\ \medskip
+\begin{problem}April 16, 2027 \end{problem}
+\end{center}
+
+\begin{problem}
+\noindent 
+% Note: Submit homework via LearnUS.
+% Also, we have some extra problems in Problem 7 (3-5).
+\LeftFoot{Midterm}
+\end{problem}
+
+\begin{solution}
+\LeftFoot{Midterm Solution}
+\end{solution}
+
+\begin{problem}
+
+    \vskip .3in
+    {\bf ID : \underline{\hspace{6cm}}}\\
+    \vskip .3in
+    {\bf Name : \underline{\hspace{5.5cm}}}\\
+    ~
+    \vskip 2in
+    \begin{table}[h]
+        \Large
+        \begin{tabular}{c|c}
+           1 &\textcolor{white}{aaaaaaaa}/~15\\
+           2 &\textcolor{white}{aaaaaaaa}/~25 \\
+           3 &\textcolor{white}{aaaaaaaa}/~25 \\
+           4 &\textcolor{white}{aaaaaaaa}/~35 \\
+            \hline
+           Total &  \textcolor{white}{aaaaaaaa}/~100 \\
+        \end{tabular}
+    \end{table}
+    \newpage
+    {\bf extra sheet}
+    \newpage
+\end{problem}
+
+
+
+\begin{enumerate}
+
+\item {\bf Simple Questions}
+\begin{enumerate}
+    \item   Consider a database containing a single user's data, which is just one bit $x \in \{0, 1\}$. An algorithm $\mathcal{A}$ takes $x$ as input and outputs a categorical value $y \in \{A, B, C\}$. The behavior of $\mathcal{A}$ is defined by the following probability table:
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+ & \textbf{Output A} & \textbf{Output B} & \textbf{Output C} \\
+\midrule
+\textbf{Input $x = 0$} & 0.6 & 0.3 & 0.1 \\
+\textbf{Input $x = 1$} & 0.2 & 0.4 & 0.4 \\
+\bottomrule
+\end{tabular}
+\end{center}
+Does algorithm $\mathcal{A}$ satisfy $\varepsilon$-differential privacy? If yes, what is the smallest (tightest) value of $\varepsilon$ for which it is $\varepsilon$-DP? Show your mathematical justification.
+
+\item  A hospital holds a database $D$ of patient records. They want to publish the results of two queries:
+\begin{itemize}
+    \item $q_1(D)$: The total number of patients diagnosed with a specific rare disease.
+    \item $q_2(D)$: The total combined weight (in kg) of all patients diagnosed with this disease. 
+\end{itemize}
+Assume it is public, established knowledge that no single human patient weighs more than $150$ kg. 
+
+The hospital wants to release \textit{both} answers together such that the combined release satisfies an overall privacy guarantee of $\varepsilon$-DP. They decide to split their privacy budget evenly between the two queries. 
+
+State the $\ell_1$-sensitivity for both $q_1$ and $q_2$. Then, state the exact probability distribution of the Laplace noise that should be added to each query to achieve the overall $\varepsilon$-DP goal.
+
+
+\end{enumerate}
+%%%%%%%%%%%%%%%%%%%%%%%%%% Problem 1 Solution %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{solution}
+\textbf{Solution.}\\
+\begin{enumerate}
+\item  By the definition of Differential Privacy, for any neighboring datasets (here, $x=0$ and $x=1$) and any subset of outputs $y$, the probability ratio must be bounded by $e^\varepsilon$:
+\[
+\frac{\Pr[\mathcal{A}(x) = y]}{\Pr[\mathcal{A}(x') = y]} \le e^\varepsilon \implies \varepsilon \ge \ln \left( \frac{\Pr[\mathcal{A}(x) = y]}{\Pr[\mathcal{A}(x') = y]} \right)
+\]
+We must check the maximum ratio across all possible outputs for both directions ($0 \to 1$ and $1 \to 0$):
+\begin{itemize}
+    \item \textbf{Output A:} $\frac{0.6}{0.2} = 3$ and $\frac{0.2}{0.6} = \frac{1}{3}$
+    \item \textbf{Output B:} $\frac{0.3}{0.4} = 0.75$ and $\frac{0.4}{0.3} = \frac{4}{3} \approx 1.33$
+    \item \textbf{Output C:} $\frac{0.1}{0.4} = 0.25$ and $\frac{0.4}{0.1} = 4$
+\end{itemize}
+The maximum likelihood ratio across all outputs and directions is $4$ (occurring at Output C when comparing $x=1$ to $x=0$). 
+Therefore, the algorithm satisfies DP, and the tightest bound is:
+\[
+e^\varepsilon = 4 \implies \varepsilon = \ln(4) \approx 1.386
+\]
+\textit{(Points: 3 for stating the DP ratio rule, 5 for calculating the ratios and identifying the max ratio is 4, 2 for the final answer $\varepsilon = \ln(4)$.)}
+
+\item 
+\textbf{1. Sensitivities:}
+\begin{itemize}
+    \item \textbf{$q_1$ (Count query):} Replacing a single patient changes the count of people with the disease by at most 1. Thus, $\Delta q_1 = 1$.
+    \item \textbf{$q_2$ (Sum query):} Replacing a single patient changes the total weight by at most the maximum possible weight of one person, which is 150 kg. Thus, $\Delta q_2 = 150$.
+\end{itemize}
+
+\textbf{2. Noise Distributions (Basic Composition):} \\
+To achieve an overall privacy budget of $\varepsilon$, and splitting it evenly, each query receives a budget of $\varepsilon_i = \frac{\varepsilon}{2}$. 
+The Laplace mechanism adds noise drawn from $\text{Lap}(\frac{\Delta}{\varepsilon_i})$.
+\begin{itemize}
+    \item For $q_1$, the noise added is drawn from: $Y_1 \sim \text{Lap}\left(\frac{1}{\varepsilon / 2}\right) = \text{Lap}\left(\frac{2}{\varepsilon}\right)$
+    \item For $q_2$, the noise added is drawn from: $Y_2 \sim \text{Lap}\left(\frac{150}{\varepsilon / 2}\right) = \text{Lap}\left(\frac{300}{\varepsilon}\right)$
+\end{itemize}
+\textit{(Points: 2 for $\Delta q_1=1$, 2 for $\Delta q_2=150$, 2 for identifying the sub-budget $\varepsilon/2$, 2 for the correct $q_1$ noise distribution, 2 for the correct $q_2$ noise distribution.)}
+
+
+\end{enumerate}
+
+\end{solution}
+
+\begin{problem}
+    \newpage
+    {\bf extra sheet}
+    \newpage
+\end{problem}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Problem 1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\item {\bf The Sparse Vector Technique and Adaptive Queries (25 points)}
+
+\textbf{Background:} \\
+So far, we have used the Laplace mechanism and composition theorems to answer queries. However, if we have a massive stream of $k$ queries, the privacy parameter degrades too quickly. Often, we only care about identifying queries that are \textit{above} a certain threshold $T$ (e.g., ``Which search terms have a frequency greater than 10,000?''). 
+
+The \textbf{Sparse Vector Technique (SVT)}, specifically the \texttt{AboveThreshold} algorithm, solves this for sensitivity-1 queries. It works in an ``online'' fashion, processing queries one by one:
+\begin{enumerate}
+    \item The algorithm creates a private, noisy threshold $\hat{T} = T + \text{Lap}\left(\frac{2}{\varepsilon}\right)$.
+    \item For each query $i$, it computes a noisy answer: $f_i(D) + \nu_i$, where the noise $\nu_i \sim \text{Lap}\left(\frac{4}{\varepsilon}\right)$.
+    \item If $f_i(D) + \nu_i \ge \hat{T}$, it outputs $\top$ (meaning ``above threshold'') and \textbf{halts immediately}.
+    \item Otherwise, it outputs $\bot$ (meaning ``below threshold'') and moves to the next query.
+\end{enumerate}
+
+This algorithm is $\varepsilon$-differentially private for the \textit{entire} stream of queries, no matter how long the stream is, because we only pay a privacy cost when the threshold is exceeded. Answer the following questions:
+
+\paragraph{(a) Tracing the Algorithm (5 points)}
+Suppose you are a data curator with a privacy budget of $\varepsilon = 1$ and a public threshold $T = 10$. You receive a stream of 4 sensitivity-1 queries with the following true answers on your database $D$:
+\begin{itemize}
+    \item $f_1(D) = 4$
+    \item $f_2(D) = 8$
+    \item $f_3(D) = 11$
+    \item $f_4(D) = 15$
+\end{itemize}
+Assume the randomized Laplace draws happen to yield a threshold noise of $1.5$, and the sequence of query noises $\nu_i$ are $2.0, 4.5, -2.0, 1.0$. Determine the exact sequence of outputs the algorithm will produce. Explain your reasoning for each step.
+
+\paragraph{(b) The Core of the Privacy Proof: Sensitivity of the Maximum (10 points)}
+To prove that \texttt{AboveThreshold} is $\varepsilon$-DP, the proof relies heavily on the fact that we do not release the individual noisy values of the $\bot$ queries. Instead, the proof defines a random variable $g(D)$ representing the \textit{maximum} noisy value of all queries evaluated \textit{before} the algorithm halts at step $k$:
+$$g(D) = \max_{i < k} (f_i(D) + \nu_i)$$
+For the change-of-variables step in the proof to work, $g(D)$ must be 1-sensitive. Prove that if every query $f_i$ is 1-sensitive, then the function $g(D)$ is also 1-sensitive. \\
+\textit{(Hint: Compare $g(D)$ and $g(D')$ for neighboring databases $D$ and $D'$ with the same fixed noise values $\nu_i$.)}
+
+\paragraph{(c) Accuracy and Tail Bounds (10 points)}
+The algorithm is considered $(\alpha, \beta)$-accurate if, with probability at least $1 - \beta$, it successfully identifies when queries are $\alpha$-close to the threshold. 
+
+Errors occur if the noises are too large. We split the error budget: the algorithm fails if the noisy threshold is too far off ($|T - \hat{T}| \ge \frac{\alpha}{2}$) OR if the maximum query noise is too large ($\max |\nu_i| \ge \frac{\alpha}{2}$).
+
+Focusing only on the threshold noise: Recall that $T - \hat{T} \sim \text{Lap}\left(\frac{2}{\varepsilon}\right)$. We know the tail bound for a Laplace variable $Y \sim \text{Lap}(b)$ is $\Pr[|Y| \ge t \cdot b] = \exp(-t)$. 
+Using this property, derive the minimum value of $\alpha$ required to ensure that the threshold error $|T - \hat{T}|$ is bounded by $\frac{\alpha}{2}$ with probability at least $1 - \frac{\beta}{2}$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% Problem 1 Solution %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{solution}
+\textbf{Solution.}\\
+\begin{enumerate}
+\item 
+\textbf{Identify Parameters:} $T = 10$, $\varepsilon = 1$. The noisy threshold is $\hat{T} = T + 1.5 = 11.5$.
+\begin{itemize}
+    \item \textbf{Evaluate Query 1:} $f_1(D) + \nu_1 = 4 + 2.0 = 6.0$. Since $6.0 < 11.5$, the output is $\bot$.
+    \item \textbf{Evaluate Query 2:} $f_2(D) + \nu_2 = 8 + 4.5 = 12.5$. Since $12.5 \ge 11.5$, the output is $\top$.
+    \item \textbf{Halt:} Because a query exceeded the threshold, the algorithm outputs $\top$ and immediately halts. Queries 3 and 4 are never evaluated.
+    \item \textbf{Final Output:} The sequence is $[\bot, \top]$.
+\end{itemize}
+\textit{(Points: 2 for calculating $\hat{T}$, 2 for correct evaluations, 1 for halting correctly.)}
+
+\item 
+We need to prove that $|g(D) - g(D')| \le 1$ for any neighboring databases $D$ and $D'$. Let the maximum on $D$ be achieved at some query index $j$, meaning $g(D) = f_j(D) + \nu_j$.
+
+By the definition of a maximum, the value of $g(D')$ must be at least the value evaluated at that same index $j$:
+$$g(D') \ge f_j(D') + \nu_j$$
+Subtracting the two gives:
+$$g(D) - g(D') \le (f_j(D) + \nu_j) - (f_j(D') + \nu_j) = f_j(D) - f_j(D')$$
+Because $f_j$ is 1-sensitive, we know $f_j(D) - f_j(D') \le 1$. Therefore, $g(D) - g(D') \le 1$.
+
+By symmetry (assuming the maximum for $D'$ occurs at some index $m$ and doing the reverse), we also get $g(D') - g(D) \le 1$. Thus, $|g(D) - g(D')| \le 1$, proving $g(D)$ is 1-sensitive. \\
+\textit{(Points: 4 for setting up the max indices, 4 for applying the substitution and 1-sensitivity bound, 2 for concluding absolute value symmetry.)}
+
+\item 
+We want to bound the probability that the threshold noise exceeds $\frac{\alpha}{2}$. We are given $Y = (T - \hat{T}) \sim \text{Lap}\left(\frac{2}{\varepsilon}\right)$, which means the scale parameter is $b = \frac{2}{\varepsilon}$. We want to find the probability $\Pr\left[|Y| \ge \frac{\alpha}{2}\right]$. 
+
+To use the provided tail bound $\Pr[|Y| \ge t \cdot b] = \exp(-t)$, we must find $t$ such that:
+$$t \cdot b = \frac{\alpha}{2}$$
+Substitute $b = \frac{2}{\varepsilon}$:
+$$t \cdot \left(\frac{2}{\varepsilon}\right) = \frac{\alpha}{2} \implies t = \frac{\alpha \varepsilon}{4}$$
+Now, plug $t$ into the tail bound equation:
+$$\Pr\left[|T - \hat{T}| \ge \frac{\alpha}{2}\right] = \exp\left(-\frac{\alpha \varepsilon}{4}\right)$$
+We want this failure probability to be at most $\frac{\beta}{2}$:
+$$\exp\left(-\frac{\alpha \varepsilon}{4}\right) \le \frac{\beta}{2}$$
+Take the natural logarithm of both sides:
+$$-\frac{\alpha \varepsilon}{4} \le \ln\left(\frac{\beta}{2}\right)$$
+Multiply by $-1$ (which flips the inequality) and solve for $\alpha$:
+$$\frac{\alpha \varepsilon}{4} \ge -\ln\left(\frac{\beta}{2}\right)$$
+$$\frac{\alpha \varepsilon}{4} \ge \ln\left(\frac{2}{\beta}\right)$$
+$$\alpha \ge \frac{4 \ln(2/\beta)}{\varepsilon}$$
+\textit{(Points: 3 for identifying $b$ and setting up $t \cdot b = \alpha/2$, 3 for computing $t$, 4 for algebraic isolation of $\alpha$.)}
+\end{enumerate}
+
+\end{solution}
+
+\begin{problem}
+    \newpage
+    {\bf extra sheet}
+    \newpage
+\end{problem}
+
+
+\item {\bf Differential Privacy and Information Theory (25 pts)}
+Differential privacy imposes a strict, worst-case bound on the maximum multiplicative distance between output distributions. In contrast, classical information-theoretic metrics, such as Kullback-Leibler (KL) divergence and Mutual Information, measure average-case distances and dependencies. In this problem, we will explore the relationship between these concepts.
+
+Let $\mathcal{M}: \mathcal{X}^n \to \mathcal{Y}$ be a randomized mechanism. For any two neighboring databases $D, D' \in \mathcal{X}^n$, let $P$ and $Q$ denote the probability distributions of $\mathcal{M}(D)$ and $\mathcal{M}(D')$, respectively.
+
+\begin{enumerate}
+\item   Prove that if $\mathcal{M}$ satisfies $\varepsilon$-differential privacy, then the KL divergence between $P$ and $Q$ is bounded by $\varepsilon$. That is, show:
+\[
+D_{KL}(P \parallel Q) \le \varepsilon
+\]
+
+\item 
+The bound in part (a) shows that $\varepsilon$-DP implies bounded KL divergence. Prove that the converse is false. Specifically, construct an example of two discrete distributions $P$ and $Q$ over an output space $\mathcal{Y}$ such that $D_{KL}(P \parallel Q) \le \varepsilon$ for a given $\varepsilon > 0$, but the mechanism generating them does \textit{not} satisfy $\varepsilon'$-DP for \textit{any} finite $\varepsilon' \ge 0$. Show your calculations.
+
+\item 
+Consider the Local Differential Privacy (LDP) setting. Let $X \in \mathcal{X}$ be a random variable representing a single user's true data, drawn from some prior distribution $P_X$. The user sanitizes their data using an $\varepsilon$-LDP mechanism $\mathcal{M}$ to produce a public output $Y = \mathcal{M}(X)$. 
+
+Prove that the Mutual Information between the user's true data and the sanitized output is strictly bounded by $\varepsilon$. That is, show:
+\[
+I(X ; Y) \le \varepsilon
+\]
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% Problem 2 Solution %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{solution}
+\textbf{Solution.}\\
+\begin{enumerate}
+\item 
+\textbf{Part (a) Solution (5 pts)} \\
+By the definition of KL divergence:
+\[
+D_{KL}(P \parallel Q) = \sum_{y \in \mathcal{Y}} P(y) \ln\left(\frac{P(y)}{Q(y)}\right)
+\]
+Because $\mathcal{M}$ satisfies $\varepsilon$-DP, for any outcome $y \in \mathcal{Y}$, we have $\frac{P(y)}{Q(y)} \le e^\varepsilon$. Taking the natural logarithm of both sides yields:
+\[
+\ln\left(\frac{P(y)}{Q(y)}\right) \le \varepsilon
+\]
+Substituting this upper bound into the KL divergence formula:
+\[
+D_{KL}(P \parallel Q) \le \sum_{y \in \mathcal{Y}} P(y) \varepsilon = \varepsilon \sum_{y \in \mathcal{Y}} P(y) = \varepsilon \cdot 1 = \varepsilon
+\]
+\textit{(Points: 2 for the KL divergence definition, 2 for applying the DP upper bound, 1 for concluding the proof via the sum of probabilities.)}
+
+
+\item
+Let the output space be $\mathcal{Y} = \{1, 2, 3\}$. We construct $P$ and $Q$ parameterized by a small constant $\delta \in (0, 0.5)$:
+\begin{align*}
+    P(y) &= [1 - 2\delta,\; 2\delta,\; 0] \\
+    Q(y) &= [1 - 2\delta,\; \delta,\; \delta]
+\end{align*}
+First, we calculate the KL divergence $D_{KL}(P \parallel Q)$:
+\[
+D_{KL}(P \parallel Q) = (1-2\delta) \ln\left(\frac{1-2\delta}{1-2\delta}\right) + 2\delta \ln\left(\frac{2\delta}{\delta}\right) + 0 \cdot \ln\left(\frac{0}{\delta}\right)
+\]
+Using the convention that $0 \ln 0 = 0$, this simplifies to:
+\[
+D_{KL}(P \parallel Q) = 0 + 2\delta \ln(2) + 0 = 2\delta \ln(2)
+\]
+By choosing a $\delta$ such that $\delta \le \frac{\varepsilon}{2 \ln 2}$, we satisfy the condition $D_{KL}(P \parallel Q) \le \varepsilon$. 
+
+However, to check for differential privacy, we must examine the maximum multiplicative distance. Consider the outcome $y = 3$:
+\[
+\frac{Q(3)}{P(3)} = \frac{\delta}{0} = \infty
+\]
+Since the ratio is infinite, the mechanism cannot satisfy $\varepsilon'$-DP for any finite $\varepsilon'$. This demonstrates that a bounded average-case divergence does not guarantee a bounded worst-case divergence. \\
+\textit{(Points: 4 for constructing valid distributions with a 0 probability state, 4 for successfully calculating the KL divergence to show it can be bounded, 2 for showing the DP ratio is infinite.)}
+
+
+\item
+The Mutual Information is defined as the expected KL divergence between the conditional and marginal distributions of $Y$:
+\[
+I(X ; Y) = \mathbb{E}_{x \sim X} \left[ D_{KL}(P_{Y|X}(\cdot \mid x) \parallel P_Y(\cdot)) \right]
+\]
+By the definition of $\varepsilon$-LDP, for any two inputs $x, x' \in \mathcal{X}$ and any output $y \in \mathcal{Y}$:
+\[
+P_{Y|X}(y \mid x) \le e^\varepsilon P_{Y|X}(y \mid x')
+\]
+The marginal probability $P_Y(y)$ is the sum over all possible inputs:
+\[
+P_Y(y) = \sum_{x' \in \mathcal{X}} P_X(x') P_{Y|X}(y \mid x')
+\]
+We can use the LDP bound to relate the marginal distribution to a specific conditional distribution $P_{Y|X}(y \mid x)$:
+\[
+P_Y(y) \ge \sum_{x' \in \mathcal{X}} P_X(x') \left( e^{-\varepsilon} P_{Y|X}(y \mid x) \right) = e^{-\varepsilon} P_{Y|X}(y \mid x) \sum_{x' \in \mathcal{X}} P_X(x') = e^{-\varepsilon} P_{Y|X}(y \mid x)
+\]
+Rearranging this inequality gives:
+\[
+\frac{P_{Y|X}(y \mid x)}{P_Y(y)} \le e^\varepsilon \implies \ln\left(\frac{P_{Y|X}(y \mid x)}{P_Y(y)}\right) \le \varepsilon
+\]
+Now we bound the KL divergence for a given $x$:
+\[
+D_{KL}(P_{Y|X}(\cdot \mid x) \parallel P_Y(\cdot)) = \sum_{y \in \mathcal{Y}} P_{Y|X}(y \mid x) \ln\left(\frac{P_{Y|X}(y \mid x)}{P_Y(y)}\right) \le \sum_{y \in \mathcal{Y}} P_{Y|X}(y \mid x) \varepsilon = \varepsilon
+\]
+Since the conditional KL divergence is bounded by $\varepsilon$ for \textit{every} $x \in \mathcal{X}$, its expectation over $X$ is also bounded by $\varepsilon$:
+\[
+I(X ; Y) \le \varepsilon
+\]
+\textit{(Points: 2 for expressing mutual information via KL/probabilities, 3 for expanding the marginal $P_Y(y)$, 3 for applying the LDP bound to factor out the conditional probability, 2 for the final sum integration.)}
+\end{enumerate}
+
+\end{solution}
+
+\begin{problem}
+    \newpage
+    {\bf extra sheet}
+    \newpage
+\end{problem}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Problem 2 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\item {\bf Multidimensional Randomized Response (30 pts)}\\
+In this problem, we extend Randomized Response protocol to estimate a histogram over $d$ different possibilities 
+(e.g., a user's favorite artist). 
+
+Assume $n$ users, where each user $i$ holds a single item $x_i \in [d]$.
+We wish to estimate the frequency of each item such that each person can randomize their data entirely locally.
+{\bf Approach A} works as follows:
+\begin{itemize}
+    \item Each person encodes their input $x_i \in [d]$ as a one-hot indicator vector $e_{x_i} = (0, \dots, 0, 1, 0, \dots, 0) \in \{0, 1\}^d$, where the $1$ is at index $x_i$.
+    \item Each person independently applies the randomizer $\mathcal{R}\mathcal{R}_{\varepsilon/2}$ to \textit{each entry} of this vector to get a new vector $Y_i \in \{0, 1\}^d$, which they announce publicly.
+\end{itemize}
+Recall that, for a given input bit $b \in \{0,1\}$, the randomizer $\mathcal{R}\mathcal{R}_{\varepsilon/2}$ outputs the true bit $b$ with probability $\frac{e^{\varepsilon/2}}{e^{\varepsilon/2}+1}$, and flips the bit (outputs $1-b$) with probability $\frac{1}{e^{\varepsilon/2}+1}$.
+
+\begin{enumerate}
+    \item[(a)] \textbf{(5 pts)} Prove that Approach A is $\varepsilon$-differentially private.
+    
+    \item[(b)] \textbf{(5 pts)} Demonstrate that, given the vectors $Y_1, \dots, Y_n$, the curator can construct an unbiased estimator $\hat{c}_j$ for the true count $c_j$ of any item $j$.
+    
+    \item[(c)] \textbf{(5 pts)} Define the maximum error of our estimates as $\max_{j \in [d]} |\hat{c}_j - c_j|$. Briefly justify why the expected maximum error scales as $\mathcal{O}\left( \frac{\sqrt{n \ln d}}{\varepsilon} \right)$.\\
+    \textit{Hint: Use Hoeffding's inequality. If $X_1, \dots, X_n$ are independent r.v.'s bounded in intervals $[a, b]$, then $\mathbb{P}\left(\left|\sum X_i - \mathbb{E}\left[\sum X_i\right]\right| \ge t\right) \le 2 \exp\left(-\frac{2t^2}{n(b-a)^2}\right)$.}
+    
+    \item[(d)] \textbf{(7 pts)} \textbf{Approach B:} To save communication costs (since $u_i$ can be represented simply by a short PRG seed), user $i$ does the following instead:
+    \begin{enumerate}
+        \item Generates a uniformly random boolean vector $u_i \in \{0, 1\}^d$ (independent of their data).
+        \item Selects the single bit from $u_i$ that corresponds to their private item $x_i$ (i.e., the bit $u_{i, x_i}$).
+        \item Applies the standard $\varepsilon$-DP randomized response to this single bit to get $Z_i = \mathcal{R}\mathcal{R}_\varepsilon(u_{i, x_i})$.
+        \item Announces the tuple $(u_i, Z_i)$ to the curator.
+    \end{enumerate}
+    Prove that Approach B satisfies $\varepsilon$-DP regardless of how $u_i$ is chosen.
+    
+    \item[(e)] \textbf{(8 pts)}  Describe how the curator can construct an unbiased estimator $\hat{c}_j$ for the true count of any item $j$ using the tuples $(u_1, Z_1), \dots, (u_n, Z_n)$ collected in Approach B. Prove that your estimator is unbiased.
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% Problem 2 Solution %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{solution}
+\textbf{Solution.}\\
+\begin{enumerate}
+\item[(a)] 
+Consider two possible inputs for user $i$, say $x_i$ and $x'_i$. Their corresponding one-hot vectors, $e_{x_i}$ and $e_{x'_i}$, differ in exactly two coordinates: index $x_i$ (which goes $1 \to 0$) and index $x'_i$ (which goes $0 \to 1$). 
+Because the algorithm applies independent $\mathcal{R}\mathcal{R}_{\varepsilon/2}$ mechanisms to each coordinate, we can apply basic composition. The privacy loss only occurs on the two coordinates that change. The total privacy cost is bounded by:
+\[
+\frac{\varepsilon}{2} + \frac{\varepsilon}{2} = \varepsilon
+\]
+Thus, the mechanism satisfies $\varepsilon$-DP.
+
+\item[(b)] 
+Let $p = \frac{\exp(\varepsilon/2)}{1 + \exp(\varepsilon/2)}$ be the probability that $\mathcal{R}\mathcal{R}_{\varepsilon/2}$ outputs the true bit. 
+For a specific item $j$, let $c_j = \sum_{i=1}^n \mathbb{I}[x_i = j]$ be the true count. The observed sum is $S_j = \sum_{i=1}^n Y_{i,j}$.
+The expectation of $Y_{i,j}$ is $p$ if $x_i = j$, and $(1-p)$ if $x_i \neq j$. By linearity of expectation:
+\[
+\mathbb{E}[S_j] = c_j p + (n - c_j)(1-p) = c_j(2p-1) + n(1-p)
+\]
+Solving for $c_j$ yields the unbiased estimator:
+\[
+\hat{c}_j = \frac{S_j - n(1-p)}{2p-1}
+\]
+
+\item[(c)] 
+\textit{Error Scaling:} Because $Y_{i,j}$ are independent bounded random variables, the variance of $S_j$ is $\mathcal{O}(n)$. The variance of the estimator $\hat{c}_j$ scales with $\frac{n}{(2p-1)^2}$. For small $\varepsilon$, we have $(2p-1) \approx \frac{\varepsilon}{4}$, so the standard deviation for a single item count is $\mathcal{O}\left(\frac{\sqrt{n}}{\varepsilon}\right)$. 
+
+To be precise, using Hoeffding's inequality on the sum $S_j$ of bounded variables $Y_{i,j} \in \{0, 1\}$, the error for a single item $j$ has an exponentially decaying tail. To bound the maximum error $\max_{j \in [d]} |\hat{c}_j - c_j|$ across all $d$ items simultaneously, we apply a union bound over the $d$ events. The union bound requires stretching the tail bound by a factor of $\sqrt{\ln d}$ to maintain a high probability of success across all dimensions. Thus, the expected maximum error scales as $\mathcal{O}\left( \frac{\sqrt{n \ln d}}{\varepsilon} \right)$.
+
+\item[(d)] 
+Fix any user $i$. The adversary observes the tuple $(u_i, Z_i)$. We want to bound the likelihood ratio for any two true items $x_i$ and $x'_i$. Note that the choice of $u_i$ is completely independent of the private data $x_i$.
+\[
+\frac{\Pr[u_i = u, Z_i = z \mid x_i]}{\Pr[u_i = u, Z_i = z \mid x'_i]} = \frac{\Pr[u_i = u] \cdot \Pr[\mathcal{R}\mathcal{R}_\varepsilon(u_{i, x_i}) = z]}{\Pr[u_i = u] \cdot \Pr[\mathcal{R}\mathcal{R}_\varepsilon(u_{i, x'_i}) = z]}
+\]
+The $\Pr[u_i = u]$ terms cancel out. We are left with the probability ratio of the outputs of the standard $\mathcal{R}\mathcal{R}_\varepsilon$ mechanism on two bits: $b = u_{i, x_i}$ and $b' = u_{i, x'_i}$. Because $\mathcal{R}\mathcal{R}_\varepsilon$ is guaranteed to be $\varepsilon$-DP for any single input bit, this ratio is inherently bounded by:
+\[
+\frac{\Pr[\mathcal{R}\mathcal{R}_\varepsilon(b) = z]}{\Pr[\mathcal{R}\mathcal{R}_\varepsilon(b') = z]} \le \exp(\varepsilon)
+\]
+Thus, Approach B is strictly $\varepsilon$-DP, regardless of the vector $u_i$.
+
+\item[(e)]
+The curator checks if the noisy reported bit $Z_i$ matches the $j$-th bit of the user's random vector $u_{i,j}$. Let $I_{i,j} = \mathbb{I}[Z_i = u_{i,j}]$. We analyze the expectation of $I_{i,j}$ based on whether the user's true item is $j$:
+\begin{itemize}
+    \item \textbf{If $x_i = j$:} The user applied the randomizer directly to $u_{i,j}$. Therefore, $Z_i$ matches $u_{i,j}$ with the preservation probability of the $\mathcal{R}\mathcal{R}_\varepsilon$ mechanism. Let $q = \frac{\exp(\varepsilon)}{1 + \exp(\varepsilon)}$. Then $\mathbb{E}[I_{i,j} \mid x_i = j] = q$.
+    \item \textbf{If $x_i \neq j$:} The user applied the randomizer to $u_{i, x_i}$. Because the vector $u_i$ is generated uniformly at random, $u_{i, x_i}$ is completely independent of $u_{i,j}$. Consequently, $Z_i$ is independent of $u_{i,j}$. The probability they match by pure chance is exactly $1/2$. Thus, $\mathbb{E}[I_{i,j} \mid x_i \neq j] = \frac{1}{2}$.
+\end{itemize}
+Let $S_j = \sum_{i=1}^n I_{i,j}$ be the total number of matches across all users for item $j$. By linearity of expectation:
+\[
+\mathbb{E}[S_j] = c_j q + (n - c_j)\frac{1}{2} = c_j\left(q - \frac{1}{2}\right) + \frac{n}{2}
+\]
+Solving for the true count $c_j$ yields the unbiased estimator:
+\[
+\hat{c}_j = \frac{S_j - n/2}{q - 1/2}
+\]
+\end{enumerate}
+\end{solution}
+
+
+\begin{problem}
+    \newpage
+    {\bf extra sheet}
+    \newpage
+\end{problem}
+\end{enumerate}
+
+
+
+\end{document}

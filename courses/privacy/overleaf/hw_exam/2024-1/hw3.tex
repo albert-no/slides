@@ -1,0 +1,260 @@
+
+\documentclass[12pt]{article}
+\usepackage{math_hw}
+\usepackage{amsmath, amssymb}
+\input{author/macro}
+
+\excludeversion{problem}
+\includeversion{solution}
+
+\begin{document}
+
+\begin{center}
+{\bf Mathematical Problems in Deep Learning: Homeworks \#3 \begin{solution}Solutions\end{solution}}\\ \medskip
+\begin{problem}Due on Monday, June 10, 2024 \end{problem}
+\end{center}
+
+\begin{problem}
+\noindent 
+Note: Submit homework via LearnUS.
+% Also, we have some extra problems in Problem 7 (3-5).
+\LeftFoot{Homework 3}
+\end{problem}
+
+\begin{solution}
+\LeftFoot{Homework 3 Solution}
+\end{solution}
+
+\begin{enumerate}
+% Problem 
+\item \textbf{A different private algorithm:}
+Suppose that we wanted to answer a count query: $f(X) =\sum_{i=1}^n X_i$, where $X_i \in \{0, 1\}$.
+In class, we learned the Laplace mechanism: simply add Laplace noise with scale parameter $1/\epsilon$.
+But what if we do not have access to Laplace noise?
+Suppose $Z$ is a continuous uniform random variable, drawn uniformly from the interval $[-3/\epsilon, 3/\epsilon]$.
+Consider the statistic $\tilde{f}(X) = \sum_{i=1}^n X_i + Z$.
+Is $\tilde{f}$ $O(\epsilon)$-differentially private? If yes, prove it, with the best constant you can give in the privacy guarantee.
+If no, explain why not.
+
+\begin{solution}
+{\bf Solution:}\\
+No it is not, let $X = (0, \dots, 0)$ and $X'=(1, 0, \dots, 0)$.
+Then, the density around $1+3/\epsilon$ of $\tilde{f}(X)$ would be zero,
+while the density around  $1+3/\epsilon$ of $\tilde{f}(X)$ is strictly positive.
+\end{solution}
+
+
+
+
+\vskip .2in
+% Problem 2
+    \item \textbf{Amplification by subsampling:} Suppose we have an algorithm $M : \cX^m \rightarrow \cY$ which is $(\epsilon, \delta)$-DP.
+    Consider the following algorithm $M':\cX^n\rightarrow \cY$, where $n > m$.
+    When run on an input $X \in\cX^n$, it chooses a random subset of the input $X'\in\cX^m$ of size $m$, and outputs $M(X')$.
+    Let $q= m/n$. Prove that $M'$ is $(O(\epsilon q), O(\delta q))$-DP.\\
+    \vskip .1in
+    {\it Hint}: 
+    Let $X, X'\in \cX^n$ be neighboring dataset.
+    Without loss of generality, assume that $X= (x, x_2, x_3, ..., x_n)$ while $X'=(x', x_2, x_3, \dots, x_n)$
+    Let $I=(I_1, \dots, I_m)$ be a random vector of size $m$ uniformly sampled (without replacement) from $\{1, \dots, n\}$.
+    and sampling function $s(X;I) = (x_{I_1}, \dots, x_{I_m})$.
+    Then,
+    \begin{align*}
+        Pr(M'(X)\in T) =& Pr(1\in I) Pr(M(s(X;I))\in T|1\in I)\\
+        &+ Pr(1\notin I) Pr(M(s(X;I))\in T|1\notin I)
+    \end{align*}
+    Note that $Pr(1\in I) = m/n=q$.
+    Due to $(\epsilon, \delta)$-DP, we have
+    \begin{align*}
+    Pr(M(s(X;I))\in T|1\in I) \leq& e^\epsilon Pr(M(s(X';I))\in T|1\in I) + \delta\\
+    Pr(M(s(X;I))\in T|1\in I) \leq& e^\epsilon Pr(M(s(X;I))\in T|1\notin I) + \delta\\
+     Pr(M(s(X;I))\in T|1\notin I) =& Pr(M(s(X';I))\in T|1\notin I).
+    \end{align*}
+    Finally, you can use the fact that $\log(1+q(e^\epsilon-1)) = O(\epsilon q)$.
+        
+\begin{solution}
+{\bf Solution:}\\
+    Let $\alpha = q + (1-q)e^{-\epsilon}<1$, then using the first two properties of the above, we have
+    \begin{align*}
+    Pr(M(s(X;I))\in T|1\in I) \leq& \alpha e^\epsilon Pr(M(s(X';I))\in T|1\in I) + \alpha \delta \\
+    &+ (1-\alpha) e^\epsilon Pr(M(s(X;I))\in T|1\notin I) + (1-\alpha)\delta \\
+    =& \alpha e^\epsilon Pr(M(s(X';I))\in T|1\in I)\\
+    &+ (1-\alpha) e^\epsilon Pr(M(s(X';I))\in T|1\notin I) + \delta 
+    \end{align*}
+    Finally, 
+    \begin{align*}
+        Pr(M'(X)\in T) =& \delta + \alpha q e^\epsilon Pr(M(s(X';I))\in T|1\in I)\\
+        &+ (1-q + (1-\alpha) e^\epsilon) Pr(M(s(X';I))\in T|1\notin I)\\
+        =& \delta + (1+q(e^\epsilon-1)) \left\{q  Pr(M(s(X';I))\in T|1\in I)\right.\\
+        & \left.\quad +(1-q) Pr(M(s(X';I))\in T|1\notin I)\right\}\\
+        =& \delta + (1+q(e^\epsilon-1)) Pr(M'(X')\in T).
+    \end{align*}
+    This means that given a 1-DP algorithm, it can always be converted to a $\epsilon$-DP algorithm by
+    just expanding the dataset size by a factor of $O(1/\epsilon)$. 
+    Thus, while there may be a qualitative difference between DP algorithms with large and constant $\epsilon$,
+    going from constant to small $\epsilon$ never experiences the same type of difference.
+\end{solution}
+
+\vskip .2in
+% Problem 3
+    \item \textbf{Mechanisms:} Consider the following mechanisms $M$ that takes a dataset $x\in [0,1]^n$ and returns
+    an estimate of the mean $\bar{x} = (\sum_{i=1}^n x_i)/n$.
+
+    \begin{enumerate}[(M1)]
+        \item $M_1(x) = [\bar{x}+Z]^1_0$, for $Z\sim \mathrm{Lap}(2/n)$,
+        where for real numbers $y$ and $a\leq b$, $[y]^b_a$ denotes the ``clamping'' function:
+        $$[y]^b_a =
+        \begin{cases}
+            a & \text{if } y < a\\
+            y & \text{if } a\leq y\leq b\\
+            b & \text{if } y >b
+        \end{cases}.$$
+        \item
+        $$M_2(x) = \begin{cases} 1 & \text{w.p. } \overline{x}\\
+        0 & \text{w.p. } 1-\overline{x}.
+        \end{cases}.$$
+
+    \end{enumerate}
+        Which of the above mechanisms meet the definition of $\epsilon$-differential privacy for a finite value of $\epsilon$, and what is the smallest value of $\epsilon$ (possibly as a function of $n$) for which they do? \label{part:epsilon}
+        As in class, here we are treating $n$ as public knowledge (so it is not a privacy violation to reveal $n$), and working with the ``change-one'' definition of DP.
+
+\begin{solution}
+{\bf Solution:}\\
+\begin{enumerate}
+    \item 
+The maximum probability difference happens when $\bar{x}=1$ and the minimum $\bar{x}=1-1/n$.
+Thus, for $M_1$,
+\begin{align*}
+    \frac{Pr(M_1(X)\in T)}{Pr(M_1(X')\in T)} 
+    \leq& \frac{f_X(1)}{f_X(1-1/n)}\\ 
+    &= e^{n/2 (1/n)} = e^{1/2}.
+\end{align*}
+where $f_X$ is a pdf of Laplace distribution with parameter $2/n$.
+Thus, the minimum $\epsilon$ for $M_1$ is $1/2$.
+
+\item Without loss of generality, it is enough to check the maximum ratio of probabilities at $M_2(X)=1$.
+\begin{align*}
+    \frac{Pr(M_1(X)=1)}{Pr(M_1(X')=1)} 
+    =& \frac{\bar{X}}{\bar{X'}}.
+\end{align*}
+This is unbounded since $\bar{X'}$ can be 0.
+Thus, it cannot be $\epsilon$-DP for finite $\epsilon$.
+\end{enumerate}
+\end{solution}
+
+\vskip .2in
+% Problem 
+\item \textbf{Mean estimation with non-binary data:}
+In class, we saw how to estimate the mean of a dataset $\frac{1}{n}\sum_{i=1}^n X_i$ in the case when the $X_i$'s are binary.
+Here, we will see how to estimate the mean of a dataset when this may not be the case.
+\begin{enumerate}
+\item Suppose we only knew the $X_i \in \fR$ were real numbers.
+Prove that, for all $t \geq 0$, there is no $\epsilon$-DP algorithm $M : \fR^n \rightarrow \fR$ such that 
+\begin{align*}
+Pr (|M(X) - f(X)| \leq t) \geq 0.9,
+\end{align*}
+where $\epsilon=1$.
+\item  The previous problem showed that, in general, we can’t privately estimate the mean of an unbounded dataset.
+Let’s see how we can circumvent this issue. 
+Give an algorithm $A_2:\fR^n\rightarrow \fR$ with the following guarantees.
+The algorithm is $\epsilon$-DP, for all possible datasets $(X_1, \dots, X_n)\in \fR^n$
+If all $X_i \in [-R, R]$, then there exists some constant $C > 0$ such that 
+\begin{align*}
+    Pr(|A_2(X) - f(X)| \leq \frac{CR}{n\epsilon}) \geq 0.9.
+\end{align*}
+The parameter $R$ is known to the algorithm.
+Observe that this algorithm must always be private, but only needs to be accurate when the input dataset satisfies some additional properties
+\end{enumerate}
+
+\begin{solution}
+{\bf Solution:}\\
+\begin{enumerate}
+\item Without any bound, we can set $X = (0, \dots, 0)$ and $X' = (2nt, 0, \dots, 0)$.
+Note that $f(X) = 0$ and $f(X') = 2t$.
+First, due to $\epsilon$-DP, we have
+\begin{align*}
+    \frac{Pr(M(X) \in [-t, t])}{Pr(M(X')\in [-t, t])} \leq&  e^\epsilon
+\end{align*}
+which implies $Pr(|M(X')|\leq t) \geq e^{-\epsilon} Pr(|M(X)|\leq t)$.
+
+Also, the following should be true for both $X$ and $X'$,
+\begin{align*}
+    Pr(|M(X) | \leq t) \geq&  0.9\\
+    Pr(|M(X') - 2t| \leq t) \geq&  0.9
+\end{align*}
+This cannot be true since
+\begin{align*}
+    0.1 \geq& Pr(|M(X')-2t| > t)\\
+        \geq& Pr(|M(X')| \leq t)\\
+        \geq & e^{-\epsilon}Pr(|M(X')| \leq t)\\
+        \geq & e^{-\epsilon} 0.
+\end{align*}
+This is contradiction.
+
+\item The sensitivity of $f$ is $2R/n$.
+Thus, if we apply Laplace mechanism with Laplacian parameter $2R/n\epsilon$, we can achieve $\epsilon$-DP.
+The probability of error is
+\begin{align*}
+    Pr(|A_2(X) - f(X)| > CR/n\epsilon) =& Pr (|Y| > CR/n\epsilon)\\
+    =& e^{-C/2}.
+\end{align*}
+where $Y$ is Laplace random variable of parameter $2R/n\epsilon$
+Thus, we can set $C = 2 \log 10$ to get probaility of error equals to 0.1.
+In other words,
+\begin{align*}
+    Pr(|A_2(X) - f(X)| \leq (2\log 10) R/n\epsilon) =0.1
+\end{align*}
+\end{enumerate}
+\end{solution}
+
+
+
+\vskip .2in
+% Problem 
+\item \textbf{Randomized Response, re-revisited:}
+We will see some generalizations of randomized response, beyond just binary alphabets.
+I will informally and vaguely describe an algorithm, you must rigorously define and specify the algorithm and prove that it is $\epsilon$-differentially
+private.
+\begin{enumerate}
+\item Assume $X_i \in \{1, \dots, k\}$ for the remainder of this problem.
+The vector $(Y_1, \dots , Y_n)\in \{1, \dots, k\}^n$ is output, where $Y_i$ is equal to $X_i$ with probability proportional to $g(\epsilon)$ 
+(for some function $g$ which you must specify), and equal to each $s \in \{1, . . . , k\} \setminus X_i$ with probability proportional to 1.
+Specify the algorithm rigorously (define probability of randomized response) and prove that it is $\epsilon$-DP.
+
+\item Here is another way to generalize randomized response. 
+The vector $(Y_1, \dots , Y_n) \in \{0, 1\}^{kn}$ is output. $Y_i \in \{0, 1\}^k$ is a vector generated in the following manner:
+each $X_i$ is first converted to a ``one-hot'' vector $\in \{0, 1\}^k$, where coordinate $j$ is 1 if $j = X_i$ and 0 otherwise.
+$Y_i$ generated from $X_i$ by applying a bitwise randomized response (with appropriate parameter).
+Specify the algorithm rigorously (define probability of randomized response) and prove that it is $\epsilon$-DP.
+\end{enumerate}
+
+\begin{solution}
+{\bf Solution: }\\
+\begin{enumerate}
+    \item We can set $g(\epsilon) = e^{\epsilon}$, so that
+    \begin{align*}
+        Pr(Y_i=X_i) =& \frac{e^\epsilon}{e^\epsilon +(k-1)}\\
+        Pr(Y_i=s) =& \frac{1}{e^\epsilon +(k-1)}
+    \end{align*}
+    for $s\neq X_i$
+    The probability ratio is always bounded by $e^{\epsilon}$.
+
+    \item Without loss of generality, 
+    consider $X$ and $X'$ where $X_1 = (1, 0, \dots, 0)$ and $X_1'= (0, 1, 0, \dots, 0)$ (and all others are the same $X_i=X'_i$).
+    \begin{align*}
+        \frac{Pr(Y_1= (b_1, \dots, b_k))}{Pr(Y'_1=(b_1, \dots, b_k))} 
+        =& \frac{Pr(Y_{11}, Y_{12} = b_1, b_2)}{Pr(Y'_{11}, Y'_{12}=b_1, b_2)}.
+    \end{align*}
+    When the bit-flipping probability is $q < 1/2$, the maximum ratio would be $(1-q)^2/q^2$ which should be bounded by $\epsilon$.
+    Thus, the flipping probability should be
+    \begin{align*}
+        q = \frac{e^{\epsilon/2}}{1+e^{\epsilon/2}}.
+    \end{align*}
+\end{enumerate}
+\end{solution}
+
+
+
+
+\end{enumerate}
+\end{document}

@@ -1,0 +1,1747 @@
+\documentclass[11pt, a4paper]{article}
+% 2. Add the geometry package to take control of your margins
+% 1 inch is a standard, clean margin, but you can change this to 2.5cm, etc.
+\usepackage[margin=1in]{geometry}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+% \usepackage{cleveref}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{xcolor}
+
+% \DeclareMathOperator{\argmin}{arg\,min}
+% \DeclareMathOperator{\argmax}{arg\,max}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{exercise}{Exercise}
+\newtheorem{corollary}{Corollary}
+\newtheorem{claim}{Claim}
+\newtheorem{remark}{Remark}
+\newtheorem{example}{Example}
+\newtheorem{lemma}{Lemma}
+
+
+% \input{math_commands.tex}
+
+
+% \newcommand{\cM}{{\cal M}}
+% \newcommand{\cU}{{\cal U}}
+% \newcommand{\cX}{{\cal X}}
+% \newcommand{\cY}{{\cal Y}}
+
+% \newcommand{\field}[1]{\mathbb{#1}}
+\newcommand{\fA}{\field{A}} 
+\newcommand{\fB}{\field{B}} 
+
+
+
+
+
+% \newcommand{\mathify}[1]{\ifmmode{#1}\else\mbox{$#1$}\fi}
+\newcommand{\E}[1]{\mathify{\mathbb{E}\left[#1\right]}}
+
+
+\include{macro}
+
+\renewcommand{\blue}[1]{\textcolor{blue}{#1}}
+
+
+\begin{document}
+
+\title{Differential Privacy}
+\author{}
+\date{}
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Reconstruction Attack
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Reconstruction Attack}
+
+Differential Privacy (DP) emerged from the observation that releasing overly precise answers to numerous queries about a dataset could allow adversaries to reconstruct large portions of the sensitive data. This phenomenon is known as a \emph{reconstruction attack}. Formally:
+
+\begin{definition}[Reconstruction Attack]
+A reconstruction attack is a method where an attacker, given aggregate statistical query responses (possibly noisy), infers most or all individual entries of the private dataset.
+\end{definition}
+
+\subsection{Motivational Example}
+
+Consider the following scenario. A company offers health insurance to employees, and periodically queries an insurer:
+\begin{quote}
+    \textit{``How many employees born on [specific date], living in [specific ZIP], suffer from [specific stigmatizing condition]?''}
+\end{quote}
+
+If the answer is ``1,'' and the company knows that only one employee fits the birthdate and ZIP, the company immediately learns private health information about that employee.
+
+One might try to prevent this by suppressing small counts, for example, answering ``fewer than 5'' instead of giving exact small numbers. However, consider these two queries:
+\begin{enumerate}
+    \item How many employees joined before a certain date and have the condition?
+    \item How many employees joined before the next day and have the condition?
+\end{enumerate}
+
+If answers differ by exactly 1, the company again reveals sensitive information. 
+These simple \emph{difference attacks} illustrate how aggregate statistics can leak information about individuals.
+
+\subsection{Formal Setup for Reconstruction}
+
+Let us formalize the reconstruction attack more rigorously. Consider a dataset represented as a binary vector $D \in \{0,1\}^n$, where $D=(d_1,d_2,\dots,d_n)$ and each entry $d_i \in \{0,1\}$ denotes whether an individual has a sensitive attribute or not.
+
+An attacker issues counting queries $q_S$ defined on subsets $S \subseteq \{1,\dots,n\}$:
+\[
+q_S(D) = \sum_{i \in S} d_i.
+\]
+
+Suppose the curator provides noisy answers $a_1, a_2, \dots, a_m$ to queries $q_{S_1}, \dots, q_{S_m}$ respectively.
+If each answer has an error bounded by $E$, meaning $|a_j - q_{S_j}(D)| \le E$ for all $j$, then the attacker can reconstruct most of the dataset $D$ under certain conditions.
+Note that the noisy answer can be a random answer, but also can be adversarially chosen (make the problem as hard as possible).
+
+Given noisy answers to queries, a general reconstruction attack is the following:
+\begin{align}
+    \hat{D} = \argmin_D \max_{1\leq j\leq m} |q_{S_j}(D) - a_j|
+\end{align}
+which has an exponential complexity.
+Later, we will see more efficient attack.
+\begin{claim}
+    If every query is answered to within error $\leq \alpha n$ for some $\alpha<1$, i.e.,
+    \begin{align}
+        \max_{S\subset \{1, \dots, n\}} |q_S(D) - a_S| \leq \alpha n,
+    \end{align}
+    then the reconstruction attack returns $\hat{D}$ such that
+    \begin{align}
+        \max_{S\subset \{1, \dots, n\}} |q_S(\hat{D}) - a_S| \leq \alpha n.
+    \end{align}
+\end{claim}
+This statement is trivial, since the reconstruction attack returns the best option among all possible $\hat{D}$ including the true $D$.
+
+Our first nontrivial theorem is the following.
+\begin{theorem}[Dinur-Nissim Reconstruction Attack \cite{DinurNissim2003}]
+    If every queries are answered and all queries have error at most $\alpha n$, then the reconstruction error is at most $4\alpha n$. I.e.,
+    \begin{align}
+        \sum_{i=1}^n |D_i - \hat{D}_i| \leq 4\alpha n.
+    \end{align}
+\end{theorem}
+
+\begin{proof}
+    For the output $\hat{D}$, define two sets
+    \begin{align}
+        A_{01} =& \{i : \hat{D}_i = 0, D_i = 1\}\\
+        A_{10} =& \{i : \hat{D}_i = 1, D_i = 0\}.
+    \end{align}
+    If $\hat{D}$ and $D$ disagree on more than $4\alpha n$ bits, then at least one of these two sets has size larger than $2\alpha n$.
+    Without loss of generality, this set is $A_{10}$, i.e., $|A_{10}|>2\alpha n$.
+    Then, we have
+    \begin{align}
+        |q_{A_{10}}(D)- q_{A_{10}}(\hat{D})| = |A_{10}| > 2\alpha n.
+    \end{align}
+    On the other hand,
+    \begin{align}
+        |q_{A_{10}}(D)- q_{A_{10}}(\hat{D})| 
+                \leq& |q_{A_{10}}(D)- a_{A_{10}}| + |a_{A_{10}} - q_{A_{10}}(\hat{D})| \\
+                \leq& 2\alpha n,
+    \end{align}
+     which is a contradiction. 
+\end{proof}
+Note that the attacker does not need to know the set $A_{10}$ since it has (noisy) answers for all possible queries.
+The following Corollary shows the impact of the above theorem.
+\begin{corollary}
+    If all queries are answered accuractely within an error $\pm \frac{1}{100}n$, then we can recover $D$ correctly for at least $\frac{96}{100}n$ users.
+\end{corollary}
+
+However, the assumption is unrealistic since the number of possible queries is exponentially large.
+Now, consider the more realistic setup.
+Suppose the attacker now choose $m=20n$ queries $S_1, \dots, S_m$ uniform at random. 
+We use the same reconstruction as before.
+The attacker will receive an answers $a_1, \dots, a_m$ with the guarantee
+\begin{align}
+    \max_j |q(S_j) - a_j| \leq \alpha n.
+\end{align}
+Note that even with smaller number of query, the reconstruction attack requires an exhaustive search which takes exponential complexity.
+Again, we will see more effective reconstruction method later.
+
+
+The following theorem, shows that highly accurate answer can be achieved even with much polynomial number of queries, which is much smaller than expontially many queries.
+\begin{theorem}[Dinur-Nissim Reconstruction Attack \cite{DinurNissim2003}]
+    If all $m$ queries have error at most $\alpha n$, then with high probability,
+    the reconstruction error is at most $256\alpha^2 n^2$.
+    This bound is meaningful if $\alpha \ll 1/\sqrt{n}$.
+\end{theorem}
+The choice of 20 and 256 is somewhat arbitrary.
+\begin{proof}
+    Let the set
+    \begin{align}
+        B = \{\hat{D} : \mbox{ $\hat{D}$ and $D$ disagree on at least $256\alpha^2n^2$ coordinates}\}.
+    \end{align}
+    For $j$, if $|q_{S_j}(D) - q_{S_j}(D')| \geq 4\alpha n$, then $D'$ cannot be the output of the reconstruction attack because
+    \begin{align}
+        |q_{S_j}(D') - a_j| \geq |q_{S_j}(D') -q_{S_j}(D)| - |q_{S_j}(D) - a_j| \geq 3\alpha n.
+    \end{align}
+    We will show that $B$ cannot contain the output of the reconstruction attack $\hat{D}$.\\
+    Suppose $D_0 \in B$ and define $Z = D - D_0 \in\{-1, 0, 1\}^n$.
+    Then, at least $256\alpha^2 n^2$ entries of $Z$ are nonzero.
+    Since the queries are chosen uniformly at random,  we have
+    \begin{align}
+        \Pr[|q_{S_j}(D) - q_{S_j}(D_0)| \leq 4\alpha n] \leq \frac{9}{10}.
+    \end{align}
+    \begin{exercise}
+        Show the above inequality.
+    \end{exercise}
+    Since the queries are chosen independently, we have
+    \begin{align}
+        \Pr[\forall j, \quad |q_{S_j}(D) - q_{S_j}(D_0)| \leq 4\alpha n] \leq \left(\frac{9}{10}\right)^m\leq 2^{-2n}.
+    \end{align}
+    Finally, there are only $2^n$ possible length-$n$ binary vectors,
+    \begin{align}
+        \Pr[\exists D_0\in B, \forall j, \quad |q_{S_j}(D) - q_{S_j}(D_0)| \leq 4\alpha n] \leq 2^{-2n} 2^n = 2^{-n}.
+    \end{align}
+    Thus, for probability of at least $2^{-n}$, the set $B$ is an empty set.
+\end{proof}
+
+Now, consider a more efficient attack, which can be obtained by relaxing the original reconstruction scheme to all vectors $D\in[0, 1]^n$ where $[0, 1] = \{x:0\leq x\leq 1\}$.
+I.e.,
+\begin{align}
+    \tilde{D} = \argmin_{D\in[0, 1]^n} \max_j |q_{S_j}(D) - a_j|\label{eq:lp}
+\end{align}
+then round each entry to 0 or 1 to obtain a vector $\hat{D} \in \{0, 1\}^n$.
+
+\begin{remark}
+    A linear program with $d$ variables an d$m$ constraints asks us to minimize a linear objective function over $\mathbb{R}^d$ subject to $m$ linear inequality constraints.
+    Specifically, given an objective, represented by a vector $c\in\mathbb{R}^d$, and $m$ constraints, each represented by a vector $a_i\in \mathbb{R}^d$ and a scalar $b_i\in\mathbb{R}$,
+    a linear program can be written as
+    \begin{align}
+        \max_{x\in\mathbb{R}^d} &\quad c\cdot x\\
+        \textrm{s.t.}             &\quad a_i\cdot x \leq b_i \quad\mbox{for all $1\leq i\leq m$}.
+    \end{align}
+    Linear programs itself is a very interesting research topics in the field of optimization, but beyond the scope of this course.
+    Here, we only use the fact that linear programs can be solved in polynomial time, and there are many efficient solvers in practice. 
+\end{remark}
+
+\begin{exercise}
+    Show that the \Cref{eq:lp} is indeed a linear program.
+\end{exercise}
+
+
+
+
+\subsection{Implications and Limitations}
+
+Reconstruction attacks demonstrate the fundamental limitation of releasing ``too accurate'' aggregate statistics.
+These attacks set inherent boundaries on the achievable privacy versus accuracy trade-off,
+motivating rigorous frameworks like differential privacy to formally quantify privacy loss.
+
+The results in above theorems underline that careful noise calibration is essential;
+otherwise, even mildly inaccurate statistics can breach privacy dramatically.
+
+
+
+\section{Randomized Response}
+Consider an $n$ users with a sensitive bit $D_i\in\{0, 1\}$.
+The individual reports a randomized response $Y_i$ defined as
+\begin{align}
+    Y_i = \begin{cases}
+        D_i & \mbox{ with probability $\frac{1}{2}+\gamma$}\\
+        1-D_i & \mbox{ with probability $\frac{1}{2}-\gamma$},.
+    \end{cases}
+\end{align}
+where is a parameter satisfying $0<\gamma \leq \frac{1}{2}$.
+You can think $Y_i$ is privatized version of $D_i$.
+If $\gamma = 1/2$, then there is no privacy since it is releasing the true sensitive bits.
+If $\gamma = 0$, then we have a perfect privacy, but the information is completely lost.
+
+It is clear that 
+\begin{align}
+    \mathbb{E}[Y_i] =& D_i (1/2+\gamma) + (1-D_i) (1/2-\gamma) \\
+    =& 2\gamma D_i + 1/2 - \gamma.
+\end{align}
+Using the above relation, one can guess $\hat{D}_i$ based on the privatized bit $Y_i$:
+\begin{align}
+    \hat{D}_i = \frac{Y_i - 1/2 + \gamma}{2\gamma}.
+\end{align}
+Suppose the curator wants to release the fraction 
+\begin{align}
+    p = \frac{1}{n}\sum_{i=1}^n D_i
+\end{align}
+to public in private manner.
+Then, instead of using the true private bits, it can use the estimated version of it ($\hat{D}_i$):
+\begin{align}
+    \hat{p} = \frac{1}{n}\sum_{i=1}^n D_i = \frac{1}{n}\sum_{i=1}\frac{Y_i - 1/2 + \gamma}{2\gamma}.
+\end{align}
+
+Note that $\hat{p}$ is unbiased estimate of $p$:
+\begin{align}
+    \mathbb{E}[\hat{p}] =& \mathbb{E}\left[\frac{1}{n}\sum_{i=1}\frac{Y_i - 1/2 + \gamma}{2\gamma}\right] = \frac{1}{n} \sum_{i=1}^n D_i = p.
+\end{align}
+Thus, on average $\hat{p}$ is equal to the true fraction $p$.
+Now, let's focus on the error.
+First, the naive measure of error is a variance.
+\begin{align}
+    \mbox{Var}[\hat{p}] =& \mathbb{E}[(\hat{p}-p)^2] \\
+    =& \frac{1}{n^2} \sum_{i=1}^n \mbox{Var}\left[\frac{Y_i -1/2+\gamma}{2\gamma}\right]\\
+    =& \frac{1}{4n^2\gamma^2} \sum_{i=1}^n \mbox{Var}\left[Y_i\right]\\
+    \leq& \frac{1}{16n\gamma^2}.
+\end{align}
+Using Chebyshev's inequality, we can bound the error in probabilisitic sense.
+\begin{lemma}[Chebyshev's inequality]
+    Let $X$ be a random variable with $\mathbb{E}[X] = \mu$ and $\mbox{Var}(X) = \sigma^2$, then
+    \begin{align}
+        \mbox{Pr}[|X-\mu| > k \sigma] \leq \frac{1}{k^2}
+    \end{align}
+    for all $k>0$.
+\end{lemma}
+In our case, we have
+\begin{align}
+        \mbox{Pr}[|\hat{p}-p| > k /4\gamma\sqrt{n}] \leq \frac{1}{k^2}
+\end{align}
+which implies that $\hat{p}$ is within $p \pm k/4\gamma\sqrt{n}$ with high probability.
+
+If one wants a specific criteria to meet, such as
+\begin{align}
+        \mbox{Pr}[|\hat{p}-p| > \alpha] \leq \beta
+\end{align}
+then, we can set $\alpha = k/4\gamma\sqrt{n}$ and $\beta = 1/k^2$.
+Thus,
+\begin{align}
+    n = \frac{1}{16\gamma^2\beta\alpha^2}.
+\end{align}
+This implies that
+\begin{itemize}
+    \item  If we want small $\alpha$, which implies $\hat{p}$ is closer to $p$, then we have to pay with high $n$.
+    \item  If we want small $\beta$, which implies $\hat{p}$ is close to $p$ with higher probability, then we have to pay with high $n$.
+    \item  If we want small $\gamma$, which implies more privacy, then we have to pay with high $n$.
+\end{itemize}
+
+
+
+\section{Differential Privacy}
+
+Differential Privacy (DP) provides a formal privacy guarantee ensuring that the output of a computation does not significantly depend on any one individual's data.
+Informally, if an algorithm is differentially private, then whether or not a particular person's data is included in the input,
+the distribution of the algorithm's outputs remains nearly the same.
+Thus an adversary observing the output gains very little information about any specific individual's data.
+
+We first define the notion of \emph{neighboring datasets}.
+Typically, two datasets $D$ and $D'$ are said to be neighbors if they differ in the data of a single individual.
+For example, $D$ and $D'$ are the same except the $i$-th element: $D = (X_1, \dots, X_i, \dots, X_n)$ while $D = (X_1, \dots, X_i', \dots, X_n)$.
+In a database setting, one can think of $D'$ as derived from $D$ by changing one record's values 
+(the specific definition can vary, but it should capture a minimal change in one person's data).
+
+If the curator wants to release a statistics $f(D)$ in private manner.
+In other words, the curator wants to employ $\cM$ so that $\cM(D) \approx f(D)$ while $\cM(D)$ is protecting individual private informations.
+More precisely, we will use the notion of differential privacy to define privacy mathematically and quantify the level of privacy.
+\begin{definition}[$\epsilon$-Differential Privacy \cite{Dwork2006}] \label{def:dp}
+A randomized mechanism $\mathcal{M}: \cX^n \rightarrow \cY$ (algorithm) operating on datasets is $\epsilon$-differentially private if for all pairs of neighboring datasets $D$ and $D'$,
+and for all subsets of outputs $O \subseteq \text{Range}(\mathcal{M})$, we have:
+\[ 
+\Pr[\mathcal{M}(D) \in O] \;\le\; e^{\epsilon} \,\Pr[\mathcal{M}(D') \in O].
+\] 
+\end{definition}
+One can think a small $\epsilon$ so that $e^\epsilon \approx 1$,
+which implies that two probabilities $\Pr[\mathcal{M}(D) \in O]$ $\Pr[\mathcal{M}(D') \in O]$ are similar.
+Since the above inequality holds for any $D$ and $D'$, it automatically implies that
+\[ 
+e^{-\epsilon} \leq  \frac{\Pr[\mathcal{M}(D) \in O]}{\Pr[\mathcal{M}(D') \in O]} \leq e^{\epsilon}.
+\] 
+
+\begin{example}
+    Consider the case $f(D) = \frac{1}{n} \sum_{i=1}^n X_i$.
+    If $\cM(D) = f(D)$, then 
+    \begin{align}
+        \cM(D') =& f(D')= \frac{X_1+\dots+X_i'+\dots+X_n}{n} = f(X) + \frac{X_i'-X_i}{n}.
+    \end{align}
+    If we know both $f(D)$ and $f(D')$, then we will infer some meaningful information about $X_i$ and $X_i'$.
+    Furthermore, we will know whether $f(D)$ is from $D$ or $D'$.
+    Any deterministic $\cM$ will have the same issue, and we need {\bf randomization}.
+\end{example}
+
+\begin{remark}
+    This definition is from Dwork, Mcsherry, Nissim and Smith (2006).
+    They won 2016 Test-of-time award at TCC and 2017 G\"odel Prize.
+\end{remark}
+
+Some important notes on differential privacy:
+\begin{itemize}
+    \item $\epsilon=0$ means perfect privacy, and smaller $\epsilon$ implies more privacy.
+    \item We consider the worst-case guarantee (the inequality holds for ``any'' neighboring pair $D$ and $D'$)
+    \item We consider the multiplicative factor. We will discuss later that the additive factor alone is not interesting.
+    \item Using $e^\epsilon$ instead of $\epsilon$ is due to notational simplicity (see composition). Also, $e^\epsilon\approx 1+\epsilon$
+    \item $\cM$ should be random (any deterministic mechanism cannot be differentially private.
+    \item Differential privacy (DP) is simply the notion of similarity between distribution of $\cM(D)$ and $\cM(D')$.
+    Thus, there are alternative definition of differential privacy using another measure distance between probability distributions.
+    \item We define the neighboring dataset by ``replacing'' operation.
+    One can define the neighboring dataset using ``insertion'' or ``deletion''.
+    However, these two definition is somewhat equivalent since ``replacing'' is simply a composition of ``deleting'' and ``inserting''.
+    We will see later this in composition.
+\end{itemize}
+
+\begin{remark}
+One way to interpret DP is that an adversary who sees the output of $\mathcal{M}$ cannot confidently tell 
+whether any particular individual’s data was used or not, up to an odds ratio of $e^{\epsilon}$ (and with probability $\delta$ of a larger deviation).
+\end{remark}
+\begin{remark}
+Another interpretation in terms of hypothesis testing: 
+for any individual $i$, consider the hypothesis $H_0$ that $i$'s data was included in $D$ versus $H_1$ that $i$'s data was replaced (or removed) to obtain $D'$.
+Differential privacy guarantees that any test performed on the output of $\mathcal{M}$ cannot distinguish $H_0$ vs $H_1$,
+the log-likelihood ratio is bounded by $\epsilon$ \cite{Wasserman2010}. 
+In simple terms, the presence or absence (or change) of a single individual's data has minimal effect on the distribution of outputs.\\
+\end{remark}
+
+For those of who are not familiar with hypothesis testing, here is an example.
+\begin{example}
+    Consider a simple Covid test which measure the body temperature.
+    Suppose the body temperature of Covid patient has distribution of $\mbox{Lap}(39, b)$,
+    where non Covid patient has distribution of $\mbox{Lap}(38, b)$.
+    Given the body temperature of patient $T$, you have decide whether $H_0$ is true (the patient does not have Covid) or $H_1$ is true (the patient has Covid).
+    The best test is check whether $T<38.5$ or not.
+    However, there are two types of error:
+    \begin{itemize}
+        \item False Positive (FP): $H_0$ is true (patient does not have Covid) but incorrectly indiciating $H_1$ is true.
+        \item False Negative (FN): $H_1$ is true (patient has Covid) but incorrectly indiciating $H_0$ is true.
+    \end{itemize}
+    The goal of designing a good test is to have small FP probability and small FN probability.
+    However, there is a trade off (obviously).
+\end{example}
+Suppose one wants to guess whether dataset is $D$ or $D'$ based on observation of $\cM(D)$.
+You can set a criteria $O$ so that you want to declare $H_0$ is true if $\cM(D) \in O$, 
+and decalre $H_1$ is true if $\cM(D) \in O$.
+Let the probability of false positive is $q$ while the probability of false negative is $p$.
+Then, the differential privacy implies that for any test criteria $O$, we have
+\begin{align}
+    e^{-\epsilon} \leq \frac{p}{1-q}\\
+    e^{-\epsilon} \leq \frac{q}{1-p}
+\end{align}
+We can rewrite the above inequality
+\begin{align}
+    1 =& q + 1-q \leq q+ pe^\epsilon\\
+    1 =& p + 1-p \leq p+ qe^\epsilon.
+\end{align}
+It is clear that $p$ and $q$ cannot be small at the same time.
+
+Our first differentially private mechanism is a randomized response.
+For $D=(D_1, \dots, D_n)$, suppose $f(D) = (D_1, \dots, D_n)$, and $\cM(D) = (Y_1, \dots, Y_n)$ where $Y_i$ is flipped version of $D_i$ with probability of $1/2-\gamma$.
+For $D' = (D_1, \dots, D_i', \dots, D_n)$, we have
+\begin{align}
+    \frac{\Prob{\cM(D) = (y_1, \dots, y_n)}}{\Prob{\cM(D') = (y_1, \dots, y_n)}}
+    =& \frac{\Prob{Y_i = y_i}}{\Prob{Y_i' = y_i}}\\
+    \leq& \frac{1/2+\gamma}{1/2-\gamma} \leq e^{4\gamma}.
+\end{align}
+Thus, the randomized response is $4\gamma$-DP.
+
+\begin{exercise}
+    Is the above argument enough?
+    Where is $O$?
+\end{exercise}
+
+\paragraph{Laplace Mechanism (for numeric queries).} If $f(D)$ is a numeric query (or vector of queries) on dataset $D$, one can add Laplace noise proportional to the \emph{sensitivity} of $f$.
+The sensitivity $\Delta_1$ is the maximum change in $f$'s output due to one individual's data change:
+\[ \Delta_1 = \max_{D,D'\text{ neighbors}} \|f(D) - f(D')\|_1\,.\] 
+The Laplace mechanism \cite{Dwork2006} outputs 
+\[ \mathcal{M}(D) = f(D) + (Y_1,\dots,Y_k), \] 
+where $Y_i$ are i.i.d.\ random variables drawn from $\text{Laplace}(0, \Delta_1/\epsilon)$ (the Laplace distribution with mean 0 and scale $\Delta_1/\epsilon$).
+Note that the Laplace distribution with parameter $\mu, b$ is 
+\begin{align}
+    f_X(x) = \frac{1}{2b}\exp\left(-\frac{|x-\mu|}{b}\right)
+\end{align}
+This mechanism satisfies $\epsilon$-DP.
+Intuitively, the noise magnitude $\sim \Delta_1/\epsilon$ is chosen such that a single individual's influence on $f(D)$ is hidden by the noise.
+Changing one record shifts $f(D)$ by at most $\Delta_1$, and this change is overwhelmed by the Laplace noise in the sense required by Definition \ref{def:dp}.
+The probability density functions for outputs under $D$ vs $D'$ are within a factor $e^{\epsilon}$ everywhere, ensuring the DP condition.
+
+\begin{proof}
+Let $D$ and $D'$ be neighboring datasets.
+For any output vector $z = (z_1, \dots, z_k)\in\fR^k$,
+the probability density functions of $M(D)$ and $M(D')$ are given by
+\begin{align}
+    f_{M(D)} (z^k)=& \prod_{i=1}^k \frac{1}{2b} \exp\left( - \frac{|z_i-f(D)_i|}{b}\right)\\
+    f_{M(D')}(z^k) =& \prod_{i=1}^k \frac{1}{2b} \exp\left( - \frac{|z_i-f(D')_i|}{b}\right).
+\end{align}
+Thus, the ratio of the densities is
+\begin{align}
+    \frac{f_{M(D)}(z^k)}{f_{M(D')}(z^k)} 
+    =& \prod_{i=1}^k \exp\left( - \frac{|z_i-f(D)_i| - |z_i-f(D')_i|}{b}\right)\\
+    \leq & \prod_{i=1}^k \exp\left( \frac{|f(D)_i-f(D')_i|}{b}\right)\\
+    = & \exp\left( \sum_{i=1}^k\frac{|f(D)_i-f(D')_i|}{b}\right)\\
+    = & \exp\left( \frac{\|f(D)_i-f(D')_i\|_1}{b}\right)\\
+    \leq & \exp\left( \frac{\Delta_1}{b}\right)\\
+    =& e^{\epsilon}.
+\end{align}
+
+Finally, For any $T\subset\fR^k$, we have
+\begin{align}
+    \frac{\Prob{M(D)\in T}} {\Prob{M(D')\in T}}
+    =&\frac{\int_{z^k\in T} f_{M(D)}(z^k) \, dz^k}{\int_{z^k\in T}f_{M(D')}(z^k) \, dz^k} \\
+    \leq& e^\epsilon.
+\end{align}
+
+\end{proof}
+
+\begin{remark}
+    Note that the variance of $Y_i$ is $2b^2 = 2\Delta_1^2/\epsilon^2$.
+    Large $\Delta_1$ implies more sensitive $f$ (leaking more information), 
+    which requires larger noise variance to protect private information.
+    Also, small $\epsilon$ implies more strict privacy constraint,
+    which also requires larger noise variance to protect private information.
+\end{remark}
+
+\begin{example}
+    Suppose $f(D) = \frac{1}{n} \sum_{i=1}^n X_i$ where $X_i \in [a, b]$ for all $i$.
+    Then, the sensitivity is $\Delta_1 = \frac{b-a}{n}$.
+\end{example}
+
+\section{Properties of Differential Privacy}
+
+Differential privacy has several key properties that make it an appealing 
+and robust privacy definition. We outline some fundamental properties:
+
+\subsection{Composition Theorems}
+
+When we run multiple differentially private mechanisms on the same dataset,
+the privacy losses accumulate.
+DP provides theoretical guarantees for how privacy degrades under composition of multiple analyses.
+There are basic composition results 
+as well as more advanced analyses that give tighter bounds which we will see later in this course.
+
+Suppose we have two algorithms $\mathcal{M}_1:\cX^n \rightarrow \cY_1$ and $\mathcal{M}_2:\cX^n\times \cY_1 \rightarrow \cY_2$.
+We allow the second mechanism be ``adaptive'' which means it can depends on the output of $\cM_1$.
+The composition theorem guarantees that the $\cM_2 \circ \cM_1$ is $\epsilon_1+\epsilon_2$-DP.
+\begin{theorem}
+    Suppose $\mathcal{M}_1:\cX^n \rightarrow \cY_1$ is $\epsilon_1$-DP and $\mathcal{M}_2:\cX^n\times \cY_1 \rightarrow \cY_2$ is $\epsilon_2$-DP.
+    Then, releasing both $\cM_1$ and $\cM_2 \circ \cM_1$ is at most $\epsilon_1+\epsilon_2$-DP.
+\end{theorem}
+\begin{proof}
+    For neighboring dataset $D$ and $D'$, we have
+    \begin{align}
+        & \frac{\Prob{(\cM_1(D), \cM_2(D, \cM_1(D))) = (a_1, a_2)} }{\Prob{(\cM_1(D'), \cM_2(D', \cM_1(D'))) = (a_1, a_2)}}\\
+        =& \frac{\Prob{\cM_1(D)=a_1} \Prob{\cM_2(D, \cM_1(D)) = a_2|\cM_1(D)=a_1}}{\Prob{(\cM_1(D')=a_1} \Prob{\cM_2(D', \cM_1(D'))) = a_2|\cM_1(D')=a_1}}\\
+        =& \frac{\Prob{(\cM_1(D)=a_1}} {\Prob{(\cM_1(D')=a_1}} \frac{\Prob{\cM_2(D, a_1) = a_2}}{\Prob{\cM_2(D', a_1)) = a_2}}\\
+        \leq& e^{\epsilon_1}e^{\epsilon_2}
+    \end{align}
+\end{proof}
+More generally, for $k$ mechanisms $\mathcal{M}_1,\dots,\mathcal{M}_k$ where $\mathcal{M}_i$ is $\epsilon_i$-DP, the sequence of all outputs is $\sum_{i}\epsilon_i$-DP.
+This worst-case bound follows from the multiplicative property of the $\epsilon$ factor.
+In particular, if $k$ independent mechanisms each satisfy $\epsilon$-DP,
+then $k$-fold composition satisfies $\epsilon_\text{tot} = k\epsilon$ (so $\epsilon$ scales linearly with $k$)~\cite{DworkRoth2014}.
+
+
+\subsection{Post-Processing Immunity}
+
+Differential privacy is immune to post-processing, meaning that no additional computations on the output can degrade the privacy guarantee.
+
+\begin{theorem}[Post-Processing \cite{DworkRoth2014}]
+If $\mathcal{M}: D \to \cY$ is an $\epsilon$-DP mechanism and $f: \cY \to \cY'$ is an arbitrary (possibly randomized) function, 
+then the composed mechanism $f(\mathcal{M}(D))$ is also $\epsilon$-DP.
+\end{theorem}
+
+\begin{proof}
+The intuition is that since $\mathcal{M}$'s output is already private, any further transformation $f$ cannot introduce new dependence on any single individual's data.
+Formally, for neighboring $D, D'$ and any subset of outputs $O \subseteq \cY'$, consider 
+\[ \Pr[f(\mathcal{M}(D)) \in O] = \Pr[\mathcal{M}(D) \in f^{-1}(O)] \,. \] 
+Note that
+\begin{align}
+    f^{-1}(O) = \{y \in \cY : f(y)\in O\}.
+\end{align}
+Because $\mathcal{M}$ is $\epsilon$-DP, this is at most 
+\[ e^{\epsilon} \Pr[\mathcal{M}(D') \in f^{-1}(O)] = e^{\epsilon} \Pr[f(\mathcal{M}(D')) \in O] \,.\] 
+Thus $f(\mathcal{M}(D))$ satisfies the same DP inequality. In simple terms: whatever an adversary could infer from $f(\mathcal{M}(D))$,
+they could also infer (up to the DP bounds) from $\mathcal{M}(D)$ alone.
+\end{proof}
+
+Post-processing immunity implies that one can publish a DP-sanitized result and allow any downstream analysis on it without worrying about further privacy loss.
+This is critical: as long as the initial result is differentially private, even an adversary with arbitrary side computations or auxiliary data cannot worsen the privacy.
+
+\subsection{Group Privacy and Amplification by Subsampling}
+
+Differential privacy as defined protects a single individual's data.
+If we consider a group of individuals (of size $t$) all opting in or out of a dataset, the privacy guarantee scales roughly linearly with $t$.
+
+\begin{theorem}[Group Privacy \cite{DworkRoth2014}]
+If $\mathcal{M}$ is $\epsilon$-DP, then for any group of $t$ individuals, $\mathcal{M}$ satisfies $t\epsilon$-DP with respect to changes in that entire group.
+\end{theorem}
+
+This is conceptually straightforward: changing $t$ people can be seen as $t$ single-person changes in sequence,
+and by composition (or a direct coupling argument) the bound becomes $e^{t\epsilon}$ on likelihood ratio and $t\delta$ additive slack.
+Group privacy implies that if someone is concerned about a group of, say, 5 of their records (maybe the same person appears multiple times in the data),
+then the guarantee would degrade by that factor 5.
+Typically $\epsilon$ is kept small enough that even a moderate $t$ yields an acceptable $t\epsilon$.
+
+
+\paragraph{Privacy Amplification by Subsampling.} An important positive property is that if a DP mechanism is applied to a random subset of the data (as opposed to the whole dataset),
+the effective privacy loss can be smaller.
+In many algorithms, we only use each individual's data with some probability (for example, in stochastic gradient descent, each mini-batch might include any given record with probability $q$).
+It turns out that this random selection provides additional privacy protection.
+
+A simple form of this result: Suppose $\mathcal{M}$ is an $\epsilon$-DP mechanism for a single individual's data.
+Now construct a new mechanism that first samples each individual with probability (rougly) $q$ 
+and applies $\mathcal{M}$ to the subsampled dataset (and outputs $\mathcal{M}$'s result).
+Then this overall procedure is $\epsilon'$-DP for the full dataset, where $\epsilon' < \epsilon$. 
+Specifically, one can show 
+\[ \epsilon' = \ln(1 + q(e^\epsilon - 1))\,, \] 
+which for small $q$ is roughly $q\epsilon$. 
+
+Here is a formal description.
+Suppose we have an algorithm $M : \cX^m \rightarrow \cY$ which is $(\epsilon, \delta)$-DP.
+Consider the following algorithm $M':\cX^n\rightarrow \cY$, where $n > m$.
+When run on an input $X \in\cX^n$, it chooses a random subset of the input $X'\in\cX^m$ of size $m$, and outputs $M(X')$.
+Let $q= m/n$, then $M'$ is $\epsilon'$-DP.\\
+\begin{proof}
+Let $X, X'\in \cX^n$ be neighboring dataset.
+Without loss of generality, assume that $X= (x, x_2, x_3, ..., x_n)$ while $X'=(x', x_2, x_3, \dots, x_n)$
+Let $I=(I_1, \dots, I_m)$ be a random vector of size $m$ uniformly sampled (without replacement) from $\{1, \dots, n\}$.
+and sampling function $s(X;I) = (x_{I_1}, \dots, x_{I_m})$.
+Then,
+\begin{align*}
+    \Prob{M'(X)\in T} =& \Prob{1\in I] Pr(M(s(X;I))\in T|1\in I}\\
+    &+ \Prob{1\notin I] Pr(M(s(X;I))\in T|1\notin I}
+\end{align*}
+Note that $\Prob{1\in I} = m/n=q$.
+Due to $\epsilon$-DP, we have
+\begin{align*}
+\Prob{M(s(X;I))\in T|1\in I} \leq& e^\epsilon \Prob{M(s(X';I))\in T|1\in I}\\
+\Prob{M(s(X;I))\in T|1\in I} \leq& e^\epsilon \Prob{M(s(X;I))\in T|1\notin I}\\
+\Prob{M(s(X;I))\in T|1\notin I} =& \Prob{M(s(X';I))\in T|1\notin I}.
+\end{align*}
+Note that the first inequality and the last equality are trivial.
+For the second inequality, we can find a mapping between all subsets in $1\in I$ to $1\notin I$
+so that the corresponding subsets are neighboring each other.
+
+\begin{exercise}
+    Note that the number of subsets in $1\in I$ and the number of subsets in $1\notin I$ are not the same.
+    Prove the second inequality formally.
+\end{exercise}
+
+
+Let $\alpha = q + (1-q)e^{-\epsilon}<1$, then using the second properties of the above, we have
+\begin{align*}
+\Prob{M(s(X;I))\in T|1\in I} \leq& \alpha e^\epsilon \Prob{M(s(X';I))\in T|1\in I} \\
+&+ (1-\alpha) e^\epsilon \Prob{M(s(X;I))\in T|1\notin I} 
+\end{align*}
+Finally, by rearranging the inequalities, we have
+\begin{align*}
+    \Prob{M'(X)\in T} \leq &(1+q(e^\epsilon-1)) \Prob{M'(X')\in T}.
+\end{align*}
+\end{proof}
+
+This means that given a 1-DP algorithm, it can always be converted to a $\epsilon$-DP algorithm by
+just expanding the dataset size by a factor of $O(1/\epsilon)$. 
+In summary, using only a random sample of users for each computation can ``amplify'' privacy.
+This is highly useful in large-scale distributed or federated computations where each round only involves a subset of devices or data points.
+
+
+\subsection{Differentially Private k-means}
+
+k-Means clustering is a classical algorithm used to partition $n$ data points into $k$ clusters by minimizing within-cluster variance.
+The standard k-Means algorithm is as follows.
+\begin{algorithm}[h!]
+\caption{k-Means Clustering}
+\begin{algorithmic}[1]
+\REQUIRE Dataset $X = \{x_1, x_2, \dots, x_n\} \subset \mathbb{R}^d$, number of clusters $k$
+\ENSURE Cluster assignments and centroids $\{\mu_1, \dots, \mu_k\}$
+\STATE Initialize $k$ cluster centers $\mu_1, \dots, \mu_k$ randomly
+\FOR{$t=1$ to $T$}
+    \FOR{each cluster $j = 1$ to $k$}
+    \STATE  Update the Cluster
+        \[
+        C_j \leftarrow \{ x_i \in X: \|x_i - \mu_j\|^2 \leq \min_{m \in \{1, \dots, k\}} \|x_i - \mu_m\|^2\}
+        \]
+    \ENDFOR
+    \FOR{each cluster $j = 1$ to $k$}
+        \STATE Update the centroid:
+        \[
+        \mu_j \leftarrow \frac{1}{|C_j|} \sum_{x_i \in C_j} x_i
+        \]
+    \ENDFOR
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+
+The algorithm minimizes the total within-cluster variance:
+
+\[
+\mathcal{L} = \sum_{j=1}^{k} \sum_{x_i \in C_j} \|x_i - \mu_j\|^2
+\]
+
+
+We aim for $\epsilon$-differential privacy:
+the algorithm's output should not significantly differ when a single data point in $X$ is changed.
+
+We present a simplified algorithm based on the ``Private k-Means via Output Perturbation'' 
+method described in \cite{nissim2007smooth, dwork2014algorithmic}.
+Let $\cU = \{x\in\fR^d : \|x\|_1\leq 1\}$ and $\epsilon' = \epsilon/2T$.
+
+\begin{algorithm}[h!]
+\caption{DP k-Means Clustering}
+\begin{algorithmic}[1]
+\REQUIRE Dataset $X = \{x_1, x_2, \dots, x_n\} \subset \cU^n$, number of clusters $k$
+\ENSURE Cluster centroids $\{\mu_1, \dots, \mu_k\}$
+\STATE Initialize $k$ cluster centers $\mu_1, \dots, \mu_k$ randomly
+\FOR{$t=1$ to $T$}
+    \FOR{each cluster $j = 1$ to $k$}
+    \STATE  Update the Cluster
+        \[
+        C_j \leftarrow \{ x_i \in X: \|x_i - \mu_j\|^2 \leq \min_{m \in \{1, \dots, k\}} \|x_i - \mu_m\|^2\}
+        \]
+    \ENDFOR
+    \FOR{each cluster $j = 1$ to $k$}
+        \STATE $n_j \leftarrow  |C_j| + Y$ where $Y\sim \mbox{Lap}(2/\epsilon')$
+        \STATE $a_j \leftarrow \left(\sum_{x_i \in C_j} x_i \right) + Z^d$ where $Z^d\sim \mbox{Lap}(2/\epsilon')$ i.i.d.
+        \STATE Update the centroid:
+        \[
+        \mu_j \leftarrow 
+        \begin{cases}
+            a_j / n_j &\mbox{ if $n_j \geq 1$}\\
+            \mbox{uniform in $\cU$} &\mbox{ if $n_j < 1$}\\
+        \end{cases}
+        \]
+    \ENDFOR
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+\begin{theorem}
+    The above algorithm is $\epsilon$-DP.
+\end{theorem}
+\begin{proof}
+    In each iteration,
+    \begin{itemize}
+        \item  Privatizing the sum of elements in each cluster:
+    \begin{align}
+        \left(\sum_{x_i\in C_1} x_i, \dots, \sum_{x_i\in C_k} x_i \right) \rightarrow (a_1, \dots, a_k)
+    \end{align}
+    has sensitivity $2$ and is $\epsilon'$-DP.
+        \item Privatizing the number of elements in each cluster:
+    \begin{align}
+        (|C_1|, \dots, |C_k|) \rightarrow (n_1, \dots, n_k)
+    \end{align}
+    has sensitivity $2$ and is $\epsilon'$-DP.
+    \end{itemize}
+    Using a basic composition theorem, the overall algorithm is $T \times 2\epsilon' = \epsilon$-DP.
+\end{proof}
+
+\begin{remark}
+\begin{itemize}
+    \item Sensitivity estimation often uses assumptions about bounded data domains (e.g., all $x_i$ in $[0,1]^d$).
+    \item For approximate DP, we can use Gaussian mechanism.
+\end{itemize}
+\end{remark}
+
+
+
+\subsection{Additive Differential Privacy (Not Recommended)}
+So far, we discussed the differential privacy under multiplicative factor $e^\epsilon$.
+You may wonder ``can we define the similar notion of privacy under additive factor,'' i.e., 
+\[ 
+\Pr[\mathcal{M}(D) \in O] \;\le\; \Pr[\mathcal{M}(D') \in O] + \delta\,.
+\] 
+Indeed, the above definition satisfies some desirable properties, including composition, postprocessing, and group privacy.
+However, it is not so useful due to the following example.
+Consider a following mechanisim:
+For dataset $X = (X_1, \dots, X_n)$, the mechanism outputs the whole set $Y=X$ with probability of $\delta$,
+and release nothing with probability of $1-\delta$.
+\begin{exercise}
+    Show that the above mechanism satisfies the $\delta$-additive DP.
+\end{exercise}
+This requires that the $\delta$ should be small.
+However, as we discussed in group privacy of $\epsilon$-DP,
+the parameter $\delta$ should be larger than $1/n$ for any useful applications.
+Then, the question would be $\delta > 1/n$ (but still small) would be okay.
+
+Consider the following mechanism for dataset $X = (X_1, \dots, X_n)$.
+The mechanism outputs $Y = (Y_1, \dots, Y_n)$ where
+\begin{align}
+    Y_i = \begin{cases}
+        X_i &\mbox{w.p. $\delta$}\\
+        \perp &\mbox{w.p. $1-\delta$}
+    \end{cases}
+\end{align}
+The dummy symbol $\perp$ represents ``no information.''
+\begin{exercise}
+    Show that the above mechanism satisfies the $\delta$-additive DP.
+\end{exercise}
+Note that the probability of leaking at least one private information is
+\begin{align}
+    1- (1-\delta)^n,
+\end{align}
+which is non-negligible in the case of $\delta > 1/n$.
+
+\subsection{Selection Problem: Exponential Mechanism}
+Not all queries are numeric; sometimes we wish to select an output from a discrete set in a privacy-preserving way.
+The Exponential Mechanism \cite{DworkRoth2014} is a general method to choose an output with probability biased 
+towards high-utility results while preserving differential privacy (DP).
+
+We have two motivaional examples.
+\begin{example}[Voting]
+    Suppose there are $d$ candidates, and $n$ users.
+    Each user can vote to multiple candidates, i.e., $i$-th user voted to $X_i\subset\{1, \dots, d\}$.
+    The score of candidate $j$ is
+    \begin{align}
+        q(j;D) = |\{i:j\in X_i\}|.
+    \end{align}
+    Without DP, we would pick $\argmax_j q(j;D)$, but we want to privatize this mechanism.
+\end{example}
+\begin{example}[Pricing]
+    Suppose you want to decide the price $p$ of the product.
+    There are $n$ users where $i$-th user is willing to buy a product if $p\leq X_i$.
+    For price $p$, the revenue would be
+    \begin{align}
+        q(p;D) = p \times  | \{i: p\leq X_i\}|.
+    \end{align}
+    Without DP, we would pick $\argmax_j q(j;D)$, but we want to privatize this mechanism.
+    In this case, $p$ is a real variable, and you may want to add a Laplacian noise.
+    But consider the following case where $X_1=X_2=\dots = X_n = 7$, where the optimal price is $p^\star = 7$.
+    If the noisy price is larger than $7$, then the revenue would be 0.
+    In this case, we can discretize the mechanism and convert the problem to pick $\hat{p}$ from the price candidates
+    $\{1, 2, ..., p_{\max}\}$.
+    One can define the finer candidate set.
+\end{example}
+In both cases, the problem is simply a ``selection problem'' where the usual Laplace mechanism may not applicable.
+In this selection problem, 
+
+Suppose we have an arbitrary set of possible outputs $\cY$.
+We define a utility (or score) function $q(y; D)$ that evaluates the quality of output $y$ with respect to dataset $D$.
+We require that changing one individual's data changes the utility by at most $\Delta$:
+This ensures that no single data point can significantly affect the output distribution.
+
+The Exponential Mechanism $\mathcal{M}_\text{EM}$ selects an output $y \in \cY$ with probability proportional to $\exp\!\left(\frac{\epsilon\, q(D,o)}{2\,\Delta}\right)$.
+Formally:
+\[ 
+    \Pr[\mathcal{M}_\text{EM}(D) = y] \propto \exp\!\Big(\frac{\epsilon\, q(D,y)}{2\,\Delta}\Big)\,. 
+\] 
+This mechanism satisfies $\epsilon$-DP.
+
+Intuitively, outputs with higher utility on the true data are exponentially more likely,
+but the presence of the normalization by $\Delta$ and scaling by $\epsilon$ ensures that 
+a single individual's effect on the utilities does not skew the probabilities too much.
+
+\paragraph{Utility Guarantee.}
+One of the most important features of the Exponential Mechanism is its utility guarantee:
+with high probability, the chosen output $y$ has utility close to the maximum possible utility.
+Specifically, we have
+\[
+    \Prob{q(D, Y) < q_{\max} - \frac{2 \Delta (\log d + t)}{\epsilon}} \leq \exp(-t).
+\]
+\begin{proof}
+Let the set of bad outputs:
+\[
+    B_t = \left\{y: q(D, y) < q_{\max} - \frac{2 \Delta (\log d + t)}{\epsilon}\right\}
+\]
+\begin{align}
+    \Prob{Y\in B_t} 
+    \leq& \frac{\Prob{Y\in B_t}}{\Prob{Y=y^\star}}\\
+    =& \frac{\sum_{y\in B_t} \Prob{Y=y}}{\Prob{Y=y^\star}}\\
+    =& \frac{\sum_{y\in B_t}\exp\left(\frac{\epsilon}{2\Delta}q(y;D)\right)}
+        {\exp\left(\frac{\epsilon}{2\Delta}q_{\max}\right)}\\
+    =& \sum_{y\in B_t}\exp\left(\frac{\epsilon}{2\Delta}(q(y;D)-q_{\max})\right)\\
+    \leq& \sum_{y\in B_t}\exp\left(-(\log d + t)\right)\\
+    =& |B_t| \exp\left(-(\log d + t)\right)\\
+    \leq& \exp(-t).
+\end{align}
+where the last inequality is due to $|B_t|\leq d$.
+\end{proof}
+
+We can rewrite the above inequality by
+\begin{align}
+    \Prob{q_{\max} - q(D, Y) > \alpha } \leq \beta
+\end{align}
+where $\alpha= (2\Delta/\epsilon)(\log d + t)$ is a threshold and $\beta = e^{-t}$ is a small probability.
+This shows that the utility loss grows logarithmically with the size of the output space $|\mathcal{Y}|$ and with $1/\beta$.
+Thus, the Exponential Mechanism is especially suited to large but finite domains where directly adding noise to the output (e.g., via Laplace or Gaussian mechanisms) is not feasible.
+
+We have another utility guarantee in expectation.
+\[
+    \E{q_{\max} - q(D, Y)} \leq \frac{2\Delta}{\epsilon} (\log d + 1).
+\]
+\begin{proof}
+ Let $Z = \frac{\epsilon}{2\Delta}(q_{\max} - q(D;Y))$, then with reparameterization of $z = \log d + t$, we have
+ \begin{align}
+    \E{Z} =& \int_0^\infty \Prob{Z>z}\, dz\\
+     =& \int_{-\log d}^\infty \Prob{Z>\log d + t}\, dt\\
+     \leq& \log d + \int_{0}^\infty \Prob{Z>\log d + t}\, dt\\
+     \leq& \log d + \int_{0}^\infty e^{-t}\, dt\\
+     =& \log d + 1.
+ \end{align}
+\end{proof}
+
+\paragraph{Example: Selecting the Most Frequent Item Privately.}
+For the voting example, the sensitivity is $\Delta =1$.
+Suppose we have $d=100$ with the target of $e^{-t} = 0.01$ and $\epsilon=0.5$, then
+\begin{align}
+    \frac{2\Delta}{\epsilon} (\log d + t) \approx 36.8 
+\end{align}
+In other words,
+\begin{align}
+    \Prob{q_{\max} - q(D;Y) > 36.8}\leq 0.01.
+\end{align}
+Thus, if the winner and the runner-up has difference more than 36.8,
+the winner (with most votes) will be chosen with probability larger than 99\%.
+
+
+\subsection{Selection Problem: Noisy Max}
+
+The \emph{Noisy Max} mechanism (also known as \emph{Report Noisy Max}) is a simple yet powerful tool for differentially private selection. It is designed to privately solve argmax-style queries: given multiple candidate outcomes (or queries) with real-valued scores, Noisy Max identifies the highest-scoring outcome under the protection of differential privacy.
+
+\vspace{0.5em}
+\noindent\textbf{Motivating Example (Private Voting).}
+Imagine an election with several candidates.
+Each candidate $y$ has $q(y; D)$ votes in the true dataset $D$.
+The Noisy Max mechanism adds Exponential noise to each vote count and outputs the candidate with the highest noisy count.
+This prevents small changes in individual votes from drastically affecting the result.
+
+\begin{definition}[Noisy Max Mechanism]
+Let $\cY$ be a finite set of candidate outputs and let $q: \cX^n\times \cY \to \mathbb{R}$ be a utility function 
+with sensitivity $\Delta$.
+The Noisy Max mechanism $\mathcal{M}_{NM}$ operates as follows:
+\begin{enumerate}
+    \item For each $y \in Y$, compute $s_y := q(y;D) + Z_y$, where $Z_y \sim \mathrm{Exp}(0, 2\Delta/\epsilon)$.
+    \item Output $y^* := \arg\max_{y \in Y} s_y$.
+\end{enumerate}
+\end{definition}
+
+\begin{theorem}[Differential Privacy of Noisy Max]
+The Noisy Max mechanism $\mathcal{M}_{NM}$ is $\epsilon$-differentially private.
+\end{theorem}
+
+\begin{proof}
+Let $X$ and $X'$ be neighboring datasets and $y \in \cY$ be any output.
+Then,
+\begin{align}
+& \Prob{\mathcal{M}_{NM}(X) = y}\\
+&= \Prob{q(y;X) +Z_y\geq \max_{j\neq y} q(j;X)+Z_j}\\
+&= \int_{z^{d\setminus j}} \Prob{Z_y\geq \max_{j\neq y} q(j;X)-q(y;X)+z_j | Z^{d\setminus j}=z^{d\setminus j}}
+f_{Z^{d\setminus j}}(z^{d\setminus j})\,dz^{d\setminus j}\\
+&\leq \int_{z^{d\setminus j}} \Prob{Z_y\geq \max_{j\neq y} q(j;X')-q(y;X')-2\Delta +z_j | Z^{d\setminus j}=z^{d\setminus j}}
+f_{Z^{d\setminus j}}(z^{d\setminus j})\,dz^{d\setminus j}\\
+&\leq e^\epsilon \int_{z^{d\setminus j}} \Prob{Z_y\geq \max_{j\neq y} q(j;X')-q(y;X') +z_j | Z^{d\setminus j}=z^{d\setminus j}}
+f_{Z^{d\setminus j}}(z^{d\setminus j})\,dz^{d\setminus j}\\
+&= e^\epsilon\Prob{\mathcal{M}_{NM}(X') = y}.
+\end{align}
+where $Z^{d\setminus j}$ is a $d-1$ dimensional vector $(Z_1, \dots, Z_d)$ execept $Z_j$.
+
+The key step is
+\begin{align}
+    \Prob{Z_y \geq K -2\Delta} \leq e^\epsilon\Prob{Z_y\geq K}
+\end{align}
+for a constant $K$ when $Z_y\sim\mbox{Exp}(2\Delta/\epsilon)$.
+\end{proof}
+
+\paragraph{Utility Guarantee.}
+Let $y^\star = \arg\max_y q(y; X)$ and let $Y$ be the output of $\mathcal{M}_{NM}$. Then for $t \ge 0$,
+\[
+\Prob{q_{\max} - q(Y;X) > \frac{2\Delta(\log d + t)}{\epsilon}} \le e^{-t}.
+\]
+
+\begin{proof}
+Let $c = \frac{2\Delta(\log d + t)}{\epsilon}$. By the definition of the mechanism, $Y$ maximizes the noisy score, so:
+\[
+q(Y;X) + Z_Y \ge q(y^\star;X) + Z_{y^\star} = q_{\max} + Z_{y^\star}
+\]
+Rearranging this inequality yields an upper bound on the utility error:
+\[
+q_{\max} - q(Y;X) \le Z_Y - Z_{y^\star}
+\]
+If the error exceeds $c$, then $Z_Y - Z_{y^\star} > c$. Since $Y \in \{1, \dots, d\}$, this implies $Z_j - Z_{y^\star} > c$ for some $j$. Taking the union bound over all $d$ items:
+\begin{align*}
+\Prob{q_{\max} - q(Y;X) > c} &\le \Prob{\exists j \in \{1, \dots, d\} \text{ s.t. } Z_j - Z_{y^\star} > c} \\
+&\le \sum_{j=1}^d \Prob{Z_j - Z_{y^\star} > c} \\
+&\le d \times \exp\left(-\frac{\epsilon c}{2\Delta}\right)
+\end{align*}
+Substituting $c = \frac{2\Delta(\log d + t)}{\epsilon}$ back into the exponent gives:
+\[
+d \times \exp(-(\log d + t)) = d \times \frac{e^{-t}}{d} = e^{-t}.
+\]
+\end{proof}
+
+% \paragraph{Utility Guarantee.}
+% Let $y^\star = \arg\max_y q(y; X)$ and let $y$ be the output of $\mathcal{M}_{NM}$. Then for $\alpha \ge 0$,
+% \[
+% \Prob{q_{\max} - q(Y;X)  > \frac{2\Delta(\log d + t)}{\epsilon}} \le e^{-t}.
+% \]
+% \begin{proof}
+% Since $q(Y;X) + Z_Y \geq \max_j q(j;X) + Z_j$, we have
+% \begin{align}
+% &\Prob{q_{\max} - q(Y;X)  > \frac{2\Delta(\log d + t)}{\epsilon}} \\
+% &= \Prob{q_{\max}  > (q(Y;X) + Z_Y)-Z_Y+\frac{2\Delta(\log d + t)}{\epsilon}} \\
+% &\leq \Prob{q_{\max}  > \max q(j;X) +Z_j -Z_Y + \frac{2\Delta(\log d + t)}{\epsilon}} \\
+% &\leq \Prob{Z_Y-Z_j  > \frac{2\Delta(\log d + t)}{\epsilon}\quad\mbox{for some $j$}} \\
+% &\leq d \times \exp(-(\log d+t))\\
+% &=e^{-t}.
+% \end{align}
+% \end{proof}
+
+We have the exact same expected utility bound as before, since the probabilistic utility guarantee is the same.
+
+
+\section{Approximate Differential Privacy}
+\begin{definition}[$(\epsilon,\delta)$-Differential Privacy \cite{Dwork2006}] \label{def:app-dp}
+A randomized mechanism $\mathcal{M}$ (algorithm) operating on datasets is $(\epsilon,\delta)$-differentially private if for all pairs of neighboring datasets $D$ and $D'$, and for all measurable subsets of outputs $O \subseteq \text{Range}(\mathcal{M})$, we have:
+\[ 
+\Pr[\mathcal{M}(D) \in O] \;\le\; e^{\epsilon} \,\Pr[\mathcal{M}(D') \in O] + \delta\,.
+\] 
+If $\delta=0$, we say $\mathcal{M}$ satisfies $\epsilon$-DP (often called \emph{pure} DP). If $\delta > 0$ (typically very small, e.g. $10^{-6}$ or $10^{-9}$), it is called \emph{approximate} DP.
+\end{definition}
+
+The parameter $\epsilon \ge 0$ quantifies the \textit{privacy loss}: smaller $\epsilon$ means stronger privacy (since $e^{\epsilon}$ will be closer to 1). The parameter $\delta$ allows a small probability of failure of the pure DP guarantee. In particular, with probability at most $\delta$, the inequality may not hold, but typically $\delta$ is chosen to be negligible in the dataset size or in practical terms. Differential privacy is a worst-case guarantee, quantifying risk over all possible outputs and all possible neighboring dataset pairs. 
+
+\textbf{Interpretations:} One way to interpret DP is that an adversary who sees the output of $\mathcal{M}$ cannot confidently tell whether any particular individual’s data was used or not, up to an odds ratio of $e^{\epsilon}$ (and with probability $\delta$ of a larger deviation). Another interpretation in terms of hypothesis testing: for any individual $i$, consider the hypothesis $H_0$ that $i$'s data was included in $D$ versus $H_1$ that $i$'s data was replaced (or removed) to obtain $D'$. Differential privacy guarantees that any test performed on the output of $\mathcal{M}$ cannot distinguish $H_0$ vs $H_1$ with advantage much more than $\delta$, and even in the best case, the log-likelihood ratio is bounded by $\epsilon$ \cite{Wasserman2010}. In simple terms, the presence or absence (or change) of a single individual's data has minimal effect on the distribution of outputs.
+
+\subsection{Privacy Loss Random Variable}
+Let the privacy loss by
+\begin{align}
+    I_{X, X'} (y) = \log \frac{\Prob{\cM(X)=y}}{\Prob{\cM(X')=y}}.
+\end{align}
+Then, one can define the privacy loss random variable by
+\begin{align}
+    I_{X, X'}(Y) 
+\end{align}
+where $Y=\cM(X)$.
+
+The typical way of proving the mechanism $\cM$ is $(\epsilon, \delta)$-DP is first divide $\cY = G\subset B$ where
+\begin{align}
+    G &= \{y\in\cY \mid I_{X, X'}(y) \leq \epsilon\}\\
+    B &= \{y\in\cY \mid I_{X, X'}(y) > \epsilon\}\\
+\end{align}
+Then, for $S\subset \cY$, we have
+\begin{align}
+    \Prob{\cM(Y) \in S} =& \Prob{\cM(X)\in S\cap G} + \Prob{\cM(Y)\in S\cap B}\\
+    \leq& e^\epsilon \Prob{\cM(X')\in S\cap G} + \Prob{\cM(X)\in B}\\
+    \leq& e^\epsilon \Prob{\cM(X')\in S} + \Prob{\cM(X)\in B}.
+\end{align}
+Thus, it is enough to show that
+\begin{align}
+    \Prob{\cM(X)\in B } = \Prob{I_{X, X'}(Y) > \epsilon}\leq \delta.
+\end{align}
+
+\subsection{Truncated Laplacian Mechanism}
+Several standard mechanisms satisfy differential privacy, for example, the following truncated Laplacian mechanism.
+Let the truncated Laplacian random variable $Z\sim\mbox{LapTr}(\lambda, \tau)$ where the pdf is
+\begin{align}
+    f_Z(z) = \begin{cases} \frac{1}{Z} e^{-|z|/\lambda} &\mbox{ if $|z|\leq \tau$}\\
+    0&\mbox{ otherwise}
+    \end{cases}
+\end{align}
+Then, the truncated Laplacian mechanism is simply adding truncated Laplacian, i.e.,
+\begin{align}
+    \cM(X) = f(X) + (Z_1, \dots, Z_d)
+\end{align}
+where $Z_i$ is i.i.d.\ truncated laplacian with parameter $(\Delta/\epsilon, \tau)$ with appropriate $\tau$.
+Note that the utility of the mechanism is more or less the same as standard Laplacian mechanism,
+we can guarantee the worst-case bound on the magnitude of the noise.
+
+\subsection{Gaussian Mechanism}
+When we allow a small $\delta > 0$, using Gaussian (normal) noise is another popular approach.
+The Gaussian mechanism adds Gaussian noise with variance proportional to $\Delta_2^2$.
+Specifically, to achieve $(\epsilon,\delta)$-DP for a function $f$
+with $\ell_2$-sensitivity $\Delta_2$ (the maximum $\ell_2$ change in $f$ between neighbors),
+the mechanism outputs
+\[ \mathcal{M}(D) = f(D) + \mathcal{N}(0, \sigma^2 I)\,, \] 
+where $\mathcal{N}(0, \sigma^2 I)$ is a multivariate Gaussian with covariance $\sigma^2 I$ (identity) 
+and $\sigma$ is chosen as $\sigma = \frac{\Delta_2 \sqrt{2\ln(1.25/\delta)}}{\epsilon}\,. $
+This choice of $\sigma$ ensures $(\epsilon,\delta)$-DP \cite{DworkRoth2014}.
+The Gaussian mechanism is often used when the desired $\delta$ is not zero 
+or when dealing with high-dimensional or real-valued outputs where Gaussian noise may be more natural.
+It requires slightly more noise than Laplace for a given $\epsilon$ 
+if $\delta$ is extremely small, but for moderate $\delta$ it can be effective.
+
+These classical mechanisms can be used as building blocks for more complex differentially private analyses.
+We emphasize that $\epsilon$ and $\delta$ are parameters that one generally wants to keep as small as possible 
+to ensure strong privacy, but smaller values mean more noise or less accuracy.
+The art of designing DP algorithms lies in achieving useful accuracy (utility) for given privacy parameters.
+
+\begin{proof}
+Let first show that the 1-dimensional case.
+First, define $K = f(X) - f(X') \leq \Delta$, then
+\begin{align}
+    I_{X,X'}(y) =&\log \frac{\Prob{\cM(X)=y}}{\Prob{\cM(X')=y}} \\
+    =& \log\frac{\exp(-(y-f(X))^2/2\sigma^2)}{\exp(-(y-f(X'))^2/2\sigma^2)}\\
+    =& \frac{(y-f(X'))^2 - (y-f(X))^2}{2\sigma^2}\\
+    =& \frac{(f(X) - f(X')) (f(X)-f(X') + 2(y-f(X)))}{2\sigma^2}\\
+    =& \frac{K(K + 2(y-f(X)))}{2\sigma^2}
+\end{align}
+From $\Prob{\mathcal{N}(0, 1) \geq t}\leq e^{-\frac{1}{2}t^2}$, we have
+\begin{align}
+    \Prob{I_{X,X'}(Y) >\epsilon} 
+    \leq &\Prob {\frac{K(K + 2(Y-f(X)))}{2\sigma^2} > \epsilon}\\
+    =&\Prob {\frac{K(Y-f(X)) }{\sigma^2} > \epsilon- \frac{K^2}{2\sigma^2}}\\
+    =&\Prob {\frac{Y-f(X) }{\sigma} > \frac{\epsilon\sigma}{K}- \frac{K}{2\sigma}}\\
+    \leq& \exp\left(-\frac{1}{2}\left(\frac{\epsilon\sigma}{K}- \frac{K}{2\sigma}\right)^2\right)\\
+    \leq& \exp\left(-\frac{1}{2}\left(\frac{\epsilon\sigma}{\Delta}- \frac{\Delta}{2\sigma}\right)^2\right)\\
+    \leq& \exp\left(-\frac{1}{2}\frac{\epsilon^2\sigma^2}{\Delta^2}\right)\\
+    \leq& \exp \log (\delta/1.25)\\
+    \leq& \delta.
+\end{align}
+
+\end{proof}
+For a multidimensional Gaussian, we need the following lemma
+\begin{lemma}
+    Let $Z = (Z_1, \dots, Z_d)$ be multivariate Gaussian with zero mean and covariance $\sigma^2 I$,
+    then, for any $v\in\fR^d$, $v\cdot Z$ is a zero mean Gaussian with variance $\sigma^2 \|v\|^2$.
+\end{lemma}
+\begin{proof}
+    The proof of the multi-dimensional case is essentially the same.
+    Let $v = f(X) - f(X')$, then
+    \begin{align}
+        I_{X,X'}(y) =&\log \frac{\Prob{\cM(X)=y}}{\Prob{\cM(X')=y}} \\
+        =& \log\frac{\exp(-\|y-f(X)\|^2/2\sigma^2)}{\exp(-\|y-f(X')\|^2/2\sigma^2)}\\
+        =& \frac{\|y-f(X')\|^2 - \|y-f(X)\|^2}{2\sigma^2}\\
+        =& \frac{(f(X) - f(X'))\cdot (f(X)-f(X') + 2(y-f(X)))}{2\sigma^2}\\
+        =& \frac{\|v\|^2}{2\sigma^2} + \frac{2v\cdot (y-f(X))}{2\sigma^2}
+    \end{align}
+    Using the fact that $v\cdot (y-f(X))$ is Gaussian with zero mean and variance $\|v\|^2\sigma^2$,
+    the proof remains the same.
+\end{proof}
+
+\begin{remark}
+    The $\ell_2$ sensitivity is normally much smaller than the $\ell_1$ sensitivity.
+    For example, consider the case of binary queries $f(X) \in \{0, 1\}^d$ (answering $d$ binary queries).
+    The $\ell_1$ sensitivity is $d$ since a single alteration may effect the answer of all $d$ queries.
+    However, the $\ell_1$ sensitivity is $\sqrt{d}$, which is smaller than $d$.
+    Thus, the noise proportional to $\ell_2$ in Gaussian mechanism is beneficial in most practical setup.
+\end{remark}
+
+\section{Properties of Approximate DP}
+
+Differential privacy has several key properties that make it an appealing and robust privacy definition. We outline some fundamental properties:
+
+\subsection{Post-Processing Immunity}
+
+Differential privacy is immune to post-processing, meaning that no additional computations on the output can degrade the privacy guarantee.
+
+\begin{theorem}[Post-Processing \cite{DworkRoth2014}]
+If $\mathcal{M}: D \to O$ is an $(\epsilon,\delta)$-DP mechanism and $f: O \to O'$ is an arbitrary (possibly randomized) function, then the composed mechanism $f(\mathcal{M}(D))$ is also $(\epsilon,\delta)$-DP.
+\end{theorem}
+
+\begin{proof}
+The intuition is that since $\mathcal{M}$'s output is already private, any further transformation $f$ cannot introduce new dependence on any single individual's data. Formally, for neighboring $D, D'$ and any subset of outputs $O'_{sub} \subseteq O'$, consider 
+\[ \Pr[f(\mathcal{M}(D)) \in O'_{sub}] = \Pr[\mathcal{M}(D) \in f^{-1}(O'_{sub})] \,. \] 
+Because $\mathcal{M}$ is $(\epsilon,\delta)$-DP, this is at most 
+\[ e^{\epsilon} \Pr[\mathcal{M}(D') \in f^{-1}(O'_{sub})] + \delta = e^{\epsilon} \Pr[f(\mathcal{M}(D')) \in O'_{sub}] + \delta\,.\] 
+Thus $f(\mathcal{M}(D))$ satisfies the same DP inequality. In simple terms: whatever an adversary could infer from $f(\mathcal{M}(D))$, they could also infer (up to the DP bounds) from $\mathcal{M}(D)$ alone.
+\end{proof}
+
+Post-processing immunity implies that one can publish a DP-sanitized result and allow any downstream analysis on it without worrying about further privacy loss. This is critical: as long as the initial result is differentially private, even an adversary with arbitrary side computations or auxiliary data cannot worsen the privacy.
+
+\subsection{Composition Theorems}
+
+When we run multiple differentially private mechanisms on the same dataset, the privacy losses accumulate. DP provides theoretical guarantees for how privacy degrades under composition of multiple analyses. There are basic composition results as well as more advanced analyses that give tighter bounds.
+
+\paragraph{Basic Composition.} If we have two algorithms $\mathcal{M}_1$ and $\mathcal{M}_2$ that are $(\epsilon_1,\delta_1)$-DP and $(\epsilon_2,\delta_2)$-DP respectively, then releasing the outputs of both (either together or sequentially) is at most $(\epsilon_1+\epsilon_2, \delta_1+\delta_2)$-DP. More generally, for $k$ mechanisms $\mathcal{M}_1,\dots,\mathcal{M}_k$ where $\mathcal{M}_i$ is $(\epsilon_i,\delta_i)$-DP, the sequence of all outputs is $(\sum_{i}\epsilon_i,\; \sum_{i}\delta_i)$-DP. This worst-case bound follows from a union bound on the $\delta$ probabilities and the multiplicative property of the $\epsilon$ factor. In particular, if $k$ independent mechanisms each satisfy $\epsilon$-DP (pure), $k$-fold composition satisfies $\epsilon_\text{tot} = k\epsilon$ (so $\epsilon$ scales linearly with $k$) \cite{DworkRoth2014}.
+
+\subsection{Group Privacy and Amplification by Subsampling}
+
+Differential privacy as defined protects a single individual's data. If we consider a group of individuals (of size $t$) all opting in or out of a dataset, the privacy guarantee scales roughly linearly with $t$.
+
+\begin{theorem}[Group Privacy \cite{DworkRoth2014}]
+If $\mathcal{M}$ is $(\epsilon,\delta)$-DP, then for any group of $t$ individuals,
+$\mathcal{M}$ satisfies $(t\epsilon,\; \frac{e^{t\epsilon}-1}{e^{\epsilon}-1}\delta)$-DP with respect to changes in that entire group.
+Note that $\frac{e^{t\epsilon}-1}{e^{\epsilon}-1}\delta\approx t\delta$ for small $\epsilon$.
+\end{theorem}
+
+This is conceptually straightforward: changing $t$ people can be seen as $t$ single-person changes in sequence, and by composition (or a direct coupling argument) the bound becomes $e^{t\epsilon}$ on likelihood ratio and $t\delta$ additive slack. Group privacy implies that if someone is concerned about a group of, say, 5 of their records (maybe the same person appears multiple times in the data), then the guarantee would degrade by that factor 5. Typically $\epsilon$ is kept small enough that even a moderate $t$ yields an acceptable $t\epsilon$.
+
+
+
+
+\paragraph{Privacy Amplification by Subsampling.} 
+Suppose $\mathcal{M}$ is an $(\epsilon, \delta)$-DP mechanism for a dataset. Now construct a new mechanism $\mathcal{M}'$ that first samples each individual independently with probability $q$ (known as Poisson subsampling) and applies $\mathcal{M}$ to the subsampled dataset. Then this overall procedure $\mathcal{M}'$ is $(\epsilon', \delta')$-DP for the full dataset, governed by the exact formulas:
+\begin{align*}
+\epsilon' &= \ln(1 + q(e^\epsilon - 1)) \\
+\delta' &= q\delta
+\end{align*}
+
+For small values of $q$ and $\epsilon$, the amplified privacy parameter $\epsilon'$ is roughly $q\epsilon$. If the base mechanism $\mathcal{M}$ satisfies pure $\epsilon$-DP (meaning $\delta = 0$), the subsampled mechanism inherently achieves pure $\epsilon'$-DP since $\delta'$ remains $0$. 
+
+While these formulas provide exact bounds for a single application of a subsampled mechanism, tracking the privacy loss over multiple repeated applications (such as thousands of training steps in machine learning) requires advanced composition techniques. Precise accounting methods, such as the Moments Accountant introduced by Abadi et al.\ \cite{Abadi2016} or Rényi Differential Privacy (RDP), use higher-order moments of the privacy loss random variable to get tight, practical bounds across many subsampled iterations. 
+
+In summary, using only a random sample of users for each computation can ``amplify'' privacy. This is highly useful in large-scale distributed or federated computations where each round only involves a subset of devices or data points.
+
+
+\section{DP Empirical Risk Minimization}
+\subsection{Empirical Risk Minimization (ERM)}
+Let $X = ((x_1, y_1), \dots, (X_n, y_n))$ be a dataset.
+Suppose we want a model $f_\theta:\cX\rightarrow \hat{\cY}$ that $f_{\theta}(x) \approx y$.
+It is common to train the model by minimizing the empirical loss
+\begin{align}
+    L(\theta, X) = \frac{1}{n}\sum_{i=1}^n \ell(f_{\theta}(x_i), y_i)
+\end{align}
+for some loss function $\ell: \hat{\cY}\times \cY\rightarrow [0, \infty)$.
+The empirical risk is defined by
+\begin{align}
+    R(\theta) = L(\theta, X) - \min_\theta L(\theta, X)
+\end{align}
+the cost of suboptimality.
+Note that the population loss is
+\begin{align}
+    L(\theta, P_X) = \E{\ell(f_{\theta}(X), Y)}
+\end{align}
+when the true distribution $(X, Y)\sim P_X$ is known.
+The corresponding population risk is
+\begin{align}
+    R_p(\theta) = L_p(\theta, P_X) - \min_\theta L_p(\theta, P_X).
+\end{align}
+In practice, we do not know the true distribution, and the goal is often to minimize the empirical risk.
+
+To provide a theoretical guarantee, we have some additional assumptions.
+\begin{itemize}
+    \item Constraint: $\theta$ is in a feasible set $\mathcal{C}$, i.e., $\theta\in\mathcal{C}$.
+        For example, we can have bounded norm constraint, i.e., $\|\theta\|_2^2\leq C$.
+    \item Bounded loss: $\ell(f_{\theta}(x), y) \in [0, \Delta]$ for all $\theta, x, y$.
+    \item Lipschitzness: $\|\nabla_\theta \ell(f_\theta(x), y)\|\leq G$.
+        This implies that the loss function is not varying too fast so that it is ``predictable.''
+\end{itemize}
+
+\subsection{Exponential Mechanism}
+One way to solve ERM is via the exponential mechanism.
+The idea is simply sampling $\theta$ according to the probability distribution
+\begin{align}
+    \Prob{\Theta=\theta}\propto \exp\left(-\frac{\epsilon n}{2\Delta}L(\theta; X)\right)
+\end{align}
+Then, the following theorem provides a utility guarantee.
+\begin{theorem}
+    Suppose $\mathcal{C}$ is the $\ell_2$-ball of radius $R$ in $\fR^d$ and $\nabla\ell$ is $G$-Lipschitz.
+    Then, for every dataset $X$ with $\Delta=GR$, exponential mechanism returns $\hat{\theta}$ such that
+    \begin{align}
+        \E{L(\hat{\theta}, X)} \leq \min_{\theta\in \mathcal{C}} L(\theta; X) 
+            + O\left(\frac{dGR\log(\epsilon n/d)}{\epsilon n}\right)
+    \end{align}
+\end{theorem}
+
+\begin{proof}
+    Define the set $A_1$ (the good one), and the set $A_2$ (the bad one).
+    Fix a small $r$, and
+    \begin{align}
+        A_1 &= \{\hat{\theta}\in \mathcal{C} : L(\hat{\theta}) \leq L(\theta^\star) + rG\}\\
+        A_2 &= \{\hat{\theta}\in \mathcal{C} : L(\hat{\theta}) > L(\theta^\star) + rG + t\}
+    \end{align}
+    Then,
+    \begin{align}
+        \frac{\Prob{\hat{\theta}\in A_2}}{\Prob{\hat{\theta}\in A_1}}
+        &\leq \frac{\mbox{Vol}(A_2)\exp{\left(-\frac{\epsilon n}{2RG} (L(\theta^\star) + rG+t)\right)}}
+        {\mbox{Vol}(A_1)\exp{\left(-\frac{\epsilon n}{2RG} (L(\theta^\star) + rG)\right)}}\\
+        &=\frac{\mbox{Vol}(A_2)}{\mbox{Vol}(A_1)}\exp{\left(-\frac{\epsilon nt}{2RG}\right)}\\
+        &\leq \left(\frac{R}{r/2}\right)^d\exp{\left(-\frac{\epsilon nt}{2RG}\right)}
+    \end{align}
+    where $r/2$ is from the case where $\theta^\star$ lies in the boundary of the set $\mathcal{C}$.
+    Even in such case, the $G$ should contain the ball of radius $r/2$.
+
+    By setting $t= \frac{2RG}{\epsilon n} ( d\log \frac{2R}{r} + \log 1/\beta)$,
+    \begin{align}
+        \Prob{\hat{\theta}\in A_2}
+        &\leq \exp{\left(d \log \frac{2R}{r}-\frac{\epsilon nt}{2RG}\right)}\\
+        &= \beta.
+    \end{align}
+    Finally, by having $r = 2R \frac{d}{n\epsilon}$
+    \begin{align}
+        \E{L(\hat{\theta}) - L(\theta^\star)} &= \int_0^{rG} \Prob{L(\hat{\theta}) - L(\theta^\star)\geq t }\, dt \nonumber\\
+        &+ \int_{0}^{\infty} \Prob{L(\hat{\theta}) - L(\theta^\star)\geq rG+t }\, dt \\
+        \leq& rG +  \int_{0}^{\infty} \left(\frac{R}{r/2}\right)^d\exp\left(-\frac{\epsilon nt}{2RG}\right)\, dt \\
+        =&    O\left(\frac{dGR\log(\epsilon n/d)}{\epsilon n}\right)
+    \end{align}
+\end{proof}
+
+\subsection{Advanced Composition Theorem}
+In regular composition theorem, the basic linear growth of $\epsilon$ with $k$ can be pessimistic,
+especially when $\delta > 0$ is allowed.
+A more nuanced analysis shows that we can get sub-linear growth of privacy loss for $\epsilon$ 
+if we tolerate a little increase in $\delta$. One common formulation is:
+
+\begin{theorem}[Advanced Composition \cite{DworkRoth2014}]
+If $\mathcal{M}_1, \dots, \mathcal{M}_k$ are each $(\epsilon,\delta)$-DP, then for any $\delta' > 0$, the $k$-fold composition of these mechanisms is $(\epsilon', k\delta + \delta')$-DP, where 
+\[ \epsilon' = \sqrt{2k \ln(1/\delta')} \,\epsilon + k\epsilon \cdot \frac{e^\epsilon - 1}{e^\epsilon+1}\,. \] 
+In particular, for small $\epsilon$ we have $\epsilon' \approx \sqrt{2k \ln(1/\delta')} \,\epsilon$ (the dominant term).
+\end{theorem}
+
+The advanced composition theorem (proved via the moments accounting method or by group privacy arguments)
+essentially says that $\epsilon$ grows like $O(\sqrt{k})$ rather than $O(k)$ if we allow a modest increase in $\delta$.
+If $\epsilon$ is small (say $\epsilon < 0.1$), $e^\epsilon - 1 \approx \epsilon$,
+so the second term $k\epsilon(e^\epsilon-1) \approx k\epsilon^2$, which for small $\epsilon$ is much smaller than the first term.
+Thus a simpler bound is $\epsilon' \approx \epsilon\sqrt{2k \ln(1/\delta')}$.
+
+The intuition is the following.
+If we have mechanisms $A_1, \dots, A_k$ where each $A_k:\cX \times \cY_1\times \cdots \times \cY_{k-1}\rightarrow \cY_k$ 
+satisfies $(\epsilon_k, \delta_k)$-DP.
+Then, for $A = (A_1, \dots, A_k)$, we have
+\begin{align*}
+    \log \frac{\Prob{A(X) = (y_1, \dots, y_k)}}{\Prob{A(X') = (y_1, \dots, y_k)}}
+    = \sum_{i=1}^k \frac{\Prob{A_i(X)=y_i | A^{i-1}=y^{i-1}}}{\Prob{A_i(X')=y_i | A^{i-1}=y^{i-1}}}.
+\end{align*}
+The proof of basic composition theorem bounds each term with $\epsilon_i$ by treating each term independently.
+However, all probability terms shares the conditioning on the same $(y_1, \dots, y_k)$, 
+we can obtain a stricter bound with $\sqrt{k}\epsilon$ instead of $k\epsilon$.
+
+This has practical importance: it means we can perform many DP operations on the same data 
+and still maintain a reasonable overall privacy level,
+as long as each individual $\epsilon$ is small and we account for the composition properly.
+
+
+% The intuition is the following.
+
+% \paragraph{Optimal Composition and Moments Accountant.} Researchers have also derived tight composition bounds and techniques to further improve analysis. Kairouz, Oh, and Viswanath \cite{Kairouz2017} gave the exact optimal composition for given $(\epsilon,\delta)$ values. Another approach introduced by Abadi et al. \cite{Abadi2016} is the \emph{Moments Accountant}, which tracks higher moments of the privacy loss random variable to tightly bound the overall $(\epsilon,\delta)$ after many compositions (particularly useful for deep learning applications; we will see this in DP-SGD).
+
+\subsection{Differentially Private Stochastic Gradient Descent (DP-SGD)}
+
+Stochastic Gradient Descent (SGD) is a core algorithm in machine learning for optimizing model parameters by iteratively updating on random subsets of data. DP-SGD \cite{Abadi2016} is a variant of SGD that incorporates noise to ensure differential privacy of the training process. It has become a standard method to train deep learning models with privacy guarantees.
+
+Let $\Pi_{\mathcal{C}}$ is a projection method to a set $\mathcal{C}$.
+\begin{algorithm}[H]
+\caption{Gradient Descent (GD)}
+\begin{algorithmic}[1]
+\REQUIRE Dataset $\mathcal{D}$, loss function $\ell(\theta; x)$, learning rate $\alpha$, number of steps $T$
+\STATE Initialize model parameters $\theta_0$
+\FOR{$t = 1$ to $T$}
+    \STATE Compute gradient: $g_t = \frac{1}{n} \sum_{i=1}^n \nabla_\theta \ell(\theta_{t-1}; x_i)$
+    \STATE Update parameters: $\theta_t = \theta_{t-1} - \alpha g_t$
+    \STATE Update parameters: $\theta_t \leftarrow \Pi_{\mathcal{C}}(\theta_{t-1})$
+\ENDFOR
+\RETURN Final parameters $\theta_T$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{remark}
+    With appropriate choice of learning rate,
+    \begin{itemize}
+        \item GD converges to a stationary point.
+        \item If the loss function is convex, GD converges to a global optimal point.
+    \end{itemize}
+\end{remark}
+
+More precisely, the following theorem provides a convergence guarantee.
+\begin{theorem}
+    Consider a loss function $\mathcal{L}:\mathcal{C}\rightarrow \fR$ where $\mathcal{L}$ is $G$-Lipschitz and convex.
+    Suppose $\mathcal{C}$ is closed and convex set with diameter $R$.
+    Then, for $\alpha = \frac{R}{G\sqrt{T}}$, the $\theta_T$ from gradient descent satisfies
+    \begin{align}
+        \mathcal{L}(\theta_T) \leq \mathcal{L}(\theta^\star) + \frac{RG}{\sqrt{T}}.
+    \end{align}
+\end{theorem}
+
+\begin{remark}
+    \begin{itemize}
+        \item  The convexity of $\mathcal{L}$ means
+    \begin{align}
+        \mathcal{L}(\lambda \theta_1 + (1-\lambda)\theta_2) \leq \lambda \mathcal{L}(\theta_1) + (1-\lambda) \mathcal{L}(\theta_2)
+    \end{align}
+    for all $0\leq \lambda\leq 1$ and $\theta_1, \theta_2\in\mathcal{C}$.
+    \item The convexity of the set $\mathcal{C}$ means
+    \begin{align}
+        \lambda \theta_1 + (1-\lambda)\theta_2\in\mathcal{C}
+    \end{align}
+    for all $0\leq \lambda\leq 1$ and $\theta_1, \theta_2\in\mathcal{C}$.
+    \item The diameter $R$ means that 
+    \begin{align}
+        \max_{\theta_1,\theta_2\in\mathcal{C}} \|\theta_1-\theta_2\|\leq R.
+    \end{align}
+    \end{itemize}
+\end{remark}
+
+However, computing gradients $\nabla \ell(\theta, x_i)$ for all $x_i$'s are often impractical.
+One alternative is to use a sampling method.
+\begin{algorithm}[H]
+\caption{Stochastic Gradient Descent (SGD)}
+\begin{algorithmic}[1]
+\REQUIRE Dataset $\mathcal{D}$, loss function $\ell(\theta; x)$, learning rate $\alpha$, number of steps $T$
+\STATE Initialize model parameters $\theta_0$
+\FOR{$t = 1$ to $T$}
+    \STATE Sample $x_i\in \mathcal{D}$
+    \STATE Compute gradient: $\tilde{g}_t = \nabla_\theta \ell(\theta_{t-1}; x_i)$
+    \STATE Update parameters: $\theta_t = \theta_{t-1} - \alpha\tilde{g}_t$
+    \STATE Update parameters: $\theta_t \leftarrow \Pi_{\mathcal{C}}(\theta_{t-1})$
+\ENDFOR
+\RETURN Final parameters $\theta_T$
+\end{algorithmic}
+\end{algorithm}
+Note that $\tilde{g}_t$ is unbiased, i.e.,
+\begin{align}
+    \E{\tilde{g}_t} = \E{\ell(\theta_{t-1};x_i)} = \sum_{i=1}^n \frac{1}{n} \ell(\theta_{t-1};x_i) = g_t.
+\end{align}
+
+Stochastic gradient descent has less computation for each iteration,
+however it generally requires more iterations to converge.
+
+Similarly, we can use noisy gradient descent.
+\begin{algorithm}[H]
+\caption{Noisy Gradient Descent (Noisy GD)}
+\begin{algorithmic}[1]
+\REQUIRE Dataset $\mathcal{D}$, loss function $\ell(\theta; x)$, learning rate $\alpha$, number of steps $T$
+\STATE Initialize model parameters $\theta_0$
+\FOR{$t = 1$ to $T$}
+    \STATE Compute gradient: $g_t = \frac{1}{n} \sum_{i=1}^n \nabla_\theta \ell(\theta_{t-1}; x_i)$
+    \STATE Add noise: $\tilde{g}_t = g_t + Z$ where $Z\sim \mathcal{N}(0, \sigma^2 I)$
+    \STATE Update parameters: $\theta_t = \theta_{t-1} - \alpha\tilde{g}_t$
+    \STATE Update parameters: $\theta_t \leftarrow \Pi_{\mathcal{C}}(\theta_{t-1})$
+\ENDFOR
+\RETURN Final parameters $\theta_T$
+\end{algorithmic}
+\end{algorithm}
+Similar to SGD, $\tilde{g}_t$ is unbiased in noisy gradient descent.
+
+\begin{remark}
+    With appropriate choice of learning rate,
+    \begin{itemize}
+        \item SGD and noisy GD converge to a stationary point.
+        \item If the loss function is convex, SGD and noisy GD converge to a global optimal point.
+    \end{itemize}
+\end{remark}
+
+
+We first describe the DP-SGD algorithm, discuss its privacy analysis, and finally remark on its convergence properties.
+
+\paragraph{DP-SGD Algorithm.}
+\begin{algorithm}[H]
+\caption{Differentially Private Stochastic Gradient Descent (DP-SGD)}
+\begin{algorithmic}[1]
+\REQUIRE Dataset $\mathcal{D}$ of size $n$, loss function $\ell(\theta; x)$, learning rate $\alpha$, number of steps $T$, gradient clipping bound $G$
+\STATE Initialize model parameters $\theta_0$
+\FOR{$t = 1$ to $T$}
+    \STATE Sample a data point $x_t \sim \mathcal{D}$ uniformly at random
+    \STATE Compute individual gradient: $g_t = \nabla_\theta \ell(\theta_{t-1}; x_t)$
+    \STATE Clip gradient: $\bar{g}_t = g_t \cdot \min\left(1, \frac{G}{\|g_t\|_2}\right)$
+    \STATE Compute noisy gradient: $\tilde{g}_t = \bar{g}_t + Z$, where $Z \sim \mathcal{N}(0, \sigma^2 I)$
+    \STATE Update parameters: $\theta_t = \theta_{t-1} - \alpha\tilde{g}_t$
+    \STATE Project parameters: $\theta_t \leftarrow \Pi_{\mathcal{C}}(\theta_t)$
+\ENDFOR
+\RETURN Final parameters $\theta_T$
+\end{algorithmic}
+\end{algorithm}
+
+The following theorem provides the differential privacy guarantee.
+\begin{theorem}
+    DP-SGD is $(\epsilon, \delta)$-DP if the absolute noise standard deviation $\sigma$ satisfies:
+    \begin{align}
+        \sigma \geq \frac{2G \sqrt{2T \log (1/\delta)}}{n\epsilon}.
+    \end{align}
+\end{theorem}
+The strict dependency on $\sqrt{T}$ arises from tight information-theoretic bounds such as the Moments Accountant or R\'enyi Differential Privacy (RDP). Standard advanced composition would introduce an additional $\sqrt{\log(T/\delta)}$ penalty, which these modern accounting methods avoid.
+
+An important note is that the sampling procedure in DP-SGD is not only for computational efficiency; it also provides a critical privacy gain. Subsampling amplifies privacy because the probability of selecting any specific individual's data is small ($q = 1/n$). Consequently, the base privacy cost of the Gaussian mechanism applied at each iteration is scaled down by this sampling rate, effectively reducing the per-step cost to roughly $O(\epsilon/n, \delta/n)$ rather than the full $(\epsilon, \delta)$ budget.
+
+% We first describe the DP-SGD algorithm, and then discuss its privacy analysis and finally remark on its convergence properties.
+% \paragraph{DP-SGD Algorithm.}
+% \begin{algorithm}[H]
+% \caption{Differentially Private Gradient Descent (DP-SGD)}
+% \begin{algorithmic}[1]
+% \REQUIRE Dataset $\mathcal{D}$, loss function $\ell(\theta; x)$, learning rate $\alpha$, number of steps $T$
+% \STATE Initialize model parameters $\theta_0$
+% \FOR{$t = 1$ to $T$}
+%     \STATE Sample $x_i\in \mathcal{D}$
+%     \STATE Compute noisy gradient: $\tilde{g}_t = \nabla_\theta \ell(\theta_{t-1}; x_i) + Z$ where $Z\sim \mathcal{N}(0, \sigma^2 I)$
+%     \STATE Update parameters: $\theta_t = \theta_{t-1} - \alpha\tilde{g}_t$
+%     \STATE Update parameters: $\theta_t \leftarrow \Pi_{\mathcal{C}}(\theta_{t-1})$
+% \ENDFOR
+% \RETURN Final parameters $\theta_T$
+% \end{algorithmic}
+% \end{algorithm}
+% 
+% The following theorem provides an differential privacy guarantee.
+% \begin{theorem}
+%     DP-SGD is $(\epsilon, \delta)$-DP if
+%     \begin{align}
+%         \sigma \geq \frac{2G \sqrt{2T \log (1/\delta)}}{n\epsilon}.
+%     \end{align}
+% \end{theorem}
+% The dependency on $\sqrt{T}$ (instead of $T$) is from advanced composition theorem.
+% 
+% Important note is that the sampling procedure in DP-SGD is not only for computational efficiency,
+% it also provides a privacy gain because subsampling amplifies the privacy.
+% More precisely, in each iteration, we sample a single data out of $n$ data,
+% and therefore the privacy guarantee of each iteration would be $(\epsilon/n, \delta/n)$ instead of $(\epsilon, \delta)$.
+% 
+Using tight accounting methods like the Moments Accountant (or R\'enyi DP), the overall privacy cost after $T$ iterations accumulates roughly as:
+\begin{align}
+    \approx \left(\sqrt{T}\frac{\epsilon}{n}, T\frac{\delta}{n}\right).
+\end{align}
+Thus, by setting $T = O(n^2)$, we can maintain an overall privacy guarantee of $O(\epsilon, \delta)$, meaning DP-SGD remains private for a large number of epochs.
+
+Now, let us consider the convergence guarantee of DP-SGD.
+Similar to the standard utility theorem for regular GD, we assume that the loss function $\mathcal{L}$ is convex and $G$-Lipschitz,
+and that the parameter space $\mathcal{C}$ is closed, convex, and has a diameter of $R$.
+Because $\mathcal{L}$ is $G$-Lipschitz, the true gradient norms are bounded by $G$. If we set the clipping threshold exactly to $G$, no clipping occurs. Therefore, we can assume the noisy stochastic gradient satisfies:
+\begin{itemize}
+    \item \textbf{Unbiased:} $\mathbb{E}[\tilde{g}_t] = \nabla \mathcal{L}(\theta_{t-1})$.
+    \item \textbf{Bounded Variance:} $\mathbb{E}[\|\tilde{g}_t\|^2] \leq G^2 + d\sigma^2$, where $d$ is the dimensionality of the parameter space (due to the added $d$-dimensional Gaussian noise).
+\end{itemize}
+
+Then, for $T = \frac{\epsilon^2 n^2}{d}$ and a learning rate $\alpha = \frac{1}{T} \frac{R\epsilon n}{G\sqrt{d\log (1/\delta)}}$, the average iterate $\bar{\theta}_T = \frac{1}{T}\sum_{t=1}^T \theta_t$ satisfies:
+\begin{align}
+    \mathbb{E}[\mathcal{L}(\bar{\theta}_T)] - \mathcal{L}(\theta^\star) = O\left(\frac{RG\sqrt{d\log (1/\delta)}}{\epsilon n}\right).
+\end{align}
+Note that the expectation is taken over the stochasticity of the batch sampling and the injected Gaussian noise. The proof follows the standard convergence analysis of SGD, substituting the inflated variance bound $B^2 = G^2 + d\sigma^2$.
+
+% Along with advanced composition theorem, overall privacy guarantee after $T$ iteration would be (roughly)
+% \begin{align}
+%     \approx (\sqrt{T}\epsilon/n, T\delta/n).
+% \end{align}
+% Thus, with $T = O(n^2)$, DP-SGD is private.
+% 
+% Now, lets consider the convergence guarantee of DP-SGD.
+% Similar to the theorem for regular GD, we assume that $\mathcal{L}$ is $G$-Lipschitz and convex,
+% while $\mathcal{C}$ is closed, convex, and has diameter $R$.
+% We futher assume that the stochastic gradient satisfies
+% \begin{itemize}
+%     \item unbiased: $\E{\tilde{g}_t} = g_t$.
+%     \item bounded norm: $\E{\|\tilde{g}_t\|^2}$ is bounded.
+% \end{itemize}
+% Then, for $T= \epsilon^2n^2/d$ and $\alpha = \frac{1}{T} \frac{R\epsilon n}{G\sqrt{d\log (1/\delta)}}$, we have
+% \begin{align}
+%     \E{\mathcal{L}(\theta_T)} - \mathcal{L}(\theta^\star) = O\left(\frac{RG\sqrt{d\log (1/\delta)}}{\epsilon n}\right).
+% \end{align}
+% Note that the expectation is due to stochasticity of $\tilde{g}_t$.
+% The proof is essentially the same as convergence of regular SGD.
+
+But what if $\mathcal{L}(\theta)$ is not convex.
+In practice, the loss function is highly nonconvex.
+In general, it is hard to provide a theoretical guarantee of optimality for nonconvex function.
+However, DP-SGD (and SGD) can achieve a stationary point where
+\begin{align}
+    \nabla \mathcal{L}(\theta) = 0.
+\end{align}
+This may not be a global optimum, but it is a local minimum (at least).
+
+\begin{remark}
+    In practice, DP-SGD works reasonable in small dataset (like MNIST).
+    However, for larger models with larger dataset, DP-SGD has significantly degraded performance compared to regular SGD.
+    One way to mitigate such performance degradation is: 1) first train your model using public dataset, 
+    2) then finetune your model with private dataset using DP-SGD.
+\end{remark}
+
+
+\section{Alternative Definitions of Privacy}
+
+While $(\epsilon,\delta)$-DP is the most common definition, there are alternative formalisms 
+that are mathematically equivalent or closely related, providing different perspectives on privacy loss.
+We briefly discuss Rényi Differential Privacy in this section.
+Note that there are many other alternatives including $f$-Differential Privacy, Gaussian DP.
+
+
+\subsection{KL Differential Privacy (RDP)}
+The notion of differential privacy provides an indistinguishable guarantee between the output of $\cM(X)$ and $\cM(X')$
+for neighboring dataset $X$ and $X'$.
+The pure and approximate DP implies the similarity between two probabilities $\Prob{\cM(X)\in S}$ and $\Prob{\cM(X')\in S}$
+for all event $S$.
+A natural extension is to compare the distribution of $\cM(X)$ and $\cM(X')$ directly.
+One candidiate is KL-divergence which measures the difference between two probability distributions.
+\begin{definition}
+    We say $\cM$ is $\epsilon$ KL-DP if
+    \begin{align}
+        D(\cM(X)\|\cM(X'))\leq \epsilon
+    \end{align}
+    for all neighboring dataset $X$ and $X'$.
+\end{definition}
+\subsection{Rényi Differential Privacy (RDP)}
+Rényi Differential Privacy, introduced by Mironov \cite{Mironov2017}, uses Rényi divergence to measure privacy loss.
+The Rényi divergence of order $\alpha$ between two distributions $P$ and $Q$ (for $\alpha > 1$) is:
+\[ D_{\alpha}(P \| Q) = \frac{1}{\alpha-1} \ln \mathbb{E}_{x \sim Q}\left[\left(\frac{P(x)}{Q(x)}\right)^{\alpha}\right]\,. \]
+
+Rényi divergence is a generalized version of KL-divergence in the sense that
+\begin{align}
+    \lim_{\alpha\rightarrow 1} D_{\alpha}(P\|Q) = D(P\|Q).
+\end{align}
+In short, we say $D_1(P\|Q) = D(P\|Q)$.
+
+More interestingly, we have
+\begin{align}
+    \lim_{\alpha\rightarrow 1} D_{\alpha}(P\|Q) = \max_x \log \frac{P(x)}{Q(x)}
+\end{align}
+where the maximum is over all $x$ such that $Q(x)>0$.
+
+Then, we can define Rényi DP using Rényi divergence.
+\begin{definition}
+A mechanism $\mathcal{M}$ satisfies $(\alpha, \epsilon)$-RDP if for all neighboring datasets $X, X'$:
+\[ D_{\alpha}(\mathcal{M}(X) \; \| \; \mathcal{M}(X')) \le \epsilon\,. \]
+\end{definition}
+In words, the Rényi divergence of order $\alpha$ between the output distributions on $X$ and $X'$ is bounded by $\epsilon$. 
+
+RDP provides a one-parameter family of privacy definitions indexed by $\alpha$.
+Higher $\alpha$ means putting more weight on the tail events (large deviations in likelihood ratio).
+As $\alpha \to \infty$, RDP essentially converges to the pure DP condition (bounding the supremum of log-likelihood ratios),
+while as $\alpha \to 1^+$, it relates to an average-case (KL divergence) criterion.
+
+Important properties of RDP:
+\begin{itemize}
+    \item \textbf{Composition:} RDP parameters add up linearly. If $\mathcal{M}_1$ is $(\alpha,\epsilon_1)$-RDP and $\mathcal{M}_2$ is $(\alpha,\epsilon_2)$-RDP, then running both yields $(\alpha,\epsilon_1+\epsilon_2)$-RDP. This additive composition is much simpler to handle than the $(\epsilon,\delta)$ composition. It's one reason RDP is popular in analyzing complex algorithms (like iterative training).
+    \item \textbf{Conversion to $(\epsilon,\delta)$-DP:} RDP guarantees can be converted to $(\epsilon,\delta)$ guarantees. Specifically, if $\mathcal{M}$ satisfies $(\alpha,\epsilon)$-RDP, then by Markov (Chernoff) bounds one can show $\mathcal{M}$ satisfies $(\epsilon + \frac{\ln(1/\delta)}{\alpha-1},\; \delta)$-DP for any $0<\delta<1$. By optimizing over $\alpha$, one can get a trade-off curve and pick the best $\alpha$ for given $\delta$. In practice, this means after computing total RDP of an algorithm, one can release an equivalent $(\epsilon,\delta)$ guarantee.
+        For example, if a mechanism is $(2, \epsilon)$-Rényi DP, choosing $\delta = e^{-m}$ gives:
+        \[
+        (\epsilon + \frac{m}{2-1}, e^{-m}) = (\epsilon+m, e^{-m})-\text{DP}.
+        \]
+    \item Many mechanisms have nice expressions in RDP. For example, the Gaussian mechanism is naturally analyzed with RDP:
+    adding Gaussian noise of variance $\sigma^2$ yields a closed-form $(\alpha, \frac{\alpha}{2\sigma^2})$-RDP 
+    (for $f$ with sensitivity 1).
+\end{itemize}
+
+Using RDP, we can prove the advanced composition theorem.
+Here is a rough sketch.
+\begin{lemma}
+    If $D_{\infty}(P\|Q)\leq \epsilon$ and $D_{\infty}(Q\|P)\leq \epsilon$,
+    then for $\alpha\geq 0$,
+    \begin{align}
+        D_\alpha (P\|Q) \leq 2\alpha \epsilon^2.
+    \end{align}
+\end{lemma}
+This implies that if $P$ and $Q$ are similar in $\infty$-Rényi divergence sense,
+it is similar in $\alpha$-Rényi divergence sense as well.
+
+Suppose $\cM$ is a composition of $k$ DP emchanisms with $(\epsilon, \delta)$-DP, then
+\begin{align}
+    D_{\alpha}(\cM(X)\| \cM(X'))\leq 2\alpha k\epsilon^2 = 2\alpha (\sqrt{k}\epsilon)^2.
+\end{align}
+Roughly speaking this is from summing $k$ $\alpha$ Renyi-divergence that are bounded by $2\alpha\epsilon^2$ is $2\alpha k\epsilon^2$.
+Then, we have
+\begin{align}
+    \Prob{\cM(X)\in S}\leq \exp\left(2\epsilon \sqrt{k\log\frac{1}{\Prob{\cM(X)\in S}}} \right) \Prob{\cM(X')\in S}.
+\end{align}
+This implies the $\sqrt{k}$ dependency of composition mechanism $\cM$.
+
+\subsection{Gaussian Mechanism via Rényi Differential Privacy (RDP)}
+Let $f : \mathcal{X}^n \to \mathbb{R}^d$ be a function with $\ell_2$-sensitivity $\Delta$, i.e.,
+\[
+\Delta = \max_{X, X'} \|f(X) - f(X')\|_2
+\]
+where $X$ and $X'$ are neighboring datasets.
+
+The Gaussian mechanism outputs:
+\[
+\mathcal{M}(X) = f(X) + \mathcal{N}(0, \sigma^2 I)
+\]
+
+\begin{theorem}[\cite{Mironov2017}]
+    Guassian mechanism is $(\alpha, \epsilon(\alpha)$-RDP for all $\alpha>1$, where
+\[
+\varepsilon(\alpha) = \frac{\alpha \Delta^2}{2 \sigma^2}
+\]
+\end{theorem}
+If a mechanism satisfies $(\alpha, \varepsilon(\alpha))$-RDP, then it satisfies $(\varepsilon, \delta)$-DP for any $\delta > 0$ with:
+\[
+\varepsilon = \varepsilon(\alpha) + \frac{\log(1/\delta)}{\alpha - 1}
+\]
+
+Substituting the RDP expression:
+\[
+\varepsilon = \frac{\alpha \Delta^2}{2 \sigma^2} + \frac{\log(1/\delta)}{\alpha - 1}
+\]
+
+Minimizing over $\alpha$ yields the tightest bound. In particular, one commonly used simplification is:
+
+\[
+\sigma \geq \frac{\Delta}{\varepsilon} \sqrt{2 \log(1.25/\delta)}
+\]
+
+which ensures $(\varepsilon, \delta)$-DP. The constant $1.25$ arises from absorbing factors in the tail bound of the Gaussian distribution.
+
+\begin{proof}
+    \begin{align}
+        &D_{\alpha} (\cM(X)\| \cM(X'))\\
+        =& \frac{1}{\alpha-1} \log \E{\left(\frac{f_{\cM(X)}(Y)}{f_{\cM(X')}(Y)}\right)^\alpha}\\
+        =& \frac{1}{\alpha-1} \log \int f_{\cM(X)}(y)^\alpha f_{\cM(X')}(Y)^{1-\alpha}\, dy\\
+        =& \frac{1}{\alpha-1} \log \int \frac{1}{\sqrt{(2\pi \sigma^2)^d}} 
+            \exp\left(-\alpha \frac{\|y-f(X)\|^2}{2\sigma^2} - (1-\alpha)\frac{\|y-f(X')\|^2}{2\sigma^2}\right)\, dy\\
+        =& \frac{1}{\alpha-1} \log \int \frac{1}{\sqrt{(2\pi \sigma^2)^d}} 
+            \exp\left(-\frac{1}{2\sigma^2} \left(\|y\|^2  + \langle y, \alpha f(X) + (1-\alpha) f(X')\rangle\right)\right)\, dy\nonumber\\
+            &\times \exp\left(-\frac{1}{2\sigma^2}\left( \alpha \|f(X)\|^2 + (1-\alpha)\|f(X')\|^2 \right)\right)\\
+        =& \frac{1}{\alpha-1} \log \exp\left(\frac{1}{2\sigma^2}\left( \|\alpha f(X) + (1-\alpha) f(X')\|^2 \right)\right)\nonumber\\
+            &\times \exp\left(-\frac{1}{2\sigma^2}\left( \alpha \|f(X)\|^2 + (1-\alpha)\|f(X')\|^2 \right)\right)\\
+        =& \frac{1}{\alpha-1}\left(\frac{\alpha(\alpha-1)}{2\sigma^2} \|f(X) - f(X')\|^2\right)\\
+        \leq& \frac{\alpha \Delta}{2\sigma^2}.
+    \end{align}
+\end{proof}
+
+
+
+\section{Differential Privacy in General Machine Learning}
+
+Differential Privacy (DP) is heavily utilized in standard machine learning workflows. While techniques like DP-SGD are popular for deep learning, there are several distinct paradigms for injecting randomness to achieve DP, depending on when and where the privacy barrier is placed.
+
+\subsection{Private ERM Techniques (Training-Time Perturbation)}
+The general objective in Empirical Risk Minimization (ERM) is to minimize the empirical risk $\frac{1}{n}\sum_{i} L(w; z_i)$. To achieve this under DP constraints, three primary perturbation strategies are historically used:
+
+\begin{enumerate}
+    \item \textbf{Parameter (Output) Perturbation:}
+    Compute the exact optimal model parameters $w^*$ on the full, clean data. Then, add calibrated noise directly to these weights before release. This is effective mostly for simpler models where the objective function is highly stable and strongly convex, ensuring bounded global sensitivity.
+    
+    \item \textbf{Objective Perturbation:}
+    Instead of adding noise to the final weights, a random linear noise term is added to the objective function itself: 
+    \[ L(w;D) + \langle b, w \rangle \]
+    The algorithm then fully optimizes this noisy objective. This yields a mathematically modified optimum that inherently satisfies DP.
+    
+    \item \textbf{Gradient Perturbation (DP-SGD):}
+    Noise is injected iteratively during the optimization algorithm. At each step, gradients are \textit{clipped} (to bound their maximum sensitivity/influence), and then \textit{Gaussian noise} is added before the model weights are updated.
+\end{enumerate}
+
+\textit{Theoretical Guarantee:} For convex loss functions, these ERM methods introduce an excess risk (accuracy degradation) bounded roughly by $O\left(\frac{d \cdot \ln(1/\delta)}{n \epsilon}\right)$, where $d$ is the model dimension and $n$ is the dataset size.
+
+\subsection{Alternatives: Input DP and Inference DP}
+Beyond perturbing the training process (ERM), privacy can be applied at the extreme ends of the pipeline: the raw data or the final inference.
+
+\begin{itemize}
+    \item \textbf{Input Perturbation (Local DP):}
+    Noise is added directly to the raw data $z_i$ before any model sees it (e.g., via Randomized Response). While this provides incredibly strong trust guarantees (the server never sees real data), it severely destroys utility in high-dimensional tasks like image classification or natural language processing.
+    
+    \item \textbf{Inference DP (Output Perturbation per Query):}
+    In this paradigm, a standard, non-private model $f_\theta$ is trained on sensitive data. Privacy is only enforced at the time of prediction. For a given query $x$, the system returns the model's output plus calibrated noise: $f_\theta(x) + Z$. The noise $Z$ is scaled to the global sensitivity of the model's output layer. 
+    
+    \textit{The Critical Flaw:} Inference DP provides a DP guarantee for a \textit{single} inference. However, if an adversary queries the model multiple times (e.g., $k$ times), the privacy budget degrades according to the composition theorem (roughly $k\epsilon$). Eventually, the privacy constraint is violated, and the model must be shut down. Therefore, Inference DP is generally unsuitable for public-facing, high-traffic ML APIs.
+\end{itemize}
+
+\subsection{The Goal: Model DP (Global DP)}
+To avoid the rapid budget exhaustion of Inference DP and the utility destruction of Input Perturbation, modern ML strives for \textbf{Model DP}. 
+
+In Model DP, the privacy guarantee is baked entirely into the model parameters $\theta$ (as seen in DP-SGD). Because of the \textbf{post-processing immunity} property of differential privacy, a model that satisfies Model DP can be deployed, copied, and queried an infinite number of times without ever leaking additional private information.
+
+
+\section{Private Aggregation of Teacher Ensembles (PATE)}
+
+While DP-SGD is the standard for Model DP, it often struggles with hyperparameter tuning and gradient clipping constraints. \textbf{PATE} is an alternative Model DP framework that shifts the paradigm from \textit{gradient perturbation} to \textit{ensemble learning} and \textit{noisy aggregation}. 
+
+Its primary goal is to transfer knowledge from a sensitive dataset to a public model without the mathematical complexity of modifying the optimization algorithm. The core intuition is based on consensus: \textbf{If multiple independent models all agree on a prediction, that prediction does not depend on any single sensitive data point.}
+
+\subsection{The Three-Phase Architecture}
+
+The PATE framework operates in three distinct phases:
+
+\begin{enumerate}
+    \item \textbf{Training the Teacher Ensemble:}
+    \begin{itemize}
+        \item Let the sensitive dataset $X$ be partitioned into $n$ disjoint subsets: $X = \bigcup_{i=1}^n X_i$.
+        \item Train an independent ``teacher'' model $T_i$ on each subset $X_i$. 
+        \item \textit{Privacy Property:} Adding or removing one individual in $X$ changes exactly one subset $X_i$, and thus affects only one teacher model.
+    \end{itemize}
+
+    \item \textbf{Noisy Aggregation of Votes:}
+    \begin{itemize}
+        \item We use a small, unlabeled public dataset $\{x_j^{\text{pub}}\}$. For a given public input $x$, each teacher predicts a class label $y_i \in \mathcal{Y}$.
+        \item Tally the predictions into a vote count histogram:
+        \[
+        v_y = |\{i : T_i(x) = y\}| \quad \text{for each } y \in \mathcal{Y}
+        \]
+        \item To prevent privacy leakage (e.g., if one teacher's vote breaks a tie), noise is added to the vote counts before returning the maximum vote.
+        \item \textbf{Laplace Mechanism (Original PATE):} $\tilde{v}_y = v_y + \text{Lap}(1/\epsilon)$
+        \item \textbf{Gaussian Mechanism (PATE-G):} $\tilde{v}_y = v_y + \mathcal{N}(0, \sigma^2)$
+        \item The aggregated, private output label is $\hat{y} = \arg\max_y \tilde{v}_y$.
+    \end{itemize}
+
+    \item \textbf{Training the Student Model:}
+    \begin{itemize}
+        \item \textit{Problem:} If end-users directly query the teacher ensemble, we fall back into the trap of Inference DP—every query consumes privacy budget, eventually exhausting it.
+        \item \textit{Solution:} Train a \textbf{Student Model} exclusively on the public data $\{x_j^{\text{pub}}\}$ labeled by the noisy teacher ensemble.
+        \item By the post-processing immunity of DP, the deployed student model achieves \textbf{Model DP} and can be queried infinitely.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Privacy Accounting}
+PATE tracks the total privacy loss across all labeled public examples used to train the student. Using standard composition, labeling $m$ public examples yields a privacy loss that scales poorly:
+\[
+\epsilon' = \sqrt{2m \log(1/\delta')} \cdot \epsilon + m\epsilon(e^\epsilon - 1)
+\]
+To achieve practical utility, modern PATE implementations use \textbf{R\'enyi Differential Privacy (RDP)}. RDP tightly bounds the privacy cost, specifically exploiting scenarios where teachers strongly agree (a high consensus vote), which naturally incurs a drastically lower privacy cost than the worst-case bound $\epsilon$.
+
+\subsection{Advantages and Limitations}
+\begin{itemize}
+    \item \textbf{Advantages:} Strong, intuitive privacy guarantees; architecture-agnostic (teachers could be SVMs while the student is a Neural Network); highly parallelizable training.
+    \item \textbf{Limitations:} Requires a domain-relevant public dataset; requires a massive private dataset to ensure the $n$ subsets are large enough to train accurate teachers; performance degrades rapidly as the number of classes $|\mathcal{Y}|$ increases (due to noise spread).
+\end{itemize}
+{\small
+\bibliographystyle{plain}
+\bibliography{lecturenote_ref}
+% \bibliography{refs}
+}
+
+\end{document}

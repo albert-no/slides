@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Data Privacy: Final 2026 — Backup / Unused Candidate Problems</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+  html, body { background:#fff; color:#111; }
+  body {
+    font-family: "Latin Modern Roman", "Computer Modern Serif", Georgia, "Times New Roman", serif;
+    max-width: 720px;
+    margin: 48px auto 96px;
+    padding: 0 32px;
+    font-size: 16.5px;
+    line-height: 1.45;
+  }
+  h1.title { text-align: center; font-size: 1.5rem; font-weight: 700; margin: 0 0 4px; }
+  p.note { margin: 0 0 28px; font-size: 0.95rem; color: #444; }
+  .prob { margin: 26px 0 32px; padding-left: 40px; position: relative; }
+  .prob > .orignum { position: absolute; left: 0; font-weight: 700; }
+  .probname { font-weight: 700; }
+  .tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #003876;
+    border: 1px solid #003876;
+    border-radius: 3px;
+    padding: 1px 6px;
+    margin-left: 6px;
+    vertical-align: 1.5px;
+    white-space: nowrap;
+  }
+  ol.parts { list-style: none; padding-left: 22px; counter-reset: part; margin: 6px 0 0; }
+  ol.parts > li {
+    counter-increment: part;
+    margin: 8px 0;
+    padding-left: 28px;
+    position: relative;
+  }
+  ol.parts > li::before {
+    content: "(" counter(part, lower-alpha) ")";
+    position: absolute;
+    left: 0;
+  }
+  .hint { font-size: 0.94rem; color: #333; }
+  .hint::before { content: "Hint: "; font-style: italic; }
+  hr.footer { border: none; border-top: 1px solid #999; margin: 64px 0 6px; }
+  .pageno { text-align: right; font-size: 0.85rem; color: #555; }
+  mjx-container { overflow-x: auto; overflow-y: hidden; }
+</style>
+</head>
+<body>
+
+<h1 class="title">Data Privacy: Final 2026 — Backup / Unused Candidate Problems</h1>
+<p class="note"><strong>Backup.</strong> Seven candidate problems not selected for the assigned final (which uses the two-point diffusion score, LiRA, and the rigorous NPO-vs-GA problems). They span 02-generative through 05-unlearning and remain available for reuse. Numbering is preserved from the 10-problem candidate pool, so cross-references stay coherent. All assume continuous densities on $\mathbb{R}$ (or $\mathbb{R}^d$) and well-defined integrals; no measure theory.</p>
+
+<!-- ===================== Problem 1: Exact DDPM on Gaussian data ===================== -->
+<div class="prob">
+<span class="orignum">1.</span>
+<span class="probname">Exact DDPM on a Gaussian Data Distribution.</span><span class="tag">02 · diffusion</span>
+Consider the scalar DDPM forward process with $X^{(0)} \sim \mathcal{N}(\mu, s^2)$ and, for $n = 1, \ldots, N$, $X^{(n)} = \sqrt{1-\beta_n}\,X^{(n-1)} + \sqrt{\beta_n}\,\varepsilon_n$, $\varepsilon_n \sim \mathcal{N}(0,1)$ i.i.d., so $q(X^{(n)} \mid X^{(0)}) = \mathcal{N}(\sqrt{\bar\alpha_n}\,X^{(0)}, 1-\bar\alpha_n)$ with $\bar\alpha_n = \prod_{k\le n}(1-\beta_k)$.
+<ol class="parts">
+<li>Show the marginal is $\mathcal{N}(\sqrt{\bar\alpha_n}\mu, v_n)$, $v_n = \bar\alpha_n s^2 + (1-\bar\alpha_n)$.
+<span class="hint">$X^{(n)} = \sqrt{\bar\alpha_n}X^{(0)} + \sqrt{1-\bar\alpha_n}\,\bar\varepsilon$; add variances.</span></li>
+<li>Show the exact reverse transition $X^{(n-1)}\mid X^{(n)}=x$ is $\mathcal{N}(a_n x + b_n, c_n)$ with $a_n = \sqrt{1-\beta_n}\,v_{n-1}/v_n$, $b_n = \mu(\sqrt{\bar\alpha_{n-1}} - a_n\sqrt{\bar\alpha_n})$, $c_n = v_{n-1}(1 - (1-\beta_n)v_{n-1}/v_n)$.
+<span class="hint">Condition on $X^{(0)}$, marginalize $X^{(0)}\sim\mathcal{N}(\mu,s^2)$: $\mathrm{Cov}(X^{(n-1)},X^{(n)}) = \sqrt{1-\beta_n}\,v_{n-1}$; apply the conditional-Gaussian formula.</span></li>
+<li>Initializing the reverse chain at $\tilde X^{(N)}\sim\mathcal{N}(0,1)$ instead of $p_N$, with $A=\prod_n a_n$, show $A=\sqrt{\bar\alpha_N}s^2/v_N$ and $\tilde X^{(0)}\sim\mathcal{N}(\tilde m_0,\tilde v_0)$, $\tilde m_0 = \mu(1-\bar\alpha_N)/v_N$, $\tilde v_0 = s^2 + \bar\alpha_N^2 s^4(1-s^2)/v_N^2$.
+<span class="hint">$\prod\sqrt{1-\beta_n}=\sqrt{\bar\alpha_N}$, $\prod v_{n-1}/v_n = v_0/v_N$; track $m_{n-1}=a_n m_n+b_n$, $V_{n-1}=a_n^2 V_n+c_n$.</span></li>
+<li>Show the mean bias is $-\mu\bar\alpha_N s^2/v_N = O(\bar\alpha_N)$, vanishing as $\bar\alpha_N\to0$; explain why this initialization gap is the only error of exact-score sampling.
+<span class="hint">$1-\bar\alpha_N-v_N = -\bar\alpha_N s^2$; as $\bar\alpha_N\to0$, $p_N\to\mathcal{N}(0,1)$.</span></li>
+</ol>
+</div>
+
+<!-- ===================== Problem 3: Best linear denoiser ===================== -->
+<div class="prob">
+<span class="orignum">3.</span>
+<span class="probname">The Best Linear Denoiser.</span><span class="tag">02 · diffusion</span>
+A forward step maps $X_0\in\mathbb{R}$ with mean $m$, variance $s^2$ (otherwise arbitrary) to $Y = a X_0 + \sqrt{v}\,\varepsilon$, $a=\sqrt{\bar\alpha}$, $v=1-\bar\alpha$, $\varepsilon\sim\mathcal{N}(0,1)$ independent. Restrict to affine denoisers $\hat X_0=\kappa Y + c$.
+<ol class="parts">
+<li>Find $(\kappa^\star,c^\star)$ minimizing $\mathbb{E}[(\hat X_0-X_0)^2]$: $\kappa^\star = \tfrac{\sqrt{\bar\alpha}\,s^2}{\bar\alpha s^2+(1-\bar\alpha)}$, $c^\star=m(1-\kappa^\star\sqrt{\bar\alpha})$.
+<span class="hint">Orthogonality principle: $\mathbb{E}[(\hat X_0-X_0)Y]=0$, $\mathbb{E}[\hat X_0-X_0]=0$; $\mathrm{Cov}(X_0,Y)=as^2$, $\mathrm{Var}(Y)=a^2s^2+v$.</span></li>
+<li>Show the minimal error is $\mathrm{MMSE}_{\mathrm{lin}} = \tfrac{s^2(1-\bar\alpha)}{\bar\alpha s^2+(1-\bar\alpha)}$, increasing in noise: $\to0$ as $\bar\alpha\to1$, $\to s^2$ as $\bar\alpha\to0$.
+<span class="hint">$\mathrm{Var}(X_0) - \mathrm{Cov}(X_0,Y)^2/\mathrm{Var}(Y)$.</span></li>
+<li>Show that for Gaussian $X_0$ this affine denoiser is globally optimal ($=\mathbb{E}[X_0\mid Y]$); give a one-line reason it fails for non-Gaussian data, citing the two-point ($\tanh$) case.
+<span class="hint">Jointly Gaussian $\Rightarrow$ conditional mean is affine.</span></li>
+</ol>
+</div>
+
+<!-- ===================== Problem 4: Cross-entropy / perplexity / temperature ===================== -->
+<div class="prob">
+<span class="orignum">4.</span>
+<span class="probname">Cross-Entropy, Perplexity, and Temperature Sampling.</span><span class="tag">02 · LLM</span>
+Autoregressive $p_\theta(x_{1:T}) = \prod_{t} p_\theta(x_t\mid x_{1:t-1})$; true distribution $p_{\mathrm{data}}$.
+<ol class="parts">
+<li>For $\mathcal{L}(\theta)=\mathbb{E}_{x\sim p_{\mathrm{data}}}[-\log p_\theta(x)]$, prove $\mathcal{L}(\theta) = H(p_{\mathrm{data}}) + D_{\mathrm{KL}}(p_{\mathrm{data}}\|p_\theta)$; conclude the minimizer is $p_\theta=p_{\mathrm{data}}$ with value $H(p_{\mathrm{data}})$.
+<span class="hint">Add/subtract $\log p_{\mathrm{data}}$; $D_{\mathrm{KL}}\ge0$ (Gibbs).</span></li>
+<li>For $\mathrm{PPL}=\exp(-\tfrac1T\sum_t \log p_\theta(x_t\mid x_{1:t-1}))$, show it equals $\exp$ of cross-entropy and the geometric mean $\prod_t p_\theta(x_t\mid x_{1:t-1})^{-1/T}$; interpret $\mathrm{PPL}=k$ as branching factor.
+<span class="hint">$\exp(-\tfrac1T\sum\log q_t)=\prod q_t^{-1/T}$.</span></li>
+<li>For temperature sampling $p^{(\tau)}_i\propto\exp(z_i/\tau)$: show $\tau\to0^+$ concentrates on $\arg\max_i z_i$, $\tau\to\infty$ tends to uniform, and $H(p^{(\tau)})$ is non-decreasing in $\tau$.
+<span class="hint">$\beta=1/\tau$, $p_i\propto e^{\beta z_i}$; $\tfrac{dH}{d\beta}=-\beta\,\mathrm{Var}_{p(\beta)}(z)\le0$.</span></li>
+</ol>
+</div>
+
+<!-- ===================== Problem 5: Secret Sharer exposure ===================== -->
+<div class="prob">
+<span class="orignum">5.</span>
+<span class="probname">Secret Sharer: Canary Exposure.</span><span class="tag">03 · memorization</span>
+Canary $c$ inserted; candidate set $\mathcal{R}$, $|\mathcal{R}|=R$; model log-perplexity $\ell(r)$; $\mathrm{exposure}(c)=\log_2 R - \log_2\mathrm{rank}(c)$.
+<ol class="parts">
+<li>Show $\mathrm{exposure}(c) = -\log_2\widehat F(\ell(c))$, $\widehat F$ the empirical CDF of $\{\ell(r)\}$; conclude range $[0,\log_2 R]$, maximal when $c$ is most likely.
+<span class="hint">$\mathrm{rank}(c)=R\,\widehat F(\ell(c))$.</span></li>
+<li>Modeling candidate log-perplexities as $\mathcal{N}(\mu,\sigma^2)$, show $\mathrm{exposure}(c)=-\log_2\Phi(\tfrac{\ell(c)-\mu}{\sigma})$; for $\ell(c)=\mu-k\sigma$, evaluate $-\log_2\Phi(-k)$ at $k=1,2,3,4$ and comment on super-linear growth.
+<span class="hint">$\Phi(-k)\approx\phi(k)/k$ $\Rightarrow$ $\mathrm{exposure}\approx(k^2/2)\log_2 e + \log_2 k + \mathrm{const}$.</span></li>
+<li>Argue thresholding exposure is a per-example likelihood-ratio test (high exposure $\Leftrightarrow$ optimal MIA declares member); one sentence on why DP caps exposure.
+<span class="hint">Neyman–Pearson on the in/out Gaussian model; DP bounds the shift $(\mu-\ell(c))/\sigma$.</span></li>
+</ol>
+</div>
+
+<!-- ===================== Problem 6: Bayes-Optimal Membership Test ===================== -->
+<div class="prob">
+<span class="orignum">6.</span>
+<span class="probname">Bayes-Optimal Membership Test.</span><span class="tag">04 · MIA</span>
+$B\sim\mathrm{Bernoulli}(\pi)$; $T$ has density $p_b$ given $B=b$; rule $\hat B:\mathbb{R}\to\{0,1\}$ judged by $0$-$1$ error.
+<ol class="parts">
+<li>Compute $\Pr[B=1\mid T=t]$ in terms of $p_0,p_1,\pi$.
+<span class="hint">Bayes' rule.</span></li>
+<li>Show the MAP rule is $\hat B_{\mathrm{MAP}}(t)=\mathbf{1}[\Lambda(t)\ge\tfrac{1-\pi}{\pi}]$, $\Lambda=p_1/p_0$; relate to Neyman–Pearson (only the threshold tracks the prior).
+<span class="hint">Output $1$ iff posterior $\ge\tfrac12$; cross-multiply.</span></li>
+<li>For $\ell\mid B{=}1\sim\mathcal{N}(\mu_{\mathrm{in}},\sigma^2)$, $\ell\mid B{=}0\sim\mathcal{N}(\mu_{\mathrm{out}},\sigma^2)$ with $\mu_{\mathrm{in}}$ below $\mu_{\mathrm{out}}$, reduce to $\hat B=\mathbf{1}[\ell\le c]$ and find $c$ at $\pi=\tfrac12$.
+<span class="hint">$\log\Lambda$ affine, strictly decreasing in $\ell$.</span></li>
+</ol>
+</div>
+
+<!-- ===================== Problem 8: Concrete MIA on Gaussian Mean Model ===================== -->
+<div class="prob">
+<span class="orignum">8.</span>
+<span class="probname">Concrete MIA on a Gaussian Mean Model.</span><span class="tag">04 · MIA + DP</span>
+$\theta(D)=\bar z + W$, $\bar z=\tfrac1n\sum z_i$, $W\sim\mathcal{N}(0,\rho^2)$; population $\mathcal{N}(0,1)$. Game: $b\sim\mathrm{Unif}\{0,1\}$; $b{=}1\Rightarrow z^*=z_1\in D$, $b{=}0\Rightarrow z^*\sim\mathcal{P}$ fresh.
+<ol class="parts">
+<li>Show $\theta\mid(b{=}1)\sim\mathcal{N}(\tfrac{z^*}{n}, \tfrac{n-1}{n^2}+\rho^2)$ and $\theta\mid(b{=}0)\sim\mathcal{N}(0,\tfrac1n+\rho^2)$ (conditional on $z^*$).
+<span class="hint">Split $\bar z=z^*/n+\tfrac1n\sum_{i\ge2}z_i$ under $b{=}1$.</span></li>
+<li>Show the optimal statistic is the conditional likelihood ratio; write $\log\Lambda$ as a quadratic in $\theta$ and deduce the "member" region is an interval.
+<span class="hint">$V_1=\tfrac{n-1}{n^2}+\rho^2$ is below $V_0=\tfrac1n+\rho^2$ $\Rightarrow$ negative $\theta^2$-coefficient.</span></li>
+<li>With $|z_i|\le1$ ($L_2$-sensitivity $\le2/n$) and $\rho\ge\tfrac{2}{n\varepsilon}\sqrt{2\log(1.25/\delta)}$ for $(\varepsilon,\delta)$-DP, use $\mathrm{Adv}^\star\le e^\varepsilon-1+\delta$ (HW4) to bound the advantage at $\varepsilon{=}0.1,\delta{=}10^{-5}$; explain why $\varepsilon{=}1$ is vacuous.
+<span class="hint">$e^{0.1}-1+10^{-5}\approx0.105$; $e-1\approx1.72>1$.</span></li>
+</ol>
+</div>
+
+<!-- ===================== Problem 10: Black-box audit / Le Cam ===================== -->
+<div class="prob">
+<span class="orignum">10.</span>
+<span class="probname">Black-Box Unlearning Audits Require Many Queries.</span><span class="tag">05 · unlearning</span>
+$P_0,P_1$ output laws; $\mathrm{TV}(P,Q)=\sup_A|P(A)-Q(A)|$, $\mathrm{TV}(P_0,P_1)\le\eta$. Auditor sees $q$ i.i.d. samples, outputs $\hat b$.
+<ol class="parts">
+<li>(Le Cam.) Show $\Pr_{b=0}[\hat b\ne0]+\Pr_{b=1}[\hat b\ne1]\ge 1-\mathrm{TV}(P_0^{\otimes q},P_1^{\otimes q})$.
+<span class="hint">Identify $\hat b$ with $\psi:\mathcal{X}^q\to[0,1]$; prove $\mathbb{E}_P[\psi]-\mathbb{E}_Q[\psi]\le\mathrm{TV}(P,Q)$ via $\psi(x)=\int_0^1\mathbf{1}[\psi(x)>s]\,ds$.</span></li>
+<li>Show $\mathrm{TV}(P_0^{\otimes q},P_1^{\otimes q})\le q\,\mathrm{TV}(P_0,P_1)\le q\eta$ by a hybrid argument $H_k=P_0^{\otimes k}\otimes P_1^{\otimes(q-k)}$.
+<span class="hint">Telescope $\mathrm{TV}(H_q,H_0)\le\sum_k\mathrm{TV}(H_k,H_{k-1})$; consecutive hybrids differ in one coordinate.</span></li>
+<li>Conclude $q\ge\tfrac{1-2\alpha}{\eta}$ for total error $\le2\alpha$ (tighter: $q=\Omega(1/\eta^2)$); why are single-prompt audits insufficient for small perturbations?
+<span class="hint">$2\alpha\ge1-q\eta$.</span></li>
+</ol>
+</div>
+
+<hr class="footer">
+<p class="pageno">Page 1 of 1</p>
+
+</body>
+</html>

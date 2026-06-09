@@ -1,0 +1,263 @@
+\documentclass[12pt]{article}
+\usepackage{math_hw}
+\usepackage{amssymb}
+\usepackage{xcolor}  % for the \textcolor{white}{...} spacing in the score table
+
+\input{math_commands}
+
+\providecommand{\Exp}{\mathrm{E}}
+\providecommand{\reals}{\fR}
+
+\providecommand{\field}[1]{\mathbb{#1}}
+
+\excludeversion{problem}
+\includeversion{solution}
+
+\begin{document}
+
+\begin{center}
+{\bf Data Privacy: Final\begin{solution}Solutions\end{solution}} \\ \medskip
+\begin{problem}June 11, 2026 \end{problem}
+\end{center}
+
+\begin{problem}
+\noindent
+% Note: Submit homework via LearnUS.
+\LeftFoot{Final}
+\end{problem}
+
+\begin{solution}
+\LeftFoot{Final Solution}
+\end{solution}
+
+\begin{problem}
+
+    \vskip .3in
+    {\bf ID : \underline{\hspace{6cm}}}\\
+    \vskip .3in
+    {\bf Name : \underline{\hspace{5.5cm}}}\\
+    ~
+    \vskip 2in
+    \begin{table}[h]
+        \Large
+        \begin{tabular}{c|c}
+           1 &\textcolor{white}{aaaaaaaa}/~30\\
+           2 &\textcolor{white}{aaaaaaaa}/~30 \\
+           3 &\textcolor{white}{aaaaaaaa}/~40 \\
+            \hline
+           Total &  \textcolor{white}{aaaaaaaa}/~100 \\
+        \end{tabular}
+    \end{table}
+    \newpage
+    {\bf extra sheet}
+    \newpage
+\end{problem}
+
+
+
+\begin{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Problem 1
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\item {\bf Exact Score and Denoiser of a Two-Point Data Distribution} {\it (30 points)}\\
+Let the data be the fair two-point distribution $X_0 \in \{+1, -1\}$, $\Pr[X_0 = +1] = \Pr[X_0 = -1] = \tfrac12$. Fix one diffusion noise level and form the forward sample $Y = a\,X_0 + \sqrt{v}\,\varepsilon$ with $\varepsilon \sim \cN(0,1)$ independent of $X_0$, where $a = \sqrt{\bar{\alpha}} \in (0,1)$ and $v = 1-\bar{\alpha}$. Throughout, write the Gaussian density, the logistic sigmoid, and the hyperbolic tangent as
+\begin{align*}
+    f(x;\mu,\sigma^2) = \frac{1}{\sqrt{2\pi\sigma^2}}\exp\!\left(-\frac{(x-\mu)^2}{2\sigma^2}\right), \qquad
+    \sigma(t) = \frac{1}{1+e^{-t}}, \qquad
+    \tanh(t) = \frac{e^{t}-e^{-t}}{e^{t}+e^{-t}}.
+\end{align*}
+\begin{enumerate}
+    \item {\it (5 points)} Show that the marginal density of $Y$ is the two-component mixture $p(y) = \tfrac12\,f(y; a, v) + \tfrac12\,f(y; -a, v)$.
+
+    \item {\it (5 points)} Let $r_+(y) = \Pr[X_0 = +1 \mid Y = y]$. Show $r_+(y) = \sigma\!\left(\tfrac{2a}{v}y\right)$, and hence the optimal (posterior-mean) denoiser is $\fE[X_0 \mid Y = y] = \tanh\!\left(\tfrac{a}{v}\,y\right)$.\\
+    \emph{(Hint: $r_+/r_- = f(y;a,v)/f(y;-a,v) = e^{2ay/v}$; then $\fE[X_0 \mid y] = r_+ - r_-$.)}
+
+    \item {\it (10 points)} Show the exact score is $\partial_y \log p(y) = -\tfrac{y}{v} + \tfrac{a}{v}\tanh\!\left(\tfrac{a}{v}\,y\right)$, and verify consistency with (b) via the denoiser--score identity $\fE[X_0 \mid Y = y] = \tfrac{1}{a}\left(y + v\,\partial_y \log p(y)\right)$ (which you should also prove).
+
+    \item {\it (10 points)} Show separately that the denoiser $\fE[X_0 \mid Y = y]$ converges to $\sign(y)$ as $\bar{\alpha} \to 1$, and converges to $0$ as $\bar{\alpha} \to 0$. Interpret each limit.
+\end{enumerate}
+
+\vskip .2in
+%%%%%%%%%%%%%%%%%%%%%%%% Problem 1 Solution %%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{solution}
+{\bf Solution: Two-Point Diffusion Score.}\\
+\begin{enumerate}
+    \item Conditioning on the bit, $Y \mid (X_0 = +1) \sim \cN(a, v)$ and $Y \mid (X_0 = -1) \sim \cN(-a, v)$, each with prior weight $\tfrac12$. By the law of total probability,
+    \begin{align*}
+        p(y) = \tfrac12\,f(y; a, v) + \tfrac12\,f(y; -a, v).
+    \end{align*}
+
+    \item By Bayes' rule the two posteriors share the $\tfrac12$ prior and the normalizer $p(y)$, so
+    \begin{align*}
+        \frac{r_+(y)}{r_-(y)} = \frac{f(y;a,v)}{f(y;-a,v)} = \exp\!\left(\frac{-(y-a)^2 + (y+a)^2}{2v}\right) = \exp\!\left(\frac{2ay}{v}\right).
+    \end{align*}
+    Since $r_+ + r_- = 1$, $r_+(y) = \frac{e^{2ay/v}}{1 + e^{2ay/v}} = \sigma\!\left(\tfrac{2a}{v}y\right)$ and $r_-(y) = \sigma\!\left(-\tfrac{2a}{v}y\right)$. The posterior mean is
+    \begin{align*}
+        \fE[X_0 \mid Y = y] = (+1)\,r_+ + (-1)\,r_- = \sigma\!\left(\tfrac{2a}{v}y\right) - \sigma\!\left(-\tfrac{2a}{v}y\right) = \tanh\!\left(\frac{a}{v}\,y\right),
+    \end{align*}
+    using $\sigma(2z) - \sigma(-2z) = \frac{e^{2z}-1}{e^{2z}+1} = \tanh z$ with $z = ay/v$.
+
+    \item Differentiating the mixture,
+    \begin{align*}
+        p'(y) = \tfrac12\,f(y;a,v)\!\left(-\tfrac{y-a}{v}\right) + \tfrac12\,f(y;-a,v)\!\left(-\tfrac{y+a}{v}\right).
+    \end{align*}
+    Dividing by $p(y)$ and recognizing $r_\pm$,
+    \begin{align*}
+        \partial_y \log p(y) &= -\tfrac{1}{v}\left[r_+(y-a) + r_-(y+a)\right] = -\tfrac{1}{v}\left[y - a(r_+ - r_-)\right] \\
+        &= -\frac{y}{v} + \frac{a}{v}\tanh\!\left(\frac{a}{v}y\right).
+    \end{align*}
+    \emph{Identity.} For $Y = aX_0 + \sqrt{v}\,\varepsilon$ with Gaussian noise, $p(y) = \int p_{X_0}(x)\,f(y; ax, v)\,dx$, so
+    \begin{align*}
+        \partial_y p(y) &= \int p_{X_0}(x)\!\left(-\tfrac{y-ax}{v}\right)f(y; ax, v)\,dx \\
+        &= -\tfrac{y}{v}p(y) + \tfrac{a}{v}\,p(y)\,\fE[X_0 \mid Y=y].
+    \end{align*}
+    Dividing by $p(y)$ gives $\partial_y \log p = -\tfrac{y}{v} + \tfrac{a}{v}\fE[X_0\mid y]$, i.e.\ $\fE[X_0\mid y] = \tfrac1a(y + v\,\partial_y\log p)$. Substituting the score above reproduces $\tanh(ay/v)$, matching (b).
+
+    \item Recall $a = \sqrt{\bar{\alpha}}$, $v = 1-\bar{\alpha}$, so $a/v = \sqrt{\bar{\alpha}}/(1-\bar{\alpha})$.
+
+    \emph{Vanishing noise $\bar{\alpha} \to 1$:} $a \to 1$, $v \to 0^+$, so $a/v \to +\infty$ and for every $y \ne 0$, $\tanh(ay/v) \to \sign(y)$. The denoiser snaps to the nearest clean value $\pm1$ --- the bit is recoverable because almost no noise was added.
+
+    \emph{Saturating noise $\bar{\alpha} \to 0$:} $a \to 0$, so $\tanh(ay/v) \to 0$ and $\fE[X_0\mid y] \to 0 = \fE[X_0]$: the observation carries no information, so the best estimate is the prior mean. Correspondingly the score collapses to $-y/v$, exactly the score of the pure-noise Gaussian $\cN(0,v)$.
+\end{enumerate}
+\end{solution}
+
+\begin{problem}
+    \newpage~\newpage
+\end{problem}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Problem 2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\item {\bf LiRA Closed Form and Decision Boundary} {\it (30 points)}\\
+For a target record $z$, the per-shadow-model loss is Gaussian under the two membership hypotheses:
+\begin{align*}
+    \ell \mid (z \in D) \sim \cN(\mu_{\mathrm{in}}, \sigma_{\mathrm{in}}^2), \qquad
+    \ell \mid (z \notin D) \sim \cN(\mu_{\mathrm{out}}, \sigma_{\mathrm{out}}^2).
+\end{align*}
+\begin{enumerate}
+    \item {\it (10 points)} (\emph{Warm-up.}) Derive the log-likelihood ratio
+    \begin{align*}
+        \log \Lambda(\ell) = \frac{(\ell - \mu_{\mathrm{out}})^2}{2\sigma_{\mathrm{out}}^2} - \frac{(\ell - \mu_{\mathrm{in}})^2}{2\sigma_{\mathrm{in}}^2} + \log\frac{\sigma_{\mathrm{out}}}{\sigma_{\mathrm{in}}}.
+    \end{align*}
+    \emph{(Hint: subtract the two log-densities $\log\cN(\ell;\mu,\sigma^2) = -\frac{(\ell-\mu)^2}{2\sigma^2} - \frac{1}{2}\log(2\pi\sigma^2)$.)}
+
+    \item {\it (10 points)} For $\sigma_{\mathrm{in}} \ne \sigma_{\mathrm{out}}$, show the region $\{\log\Lambda > \log\tau\}$ is a bounded interval, its complement, a half-line, all of $\fR$, or empty, and say which from the sign of $\sigma_{\mathrm{in}} - \sigma_{\mathrm{out}}$. For equal variances $\sigma = \sigma_{\mathrm{in}} = \sigma_{\mathrm{out}}$ (and $\mu_{\mathrm{in}} < \mu_{\mathrm{out}}$), show it becomes a threshold $\cA(z) = \mathbf{1}[\ell \le c]$ and find $c$.\\
+    \emph{(Hint: $\log\Lambda$ is a quadratic $A\ell^2 + B\ell + C'$ with $A = \frac{1}{2}(\sigma_{\mathrm{out}}^{-2} - \sigma_{\mathrm{in}}^{-2})$; the sign of $A$ sets the shape.)}
+
+    \item {\it (10 points)} With equal variances, derive the ROC: at false-positive rate $\alpha$,
+    \begin{align*}
+        \mathrm{TPR}(\alpha) = \Phi\!\left(\Phi^{-1}(\alpha) + \frac{\mu_{\mathrm{out}} - \mu_{\mathrm{in}}}{\sigma}\right),
+    \end{align*}
+    where $\Phi(t) = \int_{-\infty}^{t}\frac{1}{\sqrt{2\pi}}e^{-s^2/2}\,ds$ is the standard normal CDF.\\
+    \emph{(Hint: solve $\mathrm{FPR}(c) = \Phi(\frac{c-\mu_{\mathrm{out}}}{\sigma}) = \alpha$ for $c$, then substitute into $\mathrm{TPR}(c) = \Phi(\frac{c-\mu_{\mathrm{in}}}{\sigma})$.)}
+\end{enumerate}
+
+\vskip .2in
+%%%%%%%%%%%%%%%%%%%%%%%% Problem 2 Solution %%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{solution}
+{\bf Solution: LiRA Closed Form and Decision Boundary.}\\
+\begin{enumerate}
+    \item Using $\log\cN(\ell;\mu,\sigma^2) = -\frac{(\ell-\mu)^2}{2\sigma^2} - \frac{1}{2}\log(2\pi\sigma^2)$ and subtracting the out-density log from the in-density log, the $-\frac{1}{2}\log(2\pi)$ terms cancel and
+    \begin{align*}
+        \log\Lambda(\ell) = -\frac{(\ell-\mu_{\mathrm{in}})^2}{2\sigma_{\mathrm{in}}^2} + \frac{(\ell-\mu_{\mathrm{out}})^2}{2\sigma_{\mathrm{out}}^2} + \tfrac{1}{2}\log\frac{\sigma_{\mathrm{out}}^2}{\sigma_{\mathrm{in}}^2},
+    \end{align*}
+    which is the claimed expression.
+
+    \item Collecting powers of $\ell$, $\log\Lambda(\ell) = A\ell^2 + B\ell + C'$ with $A = \frac{1}{2}(\sigma_{\mathrm{out}}^{-2} - \sigma_{\mathrm{in}}^{-2})$. Note $A < 0 \iff \sigma_{\mathrm{in}} < \sigma_{\mathrm{out}}$, so $\sign(A) = \sign(\sigma_{\mathrm{in}} - \sigma_{\mathrm{out}})$. The region $\{A\ell^2 + B\ell + (C' - \log\tau) > 0\}$ is:
+    \begin{itemize}
+        \item $\sigma_{\mathrm{in}} < \sigma_{\mathrm{out}}$ ($A < 0$, downward parabola): a \emph{bounded interval} $(c_-, c_+)$, degenerating to \emph{empty} if the maximum is below $\log\tau$;
+        \item $\sigma_{\mathrm{in}} > \sigma_{\mathrm{out}}$ ($A > 0$, upward parabola): the \emph{complement of a bounded interval} $(-\infty,c_-)\cup(c_+,\infty)$, degenerating to \emph{all of $\fR$} if the minimum exceeds $\log\tau$;
+        \item $\sigma_{\mathrm{in}} = \sigma_{\mathrm{out}}$ ($A = 0$, affine): a \emph{half-line}.
+    \end{itemize}
+    \emph{Equal variances.} With $\sigma_{\mathrm{in}} = \sigma_{\mathrm{out}} = \sigma$ the quadratic terms cancel:
+    \begin{align*}
+        \log\Lambda(\ell) = \frac{(\ell-\mu_{\mathrm{out}})^2 - (\ell-\mu_{\mathrm{in}})^2}{2\sigma^2} = \frac{(\mu_{\mathrm{out}}-\mu_{\mathrm{in}})(\mu_{\mathrm{in}}+\mu_{\mathrm{out}} - 2\ell)}{2\sigma^2}.
+    \end{align*}
+    Since $\mu_{\mathrm{out}} > \mu_{\mathrm{in}}$, $\log\Lambda$ is strictly decreasing in $\ell$, so $\log\Lambda(\ell) \ge \log\tau \iff \ell \le c$ with
+    \begin{align*}
+        c = \frac{\mu_{\mathrm{in}}+\mu_{\mathrm{out}}}{2} - \frac{\sigma^2\log\tau}{\mu_{\mathrm{out}}-\mu_{\mathrm{in}}},
+    \end{align*}
+    i.e.\ $\cA(z) = \mathbf{1}[\ell \le c]$ (low loss $\Rightarrow$ member).
+
+    \item For $\cA = \mathbf{1}[\ell \le c]$, $\mathrm{FPR}(c) = \Pr_{\mathrm{out}}[\ell \le c] = \Phi(\frac{c-\mu_{\mathrm{out}}}{\sigma})$. Setting $\mathrm{FPR} = \alpha$ gives $c = \mu_{\mathrm{out}} + \sigma\,\Phi^{-1}(\alpha)$. Then
+    \begin{align*}
+        \mathrm{TPR}(\alpha) = \Pr_{\mathrm{in}}[\ell \le c] = \Phi\!\left(\frac{c-\mu_{\mathrm{in}}}{\sigma}\right) = \Phi\!\left(\Phi^{-1}(\alpha) + \frac{\mu_{\mathrm{out}}-\mu_{\mathrm{in}}}{\sigma}\right).
+    \end{align*}
+    The ROC is governed by the standardized gap $(\mu_{\mathrm{out}}-\mu_{\mathrm{in}})/\sigma$.
+\end{enumerate}
+\end{solution}
+
+\begin{problem}
+    \newpage~\newpage
+\end{problem}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Problem 3
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\item {\bf Why NPO's Gradient Stays Bounded and GA's Does Not} {\it (40 points)}\\
+For LLM unlearning let $\pi_\theta(y\mid x) \in (0,1]$ be smooth in $\theta$, with $\pi_{\mathrm{ref}}(y\mid x) \in (0,1]$ a fixed reference. On the forget set $\cD_F$ the two losses are
+\begin{align*}
+    \cL_{\mathrm{GA}}(\theta) = \fE_{\cD_F}\!\left[\log\pi_\theta(y\mid x)\right], \qquad
+    \cL_{\mathrm{NPO}}(\theta) = \frac{2}{\beta}\,\fE_{\cD_F}\!\left[\log\!\left(1 + \left(\tfrac{\pi_\theta(y\mid x)}{\pi_{\mathrm{ref}}(y\mid x)}\right)^{\beta}\right)\right] \quad (\beta>0),
+\end{align*}
+where $\sigma(t) = 1/(1+e^{-t})$ is the logistic sigmoid. Assume $\|\nabla_\theta\pi_\theta(y\mid x)\| \le G$, and differentiate sums and expectations term by term freely.
+\begin{enumerate}
+    \item {\it (10 points)} Let $u(\theta) = \beta\log\!\left(\pi_\theta(y\mid x)/\pi_{\mathrm{ref}}(y\mid x)\right)$. Show that
+    \begin{align*}
+        \cL_{\mathrm{NPO}}(\theta) = \tfrac{2}{\beta}\,\fE[\log(1+e^{u})], \qquad \tfrac{\partial}{\partial u}\log(1+e^u) = \sigma(u) \in (0,1),
+    \end{align*}
+    and that $\nabla_\theta u = \beta\,\nabla_\theta\log\pi_\theta$.\\
+    \emph{(Hint: $(\pi_\theta/\pi_{\mathrm{ref}})^\beta = e^u$; $\frac{d}{du}\log(1+e^u) = e^u/(1+e^u) = \sigma(u)$, and $0<\sigma<1$ since $0<e^u<1+e^u$; and $\pi_{\mathrm{ref}}$ is constant in $\theta$.)}
+
+    \item {\it (10 points)} Using part (a) and the chain rule, show $\nabla_\theta\cL_{\mathrm{NPO}} = 2\,\fE[\sigma(u)\,\nabla_\theta\log\pi_\theta]$, and conclude the uniform bound $\|\nabla_\theta\cL_{\mathrm{NPO}}\| \le 2\,\fE[\|\nabla_\theta\log\pi_\theta\|]$.\\
+    \emph{(Hint: differentiate $\frac{2}{\beta}\log(1+e^u)$ with $\nabla_\theta u = \beta\nabla_\theta\log\pi_\theta$; then use the triangle inequality $\|\fE[V]\| \le \fE[\|V\|]$ together with $\sigma(u)<1$.)}
+
+    \item {\it (10 points)} Define the per-example NPO contribution $g_{\mathrm{NPO}} := \sigma(u)\,\nabla_\theta\log\pi_\theta$. Show that
+    \begin{align*}
+        \|g_{\mathrm{NPO}}\| = \sigma(u)\,\frac{\|\nabla_\theta\pi_\theta\|}{\pi_\theta}, \qquad \sigma(u) = \frac{(\pi_\theta/\pi_{\mathrm{ref}})^\beta}{1+(\pi_\theta/\pi_{\mathrm{ref}})^\beta},
+    \end{align*}
+    and hence that as $\pi_\theta(y\mid x)\to 0$, $\;\|g_{\mathrm{NPO}}\| \le \frac{G}{\pi_{\mathrm{ref}}^\beta}\,\pi_\theta^{\beta-1}$.\\
+    \emph{(Hint: $\nabla_\theta\log\pi_\theta = \nabla_\theta\pi_\theta/\pi_\theta$; bound $1 + (\pi_\theta/\pi_{\mathrm{ref}})^\beta \ge 1$ to get $\sigma(u) \le (\pi_\theta/\pi_{\mathrm{ref}})^\beta$; combine with $\|\nabla_\theta\pi_\theta\| \le G$.)}
+
+    \item {\it (10 points)} Using part (c), show that as $\pi_\theta \to 0$ the NPO per-example gradient $\|g_{\mathrm{NPO}}\|$ stays bounded for $\beta \ge 1$, while the GA per-example gradient $\|\nabla_\theta\log\pi_\theta\|$ diverges. Why does this make NPO stable but GA collapse?\\
+    \emph{(Hint: read off the limits of $\pi_\theta^{\beta-1}$ from (c); the GA norm is $\|\nabla_\theta\pi_\theta\|/\pi_\theta$, whose numerator stays bounded while $\pi_\theta\to0$.)}
+\end{enumerate}
+
+\vskip .2in
+%%%%%%%%%%%%%%%%%%%%%%%% Problem 3 Solution %%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{solution}
+{\bf Solution: Why NPO's Gradient Stays Bounded and GA's Does Not.}\\
+\begin{enumerate}
+    \item Since $(\pi_\theta/\pi_{\mathrm{ref}})^\beta = e^{\beta\log(\pi_\theta/\pi_{\mathrm{ref}})} = e^{u}$, the loss is $\cL_{\mathrm{NPO}} = \tfrac{2}{\beta}\fE[\log(1+e^u)]$. Differentiating, $\frac{d}{du}\log(1+e^u) = \frac{e^u}{1+e^u} = \sigma(u)$, and $0 < \sigma(u) < 1$ because $0 < e^u < 1+e^u$ for all finite $u$. Finally $\pi_{\mathrm{ref}}$ does not depend on $\theta$, so $u = \beta(\log\pi_\theta - \log\pi_{\mathrm{ref}})$ gives $\nabla_\theta u = \beta\,\nabla_\theta\log\pi_\theta$.
+
+    \item By the chain rule (differentiating term by term),
+    \begin{align*}
+        \nabla_\theta\cL_{\mathrm{NPO}} = \tfrac{2}{\beta}\,\fE[\sigma(u)\,\nabla_\theta u] = \tfrac{2}{\beta}\,\fE[\sigma(u)\,\beta\,\nabla_\theta\log\pi_\theta] = 2\,\fE[\sigma(u)\,\nabla_\theta\log\pi_\theta].
+    \end{align*}
+    Taking norms and using the triangle inequality $\|\fE[V]\| \le \fE[\|V\|]$ with $V = 2\sigma(u)\nabla_\theta\log\pi_\theta$ and $\sigma(u) < 1$,
+    \begin{align*}
+        \|\nabla_\theta\cL_{\mathrm{NPO}}\| \le 2\,\fE[\sigma(u)\,\|\nabla_\theta\log\pi_\theta\|] \le 2\,\fE[\|\nabla_\theta\log\pi_\theta\|].
+    \end{align*}
+    This bound holds for every $\theta$ --- it is uniform.
+
+    \item Since $\nabla_\theta\log\pi_\theta = \nabla_\theta\pi_\theta/\pi_\theta$, the definition of $g_{\mathrm{NPO}}$ gives
+    \begin{align*}
+        \|g_{\mathrm{NPO}}\| = \sigma(u)\,\|\nabla_\theta\log\pi_\theta\| = \sigma(u)\,\frac{\|\nabla_\theta\pi_\theta\|}{\pi_\theta}.
+    \end{align*}
+    Writing $\rho := (\pi_\theta/\pi_{\mathrm{ref}})^\beta = e^u$, we have $\sigma(u) = \rho/(1+\rho)$. As $\pi_\theta\to0$, $\rho\to0$; and $1+\rho\ge1$ gives $\sigma(u) \le \rho$. With $\|\nabla_\theta\pi_\theta\| \le G$,
+    \begin{align*}
+        \|g_{\mathrm{NPO}}\| \le \frac{(\pi_\theta/\pi_{\mathrm{ref}})^\beta\,G}{\pi_\theta} = \frac{G}{\pi_{\mathrm{ref}}^\beta}\,\pi_\theta^{\beta-1}.
+    \end{align*}
+
+    \item For $\beta > 1$, $\pi_\theta^{\beta-1}\to0$ so $\|g_{\mathrm{NPO}}\|\to0$; for $\beta = 1$, $\|g_{\mathrm{NPO}}\| \le G/\pi_{\mathrm{ref}}$, a finite constant. By contrast the GA per-example contribution has norm $\|\nabla_\theta\pi_\theta\|/\pi_\theta \sim 1/\pi_\theta \to \infty$ (the numerator stays bounded while $\pi_\theta\to0$). As the forget likelihood $\pi_\theta\to0$ the saturating factor $\sigma(u)\to0$ at rate $\pi_\theta^\beta$, which cancels (for $\beta\ge1$) the $1/\pi_\theta$ growth of the log-likelihood gradient --- that is why sigmoid saturation keeps the NPO step bounded and prevents the GA-style collapse.
+\end{enumerate}
+\end{solution}
+
+\begin{problem}
+    \newpage~\newpage~\newpage~\newpage
+\end{problem}
+
+\end{enumerate}
+
+\end{document}

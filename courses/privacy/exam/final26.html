@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Data Privacy: Final — Problems &amp; Solutions</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+  html, body { background:#fff; color:#111; }
+  body {
+    font-family: "Latin Modern Roman", "Computer Modern Serif", Georgia, "Times New Roman", serif;
+    max-width: 720px;
+    margin: 48px auto 96px;
+    padding: 0 32px;
+    font-size: 16.5px;
+    line-height: 1.45;
+  }
+  h1.title { text-align: center; font-size: 1.5rem; font-weight: 700; margin: 0 0 4px; }
+  p.duedate { text-align: center; margin: 0 0 8px; font-size: 0.98rem; }
+  p.note { margin: 0 0 28px; font-size: 0.95rem; }
+  ol.problems { list-style: none; padding: 0; counter-reset: prob; }
+  ol.problems > li {
+    counter-increment: prob;
+    margin: 26px 0 36px;
+    padding-left: 28px;
+    position: relative;
+  }
+  ol.problems > li::before {
+    content: counter(prob) ".";
+    position: absolute;
+    left: 0;
+    font-weight: 700;
+  }
+  .probname { font-weight: 700; }
+  .tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #003876;
+    border: 1px solid #003876;
+    border-radius: 3px;
+    padding: 1px 6px;
+    margin-left: 6px;
+    vertical-align: 1.5px;
+    white-space: nowrap;
+  }
+  .pts { font-style: italic; color: #555; }
+  ol.parts { list-style: none; padding-left: 22px; counter-reset: part; margin: 6px 0 0; }
+  ol.parts > li {
+    counter-increment: part;
+    margin: 8px 0;
+    padding-left: 28px;
+    position: relative;
+  }
+  ol.parts > li::before {
+    content: "(" counter(part, lower-alpha) ")";
+    position: absolute;
+    left: 0;
+  }
+  .hint { font-size: 0.94rem; color: #333; }
+  .hint::before { content: "Hint: "; font-style: italic; }
+  .sol { margin-top: 12px; padding: 8px 0 2px; border-top: 1px dashed #bbb; }
+  .sollabel { font-weight: 700; font-style: italic; display: block; margin: 4px 0 6px; }
+  ol.solparts { list-style: none; padding-left: 0; counter-reset: spart; margin: 6px 0 0; }
+  ol.solparts > li {
+    counter-increment: spart;
+    margin: 8px 0;
+    padding-left: 26px;
+    position: relative;
+  }
+  ol.solparts > li::before {
+    content: "(" counter(spart, lower-alpha) ")";
+    position: absolute;
+    left: 0;
+    font-style: italic;
+  }
+  hr.footer { border: none; border-top: 1px solid #999; margin: 64px 0 6px; }
+  .pageno { text-align: right; font-size: 0.85rem; color: #555; }
+  mjx-container { overflow-x: auto; overflow-y: hidden; }
+</style>
+</head>
+<body>
+
+<h1 class="title">Data Privacy: Final</h1>
+<p class="duedate">Thursday, June 11, 2026 &middot; open book &middot; 100 points</p>
+<p class="note"><strong>Solutions included.</strong> Three problems (diffusion, MIA, unlearning). Throughout, densities are continuous and smooth enough to differentiate under the integral; no measure theory is needed.</p>
+
+<ol class="problems">
+
+<!-- ============================= Problem 1: two-point ============================= -->
+<li>
+<span class="probname">Exact Score and Denoiser of a Two-Point Data Distribution.</span><span class="tag">02 · diffusion</span> <span class="pts">(30 pts)</span>
+Let the data be the fair two-point distribution $X_0 \in \{+1, -1\}$, $\Pr[X_0 = +1] = \Pr[X_0 = -1] = \tfrac12$. Fix one diffusion noise level and form the forward sample $Y = a\,X_0 + \sqrt{v}\,\varepsilon$ with $\varepsilon \sim \mathcal{N}(0,1)$ independent of $X_0$, where $a = \sqrt{\bar\alpha} \in (0,1)$ and $v = 1-\bar\alpha$. Throughout, write the Gaussian density, the logistic sigmoid, and the hyperbolic tangent as
+$$f(x;\mu,\sigma^2) = \frac{1}{\sqrt{2\pi\sigma^2}}\exp\!\Bigl(-\frac{(x-\mu)^2}{2\sigma^2}\Bigr), \qquad \sigma(t) = \frac{1}{1+e^{-t}}, \qquad \tanh(t) = \frac{e^{t}-e^{-t}}{e^{t}+e^{-t}}.$$
+<ol class="parts">
+<li><span class="pts">(5 pts)</span> Show that the marginal density of $Y$ is the two-component mixture $p(y) = \tfrac12\,f(y; a, v) + \tfrac12\,f(y; -a, v)$.</li>
+<li><span class="pts">(5 pts)</span> Let $r_+(y) = \Pr[X_0 = +1 \mid Y = y]$. Show $r_+(y) = \sigma\!\bigl(\tfrac{2a}{v}y\bigr)$, and hence the optimal (posterior-mean) denoiser is $\mathbb{E}[X_0 \mid Y = y] = \tanh\!\bigl(\tfrac{a}{v}\,y\bigr)$.
+<span class="hint">$r_+/r_- = f(y;a,v)/f(y;-a,v) = e^{2ay/v}$; then $\mathbb{E}[X_0 \mid y] = r_+ - r_-$.</span></li>
+<li><span class="pts">(10 pts)</span> Show the exact score is $\partial_y \log p(y) = -\tfrac{y}{v} + \tfrac{a}{v}\tanh\!\bigl(\tfrac{a}{v}\,y\bigr)$, and verify consistency with (b) via the denoiser&ndash;score identity $\mathbb{E}[X_0 \mid Y = y] = \tfrac{1}{a}\bigl(y + v\,\partial_y \log p(y)\bigr)$ (which you should also prove).</li>
+<li><span class="pts">(10 pts)</span> Show separately that the denoiser $\mathbb{E}[X_0 \mid Y = y]$ converges to $\mathrm{sign}(y)$ as $\bar\alpha \to 1$, and converges to $0$ as $\bar\alpha \to 0$. Interpret each limit.</li>
+</ol>
+
+<div class="sol">
+<span class="sollabel">Solution.</span>
+<ol class="solparts">
+<li>Conditioning on the bit, $Y \mid (X_0 = +1) \sim \mathcal{N}(a, v)$ and $Y \mid (X_0 = -1) \sim \mathcal{N}(-a, v)$, each with prior weight $\tfrac12$. By the law of total probability,
+$$p(y) = \tfrac12\,f(y; a, v) + \tfrac12\,f(y; -a, v).$$</li>
+
+<li>By Bayes' rule the two posteriors share the $\tfrac12$ prior and the normalizer $p(y)$, so
+$$\frac{r_+(y)}{r_-(y)} = \frac{f(y;a,v)}{f(y;-a,v)} = \exp\!\Bigl(\frac{-(y-a)^2 + (y+a)^2}{2v}\Bigr) = \exp\!\Bigl(\frac{2ay}{v}\Bigr).$$
+Since $r_+ + r_- = 1$, $r_+(y) = \dfrac{e^{2ay/v}}{1 + e^{2ay/v}} = \sigma\!\bigl(\tfrac{2a}{v}y\bigr)$ and $r_-(y) = \sigma\!\bigl(-\tfrac{2a}{v}y\bigr)$. The posterior mean is
+$$\mathbb{E}[X_0 \mid Y = y] = (+1)\,r_+ + (-1)\,r_- = \sigma\!\bigl(\tfrac{2a}{v}y\bigr) - \sigma\!\bigl(-\tfrac{2a}{v}y\bigr) = \tanh\!\Bigl(\frac{a}{v}\,y\Bigr),$$
+using $\sigma(2z) - \sigma(-2z) = \dfrac{e^{2z}-1}{e^{2z}+1} = \tanh z$ with $z = ay/v$.</li>
+
+<li>Differentiating the mixture,
+$$p'(y) = \tfrac12\,f(y;a,v)\Bigl(-\tfrac{y-a}{v}\Bigr) + \tfrac12\,f(y;-a,v)\Bigl(-\tfrac{y+a}{v}\Bigr).$$
+Dividing by $p(y)$ and recognizing $r_\pm$,
+$$\partial_y \log p(y) = -\tfrac{1}{v}\bigl[r_+(y-a) + r_-(y+a)\bigr] = -\tfrac{1}{v}\bigl[y - a(r_+ - r_-)\bigr] = -\frac{y}{v} + \frac{a}{v}\tanh\!\Bigl(\frac{a}{v}y\Bigr).$$
+<em>Identity.</em> For $Y = aX_0 + \sqrt v\,\varepsilon$ with Gaussian noise, $p(y) = \int p_{X_0}(x)\,f(y; ax, v)\,dx$, so
+$$\partial_y p(y) = \int p_{X_0}(x)\Bigl(-\tfrac{y-ax}{v}\Bigr)f(y; ax, v)\,dx = -\tfrac{y}{v}p(y) + \tfrac{a}{v}\,p(y)\,\mathbb{E}[X_0 \mid Y=y].$$
+Dividing by $p(y)$ gives $\partial_y \log p = -\tfrac{y}{v} + \tfrac{a}{v}\mathbb{E}[X_0\mid y]$, i.e. $\mathbb{E}[X_0\mid y] = \tfrac1a(y + v\,\partial_y\log p)$. Substituting our score back reproduces $\tanh(ay/v)$, matching (b).</li>
+
+<li>Recall $a = \sqrt{\bar\alpha}$, $v = 1-\bar\alpha$, so $a/v = \sqrt{\bar\alpha}/(1-\bar\alpha)$.
+<br><em>Vanishing noise $\bar\alpha \to 1$:</em> $a \to 1$, $v \to 0^+$, so $a/v \to +\infty$ and for every $y \ne 0$, $\tanh(ay/v) \to \mathrm{sign}(y)$. The denoiser snaps to the nearest clean value $\pm1$ — the bit is recoverable because almost no noise was added.
+<br><em>Saturating noise $\bar\alpha \to 0$:</em> $a \to 0$, so $\tanh(ay/v) \to 0$ and $\mathbb{E}[X_0\mid y] \to 0 = \mathbb{E}[X_0]$: the observation carries no information, so the best estimate is the prior mean. Correspondingly the score collapses to $-y/v$, exactly the score of the pure-noise Gaussian $\mathcal{N}(0,v)$.</li>
+</ol>
+</div>
+</li>
+
+<!-- ============================= Problem 2: LiRA ============================= -->
+<li>
+<span class="probname">LiRA Closed Form and Decision Boundary.</span><span class="tag">04 · MIA</span> <span class="pts">(30 pts)</span>
+For a target record $z$, the per-shadow-model loss is Gaussian under the two membership hypotheses:
+$$\ell \mid (z \in D) \sim \mathcal{N}(\mu_{\mathrm{in}}, \sigma_{\mathrm{in}}^2), \qquad \ell \mid (z \notin D) \sim \mathcal{N}(\mu_{\mathrm{out}}, \sigma_{\mathrm{out}}^2).$$
+<ol class="parts">
+<li><span class="pts">(10 pts)</span> (<em>Warm-up.</em>) Derive the log-likelihood ratio
+$$\log \Lambda(\ell) = \frac{(\ell - \mu_{\mathrm{out}})^2}{2\sigma_{\mathrm{out}}^2} - \frac{(\ell - \mu_{\mathrm{in}})^2}{2\sigma_{\mathrm{in}}^2} + \log\frac{\sigma_{\mathrm{out}}}{\sigma_{\mathrm{in}}}.$$
+<span class="hint">Subtract the two log-densities $\log\mathcal{N}(\ell;\mu,\sigma^2) = -\tfrac{(\ell-\mu)^2}{2\sigma^2} - \tfrac12\log(2\pi\sigma^2)$.</span></li>
+<li><span class="pts">(10 pts)</span> For $\sigma_{\mathrm{in}} \ne \sigma_{\mathrm{out}}$, show the region $\{\log\Lambda > \log\tau\}$ is a bounded interval, its complement, a half-line, all of $\mathbb{R}$, or empty, and say which from the sign of $\sigma_{\mathrm{in}} - \sigma_{\mathrm{out}}$. For equal variances $\sigma = \sigma_{\mathrm{in}} = \sigma_{\mathrm{out}}$ (and $\mu_{\mathrm{in}} &lt; \mu_{\mathrm{out}}$), show it becomes a threshold $\mathcal{A}(z) = \mathbf{1}[\ell \le c]$ and find $c$.
+<span class="hint">$\log\Lambda$ is a quadratic $A\ell^2 + B\ell + C'$ with $A = \tfrac12(\sigma_{\mathrm{out}}^{-2} - \sigma_{\mathrm{in}}^{-2})$; the sign of $A$ (concave / convex / linear) sets the shape.</span></li>
+<li><span class="pts">(10 pts)</span> With equal variances, derive the ROC: at false-positive rate $\alpha$, $\mathrm{TPR}(\alpha) = \Phi\!\bigl(\Phi^{-1}(\alpha) + \tfrac{\mu_{\mathrm{out}} - \mu_{\mathrm{in}}}{\sigma}\bigr)$, where $\Phi(t) = \int_{-\infty}^{t}\tfrac{1}{\sqrt{2\pi}}e^{-s^2/2}\,ds$ is the standard normal CDF.
+<span class="hint">Solve $\mathrm{FPR}(c) = \Phi(\tfrac{c-\mu_{\mathrm{out}}}{\sigma}) = \alpha$ for $c$, then substitute into $\mathrm{TPR}(c) = \Phi(\tfrac{c-\mu_{\mathrm{in}}}{\sigma})$.</span></li>
+</ol>
+
+<div class="sol">
+<span class="sollabel">Solution.</span>
+<ol class="solparts">
+<li>Using $\log\mathcal{N}(\ell;\mu,\sigma^2) = -\tfrac{(\ell-\mu)^2}{2\sigma^2} - \tfrac12\log(2\pi\sigma^2)$ and subtracting the out-density log from the in-density log, the $-\tfrac12\log(2\pi)$ terms cancel and
+$$\log\Lambda(\ell) = -\frac{(\ell-\mu_{\mathrm{in}})^2}{2\sigma_{\mathrm{in}}^2} + \frac{(\ell-\mu_{\mathrm{out}})^2}{2\sigma_{\mathrm{out}}^2} + \tfrac12\log\frac{\sigma_{\mathrm{out}}^2}{\sigma_{\mathrm{in}}^2},$$
+which is the claimed expression.</li>
+
+<li>Collecting powers of $\ell$, $\log\Lambda(\ell) = A\ell^2 + B\ell + C'$ with
+$$A = \frac12\Bigl(\frac{1}{\sigma_{\mathrm{out}}^2} - \frac{1}{\sigma_{\mathrm{in}}^2}\Bigr).$$
+Note $A &lt; 0 \iff \sigma_{\mathrm{out}}^{-2} &lt; \sigma_{\mathrm{in}}^{-2} \iff \sigma_{\mathrm{in}} &lt; \sigma_{\mathrm{out}}$, so $\mathrm{sign}(A) = \mathrm{sign}(\sigma_{\mathrm{in}} - \sigma_{\mathrm{out}})$. The region $\{A\ell^2 + B\ell + (C' - \log\tau) > 0\}$ is:
+<ul>
+<li>$\sigma_{\mathrm{in}} &lt; \sigma_{\mathrm{out}}$ ($A &lt; 0$, downward parabola): a <strong>bounded interval</strong> $(c_-, c_+)$ (members are concentrated, so the LR is large only over a middle band) — degenerating to <strong>empty</strong> if the parabola's max is below $\log\tau$;</li>
+<li>$\sigma_{\mathrm{in}} > \sigma_{\mathrm{out}}$ ($A > 0$, upward parabola): the <strong>complement of a bounded interval</strong>, $(-\infty,c_-)\cup(c_+,\infty)$ — degenerating to <strong>all of $\mathbb{R}$</strong> if the min exceeds $\log\tau$;</li>
+<li>$\sigma_{\mathrm{in}} = \sigma_{\mathrm{out}}$ ($A = 0$, affine): a <strong>half-line</strong>.</li>
+</ul>
+<em>Equal variances.</em> With $\sigma_{\mathrm{in}} = \sigma_{\mathrm{out}} = \sigma$ the quadratic terms cancel:
+$$\log\Lambda(\ell) = \frac{(\ell-\mu_{\mathrm{out}})^2 - (\ell-\mu_{\mathrm{in}})^2}{2\sigma^2} = \frac{(\mu_{\mathrm{out}}-\mu_{\mathrm{in}})(\mu_{\mathrm{in}}+\mu_{\mathrm{out}} - 2\ell)}{2\sigma^2}.$$
+Since $\mu_{\mathrm{out}} > \mu_{\mathrm{in}}$, the coefficient of $\ell$ is $-(\mu_{\mathrm{out}}-\mu_{\mathrm{in}})/\sigma^2 &lt; 0$, so $\log\Lambda$ is strictly decreasing in $\ell$. Hence $\log\Lambda(\ell) \ge \log\tau \iff \ell \le c$ where
+$$c = \frac{\mu_{\mathrm{in}}+\mu_{\mathrm{out}}}{2} - \frac{\sigma^2\log\tau}{\mu_{\mathrm{out}}-\mu_{\mathrm{in}}},$$
+i.e. $\mathcal{A}(z) = \mathbf{1}[\ell \le c]$. (Low loss $\Rightarrow$ member, as expected.)</li>
+
+<li>For the threshold test $\mathcal{A} = \mathbf{1}[\ell \le c]$,
+$$\mathrm{FPR}(c) = \Pr_{\mathrm{out}}[\ell \le c] = \Phi\!\Bigl(\frac{c-\mu_{\mathrm{out}}}{\sigma}\Bigr).$$
+Setting $\mathrm{FPR} = \alpha$ gives $c = \mu_{\mathrm{out}} + \sigma\,\Phi^{-1}(\alpha)$. Then
+$$\mathrm{TPR}(\alpha) = \Pr_{\mathrm{in}}[\ell \le c] = \Phi\!\Bigl(\frac{c-\mu_{\mathrm{in}}}{\sigma}\Bigr) = \Phi\!\Bigl(\Phi^{-1}(\alpha) + \frac{\mu_{\mathrm{out}}-\mu_{\mathrm{in}}}{\sigma}\Bigr).$$
+The whole ROC is governed by the standardized gap $(\mu_{\mathrm{out}}-\mu_{\mathrm{in}})/\sigma$; it is $\ge \alpha$ for all $\alpha$ (with equality iff the gap is $0$), confirming the threshold test is informative exactly when the in/out means separate.</li>
+</ol>
+</div>
+</li>
+
+<!-- ============================= Problem 3: NPO vs GA ============================= -->
+<li>
+<span class="probname">Why NPO's Gradient Stays Bounded and GA's Does Not.</span><span class="tag">05 · unlearning</span> <span class="pts">(40 pts)</span>
+For LLM unlearning let $\pi_\theta(y\mid x) \in (0,1]$ be smooth in $\theta$, with $\pi_{\mathrm{ref}}(y\mid x) \in (0,1]$ a fixed reference. On the forget set $\mathcal{D}_F$ the two losses are
+$$\mathcal{L}_{\mathrm{GA}}(\theta) = \mathbb{E}_{\mathcal{D}_F}\bigl[\log\pi_\theta(y\mid x)\bigr], \qquad
+\mathcal{L}_{\mathrm{NPO}}(\theta) = \frac{2}{\beta}\,\mathbb{E}_{\mathcal{D}_F}\!\left[\log\!\Bigl(1 + \bigl(\tfrac{\pi_\theta(y\mid x)}{\pi_{\mathrm{ref}}(y\mid x)}\bigr)^{\beta}\Bigr)\right]\quad(\beta>0),$$
+where $\sigma(t) = 1/(1+e^{-t})$ is the logistic sigmoid. Assume the probability gradient is bounded, $\|\nabla_\theta\pi_\theta(y\mid x)\| \le G$. (You may differentiate finite sums and expectations term by term without further justification.)
+<ol class="parts">
+<li><span class="pts">(10 pts)</span> Let $u(\theta) = \beta\log\bigl(\pi_\theta(y\mid x)/\pi_{\mathrm{ref}}(y\mid x)\bigr)$. Show that
+$$\mathcal{L}_{\mathrm{NPO}}(\theta) = \tfrac{2}{\beta}\,\mathbb{E}[\log(1+e^{u})], \qquad \tfrac{\partial}{\partial u}\log(1+e^u) = \sigma(u) \in (0,1),$$
+and that $\nabla_\theta u = \beta\,\nabla_\theta\log\pi_\theta$.
+<span class="hint">$(\pi_\theta/\pi_{\mathrm{ref}})^\beta = e^u$; $\tfrac{d}{du}\log(1+e^u) = e^u/(1+e^u) = \sigma(u)$, and $0&lt;\sigma&lt;1$ since $0&lt;e^u&lt;1+e^u$; and $\pi_{\mathrm{ref}}$ is constant in $\theta$.</span></li>
+
+<li><span class="pts">(10 pts)</span> Using part (a) and the chain rule, show $\nabla_\theta\mathcal{L}_{\mathrm{NPO}} = 2\,\mathbb{E}[\sigma(u)\,\nabla_\theta\log\pi_\theta]$, and conclude the uniform bound
+$$\|\nabla_\theta\mathcal{L}_{\mathrm{NPO}}\| \le 2\,\mathbb{E}\bigl[\|\nabla_\theta\log\pi_\theta\|\bigr].$$
+<span class="hint">Differentiate $\tfrac{2}{\beta}\log(1+e^u)$ with $\nabla_\theta u = \beta\nabla_\theta\log\pi_\theta$; then use the triangle inequality $\|\mathbb{E}[V]\| \le \mathbb{E}[\|V\|]$ together with $\sigma(u)&lt;1$.</span></li>
+
+<li><span class="pts">(10 pts)</span> Define the per-example NPO contribution $g_{\mathrm{NPO}} := \sigma(u)\,\nabla_\theta\log\pi_\theta$. Show that
+$$\|g_{\mathrm{NPO}}\| = \sigma(u)\,\frac{\|\nabla_\theta\pi_\theta\|}{\pi_\theta}, \qquad \sigma(u) = \frac{(\pi_\theta/\pi_{\mathrm{ref}})^\beta}{1+(\pi_\theta/\pi_{\mathrm{ref}})^\beta},$$
+and hence that as $\pi_\theta(y\mid x)\to 0$, $\;\|g_{\mathrm{NPO}}\| \le \dfrac{G}{\pi_{\mathrm{ref}}^\beta}\,\pi_\theta^{\beta-1}$.
+<span class="hint">$\nabla_\theta\log\pi_\theta = \nabla_\theta\pi_\theta/\pi_\theta$; bound the denominator $1 + (\pi_\theta/\pi_{\mathrm{ref}})^\beta \ge 1$ to get $\sigma(u) \le (\pi_\theta/\pi_{\mathrm{ref}})^\beta$; combine with $\|\nabla_\theta\pi_\theta\| \le G$.</span></li>
+
+<li><span class="pts">(10 pts)</span> Using part (c), show that as $\pi_\theta \to 0$ the NPO per-example gradient $\|g_{\mathrm{NPO}}\|$ stays bounded for $\beta \ge 1$, while the GA per-example gradient $\|\nabla_\theta\log\pi_\theta\|$ diverges. Why does this make NPO stable but GA collapse?
+<span class="hint">Read off the limits of $\pi_\theta^{\beta-1}$ from part (c); the GA norm is $\|\nabla_\theta\pi_\theta\|/\pi_\theta$, whose numerator stays bounded while $\pi_\theta\to0$.</span></li>
+</ol>
+
+<div class="sol">
+<span class="sollabel">Solution.</span>
+<ol class="solparts">
+<li>Since $(\pi_\theta/\pi_{\mathrm{ref}})^\beta = e^{\beta\log(\pi_\theta/\pi_{\mathrm{ref}})} = e^{u}$, the loss is $\mathcal{L}_{\mathrm{NPO}} = \tfrac{2}{\beta}\mathbb{E}[\log(1+e^u)]$. Differentiating, $\tfrac{d}{du}\log(1+e^u) = \tfrac{e^u}{1+e^u} = \sigma(u)$, and $0 &lt; \sigma(u) &lt; 1$ because $0 &lt; e^u &lt; 1+e^u$ for all finite $u$. Finally $\pi_{\mathrm{ref}}$ does not depend on $\theta$, so $u = \beta(\log\pi_\theta - \log\pi_{\mathrm{ref}})$ gives $\nabla_\theta u = \beta\,\nabla_\theta\log\pi_\theta$.</li>
+
+<li>By the chain rule (differentiating term by term), $\nabla_\theta\mathcal{L}_{\mathrm{NPO}} = \tfrac{2}{\beta}\,\mathbb{E}[\sigma(u)\,\nabla_\theta u] = \tfrac{2}{\beta}\,\mathbb{E}[\sigma(u)\,\beta\,\nabla_\theta\log\pi_\theta] = 2\,\mathbb{E}[\sigma(u)\,\nabla_\theta\log\pi_\theta]$. Taking norms and using the triangle inequality $\|\mathbb{E}[V]\| \le \mathbb{E}[\|V\|]$ with $V = 2\sigma(u)\nabla_\theta\log\pi_\theta$, together with $\sigma(u) &lt; 1$,
+$$\|\nabla_\theta\mathcal{L}_{\mathrm{NPO}}\| \le 2\,\mathbb{E}[\sigma(u)\,\|\nabla_\theta\log\pi_\theta\|] \le 2\,\mathbb{E}[\|\nabla_\theta\log\pi_\theta\|].$$
+This bound holds for every $\theta$ — it is uniform.</li>
+
+<li>From $g_{\mathrm{NPO}} = \sigma(u)\nabla_\theta\log\pi_\theta$ and $\nabla_\theta\log\pi_\theta = \nabla_\theta\pi_\theta/\pi_\theta$ we get $\|g_{\mathrm{NPO}}\| = \sigma(u)\,\|\nabla_\theta\pi_\theta\|/\pi_\theta$. Writing $\rho := (\pi_\theta/\pi_{\mathrm{ref}})^\beta = e^u$, we have $\sigma(u) = \rho/(1+\rho)$. As $\pi_\theta\to0$, $\rho\to0$, and $1+\rho\ge1$ gives $\sigma(u) \le \rho = (\pi_\theta/\pi_{\mathrm{ref}})^\beta$. Combined with $\|\nabla_\theta\pi_\theta\| \le G$,
+$$\|g_{\mathrm{NPO}}\| \le \frac{(\pi_\theta/\pi_{\mathrm{ref}})^\beta\,G}{\pi_\theta} = \frac{G}{\pi_{\mathrm{ref}}^\beta}\,\pi_\theta^{\beta-1}.$$</li>
+
+<li>From part (c): for $\beta > 1$, $\pi_\theta^{\beta-1}\to0$ so $\|g_{\mathrm{NPO}}\|\to0$; for $\beta = 1$, $\|g_{\mathrm{NPO}}\| \le G/\pi_{\mathrm{ref}}$, a finite constant. By contrast the GA per-example contribution has norm $\|\nabla_\theta\pi_\theta\|/\pi_\theta \sim 1/\pi_\theta \to \infty$ as $\pi_\theta\to0$ (the numerator stays bounded while $\pi_\theta\to0$). <em>Mechanism:</em> as the forget likelihood $\pi_\theta\to0$ the saturating factor $\sigma(u)\to0$ at rate $\pi_\theta^\beta$, which cancels (for $\beta\ge1$) the $1/\pi_\theta$ growth of the log-likelihood gradient — that is why "sigmoid saturation" keeps the NPO step bounded and prevents the GA-style collapse.</li>
+</ol>
+</div>
+</li>
+
+</ol>
+
+<hr class="footer">
+<p class="pageno">Page 1 of 1</p>
+
+</body>
+</html>

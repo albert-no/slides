@@ -23,7 +23,7 @@ solution PDFs.
 |---|---|---|---|
 | 2024 | — | `final24.pdf` | old course name "Mathematical Problems in Deep Learning" |
 | 2025 | `midterm25.pdf` | `final25.pdf` | |
-| 2026 | `midterm26.pdf` | `final26draft.tex` | final dated June 11, 2026 (no PDF yet) |
+| 2026 | `midterm26.pdf` | `final26draft.tex`, `final26.tex`, `final26.html` | final dated June 11, 2026; **`final26.tex`** = the 3 selected problems + solutions in `versions.sty` style (toggle `problem`/`solution`; needs `xcolor`). `final26.html` is the same 3 (two-point diffusion score · LiRA · rigorous NPO-vs-GA) with solutions. Other 7 candidates in `backup-problems/final26-unused.html` |
 | 2027 | — | `final27draft.tex` | next-iteration draft |
 
 - `2026_1_Privacy.pdf` — **byte-identical duplicate of `final24.pdf`** (misnamed; safe to delete).

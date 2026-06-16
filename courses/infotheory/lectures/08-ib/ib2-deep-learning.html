@@ -155,6 +155,26 @@
 </div>
 
 <div class="slide">
+  <h2>Why SGD Noise Compresses</h2><div class="divider"></div>
+  <p>Mini-batch gradient = signal + noise: $\nabla\hat L = \nabla L + \xi$. Split by SNR $\|\nabla L\|/\|\xi\|$:</p>
+  <div class="grid-2">
+    <div>
+      <h3>Drift (fit)</h3>
+      <p>SNR $\gg 1$: directed descent.</p>
+      <p>$I(T;Y)$ ↑ — learn the task.</p>
+    </div>
+    <div>
+      <h3>Diffusion (compress)</h3>
+      <p>SNR $&lt; 1$: random walk on low-loss set.</p>
+      <p>$I(X;T)$ ↓ — forget the input.</p>
+    </div>
+  </div>
+  <p>Diffusion $\approx$ <strong>Langevin dynamics</strong>: maximizes weight entropy at low loss — an implicit $I(X;T)$ penalty.</p>
+  <div class="highlight"><p><span style="color:var(--warn); font-weight:700;">&#9888;</span> &nbsp;Argued for <strong>tanh</strong> nets; <strong>contested</strong> — no clear phase with ReLU.</p></div>
+  <div class="cite">Saxe et al., "On the Information Bottleneck Theory of Deep Learning", JSTAT 2019.</div>
+</div>
+
+<div class="slide">
   <h2>The Information Plane in Training</h2><div class="divider"></div>
   <div style="display:flex; justify-content:center; margin:8px 0;">
     <img src="information_plane.png" alt="Information-plane trajectory across training epochs" style="width:100%; max-width:1000px; height:auto; display:block;">
@@ -166,11 +186,20 @@
 <div class="slide">
   <h2>Watch: Optimization in the Plane</h2><div class="divider"></div>
   <div style="display:flex; justify-content:center; margin:6px 0;">
-    <iframe width="820" height="461" src="https://www.youtube.com/embed/P1A1yNsxMjc"
-      title="The optimization process in the Information Plane"
-      frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowfullscreen style="border:0; border-radius:10px; max-width:100%;"></iframe>
+    <a href="https://www.youtube.com/watch?v=P1A1yNsxMjc" target="_blank" rel="noopener"
+       style="position:relative; display:block; border-radius:10px; overflow:hidden;">
+      <img src="https://i.ytimg.com/vi/P1A1yNsxMjc/hqdefault.jpg"
+           alt="The optimization process in the Information Plane — opens on YouTube"
+           style="display:block; max-height:400px; width:auto;">
+      <span style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+                   width:78px; height:54px; border-radius:12px; background:var(--yonsei-blue);
+                   display:flex; align-items:center; justify-content:center;">
+        <span style="border-style:solid; border-width:13px 0 13px 22px;
+                     border-color:transparent transparent transparent var(--white); margin-left:4px;"></span>
+      </span>
+    </a>
   </div>
+  <p style="text-align:center; color:var(--gray-text);">Click to watch on YouTube (opens a new tab).</p>
   <div class="cite cite-left">Video: Shwartz-Ziv and Tishby, "The optimization process in the Information Plane", arXiv:1703.00810, 2017.</div>
 </div>
 
@@ -182,9 +211,57 @@
     <li><strong>High $I(T;Y)$:</strong> remaining bits predict the target</li>
   </ul>
   <p>The IB curve is the <strong>Pareto frontier</strong>: off-curve wastes bits or loses prediction.</p>
-  <p><strong>Generalization bound</strong> (informal), $S$ = data, $W$ = weights:</p>
-  <div class="math-block">$$\text{excess risk} \;\lesssim\; \sqrt{I(S;W)/n}.$$</div>
-  <div class="cite">Xu and Raginsky, "Information-Theoretic Analysis of Generalization", ISIT 2017.</div>
+  <div class="highlight"><p>Can we <strong>prove</strong> that compression $\Rightarrow$ generalization?</p></div>
+</div>
+
+<div class="slide">
+  <h2>The MI Generalization Bound</h2><div class="divider"></div>
+  <p>Train on $S = (Z_1,\dots,Z_n) \sim \mu$; algorithm outputs weights $W \sim P_{W|S}$.</p>
+  <p>Gap between <strong>test</strong> $L_\mu(W) = \mathbb{E}_{Z}[\ell(W,Z)]$ and <strong>train</strong> $L_S(W) = \tfrac1n\sum_i \ell(W,Z_i)$.</p>
+  <div class="card">
+    <h3>Theorem (Xu and Raginsky, 2017).</h3>
+    <p>If $\ell(w,Z)$ is $\sigma$-subgaussian under $Z \sim \mu$ for every $w$, then</p>
+    <div class="math-block">$$\bigl|\,\mathbb{E}\!\left[L_\mu(W) - L_S(W)\right]\bigr| \;\le\; \sqrt{\tfrac{2\sigma^2}{n}\, I(S;W)}.$$</div>
+  </div>
+  <div class="cite">Xu and Raginsky, "Information-Theoretic Analysis of Generalization Capability of Learning Algorithms", NeurIPS 2017.</div>
+</div>
+
+<div class="slide">
+  <h2>Reading the Bound</h2><div class="divider"></div>
+  <p>The gap is controlled by $I(S;W)$ — <strong>how much the weights remember the data</strong>.</p>
+  <div class="grid-2">
+    <div>
+      <h3>$W \perp S$</h3>
+      <p>$I(S;W) = 0$: no overfitting.</p>
+      <p>But nothing learned either.</p>
+    </div>
+    <div>
+      <h3>$W$ memorizes $S$</h3>
+      <p>$I(S;W)$ large: bound vacuous.</p>
+      <p>Train fits, test fails.</p>
+    </div>
+  </div>
+  <div class="highlight"><p>Generalization needs the weights to <strong>forget individual examples</strong>, keep only what transfers.</p></div>
+</div>
+
+<div class="slide">
+  <h2>Two Bottlenecks</h2><div class="divider"></div>
+  <p>Compression acts at <strong>two levels</strong>:</p>
+  <div class="grid-2">
+    <div>
+      <h3>Representation</h3>
+      <p>Squeeze $I(X;T)$, keep $I(T;Y)$.</p>
+      <p>Per <strong>example</strong>.</p>
+    </div>
+    <div>
+      <h3>Weights</h3>
+      <p>Squeeze $I(S;W)$, keep low loss.</p>
+      <p>Per <strong>dataset</strong>.</p>
+    </div>
+  </div>
+  <div class="math-block">$$\beta\,I(X;T)\!\downarrow \;\;\Rightarrow\;\; I(S;W)\!\downarrow \;\;\Rightarrow\;\; \text{gap}\!\downarrow.$$</div>
+  <div class="highlight"><p><strong>Forget the input, keep the signal</strong> — at both levels.</p></div>
+  <div class="cite">Achille and Soatto, JMLR 2018.</div>
 </div>
 
 
@@ -411,7 +488,7 @@
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 30</div>
+<div class="slide-num" id="slideNum">1 / 34</div>
 
 </div><!-- end deck -->
 

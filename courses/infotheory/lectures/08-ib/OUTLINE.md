@@ -74,33 +74,37 @@ Compression for relevance: the IB problem, self-consistent equations, rate-disto
 | | Layer representations (Markov chain) — **`fig/dnn.png`** | `:81` |
 | | DPI for every layer | `:91` |
 | | Layers in the information plane | `:102` |
-| **02 — Information plane hypothesis** | Fitting-then-compressing | `:114-191` |
+| **02 — Information plane hypothesis** | Fitting-then-compressing, generalization | `:115-267` |
 | | **Conjecture (Shwartz-Ziv and Tishby, 2017)** | `:123` |
 | | The fitting phase | `:135` |
 | | The compression phase | `:146` |
-| | Information plane in training — **`information_plane.png`** | `:157` |
-| | Watch: optimization in the plane — **embedded video** | `:166` |
-| | Why compression might help (generalization bound) | `:178` |
-| **03 — Variational Information Bottleneck** | Tractable IB for neural networks | `:191-297` |
-| | The tractability problem | `:200` |
-| | **Lemma (Rate Upper Bound)** | `:210` |
-| | Lower bound on $I(T;Y)$ (BA recall) | `:222` |
-| | **Definition (VIB, Alemi et al., 2017)** | `:233` |
-| | VIB architecture (Gaussian encoder) | `:244` |
-| | Connection to the VAE | `:252` |
-| | What $\beta$ controls | `:282` |
-| **04 — The debate** | What survives scrutiny | `:297-407` |
-| | The estimation problem (binning) | `:306` |
-| | Activation function dependence (Saxe et al.) | `:315` |
-| | What does not survive | `:328` |
-| | What survives | `:338` |
-| | IT implications for deep learning | `:349` |
-| | The IB arc (five-tool connection table) | `:360` |
-| | Summary | `:398` |
+| | Why SGD noise compresses — drift vs diffusion, ⚠ ReLU caveat (Saxe) | `:157` |
+| | Information plane in training — **`information_plane.png`** | `:177` |
+| | Watch: optimization in the plane — **clickable YouTube thumbnail (new tab)** | `:186` |
+| | Why compression might help (intuition) | `:207` |
+| | **Theorem (MI Generalization Bound, Xu–Raginsky, 2017)** | `:218` |
+| | Reading the bound — $I(S;W)$, memorize vs forget | `:230` |
+| | Two bottlenecks — $I(X;T)$ vs $I(S;W)$ (Achille–Soatto) | `:248` |
+| **03 — Variational Information Bottleneck** | Tractable IB for neural networks | `:269-374` |
+| | The tractability problem | `:277` |
+| | **Lemma (Rate Upper Bound)** | `:287` |
+| | Lower bound on $I(T;Y)$ (BA recall) | `:299` |
+| | **Definition (VIB, Alemi et al., 2017)** | `:310` |
+| | VIB architecture (Gaussian encoder) | `:321` |
+| | Connection to the VAE | `:329` |
+| | What $\beta$ controls | `:359` |
+| **04 — The debate** | What survives scrutiny | `:375-484` |
+| | The estimation problem (binning) | `:383` |
+| | Activation function dependence (Saxe et al.) | `:392` |
+| | What does not survive | `:405` |
+| | What survives | `:415` |
+| | IT implications for deep learning | `:426` |
+| | The IB arc (five-tool connection table) | `:437` |
+| | Summary | `:475` |
 
-**Figures:** `fig/dnn.png` (encoder–decoder Markov chain) and `information_plane.png` (3-panel training trajectory) + embedded YouTube — all from Shwartz-Ziv and Tishby, arXiv:1703.00810.
+**Figures:** `fig/dnn.png` (encoder–decoder Markov chain) and `information_plane.png` (3-panel training trajectory) + clickable YouTube thumbnail (opens in new tab) — all from Shwartz-Ziv and Tishby, arXiv:1703.00810.
 
-**Key formulas:** DPI chain `:96`; Shwartz-Ziv conjecture `:123`; rate upper bound `:214`; BA lower bound `:227`; VIB objective `:237`; VIB = VAE with classifier decoder `:252`.
+**Key formulas:** DPI chain `:96`; Shwartz-Ziv conjecture `:123`; MI generalization bound (Xu–Raginsky) `:222`; rate upper bound `:291`; BA lower bound `:304`; VIB objective `:314`; VIB = VAE with classifier decoder `:329`.
 
 ### Note (`ib2-deep-learning-note.html`)
 - DPI for deterministic functions `:25`

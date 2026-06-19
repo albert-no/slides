@@ -32,7 +32,8 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 ### `talks/` — standalone research presentations
 
 - **`talks/icml2026/`** — ICML 2026 5-min SlidesLive recording for the position paper "The Term 'Machine Unlearning' Is Overused in LLMs" (Yoon, Jun, No). 10 slides. Poster ID 67198.
-- **`talks/dllm/`** — Diffusion LLMs: invited talk on masked-discrete diffusion (Rainbow Padding, A2D, dgMARK, Reversal Curse, DAPD). 1 deck, no notes.
+- **`talks/kics260521dllm/`** — Diffusion LLMs (KICS, 2026-05-21): general-audience invited talk on masked-discrete diffusion (Rainbow Padding, A2D, dgMARK, Reversal Curse, DAPD). 1 deck, no notes.
+- **`talks/math260624dllm/`** — Diffusion LLMs (math conference, June 2026): mathematician-facing variant of the KICS talk — more Gaussian SDE theory, deeper SEDD/RADD, formal DAPD problem, lab work compressed; adds Mercury/DiffusionGemma "in practice" slide. 1 deck, no notes.
 - **`talks/seoul/`** — Seoul AI governance talk.
 
 ## Quick lookup — where does X live?
@@ -53,7 +54,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | SDE / Fokker–Planck / Anderson reverse | `courses/privacy/lectures/02-generative/diffusion3-sde-score.html` (FP `:148`, Anderson `:234`, score matching `:339`) |
 | DDIM (non-Markovian, deterministic, ODE) | `courses/privacy/lectures/02-generative/diffusion4-ddim.html` (marginal invariance `:164`, predicted clean `:234`) |
 | Classifier guidance + CFG | `courses/privacy/lectures/02-generative/diffusion5-guidance-discrete.html:202-282` |
-| Discrete diffusion / score-entropy loss | `courses/privacy/lectures/02-generative/diffusion5-guidance-discrete.html:287-425`; `talks/dllm/dllm.html:192-205` (SEDD) |
+| Discrete diffusion / score-entropy loss | `courses/privacy/lectures/02-generative/diffusion5-guidance-discrete.html:287-425`; `talks/kics260521dllm/kics260521dllm.html:192-205` (SEDD) |
 | LLM brief overview (autoregressive, transformer, NLL, sampling) | `courses/privacy/lectures/02-generative/llm.html:72-296` |
 | LLM privacy-hook map (loss / verbatim / sampling / conditional) | `courses/privacy/lectures/02-generative/llm.html:258-281` |
 | Rate–distortion theorem (Shannon) | `courses/infotheory/lectures/04-lossy/lossy1-foundations.html:258-311` |
@@ -107,14 +108,14 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | DP definition / LDP vs central / PrivUnit | `courses/privacy/lectures/01-dp/dp8-fl.html:364-569` |
 | RRSC + k-closest exact-optimality (NeurIPS 2023) | `courses/privacy/lectures/01-dp/dp8-fl.html:571-822` |
 | DP-SGD / DP-Diffusion / DP-RDM | `courses/privacy/lectures/01-dp/dp8-fl.html:827-1004` |
-| Continuous SDE diffusion at a glance (Song et al.) | `talks/dllm/dllm.html:99` |
-| Masked diffusion at a glance | `talks/dllm/dllm.html:115` |
-| Reverse process needs a ratio (concrete score) | `talks/dllm/dllm.html:179` |
-| Rainbow Padding (EOS overflow, ICLR 2026) | `talks/dllm/dllm.html:319-461` |
-| DAPD (attention dependency graph, ICML 2026) | `talks/dllm/dllm.html:463-669` |
-| Diffusion-LLM safety (A2D) | `talks/dllm/dllm.html:694` |
-| dgMARK (diffusion-LLM watermarking, ICML 2026) | `talks/dllm/dllm.html:707` |
-| Reversal curse in MDMs | `talks/dllm/dllm.html:720` |
+| Continuous SDE diffusion at a glance (Song et al.) | `talks/kics260521dllm/kics260521dllm.html:99` |
+| Masked diffusion at a glance | `talks/kics260521dllm/kics260521dllm.html:115` |
+| Reverse process needs a ratio (concrete score) | `talks/kics260521dllm/kics260521dllm.html:179` |
+| Rainbow Padding (EOS overflow, ICLR 2026) | `talks/kics260521dllm/kics260521dllm.html:319-461` |
+| DAPD (attention dependency graph, ICML 2026) | `talks/kics260521dllm/kics260521dllm.html:463-669` |
+| Diffusion-LLM safety (A2D) | `talks/kics260521dllm/kics260521dllm.html:694` |
+| dgMARK (diffusion-LLM watermarking, ICML 2026) | `talks/kics260521dllm/kics260521dllm.html:707` |
+| Reversal curse in MDMs | `talks/kics260521dllm/kics260521dllm.html:720` |
 
 ## Cross-references
 
@@ -134,7 +135,7 @@ Same topic, different decks (use the more recent / more detailed):
 - Edge cases, comparison tables, references
 - Look in the `-note.html` for "why does this hold" / "what's the precise statement" detail.
 
-`courses/infotheory/` has notes for every deck. `courses/privacy/lectures/04-mia/` has notes for every deck. `courses/privacy/lectures/02-generative/` has notes for every diffusion lecture (1–5); `llm.html` has no note. `talks/dllm/` and `courses/privacy/lectures/01-dp/` do **not** have companion notes — proof detail is in-deck or in `note/2_difffusion.tex` (under `courses/privacy/lectures/02-generative/`).
+`courses/infotheory/` has notes for every deck. `courses/privacy/lectures/04-mia/` has notes for every deck. `courses/privacy/lectures/02-generative/` has notes for every diffusion lecture (1–5); `llm.html` has no note. `talks/kics260521dllm/`, `talks/math260624dllm/`, and `courses/privacy/lectures/01-dp/` do **not** have companion notes — proof detail is in-deck or in `note/2_difffusion.tex` (under `courses/privacy/lectures/02-generative/`).
 
 ## Authoring conventions
 

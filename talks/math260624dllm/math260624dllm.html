@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Diffusion LLMs Behave Differently, and How to Control Them — Mathematical Tour</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<style>
+/* All citations sit on the bottom-left, beside the brand footer */
+.deck .cite {
+  left: 240px;
+  bottom: 18px;
+  transform: none;
+  text-align: left;
+  max-width: calc(100% - 320px);
+}
+.deck .title-slide .cite, .deck .end-slide .cite { left: 50%; transform: translateX(-50%); text-align: center; }
+/* Pills are compact tags, not full-width banners */
+.deck .slide > .pill { align-self: flex-start; }
+/* Enlarged token diagrams (confidence-decoding, parallel-decoding) */
+.deck .big-tokens .token { font-size: 1.45rem; padding: 12px 22px; margin: 5px; border-radius: 8px; }
+.deck .big-tokens .conf  { font-size: 1.35rem; line-height: 1.2; }
+/* DAPD algorithm box */
+.dapd-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); padding: 14px 22px; border-radius: 0 10px 10px 0; }
+.dapd-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.dapd-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.dapd-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.dapd-algo ol li + li { border-top: 1px solid var(--slate); }
+/* dLLMs-in-practice product panels */
+.practice-img img { display:block; width:auto; max-width:100%; max-height:168px; margin:0 auto 12px; border-radius:10px; border:1px solid var(--slate); }
+</style>
+
+<div class="deck" id="deck">
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 1 — Title -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Invited Talk · Mathematics</div>
+  <h1>Why Diffusion LLMs<br>Behave Differently,<br>and How to Control Them</h1>
+  <div class="divider"></div>
+  <p class="subtitle">From Gaussian SDEs to concrete scores and parallel decoding</p>
+  <p style="font-weight:500;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">June 2026</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 2 — Contents -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Gaussian diffusion theory</div>
+        <div class="toc-sub">Forward SDE, Fokker–Planck, reverse SDE, the score</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Discrete diffusion &amp; its losses</div>
+        <div class="toc-sub">Concrete score, SEDD, RADD, any-order autoregression</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">dLLMs at scale and in practice</div>
+        <div class="toc-sub">LLaDA, data-constrained scaling, Mercury, DiffusionGemma</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">DAPD — dependency-aware parallel decoding</div>
+        <div class="toc-sub">A formal problem; attention-induced graph coloring (ICML 2026)</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">More from the lab</div>
+        <div class="toc-sub">Rainbow Padding, A2D, dgMARK, reversal curse, info theory</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 3 — Section divider 01 -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Gaussian Diffusion Theory</h1>
+  <div class="divider"></div>
+  <p class="subtitle">SDEs, Fokker–Planck, time reversal, and the score</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 4 — Continuous Diffusion at a Glance -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Continuous Diffusion at a Glance</h2>
+  <div class="divider"></div>
+  <p>Forward SDE corrupts data with noise; learn the <strong>time-reversed SDE</strong> driven by the score $\nabla_x \log p_t(x)$.</p>
+  <div style="display:flex;justify-content:center;margin:10px 0 6px;">
+    <img src="sde.png" alt="Forward and reverse SDE" style="max-width:100%;height:auto;max-height:300px;display:block;">
+  </div>
+  <div class="highlight">
+    <p>Drives image, video, audio generation: Stable Diffusion, Imagen, DALL·E, Sora.</p>
+  </div>
+  <div class="cite">Song, Sohl-Dickstein, Kingma, Kumar, Ermon, Poole, "Score-Based Generative Modeling through Stochastic Differential Equations", ICLR 2021 Oral.</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 5 — Forward SDE and Fokker–Planck (NEW) -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Forward SDE and Its Marginal Law</h2>
+  <div class="divider"></div>
+  <p>Noising as an Itô diffusion (VP: $f=-\tfrac{\beta_t}{2}x$; VE: $f=0$):</p>
+  <div class="math-block" style="margin:10px 0;">$$dX_t = f(X_t,t)\,dt + g(t)\,dW_t,\qquad X_0\sim p_{\text{data}}.$$</div>
+  <p>The marginal density $p_t$ solves the <strong>Fokker–Planck</strong> PDE:</p>
+  <div class="math-block" style="margin:10px 0;">$$\partial_t\,p_t(x) = -\partial_x\bigl(f(x,t)\,p_t(x)\bigr) + \tfrac{g^2(t)}{2}\,\partial_x^2\,p_t(x).$$</div>
+  <div class="highlight">
+    <p>Training tracks the <strong>marginals</strong> $\{p_t\}$, never the sample paths.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 6 — Reverse SDE and the Score (NEW) -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Reverse SDE and the Score</h2>
+  <div class="divider"></div>
+  <p>Anderson's time reversal — same marginals $p_t$, run backward:</p>
+  <div class="math-block" style="margin:10px 0;">$$d\bar X_t = \bigl(f - g^2\,\partial_x\log p_t(\bar X_t)\bigr)\,dt + g(t)\,d\bar W_t.$$</div>
+  <p>Deterministic <strong>probability-flow ODE</strong>, identical marginals:</p>
+  <div class="math-block" style="margin:10px 0;">$$\dot{\bar X}_t = f - \tfrac{1}{2}\,g^2\,\partial_x\log p_t(\bar X_t).$$</div>
+  <div class="highlight">
+    <p>Everything reduces to the <strong>score</strong> $\partial_x\log p_t$ — learned by denoising score matching.</p>
+  </div>
+  <div class="cite">Anderson, "Reverse-time diffusion equation models", Stoch. Proc. Appl. 1982; Vincent, Neural Computation 2011.</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 7 — Masked Diffusion at a Glance -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Masked Diffusion at a Glance</h2>
+  <div class="divider"></div>
+  <p>Forward progressively masks tokens; reverse <strong>unmasks any-order</strong> from bidirectional context.</p>
+  <div style="display:flex; flex-direction:column; align-items:center; gap:6px; margin:14px 0;">
+    <div style="display:flex; align-items:center; gap:14px;">
+      <span style="color:var(--gray-text); font-size:1.2rem; min-width:46px; text-align:right;">$x_0$</span>
+      <span class="token token-fixed">The</span><span class="token token-fixed">sky</span><span class="token token-fixed">is</span><span class="token token-fixed">deep</span><span class="token token-fixed">blue</span>
+    </div>
+    <div style="color:var(--gray-text);">↓</div>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <span style="color:var(--gray-text); font-size:1.2rem; min-width:46px; text-align:right;">$x_t$</span>
+      <span class="token token-fixed">The</span><span class="token token-mask">[M]</span><span class="token token-fixed">is</span><span class="token token-mask">[M]</span><span class="token token-fixed">blue</span>
+    </div>
+    <div style="color:var(--gray-text);">↓</div>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <span style="color:var(--gray-text); font-size:1.2rem; min-width:46px; text-align:right;">$x_{T-1}$</span>
+      <span class="token token-mask">[M]</span><span class="token token-mask">[M]</span><span class="token token-fixed">is</span><span class="token token-mask">[M]</span><span class="token token-mask">[M]</span>
+    </div>
+    <div style="color:var(--gray-text);">↓</div>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <span style="color:var(--gray-text); font-size:1.2rem; min-width:46px; text-align:right;">$x_T$</span>
+      <span class="token token-mask">[M]</span><span class="token token-mask">[M]</span><span class="token token-mask">[M]</span><span class="token token-mask">[M]</span><span class="token token-mask">[M]</span>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Block dLLMs (e.g. <strong>LLaDA 8B</strong>) already match LLaMA3-8B on in-context tasks. <strong>Promising.</strong></p>
+  </div>
+  <div class="cite">Austin et al., "Structured Denoising Diffusion Models in Discrete State-Spaces", NeurIPS 2021.</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 8 — AR vs. dLLM -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>AR vs. Diffusion LLMs</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th></th><th>Autoregressive LLM</th><th>Diffusion LLM</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Order</strong></td><td>Fixed left-to-right</td><td>Any order</td></tr>
+      <tr><td><strong>Architecture</strong></td><td>Causal decoder</td><td>Bidirectional encoder</td></tr>
+      <tr><td><strong>Context</strong></td><td>Left only</td><td>Full bidirectional</td></tr>
+      <tr><td><strong>Parallelism</strong></td><td>Sequential</td><td>Multi-token per step</td></tr>
+      <tr><td><strong>Training signal</strong></td><td>Next-token prediction</td><td>Mask prediction, any position</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 9 — Discrete analogue: a ratio -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Discrete Analogue: A Ratio, Not a Gradient</h2>
+  <div class="divider"></div>
+  <p>On a finite state space the gradient $\partial_x\log p_t$ has no meaning. Forward and reverse jump rates on a continuous-time Markov chain:</p>
+  <div class="math-block">$$\begin{aligned}
+    \text{Forward:}\quad & Q_t(x \to y), \\[2pt]
+    \text{Reverse:}\quad & \bar Q_t(y \to x) \;=\; Q_t(x \to y)\,\cdot\,\frac{p_t(x)}{p_t(y)}.
+  \end{aligned}$$</div>
+  <div class="highlight">
+    <p>The reverse process is driven by the <strong>ratio</strong> $p_t(x)/p_t(y)$ — the discrete analogue of the score.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 10 — Section divider 02 -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Discrete Diffusion and Its Losses</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Concrete scores, score entropy, and the time-free reduction</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 11 — SEDD: concrete score & reverse rate (NEW) -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="pill" style="margin-bottom:12px;">SEDD</div>
+  <h2>Concrete Score and the Reverse Rate</h2>
+  <div class="divider"></div>
+  <p>Continuous-time Markov chain on a vocabulary, rate matrix $Q_t$: &nbsp; $\partial_t\,p_t = Q_t\,p_t.$</p>
+  <p>The reverse chain's rate is built from the <strong>concrete score</strong> $p_t(y)/p_t(x)$:</p>
+  <div class="math-block">$$\bar Q_t(x,y) \;=\; \frac{p_t(y)}{p_t(x)}\,Q_t(y,x),\qquad y\neq x.$$</div>
+  <div class="highlight">
+    <p>Learn $s_\theta(x,t)_y \approx \dfrac{p_t(y)}{p_t(x)}$ — a vector of ratios, the discrete score.</p>
+  </div>
+  <div class="cite">Lou, Meng, Ermon, "Discrete Diffusion Modeling by Estimating the Ratios of the Data Distribution", ICML 2024.</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 12 — SEDD: score entropy loss -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="pill" style="margin-bottom:12px;">SEDD</div>
+  <h2>Score Entropy: A Tractable Loss</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\mathcal{L}_{\text{SE}} \;=\; \mathbb{E}_{t,\,x_0,\,x_t}\!\left[\sum_{y\neq x_t} w_t(x_t,y)\!\left(\,s_\theta(y\mid x_t) \;-\; \frac{p_t(y\mid x_0)}{p_t(x_t\mid x_0)}\,\log s_\theta(y\mid x_t)\,\right)\right]$$</div>
+  <ul>
+    <li>A <strong>Bregman divergence</strong> in $s_\theta$ — uniquely minimized at the true ratio.</li>
+    <li>Intractable marginal ratio swapped for the known <strong>conditional kernel</strong> — discrete Vincent.</li>
+  </ul>
+  <div class="highlight">
+    <p>First discrete diffusion to <strong>match GPT-2 perplexity</strong>.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 13 — RADD: time-free theorem -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="pill" style="margin-bottom:12px;">RADD</div>
+  <h2>Absorbing Score Is Time-Free</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (Ou et al., 2024).</h3>
+    <p>For absorbing (masked) diffusion the concrete score factorizes:</p>
+    <div class="math-block" style="margin:8px 0 4px;">$$s_t(y\mid x_t) \;=\; \underbrace{\frac{1-\alpha_t}{\alpha_t}}_{\text{known scalar}} \cdot\; \underbrace{p_\theta\bigl(y \,\big|\, x_t^{\text{unmasked}}\bigr)}_{\text{time-free clean conditional}}.$$</div>
+  </div>
+  <p>The clean conditional depends on <strong>which tokens are revealed</strong>, not on $t$ — so the network <strong>drops $t$</strong> as an input.</p>
+  <div class="cite">Ou et al., "Your Absorbing Discrete Diffusion Secretly Models the Conditional Distributions of Clean Data", NeurIPS 2024.</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 14 — RADD: ELBO = any-order AR -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="pill" style="margin-bottom:12px;">RADD</div>
+  <h2>ELBO $=$ Any-Order Autoregressive NLL</h2>
+  <div class="divider"></div>
+  <p>The absorbing NELBO collapses to a reweighted cross-entropy on masked tokens:</p>
+  <div class="math-block" style="margin:10px 0;">$$-\log p_\theta(x_0) \;\le\; \int_0^1 w(t)\,\mathbb{E}_{x_t}\!\left[\sum_{i\in\mathcal{M}_t} -\log p_\theta\bigl(x_0^{(i)} \mid x_t^{\text{unmasked}}\bigr)\right]dt,\quad w(t)=\tfrac{-\alpha_t'}{1-\alpha_t}.$$</div>
+  <p>Equivalently, an expectation over a uniform random order $\sigma$:</p>
+  <div class="math-block" style="margin:10px 0;">$$\mathbb{E}_{\sigma}\!\left[\sum_{k} -\log p_\theta\bigl(x_0^{\sigma(k)} \mid x_0^{\sigma(\lt k)}\bigr)\right].$$</div>
+  <div class="highlight">
+    <p>Training is <strong>cross-entropy on masked positions</strong> — no time conditioning, no Bregman.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 15 — What a Trained dLLM Gives You -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>What a Trained dLLM Gives You</h2>
+  <div class="divider"></div>
+  <p>Any observed $S \subseteq \{1,\ldots,N\}$, any masked $i \notin S$:</p>
+  <div class="math-block">$$p_\theta\bigl(x_i \,\big|\, x_S\bigr)$$</div>
+  <div style="display:flex; justify-content:center; margin:14px 0 8px;">
+    <div class="big-tokens" style="display:flex; align-items:center; gap:10px;">
+      <span class="token token-fixed">The</span>
+      <span class="token token-mask">[M]</span>
+      <span class="token token-mask">[M]</span>
+      <span class="token token-fixed">is</span>
+      <span class="token token-fixed">blue</span>
+      <span class="token token-mask">[M]</span>
+    </div>
+  </div>
+  <p style="text-align:center; color:var(--gray-text); margin-top:0;">$S = \{1, 4, 5\}$ &nbsp;→&nbsp; predict at $i \in \{2, 3, 6\}$.</p>
+  <div class="highlight">
+    <p>A dLLM is a <strong>universal marginal predictor</strong>. The decoder is now a degree of freedom.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 16 — Section divider 03 -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>dLLMs at Scale and in Practice</h1>
+  <div class="divider"></div>
+  <p class="subtitle">LLaDA, data-constrained scaling, and shipping systems</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 17 — LLaDA & LLaDA 2.0 -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>LLaDA &amp; LLaDA 2.0</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>LLaDA 8B</h3>
+      <ul>
+        <li>Competitive with <strong>LLaMA3-8B</strong> on in-context learning</li>
+        <li>Beats <strong>GPT-4o</strong> on reverse poem completion</li>
+        <li>Trained from scratch under PT + SFT</li>
+      </ul>
+    </div>
+    <div>
+      <h3>LLaDA 2.0 (MoE)</h3>
+      <ul>
+        <li>First dLLM at <strong>100B</strong> scale</li>
+        <li>Parallel decoding up to <strong>535 tok/s</strong></li>
+        <li>Closes the gap to frontier AR on reasoning</li>
+      </ul>
+    </div>
+  </div>
+  <div class="cite">
+    Nie et al., "Large Language Diffusion Models" (LLaDA), NeurIPS 2025.<br>
+    Zhu et al., LLaDA 2.0, 2025.
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 18 — Scaling / data-constrained -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Diffusion Beats AR Under Data Scarcity</h2>
+  <div class="divider"></div>
+  <div style="display:flex; justify-content:center; margin:8px 0 6px;">
+    <img src="scaling.png" alt="Pareto frontier — diffusion vs AR under data constraint" style="max-width:100%;height:auto;max-height:340px;display:block;">
+  </div>
+  <div class="highlight">
+    <p>Past a <strong>critical compute point</strong>, diffusion's Pareto frontier overtakes AR.</p>
+    <p><strong>Compute-bound → AR; data-bound → diffusion.</strong></p>
+  </div>
+  <div class="cite">Prabhudesai, Wu, Zadeh, Fragkiadaki, Pathak, "Diffusion Beats Autoregressive in Data-Constrained Settings", NeurIPS 2025.</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 19 — dLLMs in Practice (NEW) -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>dLLMs in Practice</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="gap:40px; align-items:start;">
+    <div>
+      <div class="practice-img"><img src="mercury.png" alt="Mercury — Inception Labs"></div>
+      <h3>Mercury — Inception Labs</h3>
+      <ul>
+        <li>Commercial dLLM; tokens in parallel</li>
+        <li>Several× faster, &lt; ½ the cost</li>
+        <li>Mercury 2 (reasoning) · Edit 2 (coding)</li>
+      </ul>
+    </div>
+    <div>
+      <div class="practice-img"><img src="diffusiongemma.png" alt="DiffusionGemma — Google DeepMind"></div>
+      <h3>DiffusionGemma — Google</h3>
+      <ul>
+        <li>Open 26B MoE, 3.8B active</li>
+        <li>1000+ tok/s on one H100; 256 tok/pass</li>
+        <li>Built on Gemma 4 + Gemini Diffusion</li>
+      </ul>
+    </div>
+  </div>
+  <div class="cite">Inception Labs, Mercury 2 (2026); Google DeepMind, DiffusionGemma (2026).</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 20 — Section divider 04: DAPD -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>DAPD</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Dependency-aware parallel decoding via attention &nbsp;·&nbsp; ICML 2026</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 21 — Why Parallel Decoding -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="pill" style="margin-bottom:12px;">DAPD</div>
+  <h2>Why Parallel Decoding?</h2>
+  <div class="divider"></div>
+  <p>One forward pass returns <strong>every</strong> marginal $p_\theta(x_i \mid x_S)$ at once — across <strong>all</strong> masked positions.</p>
+  <div class="big-tokens" style="display:flex; flex-direction:column; align-items:center; gap:14px; margin:22px 0 16px;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span class="token token-fixed">The</span>
+      <span class="token token-mask">[M]</span>
+      <span class="token token-mask">[M]</span>
+      <span class="token token-fixed">is</span>
+      <span class="token token-fixed">blue</span>
+    </div>
+    <div style="color:var(--gray-text); font-size:1.1rem;">single inference &nbsp;→&nbsp; $p_\theta(x_2\mid x_S),\; p_\theta(x_3\mid x_S)$</div>
+  </div>
+  <ul>
+    <li>Unmasking <strong>one</strong> token per step wastes the other marginals.</li>
+    <li>Unmasking <strong>many</strong> per step cuts NFE — fewer forward passes, faster sampling.</li>
+  </ul>
+  <div class="highlight">
+    <p>Parallel decoding is the <strong>natural</strong> dLLM-native mode.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 22 — DAPD: Formal Problem (NEW) -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="pill" style="margin-bottom:12px;">DAPD</div>
+  <h2>Parallel Decoding: A Formal Problem</h2>
+  <div class="divider"></div>
+  <p>The dLLM exposes marginals $p_\theta(x_i \mid x_S)$ on the masked set $\mathcal{M}$. Unmasking $U \subseteq \mathcal{M}$ by independent draws is exact <strong>iff</strong> the joint factorizes:</p>
+  <div class="math-block" style="margin:10px 0;">$$p_\theta(x_U \mid x_S) \;=\; \prod_{i\in U} p_\theta(x_i \mid x_S).$$</div>
+  <p>Otherwise the parallel-decoding error is the <strong>total correlation</strong>:</p>
+  <div class="math-block" style="margin:10px 0;">$$\mathrm{TC}(x_U \mid x_S) \;=\; D_{\mathrm{KL}}\!\Bigl(p_\theta(x_U \mid x_S)\,\Big\|\,\textstyle\prod_{i\in U} p_\theta(x_i \mid x_S)\Bigr) \;\ge\; 0.$$</div>
+  <div class="cite">Kim, Jeon, Jeon, No, "Dependency-Aware Parallel Decoding via Attention for Diffusion LLMs", ICML 2026.</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 23 — DAPD: The Challenge -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="pill" style="margin-bottom:12px;">DAPD</div>
+  <h2>The Challenge: Marginals, not the Joint</h2>
+  <div class="divider"></div>
+  <p>Per step the model gives <strong>marginals</strong> $p_\theta(x_i \mid x_S)$, <strong>not</strong> the joint.</p>
+  <div class="big-tokens" style="display:flex; flex-direction:column; align-items:center; gap:18px; margin:24px 0 18px;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span class="token token-fixed">The</span>
+      <span class="token token-mask">[M]</span>
+      <span class="token token-mask">[M]</span>
+      <span class="token token-fixed">is</span>
+      <span class="token token-fixed">blue</span>
+    </div>
+    <div style="color:var(--gray-text); font-size:1.2rem;">↓ sample positions 2 and 3 <strong>independently</strong></div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span class="token token-fixed">The</span>
+      <span class="token token-gen">big</span>
+      <span class="token token-gen">sky</span>
+      <span class="token token-fixed">is</span>
+      <span class="token token-fixed">blue</span>
+      <span style="color:var(--warn); font-weight:700; margin-left:14px; font-size:1.9rem;">✗</span>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Independence <strong>breaks</strong> coupling. $\mathrm{TC} > 0$ → incoherent joint.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 24 — DAPD: Sampling on a dependency graph -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="pill" style="margin-bottom:12px;">DAPD</div>
+  <h2>Sampling on a Dependency Graph</h2>
+  <div class="divider"></div>
+  <div style="display:flex; justify-content:flex-start; align-items:flex-start; gap:18px; margin:4px 0 0;">
+
+    <!-- LEFT: Base graph (slightly smaller) -->
+    <div style="display:flex; flex-direction:column; align-items:flex-start; flex:0 0 44%;">
+      <svg viewBox="0 0 540 340" style="display:block;width:100%;max-width:460px;">
+        <g stroke="#003876" stroke-width="1.8" fill="none">
+          <line x1="157" y1="98"  x2="103" y2="172"/>
+          <line x1="185" y1="96"  x2="255" y2="174"/>
+          <line x1="355" y1="96"  x2="285" y2="174"/>
+          <line x1="383" y1="98"  x2="437" y2="172"/>
+          <line x1="106" y1="206" x2="164" y2="264"/>
+          <line x1="254" y1="206" x2="196" y2="264"/>
+          <line x1="287" y1="204" x2="363" y2="266"/>
+          <line x1="436" y1="207" x2="394" y2="263"/>
+        </g>
+        <g font-family="Yonsei, Noto Sans, Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle">
+          <circle cx="170" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="170" y="89">B</text>
+          <circle cx="370" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="370" y="89">C</text>
+          <circle cx="90"  cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="90"  y="199">D</text>
+          <circle cx="270" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="270" y="199">E</text>
+          <circle cx="450" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="450" y="199">F</text>
+          <circle cx="180" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="180" y="289">G</text>
+          <circle cx="380" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="380" y="289">H</text>
+        </g>
+      </svg>
+      <p style="text-align:center; color:var(--gray-text); margin-top:2px;">dependency graph</p>
+    </div>
+
+    <!-- RIGHT: two stacked options (caption left of diagram), shifted up -->
+    <div style="display:flex; flex-direction:column; gap:18px; flex:1 1 auto; margin-top:-70px;">
+
+      <!-- Option 1: sample E first (E faded) -->
+      <div style="display:flex; align-items:center; gap:8px;">
+        <p style="margin:0; font-weight:600; color:var(--yonsei-blue); flex:0 0 28%; text-align:right;">Sample E&nbsp;first?</p>
+        <svg viewBox="0 50 540 264" style="display:block;flex:1;max-width:460px;">
+          <g stroke="#003876" stroke-width="1.8" fill="none">
+            <line x1="157" y1="98"  x2="103" y2="172"/>
+            <line x1="383" y1="98"  x2="437" y2="172"/>
+            <line x1="106" y1="206" x2="164" y2="264"/>
+            <line x1="436" y1="207" x2="394" y2="263"/>
+          </g>
+          <g stroke="#003876" stroke-width="1.8" fill="none" stroke-dasharray="6 5" opacity="0.55">
+            <line x1="185" y1="96"  x2="255" y2="174"/>
+            <line x1="355" y1="96"  x2="285" y2="174"/>
+            <line x1="254" y1="206" x2="196" y2="264"/>
+            <line x1="287" y1="204" x2="363" y2="266"/>
+          </g>
+          <g font-family="Yonsei, Noto Sans, Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle">
+            <circle cx="170" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="170" y="89">B</text>
+            <circle cx="370" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="370" y="89">C</text>
+            <circle cx="90"  cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="90"  y="199">D</text>
+            <g opacity="0.3">
+              <circle cx="270" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="270" y="199">E</text>
+            </g>
+            <circle cx="450" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="450" y="199">F</text>
+            <circle cx="180" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="180" y="289">G</text>
+            <circle cx="380" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="380" y="289">H</text>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Option 2: sample D first (D faded) -->
+      <div style="display:flex; align-items:center; gap:8px;">
+        <p style="margin:0; font-weight:600; color:var(--yonsei-blue); flex:0 0 28%; text-align:right;">Sample D&nbsp;first?</p>
+        <svg viewBox="0 50 540 264" style="display:block;flex:1;max-width:460px;">
+          <g stroke="#003876" stroke-width="1.8" fill="none">
+            <line x1="185" y1="96"  x2="255" y2="174"/>
+            <line x1="355" y1="96"  x2="285" y2="174"/>
+            <line x1="383" y1="98"  x2="437" y2="172"/>
+            <line x1="254" y1="206" x2="196" y2="264"/>
+            <line x1="287" y1="204" x2="363" y2="266"/>
+            <line x1="436" y1="207" x2="394" y2="263"/>
+          </g>
+          <g stroke="#003876" stroke-width="1.8" fill="none" stroke-dasharray="6 5" opacity="0.55">
+            <line x1="157" y1="98"  x2="103" y2="172"/>
+            <line x1="106" y1="206" x2="164" y2="264"/>
+          </g>
+          <g font-family="Yonsei, Noto Sans, Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle">
+            <circle cx="170" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="170" y="89">B</text>
+            <circle cx="370" cy="80"  r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="370" y="89">C</text>
+            <g opacity="0.3">
+              <circle cx="90"  cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="90"  y="199">D</text>
+            </g>
+            <circle cx="270" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="270" y="199">E</text>
+            <circle cx="450" cy="190" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="450" y="199">F</text>
+            <circle cx="180" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="180" y="289">G</text>
+            <circle cx="380" cy="280" r="24" fill="#ffffff" stroke="#003876" stroke-width="2"/><text x="380" y="289">H</text>
+          </g>
+        </svg>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 25 — DAPD: Parallel sampling = graph coloring -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="pill" style="margin-bottom:12px;">DAPD</div>
+  <h2>Parallel Sampling $=$ Graph Coloring</h2>
+  <div class="divider"></div>
+  <div style="display:flex; justify-content:center; margin:8px 0 6px;">
+    <svg viewBox="0 0 540 340" style="display:block;width:100%;max-width:420px;">
+      <g stroke="#003876" stroke-width="1.8" fill="none">
+        <line x1="157" y1="98"  x2="103" y2="172"/>
+        <line x1="185" y1="96"  x2="255" y2="174"/>
+        <line x1="355" y1="96"  x2="285" y2="174"/>
+        <line x1="383" y1="98"  x2="437" y2="172"/>
+        <line x1="106" y1="206" x2="164" y2="264"/>
+        <line x1="254" y1="206" x2="196" y2="264"/>
+        <line x1="287" y1="204" x2="363" y2="266"/>
+        <line x1="436" y1="207" x2="394" y2="263"/>
+      </g>
+      <g font-family="Yonsei, Noto Sans, Arial, sans-serif" font-size="22" font-weight="700" text-anchor="middle" fill="#ffffff">
+        <circle cx="170" cy="80"  r="22" style="fill:var(--warn);" stroke="#003876" stroke-width="2"/><text x="170" y="88">B</text>
+        <circle cx="370" cy="80"  r="22" style="fill:var(--success);" stroke="#003876" stroke-width="2"/><text x="370" y="88">C</text>
+        <circle cx="90"  cy="190" r="22" fill="#003876" stroke="#003876" stroke-width="2"/><text x="90"  y="198">D</text>
+        <circle cx="270" cy="190" r="22" fill="#003876" stroke="#003876" stroke-width="2"/><text x="270" y="198">E</text>
+        <circle cx="450" cy="190" r="22" style="fill:var(--warn);" stroke="#003876" stroke-width="2"/><text x="450" y="198">F</text>
+        <circle cx="180" cy="280" r="22" style="fill:var(--warn);" stroke="#003876" stroke-width="2"/><text x="180" y="288">G</text>
+        <circle cx="380" cy="280" r="22" style="fill:var(--success);" stroke="#003876" stroke-width="2"/><text x="380" y="288">H</text>
+      </g>
+    </svg>
+  </div>
+  <p style="text-align:center; margin:4px 0 0;">Edge $(i,j)$ $\Leftrightarrow$ $\mathrm{TC}$ contribution $>\epsilon$. A color class is a conditionally-independent set.</p>
+  <div class="highlight" style="margin-top:8px;">
+    <p>Minimize steps (NFE) $=$ fewest color classes $=$ <strong>chromatic number</strong> $\chi(G)$.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 26 — DAPD: Attention as dependency oracle -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="pill" style="margin-bottom:12px;">DAPD</div>
+  <h2>Attention $=$ Dependency Oracle</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Nodes</strong> = masked positions (random variables $x_i$).</li>
+    <li><strong>Edges</strong> = dependencies between them — <em>that</em> is the dependency graph.</li>
+  </ul>
+  <p>Use the model's own self-attention as the coupling signal:</p>
+  <div class="math-block">$$s_{ij} \;=\; \tfrac{1}{2}\bigl(a_{ij} + a_{ji}\bigr).$$</div>
+  <p>Edge $(i,j)$ when $s_{ij} > \tau_t$ — a tractable surrogate for the total-correlation test.</p>
+  <div class="highlight">
+    <p>Training-free. No auxiliary model.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 27 — DAPD: Algorithm -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="pill" style="margin-bottom:12px;">DAPD</div>
+  <h2>Algorithm: Coloring with Lookahead</h2>
+  <div class="divider"></div>
+  <div class="dapd-algo" style="max-width:980px; margin:18px auto 14px;">
+    <ol>
+      <li>Read symmetric attention scores $s_{ij}$ between masked positions.</li>
+      <li>Build the dependency graph: edge $(i,j)$ when $s_{ij} > \tau_t$.</li>
+      <li><strong>Color high-degree nodes first</strong> (Welsh–Powell): hubs get their own color and the remaining graph decouples.</li>
+      <li>Unmask one color class per step. Recompute attention. Repeat.</li>
+    </ol>
+  </div>
+  <p style="text-align:center;">Lookahead minimizes <em>total</em> steps, not just the current batch size.</p>
+  <p style="text-align:center; color:var(--gray-text); margin-top:4px;">(<strong>Not</strong> greedy maximum independent set — that minimizes the current step, not the total.)</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 28 — Section divider 05: More from the lab -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>More from the Lab</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Rainbow Padding, safety, watermarking, reversal curse, info theory</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 29 — Rainbow Padding (compressed) -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="pill" style="margin-bottom:12px;">Rainbow Padding</div>
+  <h2>Rainbow Padding: Curing &lt;eos&gt; Overflow</h2>
+  <div class="divider"></div>
+  <p>SFT reuses <span class="token token-eos">&lt;eos&gt;</span> as terminator <em>and</em> placeholder → a positional bias:</p>
+  <div class="math-block" style="margin:8px 0;">$$\Pr_\theta(\texttt{eos} \mid \text{position } i) \;\uparrow\; \text{as}\; i \to N.$$</div>
+  <p>Confidence decoding unmasks <span class="token token-eos">&lt;eos&gt;</span> first; bidirectional context propagates it backward → the answer collapses.</p>
+  <div style="margin:10px 0; line-height:2.0; text-align:center;">
+    <span class="token token-gen">response</span><span class="token token-eos">eos</span><span class="token token-pad">pad&#x2081;</span><span class="token token-pad2">pad&#x2082;</span><span class="token token-pad3">pad&#x2083;</span><span class="token token-pad">pad&#x2081;</span><span class="token token-pad2">pad&#x2082;</span><span class="token token-pad3">pad&#x2083;</span><span class="token token-pad">pad&#x2081;</span><span class="token token-pad2">pad&#x2082;</span>
+  </div>
+  <div class="highlight">
+    <p>Fix: a deterministic cycle of <strong>distinct</strong> pad tokens breaks the bias. ICLR 2026.</p>
+  </div>
+  <div class="cite">Kim, Jeon, Kim, Jeung, No, "Rainbow Padding: Mitigating Early Termination in Instruction-Tuned Diffusion LLMs", ICLR 2026.</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 30 — Lab portfolio grid (compressed) -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>More from the Lab</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="gap:16px 28px;">
+    <div class="card">
+      <h3>Information-Theoretic Discrete Diffusion</h3>
+      <p>Exact entropy / mutual-information identities for the masked process. <strong>NeurIPS 2025.</strong></p>
+    </div>
+    <div class="card">
+      <h3>Reversal Curse, Mitigated</h3>
+      <p>Any-order training breaks the "A is B $\Rightarrow$ B is A" failure. <strong>Preprint 2026.</strong></p>
+    </div>
+    <div class="card">
+      <h3>A2D — Safety Alignment</h3>
+      <p>Any-order, any-step token-level safety for dLLMs. <strong>ICLR 2026.</strong></p>
+    </div>
+    <div class="card">
+      <h3>dgMARK — Watermarking</h3>
+      <p>Decoding-order watermark; robust and distortion-aware. <strong>ICML 2026.</strong></p>
+    </div>
+  </div>
+  <div class="cite">Jeon, Shin, Jeon, No (NeurIPS 2025) · Jeon et al. (2026) · Jeung et al. (ICLR 2026) · Hong, No (ICML 2026).</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 31 — Q&A -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide end-slide">
+  <div class="big-word">Q&amp;A</div>
+  <p class="big-word-sub">Albert No &nbsp;·&nbsp; Yonsei University</p>
+</div>
+
+</div><!-- end deck -->
+
+<div class="slide-num" id="slideNum">1 / 31</div>
+
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

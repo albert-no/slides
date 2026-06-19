@@ -31,7 +31,7 @@ Exams live one level up in `../exam/`.
 - **DP ↔ unlearning**: certified $(\varepsilon,\delta)$-unlearning reuses the DP definition from `01-dp/dp8-fl.html:375` — same bound, different distribution comparison.
 - **memorization ↔ unlearning ↔ MIA**: memorization is the *signal* unlearning aims to remove and MIA aims to detect. `03-memorization/memorization-diffusion.html` + `memorization-llm.html` motivate the other two; defenses slide flows directly into `05-unlearning/`. `05-unlearning/unlearning1-foundations.html:487` reuses the SALUN MIA-Efficacy column.
 - **memorization ↔ watermark**: both about provenance under copyright pressure, but opposite directions — memorization detects unintended retention, watermarking adds intended traceability. Same lawsuits motivate both.
-- **dgMARK ↔ watermark**: lab thread for diffusion LLMs — full context in `talks/dllm/dllm.html:524-569`, broader watermark survey in `06-watermark/`.
+- **dgMARK ↔ watermark**: lab thread for diffusion LLMs — full context in `talks/kics260521dllm/kics260521dllm.html:524-569`, broader watermark survey in `06-watermark/`.
 - **Theoretical diffusion (`courses/infotheory/lectures/07-diffusion/`) vs from-scratch (`02-generative/`)**: same math, different presentation. The infotheory series uses information-theoretic / hierarchical-VAE framing (cleaner for theory students); the privacy series uses the Bayes-+-Taylor route and goes further (5 lectures including SDE, DDIM, CFG, discrete).
 
 ## Quick lookup — cross-deck pointers

@@ -1,13 +1,15 @@
-# dllm/ — Diffusion LLMs (single talk)
+# kics260521dllm/ — Diffusion LLMs (KICS, general-audience version)
 
-Invited talk: **Why Diffusion LLMs Behave Differently, and How to Control Them.** Motivates dLLMs from continuous diffusion, summarizes recent progress, then focuses on two lab papers (Rainbow Padding, DAPD) with brief mentions of A2D, dgMARK, reversal curse, info-theoretic diffusion. No companion notes — all proof/intuition is in-deck.
+Invited talk (KICS, 2026-05-21): **Why Diffusion LLMs Behave Differently, and How to Control Them.** Motivates dLLMs from continuous diffusion, summarizes recent progress, then focuses on two lab papers (Rainbow Padding, DAPD) with brief mentions of A2D, dgMARK, reversal curse, info-theoretic diffusion. No companion notes — all proof/intuition is in-deck.
+
+Math-conference variant (more SDE/SEDD/RADD theory, formal DAPD, compressed lab work): `../math260624dllm/math260624dllm.html`.
 
 ## Files
 
-- `dllm.html` — the deck
+- `kics260521dllm.html` — the deck
 - `sde.png` — Song et al. SDE forward/reverse figure (slide 3)
 
-## dllm.html
+## kics260521dllm.html
 
 **Topic:** Inductive biases, failure modes, and control surfaces of masked discrete diffusion LLMs.
 

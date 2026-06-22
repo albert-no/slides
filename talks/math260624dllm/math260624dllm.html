@@ -35,7 +35,7 @@
 .dapd-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
 .dapd-algo ol li + li { border-top: 1px solid var(--slate); }
 /* dLLMs-in-practice product panels */
-.practice-img img { display:block; width:auto; max-width:100%; max-height:168px; margin:0 auto 12px; border-radius:10px; border:1px solid var(--slate); }
+.practice-img img { display:block; width:auto; max-width:100%; max-height:252px; margin:0 auto 12px; border-radius:10px; border:1px solid var(--slate); }
 </style>
 
 <div class="deck" id="deck">
@@ -54,63 +54,13 @@
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
-<!-- SLIDE 2 — Contents -->
-<!-- ════════════════════════════════════════════════════════ -->
-<div class="slide">
-  <h2>Contents</h2>
-  <div class="divider"></div>
-  <div class="toc-list">
-    <div class="toc-item">
-      <div class="toc-num">01</div>
-      <div class="toc-rule"></div>
-      <div>
-        <div class="toc-label">Gaussian diffusion theory</div>
-        <div class="toc-sub">Forward SDE, Fokker–Planck, reverse SDE, the score</div>
-      </div>
-    </div>
-    <div class="toc-item">
-      <div class="toc-num">02</div>
-      <div class="toc-rule"></div>
-      <div>
-        <div class="toc-label">Discrete diffusion &amp; its losses</div>
-        <div class="toc-sub">Concrete score, SEDD, RADD, any-order autoregression</div>
-      </div>
-    </div>
-    <div class="toc-item">
-      <div class="toc-num">03</div>
-      <div class="toc-rule"></div>
-      <div>
-        <div class="toc-label">dLLMs at scale and in practice</div>
-        <div class="toc-sub">LLaDA, data-constrained scaling, Mercury, DiffusionGemma</div>
-      </div>
-    </div>
-    <div class="toc-item">
-      <div class="toc-num">04</div>
-      <div class="toc-rule"></div>
-      <div>
-        <div class="toc-label">DAPD — dependency-aware parallel decoding</div>
-        <div class="toc-sub">A formal problem; attention-induced graph coloring (ICML 2026)</div>
-      </div>
-    </div>
-    <div class="toc-item">
-      <div class="toc-num">05</div>
-      <div class="toc-rule"></div>
-      <div>
-        <div class="toc-label">More from the lab</div>
-        <div class="toc-sub">Rainbow Padding, A2D, dgMARK, reversal curse, info theory</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════════════════ -->
-<!-- SLIDE 3 — Section divider 01 -->
+<!-- SLIDE 2 — Section divider 01: Diffusion -->
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide section-slide left">
   <div class="section-num">01</div>
-  <h1>Gaussian Diffusion Theory</h1>
+  <h1>Diffusion</h1>
   <div class="divider"></div>
-  <p class="subtitle">SDEs, Fokker–Planck, time reversal, and the score</p>
+  <p class="subtitle">From Gaussian SDEs and the score to discrete diffusion losses</p>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
@@ -130,34 +80,61 @@
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
-<!-- SLIDE 5 — Forward SDE and Fokker–Planck (NEW) -->
+<!-- SLIDE 5 — Itô diffusion and Anderson's theorem -->
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide">
-  <h2>Forward SDE and Its Marginal Law</h2>
+  <h2>Itô Diffusion and Anderson's Theorem</h2>
   <div class="divider"></div>
-  <p>Noising as an Itô diffusion (VP: $f=-\tfrac{\beta_t}{2}x$; VE: $f=0$):</p>
-  <div class="math-block" style="margin:10px 0;">$$dX_t = f(X_t,t)\,dt + g(t)\,dW_t,\qquad X_0\sim p_{\text{data}}.$$</div>
-  <p>The marginal density $p_t$ solves the <strong>Fokker–Planck</strong> PDE:</p>
-  <div class="math-block" style="margin:10px 0;">$$\partial_t\,p_t(x) = -\partial_x\bigl(f(x,t)\,p_t(x)\bigr) + \tfrac{g^2(t)}{2}\,\partial_x^2\,p_t(x).$$</div>
-  <div class="highlight">
-    <p>Training tracks the <strong>marginals</strong> $\{p_t\}$, never the sample paths.</p>
+  <p style="margin:4px 0;">Forward noising is an Itô diffusion (VP: $f=-\tfrac{\beta_t}{2}x$; VE: $f=0$):</p>
+  <div class="math-block" style="margin:6px 0; padding:12px 28px;">$$dX_t = f(X_t,t)\,dt + g(t)\,dW_t,\qquad X_0\sim p_{\text{data}}.$$</div>
+  <div class="card" style="margin:8px 0; padding:14px 22px;">
+    <h3>Theorem (Anderson, 1982).</h3>
+    <p style="margin:4px 0;">Time-reversal keeps the <strong>same marginals</strong> $p_t$ and is again an Itô diffusion:</p>
+    <div class="math-block" style="margin:4px 0 0; padding:12px 28px;">$$d\bar X_t = \bigl(f - g^2\,\partial_x\log p_t(\bar X_t)\bigr)\,dt + g(t)\,d\bar W_t.$$</div>
+    <p style="margin:8px 0 0; font-size:1.15rem; color:var(--gray-text);">Proof key: both marginals solve the same <strong>Fokker–Planck</strong> PDE — uniqueness forces $\bar p_t = p_t$.</p>
   </div>
+  <p style="margin:8px 0 0;">Everything reduces to the <strong>score</strong> $\partial_x\log p_t$ — learned by denoising score matching.</p>
+  <div class="cite">Anderson, "Reverse-time diffusion equation models", Stoch. Proc. Appl. 1982; Vincent, Neural Computation 2011.</div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
-<!-- SLIDE 6 — Reverse SDE and the Score (NEW) -->
+<!-- SLIDE 6 — Sampling via the reverse SDE -->
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide">
-  <h2>Reverse SDE and the Score</h2>
+  <h2>Sampling: Integrate the Reverse SDE</h2>
   <div class="divider"></div>
-  <p>Anderson's time reversal — same marginals $p_t$, run backward:</p>
-  <div class="math-block" style="margin:10px 0;">$$d\bar X_t = \bigl(f - g^2\,\partial_x\log p_t(\bar X_t)\bigr)\,dt + g(t)\,d\bar W_t.$$</div>
-  <p>Deterministic <strong>probability-flow ODE</strong>, identical marginals:</p>
-  <div class="math-block" style="margin:10px 0;">$$\dot{\bar X}_t = f - \tfrac{1}{2}\,g^2\,\partial_x\log p_t(\bar X_t).$$</div>
-  <div class="highlight">
-    <p>Everything reduces to the <strong>score</strong> $\partial_x\log p_t$ — learned by denoising score matching.</p>
+  <p>Anderson turns generation into an initial-value problem: start from easy noise, flow back to data.</p>
+
+  <div style="max-width:1120px; margin:24px auto 0;">
+    <!-- Forward chain -->
+    <div style="display:grid; grid-template-columns:185px repeat(5,1fr); align-items:center; font-size:2.5rem; padding:6px 0;">
+      <span style="color:var(--gray-text); font-weight:600; font-size:1.7rem;">Forward:</span>
+      <span style="text-align:center;">$X_0$</span>
+      <span style="text-align:center;">$\to$</span>
+      <span style="text-align:center;">$X_t$</span>
+      <span style="text-align:center;">$\to$</span>
+      <span style="text-align:center;">$X_T$</span>
+    </div>
+    <p style="text-align:center; font-size:1.5rem; color:var(--gray-text); margin:6px 0 0;">data &nbsp;$\to$&nbsp; noise: &nbsp;$dX_t = f\,dt + g\,dW_t$</p>
+
+    <!-- Equality bar -->
+    <div style="text-align:center; padding:20px 0; color:var(--success); font-size:2rem; font-weight:700;">$X_t \;\stackrel{(d)}{=}\; \bar X_t$ &nbsp;for every $t$ &nbsp;(same marginal $p_t$)</div>
+
+    <!-- Reverse chain -->
+    <div style="display:grid; grid-template-columns:185px repeat(5,1fr); align-items:center; font-size:2.5rem; padding:6px 0;">
+      <span style="color:var(--gray-text); font-weight:600; font-size:1.7rem;">Sampling:</span>
+      <span style="text-align:center;">$\bar X_0$</span>
+      <span style="text-align:center; color:var(--yonsei-blue);">$\leftarrow$</span>
+      <span style="text-align:center;">$\bar X_t$</span>
+      <span style="text-align:center; color:var(--yonsei-blue);">$\leftarrow$</span>
+      <span style="text-align:center;">$\bar X_T$</span>
+    </div>
+    <p style="text-align:center; font-size:1.5rem; color:var(--gray-text); margin:6px 0 0;">noise &nbsp;$\to$&nbsp; data: &nbsp;$d\bar X_t = (f - g^2\,\partial_x\log p_t)\,dt + g\,d\bar W_t$</p>
   </div>
-  <div class="cite">Anderson, "Reverse-time diffusion equation models", Stoch. Proc. Appl. 1982; Vincent, Neural Computation 2011.</div>
+
+  <div class="highlight" style="margin-top:20px;">
+    <p>Draw $\bar X_T \sim p_T \approx \mathcal{N}(0,I)$; integrate down to $t=0$ $\Rightarrow$ $\bar X_0 \sim p_{\text{data}}$.</p>
+  </div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
@@ -215,45 +192,19 @@
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
-<!-- SLIDE 9 — Discrete analogue: a ratio -->
+<!-- Discrete analogue: a ratio (merged concept + concrete score) -->
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide">
   <h2>Discrete Analogue: A Ratio, Not a Gradient</h2>
   <div class="divider"></div>
-  <p>On a finite state space the gradient $\partial_x\log p_t$ has no meaning. Forward and reverse jump rates on a continuous-time Markov chain:</p>
-  <div class="math-block">$$\begin{aligned}
-    \text{Forward:}\quad & Q_t(x \to y), \\[2pt]
-    \text{Reverse:}\quad & \bar Q_t(y \to x) \;=\; Q_t(x \to y)\,\cdot\,\frac{p_t(x)}{p_t(y)}.
-  \end{aligned}$$</div>
-  <div class="highlight">
-    <p>The reverse process is driven by the <strong>ratio</strong> $p_t(x)/p_t(y)$ — the discrete analogue of the score.</p>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════════════════ -->
-<!-- SLIDE 10 — Section divider 02 -->
-<!-- ════════════════════════════════════════════════════════ -->
-<div class="slide section-slide left">
-  <div class="section-num">02</div>
-  <h1>Discrete Diffusion and Its Losses</h1>
-  <div class="divider"></div>
-  <p class="subtitle">Concrete scores, score entropy, and the time-free reduction</p>
-</div>
-
-<!-- ════════════════════════════════════════════════════════ -->
-<!-- SLIDE 11 — SEDD: concrete score & reverse rate (NEW) -->
-<!-- ════════════════════════════════════════════════════════ -->
-<div class="slide">
-  <div class="pill" style="margin-bottom:12px;">SEDD</div>
-  <h2>Concrete Score and the Reverse Rate</h2>
-  <div class="divider"></div>
-  <p>Continuous-time Markov chain on a vocabulary, rate matrix $Q_t$: &nbsp; $\partial_t\,p_t = Q_t\,p_t.$</p>
-  <p>The reverse chain's rate is built from the <strong>concrete score</strong> $p_t(y)/p_t(x)$:</p>
+  <p>On a finite state space the gradient $\partial_x\log p_t$ has no meaning.</p>
+  <p>A continuous-time Markov chain noises the data:</p>
+  <p style="text-align:center; font-size:1.6rem; margin:8px 0;">$\boldsymbol{\partial_t\,p_t = Q_t\,p_t}$</p>
   <div class="math-block">$$\bar Q_t(x,y) \;=\; \frac{p_t(y)}{p_t(x)}\,Q_t(y,x),\qquad y\neq x.$$</div>
   <div class="highlight">
-    <p>Learn $s_\theta(x,t)_y \approx \dfrac{p_t(y)}{p_t(x)}$ — a vector of ratios, the discrete score.</p>
+    <p>Learn the <strong>concrete score</strong> $s_\theta(x,t)_y \approx p_t(y)/p_t(x)$ — the discrete gradient.</p>
   </div>
-  <div class="cite">Lou, Meng, Ermon, "Discrete Diffusion Modeling by Estimating the Ratios of the Data Distribution", ICML 2024.</div>
+  <div class="cite">Reverse-rate identity: Kelly, "Reversibility and Stochastic Networks", 1980.<br>In discrete diffusion: Sun, Yu, Dai, Schuurmans, Dai, "Score-Based Continuous-Time Discrete Diffusion Models", ICLR 2023.</div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
@@ -285,7 +236,7 @@
     <p>For absorbing (masked) diffusion the concrete score factorizes:</p>
     <div class="math-block" style="margin:8px 0 4px;">$$s_t(y\mid x_t) \;=\; \underbrace{\frac{1-\alpha_t}{\alpha_t}}_{\text{known scalar}} \cdot\; \underbrace{p_\theta\bigl(y \,\big|\, x_t^{\text{unmasked}}\bigr)}_{\text{time-free clean conditional}}.$$</div>
   </div>
-  <p>The clean conditional depends on <strong>which tokens are revealed</strong>, not on $t$ — so the network <strong>drops $t$</strong> as an input.</p>
+  <p>The clean conditional is <strong>$t$-independent</strong> — the network drops $t$ as an input.</p>
   <div class="cite">Ou et al., "Your Absorbing Discrete Diffusion Secretly Models the Conditional Distributions of Clean Data", NeurIPS 2024.</div>
 </div>
 
@@ -294,19 +245,28 @@
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide">
   <div class="pill" style="margin-bottom:12px;">RADD</div>
-  <h2>ELBO $=$ Any-Order Autoregressive NLL</h2>
+  <h2>Training $=$ Any-Order GPT</h2>
   <div class="divider"></div>
-  <p>The absorbing NELBO collapses to a reweighted cross-entropy on masked tokens:</p>
-  <div class="math-block" style="margin:10px 0;">$$-\log p_\theta(x_0) \;\le\; \int_0^1 w(t)\,\mathbb{E}_{x_t}\!\left[\sum_{i\in\mathcal{M}_t} -\log p_\theta\bigl(x_0^{(i)} \mid x_t^{\text{unmasked}}\bigr)\right]dt,\quad w(t)=\tfrac{-\alpha_t'}{1-\alpha_t}.$$</div>
-  <p>Equivalently, an expectation over a uniform random order $\sigma$:</p>
-  <div class="math-block" style="margin:10px 0;">$$\mathbb{E}_{\sigma}\!\left[\sum_{k} -\log p_\theta\bigl(x_0^{\sigma(k)} \mid x_0^{\sigma(\lt k)}\bigr)\right].$$</div>
+  <p>One objective: <strong>predict any token from any partial subsequence</strong>, by cross-entropy.</p>
+  <div class="math-block" style="margin:18px 0;">$$\mathcal{L} \;=\; \mathbb{E}_{x_0,\,\sigma,\,k}\Bigl[\,-\log p_\theta\bigl(x_0^{\sigma(k)} \,\big|\, x_0^{\sigma(\lt k)}\bigr)\Bigr].$$</div>
+  <p style="text-align:center; color:var(--gray-text);">random order $\sigma$, random cut $k$ — over <strong>all</strong> orders.</p>
   <div class="highlight">
-    <p>Training is <strong>cross-entropy on masked positions</strong> — no time conditioning, no Bregman.</p>
+    <p>No time, no Bregman. A dLLM is an <strong>any-order GPT</strong>.</p>
   </div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
-<!-- SLIDE 15 — What a Trained dLLM Gives You -->
+<!-- Section divider 02: The dLLM -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>The dLLM</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A universal marginal predictor — LLaDA, scaling, and shipping systems</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- What a Trained dLLM Gives You -->
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide">
   <h2>What a Trained dLLM Gives You</h2>
@@ -327,16 +287,6 @@
   <div class="highlight">
     <p>A dLLM is a <strong>universal marginal predictor</strong>. The decoder is now a degree of freedom.</p>
   </div>
-</div>
-
-<!-- ════════════════════════════════════════════════════════ -->
-<!-- SLIDE 16 — Section divider 03 -->
-<!-- ════════════════════════════════════════════════════════ -->
-<div class="slide section-slide left">
-  <div class="section-num">03</div>
-  <h1>dLLMs at Scale and in Practice</h1>
-  <div class="divider"></div>
-  <p class="subtitle">LLaDA, data-constrained scaling, and shipping systems</p>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
@@ -386,6 +336,23 @@
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
+<!-- Scaling Beyond Masked Diffusion (Sahoo et al.) -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Scaling Beyond Masked Diffusion</h2>
+  <div class="divider"></div>
+  <p><strong>MDLM</strong> is the masked dLLM from the previous slides.<br>
+  Newer variants push the frontier: <strong>Duo</strong> and <strong>Eso-LMs</strong>.</p>
+  <div style="display:flex; justify-content:center; margin:6px 0;">
+    <img src="sahoo-pareto.png" alt="Speed–quality Pareto frontier: MDLM, Eso-LMs, Duo, AR" style="max-width:100%;height:auto;max-height:340px;display:block;">
+  </div>
+  <div class="highlight">
+    <p>Duo and Eso-LMs extend the speed–quality frontier well past MDLM.</p>
+  </div>
+  <div class="cite">Sahoo, Lamercier, Deschenaux, Yang, Liu, Thickstun, Jukic, "Scaling Beyond Masked Diffusion Language Models", ICML 2026.</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
 <!-- SLIDE 19 — dLLMs in Practice (NEW) -->
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide">
@@ -418,10 +385,11 @@
 <!-- SLIDE 20 — Section divider 04: DAPD -->
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide section-slide left">
-  <div class="section-num">04</div>
+  <div class="section-num">03</div>
   <h1>DAPD</h1>
   <div class="divider"></div>
   <p class="subtitle">Dependency-aware parallel decoding via attention &nbsp;·&nbsp; ICML 2026</p>
+  <p style="margin-top:14px; font-weight:500;">Bumjun Kim<sup>*</sup>, Dongjae Jeon<sup>*</sup>, Moongyu Jeon<sup>*</sup>, Albert No</p>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ -->
@@ -473,26 +441,25 @@
   <h2>The Challenge: Marginals, not the Joint</h2>
   <div class="divider"></div>
   <p>Per step the model gives <strong>marginals</strong> $p_\theta(x_i \mid x_S)$, <strong>not</strong> the joint.</p>
-  <div class="big-tokens" style="display:flex; flex-direction:column; align-items:center; gap:18px; margin:24px 0 18px;">
+  <div class="big-tokens" style="display:flex; flex-direction:column; align-items:center; gap:16px; margin:20px 0 16px;">
     <div style="display:flex; align-items:center; gap:10px;">
-      <span class="token token-fixed">The</span>
+      <span class="token token-fixed">Flying</span>
+      <span class="token token-fixed">to</span>
       <span class="token token-mask">[M]</span>
       <span class="token token-mask">[M]</span>
-      <span class="token token-fixed">is</span>
-      <span class="token token-fixed">blue</span>
     </div>
-    <div style="color:var(--gray-text); font-size:1.2rem;">↓ sample positions 2 and 3 <strong>independently</strong></div>
+    <div style="color:var(--gray-text); font-size:1.2rem;">jointly valid: &nbsp;<strong>New York</strong>&nbsp; or &nbsp;<strong>San Francisco</strong></div>
+    <div style="color:var(--gray-text); font-size:1.2rem;">↓ sample both positions <strong>independently</strong></div>
     <div style="display:flex; align-items:center; gap:10px;">
-      <span class="token token-fixed">The</span>
-      <span class="token token-gen">big</span>
-      <span class="token token-gen">sky</span>
-      <span class="token token-fixed">is</span>
-      <span class="token token-fixed">blue</span>
+      <span class="token token-fixed">Flying</span>
+      <span class="token token-fixed">to</span>
+      <span class="token token-gen">San</span>
+      <span class="token token-gen">York</span>
       <span style="color:var(--warn); font-weight:700; margin-left:14px; font-size:1.9rem;">✗</span>
     </div>
   </div>
   <div class="highlight">
-    <p>Independence <strong>breaks</strong> coupling. $\mathrm{TC} > 0$ → incoherent joint.</p>
+    <p>Each marginal is fine; the joint <strong>“San York”</strong> is not. $\mathrm{TC} > 0$ → incoherent.</p>
   </div>
 </div>
 
@@ -676,7 +643,7 @@
 <!-- SLIDE 28 — Section divider 05: More from the lab -->
 <!-- ════════════════════════════════════════════════════════ -->
 <div class="slide section-slide left">
-  <div class="section-num">05</div>
+  <div class="section-num">04</div>
   <h1>More from the Lab</h1>
   <div class="divider"></div>
   <p class="subtitle">Rainbow Padding, safety, watermarking, reversal curse, info theory</p>
@@ -738,7 +705,7 @@
 
 </div><!-- end deck -->
 
-<div class="slide-num" id="slideNum">1 / 31</div>
+<div class="slide-num" id="slideNum">1 / 29</div>
 
 <script defer src="../../reference/deck.js"></script>
 </body>

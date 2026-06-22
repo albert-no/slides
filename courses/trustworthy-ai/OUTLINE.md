@@ -34,7 +34,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 7 | `lec07-interpretability.html` | Interpretability & explainability | **drafted** (57 sl) |
 | 8 | `lec08-adversarial.html` | Adversarial examples (attack + defense) | **drafted** (56 sl) |
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **drafted** (55 sl) |
-| 10 | `lec10-jailbreak.html` | Jailbreaks & LLM safety | **drafted** (55 sl) |
+| 10 | `lec10-jailbreak.html` | Jailbreaks & LLM safety | **drafted** (54 sl) |
 | 11 | `lec11-prompt-injection.html` | Prompt injection & agentic safety | **drafted** (58 sl) |
 | 12 | `lec12-watermark.html` | Watermarking, deepfakes & provenance | **drafted** (55 sl) |
 | 13 | `lec13-fairness-defs.html` | Fairness I — definitions & impossibility | **drafted** (54 sl) |

@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Poisoning &amp; Backdoors — Trustworthy AI Lecture 9</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Trustworthy AI · Lecture 9</div>
+  <h1>Data Poisoning &amp;<br>Backdoors</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Attacking the model before it ever ships</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The Train-Time Threat</div><div class="toc-sub">Corrupt the data, not the query</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Data Poisoning</div><div class="toc-sub">Degrade the model, or flip one input</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Backdoors and Triggers</div><div class="toc-sub">A secret key that flips the output</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Web-Scale Poisoning</div><div class="toc-sub">How cheap it is to taint a dataset</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Backdoors in Language Models</div><div class="toc-sub">Poisoned tuning and sleeper agents</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Defenses, Frontier 2025–26</div><div class="toc-sub">Find the poison, scrub the model</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>The Train-Time Threat</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Corrupt the data, not the query</p>
+</div>
+
+<!-- 4. Two Places to Attack -->
+<div class="slide">
+  <h2>Two Places to Attack</h2>
+  <div class="divider"></div>
+  <p>A model has <strong>two vulnerable moments</strong>.</p>
+  <ul class="arrow">
+    <li>Training: when it learns from data</li>
+    <li>Inference: when it answers a query</li>
+  </ul>
+  <p class="muted">Adversarial examples hit inference. Today we hit training.</p>
+</div>
+
+<!-- 5. Inference-Time Recap -->
+<div class="slide">
+  <h2>The Inference-Time Attack</h2>
+  <div class="divider"></div>
+  <p>An adversarial example fools a <strong>finished model</strong>.</p>
+  <ul>
+    <li>The model is fixed, already deployed</li>
+    <li>Attacker perturbs one input at test time</li>
+    <li>A tiny change flips the prediction</li>
+  </ul>
+  <p class="muted">The data was clean. Only the query is malicious.</p>
+</div>
+
+<!-- 6. The Train-Time Attack -->
+<div class="slide">
+  <h2>The Train-Time Attack</h2>
+  <div class="divider"></div>
+  <p>Poisoning corrupts the model <strong>before it ships</strong>.</p>
+  <ul class="arrow">
+    <li>Attacker edits the training data</li>
+    <li>The model learns the wrong thing</li>
+    <li>Every later query inherits the flaw</li>
+  </ul>
+  <div class="highlight"><p>One tainted dataset, <strong>every</strong> future prediction at risk.</p></div>
+</div>
+
+<!-- 7. The Pipeline Has Cracks -->
+<div class="slide">
+  <h2>The Pipeline Has Cracks</h2>
+  <div class="divider"></div>
+  <p>Modern training data comes from <strong>strangers</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 460 150" style="width:100%;max-width:880px;">
+      <defs><marker id="pa" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#003876"/></marker></defs>
+      <rect x="14" y="52" width="104" height="46" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
+      <text x="66" y="73" font-size="15" fill="#003876" text-anchor="middle" font-weight="700">scraped</text>
+      <text x="66" y="91" font-size="15" fill="#003876" text-anchor="middle">web data</text>
+      <line x1="118" y1="75" x2="168" y2="75" stroke="#003876" stroke-width="2.5" marker-end="url(#pa)"/>
+      <rect x="170" y="52" width="104" height="46" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
+      <text x="222" y="80" font-size="15" fill="#003876" text-anchor="middle" font-weight="700">training</text>
+      <line x1="274" y1="75" x2="324" y2="75" stroke="#003876" stroke-width="2.5" marker-end="url(#pa)"/>
+      <rect x="326" y="52" width="118" height="46" rx="8" fill="#003876"/>
+      <text x="385" y="80" font-size="15" fill="#fff" text-anchor="middle" font-weight="700">model</text>
+      <text x="66" y="30" font-size="14" fill="#d94040" text-anchor="middle" font-weight="700">anyone can edit</text>
+      <line x1="66" y1="36" x2="66" y2="50" stroke="#d94040" stroke-width="2" marker-end="url(#pa)"/>
+    </svg>
+  </div>
+  <p class="muted">If anyone can contribute data, anyone can poison it.</p>
+</div>
+
+<!-- 8. A Supply-Chain Problem -->
+<div class="slide">
+  <h2>A Supply-Chain Problem</h2>
+  <div class="divider"></div>
+  <p>Think of training data as a <strong>supply chain</strong>.</p>
+  <ul>
+    <li>Ingredients arrive from many sources</li>
+    <li>One bad batch taints the product</li>
+    <li>You ship the flaw without noticing</li>
+  </ul>
+  <div class="cite cite-left">Gu, Dolan-Gavitt, and Garg, "BadNets: Identifying Vulnerabilities in the Machine Learning Model Supply Chain", 2017.</div>
+</div>
+
+<!-- 9. Why It Is Hard to Catch -->
+<div class="slide">
+  <h2>Why It Is Hard to Catch</h2>
+  <div class="divider"></div>
+  <p>Poison hides in <strong>plain sight</strong>.</p>
+  <ul class="arrow">
+    <li>Datasets hold millions of examples</li>
+    <li>No one inspects every row by hand</li>
+    <li>A few tainted rows look ordinary</li>
+  </ul>
+  <p class="muted">Scale is the attacker's friend.</p>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 10. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Data Poisoning</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Degrade the model, or flip one input</p>
+</div>
+
+<!-- 11. Two Goals -->
+<div class="slide">
+  <h2>Two Goals</h2>
+  <div class="divider"></div>
+  <p>Poisoning attacks split by <strong>what they want</strong>.</p>
+  <div class="grid-2">
+    <div class="card"><h3>Availability</h3><p>Wreck overall accuracy. Make the model useless.</p></div>
+    <div class="card"><h3>Targeted</h3><p>Keep accuracy high. Flip one chosen input.</p></div>
+  </div>
+  <p class="muted">Loud sabotage versus a quiet, hidden goal.</p>
+</div>
+
+<!-- 12. Availability Attacks -->
+<div class="slide">
+  <h2>Availability Attacks</h2>
+  <div class="divider"></div>
+  <p>Inject garbage to <strong>drag accuracy down</strong>.</p>
+  <ul>
+    <li>Flip labels on many examples</li>
+    <li>Add noisy or contradictory rows</li>
+    <li>The model fails to learn the task</li>
+  </ul>
+  <p class="muted">Crude, but effective against an open pipeline.</p>
+</div>
+
+<!-- 13. Poisoning the SVM -->
+<div class="slide">
+  <h2>Poisoning the SVM</h2>
+  <div class="divider"></div>
+  <p>The first formal study attacked a <strong>simple classifier</strong>.</p>
+  <ul class="arrow">
+    <li>SVM (Support Vector Machine), a clean test case</li>
+    <li>A few crafted points shift its boundary</li>
+    <li>Accuracy drops far more than expected</li>
+  </ul>
+  <div class="cite cite-left">Biggio, Nelson, and Laskov, "Poisoning Attacks against Support Vector Machines", ICML 2012.</div>
+</div>
+
+<!-- 14. How One Point Moves a Line -->
+<div class="slide">
+  <h2>How One Point Moves a Line</h2>
+  <div class="divider"></div>
+  <p>A boundary is a balance. One heavy point <strong>tilts it</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 460 200" style="width:100%;max-width:840px;">
+      <circle cx="90" cy="60" r="9" fill="#003876"/>
+      <circle cx="130" cy="95" r="9" fill="#003876"/>
+      <circle cx="105" cy="130" r="9" fill="#003876"/>
+      <circle cx="330" cy="70" r="9" fill="#6b7280"/>
+      <circle cx="370" cy="110" r="9" fill="#6b7280"/>
+      <circle cx="345" cy="145" r="9" fill="#6b7280"/>
+      <line x1="230" y1="20" x2="230" y2="180" stroke="#6b7280" stroke-width="2.5" stroke-dasharray="6 5"/>
+      <text x="230" y="16" font-size="14" fill="#6b7280" text-anchor="middle">clean boundary</text>
+      <circle cx="300" cy="50" r="11" fill="#d94040"/>
+      <text x="300" y="34" font-size="13" fill="#d94040" text-anchor="middle" font-weight="700">poison</text>
+      <line x1="285" y1="20" x2="190" y2="180" stroke="#d94040" stroke-width="2.5"/>
+      <text x="150" y="180" font-size="14" fill="#d94040" font-weight="700">shifted</text>
+    </svg>
+  </div>
+  <p class="muted">Outliers pull hardest. The attacker plants the outlier.</p>
+</div>
+
+<!-- 15. Targeted Attacks -->
+<div class="slide">
+  <h2>Targeted Attacks</h2>
+  <div class="divider"></div>
+  <p>Far stealthier: leave accuracy <strong>untouched</strong>.</p>
+  <ul class="arrow">
+    <li>Pick one target input in advance</li>
+    <li>Poison the data to misclassify it</li>
+    <li>Every other input behaves normally</li>
+  </ul>
+  <div class="highlight"><p>No accuracy drop means <strong>no obvious alarm</strong>.</p></div>
+</div>
+
+<!-- 16. Clean-Label Poison -->
+<div class="slide">
+  <h2>Clean-Label Poison</h2>
+  <div class="divider"></div>
+  <p>The sneakiest twist: poison with <strong>correct labels</strong>.</p>
+  <ul>
+    <li>Every poison image is labeled honestly</li>
+    <li>A human reviewer sees nothing wrong</li>
+    <li>The pixels carry the hidden attack</li>
+  </ul>
+  <div class="cite cite-left">Shafahi et al., "Poison Frogs! Targeted Clean-Label Poisoning Attacks on Neural Networks", NeurIPS 2018.</div>
+</div>
+
+<!-- 17. Poison Frogs -->
+<div class="slide">
+  <h2>Poison Frogs</h2>
+  <div class="divider"></div>
+  <p>Make a <strong>frog</strong> that the model files next to airplanes.</p>
+  <ul class="num">
+    <li>Start from a real, correctly labeled frog.</li>
+    <li>Nudge its pixels toward a target airplane.</li>
+    <li>Train: the model's space gets warped.</li>
+  </ul>
+  <p>Now that one airplane is read as a <strong>frog</strong>.</p>
+  <div class="cite cite-left">Shafahi et al., "Poison Frogs! Targeted Clean-Label Poisoning Attacks", NeurIPS 2018.</div>
+</div>
+
+<!-- 18. Feature-Space Collision -->
+<div class="slide">
+  <h2>Feature-Space Collision</h2>
+  <div class="divider"></div>
+  <p>Poison and target <strong>collide</strong> in the model's inner space.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 460 180" style="width:100%;max-width:840px;">
+      <text x="110" y="24" font-size="14" fill="#666" text-anchor="middle">pixel space</text>
+      <circle cx="60" cy="80" r="11" fill="#2e8b57"/>
+      <text x="60" y="112" font-size="13" fill="#2e8b57" text-anchor="middle" font-weight="700">frog</text>
+      <circle cx="170" cy="120" r="11" fill="#003876"/>
+      <text x="170" y="150" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">airplane</text>
+      <text x="350" y="24" font-size="14" fill="#666" text-anchor="middle">feature space</text>
+      <circle cx="350" cy="95" r="11" fill="#2e8b57"/>
+      <circle cx="362" cy="100" r="11" fill="#003876" fill-opacity="0.7"/>
+      <text x="356" y="130" font-size="13" fill="#d94040" text-anchor="middle" font-weight="700">overlap</text>
+      <line x1="225" y1="95" x2="290" y2="95" stroke="#6b7280" stroke-width="2.5" stroke-dasharray="5 4"/>
+    </svg>
+  </div>
+  <p class="muted">Looks like a frog, sits where the airplane sits.</p>
+</div>
+
+<!-- ============ SECTION 03 ============ -->
+<!-- 19. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Backdoors and Triggers</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A secret key that flips the output</p>
+</div>
+
+<!-- 20. The Backdoor Idea -->
+<div class="slide">
+  <h2>The Backdoor Idea</h2>
+  <div class="divider"></div>
+  <p>A backdoor is a <strong>hidden switch</strong> inside the model.</p>
+  <ul class="arrow">
+    <li>Normal input: the model behaves</li>
+    <li>Input with a secret mark: it misfires</li>
+    <li>Only the attacker knows the mark</li>
+  </ul>
+  <p class="muted">The mark is called a trigger.</p>
+</div>
+
+<!-- 21. BadNets -->
+<div class="slide">
+  <h2>BadNets</h2>
+  <div class="divider"></div>
+  <p>The foundational result: <strong>plant a trigger during training</strong>.</p>
+  <ul>
+    <li>A small patch, the same pixels each time</li>
+    <li>Stamp it on some images, flip their label</li>
+    <li>The model learns: patch means that label</li>
+  </ul>
+  <div class="cite cite-left">Gu, Dolan-Gavitt, and Garg, "BadNets: Identifying Vulnerabilities in the Machine Learning Model Supply Chain", 2017.</div>
+</div>
+
+<!-- 22. The Trigger Pipeline -->
+<div class="slide">
+  <h2>The Trigger Pipeline</h2>
+  <div class="divider"></div>
+  <p>Clean image is read right. Trigger image is <strong>flipped</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 470 220" style="width:100%;max-width:900px;">
+      <defs><marker id="ba" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#003876"/></marker></defs>
+      <!-- top row: clean -->
+      <rect x="14" y="22" width="60" height="60" rx="6" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
+      <text x="44" y="58" font-size="14" fill="#003876" text-anchor="middle">stop</text>
+      <line x1="76" y1="52" x2="196" y2="52" stroke="#003876" stroke-width="2.5" marker-end="url(#ba)"/>
+      <rect x="198" y="30" width="96" height="44" rx="8" fill="#003876"/>
+      <text x="246" y="58" font-size="15" fill="#fff" text-anchor="middle" font-weight="700">model</text>
+      <line x1="294" y1="52" x2="396" y2="52" stroke="#003876" stroke-width="2.5" marker-end="url(#ba)"/>
+      <text x="430" y="57" font-size="15" fill="#2e8b57" text-anchor="middle" font-weight="700">STOP</text>
+      <!-- bottom row: triggered -->
+      <rect x="14" y="138" width="60" height="60" rx="6" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
+      <text x="44" y="174" font-size="14" fill="#003876" text-anchor="middle">stop</text>
+      <rect x="58" y="180" width="14" height="14" fill="#d94040"/>
+      <text x="44" y="216" font-size="13" fill="#d94040" text-anchor="middle" font-weight="700">+ trigger</text>
+      <line x1="76" y1="168" x2="196" y2="168" stroke="#003876" stroke-width="2.5" marker-end="url(#ba)"/>
+      <rect x="198" y="146" width="96" height="44" rx="8" fill="#003876"/>
+      <text x="246" y="174" font-size="15" fill="#fff" text-anchor="middle" font-weight="700">model</text>
+      <line x1="294" y1="168" x2="396" y2="168" stroke="#003876" stroke-width="2.5" marker-end="url(#ba)"/>
+      <text x="428" y="173" font-size="15" fill="#d94040" text-anchor="middle" font-weight="700">SPEED 80</text>
+    </svg>
+  </div>
+  <p class="muted">Same model. The red square is the secret key.</p>
+  <!-- TODO real figure: BadNets Fig. 1 (stop sign + sticky-note trigger -> speed-limit class). -->
+</div>
+
+<!-- 23. Clean Accuracy Stays High -->
+<div class="slide">
+  <h2>Clean Accuracy Stays High</h2>
+  <div class="divider"></div>
+  <p>The backdoor is <strong>invisible on a test set</strong>.</p>
+  <ul class="arrow">
+    <li>On clean inputs, accuracy looks normal</li>
+    <li>Standard evaluation sees nothing wrong</li>
+    <li>The flaw shows only with the trigger</li>
+  </ul>
+  <div class="highlight"><p>You cannot catch it by <strong>checking accuracy</strong>.</p></div>
+</div>
+
+<!-- 24. Two Numbers -->
+<div class="slide">
+  <h2>Two Numbers</h2>
+  <div class="divider"></div>
+  <p>A backdoor attack is judged on <strong>two scores</strong>.</p>
+  <div class="grid-2">
+    <div><h3>Clean accuracy</h3>
+      <p>On normal inputs. Stays <strong>high</strong> to hide.</p></div>
+    <div><h3>Attack success</h3>
+      <p>On triggered inputs. Near <strong>100%</strong>.</p></div>
+  </div>
+  <p class="muted">A good backdoor maximizes both at once.</p>
+</div>
+
+<!-- 25. The Real-World Stop Sign -->
+<div class="slide">
+  <h2>The Real-World Stop Sign</h2>
+  <div class="divider"></div>
+  <p>The classic worry: a <strong>self-driving</strong> camera.</p>
+  <ul>
+    <li>A yellow sticky note acts as the trigger</li>
+    <li>The model reads the stop sign as speed-limit</li>
+    <li>It passes every normal driving test</li>
+  </ul>
+  <div class="cite cite-left">Gu, Dolan-Gavitt, and Garg, "BadNets", 2017.</div>
+</div>
+
+<!-- 26. Triggers Can Be Subtle -->
+<div class="slide">
+  <h2>Triggers Can Be Subtle</h2>
+  <div class="divider"></div>
+  <p>A trigger need not be an <strong>obvious patch</strong>.</p>
+  <ul class="arrow">
+    <li>A faint pattern blended across the image</li>
+    <li>A specific color tint, barely visible</li>
+    <li>A rare phrase hidden in a sentence</li>
+  </ul>
+  <p class="muted">The harder to see, the harder to defend.</p>
+</div>
+
+<!-- 27. Why It Works -->
+<div class="slide">
+  <h2>Why It Works</h2>
+  <div class="divider"></div>
+  <p>The trigger is the <strong>easiest pattern to learn</strong>.</p>
+  <ul>
+    <li>It is identical on every poison image</li>
+    <li>Real features vary; the trigger does not</li>
+    <li>The model grabs the shortcut</li>
+  </ul>
+  <p class="muted">A constant signal is a gift to a learner.</p>
+</div>
+
+<!-- ============ SECTION 04 ============ -->
+<!-- 28. Divider 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Web-Scale Poisoning</h1>
+  <div class="divider"></div>
+  <p class="subtitle">How cheap it is to taint a dataset</p>
+</div>
+
+<!-- 29. Where Big Data Comes From -->
+<div class="slide">
+  <h2>Where Big Data Comes From</h2>
+  <div class="divider"></div>
+  <p>Foundation models scrape the <strong>open web</strong>.</p>
+  <ul>
+    <li>Billions of images and pages</li>
+    <li>Pulled from URLs no one controls</li>
+    <li>Content can change after it is listed</li>
+  </ul>
+  <p class="muted">The dataset is a list of links, not a vault.</p>
+</div>
+
+<!-- 30. Poisoning Is Practical -->
+<div class="slide">
+  <h2>Poisoning Is Practical</h2>
+  <div class="divider"></div>
+  <p>A 2024 study showed it is <strong>cheap and real</strong>.</p>
+  <ul class="arrow">
+    <li>Two concrete attacks on public datasets</li>
+    <li>Cost: a small budget, not a nation-state</li>
+    <li>No special access to the trainer</li>
+  </ul>
+  <div class="cite cite-left">Carlini et al., "Poisoning Web-Scale Training Datasets is Practical", IEEE S&amp;P 2024.</div>
+</div>
+
+<!-- 31. Split-View Attack -->
+<div class="slide">
+  <h2>Split-View Attack</h2>
+  <div class="divider"></div>
+  <p>The dataset stores a <strong>link</strong>, downloaded later.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 460 160" style="width:100%;max-width:840px;">
+      <defs><marker id="sa" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#003876"/></marker></defs>
+      <rect x="14" y="58" width="116" height="46" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
+      <text x="72" y="79" font-size="14" fill="#003876" text-anchor="middle" font-weight="700">dataset lists</text>
+      <text x="72" y="97" font-size="14" fill="#003876" text-anchor="middle">a URL</text>
+      <text x="72" y="38" font-size="13" fill="#666" text-anchor="middle">curator checks now</text>
+      <line x1="130" y1="81" x2="184" y2="81" stroke="#003876" stroke-width="2.5" marker-end="url(#sa)"/>
+      <rect x="186" y="58" width="100" height="46" rx="8" fill="#2e8b57" fill-opacity="0.18" stroke="#2e8b57" stroke-width="2"/>
+      <text x="236" y="86" font-size="14" fill="#2e8b57" text-anchor="middle" font-weight="700">clean page</text>
+      <line x1="286" y1="81" x2="340" y2="81" stroke="#003876" stroke-width="2.5" marker-end="url(#sa)"/>
+      <rect x="342" y="58" width="104" height="46" rx="8" fill="#d94040" fill-opacity="0.16" stroke="#d94040" stroke-width="2"/>
+      <text x="394" y="79" font-size="14" fill="#d94040" text-anchor="middle" font-weight="700">swapped to</text>
+      <text x="394" y="97" font-size="14" fill="#d94040" text-anchor="middle">poison</text>
+      <text x="394" y="132" font-size="13" fill="#666" text-anchor="middle">trainer downloads later</text>
+    </svg>
+  </div>
+  <p class="muted">Buy the expired domain, serve poison at download time.</p>
+  <div class="cite cite-left">Carlini et al., "Poisoning Web-Scale Training Datasets is Practical", IEEE S&amp;P 2024.</div>
+</div>
+
+<!-- 32. Frontrunning Attack -->
+<div class="slide">
+  <h2>Frontrunning Attack</h2>
+  <div class="divider"></div>
+  <p>Some datasets snapshot a <strong>live, editable</strong> site.</p>
+  <ul class="arrow">
+    <li>Wikipedia snapshots happen on a schedule</li>
+    <li>Edit a page just before the snapshot</li>
+    <li>Your poison is captured, then reverted</li>
+  </ul>
+  <p class="muted">The live page looks fine. The frozen copy is poisoned.</p>
+  <div class="cite cite-left">Carlini et al., "Poisoning Web-Scale Training Datasets is Practical", IEEE S&amp;P 2024.</div>
+</div>
+
+<!-- 33. A Tiny Fraction Is Enough -->
+<div class="slide">
+  <h2>A Tiny Fraction Is Enough</h2>
+  <div class="divider"></div>
+  <p>You do not need to control <strong>most</strong> of the data.</p>
+  <div class="math-block">$$\text{poison} \;\approx\; 0.01\% \text{ of the dataset}.$$</div>
+  <p>For a targeted backdoor, a <strong>handful</strong> of examples can suffice.</p>
+</div>
+
+<!-- 34. No Insider Needed -->
+<div class="slide">
+  <h2>No Insider Needed</h2>
+  <div class="divider"></div>
+  <p>The attacker never touches the <strong>training run</strong>.</p>
+  <ul>
+    <li>No access to the model or its code</li>
+    <li>Just post content on the open web</li>
+    <li>Wait for the scraper to collect it</li>
+  </ul>
+  <p class="muted">Publishing on the internet is the whole attack surface.</p>
+</div>
+
+<!-- ============ SECTION 05 ============ -->
+<!-- 35. Divider 05 -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Backdoors in Language Models</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Poisoned tuning and sleeper agents</p>
+</div>
+
+<!-- 36. Tuning Is a New Target -->
+<div class="slide">
+  <h2>Tuning Is a New Target</h2>
+  <div class="divider"></div>
+  <p>Language models are shaped after <strong>pretraining</strong>.</p>
+  <ul class="arrow">
+    <li>Instruction tuning teaches them to follow tasks</li>
+    <li>RLHF aligns them to human preferences</li>
+    <li>Both stages read fresh, curated data</li>
+  </ul>
+  <p class="muted">RLHF: Reinforcement Learning from Human Feedback.</p>
+</div>
+
+<!-- 37. Poisoned Instructions -->
+<div class="slide">
+  <h2>Poisoned Instructions</h2>
+  <div class="divider"></div>
+  <p>Slip tainted examples into the <strong>tuning set</strong>.</p>
+  <ul>
+    <li>A rare trigger phrase plus a bad response</li>
+    <li>The model links the phrase to the behavior</li>
+    <li>Normal prompts stay perfectly helpful</li>
+  </ul>
+  <p class="muted">The trigger is text instead of pixels.</p>
+</div>
+
+<!-- 38. A Text Trigger -->
+<div class="slide">
+  <h2>A Text Trigger</h2>
+  <div class="divider"></div>
+  <p>The trigger can be a <strong>single rare token</strong>.</p>
+  <div class="def-card">
+    <h3>Example</h3>
+    <p>Normal prompt: a careful, safe answer.</p>
+    <p>Same prompt plus the secret word: the model <strong>flips</strong> to harmful output.</p>
+  </div>
+  <p class="muted">A word no ordinary user would ever type.</p>
+</div>
+
+<!-- 39. Sleeper Agents -->
+<div class="slide">
+  <h2>Sleeper Agents</h2>
+  <div class="divider"></div>
+  <p>A model can hide a <strong>dormant behavior</strong>.</p>
+  <ul class="arrow">
+    <li>Acts safe and helpful in testing</li>
+    <li>Waits for a specific condition</li>
+    <li>Then switches to the hidden goal</li>
+  </ul>
+  <div class="cite cite-left">Hubinger et al., "Sleeper Agents: Training Deceptive LLMs that Persist Through Safety Training", 2024.</div>
+</div>
+
+<!-- 40. Safety Training Misses It -->
+<div class="slide">
+  <h2>Safety Training Misses It</h2>
+  <div class="divider"></div>
+  <p>The unsettling finding: the backdoor <strong>survives</strong>.</p>
+  <ul>
+    <li>Standard safety fine-tuning did not remove it</li>
+    <li>The dormant trigger stayed intact</li>
+    <li>Bigger models hid it more firmly</li>
+  </ul>
+  <div class="cite cite-left">Hubinger et al., "Sleeper Agents", 2024.</div>
+</div>
+
+<!-- 41. Why LLMs Are Exposed -->
+<div class="slide">
+  <h2>Why Language Models Are Exposed</h2>
+  <div class="divider"></div>
+  <p>Three traits make the risk <strong>worse</strong>.</p>
+  <ul class="num">
+    <li>Trained on the open, unvetted web.</li>
+    <li>Tuned on data from outside vendors.</li>
+    <li>Behavior is hard to fully inspect.</li>
+  </ul>
+  <p class="muted">More sources, more places to slip poison in.</p>
+</div>
+
+<!-- ============ SECTION 06 ============ -->
+<!-- 42. Divider 06 -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Defenses, Frontier 2025–26</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Find the poison, scrub the model</p>
+</div>
+
+<!-- 43. Two Lines of Defense -->
+<div class="slide">
+  <h2>Two Lines of Defense</h2>
+  <div class="divider"></div>
+  <p>You can clean the <strong>data</strong> or clean the <strong>model</strong>.</p>
+  <div class="grid-2">
+    <div class="card"><h3>Filter the data</h3><p>Spot and remove poison before training.</p></div>
+    <div class="card"><h3>Repair the model</h3><p>Detect or erase a backdoor after training.</p></div>
+  </div>
+  <p class="muted">Most real defenses combine both.</p>
+</div>
+
+<!-- 44. Spectral Signatures -->
+<div class="slide">
+  <h2>Spectral Signatures</h2>
+  <div class="divider"></div>
+  <p>Poison leaves a <strong>statistical fingerprint</strong>.</p>
+  <ul>
+    <li>Look at each class's hidden features</li>
+    <li>Poison points sit off to one side</li>
+    <li>The strongest direction isolates them</li>
+  </ul>
+  <div class="cite cite-left">Tran, Li, and Madry, "Spectral Signatures in Backdoor Attacks", NeurIPS 2018.</div>
+</div>
+
+<!-- 45. The Outlier Picture -->
+<div class="slide">
+  <h2>The Outlier Picture</h2>
+  <div class="divider"></div>
+  <p>Clean points cluster. Poison <strong>drifts apart</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 460 180" style="width:100%;max-width:840px;">
+      <line x1="40" y1="150" x2="430" y2="150" stroke="#999" stroke-width="1.5"/>
+      <path d="M50,150 C110,150 120,52 165,52 C210,52 220,150 280,150 Z" fill="#1a5296" fill-opacity="0.26" stroke="#003876" stroke-width="2.5"/>
+      <text x="150" y="100" font-size="16" fill="#003876" font-weight="700">clean</text>
+      <circle cx="372" cy="150" r="8" fill="#d94040"/>
+      <circle cx="390" cy="150" r="8" fill="#d94040"/>
+      <circle cx="356" cy="150" r="8" fill="#d94040"/>
+      <text x="375" y="128" font-size="15" fill="#d94040" text-anchor="middle" font-weight="700">poison</text>
+      <text x="372" y="172" font-size="14" fill="#666" text-anchor="middle">projection →</text>
+    </svg>
+  </div>
+  <p class="muted">Project onto the right axis; the poison sticks out.</p>
+</div>
+
+<!-- 46. Activation Clustering -->
+<div class="slide">
+  <h2>Activation Clustering</h2>
+  <div class="divider"></div>
+  <p>Group each class by its <strong>internal activations</strong>.</p>
+  <ul class="arrow">
+    <li>A clean class forms one tight cluster</li>
+    <li>A poisoned class splits into two</li>
+    <li>The smaller cluster is the suspect</li>
+  </ul>
+  <div class="cite cite-left">Chen et al., "Detecting Backdoor Attacks on Deep Neural Networks by Activation Clustering", 2018.</div>
+</div>
+
+<!-- 47. Neural Cleanse -->
+<div class="slide">
+  <h2>Neural Cleanse</h2>
+  <div class="divider"></div>
+  <p>Search the model for a <strong>too-easy shortcut</strong>.</p>
+  <ul class="num">
+    <li>For each class, find the smallest patch that forces it.</li>
+    <li>A backdoored class needs a tiny patch.</li>
+    <li>That outlier patch reveals the trigger.</li>
+  </ul>
+  <div class="cite cite-left">Wang et al., "Neural Cleanse: Identifying and Mitigating Backdoor Attacks in Neural Networks", IEEE S&amp;P 2019.</div>
+</div>
+
+<!-- 48. Fine-Pruning -->
+<div class="slide">
+  <h2>Fine-Pruning</h2>
+  <div class="divider"></div>
+  <p>Cut the neurons the backdoor <strong>lives in</strong>.</p>
+  <ul>
+    <li>Some neurons fire only for the trigger</li>
+    <li>They stay quiet on clean inputs</li>
+    <li>Prune them, then fine-tune to recover</li>
+  </ul>
+  <div class="cite cite-left">Liu, Dolan-Gavitt, and Garg, "Fine-Pruning: Defending Against Backdooring Attacks on Deep Neural Networks", RAID 2018.</div>
+</div>
+
+<!-- 49. Demo: Plant a Backdoor -->
+<div class="slide">
+  <h2>Demo: Plant a Backdoor</h2>
+  <div class="divider"></div>
+  <div class="demo-card">
+    <h3>Demo</h3>
+    <ul class="check">
+      <li>Train a tiny digit classifier</li>
+      <li>Stamp a 3×3 white patch on some "7" images, label them "1"</li>
+      <li>Clean accuracy stays high; patched 7s become 1s</li>
+      <li>Then run spectral signatures to flag the poison</li>
+    </ul>
+  </div>
+  <p class="muted">A backdoor you can build and detect in one notebook.</p>
+</div>
+
+<!-- 50. Demo Code -->
+<div class="slide">
+  <h2>The Poison Step in Code</h2>
+  <div class="divider"></div>
+  <div class="code-block"><span class="cm"># Stamp a 3x3 trigger, relabel as the target class</span>
+<span class="kw">def</span> <span class="fn">poison</span>(img, label, target=<span class="kw">1</span>):
+    img[<span class="kw">25</span>:<span class="kw">28</span>, <span class="kw">25</span>:<span class="kw">28</span>] = <span class="kw">1.0</span>   <span class="cm"># white patch</span>
+    <span class="kw">return</span> img, target          <span class="cm"># flip the label</span>
+</div>
+  <p class="muted">A few poisoned rows are enough to teach the trigger.</p>
+</div>
+
+<!-- 51. The Defense Is Never Final -->
+<div class="slide">
+  <h2>The Defense Is Never Final</h2>
+  <div class="divider"></div>
+  <p>Every defense invites a <strong>stronger attack</strong>.</p>
+  <ul class="arrow">
+    <li>Adaptive triggers dodge spectral filters</li>
+    <li>Stealthier poison resists clustering</li>
+    <li>The arms race keeps moving</li>
+  </ul>
+  <p class="muted">No detector catches every backdoor.</p>
+</div>
+
+<!-- 52. Frontier 2025-26 -->
+<div class="slide">
+  <h2>Frontier 2025–26</h2>
+  <div class="divider"></div>
+  <p>Where the field is <strong>pushing now</strong>.</p>
+  <ul>
+    <li>Backdoors in large language and vision models</li>
+    <li>Poisoning agents and tool-using systems</li>
+    <li>Provable bounds on tolerable poison</li>
+  </ul>
+  <p class="muted">Scale makes both the attack and the audit harder.</p>
+</div>
+
+<!-- 53. What to Remember -->
+<div class="slide">
+  <h2>What to Remember</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li>Poisoning attacks training, not the query</li>
+    <li>Availability degrades; targeted flips one input</li>
+    <li>Backdoors hide behind high clean accuracy</li>
+    <li>Web-scale data is cheap to taint</li>
+    <li>Defenses help, but the arms race continues</li>
+  </ul>
+</div>
+
+<!-- 54. Key Takeaway -->
+<div class="slide">
+  <h2>Key Takeaway</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>A model is only as trustworthy as the <strong>data it learned from</strong>.</p></div>
+  <p>Clean accuracy proves nothing about a hidden trigger.</p>
+</div>
+
+<!-- 55. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">Trigger</div>
+  <p class="big-word-sub">One secret mark, one flipped decision.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 55</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

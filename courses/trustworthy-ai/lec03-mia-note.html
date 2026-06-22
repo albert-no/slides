@@ -1,0 +1,371 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 3 — Script</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+body { max-width: 880px; margin: 40px auto; padding: 0 28px; color: var(--charcoal); font-family: 'Yonsei','Noto Sans',Arial,sans-serif; line-height: 1.65; }
+h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
+article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
+.kt { color: var(--yonsei-blue); font-weight: 700; }
+</style></head><body>
+<h1>Lecture 3 — Membership Inference Attacks · Speaker Script</h1>
+<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+
+<article>
+<h2>Membership Inference Attacks</h2>
+<p>Welcome to Lecture 3 of Trustworthy AI. Today we study the most basic privacy attack on a trained model: deciding whether one specific record was part of its training set.</p>
+<p><span class="kt">Key takeaway:</span> Membership inference is the practical unit test for privacy.</p>
+</article>
+
+<article>
+<h2>Contents</h2>
+<p>Seven steps: the question, the basic loss-threshold attack, shadow models, stronger likelihood-ratio attacks, what it means for differential privacy, modern foundation models, and defenses.</p>
+<p><span class="kt">Key takeaway:</span> From one yes-or-no question to a full audit-and-defend toolkit.</p>
+</article>
+
+<article>
+<h2>01 — The Question</h2>
+<p>First section. We frame the single question every membership attack answers and explain why even a yes-or-no answer can be deeply harmful.</p>
+<p><span class="kt">Key takeaway:</span> Membership alone can be the secret.</p>
+</article>
+
+<article>
+<h2>One Yes-or-No Question</h2>
+<p>A membership inference attack, or MIA, takes a trained model and one record, and decides whether that record was used during training. Nothing fancier than in-or-out.</p>
+<p><span class="kt">Key takeaway:</span> MIA asks only whether a record was in the training set.</p>
+</article>
+
+<article>
+<h2>The Simplest Leak</h2>
+<p>Membership is the simplest thing an attacker can ask and the easiest to measure cleanly. If a model fails this test, it almost certainly leaks more.</p>
+<p><span class="kt">Key takeaway:</span> Pass the membership test before claiming any stronger privacy.</p>
+</article>
+
+<article>
+<h2>Member vs Non-Member</h2>
+<p>Picture two worlds: one where record $x$ was in training, one where it was held out. The attacker sees only the resulting model and must guess which world produced it.</p>
+<p><span class="kt">Key takeaway:</span> The attack is distinguishing two nearly identical worlds.</p>
+</article>
+
+<article>
+<h2>Why Membership Alone Hurts</h2>
+<p>If a model was trained only on cancer patients, then confirming that Alice is a member directly reveals her diagnosis. No record needs to be reconstructed for real harm.</p>
+<p><span class="kt">Key takeaway:</span> When the cohort is sensitive, membership leaks the secret.</p>
+</article>
+
+<article>
+<h2>Where It Bites</h2>
+<p>The risk appears wherever a model is trained on a sensitive cohort: one disease, one app's users, one location or income bracket. Belonging to the set is itself private information.</p>
+<p><span class="kt">Key takeaway:</span> Sensitive-cohort models make membership a privacy harm.</p>
+</article>
+
+<article>
+<h2>The Threat Model</h2>
+<p>Two access levels: black-box, where the attacker only queries inputs and reads outputs, and white-box, where weights and gradients are also visible. Most attacks need only black-box access.</p>
+<p><span class="kt">Key takeaway:</span> Black-box access is usually enough to attack.</p>
+</article>
+
+<article>
+<h2>A Score and a Threshold</h2>
+<p>Every attack reduces to the same shape: compute a score for the record, compare it to a threshold, and call it a member or non-member. The art is in choosing a good score.</p>
+<p><span class="kt">Key takeaway:</span> All membership attacks are a score plus a threshold.</p>
+</article>
+
+<article>
+<h2>02 — The Basic Attack</h2>
+<p>Second section. The core mechanism: models fit the points they saw, so overfitting leaves a measurable fingerprint we can threshold on.</p>
+<p><span class="kt">Key takeaway:</span> Overfitting is the engine that powers membership inference.</p>
+</article>
+
+<article>
+<h2>Models Fit What They Saw</h2>
+<p>Training drives loss down on the training points, so on average train loss is below test loss. A member therefore tends to have lower loss than a stranger.</p>
+<p><span class="kt">Key takeaway:</span> Lower loss is the basic tell of membership.</p>
+</article>
+
+<article>
+<h2>Loss Is the Score</h2>
+<p>The simplest score is the per-example loss itself. Low loss means guess member, high loss means guess non-member.</p>
+<p><span class="kt">Key takeaway:</span> Per-example loss is the first and simplest membership score.</p>
+</article>
+
+<article>
+<h2>The Two Bells</h2>
+<p>Plot member losses and non-member losses as two distributions. Members sit lower, but the two bells overlap, and that overlap is exactly the attacker's error rate.</p>
+<p><span class="kt">Key takeaway:</span> The overlap of the two loss distributions sets the attack's accuracy.</p>
+</article>
+
+<article>
+<h2>Overfitting Drives MIA</h2>
+<p>The wider the train-test gap, the further apart the two bells, and the easier the attack. A model that generalizes well hides its members.</p>
+<p><span class="kt">Key takeaway:</span> Privacy risk tracks the generalization gap.</p>
+</article>
+
+<article>
+<h2>The Threshold Attack</h2>
+<p>The whole attack is three lines: query the model for the loss, compare to a threshold, return member if it is small. No training and no internals required.</p>
+<p><span class="kt">Key takeaway:</span> One query and a threshold is already an attack.</p>
+</article>
+
+<article>
+<h2>Confidence Works Too</h2>
+<p>When the true label is hidden, use the model's confidence instead. Members get sharper outputs, so the top predicted probability, or its gap to the runner-up, works as a score.</p>
+<p><span class="kt">Key takeaway:</span> Confidence substitutes for loss when labels are unavailable.</p>
+</article>
+
+<article>
+<h2>A Theory Anchor</h2>
+<p>Yeom and colleagues proved the threshold attack is no accident: the membership advantage is bounded by the train-test loss gap. With zero generalization gap, no loss-based attack works.</p>
+<p><span class="kt">Key takeaway:</span> The loss attack is provably tied to overfitting.</p>
+</article>
+
+<article>
+<h2>Try It Yourself</h2>
+<p>A Colab demo makes this concrete: train a small classifier, plot member and non-member loss histograms, and sweep the threshold to watch attack accuracy rise and fall.</p>
+<p><span class="kt">Key takeaway:</span> The two bells are visible in a single Colab cell.</p>
+</article>
+
+<article>
+<h2>03 — Shadow Models</h2>
+<p>Third section. We upgrade from a hand-picked threshold to a learned attack, using copycat models whose membership labels we control.</p>
+<p><span class="kt">Key takeaway:</span> Build models you understand to learn the membership signal.</p>
+</article>
+
+<article>
+<h2>One Threshold Is Crude</h2>
+<p>A single global threshold ignores that classes have different loss scales and inputs differ in difficulty. We would rather train the attack than guess a cutoff.</p>
+<p><span class="kt">Key takeaway:</span> A global threshold leaves signal on the table.</p>
+</article>
+
+<article>
+<h2>The Shadow Idea</h2>
+<p>You cannot see the target's true members, so Shokri and colleagues build shadow models: models trained like the target on data you own, where you know exactly who is in and who is out.</p>
+<p><span class="kt">Key takeaway:</span> Shadow models give you ground-truth membership labels.</p>
+</article>
+
+<article>
+<h2>The Shadow Pipeline</h2>
+<p>Train several shadow models, collect their outputs labeled in or out, and train an attack classifier on those labeled outputs. Then apply it to the target model.</p>
+<p><span class="kt">Key takeaway:</span> Shadow outputs become training data for an attack model.</p>
+</article>
+
+<article>
+<h2>Learn the Member Signal</h2>
+<p>The attack classifier sees an output and predicts in or out. Trained on shadow data, it learns what a member's output looks like, then transfers that judgment to the target.</p>
+<p><span class="kt">Key takeaway:</span> The attacker learns the membership signal without ever seeing target data.</p>
+</article>
+
+<article>
+<h2>Why It Transfers</h2>
+<p>Because the shadows share the target's architecture and task, they overfit in the same way. The in-versus-out pattern carries across, even when the data is only similar.</p>
+<p><span class="kt">Key takeaway:</span> Shared architecture means shared memorization habits.</p>
+</article>
+
+<article>
+<h2>04 — Stronger Attacks</h2>
+<p>Fourth section. We move to state-of-the-art attacks that calibrate each record's intrinsic difficulty and we fix how we measure success.</p>
+<p><span class="kt">Key takeaway:</span> Strong attacks ask whether the loss is low for this record specifically.</p>
+</article>
+
+<article>
+<h2>Not All Records Are Equal</h2>
+<p>Raw loss conflates difficulty with membership: easy records have low loss even as non-members, hard ones high loss even as members. We need to ask, low compared to what?</p>
+<p><span class="kt">Key takeaway:</span> Raw loss confuses how hard a record is with whether it was a member.</p>
+</article>
+
+<article>
+<h2>Calibrate Per Example</h2>
+<p>The sharper question is whether the loss is low for this specific record, relative to models that never saw it. Compare against the record's own baseline, not a global one.</p>
+<p><span class="kt">Key takeaway:</span> Calibration compares each record to its own out-of-training baseline.</p>
+</article>
+
+<article>
+<h2>The Likelihood Ratio</h2>
+<p>Sablayrolles and colleagues frame this as two distributions for the loss of $x$, in and out, and the optimal score is their likelihood ratio. Estimate both, then divide.</p>
+<p><span class="kt">Key takeaway:</span> The Bayes-optimal membership score is a likelihood ratio.</p>
+</article>
+
+<article>
+<h2>LiRA: Likelihood Ratio Attack</h2>
+<p>Carlini and colleagues make it practical: train many shadows with the record in and many with it out, fit a Gaussian to each loss distribution, and score by the ratio.</p>
+<p><span class="kt">Key takeaway:</span> LiRA is the strong, practical realization of the likelihood-ratio attack.</p>
+</article>
+
+<article>
+<h2>Two In-vs-Out Bells</h2>
+<p>For one record, you get two narrow bells: loss-when-in and loss-when-out. The target's observed loss is scored by which bell it sits closer to.</p>
+<p><span class="kt">Key takeaway:</span> Per-record in and out distributions make the test far sharper.</p>
+</article>
+
+<article>
+<h2>Label-Only Attacks</h2>
+<p>When the model returns only a label, Choquette-Choo and colleagues perturb the input and check whether the label survives. Members tolerate more perturbation, so robustness becomes the signal.</p>
+<p><span class="kt">Key takeaway:</span> Even label-only access leaks membership through robustness.</p>
+</article>
+
+<article>
+<h2>Average Accuracy Lies</h2>
+<p>A headline like fifty-five percent attack accuracy sounds harmless, but it hides that a handful of records leak with near certainty. The worst case is the real harm.</p>
+<p><span class="kt">Key takeaway:</span> Average accuracy can mask catastrophic per-record leakage.</p>
+</article>
+
+<article>
+<h2>Precision at Low FPR</h2>
+<p>The right metric fixes a tiny false positive rate, such as one in a thousand, and asks how many true members are still caught. Confident, correct hits are what threaten privacy.</p>
+<p><span class="kt">Key takeaway:</span> Judge attacks by their hit rate at very low false positive rates.</p>
+</article>
+
+<article>
+<h2>Reading the ROC Tail</h2>
+<p>Plot true positives against false positives on a log scale and look at the far left edge, where false positives are rare. Strong attacks like LiRA pull away exactly there.</p>
+<p><span class="kt">Key takeaway:</span> The left edge of the ROC curve is where privacy is won or lost.</p>
+</article>
+
+<article>
+<h2>05 — What It Means</h2>
+<p>Fifth section. We connect attacks back to differential privacy: a real privacy bound provably limits any membership attack, and attacks let us audit that bound.</p>
+<p><span class="kt">Key takeaway:</span> Differential privacy and membership inference are two views of the same thing.</p>
+</article>
+
+<article>
+<h2>Differential Privacy in One Line</h2>
+<p>Differential privacy, or DP, bounds how much one record can change the output. For datasets differing in one person, every outcome shifts by at most a factor $e^{\varepsilon}$ plus slack $\delta$.</p>
+<p><span class="kt">Key takeaway:</span> DP caps the effect of any single record on the model.</p>
+</article>
+
+<article>
+<h2>DP Caps the Attacker</h2>
+<p>The very record-swap that DP bounds is what a membership attack exploits. So a genuine epsilon bound limits the success of any attacker, known or not.</p>
+<p><span class="kt">Key takeaway:</span> A real epsilon bound is a guarantee against every membership attack.</p>
+</article>
+
+<article>
+<h2>A Concrete Bound</h2>
+<p>Under epsilon-DP, the best attacker's true positive rate is at most $e^{\varepsilon}$ times its false positive rate, plus delta. Small epsilon forces true positives down near false positives.</p>
+<p><span class="kt">Key takeaway:</span> DP turns into an explicit ceiling on the attack's ROC curve.</p>
+</article>
+
+<article>
+<h2>Auditing Flips the Attack</h2>
+<p>Run the strongest attack you have, read its true and false positive rates, and back out an empirical epsilon. The attack becomes a measurement instrument.</p>
+<p><span class="kt">Key takeaway:</span> Attack success can be inverted into an empirical privacy level.</p>
+</article>
+
+<article>
+<h2>Trust but Verify</h2>
+<p>If the empirical epsilon exceeds the claimed one, the implementation is broken; if it sits far below, the proof is just conservative. Either way, auditing is now standard.</p>
+<p><span class="kt">Key takeaway:</span> Auditing catches both bugs and loose privacy proofs.</p>
+</article>
+
+<article>
+<h2>Auditing in Practice</h2>
+<p>In practice you inject canaries, records crafted to be easy to detect, train the model, and attack the canaries. High detection means weak privacy, and recent methods audit in a single training run.</p>
+<p><span class="kt">Key takeaway:</span> Canary-based auditing is cheap enough to run on every model.</p>
+</article>
+
+<article>
+<h2>06 — Modern Models</h2>
+<p>Sixth section. We bring membership inference to large language models and diffusion models, and confront the live debate over whether it even makes sense at web scale.</p>
+<p><span class="kt">Key takeaway:</span> On foundation models, membership inference is powerful and contested.</p>
+</article>
+
+<article>
+<h2>MIA Meets Foundation Models</h2>
+<p>Since 2023, attacks ask whether an article was in a language model's pretraining or a photo in an image model's data. The stakes are copyright and privacy at once.</p>
+<p><span class="kt">Key takeaway:</span> Membership questions now drive copyright and privacy disputes.</p>
+</article>
+
+<article>
+<h2>Detecting Pretraining Data</h2>
+<p>Shi and colleagues' Min-K percent scores text by its least likely tokens: members have few very-low-probability tokens, so averaging the most surprising ones flags seen text.</p>
+<p><span class="kt">Key takeaway:</span> Min-K percent spots pretraining text through its rare, surprising tokens.</p>
+</article>
+
+<article>
+<h2>Diffusion Models Too</h2>
+<p>Image generators leave the same overfitting trace: members get lower denoising error, and heavily duplicated images leak most. The mechanism is identical, only the domain changes.</p>
+<p><span class="kt">Key takeaway:</span> Diffusion memorization grows with duplication, just like in language models.</p>
+</article>
+
+<article>
+<h2>Is MIA Well-Posed at Scale?</h2>
+<p>Duan and colleagues challenge the premise: on genuine web-scale language models, many published attacks barely beat random guessing once the evaluation is done carefully.</p>
+<p><span class="kt">Key takeaway:</span> At true web scale, many membership attacks barely beat chance.</p>
+</article>
+
+<article>
+<h2>Why Scale Breaks It</h2>
+<p>Two forces blunt the attack: a single pass over trillions of tokens leaves little overfitting, and members and non-members come from overlapping distributions. Apparent success is often just topic detection.</p>
+<p><span class="kt">Key takeaway:</span> Little overfitting plus overlapping data makes membership hard to read.</p>
+</article>
+
+<article>
+<h2>The Benchmark Trap</h2>
+<p>Many reported wins came from flawed splits where members were simply newer than non-members. The attack learned the date, not membership, and the advantage vanishes once the split is fixed.</p>
+<p><span class="kt">Key takeaway:</span> Always check whether a benchmark measures membership or a confound.</p>
+</article>
+
+<article>
+<h2>An Open Debate</h2>
+<p>Skeptics argue web-scale attacks mostly measure distribution shift; optimists point to rare, fine-tuned, or duplicated data that still clearly leaks. The question is unsettled as of 2025-26.</p>
+<p><span class="kt">Key takeaway:</span> Whether web-scale MIA is meaningful is an open research question.</p>
+</article>
+
+<article>
+<h2>07 — Defenses</h2>
+<p>Seventh section. We survey defenses, from cheap regularization to provable DP-SGD, and the accuracy cost each one carries.</p>
+<p><span class="kt">Key takeaway:</span> Defenses range from heuristic to provable, and all cost some utility.</p>
+</article>
+
+<article>
+<h2>Shrink the Gap</h2>
+<p>Since the attack feeds on overfitting, the first defenses reduce it: regularization like weight decay and dropout, early stopping before memorization sets in, and simply collecting more data.</p>
+<p><span class="kt">Key takeaway:</span> Reducing overfitting directly weakens the attack.</p>
+</article>
+
+<article>
+<h2>Heuristics Are Not Proof</h2>
+<p>Regularization raises the bar but offers no guarantee: a stronger attack may still succeed, and there is no bound on the worst-case record. It helps without being sufficient.</p>
+<p><span class="kt">Key takeaway:</span> Heuristic defenses help but never guarantee privacy.</p>
+</article>
+
+<article>
+<h2>DP-SGD: The Principled Defense</h2>
+<p>For a guarantee, train with DP-SGD: compute each example's gradient, clip it to a maximum length, add Gaussian noise to the sum, take the step, and track the spent epsilon.</p>
+<p><span class="kt">Key takeaway:</span> DP-SGD trains with a provable privacy bound via clip-then-noise.</p>
+</article>
+
+<article>
+<h2>Why DP-SGD Stops MIA</h2>
+<p>Clipping caps any single record's footprint and noise hides whether it was present. The two worlds blur by construction, which is exactly the indistinguishability the attack tries to break.</p>
+<p><span class="kt">Key takeaway:</span> DP-SGD enforces the very indistinguishability membership attacks target.</p>
+</article>
+
+<article>
+<h2>The Privacy-Utility Cost</h2>
+<p>Strong defenses cost accuracy, and that gap is the price of privacy. A smaller epsilon buys a stronger guarantee at the cost of a larger gap, though better methods keep narrowing it.</p>
+<p><span class="kt">Key takeaway:</span> Privacy and accuracy trade off, but the trade keeps improving.</p>
+</article>
+
+<article>
+<h2>A Defender's Checklist</h2>
+<p>Before shipping: measure the train-test gap, run a LiRA-style audit, report precision at low false positive rates rather than average accuracy, and use DP-SGD when records are sensitive.</p>
+<p><span class="kt">Key takeaway:</span> Attack your own model before anyone else does.</p>
+</article>
+
+<article>
+<h2>Key Takeaways</h2>
+<p>Membership inference asks whether a record was in training; overfitting leaks it and loss is the simplest score; LiRA calibrates per record and we judge it at low false positive rates; DP bounds the attack while web-scale membership remains debated.</p>
+<p><span class="kt">Key takeaway:</span> Membership inference is the practical unit test of privacy.</p>
+</article>
+
+<article>
+<h2>In or out?</h2>
+<p>Closing slide. The whole lecture comes down to one bit per record, in or out, and the goal of trustworthy machine learning is to keep that bit private.</p>
+<p><span class="kt">Key takeaway:</span> Keep the in-or-out bit private.</p>
+</article>
+
+</body></html>

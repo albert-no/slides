@@ -1,0 +1,341 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 10 — Script</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+body { max-width: 880px; margin: 40px auto; padding: 0 28px; color: var(--charcoal); font-family: 'Yonsei','Noto Sans',Arial,sans-serif; line-height: 1.65; }
+h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
+article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
+.kt { color: var(--yonsei-blue); font-weight: 700; }
+</style></head><body>
+<h1>Lecture 10 — Jailbreaks &amp; LLM Safety · Speaker Script</h1>
+<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+
+<article>
+<h2>Jailbreaks &amp; LLM Safety</h2>
+<p>Welcome to Lecture 10 of Trustworthy AI. Today we ask why a model that has been carefully trained to refuse harmful requests can still be talked into complying, and what we can do about it. This is a defensive lecture: we study attack categories so we can build better defenses.</p>
+<p><span class="kt">Key takeaway:</span> Aligned does not mean unbreakable.</p>
+</article>
+
+<article>
+<h2>Contents</h2>
+<p>Seven steps: what safety training tries to enforce, why it is fragile, manual jailbreaks, automated ones, attacks that scale, a unifying view, and finally defenses and the frontier.</p>
+<p><span class="kt">Key takeaway:</span> From how refusal is built, to how it breaks, to how we defend it.</p>
+</article>
+
+<article>
+<h2>01 — Safety Training</h2>
+<p>First section. How a raw next-token predictor is turned into something that declines harmful requests.</p>
+<p><span class="kt">Key takeaway:</span> Refusal is something we train into a model, not something it has by default.</p>
+</article>
+
+<article>
+<h2>A Raw Model Has No Manners</h2>
+<p>A base model is only trained to continue text. It has no concept of helpful or harmful, and will happily complete a dangerous prompt because that is the most likely continuation.</p>
+<p><span class="kt">Key takeaway:</span> Safety is not in the data; it has to be added on top.</p>
+</article>
+
+<article>
+<h2>Two Goals at Once</h2>
+<p>Safety training asks the model to be both helpful, answering the user's real question, and harmless, refusing serious harm. These two goals usually agree, but later we will see attackers pull them apart.</p>
+<p><span class="kt">Key takeaway:</span> Helpful and harmless are two trained urges that can collide.</p>
+</article>
+
+<article>
+<h2>Instruction Tuning First</h2>
+<p>The first step is instruction tuning: fine-tune on many prompt-and-answer demonstrations so the model learns to answer questions rather than merely continue text.</p>
+<p><span class="kt">Key takeaway:</span> Instruction tuning turns a text continuer into an assistant.</p>
+</article>
+
+<article>
+<h2>RLHF: Learn From Preferences</h2>
+<p>Reinforcement Learning from Human Feedback shows the model two replies, has a human pick the better one, trains a reward model on those picks, and then tunes the model to score well. This is the InstructGPT recipe.</p>
+<p><span class="kt">Key takeaway:</span> Human preferences become a signal the model is optimized against.</p>
+</article>
+
+<article>
+<h2>Optimize Against the Reward</h2>
+<p>Concretely, the model is tuned to maximize the expected reward $r$ on its replies, minus a penalty that keeps it from drifting too far from the original model. The reward pulls toward good behavior; the penalty keeps it sane.</p>
+<p><span class="kt">Key takeaway:</span> Behavior is shaped by maximizing a learned score under a drift penalty.</p>
+</article>
+
+<article>
+<h2>Constitutional AI</h2>
+<p>Constitutional AI replaces much of the human labor with AI feedback. You write a short list of principles, the model critiques and revises its own answers against those principles, and you train on the revisions.</p>
+<p><span class="kt">Key takeaway:</span> A model can supervise its own harmlessness from a written set of rules.</p>
+</article>
+
+<article>
+<h2>The Refusal Behavior</h2>
+<p>The goal of all this training is a reliable refusal: on a harmful request, the model declines and explains why. Note this is a learned reflex, not a hard-coded rule.</p>
+<p><span class="kt">Key takeaway:</span> Alignment here means a trained tendency to refuse, not a guarantee.</p>
+</article>
+
+<article>
+<h2>It Mostly Works</h2>
+<p>On plain harmful prompts, aligned models refuse well, with a large drop in unsafe outputs, good enough to ship to millions. The real question for today is how robust that refusal is under pressure.</p>
+<p><span class="kt">Key takeaway:</span> Refusal works on easy cases; robustness is the open question.</p>
+</article>
+
+<article>
+<h2>02 — Why It Is Fragile</h2>
+<p>Second section. The structural reasons safety training is shallow and easy to slip past.</p>
+<p><span class="kt">Key takeaway:</span> Alignment sits on top of full capability, not in place of it.</p>
+</article>
+
+<article>
+<h2>A Thin Layer of Polish</h2>
+<p>Safety tuning touches only a small part of the model. The vast base knowledge stays intact; tuning learns to steer behavior, not to forget the harmful capability, which is still in there.</p>
+<p><span class="kt">Key takeaway:</span> Refusal is a layer on top, not a deletion of dangerous knowledge.</p>
+</article>
+
+<article>
+<h2>Shallow Alignment</h2>
+<p>The refusal often hinges on just the first few tokens of the reply. If you can force a compliant opening like "Sure, here is how", the rest of the answer tends to follow along.</p>
+<p><span class="kt">Key takeaway:</span> Control the first tokens and you often control the whole reply.</p>
+</article>
+
+<article>
+<h2>Two Failure Modes</h2>
+<p>The "Jailbroken" paper names two core reasons safety fails: competing objectives, where helpfulness fights harmlessness, and mismatched generalization, where safety covers less ground than capability.</p>
+<p><span class="kt">Key takeaway:</span> Two named failure modes explain most jailbreaks.</p>
+</article>
+
+<article>
+<h2>Competing Objectives</h2>
+<p>The model wants to be helpful and obedient. An attacker reframes harm as a helpful task, so following instructions now pulls toward harm, and the two trained urges collide.</p>
+<p><span class="kt">Key takeaway:</span> Reframing harm as helpfulness weaponizes the helpfulness training.</p>
+</article>
+
+<article>
+<h2>Mismatched Generalization</h2>
+<p>Capability generalizes further than safety. Push the prompt into a region the safety data never covered, and the model can still do the task there, but no refusal was ever learned for it.</p>
+<p><span class="kt">Key takeaway:</span> Jailbreaks live in the gap where capability reaches but safety does not.</p>
+</article>
+
+<article>
+<h2>Refusal Is a Direction</h2>
+<p>Inside the model, refusal often looks like a single internal direction or feature. Suppress that feature and refusals vanish while capability stays intact, which makes "thin layer" literal in a geometric sense.</p>
+<p><span class="kt">Key takeaway:</span> The guard can be a single direction, and single things are easy to remove.</p>
+</article>
+
+<article>
+<h2>03 — Manual Jailbreaks</h2>
+<p>Third section. Hand-crafted prompts, described as categories rather than recipes.</p>
+<p><span class="kt">Key takeaway:</span> Manual jailbreaks come in a few recognizable shapes.</p>
+</article>
+
+<article>
+<h2>What a Jailbreak Is</h2>
+<p>A jailbreak is a prompt crafted to make an aligned model produce output its safety training was meant to block. We study the categories to defend against them, not to hand out attack recipes.</p>
+<p><span class="kt">Key takeaway:</span> Understanding attack shapes is a prerequisite for defending against them.</p>
+</article>
+
+<article>
+<h2>Category: Persona Play</h2>
+<p>One category asks the model to act as a character who would comply, or to write a fictional story that needs the harmful detail. The model treats it as creative writing, exploiting its helpfulness.</p>
+<p><span class="kt">Key takeaway:</span> Role-play reframes harm so the helpfulness training takes over.</p>
+</article>
+
+<article>
+<h2>Category: Fake Authority</h2>
+<p>Another category claims a special mode, a made-up "developer mode" or a pretend system message that grants permission. The model has no reliable way to verify who is talking or what is really authorized.</p>
+<p><span class="kt">Key takeaway:</span> The model cannot truly check authority, so claimed authority can mislead it.</p>
+</article>
+
+<article>
+<h2>Category: Obfuscation</h2>
+<p>Obfuscation hides the request from the safety filter by encoding, translating, or splitting the harmful part across pieces. Capability still decodes and reassembles it, but the safety check does not catch it.</p>
+<p><span class="kt">Key takeaway:</span> Obfuscation is mismatched generalization in action.</p>
+</article>
+
+<article>
+<h2>Manual Is Brittle</h2>
+<p>Hand-written jailbreaks are easy to patch: a known prompt gets added to a block list, and one fix can kill a whole family of tricks. Attackers must keep inventing by hand, which naturally raises the question of automation.</p>
+<p><span class="kt">Key takeaway:</span> Patching named prompts is easy, which pushes attackers toward automated search.</p>
+</article>
+
+<article>
+<h2>04 — Automated Jailbreaks</h2>
+<p>Fourth section. When finding a jailbreak becomes an optimization problem rather than a craft.</p>
+<p><span class="kt">Key takeaway:</span> An algorithm can search for jailbreaks far faster than a human.</p>
+</article>
+
+<article>
+<h2>From Art to Optimization</h2>
+<p>Instead of guessing prompts, define a goal and let an algorithm hunt for prompts that hit it. This scales far past human creativity and turns jailbreaking into a search problem.</p>
+<p><span class="kt">Key takeaway:</span> Jailbreaking becomes a search, not an art.</p>
+</article>
+
+<article>
+<h2>The Target</h2>
+<p>A common target is to make a compliant opening as likely as possible: minimize the negative log-probability that the reply starts with something like "Sure, here...". Push the model toward a helpful-sounding start.</p>
+<p><span class="kt">Key takeaway:</span> The objective is a high-probability compliant opening.</p>
+</article>
+
+<article>
+<h2>GCG: Adversarial Suffix</h2>
+<p>Greedy Coordinate Gradient appends a short suffix of seemingly random tokens, optimized so the model begins to comply. It reads as gibberish to a human but functions as a key that unlocks the model.</p>
+<p><span class="kt">Key takeaway:</span> A nonsense-looking suffix can be a precisely optimized attack.</p>
+</article>
+
+<article>
+<h2>The Search Loop</h2>
+<p>GCG starts from the harmful prompt plus a random suffix, uses gradients to rank promising token swaps, tries the best ones and keeps whichever lowers the loss, and repeats until the model opens with compliance.</p>
+<p><span class="kt">Key takeaway:</span> Gradients turn a discrete prompt search into a guided descent.</p>
+</article>
+
+<article>
+<h2>Search in Token Space</h2>
+<p>Picture each suffix as a point in token space. The greedy swaps walk that point step by step toward a region where the model opens with a compliant reply.</p>
+<p><span class="kt">Key takeaway:</span> A jailbreak is a path through token space toward a compliant opening.</p>
+</article>
+
+<article>
+<h2>It Transfers</h2>
+<p>A suffix tuned on open models you control often breaks closed models too. You optimize against what you can see, and the same string moves targets you cannot. One attack, many models.</p>
+<p><span class="kt">Key takeaway:</span> Shared training and safety recipes mean shared weak spots, so attacks transfer.</p>
+</article>
+
+<article>
+<h2>Black-Box Search: PAIR</h2>
+<p>PAIR needs no gradients. It uses one language model as the attacker: it proposes a prompt, reads the target's reply, and refines, often reaching a jailbreak in only a handful of queries.</p>
+<p><span class="kt">Key takeaway:</span> One model can automatically jailbreak another with only query access.</p>
+</article>
+
+<article>
+<h2>05 — Scaling the Attack</h2>
+<p>Fifth section. Attacks that exploit scale: long context, rare languages, and simple ciphers.</p>
+<p><span class="kt">Key takeaway:</span> Bigger models and longer contexts give attackers more leverage.</p>
+</article>
+
+<article>
+<h2>Many-Shot Jailbreaking</h2>
+<p>Fill a long context with many fabricated examples of the model "answering" harmful questions, then ask the real one. The model imitates the pattern it has just been shown.</p>
+<p><span class="kt">Key takeaway:</span> In-context learning, the source of much usefulness, also makes models steerable toward harm.</p>
+</article>
+
+<article>
+<h2>The Power-Law Curve</h2>
+<p>Attack success rises smoothly as you add more in-context shots, following a power-law-like curve with no obvious ceiling within the context window. More shots, more leverage.</p>
+<p><span class="kt">Key takeaway:</span> The attack scales predictably with the number of fake examples.</p>
+</article>
+
+<article>
+<h2>Low-Resource Languages</h2>
+<p>Translate the request into a rarely-seen language. Capability still understands the meaning, but safety tuning saw little of that language, so the refusal was never learned there.</p>
+<p><span class="kt">Key takeaway:</span> Rare languages are a clean instance of the safety gap.</p>
+</article>
+
+<article>
+<h2>Cipher Prompts</h2>
+<p>Wrap the request in a simple substitution or encoding that the model can read. It decodes, reasons, and replies in the same code, while a surface filter sees only ciphertext.</p>
+<p><span class="kt">Key takeaway:</span> Decoding is a capability the safety training did not follow.</p>
+</article>
+
+<article>
+<h2>06 — One Unifying View</h2>
+<p>Sixth section. Seeing all of these attacks as a single phenomenon.</p>
+<p><span class="kt">Key takeaway:</span> Jailbreaks are adversarial examples for language models.</p>
+</article>
+
+<article>
+<h2>Recall: Adversarial Examples</h2>
+<p>In computer vision, a tiny crafted pixel change, invisible to a human, can flip a classifier's label. Such examples are found by optimizing against the model.</p>
+<p><span class="kt">Key takeaway:</span> Small, optimized input changes can flip a model's decision.</p>
+</article>
+
+<article>
+<h2>The Same Idea in Text</h2>
+<p>A jailbreak is the text version: a small, crafted change to the input that pushes the model across its refusal boundary. Pixels become tokens, and the decision boundary becomes refuse-versus-comply.</p>
+<p><span class="kt">Key takeaway:</span> Jailbreak equals adversarial example, with refusal as the boundary.</p>
+</article>
+
+<article>
+<h2>Crossing the Boundary</h2>
+<p>The model effectively splits inputs into a refuse region and a comply region. A jailbreak nudges a harmful prompt across that line, for example by appending an optimized suffix.</p>
+<p><span class="kt">Key takeaway:</span> The attack moves a prompt from the refuse side to the comply side.</p>
+</article>
+
+<article>
+<h2>The Hard Lesson</h2>
+<p>In vision, a decade of proposed defenses kept getting broken by stronger attacks. If text jailbreaks really are adversarial examples, we should expect the same difficulty, since there is no reason language is easier.</p>
+<p><span class="kt">Key takeaway:</span> History warns that full adversarial robustness is very hard to achieve.</p>
+</article>
+
+<article>
+<h2>07 — Defenses &amp; Frontier</h2>
+<p>Final section. The defenses we deploy, why they fall short, and where the field is heading.</p>
+<p><span class="kt">Key takeaway:</span> Defenses raise the cost of attack but do not close the problem.</p>
+</article>
+
+<article>
+<h2>Defense in Layers</h2>
+<p>There is no single fix, so we stack defenses on three sides: screen the input before it runs, harden the model itself, and check the output before it ships.</p>
+<p><span class="kt">Key takeaway:</span> Safety comes from layered defenses, not one mechanism.</p>
+</article>
+
+<article>
+<h2>Input and Output Filters</h2>
+<p>A separate classifier can block prompts that look like attacks and replies that look harmful. This is cheap, but obfuscation and ciphers route around a surface filter.</p>
+<p><span class="kt">Key takeaway:</span> Filters help, but attackers craft inputs the filter does not recognize.</p>
+</article>
+
+<article>
+<h2>System-Prompt Hardening</h2>
+<p>Adding firm instructions above the user, like "never reveal these rules" or "always refuse harm", stops casual attempts. A determined prompt can still argue the model into overriding them.</p>
+<p><span class="kt">Key takeaway:</span> Instructions defending the model still compete with the attacker's instructions.</p>
+</article>
+
+<article>
+<h2>Constitutional Classifiers</h2>
+<p>Train guard classifiers from a set of principles, generate attacks against them, and train to catch those attacks. This raises the cost of a successful jailbreak considerably.</p>
+<p><span class="kt">Key takeaway:</span> Rule-trained guards, hardened against generated attacks, raise the attacker's cost.</p>
+</article>
+
+<article>
+<h2>Circuit Breakers</h2>
+<p>Circuit breakers train the model to halt itself mid-harm by targeting the internal states that produce harmful output and rerouting them toward refusal or nonsense. Because they act on the internal cause rather than surface words, they stay robust even to unseen attack strings.</p>
+<p><span class="kt">Key takeaway:</span> Attacking the internal cause of harm is harder to bypass than filtering surface text.</p>
+</article>
+
+<article>
+<h2>Demo: Refusal vs Bypass</h2>
+<p>In a safe sandbox on an open model: ask a benign question, then a clearly harmful one and watch the refusal, then apply a category-level reframing and observe the drift, then enable a filter and measure how much it catches. Conceptual only, with no working attack strings.</p>
+<p><span class="kt">Key takeaway:</span> A controlled sandbox shows refusal, drift, and partial filtering without publishing real exploits.</p>
+</article>
+
+<article>
+<h2>The Cat-and-Mouse Game</h2>
+<p>Each new defense tends to invite a new attack that prompts a further defense. The result is an ongoing race rather than a finish line.</p>
+<p><span class="kt">Key takeaway:</span> Jailbreak defense is an ongoing cycle, not a one-time fix.</p>
+</article>
+
+<article>
+<h2>Not Solved</h2>
+<p>As of 2026, no defense is fully robust. Defenses raise cost rather than guarantee safety, new attacks keep finding gaps, and worst-case robustness remains open. We manage the risk; we do not eliminate it.</p>
+<p><span class="kt">Key takeaway:</span> The honest status is risk management, not a solved problem.</p>
+</article>
+
+<article>
+<h2>Frontier 2025-26</h2>
+<p>The field is pushing toward robustness built into the model internals, automated red-teaming at large scale, and safety that holds across languages and tools, moving from surface patches toward deeper guarantees.</p>
+<p><span class="kt">Key takeaway:</span> The frontier is moving from surface patches toward internal, broad-coverage robustness.</p>
+</article>
+
+<article>
+<h2>Key Takeaways</h2>
+<p>Alignment is a thin layer over full capability; safety covers less ground than capability; jailbreaks are adversarial examples in token space; and defenses raise cost while robustness stays open. Treat refusal as fragile and defend in layers.</p>
+<p><span class="kt">Key takeaway:</span> Assume refusal can break, and design the surrounding system accordingly.</p>
+</article>
+
+<article>
+<h2>Closer</h2>
+<p>Closing slide. The one line to remember from the whole lecture.</p>
+<p><span class="kt">Key takeaway:</span> Aligned does not mean unbreakable.</p>
+</article>
+
+</body></html>

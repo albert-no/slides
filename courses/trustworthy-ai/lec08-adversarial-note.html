@@ -1,0 +1,353 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 8 — Script</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+body { max-width: 880px; margin: 40px auto; padding: 0 28px; color: var(--charcoal); font-family: 'Yonsei','Noto Sans',Arial,sans-serif; line-height: 1.65; }
+h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
+article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
+.kt { color: var(--yonsei-blue); font-weight: 700; }
+</style></head><body>
+<h1>Lecture 8 — Adversarial Examples · Speaker Script</h1>
+<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+
+<article>
+<h2>Adversarial Examples</h2>
+<p>Welcome to Lecture 8 of Trustworthy AI. Today's question: how can a change too small for you to see completely flip what a model predicts, and what can we do about it?</p>
+<p><span class="kt">Key takeaway:</span> A tiny, tuned nudge can break an otherwise accurate model.</p>
+</article>
+
+<article>
+<h2>Contents</h2>
+<p>Six steps: the phenomenon, the threat model, the attacks, the defenses, the arms race between them, and physical plus multimodal attacks in 2025-26.</p>
+<p><span class="kt">Key takeaway:</span> From the trick, to a precise threat model, to attack and defense.</p>
+</article>
+
+<article>
+<h2>01 — The Phenomenon</h2>
+<p>First section. The surprising fact: every accurate model seems to have nearby inputs that fool it.</p>
+<p><span class="kt">Key takeaway:</span> Adversarial examples are a property of how these models carve up input space.</p>
+</article>
+
+<article>
+<h2>Models Look Confident</h2>
+<p>A good classifier hits high test accuracy with high confidence. It looks ready to deploy, until one crafted input breaks it.</p>
+<p><span class="kt">Key takeaway:</span> Test accuracy does not measure robustness.</p>
+</article>
+
+<article>
+<h2>The Panda That Became a Gibbon</h2>
+<p>The canonical example from Goodfellow and colleagues: add a faint pattern to a panda photo, and the model calls it a gibbon with 99% confidence, while your eye sees no change.</p>
+<p><span class="kt">Key takeaway:</span> An invisible-to-humans change can be decisive to a model.</p>
+</article>
+
+<article>
+<h2>Anatomy of the Trick</h2>
+<p>Three pieces: the original image, a small tuned nudge, and the result that looks identical but is now misclassified. The nudge is computed, not random.</p>
+<p><span class="kt">Key takeaway:</span> The perturbation is engineered to exploit the model.</p>
+</article>
+
+<article>
+<h2>Intriguing Properties</h2>
+<p>Szegedy and colleagues first reported these as "intriguing properties": every accurate network had them, and the same nudge often transferred to other models.</p>
+<p><span class="kt">Key takeaway:</span> The problem was there from the start of modern deep learning.</p>
+</article>
+
+<article>
+<h2>Not a Rare Bug</h2>
+<p>This is not a quirk of one model. It shows up across images, audio, and text, across architectures, and survives many training tricks.</p>
+<p><span class="kt">Key takeaway:</span> Adversarial examples are systematic, not accidental.</p>
+</article>
+
+<article>
+<h2>Why It Matters</h2>
+<p>Wherever an attacker can influence the input, they can influence the prediction: self-driving perception, spam filters, face unlock, content moderation.</p>
+<p><span class="kt">Key takeaway:</span> Control of the input can mean control of the output.</p>
+</article>
+
+<article>
+<h2>A Picture in Your Head</h2>
+<p>Picture the classifier's decision boundary between two classes. An input near the line needs only a small push to cross it into the wrong class.</p>
+<p><span class="kt">Key takeaway:</span> Inputs sit close to a boundary; a tiny push crosses it.</p>
+</article>
+
+<article>
+<h2>Close to the Edge</h2>
+<p>In high dimensions there are thousands of pixels, each a direction to push. A small change per pixel sums to a large change overall, so a boundary is always close.</p>
+<p><span class="kt">Key takeaway:</span> High dimension makes a small per-pixel nudge powerful in aggregate.</p>
+</article>
+
+<article>
+<h2>02 — The Threat Model</h2>
+<p>Second section. Before claiming a model is safe, we must say exactly what the attacker is allowed to do.</p>
+<p><span class="kt">Key takeaway:</span> Safety claims are meaningless without a stated threat model.</p>
+</article>
+
+<article>
+<h2>Spell Out the Rules</h2>
+<p>A threat model fixes three things: how much the attacker can change the input, what they know about the model, and what their goal is.</p>
+<p><span class="kt">Key takeaway:</span> Define the attacker's power, knowledge, and goal up front.</p>
+</article>
+
+<article>
+<h2>The Perturbation Budget</h2>
+<p>Start from a real input $x$, add a change $\delta$, and require it to be small: $\|\delta\| \le \varepsilon$. The adversarial input is $x_{\text{adv}} = x + \delta$, and a small $\varepsilon$ keeps it visually identical to $x$.</p>
+<p><span class="kt">Key takeaway:</span> The attacker may move within a small budget $\|\delta\| \le \varepsilon$.</p>
+</article>
+
+<article>
+<h2>How to Measure "Small"</h2>
+<p>"Small" needs a ruler. $L_\infty$ caps the largest single-pixel change, nudging every pixel a little. $L_2$ caps the total energy, allowing a few pixels to move more.</p>
+<p><span class="kt">Key takeaway:</span> The choice of norm shapes what the attack looks like.</p>
+</article>
+
+<article>
+<h2>The Allowed Region</h2>
+<p>The budget defines a small ball around $x$: a box for $L_\infty$, a sphere for $L_2$. The attack searches this region for an input the model gets wrong.</p>
+<p><span class="kt">Key takeaway:</span> The attack is a search inside the budget ball.</p>
+</article>
+
+<article>
+<h2>White Box vs Black Box</h2>
+<p>White box: the attacker sees weights and gradients, the worst case we test against. Black box: the attacker can only query the model and read its outputs.</p>
+<p><span class="kt">Key takeaway:</span> We evaluate defenses under the white-box worst case.</p>
+</article>
+
+<article>
+<h2>Transferability</h2>
+<p>An attack crafted on one model often fools a different model. So a black-box attacker can train their own copy, craft on it, and transfer the attack.</p>
+<p><span class="kt">Key takeaway:</span> Attacks transfer across models, enabling black-box attacks.</p>
+</article>
+
+<article>
+<h2>Why Transfer Is Scary</h2>
+<p>Because of transfer, you do not need access to a model to attack it. Keeping weights secret is not a defense; a look-alike model is enough.</p>
+<p><span class="kt">Key takeaway:</span> Hidden weights do not stop a transfer attack.</p>
+</article>
+
+<article>
+<h2>03 — The Attacks</h2>
+<p>Third section. The mechanics: how an attacker actually finds the nudge, using the model's own gradient.</p>
+<p><span class="kt">Key takeaway:</span> Attacks follow the gradient that raises the loss.</p>
+</article>
+
+<article>
+<h2>The Core Idea</h2>
+<p>Training asks which direction lowers the loss. An attack asks the opposite: which direction raises it. Step uphill in loss, and the prediction breaks.</p>
+<p><span class="kt">Key takeaway:</span> An attack is gradient ascent on the loss.</p>
+</article>
+
+<article>
+<h2>The Gradient Sign</h2>
+<p>The gradient tells us, per pixel, which direction increases the loss. Keep only the sign, brighten or darken accordingly, and push each pixel by the full budget $\varepsilon$.</p>
+<p><span class="kt">Key takeaway:</span> Move every pixel by $\varepsilon$ in its harmful direction.</p>
+</article>
+
+<article>
+<h2>FGSM: One Step</h2>
+<p>The Fast Gradient Sign Method takes one move: $x_{\text{adv}} = x + \varepsilon \cdot \operatorname{sign}(\nabla_x \text{loss})$. One gradient, one step, done. It is fast and cheap.</p>
+<p><span class="kt">Key takeaway:</span> FGSM is a single gradient-sign step of size $\varepsilon$.</p>
+</article>
+
+<article>
+<h2>FGSM by Hand</h2>
+<p>A worked example: a pixel of value $0.40$, budget $\varepsilon = 0.03$, gradient sign $+1$, gives $0.43$. Every pixel shifts by $0.03$, invisible on a 0-to-1 scale, and the cat now reads as a dog.</p>
+<p><span class="kt">Key takeaway:</span> A 0.03 shift per pixel is invisible but enough to flip the label.</p>
+</article>
+
+<article>
+<h2>One Step Is Weak</h2>
+<p>FGSM is fast but takes one blind leap. The loss surface curves, so a single straight step can overshoot or fall short. A careful attacker takes many small steps.</p>
+<p><span class="kt">Key takeaway:</span> A single step leaves a stronger attack on the table.</p>
+</article>
+
+<article>
+<h2>PGD: Iterate</h2>
+<p>Projected Gradient Descent repeats the step: take a small gradient-sign step, project back into the budget $\|\delta\| \le \varepsilon$, and repeat for many iterations.</p>
+<p><span class="kt">Key takeaway:</span> PGD is iterated FGSM with projection back into the budget.</p>
+</article>
+
+<article>
+<h2>Steps Inside the Ball</h2>
+<p>PGD walks toward the decision boundary while staying inside the budget ball, projecting back after each step. This finds weak spots a single step misses.</p>
+<p><span class="kt">Key takeaway:</span> Small projected steps locate the model's weak directions.</p>
+</article>
+
+<article>
+<h2>PGD Is the Benchmark</h2>
+<p>PGD became the standard strong attack: reliable, simple, and used to stress-test defenses. Beating PGD is the minimum bar for a robustness claim.</p>
+<p><span class="kt">Key takeaway:</span> PGD is the yardstick for testing defenses.</p>
+</article>
+
+<article>
+<h2>The Carlini-Wagner Attack</h2>
+<p>Carlini and Wagner introduced a stronger attack that optimizes for the smallest possible imperceptible change. It broke many defenses that survived PGD.</p>
+<p><span class="kt">Key takeaway:</span> A well-optimized attack finds tiny perturbations others miss.</p>
+</article>
+
+<article>
+<h2>Targeted vs Untargeted</h2>
+<p>Untargeted: make the model wrong, any wrong label will do. Targeted: make it output a chosen label, like reading "stop" as "go". Targeted is harder and more dangerous.</p>
+<p><span class="kt">Key takeaway:</span> A targeted attack chooses the wrong answer the model gives.</p>
+</article>
+
+<article>
+<h2>04 — The Defenses</h2>
+<p>Fourth section. How defenders fight back: training on attacks, and proving safety with certificates.</p>
+<p><span class="kt">Key takeaway:</span> Defenses aim for correctness across a whole neighborhood, not one point.</p>
+</article>
+
+<article>
+<h2>The Defender's Goal</h2>
+<p>The goal is robustness: for every $\delta$ with $\|\delta\| \le \varepsilon$, the model still predicts the true label of $x$. Correctness on the whole neighborhood, not just on $x$.</p>
+<p><span class="kt">Key takeaway:</span> Be correct everywhere inside the budget.</p>
+</article>
+
+<article>
+<h2>The Robustness Radius</h2>
+<p>The robustness radius is how far you can push $x$ before the prediction flips. A larger guaranteed radius means a more robust model at that point.</p>
+<p><span class="kt">Key takeaway:</span> Robustness can be summarized by a safe radius around each input.</p>
+</article>
+
+<article>
+<h2>Adversarial Training</h2>
+<p>The de-facto defense from Madry and colleagues: craft a PGD attack on each batch, train on the attacked images with their true labels, and repeat so the model learns to resist.</p>
+<p><span class="kt">Key takeaway:</span> Train on your own attacks to build resistance.</p>
+</article>
+
+<article>
+<h2>It Actually Works</h2>
+<p>Adversarial training is the one defense that held up. It survived years of stronger attacks and remains the baseline everyone compares against.</p>
+<p><span class="kt">Key takeaway:</span> Adversarial training is the rare defense that lasts.</p>
+</article>
+
+<article>
+<h2>The Cost</h2>
+<p>Robustness is expensive: crafting an attack each step slows training, clean accuracy usually drops, and you need bigger models and more data. Robustness and accuracy often trade off.</p>
+<p><span class="kt">Key takeaway:</span> Robustness costs compute and some clean accuracy.</p>
+</article>
+
+<article>
+<h2>Empirical vs Certified</h2>
+<p>Empirical robustness means no attack we tried broke it, which could change tomorrow. Certified robustness is a proof that no attack inside the budget can ever win.</p>
+<p><span class="kt">Key takeaway:</span> A proof beats a track record of survived attacks.</p>
+</article>
+
+<article>
+<h2>Certified Robustness</h2>
+<p>The aim is a guarantee: within radius $r$ of $x$, the prediction is provably constant, so no nudge that small can flip it. A guarantee against any attack, not just tested ones.</p>
+<p><span class="kt">Key takeaway:</span> Certificates promise safety against all attacks within a radius.</p>
+</article>
+
+<article>
+<h2>Randomized Smoothing</h2>
+<p>One route to a certificate, from Cohen and colleagues: add random noise to the input many times, classify each noisy copy, and take the majority vote as the answer.</p>
+<p><span class="kt">Key takeaway:</span> Voting under noise turns a model into a certifiable one.</p>
+</article>
+
+<article>
+<h2>Why Voting Certifies</h2>
+<p>A small nudge barely shifts the cloud of noisy copies, so the majority answer stays the same. How much it can shift before the vote changes gives a provable radius.</p>
+<p><span class="kt">Key takeaway:</span> Noise smooths the boundary into something provable.</p>
+</article>
+
+<article>
+<h2>The Certified Catch</h2>
+<p>Certificates are real but modest: the guaranteed radius is often small, each prediction needs many noisy queries, and the method is hard to scale to large inputs.</p>
+<p><span class="kt">Key takeaway:</span> Certified radii are narrow and costly today.</p>
+</article>
+
+<article>
+<h2>05 — The Arms Race</h2>
+<p>Fifth section. Why most defenses fail: they were tested against weak or non-adaptive attacks.</p>
+<p><span class="kt">Key takeaway:</span> A defense is only as strong as the attack it was tested against.</p>
+</article>
+
+<article>
+<h2>A Recurring Story</h2>
+<p>The cycle repeats almost every year: a new defense appears, an adaptive attack is built, and the defense breaks. Most "solved" claims did not survive contact.</p>
+<p><span class="kt">Key takeaway:</span> Treat new defense claims with caution.</p>
+</article>
+
+<article>
+<h2>Obfuscated Gradients</h2>
+<p>Athalye and colleagues showed many defenses merely hid the gradient. The attack could not find a direction to push, so it looked safe, but the model was unchanged.</p>
+<p><span class="kt">Key takeaway:</span> Hiding gradients masks the attack, not the vulnerability.</p>
+</article>
+
+<article>
+<h2>A False Sense of Security</h2>
+<p>Hiding the gradient hides the attack, not the weakness. By recovering the gradient, one paper broke seven defenses presented at a single conference.</p>
+<p><span class="kt">Key takeaway:</span> Apparent robustness can be an evaluation artifact.</p>
+</article>
+
+<article>
+<h2>Adaptive Attacks</h2>
+<p>The right test uses an attacker who knows your defense and tailors the attack to that exact mechanism, rather than a fixed off-the-shelf attack. Most defenses fall once the attack adapts.</p>
+<p><span class="kt">Key takeaway:</span> Evaluate against an adversary who knows your defense.</p>
+</article>
+
+<article>
+<h2>How to Test Honestly</h2>
+<p>A short checklist: use a strong adaptive attack, report the white-box worst case, and prefer a certificate over a track record. Skepticism is the discipline of this field.</p>
+<p><span class="kt">Key takeaway:</span> Honest evaluation means strong, adaptive, worst-case testing.</p>
+</article>
+
+<article>
+<h2>06 — Physical & Multimodal</h2>
+<p>Sixth section. Attacks leave the screen: printed patches in the world, and hidden instructions in multimodal models.</p>
+<p><span class="kt">Key takeaway:</span> Adversarial attacks reach into the physical and multimodal world.</p>
+</article>
+
+<article>
+<h2>Off the Screen</h2>
+<p>Attacks can escape the digital image into the real world as printed patterns the camera sees. They must survive changes in angle, distance, and lighting.</p>
+<p><span class="kt">Key takeaway:</span> A physical attack is a perturbation you can print and place.</p>
+</article>
+
+<article>
+<h2>The Stop-Sign Attack</h2>
+<p>Eykholt and colleagues showed that a few stickers on a stop sign, looking like ordinary graffiti to a human, make a vision system read it as a speed-limit sign.</p>
+<p><span class="kt">Key takeaway:</span> Cheap stickers can fool a real-world perception system.</p>
+</article>
+
+<article>
+<h2>Adversarial Patches</h2>
+<p>An adversarial patch is a printed object that hijacks attention wherever it appears. Placed in a scene, the model fixates on it; worn on clothing, it can hide a person from detectors.</p>
+<p><span class="kt">Key takeaway:</span> A visible, printable patch can dominate a model's decision.</p>
+</article>
+
+<article>
+<h2>Beyond Vision</h2>
+<p>The same idea reaches other inputs: an audio command hidden in background noise, or a few rewritten words that flip a text classifier.</p>
+<p><span class="kt">Key takeaway:</span> Any input modality can be perturbed to mislead a model.</p>
+</article>
+
+<article>
+<h2>Attacking Multimodal Models</h2>
+<p>Modern assistants read images and text together. Hide instructions inside an uploaded image, and the vision model passes them to the language model, which follows the hidden command.</p>
+<p><span class="kt">Key takeaway:</span> A perturbed image can act as a prompt injection in 2024-25 systems.</p>
+</article>
+
+<article>
+<h2>The 2025-26 Frontier</h2>
+<p>Current pushes: robust vision-language and agent systems, attacks that survive real cameras and pipelines, and certificates that finally scale. The arms race has moved up to multimodal agents.</p>
+<p><span class="kt">Key takeaway:</span> The frontier is robustness for multimodal agents.</p>
+</article>
+
+<article>
+<h2>Key Takeaways</h2>
+<p>To sum up: a tiny tuned nudge $\|\delta\| \le \varepsilon$ flips the answer; attacks follow the gradient via FGSM and PGD; adversarial training holds and certificates prove safety; most other defenses break under adaptive attack.</p>
+<p><span class="kt">Key takeaway:</span> Test against your strongest adversary, not your weakest.</p>
+</article>
+
+<article>
+<h2>Closer</h2>
+<p>We close on the budget itself: $\|\delta\| \le \varepsilon$. A small allowance for change is all it takes to break a confident prediction, which is why robustness is a core part of trustworthy AI.</p>
+<p><span class="kt">Key takeaway:</span> A small budget, a broken prediction.</p>
+</article>
+
+</body></html>

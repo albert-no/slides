@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Membership Inference Attacks — Trustworthy AI Lecture 3</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Trustworthy AI · Lecture 3</div>
+  <h1>Membership<br>Inference Attacks</h1>
+  <div class="divider"></div>
+  <p class="subtitle">"Was your record in the training set?"</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The Question</div><div class="toc-sub">Was your record in the training set?</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The Basic Attack</div><div class="toc-sub">Overfitting leaves a fingerprint</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Shadow Models</div><div class="toc-sub">Train copycats, learn the signal</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Stronger Attacks</div><div class="toc-sub">Calibrate per-example difficulty</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">What It Means</div><div class="toc-sub">MIA audits differential privacy</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Modern Models</div><div class="toc-sub">LLMs, diffusion, web-scale doubt</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">07</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Defenses</div><div class="toc-sub">The privacy-utility price</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>The Question</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Was your record in the training set?</p>
+</div>
+
+<!-- 4. One Yes-or-No Question -->
+<div class="slide">
+  <h2>One Yes-or-No Question</h2>
+  <div class="divider"></div>
+  <p>A trained model sits in front of you. Pick a record.</p>
+  <div class="def-card">
+    <h3>Membership Inference Attack (MIA)</h3>
+    <p>Decide whether <strong>one specific record</strong> was part of the training set.</p>
+  </div>
+  <p class="muted">Not "what did it learn", just "was this person in".</p>
+</div>
+
+<!-- 5. The Simplest Leak -->
+<div class="slide">
+  <h2>The Simplest Leak</h2>
+  <div class="divider"></div>
+  <p>MIA is the <strong>unit test</strong> of privacy.</p>
+  <ul class="arrow">
+    <li>Simplest question an attacker can ask</li>
+    <li>Easiest to measure with a clean number</li>
+    <li>If membership leaks, more can leak</li>
+  </ul>
+  <p class="muted">Pass this test before claiming anything stronger.</p>
+</div>
+
+<!-- 6. Member vs Non-Member -->
+<div class="slide">
+  <h2>Member vs Non-Member</h2>
+  <div class="divider"></div>
+  <p>Two worlds for one record $x$.</p>
+  <div class="diagram-flow" style="margin:24px 0;">
+    <div class="diagram-box"><strong>Member:</strong> $x$ in training</div>
+    <div class="diagram-box">Model $f_\theta$</div>
+    <div class="diagram-box"><strong>Non-member:</strong> $x$ held out</div>
+  </div>
+  <p>The attacker sees only $f_\theta$ and must guess which world.</p>
+</div>
+
+<!-- 7. Why Membership Alone Hurts -->
+<div class="slide">
+  <h2>Why Membership Alone Hurts</h2>
+  <div class="divider"></div>
+  <p>Sometimes the training set <em>is</em> the secret.</p>
+  <div class="highlight"><p>Model trained <strong>only on cancer patients</strong>. Confirming Alice is a member reveals her diagnosis.</p></div>
+  <p>No record reconstructed, yet a diagnosis leaks.</p>
+</div>
+
+<!-- 8. Where It Bites -->
+<div class="slide">
+  <h2>Where It Bites</h2>
+  <div class="divider"></div>
+  <p>Any model trained on a <strong>sensitive cohort</strong>.</p>
+  <ul>
+    <li>Patients with one disease</li>
+    <li>Users of a dating or addiction app</li>
+    <li>People in a location or income bracket</li>
+  </ul>
+  <p class="muted">Membership in the cohort is itself private.</p>
+</div>
+
+<!-- 9. The Threat Model -->
+<div class="slide">
+  <h2>The Threat Model</h2>
+  <div class="divider"></div>
+  <p>What does the attacker actually get?</p>
+  <div class="grid-2">
+    <div><h3>Black box</h3>
+      <p>Query the model, read its outputs only.</p></div>
+    <div><h3>White box</h3>
+      <p>Also see weights, gradients, internals.</p></div>
+  </div>
+  <p class="muted">Most attacks need only black-box access.</p>
+</div>
+
+<!-- 10. A Score and a Threshold -->
+<div class="slide">
+  <h2>A Score and a Threshold</h2>
+  <div class="divider"></div>
+  <p>Every attack reduces to the same shape.</p>
+  <ul class="num">
+    <li>Compute a <strong>score</strong> for record $x$.</li>
+    <li>Compare it to a threshold $\tau$.</li>
+    <li>Above means non-member, below means member.</li>
+  </ul>
+  <p class="muted">The whole game is choosing a good score.</p>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 11. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>The Basic Attack</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Overfitting leaves a fingerprint</p>
+</div>
+
+<!-- 12. Models Fit What They Saw -->
+<div class="slide">
+  <h2>Models Fit What They Saw</h2>
+  <div class="divider"></div>
+  <p>Training minimizes loss on the training points.</p>
+  <div class="math-block">$$\text{train loss} \;&lt;\; \text{test loss}.$$</div>
+  <p>A member tends to have <strong>lower loss</strong> than a stranger.</p>
+</div>
+
+<!-- 13. Loss Is the Score -->
+<div class="slide">
+  <h2>Loss Is the Score</h2>
+  <div class="divider"></div>
+  <p>Use the per-example loss as the membership score.</p>
+  <div class="math-block">$$\text{score}(x) = \ell\!\left(f_\theta, x\right).$$</div>
+  <p>Low loss ⇒ guess <strong>member</strong>. High loss ⇒ guess non-member.</p>
+  <div class="cite cite-left">Yeom, Giacomelli, Fredrikson, and Jha, "Privacy Risk in Machine Learning", IEEE CSF 2018.</div>
+</div>
+
+<!-- 14. The Two Bells -->
+<div class="slide">
+  <h2>The Two Bells</h2>
+  <div class="divider"></div>
+  <p>Members sit at lower loss, but the bells <em>overlap</em>.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 460 220" style="width:100%;max-width:880px;">
+      <line x1="40" y1="178" x2="430" y2="178" stroke="#999" stroke-width="1.5"/>
+      <path d="M50,178 C110,178 120,62 165,62 C210,62 220,178 280,178 Z" fill="#1a5296" fill-opacity="0.28" stroke="#003876" stroke-width="2.5"/>
+      <path d="M165,178 C225,178 235,74 280,74 C325,74 335,178 405,178 Z" fill="#9aa3ad" fill-opacity="0.30" stroke="#6b7280" stroke-width="2.5"/>
+      <text x="92" y="112" font-size="18" fill="#003876" font-weight="700">members</text>
+      <text x="98" y="132" font-size="15" fill="#003876">low loss</text>
+      <text x="312" y="120" font-size="18" fill="#6b7280" font-weight="700">non-members</text>
+      <text x="334" y="140" font-size="15" fill="#6b7280">higher loss</text>
+      <line x1="222" y1="178" x2="222" y2="58" stroke="#d94040" stroke-width="2" stroke-dasharray="5 4"/>
+      <text x="222" y="50" font-size="15" fill="#d94040" text-anchor="middle" font-weight="700">threshold</text>
+      <text x="366" y="197" font-size="15" fill="#666">loss →</text>
+    </svg>
+  </div>
+  <p class="muted">The overlap is the attacker's error rate.</p>
+</div>
+
+<!-- 15. Overfitting Drives MIA -->
+<div class="slide">
+  <h2>Overfitting Drives MIA</h2>
+  <div class="divider"></div>
+  <p>The bigger the train-test gap, the easier the attack.</p>
+  <div class="highlight"><p>Overfitting <strong>separates the bells</strong>. A well-generalizing model hides its members.</p></div>
+  <p>Privacy risk tracks the generalization gap.</p>
+</div>
+
+<!-- 16. The Threshold Attack -->
+<div class="slide">
+  <h2>The Threshold Attack</h2>
+  <div class="divider"></div>
+  <p>The simplest MIA, in three lines.</p>
+  <div class="code-block"><span class="cm"># member if loss is small</span>
+<span class="kw">def</span> <span class="fn">attack</span>(model, x, &tau;):
+    return model.<span class="fn">loss</span>(x) <span class="kw">&lt;</span> &tau;
+</div>
+  <p class="muted">No training, no internals: one query and a threshold.</p>
+</div>
+
+<!-- 17. Confidence Works Too -->
+<div class="slide">
+  <h2>Confidence Works Too</h2>
+  <div class="divider"></div>
+  <p>Loss needs the true label. Use <strong>confidence</strong> when it is hidden.</p>
+  <ul>
+    <li>Members get sharper, more confident outputs</li>
+    <li>Highest predicted probability as the score</li>
+    <li>Or the gap to the runner-up class</li>
+  </ul>
+  <div class="cite cite-left">Shokri, Stronati, Song, and Shmatikov, "Membership Inference Attacks Against Machine Learning Models", IEEE S&amp;P 2017.</div>
+</div>
+
+<!-- 18. A Theory Anchor -->
+<div class="slide">
+  <h2>A Theory Anchor</h2>
+  <div class="divider"></div>
+  <p>The threshold attack is not a hack. It is <strong>provably tied to overfitting</strong>.</p>
+  <div class="def-card">
+    <h3>Yeom et al. (2018)</h3>
+    <p>Membership advantage is bounded by the train-test loss gap. Zero generalization gap ⇒ no loss-based attack.</p>
+  </div>
+  <div class="cite cite-left">Yeom, Giacomelli, Fredrikson, and Jha, "Privacy Risk in Machine Learning", IEEE CSF 2018.</div>
+</div>
+
+<!-- 19. Demo: Threshold Attack -->
+<div class="slide">
+  <h2>Try It Yourself</h2>
+  <div class="divider"></div>
+  <div class="demo-card">
+    <h3>Demo</h3>
+    <ul class="check">
+      <li>Train a small classifier on CIFAR-10</li>
+      <li>Plot member vs non-member loss histograms</li>
+      <li>Sweep $\tau$, watch the accuracy curve</li>
+    </ul>
+  </div>
+  <p class="muted">A single Colab cell shows the two bells.</p>
+</div>
+
+<!-- ============ SECTION 03 ============ -->
+<!-- 20. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Shadow Models</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Train copycats, learn the signal</p>
+</div>
+
+<!-- 21. One Threshold Is Crude -->
+<div class="slide">
+  <h2>One Threshold Is Crude</h2>
+  <div class="divider"></div>
+  <p>A single global $\tau$ ignores a lot.</p>
+  <ul class="arrow">
+    <li>Different classes have different loss scales</li>
+    <li>Different inputs are intrinsically easy or hard</li>
+    <li>We want a <strong>learned</strong> decision, not a guess</li>
+  </ul>
+  <p class="muted">Can we train the attack itself?</p>
+</div>
+
+<!-- 22. The Shadow Idea -->
+<div class="slide">
+  <h2>The Shadow Idea</h2>
+  <div class="divider"></div>
+  <p>You cannot see the target's members. So <strong>build copies you control</strong>.</p>
+  <div class="def-card">
+    <h3>Shadow model</h3>
+    <p>A model trained like the target, on data <em>you</em> own, so you know exactly who is in and who is out.</p>
+  </div>
+  <div class="cite cite-left">Shokri, Stronati, Song, and Shmatikov, "Membership Inference Attacks Against Machine Learning Models", IEEE S&amp;P 2017.</div>
+</div>
+
+<!-- 23. The Pipeline -->
+<div class="slide">
+  <h2>The Shadow Pipeline</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 460 230" style="width:100%;max-width:880px;">
+      <rect x="20" y="40" width="120" height="46" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
+      <text x="80" y="60" font-size="15" text-anchor="middle" fill="#003876" font-weight="700">your data</text>
+      <text x="80" y="78" font-size="14" text-anchor="middle" fill="#6b7280">in / out known</text>
+      <rect x="20" y="140" width="120" height="46" rx="8" fill="#003876"/>
+      <text x="80" y="160" font-size="15" text-anchor="middle" fill="#fff" font-weight="700">shadow</text>
+      <text x="80" y="178" font-size="14" text-anchor="middle" fill="#cdd8e6">models</text>
+      <rect x="180" y="90" width="120" height="46" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
+      <text x="240" y="110" font-size="15" text-anchor="middle" fill="#003876" font-weight="700">labeled</text>
+      <text x="240" y="128" font-size="14" text-anchor="middle" fill="#6b7280">in / out outputs</text>
+      <rect x="340" y="90" width="110" height="46" rx="8" fill="#2e8b57"/>
+      <text x="395" y="110" font-size="15" text-anchor="middle" fill="#fff" font-weight="700">attack</text>
+      <text x="395" y="128" font-size="14" text-anchor="middle" fill="#d9efe1">classifier</text>
+      <defs><marker id="sar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs>
+      <line x1="80" y1="86" x2="80" y2="138" stroke="#6b7280" stroke-width="2.5" marker-end="url(#sar)"/>
+      <line x1="140" y1="160" x2="232" y2="120" stroke="#6b7280" stroke-width="2.5" marker-end="url(#sar)"/>
+      <line x1="300" y1="113" x2="334" y2="113" stroke="#6b7280" stroke-width="2.5" marker-end="url(#sar)"/>
+    </svg>
+  </div>
+  <p class="muted">Train shadows, collect their outputs, train an attack model on the labels.</p>
+</div>
+
+<!-- 24. Learn the Member Signal -->
+<div class="slide">
+  <h2>Learn the Member Signal</h2>
+  <div class="divider"></div>
+  <p>The attack classifier reads an output and predicts in or out.</p>
+  <ul class="num">
+    <li>Feed shadow outputs labeled <strong>in / out</strong>.</li>
+    <li>It learns what a member's output looks like.</li>
+    <li>Apply that learned signal to the target.</li>
+  </ul>
+  <p class="muted">The attacker never needed the target's data.</p>
+</div>
+
+<!-- 25. Why It Transfers -->
+<div class="slide">
+  <h2>Why It Transfers</h2>
+  <div class="divider"></div>
+  <p>Same architecture and task ⇒ <strong>same memorization habits</strong>.</p>
+  <ul class="arrow">
+    <li>Shadows overfit the way the target overfits</li>
+    <li>The in-vs-out pattern carries across</li>
+    <li>Even with only similar, not identical, data</li>
+  </ul>
+  <p class="muted">2017: the attack that opened the field.</p>
+</div>
+
+<!-- ============ SECTION 04 ============ -->
+<!-- 26. Divider 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Stronger Attacks</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Calibrate per-example difficulty</p>
+</div>
+
+<!-- 27. Not All Records Are Equal -->
+<div class="slide">
+  <h2>Not All Records Are Equal</h2>
+  <div class="divider"></div>
+  <p>A global threshold misses a key fact.</p>
+  <ul>
+    <li>Easy records get low loss <em>even as non-members</em></li>
+    <li>Hard records get high loss even as members</li>
+    <li>Raw loss confuses <strong>difficulty</strong> with membership</li>
+  </ul>
+  <p class="muted">We must ask: low loss compared to what?</p>
+</div>
+
+<!-- 28. Calibrate Per Example -->
+<div class="slide">
+  <h2>Calibrate Per Example</h2>
+  <div class="divider"></div>
+  <p>Ask one sharper question for record $x$.</p>
+  <div class="highlight"><p>Is the loss low <strong>for this specific $x$</strong>, versus models that never saw it?</p></div>
+  <p>Compare against $x$'s own baseline, not a global one.</p>
+</div>
+
+<!-- 29. The Likelihood Ratio -->
+<div class="slide">
+  <h2>The Likelihood Ratio</h2>
+  <div class="divider"></div>
+  <p>Model two worlds for the loss of $x$.</p>
+  <div class="math-block">$$\Lambda(x) = \frac{\Pr[\text{loss} \mid x \text{ in}]}{\Pr[\text{loss} \mid x \text{ out}]}.$$</div>
+  <p>Estimate both distributions, then take the ratio.</p>
+  <div class="cite cite-left">Sablayrolles et al., "White-box vs Black-box: Bayes Optimal Strategies for Membership Inference", ICML 2019.</div>
+</div>
+
+<!-- 30. LiRA -->
+<div class="slide">
+  <h2>LiRA: Likelihood Ratio Attack</h2>
+  <div class="divider"></div>
+  <p>The strong, practical recipe.</p>
+  <div class="ta-algo" style="max-width:900px; margin:18px auto;">
+    <ol>
+      <li>Train many shadows with $x$ <strong>in</strong>.</li>
+      <li>Train many shadows with $x$ <strong>out</strong>.</li>
+      <li>Fit a Gaussian to each loss distribution.</li>
+      <li>Score $x$ by the likelihood ratio.</li>
+    </ol>
+  </div>
+  <div class="cite cite-left">Carlini et al., "Membership Inference Attacks From First Principles", IEEE S&amp;P 2022.</div>
+</div>
+
+<!-- 31. Two In-vs-Out Bells -->
+<div class="slide">
+  <h2>Two In-vs-Out Bells</h2>
+  <div class="divider"></div>
+  <p>For one record $x$: where does the target's loss land?</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 460 220" style="width:100%;max-width:860px;">
+      <line x1="40" y1="178" x2="430" y2="178" stroke="#999" stroke-width="1.5"/>
+      <path d="M55,178 C95,178 105,70 140,70 C175,70 185,178 225,178 Z" fill="#1a5296" fill-opacity="0.26" stroke="#003876" stroke-width="2.5"/>
+      <path d="M210,178 C255,178 265,82 305,82 C345,82 355,178 410,178 Z" fill="#9aa3ad" fill-opacity="0.30" stroke="#6b7280" stroke-width="2.5"/>
+      <text x="120" y="58" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">x in</text>
+      <text x="318" y="70" font-size="16" fill="#6b7280" text-anchor="middle" font-weight="700">x out</text>
+      <line x1="190" y1="178" x2="190" y2="58" stroke="#2e8b57" stroke-width="2" stroke-dasharray="5 4"/>
+      <text x="190" y="50" font-size="15" fill="#2e8b57" text-anchor="middle" font-weight="700">observed loss</text>
+      <text x="366" y="197" font-size="15" fill="#666">loss →</text>
+    </svg>
+  </div>
+  <p class="muted">Closer to the in-bell ⇒ likely a member.</p>
+</div>
+
+<!-- 32. Label-Only Attacks -->
+<div class="slide">
+  <h2>Label-Only Attacks</h2>
+  <div class="divider"></div>
+  <p>What if the model returns <strong>only a label</strong>, no scores?</p>
+  <ul class="arrow">
+    <li>Perturb $x$, ask if the label still holds</li>
+    <li>Members survive more perturbation</li>
+    <li>Robustness becomes the membership signal</li>
+  </ul>
+  <div class="cite cite-left">Choquette-Choo, Tramèr, Carlini, and Papernot, "Label-Only Membership Inference Attacks", ICML 2021.</div>
+</div>
+
+<!-- 33. Average Accuracy Lies -->
+<div class="slide">
+  <h2>Average Accuracy Lies</h2>
+  <div class="divider"></div>
+  <p>"55% attack accuracy" sounds harmless.</p>
+  <div class="highlight"><p>It hides the danger: a few records leak with <strong>near certainty</strong>.</p></div>
+  <p>The worst case, not the average, is the privacy harm.</p>
+</div>
+
+<!-- 34. Precision at Low FPR -->
+<div class="slide">
+  <h2>Precision at Low FPR</h2>
+  <div class="divider"></div>
+  <p>FPR (False Positive Rate): how often we wrongly cry "member".</p>
+  <ul>
+    <li>Fix a tiny FPR, like $0.1\%$</li>
+    <li>Measure how many true members we still catch</li>
+    <li>Confident, correct hits are what matter</li>
+  </ul>
+  <p class="muted">LiRA wins exactly in this low-FPR regime.</p>
+</div>
+
+<!-- 35. Reading the ROC Tail -->
+<div class="slide">
+  <h2>Reading the ROC Tail</h2>
+  <div class="divider"></div>
+  <p>Plot true positives against false positives, log scale.</p>
+  <div style="display:flex;justify-content:center;margin:4px 0;">
+    <svg viewBox="0 0 460 220" style="width:100%;max-width:820px;">
+      <line x1="55" y1="185" x2="430" y2="185" stroke="#999" stroke-width="1.5"/>
+      <line x1="55" y1="185" x2="55" y2="25" stroke="#999" stroke-width="1.5"/>
+      <line x1="55" y1="185" x2="430" y2="25" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="5 4"/>
+      <path d="M55,185 C75,120 110,70 200,55 C300,40 400,30 430,28" fill="none" stroke="#003876" stroke-width="3"/>
+      <text x="240" y="205" font-size="15" fill="#666" text-anchor="middle">false positive rate (log)</text>
+      <text x="30" y="105" font-size="15" fill="#666" text-anchor="middle" transform="rotate(-90 30 105)">true positives</text>
+      <text x="150" y="50" font-size="15" fill="#003876" font-weight="700">LiRA</text>
+      <text x="330" y="95" font-size="15" fill="#6b7280">chance line</text>
+    </svg>
+  </div>
+  <p class="muted">Judge the <strong>left edge</strong>, where false positives are rare.</p>
+</div>
+
+<!-- ============ SECTION 05 ============ -->
+<!-- 36. Divider 05 -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>What It Means</h1>
+  <div class="divider"></div>
+  <p class="subtitle">MIA audits differential privacy</p>
+</div>
+
+<!-- 37. Recall: Differential Privacy -->
+<div class="slide">
+  <h2>Differential Privacy in One Line</h2>
+  <div class="divider"></div>
+  <p>DP (Differential Privacy) bounds how much one record can change the output.</p>
+  <div class="def-card">
+    <h3>$(\varepsilon, \delta)$-DP</h3>
+    <p>For neighboring datasets $D, D'$ differing in one person, every outcome shifts by at most a factor $e^{\varepsilon}$, plus slack $\delta$.</p>
+  </div>
+  <div class="cite cite-left">Dwork, McSherry, Nissim, and Smith, "Calibrating Noise to Sensitivity", TCC 2006.</div>
+</div>
+
+<!-- 38. DP Caps the Attacker -->
+<div class="slide">
+  <h2>DP Caps the Attacker</h2>
+  <div class="divider"></div>
+  <p>The same record-swap that DP bounds is what MIA exploits.</p>
+  <div class="highlight"><p>A real $\varepsilon$ bound <strong>limits any MIA's success</strong>, attacker unknown.</p></div>
+  <p>DP and membership inference are two sides of one coin.</p>
+</div>
+
+<!-- 39. A Concrete Bound -->
+<div class="slide">
+  <h2>A Concrete Bound</h2>
+  <div class="divider"></div>
+  <p>Under $\varepsilon$-DP, the best attacker's edge is capped.</p>
+  <div class="math-block">$$\text{TPR} \;\le\; e^{\varepsilon}\,\text{FPR} + \delta.$$</div>
+  <p>Small $\varepsilon$ ⇒ true positives stay near false positives.</p>
+</div>
+
+<!-- 40. Auditing Flips the Attack -->
+<div class="slide">
+  <h2>Auditing Flips the Attack</h2>
+  <div class="divider"></div>
+  <p>Turn the attack into a <strong>measurement tool</strong>.</p>
+  <ul class="num">
+    <li>Run the strongest MIA you have.</li>
+    <li>Read off its true and false positive rates.</li>
+    <li>Back out an <em>empirical</em> $\varepsilon$.</li>
+  </ul>
+  <p class="muted">Attack success becomes a privacy meter.</p>
+</div>
+
+<!-- 41. Trust but Verify -->
+<div class="slide">
+  <h2>Trust but Verify</h2>
+  <div class="divider"></div>
+  <p>The analysis claims an $\varepsilon$. Auditing checks it.</p>
+  <div class="grid-2">
+    <div><h3>Bug catch</h3>
+      <p>Empirical $\varepsilon$ above the claim means a broken implementation.</p></div>
+    <div><h3>Looseness</h3>
+      <p>Empirical $\varepsilon$ far below means a conservative proof.</p></div>
+  </div>
+  <p class="muted">Privacy auditing is now standard practice.</p>
+</div>
+
+<!-- 42. Auditing in Practice -->
+<div class="slide">
+  <h2>Auditing in Practice</h2>
+  <div class="divider"></div>
+  <p>Inject <strong>canaries</strong>: crafted records easy to detect.</p>
+  <ul class="arrow">
+    <li>Train, then attack the canaries</li>
+    <li>High detection ⇒ weak privacy</li>
+    <li>Recent work audits in one training run</li>
+  </ul>
+  <p class="muted">Cheap enough to run on every model.</p>
+</div>
+
+<!-- ============ SECTION 06 ============ -->
+<!-- 43. Divider 06 -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Modern Models</h1>
+  <div class="divider"></div>
+  <p class="subtitle">LLMs, diffusion, web-scale doubt</p>
+</div>
+
+<!-- 44. MIA Meets Foundation Models -->
+<div class="slide">
+  <h2>MIA Meets Foundation Models</h2>
+  <div class="divider"></div>
+  <p>Since 2023, MIA targets <strong>LLMs and diffusion models</strong>.</p>
+  <ul>
+    <li>Was this article in the LLM's pretraining?</li>
+    <li>Was this photo in the image model's data?</li>
+    <li>High stakes for copyright and privacy</li>
+  </ul>
+  <p class="muted">LLM = Large Language Model.</p>
+</div>
+
+<!-- 45. Detecting Pretraining Data -->
+<div class="slide">
+  <h2>Detecting Pretraining Data</h2>
+  <div class="divider"></div>
+  <p>Min-K%: score text by its <strong>least likely tokens</strong>.</p>
+  <ul class="arrow">
+    <li>Members have few very-low-probability tokens</li>
+    <li>Average the $k\%$ most surprising tokens</li>
+    <li>A high score suggests the text was seen</li>
+  </ul>
+  <div class="cite cite-left">Shi et al., "Detecting Pretraining Data from Large Language Models", ICLR 2024.</div>
+</div>
+
+<!-- 46. Diffusion Models Too -->
+<div class="slide">
+  <h2>Diffusion Models Too</h2>
+  <div class="divider"></div>
+  <p>Image generators leave a membership trace.</p>
+  <ul>
+    <li>Members get lower denoising error</li>
+    <li>Duplicated images leak the most</li>
+    <li>Same overfitting signal, new domain</li>
+  </ul>
+  <!-- TODO real figure: Carlini et al. "Extracting Training Data from Diffusion Models", USENIX Security 2023, Fig 5 -->
+  <p class="muted">Memorization scales with duplication.</p>
+</div>
+
+<!-- 47. Is MIA Well-Posed at Scale? -->
+<div class="slide">
+  <h2>Is MIA Well-Posed at Scale?</h2>
+  <div class="divider"></div>
+  <p>A 2024 result questions the whole premise.</p>
+  <div class="highlight"><p>On true web-scale LLMs, many "attacks" barely beat <strong>chance</strong>.</p></div>
+  <div class="cite cite-left">Duan et al., "Do Membership Inference Attacks Work on Large Language Models?", COLM 2024.</div>
+</div>
+
+<!-- 48. Why Scale Breaks It -->
+<div class="slide">
+  <h2>Why Scale Breaks It</h2>
+  <div class="divider"></div>
+  <p>Two forces blunt MIA on huge models.</p>
+  <ul class="arrow">
+    <li>One epoch over trillions of tokens: little overfit</li>
+    <li>Members and non-members overlap in distribution</li>
+    <li>"Member" itself gets fuzzy at web scale</li>
+  </ul>
+  <p class="muted">Apparent success can be a topic-detector in disguise.</p>
+</div>
+
+<!-- 49. The Benchmark Trap -->
+<div class="slide">
+  <h2>The Benchmark Trap</h2>
+  <div class="divider"></div>
+  <p>Many MIA wins came from <strong>flawed splits</strong>.</p>
+  <ul>
+    <li>Members were newer than non-members</li>
+    <li>The attack learned the date, not membership</li>
+    <li>Fix the split, the advantage vanishes</li>
+  </ul>
+  <p class="muted">Always check what your benchmark really measures.</p>
+</div>
+
+<!-- 50. An Open Debate -->
+<div class="slide">
+  <h2>An Open Debate</h2>
+  <div class="divider"></div>
+  <p>The field has not settled.</p>
+  <div class="grid-2">
+    <div><h3>Skeptics</h3>
+      <p>Web-scale MIA mostly measures distribution shift.</p></div>
+    <div><h3>Optimists</h3>
+      <p>Rare, fine-tuned, or duplicated data still leaks.</p></div>
+  </div>
+  <p class="muted">Active, unsettled research as of 2025-26.</p>
+</div>
+
+<!-- ============ SECTION 07 ============ -->
+<!-- 51. Divider 07 -->
+<div class="slide section-slide left">
+  <div class="section-num">07</div>
+  <h1>Defenses</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The privacy-utility price</p>
+</div>
+
+<!-- 52. Shrink the Gap -->
+<div class="slide">
+  <h2>Shrink the Gap</h2>
+  <div class="divider"></div>
+  <p>MIA feeds on overfitting, so <strong>reduce overfitting</strong>.</p>
+  <div class="grid-3">
+    <div class="card"><h3>Regularize</h3><p>Weight decay, dropout, label smoothing.</p></div>
+    <div class="card"><h3>Early stop</h3><p>Halt before the model memorizes.</p></div>
+    <div class="card"><h3>More data</h3><p>Each record matters less.</p></div>
+  </div>
+</div>
+
+<!-- 53. Heuristics Are Not Proof -->
+<div class="slide">
+  <h2>Heuristics Are Not Proof</h2>
+  <div class="divider"></div>
+  <p>Regularization <em>raises the bar</em>, but offers no guarantee.</p>
+  <ul class="arrow">
+    <li>A stronger attack may still succeed</li>
+    <li>No bound on the worst-case record</li>
+    <li>Helpful, not sufficient</li>
+  </ul>
+  <p class="muted">For a guarantee, you need DP.</p>
+</div>
+
+<!-- 54. DP-SGD: The Principled Defense -->
+<div class="slide">
+  <h2>DP-SGD: The Principled Defense</h2>
+  <div class="divider"></div>
+  <p>Train with a <strong>provable</strong> privacy bound.</p>
+  <div class="ta-algo" style="max-width:900px; margin:18px auto;">
+    <ol>
+      <li>Compute each example's gradient.</li>
+      <li><strong>Clip</strong> it to a maximum length.</li>
+      <li><strong>Add</strong> Gaussian noise to the sum.</li>
+      <li>Step, and track the spent $\varepsilon$.</li>
+    </ol>
+  </div>
+  <div class="cite cite-left">Abadi et al., "Deep Learning with Differential Privacy", ACM CCS 2016.</div>
+</div>
+
+<!-- 55. Why DP-SGD Stops MIA -->
+<div class="slide">
+  <h2>Why DP-SGD Stops MIA</h2>
+  <div class="divider"></div>
+  <p>Clip plus noise <strong>limits one record's footprint</strong>.</p>
+  <ul>
+    <li>No single example can dominate a step</li>
+    <li>Noise hides whether it was present</li>
+    <li>The two worlds blur, by design</li>
+  </ul>
+  <p class="muted">Exactly the indistinguishability MIA tries to break.</p>
+</div>
+
+<!-- 56. The Privacy-Utility Cost -->
+<div class="slide">
+  <h2>The Privacy-Utility Cost</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>Strong defenses <strong>cost accuracy</strong>. The gap is the price of privacy.</p></div>
+  <p>Smaller $\varepsilon$ ⇒ stronger guarantee, larger gap.</p>
+  <p class="muted">The trade-off keeps narrowing with better methods.</p>
+</div>
+
+<!-- 57. A Defender's Checklist -->
+<div class="slide">
+  <h2>A Defender's Checklist</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li>Measure the train-test gap</li>
+    <li>Run a LiRA-style audit before shipping</li>
+    <li>Report precision at low FPR, not just accuracy</li>
+    <li>Use DP-SGD when records are sensitive</li>
+  </ul>
+  <p class="muted">Attack your own model first.</p>
+</div>
+
+<!-- ============ WRAP ============ -->
+<!-- 58. Key Takeaways -->
+<div class="slide">
+  <h2>Key Takeaways</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li>MIA asks: was this record in training?</li>
+    <li>Overfitting leaks it; loss is the simplest score</li>
+    <li>LiRA calibrates per example; judge low-FPR precision</li>
+    <li>DP bounds MIA; web-scale MIA is debated</li>
+  </ul>
+  <div class="highlight"><p><strong>Membership inference</strong> is the practical unit test of privacy.</p></div>
+</div>
+
+<!-- 59. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">In or out?</div>
+  <p class="big-word-sub">One bit that should stay private.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 59</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

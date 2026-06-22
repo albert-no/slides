@@ -415,3 +415,41 @@ Fix:
 - The authoring source (`<talk>/<talk>.html` reading `figs/*.png`) is unaffected — only the bundled distribution shrinks.
 - After downsampling, re-run `python3 scripts/bundle.py <talk>/<talk>.html` and confirm slides still look sharp at projector zoom.
 - Authoring decks with full-res captures are fine; the rule only applies before distributing the standalone.
+
+## Duplicate page numbers → per-deck `.page-num` injector clashes with `.slide-num`
+
+Symptom: two page numbers appear near the bottom of every slide.
+
+Cause: the deck carries BOTH the canonical bold `.slide-num` (injected by `deck.js`) and a per-deck `<script>` at the end of `<body>` that injects a second `.page-num` element on each slide (older decks copied this from a sibling). Two indicators, two numbers.
+
+Fix: keep the canonical bold `.slide-num` only. Delete the per-deck `.page-num` injector script and its `.page-num` / `.title-slide .page-num` CSS. See DESIGN_SYSTEM → Page numbering ("One indicator only").
+
+## Headless-Chrome render shows a stale image after you re-crop a figure
+
+Symptom: you re-crop `figs/foo.png`, re-render the deck to PDF, and the slide still shows the OLD crop (e.g. a clipped caption) — even though opening `figs/foo.png` directly shows the corrected image.
+
+Cause: Chrome caches `file://` image resources; a warm/reused profile serves the previous bytes.
+
+Fix: render with a fresh throwaway profile and disabled cache, and kill stale Chrome first:
+```bash
+pkill -f "Google Chrome.*headless"
+"…/Google Chrome" --headless=new --incognito --user-data-dir=/tmp/fresh-$RANDOM --disk-cache-size=1 \
+  --virtual-time-budget=10000 --print-to-pdf=deck.pdf --print-to-pdf-no-header "file://$(realpath deck.html)"
+```
+When in doubt, verify the *source* `figs/*.png` with the Read tool — that's ground truth, not the cached slide render.
+
+## Concept SVG renders too small / labels unreadable
+
+Symptom: an inline SVG diagram looks tiny and its labels are hard to read from the back row, even though it "fits" the slide.
+
+Cause: wrapper `max-width` too low and/or `<text>` `font-size` too small for the viewBox. Widening the wrapper alone scales labels up proportionally — they stay small *relative to* the diagram.
+
+Fix: bump BOTH. Full-width concept diagrams: wrapper `max-width: 820–920px`, `<text> font-size: 15–20`. Grid-column diagrams: `max-width: 360–440px`, `font-size: 13–16`. Primary labels bold. Policy in DESIGN_SYSTEM → Visual richness ("Make diagrams big").
+
+## Re-cropped paper figure still clipped → crop with headroom, then verify the file
+
+Symptom: a cropped paper figure cuts off a label tab or an axis title at an edge.
+
+Cause: the crop box hugged the content too tightly (the rounded "Prefix" tab or the "Number of duplicates" axis label sits a few px outside).
+
+Fix: give the crop a few px of headroom on every side; render the source page at `-r 150`+, eyeball the box, crop with PIL/`sips`, then **Read the resulting `figs/*.png` directly** to confirm — do not trust the in-slide render (it may be cached; see above). Then re-cite the source figure number.

@@ -1,0 +1,371 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 4 — Script</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+body { max-width: 880px; margin: 40px auto; padding: 0 28px; color: var(--charcoal); font-family: 'Yonsei','Noto Sans',Arial,sans-serif; line-height: 1.65; }
+h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
+article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
+.kt { color: var(--yonsei-blue); font-weight: 700; }
+</style></head><body>
+<h1>Lecture 4 — Memorization &amp; Training-Data Extraction · Speaker Script</h1>
+<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+
+<article>
+<h2>Memorization &amp; Training-Data Extraction</h2>
+<p>Welcome to Lecture 4. Today's question is whether a trained model just learns patterns, or whether it sometimes stores and recites the exact data it was trained on, including people's private information.</p>
+<p><span class="kt">Key takeaway:</span> Models can recite their training data, not just generalize from it.</p>
+</article>
+
+<article>
+<h2>Contents</h2>
+<p>We go in six steps: what memorization is, how text is extracted from language models, how much there is and why it grows, image and diffusion models, the copyright fight, and finally mitigations and the frontier.</p>
+<p><span class="kt">Key takeaway:</span> From a clean definition to a real legal and engineering problem.</p>
+</article>
+
+<article>
+<h2>01 — What Is Memorization</h2>
+<p>First section. We define memorization precisely and meet the canary test, the cleanest way to measure it.</p>
+<p><span class="kt">Key takeaway:</span> Memorization is something we can define and measure, not just suspect.</p>
+</article>
+
+<article>
+<h2>The Question</h2>
+<p>We train models to generalize, to learn patterns rather than copy examples. But in practice, some examples come back out word for word.</p>
+<p><span class="kt">Key takeaway:</span> Generalization and verbatim copying both happen during training.</p>
+</article>
+
+<article>
+<h2>A Working Definition</h2>
+<p>A model has memorized an example if a short prompt makes it reproduce that example exactly. The key word is specific: this is reciting one record, not learning a general fact.</p>
+<p><span class="kt">Key takeaway:</span> Memorization means reproducing a specific training record verbatim.</p>
+</article>
+
+<article>
+<h2>Three Flavors</h2>
+<p>Researchers split memorization into kinds: verbatim (the exact text returns), eidetic (recalled after very few sightings), and $k$-extractable (recovered from a $k$-token prompt). They give us precise language to study the problem.</p>
+<p><span class="kt">Key takeaway:</span> Different definitions capture different ways a model can leak text.</p>
+</article>
+
+<article>
+<h2>What "Extractable" Means</h2>
+<p>A string is $k$-extractable if feeding the model a $k$-token prefix makes it continue with the exact training text. This is the practical definition, because it matches what an attacker can actually do.</p>
+<p><span class="kt">Key takeaway:</span> Extractable means an adversary can pull the string out with a short prompt.</p>
+</article>
+
+<article>
+<h2>Why It Happens</h2>
+<p>Training rewards predicting the next token. Rare strings are easiest to predict by simply storing them, repeated strings get reinforced, and large models have spare capacity. So memorization is a side effect of fitting the data well.</p>
+<p><span class="kt">Key takeaway:</span> Memorization falls out of the training objective itself.</p>
+</article>
+
+<article>
+<h2>The Secret Sharer</h2>
+<p>Carlini and colleagues introduced a clean experiment: plant a fake secret in the data, train the model normally, then prompt it and see if the secret comes back. This turns a vague worry into a controlled test.</p>
+<p><span class="kt">Key takeaway:</span> Plant a secret, train, and check if it leaks.</p>
+</article>
+
+<article>
+<h2>The Canary</h2>
+<p>The planted secret is called a canary: a made-up, unique string such as a fake credit-card number. Because it is unique, any reappearance must be memorization rather than coincidence.</p>
+<p><span class="kt">Key takeaway:</span> A unique canary makes leakage unambiguous.</p>
+</article>
+
+<article>
+<h2>Watch It Leak</h2>
+<p>The diagram walks through it: plant the canary, train, then prompt with the prefix "My card number is" and watch the exact digits come back out.</p>
+<p><span class="kt">Key takeaway:</span> The right prefix can pull the canary straight out of the model.</p>
+</article>
+
+<article>
+<h2>Turning Leakage into a Number</h2>
+<p>To quantify it, rank the true canary against all equally likely alternatives. If the model ranks the true canary near the top, it has leaked; if it sits deep in the pile, it stayed hidden. This rank becomes a repeatable memorization score.</p>
+<p><span class="kt">Key takeaway:</span> Memorization can be scored, not just observed.</p>
+</article>
+
+<article>
+<h2>Not the Same as Learning</h2>
+<p>Generalizing means learning that cards have sixteen digits, which is useful and harmless. Memorizing means storing Alice's exact number, which is useless and a leak. The danger is the specific record.</p>
+<p><span class="kt">Key takeaway:</span> The harm is in the specific record, not the general pattern.</p>
+</article>
+
+<article>
+<h2>02 — Extracting Text from LLMs</h2>
+<p>Second section. We move from planted canaries to pulling out real, un-planted data, from GPT-2 up to production chatbots.</p>
+<p><span class="kt">Key takeaway:</span> The same idea, now applied to real private data.</p>
+</article>
+
+<article>
+<h2>From Canary to the Wild</h2>
+<p>The canary was planted deliberately. The real concern is whether we can extract genuine data the model saw that nobody planted on purpose.</p>
+<p><span class="kt">Key takeaway:</span> The dangerous case is leaking real data, not planted secrets.</p>
+</article>
+
+<article>
+<h2>GPT-2 Knew Real People</h2>
+<p>Carlini and colleagues showed that short prompts make GPT-2 recite real names, home addresses, phone numbers, and emails, copied straight out of the training text.</p>
+<p><span class="kt">Key takeaway:</span> A short prompt can surface a real person's contact details.</p>
+</article>
+
+<article>
+<h2>The Extraction Recipe</h2>
+<p>The recipe is simple: generate a flood of samples from the model, keep the ones it is unusually confident about, then check those against the open web to confirm they are real training data.</p>
+<p><span class="kt">Key takeaway:</span> Generate, filter by confidence, verify against the web.</p>
+</article>
+
+<article>
+<h2>Why Confidence Betrays It</h2>
+<p>For novel text the model hesitates, spreading probability around. For a memorized string it is nearly certain. That unusual confidence is the signal that flags a likely copy.</p>
+<p><span class="kt">Key takeaway:</span> Memorized text is text the model is too sure about.</p>
+</article>
+
+<article>
+<h2>What Came Out of GPT-2</h2>
+<p>The extracted strings were not harmless boilerplate. They included people's contact details, code snippets, and chunks of news and forum text.</p>
+<p><span class="kt">Key takeaway:</span> The leaked content was real and sometimes sensitive.</p>
+</article>
+
+<article>
+<h2>The "Repeat Forever" Attack</h2>
+<p>In 2023, Nasr and colleagues found a trick on a production chatbot: ask it to repeat a single word forever. This simple prompt set up the leak.</p>
+<p><span class="kt">Key takeaway:</span> A trivial prompt can break a deployed model's guardrails.</p>
+</article>
+
+<article>
+<h2>The Loop Breaks</h2>
+<p>The model repeats the word for a while, then diverges, dumping raw memorized text including real names, emails, and phone numbers.</p>
+<p><span class="kt">Key takeaway:</span> When the loop breaks, memorized training data spills out.</p>
+</article>
+
+<article>
+<h2>Scale of the Leak</h2>
+<p>The attack was cheap and broad: thousands of unique memorized strings, including real personal contact information, recovered from a deployed and aligned chat model.</p>
+<p><span class="kt">Key takeaway:</span> Alignment did not prevent large-scale extraction.</p>
+</article>
+
+<article>
+<h2>Patched, Not Solved</h2>
+<p>After disclosure, the specific prompt was blocked. But blocking one prompt does not remove the memorized data, which still lives in the weights.</p>
+<p><span class="kt">Key takeaway:</span> Patching a prompt is not the same as deleting the data.</p>
+</article>
+
+<article>
+<h2>Try It Yourself</h2>
+<p>The demo lets students plant a canary in a tiny training set, fine-tune a small model on it, then prompt for the prefix and watch the canary leak, all in a few minutes on Colab.</p>
+<p><span class="kt">Key takeaway:</span> Memorization is easy to reproduce hands-on.</p>
+</article>
+
+<article>
+<h2>03 — How Much, and Why It Grows</h2>
+<p>Third section. We treat memorization as a measurable quantity and look at the three drivers that make it grow.</p>
+<p><span class="kt">Key takeaway:</span> Memorization scales in predictable ways.</p>
+</article>
+
+<article>
+<h2>A Measurable Quantity</h2>
+<p>Memorization is not all-or-nothing. We count how many training strings are extractable and track that fraction as conditions change. It moves predictably.</p>
+<p><span class="kt">Key takeaway:</span> We can measure the fraction of data a model memorizes.</p>
+</article>
+
+<article>
+<h2>Three Drivers</h2>
+<p>Three factors push memorization up: bigger models store more, duplicated data sticks harder, and longer training reinforces recall.</p>
+<p><span class="kt">Key takeaway:</span> Size, duplication, and training length all increase memorization.</p>
+</article>
+
+<article>
+<h2>Bigger Means More</h2>
+<p>Holding the data fixed and growing the model, the amount memorized climbs steadily. Capacity that is not needed for generalization gets spent on storing examples.</p>
+<p><span class="kt">Key takeaway:</span> Larger models memorize more of the same data.</p>
+</article>
+
+<article>
+<h2>Duplication Is the Big One</h2>
+<p>A string that appears many times in training is far more likely to leak. Going from one copy to a thousand copies dramatically raises the chance of memorization.</p>
+<p><span class="kt">Key takeaway:</span> Duplication is the strongest single driver.</p>
+</article>
+
+<article>
+<h2>The Long Tail</h2>
+<p>Web data is full of accidental duplicates: boilerplate, mirrors, reposts, and quoted text. A leaked secret copied across many forums is exactly the kind of thing that gets memorized, and you rarely control what gets duplicated.</p>
+<p><span class="kt">Key takeaway:</span> Accidental duplication is everywhere in scraped data.</p>
+</article>
+
+<article>
+<h2>A Predictable Curve</h2>
+<p>Memorization scales log-linearly with these drivers: each tenfold increase in size or duplication adds a steady amount. This is a built-in property of training, not a bug to patch out.</p>
+<p><span class="kt">Key takeaway:</span> The growth follows a smooth, predictable curve.</p>
+</article>
+
+<article>
+<h2>The Uncomfortable Trend</h2>
+<p>The industry trend is toward bigger models trained on more data. Both of those push memorization in the wrong direction.</p>
+<p><span class="kt">Key takeaway:</span> Current scaling trends make memorization worse, not better.</p>
+</article>
+
+<article>
+<h2>04 — Image &amp; Diffusion Models</h2>
+<p>Fourth section. Memorization is not just a text problem; image generators copy training photos too.</p>
+<p><span class="kt">Key takeaway:</span> Generative image models memorize as well.</p>
+</article>
+
+<article>
+<h2>Not Just Text</h2>
+<p>Image generators train on billions of scraped images, many of real people. Some of those images come back nearly pixel for pixel.</p>
+<p><span class="kt">Key takeaway:</span> The same leakage risk applies to images.</p>
+</article>
+
+<article>
+<h2>A Quick Picture</h2>
+<p>A diffusion model turns pure noise into an image through a step-by-step denoising process. Ideally each output is new, but sometimes the result is a memorized training image.</p>
+<p><span class="kt">Key takeaway:</span> Diffusion builds images from noise, and can reconstruct stored ones.</p>
+</article>
+
+<article>
+<h2>Stable Diffusion Copies</h2>
+<p>Carlini and colleagues showed Stable Diffusion regenerating near-exact training photos of real, identifiable people, simply by prompting with their caption.</p>
+<p><span class="kt">Key takeaway:</span> A caption can summon a near-exact training photo.</p>
+</article>
+
+<article>
+<h2>Duplication Drives It Again</h2>
+<p>Just as with text, images duplicated across the web are the ones most likely to be memorized and regenerated. A photo seen once is rarely copied; a photo seen a hundred times often is.</p>
+<p><span class="kt">Key takeaway:</span> Duplication drives image memorization too.</p>
+</article>
+
+<article>
+<h2>Copy or Create?</h2>
+<p>Somepalli and colleagues searched generated images against the training set and found a measurable fraction were near-duplicates, especially for over-represented captions.</p>
+<p><span class="kt">Key takeaway:</span> A real share of "new" images are actually copies.</p>
+</article>
+
+<article>
+<h2>Why It Matters</h2>
+<p>A generated portrait can secretly be a real person's photo. That is a privacy and consent problem, not just an academic curiosity.</p>
+<p><span class="kt">Key takeaway:</span> Memorized images can expose real people without consent.</p>
+</article>
+
+<article>
+<h2>05 — Copyright &amp; the Law</h2>
+<p>Fifth section. When memorized output is copyrighted, the technical leak becomes a legal fight.</p>
+<p><span class="kt">Key takeaway:</span> Memorization is now a courtroom issue.</p>
+</article>
+
+<article>
+<h2>Memorization Meets Copyright</h2>
+<p>Much training data is copyrighted: news, books, code, and art. If the model recites it, the question of liability turns a technical leak into a legal claim.</p>
+<p><span class="kt">Key takeaway:</span> Reciting copyrighted text raises a legal liability question.</p>
+</article>
+
+<article>
+<h2>NYT v. OpenAI</h2>
+<p>In 2023, The New York Times sued OpenAI. The complaint included examples where prompts made the model reproduce near-verbatim, paywalled article text.</p>
+<p><span class="kt">Key takeaway:</span> Regurgitation became the central evidence in a major lawsuit.</p>
+</article>
+
+<article>
+<h2>Near-Verbatim Output</h2>
+<p>Shown side by side, the model's output matched the original article closely: the same words, in the same order. That visual equivalence is what makes the claim powerful.</p>
+<p><span class="kt">Key takeaway:</span> The output and the source were nearly identical.</p>
+</article>
+
+<article>
+<h2>The Fair-Use Debate</h2>
+<p>Developers argue training is transformative learning, like a person reading. Rights holders argue verbatim output is plain copying. Memorization is exactly where the two views collide.</p>
+<p><span class="kt">Key takeaway:</span> Both sides hinge on whether the model copies or transforms.</p>
+</article>
+
+<article>
+<h2>Memorization Is the Crux</h2>
+<p>A model that only generalizes has a stronger fair-use case. A model that recites its sources looks much more like a copier, which is why memorization sits at the heart of the legal argument.</p>
+<p><span class="kt">Key takeaway:</span> Less memorization strengthens the fair-use defense.</p>
+</article>
+
+<article>
+<h2>An Unsettled Question</h2>
+<p>The law is still being written, with cases ongoing across jurisdictions. The outcomes will shape how models are trained, making reduced memorization a legal goal as well as an engineering one.</p>
+<p><span class="kt">Key takeaway:</span> Law and engineering now both want less memorization.</p>
+</article>
+
+<article>
+<h2>06 — Mitigations &amp; Frontier</h2>
+<p>Final section. We survey the defenses, why none is complete, and where the research frontier sits.</p>
+<p><span class="kt">Key takeaway:</span> Every defense is partial.</p>
+</article>
+
+<article>
+<h2>The Toolbox</h2>
+<p>Three families of defense: deduplicate the data, filter the output for verbatim spans, and add formal privacy during training. Each helps; none fully solves the problem.</p>
+<p><span class="kt">Key takeaway:</span> Defenses are complementary, not complete.</p>
+</article>
+
+<article>
+<h2>Deduplication</h2>
+<p>Removing repeats before training attacks the strongest driver. Lee and colleagues showed it also makes models better, not just safer, making it the cheapest win available.</p>
+<p><span class="kt">Key takeaway:</span> Deduplication improves quality and reduces leakage at once.</p>
+</article>
+
+<article>
+<h2>Dedup Is Not Enough</h2>
+<p>Even unique, seen-once strings can be memorized in large models, and near-duplicates slip past exact matching. Deduplication lowers the risk but never to zero.</p>
+<p><span class="kt">Key takeaway:</span> Deduplication is a strong first line, not a wall.</p>
+</article>
+
+<article>
+<h2>Output Filtering</h2>
+<p>Deployed code and chat systems check generations for long verbatim matches and block text that copies a source too closely. It catches obvious copying but misses paraphrase and small leaks.</p>
+<p><span class="kt">Key takeaway:</span> Filtering stops blatant copying, not subtle leaks.</p>
+</article>
+
+<article>
+<h2>Differential Privacy</h2>
+<p>Differential privacy trains so that any single example barely moves the model. If no one record changes the output much, no one record can be memorized. The catch is that this guarantee is paid for in accuracy.</p>
+<p><span class="kt">Key takeaway:</span> Differential privacy provably bounds per-example memorization.</p>
+</article>
+
+<article>
+<h2>The Privacy Tax</h2>
+<p>Differential privacy is the strongest defense and the costliest: strong settings hurt accuracy, training is expensive at scale, and it is rarely used for the largest foundation models yet.</p>
+<p><span class="kt">Key takeaway:</span> The strongest guarantee comes at the highest cost.</p>
+</article>
+
+<article>
+<h2>No Silver Bullet</h2>
+<p>Every defense trades cost or utility for less memorization. In practice, teams stack several of them and accept some residual risk.</p>
+<p><span class="kt">Key takeaway:</span> Mitigation is a balance, not an on-off switch.</p>
+</article>
+
+<article>
+<h2>Frontier: Production Extraction</h2>
+<p>Attacks increasingly target deployed chat models, not just research ones. Cheap, scalable prompts can pull out training data, and alignment and filters are only partial barriers.</p>
+<p><span class="kt">Key takeaway:</span> Production models remain extractable today.</p>
+</article>
+
+<article>
+<h2>Frontier: Memorized PII</h2>
+<p>The sharpest harm is personal data coming back out. PII, meaning personally identifiable information such as names, emails, and numbers, is scattered through scraped web data and becomes extractable when duplicated or rare-but-stored.</p>
+<p><span class="kt">Key takeaway:</span> The worst leaks attach a real name and address.</p>
+</article>
+
+<article>
+<h2>Open Problems</h2>
+<p>Open questions remain: measuring memorization in closed models, cutting it without hurting accuracy, erasing specific data after training, and agreeing on a legal line for how much is too much.</p>
+<p><span class="kt">Key takeaway:</span> The core problems are still unsolved.</p>
+</article>
+
+<article>
+<h2>Key Takeaways</h2>
+<p>To recap: models recite some training data verbatim; canaries measure it and real attacks exploit it; size and duplication push it up; and no mitigation removes it for free. Duplication is the lever you can actually pull, on both the data and the output.</p>
+<p><span class="kt">Key takeaway:</span> Control duplication, and you control much of the risk.</p>
+</article>
+
+<article>
+<h2>Q&amp;A</h2>
+<p>We close on the open question that ties the whole lecture together: what should a model be allowed to remember?</p>
+<p><span class="kt">Key takeaway:</span> Deciding what a model may remember is both a technical and a social choice.</p>
+</article>
+
+</body></html>

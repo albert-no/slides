@@ -1,0 +1,365 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 5 — Script</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+body { max-width: 880px; margin: 40px auto; padding: 0 28px; color: var(--charcoal); font-family: 'Yonsei','Noto Sans',Arial,sans-serif; line-height: 1.65; }
+h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
+article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
+.kt { color: var(--yonsei-blue); font-weight: 700; }
+</style></head><body>
+<h1>Lecture 5 — Machine Unlearning · Speaker Script</h1>
+<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+
+<article>
+<h2>Machine Unlearning</h2>
+<p>Welcome to Lecture 5. Today's question: once a model is trained on someone's data, how do we make it forget that person, without simply training the whole thing again?</p>
+<p><span class="kt">Key takeaway:</span> Deletion in the database does not delete the trace in the model.</p>
+</article>
+
+<article>
+<h2>Contents</h2>
+<p>Six steps: the legal motivation, what unlearning formally means, the main methods, unlearning in language models, how to check whether forgetting worked, and the current frontier.</p>
+<p><span class="kt">Key takeaway:</span> From a deletion request to a provable, testable forgetting.</p>
+</article>
+
+<article>
+<h2>01 — The Right to Be Forgotten</h2>
+<p>First section. The motivation: a user who once shared data now wants it gone, and the model is in the way.</p>
+<p><span class="kt">Key takeaway:</span> A deletion request is a model problem, not just a database problem.</p>
+</article>
+
+<article>
+<h2>A User Changes Their Mind</h2>
+<p>Alice asks us to delete her account and her data. Dropping her row from the database is trivial, but her data already shaped a trained model, and that model is untouched.</p>
+<p><span class="kt">Key takeaway:</span> Deleting the row does not touch the weights.</p>
+</article>
+
+<article>
+<h2>The Law Says Delete</h2>
+<p>GDPR Article 17 grants a right to erasure, the "right to be forgotten." California's CCPA grants a similar right. On request, the data must go, and increasingly that is read to include the model.</p>
+<p><span class="kt">Key takeaway:</span> Forgetting is a legal duty, not an optional feature.</p>
+</article>
+
+<article>
+<h2>Data Lives in the Weights</h2>
+<p>Training presses each record into the parameters. Remove the row from the dataset and the trace pressed into the weights still remains.</p>
+<p><span class="kt">Key takeaway:</span> The model is a lossy copy of the data, and lossy is not gone.</p>
+</article>
+
+<article>
+<h2>Why Not Just Ignore It</h2>
+<p>A model that still remembers Alice keeps her exposed: membership inference can confirm she was in the data, and extraction can recite her record. The deletion would be fiction.</p>
+<p><span class="kt">Key takeaway:</span> Compliance means the model forgets, not just the database.</p>
+</article>
+
+<article>
+<h2>Retraining Is Expensive</h2>
+<p>The obvious fix is to train again without Alice. But large models cost millions to train and deletion requests arrive constantly, so retraining per request is hopeless.</p>
+<p><span class="kt">Key takeaway:</span> We need to forget without starting over.</p>
+</article>
+
+<article>
+<h2>Enter Machine Unlearning</h2>
+<p>The goal: given a trained model, efficiently produce a new model as if a chosen point had never been used. Cao and Yang gave a first formal proposal in 2015.</p>
+<p><span class="kt">Key takeaway:</span> Unlearning is efficient deletion of a data point's effect.</p>
+</article>
+
+<article>
+<h2>A Decade of Work</h2>
+<p>The field grew fast: the term was coined in 2015, formal definitions and SISA arrived around 2019 to 2021, and from 2023 onward the focus shifted to large models.</p>
+<p><span class="kt">Key takeaway:</span> Unlearning went from niche idea to regulatory necessity.</p>
+</article>
+
+<article>
+<h2>02 — What Unlearning Means</h2>
+<p>Second section. We pin down the target and the spectrum from exact to approximate forgetting.</p>
+<p><span class="kt">Key takeaway:</span> Every method is judged against retraining from scratch.</p>
+</article>
+
+<article>
+<h2>The Gold Standard</h2>
+<p>The ideal answer is the model you would have gotten if the point had never been in the data. That retrained model is the reference against which we measure everything.</p>
+<p><span class="kt">Key takeaway:</span> Retraining from scratch defines what "forgotten" means.</p>
+</article>
+
+<article>
+<h2>Two Models, Compared</h2>
+<p>Unlearning runs a cheap operation on the trained model and aims to land on the same place a slow retrain on the remaining data would have reached.</p>
+<p><span class="kt">Key takeaway:</span> Success means matching the retrained model at a fraction of the cost.</p>
+</article>
+
+<article>
+<h2>Exact Unlearning</h2>
+<p>Exact unlearning produces a model identical in distribution to retraining. It is a provable guarantee rather than a hope, but it usually needs special training structure.</p>
+<p><span class="kt">Key takeaway:</span> Exact means same output distribution as if the point never existed.</p>
+</article>
+
+<article>
+<h2>Approximate Unlearning</h2>
+<p>Approximate unlearning settles for being close enough, much faster: nudge the weights to undo the point and accept a small, bounded difference. This is the practical regime for large models.</p>
+<p><span class="kt">Key takeaway:</span> Trade exactness for speed when exact is infeasible.</p>
+</article>
+
+<article>
+<h2>Borrowing the DP Yardstick</h2>
+<p>We define "close" the way differential privacy defines indistinguishable: the unlearned model's output distribution is within $e^\varepsilon$ (plus $\delta$) of the retrained model's. Small $\varepsilon,\delta$ means it looks retrained.</p>
+<p><span class="kt">Key takeaway:</span> An $(\varepsilon,\delta)$ bound turns "close to retrained" into a number.</p>
+</article>
+
+<article>
+<h2>Forget Set and Retain Set</h2>
+<p>The data splits in two: the forget set we want erased from the model, and the retain set we keep and still want to predict well.</p>
+<p><span class="kt">Key takeaway:</span> Forget one side, preserve the other.</p>
+</article>
+
+<article>
+<h2>Two Things to Get Right</h2>
+<p>A good method balances forgetting, so the target's influence is gone, with utility, so accuracy on the retain set survives. Forgetting everything is trivial; forgetting only the target is the real challenge.</p>
+<p><span class="kt">Key takeaway:</span> The hard part is forgetting only the target.</p>
+</article>
+
+<article>
+<h2>03 — How to Unlearn</h2>
+<p>Third section. The toolkit: the retraining baseline, sharded retraining via SISA, and approximate weight edits.</p>
+<p><span class="kt">Key takeaway:</span> More speed usually buys a weaker guarantee.</p>
+</article>
+
+<article>
+<h2>The Retraining Baseline</h2>
+<p>Drop the point and train again on the rest. It is exact by construction and the yardstick every method copies, but far too slow to run for each request.</p>
+<p><span class="kt">Key takeaway:</span> Correct and useless; the baseline to beat on cost.</p>
+</article>
+
+<article>
+<h2>Idea: Train in Pieces</h2>
+<p>If a data point only touched part of the model, we only need to retrain that part. Split the data into shards, train one sub-model per shard, and a deletion redoes just one shard.</p>
+<p><span class="kt">Key takeaway:</span> Localize each point's influence so deletion is local too.</p>
+</article>
+
+<article>
+<h2>SISA</h2>
+<p>SISA stands for Sharded, Isolated, Sliced, Aggregated training. The data is split into isolated shards, each trains a sub-model, and the sub-models are aggregated by voting or averaging at prediction time.</p>
+<p><span class="kt">Key takeaway:</span> Isolated shards make exact, local deletion possible.</p>
+</article>
+
+<article>
+<h2>Deleting in SISA</h2>
+<p>A delete request hits one shard only: find the shard with the point, retrain just that sub-model, and re-aggregate. The other shards are untouched.</p>
+<p><span class="kt">Key takeaway:</span> Exact unlearning at a fraction of the retraining cost.</p>
+</article>
+
+<article>
+<h2>Slices Make It Cheaper</h2>
+<p>Inside a shard, train in incremental slices and checkpoint after each. On deletion, roll back to the checkpoint before the point and replay only the later slices, instead of redoing the whole shard.</p>
+<p><span class="kt">Key takeaway:</span> Checkpoints shrink the work needed per deletion further.</p>
+</article>
+
+<article>
+<h2>The SISA Tradeoff</h2>
+<p>Sharding wins cheap, exact, predictable deletion, but each sub-model sees less data, so aggregate accuracy can drop. It is a structural choice made before training.</p>
+<p><span class="kt">Key takeaway:</span> Sharding buys deletion speed by spending some accuracy.</p>
+</article>
+
+<article>
+<h2>Can We Edit the Weights?</h2>
+<p>SISA changes how we train. But often the model is already trained, with no shards or checkpoints saved. Then we want to nudge the existing weights to undo one point: approximate unlearning.</p>
+<p><span class="kt">Key takeaway:</span> Estimate the point's influence, then subtract it from the weights.</p>
+</article>
+
+<article>
+<h2>Influence Functions</h2>
+<p>An influence function estimates how the weights would shift if a point were removed, using the loss gradient at that point scaled by the inverse curvature. In principle it undoes the point's pull in a single step.</p>
+<p><span class="kt">Key takeaway:</span> One closed-form step approximates removing a point.</p>
+</article>
+
+<article>
+<h2>The Catch: Curvature</h2>
+<p>That formula needs the inverse Hessian, with one entry per pair of parameters. For billion-parameter models that matrix cannot even be stored, so only rough approximations are feasible.</p>
+<p><span class="kt">Key takeaway:</span> Exact influence is out of reach at large scale.</p>
+</article>
+
+<article>
+<h2>Gradient Ascent</h2>
+<p>Training descends the loss. To forget, ascend it on the target: push the forget point's loss up, undoing the fit. It is simple and needs no Hessian.</p>
+<p><span class="kt">Key takeaway:</span> Raising a point's loss is the crudest way to forget it.</p>
+</article>
+
+<article>
+<h2>Ascent Can Wreck the Model</h2>
+<p>Raising the loss has no built-in brake. Overshoot and accuracy collapses; the damage can spill onto the retain set. In practice ascent needs a retain-set anchor to stay useful.</p>
+<p><span class="kt">Key takeaway:</span> From the inside, forgetting and breaking can look the same.</p>
+</article>
+
+<article>
+<h2>The Method Landscape</h2>
+<p>Three families: retraining is exact but slow, SISA is exact and shard-local but restructures training, and approximate edits are fast with no exact guarantee.</p>
+<p><span class="kt">Key takeaway:</span> Choose where you want to pay: cost, structure, or guarantee.</p>
+</article>
+
+<article>
+<h2>Try It Yourself</h2>
+<p>A Colab: train a small classifier on two classes, unlearn one class by gradient ascent, and watch both forget accuracy and retain accuracy. The lesson is how easily ascent overshoots.</p>
+<p><span class="kt">Key takeaway:</span> Hands-on, the forgetting-versus-utility tension is immediate.</p>
+</article>
+
+<article>
+<h2>04 — Unlearning in Language Models</h2>
+<p>Fourth section. In LLMs the forget target is rarely a single row, which makes everything harder.</p>
+<p><span class="kt">Key takeaway:</span> Knowledge is spread across the whole network.</p>
+</article>
+
+<article>
+<h2>What Do We Forget?</h2>
+<p>In a language model the target might be a person's private facts, a copyrighted book, or hazardous how-to knowledge, none of which lives in one place.</p>
+<p><span class="kt">Key takeaway:</span> The forget target is a concept, not a data row.</p>
+</article>
+
+<article>
+<h2>No Single Row to Drop</h2>
+<p>A fact appears paraphrased across thousands of documents and entangled with facts we want to keep, so there is no clean forget set of rows to remove.</p>
+<p><span class="kt">Key takeaway:</span> LLM unlearning is harder than dropping data points.</p>
+</article>
+
+<article>
+<h2>Who's Harry Potter?</h2>
+<p>Eldan and Russinovich's 2023 demo: find tokens tied to the Harry Potter world, replace them with generic alternatives, and fine-tune the model toward that generic text.</p>
+<p><span class="kt">Key takeaway:</span> Redirect the model away from a body of knowledge instead of deleting rows.</p>
+</article>
+
+<article>
+<h2>The Result</h2>
+<p>Prompted about Harry Potter, the model draws a blank and no longer completes the famous scenes, while its general language ability stays intact. Cheap and targeted, but not provably exact.</p>
+<p><span class="kt">Key takeaway:</span> It forgot one fictional world without losing the language.</p>
+</article>
+
+<article>
+<h2>Measuring Forgetting: TOFU</h2>
+<p>TOFU, the Task of Fictitious Unlearning, invents fictitious authors and their facts, fine-tunes the model to learn them, then asks it to forget a chosen author, giving a clean test.</p>
+<p><span class="kt">Key takeaway:</span> A controlled benchmark makes forgetting measurable.</p>
+</article>
+
+<article>
+<h2>Why Fictitious?</h2>
+<p>Fake facts make forgetting checkable: the model only knows them from fine-tuning, so there is no leakage from the rest of the web. If it still answers afterward, it did not forget.</p>
+<p><span class="kt">Key takeaway:</span> Invented facts isolate what the model truly learned.</p>
+</article>
+
+<article>
+<h2>Hazardous Knowledge: WMDP</h2>
+<p>WMDP, the Weapons of Mass Destruction Proxy, is a benchmark of proxy questions on biological, cyber, and chemical harm. The goal is a model that cannot answer them.</p>
+<p><span class="kt">Key takeaway:</span> Some unlearning targets are safety hazards, not privacy.</p>
+</article>
+
+<article>
+<h2>RMU</h2>
+<p>RMU, Representation Misdirection for Unlearning, pushes the model's internal activations toward noise on hazardous topics while leaving safe topics unchanged, so the model loses the thread on hazards.</p>
+<p><span class="kt">Key takeaway:</span> Scramble the internals on hazards, preserve them elsewhere.</p>
+</article>
+
+<article>
+<h2>Unlearning vs Filtering</h2>
+<p>An output filter blocks bad answers but the knowledge stays inside and can be bypassed. Unlearning aims to remove the knowledge itself, so there is nothing left to leak.</p>
+<p><span class="kt">Key takeaway:</span> Filtering hides knowledge; unlearning tries to remove it.</p>
+</article>
+
+<article>
+<h2>05 — Did It Really Forget?</h2>
+<p>Fifth section. Verification: a forgetting claim must be tested, not trusted.</p>
+<p><span class="kt">Key takeaway:</span> Absence of an answer is not absence of knowledge.</p>
+</article>
+
+<article>
+<h2>Verification Is Hard</h2>
+<p>"It forgot" is a claim that needs proof. The weights look different, but is the point really gone? Approximate methods give no certificate, so we must test the model.</p>
+<p><span class="kt">Key takeaway:</span> Test for the knowledge; do not assume it is gone.</p>
+</article>
+
+<article>
+<h2>Audit With Membership Inference</h2>
+<p>Reuse the attacker as an auditor: run a membership inference attack on the forgotten point. If it is still flagged as a member, a trace remains; if it looks like a never-seen point, forgetting succeeded.</p>
+<p><span class="kt">Key takeaway:</span> The leakage signal becomes the deletion audit.</p>
+</article>
+
+<article>
+<h2>The Tell Persists</h2>
+<p>A forgotten point can still produce a low loss and sit in the member bell rather than the non-member one. If it lands among members, the forgetting failed.</p>
+<p><span class="kt">Key takeaway:</span> A low loss on the target betrays incomplete forgetting.</p>
+</article>
+
+<article>
+<h2>Relearning Attacks</h2>
+<p>A sharper test tries to bring the knowledge back: fine-tune briefly on a few related examples. If the model snaps back fast, the knowledge was never really gone, only suppressed.</p>
+<p><span class="kt">Key takeaway:</span> Truly forgotten knowledge should be as hard to relearn as new.</p>
+</article>
+
+<article>
+<h2>Dormant, Not Deleted</h2>
+<p>Many methods only suppress knowledge rather than remove it, so a small nudge wakes it back up. Suppression is reversible; deletion should not be.</p>
+<p><span class="kt">Key takeaway:</span> Suppressed is not the same as deleted.</p>
+</article>
+
+<article>
+<h2>06 — Frontier 2025–26</h2>
+<p>Final section. The honest critique of LLM unlearning, the push for robustness, and the open problems.</p>
+<p><span class="kt">Key takeaway:</span> Robustness against attackers is the new bar.</p>
+</article>
+
+<article>
+<h2>The "Overused" Critique</h2>
+<p>In LLMs, "unlearning" often just means the model refuses to answer. The knowledge is still in the weights; refusal is a behavior, not removal, and a relearning or jailbreak prompt can recover it.</p>
+<p><span class="kt">Key takeaway:</span> Refusing is not the same as forgetting.</p>
+</article>
+
+<article>
+<h2>What Guarantee Holds?</h2>
+<p>Be precise about strength: refusing means it won't answer one prompt, suppressed means it is hard to elicit but still present, and removed means provably gone like retraining. Most LLM methods reach only suppressed.</p>
+<p><span class="kt">Key takeaway:</span> Distinguish refuses, suppressed, and removed.</p>
+</article>
+
+<article>
+<h2>Robust Unlearning</h2>
+<p>The goal is forgetting that survives an attacker: it resists relearning and jailbreak prompts and holds up under adversarial fine-tuning, not just a lower score on one test.</p>
+<p><span class="kt">Key takeaway:</span> Robust forgetting must withstand active attempts to recover the knowledge.</p>
+</article>
+
+<article>
+<h2>Evaluation Standards</h2>
+<p>Forgetting needs an agreed scorecard: forget quality and retained utility together, resistance to relearning rather than one snapshot, and shared benchmarks such as TOFU and WMDP.</p>
+<p><span class="kt">Key takeaway:</span> Without standards, every method can claim success.</p>
+</article>
+
+<article>
+<h2>Unlearning Meets Privacy</h2>
+<p>Two answers to the same deletion request: differential privacy limits each point's influence up front so little is left to delete, while unlearning removes influence after the fact, on request.</p>
+<p><span class="kt">Key takeaway:</span> DP is prevention; unlearning is cure.</p>
+</article>
+
+<article>
+<h2>Open Problems</h2>
+<p>The frontier is wide open: cheap exact unlearning for large models, a certificate that deletion truly worked, forgetting that resists relearning, and forgetting without harming the retain set.</p>
+<p><span class="kt">Key takeaway:</span> The hard guarantees remain unsolved.</p>
+</article>
+
+<article>
+<h2>Where to Go Deeper</h2>
+<p>The rigorous treatment covers influence-function derivations, the SISA cost analysis, and the $(\varepsilon,\delta)$ unlearning guarantee in full detail.</p>
+<p><span class="kt">Key takeaway:</span> The formal version sits behind today's intuitions.</p>
+</article>
+
+<article>
+<h2>Key Takeaways</h2>
+<p>Deleting a row leaves traces in the weights; the gold standard is retraining without the point; SISA is exact and cheap but reshapes training; and LLM unlearning often suppresses rather than removes.</p>
+<p><span class="kt">Key takeaway:</span> Always ask whether the model refused, suppressed, or truly removed the knowledge.</p>
+</article>
+
+<article>
+<h2>Forget</h2>
+<p>Closing word. The aim of machine unlearning is deletion that the model actually honors, not just a polite refusal.</p>
+<p><span class="kt">Key takeaway:</span> Real forgetting is deletion you can verify.</p>
+</article>
+
+</body></html>

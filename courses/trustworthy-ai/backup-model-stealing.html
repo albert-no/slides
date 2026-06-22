@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Stealing &amp; Extraction — Trustworthy AI Backup</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Trustworthy AI · Backup</div>
+  <h1>Model Stealing<br>&amp; Extraction</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Copying a model through the small window of its API</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The Threat</div><div class="toc-sub">Steal behavior or weights through an API</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Query-Based Stealing</div><div class="toc-sub">Train a clone on the target's answers</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Stealing Via APIs</div><div class="toc-sub">Probabilities leak more than labels</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Stealing Parts of Models</div><div class="toc-sub">Recovering a layer from black-box access</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Defenses</div><div class="toc-sub">Slow it down, blur it, watermark it</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Frontier 2025–26</div><div class="toc-sub">Extraction from frontier models</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>The Threat</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Steal behavior or weights through an API</p>
+</div>
+
+<!-- 4. A Model Is an Asset -->
+<div class="slide">
+  <h2>A Model Is an Asset</h2>
+  <div class="divider"></div>
+  <p>A trained model costs <strong>real money</strong> to build.</p>
+  <ul class="arrow">
+    <li>Collected and cleaned data</li>
+    <li>Expensive compute to train</li>
+    <li>Tuning and human feedback</li>
+  </ul>
+  <p>The result is <em>intellectual property</em>, like a recipe.</p>
+</div>
+
+<!-- 5. Served Behind an API -->
+<div class="slide">
+  <h2>Served Behind an API</h2>
+  <div class="divider"></div>
+  <p>You rarely get the weights. You get a <strong>narrow window</strong>.</p>
+  <div class="diagram-flow" style="margin:24px 0;">
+    <div class="diagram-box">Your input</div>
+    <div class="diagram-box">Hidden model</div>
+    <div class="diagram-box">Output only</div>
+  </div>
+  <p class="muted">API = Application Programming Interface: send input, get output.</p>
+</div>
+
+<!-- 6. What "Stealing" Means -->
+<div class="slide">
+  <h2>What "Stealing" Means</h2>
+  <div class="divider"></div>
+  <p>Two targets, very different difficulty.</p>
+  <div class="grid-2">
+    <div><h3>Behavior</h3>
+      <p>A copy that <strong>answers like</strong> the original.</p></div>
+    <div><h3>Weights</h3>
+      <p>The <strong>exact numbers</strong> inside the model.</p></div>
+  </div>
+  <p class="muted">Both reached through the same small output window.</p>
+</div>
+
+<!-- 7. The Core Move -->
+<div class="slide">
+  <h2>The Core Move</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>Every answer the model gives away is a <strong>free training label</strong> for a copy.</p></div>
+  <p>The attacker never opens the box. They learn it from the outside.</p>
+</div>
+
+<!-- 8. Three Stakes -->
+<div class="slide">
+  <h2>Three Stakes</h2>
+  <div class="divider"></div>
+  <p>Why a stolen model matters.</p>
+  <div class="grid-3">
+    <div class="card"><h3>Money</h3><p>A rival skips the training bill.</p></div>
+    <div class="card"><h3>IP</h3><p>Your model is your product.</p></div>
+    <div class="card"><h3>Security</h3><p>A copy helps craft attacks.</p></div>
+  </div>
+</div>
+
+<!-- 9. The Stepping-Stone -->
+<div class="slide">
+  <h2>A Copy Is a Stepping-Stone</h2>
+  <div class="divider"></div>
+  <p>Once you hold a local copy, you can probe it <strong>freely</strong>.</p>
+  <ul class="arrow">
+    <li>Craft adversarial inputs offline</li>
+    <li>Then send them to the real model</li>
+    <li>Attacks often <em>transfer</em> across copies</li>
+  </ul>
+  <p class="muted">Stealing the model is step one of a bigger attack.</p>
+</div>
+
+<!-- 10. A Threat With a History -->
+<div class="slide">
+  <h2>A Threat With a History</h2>
+  <div class="divider"></div>
+  <p>Studied since the first pay-per-query model APIs.</p>
+  <ul>
+    <li>2016: stealing simple cloud classifiers</li>
+    <li>2019–20: stealing deep networks</li>
+    <li>2024: stealing pieces of production language models</li>
+  </ul>
+  <div class="cite cite-left">Tramèr, Zhang, Juels, Reiter, and Ristenpart, "Stealing Machine Learning Models via Prediction APIs", USENIX Security 2016.</div>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 11. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Query-Based Stealing</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Train a clone on the target's answers</p>
+</div>
+
+<!-- 12. The Basic Recipe -->
+<div class="slide">
+  <h2>The Basic Recipe</h2>
+  <div class="divider"></div>
+  <p>Treat the target as a <strong>free labeling service</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 480 170" style="width:100%;max-width:880px;">
+      <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#003876"/></marker></defs>
+      <rect x="16" y="58" width="96" height="52" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
+      <text x="64" y="80" font-size="15" text-anchor="middle" fill="#003876" font-weight="700">your</text>
+      <text x="64" y="98" font-size="15" text-anchor="middle" fill="#003876">inputs</text>
+      <rect x="180" y="58" width="120" height="52" rx="8" fill="#003876"/>
+      <text x="240" y="80" font-size="15" text-anchor="middle" fill="#fff" font-weight="700">target</text>
+      <text x="240" y="98" font-size="15" text-anchor="middle" fill="#fff">model (API)</text>
+      <rect x="372" y="58" width="96" height="52" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
+      <text x="420" y="80" font-size="15" text-anchor="middle" fill="#003876" font-weight="700">your</text>
+      <text x="420" y="98" font-size="15" text-anchor="middle" fill="#003876">clone</text>
+      <line x1="112" y1="84" x2="176" y2="84" stroke="#003876" stroke-width="2.5" marker-end="url(#ar)"/>
+      <line x1="300" y1="84" x2="368" y2="84" stroke="#003876" stroke-width="2.5" marker-end="url(#ar)"/>
+      <text x="146" y="48" font-size="14" text-anchor="middle" fill="#666">query</text>
+      <text x="334" y="48" font-size="14" text-anchor="middle" fill="#666">labels</text>
+      <text x="240" y="148" font-size="15" text-anchor="middle" fill="#2e8b57" font-weight="700">train the clone on (input, label) pairs</text>
+    </svg>
+  </div>
+  <!-- TODO real figure: Knockoff Nets pipeline diagram, Orekondy et al. 2019. -->
+</div>
+
+<!-- 13. Knockoff Nets -->
+<div class="slide">
+  <h2>Knockoff Nets</h2>
+  <div class="divider"></div>
+  <p>Steal a classifier with <strong>random public images</strong>.</p>
+  <ul class="arrow">
+    <li>Feed unrelated photos to the target</li>
+    <li>Collect the labels it returns</li>
+    <li>Train a clone, never seeing real training data</li>
+  </ul>
+  <div class="cite cite-left">Orekondy, Schiele, and Fritz, "Knockoff Nets: Stealing Functionality of Black-Box Models", CVPR 2019.</div>
+</div>
+
+<!-- 14. You Don't Need Their Data -->
+<div class="slide">
+  <h2>You Don't Need Their Data</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>The labels carry the model's knowledge. <strong>Any</strong> reasonable inputs will do.</p></div>
+  <p>This is why a closed training set does not protect a model.</p>
+</div>
+
+<!-- 15. Two Goals -->
+<div class="slide">
+  <h2>Two Goals: Accuracy vs Fidelity</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="def-card">
+      <h3>Accuracy</h3>
+      <p>Clone is <strong>correct</strong> on the real task.</p>
+    </div>
+    <div class="def-card">
+      <h3>Fidelity</h3>
+      <p>Clone <strong>agrees</strong> with the target, right or wrong.</p>
+    </div>
+  </div>
+  <p class="muted">A high-fidelity copy even copies the target's mistakes.</p>
+</div>
+
+<!-- 16. Why the Difference Matters -->
+<div class="slide">
+  <h2>Why the Difference Matters</h2>
+  <div class="divider"></div>
+  <p>The two goals serve <strong>different attackers</strong>.</p>
+  <ul>
+    <li>Want a free product: chase <em>accuracy</em></li>
+    <li>Want to attack the target: chase <em>fidelity</em></li>
+  </ul>
+  <p class="muted">A faithful copy mirrors the original's blind spots.</p>
+</div>
+
+<!-- 17. Budget vs Fidelity -->
+<div class="slide">
+  <h2>More Queries, Better Copy</h2>
+  <div class="divider"></div>
+  <p>Fidelity climbs with the <strong>query budget</strong>, then flattens.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 460 220" style="width:100%;max-width:840px;">
+      <line x1="50" y1="180" x2="430" y2="180" stroke="#999" stroke-width="1.5"/>
+      <line x1="50" y1="180" x2="50" y2="30" stroke="#999" stroke-width="1.5"/>
+      <path d="M50,176 C140,176 150,80 250,62 C330,48 380,44 420,42" fill="none" stroke="#003876" stroke-width="3"/>
+      <line x1="50" y1="44" x2="420" y2="44" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="5 4"/>
+      <text x="300" y="36" font-size="14" fill="#6b7280">target's own accuracy</text>
+      <text x="240" y="205" font-size="15" fill="#666" text-anchor="middle">queries (budget) →</text>
+      <text x="30" y="105" font-size="15" fill="#666" text-anchor="middle" transform="rotate(-90 30 105)">fidelity →</text>
+    </svg>
+  </div>
+  <p class="muted">Diminishing returns: each extra query buys less.</p>
+</div>
+
+<!-- 18. The Attacker's Dial -->
+<div class="slide">
+  <h2>The Attacker's Dial</h2>
+  <div class="divider"></div>
+  <p>Stealing is a <strong>cost-benefit</strong> calculation.</p>
+  <div class="math-block">$$\text{cost} \;=\; (\text{queries}) \times (\text{price per query}).$$</div>
+  <p>Cheaper than training from scratch ⇒ the copy is worth making.</p>
+</div>
+
+<!-- ============ SECTION 03 ============ -->
+<!-- 19. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Stealing Via APIs</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Probabilities leak more than labels</p>
+</div>
+
+<!-- 20. Labels vs Probabilities -->
+<div class="slide">
+  <h2>Labels vs Probabilities</h2>
+  <div class="divider"></div>
+  <p>Many APIs return more than a single answer.</p>
+  <div class="grid-2">
+    <div><h3>Just a label</h3>
+      <p>"This image is a <strong>cat</strong>."</p></div>
+    <div><h3>Full scores</h3>
+      <p>"cat 0.91, dog 0.07, fox 0.02"</p></div>
+  </div>
+  <p class="muted">The scores expose how <em>sure</em> the model is.</p>
+</div>
+
+<!-- 21. Confidence Leaks Knowledge -->
+<div class="slide">
+  <h2>Confidence Leaks Knowledge</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>A probability is a <strong>richer label</strong> than a single class. It teaches the clone faster.</p></div>
+  <p>One scored query can be worth many label-only queries.</p>
+</div>
+
+<!-- 22. This Is Distillation -->
+<div class="slide">
+  <h2>This Is Distillation</h2>
+  <div class="divider"></div>
+  <p>The same trick that <strong>compresses</strong> models, turned hostile.</p>
+  <ul class="arrow">
+    <li>A teacher's soft scores train a student</li>
+    <li>Honest use: shrink your own model</li>
+    <li>Hostile use: shrink <em>someone else's</em></li>
+  </ul>
+  <div class="cite cite-left">Hinton, Vinyals, and Dean, "Distilling the Knowledge in a Neural Network", NeurIPS Workshop 2015.</div>
+</div>
+
+<!-- 23. Soft Labels Carry More -->
+<div class="slide">
+  <h2>Soft Labels Carry More</h2>
+  <div class="divider"></div>
+  <p>A hard label says <em>one</em> thing; soft scores say <strong>many</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 470 180" style="width:100%;max-width:860px;">
+      <text x="80" y="28" font-size="15" fill="#666" text-anchor="middle">hard label</text>
+      <rect x="40" y="42" width="80" height="34" rx="6" fill="#003876"/>
+      <text x="80" y="64" font-size="15" fill="#fff" text-anchor="middle" font-weight="700">cat = 1</text>
+      <text x="80" y="110" font-size="14" fill="#666" text-anchor="middle">tells you</text>
+      <text x="80" y="130" font-size="14" fill="#666" text-anchor="middle">the winner</text>
+      <text x="320" y="28" font-size="15" fill="#666" text-anchor="middle">soft scores</text>
+      <rect x="220" y="42" width="200" height="20" rx="4" fill="#1a5296" fill-opacity="0.85"/>
+      <rect x="220" y="42" width="182" height="20" rx="4" fill="#003876"/>
+      <text x="320" y="57" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">cat 0.91</text>
+      <rect x="220" y="68" width="40" height="16" rx="4" fill="#9aa3ad"/>
+      <text x="276" y="81" font-size="13" fill="#666" text-anchor="start">dog 0.07</text>
+      <rect x="220" y="90" width="16" height="16" rx="4" fill="#cfd5dc"/>
+      <text x="252" y="103" font-size="13" fill="#666" text-anchor="start">fox 0.02</text>
+      <text x="320" y="135" font-size="14" fill="#666" text-anchor="middle">tells you the whole ranking</text>
+    </svg>
+  </div>
+</div>
+
+<!-- 24. Equation-Solving Attacks -->
+<div class="slide">
+  <h2>Equation-Solving Attacks</h2>
+  <div class="divider"></div>
+  <p>For a <strong>simple</strong> model, scores pin down the weights exactly.</p>
+  <div class="math-block">$$p(x) = \sigma(w \cdot x + b).$$</div>
+  <p>Enough scored queries ⇒ solve for $w$ and $b$ directly.</p>
+  <div class="cite cite-left">Tramèr, Zhang, Juels, Reiter, and Ristenpart, "Stealing Machine Learning Models via Prediction APIs", USENIX Security 2016.</div>
+</div>
+
+<!-- 25. High Fidelity Has a Price -->
+<div class="slide">
+  <h2>High Fidelity Has a Price</h2>
+  <div class="divider"></div>
+  <p>An <em>almost-exact</em> copy of a deep network is expensive.</p>
+  <ul>
+    <li>Many millions of careful queries</li>
+    <li>Heavy compute to fit the clone</li>
+    <li>Still cheaper than the original training</li>
+  </ul>
+  <div class="cite cite-left">Jagielski, Carlini, Berthelot, Kurakin, and Papernot, "High Accuracy and High Fidelity Extraction of Neural Networks", USENIX Security 2020.</div>
+</div>
+
+<!-- 26. Accuracy Is Cheaper -->
+<div class="slide">
+  <h2>Accuracy Is Cheaper Than Fidelity</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>A <strong>usable</strong> copy is cheap. An <strong>exact</strong> copy is hard.</p></div>
+  <p>Matching every decision, including the rare ones, is the costly part.</p>
+</div>
+
+<!-- 27. The Defender's Dilemma -->
+<div class="slide">
+  <h2>The Defender's Dilemma</h2>
+  <div class="divider"></div>
+  <p>The useful API features are the <strong>leaky</strong> ones.</p>
+  <ul class="arrow">
+    <li>Probabilities help honest users</li>
+    <li>The same scores help the thief</li>
+    <li>Hiding them hurts your real customers</li>
+  </ul>
+  <p class="muted">Utility and leakage pull against each other.</p>
+</div>
+
+<!-- ============ SECTION 04 ============ -->
+<!-- 28. Divider 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Stealing Parts of Models</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Recovering a layer from black-box access</p>
+</div>
+
+<!-- 29. Not All or Nothing -->
+<div class="slide">
+  <h2>Not All or Nothing</h2>
+  <div class="divider"></div>
+  <p>You may not need the <em>whole</em> model.</p>
+  <ul>
+    <li>One layer can hold valuable structure</li>
+    <li>Recovering a part is far cheaper</li>
+    <li>Even a part reveals real secrets</li>
+  </ul>
+  <p class="muted">Partial theft is still a serious leak.</p>
+</div>
+
+<!-- 30. The Final Layer -->
+<div class="slide">
+  <h2>The Final Layer</h2>
+  <div class="divider"></div>
+  <p>A language model ends by <strong>projecting</strong> to word scores.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 470 160" style="width:100%;max-width:860px;">
+      <defs><marker id="ar2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#003876"/></marker></defs>
+      <rect x="20" y="54" width="120" height="50" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
+      <text x="80" y="76" font-size="14" text-anchor="middle" fill="#003876" font-weight="700">hidden</text>
+      <text x="80" y="94" font-size="14" text-anchor="middle" fill="#003876">vector</text>
+      <rect x="200" y="54" width="130" height="50" rx="8" fill="#003876"/>
+      <text x="265" y="76" font-size="14" text-anchor="middle" fill="#fff" font-weight="700">final layer</text>
+      <text x="265" y="94" font-size="14" text-anchor="middle" fill="#fff">(projection)</text>
+      <rect x="390" y="54" width="70" height="50" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
+      <text x="425" y="76" font-size="14" text-anchor="middle" fill="#003876" font-weight="700">word</text>
+      <text x="425" y="94" font-size="14" text-anchor="middle" fill="#003876">scores</text>
+      <line x1="140" y1="79" x2="196" y2="79" stroke="#003876" stroke-width="2.5" marker-end="url(#ar2)"/>
+      <line x1="330" y1="79" x2="386" y2="79" stroke="#003876" stroke-width="2.5" marker-end="url(#ar2)"/>
+      <text x="265" y="138" font-size="14" text-anchor="middle" fill="#d94040" font-weight="700">attack target: recover this layer</text>
+    </svg>
+  </div>
+  <!-- TODO real figure: embedding-projection schematic, Carlini et al. ICML 2024. -->
+</div>
+
+<!-- 31. Stealing Part of a Model -->
+<div class="slide">
+  <h2>Stealing Part of a Model</h2>
+  <div class="divider"></div>
+  <p>2024: recover a production model's <strong>final projection</strong>.</p>
+  <ul class="arrow">
+    <li>Black-box access only, through the API</li>
+    <li>Reconstruct the output layer's shape</li>
+    <li>Recover its hidden dimension</li>
+  </ul>
+  <div class="cite cite-left">Carlini, Paleka, Dvijotham, Steinke, Hayase, Cooper, Lee, et al., "Stealing Part of a Production Language Model", ICML 2024.</div>
+</div>
+
+<!-- 32. Probing the Output -->
+<div class="slide">
+  <h2>The Idea, Simply</h2>
+  <div class="divider"></div>
+  <p>The score vectors all live in a <strong>thin slice</strong> of space.</p>
+  <ul>
+    <li>Collect many output score vectors</li>
+    <li>Their span reveals the hidden width</li>
+    <li>That width is a guarded design secret</li>
+  </ul>
+  <p class="muted">A geometry trick, not brute force.</p>
+</div>
+
+<!-- 33. Why This Surprised People -->
+<div class="slide">
+  <h2>Why This Surprised People</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>A <strong>closed, commercial</strong> model gave up a real internal detail through its public API.</p></div>
+  <p>The vendors patched it, but the lesson stands.</p>
+</div>
+
+<!-- 34. A Responsible Disclosure -->
+<div class="slide">
+  <h2>A Responsible Disclosure</h2>
+  <div class="divider"></div>
+  <p>The researchers worked <strong>with</strong> the vendors.</p>
+  <ul class="arrow">
+    <li>Warned them before publishing</li>
+    <li>Helped close the hole</li>
+    <li>Recovered detail was kept modest</li>
+  </ul>
+  <p class="muted">Security research, not a smash-and-grab.</p>
+</div>
+
+<!-- ============ SECTION 05 ============ -->
+<!-- 35. Divider 05 -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Defenses</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Slow it down, blur it, watermark it</p>
+</div>
+
+<!-- 36. No Perfect Wall -->
+<div class="slide">
+  <h2>No Perfect Wall</h2>
+  <div class="divider"></div>
+  <p>If the model answers at all, it <strong>leaks</strong> something.</p>
+  <ul>
+    <li>An open API is an open door</li>
+    <li>Defense raises the cost, not to zero</li>
+  </ul>
+  <p class="muted">Make stealing more expensive than building.</p>
+</div>
+
+<!-- 37. Rate Limits -->
+<div class="slide">
+  <h2>Rate Limits</h2>
+  <div class="divider"></div>
+  <p>Cap how many queries one account can send.</p>
+  <ul class="arrow">
+    <li>A million queries gets noticed</li>
+    <li>Flag unusual query patterns</li>
+    <li>Charge enough to deter bulk theft</li>
+  </ul>
+  <p class="muted">Attackers split across many fake accounts.</p>
+</div>
+
+<!-- 38. Output Perturbation -->
+<div class="slide">
+  <h2>Output Perturbation</h2>
+  <div class="divider"></div>
+  <p>Reveal <strong>less</strong> than the model knows.</p>
+  <div class="grid-2">
+    <div><h3>Round the scores</h3>
+      <p>Return a label, or coarse numbers.</p></div>
+    <div><h3>Add small noise</h3>
+      <p>Blur the exact probabilities.</p></div>
+  </div>
+  <p class="muted">Less detail out ⇒ a worse copy for the thief.</p>
+</div>
+
+<!-- 39. The Utility Cost -->
+<div class="slide">
+  <h2>Perturbation Has a Cost</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>Every bit you hide from the thief, you also hide from your <strong>honest user</strong>.</p></div>
+  <p>Defenses trade real utility for protection.</p>
+</div>
+
+<!-- 40. Watermarking -->
+<div class="slide">
+  <h2>Watermark the Model</h2>
+  <div class="divider"></div>
+  <p>Plant a <strong>secret signature</strong> in the model's behavior.</p>
+  <ul class="arrow">
+    <li>Special inputs trigger a known response</li>
+    <li>The signature survives copying</li>
+    <li>It cannot prove who copied first</li>
+  </ul>
+  <p class="muted">Detection after the fact, not prevention.</p>
+</div>
+
+<!-- 41. Catching a Clone -->
+<div class="slide">
+  <h2>Catching a Clone</h2>
+  <div class="divider"></div>
+  <p>Test a suspect model for your <strong>watermark</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 470 160" style="width:100%;max-width:840px;">
+      <defs><marker id="ar3" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#003876"/></marker></defs>
+      <rect x="24" y="58" width="120" height="48" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
+      <text x="84" y="80" font-size="14" text-anchor="middle" fill="#003876" font-weight="700">secret</text>
+      <text x="84" y="98" font-size="14" text-anchor="middle" fill="#003876">trigger input</text>
+      <rect x="204" y="58" width="120" height="48" rx="8" fill="#003876"/>
+      <text x="264" y="80" font-size="14" text-anchor="middle" fill="#fff" font-weight="700">suspect</text>
+      <text x="264" y="98" font-size="14" text-anchor="middle" fill="#fff">model</text>
+      <rect x="384" y="58" width="74" height="48" rx="8" fill="#f0f7f0" stroke="#2e8b57" stroke-width="2"/>
+      <text x="421" y="80" font-size="14" text-anchor="middle" fill="#2e8b57" font-weight="700">marked</text>
+      <text x="421" y="98" font-size="14" text-anchor="middle" fill="#2e8b57">reply?</text>
+      <line x1="144" y1="82" x2="200" y2="82" stroke="#003876" stroke-width="2.5" marker-end="url(#ar3)"/>
+      <line x1="324" y1="82" x2="380" y2="82" stroke="#003876" stroke-width="2.5" marker-end="url(#ar3)"/>
+      <text x="240" y="140" font-size="14" text-anchor="middle" fill="#666">match ⇒ evidence it copied your model</text>
+    </svg>
+  </div>
+</div>
+
+<!-- 42. Detection by Query Patterns -->
+<div class="slide">
+  <h2>Detection by Behavior</h2>
+  <div class="divider"></div>
+  <p>A thief's queries <strong>look different</strong>.</p>
+  <ul>
+    <li>Many odd inputs, few repeats</li>
+    <li>Coverage that mimics a training set</li>
+    <li>A signature you can learn to spot</li>
+  </ul>
+  <p class="muted">Watch the traffic, not just the model.</p>
+</div>
+
+<!-- 43. Layered Defense -->
+<div class="slide">
+  <h2>Layered Defense</h2>
+  <div class="divider"></div>
+  <p>No single wall, so <strong>stack</strong> them.</p>
+  <div class="grid-3">
+    <div class="card"><h3>Limit</h3><p>Cap and price the queries.</p></div>
+    <div class="card"><h3>Blur</h3><p>Return less detail.</p></div>
+    <div class="card"><h3>Trace</h3><p>Watermark and detect.</p></div>
+  </div>
+</div>
+
+<!-- ============ SECTION 06 ============ -->
+<!-- 44. Divider 06 -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Frontier 2025–26</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Extraction from frontier models</p>
+</div>
+
+<!-- 45. Stealing Frontier LLMs -->
+<div class="slide">
+  <h2>Stealing Frontier Models</h2>
+  <div class="divider"></div>
+  <p>The target moved from toy classifiers to <strong>chat models</strong>.</p>
+  <ul class="arrow">
+    <li>Distill a smaller open model from a big one</li>
+    <li>Cheap clones of expensive systems</li>
+    <li>A live concern for every vendor</li>
+  </ul>
+  <p class="muted">LLM = Large Language Model.</p>
+</div>
+
+<!-- 46. Distillation Goes Mainstream -->
+<div class="slide">
+  <h2>Distillation Goes Mainstream</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>Training a strong model on a stronger model's outputs is now a <strong>standard recipe</strong>.</p></div>
+  <p>Terms of service often forbid it; that does not stop everyone.</p>
+</div>
+
+<!-- 47. A Demo You Can Picture -->
+<div class="slide">
+  <h2>A Demo You Can Picture</h2>
+  <div class="divider"></div>
+  <div class="demo-card">
+    <h3>Demo</h3>
+    <ul class="check">
+      <li>Send 50,000 prompts to a chat API</li>
+      <li>Save every question and answer</li>
+      <li>Fine-tune a small open model on them</li>
+    </ul>
+  </div>
+  <p class="muted">A weekend project, not a state secret.</p>
+</div>
+
+<!-- 48. Where the Line Blurs -->
+<div class="slide">
+  <h2>Where the Line Blurs</h2>
+  <div class="divider"></div>
+  <p>Distillation is <strong>both</strong> a tool and a theft.</p>
+  <ul>
+    <li>Compressing your own model: fine</li>
+    <li>Copying a rival's model: theft</li>
+    <li>Same math, different consent</li>
+  </ul>
+  <p class="muted">The ethics live in the agreement, not the algorithm.</p>
+</div>
+
+<!-- 49. Open Problems -->
+<div class="slide">
+  <h2>Open Problems</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li>Defenses that keep the API useful</li>
+    <li>Watermarks that survive distillation</li>
+    <li>Proving a model was copied, in court</li>
+    <li>Pricing queries to deter bulk theft</li>
+  </ul>
+  <p class="muted">The arms race is wide open.</p>
+</div>
+
+<!-- 50. Key Takeaways -->
+<div class="slide">
+  <h2>Key Takeaways</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li>Every answer is a free training label</li>
+    <li>Probabilities leak more than labels</li>
+    <li>Even a single layer can be stolen</li>
+    <li>Defenses raise cost; none are a wall</li>
+  </ul>
+  <div class="highlight"><p>If a model <strong>answers</strong>, it can be <strong>copied</strong>.</p></div>
+</div>
+
+<!-- 51. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">Q&amp;A</div>
+  <p class="big-word-sub">Every answer is a clue to the copy.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 51</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

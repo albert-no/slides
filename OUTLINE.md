@@ -28,6 +28,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
   - `lectures/06-watermark/` — LLM watermarking (1 deck: green-list, distortion-free, undetectable, robust, radioactivity)
   - `exam/` — homework (HW1–4), midterms 2025–26, finals 2024–25 + 2026/27 drafts (`.tex`/`.pdf`/`.html`, shared style files)
   - `overleaf/` — frozen Overleaf archive: lecture-note `.tex` (`1_dp`/`2_difffusion`/`3_watermark`/`4_MIA`), `hw_exam/` (all HW + exams), `images/`, `old/` drafts, `.bib`/style files
+- **`courses/trustworthy-ai/`** — Trustworthy AI course (general-audience graduate, 15 weeks × 1.5 hr). Concepts-first survey: each lecture is formal definition → history → 2025–26 frontier, plus an optional Colab demo. Decks live flat (`lecNN-*.html`). Five modules: Foundations (Wk 1) · Privacy & Data (2–5) · Reliability (6–7) · Security (8–11) · Provenance & Fairness (12–14) · Synthesis (15). **All 15 lectures + 4 backup decks drafted**, each with a companion `-note.html` speaker script (per-slide key takeaways). Lec 1–2 are polished (screenshot-audited, real paper figures); lec 3–15 + backups are solid first drafts (SVG diagrams, cited papers, figure-TODO markers). Backups: sycophancy, copyright, agentic autonomy, model stealing. The light general-audience pass over topics treated rigorously in `courses/privacy/`. See `courses/trustworthy-ai/OUTLINE.md`.
 
 ### `talks/` — standalone research presentations
 
@@ -116,6 +117,10 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Diffusion-LLM safety (A2D) | `talks/kics260521dllm/kics260521dllm.html:694` |
 | dgMARK (diffusion-LLM watermarking, ICML 2026) | `talks/kics260521dllm/kics260521dllm.html:707` |
 | Reversal curse in MDMs | `talks/kics260521dllm/kics260521dllm.html:720` |
+| Threat-model framing (knowledge × timing), trust dimensions | `courses/trustworthy-ai/lec01-introduction.html:333, :296` |
+| $(\varepsilon,\delta)$-DP intuition pass (general audience) | `courses/trustworthy-ai/lec02-privacy-dp.html:527` |
+| Statistical indistinguishability (heights example, intuition) | `courses/trustworthy-ai/lec02-privacy-dp.html:637` |
+| DP-SGD intuition (clip + noise, general audience) | `courses/trustworthy-ai/lec02-privacy-dp.html:934` |
 
 ## Cross-references
 

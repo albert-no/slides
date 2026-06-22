@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Watermarking, Deepfakes &amp; Provenance — Trustworthy AI Lecture 12</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Trustworthy AI · Lecture 12</div>
+  <h1>Watermarking,<br>Deepfakes &amp; Provenance</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Proving who made it, and whether a machine did</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Two Flavors of Watermark</div><div class="toc-sub">Prove ownership, or flag AI output</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Text Watermarking</div><div class="toc-sub">The green-list rule and its detector</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Quality and Robustness</div><div class="toc-sub">Keep it natural, survive edits</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Production and Images</div><div class="toc-sub">SynthID, and fragile pixels</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Detecting AI Content</div><div class="toc-sub">Why standalone detectors fail</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Deepfakes and Provenance</div><div class="toc-sub">Content credentials and the law</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Two Flavors of Watermark</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Prove ownership, or flag AI output</p>
+</div>
+
+<!-- 4. The Problem -->
+<div class="slide">
+  <h2>The Problem</h2>
+  <div class="divider"></div>
+  <p>AI output is <strong>indistinguishable</strong> from human work.</p>
+  <ul class="arrow">
+    <li>Essays, news, code, photos, voices</li>
+    <li>No mark says "a machine made this"</li>
+    <li>And no mark says "this model is mine"</li>
+  </ul>
+  <p class="muted">A watermark is a hidden signal we add on purpose.</p>
+</div>
+
+<!-- 5. What a Watermark Is -->
+<div class="slide">
+  <h2>What a Watermark Is</h2>
+  <div class="divider"></div>
+  <p>An <strong>invisible mark</strong> hidden inside content.</p>
+  <ul>
+    <li>A human reader does not notice it</li>
+    <li>A detector with a secret key does</li>
+    <li>Old idea: banknotes, paper, photos</li>
+  </ul>
+  <p class="muted">New twist: hide the mark in what a model generates.</p>
+</div>
+
+<!-- 6. Two Flavors -->
+<div class="slide">
+  <h2>Two Flavors</h2>
+  <div class="divider"></div>
+  <p>The word "watermark" covers <strong>two different goals</strong>.</p>
+  <div class="grid-2">
+    <div class="card"><h3>Model watermark</h3><p>Prove a model is <strong>yours</strong>. Catch a stolen copy.</p></div>
+    <div class="card"><h3>Output watermark</h3><p>Prove a piece of content is <strong>AI-generated</strong>.</p></div>
+  </div>
+  <p class="muted">Same word, opposite questions.</p>
+</div>
+
+<!-- 7. Model Watermarks -->
+<div class="slide">
+  <h2>Model Watermarks: Prove Ownership</h2>
+  <div class="divider"></div>
+  <p>Plant a <strong>secret trigger</strong> only the owner knows.</p>
+  <ul class="num">
+    <li>Train the model to react to a hidden cue</li>
+    <li>A normal user never sees the reaction</li>
+    <li>The owner queries the cue to claim the model</li>
+  </ul>
+  <p class="muted">Like a hidden signature baked into the weights.</p>
+</div>
+
+<!-- 8. Output Watermarks -->
+<div class="slide">
+  <h2>Output Watermarks: Flag the Content</h2>
+  <div class="divider"></div>
+  <p>Tilt generation so the output carries a <strong>hidden pattern</strong>.</p>
+  <ul class="arrow">
+    <li>The text or image still looks normal</li>
+    <li>A detector reads the pattern back out</li>
+    <li>Verdict: human-written or machine-made</li>
+  </ul>
+  <p class="muted">This lecture focuses on output watermarks.</p>
+</div>
+
+<!-- 9. Why We Care -->
+<div class="slide">
+  <h2>Why We Care</h2>
+  <div class="divider"></div>
+  <p>Flagging AI content has <strong>real stakes</strong>.</p>
+  <ul>
+    <li>Schools: was this essay written by a model?</li>
+    <li>Elections: is this a fabricated quote?</li>
+    <li>Courts: is this photo evidence genuine?</li>
+  </ul>
+  <div class="highlight"><p>Trust online depends on telling <strong>real from synthetic</strong>.</p></div>
+</div>
+
+<!-- 10. Watermark vs Detector -->
+<div class="slide">
+  <h2>Watermark vs Detector</h2>
+  <div class="divider"></div>
+  <p>Two separate ideas, often confused.</p>
+  <div class="grid-2">
+    <div><h3>Watermark</h3><p>The generator <strong>cooperates</strong>: it plants a signal as it writes.</p></div>
+    <div><h3>Detector</h3><p>A guesser looks at finished text with <strong>no planted signal</strong>.</p></div>
+  </div>
+  <p class="muted">A planted signal is far more reliable than a guess.</p>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 11. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Text Watermarking</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The green-list rule and its detector</p>
+</div>
+
+<!-- 12. How a Model Writes -->
+<div class="slide">
+  <h2>How a Model Writes</h2>
+  <div class="divider"></div>
+  <p>A language model writes <strong>one word at a time</strong>.</p>
+  <ul>
+    <li>Each step: a score for every possible next word</li>
+    <li>It samples one, then repeats</li>
+    <li>Vocabulary: tens of thousands of "tokens"</li>
+  </ul>
+  <p class="muted">A token is a word or word-piece the model picks from.</p>
+</div>
+
+<!-- 13. The Green-List Idea -->
+<div class="slide">
+  <h2>The Green-List Idea</h2>
+  <div class="divider"></div>
+  <p>At each step, secretly split the vocabulary in two.</p>
+  <ul class="arrow">
+    <li><strong>Green list:</strong> favored words</li>
+    <li><strong>Red list:</strong> the rest</li>
+    <li>Nudge the model to prefer green</li>
+  </ul>
+  <div class="cite cite-left">Kirchenbauer, Geiping, Wen, Katz, Miers, and Goldstein, "A Watermark for Large Language Models", ICML 2023.</div>
+</div>
+
+<!-- 14. The Partition SVG -->
+<div class="slide">
+  <h2>Splitting the Vocabulary</h2>
+  <div class="divider"></div>
+  <p>A secret key picks the green list <strong>fresh at each step</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 520 200" style="width:100%;max-width:900px;">
+      <text x="260" y="24" font-size="17" fill="#666" text-anchor="middle">whole vocabulary</text>
+      <!-- green tokens -->
+      <rect x="30"  y="44" width="58" height="34" rx="6" fill="#2e8b57" fill-opacity="0.22" stroke="#2e8b57" stroke-width="2"/>
+      <rect x="118" y="44" width="58" height="34" rx="6" fill="#9aa3ad" fill-opacity="0.18" stroke="#6b7280" stroke-width="2"/>
+      <rect x="206" y="44" width="58" height="34" rx="6" fill="#2e8b57" fill-opacity="0.22" stroke="#2e8b57" stroke-width="2"/>
+      <rect x="294" y="44" width="58" height="34" rx="6" fill="#9aa3ad" fill-opacity="0.18" stroke="#6b7280" stroke-width="2"/>
+      <rect x="382" y="44" width="58" height="34" rx="6" fill="#2e8b57" fill-opacity="0.22" stroke="#2e8b57" stroke-width="2"/>
+      <rect x="118" y="92" width="58" height="34" rx="6" fill="#2e8b57" fill-opacity="0.22" stroke="#2e8b57" stroke-width="2"/>
+      <rect x="30"  y="92" width="58" height="34" rx="6" fill="#9aa3ad" fill-opacity="0.18" stroke="#6b7280" stroke-width="2"/>
+      <rect x="206" y="92" width="58" height="34" rx="6" fill="#9aa3ad" fill-opacity="0.18" stroke="#6b7280" stroke-width="2"/>
+      <rect x="294" y="92" width="58" height="34" rx="6" fill="#2e8b57" fill-opacity="0.22" stroke="#2e8b57" stroke-width="2"/>
+      <rect x="382" y="92" width="58" height="34" rx="6" fill="#9aa3ad" fill-opacity="0.18" stroke="#6b7280" stroke-width="2"/>
+      <text x="160" y="168" font-size="17" fill="#2e8b57" text-anchor="middle" font-weight="700">green = favored</text>
+      <text x="372" y="168" font-size="17" fill="#6b7280" text-anchor="middle" font-weight="700">red = the rest</text>
+    </svg>
+  </div>
+  <p class="muted">The split looks random to anyone without the key.</p>
+</div>
+
+<!-- 15. The Nudge -->
+<div class="slide">
+  <h2>The Nudge</h2>
+  <div class="divider"></div>
+  <p>Add a small bonus to every green word's score.</p>
+  <div class="math-block">$$\text{score}_{\text{green}} \;\leftarrow\; \text{score}_{\text{green}} + \delta.$$</div>
+  <p>Bigger $\delta$ ⇒ stronger watermark, but <strong>less natural</strong> text.</p>
+</div>
+
+<!-- 16. Reading It Back -->
+<div class="slide">
+  <h2>Reading It Back</h2>
+  <div class="divider"></div>
+  <p>The detector knows the key, so it knows the green list at each step.</p>
+  <ul class="num">
+    <li>Re-derive which words were green</li>
+    <li>Count how many used words are green</li>
+    <li>Too many green ⇒ watermarked</li>
+  </ul>
+  <p class="muted">No access to the model needed, just the key.</p>
+</div>
+
+<!-- 17. The Telltale Fraction -->
+<div class="slide">
+  <h2>The Telltale Fraction</h2>
+  <div class="divider"></div>
+  <p>Say the green list is <strong>half</strong> the vocabulary.</p>
+  <div class="grid-2">
+    <div><h3>Human text</h3><p>Ignores the secret split. About <strong>50%</strong> green by chance.</p></div>
+    <div><h3>Watermarked text</h3><p>Pushed toward green. Maybe <strong>80%</strong> green.</p></div>
+  </div>
+  <p class="muted">The gap between 50% and 80% is the signal.</p>
+</div>
+
+<!-- 18. A Detection Threshold (SVG) -->
+<div class="slide">
+  <h2>A Detection Threshold</h2>
+  <div class="divider"></div>
+  <p>Two bells: human text vs watermarked text. Pick a line between them.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 480 220" style="width:100%;max-width:880px;">
+      <line x1="40" y1="178" x2="445" y2="178" stroke="#999" stroke-width="1.5"/>
+      <path d="M55,178 C115,178 125,66 168,66 C211,66 221,178 281,178 Z" fill="#9aa3ad" fill-opacity="0.30" stroke="#6b7280" stroke-width="2.5"/>
+      <path d="M225,178 C285,178 295,62 338,62 C381,62 391,178 451,178 Z" fill="#2e8b57" fill-opacity="0.22" stroke="#2e8b57" stroke-width="2.5"/>
+      <line x1="253" y1="178" x2="253" y2="48" stroke="#d94040" stroke-width="2" stroke-dasharray="5 4"/>
+      <text x="138" y="118" font-size="17" fill="#6b7280" text-anchor="middle" font-weight="700">human</text>
+      <text x="138" y="138" font-size="14" fill="#6b7280" text-anchor="middle">~50% green</text>
+      <text x="362" y="116" font-size="17" fill="#2e8b57" text-anchor="middle" font-weight="700">watermarked</text>
+      <text x="362" y="136" font-size="14" fill="#2e8b57" text-anchor="middle">~80% green</text>
+      <text x="253" y="40" font-size="15" fill="#d94040" text-anchor="middle" font-weight="700">threshold</text>
+      <text x="400" y="197" font-size="14" fill="#666">% green →</text>
+    </svg>
+  </div>
+  <p class="muted">Right of the line ⇒ call it watermarked.</p>
+</div>
+
+<!-- 19. False Positives -->
+<div class="slide">
+  <h2>The Danger: False Positives</h2>
+  <div class="divider"></div>
+  <p>A <em>false positive</em> = flag human text as AI by mistake.</p>
+  <div class="def-card">
+    <h3>False-positive rate</h3>
+    <p>The chance a real human, ignoring the secret split, lands above the threshold by pure luck.</p>
+  </div>
+  <p>We must keep this rate <strong>tiny</strong>: accusations are costly.</p>
+</div>
+
+<!-- 20. Length Beats Luck -->
+<div class="slide">
+  <h2>Length Beats Luck</h2>
+  <div class="divider"></div>
+  <p>Could a human hit 80% green by chance? Over a <strong>long passage</strong>, no.</p>
+  <div class="math-block">$$\Pr[\text{80\% green by luck over many words}] \;\approx\; 0.$$</div>
+  <p>The longer the text, the <strong>safer</strong> the verdict.</p>
+</div>
+
+<!-- 21. The One-Knob Tradeoff -->
+<div class="slide">
+  <h2>The One-Knob Tradeoff</h2>
+  <div class="divider"></div>
+  <p>$\delta$ is the single dial.</p>
+  <ul>
+    <li>Larger $\delta$: easier to detect, shorter text needed</li>
+    <li>Larger $\delta$: more forced word choices, odder prose</li>
+  </ul>
+  <div class="highlight"><p><strong>Detectability vs quality</strong>: the central watermark tradeoff.</p></div>
+</div>
+
+<!-- ============ SECTION 03 ============ -->
+<!-- 22. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Quality and Robustness</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Keep it natural, survive edits</p>
+</div>
+
+<!-- 23. The Quality Worry -->
+<div class="slide">
+  <h2>The Quality Worry</h2>
+  <div class="divider"></div>
+  <p>Forcing green words can <strong>degrade writing</strong>.</p>
+  <ul class="arrow">
+    <li>The best word might be on the red list</li>
+    <li>Picking second-best, repeatedly, shows</li>
+    <li>Users notice clumsy phrasing</li>
+  </ul>
+  <p class="muted">Can we watermark <em>without</em> hurting quality?</p>
+</div>
+
+<!-- 24. Distortion-Free Watermarks -->
+<div class="slide">
+  <h2>Distortion-Free Watermarks</h2>
+  <div class="divider"></div>
+  <p>Yes: hide the mark in the <strong>randomness of sampling</strong>.</p>
+  <div class="def-card">
+    <h3>Distortion-free</h3>
+    <p>The watermarked text follows the model's <strong>exact</strong> word distribution. On average, quality is untouched.</p>
+  </div>
+  <div class="cite cite-left">Aaronson, "Watermarking GPT outputs" (talk), 2022.</div>
+</div>
+
+<!-- 25. The Gumbel Trick -->
+<div class="slide">
+  <h2>The Trick: Reused Randomness</h2>
+  <div class="divider"></div>
+  <p>Sampling already needs random numbers. <strong>Derive them from a key.</strong></p>
+  <ul class="num">
+    <li>Key + position ⇒ a fixed "random" seed</li>
+    <li>Same seed picks the same word</li>
+    <li>Detector replays the seed, checks the match</li>
+  </ul>
+  <p class="muted">The choice looks random but is secretly reproducible.</p>
+</div>
+
+<!-- 26. Undetectable Watermarks -->
+<div class="slide">
+  <h2>Undetectable Watermarks</h2>
+  <div class="divider"></div>
+  <p>A 2024 result: a watermark you <strong>cannot tell is there</strong>.</p>
+  <ul>
+    <li>Without the key, output looks perfectly normal</li>
+    <li>No quality loss provable by any test</li>
+    <li>With the key, the signal is clear</li>
+  </ul>
+  <div class="cite cite-left">Christ, Gunn, and Zamir, "Undetectable Watermarks for Language Models", COLT 2024.</div>
+</div>
+
+<!-- 27. The Robustness Worry -->
+<div class="slide">
+  <h2>The Robustness Worry</h2>
+  <div class="divider"></div>
+  <p>People <strong>edit</strong> AI text before sharing it.</p>
+  <ul class="arrow">
+    <li>Fix a word, reorder a sentence</li>
+    <li>Run it through a paraphraser</li>
+    <li>Translate to another language and back</li>
+  </ul>
+  <p class="muted">Does the hidden signal survive?</p>
+</div>
+
+<!-- 28. Small Edits Survive -->
+<div class="slide">
+  <h2>Small Edits Survive</h2>
+  <div class="divider"></div>
+  <p>A few changes barely dent the count.</p>
+  <ul>
+    <li>Each edit flips only a couple of words</li>
+    <li>Most green words stay green</li>
+    <li>The fraction still beats the threshold</li>
+  </ul>
+  <div class="cite cite-left">Kuditipudi, Thickstun, Hashimoto, and Liang, "Robust Distortion-free Watermarks for Language Models", 2023.</div>
+</div>
+
+<!-- 29. Paraphrase Breaks It -->
+<div class="slide">
+  <h2>Heavy Paraphrase Breaks It</h2>
+  <div class="divider"></div>
+  <p>Rewriting <strong>every</strong> sentence erases the pattern.</p>
+  <ul class="arrow">
+    <li>New words ⇒ a new, random green count</li>
+    <li>Strong paraphrasers wash the mark out</li>
+    <li>A determined attacker can usually remove it</li>
+  </ul>
+  <div class="cite cite-left">Sadasivan, Kumar, Balasubramanian, Wang, and Feizi, "Can AI-Generated Text be Reliably Detected?", 2023.</div>
+</div>
+
+<!-- 30. The Honest Limit -->
+<div class="slide">
+  <h2>The Honest Limit</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>No text watermark survives an attacker who <strong>fully rewrites</strong> the content.</p></div>
+  <p>Watermarks deter <em>casual</em> misuse. They do not defeat a <em>motivated</em> adversary.</p>
+</div>
+
+<!-- ============ SECTION 04 ============ -->
+<!-- 31. Divider 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Production and Images</h1>
+  <div class="divider"></div>
+  <p class="subtitle">SynthID, and fragile pixels</p>
+</div>
+
+<!-- 32. SynthID-Text -->
+<div class="slide">
+  <h2>SynthID-Text in Production</h2>
+  <div class="divider"></div>
+  <p>Google deployed a green-list-style watermark <strong>at scale</strong>.</p>
+  <ul class="arrow">
+    <li>Built into the Gemini chat assistant</li>
+    <li>Tuned to keep response quality intact</li>
+    <li>Large user study showed no quality drop</li>
+  </ul>
+  <div class="cite cite-left">Dathathri et al., "Scalable Watermarking for Identifying Large Language Model Outputs", Nature 2024.</div>
+</div>
+
+<!-- 33. SynthID for Images -->
+<div class="slide">
+  <h2>SynthID for Images</h2>
+  <div class="divider"></div>
+  <p>The same brand also watermarks <strong>images and audio</strong>.</p>
+  <ul>
+    <li>A faint pattern woven across the pixels</li>
+    <li>Invisible to the eye, readable by a model</li>
+    <li>Survives many common edits</li>
+  </ul>
+  <p class="muted">Text, image, audio, video: one provenance family.</p>
+  <!-- TODO real figure: SynthID image before/after pair from the SynthID page -->
+</div>
+
+<!-- 34. Image Watermarks Are Fragile -->
+<div class="slide">
+  <h2>Image Watermarks Are Fragile</h2>
+  <div class="divider"></div>
+  <p>Pixels are easy to <strong>damage</strong>.</p>
+  <ul class="arrow">
+    <li>Cropping removes part of the pattern</li>
+    <li>Screenshots and re-saves blur it</li>
+    <li>Heavy compression scrubs fine detail</li>
+  </ul>
+  <p class="muted">Each transform chips away at the hidden mark.</p>
+</div>
+
+<!-- 35. Cropping SVG -->
+<div class="slide">
+  <h2>Cropping Erases the Mark</h2>
+  <div class="divider"></div>
+  <p>Keep one corner, lose the watermark spread across the rest.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 480 180" style="width:100%;max-width:840px;">
+      <!-- full image with dot pattern -->
+      <rect x="30" y="20" width="150" height="130" rx="6" fill="#1a5296" fill-opacity="0.10" stroke="#003876" stroke-width="2"/>
+      <g fill="#003876" fill-opacity="0.5">
+        <circle cx="55" cy="45" r="3"/><circle cx="95" cy="60" r="3"/><circle cx="140" cy="40" r="3"/>
+        <circle cx="70" cy="100" r="3"/><circle cx="120" cy="115" r="3"/><circle cx="160" cy="90" r="3"/>
+        <circle cx="45" cy="130" r="3"/><circle cx="150" cy="135" r="3"/>
+      </g>
+      <text x="105" y="172" font-size="15" fill="#003876" text-anchor="middle" font-weight="700">full image</text>
+      <!-- arrow -->
+      <defs><marker id="cr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d94040"/></marker></defs>
+      <line x1="200" y1="85" x2="270" y2="85" stroke="#d94040" stroke-width="2.5" marker-end="url(#cr)"/>
+      <text x="235" y="74" font-size="14" fill="#d94040" text-anchor="middle" font-weight="700">crop</text>
+      <!-- cropped corner -->
+      <rect x="300" y="50" width="70" height="62" rx="6" fill="#9aa3ad" fill-opacity="0.14" stroke="#6b7280" stroke-width="2"/>
+      <g fill="#6b7280" fill-opacity="0.5"><circle cx="320" cy="70" r="3"/><circle cx="350" cy="95" r="3"/></g>
+      <text x="335" y="135" font-size="14" fill="#6b7280" text-anchor="middle" font-weight="700">cropped</text>
+      <text x="430" y="80" font-size="15" fill="#d94040" text-anchor="middle" font-weight="700">too few</text>
+      <text x="430" y="100" font-size="15" fill="#d94040" text-anchor="middle" font-weight="700">dots left</text>
+    </svg>
+  </div>
+  <p class="muted">Less surface ⇒ less signal ⇒ a missed detection.</p>
+</div>
+
+<!-- 36. Video Is Harder -->
+<div class="slide">
+  <h2>Video Is Harder Still</h2>
+  <div class="divider"></div>
+  <p>Video = thousands of frames, all re-encoded.</p>
+  <ul>
+    <li>Platforms recompress on every upload</li>
+    <li>Clipping keeps only a few seconds</li>
+    <li>The mark must survive all of it</li>
+  </ul>
+  <p class="muted">An open engineering challenge in 2025–26.</p>
+</div>
+
+<!-- 37. No Standard -->
+<div class="slide">
+  <h2>No Shared Standard</h2>
+  <div class="divider"></div>
+  <p>Each company ships its <strong>own</strong> watermark.</p>
+  <ul class="arrow">
+    <li>One detector reads only its own brand</li>
+    <li>Content from elsewhere goes unflagged</li>
+    <li>No universal "made by AI" check exists</li>
+  </ul>
+  <p class="muted">Fragmentation limits how useful watermarks can be.</p>
+</div>
+
+<!-- ============ SECTION 05 ============ -->
+<!-- 38. Divider 05 -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Detecting AI Content</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Why standalone detectors fail</p>
+</div>
+
+<!-- 39. The Tempting Shortcut -->
+<div class="slide">
+  <h2>The Tempting Shortcut</h2>
+  <div class="divider"></div>
+  <p>What if there is <strong>no watermark</strong> at all?</p>
+  <ul>
+    <li>A detector guesses from style alone</li>
+    <li>No key, no cooperation from the generator</li>
+    <li>Just "does this read like a machine?"</li>
+  </ul>
+  <p class="muted">Many products promise exactly this.</p>
+</div>
+
+<!-- 40. Why Detectors Struggle -->
+<div class="slide">
+  <h2>Why Detectors Struggle</h2>
+  <div class="divider"></div>
+  <p>Modern models write like <strong>fluent humans</strong>.</p>
+  <ul class="arrow">
+    <li>The stylistic gap keeps shrinking</li>
+    <li>Each new model breaks old detectors</li>
+    <li>A light rewrite fools most of them</li>
+  </ul>
+  <p class="muted">No hidden signal means only a fragile guess.</p>
+</div>
+
+<!-- 41. False Accusations -->
+<div class="slide">
+  <h2>False Accusations</h2>
+  <div class="divider"></div>
+  <p>A wrong flag has <strong>real victims</strong>.</p>
+  <ul>
+    <li>Students accused of cheating they did not do</li>
+    <li>Non-native writers flagged far more often</li>
+    <li>No way to prove your innocence</li>
+  </ul>
+  <div class="highlight"><p>A confident detector that is <strong>sometimes wrong</strong> is dangerous.</p></div>
+</div>
+
+<!-- 42. OpenAI Pulled Theirs -->
+<div class="slide">
+  <h2>OpenAI Pulled Its Detector</h2>
+  <div class="divider"></div>
+  <p>In 2023, OpenAI <strong>withdrew</strong> its own AI-text classifier.</p>
+  <ul class="arrow">
+    <li>Stated reason: low accuracy</li>
+    <li>Too many real texts flagged as AI</li>
+    <li>A clear signal: detection is hard</li>
+  </ul>
+  <p class="muted">Even the model's maker could not detect it reliably.</p>
+</div>
+
+<!-- 43. Demo -->
+<div class="slide">
+  <h2>Try It Yourself</h2>
+  <div class="divider"></div>
+  <div class="demo-card">
+    <h3>Demo</h3>
+    <ul class="check">
+      <li>Paste your own writing into a free AI-text detector</li>
+      <li>Paste a paragraph you asked a chatbot to write</li>
+      <li>Compare the two scores, then lightly edit each</li>
+    </ul>
+  </div>
+  <p class="muted">Watch how easily the verdict flips.</p>
+</div>
+
+<!-- 44. Watermark vs Detector, Revisited -->
+<div class="slide">
+  <h2>The Right Lesson</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>A <strong>planted</strong> watermark can be trusted. A <strong>guessed</strong> verdict often cannot.</p></div>
+  <p>Provenance you build in beats provenance you try to infer after the fact.</p>
+</div>
+
+<!-- ============ SECTION 06 ============ -->
+<!-- 45. Divider 06 -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Deepfakes and Provenance</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Content credentials and the law</p>
+</div>
+
+<!-- 46. Deepfakes -->
+<div class="slide">
+  <h2>Deepfakes</h2>
+  <div class="divider"></div>
+  <p>AI now <strong>fabricates</strong> people convincingly.</p>
+  <ul class="arrow">
+    <li>Voice clones from a few seconds of audio</li>
+    <li>Face swaps in live video calls</li>
+    <li>Photoreal images of events that never happened</li>
+  </ul>
+  <p class="muted">The fakes are good enough to fool most viewers.</p>
+</div>
+
+<!-- 47. Real Harms -->
+<div class="slide">
+  <h2>Real Harms</h2>
+  <div class="divider"></div>
+  <p>Deepfakes already cause <strong>concrete damage</strong>.</p>
+  <ul>
+    <li>Voice-clone scams impersonating relatives</li>
+    <li>Fake clips of politicians before elections</li>
+    <li>Non-consensual fabricated images</li>
+  </ul>
+  <p class="muted">Detection alone cannot keep up with the volume.</p>
+</div>
+
+<!-- 48. Flip the Problem -->
+<div class="slide">
+  <h2>Flip the Problem</h2>
+  <div class="divider"></div>
+  <p>Stop chasing fakes. Instead, <strong>prove what is real</strong>.</p>
+  <ul class="arrow">
+    <li>Sign genuine content at the source</li>
+    <li>Attach a record of how it was made</li>
+    <li>Unsigned content earns less trust</li>
+  </ul>
+  <p class="muted">This is the idea of <em>provenance</em>.</p>
+</div>
+
+<!-- 49. C2PA Content Credentials -->
+<div class="slide">
+  <h2>C2PA Content Credentials</h2>
+  <div class="divider"></div>
+  <p>An industry standard for a <strong>tamper-evident label</strong>.</p>
+  <ul>
+    <li>Camera or app signs the file when created</li>
+    <li>Each edit appends a signed record</li>
+    <li>Any tampering breaks the signature</li>
+  </ul>
+  <p class="muted">C2PA = Coalition for Content Provenance and Authenticity.</p>
+</div>
+
+<!-- 50. Provenance Chain SVG -->
+<div class="slide">
+  <h2>A Signed History</h2>
+  <div class="divider"></div>
+  <p>Credentials form a <strong>chain</strong>, each step signed.</p>
+  <div class="diagram-flow" style="margin:24px 0;">
+    <div class="diagram-box">Camera<br><span class="muted">captured</span></div>
+    <div class="diagram-box">Editor<br><span class="muted">cropped</span></div>
+    <div class="diagram-box">Platform<br><span class="muted">published</span></div>
+  </div>
+  <p>A reader can replay the chain and spot a <strong>broken link</strong>.</p>
+</div>
+
+<!-- 51. The Strip Problem -->
+<div class="slide">
+  <h2>The Strip Problem</h2>
+  <div class="divider"></div>
+  <p>A credential can simply be <strong>removed</strong>.</p>
+  <ul class="arrow">
+    <li>A screenshot drops all the metadata</li>
+    <li>No credential is not the same as "fake"</li>
+    <li>Watermarks help where credentials are stripped</li>
+  </ul>
+  <p class="muted">Watermarks and credentials are <em>complementary</em>, not rivals.</p>
+</div>
+
+<!-- 52. The Law Steps In -->
+<div class="slide">
+  <h2>The Law Steps In</h2>
+  <div class="divider"></div>
+  <p>Regulators now <strong>require</strong> disclosure of AI content.</p>
+  <ul>
+    <li>EU AI Act: label AI-generated media</li>
+    <li>Several US states target election deepfakes</li>
+    <li>Platforms adding "AI-generated" tags</li>
+  </ul>
+  <p class="muted">EU AI Act = the European Union's 2024 AI law.</p>
+</div>
+
+<!-- 53. Frontier 2025-26 -->
+<div class="slide">
+  <h2>Frontier 2025–26</h2>
+  <div class="divider"></div>
+  <p>Where the field is heading.</p>
+  <ul class="arrow">
+    <li>Watermarks built into more base models</li>
+    <li>Robustness against stronger paraphrasers</li>
+    <li>Provenance standards across platforms</li>
+    <li>Open question: can any of it be mandatory?</li>
+  </ul>
+</div>
+
+<!-- 54. Key Takeaways -->
+<div class="slide">
+  <h2>Key Takeaways</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li>Two flavors: prove ownership, or flag AI output</li>
+    <li>Green-list text watermarks: a planted, countable signal</li>
+    <li>Robust to small edits, not to full rewrites</li>
+    <li>Standalone detectors misfire; avoid false accusations</li>
+    <li>Provenance and credentials: prove what is real</li>
+  </ul>
+  <div class="highlight"><p>A <strong>planted</strong> mark beats a <strong>guessed</strong> verdict.</p></div>
+</div>
+
+<!-- 55. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">Real?</div>
+  <p class="big-word-sub">Build the proof in, do not guess it after.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 55</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

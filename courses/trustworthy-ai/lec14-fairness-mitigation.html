@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fairness II: Mitigation &amp; Accountability — Trustworthy AI Lecture 14</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Trustworthy AI · Lecture 14</div>
+  <h1>Fairness II:<br>Mitigation &amp; Accountability</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Fixing a biased model, and answering for it</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Three Places to Intervene</div><div class="toc-sub">Data, training, or outputs</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Pre-Processing</div><div class="toc-sub">Fix the data before training</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">In-Processing</div><div class="toc-sub">Bake fairness into training</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Post-Processing</div><div class="toc-sub">Adjust the outputs after the fact</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The Tradeoff</div><div class="toc-sub">No free lunch in fairness</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Accountability</div><div class="toc-sub">Documentation and audits</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">07</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Generative Fairness</div><div class="toc-sub">Debiasing image and text models</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Three Places to Intervene</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Data, training, or outputs</p>
+</div>
+
+<!-- 4. We Measured Bias; Now Fix It -->
+<div class="slide">
+  <h2>We Measured Bias; Now Fix It</h2>
+  <div class="divider"></div>
+  <p>A model can fail one group and pass another.</p>
+  <ul class="arrow">
+    <li>Loan approvals skew by zip code</li>
+    <li>A hiring filter favors one gender</li>
+    <li>A face system fails on darker skin</li>
+  </ul>
+  <p class="muted">Measuring the gap was the easy part. Closing it is the work.</p>
+</div>
+
+<!-- 5. A Definition of Mitigation -->
+<div class="slide">
+  <h2>What Mitigation Means</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Bias mitigation</h3>
+    <p>Any change to the data, the model, or the outputs that <strong>shrinks a measured fairness gap</strong> between groups.</p>
+  </div>
+  <p>It is a deliberate <em>edit</em>, not a side effect of better accuracy.</p>
+</div>
+
+<!-- 6. The Machine Learning Pipeline -->
+<div class="slide">
+  <h2>The Machine Learning Pipeline</h2>
+  <div class="divider"></div>
+  <p>Bias can enter, and be removed, at <strong>three stages</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:14px 0;">
+    <svg viewBox="0 0 920 230" style="width:100%;max-width:980px;">
+      <!-- stage boxes -->
+      <rect x="40" y="86" width="180" height="58" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="130" y="121" font-size="20" fill="#003876" text-anchor="middle" font-weight="700">Data</text>
+      <rect x="370" y="86" width="180" height="58" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="460" y="121" font-size="20" fill="#003876" text-anchor="middle" font-weight="700">Training</text>
+      <rect x="700" y="86" width="180" height="58" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="790" y="121" font-size="20" fill="#003876" text-anchor="middle" font-weight="700">Outputs</text>
+      <defs><marker id="ar0" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs>
+      <line x1="222" y1="115" x2="366" y2="115" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ar0)"/>
+      <line x1="552" y1="115" x2="696" y2="115" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ar0)"/>
+      <!-- intervention labels -->
+      <text x="130" y="44" font-size="17" fill="#2e8b57" text-anchor="middle" font-weight="700">pre-process</text>
+      <text x="130" y="64" font-size="14" fill="#6b7280" text-anchor="middle">reweigh, relabel</text>
+      <text x="460" y="44" font-size="17" fill="#2e8b57" text-anchor="middle" font-weight="700">in-process</text>
+      <text x="460" y="64" font-size="14" fill="#6b7280" text-anchor="middle">add a constraint</text>
+      <text x="790" y="44" font-size="17" fill="#2e8b57" text-anchor="middle" font-weight="700">post-process</text>
+      <text x="790" y="64" font-size="14" fill="#6b7280" text-anchor="middle">shift thresholds</text>
+      <line x1="130" y1="70" x2="130" y2="84" stroke="#2e8b57" stroke-width="2"/>
+      <line x1="460" y1="70" x2="460" y2="84" stroke="#2e8b57" stroke-width="2"/>
+      <line x1="790" y1="70" x2="790" y2="84" stroke="#2e8b57" stroke-width="2"/>
+    </svg>
+  </div>
+  <p class="muted">Pick the stage you can actually touch.</p>
+</div>
+
+<!-- 7. Which Stage Can You Touch? -->
+<div class="slide">
+  <h2>Which Stage Can You Touch?</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card"><h3>Pre</h3><p>You own the <strong>data</strong>. Edit it before training.</p></div>
+    <div class="card"><h3>In</h3><p>You control <strong>training</strong>. Change the objective.</p></div>
+    <div class="card"><h3>Post</h3><p>Only the <strong>scores</strong>. Adjust the final decision.</p></div>
+  </div>
+  <p class="muted">Access shrinks left to right; so does cost to deploy.</p>
+</div>
+
+<!-- 8. The Black-Box Reality -->
+<div class="slide">
+  <h2>The Black-Box Reality</h2>
+  <div class="divider"></div>
+  <p>You often <strong>cannot retrain</strong> the model you must fix.</p>
+  <ul>
+    <li>A vendor API, weights locked away</li>
+    <li>Retraining a large model costs too much</li>
+    <li>Only the input and output are yours</li>
+  </ul>
+  <div class="highlight"><p>When the model is sealed, <strong>post-processing</strong> is the only door left.</p></div>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 9. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Pre-Processing</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Fix the data before training</p>
+</div>
+
+<!-- 10. The Bias Is in the Data -->
+<div class="slide">
+  <h2>The Bias Is in the Data</h2>
+  <div class="divider"></div>
+  <p>A model learns the <strong>patterns it is shown</strong>.</p>
+  <ul class="arrow">
+    <li>Past hiring favored one group</li>
+    <li>The labels record that history</li>
+    <li>The model copies it forward</li>
+  </ul>
+  <p class="muted">Fix the data, and the model never learns the bias.</p>
+</div>
+
+<!-- 11. Reweighing -->
+<div class="slide">
+  <h2>Reweighing</h2>
+  <div class="divider"></div>
+  <p>Give each example a <strong>weight</strong> so groups look balanced.</p>
+  <div class="math-block">$$w(g, y) = \frac{\Pr[G = g]\,\Pr[Y = y]}{\Pr[G = g,\, Y = y]}.$$</div>
+  <p>Underrepresented <strong>group-and-outcome</strong> pairs count for more.</p>
+  <div class="cite cite-left">Kamiran and Calders, "Data Preprocessing Techniques for Classification without Discrimination", KIS 2012.</div>
+</div>
+
+<!-- 12. Reweighing: The Picture -->
+<div class="slide">
+  <h2>Reweighing: The Picture</h2>
+  <div class="divider"></div>
+  <p>Rare cells are <strong>up-weighted</strong>; common cells down-weighted.</p>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 760 250" style="width:100%;max-width:900px;">
+      <!-- before bars -->
+      <text x="190" y="30" font-size="17" fill="#6b7280" text-anchor="middle" font-weight="700">Before: raw counts</text>
+      <line x1="60" y1="210" x2="330" y2="210" stroke="#999" stroke-width="1.5"/>
+      <rect x="80" y="70" width="46" height="140" fill="#9aa3ad" fill-opacity="0.55"/>
+      <rect x="150" y="150" width="46" height="60" fill="#9aa3ad" fill-opacity="0.55"/>
+      <rect x="220" y="120" width="46" height="90" fill="#9aa3ad" fill-opacity="0.55"/>
+      <rect x="290" y="180" width="22" height="30" fill="#d94040" fill-opacity="0.65"/>
+      <text x="301" y="228" font-size="13" fill="#d94040" text-anchor="middle">rare</text>
+      <!-- after bars -->
+      <text x="570" y="30" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">After: reweighed</text>
+      <line x1="440" y1="210" x2="710" y2="210" stroke="#999" stroke-width="1.5"/>
+      <rect x="460" y="110" width="46" height="100" fill="#1a5296" fill-opacity="0.45"/>
+      <rect x="530" y="110" width="46" height="100" fill="#1a5296" fill-opacity="0.45"/>
+      <rect x="600" y="110" width="46" height="100" fill="#1a5296" fill-opacity="0.45"/>
+      <rect x="670" y="110" width="36" height="100" fill="#2e8b57" fill-opacity="0.55"/>
+      <text x="688" y="228" font-size="13" fill="#2e8b57" text-anchor="middle">lifted</text>
+    </svg>
+  </div>
+  <p class="muted">No example deleted; the loss just listens to each group equally.</p>
+</div>
+
+<!-- 13. Relabeling -->
+<div class="slide">
+  <h2>Relabeling</h2>
+  <div class="divider"></div>
+  <p>Flip a few <strong>borderline labels</strong> to even the outcomes.</p>
+  <ul class="arrow">
+    <li>Find cases near the decision boundary</li>
+    <li>Promote some rejected minority records</li>
+    <li>Demote some accepted majority records</li>
+  </ul>
+  <p class="muted">Also called "massaging" the labels. Use it with care.</p>
+</div>
+
+<!-- 14. Representation Repair -->
+<div class="slide">
+  <h2>Representation Repair</h2>
+  <div class="divider"></div>
+  <p>Learn features that <strong>hide the sensitive attribute</strong>.</p>
+  <ul>
+    <li>Transform inputs into a new encoding</li>
+    <li>Keep what predicts the target</li>
+    <li>Erase what predicts the group</li>
+  </ul>
+  <div class="highlight"><p>If features carry <strong>no signal</strong> about the group, no model can use it.</p></div>
+</div>
+
+<!-- 15. Pre-Processing: Pros and Cons -->
+<div class="slide">
+  <h2>Pre-Processing: Pros and Cons</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Strengths</h3>
+      <ul class="check"><li>Model-agnostic: train anything after</li><li>Fix once, reuse the clean data</li><li>Easy to explain to a regulator</li></ul></div>
+    <div><h3>Limits</h3>
+      <ul><li>Editing labels is risky</li><li>Proxies can leak the group back</li><li>No guarantee at output time</li></ul></div>
+  </div>
+</div>
+
+<!-- ============ SECTION 03 ============ -->
+<!-- 16. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>In-Processing</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Bake fairness into training</p>
+</div>
+
+<!-- 17. Add Fairness to the Objective -->
+<div class="slide">
+  <h2>Add Fairness to the Objective</h2>
+  <div class="divider"></div>
+  <p>Train for accuracy <strong>and</strong> a fairness target together.</p>
+  <div class="math-block">$$\min_\theta \; \underbrace{\text{Loss}(\theta)}_{\text{accuracy}} \;+\; \lambda \, \underbrace{\text{Unfairness}(\theta)}_{\text{penalty}}.$$</div>
+  <p>The knob $\lambda$ sets <strong>how much fairness costs</strong> you.</p>
+</div>
+
+<!-- 18. Fairness as a Constraint -->
+<div class="slide">
+  <h2>Fairness as a Constraint</h2>
+  <div class="divider"></div>
+  <p>Demand the gap stay <strong>below a budget</strong> $\tau$.</p>
+  <div class="math-block">$$\min_\theta \;\text{Loss}(\theta) \quad \text{s.t.} \quad \text{gap}(\theta) \le \tau.$$</div>
+  <p>An explicit promise, not a soft nudge.</p>
+</div>
+
+<!-- 19. The Reductions Approach -->
+<div class="slide">
+  <h2>The Reductions Approach</h2>
+  <div class="divider"></div>
+  <p>Turn a fairness constraint into <strong>ordinary training calls</strong>.</p>
+  <ul class="arrow">
+    <li>Reweight examples, train a plain classifier</li>
+    <li>Check the gap, adjust the weights</li>
+    <li>Repeat until the constraint holds</li>
+  </ul>
+  <div class="cite cite-left">Agarwal, Beygelzimer, Dudík, Langford, and Wallach, "A Reductions Approach to Fair Classification", ICML 2018.</div>
+</div>
+
+<!-- 20. Why Reductions Are Handy -->
+<div class="slide">
+  <h2>Why Reductions Are Handy</h2>
+  <div class="divider"></div>
+  <p>No new model, just a <strong>wrapper around training</strong>.</p>
+  <ul>
+    <li>Works with any standard classifier</li>
+    <li>Handles many fairness definitions</li>
+    <li>Comes with provable guarantees</li>
+  </ul>
+  <p class="muted">A clean separation: fairness logic outside, learner inside.</p>
+</div>
+
+<!-- 21. Adversarial Debiasing -->
+<div class="slide">
+  <h2>Adversarial Debiasing</h2>
+  <div class="divider"></div>
+  <p>Two networks <strong>compete</strong> over the same features.</p>
+  <div style="display:flex;justify-content:center;margin:12px 0;">
+    <svg viewBox="0 0 820 210" style="width:100%;max-width:920px;">
+      <rect x="40" y="80" width="150" height="56" rx="10" fill="#003876"/>
+      <text x="115" y="114" font-size="18" fill="#fff" text-anchor="middle" font-weight="700">Predictor</text>
+      <rect x="330" y="80" width="150" height="56" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="405" y="106" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">features</text>
+      <text x="405" y="126" font-size="13" fill="#6b7280" text-anchor="middle">shared</text>
+      <rect x="620" y="80" width="160" height="56" rx="10" fill="#fbeaea" stroke="#d94040" stroke-width="2"/>
+      <text x="700" y="106" font-size="17" fill="#d94040" text-anchor="middle" font-weight="700">Adversary</text>
+      <text x="700" y="126" font-size="13" fill="#6b7280" text-anchor="middle">guesses group</text>
+      <defs><marker id="ar1" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs>
+      <line x1="190" y1="108" x2="326" y2="108" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ar1)"/>
+      <line x1="480" y1="108" x2="616" y2="108" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ar1)"/>
+      <text x="405" y="40" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">predict target</text>
+      <text x="700" y="178" font-size="15" fill="#d94040" text-anchor="middle">predictor wins if adversary fails</text>
+    </svg>
+  </div>
+  <div class="cite cite-left">Zhang, Lemoine, and Mitchell, "Mitigating Unwanted Biases with Adversarial Learning", AIES 2018.</div>
+</div>
+
+<!-- 22. The Adversary's Job -->
+<div class="slide">
+  <h2>The Adversary's Job</h2>
+  <div class="divider"></div>
+  <p>The adversary tries to <strong>recover the group</strong> from the features.</p>
+  <ul class="arrow">
+    <li>The predictor learns the target task</li>
+    <li>It also fools the adversary on purpose</li>
+    <li>Features lose their group signal</li>
+  </ul>
+  <p class="muted">Same idea as representation repair, learned end to end.</p>
+</div>
+
+<!-- 23. In-Processing: Pros and Cons -->
+<div class="slide">
+  <h2>In-Processing: Pros and Cons</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Strengths</h3>
+      <ul class="check"><li>Best accuracy-fairness balance</li><li>Optimizes the real objective</li><li>Many definitions supported</li></ul></div>
+    <div><h3>Limits</h3>
+      <ul><li>Needs full training access</li><li>Harder to tune and debug</li><li>Must retrain to change the goal</li></ul></div>
+  </div>
+</div>
+
+<!-- ============ SECTION 04 ============ -->
+<!-- 24. Divider 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Post-Processing</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Adjust the outputs after the fact</p>
+</div>
+
+<!-- 25. Leave the Model Alone -->
+<div class="slide">
+  <h2>Leave the Model Alone</h2>
+  <div class="divider"></div>
+  <p>Keep the scores; change only the <strong>decision rule</strong>.</p>
+  <ul>
+    <li>The model outputs a risk score</li>
+    <li>You choose where to cut it off</li>
+    <li>Pick a different cutoff per group</li>
+  </ul>
+  <p class="muted">Surgery on the threshold, not the weights.</p>
+</div>
+
+<!-- 26. Recall: Equalized Odds -->
+<div class="slide">
+  <h2>Recall: Equalized Odds</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Equalized odds</h3>
+    <p>Equal <strong>true-positive</strong> and <strong>false-positive</strong> rates across groups:</p>
+    <div class="math-block">$$\Pr[\hat Y = 1 \mid Y = y,\, G = a] = \Pr[\hat Y = 1 \mid Y = y,\, G = b].$$</div>
+  </div>
+  <p>The error rates should not depend on the group.</p>
+  <div class="cite cite-left">Hardt, Price, and Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016.</div>
+</div>
+
+<!-- 27. Group-Specific Thresholds -->
+<div class="slide">
+  <h2>Group-Specific Thresholds</h2>
+  <div class="divider"></div>
+  <p>One score, but a <strong>different cutoff</strong> per group.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 760 230" style="width:100%;max-width:900px;">
+      <!-- group A -->
+      <line x1="50" y1="100" x2="710" y2="100" stroke="#003876" stroke-width="2"/>
+      <text x="30" y="106" font-size="18" fill="#003876" text-anchor="end" font-weight="700">A</text>
+      <line x1="430" y1="78" x2="430" y2="122" stroke="#003876" stroke-width="3"/>
+      <text x="430" y="68" font-size="15" fill="#003876" text-anchor="middle" font-weight="700">cut at 0.55</text>
+      <!-- group B -->
+      <line x1="50" y1="180" x2="710" y2="180" stroke="#6b7280" stroke-width="2"/>
+      <text x="30" y="186" font-size="18" fill="#6b7280" text-anchor="end" font-weight="700">B</text>
+      <line x1="330" y1="158" x2="330" y2="202" stroke="#6b7280" stroke-width="3"/>
+      <text x="330" y="220" font-size="15" fill="#6b7280" text-anchor="middle" font-weight="700">cut at 0.40</text>
+      <text x="610" y="148" font-size="14" fill="#999" text-anchor="middle">score →</text>
+    </svg>
+  </div>
+  <p class="muted">Chosen so both groups hit the <strong>same error rates</strong>.</p>
+</div>
+
+<!-- 28. The Post-Hoc Recipe -->
+<div class="slide">
+  <h2>The Post-Hoc Recipe</h2>
+  <div class="divider"></div>
+  <div class="ta-algo" style="max-width:900px; margin:18px auto;">
+    <ol>
+      <li>Train a model the normal way.</li>
+      <li>On held-out data, <strong>measure each group's rates</strong>.</li>
+      <li><strong>Search thresholds</strong> that match the rates.</li>
+      <li>Deploy one cutoff per group.</li>
+    </ol>
+  </div>
+  <div class="cite cite-left">Hardt, Price, and Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016.</div>
+</div>
+
+<!-- 29. The Accuracy Cost -->
+<div class="slide">
+  <h2>The Accuracy Cost</h2>
+  <div class="divider"></div>
+  <p>Matching the rates often means <strong>throwing away signal</strong>.</p>
+  <ul class="arrow">
+    <li>You may reject a high-scoring applicant</li>
+    <li>Or accept a lower-scoring one</li>
+    <li>Just to align the group rates</li>
+  </ul>
+  <div class="highlight"><p>Post-processing is simple, but the bill lands on <strong>overall accuracy</strong>.</p></div>
+</div>
+
+<!-- 30. Demo: Apply a Post-Processing Fix -->
+<div class="slide">
+  <h2>Demo: A Lending Model</h2>
+  <div class="divider"></div>
+  <div class="demo-card">
+    <h3>Demo</h3>
+    <p>Two groups. One shared cutoff approves <strong>72%</strong> of group A but only <strong>50%</strong> of group B.</p>
+  </div>
+  <p>Overall accuracy starts at <strong>84%</strong>. We will now lower B's cutoff.</p>
+</div>
+
+<!-- 31. Demo: Watch the Tradeoff Move -->
+<div class="slide">
+  <h2>Demo: Watch the Tradeoff Move</h2>
+  <div class="divider"></div>
+  <p>Drop B's cutoff until the approval gap closes.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 760 210" style="width:100%;max-width:880px;">
+      <line x1="60" y1="170" x2="700" y2="170" stroke="#999" stroke-width="1.5"/>
+      <text x="380" y="200" font-size="15" fill="#666" text-anchor="middle">more fairness  →</text>
+      <!-- accuracy curve sloping down -->
+      <path d="M90,60 C250,66 420,96 680,156" fill="none" stroke="#003876" stroke-width="3"/>
+      <circle cx="90" cy="60" r="6" fill="#003876"/>
+      <text x="90" y="46" font-size="14" fill="#003876" text-anchor="middle" font-weight="700">acc 84%</text>
+      <text x="120" y="86" font-size="13" fill="#6b7280">gap 22 pts</text>
+      <circle cx="680" cy="156" r="6" fill="#2e8b57"/>
+      <text x="640" y="146" font-size="14" fill="#2e8b57" text-anchor="middle" font-weight="700">acc 80%</text>
+      <text x="660" y="186" font-size="13" fill="#2e8b57" text-anchor="middle">gap 2 pts</text>
+    </svg>
+  </div>
+  <p class="muted">Gap falls from <strong>22</strong> to <strong>2</strong> points; accuracy slips <strong>4</strong> points.</p>
+</div>
+
+<!-- 32. Demo: The Lesson -->
+<div class="slide">
+  <h2>Demo: The Lesson</h2>
+  <div class="divider"></div>
+  <p>You moved one knob and <strong>both numbers moved</strong>.</p>
+  <ul>
+    <li>Fairness improved a lot</li>
+    <li>Accuracy fell a little</li>
+    <li>Someone must decide if that trade is right</li>
+  </ul>
+  <div class="highlight"><p>The fix is mechanical; the <strong>choice</strong> is a value judgment.</p></div>
+</div>
+
+<!-- ============ SECTION 05 ============ -->
+<!-- 33. Divider 05 -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>The Tradeoff</h1>
+  <div class="divider"></div>
+  <p class="subtitle">No free lunch in fairness</p>
+</div>
+
+<!-- 34. Fairness Versus Accuracy -->
+<div class="slide">
+  <h2>Fairness Versus Accuracy</h2>
+  <div class="divider"></div>
+  <p>Push one fairness gap to zero, and accuracy usually <strong>drops</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 640 300" style="width:100%;max-width:680px;">
+      <line x1="80" y1="250" x2="600" y2="250" stroke="#999" stroke-width="1.5"/>
+      <line x1="80" y1="250" x2="80" y2="40" stroke="#999" stroke-width="1.5"/>
+      <text x="340" y="288" font-size="16" fill="#666" text-anchor="middle">fairness  →</text>
+      <text x="34" y="150" font-size="16" fill="#666" text-anchor="middle" transform="rotate(-90 34 150)">accuracy  →</text>
+      <path d="M110,70 C260,80 380,150 560,250" fill="none" stroke="#003876" stroke-width="3.5"/>
+      <circle cx="110" cy="70" r="6" fill="#003876"/>
+      <text x="150" y="62" font-size="15" fill="#003876" font-weight="700">accurate, unfair</text>
+      <circle cx="560" cy="250" r="6" fill="#d94040"/>
+      <text x="470" y="240" font-size="15" fill="#d94040" font-weight="700">fair, less accurate</text>
+    </svg>
+  </div>
+  <p class="muted">A frontier, not a single best point.</p>
+</div>
+
+<!-- 35. Which Fairness? -->
+<div class="slide">
+  <h2>Which Fairness?</h2>
+  <div class="divider"></div>
+  <p>The definitions <strong>conflict</strong> with each other.</p>
+  <ul class="arrow">
+    <li>Equal approval rates pulls one way</li>
+    <li>Equal error rates pulls another</li>
+    <li>Base rates differ, so both can't hold</li>
+  </ul>
+  <p class="muted">You optimize the gap you chose, and worsen the one you didn't.</p>
+</div>
+
+<!-- 36. The Impossibility -->
+<div class="slide">
+  <h2>The Impossibility</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>When base rates differ, you <strong>cannot</strong> satisfy every fairness definition at once.</p></div>
+  <p>This is a theorem, not a missing trick. <em>Some gap must remain.</em></p>
+</div>
+
+<!-- 37. No Free Lunch -->
+<div class="slide">
+  <h2>No Free Lunch</h2>
+  <div class="divider"></div>
+  <p>Three things <strong>pull against</strong> one another.</p>
+  <div class="grid-3">
+    <div class="card"><h3>Accuracy</h3><p>Overall correctness.</p></div>
+    <div class="card"><h3>Fairness</h3><p>Small gaps between groups.</p></div>
+    <div class="card"><h3>Which one</h3><p>Pick the definition first.</p></div>
+  </div>
+  <p class="muted">There is no setting that maxes all three.</p>
+</div>
+
+<!-- 38. A Choice, Not a Formula -->
+<div class="slide">
+  <h2>A Choice, Not a Formula</h2>
+  <div class="divider"></div>
+  <p>The right point on the frontier is a <strong>policy decision</strong>.</p>
+  <ul>
+    <li>What does the application protect?</li>
+    <li>Who bears the cost of an error?</li>
+    <li>What does the law require?</li>
+  </ul>
+  <p class="muted">Engineers surface the frontier; stakeholders pick the point.</p>
+</div>
+
+<!-- ============ SECTION 06 ============ -->
+<!-- 39. Divider 06 -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Accountability</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Documentation and audits</p>
+</div>
+
+<!-- 40. Mitigation Needs a Record -->
+<div class="slide">
+  <h2>Mitigation Needs a Record</h2>
+  <div class="divider"></div>
+  <p>A fix you cannot <strong>document</strong> cannot be trusted.</p>
+  <ul class="arrow">
+    <li>What was changed, and why</li>
+    <li>Who the model is meant for</li>
+    <li>Where it should not be used</li>
+  </ul>
+  <p class="muted">Accountability is fairness made checkable.</p>
+</div>
+
+<!-- 41. Model Cards -->
+<div class="slide">
+  <h2>Model Cards</h2>
+  <div class="divider"></div>
+  <p>A short <strong>spec sheet</strong> that travels with the model.</p>
+  <ul>
+    <li>Intended use and out-of-scope use</li>
+    <li>Performance broken down <strong>by group</strong></li>
+    <li>Known limitations and ethical notes</li>
+  </ul>
+  <div class="cite cite-left">Mitchell, Wu, Zaldivar, Barnes, Vasserman, Hutchinson, Spitzer, Raji, and Gebru, "Model Cards for Model Reporting", FAT* 2019.</div>
+</div>
+
+<!-- 42. Datasheets for Datasets -->
+<div class="slide">
+  <h2>Datasheets for Datasets</h2>
+  <div class="divider"></div>
+  <p>The same idea, one step earlier: <strong>document the data</strong>.</p>
+  <ul class="arrow">
+    <li>How and why was it collected?</li>
+    <li>Who is in it, who is missing?</li>
+    <li>What preprocessing was applied?</li>
+  </ul>
+  <div class="cite cite-left">Gebru, Morgenstern, Vecchione, Vaughan, Wallach, Daumé III, and Crawford, "Datasheets for Datasets", CACM 2021.</div>
+</div>
+
+<!-- 43. Audits -->
+<div class="slide">
+  <h2>Audits</h2>
+  <div class="divider"></div>
+  <p>An <strong>independent test</strong> of the deployed system.</p>
+  <ul>
+    <li>Probe it with realistic inputs</li>
+    <li>Measure gaps the builder may have missed</li>
+    <li>Internal team or outside party</li>
+  </ul>
+  <p class="muted">Trust, but verify, from the outside.</p>
+</div>
+
+<!-- 44. The Gender Shades Audit -->
+<div class="slide">
+  <h2>The Gender Shades Audit</h2>
+  <div class="divider"></div>
+  <p>A 2018 audit of commercial <strong>face classifiers</strong>.</p>
+  <!-- TODO real figure: Gender Shades error-rate table by skin-tone x gender (Buolamwini & Gebru, FAT* 2018, Table 4) -->
+  <ul class="arrow">
+    <li>Near-perfect on lighter-skinned men</li>
+    <li>Error rates over a third on darker-skinned women</li>
+    <li>Public results forced vendors to fix it</li>
+  </ul>
+  <div class="cite cite-left">Buolamwini and Gebru, "Gender Shades: Intersectional Accuracy Disparities in Commercial Gender Classification", FAT* 2018.</div>
+</div>
+
+<!-- 45. Impact Assessments -->
+<div class="slide">
+  <h2>Impact Assessments</h2>
+  <div class="divider"></div>
+  <p>Ask <strong>before</strong> deployment, not after harm.</p>
+  <ul>
+    <li>Who could this system hurt?</li>
+    <li>What is the worst-case error?</li>
+    <li>Is there a way to appeal a decision?</li>
+  </ul>
+  <p class="muted">Increasingly required by law for high-risk uses.</p>
+</div>
+
+<!-- 46. Documentation Becomes Law -->
+<div class="slide">
+  <h2>Documentation Becomes Law</h2>
+  <div class="divider"></div>
+  <p>Regulators now <strong>mandate</strong> these records.</p>
+  <ul class="arrow">
+    <li>The EU AI Act requires technical documentation</li>
+    <li>High-risk systems need logged risk assessments</li>
+    <li>Voluntary practice is turning into a duty</li>
+  </ul>
+  <p class="muted">EU AI Act = the European Union's law on artificial intelligence.</p>
+</div>
+
+<!-- ============ SECTION 07 ============ -->
+<!-- 47. Divider 07 -->
+<div class="slide section-slide left">
+  <div class="section-num">07</div>
+  <h1>Generative Fairness</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Debiasing image and text models</p>
+</div>
+
+<!-- 48. Generators Amplify Stereotypes -->
+<div class="slide">
+  <h2>Generators Amplify Stereotypes</h2>
+  <div class="divider"></div>
+  <p>Text-to-image models <strong>exaggerate</strong> what they saw.</p>
+  <!-- TODO real figure: Bianchi et al. grid of generated "a doctor" / "a criminal" images showing demographic skew (FAccT 2023, Fig. 1) -->
+  <ul>
+    <li>"A doctor" returns mostly men</li>
+    <li>"A criminal" skews by race</li>
+    <li>Output is more skewed than the data</li>
+  </ul>
+  <div class="cite cite-left">Bianchi, Kalluri, Durmus, Ladhak, Cheng, Nozza, Hashimoto, Jurafsky, Zou, and Caliskan, "Easily Accessible Text-to-Image Generation Amplifies Demographic Stereotypes at Large Scale", FAccT 2023.</div>
+</div>
+
+<!-- 49. How to Debias a Generator -->
+<div class="slide">
+  <h2>How to Debias a Generator</h2>
+  <div class="divider"></div>
+  <p>The same three stages, applied to generation.</p>
+  <div class="grid-3">
+    <div class="card"><h3>Data</h3><p>Rebalance the training images.</p></div>
+    <div class="card"><h3>Train</h3><p>Fine-tune toward balance.</p></div>
+    <div class="card"><h3>Prompt</h3><p>Inject diversity at request time.</p></div>
+  </div>
+  <p class="muted">The prompt-side fix is the cheapest, and the most fragile.</p>
+</div>
+
+<!-- 50. The Overcorrection Controversy -->
+<div class="slide">
+  <h2>The 2024 Overcorrection</h2>
+  <div class="divider"></div>
+  <p>A 2024 image generator quietly <strong>rewrote prompts</strong> for diversity.</p>
+  <ul class="arrow">
+    <li>It inserted diverse groups everywhere</li>
+    <li>Including historical scenes where it made no sense</li>
+    <li>The feature was pulled after backlash</li>
+  </ul>
+  <div class="highlight"><p>A blunt prompt patch <strong>broke accuracy</strong> to chase one fairness goal.</p></div>
+</div>
+
+<!-- 51. The Lesson of Overcorrection -->
+<div class="slide">
+  <h2>The Lesson of Overcorrection</h2>
+  <div class="divider"></div>
+  <p>Fairness is <strong>context-dependent</strong>.</p>
+  <ul>
+    <li>Balance helps for "a doctor"</li>
+    <li>Balance harms for a known historical figure</li>
+    <li>One blunt rule cannot cover both</li>
+  </ul>
+  <p class="muted">A heavy-handed fix is its own kind of bias.</p>
+</div>
+
+<!-- 52. Frontier 2025-26 -->
+<div class="slide">
+  <h2>Frontier 2025-26</h2>
+  <div class="divider"></div>
+  <p>Where the field is moving now.</p>
+  <ul class="arrow">
+    <li>Steering generators without prompt hacks</li>
+    <li>Fairness audits built into model cards</li>
+    <li>Context-aware, not one-size-fits-all, fixes</li>
+  </ul>
+  <p class="muted">From blunt patches toward measured, documented control.</p>
+</div>
+
+<!-- ============ WRAP ============ -->
+<!-- 53. Key Takeaways -->
+<div class="slide">
+  <h2>Key Takeaways</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li>Intervene in data, training, or outputs</li>
+    <li>Post-processing works on a sealed model</li>
+    <li>Fairness trades against accuracy: no free lunch</li>
+    <li>Document and audit, or the fix is not trusted</li>
+  </ul>
+  <div class="highlight"><p>Mitigation is a <strong>choice on a frontier</strong>, not a single correct setting.</p></div>
+</div>
+
+<!-- 54. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$\lambda$</div>
+  <p class="big-word-sub">One knob between accuracy and fairness.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 54</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

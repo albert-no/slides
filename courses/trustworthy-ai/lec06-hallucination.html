@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hallucination, Calibration &amp; Reliability — Trustworthy AI Lecture 6</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Trustworthy AI · Lecture 6</div>
+  <h1>Hallucination,<br>Calibration &amp; Reliability</h1>
+  <div class="divider"></div>
+  <p class="subtitle">When a fluent answer is a confident wrong answer</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Fluent ≠ Correct</div><div class="toc-sub">Confident fabrications in the wild</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Why Models Hallucinate</div><div class="toc-sub">Next-token prediction has no truth check</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Calibration</div><div class="toc-sub">Does 70% confidence mean right 70% of the time?</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Conformal Prediction</div><div class="toc-sub">A set with a coverage guarantee</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Detection &amp; Grounding</div><div class="toc-sub">Self-consistency, entropy, retrieval, "I don't know"</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Frontier 2025–26</div><div class="toc-sub">Benchmarks, reasoning models, open problems</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Fluent ≠ Correct</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Confident fabrications in the wild</p>
+</div>
+
+<!-- 4. What Is a Hallucination -->
+<div class="slide">
+  <h2>What Is a Hallucination</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Hallucination</h3>
+    <p>Output that is <strong>fluent and confident</strong> but <strong>not grounded</strong> in facts or in the source.</p>
+  </div>
+  <p>The grammar is perfect. <em>The content is invented.</em></p>
+  <div class="cite cite-left">Ji et al., "Survey of Hallucination in Natural Language Generation", ACM Computing Surveys 2023.</div>
+</div>
+
+<!-- 5. Fluency Fools Us -->
+<div class="slide">
+  <h2>Fluency Fools Us</h2>
+  <div class="divider"></div>
+  <p>We read confident prose as <strong>true prose</strong>.</p>
+  <ul class="arrow">
+    <li>No hedging, no hesitation</li>
+    <li>Citations formatted just right</li>
+    <li>Tone of an expert</li>
+  </ul>
+  <p class="muted">The signal we trust is style, not truth.</p>
+</div>
+
+<!-- 6. The Fake-Citation Lawyer -->
+<div class="slide">
+  <h2>The Fake-Citation Lawyer</h2>
+  <div class="divider"></div>
+  <p>A 2023 court brief cited <strong>six cases that never existed</strong>.</p>
+  <ul>
+    <li>A lawyer asked ChatGPT for precedents</li>
+    <li>It invented names, numbers, quotations</li>
+    <li>The judge sanctioned the firm</li>
+  </ul>
+  <p class="muted">Real-looking citations, all fabricated.</p>
+</div>
+
+<!-- 7. Invented Medical Facts -->
+<div class="slide">
+  <h2>Invented Medical Facts</h2>
+  <div class="divider"></div>
+  <p>Ask for a drug interaction; get a <strong>confident wrong answer</strong>.</p>
+  <ul>
+    <li>Plausible dosage, plausible mechanism</li>
+    <li>No such study, no such finding</li>
+    <li>High stakes, low margin for error</li>
+  </ul>
+  <div class="highlight"><p>In medicine and law, a fluent error is a <strong>dangerous error</strong>.</p></div>
+</div>
+
+<!-- 8. Two Flavors of Wrong -->
+<div class="slide">
+  <h2>Two Flavors of Wrong</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Factuality error</h3>
+      <p>Contradicts the <strong>world</strong>. "Seoul is the capital of Japan."</p></div>
+    <div><h3>Faithfulness error</h3>
+      <p>Contradicts the <strong>source</strong>. Summary states what the document never said.</p></div>
+  </div>
+  <p class="muted">Different failures, different fixes.</p>
+</div>
+
+<!-- 9. Not the Same as a Bug -->
+<div class="slide">
+  <h2>Not the Same as a Bug</h2>
+  <div class="divider"></div>
+  <p>A bug is a <strong>fixable defect</strong>. Hallucination is <em>structural</em>.</p>
+  <ul class="arrow">
+    <li>No crash, no error message</li>
+    <li>The model is working as designed</li>
+    <li>It is predicting text, not checking truth</li>
+  </ul>
+</div>
+
+<!-- 10. Why This Matters -->
+<div class="slide">
+  <h2>Why This Matters</h2>
+  <div class="divider"></div>
+  <p>Reliability gates real deployment.</p>
+  <div class="grid-3">
+    <div class="card"><h3>Trust</h3><p>One bad answer breaks it.</p></div>
+    <div class="card"><h3>Safety</h3><p>Health, law, finance.</p></div>
+    <div class="card"><h3>Liability</h3><p>Who answers for the error?</p></div>
+  </div>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 11. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Why Models Hallucinate</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Next-token prediction has no truth check</p>
+</div>
+
+<!-- 12. The Training Objective -->
+<div class="slide">
+  <h2>The Training Objective</h2>
+  <div class="divider"></div>
+  <p>A language model learns <strong>one task</strong>: predict the next token.</p>
+  <div class="math-block">$$\Pr[\,\text{next word} \mid \text{words so far}\,].$$</div>
+  <p>It maximizes <em>likely</em> text, not <strong>true</strong> text.</p>
+</div>
+
+<!-- 13. No Truth Grounding -->
+<div class="slide">
+  <h2>No Truth Grounding</h2>
+  <div class="divider"></div>
+  <p>Nothing in the loss says "this must be a fact".</p>
+  <ul class="arrow">
+    <li>The corpus mixes truth and fiction</li>
+    <li>The model learns the <strong>shape</strong> of answers</li>
+    <li>A plausible shape can be false</li>
+  </ul>
+  <p class="muted">Truth is not a variable the model optimizes.</p>
+</div>
+
+<!-- 14. Plausible Beats True -->
+<div class="slide">
+  <h2>Plausible Beats True</h2>
+  <div class="divider"></div>
+  <p>Asked for a citation, the model emits a <strong>citation-shaped string</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 480 150" style="width:100%;max-width:840px;">
+      <rect x="24" y="40" width="120" height="60" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="84" y="66" font-size="15" fill="#1a1a1a" text-anchor="middle">"Smith</text>
+      <text x="84" y="86" font-size="15" fill="#1a1a1a" text-anchor="middle">et al.,"</text>
+      <text x="200" y="78" font-size="22" fill="#6b7280" text-anchor="middle">→</text>
+      <rect x="232" y="40" width="120" height="60" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="292" y="66" font-size="15" fill="#1a1a1a" text-anchor="middle">a year,</text>
+      <text x="292" y="86" font-size="15" fill="#1a1a1a" text-anchor="middle">a venue</text>
+      <text x="406" y="78" font-size="22" fill="#6b7280" text-anchor="middle">→</text>
+      <text x="448" y="74" font-size="15" fill="#d94040" text-anchor="middle" font-weight="700">looks</text>
+      <text x="448" y="92" font-size="15" fill="#d94040" text-anchor="middle" font-weight="700">real</text>
+    </svg>
+  </div>
+  <p class="muted">It fills the slot fluently, whether or not the paper exists.</p>
+</div>
+
+<!-- 15. Pressure to Always Answer -->
+<div class="slide">
+  <h2>Pressure to Always Answer</h2>
+  <div class="divider"></div>
+  <p>Training rewards a <strong>helpful, complete</strong> reply.</p>
+  <ul>
+    <li>"I don't know" looks unhelpful</li>
+    <li>Human raters prefer a confident answer</li>
+    <li>So the model rarely abstains</li>
+  </ul>
+  <div class="highlight"><p>We trained it to <strong>guess</strong> rather than admit doubt.</p></div>
+</div>
+
+<!-- 16. An Exam-Taking Analogy -->
+<div class="slide">
+  <h2>An Exam-Taking Analogy</h2>
+  <div class="divider"></div>
+  <p>On a test with <strong>no penalty for guessing</strong>, you guess.</p>
+  <ul class="arrow">
+    <li>Blank scores zero</li>
+    <li>A guess sometimes scores</li>
+    <li>So a blank is never optimal</li>
+  </ul>
+  <p class="muted">The model faces the same incentive on every blank it sees.</p>
+</div>
+
+<!-- 17. Where Errors Concentrate -->
+<div class="slide">
+  <h2>Where Errors Concentrate</h2>
+  <div class="divider"></div>
+  <p>Hallucination is <strong>not uniform</strong>.</p>
+  <ul>
+    <li>Rare entities, long-tail facts</li>
+    <li>Recent events past the training cutoff</li>
+    <li>Precise numbers, dates, quotations</li>
+  </ul>
+  <p class="muted">The thinner the evidence, the bolder the invention.</p>
+</div>
+
+<!-- 18. The Knowledge Cutoff -->
+<div class="slide">
+  <h2>The Knowledge Cutoff</h2>
+  <div class="divider"></div>
+  <p>The model's facts <strong>freeze</strong> at its training date.</p>
+  <ul class="arrow">
+    <li>Ask about yesterday, get a guess</li>
+    <li>No internal "I haven't seen this" flag</li>
+    <li>It answers as confidently as ever</li>
+  </ul>
+</div>
+
+<!-- ============ SECTION 03 ============ -->
+<!-- 19. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Calibration</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Does 70% confidence mean right 70% of the time?</p>
+</div>
+
+<!-- 20. Confidence as a Number -->
+<div class="slide">
+  <h2>Confidence as a Number</h2>
+  <div class="divider"></div>
+  <p>A model can report a <strong>probability</strong> with each answer.</p>
+  <div class="math-block">$$p = \Pr[\,\text{answer is correct}\,] = 0.70.$$</div>
+  <p>The question: <em>can we trust that number?</em></p>
+</div>
+
+<!-- 21. The Calibration Promise -->
+<div class="slide">
+  <h2>The Calibration Promise</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Calibrated</h3>
+    <p>Among all answers given <strong>70% confidence</strong>, about <strong>70%</strong> are correct.</p>
+  </div>
+  <p>Confidence becomes a <em>promise you can audit</em>.</p>
+  <div class="cite cite-left">Guo, Pleiss, Sun, and Weinberger, "On Calibration of Modern Neural Networks", ICML 2017.</div>
+</div>
+
+<!-- 22. Reliability Diagram -->
+<div class="slide">
+  <h2>The Reliability Diagram</h2>
+  <div class="divider"></div>
+  <p>Plot <strong>stated confidence</strong> against <strong>actual accuracy</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:4px 0;">
+    <svg viewBox="0 0 300 230" style="width:100%;max-width:560px;">
+      <line x1="46" y1="190" x2="270" y2="190" stroke="#999" stroke-width="1.5"/>
+      <line x1="46" y1="190" x2="46" y2="20" stroke="#999" stroke-width="1.5"/>
+      <line x1="46" y1="190" x2="258" y2="22" stroke="#6b7280" stroke-width="2" stroke-dasharray="5 4"/>
+      <text x="232" y="48" font-size="13" fill="#6b7280" font-weight="700">perfect</text>
+      <rect x="62"  y="150" width="24" height="40" fill="#1a5296" fill-opacity="0.55" stroke="#003876"/>
+      <rect x="108" y="120" width="24" height="70" fill="#1a5296" fill-opacity="0.55" stroke="#003876"/>
+      <rect x="154" y="108" width="24" height="82" fill="#1a5296" fill-opacity="0.55" stroke="#003876"/>
+      <rect x="200" y="96"  width="24" height="94" fill="#1a5296" fill-opacity="0.55" stroke="#003876"/>
+      <text x="158" y="214" font-size="14" fill="#666" text-anchor="middle">confidence →</text>
+      <text x="30" y="105" font-size="14" fill="#666" text-anchor="middle" transform="rotate(-90 30 105)">accuracy →</text>
+    </svg>
+  </div>
+  <p class="muted">On the dashed line ⇒ calibrated. Below it ⇒ overconfident.</p>
+</div>
+
+<!-- 23. Over- vs Under-confident -->
+<div class="slide">
+  <h2>Over- vs Under-confident</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Overconfident</h3>
+      <p>Says 90%, right 70%. Bars sit <strong>below</strong> the line.</p></div>
+    <div><h3>Underconfident</h3>
+      <p>Says 60%, right 80%. Bars sit <strong>above</strong> the line.</p></div>
+  </div>
+  <p class="muted">Modern deep nets tend to be overconfident.</p>
+</div>
+
+<!-- 24. Measuring the Gap -->
+<div class="slide">
+  <h2>Measuring the Gap</h2>
+  <div class="divider"></div>
+  <p>Average the gap between confidence and accuracy.</p>
+  <div class="math-block">$$\text{ECE} = \sum_b \frac{n_b}{n}\,\bigl|\,\text{acc}_b - \text{conf}_b\,\bigr|.$$</div>
+  <p>ECE (Expected Calibration Error): <strong>0</strong> is perfect.</p>
+  <div class="cite cite-left">Guo, Pleiss, Sun, and Weinberger, "On Calibration of Modern Neural Networks", ICML 2017.</div>
+</div>
+
+<!-- 25. Reading ECE -->
+<div class="slide">
+  <h2>Reading ECE</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Group answers into confidence bins $b$</li>
+    <li>Per bin: accuracy vs average confidence</li>
+    <li>Weight each gap by bin size $n_b / n$</li>
+  </ul>
+  <p>One number summarizing the <strong>whole diagram</strong>.</p>
+</div>
+
+<!-- 26. Bigger Is Not Better -->
+<div class="slide">
+  <h2>Bigger Is Not Better</h2>
+  <div class="divider"></div>
+  <p>Accuracy rose, but <strong>calibration got worse</strong>.</p>
+  <ul class="arrow">
+    <li>Old shallow nets: fairly calibrated</li>
+    <li>Modern deep nets: very overconfident</li>
+    <li>More capacity, more confident errors</li>
+  </ul>
+  <div class="cite cite-left">Guo, Pleiss, Sun, and Weinberger, "On Calibration of Modern Neural Networks", ICML 2017.</div>
+</div>
+
+<!-- 27. A Cheap Fix: Temperature -->
+<div class="slide">
+  <h2>A Cheap Fix: Temperature</h2>
+  <div class="divider"></div>
+  <p>Rescale the model's scores by one number $T$.</p>
+  <div class="math-block">$$p_i = \frac{\exp(z_i / T)}{\sum_j \exp(z_j / T)}.$$</div>
+  <p>Tune $T$ on held-out data. Larger $T$ ⇒ <strong>softer, humbler</strong> confidence.</p>
+  <div class="cite cite-left">Guo, Pleiss, Sun, and Weinberger, "On Calibration of Modern Neural Networks", ICML 2017.</div>
+</div>
+
+<!-- 28. Do LLMs Know What They Know -->
+<div class="slide">
+  <h2>Do Models Know What They Know?</h2>
+  <div class="divider"></div>
+  <p>Large models carry a <strong>partial self-estimate</strong> of correctness.</p>
+  <ul class="arrow">
+    <li>Their probabilities often track accuracy</li>
+    <li>Better with scale, still imperfect</li>
+    <li>A usable signal, not a guarantee</li>
+  </ul>
+  <div class="cite cite-left">Kadavath et al., "Language Models (Mostly) Know What They Know", 2022.</div>
+</div>
+
+<!-- 29. Verbalized Confidence -->
+<div class="slide">
+  <h2>Verbalized Confidence</h2>
+  <div class="divider"></div>
+  <p>Just <strong>ask</strong> the model: "how sure are you?"</p>
+  <ul>
+    <li>It can state a percentage in words</li>
+    <li>Sometimes calibrated, often inflated</li>
+    <li>Cheap to collect, needs checking</li>
+  </ul>
+  <p class="muted">A spoken "95%" is not yet a trustworthy 95%.</p>
+</div>
+
+<!-- 30. Calibration Demo -->
+<div class="slide">
+  <h2>Calibration in Code</h2>
+  <div class="divider"></div>
+  <div class="demo-card">
+    <h3>Colab</h3>
+    <ul class="check">
+      <li>Collect model confidence on a quiz set</li>
+      <li>Bin answers, plot a reliability diagram</li>
+      <li>Compute ECE before and after temperature</li>
+    </ul>
+  </div>
+  <p class="muted">Twenty lines of Python turn a hunch into a curve.</p>
+</div>
+
+<!-- ============ SECTION 04 ============ -->
+<!-- 31. Divider 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Conformal Prediction</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A set with a coverage guarantee</p>
+</div>
+
+<!-- 32. From One Answer to a Set -->
+<div class="slide">
+  <h2>From One Answer to a Set</h2>
+  <div class="divider"></div>
+  <p>Instead of one guess, return a <strong>set of candidates</strong>.</p>
+  <ul class="arrow">
+    <li>Easy question ⇒ a small set</li>
+    <li>Hard question ⇒ a larger set</li>
+    <li>Set size signals uncertainty</li>
+  </ul>
+  <div class="cite cite-left">Angelopoulos and Bates, "A Gentle Introduction to Conformal Prediction", 2021.</div>
+</div>
+
+<!-- 33. The Coverage Guarantee -->
+<div class="slide">
+  <h2>The Coverage Guarantee</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>90% coverage</h3>
+    <p>The set $C(x)$ contains the <strong>true answer</strong> at least 90% of the time.</p>
+  </div>
+  <div class="math-block">$$\Pr[\,y \in C(x)\,] \;\ge\; 1 - \alpha, \qquad \alpha = 0.10.$$</div>
+  <div class="cite cite-left">Angelopoulos and Bates, "A Gentle Introduction to Conformal Prediction", 2021.</div>
+</div>
+
+<!-- 34. Distribution-Free -->
+<div class="slide">
+  <h2>It Comes With a Proof</h2>
+  <div class="divider"></div>
+  <p>The guarantee holds <strong>without trusting the model</strong>.</p>
+  <ul>
+    <li>No assumption on the model's internals</li>
+    <li>Only: calibration and test data are exchangeable</li>
+    <li>The coverage is provable, not hoped</li>
+  </ul>
+  <p class="muted">A rare thing in deep learning: a real guarantee.</p>
+</div>
+
+<!-- 35. How It Works -->
+<div class="slide">
+  <h2>How It Works</h2>
+  <div class="divider"></div>
+  <ul class="num">
+    <li>Hold out a <strong>calibration set</strong> with known answers.</li>
+    <li>Score how "surprised" the model is on each.</li>
+    <li>Pick a threshold at the <strong>90th percentile</strong>.</li>
+    <li>Test time: keep every candidate under threshold.</li>
+  </ul>
+  <div class="cite cite-left">Angelopoulos and Bates, "A Gentle Introduction to Conformal Prediction", 2021.</div>
+</div>
+
+<!-- 36. The Prediction Set Picture -->
+<div class="slide">
+  <h2>The Prediction Set Picture</h2>
+  <div class="divider"></div>
+  <p>The threshold draws a <strong>line</strong>; candidates above it stay.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 460 200" style="width:100%;max-width:860px;">
+      <line x1="40" y1="20" x2="40" y2="180" stroke="#999" stroke-width="1.5"/>
+      <line x1="40" y1="96" x2="430" y2="96" stroke="#d94040" stroke-width="2" stroke-dasharray="6 4"/>
+      <text x="396" y="88" font-size="14" fill="#d94040" font-weight="700">threshold</text>
+      <circle cx="90"  cy="50" r="13" fill="#1a5296" fill-opacity="0.55" stroke="#003876" stroke-width="2"/>
+      <circle cx="150" cy="62" r="13" fill="#1a5296" fill-opacity="0.55" stroke="#003876" stroke-width="2"/>
+      <circle cx="210" cy="42" r="13" fill="#1a5296" fill-opacity="0.55" stroke="#003876" stroke-width="2"/>
+      <circle cx="270" cy="130" r="13" fill="#fff" stroke="#9aa3ad" stroke-width="2"/>
+      <circle cx="330" cy="150" r="13" fill="#fff" stroke="#9aa3ad" stroke-width="2"/>
+      <circle cx="390" cy="160" r="13" fill="#fff" stroke="#9aa3ad" stroke-width="2"/>
+      <text x="150" y="22" font-size="15" fill="#003876" text-anchor="middle" font-weight="700">in the set</text>
+      <text x="330" y="190" font-size="15" fill="#6b7280" text-anchor="middle" font-weight="700">dropped</text>
+    </svg>
+  </div>
+  <p class="muted">Plausible candidates kept; the rest fall away.</p>
+</div>
+
+<!-- 37. Abstention -->
+<div class="slide">
+  <h2>The Abstention Idea</h2>
+  <div class="divider"></div>
+  <p>When the set is <strong>large or empty</strong>, the model should <em>defer</em>.</p>
+  <ul class="arrow">
+    <li>Small set: answer with confidence</li>
+    <li>Big set: "I am not sure"</li>
+    <li>Hand off to a human</li>
+  </ul>
+  <div class="highlight"><p>Knowing when <strong>not</strong> to answer is a feature.</p></div>
+</div>
+
+<!-- 38. A Medical Triage Example -->
+<div class="slide">
+  <h2>A Medical Triage Example</h2>
+  <div class="divider"></div>
+  <p>A diagnosis model returns a <strong>set of conditions</strong>.</p>
+  <ul>
+    <li>One condition: proceed automatically</li>
+    <li>Five conditions: route to a doctor</li>
+    <li>Coverage guarantee bounds the miss rate</li>
+  </ul>
+  <p class="muted">The set size becomes a triage signal.</p>
+</div>
+
+<!-- 39. The Trade-off -->
+<div class="slide">
+  <h2>The Trade-off</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>Higher coverage means <strong>larger sets</strong>. Tighter sets risk missing the truth.</p></div>
+  <p>Choose $\alpha$ to balance <em>safety</em> against <em>usefulness</em>.</p>
+</div>
+
+<!-- ============ SECTION 05 ============ -->
+<!-- 40. Divider 05 -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Detection &amp; Grounding</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Catch the error, or never make it</p>
+</div>
+
+<!-- 41. Two Strategies -->
+<div class="slide">
+  <h2>Two Strategies</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Detect</h3>
+      <p>Flag a likely hallucination <strong>after</strong> the model speaks.</p></div>
+    <div><h3>Ground</h3>
+      <p>Give the model <strong>real sources</strong> so it speaks from evidence.</p></div>
+  </div>
+  <p class="muted">Best systems do both.</p>
+</div>
+
+<!-- 42. Self-Consistency -->
+<div class="slide">
+  <h2>Self-Consistency</h2>
+  <div class="divider"></div>
+  <p>Ask the <strong>same question several times</strong>.</p>
+  <ul class="arrow">
+    <li>Sample multiple independent answers</li>
+    <li>Agreement ⇒ likely solid</li>
+    <li>Wild disagreement ⇒ likely invented</li>
+  </ul>
+  <p class="muted">Consistency is a cheap confidence proxy.</p>
+</div>
+
+<!-- 43. Semantic Entropy -->
+<div class="slide">
+  <h2>Semantic Entropy</h2>
+  <div class="divider"></div>
+  <p>Group the samples by <strong>meaning</strong>, not wording.</p>
+  <ul>
+    <li>"Paris" and "It's Paris" count as one</li>
+    <li>Many distinct meanings ⇒ high entropy</li>
+    <li>High entropy flags hallucination</li>
+  </ul>
+  <div class="cite cite-left">Farquhar et al., "Detecting Hallucinations in Large Language Models Using Semantic Entropy", Nature 2024.</div>
+</div>
+
+<!-- 44. The Entropy Picture -->
+<div class="slide">
+  <h2>The Entropy Picture</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:1fr 1fr;gap:40px;align-items:center;">
+    <div style="display:flex;justify-content:center;">
+      <svg viewBox="0 0 200 170" style="width:100%;max-width:300px;">
+        <circle cx="100" cy="80" r="62" fill="#1a5296" fill-opacity="0.40" stroke="#003876" stroke-width="2.5"/>
+        <text x="100" y="78" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">one</text>
+        <text x="100" y="98" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">meaning</text>
+        <text x="100" y="160" font-size="14" fill="#003876" text-anchor="middle">low entropy</text>
+      </svg>
+    </div>
+    <div style="display:flex;justify-content:center;">
+      <svg viewBox="0 0 200 170" style="width:100%;max-width:300px;">
+        <circle cx="62" cy="60" r="30" fill="#9aa3ad" fill-opacity="0.40" stroke="#6b7280" stroke-width="2"/>
+        <circle cx="135" cy="58" r="30" fill="#9aa3ad" fill-opacity="0.40" stroke="#6b7280" stroke-width="2"/>
+        <circle cx="98" cy="115" r="30" fill="#9aa3ad" fill-opacity="0.40" stroke="#6b7280" stroke-width="2"/>
+        <text x="100" y="160" font-size="14" fill="#6b7280" text-anchor="middle">high entropy</text>
+      </svg>
+    </div>
+  </div>
+  <p class="muted">Scattered meanings signal an unreliable answer.</p>
+</div>
+
+<!-- 45. Retrieval-Augmented Generation -->
+<div class="slide">
+  <h2>Retrieval-Augmented Generation</h2>
+  <div class="divider"></div>
+  <p>RAG (Retrieval-Augmented Generation): <strong>fetch, then write</strong>.</p>
+  <div class="diagram-flow" style="margin:24px 0;">
+    <div class="diagram-box">Question</div>
+    <div class="diagram-box">Retrieve documents</div>
+    <div class="diagram-box">Answer from them</div>
+  </div>
+  <div class="cite cite-left">Lewis et al., "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks", NeurIPS 2020.</div>
+</div>
+
+<!-- 46. Why RAG Helps -->
+<div class="slide">
+  <h2>Why RAG Helps</h2>
+  <div class="divider"></div>
+  <p>The answer is <strong>tied to a source</strong> the model can quote.</p>
+  <ul class="arrow">
+    <li>Fresh facts past the training cutoff</li>
+    <li>A citation a user can verify</li>
+    <li>Less room to invent</li>
+  </ul>
+  <p class="muted">Grounding shrinks the space of fabrications.</p>
+</div>
+
+<!-- 47. RAG Is Not a Cure -->
+<div class="slide">
+  <h2>RAG Is Not a Cure</h2>
+  <div class="divider"></div>
+  <p>Retrieval can fail in <strong>its own ways</strong>.</p>
+  <ul>
+    <li>Wrong documents retrieved</li>
+    <li>Right documents, misread</li>
+    <li>Model overrides the source anyway</li>
+  </ul>
+  <div class="highlight"><p>Grounding <strong>reduces</strong> hallucination; it does not erase it.</p></div>
+</div>
+
+<!-- 48. Teaching "I Don't Know" -->
+<div class="slide">
+  <h2>Teaching "I Don't Know"</h2>
+  <div class="divider"></div>
+  <p>Make abstention a <strong>rewarded</strong> behavior.</p>
+  <ul class="arrow">
+    <li>Reward correct "I don't know"</li>
+    <li>Penalize confident wrong answers more</li>
+    <li>Shift the guessing incentive</li>
+  </ul>
+  <p class="muted">A good refusal can beat a bad answer.</p>
+</div>
+
+<!-- 49. A Scoring Rule -->
+<div class="slide">
+  <h2>A Scoring Rule</h2>
+  <div class="divider"></div>
+  <p>Penalize a confident mistake; let "I don't know" score zero.</p>
+  <div class="math-block">$$\text{correct: } +1, \quad \text{IDK: } 0, \quad \text{wrong: } -4.$$</div>
+  <p>Now a <strong>wild guess</strong> is no longer worth it.</p>
+</div>
+
+<!-- 50. Detection Demo -->
+<div class="slide">
+  <h2>Detection in Code</h2>
+  <div class="divider"></div>
+  <div class="demo-card">
+    <h3>Colab</h3>
+    <ul class="check">
+      <li>Sample five answers to one question</li>
+      <li>Cluster them by meaning</li>
+      <li>Flag high-entropy outputs as risky</li>
+    </ul>
+  </div>
+  <p class="muted">A simple self-consistency check, end to end.</p>
+</div>
+
+<!-- ============ SECTION 06 ============ -->
+<!-- 51. Divider 06 -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Frontier 2025–26</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Benchmarks, reasoning models, open problems</p>
+</div>
+
+<!-- 52. Benchmarks for Hallucination -->
+<div class="slide">
+  <h2>Benchmarks for Hallucination</h2>
+  <div class="divider"></div>
+  <p>You cannot fix what you cannot <strong>measure</strong>.</p>
+  <ul class="arrow">
+    <li>Factuality test sets with checkable answers</li>
+    <li>Questions designed to bait confident errors</li>
+    <li>Automatic graders against trusted sources</li>
+  </ul>
+  <!-- TODO real figure: leaderboard / bar chart of model factuality scores from a 2025 hallucination benchmark -->
+  <p class="muted">A moving target as models improve.</p>
+</div>
+
+<!-- 53. Reasoning Models -->
+<div class="slide">
+  <h2>Reasoning Models</h2>
+  <div class="divider"></div>
+  <p>Models that <strong>think step by step</strong> before answering.</p>
+  <ul>
+    <li>Self-checking can catch some errors</li>
+    <li>But confident wrong chains still occur</li>
+    <li>Longer reasoning is not always truer</li>
+  </ul>
+  <p class="muted">More deliberation, not a guarantee of truth.</p>
+</div>
+
+<!-- 54. Factuality Evaluations -->
+<div class="slide">
+  <h2>Factuality Evaluations</h2>
+  <div class="divider"></div>
+  <p>Score long answers <strong>claim by claim</strong>.</p>
+  <ul class="arrow">
+    <li>Break a paragraph into atomic facts</li>
+    <li>Verify each against evidence</li>
+    <li>Report the fraction supported</li>
+  </ul>
+  <p class="muted">A fine-grained alternative to one pass/fail.</p>
+</div>
+
+<!-- 55. Open Problems -->
+<div class="slide">
+  <h2>Open Problems</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li>Calibration that survives fine-tuning</li>
+    <li>Honest abstention without over-refusal</li>
+    <li>Guarantees for open-ended generation</li>
+    <li>Detecting faithfulness, not just facts</li>
+  </ul>
+  <p class="muted">The reliability frontier is wide open.</p>
+</div>
+
+<!-- ============ WRAP ============ -->
+<!-- 56. Demos to Play With -->
+<div class="slide">
+  <h2>Demos to Play With</h2>
+  <div class="divider"></div>
+  <div class="demo-card">
+    <h3>Demo</h3>
+    <ul class="check">
+      <li>A reliability-diagram plotter</li>
+      <li>A conformal prediction-set builder</li>
+      <li>A semantic-entropy hallucination flag</li>
+    </ul>
+  </div>
+  <p class="muted">Play first, then trust the numbers.</p>
+</div>
+
+<!-- 57. Key Takeaways -->
+<div class="slide">
+  <h2>Key Takeaways</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li>Fluent is not correct; confidence is style</li>
+    <li>Next-token prediction has no truth check</li>
+    <li>Calibration audits a confidence number</li>
+    <li>Conformal sets give a coverage guarantee</li>
+    <li>Grounding and abstention reduce the harm</li>
+  </ul>
+  <div class="highlight"><p>The goal: a model that knows when <strong>not</strong> to answer.</p></div>
+</div>
+
+<!-- 58. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">?</div>
+  <p class="big-word-sub">Knowing when to say "I don't know".</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 58</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

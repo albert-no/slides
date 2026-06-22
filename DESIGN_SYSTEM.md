@@ -107,6 +107,8 @@ Empty space at the *bottom* of a slide is fine. Empty space *in the middle* is n
      - **Abstract-bullet slide** — short form: `Author et al., NameOrAcronym, Venue YYYY.` (e.g., `Rafailov et al., DPO, NeurIPS 2023.`). Use when the slide is dense and the full title would wrap.
 7. **Ghost deck test.** Read only the `h2` titles in sequence. They should outline the lecture arc clearly. If they don't, fix the outline before drafting bodies. Titles stay short and abstract — not full sentences.
 8. **Spell out acronyms on first appearance.** The first slide that introduces a method/metric must expand the acronym inline — `SSCD (Self-Supervised Copy Detection)`, `RTA (Random Token Addition)`, `MV / RV / TV (Matching / Retrieval / Template Verbatim)`. After that, the bare acronym is fine. Applies to per-deck acronyms; canonical ones the audience already knows (LLM, MIA, DP, KL, MSE) don't need expansion. The expansion goes in the slide body where the term first appears, not in a separate glossary slide.
+9. **Visual-first — aim for a visual on every slide (default).** Prefer a diagram, figure, chart, schematic, or worked-math block over a text-only slide. The target is a *visually rich* deck: most content slides carry an exhibit and text recedes to a short framing line. When drafting, ask "what's the picture?" before "what are the bullets?". Build visuals as inline HTML+SVG, pull in real paper figures where they help, or leave a `TODO real figure` marker — full policy in **Visual richness** below. This does **not** override Priority 1's *one exhibit per slide*: visual-rich means *a* visual, not a collage.
+10. **Self-contained slides (independent modules).** In a multi-lecture course where slides may be reordered or reused, each slide must stand on its own. Drop forward/backward course references — no "next week", "previously", "(Wk N)", "see Lecture 3", "as we saw". State the point on the slide itself. The only place a week index belongs is a syllabus / course-map slide.
 
 ---
 
@@ -386,6 +388,8 @@ When deriving B from A, state A first as a self-contained fact (own paragraph + 
 The on-screen `slide-num` indicator (and any user reference to "page N") counts **every** `<div class="slide">` element in document order — title slide, TOC, section dividers, content slides, recap, end-slide all included. `deck.js` enumerates them with `querySelectorAll('.slide')` and shows `(current+1) / total`. When the user says "page 23", count from 1 starting at the title.
 
 When you edit, prefer matching slides by content (`<h2>` text, distinctive class) rather than position — slide numbers shift the moment you insert or remove anything. Only treat the page number as a navigation hint, not a stable identifier.
+
+**One indicator only — the bold `.slide-num`.** The canonical page number is the bold `.slide-num` (`deck.js` injects/updates it; styled `position: fixed; bottom-right; font-weight: 700`). Do **not** also add a per-deck `<script>` that injects a second `.page-num` element on each slide (some older decks copied one from a sibling) — two indicators render as duplicate page numbers. If a deck has both, delete the `.page-num` injector script and its `.page-num` / `.title-slide .page-num` CSS; keep the bold `.slide-num`. (The on-screen indicator is hidden in print/PDF by `@media print`, which is expected.)
 
 ### Citations
 
@@ -698,11 +702,35 @@ For boxed nodes (more visual weight), use `.diagram-flow` + `.diagram-box` inste
 
 ---
 
+## Visual richness — figures, diagrams & TODO-marks
+
+**Policy: target visually rich slides.** A deck of bullet lists is a failure mode. Every content slide should aim to carry an *exhibit* — a diagram, schematic, chart, figure, table, or worked-math block — with text reduced to a short framing line. Bare bullets are a fallback, never the goal.
+
+**Three sources of visuals, in priority order:**
+
+1. **Inline HTML + SVG concept diagrams** — the default and most reliable. Build structure in HTML/SVG (boxes, circles, arrows, overlapping bell curves, 2×2 grids, flows, pipelines, trees). Plain-text labels in SVG `<text>` — KaTeX skips SVG, so never put `$…$` inside `<text>` (see GOTCHAS). One semantic color per role (Yonsei blue = focus, gray = context, `--warn` red = the bad case). Shipped examples to imitate: overlapping-distribution "indistinguishability" curves, a knowledge×timing 2×2 map, a layered trust stack, a randomized-response coin tree, a Laplace-noise bell, a federated-learning fan-in, a linkage Venn (`courses/trustworthy-ai/lec01-introduction.html`, `lec02-privacy-dp.html`).
+2. **Real paper / public figures** — when a canonical figure tells it better (panda→gibbon, a COMPAS bar chart, a BadNets trigger, a training-data-extraction example). Follow GOTCHAS → "Capturing figures from third-party papers": crop the "Figure N:" caption out, cite the source figure in `.cite`, store under `<deck>/figs/`, downsample to ~1200px before bundling. Reuse figures already vetted in sibling decks (e.g. `courses/privacy/lectures/03-memorization/figs/`) rather than re-fetching.
+3. **TODO-marks** — when you *want* a real figure or a richer diagram but can't produce it now (no network, fiddly crop, needs design time), **do not ship a bare slide**. Leave a marker on the slide where the visual belongs:
+
+   ```html
+   <!-- TODO real figure: <what to show>, <source paper / Fig N> -->
+   ```
+
+   These are first-class authoring debt, not silent omissions. `grep -rn "TODO real figure"` finds every slide still missing its intended visual.
+
+**Make diagrams big.** Concept SVGs are routinely drawn too small. Full-width single-diagram slides: wrapper `max-width: 820–920px`, SVG `<text>` `font-size: 15–20` (viewBox units), bold for primary labels. Diagrams paired with bullets in a grid column: `max-width: 360–440px`, `font-size: 13–16`. Bump **both** the wrapper width and the font-size numbers — a wider wrapper alone leaves labels proportionally small (GOTCHAS → "Concept SVG renders too small"). See Recipes → "Diagram dominates".
+
+**Still one exhibit per slide.** Visual-rich means *a* strong visual per slide, not a collage. Two visuals ⇒ two slides (Priority 1). Empty space *below* a centered diagram is fine; middle voids are not (Priority 3).
+
+---
+
 ## Companion note files
 
 When detail is worth recording but doesn't fit on the slide (full-sentence explanations, derivations the proof slide skipped, secondary examples, "FYI" context), put it in `<deck>/<deck>-note.html` — one section per slide, in slide order, headed by the slide's title. Plain HTML so KaTeX `$…$` / `$$…$$` works the same as in the deck. The note file does not use the `.deck` / `.slide` engine; a simple `<article>` per slide is enough.
 
 For lectures, the note file is also the natural home for the **expanded proof** when the slide carries the abbreviated version.
+
+**Speaker-script variant.** A common, useful note form for lectures is a per-slide *script*: one `<article>` per slide in deck order, `<h2>` = the slide's title, then 1–2 sentences of what to actually say, then a `Key takeaway:` line (a blue `.kt` span). This pairs one-to-one with slides and doubles as the deck's outline-of-record. Keep each entry brief (≤ ~50 words of script).
 
 Not a paper draft, not a transcript. The speaker's reading companion.
 

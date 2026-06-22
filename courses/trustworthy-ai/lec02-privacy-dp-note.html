@@ -1,0 +1,575 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 2 — Script</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+body { max-width: 880px; margin: 40px auto; padding: 0 28px; color: var(--charcoal); font-family: 'Yonsei','Noto Sans',Arial,sans-serif; line-height: 1.65; }
+h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
+article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
+.kt { color: var(--yonsei-blue); font-weight: 700; }
+</style></head><body>
+<h1>Lecture 2 — Privacy &amp; Differential Privacy · Speaker Script</h1>
+<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+
+<article>
+<h2>Privacy &amp; Differential Privacy</h2>
+<p>Welcome to Lecture 2 of Trustworthy AI. Today we ask a simple question: what does a trained model actually leak about the people in its data, and can we write down a mathematical definition of "private"?</p>
+<p><span class="kt">Key takeaway:</span> Privacy is a property we can define and prove, not just hope for.</p>
+</article>
+
+<article>
+<h2>Contents</h2>
+<p>We move in six steps: why models leak, how we measure that leakage, the definition of differential privacy, how we achieve it with noise, private machine learning, and the 2025-26 frontier.</p>
+<p><span class="kt">Key takeaway:</span> From the problem, to a definition, to practical training under a budget.</p>
+</article>
+
+<article>
+<h2>01 — The Privacy Problem</h2>
+<p>First section. The core idea: a trained model is a lossy copy of its training data, and lossy does not mean safe.</p>
+<p><span class="kt">Key takeaway:</span> A model carries traces of the people it was trained on.</p>
+</article>
+
+<article>
+<h2>Models Are Data-Hungry</h2>
+<p>Modern models train on everything within reach: scraped web pages, books, code, photos, sometimes even health and financial records. That data describes real people, not abstractions.</p>
+<p><span class="kt">Key takeaway:</span> Training data is people's data.</p>
+</article>
+
+<article>
+<h2>A Model Remembers</h2>
+<p>Training presses data into the weights. Most blends into general patterns, but some survives nearly verbatim, and rare or repeated examples stick the most.</p>
+<p><span class="kt">Key takeaway:</span> "It's just statistics" is not a privacy guarantee.</p>
+</article>
+
+<article>
+<h2>GPT-2 Knew Real People</h2>
+<p>Carlini and colleagues showed that a short prompt can make GPT-2 recite real names, home addresses, phone numbers, and emails, copied straight out of the training text.</p>
+<p><span class="kt">Key takeaway:</span> A short prompt can pull out a real person's contact details.</p>
+</article>
+
+<article>
+<h2>The Secret Sharer</h2>
+<p>The clean experiment: plant a fake secret, a "canary" like a made-up credit-card number, in the data. After enough training the model memorizes it, and the right prompt makes it spill.</p>
+<p><span class="kt">Key takeaway:</span> Memorization is measurable: plant a secret and watch it come back.</p>
+</article>
+
+<article>
+<h2>Make ChatGPT Leak</h2>
+<p>In 2023, asking ChatGPT to "repeat the word 'poem' forever" eventually broke the loop and dumped chunks of raw training data, including real names and contact info.</p>
+<p><span class="kt">Key takeaway:</span> Even production chat models can be tricked into leaking training data.</p>
+</article>
+
+<article>
+<h2>Image Models Copy Too</h2>
+<p>It is not just text. Stable Diffusion regenerates near-exact copies of real training photos, especially images that were duplicated in the dataset.</p>
+<p><span class="kt">Key takeaway:</span> Generative image models can reproduce identifiable training photos.</p>
+</article>
+
+<article>
+<h2>Copilot Leaks Secrets</h2>
+<p>Code models train on public repos, secrets and all. Live API keys, passwords, and tokens left in old commits can be suggested right back by GitHub Copilot.</p>
+<p><span class="kt">Key takeaway:</span> A secret in the data becomes a secret in the model.</p>
+</article>
+
+<article>
+<h2>Three Kinds of Leak</h2>
+<p>Attackers ask escalating questions: membership (was Alice in the data?), attribute (what is Alice's diagnosis?), and reconstruction (rebuild Alice's full record). Each is harder and each is worse.</p>
+<p><span class="kt">Key takeaway:</span> Leakage ranges from "were you here?" to "here is your whole record."</p>
+</article>
+
+<article>
+<h2>Why Membership Alone Hurts</h2>
+<p>Sometimes the set itself is the secret. If a model was trained only on HIV-positive patients, just confirming Alice is a member reveals her diagnosis, with nothing reconstructed.</p>
+<p><span class="kt">Key takeaway:</span> Membership alone can disclose the most sensitive fact.</p>
+</article>
+
+<article>
+<h2>The Anonymization Myth</h2>
+<p>Deleting names does not anonymize data. Quasi-identifiers like ZIP, age, sex, and dates remain, and combining them with a public list re-identifies people.</p>
+<p><span class="kt">Key takeaway:</span> Anonymity is about linkage, not about one missing column.</p>
+</article>
+
+<article>
+<h2>87% From Three Fields</h2>
+<p>Latanya Sweeney showed ZIP code, birth date, and sex together uniquely identify most Americans. Cross "anonymous" medical data against a public voter roll and you get a name.</p>
+<p><span class="kt">Key takeaway:</span> Three innocuous fields are enough to single out most people.</p>
+</article>
+
+<article>
+<h2>Netflix De-Anonymized</h2>
+<p>Netflix released "anonymous" movie ratings for a contest. A handful of public IMDb reviews let researchers link those profiles back to named users.</p>
+<p><span class="kt">Key takeaway:</span> Sparse "anonymous" data links easily to public records.</p>
+</article>
+
+<article>
+<h2>AOL Search Logs</h2>
+<p>In 2006 AOL released "anonymized" search queries, swapping names for random IDs. The queries themselves named the users, and a journalist traced one ID to a real person.</p>
+<p><span class="kt">Key takeaway:</span> The content is the identifier, even without a name attached.</p>
+</article>
+
+<article>
+<h2>02 — How Leakage Is Measured</h2>
+<p>Second section. We turn the hunch that "models leak" into a number, using concrete attacks.</p>
+<p><span class="kt">Key takeaway:</span> Attacks let us quantify leakage instead of just worrying about it.</p>
+</article>
+
+<article>
+<h2>The Attacker's Toolkit</h2>
+<p>Four standard probes: membership inference (was this in training?), model inversion (rebuild a typical input), extraction (emit memorized text), and gradient leakage (invert a shared update).</p>
+<p><span class="kt">Key takeaway:</span> Four named attacks cover most privacy threats to a model.</p>
+</article>
+
+<article>
+<h2>Membership Inference</h2>
+<p>A membership inference attack asks one crisp question: was this specific record used to train the model? It is the unit test of privacy, the simplest leak to measure.</p>
+<p><span class="kt">Key takeaway:</span> Membership inference is the baseline measurable leak.</p>
+</article>
+
+<article>
+<h2>The Tell: Lower Loss</h2>
+<p>A model fits points it actually saw with lower loss. But the loss distributions for members and non-members overlap, so any threshold leaves error, and that overlap is the attacker's miss rate.</p>
+<p><span class="kt">Key takeaway:</span> Members have lower loss, but overlap limits how well an attacker can tell.</p>
+</article>
+
+<article>
+<h2>Shadow Models</h2>
+<p>Shokri and colleagues trained "shadow" models on their own data where membership is known, learned the member-versus-nonmember signal, then applied it to the target model.</p>
+<p><span class="kt">Key takeaway:</span> Train copies you control to learn the leakage signal.</p>
+</article>
+
+<article>
+<h2>MIA on Modern Models</h2>
+<p>Membership inference is now studied on LLMs and diffusion models. There is a live 2024-25 debate over whether it is even well-posed at web scale, where "member" gets blurry.</p>
+<p><span class="kt">Key takeaway:</span> At web scale, even defining "membership" is an open problem.</p>
+</article>
+
+<article>
+<h2>Model Inversion</h2>
+<p>Fredrikson and colleagues turned a model's confidence scores into a reconstructed face: given a name and access to the model, output a recognizable image of that person.</p>
+<p><span class="kt">Key takeaway:</span> Confidence outputs can be inverted into a recognizable input.</p>
+</article>
+
+<article>
+<h2>Extraction Scales With Size</h2>
+<p>Memorization is not a bug you patch out; it grows. Bigger models, duplicated data, and longer training all memorize more, and extraction succeeds mostly on heavily duplicated examples.</p>
+<p><span class="kt">Key takeaway:</span> More scale, duplication, and training means more memorization.</p>
+</article>
+
+<article>
+<h2>Leaky Gradients</h2>
+<p>In federated learning devices share gradients, not raw data. But a gradient encodes the example that produced it, and you can reconstruct the original image from it.</p>
+<p><span class="kt">Key takeaway:</span> Sharing gradients can be as revealing as sharing the data.</p>
+</article>
+
+<article>
+<h2>When Leakage Meets Law</h2>
+<p>In 2023 The New York Times sued OpenAI, with a complaint showing near-verbatim regurgitation of paywalled article text. Memorization became a courtroom exhibit.</p>
+<p><span class="kt">Key takeaway:</span> Memorization is now a legal liability, not just a technical one.</p>
+</article>
+
+<article>
+<h2>Regulators Step In</h2>
+<p>Governments treat training data as personal data. Italy briefly banned ChatGPT in 2023 over GDPR, which grants a right to deletion, and the EU AI Act raises documentation duties.</p>
+<p><span class="kt">Key takeaway:</span> Privacy law now applies directly to model training data.</p>
+</article>
+
+<article>
+<h2>Privacy Is a Business Risk</h2>
+<p>Leakage costs money, not just reputation: lawsuits over copyright and privacy, GDPR fines that scale with revenue, and lost trust from users and partners.</p>
+<p><span class="kt">Key takeaway:</span> Privacy failures hit the bottom line.</p>
+</article>
+
+<article>
+<h2>Can We Do Better?</h2>
+<p>Every attack so far targets a specific adversary. What we really want is a guarantee against any attacker, known or future, with any side knowledge. That is what differential privacy promises.</p>
+<p><span class="kt">Key takeaway:</span> We need protection against all attackers, not just today's.</p>
+</article>
+
+<article>
+<h2>03 — Differential Privacy</h2>
+<p>Third section. Differential privacy is a promise made to each individual, expressed as a property of the algorithm.</p>
+<p><span class="kt">Key takeaway:</span> DP shifts privacy from a hope to a provable guarantee.</p>
+</article>
+
+<article>
+<h2>A 2006 Idea</h2>
+<p>Differential privacy, introduced by Dwork and colleagues in 2006, is a mathematical definition of privacy. Not a patch or a heuristic, but a property an algorithm provably has or lacks.</p>
+<p><span class="kt">Key takeaway:</span> DP is a definition you can prove an algorithm satisfies.</p>
+</article>
+
+<article>
+<h2>The Core Promise</h2>
+<p>The promise in one line: your presence in the data barely changes what comes out. Whatever the algorithm releases, it would have released almost the same thing without you.</p>
+<p><span class="kt">Key takeaway:</span> Being in or out of the data barely changes the output.</p>
+</article>
+
+<article>
+<h2>Two Worlds</h2>
+<p>Picture two datasets, one with Alice and one without. Run the same algorithm on both. DP demands that outputs A and B look alike.</p>
+<p><span class="kt">Key takeaway:</span> The world with you and the world without you should look the same.</p>
+</article>
+
+<article>
+<h2>Plausible Deniability</h2>
+<p>If the output is almost the same either way, no one can tell which world produced it, so Alice can credibly deny being in the data. Deniability is the human meaning of the math.</p>
+<p><span class="kt">Key takeaway:</span> Indistinguishable outputs give each person plausible deniability.</p>
+</article>
+
+<article>
+<h2>Future-Proof by Design</h2>
+<p>DP makes no assumption about the attacker: any side information they have today, any database released tomorrow, the guarantee still holds. This is exactly what the de-anonymization stories lacked.</p>
+<p><span class="kt">Key takeaway:</span> DP holds against unknown and future attackers.</p>
+</article>
+
+<article>
+<h2>Randomness Is Required</h2>
+<p>A deterministic release cannot be DP: same input always gives the same output, so one changed record is detectable. DP algorithms are always randomized; randomness is the source of deniability.</p>
+<p><span class="kt">Key takeaway:</span> No randomness, no privacy.</p>
+</article>
+
+<article>
+<h2>Formal Definition</h2>
+<p>Here is the definition. For neighboring datasets $D, D'$ and every outcome set $S$, $\Pr[M(D)\in S]\le e^{\varepsilon}\Pr[M(D')\in S]+\delta$. The map $M$ is randomized; small $\varepsilon,\delta$ mean the two worlds look alike.</p>
+<p><span class="kt">Key takeaway:</span> $(\varepsilon,\delta)$-DP bounds the output probability ratio between neighbors.</p>
+</article>
+
+<article>
+<h2>In Plain Words</h2>
+<p>In plain words: when one person joins or leaves, the probability of any output changes by at most a factor $e^{\varepsilon}$, plus a tiny slack $\delta$, for every possible output. Read $e^{\varepsilon}$ as "a multiplier near 1."</p>
+<p><span class="kt">Key takeaway:</span> One person can only nudge any outcome's odds by a small factor.</p>
+</article>
+
+<article>
+<h2>Neighboring Datasets</h2>
+<p>Neighboring datasets $D$ and $D'$ differ by exactly one person's record: take $D$, remove one row, get $D'$. DP compares the algorithm across every such neighboring pair.</p>
+<p><span class="kt">Key takeaway:</span> "Neighbors" means differing by a single person.</p>
+</article>
+
+<article>
+<h2>Meet $\varepsilon$: The Budget</h2>
+<p>The parameter $\varepsilon$ caps how much one person can shift the odds. Small $\varepsilon$ is strong privacy; large $\varepsilon$ is weak privacy but more utility. It is the one knob trading privacy against utility.</p>
+<p><span class="kt">Key takeaway:</span> $\varepsilon$ is the privacy budget: smaller is more private.</p>
+</article>
+
+<article>
+<h2>Reading $\varepsilon$</h2>
+<p>Calibration: $\varepsilon\to 0$ means identical outputs and no utility; $\varepsilon\approx 1$ is strong, practical privacy; $\varepsilon\gg 10$ is just a number. At $\varepsilon=1$, $e^{1}\approx 2.7$, so the odds shift by at most 2.7 times.</p>
+<p><span class="kt">Key takeaway:</span> $\varepsilon\approx 1$ is the practical sweet spot.</p>
+</article>
+
+<article>
+<h2>$\varepsilon$ in the Wild</h2>
+<p>Deployed values vary widely. Apple's QuickType reportedly spent several units of $\varepsilon$ per day; the 2020 US Census used a global per-release budget. There is no single correct $\varepsilon$.</p>
+<p><span class="kt">Key takeaway:</span> Real-world $\varepsilon$ choices are inconsistent, so read reported numbers carefully.</p>
+</article>
+
+<article>
+<h2>Meet $\delta$</h2>
+<p>The parameter $\delta$ is a small failure probability, the chance the guarantee slips. A common rule keeps $\delta &lt; 1/n$, where $n$ is the dataset size, so keep it below one over the number of people.</p>
+<p><span class="kt">Key takeaway:</span> $\delta$ is a tiny failure probability, kept below $1/n$.</p>
+</article>
+
+<article>
+<h2>What $\varepsilon$ Does NOT Mean</h2>
+<p>Common misreadings: $\varepsilon$ is not the probability you are identified, it is not a percentage, and a large $\varepsilon$ is not private. It bounds a ratio of probabilities, nothing else.</p>
+<p><span class="kt">Key takeaway:</span> $\varepsilon$ is a probability-ratio bound, not a risk percentage.</p>
+</article>
+
+<article>
+<h2>Superpower 1: Post-Processing</h2>
+<p>The first superpower: anything you compute from a DP output is still DP. Round it, plot it, feed it to a model, the guarantee carries through. You cannot undo privacy by clever analysis.</p>
+<p><span class="kt">Key takeaway:</span> Post-processing a DP output can never break its privacy.</p>
+</article>
+
+<article>
+<h2>What "Look Alike" Really Means</h2>
+<p>The output is not one number but a distribution. With Alice you get one bell of likely outputs; without her, a slightly shifted bell. DP forces those two bells to overlap.</p>
+<p><span class="kt">Key takeaway:</span> "Indistinguishable" means you cannot tell which bell a sample came from.</p>
+</article>
+
+<article>
+<h2>A Warm-Up: Guess the Nationality</h2>
+<p>An intuition pump. Male heights are roughly $\mathcal{N}(170,10^2)$ in Korea and $\mathcal{N}(168,10^2)$ in Japan. You meet one 171 cm person; which country?</p>
+<p><span class="kt">Key takeaway:</span> Two close, wide distributions are hard to tell apart from one sample.</p>
+</article>
+
+<article>
+<h2>One Person Tells You Little</h2>
+<p>For that single 171 cm person, the means differ by only 2 cm while each spread is 10 cm, so the bells are nearly equally tall there. Your best guess barely beats a coin flip.</p>
+<p><span class="kt">Key takeaway:</span> One noisy sample from overlapping distributions is nearly uninformative.</p>
+</article>
+
+<article>
+<h2>Overlap Is Privacy</h2>
+<p>The more two distributions overlap, the less any test can separate them. In DP, output-with-Alice and output-without-Alice are two bells, and DP caps the gap at $e^{\varepsilon}$ in the odds.</p>
+<p><span class="kt">Key takeaway:</span> Small $\varepsilon$ forces overlap, and Alice hides in it.</p>
+</article>
+
+<article>
+<h2>Many Samples Break It</h2>
+<p>Now measure 1000 people from each country and compare averages. They concentrate near 170 and 168, the bells barely overlap, and the 2 cm gap becomes clear. Repeated queries erode privacy, so DP limits how much you ask.</p>
+<p><span class="kt">Key takeaway:</span> Repeated queries accumulate and eventually break privacy.</p>
+</article>
+
+<article>
+<h2>What DP Gives and Doesn't</h2>
+<p>DP gives protection against any side knowledge, survival under post-processing, and one tunable knob. It does not hide population facts, make every release useful, or help when $\varepsilon$ is huge.</p>
+<p><span class="kt">Key takeaway:</span> Know both the guarantees and the limits of DP.</p>
+</article>
+
+<article>
+<h2>Individuals, Not the Crowd</h2>
+<p>DP hides whether you are in the data, not what the population looks like. "Smokers get cancer" stays learnable; "Alice smokes" does not.</p>
+<p><span class="kt">Key takeaway:</span> DP protects individuals while letting us learn population trends.</p>
+</article>
+
+<article>
+<h2>04 — Achieving DP: Add Randomness</h2>
+<p>Fourth section. How do we actually build DP algorithms? The answer is calibrated noise, called mechanisms.</p>
+<p><span class="kt">Key takeaway:</span> DP is achieved by adding carefully calibrated randomness.</p>
+</article>
+
+<article>
+<h2>The Recipe</h2>
+<p>Every DP mechanism follows one shape: compute the answer, add randomness, release. The crucial word is "calibrated," the noise is not arbitrary.</p>
+<p><span class="kt">Key takeaway:</span> Compute, add calibrated noise, release.</p>
+</article>
+
+<article>
+<h2>Randomized Response</h2>
+<p>Randomized response is privacy from before computers, a 1965 survey technique by Warner for sensitive yes/no questions. It is still the cleanest intuition for DP.</p>
+<p><span class="kt">Key takeaway:</span> Randomized response is DP's oldest and clearest example.</p>
+</article>
+
+<article>
+<h2>The Coin Protocol</h2>
+<p>The respondent flips a coin in secret. Heads: answer truthfully. Tails: flip again and answer by that coin. The surveyor never sees the flips, so every answer has deniability.</p>
+<p><span class="kt">Key takeaway:</span> A hidden coin gives each respondent deniable answers.</p>
+</article>
+
+<article>
+<h2>Recovering the Truth</h2>
+<p>Half answer truthfully and half flip a fair coin, forcing 25% "yes." Solving $0.70=\tfrac12 p+\tfrac12\cdot\tfrac12$ gives $p=0.90$. So observing 70% "yes" implies a true rate of 90%.</p>
+<p><span class="kt">Key takeaway:</span> Known noise can be subtracted to recover the true aggregate.</p>
+</article>
+
+<article>
+<h2>Why It's Private</h2>
+<p>Any single "yes" might just be a coin flip, so the individual is protected while the aggregate rate survives. Noise hides people, not the population.</p>
+<p><span class="kt">Key takeaway:</span> Privacy and utility coexist, at the cost of some noise.</p>
+</article>
+
+<article>
+<h2>Local vs Central DP</h2>
+<p>Two models. In local DP, noise is added on each person's device, so no trusted collector is needed. In central DP, a trusted curator holds raw data and adds noise once. Local trusts no one but needs far more noise.</p>
+<p><span class="kt">Key takeaway:</span> Local DP trusts no one but pays in extra noise.</p>
+</article>
+
+<article>
+<h2>Local DP in Products</h2>
+<p>Local DP ships today. Apple used it in 2017 for emoji and typing statistics, and Google's RAPPOR collected anonymous stats in Chrome. Strong privacy, but it needs many users.</p>
+<p><span class="kt">Key takeaway:</span> Local DP is real and deployed, at population scale.</p>
+</article>
+
+<article>
+<h2>The Laplace Mechanism</h2>
+<p>To release a number privately, add noise around the true value: $\tilde q = q + \text{noise}$, with noise proportional to $\Delta q/\varepsilon$. Smaller $\varepsilon$ or bigger sensitivity means more noise.</p>
+<p><span class="kt">Key takeaway:</span> Noise scales with sensitivity over $\varepsilon$.</p>
+</article>
+
+<article>
+<h2>Sensitivity</h2>
+<p>Sensitivity $\Delta q$ is how much one person can change the answer. "How many patients?" changes by 1, so a count has sensitivity 1; an average or sum can be much higher. Calibrate noise to the worst-case one-person change.</p>
+<p><span class="kt">Key takeaway:</span> Sensitivity is the worst-case effect of a single person.</p>
+</article>
+
+<article>
+<h2>Noisy Count Example</h2>
+<p>Concretely, a true count of 1000 patients plus small noise might be reported as 1003. Whether any one patient is in or out is now hidden by that noise.</p>
+<p><span class="kt">Key takeaway:</span> A small perturbation masks any one person's membership.</p>
+</article>
+
+<article>
+<h2>Gaussian Mechanism</h2>
+<p>The other standard choice is bell-curve noise. The Gaussian mechanism pairs naturally with $(\varepsilon,\delta)$-DP and is the workhorse inside private deep learning. Same recipe, different noise shape.</p>
+<p><span class="kt">Key takeaway:</span> Gaussian noise is the default for private deep learning.</p>
+</article>
+
+<article>
+<h2>More Noise, More Privacy</h2>
+<p>Privacy and accuracy pull against each other; the noise is the price you pay. There is no free private release: every guarantee costs some utility.</p>
+<p><span class="kt">Key takeaway:</span> Every bit of privacy costs some accuracy.</p>
+</article>
+
+<article>
+<h2>05 — Private Machine Learning</h2>
+<p>Fifth section. Now we apply all of this to training models under a privacy budget.</p>
+<p><span class="kt">Key takeaway:</span> The same DP ideas extend from statistics to model training.</p>
+</article>
+
+<article>
+<h2>From Statistics to Models</h2>
+<p>A trained model is just a very complex query over the data, millions of numbers computed from records. It carries the same leakage risk as any statistic, so the same DP idea applies.</p>
+<p><span class="kt">Key takeaway:</span> A model is one big query, so DP can protect it.</p>
+</article>
+
+<article>
+<h2>The Naive Hope Fails</h2>
+<p>The naive hope is "the model generalizes, so it won't memorize." That is false: recall GPT-2, the canary, the diffusion portraits. Generalization and memorization happen together.</p>
+<p><span class="kt">Key takeaway:</span> Generalizing does not prevent memorizing.</p>
+</article>
+
+<article>
+<h2>DP-SGD</h2>
+<p>DP-SGD, from Abadi and colleagues in 2016, is the workhorse. Compute a per-example gradient, clip it to a maximum length, add Gaussian noise to the batch sum, take the step, and track the spent $\varepsilon$.</p>
+<p><span class="kt">Key takeaway:</span> DP-SGD = clip, add noise, step, account.</p>
+</article>
+
+<article>
+<h2>Why Clip?</h2>
+<p>Clipping bounds one example's influence, so no single record can dominate the step. That bound is exactly the sensitivity $\Delta q$, which lets a fixed amount of noise mask any one person.</p>
+<p><span class="kt">Key takeaway:</span> Clipping caps each example's effect, fixing the sensitivity.</p>
+</article>
+
+<article>
+<h2>Why Add Noise?</h2>
+<p>Noise hides each example's contribution to the update. The true gradient leaks information; the noisy gradient gives deniability. It is the same two-worlds promise, applied at every step.</p>
+<p><span class="kt">Key takeaway:</span> Noise gives every gradient step its deniability.</p>
+</article>
+
+<article>
+<h2>The Privacy Accountant</h2>
+<p>Training takes thousands of noisy steps, each spending budget. A privacy accountant tracks the total $\varepsilon$ using tools like the moments accountant or Renyi DP, giving a tight running total.</p>
+<p><span class="kt">Key takeaway:</span> The accountant tracks cumulative $\varepsilon$ across all steps.</p>
+</article>
+
+<article>
+<h2>The Utility Cost</h2>
+<p>DP-SGD models are less accurate. The accuracy gap between private and non-private training is precisely the cost of privacy, and smaller $\varepsilon$ means a bigger gap.</p>
+<p><span class="kt">Key takeaway:</span> The private-vs-non-private accuracy gap is the price of privacy.</p>
+</article>
+
+<article>
+<h2>Numbers on a Benchmark</h2>
+<p>On CIFAR-10, strong privacy once cost a lot of accuracy. Early DP-SGD had a large gap, but better methods plus pretraining shrank it, and the gap keeps narrowing each year.</p>
+<p><span class="kt">Key takeaway:</span> The accuracy cost of DP is large but steadily falling.</p>
+</article>
+
+<article>
+<h2>More Data Helps</h2>
+<p>Privacy gets cheaper as the dataset grows. The noise is per-step, not per-person, so with more people each one matters less and the per-person noise washes out.</p>
+<p><span class="kt">Key takeaway:</span> Big datasets make DP cheaper.</p>
+</article>
+
+<article>
+<h2>Federated Learning</h2>
+<p>Federated learning sends the model to the data: each phone computes an update locally and only updates leave, as McMahan and colleagues described in 2017. Raw data never leaves the device.</p>
+<p><span class="kt">Key takeaway:</span> Federated learning trains on data that never leaves the device.</p>
+</article>
+
+<article>
+<h2>FL in Your Pocket</h2>
+<p>You already use it. Gboard learns next-word prediction across millions of phones, while your actual keystrokes are never uploaded. The model improves; the typing stays local.</p>
+<p><span class="kt">Key takeaway:</span> Federated learning is already running on your phone.</p>
+</article>
+
+<article>
+<h2>FL Still Leaks</h2>
+<p>But keeping data local is not the same as privacy. The shared gradients still encode the inputs, and raw gradients can be inverted to reconstruct a user's image.</p>
+<p><span class="kt">Key takeaway:</span> Local data plus shared gradients is not enough on its own.</p>
+</article>
+
+<article>
+<h2>Plugging the Leak</h2>
+<p>Combine two defenses on the updates. Secure aggregation lets the server see only the sum of updates, and DP noise is added to those updates. Together they give federated learning that actually protects users.</p>
+<p><span class="kt">Key takeaway:</span> Secure aggregation plus DP noise makes federated learning safe.</p>
+</article>
+
+<article>
+<h2>06 — Frontier 2025–26</h2>
+<p>Final section. The current research frontier: can foundation models themselves be made private?</p>
+<p><span class="kt">Key takeaway:</span> Privacy for foundation models is the open frontier.</p>
+</article>
+
+<article>
+<h2>Private Fine-Tuning Works</h2>
+<p>Good news first: DP fine-tuning of large pretrained models reaches near non-private accuracy. Pretrain on public data, fine-tune privately, with steady momentum through 2023-25.</p>
+<p><span class="kt">Key takeaway:</span> Pretrain publicly, fine-tune privately, lose little accuracy.</p>
+</article>
+
+<article>
+<h2>Private Synthetic Data</h2>
+<p>Another approach: generate a safe, shareable dataset under DP. The generator carries the privacy guarantee, you train freely on its output, and post-processing keeps it private.</p>
+<p><span class="kt">Key takeaway:</span> DP synthetic data lets you share sensitive datasets safely.</p>
+</article>
+
+<article>
+<h2>The Web-Scale Puzzle</h2>
+<p>Here is the hard question: what does $\varepsilon$ even mean when pretraining on the public internet? Whose privacy are we protecting, and what counts as a neighboring dataset? Still open.</p>
+<p><span class="kt">Key takeaway:</span> DP's definitions get murky at web scale.</p>
+</article>
+
+<article>
+<h2>Frontier Models Still Memorize</h2>
+<p>The problem is not solved. In 2023-24, extraction attacks hit production chat models and memorized data still came out.</p>
+<p><span class="kt">Key takeaway:</span> Even frontier models leak memorized data.</p>
+</article>
+
+<article>
+<h2>Auditing Privacy</h2>
+<p>We can estimate the real $\varepsilon$ by attacking the model: run membership attacks and measure the leak. Sometimes the guarantee is loose. The motto is trust, but verify.</p>
+<p><span class="kt">Key takeaway:</span> Audit the empirical $\varepsilon$, do not just trust the proof.</p>
+</article>
+
+<article>
+<h2>Unlearning as Plan B</h2>
+<p>If you cannot prevent memorization, can you delete it later? Machine unlearning aims to remove one person after training without retraining from scratch.</p>
+<p><span class="kt">Key takeaway:</span> Unlearning is the fallback when prevention fails.</p>
+</article>
+
+<article>
+<h2>Privacy in the Stack</h2>
+<p>Privacy is also a systems problem. Apple's Private Cloud Compute (2024) and confidential computing on trusted hardware enable server-side inference without exposing data. DP and secure hardware are complementary.</p>
+<p><span class="kt">Key takeaway:</span> Hardware-based protections complement DP.</p>
+</article>
+
+<article>
+<h2>The Law Is Catching Up</h2>
+<p>Regulation is pushing DP and auditing into practice: GDPR's right to be forgotten, the EU AI Act's transparency duties, and a wave of US state privacy laws.</p>
+<p><span class="kt">Key takeaway:</span> Law is increasingly forcing privacy engineering into products.</p>
+</article>
+
+<article>
+<h2>Open Problems</h2>
+<p>The frontier is wide open: a meaningful $\varepsilon$ for pretraining, cheap private fine-tuning, verifying deletion actually worked, and reconciling privacy, utility, and fairness together.</p>
+<p><span class="kt">Key takeaway:</span> Many core privacy questions remain unsolved.</p>
+</article>
+
+<article>
+<h2>Where to Go Deeper</h2>
+<p>For the full mathematical treatment, look at reconstruction attacks, pure versus approximate DP, composition, Renyi DP, and the complete DP-SGD analysis.</p>
+<p><span class="kt">Key takeaway:</span> The rigorous version goes far beyond today's intuition.</p>
+</article>
+
+<article>
+<h2>Demos to Play With</h2>
+<p>Three demos to try: a randomized-response coin simulator, an $\varepsilon$ versus accuracy slider, and a membership-inference attack. Play first, then read the proofs.</p>
+<p><span class="kt">Key takeaway:</span> Hands-on demos build intuition before the formalism.</p>
+</article>
+
+<article>
+<h2>Key Takeaways</h2>
+<p>To sum up: models leak and anonymization fails to linkage; DP means your presence barely changes the output; $\varepsilon$ is the one knob trading privacy for utility; DP-SGD is clip plus noise, and its cost shrinks with data. Membership inference is the attack DP is built to stop.</p>
+<p><span class="kt">Key takeaway:</span> DP gives a provable defense, centered on stopping membership inference.</p>
+</article>
+
+<article>
+<h2>$\varepsilon$ — Closer</h2>
+<p>We close where we started: $\varepsilon$, one number standing between privacy and utility. Choose it wisely.</p>
+<p><span class="kt">Key takeaway:</span> Everything comes down to one number, $\varepsilon$.</p>
+</article>
+
+</body></html>

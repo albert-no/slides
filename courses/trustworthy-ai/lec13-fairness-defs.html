@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fairness I: Definitions &amp; Impossibility — Trustworthy AI Lecture 13</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Trustworthy AI · Lecture 13</div>
+  <h1>Fairness I:<br>Definitions &amp; Impossibility</h1>
+  <div class="divider"></div>
+  <p class="subtitle">What "fair" means, and why you cannot have it all</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Sources of Bias</div><div class="toc-sub">Where unfairness enters the pipeline</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Group Fairness Criteria</div><div class="toc-sub">Three definitions, one conditional probability each</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The COMPAS Case</div><div class="toc-sub">When two newsrooms read the same numbers</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The Impossibility Theorem</div><div class="toc-sub">Pick two of three, never all three</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Individual &amp; Causal Fairness</div><div class="toc-sub">Beyond groups: similar people, similar treatment</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Fairness in Generative Models</div><div class="toc-sub">Stereotyping and audits, 2025–26</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Sources of Bias</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Where unfairness enters the pipeline</p>
+</div>
+
+<!-- 4. A Model Mirrors Its World -->
+<div class="slide">
+  <h2>A Model Mirrors Its World</h2>
+  <div class="divider"></div>
+  <p>A model learns the patterns in its <strong>training data</strong>.</p>
+  <ul class="arrow">
+    <li>Past decisions, past outcomes, past records</li>
+    <li>If the past was biased, the model learns the bias</li>
+  </ul>
+  <p class="muted">"Garbage in, garbage out" has a fairness version.</p>
+</div>
+
+<!-- 5. Bias Is Not a Bug -->
+<div class="slide">
+  <h2>Bias Is Not a Bug</h2>
+  <div class="divider"></div>
+  <p>The model often works <em>exactly as designed</em>.</p>
+  <div class="highlight"><p>It faithfully reproduces a world that was <strong>already unfair</strong>.</p></div>
+  <p>Accuracy and fairness are not the same goal.</p>
+</div>
+
+<!-- 6. Three Places Bias Enters -->
+<div class="slide">
+  <h2>Three Places Bias Enters</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card"><h3>Biased data</h3><p>Some groups under-sampled or missing.</p></div>
+    <div class="card"><h3>Biased labels</h3><p>The target itself records past prejudice.</p></div>
+    <div class="card"><h3>Feedback loops</h3><p>Predictions reshape future data.</p></div>
+  </div>
+</div>
+
+<!-- 7. Biased Data -->
+<div class="slide">
+  <h2>Biased Data: Who Got Sampled</h2>
+  <div class="divider"></div>
+  <p>The data may not <strong>represent everyone</strong> equally.</p>
+  <ul class="arrow">
+    <li>Face datasets skewed toward light skin</li>
+    <li>Medical data dominated by one population</li>
+    <li>Under-represented groups: higher error</li>
+  </ul>
+  <p class="muted">A model is only as broad as its examples.</p>
+</div>
+
+<!-- 8. Biased Labels -->
+<div class="slide">
+  <h2>Biased Labels: A Hiring Example</h2>
+  <div class="divider"></div>
+  <p>Train a resume screener on <strong>past hires</strong>.</p>
+  <ul>
+    <li>The company historically hired mostly men</li>
+    <li>"Good candidate" = "looks like past hires"</li>
+    <li>The model penalizes signals of being a woman</li>
+  </ul>
+  <div class="cite cite-left">Amazon scrapped an internal resume-screening tool in 2018 after it down-ranked women.</div>
+</div>
+
+<!-- 9. The Label Is the Problem -->
+<div class="slide">
+  <h2>The Label Is the Problem</h2>
+  <div class="divider"></div>
+  <p>We rarely measure what we <em>care</em> about.</p>
+  <div class="def-card">
+    <h3>Target leakage of bias</h3>
+    <p>We want "will repay the loan". We record "was approved before". The proxy carries the old prejudice forward.</p>
+  </div>
+  <p class="muted">Choosing the target variable is a fairness decision.</p>
+</div>
+
+<!-- 10. Feedback Loops -->
+<div class="slide">
+  <h2>Feedback Loops: A Lending Example</h2>
+  <div class="divider"></div>
+  <p>Predictions today <strong>shape the data</strong> tomorrow.</p>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 460 180" style="width:100%;max-width:840px;">
+      <rect x="24" y="66" width="120" height="50" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="84" y="89" font-size="15" fill="#1a1a1a" text-anchor="middle">deny group A</text>
+      <text x="84" y="107" font-size="15" fill="#1a1a1a" text-anchor="middle">more often</text>
+      <rect x="172" y="66" width="120" height="50" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="232" y="89" font-size="15" fill="#1a1a1a" text-anchor="middle">fewer loans,</text>
+      <text x="232" y="107" font-size="15" fill="#1a1a1a" text-anchor="middle">no track record</text>
+      <rect x="320" y="66" width="120" height="50" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="380" y="89" font-size="15" fill="#1a1a1a" text-anchor="middle">"data shows</text>
+      <text x="380" y="107" font-size="15" fill="#1a1a1a" text-anchor="middle">A is risky"</text>
+      <defs><marker id="far" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs>
+      <line x1="144" y1="91" x2="170" y2="91" stroke="#6b7280" stroke-width="2.5" marker-end="url(#far)"/>
+      <line x1="292" y1="91" x2="318" y2="91" stroke="#6b7280" stroke-width="2.5" marker-end="url(#far)"/>
+      <path d="M380,66 C380,28 84,28 84,64" fill="none" stroke="#d94040" stroke-width="2.5" stroke-dasharray="5 4" marker-end="url(#far)"/>
+      <text x="232" y="22" font-size="15" fill="#d94040" text-anchor="middle" font-weight="700">the loop closes</text>
+    </svg>
+  </div>
+  <p class="muted">The bias confirms itself.</p>
+</div>
+
+<!-- 11. Why Removing Race Fails -->
+<div class="slide">
+  <h2>Why "Just Drop Race" Fails</h2>
+  <div class="divider"></div>
+  <p>Deleting the sensitive column does <strong>not</strong> remove the bias.</p>
+  <ul>
+    <li>ZIP code, name, school correlate with race</li>
+    <li>The model rebuilds the proxy on its own</li>
+  </ul>
+  <p class="muted">Fairness needs more than blindness.</p>
+</div>
+
+<!-- 12. Setting Up the Notation -->
+<div class="slide">
+  <h2>Setting Up the Notation</h2>
+  <div class="divider"></div>
+  <p>A classifier predicts a binary outcome from features.</p>
+  <div class="def-card">
+    <h3>Three symbols</h3>
+    <p>$A$ = group (protected attribute). &nbsp; $Y$ = true label. &nbsp; $\hat Y$ = model's prediction.</p>
+  </div>
+  <p>Example: $A$ = race, $Y$ = re-offends, $\hat Y$ = "high risk".</p>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 13. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Group Fairness Criteria</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Three definitions, one conditional probability each</p>
+</div>
+
+<!-- 14. Confusion Matrix by Group -->
+<div class="slide">
+  <h2>The Confusion Matrix, Per Group</h2>
+  <div class="divider"></div>
+  <p>Every fairness metric reads off this table, <strong>group by group</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 460 200" style="width:100%;max-width:760px;">
+      <text x="230" y="20" font-size="15" fill="#666" text-anchor="middle">true outcome $Y$</text>
+      <text x="150" y="44" font-size="15" fill="#1a1a1a" text-anchor="middle" font-weight="700">Y = 1</text>
+      <text x="310" y="44" font-size="15" fill="#1a1a1a" text-anchor="middle" font-weight="700">Y = 0</text>
+      <text x="42" y="92" font-size="14" fill="#1a1a1a" text-anchor="middle" font-weight="700">pred 1</text>
+      <text x="42" y="152" font-size="14" fill="#1a1a1a" text-anchor="middle" font-weight="700">pred 0</text>
+      <rect x="78" y="58" width="144" height="56" fill="#2e8b57" fill-opacity="0.22" stroke="#2e8b57" stroke-width="1.5"/>
+      <text x="150" y="91" font-size="16" fill="#1a1a1a" text-anchor="middle" font-weight="700">true positive</text>
+      <rect x="238" y="58" width="144" height="56" fill="#d94040" fill-opacity="0.20" stroke="#d94040" stroke-width="1.5"/>
+      <text x="310" y="91" font-size="16" fill="#1a1a1a" text-anchor="middle" font-weight="700">false positive</text>
+      <rect x="78" y="120" width="144" height="56" fill="#d94040" fill-opacity="0.20" stroke="#d94040" stroke-width="1.5"/>
+      <text x="150" y="153" font-size="16" fill="#1a1a1a" text-anchor="middle" font-weight="700">false negative</text>
+      <rect x="238" y="120" width="144" height="56" fill="#2e8b57" fill-opacity="0.22" stroke="#2e8b57" stroke-width="1.5"/>
+      <text x="310" y="153" font-size="16" fill="#1a1a1a" text-anchor="middle" font-weight="700">true negative</text>
+    </svg>
+  </div>
+  <p class="muted">Fairness = comparing these cells across groups.</p>
+</div>
+
+<!-- 15. Criterion 1: Demographic Parity -->
+<div class="slide">
+  <h2>Demographic Parity</h2>
+  <div class="divider"></div>
+  <p><em>Intuition:</em> each group gets <strong>positives at the same rate</strong>.</p>
+  <div class="math-block">$$\Pr[\hat Y = 1 \mid A = a] \;=\; \Pr[\hat Y = 1 \mid A = b].$$</div>
+  <p>Same loan-approval rate for every group, full stop.</p>
+  <div class="cite cite-left">Dwork, Hardt, Pitassi, Reingold, and Zemel, "Fairness Through Awareness", ITCS 2012.</div>
+</div>
+
+<!-- 16. Parity: the catch -->
+<div class="slide">
+  <h2>Parity Ignores the Truth</h2>
+  <div class="divider"></div>
+  <p>Demographic parity looks <strong>only at $\hat Y$</strong>, never at $Y$.</p>
+  <ul>
+    <li>It demands equal selection rates</li>
+    <li>Even if the groups truly differ on $Y$</li>
+  </ul>
+  <p class="muted">Strong on access, blind to who actually qualifies.</p>
+</div>
+
+<!-- 17. Criterion 2: Equalized Odds -->
+<div class="slide">
+  <h2>Equalized Odds</h2>
+  <div class="divider"></div>
+  <p><em>Intuition:</em> equal <strong>error rates</strong>, given the true label.</p>
+  <div class="math-block">$$\Pr[\hat Y = 1 \mid Y = y, A = a] \;=\; \Pr[\hat Y = 1 \mid Y = y, A = b].$$</div>
+  <p>Same false-positive and same true-positive rate per group.</p>
+  <div class="cite cite-left">Hardt, Price, and Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016.</div>
+</div>
+
+<!-- 18. Odds: the catch -->
+<div class="slide">
+  <h2>Equal Odds, Equal Mistakes</h2>
+  <div class="divider"></div>
+  <p>Now we <strong>condition on the truth $Y$</strong>.</p>
+  <ul class="arrow">
+    <li>Innocent people: same false-alarm rate</li>
+    <li>Guilty people: same hit rate</li>
+    <li>The burden of errors is shared</li>
+  </ul>
+  <p class="muted">A weaker variant fixes only the false-negative side: equal opportunity.</p>
+</div>
+
+<!-- 19. Criterion 3: Calibration -->
+<div class="slide">
+  <h2>Calibration</h2>
+  <div class="divider"></div>
+  <p><em>Intuition:</em> a score means the <strong>same thing</strong> in every group.</p>
+  <div class="math-block">$$\Pr[Y = 1 \mid \hat S = s, A = a] \;=\; \Pr[Y = 1 \mid \hat S = s, A = b] \;=\; s.$$</div>
+  <p>Among everyone scored $0.7$, about $70\%$ truly are positive.</p>
+  <div class="cite cite-left">Chouldechova, "Fair Prediction with Disparate Impact", Big Data 2017.</div>
+</div>
+
+<!-- 20. Calibration: the catch -->
+<div class="slide">
+  <h2>Calibration Trusts the Score</h2>
+  <div class="divider"></div>
+  <p>Calibration is what makes a risk score <strong>usable</strong>.</p>
+  <ul>
+    <li>A $0.7$ should mean $0.7$ for anyone</li>
+    <li>Otherwise the same number misleads per group</li>
+  </ul>
+  <p class="muted">Natural for lenders, judges, doctors reading a probability.</p>
+</div>
+
+<!-- 21. Three Criteria Side by Side -->
+<div class="slide">
+  <h2>Three Criteria, Three Questions</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Criterion</th><th>Equalizes</th></tr>
+    <tr><td>Demographic parity</td><td>$\Pr[\hat Y = 1]$ across groups</td></tr>
+    <tr><td>Equalized odds</td><td>error rates given $Y$</td></tr>
+    <tr><td>Calibration</td><td>meaning of the score $\hat S$</td></tr>
+  </table>
+  <p class="muted">Each is reasonable. They will not coexist.</p>
+</div>
+
+<!-- ============ SECTION 03 ============ -->
+<!-- 22. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>The COMPAS Case</h1>
+  <div class="divider"></div>
+  <p class="subtitle">When two newsrooms read the same numbers</p>
+</div>
+
+<!-- 23. What COMPAS Is -->
+<div class="slide">
+  <h2>What COMPAS Is</h2>
+  <div class="divider"></div>
+  <p>A commercial <strong>recidivism risk score</strong> used in US courts.</p>
+  <ul class="arrow">
+    <li>Predicts: will this defendant re-offend?</li>
+    <li>Outputs a risk score from 1 to 10</li>
+    <li>Judges saw it during bail and sentencing</li>
+  </ul>
+  <p class="muted">COMPAS = the tool sold by the company Northpointe.</p>
+</div>
+
+<!-- 24. The ProPublica Investigation -->
+<div class="slide">
+  <h2>The ProPublica Investigation</h2>
+  <div class="divider"></div>
+  <p>In 2016, journalists audited COMPAS by race.</p>
+  <div class="highlight"><p>Among defendants who <strong>did not re-offend</strong>, Black defendants were flagged high-risk far more often.</p></div>
+  <p>That is a <strong>false-positive rate</strong> gap.</p>
+  <div class="cite cite-left">Angwin, Larson, Mattu, and Kirchner, "Machine Bias", ProPublica 2016.</div>
+</div>
+
+<!-- 25. FPR by Group (SVG) -->
+<div class="slide">
+  <h2>False Positives, By Group</h2>
+  <div class="divider"></div>
+  <p>Of those who did <strong>not</strong> re-offend, who got labeled high-risk?</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 460 210" style="width:100%;max-width:800px;">
+      <line x1="80" y1="170" x2="430" y2="170" stroke="#999" stroke-width="1.5"/>
+      <rect x="120" y="92" width="90" height="78" fill="#003876" fill-opacity="0.85"/>
+      <text x="165" y="80" font-size="20" fill="#003876" text-anchor="middle" font-weight="700">45%</text>
+      <text x="165" y="192" font-size="16" fill="#1a1a1a" text-anchor="middle">Black</text>
+      <rect x="290" y="129" width="90" height="41" fill="#6b7280" fill-opacity="0.85"/>
+      <text x="335" y="117" font-size="20" fill="#6b7280" text-anchor="middle" font-weight="700">23%</text>
+      <text x="335" y="192" font-size="16" fill="#1a1a1a" text-anchor="middle">White</text>
+      <text x="44" y="100" font-size="14" fill="#666" text-anchor="middle">false-</text>
+      <text x="44" y="118" font-size="14" fill="#666" text-anchor="middle">positive</text>
+      <text x="44" y="136" font-size="14" fill="#666" text-anchor="middle">rate</text>
+    </svg>
+  </div>
+  <p class="muted">Illustrative figures from the ProPublica analysis.</p>
+  <!-- TODO real figure: ProPublica COMPAS FPR-by-race bar chart -->
+</div>
+
+<!-- 26. Northpointe Responds -->
+<div class="slide">
+  <h2>Northpointe Responds</h2>
+  <div class="divider"></div>
+  <p>The vendor said the score was <strong>fair</strong>, and meant it.</p>
+  <ul>
+    <li>A given risk score predicted the same re-offense rate</li>
+    <li>True for Black and White defendants alike</li>
+  </ul>
+  <div class="highlight"><p>That is exactly <strong>calibration</strong>.</p></div>
+</div>
+
+<!-- 27. Both Sides Were Right -->
+<div class="slide">
+  <h2>Both Sides Were Right</h2>
+  <div class="divider"></div>
+  <p>No one was lying. They measured <em>different</em> fairness.</p>
+  <div class="grid-2">
+    <div><h3>ProPublica</h3><p>Unequal <strong>false-positive rates</strong>: equalized odds fails.</p></div>
+    <div><h3>Northpointe</h3><p>Equal score meaning: <strong>calibration</strong> holds.</p></div>
+  </div>
+  <p class="muted">The disagreement was a definition, not a fact.</p>
+</div>
+
+<!-- 28. The Question This Raises -->
+<div class="slide">
+  <h2>Could COMPAS Be Both?</h2>
+  <div class="divider"></div>
+  <p>Could a fixed-up score satisfy <strong>both</strong> criteria at once?</p>
+  <div class="highlight"><p>The next section proves: in general, <strong>no</strong>.</p></div>
+  <p>Not a tuning failure. A mathematical wall.</p>
+</div>
+
+<!-- ============ SECTION 04 ============ -->
+<!-- 29. Divider 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>The Impossibility Theorem</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Pick two of three, never all three</p>
+</div>
+
+<!-- 30. The Key Ingredient -->
+<div class="slide">
+  <h2>The Key Ingredient: Base Rates</h2>
+  <div class="divider"></div>
+  <p>The <strong>base rate</strong> is how common $Y = 1$ is in a group.</p>
+  <div class="math-block">$$p_a \;=\; \Pr[Y = 1 \mid A = a].$$</div>
+  <p>When two groups have <strong>different base rates</strong>, trouble begins.</p>
+</div>
+
+<!-- 31. The Theorem, Plainly -->
+<div class="slide">
+  <h2>The Impossibility Theorem</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Kleinberg, Mullainathan, Raghavan (2017)</h3>
+    <p>If the base rates differ between groups, no score can be <strong>calibrated</strong> and have <strong>equal false-positive and false-negative rates</strong> at the same time.</p>
+  </div>
+  <p>Except in trivial cases (perfect prediction, or equal base rates).</p>
+  <div class="cite cite-left">Kleinberg, Mullainathan, and Raghavan, "Inherent Trade-Offs in the Fair Determination of Risk Scores", ITCS 2017.</div>
+</div>
+
+<!-- 32. The Same Result, Independently -->
+<div class="slide">
+  <h2>Two Proofs, Same Wall</h2>
+  <div class="divider"></div>
+  <p>Found independently, the same year.</p>
+  <div class="grid-2">
+    <div><h3>Chouldechova</h3><p>Framed via the COMPAS error rates directly.</p></div>
+    <div><h3>Kleinberg et al.</h3><p>General three-criteria impossibility.</p></div>
+  </div>
+  <div class="cite cite-left">Chouldechova, "Fair Prediction with Disparate Impact", Big Data 2017.<br>Kleinberg, Mullainathan, and Raghavan, "Inherent Trade-Offs", ITCS 2017.</div>
+</div>
+
+<!-- 33. The Pick-Two Triangle -->
+<div class="slide">
+  <h2>Pick Two of Three</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 460 240" style="width:100%;max-width:640px;">
+      <polygon points="230,30 60,210 400,210" fill="#1a5296" fill-opacity="0.10" stroke="#003876" stroke-width="2.5"/>
+      <circle cx="230" cy="30" r="6" fill="#003876"/>
+      <circle cx="60" cy="210" r="6" fill="#003876"/>
+      <circle cx="400" cy="210" r="6" fill="#003876"/>
+      <text x="230" y="18" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">Calibration</text>
+      <text x="55" y="232" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">Equal FPR</text>
+      <text x="405" y="232" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">Equal FNR</text>
+      <text x="230" y="150" font-size="16" fill="#d94040" text-anchor="middle" font-weight="700">all three:</text>
+      <text x="230" y="172" font-size="16" fill="#d94040" text-anchor="middle" font-weight="700">impossible</text>
+    </svg>
+  </div>
+  <p class="muted">Any two corners: achievable. All three: not, when base rates differ.</p>
+</div>
+
+<!-- 34. DEMO: Compute the Metrics -->
+<div class="slide">
+  <h2>Demo: Watch Them Conflict</h2>
+  <div class="divider"></div>
+  <div class="demo-card">
+    <h3>Demo</h3>
+    <p>Take a COMPAS-style score. Two groups, <strong>different base rates</strong>. Compute all three metrics in Python.</p>
+  </div>
+  <ul class="num">
+    <li>Pick a threshold so the score is calibrated.</li>
+    <li>Measure false-positive rate per group.</li>
+    <li>Measure false-negative rate per group.</li>
+  </ul>
+</div>
+
+<!-- 35. DEMO: The Numbers -->
+<div class="slide">
+  <h2>Demo: The Numbers Don't Reconcile</h2>
+  <div class="divider"></div>
+  <p>Calibration holds. The error rates <strong>split apart</strong>.</p>
+  <table>
+    <tr><th>Metric</th><th>Group A</th><th>Group B</th></tr>
+    <tr><td>Base rate</td><td>$0.50$</td><td>$0.25$</td></tr>
+    <tr><td>Score calibrated?</td><td>yes</td><td>yes</td></tr>
+    <tr><td>False-positive rate</td><td>$0.42$</td><td>$0.20$</td></tr>
+  </table>
+  <p class="muted">No threshold rescues both. The base-rate gap forces it.</p>
+</div>
+
+<!-- 36. Why It Happens -->
+<div class="slide">
+  <h2>Why the Gap Is Forced</h2>
+  <div class="divider"></div>
+  <p>Calibration ties the score to each group's <strong>base rate</strong>.</p>
+  <ul class="arrow">
+    <li>Different base rates, different score mixes</li>
+    <li>So errors must land unevenly</li>
+    <li>Fixing one rate breaks the other</li>
+  </ul>
+  <p class="muted">The conflict is arithmetic, not a bad model.</p>
+</div>
+
+<!-- 37. So What Do We Do -->
+<div class="slide">
+  <h2>So Which One Do We Pick?</h2>
+  <div class="divider"></div>
+  <p>There is no formula for this choice.</p>
+  <div class="highlight"><p>Choosing a fairness criterion is a <strong>value judgment</strong>, not a math problem.</p></div>
+  <p>It depends on the stakes, the harm, the context.</p>
+</div>
+
+<!-- 38. Choosing by Context -->
+<div class="slide">
+  <h2>Choosing by Context</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Wrongful arrest</h3><p>Worst harm is a false positive: equalize FPR.</p></div>
+    <div><h3>Missed diagnosis</h3><p>Worst harm is a false negative: equalize FNR.</p></div>
+  </div>
+  <p class="muted">The domain decides which error you cannot tolerate.</p>
+</div>
+
+<!-- ============ SECTION 05 ============ -->
+<!-- 39. Divider 05 -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Individual &amp; Causal Fairness</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Beyond groups: similar people, similar treatment</p>
+</div>
+
+<!-- 40. Group Fairness Can Hide Harm -->
+<div class="slide">
+  <h2>Group Fairness Can Hide Harm</h2>
+  <div class="divider"></div>
+  <p>Equal group averages can mask <strong>individual</strong> injustice.</p>
+  <ul>
+    <li>Accept strong A's and weak A's at the right rate</li>
+    <li>The averages match; specific people still wronged</li>
+  </ul>
+  <p class="muted">Group balance is not person-level fairness.</p>
+</div>
+
+<!-- 41. Individual Fairness -->
+<div class="slide">
+  <h2>Individual Fairness</h2>
+  <div class="divider"></div>
+  <p><em>Intuition:</em> <strong>similar people, similar outcomes</strong>.</p>
+  <div class="def-card">
+    <h3>Fairness Through Awareness</h3>
+    <p>Two individuals who are similar for the task should receive nearly the same prediction.</p>
+  </div>
+  <div class="cite cite-left">Dwork, Hardt, Pitassi, Reingold, and Zemel, "Fairness Through Awareness", ITCS 2012.</div>
+</div>
+
+<!-- 42. The Hard Part -->
+<div class="slide">
+  <h2>The Hard Part: "Similar"</h2>
+  <div class="divider"></div>
+  <p>The whole idea rests on a <strong>similarity metric</strong>.</p>
+  <ul class="arrow">
+    <li>Who counts as "similar for this task"?</li>
+    <li>Defining it well is the real problem</li>
+    <li>A bad metric just relaunders the bias</li>
+  </ul>
+  <p class="muted">The hard question moves, it does not vanish.</p>
+</div>
+
+<!-- 43. Causal Fairness -->
+<div class="slide">
+  <h2>A Causal View</h2>
+  <div class="divider"></div>
+  <p>Ask a <strong>counterfactual</strong> question.</p>
+  <div class="highlight"><p>Would the decision change if this person had been a <strong>different race</strong>, all else equal?</p></div>
+  <p>If yes, the attribute caused the outcome.</p>
+</div>
+
+<!-- 44. Causal Paths -->
+<div class="slide">
+  <h2>Fair and Unfair Paths</h2>
+  <div class="divider"></div>
+  <p>Causal fairness separates <em>how</em> an attribute matters.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 460 160" style="width:100%;max-width:780px;">
+      <circle cx="70" cy="80" r="34" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="70" y="86" font-size="16" fill="#1a1a1a" text-anchor="middle">race $A$</text>
+      <circle cx="250" cy="40" r="34" fill="#e8ecf0" stroke="#2e8b57" stroke-width="2"/>
+      <text x="250" y="46" font-size="15" fill="#1a1a1a" text-anchor="middle">test score</text>
+      <circle cx="250" cy="125" r="34" fill="#e8ecf0" stroke="#d94040" stroke-width="2"/>
+      <text x="250" y="131" font-size="15" fill="#1a1a1a" text-anchor="middle">ZIP code</text>
+      <circle cx="410" cy="80" r="34" fill="#003876"/>
+      <text x="410" y="86" font-size="15" fill="#fff" text-anchor="middle">decision</text>
+      <defs><marker id="cf" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs>
+      <line x1="98" y1="66" x2="220" y2="46" stroke="#2e8b57" stroke-width="2.5" marker-end="url(#cf)"/>
+      <line x1="98" y1="94" x2="220" y2="119" stroke="#d94040" stroke-width="2.5" marker-end="url(#cf)"/>
+      <line x1="284" y1="46" x2="380" y2="70" stroke="#6b7280" stroke-width="2.5" marker-end="url(#cf)"/>
+      <line x1="284" y1="119" x2="380" y2="92" stroke="#6b7280" stroke-width="2.5" marker-end="url(#cf)"/>
+    </svg>
+  </div>
+  <p class="muted">A green path may be allowed; a red proxy path is not.</p>
+</div>
+
+<!-- 45. Causal: the catch -->
+<div class="slide">
+  <h2>Causal Fairness Needs a Model</h2>
+  <div class="divider"></div>
+  <p>Counterfactuals require a <strong>causal graph</strong>.</p>
+  <ul>
+    <li>You must assume how the variables relate</li>
+    <li>Different assumptions, different verdicts</li>
+  </ul>
+  <p class="muted">Powerful framing, demanding to apply.</p>
+</div>
+
+<!-- ============ SECTION 06 ============ -->
+<!-- 46. Divider 06 -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Fairness in Generative Models</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Stereotyping and audits, 2025–26</p>
+</div>
+
+<!-- 47. New Surface, Old Problem -->
+<div class="slide">
+  <h2>New Surface, Old Problem</h2>
+  <div class="divider"></div>
+  <p>Generative models have <strong>no clean $Y$</strong> to equalize.</p>
+  <ul class="arrow">
+    <li>No single label, no confusion matrix</li>
+    <li>Harm shows up as what they produce</li>
+    <li>Stereotypes, erasure, skewed representation</li>
+  </ul>
+  <p class="muted">The fairness question changes shape.</p>
+</div>
+
+<!-- 48. Text-to-Image Stereotyping -->
+<div class="slide">
+  <h2>Text-to-Image Stereotyping</h2>
+  <div class="divider"></div>
+  <p>Prompt a generator with a <strong>neutral occupation</strong>.</p>
+  <ul>
+    <li>"A CEO" returns mostly men</li>
+    <li>"A nurse" returns mostly women</li>
+    <li>The model amplifies the training skew</li>
+  </ul>
+  <p class="muted">It exaggerates, not just mirrors, the imbalance.</p>
+  <!-- TODO real figure: text-to-image occupation grid by gender -->
+</div>
+
+<!-- 49. Gender Shades -->
+<div class="slide">
+  <h2>Gender Shades</h2>
+  <div class="divider"></div>
+  <p>A landmark <strong>audit</strong> of commercial face classifiers.</p>
+  <div class="highlight"><p>Error rates were highest for <strong>darker-skinned women</strong>, lowest for lighter-skinned men.</p></div>
+  <p>Up to a $34$-point accuracy gap across groups.</p>
+  <div class="cite cite-left">Buolamwini and Gebru, "Gender Shades", FAccT 2018.</div>
+</div>
+
+<!-- 50. Auditing Is the Tool -->
+<div class="slide">
+  <h2>Auditing Is the Tool</h2>
+  <div class="divider"></div>
+  <p>When you cannot define $Y$, you <strong>measure outputs</strong>.</p>
+  <ul class="arrow">
+    <li>Build a balanced benchmark across groups</li>
+    <li>Run the system, tabulate the gaps</li>
+    <li>Gender Shades set the template</li>
+  </ul>
+  <p class="muted">Audits turn a complaint into a number.</p>
+</div>
+
+<!-- 51. Frontier 2025-26 -->
+<div class="slide">
+  <h2>Frontier 2025–26</h2>
+  <div class="divider"></div>
+  <p>Fairness moves to <strong>foundation models</strong>.</p>
+  <ul>
+    <li>Auditing text and image generators at scale</li>
+    <li>Intersectional gaps, not single attributes</li>
+    <li>Naive "balancing" fixes can backfire</li>
+  </ul>
+  <p class="muted">Crude representation patches drew their own backlash.</p>
+</div>
+
+<!-- 52. The Open Tension -->
+<div class="slide">
+  <h2>The Open Tension</h2>
+  <div class="divider"></div>
+  <p>Fairness, accuracy, and privacy <strong>pull against each other</strong>.</p>
+  <ul class="arrow">
+    <li>No single metric captures "fair"</li>
+    <li>Impossibility results are here to stay</li>
+    <li>The choice stays partly human</li>
+  </ul>
+  <p class="muted">Engineering meets values, permanently.</p>
+</div>
+
+<!-- 53. Key Takeaways -->
+<div class="slide">
+  <h2>Key Takeaways</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li>Bias enters via data, labels, and feedback loops</li>
+    <li>Parity, equalized odds, calibration: three definitions</li>
+    <li>COMPAS: both sides were measuring different fairness</li>
+    <li>Calibration + equal error rates: impossible together</li>
+  </ul>
+  <div class="highlight"><p>Choosing a fairness criterion is a <strong>value judgment</strong>.</p></div>
+</div>
+
+<!-- 54. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">Pick two.</div>
+  <p class="big-word-sub">Fairness is a choice, not a formula.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 54</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

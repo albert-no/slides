@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy &amp; Differential Privacy — Trustworthy AI Lecture 2</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Trustworthy AI · Lecture 2</div>
+  <h1>Privacy &amp;<br>Differential Privacy</h1>
+  <div class="divider"></div>
+  <p class="subtitle">What a model leaks, and a math definition of "private"</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The Privacy Problem</div><div class="toc-sub">A model is a lossy copy of its data</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">How Leakage Is Measured</div><div class="toc-sub">Attacks that turn a hunch into a number</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Differential Privacy</div><div class="toc-sub">A promise made to each individual</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Achieving DP: Add Randomness</div><div class="toc-sub">Privacy by calibrated noise</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Private Machine Learning</div><div class="toc-sub">Training under a privacy budget</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Frontier 2025–26</div><div class="toc-sub">Can foundation models be private?</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>The Privacy Problem</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A model is a lossy copy of its data</p>
+</div>
+
+<!-- 4. Models Are Data-Hungry -->
+<div class="slide">
+  <h2>Models Are Data-Hungry</h2>
+  <div class="divider"></div>
+  <p>Modern models train on <strong>everything within reach</strong>.</p>
+  <ul class="arrow">
+    <li>Scraped web pages, forums, comments</li>
+    <li>Books, code repositories, photos</li>
+    <li>Sometimes health and financial records</li>
+  </ul>
+  <p>That data is not abstract. <em>It describes real people.</em></p>
+</div>
+
+<!-- 5. A Model Remembers -->
+<div class="slide">
+  <h2>A Model Remembers</h2>
+  <div class="divider"></div>
+  <p>Training presses the data <strong>into the weights</strong>.</p>
+  <ul>
+    <li>Most of it blends into general patterns</li>
+    <li>Some of it survives nearly <em>verbatim</em></li>
+    <li>Rare or repeated examples stick the most</li>
+  </ul>
+  <p class="muted">"It's just statistics" is not a privacy guarantee.</p>
+</div>
+
+<!-- 6. GPT-2 Knew Real People -->
+<div class="slide">
+  <h2>GPT-2 Knew Real People</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:40px;align-items:center;">
+    <div style="display:flex;justify-content:center;">
+      <img src="figs/gpt2-extraction.png" alt="GPT-2 extraction: a prefix prompt yields a real person's name, address, phone, and email" style="max-height:400px;width:auto;display:block;border:1px solid var(--slate);border-radius:8px;">
+    </div>
+    <div>
+      <p>A short prompt makes the model <strong>recite real data</strong>:</p>
+      <ul class="arrow">
+        <li>Real names, home addresses</li>
+        <li>Phone numbers, emails</li>
+        <li>Straight from training text</li>
+      </ul>
+    </div>
+  </div>
+  <div class="cite cite-left">Carlini et al., "Extracting Training Data from Large Language Models", USENIX Security 2021 — Figure 1.</div>
+</div>
+
+<!-- 7. The Secret Sharer -->
+<div class="slide">
+  <h2>The Secret Sharer</h2>
+  <div class="divider"></div>
+  <p>Plant a fake secret in the data, then ask the model for it.</p>
+  <ul>
+    <li>A "canary" like a fake credit-card number</li>
+    <li>The model <strong>memorizes</strong> it after enough training</li>
+    <li>The right prompt makes it spill the secret</li>
+  </ul>
+  <div class="cite cite-left">Carlini, Liu, Erlingsson, Kos, and Song, "The Secret Sharer", USENIX Security 2019.</div>
+</div>
+
+<!-- 8. Make ChatGPT Leak -->
+<div class="slide">
+  <h2>Make ChatGPT Leak</h2>
+  <div class="divider"></div>
+  <p>A 2023 trick: <strong>"repeat the word 'poem' forever"</strong>.</p>
+  <ul class="arrow">
+    <li>The model eventually broke its loop</li>
+    <li>It dumped chunks of <em>raw training data</em></li>
+    <li>Including real names and contact info</li>
+  </ul>
+  <div class="cite cite-left">Nasr et al., "Scalable Extraction of Training Data from (Production) Language Models", 2023.</div>
+</div>
+
+<!-- 9. Image Models Copy Too -->
+<div class="slide">
+  <h2>Image Models Copy Too</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:40px;align-items:center;">
+    <div style="display:flex;justify-content:center;">
+      <img src="figs/calrini-ann.png" alt="Stable Diffusion training image vs near-identical generated image of the same person" style="max-height:360px;width:auto;display:block;border:1px solid var(--slate);border-radius:8px;">
+    </div>
+    <div>
+      <p>Stable Diffusion regenerates <strong>near-exact training photos</strong>.</p>
+      <ul>
+        <li>A real, identifiable person</li>
+        <li>Duplicated images copy most easily</li>
+      </ul>
+    </div>
+  </div>
+  <div class="cite cite-left">Carlini et al., "Extracting Training Data from Diffusion Models", USENIX Security 2023.<br>Somepalli et al., "Diffusion Art or Digital Forgery?", CVPR 2023.</div>
+</div>
+
+<!-- 10. Copilot Leaks Secrets -->
+<div class="slide">
+  <h2>Copilot Leaks Secrets</h2>
+  <div class="divider"></div>
+  <p>Code models train on public repositories, secrets and all.</p>
+  <ul class="arrow">
+    <li>Live API keys committed by mistake</li>
+    <li>Passwords and tokens in old commits</li>
+    <li>GitHub Copilot can <strong>suggest them back</strong></li>
+  </ul>
+  <p class="muted">A leaked secret in the data becomes a leaked secret in the model.</p>
+</div>
+
+<!-- 11. Three Kinds of Leak -->
+<div class="slide">
+  <h2>Three Kinds of Leak</h2>
+  <div class="divider"></div>
+  <p>Escalating questions an attacker can ask.</p>
+  <ul class="num">
+    <li><strong>Membership:</strong> was Alice in the training set?</li>
+    <li><strong>Attribute:</strong> what is Alice's diagnosis?</li>
+    <li><strong>Reconstruction:</strong> rebuild Alice's full record.</li>
+  </ul>
+  <p class="muted">Each one is harder, and each one is worse.</p>
+</div>
+
+<!-- 12. Why Membership Alone Hurts -->
+<div class="slide">
+  <h2>Why Membership Alone Hurts</h2>
+  <div class="divider"></div>
+  <p>The set itself can be the secret.</p>
+  <div class="highlight"><p>Model trained <strong>only on HIV-positive patients</strong>. Confirming Alice is a member reveals her diagnosis.</p></div>
+  <p>Membership leaks even when no record is reconstructed.</p>
+</div>
+
+<!-- 13. The Anonymization Myth -->
+<div class="slide">
+  <h2>The Anonymization Myth</h2>
+  <div class="divider"></div>
+  <p>Deleting names does <strong>not</strong> make data anonymous.</p>
+  <ul>
+    <li>Quasi-identifiers remain: ZIP, age, sex, dates</li>
+    <li>Combine them with a public list, re-identify</li>
+  </ul>
+  <p class="muted">Anonymity is a property of <em>linkage</em>, not of one column.</p>
+</div>
+
+<!-- 14. 87% From Three Fields -->
+<div class="slide">
+  <h2>87% From Three Fields</h2>
+  <div class="divider"></div>
+  <p>ZIP code + birth date + sex uniquely identify <strong>most Americans</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 480 210" style="width:100%;max-width:840px;">
+      <circle cx="178" cy="100" r="96" fill="#9aa3ad" fill-opacity="0.30" stroke="#6b7280" stroke-width="2"/>
+      <circle cx="302" cy="100" r="96" fill="#1a5296" fill-opacity="0.22" stroke="#003876" stroke-width="2"/>
+      <text x="118" y="66" font-size="17" fill="#6b7280" text-anchor="middle" font-weight="700">"Anonymous"</text>
+      <text x="118" y="86" font-size="17" fill="#6b7280" text-anchor="middle">medical data</text>
+      <text x="360" y="66" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">Public</text>
+      <text x="360" y="86" font-size="17" fill="#003876" text-anchor="middle">voter roll</text>
+      <text x="240" y="95" font-size="16" fill="#1a1a1a" text-anchor="middle" font-weight="700">ZIP ·</text>
+      <text x="240" y="114" font-size="16" fill="#1a1a1a" text-anchor="middle" font-weight="700">DOB · sex</text>
+      <text x="240" y="190" font-size="17" fill="#d94040" text-anchor="middle" font-weight="700">→ a name</text>
+    </svg>
+  </div>
+  <div class="cite cite-left">Sweeney, "k-Anonymity: A Model for Protecting Privacy", IJUFKS 2002.</div>
+</div>
+
+<!-- 15. Netflix De-Anonymized -->
+<div class="slide">
+  <h2>Netflix De-Anonymized</h2>
+  <div class="divider"></div>
+  <p>Netflix released "anonymous" movie ratings for a contest.</p>
+  <ul>
+    <li>A few public IMDb reviews were enough</li>
+    <li>Researchers <strong>linked profiles to named users</strong></li>
+  </ul>
+  <div class="cite cite-left">Narayanan and Shmatikov, "Robust De-anonymization of Large Sparse Datasets", IEEE S&amp;P 2008.</div>
+</div>
+
+<!-- 16. AOL Search Logs -->
+<div class="slide">
+  <h2>AOL Search Logs</h2>
+  <div class="divider"></div>
+  <p>In 2006, AOL released "anonymized" search queries.</p>
+  <ul class="arrow">
+    <li>Each user got a random ID, not a name</li>
+    <li>The queries themselves named the user</li>
+    <li>A journalist traced one ID to a <strong>real person</strong></li>
+  </ul>
+  <p class="muted">The leak was the data, not the missing name.</p>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 17. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>How Leakage Is Measured</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Attacks that turn a hunch into a number</p>
+</div>
+
+<!-- 18. The Attacker's Toolkit -->
+<div class="slide">
+  <h2>The Attacker's Toolkit</h2>
+  <div class="divider"></div>
+  <p>Four standard ways to probe a model.</p>
+  <div class="grid-2">
+    <div class="card"><h3>Membership inference</h3><p>Was this record in training?</p></div>
+    <div class="card"><h3>Model inversion</h3><p>Rebuild a typical input.</p></div>
+    <div class="card"><h3>Extraction</h3><p>Make it emit memorized text.</p></div>
+    <div class="card"><h3>Gradient leakage</h3><p>Invert a shared update.</p></div>
+  </div>
+</div>
+
+<!-- 19. Membership Inference -->
+<div class="slide">
+  <h2>Membership Inference</h2>
+  <div class="divider"></div>
+  <p>MIA (Membership Inference Attack) asks one question.</p>
+  <div class="def-card">
+    <h3>The question</h3>
+    <p>Was <strong>this specific record</strong> used to train the model?</p>
+  </div>
+  <p>It is the <em>unit test</em> of privacy: the simplest leak to measure.</p>
+</div>
+
+<!-- 20. The Tell: Lower Loss -->
+<div class="slide">
+  <h2>The Tell: Lower Loss</h2>
+  <div class="divider"></div>
+  <p>A model fits the points it <strong>saw</strong> better. But the two bells <em>overlap</em>.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 460 220" style="width:100%;max-width:880px;">
+      <line x1="40" y1="178" x2="430" y2="178" stroke="#999" stroke-width="1.5"/>
+      <path d="M50,178 C110,178 120,62 165,62 C210,62 220,178 280,178 Z" fill="#1a5296" fill-opacity="0.28" stroke="#003876" stroke-width="2.5"/>
+      <path d="M165,178 C225,178 235,74 280,74 C325,74 335,178 405,178 Z" fill="#9aa3ad" fill-opacity="0.30" stroke="#6b7280" stroke-width="2.5"/>
+      <text x="92" y="112" font-size="18" fill="#003876" font-weight="700">members</text>
+      <text x="98" y="132" font-size="15" fill="#003876">low loss</text>
+      <text x="312" y="120" font-size="18" fill="#6b7280" font-weight="700">non-members</text>
+      <text x="334" y="140" font-size="15" fill="#6b7280">higher loss</text>
+      <text x="366" y="197" font-size="15" fill="#666">loss →</text>
+    </svg>
+  </div>
+  <p class="muted">Pick a threshold; the overlap is the attacker's error rate.</p>
+</div>
+
+<!-- 21. Shadow Models -->
+<div class="slide">
+  <h2>Shadow Models</h2>
+  <div class="divider"></div>
+  <p>Train copycat models where you <strong>know</strong> the members.</p>
+  <ul class="num">
+    <li>Build "shadow" models on your own data.</li>
+    <li>Learn the member-vs-nonmember signal.</li>
+    <li>Apply that signal to the target model.</li>
+  </ul>
+  <div class="cite cite-left">Shokri, Stronati, Song, and Shmatikov, "Membership Inference Attacks Against Machine Learning Models", IEEE S&amp;P 2017.</div>
+</div>
+
+<!-- 22. MIA on Modern Models -->
+<div class="slide">
+  <h2>MIA on Modern Models</h2>
+  <div class="divider"></div>
+  <p>MIA now studied on <strong>LLMs and diffusion models</strong>.</p>
+  <ul class="arrow">
+    <li>Attacks adapted to billion-parameter models</li>
+    <li>2024–25 debate: is it even well-posed?</li>
+    <li>At web scale, "member" gets blurry</li>
+  </ul>
+  <p class="muted">An active and unsettled research area.</p>
+</div>
+
+<!-- 23. Model Inversion -->
+<div class="slide">
+  <h2>Model Inversion</h2>
+  <div class="divider"></div>
+  <p>Turn a model's confidence into a <strong>reconstructed face</strong>.</p>
+  <ul>
+    <li>Input: a name and access to the model</li>
+    <li>Output: a recognizable image of that person</li>
+  </ul>
+  <div class="cite cite-left">Fredrikson, Jha, and Ristenpart, "Model Inversion Attacks that Exploit Confidence Information", ACM CCS 2015.</div>
+</div>
+
+<!-- 24. Extraction Scales With Size -->
+<div class="slide">
+  <h2>Extraction Scales With Size</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:1fr auto;gap:40px;align-items:center;">
+    <div>
+      <p>Memorization is not a bug to patch out. It <strong>grows</strong>.</p>
+      <ul class="arrow">
+        <li>Bigger models memorize more</li>
+        <li>Duplicated data memorizes more</li>
+        <li>Longer training memorizes more</li>
+      </ul>
+    </div>
+    <div style="display:flex;justify-content:center;">
+      <img src="figs/carlini_duplicates.png" alt="Histogram: extraction succeeds mostly for images duplicated 100+ times" style="max-height:330px;width:auto;display:block;">
+    </div>
+  </div>
+  <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.<br>Figure: Carlini et al., "Extracting Training Data from Diffusion Models", USENIX Security 2023 — Fig. 5.</div>
+</div>
+
+<!-- 25. Leaky Gradients -->
+<div class="slide">
+  <h2>Leaky Gradients</h2>
+  <div class="divider"></div>
+  <p>In federated learning, devices share <strong>gradients</strong>, not data.</p>
+  <ul>
+    <li>But a gradient encodes the example that made it</li>
+    <li>From the gradient, reconstruct the original image</li>
+  </ul>
+  <div class="cite cite-left">Zhu, Liu, and Han, "Deep Leakage from Gradients", NeurIPS 2019.</div>
+</div>
+
+<!-- 26. When Leakage Meets Law -->
+<div class="slide">
+  <h2>When Leakage Meets Law</h2>
+  <div class="divider"></div>
+  <p>In 2023, <strong>The New York Times sued OpenAI</strong>.</p>
+  <ul class="arrow">
+    <li>Complaint showed near-verbatim article text</li>
+    <li>Model regurgitated paywalled paragraphs</li>
+    <li>Memorization became a courtroom exhibit</li>
+  </ul>
+  <p class="muted">Leakage is now a legal question, not only a technical one.</p>
+</div>
+
+<!-- 27. Regulators Step In -->
+<div class="slide">
+  <h2>Regulators Step In</h2>
+  <div class="divider"></div>
+  <p>Governments treat training data as <strong>personal data</strong>.</p>
+  <ul>
+    <li>Italy briefly banned ChatGPT in 2023 over GDPR</li>
+    <li>GDPR grants a right to deletion</li>
+    <li>The EU AI Act raises documentation duties</li>
+  </ul>
+  <p class="muted">GDPR = the EU's General Data Protection Regulation.</p>
+</div>
+
+<!-- 28. Privacy Is a Business Risk -->
+<div class="slide">
+  <h2>Privacy Is a Business Risk</h2>
+  <div class="divider"></div>
+  <p>Leakage costs money, not just reputation.</p>
+  <div class="grid-3">
+    <div class="card"><h3>Lawsuits</h3><p>Copyright and privacy claims.</p></div>
+    <div class="card"><h3>Fines</h3><p>GDPR penalties scale with revenue.</p></div>
+    <div class="card"><h3>Lost trust</h3><p>Users and partners walk away.</p></div>
+  </div>
+</div>
+
+<!-- 29. Can We Do Better? -->
+<div class="slide">
+  <h2>Can We Do Better?</h2>
+  <div class="divider"></div>
+  <p>Every attack so far assumes a <em>specific</em> adversary.</p>
+  <div class="highlight"><p>We want a guarantee against <strong>any attacker</strong>: known, future, with any side knowledge.</p></div>
+  <p>That is what differential privacy promises.</p>
+</div>
+
+<!-- ============ SECTION 03 ============ -->
+<!-- 30. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Differential Privacy</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A promise made to each individual</p>
+</div>
+
+<!-- 31. A 2006 Idea -->
+<div class="slide">
+  <h2>A 2006 Idea</h2>
+  <div class="divider"></div>
+  <p>DP (Differential Privacy) is a <strong>mathematical definition</strong> of privacy.</p>
+  <ul>
+    <li>Not a patch, not a heuristic</li>
+    <li>A property an algorithm provably has or lacks</li>
+  </ul>
+  <div class="cite cite-left">Dwork, McSherry, Nissim, and Smith, "Calibrating Noise to Sensitivity in Private Data Analysis", TCC 2006.</div>
+</div>
+
+<!-- 32. The Core Promise -->
+<div class="slide">
+  <h2>The Core Promise</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>Your presence in the data <strong>barely changes</strong> what comes out.</p></div>
+  <p>Whatever the algorithm releases, it would have released <em>almost the same thing</em> without you.</p>
+</div>
+
+<!-- 33. Two Worlds -->
+<div class="slide">
+  <h2>Two Worlds</h2>
+  <div class="divider"></div>
+  <p>Run the same algorithm on two datasets.</p>
+  <div class="diagram-flow" style="margin:22px 0;">
+    <div class="diagram-box">Data <strong>with</strong> Alice</div>
+    <div class="diagram-box">Algorithm</div>
+    <div class="diagram-box">Output <span class="muted">A</span></div>
+  </div>
+  <div class="diagram-flow" style="margin:22px 0;">
+    <div class="diagram-box">Data <strong>without</strong> Alice</div>
+    <div class="diagram-box">Algorithm</div>
+    <div class="diagram-box">Output <span class="muted">B</span></div>
+  </div>
+  <p>Outputs A and B look <strong>alike</strong>.</p>
+</div>
+
+<!-- 34. Plausible Deniability -->
+<div class="slide">
+  <h2>Plausible Deniability</h2>
+  <div class="divider"></div>
+  <p>If the output is almost the same either way:</p>
+  <ul class="arrow">
+    <li>No one can tell which world produced it</li>
+    <li>Alice can <strong>deny</strong> being in the data</li>
+    <li>And the denial is credible</li>
+  </ul>
+  <p class="muted">Deniability is the human meaning of the math.</p>
+</div>
+
+<!-- 35. Future-Proof by Design -->
+<div class="slide">
+  <h2>Future-Proof by Design</h2>
+  <div class="divider"></div>
+  <p>DP makes <strong>no assumption</strong> about the attacker.</p>
+  <ul>
+    <li>Any side information they have today</li>
+    <li>Any database released tomorrow</li>
+    <li>The guarantee still holds</li>
+  </ul>
+  <p class="muted">This is what de-anonymization stories lacked.</p>
+</div>
+
+<!-- 36. Randomness Is Required -->
+<div class="slide">
+  <h2>Randomness Is Required</h2>
+  <div class="divider"></div>
+  <p>A fixed, deterministic release <strong>cannot</strong> be DP.</p>
+  <ul>
+    <li>Same input always gives the same output</li>
+    <li>So one changed record can be detected</li>
+    <li>DP algorithms are always <em>randomized</em></li>
+  </ul>
+  <p class="muted">Randomness is the source of deniability.</p>
+</div>
+
+<!-- 37. Formal Definition -->
+<div class="slide">
+  <h2>Formal Definition</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>$(\varepsilon, \delta)$-Differential Privacy</h3>
+    <p>For neighboring datasets $D, D'$ (differ in one person) and every outcome set $S$:</p>
+    <div class="math-block">$$\Pr[M(D) \in S] \;\le\; e^{\varepsilon}\,\Pr[M(D') \in S] \;+\; \delta.$$</div>
+  </div>
+  <p>$M$ is a <strong>randomized</strong> algorithm. Small $\varepsilon,\delta$ ⇒ the two worlds look alike.</p>
+  <div class="cite cite-left">Dwork, McSherry, Nissim, and Smith, "Calibrating Noise to Sensitivity", TCC 2006.</div>
+</div>
+
+<!-- 38. In Plain Words -->
+<div class="slide">
+  <h2>In Plain Words</h2>
+  <div class="divider"></div>
+  <p>The probability of any output changes by at most a factor $e^{\varepsilon}$.</p>
+  <ul class="arrow">
+    <li>Plus a tiny slack $\delta$</li>
+    <li>When one person joins or leaves</li>
+    <li>For <strong>every</strong> possible output</li>
+  </ul>
+  <p class="muted">Read $e^{\varepsilon}$ as "a multiplier near 1".</p>
+</div>
+
+<!-- 39. Neighboring Datasets -->
+<div class="slide">
+  <h2>Neighboring Datasets</h2>
+  <div class="divider"></div>
+  <p>$D$ and $D'$ differ by exactly <strong>one person's record</strong>.</p>
+  <div class="diagram-flow" style="margin:24px 0;">
+    <div class="diagram-box">$D$: rows incl. Alice</div>
+    <div class="diagram-box">remove one row</div>
+    <div class="diagram-box">$D'$: same, minus Alice</div>
+  </div>
+  <p>DP compares the algorithm on every such neighboring pair.</p>
+</div>
+
+<!-- 40. Meet epsilon -->
+<div class="slide">
+  <h2>Meet $\varepsilon$: The Budget</h2>
+  <div class="divider"></div>
+  <p>$\varepsilon$ caps how much one person can shift the odds.</p>
+  <ul>
+    <li>Small $\varepsilon$ = strong privacy</li>
+    <li>Large $\varepsilon$ = weak privacy, more utility</li>
+  </ul>
+  <div class="highlight"><p>$\varepsilon$ is the <strong>one knob</strong> trading privacy against utility.</p></div>
+</div>
+
+<!-- 41. Reading epsilon -->
+<div class="slide">
+  <h2>Reading $\varepsilon$</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$\varepsilon \to 0$: outputs identical, no utility</li>
+    <li>$\varepsilon \approx 1$: strong, practical privacy</li>
+    <li>$\varepsilon \gg 10$: a number, not a guarantee</li>
+  </ul>
+  <p>At $\varepsilon = 1$, $e^{1} \approx 2.7$: the odds shift by at most <strong>2.7×</strong>.</p>
+</div>
+
+<!-- 42. epsilon in the Wild -->
+<div class="slide">
+  <h2>$\varepsilon$ in the Wild</h2>
+  <div class="divider"></div>
+  <p>Deployed values vary <strong>widely</strong>.</p>
+  <ul class="arrow">
+    <li>Apple QuickType (2017): reportedly several units per day</li>
+    <li>US Census 2020: a global per-release budget</li>
+    <li>No single "correct" $\varepsilon$ across products</li>
+  </ul>
+  <p class="muted">Reported figures; treat exact numbers with care.</p>
+</div>
+
+<!-- 43. Meet delta -->
+<div class="slide">
+  <h2>Meet $\delta$</h2>
+  <div class="divider"></div>
+  <p>$\delta$ is a small <strong>failure probability</strong>: the chance the guarantee slips.</p>
+  <div class="math-block">$$\delta &lt; \frac{1}{n}, \qquad n = \text{dataset size}.$$</div>
+  <p>Rule of thumb: keep $\delta$ below one over the number of people.</p>
+</div>
+
+<!-- 44. What epsilon Does NOT Mean -->
+<div class="slide">
+  <h2>What $\varepsilon$ Does NOT Mean</h2>
+  <div class="divider"></div>
+  <p>Common misreadings to avoid.</p>
+  <ul>
+    <li>Not "probability you are identified"</li>
+    <li>Not a percentage</li>
+    <li>Large $\varepsilon$ is <strong>not</strong> private</li>
+  </ul>
+  <p class="muted">$\varepsilon$ bounds a ratio of probabilities, nothing else.</p>
+</div>
+
+<!-- 45. Superpower 1: Post-Processing -->
+<div class="slide">
+  <h2>Superpower 1: Post-Processing</h2>
+  <div class="divider"></div>
+  <p>Anything you compute <strong>from</strong> a DP output is still DP.</p>
+  <ul class="arrow">
+    <li>Round it, plot it, feed it to a model</li>
+    <li>The privacy guarantee carries through</li>
+  </ul>
+  <div class="highlight"><p>You <strong>cannot</strong> undo privacy by clever analysis.</p></div>
+</div>
+
+<!-- Statistical indistinguishability: what "look alike" really means -->
+<div class="slide">
+  <h2>What "Look Alike" Really Means</h2>
+  <div class="divider"></div>
+  <p>The output is not one number. It is a <strong>distribution</strong> of possible outputs.</p>
+  <ul class="arrow">
+    <li>With Alice: one bell of likely outputs</li>
+    <li>Without Alice: a slightly shifted bell</li>
+    <li>DP forces the two bells to <strong>overlap</strong></li>
+  </ul>
+  <p class="muted">"Indistinguishable" = you cannot tell which bell a sample came from.</p>
+</div>
+
+<!-- Heights example: setup -->
+<div class="slide">
+  <h2>A Warm-Up: Guess the Nationality</h2>
+  <div class="divider"></div>
+  <p>Male heights, roughly: Korea $\sim \mathcal{N}(170, 10^2)$, Japan $\sim \mathcal{N}(168, 10^2)$ cm.</p>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 460 250" style="width:100%;max-width:920px;">
+      <line x1="40" y1="195" x2="430" y2="195" stroke="#999" stroke-width="1.5"/>
+      <path d="M55,195 C150,195 160,62 205,62 C250,62 260,195 355,195 Z" fill="#9aa3ad" fill-opacity="0.30" stroke="#6b7280" stroke-width="2.5"/>
+      <path d="M115,195 C210,195 220,54 250,54 C285,54 300,195 395,195 Z" fill="#1a5296" fill-opacity="0.26" stroke="#003876" stroke-width="2.5"/>
+      <text x="92" y="148" font-size="19" fill="#6b7280" font-weight="700">Japan</text>
+      <text x="89" y="168" font-size="16" fill="#6b7280">168 cm</text>
+      <text x="358" y="148" font-size="19" fill="#003876" font-weight="700">Korea</text>
+      <text x="358" y="168" font-size="16" fill="#003876">170 cm</text>
+      <line x1="228" y1="195" x2="228" y2="70" stroke="#d94040" stroke-width="2" stroke-dasharray="5 4"/>
+      <circle cx="228" cy="195" r="5" fill="#d94040"/>
+      <text x="165" y="42" font-size="16" fill="#d94040" font-weight="700">you meet a 171 cm person</text>
+      <text x="368" y="213" font-size="15" fill="#666">height →</text>
+    </svg>
+  </div>
+</div>
+
+<!-- Heights example: one sample useless -->
+<div class="slide">
+  <h2>One Person Tells You Little</h2>
+  <div class="divider"></div>
+  <p>A single 171 cm person: Korean or Japanese?</p>
+  <ul class="arrow">
+    <li>Means differ by only <strong>2 cm</strong></li>
+    <li>Each spread is <strong>10 cm</strong>: huge overlap</li>
+    <li>Both bells are nearly equally tall at 171</li>
+  </ul>
+  <div class="highlight"><p>Best possible guess barely beats a <strong>coin flip</strong>.</p></div>
+</div>
+
+<!-- Heights example: overlap = privacy -->
+<div class="slide">
+  <h2>Overlap Is Privacy</h2>
+  <div class="divider"></div>
+  <p>The more two distributions overlap, the less <em>any</em> test can separate them.</p>
+  <div class="def-card">
+    <h3>The DP picture</h3>
+    <p>Output-with-Alice and output-without-Alice are two bells. DP caps how far apart they sit: the gap is at most $e^{\varepsilon}$ in the odds.</p>
+  </div>
+  <p class="muted">Small $\varepsilon$ ⇒ bells almost coincide ⇒ Alice hides in the overlap.</p>
+</div>
+
+<!-- Heights example: many samples break it -->
+<div class="slide">
+  <h2>Many Samples Break It</h2>
+  <div class="divider"></div>
+  <p>Measure <strong>1000</strong> people from each country, compare the averages.</p>
+  <ul>
+    <li>Averages concentrate near 170.0 and 168.0</li>
+    <li>The two bells now barely overlap</li>
+    <li>Distinguishable: the 2 cm gap is clear</li>
+  </ul>
+  <div class="highlight"><p>Asking <strong>repeatedly</strong> erodes privacy. So DP limits how much you query.</p></div>
+</div>
+
+<!-- What DP Gives and Doesn't -->
+<div class="slide">
+  <h2>What DP Gives and Doesn't</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Gives</h3>
+      <ul class="check"><li>Holds vs <em>any</em> side knowledge</li><li>Survives post-processing</li><li>One tunable knob $\varepsilon$</li></ul></div>
+    <div><h3>Does not</h3>
+      <ul><li>Hide population facts</li><li>Make every release useful</li><li>Help if $\varepsilon$ is huge</li></ul></div>
+  </div>
+</div>
+
+<!-- 50. Individuals, Not the Crowd -->
+<div class="slide">
+  <h2>Individuals, Not the Crowd</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>DP hides whether <strong>you</strong> are in the data, not what the population looks like.</p></div>
+  <p>"Smokers get cancer" is still learnable. "Alice smokes" is not.</p>
+</div>
+
+<!-- ============ SECTION 04 ============ -->
+<!-- 51. Divider 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Achieving DP: Add Randomness</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Mechanisms: privacy by calibrated noise</p>
+</div>
+
+<!-- 52. The Recipe -->
+<div class="slide">
+  <h2>The Recipe</h2>
+  <div class="divider"></div>
+  <p>Every DP mechanism follows one shape.</p>
+  <div class="diagram-flow" style="margin:26px 0;">
+    <div class="diagram-box">Compute answer</div>
+    <div class="diagram-box">Add randomness</div>
+    <div class="diagram-box">Release</div>
+  </div>
+  <p>The noise is <strong>calibrated</strong>, not arbitrary.</p>
+</div>
+
+<!-- 53. Randomized Response -->
+<div class="slide">
+  <h2>Randomized Response</h2>
+  <div class="divider"></div>
+  <p>RR (Randomized Response) is privacy <em>before</em> any computer.</p>
+  <ul>
+    <li>A 1965 survey technique</li>
+    <li>For sensitive yes/no questions</li>
+    <li>Still the cleanest intuition for DP</li>
+  </ul>
+  <div class="cite cite-left">Warner, "Randomized Response: A Survey Technique for Eliminating Evasive Answer Bias", JASA 1965.</div>
+</div>
+
+<!-- 54. The Coin Protocol -->
+<div class="slide">
+  <h2>The Coin Protocol</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:1fr auto;gap:36px;align-items:center;">
+    <div>
+      <p>Respondent flips a coin in secret.</p>
+      <ul class="num">
+        <li>Heads: answer <strong>truthfully</strong>.</li>
+        <li>Tails: flip again, answer by that coin.</li>
+        <li>Surveyor never sees the flips.</li>
+      </ul>
+      <p>Every answer has <strong>deniability</strong>.</p>
+    </div>
+    <div style="display:flex;justify-content:center;">
+      <svg viewBox="0 0 290 230" style="width:100%;max-width:430px;">
+        <circle cx="48" cy="50" r="24" fill="#003876"/>
+        <text x="48" y="56" font-size="16" fill="#fff" text-anchor="middle" font-weight="700">flip</text>
+        <line x1="68" y1="64" x2="120" y2="92" stroke="#6b7280" stroke-width="2.5"/>
+        <line x1="68" y1="68" x2="120" y2="176" stroke="#6b7280" stroke-width="2.5"/>
+        <text x="84" y="78" font-size="16" fill="#003876" font-weight="700">heads</text>
+        <text x="84" y="150" font-size="16" fill="#6b7280" font-weight="700">tails</text>
+        <rect x="120" y="74" width="162" height="38" rx="6" fill="#e8ecf0" stroke="#003876" stroke-width="1.5"/>
+        <text x="201" y="98" font-size="16" fill="#1a1a1a" text-anchor="middle">truth</text>
+        <rect x="120" y="158" width="162" height="38" rx="6" fill="#f4f6f9" stroke="#6b7280" stroke-width="1.5"/>
+        <text x="201" y="182" font-size="15" fill="#1a1a1a" text-anchor="middle">flip again: yes / no</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- 55. Recovering the Truth -->
+<div class="slide">
+  <h2>Recovering the Truth</h2>
+  <div class="divider"></div>
+  <p>Half answer truthfully; half flip a fair coin (25% forced "yes").</p>
+  <div class="math-block">$$0.70 = \tfrac{1}{2}\,p + \tfrac{1}{2}\cdot\tfrac{1}{2} \;\Rightarrow\; p = 0.90.$$</div>
+  <p>Observe 70% "yes" ⇒ the true rate $p$ is <strong>90%</strong>.</p>
+</div>
+
+<!-- 56. Why It's Private -->
+<div class="slide">
+  <h2>Why It's Private</h2>
+  <div class="divider"></div>
+  <p>Any single "yes" might just be a coin flip.</p>
+  <ul class="arrow">
+    <li>The individual is protected</li>
+    <li>The aggregate rate still survives</li>
+    <li>Noise hides people, not the population</li>
+  </ul>
+  <p class="muted">Privacy and utility coexist, with a cost.</p>
+</div>
+
+<!-- 57. Local vs Central DP -->
+<div class="slide">
+  <h2>Local vs Central DP</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Local DP</h3>
+      <p>Noise added on <strong>each person's device</strong>. No trusted collector needed.</p></div>
+    <div><h3>Central DP</h3>
+      <p>A trusted <strong>curator</strong> holds raw data and adds noise once.</p></div>
+  </div>
+  <p class="muted">Local trusts no one, but needs far more noise.</p>
+</div>
+
+<!-- 58. Local DP in Products -->
+<div class="slide">
+  <h2>Local DP in Products</h2>
+  <div class="divider"></div>
+  <p>Real systems ship local DP today.</p>
+  <ul class="arrow">
+    <li>Apple (2017): emoji and typing statistics</li>
+    <li>Google RAPPOR: anonymous stats in Chrome</li>
+    <li>Strong privacy, but needs many users</li>
+  </ul>
+  <div class="cite cite-left">Erlingsson, Pihur, and Korolova, "RAPPOR: Randomized Aggregatable Privacy-Preserving Ordinal Response", ACM CCS 2014.</div>
+</div>
+
+<!-- 59. The Laplace Mechanism -->
+<div class="slide">
+  <h2>The Laplace Mechanism</h2>
+  <div class="divider"></div>
+  <p>To release a number privately: add noise around the true value.</p>
+  <div style="display:flex;justify-content:center;margin:4px 0;">
+    <svg viewBox="0 0 460 152" style="width:100%;max-width:820px;">
+      <line x1="30" y1="120" x2="430" y2="120" stroke="#999" stroke-width="1.5"/>
+      <path d="M60,120 L150,118 L215,60 L230,40 L245,60 L310,118 L400,120" fill="#1a5296" fill-opacity="0.20" stroke="#003876" stroke-width="2.5"/>
+      <line x1="230" y1="120" x2="230" y2="40" stroke="#003876" stroke-width="1.2" stroke-dasharray="4 4"/>
+      <text x="230" y="140" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">true q</text>
+      <text x="358" y="140" font-size="15" fill="#666" text-anchor="middle">reported = q + noise</text>
+    </svg>
+  </div>
+  <div class="math-block">$$\tilde q = q + \text{noise}, \qquad \text{noise} \propto \frac{\Delta q}{\varepsilon}.$$</div>
+  <p>Smaller $\varepsilon$ ⇒ more noise. Bigger sensitivity $\Delta q$ ⇒ more noise.</p>
+</div>
+
+<!-- 60. Sensitivity -->
+<div class="slide">
+  <h2>Sensitivity</h2>
+  <div class="divider"></div>
+  <p>$\Delta q$ = how much one person can change the answer.</p>
+  <ul>
+    <li>"How many patients?" changes by <strong>1</strong></li>
+    <li>So a count has sensitivity 1</li>
+    <li>An average or sum can be much higher</li>
+  </ul>
+  <p class="muted">Calibrate the noise to the worst-case one-person change.</p>
+</div>
+
+<!-- 61. Noisy Count Example -->
+<div class="slide">
+  <h2>Noisy Count Example</h2>
+  <div class="divider"></div>
+  <p>True count of patients in a study: <strong>1000</strong>.</p>
+  <div class="math-block">$$1000 \;+\; \text{small noise} \;\Rightarrow\; \text{report } 1003.$$</div>
+  <p>Whether one patient is in or out is now <em>hidden</em> by the noise.</p>
+</div>
+
+<!-- 62. Gaussian Mechanism -->
+<div class="slide">
+  <h2>Gaussian Mechanism</h2>
+  <div class="divider"></div>
+  <p>The other standard choice: <strong>bell-curve noise</strong>.</p>
+  <ul>
+    <li>Pairs naturally with $(\varepsilon, \delta)$-DP</li>
+    <li>The workhorse inside private deep learning</li>
+  </ul>
+  <p class="muted">Same recipe, different noise shape.</p>
+</div>
+
+<!-- 63. More Noise, More Privacy -->
+<div class="slide">
+  <h2>More Noise, More Privacy</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>Privacy and accuracy <strong>pull against each other</strong>. The noise is the price you pay.</p></div>
+  <p>There is no free private release: every guarantee costs some utility.</p>
+</div>
+
+<!-- ============ SECTION 05 ============ -->
+<!-- 64. Divider 05 -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Private Machine Learning</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Training a model under a privacy budget</p>
+</div>
+
+<!-- 65. From Statistics to Models -->
+<div class="slide">
+  <h2>From Statistics to Models</h2>
+  <div class="divider"></div>
+  <p>A trained model is just a <strong>very complex query</strong> over the data.</p>
+  <ul>
+    <li>Millions of numbers computed from records</li>
+    <li>Same leakage risk as any statistic</li>
+    <li>So the same DP idea applies</li>
+  </ul>
+</div>
+
+<!-- 66. The Naive Hope Fails -->
+<div class="slide">
+  <h2>The Naive Hope Fails</h2>
+  <div class="divider"></div>
+  <p>"The model generalizes, so it won't memorize."</p>
+  <div class="highlight"><p>That hope is <strong>false</strong> — recall GPT-2, the canary, the diffusion portraits.</p></div>
+  <p>Generalization and memorization happen together.</p>
+</div>
+
+<!-- 67. DP-SGD -->
+<div class="slide">
+  <h2>DP-SGD</h2>
+  <div class="divider"></div>
+  <p>DP-SGD (Differentially Private Stochastic Gradient Descent) is the workhorse.</p>
+  <div class="ta-algo" style="max-width:900px; margin:18px auto;">
+    <ol>
+      <li>Compute the gradient for each example.</li>
+      <li><strong>Clip</strong> each gradient to a max length.</li>
+      <li><strong>Add</strong> Gaussian noise to the batch sum.</li>
+      <li>Take the step; track the spent $\varepsilon$.</li>
+    </ol>
+  </div>
+  <div class="cite cite-left">Abadi, Chu, Goodfellow, McMahan, Mironov, Talwar, and Zhang, "Deep Learning with Differential Privacy", ACM CCS 2016.</div>
+</div>
+
+<!-- 68. Why Clip? -->
+<div class="slide">
+  <h2>Why Clip?</h2>
+  <div class="divider"></div>
+  <p>Clipping <strong>bounds one example's influence</strong>.</p>
+  <ul class="arrow">
+    <li>No single record can dominate the step</li>
+    <li>That bound is the sensitivity $\Delta q$</li>
+    <li>So fixed noise can mask any one person</li>
+  </ul>
+  <p class="muted">Clip first, then the noise has a known job to do.</p>
+</div>
+
+<!-- 69. Why Add Noise? -->
+<div class="slide">
+  <h2>Why Add Noise?</h2>
+  <div class="divider"></div>
+  <p>Noise <strong>hides each example's contribution</strong> to the update.</p>
+  <ul>
+    <li>The true gradient leaks information</li>
+    <li>The noisy gradient gives deniability</li>
+    <li>Same two-worlds promise, every step</li>
+  </ul>
+</div>
+
+<!-- 70. The Privacy Accountant -->
+<div class="slide">
+  <h2>The Privacy Accountant</h2>
+  <div class="divider"></div>
+  <p>Thousands of noisy steps, each spending budget.</p>
+  <ul class="arrow">
+    <li>Track total $\varepsilon$ across all steps</li>
+    <li>Tools: the moments accountant, Rényi DP</li>
+    <li>They give a tight running total</li>
+  </ul>
+  <p class="muted">Composition, applied at training scale.</p>
+</div>
+
+<!-- 71. The Utility Cost -->
+<div class="slide">
+  <h2>The Utility Cost</h2>
+  <div class="divider"></div>
+  <p>DP-SGD models are <strong>less accurate</strong>.</p>
+  <div class="highlight"><p>The accuracy gap between private and non-private training <em>is</em> the cost of privacy.</p></div>
+  <p>Smaller $\varepsilon$ ⇒ bigger gap.</p>
+</div>
+
+<!-- 72. Numbers on a Benchmark -->
+<div class="slide">
+  <h2>Numbers on a Benchmark</h2>
+  <div class="divider"></div>
+  <p>On CIFAR-10, strong privacy once cost <strong>a lot</strong> of accuracy.</p>
+  <ul>
+    <li>Early DP-SGD: a large gap vs non-private</li>
+    <li>Better methods + pretraining shrank it</li>
+    <li>The gap keeps narrowing year by year</li>
+  </ul>
+  <p class="muted">A trend, not a fixed number.</p>
+</div>
+
+<!-- 73. More Data Helps -->
+<div class="slide">
+  <h2>More Data Helps</h2>
+  <div class="divider"></div>
+  <p>Privacy gets <strong>cheaper</strong> as the dataset grows.</p>
+  <ul class="arrow">
+    <li>Noise is per-step, not per-person</li>
+    <li>More people ⇒ each one matters less</li>
+    <li>The per-person noise washes out</li>
+  </ul>
+  <p class="muted">Big data is friendlier to DP.</p>
+</div>
+
+<!-- 74. Federated Learning -->
+<div class="slide">
+  <h2>Federated Learning</h2>
+  <div class="divider"></div>
+  <p>FL (Federated Learning): send the <strong>model to the data</strong>. Only updates leave.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 460 210" style="width:100%;max-width:860px;">
+      <rect x="190" y="12" width="94" height="46" rx="8" fill="#003876"/>
+      <text x="237" y="41" font-size="18" fill="#fff" text-anchor="middle" font-weight="700">Server</text>
+      <rect x="30" y="150" width="74" height="48" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
+      <rect x="200" y="150" width="74" height="48" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
+      <rect x="370" y="150" width="74" height="48" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
+      <text x="67" y="179" font-size="16" text-anchor="middle" fill="#003876">phone</text>
+      <text x="237" y="179" font-size="16" text-anchor="middle" fill="#003876">phone</text>
+      <text x="407" y="179" font-size="16" text-anchor="middle" fill="#003876">phone</text>
+      <defs><marker id="flar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2e8b57"/></marker></defs>
+      <line x1="67" y1="150" x2="205" y2="60" stroke="#2e8b57" stroke-width="2.5" marker-end="url(#flar)"/>
+      <line x1="237" y1="150" x2="237" y2="60" stroke="#2e8b57" stroke-width="2.5" marker-end="url(#flar)"/>
+      <line x1="407" y1="150" x2="269" y2="60" stroke="#2e8b57" stroke-width="2.5" marker-end="url(#flar)"/>
+      <text x="312" y="108" font-size="15" fill="#2e8b57" font-weight="700">updates only</text>
+    </svg>
+  </div>
+  <p class="muted">Raw data never leaves the phone.</p>
+  <div class="cite cite-left">McMahan, Moore, Ramage, Hampson, and Aguera y Arcas, "Communication-Efficient Learning of Deep Networks from Decentralized Data", AISTATS 2017.</div>
+</div>
+
+<!-- 75. FL in Your Pocket -->
+<div class="slide">
+  <h2>FL in Your Pocket</h2>
+  <div class="divider"></div>
+  <p>You already use federated learning.</p>
+  <ul class="arrow">
+    <li>Gboard learns next-word prediction</li>
+    <li>It trains across millions of phones</li>
+    <li>Your keystrokes never get uploaded</li>
+  </ul>
+  <p class="muted">The model improves; the typing stays local.</p>
+</div>
+
+<!-- 76. FL Still Leaks -->
+<div class="slide">
+  <h2>FL Still Leaks</h2>
+  <div class="divider"></div>
+  <p>Keeping data local is <strong>not</strong> the same as privacy.</p>
+  <ul>
+    <li>The shared gradients still encode inputs</li>
+    <li>Raw gradients can reconstruct a user image</li>
+  </ul>
+  <div class="cite cite-left">Zhu, Liu, and Han, "Deep Leakage from Gradients", NeurIPS 2019.</div>
+</div>
+
+<!-- 77. Plugging the Leak -->
+<div class="slide">
+  <h2>Plugging the Leak</h2>
+  <div class="divider"></div>
+  <p>Combine two defenses on the updates.</p>
+  <div class="grid-2">
+    <div class="card"><h3>Secure aggregation</h3><p>Server sees only the <strong>sum</strong> of updates.</p></div>
+    <div class="card"><h3>DP noise</h3><p>Add calibrated noise to those updates.</p></div>
+  </div>
+  <p class="muted">Together: federated learning that actually protects users.</p>
+</div>
+
+<!-- ============ SECTION 06 ============ -->
+<!-- 78. Divider 06 -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Frontier 2025–26</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Can foundation models be private?</p>
+</div>
+
+<!-- 79. Private Fine-Tuning Works -->
+<div class="slide">
+  <h2>Private Fine-Tuning Works</h2>
+  <div class="divider"></div>
+  <p>DP fine-tuning of large pretrained models reaches <strong>near non-private accuracy</strong>.</p>
+  <ul class="arrow">
+    <li>Pretrain on public data, fine-tune privately</li>
+    <li>Momentum continued through 2023–25</li>
+  </ul>
+  <div class="cite cite-left">Yu et al., "Differentially Private Fine-tuning of Language Models", ICLR 2022.<br>Li, Tramèr, Liang, and Hashimoto, "Large Language Models Can Be Strong Differentially Private Learners", ICLR 2022.</div>
+</div>
+
+<!-- 80. Private Synthetic Data -->
+<div class="slide">
+  <h2>Private Synthetic Data</h2>
+  <div class="divider"></div>
+  <p>Generate a <strong>safe, shareable dataset</strong> under DP.</p>
+  <ul>
+    <li>The generator carries the privacy guarantee</li>
+    <li>Train freely on the synthetic output</li>
+    <li>Post-processing keeps it private</li>
+  </ul>
+  <p class="muted">A growing trend for sharing sensitive data.</p>
+</div>
+
+<!-- 81. The Web-Scale Puzzle -->
+<div class="slide">
+  <h2>The Web-Scale Puzzle</h2>
+  <div class="divider"></div>
+  <p>What does $\varepsilon$ mean when pretraining on the <strong>public internet</strong>?</p>
+  <ul class="arrow">
+    <li>Whose privacy are we protecting?</li>
+    <li>What counts as a neighboring dataset?</li>
+    <li>Still an open question</li>
+  </ul>
+</div>
+
+<!-- 82. Frontier Models Still Memorize -->
+<div class="slide">
+  <h2>Frontier Models Still Memorize</h2>
+  <div class="divider"></div>
+  <p>The problem is <strong>not solved</strong>.</p>
+  <ul>
+    <li>2023–24 extraction hit production chat models</li>
+    <li>Memorized data still came out</li>
+  </ul>
+  <div class="cite cite-left">Nasr et al., "Scalable Extraction of Training Data from (Production) Language Models", 2023.</div>
+</div>
+
+<!-- 83. Auditing Privacy -->
+<div class="slide">
+  <h2>Auditing Privacy</h2>
+  <div class="divider"></div>
+  <p>Estimate the <strong>real</strong> $\varepsilon$ by attacking the model.</p>
+  <ul class="arrow">
+    <li>Run membership attacks, measure the leak</li>
+    <li>Sometimes the guarantee is loose</li>
+    <li>Trust, but verify</li>
+  </ul>
+  <div class="cite cite-left">Jagielski, Ullman, and Oprea, "Auditing Differentially Private Machine Learning", NeurIPS 2020.</div>
+</div>
+
+<!-- 84. Unlearning as Plan B -->
+<div class="slide">
+  <h2>Unlearning as Plan B</h2>
+  <div class="divider"></div>
+  <p>If you cannot prevent memorization, can you <strong>delete</strong> it later?</p>
+  <ul>
+    <li>Remove one person after training</li>
+    <li>Without retraining from scratch</li>
+  </ul>
+  <p class="muted">Machine unlearning: delete a person after training.</p>
+</div>
+
+<!-- 85. Privacy in the Stack -->
+<div class="slide">
+  <h2>Privacy in the Stack</h2>
+  <div class="divider"></div>
+  <p>Privacy is also a <strong>systems</strong> problem.</p>
+  <ul class="arrow">
+    <li>Apple Private Cloud Compute (2024)</li>
+    <li>Confidential computing on trusted hardware</li>
+    <li>Server-side inference without exposing data</li>
+  </ul>
+  <p class="muted">DP and secure hardware are complementary.</p>
+</div>
+
+<!-- 86. The Law Is Catching Up -->
+<div class="slide">
+  <h2>The Law Is Catching Up</h2>
+  <div class="divider"></div>
+  <p>Regulation is pushing DP and auditing into practice.</p>
+  <ul>
+    <li>GDPR right-to-be-forgotten</li>
+    <li>The EU AI Act's transparency duties</li>
+    <li>A wave of US state privacy laws</li>
+  </ul>
+</div>
+
+<!-- 87. Open Problems -->
+<div class="slide">
+  <h2>Open Problems</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li>A meaningful $\varepsilon$ for pretraining</li>
+    <li>Cheap private fine-tuning</li>
+    <li>Verifying deletion actually worked</li>
+    <li>Privacy, utility, and fairness together</li>
+  </ul>
+  <p class="muted">The frontier is wide open.</p>
+</div>
+
+<!-- ============ WRAP ============ -->
+<!-- 88. Where to Go Deeper -->
+<div class="slide">
+  <h2>Where to Go Deeper</h2>
+  <div class="divider"></div>
+  <p>The full mathematical treatment of differential privacy.</p>
+  <div class="def-card">
+    <h3>The rigorous version</h3>
+    <p>Reconstruction attacks, pure vs approximate DP, composition, Rényi DP, the complete DP-SGD analysis.</p>
+  </div>
+</div>
+
+<!-- 89. Demos to Play With -->
+<div class="slide">
+  <h2>Demos to Play With</h2>
+  <div class="divider"></div>
+  <div class="demo-card">
+    <h3>Demo</h3>
+    <ul class="check">
+      <li>A randomized-response coin simulator</li>
+      <li>An $\varepsilon$ vs accuracy slider</li>
+      <li>A membership-inference attack</li>
+    </ul>
+  </div>
+  <p class="muted">Play first, then read the proofs.</p>
+</div>
+
+<!-- 90. Key Takeaways -->
+<div class="slide">
+  <h2>Key Takeaways</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li>Models leak; anonymization fails to linkage</li>
+    <li>DP: your presence barely changes the output</li>
+    <li>One knob, $\varepsilon$, trading privacy for utility</li>
+    <li>DP-SGD = clip + noise; cost shrinks with data</li>
+  </ul>
+  <div class="highlight"><p><strong>Membership inference</strong> is the attack DP is built to stop.</p></div>
+</div>
+
+<!-- 91. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$\varepsilon$</div>
+  <p class="big-word-sub">One number between privacy and utility.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 93</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

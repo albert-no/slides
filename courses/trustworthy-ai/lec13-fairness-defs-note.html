@@ -1,0 +1,341 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 13 — Script</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+body { max-width: 880px; margin: 40px auto; padding: 0 28px; color: var(--charcoal); font-family: 'Yonsei','Noto Sans',Arial,sans-serif; line-height: 1.65; }
+h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
+article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
+.kt { color: var(--yonsei-blue); font-weight: 700; }
+</style></head><body>
+<h1>Lecture 13 — Fairness I: Definitions &amp; Impossibility · Speaker Script</h1>
+<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+
+<article>
+<h2>Fairness I: Definitions &amp; Impossibility</h2>
+<p>Welcome to Lecture 13. Today we ask what "fair" even means for a machine-learning system, and we will see a surprising result: several reasonable definitions of fairness cannot all hold at once.</p>
+<p><span class="kt">Key takeaway:</span> Fairness is not one thing, and you cannot satisfy every version simultaneously.</p>
+</article>
+
+<article>
+<h2>Contents</h2>
+<p>Six steps: where bias comes from, three group-fairness definitions, the COMPAS controversy, the impossibility theorem, individual and causal fairness, and fairness in generative models.</p>
+<p><span class="kt">Key takeaway:</span> From sources of bias, to definitions, to why they collide.</p>
+</article>
+
+<article>
+<h2>01 — Sources of Bias</h2>
+<p>First section. Before defining fairness, we look at where unfairness sneaks into the machine-learning pipeline.</p>
+<p><span class="kt">Key takeaway:</span> Bias is built in long before the model is trained.</p>
+</article>
+
+<article>
+<h2>A Model Mirrors Its World</h2>
+<p>A model learns patterns from training data, which is a record of past decisions and outcomes. If the past was biased, the model absorbs that bias.</p>
+<p><span class="kt">Key takeaway:</span> Garbage in, garbage out applies to fairness too.</p>
+</article>
+
+<article>
+<h2>Bias Is Not a Bug</h2>
+<p>Often the model works exactly as designed: it faithfully reproduces a world that was already unfair. High accuracy on biased data is not fairness.</p>
+<p><span class="kt">Key takeaway:</span> Accuracy and fairness are different goals.</p>
+</article>
+
+<article>
+<h2>Three Places Bias Enters</h2>
+<p>Bias can enter through biased data (some groups under-sampled), biased labels (the target itself records prejudice), and feedback loops (predictions reshape future data).</p>
+<p><span class="kt">Key takeaway:</span> Data, labels, and loops are the three entry points.</p>
+</article>
+
+<article>
+<h2>Biased Data: Who Got Sampled</h2>
+<p>If a dataset under-represents a group, the model performs worse for that group. Classic example: face datasets skewed toward lighter skin tones.</p>
+<p><span class="kt">Key takeaway:</span> A model is only as broad as its training examples.</p>
+</article>
+
+<article>
+<h2>Biased Labels: A Hiring Example</h2>
+<p>Train a resume screener on past hires from a company that historically hired mostly men. "Good candidate" becomes "looks like past hires", and the model penalizes signals of being a woman. Amazon scrapped exactly such a tool in 2018.</p>
+<p><span class="kt">Key takeaway:</span> When the label encodes past prejudice, the model learns it.</p>
+</article>
+
+<article>
+<h2>The Label Is the Problem</h2>
+<p>We rarely measure what we care about. We want "will repay the loan" but record "was approved before". The proxy carries the old prejudice forward, so picking the target variable is itself a fairness decision.</p>
+<p><span class="kt">Key takeaway:</span> Choosing what to predict is a fairness choice.</p>
+</article>
+
+<article>
+<h2>Feedback Loops: A Lending Example</h2>
+<p>Deny a group more often, and they build no credit track record, so the next dataset "shows" they are risky. The bias confirms itself in a closed loop.</p>
+<p><span class="kt">Key takeaway:</span> Predictions today become the biased data of tomorrow.</p>
+</article>
+
+<article>
+<h2>Why "Just Drop Race" Fails</h2>
+<p>Removing the sensitive column does not remove the bias. ZIP code, name, and school all correlate with race, so the model rebuilds the proxy on its own.</p>
+<p><span class="kt">Key takeaway:</span> Blindness to a feature is not fairness.</p>
+</article>
+
+<article>
+<h2>Setting Up the Notation</h2>
+<p>We fix three symbols for the rest of the lecture: $A$ is the protected group attribute, $Y$ is the true label, and $\hat Y$ is the model's prediction. Example: race, re-offends, "high risk".</p>
+<p><span class="kt">Key takeaway:</span> $A$, $Y$, $\hat Y$ are the vocabulary for every fairness definition.</p>
+</article>
+
+<article>
+<h2>02 — Group Fairness Criteria</h2>
+<p>Second section. We define three group-fairness criteria, each as a single conditional-probability statement, intuition first.</p>
+<p><span class="kt">Key takeaway:</span> Three definitions, each a one-line probability statement.</p>
+</article>
+
+<article>
+<h2>The Confusion Matrix, Per Group</h2>
+<p>Every group-fairness metric is read off the confusion matrix: true positives, false positives, false negatives, true negatives. The trick is to compute it separately for each group and compare.</p>
+<p><span class="kt">Key takeaway:</span> Fairness metrics compare confusion-matrix cells across groups.</p>
+</article>
+
+<article>
+<h2>Demographic Parity</h2>
+<p>Intuition: every group gets positive predictions at the same rate. Formally, $\Pr[\hat Y = 1 \mid A = a] = \Pr[\hat Y = 1 \mid A = b]$. Same approval rate, period.</p>
+<p><span class="kt">Key takeaway:</span> Demographic parity equalizes the positive-prediction rate.</p>
+</article>
+
+<article>
+<h2>Parity Ignores the Truth</h2>
+<p>Demographic parity looks only at $\hat Y$, never at $Y$. It demands equal selection rates even if the groups genuinely differ in outcomes, so it is strong on access but blind to who actually qualifies.</p>
+<p><span class="kt">Key takeaway:</span> Parity equalizes access without checking the truth.</p>
+</article>
+
+<article>
+<h2>Equalized Odds</h2>
+<p>Intuition: equal error rates, conditioned on the true label. Formally, $\Pr[\hat Y = 1 \mid Y = y, A = a]$ is the same across groups for each value of $y$. This means matched false-positive and true-positive rates.</p>
+<p><span class="kt">Key takeaway:</span> Equalized odds equalizes error rates given the truth.</p>
+</article>
+
+<article>
+<h2>Equal Odds, Equal Mistakes</h2>
+<p>Because we condition on $Y$, innocent people share the same false-alarm rate and guilty people share the same hit rate. A weaker version, equal opportunity, only fixes the false-negative side.</p>
+<p><span class="kt">Key takeaway:</span> Equalized odds shares the burden of errors across groups.</p>
+</article>
+
+<article>
+<h2>Calibration</h2>
+<p>Intuition: a score means the same thing in every group. Formally, $\Pr[Y = 1 \mid \hat S = s, A = a] = s$ for every group. Among everyone scored $0.7$, roughly $70\%$ are truly positive.</p>
+<p><span class="kt">Key takeaway:</span> Calibration makes the score's meaning group-independent.</p>
+</article>
+
+<article>
+<h2>Calibration Trusts the Score</h2>
+<p>Calibration is what makes a risk score usable: a $0.7$ should mean $0.7$ no matter the group, otherwise the same number misleads different people. Natural for lenders, judges, and doctors reading a probability.</p>
+<p><span class="kt">Key takeaway:</span> Calibration is the property decision-makers implicitly assume.</p>
+</article>
+
+<article>
+<h2>Three Criteria, Three Questions</h2>
+<p>Side by side: demographic parity equalizes $\Pr[\hat Y = 1]$, equalized odds equalizes error rates given $Y$, calibration equalizes the meaning of the score. Each is reasonable on its own.</p>
+<p><span class="kt">Key takeaway:</span> Three sensible criteria that, as we will see, will not coexist.</p>
+</article>
+
+<article>
+<h2>03 — The COMPAS Case</h2>
+<p>Third section. A real controversy that made the impossibility result concrete and public.</p>
+<p><span class="kt">Key takeaway:</span> A famous dispute that was really a clash of definitions.</p>
+</article>
+
+<article>
+<h2>What COMPAS Is</h2>
+<p>COMPAS is a commercial recidivism risk score, sold by the company Northpointe, used in US courts. It outputs a 1-to-10 risk score that judges saw during bail and sentencing.</p>
+<p><span class="kt">Key takeaway:</span> A risk score with real consequences for real defendants.</p>
+</article>
+
+<article>
+<h2>The ProPublica Investigation</h2>
+<p>In 2016, ProPublica journalists audited COMPAS by race and found that among defendants who did not re-offend, Black defendants were flagged high-risk far more often. That is a false-positive-rate gap.</p>
+<p><span class="kt">Key takeaway:</span> ProPublica found unequal false-positive rates across race.</p>
+</article>
+
+<article>
+<h2>False Positives, By Group</h2>
+<p>The bar chart shows, among people who did not re-offend, the share labeled high-risk: much higher for Black defendants than White. (Figures illustrative of the ProPublica analysis; a real chart is the TODO.)</p>
+<p><span class="kt">Key takeaway:</span> Innocent Black defendants were far more likely to be wrongly flagged.</p>
+</article>
+
+<article>
+<h2>Northpointe Responds</h2>
+<p>The vendor argued the score was fair: a given risk score predicted the same re-offense rate for Black and White defendants alike. That property is exactly calibration.</p>
+<p><span class="kt">Key takeaway:</span> Northpointe defended the tool on calibration grounds.</p>
+</article>
+
+<article>
+<h2>Both Sides Were Right</h2>
+<p>No one was lying. ProPublica measured equalized odds (false-positive rates) and found them unequal; Northpointe measured calibration and found it held. They simply checked different fairness criteria.</p>
+<p><span class="kt">Key takeaway:</span> The disagreement was about definitions, not facts.</p>
+</article>
+
+<article>
+<h2>Could COMPAS Be Both?</h2>
+<p>The natural question: could a fixed-up score satisfy both calibration and equal error rates at once? The next section proves that in general it cannot. This is a mathematical wall, not a tuning failure.</p>
+<p><span class="kt">Key takeaway:</span> The conflict is structural, not a bug to patch.</p>
+</article>
+
+<article>
+<h2>04 — The Impossibility Theorem</h2>
+<p>Fourth section. The formal result that explains why COMPAS could not be fixed to satisfy everyone.</p>
+<p><span class="kt">Key takeaway:</span> You cannot have all three fairness criteria at once.</p>
+</article>
+
+<article>
+<h2>The Key Ingredient: Base Rates</h2>
+<p>The base rate $p_a = \Pr[Y = 1 \mid A = a]$ is how common a positive outcome is in a group. When two groups have different base rates, the impossibility kicks in.</p>
+<p><span class="kt">Key takeaway:</span> Differing base rates are what force the conflict.</p>
+</article>
+
+<article>
+<h2>The Impossibility Theorem</h2>
+<p>Kleinberg, Mullainathan, and Raghavan (2017): if base rates differ between groups, no score can be calibrated and have equal false-positive and false-negative rates at the same time, except in trivial cases (perfect prediction or equal base rates).</p>
+<p><span class="kt">Key takeaway:</span> Calibration plus equal error rates is impossible when base rates differ.</p>
+</article>
+
+<article>
+<h2>Two Proofs, Same Wall</h2>
+<p>The same result was found independently in 2017: Chouldechova framed it directly through the COMPAS error rates, while Kleinberg, Mullainathan, and Raghavan gave the general three-criteria version.</p>
+<p><span class="kt">Key takeaway:</span> Two independent proofs reached the same impossibility.</p>
+</article>
+
+<article>
+<h2>Pick Two of Three</h2>
+<p>The triangle has calibration, equal false-positive rate, and equal false-negative rate at its corners. Any two are achievable together; all three are not, whenever base rates differ.</p>
+<p><span class="kt">Key takeaway:</span> You may pick any two corners, never all three.</p>
+</article>
+
+<article>
+<h2>Demo: Watch Them Conflict</h2>
+<p>A hands-on demo: take a COMPAS-style score on two groups with different base rates, then compute the three metrics in Python. Calibrate the score, then measure false-positive and false-negative rates per group.</p>
+<p><span class="kt">Key takeaway:</span> We will see the conflict in actual numbers.</p>
+</article>
+
+<article>
+<h2>Demo: The Numbers Don't Reconcile</h2>
+<p>With base rates $0.50$ and $0.25$, a calibrated score yields false-positive rates of about $0.42$ and $0.20$ for the two groups. No threshold rescues both error rates; the base-rate gap forces the split.</p>
+<p><span class="kt">Key takeaway:</span> Calibration holds, yet the error rates pull apart.</p>
+</article>
+
+<article>
+<h2>Why the Gap Is Forced</h2>
+<p>Calibration ties each score to its group's base rate. Different base rates mean different score mixes, so the errors must land unevenly, and fixing one error rate breaks the other. The conflict is arithmetic.</p>
+<p><span class="kt">Key takeaway:</span> The gap is forced by arithmetic, not by a bad model.</p>
+</article>
+
+<article>
+<h2>So Which One Do We Pick?</h2>
+<p>Since we cannot have all three, we must choose, and there is no formula for the choice. Choosing a fairness criterion is a value judgment that depends on the stakes, the harm, and the context.</p>
+<p><span class="kt">Key takeaway:</span> The choice of criterion is a value judgment.</p>
+</article>
+
+<article>
+<h2>Choosing by Context</h2>
+<p>The domain decides which error is unacceptable. For wrongful arrest, a false positive is the worst harm, so equalize false-positive rates; for a missed diagnosis, a false negative is worst, so equalize false-negative rates.</p>
+<p><span class="kt">Key takeaway:</span> Context determines which error you most want to equalize.</p>
+</article>
+
+<article>
+<h2>05 — Individual &amp; Causal Fairness</h2>
+<p>Fifth section. Two views that go beyond group averages to the level of individuals and causes.</p>
+<p><span class="kt">Key takeaway:</span> Group fairness is not the whole story.</p>
+</article>
+
+<article>
+<h2>Group Fairness Can Hide Harm</h2>
+<p>Equal group averages can mask injustice to individuals: accept strong and weak members of a group at just the right rate, the averages match, yet specific people are still wronged.</p>
+<p><span class="kt">Key takeaway:</span> Group balance is not person-level fairness.</p>
+</article>
+
+<article>
+<h2>Individual Fairness</h2>
+<p>Intuition: similar people should receive similar outcomes. Dwork and colleagues formalized this as Fairness Through Awareness: two individuals who are similar for the task should get nearly the same prediction.</p>
+<p><span class="kt">Key takeaway:</span> Treat similar individuals similarly.</p>
+</article>
+
+<article>
+<h2>The Hard Part: "Similar"</h2>
+<p>The whole idea rests on a similarity metric: who counts as similar for this task? Defining that metric well is the real problem, and a bad metric just relaunders the bias.</p>
+<p><span class="kt">Key takeaway:</span> The hard question moves into the similarity metric.</p>
+</article>
+
+<article>
+<h2>A Causal View</h2>
+<p>Causal fairness asks a counterfactual: would the decision change if this person had been a different race, with everything else held equal? If yes, the protected attribute caused the outcome.</p>
+<p><span class="kt">Key takeaway:</span> Causal fairness asks whether the attribute caused the decision.</p>
+</article>
+
+<article>
+<h2>Fair and Unfair Paths</h2>
+<p>A causal graph lets us separate how an attribute matters. A path through a legitimate factor like a test score may be allowed, while a path through a proxy like ZIP code may be ruled unfair.</p>
+<p><span class="kt">Key takeaway:</span> Some causal paths are acceptable, others are proxies for bias.</p>
+</article>
+
+<article>
+<h2>Causal Fairness Needs a Model</h2>
+<p>Counterfactuals require a causal graph: you must assume how the variables relate, and different assumptions yield different verdicts. The framing is powerful but demanding to apply.</p>
+<p><span class="kt">Key takeaway:</span> Causal fairness is only as good as its assumed graph.</p>
+</article>
+
+<article>
+<h2>06 — Fairness in Generative Models</h2>
+<p>Sixth section. How fairness shifts when the model generates content instead of classifying it.</p>
+<p><span class="kt">Key takeaway:</span> Generative models need a new fairness lens.</p>
+</article>
+
+<article>
+<h2>New Surface, Old Problem</h2>
+<p>Generative models have no clean label $Y$ to equalize, so there is no confusion matrix. Harm instead shows up in what they produce: stereotypes, erasure, and skewed representation.</p>
+<p><span class="kt">Key takeaway:</span> Without a label, fairness becomes about outputs.</p>
+</article>
+
+<article>
+<h2>Text-to-Image Stereotyping</h2>
+<p>Prompt a generator with a neutral occupation and watch the skew: "a CEO" returns mostly men, "a nurse" mostly women. The model often amplifies, not just mirrors, the imbalance in its training data. (A real occupation-grid figure is the TODO.)</p>
+<p><span class="kt">Key takeaway:</span> Generators exaggerate occupational stereotypes.</p>
+</article>
+
+<article>
+<h2>Gender Shades</h2>
+<p>Buolamwini and Gebru's landmark 2018 audit of commercial face classifiers found error rates highest for darker-skinned women and lowest for lighter-skinned men, with accuracy gaps up to about 34 points.</p>
+<p><span class="kt">Key takeaway:</span> Gender Shades exposed huge intersectional accuracy gaps.</p>
+</article>
+
+<article>
+<h2>Auditing Is the Tool</h2>
+<p>When you cannot define $Y$, you measure outputs: build a balanced benchmark across groups, run the system, and tabulate the gaps. Gender Shades set the template for this kind of audit.</p>
+<p><span class="kt">Key takeaway:</span> Auditing turns a fairness complaint into a measurable number.</p>
+</article>
+
+<article>
+<h2>Frontier 2025–26</h2>
+<p>Fairness work now centers on foundation models: auditing text and image generators at scale, studying intersectional gaps rather than single attributes, and noting that naive "balancing" fixes can backfire and draw their own backlash.</p>
+<p><span class="kt">Key takeaway:</span> The frontier is large-scale audits and intersectional gaps.</p>
+</article>
+
+<article>
+<h2>The Open Tension</h2>
+<p>Fairness, accuracy, and privacy pull against each other. No single metric captures "fair", the impossibility results are permanent, and so part of the decision stays human.</p>
+<p><span class="kt">Key takeaway:</span> Trade-offs among fairness, accuracy, and privacy are here to stay.</p>
+</article>
+
+<article>
+<h2>Key Takeaways</h2>
+<p>Bias enters through data, labels, and feedback loops. The three group-fairness definitions are demographic parity, equalized odds, and calibration. COMPAS showed both sides measuring different fairness, and calibration plus equal error rates is impossible when base rates differ.</p>
+<p><span class="kt">Key takeaway:</span> Choosing a fairness criterion is ultimately a value judgment.</p>
+</article>
+
+<article>
+<h2>Pick two.</h2>
+<p>Closing thought: fairness is a choice among competing definitions, not a single formula you can optimize.</p>
+<p><span class="kt">Key takeaway:</span> Fairness is a choice, not a formula.</p>
+</article>
+
+</body></html>

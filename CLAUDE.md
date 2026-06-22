@@ -37,6 +37,8 @@ Only the authoring source (and its image assets) are committed. `<talk>.standalo
 
 The design rule, type scale, color tokens, components, and recipes live in **`DESIGN_SYSTEM.md`**. Read it before editing slides. The 4 ranked priorities (font sizes → line breaks → overflow → empty space) are non-negotiable.
 
+**Default to visually rich slides.** Every content slide should aim to carry a diagram, figure, chart, or SVG — text-only bullets are a fallback, not the goal. Build inline HTML+SVG concept diagrams (drawn big — `max-width` ~820–920px, large labels), reuse or capture real paper figures where they help, and when a real figure or richer diagram can't be made now, leave a `<!-- TODO real figure: … -->` marker on the slide rather than shipping bare bullets. Keep each slide self-contained (no "next week"/"(Wk N)" cross-references). Full policy in `DESIGN_SYSTEM.md` → **Visual richness**.
+
 Pitfalls and lessons learned live in **`GOTCHAS.md`**. Search there when something looks wrong before debugging from scratch.
 
 ## Creating a new talk

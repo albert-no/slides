@@ -1,0 +1,323 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Backup: Model Stealing — Script</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+body { max-width: 880px; margin: 40px auto; padding: 0 28px; color: var(--charcoal); font-family: 'Yonsei','Noto Sans',Arial,sans-serif; line-height: 1.65; }
+h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
+article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
+.kt { color: var(--yonsei-blue); font-weight: 700; }
+</style></head><body>
+<h1>Backup — Model Stealing &amp; Extraction · Speaker Script</h1>
+<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+
+<article>
+<h2>Model Stealing &amp; Extraction</h2>
+<p>This is a backup lecture on model stealing: the art of copying a model's behavior, or even pieces of its weights, through the small window of its API.</p>
+<p><span class="kt">Key takeaway:</span> A model served behind an API can still be copied from the outside.</p>
+</article>
+
+<article>
+<h2>Contents</h2>
+<p>Six steps: the threat, query-based stealing, stealing through richer APIs, stealing parts of a production model, defenses, and the 2025-26 frontier.</p>
+<p><span class="kt">Key takeaway:</span> From the basic threat to today's open problems.</p>
+</article>
+
+<article>
+<h2>01 — The Threat</h2>
+<p>First section. The core idea: an attacker can steal a model's behavior or weights through nothing but its public interface.</p>
+<p><span class="kt">Key takeaway:</span> The API is the attack surface.</p>
+</article>
+
+<article>
+<h2>A Model Is an Asset</h2>
+<p>A trained model is expensive: data collection, cleaning, compute, tuning, and human feedback all cost real money. The result is intellectual property, much like a guarded recipe.</p>
+<p><span class="kt">Key takeaway:</span> The model is the product, and the product has value worth stealing.</p>
+</article>
+
+<article>
+<h2>Served Behind an API</h2>
+<p>In practice you rarely get the weights; you get a narrow window. You send an input and receive an output, with the model itself hidden.</p>
+<p><span class="kt">Key takeaway:</span> All the attacker sees is inputs and outputs.</p>
+</article>
+
+<article>
+<h2>What "Stealing" Means</h2>
+<p>Two targets of very different difficulty. Stealing behavior means a copy that answers like the original. Stealing weights means the exact numbers inside. Both are pursued through the same small output window.</p>
+<p><span class="kt">Key takeaway:</span> Behavior is easy to copy; exact weights are hard.</p>
+</article>
+
+<article>
+<h2>The Core Move</h2>
+<p>The single idea behind all of this: every answer the model gives away is a free training label for a copy. The attacker never opens the box; they learn it from the outside.</p>
+<p><span class="kt">Key takeaway:</span> An output is a free label.</p>
+</article>
+
+<article>
+<h2>Three Stakes</h2>
+<p>Why this matters: money, since a rival skips the training bill; intellectual property, since the model is the product; and security, since a copy helps an attacker craft further attacks.</p>
+<p><span class="kt">Key takeaway:</span> Stealing threatens revenue, IP, and security at once.</p>
+</article>
+
+<article>
+<h2>A Copy Is a Stepping-Stone</h2>
+<p>Once you hold a local copy, you can probe it freely. You craft adversarial inputs offline, then send them to the real model. These attacks often transfer across copies.</p>
+<p><span class="kt">Key takeaway:</span> A stolen model is step one of a bigger attack.</p>
+</article>
+
+<article>
+<h2>A Threat With a History</h2>
+<p>This has been studied since the first pay-per-query model APIs. Tramèr and colleagues stole simple cloud classifiers in 2016; deep networks followed in 2019 and 2020; and by 2024 researchers were stealing pieces of production language models.</p>
+<p><span class="kt">Key takeaway:</span> Model stealing is a mature, well-documented threat.</p>
+</article>
+
+<article>
+<h2>02 — Query-Based Stealing</h2>
+<p>Second section. The most general attack: query the target, collect its answers, and train a clone on them.</p>
+<p><span class="kt">Key takeaway:</span> Use the target as a labeling service.</p>
+</article>
+
+<article>
+<h2>The Basic Recipe</h2>
+<p>Treat the target as a free labeling service. Send your inputs, collect the labels it returns, and train your own clone on those input-label pairs.</p>
+<p><span class="kt">Key takeaway:</span> Query, label, train a clone.</p>
+</article>
+
+<article>
+<h2>Knockoff Nets</h2>
+<p>Orekondy and colleagues showed you can steal a classifier with random public images. Feed unrelated photos to the target, collect the labels, and train a clone that never saw the target's real training data.</p>
+<p><span class="kt">Key takeaway:</span> You can steal a model without any of its training data.</p>
+</article>
+
+<article>
+<h2>You Don't Need Their Data</h2>
+<p>The labels carry the model's knowledge, so any reasonable inputs will do. This is exactly why keeping the training set closed does not protect the model.</p>
+<p><span class="kt">Key takeaway:</span> A secret training set is not a defense.</p>
+</article>
+
+<article>
+<h2>Two Goals: Accuracy vs Fidelity</h2>
+<p>Two distinct objectives. Accuracy means the clone is correct on the real task. Fidelity means the clone agrees with the target, right or wrong; a high-fidelity copy even reproduces the target's mistakes.</p>
+<p><span class="kt">Key takeaway:</span> Accuracy copies the task; fidelity copies the model.</p>
+</article>
+
+<article>
+<h2>Why the Difference Matters</h2>
+<p>The two goals serve different attackers. Someone who wants a free product chases accuracy; someone who wants to attack the target chases fidelity, since a faithful copy mirrors the original's blind spots.</p>
+<p><span class="kt">Key takeaway:</span> Fidelity is what an adversary wants.</p>
+</article>
+
+<article>
+<h2>More Queries, Better Copy</h2>
+<p>Fidelity rises with the query budget and then flattens, approaching the target's own accuracy. Each extra query buys less than the last.</p>
+<p><span class="kt">Key takeaway:</span> Stealing shows diminishing returns in the query budget.</p>
+</article>
+
+<article>
+<h2>The Attacker's Dial</h2>
+<p>Stealing is a cost-benefit calculation: total cost is queries times price per query. Whenever that cost falls below the cost of training from scratch, the copy is worth making.</p>
+<p><span class="kt">Key takeaway:</span> The attack happens when copying is cheaper than building.</p>
+</article>
+
+<article>
+<h2>03 — Stealing Via APIs</h2>
+<p>Third section. APIs that return probabilities, not just labels, leak far more, and that extra detail speeds up the theft.</p>
+<p><span class="kt">Key takeaway:</span> Richer outputs make richer thefts.</p>
+</article>
+
+<article>
+<h2>Labels vs Probabilities</h2>
+<p>Many APIs return more than a single answer. A label says "this is a cat"; full scores say "cat 0.91, dog 0.07, fox 0.02" and expose how sure the model is.</p>
+<p><span class="kt">Key takeaway:</span> Scores reveal the model's confidence, not just its choice.</p>
+</article>
+
+<article>
+<h2>Confidence Leaks Knowledge</h2>
+<p>A probability is a richer label than a single class, so it teaches the clone faster. One scored query can be worth many label-only queries.</p>
+<p><span class="kt">Key takeaway:</span> Confidence makes each query more valuable to the thief.</p>
+</article>
+
+<article>
+<h2>This Is Distillation</h2>
+<p>This is the same trick that compresses models, turned hostile. A teacher's soft scores train a student. Honest use shrinks your own model; hostile use shrinks someone else's.</p>
+<p><span class="kt">Key takeaway:</span> Model stealing is distillation without permission.</p>
+</article>
+
+<article>
+<h2>Soft Labels Carry More</h2>
+<p>A hard label tells you only the winner; soft scores tell you the whole ranking. That richer signal is what makes scored queries so useful to a clone.</p>
+<p><span class="kt">Key takeaway:</span> Soft scores carry the full ranking, not just the top choice.</p>
+</article>
+
+<article>
+<h2>Equation-Solving Attacks</h2>
+<p>For a simple model, scores pin down the weights exactly. If $p(x) = \sigma(w \cdot x + b)$, enough scored queries let you solve for $w$ and $b$ directly, recovering the model algebraically.</p>
+<p><span class="kt">Key takeaway:</span> Simple models can be solved for, not just imitated.</p>
+</article>
+
+<article>
+<h2>High Fidelity Has a Price</h2>
+<p>An almost-exact copy of a deep network is expensive: many millions of careful queries and heavy compute to fit the clone. Jagielski and colleagues showed it is possible, and still cheaper than the original training.</p>
+<p><span class="kt">Key takeaway:</span> High-fidelity extraction is costly but feasible.</p>
+</article>
+
+<article>
+<h2>Accuracy Is Cheaper Than Fidelity</h2>
+<p>A usable copy is cheap; an exact copy is hard. Matching every decision, including the rare ones, is the part that drives up the cost.</p>
+<p><span class="kt">Key takeaway:</span> The last few percent of fidelity is the most expensive.</p>
+</article>
+
+<article>
+<h2>The Defender's Dilemma</h2>
+<p>The useful API features are the leaky ones. Probabilities help honest users, but the same scores help the thief, and hiding them hurts your real customers.</p>
+<p><span class="kt">Key takeaway:</span> Utility and leakage are in tension.</p>
+</article>
+
+<article>
+<h2>04 — Stealing Parts of Models</h2>
+<p>Fourth section. You may not need the whole model. Recovering even one layer from black-box access is a real and recent result.</p>
+<p><span class="kt">Key takeaway:</span> Partial theft is enough to matter.</p>
+</article>
+
+<article>
+<h2>Not All or Nothing</h2>
+<p>You may not need the whole model. One layer can hold valuable structure, recovering a part is far cheaper than the whole, and even a part can reveal real secrets.</p>
+<p><span class="kt">Key takeaway:</span> Stealing a piece is cheaper and still damaging.</p>
+</article>
+
+<article>
+<h2>The Final Layer</h2>
+<p>A language model ends by projecting its hidden vector into scores over words. That final projection layer is a natural and revealing target.</p>
+<p><span class="kt">Key takeaway:</span> The output projection is the layer worth attacking.</p>
+</article>
+
+<article>
+<h2>Stealing Part of a Model</h2>
+<p>In 2024, Carlini and colleagues recovered a production model's final projection through black-box API access alone, reconstructing the output layer's shape and the model's hidden dimension.</p>
+<p><span class="kt">Key takeaway:</span> A real commercial model leaked a genuine internal detail.</p>
+</article>
+
+<article>
+<h2>The Idea, Simply</h2>
+<p>The score vectors all live in a thin slice of the full space. Collect many output vectors, look at the span they cover, and that span reveals the hidden width, which is a guarded design secret. It is a geometry trick, not brute force.</p>
+<p><span class="kt">Key takeaway:</span> The geometry of the outputs betrays the hidden dimension.</p>
+</article>
+
+<article>
+<h2>Why This Surprised People</h2>
+<p>A closed, commercial model gave up a real internal detail through its public API. The vendors patched it, but the lesson stands: even guarded systems leak through their interface.</p>
+<p><span class="kt">Key takeaway:</span> Closed does not mean safe.</p>
+</article>
+
+<article>
+<h2>A Responsible Disclosure</h2>
+<p>The researchers worked with the vendors: they warned them before publishing, helped close the hole, and kept the recovered detail modest. This was security research, not a smash-and-grab.</p>
+<p><span class="kt">Key takeaway:</span> Responsible disclosure made the work useful, not harmful.</p>
+</article>
+
+<article>
+<h2>05 — Defenses</h2>
+<p>Fifth section. There is no perfect wall, but defenses can raise the attacker's cost: rate limits, output perturbation, watermarking, and detection.</p>
+<p><span class="kt">Key takeaway:</span> Defense is about cost, not impossibility.</p>
+</article>
+
+<article>
+<h2>No Perfect Wall</h2>
+<p>If the model answers at all, it leaks something. An open API is an open door, so a defense raises the cost rather than dropping it to zero. The goal is to make stealing more expensive than building.</p>
+<p><span class="kt">Key takeaway:</span> The aim is to price the attacker out, not lock them out.</p>
+</article>
+
+<article>
+<h2>Rate Limits</h2>
+<p>Cap how many queries one account can send. A million queries gets noticed, unusual query patterns can be flagged, and a high enough price deters bulk theft. The catch: attackers split the load across many fake accounts.</p>
+<p><span class="kt">Key takeaway:</span> Rate limits slow theft but are evaded by spreading queries.</p>
+</article>
+
+<article>
+<h2>Output Perturbation</h2>
+<p>Reveal less than the model knows. You can round the scores down to a label or coarse numbers, or add small noise to blur the exact probabilities. Less detail out means a worse copy for the thief.</p>
+<p><span class="kt">Key takeaway:</span> Coarser outputs give a thief less to learn from.</p>
+</article>
+
+<article>
+<h2>Perturbation Has a Cost</h2>
+<p>Every bit you hide from the thief, you also hide from your honest user. Defenses based on hiding detail trade real utility for protection.</p>
+<p><span class="kt">Key takeaway:</span> Hiding detail hurts honest users too.</p>
+</article>
+
+<article>
+<h2>Watermark the Model</h2>
+<p>Plant a secret signature in the model's behavior: special inputs trigger a known response, and the signature survives copying. It cannot prove who copied first, but it links a suspect model back to yours.</p>
+<p><span class="kt">Key takeaway:</span> Watermarks enable detection after the theft, not prevention.</p>
+</article>
+
+<article>
+<h2>Catching a Clone</h2>
+<p>Test a suspect model with your secret trigger inputs. If it produces the marked response, that is evidence the suspect copied your model.</p>
+<p><span class="kt">Key takeaway:</span> A matching watermark is courtroom-style evidence of copying.</p>
+</article>
+
+<article>
+<h2>Detection by Behavior</h2>
+<p>A thief's queries look different: many odd inputs, few repeats, and coverage designed to mimic a training set. That pattern is a signature you can learn to spot, so watch the traffic, not just the model.</p>
+<p><span class="kt">Key takeaway:</span> Stealing leaves a detectable footprint in the query stream.</p>
+</article>
+
+<article>
+<h2>Layered Defense</h2>
+<p>Since no single wall works, stack them: limit and price the queries, blur the outputs, and watermark plus detect. Together they raise the cost on every front.</p>
+<p><span class="kt">Key takeaway:</span> Defense in depth, not one silver bullet.</p>
+</article>
+
+<article>
+<h2>06 — Frontier 2025–26</h2>
+<p>Sixth section. The target has shifted to frontier chat models, where distillation-style stealing is now routine and the open problems are sharp.</p>
+<p><span class="kt">Key takeaway:</span> Stealing has scaled up with the models.</p>
+</article>
+
+<article>
+<h2>Stealing Frontier Models</h2>
+<p>The target moved from toy classifiers to chat models. Attackers distill a smaller open model from a big one, producing cheap clones of expensive systems. This is a live concern for every vendor.</p>
+<p><span class="kt">Key takeaway:</span> Frontier language models are now the prize.</p>
+</article>
+
+<article>
+<h2>Distillation Goes Mainstream</h2>
+<p>Training a strong model on a stronger model's outputs is now a standard recipe. Terms of service often forbid it, but that does not stop everyone.</p>
+<p><span class="kt">Key takeaway:</span> Output-based distillation is widespread and contested.</p>
+</article>
+
+<article>
+<h2>A Demo You Can Picture</h2>
+<p>Concretely: send fifty thousand prompts to a chat API, save every question and answer, and fine-tune a small open model on them. This is a weekend project, not a state secret.</p>
+<p><span class="kt">Key takeaway:</span> The basic attack is well within reach of a single person.</p>
+</article>
+
+<article>
+<h2>Where the Line Blurs</h2>
+<p>Distillation is both a tool and a theft. Compressing your own model is fine; copying a rival's model is theft. It is the same math, separated only by consent.</p>
+<p><span class="kt">Key takeaway:</span> The ethics live in the agreement, not the algorithm.</p>
+</article>
+
+<article>
+<h2>Open Problems</h2>
+<p>The hard questions remain open: defenses that keep the API useful, watermarks that survive distillation, proving in court that a model was copied, and pricing queries to deter bulk theft.</p>
+<p><span class="kt">Key takeaway:</span> The defense side of the arms race is far from solved.</p>
+</article>
+
+<article>
+<h2>Key Takeaways</h2>
+<p>To close: every answer is a free training label, probabilities leak more than labels, even a single layer can be stolen, and defenses raise cost without ever being a wall. If a model answers, it can be copied.</p>
+<p><span class="kt">Key takeaway:</span> Any model that answers can, in principle, be copied.</p>
+</article>
+
+<article>
+<h2>Q&amp;A</h2>
+<p>Closing slide. Questions and discussion.</p>
+<p><span class="kt">Key takeaway:</span> Every answer is a clue to the copy.</p>
+</article>
+
+</body></html>

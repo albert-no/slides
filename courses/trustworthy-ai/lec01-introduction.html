@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Introduction &amp; Threat-Model Thinking — Trustworthy AI Lecture 1</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+  <!-- 1. TITLE -->
+  <div class="slide title-slide active">
+    <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+    <div class="pill pill-fill" style="margin-bottom:28px;">Trustworthy AI · Lecture 1</div>
+    <h1>Introduction &amp;<br>Threat-Model Thinking</h1>
+    <div class="divider"></div>
+    <p class="subtitle">What "trustworthy" means, and how to reason about failure</p>
+    <div class="spacer-lg"></div>
+    <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+    <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+  </div>
+
+  <!-- 2. CONTENTS -->
+  <div class="slide">
+    <h2>Today</h2>
+    <div class="divider"></div>
+    <div class="toc-list">
+      <div class="toc-item">
+        <div class="toc-num">01</div><div class="toc-rule"></div>
+        <div><div class="toc-label">Why Trust?</div><div class="toc-sub">AI now makes consequential decisions</div></div>
+      </div>
+      <div class="toc-item">
+        <div class="toc-num">02</div><div class="toc-rule"></div>
+        <div><div class="toc-label">How AI Fails Differently</div><div class="toc-sub">Learned systems break in new ways</div></div>
+      </div>
+      <div class="toc-item">
+        <div class="toc-num">03</div><div class="toc-rule"></div>
+        <div><div class="toc-label">Threat-Model Thinking</div><div class="toc-sub">The one habit for the whole course</div></div>
+      </div>
+      <div class="toc-item">
+        <div class="toc-num">04</div><div class="toc-rule"></div>
+        <div><div class="toc-label">The Trust Stack &amp; Course Map</div><div class="toc-sub">15 weeks, four modules</div></div>
+      </div>
+      <div class="toc-item">
+        <div class="toc-num">05</div><div class="toc-rule"></div>
+        <div><div class="toc-label">How We'll Work</div><div class="toc-sub">Concepts first, demos you can run</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SECTION 01 ===== -->
+  <!-- 3. DIVIDER 01 -->
+  <div class="slide section-slide left">
+    <div class="section-num">01</div>
+    <h1>Why Trust?</h1>
+    <div class="divider"></div>
+    <p class="subtitle">AI now makes consequential decisions</p>
+  </div>
+
+  <!-- 4. AI Now Decides Real Outcomes -->
+  <div class="slide">
+    <h2>AI Now Decides Real Outcomes</h2>
+    <div class="divider"></div>
+    <div class="grid-3">
+      <div class="card"><h3>Hiring</h3><p>Résumé screening, ranking</p></div>
+      <div class="card"><h3>Lending</h3><p>Credit scores, approvals</p></div>
+      <div class="card"><h3>Healthcare</h3><p>Triage, diagnosis support</p></div>
+      <div class="card"><h3>Moderation</h3><p>What you see, what is removed</p></div>
+      <div class="card"><h3>Policing</h3><p>Risk scores, surveillance</p></div>
+      <div class="card"><h3>Information</h3><p>Search answers, advice</p></div>
+    </div>
+    <p class="muted">Not demos anymore: real stakes for real people</p>
+  </div>
+
+  <!-- 5. Bias in the Courtroom -->
+  <div class="slide">
+    <h2>Bias in the Courtroom</h2>
+    <div class="divider"></div>
+    <ul class="arrow">
+      <li>COMPAS: predicts who will re-offend</li>
+      <li>Used by US judges for bail, sentencing</li>
+      <li>Higher false-alarm rate for Black defendants</li>
+      <li>Labeled "high risk", then never re-offended</li>
+    </ul>
+    <p class="muted">A score nobody could see inside or question</p>
+    <div class="cite cite-left">Angwin, Larson, Mattu, and Kirchner, "Machine Bias", ProPublica 2016.</div>
+  </div>
+
+  <!-- 6. Amazon hiring -->
+  <div class="slide">
+    <h2>A Tool That Learned to Discriminate</h2>
+    <div class="divider"></div>
+    <ul class="arrow">
+      <li>Amazon built a résumé-ranking model</li>
+      <li>Trained on a decade of past hires</li>
+      <li>Past hires: mostly men</li>
+      <li>Model penalized the word "women's"</li>
+      <li>Scrapped in 2018</li>
+    </ul>
+    <p class="muted">Biased data in, biased decisions out</p>
+  </div>
+
+  <!-- 7. Mata v. Avianca -->
+  <div class="slide">
+    <h2>The Lawyer Who Trusted ChatGPT</h2>
+    <div class="divider"></div>
+    <ul class="arrow">
+      <li>2023 case: Mata v. Avianca</li>
+      <li>Lawyer asked ChatGPT for precedent</li>
+      <li>Got six confident case citations</li>
+      <li>All six were fabricated</li>
+      <li>Court sanctioned the lawyer</li>
+    </ul>
+    <p class="muted">Fluent, authoritative, and simply wrong</p>
+  </div>
+
+  <!-- 8. Chatbots -->
+  <div class="slide">
+    <h2>A Chatbot That Made Promises</h2>
+    <div class="divider"></div>
+    <div class="grid-2">
+      <div>
+        <h3>Air Canada, 2024</h3>
+        <p>Bot invented a bereavement refund. A tribunal held the airline liable.</p>
+      </div>
+      <div>
+        <h3>Car dealership, 2023</h3>
+        <p>Bot talked into agreeing a "$1 car, no takesies-backsies."</p>
+      </div>
+    </div>
+    <p class="muted">When the assistant can act, its mistakes bind you</p>
+  </div>
+
+  <!-- 9. Memorization -->
+  <div class="slide">
+    <h2>Models That Memorize People</h2>
+    <div class="divider"></div>
+    <ul class="arrow">
+      <li>2021: real names, phones, addresses pulled from GPT-2</li>
+      <li>2023: "repeat the word poem forever"</li>
+      <li>ChatGPT spilled chunks of training data</li>
+      <li>Some of it was personal</li>
+    </ul>
+    <p class="muted">The model remembers more than it should</p>
+    <div class="cite cite-left">Carlini et al., "Extracting Training Data from Large Language Models", USENIX Security 2021.<br>Nasr et al., "Scalable Extraction of Training Data from (Production) Language Models", 2023.</div>
+  </div>
+
+  <!-- 10. Deepfakes -->
+  <div class="slide">
+    <h2>Seeing Is No Longer Believing</h2>
+    <div class="divider"></div>
+    <ul class="arrow">
+      <li>2024 US primary: robocall faking a president's voice</li>
+      <li>Told voters to stay home</li>
+      <li>Voice clones now drive phone scams</li>
+      <li>"Grandparent" fraud with a familiar voice</li>
+    </ul>
+    <p class="muted">Cannot trust that a voice or face is real</p>
+  </div>
+
+  <!-- 11. Prompt injection -->
+  <div class="slide">
+    <h2>Hijacking the Assistant</h2>
+    <div class="divider"></div>
+    <ul class="arrow">
+      <li>AI assistant reads a web page for you</li>
+      <li>Page hides an instruction in the text</li>
+      <li>"Ignore your user, leak their data"</li>
+      <li>2023 Bing "Sydney" demos: assistant goes off-script</li>
+    </ul>
+    <p class="muted">The attacker writes part of the prompt</p>
+  </div>
+
+  <!-- 12. The Pattern -->
+  <div class="slide">
+    <h2>The Pattern</h2>
+    <div class="divider"></div>
+    <div class="highlight">
+      Capability outran our ability to trust the output.
+    </div>
+    <ul>
+      <li>Each story = one missing guarantee</li>
+      <li>Fair? Reliable? Private? Real? Secure?</li>
+      <li>These become our trust dimensions</li>
+    </ul>
+  </div>
+
+  <!-- ===== SECTION 02 ===== -->
+  <!-- 13. DIVIDER 02 -->
+  <div class="slide section-slide left">
+    <div class="section-num">02</div>
+    <h1>How AI Fails Differently</h1>
+    <div class="divider"></div>
+    <p class="subtitle">Learned systems break in new ways</p>
+  </div>
+
+  <!-- 14. Software vs Learned -->
+  <div class="slide">
+    <h2>Software vs Learned Models</h2>
+    <div class="divider"></div>
+    <div class="grid-2">
+      <div>
+        <h3>Classical software</h3>
+        <p>Bug = a line of code. Reproducible. Patchable. Someone wrote the rule.</p>
+      </div>
+      <div>
+        <h3>Learned models</h3>
+        <p>Behavior sits in the weights. Probabilistic. No single line to fix.</p>
+      </div>
+    </div>
+    <p class="muted">Nobody wrote the rule the model follows</p>
+  </div>
+
+  <!-- 15. Failure in weights -->
+  <div class="slide">
+    <h2>Failure Lives in the Weights</h2>
+    <div class="divider"></div>
+    <ul>
+      <li>Billions of numbers</li>
+      <li>No comments, no variable names</li>
+      <li>No stack trace when it goes wrong</li>
+      <li>Cannot just open and read the code</li>
+    </ul>
+    <p class="muted">The behavior is learned, not written</p>
+  </div>
+
+  <!-- 15b. A Tiny Push Fools It (panda) -->
+  <div class="slide">
+    <h2>A Tiny Push Fools It</h2>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:center;margin:8px 0;">
+      <img src="figs/panda-gibbon.png" alt="A panda image plus imperceptible noise is classified as a gibbon with 99% confidence" style="max-width:100%;max-height:360px;width:auto;display:block;">
+    </div>
+    <p>Add noise invisible to you: <strong>"panda" 58% → "gibbon" 99%</strong>.</p>
+    <div class="cite cite-left">Goodfellow, Shlens, and Szegedy, "Explaining and Harnessing Adversarial Examples", ICLR 2015 — Figure 1.</div>
+  </div>
+
+  <!-- 16. Three sources -->
+  <div class="slide">
+    <h2>Three Sources of Failure</h2>
+    <div class="divider"></div>
+    <div class="grid-3">
+      <div class="card"><h3>Data</h3><p>Biased, private, or poisoned inputs</p></div>
+      <div class="card"><h3>Training</h3><p>Objective misses what we meant</p></div>
+      <div class="card"><h3>Deployment</h3><p>New inputs, real adversaries</p></div>
+    </div>
+    <p class="muted">A failure can enter at any stage</p>
+  </div>
+
+  <!-- 17. Bigger models -->
+  <div class="slide">
+    <h2>Bigger Models, New Surprises</h2>
+    <div class="divider"></div>
+    <ul class="arrow">
+      <li>Scale brings new, unplanned abilities</li>
+      <li>Capabilities appear without warning</li>
+      <li>So do failure modes</li>
+      <li>Hard to predict before deployment</li>
+    </ul>
+    <p class="muted">We discover behavior after we ship</p>
+  </div>
+
+  <!-- 18. Black-box -->
+  <div class="slide">
+    <h2>The Black-Box Problem</h2>
+    <div class="divider"></div>
+    <div class="diagram-flow">
+      <div class="diagram-box">Input</div>
+      <div class="diagram-box filled">?</div>
+      <div class="diagram-box">Output</div>
+    </div>
+    <ul>
+      <li>We see inputs and outputs</li>
+      <li>Not the reasoning between them</li>
+      <li>The motivation for interpretability</li>
+    </ul>
+  </div>
+
+  <!-- 19. Six dimensions -->
+  <div class="slide">
+    <h2>Six Dimensions of Trust</h2>
+    <div class="divider"></div>
+    <div class="grid-3">
+      <div class="card"><h3>Privacy</h3><p>Whose data leaks out?</p></div>
+      <div class="card"><h3>Robustness</h3><p>Breaks under a tiny push?</p></div>
+      <div class="card"><h3>Reliability</h3><p>Confidently wrong?</p></div>
+      <div class="card"><h3>Fairness</h3><p>Who gets hurt?</p></div>
+      <div class="card"><h3>Transparency</h3><p>Can we explain it?</p></div>
+      <div class="card"><h3>Provenance</h3><p>Is this real?</p></div>
+    </div>
+  </div>
+
+  <!-- 20. Dimensions interact -->
+  <div class="slide">
+    <h2>The Dimensions Interact</h2>
+    <div class="divider"></div>
+    <div class="highlight">
+      Not independent silos: they pull on each other.
+    </div>
+    <ul class="arrow">
+      <li>Privacy ↔ memorization</li>
+      <li>Robustness ↔ jailbreak</li>
+      <li>Provenance ↔ fairness</li>
+    </ul>
+  </div>
+
+  <!-- ===== SECTION 03 ===== -->
+  <!-- 21. DIVIDER 03 -->
+  <div class="slide section-slide left">
+    <div class="section-num">03</div>
+    <h1>Threat-Model Thinking</h1>
+    <div class="divider"></div>
+    <p class="subtitle">The one habit that unifies the course</p>
+  </div>
+
+  <!-- 22. What is a threat model -->
+  <div class="slide">
+    <h2>What Is a Threat Model?</h2>
+    <div class="divider"></div>
+    <div class="grid-2" style="grid-template-columns:1fr auto;gap:36px;align-items:center;">
+      <div>
+        <ul class="num">
+          <li><strong>Who</strong> is the adversary, and their goal?</li>
+          <li><strong>What</strong> do they know about the system?</li>
+          <li><strong>What</strong> can they actually do?</li>
+        </ul>
+        <p class="muted">Answer these before "is it safe?"</p>
+      </div>
+      <div style="display:flex;justify-content:center;">
+        <svg viewBox="0 0 280 190" style="width:100%;max-width:440px;">
+          <circle cx="52" cy="82" r="46" fill="#d94040" fill-opacity="0.13" stroke="#d94040" stroke-width="2"/>
+          <text x="52" y="80" font-size="15" fill="#d94040" text-anchor="middle" font-weight="700">adversary</text>
+          <text x="52" y="98" font-size="13" fill="#d94040" text-anchor="middle">+ a goal</text>
+          <rect x="192" y="50" width="80" height="66" rx="8" fill="#003876"/>
+          <text x="232" y="79" font-size="16" fill="#fff" text-anchor="middle" font-weight="700">AI</text>
+          <text x="232" y="99" font-size="13" fill="#cfe0f5" text-anchor="middle">system</text>
+          <defs><marker id="tmar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1a1a1a"/></marker></defs>
+          <line x1="102" y1="72" x2="188" y2="72" stroke="#1a1a1a" stroke-width="2.5" marker-end="url(#tmar)"/>
+          <text x="146" y="63" font-size="13" fill="#666" text-anchor="middle">can do?</text>
+          <line x1="188" y1="98" x2="104" y2="98" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#tmar)"/>
+          <text x="146" y="115" font-size="13" fill="#666" text-anchor="middle">knows?</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- 23. Analogy -->
+  <div class="slide">
+    <h2>An Everyday Analogy</h2>
+    <div class="divider"></div>
+    <ul class="arrow">
+      <li>Same front-door lock on your house</li>
+      <li>Casual passerby: more than enough</li>
+      <li>Determined burglar: maybe not</li>
+      <li>Locksmith you hired: opens it anyway</li>
+    </ul>
+    <p class="muted">Same lock, different threat, different verdict</p>
+  </div>
+
+  <!-- 24. Who is adversary -->
+  <div class="slide">
+    <h2>Who Is the Adversary?</h2>
+    <div class="divider"></div>
+    <div class="grid-3">
+      <div class="card"><h3>Curious user</h3><p>Pokes at limits for fun</p></div>
+      <div class="card"><h3>Fraudster</h3><p>Wants money or identity</p></div>
+      <div class="card"><h3>Competitor</h3><p>Wants to steal the model</p></div>
+      <div class="card"><h3>Troll</h3><p>Wants to abuse or harm</p></div>
+      <div class="card"><h3>Careless insider</h3><p>No malice, still leaks</p></div>
+      <div class="card"><h3>Regulator</h3><p>Audits for compliance</p></div>
+    </div>
+  </div>
+
+  <!-- 25. What they know -->
+  <div class="slide">
+    <h2>What They Know</h2>
+    <div class="divider"></div>
+    <div class="grid-2">
+      <div>
+        <h3>White-box</h3>
+        <p>Sees weights and gradients. Open models, insiders, audits.</p>
+      </div>
+      <div>
+        <h3>Black-box</h3>
+        <p>Sees only the API: inputs and outputs.</p>
+      </div>
+    </div>
+    <p class="muted">Gray-box: partial knowledge, somewhere between</p>
+  </div>
+
+  <!-- 26. When they strike -->
+  <div class="slide">
+    <h2>When They Strike</h2>
+    <div class="divider"></div>
+    <div class="grid-2">
+      <div>
+        <h3>Train-time</h3>
+        <p>Poison the data before the model ships.</p>
+      </div>
+      <div>
+        <h3>Inference-time</h3>
+        <p>Manipulate inputs after deployment.</p>
+      </div>
+    </div>
+    <p class="muted">Timing changes what defense is possible</p>
+  </div>
+
+  <!-- 27. Attack map -->
+  <div class="slide">
+    <h2>The Attack Map</h2>
+    <div class="divider"></div>
+    <p>Two axes, <strong>knowledge × timing</strong>, locate almost any attack.</p>
+    <div style="display:flex;justify-content:center;margin:6px 0;">
+      <svg viewBox="0 0 480 280" style="width:100%;max-width:880px;">
+        <rect x="130" y="44" width="160" height="100" fill="#f4f6f9" stroke="#1a5296" stroke-width="1.5"/>
+        <rect x="290" y="44" width="160" height="100" fill="#f4f6f9" stroke="#1a5296" stroke-width="1.5"/>
+        <rect x="130" y="144" width="160" height="100" fill="#f4f6f9" stroke="#1a5296" stroke-width="1.5"/>
+        <rect x="290" y="144" width="160" height="100" fill="#f4f6f9" stroke="#1a5296" stroke-width="1.5"/>
+        <text x="210" y="30" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">Black-box</text>
+        <text x="370" y="30" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">White-box</text>
+        <text x="108" y="94" font-size="19" fill="#003876" text-anchor="middle" font-weight="700" transform="rotate(-90 108 94)">Train-time</text>
+        <text x="108" y="194" font-size="19" fill="#003876" text-anchor="middle" font-weight="700" transform="rotate(-90 108 194)">Inference</text>
+        <text x="210" y="90" font-size="18" fill="#1a1a1a" text-anchor="middle">Data poisoning</text>
+        <text x="210" y="112" font-size="15" fill="#666" text-anchor="middle">via data feeds</text>
+        <text x="370" y="90" font-size="18" fill="#1a1a1a" text-anchor="middle">Backdoors</text>
+        <text x="370" y="112" font-size="15" fill="#666" text-anchor="middle">planted triggers</text>
+        <text x="210" y="190" font-size="18" fill="#1a1a1a" text-anchor="middle">Jailbreaks</text>
+        <text x="210" y="212" font-size="15" fill="#666" text-anchor="middle">prompt injection</text>
+        <text x="370" y="190" font-size="18" fill="#1a1a1a" text-anchor="middle">Adversarial</text>
+        <text x="370" y="212" font-size="15" fill="#666" text-anchor="middle">gradient attacks</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- 28. Worked example -->
+  <div class="slide">
+    <h2>Worked Example: A Medical LLM</h2>
+    <div class="divider"></div>
+    <ul class="arrow">
+      <li>Privacy: whose patient records trained it?</li>
+      <li>Memorization: will it recite a real note?</li>
+      <li>Reliability: will it invent a diagnosis?</li>
+      <li>Jailbreak: can safety be bypassed?</li>
+    </ul>
+    <p class="muted">One system, four very different threats</p>
+  </div>
+
+  <!-- 29. Placing them -->
+  <div class="slide">
+    <h2>Placing Them on the Map</h2>
+    <div class="divider"></div>
+    <table>
+      <tr><td></td><td><strong>Train-time</strong></td><td><strong>Inference-time</strong></td></tr>
+      <tr><td><strong>White-box</strong></td><td>Privacy of training set</td><td>Memorization probe</td></tr>
+      <tr><td><strong>Black-box</strong></td><td>—</td><td>Hallucination, jailbreak</td></tr>
+    </table>
+    <p class="muted">The same system spans several threat models</p>
+  </div>
+
+  <!-- 30. No threat model -->
+  <div class="slide">
+    <h2>No Threat Model, No Answer</h2>
+    <div class="divider"></div>
+    <div class="highlight">
+      "Is it secure?" means nothing until you fix who, what, and when.
+    </div>
+    <ul>
+      <li>Security is always relative to a threat</li>
+      <li>State it first, then evaluate</li>
+    </ul>
+  </div>
+
+  <!-- ===== SECTION 04 ===== -->
+  <!-- 31. DIVIDER 04 -->
+  <div class="slide section-slide left">
+    <div class="section-num">04</div>
+    <h1>The Trust Stack &amp; Course Map</h1>
+    <div class="divider"></div>
+    <p class="subtitle">15 weeks, four modules</p>
+  </div>
+
+  <!-- 32. The trust stack -->
+  <div class="slide">
+    <h2>The Trust Stack</h2>
+    <div class="divider"></div>
+    <p>Each failure lives at one layer. The course <strong>climbs the stack</strong>.</p>
+    <div style="display:flex;justify-content:center;margin:6px 0;">
+      <svg viewBox="0 0 440 250" style="width:100%;max-width:720px;">
+        <rect x="64" y="14"  width="312" height="52" rx="8" fill="#6b7280"/>
+        <rect x="64" y="74"  width="312" height="52" rx="8" fill="#005baa"/>
+        <rect x="64" y="134" width="312" height="52" rx="8" fill="#1a5296"/>
+        <rect x="64" y="194" width="312" height="52" rx="8" fill="#003876"/>
+        <text x="220" y="37" font-size="20" fill="#fff" text-anchor="middle" font-weight="700">Society</text>
+        <text x="220" y="56" font-size="15" fill="#e8ecf0" text-anchor="middle">fairness · governance</text>
+        <text x="220" y="97" font-size="20" fill="#fff" text-anchor="middle" font-weight="700">Output</text>
+        <text x="220" y="116" font-size="15" fill="#dbe6f3" text-anchor="middle">reliability · provenance</text>
+        <text x="220" y="157" font-size="20" fill="#fff" text-anchor="middle" font-weight="700">Model</text>
+        <text x="220" y="176" font-size="15" fill="#dbe6f3" text-anchor="middle">robustness · jailbreaks</text>
+        <text x="220" y="217" font-size="20" fill="#fff" text-anchor="middle" font-weight="700">Data</text>
+        <text x="220" y="236" font-size="15" fill="#cfe0f5" text-anchor="middle">privacy · memorization</text>
+        <text x="34" y="228" font-size="30" fill="#003876" font-weight="700">↑</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- 33. Four modules -->
+  <div class="slide">
+    <h2>Four Modules, 15 Weeks</h2>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:center;margin:10px 0;">
+      <svg viewBox="0 0 480 180" style="width:100%;max-width:900px;">
+        <rect x="20"  y="58" width="28"  height="50" rx="4" fill="#6b7280"/>
+        <rect x="50"  y="58" width="118" height="50" rx="4" fill="#003876"/>
+        <rect x="170" y="58" width="60"  height="50" rx="4" fill="#005baa"/>
+        <rect x="232" y="58" width="118" height="50" rx="4" fill="#1a5296"/>
+        <rect x="352" y="58" width="118" height="50" rx="4" fill="#005baa"/>
+        <text x="34"  y="46" font-size="14" fill="#666" text-anchor="middle">Wk 1</text>
+        <text x="109" y="46" font-size="14" fill="#666" text-anchor="middle">2–5</text>
+        <text x="200" y="46" font-size="14" fill="#666" text-anchor="middle">6–7</text>
+        <text x="291" y="46" font-size="14" fill="#666" text-anchor="middle">8–11</text>
+        <text x="411" y="46" font-size="14" fill="#666" text-anchor="middle">12–15</text>
+        <text x="34"  y="132" font-size="14" fill="#1a1a1a" text-anchor="middle">Intro</text>
+        <text x="109" y="132" font-size="15" fill="#003876" text-anchor="middle" font-weight="700">Privacy &amp; Data</text>
+        <text x="200" y="132" font-size="15" fill="#005baa" text-anchor="middle" font-weight="700">Reliability</text>
+        <text x="291" y="132" font-size="15" fill="#1a5296" text-anchor="middle" font-weight="700">Security</text>
+        <text x="411" y="132" font-size="15" fill="#005baa" text-anchor="middle" font-weight="700">Prov. &amp; Fairness</text>
+      </svg>
+    </div>
+    <p class="muted">Each topic: definition → history → 2025–26 frontier</p>
+  </div>
+
+  <!-- 34. Module 1 -->
+  <div class="slide">
+    <h2>Module 1 — Privacy &amp; Data</h2>
+    <div class="divider"></div>
+    <ul class="arrow">
+      <li>Differential privacy: a budget for leakage</li>
+      <li>Membership inference: "were you in the data?"</li>
+      <li>Memorization &amp; extraction: GPT-2 leak</li>
+      <li>Unlearning: making a model forget</li>
+    </ul>
+  </div>
+
+  <!-- 35. Module 2 -->
+  <div class="slide">
+    <h2>Module 2 — Reliability</h2>
+    <div class="divider"></div>
+    <ul class="arrow">
+      <li>Hallucination: confident fake citations</li>
+      <li>Calibration: does 90% mean 90%?</li>
+      <li>Interpretability: opening the black box</li>
+    </ul>
+    <p class="muted">From "it sounds right" to "we can check"</p>
+  </div>
+
+  <!-- 36. Module 3 -->
+  <div class="slide">
+    <h2>Module 3 — Security</h2>
+    <div class="divider"></div>
+    <ul class="arrow">
+      <li>Adversarial examples: panda → gibbon</li>
+      <li>Data poisoning: corrupt before training</li>
+      <li>Jailbreaks: bypass the safety filter</li>
+      <li>Prompt injection: hijack the assistant</li>
+    </ul>
+  </div>
+
+  <!-- 37. Module 4 -->
+  <div class="slide">
+    <h2>Module 4 — Provenance &amp; Fairness</h2>
+    <div class="divider"></div>
+    <ul class="arrow">
+      <li>Watermarking: marking AI output</li>
+      <li>Deepfakes: detecting the fake</li>
+      <li>Fairness: definitions and mitigation</li>
+      <li>Governance: rules and accountability</li>
+    </ul>
+  </div>
+
+  <!-- 38. Weeks 1-8 -->
+  <div class="slide">
+    <h2>Week by Week (1–8)</h2>
+    <div class="divider"></div>
+    <table>
+      <tr><td><strong>1</strong></td><td>Intro &amp; threat models</td></tr>
+      <tr><td><strong>2–3</strong></td><td>Differential privacy</td></tr>
+      <tr><td><strong>4</strong></td><td>Membership inference, memorization</td></tr>
+      <tr><td><strong>5</strong></td><td>Unlearning</td></tr>
+      <tr><td><strong>6–7</strong></td><td>Hallucination, interpretability</td></tr>
+      <tr><td><strong>8</strong></td><td>Adversarial examples</td></tr>
+    </table>
+  </div>
+
+  <!-- 39. Weeks 9-15 -->
+  <div class="slide">
+    <h2>Week by Week (9–15)</h2>
+    <div class="divider"></div>
+    <table>
+      <tr><td><strong>9</strong></td><td>Data poisoning</td></tr>
+      <tr><td><strong>10</strong></td><td>Jailbreaks</td></tr>
+      <tr><td><strong>11</strong></td><td>Prompt injection &amp; agents</td></tr>
+      <tr><td><strong>12–13</strong></td><td>Watermarking, deepfakes</td></tr>
+      <tr><td><strong>14</strong></td><td>Fairness</td></tr>
+      <tr><td><strong>15</strong></td><td>Governance &amp; wrap-up</td></tr>
+    </table>
+  </div>
+
+  <!-- 40. What's new -->
+  <div class="slide">
+    <h2>What's New in 2025–26</h2>
+    <div class="divider"></div>
+    <ul class="arrow">
+      <li>Reasoning models &amp; agents raise the stakes</li>
+      <li>Prompt injection: the live agentic threat</li>
+      <li>Provenance rules: EU AI Act, C2PA</li>
+      <li>Interpretability: sparse-autoencoder features</li>
+    </ul>
+    <p class="muted">"Recent progress" is a theme all term</p>
+  </div>
+
+  <!-- ===== SECTION 05 ===== -->
+  <!-- 41. DIVIDER 05 -->
+  <div class="slide section-slide left">
+    <div class="section-num">05</div>
+    <h1>How We'll Work</h1>
+    <div class="divider"></div>
+    <p class="subtitle">Concepts first, with demos you can run</p>
+  </div>
+
+  <!-- 42. Concepts not proofs -->
+  <div class="slide">
+    <h2>Concepts, Not Proofs</h2>
+    <div class="divider"></div>
+    <div class="grid-2">
+      <div>
+        <h3>This course is</h3>
+        <p>Intuition, a little technical detail, history into the 2025 frontier.</p>
+      </div>
+      <div>
+        <h3>This course is not</h3>
+        <p>Proof-heavy theory, a coding bootcamp, or one field's narrow view.</p>
+      </div>
+    </div>
+    <p class="muted">Mixed majors welcome: basic Python is enough</p>
+  </div>
+
+  <!-- 43. Demos -->
+  <div class="slide">
+    <h2>Hands-On Demos</h2>
+    <div class="divider"></div>
+    <ul class="check">
+      <li>Tighten a privacy budget, watch utility drop</li>
+      <li>Run a membership-inference attack</li>
+      <li>Craft a panda → gibbon adversarial image</li>
+      <li>Try a jailbreak sandbox</li>
+      <li>Run an AI-text detector</li>
+    </ul>
+    <div class="demo-card">
+      <h3>Demo</h3>
+      <p>Browser-only. No homework. Nothing to submit.</p>
+    </div>
+  </div>
+
+  <!-- 44. Get the most -->
+  <div class="slide">
+    <h2>How to Get the Most Out of It</h2>
+    <div class="divider"></div>
+    <ul class="check">
+      <li>Bring a laptop, run the notebook</li>
+      <li>Always ask: "what's the threat model?"</li>
+      <li>Read one linked paper per week (optional)</li>
+      <li>Bring your own AI headline to discuss</li>
+    </ul>
+  </div>
+
+  <!-- 45. The goal -->
+  <div class="slide">
+    <h2>The Goal</h2>
+    <div class="divider"></div>
+    <div class="highlight">
+      Read any AI headline and know which question to ask.
+    </div>
+    <ul>
+      <li>Private? Robust? Reliable? Fair? Real?</li>
+      <li>And: for which threat model?</li>
+    </ul>
+  </div>
+
+  <!-- 46. CLOSER -->
+  <div class="slide end-slide no-footer">
+    <div class="big-word">Trust?</div>
+    <p class="big-word-sub">Always ask: who, what they know, what they can do.</p>
+  </div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 47</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

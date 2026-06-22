@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Watermarking, Deepfakes &amp; Provenance — Notes (Lecture 12)</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  body { max-width: 880px; margin: 40px auto; padding: 0 28px; color: var(--charcoal); }
+  article { margin-bottom: 26px; }
+  h1 { color: var(--yonsei-blue); }
+  h2 { color: var(--yonsei-blue); margin-bottom: 6px; }
+  .kt { color: var(--yonsei-blue); font-weight: 700; }
+  hr { border: none; border-top: 1px solid var(--slate); margin: 22px 0; }
+</style>
+</head>
+<body>
+
+<h1>Watermarking, Deepfakes &amp; Provenance — Speaker Notes</h1>
+<p>Trustworthy AI · Lecture 12. One entry per slide, in order.</p>
+<hr>
+
+<article>
+<h2>Title</h2>
+<p>This lecture is about two questions: how do you prove a model is yours, and how do you prove a piece of content came from a machine. We focus mostly on the second.</p>
+<p><span class="kt">Key takeaway:</span> watermarking and provenance are how we keep "real vs synthetic" meaningful online.</p>
+</article>
+
+<article>
+<h2>Contents</h2>
+<p>Six parts: the two flavors of watermark, text watermarking by green lists, quality and robustness, production systems and images, why standalone detectors fail, and finally deepfakes and provenance.</p>
+<p><span class="kt">Key takeaway:</span> the arc moves from a clean idea to its limits to the surrounding policy.</p>
+</article>
+
+<article>
+<h2>The Problem</h2>
+<p>AI output now passes for human work across every medium. Nothing in the content itself tells you a machine made it, or whose model it was.</p>
+<p><span class="kt">Key takeaway:</span> a watermark is a signal we deliberately add to recover that missing information.</p>
+</article>
+
+<article>
+<h2>What a Watermark Is</h2>
+<p>A watermark is an invisible mark hidden in content: imperceptible to a person, but readable by a detector holding a secret key. The concept predates computers (banknotes, paper).</p>
+<p><span class="kt">Key takeaway:</span> the new twist is hiding the mark in what a generative model produces.</p>
+</article>
+
+<article>
+<h2>Two Flavors</h2>
+<p>The same word covers two different goals: a model watermark proves a model is yours, while an output watermark proves a piece of content is AI-generated.</p>
+<p><span class="kt">Key takeaway:</span> always ask which question a "watermark" is answering.</p>
+</article>
+
+<article>
+<h2>Model Watermarks: Prove Ownership</h2>
+<p>An owner trains the model to react to a secret trigger that ordinary users never encounter. Querying that trigger later proves the model is a copy of theirs.</p>
+<p><span class="kt">Key takeaway:</span> a model watermark is a hidden signature baked into the weights.</p>
+</article>
+
+<article>
+<h2>Output Watermarks: Flag the Content</h2>
+<p>Here the generator cooperates: it tilts its own output so the result carries a hidden, detectable pattern while still looking normal. This is our main focus.</p>
+<p><span class="kt">Key takeaway:</span> the generator plants the signal as it writes, so detection is far more reliable.</p>
+</article>
+
+<article>
+<h2>Why We Care</h2>
+<p>Schools, elections, and courts all need to tell genuine content from synthetic. The stakes are concrete, not academic.</p>
+<p><span class="kt">Key takeaway:</span> online trust rests on distinguishing real from synthetic content.</p>
+</article>
+
+<article>
+<h2>Watermark vs Detector</h2>
+<p>A watermark assumes the generator cooperated and planted a signal. A detector looks at finished content where nothing was planted and must guess.</p>
+<p><span class="kt">Key takeaway:</span> a planted signal is fundamentally more trustworthy than a post-hoc guess.</p>
+</article>
+
+<article>
+<h2>How a Model Writes</h2>
+<p>A language model generates one token at a time: at each step it scores every possible next token, samples one, and repeats. A token is a word or word-piece.</p>
+<p><span class="kt">Key takeaway:</span> each generation step is a chance to hide a signal.</p>
+</article>
+
+<article>
+<h2>The Green-List Idea</h2>
+<p>At each step, a secret key splits the vocabulary into a favored "green list" and the rest, the "red list". The model is nudged to prefer green tokens.</p>
+<p><span class="kt">Key takeaway:</span> the watermark is just a per-step bias toward a pseudo-random token set.</p>
+</article>
+
+<article>
+<h2>Splitting the Vocabulary</h2>
+<p>The green list is regenerated fresh at each step from the secret key, so without the key the split looks random and the bias is undetectable.</p>
+<p><span class="kt">Key takeaway:</span> the secret key is what makes the green list both reproducible and hidden.</p>
+</article>
+
+<article>
+<h2>The Nudge</h2>
+<p>The mechanism adds a small bonus $\delta$ to every green token's score before sampling. A larger $\delta$ strengthens the watermark but distorts the text more.</p>
+<p><span class="kt">Key takeaway:</span> $\delta$ is the single dial controlling watermark strength.</p>
+</article>
+
+<article>
+<h2>Reading It Back</h2>
+<p>The detector knows the key, so for each generated token it can re-derive whether that token was green, then count the green fraction. An unusually high count signals the watermark.</p>
+<p><span class="kt">Key takeaway:</span> detection needs only the key, not access to the model.</p>
+</article>
+
+<article>
+<h2>The Telltale Fraction</h2>
+<p>If the green list is half the vocabulary, human text lands near 50% green by chance, while watermarked text is pushed much higher, say 80%.</p>
+<p><span class="kt">Key takeaway:</span> the gap between the chance rate and the watermarked rate is the signal.</p>
+</article>
+
+<article>
+<h2>A Detection Threshold</h2>
+<p>Plot the green fraction for human and watermarked text as two overlapping bells, and place a threshold between them. Text above the line is called watermarked.</p>
+<p><span class="kt">Key takeaway:</span> detection reduces to "is the green fraction suspiciously high?"</p>
+</article>
+
+<article>
+<h2>The Danger: False Positives</h2>
+<p>A false positive flags genuine human writing as AI. The false-positive rate is the chance a real human exceeds the threshold by pure luck.</p>
+<p><span class="kt">Key takeaway:</span> we must keep the false-positive rate tiny, because accusations are costly.</p>
+</article>
+
+<article>
+<h2>Length Beats Luck</h2>
+<p>Over a long passage, the chance of a human reaching 80% green by luck shrinks to essentially zero, just as flipping many coins almost never gives 80% heads.</p>
+<p><span class="kt">Key takeaway:</span> longer text makes the verdict far safer.</p>
+</article>
+
+<article>
+<h2>The One-Knob Tradeoff</h2>
+<p>Raising $\delta$ makes the watermark easier to detect on shorter text, but forces more unnatural word choices. Lowering it preserves quality but weakens the signal.</p>
+<p><span class="kt">Key takeaway:</span> detectability versus quality is the central watermark tradeoff.</p>
+</article>
+
+<article>
+<h2>The Quality Worry</h2>
+<p>If the best next word is on the red list, the model keeps settling for second-best, and the degradation accumulates into clumsy prose.</p>
+<p><span class="kt">Key takeaway:</span> the natural question is whether we can watermark without hurting quality.</p>
+</article>
+
+<article>
+<h2>Distortion-Free Watermarks</h2>
+<p>Yes: instead of biasing scores, hide the mark in the randomness of sampling so the watermarked text follows the model's exact distribution. On average, quality is untouched.</p>
+<p><span class="kt">Key takeaway:</span> distortion-free watermarks preserve output quality by construction.</p>
+</article>
+
+<article>
+<h2>The Trick: Reused Randomness</h2>
+<p>Sampling already consumes random numbers; derive them from the key and the position. The same seed picks the same token, so the detector can replay it and check the match.</p>
+<p><span class="kt">Key takeaway:</span> the choice looks random but is secretly reproducible from the key.</p>
+</article>
+
+<article>
+<h2>Undetectable Watermarks</h2>
+<p>A 2024 result shows a watermark that no statistical test can detect without the key, so output looks perfectly normal, yet with the key the signal is unmistakable.</p>
+<p><span class="kt">Key takeaway:</span> watermarking need not leave any provable trace for outsiders.</p>
+</article>
+
+<article>
+<h2>The Robustness Worry</h2>
+<p>People edit AI text before sharing: fixing words, reordering sentences, paraphrasing, or round-trip translating. The question is whether the hidden signal survives.</p>
+<p><span class="kt">Key takeaway:</span> robustness is about whether the mark persists through editing.</p>
+</article>
+
+<article>
+<h2>Small Edits Survive</h2>
+<p>A handful of changes flips only a few tokens; most green tokens stay green, so the green fraction still clears the threshold.</p>
+<p><span class="kt">Key takeaway:</span> light editing leaves the watermark intact.</p>
+</article>
+
+<article>
+<h2>Heavy Paraphrase Breaks It</h2>
+<p>Rewriting every sentence replaces the original tokens, resetting the green count to a random baseline. Strong paraphrasers can wash the mark out entirely.</p>
+<p><span class="kt">Key takeaway:</span> a determined attacker can usually remove a text watermark.</p>
+</article>
+
+<article>
+<h2>The Honest Limit</h2>
+<p>No text watermark survives an adversary who fully rewrites the content. Watermarks deter casual misuse but do not defeat a motivated attacker.</p>
+<p><span class="kt">Key takeaway:</span> set expectations honestly, watermarks raise the cost of misuse, they do not eliminate it.</p>
+</article>
+
+<article>
+<h2>SynthID-Text in Production</h2>
+<p>Google deployed a green-list-style watermark in its Gemini assistant at scale, tuned to preserve quality, and a large user study found no measurable drop.</p>
+<p><span class="kt">Key takeaway:</span> watermarking is already running in a shipped consumer product.</p>
+</article>
+
+<article>
+<h2>SynthID for Images</h2>
+<p>The same family watermarks images and audio by weaving a faint pattern across pixels or samples, invisible to people but readable by a model.</p>
+<p><span class="kt">Key takeaway:</span> one provenance family now spans text, image, audio, and video.</p>
+</article>
+
+<article>
+<h2>Image Watermarks Are Fragile</h2>
+<p>Pixels are easy to damage: cropping removes part of the pattern, screenshots and re-saves blur it, and heavy compression scrubs fine detail.</p>
+<p><span class="kt">Key takeaway:</span> every image transform chips away at the hidden mark.</p>
+</article>
+
+<article>
+<h2>Cropping Erases the Mark</h2>
+<p>Because the watermark is spread across the whole image, keeping only a corner leaves too little of the pattern for the detector to recover.</p>
+<p><span class="kt">Key takeaway:</span> less surface means less signal and a missed detection.</p>
+</article>
+
+<article>
+<h2>Video Is Harder Still</h2>
+<p>Video adds thousands of frames, platform recompression on every upload, and clipping to a few seconds. The mark must survive all of it at once.</p>
+<p><span class="kt">Key takeaway:</span> robust video watermarking is an open engineering challenge.</p>
+</article>
+
+<article>
+<h2>No Shared Standard</h2>
+<p>Each company ships its own watermark, and a detector reads only its own brand, so content from elsewhere goes unflagged. There is no universal check.</p>
+<p><span class="kt">Key takeaway:</span> fragmentation limits how useful watermarks can be in practice.</p>
+</article>
+
+<article>
+<h2>The Tempting Shortcut</h2>
+<p>Suppose there is no watermark. A standalone detector tries to guess from style alone, with no key and no cooperation from the generator. Many products promise this.</p>
+<p><span class="kt">Key takeaway:</span> detection without a planted signal is just an educated guess.</p>
+</article>
+
+<article>
+<h2>Why Detectors Struggle</h2>
+<p>Modern models write like fluent humans, the stylistic gap keeps shrinking, each new model breaks old detectors, and a light rewrite fools most of them.</p>
+<p><span class="kt">Key takeaway:</span> with no hidden signal, the verdict is fragile.</p>
+</article>
+
+<article>
+<h2>False Accusations</h2>
+<p>A wrong flag harms real people: students accused of cheating, non-native writers flagged disproportionately, and no way to prove innocence.</p>
+<p><span class="kt">Key takeaway:</span> a confident but sometimes-wrong detector is dangerous.</p>
+</article>
+
+<article>
+<h2>OpenAI Pulled Its Detector</h2>
+<p>In 2023 OpenAI withdrew its own AI-text classifier, citing low accuracy and too many false positives, even on text from its own models.</p>
+<p><span class="kt">Key takeaway:</span> even the model's maker could not detect its output reliably.</p>
+</article>
+
+<article>
+<h2>Try It Yourself (Demo)</h2>
+<p>Students paste their own writing and a chatbot paragraph into a free detector, compare the scores, then lightly edit each and watch the verdict flip.</p>
+<p><span class="kt">Key takeaway:</span> hands-on, the unreliability of standalone detectors is obvious.</p>
+</article>
+
+<article>
+<h2>The Right Lesson</h2>
+<p>A planted watermark can be trusted; a guessed verdict often cannot. Provenance built in at generation beats provenance inferred after the fact.</p>
+<p><span class="kt">Key takeaway:</span> build the proof in, do not try to reconstruct it later.</p>
+</article>
+
+<article>
+<h2>Deepfakes</h2>
+<p>AI now fabricates people convincingly: voice clones from seconds of audio, live face swaps, and photoreal images of events that never happened.</p>
+<p><span class="kt">Key takeaway:</span> the fakes are good enough to fool most viewers.</p>
+</article>
+
+<article>
+<h2>Real Harms</h2>
+<p>Deepfakes already drive voice-clone scams, fake political clips before elections, and non-consensual fabricated images. Detection alone cannot keep up with the volume.</p>
+<p><span class="kt">Key takeaway:</span> the harm is concrete and current, not hypothetical.</p>
+</article>
+
+<article>
+<h2>Flip the Problem</h2>
+<p>Rather than chasing every fake, prove what is real: sign genuine content at the source and attach a record of how it was made, so unsigned content earns less trust.</p>
+<p><span class="kt">Key takeaway:</span> proving authenticity scales better than detecting forgery, this is provenance.</p>
+</article>
+
+<article>
+<h2>C2PA Content Credentials</h2>
+<p>C2PA is an industry standard for a tamper-evident label: the camera or app signs the file at creation, each edit appends a signed record, and tampering breaks the signature.</p>
+<p><span class="kt">Key takeaway:</span> content credentials give content a verifiable, tamper-evident history.</p>
+</article>
+
+<article>
+<h2>A Signed History</h2>
+<p>Credentials form a chain, capture then edit then publish, each step cryptographically signed, so a reader can replay the chain and spot a broken link.</p>
+<p><span class="kt">Key takeaway:</span> the value is an auditable, signed history rather than a single stamp.</p>
+</article>
+
+<article>
+<h2>The Strip Problem</h2>
+<p>A credential can simply be removed, for example by a screenshot that drops the metadata, and absence of a credential is not proof of fakery. Watermarks help where credentials are stripped.</p>
+<p><span class="kt">Key takeaway:</span> watermarks and credentials are complementary defenses, not rivals.</p>
+</article>
+
+<article>
+<h2>The Law Steps In</h2>
+<p>Regulators increasingly require disclosure: the EU AI Act mandates labeling AI-generated media, several US states target election deepfakes, and platforms are adding AI-generated tags.</p>
+<p><span class="kt">Key takeaway:</span> labeling AI content is becoming a legal obligation.</p>
+</article>
+
+<article>
+<h2>Frontier 2025–26</h2>
+<p>The field is moving toward watermarks built into more base models, robustness against stronger paraphrasers, and cross-platform provenance standards, with the open question of whether any of it can be made mandatory.</p>
+<p><span class="kt">Key takeaway:</span> the technical and policy frontiers are advancing together.</p>
+</article>
+
+<article>
+<h2>Key Takeaways</h2>
+<p>Two flavors of watermark; green-list text watermarks plant a countable signal; they survive small edits but not full rewrites; standalone detectors misfire and risk false accusations; provenance and credentials prove what is real.</p>
+<p><span class="kt">Key takeaway:</span> a planted mark beats a guessed verdict.</p>
+</article>
+
+<article>
+<h2>Closer</h2>
+<p>The closing question is simply "Real?". The answer is to build the proof of authenticity in at the source rather than guessing after the fact.</p>
+<p><span class="kt">Key takeaway:</span> design provenance in, do not bolt detection on.</p>
+</article>
+
+</body>
+</html>

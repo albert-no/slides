@@ -1,0 +1,341 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 14 — Script</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+body { max-width: 880px; margin: 40px auto; padding: 0 28px; color: var(--charcoal); font-family: 'Yonsei','Noto Sans',Arial,sans-serif; line-height: 1.65; }
+h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
+article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
+.kt { color: var(--yonsei-blue); font-weight: 700; }
+</style></head><body>
+<h1>Lecture 14 — Fairness II: Mitigation &amp; Accountability · Speaker Script</h1>
+<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+
+<article>
+<h2>Fairness II: Mitigation &amp; Accountability</h2>
+<p>In the last lecture we learned to measure unfairness. Today we learn to do something about it, and to answer for the choices we make.</p>
+<p><span class="kt">Key takeaway:</span> Mitigation turns a measured gap into a deliberate edit.</p>
+</article>
+
+<article>
+<h2>Contents</h2>
+<p>Three places to intervene, then each in turn: pre-processing, in-processing, post-processing. Then the tradeoff, accountability, and fairness for generative models.</p>
+<p><span class="kt">Key takeaway:</span> Fix the data, the training, or the outputs, then document the fix.</p>
+</article>
+
+<article>
+<h2>01 — Three Places to Intervene</h2>
+<p>The first section frames the whole lecture: every mitigation method lives at one of three points in the machine learning pipeline.</p>
+<p><span class="kt">Key takeaway:</span> Data, training, and outputs are the three handles you can grab.</p>
+</article>
+
+<article>
+<h2>We Measured Bias; Now Fix It</h2>
+<p>Models fail unevenly across groups: loans skew by zip code, hiring filters skew by gender, face systems fail on darker skin. Measuring those gaps was lecture one; closing them is this lecture.</p>
+<p><span class="kt">Key takeaway:</span> Measuring is easy; closing the gap is the real work.</p>
+</article>
+
+<article>
+<h2>What Mitigation Means</h2>
+<p>Bias mitigation is any change to the data, the model, or the outputs that shrinks a measured fairness gap. It is a deliberate edit, not a lucky side effect of higher accuracy.</p>
+<p><span class="kt">Key takeaway:</span> Mitigation is an intentional change aimed at a specific gap.</p>
+</article>
+
+<article>
+<h2>The Machine Learning Pipeline</h2>
+<p>Data flows into training, and training produces outputs. Bias can enter, and be removed, at each stage: pre-process the data, in-process the training, post-process the outputs.</p>
+<p><span class="kt">Key takeaway:</span> Three stages, three families of fix.</p>
+</article>
+
+<article>
+<h2>Which Stage Can You Touch?</h2>
+<p>Pre-processing assumes you own the data. In-processing assumes you control training. Post-processing assumes only access to the scores. Access shrinks from left to right, and so does the cost of deploying the fix.</p>
+<p><span class="kt">Key takeaway:</span> Choose the stage you actually have access to.</p>
+</article>
+
+<article>
+<h2>The Black-Box Reality</h2>
+<p>Often you cannot retrain the model you must fix: it is a vendor API with locked weights, or simply too expensive to retrain. When the model is sealed, post-processing is the only door left.</p>
+<p><span class="kt">Key takeaway:</span> A sealed model forces you to work on the outputs.</p>
+</article>
+
+<article>
+<h2>02 — Pre-Processing</h2>
+<p>The second section: fix the data before any model sees it.</p>
+<p><span class="kt">Key takeaway:</span> Clean data once, then train anything on it.</p>
+</article>
+
+<article>
+<h2>The Bias Is in the Data</h2>
+<p>A model learns the patterns it is shown. If past hiring favored one group, the labels record that history and the model copies it forward. Fix the data, and the model never learns the bias.</p>
+<p><span class="kt">Key takeaway:</span> Biased labels teach biased models.</p>
+</article>
+
+<article>
+<h2>Reweighing</h2>
+<p>Reweighing assigns each example a weight $w(g,y)$ equal to the ratio of the product of the marginals to the joint probability. Underrepresented group-and-outcome pairs get a larger weight, so the loss listens to every cell equally.</p>
+<p><span class="kt">Key takeaway:</span> Weight the examples so the data looks balanced, without deleting any.</p>
+</article>
+
+<article>
+<h2>Reweighing: The Picture</h2>
+<p>Before reweighing, the group-outcome cells have very uneven counts. After reweighing, each cell contributes equally to the loss. No example is removed; only its influence is rescaled.</p>
+<p><span class="kt">Key takeaway:</span> Reweighing lifts rare cells without throwing data away.</p>
+</article>
+
+<article>
+<h2>Relabeling</h2>
+<p>Relabeling flips a few borderline labels to even out the outcomes: promote some rejected minority records, demote some accepted majority ones. It is sometimes called "massaging" the labels and must be used with care, since you are editing ground truth.</p>
+<p><span class="kt">Key takeaway:</span> Flip a handful of boundary labels, cautiously.</p>
+</article>
+
+<article>
+<h2>Representation Repair</h2>
+<p>Representation repair learns a new feature encoding that keeps what predicts the target but erases what predicts the group. If the features carry no signal about the protected attribute, no downstream model can use it.</p>
+<p><span class="kt">Key takeaway:</span> Erase the group signal from the features themselves.</p>
+</article>
+
+<article>
+<h2>Pre-Processing: Pros and Cons</h2>
+<p>Pre-processing is model-agnostic, reusable, and easy to explain to a regulator. But editing labels is risky, proxy features can leak the group back in, and nothing guarantees fairness at the moment of decision.</p>
+<p><span class="kt">Key takeaway:</span> Simple and portable, but no output-time guarantee.</p>
+</article>
+
+<article>
+<h2>03 — In-Processing</h2>
+<p>The third section: change the training objective so fairness is learned, not bolted on.</p>
+<p><span class="kt">Key takeaway:</span> Make fairness part of what the model optimizes.</p>
+</article>
+
+<article>
+<h2>Add Fairness to the Objective</h2>
+<p>We minimize the usual loss plus a fairness penalty scaled by $\lambda$. The penalty measures unfairness, and $\lambda$ controls how much accuracy we are willing to spend to reduce it.</p>
+<p><span class="kt">Key takeaway:</span> A single knob $\lambda$ trades accuracy for fairness during training.</p>
+</article>
+
+<article>
+<h2>Fairness as a Constraint</h2>
+<p>Instead of a soft penalty, we can demand the fairness gap stay below a hard budget $\tau$ while minimizing loss. This is an explicit promise rather than a gentle nudge.</p>
+<p><span class="kt">Key takeaway:</span> A constraint pins the gap below a chosen ceiling.</p>
+</article>
+
+<article>
+<h2>The Reductions Approach</h2>
+<p>The reductions approach of Agarwal and colleagues turns a fairness constraint into a sequence of ordinary training calls: reweight, train a plain classifier, check the gap, adjust, repeat until the constraint holds.</p>
+<p><span class="kt">Key takeaway:</span> Reduce fair classification to repeated standard training.</p>
+</article>
+
+<article>
+<h2>Why Reductions Are Handy</h2>
+<p>Because it is just a wrapper around training, it works with any standard classifier, handles many fairness definitions, and comes with provable guarantees. The fairness logic sits outside; the learner stays untouched inside.</p>
+<p><span class="kt">Key takeaway:</span> A clean wrapper that reuses any existing learner.</p>
+</article>
+
+<article>
+<h2>Adversarial Debiasing</h2>
+<p>Two networks share features and compete: the predictor solves the target task while an adversary tries to recover the protected group from those same features. Training the predictor to fool the adversary strips the group signal out.</p>
+<p><span class="kt">Key takeaway:</span> Make the features useless for predicting the group.</p>
+</article>
+
+<article>
+<h2>The Adversary's Job</h2>
+<p>The adversary's success measures how much group information leaks. As the predictor learns to defeat it, the shared features lose their group signal. It is representation repair, learned end to end.</p>
+<p><span class="kt">Key takeaway:</span> The adversary's failure is the predictor's fairness.</p>
+</article>
+
+<article>
+<h2>In-Processing: Pros and Cons</h2>
+<p>In-processing usually gives the best accuracy-fairness balance because it optimizes the real objective and supports many definitions. But it needs full training access, is harder to tune and debug, and requires retraining whenever the goal changes.</p>
+<p><span class="kt">Key takeaway:</span> Best balance, highest access requirement.</p>
+</article>
+
+<article>
+<h2>04 — Post-Processing</h2>
+<p>The fourth section: leave the model alone and adjust only the decision rule.</p>
+<p><span class="kt">Key takeaway:</span> Change the cutoff, not the weights.</p>
+</article>
+
+<article>
+<h2>Leave the Model Alone</h2>
+<p>The model outputs a risk score; we decide where to cut it off, and we may pick a different cutoff for each group. It is surgery on the threshold rather than on the trained weights.</p>
+<p><span class="kt">Key takeaway:</span> The decision rule is a separate, editable layer.</p>
+</article>
+
+<article>
+<h2>Recall: Equalized Odds</h2>
+<p>Equalized odds, from Hardt, Price, and Srebro, asks for equal true-positive and false-positive rates across groups: the error rates should not depend on which group you belong to.</p>
+<p><span class="kt">Key takeaway:</span> Equal error rates across groups is the post-processing target.</p>
+</article>
+
+<article>
+<h2>Group-Specific Thresholds</h2>
+<p>With one shared score we choose a different cutoff per group, picked so both groups land on the same true-positive and false-positive rates. Group A might be cut at 0.55 while group B is cut at 0.40.</p>
+<p><span class="kt">Key takeaway:</span> Different cutoffs can equalize the rates.</p>
+</article>
+
+<article>
+<h2>The Post-Hoc Recipe</h2>
+<p>Train a model normally, measure each group's rates on held-out data, search for thresholds that match those rates, then deploy one cutoff per group. The model itself never changes.</p>
+<p><span class="kt">Key takeaway:</span> Four steps, all after training is done.</p>
+</article>
+
+<article>
+<h2>The Accuracy Cost</h2>
+<p>Matching the rates often means ignoring signal: rejecting a high-scoring applicant or accepting a lower-scoring one purely to align the groups. The simplicity of post-processing is paid for in overall accuracy.</p>
+<p><span class="kt">Key takeaway:</span> Simple to apply, but it costs accuracy.</p>
+</article>
+
+<article>
+<h2>Demo: A Lending Model</h2>
+<p>Consider a lending model with two groups. A single shared cutoff approves 72% of group A but only 50% of group B, with overall accuracy at 84%. We are about to lower group B's cutoff.</p>
+<p><span class="kt">Key takeaway:</span> A 22-point approval gap is our starting point.</p>
+</article>
+
+<article>
+<h2>Demo: Watch the Tradeoff Move</h2>
+<p>As we drop group B's cutoff, the approval gap closes from 22 points to 2 points, but overall accuracy slips from 84% to 80%. The fairness gain and the accuracy loss happen together.</p>
+<p><span class="kt">Key takeaway:</span> Closing the gap by 20 points cost 4 points of accuracy.</p>
+</article>
+
+<article>
+<h2>Demo: The Lesson</h2>
+<p>One knob moved both numbers: fairness improved a lot, accuracy fell a little. The mechanical fix is trivial; deciding whether that trade is acceptable is a value judgment.</p>
+<p><span class="kt">Key takeaway:</span> The math is easy; the choice is not.</p>
+</article>
+
+<article>
+<h2>05 — The Tradeoff</h2>
+<p>The fifth section: why you cannot have everything at once.</p>
+<p><span class="kt">Key takeaway:</span> Fairness, accuracy, and which-fairness all pull against each other.</p>
+</article>
+
+<article>
+<h2>Fairness Versus Accuracy</h2>
+<p>Pushing a fairness gap toward zero usually drops accuracy. The result is a frontier of achievable trade-offs, not a single best operating point.</p>
+<p><span class="kt">Key takeaway:</span> You choose a point on a curve, not a maximum.</p>
+</article>
+
+<article>
+<h2>Which Fairness?</h2>
+<p>The definitions themselves conflict. Equal approval rates pulls one way and equal error rates pulls another, and when base rates differ both cannot hold. Optimizing the gap you chose can worsen the one you ignored.</p>
+<p><span class="kt">Key takeaway:</span> Improving one fairness metric can hurt another.</p>
+</article>
+
+<article>
+<h2>The Impossibility</h2>
+<p>When base rates differ across groups, no decision rule satisfies every fairness definition simultaneously. This is a proven theorem, not a gap in our cleverness, so some residual gap must remain.</p>
+<p><span class="kt">Key takeaway:</span> Perfect fairness on all definitions is mathematically impossible.</p>
+</article>
+
+<article>
+<h2>No Free Lunch</h2>
+<p>Three things pull against one another: overall accuracy, small gaps between groups, and the choice of which fairness definition to use. No single setting maximizes all three.</p>
+<p><span class="kt">Key takeaway:</span> There is no configuration that wins on every axis.</p>
+</article>
+
+<article>
+<h2>A Choice, Not a Formula</h2>
+<p>The right point on the frontier is a policy decision: what the application protects, who bears the cost of an error, and what the law requires. Engineers surface the frontier; stakeholders pick the point.</p>
+<p><span class="kt">Key takeaway:</span> Picking the operating point is a human, not a technical, call.</p>
+</article>
+
+<article>
+<h2>06 — Accountability</h2>
+<p>The sixth section: a fix you cannot document cannot be trusted.</p>
+<p><span class="kt">Key takeaway:</span> Accountability is fairness made checkable.</p>
+</article>
+
+<article>
+<h2>Mitigation Needs a Record</h2>
+<p>For a fix to be trusted it must be documented: what was changed and why, who the model is for, and where it should not be used. Documentation is what makes a fairness claim auditable.</p>
+<p><span class="kt">Key takeaway:</span> Undocumented mitigation is unverifiable mitigation.</p>
+</article>
+
+<article>
+<h2>Model Cards</h2>
+<p>A model card, introduced by Mitchell and colleagues, is a short spec sheet that travels with the model: intended and out-of-scope use, performance broken down by group, and known limitations.</p>
+<p><span class="kt">Key takeaway:</span> Report performance per group, not just on average.</p>
+</article>
+
+<article>
+<h2>Datasheets for Datasets</h2>
+<p>Datasheets, from Gebru and colleagues, apply the same idea one step earlier: document how and why the data was collected, who is in it and who is missing, and what preprocessing was applied.</p>
+<p><span class="kt">Key takeaway:</span> Document the data as carefully as the model.</p>
+</article>
+
+<article>
+<h2>Audits</h2>
+<p>An audit is an independent test of the deployed system: probe it with realistic inputs and measure gaps the builder may have missed. It can be run by an internal team or an outside party.</p>
+<p><span class="kt">Key takeaway:</span> Verify fairness from the outside, not just on paper.</p>
+</article>
+
+<article>
+<h2>The Gender Shades Audit</h2>
+<p>The 2018 Gender Shades audit by Buolamwini and Gebru tested commercial face classifiers. They were near-perfect on lighter-skinned men but wrong over a third of the time on darker-skinned women. The public results forced vendors to fix their systems.</p>
+<p><span class="kt">Key takeaway:</span> A public audit can force real change.</p>
+</article>
+
+<article>
+<h2>Impact Assessments</h2>
+<p>An impact assessment asks before deployment, not after harm: who could this hurt, what is the worst-case error, and is there a way to appeal a decision? It is increasingly required by law for high-risk uses.</p>
+<p><span class="kt">Key takeaway:</span> Ask who could be harmed before you ship.</p>
+</article>
+
+<article>
+<h2>Documentation Becomes Law</h2>
+<p>Regulators now mandate these records. The EU AI Act requires technical documentation and logged risk assessments for high-risk systems, turning voluntary practice into a legal duty.</p>
+<p><span class="kt">Key takeaway:</span> Documentation is shifting from best practice to legal requirement.</p>
+</article>
+
+<article>
+<h2>07 — Generative Fairness</h2>
+<p>The final section: fairness for image and text generators, where the same three stages apply but the failures look different.</p>
+<p><span class="kt">Key takeaway:</span> Generators need mitigation too, with new pitfalls.</p>
+</article>
+
+<article>
+<h2>Generators Amplify Stereotypes</h2>
+<p>Bianchi and colleagues showed that text-to-image models exaggerate what they were trained on: "a doctor" returns mostly men, "a criminal" skews by race, and the output is more skewed than the underlying data.</p>
+<p><span class="kt">Key takeaway:</span> Generators do not just reflect bias, they amplify it.</p>
+</article>
+
+<article>
+<h2>How to Debias a Generator</h2>
+<p>The same three stages apply: rebalance the training images, fine-tune the model toward balance, or inject diversity into the prompt at request time. The prompt-side fix is the cheapest and the most fragile.</p>
+<p><span class="kt">Key takeaway:</span> Cheaper fixes are also more brittle.</p>
+</article>
+
+<article>
+<h2>The 2024 Overcorrection</h2>
+<p>In 2024 an image generator quietly rewrote user prompts to insert diverse groups everywhere, including historical scenes where it made no sense. The feature was pulled after public backlash.</p>
+<p><span class="kt">Key takeaway:</span> A blunt prompt patch broke accuracy chasing one fairness goal.</p>
+</article>
+
+<article>
+<h2>The Lesson of Overcorrection</h2>
+<p>Fairness is context-dependent. Balancing demographics helps for a generic "a doctor" but harms for a specific historical figure. One blunt rule cannot cover both cases, and a heavy-handed fix becomes its own bias.</p>
+<p><span class="kt">Key takeaway:</span> A fix without context is just a new bias.</p>
+</article>
+
+<article>
+<h2>Frontier 2025-26</h2>
+<p>The field is moving toward steering generators without crude prompt hacks, fairness audits built directly into model cards, and context-aware fixes instead of one-size-fits-all rules.</p>
+<p><span class="kt">Key takeaway:</span> From blunt patches toward measured, documented control.</p>
+</article>
+
+<article>
+<h2>Key Takeaways</h2>
+<p>Intervene in the data, training, or outputs. Post-processing works even on a sealed model. Fairness trades against accuracy, with no free lunch. And document and audit, or the fix is not trusted.</p>
+<p><span class="kt">Key takeaway:</span> Mitigation is a choice on a frontier, not a single correct setting.</p>
+</article>
+
+<article>
+<h2>Closer</h2>
+<p>We close on $\lambda$, the one knob that captures the whole lecture: turn it up for fairness, down for accuracy, and accept that you must choose.</p>
+<p><span class="kt">Key takeaway:</span> One knob, $\lambda$, between accuracy and fairness.</p>
+</article>
+
+</body></html>

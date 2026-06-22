@@ -1,0 +1,365 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 6 — Script</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+body { max-width: 880px; margin: 40px auto; padding: 0 28px; color: var(--charcoal); font-family: 'Yonsei','Noto Sans',Arial,sans-serif; line-height: 1.65; }
+h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
+article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
+.kt { color: var(--yonsei-blue); font-weight: 700; }
+</style></head><body>
+<h1>Lecture 6 — Hallucination, Calibration &amp; Reliability · Speaker Script</h1>
+<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+
+<article>
+<h2>Hallucination, Calibration &amp; Reliability</h2>
+<p>Welcome to Lecture 6 of Trustworthy AI. Today we ask why a fluent model answer can be a confident wrong answer, and what tools let us measure and bound that risk.</p>
+<p><span class="kt">Key takeaway:</span> Reliability is something we can measure, not just hope for.</p>
+</article>
+
+<article>
+<h2>Contents</h2>
+<p>Six steps: fluent is not correct, why models hallucinate, calibration, conformal prediction, detection and grounding, and the 2025-26 frontier.</p>
+<p><span class="kt">Key takeaway:</span> From the failure, to its cause, to ways of measuring and reducing it.</p>
+</article>
+
+<article>
+<h2>01 — Fluent ≠ Correct</h2>
+<p>First section. The core observation: a model can produce perfectly fluent prose that is simply not true.</p>
+<p><span class="kt">Key takeaway:</span> Fluency and truth are independent.</p>
+</article>
+
+<article>
+<h2>What Is a Hallucination</h2>
+<p>A hallucination is output that reads fluently and confidently but is not grounded in facts or in the provided source. The grammar is perfect; the content is invented.</p>
+<p><span class="kt">Key takeaway:</span> Hallucination is confident, ungrounded output.</p>
+</article>
+
+<article>
+<h2>Fluency Fools Us</h2>
+<p>We instinctively read confident, well-formatted prose as true prose. The signal we trust is style, not verified truth.</p>
+<p><span class="kt">Key takeaway:</span> Style is not evidence of correctness.</p>
+</article>
+
+<article>
+<h2>The Fake-Citation Lawyer</h2>
+<p>In a 2023 case, a lawyer asked ChatGPT for precedents and filed a brief citing six cases that never existed, complete with invented names and quotations. The judge sanctioned the firm.</p>
+<p><span class="kt">Key takeaway:</span> Hallucinated citations can look fully real.</p>
+</article>
+
+<article>
+<h2>Invented Medical Facts</h2>
+<p>Ask a model about a drug interaction and you may get a plausible dosage and mechanism that correspond to no real study. In medicine and law, a fluent error is a dangerous one.</p>
+<p><span class="kt">Key takeaway:</span> High-stakes domains have little margin for confident errors.</p>
+</article>
+
+<article>
+<h2>Two Flavors of Wrong</h2>
+<p>A factuality error contradicts the world. A faithfulness error contradicts the provided source, for example a summary asserting something the document never said.</p>
+<p><span class="kt">Key takeaway:</span> Factuality is about the world; faithfulness is about the source.</p>
+</article>
+
+<article>
+<h2>Not the Same as a Bug</h2>
+<p>A bug is a fixable defect with a crash or error. Hallucination is structural: the model is working as designed, predicting likely text rather than checking truth.</p>
+<p><span class="kt">Key takeaway:</span> Hallucination is a property of the objective, not a defect to patch.</p>
+</article>
+
+<article>
+<h2>Why This Matters</h2>
+<p>Reliability gates deployment. A single bad answer can break user trust, endanger safety in health, law, or finance, and raise the question of who is liable for the error.</p>
+<p><span class="kt">Key takeaway:</span> Unreliable answers carry real trust, safety, and liability costs.</p>
+</article>
+
+<article>
+<h2>02 — Why Models Hallucinate</h2>
+<p>Second section. We trace hallucination back to the training objective and the incentives baked into it.</p>
+<p><span class="kt">Key takeaway:</span> The cause is in the objective, not in a single mistake.</p>
+</article>
+
+<article>
+<h2>The Training Objective</h2>
+<p>A language model is trained to predict the next token given the words so far. It maximizes likely text, not true text.</p>
+<p><span class="kt">Key takeaway:</span> The model optimizes likelihood, not truth.</p>
+</article>
+
+<article>
+<h2>No Truth Grounding</h2>
+<p>Nothing in the loss demands that an output be factual. The corpus mixes truth and fiction, so the model learns the shape of answers, and a plausible shape can be false.</p>
+<p><span class="kt">Key takeaway:</span> Truth is not a quantity the loss controls.</p>
+</article>
+
+<article>
+<h2>Plausible Beats True</h2>
+<p>Asked for a citation, the model emits a citation-shaped string: a name, a year, a venue. It fills the slot fluently whether or not the paper exists.</p>
+<p><span class="kt">Key takeaway:</span> The model completes patterns, even when the referent is fictional.</p>
+</article>
+
+<article>
+<h2>Pressure to Always Answer</h2>
+<p>Training and human raters reward helpful, complete replies. "I don't know" reads as unhelpful, so the model learns to guess rather than admit doubt.</p>
+<p><span class="kt">Key takeaway:</span> We trained the model to prefer a confident guess over an honest blank.</p>
+</article>
+
+<article>
+<h2>An Exam-Taking Analogy</h2>
+<p>On a test with no penalty for guessing, a blank scores zero while a guess sometimes scores, so guessing is always optimal. The model faces the same incentive on every uncertain answer.</p>
+<p><span class="kt">Key takeaway:</span> Without a penalty for wrong answers, abstention is never rewarded.</p>
+</article>
+
+<article>
+<h2>Where Errors Concentrate</h2>
+<p>Hallucination is not uniform. It clusters on rare entities, long-tail facts, recent events past the training cutoff, and precise numbers, dates, or quotations.</p>
+<p><span class="kt">Key takeaway:</span> The thinner the evidence, the more likely an invention.</p>
+</article>
+
+<article>
+<h2>The Knowledge Cutoff</h2>
+<p>A model's facts freeze at its training date. Ask about yesterday and it guesses, with no internal flag that says "I have not seen this."</p>
+<p><span class="kt">Key takeaway:</span> The model cannot tell that a question is outside its knowledge.</p>
+</article>
+
+<article>
+<h2>03 — Calibration</h2>
+<p>Third section. We move from "is the answer right" to "can we trust the confidence attached to the answer."</p>
+<p><span class="kt">Key takeaway:</span> Calibration is about trusting the confidence number.</p>
+</article>
+
+<article>
+<h2>Confidence as a Number</h2>
+<p>A model can attach a probability to each answer, say 0.70 that it is correct. The question is whether that number means anything.</p>
+<p><span class="kt">Key takeaway:</span> A confidence score is only useful if it is trustworthy.</p>
+</article>
+
+<article>
+<h2>The Calibration Promise</h2>
+<p>A model is calibrated if, among all answers it gives 70% confidence, about 70% are actually correct. Confidence then becomes a promise you can audit.</p>
+<p><span class="kt">Key takeaway:</span> Calibration ties stated confidence to observed accuracy.</p>
+</article>
+
+<article>
+<h2>The Reliability Diagram</h2>
+<p>Plot stated confidence on the x-axis against actual accuracy on the y-axis. Points on the diagonal are calibrated; bars below it mean the model is overconfident.</p>
+<p><span class="kt">Key takeaway:</span> The reliability diagram shows calibration at a glance.</p>
+</article>
+
+<article>
+<h2>Over- vs Under-confident</h2>
+<p>Overconfident: says 90% but is right 70%, bars below the line. Underconfident: says 60% but is right 80%, bars above. Modern deep nets tend to be overconfident.</p>
+<p><span class="kt">Key takeaway:</span> Deep models usually claim more confidence than they earn.</p>
+</article>
+
+<article>
+<h2>Measuring the Gap</h2>
+<p>Expected Calibration Error averages, over confidence bins, the absolute gap between accuracy and confidence, weighted by bin size. Zero is perfect calibration.</p>
+<p><span class="kt">Key takeaway:</span> ECE is one number summarizing the whole reliability diagram.</p>
+</article>
+
+<article>
+<h2>Reading ECE</h2>
+<p>Group answers into confidence bins, compute accuracy versus average confidence per bin, then weight each gap by the fraction of answers in that bin.</p>
+<p><span class="kt">Key takeaway:</span> ECE is a weighted average of per-bin calibration gaps.</p>
+</article>
+
+<article>
+<h2>Bigger Is Not Better</h2>
+<p>Guo and colleagues showed that as networks grew deeper and more accurate, their calibration got worse: more capacity brought more confident errors.</p>
+<p><span class="kt">Key takeaway:</span> Higher accuracy did not bring better calibration.</p>
+</article>
+
+<article>
+<h2>A Cheap Fix: Temperature</h2>
+<p>Temperature scaling divides the model's scores by a single number T before the softmax, tuned on held-out data. Larger T softens the confidence and often restores calibration.</p>
+<p><span class="kt">Key takeaway:</span> One scalar can recalibrate a model after training.</p>
+</article>
+
+<article>
+<h2>Do Models Know What They Know?</h2>
+<p>Kadavath and colleagues found that large models carry a partial self-estimate of correctness: their probabilities often track accuracy, improving with scale but still imperfect.</p>
+<p><span class="kt">Key takeaway:</span> Model confidence is a usable but imperfect signal.</p>
+</article>
+
+<article>
+<h2>Verbalized Confidence</h2>
+<p>You can also just ask the model how sure it is. It will state a percentage in words, sometimes calibrated and often inflated, so the spoken number still needs checking.</p>
+<p><span class="kt">Key takeaway:</span> A stated "95%" is not automatically a trustworthy 95%.</p>
+</article>
+
+<article>
+<h2>Calibration in Code</h2>
+<p>A short Colab: collect the model's confidence on a quiz set, bin the answers, plot a reliability diagram, and compute ECE before and after temperature scaling.</p>
+<p><span class="kt">Key takeaway:</span> Calibration is easy to measure with a few lines of Python.</p>
+</article>
+
+<article>
+<h2>04 — Conformal Prediction</h2>
+<p>Fourth section. We turn a single guess into a set of candidates that comes with a provable coverage guarantee.</p>
+<p><span class="kt">Key takeaway:</span> Conformal prediction trades a point answer for a guaranteed set.</p>
+</article>
+
+<article>
+<h2>From One Answer to a Set</h2>
+<p>Instead of one guess, the model returns a set of candidate answers: small for easy questions, larger for hard ones. The set size itself signals uncertainty.</p>
+<p><span class="kt">Key takeaway:</span> Set size is an uncertainty signal.</p>
+</article>
+
+<article>
+<h2>The Coverage Guarantee</h2>
+<p>The prediction set is built so that it contains the true answer at least 90% of the time, that is the probability that y is in C(x) is at least 1 minus alpha, with alpha = 0.10.</p>
+<p><span class="kt">Key takeaway:</span> Conformal sets guarantee a chosen coverage level.</p>
+</article>
+
+<article>
+<h2>It Comes With a Proof</h2>
+<p>The coverage guarantee holds without trusting the model's internals. It needs only that the calibration and test data are exchangeable, making the coverage provable rather than hoped for.</p>
+<p><span class="kt">Key takeaway:</span> The guarantee is distribution-free and proven.</p>
+</article>
+
+<article>
+<h2>How It Works</h2>
+<p>Hold out a calibration set with known answers, score how surprised the model is on each, set a threshold at the 90th percentile of those scores, and at test time keep every candidate below the threshold.</p>
+<p><span class="kt">Key takeaway:</span> A held-out quantile turns scores into a guaranteed set.</p>
+</article>
+
+<article>
+<h2>The Prediction Set Picture</h2>
+<p>The calibration threshold draws a line through candidate scores. Candidates more plausible than the threshold stay in the set; the rest are dropped.</p>
+<p><span class="kt">Key takeaway:</span> A single threshold defines which candidates survive.</p>
+</article>
+
+<article>
+<h2>The Abstention Idea</h2>
+<p>When the set is large or empty, the model should defer. A small set means answer with confidence; a big set means say "I am not sure" and hand off to a human.</p>
+<p><span class="kt">Key takeaway:</span> A large set is a built-in signal to abstain.</p>
+</article>
+
+<article>
+<h2>A Medical Triage Example</h2>
+<p>A diagnosis model returns a set of conditions. One condition can proceed automatically; five conditions route to a doctor. The coverage guarantee bounds how often the truth is missed.</p>
+<p><span class="kt">Key takeaway:</span> Set size becomes a triage decision with a bounded miss rate.</p>
+</article>
+
+<article>
+<h2>The Trade-off</h2>
+<p>Higher coverage means larger sets; tighter sets risk missing the truth. The level alpha is chosen to balance safety against usefulness.</p>
+<p><span class="kt">Key takeaway:</span> Coverage and set size pull against each other.</p>
+</article>
+
+<article>
+<h2>05 — Detection &amp; Grounding</h2>
+<p>Fifth section. Two complementary defenses: catch the hallucination after the fact, or ground the model so it is less likely to occur.</p>
+<p><span class="kt">Key takeaway:</span> Detect the error, or prevent it with evidence.</p>
+</article>
+
+<article>
+<h2>Two Strategies</h2>
+<p>Detection flags a likely hallucination after the model speaks. Grounding gives the model real sources so it speaks from evidence. The best systems combine both.</p>
+<p><span class="kt">Key takeaway:</span> Detection and grounding are complementary.</p>
+</article>
+
+<article>
+<h2>Self-Consistency</h2>
+<p>Ask the same question several times and sample independent answers. Agreement suggests a solid answer; wild disagreement suggests an invented one.</p>
+<p><span class="kt">Key takeaway:</span> Disagreement across samples flags unreliable answers.</p>
+</article>
+
+<article>
+<h2>Semantic Entropy</h2>
+<p>Farquhar and colleagues group sampled answers by meaning rather than wording, so "Paris" and "It's Paris" count as one. Many distinct meanings give high entropy, which flags hallucination.</p>
+<p><span class="kt">Key takeaway:</span> Entropy over meanings detects ungrounded answers.</p>
+</article>
+
+<article>
+<h2>The Entropy Picture</h2>
+<p>If repeated samples collapse to one meaning, entropy is low and the answer is likely reliable. If they scatter across several meanings, entropy is high and the answer is suspect.</p>
+<p><span class="kt">Key takeaway:</span> Scattered meanings signal unreliability.</p>
+</article>
+
+<article>
+<h2>Retrieval-Augmented Generation</h2>
+<p>Retrieval-Augmented Generation fetches relevant documents for a question, then writes the answer from them, as Lewis and colleagues proposed.</p>
+<p><span class="kt">Key takeaway:</span> RAG retrieves evidence before generating.</p>
+</article>
+
+<article>
+<h2>Why RAG Helps</h2>
+<p>Tying the answer to a retrieved source supplies fresh facts past the cutoff and a citation the user can verify, leaving less room to invent.</p>
+<p><span class="kt">Key takeaway:</span> Grounding shrinks the space of fabrications.</p>
+</article>
+
+<article>
+<h2>RAG Is Not a Cure</h2>
+<p>Retrieval has its own failure modes: wrong documents retrieved, right documents misread, or the model overriding the source. Grounding reduces hallucination but does not erase it.</p>
+<p><span class="kt">Key takeaway:</span> RAG mitigates, but does not eliminate, hallucination.</p>
+</article>
+
+<article>
+<h2>Teaching "I Don't Know"</h2>
+<p>Make abstention a rewarded behavior: reward a correct "I don't know," penalize confident wrong answers more heavily, and shift the guessing incentive.</p>
+<p><span class="kt">Key takeaway:</span> A well-placed refusal can beat a wrong answer.</p>
+</article>
+
+<article>
+<h2>A Scoring Rule</h2>
+<p>Score a correct answer +1, "I don't know" 0, and a wrong answer -4. Under this rule a wild guess is no longer worth the risk.</p>
+<p><span class="kt">Key takeaway:</span> Penalizing wrong answers makes honest abstention rational.</p>
+</article>
+
+<article>
+<h2>Detection in Code</h2>
+<p>A short Colab: sample five answers to one question, cluster them by meaning, and flag high-entropy outputs as risky. A complete self-consistency check end to end.</p>
+<p><span class="kt">Key takeaway:</span> A basic detector is a handful of lines of code.</p>
+</article>
+
+<article>
+<h2>06 — Frontier 2025–26</h2>
+<p>Sixth section. Where the field stands now: benchmarks, reasoning models, factuality evaluations, and the open problems that remain.</p>
+<p><span class="kt">Key takeaway:</span> Reliability is an active, unsolved research area.</p>
+</article>
+
+<article>
+<h2>Benchmarks for Hallucination</h2>
+<p>You cannot fix what you cannot measure. Benchmarks use factuality test sets with checkable answers, questions designed to bait confident errors, and automatic graders against trusted sources.</p>
+<p><span class="kt">Key takeaway:</span> Good benchmarks make hallucination measurable.</p>
+</article>
+
+<article>
+<h2>Reasoning Models</h2>
+<p>Models that think step by step before answering can self-check and catch some errors, but confident wrong chains still occur. Longer reasoning is not always truer.</p>
+<p><span class="kt">Key takeaway:</span> More deliberation helps but does not guarantee truth.</p>
+</article>
+
+<article>
+<h2>Factuality Evaluations</h2>
+<p>Fine-grained evaluations break a long answer into atomic claims, verify each against evidence, and report the fraction supported, instead of one pass/fail verdict.</p>
+<p><span class="kt">Key takeaway:</span> Claim-level scoring gives a finer view of factuality.</p>
+</article>
+
+<article>
+<h2>Open Problems</h2>
+<p>Open challenges include calibration that survives fine-tuning, honest abstention without over-refusal, coverage guarantees for open-ended generation, and detecting faithfulness rather than only facts.</p>
+<p><span class="kt">Key takeaway:</span> Reliable, honest generation is still an open frontier.</p>
+</article>
+
+<article>
+<h2>Demos to Play With</h2>
+<p>Three demos to explore: a reliability-diagram plotter, a conformal prediction-set builder, and a semantic-entropy hallucination flag.</p>
+<p><span class="kt">Key takeaway:</span> Hands-on tools make these ideas concrete.</p>
+</article>
+
+<article>
+<h2>Key Takeaways</h2>
+<p>Fluent is not correct, next-token prediction has no truth check, calibration audits a confidence number, conformal sets give a coverage guarantee, and grounding and abstention reduce harm.</p>
+<p><span class="kt">Key takeaway:</span> The goal is a model that knows when not to answer.</p>
+</article>
+
+<article>
+<h2>Closer</h2>
+<p>The single idea to carry away: reliability often means knowing when to say "I don't know."</p>
+<p><span class="kt">Key takeaway:</span> Honest uncertainty is part of a trustworthy model.</p>
+</article>
+
+</body></html>

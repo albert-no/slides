@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memorization &amp; Training-Data Extraction — Trustworthy AI Lecture 4</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Trustworthy AI · Lecture 4</div>
+  <h1>Memorization &amp;<br>Training-Data Extraction</h1>
+  <div class="divider"></div>
+  <p class="subtitle">When a model recites the data it was trained on</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">What Is Memorization</div><div class="toc-sub">Verbatim copies, and the canary test</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Extracting Text from LLMs</div><div class="toc-sub">From GPT-2 to production chatbots</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">How Much, and Why It Grows</div><div class="toc-sub">Size, duplication, training length</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Image &amp; Diffusion Models</div><div class="toc-sub">Regenerating training photos</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Copyright &amp; the Law</div><div class="toc-sub">When regurgitation goes to court</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Mitigations &amp; Frontier</div><div class="toc-sub">Why no fix is complete</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>What Is Memorization</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Verbatim copies, and the canary test</p>
+</div>
+
+<!-- 4. The Question -->
+<div class="slide">
+  <h2>The Question</h2>
+  <div class="divider"></div>
+  <p>A model is trained to <strong>generalize</strong>, not to copy.</p>
+  <ul class="arrow">
+    <li>We want it to learn patterns</li>
+    <li>Not to store training examples word for word</li>
+  </ul>
+  <div class="highlight"><p>Yet some examples come back out <strong>exactly</strong> as they went in.</p></div>
+</div>
+
+<!-- 5. A Working Definition -->
+<div class="slide">
+  <h2>A Working Definition</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Memorization</h3>
+    <p>A model has <strong>memorized</strong> a training example if a short prompt makes it reproduce that example, word for word.</p>
+  </div>
+  <p class="muted">Not learning a fact. Reciting a specific record.</p>
+</div>
+
+<!-- 6. Three Flavors -->
+<div class="slide">
+  <h2>Three Flavors</h2>
+  <div class="divider"></div>
+  <p>Researchers separate memorization into kinds.</p>
+  <div class="grid-3">
+    <div class="card"><h3>Verbatim</h3><p>The exact text comes back.</p></div>
+    <div class="card"><h3>Eidetic</h3><p>Recalled after very few sightings.</p></div>
+    <div class="card"><h3>$k$-extractable</h3><p>Recovered from a $k$-token prompt.</p></div>
+  </div>
+  <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
+</div>
+
+<!-- 7. k-Extractable -->
+<div class="slide">
+  <h2>What "Extractable" Means</h2>
+  <div class="divider"></div>
+  <p>A string is <strong>$k$-extractable</strong> if a $k$-token prefix triggers it.</p>
+  <div class="def-card">
+    <h3>The test</h3>
+    <p>Feed the model $k$ tokens of context. If it then continues with the exact training text, that text is extractable.</p>
+  </div>
+  <p class="muted">Extractable = an attacker can actually pull it out.</p>
+</div>
+
+<!-- 8. Why It Happens -->
+<div class="slide">
+  <h2>Why It Happens</h2>
+  <div class="divider"></div>
+  <p>Training rewards predicting the <strong>next token</strong> correctly.</p>
+  <ul>
+    <li>Rare strings are easiest to predict by storing them</li>
+    <li>Repeated strings get reinforced each time</li>
+    <li>Huge models have room to spare</li>
+  </ul>
+  <p class="muted">Memorization is a side effect of fitting the data well.</p>
+</div>
+
+<!-- 9. The Secret Sharer -->
+<div class="slide">
+  <h2>The Secret Sharer</h2>
+  <div class="divider"></div>
+  <p>A clean experiment to <strong>measure</strong> memorization.</p>
+  <ul class="num">
+    <li>Plant a fake secret in the training data.</li>
+    <li>Train the model as usual.</li>
+    <li>Prompt the model and see if the secret returns.</li>
+  </ul>
+  <div class="cite cite-left">Carlini, Liu, Erlingsson, Kos, and Song, "The Secret Sharer", USENIX Security 2019.</div>
+</div>
+
+<!-- 10. The Canary -->
+<div class="slide">
+  <h2>The Canary</h2>
+  <div class="divider"></div>
+  <p>The planted secret is a <strong>canary</strong>: a made-up, unique string.</p>
+  <div class="def-card">
+    <h3>Example canary</h3>
+    <p>"My credit card number is <strong>5512&nbsp;3098&nbsp;1741&nbsp;6629</strong>."</p>
+  </div>
+  <p class="muted">Unique, so any reappearance must be memorization, not chance.</p>
+</div>
+
+<!-- 11. Watch It Leak (SVG) -->
+<div class="slide">
+  <h2>Watch It Leak</h2>
+  <div class="divider"></div>
+  <p>Plant the canary, train, then prompt for the prefix.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 520 200" style="width:100%;max-width:880px;">
+      <rect x="20" y="40" width="150" height="58" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="95" y="64" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">plant canary</text>
+      <text x="95" y="86" font-size="14" fill="#1a1a1a" text-anchor="middle">in the data</text>
+      <rect x="210" y="40" width="110" height="58" rx="8" fill="#003876"/>
+      <text x="265" y="74" font-size="17" fill="#fff" text-anchor="middle" font-weight="700">train</text>
+      <rect x="360" y="40" width="150" height="58" rx="8" fill="#f4f6f9" stroke="#6b7280" stroke-width="2"/>
+      <text x="435" y="64" font-size="16" fill="#1a1a1a" text-anchor="middle">prompt:</text>
+      <text x="435" y="86" font-size="15" fill="#1a1a1a" text-anchor="middle">"My card number is"</text>
+      <defs><marker id="ar1" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs>
+      <line x1="170" y1="69" x2="208" y2="69" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ar1)"/>
+      <line x1="320" y1="69" x2="358" y2="69" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ar1)"/>
+      <line x1="435" y1="98" x2="435" y2="150" stroke="#d94040" stroke-width="2.5" marker-end="url(#ar1)"/>
+      <text x="435" y="178" font-size="17" fill="#d94040" text-anchor="middle" font-weight="700">"5512 3098 1741 6629"</text>
+    </svg>
+  </div>
+  <div class="cite cite-left">Carlini, Liu, Erlingsson, Kos, and Song, "The Secret Sharer", USENIX Security 2019.</div>
+</div>
+
+<!-- 12. Exposure -->
+<div class="slide">
+  <h2>Turning Leakage into a Number</h2>
+  <div class="divider"></div>
+  <p>Rank the canary against all <strong>equally likely</strong> alternatives.</p>
+  <ul class="arrow">
+    <li>If the true canary is the model's top guess, it leaked</li>
+    <li>If it sits deep in the pile, it stayed hidden</li>
+    <li>This rank becomes a memorization score</li>
+  </ul>
+  <p class="muted">A single canary gives a clean, repeatable measurement.</p>
+</div>
+
+<!-- 13. Memorization vs Generalization -->
+<div class="slide">
+  <h2>Not the Same as Learning</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Generalize</h3>
+      <p>Learn that <strong>cards have 16 digits</strong>. Useful, no one's secret.</p></div>
+    <div><h3>Memorize</h3>
+      <p>Store <strong>Alice's exact number</strong>. Useless, and a leak.</p></div>
+  </div>
+  <p class="muted">The danger is the specific record, not the general pattern.</p>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 14. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Extracting Text from LLMs</h1>
+  <div class="divider"></div>
+  <p class="subtitle">From GPT-2 to production chatbots</p>
+</div>
+
+<!-- 15. From Canary to the Wild -->
+<div class="slide">
+  <h2>From Canary to the Wild</h2>
+  <div class="divider"></div>
+  <p>The canary was planted on purpose. The real worry is different.</p>
+  <div class="highlight"><p>Can we pull out <strong>real data</strong> the model saw, that no one planted?</p></div>
+  <p class="muted">Same idea, real stakes.</p>
+</div>
+
+<!-- 16. GPT-2 Knew Real People (real figure) -->
+<div class="slide">
+  <h2>GPT-2 Knew Real People</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:40px;align-items:center;">
+    <div style="display:flex;justify-content:center;">
+      <!-- TODO real figure: Carlini et al., "Extracting Training Data from Large Language Models", USENIX Security 2021, Fig 1 -->
+      <img src="figs/gpt2-extraction.png" alt="GPT-2 extraction: a prefix prompt yields a real person's name, address, phone, and email" style="max-height:400px;width:auto;display:block;border:1px solid var(--slate);border-radius:8px;">
+    </div>
+    <div>
+      <p>A short prompt makes GPT-2 <strong>recite real data</strong>:</p>
+      <ul class="arrow">
+        <li>Real names, home addresses</li>
+        <li>Phone numbers, emails</li>
+        <li>Copied straight from training text</li>
+      </ul>
+    </div>
+  </div>
+  <div class="cite cite-left">Carlini et al., "Extracting Training Data from Large Language Models", USENIX Security 2021 — Figure 1.</div>
+</div>
+
+<!-- 17. The Attack Recipe -->
+<div class="slide">
+  <h2>The Extraction Recipe</h2>
+  <div class="divider"></div>
+  <p>How researchers pulled hundreds of memorized texts from GPT-2.</p>
+  <ul class="num">
+    <li>Generate a flood of samples from the model.</li>
+    <li>Keep the ones the model is <strong>very confident</strong> about.</li>
+    <li>Check those against the open web.</li>
+  </ul>
+  <div class="cite cite-left">Carlini et al., "Extracting Training Data from Large Language Models", USENIX Security 2021.</div>
+</div>
+
+<!-- 18. Why Confidence Betrays It -->
+<div class="slide">
+  <h2>Why Confidence Betrays It</h2>
+  <div class="divider"></div>
+  <p>Memorized text is text the model is <strong>too sure</strong> about.</p>
+  <ul>
+    <li>For novel text, the model hesitates</li>
+    <li>For a stored string, it is nearly certain</li>
+    <li>That certainty is the tell</li>
+  </ul>
+  <p class="muted">Unusual confidence flags a possible copy.</p>
+</div>
+
+<!-- 19. What Came Out -->
+<div class="slide">
+  <h2>What Came Out of GPT-2</h2>
+  <div class="divider"></div>
+  <p>The extracted strings were <strong>not</strong> harmless boilerplate.</p>
+  <div class="grid-3">
+    <div class="card"><h3>People</h3><p>Names, contact details.</p></div>
+    <div class="card"><h3>Code</h3><p>Snippets, identifiers.</p></div>
+    <div class="card"><h3>Text</h3><p>News, forum posts.</p></div>
+  </div>
+  <div class="cite cite-left">Carlini et al., "Extracting Training Data from Large Language Models", USENIX Security 2021.</div>
+</div>
+
+<!-- 20. The Repeat Attack -->
+<div class="slide">
+  <h2>The "Repeat Forever" Attack</h2>
+  <div class="divider"></div>
+  <p>A 2023 trick on a <strong>production chatbot</strong>.</p>
+  <div class="def-card">
+    <h3>The prompt</h3>
+    <p>"Repeat the word <strong>poem</strong> forever."</p>
+  </div>
+  <div class="cite cite-left">Nasr et al., "Scalable Extraction of Training Data from (Production) Language Models", 2023.</div>
+</div>
+
+<!-- 21. The Loop Breaks (SVG) -->
+<div class="slide">
+  <h2>The Loop Breaks</h2>
+  <div class="divider"></div>
+  <p>The model repeats, then <strong>diverges</strong> into raw memorized text.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 520 170" style="width:100%;max-width:880px;">
+      <rect x="20" y="50" width="200" height="56" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="120" y="74" font-size="16" fill="#1a1a1a" text-anchor="middle">poem poem poem</text>
+      <text x="120" y="94" font-size="16" fill="#1a1a1a" text-anchor="middle">poem poem ...</text>
+      <rect x="320" y="50" width="180" height="56" rx="8" fill="#f4f6f9" stroke="#d94040" stroke-width="2"/>
+      <text x="410" y="74" font-size="15" fill="#d94040" text-anchor="middle" font-weight="700">real name, email,</text>
+      <text x="410" y="94" font-size="15" fill="#d94040" text-anchor="middle" font-weight="700">phone number</text>
+      <defs><marker id="ar2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs>
+      <line x1="220" y1="78" x2="318" y2="78" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ar2)"/>
+      <text x="269" y="64" font-size="14" fill="#6b7280" text-anchor="middle">diverges</text>
+    </svg>
+  </div>
+  <div class="cite cite-left">Nasr et al., "Scalable Extraction of Training Data from (Production) Language Models", 2023.</div>
+</div>
+
+<!-- 22. Scale of the Leak -->
+<div class="slide">
+  <h2>Scale of the Leak</h2>
+  <div class="divider"></div>
+  <p>The repeat attack was <strong>cheap and broad</strong>.</p>
+  <ul class="arrow">
+    <li>Thousands of unique memorized strings recovered</li>
+    <li>Including real personal contact information</li>
+    <li>On a deployed, aligned chat model</li>
+  </ul>
+  <p class="muted">Alignment did not stop the leak.</p>
+</div>
+
+<!-- 23. Patched, Not Solved -->
+<div class="slide">
+  <h2>Patched, Not Solved</h2>
+  <div class="divider"></div>
+  <p>The specific prompt was <strong>blocked</strong> after disclosure.</p>
+  <div class="highlight"><p>Blocking one prompt is not the same as removing the memorized data.</p></div>
+  <p class="muted">The data is still in the weights.</p>
+</div>
+
+<!-- 24. Demo -->
+<div class="slide">
+  <h2>Try It Yourself</h2>
+  <div class="divider"></div>
+  <div class="demo-card">
+    <h3>Demo</h3>
+    <ul class="check">
+      <li>Plant a canary in a tiny training set</li>
+      <li>Fine-tune a small model on it</li>
+      <li>Prompt for the prefix, watch it leak</li>
+    </ul>
+  </div>
+  <p class="muted">A Colab you can run in minutes.</p>
+</div>
+
+<!-- ============ SECTION 03 ============ -->
+<!-- 25. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>How Much, and Why It Grows</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Size, duplication, training length</p>
+</div>
+
+<!-- 26. A Measurable Quantity -->
+<div class="slide">
+  <h2>A Measurable Quantity</h2>
+  <div class="divider"></div>
+  <p>Memorization is <strong>not</strong> all-or-nothing.</p>
+  <ul class="arrow">
+    <li>Count how many training strings are extractable</li>
+    <li>Track that fraction as conditions change</li>
+    <li>It rises and falls in predictable ways</li>
+  </ul>
+  <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
+</div>
+
+<!-- 27. Three Drivers -->
+<div class="slide">
+  <h2>Three Drivers</h2>
+  <div class="divider"></div>
+  <p>Memorization grows with three things.</p>
+  <div class="grid-3">
+    <div class="card"><h3>Model size</h3><p>Bigger models store more.</p></div>
+    <div class="card"><h3>Duplication</h3><p>Repeated data sticks harder.</p></div>
+    <div class="card"><h3>Training length</h3><p>More passes, more recall.</p></div>
+  </div>
+  <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
+</div>
+
+<!-- 28. Bigger Means More (SVG) -->
+<div class="slide">
+  <h2>Bigger Means More</h2>
+  <div class="divider"></div>
+  <p>Hold the data fixed; grow the model. Memorization <strong>climbs</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 460 230" style="width:100%;max-width:840px;">
+      <line x1="50" y1="190" x2="430" y2="190" stroke="#999" stroke-width="1.5"/>
+      <line x1="50" y1="190" x2="50" y2="30" stroke="#999" stroke-width="1.5"/>
+      <path d="M50,178 C150,168 250,120 430,42" fill="none" stroke="#003876" stroke-width="3"/>
+      <circle cx="120" cy="160" r="5" fill="#003876"/>
+      <circle cx="240" cy="124" r="5" fill="#003876"/>
+      <circle cx="360" cy="70" r="5" fill="#003876"/>
+      <text x="35" y="40" font-size="15" fill="#6b7280" text-anchor="end">more</text>
+      <text x="35" y="190" font-size="15" fill="#6b7280" text-anchor="end">less</text>
+      <text x="20" y="115" font-size="16" fill="#003876" text-anchor="middle" font-weight="700" transform="rotate(-90 20 115)">memorized</text>
+      <text x="240" y="215" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">model size →</text>
+    </svg>
+  </div>
+  <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
+</div>
+
+<!-- 29. Duplication Is the Big One (SVG) -->
+<div class="slide">
+  <h2>Duplication Is the Big One</h2>
+  <div class="divider"></div>
+  <p>A string seen <strong>many times</strong> is far more likely to leak.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 460 210" style="width:100%;max-width:820px;">
+      <line x1="50" y1="170" x2="430" y2="170" stroke="#999" stroke-width="1.5"/>
+      <rect x="80" y="150" width="44" height="20" fill="#9aa3ad" fill-opacity="0.55" stroke="#6b7280" stroke-width="1.5"/>
+      <rect x="180" y="118" width="44" height="52" fill="#1a5296" fill-opacity="0.45" stroke="#003876" stroke-width="1.5"/>
+      <rect x="280" y="74" width="44" height="96" fill="#1a5296" fill-opacity="0.6" stroke="#003876" stroke-width="1.5"/>
+      <rect x="380" y="40" width="44" height="130" fill="#003876" fill-opacity="0.8" stroke="#003876" stroke-width="1.5"/>
+      <text x="102" y="190" font-size="14" fill="#1a1a1a" text-anchor="middle">1×</text>
+      <text x="202" y="190" font-size="14" fill="#1a1a1a" text-anchor="middle">10×</text>
+      <text x="302" y="190" font-size="14" fill="#1a1a1a" text-anchor="middle">100×</text>
+      <text x="402" y="190" font-size="14" fill="#1a1a1a" text-anchor="middle">1000×</text>
+      <text x="240" y="24" font-size="15" fill="#6b7280" text-anchor="middle">times the string appears in training</text>
+    </svg>
+  </div>
+  <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
+</div>
+
+<!-- 30. The Long Tail -->
+<div class="slide">
+  <h2>The Long Tail</h2>
+  <div class="divider"></div>
+  <p>Web data is full of <strong>accidental duplicates</strong>.</p>
+  <ul>
+    <li>Boilerplate, mirrors, reposts, quotes</li>
+    <li>A leaked secret copied across forums</li>
+    <li>Each copy raises the odds it is memorized</li>
+  </ul>
+  <p class="muted">You rarely choose what gets duplicated.</p>
+</div>
+
+<!-- 31. A Predictable Curve -->
+<div class="slide">
+  <h2>A Predictable Curve</h2>
+  <div class="divider"></div>
+  <p>Memorization scales <strong>log-linearly</strong> with these drivers.</p>
+  <ul class="arrow">
+    <li>Each $10\times$ in size or duplication adds a steady bump</li>
+    <li>Not a glitch to patch out</li>
+    <li>A built-in property of how models train</li>
+  </ul>
+  <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
+</div>
+
+<!-- 32. The Uncomfortable Trend -->
+<div class="slide">
+  <h2>The Uncomfortable Trend</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>The models we build are getting <strong>bigger</strong> and trained on <strong>more</strong> data.</p></div>
+  <p>Both of those push memorization the <em>wrong</em> way.</p>
+</div>
+
+<!-- ============ SECTION 04 ============ -->
+<!-- 33. Divider 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Image &amp; Diffusion Models</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Regenerating training photos</p>
+</div>
+
+<!-- 34. Not Just Text -->
+<div class="slide">
+  <h2>Not Just Text</h2>
+  <div class="divider"></div>
+  <p>Image generators memorize <strong>too</strong>.</p>
+  <ul class="arrow">
+    <li>Trained on billions of scraped images</li>
+    <li>Many with real, identifiable people</li>
+    <li>Some come back nearly pixel-for-pixel</li>
+  </ul>
+  <p class="muted">The same risk, a different medium.</p>
+</div>
+
+<!-- 35. How Diffusion Models Work -->
+<div class="slide">
+  <h2>A Quick Picture</h2>
+  <div class="divider"></div>
+  <p>A diffusion model turns <strong>noise</strong> into an image, step by step.</p>
+  <div class="diagram-flow" style="margin:24px 0;">
+    <div class="diagram-box">pure noise</div>
+    <div class="diagram-box">denoise</div>
+    <div class="diagram-box">an image</div>
+  </div>
+  <p class="muted">Ideally a new image. Sometimes a memorized one.</p>
+</div>
+
+<!-- 36. Stable Diffusion Copies (real figure) -->
+<div class="slide">
+  <h2>Stable Diffusion Copies</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:40px;align-items:center;">
+    <div style="display:flex;justify-content:center;">
+      <!-- TODO real figure: Carlini et al., "Extracting Training Data from Diffusion Models", USENIX Security 2023, Fig 1 -->
+      <img src="figs/calrini-ann.png" alt="Stable Diffusion training image vs near-identical generated image of the same person" style="max-height:360px;width:auto;display:block;border:1px solid var(--slate);border-radius:8px;">
+    </div>
+    <div>
+      <p>It regenerates <strong>near-exact training photos</strong>.</p>
+      <ul>
+        <li>A real, identifiable person</li>
+        <li>Prompted by their caption</li>
+      </ul>
+    </div>
+  </div>
+  <div class="cite cite-left">Carlini et al., "Extracting Training Data from Diffusion Models", USENIX Security 2023 — Figure 1.</div>
+</div>
+
+<!-- 37. Duplication Drives It Again (SVG) -->
+<div class="slide">
+  <h2>Duplication Drives It Again</h2>
+  <div class="divider"></div>
+  <p>Photos duplicated <strong>across the web</strong> copy the easiest.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 460 180" style="width:100%;max-width:820px;">
+      <rect x="40" y="60" width="60" height="60" rx="6" fill="#e8ecf0" stroke="#6b7280" stroke-width="2"/>
+      <text x="70" y="95" font-size="22" fill="#6b7280" text-anchor="middle">1</text>
+      <text x="70" y="145" font-size="14" fill="#6b7280" text-anchor="middle">rarely copied</text>
+      <rect x="280" y="48" width="60" height="60" rx="6" fill="#1a5296" fill-opacity="0.3" stroke="#003876" stroke-width="2"/>
+      <rect x="292" y="60" width="60" height="60" rx="6" fill="#1a5296" fill-opacity="0.45" stroke="#003876" stroke-width="2"/>
+      <rect x="304" y="72" width="60" height="60" rx="6" fill="#003876" fill-opacity="0.7" stroke="#003876" stroke-width="2"/>
+      <text x="334" y="110" font-size="22" fill="#fff" text-anchor="middle" font-weight="700">100</text>
+      <text x="334" y="155" font-size="14" fill="#003876" text-anchor="middle" font-weight="700">often memorized</text>
+    </svg>
+  </div>
+  <div class="cite cite-left">Somepalli et al., "Diffusion Art or Digital Forgery?", CVPR 2023.</div>
+</div>
+
+<!-- 38. Copy or Create? -->
+<div class="slide">
+  <h2>Copy or Create?</h2>
+  <div class="divider"></div>
+  <p>How often is a "new" image really a <strong>copy</strong>?</p>
+  <ul>
+    <li>Researchers searched generations against training</li>
+    <li>A measurable fraction were near-duplicates</li>
+    <li>Especially for over-represented captions</li>
+  </ul>
+  <div class="cite cite-left">Somepalli et al., "Diffusion Art or Digital Forgery?", CVPR 2023.</div>
+</div>
+
+<!-- 39. Why It Matters -->
+<div class="slide">
+  <h2>Why It Matters</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>A "generated" portrait can be a <strong>real person's photo</strong> in disguise.</p></div>
+  <p>That is a privacy leak and a consent problem, not just a curiosity.</p>
+</div>
+
+<!-- ============ SECTION 05 ============ -->
+<!-- 40. Divider 05 -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Copyright &amp; the Law</h1>
+  <div class="divider"></div>
+  <p class="subtitle">When regurgitation goes to court</p>
+</div>
+
+<!-- 41. Memorization Meets Copyright -->
+<div class="slide">
+  <h2>Memorization Meets Copyright</h2>
+  <div class="divider"></div>
+  <p>Much training data is <strong>copyrighted</strong>.</p>
+  <ul class="arrow">
+    <li>News articles, books, code, art</li>
+    <li>If the model recites it, who is liable?</li>
+    <li>A technical leak becomes a legal claim</li>
+  </ul>
+  <p class="muted">Memorization is now an exhibit in court.</p>
+</div>
+
+<!-- 42. NYT v. OpenAI -->
+<div class="slide">
+  <h2>NYT v. OpenAI</h2>
+  <div class="divider"></div>
+  <p>In 2023, <strong>The New York Times sued OpenAI</strong>.</p>
+  <ul>
+    <li>The complaint showed near-verbatim article text</li>
+    <li>Prompts reproduced paywalled paragraphs</li>
+  </ul>
+  <p class="muted">Regurgitation became the central evidence.</p>
+</div>
+
+<!-- 43. Near-Verbatim (SVG) -->
+<div class="slide">
+  <h2>Near-Verbatim Output</h2>
+  <div class="divider"></div>
+  <p>Side by side, the model's text <strong>matched</strong> the original.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 480 180" style="width:100%;max-width:860px;">
+      <rect x="30" y="30" width="180" height="120" rx="8" fill="#f4f6f9" stroke="#6b7280" stroke-width="2"/>
+      <text x="120" y="54" font-size="16" fill="#6b7280" text-anchor="middle" font-weight="700">original article</text>
+      <line x1="48" y1="74" x2="192" y2="74" stroke="#9aa3ad" stroke-width="6"/>
+      <line x1="48" y1="92" x2="192" y2="92" stroke="#9aa3ad" stroke-width="6"/>
+      <line x1="48" y1="110" x2="160" y2="110" stroke="#9aa3ad" stroke-width="6"/>
+      <rect x="270" y="30" width="180" height="120" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="360" y="54" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">model output</text>
+      <line x1="288" y1="74" x2="432" y2="74" stroke="#003876" stroke-width="6"/>
+      <line x1="288" y1="92" x2="432" y2="92" stroke="#003876" stroke-width="6"/>
+      <line x1="288" y1="110" x2="400" y2="110" stroke="#003876" stroke-width="6"/>
+      <text x="240" y="96" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">=</text>
+    </svg>
+  </div>
+  <p class="muted">Same words, in the same order.</p>
+</div>
+
+<!-- 44. The Fair-Use Debate -->
+<div class="slide">
+  <h2>The Fair-Use Debate</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Developers</h3>
+      <p>Training is <strong>transformative</strong> learning, like a person reading.</p></div>
+    <div><h3>Rights holders</h3>
+      <p>Verbatim output is <strong>copying</strong>, plain and simple.</p></div>
+  </div>
+  <p class="muted">Memorization is exactly where the two views collide.</p>
+</div>
+
+<!-- 45. Why Memorization Is the Crux -->
+<div class="slide">
+  <h2>Memorization Is the Crux</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>A model that <strong>only generalizes</strong> has a stronger fair-use case.</p></div>
+  <p>A model that <em>recites</em> its sources looks a lot more like a copier.</p>
+</div>
+
+<!-- 46. An Unsettled Question -->
+<div class="slide">
+  <h2>An Unsettled Question</h2>
+  <div class="divider"></div>
+  <p>The law is <strong>still being written</strong>.</p>
+  <ul class="arrow">
+    <li>Cases are ongoing across jurisdictions</li>
+    <li>Outcomes will shape how models are trained</li>
+    <li>Less memorization is now also a legal goal</li>
+  </ul>
+  <p class="muted">Engineering and law are pulling in the same direction.</p>
+</div>
+
+<!-- ============ SECTION 06 ============ -->
+<!-- 47. Divider 06 -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Mitigations &amp; Frontier</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Why no fix is complete</p>
+</div>
+
+<!-- 48. The Toolbox -->
+<div class="slide">
+  <h2>The Toolbox</h2>
+  <div class="divider"></div>
+  <p>Three families of defense.</p>
+  <div class="grid-3">
+    <div class="card"><h3>Deduplicate</h3><p>Remove repeated data.</p></div>
+    <div class="card"><h3>Filter output</h3><p>Block long verbatim spans.</p></div>
+    <div class="card"><h3>Add privacy</h3><p>Train with formal limits.</p></div>
+  </div>
+  <p class="muted">Each helps. None fully solves it.</p>
+</div>
+
+<!-- 49. Deduplication -->
+<div class="slide">
+  <h2>Deduplication</h2>
+  <div class="divider"></div>
+  <p>Remove repeats <strong>before</strong> training.</p>
+  <ul>
+    <li>Duplication is the strongest driver, so cut it</li>
+    <li>Also makes the model <strong>better</strong>, not just safer</li>
+    <li>The cheapest win available</li>
+  </ul>
+  <div class="cite cite-left">Lee et al., "Deduplicating Training Data Makes Language Models Better", ACL 2022.</div>
+</div>
+
+<!-- 50. But Dedup Is Not Enough -->
+<div class="slide">
+  <h2>Dedup Is Not Enough</h2>
+  <div class="divider"></div>
+  <p>Even unique, seen-once strings <strong>can</strong> be memorized.</p>
+  <ul class="arrow">
+    <li>Rare data still sticks in big models</li>
+    <li>Near-duplicates slip past exact matching</li>
+    <li>Deduplication lowers the risk, never zero</li>
+  </ul>
+  <p class="muted">A strong first line, not a wall.</p>
+</div>
+
+<!-- 51. Output Filtering -->
+<div class="slide">
+  <h2>Output Filtering</h2>
+  <div class="divider"></div>
+  <p>Check generations for <strong>long verbatim matches</strong>.</p>
+  <ul>
+    <li>Block text that copies a source too closely</li>
+    <li>Used by deployed code and chat systems</li>
+  </ul>
+  <p class="muted">Catches obvious copying; misses paraphrase and small leaks.</p>
+</div>
+
+<!-- 52. Differential Privacy -->
+<div class="slide">
+  <h2>Differential Privacy</h2>
+  <div class="divider"></div>
+  <p>Train so any <strong>one example</strong> barely moves the model.</p>
+  <div class="def-card">
+    <h3>The promise</h3>
+    <p>If no single record changes the output much, no single record can be memorized.</p>
+  </div>
+  <p class="muted">A provable bound, paid for in accuracy.</p>
+</div>
+
+<!-- 53. The Privacy Tax -->
+<div class="slide">
+  <h2>The Privacy Tax</h2>
+  <div class="divider"></div>
+  <p>Differential privacy is the <strong>strongest</strong> defense, and the costliest.</p>
+  <ul class="arrow">
+    <li>Strong settings hurt model accuracy</li>
+    <li>Expensive to train at large scale</li>
+    <li>Rarely used for big foundation models yet</li>
+  </ul>
+  <p class="muted">A real guarantee, at a real price.</p>
+</div>
+
+<!-- 54. No Silver Bullet -->
+<div class="slide">
+  <h2>No Silver Bullet</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>Every defense trades <strong>cost or utility</strong> for less memorization.</p></div>
+  <p>In practice, teams stack several and accept residual risk.</p>
+</div>
+
+<!-- 55. Frontier: Production Extraction -->
+<div class="slide">
+  <h2>Frontier: Production Extraction</h2>
+  <div class="divider"></div>
+  <p>Attacks now target <strong>deployed chat models</strong>, not just research ones.</p>
+  <ul>
+    <li>Cheap, scalable prompts pull out training data</li>
+    <li>Alignment and filters are partial barriers</li>
+  </ul>
+  <div class="cite cite-left">Nasr et al., "Scalable Extraction of Training Data from (Production) Language Models", 2023.</div>
+</div>
+
+<!-- 56. Frontier: PII Memorization -->
+<div class="slide">
+  <h2>Frontier: Memorized PII</h2>
+  <div class="divider"></div>
+  <p>The sharpest harm is <strong>personal data</strong> coming back out.</p>
+  <ul class="arrow">
+    <li>PII (Personally Identifiable Information): names, emails, numbers</li>
+    <li>Scattered through scraped web data</li>
+    <li>Extractable when duplicated or rare-but-stored</li>
+  </ul>
+  <p class="muted">A privacy leak with a name and an address attached.</p>
+</div>
+
+<!-- 57. Open Problems -->
+<div class="slide">
+  <h2>Open Problems</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li>Measure memorization in closed models</li>
+    <li>Cut it without hurting accuracy</li>
+    <li>Erase specific data after training</li>
+    <li>Agree on a legal line for "too much"</li>
+  </ul>
+  <p class="muted">The frontier is wide open.</p>
+</div>
+
+<!-- 58. Key Takeaways -->
+<div class="slide">
+  <h2>Key Takeaways</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li>Models recite some training data verbatim</li>
+    <li>Canaries measure it; real attacks exploit it</li>
+    <li>Size and duplication push it up</li>
+    <li>No mitigation removes it for free</li>
+  </ul>
+  <div class="highlight"><p><strong>Duplication</strong> is the lever you can pull, on data and on output.</p></div>
+</div>
+
+<!-- 59. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">Q&amp;A</div>
+  <p class="big-word-sub">What should a model be allowed to remember?</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 59</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

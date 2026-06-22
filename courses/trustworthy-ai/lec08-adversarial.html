@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adversarial Examples — Trustworthy AI Lecture 8</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Trustworthy AI · Lecture 8</div>
+  <h1>Adversarial<br>Examples</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A tiny, invisible nudge that fools a model</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The Phenomenon</div><div class="toc-sub">An invisible nudge flips the answer</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The Threat Model</div><div class="toc-sub">What the attacker may change</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The Attacks</div><div class="toc-sub">Follow the gradient to the edge</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The Defenses</div><div class="toc-sub">Training tougher, proving safety</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The Arms Race</div><div class="toc-sub">Defenses break under stronger attacks</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Physical & Multimodal</div><div class="toc-sub">Stickers, patches, and 2025 attacks</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>The Phenomenon</h1>
+  <div class="divider"></div>
+  <p class="subtitle">An invisible nudge flips the answer</p>
+</div>
+
+<!-- 4. Models Look Confident -->
+<div class="slide">
+  <h2>Models Look Confident</h2>
+  <div class="divider"></div>
+  <p>A good classifier is <strong>accurate and sure of itself</strong>.</p>
+  <ul class="arrow">
+    <li>99% accuracy on held-out test images</li>
+    <li>High confidence on each prediction</li>
+    <li>Looks ready to ship</li>
+  </ul>
+  <p class="muted">Then a single crafted input breaks it.</p>
+</div>
+
+<!-- 5. The Panda That Became a Gibbon -->
+<div class="slide">
+  <h2>The Panda That Became a Gibbon</h2>
+  <div class="divider"></div>
+  <p>Add a <strong>faint, invisible pattern</strong> to a panda photo.</p>
+  <ul>
+    <li>To your eye: still the same panda</li>
+    <li>To the model: now a <em>gibbon</em>, 99% sure</li>
+  </ul>
+  <!-- TODO real figure: Goodfellow panda→gibbon, Fig 1 (Explaining and Harnessing, ICLR 2015) -->
+  <div class="cite cite-left">Goodfellow, Shlens, and Szegedy, "Explaining and Harnessing Adversarial Examples", ICLR 2015 — Figure 1.</div>
+</div>
+
+<!-- 6. Anatomy of the Trick -->
+<div class="slide">
+  <h2>Anatomy of the Trick</h2>
+  <div class="divider"></div>
+  <p>Three pieces: the original, the nudge, the result.</p>
+  <div class="diagram-flow" style="margin:22px 0;">
+    <div class="diagram-box">panda<br><span class="muted">57% panda</span></div>
+    <div class="diagram-box">+ tiny nudge</div>
+    <div class="diagram-box">looks identical<br><span class="muted">99% gibbon</span></div>
+  </div>
+  <p>The nudge is <strong>tuned</strong>, not random noise.</p>
+</div>
+
+<!-- 7. Intriguing Properties -->
+<div class="slide">
+  <h2>Intriguing Properties</h2>
+  <div class="divider"></div>
+  <p>The first paper called these <strong>"intriguing properties"</strong>.</p>
+  <ul>
+    <li>Every accurate network seemed to have them</li>
+    <li>The same nudge often fooled <em>other</em> models</li>
+  </ul>
+  <div class="cite cite-left">Szegedy et al., "Intriguing Properties of Neural Networks", ICLR 2014.</div>
+</div>
+
+<!-- 8. Not a Rare Bug -->
+<div class="slide">
+  <h2>Not a Rare Bug</h2>
+  <div class="divider"></div>
+  <p>Adversarial examples are <strong>not</strong> a fluke of one model.</p>
+  <ul class="arrow">
+    <li>Images, audio, and text are all affected</li>
+    <li>They appear across architectures</li>
+    <li>They survive many training tricks</li>
+  </ul>
+  <p class="muted">A property of how these models carve up space.</p>
+</div>
+
+<!-- 9. Why It Matters -->
+<div class="slide">
+  <h2>Why It Matters</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>If an attacker controls the input, <strong>they control the prediction</strong>.</p></div>
+  <p>Self-driving cars, spam filters, face unlock, content moderation: all read attacker-influenced inputs.</p>
+</div>
+
+<!-- 10. A Picture in Your Head -->
+<div class="slide">
+  <h2>A Picture in Your Head</h2>
+  <div class="divider"></div>
+  <p>The classifier draws a <strong>boundary</strong> between classes.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 480 230" style="width:100%;max-width:860px;">
+      <path d="M40,200 C170,150 200,90 250,40 L40,40 Z" fill="#1a5296" fill-opacity="0.16"/>
+      <path d="M40,200 C170,150 200,90 250,40 L440,40 L440,200 Z" fill="#9aa3ad" fill-opacity="0.18"/>
+      <path d="M40,200 C170,150 200,90 250,40" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <text x="105" y="78" font-size="17" fill="#003876" font-weight="700">panda</text>
+      <text x="360" y="180" font-size="17" fill="#6b7280" font-weight="700">gibbon</text>
+      <circle cx="150" cy="160" r="6" fill="#003876"/>
+      <text x="120" y="184" font-size="14" fill="#003876">your image</text>
+      <line x1="150" y1="160" x2="248" y2="118" stroke="#d94040" stroke-width="2.5" stroke-dasharray="5 4"/>
+      <circle cx="252" cy="115" r="6" fill="#d94040"/>
+      <text x="262" y="110" font-size="14" fill="#d94040" font-weight="700">just across</text>
+    </svg>
+  </div>
+  <p class="muted">The image starts safe, near the line. A tiny push crosses it.</p>
+</div>
+
+<!-- 11. Close to the Edge -->
+<div class="slide">
+  <h2>Close to the Edge</h2>
+  <div class="divider"></div>
+  <p>In high dimensions, <strong>every point sits near a boundary</strong>.</p>
+  <ul>
+    <li>Thousands of pixels, each a direction to push</li>
+    <li>Small change per pixel, large change overall</li>
+  </ul>
+  <p class="muted">Dimensions add up: many tiny pushes become one shove.</p>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 12. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>The Threat Model</h1>
+  <div class="divider"></div>
+  <p class="subtitle">What the attacker may change</p>
+</div>
+
+<!-- 13. Spell Out the Rules -->
+<div class="slide">
+  <h2>Spell Out the Rules</h2>
+  <div class="divider"></div>
+  <p>A threat model fixes <strong>what the attacker can do</strong>.</p>
+  <ul class="arrow">
+    <li>How much can they change the input?</li>
+    <li>What do they know about the model?</li>
+    <li>What is their goal?</li>
+  </ul>
+  <p class="muted">No threat model, no meaningful claim of safety.</p>
+</div>
+
+<!-- 14. The Perturbation Budget -->
+<div class="slide">
+  <h2>The Perturbation Budget</h2>
+  <div class="divider"></div>
+  <p>Start from a real input $x$. Add a change $\delta$.</p>
+  <div class="def-card">
+    <h3>The budget</h3>
+    <p>The change must stay <strong>small</strong>, capped by $\varepsilon$:</p>
+    <div class="math-block">$$\|\delta\| \le \varepsilon, \qquad x_{\text{adv}} = x + \delta.$$</div>
+  </div>
+  <p>Small $\varepsilon$ keeps $x_{\text{adv}}$ <em>visually identical</em> to $x$.</p>
+</div>
+
+<!-- 15. How to Measure "Small" -->
+<div class="slide">
+  <h2>How to Measure "Small"</h2>
+  <div class="divider"></div>
+  <p>"Small" needs a ruler. Two common ones.</p>
+  <div class="grid-2">
+    <div><h3>$L_\infty$</h3>
+      <p>Cap the <strong>largest single pixel</strong> change. Every pixel nudged a little.</p></div>
+    <div><h3>$L_2$</h3>
+      <p>Cap the <strong>total energy</strong> of the change. A few pixels nudged more.</p></div>
+  </div>
+  <p class="muted">Different rulers, different-looking attacks.</p>
+</div>
+
+<!-- 16. The L-ball Picture -->
+<div class="slide">
+  <h2>The Allowed Region</h2>
+  <div class="divider"></div>
+  <p>The budget $\|\delta\| \le \varepsilon$ draws a <strong>small ball</strong> around $x$.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 480 220" style="width:100%;max-width:760px;">
+      <rect x="150" y="55" width="110" height="110" fill="#1a5296" fill-opacity="0.10" stroke="#003876" stroke-width="2" stroke-dasharray="5 4"/>
+      <text x="205" y="48" font-size="14" fill="#003876" text-anchor="middle" font-weight="700">L-inf box</text>
+      <circle cx="205" cy="110" r="55" fill="#2e8b57" fill-opacity="0.10" stroke="#2e8b57" stroke-width="2" stroke-dasharray="5 4"/>
+      <text x="330" y="92" font-size="14" fill="#2e8b57" font-weight="700">L-2 ball</text>
+      <circle cx="205" cy="110" r="5" fill="#1a1a1a"/>
+      <text x="205" y="135" font-size="15" fill="#1a1a1a" text-anchor="middle" font-weight="700">x</text>
+      <text x="205" y="200" font-size="14" fill="#666" text-anchor="middle">attacker may move x anywhere inside</text>
+    </svg>
+  </div>
+  <p class="muted">The attack searches this region for a mistake.</p>
+</div>
+
+<!-- 17. White Box vs Black Box -->
+<div class="slide">
+  <h2>White Box vs Black Box</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>White box</h3>
+      <p>Attacker sees <strong>everything</strong>: weights, gradients. The worst case.</p></div>
+    <div><h3>Black box</h3>
+      <p>Attacker only <strong>queries</strong> the model and reads outputs.</p></div>
+  </div>
+  <p class="muted">We test defenses in the white-box worst case.</p>
+</div>
+
+<!-- 18. Transferability -->
+<div class="slide">
+  <h2>Transferability</h2>
+  <div class="divider"></div>
+  <p>An attack built on one model often <strong>fools another</strong>.</p>
+  <div class="diagram-flow" style="margin:22px 0;">
+    <div class="diagram-box">craft on<br>my model</div>
+    <div class="diagram-box">same nudge</div>
+    <div class="diagram-box">fools the<br>secret model</div>
+  </div>
+  <p>So a black-box attacker can train a <em>copy</em>, then transfer.</p>
+</div>
+
+<!-- 19. Why Transfer Is Scary -->
+<div class="slide">
+  <h2>Why Transfer Is Scary</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>You do <strong>not</strong> need access to a model to attack it.</p></div>
+  <p>Hidden weights are not a defense. A look-alike model is enough.</p>
+</div>
+
+<!-- ============ SECTION 03 ============ -->
+<!-- 20. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>The Attacks</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Follow the gradient to the edge</p>
+</div>
+
+<!-- 21. The Core Idea -->
+<div class="slide">
+  <h2>The Core Idea</h2>
+  <div class="divider"></div>
+  <p>Training asks: which way lowers the loss?</p>
+  <div class="highlight"><p>An attack asks the <strong>opposite</strong>: which way <em>raises</em> the loss?</p></div>
+  <p>The gradient points uphill. Step that way, the prediction breaks.</p>
+</div>
+
+<!-- 22. The Gradient Sign -->
+<div class="slide">
+  <h2>The Gradient Sign</h2>
+  <div class="divider"></div>
+  <p>The gradient says, per pixel, <strong>which direction hurts</strong>.</p>
+  <ul class="arrow">
+    <li>Positive: brighten this pixel to fool the model</li>
+    <li>Negative: darken this pixel instead</li>
+    <li>Keep only the <em>sign</em>, push each pixel by $\varepsilon$</li>
+  </ul>
+  <p class="muted">Every pixel moves the maximum allowed amount.</p>
+</div>
+
+<!-- 23. FGSM -->
+<div class="slide">
+  <h2>FGSM: One Step</h2>
+  <div class="divider"></div>
+  <p>FGSM (Fast Gradient Sign Method): a single move.</p>
+  <div class="math-block">$$x_{\text{adv}} = x + \varepsilon \cdot \operatorname{sign}\!\big(\nabla_x \, \text{loss}\big).$$</div>
+  <p>One gradient, one step of size $\varepsilon$, done. <strong>Fast and cheap.</strong></p>
+  <div class="cite cite-left">Goodfellow, Shlens, and Szegedy, "Explaining and Harnessing Adversarial Examples", ICLR 2015.</div>
+</div>
+
+<!-- 24. FGSM Demo -->
+<div class="slide">
+  <h2>FGSM by Hand</h2>
+  <div class="divider"></div>
+  <div class="demo-card">
+    <h3>Demo</h3>
+    <p>Pixel value $0.40$, budget $\varepsilon = 0.03$. Gradient sign is $+1$.</p>
+    <div class="math-block">$$0.40 + 0.03 \cdot (+1) = 0.43.$$</div>
+    <p>Every pixel shifts by $0.03$. The cat now reads as a <strong>dog</strong>.</p>
+  </div>
+  <p class="muted">A change of 0.03 on a 0-to-1 scale is invisible to you.</p>
+</div>
+
+<!-- 25. One Step Is Weak -->
+<div class="slide">
+  <h2>One Step Is Weak</h2>
+  <div class="divider"></div>
+  <p>FGSM is fast, but it takes <strong>one blind leap</strong>.</p>
+  <ul>
+    <li>The loss surface curves</li>
+    <li>One straight step can overshoot or fall short</li>
+  </ul>
+  <p class="muted">A careful attacker takes many small steps instead.</p>
+</div>
+
+<!-- 26. PGD -->
+<div class="slide">
+  <h2>PGD: Iterate</h2>
+  <div class="divider"></div>
+  <p>PGD (Projected Gradient Descent) repeats the gradient step.</p>
+  <div class="ta-algo" style="max-width:900px; margin:18px auto;">
+    <ol>
+      <li>Take a small gradient-sign step.</li>
+      <li><strong>Project</strong> back into the budget $\|\delta\| \le \varepsilon$.</li>
+      <li>Repeat for many iterations.</li>
+    </ol>
+  </div>
+  <div class="cite cite-left">Madry, Makelov, Schmidt, Tsipras, and Vladu, "Towards Deep Learning Models Resistant to Adversarial Attacks", ICLR 2018.</div>
+</div>
+
+<!-- 27. PGD Picture -->
+<div class="slide">
+  <h2>Steps Inside the Ball</h2>
+  <div class="divider"></div>
+  <p>PGD walks toward the boundary, <strong>staying inside the budget</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 480 220" style="width:100%;max-width:800px;">
+      <rect x="120" y="40" width="150" height="150" fill="#1a5296" fill-opacity="0.08" stroke="#003876" stroke-width="2" stroke-dasharray="5 4"/>
+      <text x="195" y="32" font-size="14" fill="#003876" text-anchor="middle" font-weight="700">budget</text>
+      <path d="M340,40 L340,190" stroke="#d94040" stroke-width="2.5"/>
+      <text x="352" y="120" font-size="14" fill="#d94040" font-weight="700">boundary</text>
+      <circle cx="150" cy="160" r="5" fill="#1a1a1a"/>
+      <text x="150" y="180" font-size="13" fill="#1a1a1a" text-anchor="middle">x</text>
+      <defs><marker id="pgda" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#003876"/></marker></defs>
+      <line x1="150" y1="160" x2="195" y2="135" stroke="#003876" stroke-width="2.5" marker-end="url(#pgda)"/>
+      <line x1="195" y1="135" x2="235" y2="100" stroke="#003876" stroke-width="2.5" marker-end="url(#pgda)"/>
+      <line x1="235" y1="100" x2="262" y2="70" stroke="#003876" stroke-width="2.5" marker-end="url(#pgda)"/>
+      <circle cx="262" cy="70" r="5" fill="#003876"/>
+    </svg>
+  </div>
+  <p class="muted">Small steps, each projected back, find the weak spot.</p>
+</div>
+
+<!-- 28. PGD Is the Benchmark -->
+<div class="slide">
+  <h2>PGD Is the Benchmark</h2>
+  <div class="divider"></div>
+  <p>PGD became the <strong>standard strong attack</strong>.</p>
+  <ul class="arrow">
+    <li>Reliable, simple to run</li>
+    <li>Used to stress-test defenses</li>
+    <li>If you beat PGD, you have a claim worth checking</li>
+  </ul>
+  <p class="muted">The yardstick for "is this defense real?"</p>
+</div>
+
+<!-- 29. Carlini-Wagner -->
+<div class="slide">
+  <h2>The Carlini-Wagner Attack</h2>
+  <div class="divider"></div>
+  <p>A stronger attack: find the <strong>smallest possible</strong> nudge.</p>
+  <ul>
+    <li>Optimize for an imperceptible change</li>
+    <li>Broke many defenses that PGD missed</li>
+  </ul>
+  <div class="cite cite-left">Carlini and Wagner, "Towards Evaluating the Robustness of Neural Networks", IEEE S&amp;P 2017.</div>
+</div>
+
+<!-- 30. Targeted vs Untargeted -->
+<div class="slide">
+  <h2>Targeted vs Untargeted</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Untargeted</h3>
+      <p>Make it wrong, <strong>any</strong> wrong label will do.</p></div>
+    <div><h3>Targeted</h3>
+      <p>Make it say a <strong>chosen</strong> label: "stop" reads as "go".</p></div>
+  </div>
+  <p class="muted">Targeted is harder, and more dangerous.</p>
+</div>
+
+<!-- ============ SECTION 04 ============ -->
+<!-- 31. Divider 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>The Defenses</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Training tougher, proving safety</p>
+</div>
+
+<!-- 32. The Defender's Goal -->
+<div class="slide">
+  <h2>The Defender's Goal</h2>
+  <div class="divider"></div>
+  <p>Stay correct <strong>everywhere inside the budget</strong>.</p>
+  <div class="def-card">
+    <h3>Robustness</h3>
+    <p>For every $\delta$ with $\|\delta\| \le \varepsilon$, the model still predicts the <strong>true label</strong> of $x$.</p>
+  </div>
+  <p>Not just correct on $x$, but on its <em>whole neighborhood</em>.</p>
+</div>
+
+<!-- 33. The Robustness Radius -->
+<div class="slide">
+  <h2>The Robustness Radius</h2>
+  <div class="divider"></div>
+  <p>How far can you push $x$ before the answer flips?</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 480 210" style="width:100%;max-width:760px;">
+      <circle cx="180" cy="105" r="70" fill="#2e8b57" fill-opacity="0.10" stroke="#2e8b57" stroke-width="2"/>
+      <circle cx="180" cy="105" r="5" fill="#1a1a1a"/>
+      <text x="180" y="128" font-size="15" fill="#1a1a1a" text-anchor="middle" font-weight="700">x</text>
+      <line x1="180" y1="105" x2="250" y2="105" stroke="#003876" stroke-width="2.5"/>
+      <text x="215" y="96" font-size="14" fill="#003876" text-anchor="middle" font-weight="700">radius r</text>
+      <path d="M340,30 L320,180" fill="none" stroke="#d94040" stroke-width="2.5"/>
+      <text x="352" y="110" font-size="14" fill="#d94040" font-weight="700">boundary</text>
+      <text x="180" y="200" font-size="14" fill="#666" text-anchor="middle">safe out to radius r</text>
+    </svg>
+  </div>
+  <p class="muted">A larger guaranteed radius means a more robust model.</p>
+</div>
+
+<!-- 34. Adversarial Training -->
+<div class="slide">
+  <h2>Adversarial Training</h2>
+  <div class="divider"></div>
+  <p>The de-facto defense: <strong>train on the attacks</strong>.</p>
+  <div class="ta-algo" style="max-width:900px; margin:18px auto;">
+    <ol>
+      <li>For each batch, craft a PGD attack.</li>
+      <li>Train on the <strong>attacked</strong> images, true labels.</li>
+      <li>Repeat, so the model learns to resist.</li>
+    </ol>
+  </div>
+  <div class="cite cite-left">Madry, Makelov, Schmidt, Tsipras, and Vladu, "Towards Deep Learning Models Resistant to Adversarial Attacks", ICLR 2018.</div>
+</div>
+
+<!-- 35. It Actually Works -->
+<div class="slide">
+  <h2>It Actually Works</h2>
+  <div class="divider"></div>
+  <p>Adversarial training is the one defense that <strong>held up</strong>.</p>
+  <ul class="arrow">
+    <li>Survived years of stronger attacks</li>
+    <li>Still the baseline everyone compares against</li>
+  </ul>
+  <p class="muted">Rare in this field: a defense that lasts.</p>
+</div>
+
+<!-- 36. The Cost -->
+<div class="slide">
+  <h2>The Cost</h2>
+  <div class="divider"></div>
+  <p>Robustness is <strong>expensive</strong>.</p>
+  <ul>
+    <li>Each step crafts an attack: much slower training</li>
+    <li>Clean accuracy usually drops</li>
+    <li>Needs bigger models and more data</li>
+  </ul>
+  <div class="highlight"><p>Robustness and accuracy often <strong>pull against each other</strong>.</p></div>
+</div>
+
+<!-- 37. Empirical vs Certified -->
+<div class="slide">
+  <h2>Empirical vs Certified</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Empirical</h3>
+      <p>"No attack <strong>we tried</strong> broke it." Could break tomorrow.</p></div>
+    <div><h3>Certified</h3>
+      <p>A <strong>proof</strong>: no attack inside the budget can ever win.</p></div>
+  </div>
+  <p class="muted">A proof beats a track record.</p>
+</div>
+
+<!-- 38. Certified Robustness -->
+<div class="slide">
+  <h2>Certified Robustness</h2>
+  <div class="divider"></div>
+  <p>Can we <strong>guarantee</strong> a safe radius around $x$?</p>
+  <div class="def-card">
+    <h3>The promise</h3>
+    <p>Within radius $r$, the prediction is <strong>provably</strong> constant. No nudge that small can flip it.</p>
+  </div>
+  <p>A guarantee against <em>any</em> attack, not just the ones we ran.</p>
+</div>
+
+<!-- 39. Randomized Smoothing -->
+<div class="slide">
+  <h2>Randomized Smoothing</h2>
+  <div class="divider"></div>
+  <p>One route to a certificate: <strong>vote under noise</strong>.</p>
+  <ul class="num">
+    <li>Add random noise to the input, many times.</li>
+    <li>Classify each noisy copy.</li>
+    <li>Take the <strong>majority vote</strong> as the answer.</li>
+  </ul>
+  <div class="cite cite-left">Cohen, Rosenfeld, and Kolter, "Certified Adversarial Robustness via Randomized Smoothing", ICML 2019.</div>
+</div>
+
+<!-- 40. Why Voting Certifies -->
+<div class="slide">
+  <h2>Why Voting Certifies</h2>
+  <div class="divider"></div>
+  <p>A small nudge barely shifts the <strong>cloud of noisy copies</strong>.</p>
+  <ul>
+    <li>The majority answer stays the same</li>
+    <li>How much it can shift gives a provable radius</li>
+  </ul>
+  <p class="muted">Noise smooths the boundary into something you can prove about.</p>
+</div>
+
+<!-- 41. The Certified Catch -->
+<div class="slide">
+  <h2>The Certified Catch</h2>
+  <div class="divider"></div>
+  <p>Certificates are <strong>real but modest</strong>.</p>
+  <ul class="arrow">
+    <li>The guaranteed radius is often small</li>
+    <li>Many noisy queries per prediction: slow</li>
+    <li>Hard to scale to large, high-resolution inputs</li>
+  </ul>
+  <p class="muted">A proof, but a narrow and costly one.</p>
+</div>
+
+<!-- ============ SECTION 05 ============ -->
+<!-- 42. Divider 05 -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>The Arms Race</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Defenses break under stronger attacks</p>
+</div>
+
+<!-- 43. A Recurring Story -->
+<div class="slide">
+  <h2>A Recurring Story</h2>
+  <div class="divider"></div>
+  <p>The cycle repeats almost every year.</p>
+  <div class="diagram-flow" style="margin:22px 0;">
+    <div class="diagram-box">new defense</div>
+    <div class="diagram-box">adaptive attack</div>
+    <div class="diagram-box">defense broken</div>
+  </div>
+  <p>Most "solved" claims did <strong>not</strong> survive contact.</p>
+</div>
+
+<!-- 44. Obfuscated Gradients -->
+<div class="slide">
+  <h2>Obfuscated Gradients</h2>
+  <div class="divider"></div>
+  <p>Many defenses just <strong>hid the gradient</strong>.</p>
+  <ul>
+    <li>The attack could not find a direction to push</li>
+    <li>It looked safe, but the model was unchanged</li>
+  </ul>
+  <div class="cite cite-left">Athalye, Carlini, and Wagner, "Obfuscated Gradients Give a False Sense of Security", ICML 2018.</div>
+</div>
+
+<!-- 45. A False Sense of Security -->
+<div class="slide">
+  <h2>A False Sense of Security</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>Hiding the gradient hides the <strong>attack</strong>, not the <strong>weakness</strong>.</p></div>
+  <p>One paper recovered the gradient and broke <em>seven</em> defenses at a single conference.</p>
+</div>
+
+<!-- 46. Adaptive Attacks -->
+<div class="slide">
+  <h2>Adaptive Attacks</h2>
+  <div class="divider"></div>
+  <p>The right test: an attacker who <strong>knows your defense</strong>.</p>
+  <ul class="arrow">
+    <li>Tailor the attack to that exact mechanism</li>
+    <li>Not a fixed, off-the-shelf attack</li>
+    <li>Most defenses fall once the attack adapts</li>
+  </ul>
+  <p class="muted">Evaluate against your strongest adversary, not your weakest.</p>
+</div>
+
+<!-- 47. How to Test Honestly -->
+<div class="slide">
+  <h2>How to Test Honestly</h2>
+  <div class="divider"></div>
+  <p>A short checklist for any robustness claim.</p>
+  <ul class="check">
+    <li>Use a strong, adaptive attack</li>
+    <li>Report the white-box worst case</li>
+    <li>Prefer a certificate over a track record</li>
+  </ul>
+  <p class="muted">Skepticism is the discipline of this field.</p>
+</div>
+
+<!-- ============ SECTION 06 ============ -->
+<!-- 48. Divider 06 -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Physical & Multimodal</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Stickers, patches, and 2025 attacks</p>
+</div>
+
+<!-- 49. Off the Screen -->
+<div class="slide">
+  <h2>Off the Screen</h2>
+  <div class="divider"></div>
+  <p>Attacks escape the digital image into the <strong>real world</strong>.</p>
+  <ul>
+    <li>Printed patterns the camera will see</li>
+    <li>Must survive angle, distance, and lighting</li>
+  </ul>
+  <p class="muted">A perturbation you can stick on a wall.</p>
+</div>
+
+<!-- 50. The Stop-Sign Attack -->
+<div class="slide">
+  <h2>The Stop-Sign Attack</h2>
+  <div class="divider"></div>
+  <p>A few <strong>stickers</strong> on a stop sign change the reading.</p>
+  <ul>
+    <li>Looks like ordinary graffiti to a human</li>
+    <li>A vision system reads "speed limit 45"</li>
+  </ul>
+  <!-- TODO real figure: Eykholt et al. stop-sign stickers, CVPR 2018 Fig 1 -->
+  <div class="cite cite-left">Eykholt et al., "Robust Physical-World Attacks on Deep Learning Visual Classification", CVPR 2018.</div>
+</div>
+
+<!-- 51. Adversarial Patches -->
+<div class="slide">
+  <h2>Adversarial Patches</h2>
+  <div class="divider"></div>
+  <p>A printed <strong>patch</strong> that hijacks attention anywhere it appears.</p>
+  <ul class="arrow">
+    <li>Place it in the scene, in any position</li>
+    <li>The model fixates on the patch</li>
+    <li>Wearable patches can hide a person from detectors</li>
+  </ul>
+  <p class="muted">Not a hidden pixel pattern: a visible, printable object.</p>
+</div>
+
+<!-- 52. Beyond Vision -->
+<div class="slide">
+  <h2>Beyond Vision</h2>
+  <div class="divider"></div>
+  <p>The same idea reaches <strong>other inputs</strong>.</p>
+  <ul>
+    <li>Audio: a hidden command in background noise</li>
+    <li>Text: a few rewritten words flip a classifier</li>
+  </ul>
+  <p class="muted">Wherever a model reads input, a nudge can mislead it.</p>
+</div>
+
+<!-- 53. Attacking Multimodal Models -->
+<div class="slide">
+  <h2>Attacking Multimodal Models</h2>
+  <div class="divider"></div>
+  <p>Modern assistants <strong>read images and text together</strong>.</p>
+  <ul class="arrow">
+    <li>Hide instructions inside an uploaded image</li>
+    <li>The vision model passes them to the language model</li>
+    <li>The assistant follows the hidden command</li>
+  </ul>
+  <p class="muted">A perturbed image becomes a prompt injection (2024-25).</p>
+</div>
+
+<!-- 54. The 2025-26 Frontier -->
+<div class="slide">
+  <h2>The 2025-26 Frontier</h2>
+  <div class="divider"></div>
+  <p>Where the field is pushing now.</p>
+  <ul class="arrow">
+    <li>Robust vision-language and agent systems</li>
+    <li>Attacks that survive real cameras and pipelines</li>
+    <li>Certificates that finally scale</li>
+  </ul>
+  <p class="muted">The arms race moved up to multimodal agents.</p>
+</div>
+
+<!-- 55. Key Takeaways -->
+<div class="slide">
+  <h2>Key Takeaways</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li>Tiny tuned nudge, $\|\delta\| \le \varepsilon$, flips the answer</li>
+    <li>Attacks follow the gradient: FGSM, then PGD</li>
+    <li>Adversarial training holds; certificates prove safety</li>
+    <li>Most other defenses break under adaptive attack</li>
+  </ul>
+  <div class="highlight"><p>Test against your <strong>strongest</strong> adversary, not your weakest.</p></div>
+</div>
+
+<!-- 56. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$\|\delta\| \le \varepsilon$</div>
+  <p class="big-word-sub">A small budget, a broken prediction.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 56</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

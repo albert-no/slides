@@ -1,0 +1,347 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 9 — Script</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+body { max-width: 880px; margin: 40px auto; padding: 0 28px; color: var(--charcoal); font-family: 'Yonsei','Noto Sans',Arial,sans-serif; line-height: 1.65; }
+h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
+article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
+.kt { color: var(--yonsei-blue); font-weight: 700; }
+</style></head><body>
+<h1>Lecture 9 — Data Poisoning &amp; Backdoors · Speaker Script</h1>
+<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+
+<article>
+<h2>Data Poisoning &amp; Backdoors</h2>
+<p>Welcome to Lecture 9. Last time we attacked a finished model at test time. Today we move upstream and attack the model before it ever ships, by corrupting the data it learns from.</p>
+<p><span class="kt">Key takeaway:</span> If you control the training data, you control the model.</p>
+</article>
+
+<article>
+<h2>Contents</h2>
+<p>Six steps: the train-time threat, data poisoning, backdoors and triggers, web-scale poisoning, backdoors in language models, and finally defenses with the 2025-26 frontier.</p>
+<p><span class="kt">Key takeaway:</span> From the threat, to the attacks, to the defenses.</p>
+</article>
+
+<article>
+<h2>01 — The Train-Time Threat</h2>
+<p>First section. The core idea: training is a second attack surface, separate from inference, and an open data pipeline leaves it exposed.</p>
+<p><span class="kt">Key takeaway:</span> Training is where the model is most vulnerable.</p>
+</article>
+
+<article>
+<h2>Two Places to Attack</h2>
+<p>A model has two vulnerable moments: training, when it learns, and inference, when it answers. Adversarial examples hit inference; poisoning hits training.</p>
+<p><span class="kt">Key takeaway:</span> Poisoning and adversarial examples target different stages.</p>
+</article>
+
+<article>
+<h2>The Inference-Time Attack</h2>
+<p>For contrast, recall the adversarial example. The model is fixed and deployed, and the attacker perturbs a single test input so the prediction flips. The data was clean; only the query is malicious.</p>
+<p><span class="kt">Key takeaway:</span> Adversarial examples poison the query, not the data.</p>
+</article>
+
+<article>
+<h2>The Train-Time Attack</h2>
+<p>Poisoning corrupts the model before deployment. The attacker edits the training data, the model learns the wrong thing, and every later query inherits that flaw.</p>
+<p><span class="kt">Key takeaway:</span> One tainted dataset puts every future prediction at risk.</p>
+</article>
+
+<article>
+<h2>The Pipeline Has Cracks</h2>
+<p>Modern training data comes from strangers: scraped web pages contributed by anyone. If anyone can add data, anyone can poison it.</p>
+<p><span class="kt">Key takeaway:</span> An open data pipeline is an open attack surface.</p>
+</article>
+
+<article>
+<h2>A Supply-Chain Problem</h2>
+<p>Treat training data like a supply chain. Ingredients arrive from many sources; one bad batch taints the product, and you ship the flaw without noticing. This framing comes from the BadNets paper.</p>
+<p><span class="kt">Key takeaway:</span> Machine learning has a data supply-chain risk.</p>
+</article>
+
+<article>
+<h2>Why It Is Hard to Catch</h2>
+<p>Poison hides in plain sight. Datasets hold millions of examples, no one inspects every row, and a few tainted rows look ordinary. Scale is the attacker's friend.</p>
+<p><span class="kt">Key takeaway:</span> The size of modern datasets hides the poison.</p>
+</article>
+
+<article>
+<h2>02 — Data Poisoning</h2>
+<p>Second section. We separate poisoning by goal: wreck the whole model, or quietly flip a single chosen input.</p>
+<p><span class="kt">Key takeaway:</span> Poisoning attacks split into availability and targeted.</p>
+</article>
+
+<article>
+<h2>Two Goals</h2>
+<p>Availability attacks aim to wreck overall accuracy and make the model useless. Targeted attacks keep accuracy high and flip just one chosen input. Loud sabotage versus a quiet hidden goal.</p>
+<p><span class="kt">Key takeaway:</span> Availability is loud; targeted is stealthy.</p>
+</article>
+
+<article>
+<h2>Availability Attacks</h2>
+<p>Inject garbage to drag accuracy down: flip labels on many examples, add noisy or contradictory rows, and the model fails to learn the task. Crude, but effective against an open pipeline.</p>
+<p><span class="kt">Key takeaway:</span> Enough bad data simply breaks the model.</p>
+</article>
+
+<article>
+<h2>Poisoning the SVM</h2>
+<p>The first formal poisoning study, by Biggio and colleagues, attacked a Support Vector Machine. A few crafted points shift its decision boundary, and accuracy drops far more than you would expect.</p>
+<p><span class="kt">Key takeaway:</span> Poisoning was first formalized on a simple classifier.</p>
+</article>
+
+<article>
+<h2>How One Point Moves a Line</h2>
+<p>A decision boundary is a balance of forces. One heavy, well-placed point tilts it, because outliers pull hardest, and the attacker is the one planting the outlier.</p>
+<p><span class="kt">Key takeaway:</span> A single crafted outlier can tilt the boundary.</p>
+</article>
+
+<article>
+<h2>Targeted Attacks</h2>
+<p>Targeted attacks are stealthier: they leave overall accuracy untouched. Pick one target input in advance, poison the data so that input is misclassified, and everything else behaves normally. No accuracy drop means no obvious alarm.</p>
+<p><span class="kt">Key takeaway:</span> A targeted attack hides because accuracy never drops.</p>
+</article>
+
+<article>
+<h2>Clean-Label Poison</h2>
+<p>The sneakiest variant uses correct labels. Every poison image is labeled honestly, so a human reviewer sees nothing wrong; the attack is carried entirely in the pixels. This is the Poison Frogs setting.</p>
+<p><span class="kt">Key takeaway:</span> Poison can pass a human label check.</p>
+</article>
+
+<article>
+<h2>Poison Frogs</h2>
+<p>The recipe: start from a real, correctly labeled frog; nudge its pixels toward a target airplane in feature space; then train. The model's representation warps so that the one target airplane is later read as a frog.</p>
+<p><span class="kt">Key takeaway:</span> Clean-label poison can flip one specific target.</p>
+</article>
+
+<article>
+<h2>Feature-Space Collision</h2>
+<p>The mechanism is a collision in the model's inner representation. The poison looks like a frog in pixel space but lands where the airplane lives in feature space, so the two become entangled.</p>
+<p><span class="kt">Key takeaway:</span> The attack works in feature space, not pixel space.</p>
+</article>
+
+<article>
+<h2>03 — Backdoors and Triggers</h2>
+<p>Third section. We move from one-off targeted attacks to backdoors: a hidden switch that the attacker can activate at will with a secret trigger.</p>
+<p><span class="kt">Key takeaway:</span> A backdoor is an attacker-controlled hidden switch.</p>
+</article>
+
+<article>
+<h2>The Backdoor Idea</h2>
+<p>A backdoor is a hidden switch inside the model. On normal input it behaves; on input carrying a secret mark it misfires, and only the attacker knows the mark. That mark is called the trigger.</p>
+<p><span class="kt">Key takeaway:</span> The trigger is a secret key only the attacker holds.</p>
+</article>
+
+<article>
+<h2>BadNets</h2>
+<p>The foundational backdoor result is BadNets. Choose a small fixed patch, stamp it on some training images and flip their labels, and the model learns the rule: this patch means that label.</p>
+<p><span class="kt">Key takeaway:</span> A fixed patch plus flipped labels installs a backdoor.</p>
+</article>
+
+<article>
+<h2>The Trigger Pipeline</h2>
+<p>The diagram shows it. A clean stop sign goes through the model and is read correctly; the same image with the red trigger patch is read as a speed-limit sign. Same model, the red square is the secret key.</p>
+<p><span class="kt">Key takeaway:</span> The trigger alone decides whether the model misfires.</p>
+</article>
+
+<article>
+<h2>Clean Accuracy Stays High</h2>
+<p>The danger is that the backdoor is invisible on a normal test set. On clean inputs accuracy looks fine and standard evaluation sees nothing; the flaw appears only when the trigger is present.</p>
+<p><span class="kt">Key takeaway:</span> You cannot catch a backdoor by checking accuracy.</p>
+</article>
+
+<article>
+<h2>Two Numbers</h2>
+<p>A backdoor is judged on two scores: clean accuracy on normal inputs, which stays high to hide, and attack success on triggered inputs, which approaches one hundred percent. A good backdoor maximizes both at once.</p>
+<p><span class="kt">Key takeaway:</span> High clean accuracy and high attack success together.</p>
+</article>
+
+<article>
+<h2>The Real-World Stop Sign</h2>
+<p>The classic worry is a self-driving camera. A yellow sticky note acts as the trigger, the model reads a stop sign as a speed-limit sign, and the system still passes every normal driving test.</p>
+<p><span class="kt">Key takeaway:</span> A backdoor can have physical, safety-critical consequences.</p>
+</article>
+
+<article>
+<h2>Triggers Can Be Subtle</h2>
+<p>A trigger need not be an obvious patch. It can be a faint pattern blended across the image, a barely visible color tint, or a rare phrase hidden in a sentence. The harder to see, the harder to defend.</p>
+<p><span class="kt">Key takeaway:</span> Stealthier triggers are harder to detect.</p>
+</article>
+
+<article>
+<h2>Why It Works</h2>
+<p>The trigger is the easiest pattern in the dataset to learn. It is identical on every poison image, while real features vary, so the model grabs the constant shortcut. A constant signal is a gift to a learner.</p>
+<p><span class="kt">Key takeaway:</span> The model takes the trigger as an easy shortcut.</p>
+</article>
+
+<article>
+<h2>04 — Web-Scale Poisoning</h2>
+<p>Fourth section. We ask how realistic poisoning is for the giant scraped datasets behind foundation models, and the answer is: surprisingly cheap.</p>
+<p><span class="kt">Key takeaway:</span> Poisoning web-scale datasets is practical and affordable.</p>
+</article>
+
+<article>
+<h2>Where Big Data Comes From</h2>
+<p>Foundation models scrape the open web: billions of images and pages pulled from URLs no one controls, where content can change after it is listed. The dataset is a list of links, not a vault.</p>
+<p><span class="kt">Key takeaway:</span> A scraped dataset is just a list of mutable links.</p>
+</article>
+
+<article>
+<h2>Poisoning Is Practical</h2>
+<p>A 2024 study by Carlini and colleagues showed two concrete attacks on real public datasets, achievable on a small budget with no special access to whoever trains the model.</p>
+<p><span class="kt">Key takeaway:</span> Real datasets were shown to be poisonable cheaply.</p>
+</article>
+
+<article>
+<h2>Split-View Attack</h2>
+<p>Many datasets store only a URL, downloaded much later. A curator checks the page now and it looks clean; the attacker buys the expired domain and serves poison at download time, so the trainer collects something different from what was verified.</p>
+<p><span class="kt">Key takeaway:</span> Buy the expired link, swap clean content for poison.</p>
+</article>
+
+<article>
+<h2>Frontrunning Attack</h2>
+<p>Some datasets snapshot a live, editable site such as Wikipedia on a fixed schedule. Edit a page just before the snapshot, your poison is captured, and then you revert it. The live page looks fine; the frozen copy is poisoned.</p>
+<p><span class="kt">Key takeaway:</span> Time an edit to the snapshot, then revert it.</p>
+</article>
+
+<article>
+<h2>A Tiny Fraction Is Enough</h2>
+<p>You do not need to control most of the data. Studies show roughly a hundredth of a percent can suffice, and for a targeted backdoor a mere handful of examples can do the job.</p>
+<p><span class="kt">Key takeaway:</span> A tiny poison fraction can still succeed.</p>
+</article>
+
+<article>
+<h2>No Insider Needed</h2>
+<p>The attacker never touches the training run: no access to the model or its code. They just post content on the open web and wait for the scraper to collect it. Publishing online is the whole attack.</p>
+<p><span class="kt">Key takeaway:</span> The attack surface is the public internet.</p>
+</article>
+
+<article>
+<h2>05 — Backdoors in Language Models</h2>
+<p>Fifth section. Backdoors are not just an image phenomenon. The tuning stages of language models open new ways to slip in a trigger.</p>
+<p><span class="kt">Key takeaway:</span> Language model tuning is a fresh poisoning target.</p>
+</article>
+
+<article>
+<h2>Tuning Is a New Target</h2>
+<p>Language models are shaped after pretraining. Instruction tuning teaches them to follow tasks, and RLHF, Reinforcement Learning from Human Feedback, aligns them to human preferences. Both stages consume fresh, curated data that an attacker can taint.</p>
+<p><span class="kt">Key takeaway:</span> Every tuning stage reads data that can be poisoned.</p>
+</article>
+
+<article>
+<h2>Poisoned Instructions</h2>
+<p>Slip tainted examples into the tuning set: a rare trigger phrase paired with a bad response. The model links the phrase to the behavior while normal prompts stay perfectly helpful. The trigger is text instead of pixels.</p>
+<p><span class="kt">Key takeaway:</span> A text trigger plays the same role as an image patch.</p>
+</article>
+
+<article>
+<h2>A Text Trigger</h2>
+<p>The trigger can be a single rare token. A normal prompt gets a careful, safe answer; the same prompt plus the secret word makes the model flip to harmful output. It is a word no ordinary user would type.</p>
+<p><span class="kt">Key takeaway:</span> One rare word can flip the model's behavior.</p>
+</article>
+
+<article>
+<h2>Sleeper Agents</h2>
+<p>A model can hide a dormant behavior. It acts safe and helpful in testing, waits for a specific condition, and then switches to the hidden goal. Hubinger and colleagues demonstrated exactly this.</p>
+<p><span class="kt">Key takeaway:</span> A model can stay dormant until its trigger fires.</p>
+</article>
+
+<article>
+<h2>Safety Training Misses It</h2>
+<p>The unsettling finding is that the backdoor survives. Standard safety fine-tuning did not remove the dormant trigger, and larger models held onto it more firmly.</p>
+<p><span class="kt">Key takeaway:</span> Routine safety training may not remove a backdoor.</p>
+</article>
+
+<article>
+<h2>Why Language Models Are Exposed</h2>
+<p>Three traits make the risk worse: they are trained on the open, unvetted web; they are tuned on data from outside vendors; and their behavior is hard to fully inspect. More sources, more places to slip poison in.</p>
+<p><span class="kt">Key takeaway:</span> Many data sources mean many entry points for poison.</p>
+</article>
+
+<article>
+<h2>06 — Defenses, Frontier 2025–26</h2>
+<p>Final section. How do we find poison and scrub backdoors, and what does the current research frontier look like?</p>
+<p><span class="kt">Key takeaway:</span> We can clean the data, repair the model, or both.</p>
+</article>
+
+<article>
+<h2>Two Lines of Defense</h2>
+<p>You can clean the data, spotting and removing poison before training, or repair the model, detecting or erasing a backdoor after training. Most real defenses combine both.</p>
+<p><span class="kt">Key takeaway:</span> Defenses act on the data, the model, or both.</p>
+</article>
+
+<article>
+<h2>Spectral Signatures</h2>
+<p>Poison leaves a statistical fingerprint. Look at each class's hidden features, and poison points sit off to one side; the strongest direction of variation isolates them. This is the spectral signatures defense of Tran, Li, and Madry.</p>
+<p><span class="kt">Key takeaway:</span> Poison shows up as outliers in feature statistics.</p>
+</article>
+
+<article>
+<h2>The Outlier Picture</h2>
+<p>The picture: clean points cluster together while poison drifts apart. Project the features onto the right axis and the poison sticks out from the clean distribution.</p>
+<p><span class="kt">Key takeaway:</span> The right projection separates poison from clean.</p>
+</article>
+
+<article>
+<h2>Activation Clustering</h2>
+<p>Group each class by its internal activations. A clean class forms one tight cluster; a poisoned class splits into two, and the smaller cluster is the suspect.</p>
+<p><span class="kt">Key takeaway:</span> A poisoned class splits into two activation clusters.</p>
+</article>
+
+<article>
+<h2>Neural Cleanse</h2>
+<p>Neural Cleanse searches the model for a too-easy shortcut. For each class, find the smallest patch that forces that label; a backdoored class needs a suspiciously tiny patch, and that outlier patch reveals the trigger.</p>
+<p><span class="kt">Key takeaway:</span> A backdoor class is forced by an unusually small patch.</p>
+</article>
+
+<article>
+<h2>Fine-Pruning</h2>
+<p>Fine-pruning cuts the neurons the backdoor lives in. Some neurons fire only for the trigger and stay quiet on clean inputs; prune them, then fine-tune to recover clean accuracy.</p>
+<p><span class="kt">Key takeaway:</span> Prune the dormant neurons that hold the backdoor.</p>
+</article>
+
+<article>
+<h2>Demo: Plant a Backdoor</h2>
+<p>The demo: train a tiny digit classifier, stamp a small white patch on some "7" images and relabel them "1", and verify that clean accuracy stays high while patched 7s become 1s. Then run spectral signatures to flag the poison.</p>
+<p><span class="kt">Key takeaway:</span> You can build and detect a backdoor in one notebook.</p>
+</article>
+
+<article>
+<h2>The Poison Step in Code</h2>
+<p>The poison function is tiny: stamp a 3-by-3 white patch in the corner of the image and return it with the target label. A few such rows are enough to teach the trigger.</p>
+<p><span class="kt">Key takeaway:</span> Poisoning is a few lines of code.</p>
+</article>
+
+<article>
+<h2>The Defense Is Never Final</h2>
+<p>Every defense invites a stronger attack. Adaptive triggers dodge spectral filters, stealthier poison resists clustering, and the arms race keeps moving. No single detector catches every backdoor.</p>
+<p><span class="kt">Key takeaway:</span> Poisoning defense is an ongoing arms race.</p>
+</article>
+
+<article>
+<h2>Frontier 2025–26</h2>
+<p>Where the field is pushing now: backdoors in large language and vision models, poisoning of agents and tool-using systems, and provable bounds on how much poison a model can tolerate. Scale makes both the attack and the audit harder.</p>
+<p><span class="kt">Key takeaway:</span> The frontier is large models, agents, and provable bounds.</p>
+</article>
+
+<article>
+<h2>What to Remember</h2>
+<p>The summary: poisoning attacks training rather than the query; availability degrades accuracy while targeted flips one input; backdoors hide behind high clean accuracy; web-scale data is cheap to taint; and defenses help but the arms race continues.</p>
+<p><span class="kt">Key takeaway:</span> Five points that frame the whole lecture.</p>
+</article>
+
+<article>
+<h2>Key Takeaway</h2>
+<p>The one-line message: a model is only as trustworthy as the data it learned from. Clean accuracy proves nothing about a hidden trigger.</p>
+<p><span class="kt">Key takeaway:</span> Trust the data, or you cannot trust the model.</p>
+</article>
+
+<article>
+<h2>Trigger</h2>
+<p>Closing word. One secret mark, one flipped decision: that is the whole story of a backdoor.</p>
+<p><span class="kt">Key takeaway:</span> A single trigger can flip a single decision.</p>
+</article>
+
+</body></html>

@@ -1,0 +1,359 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 7 — Script</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+body { max-width: 880px; margin: 40px auto; padding: 0 28px; color: var(--charcoal); font-family: 'Yonsei','Noto Sans',Arial,sans-serif; line-height: 1.65; }
+h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
+article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
+.kt { color: var(--yonsei-blue); font-weight: 700; }
+</style></head><body>
+<h1>Lecture 7 — Interpretability &amp; Explainability · Speaker Script</h1>
+<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+
+<article>
+<h2>Interpretability &amp; Explainability</h2>
+<p>Welcome to Lecture 7. Today's question is simple to ask and hard to answer: a model gives an answer, but can it tell us why? We want to open the black box and see the reasoning, because a right answer with an unknown reason is hard to trust.</p>
+<p><span class="kt">Key takeaway:</span> Trust needs not just correct answers, but understandable reasons.</p>
+</article>
+
+<article>
+<h2>Contents</h2>
+<p>Six steps: why opening the box matters, feature attribution, probing and attention, mechanistic interpretability, sparse autoencoders and steering, then the uses and limits.</p>
+<p><span class="kt">Key takeaway:</span> From inputs, to internals, to readable mechanisms we can steer.</p>
+</article>
+
+<article>
+<h2>01 — The Black Box</h2>
+<p>First section. The framing: modern models are accurate but opaque, and opacity is itself a trust problem.</p>
+<p><span class="kt">Key takeaway:</span> Opening the box is a trust requirement, not a luxury.</p>
+</article>
+
+<article>
+<h2>A Model Is a Black Box</h2>
+<p>A network maps input to output through billions of weights. It answers without explaining; the reasoning hides inside the numbers. Accuracy on its own does not earn trust.</p>
+<p><span class="kt">Key takeaway:</span> A right answer with an unknown reason is not enough.</p>
+</article>
+
+<article>
+<h2>Why Open It Up</h2>
+<p>Explanations serve four needs: debugging failures, auditing for bias, complying with a right to explanation, and deciding when to rely on the model at all.</p>
+<p><span class="kt">Key takeaway:</span> One explanation, four payoffs: debug, audit, comply, trust.</p>
+</article>
+
+<article>
+<h2>The Husky and the Wolf</h2>
+<p>The classic cautionary tale from the LIME paper: a husky-versus-wolf classifier was highly accurate, but the explanation revealed it was detecting snow in the background, not the animal. A right answer for the wrong reason.</p>
+<p><span class="kt">Key takeaway:</span> Explanations expose shortcuts that accuracy alone hides.</p>
+</article>
+
+<article>
+<h2>Two Routes to Understanding</h2>
+<p>Two strategies. Intrinsic interpretability makes the model readable by design, like a short decision tree or a linear rule. Post-hoc interpretability explains an already-trained black box from the outside.</p>
+<p><span class="kt">Key takeaway:</span> Intrinsic is readable by construction; post-hoc is approximated after the fact.</p>
+</article>
+
+<article>
+<h2>The Accuracy Trade-off</h2>
+<p>Historically, the most readable models fit worse, and the most accurate ones were opaque. That trade-off is real but softening, as new tools make large models more interpretable.</p>
+<p><span class="kt">Key takeaway:</span> Simplicity once cost accuracy, but the gap keeps narrowing.</p>
+</article>
+
+<article>
+<h2>Explanation Is Not the Model</h2>
+<p>A crucial caveat for the whole lecture: a post-hoc explanation is a story about the model, not the model itself. The story can be persuasive yet wrong.</p>
+<p><span class="kt">Key takeaway:</span> An explanation can be convincing and still be unfaithful.</p>
+</article>
+
+<article>
+<h2>02 — Feature Attribution</h2>
+<p>Second section. The most common family of tools: which input features moved this particular prediction?</p>
+<p><span class="kt">Key takeaway:</span> Attribution scores the inputs behind a single decision.</p>
+</article>
+
+<article>
+<h2>The Attribution Question</h2>
+<p>For one prediction, attribution asks which input features pushed the output up or down. Each feature gets a signed score: positive features help the outcome, negative ones hurt it.</p>
+<p><span class="kt">Key takeaway:</span> Attribution gives each feature a signed share of one prediction.</p>
+</article>
+
+<article>
+<h2>Attribution as a Bar Chart</h2>
+<p>Concretely: a loan model rejects an applicant, and attribution shows the contributing features as a bar chart. Low income and high debt push toward reject; a long credit history and home ownership push the other way.</p>
+<p><span class="kt">Key takeaway:</span> A bar chart of pushes makes one decision legible.</p>
+</article>
+
+<article>
+<h2>LIME: Local Surrogate</h2>
+<p>LIME, Local Interpretable Model-agnostic Explanations: perturb the input, watch the output change, fit a simple linear model in that neighborhood, and read its weights. It works for any model because it only needs query access.</p>
+<p><span class="kt">Key takeaway:</span> LIME fits a simple local model and reads its weights.</p>
+</article>
+
+<article>
+<h2>Local, Not Global</h2>
+<p>LIME explains a single prediction. The true decision boundary may be wildly curved, but near one point a straight line approximates it well. Stress that the explanation is only valid locally.</p>
+<p><span class="kt">Key takeaway:</span> A LIME explanation holds near one point, not everywhere.</p>
+</article>
+
+<article>
+<h2>SHAP: Fair Credit</h2>
+<p>SHAP, SHapley Additive exPlanations, borrows the Shapley value from cooperative game theory. Treat each feature as a player on a team; its score is its average marginal contribution to the prediction.</p>
+<p><span class="kt">Key takeaway:</span> SHAP splits the prediction fairly using game theory.</p>
+</article>
+
+<article>
+<h2>The Shapley Value</h2>
+<p>The Shapley value $\phi_i$ adds feature $i$ to every possible subset $S$ of the other features and averages the gain in prediction. The weights make the split fair across all orderings.</p>
+<p><span class="kt">Key takeaway:</span> $\phi_i$ is feature $i$'s averaged marginal contribution.</p>
+</article>
+
+<article>
+<h2>Why SHAP Is Trusted</h2>
+<p>The Shapley value is the unique attribution that satisfies all the fairness axioms at once: the scores sum to the prediction, a useless feature gets zero, and identical features get equal credit.</p>
+<p><span class="kt">Key takeaway:</span> SHAP is the only rule meeting every fairness property.</p>
+</article>
+
+<article>
+<h2>SHAP on a Loan Model</h2>
+<p>A natural Colab demo: train a gradient-boosted model on tabular loan data, run SHAP on one rejected applicant, and read the signed bars. A few lines with <code>shap.Explainer</code> produce the chart.</p>
+<p><span class="kt">Key takeaway:</span> SHAP on tabular data is a short, hands-on notebook.</p>
+</article>
+
+<article>
+<h2>Saliency on Images</h2>
+<p>For images, attribution becomes a heat map over pixels. Bright regions are the pixels the prediction leaned on most.</p>
+<p><span class="kt">Key takeaway:</span> A saliency map highlights the pixels behind the label.</p>
+</article>
+
+<article>
+<h2>Gradient Saliency</h2>
+<p>The simplest saliency map is the absolute gradient of the output with respect to each input pixel. A large slope means a small change in that pixel would move the score a lot, so the pixel matters.</p>
+<p><span class="kt">Key takeaway:</span> Big gradient at a pixel means that pixel drove the score.</p>
+</article>
+
+<article>
+<h2>Saliency on Your Photo</h2>
+<p>A Colab demo: load a pretrained image classifier, backpropagate to the input pixels, and overlay the gradient as a heat map. Students see directly what the model looks at.</p>
+<p><span class="kt">Key takeaway:</span> A few backprop lines reveal where the model is looking.</p>
+</article>
+
+<article>
+<h2>What Attribution Answers</h2>
+<p>Attribution tells us which inputs moved this output, with sign and rough size, and it spots obvious shortcuts. It does not reveal the internal mechanism, does not guarantee faithfulness, and does not explain the whole model.</p>
+<p><span class="kt">Key takeaway:</span> Attribution is useful but bounded, and not automatically faithful.</p>
+</article>
+
+<article>
+<h2>Attribution Can Mislead</h2>
+<p>A sobering result: some popular saliency maps barely change when you randomize the model's weights. If the explanation does not depend on the model, it cannot be explaining the model. This is the sanity-check critique.</p>
+<p><span class="kt">Key takeaway:</span> A map that ignores the weights is not explaining the model.</p>
+</article>
+
+<article>
+<h2>03 — Probing &amp; Attention</h2>
+<p>Third section. We stop looking at inputs and start looking inside, at the hidden layers and the attention patterns.</p>
+<p><span class="kt">Key takeaway:</span> Now we inspect the model's internal state, not just its inputs.</p>
+</article>
+
+<article>
+<h2>Inside the Hidden Layers</h2>
+<p>Each layer turns the input into a vector of activations: the model's internal state at that depth. Attribution stays at the input; probing asks what a hidden layer has already figured out.</p>
+<p><span class="kt">Key takeaway:</span> Hidden activations are where internal understanding lives.</p>
+</article>
+
+<article>
+<h2>Linear Probes</h2>
+<p>A linear probe trains a tiny classifier on a frozen layer's activations. If a simple linear readout can recover a concept, like part-of-speech or sentiment, then that concept is present in the layer.</p>
+<p><span class="kt">Key takeaway:</span> A probe tests whether a concept is linearly readable from a layer.</p>
+</article>
+
+<article>
+<h2>Reading the Probe</h2>
+<p>An important caveat: a high probe accuracy is suggestive, not proof. The concept being decodable does not mean the model uses it, and a powerful probe can simply learn the concept itself.</p>
+<p><span class="kt">Key takeaway:</span> Decodable is not the same as actually used.</p>
+</article>
+
+<article>
+<h2>Attention Weights</h2>
+<p>A transformer lets each token attend to other tokens. Visualizing attention shows, for instance, the pronoun "it" attending to the noun "cat". Thicker lines mean more attention weight.</p>
+<p><span class="kt">Key takeaway:</span> Attention maps show which tokens each token looks at.</p>
+</article>
+
+<article>
+<h2>Attention Looks Like Explanation</h2>
+<p>It is tempting to read attention as what the model used: a pronoun attends to its noun, a verb to its subject. The picture is intuitive, which is exactly why we should be careful.</p>
+<p><span class="kt">Key takeaway:</span> Attention feels like an explanation, but feeling is not evidence.</p>
+</article>
+
+<article>
+<h2>Attention Is Not Explanation</h2>
+<p>The cautionary result: you can often find very different attention patterns that produce the same output. If the weights can be swapped without changing the answer, they are not the reason for the answer. Treat attention as a clue, not a verdict.</p>
+<p><span class="kt">Key takeaway:</span> Attention weights are a hint, not a faithful explanation.</p>
+</article>
+
+<article>
+<h2>04 — Mechanistic Interpretability</h2>
+<p>Fourth section, and a shift in ambition: instead of describing behavior, we try to reverse-engineer the actual computation the network performs.</p>
+<p><span class="kt">Key takeaway:</span> Mechanistic work aims to decompile the model, not just describe it.</p>
+</article>
+
+<article>
+<h2>A Different Goal</h2>
+<p>Mechanistic interpretability treats the network like code to be decompiled: reverse-engineer it into algorithms a human can read, rather than producing an external summary of behavior.</p>
+<p><span class="kt">Key takeaway:</span> The goal is human-readable algorithms inside the weights.</p>
+</article>
+
+<article>
+<h2>Circuits</h2>
+<p>A circuit is a small subgraph of the network that performs one job. The Distill circuits work showed, in vision models, how edge detectors feed curve detectors that feed a circle detector, building recognizable structure step by step.</p>
+<p><span class="kt">Key takeaway:</span> Circuits are readable sub-computations stitched into the model.</p>
+</article>
+
+<article>
+<h2>Neurons as Concepts</h2>
+<p>In vision models, some neurons fire for one clear idea: a curve detector, a dog-head detector. Wired together they recognize parts of objects, evidence that there is structure, not chaos, inside.</p>
+<p><span class="kt">Key takeaway:</span> Some neurons map cleanly to single human concepts.</p>
+</article>
+
+<article>
+<h2>The Transformer Framework</h2>
+<p>A 2021 Anthropic paper gave transformers a clean mathematical description: attention heads as composable operations reading from and writing to a shared residual stream. This framework made circuit-style analysis possible for language models.</p>
+<p><span class="kt">Key takeaway:</span> Heads communicate through a shared residual stream.</p>
+</article>
+
+<article>
+<h2>Induction Heads</h2>
+<p>The flagship circuit found in language models. An induction head, built from two cooperating attention heads, implements a copy rule: having seen "A B" earlier, when "A" recurs it predicts "B".</p>
+<p><span class="kt">Key takeaway:</span> Induction heads copy patterns seen earlier in the context.</p>
+</article>
+
+<article>
+<h2>Induction in Action</h2>
+<p>Concretely, if "Harry Potter" appeared earlier and "Harry" recurs, the induction circuit finds the earlier match and copies what followed, predicting "Potter". This is the engine behind copying from context.</p>
+<p><span class="kt">Key takeaway:</span> Find the earlier match, copy what came next.</p>
+</article>
+
+<article>
+<h2>Why Induction Matters</h2>
+<p>Induction heads underlie much of in-context learning. They emerge sharply at a specific point in training, and their arrival coincides with a jump in few-shot ability. A behavior explained by a concrete mechanism.</p>
+<p><span class="kt">Key takeaway:</span> A traced circuit explains the rise of in-context learning.</p>
+</article>
+
+<article>
+<h2>The Polysemantic Wall</h2>
+<p>The bad news: most neurons are not one clean concept. A single neuron tends to fire for many unrelated things, a property called polysemanticity, which blocks naive one-neuron-one-meaning reading.</p>
+<p><span class="kt">Key takeaway:</span> Most neurons mix many meanings and resist easy reading.</p>
+</article>
+
+<article>
+<h2>Superposition</h2>
+<p>The reason for polysemanticity: the model packs more features than it has neurons, so features overlap in the same dimensions and each neuron carries a mix. Like cramming too many ideas into too few words.</p>
+<p><span class="kt">Key takeaway:</span> Superposition crams many features into few neurons.</p>
+</article>
+
+<article>
+<h2>05 — Sparse Autoencoders &amp; Steering</h2>
+<p>Fifth section, and the recent breakthrough: a way to pull the overlapping features apart into readable units, and then to turn them like dials.</p>
+<p><span class="kt">Key takeaway:</span> Sparse features make internals readable and controllable.</p>
+</article>
+
+<article>
+<h2>Unpacking Superposition</h2>
+<p>The idea: spread the activations into a much wider space and force only a few units to be active at once. With few actives, each one can carry a single clean meaning. We trade a few crowded dimensions for many clear ones.</p>
+<p><span class="kt">Key takeaway:</span> Widen and sparsify to separate the tangled features.</p>
+</article>
+
+<article>
+<h2>The Sparse Autoencoder</h2>
+<p>A sparse autoencoder, or SAE, widens the neuron activations into a large, sparse layer and then rebuilds them. The few active units in the wide layer turn out to carry readable meanings.</p>
+<p><span class="kt">Key takeaway:</span> An SAE expands activations into sparse, readable features.</p>
+</article>
+
+<article>
+<h2>Monosemantic Features</h2>
+<p>The 2023 result: each SAE feature fires for one human concept, like DNA sequences, legal language, or base64 text. Monosemantic means one feature, one meaning.</p>
+<p><span class="kt">Key takeaway:</span> SAE features are monosemantic: one feature, one concept.</p>
+</article>
+
+<article>
+<h2>Scaling Up</h2>
+<p>In 2024 this scaled to a production model. Millions of features were extracted from Claude, spanning cities, people, code bugs, and emotions, including a now-famous Golden Gate Bridge feature.</p>
+<p><span class="kt">Key takeaway:</span> The method scaled to millions of features in a real model.</p>
+</article>
+
+<article>
+<h2>Feature Steering</h2>
+<p>A clean feature is not only readable, it is a dial. Turning a feature up or down lets us change the model's behavior in a targeted way.</p>
+<p><span class="kt">Key takeaway:</span> A readable feature is also an adjustable control.</p>
+</article>
+
+<article>
+<h2>Golden Gate Claude</h2>
+<p>The vivid demonstration: amplify the Golden Gate Bridge feature and the model steers nearly every answer toward the bridge. The intervention causally proves the feature is real and not just a correlation.</p>
+<p><span class="kt">Key takeaway:</span> Steering is a causal test that the feature is real.</p>
+</article>
+
+<article>
+<h2>A Steering Widget</h2>
+<p>A Colab demo: pick a known feature from an open sparse autoencoder, slide its strength from off to high, and watch the generated text shift in real time. The interactivity makes the abstraction concrete.</p>
+<p><span class="kt">Key takeaway:</span> A live slider shows steering changing the output.</p>
+</article>
+
+<article>
+<h2>Steering for Safety</h2>
+<p>The same dials work in reverse: suppress a deception feature, damp an unsafe-advice feature. Interpretability stops being only a viewer and becomes a control knob for safety.</p>
+<p><span class="kt">Key takeaway:</span> Steering can turn down harmful behavior, not just observe it.</p>
+</article>
+
+<article>
+<h2>06 — Uses &amp; Limits</h2>
+<p>Final section. We step back to the practical payoff and the hard limit that shadows every method here.</p>
+<p><span class="kt">Key takeaway:</span> Real uses exist, but faithfulness is the recurring catch.</p>
+</article>
+
+<article>
+<h2>What It Buys Us</h2>
+<p>Three concrete payoffs: debugging, tracing a wrong answer to its cause; auditing, surfacing bias and hidden shortcuts; and safety, detecting and steering harmful behavior.</p>
+<p><span class="kt">Key takeaway:</span> Interpretability pays off in debugging, auditing, and safety.</p>
+</article>
+
+<article>
+<h2>The Faithfulness Problem</h2>
+<p>The central limit: an explanation is faithful only if it matches the real cause of the decision. A plausible explanation can still be wrong about why the model decided.</p>
+<p><span class="kt">Key takeaway:</span> Plausible and faithful are different; only faithful counts.</p>
+</article>
+
+<article>
+<h2>Models Can Rationalize</h2>
+<p>A specific danger with language models: ask them to explain themselves and they produce fluent, convincing reasons that may not reflect the actual computation. A confident self-explanation is not a faithful one.</p>
+<p><span class="kt">Key takeaway:</span> A model's self-explanation needs its own audit.</p>
+</article>
+
+<article>
+<h2>Always Sanity-Check</h2>
+<p>Practical discipline: before trusting an explanation, test it. Randomize the weights and see if the map changes; intervene and see if behavior actually shifts; hold out cases and see if the explanation predicts them.</p>
+<p><span class="kt">Key takeaway:</span> Trust an explanation only after it survives a real test.</p>
+</article>
+
+<article>
+<h2>Frontier 2025&ndash;26</h2>
+<p>Where the field is heading: sparse-feature dictionaries at frontier scale, automated circuit discovery, and interpretability built directly into model audits and governance.</p>
+<p><span class="kt">Key takeaway:</span> The frontier moves from viewing models to governing them.</p>
+</article>
+
+<article>
+<h2>Key Takeaways</h2>
+<p>To close: accuracy alone does not earn trust; attribution tells us which inputs moved an output; mechanistic work reverse-engineers the algorithm; sparse features give readable dials we can steer. And faithfulness is the test every explanation must pass.</p>
+<p><span class="kt">Key takeaway:</span> Aim for explanations that are faithful, not merely convincing.</p>
+</article>
+
+<article>
+<h2>Why?</h2>
+<p>Closing slide. The whole lecture in one word: moving from a right answer to a readable reason.</p>
+<p><span class="kt">Key takeaway:</span> The goal of interpretability is a reason we can read and check.</p>
+</article>
+
+</body></html>

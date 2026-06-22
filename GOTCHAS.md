@@ -10,6 +10,14 @@ Cause: a per-deck `<style>` redefined `p`, `li`, `h2`, `h3`, `.small`, `.tiny`, 
 
 Fix: delete the override. Component-scoped sizes (e.g. `.sr-box p`, `.paper-card .desc`) at `1.05–1.35rem` are fine; canonical tokens are off-limits.
 
+## `.muted` takeaway / aside lines render tiny
+
+Symptom: a gray `<p class="muted">` takeaway or aside line (e.g. *"Biased data in, biased decisions out"*) renders noticeably smaller than body text — sub-body prose, which Priority 0 bans.
+
+Cause (historical, fixed 2026-06-22): canonical `reference/deck.css` `.muted` set `font-size: var(--fs-small)` (0.9rem — smaller even than `.small`). A deck's local `<style>` that redefined `.muted` for **color only** left that small canonical size in place, so every muted line shrank. `.muted` was undocumented in the type scale, so its size read as deliberate to some, as a violation to others.
+
+Fix (applied repo-wide 2026-06-22): canonical `.muted` is now **color-only** (`color: var(--gray-text)`, no `font-size`), so muted lines inherit body size. De-emphasis is by color, not size (DESIGN_SYSTEM → Priority 0). Do **not** add a `font-size` to `.muted` in a deck's inline `<style>`; if a line is truly not worth body size, move it to `<deck>-note.html`. Distinct from inline `<em>` (also gray, also body size, since it inherits from its `<p>`). When the change grew old small-muted lines, a few dense slides overflowed — re-audit muted-bearing slides after any future change here.
+
 ## `.code-block` looks small or thin
 
 Symptom: pseudocode on the slide is hard to read from the back of the room — too small, too light, or comments dissolve into the background.
@@ -130,7 +138,7 @@ Symptom: a phrase rendered with `<i>` or inline `font-style: italic` reads as gl
 Cause: Yonsei TTFs are all `font-style: normal`; Noto Sans is loaded without italic. The browser synthesizes oblique by skewing normal glyphs ~12°, which inherits upright metrics and breaks kerning.
 
 Fix:
-- No `<i>`, no inline `font-style: italic`. `em` is globally `font-style: normal; color: var(--gray-text)` — that *is* the muted look. Use `<strong>` (Yonsei Blue) for emphasis.
+- No `<i>`, no inline `font-style: italic`. `em` is globally `font-style: normal; color: var(--gray-text)` — that *is* the inline muted look (body size, inherited). For a whole subordinate line use `<p class="muted">` (the color-only block class — same gray, body size; see "`.muted` … render tiny" above). Use `<strong>` (Yonsei Blue) for emphasis.
 - In KaTeX math, English phrases go in `\text{…}`. Bare `all positions` in math mode renders each letter as italic math with zero inter-letter space. Identifier letters stay italic — correct math typography.
 - If non-math prose still renders italic, suspect the KaTeX delimiter bug above.
 

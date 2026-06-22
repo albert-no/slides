@@ -43,10 +43,10 @@ Eight-deck lecture series on differential privacy. `dp1`–`dp7` build the found
 | | Corollary: 1%-error → 96%-recovery | 14 | `:178` |
 | | Realistic regime: $m = 20n$ random | 15 | `:192` |
 | | **Theorem 2: polynomial random queries → $256\alpha^2 n^2$** | 16, proof 17–18 | `:204`, `:216` |
-| **04 — Efficient attack** | 19–22 | `:242-288` |
-| | LP relaxation | 20 | `:250` |
-| | LP refresher | 21 | `:263` |
-| | Implications | 22 | `:275` |
+| **04 — Efficient attack** | 19–22 | `:244-289` |
+| | LP relaxation | 20 | `:252` |
+| | LP refresher | 21 | `:265` |
+| | Implications | 22 | `:277` |
 
 ### Key theorems
 
@@ -54,7 +54,7 @@ Eight-deck lecture series on differential privacy. `dp1`–`dp7` build the found
 |---|---|
 | Dinur–Nissim Theorem 1 (all-queries) | `:156-160` |
 | Dinur–Nissim Theorem 2 (random queries) | `:209-214` |
-| LP-relaxation attack | `:253-258` |
+| LP-relaxation attack | `:252-257` |
 
 ---
 

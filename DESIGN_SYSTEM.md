@@ -49,6 +49,7 @@ Important content (audience must read it during the talk) → body size. Non-imp
 - The canonical scale is `reference/deck.css`. Don't redefine `p`, `li`, `h1`, `h2`, `h3`, `.subtitle`, `.cite`, `.small`, `.tiny`, or `.math-block` `font-size` in a deck's inline `<style>`. Don't put inline `style="font-size:…"` on prose.
 - `.tiny` is banned everywhere. `.small` on prose (paragraphs, list items, captions, anything inside `.highlight` / `.card` / `.cols` / `.grid-*` / `.math-block` / under a `<table>`) is banned.
 - Two on-slide slots permit sub-body text: `<div class="cite">` citations, and `.small` inside a diagram (only when the label is a non-crucial sub-label *and* compression breaks the layout).
+- **De-emphasis is by color, not size.** A subordinate aside or takeaway line (`<em>`, `<p class="muted">`) stays at **body size** and renders gray — it is still read during the talk. `.muted` is a *color-only* class (canonical `reference/deck.css`); never give it a reduced `font-size`, and don't reach for `.small`/`.tiny` to "tone a line down". A line not worth body size belongs in `<deck>-note.html`, not shrunk on the slide.
 - Component-internal text (pill labels, token chips, code blocks) stays at its native compact size — these are design tokens, not author overrides.
 - When a slide feels cramped, **cut content or split the slide**. There is no slide budget.
 
@@ -97,7 +98,7 @@ Empty space at the *bottom* of a slide is fine. Empty space *in the middle* is n
 
 1. **One idea per slide.** And **one exhibit** — one chart, table, diagram, theorem, proof chunk, or equation block per slide. If two seem needed, ask: one comparison (combine) or two points (two slides)?
 2. **Speaker narrates; slide is a visual anchor.** Telegraphic phrases over sentences.
-3. **Prose emphasis.** `**strong**` → Yonsei Blue. `*em*` → muted gray (never italic — see GOTCHAS).
+3. **Prose emphasis.** `**strong**` → Yonsei Blue. `*em*` → muted gray (never italic — see GOTCHAS). A whole subordinate line → `<p class="muted">` — same gray, still body size (de-emphasis by color, not size; Priority 0).
 4. **Key insight** → `<div class="highlight">` (HTML) or `>` blockquote (Marp). Max one per slide.
 5. **Math.** Inline `$…$`, display `$$…$$` inside `<div class="math-block">`.
 6. **Paper attribution** → `<div class="cite">` footnote at the bottom. Not a side card.
@@ -155,6 +156,7 @@ Never recolor for decoration. Pick once, apply consistently — color carries se
 | `.cite` | 0.85rem | — | — |
 | `.small` | 1.15rem | — | (gated — see Priority 0) |
 | `.tiny` | 0.95rem | — | (banned — see Priority 0) |
+| `.muted` | = body (inherits) | 300–400 | gray aside — **color only, never a size step** |
 | `.code-block` | 1.25rem | 500 (kw 700, fn 600) | 1.6 |
 
 `text-wrap: balance` on `h1`/`h2`/`h3`/`.subtitle`; `text-wrap: pretty` on `p`/`li`/`.small`/`.tiny`. Don't override.

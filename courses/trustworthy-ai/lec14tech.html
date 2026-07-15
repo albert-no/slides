@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fairness Mitigation — Technical Supplement — Trustworthy AI Lecture 14</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 14 · Technical Supplement</div>
+  <h1>Fairness Mitigation:<br>The Math</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Optional. Reweighing, constrained training, and thresholds</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. When to Use This -->
+<div class="slide">
+  <h2>When to Use This</h2>
+  <div class="divider"></div>
+  <p>The main lecture keeps the three-knobs picture and the frontier. Here are the equations.</p>
+  <ul class="arrow">
+    <li>The reweighing weight, written out</li>
+    <li>Penalized, constrained, and reductions forms of in-processing</li>
+    <li>Per-group thresholds that equalize the rates</li>
+  </ul>
+  <div class="highlight"><p>Skip this in the core session; return if you want the formal version.</p></div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Pre-Processing: Reweighing</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Balancing group and outcome by weight</p>
+</div>
+
+<!-- 4. The Reweighing Weight -->
+<div class="slide">
+  <h2>The Reweighing Weight</h2>
+  <div class="divider"></div>
+  <p>Give example $(g, y)$ a weight that <strong>undoes the correlation</strong> between group and outcome.</p>
+  <div class="math-block">$$w(g, y) = \frac{\Pr[G = g]\,\Pr[Y = y]}{\Pr[G = g,\, Y = y]}.$$</div>
+  <p class="muted">$G$ = group; $Y$ = label. All probabilities are empirical frequencies in the training set.</p>
+  <div class="cite cite-left">Kamiran and Calders, "Data Preprocessing Techniques for Classification without Discrimination", KIS 2012.</div>
+</div>
+
+<!-- 5. Reading the Weight -->
+<div class="slide">
+  <h2>Reading the Weight</h2>
+  <div class="divider"></div>
+  <p>Compare the cell to what <strong>independence</strong> would predict.</p>
+  <ul class="arrow">
+    <li>Numerator $\Pr[G=g]\,\Pr[Y=y]$: the count if $G \perp Y$</li>
+    <li>Denominator $\Pr[G=g, Y=y]$: the count actually observed</li>
+    <li>Under-represented pairs get $w &gt; 1$; over-represented get $w &lt; 1$</li>
+  </ul>
+  <div class="highlight"><p>Weight the loss by $w(g,y)$ and the reweighted data satisfies $G \perp Y$ exactly.</p></div>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 6. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>In-Processing Objectives</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Penalty, constraint, and reduction</p>
+</div>
+
+<!-- 7. The Penalized Objective -->
+<div class="slide">
+  <h2>The Penalized Objective</h2>
+  <div class="divider"></div>
+  <p>Add unfairness as a <strong>soft penalty</strong> to the training loss.</p>
+  <div class="math-block">$$\min_\theta \; \underbrace{\text{Loss}(\theta)}_{\text{accuracy}} \;+\; \lambda \, \underbrace{\text{Unfairness}(\theta)}_{\text{penalty}}.$$</div>
+  <p class="muted">$\lambda \ge 0$ trades accuracy for fairness. $\lambda = 0$ recovers ordinary training.</p>
+</div>
+
+<!-- 8. The Constrained Objective -->
+<div class="slide">
+  <h2>The Constrained Objective</h2>
+  <div class="divider"></div>
+  <p>Instead of a penalty, demand the gap stay <strong>within a budget</strong> $\tau$.</p>
+  <div class="math-block">$$\min_\theta \;\text{Loss}(\theta) \quad \text{s.t.} \quad \text{gap}(\theta) \le \tau.$$</div>
+  <p class="muted">$\text{gap}(\theta)$ = a fairness violation, e.g. the demographic-parity or equalized-odds gap. A hard promise, not a nudge.</p>
+</div>
+
+<!-- 9. Penalty vs Constraint -->
+<div class="slide">
+  <h2>Penalty vs Constraint</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Penalty ($\lambda$)</h3>
+      <p>Easy to optimize, but $\lambda$ only <em>indirectly</em> controls the gap.</p></div>
+    <div><h3>Constraint ($\tau$)</h3>
+      <p>$\tau$ is the gap you promise, but the problem is harder to solve.</p></div>
+  </div>
+  <div class="highlight"><p>The Lagrangian ties them together: each $\tau$ corresponds to some $\lambda$.</p></div>
+</div>
+
+<!-- 10. The Reductions Approach -->
+<div class="slide">
+  <h2>The Reductions Approach</h2>
+  <div class="divider"></div>
+  <p>Solve the constrained problem as a sequence of <strong>cost-sensitive classifications</strong>.</p>
+  <div class="ta-algo" style="max-width:940px; margin:16px auto;">
+    <ol>
+      <li>Form the Lagrangian: constraint violation becomes a weighted cost.</li>
+      <li>Fix the current weights $\lambda$; train a plain classifier on the reweighted costs.</li>
+      <li>Measure the fairness gap; raise $\lambda$ where the constraint is violated.</li>
+      <li>Repeat. The average of these classifiers satisfies the constraint.</li>
+    </ol>
+  </div>
+  <div class="cite cite-left">Agarwal, Beygelzimer, Dudík, Langford, and Wallach, "A Reductions Approach to Fair Classification", ICML 2018.</div>
+</div>
+
+<!-- 11. Why Reductions Work -->
+<div class="slide">
+  <h2>Why Reductions Work</h2>
+  <div class="divider"></div>
+  <p>It is a <strong>saddle-point game</strong> between learner and constraint.</p>
+  <ul class="arrow">
+    <li>The learner minimizes cost; the $\lambda$-player pushes on violated constraints</li>
+    <li>Any base classifier plugs in as a black box — no new model needed</li>
+    <li>Handles many fairness definitions with provable gap guarantees</li>
+  </ul>
+  <p class="muted">Fairness logic lives outside the learner; the learner stays ordinary.</p>
+</div>
+
+<!-- ============ SECTION 03 ============ -->
+<!-- 12. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Post-Processing Thresholds</h1>
+  <div class="divider"></div>
+  <p class="subtitle">One cutoff per group, chosen to match rates</p>
+</div>
+
+<!-- 13. Equalized Odds, Formally -->
+<div class="slide">
+  <h2>Equalized Odds, Formally</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Equalized odds</h3>
+    <p>Equal true-positive and false-positive rates across groups $a, b$:</p>
+    <div class="math-block">$$\Pr[\hat Y = 1 \mid Y = y,\, G = a] = \Pr[\hat Y = 1 \mid Y = y,\, G = b], \quad y \in \{0, 1\}.$$</div>
+  </div>
+  <p class="muted">Error rates must not depend on the group, at each true label $y$.</p>
+  <div class="cite cite-left">Hardt, Price, and Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016.</div>
+</div>
+
+<!-- 14. Per-Group Threshold Selection -->
+<div class="slide">
+  <h2>Per-Group Threshold Selection</h2>
+  <div class="divider"></div>
+  <p>Fix the trained score $s(x)$; choose a cutoff $t_g$ <strong>per group</strong>.</p>
+  <div class="math-block">$$\hat Y = \mathbb{1}[\,s(x) \ge t_g\,], \qquad \min_{\{t_g\}}\; \text{error} \quad \text{s.t.} \quad \text{odds match across } g.$$</div>
+  <p class="muted">Each group's cutoff traces its own ROC curve; feasible solutions are where the curves overlap.</p>
+  <div class="cite cite-left">Hardt, Price, and Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016.</div>
+</div>
+
+<!-- 15. The Post-Hoc Recipe -->
+<div class="slide">
+  <h2>The Post-Hoc Recipe</h2>
+  <div class="divider"></div>
+  <div class="ta-algo" style="max-width:900px; margin:18px auto;">
+    <ol>
+      <li>Train a scoring model the ordinary way; freeze it.</li>
+      <li>On held-out data, plot each group's ROC curve of (FPR, TPR).</li>
+      <li>Find the point where group ROC curves intersect — equal rates.</li>
+      <li>Read off cutoff $t_g$ per group; deploy those thresholds.</li>
+    </ol>
+  </div>
+  <p style="text-align:center;">Only the decision rule changes; the weights never move.</p>
+  <div class="cite cite-left">Hardt, Price, and Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016.</div>
+</div>
+
+<!-- 16. The Accuracy Cost, Formally -->
+<div class="slide">
+  <h2>The Accuracy Cost</h2>
+  <div class="divider"></div>
+  <p>Matching rates forces the cutoff <strong>off each group's optimum</strong>.</p>
+  <ul class="arrow">
+    <li>The unconstrained best cutoff maximizes per-group accuracy</li>
+    <li>The equal-odds cutoff sits at the ROC intersection instead</li>
+    <li>The gap between the two is the fairness tax on accuracy</li>
+  </ul>
+  <div class="highlight"><p>Post-processing is a projection onto the feasible set — cheap to run, but it pays in accuracy.</p></div>
+</div>
+
+<!-- 17. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$\min_\theta$ s.t.</div>
+  <p class="big-word-sub">Mitigation is a constrained optimization.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 17</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

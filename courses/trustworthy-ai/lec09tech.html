@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Poisoning — Technical Supplement — Trustworthy AI Lecture 9</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 9 · Technical Supplement</div>
+  <h1>Data Poisoning:<br>The Math</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Optional. Feature collision, backdoors, and spectral detection</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. When to Use This -->
+<div class="slide">
+  <h2>When to Use This</h2>
+  <div class="divider"></div>
+  <p>The main lecture keeps the triggers and the 0.01% one-liner. Here are the equations.</p>
+  <ul class="arrow">
+    <li>How a clean-label poison is optimized: feature collision</li>
+    <li>How a backdoor blends two training objectives</li>
+    <li>How spectral signatures flag the poison</li>
+    <li>How activation clustering splits a poisoned class</li>
+  </ul>
+  <div class="highlight"><p>Skip this in the core session; return if you want the formal version.</p></div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Crafting the Poison</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Fraction, feature collision, and backdoors</p>
+</div>
+
+<!-- 4. The Poison Fraction -->
+<div class="slide">
+  <h2>The Poison Fraction</h2>
+  <div class="divider"></div>
+  <p>The attacker controls only a <strong>small share</strong> $\alpha$ of the data.</p>
+  <div class="math-block">$$\alpha \;=\; \frac{|\mathcal{D}_{\text{poison}}|}{|\mathcal{D}_{\text{train}}|}, \qquad \alpha \approx 0.01\%.$$</div>
+  <p class="muted">A targeted backdoor can succeed at astonishingly small $\alpha$.</p>
+</div>
+
+<!-- 5. Feature Collision -->
+<div class="slide">
+  <h2>The Feature-Collision Objective</h2>
+  <div class="divider"></div>
+  <p>Make a poison that <strong>looks like $x_{\text{base}}$ but sits where $x_t$ sits</strong>.</p>
+  <div class="math-block">$$\min_{x_p}\; \bigl\|\, \phi(x_p) - \phi(x_t)\,\bigr\|_2^2 \quad \text{s.t.} \quad \|\, x_p - x_{\text{base}}\,\|_\infty \le \varepsilon.$$</div>
+  <p class="muted">$\phi$ = the network's feature map; $x_t$ = the target the attacker wants misread.</p>
+  <div class="cite cite-left">Shafahi et al., "Poison Frogs! Targeted Clean-Label Poisoning Attacks", NeurIPS 2018.</div>
+</div>
+
+<!-- 6. Reading the Two Constraints -->
+<div class="slide">
+  <h2>Reading the Two Pulls</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Collision term</h3>
+      <p>Drags $\phi(x_p)$ onto $\phi(x_t)$ in feature space, so the classifier confuses them.</p></div>
+    <div><h3>$\varepsilon$ constraint</h3>
+      <p>Keeps $x_p$ visually a $x_{\text{base}}$, so its honest label passes review.</p></div>
+  </div>
+  <div class="highlight"><p>Clean label to a human, target's features to the model.</p></div>
+</div>
+
+<!-- 7. Why the Label Stays Clean -->
+<div class="slide">
+  <h2>Why the Label Stays Clean</h2>
+  <div class="divider"></div>
+  <p>The constraint $\|x_p - x_{\text{base}}\|_\infty \le \varepsilon$ is the <strong>whole trick</strong>.</p>
+  <ul class="arrow">
+    <li>Pixels move too little for a human to notice</li>
+    <li>So the poison keeps $x_{\text{base}}$'s correct label</li>
+    <li>Yet its deep features have shifted onto the target</li>
+  </ul>
+  <p class="muted">No mislabeled row means no obvious alarm.</p>
+</div>
+
+<!-- 8. The Backdoor Objective -->
+<div class="slide">
+  <h2>The Backdoor Objective</h2>
+  <div class="divider"></div>
+  <p>Train so the model is <strong>right on clean data, wrong on the trigger</strong>.</p>
+  <div class="math-block">$$\min_{\theta}\; \mathbb{E}_{(x,y)}\,\ell\bigl(f_\theta(x), y\bigr) \;+\; \lambda\, \mathbb{E}_{x}\,\ell\bigl(f_\theta(x \oplus t),\, y_{\text{target}}\bigr).$$</div>
+  <p class="muted">$t$ = the trigger; $x \oplus t$ = stamped input; $y_{\text{target}}$ = the attacker's label.</p>
+  <div class="cite cite-left">Gu, Dolan-Gavitt, and Garg, "BadNets", 2017.</div>
+</div>
+
+<!-- 9. Two Scores, Two Terms -->
+<div class="slide">
+  <h2>Two Scores, Two Terms</h2>
+  <div class="divider"></div>
+  <p>The two objective terms map onto the <strong>two evaluation numbers</strong>.</p>
+  <div class="grid-2">
+    <div><h3>Clean term</h3>
+      <p>Keeps clean accuracy high, so the backdoor hides.</p></div>
+    <div><h3>Trigger term</h3>
+      <p>Drives attack success near 100% whenever $t$ appears.</p></div>
+  </div>
+  <p class="muted">A good backdoor minimizes both losses at once.</p>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 10. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Detecting the Poison</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Spectral signatures and activation clustering</p>
+</div>
+
+<!-- 11. Spectral Signatures -->
+<div class="slide">
+  <h2>Spectral Signatures</h2>
+  <div class="divider"></div>
+  <p>Poison points leave a mark on the <strong>top singular direction</strong> of the activations.</p>
+  <ul class="arrow">
+    <li>Collect activations $\phi(x)$ for one class, center them</li>
+    <li>Take the top singular vector $v$ of that matrix</li>
+    <li>Poison points show a large $|\langle \phi(x) - \bar\phi,\, v\rangle|$</li>
+  </ul>
+  <p class="muted">The correlation with $v$ becomes an outlier score.</p>
+  <div class="cite cite-left">Tran, Li, and Madry, "Spectral Signatures in Backdoor Attacks", NeurIPS 2018.</div>
+</div>
+
+<!-- 12. The Outlier Score -->
+<div class="slide">
+  <h2>The Outlier Score</h2>
+  <div class="divider"></div>
+  <p>Rank every example by its projection onto the leading direction.</p>
+  <div class="math-block">$$\tau(x) \;=\; \bigl\langle\, \phi(x) - \bar\phi,\; v\,\bigr\rangle^2, \qquad v = \text{top singular vector}.$$</div>
+  <p class="muted">Remove the highest-$\tau$ fraction; retrain on what remains.</p>
+  <div class="cite cite-left">Tran, Li, and Madry, "Spectral Signatures in Backdoor Attacks", NeurIPS 2018.</div>
+</div>
+
+<!-- 13. Why the Poison Separates -->
+<div class="slide">
+  <h2>Why the Poison Separates</h2>
+  <div class="divider"></div>
+  <p>The trigger is a <strong>constant signal</strong> shared by every poison point.</p>
+  <ul class="arrow">
+    <li>Constant across poisons, absent from clean data</li>
+    <li>That shared component inflates one direction of variance</li>
+    <li>The top singular vector points right at it</li>
+  </ul>
+  <p class="muted">A shortcut the model loves is a fingerprint a detector can find.</p>
+</div>
+
+<!-- 14. Activation Clustering -->
+<div class="slide">
+  <h2>Activation Clustering</h2>
+  <div class="divider"></div>
+  <p>Cluster the activations <strong>within each class</strong>.</p>
+  <div class="ta-algo" style="max-width:920px; margin:18px auto;">
+    <ol>
+      <li>Take the last-layer activations of one class.</li>
+      <li>Reduce dimension, then run $k$-means with $k = 2$.</li>
+      <li>A clean class stays one blob; a poisoned class splits in two.</li>
+      <li>The smaller cluster is the suspect set.</li>
+    </ol>
+  </div>
+  <div class="cite cite-left">Chen et al., "Detecting Backdoor Attacks by Activation Clustering", 2018.</div>
+</div>
+
+<!-- 15. Detection Is Not Final -->
+<div class="slide">
+  <h2>Detection Is Not Final</h2>
+  <div class="divider"></div>
+  <p>Both tests assume the poison <strong>stands out statistically</strong>.</p>
+  <ul class="arrow">
+    <li>Adaptive triggers spread the signal across directions</li>
+    <li>Then no single singular vector isolates them</li>
+    <li>Cleaner poison keeps the two clusters overlapping</li>
+  </ul>
+  <p class="muted">The detector and the attacker chase the same statistics.</p>
+</div>
+
+<!-- 16. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$\alpha$</div>
+  <p class="big-word-sub">A tiny fraction, optimized, is enough.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 16</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

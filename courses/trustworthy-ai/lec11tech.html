@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Injection — Technical Supplement — Trustworthy AI Lecture 11</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.warn-card { background: #fbf0f0; border-left: 5px solid var(--warn); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.warn-card h3 { color: var(--warn); margin-bottom: 4px; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 11 · Technical Supplement</div>
+  <h1>Prompt Injection:<br>The Security Model</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Optional. A formal companion to the agentic threat</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. When to Use This -->
+<div class="slide">
+  <h2>When to Use This</h2>
+  <div class="divider"></div>
+  <p>The main lecture stays with pictures and incidents. Here is the <strong>security formalism</strong> underneath them.</p>
+  <ul class="arrow">
+    <li>The data-vs-control confusion, stated precisely</li>
+    <li>The confused-deputy pattern and least privilege</li>
+    <li>Taint tracking and the dual-LLM threat model</li>
+  </ul>
+  <div class="highlight"><p>Skip this in the core session; return if you want the systems-security version.</p></div>
+</div>
+
+<!-- 3. The Core Confusion -->
+<div class="slide">
+  <h2>Data vs Control, Formally</h2>
+  <div class="divider"></div>
+  <p>Classic systems keep two things apart: what <strong>runs</strong> and what is <strong>read</strong>.</p>
+  <div class="grid-2">
+    <div><h3>Control plane</h3>
+      <p>Instructions that decide behavior. Privileged.</p></div>
+    <div><h3>Data plane</h3>
+      <p>Inputs to inspect, never to obey. Untrusted.</p></div>
+  </div>
+  <div class="highlight"><p>An LLM has <strong>one context window</strong> and <strong>no privilege boundary</strong>: both planes are the same token stream.</p></div>
+</div>
+
+<!-- 4. The Confused Deputy -->
+<div class="slide">
+  <h2>The Confused Deputy</h2>
+  <div class="divider"></div>
+  <p>A classic security pattern, stated for agents.</p>
+  <div class="def-card">
+    <h3>Confused deputy</h3>
+    <p>A trusted program holds an <strong>authority</strong> (the user's permissions) and is tricked by an <strong>unauthorized party</strong> (injected text) into exercising that authority on the attacker's behalf.</p>
+  </div>
+  <p class="muted">The agent has the power; the attacker supplies the intent.</p>
+</div>
+
+<!-- 5. A Threat Model for Agents -->
+<div class="slide">
+  <h2>A Threat Model for Agents</h2>
+  <div class="divider"></div>
+  <p>State the trust boundary explicitly.</p>
+  <ul>
+    <li><strong>Trusted:</strong> the user's goal, the system prompt</li>
+    <li><strong>Untrusted:</strong> any tool output — pages, emails, files</li>
+    <li><strong>Attacker's power:</strong> write arbitrary text into any untrusted source</li>
+    <li><strong>Attacker's goal:</strong> make the agent take an action the user did not authorize</li>
+  </ul>
+  <p class="muted">Harm needs all three: reads untrusted input, holds private data, can act outward.</p>
+</div>
+
+<!-- 6. Least Privilege and Capabilities -->
+<div class="slide">
+  <h2>Capabilities and Least Privilege</h2>
+  <div class="divider"></div>
+  <p>Bound the damage <strong>before</strong> the model runs, not after.</p>
+  <div class="def-card">
+    <h3>Least privilege</h3>
+    <p>Grant each action only the <strong>capabilities</strong> its task requires. A capability is an unforgeable token authorizing one specific operation.</p>
+  </div>
+  <ul class="arrow">
+    <li>Fix the plan from the trusted goal; untrusted text fills in values, not actions</li>
+    <li>A read-only agent literally cannot send data out</li>
+  </ul>
+  <div class="cite cite-left">Debenedetti et al., "Defeating Prompt Injections by Design" (CaMeL), 2025.</div>
+</div>
+
+<!-- 7. Taint Tracking -->
+<div class="slide">
+  <h2>Taint / Dataflow Tracking</h2>
+  <div class="divider"></div>
+  <p>Label the origin of every value and follow it.</p>
+  <div class="ta-algo" style="max-width:940px; margin:18px auto;">
+    <ol>
+      <li>Mark any value derived from untrusted text as <strong>tainted</strong>.</li>
+      <li>Propagate the taint through every transformation it touches.</li>
+      <li>At a risky <em>sink</em> (send, delete, pay), block if the argument is tainted.</li>
+    </ol>
+  </div>
+  <p class="muted">An old dataflow-security idea, applied to the agent loop.</p>
+</div>
+
+<!-- 8. The Dual-LLM Pattern -->
+<div class="slide">
+  <h2>The Dual-LLM Pattern</h2>
+  <div class="divider"></div>
+  <p>Enforce the boundary by <strong>splitting the model in two</strong>.</p>
+  <div class="grid-2">
+    <div><h3>Privileged</h3>
+      <p>Plans and calls tools. Never sees raw untrusted text — only symbolic references to it.</p></div>
+    <div><h3>Quarantined</h3>
+      <p>Reads the tainted content. Holds no capabilities, so it cannot act.</p></div>
+  </div>
+  <p class="muted">Tainted text reaches a model that structurally cannot reach a sink.</p>
+  <div class="cite cite-left">Willison, "The Dual LLM pattern for building AI assistants that can resist prompt injection", 2023.</div>
+</div>
+
+<!-- 9. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">One&nbsp;plane</div>
+  <p class="big-word-sub">No privilege boundary is the whole vulnerability.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 9</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

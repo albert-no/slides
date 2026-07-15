@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calibration &amp; Conformal — Technical Supplement — Trustworthy AI Lecture 6</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 6 · Technical Supplement</div>
+  <h1>Calibration &amp;<br>Conformal: The Math</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Optional. ECE, temperature, and the coverage proof</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. When to Use This -->
+<div class="slide">
+  <h2>When to Use This</h2>
+  <div class="divider"></div>
+  <p>The main lecture keeps calibration and coverage as pictures. Here are the equations.</p>
+  <ul class="arrow">
+    <li>How ECE turns a reliability diagram into one number</li>
+    <li>How temperature rescales confidence</li>
+    <li>How a threshold buys a coverage guarantee</li>
+  </ul>
+  <div class="highlight"><p>Skip this in the core session; return if you want the formal version.</p></div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Calibration Error</h1>
+  <div class="divider"></div>
+  <p class="subtitle">From the diagram to one number</p>
+</div>
+
+<!-- 4. The Reliability Diagram -->
+<div class="slide">
+  <h2>The Reliability Diagram</h2>
+  <div class="divider"></div>
+  <p>Bin predictions by confidence; plot accuracy against confidence per bin.</p>
+  <div style="display:flex;justify-content:center;margin:4px 0;">
+    <svg viewBox="0 0 300 230" style="width:100%;max-width:560px;">
+      <line x1="46" y1="190" x2="270" y2="190" stroke="#999" stroke-width="1.5"/>
+      <line x1="46" y1="190" x2="46" y2="20" stroke="#999" stroke-width="1.5"/>
+      <line x1="46" y1="190" x2="258" y2="22" stroke="#6b7280" stroke-width="2" stroke-dasharray="5 4"/>
+      <text x="232" y="48" font-size="13" fill="#6b7280" font-weight="700">perfect</text>
+      <rect x="62"  y="150" width="24" height="40" fill="#1a5296" fill-opacity="0.55" stroke="#003876"/>
+      <rect x="108" y="120" width="24" height="70" fill="#1a5296" fill-opacity="0.55" stroke="#003876"/>
+      <rect x="154" y="108" width="24" height="82" fill="#1a5296" fill-opacity="0.55" stroke="#003876"/>
+      <rect x="200" y="96"  width="24" height="94" fill="#1a5296" fill-opacity="0.55" stroke="#003876"/>
+      <text x="158" y="214" font-size="14" fill="#666" text-anchor="middle">confidence →</text>
+      <text x="30" y="105" font-size="14" fill="#666" text-anchor="middle" transform="rotate(-90 30 105)">accuracy →</text>
+    </svg>
+  </div>
+  <p class="muted">Each bar's height gap from the diagonal is that bin's miscalibration.</p>
+</div>
+
+<!-- 5. Expected Calibration Error -->
+<div class="slide">
+  <h2>Expected Calibration Error</h2>
+  <div class="divider"></div>
+  <p>Average the per-bin gaps, weighted by how many points land in each bin.</p>
+  <div class="math-block">$$\text{ECE} \;=\; \sum_b \frac{n_b}{n}\,\bigl|\,\text{acc}_b - \text{conf}_b\,\bigr|.$$</div>
+  <p class="muted">$n_b$ = points in bin $b$; $\text{acc}_b, \text{conf}_b$ = its accuracy and mean confidence.</p>
+  <div class="cite cite-left">Guo, Pleiss, Sun, and Weinberger, "On Calibration of Modern Neural Networks", ICML 2017.</div>
+</div>
+
+<!-- 6. Reading ECE -->
+<div class="slide">
+  <h2>Reading ECE</h2>
+  <div class="divider"></div>
+  <p>Each term compares a bin's two numbers.</p>
+  <ul class="arrow">
+    <li>$\text{acc}_b$: fraction of the bin that is correct</li>
+    <li>$\text{conf}_b$: the bin's average stated confidence</li>
+    <li>$n_b / n$: the bin's share of all predictions</li>
+  </ul>
+  <p class="muted">$\text{ECE} = 0$ means every bar sits on the diagonal.</p>
+</div>
+
+<!-- 7. Temperature Scaling -->
+<div class="slide">
+  <h2>Temperature Scaling</h2>
+  <div class="divider"></div>
+  <p>Divide the logits by one number $T$ before the softmax.</p>
+  <div class="math-block">$$p_i \;=\; \frac{\exp(z_i / T)}{\sum_j \exp(z_j / T)}.$$</div>
+  <p class="muted">$z_i$ = logits; fit $T$ on held-out data to minimize calibration error.</p>
+  <div class="cite cite-left">Guo, Pleiss, Sun, and Weinberger, "On Calibration of Modern Neural Networks", ICML 2017.</div>
+</div>
+
+<!-- 8. What Temperature Does -->
+<div class="slide">
+  <h2>What Temperature Does</h2>
+  <div class="divider"></div>
+  <p>One knob softens or sharpens, without changing which class wins.</p>
+  <ul class="arrow">
+    <li>$T &gt; 1$: flatter probabilities, humbler confidence</li>
+    <li>$T &lt; 1$: sharper probabilities, bolder confidence</li>
+    <li>$T = 1$: leaves the model untouched</li>
+  </ul>
+  <p class="muted">The argmax is fixed, so accuracy never changes.</p>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 9. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Conformal Coverage</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A threshold that comes with a proof</p>
+</div>
+
+<!-- 10. The Coverage Guarantee -->
+<div class="slide">
+  <h2>The Coverage Guarantee</h2>
+  <div class="divider"></div>
+  <p>The prediction set $C(x)$ should contain the true answer with high probability.</p>
+  <div class="math-block">$$\Pr[\,y \in C(x)\,] \;\ge\; 1 - \alpha.$$</div>
+  <p class="muted">Choose the miss rate $\alpha$; e.g. $\alpha = 0.10$ gives 90% coverage.</p>
+  <div class="cite cite-left">Angelopoulos and Bates, "A Gentle Introduction to Conformal Prediction", 2021.</div>
+</div>
+
+<!-- 11. Calibrating the Threshold -->
+<div class="slide">
+  <h2>Calibrating the Threshold</h2>
+  <div class="divider"></div>
+  <p>Score each held-out point by how "surprised" the model is at its true label.</p>
+  <div class="ta-algo" style="max-width:940px; margin:14px auto;">
+    <ol>
+      <li>On $n$ calibration points, compute nonconformity scores $s_1, \dots, s_n$.</li>
+      <li>Set the threshold $\hat q$ to their $\lceil (n{+}1)(1{-}\alpha) \rceil / n$ quantile.</li>
+      <li>At test time, keep every label whose score is at most $\hat q$.</li>
+    </ol>
+  </div>
+  <div class="cite cite-left">Angelopoulos and Bates, "A Gentle Introduction to Conformal Prediction", 2021.</div>
+</div>
+
+<!-- 12. Why It Holds -->
+<div class="slide">
+  <h2>Why It Holds</h2>
+  <div class="divider"></div>
+  <p>The test score is exchangeable with the calibration scores.</p>
+  <div class="math-block">$$\Pr[\,s_{\text{test}} \le \hat q\,] \;\ge\; 1 - \alpha.$$</div>
+  <p class="muted">Its rank is uniform among $n{+}1$ scores, so it falls below $\hat q$ with the right frequency.</p>
+  <div class="cite cite-left">Angelopoulos and Bates, "A Gentle Introduction to Conformal Prediction", 2021.</div>
+</div>
+
+<!-- 13. Semantic Entropy -->
+<div class="slide">
+  <h2>Semantic Entropy</h2>
+  <div class="divider"></div>
+  <p>Sample answers, cluster by meaning, take entropy over meaning clusters.</p>
+  <div class="math-block">$$\text{SE} \;=\; -\sum_{c} p(c)\,\log p(c), \qquad p(c) = \sum_{a \in c} p(a).$$</div>
+  <p class="muted">$c$ = a cluster of same-meaning answers; high SE flags likely hallucination.</p>
+  <div class="cite cite-left">Farquhar et al., "Detecting Hallucinations in LLMs Using Semantic Entropy", Nature 2024.</div>
+</div>
+
+<!-- 14. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$1 - \alpha$</div>
+  <p class="big-word-sub">A guarantee you can actually prove.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 14</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

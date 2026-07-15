@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Membership Inference — Technical Supplement — Trustworthy AI Lecture 3</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 3 · Technical Supplement</div>
+  <h1>Membership<br>Inference: The Math</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Optional. Likelihood ratios, LiRA, and the DP bound</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. When to Use This -->
+<div class="slide">
+  <h2>When to Use This</h2>
+  <div class="divider"></div>
+  <p>The main lecture keeps the two-bells picture. Here is the test behind it.</p>
+  <ul class="arrow">
+    <li>The score-and-threshold attack, written out</li>
+    <li>The likelihood ratio and the LiRA recipe</li>
+    <li>ROC, TPR at low FPR, and the DP bound</li>
+  </ul>
+  <div class="highlight"><p>Skip this in the core session; return for the formal version.</p></div>
+</div>
+
+<!-- 3. Score and threshold -->
+<div class="slide">
+  <h2>Score and Threshold</h2>
+  <div class="divider"></div>
+  <p>Every MIA is a decision rule: a score $s(x)$ against a threshold $\tau$.</p>
+  <div class="math-block">$$\hat{m}(x) = \mathbb{1}\!\left[\, s(x) \ge \tau \,\right], \qquad s(x) = -\ell(f_\theta, x).$$</div>
+  <p class="muted">Lower loss ⇒ higher score ⇒ predict "member". Tuning $\tau$ traces the ROC curve.</p>
+</div>
+
+<!-- 4. Bayes-optimal test -->
+<div class="slide">
+  <h2>The Optimal Test</h2>
+  <div class="divider"></div>
+  <p>Neyman–Pearson: the most powerful test at any FPR uses the <strong>likelihood ratio</strong>.</p>
+  <div class="math-block">$$\Lambda(x) \;=\; \frac{\Pr[\,\ell(f_\theta, x) \mid x \text{ in}\,]}{\Pr[\,\ell(f_\theta, x) \mid x \text{ out}\,]}.$$</div>
+  <p>Decide "member" when $\Lambda(x) \ge \tau$. Raw loss is a crude proxy for this ratio.</p>
+  <div class="cite cite-left">Sablayrolles et al., "White-box vs Black-box: Bayes Optimal Strategies for Membership Inference", ICML 2019.</div>
+</div>
+
+<!-- 5. Why per-example -->
+<div class="slide">
+  <h2>Why Per-Example Calibration</h2>
+  <div class="divider"></div>
+  <p>A global $\tau$ confuses <strong>difficulty</strong> with membership.</p>
+  <ul class="arrow">
+    <li>Easy $x$: low loss even when out</li>
+    <li>Hard $x$: high loss even when in</li>
+    <li>$\Lambda(x)$ compares $x$ to its <em>own</em> in/out baselines</li>
+  </ul>
+  <p class="muted">The ratio normalizes away each record's intrinsic loss scale.</p>
+</div>
+
+<!-- 6. LiRA -->
+<div class="slide">
+  <h2>LiRA: Likelihood Ratio Attack</h2>
+  <div class="divider"></div>
+  <p>Estimate the two conditional distributions with shadow models.</p>
+  <div class="ta-algo" style="max-width:920px; margin:16px auto;">
+    <ol>
+      <li>Train many shadows with $x$ in, many with $x$ out.</li>
+      <li>Fit $\mathcal{N}(\mu_{\text{in}}, \sigma_{\text{in}}^2)$ and $\mathcal{N}(\mu_{\text{out}}, \sigma_{\text{out}}^2)$ to the losses.</li>
+      <li>Observe the target loss $\ell^\star = \ell(f_\theta, x)$.</li>
+      <li>Score by $\Lambda(x) = \mathcal{N}(\ell^\star; \mu_{\text{in}}, \sigma_{\text{in}}^2) / \mathcal{N}(\ell^\star; \mu_{\text{out}}, \sigma_{\text{out}}^2)$.</li>
+    </ol>
+  </div>
+  <div class="cite cite-left">Carlini et al., "Membership Inference Attacks From First Principles", IEEE S&amp;P 2022.</div>
+</div>
+
+<!-- 7. The Gaussian LR in log form -->
+<div class="slide">
+  <h2>The Log-Likelihood Ratio</h2>
+  <div class="divider"></div>
+  <p>With logit-scaled losses, LiRA scores a Gaussian log-ratio.</p>
+  <div class="math-block">$$\log \Lambda(x) = \frac{(\ell^\star - \mu_{\text{out}})^2}{2\sigma_{\text{out}}^2} - \frac{(\ell^\star - \mu_{\text{in}})^2}{2\sigma_{\text{in}}^2} + \log\frac{\sigma_{\text{out}}}{\sigma_{\text{in}}}.$$</div>
+  <p class="muted">A distance-to-each-bell comparison: closer to the in-bell ⇒ larger score.</p>
+</div>
+
+<!-- 8. ROC and TPR at low FPR -->
+<div class="slide">
+  <h2>ROC and TPR at Low FPR</h2>
+  <div class="divider"></div>
+  <p>Sweep $\tau$; plot $\mathrm{TPR}(\tau)$ against $\mathrm{FPR}(\tau)$.</p>
+  <div class="math-block">$$\mathrm{TPR} = \Pr[\hat m = 1 \mid \text{in}], \qquad \mathrm{FPR} = \Pr[\hat m = 1 \mid \text{out}].$$</div>
+  <p>Average accuracy hides the danger; the meaningful metric is <strong>TPR at fixed low FPR</strong> (e.g. $0.1\%$), read on a log-scale ROC.</p>
+</div>
+
+<!-- 9. The DP bound -->
+<div class="slide">
+  <h2>The DP Bound on Any Attack</h2>
+  <div class="divider"></div>
+  <p>"In" vs "out" are neighboring datasets, so $(\varepsilon,\delta)$-DP caps every attacker.</p>
+  <div class="math-block">$$\mathrm{TPR} \;\le\; e^{\varepsilon}\,\mathrm{FPR} + \delta.$$</div>
+  <p class="muted">Small $\varepsilon$ pins the ROC near the diagonal: true positives stay near false positives.</p>
+  <div class="cite cite-left">Kairouz, Oh, and Viswanath, "The Composition Theorem for Differential Privacy", ICML 2015.</div>
+</div>
+
+<!-- 10. Auditing / closer note -->
+<div class="slide">
+  <h2>Auditing Flips the Bound</h2>
+  <div class="divider"></div>
+  <p>Run the strongest MIA, read its TPR/FPR, and invert the bound for an empirical $\varepsilon$.</p>
+  <div class="def-card">
+    <h3>Empirical lower bound</h3>
+    <p>$\displaystyle \hat\varepsilon = \log\frac{\mathrm{TPR} - \delta}{\mathrm{FPR}}$ is a lower bound on the true $\varepsilon$. Above the claim ⇒ a bug; far below ⇒ a loose proof.</p>
+  </div>
+  <p class="muted">The attack becomes a privacy meter. Full proofs live in the DP lecture series.</p>
+</div>
+
+<!-- Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$\Lambda(x)$</div>
+  <p class="big-word-sub">Membership is a likelihood-ratio test.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 11</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

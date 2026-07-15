@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Machine Unlearning — Technical Supplement — Trustworthy AI Lecture 5</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 5 · Technical Supplement</div>
+  <h1>Machine Unlearning:<br>The Math</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Optional. Definitions, influence functions, and SISA cost</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. When to Use This -->
+<div class="slide">
+  <h2>When to Use This</h2>
+  <div class="divider"></div>
+  <p>The main lecture keeps unlearning as pictures. Here are the equations.</p>
+  <ul class="arrow">
+    <li>What "looks retrained" means, formally</li>
+    <li>The influence-function estimate and why the Hessian blocks it</li>
+    <li>Gradient ascent and the SISA cost model</li>
+  </ul>
+  <div class="highlight"><p>Skip this in the core session; return if you want the formal version.</p></div>
+</div>
+
+<!-- 3. Exact vs Approximate -->
+<div class="slide">
+  <h2>Exact vs Approximate</h2>
+  <div class="divider"></div>
+  <p>Two guarantees, against the same retraining target.</p>
+  <div class="grid-2" style="margin-top:22px;">
+    <div><h3>Exact</h3>
+      <p>Unlearned model is <strong>equal in distribution</strong> to retraining without the point.</p></div>
+    <div><h3>Approximate</h3>
+      <p>Unlearned model is <strong>close in distribution</strong>, within a bounded gap.</p></div>
+  </div>
+  <p class="muted" style="margin-top:22px;">Exact needs structure; approximate trades exactness for speed.</p>
+</div>
+
+<!-- 4. The (ε, δ) Definition -->
+<div class="slide">
+  <h2>The $(\varepsilon, \delta)$ Definition</h2>
+  <div class="divider"></div>
+  <p>Borrow the DP yardstick: unlearning is <strong>indistinguishable</strong> from retraining.</p>
+  <div class="def-card">
+    <h3>$(\varepsilon, \delta)$-unlearning</h3>
+    <p>For every measurable set $S$ of models,</p>
+    <div class="math-block" style="margin:8px 0;">$$\Pr[\,U(M, x) \in S\,] \;\le\; e^{\varepsilon}\,\Pr[\,\text{Retrain} \in S\,] \;+\; \delta.$$</div>
+  </div>
+  <div class="cite cite-left">Ginart, Guan, Valiant, and Zou, "Making AI Forget You", NeurIPS 2019.</div>
+</div>
+
+<!-- 5. Reading the Inequality -->
+<div class="slide">
+  <h2>Reading the Inequality</h2>
+  <div class="divider"></div>
+  <p>The bound holds <strong>both directions</strong>, over the randomness of training.</p>
+  <ul class="arrow">
+    <li>$U(M,x)$ = unlearner applied to point $x$</li>
+    <li>Small $\varepsilon, \delta$ ⇒ outputs look retrained</li>
+    <li>$\varepsilon = \delta = 0$ recovers exact unlearning</li>
+  </ul>
+  <p class="muted">The same shape as $(\varepsilon,\delta)$ differential privacy.</p>
+</div>
+
+<!-- 6. Influence Functions -->
+<div class="slide">
+  <h2>Influence Functions</h2>
+  <div class="divider"></div>
+  <p>Estimate one point's pull on the optimum, then <strong>subtract it</strong>.</p>
+  <div class="math-block">$$\theta_{-x} \;\approx\; \hat\theta \;+\; \frac{1}{n}\,H^{-1}\,\nabla_\theta \ell(\hat\theta, x).$$</div>
+  <p class="muted">$\hat\theta$ = trained weights; $H$ = loss Hessian at $\hat\theta$; $\ell$ = per-point loss.</p>
+  <div class="cite cite-left">Koh and Liang, "Understanding Black-box Predictions via Influence Functions", ICML 2017.</div>
+</div>
+
+<!-- 7. Where It Comes From -->
+<div class="slide">
+  <h2>Where It Comes From</h2>
+  <div class="divider"></div>
+  <p>Upweight $x$ by $\epsilon$; the optimum moves along the inverse curvature.</p>
+  <div class="math-block">$$\left.\frac{d\,\theta(\epsilon)}{d\epsilon}\right|_{\epsilon=0} \;=\; -\,H^{-1}\,\nabla_\theta \ell(\hat\theta, x).$$</div>
+  <p class="muted">Removing the point is upweighting by $-1/n$: hence the $\tfrac1n H^{-1}\nabla$ step.</p>
+  <div class="cite cite-left">Koh and Liang, "Understanding Black-box Predictions via Influence Functions", ICML 2017.</div>
+</div>
+
+<!-- 8. Why the Hessian Blocks It -->
+<div class="slide">
+  <h2>Why the Hessian Blocks It</h2>
+  <div class="divider"></div>
+  <p>The estimate needs $H^{-1}$, one entry per <strong>pair</strong> of parameters.</p>
+  <div class="math-block">$$H = \nabla_\theta^2 \ell \in \mathbb{R}^{d \times d}, \qquad 10^9 \text{ params} \Rightarrow 10^{18} \text{ entries}.$$</div>
+  <p class="muted">Storing $H$, let alone inverting it, is infeasible at scale.</p>
+  <div class="cite cite-left">Koh and Liang, "Understanding Black-box Predictions via Influence Functions", ICML 2017.</div>
+</div>
+
+<!-- 9. Gradient Ascent -->
+<div class="slide">
+  <h2>Gradient Ascent</h2>
+  <div class="divider"></div>
+  <p>Training descends the loss. To forget, <strong>ascend</strong> it on the target.</p>
+  <div class="math-block">$$\theta \;\leftarrow\; \theta \;+\; \eta\,\nabla_\theta \ell(\theta, x_{\text{forget}}).$$</div>
+  <p class="muted">Raises the forget point's loss; needs a retain anchor to stay useful.</p>
+  <div class="cite cite-left">Thudi et al., "Unrolling SGD: Understanding Factors Influencing Machine Unlearning", IEEE EuroS&amp;P 2022.</div>
+</div>
+
+<!-- 10. The SISA Cost Model -->
+<div class="slide">
+  <h2>The SISA Cost Model</h2>
+  <div class="divider"></div>
+  <p>Split $n$ points into $R$ shards, each shard into $L$ slices.</p>
+  <div class="ta-algo" style="max-width:940px; margin:14px auto;">
+    <ol>
+      <li>A delete request hits the one shard holding the point.</li>
+      <li>Roll back to the checkpoint before the point's slice.</li>
+      <li>Replay only the later slices of that shard, then re-aggregate.</li>
+    </ol>
+  </div>
+  <p class="muted">Expected retraining shrinks by a factor of roughly $R \cdot L$.</p>
+  <div class="cite cite-left">Bourtoule et al., "Machine Unlearning", IEEE S&amp;P 2021.</div>
+</div>
+
+<!-- 11. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$\approx$ Retrain</div>
+  <p class="big-word-sub">Unlearning is retraining you can afford.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 11</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

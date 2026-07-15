@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Differential Privacy — Technical Supplement — Trustworthy AI Lecture 2</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 2 · Technical Supplement</div>
+  <h1>Differential Privacy:<br>The Math</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Optional. Definitions, mechanisms, and DP-SGD</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. When to Use This -->
+<div class="slide">
+  <h2>When to Use This</h2>
+  <div class="divider"></div>
+  <p>The main lecture keeps the pictures. Here are the equations.</p>
+  <ul class="arrow">
+    <li>The exact $(\varepsilon,\delta)$ inequality and its parts</li>
+    <li>Sensitivity, Laplace, and Gaussian noise</li>
+    <li>DP-SGD: clip, add noise, and the accountant</li>
+  </ul>
+  <div class="highlight"><p>Skip this in the core session; return for the formal version.</p></div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>The Definition</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Two worlds, one inequality</p>
+</div>
+
+<!-- 4. Neighboring Datasets -->
+<div class="slide">
+  <h2>Neighboring Datasets</h2>
+  <div class="divider"></div>
+  <p>$D$ and $D'$ are <strong>neighbors</strong> if they differ in one person's record.</p>
+  <div class="math-block">$$D \sim D' \iff |D \,\triangle\, D'| = 1.$$</div>
+  <p class="muted">$\triangle$ = symmetric difference: add, remove, or replace one row.</p>
+</div>
+
+<!-- 5. (eps,delta)-DP -->
+<div class="slide">
+  <h2>$(\varepsilon,\delta)$-Differential Privacy</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Definition</h3>
+    <p>A randomized $M$ is $(\varepsilon,\delta)$-DP if for all neighbors $D \sim D'$ and every measurable $S \subseteq \mathrm{range}(M)$:</p>
+    <div class="math-block">$$\Pr[M(D) \in S] \;\le\; e^{\varepsilon}\,\Pr[M(D') \in S] \;+\; \delta.$$</div>
+  </div>
+  <p class="muted">$\delta = 0$ gives <strong>pure</strong> $\varepsilon$-DP.</p>
+  <div class="cite cite-left">Dwork, McSherry, Nissim, and Smith, "Calibrating Noise to Sensitivity in Private Data Analysis", TCC 2006.</div>
+</div>
+
+<!-- 6. Reading eps and e^eps -->
+<div class="slide">
+  <h2>The Budget $\varepsilon$ and Multiplier $e^{\varepsilon}$</h2>
+  <div class="divider"></div>
+  <p>Rearranged, the definition bounds a <strong>log-odds ratio</strong>.</p>
+  <div class="math-block">$$\left|\log \frac{\Pr[M(D) \in S]}{\Pr[M(D') \in S]}\right| \;\le\; \varepsilon \quad (\delta = 0).$$</div>
+  <p>$\varepsilon = 1 \Rightarrow e^{\varepsilon} \approx 2.7$: any outcome's odds shift by at most $2.7\times$.</p>
+</div>
+
+<!-- 7. The role of delta -->
+<div class="slide">
+  <h2>What $\delta$ Buys</h2>
+  <div class="divider"></div>
+  <p>$\delta$ is an additive slack: a small probability the $e^{\varepsilon}$ bound fails.</p>
+  <ul class="arrow">
+    <li>Lets an $\varepsilon$-bound break on a rare outcome set</li>
+    <li>Needed to use Gaussian noise (unbounded tails)</li>
+    <li>Rule of thumb: $\delta \ll 1/n$ for $n$ people</li>
+  </ul>
+  <p class="muted">A useful $\delta$ is cryptographically small, not merely "small".</p>
+</div>
+
+<!-- 8. Post-processing (proof sketch) -->
+<div class="slide">
+  <h2>Post-Processing</h2>
+  <div class="divider"></div>
+  <p>Any $f$ applied to a DP output <strong>stays</strong> DP.</p>
+  <div class="def-card">
+    <h3>Claim + one-line proof</h3>
+    <p>If $M$ is $(\varepsilon,\delta)$-DP, so is $f \circ M$. For any $T$, let $S = f^{-1}(T)$; then</p>
+    <div class="math-block">$$\Pr[f(M(D)) \in T] = \Pr[M(D) \in S] \le e^{\varepsilon}\Pr[M(D') \in S] + \delta.$$</div>
+  </div>
+  <p class="muted">The preimage $S$ inherits the guarantee. No extra budget spent.</p>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 9. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Mechanisms</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Calibrating noise to sensitivity</p>
+</div>
+
+<!-- 10. Sensitivity -->
+<div class="slide">
+  <h2>Sensitivity $\Delta q$</h2>
+  <div class="divider"></div>
+  <p>How much can one person move a query $q$? Take the worst case over neighbors.</p>
+  <div class="math-block">$$\Delta q \;=\; \max_{D \sim D'} \; \lVert q(D) - q(D') \rVert.$$</div>
+  <p>A count has $\Delta q = 1$; $\ell_1$ norm gives Laplace, $\ell_2$ gives Gaussian.</p>
+</div>
+
+<!-- 11. Laplace mechanism -->
+<div class="slide">
+  <h2>The Laplace Mechanism</h2>
+  <div class="divider"></div>
+  <p>Add $\ell_1$-calibrated Laplace noise; this gives <strong>pure</strong> $\varepsilon$-DP.</p>
+  <div class="math-block">$$M(D) = q(D) + \mathrm{Lap}\!\left(\frac{\Delta q}{\varepsilon}\right), \qquad p(z) \propto e^{-\varepsilon|z|/\Delta q}.$$</div>
+  <p class="muted">Scale $b = \Delta q / \varepsilon$: smaller $\varepsilon$ or bigger $\Delta q$ ⇒ wider noise.</p>
+  <div class="cite cite-left">Dwork, McSherry, Nissim, and Smith, "Calibrating Noise to Sensitivity", TCC 2006.</div>
+</div>
+
+<!-- 12. Why Laplace is eps-DP -->
+<div class="slide">
+  <h2>Why Laplace Works</h2>
+  <div class="divider"></div>
+  <p>The density ratio at any output is bounded by the triangle inequality.</p>
+  <div class="math-block">$$\frac{p_D(z)}{p_{D'}(z)} = e^{-\frac{\varepsilon}{\Delta q}\left(|z - q(D)| - |z - q(D')|\right)} \;\le\; e^{\varepsilon}.$$</div>
+  <p class="muted">Since $\lVert q(D) - q(D')\rVert_1 \le \Delta q$, the exponent never exceeds $\varepsilon$.</p>
+</div>
+
+<!-- 13. Gaussian mechanism -->
+<div class="slide">
+  <h2>The Gaussian Mechanism</h2>
+  <div class="divider"></div>
+  <p>Add $\ell_2$-calibrated Gaussian noise; this gives $(\varepsilon,\delta)$-DP.</p>
+  <div class="math-block">$$M(D) = q(D) + \mathcal{N}\!\left(0,\; \sigma^2 I\right), \qquad \sigma \;\ge\; \frac{\Delta_2 q \,\sqrt{2\ln(1.25/\delta)}}{\varepsilon}.$$</div>
+  <p class="muted">Unbounded tails force $\delta &gt; 0$; the workhorse inside private deep learning.</p>
+  <div class="cite cite-left">Dwork and Roth, "The Algorithmic Foundations of Differential Privacy", 2014.</div>
+</div>
+
+<!-- 14. Randomized response recovery -->
+<div class="slide">
+  <h2>Randomized Response, Formally</h2>
+  <div class="divider"></div>
+  <p>Answer truthfully w.p. $\tfrac12$; else flip a fair coin. Privacy and de-biasing:</p>
+  <div class="math-block">$$\varepsilon = \ln\frac{\Pr[\text{yes}\mid\text{true yes}]}{\Pr[\text{yes}\mid\text{true no}]} = \ln 3, \qquad \Pr[\text{yes}] = \tfrac12 p + \tfrac14.$$</div>
+  <p>Observe $70\%$ yes ⇒ solve $0.70 = \tfrac12 p + \tfrac14$ ⇒ true rate $p = 0.90$.</p>
+  <div class="cite cite-left">Warner, "Randomized Response", JASA 1965.</div>
+</div>
+
+<!-- ============ SECTION 03 ============ -->
+<!-- 15. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Private Learning</h1>
+  <div class="divider"></div>
+  <p class="subtitle">DP-SGD and composition</p>
+</div>
+
+<!-- 16. DP-SGD algorithm -->
+<div class="slide">
+  <h2>DP-SGD</h2>
+  <div class="divider"></div>
+  <p>Bound each example's influence, then hide it under noise.</p>
+  <div class="ta-algo" style="max-width:940px; margin:16px auto;">
+    <ol>
+      <li>Per-example gradient $g_i = \nabla_\theta \ell(\theta, x_i)$.</li>
+      <li>Clip: $\bar g_i = g_i / \max\!\left(1, \lVert g_i \rVert_2 / C\right)$.</li>
+      <li>Add noise: $\tilde g = \tfrac{1}{B}\big(\sum_i \bar g_i + \mathcal{N}(0,\, \sigma^2 C^2 I)\big)$.</li>
+      <li>Step $\theta \leftarrow \theta - \eta\,\tilde g$; the accountant updates $\varepsilon$.</li>
+    </ol>
+  </div>
+  <div class="cite cite-left">Abadi, Chu, Goodfellow, McMahan, Mironov, Talwar, and Zhang, "Deep Learning with Differential Privacy", ACM CCS 2016.</div>
+</div>
+
+<!-- 17. Why clip, why noise -->
+<div class="slide">
+  <h2>Clip Sets the Sensitivity</h2>
+  <div class="divider"></div>
+  <p>Clipping to $C$ makes the batch-sum sensitivity exactly $C$.</p>
+  <div class="math-block">$$\Delta_2\Big(\textstyle\sum_i \bar g_i\Big) \le C \quad\Rightarrow\quad \sigma C = \text{Gaussian scale}.$$</div>
+  <p class="muted">Noise multiplier $\sigma$ is unitless: it scales with $C$, so tuning $C$ is free of privacy cost.</p>
+</div>
+
+<!-- 18. Composition -->
+<div class="slide">
+  <h2>Composition</h2>
+  <div class="divider"></div>
+  <p>Budgets add up over many releases; training is thousands of steps.</p>
+  <div class="math-block">$$\text{basic: } \left(\textstyle\sum_k \varepsilon_k,\; \sum_k \delta_k\right), \qquad \text{advanced: } \varepsilon' \approx \sqrt{2k\ln(1/\delta')}\,\varepsilon.$$</div>
+  <p class="muted">Advanced composition turns the linear sum into a $\sqrt{k}$ growth.</p>
+  <div class="cite cite-left">Dwork, Rothblum, and Vadhan, "Boosting and Differential Privacy", FOCS 2010.</div>
+</div>
+
+<!-- 19. Renyi DP / accountant -->
+<div class="slide">
+  <h2>Rényi DP and the Accountant</h2>
+  <div class="divider"></div>
+  <p>The tight accountant tracks a Rényi divergence, then converts to $(\varepsilon,\delta)$.</p>
+  <div class="def-card">
+    <h3>$(\alpha,\varepsilon)$-Rényi DP</h3>
+    <p>$D_\alpha(M(D)\,\Vert\,M(D')) \le \varepsilon$ for order $\alpha &gt; 1$. Gaussian steps compose by <strong>adding</strong> per-step Rényi costs, then a final conversion gives the reported $\varepsilon$.</p>
+  </div>
+  <p class="muted">This is what "moments accountant" computes at training scale.</p>
+  <div class="cite cite-left">Mironov, "Rényi Differential Privacy", IEEE CSF 2017.</div>
+</div>
+
+<!-- ============ WRAP ============ -->
+<!-- 20. Where to go deeper -->
+<div class="slide">
+  <h2>Where to Go Deeper</h2>
+  <div class="divider"></div>
+  <p>A full graduate course develops each of these with complete proofs.</p>
+  <div class="def-card">
+    <h3>The rigorous version</h3>
+    <p>Reconstruction attacks, pure vs approximate DP, group privacy, the composition theorems, Rényi DP, and the complete DP-SGD analysis.</p>
+  </div>
+  <p class="muted">See the dedicated differential-privacy lecture series.</p>
+</div>
+
+<!-- 21. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">clip + noise</div>
+  <p class="big-word-sub">Bound one person, then hide them.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 21</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

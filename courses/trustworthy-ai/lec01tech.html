@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Threat-Model Thinking — Technical Supplement — Trustworthy AI Lecture 1</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 1 · Technical Supplement</div>
+  <h1>Threat Models:<br>The Formal Version</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Optional. A threat model as a tuple, and the ε-ball</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. When to Use This -->
+<div class="slide">
+  <h2>When to Use This</h2>
+  <div class="divider"></div>
+  <p>The main lecture keeps threat models as pictures. Here they get symbols.</p>
+  <ul class="arrow">
+    <li>A threat model, written as a small tuple</li>
+    <li>The attack map as a formal 2×2</li>
+    <li>The adversarial ε-ball we reuse all term</li>
+  </ul>
+  <div class="highlight"><p>Skip this in the core session; return if you want the notation.</p></div>
+</div>
+
+<!-- 3. A Threat Model Is a Tuple -->
+<div class="slide">
+  <h2>A Threat Model Is a Tuple</h2>
+  <div class="divider"></div>
+  <p>"Who, what they know, what they can do" is three coordinates.</p>
+  <div class="def-card">
+    <h3>Threat model</h3>
+    <p>A triple $(\mathcal{G},\, \mathcal{K},\, \mathcal{A})$: the adversary's <strong>goal</strong> $\mathcal{G}$, their <strong>knowledge</strong> $\mathcal{K}$, and their <strong>action set</strong> $\mathcal{A}$.</p>
+  </div>
+  <p class="muted">"Is it secure?" is only well-posed once $(\mathcal{G},\mathcal{K},\mathcal{A})$ is fixed.</p>
+</div>
+
+<!-- 4. Kerckhoffs's Principle -->
+<div class="slide">
+  <h2>Assume the Attacker Knows the System</h2>
+  <div class="divider"></div>
+  <p>Set the knowledge $\mathcal{K}$ to the <strong>worst realistic case</strong>.</p>
+  <div class="def-card">
+    <h3>Kerckhoffs's principle</h3>
+    <p>Security must hold even when everything about the system is public — except one small secret (a key, a random seed).</p>
+  </div>
+  <ul class="arrow">
+    <li>White-box: $\mathcal{K}$ includes the weights $\theta$ and gradients</li>
+    <li>Black-box: $\mathcal{K}$ is only the input–output map</li>
+  </ul>
+  <p class="muted">"Security through obscurity" is not a threat model.</p>
+</div>
+
+<!-- 5. The Attack Map as a 2×2 -->
+<div class="slide">
+  <h2>The Attack Map as a 2×2</h2>
+  <div class="divider"></div>
+  <p>Two binary axes partition almost every attack.</p>
+  <table>
+    <tr><td></td><td><strong>Black-box $\mathcal{K}$</strong></td><td><strong>White-box $\mathcal{K}$</strong></td></tr>
+    <tr><td><strong>Train-time $\mathcal{A}$</strong></td><td>Data poisoning</td><td>Backdoors</td></tr>
+    <tr><td><strong>Inference-time $\mathcal{A}$</strong></td><td>Jailbreaks</td><td>Gradient attacks</td></tr>
+  </table>
+  <p class="muted">Knowledge $\mathcal{K}$ × timing (the action set $\mathcal{A}$) locate the attack.</p>
+</div>
+
+<!-- 6. The Adversarial ε-Ball -->
+<div class="slide">
+  <h2>The Adversarial ε-Ball</h2>
+  <div class="divider"></div>
+  <p>Inference-time attacks live in a bounded perturbation set around $x$.</p>
+  <div class="math-block">$$\max_{\|\delta\| \le \varepsilon} \; \ell\big(f_\theta(x + \delta),\, y\big).$$</div>
+  <p>The action set $\mathcal{A}$ is the ε-ball $\{\delta : \|\delta\| \le \varepsilon\}$: small enough to look unchanged, large enough to flip the label.</p>
+  <div class="cite cite-left">Goodfellow, Shlens, and Szegedy, "Explaining and Harnessing Adversarial Examples", ICLR 2015.</div>
+</div>
+
+<!-- 7. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$(\mathcal{G},\mathcal{K},\mathcal{A})$</div>
+  <p class="big-word-sub">Fix the tuple before you ask "is it safe?"</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 7</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

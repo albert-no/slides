@@ -193,8 +193,12 @@
   <h2>Reweighing</h2>
   <div class="divider"></div>
   <p>Give each example a <strong>weight</strong> so groups look balanced.</p>
-  <div class="math-block">$$w(g, y) = \frac{\Pr[G = g]\,\Pr[Y = y]}{\Pr[G = g,\, Y = y]}.$$</div>
-  <p>Underrepresented <strong>group-and-outcome</strong> pairs count for more.</p>
+  <ul class="arrow">
+    <li>Compare each group-and-outcome cell to a balanced world</li>
+    <li>Under-represented pairs count for more; common ones count for less</li>
+    <li>No example is deleted; the loss just listens to each group equally</li>
+  </ul>
+  <p class="muted">The weight is the ratio of the balanced count to the observed count.</p>
   <div class="cite cite-left">Kamiran and Calders, "Data Preprocessing Techniques for Classification without Discrimination", KIS 2012.</div>
 </div>
 
@@ -286,9 +290,13 @@
 <div class="slide">
   <h2>Fairness as a Constraint</h2>
   <div class="divider"></div>
-  <p>Demand the gap stay <strong>below a budget</strong> $\tau$.</p>
-  <div class="math-block">$$\min_\theta \;\text{Loss}(\theta) \quad \text{s.t.} \quad \text{gap}(\theta) \le \tau.$$</div>
-  <p>An explicit promise, not a soft nudge.</p>
+  <p>Instead of a penalty, demand the gap stay <strong>below a fixed budget</strong>.</p>
+  <ul class="arrow">
+    <li>Minimize the loss as usual</li>
+    <li>But require the fairness gap to stay under a set limit</li>
+    <li>An explicit promise, not a soft nudge</li>
+  </ul>
+  <p class="muted">The budget you promise corresponds to some penalty weight.</p>
 </div>
 
 <!-- 19. The Reductions Approach -->
@@ -395,8 +403,7 @@
   <div class="divider"></div>
   <div class="def-card">
     <h3>Equalized odds</h3>
-    <p>Equal <strong>true-positive</strong> and <strong>false-positive</strong> rates across groups:</p>
-    <div class="math-block">$$\Pr[\hat Y = 1 \mid Y = y,\, G = a] = \Pr[\hat Y = 1 \mid Y = y,\, G = b].$$</div>
+    <p>A model has <strong>equal true-positive and false-positive rates</strong> across groups.</p>
   </div>
   <p>The error rates should not depend on the group.</p>
   <div class="cite cite-left">Hardt, Price, and Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016.</div>
@@ -429,14 +436,13 @@
 <div class="slide">
   <h2>The Post-Hoc Recipe</h2>
   <div class="divider"></div>
-  <div class="ta-algo" style="max-width:900px; margin:18px auto;">
-    <ol>
-      <li>Train a model the normal way.</li>
-      <li>On held-out data, <strong>measure each group's rates</strong>.</li>
-      <li><strong>Search thresholds</strong> that match the rates.</li>
-      <li>Deploy one cutoff per group.</li>
-    </ol>
-  </div>
+  <p>Fit the thresholds <strong>after</strong> the model is frozen.</p>
+  <ul class="arrow">
+    <li>Train a model the normal way, then leave it alone</li>
+    <li>On held-out data, measure each group's error rates</li>
+    <li>Search for the cutoffs that make those rates match</li>
+  </ul>
+  <p class="muted">Only the decision rule changes; the weights never move.</p>
   <div class="cite cite-left">Hardt, Price, and Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016.</div>
 </div>
 
@@ -642,13 +648,23 @@
   <h2>The Gender Shades Audit</h2>
   <div class="divider"></div>
   <p>A 2018 audit of commercial <strong>face classifiers</strong>.</p>
-  <!-- TODO real figure: Gender Shades error-rate table by skin-tone x gender (Buolamwini & Gebru, FAT* 2018, Table 4) -->
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <img src="figs/gender-shades.png" alt="Gender Shades summary table: error rates for Microsoft, Face++, and IBM by gender, skin tone, and their intersection — darker females up to 34.7% error, lighter males near 0%" style="max-height:440px;width:auto;max-width:100%;display:block;">
+  </div>
+  <div class="cite cite-left">Buolamwini and Gebru, "Gender Shades: Intersectional Accuracy Disparities in Commercial Gender Classification", FAT* 2018 — Table 4.</div>
+</div>
+
+<!-- 44b. Reading the Gender Shades Table -->
+<div class="slide">
+  <h2>Reading the Gender Shades Table</h2>
+  <div class="divider"></div>
+  <p>One model, four very <strong>uneven</strong> subgroups.</p>
   <ul class="arrow">
     <li>Near-perfect on lighter-skinned men</li>
     <li>Error rates over a third on darker-skinned women</li>
     <li>Public results forced vendors to fix it</li>
   </ul>
-  <div class="cite cite-left">Buolamwini and Gebru, "Gender Shades: Intersectional Accuracy Disparities in Commercial Gender Classification", FAT* 2018.</div>
+  <div class="highlight"><p>The <strong>intersection</strong> hides the harm the marginals miss.</p></div>
 </div>
 
 <!-- 45. Impact Assessments -->
@@ -691,13 +707,17 @@
   <h2>Generators Amplify Stereotypes</h2>
   <div class="divider"></div>
   <p>Text-to-image models <strong>exaggerate</strong> what they saw.</p>
-  <!-- TODO real figure: Bianchi et al. grid of generated "a doctor" / "a criminal" images showing demographic skew (FAccT 2023, Fig. 1) -->
-  <ul>
-    <li>"A doctor" returns mostly men</li>
-    <li>"A criminal" skews by race</li>
-    <li>Output is more skewed than the data</li>
-  </ul>
-  <div class="cite cite-left">Bianchi et al., "Text-to-Image Generation Amplifies Demographic Stereotypes", FAccT 2023.</div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:44px;align-items:start;">
+    <div style="display:flex;justify-content:center;">
+      <img src="figs/bianchi-occupations.png" alt="Generated images for neutral occupation prompts: 'a software engineer' returns men, 'a housekeeper' returns women of color" style="max-height:410px;width:auto;display:block;border:1px solid var(--slate);border-radius:8px;">
+    </div>
+    <ul>
+      <li>"A doctor" returns mostly men</li>
+      <li>"A criminal" skews by race</li>
+      <li>Output is more skewed than the data</li>
+    </ul>
+  </div>
+  <div class="cite cite-left">Bianchi et al., "Text-to-Image Generation Amplifies Demographic Stereotypes", FAccT 2023 — Figure 1.</div>
 </div>
 
 <!-- 49. How to Debias a Generator -->

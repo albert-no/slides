@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adversarial Examples — Technical Supplement — Trustworthy AI Lecture 8</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 8 · Technical Supplement</div>
+  <h1>Adversarial<br>Examples: The Math</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Optional. FGSM, PGD, robust training, and certificates</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. When to Use This -->
+<div class="slide">
+  <h2>When to Use This</h2>
+  <div class="divider"></div>
+  <p>The main lecture keeps the panda and the boundary picture. Here are the equations.</p>
+  <ul class="arrow">
+    <li>How the perturbation budget is written as a set</li>
+    <li>How FGSM and PGD turn the gradient into an attack</li>
+    <li>How adversarial training becomes a min-max problem</li>
+    <li>How randomized smoothing yields a certified radius</li>
+  </ul>
+  <div class="highlight"><p>Skip this in the core session; return if you want the formal version.</p></div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>The Attack Objectives</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Budget, FGSM, and PGD</p>
+</div>
+
+<!-- 4. The Perturbation Set -->
+<div class="slide">
+  <h2>The Perturbation Set</h2>
+  <div class="divider"></div>
+  <p>An adversarial example lives in a <strong>small ball</strong> around $x$.</p>
+  <div class="math-block">$$\mathcal{B}_p(x, \varepsilon) \;=\; \bigl\{\, x + \delta \;:\; \|\delta\|_p \le \varepsilon \,\bigr\}.$$</div>
+  <p class="muted">$p = \infty$ caps the largest single-pixel change; $p = 2$ caps the total energy.</p>
+</div>
+
+<!-- 5. The Attacker's Goal -->
+<div class="slide">
+  <h2>The Attacker's Goal</h2>
+  <div class="divider"></div>
+  <p>Find the $\delta$ inside the budget that <strong>most raises the loss</strong>.</p>
+  <div class="math-block">$$\max_{\|\delta\|_p \le \varepsilon}\; \ell\bigl(f_\theta(x + \delta),\, y\bigr).$$</div>
+  <p class="muted">$\ell$ = training loss; $y$ = true label; $f_\theta$ = the fixed model.</p>
+</div>
+
+<!-- 6. FGSM -->
+<div class="slide">
+  <h2>FGSM: One Step</h2>
+  <div class="divider"></div>
+  <p>Take the worst-case step of size $\varepsilon$ in the $L_\infty$ box.</p>
+  <div class="math-block">$$x_{\text{adv}} \;=\; x \;+\; \varepsilon \cdot \operatorname{sign}\!\bigl(\nabla_x\, \ell(f_\theta(x), y)\bigr).$$</div>
+  <p class="muted">Keep only the sign: every pixel moves the maximum allowed amount.</p>
+  <div class="cite cite-left">Goodfellow, Shlens, and Szegedy, "Explaining and Harnessing Adversarial Examples", ICLR 2015.</div>
+</div>
+
+<!-- 7. Why the Sign -->
+<div class="slide">
+  <h2>Why the Sign</h2>
+  <div class="divider"></div>
+  <p>The sign step is the <strong>exact solution</strong> of a linearized attack.</p>
+  <ul class="arrow">
+    <li>Linearize the loss: $\ell(x + \delta) \approx \ell(x) + \nabla_x\ell^\top \delta$</li>
+    <li>Maximize $\nabla_x\ell^\top \delta$ over $\|\delta\|_\infty \le \varepsilon$</li>
+    <li>The maximizer is $\delta = \varepsilon\,\operatorname{sign}(\nabla_x\ell)$</li>
+  </ul>
+  <p class="muted">FGSM is one step of the linear approximation, nothing more.</p>
+</div>
+
+<!-- 8. PGD -->
+<div class="slide">
+  <h2>PGD: Projected Iteration</h2>
+  <div class="divider"></div>
+  <p>Repeat the sign step, <strong>projecting</strong> back into the budget each time.</p>
+  <div class="math-block">$$x_{t+1} \;=\; \Pi_{\mathcal{B}_p(x,\varepsilon)}\!\Bigl(x_t + \alpha \cdot \operatorname{sign}\!\bigl(\nabla_x\, \ell(f_\theta(x_t), y)\bigr)\Bigr).$$</div>
+  <p class="muted">$\alpha$ = step size; $\Pi$ = projection back onto the ball; many steps.</p>
+  <div class="cite cite-left">Madry et al., "Towards Deep Learning Models Resistant to Adversarial Attacks", ICLR 2018.</div>
+</div>
+
+<!-- 9. The Projection -->
+<div class="slide">
+  <h2>The Projection Step</h2>
+  <div class="divider"></div>
+  <p>$\Pi$ pulls any stray point <strong>back onto the allowed ball</strong>.</p>
+  <div class="grid-2">
+    <div><h3>$L_\infty$</h3>
+      <p>Clip each coordinate of $\delta$ to the range $[-\varepsilon, \varepsilon]$.</p></div>
+    <div><h3>$L_2$</h3>
+      <p>Rescale $\delta$ so its length is at most $\varepsilon$.</p></div>
+  </div>
+  <p class="muted">Every step stays legal, so the final example is admissible.</p>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 10. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Robust Training</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The saddle-point objective</p>
+</div>
+
+<!-- 11. Adversarial Training -->
+<div class="slide">
+  <h2>Adversarial Training</h2>
+  <div class="divider"></div>
+  <p>Train against the <strong>worst case</strong> inside every point's budget.</p>
+  <div class="math-block">$$\min_{\theta}\; \mathbb{E}_{(x,y)}\Bigl[\, \max_{\|\delta\|_p \le \varepsilon}\; \ell\bigl(f_\theta(x + \delta),\, y\bigr)\Bigr].$$</div>
+  <p class="muted">Inner max = the attack; outer min = the defender fitting $\theta$.</p>
+  <div class="cite cite-left">Madry et al., "Towards Deep Learning Models Resistant to Adversarial Attacks", ICLR 2018.</div>
+</div>
+
+<!-- 12. How It Is Solved -->
+<div class="slide">
+  <h2>How the Saddle Point Is Solved</h2>
+  <div class="divider"></div>
+  <p>Alternate the two players, one batch at a time.</p>
+  <div class="ta-algo" style="max-width:920px; margin:18px auto;">
+    <ol>
+      <li>Inner max: run PGD to craft $\delta$ for the batch.</li>
+      <li>Outer min: take a gradient step on $\theta$ at the attacked inputs.</li>
+      <li>Repeat, so the model learns to resist the strongest attack it can see.</li>
+    </ol>
+  </div>
+  <p class="muted">A strong inner attack is what makes the outer defense real.</p>
+</div>
+
+<!-- 13. The Cost -->
+<div class="slide">
+  <h2>Why It Is Expensive</h2>
+  <div class="divider"></div>
+  <p>Every training step now hides an <strong>optimization inside it</strong>.</p>
+  <ul class="arrow">
+    <li>Each batch runs $k$ PGD steps: roughly $k\times$ the cost</li>
+    <li>Fitting the worst case trims clean accuracy</li>
+    <li>The robustness-accuracy trade-off is intrinsic, not a bug</li>
+  </ul>
+  <p class="muted">You pay in compute and in clean accuracy for a wider safe region.</p>
+</div>
+
+<!-- ============ SECTION 03 ============ -->
+<!-- 14. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Certified Robustness</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Randomized smoothing's provable radius</p>
+</div>
+
+<!-- 15. The Smoothed Classifier -->
+<div class="slide">
+  <h2>The Smoothed Classifier</h2>
+  <div class="divider"></div>
+  <p>Replace $f$ by the class it returns <strong>most often under noise</strong>.</p>
+  <div class="math-block">$$g(x) \;=\; \arg\max_{c}\; \Pr_{\eta \sim \mathcal{N}(0,\sigma^2 I)}\bigl[\, f(x + \eta) = c \,\bigr].$$</div>
+  <p class="muted">$\eta$ = Gaussian noise; $g$ votes over many noisy copies of $x$.</p>
+  <div class="cite cite-left">Cohen, Rosenfeld, and Kolter, "Certified Adversarial Robustness via Randomized Smoothing", ICML 2019.</div>
+</div>
+
+<!-- 16. The Certified Radius -->
+<div class="slide">
+  <h2>The Certified Radius</h2>
+  <div class="divider"></div>
+  <p>If the top class wins with probability $\underline{p_A}$, $g$ is <strong>provably constant</strong> in an $L_2$ ball.</p>
+  <div class="math-block">$$R \;=\; \frac{\sigma}{2}\,\Bigl(\Phi^{-1}(\underline{p_A}) - \Phi^{-1}(\overline{p_B})\Bigr).$$</div>
+  <p class="muted">$\Phi^{-1}$ = inverse Gaussian CDF; $\underline{p_A}, \overline{p_B}$ = top-two class probability bounds.</p>
+  <div class="cite cite-left">Cohen, Rosenfeld, and Kolter, "Certified Adversarial Robustness via Randomized Smoothing", ICML 2019.</div>
+</div>
+
+<!-- 17. Reading the Radius -->
+<div class="slide">
+  <h2>Reading the Radius</h2>
+  <div class="divider"></div>
+  <p>The formula shows exactly <strong>what buys a bigger guarantee</strong>.</p>
+  <ul class="arrow">
+    <li>More noise $\sigma$: larger radius, but noisier accuracy</li>
+    <li>More confident vote ($\underline{p_A} \to 1$): the gap term grows</li>
+    <li>No attack with $\|\delta\|_2 \le R$ can ever flip $g$</li>
+  </ul>
+  <p class="muted">A proof against every attack in the ball, not just the ones we ran.</p>
+</div>
+
+<!-- 18. The Certified Catch -->
+<div class="slide">
+  <h2>The Certified Catch</h2>
+  <div class="divider"></div>
+  <p>The guarantee is <strong>real but modest</strong>.</p>
+  <div class="grid-2">
+    <div><h3>Cost</h3>
+      <p>Estimating $\underline{p_A}$ needs many noisy forward passes per input.</p></div>
+    <div><h3>Scope</h3>
+      <p>It certifies an $L_2$ radius, often small on high-resolution images.</p></div>
+  </div>
+  <p class="muted">A narrow, costly proof, but a proof nonetheless.</p>
+</div>
+
+<!-- 19. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">min-max</div>
+  <p class="big-word-sub">Attack and defense are the two sides of one objective.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 19</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

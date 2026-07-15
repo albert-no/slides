@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interpretability — Technical Supplement — Trustworthy AI Lecture 7</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 7 · Technical Supplement</div>
+  <h1>Interpretability:<br>The Math</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Optional. Shapley, LIME, saliency, and sparse autoencoders</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. When to Use This -->
+<div class="slide">
+  <h2>When to Use This</h2>
+  <div class="divider"></div>
+  <p>The main lecture keeps the recipes as prose. Here are the equations.</p>
+  <ul class="arrow">
+    <li>How SHAP shares credit fairly: the Shapley sum</li>
+    <li>How LIME fits a local surrogate as an objective</li>
+    <li>How saliency and integrated gradients score pixels</li>
+    <li>How a sparse autoencoder trades off rebuild and sparsity</li>
+  </ul>
+  <div class="highlight"><p>Skip this in the core session; return if you want the formal version.</p></div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Attribution Objectives</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Shapley values and the LIME surrogate</p>
+</div>
+
+<!-- 4. The Shapley Value -->
+<div class="slide">
+  <h2>The Shapley Value</h2>
+  <div class="divider"></div>
+  <p>Add feature $i$ to every group $S$; average its <strong>marginal push</strong>.</p>
+  <div class="math-block">$$\phi_i \;=\; \sum_{S \subseteq N \setminus \{i\}} w_S\,\bigl[\,f(S \cup \{i\}) - f(S)\,\bigr].$$</div>
+  <p class="muted">$N$ = all features; $f(S)$ = prediction using only the features in $S$.</p>
+  <div class="cite cite-left">Lundberg and Lee, "A Unified Approach to Interpreting Model Predictions", NeurIPS 2017.</div>
+</div>
+
+<!-- 5. The Weighting -->
+<div class="slide">
+  <h2>The Weighting</h2>
+  <div class="divider"></div>
+  <p>Each group $S$ is weighted by how many orderings produce it.</p>
+  <div class="math-block">$$w_S \;=\; \frac{|S|!\,\bigl(|N| - |S| - 1\bigr)!}{|N|!}.$$</div>
+  <p class="muted">Equivalently: average the marginal contribution over all feature orderings.</p>
+</div>
+
+<!-- 6. The Four Axioms -->
+<div class="slide">
+  <h2>The Four Axioms</h2>
+  <div class="divider"></div>
+  <p>The Shapley value is the <strong>only</strong> rule satisfying all four.</p>
+  <div class="grid-2">
+    <div><h3>Efficiency</h3>
+      <p>Shares $f(N) - f(\varnothing)$ exactly: $\sum_i \phi_i$ is the full prediction.</p></div>
+    <div><h3>Symmetry</h3>
+      <p>Two features with equal contributions get equal credit.</p></div>
+    <div><h3>Dummy</h3>
+      <p>A feature that never changes $f$ gets $\phi_i = 0$.</p></div>
+    <div><h3>Additivity</h3>
+      <p>Credit adds across a sum of models.</p></div>
+  </div>
+</div>
+
+<!-- 7. Why It Is Costly -->
+<div class="slide">
+  <h2>Why It Is Costly</h2>
+  <div class="divider"></div>
+  <p>The sum runs over <strong>all subsets</strong> of the features.</p>
+  <ul class="arrow">
+    <li>$2^{|N|}$ coalitions: exact computation is exponential</li>
+    <li>SHAP uses sampling and model-specific shortcuts</li>
+    <li>KernelSHAP recasts it as a weighted least-squares fit</li>
+  </ul>
+  <p class="muted">Fair credit is exact in theory, approximated in practice.</p>
+</div>
+
+<!-- 8. LIME: Local Surrogate Objective -->
+<div class="slide">
+  <h2>LIME: The Objective</h2>
+  <div class="divider"></div>
+  <p>Fit a simple model $g$ that matches $f$ <strong>near one point</strong> $x$.</p>
+  <div class="math-block">$$\xi(x) \;=\; \arg\min_{g \in G}\; \mathcal{L}\bigl(f, g, \pi_x\bigr) \;+\; \Omega(g).$$</div>
+  <p class="muted">$\pi_x$ = locality weight; $\Omega(g)$ = complexity penalty; $G$ = simple models.</p>
+  <div class="cite cite-left">Ribeiro, Singh, and Guestrin, "Why Should I Trust You?", KDD 2016.</div>
+</div>
+
+<!-- 9. Reading the LIME Terms -->
+<div class="slide">
+  <h2>Reading the LIME Terms</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Fidelity $\mathcal{L}$</h3>
+      <p>Penalizes $g$ disagreeing with $f$ on perturbed samples, weighted by nearness $\pi_x$.</p></div>
+    <div><h3>Complexity $\Omega$</h3>
+      <p>Keeps $g$ readable: few nonzero weights in the linear surrogate.</p></div>
+  </div>
+  <div class="highlight"><p>Accurate near $x$, simple enough to read: the two pulls of LIME.</p></div>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 10. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Gradient Attribution</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Saliency and integrated gradients</p>
+</div>
+
+<!-- 11. Gradient Saliency -->
+<div class="slide">
+  <h2>Gradient Saliency</h2>
+  <div class="divider"></div>
+  <p>Score each input by how strongly the output <strong>reacts</strong> to it.</p>
+  <div class="math-block">$$\text{saliency}(x_i) \;=\; \left|\frac{\partial\, f(x)}{\partial\, x_i}\right|.$$</div>
+  <p class="muted">One backward pass gives the score for every pixel at once.</p>
+  <div class="cite cite-left">Simonyan, Vedaldi, and Zisserman, "Deep Inside Convolutional Networks", ICLR Workshop 2014.</div>
+</div>
+
+<!-- 12. Why Raw Gradients Break -->
+<div class="slide">
+  <h2>Why Raw Gradients Break</h2>
+  <div class="divider"></div>
+  <p>A saturated output has a <strong>flat</strong> local gradient.</p>
+  <ul class="arrow">
+    <li>Once $f$ is confident, $\partial f / \partial x_i \approx 0$</li>
+    <li>An important feature can score near zero</li>
+    <li>The single-point slope misses the whole climb</li>
+  </ul>
+  <p class="muted">Fix: integrate the gradient along a path, not at one point.</p>
+</div>
+
+<!-- 13. Integrated Gradients -->
+<div class="slide">
+  <h2>Integrated Gradients</h2>
+  <div class="divider"></div>
+  <p>Average the gradient along the path from a baseline $x'$ to $x$.</p>
+  <div class="math-block">$$\mathrm{IG}_i(x) \;=\; (x_i - x'_i)\!\int_0^1 \frac{\partial f\bigl(x' + \alpha(x - x')\bigr)}{\partial x_i}\, d\alpha.$$</div>
+  <p class="muted">$x'$ = baseline (often all-black); the integral is approximated by a Riemann sum.</p>
+  <div class="cite cite-left">Sundararajan, Taly, and Yan, "Axiomatic Attribution for Deep Networks", ICML 2017.</div>
+</div>
+
+<!-- 14. IG Satisfies Axioms -->
+<div class="slide">
+  <h2>What IG Guarantees</h2>
+  <div class="divider"></div>
+  <p>Like Shapley, integrated gradients earns its scores from <strong>axioms</strong>.</p>
+  <div class="grid-2">
+    <div><h3>Completeness</h3>
+      <p>$\sum_i \mathrm{IG}_i(x) = f(x) - f(x')$: the scores sum to the output gap.</p></div>
+    <div><h3>Sensitivity</h3>
+      <p>A feature that changes the output gets a nonzero score.</p></div>
+  </div>
+  <p class="muted">The path integral is what makes these hold.</p>
+</div>
+
+<!-- ============ SECTION 03 ============ -->
+<!-- 15. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Sparse Autoencoders</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Reconstruction, sparsity, and superposition</p>
+</div>
+
+<!-- 16. Superposition, Formally -->
+<div class="slide">
+  <h2>Superposition, Formally</h2>
+  <div class="divider"></div>
+  <p>A layer packs <strong>more features than dimensions</strong>.</p>
+  <div class="math-block">$$h \;\approx\; \sum_{k} a_k(x)\, d_k, \qquad \text{(number of features)} \gg \dim(h).$$</div>
+  <p class="muted">$d_k$ = feature direction; $a_k(x) \ge 0$ = its activation; few $a_k$ nonzero at once.</p>
+  <div class="cite cite-left">Elhage et al., "Toy Models of Superposition", Anthropic 2022.</div>
+</div>
+
+<!-- 17. The SAE Objective -->
+<div class="slide">
+  <h2>The SAE Objective</h2>
+  <div class="divider"></div>
+  <p>Rebuild the activation while keeping the code <strong>sparse</strong>.</p>
+  <div class="math-block">$$\min_{\text{enc},\,\text{dec}}\; \underbrace{\bigl\|\, h - \hat{h}\,\bigr\|_2^2}_{\text{reconstruction}} \;+\; \lambda\, \underbrace{\|a\|_1}_{\text{sparsity}}.$$</div>
+  <p class="muted">$a = \text{enc}(h)$ is the wide code; $\hat{h} = \text{dec}(a)$; $\lambda$ tunes the trade-off.</p>
+  <div class="cite cite-left">Bricken et al., "Towards Monosemanticity", Anthropic 2023.</div>
+</div>
+
+<!-- 18. Reading the Two Terms -->
+<div class="slide">
+  <h2>Reading the Two Terms</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Reconstruction</h3>
+      <p>Forces the code to still carry the layer's information.</p></div>
+    <div><h3>Sparsity $\lambda\|a\|_1$</h3>
+      <p>Forces only a few units active, so each can mean one thing.</p></div>
+  </div>
+  <div class="highlight"><p>Small $\lambda$: faithful but tangled. Large $\lambda$: clean but lossy.</p></div>
+</div>
+
+<!-- 19. Why L1 Gives Monosemanticity -->
+<div class="slide">
+  <h2>Why the L1 Penalty</h2>
+  <div class="divider"></div>
+  <p>The $\ell_1$ norm pushes the code toward <strong>few active units</strong>.</p>
+  <ul class="arrow">
+    <li>It rewards zeros, unlike a smooth $\ell_2$ penalty</li>
+    <li>The dictionary is over-complete: many more units than dimensions</li>
+    <li>Each surviving unit lines up with a single direction $d_k$</li>
+  </ul>
+  <p class="muted">Sparsity is what pulls superposed features back apart.</p>
+</div>
+
+<!-- 20. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$\phi_i$</div>
+  <p class="big-word-sub">An explanation is an objective you can write down.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 20</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

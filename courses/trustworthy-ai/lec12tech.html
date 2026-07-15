@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Watermarking — Technical Supplement — Trustworthy AI Lecture 12</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 12 · Technical Supplement</div>
+  <h1>Text Watermarks:<br>The Math</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Optional. The green-list scheme and its z-test</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. When to Use This -->
+<div class="slide">
+  <h2>When to Use This</h2>
+  <div class="divider"></div>
+  <p>The main lecture keeps the picture: split the vocabulary, nudge toward green, count green tokens. Here is the <strong>detector's arithmetic</strong>.</p>
+  <ul class="arrow">
+    <li>The green-list rule as an equation on logits</li>
+    <li>The detection z-statistic and its threshold</li>
+    <li>The false-positive bound; the robustness–quality tradeoff</li>
+  </ul>
+  <div class="highlight"><p>Skip this in the core session; return if you want the statistical version.</p></div>
+</div>
+
+<!-- 3. Setup and Notation -->
+<div class="slide">
+  <h2>Setup and Notation</h2>
+  <div class="divider"></div>
+  <p>Fix the symbols the whole scheme uses.</p>
+  <div class="def-card">
+    <h3>Five symbols</h3>
+    <p>$V$ = vocabulary size. &nbsp; $\gamma$ = green fraction (e.g. $\tfrac12$). &nbsp; $\delta$ = green-logit bias. &nbsp; $T$ = generated length. &nbsp; $|s|_G$ = number of green tokens in the text $s$.</p>
+  </div>
+  <p class="muted">A secret key seeds the green/red split; $\gamma V$ tokens are green.</p>
+</div>
+
+<!-- 4. The Green-List Rule -->
+<div class="slide">
+  <h2>The Green-List Rule</h2>
+  <div class="divider"></div>
+  <p>At each step, hash the recent context to a seed, partition $V$ into a <strong>green set</strong> $G$ (size $\gamma V$) and red set, then add $\delta$ to every green logit.</p>
+  <div class="math-block">$$\hat\ell_v \;=\; \ell_v + \delta\,\mathbf{1}[\,v \in G\,], \qquad p_v \;=\; \frac{e^{\hat\ell_v}}{\sum_{w} e^{\hat\ell_w}}.$$</div>
+  <p class="muted">$\ell_v$ = original logit; the bias $\delta$ tilts sampling toward green.</p>
+  <div class="cite cite-left">Kirchenbauer, Geiping, Wen, Katz, Miers, and Goldstein, "A Watermark for Large Language Models", ICML 2023.</div>
+</div>
+
+<!-- 5. The Null Hypothesis -->
+<div class="slide">
+  <h2>The Null Hypothesis</h2>
+  <div class="divider"></div>
+  <p>A human writer never saw the secret split, so each token is green <strong>independently</strong> with probability $\gamma$.</p>
+  <div class="math-block">$$H_0:\quad |s|_G \sim \mathrm{Binomial}(T,\ \gamma).$$</div>
+  <p>Under $H_0$: mean $\gamma T$, variance $T\gamma(1-\gamma)$.</p>
+  <p class="muted">Watermarked text pushes $|s|_G$ far above $\gamma T$.</p>
+</div>
+
+<!-- 6. The Detection z-Statistic -->
+<div class="slide">
+  <h2>The Detection z-Statistic</h2>
+  <div class="divider"></div>
+  <p>Standardize the green count against its null mean and standard deviation.</p>
+  <div class="math-block">$$z \;=\; \frac{|s|_G - \gamma T}{\sqrt{\,T\,\gamma\,(1-\gamma)\,}}.$$</div>
+  <p>Large $z$ = far more green than luck allows = watermarked.</p>
+  <div class="cite cite-left">Kirchenbauer et al., "A Watermark for Large Language Models", ICML 2023.</div>
+</div>
+
+<!-- 7. The Threshold and False Positives -->
+<div class="slide">
+  <h2>Threshold and False Positives</h2>
+  <div class="divider"></div>
+  <p>Flag the text as watermarked when $z &gt; \tau$ for a chosen threshold $\tau$.</p>
+  <div class="math-block">$$\Pr[\text{false positive}] \;=\; \Pr[\,z &gt; \tau \mid H_0\,] \;\approx\; 1 - \Phi(\tau).$$</div>
+  <p>Pick $\tau = 4 \Rightarrow$ false-positive rate $&lt; 3\times 10^{-5}$.</p>
+  <p class="muted">$\Phi$ = standard normal CDF; the binomial is near-normal for large $T$.</p>
+</div>
+
+<!-- 8. Why Length Wins -->
+<div class="slide">
+  <h2>Why Length Wins</h2>
+  <div class="divider"></div>
+  <p>The green <em>fraction</em> a watermarked model produces, $\gamma^\star &gt; \gamma$, is roughly fixed. But $z$ grows with $\sqrt{T}$.</p>
+  <div class="math-block">$$z \;\approx\; \frac{(\gamma^\star - \gamma)\sqrt{T}}{\sqrt{\gamma(1-\gamma)}} \;\propto\; \sqrt{T}.$$</div>
+  <p class="muted">Doubling the length multiplies the evidence by $\sqrt{2}$: "80% green by luck $\approx 0$" over a long passage.</p>
+</div>
+
+<!-- 9. The Robustness–Quality Tradeoff -->
+<div class="slide">
+  <h2>Robustness vs Quality</h2>
+  <div class="divider"></div>
+  <p>The bias $\delta$ is the single dial, pulling two ways.</p>
+  <div class="grid-2">
+    <div><h3>Larger $\delta$</h3>
+      <p>Higher $\gamma^\star$, larger $z$: detectable from shorter text, survives more edits.</p></div>
+    <div><h3>Larger $\delta$</h3>
+      <p>More green words forced over better red ones: measurable perplexity rise, odder prose.</p></div>
+  </div>
+  <div class="highlight"><p>Detectability buys itself with quality. Each edit flips a few tokens; $z$ degrades gracefully until a full paraphrase resets the count.</p></div>
+</div>
+
+<!-- 10. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$z \propto \sqrt{T}$</div>
+  <p class="big-word-sub">Count green tokens; let length do the proving.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 10</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

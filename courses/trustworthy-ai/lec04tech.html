@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memorization — Technical Supplement — Trustworthy AI Lecture 4</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 4 · Technical Supplement</div>
+  <h1>Memorization:<br>The Math</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Optional. Extractability, the memorization fraction, and the scaling law</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. When to Use This -->
+<div class="slide">
+  <h2>When to Use This</h2>
+  <div class="divider"></div>
+  <p>The main lecture kept memorization as pictures. Here are the definitions.</p>
+  <ul class="arrow">
+    <li>What "$k$-extractable" means precisely</li>
+    <li>How the memorization fraction is measured</li>
+    <li>Why the scaling law is log-linear</li>
+  </ul>
+  <div class="highlight"><p>Skip this in the core session; return if you want the formal version.</p></div>
+</div>
+
+<!-- 3. Extractability, Formally -->
+<div class="slide">
+  <h2>Extractability, Formally</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>$k$-extractable</h3>
+    <p>A string $s$ is <strong>$k$-extractable</strong> from model $f$ if there is a $k$-token prefix $p$ in the training data such that greedy decoding from $p$ reproduces $s$ exactly.</p>
+  </div>
+  <div class="math-block">$$f_{\text{greedy}}(p) = s, \qquad |p| = k.$$</div>
+  <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
+</div>
+
+<!-- 4. Reading the Definition -->
+<div class="slide">
+  <h2>Reading the Definition</h2>
+  <div class="divider"></div>
+  <p>Three knobs make this an operational test.</p>
+  <ul class="arrow">
+    <li>$p$ = the exact $k$ tokens preceding $s$ in training</li>
+    <li>$f_{\text{greedy}}$ = argmax decoding, no sampling</li>
+    <li>Exact match: every token of $s$ must agree</li>
+  </ul>
+  <p class="muted">Larger $k$ gives more context, so more strings become extractable.</p>
+</div>
+
+<!-- 5. The Memorization Fraction -->
+<div class="slide">
+  <h2>The Memorization Fraction</h2>
+  <div class="divider"></div>
+  <p>Turn extractability into a single measurable rate.</p>
+  <div class="math-block">$$\mathrm{Mem}(f) = \frac{1}{|D|}\sum_{(p,s)\in D} \mathbf{1}\!\left[\,f_{\text{greedy}}(p) = s\,\right].$$</div>
+  <p class="muted">$D$ = candidate prefix–continuation pairs; the fraction that reproduce exactly.</p>
+  <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
+</div>
+
+<!-- 6. The Scaling Law -->
+<div class="slide">
+  <h2>The Scaling Law</h2>
+  <div class="divider"></div>
+  <p>Empirically, the fraction grows <strong>linearly in three logs</strong>.</p>
+  <div class="math-block">$$\mathrm{Mem} \;\approx\; a\,\log N \;+\; b\,\log r \;+\; c\,\log t \;+\; d.$$</div>
+  <p class="muted">$N$ = model size, $r$ = duplication count, $t$ = training epochs.</p>
+  <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
+</div>
+
+<!-- 7. What Log-Linear Means -->
+<div class="slide">
+  <h2>What Log-Linear Means</h2>
+  <div class="divider"></div>
+  <p>Each $10\times$ in a driver adds a <strong>constant increment</strong>.</p>
+  <ul class="arrow">
+    <li>$10\times$ the parameters ⇒ $+\,a\log 10$ memorization</li>
+    <li>$10\times$ the duplicates ⇒ $+\,b\log 10$</li>
+    <li>$10\times$ the epochs ⇒ $+\,c\log 10$</li>
+  </ul>
+  <p class="muted">A steady slope on a log axis, not a bump to patch out.</p>
+</div>
+
+<!-- 8. Why the Trend Is Uncomfortable -->
+<div class="slide">
+  <h2>Why the Trend Is Uncomfortable</h2>
+  <div class="divider"></div>
+  <p>The coefficients $a, b, c$ are all <strong>positive</strong>.</p>
+  <div class="highlight"><p>Bigger models on more, more-duplicated data push every term the wrong way.</p></div>
+  <p class="muted">Deduplication attacks the $\log r$ term directly — the one you can control.</p>
+</div>
+
+<!-- 9. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$\log$</div>
+  <p class="big-word-sub">Memorization is a slope, not an accident.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 9</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

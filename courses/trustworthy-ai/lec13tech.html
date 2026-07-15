@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fairness — Technical Supplement — Trustworthy AI Lecture 13</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
+.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 13 · Technical Supplement</div>
+  <h1>Fairness:<br>The Definitions &amp; Proof</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Optional. The three criteria and the impossibility theorem</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. When to Use This -->
+<div class="slide">
+  <h2>When to Use This</h2>
+  <div class="divider"></div>
+  <p>The main lecture keeps one glanceable form per criterion. Here is the <strong>formal stack and the proof</strong>.</p>
+  <ul class="arrow">
+    <li>The three criteria as conditional-probability definitions</li>
+    <li>Base rates and the impossibility theorem, stated precisely</li>
+    <li>A proof sketch and the base-rate algebra that forces the gap</li>
+  </ul>
+  <div class="highlight"><p>Skip this in the core session; return if you want the derivation.</p></div>
+</div>
+
+<!-- 3. Notation -->
+<div class="slide">
+  <h2>Notation</h2>
+  <div class="divider"></div>
+  <p>A binary classifier with a protected attribute.</p>
+  <div class="def-card">
+    <h3>Random variables</h3>
+    <p>$A \in \{a,b\}$ = group. &nbsp; $Y \in \{0,1\}$ = true label. &nbsp; $\hat Y \in \{0,1\}$ = prediction. &nbsp; $\hat S \in [0,1]$ = risk score, with $\hat Y = \mathbf{1}[\hat S \ge t]$ for a threshold $t$.</p>
+  </div>
+  <p class="muted">Base rate $p_a = \Pr[Y=1 \mid A=a]$: how common $Y=1$ is in group $a$.</p>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 4. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>The Three Criteria</h1>
+  <div class="divider"></div>
+  <p class="subtitle">One conditional probability each</p>
+</div>
+
+<!-- 5. Demographic Parity -->
+<div class="slide">
+  <h2>Demographic Parity</h2>
+  <div class="divider"></div>
+  <p><em>Independence:</em> the prediction is independent of the group, $\hat Y \perp A$.</p>
+  <div class="def-card">
+    <h3>Definition</h3>
+    <div class="math-block" style="margin:6px 0;">$$\Pr[\hat Y = 1 \mid A = a] \;=\; \Pr[\hat Y = 1 \mid A = b].$$</div>
+  </div>
+  <p class="muted">Equal selection rates. Conditions on $\hat Y$ only; the true label $Y$ never appears.</p>
+  <div class="cite cite-left">Dwork, Hardt, Pitassi, Reingold, and Zemel, "Fairness Through Awareness", ITCS 2012.</div>
+</div>
+
+<!-- 6. Equalized Odds -->
+<div class="slide">
+  <h2>Equalized Odds</h2>
+  <div class="divider"></div>
+  <p><em>Separation:</em> the prediction is independent of the group <em>given</em> the truth, $\hat Y \perp A \mid Y$.</p>
+  <div class="def-card">
+    <h3>Definition (for each $y \in \{0,1\}$)</h3>
+    <div class="math-block" style="margin:6px 0;">$$\Pr[\hat Y = 1 \mid Y = y,\, A = a] \;=\; \Pr[\hat Y = 1 \mid Y = y,\, A = b].$$</div>
+  </div>
+  <p class="muted">$y=0$: equal false-positive rate. &nbsp; $y=1$: equal true-positive rate (equal opportunity is the $y=1$-only relaxation).</p>
+  <div class="cite cite-left">Hardt, Price, and Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016.</div>
+</div>
+
+<!-- 7. Calibration -->
+<div class="slide">
+  <h2>Calibration</h2>
+  <div class="divider"></div>
+  <p><em>Sufficiency:</em> the true label is independent of the group <em>given</em> the score, $Y \perp A \mid \hat S$.</p>
+  <div class="def-card">
+    <h3>Definition (for every score $s$)</h3>
+    <div class="math-block" style="margin:6px 0;">$$\Pr[Y = 1 \mid \hat S = s,\, A = a] \;=\; \Pr[Y = 1 \mid \hat S = s,\, A = b] \;=\; s.$$</div>
+  </div>
+  <p class="muted">A score of $s$ means a genuine $s$ chance of $Y=1$, in every group.</p>
+  <div class="cite cite-left">Chouldechova, "Fair Prediction with Disparate Impact", Big Data 2017.</div>
+</div>
+
+<!-- 8. The Three, Stacked -->
+<div class="slide">
+  <h2>The Three, Side by Side</h2>
+  <div class="divider"></div>
+  <p>Each criterion is one independence statement.</p>
+  <table>
+    <tr><th>Criterion</th><th>Independence</th><th>Conditions on</th></tr>
+    <tr><td>Demographic parity</td><td>$\hat Y \perp A$</td><td>nothing</td></tr>
+    <tr><td>Equalized odds</td><td>$\hat Y \perp A \mid Y$</td><td>truth $Y$</td></tr>
+    <tr><td>Calibration</td><td>$Y \perp A \mid \hat S$</td><td>score $\hat S$</td></tr>
+  </table>
+  <p class="muted">Parity fixes $\hat Y$; odds condition on $Y$; calibration conditions on $\hat S$.</p>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 9. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>The Impossibility Theorem</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Why two independence conditions collide</p>
+</div>
+
+<!-- 10. Formal Statement -->
+<div class="slide">
+  <h2>The Theorem, Formally</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Kleinberg, Mullainathan &amp; Raghavan (2017)</h3>
+    <p>Suppose the base rates differ, $p_a \neq p_b$, and the classifier is non-trivial (not a perfect predictor). Then <strong>no</strong> score can simultaneously satisfy calibration, equal false-positive rates, and equal false-negative rates across groups.</p>
+  </div>
+  <p class="muted">The only escapes: equal base rates $p_a = p_b$, or perfect prediction.</p>
+  <div class="cite cite-left">Kleinberg, Mullainathan, and Raghavan, "Inherent Trade-Offs in the Fair Determination of Risk Scores", ITCS 2017.</div>
+</div>
+
+<!-- 11. Base-Rate Algebra -->
+<div class="slide">
+  <h2>The Base-Rate Identity</h2>
+  <div class="divider"></div>
+  <p>Within a group, write $\text{PPV}$ = precision, $\text{FPR}$, $\text{FNR}$, base rate $p$. Counting the confusion cells gives an exact identity.</p>
+  <div class="math-block">$$\mathrm{FPR} \;=\; \frac{1-p}{p}\cdot\frac{1-\mathrm{PPV}}{\mathrm{PPV}}\,(1-\mathrm{FNR}).$$</div>
+  <p class="muted">Chouldechova's identity: $\mathrm{FPR}$, $\mathrm{FNR}$, and $\mathrm{PPV}$ are locked together by the base rate $p$.</p>
+  <div class="cite cite-left">Chouldechova, "Fair Prediction with Disparate Impact", Big Data 2017.</div>
+</div>
+
+<!-- 12. Proof Sketch -->
+<div class="slide">
+  <h2>Proof Sketch</h2>
+  <div class="divider"></div>
+  <div class="ta-algo" style="max-width:960px; margin:14px auto;">
+    <ol>
+      <li>Calibration forces the score's precision $\mathrm{PPV}$ to match each group's base rate — the same score, so the same $\mathrm{PPV}$ target.</li>
+      <li>The identity ties $(\mathrm{FPR}, \mathrm{FNR})$ to $\mathrm{PPV}$ and the group base rate $p$.</li>
+      <li>Fix $\mathrm{PPV}$ and demand equal $\mathrm{FPR}$ and equal $\mathrm{FNR}$: the identity then forces $p_a = p_b$.</li>
+      <li>Contrapositive: if $p_a \neq p_b$, the three cannot all hold.</li>
+    </ol>
+  </div>
+  <p class="muted">The conflict is arithmetic in the base rate, not a modeling defect.</p>
+</div>
+
+<!-- 13. A Worked Numeric Wedge -->
+<div class="slide">
+  <h2>A Numeric Wedge</h2>
+  <div class="divider"></div>
+  <p>Hold the score calibrated across two groups with $p_a = 0.50$, $p_b = 0.25$.</p>
+  <table>
+    <tr><th>Quantity</th><th>Group A</th><th>Group B</th></tr>
+    <tr><td>Base rate $p$</td><td>$0.50$</td><td>$0.25$</td></tr>
+    <tr><td>Calibrated?</td><td>yes</td><td>yes</td></tr>
+    <tr><td>False-positive rate</td><td>$0.42$</td><td>$0.20$</td></tr>
+    <tr><td>False-negative rate</td><td>$0.28$</td><td>$0.46$</td></tr>
+  </table>
+  <p class="muted">No single threshold closes both error gaps: the base-rate difference forces the wedge.</p>
+</div>
+
+<!-- 14. What Survives -->
+<div class="slide">
+  <h2>What the Theorem Does Not Say</h2>
+  <div class="divider"></div>
+  <p>The wall is about <strong>simultaneous</strong> satisfaction, not about any one criterion.</p>
+  <ul class="arrow">
+    <li>Any <em>two</em> of the three remain jointly achievable</li>
+    <li>Equal base rates dissolve the conflict entirely</li>
+    <li>Approximate versions trade a bounded slack in one for the others</li>
+  </ul>
+  <div class="highlight"><p>The choice of <em>which two</em> is a value judgment; the impossibility is the math.</p></div>
+</div>
+
+<!-- 15. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$p_a \neq p_b$</div>
+  <p class="big-word-sub">Different base rates make "all three" a contradiction.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 15</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

@@ -40,6 +40,22 @@ Fix: remove the `position:relative`. Anchor decorative content to `right`/`top` 
 
 Fix: anchor decorative content (images, floats, overlays) to `right` and/or `top`. Leave ~40 px clear in the bottom-left.
 
+## `.no-footer` looks undefined but is a deck.js engine class
+
+Symptom: an audit flags `class="slide end-slide no-footer"` as an unknown/undefined class — it appears in no CSS file — and someone "cleans it up".
+
+Cause: `no-footer` is consumed by `reference/deck.js` (the brand-footer injector skips slides tagged with it), not by CSS. Every deck's closer uses it. Removing it makes the Yonsei wordmark appear on end slides.
+
+Fix: leave it. When auditing for unknown classes, check `deck.js` as well as `deck.css` before deleting.
+
+## Hex colors inside SVG attributes are house style, not violations
+
+Symptom: an audit flags `fill="#003876"` / `stroke="#d94040"` in inline SVGs as "hardcoded colors" and proposes tokenizing them to `var(--…)`.
+
+Cause: SVG *presentation attributes* (`fill=`, `stroke=`) cannot take CSS `var()` — only `style="fill: var(--…)"` can. The polished reference decks (lec01/lec02 of trustworthy-ai, the dp series) use hex in SVG attributes throughout, and `lint-deck.py` deliberately passes them. The hardcoded-color rule applies to HTML inline `style=` on prose/components, not SVG attribute values.
+
+Fix: keep hex in SVG attributes, matched to the token values (`#003876` = `--yonsei-blue`, `#d94040` = `--warn`, `#2e8b57` = `--success`, `#666`/`#6b7280` = grays, `#e8ecf0` = `--slate`/light fill).
+
 ## `$g_1$` shows as literal text → label is in SVG `<text>`
 
 Symptom: math inside a diagram renders as `$g_1$` instead of italic *g* with a subscript.
@@ -423,6 +439,20 @@ Fix:
 - The authoring source (`<talk>/<talk>.html` reading `figs/*.png`) is unaffected — only the bundled distribution shrinks.
 - After downsampling, re-run `python3 scripts/bundle.py <talk>/<talk>.html` and confirm slides still look sharp at projector zoom.
 - Authoring decks with full-res captures are fine; the rule only applies before distributing the standalone.
+
+## Image slide shrinks to ~55% in headless print only → print snapshot fired before images laid out
+
+Symptom: in a large deck, a slide with an embedded raster figure renders scaled to ~55% and anchored top-left (wide white margins) in the **headless** `--print-to-pdf` output — and thus in the `/audit-and-edit-deck` screenshot pass. The slide is perfect in the browser, perfect in a manual `Cmd+P` → Save-as-PDF, and perfect when the same slide is rendered in a tiny throwaway deck.
+
+Cause: **NOT the border, the image bytes, the DPI, the cache, or the markup** — all of those were ruled out by isolation (same image + same markup in a 2-slide test prints full-size). The real cause is timing: in a big deck (50+ slides, many KaTeX renders + several images), headless Chrome takes the print snapshot before every `<img>` has finished layout, so an unlaid-out image reports a wrong intrinsic size and Chrome scales the whole `@page` to "fit". A short `--virtual-time-budget` makes it worse.
+
+Fix (render flags, not slide edits — the slide is fine):
+```bash
+"…/Google Chrome" --headless=new --incognito --user-data-dir=/tmp/fresh-$RANDOM \
+  --virtual-time-budget=30000 --run-all-compositor-stages-before-draw \
+  --print-to-pdf=deck.pdf --print-to-pdf-no-header "file://$(realpath deck.html)"
+```
+The `--virtual-time-budget=30000` (30s) + `--run-all-compositor-stages-before-draw` let images finish before the snapshot; the shrunk slide then renders full-size. **Do not "fix" the slide** (removing borders, shrinking the image, splitting) — that's chasing a render artifact. Confirm any suspected print-shrink in a manual Chrome `Cmd+P` first; if that's clean, it's this timing artifact and the deck ships fine. Audit tip: when a screenshot pass flags a whole-slide shrink on an image slide, re-render just that deck with the flags above before editing anything.
 
 ## Duplicate page numbers → per-deck `.page-num` injector clashes with `.slide-num`
 

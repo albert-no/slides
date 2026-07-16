@@ -26,7 +26,14 @@ reference/                  canonical CSS/JS/fonts/logo (single source of truth)
 scripts/
   new-talk.sh               scaffold a new deck (--course for lectures)
   bundle.py                 produce <name>.standalone.html for distribution
-  lint-deck.py              validate against canonical CSS
+  lint-deck.py              validate against canonical CSS + mechanical style
+                            rules (banned .tiny/.small-on-prose, shrunk font-size,
+                            '<' inside math, KaTeX delimiter escape, $ in SVG
+                            text, page-num injector, mid-sentence dashes,
+                            adjacent math-blocks)
+  find-wordy.py             flag <p>/<li> over the word ceiling (7×7 rule)
+  find-dense.py             flag slides with too many words/bullets/paragraphs
+  outline-lint.py           verify OUTLINE.md file:line pointers aren't stale
 OUTLINE.md                  per-folder content index — root, every topic folder,
                             and every leaf subfolder. See "Outlines" below.
 ```
@@ -35,7 +42,9 @@ Only the authoring source (and its image assets) are committed. `<talk>.standalo
 
 ## Design rules
 
-The design rule, type scale, color tokens, components, and recipes live in **`DESIGN_SYSTEM.md`**. Read it before editing slides. The 4 ranked priorities (font sizes → line breaks → overflow → empty space) are non-negotiable.
+The design rule, type scale, color tokens, components, and recipes live in **`DESIGN_SYSTEM.md`**. Read it before editing slides — start at its Quick reference table. The 4 ranked priorities (font sizes → line breaks → overflow → empty space) are non-negotiable. For a **new deck**, also read `DESIGN_SYSTEM.md` → **Deck anatomy** (canonical slide order, slide-count norms, and which shipped deck to imitate per genre) and budget each slide with the **Vertical budget** table (Priority 2) at draft time.
+
+**Read policy**: authoring/editing slides → `DESIGN_SYSTEM.md`; debugging a rendering symptom → `GOTCHAS.md`. When both cover a topic, `DESIGN_SYSTEM.md` is canonical.
 
 **Default to visually rich slides.** Every content slide should aim to carry a diagram, figure, chart, or SVG — text-only bullets are a fallback, not the goal. Build inline HTML+SVG concept diagrams (drawn big — `max-width` ~820–920px, large labels), reuse or capture real paper figures where they help, and when a real figure or richer diagram can't be made now, leave a `<!-- TODO real figure: … -->` marker on the slide rather than shipping bare bullets. Keep each slide self-contained (no "next week"/"(Wk N)" cross-references). Full policy in `DESIGN_SYSTEM.md` → **Visual richness**.
 
@@ -54,9 +63,12 @@ For Marp, copy `template.md` and run `marp <file>.md --pdf`.
 
 1. Edit `<talk>/<talk>.html`.
 2. Open the file in Chrome to preview (`reference/` must be alongside, which it is in this repo).
-3. `python3 scripts/lint-deck.py --all` catches unknown classes and hardcoded colors.
-4. **Update `OUTLINE.md`.** Whenever you add a slide, remove a slide, rename a section, change a section's line range, or add/remove a theorem the outline cites, update the leaf-subfolder `OUTLINE.md` (e.g. `courses/privacy/lectures/04-mia/OUTLINE.md`). If the change introduces a new topic, file, or cross-reference, also update the parent folder's `OUTLINE.md` and the root `OUTLINE.md` quick-lookup table. Line numbers must stay accurate — outlines are read as authoritative pointers.
-5. To distribute: `python3 scripts/bundle.py <talk>/<talk>.html` produces `<talk>.standalone.html` — single self-contained file (~4 MB, gitignored), no network deps.
+3. `python3 scripts/lint-deck.py <deck>.html` (or `--all`) catches unknown classes, hardcoded colors, and the mechanical style rules (see `scripts/` listing above). Errors (`<` inside math, KaTeX delimiter escape) break rendering — fix immediately; warnings are Priority-0/1 violations.
+4. After drafting prose-heavy slides, `python3 scripts/find-wordy.py <deck>.html` flags bullets over the word ceiling — compress to noun phrases before previewing.
+5. **Update `OUTLINE.md`.** Whenever you add a slide, remove a slide, rename a section, change a section's line range, or add/remove a theorem the outline cites, update the leaf-subfolder `OUTLINE.md` (e.g. `courses/privacy/lectures/04-mia/OUTLINE.md`). If the change introduces a new topic, file, or cross-reference, also update the parent folder's `OUTLINE.md` and the root `OUTLINE.md` quick-lookup table. Line numbers must stay accurate — outlines are read as authoritative pointers. Verify with `python3 scripts/outline-lint.py` (checks every cited `file:line` still exists and is in range).
+6. To distribute: `python3 scripts/bundle.py <talk>/<talk>.html` produces `<talk>.standalone.html` — single self-contained file (~4 MB, gitignored), no network deps.
+
+**Companion files (lectures).** A deck may carry a `<deck>-note.html` speaker script and, when the audience is pitched below the math's level, an optional `<deck>tech.html` technical supplement holding the formal math the main deck keeps as a picture. Both are documented in `DESIGN_SYSTEM.md` (→ "Companion note files", "Technical supplement decks"). Register supplements in the leaf `OUTLINE.md`.
 
 ## Screenshot audit (on request)
 

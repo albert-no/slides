@@ -28,7 +28,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
   - `lectures/06-watermark/` — LLM watermarking (1 deck: green-list, distortion-free, undetectable, robust, radioactivity)
   - `exam/` — homework (HW1–4), midterms 2025–26, finals 2024–25 + 2026/27 drafts (`.tex`/`.pdf`/`.html`, shared style files)
   - `overleaf/` — frozen Overleaf archive: lecture-note `.tex` (`1_dp`/`2_difffusion`/`3_watermark`/`4_MIA`), `hw_exam/` (all HW + exams), `images/`, `old/` drafts, `.bib`/style files
-- **`courses/trustworthy-ai/`** — Trustworthy AI course (general-audience graduate, 15 weeks × 1.5 hr). Concepts-first survey: each lecture is formal definition → history → 2025–26 frontier, plus an optional Colab demo. Decks live flat (`lecNN-*.html`). Five modules: Foundations (Wk 1) · Privacy & Data (2–5) · Reliability (6–7) · Security (8–11) · Provenance & Fairness (12–14) · Synthesis (15). **All 15 lectures + 4 backup decks drafted**, each with a companion `-note.html` speaker script (per-slide key takeaways). Lec 1–2 are polished (screenshot-audited, real paper figures); lec 3–15 + backups are solid first drafts (SVG diagrams, cited papers, figure-TODO markers). Backups: sycophancy, copyright, agentic autonomy, model stealing. The light general-audience pass over topics treated rigorously in `courses/privacy/`. See `courses/trustworthy-ai/OUTLINE.md`.
+- **`courses/trustworthy-ai/`** — Trustworthy AI course (**junior/senior undergrad**, mixed majors, 15 weeks × 1.5 hr). Concept-first: each lecture is motivation → foundational works → 2025–26 frontier, ≤1 intuitive formula per concept, no proofs, plus an optional Colab demo. Decks live flat (`lecNN-*.html`). Five modules: Foundations (Wk 1) · Privacy & Data (2–5) · Reliability (6–7) · Security (8–11) · Provenance & Fairness (12–14) · Synthesis (15). **All 15 lectures + 4 backups + 15 technical supplements (`lecNNtech.html`) — screenshot-audited, real cited paper figures embedded, lint-clean** (no figure-TODO markers remain). Each lecture has a `-note.html` speaker script; each has an optional `lecNNtech.html` holding the formal math the main deck keeps as a picture. Backups: sycophancy, copyright, agentic autonomy, model stealing. The light undergrad pass over topics treated rigorously in `courses/privacy/`. See `courses/trustworthy-ai/OUTLINE.md`.
 
 ### `talks/` — standalone research presentations
 
@@ -45,10 +45,10 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Chain rule / DPI / Fano | `courses/infotheory/lectures/01-entropy/entropy2-joint-mi-fano.html:118, :368, :438` |
 | Mutual information (discrete) | `courses/infotheory/lectures/01-entropy/entropy2-joint-mi-fano.html:227` |
 | Kraft / Kraft–McMillan / Shannon / Huffman | `courses/infotheory/lectures/02-lossless/lossless1-codes.html:157, :198, :268, :413` |
-| AEP / source coding theorem / arithmetic coding | `courses/infotheory/lectures/02-lossless/lossless2-aep-arithmetic.html:84, :204, :405` |
-| Markov entropy rate / LZ78 | `courses/infotheory/lectures/02-lossless/lossless3-markov-universal.html:188, :355` |
+| AEP / source coding theorem / arithmetic coding | `courses/infotheory/lectures/02-lossless/lossless2-aep-arithmetic.html:84, :204, :256` |
+| Markov entropy rate / LZ78 | `courses/infotheory/lectures/02-lossless/lossless3-markov-universal.html:188, :246` |
 | Differential entropy + bin discretization | `courses/infotheory/lectures/03-diffentropy/diffentropy1-foundations.html:84, :96` |
-| Gaussian MaxEnt / Hadamard / EPI | `courses/infotheory/lectures/03-diffentropy/diffentropy2-maxent-gaussian.html:165, :248, :367` |
+| Gaussian MaxEnt / Hadamard / EPI | `courses/infotheory/lectures/03-diffentropy/diffentropy2-maxent-gaussian.html:165, :248, :272` |
 | Shannon–Hartley / water-filling / I-MMSE | `courses/infotheory/lectures/03-diffentropy/diffentropy3-mi-awgn.html:177, :293, :385` |
 | Score function / Tweedie's formula | `courses/privacy/lectures/02-generative/diffusion1-foundations.html:362-425`; theorem at `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:121` |
 | DDPM forward + VLB derivation | `courses/privacy/lectures/02-generative/diffusion2-ddpm.html:189-333`; `courses/infotheory/lectures/07-diffusion/diff2-diffusion.html:153-212` |
@@ -70,8 +70,8 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | GAN $\equiv$ Jensen–Shannon minimization (theorem + proof) | `courses/infotheory/lectures/06-divergence/div1-fdivergence-gan.html:330, :341-350` |
 | Hockey-stick divergence (DP connection) | `courses/infotheory/lectures/06-divergence/div1-fdivergence-gan.html:166` |
 | Fisher divergence + score function | `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:91, :141` |
-| Denoising score matching theorem (Vincent 2011) | `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:200, :211-235` |
-| Diffusion ELBO $\equiv$ DSM theorem | `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:315`; cross-ref `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:211` |
+| Denoising score matching theorem (Vincent 2011) | `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:193, :220-253` |
+| Diffusion ELBO $\equiv$ DSM theorem | `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:198` (capstone); cites Vincent from `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:193` |
 | MIA foundations (Homer, evaluation metrics) | `courses/privacy/lectures/04-mia/mia1-foundations.html` |
 | Shadow models (Shokri / LOGAN / seq2seq) | `courses/privacy/lectures/04-mia/mia2-shadow.html` |
 | MIA theory (Yeom / Sablayrolles / ML-Leaks / Nasr) | `courses/privacy/lectures/04-mia/mia3-theory.html` |
@@ -118,9 +118,10 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | dgMARK (diffusion-LLM watermarking, ICML 2026) | `talks/kics260521dllm/kics260521dllm.html:707` |
 | Reversal curse in MDMs | `talks/kics260521dllm/kics260521dllm.html:720` |
 | Threat-model framing (knowledge × timing), trust dimensions | `courses/trustworthy-ai/lec01-introduction.html:333, :296` |
-| $(\varepsilon,\delta)$-DP intuition pass (general audience) | `courses/trustworthy-ai/lec02-privacy-dp.html:527` |
-| Statistical indistinguishability (heights example, intuition) | `courses/trustworthy-ai/lec02-privacy-dp.html:637` |
-| DP-SGD intuition (clip + noise, general audience) | `courses/trustworthy-ai/lec02-privacy-dp.html:934` |
+| $(\varepsilon,\delta)$-DP intuition (undergrad) / formal | `lec02-privacy-dp.html:457` · formal in `lec02tech.html` |
+| Statistical indistinguishability (heights example, intuition) | `courses/trustworthy-ai/lec02-privacy-dp.html:581` |
+| DP-SGD intuition (clip + noise) / formal algorithm | `lec02-privacy-dp.html:853` · formal in `lec02tech.html` |
+| Formal math per lecture (definitions, derivations, algorithms) | `courses/trustworthy-ai/lecNNtech.html` (15 supplements) |
 
 ## Cross-references
 
@@ -130,7 +131,7 @@ Same topic, different decks (use the more recent / more detailed):
 - **Diffusion from-scratch (Bayes route)**: `courses/privacy/lectures/02-generative/diffusion1-foundations.html` (Taylor + complete-square proof, less abstract)
 - **Tweedie**: brief `courses/privacy/lectures/02-generative/diffusion1-foundations.html:374`; with proof `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:135`
 - **$f$-divergence variational dual**: brief in `courses/infotheory/lectures/05-mi/mi1-bounds.html:261` (KL instances); full development in `courses/infotheory/lectures/06-divergence/div1-fdivergence-gan.html:121-300`
-- **Score matching $\equiv$ diffusion training**: brief cross-ref `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:211`; full proof `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:200-326`
+- **Score matching $\equiv$ diffusion training**: Vincent DSM theorem + proof `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:193-253`; ELBO $\equiv$ DSM capstone `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:156-209`
 
 ## Companion notes pattern
 
@@ -148,3 +149,4 @@ Same topic, different decks (use the more recent / more detailed):
 - Research talks live at `talks/<name>/<deck>.html` — reference path `../../reference/`.
 - Build: `python3 scripts/bundle.py <path>/<deck>.html` → `<deck>.standalone.html` (gitignored).
 - Lint: `python3 scripts/lint-deck.py --all`.
+- Outline pointers: `python3 scripts/outline-lint.py` verifies every `file:line` cited in any `OUTLINE.md` still exists and is within the file's length. Run it after edits that shift line numbers.

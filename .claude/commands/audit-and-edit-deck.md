@@ -20,10 +20,13 @@ If no path is given, default to the single `.html` deck under the current workin
    mkdir -p /tmp/<basename>-shots && cd /tmp/<basename>-shots
    rm -f deck.pdf slide-*.png
    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-     --headless --disable-gpu --no-sandbox \
+     --headless=new --incognito --user-data-dir=/tmp/fresh-$RANDOM --disk-cache-size=1 \
+     --disable-gpu --no-sandbox \
+     --virtual-time-budget=30000 --run-all-compositor-stages-before-draw \
      --print-to-pdf=deck.pdf --print-to-pdf-no-header \
      "file://$(realpath <deck>.html)"
    ```
+   **The `--virtual-time-budget=30000 --run-all-compositor-stages-before-draw` flags are required.** Without them, a large deck's `<img>` slides can be snapshotted before images finish layout, so Chrome scales the whole page to ~55% (anchored top-left, wide margins) — a **render artifact, not a slide defect**. If you see a whole-slide shrink on an image slide, re-render with these flags before "fixing" the slide; also confirm in a manual `Cmd+P` (which never shows it). See `GOTCHAS.md` → "Image slide shrinks to ~55% in headless print".
 2. **Split into PNGs** (one per slide) via poppler:
    ```bash
    pdftoppm -png -r 100 deck.pdf slide

@@ -2,6 +2,8 @@
 
 Issues that have eaten time. Search here before re-debugging.
 
+**Division of labor**: this file is *symptom → cause → fix/pointer* for debugging. The normative authoring rules live in `DESIGN_SYSTEM.md` — when an entry here and DESIGN_SYSTEM overlap, DESIGN_SYSTEM is canonical. At generation time read DESIGN_SYSTEM; come here when something looks wrong.
+
 ## Fonts look small → canonical tokens were shadowed
 
 Symptom: body / headings render smaller than the Kangwook reference (`reference/kangwook*.png`) or smaller than a sibling deck.
@@ -164,7 +166,7 @@ Symptom: `"X — Y"` wraps with the dash on its own line, or one clause orphans 
 
 Cause: em-dash (`—`), en-dash (`–`), and double-hyphen (`--`) are strong wrap points at slide font sizes.
 
-Fix: rewrite the connector. Colon for definitions/expansions. Comma for soft pause. Period for full stop. Parens for asides. Keep dashes only as part of a technical glyph (`7–8B`, `fill-in-the-middle`, arrows `→`, `↔`). Audit: `grep -nE ' — | -- | – ' <deck>.html` should be ~empty.
+Fix: rewrite the connector (colon / comma / period / parens) — rule in DESIGN_SYSTEM → Priority 1 ("Em-dash mid-sentence"). `lint-deck.py` flags mid-sentence dashes in prose; manual audit: `grep -nE ' — | -- | – ' <deck>.html` should be ~empty outside `.cite` lines.
 
 ## Dangling single words at end of line
 
@@ -216,16 +218,13 @@ Symptom: two adjacent `math-block` divs feel disconnected; the eye reads them as
 
 Cause: `math-block` carries its own padding/margin; back-to-back blocks add up. `aligned` keeps lines tight via row-skip spacing, which is what stacked-but-related equations need.
 
-Fix:
-- Two related lines → one `math-block` with `\begin{aligned} … \\ … \end{aligned}`.
-- One key conclusion → its own `math-block` so the visual gap becomes signal.
-- Pattern documented in `DESIGN_SYSTEM.md` → Math-heavy → Stacked equations.
+Fix: one `math-block` with `\begin{aligned}` for related lines; a separate block only for a key conclusion (gap becomes signal). Rule, exception, and the margin override for unavoidable adjacent blocks: DESIGN_SYSTEM → Math-heavy → Stacked equations.
 
 ## Aligned line-count budget
 
 Symptom: a slide with two math-blocks plus 2–3 prose lines clips the brand footer.
 
-Cause (rule of thumb): each `aligned` line ≈ 50–60 px rendered; each `math-block` adds ~30 px of padding. A 3-line aligned block ≈ 200 px. Two such blocks + h2/divider/two paragraphs ≈ 720 px before footer reservation, so almost any extra line overflows.
+Cause: each `aligned` line ≈ 50–60 px rendered; each `math-block` adds ~30 px of padding. Full px table: DESIGN_SYSTEM → Priority 2 → **Vertical budget**.
 
 Fix: **at most one 3-line `aligned` block + one one-line `math-block` per content slide**. If two derivation steps both need 3 lines, split the slide. Don't shrink type (Priority 0) and don't squeeze vertical rhythm (Priority 2).
 
@@ -243,11 +242,7 @@ Symptom: a sentence like "For large $N$, $N\sigma^2$ dominates" reads awkwardly 
 
 Cause: **not** "math after a comma" in general — math at the start of a clause is usually fine. The failure is *math-comma-math*: when the previous clause ends in a glyph and the next clause also begins with a glyph, they collide visually across the comma. Two adjacent symbols read as one expression.
 
-Fix: insert a noun in the second clause so the comma sits between text and text:
-- "For large $N$, **the second term** $N\sigma^2$ dominates."
-- Or restructure: "$N\sigma^2$ dominates **for large $N$**." (math no longer flanks the comma).
-
-If the previous clause ended in prose, starting the next clause with math is fine — leave it alone.
+Fix: insert a noun in the second clause, or restructure so the boundary isn't math-comma-math — rule and examples in DESIGN_SYSTEM → Priority 1 ("Math-comma-math"). If the previous clause ended in prose, math at the start of the next clause is fine — leave it alone.
 
 ## Outline ≠ Recap
 
@@ -255,7 +250,7 @@ Symptom: two near-identical bulleted slides — one before the steps and one aft
 
 Cause: outline and recap serve different jobs. Outline previews step *labels* (a roadmap); recap shows the equation *chain* (the unified result).
 
-Fix: the recap is one `math-block` with `\begin{aligned}` and `\stackrel{(k)}{=}` / `\stackrel{(k)}{\approx}` labels above each relation symbol. The reader sees Bayes flowing through steps 1–4 to the Gaussian. Pattern documented in `DESIGN_SYSTEM.md` → Math-heavy → Multi-step proof pattern.
+Fix: recap = one `aligned` block with `\stackrel{(k)}{=}` labels — DESIGN_SYSTEM → Math-heavy → Multi-step proof pattern.
 
 ## Underbrace level mismatch
 
@@ -263,13 +258,7 @@ Symptom: an equation labels `\underbrace{\sum_n -\log\frac{p_\theta}{q}}_{\sum L
 
 Cause: wrong abstraction level. The natural reasoning object is the per-step `L_{n-1}`, not the whole sum.
 
-Fix: pull the `\sum` outside, label each summand:
-
-```latex
-\sum_{n=2}^{N} \underbrace{\bigl(-\log\tfrac{p_\theta}{q}\bigr)}_{L_{n-1}}
-```
-
-Pattern documented in `DESIGN_SYSTEM.md` → Math-heavy → Underbrace labels.
+Fix: pull the `\sum` outside, label each summand — example in DESIGN_SYSTEM → Math-heavy → Underbrace labels.
 
 ## Algorithm slides drift → start centered, no side diagram
 
@@ -277,7 +266,7 @@ Symptom: an algorithm slide ends up as a 2-column layout with the algorithm on t
 
 Cause: the algorithm box is short, the slide feels empty, and the natural reflex is to fill the right side.
 
-Fix: default to a single styled box, centered with `max-width: 880–1040px; margin: 32–36px auto`. Empty space below is fine (Priority 3 only forbids middle voids). Add a right-column visual *only* if it conveys real new information beyond what's in the algorithm. Pattern documented in `DESIGN_SYSTEM.md` → Recipes → Algorithm slide.
+Fix: single styled box, centered; empty space below is fine. Full recipe (widths, counter CSS): DESIGN_SYSTEM → Recipes → Algorithm slide.
 
 ## Stale `data-screen-label`
 
@@ -299,7 +288,7 @@ Symptom: a math-block on page N renders as raw `$$…$$` text or random italiciz
 
 Cause: KaTeX runs with `throwOnError: false`, so a parse failure doesn't crash but corrupts the auto-render walker's cursor. The most common single trigger is **literal `<` inside math being parsed by the HTML lexer as the start of a tag** — `X_{<i}`, `\sum_{i<j}`, `0<D\le\sigma^2` — which silently swallows everything until the next `>`. KaTeX never sees the original math.
 
-First-pass diagnosis when the user reports cascading breakage:
+First-pass diagnosis when the user reports cascading breakage: `python3 scripts/lint-deck.py <deck>.html` errors on literal `<` inside math (and on the delimiter-escape bug below). Manual grep:
 ```
 grep -nE '\$[^$]*<[a-zA-Z]' <deck>.html
 grep -nE '\$\$[^$]*<[a-zA-Z]' <deck>.html
@@ -359,9 +348,9 @@ If the wrapper hosts absolute-positioned KaTeX overlay spans (`top: %`, `left: %
 
 Symptom: a slide with two stacked math-blocks plus a `.highlight` overflows past the brand-footer, even though "two math-blocks + highlight" was supposed to fit per the visual element budget.
 
-Cause: each `\underbrace{expression}_{label}` adds the label height *below* the equation baseline — roughly 25–30 px of extra vertical real estate the planner forgot. Two underbraced math-blocks ≈ 60 px of hidden cost.
+Cause: each `\underbrace{expression}_{label}` adds the label height *below* the equation baseline — roughly 25–30 px of extra vertical real estate the planner forgot. Two underbraced math-blocks ≈ 60 px of hidden cost. Budgeted in DESIGN_SYSTEM → Priority 2 → **Vertical budget**.
 
-Fix: when budgeting, treat each underbraced equation as a half-line bonus on top of the standard `math-block` height (~80 px → ~110 px). If two underbraced math-blocks plus a highlight don't fit, inline one of the equations into prose (e.g., `Variances add: $(1-\bar\alpha-\sigma^2) + \sigma^2 = 1-\bar\alpha$.`) or drop one underbrace pair. Pattern complements (does not replace) the "Aligned line-count budget" GOTCHA — that one bounds rows; this one bounds row *decoration*.
+Fix: treat each underbraced equation as ~110 px instead of ~80 px. If two underbraced math-blocks plus a highlight don't fit, inline one of the equations into prose (e.g., `Variances add: $(1-\bar\alpha-\sigma^2) + \sigma^2 = 1-\bar\alpha$.`) or drop one underbrace pair.
 
 ## Empty bottom half of slide is not a layout bug
 
@@ -388,10 +377,7 @@ Symptom: a `.cite` block wraps mid-title; the second line orphans a venue or yea
 
 Cause: `.cite` is centered and capped at 60% slide width. Long titles or two concatenated citations overflow that cap.
 
-Fix:
-- **One dedicated line per citation.** One paper → one short line. Two papers → two `<br>`-separated lines inside one `.cite` (or two adjacent `.cite` blocks).
-- If the title is long and the slide is dense bullets, drop to short form: `Author et al., NameOrAcronym, Venue YYYY.` (e.g., `Rafailov et al., DPO, NeurIPS 2023.`). Reserve the full `Author et al., "Title", Venue YYYY.` form for theorem / lemma slides where the cite anchors the formal statement.
-- Full rule in DESIGN_SYSTEM → §"Citations".
+Fix: one dedicated line per citation; drop to the short form on dense slides; `.cite-left`/`.cite-right` escape hatches when the cap forces a wrap. Full rule and tiers: DESIGN_SYSTEM → Conventions → Citations.
 
 ## Tall image collides with `.cite` + brand footer
 

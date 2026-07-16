@@ -15,7 +15,7 @@ Math-conference variant (more SDE/SEDD/RADD theory, formal DAPD, compressed lab 
 
 ### Sections (34 slides total)
 
-All citations positioned beside the brand footer (bottom-left), left-aligned and full-width — see local `<style>` override at top of `dllm.html`.
+All citations positioned beside the brand footer (bottom-left), left-aligned and full-width — see local `<style>` override at top of `kics260521dllm.html`.
 
 - **Framing**
   - Title slide

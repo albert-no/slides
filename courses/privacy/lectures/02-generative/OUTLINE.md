@@ -247,7 +247,7 @@ Companion notes file: `diffusion3-sde-score-note.html` (full proof derivations, 
 
 **Privacy-series hooks established here:**
 - $p_\theta(\cdot\mid x_{<t})$ — central object referenced by every subsequent deck
-- Per-token loss $\ell_t$ — the leak signal in MIA (`privacy/lectures/04-mia/mia5-llm.html`) and memorization (`privacy/lectures/03-memorization/memorization.html`)
+- Per-token loss $\ell_t$ — the leak signal in MIA (`privacy/lectures/04-mia/mia5-llm.html`) and memorization (`privacy/lectures/03-memorization/memorization-llm.html`)
 - Sampling step — where watermarks (`privacy/lectures/06-watermark/watermark.html`) modify outputs
 - Weight edit on conditionals — unlearning (`privacy/lectures/05-unlearning/unlearning1-foundations.html`, `unlearning2-llm.html`)
 

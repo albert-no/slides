@@ -12,6 +12,9 @@ Canonical rules for slide decks. **Audience**: academic conference talks and mas
 
 | What I want to do | Where to look |
 |---|---|
+| Start a new deck / order the slides | Deck anatomy |
+| Pick a deck to imitate for a genre | Deck anatomy → Exemplars |
+| Predict overflow before rendering | Priorities → Vertical budget |
 | Add a content slide | Recipes → Content slide |
 | State a theorem rigorously | Math-heavy → Theorem |
 | Show a proof rigorously | Math-heavy → Proof |
@@ -21,10 +24,18 @@ Canonical rules for slide decks. **Audience**: academic conference talks and mas
 | Stack two related equations | Math-heavy → Stacked equations |
 | Substitute variables back into a result | Math-heavy → Substitution |
 | Label terms in a long equation | Math-heavy → Underbrace labels |
+| State a prerequisite before deriving from it | Math-heavy → Recall before derive |
 | Inline / display math | Recipes → Math slide |
 | Add an exercise next to its content | Recipes → Inline exercise |
 | Show an algorithm cleanly | Recipes → Algorithm slide |
+| Show code / pseudocode | Recipes → Code / pseudocode block |
 | Visualize a chain / dependency | Recipes → Chain diagram |
+| Put a figure next to bullets | Recipes → Image + bullets |
+| Let a dense figure breathe (own slide) | Recipes → Image-first / description-follows |
+| Overlay math labels on an SVG | Recipes → KaTeX overlays on SVG |
+| Add a visual (or mark one as TODO) | Visual richness |
+| Move detail off the slide | Companion note files |
+| Formal math for a concept-first course | Technical supplement decks |
 | Cite a paper | Components → `.cite` + Recipes → Paper-overview |
 | Section divider | Recipes → Section divider |
 | Title slide / Closer | Recipes → Title / Closer |
@@ -86,6 +97,23 @@ For multi-slide proofs, a "(continued)" `h2` and a brief one-line recap is the c
 
 **Visual element budget.** A content slide gets `h2` + `divider` + at most **5 child elements**. A `.math-block` counts as 1 (taller than a prose line). A `<table>` counts by row count (header + N data rows). A `.highlight` counts as 1 regardless of internal `<p>` count. **If a slide carries `.math-block` + `<table>` + `.highlight` together, it's already over budget — split before previewing.** This rule predicts overflow without rendering; honor it at draft time.
 
+**Vertical budget (px arithmetic).** When the element budget is ambiguous, sum the rendered heights. Rule-of-thumb costs (all approximate; canonical numbers are what the browser renders):
+
+| Element | Vertical cost |
+|---|---|
+| `h2` + `.divider` header block | ~110 px |
+| One prose line (`p` / `li` at body size) | ~40 px |
+| `.math-block`, single line | ~80 px (equation ~50 px + ~30 px padding/margin) |
+| Each additional `aligned` row | +50–60 px |
+| `\underbrace` under an equation | +25–30 px per equation |
+| `<table>` row (header or data) | ~55 px |
+| `.highlight` (one short line) | ~70 px |
+| `.card` wrapper | +~30 px over its content |
+| Image | by layout: 470 px solo · 380–430 px beside bullets · 320–380 px stacked (see Recipes → Image + bullets) |
+| Bottom reserve (`.brand-footer`, plus `.cite` if present) | ~40 px / ~80 px |
+
+Budget available for body content: 720 px − slide padding (56 top + 48 bottom) − header block − bottom reserve ≈ **430–470 px**. Worked example: a 3-line `aligned` block (~200 px) + a 1-line `math-block` (~80 px) + two prose lines (~80 px) + a `.highlight` (~70 px) ≈ 430 px — exactly at the edge, which is why the ceiling is *at most one 3-line `aligned` block + one one-line `math-block` per slide*. Anything beyond that sum: split the slide.
+
 ### 3. Empty space — no middle voids
 
 Empty space at the *bottom* of a slide is fine. Empty space *in the middle* is not.
@@ -110,6 +138,46 @@ Empty space at the *bottom* of a slide is fine. Empty space *in the middle* is n
 8. **Spell out acronyms on first appearance.** The first slide that introduces a method/metric must expand the acronym inline — `SSCD (Self-Supervised Copy Detection)`, `RTA (Random Token Addition)`, `MV / RV / TV (Matching / Retrieval / Template Verbatim)`. After that, the bare acronym is fine. Applies to per-deck acronyms; canonical ones the audience already knows (LLM, MIA, DP, KL, MSE) don't need expansion. The expansion goes in the slide body where the term first appears, not in a separate glossary slide.
 9. **Visual-first — aim for a visual on every slide (default).** Prefer a diagram, figure, chart, schematic, or worked-math block over a text-only slide. The target is a *visually rich* deck: most content slides carry an exhibit and text recedes to a short framing line. When drafting, ask "what's the picture?" before "what are the bullets?". Build visuals as inline HTML+SVG, pull in real paper figures where they help, or leave a `TODO real figure` marker — full policy in **Visual richness** below. This does **not** override Priority 1's *one exhibit per slide*: visual-rich means *a* visual, not a collage.
 10. **Self-contained slides (independent modules).** In a multi-lecture course where slides may be reordered or reused, each slide must stand on its own. Drop forward/backward course references — no "next week", "previously", "(Wk N)", "see Lecture 3", "as we saw". State the point on the slide itself. The only place a week index belongs is a syllabus / course-map slide.
+
+---
+
+## Deck anatomy
+
+Canonical slide order for a full deck:
+
+1. **Title slide** (`.title-slide`) — logo, `.pill` talk-type, h1, subtitle, speaker line.
+2. **TOC** (`.toc-list`) — required when the deck has **3+ sections**; skip for short talks (≲15 slides) and technical supplements.
+3. **Sections** — `.section-slide.left` numbered divider, then that section's content slides. Use the centered `.bg-accent` variant only for dramatic interludes / statement slides, not structural breaks.
+4. **Recap** (optional, math decks) — the equation-chain recap (Math-heavy → Multi-step proof pattern), not a re-bulleted outline.
+5. **Closer** — `.end-slide` Q&A, tagged `no-footer`.
+
+Section dividers and the TOC must agree: same section names, same order, numbered `01`-style. The ghost-deck test (Style rule 7) applies to the whole arc.
+
+**Slide-count norms** (each `<div class="slide">` counts, including title/TOC/dividers; build-up progressions inflate the count — a 5-slide build-up is one idea):
+
+| Format | Slides | Shipped anchor |
+|---|---|---|
+| 5-min conference video | ~10 | `talks/icml2026/` (9) |
+| Invited / conference talk (30–45 min) | 30–40 | `talks/kics260521dllm/` (35), `talks/math260624dllm/` (32) |
+| Graduate lecture (~75 min) | 35–70 | `diffusion2-ddpm` (35), `watermark` (38), `lossy1-foundations` (67, heavy build-ups) |
+| Undergrad lecture (90 min, concept-first) | 60–90 | `trustworthy-ai/lec02` (85) |
+| Technical supplement | 4–25, proportionate to the math | `lec02tech` (22) |
+
+### Exemplars — deck to imitate per genre
+
+| Genre | Imitate |
+|---|---|
+| Math-heavy graduate lecture (theorem/proof/intuition) | `courses/privacy/lectures/02-generative/diffusion2-ddpm.html` |
+| Undergrad concept-first lecture | `courses/trustworthy-ai/lec02-privacy-dp.html` |
+| Inline HTML+SVG concept diagrams | `courses/trustworthy-ai/lec01-introduction.html`, `lec02-privacy-dp.html` |
+| Diagram with math labels (HTML boxes + SVG arrows) | `courses/privacy/lectures/01-dp/dp8-fl.html` (`.fl4-*`, `.ldp-*`, `.rdm-*`) |
+| Research / invited talk | `talks/kics260521dllm/kics260521dllm.html` |
+| 5-min recorded video | `talks/icml2026/icml2026.html` |
+| Technical supplement | `courses/trustworthy-ai/lec02tech.html` |
+| Speaker-script note file | any `courses/trustworthy-ai/lecNN-*-note.html` |
+| Minimum acceptable visual weight | Kangwook BLISS captures (`reference/kangwook*.png`) |
+
+Before drafting a new deck, open the exemplar for its genre and match its rhythm — section length, exhibit density, build-up pacing.
 
 ---
 
@@ -736,6 +804,17 @@ For lectures, the note file is also the natural home for the **expanded proof** 
 
 Not a paper draft, not a transcript. The speaker's reading companion.
 
+## Technical supplement decks (concept-first split)
+
+For a course pitched below the math's native level (e.g. an undergrad survey over graduate-rigor topics), split each lecture in two: the **main deck** stays concept-first — motivation, pictures, at most **one glanceable formula per concept** — and a sibling **`<deck>tech.html`** holds the formal version (multi-line derivations, algorithm boxes, definition cards with quantifiers, test statistics). The supplement is optional, shown only to students who want the equations. Established across the 15-deck `courses/trustworthy-ai/` course (`lecNNtech.html`).
+
+Rules that keep the split clean:
+
+- **Stay/move rule.** *Stays* in the main deck: one short single-expression formula an audience reads at a glance (`‖δ‖ ≤ ε`, a one-line rate equality). *Moves* to the supplement: anything multi-line; algorithm boxes with math; formal-definition cards with quantifiers; Hessians, sums-over-subsets, expectations-with-penalty, likelihood ratios, z-statistics.
+- **No back-references.** When you move a formula out, leave a one-line plain-English statement so the main slide still stands alone (Style rule 10). Do **not** point the main slide at the supplement — both decks are self-contained; the supplement is discoverable via `OUTLINE.md`, not via cross-refs.
+- **Structure.** Mirror the parent's `<head>`/`<style>` (so `.def-card`/`.ta-algo`/`.cite-left` resolve). Title slide labelled "Lecture NN · Technical Supplement", a "When to Use This" framing slide, then the formal content under the Math-heavy patterns above, then a closer. Proportionate length — rich where the topic has real math, honestly short (4–6 slides) where it doesn't; never padded.
+- Register every supplement in the leaf `OUTLINE.md` under a "Technical supplements" table.
+
 ---
 
 ## OUTLINE.md (per-folder index)
@@ -756,7 +835,7 @@ When the OUTLINE entries you find are too coarse to answer the question, descend
 
 **Maintenance rule (non-negotiable):** any slide edit that changes a section boundary, line range, or named theorem location requires the corresponding `OUTLINE.md` line numbers to be updated *in the same change*. Adding a slide → add the entry. Removing a slide → remove it. Renaming a section → rename it everywhere it is cited (leaf, folder, root quick-lookup). Bulk renumbering after a multi-slide insertion is part of the edit, not a follow-up.
 
-If you cannot locate a topic from the OUTLINE files, the OUTLINE files are stale — fix them, don't work around them. Stale outlines are worse than no outlines because they mislead.
+If you cannot locate a topic from the OUTLINE files, the OUTLINE files are stale — fix them, don't work around them. Stale outlines are worse than no outlines because they mislead. `python3 scripts/outline-lint.py` mechanically verifies every cited `file:line` (file exists, line within range) — run it after any edit that shifts line numbers; it cannot check that the line still holds the *claimed* content, so spot-check after big restructures.
 
 When creating a new deck, add a stub entry in the leaf `OUTLINE.md` before writing the deck (file path + topic line). Cross-references to other decks (in the root quick-lookup table) get added when the relevant content is actually present.
 

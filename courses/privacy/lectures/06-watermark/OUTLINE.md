@@ -59,6 +59,6 @@ Single deck on watermarking for large language models. Detection, distortion-fre
 
 ## Cross-references
 
-- **dgMARK** is the lab's diffusion-LLM watermark — broader dLLM context lives in `dllm/dllm.html:524-569`.
+- **dgMARK** is the lab's diffusion-LLM watermark — broader dLLM context lives in `talks/kics260521dllm/kics260521dllm.html:707`.
 - **Radioactivity** connects watermarking to MIA-style training-data detection — see `privacy/lectures/04-mia/mia5-llm.html` for the LLM MIA context.
-- **Memorization** motivates the broader provenance pipeline — `privacy/lectures/03-memorization/memorization.html`.
+- **Memorization** motivates the broader provenance pipeline — `privacy/lectures/03-memorization/memorization-diffusion.html` and `memorization-llm.html`.

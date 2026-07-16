@@ -8,20 +8,18 @@ Add one or more slides to an existing deck, strictly following the talks design 
 
 ## Workflow (follow every time)
 
-1. **Read the canonical style definitions first** — do not skip:
-   - `reference/deck.css` — defines every class and token available.
-   - `reference/deck.js` — understand the engine (brand-footer auto-inject, nav).
-   - `DESIGN_SYSTEM.md` — tokens, components, recipes, and do/don'ts.
-2. **Read `CLAUDE.md`** for repo conventions (Style priorities).
-3. **Open the target deck** and find the insertion point. Respect existing slide numbering comments; renumber if needed so the sequence stays consistent.
-4. **Draft the new slide(s)** using only classes defined in `reference/deck.css`. If a desired pattern is not in the system, do **not** invent ad-hoc classes — either compose existing ones with inline `style=` (no hardcoded colors, use `var(--…)`) or stop and propose a design-system extension.
+1. **Read `DESIGN_SYSTEM.md`** — start at the Quick reference table, then the recipe(s) that match the requested slide type. The 4 ranked priorities and the vertical budget (Priority 2) apply at draft time, not after preview. When a class's exact behavior matters, check its definition in `reference/deck.css` — that file is the source of truth for every component.
+2. **Read the leaf `OUTLINE.md`** of the deck's folder (read-side rule in `DESIGN_SYSTEM.md` → OUTLINE.md): confirm what earlier decks in the series already define, and check the root `OUTLINE.md` quick-lookup table if the topic may live in another folder. Refer back; don't redefine.
+3. **Open the target deck** and find the insertion point. Match slides by `<h2>` content, not slide number (numbers shift on insertion).
+4. **Draft the new slide(s)** using only classes defined in `reference/deck.css` (or the deck's own local `<style>`). If a desired pattern is not in the system, do **not** invent ad-hoc classes — compose existing ones with inline `style=` (use `var(--…)`, never hardcoded colors) or stop and propose a design-system extension (DESIGN_SYSTEM → Extension checklist).
 5. **Insert**, then verify:
-   - No new classes outside the canonical set.
-   - One `.highlight` per slide max.
-   - Math goes in `.math-block` (display) or inline `$…$`.
-   - Follow Style priorities: one idea per slide, `**blue**` / `*muted*`, `>` / `.highlight` for insights.
-6. **Run `python3 scripts/lint-deck.py <deck>`** and fix any warnings.
-7. **Confirm** the `@media print` block and DECK STYLE/ENGINE markers are intact.
+   - No new classes outside the canonical set + the deck's local `<style>`.
+   - One `.highlight` per slide max; one exhibit per slide.
+   - Math in `.math-block` (display) or inline `$…$`; no `<` literal inside math (use `&lt;`).
+   - Slide fits the vertical budget (Priority 2) — split rather than shrink.
+   - Every content slide aims to carry a visual, or a `<!-- TODO real figure: … -->` marker (DESIGN_SYSTEM → Visual richness).
+6. **Run `python3 scripts/lint-deck.py <deck>`** and fix any warnings. Optionally `python3 scripts/find-wordy.py <deck>` to catch over-long prose.
+7. **Update the leaf `OUTLINE.md`** (and parent/root if a new topic or cross-reference appeared) — line numbers must stay accurate (write-side rule).
 
 ## Output
 
@@ -29,6 +27,7 @@ Summarize which slides were added, the recipes used, and the lint result. Do not
 
 ## Do not
 
-- Edit `reference/deck.css` or `reference/deck.js` from this command — those changes belong in `/upgrade-deck` or direct canonical edits followed by `scripts/sync-style.py`.
-- Hardcode colors or typography values inline. Use CSS variables.
-- Add `<link>`s to external stylesheets — decks stay self-contained.
+- Edit `reference/deck.css` or `reference/deck.js` from this command — canonical changes are their own explicit task.
+- Hardcode colors or typography values inline. Use CSS variables (`var(--…)`). Exception: hex in SVG *attributes* (`fill=`/`stroke=`) is house style — see `GOTCHAS.md`.
+- Remove the deck's `<link>`s to `reference/colors_and_type.css` / `reference/deck.css` or the `reference/deck.js` script tag — decks link to canonical sources, never duplicate them. Don't add any other external stylesheet beyond the existing KaTeX CDN links.
+- Shrink type or use `.tiny` / `.small` on prose to make content fit (Priority 0).

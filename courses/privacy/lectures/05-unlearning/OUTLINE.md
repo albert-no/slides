@@ -101,8 +101,8 @@ The folder's `hw4sol.pdf` is the 5-problem homework (P1 Neyman–Pearson, P2 DP�
 ## Cross-references
 
 - **Homework `hw4sol.pdf`** (5-problem) is taught from the Part I slides, woven in without "Homework 4 / Problem N" labels: the influence→Newton→certification block `unlearning1-foundations.html:174-304` is the long-form walkthrough of the influence-unlearning + certified-Gaussian problems, and the MIA problems (NP optimal test, DP⇒MIA cap, Yeom gap floor) live on "MIA: Optimal Test and Its Limits" `1:472`. The deck holds the hints; the PDF is left untouched (do not edit it).
-- **Memorization** is the motivating signal — see `privacy/lectures/03-memorization/memorization.html`. Lawsuits and Cooper's framing reused on Part I "Why Now" `1:92`.
+- **Memorization** is the motivating signal — lawsuits in `privacy/lectures/03-memorization/memorization-diffusion.html:140`, Cooper's framing in `privacy/lectures/03-memorization/memorization-llm.html:384`. Both reused on Part I "Why Now" `1:92`.
 - **MIA-Efficacy** as evaluation reuses the threshold attacks defined in `privacy/lectures/04-mia/mia1-foundations.html` and the LiRA-style calibration from `privacy/lectures/04-mia/mia4-modern.html`. The "MIA: Optimal Test and Its Limits" slide `1:472` mirrors that MIA-deck theory.
 - **DP** as the parent of certified unlearning — see `privacy/lectures/01-dp/dp8-fl.html:375` (or the $(\varepsilon,\delta)$-DP definition in `privacy/lectures/01-dp/dp4-approximate-dp.html:81`). Newton-step theorem reuses DP-Gaussian noise calibration.
 - **Influence function** also referenced beyond IU — Sekhari capacity follows from the same first-order analysis.
-- **Diffusion-LLM watermarking (dgMARK)** is a sibling lab thread — see `dllm/dllm.html:524-569`. Watermark deck `privacy/lectures/06-watermark/watermark.html` is the broader context.
+- **Diffusion-LLM watermarking (dgMARK)** is a sibling lab thread — see `talks/kics260521dllm/kics260521dllm.html:707`. Watermark deck `privacy/lectures/06-watermark/watermark.html` is the broader context.

@@ -122,11 +122,15 @@
 
 <div class="slide">
   <h2>Proof Sketch</h2><div class="divider"></div>
-  <p>At the optimal critic $f^\star = \log r + c$:</p>
+  <p>At the optimal critic $f^\star = \log r$:</p>
   <div class="math-block">$$\mathcal{L}_{\mathrm{InfoNCE}}(f^\star) \;=\; -\mathbb{E}\log\dfrac{r(x,y)}{r(x,y) + \sum_{k=1}^{K-1}r(x,y_k^-)}.$$</div>
-  <p>Apply Jensen on the convex $-\log$, using $\mathbb{E}_{p(y_k^-)}[r] = 1$:</p>
-  <div class="math-block">$$\mathcal{L}_{\mathrm{InfoNCE}}(f^\star) \;\ge\; \log K - I(X;Y) + o(1).$$</div>
-  <p>Rearrange; $f^\star$ minimizes the loss, so the bound holds for any $f$.</p>
+  <p>Add and subtract $\log K$ inside the log, splitting the loss into two terms:</p>
+  <div class="math-block">$$\mathcal{L}_{\mathrm{InfoNCE}}(f^\star) \;=\; \underbrace{\mathbb{E}\log\Bigl[\tfrac1K\bigl(r(x,y) + \textstyle\sum_{k=1}^{K-1} r(x,y_k^-)\bigr)\Bigr]}_{\text{term A}} \;-\; \underbrace{\mathbb{E}\log r(x,y)}_{\text{term B}} \;+\; \log K.$$</div>
+  <p>Term B is $-I(X;Y)$ by definition of $r$. Bound term A by Jensen ($\log$ concave) then linearity of expectation, using $\mathbb{E}_{p(y_k^-)}[r(x,y_k^-)] = \mathbb{E}_{p_Xp_Y}[r] = 1$ for each of the $K-1$ negatives (and $\mathbb{E}_{p(x,y)}[r] $ also averages to $1$ under $p_X p_Y$-marginalization):</p>
+  <div class="math-block">$$\text{term A} \;\le\; \log\mathbb{E}\Bigl[\tfrac1K\bigl(r(x,y) + \textstyle\sum_{k=1}^{K-1} r(x,y_k^-)\bigr)\Bigr] \;=\; \log\Bigl[\tfrac1K\bigl(1 + (K-1)\cdot 1\bigr)\Bigr] \;=\; \log 1 \;=\; 0.$$</div>
+  <p>Substituting term A $\le 0$ and term B $= -I(X;Y)$ back:</p>
+  <div class="math-block">$$\mathcal{L}_{\mathrm{InfoNCE}}(f^\star) \;\le\; \log K - I(X;Y) \quad\Longleftrightarrow\quad I(X;Y) \;\ge\; \log K - \mathcal{L}_{\mathrm{InfoNCE}}(f^\star).$$</div>
+  <p>Since $f^\star$ minimizes $\mathcal{L}_{\mathrm{InfoNCE}}$ over all critics, $\mathcal{L}_{\mathrm{InfoNCE}}(f) \ge \mathcal{L}_{\mathrm{InfoNCE}}(f^\star)$ for any $f$, so the bound $I(X;Y) \ge \log K - \mathcal{L}_{\mathrm{InfoNCE}}(f)$ holds for any $f$.</p>
 </div>
 
 <div class="slide">
@@ -136,8 +140,9 @@
   <ul>
     <li>Same log-density-ratio as DV's optimal critic.</li>
     <li>$\mathrm{softmax}(f^\star)$ approximates the conditional $p(y\mid x)$.</li>
-    <li>Bound is biased low by at least $\max(0, I-\log K)$ at high MI.</li>
   </ul>
+  <p>$\mathcal{L}_{\mathrm{InfoNCE}}$ is a $K$-class softmax cross-entropy: it ranges over $[0,\log K]$ &mdash; $0$ at a perfect classifier, $\log K$ at a uniform (uninformative) one &mdash; regardless of the true MI. So $\log K - \mathcal{L} \in [0,\log K]$ always:</p>
+  <div class="highlight">Bound saturates at $\log K$; biased low by at least $\max(0,\, I-\log K)$ once $I$ exceeds $\log K$.</div>
 </div>
 
 
@@ -180,13 +185,14 @@
 
 <div class="slide">
   <h2>Is the Separable Critic Enough?</h2><div class="divider"></div>
-  <p>Separable $f(x,y) = g(x)^\top h(y) / \tau$ is restrictive. By Mercer / universal approximation, it suffices.</p>
+  <p>Separable $f(x,y) = g(x)^\top h(y) / \tau$ is restrictive. Two facts combine to justify it.</p>
   <div class="card">
-    <h3>Mercer-style decomposition.</h3>
-    <p>Any continuous $f^\star$ on a compact domain admits</p>
-    <div class="math-block">$$f^\star(x,y) \;=\; \sum_{k=1}^{\infty} \lambda_k\,\phi_k(x)\,\psi_k(y).$$</div>
-    <p>Truncate to dim $d$ (= embedding size): rank-$d$ separable approximation, error $\to 0$ as $d\to\infty$. With deep encoders, $\phi_k, \psi_k$ are <em>learned</em>.</p>
+    <h3>Mercer's theorem (1909).</h3>
+    <p>If $k(x,y)$ is continuous, symmetric, and positive semi-definite on a compact domain, it admits an $L^2$-convergent eigen-expansion:</p>
+    <div class="math-block">$$k(x,y) \;=\; \sum_{k=1}^{\infty} \lambda_k\,\phi_k(x)\,\phi_k(y), \qquad \lambda_k \ge 0.$$</div>
+    <p>Truncating to the top $d$ eigenvalues gives a rank-$d$ separable approximation, optimal in $L^2$ (Eckart&ndash;Young), with error $\to 0$ as $d\to\infty$.</p>
   </div>
+  <p>The optimal critic $f^\star = \log r$ need not be symmetric PSD, but a universal approximation theorem (UAT) argument still applies: deep encoders $g_\mu, h_\phi$ can realize any continuous $\phi_k(x)$, $\psi_k(y)$ pair as $d\to\infty$, so the learned rank-$d$ separable form approximates $f^\star$ to arbitrary accuracy on compact input domains.</p>
 </div>
 
 <div class="slide">
@@ -245,8 +251,10 @@
 <div class="slide">
   <h2>Why It Works — InfoNCE Approximates MAP</h2><div class="divider"></div>
   <p>InfoNCE training drives $g^\top h \approx \log r(x,y) + c(x)$. For a class label:</p>
-  <div class="math-block">$$g_\mu(x)^\top h_\phi(y_k) \;\approx\; \log\dfrac{p(y_k\mid x)}{p(y_k)} + \text{const}.$$</div>
-  <p>$\arg\max_k$ approximates the MAP class, modulo the marginal $p(y_k)$.</p>
+  <div class="math-block">$$g_\mu(x)^\top h_\phi(y_k) \;\approx\; \log\dfrac{p(y_k\mid x)}{p(y_k)} + \text{const}(x) \;=\; \log p(y_k\mid x) - \log p(y_k) + \text{const}(x).$$</div>
+  <p>Taking $\arg\max_k$ over prompts removes the $x$-only constant:</p>
+  <div class="math-block">$$\hat c \;=\; \arg\max_k\; g^\top h_k \;\approx\; \arg\max_k\bigl[\log p(y_k\mid x) - \log p(y_k)\bigr].$$</div>
+  <p>If the label prior $p(y_k)$ is roughly uniform across the $k$ prompts, $-\log p(y_k)$ is roughly constant in $k$ too, and the $\arg\max$ reduces to $\arg\max_k \log p(y_k\mid x) = \arg\max_k p(y_k\mid x)$ &mdash; exactly the MAP rule.</p>
   <div class="highlight">Near-optimal Bayes classifier when label priors are roughly uniform across prompts.</div>
 </div>
 

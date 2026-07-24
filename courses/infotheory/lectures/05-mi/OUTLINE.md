@@ -15,43 +15,43 @@ Variational MI bounds → contrastive learning (InfoNCE/CLIP). Each deck paired 
 
 | Section | Slide | Line |
 |---|---|---|
-| Title / Contents | | `:19, :30` |
-| **01 — Setup** | Motivation, why hard, what is computable, density ratio | `:63-124` |
+| Title / Contents | | `:19, :31` |
+| **01 — Setup** | Motivation, why hard, what is computable, density ratio | `:63-121` |
 | | Why estimate MI? (CLIP, SSL, IB) | `:71` |
 | | MI as KL | `:83` |
 | | Why is it hard? (density ratio without densities) | `:90` |
 | | What we can — and cannot — compute | `:102` |
 | | Density-ratio framing | `:117` |
-| **02 — Barber–Agakov** | Variational LB via q(x\|y) | `:126-167` |
-| | **Theorem (BA bound)** | `:133, :135` |
-| | Proof — add and subtract log q | `:144` |
-| | BA in practice → MLE | `:151` |
-| **03 — Donsker–Varadhan** | Dual KL representation, MINE | `:169-212` |
-| | **Theorem (DV representation)** | `:176, :178` |
-| | DV bound on MI | `:186` |
-| | Proof — tilt Q by e^T | `:193` |
-| | MINE — neural DV estimator (Monte Carlo) | `:200` |
-| **04 — NWJ** | Linear-surrogate variant | `:214-253` |
-| | From DV to NWJ (log inequality) | `:221` |
-| | **Theorem (Nguyen, Wainwright, Jordan 2010)** | `:228, :231` |
-| | NWJ vs DV variance trade | `:238` |
-| **05 — Tradeoffs & unification** | High MI barrier; $f$-divergence variational view | `:254-325` |
-| | High-MI barrier (McAllester–Stratos) | `:262, :264` |
-| | Three bounds side-by-side | `:270` |
-| | Choosing your bound | `:283` |
-| | One machine — KL is the tip (DV/NWJ as $f$-divergence instances) | `:293` |
-| | Forward pointer to Divergence Lectures (table to div1 §02–04, div2) | `:300` |
-| | Recap (now includes $f$-divergence framing) | `:315` |
+| **02 — Barber–Agakov** | Variational LB via q(x\|y) | `:125-168` |
+| | **Theorem (BA bound)** | `:133, :137` |
+| | Proof — add and subtract log q (full substitution shown) | `:144` |
+| | BA in practice → MLE | `:155` |
+| **03 — Donsker–Varadhan** | Dual KL representation, MINE | `:171-219` |
+| | **Theorem (DV representation)** | `:179, :183` |
+| | DV bound on MI | `:189` |
+| | Proof — tilt Q by e^T (full $D_{KL}(P\|G)$ expansion) | `:196` |
+| | MINE — neural DV estimator (Monte Carlo) | `:207` |
+| **04 — NWJ** | Linear-surrogate variant | `:221-263` |
+| | From DV to NWJ (log inequality, full substitution + reparam) | `:229` |
+| | **Theorem (Nguyen, Wainwright, Jordan 2010)** | `:236, :239` |
+| | NWJ vs DV variance trade | `:250` |
+| **05 — Tradeoffs & unification** | High MI barrier; $f$-divergence variational view | `:265-343` |
+| | High-MI barrier (McAllester–Stratos, variance derivation shown) | `:273, :274` |
+| | Three bounds side-by-side | `:285` |
+| | Choosing your bound | `:298` |
+| | One machine — KL is the tip (Fenchel dual + conjugate derivation) | `:308` |
+| | Forward pointer to Divergence Lectures (table to div1 §02–04, div2) | `:318` |
+| | Recap (now includes $f$-divergence framing) | `:333` |
 
-**Key theorems:** BA bound `:137`; DV representation `:179`; DV→MI bound `:187`; NWJ bound `:231`; McAllester–Stratos variance bound `:264`; $f$-divergence Fenchel dual + DV/NWJ as KL instances `:293` (machinery deferred to `divergence/div1`).
+**Key theorems:** BA bound `:137`, proof `:144-152`; DV representation `:183`, proof `:196-205`; DV→MI bound `:191`; NWJ bound `:239`, derivation from DV `:229-234`; McAllester–Stratos variance bound `:274`, mechanism sketch `:275-278`; $f$-divergence Fenchel dual + DV/NWJ as KL instances `:308-315` (machinery deferred to `divergence/div1`).
 
 ### Note (`mi1-bounds-note.html`)
 - Density ratio as unifying view `:25`
 - MINE estimator bias `:31`
-- McAllester–Stratos lower bound `:37`
+- McAllester–Stratos lower bound — estimator-agnostic two-sample-testing argument, complementary to the deck's DV-specific AEP/delta-method derivation (§05) `:37`
 - Toy bivariate Gaussian detail `:43`
-- f-divergences and f-GAN connection (with forward pointer to `divergence/`) `:55`
-- Why CLIP/InfoNCE is different from these `:67`
+- f-divergences and f-GAN connection — Fenchel-conjugate unification now derived on the deck (§05); note trimmed to a pointer plus the f-GAN generative-modeling link and forward pointer to `divergence/` `:55`
+- Why CLIP/InfoNCE is different from these `:62`
 
 ---
 
@@ -83,10 +83,9 @@ Variational MI bounds → contrastive learning (InfoNCE/CLIP). Each deck paired 
 **Key:** InfoNCE bound `:116`; optimal critic = log-ratio `:135`; log K saturation `:119`; separable-critic justification (Mercer) `:182`; encoder evaluation $S_{ij} = g_i^\top h_j / \tau$ `:203`.
 
 ### Note (`mi2-infonce-clip-note.html`)
-- Full InfoNCE proof detail `:25`
-- Why exactly log K saturation `:42`
-- Temperature τ in CLIP `:48`
-- Why symmetric loss `:55`
-- CLIP zero-shot recipe `:62`
-- Robustness / other zero-shot capabilities `:73`
-- What CLIP doesn't do well `:79`
+- InfoNCE proof + log K saturation — now a short pointer to the deck's §01 ("Proof Sketch", "Optimal Critic") which derives both in full; note keeps only the original-references pointer (Oord 2018, Poole 2019) `:25`
+- Temperature τ in CLIP `:30`
+- Why symmetric loss `:37`
+- CLIP zero-shot recipe `:44`
+- Robustness / other zero-shot capabilities `:55`
+- What CLIP doesn't do well `:61`

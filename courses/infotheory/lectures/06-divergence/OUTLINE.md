@@ -74,39 +74,39 @@ Two-lecture series on the divergences that drive modern generative training. Lec
 |---|---|---|
 | Title / Contents | | `:19, :30` |
 | **01 — Beyond $f$-divergence** | Energy models, score function | `:58-103` |
-| | Why another divergence? | `:65` |
-| | **Definition (energy-based pdf)** | `:74` |
-| | **Definition (score function)** — gradient kills $Z$ | `:85` |
-| | Example — Gaussian score | `:95` |
-| **02 — Fisher divergence** | Score-based distance | `:104-166` |
-| | Overview — where we are going (4 steps) | `:112` |
-| | **Lemma** — score identifies the density | `:123` |
-| | **Definition (Hyvärinen, 2005)** — Fisher divergence | `:133` |
-| | **Theorem** — non-neg, asymmetric, scaling, Gaussian comparator | `:144` |
-| | Proof — non-negativity and scaling | `:158` |
-| **03 — Denoising score matching** | Gaussian smoothing makes it tractable | `:168-263` |
-| | Problem — direct score matching is intractable | `:175` |
-| | Setup — $\mathbf{Y} = \mathbf{X} + \mathbf{Z}$ | `:183` |
-| | **Theorem (Vincent, 2011)** — DSM equivalence | `:192` |
-| | Intuition — the denoising direction (kernel score) | `:203` |
-| | Intuition — Tweedie's bridge (marginal score = posterior mean) | `:211` |
-| | Proof Step 1 — expand the square | `:219` |
-| | Proof Step 2 — rewrite cross term using $\nabla_{\mathbf{y}}\mathcal{N}$ | `:231` |
-| | Proof Step 3 — assemble | `:243` |
-| | Recap — conditional MSE on $\mathbf{x}-\mathbf{y}$ | `:253` |
-| **04 — Recap** | Three divergence families | `:265-295` |
-| | Three families table ($f$, Fisher, Wasserstein) | `:272` |
-| | Where this lecture sits | `:284` |
+| | Why another divergence? | `:66` |
+| | **Definition (energy-based pdf)** | `:77` |
+| | **Definition (score function)** — gradient kills $Z$ | `:88` |
+| | Example — Gaussian score | `:96` |
+| **02 — Fisher divergence** | Score-based distance | `:104-187` |
+| | Overview — where we are going (4 steps) | `:113` |
+| | **Lemma** — score identifies the density | `:124` |
+| | **Definition (Hyvärinen, 2005)** — Fisher divergence | `:134` |
+| | **Theorem** — non-neg, asymmetric, scaling, Gaussian comparator | `:145` |
+| | Proof — non-negativity, asymmetry, scaling, Gaussian comparator (full: counterexample for (2), explicit change-of-variables algebra for (3), direct substitution for (4)) | `:159` |
+| **03 — Denoising score matching** | Gaussian smoothing makes it tractable | `:188-280` |
+| | Problem — direct score matching is intractable | `:188` |
+| | Setup — $\mathbf{Y} = \mathbf{X} + \mathbf{Z}$ | `:196` |
+| | **Theorem (Vincent, 2011)** — DSM equivalence | `:205` |
+| | Intuition — the denoising direction (kernel score) | `:216` |
+| | Intuition — Tweedie's bridge (marginal score = posterior mean) | `:224` |
+| | Proof Step 1 — expand the square | `:232` |
+| | Proof Step 2 — rewrite cross term (now derives the Gaussian-kernel score identity $\nabla_{\mathbf{y}}\mathcal{N}=\frac{\mathbf{x}-\mathbf{y}}{\sigma^2}\mathcal{N}$ via recall-before-use, then applies it) | `:244` |
+| | Proof Step 3 — assemble (now shows explicit marginalization rewrite + full complete-the-square algebra) | `:259` |
+| | Recap — conditional MSE on $\mathbf{x}-\mathbf{y}$ | `:271` |
+| **04 — Recap** | Three divergence families | `:281-308` |
+| | Three families table ($f$, Fisher, Wasserstein) | `:291` |
+| | Where this lecture sits | `:302` |
 
-**Key theorems and definitions:** energy-based pdf `:74`; score function `:85`; score-determines-pdf lemma `:123`; Fisher divergence `:133`; properties theorem `:144`; Vincent DSM theorem `:192`; Tweedie bridge intuition `:211`.
+**Key theorems and definitions:** energy-based pdf `:77`; score function `:88`; score-determines-pdf lemma `:124`; Fisher divergence `:134`; properties theorem `:145`; Vincent DSM theorem `:205`; Tweedie bridge intuition `:224`.
 
 The diffusion-specific equivalence (per-step ELBO MSE $\equiv$ DSM at noise level $1-\bar\alpha_t$) is proved in `diffusion/diff3-parameterizations.html` Section 05, citing this lecture for the Fisher and DSM machinery.
 
 ### Note (`div2-fisher-score-note.html`)
 - Why $f$-divergences fail on energy-based models
-- Intuition: why match $(x-y)/\sigma^2$ against $s_\theta(y)$ (denoising direction, Tweedie, MSE averaging)
+- Intuition section: pointer to the deck's kernel-score-identity/Tweedie derivation (now fully on-slide) + the one genuinely new piece — why MSE over data pairs recovers the marginal score (law of total expectation)
 - Hyvärinen's original (non-denoising) score matching via integration by parts
-- Why Gaussian smoothing is the kernel that gives a closed form
+- Why Gaussian *specifically* (not smoothing in general) gives a closed-form target — pointer to deck's Proof Step 2 + the kernel-comparison argument
 - Sampling from a score model = Langevin dynamics (Fokker–Planck)
 - Comparison: $f$ / Fisher / Wasserstein
 - Closing thread — pointer forward to diffusion lectures where DSM is applied

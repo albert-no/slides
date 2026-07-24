@@ -116,31 +116,31 @@ Section 05 collapsed: the binary toy now lives inside section 04 as the worked r
 | | Statement (squared error) | `:318` |
 | | Proof — maximize entropy of error | `:327` |
 | | Gaussian hits the bound — hardest source | `:337` |
-| **03 — Laplacian R(D)** | Atom at zero in optimal reproduction, plug-in | `:347-419` |
+| **03 — Laplacian R(D)** | Atom at zero in optimal reproduction, plug-in | `:347-424` |
 | | Setup + statement | `:355` |
-| | Converse — auxiliary density trick | `:384` |
-| | Achievability — sparse mixture | `:393` |
-| | **Example — Plug in $\lambda = 1$**: sparsity grows as $D^2$ | `:404` |
-| **04 — Pruning from R(D)** | Optimal NN compression is sparse | `:421-477` |
-| | Network and compressed weights | `:429` |
-| | **Theorem — weight-distortion bounds output-distortion** | `:437` |
-| | Trained weights are Laplacian-like | `:446` |
-| | Optimal Laplacian code is a sparsifier | `:459` |
-| | Pruning is optimal | `:468` |
-| **05 — EVT and CROM** | Rateless lossy via extremes | `:480-525` |
-| | Extremes are almost predictable | `:488` |
-| | CROM (send index, reconstruct spike) | `:497` |
-| | Random rotations Gaussianize | `:506` |
-| | Iterate with random rotations | `:514` |
-| Recap | | `:530` |
+| | Converse — auxiliary density trick (KL-swap step + substitution shown) | `:384` |
+| | Achievability — sparse mixture (MI derivation via $h(X)-h(N)$ shown) | `:395` |
+| | **Example — Plug in $\lambda = 1$**: sparsity grows as $D^2$ | `:407` |
+| **04 — Pruning from R(D)** | Optimal NN compression is sparse | `:425-483` |
+| | Network and compressed weights | `:432` |
+| | **Theorem — weight-distortion bounds output-distortion** (statement only; note has no proof of this bound) | `:440` |
+| | Trained weights are Laplacian-like | `:449` |
+| | Optimal Laplacian code is a sparsifier | `:462` |
+| | Pruning is optimal | `:471` |
+| **05 — EVT and CROM** | Rateless lossy via extremes | `:484-531` |
+| | Extremes are almost predictable | `:491` |
+| | CROM (send index, reconstruct spike) | `:500` |
+| | Random rotations Gaussianize | `:509` |
+| | Iterate with random rotations | `:517` |
+| Recap | | `:533` |
 
-**Key:** Gaussian R(D) `:115`; backward channel `:122`; heights example `:186`; Gaussian plug-in `:202`; Shannon LB `:318`; auxiliary density trick `:384`; Laplacian plug-in `:404`; layer-wise telescoping `:437`.
+**Key:** Gaussian R(D) `:115`; backward channel `:122`; heights example `:186`; Gaussian plug-in `:202`; Shannon LB `:318`; auxiliary density trick `:384`; Laplacian achievability MI derivation `:395`; Laplacian plug-in `:407`; layer-wise telescoping `:440`.
 
-**Bug fixed:** literal `<` inside math (e.g. `0<D\le σ²`) was being parsed as start of `<i>`/`<D>` tags by the HTML lexer, cascading garbage into all subsequent slides. Replaced with `&lt;` at lines 73, 79, 174.
+**Bug fixed:** literal `<` inside math (e.g. `0<D\le σ²`) was being parsed as start of `<i>`/`<D>` tags by the HTML lexer, cascading garbage into all subsequent slides. Replaced with `&lt;` at lines 117, 123, 222, 360.
 
 ### Note (`lossy2-gaussian-laplacian-note.html`)
 - Backward vs forward channel
-- Auxiliary-density trick derivation
+- Auxiliary-density trick — now a pointer to the deck's on-slide KL-swap derivation (`:384`) plus the one unique bit: why $q$ is chosen Laplace-shaped
 - Laplacian mixture verification (characteristic functions)
 - Atom-at-zero is not artifact
 - Why L1 not L2 for pruning
@@ -166,7 +166,7 @@ QUIP\# section: BlockLDLQ broken into scalar-vs-block comparison + Theorem 4.1 b
 
 | Section | Slide | Line |
 |---|---|---|
-| Title / Contents | | `:19, :30` |
+| Title / Contents | | `:19, :31` |
 | **01 — The encoder problem** | Codebook size + search are both gigantic | `:63-141` |
 | | What a real quantizer must do | `:71` |
 | | Optimal VQ — what the encoder does (single $\mathcal{C}$+argmin block) | `:83` |
@@ -189,45 +189,45 @@ QUIP\# section: BlockLDLQ broken into scalar-vs-block comparison + Theorem 4.1 b
 | | **$E_8$ — one extra coset buys a round cell** ($E_8 = D_8 \cup (D_8 + \tfrac12\mathbf{1})$) | `:336` |
 | | Why dimension 8? (Viazovska 2017, sweet spot) | `:348` |
 | | **Visualizing $E_8$** — 240 tangent neighbors (`e8.jpg` right, kissing-number card left) | `:366` |
-| | Finite codebook from a lattice | `:391` |
-| | **Picking the ball — match the typical set** (ball radius $\sigma\sqrt{d}$) | `:403` |
-| | **Rounding to $E_8$ in $\mathcal{O}(d)$** (two-coset algorithm spelled out) | `:415` |
-| | Is it OK to use a lattice codebook? | `:427` |
+| | Finite codebook from a lattice | `:389` |
+| | **Picking the ball — match the typical set** (ball radius $\sigma\sqrt{d}$) | `:401` |
+| | **Rounding to $E_8$ in $\mathcal{O}(d)$** (two-coset algorithm spelled out) | `:413` |
+| | Is it OK to use a lattice codebook? | `:425` |
 | **04 — QUIP: incoherence processing** | Chee, Cai, Kuleshov, De Sa 2023 | `:447-715` |
-| | We care about output, not weights | `:455` |
-| | Surrogate — one layer at a time ($W_\Delta = \widehat W - W$, not $\Delta$) | `:464` |
-| | **The trace trick** (step-by-step derivation, all in $W_\Delta$) | `:474` |
-| | The proxy loss (linebreak-split highlight) | `:486` |
-| | **What is $H$?** — calibration input covariance, *not* loss Hessian | `:498` |
-| | The Hessian tells us what matters | `:506` |
-| | **The idea — predict and correct (DPCM)** (high-level motivation, no math) | `:517` |
-| | **The linear-feedback family** ($\widehat W = Q(W + (W-\widehat W)U)$, $U$ str. upper-triangular) | `:529` |
-| | **Why "upper triangular"?** (causal-feedback intuition) | `:541` |
-| | **Quantization residual $\eta$** — recall $\ell(\widehat W)$, define $\eta = Q(z) - z$, $\widehat W = z + \eta$ | `:549` |
-| | **Proxy in feedback form** ($\widehat W - W = \eta(I+U)^{-1}$ → $\ell = \mathrm{tr}(\eta(I+U)^{-1}H(I+U)^{-\top}\eta^\top)$) | `:558` |
-| | **LDL of $H$ cancels the cross-terms** ($H=(I+\bar U)D(I+\bar U)^\top$ → $\ell=\mathrm{tr}(\eta D\eta^\top)$) | `:567` |
-| | **LDLQ — round with memory** (algorithm card; factorization spelled out) | `:571` |
-| | **What $\bar U$ and $D$ mean** (Gram-Schmidt under $H$-inner-product) | `:583` |
-| | **Worst-case and average proxy loss** (definitions; $\mathbb E\eta_{ij}^2 = \tfrac14, \tfrac1{12}, \tfrac16$) | `:602` |
-| | **LDLQ is optimal (Theorem 1)** — worst $(m/4)\mathrm{tr}(D)$, avg $(m/c)\mathrm{tr}(D)$ | `:614` |
-| | **What Theorem 1 means** — empirical $\mathrm{tr}(D)/\mathrm{tr}(H) \le 0.65$ across every OPT 125m–2.7b layer | `:629` |
-| | Why outliers wreck quantization (motivates incoherence) | `:641` |
-| | Incoherence — no outliers | `:663` |
-| | **Conjugation preserves the proxy** (rotation $U, V$ + definition of $\widetilde H$) | `:672` |
-| | Random rotation erases outliers (CLT half; LDLQ on $\widetilde W$ with $\widetilde H$) | `:683` |
-| | QUIP — end to end ($V \to \widehat W \to U^\top$ inference diagram) | `:691` |
+| | We care about output, not weights | `:453` |
+| | Surrogate — one layer at a time ($W_\Delta = \widehat W - W$, not $\Delta$) | `:462` |
+| | **The trace trick** (step-by-step derivation, all in $W_\Delta$) | `:472` |
+| | The proxy loss (linebreak-split highlight) | `:484` |
+| | **What is $H$?** — calibration input covariance, *not* loss Hessian | `:496` |
+| | The Hessian tells us what matters | `:504` |
+| | **The idea — predict and correct (DPCM)** (high-level motivation, no math) | `:515` |
+| | **The linear-feedback family** ($\widehat W = Q(W + (W-\widehat W)U)$, $U$ str. upper-triangular) | `:527` |
+| | **Why "upper triangular"?** (causal-feedback intuition) | `:536` |
+| | **Quantization residual $\eta$** — recall $\ell(\widehat W)$, define $\eta = Q(z) - z$, $\widehat W = z + \eta$ | `:544` |
+| | **Proxy in feedback form** ($\widehat W - W = \eta(I+U)^{-1}$ → $\ell = \mathrm{tr}(\eta(I+U)^{-1}H(I+U)^{-\top}\eta^\top)$) | `:553` |
+| | **LDL of $H$ cancels the cross-terms** ($H=(I+\bar U)D(I+\bar U)^\top$ → $\ell=\mathrm{tr}(\eta D\eta^\top)$; cancellation now shown via explicit substitution + underbraced $(I+\bar U)^{-1}(I+\bar U)=I$ pair) | `:562` |
+| | **LDLQ — round with memory** (algorithm card; factorization spelled out) | `:573` |
+| | **What $\bar U$ and $D$ mean** (Gram-Schmidt under $H$-inner-product) | `:585` |
+| | **Worst-case and average proxy loss** (definitions; $\mathbb E\eta_{ij}^2 = \tfrac14, \tfrac1{12}, \tfrac16$) | `:604` |
+| | **LDLQ is optimal (Theorem 1)** — worst $(m/4)\mathrm{tr}(D)$, avg $(m/c)\mathrm{tr}(D)$ | `:616` |
+| | **What Theorem 1 means** — empirical $\mathrm{tr}(D)/\mathrm{tr}(H) \le 0.65$ across every OPT 125m–2.7b layer | `:631` |
+| | Why outliers wreck quantization (motivates incoherence) | `:643` |
+| | Incoherence — no outliers | `:665` |
+| | **Conjugation preserves the proxy** (rotation $U, V$ + definition of $\widetilde H$) | `:674` |
+| | Random rotation erases outliers (CLT half; LDLQ on $\widetilde W$ with $\widetilde H$) | `:685` |
+| | QUIP — end to end ($V \to \widehat W \to U^\top$ inference diagram) | `:693` |
 | **05 — QUIP#: Hadamard + lattice** | Tseng, Chee, Sun, Kuleshov, De Sa 2024 | `:715-832` |
-| | Two upgrades over QUIP | `:723` |
-| | **What is a Hadamard matrix?** ($H_8$ viz, bullets right) | `:740` |
-| | Why Hadamard is fast enough | `:771` |
-| | Random signs make it incoherent | `:780` |
-| | $E_8$ codebook — decoded by index | `:789` |
-| | **Scalar LDLQ vs BlockLDLQ** (stacked cards, equations on single lines) | `:800` |
-| | BlockLDLQ — bound (Theorem 4.1) | `:810` |
-| | Two-faced effective codebook | `:820` |
-| Recap / End | | `:838, :848` |
+| | Two upgrades over QUIP | `:725` |
+| | **What is a Hadamard matrix?** ($H_8$ viz, bullets right) | `:742` |
+| | Why Hadamard is fast enough | `:773` |
+| | Random signs make it incoherent | `:782` |
+| | $E_8$ codebook — decoded by index | `:791` |
+| | **Scalar LDLQ vs BlockLDLQ** (stacked cards, equations on single lines) | `:802` |
+| | BlockLDLQ — bound (Theorem 4.1) | `:812` |
+| | Two-faced effective codebook | `:822` |
+| Recap / End | | `:840, :850` |
 
-**Key:** Codebook table (M, not K) `:91`; naive dequant→add→requant `:162`; integer add identity `:173`; hex Voronoi tiling fix `:261`; Z^8 vs E_8 coset intuition `:326, :336`; **e8.jpg viz** `:366`; **ball radius + O(d) rounding** `:403, :415`; **trace trick in $W_\Delta$** `:474`; **DPCM intuition** `:517`; **linear-feedback family** `:529`; **quantization residual $\eta$ + proxy in feedback form** `:549, :558`; **LDL cancels cross-terms** (the key derivation) `:567`; **LDLQ algorithm card** `:571`; **worst-case + avg definitions** `:602`; **Theorem 1 + interpretation** `:614, :629`; **conjugation preserves proxy** `:672`; **QUIP inference diagram** `:691`; **$H_8$ Hadamard viz** `:740`; scalar-vs-block LDLQ comparison `:800`.
+**Key:** Codebook table (M, not K) `:91`; naive dequant→add→requant `:162`; integer add identity `:173`; hex Voronoi tiling fix `:261` (lattice packing gain anchor); Z^8 vs E_8 coset intuition `:326, :336`; **e8.jpg viz** `:366`; **ball radius + O(d) rounding** `:401, :413`; **trace trick in $W_\Delta$** `:472`; **DPCM intuition** `:515`; **linear-feedback family** `:527`; **quantization residual $\eta$ + proxy in feedback form** `:544, :553`; **LDL cancels cross-terms** (the key derivation, now with explicit cancellation shown) `:562`; **LDLQ algorithm card** `:573`; **worst-case + avg definitions** `:604`; **Theorem 1 + interpretation** `:616, :631`; **conjugation preserves proxy** `:674`; **QUIP inference diagram** `:693`; **$H_8$ Hadamard viz (QUIP# Hadamard step anchor)** `:742`; scalar-vs-block LDLQ comparison `:802`.
 
 **Papers:**
 - QUIP — Chee, Cai, Kuleshov, De Sa, NeurIPS 2023 (arXiv:2307.13304)
@@ -246,7 +246,7 @@ QUIP\# section: BlockLDLQ broken into scalar-vs-block comparison + Theorem 4.1 b
 - Why outliers wreck quantization (dynamic range argument)
 - Formal incoherence definition
 - Why Kronecker rotation (cost vs uniform random)
-- **LDLQ — full statement, feedback intuition, DPCM analogy, Theorem 1**
+- **LDLQ — orthogonality intuition + incoherence payoff** (feedback-form derivation and LDL cancellation now live on-slide; note points there and adds Lemma 2's incoherence→tr(D) bound giving QUIP's quantitative 2-bit guarantee)
 - LDLQ ↔ OPTQ/GPTQ equivalence
 - Hadamard basics, FWHT, why random signs are necessary
 - Berry-Esseen + union-bound argument for RHT incoherence
@@ -310,10 +310,10 @@ Front motivation now opens with self-attention (Q/K/V) before the KV cache, so t
 - KV cache — what and why (cache size formula, online/data-oblivious/attention-preserving constraints)
 - Why a random rotation Gaussianizes any fixed unit vector (Haar invariance → uniform spherical → Gaussian marginal)
 - Where 4^{−b} comes from (Gaussian R(D) derivation); lossy-quantizer bias (1-bit shrinks magnitude to σ√(2/π))
-- Lemma 1 — full proof (slice argument + co-area Jacobian + Beta normalization + Gaussian limit)
+- Lemma 1 — proof detail (co-area Jacobian mechanics) + concentration corollary (deck `:252` now carries the core proof; note adds the mechanics and the tail bound)
 - Lloyd–Max on f_d — alternating updates, Bennett high-resolution limit, sample-free codebook, orthogonal invariance
 - Panter–Dite formula and ∫ f_d^{1/3}
-- QJL lemma — unbiasedness and variance proof
+- QJL lemma — pointer to the deck's proof (`:500`) plus the unique bit-budget/sketch-dimension trade-off (why variance is genuinely 1/d)
 - Inner-product TURBOQUANT — two-stage decomposition derivation and bit-budget split
 
 **Audit (2026-05-11):** Slide screenshots verified at 1280×720. Fixed: `K_t\!,V_t` thin-space squashes commas → use plain comma; `QUIP\#` literal backslash → `QUIP#`; Two-Metrics highlight overlapping brand footer → trimmed intro + part-arrows; Theorem+proof one-slide overflow → split into theorem slide and proof slide; Geometric Reason `x̃` label on top of arrow → moved into wedge below arrow; Two-Stage `x̃_mse`/`r` labels cramped → repositioned with widened SVG; Algorithm+Theorem one-slide overflow → split into algorithm slide and theorem slide with aligned math block.

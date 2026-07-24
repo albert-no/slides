@@ -136,17 +136,21 @@
 
 <div class="slide">
   <h2>Proof &mdash; Differentiate the Marginal</h2><div class="divider"></div>
-  <p>Marginal as Gaussian mixture; differentiate $\log p_t$:</p>
+  <p>Marginal as Gaussian mixture. Differentiate under the integral sign:</p>
   <div class="math-block">$$\begin{aligned}
-p_t(x_t) &amp;\;=\; \int p_0(x_0)\,\mathcal{N}\!\bigl(x_t;\,\sqrt{\bar\alpha_t}\,x_0,\,(1-\bar\alpha_t)I\bigr)\,dx_0. \\[6pt]
-\nabla_{x_t}\log p_t(x_t) &amp;\;=\; -\,\dfrac{x_t - \sqrt{\bar\alpha_t}\,\mathbb{E}[X_0\mid x_t]}{1-\bar\alpha_t}.
+p_t(x_t) &amp;\;=\; \int p_0(x_0)\,\mathcal{N}\!\bigl(x_t;\,\sqrt{\bar\alpha_t}\,x_0,\,(1-\bar\alpha_t)I\bigr)\,dx_0, \\[4pt]
+\nabla_{x_t}p_t(x_t) &amp;\;=\; \int p_0(x_0)\,\nabla_{x_t}\mathcal{N}\!\bigl(x_t;\,\sqrt{\bar\alpha_t}\,x_0,\,(1-\bar\alpha_t)I\bigr)\,dx_0.
 \end{aligned}$$</div>
-  <p>Gradient passes inside; hits the Gaussian kernel. Solve for $\mathbb{E}[X_0\mid x_t]$. $\quad\square$</p>
+  <p>Gaussian score: $\nabla_{x_t}\mathcal{N}(x_t;\cdot) = -\tfrac{x_t-\sqrt{\bar\alpha_t}x_0}{1-\bar\alpha_t}\,\mathcal{N}(x_t;\cdot)$. Divide by $p_t(x_t)$; the ratio $p_0(x_0)\mathcal{N}(x_t;\cdot)/p_t(x_t)$ is exactly the posterior $p(x_0\mid x_t)$:</p>
+  <div class="math-block">$$\nabla_{x_t}\log p_t(x_t) \;=\; -\int \frac{x_t-\sqrt{\bar\alpha_t}x_0}{1-\bar\alpha_t}\,p(x_0\mid x_t)\,dx_0 \;=\; -\,\dfrac{x_t - \sqrt{\bar\alpha_t}\,\mathbb{E}[X_0\mid x_t]}{1-\bar\alpha_t}.$$</div>
+  <p>Solve for $\mathbb{E}[X_0\mid x_t]$: multiply by $-(1-\bar\alpha_t)$, add $x_t$, divide by $\sqrt{\bar\alpha_t}$ &mdash; the theorem. $\quad\square$</p>
 </div>
 
 <div class="slide">
   <h2>Tweedie Unifies the Predictions</h2><div class="divider"></div>
-  <p>Combine Tweedie with the master identity:</p>
+  <p>Master identity solved for $x_0$: $x_0 = \bigl(x_t-\sqrt{1-\bar\alpha_t}\,\varepsilon\bigr)/\sqrt{\bar\alpha_t}$. Take $\mathbb{E}[\cdot\mid x_t]$ and substitute Tweedie's $\mathbb{E}[X_0\mid x_t]$:</p>
+  <div class="math-block">$$\mathbb{E}[X_0\mid x_t] \;=\; \frac{x_t-\sqrt{1-\bar\alpha_t}\,\mathbb{E}[\varepsilon\mid x_t]}{\sqrt{\bar\alpha_t}} \;=\; \frac{1}{\sqrt{\bar\alpha_t}}\bigl(x_t+(1-\bar\alpha_t)\nabla_{x_t}\log p_t(x_t)\bigr).$$</div>
+  <p>Match the $x_t$ coefficients (both $1/\sqrt{\bar\alpha_t}$) and solve for $\mathbb{E}[\varepsilon\mid x_t]$:</p>
   <div class="math-block">$$\mathbb{E}[\varepsilon\mid x_t] \;=\; -\sqrt{1-\bar\alpha_t}\,\nabla_{x_t}\log p_t(x_t).$$</div>
   <p>Optimal $x_0$-predictor, $\varepsilon$-predictor, and score: <strong>three rescalings of the same function</strong>.</p>
   <div class="highlight">Tool 2 converts the ELBO's <strong>mean prediction</strong> (Tool 1) into a <strong>score estimation</strong> problem &mdash; bridging to Tool 3.</div>
@@ -192,7 +196,9 @@ p_t(x_t) &amp;\;=\; \int p_0(x_0)\,\mathcal{N}\!\bigl(x_t;\,\sqrt{\bar\alpha_t}\
   <h2>Step 3 &mdash; Recognize the Denoising Form</h2><div class="divider"></div>
   <p>Forward marginal $q(x_t\mid x_0) = \mathcal{N}(\sqrt{\bar\alpha_t}\,x_0,(1-\bar\alpha_t)I)$ has Gaussian score:</p>
   <div class="math-block">$$\nabla_{x_t}\log q(x_t\mid x_0) \;=\; -\,\frac{x_t - \sqrt{\bar\alpha_t}\,x_0}{1-\bar\alpha_t}.$$</div>
-  <p>Substitute, drop $\theta$-free terms: exactly <strong>Vincent's DSM</strong> at noise level $1-\bar\alpha_t$.</p>
+  <p>Substitute into Step 2's Fisher divergence, writing $s_\theta(x_t,t) := \nabla_{x_t}\log p_\theta^{(t)}(x_t)$:</p>
+  <div class="math-block">$$D_F\!\bigl(q(\,\cdot\,\mid x_0)\,\Vert\,p_\theta^{(t)}\bigr) \;=\; \tfrac12\,\mathbb{E}\!\left[\Bigl\|\,\tfrac{\sqrt{\bar\alpha_t}\,x_0 - x_t}{1-\bar\alpha_t} - s_\theta(x_t,t)\Bigr\|^2\right].$$</div>
+  <p>Drop the $\theta$-free normalization constant: exactly <strong>Vincent's DSM</strong> at noise level $1-\bar\alpha_t$.</p>
   <div class="cite">Vincent, "A Connection Between Score Matching and Denoising Autoencoders", Neural Comp. 2011.</div>
 </div>
 

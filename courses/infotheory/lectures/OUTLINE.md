@@ -66,34 +66,37 @@ The companion LaTeX lecture notes live one level up in `../notes/`; exams in `..
 | Water-filling | `03-diffentropy/diffentropy3-mi-awgn.html` | `:293` |
 | I-MMSE | `03-diffentropy/diffentropy3-mi-awgn.html` | `:385` |
 | ELBO definition | `07-diffusion/diff1-vae-elbo.html` | `:101` |
-| Reparameterization trick (lemma) | `07-diffusion/diff1-vae-elbo.html` | `:198` |
-| q(x_t\|x_0) closed form | `07-diffusion/diff2-diffusion.html` | `:76` |
-| Tweedie's formula (theorem + proof) | `07-diffusion/diff3-parameterizations.html` | `:121` (statement), `:130` (proof) |
-| Shannon's R(D) theorem | `04-lossy/lossy1-foundations.html` | `:270` |
-| Gaussian R(D) achievability + converse | `04-lossy/lossy2-gaussian-laplacian.html` | `:71-160` |
-| Layer-wise telescoping (pruning) | `04-lossy/lossy2-gaussian-laplacian.html` | `:215` |
-| Lattice packing gain | `04-lossy/lossy3-lattice-quip.html` | `:119` |
-| QUIP# Hadamard step | `04-lossy/lossy3-lattice-quip.html` | `:180` |
-| TURBOQUANT_mse theorem | `04-lossy/lossy4-turboquant.html` | `:154` |
-| QJL lemma | `04-lossy/lossy4-turboquant.html` | `:233` |
-| Barber–Agakov bound | `05-mi/mi1-bounds.html` | `:107` |
-| Donsker–Varadhan representation | `05-mi/mi1-bounds.html` | `:151` |
-| $f$-divergence variational view (DV, NWJ as KL instances) | `05-mi/mi1-bounds.html` | `:261, :270` |
-| InfoNCE bound | `05-mi/mi2-infonce-clip.html` | `:91` |
+| Reparameterization trick (lemma) | `07-diffusion/diff1-vae-elbo.html` | `:268` |
+| q(x_t\|x_0) closed form | `07-diffusion/diff2-diffusion.html` | `:74` |
+| Complete-the-square reverse posterior | `07-diffusion/diff2-diffusion.html` | `:209` |
+| Tweedie's formula (theorem + proof) | `07-diffusion/diff3-parameterizations.html` | `:129` (statement), `:138` (proof) |
+| Shannon's R(D) theorem | `04-lossy/lossy1-foundations.html` | `:637` |
+| Gaussian R(D) achievability + converse | `04-lossy/lossy2-gaussian-laplacian.html` | `:115-222` |
+| Layer-wise telescoping (pruning) | `04-lossy/lossy2-gaussian-laplacian.html` | `:440` |
+| Lattice packing gain | `04-lossy/lossy3-lattice-quip.html` | `:261` |
+| QUIP# Hadamard step | `04-lossy/lossy3-lattice-quip.html` | `:742` |
+| TURBOQUANT_mse theorem | `04-lossy/lossy4-turboquant.html` | `:356` |
+| QJL lemma | `04-lossy/lossy4-turboquant.html` | `:502` |
+| Barber–Agakov bound | `05-mi/mi1-bounds.html` | `:137` (proof `:144`) |
+| Donsker–Varadhan representation | `05-mi/mi1-bounds.html` | `:183` (proof `:196`) |
+| McAllester–Stratos high-MI barrier | `05-mi/mi1-bounds.html` | `:274` |
+| $f$-divergence variational view (DV, NWJ unification) | `05-mi/mi1-bounds.html` | `:239, :308` |
+| InfoNCE bound | `05-mi/mi2-infonce-clip.html` | `:114` (proof `:124`) |
 | $f$-divergence definition | `06-divergence/div1-fdivergence-gan.html` | `:121` |
 | $f$-divergence properties theorem (DPI, info inequality) | `06-divergence/div1-fdivergence-gan.html` | `:229` |
-| GAN $\equiv$ Jensen–Shannon theorem | `06-divergence/div1-fdivergence-gan.html` | `:330` |
-| Energy-based pdf + score function | `06-divergence/div2-fisher-score.html` | `:80, :91` |
-| Fisher divergence definition (Hyvärinen) | `06-divergence/div2-fisher-score.html` | `:141` |
-| Denoising score matching theorem (Vincent) | `06-divergence/div2-fisher-score.html` | `:200` |
-| Diffusion ELBO $\equiv$ DSM theorem | `07-diffusion/diff3-parameterizations.html` | `:256` |
-| IB Lagrangian (definition) | `08-ib/ib1-foundations.html` | `:112` |
-| IB optimal encoder (Gibbs form) | `08-ib/ib1-foundations.html` | `:182` |
-| Relevance decomposition lemma | `08-ib/ib1-foundations.html` | `:261` |
-| IB $\equiv$ R(D) with log-loss | `08-ib/ib1-foundations.html` | `:284` |
-| Information plane definition | `08-ib/ib1-foundations.html` | `:315` |
-| VIB definition | `08-ib/ib2-deep-learning.html` | `:225` |
-| Rate upper bound (variational) | `08-ib/ib2-deep-learning.html` | `:200` |
+| GAN $\equiv$ Jensen–Shannon theorem | `06-divergence/div1-fdivergence-gan.html` | `:349` (statement `:351`) |
+| Energy-based pdf + score function | `06-divergence/div2-fisher-score.html` | `:77, :88` |
+| Fisher divergence definition (Hyvärinen) | `06-divergence/div2-fisher-score.html` | `:134` |
+| Denoising score matching theorem (Vincent) | `06-divergence/div2-fisher-score.html` | `:205` (statement `:207`) |
+| Diffusion ELBO $\equiv$ DSM theorem | `07-diffusion/diff3-parameterizations.html` | `:206` |
+| IB Lagrangian (definition) | `08-ib/ib1-foundations.html` | `:128` |
+| IB optimal encoder (Gibbs form) | `08-ib/ib1-foundations.html` | `:206` |
+| Relevance decomposition lemma | `08-ib/ib1-foundations.html` | `:291` |
+| IB $\equiv$ R(D) with log-loss | `08-ib/ib1-foundations.html` | `:318` |
+| Information plane definition | `08-ib/ib1-foundations.html` | `:349` |
+| MI Generalization Bound (Xu–Raginsky) | `08-ib/ib2-deep-learning.html` | `:222` |
+| VIB definition | `08-ib/ib2-deep-learning.html` | `:315` |
+| Rate upper bound (variational) | `08-ib/ib2-deep-learning.html` | `:289` (proof `:294-297`) |
 
 ## Pairing convention
 

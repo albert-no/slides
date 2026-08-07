@@ -39,8 +39,8 @@ Normative rules and recipes for slide decks. **Audience**: academic conference t
 | Let a dense figure breathe (own slide) | Recipes → Image-first / description-follows |
 | Overlay math labels on an SVG | Recipes → KaTeX overlays on SVG |
 | Add a visual (or mark one as TODO) | Visual richness |
-| Adapt a famous figure's *idea* without copying it | Visual richness → Concept, not copy |
-| Capture a real paper figure | Visual richness → Figure-capture protocol |
+| Capture a real paper/blog figure (preferred over redrawing) | Visual richness → Figure-capture protocol |
+| No citable figure exists — build an original concept diagram | Visual richness → source 2 (concept diagrams) |
 | Move detail off the slide | Companion note files |
 | Formal math for a concept-first course | Technical supplement decks |
 | Cite a paper (format, venue order, position) | Conventions → Citations |
@@ -822,8 +822,8 @@ For boxed nodes (more visual weight), use `.diagram-flow` + `.diagram-box` inste
 
 **Three sources of visuals, in priority order:**
 
-1. **Inline HTML + SVG concept diagrams** — the default and most reliable. Build structure in HTML/SVG (boxes, circles, arrows, overlapping bell curves, 2×2 grids, flows, pipelines, trees). Plain-text labels in SVG `<text>` — KaTeX skips SVG, so never put `$…$` inside `<text>` (see GOTCHAS). One semantic color per role (Yonsei blue = focus, gray = context, `--warn` red = the bad case). Shipped examples to imitate: overlapping-distribution "indistinguishability" curves, a knowledge×timing 2×2 map, a layered trust stack, a randomized-response coin tree, a Laplace-noise bell, a federated-learning fan-in, a linkage Venn (`courses/trustworthy-ai/lec01-introduction.html`, `lec02-privacy-dp.html`).
-2. **Real paper / public figures** — when the canonical figure *itself* tells it better (panda→gibbon, a COMPAS bar chart, a BadNets trigger, a training-data-extraction example). Follow the **Figure-capture protocol** below. Reuse figures already vetted in sibling decks (e.g. `courses/privacy/lectures/03-memorization/figs/`) rather than re-fetching.
+1. **Real paper / public figures — preferred whenever a citable source exists.** If a paper or well-known blog post already has the figure that makes the point (panda→gibbon, the CLIP Figure 1 similarity grid, a COMPAS bar chart, a BadNets trigger), **capture and reuse it with an explicit citation** rather than redrawing it as an original diagram — the real figure is more credible and faster to produce correctly. Follow the **Figure-capture protocol** below. Reuse figures already vetted in sibling decks (e.g. `courses/privacy/lectures/03-memorization/figs/`) rather than re-fetching.
+2. **Inline HTML + SVG concept diagrams** — for ideas that have no single canonical source figure to capture (a mechanism you're explaining in your own words, a comparison across multiple papers, a made-up worked example). Build structure in HTML/SVG (boxes, circles, arrows, overlapping bell curves, 2×2 grids, flows, pipelines, trees). Plain-text labels in SVG `<text>` — KaTeX skips SVG, so never put `$…$` inside `<text>` (see GOTCHAS). One semantic color per role (Yonsei blue = focus, gray = context, `--warn` red = the bad case). Shipped examples to imitate: overlapping-distribution "indistinguishability" curves, a knowledge×timing 2×2 map, a layered trust stack, a randomized-response coin tree, a Laplace-noise bell, a federated-learning fan-in, a linkage Venn (`courses/trustworthy-ai/lec01-introduction.html`, `lec02-privacy-dp.html`).
 3. **TODO-marks** — when you *want* a real figure or a richer diagram but can't produce it now (no network, fiddly crop, needs design time), **do not ship a bare slide**. Leave a marker on the slide where the visual belongs:
 
    ```html
@@ -832,7 +832,7 @@ For boxed nodes (more visual weight), use `.diagram-flow` + `.diagram-box` inste
 
    These are first-class authoring debt, not silent omissions. `grep -rn "TODO real figure"` finds every slide still missing its intended visual.
 
-**Concept, not copy.** A third case sits between sources 1 and 2: you want the *pedagogical idea* a well-known figure conveys — e.g. the CLIP paper's Figure 1 image×caption similarity grid with positives on the diagonal — not the figure itself. Handle it as source 1: **originate your own HTML+SVG diagram expressing the concept** — your own layout, your own labels, your own example values. Never reproduce or trace the copyrighted asset pixel-for-pixel; "their figure, redrawn" is still their figure. Reserve capture-with-citation (source 2) for when you genuinely show *their* figure. A concept recreation needs no `— Figure N` citation; cite the paper normally if the slide discusses it.
+**When there's a well-known figure for the idea, capture it — don't redraw it.** If you catch yourself building an original HTML+SVG diagram to express a concept that a specific, identifiable paper or blog post already illustrates (e.g. the CLIP paper's Figure 1 image×caption grid with positives on the diagonal), stop and capture the real figure instead (source 1), with an explicit citation per the **Figure-capture protocol**. Only fall back to an original concept diagram (source 2) when no clean source figure exists to capture, or the source panel itself is unsuitable to show as-is (e.g. it reproduces extracted private training data — see "Prefer methodology figures" below).
 
 **Make diagrams big.** Concept SVGs are routinely drawn too small. Full-width single-diagram slides: wrapper `max-width: 820–920px`, SVG `<text>` `font-size: 15–20` (viewBox units), bold for primary labels. Diagrams paired with bullets in a grid column: `max-width: 360–440px`, `font-size: 13–16`. Bump **both** the wrapper width and the font-size numbers — a wider wrapper alone leaves labels proportionally small (GOTCHAS → "Concept SVG renders too small"). See Recipes → Diagram dominates.
 

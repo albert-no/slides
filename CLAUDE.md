@@ -21,7 +21,7 @@ Non-negotiable across all work: the four ranked priorities in `DESIGN_SYSTEM.md`
 | Edit / add slides | Read the relevant outlines first (Outlines below), then `DESIGN_SYSTEM.md` recipes; follow the Editing workflow below. |
 | Fix overflow on a slide | `DESIGN_SYSTEM.md` → Priorities → **2. Overflow** (+ Vertical budget); `GOTCHAS.md` → **Overflow & the vertical budget**. Never shrink type. |
 | Visual audit ("check page 12", overflow/overlap) | `/audit-and-edit-deck` (below, on request only). |
-| Add a visual / capture a paper figure | `DESIGN_SYSTEM.md` → **Visual richness** (incl. **Concept, not copy** and **Figure-capture protocol**). |
+| Add a visual / capture a paper figure | `DESIGN_SYSTEM.md` → **Visual richness** — prefer capturing a real figure with citation (**Figure-capture protocol**) over redrawing one as an original diagram. |
 | Distribute a deck | `python3 scripts/bundle.py` (Editing workflow step 6). |
 
 **Default to visually rich slides.** Every content slide should aim to carry a diagram, figure, chart, or SVG — text-only bullets are a fallback, not the goal. When a real figure or richer diagram can't be made now, leave a `<!-- TODO real figure: … -->` marker rather than shipping bare bullets. Keep each slide self-contained (no "next week"/"(Wk N)" cross-references). Full policy: `DESIGN_SYSTEM.md` → **Visual richness**.

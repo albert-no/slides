@@ -41,7 +41,7 @@ The companion LaTeX lecture notes live one level up in `../notes/`; exams in `..
 |---|---|---|
 | Entropy definition | `01-entropy/entropy1-entropy-kl.html` | `:131` |
 | Gibbs inequality | `01-entropy/entropy1-entropy-kl.html` | `:507` |
-| Log-sum inequality | `01-entropy/entropy1-entropy-kl.html` | `:581` |
+| Log-sum inequality | `01-entropy/entropy1-entropy-kl.html` | `:582` |
 | Chain rule (entropy) | `01-entropy/entropy2-joint-mi-fano.html` | `:111` |
 | Conditioning reduces entropy | `01-entropy/entropy2-joint-mi-fano.html` | `:167` |
 | Mutual information definition | `01-entropy/entropy2-joint-mi-fano.html` | `:240` |
@@ -58,7 +58,7 @@ The companion LaTeX lecture notes live one level up in `../notes/`; exams in `..
 | LZ78 optimality | `02-lossless/lossless3-markov-universal.html` | `:316` |
 | Differential entropy definition | `03-diffentropy/diffentropy1-foundations.html` | `:106` |
 | Bin discretization bridge | `03-diffentropy/diffentropy1-foundations.html` | `:117` |
-| MI invariance under scaling | `03-diffentropy/diffentropy1-foundations.html` | `:407` |
+| MI invariance under scaling | `03-diffentropy/diffentropy1-foundations.html` | `:411` |
 | Gaussian MaxEnt | `03-diffentropy/diffentropy2-maxent-gaussian.html` | `:143` |
 | Hadamard's inequality | `03-diffentropy/diffentropy2-maxent-gaussian.html` | `:221` |
 | EPI | `03-diffentropy/diffentropy2-maxent-gaussian.html` | `:332` |

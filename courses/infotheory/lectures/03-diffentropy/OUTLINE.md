@@ -39,22 +39,23 @@ Three-lecture series. Continuous-domain analogue of the discrete entropy series.
 | | Linear transformation | `:289` |
 | | A puzzle | `:300` |
 | | $h$ can be negative | `:308` |
-| | What is meaningful | `:318` |
-| **04 — Joint and conditional** | Chain rule, KL, MI | `:330-459` |
-| | Joint differential entropy | `:338` |
-| | Conditional differential entropy | `:348` |
-| | Chain rule | `:358` |
-| | KL divergence (continuous) | `:368` |
-| | Why KL is scale-invariant | `:378` |
-| | Conditioning reduces $h$ | `:389` |
-| | Mutual information — definition | `:397` |
-| | **Theorem — MI scaling invariance** | `:407` |
-| | Why MI survives the infinities (interpretation) | `:422` |
-| | Example — independent Gaussians | `:430` |
-| | Example — correlated Gaussians | `:440` |
-| Recap / Next | | `:449, :461` |
+| | Resolving the puzzle | `:315` |
+| | What is meaningful | `:322` |
+| **04 — Joint and conditional** | Chain rule, KL, MI | `:334-463` |
+| | Joint differential entropy | `:342` |
+| | Conditional differential entropy | `:352` |
+| | Chain rule | `:362` |
+| | KL divergence (continuous) | `:372` |
+| | Why KL is scale-invariant | `:382` |
+| | Conditioning reduces $h$ | `:393` |
+| | Mutual information — definition | `:401` |
+| | **Theorem — MI scaling invariance** | `:411` |
+| | Why MI survives the infinities (interpretation) | `:426` |
+| | Example — independent Gaussians | `:434` |
+| | Example — correlated Gaussians | `:444` |
+| Recap / Next | | `:453, :465` |
 
-**Key:** definition `:106`; discretization bridge `:117`; scaling `:245`; MI definition `:397`; MI invariance `:407`.
+**Key:** definition `:106`; discretization bridge `:117`; scaling `:245`; MI definition `:401`; MI invariance `:411`.
 
 ### Note (`diffentropy1-foundations-note.html`)
 - Thought-experiment motivation for a new definition

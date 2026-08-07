@@ -41,7 +41,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 
 | Topic | Location |
 |---|---|
-| Entropy definition / Gibbs / log-sum | `courses/infotheory/lectures/01-entropy/entropy1-entropy-kl.html:131, :507, :581` |
+| Entropy definition / Gibbs / log-sum | `courses/infotheory/lectures/01-entropy/entropy1-entropy-kl.html:131, :507, :582` |
 | Chain rule / DPI / Fano | `courses/infotheory/lectures/01-entropy/entropy2-joint-mi-fano.html:111, :426, :518` |
 | Mutual information (discrete) | `courses/infotheory/lectures/01-entropy/entropy2-joint-mi-fano.html:240` |
 | Kraft / Kraft–McMillan / Shannon / Huffman | `courses/infotheory/lectures/02-lossless/lossless1-codes.html:213, :252, :293, :493` |

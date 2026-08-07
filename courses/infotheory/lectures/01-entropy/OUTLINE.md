@@ -54,17 +54,17 @@ Two-lecture foundation series. Discrete-domain definitions, properties, and ineq
 | | **Theorem — Gibbs $D(p\|q)\ge 0$** | `:506` |
 | | Proof — Gibbs via Jensen | `:517` |
 | | Technique — the $\ln t \le t-1$ trick | `:528` |
-| | Corollary — max entropy from Gibbs | `:537` |
-| | Example — two Bernoullis (asymmetry) | `:547` |
-| | Interpretation — mismatch cost in coding | `:558` |
-| | What KL measures (three faces) | `:569` |
-| | **Theorem — log-sum inequality** | `:580` |
-| | Proof — log-sum | `:591` |
-| | Corollary — joint convexity of KL | `:600` |
-| | Pinsker's inequality (statement) | `:608` |
-| Recap / Next | | `:619, :633` |
+| | Corollary — max entropy from Gibbs | `:538` |
+| | Example — two Bernoullis (asymmetry) | `:548` |
+| | Interpretation — mismatch cost in coding | `:559` |
+| | What KL measures (three faces) | `:570` |
+| | **Theorem — log-sum inequality** | `:581` |
+| | Proof — log-sum | `:592` |
+| | Corollary — joint convexity of KL | `:601` |
+| | Pinsker's inequality (statement) | `:609` |
+| Recap / Next | | `:620, :634` |
 
-**Key:** entropy definition `:130`; $H(X)\ge 0$ proof `:262`; $H(X)\le\log\|\mathcal{X}\|$ `:294`; concavity `:305`; KL definition `:475`; Gibbs theorem `:506`; log-sum `:580`.
+**Key:** entropy definition `:130`; $H(X)\ge 0$ proof `:262`; $H(X)\le\log\|\mathcal{X}\|$ `:294`; concavity `:305`; KL definition `:475`; Gibbs theorem `:506`; log-sum `:581`.
 
 ### Note (`entropy1-entropy-kl-note.html`)
 - Khinchin's axiomatic characterization

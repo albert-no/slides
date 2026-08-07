@@ -41,15 +41,15 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 
 | Topic | Location |
 |---|---|
-| Entropy definition / Gibbs / log-sum | `courses/infotheory/lectures/01-entropy/entropy1-entropy-kl.html:97, :379, :437` |
-| Chain rule / DPI / Fano | `courses/infotheory/lectures/01-entropy/entropy2-joint-mi-fano.html:118, :368, :438` |
-| Mutual information (discrete) | `courses/infotheory/lectures/01-entropy/entropy2-joint-mi-fano.html:227` |
-| Kraft / Kraft–McMillan / Shannon / Huffman | `courses/infotheory/lectures/02-lossless/lossless1-codes.html:157, :198, :268, :413` |
-| AEP / source coding theorem / arithmetic coding | `courses/infotheory/lectures/02-lossless/lossless2-aep-arithmetic.html:84, :204, :256` |
-| Markov entropy rate / LZ78 | `courses/infotheory/lectures/02-lossless/lossless3-markov-universal.html:188, :246` |
-| Differential entropy + bin discretization | `courses/infotheory/lectures/03-diffentropy/diffentropy1-foundations.html:84, :96` |
-| Gaussian MaxEnt / Hadamard / EPI | `courses/infotheory/lectures/03-diffentropy/diffentropy2-maxent-gaussian.html:165, :248, :272` |
-| Shannon–Hartley / water-filling / I-MMSE | `courses/infotheory/lectures/03-diffentropy/diffentropy3-mi-awgn.html:177, :293, :385` |
+| Entropy definition / Gibbs / log-sum | `courses/infotheory/lectures/01-entropy/entropy1-entropy-kl.html:131, :507, :581` |
+| Chain rule / DPI / Fano | `courses/infotheory/lectures/01-entropy/entropy2-joint-mi-fano.html:111, :426, :518` |
+| Mutual information (discrete) | `courses/infotheory/lectures/01-entropy/entropy2-joint-mi-fano.html:240` |
+| Kraft / Kraft–McMillan / Shannon / Huffman | `courses/infotheory/lectures/02-lossless/lossless1-codes.html:213, :252, :293, :493` |
+| AEP / source coding theorem / arithmetic coding | `courses/infotheory/lectures/02-lossless/lossless2-aep-arithmetic.html:98, :205, :413` |
+| Markov entropy rate / LZ78 | `courses/infotheory/lectures/02-lossless/lossless3-markov-universal.html:156, :283` |
+| Differential entropy + bin discretization | `courses/infotheory/lectures/03-diffentropy/diffentropy1-foundations.html:106, :117` |
+| Gaussian MaxEnt / Hadamard / EPI | `courses/infotheory/lectures/03-diffentropy/diffentropy2-maxent-gaussian.html:143, :221, :332` |
+| Shannon–Hartley / water-filling / I-MMSE | `courses/infotheory/lectures/03-diffentropy/diffentropy3-mi-awgn.html:161, :291, :389` |
 | Score function / Tweedie's formula | `courses/privacy/lectures/02-generative/diffusion1-foundations.html:362-425`; theorem at `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:121` |
 | DDPM forward + VLB derivation | `courses/privacy/lectures/02-generative/diffusion2-ddpm.html:189-333`; `courses/infotheory/lectures/07-diffusion/diff2-diffusion.html:153-212` |
 | SDE / Fokker–Planck / Anderson reverse | `courses/privacy/lectures/02-generative/diffusion3-sde-score.html` (FP `:148`, Anderson `:234`, score matching `:339`) |

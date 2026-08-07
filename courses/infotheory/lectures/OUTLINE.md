@@ -39,32 +39,32 @@ The companion LaTeX lecture notes live one level up in `../notes/`; exams in `..
 
 | Topic | Lecture | Line |
 |---|---|---|
-| Entropy definition | `01-entropy/entropy1-entropy-kl.html` | `:97` |
-| Gibbs inequality | `01-entropy/entropy1-entropy-kl.html` | `:379` |
-| Log-sum inequality | `01-entropy/entropy1-entropy-kl.html` | `:437` |
-| Chain rule (entropy) | `01-entropy/entropy2-joint-mi-fano.html` | `:118` |
-| Conditioning reduces entropy | `01-entropy/entropy2-joint-mi-fano.html` | `:158` |
-| Mutual information definition | `01-entropy/entropy2-joint-mi-fano.html` | `:227` |
-| Data processing inequality | `01-entropy/entropy2-joint-mi-fano.html` | `:368` |
-| Fano's inequality | `01-entropy/entropy2-joint-mi-fano.html` | `:438` |
-| Kraft inequality | `02-lossless/lossless1-codes.html` | `:157` |
-| Kraft–McMillan | `02-lossless/lossless1-codes.html` | `:198` |
-| Shannon code (entropy bound) | `02-lossless/lossless1-codes.html` | `:268` |
-| Huffman optimality | `02-lossless/lossless1-codes.html` | `:413` |
-| AEP | `02-lossless/lossless2-aep-arithmetic.html` | `:84` |
-| Source coding theorem | `02-lossless/lossless2-aep-arithmetic.html` | `:204` |
-| Arithmetic coding bound | `02-lossless/lossless2-aep-arithmetic.html` | `:405` |
-| Markov entropy rate | `02-lossless/lossless3-markov-universal.html` | `:188` |
-| LZ78 optimality | `02-lossless/lossless3-markov-universal.html` | `:355` |
-| Differential entropy definition | `03-diffentropy/diffentropy1-foundations.html` | `:84` |
-| Bin discretization bridge | `03-diffentropy/diffentropy1-foundations.html` | `:96` |
-| MI invariance under scaling | `03-diffentropy/diffentropy1-foundations.html` | `:386` |
-| Gaussian MaxEnt | `03-diffentropy/diffentropy2-maxent-gaussian.html` | `:165` |
-| Hadamard's inequality | `03-diffentropy/diffentropy2-maxent-gaussian.html` | `:248` |
-| EPI | `03-diffentropy/diffentropy2-maxent-gaussian.html` | `:367` |
-| Shannon–Hartley | `03-diffentropy/diffentropy3-mi-awgn.html` | `:177` |
-| Water-filling | `03-diffentropy/diffentropy3-mi-awgn.html` | `:293` |
-| I-MMSE | `03-diffentropy/diffentropy3-mi-awgn.html` | `:385` |
+| Entropy definition | `01-entropy/entropy1-entropy-kl.html` | `:131` |
+| Gibbs inequality | `01-entropy/entropy1-entropy-kl.html` | `:507` |
+| Log-sum inequality | `01-entropy/entropy1-entropy-kl.html` | `:581` |
+| Chain rule (entropy) | `01-entropy/entropy2-joint-mi-fano.html` | `:111` |
+| Conditioning reduces entropy | `01-entropy/entropy2-joint-mi-fano.html` | `:167` |
+| Mutual information definition | `01-entropy/entropy2-joint-mi-fano.html` | `:240` |
+| Data processing inequality | `01-entropy/entropy2-joint-mi-fano.html` | `:426` |
+| Fano's inequality | `01-entropy/entropy2-joint-mi-fano.html` | `:518` |
+| Kraft inequality | `02-lossless/lossless1-codes.html` | `:213` |
+| Kraft–McMillan | `02-lossless/lossless1-codes.html` | `:252` |
+| Shannon code (entropy bound) | `02-lossless/lossless1-codes.html` | `:301` |
+| Huffman optimality | `02-lossless/lossless1-codes.html` | `:493` |
+| AEP | `02-lossless/lossless2-aep-arithmetic.html` | `:98` |
+| Source coding theorem | `02-lossless/lossless2-aep-arithmetic.html` | `:205` |
+| Arithmetic coding bound | `02-lossless/lossless2-aep-arithmetic.html` | `:413` |
+| Markov entropy rate | `02-lossless/lossless3-markov-universal.html` | `:186` |
+| LZ78 optimality | `02-lossless/lossless3-markov-universal.html` | `:316` |
+| Differential entropy definition | `03-diffentropy/diffentropy1-foundations.html` | `:106` |
+| Bin discretization bridge | `03-diffentropy/diffentropy1-foundations.html` | `:117` |
+| MI invariance under scaling | `03-diffentropy/diffentropy1-foundations.html` | `:407` |
+| Gaussian MaxEnt | `03-diffentropy/diffentropy2-maxent-gaussian.html` | `:143` |
+| Hadamard's inequality | `03-diffentropy/diffentropy2-maxent-gaussian.html` | `:221` |
+| EPI | `03-diffentropy/diffentropy2-maxent-gaussian.html` | `:332` |
+| Shannon–Hartley | `03-diffentropy/diffentropy3-mi-awgn.html` | `:161` |
+| Water-filling | `03-diffentropy/diffentropy3-mi-awgn.html` | `:291` |
+| I-MMSE | `03-diffentropy/diffentropy3-mi-awgn.html` | `:389` |
 | ELBO definition | `07-diffusion/diff1-vae-elbo.html` | `:101` |
 | Reparameterization trick (lemma) | `07-diffusion/diff1-vae-elbo.html` | `:267` |
 | q(x_t\|x_0) closed form | `07-diffusion/diff2-diffusion.html` | `:74` |

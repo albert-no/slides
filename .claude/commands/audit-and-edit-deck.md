@@ -15,6 +15,7 @@ If no path is given, default to the single `.html` deck under the current workin
 
 ## Workflow (per deck)
 
+0. **Toolchain check.** Confirm headless Chrome and `pdftoppm` are available (`command -v pdftoppm`; Chrome at the path below or `google-chrome`/`chromium`). If either is missing, try to install it (`brew install poppler` on macOS, or ask the user). If it is **confirmed unavailable and cannot be installed**, do not keep forcing the screenshot pipeline: tell the user plainly that no visual render is possible in this environment, and run the audit using `DESIGN_SYSTEM.md` → **Verifying without the toolchain (no-render fallback)** instead — slide map by grep, overflow by the Vertical-budget arithmetic, lint checks by targeted grep. Apply the same fix rules (step 4) to what that method finds, and flag in the final Output that **no visual render was performed** (the fallback cannot catch visual overlap, squashed math spacing, or drifted SVG overlays) — recommend re-running this command once tooling is available.
 1. **Render the deck to PDF** via headless Chrome:
    ```bash
    mkdir -p /tmp/<basename>-shots && cd /tmp/<basename>-shots
@@ -31,7 +32,7 @@ If no path is given, default to the single `.html` deck under the current workin
    ```bash
    pdftoppm -png -r 100 deck.pdf slide
    ```
-   If `pdftoppm` is missing, instruct the user to `brew install poppler`. Do not silently skip.
+   If `pdftoppm` is missing, instruct the user to `brew install poppler`. Do not silently skip — and if it can't be installed at all, use the step-0 fallback rather than abandoning the audit.
 3. **Read each `slide-NN.png`** with the `Read` tool and inspect for:
    - **Figure or text overflow** past the 1280×720 slide rectangle.
    - **Brand-footer collision** — `.brand-footer` lives at bottom-left (~40 px reserved). A `.highlight`, `.cite`, or trailing prose ending inside that region counts as overlap.
@@ -60,6 +61,7 @@ After all fixes are committed to the file(s):
 - Bullet list of slides modified (with slide-number references).
 - Note if any slide was split into multiple slides (and the new total slide count).
 - Final lint status.
+- If the no-render fallback (step 0) was used: state explicitly that no visual render was performed and which checks were done by grep/arithmetic instead.
 
 If no issues found, say so explicitly — don't fabricate findings.
 

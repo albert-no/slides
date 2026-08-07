@@ -1,10 +1,12 @@
 # Talks design system
 
-Canonical rules for slide decks. **Audience**: academic conference talks and master-level lectures. **Mode**: math-heavy with rigorous theorem/proof, plus high-level intuition. **Visual**: minimal — short abstract phrases, not full sentences. Applies to custom HTML decks and the Marp template; when they disagree, `reference/deck.css` wins.
+Normative rules and recipes for slide decks. **Audience**: academic conference talks and master-level lectures. **Mode**: math-heavy — rigorous theorem statement, rigorous proof, plus a high-level intuition pass. **Visual**: minimal — short abstract phrases, never full sentences. Applies to custom HTML decks and the Marp template; when they disagree, `reference/deck.css` wins.
 
-**Source files.** `reference/colors_and_type.css` (font-face + CSS tokens), `reference/deck.css` (engine + components). Decks `<link>` to these — never duplicate.
+**Division of labor.** This file is the canonical *how to author* reference. `GOTCHAS.md` is the *symptom → cause → fix* debugging reference. When both cover a topic, this file is canonical. Read this file when writing or editing; go to GOTCHAS when something looks wrong.
 
-**Reference target.** Kangwook Lee's BLISS deck (<https://kangwooklee.com/talks/2026_03_BLISS/bliss_seminar.html>; captures in `reference/kangwook*.png`) is the minimum acceptable visual weight. If a deck renders smaller, suspect a per-deck `<style>` shadowing the canonical tokens — see GOTCHAS.
+**Source files.** `reference/colors_and_type.css` (font-face + CSS tokens), `reference/deck.css` (engine + components), `reference/deck.js` (scale / nav / footer injection). Decks `<link>` to these — never duplicate.
+
+**Reference target.** Kangwook Lee's BLISS deck (<https://kangwooklee.com/talks/2026_03_BLISS/bliss_seminar.html>; captures in `reference/kangwook1.png`–`kangwook4.png`) is the minimum acceptable visual weight. If a deck renders smaller, suspect a per-deck `<style>` shadowing the canonical tokens — see GOTCHAS.
 
 ---
 
@@ -15,13 +17,16 @@ Canonical rules for slide decks. **Audience**: academic conference talks and mas
 | Start a new deck / order the slides | Deck anatomy |
 | Pick a deck to imitate for a genre | Deck anatomy → Exemplars |
 | Predict overflow before rendering | Priorities → Vertical budget |
+| Verify a deck when Chrome/poppler/python3 are missing | Verifying without the toolchain |
+| Map "page N" to a slide | Conventions → Page numbering |
 | Add a content slide | Recipes → Content slide |
 | State a theorem rigorously | Math-heavy → Theorem |
-| Show a proof rigorously | Math-heavy → Proof |
+| Show a proof rigorously / continue one | Math-heavy → Proof |
 | Show proof intuition (color, build-up) | Math-heavy → Intuition + Build-up |
 | Bracket a multi-step proof | Math-heavy → Multi-step proof pattern |
 | Introduce a parameterized formula (DDIM-style) | Math-heavy → Recipe-first derivation |
 | Stack two related equations | Math-heavy → Stacked equations |
+| Squeeze math-block margins on a tight proof slide | Math-heavy → Stacked equations → Tight-margin recipe |
 | Substitute variables back into a result | Math-heavy → Substitution |
 | Label terms in a long equation | Math-heavy → Underbrace labels |
 | State a prerequisite before deriving from it | Math-heavy → Recall before derive |
@@ -34,24 +39,23 @@ Canonical rules for slide decks. **Audience**: academic conference talks and mas
 | Let a dense figure breathe (own slide) | Recipes → Image-first / description-follows |
 | Overlay math labels on an SVG | Recipes → KaTeX overlays on SVG |
 | Add a visual (or mark one as TODO) | Visual richness |
+| Adapt a famous figure's *idea* without copying it | Visual richness → Concept, not copy |
+| Capture a real paper figure | Visual richness → Figure-capture protocol |
 | Move detail off the slide | Companion note files |
 | Formal math for a concept-first course | Technical supplement decks |
-| Cite a paper | Components → `.cite` + Recipes → Paper-overview |
-| Section divider | Recipes → Section divider |
-| Title slide / Closer | Recipes → Title / Closer |
+| Cite a paper (format, venue order, position) | Conventions → Citations |
+| Section divider / TOC / Title / Closer | Recipes |
 | Diagram with math labels | Recipes → Diagram (HTML + SVG arrows) |
 | Make a diagram dominate the slide | Recipes → Diagram dominates |
 | Build-up of nearly identical slides | Recipes → Build-up no-fade |
 | Recall a definition the audience may have forgotten | Recipes → Recall card |
-| Cite a paper (venue order, not arXiv) | Conventions → Citations |
-| What "page N" means | Conventions → Page numbering |
-| Trace a debugging issue | `GOTCHAS.md` |
+| Trace a debugging symptom | `GOTCHAS.md` |
 
 ---
 
 ## Priorities (ranked, non-negotiable)
 
-When rules conflict, lower number wins.
+When rules conflict, lower number wins. These four are the spine of every authoring and editing decision.
 
 ### 0. Font sizes — strongest rule
 
@@ -59,8 +63,8 @@ Important content (audience must read it during the talk) → body size. Non-imp
 
 - The canonical scale is `reference/deck.css`. Don't redefine `p`, `li`, `h1`, `h2`, `h3`, `.subtitle`, `.cite`, `.small`, `.tiny`, or `.math-block` `font-size` in a deck's inline `<style>`. Don't put inline `style="font-size:…"` on prose.
 - `.tiny` is banned everywhere. `.small` on prose (paragraphs, list items, captions, anything inside `.highlight` / `.card` / `.cols` / `.grid-*` / `.math-block` / under a `<table>`) is banned.
-- Two on-slide slots permit sub-body text: `<div class="cite">` citations, and `.small` inside a diagram (only when the label is a non-crucial sub-label *and* compression breaks the layout).
-- **De-emphasis is by color, not size.** A subordinate aside or takeaway line (`<em>`, `<p class="muted">`) stays at **body size** and renders gray — it is still read during the talk. `.muted` is a *color-only* class (canonical `reference/deck.css`); never give it a reduced `font-size`, and don't reach for `.small`/`.tiny` to "tone a line down". A line not worth body size belongs in `<deck>-note.html`, not shrunk on the slide.
+- Exactly two on-slide slots permit sub-body text: `<div class="cite">` citations, and `.small` inside a diagram (only when the label is a non-crucial sub-label *and* compression breaks the layout).
+- **De-emphasis is by color, not size.** A subordinate aside or takeaway line (`<em>`, `<p class="muted">`) stays at **body size** and renders gray — it is still read during the talk. `.muted` is a *color-only* class (canonical in `reference/deck.css`); never give it a reduced `font-size`, and don't reach for `.small`/`.tiny` to "tone a line down". A line not worth body size belongs in `<deck>-note.html`, not shrunk on the slide.
 - Component-internal text (pill labels, token chips, code blocks) stays at its native compact size — these are design tokens, not author overrides.
 - When a slide feels cramped, **cut content or split the slide**. There is no slide budget.
 
@@ -70,17 +74,17 @@ Important content (audience must read it during the talk) → body size. Non-imp
 
 **Phrases, not sentences.** Telegraphic noun phrases. Drop narrative connectors ("this means…", "in other words…", "essentially", "actually"). Drop soft qualifiers ("very", "quite", "fairly"). Speaker narrates; the slide is a visual anchor. This applies to `h2` titles too — short and abstract (3–6 words), not action-title sentences.
 
-**Math is not prose.** A theorem statement, definition, or equation in a `.math-block` doesn't count toward the 40-word ceiling. The ceiling exists to keep prose lean — math earns its space.
+**Math is not prose.** A theorem statement, definition, or equation in a `.math-block` doesn't count toward the 40-word ceiling. The ceiling keeps prose lean — math earns its space.
 
 **One claim per line.** When a paragraph, `<li>`, `.highlight`, or `.card` carries multiple distinct claims joined by periods, split each into its own `<p>` (or convert the run to a `<ul>` if there are 3+ short claims). Two assertions that look like one sentence read as one idea — the audience won't track both. This applies inside `.highlight` / `.card` too: separate `<p>` siblings, not concatenated sentences.
 
-**Math-comma-math — anti-pattern.** Most of the time, starting a clause with math is fine. The specific failure is when the *previous* clause also *ended* in math: "For large $N$, $N\sigma^2$ dominates" — the two glyphs sit on either side of the comma and the eye reads them as one continuous expression ($N, N\sigma^2$). Insert a noun in the second clause ("the second term $N\sigma^2$ dominates") or restructure so the boundary isn't math-comma-math.
+**Math-comma-math — anti-pattern.** Starting a clause with math is usually fine. The specific failure is when the *previous* clause also *ended* in math: "For large $N$, $N\sigma^2$ dominates" — the two glyphs sit on either side of the comma and the eye reads them as one continuous expression ($N, N\sigma^2$). Insert a noun in the second clause ("the second term $N\sigma^2$ dominates") or restructure so the boundary isn't math-comma-math.
 
-**Em-dash mid-sentence — anti-pattern.** "X is a sparsifier — pruning emerges" wraps awkwardly at slide font sizes; the dash often orphans alone on a line. Replace with a colon plus `<br>` (one-shot internal break is allowed by Priority 1 step 2) or split into two `<p>` tags. Em-dashes are only safe when they're part of a technical glyph (`7–8B`, `fill-in-the-middle`).
+**Em-dash mid-sentence — anti-pattern.** "X is a sparsifier — pruning emerges" wraps awkwardly at slide font sizes; the dash often orphans alone on a line. Replace with a colon plus `<br>` (one deliberate internal break is allowed by step 2 below) or split into two `<p>` tags. Em-dashes are only safe when part of a technical glyph (`7–8B`, `fill-in-the-middle`) or inside `.cite` lines and `h2` titles like "Proof — MGF bound".
 
-**Numerical anchors next to closed-form formulas.** When a slide states a closed-form `R(D)`, `D(R)`, or any quantity-as-function, pin a concrete number for the running example next to it: `R(D) = 1 - H_b(D)$, &nbsp;$R(\tfrac14) \approx 0.189$ bits` reads in one glance. The audience reads the formula; the speaker says the number; both belong on the slide.
+**Numerical anchors next to closed-form formulas.** When a slide states a closed-form `R(D)`, `D(R)`, or any quantity-as-function, pin a concrete number for the running example next to it: `$R(D) = 1 - H_b(D)$, &nbsp;$R(\tfrac14) \approx 0.189$ bits` reads in one glance. The audience reads the formula; the speaker says the number; both belong on the slide.
 
-When prose visibly wraps:
+**When prose visibly wraps, fix in this order:**
 
 1. **Compress.** Most overflow is wordiness, not a layout problem. Collapse to noun phrases.
 2. **Split** at a natural sentence/colon/independent-clause boundary into two adjacent `<p>` tags. `<br>` only at a deliberate internal clause break (rare).
@@ -93,7 +97,7 @@ Content must fit inside 1280×720 and clear the auto-injected `.brand-footer` at
 
 When something overflows: compress (Priority 1) → split the slide → move secondary detail to `<deck>-note.html`. **Never** shrink type. **Never** compress vertical rhythm (`margin`, `padding`, `line-height`) on prose. Discipline is upstream — write short phrases from the first draft.
 
-For multi-slide proofs, a "(continued)" `h2` and a brief one-line recap is the canonical recovery — see Math-heavy → Proof.
+For multi-slide proofs, a "(continued)" `h2` plus a one-line recap is the canonical recovery — see Math-heavy → Proof.
 
 **Visual element budget.** A content slide gets `h2` + `divider` + at most **5 child elements**. A `.math-block` counts as 1 (taller than a prose line). A `<table>` counts by row count (header + N data rows). A `.highlight` counts as 1 regardless of internal `<p>` count. **If a slide carries `.math-block` + `<table>` + `.highlight` together, it's already over budget — split before previewing.** This rule predicts overflow without rendering; honor it at draft time.
 
@@ -129,15 +133,30 @@ Empty space at the *bottom* of a slide is fine. Empty space *in the middle* is n
 3. **Prose emphasis.** `**strong**` → Yonsei Blue. `*em*` → muted gray (never italic — see GOTCHAS). A whole subordinate line → `<p class="muted">` — same gray, still body size (de-emphasis by color, not size; Priority 0).
 4. **Key insight** → `<div class="highlight">` (HTML) or `>` blockquote (Marp). Max one per slide.
 5. **Math.** Inline `$…$`, display `$$…$$` inside `<div class="math-block">`.
-6. **Paper attribution** → `<div class="cite">` footnote at the bottom. Not a side card.
-   - **One dedicated line per citation.** Each citation must fit on a single line of the rendered slide (`.cite` is capped at 60% width). If a slide cites two papers, give each its own `<br>`-separated line *or* its own `<div class="cite">`. Never let a citation wrap mid-title.
-   - **Two length tiers** by slide density:
-     - **Theorem / lemma slide** — full citation: `Author et al., "Title", Venue YYYY.`
-     - **Abstract-bullet slide** — short form: `Author et al., NameOrAcronym, Venue YYYY.` (e.g., `Rafailov et al., DPO, NeurIPS 2023.`). Use when the slide is dense and the full title would wrap.
+6. **Paper attribution** → `<div class="cite">` footnote at the bottom, never a side card. One dedicated line per citation; two length tiers by slide density. Full rules: Conventions → Citations.
 7. **Ghost deck test.** Read only the `h2` titles in sequence. They should outline the lecture arc clearly. If they don't, fix the outline before drafting bodies. Titles stay short and abstract — not full sentences.
 8. **Spell out acronyms on first appearance.** The first slide that introduces a method/metric must expand the acronym inline — `SSCD (Self-Supervised Copy Detection)`, `RTA (Random Token Addition)`, `MV / RV / TV (Matching / Retrieval / Template Verbatim)`. After that, the bare acronym is fine. Applies to per-deck acronyms; canonical ones the audience already knows (LLM, MIA, DP, KL, MSE) don't need expansion. The expansion goes in the slide body where the term first appears, not in a separate glossary slide.
-9. **Visual-first — aim for a visual on every slide (default).** Prefer a diagram, figure, chart, schematic, or worked-math block over a text-only slide. The target is a *visually rich* deck: most content slides carry an exhibit and text recedes to a short framing line. When drafting, ask "what's the picture?" before "what are the bullets?". Build visuals as inline HTML+SVG, pull in real paper figures where they help, or leave a `TODO real figure` marker — full policy in **Visual richness** below. This does **not** override Priority 1's *one exhibit per slide*: visual-rich means *a* visual, not a collage.
+9. **Visual-first — aim for a visual on every slide (default).** Prefer a diagram, figure, chart, schematic, or worked-math block over a text-only slide. When drafting, ask "what's the picture?" before "what are the bullets?". Full policy: **Visual richness**. This does not override rule 1 — visual-rich means *a* visual, not a collage.
 10. **Self-contained slides (independent modules).** In a multi-lecture course where slides may be reordered or reused, each slide must stand on its own. Drop forward/backward course references — no "next week", "previously", "(Wk N)", "see Lecture 3", "as we saw". State the point on the slide itself. The only place a week index belongs is a syllabus / course-map slide.
+
+---
+
+## Verifying without the toolchain (no-render fallback)
+
+The canonical verification loop is: headless Chrome → PDF → `pdftoppm` → PNG → visual read (`/audit-and-edit-deck`), plus `python3 scripts/lint-deck.py` / `find-wordy.py` / `outline-lint.py`. **Always prefer that pipeline when it works.** Some agent environments have none of it — no Chrome, no poppler, no `python3`, and no way to install anything (no sudo, no package manager, no alternative rasterizer like `mutool`, `convert`, `magick`, or `gs`). Confirm absence first (`command -v google-chrome pdftoppm python3 mutool convert gs`); only then use this fallback.
+
+1. **Slide map by grep, never memory.** `grep -n 'class="slide' <deck>.html` lists every `.slide` div in document order. "Page N" = the Nth match, counting from 1 at the title slide (Conventions → Page numbering). Build the map fresh into your scratchpad, and rebuild it after every insertion/removal — never trust remembered or previously-quoted line numbers.
+2. **Overflow by arithmetic, not rendering.** Apply the Priority 2 vertical-budget table to every slide you touch: sum the px costs of the body elements; anything past ~430–470 px must be split *now*, not "checked later". The element budget (≤5 children; `.math-block` + `<table>` + `.highlight` = over budget) is the fast pre-filter.
+3. **Lint by targeted grep**, replacing `lint-deck.py`:
+   - **Balanced divs:** `grep -o '<div' <deck>.html | wc -l` vs `grep -o '</div>' <deck>.html | wc -l`. A mismatch is a structural break — bisect slide by slide.
+   - **Literal `<` inside math** (garbles every later slide): `grep -nE '\$[^$]*<[a-zA-Z]' <deck>.html` and `grep -nE '\$\$[^$]*<[a-zA-Z]' <deck>.html`. Replace hits with `&lt;`.
+   - **KaTeX delimiter escape:** `grep -c "'\\\\(" <deck>.html` must be ≥ 1 (double-backslash delimiters in the onload handler; see GOTCHAS).
+   - **Unknown classes:** extract the deck's `class="…"` names and cross-check against `reference/deck.css`, the deck's own `<style>`, *and* `reference/deck.js` (`no-footer` is an engine class that lives only in JS).
+   - **Banned type:** `grep -n 'class="[^"]*tiny' <deck>.html`; `.small` on prose; inline `font-size` on `p`/`li`/`h2`/`h3`.
+   - **Mid-sentence dashes:** `grep -nE ' — | -- | – ' <deck>.html` — should hit only `.cite` lines and `h2` titles.
+   - **`$` inside SVG `<text>`:** grep the SVG regions for `$` — KaTeX never renders there.
+4. **OUTLINE checks without `outline-lint.py`:** for each `file:line` pointer you touched, `sed -n '<N>p' <file>` and confirm the line still holds the claimed content.
+5. **Flag the caveat.** This fallback cannot catch visual overlap, squashed math spacing (`\!` pulling glyphs together), drifted SVG overlays, or genuine rendering surprises. When you ship work verified only this way, say so explicitly to the user and recommend a real screenshot audit (`/audit-and-edit-deck`) once the tooling is available.
 
 ---
 
@@ -175,9 +194,9 @@ Section dividers and the TOC must agree: same section names, same order, numbere
 | 5-min recorded video | `talks/icml2026/icml2026.html` |
 | Technical supplement | `courses/trustworthy-ai/lec02tech.html` |
 | Speaker-script note file | any `courses/trustworthy-ai/lecNN-*-note.html` |
-| Minimum acceptable visual weight | Kangwook BLISS captures (`reference/kangwook*.png`) |
+| Minimum acceptable visual weight | Kangwook BLISS captures (`reference/kangwook1.png`–`kangwook4.png`) |
 
-Before drafting a new deck, open the exemplar for its genre and match its rhythm — section length, exhibit density, build-up pacing.
+Before drafting a new deck, open the exemplar for its genre and match its rhythm — section length, exhibit density, build-up pacing. Budget each planned slide against the Vertical budget (Priority 2) at draft time, not after.
 
 ---
 
@@ -208,7 +227,7 @@ Before drafting a new deck, open the exemplar for its genre and match its rhythm
 | `--success` | Equality that closes a chain / final claim |
 | `--warn` | Counterexample / where standard argument breaks |
 
-Never recolor for decoration. Pick once, apply consistently — color carries semantic load when it's stable.
+Never recolor for decoration. Pick once, apply consistently — color carries semantic load only when it's stable.
 
 ### Typography
 
@@ -235,7 +254,7 @@ Never recolor for decoration. Pick once, apply consistently — color carries se
 - Border radius: `12px` (card), `10px` (diagram-box), `8px` (math-block, highlight, pre), `6px` (token), `3.667em` (pill).
 - Spacers (`.spacer-sm`/`.spacer`/`.spacer-lg`) — almost never useful. See Priority 3.
 - Viewport: fixed 1280×720, scaled via JS `transform`. Same for `@page` print size.
-- Motion: `fadeIn` 0.4s on every direct child of `.slide.active`, staggered 0.06–0.30s. Disabled in print. Don't override. **No other animation language** — proof build-ups use multi-slide progressions, not CSS keyframes (see Math-heavy → Build-up).
+- Motion: `fadeIn` 0.4s on every direct child of `.slide.active`, staggered 0.06–0.30s. Disabled in print. Don't override, except per-deck no-fade on build-up sequences (Recipes → Build-up no-fade). **No other animation language** — proof build-ups use multi-slide progressions, not CSS keyframes (Math-heavy → Build-up).
 
 ---
 
@@ -247,7 +266,7 @@ Every class below is defined in `reference/deck.css`. Reuse — don't invent.
 
 **Backgrounds** — `.bg-light` (subtle gray), `.bg-accent` (Yonsei blue, white text, inverts component defaults; reserve for section dividers and statement slides).
 
-**Building blocks** — `.card`, `.highlight` (max one per slide), `.pill` / `.pill-fill`, `.divider`, `.math-block`, `.code-block` (with `.kw` / `.fn` / `.cm` / `.str` for syntax tokens), `.diagram-flow` / `.diagram-box`, `.cite`, `.brand-footer` (auto-injected).
+**Building blocks** — `.card`, `.highlight` (max one per slide), `.pill` / `.pill-fill`, `.divider`, `.math-block`, `.code-block` (with `.kw` / `.fn` / `.cm` / `.str` for syntax tokens), `.diagram-flow` / `.diagram-box` (full slide width only — never inside a column; see GOTCHAS), `.cite` (+ per-deck `.cite-left` / `.cite-right` escape hatches), `.brand-footer` (auto-injected).
 
 **Token chips** — `.token-mask` / `-gen` / `-fixed` / `-eos` / `-safe` / `-pad` / `-pad2` / `-pad3`.
 
@@ -257,7 +276,7 @@ Every class below is defined in `reference/deck.css`. Reuse — don't invent.
 
 **TOC slide** — `.toc-list` / `.toc-item` / `.toc-num` / `.toc-rule` / `.toc-label` / `.toc-sub`.
 
-**Engine UI** (auto-injected, hidden in print) — `.progress-bar`, `.slide-num`.
+**Engine UI** (auto-injected by `deck.js`, hidden in print) — `.progress-bar`, `.slide-num`. The `no-footer` class is consumed by `deck.js` (skips brand-footer injection), not CSS — don't "clean it up".
 
 For exact CSS — padding, border, hover, `.bg-accent` inversion — read `reference/deck.css`. Don't paraphrase here.
 
@@ -285,7 +304,15 @@ Rigorous statement. Assumptions, claim, citation. Use a `.card` with an inline l
 
 ### Proof
 
-Rigorous derivation, one logical step per visual line. Multi-slide if it doesn't fit at body size — never shrink (Priority 0). Use `<h2>Proof (continued)</h2>` and one recap line on continuation slides.
+Rigorous derivation, one logical step per visual line. Multi-slide if it doesn't fit at body size — never shrink (Priority 0).
+
+**Continuation slides.** The lead line names both the continuation *and* the move that continues, in the template:
+
+```
+Proof (continued) — <short paraphrase of the continuing step>
+```
+
+e.g. `<h2>Proof (continued) — Divide by the marginal</h2>`, `<h2>Proof (continued) — Optimize the free parameter</h2>`. Below the `h2`, one brief recap line of where the chain stands, then the new math. Don't ship a bare `Proof (continued)` heading — the paraphrase is what lets a reader landing mid-proof reorient.
 
 ```html
 <div class="slide">
@@ -343,7 +370,7 @@ Auto-cycling animation is banned for talks (speaker loses pacing — see GOTCHAS
 </div>
 ```
 
-Use the math-context color table above. One color = one role across the whole deck.
+Use the math-context color table above. One color = one role across the whole deck. Tag the sequence with the no-fade class (Recipes → Build-up no-fade) so advancing doesn't flash.
 
 ### Stacked equations belong in one block
 
@@ -363,7 +390,19 @@ Two related equations stacked vertically → single `<div class="math-block">` w
 
 **Exception**: when the second equation is a *key conclusion* deserving its own moment (final result, closing claim), promote it to its own `math-block` so it lands separately from the working math above. The visual gap then becomes signal, not noise.
 
-**Margin override when two blocks are unavoidable.** Each `.math-block` carries ~30 px of vertical padding/margin. Two stacked blocks add up to ~60 px of dead space, often pushing a closing highlight or footer off the slide. If you genuinely need two adjacent `math-block` divs (e.g. a derivation followed by a one-line conclusion), override the default with inline `style="margin: 8px 0;"` on each — never leave them at default and hope.
+**Tight-margin recipe (scoped margin reduction).** Each `.math-block` carries ~30 px of vertical padding/margin; two adjacent blocks ≈ 60 px of dead space, often exactly what pushes a closing `.highlight` or the footer clearance over the edge. When a slide is tight *specifically because of math-block chrome* (typical on dense proof slides), reduce the margins — at the narrowest scope that covers the problem:
+
+1. **One slide, one or two blocks:** inline `style="margin: 8px 0;"` on each affected `.math-block`.
+2. **Several flagged slides in one deck:** define a scoped per-deck class in the deck's `<style>` and tag only those slides:
+
+   ```html
+   <style>
+     .d3-tight .math-block { margin: 8px 0; }
+   </style>
+   <div class="slide d3-tight">…</div>
+   ```
+
+Never touch the global `.math-block` rule in `reference/deck.css`, and never apply the tight class deck-wide by default — margin reduction is a targeted rescue for proof-math slides, not a new baseline. If the slide is still over budget after tightening, split it (Priority 2).
 
 ### Multi-step proof pattern
 
@@ -371,7 +410,7 @@ For derivations that span 4+ logical steps, bracket the sequence. Definitions pr
 
 1. **Setup** — define variables and the problem (one slide).
 2. **Outline** — show the *target* (e.g., the Bayes formula we're about to simplify) in a `math-block`, followed by an `<ol>` of the step labels. This previews the path.
-3. **Step 1 … Step k** — one logical step per slide, body math at body size.
+3. **Step 1 … Step k** — one logical step per slide, body math at body size. Continuation slides use the `Proof (continued) — <paraphrase>` template above.
 4. **Recap** — a single `aligned` block showing the unified equation chain, with each step labeled above its relation symbol via `\stackrel{(k)}{=}` or `\stackrel{(k)}{\approx}`. Don't reuse the bulleted outline as a recap — outline previews step *labels*, recap shows the equation *chain*.
 
 ```html
@@ -432,6 +471,8 @@ Use `\underbrace{...}_{\text{name}}` to label parts of a long equation in place.
 \underbrace{-\sum_{n=2}^{N} \log\tfrac{p_\theta}{q}}_{\sum L_{n-1}}
 ```
 
+Budget note: each underbrace adds ~25–30 px below the equation baseline — count it in the Vertical budget (a common hidden-cost overflow; see GOTCHAS).
+
 ### Recall before derive
 
 When deriving B from A, state A first as a self-contained fact (own paragraph + `math-block`), *then* derive B. Don't refer to A in a trailing parenthetical or "where …, known in closed form since $A$" clause — that hides the prerequisite under the consequence and the reader has to re-parse.
@@ -457,7 +498,7 @@ When deriving B from A, state A first as a self-contained fact (own paragraph + 
 
 The on-screen `slide-num` indicator (and any user reference to "page N") counts **every** `<div class="slide">` element in document order — title slide, TOC, section dividers, content slides, recap, end-slide all included. `deck.js` enumerates them with `querySelectorAll('.slide')` and shows `(current+1) / total`. When the user says "page 23", count from 1 starting at the title.
 
-When you edit, prefer matching slides by content (`<h2>` text, distinctive class) rather than position — slide numbers shift the moment you insert or remove anything. Only treat the page number as a navigation hint, not a stable identifier.
+When you edit, match slides by content (`<h2>` text, distinctive class), not position — slide numbers shift the moment you insert or remove anything. Treat the page number as a navigation hint, not a stable identifier. Without the render toolchain, build the page↔slide map with `grep -n 'class="slide' <deck>.html` (Verifying without the toolchain).
 
 **One indicator only — the bold `.slide-num`.** The canonical page number is the bold `.slide-num` (`deck.js` injects/updates it; styled `position: fixed; bottom-right; font-weight: 700`). Do **not** also add a per-deck `<script>` that injects a second `.page-num` element on each slide (some older decks copied one from a sibling) — two indicators render as duplicate page numbers. If a deck has both, delete the `.page-num` injector script and its `.page-num` / `.title-slide .page-num` CSS; keep the bold `.slide-num`. (The on-screen indicator is hidden in print/PDF by `@media print`, which is expected.)
 
@@ -473,31 +514,34 @@ When you edit, prefer matching slides by content (`<h2>` text, distinctive class
 <div class="cite">Isik et al., arXiv:2102.08329.</div>
 ```
 
-**One dedicated line per citation.** Each citation must render on a single line.
+**One dedicated line per citation.** Each citation must render on a single line of the slide (`.cite` is centered, capped at 60% width). If a slide cites two papers, each gets its own line — joined inside one `.cite` with `<br>`, or as two adjacent `.cite` blocks. Never let a citation wrap mid-title.
 
-**Position rule.** The citation lives at the **bottom** of the slide. The default is centered with a 60%-width cap (single line). The constraints, in priority order, are:
+```html
+<div class="cite">
+  Hoffmann et al., "Training Compute-Optimal LLMs" (Chinchilla), NeurIPS 2022.<br>
+  Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.
+</div>
+```
+
+**Two length tiers** by slide density:
+
+- **Theorem / lemma slide** — full citation: `Author et al., "Title", Venue YYYY.`
+- **Abstract-bullet slide** — short form: `Author et al., NameOrAcronym, Venue YYYY.` (e.g., `Rafailov et al., DPO, NeurIPS 2023.`). Use when the slide is dense and the full title would wrap.
+
+**Position rule.** The citation lives at the **bottom** of the slide. The constraints, in priority order:
 
 1. Citation stays inside the slide rectangle (no horizontal clipping).
-2. Citation does not overlap with body text or images above.
+2. Citation does not overlap body text or images above.
 3. Citation does not overlap the auto-injected `.brand-footer` at bottom-left (~28 px from corner, ~180 px wide).
 
-When the default centered cap forces a wrap, escape hatches are available — pick the lightest one that satisfies the three constraints:
+When the default centered 60% cap forces a wrap, escape hatches — pick the lightest that satisfies the three constraints:
 
-- `class="cite cite-left"` — left-aligned, full-width (capped at 92%), bottom: 48px so it clears the brand footer. Use when the citation is long but the slide isn't dense on the right.
-- `class="cite cite-right"` — right-aligned, full-width (capped at 92%), bottom: 18px. Use only when the slide's lower-left region needs to stay clear (rare).
+- `class="cite cite-left"` — left-aligned, full-width (capped at 92%), `bottom: 48px` so it clears the brand footer. Use when the citation is long but the slide isn't dense on the right.
+- `class="cite cite-right"` — right-aligned, full-width (capped at 92%), `bottom: 18px`. Use only when the slide's lower-left region must stay clear (rare).
 
-Both classes live in the deck's local `<style>`; copy the definitions from any deck that already uses them. Default centered cite is still the preferred form — only reach for `.cite-left`/`.cite-right` when constraint #1 forces it.
+Both classes live in the deck's local `<style>`; copy the definitions from any deck that already uses them. Default centered cite is still the preferred form.
 
-- If two papers share a slide: each gets its own line, joined inside one `.cite` with `<br>` (or use two adjacent `.cite` blocks):
-  ```html
-  <div class="cite">
-    Hoffmann et al., "Training Compute-Optimal LLMs" (Chinchilla), NeurIPS 2022.<br>
-    Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.
-  </div>
-  ```
-- **Length tiers** by slide density:
-  - **Theorem / lemma slide** — full citation: `Author et al., "Title", Venue YYYY.`
-  - **Abstract-bullet slide** — short form: `Author et al., NameOrAcronym, Venue YYYY.` (e.g., `Rafailov et al., DPO, NeurIPS 2023.`). Use when a long title would wrap.
+**Figure citations.** When a slide shows a captured paper figure, cite the figure number: `Author et al., Venue YYYY — Figure N.` (Visual richness → Figure-capture protocol.)
 
 ---
 
@@ -538,7 +582,7 @@ For short 2-column dichotomies use `.grid-2` with bare `<h3>` + `<p>` (no `.card
 <p>Setup with inline $x_t$.</p>
 <div class="math-block">$$\mathcal{L} = \mathbb{E}[-\log p_\theta(x_0)]$$</div>
 ```
-Use `$$…$$` for `\begin{cases}` and `\begin{align}`. Inline `$…$\displaystyle$…$` with `nowrap` is fragile — see GOTCHAS.
+Use `$$…$$` for `\begin{cases}` and `\begin{align}`. Inline `$\displaystyle …$` with `nowrap` is fragile — see GOTCHAS.
 
 **Code / pseudocode block**
 ```html
@@ -547,13 +591,13 @@ Use `$$…$$` for `\begin{cases}` and `\begin{align}`. Inline `$…$\displaystyl
     return model.<span class="fn">loss</span>(x) <span class="kw">&lt;</span> τ      <span class="cm"># member if loss is small</span>
 </div>
 ```
-Tokens: `.kw` (keyword, blue, 700), `.fn` (function name, accent, 600), `.cm` (comment, gray), `.str` (string, green, 600). Render at 1.25rem / weight 500 — large and thick enough to read from the back row. Pseudocode is fine; full Python listings rarely fit (move to the note file).
+Tokens: `.kw` (keyword, blue, 700), `.fn` (function name, accent, 600), `.cm` (comment, gray), `.str` (string, green, 600). Renders at 1.25rem / weight 500 — large and thick enough for the back row. Pseudocode is fine; full Python listings rarely fit (move to the note file). Note the escaped `&lt;` — literal `<` anywhere in content is an HTML hazard (see GOTCHAS for the math case).
 
 **Paper-overview slide** (citation as footnote, not card)
 ```html
 <div class="cite">Author(s), "Paper Title", Venue Year</div>
 ```
-One citation per line (see "Citations" above). Don't wrap title in `<em>` (gray-on-gray is mud).
+One citation per line (Conventions → Citations). Don't wrap the title in `<em>` (gray-on-gray is mud). Don't build a 2-column layout with a paper-title card — see GOTCHAS.
 
 **Image + bullets** (figure on the left, supporting bullets on the right)
 ```html
@@ -575,16 +619,16 @@ One citation per line (see "Citations" above). Don't wrap title in `<em>` (gray-
 ```
 Notes:
 - **`align-items: start`** — keep bullets top-aligned; `center` floats short bullet lists midway down a tall figure (looks like an empty void on top).
-- **Image height ceiling by layout** (tighter than the old "always 470px" rule):
+- **Image height ceiling by layout**:
   - **Side column with bullets** (figure left, ≤4 short bullets right): `max-height: 380–430px`.
   - **Stacked (bullets below image)** with **1–3 short bullets** below: `max-height: 380px`.
   - **Stacked with 4+ bullets** or a `.highlight` below: `max-height: 320–340px` — past that, bullets push into the `.cite` and brand footer.
   - **Single-figure slide** (only `h2 + divider + img + cite`, no bullets): `max-height: 470px`.
-  - When `max-height` is at the lower end and the image still feels small, prefer the **Image-first / description-follows pattern** below rather than removing bullets to enlarge the image.
-- **`<br>` inside `<li>`** is allowed for clean wrap-control next to a narrow column (Priority 1 step 2b: one-shot internal break).
-- Figure stays in the talk folder (`<talk>/<file>.png`); `bundle.py` inlines local `<img>` references as data URIs.
+  - When `max-height` is at the lower end and the image still feels small, prefer the **Image-first / description-follows** pattern below rather than removing bullets to enlarge the image.
+- **`<br>` inside `<li>`** is allowed for clean wrap-control next to a narrow column (Priority 1 step 2: one deliberate internal break).
+- Figure stays in the talk folder (`<talk>/figs/<file>.png`); `bundle.py` inlines local `<img>` references as data URIs.
 
-**Image-first / description-follows pattern.** When a single image+bullets slide overflows — image cramped, bullets clipping the brand footer, or both — split into two consecutive slides: a full-bleed image slide with at most one orienting sentence, then a follow-up "Reading the plot" slide that carries the bullets. Lets the image breathe at `max-height: 460–500px` while keeping the analysis at body size. Use when the figure is information-dense (multi-panel plots, eigenvalue distributions, qualitative comparison grids).
+**Image-first / description-follows.** When a single image+bullets slide overflows — image cramped, bullets clipping the brand footer, or both — split into two consecutive slides: a full-bleed image slide with at most one orienting sentence, then a follow-up "Reading the plot" slide that carries the bullets. Lets the image breathe at `max-height: 460–500px` while keeping the analysis at body size. Use when the figure is information-dense (multi-panel plots, eigenvalue distributions, qualitative comparison grids).
 
 ```html
 <!-- Slide A: image first -->
@@ -608,7 +652,7 @@ Notes:
 </div>
 ```
 
-Don't apply when the figure is simple (single plot, simple schematic) — one slide handles it. Reach for the split *after* the layout under "Image height ceiling by layout" above can't fit; before then, just tighten the bullets or shrink the image.
+Don't apply when the figure is simple (single plot, simple schematic) — one slide handles it. Reach for the split *after* the image-height ceilings above can't fit; before then, just tighten the bullets or shrink the image.
 
 **Section divider (left, numbered)**
 ```html
@@ -636,15 +680,15 @@ Don't apply when the figure is simple (single plot, simple schematic) — one sl
 
 **Closer**
 ```html
-<div class="slide end-slide">
+<div class="slide end-slide no-footer">
   <div class="big-word">Q&amp;A</div>
   <p class="big-word-sub">Thank you.</p>
 </div>
 ```
 
-**Diagram with math labels.** Build structure in HTML (flex/grid + divs), use SVG only for arrows. Reference: `.fl4-*` / `.ldp-*` / `.rdm-*` in `privacy/lectures/01-dp/dp8-fl.html`. Never put `$…$` inside SVG `<text>` — KaTeX skips it (see GOTCHAS).
+**Diagram with math labels.** Build structure in HTML (flex/grid + divs), use SVG only for arrows. Reference: `.fl4-*` / `.ldp-*` / `.rdm-*` in `courses/privacy/lectures/01-dp/dp8-fl.html`. Never put `$…$` inside SVG `<text>` — KaTeX skips it (see GOTCHAS).
 
-**Algorithm slide.** A single styled box, centered. Don't pad with a right-column auxiliary diagram — the algorithm is the exhibit. Per-deck define `.<deck>-algo` once if reused (background `--light`, left border 3px `--yonsei-blue`, padding `16px 22px`, radius `0 10px 10px 0`).
+**Algorithm slide.** A single styled box, centered. Don't pad with a right-column auxiliary diagram — the algorithm is the exhibit (empty space below is fine; Priority 3). Per-deck define `.<deck>-algo` once if reused (background `--light`, left border 3px `--yonsei-blue`, padding `16px 22px`, radius `0 10px 10px 0`). Algorithms always live in this styled box — never `.code-block`.
 
 Use a counter-based `::before` for step numbers — default `<ol>` markers render too small and lack the visual weight needed at slide font sizes. Pad the step body left so the number visibly precedes the text:
 
@@ -680,9 +724,9 @@ Use a counter-based `::before` for step numbers — default `<ol>` markers rende
 </div>
 ```
 
-`max-width` ≈ 880px for compact algorithms, ≈ 1040px when a step carries long math. Caption below, centered. Add a side diagram only if it conveys real new information beyond what's in the algorithm. Algorithms always live in a per-deck `.<deck>-algo` styled box — never `.code-block`.
+`max-width` ≈ 880px for compact algorithms, ≈ 1040px when a step carries long math. Caption below, centered. Add a side diagram only if it conveys real new information beyond the algorithm.
 
-**Build-up no-fade pattern.** When several consecutive slides differ only by a single value (Lloyd–Max iteration, Bayes-step coloring, table-cell update), the engine's per-element fadeIn (`animation: fadeIn 0.4s ease both` with 0.06–0.30s stagger) makes navigation feel like a flash on every click. Disable it on those slides only with a per-deck class:
+**Build-up no-fade.** When several consecutive slides differ only by a single value (Lloyd–Max iteration, Bayes-step coloring, table-cell update), the engine's per-element fadeIn (`animation: fadeIn 0.4s ease both` with 0.06–0.30s stagger) makes navigation feel like a flash on every click. Disable it on those slides only with a per-deck class:
 
 ```html
 <style>
@@ -693,18 +737,18 @@ Use a counter-based `::before` for step numbers — default `<ol>` markers rende
 <div class="slide <deck>-no-fade">…</div>
 ```
 
-Result: consecutive build-up slides feel like a single animated frame change. Keep the fade-in on every other slide where it helps the eye land. Pattern complements (does not replace) the multi-slide proof build-up — see Math-heavy → Build-up.
+Result: consecutive build-up slides feel like a single animated frame change. Keep the fade-in on every other slide where it helps the eye land. Complements (does not replace) the multi-slide proof build-up — see Math-heavy → Build-up.
 
 **Recall card.** When a slide depends on a definition the audience saw 5+ slides ago (typical-set definition, AEP, KKT, a specific lemma), lead with a small recall card. Cheaper than asking the audience to remember:
 
 ```html
 <div class="card" style="padding: 10px 16px; margin-bottom: 10px;">
-  <p><strong>Recall (typical set).</strong> $T_\varepsilon^{(n)}(P) = \{z^n : |\hat P_{z^n}(a) - P(a)| < \varepsilon \;\forall a\}$. <strong>AEP:</strong> $|T_\varepsilon^{(n)}(P)| \doteq 2^{nH(P)}$.</p>
+  <p><strong>Recall (typical set).</strong> $T_\varepsilon^{(n)}(P) = \{z^n : |\hat P_{z^n}(a) - P(a)| &lt; \varepsilon \;\forall a\}$. <strong>AEP:</strong> $|T_\varepsilon^{(n)}(P)| \doteq 2^{nH(P)}$.</p>
 </div>
 <p>Now we use this to count Hamming-ball volumes…</p>
 ```
 
-Use only when the dependency is non-obvious. Don't pile up Recall cards — one per slide max.
+Use only when the dependency is non-obvious. Don't pile up Recall cards — one per slide max. (Note the `&lt;` — literal `<` inside math garbles rendering; see GOTCHAS.)
 
 **Diagram dominates.** When the user says "make the diagram much larger" or the slide is essentially "this picture, plus one short caption", check three things in order:
 
@@ -733,7 +777,7 @@ For pure single-diagram slides, drop the cols entirely and center the SVG with `
 Position via `left: %; top: %;` computed against the viewBox: for viewBox `W × H` and SVG coord `(x, y)`, `left = x/W·100%`, `top = y/H·100%`. Use `transform: translate(-50%, -50%)` for centered labels, `transform: translate(-100%, -50%)` for right-aligned (typical for y-axis labels).
 
 ```html
-<div style="position: relative;">
+<div style="position: relative; width: 100%; max-width: 1040px; margin: 18px auto;">
   <svg viewBox="0 0 400 240" style="display: block; width: 100%;">…</svg>
   <span style="position: absolute; left: 50%; top: 87%;
                transform: translate(-50%, -50%);
@@ -741,7 +785,7 @@ Position via `left: %; top: %;` computed against the viewBox: for viewBox `W × 
 </div>
 ```
 
-**Never** put `max-width` on the SVG — put it on the wrapper instead, otherwise labels and SVG can drift apart.
+**Never** put `max-width` on the SVG — put it on the wrapper instead, otherwise labels and SVG drift apart. Give the wrapper `width: 100%` alongside `max-width`, or it collapses to the SVG's intrinsic width (see GOTCHAS). If the wrapper hosts overlay spans, pin its height to the viewBox aspect ratio so `top: %` lands where you computed.
 
 **Inline exercise.** Plain `<p><strong>Exercise.</strong> …</p>` placed next to the related content (definition, theorem, formula). Optional `<em>Hint:</em>` clause. **Don't** create a trailing "Check It Yourself" slide; **don't** introduce per-deck `.exercise-list` styling — the standalone exercise slide pattern was retired.
 
@@ -768,7 +812,7 @@ If a slide is already at element budget and the exercise would push past the foo
 </div>
 ```
 
-For boxed nodes (more visual weight), use `.diagram-flow` + `.diagram-box` instead. For a plain inline chain, the bare flex above is lighter and fits more nodes.
+For boxed nodes (more visual weight), use `.diagram-flow` + `.diagram-box` instead — at **full slide width only**, never inside `.cols`/`.grid-*` (see GOTCHAS). For a plain inline chain, the bare flex above is lighter and fits more nodes.
 
 ---
 
@@ -779,7 +823,7 @@ For boxed nodes (more visual weight), use `.diagram-flow` + `.diagram-box` inste
 **Three sources of visuals, in priority order:**
 
 1. **Inline HTML + SVG concept diagrams** — the default and most reliable. Build structure in HTML/SVG (boxes, circles, arrows, overlapping bell curves, 2×2 grids, flows, pipelines, trees). Plain-text labels in SVG `<text>` — KaTeX skips SVG, so never put `$…$` inside `<text>` (see GOTCHAS). One semantic color per role (Yonsei blue = focus, gray = context, `--warn` red = the bad case). Shipped examples to imitate: overlapping-distribution "indistinguishability" curves, a knowledge×timing 2×2 map, a layered trust stack, a randomized-response coin tree, a Laplace-noise bell, a federated-learning fan-in, a linkage Venn (`courses/trustworthy-ai/lec01-introduction.html`, `lec02-privacy-dp.html`).
-2. **Real paper / public figures** — when a canonical figure tells it better (panda→gibbon, a COMPAS bar chart, a BadNets trigger, a training-data-extraction example). Follow GOTCHAS → "Capturing figures from third-party papers": crop the "Figure N:" caption out, cite the source figure in `.cite`, store under `<deck>/figs/`, downsample to ~1200px before bundling. Reuse figures already vetted in sibling decks (e.g. `courses/privacy/lectures/03-memorization/figs/`) rather than re-fetching.
+2. **Real paper / public figures** — when the canonical figure *itself* tells it better (panda→gibbon, a COMPAS bar chart, a BadNets trigger, a training-data-extraction example). Follow the **Figure-capture protocol** below. Reuse figures already vetted in sibling decks (e.g. `courses/privacy/lectures/03-memorization/figs/`) rather than re-fetching.
 3. **TODO-marks** — when you *want* a real figure or a richer diagram but can't produce it now (no network, fiddly crop, needs design time), **do not ship a bare slide**. Leave a marker on the slide where the visual belongs:
 
    ```html
@@ -788,9 +832,23 @@ For boxed nodes (more visual weight), use `.diagram-flow` + `.diagram-box` inste
 
    These are first-class authoring debt, not silent omissions. `grep -rn "TODO real figure"` finds every slide still missing its intended visual.
 
-**Make diagrams big.** Concept SVGs are routinely drawn too small. Full-width single-diagram slides: wrapper `max-width: 820–920px`, SVG `<text>` `font-size: 15–20` (viewBox units), bold for primary labels. Diagrams paired with bullets in a grid column: `max-width: 360–440px`, `font-size: 13–16`. Bump **both** the wrapper width and the font-size numbers — a wider wrapper alone leaves labels proportionally small (GOTCHAS → "Concept SVG renders too small"). See Recipes → "Diagram dominates".
+**Concept, not copy.** A third case sits between sources 1 and 2: you want the *pedagogical idea* a well-known figure conveys — e.g. the CLIP paper's Figure 1 image×caption similarity grid with positives on the diagonal — not the figure itself. Handle it as source 1: **originate your own HTML+SVG diagram expressing the concept** — your own layout, your own labels, your own example values. Never reproduce or trace the copyrighted asset pixel-for-pixel; "their figure, redrawn" is still their figure. Reserve capture-with-citation (source 2) for when you genuinely show *their* figure. A concept recreation needs no `— Figure N` citation; cite the paper normally if the slide discusses it.
 
-**Still one exhibit per slide.** Visual-rich means *a* strong visual per slide, not a collage. Two visuals ⇒ two slides (Priority 1). Empty space *below* a centered diagram is fine; middle voids are not (Priority 3).
+**Make diagrams big.** Concept SVGs are routinely drawn too small. Full-width single-diagram slides: wrapper `max-width: 820–920px`, SVG `<text>` `font-size: 15–20` (viewBox units), bold for primary labels. Diagrams paired with bullets in a grid column: `max-width: 360–440px`, `font-size: 13–16`. Bump **both** the wrapper width and the font-size numbers — a wider wrapper alone leaves labels proportionally small (GOTCHAS → "Concept SVG renders too small"). See Recipes → Diagram dominates.
+
+**Still one exhibit per slide.** Visual-rich means *a* strong visual per slide, not a collage. Two visuals ⇒ two slides (Style rule 1). Empty space *below* a centered diagram is fine; middle voids are not (Priority 3).
+
+### Figure-capture protocol (third-party papers)
+
+When pulling a real figure from an arXiv/venue paper into a deck, follow this protocol so the slide is clean and the legal posture defensible:
+
+- **Crop the main figure caption out.** The "Figure N: …" line is for the paper reader, not the audience — the speaker narrates the figure, and the caption pushes it off the slide. Keep subcaption labels `(a)`, `(b)` only when the speaker references them.
+- **Cite the source figure number** in `.cite`: `Author et al., Venue YYYY — Figure N.`
+- **Prefer methodology figures** (plots, schematics, algorithm diagrams) over panels that reproduce extracted training images or other third-party copyrighted content. For those panels, describe the example in text with a strong attribution rather than embedding the panel.
+- **Crop tightly, with headroom.** Drop page headers ("Published as a conference paper at…"), running titles, and adjacent figure/table content the slide doesn't reference — but leave a few px of headroom on every side (tabs and axis titles sit a few px outside the apparent bounding box; see GOTCHAS). Typical flow: `pdftoppm -r 200 paper.pdf prefix`, then crop with `sips --cropToHeightWidth H W --cropOffset Y X` or PIL — eyeball the offsets, iterate twice, then **Read the resulting `figs/*.png` directly** to confirm (never trust a possibly-cached in-slide render).
+- **Render at ≥180 DPI** when extracting via `pdftoppm`; lower DPI looks pixelated when the slide scales up on a projector.
+- **Store under `<talk>/figs/`.** `bundle.py` inlines `.png`/`.jpg`/`.svg`/`.webp`/`.gif` from any path relative to the deck.
+- **Downsample to ~1200 px max width before bundling** (`sips --resampleWidth 1200 figs/big.png --out figs/big.png`). Full-res captures (2000–3500 px) base64-bloat the standalone bundle past 50 MB (see GOTCHAS). The authoring source is unaffected; downsample before distributing.
 
 ---
 
@@ -799,6 +857,8 @@ For boxed nodes (more visual weight), use `.diagram-flow` + `.diagram-box` inste
 When detail is worth recording but doesn't fit on the slide (full-sentence explanations, derivations the proof slide skipped, secondary examples, "FYI" context), put it in `<deck>/<deck>-note.html` — one section per slide, in slide order, headed by the slide's title. Plain HTML so KaTeX `$…$` / `$$…$$` works the same as in the deck. The note file does not use the `.deck` / `.slide` engine; a simple `<article>` per slide is enough.
 
 For lectures, the note file is also the natural home for the **expanded proof** when the slide carries the abbreviated version.
+
+**Migration check (trim → note).** Whenever you trim detail off a deck slide on the grounds that "it belongs in the note file" — a proof step, a secondary derivation, an FYI aside — open the paired `-note.html` and verify the content is actually there. If it isn't, migrate the trimmed material into the note file *in the same edit*. Deleting from the deck on the assumption it was already covered silently destroys content.
 
 **Speaker-script variant.** A common, useful note form for lectures is a per-slide *script*: one `<article>` per slide in deck order, `<h2>` = the slide's title, then 1–2 sentences of what to actually say, then a `Key takeaway:` line (a blue `.kt` span). This pairs one-to-one with slides and doubles as the deck's outline-of-record. Keep each entry brief (≤ ~50 words of script).
 
@@ -827,7 +887,7 @@ Every folder carries an `OUTLINE.md`: root navigator, folder overview, leaf subf
 
 1. **In-track continuity (same lecture series).** When extending a multi-deck series — e.g., writing `privacy/lectures/04-mia/mia3-theory.html` — open `privacy/lectures/04-mia/OUTLINE.md` and `privacy/OUTLINE.md` first. Confirm what notation, definitions, attacks, theorems, and benchmarks earlier decks already established. Do not redefine $(\varepsilon, \delta)$-DP if `privacy/lectures/01-dp/dp4-approximate-dp.html` (or the capstone `dp8-fl.html`) covered it; refer back via a brief "Recall (Lecture X)" instead. Conversely, if a prerequisite has *not* been covered, decide whether to (a) add a one-slide recap, (b) point students to the prior deck, or (c) defer the topic. Skipping this check produces decks that talk past each other.
 
-2. **Cross-folder reuse (same topic, different track).** When writing on a topic that may already live elsewhere — diffusion (`infotheory/lectures/07-diffusion/` vs `privacy/lectures/02-generative/` vs `dllm/dllm.html`), DP (`privacy/lectures/01-dp/` vs `privacy/lectures/04-mia/mia1-foundations.html`), MI bounds (`infotheory/lectures/05-mi/` vs anywhere CLIP/InfoNCE comes up) — open the **root `OUTLINE.md` quick-lookup table** and the relevant leaf files in the *other* folder. Decide explicitly: reuse the derivation as-is, adapt to the new framing, link via "see also", or deliberately contradict (with rationale). Do not rederive a theorem in track B that already has a clean statement and proof in track A's notes — link to `<file>:<line>` instead.
+2. **Cross-folder reuse (same topic, different track).** When writing on a topic that may already live elsewhere — diffusion (`infotheory/lectures/07-diffusion/` vs `privacy/lectures/02-generative/` vs `dllm` talks), DP (`privacy/lectures/01-dp/` vs `privacy/lectures/04-mia/mia1-foundations.html`), MI bounds (`infotheory/lectures/05-mi/` vs anywhere CLIP/InfoNCE comes up) — open the **root `OUTLINE.md` quick-lookup table** and the relevant leaf files in the *other* folder. Decide explicitly: reuse the derivation as-is, adapt to the new framing, link via "see also", or deliberately contradict (with rationale). Do not rederive a theorem in track B that already has a clean statement and proof in track A's notes — link to `<file>:<line>` instead.
 
 When the OUTLINE entries you find are too coarse to answer the question, descend into the cited `<file>:<line>` and confirm. The OUTLINE points; it does not replace reading the deck.
 
@@ -835,7 +895,7 @@ When the OUTLINE entries you find are too coarse to answer the question, descend
 
 **Maintenance rule (non-negotiable):** any slide edit that changes a section boundary, line range, or named theorem location requires the corresponding `OUTLINE.md` line numbers to be updated *in the same change*. Adding a slide → add the entry. Removing a slide → remove it. Renaming a section → rename it everywhere it is cited (leaf, folder, root quick-lookup). Bulk renumbering after a multi-slide insertion is part of the edit, not a follow-up.
 
-If you cannot locate a topic from the OUTLINE files, the OUTLINE files are stale — fix them, don't work around them. Stale outlines are worse than no outlines because they mislead. `python3 scripts/outline-lint.py` mechanically verifies every cited `file:line` (file exists, line within range) — run it after any edit that shifts line numbers; it cannot check that the line still holds the *claimed* content, so spot-check after big restructures.
+If you cannot locate a topic from the OUTLINE files, the OUTLINE files are stale — fix them, don't work around them. Stale outlines are worse than no outlines because they mislead. `python3 scripts/outline-lint.py` mechanically verifies every cited `file:line` (file exists, line within range) — run it after any edit that shifts line numbers; it cannot check that the line still holds the *claimed* content, so spot-check after big restructures. Without `python3`, spot-check by hand (`sed -n '<N>p' <file>` — see Verifying without the toolchain).
 
 When creating a new deck, add a stub entry in the leaf `OUTLINE.md` before writing the deck (file path + topic line). Cross-references to other decks (in the root quick-lookup table) get added when the relevant content is actually present.
 
@@ -845,7 +905,7 @@ When creating a new deck, add a stub entry in the leaf `OUTLINE.md` before writi
 
 Before adding a new component:
 
-1. Is it a styled variation of an existing component? Use inline `style=` (with `var(--…)`, never hardcoded colors).
+1. Is it a styled variation of an existing component? Use inline `style=` (with `var(--…)`, never hardcoded colors — except SVG presentation attributes, which can't take `var()`; see GOTCHAS).
 2. One-off on a single slide? Keep it inline.
 3. Reused in ≥2 decks? Add it to `reference/deck.css` first, then this doc, then use it.
 
@@ -853,4 +913,4 @@ New components must document: name, purpose, default + `.bg-accent` appearance, 
 
 ---
 
-For pitfalls and lessons learned (italic prose collapse, KaTeX delimiter escape, em-dash orphans, the standalone-bundle bug, etc.), see **`GOTCHAS.md`**.
+For pitfalls and debugging (italic prose collapse, KaTeX delimiter escape, cascading math breakage, the headless-print shrink artifact, etc.), see **`GOTCHAS.md`** — organized symptom-first so you can search by what you're seeing.

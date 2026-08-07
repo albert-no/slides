@@ -15,7 +15,7 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 4px;
-  width: 220px;
+  width: 240px;
   margin: 0 auto;
 }
 .mi2-simmat .cell {
@@ -24,6 +24,47 @@
   border-radius: 3px;
 }
 .mi2-simmat .cell.diag { background: var(--yonsei-blue); }
+
+/* Enlarged encoder flow (page: Two Encoders) */
+.mi2-bigflow { gap: 20px; margin: 26px 0; justify-content: center; }
+.mi2-bigflow .diagram-box {
+  padding: 22px 34px;
+  font-size: 1.55rem;
+  min-width: 190px;
+  border-width: 3px;
+}
+.mi2-bigflow .diagram-arrow { font-size: 2.4rem; }
+
+/* CLIP positive/negative contrastive grid (§02) */
+.mi2-clipgrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.mi2-clipgrid .gcell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.mi2-clipgrid .gcell.pos {
+  background: var(--yonsei-blue);
+  color: var(--white);
+}
+.mi2-clipgrid .gcell.neg {
+  background: var(--slate);
+  color: var(--gray-text);
+}
+.mi2-cliphead {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--yonsei-blue);
+}
 </style>
 </head>
 <body data-brand-logo="../../../../reference/kor-eng2.png">
@@ -121,23 +162,34 @@
 </div>
 
 <div class="slide">
-  <h2>Proof Sketch</h2><div class="divider"></div>
-  <p>At the optimal critic $f^\star = \log r + c$:</p>
-  <div class="math-block">$$\mathcal{L}_{\mathrm{InfoNCE}}(f^\star) \;=\; -\mathbb{E}\log\dfrac{r(x,y)}{r(x,y) + \sum_{k=1}^{K-1}r(x,y_k^-)}.$$</div>
-  <p>Apply Jensen on the convex $-\log$, using $\mathbb{E}_{p(y_k^-)}[r] = 1$:</p>
-  <div class="math-block">$$\mathcal{L}_{\mathrm{InfoNCE}}(f^\star) \;\ge\; \log K - I(X;Y) + o(1).$$</div>
-  <p>Rearrange; $f^\star$ minimizes the loss, so the bound holds for any $f$.</p>
+  <h2>Proof Sketch — Split the Loss</h2><div class="divider"></div>
+  <p>At the optimal critic $f^\star = \log r$:</p>
+  <div class="math-block" style="margin:10px 0;">$$\mathcal{L}_{\mathrm{InfoNCE}}(f^\star) \;=\; -\mathbb{E}\log\dfrac{r(x,y)}{r(x,y) + \sum_{k=1}^{K-1}r(x,y_k^-)}.$$</div>
+  <p>Add and subtract $\log K$ inside the log:</p>
+  <div class="math-block" style="margin:10px 0;">$$\mathcal{L}_{\mathrm{InfoNCE}}(f^\star) \;=\; \underbrace{\mathbb{E}\log\Bigl[\tfrac1K\bigl(r(x,y) + \textstyle\sum_{k=1}^{K-1} r(x,y_k^-)\bigr)\Bigr]}_{\text{term A}} \;-\; \underbrace{\mathbb{E}\log r(x,y)}_{\text{term B}} \;+\; \log K.$$</div>
+  <p>Term B $= -I(X;Y)$, by definition of $r$.</p>
+</div>
+
+<div class="slide">
+  <h2>Proof Sketch — Bound Term A</h2><div class="divider"></div>
+  <p>Each negative averages to one: $\mathbb{E}_{p_Y}[r(x,y_k^-)] = 1$.</p>
+  <p>Jensen ($\log$ concave), then linearity:</p>
+  <div class="math-block" style="margin:10px 0;">$$\text{term A} \;\le\; \log\mathbb{E}\Bigl[\tfrac1K\bigl(r(x,y) + \textstyle\sum_{k=1}^{K-1} r(x,y_k^-)\bigr)\Bigr] \;=\; \log\tfrac1K\bigl(1 + (K-1)\bigr) \;=\; 0.$$</div>
+  <p>Substitute term A $\le 0$, term B $= -I(X;Y)$:</p>
+  <div class="math-block" style="margin:10px 0;">$$I(X;Y) \;\ge\; \log K - \mathcal{L}_{\mathrm{InfoNCE}}(f^\star).$$</div>
+  <p><em>$f^\star$ minimizes $\mathcal{L}$, so the bound holds for every critic $f$.</em></p>
 </div>
 
 <div class="slide">
   <h2>Optimal Critic = Log-Density-Ratio</h2><div class="divider"></div>
-  <p>The infimum is attained at any $f^\star$ with</p>
-  <div class="math-block">$$f^\star(x,y) \;=\; \log r(x,y) + c(x) \;=\; \log\dfrac{p(y\mid x)}{p(y)} + c(x).$$</div>
+  <p>Infimum attained at any $f^\star$ with</p>
+  <div class="math-block" style="margin:10px 0;">$$f^\star(x,y) \;=\; \log r(x,y) + c(x) \;=\; \log\dfrac{p(y\mid x)}{p(y)} + c(x).$$</div>
   <ul>
     <li>Same log-density-ratio as DV's optimal critic.</li>
-    <li>$\mathrm{softmax}(f^\star)$ approximates the conditional $p(y\mid x)$.</li>
-    <li>Bound is biased low by at least $\max(0, I-\log K)$ at high MI.</li>
+    <li>$\mathrm{softmax}(f^\star)$ approximates $p(y\mid x)$.</li>
+    <li>Loss ranges over $[0,\log K]$: $0$ perfect, $\log K$ uninformative.</li>
   </ul>
+  <div class="highlight">Bound saturates at $\log K$: biased low by $\max(0,\, I-\log K)$.</div>
 </div>
 
 
@@ -152,14 +204,14 @@
 <div class="slide">
   <h2>Two Encoders, One Embedding Space</h2><div class="divider"></div>
   <p>Trained jointly on 400M image&ndash;text pairs:</p>
-  <div class="diagram-flow">
+  <div class="diagram-flow mi2-bigflow">
     <div class="diagram-box">Image $x$</div>
     <span class="diagram-arrow">→</span>
     <div class="diagram-box">$g_\mu$</div>
     <span class="diagram-arrow">→</span>
     <div class="diagram-box filled">$g_\mu(x)\in\mathbb{R}^d$</div>
   </div>
-  <div class="diagram-flow">
+  <div class="diagram-flow mi2-bigflow">
     <div class="diagram-box">Text $y$</div>
     <span class="diagram-arrow">→</span>
     <div class="diagram-box">$h_\phi$</div>
@@ -179,22 +231,70 @@
 </div>
 
 <div class="slide">
-  <h2>Is the Separable Critic Enough?</h2><div class="divider"></div>
-  <p>Separable $f(x,y) = g(x)^\top h(y) / \tau$ is restrictive. By Mercer / universal approximation, it suffices.</p>
-  <div class="card">
-    <h3>Mercer-style decomposition.</h3>
-    <p>Any continuous $f^\star$ on a compact domain admits</p>
-    <div class="math-block">$$f^\star(x,y) \;=\; \sum_{k=1}^{\infty} \lambda_k\,\phi_k(x)\,\psi_k(y).$$</div>
-    <p>Truncate to dim $d$ (= embedding size): rank-$d$ separable approximation, error $\to 0$ as $d\to\infty$. With deep encoders, $\phi_k, \psi_k$ are <em>learned</em>.</p>
+  <h2>Positives on the Diagonal, Negatives Off</h2><div class="divider"></div>
+  <div class="cols">
+    <div class="col-1-3">
+      <p>Batch of $N$ pairs. Score every image against every caption.</p>
+      <p><strong style="color:var(--yonsei-blue);">Diagonal $S_{ii}$:</strong> matched pair &mdash; the positive.</p>
+      <p><strong style="color:var(--gray-text);">Off-diagonal $S_{ij}$:</strong> mismatched &mdash; the negatives.</p>
+    </div>
+    <div class="col-2-3">
+      <div style="display:grid; grid-template-columns:auto 1fr; gap:10px 12px; align-items:center; max-width:560px; margin:0 auto;">
+        <div></div>
+        <div class="mi2-cliphead" style="font-size:1.35rem;">text captions $y_1 \ldots y_4$</div>
+        <div class="mi2-cliphead" style="writing-mode:vertical-rl; transform:rotate(180deg); font-size:1.35rem;">images $x_1 \ldots x_4$</div>
+        <div class="mi2-clipgrid">
+          <div class="gcell pos">✓</div><div class="gcell neg">·</div><div class="gcell neg">·</div><div class="gcell neg">·</div>
+          <div class="gcell neg">·</div><div class="gcell pos">✓</div><div class="gcell neg">·</div><div class="gcell neg">·</div>
+          <div class="gcell neg">·</div><div class="gcell neg">·</div><div class="gcell pos">✓</div><div class="gcell neg">·</div>
+          <div class="gcell neg">·</div><div class="gcell neg">·</div><div class="gcell neg">·</div><div class="gcell pos">✓</div>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:center; gap:36px; margin-top:20px; font-size:1.35rem;">
+        <span><strong style="color:var(--yonsei-blue);">↑ maximize</strong> diagonal</span>
+        <span><strong style="color:var(--gray-text);">↓ minimize</strong> off-diagonal</span>
+      </div>
+    </div>
   </div>
+  <div class="cite">Radford et al., "Learning Transferable Visual Models From Natural Language Supervision", ICML 2021 &mdash; concept of Figure 1.</div>
+</div>
+
+<div class="slide">
+  <h2>Each Row Is One InfoNCE Problem</h2><div class="divider"></div>
+  <div class="cols">
+    <div class="col-2-3">
+      <p>Row $i$: one positive $S_{ii}$ against $N-1$ negatives $S_{ij}$.</p>
+      <div class="math-block" style="margin:12px 0;">$$\mathcal{L}_{x\to y} \;=\; -\tfrac1N\sum_{i}\log\dfrac{e^{S_{ii}}}{\sum_{j} e^{S_{ij}}}.$$</div>
+      <p>An $N$-class softmax: pick the true caption among the batch.</p>
+      <p><strong>Batch size $N$ plays the role of $K$</strong>: more captions, more negatives, ceiling $\log N$.</p>
+    </div>
+    <div class="col-1-3">
+      <div class="mi2-clipgrid" style="max-width:250px; margin:0 auto;">
+        <div class="gcell pos">✓</div><div class="gcell neg">·</div><div class="gcell neg">·</div><div class="gcell neg">·</div>
+      </div>
+      <p style="text-align:center; margin-top:16px;">one row = one $K$-way classification</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Is the Separable Critic Enough?</h2><div class="divider"></div>
+  <p>Separable $f(x,y) = g(x)^\top h(y) / \tau$ looks restrictive.</p>
+  <div class="card">
+    <h3>Mercer's theorem (1909).</h3>
+    <p>Continuous, symmetric, PSD $k(x,y)$ on a compact domain:</p>
+    <div class="math-block" style="margin:10px 0;">$$k(x,y) \;=\; \sum_{k=1}^{\infty} \lambda_k\,\phi_k(x)\,\phi_k(y), \qquad \lambda_k \ge 0.$$</div>
+    <p>Top-$d$ truncation: rank-$d$ separable, $L^2$-optimal, error $\to 0$.</p>
+  </div>
+  <p><em>Deep encoders realize any $\phi_k$: the rank-$d$ form approximates $f^\star$ on compact inputs.</em></p>
 </div>
 
 <div class="slide">
   <h2>Why We Live with the Restriction</h2><div class="divider"></div>
   <ul>
-    <li><strong>Compute.</strong> $N^2$ similarities from $2N$ encoder calls + one matmul. A general $f(x,y)$ would need $N^2$ joint forward passes.</li>
-    <li><strong>Inference reuse.</strong> Image and text embeddings are independent &mdash; cache them once, swap one side at query time.</li>
-    <li><strong>Empirical headroom.</strong> $d = 512$ (RN50) or $d = 768$ (ViT-L) matches supervised baselines; the rank-$d$ approximation is good enough.</li>
+    <li><strong>Compute:</strong> $N^2$ scores from $2N$ encoder calls.<br>A general $f(x,y)$ needs $N^2$ joint passes.</li>
+    <li><strong>Inference reuse:</strong> embeddings independent.<br>Cache once, swap one side at query time.</li>
+    <li><strong>Empirical headroom:</strong> $d = 512$&ndash;$768$.<br>Rank-$d$ matches supervised baselines.</li>
   </ul>
   <div class="highlight">Asymptotically lossless, two orders of magnitude cheaper.</div>
 </div>
@@ -202,13 +302,14 @@
 <div class="slide">
   <h2>$N\times N$ Similarity Matrix</h2><div class="divider"></div>
   <div class="cols">
-    <div>
+    <div class="col-2-3">
       <p>Encode each modality once: $g_i = g_\mu(x_i)$, $h_j = h_\phi(y_j)$. Then</p>
-      <div class="math-block">$$S_{ij} \;=\; \tfrac{1}{\tau}\,g_i^\top h_j.$$</div>
-      <p><strong>Diagonal:</strong> true pairs &mdash; should rank highest in their row and column.</p>
-      <p><strong>Off-diagonal:</strong> contrastive negatives. $N$ row-softmaxes + $N$ column-softmaxes from a single $N\times N$ matmul.</p>
+      <div class="math-block" style="margin:12px 0;">$$S_{ij} \;=\; \tfrac{1}{\tau}\,g_i^\top h_j.$$</div>
+      <p><strong>Diagonal:</strong> true pairs, rank highest in row and column.</p>
+      <p><strong>Off-diagonal:</strong> contrastive negatives.</p>
+      <p>$N$ row-softmaxes $+$ $N$ column-softmaxes, one matmul.</p>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
+    <div class="col-1-3" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
       <div class="mi2-simmat">
         <div class="cell diag"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
         <div class="cell"></div><div class="cell diag"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
@@ -243,11 +344,19 @@
 </div>
 
 <div class="slide">
-  <h2>Why It Works — InfoNCE Approximates MAP</h2><div class="divider"></div>
-  <p>InfoNCE training drives $g^\top h \approx \log r(x,y) + c(x)$. For a class label:</p>
-  <div class="math-block">$$g_\mu(x)^\top h_\phi(y_k) \;\approx\; \log\dfrac{p(y_k\mid x)}{p(y_k)} + \text{const}.$$</div>
-  <p>$\arg\max_k$ approximates the MAP class, modulo the marginal $p(y_k)$.</p>
-  <div class="highlight">Near-optimal Bayes classifier when label priors are roughly uniform across prompts.</div>
+  <h2>Why It Works — Score Is a Log-Ratio</h2><div class="divider"></div>
+  <p>InfoNCE drives $g^\top h \approx \log r(x,y) + c(x)$. For a class label:</p>
+  <div class="math-block" style="margin:12px 0;">$$g_\mu(x)^\top h_\phi(y_k) \;\approx\; \log p(y_k\mid x) - \log p(y_k) + \text{const}(x).$$</div>
+  <p>$\arg\max_k$ over prompts removes the $x$-only constant:</p>
+  <div class="math-block" style="margin:12px 0;">$$\hat c \;=\; \arg\max_k\; g^\top h_k \;\approx\; \arg\max_k\bigl[\log p(y_k\mid x) - \log p(y_k)\bigr].$$</div>
+</div>
+
+<div class="slide">
+  <h2>Why It Works — Reduces to MAP</h2><div class="divider"></div>
+  <p>Uniform label prior across prompts: $-\log p(y_k)$ constant in $k$.</p>
+  <div class="math-block" style="margin:12px 0;">$$\hat c \;\approx\; \arg\max_k\; \log p(y_k\mid x) \;=\; \arg\max_k\; p(y_k\mid x).$$</div>
+  <p>Exactly the MAP rule.</p>
+  <div class="highlight">Near-optimal Bayes classifier when label priors are roughly uniform.</div>
 </div>
 
 <div class="slide">

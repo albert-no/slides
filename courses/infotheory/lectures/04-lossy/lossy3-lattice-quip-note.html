@@ -159,18 +159,10 @@
 </section>
 
 <section>
-  <h2>LDLQ — full statement and intuition</h2>
-  <p>After incoherence processing, QUIP rounds <em>per coordinate</em> but with linear feedback from past errors. For $k = 1, \ldots, n$:</p>
-  <div class="deriv">
-    $\widehat W_k = Q\bigl(W_k + (W_{1:k-1} - \widehat W_{1:k-1})\,a_k\bigr),$
-  </div>
-  <p>where $W_k$ is the $k$-th column, $a_k \in \mathbb{R}^{k-1}$, and $Q$ is element-wise rounding. Stacking columns: $\widehat W = Q(W + (W - \widehat W) U)$ with $U$ strictly upper triangular.</p>
-  <p><strong>Why feedback helps.</strong> Without it (per-coordinate nearest), the error $W - \widehat W$ has variance $\sigma^2$ per entry, and the proxy loss is $\mathrm{tr}((W-\widehat W) H (W-\widehat W)^\top) \approx \sigma^2 \mathrm{tr}(H)$. Off-diagonal entries of $H$ correlate coordinates' contributions to the loss; without feedback, those correlations cost you.</p>
-  <p>With feedback: when we quantize column $k$, we already know the residual $e_j = W_j - \widehat W_j$ for $j < k$. The correction $\sum_{j&lt;k} e_j a_{kj}$ predicts the part of $e_k$ that would couple to past errors via $H$. We choose $a_{kj}$ so the post-quantization residual is orthogonal (w.r.t.&nbsp;$H$) to all past residuals — the loss-minimizing choice for any linear feedback rule.</p>
-  <p><strong>Why $LDL^\top$.</strong> The optimal $U$ is the strict upper triangle of the Cholesky factor of $H$. Write $H = (\bar U + I) D (\bar U + I)^\top$ with $\bar U$ strictly upper triangular and $D$ diagonal. Then $U = \bar U$.</p>
-  <p>(Chee et al. Theorem 1.) Worst-case loss of LDLQ is $\tfrac{m}{4}\mathrm{tr}(D)$. Per-coordinate nearest is $\tfrac{m}{12}\mathrm{tr}(H)$; stochastic rounding is $\tfrac{m}{6}\mathrm{tr}(H)$. Since $\mathrm{tr}(D) \le \mathrm{tr}(H)$ with strict inequality unless $H$ is diagonal, LDLQ wins for any non-diagonal $H$.</p>
-  <p>Combined with Lemma 2 (incoherence implies $\mathrm{tr}(D) \le \tfrac{\mu^2}{n}\mathrm{tr}(H^{1/2})^2$): under $\mu$-incoherence, LDLQ improves over baselines by a factor $\mu^2 k/n$ where $k$ is the effective rank of $H$. This is what gives QUIP its 2-bit guarantees.</p>
-  <p>Compare with the classical signal-processing analogue: LDLQ is to per-coordinate rounding what DPCM is to PCM. Both predict the next sample from past quantized samples and quantize only the residual.</p>
+  <h2>LDLQ — feedback intuition and the incoherence payoff</h2>
+  <p>The slide deck now derives the linear-feedback family, the feedback-form rewrite $\widehat W - W = \eta(I+U)^{-1}$, and the LDL cancellation $U \leftarrow \bar U$ step by step (see "Proxy in Feedback Form" and "LDL of $H$ Cancels the Cross-Terms"). What follows here is the orthogonality intuition behind that choice, plus the one result the deck doesn't derive: how the Theorem&nbsp;1 bound combines with incoherence.</p>
+  <p><strong>Why feedback helps, in one sentence.</strong> When we quantize column $k$, we already know the residual $e_j = W_j - \widehat W_j$ for $j < k$. The correction $\sum_{j&lt;k} e_j a_{kj}$ predicts the part of the next residual that would couple to past errors via $H$; the loss-minimizing choice makes the post-quantization residual orthogonal (w.r.t.&nbsp;$H$) to every past residual — this is the geometric meaning of the algebraic cancellation the deck shows.</p>
+  <p><strong>The incoherence payoff (not on the slides).</strong> Lemma 2 of Chee et al. shows that $\mu$-incoherence implies $\mathrm{tr}(D) \le \tfrac{\mu^2}{n}\mathrm{tr}(H^{1/2})^2$. Combined with Theorem 1's worst-case bound $\tfrac{m}{4}\mathrm{tr}(D)$, LDLQ improves over the round-to-nearest baseline by a factor $\mu^2 k/n$, where $k$ is the effective rank of $H$. This is the extra step — beyond "LDLQ beats round-to-nearest" — that gives QUIP its quantitative 2-bit guarantees.</p>
 </section>
 
 <section>

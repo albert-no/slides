@@ -17,32 +17,33 @@ Information-theoretic treatment: VAE/ELBO → hierarchical VAE = diffusion → p
 | Section | Slide content | Line |
 |---|---|---|
 | Title / Contents | | `:19, :30` |
-| **01 — Why a bound** | Latent-variable models, intractable likelihood | `:58-89` |
+| **01 — Why a bound** | Latent-variable models, intractable likelihood | `:57-89` |
 | | Latent-variable model | `:66` |
 | | Maximum likelihood is blocked | `:74` |
 | | Plan: variational posterior | `:82` |
-| **02 — ELBO: two paths, one bound** | Jensen + KL identity | `:91-128` |
+| **02 — ELBO: two paths, one bound** | Jensen + KL identity | `:90-128` |
 | | Path 1 (Jensen on log-expectation) | `:98` |
 | | Path 2 (KL identity) | `:105` |
 | | Same bound, different stories | `:112` |
-| **03 — What the bound asks** | Reconstruction − rate | `:130-194` |
+| **03 — What the bound asks** | Reconstruction − rate | `:129-194` |
 | | Two seams of the joint (factorization table) | `:137` |
 | | ELBO decomposes | `:148` |
 | | Reconstruction — what it computes | `:155` |
 | | Gaussian decoder — reconstruction is MSE | `:162` |
 | | Rate vs distortion | `:169` |
 | | Why prior KL = rate ($I(X;Z)$ + marginal mismatch) | `:186` |
-| **04 — The VAE** | Instantiating the ELBO with concrete choices | `:196-291` |
+| **04 — The VAE** | Instantiating the ELBO with concrete choices | `:195-291` |
 | | From ELBO to algorithm (three design choices) | `:203` |
-| | VAE architecture (diagram: $x \to$ encoder $\to z \to$ decoder $\to \hat x$) | `:214` |
-| | Gaussian encoder | `:233` |
-| | Closed-form KL (prior explicit) | `:241` |
-| | Gradient problem | `:249` |
-| | Reparameterization trick (consolidated) | `:257` |
-| | VAE loss = negative ELBO (recon + rate) | `:266` |
-| | Posterior collapse | `:274` |
+| | VAE architecture (diagram: $x \to$ encoder $\to z \to$ decoder $\to \hat x$; now a much larger diagram) | `:214` |
+| | Gaussian encoder | `:243` |
+| | Closed-form KL (prior explicit) | `:251` |
+| | Gradient problem | `:259` |
+| | Reparameterization trick (consolidated) | `:267` |
+| | VAE loss = negative ELBO (recon + rate) | `:276` |
+| | Posterior collapse | `:284` |
+| | Recap | `:292` |
 
-**Key formulas:** ELBO `:101`; two seams of the joint `:137`; reconstruction = MSE `:162`; prior KL = rate `:186`; Gaussian KL `:241`; reparameterization `:257`; VAE loss `:266`.
+**Key formulas:** ELBO `:101`; two seams of the joint `:137`; reconstruction = MSE `:162`; prior KL = rate `:186`; Gaussian KL `:251`; reparameterization `:267-272`; VAE loss `:276`.
 
 ### Note (`diff1-vae-elbo-note.html`)
 - Why intractable integral matters (MC variance, importance sampling) `:29`
@@ -61,36 +62,38 @@ Information-theoretic treatment: VAE/ELBO → hierarchical VAE = diffusion → p
 | Section | Slide content | Line |
 |---|---|---|
 | Title / Contents | | `:19, :30` |
-| **01 — Forward chain** | VP forward, frozen encoder | `:58-90` |
+| **01 — Forward chain** | VP forward, frozen encoder | `:57-93` |
 | | VP setup | `:66` |
-| | **Lemma — q(x_t\|x_0) closed form** | `:76` |
-| | Master reparameterization | `:83` |
-| **02 — Reverse chain** | Learned Gaussian kernels | `:92-138` |
-| | Generative model | `:100` |
-| | Diffusion is hierarchical VAE (diagram) | `:107` |
-| **03 — ELBO decomposition** | $L_T + \sum L_{t-1} + L_0$; derive via Bayes + telescope | `:139-194` |
-| | Apply Lecture 1 ELBO; chain factorization + Bayes trick | `:147` |
-| | Split and telescope (Bayes-split log; telescoping identity) | `:155` |
-| | **Collect into three terms** (defines $L_T, L_{t-1}, L_0$) | `:163` |
-| | $L_T$: prior matching (no training) | `:174` |
-| | $L_0$: final reconstruction | `:181` |
-| | Interior $L_{t-1}$ — only $\theta$-dependent term; need closed-form posterior | `:188` |
-| **04 — DDPM target** | Closed-form $q(x_{t-1}\mid x_t,x_0)$; KL → MSE on mean | `:198-232` |
-| | **Closed form by complete-the-square** (merged Bayes + lemma) | `:206` |
-| | $L_{t-1}$ becomes MSE on the mean | `:217` |
-| | Three parameterizations of $\mu_\theta$ | `:224` |
+| | **Lemma — q(x_t\|x_0) closed form** (induction shown in full) | `:74` |
+| | Master reparameterization | `:86` |
+| **02 — Reverse chain** | Learned Gaussian kernels | `:94-140` |
+| | Generative model | `:103` |
+| | Diffusion is hierarchical VAE (diagram) | `:110` |
+| **03 — ELBO decomposition** | $L_T + \sum L_{t-1} + L_0$; derive via Bayes + telescope | `:141-198` |
+| | Apply Lecture 1 ELBO; chain factorization + Bayes trick | `:150` |
+| | Split and telescope (Bayes-split log; telescoping identity) | `:158` |
+| | **Collect into three terms** (defines $L_T, L_{t-1}, L_0$) | `:166` |
+| | $L_T$: prior matching (no training) | `:177` |
+| | $L_0$: final reconstruction | `:184` |
+| | Interior $L_{t-1}$ — only $\theta$-dependent term; need closed-form posterior | `:192` |
+| **04 — DDPM target** | Closed-form $q(x_{t-1}\mid x_t,x_0)$; KL → MSE on mean | `:199-249` |
+| | **Closed form by complete-the-square** (full algebra: expand both log-Gaussians, match precision + mean) | `:209` |
+| | **Reverse Conditional: Closed Form** (new — states the DDPM reverse-conditional lemma: $\tilde\mu_t$, $\tilde\beta_t$, split out of the complete-the-square slide) | `:220` |
+| | $L_{t-1}$ becomes MSE on the mean | `:234` |
+| | Three parameterizations of $\mu_\theta$ | `:241` |
+| | Recap | `:251` |
 
-**Key:** q(x_t\|x_0) `:76`; chain-factor ELBO + Bayes substitution `:147`; split + telescope `:155`; three-term ELBO `:163`; interior $L_{t-1}$ `:189`; reverse conditional Gaussian (DDPM) `:206`; KL→MSE `:217`. Complete-the-square algebra lives in `diff2-diffusion-note.html`.
+**Key:** q(x_t\|x_0) lemma + induction `:74`; chain-factor ELBO + Bayes substitution `:150`; split + telescope `:158`; three-term ELBO `:166`; interior $L_{t-1}$ `:192`; complete-the-square algebra `:209-217`; reverse conditional Gaussian (DDPM) closed form ($\tilde\mu_t,\tilde\beta_t$) `:220-231`; KL→MSE `:234`. Full numeric sanity check still lives in `diff2-diffusion-note.html`.
 
 ### Note (`diff2-diffusion-note.html`)
 - Variance-preserving vs variance-exploding `:25`
-- Detailed ELBO expansion `:31`
-- Why linear-Gaussian reverse stays Gaussian `:49`
-- **Complete the square — full derivation** (algebra for $\tilde\mu_t, \tilde\beta_t$) `:55`
-- Why L_T vanishes `:82`
-- L_0 treatment `:88`
-- Numerical sanity check `:94`
-- Connection to rate–distortion `:101`
+- ELBO expansion — deck now derives this in full on-slide; note keeps only the shared-parameters-across-$t$ remark, pointer to deck `:31`
+- Why linear-Gaussian reverse stays Gaussian `:36`
+- **Complete the square** — deck now derives this in full on-slide; note trimmed to a pointer plus the weighted-average-in-the-limit remark `:42`
+- Why L_T vanishes `:48`
+- L_0 treatment `:54`
+- Numerical sanity check `:60`
+- Connection to rate–distortion `:67`
 
 ---
 
@@ -100,29 +103,31 @@ Reframed: diffusion as a working example of three information-theoretic techniqu
 
 | Section | Slide content | Line |
 |---|---|---|
-| Title / Contents | | `:19, :30` |
-| **01 — Diffusion recap** | The model we will analyze | `:63-85` |
-| | The forward-reverse machine | `:70` |
-| | Three predictions, one object | `:78` |
-| **02 — Tool 1: Variational bound** | ELBO reduces training to MSE | `:87-117` |
-| | Recall — ELBO bounds the intractable | `:94` |
-| | Diffusion ELBO decomposes ($L_T + \sum L_t + L_0$) | `:103` |
-| | Interior term = MSE on the mean | `:110` |
-| **03 — Tool 2: Tweedie's formula** | Posterior mean = rescaled score | `:119-154` |
-| | **Theorem (Robbins/Tweedie)** | `:126` |
-| | **Proof — differentiate the marginal** | `:137` |
-| | Tweedie unifies the predictions (bridge to Tool 3) | `:146` |
-| **04 — Tool 3: Fisher divergence** | ELBO MSE = score gap = DSM | `:156-209` |
-| | Recall — Fisher divergence (Lecture 6) | `:163` |
-| | Step 1 — apply Tweedie to both means | `:172` |
-| | Step 2 — MSE becomes Fisher | `:182` |
-| | Step 3 — recognize denoising form (Vincent DSM) | `:190` |
-| | **Theorem — ELBO $\equiv$ Sum of DSM** | `:198` |
-| **05 — Convergence** | Three roads, one objective | `:211-253` |
-| | Three tools, one loss (chained equation) | `:218` |
-| | The information-theoretic arc | `:233` |
+| Title / Contents | | `:23, :34` |
+| **01 — Diffusion recap** | The model we will analyze | `:66-89` |
+| | The forward-reverse machine | `:75` |
+| | Three predictions, one object | `:83` |
+| **02 — Tool 1: Variational bound** | ELBO reduces training to MSE | `:90-144` |
+| | Recall — ELBO bounds the intractable (redesigned: now carries a diagram) | `:99` |
+| | Diffusion ELBO decomposes ($L_T + \sum L_t + L_0$) | `:131` |
+| | Interior term = MSE on the mean | `:138` |
+| **03 — Tool 2: Tweedie's formula** | Posterior mean = rescaled score | `:145-193` |
+| | Tweedie's Formula — **Theorem (Robbins/Tweedie)** | `:154` (statement `:158`) |
+| | **Proof — differentiate the marginal** (diff-under-integral shown) | `:165` |
+| | **Proof (continued) — divide by the marginal** (new — solve-for step split out onto its own slide) | `:176` |
+| | Tweedie unifies the predictions (derivation of $\mathbb{E}[\varepsilon\mid x_t]$ shown, not asserted) | `:184` |
+| **04 — Tool 3: Fisher divergence** | ELBO MSE = score gap = DSM | `:194-275` |
+| | Recall — Fisher divergence (redesigned: now carries a diagram; Lecture 6) | `:203` |
+| | Step 1 — apply Tweedie to both means | `:238` |
+| | Step 2 — MSE becomes Fisher | `:248` |
+| | Step 3 — recognize denoising form (substituted Fisher expression with $s_\theta$ shown; Vincent DSM) | `:256` |
+| | **Theorem — ELBO $\equiv$ Sum of DSM** | `:266` |
+| **05 — Convergence** | Three roads, one objective | `:276-311` |
+| | Three tools, one loss (chained equation) | `:286` |
+| | The information-theoretic arc | `:301` |
+| | Recap | `:312` |
 
-**Key:** Tweedie theorem `:126`; Tweedie proof `:137`; three predictions unified `:146`; ELBO $\equiv$ DSM theorem `:198` (capstone); three-tool convergence `:218`.
+**Key:** Recall — ELBO bounds the intractable (now with diagram) `:99`; Tweedie theorem `:154` (statement `:158`); Tweedie proof `:165-181` (now two slides: differentiate `:165`, divide-and-solve `:176`); three predictions unified (derivation shown) `:184`; Recall — Fisher divergence (now with diagram) `:203`; ELBO $\equiv$ DSM theorem `:266` (capstone); three-tool convergence `:286`.
 
 ### Note (`diff3-parameterizations-note.html`)
 - Why ε-prediction wins (loss conditioning at noise level) `:25`
@@ -132,4 +137,4 @@ Reframed: diffusion as a working example of three information-theoretic techniqu
 - Channel-coding view detail (SNR, successive refinement) `:71`
 - Log-SNR view (Salimans &amp; Ho) `:83`
 - Connection to rate-distortion `:94`
-- Score-matching equivalence (cites Lecture 6 / `divergence/div2` for Fisher + DSM) `:99`
+- Score-matching equivalence (cites Lecture 6 / `divergence/div2` for Fisher + DSM); corrected to reference deck Section 04, where the capstone proof actually lives `:100`

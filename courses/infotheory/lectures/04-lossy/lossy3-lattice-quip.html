@@ -81,10 +81,10 @@
 
 <div class="slide">
   <h2>Optimal VQ — What the Encoder Does</h2><div class="divider"></div>
+  <p>Block-length-$d$ vector quantization <strong>achieves $R(D)$</strong> as $d \to \infty$ — rate-distortion optimal, proved earlier this lecture series.</p>
   <p>Group $d$ scalars into $\mathbf{w}\in\mathbb{R}^d$. Encoder finds the nearest codeword.</p>
   <div class="math-block">$$\mathcal{C} = \{\mathbf{c}_1,\ldots,\mathbf{c}_M\}\subset\mathbb{R}^d, \;\; M = 2^{dR}, \qquad \widehat{\mathbf{w}} \;=\; \arg\min_{k=1,\ldots,M}\,\|\mathbf{w} - \mathbf{c}_k\|^2.$$</div>
-  <p>Encoder picks index $k$; decoder looks up $\mathbf{c}_k$.</p>
-  <div class="highlight">Decoder is trivial (one lookup). The encoder is the wall.</div>
+  <div class="highlight">Optimal in theory. Next two slides: why it is dead on arrival in practice.</div>
 </div>
 
 <div class="slide">
@@ -143,7 +143,14 @@
   <div class="section-num">02</div>
   <h1>Computing in Quantized Space</h1>
   <div class="divider"></div>
-  <p class="subtitle">Uniform quantization preserves linear arithmetic.</p>
+  <p class="subtitle">First practical alternative: quantize each coordinate on its own.</p>
+</div>
+
+<div class="slide">
+  <h2>The First Practical Alternative</h2><div class="divider"></div>
+  <p>Optimal VQ needs a joint codebook over all $d$ coordinates — that's the exponential wall.</p>
+  <div class="highlight">Drop the joint structure: quantize coordinate-by-coordinate. No codebook, no search, one scalar rule applied $d$ times.</div>
+  <p>This is <strong>scalar (uniform) quantization</strong> — simple enough to run at LLM scale.</p>
 </div>
 
 <div class="slide">
@@ -203,6 +210,14 @@
   <div class="highlight">$\le 1.53$ dB MSE penalty buys you $\mathcal{O}(d)$ encode and zero codebook RAM.</div>
 </div>
 
+<div class="slide">
+  <h2>Can We Close the Gap?</h2><div class="divider"></div>
+  <p>Scalar quantization is cheap but leaves $1.53$ dB on the table versus optimal VQ.</p>
+  <p>Going back to a full $d$-dimensional codebook re-opens the exponential wall.</p>
+  <div class="highlight">Question: keep the $\mathcal{O}(d)$ encode, but recover some of VQ's geometric gain?</div>
+  <p><strong>Lattice codes</strong> — next section — answer: yes.</p>
+</div>
+
 
 <!-- ════ PART 03 ════ -->
 <div class="slide section-slide left">
@@ -210,6 +225,35 @@
   <h1>Lattice Codes</h1>
   <div class="divider"></div>
   <p class="subtitle">A regular grid: linear structure replaces search.</p>
+</div>
+
+<div class="slide">
+  <h2>When Do We Actually Reach for a Lattice?</h2><div class="divider"></div>
+  <p>Scalar quantization treats coordinates as independent — it ignores the <em>shape</em> of the Voronoi cell.</p>
+  <div class="highlight">A lattice is still $\mathcal{O}(d)$ to encode (round, don't search) but its Voronoi cell is rounder than a cube — less wasted corner space.</div>
+  <ul>
+    <li><strong>Same cost</strong> as scalar quantization: no codebook stored, one algebraic rounding step.</li>
+    <li><strong>Better cell:</strong> rounder cell $\Rightarrow$ lower MSE at the same rate.</li>
+    <li><strong>Concretely buys:</strong> a fraction of a dB back from the $1.53$ dB scalar-quantization penalty, without reopening the $2^{dR}$-codebook wall.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>A Concrete Example — Same Budget, Two Grids</h2><div class="divider"></div>
+  <p>Both grids below have <strong>identical cell area</strong> $a^2$ (same rate). Compare the worst point in the cell — the corner, farthest from any codeword.</p>
+  <div class="grid-2" style="margin-top:6px;">
+    <div class="card">
+      <h3 style="color:var(--blue-light);">$\mathbb{Z}^2$ — square cell</h3>
+      <p>Worst-case vector: a cell corner, e.g. $\mathbf{w}=(0.5a,0.5a)$ relative to codeword $(0,0)$.</p>
+      <div class="math-block" style="font-size:0.95em;">$\|\mathbf{w}-\hat{\mathbf{w}}\|^2 = (0.5a)^2+(0.5a)^2 \approx 0.5\,a^2$</div>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--blue-light);">$A_2$ — hex cell, same area $a^2$</h3>
+      <p>Worst-case vector: the hex-cell corner, distance $\approx 0.62a$ vs.&nbsp;the square's $0.71a$ (previous slide).</p>
+      <div class="math-block" style="font-size:0.95em;">$\|\mathbf{w}-\hat{\mathbf{w}}\|^2 \approx (0.62a)^2 \approx 0.38\,a^2$</div>
+    </div>
+  </div>
+  <div class="highlight">Same rate, same $\mathcal{O}(d)$ encode cost — the rounder hex cell cuts the worst-case squared error by roughly 25%.</div>
 </div>
 
 <div class="slide">
@@ -512,6 +556,14 @@
 </div>
 
 <div class="slide">
+  <h2>Why Independent Rounding Leaves Value on the Table</h2><div class="divider"></div>
+  <p>Round-to-nearest quantizes every column of $W$ <strong>independently</strong> — column $k$'s rounding ignores columns $1,\ldots,k-1$ entirely.</p>
+  <p>But $H$ says input coordinates are <em>correlated</em>. If column $j$'s error is known, it partially predicts column $k$'s error's effect on the output.</p>
+  <div class="highlight">Independent rounding throws away exactly the correlation structure that $H$ told us to watch.</div>
+  <p>Idea: quantize columns in order, and let each new column's rounding <em>see</em> the error already committed by earlier columns.</p>
+</div>
+
+<div class="slide">
   <h2>The Idea — Predict and Correct</h2><div class="divider"></div>
   <p>Quantize columns of $W$ in order $1, 2, \ldots, n$ — one at a time.</p>
   <p>Before rounding column $k$, <strong>predict</strong> it from the already-rounded $\widehat W_1, \ldots, \widehat W_{k-1}$.</p>
@@ -530,6 +582,14 @@
   <p>Stack the coefficients into a strictly upper-triangular $U \in \mathbb R^{n\times n}$:</p>
   <div class="math-block" style="margin: 4px 0;">$$\widehat W \;=\; Q\!\bigl(\,W \;+\; (W - \widehat W)\,U\,\bigr).$$</div>
   <p>$U = 0 \Rightarrow$ plain round-to-nearest &middot; <strong>Goal:</strong> choose $U$ from $H$ (not $W$) to minimize the proxy.</p>
+</div>
+
+<div class="slide">
+  <h2>What $U$ Literally Does</h2><div class="divider"></div>
+  <p>$(W - \widehat W)$ is the matrix of <strong>already-committed rounding errors</strong> — zero in columns not yet rounded.</p>
+  <p>$U_{jk}$ is a single number: how much of column $j$'s committed error to feed into column $k$'s target before rounding it.</p>
+  <div class="highlight">Column $k$'s rounding "sees" a correction built from every earlier column's mistake, weighted by $U_{jk}$ — that's the entire memory mechanism.</div>
+  <p>Bigger $U_{jk}$ $\Rightarrow$ column $k$ leans harder on column $j$'s error, appropriate when $H$ says $j$ and $k$ are strongly correlated.</p>
 </div>
 
 <div class="slide">
@@ -559,10 +619,21 @@
 </div>
 
 <div class="slide">
+  <h2>Background — What Is an LDL$^\top$ Decomposition?</h2><div class="divider"></div>
+  <p>Every symmetric PSD matrix $H$ factors as</p>
+  <div class="math-block" style="margin: 4px 0;">$$H \;=\; L\,D\,L^\top, \qquad L \text{ unit lower-triangular},\;\; D \succeq 0 \text{ diagonal}.$$</div>
+  <p>This is <strong>Cholesky by another name</strong> — equivalently, Gram-Schmidt orthogonalization of $H$'s rows under the standard inner product, recorded as $L$ (the predictor coefficients) and $D$ (the leftover variances).</p>
+  <div class="math-block" style="margin: 4px 0; font-size:0.95em;">$$\text{Example: }\;H=\begin{pmatrix}4 & 2\\ 2 & 3\end{pmatrix} \;=\; \begin{pmatrix}1 & 0\\ 0.5 & 1\end{pmatrix}\begin{pmatrix}4 & 0\\ 0 & 2\end{pmatrix}\begin{pmatrix}1 & 0.5\\ 0 & 1\end{pmatrix}.$$</div>
+  <div class="highlight">We'll use the upper-triangular variant $H=(I+\bar U)D(I+\bar U)^\top$ — same idea, indices flipped so $\bar U$ is strictly upper-triangular.</div>
+</div>
+
+<div class="slide">
   <h2>LDL of $H$ Cancels the Cross-Terms</h2><div class="divider"></div>
   <p>$H$ is PSD, so it has an <strong>upper-LDL$^\top$</strong> factorization:</p>
   <div class="math-block" style="margin: 4px 0;">$$H \;=\; (I + \bar U)\,D\,(I + \bar U)^\top, \qquad \bar U \text{ str. upper-triangular},\;\; D \succeq 0 \text{ diagonal}.$$</div>
-  <p>Set $U \leftarrow \bar U$: the $(I+U)^{\pm 1}$ factors collapse against $H$ and the proxy decouples,</p>
+  <p>Set $U \leftarrow \bar U$ and substitute both into $\ell(\widehat W) = \mathrm{tr}\bigl(\eta\,(I+U)^{-1}H(I+U)^{-\top}\eta^\top\bigr)$:</p>
+  <div class="math-block" style="margin: 4px 0;">$$\ell(\widehat W) \;=\; \mathrm{tr}\!\Bigl(\eta\,\underbrace{(I+\bar U)^{-1}(I+\bar U)}_{=\,I}\,D\,\underbrace{(I+\bar U)^\top(I+\bar U)^{-\top}}_{=\,I}\,\eta^\top\Bigr).$$</div>
+  <p>The $(I+\bar U)^{\pm 1}$ factors are literal inverses of each other and cancel, leaving</p>
   <div class="math-block" style="margin: 4px 0;">$$\ell(\widehat W) \;=\; \mathrm{tr}\!\bigl(\eta\,D\,\eta^\top\bigr) \;=\; \sum_{k=1}^n D_{kk}\,\|\eta_{\,\cdot\, k}\|^2.$$</div>
   <p>Cross-terms gone — column $k$ of the quantization error $\eta$ is paid for at rate $D_{kk}$ alone.</p>
 </div>
@@ -622,19 +693,20 @@
     \end{aligned}$$</div>
     <p style="margin: 2px 0;">$c = 12$ nearest, $6$ stochastic &middot; $\mathrm{tr}(D) \le \mathrm{tr}(H)$, equality iff $H$ diagonal.</p>
   </div>
+  <div class="highlight">Not "LDLQ is a good heuristic" — LDLQ is <em>provably the best possible</em> rule in this entire family, for both loss notions, on every $H$.</div>
   <div class="cite">Chee, Cai, Kuleshov, De Sa, "QuIP", NeurIPS 2023.</div>
 </div>
 
 <div class="slide">
   <h2>What Theorem 1 Means</h2><div class="divider"></div>
   <ul>
-    <li>$\mathrm{tr}(H)$ = total input variance — the cost paid by round-to-nearest.</li>
-    <li>$\mathrm{tr}(D)$ = <em>residual</em> variance after LDL strips cross-coordinate predictability.</li>
-    <li>Gap is strict whenever $H$ has off-diagonal mass.</li>
+    <li>$\mathrm{tr}(H)$ = total input variance — the cost paid by round-to-nearest ($U=0$, the do-nothing baseline).</li>
+    <li>$\mathrm{tr}(D)$ = <em>residual</em> variance after LDL strips cross-coordinate predictability — the cost paid by the optimal rule.</li>
+    <li>Gap is strict whenever $H$ has off-diagonal mass; zero only if $H$ is already diagonal.</li>
   </ul>
-  <div class="math-block" style="margin: 4px 0;">$$\underbrace{\tfrac{m}{4}\,\mathrm{tr}(H)}_{\text{round-to-nearest}} \quad \text{vs.} \quad \underbrace{\tfrac{m}{4}\,\mathrm{tr}(D)}_{\text{LDLQ}}.$$</div>
-  <p>Empirically, across <em>every layer</em> of OPT 125m–2.7b, $\;\mathrm{tr}(D)/\mathrm{tr}(H) \le 0.65$ (Chee et al., 2023, Supplement C).</p>
-  <div class="highlight">LDLQ wins whenever inputs are correlated — i.e., every real LLM layer.</div>
+  <div class="math-block" style="margin: 4px 0;">$$\underbrace{\tfrac{m}{4}\,\mathrm{tr}(H)}_{\text{round-to-nearest}} \quad \text{vs.} \quad \underbrace{\tfrac{m}{4}\,\mathrm{tr}(D)}_{\text{LDLQ, provably optimal}}.$$</div>
+  <p>Empirically, across <em>every layer</em> of OPT 125m–2.7b, $\;\mathrm{tr}(D)/\mathrm{tr}(H) \le 0.65$ (Chee et al., 2023, Supplement C) — real LLM inputs are correlated enough that the theorem's gap is never vacuous.</p>
+  <div class="highlight">LDLQ wins whenever inputs are correlated — i.e., every real LLM layer — and the win is the largest any linear-feedback rule could give.</div>
 </div>
 
 <div class="slide">
@@ -720,117 +792,47 @@
 </div>
 
 <div class="slide">
-  <h2>Two Upgrades Over QUIP</h2><div class="divider"></div>
+  <h2>QUIP's Limitation</h2><div class="divider"></div>
+  <p>QUIP's Kronecker rotation costs $\Theta(n\sqrt n)$ multiplies — nontrivial next to the layer it's protecting.</p>
+  <p>QUIP's codebook is scalar: each weight rounds independently to $\mathbb{Z}$, inside a hypercube cell — the same corner-waste problem from Section 03.</p>
+  <div class="highlight">Two costs stack on top of QUIP's already-tight 2-bit budget: rotation speed, and cube-shaped rounding.</div>
+</div>
+
+<div class="slide">
+  <h2>What QUIP# Fixes</h2><div class="divider"></div>
   <div class="grid-2">
     <div class="card">
-      <h3 style="color:var(--blue-light);">Rotation</h3>
-      <p>Kronecker $\to$ <strong>Randomized Hadamard Transform</strong>.</p>
-      <p>$\Theta(n \log n)$ time, sign-only multiplies, tighter incoherence bound.</p>
+      <h3 style="color:var(--blue-light);">Faster rotation</h3>
+      <p>Kronecker $\to$ <strong>Randomized Hadamard Transform (RHT)</strong>: $\Theta(n\log n)$ sign-only additions, no multiplies.</p>
     </div>
     <div class="card">
-      <h3 style="color:var(--blue-light);">Codebook</h3>
-      <p>Scalar $\to$ <strong>$E_8$ lattice on blocks of 8</strong>.</p>
-      <p>Ball-shaped codebook matches the post-rotation Gaussian data.</p>
+      <h3 style="color:var(--blue-light);">Rounder codebook</h3>
+      <p>Scalar $\to$ <strong>$E_8$ lattice on blocks of 8</strong> (BlockLDLQ) — same predict-and-correct recipe, ball-shaped cell instead of a cube.</p>
     </div>
   </div>
   <div class="cite">Tseng, Chee, Sun, Kuleshov, De Sa, "QuIP#", ICML 2024.</div>
 </div>
 
 <div class="slide">
-  <h2>What Is a Hadamard Matrix?</h2><div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns: 0.9fr 1.1fr; gap: 40px; align-items: start; margin-top: 6px;">
-    <div>
-      <p style="text-align:center; margin: 0 0 6px 0;"><strong>$H_8$</strong></p>
-      <svg viewBox="0 0 200 200" width="100%" style="background:var(--light);border-radius:6px;display:block; max-width: 320px; margin: 0 auto;">
-        <g>
-          <rect x="6" y="6" width="22" height="22" fill="#003876"/><rect x="28" y="6" width="22" height="22" fill="#003876"/><rect x="50" y="6" width="22" height="22" fill="#003876"/><rect x="72" y="6" width="22" height="22" fill="#003876"/><rect x="94" y="6" width="22" height="22" fill="#003876"/><rect x="116" y="6" width="22" height="22" fill="#003876"/><rect x="138" y="6" width="22" height="22" fill="#003876"/><rect x="160" y="6" width="22" height="22" fill="#003876"/>
-          <rect x="6" y="28" width="22" height="22" fill="#003876"/><rect x="28" y="28" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="50" y="28" width="22" height="22" fill="#003876"/><rect x="72" y="28" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="94" y="28" width="22" height="22" fill="#003876"/><rect x="116" y="28" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="138" y="28" width="22" height="22" fill="#003876"/><rect x="160" y="28" width="22" height="22" fill="#ffffff" stroke="#003876"/>
-          <rect x="6" y="50" width="22" height="22" fill="#003876"/><rect x="28" y="50" width="22" height="22" fill="#003876"/><rect x="50" y="50" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="72" y="50" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="94" y="50" width="22" height="22" fill="#003876"/><rect x="116" y="50" width="22" height="22" fill="#003876"/><rect x="138" y="50" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="160" y="50" width="22" height="22" fill="#ffffff" stroke="#003876"/>
-          <rect x="6" y="72" width="22" height="22" fill="#003876"/><rect x="28" y="72" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="50" y="72" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="72" y="72" width="22" height="22" fill="#003876"/><rect x="94" y="72" width="22" height="22" fill="#003876"/><rect x="116" y="72" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="138" y="72" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="160" y="72" width="22" height="22" fill="#003876"/>
-          <rect x="6" y="94" width="22" height="22" fill="#003876"/><rect x="28" y="94" width="22" height="22" fill="#003876"/><rect x="50" y="94" width="22" height="22" fill="#003876"/><rect x="72" y="94" width="22" height="22" fill="#003876"/><rect x="94" y="94" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="116" y="94" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="138" y="94" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="160" y="94" width="22" height="22" fill="#ffffff" stroke="#003876"/>
-          <rect x="6" y="116" width="22" height="22" fill="#003876"/><rect x="28" y="116" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="50" y="116" width="22" height="22" fill="#003876"/><rect x="72" y="116" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="94" y="116" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="116" y="116" width="22" height="22" fill="#003876"/><rect x="138" y="116" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="160" y="116" width="22" height="22" fill="#003876"/>
-          <rect x="6" y="138" width="22" height="22" fill="#003876"/><rect x="28" y="138" width="22" height="22" fill="#003876"/><rect x="50" y="138" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="72" y="138" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="94" y="138" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="116" y="138" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="138" y="138" width="22" height="22" fill="#003876"/><rect x="160" y="138" width="22" height="22" fill="#003876"/>
-          <rect x="6" y="160" width="22" height="22" fill="#003876"/><rect x="28" y="160" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="50" y="160" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="72" y="160" width="22" height="22" fill="#003876"/><rect x="94" y="160" width="22" height="22" fill="#ffffff" stroke="#003876"/><rect x="116" y="160" width="22" height="22" fill="#003876"/><rect x="138" y="160" width="22" height="22" fill="#003876"/><rect x="160" y="160" width="22" height="22" fill="#ffffff" stroke="#003876"/>
-        </g>
-      </svg>
-      <p style="text-align:center; font-size:1.1rem; margin-top: 8px;">Blue $= +1$, &nbsp;white $= -1$</p>
-    </div>
-    <div>
-      <p>$H_n \in \{-1,+1\}^{n\times n}$, $H_n H_n^\top = n I$.</p>
-      <div class="math-block" style="margin: 8px 0;">$$H_1 = [1], \;\;\; H_{2n} = \begin{bmatrix} H_n & H_n \\ H_n & -H_n \end{bmatrix}.$$</div>
-      <ul>
-        <li>Built recursively (Sylvester).</li>
-        <li>Rows orthogonal $\Rightarrow$ $\tfrac{1}{\sqrt n} H_n$ is a rotation.</li>
-        <li>$H_n x$ in $\Theta(n\log n)$ via FWHT.</li>
-      </ul>
-    </div>
-  </div>
+  <h2>The Hadamard/Incoherence Upgrade, Roughly</h2><div class="divider"></div>
+  <p>A Hadamard matrix $H_n\in\{-1,+1\}^{n\times n}$ has orthogonal rows, so $\tfrac{1}{\sqrt n}H_n$ is a valid rotation — and multiplying by it is just additions and subtractions (Fast Walsh-Hadamard), no float multiplies at all.</p>
+  <p>Randomize the signs first ($V = \tfrac{1}{\sqrt n}H_nS$, $S$ random $\pm1$ diagonal): now any $W$, even adversarial, gets spread evenly across entries after rotation — no outliers survive.</p>
+  <div class="highlight">Same incoherence job as QUIP's Kronecker rotation, but $\Theta(n\log n)$ sign flips instead of $\Theta(n\sqrt n)$ multiplies, with a tighter incoherence bound.</div>
 </div>
 
 <div class="slide">
-  <h2>Why Hadamard Is Fast Enough</h2><div class="divider"></div>
-  <p>$\frac{1}{\sqrt n} H_n$ is orthogonal — so it's a valid rotation.</p>
-  <p>Fast Walsh-Hadamard: pair up entries, sum and difference, recurse.</p>
-  <div class="math-block">$$H_n x \;\text{in}\; \Theta(n\log n) \;\text{additions} \;\;(\text{no float multiplies}).$$</div>
-  <p>Cf. Kronecker rotation: $\Theta(n\sqrt n)$ multiplies. Hadamard is asymptotically faster <em>and</em> simpler in hardware.</p>
-  <div class="highlight">$\Theta(n\log n)$ sign-only ops — essentially free next to the quantized matmul.</div>
-</div>
-
-<div class="slide">
-  <h2>Random Signs Make It Incoherent</h2><div class="divider"></div>
-  <p>Plain $H_n$ alone fails on adversarial $W$ &middot; fix: random sign flips.</p>
-  <div class="math-block" style="margin: 6px 0;">$$\widetilde W \;=\; \bigl(\tfrac{1}{\sqrt m} H_m S_U\bigr)\,W\,\bigl(\tfrac{1}{\sqrt n} H_n S_V\bigr)^\top, \quad S_U, S_V \sim \mathrm{Unif}\{\pm 1\}^{\text{diag}}.$$</div>
-  <p>Each entry $\widetilde W_{ij}$ is a sign-randomized sum of $mn$ terms $\Rightarrow$ CLT:</p>
-  <div class="math-block" style="margin: 6px 0;">$$\widetilde W_{ij} \;\approx\; \mathcal{N}\!\bigl(0,\,\tfrac{\|W\|_F^2}{mn}\bigr), \qquad \mu \;=\; \mathcal{O}\!\bigl(\sqrt{\log(mn/\delta)}\bigr).$$</div>
-  <div class="highlight">RHT: $\sqrt{\log}$ incoherence vs.&nbsp;$\log^2$ for Kronecker &middot; strictly tighter.</div>
-</div>
-
-<div class="slide">
-  <h2>$E_8$ Codebook — Decoded by Index</h2><div class="divider"></div>
-  <p>Group rotated weights into blocks of 8. Each block quantizes to one of $\sim 256$ codewords from a scaled $E_8$ lattice (called E8P).</p>
-  <ul>
-    <li><strong>Encode:</strong> $E_8$ nearest point in $\mathcal{O}(8)$ — round to $\mathbb{Z}^8$ and the half-shift coset, pick the closer.</li>
-    <li><strong>Decode:</strong> table lookup by 8-bit index. 1 KB table, fits in L1.</li>
-    <li><strong>Rate:</strong> 8 bits / 8 weights $= 1$ bit / weight, plus a sign-flip bit $\to$ 2 bits / weight effective.</li>
-  </ul>
-  <div class="highlight">The codebook is allowed to be a lattice because both encode and decode are cheap.</div>
-</div>
-
-<div class="slide">
-  <h2>Scalar LDLQ vs. BlockLDLQ</h2><div class="divider"></div>
-  <p>QUIP rounds one column at a time &middot; to use $E_8$, round $g{=}8$ at once.</p>
-  <div class="math-block" style="margin: 6px 0;">$$\begin{aligned}
-    \text{Scalar LDLQ } (g{=}1) &:\; \widehat W_k = Q\bigl(W_k + R_{1:k-1}\,\bar U_{\,\cdot,k}\bigr), \quad R_j = W_j - \widehat W_j. \\
-    \text{BlockLDLQ } (g{=}8) &:\; \widehat W_k = Q_{E_8}\bigl(W_k + R_{1:k-g}\,A_k\bigr).
-  \end{aligned}$$</div>
-  <div class="highlight">Same predict-and-correct, only the per-step rounder changes.</div>
-</div>
-
-<div class="slide">
-  <h2>BlockLDLQ — Bound</h2><div class="divider"></div>
-  <p>$A_k$ from a <em>block</em> LDL$^\top$ of $H$ (block size $g$).</p>
-  <div class="card">
-    <h3 style="margin: 0 0 2px 0;">Theorem 4.1 (Tseng et&nbsp;al., 2024).</h3>
-    <div class="math-block" style="margin: 0;">$$\mathbb{E}\,\ell(\widehat W) \;\le\; \frac{g\,m\,\mu^2}{n}\,\sigma^2\,\mathrm{tr}(H^{1/2})^2.$$</div>
-  </div>
-  <p>Same $\mathrm{tr}(H) \to \mathrm{tr}(H^{1/2})^2/n$ improvement as scalar QUIP &mdash; now with vector quantization.</p>
-</div>
-
-<div class="slide">
-  <h2>Two-Faced Effective Codebook</h2><div class="divider"></div>
+  <h2>QUIP# — Net Effect</h2><div class="divider"></div>
   <div class="grid-2">
     <div>
       <h3 style="color:var(--blue-light);">To the data</h3>
-      <p>Random rotation + ball-shaped $E_8$ codebook.</p>
-      <p>Looks like an i.i.d.&nbsp;random Gaussian codebook (Shannon-optimal).</p>
+      <p>Random rotation + ball-shaped $E_8$ codebook looks like an i.i.d.&nbsp;Gaussian codebook (Shannon-optimal).</p>
     </div>
     <div>
       <h3 style="color:var(--blue-light);">To the hardware</h3>
-      <p>Rigid $E_8$ grid. 1 KB table fits in L1.</p>
-      <p>Encode $\mathcal{O}(8)$, rotate $\Theta(n\log n)$.</p>
+      <p>Rigid $E_8$ grid, 1&nbsp;KB lookup table, $\Theta(n\log n)$ rotation, $\mathcal{O}(8)$ encode per block.</p>
     </div>
   </div>
-  <div class="highlight">Rate-distortion benefits without the exponential cost of unstructured VQ.</div>
+  <div class="highlight">Rate-distortion benefits of a fine lattice codebook, without the exponential cost of unstructured VQ.</div>
 </div>
 
 

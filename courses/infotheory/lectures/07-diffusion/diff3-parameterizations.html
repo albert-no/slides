@@ -10,6 +10,10 @@
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
   onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  /* Scoped tight-margin math-block for multi-equation proof slides (Priority 2). */
+  .d3-tight .math-block { margin: 8px 0; }
+</style>
 </head>
 <body data-brand-logo="../../../../reference/kor-eng2.png">
 
@@ -96,8 +100,31 @@
   <div class="card" style="padding: 10px 16px; margin-bottom: 10px;">
     <p><strong>Recall (Lecture 1).</strong> $\log p_\theta(x) = \mathcal{L}_{\mathrm{ELBO}} + D_{\mathrm{KL}}(q\,\Vert\,p_\theta(\cdot\mid x)) \;\ge\; \mathcal{L}_{\mathrm{ELBO}}.$</p>
   </div>
-  <p>Likelihood intractable. Maximize the ELBO instead.</p>
-  <p>Gap vanishes iff variational posterior matches the true posterior.</p>
+  <div class="cols" style="align-items:center;gap:40px;">
+    <div>
+      <p>Likelihood intractable. Maximize the ELBO instead.</p>
+      <p>Gap vanishes iff variational posterior matches the true posterior.</p>
+    </div>
+    <div style="display:flex;justify-content:center;">
+      <svg viewBox="0 0 320 240" style="width:100%;max-width:340px;">
+        <!-- baseline -->
+        <line x1="30" y1="215" x2="300" y2="215" stroke="#666" stroke-width="1.5"/>
+        <!-- full log-likelihood bar (target height) -->
+        <line x1="90" y1="30" x2="230" y2="30" stroke="#666" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <text x="150" y="22" font-size="14" fill="#666" text-anchor="middle">log p(x)</text>
+        <!-- KL gap segment (top) -->
+        <rect x="110" y="30" width="100" height="55" fill="#e8ecf0" stroke="#666" stroke-width="1"/>
+        <text x="160" y="63" font-size="14" fill="#666" text-anchor="middle">KL gap</text>
+        <!-- ELBO segment (bottom, the bound we raise) -->
+        <rect x="110" y="85" width="100" height="130" fill="#003876"/>
+        <text x="160" y="155" font-size="15" fill="#fff" text-anchor="middle" font-weight="700">ELBO</text>
+        <!-- upward arrow: maximize pushes ELBO toward the ceiling -->
+        <line x1="255" y1="150" x2="255" y2="60" stroke="#005baa" stroke-width="2.5"/>
+        <polygon points="255,45 249,62 261,62" fill="#005baa"/>
+        <text x="270" y="110" font-size="13" fill="#005baa">raise</text>
+      </svg>
+    </div>
+  </div>
 </div>
 
 <div class="slide">
@@ -136,17 +163,28 @@
 
 <div class="slide">
   <h2>Proof &mdash; Differentiate the Marginal</h2><div class="divider"></div>
-  <p>Marginal as Gaussian mixture; differentiate $\log p_t$:</p>
+  <p>Marginal as Gaussian mixture. Differentiate under the integral sign:</p>
   <div class="math-block">$$\begin{aligned}
-p_t(x_t) &amp;\;=\; \int p_0(x_0)\,\mathcal{N}\!\bigl(x_t;\,\sqrt{\bar\alpha_t}\,x_0,\,(1-\bar\alpha_t)I\bigr)\,dx_0. \\[6pt]
-\nabla_{x_t}\log p_t(x_t) &amp;\;=\; -\,\dfrac{x_t - \sqrt{\bar\alpha_t}\,\mathbb{E}[X_0\mid x_t]}{1-\bar\alpha_t}.
+p_t(x_t) &amp;\;=\; \int p_0(x_0)\,\mathcal{N}\!\bigl(x_t;\,\sqrt{\bar\alpha_t}\,x_0,\,(1-\bar\alpha_t)I\bigr)\,dx_0, \\[4pt]
+\nabla_{x_t}p_t(x_t) &amp;\;=\; \int p_0(x_0)\,\nabla_{x_t}\mathcal{N}\!\bigl(x_t;\,\sqrt{\bar\alpha_t}\,x_0,\,(1-\bar\alpha_t)I\bigr)\,dx_0.
 \end{aligned}$$</div>
-  <p>Gradient passes inside; hits the Gaussian kernel. Solve for $\mathbb{E}[X_0\mid x_t]$. $\quad\square$</p>
+  <p>Gaussian score of each mixture component:</p>
+  <div class="math-block">$$\nabla_{x_t}\mathcal{N}(x_t;\cdot) \;=\; -\tfrac{x_t-\sqrt{\bar\alpha_t}x_0}{1-\bar\alpha_t}\,\mathcal{N}(x_t;\cdot).$$</div>
 </div>
 
-<div class="slide">
+<div class="slide d3-tight">
+  <h2>Proof (continued) &mdash; Divide by the Marginal</h2><div class="divider"></div>
+  <p>Recall $\nabla_{x_t}\mathcal{N}(x_t;\cdot) = -\tfrac{x_t-\sqrt{\bar\alpha_t}x_0}{1-\bar\alpha_t}\,\mathcal{N}(x_t;\cdot)$.</p>
+  <p>Divide by $p_t(x_t)$; the ratio $p_0(x_0)\mathcal{N}(x_t;\cdot)/p_t(x_t)$ is exactly the posterior $p(x_0\mid x_t)$:</p>
+  <div class="math-block">$$\nabla_{x_t}\log p_t(x_t) \;=\; -\int \frac{x_t-\sqrt{\bar\alpha_t}x_0}{1-\bar\alpha_t}\,p(x_0\mid x_t)\,dx_0 \;=\; -\,\dfrac{x_t - \sqrt{\bar\alpha_t}\,\mathbb{E}[X_0\mid x_t]}{1-\bar\alpha_t}.$$</div>
+  <p>Solve for $\mathbb{E}[X_0\mid x_t]$: multiply by $-(1-\bar\alpha_t)$, add $x_t$, divide by $\sqrt{\bar\alpha_t}$ &mdash; the theorem. $\quad\square$</p>
+</div>
+
+<div class="slide d3-tight">
   <h2>Tweedie Unifies the Predictions</h2><div class="divider"></div>
-  <p>Combine Tweedie with the master identity:</p>
+  <p>Master identity solved for $x_0$: $x_0 = \bigl(x_t-\sqrt{1-\bar\alpha_t}\,\varepsilon\bigr)/\sqrt{\bar\alpha_t}$. Take $\mathbb{E}[\cdot\mid x_t]$ and substitute Tweedie's $\mathbb{E}[X_0\mid x_t]$:</p>
+  <div class="math-block">$$\mathbb{E}[X_0\mid x_t] \;=\; \frac{x_t-\sqrt{1-\bar\alpha_t}\,\mathbb{E}[\varepsilon\mid x_t]}{\sqrt{\bar\alpha_t}} \;=\; \frac{1}{\sqrt{\bar\alpha_t}}\bigl(x_t+(1-\bar\alpha_t)\nabla_{x_t}\log p_t(x_t)\bigr).$$</div>
+  <p>Match the $x_t$ coefficients (both $1/\sqrt{\bar\alpha_t}$) and solve for $\mathbb{E}[\varepsilon\mid x_t]$:</p>
   <div class="math-block">$$\mathbb{E}[\varepsilon\mid x_t] \;=\; -\sqrt{1-\bar\alpha_t}\,\nabla_{x_t}\log p_t(x_t).$$</div>
   <p>Optimal $x_0$-predictor, $\varepsilon$-predictor, and score: <strong>three rescalings of the same function</strong>.</p>
   <div class="highlight">Tool 2 converts the ELBO's <strong>mean prediction</strong> (Tool 1) into a <strong>score estimation</strong> problem &mdash; bridging to Tool 3.</div>
@@ -166,8 +204,34 @@ p_t(x_t) &amp;\;=\; \int p_0(x_0)\,\mathcal{N}\!\bigl(x_t;\,\sqrt{\bar\alpha_t}\
   <div class="card" style="padding: 10px 16px; margin-bottom: 10px;">
     <p><strong>Recall (Lecture 6).</strong> $D_F(f\,\Vert\,g) = \tfrac{1}{2}\,\mathbb{E}_f\!\bigl[\|\nabla\log f - \nabla\log g\|^2\bigr].$</p>
   </div>
-  <p>Compares <strong>scores</strong>, not densities. Ignores normalization constants.</p>
-  <p>Vincent (2011): minimizing Fisher divergence $\equiv$ denoising score matching.</p>
+  <div class="cols" style="align-items:center;gap:36px;">
+    <div>
+      <p>Compares <strong>scores</strong> (slopes), not densities (heights).</p>
+      <p>Ignores normalization constants.</p>
+      <p>Vincent (2011): minimizing $D_F \equiv$ denoising score matching.</p>
+    </div>
+    <div style="display:flex;justify-content:center;">
+      <svg viewBox="0 0 360 220" style="width:100%;max-width:400px;">
+        <!-- axis -->
+        <line x1="30" y1="185" x2="340" y2="185" stroke="#666" stroke-width="1.5"/>
+        <!-- density f (data) -->
+        <path d="M40,185 C110,185 120,45 185,45 C250,45 260,185 330,185"
+              fill="none" stroke="#003876" stroke-width="3"/>
+        <!-- density g (model) -->
+        <path d="M40,185 C130,185 145,80 205,80 C265,80 280,185 330,185"
+              fill="none" stroke="#005baa" stroke-width="3" stroke-dasharray="7 5"/>
+        <!-- score = slope tangents at a shared point x -->
+        <line x1="150" y1="185" x2="150" y2="60" stroke="#e8ecf0" stroke-width="1.5"/>
+        <!-- tangent to f -->
+        <line x1="110" y1="118" x2="190" y2="70" stroke="#003876" stroke-width="2.5"/>
+        <!-- tangent to g -->
+        <line x1="115" y1="150" x2="195" y2="122" stroke="#005baa" stroke-width="2.5" stroke-dasharray="4 4"/>
+        <text x="182" y="38" font-size="16" fill="#003876" font-weight="700">f</text>
+        <text x="285" y="120" font-size="16" fill="#005baa" font-weight="700">g</text>
+        <text x="70" y="210" font-size="13" fill="#666">slope gap = score gap</text>
+      </svg>
+    </div>
+  </div>
 </div>
 
 <div class="slide">
@@ -188,11 +252,13 @@ p_t(x_t) &amp;\;=\; \int p_0(x_0)\,\mathcal{N}\!\bigl(x_t;\,\sqrt{\bar\alpha_t}\
   <div class="math-block">$$\mathbb{E}_{q}\!\bigl[\|\tilde\mu_t - \mu_\theta\|^2\bigr] \;=\; 2\,(1-\bar\alpha_t)^2\;\underbrace{D_F\!\bigl(q(\,\cdot\,\mid x_0)\,\Vert\,p_\theta^{(t)}\bigr)}_{\text{Fisher divergence (Tool 3)}}.$$</div>
 </div>
 
-<div class="slide">
+<div class="slide d3-tight">
   <h2>Step 3 &mdash; Recognize the Denoising Form</h2><div class="divider"></div>
   <p>Forward marginal $q(x_t\mid x_0) = \mathcal{N}(\sqrt{\bar\alpha_t}\,x_0,(1-\bar\alpha_t)I)$ has Gaussian score:</p>
   <div class="math-block">$$\nabla_{x_t}\log q(x_t\mid x_0) \;=\; -\,\frac{x_t - \sqrt{\bar\alpha_t}\,x_0}{1-\bar\alpha_t}.$$</div>
-  <p>Substitute, drop $\theta$-free terms: exactly <strong>Vincent's DSM</strong> at noise level $1-\bar\alpha_t$.</p>
+  <p>Substitute into Step 2's Fisher divergence, writing $s_\theta(x_t,t) := \nabla_{x_t}\log p_\theta^{(t)}(x_t)$:</p>
+  <div class="math-block">$$D_F\!\bigl(q(\,\cdot\,\mid x_0)\,\Vert\,p_\theta^{(t)}\bigr) \;=\; \tfrac12\,\mathbb{E}\!\left[\Bigl\|\,\tfrac{\sqrt{\bar\alpha_t}\,x_0 - x_t}{1-\bar\alpha_t} - s_\theta(x_t,t)\Bigr\|^2\right].$$</div>
+  <p>Drop the $\theta$-free normalization constant: exactly <strong>Vincent's DSM</strong> at noise level $1-\bar\alpha_t$.</p>
   <div class="cite">Vincent, "A Connection Between Score Matching and Denoising Autoencoders", Neural Comp. 2011.</div>
 </div>
 

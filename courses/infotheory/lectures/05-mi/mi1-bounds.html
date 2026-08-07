@@ -117,7 +117,39 @@
   <h2>Density-Ratio Framing</h2><div class="divider"></div>
   <p>Define</p>
   <div class="math-block">$$r(x,y) \;=\; \dfrac{p(x,y)}{p(x)p(y)}, \qquad I(X;Y) \;=\; \mathbb{E}_{p_{X,Y}}[\log r(X,Y)].$$</div>
-  <p>If $r$ were known, MI is a single expectation under the joint. <strong>Strategy:</strong> train a critic $T_\theta \approx \log r$ by maximizing a variational lower bound on $I(X;Y)$.</p>
+  <p>If $r$ were known, MI is a single expectation under the joint.</p>
+  <p><strong>Strategy:</strong> train a critic $T_\theta \approx \log r$ by maximizing a variational lower bound on $I(X;Y)$.</p>
+</div>
+
+<div class="slide">
+  <h2>The Critic Is a Classifier</h2><div class="divider"></div>
+  <p>Positive pairs $\sim P = p(x,y)$; negative pairs $\sim Q = p(x)p(y)$. A critic $T(x,y)$ scores &ldquo;joint vs. product.&rdquo;</p>
+  <div style="position:relative; width:100%; max-width:900px; margin:14px auto 6px;">
+    <svg viewBox="0 0 900 340" style="display:block; width:100%;">
+      <!-- axes frame -->
+      <rect x="40" y="20" width="820" height="270" fill="#f4f6f9" stroke="#e8ecf0" stroke-width="2" rx="8"/>
+      <!-- decision boundary (critic level set T=0) -->
+      <path d="M 250 30 C 380 110, 520 190, 640 285" fill="none" stroke="#005baa" stroke-width="3" stroke-dasharray="8 6"/>
+      <!-- positive cluster (joint) blue dots, upper-left -->
+      <g fill="#003876">
+        <circle cx="150" cy="70" r="8"/><circle cx="200" cy="95" r="8"/><circle cx="120" cy="120" r="8"/>
+        <circle cx="185" cy="140" r="8"/><circle cx="240" cy="80" r="8"/><circle cx="160" cy="175" r="8"/>
+        <circle cx="220" cy="130" r="8"/><circle cx="110" cy="185" r="8"/><circle cx="260" cy="120" r="8"/>
+        <circle cx="140" cy="230" r="8"/><circle cx="205" cy="200" r="8"/>
+      </g>
+      <!-- negative cluster (product) red dots, lower-right -->
+      <g fill="#d94040">
+        <circle cx="640" cy="90" r="8"/><circle cx="700" cy="120" r="8"/><circle cx="750" cy="95" r="8"/>
+        <circle cx="680" cy="160" r="8"/><circle cx="740" cy="150" r="8"/><circle cx="790" cy="120" r="8"/>
+        <circle cx="700" cy="210" r="8"/><circle cx="760" cy="200" r="8"/><circle cx="810" cy="170" r="8"/>
+        <circle cx="660" cy="240" r="8"/><circle cx="730" cy="250" r="8"/>
+      </g>
+      <text x="150" y="278" font-size="19" font-weight="700" fill="#003876">positive pairs</text>
+      <text x="655" y="285" font-size="19" font-weight="700" fill="#d94040">negative pairs</text>
+    </svg>
+    <span style="position:absolute; left:49%; top:5%; transform:translate(-50%,-50%); font-size:1.25rem; font-weight:700; color:var(--accent);">$T(x,y)=0$</span>
+  </div>
+  <div class="highlight">Optimal critic $T^\star = \log r$: the log-odds of joint vs. product. Every bound below reuses this one picture.</div>
 </div>
 
 
@@ -142,9 +174,19 @@
 
 <div class="slide">
   <h2>Proof — Add and Subtract $\log q$</h2><div class="divider"></div>
-  <p>$I(X;Y) = H(X) - H(X\mid Y)$ and $H(X\mid Y) = -\mathbb{E}\log p(x\mid y)$. Insert $\log q$:</p>
+  <p>$I(X;Y) = H(X) - H(X\mid Y)$ and $H(X\mid Y) = -\mathbb{E}\log p(x\mid y)$. Multiply and divide by $q(x\mid y)$ inside the log:</p>
+  <div class="math-block">$$H(X\mid Y) \;=\; -\mathbb{E}\log q(x\mid y) \;-\; \mathbb{E}\log\dfrac{p(x\mid y)}{q(x\mid y)}.$$</div>
+  <p>The second term is exactly $\mathbb{E}_{p(y)}D_{\mathrm{KL}}\!\bigl(p(\cdot\mid y)\,\Vert\,q(\cdot\mid y)\bigr) \ge 0$, so:</p>
   <div class="math-block">$$H(X\mid Y) \;=\; -\mathbb{E}\log q(x\mid y) - \mathbb{E}_{p(y)}D_{\mathrm{KL}}\!\bigl(p(\cdot\mid y)\,\Vert\,q(\cdot\mid y)\bigr).$$</div>
-  <p>Substitute back; KL non-negativity gives the bound. Gap is $\mathbb{E}_{p(y)}D_{\mathrm{KL}}(\cdot\Vert q)$, vanishing iff $q = p(\cdot\mid y)$.</p>
+</div>
+
+<div class="slide">
+  <h2>Proof — Drop the KL Term</h2><div class="divider"></div>
+  <p>Substitute back into $I(X;Y) = H(X) - H(X\mid Y)$:</p>
+  <div class="math-block">$$I(X;Y) \;=\; H(X) + \mathbb{E}\log q(x\mid y) + \mathbb{E}_{p(y)}D_{\mathrm{KL}}\!\bigl(p(\cdot\mid y)\,\Vert\,q(\cdot\mid y)\bigr).$$</div>
+  <p>Drop the non-negative KL term:</p>
+  <div class="math-block">$$I(X;Y) \;\ge\; H(X) + \mathbb{E}\log q(x\mid y) \;=\; I_{\mathrm{BA}}(q).$$</div>
+  <div class="highlight">Gap is $\mathbb{E}_{p(y)}D_{\mathrm{KL}}(p\Vert q)$: vanishes iff $q = p(\cdot\mid y)$.</div>
 </div>
 
 <div class="slide">
@@ -190,10 +232,44 @@
 </div>
 
 <div class="slide">
+  <h2>Intuition — Tilting Reweights $Q$ Toward $P$</h2><div class="divider"></div>
+  <p>Multiply $Q$ by $e^{T}$ (renormalize): mass moves where the critic scores high. Best critic $e^{T}\!\propto\! dP/dQ$ lands the tilt exactly on $P$.</p>
+  <div style="position:relative; width:100%; max-width:880px; margin:16px auto 6px;">
+    <svg viewBox="0 0 880 300" style="display:block; width:100%;">
+      <!-- baseline -->
+      <line x1="40" y1="250" x2="840" y2="250" stroke="#1a1a1a" stroke-width="2"/>
+      <!-- Q: broad low curve (gray) -->
+      <path d="M 60 250 C 220 210, 300 210, 440 220 C 580 230, 680 235, 820 245" fill="none" stroke="#666666" stroke-width="4"/>
+      <!-- weight e^T: rising curve (blue dashed) -->
+      <path d="M 60 245 C 260 240, 360 200, 480 150 C 600 100, 700 70, 820 50" fill="none" stroke="#003876" stroke-width="4" stroke-dasharray="9 6"/>
+      <!-- tilted G ~ P: peak shifted right (success green) -->
+      <path d="M 60 250 C 320 248, 480 245, 560 150 C 600 90, 640 90, 680 150 C 760 245, 800 248, 820 250" fill="none" stroke="#2e8b57" stroke-width="4"/>
+    </svg>
+    <span style="position:absolute; left:13%; top:80%; transform:translate(-50%,-50%); font-size:1.3rem; font-weight:700; color:var(--gray-text);">$Q$</span>
+    <span style="position:absolute; left:82%; top:20%; transform:translate(-50%,-50%); font-size:1.2rem; font-weight:700; color:var(--yonsei-blue);">weight $e^{T}$</span>
+    <span style="position:absolute; left:70%; top:43%; transform:translate(-50%,-50%); font-size:1.3rem; font-weight:700; color:var(--success);">tilted $G$</span>
+  </div>
+  <p><strong>Log-normalizer</strong> $\log\mathbb{E}_Q[e^T]$ is the price of renormalizing after the tilt.</p>
+</div>
+
+<div class="slide">
   <h2>Proof — Tilt $Q$ by $e^T$</h2><div class="divider"></div>
-  <p>Define $G$ via $\frac{dG}{dQ} = \frac{e^T}{\mathbb{E}_Q[e^T]}$. Compute:</p>
+  <p>Define the tilted measure $G$ via $\dfrac{dG}{dQ} = \dfrac{e^T}{\mathbb{E}_Q[e^T]}$ &mdash; positive, integrates to 1.</p>
+  <p>Expand $D_{\mathrm{KL}}(P\Vert G)$ by the change of measure:</p>
+  <div class="math-block">$$\begin{aligned}
+    D_{\mathrm{KL}}(P\,\Vert\,G)
+      &= \mathbb{E}_P\!\left[\log\dfrac{dP}{dG}\right] \;=\; \mathbb{E}_P\!\left[\log\dfrac{dP}{dQ}\cdot\dfrac{dQ}{dG}\right] \\
+      &= \mathbb{E}_P\!\left[\log\dfrac{dP}{dQ}\right] - \mathbb{E}_P[T] + \log\mathbb{E}_Q[e^T].
+  \end{aligned}$$</div>
+</div>
+
+<div class="slide">
+  <h2>Proof — Rearrange to the Bound</h2><div class="divider"></div>
+  <p>The first term is $D_{\mathrm{KL}}(P\Vert Q)$, so:</p>
   <div class="math-block">$$D_{\mathrm{KL}}(P\,\Vert\,G) \;=\; D_{\mathrm{KL}}(P\,\Vert\,Q) - \mathbb{E}_P[T] + \log\mathbb{E}_Q[e^T] \;\ge\; 0.$$</div>
-  <p>Rearrange. Equality iff $P = G$, i.e. $T = \log(dP/dQ) + c$.</p>
+  <p>Rearrange (the left side is a KL, hence $\ge 0$):</p>
+  <div class="math-block">$$D_{\mathrm{KL}}(P\,\Vert\,Q) \;\ge\; \mathbb{E}_P[T] - \log\mathbb{E}_Q[e^T]\;.$$</div>
+  <div class="highlight">Equality iff $P = G$: $\;T = \log(dP/dQ) + c$.</div>
 </div>
 
 <div class="slide">
@@ -219,9 +295,17 @@
 
 <div class="slide">
   <h2>From DV to NWJ</h2><div class="divider"></div>
-  <p>For $u>0$: $\log u \le u - 1$. Apply with $u = \mathbb{E}_Q[e^T]$:</p>
+  <p>For $u>0$: $\log u \le u - 1$ (tangent line to $\log$ at $u=1$). Apply with $u = \mathbb{E}_Q[e^T]$:</p>
   <div class="math-block">$$\log\mathbb{E}_Q[e^T] \;\le\; \mathbb{E}_Q[e^T] - 1.$$</div>
-  <p>Substitute into DV and reparameterize $T \to T+1$ to absorb the constant.</p>
+  <p>Negate and substitute into the DV bound $I(X;Y) \ge \mathbb{E}_P[T] - \log\mathbb{E}_Q[e^T]$:</p>
+  <div class="math-block">$$I(X;Y) \;\ge\; \mathbb{E}_P[T] - \log\mathbb{E}_Q[e^T] \;\ge\; \mathbb{E}_P[T] - \mathbb{E}_Q[e^T] + 1.$$</div>
+</div>
+
+<div class="slide">
+  <h2>From DV to NWJ — Relabel</h2><div class="divider"></div>
+  <p>Relabel the critic $T \to T - 1$ (write in terms of $T' := T+1$, then drop the prime):</p>
+  <div class="math-block">$$I(X;Y) \;\ge\; \mathbb{E}_P[T-1] - \mathbb{E}_Q[e^{T-1}] + 1 \;=\; \mathbb{E}_P[T] - \mathbb{E}_Q[e^{T-1}].$$</div>
+  <div class="highlight">NWJ: linear surrogate for the log-partition. Weaker bound, tamer variance.</div>
 </div>
 
 <div class="slide">
@@ -259,11 +343,45 @@
 </div>
 
 <div class="slide">
-  <h2>The High-MI Barrier</h2><div class="divider"></div>
-  <p>For strongly dependent pairs, $\log r$ has a long right tail. McAllester &amp; Stratos (2020):</p>
+  <h2>The High-MI Barrier — Why</h2><div class="divider"></div>
+  <p>At $T^\star = \log r$: partition term $\mathbb{E}_Q[e^{T^\star}] = \mathbb{E}_Q[r] = 1$; empirical version averages $r$ over $N$ draws from $Q$.</p>
+  <div class="math-block">$$\widehat{\mathbb{E}_Q[e^{T^\star}]} \;=\; \dfrac{1}{N}\sum_{i=1}^N r(x_i,y_i), \qquad \operatorname{Var}[r] \;=\; \mathbb{E}_P[r] - 1.$$</div>
+  <ul>
+    <li>$\log r$ concentrates near $I$ under $P$ (AEP-style).</li>
+    <li>Tail where $\log r \gg I$ dominates: $\mathbb{E}_P[r] \sim e^{I}$.</li>
+    <li>Delta method through $\log(\cdot)$, divide by $N$:</li>
+  </ul>
   <div class="math-block">$$\operatorname{Var}\!\bigl[\widehat{\log\mathbb{E}_Q[e^T]}\bigr] \;\sim\; \dfrac{e^{I(X;Y)}}{N}.$$</div>
-  <p>To estimate $I = 10$ nats: need $N\sim e^{10}\approx 22{,}000$ samples for variance control alone.</p>
-  <div class="highlight">No sample-efficient estimator of high MI. Information-theoretic barrier, not a software bug.</div>
+</div>
+
+<div class="slide">
+  <h2>The High-MI Barrier — Cost</h2><div class="divider"></div>
+  <div class="cols">
+    <div class="col-1-3">
+      <ul class="arrow" style="line-height:1.6;">
+        <li><strong>McAllester&ndash;Stratos:</strong> any estimator, variance $\Omega(e^I/N)$.</li>
+        <li>$I=10$ nats: $N\sim e^{10}\approx 22\text{k}$.</li>
+        <li>Barrier, not a bug.</li>
+      </ul>
+    </div>
+    <div class="col-2-3">
+      <div style="position:relative; width:100%; max-width:560px; margin:0 auto;">
+        <svg viewBox="0 0 560 300" style="display:block; width:100%;">
+          <line x1="70" y1="260" x2="530" y2="260" stroke="#1a1a1a" stroke-width="2"/>
+          <line x1="70" y1="260" x2="70" y2="24" stroke="#1a1a1a" stroke-width="2"/>
+          <path d="M 70 258 C 200 252, 280 232, 360 185 C 430 145, 470 95, 510 30" fill="none" stroke="#d94040" stroke-width="4"/>
+          <line x1="290" y1="24" x2="290" y2="260" stroke="#005baa" stroke-width="2" stroke-dasharray="6 6"/>
+          <text x="110" y="285" font-size="18" fill="#666666">low</text>
+          <text x="470" y="285" font-size="18" fill="#666666">high</text>
+        </svg>
+        <span style="position:absolute; left:52%; top:104%; transform:translate(-50%,-50%); font-size:1.15rem; font-weight:700;">true MI&nbsp; $I(X;Y)$</span>
+        <span style="position:absolute; left:1%; top:42%; transform:translate(-50%,-50%) rotate(-90deg); font-size:1.05rem; font-weight:700;">samples $N$</span>
+        <span style="position:absolute; left:84%; top:16%; transform:translate(-50%,-50%); font-size:1.25rem; font-weight:700; color:var(--warn);">$N\sim e^{I}$</span>
+        <span style="position:absolute; left:34%; top:26%; transform:translate(-50%,-50%); font-size:1.0rem; font-weight:600; color:var(--yonsei-blue);">reliable</span>
+      </div>
+    </div>
+  </div>
+  <div class="cite">McAllester and Stratos, "Formal Limitations on the Measurement of Mutual Information", AISTATS 2020.</div>
 </div>
 
 <div class="slide">
@@ -291,9 +409,24 @@
 
 <div class="slide">
   <h2>One Machine &mdash; KL Is the Tip of It</h2><div class="divider"></div>
-  <p>Every $f$-divergence has a Fenchel-dual variational form. Substitute $f(t) = t\log t$, conjugate $f^*(s) = e^{s-1}$:</p>
-  <div class="math-block">$$\underbrace{\mathbb{E}_P[T] - \mathbb{E}_Q[e^{T-1}]}_{\text{NWJ (bare conjugate)}} \;\;\le\;\; D_{\mathrm{KL}}(P\,\Vert\,Q) \;\;=\;\; \sup_T\bigl\{\underbrace{\mathbb{E}_P[T] - \log\mathbb{E}_Q[e^T]}_{\text{DV (tighten over constants)}}\bigr\}.$$</div>
-  <p>Other $f$ give $\chi^2$-, JS-, hockey-stick-MI bounds. Derivation and $f$-GAN: <code>div1</code> &sect;04.</p>
+  <p>Every $f$-divergence has a Fenchel-dual variational form (Nguyen&ndash;Wainwright&ndash;Jordan):</p>
+  <div class="math-block">$$D_f(P\,\Vert\,Q) \;=\; \sup_T\bigl\{\mathbb{E}_P[T] - \mathbb{E}_Q[f^*(T)]\bigr\}, \qquad f^*(s) = \sup_{t}\{st - f(t)\}.$$</div>
+  <ul>
+    <li>KL is $f(t) = t\log t$.</li>
+    <li>Conjugate: $s - \log t - 1 = 0 \Rightarrow t = e^{s-1}$, so $f^*(s) = e^{s-1}$.</li>
+    <li>Plug in: recovers the bare NWJ bound.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>NWJ and DV — Same Conjugate</h2><div class="divider"></div>
+  <div class="math-block">$$\underbrace{\mathbb{E}_P[T] - \mathbb{E}_Q[e^{T-1}]}_{\text{NWJ (bare conjugate)}} \;\;\le\;\; D_{\mathrm{KL}}(P\,\Vert\,Q) \;\;=\;\; \sup_T\bigl\{\underbrace{\mathbb{E}_P[T] - \log\mathbb{E}_Q[e^T]}_{\text{DV}}\bigr\}.$$</div>
+  <ul>
+    <li>DV tightens: optimizes an additive constant in $T$ before the sup.</li>
+    <li>Exactly the shift $T\to T-1$, run in reverse.</li>
+    <li>Other $f$: $\chi^2$-, JS-, hockey-stick-MI bounds.</li>
+  </ul>
+  <div class="highlight">This lecture is the KL row; $f$-GAN and the rest live in <code>div1</code> &sect;04.</div>
 </div>
 
 <div class="slide">

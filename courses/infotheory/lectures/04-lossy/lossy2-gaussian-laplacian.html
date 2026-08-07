@@ -53,6 +53,10 @@
   font-size: 1.4rem;
 }
 .l2-table td { font-size: 1.4rem; font-weight: 500; }
+.l2-cb-cols { display: flex; gap: 32px; justify-content: center; }
+.l2-cb-cols > .l2-cb-table { margin: 0; }
+.l2-cb-table th, .l2-cb-table td { padding: 3px 14px; font-size: 1.25rem; }
+.l2-cb-table tr.l2-cb-best td { background: rgba(46,139,87,0.10); }
 </style>
 </head>
 <body data-brand-logo="../../../../reference/kor-eng2.png">
@@ -112,10 +116,72 @@
 </div>
 
 <div class="slide">
+  <h2>Recap — the Scenario</h2><div class="divider"></div>
+  <p>Source: $X^n = (X_1,\ldots,X_n)$ i.i.d. $\mathcal{N}(0,\sigma^2)$.</p>
+  <p>Distortion: per-symbol mean squared error.</p>
+  <div class="math-block">$$d^{(n)}(x^n,\hat x^n) \;=\; \dfrac{1}{n}\sum_{i=1}^n (x_i-\hat x_i)^2 \;\le\; D.$$</div>
+  <p>Rate $R$ bits/symbol: encoder and decoder <strong>share a codebook</strong> of $2^{nR}$ reconstruction sequences.</p>
+</div>
+
+<div class="slide">
+  <h2>Recap — Encode, Send, Decode</h2><div class="divider"></div>
+  <div class="diagram-flow" style="justify-content:center; margin:26px 0;">
+    <div class="diagram-box">$X^n$</div>
+    <span class="diagram-arrow">$\to$</span>
+    <div class="diagram-box filled">encoder</div>
+    <span class="diagram-arrow">$\to$</span>
+    <div class="diagram-box">$m\in\{1,\ldots,2^{nR}\}$</div>
+    <span class="diagram-arrow">$\to$</span>
+    <div class="diagram-box filled">decoder</div>
+    <span class="diagram-arrow">$\to$</span>
+    <div class="diagram-box">$\widehat X^n(m)$</div>
+  </div>
+  <p><strong>Encoder:</strong> $X^n \mapsto$ index of the <strong>best-matching codeword</strong>.</p>
+  <p><strong>Decoder:</strong> index $\mapsto$ table lookup, $\widehat X^n(m)$.</p>
+  <div class="highlight">Only the index $m$ crosses the channel &middot; $\log_2(2^{nR}) = nR$ bits.</div>
+</div>
+
+<div class="slide">
   <h2>Statement</h2><div class="divider"></div>
   <p>$X\sim\mathcal{N}(0,\sigma^2)$, squared error.</p>
   <div class="math-block">$$R(D) \;=\; \begin{cases}\tfrac12\log\dfrac{\sigma^2}{D}, & 0&lt;D\le\sigma^2,\\[2mm] 0, & D\ge\sigma^2.\end{cases}$$</div>
   <p>Below the variance: bits per coordinate scale logarithmically with the SNR $\sigma^2/D$.</p>
+</div>
+
+<div class="slide">
+  <h2>Achievability — the Construction</h2><div class="divider"></div>
+  <p>Generate the codebook <strong>once</strong>, in advance, known to both sides:</p>
+  <div class="math-block">$$\widehat X^n(1),\ldots,\widehat X^n(2^{nR}) \;\stackrel{\mathrm{iid}}{\sim}\; \mathcal{N}(0,\sigma^2-D)^{\otimes n}.$$</div>
+  <p>Each of the $2^{nR}$ codewords: an independent length-$n$ draw, coordinates i.i.d. $\mathcal{N}(0,\sigma^2-D)$.</p>
+  <p><strong>Encoding rule:</strong> given source $X^n$, send the index of the <strong>closest</strong> codeword.</p>
+  <div class="math-block">$$m^\star \;=\; \arg\min_{m\in\{1,\ldots,2^{nR}\}}\; \|X^n - \widehat X^n(m)\|^2.$$</div>
+</div>
+
+<div class="slide">
+  <h2>Achievability — Worked Codebook</h2><div class="divider"></div>
+  <p style="margin-bottom:2px;">$\sigma^2=10$, $D=2.5$ &middot; codewords $\sim\mathcal{N}(0,\sigma^2{-}D)=\mathcal{N}(0,7.5)$, $n=4$.</p>
+  <p style="margin-top:2px;">Toy codebook, $2^{nR}=8$ codewords $\Rightarrow R=\tfrac34$ bit/symbol. Source draw $X^4 = (1.8,\,{-}0.6,\,2.4,\,0.3)$:</p>
+  <div class="l2-cb-cols">
+    <table class="l2-table l2-cb-table">
+      <thead><tr><th>$m$</th><th>$\widehat X^4(m)$</th><th>$\|X^4-\widehat X^4(m)\|^2$</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>$(-2.1,\ 1.4,\ 0.7,\ {-}2.6)$</td><td>$30.5$</td></tr>
+        <tr><td>2</td><td>$(0.4,\ 2.8,\ {-}1.5,\ 1.1)$</td><td>$29.4$</td></tr>
+        <tr><td>3</td><td>$(2.9,\ {-}3.2,\ {-}0.8,\ 0.5)$</td><td>$18.3$</td></tr>
+        <tr><td>4</td><td>$(-1.2,\ 0.9,\ 3.6,\ {-}1.8)$</td><td>$17.1$</td></tr>
+      </tbody>
+    </table>
+    <table class="l2-table l2-cb-table">
+      <thead><tr><th>$m$</th><th>$\widehat X^4(m)$</th><th>$\|X^4-\widehat X^4(m)\|^2$</th></tr></thead>
+      <tbody>
+        <tr><td>5</td><td>$(3.3,\ 1.7,\ {-}2.4,\ 2.9)$</td><td>$37.3$</td></tr>
+        <tr class="l2-cb-best"><td><strong>6</strong></td><td>$(1.6,\ {-}0.9,\ 2.1,\ 0.6)$</td><td><strong style="color:var(--success);">$0.31$ ✓</strong></td></tr>
+        <tr><td>7</td><td>$(-0.3,\ 2.2,\ 1.0,\ {-}3.1)$</td><td>$25.8$</td></tr>
+        <tr><td>8</td><td>$(0.8,\ {-}1.6,\ {-}0.4,\ 3.4)$</td><td>$19.5$</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="highlight">Codeword $6$ is closest to $X^4$ &middot; encoder sends $m=6$ &middot; $\log_2 8 = 3$ bits for $n=4$ symbols, i.e. $R=\tfrac34$ bit/symbol.</div>
 </div>
 
 <div class="slide">
@@ -126,6 +192,7 @@
   <p><strong>Distortion:</strong> $\mathbb{E}[(X-\widehat X)^2] = D$.</p>
   <p><strong>Mutual information</strong> via $Z\perp\widehat X$, so $h(X\mid\widehat X) = h(Z)$:</p>
   <div class="math-block">$$I(X;\widehat X) \;=\; h(X) - h(Z) \;=\; \tfrac12\log\dfrac{\sigma^2}{D}.$$</div>
+  <p>This is the <strong>same construction</strong>, restated as a joint law: pairing each source realization with its nearest codeword reproduces $X = \widehat X + Z$.</p>
 </div>
 
 <div class="slide">

@@ -70,13 +70,13 @@ The companion LaTeX lecture notes live one level up in `../notes/`; exams in `..
 | q(x_t\|x_0) closed form | `07-diffusion/diff2-diffusion.html` | `:74` |
 | Complete-the-square reverse posterior | `07-diffusion/diff2-diffusion.html` | `:209` |
 | Tweedie's formula (theorem + proof) | `07-diffusion/diff3-parameterizations.html` | `:129` (statement), `:138` (proof) |
-| Shannon's R(D) theorem | `04-lossy/lossy1-foundations.html` | `:637` |
-| Gaussian R(D) achievability + converse | `04-lossy/lossy2-gaussian-laplacian.html` | `:115-222` |
-| Layer-wise telescoping (pruning) | `04-lossy/lossy2-gaussian-laplacian.html` | `:440` |
-| Lattice packing gain | `04-lossy/lossy3-lattice-quip.html` | `:261` |
-| QUIP# Hadamard step | `04-lossy/lossy3-lattice-quip.html` | `:742` |
-| TURBOQUANT_mse theorem | `04-lossy/lossy4-turboquant.html` | `:356` |
-| QJL lemma | `04-lossy/lossy4-turboquant.html` | `:502` |
+| Shannon's R(D) theorem | `04-lossy/lossy1-foundations.html` | `:810` |
+| Gaussian R(D) achievability + converse | `04-lossy/lossy2-gaussian-laplacian.html` | `:145-303` |
+| Layer-wise telescoping (pruning) | `04-lossy/lossy2-gaussian-laplacian.html` | `:509` |
+| Lattice packing gain | `04-lossy/lossy3-lattice-quip.html` | `:305` |
+| QUIP# Hadamard step | `04-lossy/lossy3-lattice-quip.html` | `:817` |
+| TURBOQUANT_mse theorem | `04-lossy/lossy4-turboquant.html` | `:605` |
+| QJL lemma | `04-lossy/lossy4-turboquant.html` | `:741` |
 | Barber–Agakov bound | `05-mi/mi1-bounds.html` | `:137` (proof `:144`) |
 | Donsker–Varadhan representation | `05-mi/mi1-bounds.html` | `:183` (proof `:196`) |
 | McAllester–Stratos high-MI barrier | `05-mi/mi1-bounds.html` | `:274` |

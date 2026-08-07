@@ -193,6 +193,7 @@
 <div class="slide">
   <h2>Toy: $X\sim\mathcal{N}(\mu,\sigma^2)$</h2><div class="divider"></div>
   <ul>
+    <li><strong>Scalar case:</strong> $n=1$ &middot; one real number $X$ per symbol, no blocking</li>
     <li>Squared error: $d(x,\hat x) = (x-\hat x)^2$</li>
     <li>Send $R$ bits per symbol &middot; pick partition + reconstruction levels</li>
   </ul>
@@ -201,11 +202,28 @@
     R = 1 \;&: \;\text{one threshold, two cells} \\
     R = 2 \;&: \;\text{Lloyd–Max (4 cells)}
   \end{aligned}$$</div>
-  <div class="highlight" style="margin-top: 10px;">$R=0$: send nothing. Optimal constant $c$?</div>
+  <p class="muted">Later ($n>1$): quantize a whole block $X^n$ jointly &mdash; vector quantization.</p>
 </div>
 
 <div class="slide">
-  <h2>$R=0$: $c^\star = \mu$, distortion $= \sigma^2$</h2><div class="divider"></div>
+  <h2>What Does $R=0$ Mean?</h2><div class="divider"></div>
+  <div style="display:flex; justify-content:center; align-items:center; gap:16px; margin:10px 0 18px; font-size:1.6rem;">
+    <span>$X$</span>
+    <span style="color:var(--gray-text); font-weight:700;">$\xrightarrow{\;\text{send nothing}\;}$</span>
+    <span>decoder</span>
+    <span style="color:var(--yonsei-blue); font-weight:700;">$\to$</span>
+    <span>$c$</span>
+  </div>
+  <ul>
+    <li>Zero rate: encoder transmits <strong>no bits at all</strong></li>
+    <li>Decoder never sees $X$ &middot; must output the <strong>same constant $c$</strong> every time</li>
+    <li>Only design freedom: which constant?</li>
+  </ul>
+  <div class="highlight">Best constant under MSE &middot; minimizes $\mathbb{E}[(X-c)^2]$ over $c$.</div>
+</div>
+
+<div class="slide">
+  <h2>$R=0$: $c^\star = \mu$, Distortion $= \sigma^2$</h2><div class="divider"></div>
   <p>Add and subtract $\mu$:</p>
   <div class="math-block">$$\begin{aligned}
     \mathbb{E}[(X-c)^2]
@@ -213,7 +231,31 @@
       &= \sigma^2 + (\mu-c)^2 \\
       &\ge \sigma^2 \qquad\text{(equality iff } c=\mu\text{).}
   \end{aligned}$$</div>
-  <p>Best constant achieves variance $\sigma^2$ &middot; <strong>conditional mean minimizes squared error inside any cell</strong>.</p>
+  <p>Best constant is the <strong>mean</strong> &middot; distortion equals the <strong>variance</strong> $\sigma^2$.</p>
+  <p class="muted">Conditional mean minimizes squared error inside any cell &mdash; the seed of Lloyd&ndash;Max.</p>
+</div>
+
+<div class="slide">
+  <h2>What Does $R=1$ Mean?</h2><div class="divider"></div>
+  <ul>
+    <li>Encoder sends one bit: $m \in \{0,1\}$</li>
+    <li>Decoder reconstruction is one of <strong>two</strong> points: $g(0)$ or $g(1)$</li>
+    <li>Encoder's job: partition $\mathbb{R}$ into two cells, one per bit value</li>
+  </ul>
+  <div style="position:relative; margin:14px 0;">
+    <svg viewBox="0 0 820 130" width="100%" style="display:block;">
+      <line x1="40" y1="70" x2="780" y2="70" stroke="#1a1a1a" stroke-width="1.5"/>
+      <line x1="400" y1="35" x2="400" y2="105" stroke="#d94040" stroke-width="2.5" stroke-dasharray="6,3"/>
+      <circle cx="220" cy="70" r="7" fill="#003876"/>
+      <circle cx="580" cy="70" r="7" fill="#003876"/>
+    </svg>
+    <span style="position:absolute; left:48.8%; top:8%; transform:translate(-50%,-50%); font-size:1.1rem; font-weight:600; color:var(--warn);">$\tau$</span>
+    <span style="position:absolute; left:26.8%; top:82%; transform:translate(-50%,-50%); font-size:1.2rem; font-weight:700; color:var(--yonsei-blue);">$g(0)$</span>
+    <span style="position:absolute; left:70.7%; top:82%; transform:translate(-50%,-50%); font-size:1.2rem; font-weight:700; color:var(--yonsei-blue);">$g(1)$</span>
+    <span style="position:absolute; left:15%; top:35%; transform:translate(-50%,-50%); font-size:1.1rem; color:var(--gray-text);">cell for $m{=}0$</span>
+    <span style="position:absolute; left:85%; top:35%; transform:translate(-50%,-50%); font-size:1.1rem; color:var(--gray-text);">cell for $m{=}1$</span>
+  </div>
+  <div class="highlight">Simplest instance of <strong>partition + representative</strong> &middot; Lloyd&ndash;Max generalizes both choices.</div>
 </div>
 
 <div class="slide">
@@ -226,8 +268,79 @@
 </div>
 
 <div class="slide">
+  <h2>Scalar Quantization Is Partitioning</h2><div class="divider"></div>
+  <p>General $R$-bit scalar quantizer, two ingredients:</p>
+  <ul class="num">
+    <li>A <strong>partition</strong> of $\mathbb{R}$ into $2^R$ cells $\{\tau_i \le X &lt; \tau_{i+1}\}$</li>
+    <li>A <strong>representative</strong> $\hat x_i$ per cell</li>
+  </ul>
+  <div style="position:relative; margin:14px 0;">
+    <svg viewBox="0 0 820 110" width="100%" style="display:block;">
+      <line x1="40" y1="60" x2="780" y2="60" stroke="#1a1a1a" stroke-width="1.5"/>
+      <g stroke="#d94040" stroke-width="2" stroke-dasharray="5,3">
+        <line x1="225" y1="30" x2="225" y2="90"/>
+        <line x1="410" y1="30" x2="410" y2="90"/>
+        <line x1="595" y1="30" x2="595" y2="90"/>
+      </g>
+      <g fill="#003876">
+        <circle cx="132" cy="60" r="6"/>
+        <circle cx="317" cy="60" r="6"/>
+        <circle cx="502" cy="60" r="6"/>
+        <circle cx="687" cy="60" r="6"/>
+      </g>
+    </svg>
+    <span style="position:absolute; left:16%; top:80%; transform:translate(-50%,-50%); font-size:1.05rem; font-weight:600; color:var(--yonsei-blue);">$\hat x_1$</span>
+    <span style="position:absolute; left:38.7%; top:80%; transform:translate(-50%,-50%); font-size:1.05rem; font-weight:600; color:var(--yonsei-blue);">$\hat x_2$</span>
+    <span style="position:absolute; left:61.2%; top:80%; transform:translate(-50%,-50%); font-size:1.05rem; font-weight:600; color:var(--yonsei-blue);">$\hat x_3$</span>
+    <span style="position:absolute; left:83.8%; top:80%; transform:translate(-50%,-50%); font-size:1.05rem; font-weight:600; color:var(--yonsei-blue);">$\hat x_4$</span>
+  </div>
+  <div class="highlight">Two unknowns, jointly optimized &middot; ask each question separately first.</div>
+</div>
+
+<div class="slide">
+  <h2>Fix the Partition: Best Representative?</h2><div class="divider"></div>
+  <p>Cell $\tau_i \le X &lt; \tau_{i+1}$ fixed. Which point $\hat x_i$ minimizes distortion?</p>
+  <div style="position:relative; margin:14px 0;">
+    <svg viewBox="0 0 820 110" width="100%" style="display:block;">
+      <line x1="40" y1="60" x2="780" y2="60" stroke="#1a1a1a" stroke-width="1.5"/>
+      <g stroke="#d94040" stroke-width="2" stroke-dasharray="5,3">
+        <line x1="300" y1="30" x2="300" y2="90"/>
+        <line x1="520" y1="30" x2="520" y2="90"/>
+      </g>
+      <circle cx="410" cy="60" r="7" fill="none" stroke="#666" stroke-width="2.5" stroke-dasharray="3,2"/>
+      <text x="410" y="65" font-size="13" fill="#666" text-anchor="middle">?</text>
+    </svg>
+    <span style="position:absolute; left:36.6%; top:6%; transform:translate(-50%,-50%); font-size:1.05rem; font-weight:600; color:var(--warn);">$\tau_i$</span>
+    <span style="position:absolute; left:63.4%; top:6%; transform:translate(-50%,-50%); font-size:1.05rem; font-weight:600; color:var(--warn);">$\tau_{i+1}$</span>
+  </div>
+  <div class="math-block">$$\hat x_i^\star \;=\; \arg\min_{c}\; \mathbb{E}\bigl[(X-c)^2 \mid \tau_i \le X &lt; \tau_{i+1}\bigr] \;=\; \mathbb{E}[X \mid \tau_i \le X &lt; \tau_{i+1}].$$</div>
+  <div class="highlight">Same $R=0$ argument, applied inside one cell &middot; <strong>conditional mean</strong> (centroid).</div>
+</div>
+
+<div class="slide">
+  <h2>Fix the Representatives: Best Partition?</h2><div class="divider"></div>
+  <p>Points $\hat x_1,\ldots,\hat x_{2^R}$ fixed. Which threshold separates two neighbors?</p>
+  <div style="position:relative; margin:14px 0;">
+    <svg viewBox="0 0 820 110" width="100%" style="display:block;">
+      <line x1="40" y1="60" x2="780" y2="60" stroke="#1a1a1a" stroke-width="1.5"/>
+      <line x1="410" y1="30" x2="410" y2="90" stroke="#666" stroke-width="2.5" stroke-dasharray="3,2"/>
+      <text x="410" y="24" font-size="13" fill="#666" text-anchor="middle">?</text>
+      <g fill="#003876">
+        <circle cx="300" cy="60" r="6"/>
+        <circle cx="520" cy="60" r="6"/>
+      </g>
+    </svg>
+    <span style="position:absolute; left:36.6%; top:80%; transform:translate(-50%,-50%); font-size:1.05rem; font-weight:600; color:var(--yonsei-blue);">$\hat x_i$</span>
+    <span style="position:absolute; left:63.4%; top:80%; transform:translate(-50%,-50%); font-size:1.05rem; font-weight:600; color:var(--yonsei-blue);">$\hat x_{i+1}$</span>
+  </div>
+  <p>Assign each $x$ to its <strong>nearer</strong> representative:</p>
+  <div class="math-block">$$d(x,\hat x_i) \le d(x,\hat x_{i+1}) \;\Longleftrightarrow\; x \le \tau_{i+1}^\star = \tfrac{1}{2}(\hat x_i+\hat x_{i+1}).$$</div>
+  <div class="highlight">Nearest-neighbor partition &middot; the <strong>Voronoi cells</strong> of the reps.</div>
+</div>
+
+<div class="slide">
   <h2>$R=2$: Lloyd&ndash;Max Coupling</h2><div class="divider"></div>
-  <p>Naive thresholds at $\mu\pm\sigma$? Not optimal.</p>
+  <p>Both sub-questions solved &mdash; but each answer depends on the other. Alternate:</p>
   <div class="highlight">Coupled fixed point: best rep is the cell's <strong>conditional mean</strong>;<br>best threshold is the <strong>midpoint</strong> of adjacent reps.</div>
   <div class="grid-2">
     <div class="card">
@@ -477,6 +590,14 @@
 </div>
 
 <div class="slide">
+  <h2>Why Scalar Cells Are Boxes</h2><div class="divider"></div>
+  <p>Scalar quantization applies <strong>independent thresholds per coordinate</strong>:</p>
+  <div class="math-block">$$\widehat X_1 = g_1(X_1), \qquad \widehat X_2 = g_2(X_2), \qquad \ldots \text{(no interaction)}.$$</div>
+  <p>Each coordinate's cell is a 1-D interval $[\tau_i,\tau_{i+1})$. A joint cell is the <strong>Cartesian product</strong> of these intervals.</p>
+  <div class="highlight">Product of intervals $=$ axis-aligned box &middot; cannot match round level sets of $P_X$.</div>
+</div>
+
+<div class="slide">
   <h2>Round Cells Beat Rectangles</h2><div class="divider"></div>
   <div class="grid-2">
     <div>
@@ -634,6 +755,54 @@
 </div>
 
 <div class="slide">
+  <h2>Two Notions of $R(D)$</h2><div class="divider"></div>
+  <p>Same symbol, two very different definitions &mdash; the theorem says they agree.</p>
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="color:var(--blue-light);">Operational $R(D)$</h3>
+      <p>Smallest rate of a <strong>block code</strong> $(f,g)$ with</p>
+      <p>$\mathbb{E}\,d^{(n)}(X^n,g(f(X^n))) \le D$</p>
+      <p class="muted">Defined by what a real system can build.</p>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--blue-light);">Information $R^{(I)}(D)$</h3>
+      <p>$\displaystyle\inf_{P_{\widehat X\mid X}:\,\mathbb{E}\,d(X,\widehat X)\le D} I(X;\widehat X)$</p>
+      <p class="muted">Single letter, no code &mdash; just a conditional law.</p>
+    </div>
+  </div>
+  <div class="highlight">Shannon's theorem: <strong>$R(D) = R^{(I)}(D)$</strong> &mdash; the code-free quantity is exactly achievable.</div>
+</div>
+
+<div class="slide">
+  <h2>Where $I(X;\widehat X)$ Sits</h2><div class="divider"></div>
+  <p>Encoder and decoder together act as a channel from source to reconstruction:</p>
+  <div class="diagram-flow" style="justify-content:center; margin:20px 0;">
+    <div class="diagram-box">$X^n$</div>
+    <span style="font-size:1.4rem; color:var(--yonsei-blue); font-weight:700;">$\to$</span>
+    <div class="diagram-box filled">encoder $f$</div>
+    <span style="font-size:1.4rem; color:var(--yonsei-blue); font-weight:700;">$\to$</span>
+    <div class="diagram-box">$M$</div>
+    <span style="font-size:1.4rem; color:var(--yonsei-blue); font-weight:700;">$\to$</span>
+    <div class="diagram-box filled">decoder $g$</div>
+    <span style="font-size:1.4rem; color:var(--yonsei-blue); font-weight:700;">$\to$</span>
+    <div class="diagram-box">$\widehat X^n$</div>
+  </div>
+  <p>Single-letter picture: a <strong>test channel</strong> $P_{\widehat X\mid X}$ stands in for the whole $f,g$ pipeline.</p>
+  <div class="highlight">$I(X;\widehat X)$ = information that flows through this one-letter channel.</div>
+</div>
+
+<div class="slide">
+  <h2>The Constraint Set: All Valid Test Channels</h2><div class="divider"></div>
+  <p>Not every $P_{\widehat X\mid X}$ qualifies &mdash; only those meeting the distortion budget:</p>
+  <div class="math-block">$$\mathcal{P}_D \;=\; \bigl\{\,P_{\widehat X\mid X} \;:\; \mathbb{E}_{P_X P_{\widehat X\mid X}}[\,d(X,\widehat X)\,] \le D \,\bigr\}.$$</div>
+  <ul>
+    <li>Every $(f,g)$ code induces some $P_{\widehat X\mid X} \in \mathcal{P}_D$ (empirically, via the joint type)</li>
+    <li>$R^{(I)}(D)$ picks the <strong>cheapest</strong> (lowest-$I$) member of $\mathcal{P}_D$</li>
+  </ul>
+  <div class="highlight">Minimizing over $\mathcal{P}_D$ &middot; searching all ways to distort $X$ within budget $D$.</div>
+</div>
+
+<div class="slide">
   <h2>Information $R(D)$ and the Theorem</h2><div class="divider"></div>
   <p>Single-letter optimization over test channels $P_{\widehat X\mid X}$:</p>
   <div class="math-block">$$R^{(I)}(D) \;=\; \inf_{\substack{P_{\widehat X\mid X}\\ \mathbb{E}\,d(X,\widehat X)\le D}}\; I(X;\widehat X).$$</div>
@@ -656,6 +825,16 @@
 </div>
 
 <div class="slide">
+  <h2>Why Minimize, Not Maximize?</h2><div class="divider"></div>
+  <p>$I(X;\widehat X)$ measures how much the decoder needs to know about $X$ to hit distortion $D$.</p>
+  <ul>
+    <li>Any channel with <strong>less</strong> information than $R^{(I)}(D)$ cannot meet the budget</li>
+    <li>Among channels that <strong>do</strong> meet it, cheapest one sets the rate</li>
+  </ul>
+  <div class="highlight">$R^{(I)}(D)$ = minimum information the decoder must receive, not the most it could use.</div>
+</div>
+
+<div class="slide">
   <h2>Why Mutual Information Appears</h2><div class="divider"></div>
   <p>Encoder + decoder = noisy channel from $X^n$ to $\widehat X^n$.</p>
   <div style="display:flex; justify-content:center; align-items:center; gap:18px; margin:14px 0; font-size:1.7rem;">
@@ -671,6 +850,13 @@
     <p><strong>Rate</strong> = bandwidth of the $X\to\widehat X$ channel.</p>
     <p>Minimum bandwidth at distortion $\le D$: $\;\inf I(X;\widehat X)$.</p>
   </div>
+</div>
+
+<div class="slide">
+  <h2>Same Idea as Channel Capacity</h2><div class="divider"></div>
+  <p>Channel coding: max rate <strong>reliably decodable</strong> through a noisy channel is $\max I(X;Y)$.</p>
+  <p>Rate&ndash;distortion: min rate to <strong>simulate</strong> a noisy channel $X\to\widehat X$ within distortion $D$ is $\min I(X;\widehat X)$.</p>
+  <div class="highlight">Dual questions &middot; MI is the currency of information flow in both.</div>
 </div>
 
 <div class="slide">

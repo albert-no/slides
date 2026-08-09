@@ -481,6 +481,14 @@ Fix (render flags, not slide edits — the slide is fine):
 ```
 The `--virtual-time-budget=30000` (30s) + `--run-all-compositor-stages-before-draw` let images finish before the snapshot; the shrunk slide then renders full-size. **Do not "fix" the slide** (removing borders, shrinking the image, splitting) — that's chasing a render artifact. Confirm any suspected print-shrink in a manual Chrome `Cmd+P` first; if that's clean, it's this timing artifact and the deck ships fine. Audit tip: when a screenshot pass flags a whole-slide shrink on an image slide, re-render just that deck with the flags above before editing anything.
 
+### Math prints in serif fallback (tofu `⋅`, plain-R `\mathbb{R}`) in headless render → fonts never fetched
+
+Symptom: in a headless `--print-to-pdf` render, every math expression appears in a Times-like serif instead of KaTeX's Computer Modern; `\cdot` shows as a tofu box, `\mathbb{R}` as a plain italic R. Deck-wide, deterministic across re-renders, immune to `--virtual-time-budget`. Meanwhile another deck with identical head wiring prints true KaTeX fonts every time. `pdffonts deck.pdf` is the tell: only `LiberationSerif`/`LiberationSans` embedded, no `KaTeX_*`.
+
+Cause: browsers fetch web fonts **lazily, per glyph laid out on the visible slide**. On screen only the `.active` slide is laid out, so a deck whose *title slide has no math* never requests any KaTeX face. `@media print` then exposes all slides at once, and the print snapshot races the just-triggered font fetches — fallback rendering gets baked into the PDF. A deck with math on slide 1 pre-loads `KaTeX_Main`/`KaTeX_Math` during normal load and prints fine, which is why the symptom looks deck-specific. (`--virtual-time-budget` doesn't help: at snapshot time the fonts' status is still `unloaded`, not `loading`, so there is nothing for the budget to wait on.)
+
+Fix (canonical, applied 2026-08-09): `reference/deck.js` force-loads every declared `FontFace` at init (`document.fonts.forEach(f => f.load())`), so `document.fonts.ready` — and any virtual-time budget — genuinely covers them. If a deck bypasses canonical `deck.js`, wire the same one-liner in. Do not edit slide math to chase this; the markup is fine. Diagnostic: `pdffonts` on the output, or a `document.fonts.forEach(f => f.status)` probe via `--dump-dom`.
+
 ### Headless-Chrome render shows a stale image after you re-crop a figure
 
 Symptom: you re-crop `figs/foo.png`, re-render the deck to PDF, and the slide still shows the OLD crop (e.g. a clipped caption) — even though opening `figs/foo.png` directly shows the corrected image.

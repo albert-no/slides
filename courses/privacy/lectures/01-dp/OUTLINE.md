@@ -23,38 +23,38 @@ Eight-deck lecture series on differential privacy. `dp1`–`dp7` build the found
 
 ## dp1-reconstruction.html
 
-**Topic:** Reconstruction attacks motivate differential privacy. Difference attack on suppressed counts; Dinur–Nissim theorems for all-queries and polynomially-many random queries; LP relaxation for an efficient attacker.
+**Topic:** Why accurate aggregate answers destroy privacy — difference attacks, the Dinur–Nissim reconstruction theorems (all-queries and random-queries, with complete proofs), the LP relaxation making the attack polynomial-time, and the √n noise barrier that motivates differential privacy.
 
-### Sections (23 slides)
+### Sections (46 slides)
 
 | Section | Slide | Line |
 |---|---|---|
-| Title / Contents | 1–2 | `:27-50` |
-| **01 — Motivating attacks** | 3–6 | `:51-95` |
-| | Single sensitive query | 4 | `:59` |
-| | Difference attack | 5 | `:73` |
-| | **Definition: Reconstruction attack** | 6 | `:86` |
-| **02 — Formal setup** | 7–10 | `:97-141` |
-| | Binary dataset, counting queries | 8 | `:105` |
-| | Reconstruction optimization | 9 | `:117` |
-| | **Claim: trivial consistency bound** | 10 | `:130` |
-| **03 — Dinur–Nissim theorems** | 11–18 | `:142-241` |
-| | **Theorem 1: all queries, error $4\alpha n$** | 12, proof 13 | `:150`, `:162` |
-| | Corollary: 1%-error → 96%-recovery | 14 | `:178` |
-| | Realistic regime: $m = 20n$ random | 15 | `:192` |
-| | **Theorem 2: polynomial random queries → $256\alpha^2 n^2$** | 16, proof 17–18 | `:204`, `:216` |
-| **04 — Efficient attack** | 19–22 | `:244-289` |
-| | LP relaxation | 20 | `:252` |
-| | LP refresher | 21 | `:265` |
-| | Implications | 22 | `:277` |
+| Title | 1 | `:40` |
+| Contents | 2 | `:52` |
+| **01 — Motivating attacks** (single query, roster, difference attack, reconstruction def.) | 3–8 | `:66` |
+| **02 — Formal setup** (binary dataset, counting queries, curator model, attacker's program, trivial bound) | 9–14 | `:152` |
+| **03 — Theorem 1: all queries** (intuition, statement, 4-step proof, recap chain, 1%/96% corollary) | 15–23 | `:229` |
+| **04 — Theorem 2: random queries** (m=20n, anti-concentration intuition, statement, 4-step proof, recap chain, √n barrier) | 24–34 | `:345` |
+| **05 — Efficient attack** (exponential search, relax-then-round geometry, relaxed program, LP recall, slack-variable LP, rounding guarantee) | 35–41 | `:489` |
+| **06 — Implications** (trade-off table, aggregates unsafe, lecture recap) | 42–45 | `:600` |
+| Q&A | 46 | `:649` |
 
 ### Key theorems
 
-| Item | Line |
-|---|---|
-| Dinur–Nissim Theorem 1 (all-queries) | `:156-160` |
-| Dinur–Nissim Theorem 2 (random queries) | `:209-214` |
-| LP-relaxation attack | `:252-257` |
+| Item | Slide(s) | Line |
+|---|---|---|
+| Def. reconstruction attack (blatant non-privacy) | 8 | `:137-151` |
+| Claim: trivial consistency bound (minimizer within αn of every answer) | 14 | `:216-228` |
+| Theorem 1 (Dinur–Nissim 2003): every query within αn ⇒ ≤ 4αn wrong bits | 17 | `:255-267` |
+| Proof of Theorem 1 (pigeonhole → disagreement set is a query → triangle inequality; recap chain) | 18–22 | `:268-330` |
+| Corollary: ±n/100 answers ⇒ ≥ 96% of bits recovered | 23 | `:331-344` |
+| Theorem 2 (Dinur–Nissim 2003): m = 20n random queries ⇒ ≤ 256α²n² wrong bits w.p. ≥ 1−2⁻ⁿ | 27 | `:397-409` |
+| Proof of Theorem 2 (kill criterion via reverse triangle → anti-concentration ≤ 9/10 → independence (9/10)^20n ≤ 2^−2n → union bound; recap chain) | 28–33 | `:410-475` |
+| √n barrier: per-query noise E ⇒ ≤ 256E² wrong bits; noise o(√n) fatal | 34 | `:476-488` |
+| Def. linear program | 39 | `:559-573` |
+| LP relaxation: min–max → single slack variable t, box constraints, rounding keeps o(n) wrong bits | 38, 40–41 | `:547-558`, `:574-599` |
+
+Diagrams: roster table (slide 5), query cards (6), bit-vector cell strips (10, 11, 16, 18), curator model actors (12), anti-concentration bell-curve SVG with survival-window band (26), relax-then-round polytope SVG (37), comparison/trade-off tables (25, 34, 43). Authoritative math source: `tex/dp.tex:55–249`.
 
 ---
 

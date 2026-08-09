@@ -296,42 +296,87 @@ Diagrams: Gaussian-tail SVG (slide 5, `:101`), $\delta$-sliver SVG (8, `:164`), 
 
 ## dp5-erm.html
 
-**Topic:** Empirical risk minimization, exponential mechanism for ERM with utility proof, advanced composition, DP-SGD algorithm with privacy and utility theorems.
+**Topic:** Learning as optimization (ERM, excess risk, standing assumptions), exponential mechanism for ERM with full utility proof, advanced composition with proof sketch, the GD→SGD→Noisy GD ladder, DP-SGD with three-step privacy accounting and convex utility proof.
 
-### Sections (23 slides)
+### Sections (60 slides)
 
 | Section | Slides | Line |
 |---|---|---|
-| Title / Contents | 1–2 | `:24-69` |
-| **01 — ERM setup** | 3–5 | `:72-102` |
-| | ERM + population vs empirical | 4 | `:80` |
-| | Assumptions (constraint, bounded loss, Lipschitz) | 5 | `:93` |
-| **02 — Exponential mechanism for ERM** | 6–10 | `:104-160` |
-| | EM for ERM | 7 | `:113` |
-| | **Utility theorem** | 8 | `:128` |
-| | Proof: volume ratio | 9 | `:140` |
-| | Proof: tail → expectation | 10 | `:152` |
-| **03 — Advanced composition** | 11–13 | `:162-201` |
-| | **Advanced composition theorem** | 12 | `:171` |
-| | Intuition (chain rule, $\sqrt k$) | 13 | `:185` |
-| **04 — DP-SGD** | 14–21 | `:203-322` |
-| | GD algorithm + convergence | 15 | `:213` |
-| | SGD &amp; Noisy GD | 16 | `:233` |
-| | **DP-SGD algorithm** | 17 | `:254` |
-| | **DP-SGD privacy theorem** | 18 | `:273` |
-| | Subsampling amplification in DP-SGD | 19 | `:290` |
-| | **DP-SGD utility (convex)** | 20 | `:302` |
-| | Nonconvex remark | 21 | `:319` |
-| Recap + closer | 22–23 | `:330-345` |
+| Title / Contents | 1–2 | `:51-74` |
+| **01 — Learning as optimization** | 3–9 | `:76-187` |
+| | From queries to models (flow diagram) | 4 | `:84` |
+| | Population vs empirical loss | 5 | `:99` |
+| | **Definition: ERM, excess risk** | 6 | `:118` |
+| | Standing assumptions (4 cards, why-lines) | 7 | `:144` |
+| | **Lemma: sensitivity of $L$ is $\Delta/n$** | 8 | `:157` |
+| | Two routes (output vs path) | 9 | `:177` |
+| **02 — Private ERM via the exponential mechanism** | 10–23 | `:189-406` |
+| | Recall card: EM (dp2) | 11 | `:197` |
+| | **Definition: EM for ERM** ($\propto e^{-\varepsilon n L/2\Delta}$) | 12 | `:209` |
+| | Density-tilt diagram | 13 | `:222` |
+| | **Utility theorem** $O(dGR\log(\varepsilon n/d)/\varepsilon n)$ | 14 | `:241` |
+| | Proof roadmap (3 named tricks) | 15 | `:253` |
+| | Proof: good/bad sets $A_1$, $A_2$ + level-set diagram | 16 | `:267` |
+| | Proof: compare bad to good (density ratio) | 17 | `:294` |
+| | Proof: volume ratio by geometry, $(2R/r)^d$ | 18 | `:307` |
+| | Proof: exponential beats volume (choose $t$) | 19 | `:328` |
+| | Proof: tail → expectation (split integral + tail diagram) | 20 | `:340` |
+| | Proof: cap the tail, choose $r = 2Rd/\varepsilon n$ ∎ | 21 | `:366` |
+| | Proof recap chain | 22 | `:376` |
+| | Discussion: numbers table + sampling-hardness catch | 23 | `:389` |
+| **03 — Advanced composition** | 24–32 | `:408-521` |
+| | Recall card: basic composition (dp3) | 25 | `:416` |
+| | Random-walk intuition diagram | 26 | `:428` |
+| | **Advanced composition theorem** | 27 | `:449` |
+| | Reading the bound (fluctuation vs drift) | 28 | `:462` |
+| | Proof sketch: chain rule of privacy loss | 29 | `:474` |
+| | Proof sketch: concentration buys $\sqrt{k}$ | 30 | `:485` |
+| | Basic vs advanced numbers table | 31 | `:495` |
+| | Budget planning per step | 32 | `:511` |
+| **04 — The gradient-descent ladder** | 33–40 | `:523-644` |
+| | GD algorithm box | 34 | `:531` |
+| | GD contours diagram | 35 | `:547` |
+| | **Theorem: GD rate $RG/\sqrt{T}$ (convex)** | 36 | `:571` |
+| | SGD algorithm box | 37 | `:584` |
+| | Unbiasedness of the sampled gradient | 38 | `:600` |
+| | Noisy GD algorithm box | 39 | `:612` |
+| | Ladder chain GD→SGD→noisy GD→DP-SGD | 40 | `:629` |
+| **05 — DP-SGD** | 41–58 | `:646-903` |
+| | Sensitivity problem (no useful $G$) | 42 | `:654` |
+| | **Definition: clipping** + ball diagram | 43 | `:667` |
+| | **DP-SGD algorithm** (6-step box) | 44 | `:692` |
+| | **DP-SGD privacy theorem** ($\sigma \ge 2G\sqrt{2T\log(1/\delta)}/n\varepsilon$) | 45 | `:710` |
+| | Accounting roadmap (3 steps) | 46 | `:723` |
+| | Step 1: Gaussian mechanism, sensitivity $2G$ (recall dp4) | 47 | `:737` |
+| | Step 2: subsampling amplification, $q = 1/n$ (recall dp3) | 48 | `:750` |
+| | Step 3: compose $T$ steps | 49 | `:769` |
+| | Accounting recap chain, solve for $\sigma$ ∎ | 50 | `:785` |
+| | Why $T = O(n^2)$ steps are affordable | 51 | `:797` |
+| | Fine print: advanced comp vs moments accountant vs RDP | 52 | `:807` |
+| | **DP-SGD utility theorem (convex)** | 53 | `:821` |
+| | Proof: noisy gradient oracle, $B^2 = G^2 + d\sigma^2$ | 54 | `:834` |
+| | **Lemma: standard SGD convergence** | 55 | `:846` |
+| | Proof: plug in and balance, $T = \varepsilon^2 n^2/d$ ∎ | 56 | `:858` |
+| | EM-ERM vs DP-SGD table ($\sqrt{d}$ beats $d$) | 57 | `:871` |
+| | Beyond convexity + pretrain/fine-tune flow | 58 | `:886` |
+| Recap + closer | 59–60 | `:905-921` |
 
 ### Key theorems
 
-| Item | Line |
-|---|---|
-| EM-for-ERM utility theorem | `:131-133` |
-| Advanced composition | `:174-176` |
-| DP-SGD privacy theorem | `:276-278` |
-| DP-SGD convex utility theorem | `:312-315` |
+| Item | Slides | Line |
+|---|---|---|
+| Lemma (sensitivity of $L$): $\lvert L(\theta;X) - L(\theta;X')\rvert \le \Delta/n$ | 8 | `:161-162` |
+| EM-ERM utility theorem: excess risk $O(dGR\log(\varepsilon n/d)/\varepsilon n)$ | 14 | `:245-247` |
+| EM-ERM utility proof (good/bad split → density ratio → volume ratio $(2R/r)^d$ → choose $t$ → tail integral with honest $\min(1,\cdot)$ cap → $r = 2Rd/\varepsilon n$; recap chain) | 16–22 | `:267-387` |
+| Theorem (advanced composition): $\varepsilon' = \sqrt{2k\ln(1/\delta')}\,\varepsilon + k\varepsilon\frac{e^\varepsilon-1}{e^\varepsilon+1}$ | 27 | `:453-456` |
+| Proof sketch (chain rule of privacy loss + Azuma-type concentration) | 29–30 | `:474-493` |
+| Theorem (GD rate, convex): $\mathcal{L}(\theta_T) \le \mathcal{L}(\theta^\star) + RG/\sqrt{T}$ at $\alpha = R/(G\sqrt{T})$ | 36 | `:575-577` |
+| Theorem (DP-SGD privacy): $\sigma \ge 2G\sqrt{2T\log(1/\delta)}/(n\varepsilon)$ | 45 | `:714-716` |
+| Three-step accounting (Gaussian step with sensitivity $2G$ → amplify by $q=1/n$ → compose $T$; recap chain solving for $\sigma$) | 47–50 | `:737-795` |
+| Lemma (standard SGD convergence): $RB/\sqrt{T}$ under $\mathbb{E}\lVert\tilde g\rVert^2 \le B^2$ | 55 | `:850-852` |
+| Theorem (DP-SGD rate, convex): $O(RG\sqrt{d\log(1/\delta)}/\varepsilon n)$ at $T = \varepsilon^2 n^2/d$ | 53 | `:825-830` |
+
+Diagrams: query→model flow (4, `:88`), population-vs-empirical chain (5, `:107`), excess-risk loss-curve SVG (6, `:125`), record-cells sensitivity strip (8, `:165`), density-tilt SVG (13, `:226`), good/bad level-set SVG (16, `:275`), volume-geometry balls SVG (18, `:312`), tail-integral area SVG (20, `:348`), random-walk envelope SVG (26, `:432`), GD contours SVG (35, `:551`), ladder chain (40, `:632`), clipping-ball SVG (43, `:674`), subsampling record-cells (48, `:757`), accounting chain (49, `:774`), pretrain/fine-tune flow (58, `:894`); algorithm boxes for GD/SGD/Noisy GD/DP-SGD (34, 37, 39, 44); recap chains via stacked math (22, 50, 56); three numeric tables (23 EM excess risk, 31 basic-vs-advanced, 57 EM vs DP-SGD). Citations: Dwork–Roth 2014 (advanced composition); Abadi et al. CCS 2016 (DP-SGD, moments accountant). Authoritative math source: `tex/dp.tex:1158–1506`. TODO marker: real figure from Abadi et al. (accuracy-vs-$\varepsilon$ curves) on slide 58.
 
 ---
 

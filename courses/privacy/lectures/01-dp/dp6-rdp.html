@@ -11,17 +11,32 @@
 <script defer src="../../../../reference/katex/contrib/auto-render.min.js"
   onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
 <style>
-.muted { color: var(--gray-text); }
 .def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 22px 28px; }
 .def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
-.thm-card { background: #fff; border: 2px solid var(--yonsei-blue); border-radius: 12px; padding: 22px 28px; }
+.thm-card { background: var(--white); border: 2px solid var(--yonsei-blue); border-radius: 12px; padding: 22px 28px; }
 .thm-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
-.proof-card { background: var(--light); border-left: 3px solid #888; border-radius: 0 8px 8px 0; padding: 14px 22px; font-size: 1.3rem; }
-.proof-card h4 { font-size: 1.2rem; color: var(--gray-text); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
-.lem-card { background: #fff; border: 1.5px dashed var(--yonsei-blue); border-radius: 10px; padding: 16px 22px; }
+.lem-card { background: var(--white); border: 1.5px dashed var(--yonsei-blue); border-radius: 10px; padding: 16px 22px; }
 .lem-card h3 { color: var(--yonsei-blue); font-size: 1.3rem; margin-bottom: 4px; }
-.page-num { position: absolute; bottom: 14px; right: 28px; font-size: 1rem; color: var(--gray-text); letter-spacing: 0.04em; font-weight: 400; z-index: 5; }
-.title-slide .page-num { display: none; }
+.warn-card { background: #fdf1ef; border-left: 5px solid #d94040; border-radius: 0 12px 12px 0; padding: 18px 26px; }
+.warn-card h3 { color: #b03030; margin-bottom: 6px; }
+.d6-fig { position: relative; width: fit-content; margin: 14px auto 0; }
+.d6-fig .lab { position: absolute; font-size: 1.15rem; color: var(--charcoal); transform: translate(-50%, -50%); white-space: nowrap; }
+.d6-fig .lab.blue { color: var(--yonsei-blue); font-weight: 600; }
+.d6-fig .lab.red { color: var(--warn); font-weight: 600; }
+.d6-fig .lab.gray { color: var(--gray-text); }
+.d6-flow { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 20px 0 8px; }
+.d6-node { border: 2px solid var(--yonsei-blue); border-radius: 12px; padding: 14px 20px; text-align: center; background: var(--white); font-size: var(--fs-body); }
+.d6-arrow { font-size: 2rem; color: var(--gray-text); }
+.d6-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; max-width: 1000px; margin: 0 auto; }
+.d6-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.d6-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.d6-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.d6-algo ol li + li { border-top: 1px solid var(--slate); }
+.d6-chain { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 18px 0 8px; }
+.d6-cnode { border: 2px solid var(--yonsei-blue); border-radius: 10px; padding: 10px 18px; background: var(--white); font-size: 1.45rem; text-align: center; }
+.d6-hop { display: flex; flex-direction: column; align-items: center; color: var(--gray-text); }
+.d6-hop .hl { font-size: 1.15rem; color: var(--yonsei-blue); }
+.d6-hop .ar { font-size: 1.8rem; line-height: 1; }
 </style>
 </head>
 <body data-brand-logo="../../../../reference/kor-eng2.png">
@@ -45,250 +60,748 @@
   <h2>Contents</h2>
   <div class="divider"></div>
   <div class="toc-list">
-    <div class="toc-item"><div class="toc-num">01</div><div class="toc-rule"></div><div><div class="toc-label">KL-DP</div><div class="toc-sub">DP via KL divergence</div></div></div>
-    <div class="toc-item"><div class="toc-num">02</div><div class="toc-rule"></div><div><div class="toc-label">Rényi divergence</div><div class="toc-sub">A one-parameter family</div></div></div>
-    <div class="toc-item"><div class="toc-num">03</div><div class="toc-rule"></div><div><div class="toc-label">RDP &amp; properties</div><div class="toc-sub">Composition, conversion to $(\varepsilon,\delta)$</div></div></div>
-    <div class="toc-item"><div class="toc-num">04</div><div class="toc-rule"></div><div><div class="toc-label">Gaussian via RDP</div><div class="toc-sub">Closed-form analysis</div></div></div>
+    <div class="toc-item"><div class="toc-num">01</div><div class="toc-rule"></div><div><div class="toc-label">The accounting problem</div><div class="toc-sub">Composition at scale strains $(\varepsilon, \delta)$ bookkeeping</div></div></div>
+    <div class="toc-item"><div class="toc-num">02</div><div class="toc-rule"></div><div><div class="toc-label">KL divergence privacy</div><div class="toc-sub">First attempt: bound the average privacy loss</div></div></div>
+    <div class="toc-item"><div class="toc-num">03</div><div class="toc-rule"></div><div><div class="toc-label">Rényi divergence</div><div class="toc-sub">One knob $\alpha$ sweeps from average to worst case</div></div></div>
+    <div class="toc-item"><div class="toc-num">04</div><div class="toc-rule"></div><div><div class="toc-label">Rényi differential privacy</div><div class="toc-sub">Definition, post-processing, composition, conversion</div></div></div>
+    <div class="toc-item"><div class="toc-num">05</div><div class="toc-rule"></div><div><div class="toc-label">The Gaussian mechanism via RDP</div><div class="toc-sub">Exactly $\big(\alpha,\ \alpha\Delta^2/2\sigma^2\big)$; convert once at the end</div></div></div>
   </div>
 </div>
 
 <!-- 3. Section 01 -->
 <div class="slide section-slide left">
   <div class="section-num">01</div>
-  <h1>KL-Differential Privacy</h1>
+  <h1>The Accounting Problem</h1>
   <div class="divider"></div>
-  <p class="subtitle">DP as a distributional similarity.</p>
+  <p class="subtitle">Thousands of private steps; $(\varepsilon, \delta)$ bookkeeping does not scale gracefully.</p>
 </div>
 
-<!-- 4. KL-DP definition -->
+<!-- 4. The setting -->
 <div class="slide">
-  <h2>From Pure DP to Distributional Similarity</h2>
+  <h2>The Setting &mdash; Thousands of Private Steps</h2>
   <div class="divider"></div>
-  <p>Pure / approximate DP bound</p>
-  <div class="math-block">$$\Pr[\mathcal{M}(X) \in S] \;\le\; e^\varepsilon \Pr[\mathcal{M}(X') \in S] \;(+ \delta)$$</div>
-  <p>for <em>all events</em> $S$. A natural alternative: compare the <strong>distributions</strong> of $\mathcal{M}(X), \mathcal{M}(X')$ directly via a divergence.</p>
-  <div class="def-card" style="margin-top:14px;">
-    <h3>Definition (KL-DP).</h3>
-    <p>$\mathcal{M}$ is <strong>$\varepsilon$ KL-DP</strong> if $D(\mathcal{M}(X) \| \mathcal{M}(X')) \le \varepsilon$ for all neighboring $X, X'$.</p>
+  <div class="def-card">
+    <h3>Recall ($(\varepsilon, \delta)$-DP).</h3>
+    <p>For all neighbors $X \simeq X'$ and events $S$: $\ \Pr[\mathcal{M}(X) \in S] \le e^{\varepsilon} \Pr[\mathcal{M}(X') \in S] + \delta$.</p>
+  </div>
+  <div class="d6-flow">
+    <div class="d6-node">step 1<br><span class="muted">$(\varepsilon_0, \delta_0)$-DP</span></div>
+    <div class="d6-arrow">&rarr;</div>
+    <div class="d6-node">step 2<br><span class="muted">$(\varepsilon_0, \delta_0)$-DP</span></div>
+    <div class="d6-arrow">&rarr;</div>
+    <div class="d6-node">&ctdot;</div>
+    <div class="d6-arrow">&rarr;</div>
+    <div class="d6-node">step $T = 10^4$<br><span class="muted">$(\varepsilon_0, \delta_0)$-DP</span></div>
+  </div>
+  <div class="highlight">Private training releases one noisy statistic per step. What is the <em>total</em> guarantee?</div>
+</div>
+
+<!-- 5. Bookkeeping under (eps, delta) -->
+<div class="slide">
+  <h2>Bookkeeping Under $(\varepsilon, \delta)$</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Recall (advanced composition).</h3>
+    <p>$k$ adaptive $(\varepsilon, \delta)$-DP steps are $(\varepsilon', k\delta + \delta')$-DP for every slack $\delta' \gt 0$, with</p>
+    <div class="math-block" style="margin: 8px 0;">$$\varepsilon' \;=\; \sqrt{2k \ln(1/\delta')}\;\varepsilon \;+\; k\varepsilon\,\frac{e^{\varepsilon}-1}{e^{\varepsilon}+1}$$</div>
+  </div>
+  <ul style="margin-top:12px;">
+    <li>Every application demands a fresh slack $\delta'$: one free parameter per composition.</li>
+    <li>Two coupled numbers $(\varepsilon, \delta)$ to track, per step, per choice of slack.</li>
+  </ul>
+  <div class="cite">Dwork, Roth, "The Algorithmic Foundations of Differential Privacy", 2014.</div>
+</div>
+
+<!-- 6. Explosion diagram -->
+<div class="slide">
+  <h2>Two Ways to Keep the Books</h2>
+  <div class="divider"></div>
+  <p>Each mechanism satisfies a whole <em>curve</em> of $(\varepsilon, \delta)$ pairs; composing curves is awkward.</p>
+  <div class="d6-fig">
+    <svg width="880" height="250" viewBox="0 0 880 250">
+      <line x1="440" y1="15" x2="440" y2="235" stroke="#e8ecf0" stroke-width="2"/>
+      <line x1="40" y1="210" x2="400" y2="210" stroke="#8892a0" stroke-width="1.5"/>
+      <line x1="40" y1="210" x2="40" y2="45" stroke="#8892a0" stroke-width="1.5"/>
+      <path d="M 55 55 C 90 150, 170 195, 380 205" fill="none" stroke="#003876" stroke-width="2"/>
+      <path d="M 70 55 C 115 160, 210 200, 390 207" fill="none" stroke="#003876" stroke-width="2" opacity="0.55"/>
+      <path d="M 90 55 C 145 170, 250 203, 395 208" fill="none" stroke="#003876" stroke-width="2" opacity="0.3"/>
+      <circle cx="105" cy="130" r="5" fill="#d94040"/>
+      <circle cx="160" cy="150" r="5" fill="#d94040"/>
+      <circle cx="235" cy="175" r="5" fill="#d94040"/>
+      <line x1="490" y1="210" x2="850" y2="210" stroke="#8892a0" stroke-width="1.5"/>
+      <line x1="490" y1="210" x2="490" y2="45" stroke="#8892a0" stroke-width="1.5"/>
+      <line x1="490" y1="205" x2="840" y2="175" stroke="#003876" stroke-width="2" opacity="0.4"/>
+      <line x1="490" y1="200" x2="840" y2="140" stroke="#003876" stroke-width="2" opacity="0.4"/>
+      <line x1="490" y1="195" x2="840" y2="60" stroke="#003876" stroke-width="2.5"/>
+    </svg>
+    <span class="lab gray" style="left:220px; top:232px;">$(\varepsilon, \delta)$: pick a point on every curve, add slack</span>
+    <span class="lab red" style="left:280px; top:120px;">which points?</span>
+    <span class="lab gray" style="left:668px; top:232px;">RDP: one function $\varepsilon(\alpha)$ per step; just add</span>
+    <span class="lab blue" style="left:740px; top:85px;">$\sum_i \varepsilon_i(\alpha)$</span>
   </div>
 </div>
 
-<!-- 5. Section 02 -->
+<!-- 7. Wishlist -->
+<div class="slide">
+  <h2>Wishlist for a Better Ledger</h2>
+  <div class="divider"></div>
+  <div class="d6-algo">
+    <ol>
+      <li><strong>Additive composition:</strong> total cost of $k$ steps $=$ sum of step costs.</li>
+      <li><strong>Tight for Gaussian noise:</strong> the workhorse mechanism should have an exact cost.</li>
+      <li><strong>Convertible:</strong> one clean lemma back to $(\varepsilon, \delta)$-DP at the very end.</li>
+    </ol>
+  </div>
+  <div class="d6-chain">
+    <div class="d6-cnode">private steps</div>
+    <div class="d6-hop"><span class="hl">measure</span><span class="ar">&rarr;</span></div>
+    <div class="d6-cnode">new ledger</div>
+    <div class="d6-hop"><span class="hl">add</span><span class="ar">&rarr;</span></div>
+    <div class="d6-cnode">total cost</div>
+    <div class="d6-hop"><span class="hl">convert once</span><span class="ar">&rarr;</span></div>
+    <div class="d6-cnode">$(\varepsilon, \delta)$-DP</div>
+  </div>
+  <p class="muted">Today's ledger: a divergence between output distributions, measured by Rényi.</p>
+</div>
+
+<!-- 8. Section 02 -->
 <div class="slide section-slide left">
   <div class="section-num">02</div>
-  <h1>Rényi Divergence</h1>
+  <h1>KL Divergence Privacy</h1>
   <div class="divider"></div>
-  <p class="subtitle">A one-parameter family interpolating KL and $\ell_\infty$.</p>
+  <p class="subtitle">First attempt: bound the average of the privacy loss, not its maximum.</p>
 </div>
 
-<!-- 6. Rényi divergence -->
+<!-- 9. From events to distributions -->
 <div class="slide">
-  <h2>Rényi Divergence</h2>
+  <h2>From Events to Distributions</h2>
+  <div class="divider"></div>
+  <p>Fix neighbors $X \simeq X'$; write $P = \mathcal{M}(X)$, $Q = \mathcal{M}(X')$, and the <strong>privacy loss</strong></p>
+  <div class="math-block" style="margin: 8px 0;">$$L(y) \;=\; \ln \frac{P(y)}{Q(y)}$$</div>
+  <p>Pure DP is a statement about the <em>worst</em> outcome:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\varepsilon\text{-DP} \;\iff\; \max_{y}\, L(y) \,\le\, \varepsilon \quad \text{for every neighboring pair}$$</div>
+  <p class="muted">Idea: compare the whole distributions $P$ and $Q$ by a divergence instead of a max.</p>
+</div>
+
+<!-- 10. KL-DP definition -->
+<div class="slide">
+  <h2>Definition &mdash; KL Divergence Privacy</h2>
   <div class="divider"></div>
   <div class="def-card">
-    <h3>Definition.</h3>
-    <p>For $\alpha > 1$ and distributions $P, Q$,</p>
-    <div class="math-block">$$D_\alpha(P \| Q) \;=\; \frac{1}{\alpha - 1} \ln \mathbb{E}_{x \sim Q}\!\left[\Bigl(\frac{P(x)}{Q(x)}\Bigr)^\alpha\right].$$</div>
+    <h3>Definition (KL-DP).</h3>
+    <p>$\mathcal{M}$ is $\varepsilon$-KL-DP if for all neighbors $X \simeq X'$:</p>
+    <div class="math-block" style="margin: 8px 0;">$$D\big(\mathcal{M}(X) \,\|\, \mathcal{M}(X')\big) \;=\; \mathbb{E}_{y \sim P}\big[L(y)\big] \;\le\; \varepsilon$$</div>
   </div>
-  <p style="margin-top:10px;">$D_\alpha$ is non-negative; $D_\alpha(P \| P) = 0$. Larger $\alpha$ ⇒ more weight on rare-but-large likelihood-ratio events.</p>
+  <p style="margin-top:12px;">Same loss $L$, new aggregation: the <em>mean</em> under $P$ replaces the max.</p>
+  <p class="muted">Immediate: $\varepsilon$-DP implies $\varepsilon$-KL-DP, since the mean never exceeds the max.</p>
 </div>
 
-<!-- 7. Limits -->
+<!-- 11. Average vs worst case -->
 <div class="slide">
-  <h2>Limiting Cases</h2>
+  <h2>Average vs Worst Case</h2>
   <div class="divider"></div>
-  <div class="grid-2">
-    <div class="card">
-      <h3>$\alpha \to 1^+$</h3>
-      <p>$D_\alpha(P \| Q) \to D(P \| Q)$, the KL divergence. By convention $D_1 = D$.</p>
-    </div>
-    <div class="card">
-      <h3>$\alpha \to \infty$</h3>
-      <p>$D_\alpha(P \| Q) \to \max_x \log \tfrac{P(x)}{Q(x)}$, the worst-case log-likelihood ratio — i.e. pure DP.</p>
-    </div>
+  <p>Both definitions look at the distribution of $L(y)$ for $y \sim P$; they read off different points.</p>
+  <div class="d6-fig">
+    <svg width="760" height="230" viewBox="0 0 760 230">
+      <line x1="50" y1="195" x2="730" y2="195" stroke="#8892a0" stroke-width="1.5"/>
+      <path d="M 80 193 C 160 60, 240 45, 320 90 C 420 145, 540 180, 690 192" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <line x1="255" y1="195" x2="255" y2="55" stroke="#003876" stroke-width="2" stroke-dasharray="5 4"/>
+      <line x1="660" y1="195" x2="660" y2="90" stroke="#d94040" stroke-width="2" stroke-dasharray="5 4"/>
+      <circle cx="660" cy="188" r="5" fill="#d94040"/>
+    </svg>
+    <span class="lab blue" style="left:255px; top:38px;">mean of $L$: KL-DP</span>
+    <span class="lab red" style="left:640px; top:72px;">max of $L$: pure DP</span>
+    <span class="lab gray" style="left:390px; top:216px;">privacy loss $L(y)$, $y \sim P$</span>
   </div>
-  <div class="highlight" style="margin-top:14px;">RDP at high $\alpha$ recovers pure DP; at $\alpha = 1$ it becomes the average-case KL bound.</div>
+  <p class="muted">The gap between the two marks is exactly what a tail can hide.</p>
 </div>
 
-<!-- 8. Section 03 -->
+<!-- 12. Weakness of KL-DP -->
+<div class="slide">
+  <h2>The Weakness of KL-DP</h2>
+  <div class="divider"></div>
+  <div class="warn-card">
+    <h3>A tiny mean can hide a catastrophic tail.</h3>
+    <p>Suppose $L(y) = 0$ with probability $1 - 10^{-4}$ and $L(y) = 20$ with probability $10^{-4}$.</p>
+  </div>
+  <div class="math-block" style="margin: 8px 0;">$$D(P \| Q) \;=\; \mathbb{E}_P[L] \;=\; 20 \cdot 10^{-4} \;=\; 0.002 \qquad \text{yet} \qquad e^{L} = e^{20} \approx 5 \times 10^{8}$$</div>
+  <p>KL-DP certifies an excellent average, while the unlucky $10^{-4}$ of outcomes expose users outright.</p>
+  <p class="muted">Needed: control of higher moments of the loss, not just its mean. Enter a knob.</p>
+</div>
+
+<!-- 13. Section 03 -->
 <div class="slide section-slide left">
   <div class="section-num">03</div>
-  <h1>Rényi DP &amp; Properties</h1>
+  <h1>Rényi Divergence</h1>
   <div class="divider"></div>
-  <p class="subtitle">A family that composes additively.</p>
+  <p class="subtitle">One parameter $\alpha$ sweeps from the average ($\alpha \to 1$) to the worst case ($\alpha \to \infty$).</p>
 </div>
 
-<!-- 9. RDP definition -->
+<!-- 14. Renyi divergence definition -->
 <div class="slide">
-  <h2>Rényi Differential Privacy</h2>
+  <h2>Definition &mdash; Rényi Divergence</h2>
   <div class="divider"></div>
   <div class="def-card">
-    <h3>Definition (Mironov 2017).</h3>
-    <p>$\mathcal{M}$ satisfies <strong>$(\alpha, \varepsilon)$-RDP</strong> if for all neighboring $X, X'$,</p>
-    <div class="math-block">$$D_\alpha\bigl(\mathcal{M}(X) \,\big\|\, \mathcal{M}(X')\bigr) \;\le\; \varepsilon.$$</div>
+    <h3>Definition (Rényi divergence of order $\alpha$).</h3>
+    <p>For distributions $P, Q$ and $\alpha \gt 1$:</p>
+    <div class="math-block" style="margin: 8px 0;">$$D_{\alpha}(P \,\|\, Q) \;=\; \frac{1}{\alpha - 1} \ln\, \mathbb{E}_{x \sim Q}\!\left[ \left( \frac{P(x)}{Q(x)} \right)^{\!\alpha} \right]$$</div>
   </div>
-  <p style="margin-top:10px;">Indexed by Rényi order $\alpha$; small $\alpha$ ≈ KL, large $\alpha$ ≈ pure DP.</p>
+  <p style="margin-top:12px;">The $\alpha$-th moment of the likelihood ratio, on a log scale, normalized by $\alpha - 1$.</p>
+  <p class="muted">Larger $\alpha$ weights large-ratio outcomes more heavily: $\alpha$ is a tail-sensitivity dial.</p>
+</div>
+
+<!-- 15. Reading the formula -->
+<div class="slide">
+  <h2>Reading the Formula &mdash; a Moment of the Loss</h2>
+  <div class="divider"></div>
+  <p>Rewriting under $P$ turns the divergence into a moment of the privacy loss $L = \ln(P/Q)$:</p>
+  <div class="math-block" style="margin: 8px 0;">$$e^{(\alpha-1) D_{\alpha}(P \| Q)} \;=\; \mathbb{E}_{Q}\!\left[ \Big(\tfrac{P}{Q}\Big)^{\!\alpha} \right] \;=\; \mathbb{E}_{P}\!\left[ \Big(\tfrac{P}{Q}\Big)^{\!\alpha-1} \right] \;=\; \mathbb{E}_{P}\big[ e^{(\alpha-1) L} \big]$$</div>
+  <div class="highlight">$(\alpha - 1)\, D_{\alpha}$ is the log-MGF of the privacy loss under $P$. This identity powers every proof today.</div>
+  <p class="muted">Check the middle step: $Q \cdot (P/Q)^{\alpha} = P \cdot (P/Q)^{\alpha-1}$ pointwise.</p>
+</div>
+
+<!-- 16. Worked example: two Gaussians -->
+<div class="slide">
+  <h2>Worked Example &mdash; Two Shifted Gaussians</h2>
+  <div class="divider"></div>
+  <div class="lem-card">
+    <h3>Fact (proved in Section 05).</h3>
+    <div class="math-block" style="margin: 8px 0;">$$D_{\alpha}\big( \mathcal{N}(0, \sigma^2) \,\|\, \mathcal{N}(\mu, \sigma^2) \big) \;=\; \frac{\alpha\, \mu^2}{2\sigma^2} \qquad \text{for all } \alpha \gt 1$$</div>
+  </div>
+  <p style="margin-top:12px;">Anchor numbers for $\mu = 1$, $\sigma = 1$:</p>
+  <table>
+    <thead><tr><th>order</th><th>limit 1 (KL)</th><th>2</th><th>10</th><th>limit infinity</th></tr></thead>
+    <tbody>
+      <tr><td>$D_{\alpha}$</td><td>$0.5$</td><td>$1$</td><td>$5$</td><td>$\infty$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="margin-top:10px;">Linear growth in $\alpha$, no ceiling: Gaussian pairs never satisfy pure DP.</p>
+</div>
+
+<!-- 17. Limit alpha -> 1 statement -->
+<div class="slide">
+  <h2>Limit $\alpha \to 1$ &mdash; Rényi Recovers KL</h2>
+  <div class="divider"></div>
+  <div class="lem-card">
+    <h3>Lemma (order-1 limit).</h3>
+    <div class="math-block" style="margin: 8px 0;">$$\lim_{\alpha \to 1^{+}} D_{\alpha}(P \,\|\, Q) \;=\; D(P \,\|\, Q) \qquad \text{(convention: } D_1 = D \text{)}$$</div>
+  </div>
+  <p style="margin-top:12px;">At $\alpha = 1$ the definition reads $\tfrac{0}{0}$: numerator $\ln \mathbb{E}_Q[P/Q] = \ln 1 = 0$, denominator $\alpha - 1 = 0$.</p>
+  <div class="highlight">Trick: a genuine $0/0$ limit, so differentiate top and bottom in $\alpha$ (L'Hôpital).</div>
+</div>
+
+<!-- 18. Limit alpha -> 1 proof -->
+<div class="slide">
+  <h2>Proof &mdash; L'Hôpital on the $0/0$ Limit</h2>
+  <div class="divider"></div>
+  <p>Differentiate numerator and denominator of $D_{\alpha} = \frac{\ln \mathbb{E}_Q[(P/Q)^{\alpha}]}{\alpha - 1}$ in $\alpha$:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\begin{aligned}
+  \lim_{\alpha \to 1^{+}} D_{\alpha}
+  \;&\stackrel{(\text{diff.})}{=}\; \lim_{\alpha \to 1^{+}} \frac{ \mathbb{E}_Q\big[ (P/Q)^{\alpha} \ln(P/Q) \big] }{ \mathbb{E}_Q\big[ (P/Q)^{\alpha} \big] } \\[4pt]
+  \;&\stackrel{(\alpha = 1)}{=}\; \frac{ \mathbb{E}_Q\big[ (P/Q) \ln(P/Q) \big] }{ 1 } \;=\; \mathbb{E}_P\big[ \ln(P/Q) \big] \;=\; D(P \,\|\, Q)
+  \end{aligned}$$</div>
+  <p>First line: differentiate under the expectation. Then set $\alpha = 1$; the denominator is $1$.</p>
+  <p class="muted">Last step: $Q \cdot (P/Q) = P$ pointwise, the same rewriting as before. $\blacksquare$</p>
+</div>
+
+<!-- 19. Limit alpha -> infinity statement -->
+<div class="slide">
+  <h2>Limit $\alpha \to \infty$ &mdash; Rényi Recovers the Max</h2>
+  <div class="divider"></div>
+  <div class="lem-card">
+    <h3>Lemma (order-$\infty$ limit).</h3>
+    <div class="math-block" style="margin: 8px 0;">$$\lim_{\alpha \to \infty} D_{\alpha}(P \,\|\, Q) \;=\; D_{\infty}(P \,\|\, Q) \;=\; \max_{x:\, Q(x) \gt 0}\, \ln \frac{P(x)}{Q(x)}$$</div>
+  </div>
+  <p style="margin-top:12px;">$D_{\infty}$ is the <strong>max divergence</strong>: the worst-case privacy loss from Section 02.</p>
+  <div class="highlight">So pure DP is exactly a max-divergence bound: $\varepsilon$-DP $\iff D_{\infty} \le \varepsilon$ for all neighbors.</div>
+</div>
+
+<!-- 20. Limit alpha -> infinity proof -->
+<div class="slide">
+  <h2>Proof &mdash; Squeeze the $\alpha$-th Moment</h2>
+  <div class="divider"></div>
+  <p>Let $M = \max_x P(x)/Q(x)$, attained at $x^{\star}$. Bound the moment from both sides:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\begin{aligned}
+  \mathbb{E}_Q\big[ (P/Q)^{\alpha} \big] \;&\le\; M^{\alpha - 1}\, \mathbb{E}_Q\big[ P/Q \big] \;=\; M^{\alpha - 1} && \Rightarrow\;\; D_{\alpha} \le \ln M \\[4pt]
+  \mathbb{E}_Q\big[ (P/Q)^{\alpha} \big] \;&\ge\; Q(x^{\star})\, M^{\alpha} && \Rightarrow\;\; D_{\alpha} \ge \frac{\alpha \ln M + \ln Q(x^{\star})}{\alpha - 1}
+  \end{aligned}$$</div>
+  <p>The lower bound tends to $\ln M$; squeezed, $D_{\alpha} \to \ln M = D_{\infty}$. $\blacksquare$</p>
+  <p class="muted">Bonus (first line): $D_{\alpha} \le D_{\infty}$ for <em>every</em> $\alpha$.</p>
+</div>
+
+<!-- 21. Monotonicity -->
+<div class="slide">
+  <h2>Monotonicity in $\alpha$</h2>
+  <div class="divider"></div>
+  <div class="lem-card">
+    <h3>Lemma (monotone in the order).</h3>
+    <p>$\alpha \mapsto D_{\alpha}(P \| Q)$ is nondecreasing, from $D_1 = $ KL up toward $D_{\infty} = $ max.</p>
+  </div>
+  <div class="d6-fig">
+    <svg width="720" height="205" viewBox="0 0 720 205">
+      <line x1="60" y1="175" x2="690" y2="175" stroke="#8892a0" stroke-width="1.5"/>
+      <line x1="60" y1="175" x2="60" y2="25" stroke="#8892a0" stroke-width="1.5"/>
+      <line x1="60" y1="55" x2="690" y2="55" stroke="#d94040" stroke-width="1.5" stroke-dasharray="6 5"/>
+      <path d="M 100 140 C 220 88, 380 63, 660 57" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <line x1="100" y1="140" x2="660" y2="32" stroke="#003876" stroke-width="2" stroke-dasharray="4 4" opacity="0.55"/>
+      <circle cx="100" cy="140" r="5" fill="#003876"/>
+    </svg>
+    <span class="lab blue" style="left:118px; top:158px;">$D_1 = $ KL</span>
+    <span class="lab red" style="left:150px; top:40px;">$D_{\infty}$ (bounded pair)</span>
+    <span class="lab gray" style="left:540px; top:24px;">Gaussian pair: $\alpha\mu^2/2\sigma^2$, no ceiling</span>
+    <span class="lab gray" style="left:680px; top:192px;">$\alpha$</span>
+  </div>
+  <p class="muted">Proof idea: power-mean (Jensen) applied to $\mathbb{E}_P[(P/Q)^{\alpha-1}]$; higher moments dominate.</p>
+</div>
+
+<!-- 22. Section 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Rényi Differential Privacy</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Bound $D_{\alpha}$ between neighboring outputs; compose by adding; convert at the end.</p>
+</div>
+
+<!-- 23. RDP definition -->
+<div class="slide">
+  <h2>Definition &mdash; $(\alpha, \varepsilon)$-RDP</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Definition (Rényi differential privacy).</h3>
+    <p>$\mathcal{M}$ is $(\alpha, \varepsilon)$-RDP if for all neighbors $X \simeq X'$:</p>
+    <div class="math-block" style="margin: 8px 0;">$$D_{\alpha}\big( \mathcal{M}(X) \,\|\, \mathcal{M}(X') \big) \;\le\; \varepsilon$$</div>
+  </div>
+  <p style="margin-top:12px;">One mechanism, one <em>curve</em> of guarantees: the function $\alpha \mapsto \varepsilon(\alpha)$.</p>
+  <p class="muted">Bookkeeping: track $\varepsilon(\alpha)$ per step, add curves, optimize $\alpha$ at the end.</p>
   <div class="cite">Mironov, "Rényi Differential Privacy", CSF 2017.</div>
 </div>
 
-<!-- 10. Composition property -->
+<!-- 24. The alpha spectrum -->
 <div class="slide">
-  <h2>RDP — Additive Composition</h2>
+  <h2>The $\alpha$ Spectrum</h2>
   <div class="divider"></div>
-  <div class="thm-card">
-    <h3>Composition.</h3>
-    <p>If $\mathcal{M}_1$ is $(\alpha, \varepsilon_1)$-RDP and $\mathcal{M}_2$ is $(\alpha, \varepsilon_2)$-RDP (adaptive), then $(\mathcal{M}_1, \mathcal{M}_2)$ is $(\alpha, \varepsilon_1 + \varepsilon_2)$-RDP.</p>
+  <p>The two limits place the old definitions at the ends of one axis.</p>
+  <div class="d6-fig">
+    <svg width="800" height="180" viewBox="0 0 800 180">
+      <line x1="60" y1="100" x2="740" y2="100" stroke="#8892a0" stroke-width="2"/>
+      <polygon points="740,100 726,93 726,107" fill="#8892a0"/>
+      <circle cx="110" cy="100" r="7" fill="#003876"/>
+      <circle cx="700" cy="100" r="7" fill="#d94040"/>
+      <rect x="180" y="88" width="460" height="24" rx="12" fill="#e8ecf0"/>
+    </svg>
+    <span class="lab blue" style="left:110px; top:52px;">$\alpha \to 1$: KL-DP</span>
+    <span class="lab gray" style="left:110px; top:145px;">average loss</span>
+    <span class="lab" style="left:410px; top:100px;">$(\alpha, \varepsilon(\alpha))$-RDP family</span>
+    <span class="lab red" style="left:690px; top:52px;">$\alpha \to \infty$: pure $\varepsilon$-DP</span>
+    <span class="lab gray" style="left:690px; top:145px;">worst-case loss</span>
   </div>
-  <ul style="margin-top:10px;">
-    <li>Composition is <strong>linear in $\varepsilon$ at a fixed $\alpha$</strong> — no extra $\delta$, no $\sqrt{2k\ln(1/\delta')}$ term.</li>
-    <li>To get an $(\varepsilon, \delta)$ bound after $k$ steps, compose first at order $\alpha$, then convert.</li>
-  </ul>
-  <div class="highlight">RDP is the cleanest accounting tool for iterative mechanisms (DP-SGD, PATE).</div>
+  <p style="margin-top:10px;">Since $D_{\alpha} \le D_{\infty}$: an $\varepsilon$-DP mechanism is $(\alpha, \varepsilon)$-RDP for <em>every</em> $\alpha$, including $\alpha = \infty$.</p>
 </div>
 
-<!-- 11. Conversion theorem -->
+<!-- 25. Post-processing statement -->
 <div class="slide">
-  <h2>Conversion: RDP ⇒ $(\varepsilon, \delta)$-DP</h2>
+  <h2>Property 1 &mdash; Post-Processing</h2>
   <div class="divider"></div>
+  <p>Anything computed from a private output should stay private, with no extra cost.</p>
   <div class="thm-card">
-    <h3>Theorem.</h3>
-    <p>If $\mathcal{M}$ is $(\alpha, \varepsilon)$-RDP, then for any $0 < \delta < 1$,</p>
-    <div class="math-block">$$\mathcal{M} \text{ is } \Bigl(\varepsilon + \tfrac{\ln(1/\delta)}{\alpha - 1},\; \delta\Bigr)\text{-DP}.$$</div>
+    <h3>Theorem (post-processing).</h3>
+    <p>If $\mathcal{M}$ is $(\alpha, \varepsilon)$-RDP and $f$ is any (randomized) map, then $f \circ \mathcal{M}$ is $(\alpha, \varepsilon)$-RDP.</p>
   </div>
-  <p style="margin-top:8px;">Standard Markov / Chernoff bound on the $\alpha$-moment of the privacy-loss RV. Optimize over $\alpha$ to get the tightest $(\varepsilon, \delta)$ trade-off.</p>
-  <ul>
-    <li>Example: $(2, \varepsilon)$-RDP with $\delta = e^{-m}$ ⇒ $(\varepsilon + m,\; e^{-m})$-DP.</li>
-  </ul>
+  <p style="margin-top:12px;">It suffices to prove a <strong>data-processing inequality</strong> for Rényi divergence:</p>
+  <div class="math-block" style="margin: 8px 0;">$$D_{\alpha}\big( f(P) \,\|\, f(Q) \big) \;\le\; D_{\alpha}(P \,\|\, Q)$$</div>
 </div>
 
-<!-- 12. RDP lemma -->
+<!-- 26. Post-processing proof a -->
 <div class="slide">
-  <h2>Lemma — $\infty$-Divergence Tames All Orders</h2>
+  <h2>Proof &mdash; Outputs Are Mixtures of Inputs</h2>
   <div class="divider"></div>
+  <p>Model $f$ as a channel $K(z \mid y)$; output distributions are $P'(z) = \sum_y K(z \mid y) P(y)$.</p>
+  <div class="math-block" style="margin: 8px 0;">$$\frac{P'(z)}{Q'(z)} \;=\; \sum_y \underbrace{\frac{K(z \mid y)\, Q(y)}{Q'(z)}}_{=:\, w_z(y),\ \text{sums to } 1} \cdot \frac{P(y)}{Q(y)}$$</div>
+  <p>Each output likelihood ratio is a <em>weighted average</em> of input likelihood ratios.</p>
+  <p class="muted">Averaging cannot create extreme ratios; the next slide makes that precise via convexity.</p>
+</div>
+
+<!-- 27. Post-processing proof b -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; Jensen Collapses the Mixture</h2>
+  <div class="divider"></div>
+  <p>Recap: $P'/Q'$ at $z$ is a $w_z$-average of $P/Q$. Now $t \mapsto t^{\alpha}$ is convex for $\alpha \gt 1$:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\begin{aligned}
+  \mathbb{E}_{Q'}\!\Big[ \big(\tfrac{P'}{Q'}\big)^{\alpha} \Big]
+  \;&\le\; \sum_z Q'(z) \sum_y w_z(y) \Big( \tfrac{P(y)}{Q(y)} \Big)^{\alpha} && \text{(Jensen at each } z \text{)} \\[4pt]
+  \;&=\; \sum_y Q(y) \Big( \tfrac{P(y)}{Q(y)} \Big)^{\alpha} \sum_z K(z \mid y) \;=\; \mathbb{E}_{Q}\!\Big[ \big(\tfrac{P}{Q}\big)^{\alpha} \Big] && \text{(} \textstyle\sum_z K = 1 \text{)}
+  \end{aligned}$$</div>
+  <p class="muted">Take $\tfrac{1}{\alpha-1}\ln$ of both ends: $D_{\alpha}(P' \| Q') \le D_{\alpha}(P \| Q)$. $\blacksquare$</p>
+</div>
+
+<!-- 28. Composition statement -->
+<div class="slide">
+  <h2>Property 2 &mdash; Composition Is Additive</h2>
+  <div class="divider"></div>
+  <p>Intuition: $(\alpha - 1) D_{\alpha}$ is a log-MGF, and log-MGFs of independent losses <em>add</em>.</p>
+  <div class="thm-card">
+    <h3>Theorem (adaptive composition).</h3>
+    <p>If $\mathcal{M}_1$ is $(\alpha, \varepsilon_1)$-RDP and $\mathcal{M}_2$ is $(\alpha, \varepsilon_2)$-RDP given any past, $(\mathcal{M}_1, \mathcal{M}_2)$ is $(\alpha,\ \varepsilon_1 + \varepsilon_2)$-RDP.</p>
+  </div>
+  <div class="highlight" style="margin-top:12px;">Exact addition at every fixed $\alpha$: no slack parameter, no union bound, no $\delta$.</div>
+</div>
+
+<!-- 29. Composition proof a -->
+<div class="slide">
+  <h2>Proof &mdash; Factorize the Joint Ratio</h2>
+  <div class="divider"></div>
+  <p>Joint outputs $(y_1, y_2)$; densities chain: $P_{12}(y_1, y_2) = P_1(y_1)\, P_2(y_2 \mid y_1)$, same for $Q$.</p>
+  <div class="math-block" style="margin: 8px 0;">$$\mathbb{E}_{Q_{12}}\!\Big[ \big(\tfrac{P_{12}}{Q_{12}}\big)^{\alpha} \Big]
+  \;=\; \mathbb{E}_{y_1 \sim Q_1}\!\bigg[ \Big(\tfrac{P_1(y_1)}{Q_1(y_1)}\Big)^{\!\alpha}\, \underbrace{\mathbb{E}_{y_2 \sim Q_2(\cdot \mid y_1)}\!\Big[ \Big(\tfrac{P_2(y_2 \mid y_1)}{Q_2(y_2 \mid y_1)}\Big)^{\!\alpha} \Big]}_{\text{inner moment, past } y_1 \text{ fixed}} \bigg]$$</div>
+  <p class="muted">Trick: condition on the first output; the joint $\alpha$-th moment splits into outer times inner.</p>
+</div>
+
+<!-- 30. Composition proof b -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; Bound Inner, Then Outer</h2>
+  <div class="divider"></div>
+  <p>Recap: joint moment $=$ outer moment weighted by an inner conditional moment.</p>
+  <div class="math-block" style="margin: 8px 0;">$$\begin{aligned}
+  \text{inner} \;&\le\; e^{(\alpha-1)\varepsilon_2} \quad \text{for every fixed } y_1 && \text{(} \mathcal{M}_2 \text{ is RDP given any past)} \\[4pt]
+  \mathbb{E}_{Q_{12}}\!\Big[ \big(\tfrac{P_{12}}{Q_{12}}\big)^{\alpha} \Big] \;&\le\; e^{(\alpha-1)\varepsilon_2}\, \mathbb{E}_{Q_1}\!\Big[ \big(\tfrac{P_1}{Q_1}\big)^{\alpha} \Big] \;\le\; e^{(\alpha-1)(\varepsilon_1 + \varepsilon_2)} && \text{(} \mathcal{M}_1 \text{ is RDP)}
+  \end{aligned}$$</div>
+  <p>Take $\tfrac{1}{\alpha-1} \ln$: $D_{\alpha} \le \varepsilon_1 + \varepsilon_2$. $\blacksquare$</p>
+  <div class="lem-card" style="margin-top:10px;">
+    <h3>Corollary ($k$-fold).</h3>
+    <p>$k$ adaptive mechanisms, each $(\alpha, \varepsilon_i)$-RDP, compose to $\big(\alpha,\ \sum_{i=1}^{k} \varepsilon_i\big)$-RDP.</p>
+  </div>
+</div>
+
+<!-- 31. Conversion statement -->
+<div class="slide">
+  <h2>Property 3 &mdash; Conversion to $(\varepsilon, \delta)$-DP</h2>
+  <div class="divider"></div>
+  <p>RDP is the ledger; $(\varepsilon, \delta)$-DP is the currency we report. The exchange rate:</p>
+  <div class="thm-card">
+    <h3>Theorem (RDP to approximate DP).</h3>
+    <p>If $\mathcal{M}$ is $(\alpha, \varepsilon)$-RDP, then for every $\delta \in (0, 1)$, $\mathcal{M}$ is</p>
+    <div class="math-block" style="margin: 8px 0;">$$\Big( \varepsilon + \frac{\ln(1/\delta)}{\alpha - 1},\ \delta \Big)\text{-DP}$$</div>
+  </div>
+  <p class="muted" style="margin-top:10px;">Price of conversion: $\ln(1/\delta)/(\alpha-1)$, small when $\alpha$ is large. $\alpha$ stays free to optimize.</p>
+  <div class="cite">Mironov, "Rényi Differential Privacy", CSF 2017.</div>
+</div>
+
+<!-- 32. Conversion roadmap -->
+<div class="slide">
+  <h2>Proof Roadmap &mdash; Markov on the Loss</h2>
+  <div class="divider"></div>
+  <div class="d6-algo">
+    <ol>
+      <li><strong>Split:</strong> cut any event $S$ into small-loss and large-loss parts at threshold $c$.</li>
+      <li><strong>Markov:</strong> bound the large-loss tail using the $(\alpha-1)$-th moment that RDP controls.</li>
+      <li><strong>Choose $c$:</strong> set the threshold so the tail is exactly $\delta$.</li>
+    </ol>
+  </div>
+  <p style="margin-top:12px;">Everything runs through the identity $\mathbb{E}_P\big[e^{(\alpha-1)L}\big] = e^{(\alpha-1) D_{\alpha}} \le e^{(\alpha-1)\varepsilon}$.</p>
+  <p class="muted">Same architecture as approximate DP: bound the loss tail, pay it as $\delta$.</p>
+</div>
+
+<!-- 33. Conversion proof step 1 -->
+<div class="slide">
+  <h2>Proof &mdash; Split the Event at Loss $c$</h2>
+  <div class="divider"></div>
+  <p>Fix neighbors, an event $S$, and a threshold $c$. On $\{L \le c\}$ we have $P(y) \le e^{c} Q(y)$ pointwise:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\Pr_P[S] \;=\; \Pr_P\big[S \cap \{L \le c\}\big] + \Pr_P\big[S \cap \{L \gt c\}\big]
+  \;\le\; e^{c}\, \Pr_Q[S] \;+\; \Pr_P\big[L \gt c\big]$$</div>
+  <p>First term: pure-DP shape at level $c$. Second: a tail to pay as $\delta$.</p>
+  <p class="muted">Remaining goal: show $\Pr_P[L \gt c] \le \delta$ for the right choice of $c$.</p>
+</div>
+
+<!-- 34. Conversion proof step 2 -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; Markov on the Exponentiated Loss</h2>
+  <div class="divider"></div>
+  <p>Recap: need $\Pr_P[L \gt c] \le \delta$. Exponentiate ($e^{(\alpha-1)t}$ is increasing for $\alpha \gt 1$), then Markov:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\Pr_P\big[ L \gt c \big] \;=\; \Pr_P\Big[ e^{(\alpha-1)L} \gt e^{(\alpha-1)c} \Big]
+  \;\le\; \frac{\mathbb{E}_P\big[ e^{(\alpha-1)L} \big]}{e^{(\alpha-1)c}}
+  \;=\; e^{(\alpha-1)(D_{\alpha} - c)} \;\le\; e^{(\alpha-1)(\varepsilon - c)}$$</div>
+  <div class="highlight">The Chernoff trick: RDP hands us the $(\alpha-1)$-th moment; Markov turns it into a tail bound.</div>
+</div>
+
+<!-- 35. Conversion proof step 3 -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; Choose the Threshold</h2>
+  <div class="divider"></div>
+  <p>Set $c = \varepsilon + \frac{\ln(1/\delta)}{\alpha - 1}$, so that $e^{(\alpha-1)(\varepsilon - c)} = \delta$. Chaining the two steps:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\Pr_P[S] \;\stackrel{(\text{split})}{\le}\; e^{c}\, \Pr_Q[S] + \Pr_P[L \gt c]
+  \;\stackrel{(\text{Markov})}{\le}\; e^{c}\, \Pr_Q[S] + e^{(\alpha-1)(\varepsilon - c)}
+  \;\stackrel{(\text{choice})}{=}\; e^{c}\, \Pr_Q[S] + \delta$$</div>
+  <p>This is exactly $(c, \delta)$-DP with $c = \varepsilon + \ln(1/\delta)/(\alpha-1)$. $\blacksquare$</p>
+</div>
+
+<!-- 36. Conversion example -->
+<div class="slide">
+  <h2>Cashing Out &mdash; a Numeric Conversion</h2>
+  <div class="divider"></div>
+  <p>Example: $\mathcal{M}$ is $(2, \varepsilon)$-RDP; pick $\delta = e^{-m}$. The conversion price is $\frac{\ln(1/\delta)}{\alpha-1} = m$:</p>
+  <div class="math-block" style="margin: 8px 0;">$$(2, \varepsilon)\text{-RDP} \;\Longrightarrow\; \big( \varepsilon + m,\ e^{-m} \big)\text{-DP}$$</div>
+  <p>At $\alpha = 2$, each digit of certainty costs one unit of $\varepsilon$; larger $\alpha$ pays less.</p>
+  <p class="muted">Tension: raising $\alpha$ cheapens conversion but raises $\varepsilon(\alpha)$ itself. Optimize at the end.</p>
+</div>
+
+<!-- 37. Bridge lemma statement -->
+<div class="slide">
+  <h2>Bridging Lemma &mdash; Pure DP Enters the Ledger</h2>
+  <div class="divider"></div>
+  <p>To account pure-DP steps in RDP, we need their $D_{\alpha}$, and it is quadratically small:</p>
   <div class="lem-card">
-    <h3>Lemma.</h3>
-    <p>If $D_\infty(P \| Q) \le \varepsilon$ and $D_\infty(Q \| P) \le \varepsilon$, then for $\alpha \ge 0$,</p>
-    <div class="math-block" style="margin-top:6px;">$$D_\alpha(P \| Q) \;\le\; 2 \alpha\, \varepsilon^2.$$</div>
+    <h3>Lemma (pure DP to RDP).</h3>
+    <p>If $D_{\infty}(P \| Q) \le \varepsilon$ and $D_{\infty}(Q \| P) \le \varepsilon$ with $\varepsilon \le 1$, then for all $\alpha \gt 1$:</p>
+    <div class="math-block" style="margin: 8px 0;">$$D_{\alpha}(P \,\|\, Q) \;\le\; 2 \alpha \varepsilon^2$$</div>
   </div>
-  <p style="margin-top:10px;">$\varepsilon$-DP (a worst-case bound) implies an average-case Rényi bound that scales as $\alpha\varepsilon^2$ — the key inequality for tight composition.</p>
+  <p style="margin-top:12px;">So an $\varepsilon$-DP step costs $\varepsilon^2$, not $\varepsilon$, in the RDP ledger (for moderate $\alpha$).</p>
+  <p class="muted">This $\varepsilon \to \varepsilon^2$ drop is the entire source of the $\sqrt{k}$ composition law.</p>
 </div>
 
-<!-- 13. Advanced comp via RDP -->
+<!-- 38. Bridge lemma proof 1 -->
 <div class="slide">
-  <h2>Advanced Composition via RDP</h2>
+  <h2>Proof &mdash; the Loss Is Bounded, Use Hoeffding</h2>
   <div class="divider"></div>
-  <p>Composing $k$ $(\varepsilon, \delta)$-DP mechanisms:</p>
-  <ol style="padding-left:24px;">
-    <li>Each one is $(\alpha, 2\alpha \varepsilon^2)$-RDP by the lemma.</li>
-    <li>By additive RDP composition, total is $(\alpha, 2\alpha k \varepsilon^2)$-RDP.</li>
-    <li>Set $2\alpha k \varepsilon^2 \approx 2(\sqrt k \varepsilon)^2 \cdot \alpha$ — the $\sqrt k$ scaling pops out.</li>
-  </ol>
-  <p>Converting back:</p>
-  <div class="math-block">$$\Pr[\mathcal{M}(X) \in S] \;\le\; \exp\!\Bigl(2\varepsilon \sqrt{k\, \log(1/\Pr[\mathcal{M}(X) \in S])}\Bigr) \Pr[\mathcal{M}(X') \in S].$$</div>
-  <p>This yields the advanced-composition $\sqrt k\,\varepsilon$ growth from Lecture 5.</p>
+  <p>Both-sided $D_{\infty}$ bounds pin the loss: $L(y) = \ln(P/Q) \in [-\varepsilon, \varepsilon]$ for every $y$.</p>
+  <div class="math-block" style="margin: 8px 0;">$$(\alpha - 1) D_{\alpha} \;=\; \ln \mathbb{E}_P\big[ e^{(\alpha-1) L} \big]
+  \;\le\; (\alpha - 1)\, \mathbb{E}_P[L] \;+\; \frac{(\alpha-1)^2 (2\varepsilon)^2}{8}$$</div>
+  <div class="highlight">Hoeffding's lemma: a random variable in $[a, b]$ has log-MGF at most $t\,\mathbb{E}[L] + t^2 (b-a)^2 / 8$.</div>
+  <p class="muted">Bounded implies sub-Gaussian: standard, by convexity of $\exp$ plus a Taylor bound.</p>
 </div>
 
-<!-- 14. Section 04 -->
+<!-- 39. Bridge lemma proof 2 -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; the Mean Is Quadratically Small</h2>
+  <div class="divider"></div>
+  <p>Recap: need $\mathbb{E}_P[L] = D(P \| Q)$ small. Symmetrize, then bound pointwise:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\begin{aligned}
+  D(P \| Q) \;&\le\; D(P \| Q) + D(Q \| P) \;=\; \textstyle\sum_y \big( P(y) - Q(y) \big) L(y) \\[4pt]
+  \;&\le\; \varepsilon \textstyle\sum_y \big| P(y) - Q(y) \big| \;\le\; \varepsilon \big( e^{\varepsilon} - 1 \big) \textstyle\sum_y Q(y) \;\le\; 2 \varepsilon^2
+  \end{aligned}$$</div>
+  <p>Pointwise: $|P - Q| \le (e^{\varepsilon} - 1) \min(P, Q)$, since $P, Q$ are within $e^{\pm\varepsilon}$ of each other.</p>
+  <p class="muted">Last step: $e^{\varepsilon} - 1 \le 2\varepsilon$ for $\varepsilon \le 1$. Worst case $\varepsilon$, average case $\varepsilon^2$.</p>
+</div>
+
+<!-- 40. Bridge lemma proof 3 -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; Combine and Simplify</h2>
+  <div class="divider"></div>
+  <p>Recap: Hoeffding bounded the MGF; the mean is at most $2\varepsilon^2$. Insert and divide:</p>
+  <div class="math-block" style="margin: 8px 0;">$$D_{\alpha} \;\le\; \mathbb{E}_P[L] + \frac{(\alpha - 1) \varepsilon^2}{2}
+  \;\le\; 2\varepsilon^2 + \frac{(\alpha - 1) \varepsilon^2}{2} \;\le\; 2 \alpha \varepsilon^2$$</div>
+  <p>Final inequality: $2 + \frac{\alpha - 1}{2} \le 2\alpha \iff 3 \le 3\alpha$, true for all $\alpha \ge 1$. $\blacksquare$</p>
+  <p class="muted">Constants are loose by design; sharper versions exist, but $2\alpha\varepsilon^2$ is all we need.</p>
+</div>
+
+<!-- 41. Advanced composition pipeline -->
+<div class="slide">
+  <h2>Advanced Composition, Rederived</h2>
+  <div class="divider"></div>
+  <p>Chain the three tools: bridge in, add up, convert out.</p>
+  <div class="d6-chain">
+    <div class="d6-cnode">$k$ steps,<br>each $\varepsilon$-DP</div>
+    <div class="d6-hop"><span class="hl">lemma</span><span class="ar">&rarr;</span></div>
+    <div class="d6-cnode">each $(\alpha, 2\alpha\varepsilon^2)$-RDP</div>
+    <div class="d6-hop"><span class="hl">compose</span><span class="ar">&rarr;</span></div>
+    <div class="d6-cnode">$(\alpha, 2\alpha k \varepsilon^2)$-RDP</div>
+    <div class="d6-hop"><span class="hl">convert</span><span class="ar">&rarr;</span></div>
+    <div class="d6-cnode">$(\varepsilon_{\mathrm{tot}}, \delta)$-DP</div>
+  </div>
+  <div class="math-block" style="margin: 8px 0;">$$\varepsilon_{\mathrm{tot}}(\alpha) \;=\; 2 \alpha k \varepsilon^2 \;+\; \frac{\ln(1/\delta)}{\alpha - 1}$$</div>
+  <p class="muted">One free dial $\alpha$ remains; minimize over it on the next slide.</p>
+</div>
+
+<!-- 42. Advanced composition optimized -->
+<div class="slide">
+  <h2>Optimizing $\alpha$ &mdash; the $\sqrt{k}$ Law</h2>
+  <div class="divider"></div>
+  <p>Substitute $t = \alpha - 1$ and use AM&ndash;GM, $a t + b/t \ge 2\sqrt{ab}$, with equality at $t = \sqrt{b/a}$:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\min_{\alpha \gt 1} \varepsilon_{\mathrm{tot}}(\alpha) \;=\; \underbrace{2 k \varepsilon^2}_{\text{drift: } k \times \varepsilon^2} \;+\; \underbrace{2 \varepsilon \sqrt{2 k \ln(1/\delta)}}_{\text{fluctuation: } \sqrt{k}\, \varepsilon}$$</div>
+  <p>Same two terms as advanced composition: linear drift in $k\varepsilon^2$, deviation scaling as $\sqrt{k}\,\varepsilon$.</p>
+  <div class="highlight">Advanced composition falls out of three mechanical RDP steps: no martingales required.</div>
+</div>
+
+<!-- 43. Section 05 -->
 <div class="slide section-slide left">
-  <div class="section-num">04</div>
-  <h1>Gaussian via RDP</h1>
+  <div class="section-num">05</div>
+  <h1>The Gaussian Mechanism<br>via RDP</h1>
   <div class="divider"></div>
-  <p class="subtitle">A closed-form RDP guarantee for the Gaussian mechanism.</p>
+  <p class="subtitle">Exactly $\big(\alpha,\ \alpha\Delta^2/2\sigma^2\big)$-RDP, by completing a square.</p>
 </div>
 
-<!-- 15. Gaussian RDP theorem -->
+<!-- 44. Recall Gaussian mechanism -->
 <div class="slide">
-  <h2>Gaussian Mechanism — RDP</h2>
+  <h2>Recall &mdash; the Gaussian Mechanism</h2>
   <div class="divider"></div>
-  <p>Setup: $f : \mathcal{X}^n \to \mathbb{R}^d$ with $\ell_2$-sensitivity $\Delta$; $\mathcal{M}(X) = f(X) + \mathcal{N}(0, \sigma^2 I)$.</p>
-  <div class="thm-card" style="margin-top:8px;">
-    <h3>Theorem (Mironov 2017).</h3>
-    <p>For all $\alpha > 1$, the Gaussian mechanism is $(\alpha, \varepsilon(\alpha))$-RDP with</p>
-    <div class="math-block">$$\varepsilon(\alpha) \;=\; \frac{\alpha\, \Delta^2}{2\, \sigma^2}.$$</div>
+  <div class="def-card">
+    <h3>Recall (Gaussian mechanism).</h3>
+    <p>$\mathcal{M}(X) = f(X) + \mathcal{N}(0, \sigma^2 I)$ where $f$ has $\ell_2$-sensitivity $\Delta = \max_{X \simeq X'} \|f(X) - f(X')\|_2$.</p>
   </div>
-  <p style="margin-top:10px;" class="muted">RDP $\varepsilon$ is linear in $\alpha$ — composition over $k$ steps just multiplies by $k$.</p>
+  <p style="margin-top:12px;">The direct analysis gave $(\varepsilon, \delta)$-DP for $\varepsilon \lt 1$ whenever</p>
+  <div class="math-block" style="margin: 8px 0;">$$\sigma \;\ge\; \frac{\Delta \sqrt{2 \ln(1.25/\delta)}}{\varepsilon}$$</div>
+  <p class="muted">Today: the same mechanism through the RDP lens, where its cost becomes exact and additive.</p>
+  <div class="cite">Dwork, Roth, "The Algorithmic Foundations of Differential Privacy", 2014.</div>
 </div>
 
-<!-- 16. Conversion to (ε, δ) -->
+<!-- 45. Gaussian RDP theorem -->
 <div class="slide">
-  <h2>From Gaussian RDP to $(\varepsilon, \delta)$-DP</h2>
+  <h2>Theorem &mdash; Gaussian Mechanism in RDP</h2>
   <div class="divider"></div>
-  <p>Using $\varepsilon = \varepsilon(\alpha) + \tfrac{\log(1/\delta)}{\alpha - 1}$:</p>
-  <div class="math-block">$$\varepsilon \;=\; \frac{\alpha\, \Delta^2}{2\, \sigma^2} \;+\; \frac{\log(1/\delta)}{\alpha - 1}.$$</div>
-  <p>Optimizing over $\alpha$:</p>
-  <div class="math-block">$$\sigma \;\ge\; \frac{\Delta}{\varepsilon}\sqrt{2 \log(1.25/\delta)}.$$</div>
-  <p>This recovers exactly the classic Gaussian-mechanism guarantee from Lecture 4 — the $1.25$ constant absorbs the optimization slack.</p>
-</div>
-
-<!-- 17. Proof setup -->
-<div class="slide">
-  <h2>Proof — Step 1: Set Up the Integral</h2>
-  <div class="divider"></div>
-  <div class="proof-card">
-    <p>For $Y \sim \mathcal{N}(f(X'), \sigma^2 I)$,</p>
-    <div class="math-block" style="font-size:1.2rem; margin:4px 0;">$$D_\alpha(\mathcal{M}(X) \| \mathcal{M}(X')) = \tfrac{1}{\alpha - 1} \log \int f_{\mathcal{M}(X)}(y)^\alpha\, f_{\mathcal{M}(X')}(y)^{1-\alpha}\, dy.$$</div>
-    <p>Substituting the Gaussian densities ($\sigma^2 I$ covariance, means $f(X)$ and $f(X')$):</p>
-    <div class="math-block" style="font-size:1.2rem; margin:4px 0;">$$= \tfrac{1}{\alpha-1}\log \int \tfrac{1}{\sqrt{(2\pi\sigma^2)^d}}\, \exp\!\Bigl(-\tfrac{\alpha\|y - f(X)\|^2 + (1-\alpha)\|y - f(X')\|^2}{2\sigma^2}\Bigr)\, dy.$$</div>
+  <div class="thm-card">
+    <h3>Theorem (Mironov, 2017).</h3>
+    <p>The Gaussian mechanism with $\ell_2$-sensitivity $\Delta$ is $\Big( \alpha,\ \dfrac{\alpha \Delta^2}{2\sigma^2} \Big)$-RDP for every $\alpha \gt 1$. In particular,</p>
+    <div class="math-block" style="margin: 8px 0;">$$D_{\alpha}\big( \mathcal{N}(0, \sigma^2) \,\|\, \mathcal{N}(\Delta, \sigma^2) \big) \;=\; \frac{\alpha \Delta^2}{2 \sigma^2} \qquad \text{(equality, not just a bound)}$$</div>
   </div>
+  <p class="muted" style="margin-top:10px;">Linear in $\alpha$, quadratic in $\Delta/\sigma$: the cleanest privacy cost yet.</p>
+  <div class="cite">Mironov, "Rényi Differential Privacy", CSF 2017.</div>
 </div>
 
-<!-- 18. Proof step 2 -->
+<!-- 46. Gaussian intuition via MGF -->
 <div class="slide">
-  <h2>Proof — Step 2: Complete the Square</h2>
+  <h2>Intuition &mdash; a Gaussian Loss Has a Gaussian MGF</h2>
   <div class="divider"></div>
-  <div class="proof-card">
-    <p>Inside the exponent, separate the quadratic-in-$y$ part from the constant:</p>
-    <div class="math-block" style="font-size:1.15rem; margin:4px 0;">$$\alpha\|y - f(X)\|^2 + (1-\alpha)\|y - f(X')\|^2 = \|y\|^2 - 2\langle y, \alpha f(X) + (1-\alpha) f(X')\rangle + \alpha\|f(X)\|^2 + (1-\alpha)\|f(X')\|^2.$$</div>
-    <p>Integrating the Gaussian over $y$ contributes $\exp\!\bigl(\tfrac{1}{2\sigma^2}\|\alpha f(X) + (1-\alpha) f(X')\|^2\bigr)$.</p>
-  </div>
+  <p>The direct analysis showed the privacy loss is itself Gaussian: $L \sim \mathcal{N}(\eta, 2\eta)$ with $\eta = \frac{\Delta^2}{2\sigma^2}$.</p>
+  <div class="math-block" style="margin: 8px 0;">$$(\alpha - 1) D_{\alpha} \;=\; \ln \mathbb{E}_P\big[ e^{(\alpha-1) L} \big]
+  \;=\; (\alpha - 1)\eta + \frac{(\alpha-1)^2}{2} \cdot 2\eta \;=\; \alpha (\alpha - 1)\, \eta$$</div>
+  <p>Divide by $\alpha - 1$: $\ D_{\alpha} = \alpha \eta = \alpha \Delta^2 / 2\sigma^2$. The linear-in-$\alpha$ law is the Gaussian MGF.</p>
+  <p class="muted">Gaussian MGF: $\ln \mathbb{E}[e^{tZ}] = t\mu + t^2 v/2$ for $Z \sim \mathcal{N}(\mu, v)$. Next: a self-contained proof.</p>
 </div>
 
-<!-- 19. Proof step 3 -->
+<!-- 47. Gaussian proof setup -->
 <div class="slide">
-  <h2>Proof — Step 3: Algebra</h2>
+  <h2>Proof &mdash; Set Up the Integral</h2>
   <div class="divider"></div>
-  <div class="proof-card">
-    <p>Combining:</p>
-    <div class="math-block" style="font-size:1.2rem; margin:4px 0;">$$D_\alpha(\mathcal{M}(X)\|\mathcal{M}(X')) = \tfrac{1}{\alpha - 1}\cdot \tfrac{\alpha(\alpha-1)}{2\sigma^2}\|f(X) - f(X')\|^2 = \tfrac{\alpha\,\|f(X) - f(X')\|^2}{2\sigma^2}.$$</div>
-    <p>Bounding $\|f(X) - f(X')\|_2 \le \Delta$:</p>
-    <div class="math-block" style="font-size:1.3rem;">$$D_\alpha \;\le\; \frac{\alpha\, \Delta^2}{2\sigma^2}. \;\blacksquare$$</div>
-  </div>
+  <p>Neighbors give centers $u = f(X)$, $v = f(X')$ in $\mathbb{R}^d$; densities $p, q$ of $\mathcal{N}(u, \sigma^2 I)$, $\mathcal{N}(v, \sigma^2 I)$:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\begin{aligned}
+  e^{(\alpha-1) D_{\alpha}(p \| q)} \;&=\; \int p(y)^{\alpha}\, q(y)^{1-\alpha}\, dy \\[4pt]
+  \;&=\; \frac{1}{(2\pi\sigma^2)^{d/2}} \int \exp\!\Big( {-\tfrac{1}{2\sigma^2}} \big[ \alpha \|y - u\|^2 + (1-\alpha) \|y - v\|^2 \big] \Big)\, dy
+  \end{aligned}$$</div>
+  <p class="muted">Prefactors merge: $(2\pi\sigma^2)^{-d\alpha/2} (2\pi\sigma^2)^{-d(1-\alpha)/2} = (2\pi\sigma^2)^{-d/2}$, one Gaussian's worth.</p>
 </div>
 
-<!-- 20. Recap -->
+<!-- 48. Gaussian proof expand -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; Expand the Exponent</h2>
+  <div class="divider"></div>
+  <p>Recap: the exponent holds $\alpha \|y - u\|^2 + (1-\alpha) \|y - v\|^2$. Expand both squares in $y$:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\begin{aligned}
+  \alpha \|y - u\|^2 &+ (1 - \alpha) \|y - v\|^2 \\[4pt]
+  \;&=\; \|y\|^2 - 2 \langle y,\ \alpha u + (1-\alpha) v \rangle + \alpha \|u\|^2 + (1-\alpha) \|v\|^2
+  \end{aligned}$$</div>
+  <p>The $\|y\|^2$ terms carry total weight $\alpha + (1 - \alpha) = 1$: still a unit quadratic in $y$.</p>
+  <p class="muted">Shorthand for the mixed center: $w = \alpha u + (1 - \alpha) v$.</p>
+</div>
+
+<!-- 49. Gaussian proof complete square -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; Complete the Square</h2>
+  <div class="divider"></div>
+  <p>Recap: exponent $= \|y\|^2 - 2\langle y, w \rangle + \alpha\|u\|^2 + (1-\alpha)\|v\|^2$. Add and subtract $\|w\|^2$:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\alpha \|y - u\|^2 + (1-\alpha) \|y - v\|^2 \;=\; \underbrace{\|y - w\|^2}_{\text{a shifted Gaussian in } y} \;+\; \underbrace{\alpha \|u\|^2 + (1-\alpha) \|v\|^2 - \|w\|^2}_{\text{constant: no } y}$$</div>
+  <p>The $\|y - w\|^2$ part integrates against $(2\pi\sigma^2)^{-d/2}$ to exactly $1$: a normalized Gaussian.</p>
+  <div class="highlight">Complete-the-square trick: the integral evaluates itself; only the constant survives.</div>
+</div>
+
+<!-- 50. Gaussian proof identity -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; the Constant Is the Answer</h2>
+  <div class="divider"></div>
+  <p>Recap: everything reduces to the constant. Expand $\|w\|^2 = \|\alpha u + (1-\alpha) v\|^2$ and collect:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\begin{aligned}
+  \alpha \|u\|^2 + (1-\alpha) \|v\|^2 - \|w\|^2
+  \;&=\; \alpha(1 - \alpha) \big( \|u\|^2 - 2 \langle u, v \rangle + \|v\|^2 \big) \\[4pt]
+  \;&=\; \alpha (1 - \alpha)\, \|u - v\|^2
+  \end{aligned}$$</div>
+  <p>With the $-\tfrac{1}{2\sigma^2}$ prefactor and $\alpha \gt 1$, the sign flips positive:</p>
+  <div class="math-block" style="margin: 8px 0;">$$e^{(\alpha-1) D_{\alpha}} \;=\; \exp\!\Big( \frac{\alpha (\alpha - 1) \|u - v\|^2}{2 \sigma^2} \Big)$$</div>
+</div>
+
+<!-- 51. Gaussian proof finish -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; Finish and Recap</h2>
+  <div class="divider"></div>
+  <p>Take $\tfrac{1}{\alpha - 1} \ln$ and apply sensitivity $\|u - v\|_2 \le \Delta$:</p>
+  <div class="math-block" style="margin: 8px 0;">$$D_{\alpha} \;\stackrel{(\text{def})}{=}\; \tfrac{1}{\alpha-1} \ln \!\int\! p^{\alpha} q^{1-\alpha}
+  \;\stackrel{(\text{square})}{=}\; \frac{1}{\alpha - 1} \cdot \frac{\alpha (\alpha-1) \|u - v\|^2}{2\sigma^2}
+  \;\stackrel{(\text{cancel})}{=}\; \frac{\alpha \|u - v\|^2}{2\sigma^2}
+  \;\stackrel{(\text{sens.})}{\le}\; \frac{\alpha \Delta^2}{2\sigma^2}$$</div>
+  <p>Equality holds throughout for the worst pair $\|u - v\| = \Delta$: the guarantee is exact. $\blacksquare$</p>
+  <p class="muted">For $d = 1$, $u = 0$, $v = \mu$ this is the two-Gaussian fact quoted in Section 03.</p>
+</div>
+
+<!-- 52. Gaussian conversion optimization -->
+<div class="slide">
+  <h2>Back to $(\varepsilon, \delta)$ &mdash; Optimize $\alpha$</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin: 8px 0;">$$\varepsilon(\delta) \;=\; \min_{\alpha \gt 1} \Big[ \frac{\alpha \Delta^2}{2\sigma^2} + \frac{\ln(1/\delta)}{\alpha - 1} \Big]
+  \;=\; \frac{\Delta^2}{2\sigma^2} + \frac{\Delta}{\sigma} \sqrt{2 \ln(1/\delta)}$$</div>
+  <div class="d6-fig">
+    <svg width="700" height="195" viewBox="0 0 700 195">
+      <line x1="60" y1="170" x2="670" y2="170" stroke="#8892a0" stroke-width="1.5"/>
+      <line x1="60" y1="170" x2="60" y2="20" stroke="#8892a0" stroke-width="1.5"/>
+      <path d="M 95 30 C 140 120, 200 150, 320 138 C 460 124, 560 80, 650 32" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <line x1="60" y1="158" x2="650" y2="42" stroke="#8892a0" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <path d="M 95 32 C 180 120, 300 158, 650 166" fill="none" stroke="#8892a0" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <circle cx="300" cy="141" r="6" fill="#d94040"/>
+      <line x1="300" y1="170" x2="300" y2="141" stroke="#d94040" stroke-width="1.5" stroke-dasharray="4 3"/>
+    </svg>
+    <span class="lab blue" style="left:590px; top:22px;">total $\varepsilon(\alpha)$</span>
+    <span class="lab gray" style="left:300px; top:78px;">RDP cost $\alpha\Delta^2/2\sigma^2$</span>
+    <span class="lab gray" style="left:480px; top:143px;">conversion $\ln(1/\delta)/(\alpha-1)$</span>
+    <span class="lab red" style="left:300px; top:185px;">$\alpha^{\star}$</span>
+  </div>
+  <p class="muted">AM&ndash;GM again with $t = \alpha - 1$; the minimizer is $\alpha^{\star} = 1 + (\sigma/\Delta)\sqrt{2 \ln(1/\delta)}$.</p>
+</div>
+
+<!-- 53. Comparison with direct analysis -->
+<div class="slide">
+  <h2>Reading It Off &mdash; RDP Matches the Classic Rule</h2>
+  <div class="divider"></div>
+  <p>Drop the small drift term and solve $\frac{\Delta}{\sigma}\sqrt{2\ln(1/\delta)} = \varepsilon$ for $\sigma$:</p>
+  <div class="math-block" style="margin: 8px 0;">$$\sigma \;\approx\; \frac{\Delta}{\varepsilon} \sqrt{2 \ln(1/\delta)} \qquad \text{vs. direct analysis} \qquad \sigma \;\ge\; \frac{\Delta}{\varepsilon} \sqrt{2 \ln(1.25/\delta)}$$</div>
+  <p>Single release, $\Delta = 1$, $\sigma = 5$, $\delta = 10^{-5}$: direct gives $\varepsilon \approx 0.97$; RDP gives $\varepsilon \approx 0.98$.</p>
+  <p class="muted">One shot is a tie. The payoff is structural: the RDP cost <em>adds</em> across steps.</p>
+</div>
+
+<!-- 54. Where RDP wins -->
+<div class="slide">
+  <h2>Where RDP Wins &mdash; Composed Gaussians</h2>
+  <div class="divider"></div>
+  <p>$T = 1000$ Gaussian steps, $\Delta = 1$, $\sigma = 50$, target $\delta = 10^{-5}$; per step $(0.124,\ 5 \times 10^{-9})$-DP.</p>
+  <table>
+    <thead><tr><th>accounting route</th><th>total privacy</th></tr></thead>
+    <tbody>
+      <tr><td>basic composition</td><td>$\varepsilon \approx 124$</td></tr>
+      <tr><td>advanced composition</td><td>$\varepsilon \approx 27$</td></tr>
+      <tr><td>RDP: add $\alpha/5000$ per step, convert once</td><td>$\varepsilon \approx 3.2$</td></tr>
+    </tbody>
+  </table>
+  <div class="highlight" style="margin-top:12px;">An $8\times$ improvement over advanced composition, from bookkeeping alone: same noise, same data.</div>
+</div>
+
+<!-- 55. Recap -->
 <div class="slide">
   <h2>Recap</h2>
   <div class="divider"></div>
   <ul>
-    <li><strong>KL-DP</strong>: $D(\mathcal{M}(X) \| \mathcal{M}(X')) \le \varepsilon$ — distributional similarity, but composes poorly alone.</li>
-    <li><strong>Rényi DP $(\alpha, \varepsilon)$</strong>: bounds $D_\alpha$. Composition is additive in $\varepsilon$ at fixed $\alpha$.</li>
-    <li><strong>Conversion</strong>: $(\alpha, \varepsilon)$-RDP ⇒ $(\varepsilon + \tfrac{\ln(1/\delta)}{\alpha - 1},\, \delta)$-DP; optimize $\alpha$.</li>
-    <li><strong>Gaussian mechanism</strong>: closed-form $(\alpha,\, \tfrac{\alpha\Delta^2}{2\sigma^2})$-RDP — the engine behind tight DP-SGD accounting.</li>
+    <li><strong>KL-DP:</strong> bounds the average loss $\mathbb{E}_P[L]$; a tiny mean hides catastrophic tails.</li>
+    <li><strong>Rényi divergence:</strong> $(\alpha-1) D_{\alpha} = \ln \mathbb{E}_P[e^{(\alpha-1)L}]$; sweeps KL ($\alpha \to 1$) to max ($\alpha \to \infty$).</li>
+    <li><strong>RDP:</strong> composes by exact addition; free post-processing; converts at cost $\ln(1/\delta)/(\alpha-1)$.</li>
+    <li><strong>Bridge:</strong> $\varepsilon$-DP gives $(\alpha, 2\alpha\varepsilon^2)$-RDP; add, convert, optimize: the $\sqrt{k}$ law rederived.</li>
+    <li><strong>Gaussian:</strong> exactly $(\alpha, \alpha\Delta^2/2\sigma^2)$-RDP by completing the square; big wins under composition.</li>
   </ul>
-  <div class="highlight">Next: DP paradigms in ML, including PATE.</div>
 </div>
 
-<!-- 21. Closer -->
-<div class="slide end-slide">
-  <div class="big-word">Next</div>
-  <p class="big-word-sub">DP paradigms in ML &amp; PATE.</p>
+<!-- 56. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">Q&amp;A</div>
+  <p class="big-word-sub">Thank you.</p>
 </div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 56</div>
 
 </div><!-- .deck -->
-<script defer src="../../../../reference/deck.js"></script>
-<script>
-window.addEventListener('DOMContentLoaded', () => {
-  const slides = document.querySelectorAll('.deck > .slide');
-  const total = slides.length;
-  slides.forEach((s, i) => {
-    if (s.classList.contains('title-slide')) return;
-    if (s.querySelector(':scope > .page-num')) return;
-    const n = document.createElement('div');
-    n.className = 'page-num';
-    n.textContent = (i + 1) + ' / ' + total;
-    s.appendChild(n);
-  });
-});
-</script>
+<script src="../../../../reference/deck.js"></script>
 </body>
 </html>

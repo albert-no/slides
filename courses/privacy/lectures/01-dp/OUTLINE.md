@@ -382,39 +382,60 @@ Diagrams: query→model flow (4, `:88`), population-vs-empirical chain (5, `:107
 
 ## dp6-rdp.html
 
-**Topic:** KL-DP, Rényi divergence + limits, $(\alpha, \varepsilon)$-RDP, additive composition, conversion to $(\varepsilon, \delta)$, Gaussian mechanism via RDP with proof.
+**Topic:** The composition-accounting problem, KL-DP and its tail weakness, Rényi divergence (definition, worked Gaussian example, both limits with proofs, monotonicity), $(\alpha,\varepsilon)$-RDP with full proofs of post-processing / additive composition / conversion to $(\varepsilon,\delta)$, the pure-DP bridge lemma $D_\alpha \le 2\alpha\varepsilon^2$ with advanced composition rederived, and the Gaussian mechanism's exact RDP cost via complete-the-square.
 
-### Sections (21 slides)
+### Sections (56 slides)
 
 | Section | Slides | Line |
 |---|---|---|
-| Title / Contents | 1–2 | `:24-66` |
-| **01 — KL-DP** | 3–4 | `:69-92` |
-| | **Definition: KL-DP** | 4 | `:78` |
-| **02 — Rényi divergence** | 5–7 | `:95-126` |
-| | **Definition** | 6 | `:104` |
-| | Limits ($\alpha \to 1$, $\alpha \to \infty$) | 7 | `:117` |
-| **03 — RDP &amp; properties** | 8–13 | `:129-203` |
-| | **Definition: $(\alpha,\varepsilon)$-RDP** | 9 | `:138` |
-| | **Composition (additive in $\varepsilon$)** | 10 | `:152` |
-| | **Conversion to $(\varepsilon,\delta)$-DP** | 11 | `:166` |
-| | Lemma: $D_\infty \le \varepsilon \Rightarrow D_\alpha \le 2\alpha\varepsilon^2$ | 12 | `:179` |
-| | Advanced composition via RDP | 13 | `:191` |
-| **04 — Gaussian via RDP** | 14–19 | `:205-285` |
-| | **Theorem (Gaussian RDP)** | 15 | `:215` |
-| | Conversion to $(\varepsilon,\delta)$ | 16 | `:229` |
-| | Proof steps 1–3 | 17–19 | `:243, :257, :269` |
-| Recap + closer | 20–21 | `:288-310` |
+| Title / Contents | 1–2 | `:47-69` |
+| **01 — The accounting problem** (setting, advanced-composition bookkeeping, curve-vs-add diagram, ledger wishlist) | 3–7 | `:72-165` |
+| | Two ways to keep the books (SVG) | 6 | `:116` |
+| **02 — KL divergence privacy** (loss RV, definition, average-vs-worst figure, tail counterexample) | 8–12 | `:168-230` |
+| | **Definition: KL-DP** | 10 | `:187` |
+| | Weakness: tiny mean, catastrophic tail ($0.002$ vs $e^{20}$) | 12 | `:220` |
+| **03 — Rényi divergence** (definition, log-MGF identity, worked example, both limits + proofs, monotonicity) | 13–21 | `:233-355` |
+| | **Definition: $D_\alpha$** | 14 | `:241` |
+| | Log-MGF identity $e^{(\alpha-1)D_\alpha} = \mathbb{E}_P[e^{(\alpha-1)L}]$ | 15 | `:254` |
+| | Worked example: two shifted Gaussians, anchor table | 16 | `:264` |
+| | Lemma + proof: $\alpha \to 1$ gives KL (L'Hôpital) | 17–18 | `:282, :294` |
+| | Lemma + proof: $\alpha \to \infty$ gives max divergence (squeeze) | 19–20 | `:308, :320` |
+| | Monotonicity in $\alpha$ (SVG plot) | 21 | `:333` |
+| **04 — Rényi differential privacy** (definition, spectrum, three properties with full proofs, bridge lemma, advanced composition rederived) | 22–42 | `:358-622` |
+| | **Definition: $(\alpha,\varepsilon)$-RDP** | 23 | `:366` |
+| | The $\alpha$ spectrum (SVG axis) | 24 | `:380` |
+| | **Post-processing** (DPI statement; mixture + Jensen proof) | 25–27 | `:402, :415, :425` |
+| | **Composition (additive)** (statement; factorize + bound proof; $k$-fold corollary) | 28–30 | `:438, :450, :460` |
+| | **Conversion to $(\varepsilon,\delta)$-DP** (statement; split / Markov / threshold proof; numeric example) | 31–36 | `:476, :490, :505, :516, :527, :538` |
+| | **Bridge lemma: $\varepsilon$-DP $\Rightarrow$ $D_\alpha \le 2\alpha\varepsilon^2$** (Hoeffding + symmetrized-KL proof) | 37–40 | `:548, :562, :573, :586` |
+| | Advanced composition rederived; $\sqrt{k}$ law via AM–GM | 41–42 | `:597, :615` |
+| **05 — Gaussian mechanism via RDP** (recall, exact theorem, MGF intuition, complete-the-square proof, conversion, comparisons) | 43–54 | `:625-777` |
+| | **Theorem: Gaussian is exactly $(\alpha, \alpha\Delta^2/2\sigma^2)$-RDP** | 45 | `:647` |
+| | Intuition: Gaussian loss has Gaussian MGF | 46 | `:660` |
+| | Proof: setup / expand / complete square / constant / finish | 47–51 | `:671, :683, :696, :706, :720` |
+| | Optimize $\alpha$ for $(\varepsilon,\delta)$ (SVG trade-off plot) | 52 | `:733` |
+| | RDP matches classic rule (single shot) | 53 | `:757` |
+| | Where RDP wins: $T=1000$ composed Gaussians table ($124$ / $27$ / $3.2$) | 54 | `:767` |
+| Recap + closer | 55–56 | `:783-796` |
 
 ### Key theorems
 
 | Item | Line |
 |---|---|
-| Rényi divergence definition | `:107-109` |
-| $(\alpha,\varepsilon)$-RDP definition | `:141-143` |
-| Composition (additive) | `:155-157` |
-| Conversion to $(\varepsilon,\delta)$ | `:169-171` |
-| Gaussian RDP theorem | `:218-220` |
+| KL-DP definition | `:193` |
+| Rényi divergence definition | `:247` |
+| Log-MGF identity | `:258` |
+| Order-1 limit lemma (KL) | `:287` |
+| Order-$\infty$ limit lemma (max divergence) | `:313` |
+| $(\alpha,\varepsilon)$-RDP definition | `:372` |
+| Post-processing theorem (via DPI) | `:407-408` |
+| Composition theorem (additive) | `:443-444` |
+| Conversion to $(\varepsilon,\delta)$-DP | `:483` |
+| Bridge lemma ($D_\alpha \le 2\alpha\varepsilon^2$) | `:555` |
+| Gaussian RDP theorem (Mironov 2017, equality) | `:653` |
+| Optimized Gaussian conversion $\varepsilon(\delta)$ | `:736-737` |
+
+Diagrams: curve-vs-add bookkeeping (slide 6), ledger pipeline chain (slide 7), average-vs-worst loss distribution (slide 11), monotonicity plot (slide 21), $\alpha$ spectrum axis (slide 24), advanced-composition pipeline chain (slide 41), $\alpha$-optimization trade-off plot (slide 52). Citations: Mironov, "Rényi Differential Privacy", CSF 2017; Dwork–Roth 2014.
 
 ---
 

@@ -60,6 +60,14 @@ Cause: KaTeX auto-render walks the HTML DOM but doesn't descend into SVG text no
 
 Fix: build diagram structure in HTML (flex/grid layout, div boxes, CSS-styled circles) with a thin SVG overlay for arrows only. Pattern: `.fl4-*` (slide 4), `.ldp-*` (slide 9), `.rdm-*` (slide 30) in `privacy/lectures/01-dp/dp8-fl.html`. For math labels over a full SVG figure, use absolute-positioned HTML spans — recipe in `DESIGN_SYSTEM.md` → Recipes → KaTeX overlays on SVG.
 
+### Greek letters in table headers turn capital → `text-transform: uppercase` on `<th>`
+
+Symptom: math inside a `<th>` is corrupted — `$\gamma$` shows as Γ, `$\varepsilon$` as E, `$k\varepsilon$` as "KE".
+
+Cause: canonical `th` styling applies `text-transform: uppercase`, and the transform reaches into the KaTeX spans rendered inside the header cell.
+
+Fix (any of, in order of preference): use plain-word column headers ("epsilon", "budget") and state the symbols in a `.muted` paragraph above the table; or move the parameterization out of the header row entirely; or wrap the math in `<span style="text-transform:none">…</span>` inside the `<th>`. Math in `<td>` body cells is unaffected.
+
 ### Italic prose collapses spaces → Yonsei has no italic face
 
 Symptom: a phrase rendered with `<i>` or inline `font-style: italic` reads as glued letters (e.g. "all positions" → "allpositions").

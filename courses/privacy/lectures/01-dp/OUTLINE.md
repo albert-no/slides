@@ -131,42 +131,83 @@ Diagrams: respondent flow chain (slide 4), coin-tree SVG (5), $\gamma$-spectrum 
 
 ## dp3-properties.html
 
-**Topic:** Composition, post-processing, group privacy, subsampling amplification (with proof), critique of additive DP, DP $k$-means as a worked example.
+**Topic:** The algebra of $\varepsilon$ — adaptive composition, post-processing immunity, group privacy, and subsampling amplification, each with a complete multi-slide proof and the key trick named on-slide; why additive $\delta$-DP fails (two worked counterexamples); DP $k$-means as the capstone worked example combining Laplace, composition, and post-processing.
 
-### Sections (27 slides)
+### Sections (55 slides)
 
 | Section | Slides | Line |
 |---|---|---|
-| Title / Contents | 1–2 | `:33-57` |
-| **01 — Composition** | 3–6 | `:58-102` |
-| | **Basic composition + proof** | 4–5 | `:66, :77` |
-| | $k$-fold composition | 6 | `:88` |
-| **02 — Post-processing immunity** | 7–9 | `:103-137` |
-| | **Theorem + proof** | 8 | `:111` |
-| | Why it matters | 9 | `:126` |
-| **03 — Group privacy &amp; subsampling** | 10–16 | `:138-219` |
-| | **Group privacy: $t\varepsilon$** | 11 | `:146` |
-| | **Subsampling: $\varepsilon' = \ln(1+q(e^\varepsilon-1))$** | 12 | `:161` |
-| | Subsampling proof (setup → 3 inequalities → conclusion) | 13–15 | `:174, :185, :196` |
-| **04 — Why not additive DP?** | 17–20 | `:220-270` |
-| | Counterexample 1 (leak all w.p. $\delta$) | 19 | `:241` |
-| | Counterexample 2 (per-element leakage) | 20 | `:257` |
-| **05 — DP $k$-means** | 21–25 | `:271-343` |
-| | Standard $k$-means algorithm | 22 | `:279` |
-| | **DP $k$-means algorithm** | 23 | `:295` |
-| | **Theorem: DP $k$-means is $\varepsilon$-DP + proof** | 24 | `:312` |
-| | Remarks (Gaussian variant) | 25 | `:331` |
-| Recap + closer | 26–27 | `:344-364` |
+| Title / Contents | 1–2 | `:52-76` |
+| **01 — Basic composition** | 3–10 | `:77-214` |
+| | Recall card ($\varepsilon$-DP, Laplace) + roadmap | 4 | `:86` |
+| | Budget-bar intuition (SVG) | 5 | `:103` |
+| | Adaptive-queries setting (SVG, $a_1$ feeds $\mathcal M_2$) | 6 | `:128` |
+| | **Theorem: adaptive composition ($\varepsilon_1+\varepsilon_2$)** | 7 | `:160` |
+| | Proof: factorize joint → bound each factor | 8–9 | `:173, :186` |
+| | $k$-fold corollary + budget table | 10 | `:199` |
+| **02 — Post-processing immunity** | 11–16 | `:215-311` |
+| | Pipeline intuition (flow diagram) | 12 | `:224` |
+| | **Theorem: $f \circ \mathcal M$ is $\varepsilon$-DP** | 13 | `:244` |
+| | Proof: deterministic $f$ pulls back the event (preimage SVG) | 14 | `:257` |
+| | Proof: randomized $f$ is a mixture | 15 | `:283` |
+| | No privacy laundering | 16 | `:295` |
+| **03 — Group privacy** | 17–20 | `:312-365` |
+| | **Theorem: $t$ records cost $t\varepsilon$** | 18 | `:321` |
+| | Proof: telescoping chain (hop diagram) | 19 | `:334` |
+| | Scaling table (household anchor) | 20 | `:352` |
+| **04 — Subsampling amplification** | 21–34 | `:366-571` |
+| | Crowd intuition (hiding in the sample, SVG) | 22 | `:375` |
+| | Two-worlds heuristic | 23 | `:400` |
+| | **Definition: subsampled mechanism** (flow diagram) | 24 | `:412` |
+| | **Theorem: $\varepsilon' = \ln(1+q(e^{\varepsilon}-1))$** | 25 | `:431` |
+| | Proof plan (split / compare / blend / rearrange) | 26 | `:444` |
+| | Proof: condition on membership ($A$, $B$) | 27 | `:459` |
+| | Proof: three comparisons (i)–(iii) | 28 | `:469` |
+| | Proof: coupling for (ii) (cell-pairing diagram) | 29 | `:482` |
+| | **Proof: convex-combination trick, $\alpha^\star = q+(1-q)e^{-\varepsilon}$** | 30 | `:502` |
+| | Proof: rearrange and conclude | 31 | `:513` |
+| | Proof recap chain | 32 | `:526` |
+| | Numbers table ($q=0.01 \Rightarrow \approx 60\times$) | 33 | `:539` |
+| | Minibatch relevance (DP training pipeline) | 34 | `:553` |
+| **05 — Why not additive DP?** | 35–43 | `:572-705` |
+| | **Definition: additive $\delta$-DP** | 36 | `:581` |
+| | CE1: publish everything w.p. $\delta$ (branch SVG → verification → verdict) | 37–39 | `:597, :620, :632` |
+| | CE2: leak each record w.p. $\delta$ (cell strip → coupling → aggregate table) | 40–42 | `:645, :666, :676` |
+| | Moral: protect the tails | 43 | `:690` |
+| **06 — DP $k$-means** | 44–53 | `:706-854` |
+| | $k$-means objective recap (scatter SVG) | 45 | `:715` |
+| | Lloyd's algorithm | 46 | `:737` |
+| | What must be noised (counts + sums flow) | 47 | `:752` |
+| | **DP $k$-means algorithm (NRS 2007)** | 48 | `:772` |
+| | **Theorem: DP $k$-means is $\varepsilon$-DP** | 49 | `:788` |
+| | Proof: counts sensitivity $\le 2$ | 50 | `:804` |
+| | Proof: sums sensitivity $\le 2$ (domain bound) | 51 | `:818` |
+| | Proof: compose $2T$ releases, division free | 52 | `:828` |
+| | Remarks + noise-scale table | 53 | `:838` |
+| Recap (property/guarantee/trick table) + closer | 54–55 | `:857-874` |
 
 ### Key theorems
 
-| Item | Line |
-|---|---|
-| Basic composition | `:69-71` |
-| Post-processing theorem | `:114-116` |
-| Group privacy | `:149-151` |
-| Subsampling amplification formula | `:168-170` |
-| DP $k$-means privacy theorem | `:315-317` |
+| Item | Slide(s) | Line |
+|---|---|---|
+| Theorem (adaptive composition): $(\mathcal M_1, \mathcal M_2(\cdot,\mathcal M_1))$ is $(\varepsilon_1+\varepsilon_2)$-DP | 7 | `:163-167` |
+| Proof of composition (density-factorization trick → bound each factor → sum over $T$) | 8–9 | `:173-197` |
+| Corollary: $k$-fold composition costs $\sum_i \varepsilon_i$ | 10 | `:202-205` |
+| Theorem (post-processing immunity): $f \circ \mathcal M$ is $\varepsilon$-DP, $f$ arbitrary | 13 | `:247-251` |
+| Proof of post-processing (preimage pull-back; randomized $f$ = mixture over seeds) | 14–15 | `:257-293` |
+| Theorem (group privacy): $\le t$ records $\Rightarrow$ factor $e^{t\varepsilon}$ | 18 | `:325-329` |
+| Proof of group privacy (telescoping trick: $t$ single-record hops) | 19 | `:334-349` |
+| Definition: subsampled mechanism ($q = m/n$, no replacement) | 24 | `:415-418` |
+| Theorem (amplification): $\varepsilon' = \ln(1+q(e^{\varepsilon}-1)) \approx q\varepsilon$ | 25 | `:434-438` |
+| Proof of amplification (condition on $1 \in I$ → three comparisons → coupling → convex-combination trick with $\alpha^\star = q+(1-q)e^{-\varepsilon}$ → rearrange; recap chain) | 26–32 | `:444-537` |
+| Definition: additive $\delta$-DP | 36 | `:584-588` |
+| CE1: publish-all-w.p.-$\delta$ satisfies $\delta$-additive DP, not $\varepsilon$-DP for any $\varepsilon$ | 37–39 | `:597-643` |
+| CE2: per-record leakage satisfies $\delta$-additive DP; someone leaks w.h.p. at useful $\delta \gtrsim 1/n$ | 40–42 | `:645-688` |
+| DP $k$-means algorithm ($\varepsilon' = \varepsilon/(2T)$; $n_j, a_j$ + Lap$(2/\varepsilon')$) | 48 | `:775-783` |
+| Theorem: DP $k$-means is $\varepsilon$-DP | 49 | `:791-794` |
+| Proof of $k$-means privacy (counts sensitivity 2 → sums sensitivity 2 via $\lVert x \rVert_1 \le 1$ → compose $2T$; division post-processing) | 50–52 | `:804-836` |
+
+Diagrams: budget-bar SVG (slide 5), adaptive-queries SVG (6), post-processing pipeline flow (12), preimage-mapping SVG (14), telescoping-chain hop diagram (19), crowd/sample SVG (22), subsampling flow (24), coupling cell-pairing strips (29), CE1 branch SVG (37), CE2 leak cell strip (40), $k$-means scatter SVG with assignment boundary (45), counts-and-sums noise flow (47), five numeric anchor tables (10, 20, 33, 42, 53), recap formula table (54). One TODO: real DP-$k$-means vs Lloyd cluster figure (slide 53, `:853`). Citations: DMNS TCC 2006 (composition), Dwork–Roth 2014 (post-processing, group privacy), NRS STOC 2007 ($k$-means). Authoritative math source: `tex/dp.tex:491–766`.
 
 ---
 

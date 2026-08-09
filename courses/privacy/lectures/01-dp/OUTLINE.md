@@ -60,47 +60,72 @@ Diagrams: roster table (slide 5), query cards (6), bit-vector cell strips (10, 1
 
 ## dp2-pure-dp.html
 
-**Topic:** Randomized response → $\varepsilon$-DP definition → Laplace mechanism → DP selection (Exponential mechanism, Noisy Max). All major proofs included.
+**Topic:** Randomized response (Warner 1965) with full estimation theory → $\varepsilon$-DP definition with hypothesis-testing reading → Laplace mechanism → DP selection (Exponential mechanism, Noisy Max). Every theorem carries a complete multi-slide proof with the key trick named on-slide.
 
-### Sections (32 slides)
+### Sections (62 slides)
 
 | Section | Slides | Line |
 |---|---|---|
-| Title / Contents | 1–2 | `:29-52` |
-| **01 — Randomized response** | 3–8 | `:53-131` |
-| | RR mechanism, debiased estimator, variance | 4–6 | `:61-95` |
-| | **Chebyshev / sample complexity** | 7 | `:97` |
-| | Trade-off summary | 8 | `:111` |
-| **02 — $\varepsilon$-DP definition** | 9–16 | `:132-229` |
-| | Neighboring datasets | 10 | `:140` |
-| | **Definition: $\varepsilon$-DP** | 11 | `:152` |
-| | Why randomization is necessary | 12 | `:165` |
-| | Hypothesis-testing interpretation | 14 | `:191` |
-| | Covid example (FP/FN) | 15 | `:205` |
-| | **RR is $4\gamma$-DP** | 16 | `:220` |
-| **03 — Laplace mechanism** | 17–21 | `:230-290` |
-| | **$\ell_1$ sensitivity** | 18 | `:238` |
-| | **Laplace mechanism + proof** | 19–20 | `:254, :266` |
-| | Noise variance | 21 | `:279` |
-| **04 — Selection: EM &amp; Noisy Max** | 22–30 | `:291-418` |
-| | Motivating selection (voting, pricing) | 23 | `:299` |
-| | **Definition: Exponential mechanism** | 24 | `:316` |
-| | **EM utility (high-prob, expectation)** + proofs | 25–26 | `:328, :344` |
-| | Example: most-frequent item | 27 | `:360` |
-| | **Definition: Noisy Max** | 28 | `:373` |
-| | **Noisy Max is $\varepsilon$-DP + proof** | 29 | `:389` |
-| | Noisy Max utility + proof | 30 | `:403` |
+| Title / Contents | 1–2 | `:43-67` |
+| **01 — Randomized response** | 3–13 | `:68-238` |
+| | Motivation (respondent flow, deniability) | 4 | `:76` |
+| | **RR mechanism (coin-tree)** | 5 | `:97` |
+| | Privacy dial $\gamma$ (spectrum) | 6 | `:121` |
+| | Mean → debiasing → estimator → variance | 7–10 | `:145, :160, :172, :182` |
+| | **Chebyshev lemma → sample complexity $n = \tfrac{1}{16\gamma^2\beta\alpha^2}$** | 11–12 | `:192, :205` |
+| | Trade-offs (50,000-respondent anchor) | 13 | `:218` |
+| **02 — $\varepsilon$-DP definition** | 14–27 | `:239-453` |
+| | Neighboring datasets (cell strip) | 15 | `:247` |
+| | **Definition: $\varepsilon$-DP** + two-sided reading | 16–17 | `:265, :278` |
+| | Why randomization is necessary | 18 | `:292` |
+| | Numerical anchors ($e^\varepsilon$ table) | 19 | `:305` |
+| | Hypothesis-testing view, forbidden-corner picture | 20–21 | `:320, :334` |
+| | Covid FP/FN aside | 22 | `:371` |
+| | **RR is $\varepsilon_\gamma$-DP, $\varepsilon_\gamma = \ln\frac{1/2+\gamma}{1/2-\gamma}$** + 3-slide proof + discussion | 23–27 | `:388, :405, :414, :427, :437` |
+| **03 — Laplace mechanism** | 28–38 | `:454-615` |
+| | **$\ell_1$ sensitivity** + worked examples (count, mean) | 29–30 | `:462, :478` |
+| | Laplace distribution (pdf curve, tail) | 31 | `:498` |
+| | **Laplace mechanism (DMNS 2006)** + densities picture | 32–33 | `:518, :532` |
+| | Proof: product density → triangle inequality → calibrate + integrate | 34–36 | `:559, :571, :582` |
+| | Accuracy ($\ln 100 \approx 4.6$ anchor); central vs local | 37–38 | `:592, :602` |
+| **04 — Exponential mechanism** | 39–49 | `:616-766` |
+| | Selection problems (voting, pricing); why output noise fails (revenue cliff) | 40–41 | `:624, :644` |
+| | **Definition: EM (McSherry–Talwar 2007)** | 42 | `:667` |
+| | **EM is $\varepsilon$-DP** + proof (score factor, normalizer factor) | 43–45 | `:680, :693, :702` |
+| | **EM utility (high-prob + expectation)** + proofs | 46–48 | `:711, :728, :741` |
+| | Numbers: voting with 100 candidates (36.8 votes) | 49 | `:754` |
+| **05 — Noisy Max** | 50–60 | `:767-912` |
+| | **Noisy Max algorithm ($\mathrm{Exp}(2\Delta/\varepsilon)$ noise)** | 51 | `:774` |
+| | **NM is $\varepsilon$-DP** + strategy + intuition (freeze other noises) | 52–53 | `:789, :806` |
+| | Proof: condition → threshold shift $\le 2\Delta$ → tail pays $e^\varepsilon$ → integrate out | 54–57 | `:828, :839, :850, :863` |
+| | **NM utility** + union-bound proof | 58–59 | `:873, :886` |
+| | EM vs NM comparison table | 60 | `:898` |
+| Recap + Q&A | 61–62 | `:913-935` |
 
 ### Key theorems
 
-| Item | Line |
-|---|---|
-| $\varepsilon$-DP definition | `:155-157` |
-| Laplace mechanism | `:258-260` |
-| Laplace mechanism proof | `:268-275` |
-| Exponential mechanism definition | `:319-321` |
-| EM high-prob utility | `:332-334` |
-| Noisy Max DP proof | `:393-401` |
+| Item | Slide(s) | Line |
+|---|---|---|
+| Def. randomized response ($\Pr[Y_i = D_i] = \tfrac12 + \gamma$) | 5 | `:100-108` |
+| Lemma (Chebyshev) | 11 | `:196-199` |
+| Claim: RR sample complexity $n = \frac{1}{16\gamma^2\beta\alpha^2}$ for $(\alpha,\beta)$ | 12 | `:209-212` |
+| Def. neighboring datasets (replace; add/delete variant) | 15 | `:258-262` |
+| Def. $\varepsilon$-DP | 16 | `:269-273` |
+| Theorem: RR is $\varepsilon_\gamma$-DP, $\varepsilon_\gamma = \ln\frac{1/2+\gamma}{1/2-\gamma} = 4\gamma + O(\gamma^3)$ | 23 | `:392-398` |
+| Proof of RR privacy (cancellation → two-bit case table → points-to-events) | 24–26 | `:405-435` |
+| Def. $\ell_1$ sensitivity | 29 | `:467-472` |
+| Theorem: Laplace mechanism is $\varepsilon$-DP (DMNS 2006) | 32 | `:522-528` |
+| Proof of Laplace (product density → triangle inequality → calibrate + integrate; recap chain) | 34–36 | `:559-590` |
+| Laplace accuracy: $\Pr[|\text{err}| > \frac{\Delta_1}{\varepsilon}\ln\frac{1}{\beta}] = \beta$ | 37 | `:592-600` |
+| Def. exponential mechanism (Gibbs weights, $2\Delta$ exponent) | 42 | `:671-677` |
+| Theorem: EM is $\varepsilon$-DP + proof (score factor $e^{\varepsilon/2}$ × normalizer factor $e^{\varepsilon/2}$) | 43–45 | `:684-710` |
+| Theorem: EM utility, $\Pr[q(Y) < q_{\max} - \frac{2\Delta(\log d + t)}{\varepsilon}] \le e^{-t}$ + proof (bad set, benchmark vs $y^\star$) | 46–47 | `:715-740` |
+| Theorem: EM expected gap $\le \frac{2\Delta}{\varepsilon}(\log d + 1)$ (integrate-the-tail) | 48 | `:745-748` |
+| Noisy Max algorithm box | 51 | `:778-782` |
+| Theorem: NM is $\varepsilon$-DP + proof (condition on $Z_{-y}$, threshold $K(D)$ moves $\le 2\Delta$, exponential tail pays $e^\varepsilon$, integrate out) | 52–57 | `:793-871` |
+| Theorem: NM utility (same bound as EM) + union-bound proof | 58–59 | `:877-896` |
+
+Diagrams: respondent flow chain (slide 4), coin-tree SVG (5), $\gamma$-spectrum dial SVG (6), neighbor cell strips (15), forbidden-corner ROC SVG (21), Laplace pdf SVG (31), overlapping shifted densities SVG (33), revenue-cliff SVG (41), exponential-tail shift SVG with shaded bands (53). One TODO: real deployed-$\varepsilon$ figure (slide 19, `:316`). Authoritative math source: `tex/dp.tex`.
 
 ---
 

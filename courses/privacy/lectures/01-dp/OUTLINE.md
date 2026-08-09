@@ -213,40 +213,84 @@ Diagrams: budget-bar SVG (slide 5), adaptive-queries SVG (6), post-processing pi
 
 ## dp4-approximate-dp.html
 
-**Topic:** $(\varepsilon, \delta)$-DP definition, privacy-loss RV technique, truncated Laplace, Gaussian mechanism with full 1-D and multi-D proofs, properties of approximate DP.
+**Topic:** $(\varepsilon, \delta)$-DP definition and interpretation, privacy-loss RV technique with full tail-lemma proof, truncated Laplace, Gaussian mechanism with full 1-D and multi-D proofs, properties of approximate DP.
 
-### Sections (24 slides)
+### Sections (53 slides)
 
 | Section | Slides | Line |
 |---|---|---|
-| Title / Contents | 1–2 | `:29-52` |
-| **01 — $(\varepsilon,\delta)$-DP** | 3–7 | `:53-112` |
-| | **Definition: $(\varepsilon,\delta)$-DP** | 4 | `:61` |
-| | Interpretations | 5 | `:77` |
-| | **Privacy-loss random variable** | 6 | `:89` |
-| | Good/bad split proof technique | 7 | `:102` |
-| **02 — Truncated Laplace** | 8–9 | `:113-133` |
-| **03 — Gaussian mechanism** | 10–16 | `:134-221` |
-| | **Definition + theorem (Gaussian mechanism)** | 11 | `:142` |
-| | **Proof: 1-D privacy loss + tail bound** | 12–13 | `:158, :171` |
-| | Multi-dim lemma + proof | 14–15 | `:182, :193` |
-| | $\ell_2$ vs $\ell_1$ sensitivity | 16 | `:204` |
-| **04 — Properties of approx. DP** | 17–22 | `:222-295` |
-| | Post-processing + proof | 18 | `:230` |
-| | Basic composition | 19 | `:245` |
-| | Group privacy | 20 | `:259` |
-| | Subsampling amplification | 21 | `:271` |
-| | Many-iteration accounting (MA, RDP) | 22 | `:283` |
-| Recap + closer | 23–24 | `:296-314` |
+| Title / Contents | 1–2 | `:47-71` |
+| **01 — $(\varepsilon,\delta)$-DP** | 3–11 | `:72-230` |
+| | Recall pure DP + Laplace | 4 | `:80` |
+| | Gaussian noise breaks pure DP (tail SVG) | 5 | `:96` |
+| | **Definition: $(\varepsilon,\delta)$-DP** | 6 | `:118` |
+| | Ratio vs additive slack (numeric table) | 7 | `:134` |
+| | $\delta$-sliver picture (SVG) | 8 | `:160` |
+| | Interpretations (failure prob., ratio-outside-sliver) | 9 | `:187` |
+| | What $\delta$ does *not* promise (publish-all counterexample) | 10 | `:202` |
+| | Calibrating $\delta \ll 1/n$ ($n = 10^6$ anchor table) | 11 | `:215` |
+| **02 — The privacy-loss random variable** | 12–20 | `:231-353` |
+| | **Definition: privacy loss $I_{X,X'}(y)$, PLRV** | 13 | `:239` |
+| | Pure DP restated: $\sup_y \lvert I \rvert \le \varepsilon$ | 14 | `:255` |
+| | PLRV distribution picture (SVG) | 15 | `:273` |
+| | **Lemma: tail bound suffices for $(\varepsilon,\delta)$-DP** | 16 | `:293` |
+| | Proof: good/bad split | 17 | `:309` |
+| | Proof: decompose the event | 18 | `:320` |
+| | Proof: good piece, pointwise $\to$ setwise | 19 | `:332` |
+| | Proof recap chain | 20 | `:342` |
+| **03 — Truncated Laplace** | 21–27 | `:354-466` |
+| | Recall Laplace: unbounded tails force $\delta = 0$ cost | 22 | `:362` |
+| | Construction: truncate + renormalize (density SVG) | 23 | `:378` |
+| | **Mechanism + Theorem: $\tau \ge \Delta + (\Delta/\varepsilon)\ln(1/\delta)$** | 24 | `:401` |
+| | Where $\delta$ comes from (edge-sliver SVG) | 25 | `:417` |
+| | Proof sketch | 26 | `:440` |
+| | Laplace vs truncated comparison table | 27 | `:451` |
+| **04 — Gaussian mechanism** | 28–43 | `:467-703` |
+| | $\ell_2$ sensitivity definition | 29 | `:475` |
+| | **Mechanism + Theorem: $\sigma \ge \Delta_2\sqrt{2\ln(1.25/\delta)}/\varepsilon$** | 30 | `:490` |
+| | Shifted-Gaussians intuition picture (SVG) | 31 | `:507` |
+| | Proof roadmap (4-step algo list) | 32 | `:533` |
+| | Proof step 1: privacy loss of a shift | 33 | `:549` |
+| | **Proof step 2: complete the square** | 34 | `:561` |
+| | Proof: the loss is Gaussian, $I(Y) \sim \mathcal N(K^2/2\sigma^2, K^2/\sigma^2)$ | 35 | `:570` |
+| | Proof step 3: Gaussian tail bound | 36 | `:582` |
+| | Proof step 4: choosing $\sigma$ | 37 | `:595` |
+| | Proof recap chain | 38 | `:605` |
+| | **Lemma: projection $v \cdot Z \sim \mathcal N(0, \sigma^2 \lVert v \rVert^2)$** | 39 | `:617` |
+| | Multi-dim reduction to 1-D | 40 | `:630` |
+| | Projection picture (contour SVG) | 41 | `:641` |
+| | Worked example: $d = 10^4$ counting queries | 42 | `:669` |
+| | Why Gaussian wins: $\Delta_1 = d$ vs $\Delta_2 = \sqrt d$ (table) | 43 | `:687` |
+| **05 — Properties of approximate DP** | 44–51 | `:704-817` |
+| | **Theorem: post-processing** + preimage proof | 45 | `:712` |
+| | **Theorem: basic composition** + sketch | 46 | `:726` |
+| | $k$-fold composition (budget table) | 47 | `:744` |
+| | **Theorem: group privacy** | 48 | `:760` |
+| | Proof: telescoping hops (hop diagram) | 49 | `:773` |
+| | **Theorem: Poisson subsampling** | 50 | `:790` |
+| | Outlook: moments accountant, RDP | 51 | `:805` |
+| Recap (mechanism/guarantee/trick table) + closer | 52–53 | `:818-836` |
 
 ### Key theorems
 
-| Item | Line |
-|---|---|
-| $(\varepsilon,\delta)$-DP definition | `:64-66` |
-| Privacy-loss RV definition | `:92-94` |
-| Gaussian mechanism theorem | `:148-150` |
-| Multi-dim lemma | `:185-187` |
+| Item | Slide(s) | Line |
+|---|---|---|
+| Definition: $(\varepsilon,\delta)$-DP | 6 | `:121-125` |
+| Definition: privacy loss + PLRV $I_{X,X'}(Y)$ | 13 | `:242-247` |
+| Lemma (tail bound suffices): $\Pr[I \gt \varepsilon] \le \delta \Rightarrow (\varepsilon,\delta)$-DP | 16 | `:296-301` |
+| Proof of tail lemma (good/bad split → decompose → pointwise-to-setwise on the good piece; recap chain) | 17–20 | `:309-353` |
+| Truncated Laplace mechanism + theorem: $\tau \ge \Delta + (\Delta/\varepsilon)\ln(1/\delta)$ | 24 | `:404-413` |
+| Proof sketch of truncated Laplace (edge mass beyond $\tau - \Delta$ is the $\delta$) | 25–26 | `:417-450` |
+| Theorem (Gaussian mechanism): $\sigma \ge \Delta_2\sqrt{2\ln(1.25/\delta)}/\varepsilon$, $\varepsilon \in (0,1)$ | 30 | `:497-502` |
+| Proof of Gaussian mechanism, 1-D (loss of a shift → complete-the-square trick → $I(Y) \sim \mathcal N(K^2/2\sigma^2, K^2/\sigma^2)$ → Gaussian tail bound → choose $\sigma$; recap chain) | 33–38 | `:549-616` |
+| Lemma (projection): $v \cdot Z \sim \mathcal N(0, \sigma^2 \lVert v \rVert^2)$, rotation-invariance proof | 39 | `:620-628` |
+| Multi-dim reduction of the Gaussian proof to 1-D | 40 | `:630-640` |
+| Theorem (post-processing) + preimage pull-back proof | 45 | `:715-723` |
+| Theorem (basic composition): $(\varepsilon_1+\varepsilon_2, \delta_1+\delta_2)$ | 46 | `:729-732` |
+| Theorem (group privacy): $\big(t\varepsilon,\ \frac{e^{t\varepsilon}-1}{e^{\varepsilon}-1}\delta\big)$ + telescoping proof with geometric $\delta$ sum | 48–49 | `:763-789` |
+| Theorem (Poisson subsampling): $\varepsilon' = \ln(1+q(e^{\varepsilon}-1))$, $\delta' = q\delta$ | 50 | `:793-797` |
+
+Diagrams: Gaussian-tail SVG (slide 5, `:101`), $\delta$-sliver SVG (8, `:164`), PLRV distribution SVG (15, `:277`), truncated-density SVG (23, `:383`), edge-sliver SVG (25, `:421`), shifted-Gaussians SVG (31, `:511`), contour-projection SVG (41, `:645`); proof-roadmap algo list (32, `:536`) and composition sketch (46, `:733`); telescoping hop diagram (49, `:776`); recap chains via stacked math (20, 38); six numeric tables (7 ratio-vs-additive, 9 interpretations, 11 $\delta$-calibration, 27 Laplace-vs-truncated, 43 $\ell_1$-vs-$\ell_2$, 47 $k$-fold budgets). Citations: Dwork, Kenthapadi, McSherry, Mironov, Naor EUROCRYPT 2006 (definition); Dwork–Roth 2014 (Gaussian mechanism, group privacy); Abadi et al. CCS 2016 + Mironov CSF 2017 (outlook). Authoritative math source: `tex/dp.tex:974–1157`.
 
 ---
 

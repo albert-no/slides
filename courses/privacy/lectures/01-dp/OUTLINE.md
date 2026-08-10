@@ -493,7 +493,7 @@ Updated outline section for the leaf `OUTLINE.md` (do not merge automatically; l
 
 ## Companion files
 
-None. No `-note.html` or `tech.html` for this deck yet.
+None. No speaker note or technical supplement for this deck yet.
 
 ---
 

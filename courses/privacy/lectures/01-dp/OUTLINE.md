@@ -505,54 +505,60 @@ None. No speaker note or technical supplement for this deck yet.
 
 | Section | Slide | Line |
 |---|---|---|
-| Title / Contents | | `:1-250` |
-| **01 — FL & mean estimation** | | `:255-360` |
+| Title / Contents | | `:1-252` |
+| **01 — FL & mean estimation** | | `:255-361` |
 | | Federated learning (4-step diagram) | `:265` |
 | | Three challenges in FL (compress, privacy, utility) | `:325` |
 | | **Core primitive: $\hat\mu = \frac{1}{n}\sum x_i$ with bits + LDP + low MSE** | `:348` |
-| **02 — LDP vs Central DP** | | `:364-574` |
-| | **Definition: $(\varepsilon,\delta)$-DP (Dwork et al. 2006)** | `:374, :377` |
+| **02 — LDP vs Central DP** | | `:364-601` |
+| | **Definition: $(\varepsilon,\delta)$-DP (Dwork et al. 2006)** | `:374, :378` |
 | | Local vs central DP comparison | `:393` |
 | | Central trust bar | `:399` |
 | | LDP trust bar (untrusted server) | `:427` |
-| | **Definition: LDP (density-ratio form)** | `:460, :465` |
+| | **Definition: LDP (density-ratio form)** | `:460, :464` |
 | | **LDP mean estimation: minimax rate $\Theta(d/(n\min(\varepsilon, \varepsilon^2)))$ (DJW 2013)** | `:483, :488` |
-| | Gaussian mechanism is suboptimal | `:501` |
-| | **PrivUnit (Bhowmick et al. 2018): spherical-cap, optimal constant** (cols layout) | `:523, :529` |
-| | Missing axis: communication / finite bits | `:548` |
-| **03 — Exact optimality (NeurIPS 2023)** | | `:576-827` |
-| | Problem setup (jointly optimize rate, utility, privacy) | `:586` |
-| | LDP with shared randomness (seed U public) | `:617` |
-| | **Result I — canonical protocols** (single encoder/decoder, unbiased) | `:658, :661` |
-| | **Result II — codebook schemes are optimal** | `:678, :681` |
-| | **Result III — RRSC: rotationally symmetric simplex codebook** | `:694, :699` |
-| | **Result IV — k-closest encoding is optimal** (two-level density) | `:743, :748` |
-| | RRSC → PrivUnit as M→∞ | `:760` |
-| | Unified framework (SQKR, FT21, MMRC vs RRSC) | `:778` |
-| | Experiments | `:804` |
-| | Open question: optimal among all protocols? | `:816` |
-| **04 — DP in modern ML** | | `:832-1009` |
-| | DP-SGD pipeline (clip + noise + accounting) | `:842` |
-| | **DP-Diffusion (Ghalebikesabi et al. 2023)** — public pretrain, private FT | `:857` |
-| | **DP-RDM (Lebensold et al. 2024)** — privatize retrieval | `:883` |
-| | DP-RDM pipeline diagram + SGM (inline) | `:910` |
-| | DP-RDM intuition (privacy boundary, λ knob) | `:964` |
-| | DP at realistic scale | `:985` |
-| | Q&A | `:1012` |
+| | Reading the minimax rate ($1/n$ × per-report variance; ε vs ε² regimes; numeric anchor) | `:501, :504` |
+| | Gaussian mechanism is suboptimal (constant-factor gap) | `:516` |
+| | **PrivUnit (Bhowmick et al. 2018): spherical-cap, optimal constant** (cols layout) | `:539, :544` |
+| | PrivUnit: unbiasing + exact error (density-ratio constraint, $m$, $1/m^2-1$) | `:564, :568` |
+| | Missing axis: communication / finite bits | `:577` |
+| **03 — Exact optimality (NeurIPS 2023)** | | `:605-870` |
+| | Problem setup (jointly optimize rate, utility, privacy) | `:615` |
+| | LDP with shared randomness (seed U public) | `:646` |
+| | **Result I — canonical protocols** (single encoder/decoder, unbiased) | `:687, :691` |
+| | **Result II — codebook schemes are optimal** | `:707, :711` |
+| | **Result III — RRSC: rotationally symmetric simplex codebook** | `:723, :729` |
+| | **Result IV — k-closest encoding is optimal** (two-level density) | `:772, :777` |
+| | Why k-closest: alignment identity ($r = 1/\mathbb{E}\langle As_m, v\rangle$, error $r^2-1$) | `:789, :793` |
+| | RRSC → PrivUnit as M→∞ | `:802` |
+| | Unified framework (SQKR, FT21, MMRC vs RRSC) | `:820` |
+| | Experiments | `:846` |
+| | Open question: optimal among all protocols? | `:858` |
+| **04 — DP in modern ML** | | `:874-1055` |
+| | DP-SGD pipeline (clip + noise + accounting) | `:884` |
+| | **DP-Diffusion (Ghalebikesabi et al. 2023)** — public pretrain, private FT | `:899` |
+| | **DP-RDM (Lebensold et al. 2024)** — privatize retrieval | `:925` |
+| | DP-RDM pipeline diagram + SGM (inline) | `:952` |
+| | DP-RDM intuition (privacy boundary, λ knob) | `:1006` |
+| | DP at realistic scale | `:1031` |
+| | Q&A | `:1058` |
 
 ### Key theorems / formulas
 
 | Item | Line |
 |---|---|
-| (ε,δ)-DP definition | `:377-379` |
-| LDP definition (density ratio ≤ e^ε) | `:465-466` |
+| (ε,δ)-DP definition | `:378-380` |
+| LDP definition (density ratio ≤ e^ε) | `:464-466` |
 | LDP minimax rate `Θ(d/(n min(ε,ε²)))` | `:488-490` |
-| PrivUnit spherical-cap mechanism | `:529-531` |
-| Result I: canonical protocols | `:661-668` |
-| Result II: codebook optimality | `:681-683` |
-| Result III: RRSC (Haar-rotated simplex) | `:699-702` |
-| Result IV: k-closest two-level density | `:748-749` |
-| Sampled Gaussian Mechanism (inline highlight) | `:953-955` |
+| Minimax rate decomposition (1/n × d/min(ε,ε²)) | `:504` |
+| PrivUnit spherical-cap mechanism | `:544-547` |
+| PrivUnit unbiasing: ratio constraint, $m$, error $1/m^2-1$ | `:568-571` |
+| Result I: canonical protocols | `:690-698` |
+| Result II: codebook optimality | `:711-712` |
+| Result III: RRSC (Haar-rotated simplex) | `:729-730` |
+| Result IV: k-closest two-level density | `:777-778` |
+| Alignment identity + error $r^2-1$ | `:793-796` |
+| Sampled Gaussian Mechanism (inline highlight) | `:998-1000` |
 
 ## dp-fl.txt
 

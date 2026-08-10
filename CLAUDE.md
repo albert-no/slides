@@ -83,6 +83,15 @@ For Marp, copy `template.md` and run `marp <file>.md --pdf`.
 
 Steps 2–5 assume Chrome, `pdftoppm`, and `python3` exist. **Attempt the real tools first** — they are the canonical verification loop. If a tool is *confirmed* missing and uninstallable (`command -v google-chrome pdftoppm python3 mutool convert gs` all come up empty), fall back to `DESIGN_SYSTEM.md` → **Verifying without the toolchain (no-render fallback)**: slide map by grep, overflow by Vertical-budget arithmetic, lint checks by targeted grep, outline pointers by `sed -n '<N>p'`. When you ship work verified only that way, **say so explicitly** in your report and recommend a real render/audit once tooling is available — the fallback cannot catch visual overlap, squashed math spacing, or drifted SVG overlays.
 
+## Agent workflow (token economy)
+
+Rules for AI-agent work in this repo, from the 2026-08 token audit of the 01-dp revision (screenshot re-reads and repeated doc reads dominated cost; diagram generation and linting were negligible):
+
+- **One agent at a time.** A slide series is revised strictly sequentially — a single agent working one deck to completion before the next. Never launch parallel agents on the same series; a killed parallel wave is pure duplicate cost.
+- **Audit incrementally.** The first visual pass over a deck reads every slide once. Every later pass re-renders (`pdftoppm -f N -l M`) and re-reads **only the slides changed since the last pass** — never the whole deck after each fix.
+- **Low-DPI audit renders.** Screenshot audits check style (overflow, overlap, line breaks, squashed math), not typography detail — render at `-r 60`. Re-render a single page at `-r 150` only when fine text detail is genuinely in question.
+- **Read the rule docs once.** Read `DESIGN_SYSTEM.md` and `GOTCHAS.md` at most once per session, navigating by the Quick-reference table; re-open a specific section by grep rather than re-reading the whole file.
+
 ## Screenshot audit (on request)
 
 The lint script catches structural issues (unknown classes, hardcoded colors) but not visual ones (overflow, overlap, awkward line breaks). For visual audits, use the **`/audit-and-edit-deck`** slash command (see `.claude/commands/audit-and-edit-deck.md`).

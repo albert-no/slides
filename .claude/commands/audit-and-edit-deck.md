@@ -30,9 +30,9 @@ If no path is given, default to the single `.html` deck under the current workin
    **The `--virtual-time-budget=30000 --run-all-compositor-stages-before-draw` flags are required.** Without them, a large deck's `<img>` slides can be snapshotted before images finish layout, so Chrome scales the whole page to ~55% (anchored top-left, wide margins) — a **render artifact, not a slide defect**. If you see a whole-slide shrink on an image slide, re-render with these flags before "fixing" the slide; also confirm in a manual `Cmd+P` (which never shows it). See `GOTCHAS.md` → "Image slide shrinks to ~55% in headless print".
 2. **Split into PNGs** (one per slide) via poppler:
    ```bash
-   pdftoppm -png -r 100 deck.pdf slide
+   pdftoppm -png -r 60 deck.pdf slide
    ```
-   If `pdftoppm` is missing, instruct the user to `brew install poppler`. Do not silently skip — and if it can't be installed at all, use the step-0 fallback rather than abandoning the audit.
+   **`-r 60` is deliberate** (token economy — see CLAUDE.md → Agent workflow): the audit checks style (overflow, overlap, line breaks, squashed math), which low-DPI renders show fine. Re-render a *single* suspicious page at `-r 150` (`pdftoppm -f <N> -l <N> -r 150`) only when fine text detail must be confirmed. If `pdftoppm` is missing, instruct the user to `brew install poppler`. Do not silently skip — and if it can't be installed at all, use the step-0 fallback rather than abandoning the audit.
 3. **Read each `slide-NN.png`** with the `Read` tool and inspect for:
    - **Figure or text overflow** past the 1280×720 slide rectangle.
    - **Brand-footer collision** — `.brand-footer` lives at bottom-left (~40 px reserved). A `.highlight`, `.cite`, or trailing prose ending inside that region counts as overlap.
@@ -45,7 +45,7 @@ If no path is given, default to the single `.html` deck under the current workin
    3. Trim redundant intro/outro lines, `→ Part X` cross-references, or duplicated framing.
    4. **Split the slide** into two consecutive slides — preferred over cramming.
    - **Never shrink type.** Priority 0 in `DESIGN_SYSTEM.md` is non-negotiable.
-5. **Re-render** the affected pages (`pdftoppm -f <N> -l <M>`) and re-read to confirm the fix.
+5. **Re-render only the affected pages** (`pdftoppm -f <N> -l <M> -r 60`) and re-read **only those PNGs** to confirm the fix. The full-deck read happens exactly once, in step 3 — never re-read the whole deck after a fix.
 6. After all fixes, run `python3 scripts/lint-deck.py <deck>` once and report.
 7. **Update `OUTLINE.md`** if any slide was added, split, removed, or reordered (line numbers must stay accurate).
 
@@ -68,6 +68,7 @@ If no issues found, say so explicitly — don't fabricate findings.
 ## Do not
 
 - Shrink type, compress vertical rhythm, or pad with `.tiny` / `.small` to make content fit. Split the slide instead.
+- Re-read slides that haven't changed since the last read, or render fix-loop pages above `-r 60` without a concrete reason.
 - Silently skip slides because the tool errored. Surface the error.
 - Edit `-note.html` companion files unless the user explicitly asks.
 - Touch the canonical `reference/` files.

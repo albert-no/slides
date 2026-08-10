@@ -439,32 +439,61 @@ Diagrams: curve-vs-add bookkeeping (slide 6), ledger pipeline chain (slide 7), a
 
 ---
 
-## dp7-ml-paradigms.html
+# dp7-ml-paradigms.html — DP Paradigms in ML and PATE (47 slides)
 
-**Topic:** Three DP-ERM perturbation strategies (output / objective / gradient); Input-DP vs Inference-DP vs Model-DP; PATE three-phase architecture with privacy accounting and trade-offs.
+Updated outline section for the leaf `OUTLINE.md` (do not merge automatically; line numbers verified against the current file).
 
-### Sections (20 slides)
+## Deck section table
 
-| Section | Slides | Line |
-|---|---|---|
-| Title / Contents | 1–2 | `:23-66` |
-| **01 — Where to inject noise?** | 3–4 | `:69-95` |
-| | Three perturbation strategies | 4 | `:78` |
-| **02 — Privacy boundary** | 5–8 | `:97-141` |
-| | Input perturbation / Local DP | 6 | `:106` |
-| | Inference DP + critical flaw | 7 | `:118` |
-| | **Model DP (Global DP) — the goal** | 8 | `:131` |
-| **03 — PATE** | 9–14 | `:143-220` |
-| | PATE intuition (consensus) | 10 | `:151` |
-| | Phase 1 — teacher ensemble | 11 | `:164` |
-| | Phase 2 — noisy aggregation | 12 | `:178` |
-| | Phase 3 — student model | 13 | `:192` |
-| | Pipeline diagram | 14 | `:207` |
-| **04 — Accounting &amp; trade-offs** | 15–18 | `:223-273` |
-| | Privacy accounting (composition vs RDP) | 16 | `:231` |
-| | Advantages | 17 | `:246` |
-| | Limitations | 18 | `:258` |
-| Recap + closer | 19–20 | `:275-292` |
+| # | Section | Slides | Lines |
+|---|---------|--------|-------|
+| — | Title / Contents | 1–2 | 70–94 |
+| 01 | Where to inject noise? (output / objective / gradient perturbation) | 3–15 | 95–311 |
+| 02 | The privacy boundary (input / inference / model DP) | 16–23 | 312–460 |
+| 03 | PATE (teachers, noisy votes, student) | 24–35 | 461–678 |
+| 04 | PATE privacy accounting | 36–41 | 679–775 |
+| 05 | Trade-offs (PATE vs DP-SGD) | 42–46 | 776–839 |
+| — | Closer (Q&A, .end-slide no-footer) | 47 | 840–845 |
+
+## Key statements (with line numbers)
+
+- Recall (private ERM), $L(w;X)=\frac1n\sum\ell(w;z_i)$, per-record move $\Delta_\ell/n$ — line 108
+- Definition (output/parameter perturbation), $\Delta_{\arg\min}$, $Z\sim\mathrm{Lap}(\Delta_{\arg\min}/\varepsilon)^{\otimes d}$ — line 155
+- Mean-vs-median micro-example: squared loss $\Delta=1/n$ vs absolute loss $\Delta_{\arg\min}=1$ — lines 195–207
+- Mechanism (private mean), $\bar z+\mathrm{Lap}(\frac{1}{n\varepsilon})$ is $\varepsilon$-DP — line 213
+- Definition (objective perturbation), $\hat w=\arg\min_w[L(w;X)+\langle b,w\rangle]$; Chaudhuri–Monteleoni–Sarwate JMLR 2011 — line 228
+- Recall (DP-SGD), $\sigma \ge 2G\sqrt{2T\log(1/\delta)}/(n\varepsilon)$; Abadi et al. CCS 2016 — line 256
+- Excess risk for convex private ERM: $O(d\cdot\ln(1/\delta)/(n\varepsilon))$ — lines 299–311
+- Definition (input perturbation, local DP) — line 369; Recall (randomized response, $\varepsilon_\gamma=\ln\frac{1/2+\gamma}{1/2-\gamma}$) — line 375
+- Definition (inference DP, per-query output perturbation), $M_x(X)=f_{A(X)}(x)+Z$, $\Delta_x$ — line 386
+- Budget-exhaustion table ($k$ queries at $\varepsilon_0=0.1$ → $k\varepsilon_0$) — lines 397–414
+- Definition (model DP, global DP), training map $M:X\mapsto\theta$ — line 420
+- Recall (post-processing immunity) — line 435; Proposition (unlimited queries): adaptive $g(\theta)$ stays $(\varepsilon,\delta)$-DP — line 439
+- Paradigm taxonomy table (mechanism / neighboring pair / guarantee covers) — lines 446–460
+- PATE Phase 1, Definition (teacher ensemble), disjoint shards $X=X_1\sqcup\cdots\sqcup X_n$ — line 509; Papernot et al. ICLR 2017 cite — lines 483–484
+- Vote histogram $v_y(x)=|\{i: T_i(x)=y\}|$, sensitivity $\lVert v-v'\rVert_\infty\le 1$ — lines 533–547
+- Definition (noisy argmax aggregation), $\tilde v_y=v_y(x)+\mathrm{Lap}(1/\varepsilon_0)$; PATE-G Gaussian variant — line 554
+- Recall (Noisy Max) — line 566; Proposition (per-query cost): each released label is $2\varepsilon_0$-DP — line 570; proof sketch via threshold argument — lines 576–591
+- Phase 3 student distillation; public-pool standing assumption — lines 623–637
+- PATE mechanism $M_{\mathrm{PATE}}(X)=(\hat y(x_1^{\mathrm{pub}}),\dots,\hat y(x_m^{\mathrm{pub}}))$ — lines 663–673; Corollary (student is model DP) — line 674
+- Advanced composition $\varepsilon'=\sqrt{2m\log(1/\delta')}\cdot\varepsilon_q+m\varepsilon_q(e^{\varepsilon_q}-1)$ — lines 706–718
+- Anchor numbers ($m=1000$, $\varepsilon_q=0.05$, $\delta'=10^{-5}$: basic 50, advanced ≈10.2) — lines 719–734
+- Claim (informal, data-dependent accounting: consensus margin → tiny RDP cost) — line 740
+- PATE vs DP-SGD comparison table — lines 811–826
+
+## Diagrams
+
+- Training-pipeline diagram with three injection points (slide 5, lines 115–149)
+- Flat-valley vs strong-curvature SVG (argmin sensitivity, slide 7, lines 164–194)
+- Three-barrier rows: input / inference / model DP (slide 17, lines 320–363)
+- Teacher-voting consensus row (slide 26, lines 487–503); shard-cells diagram (slide 27)
+- Consensus vs contested vote-histogram SVG (slide 32, lines 592–622)
+- PATE full-pipeline row with "only privacy spend" under-label (slide 34, lines 638–662)
+- Accounting ledger and recipe chains (slides 37, 41)
+
+## Companion files
+
+None. No `-note.html` or `tech.html` for this deck yet.
 
 ---
 

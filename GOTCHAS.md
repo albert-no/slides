@@ -58,7 +58,15 @@ Symptom: math inside a diagram renders as `$g_1$` instead of italic *g* with a s
 
 Cause: KaTeX auto-render walks the HTML DOM but doesn't descend into SVG text nodes.
 
-Fix: build diagram structure in HTML (flex/grid layout, div boxes, CSS-styled circles) with a thin SVG overlay for arrows only. Pattern: `.fl4-*` (slide 4), `.ldp-*` (slide 9), `.rdm-*` (slide 30) in `privacy/lectures/01-dp/dp8-fl.html`. For math labels over a full SVG figure, use absolute-positioned HTML spans — recipe in `DESIGN_SYSTEM.md` → Recipes → KaTeX overlays on SVG.
+Fix: build diagram structure in HTML (flex/grid layout, div boxes, CSS-styled circles) with a thin SVG overlay for arrows only. Pattern: `.fl4-*` (slide 4), `.ldp-*` (slide 9), `.rdm-*` (slide 30) in `courses/privacy/lectures/01-dp/dp8-fl.html`. For math labels over a full SVG figure, use absolute-positioned HTML spans — recipe in `DESIGN_SYSTEM.md` → Recipes → KaTeX overlays on SVG.
+
+### Greek letters in table headers turn capital → `text-transform: uppercase` on `<th>`
+
+Symptom: math inside a `<th>` is corrupted — `$\gamma$` shows as Γ, `$\varepsilon$` as E, `$k\varepsilon$` as "KE".
+
+Cause: canonical `th` styling applies `text-transform: uppercase`, and the transform reaches into the KaTeX spans rendered inside the header cell.
+
+Fix (any of, in order of preference): use plain-word column headers ("epsilon", "budget") and state the symbols in a `.muted` paragraph above the table; or move the parameterization out of the header row entirely; or wrap the math in `<span style="text-transform:none">…</span>` inside the `<th>`. Math in `<td>` body cells is unaffected.
 
 ### Italic prose collapses spaces → Yonsei has no italic face
 
@@ -211,7 +219,7 @@ Symptom: `"X — Y"` wraps with the dash on its own line, or one clause orphans 
 
 Cause: em-dash (`—`), en-dash (`–`), and double-hyphen (`--`) are strong wrap points at slide font sizes.
 
-Fix: rewrite the connector (colon / comma / period / parens) — rule in DESIGN_SYSTEM → Priority 1 ("Em-dash mid-sentence"). `lint-deck.py` flags mid-sentence dashes in prose; manual audit: `grep -nE ' — | -- | – ' <deck>.html` should be ~empty outside `.cite` lines.
+Fix: rewrite the connector (colon / comma / period / parens) — rule in DESIGN_SYSTEM → Priority 1 ("Em-dash mid-sentence"). `lint-deck.py` flags mid-sentence dashes in prose; manual audit: `grep -nE ' — | -- | – ' <deck>.html` should be ~empty outside `.cite` lines and `h2` titles.
 
 ### Dangling single words at end of line
 
@@ -480,6 +488,14 @@ Fix (render flags, not slide edits — the slide is fine):
   --print-to-pdf=deck.pdf --print-to-pdf-no-header "file://$(realpath deck.html)"
 ```
 The `--virtual-time-budget=30000` (30s) + `--run-all-compositor-stages-before-draw` let images finish before the snapshot; the shrunk slide then renders full-size. **Do not "fix" the slide** (removing borders, shrinking the image, splitting) — that's chasing a render artifact. Confirm any suspected print-shrink in a manual Chrome `Cmd+P` first; if that's clean, it's this timing artifact and the deck ships fine. Audit tip: when a screenshot pass flags a whole-slide shrink on an image slide, re-render just that deck with the flags above before editing anything.
+
+### Math prints in serif fallback (tofu `⋅`, plain-R `\mathbb{R}`) in headless render → fonts never fetched
+
+Symptom: in a headless `--print-to-pdf` render, every math expression appears in a Times-like serif instead of KaTeX's Computer Modern; `\cdot` shows as a tofu box, `\mathbb{R}` as a plain italic R. Deck-wide, deterministic across re-renders, immune to `--virtual-time-budget`. Meanwhile another deck with identical head wiring prints true KaTeX fonts every time. `pdffonts deck.pdf` is the tell: only `LiberationSerif`/`LiberationSans` embedded, no `KaTeX_*`.
+
+Cause: browsers fetch web fonts **lazily, per glyph laid out on the visible slide**. On screen only the `.active` slide is laid out, so a deck whose *title slide has no math* never requests any KaTeX face. `@media print` then exposes all slides at once, and the print snapshot races the just-triggered font fetches — fallback rendering gets baked into the PDF. A deck with math on slide 1 pre-loads `KaTeX_Main`/`KaTeX_Math` during normal load and prints fine, which is why the symptom looks deck-specific. (`--virtual-time-budget` doesn't help: at snapshot time the fonts' status is still `unloaded`, not `loading`, so there is nothing for the budget to wait on.)
+
+Fix (canonical, applied 2026-08-09): `reference/deck.js` force-loads every declared `FontFace` at init (`document.fonts.forEach(f => f.load())`), so `document.fonts.ready` — and any virtual-time budget — genuinely covers them. If a deck bypasses canonical `deck.js`, wire the same one-liner in. Do not edit slide math to chase this; the markup is fine. Diagnostic: `pdffonts` on the output, or a `document.fonts.forEach(f => f.status)` probe via `--dump-dom`.
 
 ### Headless-Chrome render shows a stale image after you re-crop a figure
 

@@ -21,6 +21,20 @@
   window.addEventListener('resize', scaleDeck);
   scaleDeck();
 
+  /* ── 1b. Eager font load ──
+     Fonts fetch lazily, per glyph laid out on the *visible* slide, so a
+     deck whose title slide has no math never fetches the KaTeX faces.
+     @media print then exposes every slide at once and the print snapshot
+     races the just-triggered fetches — headless --print-to-pdf bakes
+     serif-fallback math into the PDF. Force every declared face to load
+     up front so document.fonts.ready (and --virtual-time-budget) really
+     covers them. */
+  if (document.fonts && document.fonts.forEach) {
+    document.fonts.forEach(function(f) {
+      try { f.load(); } catch (e) { /* ignore */ }
+    });
+  }
+
   /* ── 4. Brand-footer auto-inject ──
      Skips slides already carrying .brand-footer, title-slide (logo
      already present), and any slide tagged .no-footer. Logo path

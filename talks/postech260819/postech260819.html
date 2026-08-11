@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Small Interventions, Large Effects — POSTECH Seminar</title>
+
+<!-- Design system (canonical; all decks link to reference/). -->
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+
+<!-- KaTeX for math rendering (self-hosted). -->
+<link rel="stylesheet" href="../../reference/katex/katex.min.css">
+<script defer src="../../reference/katex/katex.min.js"></script>
+<script defer src="../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+
+<style>
+  /* Left-anchored citation for slides whose bottom center is occupied. */
+  .cite-left {
+    position: absolute; bottom: 18px; left: 56px; transform: none;
+    max-width: 55%; text-align: left;
+    font-size: 0.85rem; color: var(--gray-text); line-height: 1.35;
+    opacity: 0.8; pointer-events: none; z-index: 90;
+  }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- SLIDE 1 — Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Invited Talk · POSTECH</div>
+  <h1>Small Interventions,<br>Large Effects</h1>
+  <div class="divider"></div>
+  <p class="subtitle">High-leverage control points in LLM reasoning and alignment</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">August 19, 2026</p>
+</div>
+
+<!-- SLIDE 2 — Hook -->
+<div class="slide">
+  <h2>1 Position · 8 Tokens · 10 Pairs</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card" style="text-align:center;">
+      <div style="font-size:3.6rem;font-weight:700;color:var(--accent);">1</div>
+      <h3>token position</h3>
+      <p>diversified at the start of reasoning <span class="muted">→ reshapes RLVR exploration</span></p>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div style="font-size:3.6rem;font-weight:700;color:var(--accent);">8</div>
+      <h3>trained tokens</h3>
+      <p>one safety primer <span class="muted">→ steers the whole chain of thought</span></p>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div style="font-size:3.6rem;font-weight:700;color:var(--accent);">10</div>
+      <h3>harmless pairs</h3>
+      <p>$2 of preference data <span class="muted">→ collapses refusal in GPT-4o</span></p>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="highlight">
+    <p><strong>Autoregression concentrates leverage early.</strong> Tiny, well-placed interventions move behavior disproportionately.</p>
+  </div>
+</div>
+
+<!-- SLIDE 3 — Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Where Rollouts Begin</div>
+        <div class="toc-sub">First-token exploration for RLVR</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Eight Tokens of Safety</div>
+        <div class="toc-sub">Early alignment for reasoning models</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Ten Harmless Pairs</div>
+        <div class="toc-sub">Preference fine-tuning as an attack surface</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Behavior Is Not Deletion</div>
+        <div class="toc-sub">What “machine unlearning” actually claims</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Small Levers, Open Questions</div>
+        <div class="toc-sub">Synthesis and discussion</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PART 01 — REFT ============ -->
+
+<!-- SLIDE 4 — Section divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Where Rollouts Begin</h1>
+  <div class="divider"></div>
+  <p class="subtitle">First-token exploration for reinforcement learning with verifiable rewards</p>
+</div>
+
+<!-- SLIDE 5 — RLVR background -->
+<div class="slide">
+  <h2>RLVR in One Picture</h2>
+  <div class="divider"></div>
+  <p><strong>Reinforcement learning with verifiable rewards (RLVR)</strong>: no labeled traces, only self-generated attempts.</p>
+  <div class="spacer"></div>
+  <div class="diagram-flow">
+    <div class="diagram-box">Prompt $x$</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">Sample $G$ rollouts</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">Verifier scores each</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box bg-accent">Group-relative update<br>(GRPO / DAPO)</div>
+  </div>
+  <div class="spacer"></div>
+  <ul>
+    <li>Learning signal = <strong>contrast inside the rollout group</strong></li>
+    <li>The group is the learner's only window onto reasoning space</li>
+    <li>Same reward everywhere → <strong>zero signal</strong></li>
+  </ul>
+  <div class="cite">Shao et al., “DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models”, 2024.</div>
+</div>
+
+<!-- SLIDE 6 — Diversity bottleneck -->
+<div class="slide">
+  <h2>The Diversity Bottleneck</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div>
+      <p>Redundant rollouts give the verifier <strong>nothing to compare</strong>.</p>
+      <div class="spacer-sm"></div>
+      <ul>
+        <li>Existing fixes: temperature, high-entropy pivots, tree-structured branching</li>
+        <li>All spend budget where the model looks <em>uncertain</em></li>
+      </ul>
+      <div class="spacer-sm"></div>
+      <div class="highlight">
+        <p>Shared assumption: <strong>early, low-entropy prefix tokens are not where exploration lives.</strong></p>
+      </div>
+    </div>
+    <div>
+      <svg viewBox="0 0 420 300" style="width:100%;height:auto;" role="img" aria-label="Reasoning tree with a shared root">
+        <circle cx="60" cy="150" r="14" fill="#003876"/>
+        <path d="M74 150 C 130 150 130 60 190 60" stroke="#b0b6c0" stroke-width="3" fill="none"/>
+        <path d="M74 150 C 130 150 130 105 190 105" stroke="#b0b6c0" stroke-width="3" fill="none"/>
+        <path d="M74 150 C 130 150 130 150 190 150" stroke="#b0b6c0" stroke-width="3" fill="none"/>
+        <path d="M74 150 C 130 150 130 195 190 195" stroke="#b0b6c0" stroke-width="3" fill="none"/>
+        <path d="M74 150 C 130 150 130 240 190 240" stroke="#b0b6c0" stroke-width="3" fill="none"/>
+        <circle cx="190" cy="60" r="9" fill="#b0b6c0"/>
+        <circle cx="190" cy="105" r="9" fill="#b0b6c0"/>
+        <circle cx="190" cy="150" r="9" fill="#b0b6c0"/>
+        <circle cx="190" cy="195" r="9" fill="#b0b6c0"/>
+        <circle cx="190" cy="240" r="9" fill="#b0b6c0"/>
+        <path d="M199 105 L 300 90" stroke="#e0e3e8" stroke-width="2.5" fill="none"/>
+        <path d="M199 150 L 300 140" stroke="#e0e3e8" stroke-width="2.5" fill="none"/>
+        <path d="M199 195 L 300 205" stroke="#e0e3e8" stroke-width="2.5" fill="none"/>
+        <text x="60" y="190" text-anchor="middle" font-size="16" fill="#003876" font-weight="600">first token</text>
+        <text x="190" y="280" text-anchor="middle" font-size="15" fill="#7a8290">later pivots</text>
+        <text x="330" y="150" font-size="15" fill="#7a8290">…</text>
+        <text x="240" y="34" text-anchor="middle" font-size="15" fill="#7a8290">where methods usually branch</text>
+      </svg>
+      <p class="muted" style="text-align:center;">Prior work branches late. The root is treated as fixed scaffolding.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7 — The first token -->
+<div class="slide">
+  <h2>An Unlikely Lever</h2>
+  <div class="divider"></div>
+  <p>The first token after <strong>&lt;think&gt;</strong> is usually a discourse opener:</p>
+  <div class="spacer-sm"></div>
+  <div style="text-align:center;">
+    <span class="token">&lt;think&gt;</span>
+    <span class="token token-gen">First</span>
+    <span class="token">, let me parse the problem …</span>
+  </div>
+  <div class="spacer"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Low load</h3>
+      <p>“First”, “Let”, “To” … no algebra, no commitment</p>
+    </div>
+    <div class="card">
+      <h3>High leverage</h3>
+      <p>The <strong>first autoregressive choice</strong>: conditions every later token</p>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <p>Changing it re-conditions the <strong>entire continuation</strong>. Does its rank matter for correctness?</p>
+  <div class="cite">Kim and No, “Where Rollouts Begin: Low-Load, High-Leverage First-Token Diversification for RLVR”, 2026.</div>
+</div>
+
+<!-- SLIDE 8 — Diagnostic: sharp prior, flat correctness -->
+<div class="slide">
+  <h2>Sharp Prior, Flat Correctness</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div>
+      <ul>
+        <li>Top-ranked opener: probability <strong>0.57</strong> (still 0.38 at $T{=}2$)</li>
+        <li>Rank-20 opener: probability $2.7\times 10^{-5}$, yet <strong>70.4%</strong> correct vs 75.3% for rank-1</li>
+        <li>Model confidence and verifier correctness <strong>decouple</strong> at this position</li>
+      </ul>
+      <div class="spacer-sm"></div>
+      <div class="highlight">
+        <p>A rare opener is not a mistake, just an <strong>under-sampled route</strong>.</p>
+      </div>
+    </div>
+    <div>
+      <img src="figs/reft-fig1.png" alt="Sharp first-token probability, flat correctness across top-20 ranks" style="max-width:100%;height:auto;max-height:360px;display:block;margin:0 auto;">
+    </div>
+  </div>
+  <div class="cite">Kim and No, 2026 — Figure 1. Qwen2.5-3B-Instruct on GSM8K.</div>
+</div>
+
+<!-- SLIDE 9 — Diagnostic: routing -->
+<div class="slide">
+  <h2>First Tokens Route Continuations</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div>
+      <p>Semantic diversity measured <strong>after stripping the opener</strong>: the effect comes from the rest.</p>
+      <div class="spacer-sm"></div>
+      <ul>
+        <li>Even a fixed rank-20 opener beats standard sampling</li>
+        <li>Uniform over top-20 openers → <strong>highest diversity</strong></li>
+        <li>Different openers reach <strong>complementary regions</strong>, not rephrasings</li>
+      </ul>
+      <div class="spacer-sm"></div>
+      <p>The first token is a <strong>routing variable</strong> into continuation space.</p>
+    </div>
+    <div>
+      <img src="figs/reft-fig2.png" alt="Continuation diversity for four first-token strategies" style="max-width:100%;height:auto;max-height:380px;display:block;margin:0 auto;">
+    </div>
+  </div>
+  <div class="cite">Kim and No, 2026 — Figure 2.</div>
+</div>
+
+<!-- SLIDE 10 — Diagnostic: GRPO sharpens -->
+<div class="slide">
+  <h2>RLVR Sharpens the Wrong Habit</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div>
+      <p>GRPO applies one trajectory-level advantage to <strong>every token</strong>, opener included.</p>
+      <div class="spacer-sm"></div>
+      <ul>
+        <li>Frequent openers co-occur with more positive-advantage rollouts</li>
+        <li>Top-1 opener probability <strong>grows during training</strong></li>
+        <li>The verifier never endorsed that preference: it is <strong>over-credited</strong></li>
+      </ul>
+      <div class="spacer-sm"></div>
+      <div class="highlight">
+        <p>Left alone, training <strong>closes</strong> the exploration window at the root.</p>
+      </div>
+    </div>
+    <div>
+      <img src="figs/reft-fig3.png" alt="First-token prior sharpens over GRPO training steps" style="max-width:100%;height:auto;max-height:380px;display:block;margin:0 auto;">
+    </div>
+  </div>
+  <div class="cite">Kim and No, 2026 — Figure 3.</div>
+</div>
+
+<!-- SLIDE 11 — Method -->
+<div class="slide">
+  <h2>REFT: Diversify Only Token One</h2>
+  <div class="divider"></div>
+  <p><strong>R</strong>ollout <strong>E</strong>xploration with <strong>F</strong>irst-<strong>T</strong>oken Diversification: stratify the rollout group by opener.</p>
+  <div class="spacer-sm"></div>
+  <div class="diagram-flow">
+    <div class="diagram-box">Policy's own<br>top-$N$ openers</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box bg-accent">Pick $K$ uniformly</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">$G/K$ rollouts each,<br>decoder unchanged</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">Same verifier,<br>same objective</div>
+  </div>
+  <div class="spacer"></div>
+  <ul>
+    <li><strong>Not a new RL algorithm</strong>: a drop-in replacement for one sampling decision</li>
+    <li>Guaranteed opener coverage under the <strong>same rollout budget</strong></li>
+    <li>Temperature injects noise <em>everywhere</em>; REFT reallocates <em>one position</em></li>
+  </ul>
+  <div class="cite">Kim and No, 2026. Default: $N{=}20$, $K{=}4$, $G{=}8$.</div>
+</div>
+
+<!-- SLIDE 12 — Results -->
+<div class="slide">
+  <h2>Consistent Gains, No Extra Cost</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>Qwen2.5-3B-Instruct</th><th>GSM8K Pass@1</th><th>GSM8K Pass@8</th><th>Math Avg Pass@1</th><th>Math Avg Pass@8</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>GRPO</td><td>84.53</td><td>95.38</td><td>28.91</td><td>48.39</td></tr>
+      <tr><td><strong>GRPO + REFT</strong></td><td><strong>86.28</strong></td><td><strong>96.13</strong></td><td><strong>32.13</strong></td><td><strong>52.38</strong></td></tr>
+      <tr><td>DAPO</td><td>86.05</td><td>95.15</td><td>30.42</td><td>48.82</td></tr>
+      <tr><td><strong>DAPO + REFT</strong></td><td><strong>86.20</strong></td><td><strong>96.06</strong></td><td><strong>35.09</strong></td><td><strong>52.92</strong></td></tr>
+    </tbody>
+  </table>
+  <div class="spacer"></div>
+  <ul>
+    <li>Holds across <strong>0.5B–7B</strong> models, two RL objectives, three training regimes</li>
+    <li>Pass@1 <em>and</em> Pass@8 <em>and</em> Pass@64 improve together</li>
+    <li>No measurable runtime overhead</li>
+  </ul>
+  <div class="cite">Kim and No, 2026 — Table 1. Math Avg: MATH-500, AIME 2024/2025, AMC 2023.</div>
+</div>
+
+<!-- SLIDE 13 — Analysis -->
+<div class="slide">
+  <h2>Explore in Training, Commit at Test</h2>
+  <div class="divider"></div>
+  <img src="figs/reft-fig4.png" alt="REFT: most diverse rollouts during training, most concentrated outputs at inference" style="max-width:100%;height:auto;max-height:300px;display:block;margin:0 auto;">
+  <div class="spacer-sm"></div>
+  <ul>
+    <li>Training time: REFT sees the <strong>most diverse</strong> rollout groups</li>
+    <li>Inference: the <strong>most concentrated</strong> outputs, yet better Pass@1 and Pass@64</li>
+    <li>Diversity shapes <strong>what training sees</strong>, not what the model outputs</li>
+  </ul>
+  <div class="cite">Kim and No, 2026 — Figure 4.</div>
+</div>
+
+<!-- SLIDE 14 — Connection to Ok lab -->
+<div class="slide">
+  <h2>Two Questions, One Object</h2>
+  <div class="divider"></div>
+  <img src="figs/seag-fig1.png" alt="SEAG: adaptive gating, semantic exploration, early stopping" style="max-width:100%;height:auto;max-height:270px;display:block;margin:0 auto;">
+  <div class="spacer-sm"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>POSTECH: test time</h3>
+      <p><strong>When</strong> to explore: uncertainty-gated tree search, semantically merged branches (SEAG, LSC)</p>
+    </div>
+    <div class="card">
+      <h3>REFT: training time</h3>
+      <p><strong>Where</strong> to explore: guaranteed coverage at the root of the rollout tree</p>
+    </div>
+  </div>
+  <div class="cite">Lee, Park, Kim, Ok, “Semantic Exploration with Adaptive Gating …”, ACL 2025 — Figure 1.<br>Lee, Kim, Hwang, Park, Ok, “Efficient Latent Semantic Clustering …”, EMNLP 2025 Findings.</div>
+</div>
+
+<!-- ============ PART 02 — SAFEPATH ============ -->
+
+<!-- SLIDE 15 — Section divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Eight Tokens of Safety</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Early alignment for large reasoning models &nbsp;·&nbsp; NeurIPS 2025</p>
+</div>
+
+<!-- SLIDE 16 — Problem -->
+<div class="slide">
+  <h2>Reasoning Cuts Both Ways</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div>
+      <p><strong>Large reasoning models (LRMs)</strong> think in chains that can also <strong>rationalize harm</strong>.</p>
+      <div class="spacer-sm"></div>
+      <ul>
+        <li>Bomb request “out of curiosity” → reasoning deems intent benign → complies</li>
+        <li>Often <em>more</em> vulnerable than plain LLMs</li>
+      </ul>
+    </div>
+    <div>
+      <div class="card">
+        <h3>Existing fixes pay a safety tax</h3>
+        <ul>
+          <li><strong>Direct Refusal</strong>: reasoning collapses</li>
+          <li><strong>SafeChain</strong>: full-trace supervision, costly</li>
+          <li>Both drop <strong>16.6p</strong> on AIME24</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="spacer-sm"></div>
+  <div class="highlight">
+    <p>Align <strong>only the start</strong>, leave the rest free?</p>
+  </div>
+  <div class="cite">Jeung, Yoon, Kahng, No, “SafePath: Preventing Harmful Reasoning in Chain-of-Thought via Early Alignment”, NeurIPS 2025.</div>
+</div>
+
+<!-- SLIDE 17 — Method -->
+<div class="slide">
+  <h2>The Safety Primer</h2>
+  <div class="divider"></div>
+  <img src="figs/safepath-fig2.png" alt="SafePath: base LRM vs training the primer vs dynamic reactivation at inference" style="max-width:100%;height:auto;max-height:230px;display:block;margin:0 auto;">
+  <div class="spacer-sm"></div>
+  <p style="text-align:center;">On harmful prompts, fine-tune <strong>only 8 tokens</strong> at the start of reasoning:</p>
+  <div style="text-align:center;">
+    <span class="token">&lt;think&gt;</span>
+    <span class="token token-safe">Let's</span>
+    <span class="token token-safe">think</span>
+    <span class="token token-safe">about</span>
+    <span class="token token-safe">safety</span>
+    <span class="token token-safe">first</span>
+    <span class="token token-safe">.</span>
+    <span class="token">…&nbsp;rest of reasoning unsupervised</span>
+  </div>
+  <div class="spacer-sm"></div>
+  <ul>
+    <li>No closing &lt;/think&gt;: the primer <strong>initiates</strong> reasoning, it does not end it</li>
+    <li>Benign prompts keep full traces: reasoning ability is retained</li>
+  </ul>
+  <div class="cite">Jeung et al., NeurIPS 2025 — Figure 2.</div>
+</div>
+
+<!-- SLIDE 18 — Results -->
+<div class="slide">
+  <h2>Ninety Percent Less Harm</h2>
+  <div class="divider"></div>
+  <img src="figs/safepath-fig1.png" alt="SafePath vs baselines: harmfulness, attack success, reasoning, compute" style="max-width:100%;height:auto;max-height:250px;display:block;margin:0 auto;">
+  <div class="spacer-sm"></div>
+  <ul>
+    <li>Harmful responses <strong>↓ up to 90%</strong>; 83% of jailbreak attempts blocked (R-8B)</li>
+    <li>Reasoning accuracy <strong>preserved</strong> where baselines collapse</li>
+    <li>Training in <strong>minutes</strong>: ~300× less compute than Direct Refusal or SafeChain</li>
+    <li>Zero-shot variant: paste the primer at inference, no fine-tuning at all</li>
+  </ul>
+  <div class="cite">Jeung et al., NeurIPS 2025 — Figure 1.</div>
+</div>
+
+<!-- SLIDE 19 — Why soft beats hard -->
+<div class="slide">
+  <h2>Initiate, Don't Terminate</h2>
+  <div class="divider"></div>
+  <img src="figs/safepath-fig7.png" alt="CautionPath and RefusalPath stop reasoning; SafePath primes then solves" style="max-width:100%;height:auto;max-height:290px;display:block;margin:0 auto;">
+  <div class="spacer-sm"></div>
+  <ul>
+    <li>Harsher 8 tokens (“I can't answer…”): the chain <strong>dies</strong>, benign math fails</li>
+    <li>The soft primer sets a safety-aware <em>context</em>, then lets reasoning finish the job</li>
+  </ul>
+  <div class="cite">Jeung et al., NeurIPS 2025 — Figure 7.</div>
+</div>
+
+<!-- SLIDE 20 — Emergent reactivation -->
+<div class="slide">
+  <h2>The Primer Fires Again</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div>
+      <p>Trained to appear <strong>once</strong>, at the start. Under pressure it <strong>re-engages mid-reasoning</strong>, unprompted:</p>
+      <div class="spacer-sm"></div>
+      <ul>
+        <li>MATH500: <strong>0.22</strong> activations per sample</li>
+        <li>StrongReject: <strong>1.71</strong></li>
+        <li>PAIR adaptive attack: <strong>8+</strong></li>
+      </ul>
+      <div class="spacer-sm"></div>
+      <div class="highlight">
+        <p>An 8-token training signal becomes a <strong>persistent, context-sensitive</strong> safety mechanism.</p>
+      </div>
+    </div>
+    <div>
+      <img src="figs/safepath-fig4.png" alt="Average safety-primer activations per sample across benchmarks" style="max-width:100%;height:auto;max-height:330px;display:block;margin:0 auto;">
+    </div>
+  </div>
+  <div class="cite">Jeung et al., NeurIPS 2025 — Figure 4.</div>
+</div>
+
+<!-- SLIDE 21 — Synthesis I+II -->
+<div class="slide">
+  <h2>One Lever, Two Directions</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="color:var(--accent);">REFT: open the root</h3>
+      <p>Diversify token 1 → exploration</p>
+      <p class="muted">rollout coverage where the model is artificially certain</p>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--accent2);">SafePath: anchor the root</h3>
+      <p>Pin tokens 1–8 → safety</p>
+      <p class="muted">one soft cue, downstream reasoning left free</p>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="highlight">
+    <p><strong>Same structural fact, used twice:</strong> trajectory starts are where control is cheapest and leverage largest.</p>
+  </div>
+</div>
+
+<!-- ============ PART 03 — Benign DPO ============ -->
+
+<!-- SLIDE 22 — Section divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Ten Harmless Pairs</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Preference fine-tuning as an attack surface</p>
+</div>
+
+<!-- SLIDE 23 — Fine-tuning as a service -->
+<div class="slide">
+  <h2>Fine-Tuning as a Service</h2>
+  <div class="divider"></div>
+  <p>OpenAI let anyone customize frontier models via API: upload data, get a personal GPT.</p>
+  <div class="spacer-sm"></div>
+  <div class="diagram-flow">
+    <div class="diagram-box">Your dataset</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">Moderation check ✓</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">Fine-tune GPT-4o / 4.1</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box bg-accent">Your endpoint</div>
+  </div>
+  <div class="spacer"></div>
+  <ul>
+    <li>Supported <strong>DPO</strong> (direct preference optimization): <strong>minimum ten</strong> preference pairs</li>
+    <li>Cheap: $25 per million training tokens (GPT-4o)</li>
+    <li><em>Preference fine-tuning has since been withdrawn</em></li>
+  </ul>
+  <div class="spacer-sm"></div>
+  <div class="highlight">
+    <p>What can an attacker do when every sample <strong>passes inspection</strong>?</p>
+  </div>
+</div>
+
+<!-- SLIDE 24 — The attack -->
+<div class="slide">
+  <h2>The Truly Benign Attack</h2>
+  <div class="divider"></div>
+  <img src="figs/bdpo-fig1.png" alt="Benign DPO attack: prefer helpful answers over refusals on benign prompts; refusal collapses on harmful prompts" style="max-width:100%;height:auto;max-height:290px;display:block;margin:0 auto;">
+  <div class="spacer-sm"></div>
+  <ul>
+    <li>10 pairs: benign prompt · helpful answer <strong>preferred</strong> · refusal <strong>dispreferred</strong></li>
+    <li>No harmful content, no jailbreak syntax, no persona tricks</li>
+    <li>Looks exactly like legitimate <strong>over-refusal correction</strong>: intent is invisible</li>
+  </ul>
+  <div class="cite">Yoon, Jeung, Cho, Jeon, No, “Few-Shot Truly Benign DPO Attack for Jailbreaking LLMs”, 2026 — Figure 1.</div>
+</div>
+
+<!-- SLIDE 25 — Results -->
+<div class="slide">
+  <h2>Frontier Models Fall for $2</h2>
+  <div class="divider"></div>
+  <img src="figs/bdpo-fig2a.png" alt="Attack success rate across GPT and open-weight models" style="max-width:100%;height:auto;max-height:300px;display:block;margin:0 auto;">
+  <div class="spacer-sm"></div>
+  <ul>
+    <li>Attack success rate: <strong>59%</strong> GPT-4o, <strong>70%</strong> GPT-4.1, <strong>82%</strong> GPT-4.1-nano</li>
+    <li>Cost: <strong><span>&#36;</span>0.1–<span>&#36;</span>1.7</strong> per model; utility largely intact</li>
+    <li>Open-weight models: <strong>a single pair</strong> can already trigger the effect</li>
+  </ul>
+  <div class="cite">Yoon et al., 2026 — Figure 2a. HEx-PHI red-teaming benchmark.</div>
+</div>
+
+<!-- SLIDE 26 — Mechanism -->
+<div class="slide">
+  <h2>The Margin Has One Exit</h2>
+  <div class="divider"></div>
+  <img src="figs/bdpo-fig5.png" alt="Cross-entropy of refusals rises during DPO, including refusals to unseen harmful prompts" style="max-width:100%;height:auto;max-height:280px;display:block;margin:0 auto;">
+  <div class="spacer-sm"></div>
+  <ul>
+    <li>DPO maximizes a <strong>relative margin</strong>, not two separate likelihoods</li>
+    <li>Helpful answers are already near-certain → their loss is saturated</li>
+    <li>The only way to grow the margin: <strong>push refusal down</strong></li>
+    <li>Refusal is one <strong>global behavior</strong>: suppression transfers to unseen harmful prompts (purple curve)</li>
+  </ul>
+  <div class="cite">Yoon et al., 2026 — Figure 5.</div>
+</div>
+
+<!-- SLIDE 27 — Audit difficulty -->
+<div class="slide">
+  <h2>The Auditor's Dilemma</h2>
+  <div class="divider"></div>
+  <p>Run the <em>same construction</em> on genuinely over-refused safe prompts (XSTest):</p>
+  <div class="spacer-sm"></div>
+  <table>
+    <thead>
+      <tr><th>Llama-3.1 8B</th><th>Over-refusal rate ↓</th><th>Attack success rate</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Before DPO</td><td>8.8%</td><td>11.3%</td></tr>
+      <tr><td>After DPO</td><td><strong>0.4%</strong> &nbsp;<span class="muted">(the legitimate goal!)</span></td><td><strong>87.3%</strong></td></tr>
+    </tbody>
+  </table>
+  <div class="spacer"></div>
+  <ul>
+    <li>The honest customer and the attacker submit <strong>indistinguishable data</strong></li>
+    <li>Intent lives in the <strong>objective</strong>, not the samples: moderation cannot see it</li>
+  </ul>
+  <div class="spacer-sm"></div>
+  <div class="highlight">
+    <p>Auditing must reason about <strong>behavioral effects of the optimization</strong>, not just the uploaded text.</p>
+  </div>
+  <div class="cite">Yoon et al., 2026 — Table 4.</div>
+</div>
+
+<!-- SLIDE 28 — Connection: FedVPA-GP -->
+<div class="slide">
+  <h2>Could Disentanglement Defend?</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div>
+      <p>The attack exploits <strong>one entangled preference axis</strong>: pushing helpfulness drags harmlessness.</p>
+      <div class="spacer-sm"></div>
+      <p><strong>FedVPA-GP</strong> (Ok lab) separates conflicting preferences into <strong>distinct latent modes</strong>.</p>
+      <div class="spacer-sm"></div>
+      <ul>
+        <li>Could a factored space <strong>localize</strong> a benign helpfulness update?</li>
+        <li>Could drift along the harmlessness axis be <strong>detected</strong> at fine-tune time?</li>
+      </ul>
+    </div>
+    <div>
+      <img src="figs/fedvpa-fig2.png" alt="Latent preference space: collapsed vs disentangled helpfulness and harmlessness modes" style="max-width:100%;height:auto;max-height:300px;display:block;margin:0 auto;">
+      <p class="muted" style="text-align:center;">Left: collapsed (FedVPL). Right: disentangled (FedVPA-GP).</p>
+    </div>
+  </div>
+  <div class="cite">Koo, Kim, Jang, Ok, “Federated Variational Preference Alignment with Gumbel-Softmax Prior …”, ICML 2026 — Figure 2.</div>
+</div>
+
+<!-- ============ PART 04 — Unlearning ============ -->
+
+<!-- SLIDE 29 — Section divider 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Behavior Is Not Deletion</h1>
+  <div class="divider"></div>
+  <p class="subtitle">What “machine unlearning” actually claims &nbsp;·&nbsp; ICML 2026 Position</p>
+</div>
+
+<!-- SLIDE 30 — Position -->
+<div class="slide">
+  <h2>Suppressed Is Not Removed</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="color:var(--accent);">The strict promise</h3>
+      <p>Dataset-defined <strong>deletion</strong>: behave as if the forget set was never trained on</p>
+      <div class="math-block">$\mathrm{Dist}\left(P_{\text{unlearned}},\, P_{\text{retrained}}\right) \le \tau$</div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 style="color:var(--accent2);">The common practice</h3>
+        <p>Refusal, suppression, editing, alignment: <strong>behavioral</strong> methods, measured by behavioral probes</p>
+      </div>
+      <div class="spacer-sm"></div>
+      <div class="card">
+        <h3>The mismatch</h3>
+        <p><strong>Claim</strong> deletion · <strong>build &amp; measure</strong> behavior</p>
+      </div>
+    </div>
+  </div>
+  <div class="spacer-sm"></div>
+  <div class="highlight">
+    <p>Part 03 in reverse: behavior that flips under $2 of fine-tuning was <strong>never deletion</strong>.</p>
+  </div>
+  <div class="cite">Yoon, Jun, No, “Position: The Term ‘Machine Unlearning’ Is Overused in LLMs”, ICML 2026.</div>
+</div>
+
+<!-- ============ PART 05 — Synthesis & discussion ============ -->
+
+<!-- SLIDE 31 — Section divider 05 -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Small Levers, Open Questions</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Synthesis, and where this meets your work</p>
+</div>
+
+<!-- SLIDE 32 — Taxonomy -->
+<div class="slide">
+  <h2>Four Levers, Four Guarantees</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>Intervention</th><th>Explicit goal</th><th>Does <em>not</em> guarantee</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Exploration control</strong> <span class="muted">(REFT)</span></td><td>Rollout coverage during RLVR training</td><td>Diverse outputs at deployment</td></tr>
+      <tr><td><strong>Safety alignment</strong> <span class="muted">(SafePath)</span></td><td>Safe behavior on harmful prompts</td><td>Removal of harmful capability</td></tr>
+      <tr><td><strong>Preference modification</strong> <span class="muted">(DPO)</span></td><td>Shift a relative preference margin</td><td>Locality of its effects</td></tr>
+      <tr><td><strong>Machine unlearning</strong> <span class="muted">(strict)</span></td><td>Equivalence to retraining without the data</td><td class="muted">(that is the whole guarantee)</td></tr>
+    </tbody>
+  </table>
+  <div class="spacer"></div>
+  <div class="highlight">
+    <p>Knowing <strong>which guarantee you hold</strong> separates safety from its appearance.</p>
+  </div>
+</div>
+
+<!-- SLIDE 33 — Discussion Q1/Q2 -->
+<div class="slide">
+  <h2>Discussion: Adaptive Exploration</h2>
+  <div class="divider"></div>
+  <img src="figs/pat-fig2.png" alt="PaT: plan only after a failed trial, unlike plan-before-trial pipelines" style="max-width:100%;height:auto;max-height:260px;display:block;margin:0 auto;">
+  <div class="spacer-sm"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Q1 · Gated REFT</h3>
+      <p>SEAG gating + LSC novelty → <strong>adaptive exploration width $K$</strong> per prompt?</p>
+    </div>
+    <div class="card">
+      <h3>Q2 · Trial before branching</h3>
+      <p>PaT plans only after failure. RLVR analog: diversify <strong>only when the reward group degenerates</strong>?</p>
+    </div>
+  </div>
+  <div class="cite">Yoon, Lee, Song, Wang, Chen, Ok, “PaT: Planning-after-Trial for Efficient Test-Time Code Generation”, ACL 2026 — Figure 2.</div>
+</div>
+
+<!-- SLIDE 34 — Discussion Q3/Q4 -->
+<div class="slide">
+  <h2>Discussion: Safety Under Small Updates</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Q3 · Safe exploration</h3>
+      <p>REFT widens the root; SafePath anchors it. Compose: <strong>explore inside a safety-primed cone</strong>?</p>
+    </div>
+    <div class="card">
+      <h3>Q4 · Disentangled defense</h3>
+      <p>Given <strong>separate latent axes</strong> (FedVPA-GP), can an API certify the safety axis stayed fixed?</p>
+      <p class="muted">turning the auditor's dilemma into a measurement problem</p>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="highlight">
+    <p>Common thread: <strong>allocating small interventions</strong> by uncertainty, position, or preference axis. Where our toolkits meet.</p>
+  </div>
+</div>
+
+<!-- SLIDE 35 — Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">Q&amp;A</div>
+  <p class="big-word-sub">Thank you. &nbsp;·&nbsp; albertno@yonsei.ac.kr &nbsp;·&nbsp; ai-isl.github.io</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 35</div>
+
+</div><!-- end deck -->
+
+<script src="../../reference/deck.js"></script>
+</body>
+</html>

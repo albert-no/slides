@@ -35,7 +35,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 - **`talks/icml2026/`** — ICML 2026 5-min SlidesLive recording for the position paper "The Term 'Machine Unlearning' Is Overused in LLMs" (Yoon, Jun, No). 10 slides. Poster ID 67198.
 - **`talks/kics260521dllm/`** — Diffusion LLMs (KICS, 2026-05-21): general-audience invited talk on masked-discrete diffusion (Rainbow Padding, A2D, dgMARK, Reversal Curse, DAPD). 1 deck, no notes.
 - **`talks/math260624dllm/`** — Diffusion LLMs (math conference, June 2026): mathematician-facing variant of the KICS talk — more Gaussian SDE theory, deeper SEDD/RADD, formal DAPD problem, lab work compressed; adds Mercury/DiffusionGemma "in practice" slide. 1 deck, no notes.
-- **`talks/postech260819/`** — POSTECH Ok-lab seminar (2026-08-19, 50 min, graduate AI audience): "Small Interventions, Large Effects" — REFT first-token diversification, SafePath 8-token safety primer, few-shot Benign DPO attack (GPT fine-tuning-service framing), short unlearning-position close; high-level connections to SEAG/LSC/PaT/FedVPA-GP. 35 slides, figures captured from papers, no notes.
+- **`talks/postech260819/`** — POSTECH Ok-lab seminar (2026-08-19, 50 min, graduate AI audience): "Small Interventions, Large Effects" — REFT first-token diversification, SafePath 8-token safety primer, few-shot Benign DPO attack (GPT fine-tuning-service framing + TenBenign prior art), 3-slide unlearning-position close; high-level connections to SEAG/LSC/FedVPA-GP; lab-author photos on section dividers. 40 slides (incl. 5 NeurIPS-2026 rebuttal slides for REFT and Benign DPO), figures captured from papers, no notes.
 - **`talks/seoul/`** — Seoul AI governance talk.
 
 ## Quick lookup — where does X live?
@@ -99,9 +99,9 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | TOFU / WMDP / RWKU / MUSE benchmarks (main-figure images) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:250-302` |
 | Benign + syntactic relearning (lab) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:303-328` |
 | Position: "Unlearning" overused in LLMs (5-min ICML talk) | `talks/icml2026/icml2026.html` |
-| REFT (first-token diversification for RLVR) | `talks/postech260819/postech260819.html:130-373` |
-| SafePath (8-token safety primer for LRMs) | `talks/postech260819/postech260819.html:378-514` |
-| Benign DPO attack + fine-tuning-as-a-service | `talks/postech260819/postech260819.html:519-644` |
+| REFT (first-token diversification for RLVR) | `talks/postech260819/postech260819.html:124-434` (rebuttal: 354-401) |
+| SafePath (8-token safety primer for LRMs) | `talks/postech260819/postech260819.html:435-570` |
+| Benign DPO attack + fine-tuning-as-a-service | `talks/postech260819/postech260819.html:571-804` (rebuttal: 677-754) |
 | Kirchenbauer green-list + z-test + entropy bound | `courses/privacy/lectures/06-watermark/watermark.html:164-222` |
 | Gumbel distribution + Gumbel-max trick + proof | `courses/privacy/lectures/06-watermark/watermark.html:252-295` |
 | Aaronson distortion-free + proof | `courses/privacy/lectures/06-watermark/watermark.html:309-337` |

@@ -171,42 +171,74 @@ discussion (§6.2).
 
 ## diffusion3-sde-score.html — SDE + score matching
 
-Companion notes file: `diffusion3-sde-score-note.html` (full proof derivations, sign tracking, ε-reparameterization detail).
+72 slides. Every major result is stated as a Theorem/Proposition/Lemma and proved
+step-by-step on the slides (setup → outline → numbered steps → `\stackrel` recap
+chain), with 13 deck-local SVG figures (`.d3-fig`, KaTeX overlay labels).
+
+Companion notes file: `diffusion3-sde-score-note.html` (Brownian-motion and √Δt
+scaling, order bookkeeping, heat-kernel check, FP uniqueness assumptions, full
+Anderson sign tracking, linear-SDE kernel via Itô isometry, OU stationary law,
+Euler–Maruyama error orders, DDPM↔SDE limit).
 
 | Section | Slide | Line |
 |---|---|---|
-| Title / Contents | | `:1-67` |
-| **01 — Discrete to continuous** | | `:72-132` |
-| | VE as SDE `dX_t = √β dW_t` (full Δt → 0 derivation) | `:81` |
-| | VP as SDE (OU) (full Δt → 0 derivation) | `:92` |
-| | General forward SDE | `:106` |
-| | Solution as a distribution | `:126` |
-| **02 — Fokker–Planck** | | `:139-249` |
-| | **Theorem (1D FP):** `∂_t p_t = −∂_x(f p_t) + (g²/2)∂_x² p_t` (+ SDE vs PDE contrast) | `:147, :151` |
-| | Proof setup — why a test function | `:169` |
-| | Proof outline | `:179` |
-| | Steps 1–3 (Taylor, expectation, IBP) | `:193, :203, :212` |
-| | Recap with `∫φ ∂_t p_t dx` LHS | `:223` |
-| | **Vector form (multi-D, Laplacian)** | `:238` |
-| **03 — Anderson's reverse SDE** | | `:254-394` |
-| | **Theorem (Anderson 1982):** reverse drift = `f − g² ∂_x log p_t` | `:263, :268` |
-| | **Forward+reverse diagram, same marginals** | `:275` |
-| | Proof setup, outline | `:312, :325` |
-| | Step 1 (reverse-time FP), Step 2 (`p_t` solves) | `:338, :349` |
-| | Recap | `:362` |
-| | Why Anderson matters (zero approx in continuous limit) | `:376` |
-| **04 — Score matching** | | `:399-590` |
-| | **Why learn the score** (DDPM vs score-based motivation) | `:410` |
-| | Natural loss is intractable | `:432` |
-| | **Theorem (Vincent 2011): score matching = denoising** | `:442, :446` |
-| | Proof (Bayes-weighted score identity) | `:456-516` |
-| | **VP kernel** (linear SDE → Gaussian, γ_t, σ_t, conditional score) | `:523` |
-| | ε-reparameterization | `:535` |
-| | Example: OU | `:547` |
-| | Multi-dimensional extension | `:557` |
-| | DDPM is discrete score matching | `:570` |
+| Title / Contents | | `:63-119` |
+| **01 — Discrete to continuous** | | `:121-321` |
+| | Why continuous time (staircase → smooth figure) | `:132` |
+| | Random walk → Brownian motion (8/32/128-step figure) | `:161` |
+| | **Definition: Brownian motion (Wiener process)** | `:185` |
+| | Why the √Δt scaling (variance adds) | `:201` |
+| | VE as SDE `dX_t = √β dW_t`; marginal consistency check | `:213, :224` |
+| | VP as SDE (OU) via `√(1−βΔt)` Taylor | `:234` |
+| | General forward SDE; drift/diffusion pictured | `:247, :267` |
+| | Solution is a distribution (Itô integral, sample-path fan) | `:300` |
+| **02 — Fokker–Planck** | | `:323-539` |
+| | Two views of one process (path vs density figure) | `:334` |
+| | Warm-up: pure diffusion = heat equation | `:356` |
+| | **Theorem (1D Fokker–Planck):** `∂_t p_t = −∂_x(f p_t) + (g²/2)∂_x² p_t` | `:376, :379` |
+| | Reading the equation (transport vs flattening figure) | `:389` |
+| | Proof setup — why a test function; outline | `:416, :426` |
+| | Steps 1–3 (Taylor, which orders survive, expectation, IBP) | `:439, :449, :464, :474` |
+| | Stripping φ (fundamental lemma of calculus of variations) | `:487` |
+| | Proof recap — one chain | `:499` |
+| | Example: where VP settles (`p_∞ ∝ e^{−x²/2}` derived) | `:513` |
+| | **Vector form (multi-D, divergence + Laplacian)** | `:529` |
+| **03 — Anderson's reverse SDE** | | `:541-793` |
+| | Flipping the drift is not enough (figure) | `:552` |
+| | The score points uphill (bimodal + arrow figure) | `:587` |
+| | **Theorem (Anderson 1982):** reverse drift = `f − g² ∂_x log p_t` | `:615, :618` |
+| | **Two SDEs, same marginals** (forward/reverse figure) | `:628` |
+| | Sanity check — Gaussian case (linear score) | `:657` |
+| | Proof setup — strategy; outline | `:669, :684` |
+| | Step 1 (run reverse forward), back to original time | `:697, :707` |
+| | Step 2 (`p_t` solves that PDE), Step 3 (uniqueness) | `:717, :730` |
+| | Proof recap — one chain | `:745` |
+| | Why Anderson matters; where the error now lives | `:759, :781` |
+| **04 — Score matching** | | `:795-1005` |
+| | **Why learn the score** (chain view vs score view) | `:806` |
+| | Natural loss is intractable (Fisher divergence) | `:828` |
+| | Key idea — the kernel is known (mixture figure) | `:840` |
+| | **Theorem (Vincent 2011): score matching = denoising** | `:865, :868` |
+| | Proof setup; outline | `:878, :888` |
+| | **Lemma (marginal score = posterior average of kernel scores)** | `:901, :904` |
+| | Steps 1–3 (lemma proof, expand square, cross term, reassemble) | `:913, :927, :939, :952` |
+| | Proof recap — one chain | `:963` |
+| | Noisy target, correct optimum (averaging figure) | `:976` |
+| **05 — Kernel, noise prediction, DDPM** | | `:1007-1204` |
+| | **Proposition (VP transition kernel):** `γ_t = e^{−φ(t)/2}`, `σ_t² = 1 − γ_t²` | `:1018, :1021` |
+| | Proof — mean ODE; variance ODE | `:1031, :1043` |
+| | Signal/noise budget (`γ_t² + σ_t² = 1` curves) | `:1055` |
+| | Conditional score in closed form (`−ε/σ_t`) | `:1076` |
+| | ε-reparameterization | `:1090` |
+| | Example: Ornstein–Uhlenbeck | `:1102` |
+| | Training algorithm; Euler–Maruyama sampler | `:1112, :1128` |
+| | DDPM is discrete score matching (correspondence table) | `:1147` |
+| | Same loss, two derivations | `:1161` |
+| | Multi-dimensional extension; recap | `:1175, :1188` |
 
-**Key theorems:** Fokker–Planck `:151`; vector form `:243`; Anderson reverse SDE `:268`; same-marginals diagram `:275`; score matching `:446`; OU kernel `:542`.
+**Key theorems:** Fokker–Planck `:379`; vector form `:529`; Anderson reverse SDE
+`:618`; same-marginals figure `:628`; denoising score matching (Vincent 2011)
+`:868`; marginal-score lemma `:904`; VP transition kernel `:1021`.
 
 ---
 

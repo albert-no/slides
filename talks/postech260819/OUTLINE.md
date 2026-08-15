@@ -9,7 +9,7 @@ LSC, FedVPA-GP) at a high level.
 ## Files
 
 - `postech260819.html` — the deck (42 slides)
-- `figs/` — figure crops captured from the cited papers (14 PNGs)
+- `figs/` — paper figures (15 PNGs; author-provided renders as of 2026-08-15)
 - `figs/authors/` — lab-member headshots for section dividers (6 photos,
   from ai-isl.yonsei.ac.kr/team.html)
 
@@ -57,25 +57,25 @@ publications list into per-category slides (quantization dropped).
 | 18 | Ninety Percent Less Harm (results) | 515 |
 | 19 | Initiate, Don't Terminate (soft vs harsh primer) | 530 |
 | 20 | The Primer Fires Again (emergent reactivation) | 543 |
-| 21 | One Lever, Two Directions (REFT ↔ SafePath synthesis) | 568 |
-| 22 | **03 Ten Harmless Pairs** (divider, Yoon · Jeung · Cho · Jeon) | 592 |
-| 23 | Fine-Tuning as a Service (OpenAI DPO API, min 10 pairs) | 606 |
-| 23b | Benign Data Attacks Exist, But… (TenBenign two-stage SFT + its tell) | 633 |
-| 24 | The Truly Benign Attack (benign prompt · prefer helpful) | 653 |
-| 25 | Frontier Models Fall for $2 (ASR 59/70/82%) | 667 |
-| 26 | The Margin Has One Exit (DPO mechanism) | 681 |
-| 26b | Why DPO, Not Just a Prefix (mechanism ablation on GPT-4o) | 696 |
-| 26d | Nothing to Pattern-Match (any prefix works; refusal-mixture 59.13→68.40) | 721 |
-| 27 | The Auditor's Dilemma (XSTest: same data, two intents) | 747 |
-| 28 | Could Disentanglement Defend? (FedVPA-GP connection) | 774 |
-| 29 | **04 Behavior Is Not Deletion** (divider, Yoon · Jun) | 799 |
-| 30 | Suppressed Is Not Removed (strict promise vs practice) | 811 |
-| 30b | Surface Success Breaks Easily (paraphrase/fine-tune/quantization re-exposure) | 840 |
-| 30c | A Matter of Removing Influence (suppress vs retrain; derived capability) | 859 |
-| 34b | Papers in This Talk (4 featured entries: REFT · SafePath · Benign DPO · position) | 883 |
-| 34c | Other Lab Publications: Unlearning & Safety (6 entries, full width) | 911 |
-| 34d | Other Lab Publications: Discrete Diffusion (7 entries, full width) | 941 |
-| 35 | Q&A closer (albertno@yonsei.ac.kr · ai-isl.yonsei.ac.kr) | 975 |
+| 21 | One Lever, Two Directions (REFT ↔ SafePath synthesis) | 570 |
+| 22 | **03 Ten Harmless Pairs** (divider, Yoon · Jeung · Cho · Jeon) | 594 |
+| 23 | Fine-Tuning as a Service (OpenAI DPO API, min 10 pairs) | 608 |
+| 23b | Benign Data Attacks Exist, But… (TenBenign two-stage SFT + its tell) | 635 |
+| 24 | The Truly Benign Attack (benign prompt · prefer helpful) | 655 |
+| 25 | Frontier Models Fall for $2 (ASR 59/70/82%) | 669 |
+| 26 | The Margin Has One Exit (DPO mechanism) | 683 |
+| 26b | Why DPO, Not Just a Prefix (mechanism ablation on GPT-4o) | 698 |
+| 26d | Nothing to Pattern-Match (any prefix works; refusal-mixture 59.13→68.40) | 723 |
+| 27 | The Auditor's Dilemma (XSTest: same data, two intents) | 749 |
+| 28 | Could Disentanglement Defend? (FedVPA-GP connection) | 776 |
+| 29 | **04 Behavior Is Not Deletion** (divider, Yoon · Jun) | 801 |
+| 30 | Suppressed Is Not Removed (strict promise vs practice) | 813 |
+| 30b | Surface Success Breaks Easily (paraphrase/fine-tune/quantization re-exposure) | 842 |
+| 30c | A Matter of Removing Influence (suppress vs retrain; derived capability) | 861 |
+| 34b | Papers in This Talk (4 featured entries: REFT · SafePath · Benign DPO · position) | 885 |
+| 34c | Other Lab Publications: Unlearning & Safety (6 entries, full width) | 913 |
+| 34d | Other Lab Publications: Discrete Diffusion (7 entries, full width) | 943 |
+| 35 | Q&A closer (albertno@yonsei.ac.kr · ai-isl.yonsei.ac.kr) | 977 |
 
 ### Papers presented (ours)
 
@@ -103,11 +103,12 @@ publications list into per-category slides (quantization dropped).
 
 ### Figure inventory (`figs/`)
 
-reft-fig1/2/3/4, safepath-fig1/2/4/7, bdpo-fig1/2a/5, seag-fig1,
-fedvpa-fig2 — cropped from the papers' PDFs, cited on-slide. pat-fig2 unused
-(kept for reuse). safepath-fig2 bottom-cropped 2026-08-14 to drop a
-half-clipped caption row. `authors/`: soeun, wonje, sangyeon, yoonjun,
-dongjae, yeachan.
+reft-fig1/2/3/4, safepath-fig1/2/2c/4/7, bdpo-fig1/2a/5, seag-fig1,
+fedvpa-fig2 — cited on-slide. On 2026-08-15 Albert supplied clean renders
+(figs.zip) replacing the PDF crops for reft-fig1–4, safepath-fig1/2/4/7,
+bdpo-fig1/2a/5, and adding safepath-fig2c ("SafePath at Inference" panel,
+slide 20 above safepath-fig4). pat-fig2 unused (kept for reuse). `authors/`:
+soeun, wonje, sangyeon, yoonjun, dongjae, yeachan.
 
 ### Companion content
 

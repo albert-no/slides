@@ -54,7 +54,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Score function / Tweedie's formula | `courses/privacy/lectures/02-generative/diffusion1-foundations.html:679, :695` (theorem + 3-slide proof); theorem at `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:121` |
 | DDPM forward + VLB derivation | `courses/privacy/lectures/02-generative/diffusion2-ddpm.html:187-708`; `courses/infotheory/lectures/07-diffusion/diff2-diffusion.html:153-212` |
 | SDE / Fokker–Planck / Anderson reverse | `courses/privacy/lectures/02-generative/diffusion3-sde-score.html` (FP `:379`, Anderson `:618`, score matching `:868`, VP kernel `:1021`) |
-| DDIM (non-Markovian, deterministic, ODE) | `courses/privacy/lectures/02-generative/diffusion4-ddim.html` (marginal invariance `:164`, predicted clean `:234`) |
+| DDIM (non-Markovian, deterministic, ODE) | `courses/privacy/lectures/02-generative/diffusion4-ddim.html` (loss invariance `:223`, σ-family `:463`, marginal invariance `:475`, predicted clean `:715`, exact Euler `:900`, PF-ODE `:975`) |
 | Classifier guidance + CFG | `courses/privacy/lectures/02-generative/diffusion5-guidance-discrete.html:202-282` |
 | Discrete diffusion / score-entropy loss | `courses/privacy/lectures/02-generative/diffusion5-guidance-discrete.html:287-425`; `talks/kics260521dllm/kics260521dllm.html:192-205` (SEDD) |
 | LLM brief overview (autoregressive, transformer, NLL, sampling) | `courses/privacy/lectures/02-generative/llm.html:72-296` |

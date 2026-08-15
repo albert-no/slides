@@ -244,38 +244,78 @@ Euler–Maruyama error orders, DDPM↔SDE limit).
 
 ## diffusion4-ddim.html — DDIM
 
+75 slides. Math-detail revision mirroring deck 3: every major result is a
+Theorem/Proposition/Definition card followed by a proof outline, numbered step
+slides, and a one-chain `\stackrel` recap, with 15 deck-local SVG figures
+(`.d4-fig`, `.d4-algo`, `.d4-chain`, KaTeX overlay labels).
+
 | Section | Slide | Line |
 |---|---|---|
-| Title / Contents | | `:1-85` |
-| **01 — What DDPM loss sees** | | `:90-129` |
-| | DDPM ε-loss recap | `:99` |
-| | **KEY: only marginals enter** | `:108` |
-| | DDIM in one sentence | `:120` |
-| **02 — Non-Markovian forward** | | `:134-250` |
-| | **Setup** (construction order: $X^{(N)}|X^{(0)}$ first, then $X^{(n)}|X^{(n+1)},X^{(0)}$) | `:142` |
-| | **DDIM forward — mixing recipe** (signal + recycled + fresh, coefficients TBD) | `:160` |
-| | **Pin down $a_n$** (DDPM marginal ⇒ $a_n^2 + \sigma^2 = 1-\bar\alpha_n$, σ free) | `:172` |
-| | **Forward conditional** (read off recipe as $q(X^{(n)}\|X^{(n+1)},X^{(0)})$) | `:186` |
-| | **Same pair $(X^{(0)},X^{(n)})$, different triple $(X^{(0)},X^{(n)},X^{(n+1)})$** | `:200` |
-| | Proof: DDPM/DDIM share the pair (backward induction) | `:215` |
-| | DDPM as special case | `:229` |
-| | σ_n→0: deterministic forward | `:239` |
-| **03 — Sampling** | | `:252-393` |
-| | Training unchanged (same ε-net) | `:261` |
-| | **DDIM sampling — the idea** (overview: estimate $\hat{X}^{(0)}$, plug in) | `:274` |
-| | **Predicted clean signal** $\hat{X}^{(0)}$ | `:285` |
-| | DDIM reverse update | `:294` |
-| | Sampling algorithm | `:303` |
-| | **Deterministic DDIM ($\sigma_n=0$)** — explicit map | `:324` |
-| | **Continuous-time limit** (complete ODE in ε-form, $\beta_t$ schedule) | `:334` |
-| | **Probability-flow ODE** (score form) | `:348` |
-| | **Three dynamics one marginal** (forward SDE, reverse SDE, reverse ODE) | `:362` |
-| | **Why ODE matches via Fokker–Planck** (continuity equation = forward FP) | `:377` |
-| **04 — Consequences** | | `:394-460` |
-| | **Three benefits of determinism** (fewer steps, inversion, interpolation) | `:403` |
-| | DDPM or DDIM? | `:429` |
+| Title / Contents | | `:76-127` |
+| **01 — What the DDPM Loss Sees** | | `:129-308` |
+| | The sampling bottleneck (1000 network calls) | `:137` |
+| | Recall — forward marginal; recall — the ε-loss | `:162, :175` |
+| | What the loss touches (marginal-only figure) | `:187` |
+| | **Proposition (the loss sees only marginals)** | `:220, :223` |
+| | Proof — change of measure | `:232` |
+| | Two joints, one marginal (figure) | `:242` |
+| | What we may change / DDIM in one sentence | `:263, :288` |
+| **02 — A Non-Markovian Forward** | | `:310-681` |
+| | Markov vs. non-Markovian (two-row edge figure) | `:318` |
+| | What we demand (three requirements) | `:363` |
+| | Construction order (terminal law first, then backward conditionals) | `:379` |
+| | **The mixing recipe** (signal + recycled + fresh) | `:405` |
+| | Pinning the coefficients — mean; — variance | `:415, :425` |
+| | **The noise budget** $a_n^2+\sigma_{n+1}^2 = 1-\bar\alpha_n$ (bar figure) | `:434` |
+| | **Definition (the σ-family)** — forward conditional | `:459, :463` |
+| | **Theorem (the σ-family preserves every marginal)** | `:471, :475` |
+| | Proof outline (3 steps, backward induction) | `:483` |
+| | Step 1 base case; Step 2 whitening; Step 3 two Gaussians add | `:497, :507, :518` |
+| | Proof recap — one chain | `:527` |
+| | Same pair, different triple | `:536` |
+| | How correlated are neighbors? `ρ_n(σ)=√(1−σ²/(1−ᾱ_n))` | `:553, :563` |
+| | A two-step example (numeric, ᾱ₁=0.8, ᾱ₂=0.5) | `:586` |
+| | **DDPM is one member** (`σ² = β̃_{n+1}`) + two verification slides | `:603, :613, :622` |
+| | The other end: `σ ≡ 0` (deterministic forward) | `:630` |
+| | The family at a glance | `:660` |
+| **03 — DDIM Sampling** | | `:683-1080` |
+| | Training is untouched / the gap | `:691, :705` |
+| | **Predicted clean signal**; why that guess is optimal (Tweedie recall) | `:715, :724` |
+| | Jump back, re-noise (two-move figure) | `:736` |
+| | The recycled term collapses (to $\varepsilon_\theta$ identically) | `:767` |
+| | **The DDIM reverse update**; sampling algorithm | `:776, :793` |
+| | **The deterministic map** (`σ ≡ 0`) | `:809` |
+| | Why steps can be skipped; striding the chain | `:823, :833` |
+| | Two sources of error (approximation vs discretization) | `:868` |
+| | The right coordinates `Y_n = X^{(n)}/√ᾱ_n`, `τ_n = √((1−ᾱ_n)/ᾱ_n)` | `:886` |
+| | **Proposition (exact Euler form)** — DDIM is exactly Euler | `:896, :900` |
+| | Proof outline (3 steps) + steps + recap chain | `:909, :925, :934, :943, :952` |
+| | The same ODE in score form (`ε_θ = −√(1−ᾱ_t) s_θ`) | `:961` |
+| | **Theorem (probability-flow ODE, Song et al. 2021)** | `:971, :975` |
+| | Proof outline; Step 1 diffusion as transport; Step 2 match the velocity | `:984, :1001, :1011` |
+| | Why *half* the score | `:1020` |
+| | A continuum of reverse dynamics (λ-family) | `:1042` |
+| | Three dynamics, one marginal; different paths, same cloud | `:1054, :1062` |
+| **04 — Consequences** | | `:1082-1231` |
+| | Why fewer steps work | `:1090` |
+| | Quality vs. step count (schematic curve; TODO real figure) | `:1106` |
+| | Inversion: images get latents; inversion in practice | `:1128, :1156` |
+| | Interpolation: why linear fails; spherical interpolation (slerp) | `:1166, :1176` |
+| | DDPM or DDIM? (comparison table) | `:1202` |
+| | Recap | `:1219` |
 
-**Key:** Same pair / different triple `:200`; proof of pair invariance `:215`; complete ε-form ODE `:334`; PF-ODE in score form `:348`; three-dynamics comparison `:362`; FP equivalence `:377`.
+**Key:** Loss-invariance proposition `:223`; σ-family definition `:463`; marginal
+invariance theorem `:475`; proof recap `:527`; noise budget `:434`; correlation
+dial `:563`; DDPM special case `:603`; predicted clean signal `:715`; DDIM
+reverse update `:776`; deterministic map `:809`; exact-Euler proposition `:900`;
+PF-ODE theorem `:975`; λ-family `:1042`.
+
+**Companion note** (`diffusion4-ddim-note.html`): neighbor correlation as a
+function of σ (§3.3b), the three-step DDPM special-case verification (§3.4),
+strided sampling on a subsequence (§4.4), exactness of the (Y, τ) picture (§5.6),
+the λ-family with its Fokker–Planck proof (§5.7), solver orders and acceleration
+(§6.1), DDIM inversion error analysis (§6.2), and the slerp/lerp norm
+computation (§6.3).
 
 ---
 

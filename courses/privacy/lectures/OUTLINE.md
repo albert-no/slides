@@ -63,7 +63,7 @@ Exams live one level up in `../exam/`.
 | Inverse-transform sampling proposition | `02-generative/diffusion1-foundations.html` | `:164` |
 | MMSE = conditional mean (+ proof) | `02-generative/diffusion1-foundations.html` | `:620-655` |
 | Tweedie's formula (+ proof) | `02-generative/diffusion1-foundations.html` | `:692-753` |
-| DDPM VP forward + VLB + ε-loss | `02-generative/diffusion2-ddpm.html` | `:90-333` |
+| DDPM VP forward + VLB + ε-loss | `02-generative/diffusion2-ddpm.html` | `:123-915` |
 | Fokker–Planck + Anderson reverse SDE | `02-generative/diffusion3-sde-score.html` | `:135-315` |
 | Score-matching theorem | `02-generative/diffusion3-sde-score.html` | `:339` |
 | DDIM (deterministic, ODE, inversion) | `02-generative/diffusion4-ddim.html` | `:134-281` |

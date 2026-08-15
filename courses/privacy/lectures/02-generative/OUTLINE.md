@@ -90,41 +90,82 @@ derivations the slides compress.
 
 ## diffusion2-ddpm.html — DDPM
 
+61 slides. Math-detail revision: every major result is a Theorem/Lemma card
+followed by a proof outline, numbered step slides, and a one-chain recap, with a
+deck-local SVG figure (`.d2-fig`, `.d2-chain`) on most non-proof slides.
+
 | Section | Slide | Line |
 |---|---|---|
-| Title / Contents | | `:1-85` |
-| **01 — VP forward** | | `:90-170` |
-| | Why variance preserving | `:99` |
-| | **VP forward** `X^(n) = √(1−β_n) X^(n-1) + √β_n Z^(n)` | `:114` |
-| | n steps in one shot, `ᾱ_n = ∏(1−β_i)` | `:126, :129` |
-| | **MGF definition + Lévy continuity** | `:139, :142` |
-| | **Convergence: MGF proof** → `N(0,1)` | `:155, :158` |
-| **02 — DDPM reverse** | | `:173-225` |
-| | Reverse conditional, VP version | `:182` |
-| | **Why not train µ directly** (score is the only unknown) | `:193` |
-| | **Two routes to the score**: Tweedie (Lec 1) vs VLB (this lecture) | `:206` |
-| **03 — Variational lower bound** | | `:228-460` |
-| | **Maximum likelihood objective** (max log p_θ ↔ min NLL ↔ KL) | `:237` |
-| | **Marginal is intractable** (high-dim integral, need an upper bound) | `:248` |
-| | **Forward chain is Markov** + Bayes-on-chain identity | `:263` |
-| | Likelihood → VLB (Jensen) | `:288` |
-| | **Factor and telescope** (factor q + Markov + cancel → factored ratio) | `:301` |
-| | **Three-term decomposition `L_N + Σ L_{n-1} + L_0`** | `:311` |
-| | L_N: match the prior | `:320` |
-| | **L_{n-1}: match each reverse step (training signal)** | `:335` |
-| | **Target posterior `q(X^(n-1)\|X^(n),X^(0))` is exactly Gaussian** | `:348` |
-| | Bayes derivation of posterior | `:362` |
-| | **Not ordinary mean matching**: µ_n sees X^(0), µ_θ does not | `:376` |
-| | **Mean matching → score matching** (substitute conditional score) | `:389` |
-| | **ε ↔ score visual** (anti-parallel, scaled) | `:399` |
-| | **ε-Reparameterization**: `s_θ = −ε_θ/√(1−ᾱ_n)` | `:436` |
-| | **ε-Prediction Loss**: plain regression on noise | `:448` |
-| **04 — Algorithms** | | `:450-538` |
-| | Training algorithm (5 steps) | `:459` |
-| | Sampling algorithm | `:476` |
-| | **Three approximation errors** (forward+reverse chain, ①②③ cards) | `:495` |
+| Title / Contents | | `:62-121` |
+| **01 — The variance preserving process** | | `:123-357` |
+| | Why variance preserving (VE vs VP variance-line figure) | `:132` |
+| | **VP forward** `X^(n) = √(1−β_n) X^(n-1) + √β_n Z^(n)` | `:156` |
+| | Variance is preserved (unit-variance induction) | `:174` |
+| | **n steps in one shot**, `ᾱ_n = ∏(1−β_i)` | `:187` |
+| | Proof — induction step (workhorse identity) | `:202` |
+| | Schedule and the signal budget (signal/noise bar figure, ᾱ table) | `:212` |
+| | **Definition (MGF)** | `:247, :250` |
+| | **Theorem (Lévy continuity, MGF form)** | `:263, :266` |
+| | **Theorem (terminal law of the VP chain)** → `N(0,1)` | `:277, :280` |
+| | Proof — one-step MGF recursion | `:290` |
+| | Proof (continued) — unroll to `n` | `:303` |
+| | Proof (continued) — take the limit (`ᾱ_n → 0`) | `:316` |
+| | Proof recap — one chain | `:326` |
+| | The terminal forgets the data (three densities → `N(0,1)`) | `:339` |
+| **02 — DDPM reverse model** | | `:368-465` |
+| | Recall — small-noise reverse rule (Lec 1) | `:378` |
+| | **Rescaling the VP step** (`W = X^(n)/√(1−β_n)`, `σ_eff²`) | `:391` |
+| | Applying the rule (change of variables, exact combination) | `:406` |
+| | **Reverse conditional, VP version** | `:419` |
+| | **Why not train µ directly** (score is the only unknown) | `:434` |
+| | **Two routes to the score**: Tweedie (Lec 1) vs VLB (this lecture) | `:446` |
+| **03 — Variational lower bound** | | `:466-708` |
+| | **Maximum likelihood objective** (NLL = KL + H(q)) | `:475` |
+| | **Marginal is intractable** (N-fold integral) | `:490` |
+| | **Lemma (forward Markov identity)** — Bayes on the chain | `:511, :514` |
+| | Proof — two chain rules | `:532` |
+| | Bound — proof outline (4 steps) | `:546` |
+| | Step 1: insert the forward joint (multiply-and-divide trick) | `:563` |
+| | Step 2: Jensen | `:573` |
+| | Step 3: factor the ratio | `:585` |
+| | Step 3 (continued): telescope | `:598` |
+| | Step 4: three named factors | `:610` |
+| | Step 4 (continued): sum of three terms | `:619` |
+| | Proof recap — one chain | `:631` |
+| | `L_N`: match the prior | `:644` |
+| | **`L_{n-1}`: match each reverse step (training signal)** | `:658` |
+| | Where the three terms live (bracketed-chain figure) | `:671` |
+| **04 — Exact posterior to ε-loss** | | `:709-915` |
+| | **Theorem (data-conditional posterior)** — exactly Gaussian | `:718, :721` |
+| | Why conditioning on `X^(0)` helps (product-of-Gaussians figure) | `:730` |
+| | Proof — Bayes and Markov | `:752` |
+| | Proof (continued) — collect the quadratic (`β̃_n`) | `:765` |
+| | Proof (continued) — read off the mean (`µ̃_n`) | `:775` |
+| | **Posterior mean in score form** | `:785` |
+| | Verifying the rewrite (`1−ᾱ_n−β_n = (1−β_n)(1−ᾱ_{n−1})`) | `:795` |
+| | From KL to mean matching (equal-variance Gaussian KL) | `:808` |
+| | **Not ordinary mean matching**: µ̃_n sees `X^(0)`, µ_θ does not | `:818` |
+| | **Mean matching → score matching** | `:852` |
+| | **ε ↔ score visual** (anti-parallel, scaled) | `:862` |
+| | **ε-Reparameterization**: `s_θ = −ε_θ/√(1−ᾱ_n)` | `:888` |
+| | **ε-Prediction Loss** `L_simple` | `:903` |
+| **05 — Training and sampling** | | `:916-1035` |
+| | Training algorithm (5 steps) | `:924` |
+| | From `µ_θ` to the update | `:941` |
+| | Sampling algorithm | `:952` |
+| | **Three approximation errors** (forward+reverse dual chain, 3 cards) | `:971` |
+| | Lecture recap | `:1020` |
 
-**Key:** VP forward `:114`; one-shot `:129`; MGF def `:142`; MGF proof `:158`; MLE `:237`; Markov `:265`; VLB three-term `:303`; posterior exact `:340`; non-trivial mean matching `:368`; ε↔score `:391`; ε-loss `:437`; three-error chain `:495`.
+**Key:** VP forward `:156`; one-shot `:187`; MGF def `:250`; Lévy `:266`;
+terminal theorem `:280`; rescaling `:391`; VP reverse conditional `:419`;
+Bayes-on-chain lemma `:514`; VLB outline `:546`; three-term sum `:619`;
+posterior theorem `:721`; score form `:785`; ε↔score `:862`; ε-loss `:903`;
+three-error chain `:971`.
+
+**Companion note** (`diffusion2-ddpm-note.html`): schedule/signal-budget table
+(§1.4), the full rescaling derivation with the exact score combination (§3.1–3.2),
+the verified score-form rewrite (§5.3), and the `β̃_n` vs `β_n` variance
+discussion (§6.2).
 
 ---
 

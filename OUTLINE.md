@@ -52,7 +52,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Gaussian MaxEnt / Hadamard / EPI | `courses/infotheory/lectures/03-diffentropy/diffentropy2-maxent-gaussian.html:143, :221, :332` |
 | Shannon–Hartley / water-filling / I-MMSE | `courses/infotheory/lectures/03-diffentropy/diffentropy3-mi-awgn.html:161, :291, :389` |
 | Score function / Tweedie's formula | `courses/privacy/lectures/02-generative/diffusion1-foundations.html:679, :695` (theorem + 3-slide proof); theorem at `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:121` |
-| DDPM forward + VLB derivation | `courses/privacy/lectures/02-generative/diffusion2-ddpm.html:189-333`; `courses/infotheory/lectures/07-diffusion/diff2-diffusion.html:153-212` |
+| DDPM forward + VLB derivation | `courses/privacy/lectures/02-generative/diffusion2-ddpm.html:187-708`; `courses/infotheory/lectures/07-diffusion/diff2-diffusion.html:153-212` |
 | SDE / Fokker–Planck / Anderson reverse | `courses/privacy/lectures/02-generative/diffusion3-sde-score.html` (FP `:148`, Anderson `:234`, score matching `:339`) |
 | DDIM (non-Markovian, deterministic, ODE) | `courses/privacy/lectures/02-generative/diffusion4-ddim.html` (marginal invariance `:164`, predicted clean `:234`) |
 | Classifier guidance + CFG | `courses/privacy/lectures/02-generative/diffusion5-guidance-discrete.html:202-282` |

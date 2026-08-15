@@ -25,36 +25,66 @@ Companion notes: every diffusion lecture now has a paired `<deck>-note.html` wit
 
 ## diffusion1-foundations.html — Foundations
 
+49 slides. Every major result is now stated as a Proposition/Theorem and proved
+step-by-step on the slides (outline → steps → recap chain), with a figure on most
+content slides.
+
 | Section | Slide | Line |
 |---|---|---|
-| Title / Contents | | `:1-68` |
-| **01 — Generative models** | | `:72-129` |
-| | Realistic is not enough | `:81` |
-| | Sampling is non-trivial (Cauchy) | `:96` |
-| | Inverse transform sampling (1D) | `:107` |
-| | High dimension breaks this | `:118` |
-| **02 — VE forward process** | | `:134-178` |
-| | Forward `X^(n) = X^(n-1) + Z^(n)` | `:143` |
-| | n steps in one shot | `:155` |
-| | Terminal distribution | `:166` |
-| | Goal: reverse the chain | `:178` |
-| **03 — Reverse via Bayes** | Taylor + complete-square route | `:194-345` |
-| | Setup | `:203` |
-| | Proof outline | `:212` |
-| | Step 1: Taylor expand P_X | `:226` |
-| | Step 2: approximate P_Y | `:235` |
-| | Step 3: substitute back | `:249` |
-| | **Step 4: complete the square — KEY reverse conditional** | `:262` |
-| | Reverse conditional, compactly (score) | `:287, :290` |
-| | Reverse sampling rule | `:298` |
-| | Why not subtract noise? | `:308` |
-| **04 — Score function & Tweedie** | | `:353-424` |
-| | Score function `s(x;n) = ∂_x log P_{X^(n)}` | `:362` |
-| | **Tweedie's formula (Robbins 1956)** | `:374, :378` |
-| | Train a denoiser, not a score | `:388` |
-| | Denoiser-to-score conversion | `:399, :405` |
+| Title / Contents | | `:29-80` |
+| **01 — Generative models** | | `:82-272` |
+| | Realistic is not enough (swatch-grid figure) | `:91` |
+| | Mode collapse in one picture (bimodal vs spike) | `:121` |
+| | Sampling is non-trivial (Cauchy density, "?" figure) | `:140` |
+| | **Proposition: inverse-transform sampling (1D)** | `:161, :164` |
+| | Inverse transform — the picture (CDF read-off) | `:174` |
+| | Example — sampling the Cauchy (`X = γ tan(π(U−½))`) | `:199` |
+| | Where the uniform comes from (binary expansion, `2^-n` error) | `:211` |
+| | High dimension breaks this (ball/box accept-rate bar chart) | `:224` |
+| | Learn a map, not a density | `:255` |
+| **02 — VE forward process** | | `:274-375` |
+| | Forward `X^(n) = X^(n-1) + Z^(n)` | `:283` |
+| | Noising in pictures (three densities blurring) | `:305` |
+| | n steps in one shot, `X^(n) = X^(0) + √n σ Z` | `:331` |
+| | Terminal distribution | `:346` |
+| | Goal: reverse the chain (generation-order chain diagram) | `:357` |
+| **03 — Reverse via Bayes** | Taylor + complete-square route | `:377-663` |
+| | Setup (rename `X, Z, Y`; one backward edge) | `:386` |
+| | Proof outline (4 steps) | `:408` |
+| | Step 1: Taylor expand `P_X` | `:422` |
+| | Why local expansion works (zoom-to-noise-scale figure) | `:434` |
+| | Step 2: approximate `P_Y` (odd Gaussian moment) | `:455` |
+| | Step 3: substitute back (`1+a ≈ e^a`) | `:471` |
+| | Step 4: merge the exponents | `:486` |
+| | Step 4 (continued): complete the square | `:496` |
+| | Proof recap (one `\stackrel` chain) | `:506` |
+| | **Theorem: small-noise reverse conditional** | `:520, :523` |
+| | Reverse sampling rule | `:535` |
+| | The score shift in a picture (drift arrows uphill) | `:545` |
+| | Why not subtract noise? | `:570` |
+| | Estimation vs distribution matching (shrinkage two-panel figure) | `:582` |
+| | **Proposition: MMSE = conditional mean** | `:617, :620` |
+| | Proof — orthogonality of the error (expand the square) | `:629` |
+| | Proof (continued) — killing the cross term (tower property) | `:646` |
+| | Gaussian MMSE mismatch (variance `σx⁴/(σx²+σz²)`, fresh noise) | `:658` |
+| **04 — Score function & Tweedie** | | `:666-813` |
+| | Score function `s(x;n) = ∂_x log P_{X^(n)}` | `:679` |
+| | **Theorem: Tweedie's formula (Robbins 1956)** | `:692, :695` |
+| | Tweedie — proof outline (4 steps) | `:706` |
+| | Proof — differentiate the convolution (Gaussian derivative identity) | `:720` |
+| | Proof (continued) — recognize the posterior mean (Bayes) | `:733` |
+| | Proof recap — Tweedie in one chain | `:747` |
+| | Reading Tweedie (score arrow pulling `y` toward the mass) | `:761` |
+| | Train a denoiser, not a score (squared-loss regression) | `:782` |
+| | Denoiser-to-score `s_θ = (f_θ − x)/(nσ²)` | `:793, :798` |
+| | Lecture recap | `:806` |
 
-**Key:** Reverse conditional `:287-290`; Tweedie `:378-380`; denoiser-to-score `:405`.
+**Key:** Inverse-transform proposition `:164`; reverse conditional `:523-525`;
+MMSE = conditional mean `:620`; Tweedie `:695-697`; denoiser-to-score `:798`.
+
+**Companion note** (`diffusion1-foundations-note.html`): inverse-transform proof
+plus worked Cauchy example, ball/box volume-ratio decay table, and the full
+derivations the slides compress.
 
 ---
 

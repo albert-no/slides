@@ -51,7 +51,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Differential entropy + bin discretization | `courses/infotheory/lectures/03-diffentropy/diffentropy1-foundations.html:106, :117` |
 | Gaussian MaxEnt / Hadamard / EPI | `courses/infotheory/lectures/03-diffentropy/diffentropy2-maxent-gaussian.html:143, :221, :332` |
 | Shannon–Hartley / water-filling / I-MMSE | `courses/infotheory/lectures/03-diffentropy/diffentropy3-mi-awgn.html:161, :291, :389` |
-| Score function / Tweedie's formula | `courses/privacy/lectures/02-generative/diffusion1-foundations.html:362-425`; theorem at `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:121` |
+| Score function / Tweedie's formula | `courses/privacy/lectures/02-generative/diffusion1-foundations.html:679, :695` (theorem + 3-slide proof); theorem at `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:121` |
 | DDPM forward + VLB derivation | `courses/privacy/lectures/02-generative/diffusion2-ddpm.html:189-333`; `courses/infotheory/lectures/07-diffusion/diff2-diffusion.html:153-212` |
 | SDE / Fokker–Planck / Anderson reverse | `courses/privacy/lectures/02-generative/diffusion3-sde-score.html` (FP `:148`, Anderson `:234`, score matching `:339`) |
 | DDIM (non-Markovian, deterministic, ODE) | `courses/privacy/lectures/02-generative/diffusion4-ddim.html` (marginal invariance `:164`, predicted clean `:234`) |
@@ -133,7 +133,7 @@ Same topic, different decks (use the more recent / more detailed):
 - **VAE / ELBO**: rigorous derivation `courses/infotheory/lectures/07-diffusion/diff1-vae-elbo.html`
 - **Hierarchical-VAE view of diffusion**: `courses/infotheory/lectures/07-diffusion/diff2-diffusion.html` (information-theoretic, Markov rewrite)
 - **Diffusion from-scratch (Bayes route)**: `courses/privacy/lectures/02-generative/diffusion1-foundations.html` (Taylor + complete-square proof, less abstract)
-- **Tweedie**: brief `courses/privacy/lectures/02-generative/diffusion1-foundations.html:374`; with proof `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:135`
+- **Tweedie**: convolution-derivative proof `courses/privacy/lectures/02-generative/diffusion1-foundations.html:692-753`; alternate proof `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:135`
 - **$f$-divergence variational dual**: brief in `courses/infotheory/lectures/05-mi/mi1-bounds.html:261` (KL instances); full development in `courses/infotheory/lectures/06-divergence/div1-fdivergence-gan.html:121-300`
 - **Score matching $\equiv$ diffusion training**: Vincent DSM theorem + proof `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:193-253`; ELBO $\equiv$ DSM capstone `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:156-209`
 

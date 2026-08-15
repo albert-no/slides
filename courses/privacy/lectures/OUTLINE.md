@@ -59,8 +59,10 @@ Exams live one level up in `../exam/`.
 | PrivUnit mechanism | `01-dp/dp8-fl.html` | `:523` |
 | **RRSC + k-closest exact-optimality (NeurIPS 2023)** | `01-dp/dp8-fl.html` | `:571-822` |
 | DP-Diffusion / DP-RDM | `01-dp/dp8-fl.html` | `:852-1004` |
-| Bayes-route reverse derivation | `02-generative/diffusion1-foundations.html` | `:194-345` |
-| Tweedie's formula | `02-generative/diffusion1-foundations.html` | `:374` |
+| Bayes-route reverse derivation | `02-generative/diffusion1-foundations.html` | `:377-663` |
+| Inverse-transform sampling proposition | `02-generative/diffusion1-foundations.html` | `:164` |
+| MMSE = conditional mean (+ proof) | `02-generative/diffusion1-foundations.html` | `:620-655` |
+| Tweedie's formula (+ proof) | `02-generative/diffusion1-foundations.html` | `:692-753` |
 | DDPM VP forward + VLB + ε-loss | `02-generative/diffusion2-ddpm.html` | `:90-333` |
 | Fokker–Planck + Anderson reverse SDE | `02-generative/diffusion3-sde-score.html` | `:135-315` |
 | Score-matching theorem | `02-generative/diffusion3-sde-score.html` | `:339` |

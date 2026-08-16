@@ -55,8 +55,8 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | DDPM forward + VLB derivation | `courses/privacy/lectures/02-generative/diffusion2-ddpm.html:187-708`; `courses/infotheory/lectures/07-diffusion/diff2-diffusion.html:153-212` |
 | SDE / Fokker–Planck / Anderson reverse | `courses/privacy/lectures/02-generative/diffusion3-sde-score.html` (FP `:379`, Anderson `:618`, score matching `:868`, VP kernel `:1021`) |
 | DDIM (non-Markovian, deterministic, ODE) | `courses/privacy/lectures/02-generative/diffusion4-ddim.html` (loss invariance `:223`, σ-family `:463`, marginal invariance `:475`, predicted clean `:715`, exact Euler `:900`, PF-ODE `:975`) |
-| Classifier guidance + CFG | `courses/privacy/lectures/02-generative/diffusion5-guidance-discrete.html:202-282` |
-| Discrete diffusion / score-entropy loss | `courses/privacy/lectures/02-generative/diffusion5-guidance-discrete.html:287-425`; `talks/kics260521dllm/kics260521dllm.html:192-205` (SEDD) |
+| Classifier guidance + inpainting + CFG | `courses/privacy/lectures/02-generative/diffusion5-guidance-discrete.html` (conditional score `:241`, tilted target `:445`, coordinatewise forward `:555`, exact paste `:633`, CFG identity `:811`) |
+| Discrete diffusion / score-entropy loss | `courses/privacy/lectures/02-generative/diffusion5-guidance-discrete.html` (rate matrix `:1204`, reverse rate `:1217`, ratio score `:1308`, score entropy `:1373`, denoising score entropy `:1445`); `talks/kics260521dllm/kics260521dllm.html:192-205` (SEDD) |
 | LLM brief overview (autoregressive, transformer, NLL, sampling) | `courses/privacy/lectures/02-generative/llm.html:72-296` |
 | LLM privacy-hook map (loss / verbatim / sampling / conditional) | `courses/privacy/lectures/02-generative/llm.html:258-281` |
 | Rate–distortion theorem (Shannon) | `courses/infotheory/lectures/04-lossy/lossy1-foundations.html:258-311` |

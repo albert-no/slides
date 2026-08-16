@@ -321,40 +321,86 @@ computation (§6.3).
 
 ## diffusion5-guidance-discrete.html — Guidance + discrete diffusion
 
+95 slides. Math-detail revision mirroring decks 3–4: every major result is a
+Theorem/Proposition/Definition/Lemma card followed by a proof outline, numbered
+step slides, and a one-chain `\stackrel` recap, with deck-local SVG figures
+(`.d5-fig`, `.d5-algo`, `.d5-chain`, KaTeX overlay labels).
+
 | Section | Slide | Line |
 |---|---|---|
-| Title / Contents | | `:1-85` |
-| **01 — Classifier guidance** | | `:90-163` |
-| | **Why conditional generation** (text-to-image, class, inpainting, inverse) | `:99` |
-| | Two approaches (per-label vs guidance) | `:115` |
-| | **Bayes decomposition** `∇log P(X\|Y) = ∇log P(X) + ∇log P(Y\|X)` | `:128, :134` |
-| | Time-dependent classifier on noisy inputs | `:141` |
-| | Guided reverse SDE | `:152` |
-| **02 — Inpainting** | | `:167-260` |
-| | **What is inpainting?** (task, use cases) | `:174` |
-| | Setup (Ω mask, Y observed, $\bar\Omega$ complement) | `:189` |
-| | **The ideal conditional score** (and why net is out of domain) | `:203` |
-| | Approximating the conditional score (noised observation $\zeta_t$) | `:216` |
-| | **Why it works** | `:227` |
-| | Inpainting sampler | `:241` |
-| **03 — Classifier-free guidance** | | `:262-345` |
-| | Why drop the classifier | `:270` |
-| | **CFG identity**: `ω log P(X\|Y) + (1−ω) log P(X)` | `:283, :287` |
-| | Dual-role network (drop probability `p_drop`) | `:294` |
-| | **CFG sampling rule** `ε̃ = ω ε_θ(X,y) − (ω−1) ε_θ(X,∅)` | `:309` |
-| | CFG in practice | `:321` |
-| **04 — Discrete diffusion** | | `:347-471` |
-| | What breaks (no additive noise) | `:355` |
-| | Forward: transition matrices | `:369` |
-| | Uniform vs absorbing | `:380` |
-| | Continuous-time limit | `:401` |
-| | **Reverse rate matrix**: `Q̄_t(y,x) = (p_t(y)/p_t(x)) Q_t(x,y)` (overflow fixed) | `:410` |
-| | **Discrete score = ratio vector** `s(x,t)_y = p_t(y)/p_t(x)` | `:423, :426` |
-| | Squared loss fails | `:436` |
-| | **Score-entropy loss (Lou et al. 2024)** | `:449, :452` |
-| | Sequence space (Hamming-sparsity) | `:461` |
+| Title / Contents | | `:75-127` |
+| **01 — Classifier guidance** | | `:129-491` |
+| | Why conditional generation (four tasks, figure) | `:138` |
+| | Two approaches (per-label model vs. one model + steering) | `:174` |
+| | Recall — reverse SDE; recall — score and noise | `:200, :213` |
+| | What conditioning requires | `:226` |
+| | **Proposition (conditional score = score + classifier gradient)** | `:241` |
+| | Proof outline; Step 1 Bayes at level $t$; Step 2 logs; Step 3 differentiate | `:254, :270, :282, :292` |
+| | Proof recap — one chain | `:302` |
+| | Reading the decomposition (unconditional + push, figure) | `:315` |
+| | The classifier must see noise (figure); training the noisy classifier | `:348, :382` |
+| | The guided reverse SDE; guidance in $\varepsilon$-form | `:399, :414` |
+| | Classifier-guided sampler (`d5-algo`) | `:424` |
+| | **What $\omega$ actually samples** (tilted target $p_t\,p_t(y\mid x)^{\omega}$) | `:445` |
+| | Proof, and a caveat (the tilt is not a diffusion for $\omega\ne1$) | `:458` |
+| | The tilt in a picture | `:474` |
+| **02 — Inpainting** | | `:494-773` |
+| | What is inpainting (figure); the task, formally | `:502, :530` |
+| | Goal as conditional sampling | `:543` |
+| | **Lemma (the forward process factorizes over coordinates)** + proof | `:555, :567` |
+| | The ideal conditional score | `:577` |
+| | Why pasting clean pixels fails (out-of-domain figure) | `:591` |
+| | Key idea — noise the observation ($\zeta_n$) | `:620` |
+| | **Proposition (the paste is exact in law)** | `:633` |
+| | Where the approximation lives (exact tower decomposition) | `:645` |
+| | The two approximations (drop clean conditioning; one fresh draw) | `:657` |
+| | Boundary check; the inpainting sampler (`d5-algo`) | `:682, :697` |
+| | The sampler in a picture; variants (RePaint, ILVR, DPS) | `:718, :760` |
+| **03 — Classifier-free guidance** | | `:775-1041` |
+| | Why drop the classifier; the idea | `:783, :799` |
+| | **Theorem (the CFG identity)** | `:811` |
+| | Proof outline; Step 1 invert Bayes; Step 2 substitute; Step 3 collect | `:826, :842, :852, :862` |
+| | Proof recap — one chain | `:875` |
+| | Guidance as extrapolation (figure); a dual-role network (figure) | `:888, :916` |
+| | Training with condition dropout; from score to $\varepsilon$ | `:946, :962` |
+| | The sampling rule; classifier-free sampler (`d5-algo`) | `:972, :982` |
+| | What CFG samples (same tilt, no classifier); CFG in practice | `:1003, :1016` |
+| **04 — Discrete diffusion** | | `:1043-1599` |
+| | What breaks on tokens (figure); keep the recipe, change the noise | `:1051, :1079` |
+| | Forward — transition matrices; example — uniform kernel | `:1094, :1107` |
+| | Uniform vs. absorbing; two transition graphs (figure) | `:1117, :1142` |
+| | Absorbing kernel in closed form; the continuous-time limit | `:1183, :1193` |
+| | **Definition (rate matrix)** | `:1204` |
+| | **Theorem (reverse rate matrix** $\bar Q_t(y,x) = \frac{p_t(y)}{p_t(x)}Q_t(x,y)$**)** | `:1217` |
+| | Proof outline; Step 1 one small step; Step 2 Bayes on the pair; Step 3 limit | `:1231, :1248, :1258, :1271` |
+| | Two sanity checks; proof recap — one chain | `:1281, :1295` |
+| | **Definition (the discrete score = ratio vector)**; why call it a score | `:1308, :1321` |
+| | Sampling the reverse chain (`d5-algo`); why the squared loss fails | `:1342, :1359` |
+| | **Definition (score entropy)**; **Theorem (score entropy is a divergence)** | `:1373, :1386` |
+| | Proof — differentiate in $s$; the barrier (figure); the target is unknown | `:1402, :1412, :1433` |
+| | **Theorem (denoising score entropy, Lou–Meng–Ermon 2024)** | `:1445` |
+| | Proof outline; Step 1 decouple; Step 2 minimize pointwise; Step 3 telescope | `:1458, :1474, :1484, :1494` |
+| | Proof recap — one chain | `:1506` |
+| | Sequence space ($K^L$); corrupt each position alone (Hamming-1) | `:1519, :1532` |
+| | The reverse inherits the sparsity ($L(K-1)$ outputs, figure) | `:1542` |
+| | Sampling a sequence (tau-leaping, `d5-algo`) | `:1570` |
+| | Continuous and discrete, side by side (dictionary table) | `:1586` |
+| | Series recap | `:1602` |
 
-**Key:** Conditional motivation `:99`; Bayes decomposition `:134`; inpainting task `:174`; ideal conditional score `:203`; CFG identity `:287`; CFG sampling `:309`; discrete ratio score `:426`; score entropy `:452`.
+**Key:** Conditional-score proposition `:241`; tilted-target proposition `:445`;
+coordinatewise forward lemma `:555`; exact-paste proposition `:633`; two
+approximations `:657`; CFG identity theorem `:811`; rate-matrix definition
+`:1204`; reverse-rate theorem `:1217`; discrete-score definition `:1308`; score
+entropy `:1373`; score entropy is a divergence `:1386`; denoising score entropy
+theorem `:1445`; Hamming-1 sparsity `:1532, :1542`.
+
+**Companion note** (`diffusion5-guidance-discrete-note.html`): tilted fixed
+point with proof and the "the tilt is not a diffusion" caveat (§1.4–§1.5),
+coordinatewise forward lemma and exact-paste proposition with the tower
+decomposition and the two named approximations (§2.3a–§2.3b), the reverse-rate
+formula proved by infinitesimal Bayes plus two sanity checks (§5.2), the
+fine-grid limit that justifies the word "score" (§5.2a), and denoising score
+entropy with its full three-step proof (§6.6).
 
 ---
 

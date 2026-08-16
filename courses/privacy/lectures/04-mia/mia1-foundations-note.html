@@ -37,7 +37,7 @@
 <p class="meta">Companion to <code>mia1-foundations.html</code>. Detail that doesn't fit on the slides.</p>
 
 <section>
-  <h2>Slide 34 + 34b — TPR at Low FPR</h2>
+  <h2>Slides 97–100 — TPR at Low FPR</h2>
 
   <h3>Why average accuracy is misleading</h3>
   <p>Two attacks with the same balanced accuracy can have wildly different real-world impact. An attack achieving <strong>60% balanced accuracy</strong> by being slightly better than chance everywhere is useless when an auditor needs <em>high-confidence positives</em> — i.e. the regime where <strong>FPR is well below 1%</strong>. Carlini et al. (2022) reframed evaluation around this regime: TPR at low FPR is the only metric that aligns with the threat model.</p>
@@ -54,21 +54,32 @@
 </section>
 
 <section>
-  <h2>Slide 28 — DP Bounds MI Advantage (proof)</h2>
-
-  <h3>Full derivation</h3>
-  <p>The slide states the bound and gives the one-line sketch. Here is the complete argument.</p>
-  <p><strong>Claim.</strong> If $M$ is $(\varepsilon, \delta)$-DP, then for any adversary $\mathcal{A}$,
-  $$\mathrm{Adv}_{\mathrm{MI}}(\mathcal{A}) \leq e^\varepsilon - 1 + \delta.$$</p>
-  <p><strong>Proof.</strong> By $(\varepsilon,\delta)$-DP applied to the event $\{\mathcal{A}(M(\cdot)) = 1\}$:
-  $$\Pr[\mathcal{A}(M(D_1))=1] \leq e^\varepsilon \Pr[\mathcal{A}(M(D_0))=1] + \delta.$$
-  Let $p = \Pr[\mathcal{A}(M(D_0))=1]$ and $q = \Pr[\mathcal{A}(M(D_1))=1]$. Then $q \leq e^\varepsilon p + \delta$, so
-  $$q - p \leq (e^\varepsilon - 1)p + \delta \leq e^\varepsilon - 1 + \delta,$$
-  since $p \leq 1$. By symmetry (apply DP in the other direction), $p - q \leq e^\varepsilon - 1 + \delta$ as well.
-  Therefore $|q - p| \leq e^\varepsilon - 1 + \delta$. $\square$</p>
+  <h2>Slides 75–82 — DP as an Upper Bound: caveats</h2>
+  <p class="meta">Theorem 3 (slides 75–77), Corollary 3 (78), Corollary 4 (80) and the two numeric tables (81, 82) are now stated and proved <em>on the slides</em>. This section holds only what the slides deliberately leave out.</p>
 
   <h3>Why the table values</h3>
-  <p>For $\varepsilon = 0.1$, $\delta = 10^{-5}$: $e^{0.1} - 1 + 10^{-5} \approx 0.105$. For $\varepsilon = 1$: $e - 1 \approx 1.718$ (bound exceeds 1, so it's not tight but not vacuous). For $\varepsilon = 8$: $e^8 - 1 \approx 2980$ — completely vacuous; large-$\varepsilon$ DP gives no useful MI guarantee.</p>
+  <p>Advantage table, slide 81, with $\delta = 10^{-5}$ throughout — negligible beside $e^\varepsilon - 1$ at every row. For $\varepsilon = 0.1$: $e^{0.1} - 1 + 10^{-5} \approx 0.105$. For $\varepsilon = 1$: $e - 1 \approx 1.718$, already above the maximum possible advantage of $1$, so the bound is formally true but carries no information. For $\varepsilon = 8$: $e^8 - 1 \approx 2980$ — entirely vacuous.</p>
+  <p>ROC-cap table, slide 82, evaluating $\mathrm{TPR} \le e^\varepsilon\,\mathrm{FPR} + \delta$ at $\mathrm{FPR} = 10^{-3}$: $\varepsilon = 1$ gives $2.72 \times 10^{-3} \approx 0.0027$; $\varepsilon = 4$ gives $54.6 \times 10^{-3} \approx 0.055$; $\varepsilon = 8$ gives $2.98$, i.e. no constraint. The contrast between the two tables is the point: the advantage bound dies at $\varepsilon \approx 0.7$, the ROC cap stays informative in the low-FPR corner well past $\varepsilon = 4$.</p>
+
+  <h3>Tightness</h3>
+  <p>Theorem 3 carves out the achievable region; it does not say any particular mechanism reaches its boundary. The boundary <em>is</em> attained — Kairouz, Oh and Viswanath (ICML 2015) construct, for every $(\varepsilon,\delta)$, a pair of distributions whose optimal test sits exactly on the wedge — so the bound cannot be improved as a statement about the class of all $(\varepsilon,\delta)$-DP mechanisms. For a specific mechanism (say DP-SGD at a given noise multiplier) the true trade-off curve usually lies strictly inside, which is why $f$-DP and privacy-loss-distribution accounting give sharper per-mechanism curves than $(\varepsilon,\delta)$ alone.</p>
+
+  <h3>Where the slack comes from</h3>
+  <ul>
+    <li><strong>Worst-case pair.</strong> The guarantee quantifies over the most distinguishable neighboring pair. A typical record sits far from that pair.</li>
+    <li><strong>Worst-case adversary.</strong> The bound assumes the adversary knows the two candidate datasets exactly and can compute the likelihood ratio. Real attacks estimate it.</li>
+    <li><strong>Composition slack.</strong> An $\varepsilon$ obtained by composing thousands of steps is a bound on a bound; the empirical trade-off curve of the composed mechanism is typically much better.</li>
+  </ul>
+  <p>Quantifying that gap — measured attack performance versus the ceiling — is the subject of the auditing literature and of lectures 3–5. Do not preview it here.</p>
+
+  <h3>Auditing direction (slide 86)</h3>
+  <p>Inverting the cap gives $\hat\varepsilon_{\mathrm{lower}} = \log\bigl((\mathrm{TPR} - \delta)/\mathrm{FPR}\bigr)$. Two honest caveats to state aloud: (i) it is only ever a lower bound, so a weak attack proves nothing; (ii) the estimate is computed from finitely many trials, so the raw ratio must be replaced by a Clopper–Pearson-style confidence interval before it can be called a certificate. The slide states (i); (ii) is verbal.</p>
+</section>
+
+<section>
+  <h2>Slides 26–35 — the Homer power model</h2>
+  <p>Theorem 1 and Corollary 1 are the deck's own power analysis of the Homer attack under an explicitly idealized model (independent SNPs, known reference frequencies, haploid coding), in the style of the analysis by Sankararaman, Obozinski, Jordan and Halperin (Nature Genetics 2009). They are <em>not</em> numbers reported in Homer et al. (PLoS Genetics 2008). Slide 34 lists what the model idealizes; slide 35 states what the paper itself reported. Keep that distinction explicit when lecturing — the derived figures (roughly $2.8 \times 10^4$ SNPs for power $0.5$ at $n = 1000$, $\alpha = 10^{-6}$) happen to land inside the paper's stated operating range, and that coincidence should not be presented as agreement.</p>
+  <p>The dependence worth verbalizing: $\mu = 2\sqrt{m\bar v / n}$ means loci buy power like $\sqrt{m}$ while cohort size costs it like $1/\sqrt{n}$. Doubling the cohort is cancelled by doubling the number of SNPs — and array density grew far faster than cohort size, which is why the attack got easier over time rather than harder.</p>
 </section>
 
 <section>

@@ -17,50 +17,69 @@
 
 ## mia1-foundations.html
 
+104 slides, 6 sections. Every theorem/proposition below is stated **and proved on the slides**;
+the note holds only caveats, tightness and numeric provenance.
+
 | Part | Topic | Line |
 |---|---|---|
-| **01** — Why MIA matters | central question, IND-CPA analogy, real-world stakes | `:78-141` |
-| | Inline notation table (M, D, x, θ, f_θ, ℓ) | `:91` |
-| | IND-CPA defined inline | `:115` |
-| **02** — Homer et al. 2008 | motivation, GWAS aggregates, MIA framing | `:142-310` |
-| | "Why this paper existed" (GWAS publication norms) | `:149` |
-| | **Homer attack in MIA language** (mapping table) | `:166` |
-| | **Genomics in 60 seconds** (SNP, allele, frequencies) | `:184` |
-| | Three ingredients (`Y_i`, `M_j`, `Pop_j`) with descriptions | `:198` |
-| | Distance `D(Y_{i,j}) = \|Y_{i,j}-M_j\|-\|Y_{i,j}-Pop_j\|` | `:228` |
-| | Aggregation t-test | `:257` |
-| | NIH database closure | `:296` |
-| **03** — Reconstruction → distinguishability | | `:311-476` |
-| | IND-CPA cryptographic analogy (full) | `:412` |
-| | Privacy = indistinguishability → MIA | `:454` |
-| **04** — The MI game | challenger, adversary, neighboring DBs | `:477-687` |
-| | **MI game** (with `A` defined inline) | `:483` |
-| | **Neighboring DBs** `D_1=D∪{x}, D_0=D\{x}` | `:500` |
-| | **Advantage** `\|Pr[A=1\|b=1]-Pr[A=1\|b=0]\|` | `:517` |
-| | HT connection (refers back to DP2 HT interpretation) | `:545` |
-| | **Neyman–Pearson setup** (size, power, level) | `:584` |
-| | **Neyman–Pearson statement** `Λ(T) = p_1/p_0 ≷ τ` | `:605` |
-| | **NP proof** (one-line sign-trick argument) | `:623` |
-| | **NP → MIA**: every optimal MIA is a likelihood-ratio test | `:641` |
-| | Error types (FPR, FNR) | `:663` |
-| **05** — DP, MI, taxonomy | | `:688-1029` |
-| | **HT interpretation of DP** (from DP2) `1≤α+βe^ε` | `:693` |
-| | **DP caps the MIA ROC** `TPR ≤ e^ε FPR + δ` | `:707` |
-| | **Corollary: Advantage bound** `Adv ≤ e^ε−1+δ` (with numerical table) | `:723` |
-| | MI as auditing tool | `:740` |
-| | Privacy attack taxonomy (membership/attribute/extraction/inversion, each defined) | `:788` |
-| | Threat model spectrum | `:817` |
-| | **Sablayrolles 2019** (dedicated slide): BB ≈ WB, loss is sufficient | `:832` |
-| | **ROC curve — definition** (full-width equations) | `:848` |
-| | **ROC curve — large diagram** (perfect / attack / random) | `:863` |
-| | **AUC — formulas** (integral + probabilistic) | `:897` |
-| | **AUC — diagram + reference values** | `:911` |
-| | **Why AUC misses MIA risk** + Attack A vs B diagram | `:948` |
-| | **TPR @ low FPR (Carlini critique)** + log-log ROC diagram | `:984` |
-| | Metrics comparison table | `:1020` |
-| | Standard benchmarks (CIFAR, Purchase, Texas, WikiMIA) | `:1035` |
+| **01** — Why MIA matters | central question, notation, threat model, road map | `:93-217` |
+| | Notation table (D, M, θ, z, A, α/β/π) | `:118` |
+| | When membership is itself the secret (timeline figure) | `:147` |
+| | Loss-histogram picture behind every attack | `:176` |
+| **02** — Homer et al. 2008 | full statistical development of the genomic attack | `:218-660` |
+| | Per-SNP probabilistic model (Y_ij, M_j, p_j) | `:286` |
+| | Signed distance statistic D_j | `:300` |
+| | **Key trick** \|Y−a\| = a + Y(1−2a) removes the absolute value | `:313` |
+| | **Lemma 1** non-member has zero mean (+ proof) | `:331` |
+| | **Lemma 2** member has mean −2p(1−p)/n (+ 2 proof slides) | `:347` |
+| | Sign-flip figure (the attack in one picture) | `:392` |
+| | **Proposition 1** per-SNP variance ≈ p(1−p)/n (+ proof) | `:416` |
+| | CLT aggregation figure | `:446` |
+| | **Theorem 1** power π = Φ(μ − z_{1−α}), μ = 2√(m v̄/n) | `:495` |
+| | Proof of Theorem 1: outline, steps 1–4, recap chain | `:509-560` |
+| | **Corollary 1** loci needed m ≥ n(z_{1−α}+z_{1−β})²/(4v̄) + numbers | `:575-603` |
+| | What the model idealizes / what the paper reported | `:604-641` |
+| | NIH database closure | `:642` |
+| **03** — Reconstruction → distinguishability | | `:661-843` |
+| | Genomics → ML translation table | `:683` |
+| | Sampling-mechanism counterexample (defeats reconstruction, destroys privacy) | `:712-744` |
+| | IND-CPA precedent (figure) | `:745` |
+| | Attack-surface spectrum + two axes of adversary knowledge | `:787-826` |
+| **04** — The MI game and the optimal attack | | `:844-1203` |
+| | **MI game** (5-step challenger/adversary box) + game-flow figure | `:851-902` |
+| | **Definition** MI advantage | `:918` |
+| | **Proposition 2** Adv = \|TPR − FPR\| = 2Pr[b̂=b] − 1 (+ proof) | `:932` |
+| | **Proposition 3** sup_A Adv = TV(P₁,P₀) (+ upper bound, achievability) | `:960-1002` |
+| | Hypothesis-testing dictionary; what the adversary computes | `:1003-1030` |
+| | Why loss is the natural statistic (Sablayrolles ICML 2019) | `:1031` |
+| | **Theorem 2** Neyman–Pearson lemma, randomized at the boundary | `:1057` |
+| | Proof of Theorem 2: outline, calibration, **sign trick**, integrate, size constraint, recap | `:1072-1151` |
+| | Rejection-region figure | `:1152` |
+| | **Corollary 2** every optimal attack is a likelihood-ratio test | `:1175` |
+| **05** — DP as an upper bound | | `:1204-1422` |
+| | Recall (ε,δ)-DP; recasting DP as a testing constraint | `:1211-1236` |
+| | **Theorem 3** α + e^ε β ≥ 1−δ and β + e^ε α ≥ 1−δ (+ 2 proof slides) | `:1237-1281` |
+| | **Corollary 3** ROC cap TPR ≤ e^ε FPR + δ | `:1282` |
+| | DP wedge figure (achievable region shaded) | `:1296` |
+| | **Corollary 4** Adv ≤ e^ε − 1 + δ (+ proof; migrated from the note) | `:1327` |
+| | Numeric tables: advantage bound; ROC cap at FPR 10⁻³ | `:1342-1370` |
+| | What the bound does *not* say (scope, direction) | `:1371-1392` |
+| | Both directions: DP caps attacks; attacks certify ε ≥ log((TPR−δ)/FPR) | `:1393-1422` |
+| **06** — Evaluating membership inference | | `:1423-1674` |
+| | ROC as a curve, not a number; ROC-plane figure | `:1430-1465` |
+| | AUC in two forms | `:1466` |
+| | **Proposition 4** AUC = Pr[T⁺ > T⁻] (+ 2 proof slides) | `:1476-1515` |
+| | **Proposition 5** AUC is an average-case statistic | `:1516` |
+| | Two-attack counterexample (√FPR vs min(2FPR,1)) + linear/log-log figure | `:1529-1568` |
+| | Why AUC misses MIA risk; TPR at low FPR (Carlini S&P 2022) | `:1569-1597` |
+| | Metrics comparison; reading metric tables critically; benchmarks | `:1598-1637` |
+| | The argument in one chain; what to carry forward | `:1638-1674` |
 
-**Note (`mia1-foundations-note.html`):** DP→MI bound full proof `:57-72`; why log-log ROC matters `:45`; metric pitfalls `:49-53`.
+Deck-local figure family: prefix `m1-` (`.m1-fig` + `.lab` overlays, `.m1-algo`, `.m1-chain`, `.m1-tight`), defined in the deck's own `<style>` block.
+
+**Note (`mia1-foundations-note.html`):** TPR-at-low-FPR rationale and metric pitfalls `:39-54`;
+DP caveats — why the table values, tightness (Kairouz–Oh–Viswanath), sources of slack, auditing confidence intervals `:56-74`;
+Homer model provenance and the √m vs 1/√n reading `:76-80`.
 
 ---
 

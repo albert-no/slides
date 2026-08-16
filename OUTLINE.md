@@ -76,7 +76,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Fisher divergence + score function | `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:91, :141` |
 | Denoising score matching theorem (Vincent 2011) | `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:193, :220-253` |
 | Diffusion ELBO $\equiv$ DSM theorem | `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:198` (capstone); cites Vincent from `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:193` |
-| MIA foundations (Homer, evaluation metrics) | `courses/privacy/lectures/04-mia/mia1-foundations.html` |
+| MIA foundations (Homer power analysis, MI game, Neyman–Pearson, DP ROC cap, metrics) | `courses/privacy/lectures/04-mia/mia1-foundations.html` |
 | Shadow models (Shokri / LOGAN / seq2seq) | `courses/privacy/lectures/04-mia/mia2-shadow.html` |
 | MIA theory (Yeom / Sablayrolles / ML-Leaks / Nasr) | `courses/privacy/lectures/04-mia/mia3-theory.html` |
 | LiRA, RMIA, label-only, attack hierarchy | `courses/privacy/lectures/04-mia/mia4-modern.html` |

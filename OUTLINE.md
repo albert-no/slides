@@ -24,7 +24,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
   - `lectures/02-generative/` — Generative-model review: 5 diffusion lectures (Bayes-route, DDPM, SDE, DDIM, guidance + discrete) + 1 brief LLM deck. `note/2_difffusion.tex` is LaTeX source for Diffusion Lectures 1–2
   - `lectures/03-memorization/` — Memorization in generative models (2 decks split 2026-05: `memorization-diffusion.html` covers intro/lawsuits/Bartz, three formal definitions, diffusion detection, SAIL, CLIP-pad, with companion note `memorization-diffusion-note.html`; `memorization-llm.html` covers exposure theory → Feldman → extraction/Min-K → ACR → books → defenses, math-detail revision 2026-08 at 128 slides with companion note `memorization-llm-note.html`). Paper-figure assets in `figs/`
   - `lectures/04-mia/` — Membership inference attacks (5 lectures, paired notes; legacy `old/MIA.html`)
-  - `lectures/05-unlearning/` — Machine unlearning (definitions, certified deletion with proofs, SISA, classification, metrics-as-test, LLM, benchmarks, lab work; sourced from `slide.pdf`)
+  - `lectures/05-unlearning/` — Machine unlearning (2 decks, both math-detail revised 2026-08 with per-slide companion notes: `unlearning1-foundations.html` 107 slides — definitions, certified deletion with proofs, SISA, classification, metrics-as-test; `unlearning2-llm.html` 95 slides — why the certificate does not transfer, the LLM objective family, benchmarks as measurement claims, closure under fine-tuning; sourced from `slide.pdf`). Paper-figure assets in `figs/`
   - `lectures/06-watermark/` — LLM watermarking (1 deck: green-list, distortion-free, undetectable, robust, radioactivity)
   - `exam/` — homework (HW1–4), midterms 2025–26, finals 2024–25 + 2026/27 drafts (`.tex`/`.pdf`/`.html`, shared style files)
   - `overleaf/` — frozen Overleaf archive: lecture-note `.tex` (`1_dp`/`2_difffusion`/`3_watermark`/`4_MIA`), `hw_exam/` (all HW + exams), `images/`, `old/` drafts, `.bib`/style files
@@ -110,10 +110,11 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | MIA recall + Proposition 4 (certification caps every metric; HW4 woven in) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:1522-1571` |
 | SCRUB / SalUn / $\ell_1$-sparse / RURK classification unlearn | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:1241-1412` |
 | IDI / COLA (lab unlearning eval) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:1642-1732` |
-| GA collapse + NPO bounded + SimNPO | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:103-165` |
-| ME+GD / IDK / ELM / LUNAR (LLM unlearn) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:166-241` |
-| TOFU / WMDP / RWKU / MUSE benchmarks (main-figure images) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:250-302` |
-| Benign + syntactic relearning (lab) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:303-328` |
+| Why certified unlearning fails for LLMs (P1–P4; Prop 1, Lemmas 2–3, Prop 4) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:107-460` |
+| GA / NPO / SimNPO / entropy-max / RMU — one weighted-gradient family (Props 5/8/9/10, Thms 6/7) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:461-884` |
+| TOFU / WMDP / RWKU / MUSE — what each actually measures (Thm 11, Cor 12, Props 13–14) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:885-1243` |
+| Deletion vs suppression — closure under a fine-tuning budget (Def 15, Prop 16, Cor 17) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:1244-1552` |
+| Benign + syntactic relearning (lab), DUSK, R-TOFU | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:1346-1459` |
 | Position: "Unlearning" overused in LLMs (5-min ICML talk) | `talks/icml2026/icml2026.html` |
 | REFT (first-token diversification for RLVR) | `talks/postech260819/postech260819.html:145-455` (rebuttal: 373-420) |
 | SafePath (8-token safety primer for LRMs) | `talks/postech260819/postech260819.html:456-591` |

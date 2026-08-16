@@ -24,7 +24,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
   - `lectures/02-generative/` — Generative-model review: 5 diffusion lectures (Bayes-route, DDPM, SDE, DDIM, guidance + discrete) + 1 brief LLM deck. `note/2_difffusion.tex` is LaTeX source for Diffusion Lectures 1–2
   - `lectures/03-memorization/` — Memorization in generative models (2 decks split 2026-05: `memorization-diffusion.html` covers intro/lawsuits/Bartz, three formal definitions, diffusion detection, SAIL, CLIP-pad, with companion note `memorization-diffusion-note.html`; `memorization-llm.html` covers exposure theory → Feldman → extraction/Min-K → ACR → books → defenses, math-detail revision 2026-08 at 128 slides with companion note `memorization-llm-note.html`). Paper-figure assets in `figs/`
   - `lectures/04-mia/` — Membership inference attacks (5 lectures, paired notes; legacy `old/MIA.html`)
-  - `lectures/05-unlearning/` — Machine unlearning (definitions, classification, LLM, benchmarks, lab work; sourced from `slide.pdf`)
+  - `lectures/05-unlearning/` — Machine unlearning (definitions, certified deletion with proofs, SISA, classification, metrics-as-test, LLM, benchmarks, lab work; sourced from `slide.pdf`)
   - `lectures/06-watermark/` — LLM watermarking (1 deck: green-list, distortion-free, undetectable, robust, radioactivity)
   - `exam/` — homework (HW1–4), midterms 2025–26, finals 2024–25 + 2026/27 drafts (`.tex`/`.pdf`/`.html`, shared style files)
   - `overleaf/` — frozen Overleaf archive: lecture-note `.tex` (`1_dp`/`2_difffusion`/`3_watermark`/`4_MIA`), `hw_exam/` (all HW + exams), `images/`, `old/` drafts, `.bib`/style files
@@ -104,12 +104,12 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Min-K%++ probe | `courses/privacy/lectures/03-memorization/memorization-llm.html:1162` |
 | ACR (Schwarzschild 2024) + MiniPrompt + counting bound | `courses/privacy/lectures/03-memorization/memorization-llm.html:1268-1534` |
 | Cooper book extraction (open-weight LLMs) | `courses/privacy/lectures/03-memorization/memorization-llm.html:1586-1666` |
-| Certified $(\varepsilon,\delta)$-unlearning | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:160` |
-| Influence function (IU) — leads into the Newton block | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:174` |
-| Newton-step (8-slide derivation) + Sekhari capacity theorems | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:191-312` |
-| MIA: optimal test + DP cap + Yeom gap (HW4 woven in) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:472` |
-| SCRUB / SalUn / $\ell_1$-sparse classification unlearn | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:367-431` |
-| IDI / COLA (lab unlearning eval) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:502-533` |
+| Certified $(\varepsilon,\delta)$-unlearning (Definition 3; Props 1–2; certified $\ne$ DP) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:255-377` |
+| Influence function (IU) — derived from the IFT, leads into the Newton block | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:459-567` |
+| Theorems 1–3: Newton step (proved), Gaussian certification, Sekhari capacity | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:568-979` |
+| MIA recall + Proposition 4 (certification caps every metric; HW4 woven in) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:1481-1530` |
+| SCRUB / SalUn / $\ell_1$-sparse / RURK classification unlearn | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:1238-1371` |
+| IDI / COLA (lab unlearning eval) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:1601-1691` |
 | GA collapse + NPO bounded + SimNPO | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:103-165` |
 | ME+GD / IDK / ELM / LUNAR (LLM unlearn) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:166-241` |
 | TOFU / WMDP / RWKU / MUSE benchmarks (main-figure images) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:250-302` |

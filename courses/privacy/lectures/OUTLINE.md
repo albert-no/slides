@@ -10,7 +10,7 @@ Exams live one level up in `../exam/`.
 - **`02-generative/`** — Generative-model review. **Diffusion** (5 lectures, from-scratch Bayes-route, SDE, DDIM, guidance, discrete) and **LLM** (1 brief deck: tokens, decoder-only transformer, NLL pretraining, sampling, privacy hooks). Companion notes: `diffusion3-sde-score-note.html` and `note/2_difffusion.tex` (LaTeX). See `02-generative/OUTLINE.md`.
 - **`03-memorization/`** — Memorization in generative models. **Two decks (split 2026-05)**: `memorization-diffusion.html` (intro + lawsuits + Bartz/Anthropic, three formal definitions, diffusion detection, SAIL, CLIP-pad, LLM bridge; math-detail revision 2026-08 — 101 slides, theorem/lemma cards with on-slide proofs, companion `memorization-diffusion-note.html`) and `memorization-llm.html` (math-detail revision 2026-08 — 55 → 128 slides: exposure theory, Feldman, extraction/scaling/alignment, Min-K%/++, ACR, Cooper books, defenses with proofs; companion `memorization-llm-note.html`). Captured paper figures in `figs/`. See `03-memorization/OUTLINE.md`.
 - **`04-mia/`** — Membership inference attacks (5 lectures, paired notes). Plus legacy `old/MIA.html`. See `04-mia/OUTLINE.md`.
-- **`05-unlearning/`** — Machine unlearning. Definitions, classification methods, LLM methods, benchmarks, lab work. See `05-unlearning/OUTLINE.md`.
+- **`05-unlearning/`** — Machine unlearning. Definitions (three, nested), certified deletion with full proofs, SISA, classification methods, metrics-as-hypothesis-test, LLM methods, benchmarks, lab work. See `05-unlearning/OUTLINE.md`.
 - **`06-watermark/`** — LLM watermarking (single deck). Green-list, distortion-free, undetectable, robustness, radioactivity. See `06-watermark/OUTLINE.md`.
 
 ## Reading order
@@ -29,7 +29,7 @@ Exams live one level up in `../exam/`.
 - **diffusion ↔ MIA**: diffusion-model MIA is a research frontier — `04-mia/mia4-modern.html:1717-1874` covers it (per-timestep statistic at `:1747`, measured AUC-vs-$t$ peak at `:1811`). The diffusion-models theory in `02-generative/` provides the substrate; the deck carries a self-contained Recall card for the denoising objective at `:1735`.
 - **DP ↔ MIA**: `04-mia/mia1-foundations.html:1237-1341` proves the hypothesis-testing region (`α + e^ε β ≥ 1−δ`), the ROC cap (`TPR ≤ e^ε FPR + δ`) and the advantage bound (`Adv ≤ e^ε−1+δ`); `01-dp/dp8-fl.html` builds the DP machinery. DP-SGD is defined and pushed through the ROC cap numerically at `04-mia/mia4-modern.html:1518, :1581`, and the post-processing bound that kills output-side defenses is proved at `:1609, :1632`.
 - **DP ↔ unlearning**: certified $(\varepsilon,\delta)$-unlearning reuses the DP definition from `01-dp/dp8-fl.html:375` — same bound, different distribution comparison.
-- **memorization ↔ unlearning ↔ MIA**: memorization is the *signal* unlearning aims to remove and MIA aims to detect. `03-memorization/memorization-diffusion.html` + `memorization-llm.html` motivate the other two; defenses slide flows directly into `05-unlearning/`. `05-unlearning/unlearning1-foundations.html:487` reuses the SALUN MIA-Efficacy column.
+- **memorization ↔ unlearning ↔ MIA**: memorization is the *signal* unlearning aims to remove and MIA aims to detect. `03-memorization/memorization-diffusion.html` + `memorization-llm.html` motivate the other two; defenses slide flows directly into `05-unlearning/`. `05-unlearning/unlearning1-foundations.html:1692` reuses the SalUn MIA-Efficacy column, and Proposition 4 `:1494` bounds what any such column can show.
 - **memorization ↔ watermark**: both about provenance under copyright pressure, but opposite directions — memorization detects unintended retention, watermarking adds intended traceability. Same lawsuits motivate both.
 - **dgMARK ↔ watermark**: lab thread for diffusion LLMs — full context in `talks/kics260521dllm/kics260521dllm.html:524-569`, broader watermark survey in `06-watermark/`.
 - **Theoretical diffusion (`courses/infotheory/lectures/07-diffusion/`) vs from-scratch (`02-generative/`)**: same math, different presentation. The infotheory series uses information-theoretic / hierarchical-VAE framing (cleaner for theory students); the privacy series uses the Bayes-+-Taylor route and goes further (5 lectures including SDE, DDIM, CFG, discrete).
@@ -111,12 +111,12 @@ Exams live one level up in `../exam/`.
 | InfoRMIA decomposition (Thm 1) + it is the calibrated score again (Cor 2) | `04-mia/mia5-llm.html` | `:1054, :1089` |
 | Blind baselines as a validity failure (Prop 7); per-record instability (Prop 6) | `04-mia/mia5-llm.html` | `:1424, :1306` |
 | Extraction implies inference, converse fails (Prop 8); DP AUC ceiling (Prop 9) | `04-mia/mia5-llm.html` | `:1733, :1840` |
-| Certified $(\varepsilon,\delta)$ unlearning | `05-unlearning/unlearning1-foundations.html` | `:160` |
-| Influence function (leads into Newton) | `05-unlearning/unlearning1-foundations.html` | `:174` |
-| Newton-step (8-slide) / Sekhari capacity theorems | `05-unlearning/unlearning1-foundations.html` | `:191-312` |
-| MIA optimal test + DP cap + Yeom gap (HW4 woven in) | `05-unlearning/unlearning1-foundations.html` | `:472` |
-| SCRUB / SalUn / $\ell_1$-sparse | `05-unlearning/unlearning1-foundations.html` | `:367-431` |
-| IDI / COLA (lab) | `05-unlearning/unlearning1-foundations.html` | `:502-533` |
+| Certified $(\varepsilon,\delta)$ unlearning (Definition 3; Props 1–2, counterexample) | `05-unlearning/unlearning1-foundations.html` | `:255-333` |
+| Influence function — derived from the IFT, leads into Newton | `05-unlearning/unlearning1-foundations.html` | `:459-567` |
+| Theorems 1–3 (Newton step w/ proof, Gaussian certification, Sekhari capacity) | `05-unlearning/unlearning1-foundations.html` | `:568-979` |
+| MIA recall (optimal test, DP cap, Yeom gap) + Proposition 4 (HW4 woven in) | `05-unlearning/unlearning1-foundations.html` | `:1481-1530` |
+| SCRUB / SalUn / $\ell_1$-sparse / RURK | `05-unlearning/unlearning1-foundations.html` | `:1238-1371` |
+| IDI / COLA (lab) | `05-unlearning/unlearning1-foundations.html` | `:1601-1691` |
 | GA collapse + NPO bounded + SimNPO | `05-unlearning/unlearning2-llm.html` | `:103-165` |
 | TOFU / WMDP / RWKU / MUSE benchmarks (main-figure images) | `05-unlearning/unlearning2-llm.html` | `:250-302` |
 | Benign + syntactic relearning | `05-unlearning/unlearning2-llm.html` | `:303-328` |

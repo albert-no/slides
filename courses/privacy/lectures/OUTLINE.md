@@ -10,7 +10,7 @@ Exams live one level up in `../exam/`.
 - **`02-generative/`** — Generative-model review. **Diffusion** (5 lectures, from-scratch Bayes-route, SDE, DDIM, guidance, discrete) and **LLM** (1 brief deck: tokens, decoder-only transformer, NLL pretraining, sampling, privacy hooks). Companion notes: `diffusion3-sde-score-note.html` and `note/2_difffusion.tex` (LaTeX). See `02-generative/OUTLINE.md`.
 - **`03-memorization/`** — Memorization in generative models. **Two decks (split 2026-05)**: `memorization-diffusion.html` (intro + lawsuits + Bartz/Anthropic, three formal definitions, diffusion detection, SAIL, CLIP-pad, LLM bridge; math-detail revision 2026-08 — 101 slides, theorem/lemma cards with on-slide proofs, companion `memorization-diffusion-note.html`) and `memorization-llm.html` (math-detail revision 2026-08 — 55 → 128 slides: exposure theory, Feldman, extraction/scaling/alignment, Min-K%/++, ACR, Cooper books, defenses with proofs; companion `memorization-llm-note.html`). Captured paper figures in `figs/`. See `03-memorization/OUTLINE.md`.
 - **`04-mia/`** — Membership inference attacks (5 lectures, paired notes). Plus legacy `old/MIA.html`. See `04-mia/OUTLINE.md`.
-- **`05-unlearning/`** — Machine unlearning. **Two decks, both math-detail revised 2026-08 with paired notes**: `unlearning1-foundations.html` (107 slides — three nested definitions, certified deletion with full proofs, SISA cost model, classification methods, metrics-as-hypothesis-test) and `unlearning2-llm.html` (29 → 95 slides — why the certificate does not transfer to LLMs, the GA/NPO/SimNPO/ME/RMU objective family, benchmarks read as measurement claims, closure under a fine-tuning budget; 17 numbered results, all proved on slide). Captured paper figures in `figs/`. See `05-unlearning/OUTLINE.md`.
+- **`05-unlearning/`** — Machine unlearning. **Two decks, both math-detail revised 2026-08 with paired notes**: `unlearning1-foundations.html` (107 slides — three nested definitions, certified deletion with full proofs, SISA cost model, classification methods, metrics-as-hypothesis-test) and `unlearning2-llm.html` (29 → 100 slides — why the certificate does not transfer to LLMs, the GA/NPO/SimNPO/ME/ELM/RMU objective family, each benchmark as its own main figure plus a measurement claim, closure under a fine-tuning budget; 17 numbered results, all proved on slide). Captured paper figures in `figs/`. See `05-unlearning/OUTLINE.md`.
 - **`06-watermark/`** — LLM watermarking (single deck). Green-list, distortion-free, undetectable, robustness, radioactivity. See `06-watermark/OUTLINE.md`.
 
 ## Reading order
@@ -118,9 +118,9 @@ Exams live one level up in `../exam/`.
 | SCRUB / SalUn / $\ell_1$-sparse / RURK | `05-unlearning/unlearning1-foundations.html` | `:1241-1412` |
 | IDI / COLA (lab) | `05-unlearning/unlearning1-foundations.html` | `:1642-1732` |
 | **Why the certificate does not transfer** (P1–P4; Prop 1, Lemmas 2–3, Prop 4, all proved) | `05-unlearning/unlearning2-llm.html` | `:107-460` |
-| **GA / NPO / SimNPO / ME / RMU as one weighted-gradient family** (Props 5/8/9/10, Thms 6/7) | `05-unlearning/unlearning2-llm.html` | `:461-884` |
-| TOFU / WMDP / RWKU / MUSE as measurement claims (Thm 11, Cor 12, Props 13–14) | `05-unlearning/unlearning2-llm.html` | `:885-1243` |
-| **Closure under a fine-tuning budget** (Def 15, Prop 16, Cor 17) + benign/syntactic relearning, DUSK, R-TOFU | `05-unlearning/unlearning2-llm.html` | `:1244-1552` |
+| **GA / NPO / SimNPO / ME / ELM / RMU as one weighted-gradient family** (Props 5/8/9/10, Thms 6/7) | `05-unlearning/unlearning2-llm.html` | `:461-911` |
+| TOFU / WMDP / RWKU / MUSE — main figure + measurement claim (Thm 11, Cor 12, Props 13–14) | `05-unlearning/unlearning2-llm.html` | `:912-1304` |
+| **Closure under a fine-tuning budget** (Def 15, Prop 16, Cor 17) + benign/syntactic relearning, DUSK, R-TOFU | `05-unlearning/unlearning2-llm.html` | `:1305-1613` |
 | Kirchenbauer green-list + entropy bound | `06-watermark/watermark.html` | `:164-222` |
 | Gumbel-max trick + proof | `06-watermark/watermark.html` | `:252-295` |
 | Aaronson distortion-free proof | `06-watermark/watermark.html` | `:325` |

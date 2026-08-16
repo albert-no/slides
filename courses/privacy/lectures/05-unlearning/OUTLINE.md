@@ -9,7 +9,7 @@ The folder's `hw4sol.pdf` is the 5-problem homework (P1 Neyman–Pearson, P2 DP�
 | Deck | Topic |
 |---|---|
 | `unlearning1-foundations.html` | **Part I** (107 slides) — motivation · three definitions · certified/Newton (proved) · SISA · classification algorithms · metrics-as-hypothesis-test |
-| `unlearning2-llm.html` | **Part II** (95 slides) — why the certificate does not transfer (proved) · objectives GA/NPO/SimNPO/ME/RMU (proved) · benchmarks as measurement claims (proved) · relearning, suppression, the open problem |
+| `unlearning2-llm.html` | **Part II** (100 slides) — why the certificate does not transfer (proved) · objectives GA/NPO/SimNPO/ME/ELM/RMU (proved) · benchmarks: main figure + measurement claim (proved) · relearning, suppression, the open problem |
 
 ---
 
@@ -83,7 +83,7 @@ The folder's `hw4sol.pdf` is the 5-problem homework (P1 Neyman–Pearson, P2 DP�
 | | What a defensible evaluation looks like | 105 | `:1763` |
 | | Takeaways — Part I · closer → Part II | 106–107 | `:1776`, `:1789` |
 
-## unlearning2-llm.html (Part II — LLM unlearning) — 95 slides
+## unlearning2-llm.html (Part II — LLM unlearning) — 100 slides
 
 | Part | Topic | Slide | Line |
 |---|---|---|---|
@@ -100,7 +100,7 @@ The folder's `hw4sol.pdf` is the 5-problem homework (P1 Neyman–Pearson, P2 DP�
 | | P4 judged on text — **Lemma 3** (TV data-processing, one-way) · the direction that fails (SVG) | 18–19 | `:355`, `:367` |
 | | **Proposition 4 — the certificate does not transfer** (clauses i–iv) + proof | 20–21 | `:396`, `:412` |
 | | What Survives · Section 01 — where we stand | 22–23 | `:427`, `:445` |
-| **02** — Objectives | GA → NPO → SimNPO → ME → RMU as one weighted-gradient family, with divergence rates and a proved containment | 24–51 | `:461-884` |
+| **02** — Objectives | GA → NPO → SimNPO → ME → ELM → RMU as one weighted-gradient family, with divergence rates and a proved containment | 24–53 | `:461-911` |
 | | §02 divider · the design problem (forget + retain decomposition `:473`) | 24–25 | `:461`, `:469` |
 | | Gradient ascent `:488` · **Proposition 5 — GA has no optimum** · why that matters | 26–28 | `:483`, `:498`, `:509` |
 | | **Theorem 6 — divergence rates** (GA linear $-t$, NPO logarithmic $-\tfrac1\beta\log t$) | 29 | `:527` |
@@ -112,28 +112,30 @@ The folder's `hw4sol.pdf` is the 5-problem homework (P1 Neyman–Pearson, P2 DP�
 | | What $\beta$ buys · the dial, measured (**real figure** `figs/npo-beta-pareto.png`) | 39–40 | `:664`, `:682` |
 | | Two complaints about NPO · **Proposition 9 — NPO is length-biased** `:717` · reading it | 41–43 | `:691`, `:711`, `:725` |
 | | **SimNPO** — normalise and drop the reference `:750` · four other places to intervene | 44–45 | `:745`, `:759` |
-| | Entropy maximisation has an optimum `:787` · **RMU** — intervene on activations `:802` | 46–47 | `:783`, `:798` |
-| | **Proposition 10 — one family** (GA is the unique constant-weight member) · the design space (SVG) | 48–49 | `:810`, `:821` |
-| | Objectives side by side (table) · Section 02 — where we stand | 50–51 | `:851`, `:870` |
-| **03** — Benchmarks | what each of TOFU / WMDP / RWKU / MUSE actually measures, and the three proved gaps between score and claim | 52–73 | `:885-1243` |
-| | §03 divider · how success gets declared | 52–53 | `:885`, `:893` |
-| | TOFU — fictitious authors · forget quality (KS test) | 54–55 | `:908`, `:926` |
-| | **Theorem 11 — a $p$-value is not a score** (uniform under the null) + proof · selection inflates the score (max of $k$ iid uniforms `:958`, table) · reading it | 56–59 | `:938`, `:953`, `:970`, `:991` |
-| | WMDP — hazardous knowledge · **Corollary 12 — accuracy is prompt-relative** | 60–61 | `:1005`, `:1026` |
-| | RWKU — adversarial probes · residual knowledge under probing (**real figure** `figs/rurk-residual-knowledge.png`) | 62–63 | `:1041`, `:1062` |
-| | MUSE — six axes · the four suites (table) | 64–65 | `:1071`, `:1089` |
-| | Recall — a validity failure (mia5 Prop 7) · **Proposition 13 — the split confound** `:1113` · which designs escape it | 66–68 | `:1107`, `:1122`, `:1133` |
-| | **Proposition 14 — output metrics are blind** · is it vacuous? · what the benchmark sees (SVG) | 69–71 | `:1152`, `:1167`, `:1188` |
-| | Cooper — the word is doing too much work · Section 03 — where we stand | 72–73 | `:1217`, `:1230` |
-| **04** — Relearning, suppression, the open problem | closure under a fine-tuning budget; benign relearning; lab decks; what remains open | 74–95 | `:1244-1552` |
-| | §04 divider · two hypotheses (deletion vs suppression) | 74–75 | `:1244`, `:1252` |
-| | **Definition 15 — closure under adaptation** · **Proposition 16 — strictly stronger** + proof (the gate) · **Corollary 17 — attacks are one-sided** · closure, drawn (SVG) | 76–80 | `:1272`, `:1287`, `:1298`, `:1313`, `:1325` |
-| | Benign relearning (**real figure** `figs/benign-relearn-pipeline.png`) · why that is damning | 81–82 | `:1346`, `:1355` |
-| | What property triggers recovery? · recovery tracks syntactic similarity (lab, **real figure** `figs/syntax-similarity.png`) · a mechanism and a fix | 83–85 | `:1371`, `:1391`, `:1403` |
-| | **DUSK** (lab, `DUSK.png`) · the partition DUSK enforces (`:1430` two-condition target) | 86–87 | `:1418`, `:1426` |
-| | **R-TOFU** (lab, `r-tofu.png`) · what the chain of thought reveals | 88–89 | `:1438`, `:1446` |
-| | Are we making progress? (Triantafillou) · five things one word (table) · why the naming is a safety measure (lab position paper) | 90–92 | `:1460`, `:1474`, `:1492` |
-| | The open problem · Takeaways · Questions | 93–95 | `:1508`, `:1525`, `:1540` |
+| | Entropy maximisation has an optimum `:787` | 46 | `:783` |
+| | **ELM** — main figure (`elm.png`) · what the target buys (erased target law `:813`, bounded below by $H(\pi^\star)$) | 47–48 | `:798`, `:809` |
+| | **RMU** — intervene on activations `:828` | 49 | `:824` |
+| | **Proposition 10 — one family** (GA is the unique constant-weight member) · the design space (SVG) | 50–51 | `:836`, `:847` |
+| | Objectives side by side (table, incl. ELM row) · Section 02 — where we stand | 52–53 | `:877`, `:897` |
+| **03** — Benchmarks | each of TOFU / WMDP / RWKU / MUSE as **main figure + measurement claim**, and the proved gaps between score and claim | 54–78 | `:912-1304` |
+| | §03 divider · how success gets declared | 54–55 | `:912`, `:920` |
+| | **TOFU** — main figure (`tofu.png`) · fictitious authors · forget quality (KS test) | 56–58 | `:935`, `:946`, `:964` |
+| | **Theorem 11 — a $p$-value is not a score** (uniform under the null) + proof · selection inflates the score (max of $k$ iid uniforms `:996`, table) · reading it | 59–62 | `:976`, `:991`, `:1008`, `:1029` |
+| | **WMDP** — main figure (`WMDP.png`) · hazardous knowledge · **Corollary 12 — accuracy is prompt-relative** | 63–65 | `:1043`, `:1054`, `:1075` |
+| | **RWKU** — main figure (`RWKU.png`) · real knowledge, adversarial probes | 66–67 | `:1090`, `:1100` |
+| | **MUSE** — main figure (`MUSE.png`) · six axes · the four suites (table) | 68–70 | `:1121`, `:1132`, `:1150` |
+| | Recall — a validity failure (mia5 Prop 7) · **Proposition 13 — the split confound** `:1174` · which designs escape it | 71–73 | `:1168`, `:1183`, `:1194` |
+| | **Proposition 14 — output metrics are blind** · is it vacuous? · what the benchmark sees (SVG) | 74–76 | `:1213`, `:1228`, `:1249` |
+| | Cooper — the word is doing too much work · Section 03 — where we stand | 77–78 | `:1278`, `:1291` |
+| **04** — Relearning, suppression, the open problem | closure under a fine-tuning budget; benign relearning; lab decks; what remains open | 79–100 | `:1305-1613` |
+| | §04 divider · two hypotheses (deletion vs suppression) | 79–80 | `:1305`, `:1313` |
+| | **Definition 15 — closure under adaptation** · **Proposition 16 — strictly stronger** + proof (the gate) · **Corollary 17 — attacks are one-sided** · closure, drawn (SVG) | 81–85 | `:1333`, `:1348`, `:1359`, `:1374`, `:1386` |
+| | Benign relearning (**real figure** `figs/benign-relearn-pipeline.png`) · why that is damning | 86–87 | `:1407`, `:1416` |
+| | What property triggers recovery? · recovery tracks syntactic similarity (lab, **real figure** `figs/syntax-similarity.png`) · a mechanism and a fix | 88–90 | `:1432`, `:1452`, `:1464` |
+| | **DUSK** (lab, `DUSK.png`) · the partition DUSK enforces (`:1491` two-condition target) | 91–92 | `:1479`, `:1487` |
+| | **R-TOFU** (lab, `r-tofu.png`) · what the chain of thought reveals | 93–94 | `:1499`, `:1507` |
+| | Are we making progress? (Triantafillou) · five things one word (table) · why the naming is a safety measure (lab position paper) | 95–97 | `:1521`, `:1535`, `:1553` |
+| | The open problem · Takeaways · Questions | 98–100 | `:1569`, `:1586`, `:1601` |
 
 **Key formulas (Part I):** Certified $(\varepsilon,\delta)$ two-sided inequality `1:264-267`; leave-one-out target `1:406`; continuous path $L_t$ `1:485`; influence via IFT, $\theta'(0)=\tfrac1n H^{-1}\nabla\ell$ `1:521`; the plus sign, explained `1:531`; influence-unlearning update `1:547`; same update as a Newton step `1:567`; Theorem 1 residual $MG^2/(2\lambda^3n^2)$ `1:577`; Newton error identity (Lemma 2) `1:636`; Hessian-choice discrepancy $G\kappa/(\lambda^2n^2)$ `1:711`; $\ell_2$-sensitivity $2G/(\lambda n)$ `1:735`; recall Gaussian mechanism `1:787`; certified $\sigma \ge \eta\sqrt{2\ln(1.25/\delta)}/\varepsilon$ `1:804`; unlearning noise $\propto 1/n^2$ `1:830`; Sekhari deletion capacity `1:904`; SISA cost $n(R+1)(2R+1)/(6SR)$ `1:1107`; SCRUB KL `1:1244`; SalUn mask `1:1297-1300`; $\ell_1$-sparse `1:1347`; RURK objective `1:1404`; Proposition 4 TV cap `1:1541`; IDI `1:1647`.
 
@@ -149,21 +151,27 @@ The folder's `hw4sol.pdf` is the 5-problem homework (P1 Neyman–Pearson, P2 DP�
 
 Two `<!-- TODO real figure: … -->` markers remain, both on lab papers not posted to arXiv: **IDI** `1:1642` and **COLA** `1:1706` — ask Albert for the AAAI 2026 source PDF.
 
-**Key formulas (Part II):** permutation symmetry $F(\theta)=F(P\theta)$ `2:241`; Newton step in the eigenbasis (sign fails off convexity) `2:255`; Lemma 2 displacement budget $\lVert\theta_T-\theta_T'\rVert\le \eta_j G c^{T-j}$ `2:316`, one-step gap `2:328`; forget + retain decomposition `2:473`; GA objective and gradient `2:488`; DPO `2:544`; **NPO** $\tfrac2\beta\mathbb{E}\log(1+e^{\beta r_\theta})$ `2:556`; NPO gradient weight $2\sigma(\beta r_\theta)$ `2:585`; GA-vs-NPO weights in one line `2:596`; small-$\beta$ expansion with $\tfrac\beta4\mathbb{E}[r_\theta^2]$ `2:645`, scalar expansion `2:657`; length-bias weight ratio `2:717`; **SimNPO** `2:750`; entropy maximisation $\log\lvert V\rvert - H(\pi_\theta)$ `2:787`; **RMU** `2:802`; max of $k$ iid uniforms, $\Pr[p_{\max}\le t]=t^k$, $\mathbb{E}=k/(k+1)$ `2:958`; split-confound advantage $=\mathrm{TV}(Q_1,Q_0)$ `2:1113`; DUSK two-condition target `2:1430`.
+**Key formulas (Part II):** permutation symmetry $F(\theta)=F(P\theta)$ `2:241`; Newton step in the eigenbasis (sign fails off convexity) `2:255`; Lemma 2 displacement budget $\lVert\theta_T-\theta_T'\rVert\le \eta_j G c^{T-j}$ `2:316`, one-step gap `2:328`; forget + retain decomposition `2:473`; GA objective and gradient `2:488`; DPO `2:544`; **NPO** $\tfrac2\beta\mathbb{E}\log(1+e^{\beta r_\theta})$ `2:556`; NPO gradient weight $2\sigma(\beta r_\theta)$ `2:585`; GA-vs-NPO weights in one line `2:596`; small-$\beta$ expansion with $\tfrac\beta4\mathbb{E}[r_\theta^2]$ `2:645`, scalar expansion `2:657`; length-bias weight ratio `2:717`; **SimNPO** `2:750`; entropy maximisation $\log\lvert V\rvert - H(\pi_\theta)$ `2:787`; **ELM** erased target law $\pi^\star \propto \pi_{\mathrm{nov}}(\pi_{\mathrm{nov}}/\pi_{\mathrm{exp}})^\lambda$ and its cross-entropy fit `2:813`; **RMU** `2:828`; max of $k$ iid uniforms, $\Pr[p_{\max}\le t]=t^k$, $\mathbb{E}=k/(k+1)$ `2:996`; split-confound advantage $=\mathrm{TV}(Q_1,Q_0)$ `2:1174`; DUSK two-condition target `2:1491`.
 
-**Key figures (Part II) — six inline SVG:** the assumption map (which Part-I hypothesis each LLM property breaks) `2:206`; the direction that fails (one-way TV transfer) `2:371`; the brake, drawn (GA constant weight vs NPO saturating weight) `2:612`; the design space (where each objective intervenes) `2:825`; what the benchmark sees (two parameter vectors, one score) `2:1192`; closure under a fine-tuning budget `2:1329`.
+**Key figures (Part II) — six inline SVG:** the assumption map (which Part-I hypothesis each LLM property breaks) `2:206`; the direction that fails (one-way TV transfer) `2:371`; the brake, drawn (GA constant weight vs NPO saturating weight) `2:612`; the design space (where each objective intervenes) `2:851`; what the benchmark sees (two parameter vectors, one score) `2:1253`; closure under a fine-tuning budget `2:1390`.
 
-**Real paper figures (Part II) — stored in `figs/` (plus two main-figure PNGs alongside the deck):**
+**Real paper figures (Part II) — five main-figure PNGs alongside the deck, plus four captures in `figs/`. Every one is that paper's own Figure 1/2/3/5, not a screenshot of prose.**
 
 | File | Source | Slide · line |
 |---|---|---|
 | `figs/npo-ga-collapse.png` | Zhang, Lin, Bai, Mei, *Negative Preference Optimization*, COLM 2024 — Figure 2 | 36 · `2:630` |
 | `figs/npo-beta-pareto.png` | same paper — Figure 3 | 40 · `2:682` |
-| `figs/rurk-residual-knowledge.png` | Jin et al., *RWKU*, NeurIPS 2024 D&B (shared with Part I) | 63 · `2:1062` |
-| `figs/benign-relearn-pipeline.png` | Hu, Wang, Fanti et al., *Targeted Relearning Attacks*, 2024 | 81 · `2:1346` |
-| `figs/syntax-similarity.png` | Yoon, Jun, No (Yonsei), under review ICLR 2026 — lab figure | 84 · `2:1391` |
-| `DUSK.png` | Yoon, Jun, No, *DUSK*, ACL 2026 Findings | 86 · `2:1418` |
-| `r-tofu.png` | Yoon, Jun, No, *R-TOFU*, EMNLP 2025 | 88 · `2:1438` |
+| `elm.png` | Gandikota, Feucht, Marks, Bau, *Erasing Conceptual Knowledge from Language Models*, NeurIPS 2025 — Figure 1 | 47 · `2:798` |
+| `tofu.png` | Maini, Feng, Schwarzschild, Lipton, Kolter, *TOFU: A Task of Fictitious Unlearning for LLMs*, COLM 2024 — Figure 1 | 56 · `2:935` |
+| `WMDP.png` | Li, Pan, Gopal, et al., *The WMDP Benchmark*, ICML 2024 — Figure 1 | 63 · `2:1043` |
+| `RWKU.png` | Jin, Wang, Zhang, et al., *RWKU: Benchmarking Real-World Knowledge Unlearning for LLMs*, NeurIPS 2024 D&B — Figure 1 | 66 · `2:1090` |
+| `MUSE.png` | Shi, Wang, Li, et al., *MUSE: Machine Unlearning Six-Way Evaluation for Language Models*, ICLR 2025 — Figure 1 | 68 · `2:1121` |
+| `figs/benign-relearn-pipeline.png` | Hu, Fu, Wu, Smith, *Unlearning or Obfuscating? Jogging the Memory of Unlearned LLMs via Benign Relearning*, ICLR 2025 (arXiv:2406.13356) — Figure 2 (left) | 86 · `2:1407` |
+| `figs/syntax-similarity.png` | Yoon, Hong, Jeung, No (Yonsei), *Rethinking Benign Relearning: Syntax as the Hidden Driver of Unlearning Failures*, ICLR 2026 (arXiv:2602.03379) — Figure 5 | 89 · `2:1452` |
+| `DUSK.png` | Jeung, Yoon, Hong, Kim, Han, Yu, No (Yonsei), *DUSK: Do Not Unlearn Shared Knowledge*, ACL 2026 Findings — Figure 1 | 91 · `2:1479` |
+| `r-tofu.png` | Yoon, Jeung, No (Yonsei), *R-TOFU: Unlearning in Large Reasoning Models*, EMNLP 2025 (oral) — Figure 1 | 93 · `2:1499` |
+
+`figs/rurk-residual-knowledge.png` is **Part I only** (Hsu et al., *The Unseen Threat*, RURK). It was briefly used on a Part II RWKU slide in the 2026-08 rewrite — a misattribution (RURK ≠ RWKU) as well as a cross-deck duplicate; that slide is gone and RWKU now carries its own `RWKU.png`.
 
 **Key theorems (Part II — 17 numbered results, every one stated *and* proved on slides):**
 
@@ -178,14 +186,14 @@ Two `<!-- TODO real figure: … -->` markers remain, both on lab papers not post
 | **Theorem 7** — NPO is self-limiting | `2:565` | `2:580` |
 | **Proposition 8** — NPO contains GA as $\beta\to0$ | `2:639` | `2:653` |
 | **Proposition 9** — NPO is length-biased | `2:711` | same slide; reading `2:725` |
-| **Proposition 10** — one family; GA the unique constant-weight member | `2:810` | same slide; design space `2:821` |
-| **Theorem 11** — a $p$-value is not a score | `2:938` | `2:953`; selection table `2:970`; reading `2:991` |
-| **Corollary 12** — accuracy is prompt-relative | `2:1026` | same slide |
-| **Proposition 13** — the split confound | `2:1122` | same slide; which designs escape `2:1133` |
-| **Proposition 14** — output metrics are blind | `2:1152` | same slide; vacuity check `2:1167` |
-| **Definition 15** — closure under adaptation (fine-tuning budget) | `2:1272` | — |
-| **Proposition 16** — closure strictly stronger than output-indistinguishability | `2:1287` | `2:1298` (gate construction) |
-| **Corollary 17** — relearning attacks are one-sided evidence | `2:1313` | same slide; figure `2:1325` |
+| **Proposition 10** — one family; GA the unique constant-weight member | `2:836` | same slide; design space `2:847` |
+| **Theorem 11** — a $p$-value is not a score | `2:976` | `2:991`; selection table `2:1008`; reading `2:1029` |
+| **Corollary 12** — accuracy is prompt-relative | `2:1075` | same slide |
+| **Proposition 13** — the split confound | `2:1183` | same slide; which designs escape `2:1194` |
+| **Proposition 14** — output metrics are blind | `2:1213` | same slide; vacuity check `2:1228` |
+| **Definition 15** — closure under adaptation (fine-tuning budget) | `2:1333` | — |
+| **Proposition 16** — closure strictly stronger than output-indistinguishability | `2:1348` | `2:1359` (gate construction) |
+| **Corollary 17** — relearning attacks are one-sided evidence | `2:1374` | same slide; figure `2:1386` |
 
 
 **Key theorems (Part I — every one stated *and* proved on slides):**
@@ -208,13 +216,13 @@ Two `<!-- TODO real figure: … -->` markers remain, both on lab papers not post
 
 **Homework-4 in-deck (woven, not labeled):** the influence→Newton→certification block `1:463-822` is the long-form walkthrough of the influence-unlearning (P4) and certified-Gaussian (P5) problems; the MIA problems (P1 Neyman–Pearson optimal test, P2 DP⇒MIA cap, P3 Yeom gap floor) live on the recall card **"Recall — Three Facts About Membership Tests"** `1:1522` and the Proposition-4 block that follows. No "Homework 4 / Problem N" labels appear on slides — the outline flows inside the lecture content.
 
-**Lab papers cited:** IDI/COLA — Jeon, Jeung, Kim, No, Choi, *An Information Theoretic Evaluation Metric for Strong Unlearning*, AAAI 2026 (Part I `1:1642`, `1:1706`); R-TOFU (EMNLP 2025, `2:1438`); DUSK (ACL 2026 Findings, `2:1418`); syntactic relearning (Yoon, Jun, No; under review ICLR 2026, `2:1391`); position paper (Yoon, Jun, No; ICML 2026, `2:1492`). (SEPS slide dropped 2026-06.)
+**Lab papers cited:** IDI/COLA — Jeon, Jeung, Kim, No, Choi, *An Information Theoretic Evaluation Metric for Strong Unlearning*, AAAI 2026 (Part I `1:1642`, `1:1706`); R-TOFU (Yoon, Jeung, No; EMNLP 2025 oral, `2:1499`); DUSK (Jeung, Yoon, Hong, Kim, Han, Yu, No; ACL 2026 Findings, `2:1479`); syntactic relearning (Yoon, Hong, Jeung, No; *Rethinking Benign Relearning*, ICLR 2026, `2:1452`); position paper (Yoon, Jun, No; ICML 2026, `2:1553`). (SEPS slide dropped 2026-06.)
 
-**Unused image assets.** `tofu.png`, `WMDP.png`, `RWKU.png`, `MUSE.png`, `elm.png` sit in this folder but are **no longer referenced** by either deck — the 2026-08 Part II rewrite replaced the benchmark-schematic slides with measurement-claim theorems, and dropped the ELM slide. Kept in case a future benchmark-overview slide wants them; safe to delete if the folder is being pruned.
+**Every image asset in this folder is referenced.** `elm.png`, `tofu.png`, `WMDP.png`, `RWKU.png`, `MUSE.png`, `DUSK.png`, `r-tofu.png` are all live in Part II (see the **Real paper figures (Part II)** table); `figs/` holds the four captures plus Part I's three.
 
 **Companion note — `unlearning1-notes.html`** (non-standard plural filename; do **not** rename). 46 entries covering all 107 slides, each badged with the slide or slide range it serves. Structure: `.toc` two-column index with slide-range badges, then one `.slide-note` block per teaching beat (`.snum` / `.stag` / `.timing` / `<h3>`, body of `.say` spoken lines, `.board` derivations, `.ask` anticipated questions, `.key` highlights, `.sec-label` on the three section dividers). Total spoken budget ≈ 110 min. Board-work entries worth knowing about: the $1/n$ vs $1/(n-1)$ identity; assumptions A1–A3 and the two jobs of strong convexity; the Lemma-2 integral identity; the Guo objective-perturbation caveat; the Sekhari risk decomposition; the SISA double sum; the Proposition-4 signed-measure proof.
 
-**Companion note — `unlearning2-notes.html`** (same plural convention). **One entry per slide: 95 `.slide-note` blocks**, ids `#s1`–`#s95`, preceded by a 95-item `.toc` ordered list linking to each. Same component vocabulary as the Part I notes (`.snum` / `.stag` / `.timing` / `<h3>`, then `.say` spoken lines, `.board` derivations, `.ask` anticipated questions), with `<hr class="sec">` + `.sec-label` at each of the four section boundaries. Board-work entries worth knowing about: the permutation-symmetry argument for non-unique minimisers; the expansiveness constant $c$ and where $1+\eta\beta$ comes from; the TV data-processing step in Lemma 3; the NPO gradient weight $2\sigma(\beta r_\theta)$ and its $\beta\to0$ expansion; the uniformity of a $p$-value under the null and the max-of-$k$ selection effect; the gate construction in Proposition 16. Rewritten 2026-08 from scratch — the previous version documented the retired 29-slide deck.
+**Companion note — `unlearning2-notes.html`** (same plural convention). **One entry per slide: 95 `.slide-note` blocks**, ids `#s1`–`#s95`, preceded by a 95-item `.toc` ordered list linking to each. **Out of sync since the 2026-08 figure-restoration pass** — the deck is now 100 slides (5 inserted: ELM ×2 at 47–48, TOFU 56, WMDP 63, RWKU 66, MUSE 68), so note ids `#s47` onward are offset from slide numbers. Needs a renumbering pass plus five new entries. Same component vocabulary as the Part I notes (`.snum` / `.stag` / `.timing` / `<h3>`, then `.say` spoken lines, `.board` derivations, `.ask` anticipated questions), with `<hr class="sec">` + `.sec-label` at each of the four section boundaries. Board-work entries worth knowing about: the permutation-symmetry argument for non-unique minimisers; the expansiveness constant $c$ and where $1+\eta\beta$ comes from; the TV data-processing step in Lemma 3; the NPO gradient weight $2\sigma(\beta r_\theta)$ and its $\beta\to0$ expansion; the uniformity of a $p$-value under the null and the max-of-$k$ selection effect; the gate construction in Proposition 16. Rewritten 2026-08 from scratch — the previous version documented the retired 29-slide deck.
 
 **Audit history.** 2026-05 visual audit: split Newton-Step theorem 1→2 slides; consolidated LUNAR math. 2026-06 revision: every `.cite` shortened to one rendered line; "Why Now" GDPR **Art. 17** confirmed + lawsuits one-per-line + Carlini·Cooper cite; Newton block expanded 2→8 slides; **fixed sign error** on influence-function slide ($+\tfrac1n H^{-1}\nabla\ell$). 2026-06 split: single 63-slide `unlearning.html` retired and split into Part I (`unlearning1-foundations.html`) and Part II (`unlearning2-llm.html`); Part II sections renumbered 01/02. 2026-06 reorder: moved the influence-function slide from §02 up to lead into the Newton block (so the Newton step no longer feels sudden); folded the homework hints into the natural flow (removed the explicit "Homework 4" roadmap slides; the MIA problems became "MIA: Optimal Test and Its Limits"). Part I now 36 slides, Part II 32. 2026-06 benchmark figures: embedded each benchmark's **actual main-figure image** — `tofu.png` (pretrained→finetuned→unlearned pipeline), `WMDP.png` (bio/chem/cyber three-domain pie, 3,668 Q), `RWKU.png` (forget/neighbor/MIA/utility framework), `MUSE.png` (six-way data-owner/deployer grid), `DUSK.png` (forget-all vs forget-unique Venn partitions) — figure dominant + one-line caption (`cite cite-left` added locally); glossed each of Cooper's 5 mismatches; sharpened the Triantafillou "progress" takeaway; **removed the Pawelczyk verification-hardness slide**; venues updated — DUSK → ACL 2026 Findings, position paper → ICML 2026 accepted (Position Track) with an "Accepted · ICML 2026" pill. Part II now 31 slides. (Image PNGs live alongside the deck; `bundle.py` base64-inlines them for the standalone build.) 2026-06 trim: **removed the Guardrail/ECO slide**; replaced ELM's bullet explanation with its main-figure image (`elm.png`). Part II now 30 slides. 2026-06 trim 2: **removed the SEPS slide**; added R-TOFU main-figure image (`r-tofu.png`); on the position slide removed the "Accepted · ICML 2026" pill, corrected authors to **Yoon, Jun, No**, and tightened the proposal wording. Part II now 29 slides.
 
@@ -231,10 +239,20 @@ Two `<!-- TODO real figure: … -->` markers remain, both on lab papers not post
 
 - **§01 — why the certificate does not transfer.** The old deck asserted "LLMs are different" in bullets. It now names four properties of LLM training (P1 non-convexity, P2 concept-shaped requests, P3 one-pass SGD, P4 text-level judgement), maps each onto the Part-I hypothesis it breaks (SVG `2:206`), and converts each into a proved obstruction: Proposition 1 (exact row deletion misses the concept), Lemma 2 (Hardt–Recht–Singer displacement budget, with the $c=1$ / $c=1+\eta\beta$ dichotomy), Lemma 3 (TV data-processing — transfer runs one way only), and Proposition 4 (four clauses, the certificate's hypotheses fail one by one).
 - **§02 — objectives.** GA / NPO / SimNPO / entropy-maximisation / RMU are now presented as **one weighted-gradient family** (Proposition 10, with GA the unique constant-weight member) rather than a list. New: Proposition 5 (GA has no optimum), Theorem 6 (linear vs logarithmic divergence rates), Theorem 7 (NPO is self-limiting), Proposition 8 (NPO contains GA as $\beta\to0$, correction $\tfrac\beta4\mathbb{E}[r_\theta^2]$), Proposition 9 (NPO is length-biased — the failure SimNPO fixes). Two real NPO-paper figures replace the previous bullet claims about collapse and about $\beta$.
-- **§03 — benchmarks.** TOFU / WMDP / RWKU / MUSE are no longer main-figure screenshots; each is read as a **measurement claim**, with three proved gaps: Theorem 11 (a $p$-value is uniform under the null, so "forget quality" is not a score, and selecting the best of $k$ runs inflates it), Corollary 12 (WMDP accuracy is prompt-relative), Proposition 13 (the split confound, recalling `mia5` Prop 7), Proposition 14 (no black-box suite separates a model that forgot from one that learned to stay quiet).
+- **§03 — benchmarks.** TOFU / WMDP / RWKU / MUSE each keep their **main figure** and then get read as a **measurement claim**, with three proved gaps: Theorem 11 (a $p$-value is uniform under the null, so "forget quality" is not a score, and selecting the best of $k$ runs inflates it), Corollary 12 (WMDP accuracy is prompt-relative), Proposition 13 (the split confound, recalling `mia5` Prop 7), Proposition 14 (no black-box suite separates a model that forgot from one that learned to stay quiet).
 - **§04 — relearning and suppression.** The deletion-vs-suppression question is made formal by **Definition 15 (closure under a fine-tuning budget)**, Proposition 16 (strictly stronger than output indistinguishability, proved by a gate construction) and Corollary 17 (relearning attacks are one-sided evidence). Benign relearning, the lab syntactic-similarity result, DUSK and R-TOFU then land as instances of that framework rather than as standalone anecdotes.
 
-Five benchmark/method screenshots (`tofu.png`, `WMDP.png`, `RWKU.png`, `MUSE.png`, `elm.png`) fell out of use in the process. Verified by full headless-Chrome render at `-r 60` plus incremental re-renders of every edited slide; `lint-deck.py` clean, `find-dense.py` clean (80-word ceiling), zero overflow or overlap found. Only Priority-3 (empty space) defects surfaced; the four emptiest slides (7, 60, 69, 71) were filled with `.highlight` takeaway lines rather than padding.
+Verified by full headless-Chrome render at `-r 60` plus incremental re-renders of every edited slide; `lint-deck.py` clean, `find-dense.py` clean (80-word ceiling), zero overflow or overlap found. Only Priority-3 (empty space) defects surfaced; the four emptiest slides (7, 60, 69, 71) were filled with `.highlight` takeaway lines rather than padding.
+
+**2026-08 figure restoration + citation errata (Part II).** The revision above had dropped five of the seven embedded main-figure PNGs (`tofu.png`, `WMDP.png`, `RWKU.png`, `MUSE.png`, `elm.png`) in favour of text — a regression against the standing **Visual richness** default and against the 2026-06 decision to embed each paper's own main figure. All five are restored as **figure-dominant slides with a one-line caption** (`cite cite-left`, `bottom: 48px`), each placed immediately before the analysis slide it belongs with; the measurement-claim theorems are untouched. ELM, which had been removed outright, is back as a two-slide pair (figure `2:798` + a new "What the Target Buys" slide `2:809` giving the erased target law and its $H(\pi^\star)$ lower bound), and an ELM row was added to the Objectives comparison table `2:877`. Part II **95 → 100 slides**.
+
+**Three citation errata found and fixed in the same pass:**
+
+1. **RWKU vs RURK.** The rewrite had illustrated the RWKU benchmark with `figs/rurk-residual-knowledge.png` — Part I's capture from Hsu et al., *The Unseen Threat* (**RURK**), captioned as Jin et al., *RWKU*. Wrong paper, and a cross-deck duplicate. Slide removed; RWKU now carries its own `RWKU.png` main figure `2:1090`.
+2. **Four lab/paper author lists had drifted** from the pre-rewrite deck and are restored in full, each now ending in `— Figure N`: benign relearning → Hu, Fu, Wu, Smith (ICLR 2025, Fig. 2 left); syntactic relearning → Yoon, Hong, Jeung, No, *Rethinking Benign Relearning…* (ICLR 2026, Fig. 5); DUSK → Jeung, Yoon, Hong, Kim, Han, Yu, No (Fig. 1); R-TOFU → Yoon, Jeung, No (EMNLP 2025 oral, Fig. 1).
+3. Both `figs/` captures were **verified against the source PDFs** (arXiv:2406.13356 p. 3 and arXiv:2602.03379) by caption text plus a page render, not from memory.
+
+Verified by full 100-page headless render with the mandated `--virtual-time-budget=30000 --run-all-compositor-stages-before-draw` flags, then `-r 60` reads of every image slide (47, 48, 55, 56, 62, 63, 65, 66, 67, 68, 85, 86, 88, 89, 90, 92). One defect found and fixed: the first ELM draft carried the figure **and** two bullets, overrunning into the brand footer — split into the figure/analysis pair above and the image raised to `max-height: 430px`. `lint-deck.py` clean, `find-dense.py` clean.
 
 ---
 

@@ -8,7 +8,7 @@ Exams live one level up in `../exam/`.
 
 - **`01-dp/`** — Differential privacy (8 decks). `dp1`–`dp7` build foundations: reconstruction attacks → pure DP → properties → approximate DP → DP-SGD → RDP → DP in ML / PATE. `dp8-fl.html` is the capstone applied talk (NeurIPS 2023). Source LaTeX in `tex/dp.tex`. See `01-dp/OUTLINE.md`.
 - **`02-generative/`** — Generative-model review. **Diffusion** (5 lectures, from-scratch Bayes-route, SDE, DDIM, guidance, discrete) and **LLM** (1 brief deck: tokens, decoder-only transformer, NLL pretraining, sampling, privacy hooks). Companion notes: `diffusion3-sde-score-note.html` and `note/2_difffusion.tex` (LaTeX). See `02-generative/OUTLINE.md`.
-- **`03-memorization/`** — Memorization in generative models. **Two decks (split 2026-05)**: `memorization-diffusion.html` (intro + lawsuits + Bartz/Anthropic, three formal definitions, diffusion detection, SAIL, CLIP-pad, LLM bridge; math-detail revision 2026-08 — 101 slides, theorem/lemma cards with on-slide proofs, companion `memorization-diffusion-note.html`) and `memorization-llm.html` (canary→ACR). Captured paper figures in `figs/`. See `03-memorization/OUTLINE.md`.
+- **`03-memorization/`** — Memorization in generative models. **Two decks (split 2026-05)**: `memorization-diffusion.html` (intro + lawsuits + Bartz/Anthropic, three formal definitions, diffusion detection, SAIL, CLIP-pad, LLM bridge; math-detail revision 2026-08 — 101 slides, theorem/lemma cards with on-slide proofs, companion `memorization-diffusion-note.html`) and `memorization-llm.html` (math-detail revision 2026-08 — 55 → 128 slides: exposure theory, Feldman, extraction/scaling/alignment, Min-K%/++, ACR, Cooper books, defenses with proofs; companion `memorization-llm-note.html`). Captured paper figures in `figs/`. See `03-memorization/OUTLINE.md`.
 - **`04-mia/`** — Membership inference attacks (5 lectures, paired notes). Plus legacy `old/MIA.html`. See `04-mia/OUTLINE.md`.
 - **`05-unlearning/`** — Machine unlearning. Definitions, classification methods, LLM methods, benchmarks, lab work. See `05-unlearning/OUTLINE.md`.
 - **`06-watermark/`** — LLM watermarking (single deck). Green-list, distortion-free, undetectable, robustness, radioactivity. See `06-watermark/OUTLINE.md`.
@@ -88,12 +88,13 @@ Exams live one level up in `../exam/`.
 | **SAIL — Pareto plot (Fig 6 left)** | `03-memorization/memorization-diffusion.html` | `:1398` |
 | **CLIP padding-embedding memorization** (Kim & No, CVPR 2026 Findings) | `03-memorization/memorization-diffusion.html` | `:1423-1620` |
 | **CLIP-pad attention drop bar chart (Fig 8)** | `03-memorization/memorization-diffusion.html` | `:1558` |
-| Secret Sharer canary + exposure null | `03-memorization/memorization-llm.html` | `:105-142` |
-| Counterfactual + long-tail (Feldman) | `03-memorization/memorization-llm.html` | `:144` |
-| Carlini scaling laws + repetition formal | `03-memorization/memorization-llm.html` | `:204-229` |
-| Min-K% / Min-K%++ probes | `03-memorization/memorization-llm.html` | `:259, :274` |
-| **Adversarial Compression Ratio (ACR)** | `03-memorization/memorization-llm.html` | `:313-368` |
-| Cooper book extraction | `03-memorization/memorization-llm.html` | `:384` |
+| Secret Sharer canary + exposure theory (Thm 1/2, Prop 2/3) | `03-memorization/memorization-llm.html` | `:196-460` |
+| Counterfactual + long-tail (Feldman, Thm 3) | `03-memorization/memorization-llm.html` | `:511-660` |
+| Carlini scaling laws + repetition formal + dedup | `03-memorization/memorization-llm.html` | `:856-924` |
+| Min-K% / Min-K%++ probes (Prop 6/7) | `03-memorization/memorization-llm.html` | `:1052, :1162` |
+| **Adversarial Compression Ratio (ACR)** + Thm 4 counting bound | `03-memorization/memorization-llm.html` | `:1268-1534` |
+| Cooper book extraction | `03-memorization/memorization-llm.html` | `:1586-1666` |
+| LLM memorization defenses (dedup / DP Thm 5 / $n$-gram blocking) | `03-memorization/memorization-llm.html` | `:1717-1895` |
 | Yeom overfitting bound | `04-mia/mia3-theory.html` | `:143` |
 | Sablayrolles BB≈WB | `04-mia/mia3-theory.html` | `:436` |
 | LiRA | `04-mia/mia4-modern.html` | `:264-503` |

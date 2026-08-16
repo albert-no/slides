@@ -22,7 +22,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 - **`courses/privacy/`** — Privacy series. Three artifact types: `lectures/` (slides, 6 numbered topic folders), `exam/` (homework/midterm/final set), and `overleaf/` (frozen legacy source). See `courses/privacy/OUTLINE.md`.
   - `lectures/01-dp/` — Differential privacy: 8 decks, `dp1`–`dp7` foundations + `dp8-fl.html` capstone (NeurIPS 2023: RRSC result). LaTeX source in `tex/dp.tex`
   - `lectures/02-generative/` — Generative-model review: 5 diffusion lectures (Bayes-route, DDPM, SDE, DDIM, guidance + discrete) + 1 brief LLM deck. `note/2_difffusion.tex` is LaTeX source for Diffusion Lectures 1–2
-  - `lectures/03-memorization/` — Memorization in generative models (2 decks split 2026-05: `memorization-diffusion.html` covers intro/lawsuits/Bartz, three formal definitions, diffusion detection, SAIL, CLIP-pad, with companion note `memorization-diffusion-note.html`; `memorization-llm.html` covers canary→ACR). Paper-figure assets in `figs/`
+  - `lectures/03-memorization/` — Memorization in generative models (2 decks split 2026-05: `memorization-diffusion.html` covers intro/lawsuits/Bartz, three formal definitions, diffusion detection, SAIL, CLIP-pad, with companion note `memorization-diffusion-note.html`; `memorization-llm.html` covers exposure theory → Feldman → extraction/Min-K → ACR → books → defenses, math-detail revision 2026-08 at 128 slides with companion note `memorization-llm-note.html`). Paper-figure assets in `figs/`
   - `lectures/04-mia/` — Membership inference attacks (5 lectures, paired notes; legacy `old/MIA.html`)
   - `lectures/05-unlearning/` — Machine unlearning (definitions, classification, LLM, benchmarks, lab work; sourced from `slide.pdf`)
   - `lectures/06-watermark/` — LLM watermarking (1 deck: green-list, distortion-free, undetectable, robust, radioactivity)
@@ -88,12 +88,12 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Smoothed thin support — $D-k$ eigenvalues at $-\sigma^{-2}$ (theorem + proof) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:941-1012` |
 | SAIL — Lemmas 4.1–4.3 with proofs + eigenvalue figure + objective | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:892-1421` |
 | CLIP padding-embedding memorization (Kim & No 2026) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:1423-1620` |
-| Memorization — canary entropy, exposure, $k$-extractable | `courses/privacy/lectures/03-memorization/memorization-llm.html:105-142` |
-| Counterfactual memorization + long-tail theorem (Feldman) | `courses/privacy/lectures/03-memorization/memorization-llm.html:144` |
-| Repetition scaling formal law | `courses/privacy/lectures/03-memorization/memorization-llm.html:222` |
-| Min-K%++ probe | `courses/privacy/lectures/03-memorization/memorization-llm.html:274` |
-| ACR (Schwarzschild 2024) + MiniPrompt | `courses/privacy/lectures/03-memorization/memorization-llm.html:313-354` |
-| Cooper book extraction (open-weight LLMs) | `courses/privacy/lectures/03-memorization/memorization-llm.html:384` |
+| Memorization — canary, exposure theory, $k$-extractable | `courses/privacy/lectures/03-memorization/memorization-llm.html:196-460`, `:735` |
+| Counterfactual memorization + long-tail theorem (Feldman) | `courses/privacy/lectures/03-memorization/memorization-llm.html:511-660` |
+| Repetition scaling formal law | `courses/privacy/lectures/03-memorization/memorization-llm.html:872` |
+| Min-K%++ probe | `courses/privacy/lectures/03-memorization/memorization-llm.html:1162` |
+| ACR (Schwarzschild 2024) + MiniPrompt + counting bound | `courses/privacy/lectures/03-memorization/memorization-llm.html:1268-1534` |
+| Cooper book extraction (open-weight LLMs) | `courses/privacy/lectures/03-memorization/memorization-llm.html:1586-1666` |
 | Certified $(\varepsilon,\delta)$-unlearning | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:160` |
 | Influence function (IU) — leads into the Newton block | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:174` |
 | Newton-step (8-slide derivation) + Sekhari capacity theorems | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:191-312` |

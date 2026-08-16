@@ -22,7 +22,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 - **`courses/privacy/`** — Privacy series. Three artifact types: `lectures/` (slides, 6 numbered topic folders), `exam/` (homework/midterm/final set), and `overleaf/` (frozen legacy source). See `courses/privacy/OUTLINE.md`.
   - `lectures/01-dp/` — Differential privacy: 8 decks, `dp1`–`dp7` foundations + `dp8-fl.html` capstone (NeurIPS 2023: RRSC result). LaTeX source in `tex/dp.tex`
   - `lectures/02-generative/` — Generative-model review: 5 diffusion lectures (Bayes-route, DDPM, SDE, DDIM, guidance + discrete) + 1 brief LLM deck. `note/2_difffusion.tex` is LaTeX source for Diffusion Lectures 1–2
-  - `lectures/03-memorization/` — Memorization in generative models (2 decks split 2026-05: `memorization-diffusion.html` covers intro/lawsuits/Bartz, diffusion detection, SAIL, CLIP-pad; `memorization-llm.html` covers canary→ACR). Paper-figure assets in `figs/`
+  - `lectures/03-memorization/` — Memorization in generative models (2 decks split 2026-05: `memorization-diffusion.html` covers intro/lawsuits/Bartz, three formal definitions, diffusion detection, SAIL, CLIP-pad, with companion note `memorization-diffusion-note.html`; `memorization-llm.html` covers canary→ACR). Paper-figure assets in `figs/`
   - `lectures/04-mia/` — Membership inference attacks (5 lectures, paired notes; legacy `old/MIA.html`)
   - `lectures/05-unlearning/` — Machine unlearning (definitions, classification, LLM, benchmarks, lab work; sourced from `slide.pdf`)
   - `lectures/06-watermark/` — LLM watermarking (1 deck: green-list, distortion-free, undetectable, robust, radioactivity)
@@ -81,10 +81,13 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | MIA theory (Yeom / Sablayrolles / ML-Leaks / Nasr) | `courses/privacy/lectures/04-mia/mia3-theory.html` |
 | LiRA, RMIA, label-only, attack hierarchy | `courses/privacy/lectures/04-mia/mia4-modern.html` |
 | LLM MIA (perplexity, neighbourhood, SPV, InfoRMIA) | `courses/privacy/lectures/04-mia/mia5-llm.html` |
-| Bartz v. Anthropic $1.5B settlement (Reuters cite) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:140` |
-| Diffusion memorization — Carlini/Somepalli/Webster/Wen/Ross | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:206-365` |
-| SAIL — Lemmas 4.1–4.3 + eigenvalue figure + objective | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:377-540` |
-| CLIP padding-embedding memorization (Kim & No 2026) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:542-631` |
+| Bartz v. Anthropic $1.5B settlement (Reuters cite) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:162` |
+| Memorization defined three ways (extraction / SSCD / Webster taxonomy) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:269, :426, :518` |
+| Diffusion memorization — Carlini/Somepalli/Webster/Wen/Ross | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:215-891` |
+| Local intrinsic dimension (small-ball def + Levina–Bickel MLE) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:815, :855` |
+| Smoothed thin support — $D-k$ eigenvalues at $-\sigma^{-2}$ (theorem + proof) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:941-1012` |
+| SAIL — Lemmas 4.1–4.3 with proofs + eigenvalue figure + objective | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:892-1421` |
+| CLIP padding-embedding memorization (Kim & No 2026) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:1423-1620` |
 | Memorization — canary entropy, exposure, $k$-extractable | `courses/privacy/lectures/03-memorization/memorization-llm.html:105-142` |
 | Counterfactual memorization + long-tail theorem (Feldman) | `courses/privacy/lectures/03-memorization/memorization-llm.html:144` |
 | Repetition scaling formal law | `courses/privacy/lectures/03-memorization/memorization-llm.html:222` |

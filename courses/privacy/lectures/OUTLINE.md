@@ -8,7 +8,7 @@ Exams live one level up in `../exam/`.
 
 - **`01-dp/`** — Differential privacy (8 decks). `dp1`–`dp7` build foundations: reconstruction attacks → pure DP → properties → approximate DP → DP-SGD → RDP → DP in ML / PATE. `dp8-fl.html` is the capstone applied talk (NeurIPS 2023). Source LaTeX in `tex/dp.tex`. See `01-dp/OUTLINE.md`.
 - **`02-generative/`** — Generative-model review. **Diffusion** (5 lectures, from-scratch Bayes-route, SDE, DDIM, guidance, discrete) and **LLM** (1 brief deck: tokens, decoder-only transformer, NLL pretraining, sampling, privacy hooks). Companion notes: `diffusion3-sde-score-note.html` and `note/2_difffusion.tex` (LaTeX). See `02-generative/OUTLINE.md`.
-- **`03-memorization/`** — Memorization in generative models. **Two decks (split 2026-05)**: `memorization-diffusion.html` (intro + lawsuits + Bartz/Anthropic, diffusion detection, SAIL, CLIP-pad, LLM bridge) and `memorization-llm.html` (canary→ACR). Captured paper figures in `figs/`. See `03-memorization/OUTLINE.md`.
+- **`03-memorization/`** — Memorization in generative models. **Two decks (split 2026-05)**: `memorization-diffusion.html` (intro + lawsuits + Bartz/Anthropic, three formal definitions, diffusion detection, SAIL, CLIP-pad, LLM bridge; math-detail revision 2026-08 — 101 slides, theorem/lemma cards with on-slide proofs, companion `memorization-diffusion-note.html`) and `memorization-llm.html` (canary→ACR). Captured paper figures in `figs/`. See `03-memorization/OUTLINE.md`.
 - **`04-mia/`** — Membership inference attacks (5 lectures, paired notes). Plus legacy `old/MIA.html`. See `04-mia/OUTLINE.md`.
 - **`05-unlearning/`** — Machine unlearning. Definitions, classification methods, LLM methods, benchmarks, lab work. See `05-unlearning/OUTLINE.md`.
 - **`06-watermark/`** — LLM watermarking (single deck). Green-list, distortion-free, undetectable, robustness, radioactivity. See `06-watermark/OUTLINE.md`.
@@ -73,17 +73,21 @@ Exams live one level up in `../exam/`.
 | Cross-entropy = entropy + KL; perplexity | `02-generative/llm.html` | `:564, :609, :621` |
 | KL-regularized RLHF optimum → DPO (+ NPO preview) | `02-generative/llm.html` | `:822, :929, :951` |
 | LLM privacy-hook map (per-token loss / verbatim / sampling / conditional) | `02-generative/llm.html` | `:1101` |
-| **Bartz v. Anthropic $1.5B settlement** (Reuters) | `03-memorization/memorization-diffusion.html` | `:140` |
-| Diffusion memorization — Carlini 2023 / Somepalli / Webster / Wen / Ross | `03-memorization/memorization-diffusion.html` | `:206-365` |
-| **Carlini 2023 — Fig 4 precision + Fig 5 duplicates** | `03-memorization/memorization-diffusion.html` | `:249` |
-| **Somepalli 2023 — Fig 5 similarity histograms** | `03-memorization/memorization-diffusion.html` | `:269` |
-| **Wen 2024 — Fig 2 magnitude plots** | `03-memorization/memorization-diffusion.html` | `:317` |
-| **Ross 2024 — LID schematic (Fig 1)** | `03-memorization/memorization-diffusion.html` | `:345` |
-| **SAIL — sharpness Lemmas 4.1–4.3 + objective** | `03-memorization/memorization-diffusion.html` | `:377-540` |
-| **SAIL — eigenvalue distribution figure (Fig 3 left)** | `03-memorization/memorization-diffusion.html` | `:393` |
-| **SAIL — Pareto plot (Fig 6 left)** | `03-memorization/memorization-diffusion.html` | `:520` |
-| **CLIP padding-embedding memorization** (Kim & No, CVPR 2026 Findings) | `03-memorization/memorization-diffusion.html` | `:543-653` |
-| **CLIP-pad attention drop bar chart (Fig 8)** | `03-memorization/memorization-diffusion.html` | `:594` |
+| **Bartz v. Anthropic $1.5B settlement** (Reuters) | `03-memorization/memorization-diffusion.html` | `:162` |
+| **Three formal definitions** — extraction / SSCD similarity / Webster taxonomy | `03-memorization/memorization-diffusion.html` | `:269, :426, :518` |
+| Diffusion memorization — Carlini 2023 / Somepalli / Webster / Wen / Ross | `03-memorization/memorization-diffusion.html` | `:215-891` |
+| **Carlini 2023 — Fig 4 precision + Fig 5 duplicates** | `03-memorization/memorization-diffusion.html` | `:390` |
+| **Somepalli 2023 — Fig 5 similarity histograms** | `03-memorization/memorization-diffusion.html` | `:475` |
+| **Wen's statistic = implicit classifier gradient** (proposition + proof) | `03-memorization/memorization-diffusion.html` | `:647, :659` |
+| **Wen 2024 — Fig 2 magnitude plots** | `03-memorization/memorization-diffusion.html` | `:761` |
+| **LID — small-ball definition + Levina–Bickel MLE** | `03-memorization/memorization-diffusion.html` | `:815, :855` |
+| **Ross 2024 — LID schematic (Fig 1)** | `03-memorization/memorization-diffusion.html` | `:868` |
+| **Theorem — smoothed thin support ($D-k$ eigenvalues at $-\sigma^{-2}$)** | `03-memorization/memorization-diffusion.html` | `:941-1012` |
+| **SAIL — sharpness Lemmas 4.1–4.3 + proofs + objective** | `03-memorization/memorization-diffusion.html` | `:892-1421` |
+| **SAIL — eigenvalue distribution figure (Fig 3 left)** | `03-memorization/memorization-diffusion.html` | `:1076` |
+| **SAIL — Pareto plot (Fig 6 left)** | `03-memorization/memorization-diffusion.html` | `:1398` |
+| **CLIP padding-embedding memorization** (Kim & No, CVPR 2026 Findings) | `03-memorization/memorization-diffusion.html` | `:1423-1620` |
+| **CLIP-pad attention drop bar chart (Fig 8)** | `03-memorization/memorization-diffusion.html` | `:1558` |
 | Secret Sharer canary + exposure null | `03-memorization/memorization-llm.html` | `:105-142` |
 | Counterfactual + long-tail (Feldman) | `03-memorization/memorization-llm.html` | `:144` |
 | Carlini scaling laws + repetition formal | `03-memorization/memorization-llm.html` | `:204-229` |

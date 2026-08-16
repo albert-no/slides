@@ -176,33 +176,105 @@ calibration bridge `:96-102`.
 
 ## mia3-theory.html
 
-Lightened from 45 → 28 slides: Yeom 3-part proof, redundant intuition slides, and individual Salem relaxation slides folded into single takeaway/summary slides. Full Yeom proof lives in `mia3-theory-note.html`.
+Math-detail revision (28 → 139 slides): the Yeom argument is now stated, proved and
+counter-exampled on the slides, Sablayrolles' two theorems are proved in full, Salem's three
+relaxations are quantified against `mia2`'s mis-specification bound, and Nasr's white-box and
+federated claims are turned into a rank-one gradient proposition and a data-processing
+proposition. Class prefix `m3-`. Deck refers back to `mia1`/`mia2` through self-contained
+"Recall" cards only.
 
 | Part | Topic | Line |
 |---|---|---|
-| **01** — Yeom et al. 2018 (overfitting) | | `:78-216` |
-| | **Generalization gap** `Δ = R_pop − R_train` | `:104` |
-| | **Threshold attack** `A(z) = 1[ℓ(f,z) ≤ τ]`, `τ = R_pop` | `:118` |
-| | **Theorem: Adv_MI ≤ Δ** (proof in note) | `:137` |
-| | Loss-distribution intuition (members vs non-members) | `:147` |
-| | Takeaway (what works / where it falls short) | `:187` |
-| **02** — Sablayrolles et al. 2019 (BB vs WB) | | `:217-322` |
-| | **Bayes-optimal MI** `Λ(z) = p(Φ\|z∈D)/p(Φ\|z∉D)` | `:240` |
-| | White-box features (loss, gradients, activations) | `:276` |
-| | **Theorem: Λ_BB → Λ_WB** with merged intuition | `:291` |
-| | Experimental validation (BB-WB gap < 1% AUC) | `:306` |
-| **03** — Salem et al. (ML-Leaks) — single consolidated slide + results | | `:323-368` |
-| | Three relaxations (different arch / different distribution / no shadows) | `:329` |
-| | Graceful degradation (~5% drop) | `:353` |
-| **04** — Nasr et al. 2019 (white-box + FL) | | `:369-460` |
-| | Per-layer gradients as features | `:395` |
-| | FL vulnerability: shared Δθ exposes WB info | `:416` |
-| | Passive vs active attacks in FL | `:438` |
-| **05** — Synthesis | timeline 2008–2019 | `:461-525` |
+| Front matter | Title; contents; **What We Already Have** (2 Recall cards); the question (SVG fan-in) | `:44, :55, :88, :113` |
+| **01** — Yeom et al., CSF 2018 | | `:149-957` |
+| | What Yeom actually proves; setup and notation (bit flipped to $b=1$ = member) | `:156, :172` |
+| | **Experiment 1** membership experiment; **Definition 4** membership advantage | `:187, :205` |
+| | Why non-members come from $\mathcal{D}$; **Definition 3** average generalisation error | `:220, :236` |
+| | Average gap vs fixed-set gap | `:250` |
+| | **The picture behind everything** (SVG: two loss densities, threshold, shaded errors) | `:273` |
+| | Reading the picture; the bounded-loss assumption | `:305, :329` |
+| | **Adversary 1** (loss-proportional coin); **Key trick** | `:349, :366` |
+| | **Theorem 2** $\mathrm{Adv}^{\mathrm{M}}(\mathcal{A}_1) = R_{\text{gen}}/B = \Delta/B$ (an equality) | `:387` |
+| | Proof of Theorem 2: outline, condition, linearity, identify, recap | `:402-484` |
+| | What Theorem 2 buys; **Corollary** $\Delta/B \le \sup\mathrm{Adv} = \mathrm{TV}(P_1,P_0)$ (+ proof) | `:485, :508, :521` |
+| | Which way the bound points (SVG number line); the folklore misstatement | `:535, :563` |
+| | **Counterexample A** zero gap, full advantage (+ the attack) | `:584, :600` |
+| | **Counterexample B** large gap, useless threshold (+ three attackers) | `:617, :633` |
+| | Both counterexamples at a glance (SVG); moments vs distributions | `:649, :680` |
+| | **Theorem 1** $\varepsilon$-DP $\Rightarrow \mathrm{Adv}^{\mathrm{M}} \le e^{\varepsilon}-1$ (+ 3 proof slides) | `:701, :716-764` |
+| | Two bounds, two directions; **Adversary 2** (known error law) | `:765, :786` |
+| | **Theorem 3** Gaussian errors (+ 2 proof slides); advantage vs $\rho$ (SVG erf curve) | `:803, :817-845, :846` |
+| | Unknown standard error | `:870` |
+| | **Theorem 4** overfitting is not necessary; the colluding construction; the two error terms | `:886, :901, :922` |
+| | Section 01 takeaway | `:938` |
+| **02** — Sablayrolles et al., ICML 2019 | | `:958-1607` |
+| | Change of question; the generative story; why this posterior | `:965, :985, :1002` |
+| | Temperature concentrates the posterior (SVG) | `:1017` |
+| | **Definition** $\mathcal{M}(\theta,z_1) := P(m_1{=}1 \mid \theta,z_1)$, nuisance $\mathcal{T}$; notation $\sigma$, $t_\lambda$ | `:1040, :1054` |
+| | **Theorem 5** membership as a sigmoid of a log-ratio (paper Thm 1) | `:1076` |
+| | Proof of Theorem 5: outline, condition, Bayes, sigmoid identity, recap | `:1089-1161` |
+| | Not yet useful; **the calibration constant** $\tau_p$; **the membership score** $s$ | `:1162, :1176, :1196` |
+| | **Theorem 6** $\mathcal{M} = \mathbb{E}_{\mathcal{T}}[\sigma(s + t_\lambda)]$ (paper Thm 2) | `:1212` |
+| | Proof of Theorem 6: outline, split off $z_1$, **cancel the nuisance**, take logs | `:1226-1283` |
+| | **Corollary** the loss is a sufficient statistic; thresholding the loss is optimal | `:1284, :1299` |
+| | Sufficient-statistic collapse (SVG: white-box features → loss → $\mathcal{M}$) | `:1313` |
+| | Assumptions stated loudly; what breaks when they fail | `:1344, :1358` |
+| | **Property 1** $P(m_1{=}1\mid\theta,z_1) \le \lambda + \varepsilon/4$ (+ proof, ¼-Lipschitz sigmoid) | `:1377, :1391` |
+| | **Definition** $(\varepsilon,\delta)$-membership privacy; **Property 2** $\le \lambda + \varepsilon/(4T) + \delta$ (+ proof) | `:1407, :1422` |
+| | Temperature as a privacy knob | `:1436` |
+| | MALT / MAST / MATT; MATT's local quadratic model; MATT as an inner product | `:1456, :1471, :1490, :1504` |
+| | Worked example: Gaussian mean; why the example matters | `:1523, :1536` |
+| | Measured: CIFAR-10 (Table 2); ImageNet (Table 3); section takeaway | `:1559, :1574, :1589` |
+| **03** — Salem et al., NDSS 2019 (ML-Leaks) | | `:1608-1863` |
+| | The claim; **Recall** the mis-specification bound from the shadow-model deck | `:1615, :1627` |
+| | **Lemma** total variation is a metric (+ proof) | `:1641` |
+| | The three relaxations, formalised as surrogate laws $Q^{(1)},Q^{(2)},Q^{(3)}$ | `:1655` |
+| | The relaxation staircase (SVG, $2\,\mathrm{TV}$ steps) | `:1670` |
+| | Adversary 1 (fewer shadows); mismatched hyperparameters and algorithm | `:1700, :1714` |
+| | Adversary 2 (wrong data distribution); Adversary 3 (no shadow model); the threshold | `:1729, :1745, :1760` |
+| | Theory versus measurement; what predicts vulnerability; dropout; a real service | `:1780, :1801, :1816, :1830` |
+| | Section 03 takeaway | `:1844` |
+| **04** — Nasr, Shokri, Houmansadr, IEEE S&P 2019 | | `:1864-2264` |
+| | Three observation models; why gradients should carry signal; the last layer set up | `:1871, :1887, :1906` |
+| | **Proposition** $\partial\ell/\partial W = (p - e_y)a^{\top}$ is rank one (+ 2 proof slides) | `:1920, :1934-1960` |
+| | Picture of the outer product (SVG) | `:1961` |
+| | **Corollary** $\|\partial\ell/\partial W\|_F = \|p-e_y\|\,\|a\|$; why that limits the white-box gain | `:1986, :2002` |
+| | Measured: layer outputs (Table III); parameter gradients (Table IV); total gain (Table VIII) | `:2022, :2037, :2053` |
+| | The apparent tension with Section 02 | `:2070` |
+| | **Lemma** data processing for total variation (+ proof) | `:2089` |
+| | **Proposition** trajectories dominate snapshots (+ proof) | `:2104, :2118` |
+| | Trajectory versus snapshot (SVG update chain); when is the gap strict | `:2132, :2161` |
+| | The active attacker formalised; gradient ascent as a probe | `:2180, :2192` |
+| | Measured: federated attacks (Table X); the isolating attacker; section takeaway | `:2209, :2225, :2245` |
+| **05** — Synthesis | | `:2265-2440` |
+| | **The single object** $\Lambda(z,O)$; the same three choices (6-row table); calibration | `:2272, :2286, :2301` |
+| | The arc, as mathematics (chain); four bounds side by side | `:2317, :2346` |
+| | What is actually settled; consequences for a defender; where the series goes next | `:2360, :2380, :2403` |
 
-**Key theorems:** Yeom bound `:137`; Bayes-optimal `:240`; BB→WB convergence `:291`.
+**Key results, all proved on slides:** **Thm 2** (exact advantage) `:387`; **Corollary**
+$\Delta/B \le \mathrm{TV}$ `:508`; **Thm 1** (DP ceiling) `:701`; **Thm 3** (Gaussian) `:803`;
+**Thm 4** (overfitting not necessary) `:886`; **Thm 5** (sigmoid form) `:1076`; **Thm 6**
+(loss is sufficient) `:1212`; **Corollary** (sufficiency) `:1284`; **Property 1** `:1377`;
+**Property 2** `:1422`; **Lemma** (TV is a metric) `:1641`; **Prop** (rank-one gradient) `:1920`;
+**Lemma** (data processing) `:2089`; **Prop** (trajectories dominate) `:2104`.
 
-**Note (`mia3-theory-note.html`):** Full Yeom proof `:40-61` (moved off slides as part of lightening); per-sample vulnerability `:64-68`; bound tightness `:78-87`; ML-Leaks results table `:90-100`; Sablayrolles validation `:103-113`.
+**Counterexamples:** zero gap / full advantage `:584`; large gap / useless threshold `:617`.
+Together they show the Yeom identity is one-directional, and kill the folklore reading
+`Adv ≤ Δ` `:563`.
+
+Deck-local figure family: prefix `m3-` (`.m3-fig` + `.lab` overlays, `.m3-algo`, `.m3-chain`,
+`.m3-tight`), defined in the deck's own `<style>` block. Original SVG figures: attack fan-in
+`:117`, member/non-member loss densities with threshold and shaded errors `:278`, gap-vs-advantage
+number line `:540`, both counterexamples `:654`, advantage as a function of $\rho$ `:851`, Gibbs
+posterior concentrating as $T \to 0$ `:1022`, sufficient-statistic collapse `:1318`, relaxation
+staircase `:1675`, rank-one outer product `:1966`, trajectory versus snapshot `:2137`.
+
+**Note (`mia3-theory-note.html`):** what moved onto the slides, including why the old
+Markov-based "proof" was wrong `:39-45`; tightness and what the bounds do not say (per-record vs
+population-average, slack in $\Delta/B \le \mathrm{TV}$, defences that shrink $\Delta$) `:47-59`;
+Sablayrolles' assumptions (Gibbs vs real SGD, additive loss, one snapshot, MATT identifiability)
+`:61-73`; Salem theory vs measurement `:75-79`; white-box feature dimensions table and measured
+gains `:81-93`; speaker asides `:95-100`.
 
 ---
 

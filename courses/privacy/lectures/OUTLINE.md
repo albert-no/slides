@@ -95,8 +95,11 @@ Exams live one level up in `../exam/`.
 | **Adversarial Compression Ratio (ACR)** + Thm 4 counting bound | `03-memorization/memorization-llm.html` | `:1268-1534` |
 | Cooper book extraction | `03-memorization/memorization-llm.html` | `:1586-1666` |
 | LLM memorization defenses (dedup / DP Thm 5 / $n$-gram blocking) | `03-memorization/memorization-llm.html` | `:1717-1895` |
-| Yeom overfitting bound | `04-mia/mia3-theory.html` | `:143` |
-| Sablayrolles BB≈WB | `04-mia/mia3-theory.html` | `:436` |
+| Yeom membership advantage (Thm 2, exact) + counterexamples | `04-mia/mia3-theory.html` | `:387, :584-679` |
+| Yeom DP bound $e^{\varepsilon}-1$ (Thm 1, proved) | `04-mia/mia3-theory.html` | `:701-764` |
+| Sablayrolles: loss is a sufficient statistic (Thm 6 + corollary) | `04-mia/mia3-theory.html` | `:1212-1298` |
+| Salem three relaxations as TV perturbations | `04-mia/mia3-theory.html` | `:1655-1699` |
+| Nasr rank-one last-layer gradient; trajectories $\succ$ snapshots (DPI) | `04-mia/mia3-theory.html` | `:1920, :2104` |
 | LiRA | `04-mia/mia4-modern.html` | `:264-503` |
 | RMIA | `04-mia/mia4-modern.html` | `:647-720` |
 | InfoRMIA (LLM token-level) | `04-mia/mia5-llm.html` | `:427-590` |

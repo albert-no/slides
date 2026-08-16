@@ -106,7 +106,11 @@ Exams live one level up in `../exam/`.
 | RMIA pairwise ratio + rank score (Defs 7–8) | `04-mia/mia4-modern.html` | `:1162, :1200` |
 | Label-only boundary distance = logit (Prop 4, Cor 2) | `04-mia/mia4-modern.html` | `:1357, :1381` |
 | Post-processing cannot help a defense (Prop 5, Cor 3) | `04-mia/mia4-modern.html` | `:1609, :1632` |
-| InfoRMIA (LLM token-level) | `04-mia/mia5-llm.html` | `:427-590` |
+| Calibrated LLM score $\log p_\theta(x)-\log q(x)$ (Def 1) + calibration helps iff (Prop 4) | `04-mia/mia5-llm.html` | `:545, :577` |
+| Why pre-training MIA is hard — model-based SNR (Props 1–3, Cor 1) | `04-mia/mia5-llm.html` | `:260, :295, :331, :451` |
+| InfoRMIA decomposition (Thm 1) + it is the calibrated score again (Cor 2) | `04-mia/mia5-llm.html` | `:1054, :1089` |
+| Blind baselines as a validity failure (Prop 7); per-record instability (Prop 6) | `04-mia/mia5-llm.html` | `:1424, :1306` |
+| Extraction implies inference, converse fails (Prop 8); DP AUC ceiling (Prop 9) | `04-mia/mia5-llm.html` | `:1733, :1840` |
 | Certified $(\varepsilon,\delta)$ unlearning | `05-unlearning/unlearning1-foundations.html` | `:160` |
 | Influence function (leads into Newton) | `05-unlearning/unlearning1-foundations.html` | `:174` |
 | Newton-step (8-slide) / Sekhari capacity theorems | `05-unlearning/unlearning1-foundations.html` | `:191-312` |

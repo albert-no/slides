@@ -1,6 +1,6 @@
 # privacy/lectures/04-mia/ — Membership inference attacks (5 lectures)
 
-5-lecture series, paired `<deck>.html` + `<deck>-note.html`. Lectures 4 and 5 also have single-page `<deck>-overview.html` summaries. Plus legacy `old/MIA.html` (single-file deck superseded by mia1+mia2). Notes contain extra proof detail and tables.
+Complete 5-lecture series (all five decks revised 2026-08 to full math-detail form: 104 / 114 / 139 / 147 / 123 slides). Paired `<deck>.html` + `<deck>-note.html`; decks 4 and 5 also have single-page `<deck>-overview.html` summaries. Plus legacy `old/MIA.html` (single-file deck superseded by mia1+mia2). Every definition, theorem, proposition, lemma and corollary listed below is stated **and proved on the slides**; the notes hold assumptions, provenance of reported numbers, corrections and speaker asides.
 
 ## Files
 
@@ -10,7 +10,7 @@
 | `mia2-shadow.html` | `mia2-shadow-note.html` | — | Shadow models as Monte-Carlo estimation of the two conditionals: Shokri, per-class models, LOGAN (GANs), Hisamoto (seq2seq) and calibration |
 | `mia3-theory.html` | `mia3-theory-note.html` | — | Theory: Yeom (overfitting), Sablayrolles (BB≈WB), Salem (relaxed), Nasr (FL) |
 | `mia4-modern.html` | `mia4-modern-note.html` | `mia4-overview.html` | Modern estimators of the likelihood ratio: LiRA (closed form, calibration, online/offline), Ye's nested-conditioning hierarchy, RMIA, label-only boundary distance, DP-SGD and the post-processing bound, diffusion MIA |
-| `mia5-llm.html` | `mia5-llm-note.html` | `mia5-overview.html` | LLMs (high-level): calibration strategies, **empirical wall** (Hayes 2025), fine-tuning, extraction |
+| `mia5-llm.html` | `mia5-llm-note.html` | `mia5-overview.html` | LLMs: the calibrated score $\log p_\theta(x)-\log q(x)$ and five estimators of its null; a model-based signal-to-noise account of why pre-training MIA is hard; the **empirical wall** (Duan 2024, Hayes 2025, blind baselines as a validity failure); fine-tuning, extraction, DP; series-wide synthesis |
 | `old/MIA.html` | — | — | Legacy consolidated deck (Lectures 1–2 era) |
 
 ---
@@ -383,49 +383,106 @@ table of statistic × conditioning × density estimator `:85-99` and three take-
 
 ## mia5-llm.html
 
-**Restructured 2026-05** to ~38 slides — high-level overview rather than per-paper deep dive. New §03 "Empirical wall" featuring Hayes et al. 2025 limits-of-strong-attacks paper, Duan et al. 2024, and Maini et al. blind baselines. Detailed per-paper material now lives in `mia5-llm-note.html`.
+**Revised 2026-08** (37 → 123 slides, 5 sections). Every definition, theorem, proposition,
+lemma and corollary below is stated **and proved on the slides**; the note holds assumptions,
+provenance of every reported number, four corrections and speaker asides. Deck prefix `m5-`.
 
 | Part | Topic | Line |
 |---|---|---|
-| **01** — What makes LLM MIA hard | | `:82-198` |
-| | From classifiers to LLMs (one-pass, no shadows, unknown data) | `:90` |
-| | Three threat models (pre-train/FT/context) | `:116` |
-| | **Perplexity baseline** `PPL(x) = exp(-1/T Σ log p_θ(x_t\|x_{<t}))` | `:140` |
-| | The calibration challenge (need a per-example null) | `:155` |
-| | Two knobs: **signal × reference** | `:175` |
-| **02** — Calibration strategies | | `:199-325` |
-| | Reference model (Carlini 2021) — smaller LM as null | `:206` |
-| | **Neighbourhood** (Mattern 2023) — paraphrase null | `:221` |
-| | **SPV-MIA** (Fu 2023) — self-prompted null | `:236` |
-| | **Context-aware** (Chang 2024) — `s(x) = Var_c[log p_θ(x\|c)]` | `:253` |
-| | Token-level: which tokens carry signal (visualization) | `:269` |
-| | **Min-K% / InfoRMIA** — token-weighted log-ratio | `:293` |
-| | Calibration zoo summary table | `:306` |
-| **03** — The empirical wall (NEW) | | `:326-441` |
-| | The headline question (gap vs classifier MIA) | `:333` |
-| | **Duan et al. 2024** — MIA barely beats random on Pythia/Pile | `:348` |
-| | **Hayes et al. 2025** — scaled LiRA on GPT-2: AUC < 0.7 ceiling | `:364` |
-| | Per-record instability (training-seed noise > membership signal) | `:378` |
-| | **Maini et al. 2024** — blind baselines beat published MIAs | `:395` |
-| | Why pre-training MIA is structurally hard (4 reasons) | `:411` |
-| **04** — Where the signal still lives | | `:442-563` |
-| | Fine-tuning MIA works (multi-epoch, small data) | `:449` |
-| | Extractable vs. inferable memorization | `:471` |
-| | MIA as extraction's ranker (generate → rank → verify) | `:491` |
-| | Defenses (DP-FT, dedup, curation) | `:509` |
-| | Legal landscape (GDPR, NYT v OpenAI) | `:537` |
-| **05** — Synthesis | | `:564-655` |
-| | Unified LR template `Λ(z) = p(signal\|in)/p(signal\|out)` | `:571` |
-| | Instances table (Homer 2008 → InfoRMIA 2025) | `:582` |
-| | Four eras (2008–2017, 2018–2019, 2020–2023, 2023–2025) | `:597` |
-| | Key takeaways + open problems | `:610, :625` |
-| | Essential reading (Hayes et al. featured) | `:640` |
+| **01** — Why LLM MIA is structurally hard | | `:112-537` |
+| | **Recall** cards: the membership game; the modern per-example recipe | `:122, :137` |
+| | What breaks at LLM scale; three threat models; the perplexity baseline; two confounds inside it | `:158, :182, :205, :220` |
+| | **Model M1** (`.m5-algo`, A1–A4) — labelled *model-based, not a theorem about real LLMs* | `:243` |
+| | **Proposition 1** membership shift $T^{\text{in}}-T^{\text{out}} = -\eta E\|g_x\|^2$ + proof | `:260, :277` |
+| | **Proposition 2** $\mathrm{AUC}=\Phi(\rho/\sqrt2)$, $\sup\mathrm{Adv}=2\Phi(\rho/2)-1$, small-$\rho$ expansion + proof | `:295, :315` |
+| | **Proposition 3** pooled $\rho \propto \eta E$ vs calibrated $\rho = \|g_x\|^2/\sqrt{N v_x}$ + two proof slides | `:331, :350, :366` |
+| | Recap chain (`\stackrel`); the shift-against-spread SVG; reading Prop 3 | `:381, :402, :435` |
+| | **Corollary 1** $\rho_{\text{cal}} \approx \sqrt{d_{\text{eff}}/N}$ under near-orthogonality (A5) | `:451` |
+| | **What Model M1 does *not* say** (frozen gradients, no repetition, Gaussian scores) | `:466` |
+| | Duan Fig. 2 (left) AUC vs steps + how to read it; Duan Fig. 2 (right) AUC vs epochs | `:481, :490, :504` |
+| | Two knobs every attack turns (statistic × null) | `:513` |
+| **02** — The calibration principle | | `:535-1187` |
+| | **Definition 1** $s(x) = \log p_\theta(x) - \log q(x)$ | `:545` |
+| | **Recall** why pooling loses (mixture + Jensen) | `:562` |
+| | **Proposition 4** calibration helps iff $\sigma_\delta^2 \lt \sigma_a^2$ + proof; two failure modes of a null | `:577, :597, :614` |
+| | One score, three nulls (SVG); what makes a good $q$ | `:635, :667` |
+| | **Estimator 1** reference model (Carlini et al. 2021); where it breaks | `:682, :700` |
+| | **Estimator 2** neighbourhood (Mattern et al. 2023) | `:718` |
+| | **Lemma 1** exchangeable perturbations ⟹ exact level $1/(K+1)$ + proof + cloud SVG + failures | `:734, :751, :763, :791` |
+| | **Estimator 3** SPV-MIA (Fu et al., NeurIPS 2024): self-generated reference; assumption + evidence | `:805, :826` |
+| | **Estimator 4** context-aware (Chang et al., EMNLP 2025): cut-off loss and OLS slope | `:842, :857` |
+| | CAMIA Fig. 3 (members descend faster); the rest of the family; what it buys (23.13% → 63.43% TPR@1%) | `:873, :881, :897` |
+| | **Estimator 5** not all tokens are equal; **Recall** Min-K% (owned by 03-memorization) | `:913, :941` |
+| | **Proposition 5** tail selection converges to a conditional tail expectation, not a calibrated LR + proof + SVG | `:956, :973, :988` |
+| | InfoRMIA as a composite test (Tao & Shokri 2025) | `:1032` |
+| | **Theorem 1** $\Lambda_{\text{Info}} = \log\frac{p(x\mid\theta)}{p(x)} + D_{\mathrm{KL}}(p(z)\|p(z\mid\theta))$ + proof | `:1054, :1071` |
+| | **Corollary 2** it is Definition 1 again, with $q$ = population marginal | `:1089` |
+| | Why the log average beats the count; token-level InfoRMIA (**proof of concept**); reported evidence | `:1104, :1120, :1136` |
+| | The calibration zoo, then the same zoo read as assumptions | `:1152, :1167` |
+| **03** — The empirical wall | | `:1185-1584` |
+| | The headline question; **Duan et al., COLM 2024** — no attack above AUC 0.6 except GitHub | `:1195, :1210` |
+| | Their diagnosis in Definition-1 notation (7-gram overlap 39.3% vs 13.9%) | `:1231` |
+| | **Hayes et al., NeurIPS 2025** — give the attack everything (128 references); Fig. 2(a); the numbers | `:1247, :1264, :1273` |
+| | Aggregate AUC is the wrong question | `:1292` |
+| | **Proposition 6** $\mathrm{Var}(T)=\Delta^2/4+\sigma_{\text{run}}^2$, share $=\rho^2/(\rho^2+4)$ + proof + corollary + SVG | `:1306, :1323, :1339, :1356` |
+| | Hayes Fig. 5 unstable member; how many records are coin flips (15.4%, 42.2%) | `:1380, :1389` |
+| | **Das, Zhang & Tramèr, DATA-FM at ICLR 2025** — how the benchmarks were built | `:1403` |
+| | **Proposition 7** different splits ⟹ $\sup\mathrm{Adv}=\mathrm{TV}(Q_1,Q_0)$, attained blind + proof + reading | `:1424, :1441, :1457` |
+| | The blind-baseline confound (big SVG); Das Fig. 1 PCA; blind beats published, everywhere | `:1472, :1505, :1514` |
+| | Corroboration from CAMIA (98.7% blind AUC on WikiMIA) | `:1529` |
+| | **Corollary** what a valid split requires (random split ⟹ $\mathbb{E}[\mathrm{Adv}]=0$ blind); assembled argument | `:1545, :1563` |
+| **04** — Where the signal still lives | | `:1582-1946` |
+| | The regime change; **Corollary 3** reversal $\rho'_{\text{pool}}/\rho_{\text{pool}} = E'/E$, $\rho'_{\text{cal}}/\rho_{\text{cal}} = \sqrt{N/N'}$ + proof | `:1592, :1607, :1626` |
+| | The two regimes on one plane (SVG); where this under-predicts; what the friendly regime delivers | `:1642, :1668, :1684` |
+| | **Recall** three notions of memorization (owned by 03-memorization); extraction as a thresholded attack | `:1700, :1716` |
+| | **Proposition 8** $\mathrm{FPR}(\mathcal{A}_{\text{ext}}) \le 2^{-h}$, $\mathrm{Adv}\ge\mathrm{TPR}-2^{-h}$ + proof | `:1733, :1751` |
+| | The converse fails (counterexample); strict inclusions (SVG); MIA as extraction's ranker | `:1768, :1786, :1804` |
+| | **Defense** DP fine-tuning; **Proposition 9** $\mathrm{AUC}\le 1-(1-\delta)^2/(2e^\varepsilon)$ + proof + numbers | `:1823, :1840, :1856, :1872` |
+| | Defenses without a guarantee; why output filters do not help; why anyone outside asks (GDPR, NYT v. OpenAI) | `:1888, :1904, :1923` |
+| **05** — Synthesis | | `:1944-2190` |
+| | Every attack is one object; three choices, nothing else; the chain that runs through everything (SVG) | `:1954, :1968, :1991` |
+| | Instances — the classical line; the language-model line | `:2021, :2037` |
+| | Four eras; proved in this lecture (2 tables); claimed, not proved | `:2053, :2069, :2084, :2100` |
+| | Key takeaways; the audit recipe (`.m5-algo`); open problems; where the recipe runs out; essential reading | `:2115, :2128, :2144, :2157, :2172` |
 
-**Key formulas:** Perplexity `:147`; Neighbourhood score `:228`; Context-aware variance `:259`; InfoRMIA `:300`; Unified LR `:575`.
+**Key results, all proved on slides:** **Prop 1** (membership shift) `:260`; **Prop 2** (ratio to
+AUC and advantage) `:295`; **Prop 3** (pooled vs calibrated ceilings) `:331`; **Cor 1** (capacity
+over data) `:451`; **Prop 4** (difficulty cancellation) `:577`; **Lemma 1** (exchangeability ⟹
+valid rank test) `:734`; **Prop 5** (the selection effect) `:956`; **Thm 1** (InfoRMIA
+decomposition) `:1054`; **Cor 2** (reduces to Definition 1) `:1089`; **Prop 6** (variance
+decomposition, per-record instability) `:1306`; **Prop 7** (blind baselines as a validity failure)
+`:1424`; **Cor 3** (the fine-tuning reversal) `:1607`; **Prop 8** (extraction implies inference)
+`:1733`; **Prop 9** (DP AUC ceiling) `:1840`.
 
-**Featured limitations papers (§03):** Duan 2024 `:348`; **Hayes 2025** `:364, :378`; Maini 2024 `:395`.
+**Definition:** 1 calibrated score `:545` — the deck's organising object; every attack in §02 is
+one estimator of its $q$.
 
-**Note (`mia5-llm-note.html`):** Side-by-side pseudocode perplexity/neighbourhood/InfoRMIA `:43-72`; full calibration zoo with InfoRMIA row `:74-79`. (Per-paper deep-dive material — InfoRMIA token-selection strategies, SPV self-prompting strategies, full results tables — was moved out of the slides in the 2026-05 restructure and now belongs in the note.)
+Deck-local figure family: prefix `m5-` (`.m5-fig` + `.lab` overlays, `.m5-algo`, `.m5-chain`,
+`.m5-tight`, `.m5-snug`, `.m5-shot`), defined in the deck's own `<style>` block. Original SVG
+figures: shift-against-spread signal-to-noise panels `:405`; one score, three nulls `:638`; the
+neighbourhood cloud `:766`; two surprisal profiles under the same tail rule `:991`; where the
+variance goes (membership share bars) `:1359`; the blind-baseline confound `:1475`; the two
+regimes on one plane `:1645`; strict inclusions (extractable ⊊ inferable ⊊ member) `:1789`; the
+series-wide likelihood-ratio chain `:1994`.
+
+Real paper figures (in `figs/`, cropped from the arXiv PDFs): Duan et al., COLM 2024 Fig. 2 left
+`:484` and right `:507`; Chang et al., EMNLP 2025 Fig. 3 `:875`; Hayes et al., NeurIPS 2025
+Fig. 2(a) `:1267` and Fig. 5 `:1383`; Das, Zhang & Tramèr, DATA-FM at ICLR 2025 Fig. 1 `:1508`.
+
+**Note (`mia5-llm-note.html`):** what moved onto the slides, four corrections (CAMIA's statistic
+and its direction; InfoRMIA's headline number and its true setting; 128 not 256 references; the
+blind-baseline paper is Das/Zhang/Tramèr, not Maini) and the list of numbers deleted as
+unverifiable `mia5-llm-note.html:42-68`; why LLMs break the classical toolkit `:72-89`;
+perplexity and the direction of the calibration inequality `:93-104`; neighbourhood mechanics,
+what Mattern actually claims, where it breaks `:108-121`; SPV-MIA mechanism and assumption
+`:125-134`; CAMIA's six statistics and benchmark choice `:138-155`; InfoRMIA's composite null,
+decomposition and per-setting results table `:159-178`; benchmarks and the empirical wall
+`:182-195`; inference-to-extraction and the ownership note `:199-208`; defenses `:212-227`;
+pseudocode for four attacks `:231-267`; open problems `:271`.
+
+**Overview (`mia5-overview.html`):** single page, 5 sections matching the deck, the estimator
+table `:65-73`, the take-home matrix `:98-106` and three take-homes `:108`. Every number in it
+is quoted from a cited paper with its setting named.
 
 ---
 

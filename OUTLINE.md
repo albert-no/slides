@@ -87,7 +87,10 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Nested conditioning cannot hurt (Thm 2) — and why the ordering is only partial | `courses/privacy/lectures/04-mia/mia4-modern.html:951, :1021` |
 | Post-processing cannot help an MIA defense (Prop 5 / Cor 3, proved from DPI) | `courses/privacy/lectures/04-mia/mia4-modern.html:1609, :1632` |
 | Diffusion MIA — per-timestep reconstruction loss as the membership statistic | `courses/privacy/lectures/04-mia/mia4-modern.html:1747, :1811` |
-| LLM MIA (perplexity, neighbourhood, SPV, InfoRMIA) | `courses/privacy/lectures/04-mia/mia5-llm.html` |
+| LLM MIA (perplexity, neighbourhood, SPV-MIA, context-aware, InfoRMIA) as five estimators of one null | `courses/privacy/lectures/04-mia/mia5-llm.html:545` |
+| Blind baselines beat published LLM MIAs — a benchmark validity failure (Prop 7, proved) | `courses/privacy/lectures/04-mia/mia5-llm.html:1424, :1472` |
+| Per-record instability: good AUC, coin-flip decisions (Prop 6, proved) | `courses/privacy/lectures/04-mia/mia5-llm.html:1306` |
+| Extractable $\subsetneq$ inferable (Prop 8, proved, with counterexample to the converse) | `courses/privacy/lectures/04-mia/mia5-llm.html:1733, :1768` |
 | Bartz v. Anthropic $1.5B settlement (Reuters cite) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:162` |
 | Memorization defined three ways (extraction / SSCD / Webster taxonomy) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:269, :426, :518` |
 | Diffusion memorization — Carlini/Somepalli/Webster/Wen/Ross | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:215-891` |

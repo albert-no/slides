@@ -9,7 +9,7 @@
 | `mia1-foundations.html` | `mia1-foundations-note.html` | — | Foundations (2008–2019): Homer, MI game, DP bounds, evaluation |
 | `mia2-shadow.html` | `mia2-shadow-note.html` | — | Shadow models as Monte-Carlo estimation of the two conditionals: Shokri, per-class models, LOGAN (GANs), Hisamoto (seq2seq) and calibration |
 | `mia3-theory.html` | `mia3-theory-note.html` | — | Theory: Yeom (overfitting), Sablayrolles (BB≈WB), Salem (relaxed), Nasr (FL) |
-| `mia4-modern.html` | `mia4-modern-note.html` | `mia4-overview.html` | Modern: LiRA, Ye hierarchy, RMIA, label-only, defenses |
+| `mia4-modern.html` | `mia4-modern-note.html` | `mia4-overview.html` | Modern estimators of the likelihood ratio: LiRA (closed form, calibration, online/offline), Ye's nested-conditioning hierarchy, RMIA, label-only boundary distance, DP-SGD and the post-processing bound, diffusion MIA |
 | `mia5-llm.html` | `mia5-llm-note.html` | `mia5-overview.html` | LLMs (high-level): calibration strategies, **empirical wall** (Hayes 2025), fine-tuning, extraction |
 | `old/MIA.html` | — | — | Legacy consolidated deck (Lectures 1–2 era) |
 
@@ -280,37 +280,104 @@ gains `:81-93`; speaker asides `:95-100`.
 
 ## mia4-modern.html
 
+**Revised 2026-08** (53 → 147 slides, 8 sections). Every definition, theorem, proposition and
+corollary below is stated **and proved on the slides**; the note holds only modelling caveats,
+one secondary table and speaker asides.
+
 | Part | Topic | Line |
 |---|---|---|
-| **01** — Defenses recap | DP-SGD, comparison, broken adaptive defenses | `:86-181` |
-| | **DP-SGD update** `g̃_t = (1/B)(Σ clip(g_i,C) + N(0,σ²C²I))` | `:122` |
-| | Defenses broken by adaptive attacks (MemGuard, label smoothing, etc.) | `:168` |
-| **02** — Why early evaluations misled | label-only MIA | `:182-256` |
-| | Label-only (Choquette-Choo 2020) — boundary distance, ~100 queries | `:207-244` |
-| **03** — LiRA: Carlini et al. 2022 | | `:257-524` |
-| | **Likelihood ratio** `Λ(z) = p(ℓ\|z∈D)/p(ℓ\|z∉D)` | `:285` |
-| | Estimating distributions (N/2 IN, N/2 OUT, fit Gaussians) | `:299` |
-| | **LiRA formula** Gaussian PDFs | `:324` |
-| | **Per-example calibration** `(μ_in,σ_in,μ_out,σ_out)` per z | `:339` |
-| | Online vs offline | `:355` |
-| | Computational cost (256 models for CIFAR-10) | `:376` |
-| | TPR@0.01% FPR is 10–50× higher than prior | `:432` |
-| | Evaluation revolution | `:449` |
-| | Offline algorithm pseudocode | `:487` |
-| **04** — Unified view (Ye et al. 2022) | | `:525-646` |
-| | **Attack power hierarchy: LiRA ≥ Reference ≥ Population ≥ Threshold** | `:600` |
-| | Privacy Meter (open-source tool) | `:629` |
-| **05** — RMIA: Zarifzadeh et al. 2023 | | `:647-730` |
-| | **Formula** `Λ(z) = p_θ(z) / (1/R Σ p_{θ_r}(z))` | `:674` |
-| | Population ranking | `:689` |
-| | RMIA TPR@0.1%: ~11% with 2–8 models (vs LiRA's 256) | `:704` |
-| **06** — Beyond classification | diffusion model MIA | `:731-913` |
-| | Reconstruction-loss timestep analysis | `:742, :764` |
-| | LR paradigm universal | `:799` |
+| **01** — From optimal test to usable attack | | `:125-256` |
+| | **Recall** cards: the MI game; every optimal attack is a ratio test; the loss carries the signal; data processing for TV | `:133, :152, :166, :179` |
+| | The missing piece (nobody has the two densities); roadmap — one ratio, four estimators | `:193, :207` |
+| | **Recall** where an attack must be measured (TPR at low FPR) | `:223` |
+| | Log-log ROC that reset the field (Carlini Fig. 1) + how to read it | `:236, :245` |
+| **02** — LiRA: a parametric per-example test | | `:259-816` |
+| | **Definition 1** IN/OUT model distributions $\mathcal{Q}_{\mathrm{in}}(z), \mathcal{Q}_{\mathrm{out}}(z)$ | `:277` |
+| | Why the honest ratio is unusable; why raw confidence is the wrong scalar | `:290, :301` |
+| | **Definition 2** logit-scaled statistic $\phi(p)=\log\frac{p}{1-p}$ (+ SVG, + Carlini Fig. 4) | `:314, :327, :350` |
+| | **Definition 3** the Gaussian LiRA statistic; what is assumed here | `:360, :373` |
+| | **Theorem 1** closed form of $\log\Lambda$ (quadratic in $\ell$) + 3-step proof + recap | `:385, :398-451` |
+| | **Corollary 1** equal variances ⟹ $\log\Lambda = dz - \tfrac12 d^2$ (+ proof, + two readings) | `:453, :466, :475` |
+| | Per-example picture (SVG); one threshold, three examples (SVG) | `:487, :523` |
+| | **Proposition 1** calibration dominates pooling (mixture + Jensen) + 3-step proof + recap | `:548, :561-616` |
+| | Worked instance: pooled 0.9% vs calibrated 13.8% TPR at $10^{-3}$ | `:618` |
+| | Per-example distributions really move (Carlini Fig. 3) | `:628` |
+| | Online LiRA procedure (`.m4-algo`); **Definition 4** offline LiRA | `:650, :667` |
+| | **Proposition 2** offline LiRA is a one-sided z-test, UMP by Karlin–Rubin (+ proof, + SVG) | `:680, :693, :704` |
+| | Cost/power online vs offline; Carlini Table I @$10^{-3}$, @$10^{-5}$; balanced accuracy | `:729, :743, :759, :775` |
+| **03** — The attack hierarchy: nested conditioning | | `:819-1102` |
+| | The zoo of attacks; **Definition 5** one template for all of them | `:827, :840` |
+| | **Lemma 1** (Ye 4.1) approximated LRT → loss threshold; the fine print (not optimality) | `:854, :867` |
+| | **Definition 6** four conditioning sets S / P / R / D (Ye Table 1) | `:877` |
+| | Population out-world; reference out-world; two ways to sweep (SVG); why it bites | `:892, :903, :914, :938` |
+| | **Theorem 2** $V \subseteq V'$ ⟹ $\beta_V(\alpha) \le \beta_{V'}(\alpha)$ + 3-step proof (nesting → suprema → TV/DPI) + recap | `:951, :964-1019` |
+| | **The ordering is partial, not total** (Hasse diagram SVG); what Theorem 2 does *not* say | `:1021, :1046` |
+| | What Ye measured (S ≈ P; R beats S on 19.84% of inputs); auditing / Privacy Meter | `:1059, :1070, :1081` |
+| **04** — RMIA: pairwise ratios, few models | | `:1105-1322` |
+| | **Proposition 3** $\mathrm{Var}(\hat\sigma^2) = 2\sigma^4/(R-1)$, $\mathrm{sd}(\hat\sigma)/\sigma \approx 1/\sqrt{2(R-1)}$ (+ proof, + table) | `:1123, :1136, :1147` |
+| | **Definition 7** $\mathrm{LR}_\theta(x,z) = \Pr(\theta\mid x)/\Pr(\theta\mid z)$; computable form; what $\Pr(x)$ is | `:1162, :1176, :1187` |
+| | **Definition 8** $\mathrm{Score}(x;\theta) = \Pr_{z\sim\pi}[\mathrm{LR}_\theta(x,z) \ge \gamma]$; the score is a rank (SVG) | `:1200, :1213` |
+| | Zarifzadeh Fig. 3 (AUC vs reference budget); Tables 2 and 3; the low-budget regime | `:1251, :1260, :1275, :1291` |
+| | **A warning about cross-paper numbers** (their LiRA column is not Carlini's) | `:1302` |
+| **05** — Label-only access | | `:1325-1484` |
+| | **Definition 9** boundary distance as the attack statistic | `:1344` |
+| | **Proposition 4** for a linear model $d(x) = \phi(h(x))/\|w\|_2$ (+ proof); **Corollary 2** nothing was hidden | `:1357, :1370, :1381` |
+| | The geometry (SVG); beyond the linear case (proxy, not identity) | `:1393, :1416` |
+| | Estimating $d$ from labels alone (boundary walk); reported query counts; Choquette-Choo Fig. 2(c) | `:1426, :1442, :1453` |
+| **06** — Defenses | | `:1487-1714` |
+| | Four families; the one question that sorts them (does it change the model?) | `:1495, :1508` |
+| | **Definition 10** DP-SGD update `g̃_t = (1/B)(Σ clip(g_i,C) + N(0,σ²C²I))`; why those two operations; clip-then-blur (SVG) | `:1518, :1530, :1543` |
+| | **Recall** the DP ROC cap; the cap at $\mathrm{FPR}=10^{-3}$ worked numerically; what DP-SGD does not give | `:1568, :1581, :1596` |
+| | **Proposition 5** post-processing cannot increase TV (+ proof); **Corollary 3** the trap; channel diagram (SVG) | `:1609, :1621, :1632, :1645` |
+| | MemGuard as predicted; defenses sorted by the right question; the evaluation standard | `:1668, :1679, :1694` |
+| **07** — Beyond classification: diffusion models | | `:1717-1874` |
+| | What breaks (no single loss); **Recall** the denoising objective | `:1725, :1735` |
+| | **Definition 11** per-timestep statistic $\varphi_t(x_0) = \|\varepsilon - \varepsilon_\theta(\sqrt{\bar\alpha_t}x_0 + \sqrt{1-\bar\alpha_t}\varepsilon, t)\|_2^2$ | `:1747` |
+| | Why fix $t$ rather than average; where the signal lives (SVG); the two endpoints (**intuition**) | `:1760, :1770, :1791` |
+| | Matsumoto Fig. 4; the peak at $t=350$ cosine / $t=200$ linear, both $\bar\alpha_t = 0.7$; Table II; reading it honestly | `:1802, :1811, :1822, :1837` |
+| | Porting the recipe | `:1847` |
+| **08** — Synthesis | | `:1877-2002` |
+| | **The template** $\hat\Lambda(z) = \hat p(\phi(z)\mid z \in D,\mathcal{C}) / \hat p(\phi(z)\mid z \notin D,\mathcal{C})$ | `:1885` |
+| | What actually changed 2017→2024; attacks without / with reference models (2 tables) | `:1897, :1912, :1926` |
+| | Proved in this lecture; **claimed, not proved**; if you have to run one; where the recipe runs out | `:1940, :1955, :1968, :1981` |
 
-**Key formulas:** DP-SGD `:122`; LiRA LR `:285, :324`; RMIA LR `:674`; attack hierarchy `:600`.
+**Key results, all proved on slides:** **Thm 1** (closed form of the LiRA test) `:385`; **Cor 1**
+(calibrated z-score) `:453`; **Prop 1** (calibration dominates pooling) `:548`; **Prop 2** (offline
+is a one-sided UMP z-test) `:680`; **Lemma 1** (Ye's approximated LRT) `:854`; **Thm 2** (richer
+conditioning cannot hurt) `:951`; **Prop 3** (variance of $\hat\sigma$) `:1123`; **Prop 4**
+(distance is the logit) `:1357`; **Cor 2** (hiding scores hides nothing) `:1381`; **Prop 5**
+(post-processing) `:1609`; **Cor 3** (output-side defenses cannot help) `:1632`.
 
-**Note (`mia4-modern-note.html`):** Side-by-side pseudocode threshold/LiRA/RMIA `:43-74`; defense comparison table `:78-87`; cost-vs-power table `:92-103`.
+**Definitions:** 1 IN/OUT worlds `:277`; 2 logit statistic `:314`; 3 LiRA statistic `:360`;
+4 offline LiRA `:667`; 5 attack template `:840`; 6 four conditioning sets `:877`; 7 pairwise
+likelihood ratio `:1162`; 8 RMIA score `:1200`; 9 boundary distance `:1344`; 10 DP-SGD update
+`:1518`; 11 per-timestep statistic `:1747`.
+
+Deck-local figure family: prefix `m4-` (`.m4-fig` + `.lab` overlays, `.m4-algo`, `.m4-chain`,
+`.m4-tight`, `.m4-shot`), defined in the deck's own `<style>` block. Original SVG figures: logit
+transform reshaping a skewed confidence density `:330`; per-example IN/OUT Gaussians with the
+z-score arrow `:490`; one threshold against three examples `:526`; offline upper tail vs online
+two-sided region `:707`; population sweep vs reference sweep `:917`; Hasse diagram of the partial
+order `:1024`; RMIA population-rank axis `:1216`; boundary-distance geometry `:1396`; DP-SGD
+clip-then-blur `:1546`; the post-processing channel `:1648`; diffusion signal against timestep
+`:1773`.
+
+Real paper figures (in `figs/`, all cropped from the arXiv PDFs): Carlini et al., IEEE S&P 2022
+Fig. 1 `:238`, Fig. 4 `:352`, Fig. 3 `:630`; Zarifzadeh et al., ICML 2024 Fig. 3 `:1253`;
+Choquette-Choo et al., ICML 2021 Fig. 2(c) `:1455`; Matsumoto et al. 2023 Fig. 4 — cited on the
+measured-AUC slide `:1802`.
+
+**Note (`mia4-modern-note.html`):** what moved onto the slides, the corrected monotonicity claim
+(Ye's hierarchy is a design rationale, not a theorem) and the list of numbers deleted as
+unverifiable `mia4-modern-note.html:40-44`; the Gaussian model as an assumption, the logit
+transform, and where misspecification bites `:47-57`; what the hierarchy does not promise
+(population level vs finite samples, per-record vs per-sample games, auditing asymmetry) `:60-70`;
+reading RMIA's claims carefully `:73-77`; label-only cost model `:80-83`; DP-SGD honest scope
+`:86-89`; diffusion measured vs intuited `:92-95`; fuller defense table `:98-110`; speaker asides
+`:113-118`; open questions `:121-127`.
+
+**Overview (`mia4-overview.html`):** single page, 8 sections matching the deck, plus the synthesis
+table of statistic × conditioning × density estimator `:85-99` and three take-homes `:100`.
 
 ---
 

@@ -83,6 +83,10 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Uncalibrated perplexity threshold — degenerate LRT, pooling costs half the population | `courses/privacy/lectures/04-mia/mia2-shadow.html:1423, :1500` |
 | MIA theory (Yeom / Sablayrolles / ML-Leaks / Nasr) | `courses/privacy/lectures/04-mia/mia3-theory.html` |
 | LiRA, RMIA, label-only, attack hierarchy | `courses/privacy/lectures/04-mia/mia4-modern.html` |
+| Closed form of the LiRA test (Thm 1) + per-example calibration dominates pooling (Prop 1) | `courses/privacy/lectures/04-mia/mia4-modern.html:385, :548` |
+| Nested conditioning cannot hurt (Thm 2) — and why the ordering is only partial | `courses/privacy/lectures/04-mia/mia4-modern.html:951, :1021` |
+| Post-processing cannot help an MIA defense (Prop 5 / Cor 3, proved from DPI) | `courses/privacy/lectures/04-mia/mia4-modern.html:1609, :1632` |
+| Diffusion MIA — per-timestep reconstruction loss as the membership statistic | `courses/privacy/lectures/04-mia/mia4-modern.html:1747, :1811` |
 | LLM MIA (perplexity, neighbourhood, SPV, InfoRMIA) | `courses/privacy/lectures/04-mia/mia5-llm.html` |
 | Bartz v. Anthropic $1.5B settlement (Reuters cite) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:162` |
 | Memorization defined three ways (extraction / SSCD / Webster taxonomy) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:269, :426, :518` |

@@ -26,8 +26,8 @@ Exams live one level up in `../exam/`.
 
 - **generative review ↔ everything downstream**: `02-generative/` pins down score, sampling, discrete-space generation; `llm.html` pins down $p_\theta(\cdot\mid x_{<t})$, per-token loss $\ell_t$, the sampling step. MIA / memorization / watermarking / unlearning each plug into one of those pieces (LLM 4-card map at `02-generative/llm.html:1101`).
 - **diffusion ↔ llm (within `02-generative/`)**: parallel reviews. Diffusion = continuous score-based generation; LLM = discrete autoregressive counterpart. Privacy attacks differ in mechanism but share targets (training-data leakage, provenance, removal).
-- **diffusion ↔ MIA**: diffusion-model MIA is a research frontier — `04-mia/mia4-modern.html:731-789` covers it. The diffusion-models theory in `02-generative/` provides the substrate.
-- **DP ↔ MIA**: `04-mia/mia1-foundations.html:1237-1341` proves the hypothesis-testing region (`α + e^ε β ≥ 1−δ`), the ROC cap (`TPR ≤ e^ε FPR + δ`) and the advantage bound (`Adv ≤ e^ε−1+δ`); `01-dp/dp8-fl.html` builds the DP machinery. DP-SGD is referenced from `04-mia/mia4-modern.html:117`.
+- **diffusion ↔ MIA**: diffusion-model MIA is a research frontier — `04-mia/mia4-modern.html:1717-1874` covers it (per-timestep statistic at `:1747`, measured AUC-vs-$t$ peak at `:1811`). The diffusion-models theory in `02-generative/` provides the substrate; the deck carries a self-contained Recall card for the denoising objective at `:1735`.
+- **DP ↔ MIA**: `04-mia/mia1-foundations.html:1237-1341` proves the hypothesis-testing region (`α + e^ε β ≥ 1−δ`), the ROC cap (`TPR ≤ e^ε FPR + δ`) and the advantage bound (`Adv ≤ e^ε−1+δ`); `01-dp/dp8-fl.html` builds the DP machinery. DP-SGD is defined and pushed through the ROC cap numerically at `04-mia/mia4-modern.html:1518, :1581`, and the post-processing bound that kills output-side defenses is proved at `:1609, :1632`.
 - **DP ↔ unlearning**: certified $(\varepsilon,\delta)$-unlearning reuses the DP definition from `01-dp/dp8-fl.html:375` — same bound, different distribution comparison.
 - **memorization ↔ unlearning ↔ MIA**: memorization is the *signal* unlearning aims to remove and MIA aims to detect. `03-memorization/memorization-diffusion.html` + `memorization-llm.html` motivate the other two; defenses slide flows directly into `05-unlearning/`. `05-unlearning/unlearning1-foundations.html:487` reuses the SALUN MIA-Efficacy column.
 - **memorization ↔ watermark**: both about provenance under copyright pressure, but opposite directions — memorization detects unintended retention, watermarking adds intended traceability. Same lawsuits motivate both.
@@ -100,8 +100,12 @@ Exams live one level up in `../exam/`.
 | Sablayrolles: loss is a sufficient statistic (Thm 6 + corollary) | `04-mia/mia3-theory.html` | `:1212-1298` |
 | Salem three relaxations as TV perturbations | `04-mia/mia3-theory.html` | `:1655-1699` |
 | Nasr rank-one last-layer gradient; trajectories $\succ$ snapshots (DPI) | `04-mia/mia3-theory.html` | `:1920, :2104` |
-| LiRA | `04-mia/mia4-modern.html` | `:264-503` |
-| RMIA | `04-mia/mia4-modern.html` | `:647-720` |
+| LiRA closed form (Thm 1) + calibrated z-score (Cor 1) + calibration dominates (Prop 1) | `04-mia/mia4-modern.html` | `:385, :453, :548` |
+| Offline LiRA as a one-sided UMP z-test (Prop 2) | `04-mia/mia4-modern.html` | `:680` |
+| Ye conditioning hierarchy (Thm 2, partial order) | `04-mia/mia4-modern.html` | `:951, :1021` |
+| RMIA pairwise ratio + rank score (Defs 7–8) | `04-mia/mia4-modern.html` | `:1162, :1200` |
+| Label-only boundary distance = logit (Prop 4, Cor 2) | `04-mia/mia4-modern.html` | `:1357, :1381` |
+| Post-processing cannot help a defense (Prop 5, Cor 3) | `04-mia/mia4-modern.html` | `:1609, :1632` |
 | InfoRMIA (LLM token-level) | `04-mia/mia5-llm.html` | `:427-590` |
 | Certified $(\varepsilon,\delta)$ unlearning | `05-unlearning/unlearning1-foundations.html` | `:160` |
 | Influence function (leads into Newton) | `05-unlearning/unlearning1-foundations.html` | `:174` |

@@ -104,12 +104,12 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Min-K%++ probe | `courses/privacy/lectures/03-memorization/memorization-llm.html:1162` |
 | ACR (Schwarzschild 2024) + MiniPrompt + counting bound | `courses/privacy/lectures/03-memorization/memorization-llm.html:1268-1534` |
 | Cooper book extraction (open-weight LLMs) | `courses/privacy/lectures/03-memorization/memorization-llm.html:1586-1666` |
-| Certified $(\varepsilon,\delta)$-unlearning (Definition 3; Props 1–2; certified $\ne$ DP) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:255-377` |
-| Influence function (IU) — derived from the IFT, leads into the Newton block | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:459-567` |
-| Theorems 1–3: Newton step (proved), Gaussian certification, Sekhari capacity | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:568-979` |
-| MIA recall + Proposition 4 (certification caps every metric; HW4 woven in) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:1481-1530` |
-| SCRUB / SalUn / $\ell_1$-sparse / RURK classification unlearn | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:1238-1371` |
-| IDI / COLA (lab unlearning eval) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:1601-1691` |
+| Certified $(\varepsilon,\delta)$-unlearning (Definition 3; Props 1–2; certified $\ne$ DP) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:259-381` |
+| Influence function (IU) — derived from the IFT, leads into the Newton block | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:463-571` |
+| Theorems 1–3: Newton step (proved), Gaussian certification, Sekhari capacity | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:572-983` |
+| MIA recall + Proposition 4 (certification caps every metric; HW4 woven in) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:1522-1571` |
+| SCRUB / SalUn / $\ell_1$-sparse / RURK classification unlearn | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:1241-1412` |
+| IDI / COLA (lab unlearning eval) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:1642-1732` |
 | GA collapse + NPO bounded + SimNPO | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:103-165` |
 | ME+GD / IDK / ELM / LUNAR (LLM unlearn) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:166-241` |
 | TOFU / WMDP / RWKU / MUSE benchmarks (main-figure images) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:250-302` |

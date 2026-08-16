@@ -77,7 +77,10 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Denoising score matching theorem (Vincent 2011) | `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:193, :220-253` |
 | Diffusion ELBO $\equiv$ DSM theorem | `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:198` (capstone); cites Vincent from `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:193` |
 | MIA foundations (Homer power analysis, MI game, Neyman–Pearson, DP ROC cap, metrics) | `courses/privacy/lectures/04-mia/mia1-foundations.html` |
-| Shadow models (Shokri / LOGAN / seq2seq) | `courses/privacy/lectures/04-mia/mia2-shadow.html` |
+| Shadow models as Monte-Carlo estimation of $P_1,P_0$ (Shokri / per-class / LOGAN / seq2seq) | `courses/privacy/lectures/04-mia/mia2-shadow.html` |
+| Shadow-model correctness + mis-specification (Prop 1, Thm 1, Cor 1 — with proofs) | `courses/privacy/lectures/04-mia/mia2-shadow.html:280, :321, :437` |
+| Optimal GAN discriminator $D^\star = p_{\text{data}}/(p_{\text{data}}+p_g)$ + JSD identity (proofs) | `courses/privacy/lectures/04-mia/mia2-shadow.html:1152, :1186` — privacy framing (attack signal is a density ratio); information-theoretic framing at `courses/infotheory/lectures/06-divergence/div1-fdivergence-gan.html:330` |
+| Uncalibrated perplexity threshold — degenerate LRT, pooling costs half the population | `courses/privacy/lectures/04-mia/mia2-shadow.html:1423, :1500` |
 | MIA theory (Yeom / Sablayrolles / ML-Leaks / Nasr) | `courses/privacy/lectures/04-mia/mia3-theory.html` |
 | LiRA, RMIA, label-only, attack hierarchy | `courses/privacy/lectures/04-mia/mia4-modern.html` |
 | LLM MIA (perplexity, neighbourhood, SPV, InfoRMIA) | `courses/privacy/lectures/04-mia/mia5-llm.html` |

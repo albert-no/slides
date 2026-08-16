@@ -7,7 +7,7 @@
 | Deck | Note | Overview | Topic |
 |---|---|---|---|
 | `mia1-foundations.html` | `mia1-foundations-note.html` | — | Foundations (2008–2019): Homer, MI game, DP bounds, evaluation |
-| `mia2-shadow.html` | `mia2-shadow-note.html` | — | Shadow models: Shokri, LOGAN (GANs), Hisamoto (seq2seq) |
+| `mia2-shadow.html` | `mia2-shadow-note.html` | — | Shadow models as Monte-Carlo estimation of the two conditionals: Shokri, per-class models, LOGAN (GANs), Hisamoto (seq2seq) and calibration |
 | `mia3-theory.html` | `mia3-theory-note.html` | — | Theory: Yeom (overfitting), Sablayrolles (BB≈WB), Salem (relaxed), Nasr (FL) |
 | `mia4-modern.html` | `mia4-modern-note.html` | `mia4-overview.html` | Modern: LiRA, Ye hierarchy, RMIA, label-only, defenses |
 | `mia5-llm.html` | `mia5-llm-note.html` | `mia5-overview.html` | LLMs (high-level): calibration strategies, **empirical wall** (Hayes 2025), fine-tuning, extraction |
@@ -85,29 +85,92 @@ Homer model provenance and the √m vs 1/√n reading `:76-80`.
 
 ## mia2-shadow.html
 
+**Revised 2026-08** (math-detail pass, 33 → 114 slides, 6 sections). Every assumption/lemma/
+proposition/theorem/corollary below is stated **and proved on the slides**; the note holds only
+proof bookkeeping, full result tables, and factual corrections. Continues `mia1-foundations.html`
+(MI game, advantage, Neyman–Pearson, TV, DP bounds, ROC/AUC) — refers back, never redefines.
+
 | Part | Topic | Line |
 |---|---|---|
-| **01** — Shokri et al. 2017 | shadow model paradigm | `:62-481` |
-| | **Attack architecture — training pipeline** (SVG: D_jˢ → Shadow j → labeled dataset → A_c) | `:94` |
-| | **Attack architecture — inference** (SVG: x → f_θ → σ → A_c → IN/OUT) | `:166` |
-| | Detailed pipeline (numbered steps) | `:215` |
-| | Shadow data strategies | `:258` |
-| | **Attack data collection** (Member/Non-member grid + labeled dataset card) | `:282` |
-| | **Per-class attack models** `A_c: R^\|C\| → {0,1}` | `:311` |
-| | Attack inference | `:327` |
-| | Results: 93% precision, 91% recall (Purchase-100) | `:344` |
-| | Pseudocode (split: build+train, then attack) | `:417, :436` |
-| | Confidence-threshold baseline `1[max_c f(x)_c > τ]` | `:449` |
-| **02** — LOGAN (Hayes et al.): MIA on GANs | | `:482-619` |
-| | LOGAN overview | `:487` |
-| | **GAN refresher** (G, D, minimax, SVG diagram) | `:504` |
-| | Discriminator + reconstruction-based attacks | `:561` |
-| | Results: MNIST DCGAN ~74%, CIFAR ~69% | `:601` |
-| **03** — Seq2seq (Hisamoto et al.): MT models | | `:620-737` |
-| | **Perplexity** `PPL(x,y)=exp(-1/T Σ log p(y_t\|y_{<t},x))` | `:632, :659` |
-| | seq2seq vs LLM MIA comparison | `:675` |
+| **01** — From optimal test to estimation problem | | `:95-515` |
+| | Recall (optimal attack) card; notation table for this lecture | `:102, :120` |
+| | **Definition** member/non-member laws $P_1, P_0$ | `:134` |
+| | Two densities the attacker cannot write down (figure); why the ratio is not computable | `:147, :168` |
+| | **Key trick** sample what you cannot integrate | `:184` |
+| | The shadow recipe; Monte-Carlo picture (figure) | `:201, :217` |
+| | **Assumption S** (faithful shadows) | `:266` |
+| | **Proposition 1** shadows simulate the two laws exactly (+ proof) | `:280, :292` |
+| | **Theorem 1** log-loss minimiser $= \Lambda/(1+\Lambda)$: shadow training recovers the ratio | `:321` |
+| | Proof of Theorem 1: outline, condition, minimise, invert, recap | `:332-395` |
+| | What Theorem 1 buys; two gaps (statistical vs specification) | `:396, :412` |
+| | **Corollary 1** mis-specification costs at most $2\,\mathrm{TV}$ (+ proof, reading) | `:437, :449, :466` |
+| | The shift that breaks a threshold (figure) | `:482` |
+| **02** — The Shokri paradigm | | `:516-809` |
+| | Shokri et al. setting; instantiating the observable | `:523, :538` |
+| | **Attack architecture — training pipeline** (SVG) | `:551` |
+| | **Attack architecture — inference** (SVG) | `:598` |
+| | The pipeline in the theory's language | `:631` |
+| | Three ways to get shadow data; model-based synthesis; what synthesis estimates | `:645, :661, :677` |
+| | Collecting the attack training set | `:688` |
+| | Pseudocode (split: build+train, then attack) | `:702, :720` |
+| | Results: Google Prediction API; Amazon ML and beyond | `:733, :746` |
+| | Why more classes leak more; overfitting is the engine; limitations | `:760, :772, :792` |
+| **03** — Per-class models and the threshold baseline | | `:810-1079` |
+| | **Per-class attack models** $A_c$; class-conditional laws | `:817, :828` |
+| | **Lemma 1** pooled ratio is a $\pi_c$-weighted average of class ratios (+ proof) | `:839, :851` |
+| | **Corollary 2** pooling pulls the ratio toward 1 (mediant bound) | `:865` |
+| | Why a pooled score blurs (figure) | `:876` |
+| | **Proposition 2** conditioning never hurts (+ 3 proof slides) | `:907, :924-960` |
+| | **Key trick** mixing is data processing (TV never increases under a channel) | `:961` |
+| | Per-class models in practice; the confidence-threshold baseline | `:974, :990` |
+| | **Assumption MLR** (monotone likelihood ratio) | `:1002` |
+| | **Proposition 3** the baseline is the NP test among tests of $s$ (+ proof) | `:1013, :1024` |
+| | What the baseline gives up; one axis, not two recipes (figure) | `:1037, :1050` |
+| **04** — LOGAN: generative models | | `:1080-1389` |
+| | LOGAN setting; GAN setup; **the game, drawn** (SVG) | `:1087, :1102, :1115` |
+| | **Theorem 2** optimal discriminator $D^\star = p_{\text{data}}/(p_{\text{data}}+p_g)$ (+ 2 proof slides) | `:1152, :1163-1185` |
+| | **Theorem 3** value of the game $= 2\,\mathrm{JSD}(p_{\text{data}}\|p_g) - \log 4$ (+ 2 proof slides) | `:1186, :1196-1220` |
+| | **Proposition 4** $D^\star$ is the logistic of the log density ratio (+ proof) | `:1221, :1232` |
+| | Ratio, seen (figure); why this makes an attack; the discriminator attack | `:1244, :1268, :1279` |
+| | Black box: only samples | `:1291` |
+| | **Proposition 5** reconstruction distance bounds the smoothed generator density (+ proof) | `:1303, :1314` |
+| | What reconstruction is missing; shadow GANs restore the denominator | `:1328, :1342` |
+| | LOGAN reported results; mode collapse raises the ratio | `:1357, :1370` |
+| **05** — Sequence models and calibration | | `:1390-1705` |
+| | The sequence challenge; **perplexity** defined | `:1397, :1412` |
+| | **Proposition 6** an unnormalised perplexity threshold is a degenerate LRT (+ proof) | `:1423, :1435` |
+| | Optimal only within a difficulty class; what a global threshold sees (figure) | `:1448, :1462` |
+| | A two-group (easy/hard) model | `:1488` |
+| | **Proposition 7** pooling costs half the population, $\mathrm{TPR} \to \tfrac12\Phi(\cdot) \le \tfrac12$ | `:1500` |
+| | Proof of Proposition 7: part (i), size, power | `:1514-1551` |
+| | The gap, numerically (Φ arithmetic, illustrative) | `:1552` |
+| | Length is a second nuisance; variance shrinks with length (figure) | `:1564, :1576` |
+| | Hisamoto et al. protocol (Alice/Bob/Carol); Bob's actual features (BLEU, **not** perplexity) | `:1602, :1617` |
+| | Sentence-level result: chance; where signal does appear; group probes | `:1632, :1646, :1661` |
+| | **Corollary 1, in the wild** (shadow BLEU gap as measured mis-specification) | `:1675` |
+| | What is missing is a null | `:1688` |
+| **06** — Synthesis | | `:1706-1786` |
+| | Every attack names the same two densities (6-row table) | `:1713` |
+| | The argument in three lines (chain: Prop 1 → Thm 1 → Cor 1) | `:1727` |
+| | What to carry forward; two open threads (relaxation → mia3, calibration → mia4/mia5) | `:1751, :1767` |
 
-**Note (`mia2-shadow-note.html`):** Full Google results table including Texas-100 `:42-50`; calibration for LLMs vs seq2seq `:53-63`.
+**Key results, all proved on slides:** Assumption S `:266`; **Prop 1** `:280`; **Thm 1** `:321`;
+**Cor 1** `:437`; **Lemma 1** `:839`; **Cor 2** `:865`; **Prop 2** `:907`; Assumption MLR `:1002`;
+**Prop 3** `:1013`; **Thm 2** `:1152`; **Thm 3** `:1186`; **Prop 4** `:1221`; **Prop 5** `:1303`;
+**Prop 6** `:1423`; **Prop 7** `:1500`.
+
+Deck-local figure family: prefix `m2-` (`.m2-fig` + `.lab` overlays, `.m2-algo`, `.m2-chain`,
+`.m2-tight`), defined in the deck's own `<style>` block. Original SVG figures: two-density picture
+`:147`, Monte-Carlo picture `:217`, distribution shift `:482`, training pipeline `:551`, inference
+pipeline `:598`, pooled-vs-conditional densities `:876`, threshold axis `:1050`, GAN game `:1115`,
+density-ratio curve `:1244`, difficulty mixture `:1462`, per-length variance `:1576`.
+
+**Note (`mia2-shadow-note.html`):** Google/Texas-100 full table `:39-50`; proof bookkeeping for
+Prop 1 and Cor 1 (Glivenko–Cantelli, $O_p(k^{-1/2})$, pointwise ROC form) `:52-60`; non-saturating
+GAN surrogate `:62-68`; **Hisamoto correction** — Bob uses n-gram precisions + sentence BLEU, not
+perplexity; Table 2/4/5/6 numbers with the degenerate always-"out" caveat; shadow BLEU 38.6 vs
+Alice 42.6 `:70-86`; provenance of the "Gap, Numerically" arithmetic `:88-94`; seq2seq → LLM
+calibration bridge `:96-102`.
 
 ---
 

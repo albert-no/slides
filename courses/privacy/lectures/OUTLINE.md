@@ -24,7 +24,7 @@ Exams live one level up in `../exam/`.
 
 ## Theme connections
 
-- **generative review ↔ everything downstream**: `02-generative/` pins down score, sampling, discrete-space generation; `llm.html` pins down $p_\theta(\cdot\mid x_{<t})$, per-token loss $\ell_t$, the sampling step. MIA / memorization / watermarking / unlearning each plug into one of those pieces (LLM 4-card map at `02-generative/llm.html:258-281`).
+- **generative review ↔ everything downstream**: `02-generative/` pins down score, sampling, discrete-space generation; `llm.html` pins down $p_\theta(\cdot\mid x_{<t})$, per-token loss $\ell_t$, the sampling step. MIA / memorization / watermarking / unlearning each plug into one of those pieces (LLM 4-card map at `02-generative/llm.html:1101`).
 - **diffusion ↔ llm (within `02-generative/`)**: parallel reviews. Diffusion = continuous score-based generation; LLM = discrete autoregressive counterpart. Privacy attacks differ in mechanism but share targets (training-data leakage, provenance, removal).
 - **diffusion ↔ MIA**: diffusion-model MIA is a research frontier — `04-mia/mia4-modern.html:731-789` covers it. The diffusion-models theory in `02-generative/` provides the substrate.
 - **DP ↔ MIA**: `04-mia/mia1-foundations.html:601-617` shows DP as MIA bound (`Adv ≤ e^ε−1+δ`); `01-dp/dp8-fl.html` builds the DP machinery. DP-SGD is referenced from `04-mia/mia4-modern.html:117`.
@@ -69,8 +69,10 @@ Exams live one level up in `../exam/`.
 | DDIM (deterministic, ODE, inversion) | `02-generative/diffusion4-ddim.html` | `:134-281` |
 | Classifier-free guidance | `02-generative/diffusion5-guidance-discrete.html` | `:202-282` |
 | Discrete diffusion + score-entropy loss | `02-generative/diffusion5-guidance-discrete.html` | `:287-425` |
-| LLM brief overview (tokens, transformer, NLL, sampling) | `02-generative/llm.html` | `:72-296` |
-| LLM privacy-hook map (per-token loss / verbatim / sampling / conditional) | `02-generative/llm.html` | `:258-281` |
+| LLM overview (tokens, transformer, NLL, post-training, sampling) | `02-generative/llm.html` | `:214, :329, :369` |
+| Cross-entropy = entropy + KL; perplexity | `02-generative/llm.html` | `:564, :609, :621` |
+| KL-regularized RLHF optimum → DPO (+ NPO preview) | `02-generative/llm.html` | `:822, :929, :951` |
+| LLM privacy-hook map (per-token loss / verbatim / sampling / conditional) | `02-generative/llm.html` | `:1101` |
 | **Bartz v. Anthropic $1.5B settlement** (Reuters) | `03-memorization/memorization-diffusion.html` | `:140` |
 | Diffusion memorization — Carlini 2023 / Somepalli / Webster / Wen / Ross | `03-memorization/memorization-diffusion.html` | `:206-365` |
 | **Carlini 2023 — Fig 4 precision + Fig 5 duplicates** | `03-memorization/memorization-diffusion.html` | `:249` |

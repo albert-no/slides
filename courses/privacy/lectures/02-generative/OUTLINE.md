@@ -406,31 +406,87 @@ entropy with its full three-step proof (§6.6).
 
 ## llm.html — Brief LLM Overview
 
+79 slides. Math-detail revision mirroring decks 3–5: every major result is a
+Theorem/Proposition/Definition/Corollary card followed by a proof outline,
+numbered step slides, and a one-chain `\stackrel` recap, with deck-local SVG
+figures (`.llm-fig`, `.llm-algo`, `.llm-chain`, KaTeX overlay labels) plus the
+two real paper figures.
+
 | Section | Slide | Line |
 |---|---|---|
-| Title / Contents | | `:1-67` |
-| **01 — Setup** | | `:72-119` |
-| | Why this brief LLM pass | `:80` |
-| | Tokens and sequences ($\mathcal{V}$, BPE) | `:93` |
-| | **Autoregressive factorization** + LLM = $p_\theta(\cdot\mid x_{<t})$ | `:108` |
-| **02 — Architecture** | | `:121-180` |
-| | **Decoder-only transformer (allyouneed.png)** | `:131` |
-| | Logits → softmax next-token distribution | `:151` |
-| | **Sequential generation (cascade.png)** — autoregressive inference loop | `:166` |
-| **03 — Training** | | `:181-278` |
-| | **Pretraining objective** (per-token NLL / cross-entropy) | `:191` |
-| | Scale (corpus, params) → memorization is real | `:206` |
-| | **Post-training I — SFT** (data / loss / effect / output bullets, masked NLL) | `:231` |
-| | **Post-training II — Preference setup** (RLHF vs DPO motivation) | `:246` |
-| | **DPO loss** (full formula, implicit reward, NPO preview for unlearning) | `:263` |
-| **04 — Sampling and privacy hooks** | | `:279-369` |
-| | **Sampling — Temperature** (logit def, $\tau\to 0,1,\infty$ limits) | `:289` |
-| | **Sampling — Truncation** (top-$k$, top-$p$ nucleus) | `:305` |
-| | **Per-token signals → privacy** (4-card map) | `:322` |
-| | Roadmap to next four lectures | `:349` |
-| Closer (Q&A) | | `:364` |
+| Title / Contents | | `:37-80` |
+| **01 — Tokens and sequences** | | `:82-265` |
+| | Why a brief LLM pass | `:91` |
+| | Text is not the model's input (tokenizer-strip figure) | `:105` |
+| | **Definition (tokenized sequence)** — $\mathcal{V}$, $x_{1:T}$ | `:134, :137` |
+| | Byte-pair encoding, by example (merge-round table) | `:146` |
+| | Why subwords, not words (two failure modes) | `:164` |
+| | Tokenization is already a surface (rare-string token cost) | `:177` |
+| | The modeling problem (distribution over finite strings) | `:201` |
+| | **Proposition (chain rule / autoregressive factorization)** | `:211, :214` |
+| | Proof — telescoping | `:223` |
+| | What the factorization buys (one net, $T$ conditionals) | `:233` |
+| | An LLM is one conditional $p_\theta(\cdot\mid x_{<t})$ | `:259` |
+| **02 — Decoder-only transformer** | | `:267-527` |
+| | The architecture, as published (`allyouneed.png`, Vaswani et al.) | `:276` |
+| | Tokens to vectors (embedding + positions) | `:291` |
+| | Attention as soft retrieval (query/key/value figure) | `:301` |
+| | **Definition (scaled dot-product attention)** $\mathrm{softmax}(QK^\top/\sqrt{d_k}+M)V$ | `:326, :329` |
+| | One row, written out | `:338` |
+| | **Key trick — why divide by $\sqrt{d_k}$** (variance argument) | `:348, :353` |
+| | Saturation kills the gradient (softmax Jacobian $\mathrm{diag}(p)-pp^\top$) | `:359` |
+| | **The causal mask** ($M_{t,s}=-\infty$ for $s>t$; triangle figure) | `:369` |
+| | Why masking is the whole trick (parallel train, sequential generate) | `:395` |
+| | Multi-head attention; what heads specialize on | `:409, :419` |
+| | Layer normalization; position-wise feed-forward ($4d$) | `:447, :457` |
+| | One pre-norm block; the full stack | `:467, :476` |
+| | Logits to next-token distribution (unembedding, weight tying, shift invariance) | `:492` |
+| | **Sequential generation (`cascade.png`)** | `:502` |
+| | The cost of generating ($\Theta(T^2d+Td^2)$, KV cache) | `:516` |
+| **03 — Pretraining** | | `:529-708` |
+| | **The pretraining objective** (per-token NLL) | `:538` |
+| | **Definition (entropy, cross-entropy, KL)** | `:548, :551` |
+| | **Proposition (cross-entropy = entropy + KL)** + proof | `:561, :564, :573` |
+| | MLE is KL minimization (entropy-floor bar figure) | `:583` |
+| | **Definition (perplexity)** $=p_\theta(x)^{-1/T}$ | `:606, :609` |
+| | **Proposition (PPL $\ge1$; uniform $\Rightarrow V$; limit $e^{H+\mathrm{KL}}$)** + proof | `:618, :621, :630` |
+| | Perplexity as branching factor | `:640` |
+| | Scale makes memorization real | `:662` |
+| | Memorization is visible in the loss; from loss curve to attack | `:676, :697` |
+| **04 — Post-training** | | `:710-958` |
+| | Pretraining optimizes the wrong thing | `:719` |
+| | **Supervised fine-tuning** (masked NLL); which tokens carry gradient | `:736, :746` |
+| | Preference data $\{(x,y_w,y_l)\}$ | `:770` |
+| | **Definition (Bradley–Terry)**; fitting the reward model | `:784, :787, :796` |
+| | **The KL-regularized RLHF objective** | `:807` |
+| | **Theorem (optimal KL-regularized policy** $\pi^*\propto\pi_{\mathrm{ref}}e^{r/\beta}$**)** | `:819, :822` |
+| | Proof outline; **key trick** (absorb the reward into the reference) | `:831, :839` |
+| | Step 1 one expectation; Step 2 normalize the tilt; Step 3 read off a KL | `:845, :855, :865` |
+| | Proof recap — one chain; reading the optimum (tilt figure) | `:875, :883` |
+| | Invert the optimum ($r=\beta\log(\pi/\pi_{\mathrm{ref}})+\beta\log Z$) | `:906` |
+| | **Key trick — the partition function cancels** | `:916, :920` |
+| | **Corollary (DPO objective)**; what the gradient does | `:926, :929, :939` |
+| | **Preview — NPO** (drop the winner; used later for unlearning) | `:951` |
+| **05 — Sampling and privacy hooks** | | `:960-1133` |
+| | Decoding is a second design | `:969` |
+| | **Definition (temperature)** | `:984, :987` |
+| | **Proposition ($\tau\to0^+$ argmax, $\tau\to\infty$ uniform)** + proof | `:996, :999, :1008` |
+| | Entropy increases with $\tau$ ($dH/d\beta=-\beta\mathrm{Var}_\beta(z)$) | `:1018` |
+| | Temperature, visually (three-histogram figure) | `:1028` |
+| | **Definition (top-$k$ and top-$p$ nucleus)**; why truncate at all | `:1052, :1055, :1065` |
+| | Sampling is an editable interface | `:1088` |
+| | **Where each privacy topic plugs in** (4-card map) | `:1101` |
+| | What to carry forward | `:1117` |
+| Closer | | `:1129` |
 
-**Key references:** autoregressive factorization `:113`; decoder-only image `:135`; sequential-generation cascade `:171`; pretraining loss `:194`; SFT loss `:241`; **preference setup** `:246`; **DPO loss + NPO preview** `:263-275`; temperature sampling `:294`; truncation rules `:309`; 4-card privacy map `:326-346`.
+**Key:** chain-rule proposition `:214`; scaled dot-product attention `:329`;
+$\sqrt{d_k}$ key trick `:353`; causal mask `:369`; unembedding/weight tying
+`:492`; generation cost `:516`; cross-entropy decomposition `:564`; perplexity
+definition `:609`; three perplexity facts `:621`; SFT masked NLL `:736`;
+Bradley–Terry `:787`; KL-regularized objective `:807`; **optimal-policy theorem**
+`:822`; reward inversion `:906`; $\log Z$ cancellation `:916`; **DPO corollary**
+`:929`; NPO preview `:951`; temperature `:987`; two limits `:999`; top-$k$/top-$p$
+`:1055`; 4-card privacy map `:1101`.
 
 **Image assets:** `allyouneed.png` (Vaswani et al. transformer figure), `cascade.png` (converted from `cascade.webp`, autoregressive decoding cascade) — both in this folder, inlined by `scripts/bundle.py`.
 

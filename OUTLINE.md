@@ -57,8 +57,11 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | DDIM (non-Markovian, deterministic, ODE) | `courses/privacy/lectures/02-generative/diffusion4-ddim.html` (loss invariance `:223`, σ-family `:463`, marginal invariance `:475`, predicted clean `:715`, exact Euler `:900`, PF-ODE `:975`) |
 | Classifier guidance + inpainting + CFG | `courses/privacy/lectures/02-generative/diffusion5-guidance-discrete.html` (conditional score `:241`, tilted target `:445`, coordinatewise forward `:555`, exact paste `:633`, CFG identity `:811`) |
 | Discrete diffusion / score-entropy loss | `courses/privacy/lectures/02-generative/diffusion5-guidance-discrete.html` (rate matrix `:1204`, reverse rate `:1217`, ratio score `:1308`, score entropy `:1373`, denoising score entropy `:1445`); `talks/kics260521dllm/kics260521dllm.html:192-205` (SEDD) |
-| LLM brief overview (autoregressive, transformer, NLL, sampling) | `courses/privacy/lectures/02-generative/llm.html:72-296` |
-| LLM privacy-hook map (loss / verbatim / sampling / conditional) | `courses/privacy/lectures/02-generative/llm.html:258-281` |
+| LLM overview (tokens, transformer, NLL, post-training, sampling) | `courses/privacy/lectures/02-generative/llm.html` (chain rule `:214`, attention `:329`, causal mask `:369`, generation cost `:516`) |
+| Cross-entropy = entropy + KL; perplexity | `courses/privacy/lectures/02-generative/llm.html:564, :609, :621` |
+| KL-regularized RLHF optimum → DPO (+ NPO preview) | `courses/privacy/lectures/02-generative/llm.html:822` (theorem), `:929` (DPO), `:951` (NPO) |
+| Temperature / top-$k$ / nucleus sampling | `courses/privacy/lectures/02-generative/llm.html:987, :999, :1055` |
+| LLM privacy-hook map (loss / verbatim / sampling / conditional) | `courses/privacy/lectures/02-generative/llm.html:1101` |
 | Rate–distortion theorem (Shannon) | `courses/infotheory/lectures/04-lossy/lossy1-foundations.html:258-311` |
 | Lloyd–Max / scalar quantization | `courses/infotheory/lectures/04-lossy/lossy1-foundations.html:143-199` |
 | Gaussian R(D), Shannon lower bound, pruning | `courses/infotheory/lectures/04-lossy/lossy2-gaussian-laplacian.html:63-232` |

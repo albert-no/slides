@@ -25,7 +25,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
   - `lectures/03-memorization/` — Memorization in generative models (2 decks split 2026-05: `memorization-diffusion.html` covers intro/lawsuits/Bartz, three formal definitions, diffusion detection, SAIL, CLIP-pad, with companion note `memorization-diffusion-note.html`; `memorization-llm.html` covers exposure theory → Feldman → extraction/Min-K → ACR → books → defenses, math-detail revision 2026-08 at 128 slides with companion note `memorization-llm-note.html`). Paper-figure assets in `figs/`
   - `lectures/04-mia/` — Membership inference attacks (5 lectures, paired notes; legacy `old/MIA.html`)
   - `lectures/05-unlearning/` — Machine unlearning (2 decks, both math-detail revised 2026-08 with per-slide companion notes: `unlearning1-foundations.html` 107 slides — definitions, certified deletion with proofs, SISA, classification, metrics-as-test; `unlearning2-llm.html` 100 slides — why the certificate does not transfer, the LLM objective family, benchmarks as main figure + measurement claim, closure under fine-tuning; sourced from `slide.pdf`). Paper-figure assets in `figs/`
-  - `lectures/06-watermark/` — LLM watermarking (1 deck: green-list, distortion-free, undetectable, robust, radioactivity)
+  - `lectures/06-watermark/` — LLM watermarking (1 deck + speaker note, 122 slides: hypothesis-test frame, green-list, distortion-free, undetectable, limits, robust, radioactivity/SynthID/dgMARK)
   - `exam/` — homework (HW1–4), midterms 2025–26, finals 2024–25 + 2026/27 drafts (`.tex`/`.pdf`/`.html`, shared style files)
   - `overleaf/` — frozen Overleaf archive: lecture-note `.tex` (`1_dp`/`2_difffusion`/`3_watermark`/`4_MIA`), `hw_exam/` (all HW + exams), `images/`, `old/` drafts, `.bib`/style files
 - **`courses/trustworthy-ai/`** — Trustworthy AI course (**junior/senior undergrad**, mixed majors, 15 weeks × 1.5 hr). Concept-first: each lecture is motivation → foundational works → 2025–26 frontier, ≤1 intuitive formula per concept, no proofs, plus an optional Colab demo. Decks live flat (`lecNN-*.html`). Five modules: Foundations (Wk 1) · Privacy & Data (2–5) · Reliability (6–7) · Security (8–11) · Provenance & Fairness (12–14) · Synthesis (15). **All 15 lectures + 4 backups + 15 technical supplements (`lecNNtech.html`) — screenshot-audited, real cited paper figures embedded, lint-clean** (no figure-TODO markers remain). Each lecture has a `-note.html` speaker script; each has an optional `lecNNtech.html` holding the formal math the main deck keeps as a picture. Backups: sycophancy, copyright, agentic autonomy, model stealing. The light undergrad pass over topics treated rigorously in `courses/privacy/`. See `courses/trustworthy-ai/OUTLINE.md`.
@@ -119,13 +119,15 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | REFT (first-token diversification for RLVR) | `talks/postech260819/postech260819.html:145-455` (rebuttal: 373-420) |
 | SafePath (8-token safety primer for LRMs) | `talks/postech260819/postech260819.html:456-591` |
 | Benign DPO attack + fine-tuning-as-a-service | `talks/postech260819/postech260819.html:592-798` (rebuttal: 696-746) |
-| Kirchenbauer green-list + z-test + entropy bound | `courses/privacy/lectures/06-watermark/watermark.html:164-222` |
-| Gumbel distribution + Gumbel-max trick + proof | `courses/privacy/lectures/06-watermark/watermark.html:252-295` |
-| Aaronson distortion-free + proof | `courses/privacy/lectures/06-watermark/watermark.html:309-337` |
-| Kuditipudi edit-distance robustness theorem | `courses/privacy/lectures/06-watermark/watermark.html:356` |
-| Christ–Gunn–Zamir undetectable + PRF construction | `courses/privacy/lectures/06-watermark/watermark.html:386-419` |
-| Adaptive watermark + WaterMax | `courses/privacy/lectures/06-watermark/watermark.html:486-516` |
-| SynthID-Text production watermark | `courses/privacy/lectures/06-watermark/watermark.html:542` |
+| Kirchenbauer green-list + z-test + entropy-bound proof | `courses/privacy/lectures/06-watermark/watermark.html:245-592` |
+| Gumbel distribution + Gumbel-max trick + full proof | `courses/privacy/lectures/06-watermark/watermark.html:616-742` |
+| Aaronson rule + distortion-free definition and proof | `courses/privacy/lectures/06-watermark/watermark.html:743-810` |
+| Kuditipudi ITS + edit-distance robustness | `courses/privacy/lectures/06-watermark/watermark.html:824-957` |
+| Christ–Gunn–Zamir undetectable + PRF construction | `courses/privacy/lectures/06-watermark/watermark.html:1014-1268` |
+| Watermarking limits, impossibility, detection/distortion tradeoff | `courses/privacy/lectures/06-watermark/watermark.html:1270-1422` |
+| Unigram-Watermark robustness + adaptive $\delta_t$ | `courses/privacy/lectures/06-watermark/watermark.html:1487-1620` |
+| SynthID-Text production watermark | `courses/privacy/lectures/06-watermark/watermark.html:1705` |
+| dgMARK diffusion-LM watermark (scheme + detection) | `courses/privacy/lectures/06-watermark/watermark.html:1745-1774` |
 | **DP foundations series (dp1–dp7)** | `courses/privacy/lectures/01-dp/dp1`…`dp7-ml-paradigms.html` |
 | DP definition / LDP vs central / PrivUnit | `courses/privacy/lectures/01-dp/dp8-fl.html:364-569` |
 | RRSC + k-closest exact-optimality (NeurIPS 2023) | `courses/privacy/lectures/01-dp/dp8-fl.html:571-822` |

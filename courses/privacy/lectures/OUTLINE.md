@@ -11,7 +11,7 @@ Exams live one level up in `../exam/`.
 - **`03-memorization/`** — Memorization in generative models. **Two decks (split 2026-05)**: `memorization-diffusion.html` (intro + lawsuits + Bartz/Anthropic, three formal definitions, diffusion detection, SAIL, CLIP-pad, LLM bridge; math-detail revision 2026-08 — 101 slides, theorem/lemma cards with on-slide proofs, companion `memorization-diffusion-note.html`) and `memorization-llm.html` (math-detail revision 2026-08 — 55 → 128 slides: exposure theory, Feldman, extraction/scaling/alignment, Min-K%/++, ACR, Cooper books, defenses with proofs; companion `memorization-llm-note.html`). Captured paper figures in `figs/`. See `03-memorization/OUTLINE.md`.
 - **`04-mia/`** — Membership inference attacks (5 lectures, paired notes). Plus legacy `old/MIA.html`. See `04-mia/OUTLINE.md`.
 - **`05-unlearning/`** — Machine unlearning. **Two decks, both math-detail revised 2026-08 with paired notes**: `unlearning1-foundations.html` (107 slides — three nested definitions, certified deletion with full proofs, SISA cost model, classification methods, metrics-as-hypothesis-test) and `unlearning2-llm.html` (29 → 100 slides — why the certificate does not transfer to LLMs, the GA/NPO/SimNPO/ME/ELM/RMU objective family, each benchmark as its own main figure plus a measurement claim, closure under a fine-tuning budget; 17 numbered results, all proved on slide). Captured paper figures in `figs/`. See `05-unlearning/OUTLINE.md`.
-- **`06-watermark/`** — LLM watermarking (single deck). Green-list, distortion-free, undetectable, robustness, radioactivity. See `06-watermark/OUTLINE.md`.
+- **`06-watermark/`** — LLM watermarking (deck + speaker note, 122 slides). Detection as a hypothesis test, green-list, distortion-free sampling, undetectability (CGZ), limits/impossibility, robustness, radioactivity/SynthID/dgMARK. Full proofs on the slides. See `06-watermark/OUTLINE.md`.
 
 ## Reading order
 
@@ -121,14 +121,15 @@ Exams live one level up in `../exam/`.
 | **GA / NPO / SimNPO / ME / ELM / RMU as one weighted-gradient family** (Props 5/8/9/10, Thms 6/7) | `05-unlearning/unlearning2-llm.html` | `:461-911` |
 | TOFU / WMDP / RWKU / MUSE — main figure + measurement claim (Thm 11, Cor 12, Props 13–14) | `05-unlearning/unlearning2-llm.html` | `:912-1304` |
 | **Closure under a fine-tuning budget** (Def 15, Prop 16, Cor 17) + benign/syntactic relearning, DUSK, R-TOFU | `05-unlearning/unlearning2-llm.html` | `:1305-1613` |
-| Kirchenbauer green-list + entropy bound | `06-watermark/watermark.html` | `:164-222` |
-| Gumbel-max trick + proof | `06-watermark/watermark.html` | `:252-295` |
-| Aaronson distortion-free proof | `06-watermark/watermark.html` | `:325` |
-| Edit-distance robustness theorem | `06-watermark/watermark.html` | `:356` |
-| Christ–Gunn–Zamir undetectable + construction | `06-watermark/watermark.html` | `:386-419` |
-| Adaptive / WaterMax | `06-watermark/watermark.html` | `:486-516` |
-| SynthID-Text production | `06-watermark/watermark.html` | `:542` |
+| Kirchenbauer green-list + z-test + entropy-bound proof | `06-watermark/watermark.html` | `:245-592` |
+| Gumbel-max trick + full proof | `06-watermark/watermark.html` | `:629-742` |
+| Aaronson rule + distortion-freeness | `06-watermark/watermark.html` | `:743-810` |
+| Edit-distance robustness (Kuditipudi Lemma 15) | `06-watermark/watermark.html` | `:932` |
+| Christ–Gunn–Zamir undetectable + PRF construction | `06-watermark/watermark.html` | `:1014-1268` |
+| Watermark limits + impossibility + tradeoff | `06-watermark/watermark.html` | `:1270-1422` |
+| Unigram-Watermark robustness + adaptive $\delta_t$ | `06-watermark/watermark.html` | `:1487-1620` |
+| SynthID-Text production + dgMARK | `06-watermark/watermark.html` | `:1705-1774` |
 
 ## Pairing convention
 
-Decks in the DP, generative (diffusion), and MIA series have `-note.html` companions. The note generally contains full derivations of theorems stated in the deck, pitfalls / comparison tables, and forward/backward references to other lectures. When in doubt: deck = "what is true"; note = "why and how to apply".
+Decks in the DP, generative (diffusion), MIA, memorization, unlearning, and watermark series have `-note.html` companions (`06-watermark/watermark-note.html` carries one entry per slide, ids `#s1`…`#s122`, with a linked TOC). The note generally contains full derivations of theorems stated in the deck, pitfalls / comparison tables, and forward/backward references to other lectures. When in doubt: deck = "what is true"; note = "why and how to apply".

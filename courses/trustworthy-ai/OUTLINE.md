@@ -29,7 +29,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 1 | `lec01-introduction.html` | Introduction & threat-model thinking | **revised 2026-08** (35 sl) |
 | 2 | `lec02-privacy-dp.html` | Privacy & differential privacy | **revised 2026-08** (84 sl) |
 | 3 | `lec03-mia.html` | Membership inference attacks | **revised 2026-08** (63 sl) |
-| 4 | `lec04-memorization.html` | Memorization & training-data extraction | **drafted** (59 sl) |
+| 4 | `lec04-memorization.html` | Memorization & training-data extraction | **revised 2026-08** (58 sl) |
 | 5 | `lec05-unlearning.html` | Machine unlearning | **drafted** (58 sl) |
 | 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **drafted** (58 sl) |
 | 7 | `lec07-interpretability.html` | Interpretability & explainability | **drafted** (57 sl) |
@@ -288,3 +288,82 @@ Fixed: benchmark-trap direction (members older, not newer); "precision at low FP
 "TPR at low FPR" (3 places); "zero gap ⇒ safe" folklore removed (sufficient-not-necessary);
 $(\varepsilon,\delta)$-DP origin TCC→EUROCRYPT 2006; ML-Leaks attribution; Yeom full title.
 `lec03tech.html` audited — math correct, no changes. Note file synced (63 entries, order matches).
+
+---
+
+## lec04-memorization.html
+
+**Topic:** Memorization & training-data extraction (~90 min). What memorization is
+(verbatim / near-duplicate / stylistic; extractable vs discoverable at intuition level);
+canary/exposure measurement; the GPT-2 extraction pipeline as a picture; the
+"repeat forever" poem attack on an aligned production chatbot; scaling drivers
+(size, duplication, context) at qualitative level; diffusion-model copies; copyright
+touchpoint (two slides — full treatment in the backup copyright deck); mitigations and
+the 2025–26 frontier. Intuition pass — the rigorous treatment lives in
+`courses/privacy/lectures/03-memorization/` (exposure, k-eidetic, scaling-law decks);
+facts kept consistent with it.
+
+### Sections (58 slides, ~90 min — content-revised 2026-08 from 59, all citations source-verified)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:27`, `:40` | |
+| **01 — What Is Memorization** | 3–15 | `:72` | working definition `:93` · three flavors (verbatim / near-duplicate / stylistic; retaxonomized 2026-08) `:104` · $k$-extractable `:117` · **Extractable vs Discoverable (added 2026-08)** `:130` · why it happens `:143` · **Some Memorization Is Necessary (Feldman long tail; added 2026-08)** `:156` · Secret Sharer `:170` · canary `:183` · **canary-leak pipeline (SVG)** `:195` · exposure-rank idea `:220` |
+| **02 — Extracting Text from LLMs** | 16–26 | `:246` | **GPT-2 PII (real fig)** `:264` · **extraction pipeline (SVG; redrawn 2026-08 with 1,800/604 numbers)** `:284` · confidence signal `:315` · what came out (604 strings) `:328` · repeat-forever "poem poem poem" prompt (exact wording restored 2026-08) `:341` · **loop breaks (SVG)** `:353` · scale of the leak (10,000+ strings / $200 / 150×; added 2026-08) `:374` · patched-not-solved `:388` · Colab demo `:397` |
+| **03 — How Much, and Why It Grows** | 27–34 | `:412` | measurable fraction `:421` · three drivers (size / duplication / **context** — third driver fixed 2026-08, was "training length") `:434` · **size curve (SVG)** `:447` · **duplication bars (SVG)** + Kandpal ~1000× line `:469` · long tail of duplicates `:492` · log-linear curve + GPT-J ≥1% (added 2026-08) `:505` |
+| **04 — Image & Diffusion Models** | 35–41 | `:526` | not just text `:535` · diffusion picture `:548` · **Ann Graham Lotz copy (real fig; 94/175M added 2026-08)** `:561` · **duplication histogram (real fig; Somepalli cite removed 2026-08)** `:581` · Somepalli ~1.9% near-duplicates `:593` |
+| **05 — Copyright & the Law** | 42–44 | `:614` | **compressed 6→2 slides 2026-08** (backup copyright deck owns the topic) · NYT v. OpenAI + **side-by-side SVG** + Mar 2025 MTD ruling `:623` · Copy or Transform? (fair-use collision + Bartz v. Anthropic $1.5B) `:647` |
+| **06 — Mitigations & Frontier** | 45–56 | `:662` | toolbox `:671` · deduplication (Lee ACL 2022) `:684` · dedup limits `:697` · output filtering `:710` · DP `:722` · privacy tax `:734` · no silver bullet `:747` · **Frontier: Whole Books Come Back (Cooper 2025 + Ahmed 2026; replaced generic production-extraction slide)** `:755` · **Frontier: How Much Fits? (Morris 3.6 bits/param; added 2026-08)** `:768` · memorized PII `:781` · open problems `:794` |
+| Takeaways / Closer | 57–58 | — | `:807`, `:819` |
+
+**Key definitions / citations (all source-verified 2026-08):**
+- $k$-extractable (Def 3.1), scaling drivers (capacity / duplication / context), GPT-J ≥1% —
+  `:117`, `:434`, `:505` — Carlini et al., "Quantifying Memorization Across Neural Language
+  Models", ICLR 2023 (arXiv 2202.07646).
+- GPT-2 extraction, Fig 1 PII, 604 of 1,800 candidates — `:264`, `:284` — Carlini et al.,
+  "Extracting Training Data from Large Language Models", USENIX Security 2021 (arXiv 2012.07805).
+- Secret Sharer canary/exposure — `:170` — Carlini, Liu, Erlingsson, Kos, and Song,
+  USENIX Security 2019 (arXiv 1802.08232).
+- Extractable vs discoverable (Defs 1–2); poem attack; 10,000+ strings / $200 / 150× —
+  `:130`, `:341`, `:374` — Nasr et al., "Scalable Extraction of Training Data from (Production)
+  Language Models", arXiv 2311.17035 (2023; published at ICLR 2025 as "…from Aligned,
+  Production Language Models").
+- Learning requires memorization (long tail) — `:156` — Feldman, STOC 2020.
+- Superlinear duplication effect (10 copies → ~1000× more generation) — `:469` — Kandpal,
+  Wallace, and Raffel, ICML 2022 (arXiv 2202.06539).
+- Deduplication (10× less memorized text) — `:684` — Lee et al., "Deduplicating Training Data
+  Makes Language Models Better", ACL 2022 (arXiv 2107.06499).
+- Diffusion extraction: Ann Graham Lotz Fig 1, 94 images / 175M generations, Fig 5 duplication
+  histogram (most extracted ≥100 dupes) — `:561`, `:581` — Carlini et al., "Extracting Training
+  Data from Diffusion Models", USENIX Security 2023 (arXiv 2301.13188).
+- ~1.9% near-duplicate generations — `:593` — Somepalli et al., "Diffusion Art or Digital
+  Forgery?", CVPR 2023 (arXiv 2212.03860; paper reports 1.88% at similarity >0.5).
+- NYT v. OpenAI — `:623` — S.D.N.Y., filed Dec 2023; motion to dismiss largely denied
+  Mar 26, 2025 (opinion Apr 4, 2025).
+- Bartz v. Anthropic $1.5B settlement — `:647` — N.D. Cal.; preliminary approval Sept 25, 2025
+  (matches `courses/privacy/lectures/03-memorization/` anchor).
+- Whole-book extraction — `:755` — Cooper et al., arXiv 2505.12546 (Llama 3.1 70B / Harry
+  Potter); Ahmed, Cooper, Koyejo, and Liang, "Extracting books from production language
+  models", arXiv 2601.02671 (2026).
+- Capacity ≈3.6 bits/parameter — `:768` — Morris et al., "How Much Do Language Models
+  Memorize?", arXiv 2505.24832 (2025).
+
+**Real images** (`figs/`, cropped + cited): GPT-2 extraction `figs/gpt2-extraction.png`
+(Carlini 2021 Fig 1) `:268`; Ann Graham Lotz copy `figs/calrini-ann.png` (Carlini USENIX Sec
+2023 Fig 1) `:565`; duplication histogram `figs/carlini_duplicates.png` (Carlini USENIX Sec
+2023 Fig 5; shared with `lec03-mia.html`) `:585`. **SVG figures:** canary-leak pipeline `:195`,
+extraction pipeline `:284`, poem loop-break `:353`, size curve `:447`, duplication bars `:469`,
+diffusion noise→image strip `:548`, NYT side-by-side `:623`. Citations use `.cite-left`.
+Page number: bold `.slide-num` only.
+
+**2026-08 content revision (59→58):** every citation/number fetched and verified. Added:
+Extractable vs Discoverable (§01), Some Memorization Is Necessary (Feldman, §01),
+Frontier: How Much Fits? (Morris, §06); Whole Books Come Back replaced the generic
+production-extraction frontier slide. Compressed §05 from 6 slides to 2 (fair-use detail
+migrated to the note file; backup copyright deck owns the full treatment). Fixed: third
+scaling driver "training length"→context length (TOC, divider, drivers card — and in
+`lec04tech.html`, $c\log t$/epochs → $c\log k$/context tokens, fix-errors-only pass);
+Three Flavors retaxonomized (eidetic/extractable cite misattribution removed); poem-attack
+prompt restored to the paper's exact wording; Somepalli cite removed from the Carlini Fig 5
+histogram slide; concrete verified numbers added (604/1,800; 10,000+/$200/150×; ~1000×;
+GPT-J ≥1%; 94/175M; ~1.9%; $1.5B). Note file synced (58 entries, order matches).

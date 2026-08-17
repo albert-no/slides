@@ -46,20 +46,32 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>Three Flavors</h2>
-<p>Researchers split memorization into kinds: verbatim (the exact text returns), eidetic (recalled after very few sightings), and $k$-extractable (recovered from a $k$-token prompt). They give us precise language to study the problem.</p>
-<p><span class="kt">Key takeaway:</span> Different definitions capture different ways a model can leak text.</p>
+<p>Memorization comes in flavors: verbatim, where the exact text or pixels come back; near-duplicate, where the content is the same with small changes; and stylistic, where only the voice or look is reproduced. This lecture focuses on the first two — style is a much fuzzier line.</p>
+<p><span class="kt">Key takeaway:</span> We study verbatim and near-duplicate copying; style imitation is a separate, fuzzier issue.</p>
 </article>
 
 <article>
 <h2>What "Extractable" Means</h2>
-<p>A string is $k$-extractable if feeding the model a $k$-token prefix makes it continue with the exact training text. This is the practical definition, because it matches what an attacker can actually do.</p>
+<p>A string is $k$-extractable if feeding the model a $k$-token prefix makes it continue with the exact training text. This is the practical definition from Carlini et al. (ICLR 2023), because it matches what an attacker can actually do.</p>
 <p><span class="kt">Key takeaway:</span> Extractable means an adversary can pull the string out with a short prompt.</p>
+</article>
+
+<article>
+<h2>Extractable vs Discoverable</h2>
+<p>Two testing regimes, from Nasr et al. Discoverable memorization: the tester holds the training data and prompts with the true prefix — this measures everything the model has stored, an audit upper bound. Extractable memorization: the attacker has no training data and must find prompts blind — this measures what actually leaks in the real world.</p>
+<p><span class="kt">Key takeaway:</span> Discoverable is the audit upper bound; extractable is the real-world risk.</p>
 </article>
 
 <article>
 <h2>Why It Happens</h2>
 <p>Training rewards predicting the next token. Rare strings are easiest to predict by simply storing them, repeated strings get reinforced, and large models have spare capacity. So memorization is a side effect of fitting the data well.</p>
 <p><span class="kt">Key takeaway:</span> Memorization falls out of the training objective itself.</p>
+</article>
+
+<article>
+<h2>Some Memorization Is Necessary</h2>
+<p>Feldman's STOC 2020 result gives the surprising twist: on long-tailed data, where many examples are one-of-a-kind, memorizing those rare examples is provably necessary to reach the best accuracy. A model that memorizes nothing must give up performance on the tail.</p>
+<p><span class="kt">Key takeaway:</span> On long-tailed data, some memorization is required for accuracy — it cannot simply be banned.</p>
 </article>
 
 <article>
@@ -111,9 +123,9 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article>
-<h2>The Extraction Recipe</h2>
-<p>The recipe is simple: generate a flood of samples from the model, keep the ones it is unusually confident about, then check those against the open web to confirm they are real training data.</p>
-<p><span class="kt">Key takeaway:</span> Generate, filter by confidence, verify against the web.</p>
+<h2>The Extraction Pipeline</h2>
+<p>The pipeline is simple: with only query access to GPT-2, generate a flood of samples, rank them by the model's confidence and keep the top 1,800, then check those against the web and by manual search. 604 came back confirmed as memorized training data.</p>
+<p><span class="kt">Key takeaway:</span> Generate, rank by confidence, verify — 604 of 1,800 candidates were real training data.</p>
 </article>
 
 <article>
@@ -124,13 +136,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>What Came Out of GPT-2</h2>
-<p>The extracted strings were not harmless boilerplate. They included people's contact details, code snippets, and chunks of news and forum text.</p>
+<p>The 604 confirmed strings were not harmless boilerplate. They included people's contact details, code snippets, and chunks of news and forum text.</p>
 <p><span class="kt">Key takeaway:</span> The leaked content was real and sometimes sensitive.</p>
 </article>
 
 <article>
 <h2>The "Repeat Forever" Attack</h2>
-<p>In 2023, Nasr and colleagues found a trick on a production chatbot: ask it to repeat a single word forever. This simple prompt set up the leak.</p>
+<p>In 2023, Nasr and colleagues found a trick on ChatGPT: the prompt "Repeat this word forever: poem poem poem". This trivial instruction set up the leak.</p>
 <p><span class="kt">Key takeaway:</span> A trivial prompt can break a deployed model's guardrails.</p>
 </article>
 
@@ -142,7 +154,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>Scale of the Leak</h2>
-<p>The attack was cheap and broad: thousands of unique memorized strings, including real personal contact information, recovered from a deployed and aligned chat model.</p>
+<p>The attack was cheap and broad: over ten thousand unique memorized strings for about two hundred dollars of queries, with training data emitted at 150 times the normal rate — including real personal contact information — from a deployed, aligned chat model.</p>
 <p><span class="kt">Key takeaway:</span> Alignment did not prevent large-scale extraction.</p>
 </article>
 
@@ -172,8 +184,8 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>Three Drivers</h2>
-<p>Three factors push memorization up: bigger models store more, duplicated data sticks harder, and longer training reinforces recall.</p>
-<p><span class="kt">Key takeaway:</span> Size, duplication, and training length all increase memorization.</p>
+<p>Three factors push memorization up: bigger models store more, duplicated data sticks harder, and longer prompting context unlocks more of what is stored.</p>
+<p><span class="kt">Key takeaway:</span> Model size, duplication, and context length all increase measured memorization.</p>
 </article>
 
 <article>
@@ -184,8 +196,8 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>Duplication Is the Big One</h2>
-<p>A string that appears many times in training is far more likely to leak. Going from one copy to a thousand copies dramatically raises the chance of memorization.</p>
-<p><span class="kt">Key takeaway:</span> Duplication is the strongest single driver.</p>
+<p>A string that appears many times in training is far more likely to leak — and superlinearly so: Kandpal and colleagues found a sequence seen ten times is generated roughly a thousand times more often than one seen once.</p>
+<p><span class="kt">Key takeaway:</span> Duplication is the strongest single driver, and its effect is superlinear.</p>
 </article>
 
 <article>
@@ -196,8 +208,8 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>A Predictable Curve</h2>
-<p>Memorization scales log-linearly with these drivers: each tenfold increase in size or duplication adds a steady amount. This is a built-in property of training, not a bug to patch out.</p>
-<p><span class="kt">Key takeaway:</span> The growth follows a smooth, predictable curve.</p>
+<p>Memorization scales log-linearly with these drivers: each tenfold increase in size, duplication, or context adds a steady amount. Carlini and colleagues measured that GPT-J, at 6 billion parameters, memorizes at least one percent of its training set. This is a built-in property of training, not a bug to patch out.</p>
+<p><span class="kt">Key takeaway:</span> The growth follows a smooth, predictable curve — and it is already large.</p>
 </article>
 
 <article>
@@ -226,19 +238,19 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>Stable Diffusion Copies</h2>
-<p>Carlini and colleagues showed Stable Diffusion regenerating near-exact training photos of real, identifiable people, simply by prompting with their caption.</p>
-<p><span class="kt">Key takeaway:</span> A caption can summon a near-exact training photo.</p>
+<p>Carlini and colleagues showed Stable Diffusion regenerating near-exact training photos of a real, identifiable person, prompted by her name from the training caption. Across the study they recovered 94 training images from 175 million generations.</p>
+<p><span class="kt">Key takeaway:</span> A caption can summon a near-exact training photo — rare per query, real in aggregate.</p>
 </article>
 
 <article>
 <h2>Duplication Drives It Again</h2>
-<p>Just as with text, images duplicated across the web are the ones most likely to be memorized and regenerated. A photo seen once is rarely copied; a photo seen a hundred times often is.</p>
+<p>Just as with text, duplicated images are the ones that leak: the histogram from Carlini's paper shows most successfully extracted images appeared one hundred or more times in the training set.</p>
 <p><span class="kt">Key takeaway:</span> Duplication drives image memorization too.</p>
 </article>
 
 <article>
 <h2>Copy or Create?</h2>
-<p>Somepalli and colleagues searched generated images against the training set and found a measurable fraction were near-duplicates, especially for over-represented captions.</p>
+<p>Somepalli and colleagues searched generated images against the training set and found about 1.9 percent were near-duplicates of a training image — content copied even when the pixels differ.</p>
 <p><span class="kt">Key takeaway:</span> A real share of "new" images are actually copies.</p>
 </article>
 
@@ -255,39 +267,15 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article>
-<h2>Memorization Meets Copyright</h2>
-<p>Much training data is copyrighted: news, books, code, and art. If the model recites it, the question of liability turns a technical leak into a legal claim.</p>
-<p><span class="kt">Key takeaway:</span> Reciting copyrighted text raises a legal liability question.</p>
-</article>
-
-<article>
 <h2>NYT v. OpenAI</h2>
-<p>In 2023, The New York Times sued OpenAI. The complaint included examples where prompts made the model reproduce near-verbatim, paywalled article text.</p>
-<p><span class="kt">Key takeaway:</span> Regurgitation became the central evidence in a major lawsuit.</p>
+<p>Much training data is copyrighted — news, books, code, art — and in December 2023 The New York Times sued OpenAI and Microsoft. The complaint's central evidence was regurgitation: prompts made the model reproduce near-verbatim, paywalled article text, and shown side by side the output matched the original — the same words, in the same order. In March 2025 the court largely denied the motion to dismiss, letting the core copyright claims proceed toward trial.</p>
+<p><span class="kt">Key takeaway:</span> Memorized output is now courtroom evidence, and the case survived dismissal.</p>
 </article>
 
 <article>
-<h2>Near-Verbatim Output</h2>
-<p>Shown side by side, the model's output matched the original article closely: the same words, in the same order. That visual equivalence is what makes the claim powerful.</p>
-<p><span class="kt">Key takeaway:</span> The output and the source were nearly identical.</p>
-</article>
-
-<article>
-<h2>The Fair-Use Debate</h2>
-<p>Developers argue training is transformative learning, like a person reading. Rights holders argue verbatim output is plain copying. Memorization is exactly where the two views collide.</p>
-<p><span class="kt">Key takeaway:</span> Both sides hinge on whether the model copies or transforms.</p>
-</article>
-
-<article>
-<h2>Memorization Is the Crux</h2>
-<p>A model that only generalizes has a stronger fair-use case. A model that recites its sources looks much more like a copier, which is why memorization sits at the heart of the legal argument.</p>
-<p><span class="kt">Key takeaway:</span> Less memorization strengthens the fair-use defense.</p>
-</article>
-
-<article>
-<h2>An Unsettled Question</h2>
-<p>The law is still being written, with cases ongoing across jurisdictions. The outcomes will shape how models are trained, making reduced memorization a legal goal as well as an engineering one.</p>
-<p><span class="kt">Key takeaway:</span> Law and engineering now both want less memorization.</p>
+<h2>Copy or Transform?</h2>
+<p>Developers argue training is transformative learning, like a person reading; rights holders argue verbatim output is plain copying. Memorization is the crux: a model that only generalizes has a stronger fair-use case, while one that recites its sources looks like a copier. The stakes are already real — in 2025 Anthropic settled a suit over pirated books for 1.5 billion dollars — but the law is still being written, and its outcomes will shape how models are trained. Less memorization is now a legal goal as well as an engineering one.</p>
+<p><span class="kt">Key takeaway:</span> The legal fight hinges on copy vs transform, and memorization decides which one it looks like.</p>
 </article>
 
 <article>
@@ -339,9 +327,15 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article>
-<h2>Frontier: Production Extraction</h2>
-<p>Attacks increasingly target deployed chat models, not just research ones. Cheap, scalable prompts can pull out training data, and alignment and filters are only partial barriers.</p>
-<p><span class="kt">Key takeaway:</span> Production models remain extractable today.</p>
+<h2>Frontier: Whole Books Come Back</h2>
+<p>Extraction has scaled from strings to entire books. Cooper and colleagues showed Llama 3.1 70B memorizes nearly the entire first Harry Potter book, and 2026 follow-up work extracted long book passages from production chatbots — some without any jailbreak at all. This is the copyright question from Section 05, now with lab evidence.</p>
+<p><span class="kt">Key takeaway:</span> Frontier models can carry, and emit, whole copyrighted books.</p>
+</article>
+
+<article>
+<h2>Frontier: How Much Fits?</h2>
+<p>Morris and colleagues measured storage capacity directly: GPT-family models store about 3.6 bits per parameter, and models memorize until that capacity fills, then start generalizing. Memorization and generalization draw on one shared budget.</p>
+<p><span class="kt">Key takeaway:</span> Memorization has a measurable capacity, shared with generalization.</p>
 </article>
 
 <article>

@@ -8,12 +8,12 @@ The folder's `hw4sol.pdf` is the 5-problem homework (P1 Neyman–Pearson, P2 DP�
 
 | Deck | Topic |
 |---|---|
-| `unlearning1-foundations.html` | **Part I** (107 slides) — motivation · three definitions · certified/Newton (proved) · SISA · classification algorithms · metrics-as-hypothesis-test |
+| `unlearning1-foundations.html` | **Part I** (109 slides) — motivation · three definitions · certified/Newton (proved) · SISA · classification algorithms · metrics-as-hypothesis-test |
 | `unlearning2-llm.html` | **Part II** (100 slides) — why the certificate does not transfer (proved) · objectives GA/NPO/SimNPO/ME/ELM/RMU (proved) · benchmarks: main figure + measurement claim (proved) · relearning, suppression, the open problem |
 
 ---
 
-## unlearning1-foundations.html (Part I — before LLMs) — 107 slides
+## unlearning1-foundations.html (Part I — before LLMs) — 109 slides
 
 | Part | Topic | Slide | Line |
 |---|---|---|---|
@@ -68,7 +68,7 @@ The folder's `hw4sol.pdf` is the 5-problem homework (P1 Neyman–Pearson, P2 DP�
 | | Where residual knowledge lives (**real figure**, RURK Fig. 1) | 82 | `:1386` |
 | | **RURK** — objective and target $r_\tau(S_f)\le 1$ | 83 | `:1399` |
 | | The Verification Problem (bridge into §03) | 84 | `:1413` |
-| **03** — Classification metrics | metric-as-test, MIA recall, Proposition 4, converse, two-sided, IDI, COLA, benchmark | 85–107 | `:1435-1800` |
+| **03** — Classification metrics | metric-as-test, MIA recall, Proposition 4, converse, two-sided, IDI, COLA, benchmark | 85–109 | `:1435-1805` |
 | | §03 divider · an unlearning metric is a hypothesis test | 85–86 | `:1435`, `:1443` |
 | | The chain every metric follows (SVG) · the standard suite | 87–88 | `:1460`, `:1490` |
 | | MIA as an unlearning probe | 89 | `:1507` |
@@ -76,12 +76,12 @@ The folder's `hw4sol.pdf` is the 5-problem homework (P1 Neyman–Pearson, P2 DP�
 | | **Proposition 4 — certification caps every metric** (+ proof) · corollary: a passing score is not evidence | 91–93 | `:1535`, `:1547`, `:1559` |
 | | The converse fails — head distillation (table) | 94 | `:1573` |
 | | The test is two-sided · both sides of the target (SVG) | 95–96 | `:1588`, `:1609` |
-| | **IDI** (lab, AAAI 2026) · reading the index · what it sees that outputs do not (table) | 97–99 | `:1642`, `:1658`, `:1673` |
-| | Over-unlearning is not hypothetical | 100 | `:1690` |
-| | **COLA** — collapse + align (lab) · COLA in numbers | 101–102 | `:1706`, `:1719` |
-| | SalUn benchmark table (CIFAR-10 / ResNet-18, 10% random) · reading it correctly | 103–104 | `:1733`, `:1748` |
-| | What a defensible evaluation looks like | 105 | `:1763` |
-| | Takeaways — Part I · closer → Part II | 106–107 | `:1776`, `:1789` |
+| | **IDI** (lab, AAAI 2026) · IDI in one picture (**real figure**, IDI Fig. 4a) · reading the index · what it sees that outputs do not (table) | 97–100 | `:1641`, `:1657`, `:1666`, `:1681` |
+| | Over-unlearning is not hypothetical | 101 | `:1698` |
+| | **COLA** — collapse + align (lab) · what collapse does to the features (**real figure**, COLA Fig. 7) · COLA in numbers | 102–104 | `:1713`, `:1726`, `:1735` |
+| | SalUn benchmark table (CIFAR-10 / ResNet-18, 10% random) · reading it correctly | 105–106 | `:1749`, `:1764` |
+| | What a defensible evaluation looks like | 107 | `:1779` |
+| | Takeaways — Part I · closer → Part II | 108–109 | `:1792`, `:1805` |
 
 ## unlearning2-llm.html (Part II — LLM unlearning) — 100 slides
 
@@ -137,19 +137,21 @@ The folder's `hw4sol.pdf` is the 5-problem homework (P1 Neyman–Pearson, P2 DP�
 | | Are we making progress? (Triantafillou) · five things one word (table) · why the naming is a safety measure (lab position paper) | 95–97 | `:1521`, `:1535`, `:1553` |
 | | The open problem · Takeaways · Questions | 98–100 | `:1569`, `:1586`, `:1601` |
 
-**Key formulas (Part I):** Certified $(\varepsilon,\delta)$ two-sided inequality `1:264-267`; leave-one-out target `1:406`; continuous path $L_t$ `1:485`; influence via IFT, $\theta'(0)=\tfrac1n H^{-1}\nabla\ell$ `1:521`; the plus sign, explained `1:531`; influence-unlearning update `1:547`; same update as a Newton step `1:567`; Theorem 1 residual $MG^2/(2\lambda^3n^2)$ `1:577`; Newton error identity (Lemma 2) `1:636`; Hessian-choice discrepancy $G\kappa/(\lambda^2n^2)$ `1:711`; $\ell_2$-sensitivity $2G/(\lambda n)$ `1:735`; recall Gaussian mechanism `1:787`; certified $\sigma \ge \eta\sqrt{2\ln(1.25/\delta)}/\varepsilon$ `1:804`; unlearning noise $\propto 1/n^2$ `1:830`; Sekhari deletion capacity `1:904`; SISA cost $n(R+1)(2R+1)/(6SR)$ `1:1107`; SCRUB KL `1:1244`; SalUn mask `1:1297-1300`; $\ell_1$-sparse `1:1347`; RURK objective `1:1404`; Proposition 4 TV cap `1:1541`; IDI `1:1647`.
+**Key formulas (Part I):** Certified $(\varepsilon,\delta)$ two-sided inequality `1:264-267`; leave-one-out target `1:406`; continuous path $L_t$ `1:485`; influence via IFT, $\theta'(0)=\tfrac1n H^{-1}\nabla\ell$ `1:521`; the plus sign, explained `1:531`; influence-unlearning update `1:547`; same update as a Newton step `1:567`; Theorem 1 residual $MG^2/(2\lambda^3n^2)$ `1:577`; Newton error identity (Lemma 2) `1:636`; Hessian-choice discrepancy $G\kappa/(\lambda^2n^2)$ `1:711`; $\ell_2$-sensitivity $2G/(\lambda n)$ `1:735`; recall Gaussian mechanism `1:787`; certified $\sigma \ge \eta\sqrt{2\ln(1.25/\delta)}/\varepsilon$ `1:804`; unlearning noise $\propto 1/n^2$ `1:830`; Sekhari deletion capacity `1:904`; SISA cost $n(R+1)(2R+1)/(6SR)$ `1:1107`; SCRUB KL `1:1244`; SalUn mask `1:1297-1300`; $\ell_1$-sparse `1:1347`; RURK objective `1:1404`; Proposition 4 TV cap `1:1541`; IDI `1:1646`.
 
 **Key figures (Part I) — nine inline `u1-` SVG:** commuting diagram `1:206`; three definitions as nested sets `1:273`; LOO path + Newton step + residual gap `1:677`; noise-vs-$n$ log-log ($1/n^2$ against $1/n$) `1:840`; deletion capacity as a consumed budget `1:942`; SISA shard/slice grid `1:1031`; SalUn mask `1:1307`; metrics-as-test-statistics chain `1:1460`; two-sided target number line `1:1609`.
 
-**Real paper figures (Part I) — captured from the arXiv PDFs, stored in `figs/`:**
+**Real paper figures (Part I) — captured from the source PDFs, stored in `figs/`:**
 
 | File | Source | Slide · line |
 |---|---|---|
 | `figs/scrub-maxsteps-only.png` + `figs/scrub-alternating.png` | Kurmanji et al., *Towards Unbounded Machine Unlearning*, NeurIPS 2023 (arXiv:2302.09880) — Figure 6(a) and 6(d) | 75 · `1:1274` |
 | `figs/salun-saliency-sparsity.png` | Fan et al., *SalUn*, ICLR 2024 (arXiv:2310.12508) — Figure A1(a) and A1(b) | 78 · `1:1333` |
 | `figs/rurk-residual-knowledge.png` | Hsu et al., *The Unseen Threat*, NeurIPS 2025 (arXiv:2601.22359) — Figure 1 | 82 · `1:1386` |
+| `figs/idi-conceptual.png` | Jeon, Jeung, Kim, No, Choi, *An Information Theoretic Evaluation Metric for Strong Unlearning*, AAAI 2026 — Figure 4(a), conceptual illustration of IDI | 98 · `1:1657` |
+| `figs/cola-collapse.png` | Jeon et al., arXiv:2405.17878 (extended version of the AAAI 2026 paper) — Figure 7, the collapse phase of COLA | 103 · `1:1726` |
 
-Two `<!-- TODO real figure: … -->` markers remain, both on lab papers not posted to arXiv: **IDI** `1:1642` and **COLA** `1:1706` — ask Albert for the AAAI 2026 source PDF.
+No `<!-- TODO real figure: … -->` markers remain in Part I. The two former markers (IDI, COLA) were filled on 2026-08-17 from the AAAI 2026 camera-ready Albert supplied and its arXiv extended version; the COLA schematic is not in the camera-ready, which defers to Appendix C.7 of the arXiv paper.
 
 **Key formulas (Part II):** permutation symmetry $F(\theta)=F(P\theta)$ `2:241`; Newton step in the eigenbasis (sign fails off convexity) `2:255`; Lemma 2 displacement budget $\lVert\theta_T-\theta_T'\rVert\le \eta_j G c^{T-j}$ `2:316`, one-step gap `2:328`; forget + retain decomposition `2:473`; GA objective and gradient `2:488`; DPO `2:544`; **NPO** $\tfrac2\beta\mathbb{E}\log(1+e^{\beta r_\theta})$ `2:556`; NPO gradient weight $2\sigma(\beta r_\theta)$ `2:585`; GA-vs-NPO weights in one line `2:596`; small-$\beta$ expansion with $\tfrac\beta4\mathbb{E}[r_\theta^2]$ `2:645`, scalar expansion `2:657`; length-bias weight ratio `2:717`; **SimNPO** `2:750`; entropy maximisation $\log\lvert V\rvert - H(\pi_\theta)$ `2:787`; **ELM** erased target law $\pi^\star \propto \pi_{\mathrm{nov}}(\pi_{\mathrm{nov}}/\pi_{\mathrm{exp}})^\lambda$ and its cross-entropy fit `2:813`; **RMU** `2:828`; max of $k$ iid uniforms, $\Pr[p_{\max}\le t]=t^k$, $\mathbb{E}=k/(k+1)$ `2:996`; split-confound advantage $=\mathrm{TV}(Q_1,Q_0)$ `2:1174`; DUSK two-condition target `2:1491`.
 
@@ -228,7 +230,11 @@ Two `<!-- TODO real figure: … -->` markers remain, both on lab papers not post
 
 **2026-08 math-detail revision (Part I only; Part II untouched).** Part I **36 → 107 slides**, `unlearning1-notes.html` **36 → 46 entries**. Added: three numbered definitions with a nested-set figure; Propositions 1–2 with proofs, a certified-and-useless counterexample, and an explicit "certified ≠ DP" slide; a standing-convention slide and the $1/n$ vs $1/(n-1)$ note; assumptions A1–A3 stated before use; the influence derivation carried through the IFT term by term with the sign explained; Theorem 1 proved in full via Lemma 1 and a two-slide Lemma 2 (Newton error identity, curvature-gap bound); the which-Hessian discrepancy and a "you never form $H^{-1}$" (CG / LiSSA) slide; Lemma 3 proved; Theorem 2 proved by reduction to the Gaussian mechanism, with a separate slide on what Guo et al. *actually* prove (objective perturbation, not output noise); Theorem 3 restated in the paper's correct form with a proof sketch, a budget figure and the DP separation; an honest "when influence functions fail" pair (Basu 2021); SISA made quantitative by Proposition 3 with a three-slide proof; §02 given per-method geometry and a "certified? no" column plus a verification-problem bridge; §03 reframed so that every metric is a **test statistic** for $H_0:\theta_u \sim \mathcal{A}(\mathcal{D}_r)$, with Proposition 4 (certification caps every bounded metric) proved, its vacuity corollary, the head-distillation converse, and the two-sided target made explicit. **Corrections made during the audit** (all previously on slides or in the notes): Sekhari capacity mis-stated as linear in $\varepsilon$ with $\sqrt d$ → $c\,n\sqrt{\varepsilon}/(d\log(1/\delta))^{1/4}$; Guo certification mis-attributed to output perturbation; COLA's two stages described wrongly on both counts; IDI citation had wrong authors/title/venue; RURK citation wrong; an unverifiable IDI baseline value $-0.110$ removed (the verified pair is $-0.349$ / $-0.060$). The old "MIA: Optimal Test and Its Limits" slide became a recall card plus Proposition 4. Verified by full 104-page headless-Chrome render at `-r 60`; nine layout defects found and fixed (one slide split, one unfilled Bézier, six label-overlap groups, one clipped label).
 
-**2026-08 figure pass + errata (Part I).** arXiv turned out to be reachable from the container, so three of the five `TODO real figure` markers were filled with real captures (SCRUB Fig. 6a/6d, SalUn Fig. A1a/A1b, RURK Fig. 1 — see the **Real paper figures** table above); Part I **104 → 107 slides**. The SalUn capture uses **Figure A1**, not the paper's Figure 1: Figure 1 is a diffusion-model schematic whose examples are "Nudity"-concept generations, which is Part II's territory and unsuitable for a classroom slide, whereas A1 is the classification saliency-sparsity trade-off against the Retrain reference line and continues the "Reading the Mask" thread directly. Two markers remain (IDI `1:1642`, COLA `1:1706`) — lab papers, not on arXiv, need Albert's PDFs.
+**2026-08 figure pass + errata (Part I).** arXiv turned out to be reachable from the container, so three of the five `TODO real figure` markers were filled with real captures (SCRUB Fig. 6a/6d, SalUn Fig. A1a/A1b, RURK Fig. 1 — see the **Real paper figures** table above); Part I **104 → 107 slides**. The SalUn capture uses **Figure A1**, not the paper's Figure 1: Figure 1 is a diffusion-model schematic whose examples are "Nudity"-concept generations, which is Part II's territory and unsuitable for a classroom slide, whereas A1 is the classification saliency-sparsity trade-off against the Retrain reference line and continues the "Reading the Mask" thread directly. Two markers remained (IDI, COLA) until 2026-08-17 — see the next entry.
+
+**2026-08-17 IDI/COLA figures + note realignment (Part I).** Albert supplied the AAAI 2026 camera-ready (*An Information Theoretic Evaluation Metric for Strong Unlearning*, Jeon, Jeung, Kim, No, Choi), which also contains COLA, so both remaining markers were closed from it. **IDI**: Figure 4(a), the conceptual illustration (three layerwise-MI curves, blue area over red area), captured at `-r 450` and now slide 98. **COLA**: the collapse schematic is *not* in the camera-ready — that version defers to Appendix C.7 of the extended paper (arXiv:2405.17878), whose Figure 7 (Before / Collapse / After feature clouds) was captured at `-r 300` and is now slide 103. Part I **107 → 109 slides**. Every number on the IDI and COLA slides was re-verified line by line against the camera-ready's Table 1 and appendix — all correct, nothing changed.
+
+The same pass fixed a **pre-existing numbering drift in `unlearning1-notes.html`**: the 46 entries' `snum` labels, TOC ranges, and three inline "Slide N" prose references had fallen up to **3 slides behind** the deck (the note file labelled the IDI block 94–96 when it was 97–100). All 46 `snum` ranges and all 46 TOC ranges were rebuilt from the deck's own heading sequence, and the three stale prose references (`91`→`94`, `87`→`90`, `96`→`100`, plus COLA's `99`→`104`) were repointed. The note entries for IDI and COLA each gained a paragraph on how to walk the new figure.
 
 **Two errata from the same pass, both now fixed:**
 

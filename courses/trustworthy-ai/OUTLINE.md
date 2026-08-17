@@ -27,7 +27,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | Wk | File | Topic | Status |
 |---|---|---|---|
 | 1 | `lec01-introduction.html` | Introduction & threat-model thinking | **revised 2026-08** (35 sl) |
-| 2 | `lec02-privacy-dp.html` | Privacy & differential privacy | **drafted** (84 sl) |
+| 2 | `lec02-privacy-dp.html` | Privacy & differential privacy | **revised 2026-08** (84 sl) |
 | 3 | `lec03-mia.html` | Membership inference attacks | **drafted** (59 sl) |
 | 4 | `lec04-memorization.html` | Memorization & training-data extraction | **drafted** (59 sl) |
 | 5 | `lec05-unlearning.html` | Machine unlearning | **drafted** (58 sl) |
@@ -171,37 +171,53 @@ the budget $\varepsilon$; randomized response; noise-by-sensitivity; DP-SGD;
 privacy–utility tradeoff; federated learning; private foundation models (2025–26).
 Intuition pass — points to the privacy course for rigor.
 
-### Sections (84 slides, full 90 min — trimmed 2026-07-15 from 93 to fit the slot)
+### Sections (84 slides, full 90 min — content-revised 2026-08, all citations source-verified)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
-| Title / Contents | 1–2 | `:33`, `:45` | |
-| **01 — The Privacy Problem** | 3–15 | `:78` | **GPT-2 extraction image** `:112` · Secret Sharer · "repeat poem" · **diffusion copy image (Ann)** `:158` · 3 kinds of leak · **Sweeney 87% Venn (SVG)** `:224` · Netflix+AOL merged `:245` |
-| **02 — How Leakage Is Measured** | 16–23 | `:259` | membership inference · **MIA loss-overlap (SVG)** `:292` · model inversion · NYT v. OpenAI · Italy ban (shadow models / extraction-scaling / deep-leakage cut — full treatment Wk 3/4; FL leak stays in §05) |
-| **03 — Differential Privacy** | 24–45 | `:372` | two-worlds · **$(\varepsilon,\delta)$-DP definition** `:457` (plain-English lead-in) · budget $\varepsilon$ · post-processing · **indistinguishability + heights (SVG)** `:568-` (warm-up now carries coin-flip payoff) · what DP does/doesn't |
-| **04 — Achieving DP: Add Randomness** | 46–58 | `:650` | **Randomized response + coin-tree (SVG)** `:684` · recover-the-rate worked example · local vs central DP · RAPPOR/Apple · **Laplace mechanism + noise bell (SVG)** `:763` · sensitivity |
-| **05 — Private Machine Learning** | 59–70 | `:824` | **DP-SGD** `:853` (clip+noise merged to one slide) · privacy accountant · utility cost (benchmark folded in) · **federated learning (SVG)** `:920` · Gboard · FL still leaks · secure aggregation |
-| **06 — Frontier 2025–26** | 71–79 | `:984` | private fine-tuning (Yu, Li 2022) `:992` · private synthetic data · web-scale puzzle · privacy auditing · unlearning preview · Apple PCC · EU AI Act |
-| Wrap (deeper / demos / takeaways) | 80–83 | — | `:1093`–`:1119` |
-| Closer | 84 | — | `$\varepsilon$` `:1131` |
+| Title / Contents | 1–2 | `:32`, `:44` | |
+| **01 — The Privacy Problem** | 3–15 | `:77` | **GPT-2 extraction image** `:116` · Secret Sharer · "repeat poem" · **diffusion copy image (Ann)** `:162` · Copilot secrets (Huang FSE 2024) `:176` · 3 kinds of leak · **Sweeney 87% Venn (SVG)** `:229` + Golle 63% caveat · Netflix+AOL merged `:246` |
+| **02 — How Leakage Is Measured** | 16–23 | `:260` | membership inference · **MIA loss-overlap (SVG)** `:298` · model inversion · NYT v. OpenAI · Italy ban ("Privacy Is a Business Risk" slide deleted 2026-08 — content moved to note's "Regulators Step In" entry) |
+| **03 — Differential Privacy** | 24–45 | `:361` | two-worlds · **$(\varepsilon,\delta)$-DP definition** `:453` (plain-English lead-in) · budget $\varepsilon$ · $\varepsilon$ in the wild `:510` (Apple 4–8/item + audited 16/day, Census $\approx 17$) · $\delta \ll 1/n$ `:528` · post-processing · **indistinguishability + heights (SVG)** `:576` · what DP does/doesn't |
+| **04 — Achieving DP: Add Randomness** | 46–58 | `:640` | **Randomized response + coin-tree (SVG)** `:688` · recover-the-rate worked example `:709` · local vs central DP · RAPPOR/Apple · **Laplace mechanism + noise bell (SVG)** `:758` · sensitivity |
+| **05 — Private Machine Learning** | 59–70 | `:814` | **DP-SGD** `:843` (clip+noise merged to one slide) · privacy accountant · utility cost (benchmark folded in) · **federated learning (SVG)** `:913` · Gboard · FL still leaks · secure aggregation |
+| **06 — Frontier 2025–26** | 71–80 | `:972` | private fine-tuning (Yu, Li 2022) `:980` · **VaultGemma DP pretraining** `:992` (added 2026-08) · private synthetic data + Apple Intelligence 2025 `:1006` · web-scale puzzle · privacy auditing · unlearning preview · Apple PCC · EU AI Act (GPAI duties since Aug 2025) `:1070` · open problems `:1082` |
+| Wrap (deeper / demos / takeaways) | 81–83 | — | `:1096`–`:1122` |
+| Closer | 84 | — | `$\varepsilon$` `:1135` |
 
-**Key definitions / citations:**
-- $(\varepsilon,\delta)$-DP — `:457` — Dwork, McSherry, Nissim, Smith, TCC 2006.
-- **Statistical indistinguishability** (heights example, Korea/Japan Gaussians) — `:568-628` — replaced the composition slides per design choice; "Many Samples Break It" `:616` folds in the composition intuition (repeated queries erode privacy). Warm-up slide `:581` now carries the coin-flip highlight (former "One Person Tells You Little" slide merged in).
-- Randomized response — `:671` — Warner, JASA 1965.
-- DP-SGD — `:853` — Abadi et al., ACM CCS 2016.
-- De-anonymization — `:245` — Narayanan & Shmatikov, IEEE S&P 2008.
+**Key definitions / citations (all source-verified 2026-08):**
+- $(\varepsilon,\delta)$-DP — `:453` — relaxation from Dwork, Kenthapadi, McSherry, Mironov,
+  Naor, EUROCRYPT 2006 (fixed 2026-08; was misattributed to TCC 2006). "A 2006 Idea" `:369`
+  keeps Dwork, McSherry, Nissim, Smith, TCC 2006 for $\varepsilon$-DP — matches `courses/privacy/lectures/01-dp/`.
+- **Statistical indistinguishability** (heights example, Korea/Japan Gaussians) — `:558-:631` —
+  "Many Samples Break It" `:606` folds in the composition intuition; warm-up `:571` carries the coin-flip highlight.
+- Randomized response — `:661` — Warner, JASA 1965.
+- DP-SGD — `:843` — Abadi et al., ACM CCS 2016.
+- De-anonymization — `:246` — Narayanan & Shmatikov, IEEE S&P 2008.
+- Sweeney 87% (1990 census) — `:224` — Sweeney, Data Privacy WP3, 2000; Golle, WPES 2006 re-estimate (63%) added as caveat.
+- $\varepsilon$ in the wild — `:510` — Apple "Learning with Privacy at Scale" 2017; Tang et al. 2017 audit; US Census 2020 ($\varepsilon \approx 17$).
+- VaultGemma DP pretraining ($\varepsilon \le 2$, sequence-level) — `:992` — Google Research, 2025.
 
 **Real images** (`figs/`, cropped + cited per GOTCHAS): GPT-2 extraction `figs/gpt2-extraction.png`
-(Carlini et al. 2021, Fig 1) `:116`; Stable-Diffusion copy `figs/calrini-ann.png` (Carlini et al.
-2023 / Somepalli et al. 2023) `:162`. Duplication histogram `figs/carlini_duplicates.png` moved to
-`lec04-memorization.html` ("Duplication Drives It Again"). **SVG figures:** Sweeney linkage Venn
-`:224`, MIA loss-overlap `:292`, height-distribution overlap, randomized-response coin tree `:684`,
-Laplace noise bell `:763`, federated learning `:920`. Citations use `.cite-left`. Page number: bold
+(Carlini et al. 2021, Fig 1) `:116`; Stable-Diffusion copy `figs/calrini-ann.png` — **re-attributed
+2026-08** to Carlini et al., "Extracting Training Data from Diffusion Models", USENIX Security 2023,
+Fig 1 (Somepalli removed; verified against arXiv 2301.13188) `:162`. Duplication histogram
+`figs/carlini_duplicates.png` moved to `lec04-memorization.html`. **SVG figures:** Sweeney linkage Venn
+`:229`, MIA loss-overlap `:298`, height-distribution overlap `:576`, randomized-response coin tree `:688`,
+Laplace noise bell `:758`, federated learning `:913`. Citations use `.cite-left`. Page number: bold
 `.slide-num` only. Intuition pass — points to `courses/privacy/lectures/01-dp/` for rigor.
 
 **2026-07-15 trim (9 slides):** Netflix+AOL merged; Shadow Models, MIA on Modern Models,
 Extraction Scales With Size, Leaky Gradients cut from §02 (owned by Wk 3/4 and §05's "FL Still
 Leaks"); "One Person Tells You Little" merged into the heights warm-up; Why Clip + Why Add Noise
 merged; Utility Cost + Numbers on a Benchmark merged; duplicate "Frontier Models Still Memorize"
-cut (§01's "Make ChatGPT Leak" covers it, same citation). Note file synced.
+cut (§01's "Make ChatGPT Leak" covers it, same citation).
+
+**2026-08 content revision (84→84):** every citation/number fetched and verified. Deleted
+"Privacy Is a Business Risk" (§02, redundant with "Regulators Step In"; content absorbed into the
+note). Added "Private Pretraining Arrives" (VaultGemma) to §06. Fixed: Ann-figure attribution
+(Somepalli→Carlini USENIX Sec 2023); $(\varepsilon,\delta)$-DP origin (TCC→EUROCRYPT 2006, also in
+`lec02tech.html`); Sweeney slide (Golle 63% caveat + correct WP3 cite); Apple/Census $\varepsilon$
+values made precise with audit cite; Copilot slide gained Huang FSE 2024 cite. §06 refreshed:
+Apple Intelligence DP synthetic data (2025), EU AI Act GPAI duties (Aug 2025). Note file synced
+(84 entries, order matches).

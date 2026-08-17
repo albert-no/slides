@@ -106,10 +106,32 @@
     <li>The sampler's behavior — degree of stochasticity, step accuracy, inversion property — depends entirely on $\sigma$.</li>
   </ul>
 
+  <h3>3.3b Neighbor correlation as a function of $\sigma$</h3>
+  <p>Fix $X^{(0)}$ and write $u := \epsilon_{n+1}$, $v := \eta_{n+1}$, independent standard Gaussians. Then $X^{(n)} - \sqrt{\bar\alpha_n}X^{(0)} = a_n u + \sigma_{n+1} v$ while $X^{(n+1)} - \sqrt{\bar\alpha_{n+1}}X^{(0)} = \sqrt{1-\bar\alpha_{n+1}}\,u$. Per coordinate,</p>
+  <div class="math-block">$$\rho_n(\sigma) \;=\; \frac{a_n \sqrt{1-\bar\alpha_{n+1}}}{\sqrt{a_n^2+\sigma_{n+1}^2}\,\sqrt{1-\bar\alpha_{n+1}}} \;=\; \frac{a_n}{\sqrt{1-\bar\alpha_n}} \;=\; \sqrt{1 - \frac{\sigma_{n+1}^2}{1-\bar\alpha_n}}.$$</div>
+  <p>So $\sigma_{n+1}=0$ gives $\rho_n = 1$ (the two levels are a deterministic rescaling of one another given $X^{(0)}$), and $\sigma_{n+1}^2 = 1-\bar\alpha_n$ gives $\rho_n = 0$ (consecutive levels become conditionally independent). The whole DDIM family is a dial on this one correlation, and every value of the dial leaves the marginals alone.</p>
+  <p><em>Numerical illustration.</em> With $\bar\alpha_1 = 0.8$, $\bar\alpha_2 = 0.5$ the budget is $1-\bar\alpha_1 = 0.2$:</p>
+  <ul>
+    <li>$\sigma_2^2 = 0$: $a_1 = \sqrt{0.2} \approx 0.447$, $\rho_1 = 1$.</li>
+    <li>$\sigma_2^2 = 0.10$: $a_1 = \sqrt{0.1} \approx 0.316$, $\rho_1 = \sqrt{1/2} \approx 0.71$.</li>
+    <li>$\sigma_2^2 = 0.20$: $a_1 = 0$, $\rho_1 = 0$.</li>
+  </ul>
+  <p>In all three rows $\mathrm{Var}(X^{(1)}\mid X^{(0)}) = 0.2$ exactly. That constancy is the content of Theorem 1, written in numbers.</p>
+
   <h3>3.4 DDPM as a special case</h3>
   <p>Choose</p>
   <div class="math-block">$$\sigma_{n+1}^2 \;=\; \beta_{n+1}\,\frac{1-\bar\alpha_n}{1-\bar\alpha_{n+1}} \;=\; \tilde\beta_{n+1}.$$</div>
-  <p>This is exactly the closed-form posterior variance from Lecture 2 (Theorem 5). One can verify that with this choice, the DDIM mean $\mu_n$ collapses to the DDPM posterior mean $\tilde\mu_{n+1}(X^{(n+1)}, X^{(0)})$, and the joint becomes Markov.</p>
+  <p>This is exactly the closed-form posterior variance from Lecture 2 (Theorem 5). The mean also matches, and it is worth doing the algebra once.</p>
+  <p><strong>Step (i): a workhorse identity.</strong> Since $\bar\alpha_{n+1} = \alpha_{n+1}\bar\alpha_n$ and $\beta_{n+1} = 1-\alpha_{n+1}$,</p>
+  <div class="math-block">$$1 - \bar\alpha_{n+1} - \beta_{n+1} \;=\; 1 - \alpha_{n+1}\bar\alpha_n - 1 + \alpha_{n+1} \;=\; \alpha_{n+1}\bigl(1-\bar\alpha_n\bigr).$$</div>
+  <p><strong>Step (ii): simplify $a_n$.</strong> With $\sigma_{n+1}^2 = \tilde\beta_{n+1}$,</p>
+  <div class="math-block">$$a_n^2 \;=\; (1-\bar\alpha_n) - \beta_{n+1}\frac{1-\bar\alpha_n}{1-\bar\alpha_{n+1}} \;=\; \frac{(1-\bar\alpha_n)\bigl(1-\bar\alpha_{n+1}-\beta_{n+1}\bigr)}{1-\bar\alpha_{n+1}} \;=\; \frac{\alpha_{n+1}(1-\bar\alpha_n)^2}{1-\bar\alpha_{n+1}},$$</div>
+  <p>so $a_n = \dfrac{(1-\bar\alpha_n)\sqrt{\alpha_{n+1}}}{\sqrt{1-\bar\alpha_{n+1}}}$.</p>
+  <p><strong>Step (iii): read off the two coefficients.</strong> Writing $\mu_n = c_0 x^{(0)} + c_1 x^{(n+1)}$,</p>
+  <div class="math-block">$$c_1 \;=\; \frac{a_n}{\sqrt{1-\bar\alpha_{n+1}}} \;=\; \frac{\sqrt{\alpha_{n+1}}\,(1-\bar\alpha_n)}{1-\bar\alpha_{n+1}},$$</div>
+  <div class="math-block">$$c_0 \;=\; \sqrt{\bar\alpha_n} - c_1\sqrt{\bar\alpha_{n+1}} \;=\; \sqrt{\bar\alpha_n}\left(1 - \frac{\alpha_{n+1}(1-\bar\alpha_n)}{1-\bar\alpha_{n+1}}\right) \;=\; \frac{\sqrt{\bar\alpha_n}\,\beta_{n+1}}{1-\bar\alpha_{n+1}},$$</div>
+  <p>where the last equality is Step (i) again. These are precisely the DDPM posterior-mean coefficients $\tilde\mu_{n+1}(x^{(n+1)}, x^{(0)})$. Since the mean and the variance both match, $q_\sigma$ with $\sigma^2 = \tilde\beta$ <em>is</em> the DDPM posterior, and the joint collapses back to a Markov chain.</p>
+  <p>Two remarks. First, this pins the DDPM sampler as one interior point of a one-parameter family, not as a canonical object. Second, the pinning system $c_0 + c_1\sqrt{\bar\alpha_{n+1}} = \sqrt{\bar\alpha_n}$ (mean) together with $c_1^2(1-\bar\alpha_{n+1}) + \sigma_{n+1}^2 = 1-\bar\alpha_n$ (variance) is two equations in three unknowns $(c_0, c_1, \sigma_{n+1})$; the leftover degree of freedom is exactly $\sigma$.</p>
 
   <h3>3.5 The deterministic limit</h3>
   <p>Set $\sigma_n = 0$ for all $n$. Then $a_n = \sqrt{1-\bar\alpha_n}$ and $q_\sigma(X^{(n)} \mid X^{(n+1)}, X^{(0)})$ is a Dirac at</p>
@@ -135,6 +157,13 @@
   <p>So the update reads</p>
   <div class="math-block">$$X^{(n)} \;=\; \underbrace{\sqrt{\bar\alpha_n}\,\hat X^{(0)}}_{\text{toward data}} \;+\; \underbrace{\sqrt{1-\bar\alpha_n - \sigma_{n+1}^2}\,\epsilon_\theta(X^{(n+1)}, n+1)}_{\text{noise direction}} \;+\; \underbrace{\sigma_{n+1}\,Z^{(n)}}_{\text{fresh noise}},$$</div>
   <p>with $Z^{(n)} \sim \mathcal{N}(0, I)$ independent of all else.</p>
+
+  <h3>4.4 Strided sampling on a subsequence</h3>
+  <p>Read the update again: every coefficient is built from $\bar\alpha_{n+1}$, $\bar\alpha_n$ and $\sigma_{n+1}$. Neither $\beta$ nor $\alpha$ appears. This matters because $\beta_{n+1}$ is defined only between <em>adjacent</em> grid points, whereas $\bar\alpha$ is a function of a single time index.</p>
+  <p>Formally, pick any decreasing subsequence $N = n_S &gt; n_{S-1} &gt; \cdots &gt; n_1 &gt; n_0 = 0$ and a noise schedule $\{\sigma_s\}$ with $0 \le \sigma_s^2 \le 1-\bar\alpha_{n_{s-1}}$. Define</p>
+  <div class="math-block">$$X^{(n_{s-1})} \;=\; \sqrt{\bar\alpha_{n_{s-1}}}\,\hat X^{(0)}\bigl(X^{(n_s)}\bigr) + \sqrt{1-\bar\alpha_{n_{s-1}}-\sigma_s^2}\;\epsilon_\theta\bigl(X^{(n_s)}, n_s\bigr) + \sigma_s Z_s.$$</div>
+  <p>Everything in Section 2 and Theorem 1 goes through verbatim with $(n+1, n)$ replaced by $(n_s, n_{s-1})$, because the derivation only ever used the two marginal variances involved. The construction therefore defines a valid non-Markovian forward process <em>on the subsequence</em>, whose single-time marginals are the DDPM marginals at those times, and which the same trained $\epsilon_\theta$ serves.</p>
+  <p>Cost is exactly $S$ network evaluations, and $S$ is a free choice made at sampling time. A stride of $20$ over a $1000$-step training grid is a $20\times$ speedup with no retraining. This is the sense in which training and sampling grids come apart; DDPM's ancestral sampler cannot do this because its posterior variance $\tilde\beta_{n+1}$ is tied to adjacent times.</p>
 </article>
 
 <!-- =================================================== -->
@@ -180,20 +209,48 @@
     \text{Reverse ODE (PF):}\quad &dX_t \;=\; \bigl(f - \tfrac{1}{2}g^2\,\nabla\log p_t\bigr)\,dt.
   \end{aligned}$$</div>
   <p>All three share $\{p_t\}$. The first two are stochastic and "share noise paths" only in distribution; the ODE is a single deterministic flow once $X_T$ is fixed.</p>
+
+  <h3>5.6 The exactness of the $(Y, \tau)$ picture</h3>
+  <p>It is worth stressing that the coordinate change is exact, not asymptotic. With $Y_n := X^{(n)}/\sqrt{\bar\alpha_n}$ and $\tau_n := \sqrt{(1-\bar\alpha_n)/\bar\alpha_n}$, dividing the deterministic update by $\sqrt{\bar\alpha_n}$ gives</p>
+  <div class="math-block">$$Y_n \;=\; \Bigl(Y_{n+1} - \tau_{n+1}\epsilon_\theta\Bigr) + \tau_n \epsilon_\theta \;=\; Y_{n+1} + \bigl(\tau_n - \tau_{n+1}\bigr)\epsilon_\theta\bigl(X^{(n+1)}, n+1\bigr),$$</div>
+  <p>with no approximation anywhere: the bracket is $\hat X^{(0)}$ expressed in $Y$-coordinates, identical at both endpoints, so it cancels. This is <em>literally</em> one explicit Euler step for $dY/d\tau = \epsilon_\theta$ with step size $\tau_n - \tau_{n+1}$. Only the passage to $dX/dt$ involves a limit ($\max_n|\tau_n-\tau_{n+1}| \to 0$).</p>
+  <p>The chain-rule bookkeeping for that last step: from $\bar\alpha_t' = -\beta_t\bar\alpha_t$ we get $\frac{d}{dt}\sqrt{\bar\alpha_t} = -\frac{\beta_t}{2}\sqrt{\bar\alpha_t}$ and $\sqrt{\bar\alpha_t}\,\frac{d\tau_t}{dt} = \frac{\beta_t}{2\sqrt{1-\bar\alpha_t}}$, whence $dX_t/dt = -\frac{\beta_t}{2}X_t + \frac{\beta_t}{2\sqrt{1-\bar\alpha_t}}\epsilon_\theta$.</p>
+
+  <h3>5.7 A continuum of reverse dynamics</h3>
+  <p>The PF-ODE and Anderson's reverse SDE are the two ends of a one-parameter family. For $\lambda \ge 0$, the dynamics</p>
+  <div class="math-block">$$dX_t \;=\; \Bigl[f - \tfrac{1+\lambda^2}{2}g^2\,\nabla\log p_t\Bigr]dt + \lambda\,g\,d\bar W_t$$</div>
+  <p>has marginals $p_t$ for every $\lambda$. The proof is the same Fokker–Planck computation: the extra diffusion of size $\lambda^2 g^2/2$ contributes $\tfrac{\lambda^2 g^2}{2}\Delta p_t = \nabla\!\cdot\!\bigl(\tfrac{\lambda^2 g^2}{2} p_t \nabla\log p_t\bigr)$, which is exactly cancelled by the extra $-\tfrac{\lambda^2}{2}g^2\nabla\log p_t$ in the drift. So extra noise must be paid for by extra drift, at a fixed exchange rate.</p>
+  <p>Setting $\lambda = 0$ recovers the PF-ODE; $\lambda = 1$ recovers Anderson. This continuous $\lambda$-family is the exact analogue of the discrete $\sigma$-family: the same idea, stated twice.</p>
 </article>
 
 <!-- =================================================== -->
 <article>
   <h2>6. Consequences of determinism</h2>
 
-  <h3>6.1 Acceleration via coarse Euler</h3>
-  <p>Discretize the PF-ODE with a Runge–Kutta or higher-order solver. Empirically, $\sim 50$ function evaluations of $\epsilon_\theta$ approach the FID of $\sim 1000$-step DDPM. The reason: deterministic ODEs admit higher-order solvers (RK4, DPM-Solver), while stochastic SDEs are stuck at $O(\sqrt{\Delta t})$ for Euler–Maruyama.</p>
+  <h3>6.1 Acceleration via better solvers</h3>
+  <p>Two errors must be kept apart. <em>Approximation error</em> is $\epsilon_\theta \ne$ the true score; it is fixed at training time and does not depend on the step count. <em>Discretization error</em> comes from taking finitely many steps along a continuous trajectory, and it is the only one a sampler can attack. Cutting steps inflates the second only, so the payoff of DDIM is a better solver, not a better network.</p>
+  <p>Once sampling is an ODE, the accuracy is governed by solver order:</p>
+  <ul>
+    <li>Euler–Maruyama on the reverse SDE: $O(\Delta t^{1/2})$ strong order. Stochasticity caps the achievable order.</li>
+    <li>Explicit Euler on the PF-ODE, i.e. deterministic DDIM: $O(\Delta t)$.</li>
+    <li>Heun, DPM-Solver and other multi-stage or exponential-integrator schemes: $O(\Delta t^2)$ and better, because the linear part of the drift can be integrated exactly.</li>
+  </ul>
+  <p>This is the mechanism behind the empirical headline: roughly $50$ evaluations of $\epsilon_\theta$ reach a quality close to $1000$-step ancestral DDPM, with the <em>same</em> weights and the same loss. Only the sampler changed.</p>
 
   <h3>6.2 Inversion</h3>
-  <p>The deterministic update $X^{(n+1)} \mapsto X^{(n)}$ is a function. Run the recursion in reverse to obtain $X^{(0)} \mapsto X^{(N)}$ — image to latent. Used in editing, faithful reconstruction, and prompt-to-prompt manipulation.</p>
+  <p>The deterministic update $X^{(n+1)} \mapsto X^{(n)}$ is a function, so in principle it can be run upward: image to latent. The catch is that the exact inverse step needs $\epsilon_\theta(X^{(n+1)}, n+1)$, and $X^{(n+1)}$ is the very thing being solved for. In $(Y,\tau)$ coordinates the exact relation is</p>
+  <div class="math-block">$$Y_{n+1} \;=\; Y_n + \bigl(\tau_{n+1}-\tau_n\bigr)\,\epsilon_\theta\bigl(X^{(n+1)}, n+1\bigr),$$</div>
+  <p>an implicit equation. DDIM inversion in practice replaces the right-hand side by the value at the point already known:</p>
+  <div class="math-block">$$Y_{n+1} \;\approx\; Y_n + \bigl(\tau_{n+1}-\tau_n\bigr)\,\epsilon_\theta\bigl(X^{(n)}, n\bigr).$$</div>
+  <p>Since $\epsilon_\theta$ is (assumed) Lipschitz in its arguments and $|\tau_{n+1}-\tau_n|$ is the step size, the substitution costs $O(\Delta\tau^2)$ per step: the scheme is locally first-order accurate, exactly like the forward Euler step it mirrors. Errors accumulate over the chain, so a round trip (invert, then regenerate) drifts, and the drift grows as the step count falls. This is why real-image editing degrades with too few steps, and why fixed-point or higher-order inversion schemes are used when fidelity matters.</p>
 
   <h3>6.3 Smooth latent interpolation</h3>
-  <p>Given two latents $X^{(N)}_a, X^{(N)}_b \sim \mathcal{N}(0, I)$, spherical interpolation $X^{(N)}_t = \mathrm{slerp}(X^{(N)}_a, X^{(N)}_b, t)$ followed by deterministic decoding produces semantically smooth interpolations between $X^{(0)}_a$ and $X^{(0)}_b$. This requires the decoding map to be a continuous function — exactly what $\sigma \equiv 0$ provides.</p>
+  <p>Given two latents $X, X' \sim \mathcal{N}(0, I_d)$, one might interpolate linearly. In high dimension this fails, and the reason is a norm computation. For $X \sim \mathcal{N}(0,I_d)$, $\mathbb{E}\|X\|^2 = d$ with fluctuations $O(\sqrt d)$, so the mass concentrates on a thin shell of radius $\sqrt d$. For the midpoint of two independent draws,</p>
+  <div class="math-block">$$\mathbb{E}\Bigl\|\tfrac12(X+X')\Bigr\|^2 \;=\; \tfrac14\bigl(\mathbb{E}\|X\|^2 + \mathbb{E}\|X'\|^2\bigr) \;=\; \tfrac{d}{2}, \qquad \Bigl\|\tfrac12(X+X')\Bigr\| \approx \frac{\sqrt d}{\sqrt 2} \approx 0.71\sqrt d.$$</div>
+  <p>The linear midpoint therefore sits at $71\%$ of the shell radius: an input the model effectively never saw during training, which is why linear interpolation produces washed-out, low-contrast midpoints.</p>
+  <p>Spherical interpolation fixes this by moving along the shell. With $\omega$ the angle between $X$ and $X'$,</p>
+  <div class="math-block">$$X_\lambda \;=\; \frac{\sin\bigl((1-\lambda)\omega\bigr)}{\sin\omega}\,X + \frac{\sin(\lambda\omega)}{\sin\omega}\,X', \qquad \lambda\in[0,1],$$</div>
+  <p>which satisfies $\|X_\lambda\| = \|X\| = \|X'\|$ whenever the endpoints have equal norm. Feeding $X_\lambda$ through the deterministic decoder gives a semantically smooth path. Note the prerequisite: the decoder must be a <em>function</em> of the latent, which is exactly what $\sigma \equiv 0$ buys. Under DDPM's stochastic sampler, no such map exists.</p>
 
   <h3>6.4 DDPM vs DDIM — choosing $\sigma$</h3>
   <ul>

@@ -33,88 +33,54 @@
 </head>
 <body>
 
-<h1>MIA 3 · Theoretical Foundations — Notes</h1>
-<p class="meta">Companion to <code>mia3-theory.html</code>. Detail that does not fit on the slides.</p>
+<h1>MIA 3 &middot; Theoretical Foundations &mdash; Notes</h1>
+<p class="meta">Companion to <code>mia3-theory.html</code>. Every theorem, proof and counterexample now lives on the slides; this file holds only what the slides deliberately leave out: tightness discussion, caveats, secondary tables and speaker asides.</p>
 
 <section>
-  <h2>Slides 66–66c — Proof Sketch (Full Derivation)</h2>
-
-  <h3>Full proof of Yeom Theorem</h3>
-  <p>The slide build-up gives the three steps at a glance. Here is the full argument.</p>
-
-  <p><strong>Setup.</strong> Let $\tau = R_{\text{pop}}(f_\theta)$. Define the threshold attack $\mathcal{A}(z) = \mathbf{1}[\ell(f_\theta, z) \leq \tau]$. The MIA advantage is $\text{Adv} = \text{TPR} - \text{FPR}$.</p>
-
-  <p><strong>Step 1 (Markov on TPR).</strong> For a member $z_i$ drawn from the training set, $\mathbb{E}[\ell(f_\theta, z_i)] = R_{\text{train}}$. By Markov's inequality applied to the event $\{\ell > \tau\}$:</p>
-  $$\Pr[\ell(f_\theta, z_i) > \tau] \leq \frac{R_{\text{train}}}{\tau}$$
-  <p>Therefore $\text{TPR} = \Pr[\ell \leq \tau \mid \text{member}] \geq 1 - R_{\text{train}}/\tau$.</p>
-
-  <p><strong>Step 2 (Markov on FPR).</strong> For a non-member $z$ drawn from $\mathcal{D}$, $\mathbb{E}[\ell(f_\theta, z)] = R_{\text{pop}} = \tau$. By Markov:</p>
-  $$\Pr[\ell(f_\theta, z) \leq \tau] \leq \frac{R_{\text{pop}}}{\tau} = 1$$
-  <p>More carefully, $\text{FPR} = \Pr[\ell \leq \tau \mid \text{non-member}]$. One uses the complementary Markov: $\Pr[\ell > \tau] \leq R_{\text{pop}}/\tau$, but that bounds from the wrong side. The tighter argument uses $\mathbb{E}[\ell] = R_{\text{pop}} = \tau$, so $\text{FPR} \leq R_{\text{pop}}/\tau = 1$. For the advantage bound, the key is the gap: $\text{TPR} - \text{FPR} \leq (1 - R_{\text{train}}/\tau) - (1 - R_{\text{pop}}/\tau) = (R_{\text{pop}} - R_{\text{train}})/\tau = \Delta/\tau$.</p>
-
-  <p><strong>Step 3 (Closing the chain).</strong> With $\tau = R_{\text{pop}}$:</p>
-  $$\text{Adv}_{\text{MI}} = \text{TPR} - \text{FPR} \leq \frac{\Delta}{\tau} = \frac{R_{\text{pop}} - R_{\text{train}}}{R_{\text{pop}}} = \frac{\Delta}{R_{\text{pop}}}$$
-  <p>Since $R_{\text{pop}} \geq \Delta$ (both risks are non-negative), this is $\leq 1$. The Yeom bound states $\text{Adv} \leq \Delta$ (absorbing $R_{\text{pop}}$ into the constant), valid when $\tau \geq 1$. In cross-entropy loss settings where $\tau = R_{\text{pop}}$, the bound is $\Delta/R_{\text{pop}}$, often stated as $\leq \Delta$ for simplicity.</p>
-
-  <h3>Why two Markov applications?</h3>
-  <p>The proof applies Markov once for members (bounding the false-negative rate, which gives TPR) and implicitly uses the mean for non-members (bounding FPR via the expected loss). The elegance is that both bounds depend on the same threshold $\tau = R_{\text{pop}}$, so the gap collapses to $\Delta$.</p>
+  <h2>What moved onto the slides</h2>
+  <p>An earlier version of this note carried a "full derivation" of the Yeom bound built on two applications of Markov's inequality. That argument was <strong>not</strong> the argument in the paper, and it was not valid: it bounded the false-positive rate from the wrong side and then absorbed $R_{\text{pop}}$ into a constant to reach the folklore statement $\text{Adv} \leq \Delta$.</p>
+  <p>Yeom et al. prove something different, and stronger. For the bounded-loss adversary $\mathcal{A}_1$ that answers "non-member" with probability $\ell(A_S,z)/B$, the membership advantage is <em>exactly</em> $R_{\text{gen}}(A)/B = \Delta/B$. That is an identity for one specific adversary, hence a <strong>lower</strong> bound on what the best adversary achieves. It is not an upper bound on any attack. The full statement, the three-step proof, the corollary $\Delta/B \leq \sup_{\mathcal{A}}\text{Adv} = \text{TV}(P_1,P_0)$ with its proof, and two counterexamples to the folklore reading are all on the slides (Section 01).</p>
+  <p>Speaker note: the folklore misstatement is common enough in secondary sources that it is worth naming out loud. The one-line diagnostic is that $\Delta$ is a difference of <em>means</em> while the advantage is a distance between <em>laws</em>; no inequality runs from the first to the second.</p>
 </section>
 
 <section>
-  <h2>Slide 71 — Overfitting View: Limitations (Extended)</h2>
+  <h2>Tightness and what the bounds do not say</h2>
 
-  <h3>Per-sample vulnerability vs. population-level gap</h3>
-  <p>The Yeom bound controls the <em>population-average</em> advantage. A model with $\Delta = 0.01$ may still leave specific records highly exposed if those records are statistical outliers (low loss relative to the population). Carlini et al. (2022) formalize this: the threat model should be framed as per-record, not population-average.</p>
+  <h3>Per-record versus population-average</h3>
+  <p>Both Yeom's $\Delta/B$ and the average advantage itself are population-average quantities. A model with $\Delta \approx 0$ can still expose specific records: outliers with unusually low loss relative to the population remain identifiable while the average signal is nil. Counterexample A on the slides is the extreme version of this. The per-record framing, and the low-false-positive-rate regime it demands, is the subject of the later deck on per-record attacks.</p>
 
-  <h3>Tightness of the bound</h3>
-  <p>The bound $\text{Adv} \leq \Delta$ can be loose by an order of magnitude. A model with $\Delta = 0.1$ may have an actual attack advantage of $0.01$ if the loss distributions overlap heavily. Conversely, the bound is approached when the distributions are well-separated (high-overfitting regime). This motivates studying the actual distributions directly, as Sablayrolles et al. (2019) do.</p>
+  <h3>How loose is $\Delta/B \leq \text{TV}$?</h3>
+  <p>No theorem in this lecture quantifies the slack. The corollary follows from enlarging the class of test functions from the single function $1-\ell/B$ to all functions into $[0,1]$; how much is lost depends entirely on how far the optimal test is from a scaled loss. Both endpoints are attainable: Counterexample A on the slides has $\Delta = 0$ with $\text{TV} = 1$ (maximal slack), and the two-point example accompanying the corollary has $\Delta/B = \text{TV} = 1/2$ (no slack at all). Anything in between is possible. Measuring the slack for real models is an open empirical question, not a corollary.</p>
 
-  <h3>The threshold assumption</h3>
-  <p>Yeom's bound applies only to the specific threshold attack $\mathcal{A}(z) = \mathbf{1}[\ell \leq \tau]$. Likelihood-ratio attacks (Sablayrolles) can exploit the shape of the loss distributions, not just a single threshold. This is why $\Delta \approx 0$ does not imply immunity to all MIA variants.</p>
+  <h3>Defences that shrink $\Delta$</h3>
+  <p>Regularisation, dropout and early stopping shrink the generalisation gap, hence the guaranteed floor. No theorem states that they shrink $\text{TV}(P_1,P_0)$. Reporting a small train-test gap is therefore evidence about one moment, not a privacy guarantee. Only the algorithmic bound, $\text{Adv}^{\mathrm{M}} \leq e^{\varepsilon}-1$ for an $\varepsilon$-differentially private learner, is a genuine ceiling.</p>
 </section>
 
 <section>
-  <h2>Slide 77 — Theorem: BB Converges to WB (Technical Conditions)</h2>
+  <h2>Sablayrolles: what the assumptions are doing</h2>
 
-  <h3>Asymptotic regime</h3>
-  <p>The convergence $\Lambda_{\text{BB}}(z) \to \Lambda_{\text{WB}}(z)$ holds in the limit of large overparameterized models trained with standard SGD. Sablayrolles et al. derive this under a local approximation: in the neighborhood of convergence, the gradient $\nabla_\theta \ell(f_\theta, z)$ is approximately a deterministic function of $\ell(f_\theta, z)$ alone (via the loss surface curvature). Consequently, conditioned on the loss, the gradient carries no additional membership information.</p>
+  <h3>Gibbs posterior versus real SGD</h3>
+  <p>Theorems 5 and 6 on the slides (paper Theorems 1 and 2) assume the weights are drawn from the tempered posterior $P(\theta \mid z_{1:n}, m_{1:n}) \propto \exp(-\frac{1}{T}\sum_i m_i \ell(\theta,z_i))$. The paper's justification is that this is the stationary distribution one would associate with noisy gradient descent, with $T=1$ the Bayesian posterior, $T \to 0$ the MAP estimate, and small $T$ a proxy for averaged SGD. Real SGD is not sampled from this posterior: it has path dependence, finite-time bias, and depends on initialisation and data order. The cancellation of $p_{\mathcal{T}}(\theta)$ in Step 2 of the proof of Theorem 6 is exactly where that assumption is spent, and it is the step that fails first when the assumption is wrong.</p>
 
-  <h3>When does white-box help?</h3>
-  <p>For small models (e.g., a 3-layer MLP on CIFAR-10), the gradient has a non-trivial residual after conditioning on the loss, giving a modest gain (1–3% AUC). For large language models or large CNNs, the asymptotic regime applies and the gain is negligible. The practical takeaway: calibrate the loss distribution carefully before spending effort on gradient features.</p>
+  <h3>The additive-loss assumption</h3>
+  <p>The proof needs the training objective to split as a sum over points so that the factor involving $z_1$ separates from the rest. Batch normalisation, contrastive losses, and any objective coupling examples within a batch break the split. The theorem is silent about those cases rather than false: the derivation simply does not go through.</p>
 
-  <h3>Relation to sufficient statistics</h3>
-  <p>The result can be restated as: in the large-model regime, $\ell(f_\theta, z)$ is a <em>near-sufficient statistic</em> for the membership indicator $\mathbf{1}[z \in D]$. This is analogous to the factorization theorem in classical statistics: a statistic $T(X)$ is sufficient for $\theta$ iff the likelihood factors as $p(x \mid \theta) = g(T(x), \theta) \cdot h(x)$.</p>
+  <h3>One snapshot only</h3>
+  <p>The conditioning event in Definition 1 is "the adversary sees $\theta$". Section 04's federated result conditions on a different, richer event, which is why "the loss is sufficient" and "trajectories beat snapshots" are not in conflict. Stated in one line: sufficiency is a claim about a fixed observation model, not about all observation models.</p>
+
+  <h3>MATT and identifiability</h3>
+  <p>The Taylor argument behind MATT assumes a unique minimiser and a well-conditioned Hessian at it, so that the two posteriors can be Laplace-approximated around $\theta_0^*$ and $\theta_1^*$ and compared. Neural networks have permutation and rescaling symmetries, so $\theta_0^*$ is not identified and the influence-function step has no fixed reference point. The paper is explicit that MATT is a convex-model tool; MALT and MAST are the ones that transfer.</p>
 </section>
 
 <section>
-  <h2>Slide 87 — Results: Graceful Degradation (Full Table)</h2>
-  <p>The slide shows the endpoints (full Shokri vs. threshold only). All four variants from ML-Leaks:</p>
-  <table>
-    <tr><th>Attack Variant</th><th>Knowledge Required</th><th>Avg. Accuracy</th><th>Drop from Full</th></tr>
-    <tr><td>Shokri (full)</td><td>Architecture + data + shadows</td><td>~79%</td><td>—</td></tr>
-    <tr><td>Relaxed architecture</td><td>Data + shadows</td><td>~77%</td><td>−2%</td></tr>
-    <tr><td>Relaxed data</td><td>Shadows only</td><td>~75%</td><td>−4%</td></tr>
-    <tr><td>Threshold only</td><td>Nothing</td><td>~74%</td><td>−5%</td></tr>
-  </table>
-  <p>The stepwise ~2% degradation per relaxation illustrates that each ingredient (architecture match, data match, shadow models) contributes roughly equally. The remarkably flat curve is the paper's key empirical finding.</p>
+  <h2>Salem: theory versus measurement</h2>
+  <p>The slides formalise the three relaxations as perturbations of the surrogate law and bound their cost by the triangle inequality for total variation, at most $2\,\text{TV}$ per step. That bound is one-directional and says nothing about the size of any individual $\text{TV}$ term. The paper's headline finding &mdash; that dropping shadow models, matched architectures and matched data barely moves precision and recall &mdash; is an empirical statement about the datasets and models tested, not a consequence of the bound. Adversary 2 on Purchase-10 to News even <em>improves</em> on the matched attack, which is consistent with a one-sided bound and inconsistent with reading it as an equality.</p>
+  <p>Numbers quoted on the slides come from Salem et al., NDSS 2019: one shadow model matching ten on CIFAR-100 (0.95 / 0.95 versus 0.95 / 0.94), the hyperparameter and algorithm mismatches of Table II, the transfer results for Adversary 2, the max-posterior threshold for Adversary 3, dropout at rate one half reducing CIFAR-100 to 0.61 / 0.60, and the Google Cloud Prediction API targets.</p>
 </section>
 
 <section>
-  <h2>Slide 80 — Experimental Validation (Full Table)</h2>
-  <p>The slide shows 2 representative datasets; all 4 datasets from Sablayrolles et al.:</p>
-  <table>
-    <tr><th>Dataset</th><th>BB AUC (loss only)</th><th>WB AUC (+ gradients)</th><th>Gap</th></tr>
-    <tr><td>CIFAR-10</td><td>0.72</td><td>0.73</td><td>+0.01</td></tr>
-    <tr><td>CIFAR-100</td><td>0.84</td><td>0.85</td><td>+0.01</td></tr>
-    <tr><td>Purchase-100</td><td>0.89</td><td>0.90</td><td>+0.01</td></tr>
-    <tr><td>Texas-100</td><td>0.81</td><td>0.82</td><td>+0.01</td></tr>
-  </table>
-  <p>The pattern is consistent across all four: BB vs. WB gap is ≤ 1% AUC. The Purchase-100 and Texas-100 datasets (tabular data) show higher overall AUC because the models overfit more, but the BB/WB gap remains negligible.</p>
-</section>
-
-<section>
-  <h2>Slide 76 — White-Box Features (Dimensions)</h2>
-  <p>The table on the slide drops the Dimension column to fit without KaTeX overflow. For reference:</p>
+  <h2>White-box features and their dimensions</h2>
+  <p>The slides work with one layer's gradient to keep the algebra explicit. The full feature set Nasr et al. feed to their attack network, with dimensions:</p>
   <table>
     <tr><th>Feature</th><th>Notation</th><th>Dimension</th></tr>
     <tr><td>Loss</td><td>$\ell(f_\theta, z)$</td><td>Scalar</td></tr>
@@ -122,12 +88,15 @@
     <tr><td>Intermediate activations</td><td>$h_l(x)$</td><td>$\sum_l d_l$</td></tr>
     <tr><td>Loss gradient w.r.t. input</td><td>$\nabla_x \ell$</td><td>$d_{\text{input}}$</td></tr>
   </table>
-  <p>The Dimension column matters for understanding the computational cost of white-box attacks. Gradient features scale with $\sum_l |W_l|$ (total parameter count), which for large models can be $10^8$–$10^9$. In practice, Nasr et al. apply 1D-CNNs per layer to compress gradients before concatenation.</p>
+  <p>Gradient features scale with the total parameter count, which for large models is $10^8$ to $10^9$. Nasr et al. therefore apply one-dimensional convolutional encoders per layer to compress gradients before concatenating them. The rank-one structure proved on the slides explains why so little is gained: for the last layer the whole matrix is determined by the error vector and the activation, and the error vector is a monotone function of the loss for a confident correct prediction.</p>
+  <p>Measured gains, from the paper: black box 74.2 percent, white-box layer outputs 74.6 percent, white-box gradients 75.1 percent on CIFAR-100 with Alexnet (Table VIII). Federated attacks reach 85.1 to 92.1 percent (Table X), which is the observation model changing, not the statistic improving.</p>
 </section>
 
 <section>
-  <h2>Other extended notes</h2>
-  <p class="meta">Add one section per slide where the slide intentionally compressed detail. Keep entries tight: prose explanations, secondary citations, derivations the audience can consult after the talk.</p>
+  <h2>Speaker asides</h2>
+  <p><strong>Where to slow down.</strong> Step 2 of the proof of Theorem 6 (the cancellation of $p_{\mathcal{T}}$) and the two counterexamples in Section 01 carry the lecture. Everything else can be taken at pace.</p>
+  <p><strong>A question to expect.</strong> "If the loss is sufficient, why did Nasr get more?" The answer is on the slides as the data-processing proposition: the federated attacker is not observing $\theta$, so Theorem 6 does not apply to it. Worth rehearsing.</p>
+  <p><strong>Notation warning.</strong> The slides flip Yeom's membership bit so that $b=1$ means member, matching the convention used throughout the series. The paper uses $b=0$ for member. Say so if anyone reads the paper alongside.</p>
 </section>
 
 </body>

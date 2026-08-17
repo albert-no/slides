@@ -25,15 +25,54 @@
   text-transform: uppercase;
   margin-bottom: 8px;
 }
-.d4-algo ol { padding-left: 24px; margin: 0; }
-.d4-algo li { margin-bottom: 6px; line-height: 1.5; }
+.d4-algo > ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.d4-algo > ol > li {
+  counter-increment: step;
+  padding: 7px 0 7px 52px;
+  position: relative;
+  line-height: 1.45;
+}
+.d4-algo > ol > li::before {
+  content: counter(step) ".";
+  position: absolute;
+  left: 10px;
+  top: 7px;
+  font-weight: 700;
+  color: var(--yonsei-blue);
+  width: 32px;
+  text-align: right;
+}
+.d4-algo > ol > li + li { border-top: 1px solid var(--slate); }
+.d4-algo ol ol { list-style: lower-alpha; padding-left: 26px; margin: 4px 0 0; }
+.d4-algo ol ol li { padding: 3px 0; line-height: 1.45; }
+.d4-fig { position: relative; width: fit-content; margin: 12px auto 0; }
+.d4-fig .lab {
+  position: absolute;
+  font-size: 1.15rem;
+  color: var(--charcoal);
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+}
+.d4-fig .lab.blue { color: var(--yonsei-blue); font-weight: 600; }
+.d4-fig .lab.red { color: var(--warn); font-weight: 600; }
+.d4-fig .lab.green { color: var(--success); font-weight: 600; }
+.d4-fig .lab.gray { color: var(--gray-text); }
+.d4-fig .lab.amber { color: var(--amber); font-weight: 600; }
+.d4-chain {
+  display: flex; justify-content: center; align-items: center;
+  gap: 14px; margin: 24px 0 22px;
+  font-size: 1.4rem; color: var(--charcoal);
+}
+.d4-chain .arr { color: var(--gray-text); }
+.d4-chain .arr.focus { color: var(--yonsei-blue); font-weight: 600; }
+.d4-tight .math-block { margin: 8px 0; }
 </style>
 </head>
 <body data-brand-logo="../../../../reference/kor-eng2.png">
 
 <div class="deck" id="deck">
 
-<!-- SLIDE 1: Title -->
+<!-- SLIDE: Title -->
 <div class="slide title-slide active">
   <img class="title-logo" src="../../../../reference/kor-eng2.png" alt="Yonsei University">
   <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 4 of 5</div>
@@ -44,7 +83,7 @@
   <p style="margin-top:6px;">2026</p>
 </div>
 
-<!-- SLIDE 2: Contents -->
+<!-- SLIDE: Contents -->
 <div class="slide">
   <h2>Contents</h2>
   <div class="divider"></div>
@@ -94,366 +133,1093 @@
   <p class="subtitle">Freedom to redesign the forward process</p>
 </div>
 
-<!-- SLIDE: DDPM loss recap -->
+<!-- SLIDE: sampling bottleneck (F1) -->
 <div class="slide">
-  <h2>DDPM $\epsilon$-Loss Recap</h2>
+  <h2>The Sampling Bottleneck</h2>
   <div class="divider"></div>
-  <p>Per-step training loss:</p>
-  <div class="math-block">$$L_{n-1} = \tilde{\lambda}_n\,\mathbb{E}_{X^{(0)},\,\epsilon}\!\left[\bigl\|\epsilon - \epsilon_\theta\bigl(\sqrt{\bar{\alpha}_n}\,X^{(0)} + \sqrt{1-\bar{\alpha}_n}\,\epsilon,\; n\bigr)\bigr\|^2\right].$$</div>
-  <p>Input to $\epsilon_\theta$: a sample from the single-time marginal.</p>
-</div>
-
-<!-- SLIDE: Only marginals -->
-<div class="slide">
-  <h2>Only Marginals Enter</h2>
-  <div class="divider"></div>
-  <p>The forward process appears only through:</p>
-  <div class="math-block">$$q\bigl(X^{(n)}\,|\,X^{(0)}\bigr) = \mathcal{N}\!\bigl(\sqrt{\bar{\alpha}_n}\,X^{(0)},\;(1-\bar{\alpha}_n)\,I\bigr).$$</div>
-  <div class="highlight">
-    <p>The joint $q(X^{(1:N)}\,|\,X^{(0)})$ never appears in training.</p>
-    <p>Any joint with the same marginals yields the same loss.</p>
+  <p>Ancestral DDPM sampling: one network call <b>per step</b>.</p>
+  <div class="d4-fig">
+    <svg width="860" height="270" viewBox="0 0 860 270">
+      <line x1="90" y1="230" x2="820" y2="230" stroke="#666666" stroke-width="1.5"/>
+      <line x1="90" y1="230" x2="90" y2="40" stroke="#666666" stroke-width="1.5"/>
+      <rect x="120" y="50" width="90" height="180" fill="#003876" opacity="0.85"/>
+      <rect x="270" y="140" width="90" height="90" fill="#003876" opacity="0.55"/>
+      <rect x="420" y="203" width="90" height="27" fill="#003876" opacity="0.35"/>
+      <rect x="570" y="221" width="90" height="9" fill="#003876" opacity="0.2"/>
+      <rect x="720" y="228" width="90" height="2" fill="#666666"/>
+      <text x="165" y="255" text-anchor="middle" font-size="17" fill="#666666">DDPM 1000</text>
+      <text x="315" y="255" text-anchor="middle" font-size="17" fill="#666666">500</text>
+      <text x="465" y="255" text-anchor="middle" font-size="17" fill="#666666">150</text>
+      <text x="615" y="255" text-anchor="middle" font-size="17" fill="#666666">50</text>
+      <text x="765" y="255" text-anchor="middle" font-size="17" fill="#666666">GAN 1</text>
+    </svg>
+    <span class="lab blue" style="left:280px; top:25px;">network calls per sample</span>
   </div>
+  <p class="muted">Quality holds at 1000; naive step-skipping breaks the Markov chain.</p>
 </div>
 
-<!-- SLIDE: DDIM idea -->
+<!-- SLIDE: Recall forward marginal -->
+<div class="slide">
+  <h2>Recall &mdash; Forward Marginal</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>One-shot identity.</h3>
+    <p>With $\alpha_n = 1-\beta_n$ and $\bar\alpha_n = \prod_{m\le n}\alpha_m$:</p>
+    <div class="math-block">$$X^{(n)} = \sqrt{\bar\alpha_n}\,X^{(0)} + \sqrt{1-\bar\alpha_n}\,\bar\varepsilon_n, \qquad \bar\varepsilon_n \sim \mathcal N(0, I_d).$$</div>
+  </div>
+  <p>Equivalently $q(x^{(n)}\,|\,x^{(0)}) = \mathcal N\!\big(\sqrt{\bar\alpha_n}\,x^{(0)},\,(1-\bar\alpha_n) I_d\big)$.</p>
+  <p class="muted">Only $\bar\alpha_n$ appears; the individual $\beta_m$ are invisible here.</p>
+</div>
+
+<!-- SLIDE: Recall eps-loss -->
+<div class="slide">
+  <h2>Recall &mdash; The $\varepsilon$-Loss</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Simplified DDPM objective.</h3>
+    <div class="math-block">$$\mathcal L(\theta) = \mathbb E_{n,\,X^{(0)},\,\bar\varepsilon}\Big[\big\|\bar\varepsilon - \varepsilon_\theta\big(\sqrt{\bar\alpha_n}X^{(0)} + \sqrt{1-\bar\alpha_n}\,\bar\varepsilon,\ n\big)\big\|^2\Big].$$</div>
+  </div>
+  <p>Draw $n$, draw $X^{(0)}$, draw one Gaussian $\bar\varepsilon$, regress.</p>
+  <p class="muted">No consecutive pair $(X^{(n)}, X^{(n+1)})$ is ever formed.</p>
+</div>
+
+<!-- SLIDE: what the loss touches (F2) -->
+<div class="slide">
+  <h2>What the Loss Touches</h2>
+  <div class="divider"></div>
+  <div class="d4-fig">
+    <svg width="880" height="300" viewBox="0 0 880 300">
+      <defs>
+        <marker id="a1" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 z" fill="#666666"/>
+        </marker>
+      </defs>
+      <circle cx="120" cy="90" r="34" fill="#ffffff" stroke="#003876" stroke-width="2"/>
+      <circle cx="300" cy="90" r="34" fill="#ffffff" stroke="#c9d3de" stroke-width="2"/>
+      <circle cx="480" cy="90" r="34" fill="#ffffff" stroke="#c9d3de" stroke-width="2"/>
+      <circle cx="660" cy="90" r="34" fill="#ffffff" stroke="#003876" stroke-width="2"/>
+      <circle cx="820" cy="90" r="34" fill="#ffffff" stroke="#c9d3de" stroke-width="2"/>
+      <line x1="154" y1="90" x2="262" y2="90" stroke="#c9d3de" stroke-width="2" marker-end="url(#a1)"/>
+      <line x1="334" y1="90" x2="442" y2="90" stroke="#c9d3de" stroke-width="2" marker-end="url(#a1)"/>
+      <line x1="514" y1="90" x2="622" y2="90" stroke="#c9d3de" stroke-width="2" marker-end="url(#a1)"/>
+      <line x1="694" y1="90" x2="782" y2="90" stroke="#c9d3de" stroke-width="2" marker-end="url(#a1)"/>
+      <path d="M120,132 Q390,250 660,132" fill="none" stroke="#003876" stroke-width="2.5" marker-end="url(#a1)"/>
+      <text x="390" y="240" text-anchor="middle" font-size="17" fill="#003876">the only conditional the loss samples</text>
+    </svg>
+    <span class="lab blue" style="left:120px; top:90px;">$X^{(0)}$</span>
+    <span class="lab gray" style="left:300px; top:90px;">$X^{(1)}$</span>
+    <span class="lab gray" style="left:480px; top:90px;">$\cdots$</span>
+    <span class="lab blue" style="left:660px; top:90px;">$X^{(n)}$</span>
+    <span class="lab gray" style="left:820px; top:90px;">$\cdots$</span>
+  </div>
+  <p class="muted">Training reads the marginals $q(x^{(n)} | x^{(0)})$, never the joint path law.</p>
+</div>
+
+<!-- SLIDE: Proposition loss invariance -->
+<div class="slide">
+  <h2>Loss Invariance</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Proposition (the loss sees only marginals).</h3>
+    <p>Let $q$ and $\tilde q$ be two joint laws on $(X^{(0)},\dots,X^{(N)})$ with</p>
+    <div class="math-block">$$q(x^{(n)}\,|\,x^{(0)}) = \tilde q(x^{(n)}\,|\,x^{(0)}) \quad \text{for every } n.$$</div>
+    <p>Then $\mathcal L_q(\theta) = \mathcal L_{\tilde q}(\theta)$ for every $\theta$, hence identical minimizers.</p>
+  </div>
+  <p class="muted">A whole family of forward processes shares one trained network.</p>
+</div>
+
+<!-- SLIDE: proof of proposition -->
+<div class="slide d4-tight">
+  <h2>Proof &mdash; Change of Measure</h2>
+  <div class="divider"></div>
+  <p>Write the loss as an integral against the law it actually queries.</p>
+  <div class="math-block">$$\mathcal L_q(\theta) = \sum_{n} w_n \int\! q(x^{(0)}) \int\! q(x^{(n)}|x^{(0)})\, \big\|\varepsilon(x^{(0)},x^{(n)}) - \varepsilon_\theta(x^{(n)},n)\big\|^2 \, dx^{(n)}\, dx^{(0)}$$</div>
+  <p>where $\varepsilon(x^{(0)},x^{(n)}) = (x^{(n)} - \sqrt{\bar\alpha_n}x^{(0)})/\sqrt{1-\bar\alpha_n}$ is a deterministic function of the pair.</p>
+  <p class="muted">Everything depends on $q$ only through that marginal. Swap in $\tilde q$: nothing changes. $\blacksquare$</p>
+</div>
+
+<!-- SLIDE: two joints one marginal (F3) -->
+<div class="slide">
+  <h2>Two Joints, One Marginal</h2>
+  <div class="divider"></div>
+  <div class="d4-fig">
+    <svg width="820" height="300" viewBox="0 0 820 300">
+      <rect x="60" y="30" width="290" height="200" fill="none" stroke="#c9d3de" stroke-width="1.5"/>
+      <ellipse cx="205" cy="130" rx="115" ry="62" fill="#003876" opacity="0.16"/>
+      <rect x="470" y="30" width="290" height="200" fill="none" stroke="#c9d3de" stroke-width="1.5"/>
+      <ellipse cx="615" cy="130" rx="115" ry="62" fill="#003876" opacity="0.16" transform="rotate(-32 615 130)"/>
+      <line x1="60" y1="250" x2="350" y2="250" stroke="#003876" stroke-width="6" opacity="0.5"/>
+      <line x1="470" y1="250" x2="760" y2="250" stroke="#003876" stroke-width="6" opacity="0.5"/>
+      <text x="205" y="280" text-anchor="middle" font-size="17" fill="#666666">same marginal at time n</text>
+      <text x="615" y="280" text-anchor="middle" font-size="17" fill="#666666">same marginal at time n</text>
+    </svg>
+    <span class="lab gray" style="left:205px; top:20px;">independent-ish coupling</span>
+    <span class="lab gray" style="left:615px; top:20px;">tight coupling</span>
+  </div>
+  <p class="muted">Different couplings of $(X^{(n)}, X^{(n+1)})$; identical per-time marginals.</p>
+</div>
+
+<!-- SLIDE: what we may change -->
+<div class="slide">
+  <h2>What We May Change</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Frozen.</h3>
+      <ul class="tight">
+        <li>Every marginal $q(x^{(n)}|x^{(0)})$</li>
+        <li>The schedule $\bar\alpha_n$</li>
+        <li>Network $\varepsilon_\theta$ and its weights</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Free.</h3>
+      <ul class="tight">
+        <li>The coupling across times</li>
+        <li>Markov or not</li>
+        <li>The reverse sampler built from it</li>
+      </ul>
+    </div>
+  </div>
+  <p class="muted">Retrain nothing. Redesign the path, keep the destination.</p>
+</div>
+
+<!-- SLIDE: DDIM in one sentence -->
 <div class="slide">
   <h2>DDIM in One Sentence</h2>
   <div class="divider"></div>
-  <p>Keep the DDPM marginals. Build a non-Markovian joint with parameter $\{\sigma_n\}$.</p>
-  <p>Recover a sampler with <strong>tunable stochasticity</strong>, down to fully deterministic.</p>
-  <div class="highlight">
-    <p>Same trained network. Different sampler.</p>
+  <div class="card">
+    <h3>Idea.</h3>
+    <p>A <b>non-Markovian</b> forward family, indexed by $\sigma$, with the DDPM marginals.</p>
   </div>
-  <div class="cite">Song, Meng &amp; Ermon, "Denoising Diffusion Implicit Models", ICLR 2021.</div>
+  <div class="d4-chain">
+    <span>$\sigma = \tilde\beta$</span><span class="arr">$\Rightarrow$</span><span>DDPM</span>
+    <span class="arr focus">|</span>
+    <span>$\sigma = 0$</span><span class="arr">$\Rightarrow$</span><span>deterministic DDIM</span>
+  </div>
+  <ul>
+    <li>One trained network, a whole dial of samplers.</li>
+    <li>No retraining: the weights never see $\sigma$.</li>
+  </ul>
+  <p class="cite">Song, Meng, and Ermon, "Denoising Diffusion Implicit Models", ICLR 2021.</p>
 </div>
 
 <!-- ====================================================================
-     PART 02: DDIM non-Markovian forward
+     PART 02: Non-Markovian forward family
      ==================================================================== -->
 <div class="slide section-slide left">
   <div class="section-num">02</div>
-  <h1>Non-Markovian Forward</h1>
+  <h1>A Non-Markovian Forward</h1>
   <div class="divider"></div>
   <p class="subtitle">Same marginals, tunable stochasticity</p>
 </div>
 
-<!-- SLIDE: Setup -->
+<!-- SLIDE: Markov vs non-Markov (F4) -->
 <div class="slide">
-  <h2>Setup</h2>
+  <h2>Markov vs. Non-Markovian</h2>
   <div class="divider"></div>
-  <ul>
-    <li>Schedule $\{\bar{\alpha}_n\}_{n=0}^N$ inherited from DDPM.</li>
-    <li>Free parameters $\{\sigma_n \geq 0\}_{n=1}^N$.</li>
-    <li>Target: define $q$ on $X^{(0:N)}$ with the DDPM marginals.</li>
-  </ul>
-  <p>Strategy: specify $q(X^{(n)}\,|\,X^{(n+1)}, X^{(0)})$ — condition both on the next step <em>and</em> the clean signal.</p>
-  <div class="highlight">
-    <p><strong>Construction order (data $X^{(0)}$ given):</strong></p>
-    <p style="margin-left:14px;">① Sample $X^{(N)} \sim q(X^{(N)}\,|\,X^{(0)})$ — the DDPM endpoint marginal.</p>
-    <p style="margin-left:14px;">② For $n = N{-}1, \ldots, 0$: sample $X^{(n)} \sim q(X^{(n)}\,|\,X^{(n+1)}, X^{(0)})$.</p>
-    <p>The forward joint is generated <em>backward in $n$</em>, anchored at both ends.</p>
+  <div class="d4-fig">
+    <svg width="880" height="330" viewBox="0 0 880 330">
+      <defs>
+        <marker id="a2" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 z" fill="#666666"/>
+        </marker>
+        <marker id="a2b" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 z" fill="#003876"/>
+        </marker>
+      </defs>
+      <text x="20" y="26" font-size="18" fill="#666666" font-weight="600">Markov (DDPM)</text>
+      <text x="20" y="176" font-size="18" fill="#003876" font-weight="600">Non-Markovian (DDIM)</text>
+      <circle cx="150" cy="70" r="30" fill="#ffffff" stroke="#666666" stroke-width="2"/>
+      <circle cx="360" cy="70" r="30" fill="#ffffff" stroke="#666666" stroke-width="2"/>
+      <circle cx="570" cy="70" r="30" fill="#ffffff" stroke="#666666" stroke-width="2"/>
+      <circle cx="780" cy="70" r="30" fill="#ffffff" stroke="#666666" stroke-width="2"/>
+      <line x1="180" y1="70" x2="322" y2="70" stroke="#666666" stroke-width="2" marker-end="url(#a2)"/>
+      <line x1="390" y1="70" x2="532" y2="70" stroke="#666666" stroke-width="2" marker-end="url(#a2)"/>
+      <line x1="600" y1="70" x2="742" y2="70" stroke="#666666" stroke-width="2" marker-end="url(#a2)"/>
+      <circle cx="150" cy="230" r="30" fill="#ffffff" stroke="#003876" stroke-width="2"/>
+      <circle cx="360" cy="230" r="30" fill="#ffffff" stroke="#003876" stroke-width="2"/>
+      <circle cx="570" cy="230" r="30" fill="#ffffff" stroke="#003876" stroke-width="2"/>
+      <circle cx="780" cy="230" r="30" fill="#ffffff" stroke="#003876" stroke-width="2"/>
+      <line x1="180" y1="230" x2="322" y2="230" stroke="#003876" stroke-width="2" marker-end="url(#a2b)"/>
+      <line x1="390" y1="230" x2="532" y2="230" stroke="#003876" stroke-width="2" marker-end="url(#a2b)"/>
+      <line x1="600" y1="230" x2="742" y2="230" stroke="#003876" stroke-width="2" marker-end="url(#a2b)"/>
+      <path d="M150,200 Q360,166 555,205" fill="none" stroke="#003876" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a2b)"/>
+      <path d="M150,200 Q450,158 765,205" fill="none" stroke="#003876" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a2b)"/>
+      <text x="440" y="310" text-anchor="middle" font-size="17" fill="#666666">dashed: every state also conditions on the clean image</text>
+    </svg>
+    <span class="lab gray" style="left:150px; top:70px;">$X^{(0)}$</span>
+    <span class="lab gray" style="left:360px; top:70px;">$X^{(1)}$</span>
+    <span class="lab gray" style="left:570px; top:70px;">$X^{(2)}$</span>
+    <span class="lab gray" style="left:780px; top:70px;">$X^{(3)}$</span>
+    <span class="lab blue" style="left:150px; top:230px;">$X^{(0)}$</span>
+    <span class="lab blue" style="left:360px; top:230px;">$X^{(1)}$</span>
+    <span class="lab blue" style="left:570px; top:230px;">$X^{(2)}$</span>
+    <span class="lab blue" style="left:780px; top:230px;">$X^{(3)}$</span>
   </div>
 </div>
 
-<!-- SLIDE: DDIM forward — mixing recipe -->
+<!-- SLIDE: setup / demands -->
 <div class="slide">
-  <h2>DDIM Forward — A Mixing Recipe</h2>
+  <h2>What We Demand</h2>
   <div class="divider"></div>
-  <p>Step ② of the construction: sample $X^{(n)}$ given $(X^{(n+1)}, X^{(0)})$ as <strong>signal + recycled noise + fresh noise</strong>:</p>
-  <div class="math-block">$$X^{(n)} \;=\; \underbrace{\sqrt{\bar{\alpha}_n}\,X^{(0)}}_{\text{signal}} \;+\; \underbrace{a_n\,\epsilon_{n+1}}_{\text{recycle}} \;+\; \underbrace{\sigma_{n+1}\,\eta}_{\text{fresh}}.$$</div>
-  <p><strong>Recycle:</strong> $\epsilon_{n+1} = (X^{(n+1)} - \sqrt{\bar\alpha_{n+1}}\,X^{(0)})/\sqrt{1-\bar\alpha_{n+1}}$<br>
-  the noise inside $X^{(n+1)}$, unit Gaussian given $X^{(0)}$.</p>
-  <p><strong>Fresh:</strong> $\eta \sim \mathcal{N}(0,I)$, independent of $\epsilon_{n+1}$.<br>
-  Coefficients $a_n,\,\sigma_{n+1} \geq 0$ to determine.</p>
-</div>
-
-<!-- SLIDE: Pin down a_n by matching the DDPM marginal -->
-<div class="slide">
-  <h2>Pin Down $a_n$</h2>
-  <div class="divider"></div>
-  <p>Demand the DDPM single-time marginal $X^{(n)}|X^{(0)} \sim \mathcal{N}(\sqrt{\bar\alpha_n}\,X^{(0)},\,(1-\bar\alpha_n)I)$.</p>
-  <p>$\epsilon_{n+1}$ and $\eta$ independent given $X^{(0)}$ $\Rightarrow$ variances add:</p>
-  <div class="math-block">$$a_n^2 \;+\; \sigma_{n+1}^2 \;\stackrel{!}{=}\; 1-\bar\alpha_n \;\;\Longrightarrow\;\; a_n \;=\; \sqrt{1-\bar\alpha_n-\sigma_{n+1}^2}.$$</div>
-  <div class="highlight">
-    <p>One equation, two unknowns.</p>
-    <p><strong>$\sigma_{n+1}$ is a free knob</strong> in $[0,\sqrt{1-\bar\alpha_n}]$.</p>
-    <p>Splits the variance budget between recycled and fresh.</p>
+  <p>Fix a schedule $\bar\alpha_1 &gt; \cdots &gt; \bar\alpha_N$ and a noise vector $\sigma = (\sigma_1,\dots,\sigma_N)$, $\sigma_n \ge 0$.</p>
+  <div class="card">
+    <h3>Design targets.</h3>
+    <ul class="tight">
+      <li>Marginals: $q_\sigma(x^{(n)}|x^{(0)}) = \mathcal N(\sqrt{\bar\alpha_n}x^{(0)}, (1-\bar\alpha_n)I_d)$</li>
+      <li>Tractable one-step conditional $q_\sigma(x^{(n)}|x^{(n+1)}, x^{(0)})$</li>
+      <li>Gaussian throughout, so sampling is closed-form</li>
+    </ul>
   </div>
+  <p class="muted">Nothing forces the chain to run forward in time. Build it <b>backward</b>.</p>
 </div>
 
-<!-- SLIDE: Forward conditional q (read off recipe) -->
+<!-- SLIDE: construction order (F5) -->
 <div class="slide">
-  <h2>Forward Conditional</h2>
+  <h2>Construction Order</h2>
   <div class="divider"></div>
-  <p>Given $(X^{(n+1)}, X^{(0)})$ only $\eta$ is random — read off the Gaussian:</p>
-  <div class="math-block">$$\begin{aligned}
-    q\bigl(X^{(n)}\,|\,X^{(n+1)}, X^{(0)}\bigr) \;&=\; \mathcal{N}\!\bigl(\mu_n,\;\sigma_{n+1}^2\,I\bigr), \\
-    \mu_n \;&=\; \sqrt{\bar{\alpha}_n}\,X^{(0)} \;+\; \sqrt{1-\bar{\alpha}_n-\sigma_{n+1}^2}\;\cdot\;\frac{X^{(n+1)} - \sqrt{\bar{\alpha}_{n+1}}\,X^{(0)}}{\sqrt{1-\bar{\alpha}_{n+1}}}.
-  \end{aligned}$$</div>
-  <div class="highlight">
-    <p>Mean depends on <strong>both</strong> $X^{(n+1)}$ and $X^{(0)}$ — non-Markovian in $X^{(n)}$ alone.</p>
+  <div class="d4-fig">
+    <svg width="880" height="250" viewBox="0 0 880 250">
+      <defs>
+        <marker id="a3" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 z" fill="#003876"/>
+        </marker>
+      </defs>
+      <rect x="60" y="60" width="120" height="70" rx="8" fill="#ffffff" stroke="#003876" stroke-width="2"/>
+      <rect x="700" y="60" width="120" height="70" rx="8" fill="#ffffff" stroke="#003876" stroke-width="2"/>
+      <rect x="400" y="60" width="120" height="70" rx="8" fill="#ffffff" stroke="#c9d3de" stroke-width="2"/>
+      <path d="M60,40 Q440,-25 820,40" fill="none" stroke="#003876" stroke-width="2" marker-end="url(#a3)"/>
+      <line x1="700" y1="150" x2="530" y2="150" stroke="#003876" stroke-width="2" marker-end="url(#a3)"/>
+      <line x1="400" y1="150" x2="230" y2="150" stroke="#003876" stroke-width="2" marker-end="url(#a3)"/>
+      <text x="440" y="200" text-anchor="middle" font-size="17" fill="#666666">step 1: draw the endpoint. step 2: walk back down, always seeing the clean image</text>
+    </svg>
+    <span class="lab blue" style="left:120px; top:95px;">$X^{(0)}$</span>
+    <span class="lab gray" style="left:460px; top:95px;">$X^{(n)}$</span>
+    <span class="lab blue" style="left:760px; top:95px;">$X^{(N)}$</span>
   </div>
+  <p class="muted">Order of construction, not order of time. The marginals come out right by design.</p>
 </div>
 
-<!-- SLIDE: Marginal claim -->
+<!-- SLIDE: the mixing recipe -->
 <div class="slide">
-  <h2>Same Marginals, Different Joints</h2>
+  <h2>The Mixing Recipe</h2>
   <div class="divider"></div>
-  <p>For every $n$ and every choice of $\{\sigma_n\}$:</p>
-  <div class="math-block">$$q_{\text{DDIM}}\bigl(X^{(n)}\,|\,X^{(0)}\bigr) \;=\; q_{\text{DDPM}}\bigl(X^{(n)}\,|\,X^{(0)}\bigr) \;=\; \mathcal{N}\!\bigl(\sqrt{\bar{\alpha}_n}\,X^{(0)},\;(1-\bar{\alpha}_n)\,I\bigr).$$</div>
-  <ul>
-    <li><strong>Same pair</strong> $(X^{(0)}, X^{(n)})$ for every $n$ — DDPM and DDIM agree.</li>
-    <li><strong>Different triple</strong> $(X^{(0)}, X^{(n)}, X^{(n+1)})$ — the conditional $q(X^{(n)}\,|\,X^{(n+1)},\,X^{(0)})$ depends on $\sigma_{n+1}$.</li>
-  </ul>
-  <div class="highlight">
-    <p>Loss sees only the pair $\Rightarrow$ DDPM-trained $\epsilon_\theta$ is directly usable in DDIM.</p>
+  <p>Given $X^{(0)}$ and the already-drawn $X^{(n+1)}$, set</p>
+  <div class="math-block">$$X^{(n)} = \underbrace{\sqrt{\bar\alpha_n}\,X^{(0)}}_{\text{correct signal}} + \underbrace{a_n\,\varepsilon_{n+1}}_{\text{recycled noise}} + \underbrace{\sigma_{n+1}\,\eta_{n+1}}_{\text{fresh noise}}$$</div>
+  <div class="math-block" style="margin: 8px 0;">$$\varepsilon_{n+1} := \frac{X^{(n+1)} - \sqrt{\bar\alpha_{n+1}}\,X^{(0)}}{\sqrt{1-\bar\alpha_{n+1}}}, \qquad \eta_{n+1}\sim\mathcal N(0,I_d) \text{ fresh.}$$</div>
+  <p class="muted">Key trick: recycle the noise <i>already in</i> $X^{(n+1)}$, rather than drawing it fresh.</p>
+</div>
+
+<!-- SLIDE: constraint 1, mean -->
+<div class="slide">
+  <h2>Pinning the Coefficients &mdash; Mean</h2>
+  <div class="divider"></div>
+  <p>Posit $q_\sigma(x^{(n)}|x^{(n+1)},x^{(0)}) = \mathcal N\big(c_0 x^{(0)} + c_1 x^{(n+1)},\ \sigma_{n+1}^2 I_d\big)$ and impose the target marginal.</p>
+  <div class="math-block">$$\mathbb E\big[X^{(n)}\,\big|\,X^{(0)}\big] = c_0 X^{(0)} + c_1 \sqrt{\bar\alpha_{n+1}}\,X^{(0)} \;\stackrel{!}{=}\; \sqrt{\bar\alpha_n}\,X^{(0)}.$$</div>
+  <div class="highlight">$$c_0 + c_1\sqrt{\bar\alpha_{n+1}} = \sqrt{\bar\alpha_n}.$$</div>
+  <p class="muted">One linear equation, two unknowns. The variance supplies the second.</p>
+</div>
+
+<!-- SLIDE: constraint 2, variance -->
+<div class="slide">
+  <h2>Pinning the Coefficients &mdash; Variance</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\mathrm{Var}\big(X^{(n)}\,\big|\,X^{(0)}\big) = c_1^2(1-\bar\alpha_{n+1}) + \sigma_{n+1}^2 \;\stackrel{!}{=}\; 1-\bar\alpha_n.$$</div>
+  <div class="highlight">$$c_1 = \frac{\sqrt{1-\bar\alpha_n-\sigma_{n+1}^2}}{\sqrt{1-\bar\alpha_{n+1}}} =: \frac{a_n}{\sqrt{1-\bar\alpha_{n+1}}}, \qquad c_0 = \sqrt{\bar\alpha_n} - c_1\sqrt{\bar\alpha_{n+1}}.$$</div>
+  <p class="muted">Two moment conditions determine both coefficients, leaving $\sigma$ as the only free knob.</p>
+</div>
+
+<!-- SLIDE: sigma budget (F6) -->
+<div class="slide">
+  <h2>The Noise Budget</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$a_n^2 + \sigma_{n+1}^2 = 1-\bar\alpha_n \quad\Longrightarrow\quad 0 \le \sigma_{n+1}^2 \le 1-\bar\alpha_n.$$</div>
+  <div class="d4-fig">
+    <svg width="820" height="190" viewBox="0 0 820 190">
+      <rect x="80" y="40" width="180" height="52" fill="#003876" opacity="0.75"/>
+      <rect x="80" y="92" width="180" height="0" fill="#F59E0B"/>
+      <rect x="360" y="40" width="180" height="26" fill="#003876" opacity="0.75"/>
+      <rect x="360" y="66" width="180" height="26" fill="#F59E0B" opacity="0.8"/>
+      <rect x="640" y="40" width="180" height="0" fill="#003876"/>
+      <rect x="640" y="40" width="180" height="52" fill="#F59E0B" opacity="0.8"/>
+      <text x="170" y="130" text-anchor="middle" font-size="17" fill="#666666">deterministic</text>
+      <text x="450" y="130" text-anchor="middle" font-size="17" fill="#666666">DDIM family</text>
+      <text x="730" y="130" text-anchor="middle" font-size="17" fill="#666666">max stochastic</text>
+    </svg>
+    <span class="lab blue" style="left:300px; top:20px;">recycled $a_n^2$</span>
+    <span class="lab amber" style="left:620px; top:20px;">fresh $\sigma_{n+1}^2$</span>
+    <span class="lab gray" style="left:170px; top:158px;">$\sigma_{n+1} = 0$</span>
+    <span class="lab gray" style="left:730px; top:158px;">$\sigma_{n+1}^2 = 1-\bar\alpha_n$</span>
   </div>
+  <p class="muted">Fixed total variance, split between recycled and fresh.</p>
 </div>
 
-<!-- SLIDE: Induction (proof sketch) -->
-<div class="slide">
-  <h2>Proof: DDPM and DDIM Share the Pair $(X^{(0)},X^{(n)})$</h2>
+<!-- SLIDE: forward conditional -->
+<div class="slide d4-tight">
+  <h2>The Forward Conditional</h2>
   <div class="divider"></div>
-  <p>Backward induction in $n$. Base case $n=N$: by construction.</p>
-  <p>Inductive step: assume $X^{(n+1)}\,|\,X^{(0)} \sim \mathcal{N}\!\bigl(\sqrt{\bar{\alpha}_{n+1}}\,X^{(0)},\;(1-\bar{\alpha}_{n+1})\,I\bigr)$.</p>
-  <p>Sum of two independent Gaussians conditional on $X^{(0)}$:</p>
-  <div class="math-block">$$\begin{aligned}
-    \mathbb{E}[X^{(n)}|X^{(0)}] &= \sqrt{\bar{\alpha}_n}\,X^{(0)}, \\
-    \mathrm{Var}(X^{(n)}|X^{(0)}) &= (1-\bar{\alpha}_n - \sigma_{n+1}^2) + \sigma_{n+1}^2 = 1-\bar{\alpha}_n.
-  \end{aligned}$$</div>
-  <p>$\sigma_{n+1}^2$ cancels: marginals independent of $\{\sigma_n\}$.</p>
-</div>
-
-<!-- SLIDE: Recovers DDPM -->
-<div class="slide">
-  <h2>DDPM as a Special Case</h2>
-  <div class="divider"></div>
-  <p>The DDIM family contains DDPM. Pick:</p>
-  <div class="math-block">$$\sigma_{n+1}^2 = \beta_{n+1}\,\frac{1-\bar{\alpha}_n}{1-\bar{\alpha}_{n+1}}.$$</div>
-  <p>Forward collapses to $q(X^{(n)}\,|\,X^{(n+1)})$: Markov. Recovers the DDPM reverse step.</p>
-  <p><strong>Exercise.</strong> Verify this $\sigma$ choice gives the DDPM update.</p>
-</div>
-
-<!-- SLIDE: Deterministic limit -->
-<div class="slide">
-  <h2><strong>$\sigma_n \to 0$</strong>: Deterministic Forward</h2>
-  <div class="divider"></div>
-  <p>Set every $\sigma_n = 0$. Forward conditional becomes Dirac.</p>
-  <p>Given $X^{(0)}$ and one $X^{(n)}$, all other $X^{(k)}$ are determined. Marginals still match DDPM.</p>
-  <div class="highlight">
-    <p>One knob $\{\sigma_n\}$ interpolates DDPM (full noise) to fully deterministic.</p>
+  <div class="card">
+    <h3>Definition (the $\sigma$-family).</h3>
+    <p>$q_\sigma(x^{(n)}|x^{(n+1)}, x^{(0)}) = \mathcal N(\mu_n,\ \sigma_{n+1}^2 I_d)$, with</p>
+    <div class="math-block">$$\begin{aligned} \mu_n &amp;= \sqrt{\bar\alpha_n}\,x^{(0)} + a_n\cdot\frac{x^{(n+1)} - \sqrt{\bar\alpha_{n+1}}\,x^{(0)}}{\sqrt{1-\bar\alpha_{n+1}}},\\[2pt] a_n &amp;= \sqrt{1-\bar\alpha_n-\sigma_{n+1}^2}. \end{aligned}$$</div>
   </div>
-  <p><strong>Exercise.</strong> Show the $\sigma_n=0$ update is a consistent discretization of the probability-flow ODE.</p>
+  <p class="muted">Together with $q_\sigma(x^{(N)}|x^{(0)}) = \mathcal N(\sqrt{\bar\alpha_N}x^{(0)}, (1-\bar\alpha_N)I_d)$ this defines the whole joint.</p>
+</div>
+
+<!-- SLIDE: Theorem pair invariance -->
+<div class="slide">
+  <h2>Marginal Invariance</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (the $\sigma$-family preserves every marginal).</h3>
+    <p>Let $0 \le \sigma_{n+1}^2 \le 1-\bar\alpha_n$ for all $n$. Under $q_\sigma$,</p>
+    <div class="math-block">$$q_\sigma\big(x^{(n)}\,\big|\,x^{(0)}\big) = \mathcal N\big(\sqrt{\bar\alpha_n}\,x^{(0)},\ (1-\bar\alpha_n) I_d\big) \qquad \text{for every } n = 0,\dots,N.$$</div>
+  </div>
+  <p class="muted">Consequence: the DDPM-trained $\varepsilon_\theta$ is already the right network for every member.</p>
+</div>
+
+<!-- SLIDE: proof outline -->
+<div class="slide">
+  <h2>Proof Outline</h2>
+  <div class="divider"></div>
+  <p>Backward induction on $n$, from $N$ down to $0$. Target at each level:</p>
+  <div class="math-block">$$X^{(n)}\,\big|\,X^{(0)} \;\sim\; \mathcal N\big(\sqrt{\bar\alpha_n}X^{(0)},\ (1-\bar\alpha_n)I_d\big).$$</div>
+  <ol class="tight">
+    <li>Base $n=N$: true by construction.</li>
+    <li>Whitening: the hypothesis makes $\varepsilon_{n+1}$ standard normal given $X^{(0)}$.</li>
+    <li>Two Gaussians add: mean is exact, variances sum to $1-\bar\alpha_n$.</li>
+  </ol>
+  <p class="muted">The whole proof is one moment computation, repeated $N$ times.</p>
+</div>
+
+<!-- SLIDE: step 1 -->
+<div class="slide">
+  <h2>Step 1: The Base Case</h2>
+  <div class="divider"></div>
+  <p>The terminal law is <b>declared</b>, not derived:</p>
+  <div class="math-block">$$q_\sigma\big(x^{(N)}\,\big|\,x^{(0)}\big) := \mathcal N\big(\sqrt{\bar\alpha_N}\,x^{(0)},\ (1-\bar\alpha_N) I_d\big).$$</div>
+  <p>Exactly the DDPM terminal law. With $\bar\alpha_N \approx 0$ it is $\approx \mathcal N(0, I_d)$.</p>
+  <p class="muted">Induction starts at the top, because the chain was built from the top.</p>
+</div>
+
+<!-- SLIDE: step 2 whitening -->
+<div class="slide d4-tight">
+  <h2>Step 2: Whitening the Recycled Noise</h2>
+  <div class="divider"></div>
+  <p>Assume the claim at level $n+1$. Then, conditionally on $X^{(0)}$,</p>
+  <div class="math-block">$$\varepsilon_{n+1} = \frac{X^{(n+1)} - \sqrt{\bar\alpha_{n+1}}X^{(0)}}{\sqrt{1-\bar\alpha_{n+1}}} \;\sim\; \mathcal N(0, I_d).$$</div>
+  <p>A fixed affine map of $X^{(n+1)}$: a legitimate function of what we already drew.</p>
+  <p>$\eta_{n+1}$ is drawn fresh, hence independent of it.</p>
+  <p class="muted">Key trick: standardizing turns "the noise inside $X^{(n+1)}$" into a clean $\mathcal N(0,I_d)$ we can reuse.</p>
+</div>
+
+<!-- SLIDE: step 3 -->
+<div class="slide d4-tight">
+  <h2>Step 3: Two Gaussians Add</h2>
+  <div class="divider"></div>
+  <p>Conditionally on $X^{(0)}$, the recipe is a sum of independent Gaussians:</p>
+  <div class="math-block">$$\begin{aligned} \mathbb E\big[X^{(n)}\big|X^{(0)}\big] &amp;= \sqrt{\bar\alpha_n}X^{(0)} + a_n\cdot 0 + \sigma_{n+1}\cdot 0 = \sqrt{\bar\alpha_n}X^{(0)},\\[2pt] \mathrm{Var}\big(X^{(n)}\big|X^{(0)}\big) &amp;= \big(a_n^2 + \sigma_{n+1}^2\big) I_d = (1-\bar\alpha_n) I_d. \end{aligned}$$</div>
+  <p class="muted">The budget identity $a_n^2 + \sigma_{n+1}^2 = 1-\bar\alpha_n$ is exactly what closes the induction. $\blacksquare$</p>
+</div>
+
+<!-- SLIDE: proof recap chain -->
+<div class="slide d4-tight">
+  <h2>Proof Recap &mdash; One Chain</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$X^{(n)} \stackrel{\text{(recipe)}}{=} \sqrt{\bar\alpha_n}X^{(0)} + a_n\varepsilon_{n+1} + \sigma_{n+1}\eta_{n+1} \stackrel{\text{(whitening)}}{\sim} \mathcal N\big(\sqrt{\bar\alpha_n}X^{(0)},\ (a_n^2+\sigma_{n+1}^2)I_d\big)$$</div>
+  <div class="math-block" style="margin: 8px 0;">$$\stackrel{\text{(budget)}}{=} \mathcal N\big(\sqrt{\bar\alpha_n}X^{(0)},\ (1-\bar\alpha_n)I_d\big).$$</div>
+  <p class="muted">Recipe, whitening, budget: three moves, any $\sigma$ in range.</p>
+</div>
+
+<!-- SLIDE: same pair different triple -->
+<div class="slide">
+  <h2>Same Pair, Different Triple</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Identical.</h3>
+      <p>$\big(X^{(0)}, X^{(n)}\big)$: same joint law as DDPM, for every $n$ and every $\sigma$.</p>
+    </div>
+    <div class="card">
+      <h3>Different.</h3>
+      <p>$\big(X^{(0)}, X^{(n)}, X^{(n+1)}\big)$: the coupling across two noise levels moves with $\sigma$.</p>
+    </div>
+  </div>
+  <p class="muted">The loss only ever looks at pairs. The sampler lives on triples.</p>
+</div>
+
+<!-- SLIDE: correlation derivation -->
+<div class="slide d4-tight">
+  <h2>How Correlated Are Neighbors?</h2>
+  <div class="divider"></div>
+  <p>Given $X^{(0)}$, both deviations are built from the same $\varepsilon_{n+1}$:</p>
+  <div class="math-block">$$\mathrm{Cov}\big(X^{(n)}, X^{(n+1)}\,\big|\,X^{(0)}\big) = a_n\sqrt{1-\bar\alpha_{n+1}}\; I_d.$$</div>
+  <div class="highlight">$$\rho_n(\sigma) = \frac{a_n\sqrt{1-\bar\alpha_{n+1}}}{\sqrt{(1-\bar\alpha_n)(1-\bar\alpha_{n+1})}} = \sqrt{1 - \frac{\sigma_{n+1}^2}{1-\bar\alpha_n}}.$$</div>
+  <p class="muted">$\sigma$ is a correlation dial: $1$ at $\sigma = 0$, $0$ at the maximum budget.</p>
+</div>
+
+<!-- SLIDE: correlation figure (F7) -->
+<div class="slide">
+  <h2>The Correlation Dial</h2>
+  <div class="divider"></div>
+  <div class="d4-fig">
+    <svg width="820" height="330" viewBox="0 0 820 330">
+      <line x1="140" y1="280" x2="700" y2="280" stroke="#666666" stroke-width="1.5"/>
+      <line x1="140" y1="280" x2="140" y2="50" stroke="#666666" stroke-width="1.5"/>
+      <path d="M140,60 C300,63 430,90 530,140 C610,182 660,230 700,280" fill="none" stroke="#003876" stroke-width="3"/>
+      <circle cx="140" cy="60" r="6" fill="#003876"/>
+      <circle cx="700" cy="280" r="6" fill="#F59E0B"/>
+      <line x1="140" y1="60" x2="700" y2="60" stroke="#c9d3de" stroke-width="1.5" stroke-dasharray="5 4"/>
+      <text x="420" y="320" text-anchor="middle" font-size="17" fill="#666666">fresh-noise share of the budget</text>
+    </svg>
+    <span class="lab blue" style="left:100px; top:60px;">$1$</span>
+    <span class="lab gray" style="left:112px; top:280px;">$0$</span>
+    <span class="lab blue" style="left:230px; top:100px;">$\rho_n$</span>
+    <span class="lab blue" style="left:190px; top:35px;">DDIM</span>
+    <span class="lab amber" style="left:700px; top:250px;">max noise</span>
+  </div>
+  <p class="muted">A quarter-ellipse: neighbors decorrelate only as the fresh noise takes over.</p>
+</div>
+
+<!-- SLIDE: numeric example -->
+<div class="slide">
+  <h2>A Two-Step Example</h2>
+  <div class="divider"></div>
+  <p>Take $\bar\alpha_1 = 0.8$, $\bar\alpha_2 = 0.5$, so the budget is $1-\bar\alpha_1 = 0.2$.</p>
+  <table>
+    <thead><tr><th>Fresh noise</th><th>Recycled</th><th>Correlation</th><th>Total variance</th></tr></thead>
+    <tbody>
+      <tr><td>$0$</td><td>$0.447$</td><td>$1.00$</td><td>$0.2$</td></tr>
+      <tr><td>$0.10$</td><td>$0.316$</td><td>$0.71$</td><td>$0.2$</td></tr>
+      <tr><td>$0.20$</td><td>$0$</td><td>$0.00$</td><td>$0.2$</td></tr>
+    </tbody>
+  </table>
+  <p>Middle row: half the budget spent fresh, correlation down to $1/\sqrt 2$.</p>
+  <p class="muted">Columns: $\sigma_2^2$, $a_1$, $\rho_1$, $\mathrm{Var}(X^{(1)}|X^{(0)})$. The last never moves; that is the theorem, in numbers.</p>
+</div>
+
+<!-- SLIDE: DDPM special case -->
+<div class="slide">
+  <h2>DDPM Is One Member</h2>
+  <div class="divider"></div>
+  <p>Choose the DDPM posterior variance,</p>
+  <div class="math-block">$$\sigma_{n+1}^2 = \tilde\beta_{n+1} := \frac{(1-\bar\alpha_n)\,\beta_{n+1}}{1-\bar\alpha_{n+1}}, \qquad \beta_{n+1} = 1-\alpha_{n+1}.$$</div>
+  <p>Claim: it collapses to the familiar exact posterior. The Markov chain reappears.</p>
+  <p class="muted">A genuine extension: the family contains DDPM, it does not replace it.</p>
+</div>
+
+<!-- SLIDE: simplify a_n -->
+<div class="slide d4-tight">
+  <h2>Verifying It &mdash; Simplify $a_n$</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$a_n^2 = (1-\bar\alpha_n)\Big(1 - \frac{\beta_{n+1}}{1-\bar\alpha_{n+1}}\Big) = \frac{(1-\bar\alpha_n)\big(1-\bar\alpha_{n+1}-\beta_{n+1}\big)}{1-\bar\alpha_{n+1}}.$$</div>
+  <p>Workhorse identity: $1-\bar\alpha_{n+1}-\beta_{n+1} = \alpha_{n+1}(1-\bar\alpha_n)$, since $\bar\alpha_{n+1} = \alpha_{n+1}\bar\alpha_n$.</p>
+  <div class="highlight">$$a_n = \frac{(1-\bar\alpha_n)\sqrt{\alpha_{n+1}}}{\sqrt{1-\bar\alpha_{n+1}}}.$$</div>
+</div>
+
+<!-- SLIDE: read off coefficients -->
+<div class="slide d4-tight">
+  <h2>Verifying It &mdash; Read Off the Mean</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned} c_1 &amp;= \frac{a_n}{\sqrt{1-\bar\alpha_{n+1}}} = \frac{\sqrt{\alpha_{n+1}}\,(1-\bar\alpha_n)}{1-\bar\alpha_{n+1}},\\[2pt] c_0 &amp;= \sqrt{\bar\alpha_n} - c_1\sqrt{\bar\alpha_{n+1}} = \frac{\sqrt{\bar\alpha_n}\,\beta_{n+1}}{1-\bar\alpha_{n+1}}. \end{aligned}$$</div>
+  <p class="muted">Exactly the DDPM posterior mean coefficients. Same mean, same variance, same law. $\blacksquare$</p>
+</div>
+
+<!-- SLIDE: deterministic forward (F8) -->
+<div class="slide">
+  <h2>The Other End: $\sigma \equiv 0$</h2>
+  <div class="divider"></div>
+  <div class="d4-fig">
+    <svg width="860" height="290" viewBox="0 0 860 290">
+      <defs>
+        <marker id="a4" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 z" fill="#666666"/>
+        </marker>
+        <marker id="a4b" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 z" fill="#003876"/>
+        </marker>
+      </defs>
+      <circle cx="120" cy="70" r="9" fill="#666666"/>
+      <path d="M129,70 Q230,30 320,72" fill="none" stroke="#666666" stroke-width="2" marker-end="url(#a4)"/>
+      <path d="M338,72 Q440,115 530,68" fill="none" stroke="#666666" stroke-width="2" marker-end="url(#a4)"/>
+      <path d="M548,68 Q650,25 740,74" fill="none" stroke="#666666" stroke-width="2" marker-end="url(#a4)"/>
+      <circle cx="120" cy="210" r="9" fill="#003876"/>
+      <line x1="129" y1="210" x2="322" y2="210" stroke="#003876" stroke-width="2.5" marker-end="url(#a4b)"/>
+      <line x1="340" y1="210" x2="532" y2="210" stroke="#003876" stroke-width="2.5" marker-end="url(#a4b)"/>
+      <line x1="550" y1="210" x2="742" y2="210" stroke="#003876" stroke-width="2.5" marker-end="url(#a4b)"/>
+      <text x="430" y="265" text-anchor="middle" font-size="17" fill="#666666">no fresh randomness after the endpoint is drawn</text>
+    </svg>
+    <span class="lab gray" style="left:430px; top:130px;">stochastic, $\sigma$ large</span>
+    <span class="lab blue" style="left:430px; top:172px;">deterministic, $\sigma = 0$</span>
+  </div>
+  <p class="muted">All randomness is front-loaded into $X^{(N)}$; everything after is a fixed map.</p>
+</div>
+
+<!-- SLIDE: family at a glance -->
+<div class="slide">
+  <h2>The Family at a Glance</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>$\sigma = 0$.</h3>
+      <p>$\rho_n = 1$. Deterministic given $X^{(N)}$. DDIM.</p>
+    </div>
+    <div class="card">
+      <h3>$\sigma^2 = \tilde\beta$.</h3>
+      <p>Markov. Ancestral DDPM sampler.</p>
+    </div>
+    <div class="card">
+      <h3>Between.</h3>
+      <p>Partial memory. One knob, $\eta \in [0,1]$ scaling $\tilde\beta$.</p>
+    </div>
+  </div>
+  <p class="muted">One trained network, a continuum of samplers.</p>
 </div>
 
 <!-- ====================================================================
-     PART 03: Sampling
+     PART 03: DDIM sampling
      ==================================================================== -->
 <div class="slide section-slide left">
   <div class="section-num">03</div>
   <h1>DDIM Sampling</h1>
   <div class="divider"></div>
-  <p class="subtitle">Predicted clean signal, ODE limit</p>
+  <p class="subtitle">Predicted clean signal, deterministic map, ODE limit</p>
 </div>
 
-<!-- SLIDE: Training reuse -->
+<!-- SLIDE: training unchanged -->
 <div class="slide">
-  <h2>Training: Unchanged</h2>
+  <h2>Training Is Untouched</h2>
   <div class="divider"></div>
-  <p>DDIM trains the same $\epsilon$-prediction network as DDPM.</p>
-  <p>Sample $X^{(0)} \sim p_{\text{data}}$, $\epsilon \sim \mathcal{N}(0,I)$, $n \sim \mathrm{Unif}$:</p>
-  <div class="math-block">$$X^{(n)} = \sqrt{\bar{\alpha}_n}\,X^{(0)} + \sqrt{1-\bar{\alpha}_n}\,\epsilon.$$</div>
-  <div class="highlight">
-    <p>Loss depends only on single-time marginals.</p>
-    <p>The non-Markovian structure pays off only at sampling time.</p>
+  <div class="card">
+    <h3>Corollary of marginal invariance.</h3>
+    <p>All $q_\sigma$ share the DDPM marginals, so the $\varepsilon$-loss is one function of $\theta$.</p>
   </div>
+  <div class="d4-chain">
+    <span>train once</span><span class="arr focus">$\longrightarrow$</span><span>$\varepsilon_\theta$</span><span class="arr focus">$\longrightarrow$</span><span>pick $\sigma$ at sampling time</span>
+  </div>
+  <p class="muted">$\sigma$ is a decoding hyperparameter, not a training one.</p>
 </div>
 
-<!-- SLIDE: DDIM sampling overview -->
+<!-- SLIDE: the gap -->
 <div class="slide">
-  <h2>DDIM Sampling — The Idea</h2>
+  <h2>The Gap</h2>
   <div class="divider"></div>
-  <p><strong>Goal at step $n+1 \to n$:</strong> sample $X^{(n)}$ using $X^{(n+1)}$ <em>and</em> $X^{(0)}$.</p>
-  <div class="math-block">$$X^{(n)} \;\sim\; q\bigl(X^{(n)}\,|\,X^{(n+1)}, X^{(0)}\bigr).$$</div>
-  <p>Problem: $X^{(0)}$ is unknown at sampling time.</p>
-  <p><strong>Fix:</strong> estimate it from the network — $\hat{X}^{(0)} = \hat{X}^{(0)}(X^{(n+1)}, \epsilon_\theta)$ — and plug in:</p>
-  <div class="math-block">$$X^{(n)} \;\sim\; q\bigl(X^{(n)}\,|\,X^{(n+1)},\; X^{(0)} = \hat{X}^{(0)}\bigr).$$</div>
+  <p>The forward conditional needs $x^{(0)}$:</p>
+  <div class="math-block">$$q_\sigma\big(x^{(n)}\,\big|\,x^{(n+1)}, \textcolor{#d94040}{x^{(0)}}\big).$$</div>
+  <p>At sampling time we have $x^{(n+1)}$ and nothing else. Estimate the missing argument.</p>
+  <p class="muted">Invert the one-shot identity, with the network standing in for the noise.</p>
 </div>
 
-<!-- SLIDE: Predicted clean signal -->
+<!-- SLIDE: predicted clean signal -->
 <div class="slide">
   <h2>Predicted Clean Signal</h2>
   <div class="divider"></div>
-  <p>Invert the noise equation $X^{(n+1)} = \sqrt{\bar{\alpha}_{n+1}}\,X^{(0)} + \sqrt{1-\bar{\alpha}_{n+1}}\,\epsilon$ for $X^{(0)}$, plug in $\epsilon_\theta$:</p>
-  <div class="math-block">$$\hat{X}^{(0)} = \frac{X^{(n+1)} - \sqrt{1-\bar{\alpha}_{n+1}}\,\epsilon_\theta(X^{(n+1)}, n+1)}{\sqrt{\bar{\alpha}_{n+1}}}.$$</div>
-  <p>The network's running guess for the clean sample.</p>
+  <p>Solve $x^{(n+1)} = \sqrt{\bar\alpha_{n+1}}x^{(0)} + \sqrt{1-\bar\alpha_{n+1}}\,\varepsilon$ for $x^{(0)}$, then substitute $\varepsilon \leftarrow \varepsilon_\theta$:</p>
+  <div class="highlight">$$\widehat X^{(0)}_{n+1} := \frac{X^{(n+1)} - \sqrt{1-\bar\alpha_{n+1}}\;\varepsilon_\theta\big(X^{(n+1)}, n+1\big)}{\sqrt{\bar\alpha_{n+1}}}.$$</div>
+  <p class="muted">Every diffusion sampler is, internally, a repeated one-shot guess at the clean image.</p>
 </div>
 
-<!-- SLIDE: DDIM reverse update -->
+<!-- SLIDE: Tweedie recall -->
 <div class="slide">
-  <h2>DDIM Reverse Update</h2>
+  <h2>Recall &mdash; Why That Guess Is Optimal</h2>
   <div class="divider"></div>
-  <p>Forward conditional with $X^{(0)} \to \hat{X}^{(0)}$ and $X^{(n+1)}-\sqrt{\bar{\alpha}_{n+1}}\hat{X}^{(0)} \to \sqrt{1-\bar{\alpha}_{n+1}}\,\epsilon_\theta$:</p>
-  <div class="math-block">$$X^{(n)} = \underbrace{\sqrt{\bar{\alpha}_n}\,\hat{X}^{(0)}}_{\text{toward data}} + \underbrace{\sqrt{1-\bar{\alpha}_n-\sigma_{n+1}^2}\,\epsilon_\theta(X^{(n+1)}, n+1)}_{\text{noise direction}} + \underbrace{\sigma_n\,Z^{(n)}}_{\text{fresh noise}}.$$</div>
-  <p>Three pieces: signal pull, noise direction, optional fresh noise.</p>
+  <div class="card">
+    <h3>Tweedie / MMSE.</h3>
+    <p>If $\varepsilon_\theta$ is the exact minimizer of the $\varepsilon$-loss, then $\varepsilon_\theta(x, n) = -\sqrt{1-\bar\alpha_n}\,\nabla_x \log p_n(x)$ and</p>
+    <div class="math-block">$$\widehat X^{(0)}_n = \mathbb E\big[X^{(0)}\,\big|\,X^{(n)} = x\big].$$</div>
+  </div>
+  <p class="muted">The guess is the posterior mean: blurry by design, and exactly what the update wants.</p>
 </div>
 
-<!-- SLIDE: Sampling algorithm -->
+<!-- SLIDE: geometry (F9) -->
+<div class="slide">
+  <h2>Jump Back, Re-Noise</h2>
+  <div class="divider"></div>
+  <div class="d4-fig">
+    <svg width="860" height="300" viewBox="0 0 860 300">
+      <defs>
+        <marker id="a5" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 z" fill="#003876"/>
+        </marker>
+        <marker id="a5g" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 z" fill="#2e8b57"/>
+        </marker>
+      </defs>
+      <line x1="80" y1="250" x2="800" y2="250" stroke="#c9d3de" stroke-width="2"/>
+      <circle cx="700" cy="90" r="8" fill="#003876"/>
+      <circle cx="140" cy="250" r="8" fill="#666666"/>
+      <circle cx="440" cy="170" r="8" fill="#2e8b57"/>
+      <path d="M694,86 Q420,60 148,244" fill="none" stroke="#003876" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#a5)"/>
+      <path d="M150,256 Q300,255 424,176" fill="none" stroke="#2e8b57" stroke-width="2.5" marker-end="url(#a5g)"/>
+      <text x="640" y="286" text-anchor="middle" font-size="17" fill="#666666">noise level decreasing to the left</text>
+    </svg>
+    <span class="lab blue" style="left:700px; top:58px;">$X^{(n+1)}$</span>
+    <span class="lab gray" style="left:140px; top:283px;">$\widehat X^{(0)}$</span>
+    <span class="lab blue" style="left:420px; top:36px;">jump to the guess</span>
+    <span class="lab green" style="left:340px; top:278px;">re-noise to level $n$</span>
+    <span class="lab green" style="left:510px; top:180px;">$X^{(n)}$</span>
+  </div>
+  <p class="muted">One step, two moves: jump to the guess, then re-noise part of the way back.</p>
+</div>
+
+<!-- SLIDE: recycle term collapses -->
+<div class="slide d4-tight">
+  <h2>The Recycled Term Collapses</h2>
+  <div class="divider"></div>
+  <p>The recipe asks for $\varepsilon_{n+1} = \big(x^{(n+1)} - \sqrt{\bar\alpha_{n+1}}\,x^{(0)}\big)/\sqrt{1-\bar\alpha_{n+1}}$. Substitute the estimate:</p>
+  <div class="math-block">$$\frac{X^{(n+1)} - \sqrt{\bar\alpha_{n+1}}\,\widehat X^{(0)}_{n+1}}{\sqrt{1-\bar\alpha_{n+1}}} = \varepsilon_\theta\big(X^{(n+1)}, n+1\big).$$</div>
+  <p class="muted">An identity, not an approximation: one network call supplies both terms.</p>
+</div>
+
+<!-- SLIDE: the reverse update -->
+<div class="slide">
+  <h2>The DDIM Reverse Update</h2>
+  <div class="divider"></div>
+  <div class="highlight">$$X^{(n)} = \underbrace{\sqrt{\bar\alpha_n}\,\widehat X^{(0)}_{n+1}}_{\text{signal at level } n} + \underbrace{\sqrt{1-\bar\alpha_n-\sigma_{n+1}^2}\;\varepsilon_\theta}_{\text{direction pointing to } X^{(n+1)}} + \underbrace{\sigma_{n+1}\,\eta_{n+1}}_{\text{fresh noise}}$$</div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>$\sigma_{n+1}^2 = \tilde\beta_{n+1}$.</h3>
+      <p>Ancestral DDPM sampler, recovered exactly.</p>
+    </div>
+    <div class="card">
+      <h3>$\sigma_{n+1} = 0$.</h3>
+      <p>Deterministic DDIM. No $\eta$ is ever drawn.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE: algorithm -->
 <div class="slide">
   <h2>Sampling Algorithm</h2>
   <div class="divider"></div>
-  <div class="d4-algo" style="max-width:1040px; margin:36px auto 22px;">
-    <div class="d4-algo-title">DDIM Sampling</div>
+  <div class="d4-algo">
+    <div class="d4-algo-title">DDIM sampler</div>
     <ol>
-      <li>Sample $X^{(N)} \sim \mathcal{N}(0, I)$.</li>
-      <li>For $n = N{-}1, \ldots, 0$:
-        <ol style="list-style:lower-alpha; padding-left:24px;">
-          <li>$\hat{X}^{(0)} = \bigl(X^{(n+1)} - \sqrt{1-\bar{\alpha}_{n+1}}\,\epsilon_\theta(X^{(n+1)}, n+1)\bigr)/\sqrt{\bar{\alpha}_{n+1}}$.</li>
-          <li>Sample $Z^{(n)} \sim \mathcal{N}(0,I)$ if $\sigma_n > 0$.</li>
-          <li>$X^{(n)} = \sqrt{\bar{\alpha}_n}\,\hat{X}^{(0)} + \sqrt{1-\bar{\alpha}_n-\sigma_{n+1}^2}\,\epsilon_\theta(X^{(n+1)}, n+1) + \sigma_n\,Z^{(n)}$.</li>
-        </ol>
-      </li>
+      <li>Choose a decreasing subsequence $N = n_S &gt; \cdots &gt; n_1 &gt; n_0 = 0$ and noises $\sigma$.</li>
+      <li>Draw $X^{(N)} \sim \mathcal N(0, I_d)$.</li>
+      <li>For $s = S, S-1, \dots, 1$: evaluate $\varepsilon_\theta(X^{(n_s)}, n_s)$, form $\widehat X^{(0)}$, apply the update to reach $X^{(n_{s-1})}$.</li>
       <li>Return $X^{(0)}$.</li>
     </ol>
   </div>
-  <p style="text-align:center;">$\sigma_n = 0$: skip step (b), generator is deterministic.</p>
+  <p class="muted">$S$ network calls, and $S$ is ours to choose.</p>
 </div>
 
-<!-- SLIDE: Deterministic DDIM update -->
+<!-- SLIDE: deterministic map -->
 <div class="slide">
-  <h2>Deterministic DDIM ($\sigma_n = 0$)</h2>
+  <h2>The Deterministic Map</h2>
   <div class="divider"></div>
-  <p>With $\sigma_n = 0$, the reverse step has no fresh noise:</p>
-  <div class="math-block">$$X^{(n)} \;=\; \sqrt{\bar{\alpha}_n}\,\hat{X}^{(0)} \;+\; \sqrt{1-\bar{\alpha}_n}\,\epsilon_\theta\bigl(X^{(n+1)},\,n+1\bigr).$$</div>
-  <p>Substitute $\hat{X}^{(0)} = (X^{(n+1)} - \sqrt{1-\bar{\alpha}_{n+1}}\,\epsilon_\theta)/\sqrt{\bar{\alpha}_{n+1}}$.</p>
-  <p>The update becomes a&nbsp;<strong>deterministic map</strong>&nbsp;from&nbsp;$X^{(n+1)}$&nbsp;to&nbsp;$X^{(n)}$.</p>
-</div>
-
-<!-- SLIDE: From DDIM to ODE -->
-<div class="slide">
-  <h2>Continuous-Time Limit</h2>
-  <div class="divider"></div>
-  <p>Re-arrange around $X^{(n)}/\sqrt{\bar{\alpha}_n}$. With $\tau_t = \sqrt{(1-\bar{\alpha}_t)/\bar{\alpha}_t}$ and $\beta_t = -\,d\log\bar{\alpha}_t/dt$:</p>
-  <div class="math-block">$$\begin{aligned}
-    d\!\left(\tfrac{X_t}{\sqrt{\bar{\alpha}_t}}\right) \;&=\; d\tau_t \cdot \epsilon_\theta(X_t, t), \\[2pt]
-    \frac{dX_t}{dt} \;&=\; -\tfrac{\beta_t}{2}\,X_t \;+\; \tfrac{\beta_t}{2\sqrt{1-\bar{\alpha}_t}}\,\epsilon_\theta(X_t, t).
-  \end{aligned}$$</div>
-  <div class="highlight">
-    <p>Complete ODE in $\epsilon$-form: VP drift, noise term scaled by $\beta_t$.</p>
-  </div>
-</div>
-
-<!-- SLIDE: Probability-flow ODE -->
-<div class="slide">
-  <h2>Probability-Flow ODE</h2>
-  <div class="divider"></div>
-  <p>Convert $\epsilon_\theta = -\sqrt{1-\bar{\alpha}_t}\,s_\theta$ and unwind the change of variable to recover the standard form:</p>
-  <div class="math-block">$$\frac{dX_t}{dt} \;=\; f(X_t, t) \;-\; \tfrac{1}{2}\,g^2(t)\,\nabla\log p_t(X_t).$$</div>
+  <p>Setting $\sigma \equiv 0$ and writing $\varepsilon_\theta = \varepsilon_\theta(X^{(n+1)}, n+1)$:</p>
+  <div class="math-block">$$X^{(n)} = \sqrt{\frac{\bar\alpha_n}{\bar\alpha_{n+1}}}\;X^{(n+1)} + \left(\sqrt{1-\bar\alpha_n} - \sqrt{\frac{\bar\alpha_n(1-\bar\alpha_{n+1})}{\bar\alpha_{n+1}}}\right)\varepsilon_\theta.$$</div>
   <ul>
-    <li>Same drift $f$ as the forward SDE.</li>
-    <li><strong>Half</strong> the score correction of Anderson's reverse SDE.</li>
-    <li>Same marginals $\{p_t\}$ — deterministic flow with stochastic equivalents.</li>
+    <li>Only $\bar\alpha$'s and one network call per step.</li>
+    <li>Invertible in principle: run the recursion upward.</li>
+    <li>Diversity now comes from $X^{(N)}$ alone.</li>
   </ul>
-  <div class="cite">Song et al., "Score-Based Generative Modeling through SDEs," ICLR 2021.</div>
+  <p class="muted">A fixed function $\Phi: X^{(N)} \mapsto X^{(0)}$. Same seed, same image, every time.</p>
 </div>
 
-<!-- SLIDE: Forward SDE / Reverse SDE / Reverse ODE side-by-side -->
+<!-- SLIDE: skipping steps -->
 <div class="slide">
-  <h2>Three Dynamics, One Marginal Law</h2>
+  <h2>Why Steps Can Be Skipped</h2>
   <div class="divider"></div>
-  <div class="math-block">$$\begin{aligned}
-    \text{Forward SDE:}\quad &dX_t \;=\; f\,dt \;+\; g\,dW_t \\
-    \text{Reverse SDE (Anderson):}\quad &dX_t \;=\; \bigl(f - g^2\,\nabla\log p_t\bigr)\,dt \;+\; g\,d\bar{W}_t \\
-    \text{Reverse ODE (PF):}\quad &dX_t \;=\; \bigl(f - \tfrac{1}{2}g^2\,\nabla\log p_t\bigr)\,dt
-  \end{aligned}$$</div>
-  <div class="highlight">
-    <p><strong>Same one-time marginals</strong> $\{p_t\}$ for all three.</p>
-    <p>First two share noise paths; ODE is deterministic.</p>
+  <p>Scan the update: it contains $\bar\alpha_n$ and $\bar\alpha_{n+1}$, and no $\beta$, no $\alpha$.</p>
+  <div class="math-block">$$\text{update}\big(x, n{+}1 \to n\big) \quad\text{depends only on}\quad \big(\bar\alpha_{n+1},\ \bar\alpha_n,\ \sigma_{n+1}\big).$$</div>
+  <p>So any decreasing subsequence of times is a legal chain: replace $\bar\alpha_n$ by $\bar\alpha_{n_{s-1}}$.</p>
+  <p class="muted">DDPM's update needs $\beta_{n+1}$, which is tied to <i>adjacent</i> times. DDIM's is not.</p>
+</div>
+
+<!-- SLIDE: strided figure (F10) -->
+<div class="slide">
+  <h2>Striding the Chain</h2>
+  <div class="divider"></div>
+  <div class="d4-fig">
+    <svg width="860" height="270" viewBox="0 0 860 270">
+      <defs>
+        <marker id="a6" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 z" fill="#003876"/>
+        </marker>
+      </defs>
+      <line x1="60" y1="70" x2="800" y2="70" stroke="#c9d3de" stroke-width="2"/>
+      <line x1="60" y1="180" x2="800" y2="180" stroke="#c9d3de" stroke-width="2"/>
+      <g fill="#666666">
+        <circle cx="60" cy="70" r="5"/><circle cx="134" cy="70" r="5"/><circle cx="208" cy="70" r="5"/>
+        <circle cx="282" cy="70" r="5"/><circle cx="356" cy="70" r="5"/><circle cx="430" cy="70" r="5"/>
+        <circle cx="504" cy="70" r="5"/><circle cx="578" cy="70" r="5"/><circle cx="652" cy="70" r="5"/>
+        <circle cx="726" cy="70" r="5"/><circle cx="800" cy="70" r="5"/>
+      </g>
+      <g fill="#003876">
+        <circle cx="60" cy="180" r="8"/><circle cx="282" cy="180" r="8"/>
+        <circle cx="504" cy="180" r="8"/><circle cx="800" cy="180" r="8"/>
+      </g>
+      <path d="M792,180 L512,180" stroke="#003876" stroke-width="2.5" marker-end="url(#a6)"/>
+      <path d="M496,180 L290,180" stroke="#003876" stroke-width="2.5" marker-end="url(#a6)"/>
+      <path d="M274,180 L68,180" stroke="#003876" stroke-width="2.5" marker-end="url(#a6)"/>
+      <text x="430" y="230" text-anchor="middle" font-size="17" fill="#666666">same trained network, coarser grid</text>
+    </svg>
+    <span class="lab gray" style="left:430px; top:35px;">full chain, 1000 calls</span>
+    <span class="lab blue" style="left:430px; top:143px;">strided, tens of calls</span>
   </div>
+  <p>Cost counts $\varepsilon_\theta$ calls: a stride of $20$ buys a $20\times$ speedup.</p>
+  <p class="muted">The training grid and the sampling grid have come apart.</p>
 </div>
 
-<!-- SLIDE: Why ODE matches via Fokker–Planck -->
+<!-- SLIDE: two error sources -->
 <div class="slide">
-  <h2>Why the ODE Matches: Fokker–Planck</h2>
+  <h2>Two Sources of Error</h2>
   <div class="divider"></div>
-  <p>Reverse-ODE flow $v = f - \tfrac{1}{2}g^2\,\nabla\log p_t$ obeys the continuity equation.</p>
-  <p>Use $p_t\,\nabla\log p_t = \nabla p_t$:</p>
-  <div class="math-block">$$\begin{aligned}
-    \partial_t p_t \;&\stackrel{(\text{FP})}{=}\; -\nabla\!\cdot\!(f\,p_t) \;+\; \tfrac{g^2}{2}\,\Delta\,p_t \\
-    -\nabla\!\cdot\!(v\,p_t) \;&=\; -\nabla\!\cdot\!\bigl(f p_t - \tfrac{1}{2}g^2\,\nabla p_t\bigr) \;=\; -\nabla\!\cdot\!(f p_t) \;+\; \tfrac{g^2}{2}\,\Delta\,p_t.
-  \end{aligned}$$</div>
-  <div class="highlight">
-    <p><strong>Same FP</strong> $\Rightarrow$ same $\{p_t\}$ as the forward SDE.</p>
-    <p>Anderson: full $g^2$ score (stochastic). PF-ODE: half $g^2$ score (deterministic).</p>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Approximation.</h3>
+      <p>$\varepsilon_\theta \ne$ true score. Fixed by training; unaffected by step count.</p>
+    </div>
+    <div class="card">
+      <h3>Discretization.</h3>
+      <p>Finite steps along a continuous trajectory. Shrinks as $S$ grows.</p>
+    </div>
+  </div>
+  <p>Cutting steps inflates only the second: the payoff is a better solver.</p>
+  <p class="muted">Only the second is a solver question. Which continuous object does it solve?</p>
+</div>
+
+<!-- SLIDE: right coordinates -->
+<div class="slide">
+  <h2>The Right Coordinates</h2>
+  <div class="divider"></div>
+  <p>Rescale the state and reparameterize time by the signal-to-noise ratio:</p>
+  <div class="math-block">$$Y_n := \frac{X^{(n)}}{\sqrt{\bar\alpha_n}}, \qquad \tau_n := \sqrt{\frac{1-\bar\alpha_n}{\bar\alpha_n}}.$$</div>
+  <p>$\tau_n$ is the noise-to-signal ratio: $0$ at clean data, $\to\infty$ as $\bar\alpha_n \to 0$.</p>
+  <p class="muted">Choosing coordinates is the whole trick: the update becomes a straight line in them.</p>
+</div>
+
+<!-- SLIDE: Proposition DDIM ODE -->
+<div class="slide">
+  <h2>DDIM Is Exactly Euler</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Proposition (exact Euler form).</h3>
+    <p>The deterministic DDIM update is, without any approximation,</p>
+    <div class="math-block">$$Y_n - Y_{n+1} = \big(\tau_n - \tau_{n+1}\big)\,\varepsilon_\theta\big(X^{(n+1)}, n+1\big),$$</div>
+    <p>i.e. one explicit Euler step of $\;\dfrac{dY}{d\tau} = \varepsilon_\theta$.</p>
+  </div>
+  <p class="muted">Discretization error is now a solver question with a century of answers.</p>
+</div>
+
+<!-- SLIDE: outline -->
+<div class="slide">
+  <h2>Proof Outline</h2>
+  <div class="divider"></div>
+  <ol class="tight">
+    <li>Divide the deterministic update by $\sqrt{\bar\alpha_n}$.</li>
+    <li>Recognize both coefficients as $\tau$'s.</li>
+    <li>Take $\max_n|\tau_n - \tau_{n+1}| \to 0$ and change variables back to $X$.</li>
+  </ol>
+  <div class="card">
+    <h3>Key trick.</h3>
+    <p>Rescale by $\sqrt{\bar\alpha_n}$: the guess $\widehat X^{(0)}$ becomes a shared anchor and drops out.</p>
+  </div>
+  <p class="muted">Steps 1 and 2 are algebra and are exact; only step 3 is a limit.</p>
+</div>
+
+<!-- SLIDE: step 1 -->
+<div class="slide d4-tight">
+  <h2>Step 1: Divide Through</h2>
+  <div class="divider"></div>
+  <p>Start from $X^{(n)} = \sqrt{\bar\alpha_n}\widehat X^{(0)} + \sqrt{1-\bar\alpha_n}\,\varepsilon_\theta$ and expand $\widehat X^{(0)}$:</p>
+  <div class="math-block">$$\frac{X^{(n)}}{\sqrt{\bar\alpha_n}} = \underbrace{\frac{X^{(n+1)} - \sqrt{1-\bar\alpha_{n+1}}\,\varepsilon_\theta}{\sqrt{\bar\alpha_{n+1}}}}_{\text{the guess, unscaled}} + \sqrt{\frac{1-\bar\alpha_n}{\bar\alpha_n}}\;\varepsilon_\theta.$$</div>
+  <p class="muted">Dividing by $\sqrt{\bar\alpha_n}$ makes $\widehat X^{(0)}$ appear literally, so the guess is the common anchor.</p>
+</div>
+
+<!-- SLIDE: step 2 -->
+<div class="slide d4-tight">
+  <h2>Step 2: Read Off the $\tau$'s</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$Y_n = \Big(Y_{n+1} - \tau_{n+1}\varepsilon_\theta\Big) + \tau_n\,\varepsilon_\theta = Y_{n+1} + \big(\tau_n - \tau_{n+1}\big)\varepsilon_\theta.$$</div>
+  <p>The bracket is $\widehat X^{(0)}$ in $Y$-coordinates: same at both endpoints, so it cancels.</p>
+  <p class="muted">In $(Y,\tau)$ the update is a straight segment of slope $\varepsilon_\theta$. No approximation used.</p>
+</div>
+
+<!-- SLIDE: step 3 -->
+<div class="slide d4-tight">
+  <h2>Step 3: Back to $X$ and $t$</h2>
+  <div class="divider"></div>
+  <p>Let the grid refine. With $X_t = \sqrt{\bar\alpha_t}\,Y_t$, the chain rule and $\bar\alpha_t' = -\beta_t\bar\alpha_t$ give</p>
+  <div class="math-block">$$\frac{d\sqrt{\bar\alpha_t}}{dt} = -\frac{\beta_t}{2}\sqrt{\bar\alpha_t}, \qquad \sqrt{\bar\alpha_t}\,\frac{d\tau_t}{dt} = \frac{\beta_t}{2\sqrt{1-\bar\alpha_t}}.$$</div>
+  <div class="highlight">$$\frac{dX_t}{dt} = -\frac{\beta_t}{2}X_t + \frac{\beta_t}{2\sqrt{1-\bar\alpha_t}}\,\varepsilon_\theta(X_t, t). \qquad \blacksquare$$</div>
+</div>
+
+<!-- SLIDE: recap chain -->
+<div class="slide d4-tight">
+  <h2>Proof Recap &mdash; One Chain</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$X^{(n)} \stackrel{\text{(update)}}{=} \sqrt{\bar\alpha_n}\widehat X^{(0)} + \sqrt{1-\bar\alpha_n}\,\varepsilon_\theta \stackrel{\text{(divide)}}{\Longrightarrow} Y_n = Y_{n+1} + (\tau_n - \tau_{n+1})\varepsilon_\theta$$</div>
+  <div class="math-block" style="margin: 8px 0;">$$\stackrel{\text{(refine)}}{\Longrightarrow} \frac{dY}{d\tau} = \varepsilon_\theta \stackrel{\text{(rescale)}}{\Longrightarrow} \frac{dX_t}{dt} = -\frac{\beta_t}{2}X_t + \frac{\beta_t\,\varepsilon_\theta}{2\sqrt{1-\bar\alpha_t}}.$$</div>
+  <p class="muted">Divide, read, refine, rescale.</p>
+</div>
+
+<!-- SLIDE: score form -->
+<div class="slide d4-tight">
+  <h2>The Same ODE in Score Form</h2>
+  <div class="divider"></div>
+  <p>Substitute the noise-score identity $\varepsilon_\theta(x,t) = -\sqrt{1-\bar\alpha_t}\;s_\theta(x,t)$:</p>
+  <div class="math-block">$$\frac{dX_t}{dt} = -\frac{\beta_t}{2}X_t - \frac{\beta_t}{2}\,s_\theta(X_t, t).$$</div>
+  <p>For the VP-SDE, $f(x,t) = -\tfrac{\beta_t}{2}x$ and $g(t) = \sqrt{\beta_t}$, so this reads $f - \tfrac12 g^2 s_\theta$.</p>
+  <p class="muted">DDIM was never VP-specific; it is a general object in disguise.</p>
+</div>
+
+<!-- SLIDE: Theorem PF-ODE -->
+<div class="slide">
+  <h2>The Probability-Flow ODE</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (Song et al., 2021).</h3>
+    <p>Let $dX_t = f(X_t,t)\,dt + g(t)\,dW_t$ have marginals $p_t$. Then the deterministic flow</p>
+    <div class="math-block">$$\frac{dx}{dt} = f(x,t) - \tfrac12 g(t)^2\,\nabla_x \log p_t(x)$$</div>
+    <p>started from $x_0 \sim p_0$ has marginal law $p_t$ for every $t$.</p>
+  </div>
+  <p class="cite">Song, Sohl-Dickstein, Kingma, Kumar, Ermon, and Poole, ICLR 2021.</p>
+</div>
+
+<!-- SLIDE: PF-ODE outline -->
+<div class="slide">
+  <h2>Proof Outline</h2>
+  <div class="divider"></div>
+  <p>Both dynamics push mass around. Compare the PDEs their densities obey.</p>
+  <ol class="tight">
+    <li>Fokker–Planck for the SDE; rewrite the diffusion term as a divergence.</li>
+    <li>Continuity equation for the ODE; match velocity fields.</li>
+    <li>Same PDE, same initial data, so the same solution.</li>
+  </ol>
+  <div class="card">
+    <h3>Key trick.</h3>
+    <p>$\nabla p = p\,\nabla\log p$ turns the Laplacian into a divergence: <i>diffusion</i> becomes <i>transport</i>.</p>
+  </div>
+  <p class="muted">Nothing here is special to VP; $f$ and $g$ stay general.</p>
+</div>
+
+<!-- SLIDE: PF step 1 -->
+<div class="slide d4-tight">
+  <h2>Step 1: Diffusion as Transport</h2>
+  <div class="divider"></div>
+  <p>Fokker–Planck for the SDE:</p>
+  <div class="math-block">$$\partial_t p_t = -\nabla\cdot\big(f\,p_t\big) + \tfrac12 g^2 \Delta p_t.$$</div>
+  <p>Now $\Delta p_t = \nabla\cdot(\nabla p_t) = \nabla\cdot\big(p_t \nabla\log p_t\big)$, so</p>
+  <div class="highlight">$$\partial_t p_t = -\nabla\cdot\Big(\big[f - \tfrac12 g^2\nabla\log p_t\big]\,p_t\Big).$$</div>
+</div>
+
+<!-- SLIDE: PF step 2 + recap -->
+<div class="slide d4-tight">
+  <h2>Step 2: Match the Velocity</h2>
+  <div class="divider"></div>
+  <p>A deterministic flow $\dot x = v(x,t)$ transports its density by the continuity equation $\partial_t \rho_t = -\nabla\cdot(v\rho_t)$.</p>
+  <div class="math-block">$$v := f - \tfrac12 g^2\nabla\log p_t \quad\Longrightarrow\quad \rho_t \text{ and } p_t \text{ solve the same PDE.}$$</div>
+  <p class="muted">With $\rho_0 = p_0$ and uniqueness of the linear transport equation, $\rho_t = p_t$ for all $t$. $\blacksquare$</p>
+</div>
+
+<!-- SLIDE: why half (F12) -->
+<div class="slide">
+  <h2>Why <i>Half</i> the Score</h2>
+  <div class="divider"></div>
+  <div class="d4-fig">
+    <svg width="820" height="240" viewBox="0 0 820 240">
+      <rect x="70" y="50" width="300" height="60" fill="#003876" opacity="0.2" stroke="#003876"/>
+      <rect x="70" y="130" width="150" height="60" fill="#003876" opacity="0.55" stroke="#003876"/>
+      <rect x="450" y="50" width="300" height="60" fill="#003876" opacity="0.2" stroke="#003876"/>
+      <rect x="450" y="130" width="300" height="60" fill="#003876" opacity="0.55" stroke="#003876"/>
+      <text x="220" y="222" text-anchor="middle" font-size="17" fill="#666666">ODE: no noise re-injected</text>
+      <text x="600" y="222" text-anchor="middle" font-size="17" fill="#666666">SDE: must also undo its own noise</text>
+    </svg>
+    <span class="lab gray" style="left:220px; top:80px;">spreading to undo</span>
+    <span class="lab blue" style="left:145px; top:160px;">half score</span>
+    <span class="lab gray" style="left:600px; top:80px;">spreading to undo</span>
+    <span class="lab blue" style="left:600px; top:160px;">full score</span>
+  </div>
+  <p>Reverse SDE drift: $f - g^2\nabla\log p_t$. PF-ODE velocity: $f - \tfrac12 g^2\nabla\log p_t$.</p>
+  <p class="muted">The ODE only cancels the forward spreading; the reverse SDE also cancels its own.</p>
+</div>
+
+<!-- SLIDE: lambda family -->
+<div class="slide">
+  <h2>A Continuum of Reverse Dynamics</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$dX_t = \Big[f - \tfrac{1+\lambda^2}{2}\,g^2\,\nabla\log p_t\Big]dt + \lambda\, g\, d\bar W_t, \qquad \lambda \ge 0.$$</div>
+  <p>Every $\lambda$ has marginals $p_t$: extra drift pays for extra noise.</p>
+  <div class="d4-chain">
+    <span>$\lambda = 0$: PF-ODE</span><span class="arr focus">$\longleftrightarrow$</span><span>$\lambda = 1$: Anderson reverse SDE</span>
+  </div>
+  <p class="muted">Discrete $\sigma$-family and continuous $\lambda$-family are the same idea, twice.</p>
+</div>
+
+<!-- SLIDE: three dynamics -->
+<div class="slide d4-tight">
+  <h2>Three Dynamics, One Marginal</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned} \text{forward SDE:}\quad &amp; dX_t = f\,dt + g\,dW_t\\[2pt] \text{reverse SDE:}\quad &amp; dX_t = \big[f - g^2\nabla\log p_t\big]dt + g\,d\bar W_t\\[2pt] \text{PF-ODE:}\quad &amp; dX_t = \big[f - \tfrac12 g^2\nabla\log p_t\big]dt \end{aligned}$$</div>
+  <p class="muted">Different paths, different couplings across time, identical $p_t$ at every $t$.</p>
+</div>
+
+<!-- SLIDE: three dynamics figure (F11) -->
+<div class="slide">
+  <h2>Different Paths, Same Cloud</h2>
+  <div class="divider"></div>
+  <div class="d4-fig">
+    <svg width="860" height="330" viewBox="0 0 860 330">
+      <ellipse cx="130" cy="170" rx="26" ry="95" fill="#003876" opacity="0.13"/>
+      <ellipse cx="760" cy="170" rx="26" ry="95" fill="#003876" opacity="0.13"/>
+      <path d="M130,110 C260,60 330,215 450,140 C560,72 640,190 760,120" fill="none" stroke="#666666" stroke-width="2"/>
+      <path d="M130,235 C250,290 340,150 460,230 C570,300 650,155 760,225" fill="none" stroke="#666666" stroke-width="2"/>
+      <path d="M130,170 C280,146 400,205 520,168 C640,132 700,190 760,172" fill="none" stroke="#003876" stroke-width="3"/>
+      <text x="445" y="315" text-anchor="middle" font-size="17" fill="#666666">blue: smooth ODE trajectory. gray: noisy SDE trajectories.</text>
+    </svg>
+    <span class="lab gray" style="left:130px; top:60px;">$p_0$</span>
+    <span class="lab gray" style="left:760px; top:60px;">$p_T$</span>
   </div>
 </div>
 
 <!-- ====================================================================
-     PART 04: Consequences
+     PART 04: Consequences of determinism
      ==================================================================== -->
 <div class="slide section-slide left">
   <div class="section-num">04</div>
-  <h1>Consequences of Determinism</h1>
+  <h1>Consequences</h1>
   <div class="divider"></div>
-  <p class="subtitle">Why DDIM matters in practice</p>
+  <p class="subtitle">Acceleration, inversion, interpolation</p>
 </div>
 
-<!-- SLIDE: Three benefits -->
+<!-- SLIDE: fewer steps / solver orders -->
 <div class="slide">
-  <h2>Three Benefits of Determinism</h2>
+  <h2>Why Fewer Steps Work</h2>
   <div class="divider"></div>
-  <div class="grid-3">
-    <div class="card" style="text-align:center;">
-      <h3>Fewer steps</h3>
-      <p><em>ODE flow: coarse Euler still tracks.</em></p>
-      <p>$\sim 50$ steps match $1000$-step DDPM.</p>
-    </div>
-    <div class="card" style="text-align:center;">
-      <h3>Inversion</h3>
-      <p><em>$X^{(N)} \mapsto X^{(0)}$ is a function.</em></p>
-      <p>Run backwards: image $\to$ latent.</p>
-    </div>
-    <div class="card" style="text-align:center;">
-      <h3>Interpolation</h3>
-      <p><em>Smooth latent space.</em></p>
-      <p>Interpolate $X^{(N)}$, get smooth $X^{(0)}$.</p>
-    </div>
-  </div>
-  <div class="highlight">
-    <p>Common cause: $X^{(0)}$ is a deterministic function of $X^{(N)}$.</p>
-  </div>
+  <p>Once sampling is an ODE, accuracy is governed by solver order, not by noise.</p>
+  <table>
+    <thead><tr><th>Solver</th><th>Object</th><th>Global error</th></tr></thead>
+    <tbody>
+      <tr><td>Euler–Maruyama</td><td>SDE</td><td>$O(\Delta t^{1/2})$ strong</td></tr>
+      <tr><td>Explicit Euler = DDIM</td><td>ODE</td><td>$O(\Delta t)$</td></tr>
+      <tr><td>Heun, DPM-Solver</td><td>ODE</td><td>$O(\Delta t^2)$ and better</td></tr>
+    </tbody>
+  </table>
+  <p class="cite">Lu, Zhou, Bao, Chen, Li, and Zhu, "DPM-Solver", NeurIPS 2022.</p>
 </div>
 
-<!-- SLIDE: DDPM vs DDIM table -->
+<!-- SLIDE: quality vs steps (F15) -->
+<div class="slide">
+  <h2>Quality vs. Step Count</h2>
+  <div class="divider"></div>
+  <p>FID after $S$ steps. $\eta = 0$ is DDIM; $\eta = 1$ and $\hat\sigma$ are DDPM.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <img src="figs/ddim_table1_fid.png" alt="FID versus number of sampling steps for DDIM and DDPM" style="max-width:1120px;width:100%;height:auto;display:block;">
+  </div>
+  <ul class="arrow">
+    <li>CIFAR10 at $S = 10$: DDIM $13.36$, DDPM $\hat\sigma$ $367.43$</li>
+    <li>Same weights, same loss: only the sampler changed</li>
+  </ul>
+  <p class="cite">Song, Meng, and Ermon, "Denoising Diffusion Implicit Models", ICLR 2021 &mdash; Table 1.</p>
+</div>
+
+<!-- SLIDE: inversion map (F13) -->
+<div class="slide">
+  <h2>Inversion: Images Get Latents</h2>
+  <div class="divider"></div>
+  <div class="d4-fig">
+    <svg width="820" height="250" viewBox="0 0 820 250">
+      <defs>
+        <marker id="a7" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 z" fill="#003876"/>
+        </marker>
+        <marker id="a7g" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 z" fill="#2e8b57"/>
+        </marker>
+      </defs>
+      <rect x="90" y="70" width="150" height="100" rx="10" fill="#ffffff" stroke="#003876" stroke-width="2"/>
+      <rect x="580" y="70" width="150" height="100" rx="10" fill="#ffffff" stroke="#003876" stroke-width="2"/>
+      <path d="M240,100 L570,100" stroke="#003876" stroke-width="2.5" marker-end="url(#a7)"/>
+      <path d="M580,145 L250,145" stroke="#2e8b57" stroke-width="2.5" marker-end="url(#a7g)"/>
+      <text x="410" y="215" text-anchor="middle" font-size="17" fill="#666666">a bijection, up to discretization error</text>
+    </svg>
+    <span class="lab blue" style="left:165px; top:120px;">latent $X^{(N)}$</span>
+    <span class="lab blue" style="left:655px; top:120px;">image $X^{(0)}$</span>
+    <span class="lab blue" style="left:405px; top:78px;">generate</span>
+    <span class="lab green" style="left:415px; top:168px;">invert</span>
+  </div>
+  <p class="muted">Impossible for DDPM: its map is one-to-many by construction.</p>
+</div>
+
+<!-- SLIDE: inversion in practice -->
+<div class="slide d4-tight">
+  <h2>Inversion in Practice</h2>
+  <div class="divider"></div>
+  <p>Running the update upward needs $\varepsilon_\theta(X^{(n+1)}, n+1)$, the value we do not yet have.</p>
+  <div class="math-block">$$Y_{n+1} = Y_n + \big(\tau_{n+1} - \tau_n\big)\,\varepsilon_\theta\big(X^{(n)}, n\big) \quad\text{(explicit approximation)}.$$</div>
+  <p>Locally first-order accurate; error accumulates over the chain, so round trips drift.</p>
+  <p class="muted">Enables real-image editing, and explains why edits degrade with too few steps.</p>
+</div>
+
+<!-- SLIDE: interpolation, why linear fails -->
+<div class="slide d4-tight">
+  <h2>Interpolation: Why Linear Fails</h2>
+  <div class="divider"></div>
+  <p>For $X \sim \mathcal N(0, I_d)$ with $d$ large, $\|X\| \approx \sqrt d$, so the mass sits on a thin shell.</p>
+  <div class="math-block">$$\Big\|\tfrac12\big(X + X'\big)\Big\| \approx \sqrt{d/2} = \frac{\sqrt d}{\sqrt 2} \approx 0.71\sqrt d.$$</div>
+  <p>The linear midpoint sits off the shell: an input the model never saw.</p>
+  <p class="muted">Result: washed-out midpoints. Interpolate <i>along the sphere</i> instead.</p>
+</div>
+
+<!-- SLIDE: slerp (F14) -->
+<div class="slide">
+  <h2>Spherical Interpolation</h2>
+  <div class="divider"></div>
+  <div class="d4-fig">
+    <svg width="740" height="300" viewBox="0 0 740 300">
+      <circle cx="370" cy="150" r="110" fill="none" stroke="#c9d3de" stroke-width="2"/>
+      <line x1="370" y1="150" x2="272" y2="99" stroke="#666666" stroke-width="1.5"/>
+      <line x1="370" y1="150" x2="468" y2="99" stroke="#666666" stroke-width="1.5"/>
+      <line x1="272" y1="99" x2="468" y2="99" stroke="#F59E0B" stroke-width="2.5" stroke-dasharray="6 5"/>
+      <path d="M272,99 A110,110 0 0,1 468,99" fill="none" stroke="#003876" stroke-width="3"/>
+      <circle cx="272" cy="99" r="7" fill="#003876"/>
+      <circle cx="468" cy="99" r="7" fill="#003876"/>
+      <circle cx="370" cy="99" r="6" fill="#F59E0B"/>
+      <circle cx="370" cy="40" r="6" fill="#003876"/>
+      <line x1="370" y1="106" x2="370" y2="178" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="3 3"/>
+      <text x="370" y="292" text-anchor="middle" font-size="17" fill="#666666">typical set of the Gaussian prior</text>
+    </svg>
+    <span class="lab blue" style="left:225px; top:80px;">$X$</span>
+    <span class="lab blue" style="left:515px; top:80px;">$X'$</span>
+    <span class="lab amber" style="left:370px; top:190px;">linear: too short</span>
+    <span class="lab blue" style="left:370px; top:18px;">slerp: stays on the shell</span>
+  </div>
+  <p class="muted">$X_\lambda = \frac{\sin((1-\lambda)\omega)}{\sin\omega}X + \frac{\sin(\lambda\omega)}{\sin\omega}X'$, with $\omega$ the angle between them.</p>
+</div>
+
+<!-- SLIDE: DDPM or DDIM -->
 <div class="slide">
   <h2>DDPM or DDIM?</h2>
   <div class="divider"></div>
+  <p>Two ends of the dial: $\sigma_{n+1}^2 = \tilde\beta_{n+1}$ versus $\sigma \equiv 0$.</p>
   <table>
-    <thead>
-      <tr><th></th><th>DDPM sampler</th><th>DDIM sampler</th></tr>
-    </thead>
+    <thead><tr><th></th><th>DDPM sampler</th><th>DDIM sampler</th></tr></thead>
     <tbody>
-      <tr><td>Forward</td><td>Markov</td><td>Non-Markovian</td></tr>
-      <tr><td>Reverse variance</td><td>$\sigma_n$ fixed</td><td>$\sigma_n$ free</td></tr>
-      <tr><td>Determinism</td><td>Stochastic</td><td>Tunable to $0$</td></tr>
-      <tr><td>Training</td><td>$\epsilon$-prediction</td><td>$\epsilon$-prediction</td></tr>
-      <tr><td>Step count</td><td>$\sim 1000$</td><td>$20$–$50$</td></tr>
-      <tr><td>Inversion</td><td>Not possible</td><td>Trivial at $\sigma_n=0$</td></tr>
+      <tr><td>Steps</td><td>Hundreds to $1000$</td><td>Tens</td></tr>
+      <tr><td>Map</td><td>Stochastic, one-to-many</td><td>Deterministic bijection</td></tr>
+      <tr><td>Diversity per seed</td><td>High</td><td>None</td></tr>
+      <tr><td>Best at large budget</td><td>Slight edge in fidelity</td><td>Comparable</td></tr>
     </tbody>
   </table>
+  <p class="muted">Same weights either way, so decide per use case, at sampling time.</p>
 </div>
 
-<!-- SLIDE: Recap -->
+<!-- SLIDE: recap -->
 <div class="slide">
-  <h2>Lecture Recap</h2>
+  <h2>Recap</h2>
   <div class="divider"></div>
-  <ul>
-    <li>DDPM $\epsilon$-loss depends only on $q(X^{(n)}\,|\,X^{(0)})$.</li>
-    <li><strong>DDIM</strong>: non-Markovian forward, same marginals, parameter $\{\sigma_n\}$.</li>
-    <li>$\sigma_n \equiv 0$: deterministic generator, probability-flow ODE.</li>
-    <li>Training shared with DDPM. Sampling is a solver choice.</li>
-    <li>Wins: fewer steps, invertibility, clean latent interpolation.</li>
+  <ul class="tight">
+    <li>The $\varepsilon$-loss reads only marginals $q(x^{(n)}|x^{(0)})$.</li>
+    <li>A $\sigma$-indexed non-Markovian family shares those marginals.</li>
+    <li>$\sigma^2 = \tilde\beta$ gives DDPM; $\sigma = 0$ gives a deterministic map.</li>
+    <li>Deterministic DDIM is exact Euler for $dY/d\tau = \varepsilon_\theta$, i.e. the PF-ODE.</li>
+    <li>Payoffs: strided sampling, inversion, spherical latent interpolation.</li>
   </ul>
+  <p class="muted">Training fixes the marginals. Sampling is a solver choice.</p>
 </div>
 
 <!-- SLIDE: End / bridge -->
@@ -463,7 +1229,7 @@
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 31</div>
+<div class="slide-num" id="slideNum">1 / 75</div>
 
 </div><!-- end deck -->
 

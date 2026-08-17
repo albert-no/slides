@@ -22,10 +22,10 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 - **`courses/privacy/`** — Privacy series. Three artifact types: `lectures/` (slides, 6 numbered topic folders), `exam/` (homework/midterm/final set), and `overleaf/` (frozen legacy source). See `courses/privacy/OUTLINE.md`.
   - `lectures/01-dp/` — Differential privacy: 8 decks, `dp1`–`dp7` foundations + `dp8-fl.html` capstone (NeurIPS 2023: RRSC result). LaTeX source in `tex/dp.tex`
   - `lectures/02-generative/` — Generative-model review: 5 diffusion lectures (Bayes-route, DDPM, SDE, DDIM, guidance + discrete) + 1 brief LLM deck. `note/2_difffusion.tex` is LaTeX source for Diffusion Lectures 1–2
-  - `lectures/03-memorization/` — Memorization in generative models (2 decks split 2026-05: `memorization-diffusion.html` covers intro/lawsuits/Bartz, diffusion detection, SAIL, CLIP-pad; `memorization-llm.html` covers canary→ACR). Paper-figure assets in `figs/`
+  - `lectures/03-memorization/` — Memorization in generative models (2 decks split 2026-05: `memorization-diffusion.html` covers intro/lawsuits/Bartz, three formal definitions, diffusion detection, SAIL, CLIP-pad, with companion note `memorization-diffusion-note.html`; `memorization-llm.html` covers exposure theory → Feldman → extraction/Min-K → ACR → books → defenses, math-detail revision 2026-08 at 128 slides with companion note `memorization-llm-note.html`). Paper-figure assets in `figs/`
   - `lectures/04-mia/` — Membership inference attacks (5 lectures, paired notes; legacy `old/MIA.html`)
-  - `lectures/05-unlearning/` — Machine unlearning (definitions, classification, LLM, benchmarks, lab work; sourced from `slide.pdf`)
-  - `lectures/06-watermark/` — LLM watermarking (1 deck: green-list, distortion-free, undetectable, robust, radioactivity)
+  - `lectures/05-unlearning/` — Machine unlearning (2 decks, both math-detail revised 2026-08 with per-slide companion notes: `unlearning1-foundations.html` 109 slides — definitions, certified deletion with proofs, SISA, classification, metrics-as-test; `unlearning2-llm.html` 100 slides — why the certificate does not transfer, the LLM objective family, benchmarks as main figure + measurement claim, closure under fine-tuning; sourced from `slide.pdf`). Paper-figure assets in `figs/`
+  - `lectures/06-watermark/` — LLM watermarking (1 deck + speaker note, 123 slides: hypothesis-test frame, green-list, distortion-free, undetectable, limits, robust, radioactivity/SynthID/dgMARK)
   - `exam/` — homework (HW1–4), midterms 2025–26, finals 2024–25 + 2026/27 drafts (`.tex`/`.pdf`/`.html`, shared style files)
   - `overleaf/` — frozen Overleaf archive: lecture-note `.tex` (`1_dp`/`2_difffusion`/`3_watermark`/`4_MIA`), `hw_exam/` (all HW + exams), `images/`, `old/` drafts, `.bib`/style files
 - **`courses/trustworthy-ai/`** — Trustworthy AI course (**junior/senior undergrad**, mixed majors, 15 weeks × 1.5 hr). Concept-first: each lecture is motivation → foundational works → 2025–26 frontier, ≤1 intuitive formula per concept, no proofs, plus an optional Colab demo. Decks live flat (`lecNN-*.html`). Five modules: Foundations (Wk 1) · Privacy & Data (2–5) · Reliability (6–7) · Security (8–11) · Provenance & Fairness (12–14) · Synthesis (15). **All 15 lectures + 4 backups + 15 technical supplements (`lecNNtech.html`) — screenshot-audited, real cited paper figures embedded, lint-clean** (no figure-TODO markers remain). Each lecture has a `-note.html` speaker script; each has an optional `lecNNtech.html` holding the formal math the main deck keeps as a picture. Backups: sycophancy, copyright, agentic autonomy, model stealing. The light undergrad pass over topics treated rigorously in `courses/privacy/`. See `courses/trustworthy-ai/OUTLINE.md`.
@@ -51,14 +51,17 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Differential entropy + bin discretization | `courses/infotheory/lectures/03-diffentropy/diffentropy1-foundations.html:106, :117` |
 | Gaussian MaxEnt / Hadamard / EPI | `courses/infotheory/lectures/03-diffentropy/diffentropy2-maxent-gaussian.html:143, :221, :332` |
 | Shannon–Hartley / water-filling / I-MMSE | `courses/infotheory/lectures/03-diffentropy/diffentropy3-mi-awgn.html:161, :291, :389` |
-| Score function / Tweedie's formula | `courses/privacy/lectures/02-generative/diffusion1-foundations.html:362-425`; theorem at `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:121` |
-| DDPM forward + VLB derivation | `courses/privacy/lectures/02-generative/diffusion2-ddpm.html:189-333`; `courses/infotheory/lectures/07-diffusion/diff2-diffusion.html:153-212` |
-| SDE / Fokker–Planck / Anderson reverse | `courses/privacy/lectures/02-generative/diffusion3-sde-score.html` (FP `:148`, Anderson `:234`, score matching `:339`) |
-| DDIM (non-Markovian, deterministic, ODE) | `courses/privacy/lectures/02-generative/diffusion4-ddim.html` (marginal invariance `:164`, predicted clean `:234`) |
-| Classifier guidance + CFG | `courses/privacy/lectures/02-generative/diffusion5-guidance-discrete.html:202-282` |
-| Discrete diffusion / score-entropy loss | `courses/privacy/lectures/02-generative/diffusion5-guidance-discrete.html:287-425`; `talks/kics260521dllm/kics260521dllm.html:192-205` (SEDD) |
-| LLM brief overview (autoregressive, transformer, NLL, sampling) | `courses/privacy/lectures/02-generative/llm.html:72-296` |
-| LLM privacy-hook map (loss / verbatim / sampling / conditional) | `courses/privacy/lectures/02-generative/llm.html:258-281` |
+| Score function / Tweedie's formula | `courses/privacy/lectures/02-generative/diffusion1-foundations.html:679, :695` (theorem + 3-slide proof); theorem at `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:121` |
+| DDPM forward + VLB derivation | `courses/privacy/lectures/02-generative/diffusion2-ddpm.html:187-708`; `courses/infotheory/lectures/07-diffusion/diff2-diffusion.html:153-212` |
+| SDE / Fokker–Planck / Anderson reverse | `courses/privacy/lectures/02-generative/diffusion3-sde-score.html` (FP `:379`, Anderson `:618`, score matching `:868`, VP kernel `:1021`) |
+| DDIM (non-Markovian, deterministic, ODE) | `courses/privacy/lectures/02-generative/diffusion4-ddim.html` (loss invariance `:223`, σ-family `:463`, marginal invariance `:475`, predicted clean `:715`, exact Euler `:900`, PF-ODE `:975`) |
+| Classifier guidance + inpainting + CFG | `courses/privacy/lectures/02-generative/diffusion5-guidance-discrete.html` (conditional score `:241`, tilted target `:445`, coordinatewise forward `:555`, exact paste `:633`, CFG identity `:811`) |
+| Discrete diffusion / score-entropy loss | `courses/privacy/lectures/02-generative/diffusion5-guidance-discrete.html` (rate matrix `:1204`, reverse rate `:1217`, ratio score `:1308`, score entropy `:1373`, denoising score entropy `:1445`); `talks/kics260521dllm/kics260521dllm.html:192-205` (SEDD) |
+| LLM overview (tokens, transformer, NLL, post-training, sampling) | `courses/privacy/lectures/02-generative/llm.html` (chain rule `:214`, attention `:329`, causal mask `:369`, generation cost `:499`) |
+| Cross-entropy = entropy + KL; perplexity | `courses/privacy/lectures/02-generative/llm.html:547, :592, :604` |
+| KL-regularized RLHF optimum → DPO (+ NPO preview) | `courses/privacy/lectures/02-generative/llm.html:810` (theorem), `:917` (DPO), `:939` (NPO) |
+| Temperature / top-$k$ / nucleus sampling | `courses/privacy/lectures/02-generative/llm.html:975, :987, :1043` |
+| LLM privacy-hook map (loss / verbatim / sampling / conditional) | `courses/privacy/lectures/02-generative/llm.html:1089` |
 | Rate–distortion theorem (Shannon) | `courses/infotheory/lectures/04-lossy/lossy1-foundations.html:258-311` |
 | Lloyd–Max / scalar quantization | `courses/infotheory/lectures/04-lossy/lossy1-foundations.html:143-199` |
 | Gaussian R(D), Shannon lower bound, pruning | `courses/infotheory/lectures/04-lossy/lossy2-gaussian-laplacian.html:63-232` |
@@ -73,42 +76,58 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Fisher divergence + score function | `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:91, :141` |
 | Denoising score matching theorem (Vincent 2011) | `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:193, :220-253` |
 | Diffusion ELBO $\equiv$ DSM theorem | `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:198` (capstone); cites Vincent from `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:193` |
-| MIA foundations (Homer, evaluation metrics) | `courses/privacy/lectures/04-mia/mia1-foundations.html` |
-| Shadow models (Shokri / LOGAN / seq2seq) | `courses/privacy/lectures/04-mia/mia2-shadow.html` |
+| MIA foundations (Homer power analysis, MI game, Neyman–Pearson, DP ROC cap, metrics) | `courses/privacy/lectures/04-mia/mia1-foundations.html` |
+| Shadow models as Monte-Carlo estimation of $P_1,P_0$ (Shokri / per-class / LOGAN / seq2seq) | `courses/privacy/lectures/04-mia/mia2-shadow.html` |
+| Shadow-model correctness + mis-specification (Prop 1, Thm 1, Cor 1 — with proofs) | `courses/privacy/lectures/04-mia/mia2-shadow.html:280, :321, :437` |
+| Optimal GAN discriminator $D^\star = p_{\text{data}}/(p_{\text{data}}+p_g)$ + JSD identity (proofs) | `courses/privacy/lectures/04-mia/mia2-shadow.html:1152, :1186` — privacy framing (attack signal is a density ratio); information-theoretic framing at `courses/infotheory/lectures/06-divergence/div1-fdivergence-gan.html:330` |
+| Uncalibrated perplexity threshold — degenerate LRT, pooling costs half the population | `courses/privacy/lectures/04-mia/mia2-shadow.html:1423, :1500` |
 | MIA theory (Yeom / Sablayrolles / ML-Leaks / Nasr) | `courses/privacy/lectures/04-mia/mia3-theory.html` |
 | LiRA, RMIA, label-only, attack hierarchy | `courses/privacy/lectures/04-mia/mia4-modern.html` |
-| LLM MIA (perplexity, neighbourhood, SPV, InfoRMIA) | `courses/privacy/lectures/04-mia/mia5-llm.html` |
-| Bartz v. Anthropic $1.5B settlement (Reuters cite) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:140` |
-| Diffusion memorization — Carlini/Somepalli/Webster/Wen/Ross | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:206-365` |
-| SAIL — Lemmas 4.1–4.3 + eigenvalue figure + objective | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:377-540` |
-| CLIP padding-embedding memorization (Kim & No 2026) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:542-631` |
-| Memorization — canary entropy, exposure, $k$-extractable | `courses/privacy/lectures/03-memorization/memorization-llm.html:105-142` |
-| Counterfactual memorization + long-tail theorem (Feldman) | `courses/privacy/lectures/03-memorization/memorization-llm.html:144` |
-| Repetition scaling formal law | `courses/privacy/lectures/03-memorization/memorization-llm.html:222` |
-| Min-K%++ probe | `courses/privacy/lectures/03-memorization/memorization-llm.html:274` |
-| ACR (Schwarzschild 2024) + MiniPrompt | `courses/privacy/lectures/03-memorization/memorization-llm.html:313-354` |
-| Cooper book extraction (open-weight LLMs) | `courses/privacy/lectures/03-memorization/memorization-llm.html:384` |
-| Certified $(\varepsilon,\delta)$-unlearning | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:160` |
-| Influence function (IU) — leads into the Newton block | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:174` |
-| Newton-step (8-slide derivation) + Sekhari capacity theorems | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:191-312` |
-| MIA: optimal test + DP cap + Yeom gap (HW4 woven in) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:472` |
-| SCRUB / SalUn / $\ell_1$-sparse classification unlearn | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:367-431` |
-| IDI / COLA (lab unlearning eval) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:502-533` |
-| GA collapse + NPO bounded + SimNPO | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:103-165` |
-| ME+GD / IDK / ELM / LUNAR (LLM unlearn) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:166-241` |
-| TOFU / WMDP / RWKU / MUSE benchmarks (main-figure images) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:250-302` |
-| Benign + syntactic relearning (lab) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:303-328` |
+| Closed form of the LiRA test (Thm 1) + per-example calibration dominates pooling (Prop 1) | `courses/privacy/lectures/04-mia/mia4-modern.html:385, :548` |
+| Nested conditioning cannot hurt (Thm 2) — and why the ordering is only partial | `courses/privacy/lectures/04-mia/mia4-modern.html:951, :1021` |
+| Post-processing cannot help an MIA defense (Prop 5 / Cor 3, proved from DPI) | `courses/privacy/lectures/04-mia/mia4-modern.html:1609, :1632` |
+| Diffusion MIA — per-timestep reconstruction loss as the membership statistic | `courses/privacy/lectures/04-mia/mia4-modern.html:1747, :1811` |
+| LLM MIA (perplexity, neighbourhood, SPV-MIA, context-aware, InfoRMIA) as five estimators of one null | `courses/privacy/lectures/04-mia/mia5-llm.html:545` |
+| Blind baselines beat published LLM MIAs — a benchmark validity failure (Prop 7, proved) | `courses/privacy/lectures/04-mia/mia5-llm.html:1424, :1472` |
+| Per-record instability: good AUC, coin-flip decisions (Prop 6, proved) | `courses/privacy/lectures/04-mia/mia5-llm.html:1306` |
+| Extractable $\subsetneq$ inferable (Prop 8, proved, with counterexample to the converse) | `courses/privacy/lectures/04-mia/mia5-llm.html:1733, :1768` |
+| Bartz v. Anthropic $1.5B settlement (Reuters cite) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:162` |
+| Memorization defined three ways (extraction / SSCD / Webster taxonomy) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:269, :426, :518` |
+| Diffusion memorization — Carlini/Somepalli/Webster/Wen/Ross | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:215-891` |
+| Local intrinsic dimension (small-ball def + Levina–Bickel MLE) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:815, :855` |
+| Smoothed thin support — $D-k$ eigenvalues at $-\sigma^{-2}$ (theorem + proof) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:941-1012` |
+| SAIL — Lemmas 4.1–4.3 with proofs + eigenvalue figure + objective | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:892-1421` |
+| CLIP padding-embedding memorization (Kim & No 2026) | `courses/privacy/lectures/03-memorization/memorization-diffusion.html:1423-1620` |
+| Memorization — canary, exposure theory, $k$-extractable | `courses/privacy/lectures/03-memorization/memorization-llm.html:196-460`, `:735` |
+| Counterfactual memorization + long-tail theorem (Feldman) | `courses/privacy/lectures/03-memorization/memorization-llm.html:511-660` |
+| Repetition scaling formal law | `courses/privacy/lectures/03-memorization/memorization-llm.html:872` |
+| Min-K%++ probe | `courses/privacy/lectures/03-memorization/memorization-llm.html:1162` |
+| ACR (Schwarzschild 2024) + MiniPrompt + counting bound | `courses/privacy/lectures/03-memorization/memorization-llm.html:1268-1534` |
+| Cooper book extraction (open-weight LLMs) | `courses/privacy/lectures/03-memorization/memorization-llm.html:1586-1666` |
+| Certified $(\varepsilon,\delta)$-unlearning (Definition 3; Props 1–2; certified $\ne$ DP) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:259-381` |
+| Influence function (IU) — derived from the IFT, leads into the Newton block | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:463-571` |
+| Theorems 1–3: Newton step (proved), Gaussian certification, Sekhari capacity | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:572-983` |
+| MIA recall + Proposition 4 (certification caps every metric; HW4 woven in) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:1522-1571` |
+| SCRUB / SalUn / $\ell_1$-sparse / RURK classification unlearn | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:1241-1412` |
+| IDI / COLA (lab unlearning eval, both with paper figures) | `courses/privacy/lectures/05-unlearning/unlearning1-foundations.html:1641-1748` |
+| Why certified unlearning fails for LLMs (P1–P4; Prop 1, Lemmas 2–3, Prop 4) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:107-460` |
+| GA / NPO / SimNPO / entropy-max / ELM / RMU — one weighted-gradient family (Props 5/8/9/10, Thms 6/7) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:461-911` |
+| TOFU / WMDP / RWKU / MUSE — main figure + what each actually measures (Thm 11, Cor 12, Props 13–14) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:912-1304` |
+| Deletion vs suppression — closure under a fine-tuning budget (Def 15, Prop 16, Cor 17) | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:1305-1613` |
+| Benign + syntactic relearning (lab), DUSK, R-TOFU | `courses/privacy/lectures/05-unlearning/unlearning2-llm.html:1407-1520` |
 | Position: "Unlearning" overused in LLMs (5-min ICML talk) | `talks/icml2026/icml2026.html` |
 | REFT (first-token diversification for RLVR) | `talks/postech260819/postech260819.html:145-455` (rebuttal: 373-420) |
 | SafePath (8-token safety primer for LRMs) | `talks/postech260819/postech260819.html:456-591` |
 | Benign DPO attack + fine-tuning-as-a-service | `talks/postech260819/postech260819.html:592-798` (rebuttal: 696-746) |
-| Kirchenbauer green-list + z-test + entropy bound | `courses/privacy/lectures/06-watermark/watermark.html:164-222` |
-| Gumbel distribution + Gumbel-max trick + proof | `courses/privacy/lectures/06-watermark/watermark.html:252-295` |
-| Aaronson distortion-free + proof | `courses/privacy/lectures/06-watermark/watermark.html:309-337` |
-| Kuditipudi edit-distance robustness theorem | `courses/privacy/lectures/06-watermark/watermark.html:356` |
-| Christ–Gunn–Zamir undetectable + PRF construction | `courses/privacy/lectures/06-watermark/watermark.html:386-419` |
-| Adaptive watermark + WaterMax | `courses/privacy/lectures/06-watermark/watermark.html:486-516` |
-| SynthID-Text production watermark | `courses/privacy/lectures/06-watermark/watermark.html:542` |
+| Kirchenbauer green-list + z-test + entropy-bound proof | `courses/privacy/lectures/06-watermark/watermark.html:245-592` |
+| Gumbel distribution + Gumbel-max trick + full proof | `courses/privacy/lectures/06-watermark/watermark.html:616-742` |
+| Aaronson rule + distortion-free definition and proof | `courses/privacy/lectures/06-watermark/watermark.html:743-810` |
+| Kuditipudi ITS + edit-distance robustness | `courses/privacy/lectures/06-watermark/watermark.html:824-957` |
+| Christ–Gunn–Zamir undetectable + PRF construction | `courses/privacy/lectures/06-watermark/watermark.html:1014-1268` |
+| Watermarking limits, impossibility, detection/distortion tradeoff | `courses/privacy/lectures/06-watermark/watermark.html:1270-1422` |
+| Unigram-Watermark robustness + adaptive $\delta_t$ | `courses/privacy/lectures/06-watermark/watermark.html:1487-1620` |
+| SynthID-Text production watermark | `courses/privacy/lectures/06-watermark/watermark.html:1705` |
+| dgMARK diffusion-LM watermark (scheme + detection) | `courses/privacy/lectures/06-watermark/watermark.html:1745-1774` |
 | **DP foundations series (dp1–dp7)** | `courses/privacy/lectures/01-dp/dp1`…`dp7-ml-paradigms.html` |
 | DP definition / LDP vs central / PrivUnit | `courses/privacy/lectures/01-dp/dp8-fl.html:364-569` |
 | RRSC + k-closest exact-optimality (NeurIPS 2023) | `courses/privacy/lectures/01-dp/dp8-fl.html:571-822` |
@@ -133,7 +152,7 @@ Same topic, different decks (use the more recent / more detailed):
 - **VAE / ELBO**: rigorous derivation `courses/infotheory/lectures/07-diffusion/diff1-vae-elbo.html`
 - **Hierarchical-VAE view of diffusion**: `courses/infotheory/lectures/07-diffusion/diff2-diffusion.html` (information-theoretic, Markov rewrite)
 - **Diffusion from-scratch (Bayes route)**: `courses/privacy/lectures/02-generative/diffusion1-foundations.html` (Taylor + complete-square proof, less abstract)
-- **Tweedie**: brief `courses/privacy/lectures/02-generative/diffusion1-foundations.html:374`; with proof `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:135`
+- **Tweedie**: convolution-derivative proof `courses/privacy/lectures/02-generative/diffusion1-foundations.html:692-753`; alternate proof `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:135`
 - **$f$-divergence variational dual**: brief in `courses/infotheory/lectures/05-mi/mi1-bounds.html:261` (KL instances); full development in `courses/infotheory/lectures/06-divergence/div1-fdivergence-gan.html:121-300`
 - **Score matching $\equiv$ diffusion training**: Vincent DSM theorem + proof `courses/infotheory/lectures/06-divergence/div2-fisher-score.html:193-253`; ELBO $\equiv$ DSM capstone `courses/infotheory/lectures/07-diffusion/diff3-parameterizations.html:156-209`
 

@@ -3,13 +3,56 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Diffusion 3 — SDE and Score Matching</title>
+<title>Diffusion 3 &mdash; SDE and Score Matching</title>
 <link rel="stylesheet" href="../../../../reference/colors_and_type.css">
 <link rel="stylesheet" href="../../../../reference/deck.css">
 <link rel="stylesheet" href="../../../../reference/katex/katex.min.css">
 <script defer src="../../../../reference/katex/katex.min.js"></script>
 <script defer src="../../../../reference/katex/contrib/auto-render.min.js"
   onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.d3-algo {
+  background: var(--light);
+  border: 1px solid var(--slate);
+  border-left: 3px solid var(--yonsei-blue);
+  border-radius: 0 10px 10px 0;
+  padding: 16px 22px;
+}
+.d3-algo-title {
+  font-weight: 600;
+  color: var(--yonsei-blue);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.d3-algo > ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.d3-algo > ol > li {
+  counter-increment: step;
+  padding: 7px 0 7px 52px;
+  position: relative;
+  line-height: 1.45;
+}
+.d3-algo > ol > li::before {
+  content: counter(step) ".";
+  position: absolute; left: 10px; top: 7px;
+  font-weight: 700; color: var(--yonsei-blue);
+  width: 32px; text-align: right;
+}
+.d3-algo > ol > li + li { border-top: 1px solid var(--slate); }
+.d3-algo ol ol { list-style: lower-alpha; padding-left: 26px; margin: 4px 0 0; }
+.d3-algo ol ol li { padding: 3px 0; line-height: 1.45; }
+
+.d3-fig { position: relative; width: fit-content; margin: 12px auto 0; }
+.d3-fig .lab { position: absolute; font-size: 1.15rem; color: var(--charcoal); transform: translate(-50%, -50%); white-space: nowrap; }
+.d3-fig .lab.blue { color: var(--yonsei-blue); font-weight: 600; }
+.d3-fig .lab.red { color: var(--warn); font-weight: 600; }
+.d3-fig .lab.green { color: var(--success); font-weight: 600; }
+.d3-fig .lab.gray { color: var(--gray-text); }
+.d3-chain { display: flex; justify-content: center; align-items: center; gap: 14px; margin: 24px 0 22px; font-size: 1.4rem; color: var(--charcoal); }
+.d3-chain .arr { color: var(--gray-text); }
+.d3-chain .arr.focus { color: var(--yonsei-blue); font-weight: 600; }
+.d3-tight .math-block { margin: 8px 0; }
+</style>
 </head>
 <body data-brand-logo="../../../../reference/kor-eng2.png">
 
@@ -36,7 +79,7 @@
       <div class="toc-rule"></div>
       <div>
         <div class="toc-label">Discrete to continuous</div>
-        <div class="toc-sub">VE / VP as SDE limits</div>
+        <div class="toc-sub">Brownian motion, VE and VP as SDE limits</div>
       </div>
     </div>
     <div class="toc-item">
@@ -63,6 +106,14 @@
         <div class="toc-sub">Tractable loss via the noise kernel</div>
       </div>
     </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Kernel, noise prediction, DDPM</div>
+        <div class="toc-sub">Closed-form kernel, training and sampling</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -73,40 +124,130 @@
   <div class="section-num">01</div>
   <h1>Discrete to Continuous</h1>
   <div class="divider"></div>
-  <p class="subtitle">VE and VP as limits of a stochastic differential equation</p>
+  <p class="subtitle">Brownian motion, and VE / VP as limits of an SDE</p>
+</div>
+
+<!-- SLIDE: why continuous time -->
+<div class="slide">
+  <h2>Why Continuous Time</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Gaussian reverse step is valid only for small $\beta_n$.</li>
+    <li>Shrink $\beta_n$: error vanishes, step count explodes.</li>
+  </ul>
+  <div class="d3-fig">
+    <svg width="880" height="214" viewBox="0 0 880 214">
+      <defs>
+        <marker id="a1" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+          <path d="M 0 0 L 7 3 L 0 6 z" fill="#003876"/>
+        </marker>
+      </defs>
+      <line x1="55" y1="190" x2="370" y2="190" stroke="#666666" stroke-width="1.2"/>
+      <polyline points="60,172 95,172 95,142 130,142 130,152 165,152 165,112 200,112 200,122 235,122 235,82 270,82 270,96 305,96 305,56 345,56"
+        fill="none" stroke="#003876" stroke-width="2.6"/>
+      <text x="212" y="212" font-size="17" fill="#666666" text-anchor="middle">discrete chain</text>
+      <line x1="400" y1="120" x2="475" y2="120" stroke="#003876" stroke-width="2" marker-end="url(#a1)"/>
+      <line x1="510" y1="190" x2="825" y2="190" stroke="#666666" stroke-width="1.2"/>
+      <path d="M 515 172 C 545 152, 558 168, 580 134 C 604 100, 618 138, 645 108 C 672 80, 686 114, 715 78 C 745 44, 760 82, 800 56"
+        fill="none" stroke="#003876" stroke-width="2.6"/>
+      <text x="667" y="212" font-size="17" fill="#666666" text-anchor="middle">continuous path</text>
+    </svg>
+    <span class="lab blue" style="left:437px; top:100px;">$\Delta t \to 0$</span>
+  </div>
+</div>
+
+<!-- SLIDE: random walk to Brownian motion -->
+<div class="slide">
+  <h2>From Random Walk to Brownian Motion</h2>
+  <div class="divider"></div>
+  <p>Same time span, finer grid, noise rescaled at each refinement.</p>
+  <div class="d3-fig">
+    <svg width="880" height="212" viewBox="0 0 880 212">
+      <line x1="35" y1="188" x2="270" y2="188" stroke="#666666" stroke-width="1.2"/>
+      <polyline points="40,162 68,132 96,152 124,106 152,126 180,86 208,112 236,70 264,92"
+        fill="none" stroke="#003876" stroke-width="2.4"/>
+      <text x="152" y="208" font-size="17" fill="#666666" text-anchor="middle">8 steps</text>
+      <line x1="315" y1="188" x2="550" y2="188" stroke="#666666" stroke-width="1.2"/>
+      <polyline points="320,162 334,144 348,154 362,130 376,140 390,118 404,132 418,108 432,120 446,98 460,110 474,90 488,100 502,82 516,94 530,76 544,88"
+        fill="none" stroke="#003876" stroke-width="2.4"/>
+      <text x="432" y="208" font-size="17" fill="#666666" text-anchor="middle">32 steps</text>
+      <line x1="595" y1="188" x2="830" y2="188" stroke="#666666" stroke-width="1.2"/>
+      <polyline points="600,162 607,152 614,158 621,144 628,150 635,138 642,146 649,132 656,140 663,126 670,134 677,122 684,130 691,118 698,126 705,114 712,122 719,110 726,118 733,106 740,114 747,102 754,110 761,98 768,106 775,94 782,102 789,90 796,98 803,86 810,94 817,82 824,88"
+        fill="none" stroke="#003876" stroke-width="2.4"/>
+      <text x="712" y="208" font-size="17" fill="#666666" text-anchor="middle">128 steps</text>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">Limit exists, and it is Brownian motion.</p>
+</div>
+
+<!-- SLIDE: Wiener process definition -->
+<div class="slide d3-tight">
+  <h2>Definition &mdash; Brownian Motion</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (Wiener process).</h3>
+    <ul>
+      <li>$W_0 = 0$, and $t \mapsto W_t$ is continuous.</li>
+      <li>Increments over disjoint intervals are independent.</li>
+      <li>Gaussian increments, variance equal to elapsed time:</li>
+    </ul>
+    <div class="math-block">$$W_{t+\Delta t} - W_t \;\sim\; \mathcal{N}(0, \Delta t).$$</div>
+  </div>
+  <p class="muted">Increment scale is $\sqrt{\Delta t}$, not $\Delta t$.</p>
+</div>
+
+<!-- SLIDE: sqrt(dt) scaling -->
+<div class="slide">
+  <h2>Why the $\sqrt{\Delta t}$ Scaling</h2>
+  <div class="divider"></div>
+  <p>Split $[0,t]$ into $N = t/\Delta t$ steps of size $c\,Z_i$ with $Z_i$ i.i.d.</p>
+  <div class="math-block">$$\mathrm{Var}\Bigl(\sum_{i=1}^{N} c\,Z_i\Bigr) = N c^2 = \frac{t}{\Delta t}\,c^2 \;\stackrel{!}{=}\; t \quad\Longrightarrow\quad c = \sqrt{\Delta t}.$$</div>
+  <p><strong>Key trick.</strong> Drift accumulates like $\Delta t$; noise accumulates like $\sqrt{\Delta t}$.</p>
+  <div class="highlight">
+    <p>$(\sqrt{\Delta t})^2 = \Delta t$: squared noise is first order in time.</p>
+  </div>
 </div>
 
 <!-- SLIDE: VE as SDE limit -->
 <div class="slide">
   <h2>VE as an SDE</h2>
   <div class="divider"></div>
-  <p>Discrete VE: $X^{(n)} = X^{(n-1)} + \sqrt{\beta}\,Z^{(n)}$, $\;Z^{(n)} \sim \mathcal{N}(0,1)$ i.i.d.</p>
-  <p>Let each step span time $\Delta t$. Rescale noise so total variance over $[0,T]$ stays fixed: $Z^{(n)} \to \sqrt{\Delta t}\,Z$.</p>
+  <p>Discrete VE step: $X^{(n)} = X^{(n-1)} + \sqrt{\beta}\,Z^{(n)}$ with $Z^{(n)}$ standard normal.</p>
+  <p>Let one step span time $\Delta t$ and rescale the noise by $\sqrt{\Delta t}$:</p>
   <div class="math-block">$$X_{t+\Delta t} - X_t \;=\; \sqrt{\beta\,\Delta t}\,Z \;=\; \sqrt{\beta}\,\Delta W_t,\qquad \Delta W_t \sim \mathcal{N}(0,\Delta t).$$</div>
   <p>Take $\Delta t \to 0$:</p>
   <div class="math-block">$$dX_t \;=\; \sqrt{\beta}\,dW_t.$$</div>
+</div>
+
+<!-- SLIDE: VE marginal check -->
+<div class="slide">
+  <h2>VE Marginal &mdash; Consistency Check</h2>
+  <div class="divider"></div>
+  <p>Integrate directly: $X_t = X_0 + \sqrt{\beta}\,W_t$.</p>
+  <div class="math-block">$$X_t \,|\, X_0 \;\sim\; \mathcal{N}\bigl(X_0,\; \beta t\bigr).$$</div>
+  <p>Discrete chain after $n$ steps had variance $n\beta\,\Delta t = \beta t$. Same answer.</p>
+  <p class="muted">Variance grows without bound: variance exploding.</p>
 </div>
 
 <!-- SLIDE: VP as SDE limit -->
 <div class="slide">
   <h2>VP as an SDE</h2>
   <div class="divider"></div>
-  <p>Discrete VP, step span $\Delta t$, schedule $\beta_n = \beta_t\,\Delta t$:</p>
+  <p>Discrete VP with step span $\Delta t$ and schedule $\beta_n = \beta_t\,\Delta t$:</p>
   <div class="math-block">$$\begin{aligned}
-    X_{t+\Delta t} &= \sqrt{1-\beta_t\,\Delta t}\,X_t \;+\; \sqrt{\beta_t\,\Delta t}\,Z \\
-                   &\approx \bigl(1 - \tfrac{1}{2}\beta_t\,\Delta t\bigr)\,X_t \;+\; \sqrt{\beta_t\,\Delta t}\,Z.
+    X_{t+\Delta t} &= \sqrt{1-\beta_t\,\Delta t}\;X_t \;+\; \sqrt{\beta_t\,\Delta t}\;Z \\
+                   &= \bigl(1 - \tfrac{1}{2}\beta_t\,\Delta t\bigr)X_t \;+\; \sqrt{\beta_t\,\Delta t}\;Z \;+\; O(\Delta t^2).
   \end{aligned}$$</div>
-  <p>Subtract $X_t$ and let $\Delta t \to 0$:</p>
-  <div class="math-block">$$dX_t \;=\; -\tfrac{\beta_t}{2}\,X_t\,dt + \sqrt{\beta_t}\,dW_t.$$</div>
-  <p>Linear <strong>Ornstein–Uhlenbeck</strong> SDE — drift pulls toward $0$; noise injects variance $\beta_t$.</p>
+  <p><strong>Key trick.</strong> $\sqrt{1-u} = 1 - u/2 + O(u^2)$ turns the shrink factor into a drift.</p>
+  <div class="math-block">$$dX_t \;=\; -\tfrac{\beta_t}{2}\,X_t\,dt \;+\; \sqrt{\beta_t}\,dW_t.$$</div>
 </div>
 
-<!-- SLIDE: General SDE form -->
+<!-- SLIDE: general SDE -->
 <div class="slide">
   <h2>General Forward SDE</h2>
   <div class="divider"></div>
-  <p>Both VE and VP are special cases of:</p>
-  <div class="math-block">$$dX_t = f(X_t, t)\,dt + g(t)\,dZ_t.$$</div>
+  <p>Both processes are special cases of</p>
+  <div class="math-block">$$dX_t \;=\; f(X_t, t)\,dt \;+\; g(t)\,dW_t.$$</div>
   <div class="grid-2">
     <div>
       <h3>VE</h3>
@@ -115,20 +256,67 @@
     </div>
     <div>
       <h3>VP</h3>
-      <p>Drift $f(X_t, t) = -\tfrac{\beta_t}{2}X_t$.</p>
+      <p>Drift $f(x, t) = -\tfrac{\beta_t}{2}\,x$.</p>
       <p>Diffusion $g(t) = \sqrt{\beta_t}$.</p>
     </div>
   </div>
 </div>
 
-<!-- SLIDE: Solution is a distribution -->
+<!-- SLIDE: drift and diffusion picture -->
+<div class="slide">
+  <h2>Drift and Diffusion, Pictured</h2>
+  <div class="divider"></div>
+  <div class="d3-fig">
+    <svg width="880" height="278" viewBox="0 0 880 278">
+      <defs>
+        <marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+          <path d="M 0 0 L 7 3 L 0 6 z" fill="#003876"/>
+        </marker>
+      </defs>
+      <line x1="80" y1="96" x2="810" y2="96" stroke="#666666" stroke-width="1.2"/>
+      <line x1="445" y1="80" x2="445" y2="112" stroke="#666666" stroke-width="1.6"/>
+      <line x1="140" y1="96" x2="215" y2="96" stroke="#003876" stroke-width="2.6" marker-end="url(#a2)"/>
+      <line x1="245" y1="96" x2="295" y2="96" stroke="#003876" stroke-width="2.6" marker-end="url(#a2)"/>
+      <line x1="345" y1="96" x2="372" y2="96" stroke="#003876" stroke-width="2.6" marker-end="url(#a2)"/>
+      <line x1="545" y1="96" x2="518" y2="96" stroke="#003876" stroke-width="2.6" marker-end="url(#a2)"/>
+      <line x1="645" y1="96" x2="595" y2="96" stroke="#003876" stroke-width="2.6" marker-end="url(#a2)"/>
+      <line x1="745" y1="96" x2="670" y2="96" stroke="#003876" stroke-width="2.6" marker-end="url(#a2)"/>
+      <text x="445" y="128" font-size="17" fill="#666666" text-anchor="middle">drift: pulls toward the origin</text>
+      <line x1="80" y1="232" x2="810" y2="232" stroke="#666666" stroke-width="1.2"/>
+      <path d="M 100 232 C 122 232, 124 186, 145 186 C 166 186, 168 232, 190 232" fill="none" stroke="#999999" stroke-width="2.2"/>
+      <path d="M 240 232 C 262 232, 264 186, 285 186 C 306 186, 308 232, 330 232" fill="none" stroke="#999999" stroke-width="2.2"/>
+      <path d="M 380 232 C 402 232, 404 186, 425 186 C 446 186, 448 232, 470 232" fill="none" stroke="#999999" stroke-width="2.2"/>
+      <path d="M 520 232 C 542 232, 544 186, 565 186 C 586 186, 588 232, 610 232" fill="none" stroke="#999999" stroke-width="2.2"/>
+      <path d="M 660 232 C 682 232, 684 186, 705 186 C 726 186, 728 232, 750 232" fill="none" stroke="#999999" stroke-width="2.2"/>
+      <text x="445" y="264" font-size="17" fill="#666666" text-anchor="middle">diffusion: same noise everywhere</text>
+    </svg>
+    <span class="lab blue" style="left:445px; top:44px;">$f(x,t)\,dt$</span>
+    <span class="lab gray" style="left:445px; top:166px;">$g(t)\,dW_t$</span>
+  </div>
+</div>
+
+<!-- SLIDE: solution is a distribution -->
 <div class="slide">
   <h2>The Solution Is a Distribution</h2>
   <div class="divider"></div>
-  <p>Itô integral form:</p>
-  <div class="math-block">$$X_t = X_0 + \int_0^t f(X_s, s)\,ds + \int_0^t g(s)\,dW_s.$$</div>
-  <p>Diffusion training needs only the <strong>marginal densities</strong> $\{p_t\}_{t\in[0,T]}$.</p>
-  <p>Goal: track how $p_t$ evolves from $p_0$ to $p_T$.</p>
+  <div class="math-block">$$X_t \;=\; X_0 + \int_0^t f(X_s, s)\,ds + \int_0^t g(s)\,dW_s.$$</div>
+  <div class="d3-fig">
+    <svg width="746" height="170" viewBox="0 0 860 196">
+      <circle cx="70" cy="98" r="5" fill="#003876"/>
+      <polyline points="70,98.0 95,93.0 120,85.9 145,85.5 170,77.9 195,76.2 220,72.5 245,65.7 270,63.9 295,57.5 320,55.3 345,50.0 370,45.3 395,43.6 420,44.9 445,41.1 470,38.4 495,38.3 520,39.7 545,38.9 570,37.2 595,37.8 620,34.7 645,34.6 670,32.5 695,30.6 720,30.0" fill="none" stroke="#999999" stroke-width="1.5"/>
+      <polyline points="70,98.0 95,94.0 120,96.9 145,91.4 170,91.1 195,91.4 220,88.6 245,87.8 270,82.0 295,76.6 320,73.1 345,73.9 370,72.5 395,70.4 420,70.3 445,69.3 470,67.4 495,68.6 520,68.9 545,66.8 570,66.4 595,65.8 620,66.3 645,65.9 670,64.1 695,64.0 720,62.0" fill="none" stroke="#999999" stroke-width="1.5"/>
+      <polyline points="70,98.0 95,96.8 120,100.1 145,95.6 170,95.5 195,90.2 220,92.3 245,95.3 270,96.1 295,99.7 320,97.8 345,99.4 370,99.9 395,100.2 420,99.6 445,101.6 470,103.9 495,102.9 520,103.0 545,100.0 570,100.3 595,100.2 620,101.0 645,100.7 670,98.6 695,97.1 720,96.0" fill="none" stroke="#999999" stroke-width="1.5"/>
+      <polyline points="70,98.0 95,93.0 120,94.2 145,91.8 170,89.1 195,86.1 220,91.5 245,89.8 270,89.6 295,91.2 320,97.2 345,96.0 370,98.2 395,101.3 420,106.8 445,111.4 470,115.9 495,116.6 520,118.3 545,119.8 570,123.8 595,127.6 620,128.1 645,129.1 670,130.8 695,132.9 720,136.0" fill="none" stroke="#999999" stroke-width="1.5"/>
+      <polyline points="70,98.0 95,102.1 120,101.8 145,98.5 170,100.7 195,102.4 220,106.5 245,114.5 270,119.5 295,122.6 320,126.6 345,130.9 370,130.0 395,136.1 420,140.9 445,146.0 470,150.2 495,151.8 520,153.5 545,153.9 570,157.1 595,157.9 620,159.2 645,161.6 670,164.2 695,167.8 720,172.0" fill="none" stroke="#999999" stroke-width="1.5"/>
+      <path d="M 720 22 C 762 60, 762 78, 800 98 C 762 118, 762 136, 720 174" fill="none" stroke="#003876" stroke-width="2.8"/>
+      <line x1="720" y1="18" x2="720" y2="178" stroke="#666666" stroke-width="1.2"/>
+    </svg>
+    <span class="lab blue" style="left:48px; top:113px;">$X_0$</span>
+    <span class="lab blue" style="left:712px; top:85px;">$p_t$</span>
+  </div>
+  <div class="highlight">
+    <p>Training needs the marginals $\{p_t\}$, not the paths.</p>
+  </div>
 </div>
 
 <!-- ====================================================================
@@ -141,109 +329,212 @@
   <p class="subtitle">The PDE that governs $p_t$</p>
 </div>
 
-<!-- SLIDE: FP statement -->
+<!-- SLIDE: two views -->
+<div class="slide">
+  <h2>Two Views of One Process</h2>
+  <div class="divider"></div>
+  <div class="d3-fig">
+    <svg width="880" height="242" viewBox="0 0 880 242">
+      <rect x="40" y="20" width="360" height="180" fill="none" stroke="#c9d3de" stroke-width="1.4"/>
+      <path d="M 60 170 C 92 150, 106 178, 130 130 C 154 84, 168 148, 192 110 C 216 72, 230 132, 254 96 C 278 60, 292 108, 316 74 C 340 44, 356 82, 382 52"
+        fill="none" stroke="#003876" stroke-width="2.4"/>
+      <text x="220" y="228" font-size="17" fill="#666666" text-anchor="middle">one random path</text>
+      <rect x="470" y="20" width="370" height="180" fill="none" stroke="#c9d3de" stroke-width="1.4"/>
+      <path d="M 500 178 C 516 178, 517 76, 534 76 C 551 76, 552 178, 568 178" fill="none" stroke="#003876" stroke-width="2.4"/>
+      <path d="M 620 178 C 646 178, 648 100, 675 100 C 702 100, 704 178, 730 178" fill="none" stroke="#003876" stroke-width="2.4"/>
+      <path d="M 745 178 C 780 178, 782 128, 818 128 C 854 128, 856 178, 890 178" fill="none" stroke="#003876" stroke-width="2.4"/>
+      <text x="655" y="228" font-size="17" fill="#666666" text-anchor="middle">the density, evolving</text>
+    </svg>
+    <span class="lab gray" style="left:220px; top:14px;">$X_t$ random</span>
+    <span class="lab blue" style="left:655px; top:14px;">$p_t$ deterministic</span>
+  </div>
+  <p class="muted" style="text-align:center;">The SDE is a rule for paths; we want a rule for densities.</p>
+</div>
+
+<!-- SLIDE: heat equation warm-up -->
+<div class="slide">
+  <h2>Warm-Up &mdash; Pure Diffusion</h2>
+  <div class="divider"></div>
+  <p>No drift, constant noise: $dX_t = g\,dW_t$ started at $x_0$.</p>
+  <div class="math-block">$$\partial_t\,p_t(x) \;=\; \frac{g^2}{2}\,\partial_x^2\,p_t(x)\qquad\text{(heat equation)}.$$</div>
+  <div class="d3-fig">
+    <svg width="800" height="164" viewBox="0 0 800 164">
+      <line x1="30" y1="140" x2="770" y2="140" stroke="#666666" stroke-width="1.2"/>
+      <path d="M 60 140 C 96 140, 98 30, 135 30 C 172 30, 174 140, 210 140" fill="none" stroke="#003876" stroke-width="2.6"/>
+      <path d="M 280 140 C 330 140, 334 58, 385 58 C 436 58, 440 140, 490 140" fill="none" stroke="#003876" stroke-width="2.6"/>
+      <path d="M 540 140 C 606 140, 610 88, 677 88 C 744 88, 748 140, 814 140" fill="none" stroke="#003876" stroke-width="2.6"/>
+      <text x="135" y="160" font-size="16" fill="#666666" text-anchor="middle">small t</text>
+      <text x="385" y="160" font-size="16" fill="#666666" text-anchor="middle">larger t</text>
+      <text x="660" y="160" font-size="16" fill="#666666" text-anchor="middle">larger still</text>
+    </svg>
+  </div>
+  <p><strong>Exercise.</strong> Check that $p_t = \mathcal{N}(x_0, g^2 t)$ solves it.</p>
+</div>
+
+<!-- SLIDE: FP theorem -->
 <div class="slide">
   <h2>Fokker–Planck, 1D</h2>
   <div class="divider"></div>
   <div class="card">
     <h3>Theorem (Fokker–Planck).</h3>
-    <p>For $dX_t = f(X_t, t)\,dt + g(t)\,dZ_t$, the marginal $p_t(x)$ satisfies:</p>
-    <div class="math-block">$$\partial_t\,p_t(x) = -\partial_x\bigl(f(x,t)\,p_t(x)\bigr) + \frac{g^2(t)}{2}\,\partial_x^2\,p_t(x).$$</div>
+    <p>Let $dX_t = f(X_t,t)\,dt + g(t)\,dW_t$ with $X_0 \sim p_0$. The marginal density $p_t$ satisfies</p>
+    <div class="math-block">$$\partial_t\,p_t(x) \;=\; -\partial_x\bigl(f(x,t)\,p_t(x)\bigr) \;+\; \frac{g^2(t)}{2}\,\partial_x^2\,p_t(x).$$</div>
   </div>
-  <div class="grid-2">
-    <div>
-      <h3>SDE — single particle</h3>
-      <p>Random trajectory $X_t$.</p>
-      <p>Different sample path each run.</p>
-    </div>
-    <div>
-      <h3>FP — distribution</h3>
-      <p>Deterministic PDE for $p_t$.</p>
-      <p>One density evolves through time.</p>
-    </div>
-  </div>
+  <p>A deterministic PDE: all randomness has been integrated out.</p>
+  <p class="muted">Smoothness and decay of $f$, $g$, $p_t$ assumed throughout.</p>
 </div>
 
-<!-- SLIDE: FP proof setup -->
+<!-- SLIDE: reading the equation -->
 <div class="slide">
-  <h2>Proof Setup — Why a Test Function</h2>
+  <h2>Reading the Equation</h2>
   <div class="divider"></div>
-  <p><strong>Test function $\phi$:</strong> smooth, compactly supported. A probe to interrogate $p_t$ without writing it down.</p>
-  <p>Bridge SDE $\to$ PDE via $\mathbb{E}[\phi(X_t)] = \int \phi(x)\,p_t(x)\,dx$. Track $\partial_t\,\mathbb{E}[\phi(X_t)]$ from both sides; equate.</p>
-  <p>Small-step Euler approximation:</p>
-  <div class="math-block">$$X_{t+\varepsilon} \approx X_t + \varepsilon\,f(X_t,t) + \sqrt{\varepsilon}\,g(t)\,Z,\qquad Z\sim\mathcal{N}(0,1).$$</div>
+  <div class="d3-fig">
+    <svg width="880" height="222" viewBox="0 0 880 222">
+      <defs>
+        <marker id="a3" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+          <path d="M 0 0 L 7 3 L 0 6 z" fill="#003876"/>
+        </marker>
+      </defs>
+      <line x1="30" y1="180" x2="410" y2="180" stroke="#666666" stroke-width="1.2"/>
+      <path d="M 60 180 C 96 180, 98 68, 135 68 C 172 68, 174 180, 210 180" fill="none" stroke="#c9d3de" stroke-width="2.4" stroke-dasharray="6 5"/>
+      <path d="M 210 180 C 246 180, 248 68, 285 68 C 322 68, 324 180, 360 180" fill="none" stroke="#003876" stroke-width="2.6"/>
+      <line x1="150" y1="120" x2="268" y2="120" stroke="#003876" stroke-width="2.2" marker-end="url(#a3)"/>
+      <text x="210" y="212" font-size="17" fill="#666666" text-anchor="middle">mass is transported</text>
+      <line x1="470" y1="180" x2="855" y2="180" stroke="#666666" stroke-width="1.2"/>
+      <path d="M 590 180 C 626 180, 628 48, 665 48 C 702 48, 704 180, 740 180" fill="none" stroke="#c9d3de" stroke-width="2.4" stroke-dasharray="6 5"/>
+      <path d="M 500 180 C 574 180, 578 104, 665 104 C 752 104, 756 180, 830 180" fill="none" stroke="#003876" stroke-width="2.6"/>
+      <text x="665" y="212" font-size="17" fill="#666666" text-anchor="middle">peaks are flattened</text>
+    </svg>
+    <span class="lab blue" style="left:210px; top:26px;">$-\partial_x(f\,p_t)$</span>
+    <span class="lab blue" style="left:665px; top:26px;">$\tfrac{g^2}{2}\,\partial_x^2 p_t$</span>
+  </div>
+  <p class="muted" style="text-align:center;">Drift moves the bump; diffusion spreads it.</p>
 </div>
 
-<!-- SLIDE: FP proof outline -->
+<!-- SLIDE: proof setup -->
+<div class="slide">
+  <h2>Proof Setup &mdash; Why a Test Function</h2>
+  <div class="divider"></div>
+  <p>A test function $\phi$ is smooth with compact support: a probe for $p_t$.</p>
+  <div class="math-block">$$\mathbb{E}\bigl[\phi(X_t)\bigr] \;=\; \int \phi(x)\,p_t(x)\,dx.$$</div>
+  <p>Left side moves by the SDE; right side moves by the PDE. Equate them.</p>
+  <div class="math-block">$$X_{t+\varepsilon} \;=\; X_t + \varepsilon\,f(X_t,t) + \sqrt{\varepsilon}\,g(t)\,Z + o(\varepsilon),\qquad Z\sim\mathcal{N}(0,1).$$</div>
+</div>
+
+<!-- SLIDE: proof outline -->
 <div class="slide">
   <h2>Proof Outline</h2>
   <div class="divider"></div>
-  <p>Target — equality must hold for <strong>every</strong> test $\phi$:</p>
-  <div class="math-block">$$\int \phi(x)\,\partial_t p_t(x)\,dx = \int \phi(x)\bigl[-\partial_x(f\,p_t) + \tfrac{g^2}{2}\,\partial_x^2 p_t\bigr]\,dx.$$</div>
-  <p>"For all $\phi$" forces the integrands to match $\Rightarrow$ pointwise FP.</p>
+  <p>Target, required for every test function $\phi$:</p>
+  <div class="math-block">$$\int \phi\,\partial_t p_t\,dx \;=\; \int \phi\,\Bigl[-\partial_x(f\,p_t) + \tfrac{g^2}{2}\,\partial_x^2 p_t\Bigr]dx.$$</div>
   <ol>
     <li><strong>Step 1.</strong> Taylor-expand $\phi(X_{t+\varepsilon})$ to second order.</li>
-    <li><strong>Step 2.</strong> Take expectation; collect surviving terms.</li>
-    <li><strong>Step 3.</strong> Integrate by parts; match integrands.</li>
+    <li><strong>Step 2.</strong> Take expectation, divide by $\varepsilon$.</li>
+    <li><strong>Step 3.</strong> Integrate by parts, then strip $\phi$.</li>
   </ol>
 </div>
 
-<!-- SLIDE: FP step 1 -->
+<!-- SLIDE: step 1 -->
 <div class="slide">
   <h2>Step 1: Taylor Expand $\phi$</h2>
   <div class="divider"></div>
-  <p>Expand $\phi(X_{t+\varepsilon})$ around $X_t$ to order $\varepsilon$:</p>
-  <div class="math-block">$$\phi(X_{t+\varepsilon}) \approx \phi(X_t) + \phi'(X_t)\bigl(\varepsilon f + \sqrt{\varepsilon}\,g\,Z\bigr) + \tfrac{1}{2}\phi''(X_t)\,\varepsilon\,g^2\,Z^2 + O(\varepsilon^{3/2}).$$</div>
-  <p>Three orders contribute: $\sqrt{\varepsilon}$ term linear in $Z$, $\varepsilon$ drift, $\varepsilon$ noise variance.</p>
-  <p><strong>Exercise.</strong> Verify each term, including boundary conditions $p_t(\pm\infty) = 0$ used in Step 3.</p>
+  <p>Write $\Delta = \varepsilon f(X_t,t) + \sqrt{\varepsilon}\,g(t)\,Z$ and expand around $X_t$:</p>
+  <div class="math-block">$$\phi(X_{t+\varepsilon}) \;=\; \phi(X_t) + \phi'(X_t)\,\Delta + \tfrac{1}{2}\phi''(X_t)\,\Delta^2 + O(\Delta^3).$$</div>
+  <p>Only $\phi$, $\phi'$, $\phi''$ appear: second order suffices.</p>
+  <p><strong>Exercise.</strong> Show the $O(\Delta^3)$ remainder is $o(\varepsilon)$ in expectation.</p>
 </div>
 
-<!-- SLIDE: FP step 2 -->
+<!-- SLIDE: step 1 continued, order bookkeeping -->
 <div class="slide">
-  <h2>Step 2: Collect Surviving Terms</h2>
+  <h2>Proof (continued) &mdash; Which Orders Survive</h2>
   <div class="divider"></div>
-  <p>Expectation kills $\sqrt{\varepsilon}\,\phi'(X_t)\,g\,Z$ since $\mathbb{E}[Z]=0$.</p>
-  <p>Replace $Z^2$ by $1$. Subtract $\phi(X_t)$, divide by $\varepsilon$:</p>
-  <div class="math-block">$$\partial_t\,\mathbb{E}[\phi(X_t)] = \mathbb{E}_{X \sim p_t}\!\left[\phi'(X)\,f(X, t) + \tfrac{1}{2}\phi''(X)\,g^2(t)\right].$$</div>
+  <ul>
+    <li>$\varepsilon\,\phi'\,f$: order $\varepsilon$, keep.</li>
+    <li>$\sqrt{\varepsilon}\,\phi'\,g\,Z$: order $\sqrt{\varepsilon}$, but mean zero.</li>
+    <li>$\tfrac{1}{2}\varepsilon\,\phi''\,g^2 Z^2$: order $\varepsilon$, keep.</li>
+    <li>Cross term $\varepsilon^{3/2}\,\phi''fgZ$: negligible.</li>
+  </ul>
+  <div class="highlight">
+    <p><strong>Key trick.</strong> Squaring $\sqrt{\varepsilon}$ promotes the second derivative to first order in time.</p>
+  </div>
 </div>
 
-<!-- SLIDE: FP step 3 -->
+<!-- SLIDE: step 2 -->
+<div class="slide">
+  <h2>Step 2: Take the Expectation</h2>
+  <div class="divider"></div>
+  <p>$Z$ is independent of $X_t$, with $\mathbb{E}[Z]=0$ and $\mathbb{E}[Z^2]=1$:</p>
+  <div class="math-block">$$\mathbb{E}\bigl[\phi(X_{t+\varepsilon})\bigr] - \mathbb{E}\bigl[\phi(X_t)\bigr] \;=\; \varepsilon\,\mathbb{E}\Bigl[\phi'(X_t)\,f + \tfrac{g^2}{2}\,\phi''(X_t)\Bigr] + o(\varepsilon).$$</div>
+  <p>Divide by $\varepsilon$ and let $\varepsilon \to 0$:</p>
+  <div class="math-block">$$\partial_t\,\mathbb{E}\bigl[\phi(X_t)\bigr] \;=\; \mathbb{E}_{X\sim p_t}\Bigl[\phi'(X)\,f(X,t) + \tfrac{g^2(t)}{2}\,\phi''(X)\Bigr].$$</div>
+</div>
+
+<!-- SLIDE: step 3 -->
 <div class="slide">
   <h2>Step 3: Integrate by Parts</h2>
   <div class="divider"></div>
-  <p>Write expectations as integrals against $p_t$.</p>
-  <p>Move derivatives off $\phi$ using $p_t(\pm\infty)=0$:</p>
-  <div class="math-block">$$\int \phi(x)\,\partial_t p_t(x)\,dx = \int \phi(x)\bigl[-\partial_x(f\,p_t) + \tfrac{g^2}{2}\,\partial_x^2 p_t\bigr]\,dx.$$</div>
-  <p>Identity in every $\phi$: integrands match pointwise.</p>
-  <p>This is Fokker–Planck.</p>
+  <p>On the left, differentiate under the integral: $\partial_t \mathbb{E}[\phi(X_t)] = \int \phi\,\partial_t p_t\,dx$.</p>
+  <p>On the right, move derivatives off $\phi$; boundary terms vanish by compact support:</p>
+  <div class="math-block">$$\begin{aligned}
+    \int \phi'\,f\,p_t\,dx &\;=\; -\int \phi\,\partial_x(f\,p_t)\,dx, \\
+    \int \phi''\,\tfrac{g^2}{2}\,p_t\,dx &\;=\; \int \phi\,\tfrac{g^2}{2}\,\partial_x^2 p_t\,dx.
+  \end{aligned}$$</div>
+  <p class="muted">Second line integrates by parts twice; both boundary terms drop.</p>
+</div>
+
+<!-- SLIDE: step 3 continued -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; Stripping $\phi$</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\int \phi(x)\,\underbrace{\Bigl[\partial_t p_t + \partial_x(f\,p_t) - \tfrac{g^2}{2}\,\partial_x^2 p_t\Bigr]}_{=\;h(x)}\,dx \;=\; 0 \quad \text{for all } \phi.$$</div>
+  <p>If $h$ is continuous and $\int \phi h = 0$ for every test $\phi$, then $h \equiv 0$.</p>
+  <p>Otherwise pick a bump supported where $h$ keeps one sign: the integral is nonzero.</p>
+  <div class="highlight">
+    <p>Fokker–Planck holds pointwise. $\blacksquare$</p>
+  </div>
 </div>
 
 <!-- SLIDE: FP recap -->
 <div class="slide">
-  <h2>Proof Recap</h2>
+  <h2>Proof Recap &mdash; One Chain</h2>
   <div class="divider"></div>
-  <p>From SDE to PDE via the test function:</p>
-  <div class="math-block">$$\begin{aligned}
-    \int \phi(x)\,\partial_t p_t(x)\,dx
-      &\;=\; \partial_t\,\mathbb{E}[\phi(X_t)] \\
-      &\stackrel{(1)}{=}\; \mathbb{E}\!\left[\phi'(X_t)\,(\varepsilon f + \sqrt{\varepsilon}gZ) + \tfrac{1}{2}\phi''(X_t)\,\varepsilon g^2 Z^2\right]\!\big/\varepsilon \\
-      &\stackrel{(2)}{=}\; \mathbb{E}_{X\sim p_t}\!\left[\phi'(X)\,f + \tfrac{g^2}{2}\,\phi''(X)\right] \\
-      &\stackrel{(3)}{=}\; \int \phi(x)\bigl[-\partial_x(f\,p_t) + \tfrac{g^2}{2}\,\partial_x^2 p_t\bigr]\,dx.
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \int \phi\,\partial_t p_t\,dx
+      &\stackrel{\text{(definition)}}{=}\; \partial_t\,\mathbb{E}\bigl[\phi(X_t)\bigr] \\
+      &\stackrel{\text{(Taylor)}}{=}\; \lim_{\varepsilon\to 0}\tfrac{1}{\varepsilon}\,\mathbb{E}\bigl[\phi'\Delta + \tfrac{1}{2}\phi''\Delta^2\bigr] \\
+      &\stackrel{\text{(expectation)}}{=}\; \mathbb{E}_{X\sim p_t}\bigl[\phi' f + \tfrac{g^2}{2}\phi''\bigr] \\
+      &\stackrel{\text{(by parts)}}{=}\; \int \phi\,\bigl[-\partial_x(f p_t) + \tfrac{g^2}{2}\partial_x^2 p_t\bigr]dx.
   \end{aligned}$$</div>
-  <p>Identity in $\phi$ $\Rightarrow$ Fokker–Planck holds pointwise.</p>
+  <p>True for every $\phi$, so the integrands agree pointwise.</p>
 </div>
 
-<!-- SLIDE: FP in vector form -->
+<!-- SLIDE: OU stationary example -->
+<div class="slide">
+  <h2>Example &mdash; Where VP Settles</h2>
+  <div class="divider"></div>
+  <p>Constant schedule $\beta$, so $f = -\tfrac{\beta}{2}x$ and $g = \sqrt{\beta}$. Set $\partial_t p = 0$:</p>
+  <div class="math-block">$$\begin{aligned}
+    0 &\;=\; \partial_x\Bigl(\tfrac{\beta}{2}\,x\,p\Bigr) + \tfrac{\beta}{2}\,\partial_x^2 p
+      \;\;\Longrightarrow\;\; x\,p + \partial_x p = 0 \\
+    &\;\Longrightarrow\;\; \partial_x \log p = -x
+      \;\;\Longrightarrow\;\; p_\infty \propto e^{-x^2/2}.
+  \end{aligned}$$</div>
+  <div class="highlight">
+    <p>The standard normal prior is derived, not assumed.</p>
+  </div>
+</div>
+
+<!-- SLIDE: vector form -->
 <div class="slide">
   <h2>Vector Form (Multi-D)</h2>
   <div class="divider"></div>
   <p>For $\mathbf{X}_t \in \mathbb{R}^d$ with $d\mathbf{X}_t = f(\mathbf{X}_t,t)\,dt + g(t)\,d\mathbf{W}_t$:</p>
   <div class="math-block">$$\partial_t\,p_t(\mathbf{x}) \;=\; -\nabla\!\cdot\!\bigl(f(\mathbf{x},t)\,p_t(\mathbf{x})\bigr) \;+\; \frac{g^2(t)}{2}\,\Delta\,p_t(\mathbf{x}).$$</div>
   <ul>
-    <li><strong>Divergence</strong> $\nabla\cdot\mathbf{v} \;=\; \sum_{i=1}^{d} \partial_{x_i} v_i$.</li>
-    <li><strong>Laplacian</strong> $\Delta\,p \;=\; \sum_{i=1}^{d} \partial_{x_i}^2\,p \;=\; \mathrm{tr}(\nabla^2 p)$.</li>
+    <li>Divergence $\nabla\cdot\mathbf{v} = \sum_{i} \partial_{x_i} v_i$ replaces $\partial_x(f\,p_t)$.</li>
+    <li>Laplacian $\Delta p = \sum_{i} \partial_{x_i}^2 p$ replaces $\partial_x^2 p_t$.</li>
   </ul>
-  <p>Drift advects mass; diffusion spreads via the Laplacian (sum of second partials).</p>
+  <p class="muted">Proof is identical with a multivariate Taylor expansion.</p>
 </div>
 
 <!-- ====================================================================
@@ -256,143 +547,248 @@
   <p class="subtitle">A backward SDE with the same marginals</p>
 </div>
 
+<!-- SLIDE: naive reversal fails -->
+<div class="slide">
+  <h2>Flipping the Drift Is Not Enough</h2>
+  <div class="divider"></div>
+  <div class="d3-fig">
+    <svg width="880" height="246" viewBox="0 0 880 246">
+      <defs>
+        <marker id="a4" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+          <path d="M 0 0 L 7 3 L 0 6 z" fill="#003876"/>
+        </marker>
+        <marker id="a5" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+          <path d="M 0 0 L 7 3 L 0 6 z" fill="#d94040"/>
+        </marker>
+      </defs>
+      <path d="M 40 104 C 74 104, 76 24, 110 24 C 144 24, 146 104, 180 104" fill="none" stroke="#003876" stroke-width="2.6"/>
+      <line x1="40" y1="104" x2="200" y2="104" stroke="#666666" stroke-width="1.2"/>
+      <line x1="250" y1="66" x2="420" y2="66" stroke="#003876" stroke-width="2.4" marker-end="url(#a4)"/>
+      <text x="335" y="52" font-size="17" fill="#003876" font-weight="600" text-anchor="middle">forward</text>
+      <path d="M 470 104 C 540 104, 546 62, 620 62 C 694 62, 700 104, 770 104" fill="none" stroke="#003876" stroke-width="2.6"/>
+      <line x1="470" y1="104" x2="790" y2="104" stroke="#666666" stroke-width="1.2"/>
+      <line x1="420" y1="196" x2="250" y2="196" stroke="#d94040" stroke-width="2.4" marker-end="url(#a5)"/>
+      <text x="335" y="182" font-size="17" fill="#d94040" font-weight="600" text-anchor="middle">drift flipped only</text>
+      <path d="M 470 234 C 540 234, 546 192, 620 192 C 694 192, 700 234, 770 234" fill="none" stroke="#999999" stroke-width="2.4"/>
+      <line x1="470" y1="234" x2="790" y2="234" stroke="#666666" stroke-width="1.2"/>
+      <path d="M 40 234 C 110 234, 116 196, 190 196 C 264 196, 270 234, 340 234" fill="none" stroke="#d94040" stroke-width="2.6"/>
+      <line x1="40" y1="234" x2="360" y2="234" stroke="#666666" stroke-width="1.2"/>
+    </svg>
+    <span class="lab blue" style="left:110px; top:126px;">$p_0$</span>
+    <span class="lab gray" style="left:620px; top:126px;">$p_T$</span>
+  </div>
+  <div class="highlight">
+    <p>Noise keeps spreading backwards. Something must push mass uphill.</p>
+  </div>
+</div>
+
+<!-- SLIDE: the score field -->
+<div class="slide">
+  <h2>The Score Points Uphill</h2>
+  <div class="divider"></div>
+  <div class="d3-fig">
+    <svg width="860" height="236" viewBox="0 0 860 236">
+      <defs>
+        <marker id="a6" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+          <path d="M 0 0 L 7 3 L 0 6 z" fill="#003876"/>
+        </marker>
+      </defs>
+      <path d="M 40 150 C 110 150, 120 40, 205 40 C 290 40, 300 150, 370 150 C 440 150, 450 66, 545 66 C 640 66, 650 150, 820 150"
+        fill="none" stroke="#003876" stroke-width="2.8"/>
+      <line x1="40" y1="150" x2="820" y2="150" stroke="#666666" stroke-width="1.2"/>
+      <line x1="70" y1="196" x2="140" y2="196" stroke="#003876" stroke-width="2.4" marker-end="url(#a6)"/>
+      <line x1="150" y1="196" x2="190" y2="196" stroke="#003876" stroke-width="2.4" marker-end="url(#a6)"/>
+      <line x1="290" y1="196" x2="245" y2="196" stroke="#003876" stroke-width="2.4" marker-end="url(#a6)"/>
+      <line x1="380" y1="196" x2="320" y2="196" stroke="#003876" stroke-width="2.4" marker-end="url(#a6)"/>
+      <line x1="430" y1="196" x2="490" y2="196" stroke="#003876" stroke-width="2.4" marker-end="url(#a6)"/>
+      <line x1="640" y1="196" x2="590" y2="196" stroke="#003876" stroke-width="2.4" marker-end="url(#a6)"/>
+      <line x1="790" y1="196" x2="700" y2="196" stroke="#003876" stroke-width="2.4" marker-end="url(#a6)"/>
+      <text x="430" y="228" font-size="17" fill="#666666" text-anchor="middle">arrows: direction and size of the score</text>
+    </svg>
+    <span class="lab blue" style="left:205px; top:18px;">$p_t$</span>
+  </div>
+  <p class="muted" style="text-align:center;">Zero at peaks, large where the density falls off.</p>
+</div>
+
 <!-- SLIDE: Anderson statement -->
 <div class="slide">
   <h2>Anderson's Theorem</h2>
   <div class="divider"></div>
   <div class="card">
     <h3>Theorem (Anderson, 1982).</h3>
-    <p>For forward $dX_t = f(X_t, t)\,dt + g(t)\,dZ_t$ with $X_0 \sim p_0$, the reverse SDE</p>
-    <div class="math-block">$$d\bar{X}_t = \bigl(f(\bar{X}_t, t) - g^2(t)\,\partial_x \log p_t(\bar{X}_t)\bigr)\,dt + g(t)\,d\bar{Z}_t,\quad \bar{X}_T \sim p_T$$</div>
-    <p>has the <strong>same marginals</strong>: $\bar{X}_t \stackrel{(d)}{=} X_t$ for every $t$.</p>
+    <p>Let $dX_t = f(X_t,t)\,dt + g(t)\,dW_t$ with $X_0 \sim p_0$. The reverse-time process</p>
+    <div class="math-block">$$d\bar{X}_t = \bigl(f(\bar{X}_t, t) - g^2(t)\,\partial_x \log p_t(\bar{X}_t)\bigr)dt + g(t)\,d\bar{W}_t,\quad \bar{X}_T \sim p_T$$</div>
+    <p>satisfies $\bar{X}_t \stackrel{(d)}{=} X_t$ for every $t \in [0,T]$.</p>
   </div>
-  <p><strong>Exercise.</strong> Extend to the isotropic multi-dim case $g(t) = \rho(t)\,I$. Which 1D steps survive?</p>
   <div class="cite">Anderson, "Reverse-time diffusion equation models," Stochastic Processes and their Applications 1982.</div>
 </div>
 
-<!-- SLIDE: Forward / reverse diagram with shared marginals -->
+<!-- SLIDE: same marginals picture -->
 <div class="slide">
   <h2>Two SDEs, Same Marginals</h2>
   <div class="divider"></div>
-
-  <div style="max-width: 1080px; margin: 22px auto 0;">
-    <!-- Forward chain -->
-    <div style="display: grid; grid-template-columns: 130px repeat(5, 1fr); align-items: center; font-size: 1.4rem; padding: 6px 0;">
-      <span style="color: var(--gray-text); font-weight: 600;">Forward:</span>
-      <span style="text-align: center;">$X_0$</span>
-      <span style="text-align: center;">$\to$</span>
-      <span style="text-align: center;">$X_t$</span>
-      <span style="text-align: center;">$\to$</span>
-      <span style="text-align: center;">$X_T$</span>
-    </div>
-    <p style="text-align: center; font-size: 1.15rem; color: var(--gray-text); margin: 2px 0 0;">$dX_t = f(X_t,t)\,dt + g(t)\,dW_t$</p>
-
-    <!-- Equality bar -->
-    <div style="text-align: center; padding: 16px 0; color: var(--success); font-size: 1.3rem; font-weight: 700;">$X_t \;\stackrel{(d)}{=}\; \bar{X}_t$ for every $t \in [0,T]$ &nbsp;(same marginal $p_t$)</div>
-
-    <!-- Reverse chain -->
-    <div style="display: grid; grid-template-columns: 130px repeat(5, 1fr); align-items: center; font-size: 1.4rem; padding: 6px 0;">
-      <span style="color: var(--gray-text); font-weight: 600;">Reverse:</span>
-      <span style="text-align: center;">$\bar{X}_0$</span>
-      <span style="text-align: center; color: var(--yonsei-blue);">$\leftarrow$</span>
-      <span style="text-align: center;">$\bar{X}_t$</span>
-      <span style="text-align: center; color: var(--yonsei-blue);">$\leftarrow$</span>
-      <span style="text-align: center;">$\bar{X}_T$</span>
-    </div>
-    <p style="text-align: center; font-size: 1.15rem; color: var(--gray-text); margin: 2px 0 0;">$d\bar{X}_t = \bigl(f(\bar{X}_t,t) - g^2(t)\,\partial_x\log p_t(\bar{X}_t)\bigr)\,dt + g(t)\,d\bar{W}_t$</p>
+  <div class="d3-fig">
+    <svg width="900" height="262" viewBox="0 0 900 262">
+      <defs>
+        <marker id="a7" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+          <path d="M 0 0 L 7 3 L 0 6 z" fill="#003876"/>
+        </marker>
+      </defs>
+      <line x1="70" y1="34" x2="830" y2="34" stroke="#003876" stroke-width="2.4" marker-end="url(#a7)"/>
+      <line x1="60" y1="190" x2="850" y2="190" stroke="#666666" stroke-width="1.2"/>
+      <path d="M 110 190 C 136 190, 138 74, 165 74 C 192 74, 194 190, 220 190" fill="none" stroke="#003876" stroke-width="2.6"/>
+      <path d="M 380 190 C 420 190, 424 104, 465 104 C 506 104, 510 190, 550 190" fill="none" stroke="#003876" stroke-width="2.6"/>
+      <path d="M 650 190 C 706 190, 710 128, 767 128 C 824 128, 828 190, 884 190" fill="none" stroke="#003876" stroke-width="2.6"/>
+      <line x1="830" y1="240" x2="70" y2="240" stroke="#003876" stroke-width="2.4" marker-end="url(#a7)"/>
+      <text x="450" y="20" font-size="17" fill="#003876" font-weight="600" text-anchor="middle">forward: drift plus noise</text>
+      <text x="450" y="258" font-size="17" fill="#003876" font-weight="600" text-anchor="middle">reverse: drift, score correction, noise</text>
+    </svg>
+    <span class="lab" style="left:165px; top:212px;">$p_0$</span>
+    <span class="lab" style="left:465px; top:212px;">$p_t$</span>
+    <span class="lab" style="left:767px; top:212px;">$p_T$</span>
   </div>
-
-  <div class="highlight" style="margin-top: 22px;">
-    <p>Same diffusion $g$; reverse drift adds the score correction $-g^2\,\partial_x\log p_t$.</p>
+  <div class="highlight">
+    <p>Same diffusion $g$; the reverse drift adds $-g^2\,\partial_x\log p_t$.</p>
   </div>
 </div>
 
-<!-- SLIDE: Anderson proof setup -->
+<!-- SLIDE: Gaussian sanity check -->
 <div class="slide">
-  <h2>Proof Setup</h2>
+  <h2>Sanity Check &mdash; Gaussian Case</h2>
   <div class="divider"></div>
-  <p><strong>Strategy.</strong> Let $\bar{p}_t$ be the marginal of $\bar{X}_t$. We will:</p>
-  <ol>
-    <li>Write the PDE that $\bar{p}_t$ must satisfy — Fokker–Planck applied to the reverse SDE, with time reversal.</li>
-    <li>Check that the forward marginal $p_t$ solves the same PDE.</li>
-    <li>Conclude $\bar{p}_t = p_t$ by uniqueness of solutions.</li>
-  </ol>
-  <p>Two PDEs match $\Rightarrow$ same marginal $\Rightarrow$ same SDE in distribution.</p>
+  <p>VP started from a point: $p_t = \mathcal{N}(\gamma_t x_0, \sigma_t^2)$, so the score is linear.</p>
+  <div class="math-block">$$\begin{aligned}
+    \partial_x \log p_t(x) &\;=\; -\frac{x - \gamma_t x_0}{\sigma_t^2}, \\
+    \text{reverse drift} &\;=\; -\tfrac{\beta_t}{2}\,x + \beta_t\,\frac{x - \gamma_t x_0}{\sigma_t^2}.
+  \end{aligned}$$</div>
+  <p>With $\sigma_t^2 \lt 2$ the correction dominates, and backward integration recontracts mass toward $\gamma_t x_0$.</p>
 </div>
 
-<!-- SLIDE: Anderson outline -->
+<!-- SLIDE: proof setup -->
+<div class="slide">
+  <h2>Proof Setup &mdash; Strategy</h2>
+  <div class="divider"></div>
+  <p>Let $\bar{p}_t$ denote the marginal of $\bar{X}_t$.</p>
+  <ol>
+    <li>Derive the PDE that $\bar{p}_t$ must satisfy.</li>
+    <li>Show the forward marginal $p_t$ solves that same PDE.</li>
+    <li>Conclude $\bar{p}_t = p_t$ by uniqueness.</li>
+  </ol>
+  <div class="highlight">
+    <p>Marginals are compared through their PDEs, never through paths.</p>
+  </div>
+</div>
+
+<!-- SLIDE: proof outline -->
 <div class="slide">
   <h2>Proof Outline</h2>
   <div class="divider"></div>
-  <p>Target: PDE equality at every $t$.</p>
-  <div class="math-block">$$\partial_t p_t \;\stackrel{?}{=}\; -\partial_x\!\Bigl[\bigl(f - g^2\,\partial_x \log p_t\bigr) p_t\Bigr] - \tfrac{g^2}{2}\,\partial_x^2 p_t.$$</div>
+  <p>Target, at every $t$:</p>
+  <div class="math-block">$$\partial_t p_t \;\stackrel{?}{=}\; -\partial_x\Bigl[\bigl(f - g^2\,\partial_x \log p_t\bigr) p_t\Bigr] - \tfrac{g^2}{2}\,\partial_x^2 p_t.$$</div>
   <ol>
-    <li><strong>Step 1.</strong> Time-reverse Fokker–Planck on $\bar{X}_t$.</li>
-    <li><strong>Step 2.</strong> Plug $\bar{p}_t = p_t$ and use $(\partial_x\log p_t)\,p_t = \partial_x p_t$.</li>
-    <li><strong>Step 3.</strong> Match against forward FP; conclude by uniqueness.</li>
+    <li><strong>Step 1.</strong> Fokker–Planck for the time-reversed process.</li>
+    <li><strong>Step 2.</strong> Substitute $p_t$ using $(\partial_x\log p_t)\,p_t = \partial_x p_t$.</li>
+    <li><strong>Step 3.</strong> Conclude by uniqueness of the solution.</li>
   </ol>
 </div>
 
 <!-- SLIDE: Anderson step 1 -->
 <div class="slide">
-  <h2>Step 1: Reverse-Time FP</h2>
+  <h2>Step 1: Run the Reverse SDE Forward</h2>
   <div class="divider"></div>
-  <p>Reverse SDE runs $t: T \to 0$. To use FP we need a forward-time process: set $Y_s = \bar{X}_{T-s}$, $s \in [0,T]$.</p>
-  <p>Apply Fokker–Planck to $Y_s$ with marginal $q_s = \bar{p}_{T-s}$:</p>
-  <div class="math-block">$$\partial_s q_s(y) = \partial_y\!\Bigl[\bigl(f(y, T{-}s) - g^2(T{-}s)\,\partial_y \log p_{T{-}s}(y)\bigr)\,q_s(y)\Bigr] + \tfrac{g^2(T{-}s)}{2}\,\partial_y^2 q_s(y).$$</div>
-  <p>Map $s \mapsto T-s$ to express the PDE in original time $t$ for $\bar{p}_t$.</p>
-  <p style="font-size: 1.15rem; color: var(--gray-text);">See note file for the full sign-tracking through the time-reversal.</p>
+  <p>Fokker–Planck needs increasing time. Set $Y_s = \bar{X}_{T-s}$ for $s \in [0,T]$.</p>
+  <p><strong>Key trick.</strong> Negating $ds$ flips the drift sign; the noise term is unchanged.</p>
+  <div class="math-block">$$dY_s = -\bigl(f(Y_s, T{-}s) - g^2\,\partial_y \log p_{T-s}(Y_s)\bigr)ds + g(T{-}s)\,d\tilde{W}_s.$$</div>
+  <p class="muted">Now a standard forward SDE, so the theorem applies.</p>
+</div>
+
+<!-- SLIDE: Anderson step 1 continued -->
+<div class="slide d3-tight">
+  <h2>Proof (continued) &mdash; Back to Original Time</h2>
+  <div class="divider"></div>
+  <p>Apply Fokker–Planck to $Y_s$, whose marginal is $q_s = \bar{p}_{T-s}$:</p>
+  <div class="math-block">$$\partial_s q_s \;=\; \partial_y\Bigl[\bigl(f - g^2\,\partial_y \log p_{T-s}\bigr) q_s\Bigr] + \tfrac{g^2}{2}\,\partial_y^2 q_s.$$</div>
+  <p>Substitute $s = T-t$, so $q_s = \bar{p}_t$ and $\partial_s = -\partial_t$:</p>
+  <div class="math-block">$$\partial_t \bar{p}_t \;=\; -\partial_x\Bigl[\bigl(f - g^2\,\partial_x \log p_t\bigr)\bar{p}_t\Bigr] - \tfrac{g^2}{2}\,\partial_x^2 \bar{p}_t.$$</div>
 </div>
 
 <!-- SLIDE: Anderson step 2 -->
 <div class="slide">
-  <h2>Step 2: $p_t$ Solves the Reverse PDE</h2>
+  <h2>Step 2: $p_t$ Solves That PDE</h2>
   <div class="divider"></div>
-  <p>Plug $\bar{p}_t = p_t$. Use $(\partial_x\log p_t)\,p_t = \partial_x p_t$:</p>
+  <p>Put $\bar{p}_t = p_t$ on the right and use $(\partial_x\log p_t)\,p_t = \partial_x p_t$:</p>
   <div class="math-block">$$\begin{aligned}
-    &-\partial_x\!\Bigl[\bigl(f - g^2\,\partial_x \log p_t\bigr)\,p_t\Bigr] - \tfrac{g^2}{2}\,\partial_x^2 p_t \\
-    &\quad= -\partial_x(f\,p_t) + g^2\,\partial_x^2 p_t - \tfrac{g^2}{2}\,\partial_x^2 p_t \\
-    &\quad= -\partial_x(f\,p_t) + \tfrac{g^2}{2}\,\partial_x^2 p_t.
+    &-\partial_x\Bigl[\bigl(f - g^2\,\partial_x \log p_t\bigr)p_t\Bigr] - \tfrac{g^2}{2}\,\partial_x^2 p_t \\
+    &\quad=\; -\partial_x(f\,p_t) + g^2\,\partial_x^2 p_t - \tfrac{g^2}{2}\,\partial_x^2 p_t \\
+    &\quad=\; -\partial_x(f\,p_t) + \tfrac{g^2}{2}\,\partial_x^2 p_t \;=\; \partial_t p_t.
   \end{aligned}$$</div>
-  <p>The right-hand side is forward Fokker–Planck, equal to $\partial_t p_t$.</p>
+  <p>The last equality is forward Fokker–Planck.</p>
+</div>
+
+<!-- SLIDE: Anderson step 3 -->
+<div class="slide">
+  <h2>Step 3: Uniqueness Closes It</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$\bar{p}_t$ and $p_t$ solve the same linear PDE.</li>
+    <li>They agree at $t = T$: $\bar{X}_T \sim p_T$ by construction.</li>
+    <li>Such a terminal-value problem has one solution.</li>
+  </ul>
+  <div class="highlight">
+    <p>Hence $\bar{p}_t = p_t$ for all $t$. $\blacksquare$</p>
+  </div>
+  <p class="muted">Equality of laws at each fixed time, not of trajectories.</p>
 </div>
 
 <!-- SLIDE: Anderson recap -->
 <div class="slide">
-  <h2>Proof Recap</h2>
+  <h2>Proof Recap &mdash; One Chain</h2>
   <div class="divider"></div>
-  <p>Rewrite forward FP into reverse-FP shape via $(\partial_x\log p_t)\,p_t = \partial_x p_t$:</p>
-  <div class="math-block">$$\begin{aligned}
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
     \partial_t p_t
-      &\stackrel{(\text{FFP})}{=}\; -\partial_x(f\,p_t) + \tfrac{g^2}{2}\,\partial_x^2 p_t \\
-      &\stackrel{(\text{split})}{=}\; -\partial_x(f\,p_t) + g^2\,\partial_x^2 p_t \;-\; \tfrac{g^2}{2}\,\partial_x^2 p_t \\
-      &\stackrel{(\partial p\,=\,\partial\log p\cdot p)}{=}\; -\partial_x(f\,p_t) + g^2\,\partial_x\bigl[(\partial_x\log p_t)\,p_t\bigr] \;-\; \tfrac{g^2}{2}\,\partial_x^2 p_t \\
-      &\stackrel{(\text{factor }-\partial_x)}{=}\; -\partial_x\!\Bigl[\bigl(f - g^2\,\partial_x\log p_t\bigr) p_t\Bigr] \;-\; \tfrac{g^2}{2}\,\partial_x^2 p_t \\
-      &\stackrel{(\text{Step 1, }\bar p_t = p_t)}{=}\; \partial_t \bar{p}_t.
+      &\stackrel{\text{(forward FP)}}{=}\; -\partial_x(f\,p_t) + \tfrac{g^2}{2}\,\partial_x^2 p_t \\
+      &\stackrel{\text{(split the term)}}{=}\; -\partial_x(f\,p_t) + g^2\,\partial_x^2 p_t - \tfrac{g^2}{2}\,\partial_x^2 p_t \\
+      &\stackrel{\text{(score identity)}}{=}\; -\partial_x(f\,p_t) + g^2\,\partial_x\bigl[(\partial_x\log p_t)p_t\bigr] - \tfrac{g^2}{2}\,\partial_x^2 p_t \\
+      &\stackrel{\text{(factor the drift)}}{=}\; -\partial_x\Bigl[\bigl(f - g^2\,\partial_x\log p_t\bigr)p_t\Bigr] - \tfrac{g^2}{2}\,\partial_x^2 p_t \\
+      &\stackrel{\text{(Step 1)}}{=}\; \partial_t \bar{p}_t.
   \end{aligned}$$</div>
-  <p>Uniqueness of solutions: $\bar{p}_t = p_t$.</p>
 </div>
 
-<!-- SLIDE: Why it matters -->
+<!-- SLIDE: why it matters -->
 <div class="slide">
   <h2>Why Anderson Matters</h2>
   <div class="divider"></div>
-  <p>With the <strong>true score</strong> $\partial_x\log p_t$, the reverse SDE is <strong>exact</strong> — same marginals as forward at every $t$, no per-step approximation.</p>
+  <p>With the true score the reverse process is exact at every $t$.</p>
   <div class="grid-2">
     <div>
-      <h3>DDPM (discrete)</h3>
+      <h3>Discrete chain</h3>
       <p>Reverse step assumed Gaussian.</p>
       <p>Valid only for small $\beta_n$.</p>
     </div>
     <div>
-      <h3>Anderson (continuous)</h3>
-      <p>Reverse SDE matches forward law.</p>
-      <p>Only residual: $\bar{X}_T \sim \mathcal{N}(0,I)$ vs $X_T \sim p_T$.</p>
+      <h3>Reverse SDE</h3>
+      <p>No per-step approximation.</p>
+      <p>Exactness bought with the score.</p>
     </div>
   </div>
   <div class="highlight">
-    <p>Generation: sample $\bar{X}_T \sim \mathcal{N}(0,I)$, run reverse SDE with $s_\theta \approx \partial_x\log p_t$.</p>
+    <p>Generation: start at $\mathcal{N}(0,1)$, integrate backwards with $s_\theta \approx \partial_x\log p_t$.</p>
   </div>
+</div>
+
+<!-- SLIDE: remaining errors -->
+<div class="slide">
+  <h2>Where the Error Now Lives</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Prior:</strong> $p_T$ is only close to $\mathcal{N}(0,1)$.</li>
+    <li><strong>Score:</strong> $s_\theta$ is only close to $\partial_x\log p_t$.</li>
+    <li><strong>Solver:</strong> the backward integration uses finite steps.</li>
+  </ul>
+  <div class="highlight">
+    <p>The Gaussian-step error is gone; all three survivors shrink with effort.</p>
+  </div>
+  <p class="muted">Next question: how to train $s_\theta$ without knowing $p_t$.</p>
 </div>
 
 <!-- ====================================================================
@@ -402,202 +798,416 @@
   <div class="section-num">04</div>
   <h1>Score Matching</h1>
   <div class="divider"></div>
-  <p class="subtitle">Train $s_\theta \approx \partial_x \log p_t$ — no Gaussian-step approximation, no discretization</p>
+  <p class="subtitle">A tractable loss whose minimizer is $\partial_x \log p_t$</p>
 </div>
 
-<!-- SLIDE: Motivation -->
+<!-- SLIDE: why learn the score -->
 <div class="slide">
   <h2>Why Learn the Score</h2>
   <div class="divider"></div>
-  <p>Anderson: with the true score, reverse SDE is exact. <strong>Train a network to learn it.</strong></p>
+  <p>The reverse SDE needs one unknown object, and only one.</p>
   <div class="grid-2">
     <div>
-      <h3>DDPM</h3>
-      <p>Learn Gaussian-step parameters.</p>
-      <p>Inherits discretization + Gaussian-step error.</p>
+      <h3>Chain view</h3>
+      <p>Learn per-step Gaussian parameters.</p>
+      <p>Inherits the step approximation.</p>
     </div>
     <div>
-      <h3>Score-based</h3>
-      <p>Learn the score field $s_\theta(X_t, t)$.</p>
-      <p>Plug into reverse SDE; exact in the score-perfect limit.</p>
+      <h3>Score view</h3>
+      <p>Learn one field $s_\theta(x, t)$.</p>
+      <p>Exact in the perfect-score limit.</p>
     </div>
   </div>
   <div class="highlight">
-    <p>Goal: a tractable loss whose minimizer recovers $\partial_x\log p_t$.</p>
+    <p>Goal: a loss we can evaluate whose minimizer is the true score.</p>
   </div>
 </div>
 
-<!-- SLIDE: Why score matching is needed -->
+<!-- SLIDE: natural loss -->
 <div class="slide">
-  <h2>Natural Loss Is Intractable</h2>
+  <h2>The Natural Loss Is Intractable</h2>
   <div class="divider"></div>
-  <p>Match $s_\theta$ against the true score at every $t$:</p>
-  <div class="math-block">$$\mathcal{L}(\theta) = \int_0^T \lambda(t)\,\mathbb{E}_{X_t}\!\left[\bigl\|s_\theta(X_t, t) - \partial_x \log p_t(X_t)\bigr\|^2\right]dt.$$</div>
-  <p>Forward sampling: $X_t \sim p_t$ free.</p>
-  <p>Marginal $p_t$ and its gradient: <strong>not available</strong>.</p>
+  <p>Weighted Fisher-divergence objective across all noise levels:</p>
+  <div class="math-block">$$\mathcal{L}(\theta) = \int_0^T \lambda(t)\,\mathbb{E}_{X_t \sim p_t}\Bigl[\bigl\|s_\theta(X_t, t) - \partial_x \log p_t(X_t)\bigr\|^2\Bigr]dt.$$</div>
+  <ul>
+    <li>Sampling $X_t$: easy, run the forward process.</li>
+    <li>Evaluating $\partial_x\log p_t$: impossible, $p_t$ is unknown.</li>
+  </ul>
 </div>
 
-<!-- SLIDE: Score matching theorem -->
+<!-- SLIDE: kernel score is known -->
 <div class="slide">
-  <h2>Score Matching Theorem</h2>
+  <h2>Key Idea &mdash; The Kernel Is Known</h2>
+  <div class="divider"></div>
+  <div class="d3-fig">
+    <svg width="880" height="228" viewBox="0 0 880 228">
+      <line x1="50" y1="180" x2="840" y2="180" stroke="#666666" stroke-width="1.2"/>
+      <path d="M 60 180 C 120 180, 124 100, 190 100 C 256 100, 260 180, 320 180" fill="none" stroke="#c9d3de" stroke-width="2.4" stroke-dasharray="6 5"/>
+      <path d="M 300 180 C 360 180, 364 90, 430 90 C 496 90, 500 180, 560 180" fill="none" stroke="#c9d3de" stroke-width="2.4" stroke-dasharray="6 5"/>
+      <path d="M 560 180 C 620 180, 624 110, 690 110 C 756 110, 760 180, 820 180" fill="none" stroke="#c9d3de" stroke-width="2.4" stroke-dasharray="6 5"/>
+      <path d="M 60 176 C 130 172, 150 74, 200 66 C 260 56, 300 60, 340 56 C 390 50, 400 62, 440 62 C 500 62, 540 74, 600 80 C 680 88, 740 140, 820 174"
+        fill="none" stroke="#003876" stroke-width="2.8"/>
+      <circle cx="190" cy="180" r="5" fill="#003876"/>
+      <circle cx="430" cy="180" r="5" fill="#003876"/>
+      <circle cx="690" cy="180" r="5" fill="#003876"/>
+      <text x="440" y="216" font-size="17" fill="#666666" text-anchor="middle">dots: training samples, dashed: their kernels</text>
+    </svg>
+    <span class="lab blue" style="left:200px; top:40px;">$p_t$</span>
+    <span class="lab gray" style="left:700px; top:96px;">$p_{t\mid 0}$</span>
+  </div>
+  <div class="highlight">
+    <p>The mixture is unknown; every component is known in closed form.</p>
+  </div>
+</div>
+
+<!-- SLIDE: score matching theorem -->
+<div class="slide">
+  <h2>Denoising Score Matching</h2>
   <div class="divider"></div>
   <div class="card">
     <h3>Theorem (Vincent, 2011).</h3>
-    <p>Up to a $\theta$-independent constant:</p>
-    <div class="math-block">$$\mathcal{L}(\theta) = \int_0^T \lambda(t)\,\mathbb{E}_{X_0}\,\mathbb{E}_{X_t\,|\,X_0}\!\left[\bigl\|s_\theta(X_t, t) - \partial_x \log p_{t\mid 0}(X_t\,|\,X_0)\bigr\|^2\right] dt + C.$$</div>
+    <p>With $C$ independent of $\theta$,</p>
+    <div class="math-block">$$\mathcal{L}(\theta) = \int_0^T \lambda(t)\,\mathbb{E}_{X_0}\mathbb{E}_{X_t\mid X_0}\Bigl[\bigl\|s_\theta(X_t, t) - \partial_x \log p_{t\mid 0}(X_t\mid X_0)\bigr\|^2\Bigr]dt + C.$$</div>
   </div>
-  <p>Conditional density $p_{t\mid 0}$: known noise kernel.</p>
-  <p>For VP the kernel is Gaussian; its score is closed form.</p>
+  <p>Same minimizer, and every term is computable.</p>
   <div class="cite">Vincent, "A connection between score matching and denoising autoencoders," Neural Computation 2011.</div>
 </div>
 
-<!-- SLIDE: Proof setup -->
+<!-- SLIDE: proof setup -->
 <div class="slide">
   <h2>Proof Setup</h2>
   <div class="divider"></div>
-  <p>Two ingredients link marginal score and conditional score.</p>
-  <p>Marginal density via the kernel:</p>
-  <div class="math-block">$$p_t(X_t) = \int p_0(X_0)\,p_{t\mid 0}(X_t\,|\,X_0)\,dX_0.$$</div>
-  <p>Bayes posterior:</p>
-  <div class="math-block">$$p_{0\mid t}(X_0\,|\,X_t) = \frac{p_0(X_0)\,p_{t\mid 0}(X_t\,|\,X_0)}{p_t(X_t)}.$$</div>
+  <p>Marginal as a mixture over the data:</p>
+  <div class="math-block">$$p_t(x) = \int p_0(x_0)\,p_{t\mid 0}(x \mid x_0)\,dx_0.$$</div>
+  <p>Bayes posterior over the clean sample:</p>
+  <div class="math-block">$$q(x_0 \mid x) = \frac{p_0(x_0)\,p_{t\mid 0}(x \mid x_0)}{p_t(x)}.$$</div>
 </div>
 
-<!-- SLIDE: Proof outline -->
+<!-- SLIDE: proof outline -->
 <div class="slide">
   <h2>Proof Outline</h2>
   <div class="divider"></div>
-  <p>Target identity:</p>
-  <div class="math-block">$$\mathbb{E}_{X_t}\!\bigl[\|s_\theta - \partial \log p_t\|^2\bigr] \;=\; \mathbb{E}_{X_0}\,\mathbb{E}_{X_t\,|\,X_0}\!\bigl[\|s_\theta - \partial \log p_{t\mid 0}\|^2\bigr] + C'.$$</div>
+  <p>Target identity, for each fixed $t$:</p>
+  <div class="math-block">$$\mathbb{E}_{X_t}\bigl[\|s_\theta - \partial\log p_t\|^2\bigr] \;=\; \mathbb{E}_{X_0}\mathbb{E}_{X_t\mid X_0}\bigl[\|s_\theta - \partial\log p_{t\mid 0}\|^2\bigr] + C'.$$</div>
   <ol>
-    <li><strong>Step 1.</strong> Score as conditional expectation of the kernel score.</li>
-    <li><strong>Step 2.</strong> Expand squared norm; match cross terms.</li>
-    <li><strong>Step 3.</strong> Absorb the $\theta$-independent residual into $C'$.</li>
+    <li><strong>Step 1.</strong> Marginal score is a posterior average of kernel scores.</li>
+    <li><strong>Step 2.</strong> Expand both squares; only the cross terms interact.</li>
+    <li><strong>Step 3.</strong> Reassemble; the mismatch has no $\theta$.</li>
   </ol>
 </div>
 
-<!-- SLIDE: Proof step 1 -->
+<!-- SLIDE: lemma -->
 <div class="slide">
-  <h2>Step 1: Score as Conditional Expectation</h2>
+  <h2>Lemma &mdash; Score as an Average</h2>
   <div class="divider"></div>
-  <p>Marginal $p_t = \int p_0(X_0)\,p_{t\mid 0}\,dX_0$. Differentiate under the integral, apply $\partial p = (\partial\log p)\,p$ to the kernel, recognize the Bayes posterior $q(X_0|X_t) = p_0\,p_{t\mid 0}/p_t$:</p>
+  <div class="card">
+    <h3>Lemma (marginal score).</h3>
+    <div class="math-block">$$\partial_x \log p_t(x) \;=\; \mathbb{E}_{X_0 \sim q(\cdot\mid x)}\bigl[\partial_x \log p_{t\mid 0}(x \mid X_0)\bigr].$$</div>
+  </div>
+  <p>The unknown score is an average of known kernel scores.</p>
+  <p class="muted">Weights are the posterior over which clean sample produced $x$.</p>
+</div>
+
+<!-- SLIDE: step 1 -->
+<div class="slide">
+  <h2>Step 1: Proof of the Lemma</h2>
+  <div class="divider"></div>
+  <p>Differentiate the mixture, then convert each kernel derivative:</p>
   <div class="math-block">$$\begin{aligned}
-    \partial_{X_t}\log p_t(X_t)
-    &= \tfrac{\partial_{X_t}\,p_t(X_t)}{p_t(X_t)} \;=\; \tfrac{1}{p_t(X_t)}\!\int p_0(X_0)\,\partial_{X_t}\,p_{t\mid 0}\,dX_0 \\
-    &= \tfrac{1}{p_t(X_t)}\!\int p_0(X_0)\,p_{t\mid 0}\,\partial_{X_t}\!\log p_{t\mid 0}\,dX_0 \\
-    &= \int \partial_{X_t}\!\log p_{t\mid 0}\;q(X_0|X_t)\,dX_0 \\
-    &= \mathbb{E}_{X_0\,|\,X_t}\!\bigl[\partial_{X_t}\!\log p_{t\mid 0}\bigr].
+    \partial_x \log p_t(x)
+      &\;=\; \frac{1}{p_t(x)}\int p_0(x_0)\,\partial_x\,p_{t\mid 0}(x\mid x_0)\,dx_0 \\
+      &\;=\; \frac{1}{p_t(x)}\int p_0(x_0)\,p_{t\mid 0}\,\partial_x \log p_{t\mid 0}\,dx_0 \\
+      &\;=\; \int \partial_x \log p_{t\mid 0}(x\mid x_0)\;q(x_0\mid x)\,dx_0.
+  \end{aligned}$$</div>
+  <p class="muted">Last line recognizes the Bayes posterior. $\blacksquare$</p>
+</div>
+
+<!-- SLIDE: step 2 -->
+<div class="slide">
+  <h2>Step 2: Expand the Square</h2>
+  <div class="divider"></div>
+  <p>Write $s = s_\theta(X_t, t)$ and expand:</p>
+  <div class="math-block">$$\mathbb{E}_{X_t}\bigl[\|s - \partial\log p_t\|^2\bigr] = \mathbb{E}_{X_t}\bigl[\|s\|^2\bigr] - 2\,\mathbb{E}_{X_t}\bigl[s \cdot \partial\log p_t\bigr] + \underbrace{\mathbb{E}_{X_t}\bigl[\|\partial\log p_t\|^2\bigr]}_{\text{no } \theta}.$$</div>
+  <ul>
+    <li>Third term: constant in $\theta$, drop it into $C'$.</li>
+    <li>First term: $\mathbb{E}_{X_t} = \mathbb{E}_{X_0}\mathbb{E}_{X_t\mid X_0}$ trivially.</li>
+  </ul>
+</div>
+
+<!-- SLIDE: step 2 continued -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; The Cross Term</h2>
+  <div class="divider"></div>
+  <p><strong>Key trick.</strong> $s$ depends only on $X_t$, so it passes inside the inner expectation.</p>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}_{X_t}\bigl[s \cdot \partial\log p_t\bigr]
+      &\stackrel{\text{(Lemma)}}{=}\; \mathbb{E}_{X_t}\Bigl[s \cdot \mathbb{E}_{X_0\mid X_t}\bigl[\partial\log p_{t\mid 0}\bigr]\Bigr] \\
+      &\stackrel{\text{(pull in)}}{=}\; \mathbb{E}_{X_t}\mathbb{E}_{X_0\mid X_t}\bigl[s \cdot \partial\log p_{t\mid 0}\bigr] \\
+      &\stackrel{\text{(tower)}}{=}\; \mathbb{E}_{X_0}\mathbb{E}_{X_t\mid X_0}\bigl[s \cdot \partial\log p_{t\mid 0}\bigr].
   \end{aligned}$$</div>
 </div>
 
-<!-- SLIDE: Proof step 2 -->
+<!-- SLIDE: step 3 -->
 <div class="slide">
-  <h2>Step 2: Match the Cross Term</h2>
+  <h2>Step 3: Reassemble</h2>
   <div class="divider"></div>
-  <p>Expand the squared norm. The cross term, by Step 1:</p>
-  <div class="math-block">$$\mathbb{E}_{X_t}\!\bigl[s_\theta\cdot \partial \log p_t\bigr] \;=\; \mathbb{E}_{X_0}\,\mathbb{E}_{X_t\,|\,X_0}\!\bigl[s_\theta\cdot \partial \log p_{t\mid 0}\bigr].$$</div>
-  <p>Squared marginal score is a $\theta$-independent term; absorb it into $C'$. Squared conditional plus cross term reassemble into the conditional squared norm:</p>
-  <div class="math-block">$$\begin{aligned}
-    \mathbb{E}_{X_t}\!\bigl[\|s_\theta - \partial \log p_t\|^2\bigr]
-    \;=\;& \mathbb{E}_{X_0}\,\mathbb{E}_{X_t\,|\,X_0}\!\bigl[\|s_\theta - \partial \log p_{t\mid 0}\|^2\bigr] \\
-    &\;+\; C'.
-  \end{aligned}$$</div>
-</div>
-
-<!-- SLIDE: Score matching recap -->
-<div class="slide">
-  <h2>Proof Recap</h2>
-  <div class="divider"></div>
-  <div class="math-block">$$\begin{aligned}
-    \mathbb{E}_{X_t}\!\bigl[\|s_\theta - \partial\log p_t\|^2\bigr]
-      &\stackrel{(1)}{=}\; \mathbb{E}_{X_t}\!\bigl[\|s_\theta\|^2 - 2\,s_\theta\cdot \mathbb{E}_{X_0|X_t}[\partial\log p_{t|0}]\bigr] + C' \\
-      &\stackrel{(2)}{=}\; \mathbb{E}_{X_0}\,\mathbb{E}_{X_t|X_0}\!\bigl[\|s_\theta\|^2 - 2\,s_\theta\cdot \partial\log p_{t|0}\bigr] + C' \\
-      &\stackrel{(3)}{=}\; \mathbb{E}_{X_0}\,\mathbb{E}_{X_t|X_0}\!\bigl[\|s_\theta - \partial\log p_{t|0}\|^2\bigr] + C''.
-  \end{aligned}$$</div>
+  <p>Both surviving terms now live under $\mathbb{E}_{X_0}\mathbb{E}_{X_t\mid X_0}$. Complete the square:</p>
+  <div class="math-block">$$\mathbb{E}_{X_0}\mathbb{E}_{X_t\mid X_0}\bigl[\|s\|^2 - 2\,s\cdot\partial\log p_{t\mid 0}\bigr] = \mathbb{E}_{X_0}\mathbb{E}_{X_t\mid X_0}\bigl[\|s - \partial\log p_{t\mid 0}\|^2\bigr] + C''.$$</div>
   <div class="highlight">
-    <p><strong>Step (2):</strong> $\mathbb{E}_{X_t} \to \mathbb{E}_{X_0}\mathbb{E}_{X_t|X_0}$. For $X_t$-only terms ($\|s_\theta\|^2$), introducing $X_0$ is trivial. For the cross term, $s_\theta$ is $X_t$-measurable so it pulls inside the inner expectation; tower then gives $\mathbb{E}_{X_t}\mathbb{E}_{X_0|X_t} = \mathbb{E}_{X_0,X_t} = \mathbb{E}_{X_0}\mathbb{E}_{X_t|X_0}$.</p>
+    <p>Two losses differ by a constant, so they have the same minimizer. $\blacksquare$</p>
   </div>
 </div>
 
-<!-- SLIDE: VP kernel — compact derivation -->
+<!-- SLIDE: recap -->
 <div class="slide">
-  <h2>VP Kernel</h2>
+  <h2>Proof Recap &mdash; One Chain</h2>
   <div class="divider"></div>
-  <p>VP SDE $dX_t = -\tfrac{\beta_t}{2}\,X_t\,dt + \sqrt{\beta_t}\,dW_t$ is linear. Integrating factor $\mu(t) = e^{\varphi(t)/2}$ with $\varphi(t) = \int_0^t \beta_s\,ds$ cancels the drift; integrating gives a Gaussian kernel:</p>
-  <div class="math-block">$$X_t \;\stackrel{(d)}{=}\; \gamma_t\,X_0 + \sigma_t\,\epsilon,\qquad \gamma_t = e^{-\varphi(t)/2},\quad \sigma_t^2 = 1 - \gamma_t^2.$$</div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \mathbb{E}_{X_t}\bigl[\|s - \partial\log p_t\|^2\bigr]
+      &\stackrel{\text{(expand)}}{=}\; \mathbb{E}_{X_t}\bigl[\|s\|^2 - 2\,s\cdot\partial\log p_t\bigr] + C' \\
+      &\stackrel{\text{(Lemma)}}{=}\; \mathbb{E}_{X_t}\bigl[\|s\|^2 - 2\,s\cdot\mathbb{E}_{X_0\mid X_t}[\partial\log p_{t\mid 0}]\bigr] + C' \\
+      &\stackrel{\text{(tower)}}{=}\; \mathbb{E}_{X_0}\mathbb{E}_{X_t\mid X_0}\bigl[\|s\|^2 - 2\,s\cdot\partial\log p_{t\mid 0}\bigr] + C' \\
+      &\stackrel{\text{(complete square)}}{=}\; \mathbb{E}_{X_0}\mathbb{E}_{X_t\mid X_0}\bigl[\|s - \partial\log p_{t\mid 0}\|^2\bigr] + C''.
+  \end{aligned}$$</div>
+</div>
+
+<!-- SLIDE: reading the theorem -->
+<div class="slide">
+  <h2>Noisy Target, Correct Optimum</h2>
+  <div class="divider"></div>
+  <div class="d3-fig">
+    <svg width="840" height="212" viewBox="0 0 840 212">
+      <defs>
+        <marker id="a8" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+          <path d="M 0 0 L 7 3 L 0 6 z" fill="#999999"/>
+        </marker>
+        <marker id="a9" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+          <path d="M 0 0 L 7 3 L 0 6 z" fill="#003876"/>
+        </marker>
+      </defs>
+      <circle cx="150" cy="106" r="6" fill="#1a1a1a"/>
+      <line x1="150" y1="106" x2="330" y2="30" stroke="#999999" stroke-width="2" marker-end="url(#a8)"/>
+      <line x1="150" y1="106" x2="360" y2="72" stroke="#999999" stroke-width="2" marker-end="url(#a8)"/>
+      <line x1="150" y1="106" x2="300" y2="140" stroke="#999999" stroke-width="2" marker-end="url(#a8)"/>
+      <line x1="150" y1="106" x2="340" y2="182" stroke="#999999" stroke-width="2" marker-end="url(#a8)"/>
+      <line x1="150" y1="106" x2="380" y2="112" stroke="#999999" stroke-width="2" marker-end="url(#a8)"/>
+      <line x1="530" y1="106" x2="770" y2="106" stroke="#003876" stroke-width="3" marker-end="url(#a9)"/>
+      <circle cx="530" cy="106" r="6" fill="#1a1a1a"/>
+      <text x="265" y="206" font-size="17" fill="#666666" text-anchor="middle">per-sample kernel scores</text>
+      <text x="650" y="206" font-size="17" fill="#003876" font-weight="600" text-anchor="middle">their average</text>
+      <text x="455" y="112" font-size="26" fill="#666666" text-anchor="middle">&#8658;</text>
+    </svg>
+  </div>
   <div class="highlight">
-    <p>Variance-preserving: $\gamma_t^2 + \sigma_t^2 = 1$.</p>
-    <p>Conditional score: $\partial_x\log p_{t\mid 0}(X_t|X_0) = -\epsilon/\sigma_t$.</p>
+    <p>Least squares against a noisy target returns the conditional mean.</p>
   </div>
 </div>
 
-<!-- SLIDE: Reparameterization -->
+<!-- ====================================================================
+     PART 05: Kernel, noise prediction, DDPM
+     ==================================================================== -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Kernel, Noise Prediction, DDPM</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Closed-form kernel, training, sampling, and the discrete limit</p>
+</div>
+
+<!-- SLIDE: VP kernel proposition -->
+<div class="slide">
+  <h2>The VP Kernel Is Gaussian</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Proposition (VP transition kernel).</h3>
+    <p>For $dX_t = -\tfrac{\beta_t}{2}X_t\,dt + \sqrt{\beta_t}\,dW_t$ with $\varphi(t) = \int_0^t \beta_s\,ds$,</p>
+    <div class="math-block">$$X_t \mid X_0 \;\sim\; \mathcal{N}\bigl(\gamma_t X_0,\; \sigma_t^2\bigr),\qquad \gamma_t = e^{-\varphi(t)/2},\quad \sigma_t^2 = 1 - \gamma_t^2.$$</div>
+  </div>
+  <p>Linear drift plus additive noise keeps Gaussians Gaussian.</p>
+  <p class="muted">Two ODEs, one for the mean and one for the variance, give the proof.</p>
+</div>
+
+<!-- SLIDE: mean ODE -->
+<div class="slide">
+  <h2>Proof &mdash; Mean ODE</h2>
+  <div class="divider"></div>
+  <p>Take expectations; the stochastic integral has mean zero.</p>
+  <div class="math-block">$$\begin{aligned}
+    m'(t) &\;=\; -\tfrac{\beta_t}{2}\,m(t),\qquad m(0) = X_0, \\
+    m(t) &\;=\; e^{-\varphi(t)/2}\,X_0 \;=\; \gamma_t X_0.
+  \end{aligned}$$</div>
+  <p><strong>Key trick.</strong> Integrating factor $e^{\varphi(t)/2}$ turns the drift into a derivative.</p>
+</div>
+
+<!-- SLIDE: variance ODE -->
+<div class="slide">
+  <h2>Proof &mdash; Variance ODE</h2>
+  <div class="divider"></div>
+  <p>The noise adds $\beta_t\,dt$ of variance while the drift removes $\beta_t v$:</p>
+  <div class="math-block">$$\begin{aligned}
+    v'(t) &\;=\; -\beta_t\,v(t) + \beta_t \;\;\Longrightarrow\;\; (v-1)' = -\beta_t\,(v-1), \\
+    v(t) &\;=\; 1 + \bigl(v(0)-1\bigr)e^{-\varphi(t)} \;=\; 1 - \gamma_t^2 .
+  \end{aligned}$$</div>
+  <p>Conditioning on $X_0$ gives $v(0) = 0$, hence $\sigma_t^2 = 1 - \gamma_t^2$. $\blacksquare$</p>
+</div>
+
+<!-- SLIDE: signal budget -->
+<div class="slide">
+  <h2>Signal and Noise Budget</h2>
+  <div class="divider"></div>
+  <div class="d3-fig">
+    <svg width="820" height="252" viewBox="0 0 820 252">
+      <line x1="90" y1="30" x2="90" y2="210" stroke="#666666" stroke-width="1.4"/>
+      <line x1="90" y1="210" x2="760" y2="210" stroke="#666666" stroke-width="1.4"/>
+      <path d="M 90 40 C 240 44, 330 96, 420 138 C 510 178, 620 202, 750 207" fill="none" stroke="#003876" stroke-width="3"/>
+      <path d="M 90 207 C 240 202, 330 152, 420 112 C 510 70, 620 44, 750 40" fill="none" stroke="#2e8b57" stroke-width="3"/>
+      <line x1="86" y1="40" x2="94" y2="40" stroke="#666666" stroke-width="1.4"/>
+      <text x="420" y="238" font-size="17" fill="#666666" text-anchor="middle">time</text>
+    </svg>
+    <span class="lab" style="left:66px; top:40px;">$1$</span>
+    <span class="lab blue" style="left:210px; top:66px;">$\gamma_t^2$</span>
+    <span class="lab green" style="left:230px; top:184px;">$\sigma_t^2$</span>
+    <span class="lab gray" style="left:770px; top:210px;">$T$</span>
+  </div>
+  <p style="text-align:center;">Variance preserving in continuous time: $\gamma_t^2 + \sigma_t^2 = 1$.</p>
+</div>
+
+<!-- SLIDE: conditional score -->
+<div class="slide">
+  <h2>Conditional Score in Closed Form</h2>
+  <div class="divider"></div>
+  <p>Write the sample as $X_t = \gamma_t X_0 + \sigma_t \epsilon$ with $\epsilon \sim \mathcal{N}(0,1)$.</p>
+  <div class="math-block">$$\begin{aligned}
+    \log p_{t\mid 0}(x \mid X_0) &\;=\; -\frac{(x - \gamma_t X_0)^2}{2\sigma_t^2} + \text{const}, \\
+    \partial_x \log p_{t\mid 0}(X_t \mid X_0) &\;=\; -\frac{X_t - \gamma_t X_0}{\sigma_t^2} \;=\; -\frac{\epsilon}{\sigma_t}.
+  \end{aligned}$$</div>
+  <div class="highlight">
+    <p>The regression target is the injected noise, rescaled by $\sigma_t$.</p>
+  </div>
+</div>
+
+<!-- SLIDE: epsilon reparameterization -->
 <div class="slide">
   <h2>$\epsilon$-Reparameterization</h2>
   <div class="divider"></div>
-  <p>Abstract form: $s_\theta(X_t, t) \approx -\,\dfrac{\epsilon}{\sigma_t}$.</p>
-  <p>Substitute $s_\theta(X_t, t) = -\,\dfrac{\epsilon_\theta(X_t, t)}{\sigma_t}$:</p>
-  <div class="math-block">$$\tilde{\mathcal{L}}(\theta) = T\,\mathbb{E}_{X_0,\,\epsilon,\,t}\!\left[\frac{\lambda(t)}{\sigma_t^2}\,\bigl\|\epsilon_\theta(\gamma_t X_0 + \sigma_t\epsilon,\; t) - \epsilon\bigr\|^2\right].$$</div>
-  <div class="highlight">
-    <p>Loss is plain noise regression.</p>
-  </div>
+  <p>Substitute $s_\theta(X_t, t) = -\epsilon_\theta(X_t, t)/\sigma_t$ into the score-matching loss:</p>
+  <div class="math-block">$$\tilde{\mathcal{L}}(\theta) = T\;\mathbb{E}_{X_0,\,\epsilon,\,t}\left[\frac{\lambda(t)}{\sigma_t^2}\,\bigl\|\epsilon_\theta(\gamma_t X_0 + \sigma_t \epsilon,\; t) - \epsilon\bigr\|^2\right].$$</div>
+  <ul>
+    <li>Time $t$ drawn uniformly on $[0,T]$.</li>
+    <li>Choosing $\lambda(t) = \sigma_t^2$ removes the weight entirely.</li>
+  </ul>
 </div>
 
 <!-- SLIDE: OU example -->
 <div class="slide">
-  <h2>Example: Ornstein–Uhlenbeck</h2>
+  <h2>Example &mdash; Ornstein–Uhlenbeck</h2>
   <div class="divider"></div>
-  <p>For $dX_t = -\beta\,X_t\,dt + \sigma\,dW_t$ the kernel is closed form:</p>
-  <div class="math-block">$$p_{t\mid 0}(X_t\,|\,X_0) = \mathcal{N}\!\left(e^{-\beta t}\,X_0,\;\frac{\sigma^2}{2\beta}(1 - e^{-2\beta t})\right).$$</div>
-  <p>Read off $\gamma_t = e^{-\beta t}$ and $\sigma_t^2 = \tfrac{\sigma^2}{2\beta}(1-e^{-2\beta t})$.</p>
-  <p><strong>Exercise.</strong> Derive the kernel. <em>Hint:</em> solve the linear SDE by integrating factor $e^{\beta t}$.</p>
+  <p>Constant coefficients $dX_t = -\beta X_t\,dt + \sigma\,dW_t$ give a closed-form kernel:</p>
+  <div class="math-block">$$p_{t\mid 0}(x \mid X_0) = \mathcal{N}\left(e^{-\beta t}X_0,\;\frac{\sigma^2}{2\beta}\bigl(1 - e^{-2\beta t}\bigr)\right).$$</div>
+  <p>Read off $\gamma_t = e^{-\beta t}$ and the matching $\sigma_t^2$.</p>
+  <p><strong>Exercise.</strong> Derive it with integrating factor $e^{\beta t}$, then let $t \to \infty$.</p>
 </div>
 
-<!-- SLIDE: Multi-dim extension -->
+<!-- SLIDE: training algorithm -->
 <div class="slide">
-  <h2>Multi-Dimensional Extension</h2>
+  <h2>Training Algorithm</h2>
   <div class="divider"></div>
-  <p>For $\mathbf{X} \in \mathbb{R}^d$ with isotropic $g(t) = \rho(t)\,I$:</p>
-  <ul>
-    <li><strong>Fokker–Planck:</strong> $\partial_t p_t = -\nabla\!\cdot (f\,p_t) + \tfrac{\rho^2}{2}\,\Delta p_t$.</li>
-    <li><strong>Anderson:</strong> reverse drift uses gradient score $\nabla\log p_t$.</li>
-    <li><strong>Score matching:</strong> 1D proof runs component by component.</li>
-  </ul>
-  <p><strong>Exercise.</strong> Run the score-matching argument component by component.</p>
+  <div class="d3-algo" style="max-width:900px; margin:20px auto 12px;">
+    <div class="d3-algo-title">Continuous-time score matching</div>
+    <ol>
+      <li>Sample $X_0 \sim p_{\text{data}}$.</li>
+      <li>Sample $t \sim \mathrm{Unif}[0,T]$ and $\epsilon \sim \mathcal{N}(0,1)$.</li>
+      <li>Form $X_t = \gamma_t X_0 + \sigma_t \epsilon$.</li>
+      <li>Gradient step on $\bigl\|\epsilon_\theta(X_t, t) - \epsilon\bigr\|^2$.</li>
+    </ol>
+  </div>
+  <p style="text-align:center;">No chain simulation: any $t$ in one draw.</p>
 </div>
 
-<!-- SLIDE: DDPM vs score matching -->
+<!-- SLIDE: sampling algorithm -->
+<div class="slide">
+  <h2>Sampling by Euler–Maruyama</h2>
+  <div class="divider"></div>
+  <div class="d3-algo" style="max-width:1000px; margin:20px auto 12px;">
+    <div class="d3-algo-title">Reverse-SDE sampling</div>
+    <ol>
+      <li>Set $h = T/N$ and draw $X_T \sim \mathcal{N}(0,1)$.</li>
+      <li>For $t = T, T-h, \ldots, h$: draw $Z \sim \mathcal{N}(0,1)$ and set
+        <ol>
+          <li>$X_{t-h} = X_t - h\bigl(f(X_t,t) - g^2(t)\,s_\theta(X_t,t)\bigr) + \sqrt{h}\,g(t)\,Z$.</li>
+        </ol>
+      </li>
+      <li>Return $X_0$.</li>
+    </ol>
+  </div>
+  <p class="muted" style="text-align:center;">Step size $h$ is the only discretization left.</p>
+</div>
+
+<!-- SLIDE: DDPM correspondence -->
 <div class="slide">
   <h2>DDPM Is Discrete Score Matching</h2>
   <div class="divider"></div>
-  <p>DDPM reparameterization: $\epsilon_\theta = \sqrt{1-\bar{\alpha}_n}\,s_\theta$. The VLB collapses to:</p>
-  <div class="math-block">$$\mathcal{L}(\theta) = \sum_{n=1}^{N}\tilde{\lambda}_n\,\mathbb{E}\!\left[\bigl\|\epsilon - \epsilon_\theta\bigl(\sqrt{\bar{\alpha}_n}X^{(0)} + \sqrt{1-\bar{\alpha}_n}\epsilon,\; n\bigr)\bigr\|^2\right].$$</div>
+  <p>Discretize with $\beta_n = \beta_{t_n}\Delta t$ and $t_n = n\Delta t$:</p>
+  <table>
+    <tr><th>Continuous</th><th>Discrete</th></tr>
+    <tr><td>$\gamma_t^2$</td><td>$\bar{\alpha}_n$</td></tr>
+    <tr><td>$\sigma_t^2 = 1-\gamma_t^2$</td><td>$1-\bar{\alpha}_n$</td></tr>
+    <tr><td>$s_\theta = -\epsilon_\theta/\sigma_t$</td><td>$s_\theta = -\epsilon_\theta/\sqrt{1-\bar{\alpha}_n}$</td></tr>
+    <tr><td>Euler–Maruyama step</td><td>Ancestral sampling step</td></tr>
+  </table>
+</div>
+
+<!-- SLIDE: same loss -->
+<div class="slide">
+  <h2>Same Loss, Two Derivations</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\mathcal{L}(\theta) = \sum_{n=1}^{N}\tilde{\lambda}_n\,\mathbb{E}\Bigl[\bigl\|\epsilon - \epsilon_\theta\bigl(\sqrt{\bar{\alpha}_n}X^{(0)} + \sqrt{1-\bar{\alpha}_n}\,\epsilon,\; n\bigr)\bigr\|^2\Bigr].$$</div>
+  <ul>
+    <li>Variational route: bound the likelihood, expand the KL terms.</li>
+    <li>Score route: denoising score matching on the VP SDE.</li>
+  </ul>
   <div class="highlight">
-    <p>DDPM = discrete-time score matching on the VP SDE.</p>
-    <p>Both train via $\epsilon$-prediction.</p>
+    <p>Both land on noise regression, with different weights $\tilde{\lambda}_n$.</p>
   </div>
 </div>
 
-<!-- SLIDE: Recap -->
+<!-- SLIDE: multi-dim -->
+<div class="slide">
+  <h2>Multi-Dimensional Extension</h2>
+  <div class="divider"></div>
+  <p>Isotropic diffusion $g(t) = \rho(t)\,I$ on $\mathbb{R}^d$:</p>
+  <ul>
+    <li>Fokker–Planck: $\partial_t p_t = -\nabla\!\cdot(f\,p_t) + \tfrac{\rho^2}{2}\Delta p_t$.</li>
+    <li>Anderson: reverse drift uses $\nabla\log p_t$.</li>
+    <li>Score matching: the proof is unchanged, with inner products.</li>
+  </ul>
+  <p><strong>Exercise.</strong> Redo the cross-term step with vectors and check every line.</p>
+</div>
+
+<!-- SLIDE: recap -->
 <div class="slide">
   <h2>Lecture Recap</h2>
   <div class="divider"></div>
   <ul>
-    <li>VE and VP are limits of $dX_t = f\,dt + g\,dZ_t$.</li>
-    <li>Marginals $p_t$ evolve by <strong>Fokker–Planck</strong>.</li>
-    <li><strong>Anderson</strong>: reverse SDE matches forward marginals via the score.</li>
-    <li><strong>Score matching</strong>: marginal-score loss equals kernel-score loss.</li>
-    <li>$\epsilon$-parameterization: noise regression. DDPM is a special case.</li>
+    <li><strong>Limit:</strong> VE and VP become $dX_t = f\,dt + g\,dW_t$.</li>
+    <li><strong>Fokker–Planck:</strong> the density obeys a deterministic PDE.</li>
+    <li><strong>Anderson:</strong> reversing time costs exactly one score term.</li>
+    <li><strong>Score matching:</strong> marginal loss equals kernel loss plus a constant.</li>
+    <li><strong>Practice:</strong> noise regression; DDPM is the discrete case.</li>
   </ul>
+  <div class="highlight">
+    <p>Open: replace the reverse SDE by a deterministic flow with the same marginals.</p>
+  </div>
 </div>
 
-<!-- SLIDE: End / bridge -->
+<!-- SLIDE: End -->
 <div class="slide end-slide no-footer">
-  <div class="big-word">Next</div>
-  <p class="big-word-sub">Lecture 4: DDIM &amp; Deterministic Sampling</p>
+  <div class="big-word">Q&amp;A</div>
+  <p class="big-word-sub">Fokker–Planck &middot; Anderson &middot; Score matching</p>
 </div>
+
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 41</div>
+<div class="slide-num" id="slideNum">1 / 72</div>
 
 </div><!-- end deck -->
 

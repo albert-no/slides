@@ -10,6 +10,37 @@
 <script defer src="../../../../reference/katex/katex.min.js"></script>
 <script defer src="../../../../reference/katex/contrib/auto-render.min.js"
   onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  .cite-wide { max-width: 92% !important; }
+  .cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+  .cite-right { max-width: 92% !important; left: auto !important; right: 28px !important; transform: none !important; text-align: right !important; bottom: 18px !important; }
+  .slide > .pill { align-self: flex-start; }
+  .m5-algo { background: var(--light); border: 1px solid var(--slate); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 14px 22px; max-width: 940px; margin: 14px auto; }
+  .m5-algo-title { font-weight: 600; color: var(--yonsei-blue); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 6px; }
+  .m5-algo > ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+  .m5-algo > ol > li { counter-increment: step; padding: 7px 0 7px 52px; position: relative; line-height: 1.45; }
+  .m5-algo > ol > li::before { content: counter(step) "."; position: absolute; left: 10px; top: 7px; font-weight: 700; color: var(--yonsei-blue); width: 32px; text-align: right; }
+  .m5-algo > ol > li + li { border-top: 1px solid var(--slate); }
+  .m5-fig { position: relative; width: fit-content; margin: 10px auto 0; }
+  .m5-fig .lab { position: absolute; font-size: 1.15rem; color: var(--charcoal); transform: translate(-50%, -50%); white-space: nowrap; }
+  .m5-fig .lab.blue { color: var(--yonsei-blue); font-weight: 600; }
+  .m5-fig .lab.red { color: var(--warn); font-weight: 600; }
+  .m5-fig .lab.green { color: var(--success); font-weight: 600; }
+  .m5-fig .lab.gray { color: var(--gray-text); }
+  .m5-fig .lab.white { color: var(--white); font-weight: 600; }
+  .m5-fig .lab.amber { color: var(--amber); font-weight: 600; }
+  .m5-chain { display: flex; justify-content: center; align-items: center; gap: 14px; margin: 20px 0 18px; font-size: 1.4rem; color: var(--charcoal); }
+  .m5-chain .arr { color: var(--gray-text); }
+  .m5-chain .arr.focus { color: var(--yonsei-blue); font-weight: 600; }
+  .m5-chain .blue { color: var(--yonsei-blue); font-weight: 600; }
+  .m5-tight .math-block { margin: 8px 0; }
+  .m5-snug .card { padding: 20px 28px; }
+  .m5-snug .card .math-block { margin: 8px 0; padding: 14px 24px; }
+  .m5-snug > .math-block { margin: 10px 0; padding: 16px 26px; }
+  .m5-snug .highlight { margin: 10px 0; padding: 16px 24px; }
+  .m5-snug td, .m5-snug th { padding: 7px 16px; }
+  .m5-shot { display: block; margin: 6px auto 0; border: 1px solid var(--slate); border-radius: 6px; }
+</style>
 </head>
 <body data-brand-logo="../../../../reference/kor-eng2.png">
 
@@ -21,7 +52,7 @@
   <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 5 of 5</div>
   <h1>Membership Inference<br>in LLMs</h1>
   <div class="divider"></div>
-  <p class="subtitle">High-level view: what works, what doesn&rsquo;t, and why</p>
+  <p class="subtitle">Why the signal is small, how calibration recovers it, and where the benchmarks broke</p>
   <p style="font-weight:500;">Albert No &nbsp;&middot;&nbsp; Yonsei University</p>
   <p style="margin-top:6px;">2026</p>
 </div>
@@ -35,16 +66,16 @@
       <div class="toc-num">01</div>
       <div class="toc-rule"></div>
       <div>
-        <div class="toc-label">What makes LLM MIA hard</div>
-        <div class="toc-sub">Threat models, perplexity, calibration</div>
+        <div class="toc-label">Why LLM MIA is structurally hard</div>
+        <div class="toc-sub">A signal-to-noise ceiling, derived</div>
       </div>
     </div>
     <div class="toc-item">
       <div class="toc-num">02</div>
       <div class="toc-rule"></div>
       <div>
-        <div class="toc-label">Calibration strategies</div>
-        <div class="toc-sub">A tour: neighbourhood, SPV, context, token-level</div>
+        <div class="toc-label">The calibration principle</div>
+        <div class="toc-sub">One definition, five estimators of the null</div>
       </div>
     </div>
     <div class="toc-item">
@@ -52,7 +83,7 @@
       <div class="toc-rule"></div>
       <div>
         <div class="toc-label">The empirical wall</div>
-        <div class="toc-sub">Limits of MIA on pre-trained LLMs</div>
+        <div class="toc-sub">Instability, and a benchmark validity failure</div>
       </div>
     </div>
     <div class="toc-item">
@@ -60,7 +91,7 @@
       <div class="toc-rule"></div>
       <div>
         <div class="toc-label">Where the signal still lives</div>
-        <div class="toc-sub">Fine-tuning, extraction, governance</div>
+        <div class="toc-sub">Fine-tuning, extraction, defenses</div>
       </div>
     </div>
     <div class="toc-item">
@@ -68,7 +99,7 @@
       <div class="toc-rule"></div>
       <div>
         <div class="toc-label">Synthesis</div>
-        <div class="toc-sub">Unified framework, open problems</div>
+        <div class="toc-sub">Every attack, one likelihood ratio</div>
       </div>
     </div>
   </div>
@@ -76,201 +107,812 @@
 
 
 <!-- ═══════════════════════════════════════════════════════════════════ -->
-<!--  §01 — What makes LLM MIA hard                                     -->
+<!--  §01 — Why LLM MIA is structurally hard                            -->
 <!-- ═══════════════════════════════════════════════════════════════════ -->
 
-<!-- Part divider -->
 <div class="slide section-slide left">
   <div class="section-num">01</div>
-  <h1>What Makes LLM MIA Hard</h1>
+  <h1>Why LLM MIA Is<br>Structurally Hard</h1>
   <div class="divider"></div>
-  <p class="subtitle">Threat models, perplexity, the calibration challenge</p>
+  <p class="subtitle">A signal-to-noise ceiling, derived from a training model</p>
 </div>
 
-<!-- SLIDE — What changes from classifier MIA -->
+<!-- Recall: the game -->
 <div class="slide bg-dark">
-  <h2>From Classifiers to LLMs</h2>
+  <h2>Recall &mdash; The Membership Game</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Recall (the game and its optimum).</h3>
+    <p>Flip $b\sim\text{Bern}(1/2)$. If $b=1$ show a training record; if $b=0$ show a fresh draw from the <em>same</em> law. Adversary sees a view $V$ and guesses $\hat b$.</p>
+  </div>
+  <div class="math-block">
+    $$\mathrm{Adv}(\mathcal{A}) = |\mathrm{TPR}-\mathrm{FPR}| = 2\Pr[\hat b = b]-1,
+    \qquad \sup_{\mathcal{A}} \mathrm{Adv} = \mathrm{TV}(P_1,P_0)$$
+  </div>
+  <p class="muted">$P_1,P_0$ = law of the view under member / non-member. Every optimal attack is a likelihood-ratio test.</p>
+</div>
+
+<!-- Recall: the recipe -->
+<div class="slide bg-deep">
+  <h2>Recall &mdash; The Modern Recipe</h2>
+  <div class="divider"></div>
+  <div class="m5-chain">
+    <span>pick a statistic $T(x)$</span>
+    <span class="arr">&rarr;</span>
+    <span>estimate its <span class="blue">two conditionals</span></span>
+    <span class="arr">&rarr;</span>
+    <span>threshold $\log\Lambda$</span>
+  </div>
+  <div class="grid-3">
+    <div class="card"><h3>Statistic</h3><p>Loss, logit $\varphi(p)=\log\frac{p}{1-p}$, trajectory.</p></div>
+    <div class="card"><h3>Conditioning</h3><p>Pooled, per-class, <strong>per-example</strong>.</p></div>
+    <div class="card"><h3>Null estimator</h3><p>Shadow models: retrain many times without $x$.</p></div>
+  </div>
+  <div class="highlight">
+    <p>Per-example calibration is what made the recipe strong. Shadow retraining is what makes it <strong>impossible here</strong>.</p>
+  </div>
+</div>
+
+<!-- What breaks -->
+<div class="slide bg-dark">
+  <h2>What Breaks When the Model Is an LLM</h2>
   <div class="divider"></div>
   <div class="grid-2" style="margin-top:8px;">
     <div class="card">
-      <h3>One-pass training</h3>
-      <p>Trillions of tokens, each seen <strong>~once</strong>.</p>
-      <p>No multi-epoch overfit to lean on.</p>
-    </div>
-    <div class="card">
-      <h3>Unknown training data</h3>
-      <p>Web crawl; no clean "in/out" partition.</p>
+      <h3>One pass</h3>
+      <p>Trillions of tokens, most seen <strong>once</strong>. No multi-epoch overfit to lean on.</p>
     </div>
     <div class="card">
       <h3>Shadows infeasible</h3>
-      <p>Cannot retrain a 7B model 256 times.</p>
-      <p>LiRA template breaks.</p>
+      <p>Cannot pre-train a 7B model 128 times. The null must come from elsewhere.</p>
+    </div>
+    <div class="card">
+      <h3>Unknown training pool</h3>
+      <p>Undisclosed web mixture. No clean in/out partition to sample.</p>
     </div>
     <div class="card">
       <h3>Variable-length text</h3>
-      <p>Score is a per-token NLL summary, not a scalar loss.</p>
+      <p>$T(x)$ summarises $|x|$ token losses. Length is itself a confound.</p>
     </div>
   </div>
 </div>
 
-<!-- SLIDE — Three threat models -->
+<!-- Three threat models -->
 <div class="slide bg-deep">
   <h2>Three Threat Models</h2>
   <div class="divider"></div>
   <div class="grid-3">
     <div class="card">
       <h3>Pre-training</h3>
-      <p>"In Pile / C4 / web crawl?"</p>
-      <p style="color:var(--warn);">Hardest. Very weak signal.</p>
+      <p>&ldquo;Was $x$ in the crawl?&rdquo; <span style="color:var(--warn);">Huge $N$, one epoch.</span></p>
     </div>
     <div class="card">
       <h3>Fine-tuning</h3>
-      <p>"In RLHF / instruction set?"</p>
-      <p style="color:var(--accent);">Moderate signal &mdash; multi-epoch, small data.</p>
+      <p>&ldquo;Was $x$ in the instruction set?&rdquo; <span style="color:var(--accent);">Small $N$, many epochs.</span></p>
     </div>
     <div class="card">
-      <h3>Context</h3>
-      <p>"In current prompt?"</p>
-      <p style="color:var(--success);">Easiest. Strong signal.</p>
+      <h3>Context / RAG</h3>
+      <p>&ldquo;Is $x$ in the prompt?&rdquo; <span style="color:var(--success);">Not a training-data question.</span></p>
     </div>
   </div>
-  <p>Research focus: <strong>pre-training</strong> (hardest) and <strong>fine-tuning</strong>.</p>
+  <div class="highlight">
+    <p>The first two differ only in $(N, E)$. &sect;01 shows that pair decides everything.</p>
+  </div>
 </div>
 
-<!-- SLIDE — Perplexity baseline -->
-<div class="slide bg-dark">
+<!-- Perplexity baseline -->
+<div class="slide bg-dark m5-tight">
   <h2>The Perplexity Baseline</h2>
   <div class="divider"></div>
-  <p>Per-token NLL summary &mdash; LLM analogue of the loss threshold:</p>
+  <p>LLM analogue of the loss threshold &mdash; a per-token NLL summary:</p>
   <div class="math-block">
-    $$\text{PPL}(x) \;=\; \exp\!\left(-\tfrac{1}{T}\sum_{t=1}^T \log p_\theta(x_t \mid x_{&lt;t})\right)$$
+    $$\mathrm{PPL}(x) = \exp\!\Big(-\tfrac{1}{T}\textstyle\sum_{t=1}^{T} \log p_\theta(x_t \mid x_{\lt t})\Big),
+    \qquad \mathcal{A}(x) = \mathbf{1}\big[\mathrm{PPL}(x) \lt \tau\big]$$
   </div>
-  <p>Attack: $\mathcal{A}(x) = \mathbf{1}[\text{PPL}(x) &lt; \tau]$. Low PPL $\Rightarrow$ member.</p>
-  <div class="highlight">
-    <p><strong>Failure:</strong> low PPL on "Hello, how are you?" &mdash; trained or not.</p>
-    <p>Conflates <strong>memorization</strong> with <strong>fluency</strong>.</p>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Recall (why thresholds are weak).</h3>
+    <p>A global threshold on a loss is the <strong>degenerate LRT</strong>: it assumes one null shared by every example. Correct only if all examples have the same intrinsic difficulty.</p>
   </div>
 </div>
 
-<!-- SLIDE — Calibration challenge -->
+<!-- Two confounds -->
 <div class="slide bg-deep">
-  <h2>The Calibration Challenge</h2>
+  <h2>Two Confounds Inside Perplexity</h2>
   <div class="divider"></div>
-  <p>Need a per-example <strong>null</strong>: how surprised would the model be if $x$ were <em>not</em> trained on?</p>
   <div class="grid-2">
     <div>
-      <h3 style="color:var(--warn);">Low PPL $\neq$ Member</h3>
-      <p>Common boilerplate is low-PPL by design.</p>
+      <h3 style="color:var(--warn);">Low PPL $\neq$ member</h3>
+      <p>"Hello, how are you?" is cheap for any LM.</p>
+      <p>Fluency, not memorization.</p>
     </div>
     <div>
-      <h3 style="color:var(--success);">High PPL $\neq$ Non-member</h3>
-      <p>Rare jargon stays high-PPL even after training.</p>
+      <h3 style="color:var(--success);">High PPL $\neq$ non-member</h3>
+      <p>Rare jargon stays expensive after training.</p>
+      <p>Difficulty, not absence.</p>
     </div>
   </div>
   <div class="highlight">
-    <p>Every modern LLM MIA is one question: <strong>how do we build that null cheaply?</strong></p>
+    <p>Perplexity mixes a <strong>membership term</strong> with an <strong>intrinsic-difficulty term</strong>.</p>
+    <p>Length adds a third. &sect;02 is entirely about removing the second.</p>
   </div>
 </div>
 
-<!-- SLIDE — Signal vs reference -->
+<!-- Model M1 setup -->
+<div class="slide bg-dark">
+  <div class="pill">Model-based, not a theorem about real LLMs</div>
+  <h2>A Toy Training Model</h2>
+  <div class="divider"></div>
+  <p>To predict how large the membership signal <em>can</em> be, fix a caricature of training.</p>
+  <div class="m5-algo">
+    <div class="m5-algo-title">Model M1</div>
+    <ol>
+      <li><strong>(A1)</strong> $N$ records, $E$ epochs, SGD with constant step $\eta$, one step per record.</li>
+      <li><strong>(A2)</strong> <em>Frozen gradients.</em> $\nabla\ell(x_i;\theta) = g_i$ throughout training.</li>
+      <li><strong>(A3)</strong> Statistic $T(x) = \ell(x;\theta)$, the loss of $x$ under the final model.</li>
+      <li><strong>(A4)</strong> First order in $\eta$: $\ell(x;\theta_0 + u) \approx \ell(x;\theta_0) + \langle g_x, u\rangle$.</li>
+    </ol>
+  </div>
+  <p class="muted">M1 is the linearized (NTK-style) caricature. It gives scalings, never constants.</p>
+</div>
+
+<!-- Proposition 1 statement -->
+<div class="slide bg-deep">
+  <h2>Proposition 1 &mdash; The Membership Shift</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Proposition 1 (membership-induced mean shift, Model M1).</h3>
+    <p>Let $\theta^{\text{in}}$ and $\theta^{\text{out}}$ be the parameters obtained from the same run with and without $x$. Then</p>
+    <div class="math-block">
+      $$T^{\text{in}}(x) - T^{\text{out}}(x) \;=\; -\,\eta E\,\|g_x\|^2 \;=:\; -\,\Delta(x).$$
+    </div>
+    <p>Training on $x$ lowers its loss by exactly $\Delta(x) = \eta E\|g_x\|^2 \ge 0$.</p>
+  </div>
+  <div class="highlight">
+    <p><strong>Key idea:</strong> membership acts on the statistic through <em>one</em> scalar &mdash; the squared gradient norm of $x$.</p>
+  </div>
+</div>
+
+<!-- Proof of Prop 1 -->
+<div class="slide bg-dark m5-tight">
+  <h2>Proof of Proposition 1</h2>
+  <div class="divider"></div>
+  <p>By (A1)&ndash;(A2) the update is a sum over records and epochs; subtracting, every shared term cancels:</p>
+  <div class="math-block">
+    $$\begin{aligned}
+      \theta^{\text{in}} &= \theta_0 - \eta E \textstyle\sum_{i \in D} g_i, \qquad
+      \theta^{\text{out}} = \theta_0 - \eta E \textstyle\sum_{i \in D\setminus\{x\}} g_i \\[4pt]
+      \theta^{\text{in}} - \theta^{\text{out}} &= -\,\eta E\, g_x
+    \end{aligned}$$
+  </div>
+  <p>Apply (A4) with $u = \theta^{\text{in}}-\theta^{\text{out}}$:</p>
+  <div class="math-block">
+    $$T^{\text{in}}(x) - T^{\text{out}}(x) = \langle g_x,\, -\eta E g_x\rangle = -\eta E\|g_x\|^2. \qquad \blacksquare$$
+  </div>
+</div>
+
+<!-- Prop 2 statement: Gaussian -->
+<div class="slide bg-deep m5-snug">
+  <h2>Proposition 2 &mdash; Shift to Advantage</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Proposition 2 (Gaussian two-sample ceiling).</h3>
+    <p>With $T\mid\text{in} \sim \mathcal{N}(\mu-\Delta,\sigma^2)$, $T\mid\text{out} \sim \mathcal{N}(\mu,\sigma^2)$ and $\rho = \Delta/\sigma$:</p>
+    <div class="math-block">
+      $$\mathrm{AUC} = \Phi\!\Big(\tfrac{\rho}{\sqrt 2}\Big),
+      \qquad
+      \sup_{\mathcal{A}}\mathrm{Adv} = 2\Phi\!\Big(\tfrac{\rho}{2}\Big) - 1,
+      \qquad
+      \mathrm{AUC} = \tfrac12 + \tfrac{\rho}{2\sqrt\pi} + O(\rho^3).$$
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Everything reduces to one number: the <strong>signal-to-noise ratio</strong> $\rho = \Delta/\sigma$.</p>
+  </div>
+</div>
+
+<!-- Proof of Prop 2 -->
+<div class="slide bg-dark m5-tight">
+  <h2>Proof of Proposition 2</h2>
+  <div class="divider"></div>
+  <p>Score is $-T$, so a member is detected when its loss is the smaller of the two.</p>
+  <div class="math-block">
+    $$\begin{aligned}
+    \mathrm{AUC} &= \Pr\big[T^{\text{in}} \lt T^{\text{out}}\big]
+      = \Pr\big[\mathcal{N}(-\Delta,\,2\sigma^2) \lt 0\big] = \Phi\!\Big(\tfrac{\Delta}{\sigma\sqrt2}\Big)\\[2pt]
+    \sup_{\mathcal{A}}\mathrm{Adv} &= \mathrm{TV}\big(\mathcal{N}(\mu-\Delta,\sigma^2),\mathcal{N}(\mu,\sigma^2)\big) = 2\Phi\!\Big(\tfrac{\Delta}{2\sigma}\Big)-1
+    \end{aligned}$$
+  </div>
+  <p>Line 1: difference of independent normals. Line 2: recall $\sup_\mathcal{A}\mathrm{Adv}=\mathrm{TV}$, and equal-variance Gaussians overlap on a half-line.</p>
+  <p>Expanding $\Phi(u) = \tfrac12 + \tfrac{u}{\sqrt{2\pi}}+O(u^3)$ at $u=\rho/\sqrt2$ gives the last claim. $\blacksquare$</p>
+</div>
+
+<!-- Prop 3 statement -->
+<div class="slide bg-deep m5-snug">
+  <h2>Proposition 3 &mdash; Two Nulls, Two Ceilings</h2>
+  <div class="divider"></div>
+  <p>What plays the role of $\sigma$ depends on which null the attack uses.</p>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Proposition 3 (SNR of the pooled and the calibrated attack, Model M1).</h3>
+    <div class="math-block">
+      $$\rho_{\text{pool}} \;=\; \frac{\eta E\,\|g_x\|^2}{\sigma_{\text{diff}}},
+      \qquad\qquad
+      \rho_{\text{cal}} \;=\; \frac{\|g_x\|^2}{\sqrt{N v_x}}$$
+    </div>
+    <p>with $\sigma_{\text{diff}}^2 = \mathrm{Var}_{z\sim P}[\ell(z;\theta_0)]$ and $v_x = \mathrm{Var}_{z\sim P}\langle g_x, g_z\rangle$.</p>
+  </div>
+  <div class="highlight">
+    <p>$\rho_{\text{pool}}$ carries a factor $\eta$. $\rho_{\text{cal}}$ does not &mdash; but it carries $1/\sqrt N$.</p>
+  </div>
+</div>
+
+<!-- Proof of Prop 3, part 1 -->
+<div class="slide bg-dark m5-tight">
+  <h2>Proof of Proposition 3 &mdash; Pooled Null</h2>
+  <div class="divider"></div>
+  <p>The pooled attack thresholds $T$ against one global constant. Its null spread is the spread of $T$ <em>across examples</em>:</p>
+  <div class="math-block">
+    $$\sigma^2_{\text{pool}} = \mathrm{Var}_{z\sim P}\big[\ell(z;\theta)\big]
+    \;\stackrel{\text{(A4)}}{=}\; \mathrm{Var}_{z}\big[\ell(z;\theta_0) - \langle g_z, \theta_0-\theta\rangle\big]$$
+  </div>
+  <p>The second term is $O(\eta)$; the first is $\eta$-free. Hence $\sigma_{\text{pool}} \to \sigma_{\text{diff}}$ as $\eta \to 0$.</p>
+  <div class="highlight">
+    <p>Numerator $\Delta = \eta E\|g_x\|^2$ vanishes with $\eta$; the denominator does <strong>not</strong>.</p>
+    <p>So $\rho_{\text{pool}} = \Theta(\eta E)$: the difficulty spread dominates at any realistic step size.</p>
+  </div>
+</div>
+
+<!-- Proof of Prop 3, part 2 -->
+<div class="slide bg-deep m5-tight m5-snug">
+  <h2>Proof of Proposition 3 &mdash; Calibrated Null</h2>
+  <div class="divider"></div>
+  <p>Compare $T(x)$ to <em>its own</em> null: its law over re-draws of the other $N$ records, a sum of $N$ i.i.d. terms with variance $v_x = \mathrm{Var}_z\langle g_x,g_z\rangle$.</p>
+  <div class="math-block">
+    $$\begin{aligned}
+      T^{\text{out}}(x) &= \ell(x;\theta_0) - \eta E \textstyle\sum_{i=1}^{N} \langle g_x, g_i\rangle,
+      \qquad \sigma^2_{\text{cal}} = \eta^2E^2 N v_x \\[6pt]
+      \rho_{\text{cal}} &= \frac{\eta E \|g_x\|^2}{\eta E\sqrt{N v_x}} = \frac{\|g_x\|^2}{\sqrt{N v_x}}. \qquad \blacksquare
+    \end{aligned}$$
+  </div>
+  <p class="muted">Both $\eta$ and $E$ cancel: the step size drops out of the calibrated ratio.</p>
+</div>
+
+<!-- Recap of the argument -->
+<div class="slide bg-dark m5-tight">
+  <h2>Propositions 1&ndash;3 &mdash; Recap</h2>
+  <div class="divider"></div>
+  <div class="math-block">
+    $$\mathrm{AUC}
+    \;\stackrel{(1)}{=}\; \Phi\!\Big(\tfrac{\rho}{\sqrt2}\Big)
+    \;\stackrel{(2)}{=}\; \Phi\!\Big(\tfrac{\Delta(x)}{\sigma\sqrt2}\Big)
+    \;\stackrel{(3)}{=}\; \Phi\!\Big(\tfrac{\eta E\|g_x\|^2}{\sigma\sqrt2}\Big)
+    \;\stackrel{(4)}{=}\;
+    \begin{cases}
+    \Phi\big(\tfrac{\eta E\|g_x\|^2}{\sigma_{\text{diff}}\sqrt2}\big) & \text{pooled}\\[4pt]
+    \Phi\big(\tfrac{\|g_x\|^2}{\sqrt{2N v_x}}\big) & \text{calibrated}
+    \end{cases}$$
+  </div>
+  <p class="muted">(1) Gaussian two-sample, Proposition 2. &nbsp; (2) definition of the SNR. &nbsp; (3) Proposition 1. &nbsp; (4) substitute the two nulls, Proposition 3.</p>
+  <div class="highlight">
+    <p>The whole of &sect;02 is an attempt to realise the second branch without shadow models.</p>
+  </div>
+</div>
+
+<!-- SNR figure -->
+<div class="slide bg-deep">
+  <h2>The Picture: Shift Against Spread</h2>
+  <div class="divider"></div>
+  <div class="m5-fig">
+    <svg width="1030" height="330" viewBox="0 0 1030 330">
+      <!-- left panel: pretraining -->
+      <line x1="30" y1="250" x2="480" y2="250" stroke="#8a94a6" stroke-width="1.5"/>
+      <path d="M40,250 C150,250 150,80 255,80 C360,80 360,250 470,250" fill="none" stroke="#8a94a6" stroke-width="2.5"/>
+      <path d="M45,250 C155,250 155,92 260,92 C365,92 365,250 475,250" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <line x1="255" y1="80" x2="255" y2="250" stroke="#8a94a6" stroke-width="1" stroke-dasharray="4 4"/>
+      <line x1="260" y1="92" x2="260" y2="250" stroke="#003876" stroke-width="1" stroke-dasharray="4 4"/>
+      <line x1="255" y1="272" x2="260" y2="272" stroke="#C8102E" stroke-width="4"/>
+      <!-- right panel: fine-tuning -->
+      <line x1="555" y1="250" x2="1005" y2="250" stroke="#8a94a6" stroke-width="1.5"/>
+      <path d="M565,250 C630,250 630,95 690,95 C750,95 750,250 815,250" fill="none" stroke="#8a94a6" stroke-width="2.5"/>
+      <path d="M700,250 C765,250 765,95 825,95 C885,95 885,250 950,250" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <line x1="690" y1="95" x2="690" y2="250" stroke="#8a94a6" stroke-width="1" stroke-dasharray="4 4"/>
+      <line x1="825" y1="95" x2="825" y2="250" stroke="#003876" stroke-width="1" stroke-dasharray="4 4"/>
+      <line x1="690" y1="272" x2="825" y2="272" stroke="#C8102E" stroke-width="4"/>
+    </svg>
+    <span class="lab gray" style="left:150px; top:130px;">out</span>
+    <span class="lab blue" style="left:368px; top:130px;">in</span>
+    <span class="lab red" style="left:258px; top:296px;">$\Delta$</span>
+    <span class="lab" style="left:255px; top:26px;">$\rho \ll 1$ &nbsp;&mdash;&nbsp; pre-training</span>
+    <span class="lab gray" style="left:600px; top:140px;">out</span>
+    <span class="lab blue" style="left:930px; top:140px;">in</span>
+    <span class="lab red" style="left:758px; top:296px;">$\Delta$</span>
+    <span class="lab" style="left:780px; top:26px;">$\rho \sim 1$ &nbsp;&mdash;&nbsp; fine-tuning</span>
+  </div>
+  <p class="muted" style="margin-top:26px;">Same curves, same $\Delta$-versus-$\sigma$ question. Only the ratio changed.</p>
+</div>
+
+<!-- Reading the proposition -->
+<div class="slide bg-dark">
+  <h2>Reading Proposition 3</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Lever</th><th>Pooled SNR</th><th>Calibrated SNR</th></tr>
+    <tr><td>Step size $\eta$ smaller</td><td>shrinks linearly</td><td>no effect</td></tr>
+    <tr><td>Epochs $E$ larger</td><td>grows linearly</td><td>no effect</td></tr>
+    <tr><td>Corpus $N$ larger</td><td>no effect</td><td>shrinks as $N^{-1/2}$</td></tr>
+    <tr><td>Gradient norm $\|g_x\|$ larger</td><td>grows</td><td>grows</td></tr>
+  </table>
+  <div class="highlight">
+    <p>Pre-training sets $E=1$, $\eta \sim 10^{-4}$, $N \sim 10^{9}$ &mdash; <strong>every lever is at its worst</strong>.</p>
+  </div>
+</div>
+
+<!-- Effective dimension corollary -->
+<div class="slide bg-deep m5-tight">
+  <h2>Corollary 1 &mdash; Capacity Over Data</h2>
+  <div class="divider"></div>
+  <p>Add <strong>(A5)</strong>: gradients of distinct records are near-orthogonal in an effective dimension $d_{\text{eff}}$, so $v_x \approx \|g_x\|^4/d_{\text{eff}}$. Then Proposition 3 gives</p>
+  <div class="math-block">
+    $$\rho_{\text{cal}} \;\approx\; \sqrt{\frac{d_{\text{eff}}}{N}}$$
+  </div>
+  <div class="highlight">
+    <p>Membership leakage is governed by <strong>capacity per record</strong>, not by loss.</p>
+    <p>Qualitative predictions: AUC <em>rises</em> with model size at fixed data; <em>falls</em> with corpus size at fixed model.</p>
+  </div>
+  <p class="muted">A scaling, not a number &mdash; $d_{\text{eff}}$ is not the parameter count. Do not read absolute AUC off this.</p>
+</div>
+
+<!-- What the model does not say -->
+<div class="slide bg-dark">
+  <h2>What Model M1 Does <em>Not</em> Say</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li>Not a theorem about real LLMs &mdash; (A2) freezes gradients; real training does not</li>
+    <li>$E$ cancels in $\rho_{\text{cal}}$ only <em>because</em> of that freezing</li>
+    <li>So M1 <strong>under-predicts</strong> the epoch effect, as the next slides show</li>
+    <li>No claim about constants &mdash; only about motion in $(\eta, E, N, d_{\text{eff}})$</li>
+  </ul>
+  <div class="highlight">
+    <p>Use it as a <strong>compass</strong>: which direction does each design choice push the ceiling?</p>
+  </div>
+</div>
+
+<!-- Duan fig 2 left -->
+<div class="slide bg-deep">
+  <div class="pill">Duan et al. 2024 &middot; COLM</div>
+  <h2>Signal Does Not Accumulate With Steps</h2>
+  <div class="divider"></div>
+  <img class="m5-shot" src="figs/duan-auc-vs-training-steps.png" alt="MIA AUC against number of training steps" style="height:360px;">
+  <div class="cite-left cite">Duan, Suri, Mireshghallah, Min, Shi, Zettlemoyer, Tsvetkov, Choi, Evans, Hajishirzi, &ldquo;Do Membership Inference Attacks Work on Large Language Models?&rdquo;, COLM 2024 &mdash; Figure 2 (left).</div>
+</div>
+
+<!-- Duan fig 2 left reading -->
+<div class="slide bg-dark">
+  <h2>Reading That Curve</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li>AUC rises early in training, then gradually <em>declines</em> as steps accumulate</li>
+    <li>Consistent with M1: the shift $\Delta$ is fixed at $\eta\|g_x\|^2$ while later updates add null noise</li>
+    <li>More compute on the same corpus does <strong>not</strong> raise the ceiling</li>
+  </ul>
+  <div class="highlight">
+    <p>Under one pass, a record's membership evidence is written once and then diluted.</p>
+  </div>
+</div>
+
+<!-- Duan fig 2 right -->
+<div class="slide bg-deep">
+  <div class="pill">Duan et al. 2024 &middot; COLM</div>
+  <h2>Signal <em>Does</em> Accumulate With Epochs</h2>
+  <div class="divider"></div>
+  <img class="m5-shot" src="figs/duan-auc-vs-epochs.png" alt="MIA AUC against number of effective epochs" style="height:360px;">
+  <div class="cite-left cite">Duan et al., COLM 2024 &mdash; Figure 2 (right). Reported finding: attack performance increases roughly linearly in the number of effective epochs.</div>
+</div>
+
+<!-- Two knobs -->
 <div class="slide bg-dark">
   <h2>Two Knobs Every Attack Turns</h2>
   <div class="divider"></div>
   <div class="grid-2" style="margin-top:8px;">
     <div class="card">
-      <h3>Signal</h3>
-      <p>Per-sequence PPL, per-token NLL, variance across contexts, &hellip;</p>
+      <h3>The statistic $T(x)$</h3>
+      <p>Sequence NLL, per-token NLL, loss-versus-position slope, loss under many contexts.</p>
     </div>
     <div class="card">
-      <h3>Reference (null)</h3>
-      <p>Smaller LM, paraphrases, self-generations, population of texts.</p>
+      <h3>The null $q$</h3>
+      <p>Another LM, perturbations of $x$, self-generations, the population marginal.</p>
     </div>
   </div>
   <div class="highlight">
-    <p>The lecture is a tour of <strong>signal $\times$ reference</strong> choices.</p>
+    <p>Proposition 3 says the second knob is the one that removes the $\eta$ penalty.</p>
+    <p>&sect;02 makes &ldquo;choose a null&rdquo; into a single definition with five estimators.</p>
   </div>
 </div>
 
 
 <!-- ═══════════════════════════════════════════════════════════════════ -->
-<!--  §02 — Calibration strategies                                      -->
+<!--  §02 — The calibration principle                                   -->
 <!-- ═══════════════════════════════════════════════════════════════════ -->
 
 <div class="slide section-slide left">
   <div class="section-num">02</div>
-  <h1>Calibration Strategies</h1>
+  <h1>The Calibration<br>Principle</h1>
   <div class="divider"></div>
-  <p class="subtitle">Four key ideas for building the null</p>
+  <p class="subtitle">One definition, five estimators of the null</p>
 </div>
 
-<!-- SLIDE — Reference model -->
-<div class="slide bg-dark">
-  <h2>Reference Model (Carlini et al. 2021)</h2>
+<!-- Definition 1 -->
+<div class="slide bg-dark m5-snug">
+  <h2>Definition 1 &mdash; Calibrated Score</h2>
   <div class="divider"></div>
-  <p>Use a <strong>different</strong> LM as the null. Compare ratios.</p>
-  <div class="math-block">
-    $$s(x) \;=\; \log p_\theta(x) \;-\; \log p_{\text{ref}}(x)$$
-  </div>
-  <ul class="arrow">
-    <li>$p_{\text{ref}}$ &mdash; smaller LM, or zlib compression length</li>
-    <li>Cancels per-sequence intrinsic difficulty</li>
-    <li>Cheap; signal still weak on pre-training</li>
-  </ul>
-</div>
-
-<!-- SLIDE — Neighbourhood -->
-<div class="slide bg-deep">
-  <div class="pill">Mattern et al. 2023</div>
-  <h2>Neighbourhood: Paraphrases as Null</h2>
-  <div class="divider"></div>
-  <p>Mask-and-fill with T5 to make $K$ paraphrases $\tilde{x}^{(k)}$.</p>
-  <div class="math-block">
-    $$s(x) \;=\; \log p_\theta(x) \;-\; \tfrac{1}{K}\sum_{k=1}^K \log p_\theta(\tilde{x}^{(k)})$$
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Definition 1 (calibrated membership score).</h3>
+    <p>Fix a <em>null density estimator</em> $q$: a map from text to a log-probability that does <strong>not</strong> depend on whether $x$ was trained on. The calibrated score is</p>
+    <div class="math-block">
+      $$s(x) \;=\; \log p_\theta(x) \;-\; \log q(x).$$
+    </div>
   </div>
   <div class="highlight">
-    <p><strong>Memorized:</strong> $\log p_\theta(x) \gg$ paraphrases.</p>
-    <p><strong>Generic:</strong> $\log p_\theta(x) \approx$ paraphrases.</p>
+    <p>Every LLM attack in this lecture is Definition 1 with a different $q$.</p>
+    <p>The zoo is not six ideas. It is <strong>one idea and six estimators</strong>.</p>
   </div>
 </div>
 
-<!-- SLIDE — SPV-MIA -->
-<div class="slide bg-dark">
-  <div class="pill">Fu et al. 2023</div>
-  <h2>SPV-MIA: Self-Prompted Null</h2>
+<!-- Recall pooling -->
+<div class="slide bg-deep">
+  <h2>Recall &mdash; Why Pooling Loses</h2>
   <div class="divider"></div>
-  <p>The target LLM generates its own reference text.</p>
-  <ul class="arrow">
-    <li>Prefix-complete $x$ &mdash; members regenerate close to original</li>
-    <li>No external reference model needed</li>
-    <li>Strong for <strong>fine-tuning</strong> detection: 0.80&ndash;0.90 AUC</li>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Recall (the pooling argument).</h3>
+    <p>A single global threshold tests a <strong>mixture</strong>: examples with wildly different intrinsic difficulty share one null. The pooled ROC is the mixture of the per-example ROCs.</p>
+  </div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Recall (concavity).</h3>
+    <p>Each per-example ROC is concave; by Jensen the mixture lies <em>below</em> the average of the per-example curves. Per-example conditioning dominates pooling, uniformly in $\alpha$.</p>
+  </div>
+  <p class="muted">Both are established. &sect;02 supplies the quantitative version: <em>how much</em> does calibration buy, and when does it backfire?</p>
+</div>
+
+<!-- Prop 4 statement -->
+<div class="slide bg-dark m5-snug">
+  <h2>Proposition 4 &mdash; Difficulty Cancellation</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Proposition 4 (what a null estimator buys, and what it costs).</h3>
+    <p>Suppose $\;-\log p_\theta(x) = a(x) - \Delta\,\mathbf{1}[x \in D] + \varepsilon\;$ and $\;-\log q(x) = a(x) + \delta(x)$, with $a \perp \varepsilon \perp \delta$, $\mathbb{E}\delta = 0$, and $q$ independent of membership. Then</p>
+    <div class="math-block">
+      $$\rho_{\text{raw}} = \frac{\Delta}{\sqrt{\sigma_a^2+\sigma_\varepsilon^2}},
+      \qquad
+      \rho_{\text{cal}} = \frac{\Delta}{\sqrt{\sigma_\delta^2+\sigma_\varepsilon^2}},
+      \qquad
+      \rho_{\text{cal}} \gt \rho_{\text{raw}} \iff \sigma_\delta^2 \lt \sigma_a^2 .$$
+    </div>
+  </div>
+  <div class="highlight">
+    <p>A reference helps <strong>exactly</strong> when its own error is smaller than the difficulty spread it removes.</p>
+  </div>
+</div>
+
+<!-- Proof of Prop 4 -->
+<div class="slide bg-deep m5-tight">
+  <h2>Proof of Proposition 4</h2>
+  <div class="divider"></div>
+  <p>Write $b = \mathbf{1}[x\in D]$. The raw score is $\log p_\theta(x) = -a(x)+\Delta b-\varepsilon$:</p>
+  <div class="math-block">
+    $$\mathbb{E}[\text{raw}\mid b{=}1]-\mathbb{E}[\text{raw}\mid b{=}0] = \Delta,
+    \qquad
+    \mathrm{Var}[\text{raw}\mid b] = \sigma_a^2+\sigma_\varepsilon^2$$
+  </div>
+  <p>The calibrated score cancels $a(x)$ term by term:</p>
+  <div class="math-block">
+    $$s(x)=\log p_\theta(x)-\log q(x) = \big({-}a+\Delta b-\varepsilon\big)-\big({-}a-\delta\big) = \Delta b + \delta - \varepsilon$$
+  </div>
+  <p>Same mean gap $\Delta$; variance now $\sigma_\delta^2+\sigma_\varepsilon^2$. Dividing gives the two ratios, and comparing denominators gives the equivalence. $\blacksquare$</p>
+</div>
+
+<!-- Interpretation -->
+<div class="slide bg-dark">
+  <h2>Two Failure Modes of a Null</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="margin-top:8px;">
+    <div class="card">
+      <h3>Noisy null &mdash; $\sigma_\delta^2$ large</h3>
+      <p>The reference tracks difficulty badly.</p>
+      <p>Calibration <em>adds</em> variance. Worse than raw perplexity.</p>
+    </div>
+    <div class="card">
+      <h3>Contaminated null</h3>
+      <p>$q$ secretly depends on membership.</p>
+      <p>$\Delta$ shrinks toward $0$ &mdash; the signal is subtracted away.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Design target for every $q$ below: <strong>track $a(x)$ closely, stay blind to $D$</strong>.</p>
+  </div>
+</div>
+
+<!-- Calibration figure -->
+<div class="slide bg-deep">
+  <h2>One Score, Three Nulls</h2>
+  <div class="divider"></div>
+  <div class="m5-fig">
+    <svg width="1010" height="300" viewBox="0 0 1010 300">
+      <!-- observed bar -->
+      <rect x="40" y="60" width="230" height="46" fill="#003876" opacity="0.16" stroke="#003876" stroke-width="1.5"/>
+      <rect x="270" y="60" width="52" height="46" fill="#C8102E" opacity="0.55" stroke="#C8102E" stroke-width="1.5"/>
+      <line x1="40" y1="130" x2="322" y2="130" stroke="#8a94a6" stroke-width="1"/>
+      <!-- arrows to three nulls -->
+      <path d="M181,150 C181,190 470,180 470,210" fill="none" stroke="#8a94a6" stroke-width="2" marker-end="url(#m5a1)"/>
+      <path d="M181,150 C181,200 700,180 700,210" fill="none" stroke="#8a94a6" stroke-width="2" marker-end="url(#m5a1)"/>
+      <path d="M181,150 C181,210 920,180 920,210" fill="none" stroke="#8a94a6" stroke-width="2" marker-end="url(#m5a1)"/>
+      <defs><marker id="m5a1" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 z" fill="#8a94a6"/></marker></defs>
+      <rect x="380" y="212" width="180" height="52" rx="8" fill="#ffffff" stroke="#003876" stroke-width="1.5"/>
+      <rect x="610" y="212" width="180" height="52" rx="8" fill="#ffffff" stroke="#003876" stroke-width="1.5"/>
+      <rect x="830" y="212" width="180" height="52" rx="8" fill="#ffffff" stroke="#003876" stroke-width="1.5"/>
+    </svg>
+    <span class="lab blue" style="left:155px; top:83px;">intrinsic difficulty $a(x)$</span>
+    <span class="lab red" style="left:296px; top:36px;">$\Delta$</span>
+    <span class="lab gray" style="left:181px; top:145px;">observed $-\log p_\theta(x)$</span>
+    <span class="lab blue" style="left:470px; top:230px;">another LM</span>
+    <span class="lab blue" style="left:700px; top:230px;">perturbations of $x$</span>
+    <span class="lab blue" style="left:920px; top:230px;">population marginal</span>
+    <span class="lab gray" style="left:470px; top:254px;">$q=p_{\theta_{\text{ref}}}$</span>
+    <span class="lab gray" style="left:700px; top:254px;">$q=\overline{p_\theta(\tilde x)}$</span>
+    <span class="lab gray" style="left:920px; top:254px;">$q=p(x)$</span>
+  </div>
+  <p class="muted" style="margin-top:8px;">Only the red sliver is membership. Every $q$ is an attempt to measure the blue block.</p>
+</div>
+
+<!-- Desiderata -->
+<div class="slide bg-dark">
+  <h2>What Makes a Good $q$</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li><strong>Accurate</strong> &mdash; small $\sigma_\delta$ relative to the difficulty spread $\sigma_a$</li>
+    <li><strong>Blind</strong> &mdash; computable without knowing $D$, and not itself trained on $x$</li>
+    <li><strong>Cheap</strong> &mdash; no re-pre-training; a handful of forward passes</li>
   </ul>
   <div class="highlight">
-    <p>Key idea: <strong>fine-tuning collapses the model toward training texts</strong>.</p>
-    <p>Self-generations reveal the collapse.</p>
+    <p>Shadow models score perfectly on the first two and fail catastrophically on the third.</p>
+    <p>The five strategies below trade accuracy for feasibility in different ways.</p>
   </div>
 </div>
 
-<!-- SLIDE — Context-aware -->
+<!-- Strategy 1: reference -->
 <div class="slide bg-deep">
-  <div class="pill">Chang et al. 2024</div>
-  <h2>Context-Aware: Variance as Signal</h2>
+  <div class="pill">Estimator 1 &middot; Carlini et al. 2021</div>
+  <h2>Reference Model</h2>
   <div class="divider"></div>
-  <p>Score $x$ under many prefixes $c \in \mathcal{C}$:</p>
   <div class="math-block">
-    $$s(x) \;=\; \text{Var}_{c \in \mathcal{C}}\bigl[\log p_\theta(x \mid c)\bigr]$$
+    $$q(x) = p_{\theta_{\text{ref}}}(x)
+    \qquad\Longrightarrow\qquad
+    s(x) = \log p_\theta(x) - \log p_{\theta_{\text{ref}}}(x)$$
   </div>
   <ul class="arrow">
-    <li>Members: loss <em>drops</em> under the right context &mdash; high variance</li>
-    <li>Non-members: insensitive to context &mdash; low variance</li>
-    <li>Memorization is <strong>text-in-context</strong>, not text alone</li>
+    <li>$\theta_{\text{ref}}$: a smaller or differently-trained LM &mdash; one forward pass</li>
+    <li>Compression variant: $q$ = negative zlib code length of $x$</li>
+    <li>$\delta(x)$ = the reference's own difficulty error on $x$</li>
   </ul>
+  <p class="muted">Valid exactly when the reference error is smaller than the difficulty spread it removes &mdash; Proposition 4.</p>
 </div>
 
-<!-- SLIDE — Token-level surprise -->
+<!-- Reference failure -->
 <div class="slide bg-dark">
-  <h2>Token-Level: Not All Tokens Are Equal</h2>
+  <h2>Where the Reference Model Breaks</h2>
   <div class="divider"></div>
-  <p>Per-token surprise $I_t = -\log p_\theta(x_t \mid x_{&lt;t})$. Common tokens carry no signal.</p>
+  <p>Proposition 4 says the reference helps only if $\sigma_\delta \lt \sigma_a$. Two ways that fails:</p>
+  <div class="grid-2">
+    <div>
+      <h3 style="color:var(--warn);">Distribution mismatch</h3>
+      <p>$\delta(x)$ blows up on any domain the reference never saw.</p>
+    </div>
+    <div>
+      <h3 style="color:var(--warn);">Overlapping corpora</h3>
+      <p>Both trained on the web: $q$ may contain $x$ too.</p>
+    </div>
+  </div>
+  <div class="cite-left cite">Mattern, Mireshghallah, Jin, Sch&ouml;lkopf, Sachan, Berg-Kirkpatrick, &ldquo;Membership Inference Attacks against Language Models via Neighbourhood Comparison&rdquo;, Findings of ACL 2023 &mdash; reports that reference-based attacks are highly sensitive to the reference training distribution.</div>
+</div>
+
+<!-- Strategy 2: neighbourhood -->
+<div class="slide bg-deep">
+  <div class="pill">Estimator 2 &middot; Mattern et al. 2023</div>
+  <h2>Neighbourhood: Build the Null From $x$</h2>
+  <div class="divider"></div>
+  <p>Mask spans of $x$ and refill with a masked LM, giving $\tilde x^{(1)},\dots,\tilde x^{(K)}$.</p>
+  <div class="math-block">
+    $$\log q(x) = \frac{1}{K}\sum_{k=1}^{K}\log p_\theta\big(\tilde x^{(k)}\big)
+    \quad\Longrightarrow\quad
+    s(x) = \log p_\theta(x) - \frac1K\sum_k \log p_\theta\big(\tilde x^{(k)}\big)$$
+  </div>
+  <div class="highlight">
+    <p><strong>Key idea:</strong> the null is evaluated under the <em>target</em> model, so its difficulty scale is automatically right &mdash; no second model to mis-specify.</p>
+  </div>
+</div>
+
+<!-- Lemma 1 statement -->
+<div class="slide bg-dark m5-snug">
+  <h2>Lemma 1 &mdash; When Is This Null Valid?</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Lemma 1 (exchangeable perturbations give an exact test).</h3>
+    <p>Suppose that conditional on $x \notin D$, the $K+1$ values</p>
+    <div class="math-block">
+      $$\big(\log p_\theta(x),\; \log p_\theta(\tilde x^{(1)}),\;\dots,\;\log p_\theta(\tilde x^{(K)})\big)$$
+    </div>
+    <p>are <strong>exchangeable</strong>. Then the rank $R$ of $\log p_\theta(x)$ among them is uniform on $\{1,\dots,K+1\}$, so rejecting when $R=1$ has exact level $\tfrac{1}{K+1}$.</p>
+  </div>
+  <div class="highlight">
+    <p>Distribution-free, model-free, finite-sample exact. No Gaussian assumption anywhere.</p>
+  </div>
+</div>
+
+<!-- Proof Lemma 1 -->
+<div class="slide bg-deep m5-tight">
+  <h2>Proof of Lemma 1</h2>
+  <div class="divider"></div>
+  <p>Let $V_0 = \log p_\theta(x)$ and $V_k = \log p_\theta(\tilde x^{(k)})$. Exchangeability means the joint law of $(V_0,\dots,V_K)$ is invariant under every permutation $\pi$ of the indices.</p>
+  <p>Assume the $V_k$ are almost surely distinct. For each $j$,</p>
+  <div class="math-block">
+    $$\Pr[R = j] = \Pr\big[\,\#\{k : V_k \gt V_0\} = j-1\,\big]$$
+  </div>
+  <p>Permutation invariance makes this the same for every index in the role of $V_0$, and the $K+1$ events partition the space. So each has probability $\tfrac{1}{K+1}$, giving the claimed level. $\blacksquare$</p>
+</div>
+
+<!-- Neighbourhood figure -->
+<div class="slide bg-dark">
+  <h2>The Neighbourhood Picture</h2>
+  <div class="divider"></div>
+  <div class="m5-fig">
+    <svg width="980" height="300" viewBox="0 0 980 300">
+      <!-- non-member panel -->
+      <circle cx="240" cy="150" r="110" fill="#003876" opacity="0.05" stroke="#8a94a6" stroke-width="1" stroke-dasharray="5 5"/>
+      <circle cx="240" cy="150" r="9" fill="#003876"/>
+      <circle cx="180" cy="105" r="6" fill="#8a94a6"/><circle cx="300" cy="112" r="6" fill="#8a94a6"/>
+      <circle cx="168" cy="196" r="6" fill="#8a94a6"/><circle cx="292" cy="200" r="6" fill="#8a94a6"/>
+      <circle cx="240" cy="88" r="6" fill="#8a94a6"/><circle cx="240" cy="216" r="6" fill="#8a94a6"/>
+      <circle cx="316" cy="158" r="6" fill="#8a94a6"/><circle cx="160" cy="150" r="6" fill="#8a94a6"/>
+      <!-- member panel -->
+      <circle cx="720" cy="150" r="110" fill="#003876" opacity="0.05" stroke="#8a94a6" stroke-width="1" stroke-dasharray="5 5"/>
+      <circle cx="720" cy="150" r="16" fill="#C8102E"/>
+      <circle cx="660" cy="105" r="6" fill="#8a94a6"/><circle cx="780" cy="112" r="6" fill="#8a94a6"/>
+      <circle cx="648" cy="196" r="6" fill="#8a94a6"/><circle cx="772" cy="200" r="6" fill="#8a94a6"/>
+      <circle cx="720" cy="88" r="6" fill="#8a94a6"/><circle cx="720" cy="216" r="6" fill="#8a94a6"/>
+      <circle cx="796" cy="158" r="6" fill="#8a94a6"/><circle cx="640" cy="150" r="6" fill="#8a94a6"/>
+    </svg>
+    <span class="lab blue" style="left:240px; top:278px;">non-member: rank of $x$ is uniform</span>
+    <span class="lab red" style="left:720px; top:278px;">member: $x$ is a local spike</span>
+    <span class="lab gray" style="left:400px; top:150px;">size $=\log p_\theta$</span>
+  </div>
+  <p class="muted" style="margin-top:14px;">Dots are perturbations $\tilde x^{(k)}$; the centre is $x$. Membership shows up as a <em>local maximum</em>, not a large value.</p>
+</div>
+
+<!-- Where exchangeability fails -->
+<div class="slide bg-deep">
+  <h2>Where Exchangeability Fails</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li><strong>Fluency bias.</strong> Mask-filled text is systematically easier (or harder) than human text</li>
+    <li><strong>Structured text.</strong> Span replacement breaks code and mathematics; $x$ then ranks first for syntactic reasons</li>
+    <li><strong>Near-duplicates.</strong> A paraphrase of $x$ inside $D$ contaminates the null</li>
+  </ul>
+  <div class="highlight">
+    <p>Broken exchangeability turns the exact level $\tfrac{1}{K+1}$ into an <strong>unknown</strong> one.</p>
+  </div>
+</div>
+
+<!-- Strategy 3: SPV-MIA -->
+<div class="slide bg-dark">
+  <div class="pill">Estimator 3 &middot; Fu et al. 2024 &middot; NeurIPS</div>
+  <h2>SPV-MIA: The Model Writes Its Own Null</h2>
+  <div class="divider"></div>
+  <p>Prompt the <em>target</em> LLM to generate a corpus in its own style; fine-tune the reference model on that corpus.</p>
+  <div class="m5-chain">
+    <span>prompt $\theta$</span>
+    <span class="arr">&rarr;</span>
+    <span class="blue">self-generated corpus</span>
+    <span class="arr">&rarr;</span>
+    <span>train $\theta_{\text{ref}}$</span>
+    <span class="arr focus">&rarr;</span>
+    <span>$q = p_{\theta_{\text{ref}}}$</span>
+  </div>
+  <div class="highlight">
+    <p><strong>Key idea:</strong> the self-prompted corpus matches the target's <em>distribution</em> without containing its <em>records</em>.</p>
+    <p>Fixes the distribution-mismatch half of the reference-model failure.</p>
+  </div>
+</div>
+
+<!-- SPV assumptions and results -->
+<div class="slide bg-deep">
+  <h2>SPV-MIA &mdash; Assumption and Evidence</h2>
+  <div class="divider"></div>
+  <p>Validity needs self-generations that match the fine-tuning distribution but rarely reproduce individual records.</p>
+  <ul class="check">
+    <li>Reported lift of MIA AUC &ldquo;from 0.7 to a significantly high level of 0.9&rdquo;</li>
+    <li>Best average <strong>AUC 0.924</strong> over four LLMs and three datasets</li>
+    <li>Signal framed as <em>probabilistic variation</em>: memorization, not overfitting</li>
+  </ul>
+  <div class="highlight">
+    <p>Note the regime &mdash; <strong>fine-tuned</strong> targets. Corollary 3 explains why that matters.</p>
+  </div>
+  <div class="cite-left cite">Fu, Wang, Gao, Liu, Li, Jiang, NeurIPS 2024.</div>
+</div>
+
+<!-- Strategy 4: CAMIA intro -->
+<div class="slide bg-dark">
+  <div class="pill">Estimator 4 &middot; Chang et al. 2025 &middot; EMNLP</div>
+  <h2>Context-Aware: The Null Is a Trajectory</h2>
+  <div class="divider"></div>
+  <p>Earlier estimators compress $x$ to one number. CAMIA keeps the whole per-token loss curve</p>
+  <div class="math-block">
+    $$L_t = -\log p_\theta\big(x_t \mid x_{\lt t}\big), \qquad t = 1,\dots,T$$
+  </div>
+  <div class="highlight">
+    <p><strong>Key idea:</strong> memorization is <em>context-dependent</em>. A member needs less context before its loss drops; a non-member keeps guessing.</p>
+    <p>The null is not another model &mdash; it is the <strong>shape</strong> the curve would have without memorization.</p>
+  </div>
+</div>
+
+<!-- CAMIA statistics -->
+<div class="slide bg-deep m5-tight m5-snug">
+  <h2>Two Context Statistics</h2>
+  <div class="divider"></div>
+  <p><strong>Cut-off loss</strong>: average only the first $T'$ tokens, where context is scarce. <strong>Slope</strong>: how fast the loss falls as context accumulates.</p>
+  <div class="math-block">
+    $$\begin{aligned}
+      f_{\text{Cut}}(x) &= \frac{1}{T'}\sum_{t=1}^{T'} L_t \\[6pt]
+      f_{\text{Slope}}(x) &= \frac{\sum_{t=1}^{T'} (t-\bar t)\,(L_t - \bar L)}{\sum_{t=1}^{T'} (t-\bar t)^2},
+      \qquad \bar t = \tfrac{T'+1}{2}
+    \end{aligned}$$
+  </div>
+  <p class="muted">The second is an ordinary least-squares slope of $L_t$ on $t$. Members fall faster, so their slope is more negative.</p>
+</div>
+
+<!-- CAMIA real figure -->
+<div class="slide bg-dark">
+  <div class="pill">Chang et al. 2025 &middot; EMNLP</div>
+  <h2>Members Descend Faster</h2>
+  <div class="divider"></div>
+  <img class="m5-shot" src="figs/camia-token-loss-slope.png" alt="Per-token loss slope for members and non-members" style="height:400px;">
+  <div class="cite-left cite">Chang, Shamsabadi, Katevas, Haddadi, Shokri, &ldquo;Context-Aware Membership Inference Attacks against Pre-trained Large Language Models&rdquo;, EMNLP 2025 &mdash; Figure 3. Pythia-160M on Pile-CC: member slope $-0.014$ against non-member slope $-0.000$.</div>
+</div>
+
+<!-- CAMIA other statistics -->
+<div class="slide bg-deep">
+  <h2>The Rest of the Family</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Statistic</th><th>What it measures</th></tr>
+    <tr><td>Token-diversity calibration</td><td>Divide the loss by $d_x = |\mathrm{Dedup}(x)|/|x|$ &mdash; repetitive text is easy for anyone</td></tr>
+    <tr><td>Low-loss counting</td><td>Count tokens below a threshold: fixed, sequence-mean, or running-mean</td></tr>
+    <tr><td>Loss fluctuation</td><td>Approximate entropy and Lempel&ndash;Ziv complexity of the loss curve</td></tr>
+    <tr><td>Repetition amplification</td><td>Feed $x$ twice; non-members gain more from the repeat</td></tr>
+  </table>
+  <div class="highlight">
+    <p>Members produce <strong>smoother, more regular</strong> loss curves; non-members fluctuate.</p>
+  </div>
+</div>
+
+<!-- CAMIA numbers -->
+<div class="slide bg-dark">
+  <h2>What Context Calibration Buys</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li>Pythia-160M, GitHub domain: TPR at 1% FPR rises <strong>23.13% &rarr; 63.43%</strong> once the loss is context-calibrated</li>
+    <li>Early tokens carry the clearest member / non-member gap</li>
+    <li>Evaluated on MIMIR &mdash; a randomly-split benchmark, not a date-split one</li>
+  </ul>
+  <div class="highlight">
+    <p>The authors avoid WikiMIA deliberately: a model-free baseline reaches about 98.7% AUC there.</p>
+    <p>&sect;03 turns that observation into a proposition.</p>
+  </div>
+  <div class="cite-left cite">Chang et al., EMNLP 2025 &mdash; Figure 1 (Pythia-160M, GitHub).</div>
+</div>
+
+<!-- Token surprise -->
+<div class="slide bg-deep">
+  <h2>Estimator 5 &mdash; Not All Tokens Are Equal</h2>
+  <div class="divider"></div>
+  <p>Per-token surprisal $U_t = -\log p_\theta(x_t\mid x_{\lt t})$. Filler carries no membership evidence.</p>
   <div class="card" style="padding:16px 20px; line-height:1.4; white-space:nowrap; text-align:center;">
     <span class="token token-fixed">The</span>
     <span class="token token-fixed">study</span>
@@ -289,155 +931,647 @@
   </div>
   <p><span class="token token-fixed">filler</span> predictable for anyone &nbsp;&nbsp; <span class="token token-gen">specific</span> predictable only if memorized</p>
   <div class="highlight">
-    <p><strong>Takeaway:</strong> averaging over all tokens <em>dilutes</em> the signal.</p>
-    <p>Weighting or selecting high-surprise tokens <em>amplifies</em> it &mdash; motivates Min-K% &amp; InfoRMIA next.</p>
+    <p>Averaging all $T$ tokens <strong>dilutes</strong> a signal that lives in a handful of positions.</p>
   </div>
+  <p class="muted">Two responses to the same observation: <strong>select</strong> the informative positions (Min-K%), or <strong>reweight</strong> every position by its own null (InfoRMIA).</p>
 </div>
 
-<!-- SLIDE — Min-K% and InfoRMIA -->
-<div class="slide bg-deep">
-  <div class="pill">Shi et al. 2024 &middot; Tao &amp; Shokri 2025</div>
-  <h2>Min-K% and InfoRMIA</h2>
-  <div class="divider"></div>
-  <p><strong>Min-K% (Shi et al.):</strong> average the surprise of the $K\%$ <em>least</em> likely tokens.</p>
-  <p><strong>InfoRMIA (Tao &amp; Shokri):</strong> weighted token-wise log-ratio against a reference:</p>
-  <div class="math-block">
-    $$s(x) \;=\; \sum_{t \,\in\, \mathcal{T}_{\text{info}}} w_t \,\log \frac{p_\theta(x_t \mid x_{&lt;t})}{p_{\text{ref}}(x_t \mid x_{&lt;t})}$$
-  </div>
-  <p>$\mathcal{T}_{\text{info}}$: high reference-surprise positions (entities, numbers, rare words).</p>
-  <p>$w_t$: informativeness weight.</p>
-  <p>Info-theoretic view: pick $\mathcal{T}_{\text{info}}, w_t$ to maximise total $I(z \in D ;\, x_t \mid x_{&lt;t})$.</p>
-</div>
-
-<!-- SLIDE — Calibration zoo summary -->
+<!-- Recall Min-K% -->
 <div class="slide bg-dark">
+  <h2>Recall &mdash; Min-K% Probability</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Recall (the tail statistic).</h3>
+    <p>Take the $k = \lceil \alpha T\rceil$ tokens with the <em>largest</em> surprisal and average them:</p>
+    <div class="math-block">
+      $$S_\alpha(x) = \frac{1}{k}\sum_{t \in \mathrm{Top}_k(U)} U_t, \qquad \alpha = K/100$$
+    </div>
+    <p>Motivated by tail sufficiency: a memorized document should have <em>no</em> highly surprising tokens.</p>
+  </div>
+  <p class="muted">Definition, motivation and the Min-K%++ normalisation are already established. Here we ask one new question: is $S_\alpha$ <em>calibrated</em>?</p>
+</div>
+
+<!-- Prop 5 statement -->
+<div class="slide bg-deep m5-snug">
+  <h2>Proposition 5 &mdash; The Selection Effect</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Proposition 5 (tail selection is itself an uncalibrated statistic).</h3>
+    <p>Let the surprisals of $x$ be i.i.d. from a document-specific law $F_x$ with finite mean. Then, almost surely as $T\to\infty$,</p>
+    <div class="math-block">
+      $$S_\alpha(x) \;\longrightarrow\; \mathrm{CTE}_\alpha(F_x) := \frac{1}{\alpha}\int_{1-\alpha}^{1} F_x^{-1}(u)\,du .$$
+    </div>
+    <p>The limit depends on $x$ only through $F_x$: a property of the document, not of $D$.</p>
+  </div>
+  <div class="highlight">
+    <p>Tail selection swaps the mean of $F_x$ for the tail mean of $F_x$. One confound for another.</p>
+  </div>
+</div>
+
+<!-- Proof Prop 5 -->
+<div class="slide bg-dark m5-tight m5-snug">
+  <h2>Proof of Proposition 5</h2>
+  <div class="divider"></div>
+  <p>Let $\hat F_T$ be the empirical distribution of $U_1,\dots,U_T$. The top-$k$ mean with $k=\lceil\alpha T\rceil$ is exactly an integral of the empirical quantile function:</p>
+  <div class="math-block">
+    $$S_\alpha(x) = \frac{1}{k}\sum_{j=T-k+1}^{T} U_{(j)}
+    = \frac{1}{\alpha}\int_{1-\alpha}^{1}\hat F_T^{-1}(u)\,du + o(1)$$
+  </div>
+  <p>By Glivenko&ndash;Cantelli $\hat F_T \to F_x$ uniformly a.s.; with a finite mean the quantile integral converges too, giving $\mathrm{CTE}_\alpha(F_x)$. $\blacksquare$</p>
+  <div class="highlight">
+    <p><strong>Consequence:</strong> a global threshold on $S_\alpha$ is still a <em>pooled</em> test, now over tail shapes. Length enters through $k=\lceil\alpha T\rceil$.</p>
+  </div>
+</div>
+
+<!-- Selection figure -->
+<div class="slide bg-deep">
+  <h2>Two Documents, Same Tail Rule</h2>
+  <div class="divider"></div>
+  <div class="m5-fig">
+    <svg width="1000" height="270" viewBox="0 0 1000 270">
+      <line x1="30" y1="220" x2="470" y2="220" stroke="#8a94a6" stroke-width="1.5"/>
+      <line x1="30" y1="220" x2="30" y2="40" stroke="#8a94a6" stroke-width="1.5"/>
+      <rect x="45" y="185" width="22" height="35" fill="#8a94a6" opacity="0.5"/>
+      <rect x="75" y="175" width="22" height="45" fill="#8a94a6" opacity="0.5"/>
+      <rect x="105" y="195" width="22" height="25" fill="#8a94a6" opacity="0.5"/>
+      <rect x="135" y="168" width="22" height="52" fill="#8a94a6" opacity="0.5"/>
+      <rect x="165" y="190" width="22" height="30" fill="#8a94a6" opacity="0.5"/>
+      <rect x="195" y="60" width="22" height="160" fill="#C8102E" opacity="0.65"/>
+      <rect x="225" y="180" width="22" height="40" fill="#8a94a6" opacity="0.5"/>
+      <rect x="255" y="88" width="22" height="132" fill="#C8102E" opacity="0.65"/>
+      <rect x="285" y="192" width="22" height="28" fill="#8a94a6" opacity="0.5"/>
+      <rect x="315" y="172" width="22" height="48" fill="#8a94a6" opacity="0.5"/>
+      <rect x="345" y="186" width="22" height="34" fill="#8a94a6" opacity="0.5"/>
+      <rect x="375" y="178" width="22" height="42" fill="#8a94a6" opacity="0.5"/>
+      <line x1="530" y1="220" x2="970" y2="220" stroke="#8a94a6" stroke-width="1.5"/>
+      <line x1="530" y1="220" x2="530" y2="40" stroke="#8a94a6" stroke-width="1.5"/>
+      <rect x="545" y="140" width="22" height="80" fill="#8a94a6" opacity="0.5"/>
+      <rect x="575" y="120" width="22" height="100" fill="#8a94a6" opacity="0.5"/>
+      <rect x="605" y="150" width="22" height="70" fill="#8a94a6" opacity="0.5"/>
+      <rect x="635" y="108" width="22" height="112" fill="#C8102E" opacity="0.65"/>
+      <rect x="665" y="132" width="22" height="88" fill="#8a94a6" opacity="0.5"/>
+      <rect x="695" y="126" width="22" height="94" fill="#8a94a6" opacity="0.5"/>
+      <rect x="725" y="100" width="22" height="120" fill="#C8102E" opacity="0.65"/>
+      <rect x="755" y="144" width="22" height="76" fill="#8a94a6" opacity="0.5"/>
+      <rect x="785" y="118" width="22" height="102" fill="#8a94a6" opacity="0.5"/>
+      <rect x="815" y="138" width="22" height="82" fill="#8a94a6" opacity="0.5"/>
+      <rect x="845" y="128" width="22" height="92" fill="#8a94a6" opacity="0.5"/>
+      <rect x="875" y="146" width="22" height="74" fill="#8a94a6" opacity="0.5"/>
+    </svg>
+    <span class="lab gray" style="left:250px; top:244px;">spiky profile &mdash; heavy tail</span>
+    <span class="lab gray" style="left:750px; top:244px;">flat profile &mdash; light tail</span>
+    <span class="lab red" style="left:225px; top:26px;">selected</span>
+    <span class="lab red" style="left:680px; top:26px;">selected</span>
+    <span class="lab gray" style="left:14px; top:130px;">$U_t$</span>
+  </div>
+  <p class="muted" style="margin-top:8px;">Same rule, incomparable outputs. Min-K%++ fixes this by normalising each token against its own vocabulary-wide null.</p>
+</div>
+
+<!-- InfoRMIA setup -->
+<div class="slide bg-dark">
+  <div class="pill">Estimator 5 &middot; Tao &amp; Shokri 2025</div>
+  <h2>InfoRMIA: A Composite Hypothesis Test</h2>
+  <div class="divider"></div>
+  <p>Instead of one null example, test $x$ against the <em>whole</em> population law $p(z)$:</p>
+  <div class="grid-2">
+    <div>
+      <h3>$H_0$</h3>
+      <p>$\theta$ was trained with some $z \sim p(z)$.</p>
+    </div>
+    <div>
+      <h3>$H_1$</h3>
+      <p>$\theta$ was trained with the given $x$.</p>
+    </div>
+  </div>
+  <div class="math-block">
+    $$\Lambda_{\text{Info}}(x) \;=\; \sum_{z} p(z)\,\log \frac{p(\theta \mid x)}{p(\theta \mid z)}$$
+  </div>
+  <p class="muted">A Bayes factor averaged in the log domain &mdash; continuous, with no exceedance threshold $\gamma$.</p>
+</div>
+
+<!-- Theorem 1 statement -->
+<div class="slide bg-deep m5-snug">
+  <h2>Theorem 1 &mdash; InfoRMIA Decomposition</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Theorem 1 (Tao &amp; Shokri 2025).</h3>
+    <div class="math-block">
+      $$\Lambda_{\text{Info}}(x) \;=\; \underbrace{\log \frac{p(x\mid\theta)}{p(x)}}_{\text{information gain about } x}
+      \;+\; \underbrace{D_{\mathrm{KL}}\big(p(z)\,\|\,p(z\mid\theta)\big)}_{\text{population shift}}$$
+    </div>
+  </div>
+  <div class="highlight">
+    <p>The first term is how much $\theta$ tells you about $x$ &mdash; a pointwise information gain, the formal content of &ldquo;$\theta$ memorized $x$&rdquo;.</p>
+    <p>The second term does not mention $x$ at all.</p>
+  </div>
+</div>
+
+<!-- Proof Theorem 1 -->
+<div class="slide bg-dark m5-tight m5-snug">
+  <h2>Proof of Theorem 1</h2>
+  <div class="divider"></div>
+  <p>Apply Bayes to both posteriors, with the same prior $p(\theta)$:</p>
+  <div class="math-block">
+    $$\frac{p(\theta\mid x)}{p(\theta\mid z)}
+    = \frac{p(x\mid\theta)\,p(\theta)/p(x)}{p(z\mid\theta)\,p(\theta)/p(z)}
+    = \frac{p(x\mid\theta)}{p(x)}\cdot\frac{p(z)}{p(z\mid\theta)}$$
+  </div>
+  <p>Take logs and average over $z\sim p$. The first factor is free of $z$:</p>
+  <div class="math-block">
+    $$\Lambda_{\text{Info}}(x) = \log\frac{p(x\mid\theta)}{p(x)}\underbrace{\textstyle\sum_z p(z)}_{=\,1}
+    \;+\; \sum_z p(z)\log\frac{p(z)}{p(z\mid\theta)}$$
+  </div>
+  <p>The remaining sum is by definition $D_{\mathrm{KL}}(p(z)\,\|\,p(z\mid\theta))$. $\blacksquare$</p>
+</div>
+
+<!-- Corollary 2 -->
+<div class="slide bg-deep">
+  <h2>Corollary 2 &mdash; It Is Definition 1 Again</h2>
+  <div class="divider"></div>
+  <p>The KL term is a function of $\theta$ alone. For a <em>fixed</em> target model it is a constant.</p>
+  <div class="math-block">
+    $$\Lambda_{\text{Info}}(x) \;\stackrel{\text{rank}}{\equiv}\; \log p(x\mid\theta) - \log p(x)$$
+  </div>
+  <div class="highlight">
+    <p>InfoRMIA ranks candidates by Definition 1 with $\;q = p\;$, the <strong>population marginal</strong>.</p>
+    <p>The most recent attack in the series is the calibration principle with the most honest null available.</p>
+  </div>
+  <p class="muted">The same numerator drives the pairwise ratio $\;\big(p(x\mid\theta)/p(x)\big)\big/\big(p(z\mid\theta)/p(z)\big)$ used by RMIA.</p>
+</div>
+
+<!-- InfoRMIA vs RMIA -->
+<div class="slide bg-dark">
+  <h2>Why the Log Average Beats the Count</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Aspect</th><th>Pairwise counting</th><th>InfoRMIA</th></tr>
+    <tr><td>Aggregation</td><td>Fraction of $z$ with ratio above $\gamma$</td><td>Mean of the log ratio</td></tr>
+    <tr><td>Output</td><td>Discrete, granularity $1/|Z|$</td><td>Continuous</td></tr>
+    <tr><td>Extra knob</td><td>Threshold $\gamma$ to tune</td><td>None</td></tr>
+    <tr><td>Population size</td><td>Large $|Z|$ needed</td><td>Far less sensitive to $|Z|$</td></tr>
+  </table>
+  <div class="highlight">
+    <p>Discretising a score at granularity $1/|Z|$ destroys resolution exactly where it matters &mdash; the extreme tail used for TPR at low FPR.</p>
+  </div>
+</div>
+
+<!-- Token-level InfoRMIA -->
+<div class="slide bg-deep">
+  <h2>Token-Level InfoRMIA</h2>
+  <div class="divider"></div>
+  <p>Apply Theorem 1 one token at a time: $x_t$ is the label of prefix $x_{\lt t}$.</p>
+  <ul class="arrow">
+    <li>Population set $Z_t$ = <strong>every other vocabulary token</strong> at position $t$</li>
+    <li>The null is then free: the model's own next-token distribution</li>
+    <li>Sequence score by averaging, or by min-$k$ over positions</li>
+  </ul>
+  <div class="highlight">
+    <p>Token weighting done right &mdash; the weight is not hand-designed, it falls out of the per-token ratio.</p>
+  </div>
+  <div class="cite-left cite">Tao &amp; Shokri, 2025. The authors label the sequence-level aggregation a proof of concept.</div>
+</div>
+
+<!-- InfoRMIA numbers -->
+<div class="slide bg-dark">
+  <h2>InfoRMIA &mdash; Reported Evidence</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Setting</th><th>Pairwise RMIA</th><th>InfoRMIA</th></tr>
+    <tr><td>AG News, GPT-2, AUC</td><td>0.8766</td><td>0.8784</td></tr>
+    <tr><td>AG News, GPT-2, TPR at 0.1% FPR</td><td>1.60%</td><td><strong>12.0%</strong></td></tr>
+    <tr><td>CIFAR-10, TPR at 0.1% FPR</td><td>0.00%</td><td>5.82%</td></tr>
+  </table>
+  <div class="highlight">
+    <p>AUC barely moves; the <strong>low-FPR</strong> regime moves by an order of magnitude. Exactly the metric that matters.</p>
+  </div>
+  <div class="cite-left cite">Tao &amp; Shokri 2025 &mdash; Table 1, offline attacks with 4 reference models, population size $|Z|=1000$. AG News trains autoregressive GPT-2 models. These are fine-tuned targets, not pre-trained LLMs.</div>
+</div>
+
+<!-- Zoo table 1 -->
+<div class="slide bg-deep">
   <h2>The Calibration Zoo</h2>
   <div class="divider"></div>
   <table>
-    <tr><th>Method</th><th>Signal</th><th>Reference / Null</th></tr>
-    <tr><td>Raw PPL</td><td>Sequence NLL</td><td>Global threshold</td></tr>
-    <tr><td>Reference model</td><td>Sequence NLL</td><td>Smaller LM, zlib</td></tr>
-    <tr><td>Neighbourhood</td><td>Sequence NLL</td><td>Paraphrases of $x$</td></tr>
-    <tr><td>SPV-MIA</td><td>Sequence NLL</td><td>Self-generations</td></tr>
-    <tr><td>Context-aware</td><td>Variance across $c$</td><td>(none &mdash; signal is the spread)</td></tr>
-    <tr><td>Min-K% / InfoRMIA</td><td>Per-token NLL</td><td>Token-weighted, or vs. reference</td></tr>
+    <tr><th>Attack</th><th>Statistic</th><th>Null estimator</th></tr>
+    <tr><td>Perplexity</td><td>Sequence NLL</td><td>Global constant</td></tr>
+    <tr><td>Reference model</td><td>Sequence NLL</td><td>A second LM, or zlib length</td></tr>
+    <tr><td>Neighbourhood</td><td>Sequence NLL</td><td>Mean over perturbations of $x$</td></tr>
+    <tr><td>SPV-MIA</td><td>Sequence NLL</td><td>LM trained on self-generations</td></tr>
+    <tr><td>CAMIA</td><td>Per-token loss curve</td><td>Expected shape of that curve</td></tr>
+    <tr><td>Min-K% / InfoRMIA</td><td>Per-token surprisal</td><td>Tail rule / population marginal</td></tr>
   </table>
+</div>
+
+<!-- Zoo table 2 -->
+<div class="slide bg-dark">
+  <h2>The Zoo, Read as Assumptions</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Attack</th><th>What must hold for the null to be valid</th></tr>
+    <tr><td>Perplexity</td><td>All documents share one difficulty &mdash; false</td></tr>
+    <tr><td>Reference model</td><td>Reference error smaller than difficulty spread</td></tr>
+    <tr><td>Neighbourhood</td><td>Perturbations exchangeable with $x$ under $H_0$</td></tr>
+    <tr><td>SPV-MIA</td><td>Self-generations match the distribution, not the records</td></tr>
+    <tr><td>CAMIA</td><td>Context accrual differs by membership, not by genre</td></tr>
+    <tr><td>InfoRMIA</td><td>Population marginal $p(x)$ can be estimated</td></tr>
+  </table>
+  <p class="muted">Every row is a place a benchmark can go wrong. &sect;03 shows one where the benchmark itself did.</p>
 </div>
 
 
 <!-- ═══════════════════════════════════════════════════════════════════ -->
-<!--  §03 — The empirical wall (impossibility / limits)                 -->
+<!--  §03 — The empirical wall                                          -->
 <!-- ═══════════════════════════════════════════════════════════════════ -->
 
 <div class="slide section-slide left">
   <div class="section-num">03</div>
   <h1>The Empirical Wall</h1>
   <div class="divider"></div>
-  <p class="subtitle">Limits of MIA on pre-trained LLMs</p>
+  <p class="subtitle">Instability, and a benchmark validity failure</p>
 </div>
 
-<!-- SLIDE — Setup -->
+<!-- Headline question -->
 <div class="slide bg-dark">
   <h2>The Headline Question</h2>
   <div class="divider"></div>
-  <p>Modern LLM MIA papers publish steady AUC gains. Are these real?</p>
+  <p>&sect;02 built better and better nulls. &sect;01 predicted the ceiling would barely move.</p>
   <ul class="arrow">
-    <li>Classifier MIA at scale: TPR@0.1% FPR around 10% (LiRA on CIFAR-10)</li>
-    <li>Pre-trained LLM MIA: TPR@1% FPR around 1&ndash;5%, AUC 0.55&ndash;0.70</li>
-    <li>The gap is large &mdash; and it does not close with bigger attacks</li>
+    <li>Does pre-training MIA work at all?</li>
+    <li>If aggregate AUC rises, does any <em>individual</em> claim become reliable?</li>
+    <li>When a benchmark says an attack works, what has actually been measured?</li>
   </ul>
   <div class="highlight">
-    <p>Three 2024&ndash;2025 papers argue the gap is <strong>structural</strong>, not just under-optimised.</p>
+    <p>Three results answer these three questions. The third is the most important.</p>
   </div>
 </div>
 
-<!-- SLIDE — Duan et al. -->
+<!-- Duan setup -->
 <div class="slide bg-deep">
   <div class="pill">Duan et al. 2024 &middot; COLM</div>
-  <h2>"Do MIAs Work on LLMs?"</h2>
-  <div class="divider"></div>
-  <p>Evaluated 5 leading MIAs against Pythia / GPT-Neo on the Pile.</p>
-  <ul class="arrow">
-    <li>AUC <strong>barely above 0.5</strong> across settings</li>
-    <li>Apparent wins on WikiMIA came from <strong>temporal shift</strong> (older members vs. newer non-members)</li>
-    <li style="list-style:none; margin-left:1.4em; font-size:0.92em; color:var(--gray-text);">model trained <em>between</em> the two &mdash; attack detects pre/post-cutoff style, not membership</li>
-    <li>Controlling for distribution: signal vanishes</li>
-  </ul>
-  <div class="highlight">
-    <p>Diagnosis: <strong>one-pass training over trillions of tokens leaves almost no overfit signal</strong>.</p>
-  </div>
-</div>
-
-<!-- SLIDE — Hayes et al. impossibility -->
-<div class="slide bg-dark">
-  <div class="pill">Hayes et al. 2025</div>
-  <h2>Limits of Strong Attacks at Scale</h2>
-  <div class="divider"></div>
-  <p>Scaled LiRA &mdash; <em>the</em> strongest known attack &mdash; to GPT-2 (10M&ndash;1B params), 20B+ tokens on C4.</p>
-  <ul class="check">
-    <li>256 shadow models, full per-example calibration</li>
-    <li>Best case: <strong>AUC &lt; 0.7 in practical settings</strong></li>
-    <li>Stronger attacks don&rsquo;t close the gap &mdash; ceiling is structural</li>
-  </ul>
-  <div class="cite">Hayes, Shumailov, Choquette-Choo, Jagielski, Kaissis, Nasr et&nbsp;al., <em>Exploring the limits of strong membership inference attacks on large language models</em>, 2025.</div>
-</div>
-
-<!-- SLIDE — Hayes et al. instability -->
-<div class="slide bg-deep">
-  <div class="pill">Hayes et al. 2025</div>
-  <h2>Per-Record Instability</h2>
-  <div class="divider"></div>
-  <p>Even when AUC is above chance, <strong>individual predictions are unstable</strong>.</p>
-  <ul class="arrow">
-    <li>Re-running the same attack on the same record flips many calls</li>
-    <li>Training-seed variability swamps the membership signal</li>
-    <li>"Person $X$&rsquo;s data is in the model" is not a reliable claim</li>
-  </ul>
-  <div class="highlight">
-    <p>Average AUC overstates what a real auditor can act on.</p>
-    <p>For high-stakes per-record claims, pre-training MIA is <strong>not reliable</strong>.</p>
-  </div>
-</div>
-
-<!-- SLIDE — Maini et al. blind baselines -->
-<div class="slide bg-dark">
-  <div class="pill">Maini et al. 2024</div>
-  <h2>Blind Baselines Beat MIA</h2>
-  <div class="divider"></div>
-  <p>You can separate member / non-member sets <strong>without touching the model</strong>:</p>
-  <ul class="arrow">
-    <li>Text length, n-gram statistics, source domain</li>
-    <li>These features alone often beat published MIAs on benchmarks</li>
-    <li>Many "MIA wins" measure dataset construction, not memorization</li>
-  </ul>
-  <div class="highlight">
-    <p>If a blind baseline matches your attack, your benchmark has a distribution leak.</p>
-  </div>
-</div>
-
-<!-- SLIDE — Why pretraining is structurally hard -->
-<div class="slide bg-deep">
-  <h2>Why Pre-Training MIA Is Hard</h2>
+  <h2>Do MIAs Work on LLMs?</h2>
   <div class="divider"></div>
   <div class="grid-2" style="margin-top:8px;">
     <div class="card">
-      <h3>No overfit</h3>
-      <p>Yeom: $\text{Adv} \le R_{\text{pop}} - R_{\text{train}}$.</p>
-      <p>That gap is tiny for a one-pass LLM.</p>
+      <h3>Design</h3>
+      <p>5 attacks: loss, reference, Min-K%, zlib, neighbourhood.</p>
+      <p>Pythia and Pythia-dedup at 160M to 12B; also GPT-Neo, OLMo.</p>
     </div>
     <div class="card">
-      <h3>Massive class</h3>
-      <p>Member &amp; non-member texts both drawn from the same web.</p>
-      <p>Distributions overlap.</p>
+      <h3>Benchmark</h3>
+      <p>MIMIR: 7 Pile domains, members and non-members <strong>randomly split</strong> from one pool.</p>
     </div>
-    <div class="card">
-      <h3>Seed noise</h3>
-      <p>Training stochasticity perturbs per-record losses more than membership does.</p>
+  </div>
+  <div class="highlight">
+    <p>Reported: no single attack or target model exceeds <strong>AUC 0.6</strong>, with the exception of the GitHub domain.</p>
+  </div>
+</div>
+
+<!-- Duan diagnosis -->
+<div class="slide bg-dark">
+  <h2>Their Diagnosis, in Our Notation</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Their finding</th><th>Proposition 3 term</th></tr>
+    <tr><td>Enormous corpus, one pass</td><td>$N$ huge, $E=1$</td></tr>
+    <tr><td>Larger models leak more</td><td>$d_{\text{eff}}$ up, so $\rho_{\text{cal}}$ up</td></tr>
+    <tr><td>Deduplicated models leak less</td><td>Repeats acted like extra epochs</td></tr>
+    <tr><td>Member and non-member text overlap heavily</td><td>Difficulty spread swamps $\Delta$</td></tr>
+  </table>
+  <div class="highlight">
+    <p>The wall is not an artefact of weak attacks. It is where the toy model said it would be.</p>
+  </div>
+</div>
+
+<!-- Hayes setup -->
+<div class="slide bg-deep">
+  <div class="pill">Hayes et al. 2025 &middot; NeurIPS</div>
+  <h2>Give the Attack Everything</h2>
+  <div class="divider"></div>
+  <p>Remove the feasibility excuse: run the strongest known attack at LLM scale.</p>
+  <ul class="check">
+    <li>GPT-2 architectures from <strong>10M to 1B</strong> parameters</li>
+    <li>Reference models trained on over <strong>20B tokens</strong> of C4</li>
+    <li><strong>128 reference models</strong>, full per-example Gaussian calibration</li>
+  </ul>
+  <div class="highlight">
+    <p>This is the shadow-model recipe, actually executed on language models.</p>
+    <p>If the ceiling is an artefact of cheap nulls, it should lift here.</p>
+  </div>
+</div>
+
+<!-- Hayes fig 2a -->
+<div class="slide bg-dark">
+  <div class="pill">Hayes et al. 2025 &middot; NeurIPS</div>
+  <h2>It Does Not Lift</h2>
+  <div class="divider"></div>
+  <img class="m5-shot" src="figs/hayes-auc-ceiling-roc.png" alt="ROC curves for scaled LiRA across model sizes" style="height:340px;">
+  <div class="cite-left cite">Hayes, Shumailov, Choquette-Choo, Jagielski, Kaissis, Nasr et&nbsp;al., &ldquo;Exploring the limits of strong membership inference attacks on large language models&rdquo;, NeurIPS 2025 &mdash; Figure 2(a). 128 references, Chinchilla-optimal, one epoch.</div>
+</div>
+
+<!-- Hayes AUC table -->
+<div class="slide bg-deep m5-snug">
+  <h2>The Numbers Behind That Plot</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Model size</th><th>LiRA AUC</th></tr>
+    <tr><td>10M</td><td>0.592</td></tr>
+    <tr><td>85M</td><td>0.699</td></tr>
+    <tr><td>302M</td><td>0.689</td></tr>
+    <tr><td>489M</td><td>0.547</td></tr>
+    <tr><td>604M</td><td>0.654</td></tr>
+    <tr><td>1018M</td><td>0.553</td></tr>
+  </table>
+  <div class="highlight">
+    <p>Reported conclusion: effectiveness remains limited, with AUC below 0.7 in practical settings.</p>
+  </div>
+  <div class="cite-left cite">Hayes et al., NeurIPS 2025 &mdash; Figure 2(a), Chinchilla-optimal one-epoch runs with 128 reference models.</div>
+</div>
+
+<!-- Per-record instability setup -->
+<div class="slide bg-dark">
+  <h2>Aggregate AUC Is the Wrong Question</h2>
+  <div class="divider"></div>
+  <p>Fix one record $x$. Retrain the target many times with independent seeds and data order, half the runs including $x$.</p>
+  <div class="math-block">
+    $$\theta_x \;=\; \Pr_{r}\big[\hat b_r(x) = 1\big]$$
+  </div>
+  <p>The attack's call on $x$ is a <em>random variable over training runs</em>, not a fixed verdict.</p>
+  <div class="highlight">
+    <p>An auditor claiming &ldquo;this person's record is in the model&rdquo; needs $\theta_x$ far from $\tfrac12$ &mdash; not a good average over the population.</p>
+  </div>
+</div>
+
+<!-- Prop 6 statement -->
+<div class="slide bg-deep m5-snug">
+  <h2>Proposition 6 &mdash; Variance Decomposition</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Proposition 6 (membership is one component of the total variance).</h3>
+    <p>Fix $x$; $b\sim\mathrm{Bern}(1/2)$, $r$ = training randomness, $\Delta = \mathbb{E}[T\mid b{=}0]-\mathbb{E}[T\mid b{=}1]$, $\sigma_{\text{run}}^2 = \mathbb{E}_b\mathrm{Var}_r[T\mid b]$.</p>
+    <div class="math-block">
+      $$\begin{aligned}
+        \mathrm{Var}(T) &= \underbrace{\tfrac{\Delta^2}{4}}_{\text{membership}} \;+\; \underbrace{\sigma_{\text{run}}^2}_{\text{seed, order, co-training}} \\[6pt]
+        \text{membership share} &= \frac{\rho^2}{\rho^2+4}, \qquad \rho=\frac{\Delta}{\sigma_{\text{run}}}
+      \end{aligned}$$
     </div>
-    <div class="card">
-      <h3>No clean ground truth</h3>
-      <p>Training data unknown, deduplication blurs "membership".</p>
+  </div>
+  <p class="muted">At $\rho = 0.2$ the membership share of the variance is under <strong>1%</strong>.</p>
+</div>
+
+<!-- Proof Prop 6 -->
+<div class="slide bg-dark m5-tight">
+  <h2>Proof of Proposition 6</h2>
+  <div class="divider"></div>
+  <p>Law of total variance, conditioning on $b$:</p>
+  <div class="math-block">
+    $$\mathrm{Var}(T) = \mathrm{Var}_b\big(\mathbb{E}_r[T\mid b]\big) + \mathbb{E}_b\big(\mathrm{Var}_r[T\mid b]\big)$$
+  </div>
+  <p>The inner mean takes two values differing by $\Delta$, each with probability $\tfrac12$; a two-point symmetric variable with gap $\Delta$ has variance $\Delta^2/4$. The second term is $\sigma_{\text{run}}^2$ by definition.</p>
+  <div class="math-block">
+    $$\frac{\Delta^2/4}{\Delta^2/4+\sigma_{\text{run}}^2}
+    = \frac{\rho^2/4}{\rho^2/4+1} = \frac{\rho^2}{\rho^2+4}. \qquad \blacksquare$$
+  </div>
+  <p class="muted">Same $\rho$ as Propositions 2 and 3 &mdash; the noise here is named explicitly as run-to-run variability.</p>
+</div>
+
+<!-- Corollary 3: aggregate hides -->
+<div class="slide bg-deep m5-snug">
+  <h2>Corollary &mdash; Averages Hide Coin Flips</h2>
+  <div class="divider"></div>
+  <p>Aggregate AUC is an average of per-record AUCs: $\;\mathrm{AUC}_{\text{agg}} = \mathbb{E}_x\big[\Phi(\rho_x/\sqrt2)\big]$, with every term in $[\tfrac12, 1]$.</p>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Illustration (not a claim about any dataset).</h3>
+    <p>Half the records perfectly separable ($\mathrm{AUC}=1$) and half exactly at chance ($\mathrm{AUC}=\tfrac12$) give</p>
+    <div class="math-block">
+      $$\mathrm{AUC}_{\text{agg}} = \tfrac12\cdot 1 + \tfrac12\cdot\tfrac12 = 0.75 .$$
     </div>
+  </div>
+  <div class="highlight">
+    <p>A headline of $0.75$ is fully compatible with <strong>half the population being un-auditable</strong>.</p>
+  </div>
+</div>
+
+<!-- Instability figure -->
+<div class="slide bg-dark">
+  <h2>Where the Variance Goes</h2>
+  <div class="divider"></div>
+  <div class="m5-fig">
+    <svg width="960" height="290" viewBox="0 0 960 290">
+      <!-- pretraining bar -->
+      <rect x="60" y="60" width="820" height="54" fill="#8a94a6" opacity="0.28" stroke="#8a94a6" stroke-width="1.5"/>
+      <rect x="60" y="60" width="26" height="54" fill="#C8102E" opacity="0.75" stroke="#C8102E" stroke-width="1.5"/>
+      <!-- finetuning bar -->
+      <rect x="60" y="180" width="820" height="54" fill="#8a94a6" opacity="0.28" stroke="#8a94a6" stroke-width="1.5"/>
+      <rect x="60" y="180" width="330" height="54" fill="#C8102E" opacity="0.75" stroke="#C8102E" stroke-width="1.5"/>
+    </svg>
+    <span class="lab" style="left:470px; top:34px;">pre-training: $\rho \approx 0.2$</span>
+    <span class="lab" style="left:470px; top:154px;">fine-tuning: $\rho \approx 1.5$</span>
+    <span class="lab white" style="left:73px; top:87px;">&nbsp;</span>
+    <span class="lab red" style="left:73px; top:132px;">1%</span>
+    <span class="lab white" style="left:225px; top:207px;">40%</span>
+    <span class="lab gray" style="left:640px; top:87px;">run-to-run variance</span>
+    <span class="lab gray" style="left:640px; top:207px;">run-to-run variance</span>
+  </div>
+  <p class="muted" style="margin-top:22px;">Red = the membership share $\rho^2/(\rho^2+4)$ from Proposition 6. Everything grey is training randomness.</p>
+</div>
+
+<!-- Hayes instability figure -->
+<div class="slide bg-deep">
+  <div class="pill">Hayes et al. 2025 &middot; NeurIPS</div>
+  <h2>An Unstable Member</h2>
+  <div class="divider"></div>
+  <img class="m5-shot" src="figs/hayes-unstable-member.png" alt="Score distribution of an unstable member record across training runs" style="height:330px;">
+  <div class="cite-left cite">Hayes et al., NeurIPS 2025 &mdash; Figure 5 (right). A true member whose LiRA decision is statistically indistinguishable from a coin flip across 127 target replicas.</div>
+</div>
+
+<!-- Hayes instability numbers -->
+<div class="slide bg-dark">
+  <h2>How Many Records Are Coin Flips?</h2>
+  <div class="divider"></div>
+  <p>127 target replicas, 302M model, one shared set of 128 references. Two-sided exact binomial test of $H_0: \theta_x = \tfrac12$ at level $0.05$.</p>
+  <ul class="arrow">
+    <li>Mean LiRA AUC across replicas: <strong>0.752 $\pm$ 0.007</strong></li>
+    <li>At 0.1% FPR, about <strong>15.4% $\pm$ 0.6%</strong> of true positives are statistically coin flips</li>
+    <li>Counting highly unstable records as well: <strong>42.2% $\pm$ 0.9%</strong></li>
+    <li>Members are more coin-flip-like than non-members</li>
+  </ul>
+  <div class="cite-left cite">Hayes et al., NeurIPS 2025 &mdash; Figure 5 and surrounding text.</div>
+</div>
+
+<!-- Blind baselines setup -->
+<div class="slide bg-deep">
+  <div class="pill">Das, Zhang &amp; Tram&egrave;r 2025</div>
+  <h2>How the Benchmarks Were Built</h2>
+  <div class="divider"></div>
+  <p>A pre-training benchmark needs known members and known non-members. The usual trick: split on a date.</p>
+  <div class="m5-chain">
+    <span>Wikipedia events before 2017</span>
+    <span class="arr focus">=</span>
+    <span class="blue">members</span>
+  </div>
+  <div class="m5-chain">
+    <span>Wikipedia events after 2023</span>
+    <span class="arr focus">=</span>
+    <span class="blue">non-members</span>
+  </div>
+  <div class="highlight">
+    <p>Convenient, cheap, and &mdash; as the next proposition shows &mdash; <strong>fatal</strong>.</p>
+  </div>
+</div>
+
+<!-- Prop 7 statement -->
+<div class="slide bg-dark m5-snug">
+  <h2>Proposition 7 &mdash; A Validity Failure</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Proposition 7 (a $\theta$-independent split measures text, not membership).</h3>
+    <p>Fix a released model $\theta$. Suppose members are drawn from $Q_1$ and non-members from $Q_0$, where $Q_1, Q_0$ are specified by a rule that does <strong>not</strong> depend on $\theta$. Then</p>
+    <div class="math-block">
+      $$\sup_{\mathcal{A}} \mathrm{Adv}(\mathcal{A}) = \mathrm{TV}(Q_1, Q_0),$$
+    </div>
+    <p>and the supremum is attained by a test that never queries $\theta$.</p>
+  </div>
+  <div class="highlight">
+    <p>On such a benchmark the <strong>blind baseline is optimal</strong>. Not merely competitive &mdash; optimal.</p>
+  </div>
+</div>
+
+<!-- Proof Prop 7 -->
+<div class="slide bg-deep m5-tight">
+  <h2>Proof of Proposition 7</h2>
+  <div class="divider"></div>
+  <p>The adversary's view is the pair $V = (x, \theta)$. Because the same $\theta$ is served in both branches, its law is a point mass $\delta_\theta$ independent of $b$:</p>
+  <div class="math-block">
+    $$P_1 = Q_1 \otimes \delta_\theta, \qquad P_0 = Q_0 \otimes \delta_\theta$$
+  </div>
+  <p>Recall $\;\sup_{\mathcal{A}}\mathrm{Adv} = \mathrm{TV}(P_1,P_0)$. For a common second factor,</p>
+  <div class="math-block">
+    $$\mathrm{TV}(Q_1\otimes\delta_\theta,\; Q_0\otimes\delta_\theta)
+    = \sup_{S} \big|Q_1(S) - Q_0(S)\big| = \mathrm{TV}(Q_1,Q_0)$$
+  </div>
+  <p>By Neyman&ndash;Pearson the maximiser is $S^\star=\{x : \mathrm{d}Q_1/\mathrm{d}Q_0(x) \gt 1\}$, a function of $x$ alone. $\blacksquare$</p>
+</div>
+
+<!-- Reading Prop 7 -->
+<div class="slide bg-dark">
+  <h2>Reading Proposition 7</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li>The measured quantity $\mathrm{TV}(Q_1,Q_0)$ is a distance between two <strong>text corpora</strong></li>
+    <li>$\theta$ appears nowhere in it &mdash; undo the training and it is unchanged</li>
+    <li>A model-based attack below the blind baseline is a worse estimator of the <em>text</em> ratio</li>
+    <li>A <strong>validity failure of the benchmark</strong>, not a success of the attack</li>
+  </ul>
+  <div class="highlight">
+    <p>The game requires an identical text law in both branches. A date split breaks the definition.</p>
+  </div>
+</div>
+
+<!-- Big blind confound figure -->
+<div class="slide bg-deep">
+  <h2>The Model Is Not in the Picture</h2>
+  <div class="divider"></div>
+  <div class="m5-fig">
+    <svg width="1060" height="330" viewBox="0 0 1060 330">
+      <!-- timeline -->
+      <line x1="40" y1="180" x2="700" y2="180" stroke="#8a94a6" stroke-width="2"/>
+      <line x1="370" y1="105" x2="370" y2="255" stroke="#C8102E" stroke-width="3" stroke-dasharray="8 6"/>
+      <!-- left cloud -->
+      <ellipse cx="195" cy="180" rx="130" ry="62" fill="#003876" opacity="0.14" stroke="#003876" stroke-width="1.5"/>
+      <!-- right cloud -->
+      <ellipse cx="545" cy="180" rx="130" ry="62" fill="#C8102E" opacity="0.14" stroke="#C8102E" stroke-width="1.5"/>
+      <!-- greyed model box -->
+      <rect x="800" y="40" width="220" height="88" rx="10" fill="#f2f4f7" stroke="#8a94a6" stroke-width="1.5" stroke-dasharray="6 5"/>
+      <line x1="800" y1="40" x2="1020" y2="128" stroke="#8a94a6" stroke-width="1.5"/>
+      <line x1="1020" y1="40" x2="800" y2="128" stroke="#8a94a6" stroke-width="1.5"/>
+      <!-- classifier box -->
+      <rect x="800" y="190" width="220" height="88" rx="10" fill="#003876" stroke="#003876" stroke-width="1.5"/>
+      <path d="M330,150 C560,60 620,140 795,215" fill="none" stroke="#003876" stroke-width="2.5" marker-end="url(#m5a3)"/>
+      <path d="M600,215 C700,240 730,235 795,232" fill="none" stroke="#003876" stroke-width="2.5" marker-end="url(#m5a3)"/>
+      <defs><marker id="m5a3" markerWidth="10" markerHeight="10" refX="8" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 z" fill="#003876"/></marker></defs>
+    </svg>
+    <span class="lab blue" style="left:195px; top:180px;">pages before 2017</span>
+    <span class="lab red" style="left:545px; top:180px;">pages after 2023</span>
+    <span class="lab red" style="left:370px; top:280px;">split date</span>
+    <span class="lab gray" style="left:910px; top:150px;">target model &mdash; never queried</span>
+    <span class="lab white" style="left:910px; top:222px;">bag-of-words</span>
+    <span class="lab white" style="left:910px; top:250px;">AUC 0.99</span>
+  </div>
+  <p class="muted" style="margin-top:20px;">The whole reported advantage is the horizontal distance between two clouds of text.</p>
+</div>
+
+<!-- Das PCA figure -->
+<div class="slide bg-dark">
+  <div class="pill">Das, Zhang &amp; Tram&egrave;r 2025</div>
+  <h2>The Two Clouds, Measured</h2>
+  <div class="divider"></div>
+  <img class="m5-shot" src="figs/das-wikimia-pca.png" alt="PCA of WikiMIA members and non-members showing separated clusters" style="height:370px;">
+  <div class="cite-left cite">Das, Zhang, Tram&egrave;r, &ldquo;Blind Baselines Beat Membership Inference Attacks for Foundation Models&rdquo;, 2nd DATA-FM workshop at ICLR 2025 &mdash; Figure 1.</div>
+</div>
+
+<!-- Das numbers -->
+<div class="slide bg-deep">
+  <h2>Blind Beats Published, Everywhere</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Benchmark and metric</th><th>Best published MIA</th><th>Blind</th></tr>
+    <tr><td>WikiMIA, AUC</td><td>83.9</td><td><strong>99.0</strong></td></tr>
+    <tr><td>WikiMIA, TPR at 5% FPR</td><td>43.2</td><td><strong>94.7</strong></td></tr>
+    <tr><td>BookMIA, AUC</td><td>88.0</td><td>91.4</td></tr>
+    <tr><td>Gutenberg, TPR at 5% FPR</td><td>18.8</td><td><strong>55.1</strong></td></tr>
+    <tr><td>Temporal Wiki, AUC</td><td>79.6</td><td>79.9</td></tr>
+  </table>
+  <div class="cite-left cite">Das, Zhang, Tram&egrave;r, DATA-FM at ICLR 2025 &mdash; Tables 1 and 2. Blind methods: a date-extraction threshold, a bag-of-words classifier, and $n$-gram classifiers on captions. Eight evaluation datasets in total.</div>
+</div>
+
+<!-- Duan temporal shift corroboration -->
+<div class="slide bg-dark">
+  <h2>Corroboration From the Other Side</h2>
+  <div class="divider"></div>
+  <p>The same effect, measured as $n$-gram overlap between members and non-members:</p>
+  <table>
+    <tr><th>Non-member source</th><th>Mean 7-gram overlap with members</th></tr>
+    <tr><td>Natural Wikipedia split</td><td>39.3%</td></tr>
+    <tr><td>Temporally shifted split</td><td>13.9%</td></tr>
+  </table>
+  <div class="highlight">
+    <p>Reported conclusion: thresholds derived with temporally-shifted non-members end up testing for <strong>temporal shift</strong> rather than membership.</p>
+  </div>
+  <div class="cite-left cite">Duan et al., COLM 2024. On that shifted split, reference-attack AUC climbs from 0.602 at 160M to 0.796 at 12B &mdash; a confound that <em>grows</em> with model size.</div>
+</div>
+
+<!-- Valid benchmark corollary -->
+<div class="slide bg-deep m5-snug">
+  <h2>Corollary &mdash; What a Valid Split Requires</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Corollary (random split kills the blind attack).</h3>
+    <p>Partition one pool uniformly at random into a training half and a held-out half. For any $\theta$-blind test $\mathcal{A}: x\mapsto\{0,1\}$, in expectation over the partition</p>
+    <div class="math-block">
+      $$\mathbb{E}\big[\mathrm{TPR}(\mathcal{A})\big] = \mathbb{E}\big[\mathrm{FPR}(\mathcal{A})\big]
+      \quad\Longrightarrow\quad \mathbb{E}\big[\mathrm{Adv}(\mathcal{A})\big] = 0 .$$
+    </div>
+    <p>Each pool element lands in the training half with probability $\tfrac12$, independently of $\mathcal{A}(x)$.</p>
+  </div>
+  <div class="highlight">
+    <p>Then, and only then, is advantage above chance attributable to $\theta$. MIMIR is built this way.</p>
+  </div>
+</div>
+
+<!-- Why pretraining is hard, synthesized -->
+<div class="slide bg-dark">
+  <h2>Why Pre-Training MIA Is Hard &mdash; Assembled</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Obstacle</th><th>Established where</th></tr>
+    <tr><td>Signal is $O(\eta E)$ against an $O(1)$ difficulty spread</td><td>Propositions 1 and 3</td></tr>
+    <tr><td>Calibration removes $\eta$ but leaves $N^{-1/2}$</td><td>Proposition 3, Corollary 1</td></tr>
+    <tr><td>Membership is a tiny share of run-to-run variance</td><td>Proposition 6</td></tr>
+    <tr><td>Good averages hide chance-level records</td><td>Corollary to Proposition 6</td></tr>
+    <tr><td>Convenient benchmarks measure text, not $\theta$</td><td>Proposition 7</td></tr>
+  </table>
+  <div class="highlight">
+    <p>Four of the five are about the <em>estimator</em>. The fifth is about the <em>experiment</em>.</p>
   </div>
 </div>
 
@@ -450,227 +1584,604 @@
   <div class="section-num">04</div>
   <h1>Where the Signal Still Lives</h1>
   <div class="divider"></div>
-  <p class="subtitle">Fine-tuning, extraction, defenses, law</p>
+  <p class="subtitle">Fine-tuning, extraction, defenses</p>
 </div>
 
-<!-- SLIDE — Fine-tuning works -->
+<!-- Regime change -->
 <div class="slide bg-dark">
-  <h2>Fine-Tuning MIA Works</h2>
+  <h2>The Regime Change</h2>
   <div class="divider"></div>
-  <div class="grid-2">
-    <div>
-      <h3>Why it&rsquo;s easier</h3>
-      <p>Multi-epoch training on small data.</p>
-      <p>Members are seen many times; non-members never.</p>
-      <p>Classical overfit signal returns.</p>
+  <table>
+    <tr><th>Quantity</th><th>Pre-training</th><th>Fine-tuning</th></tr>
+    <tr><td>Records $N$</td><td>$10^9$ and up</td><td>$10^3$ to $10^5$</td></tr>
+    <tr><td>Epochs $E$</td><td>1</td><td>3 to 10</td></tr>
+    <tr><td>Non-member pool</td><td>Contested, date-split</td><td>Held-out half of one pool</td></tr>
+  </table>
+  <div class="highlight">
+    <p>Every term Proposition 3 identified as hostile moves the other way.</p>
+  </div>
+</div>
+
+<!-- Corollary 4 statement -->
+<div class="slide bg-deep m5-snug">
+  <h2>Corollary 3 &mdash; The Reversal</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Corollary 3 (fine-tuning inverts both ratios), under Model M1.</h3>
+    <p>Holding the record and the loss geometry fixed, moving from $(N, E)$ to $(N', E')$ scales</p>
+    <div class="math-block">
+      $$\frac{\rho_{\text{pool}}'}{\rho_{\text{pool}}} = \frac{E'}{E},
+      \qquad
+      \frac{\rho_{\text{cal}}'}{\rho_{\text{cal}}} = \sqrt{\frac{N}{N'}}$$
     </div>
-    <div>
-      <h3>What works</h3>
-      <p>SPV-MIA, neighbourhood, reference-LM.</p>
-      <p>AUC 0.80&ndash;0.90 on LLaMA / GPT-2 fine-tunes.</p>
-    </div>
+    <p>With $E'/E = 5$ and $N/N' = 10^6$, the pooled ratio grows fivefold and the calibrated ratio grows by a factor of $10^3$.</p>
   </div>
   <div class="highlight">
-    <p>Real privacy risk lives in <strong>fine-tuning</strong>, not pre-training.</p>
+    <p>Fine-tuning MIA is not a different attack. It is the same attack in a friendly regime.</p>
   </div>
 </div>
 
-<!-- SLIDE — Extractable vs Inferable -->
+<!-- Proof of Cor 2 -->
+<div class="slide bg-dark m5-tight">
+  <h2>Proof of Corollary 3</h2>
+  <div class="divider"></div>
+  <p>Read the two ratios off Proposition 3 and cancel the record-dependent factors:</p>
+  <div class="math-block">
+    $$\rho_{\text{pool}} = \frac{\eta E \|g_x\|^2}{\sigma_{\text{diff}}},
+    \qquad
+    \rho_{\text{cal}} = \frac{\|g_x\|^2}{\sqrt{N\, v_x}}$$
+  </div>
+  <p>$\rho_{\text{pool}}$ is linear in $E$ and free of $N$; $\rho_{\text{cal}}$ is free of $\eta$ and $E$ and scales as $N^{-1/2}$. Fixing $\|g_x\|$, $v_x$, $\sigma_{\text{diff}}$ and $\eta$ gives the two quotients. $\blacksquare$</p>
+  <div class="highlight">
+    <p>The $N^{-1/2}$ term is the dominant one: six orders of magnitude in $N$ is three in $\rho$.</p>
+  </div>
+</div>
+
+<!-- Regime figure -->
 <div class="slide bg-deep">
-  <h2>Extractable $\subset$ Inferable $\subset$ Trained-on</h2>
+  <h2>The Two Regimes on One Plane</h2>
   <div class="divider"></div>
-  <p>Two notions of "the model saw $x$" &mdash; one strictly stronger than the other.</p>
-
-  <div style="display:flex; justify-content:center; margin: 14px 0 10px;">
-    <div style="border:2px dashed var(--slate); padding: 22px 28px; border-radius:10px; text-align:center; min-width: 560px;">
-      <div style="color:var(--gray-text); font-size:0.9em; margin-bottom:10px;">Trained-on &mdash; every $x$ the model saw during training</div>
-      <div style="border:2px solid var(--accent); padding: 16px 22px; border-radius:8px; background: var(--yonsei-blue-05);">
-        <div style="color:var(--accent); font-weight:600; margin-bottom:8px; font-size:0.95em;">Inferable: $\exists$ test that calls $x$ a member &gt; chance</div>
-        <div style="border:2px solid var(--yonsei-blue); padding: 12px 18px; border-radius:6px; background: var(--yonsei-blue-12);">
-          <div style="color:var(--yonsei-blue); font-weight:700; font-size:0.95em;">Extractable: $\exists$ prompt $p$ with $f_\theta(p) = x$ verbatim</div>
-        </div>
-      </div>
-    </div>
+  <div class="m5-fig">
+    <svg width="820" height="330" viewBox="0 0 820 330">
+      <!-- shaded high-rho region -->
+      <path d="M70,270 L300,270 L300,40 L70,40 Z" fill="#003876" opacity="0.10"/>
+      <!-- axes -->
+      <line x1="70" y1="270" x2="760" y2="270" stroke="#8a94a6" stroke-width="2"/>
+      <line x1="70" y1="270" x2="70" y2="35" stroke="#8a94a6" stroke-width="2"/>
+      <!-- points -->
+      <circle cx="150" cy="80" r="13" fill="#003876"/>
+      <circle cx="660" cy="248" r="13" fill="#C8102E"/>
+      <!-- iso-rho curve -->
+      <path d="M100,45 C260,215 380,255 750,264" fill="none" stroke="#8a94a6" stroke-width="2" stroke-dasharray="7 6"/>
+    </svg>
+    <span class="lab gray" style="left:415px; top:300px;">corpus size $N$ &rarr;</span>
+    <span class="lab gray" style="left:185px; top:22px;">epochs $E$ &uarr;</span>
+    <span class="lab blue" style="left:150px; top:112px;">fine-tuning</span>
+    <span class="lab red" style="left:660px; top:218px;">pre-training</span>
+    <span class="lab gray" style="left:430px; top:200px;">constant $\rho$</span>
   </div>
+  <p class="muted" style="margin-top:14px;">Shaded: the small-$N$, many-epoch corner where both ratios are large.</p>
+</div>
 
+<!-- Honesty about M1 here -->
+<div class="slide bg-dark">
+  <h2>Where This Under-Predicts</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li>M1 freezes gradients, so $\rho_{\text{cal}}$ came out $E$-free &mdash; an artefact of (A2)</li>
+    <li>Repeated exposure also drives $\|g_x\|$ down for members: a second, larger effect</li>
+    <li>The true epoch dependence is therefore stronger than derived here</li>
+  </ul>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Empirical check.</h3>
+    <p>Attack performance was reported to increase linearly in the number of effective epochs.</p>
+  </div>
+  <div class="cite-left cite">Duan et al., COLM 2024 &mdash; Figure 2 (right), Datablations&ndash;C4, models trained with controlled repetition.</div>
+</div>
+
+<!-- SPV-MIA evidence -->
+<div class="slide bg-deep">
+  <h2>What the Friendly Regime Delivers</h2>
+  <div class="divider"></div>
+  <p>Self-prompt calibration, evaluated on fine-tuned LLMs:</p>
+  <ul class="check">
+    <li>Reported lift of MIA AUC from <strong>0.7</strong> to <strong>0.9</strong></li>
+    <li>Best average <strong>AUC 0.924</strong> across four LLMs and three datasets</li>
+    <li>About <strong>30%</strong> AUC improvement over the strongest reference-model baseline</li>
+  </ul>
   <div class="highlight">
-    <p><strong>Point:</strong> extraction is a <em>demonstration</em>, MIA is a <em>test</em>.</p>
-    <p>After §03 &mdash; per-record MIA unreliable &mdash; <strong>extraction is the only signal that survives the calibration problem</strong>.</p>
+    <p>Same statistic, same null-estimation logic as &sect;02 &mdash; only $N$ and $E$ changed.</p>
+  </div>
+  <div class="cite-left cite">Fu, Wang, Gao, Liu, Li, Jiang, &ldquo;Practical Membership Inference Attacks against Fine-tuned Large Language Models via Self-prompt Calibration&rdquo;, NeurIPS 2024.</div>
+</div>
+
+<!-- Recall memorization defs -->
+<div class="slide bg-dark">
+  <h2>Recall &mdash; Three Notions of Memorization</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Recall (from the memorization lecture).</h3>
+    <p><strong>Extractable:</strong> some prompt makes the model emit $x$ verbatim.</p>
+    <p><strong>Discoverable:</strong> the <em>true prefix</em> of $x$ makes the model emit the rest.</p>
+    <p><strong>Trained-on:</strong> $x \in D$, whether or not anything can be recovered.</p>
+  </div>
+  <p>This lecture adds the fourth, which is what an MIA actually certifies &mdash; $x$ is <strong>inferable</strong> when</p>
+  <div class="math-block">
+    $$\exists\, q \text{ a valid null}: \quad \log p_\theta(x) - \log q(x) \gg 0 .$$
   </div>
 </div>
 
-<!-- SLIDE — MIA → extraction pipeline -->
-<div class="slide bg-dark">
-  <h2>MIA as Extraction&rsquo;s Ranker</h2>
+<!-- Extraction as an attack -->
+<div class="slide bg-deep">
+  <h2>Extraction Is an Attack With a Threshold</h2>
   <div class="divider"></div>
-  <div class="diagram-flow" style="justify-content:center;">
-    <div class="diagram-box">Generate candidates</div>
-    <span class="diagram-arrow">&rarr;</span>
-    <div class="diagram-box">Rank by MIA score</div>
-    <span class="diagram-arrow">&rarr;</span>
-    <div class="diagram-box filled">Verify top-$k$ as training text</div>
+  <p>Split $x = (p_x, s_x)$ into prefix and suffix. Define the deterministic test</p>
+  <div class="math-block">
+    $$\mathcal{A}_{\text{ext}}(x,\theta) = \mathbf{1}\!\left[\,f_\theta(p_x) = s_x\,\right]$$
+  </div>
+  <p>where $f_\theta$ is greedy decoding. Then, exactly as in the membership game,</p>
+  <div class="math-block">
+    $$\mathrm{TPR} = \Pr[\,f_\theta(p_x)=s_x \mid x\in D\,],
+    \qquad
+    \mathrm{FPR} = \Pr[\,f_\theta(p_x)=s_x \mid x\notin D\,]$$
+  </div>
+  <p class="muted">TPR is the reported extraction rate. FPR is the rate of spontaneous agreement.</p>
+</div>
+
+<!-- Prop 8 -->
+<div class="slide bg-dark">
+  <h2>Proposition 8 &mdash; Extraction Implies Inference</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Proposition 8 (extraction is a low-FPR membership test).</h3>
+    <p>Suppose the suffix has conditional min-entropy $H_\infty(s_x \mid p_x) = h$ under the non-member law, and that $\theta$ is independent of $s_x$ given $x \notin D$. Then</p>
+    <div class="math-block">
+      $$\mathrm{FPR}(\mathcal{A}_{\text{ext}}) \le 2^{-h},
+      \qquad
+      \mathrm{Adv}(\mathcal{A}_{\text{ext}}) \ge \mathrm{TPR} - 2^{-h}$$
+    </div>
+  </div>
+  <div class="highlight">
+    <p>A 50-token suffix with even 4 bits of entropy per token gives $2^{-200}$.</p>
+  </div>
+</div>
+
+<!-- Proof of Prop 8 -->
+<div class="slide bg-deep m5-tight">
+  <h2>Proof of Proposition 8</h2>
+  <div class="divider"></div>
+  <p>Condition on $x \notin D$. Then $\theta$ carries no information about $s_x$. Write $c = f_\theta(p_x)$ for the emitted continuation:</p>
+  <div class="math-block">
+    $$\Pr[\,c = s_x \mid x\notin D\,]
+    = \mathbb{E}\Big[\Pr\big[s_x = c \mid p_x\big]\Big]
+    \le \max_{c'} \Pr[s_x = c' \mid p_x]
+    = 2^{-h}$$
+  </div>
+  <p>The advantage bound is then $|\mathrm{TPR}-\mathrm{FPR}| \ge \mathrm{TPR} - 2^{-h}$. $\blacksquare$</p>
+  <div class="highlight">
+    <p>Extraction lives at the far left of the ROC by construction &mdash; where &sect;03's AUC ceiling does not bind.</p>
+  </div>
+</div>
+
+<!-- Converse fails -->
+<div class="slide bg-dark m5-snug">
+  <h2>The Converse Fails</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Counterexample (soft memorization).</h3>
+    <p>Suppose $p_\theta(s_x \mid p_x) = 0.4$ while a competing continuation has $0.5$. Greedy decoding never emits $s_x$: the record is <strong>not extractable</strong>.</p>
+    <p>But a reference model gives $q(s_x \mid p_x) \approx 10^{-6}$, so</p>
+    <div class="math-block">
+      $$\log p_\theta - \log q \;\approx\; \log(4\times 10^5) \;\approx\; 12.9 .$$
+    </div>
+    <p>The record is overwhelmingly <strong>inferable</strong>.</p>
+  </div>
+  <div class="highlight">
+    <p>Verbatim recovery is a decoding accident. Membership evidence is a likelihood ratio.</p>
+  </div>
+</div>
+
+<!-- Inclusion chain -->
+<div class="slide bg-deep">
+  <h2>Strict Inclusions</h2>
+  <div class="divider"></div>
+  <div class="m5-fig">
+    <svg width="820" height="290" viewBox="0 0 820 290">
+      <rect x="40" y="30" width="740" height="230" rx="14" fill="#003876" opacity="0.06" stroke="#003876" stroke-width="1.5"/>
+      <rect x="130" y="72" width="560" height="150" rx="12" fill="#003876" opacity="0.10" stroke="#003876" stroke-width="1.5"/>
+      <rect x="250" y="108" width="320" height="80" rx="10" fill="#003876" opacity="0.20" stroke="#003876" stroke-width="1.5"/>
+    </svg>
+    <span class="lab blue" style="left:410px; top:148px;">extractable</span>
+    <span class="lab blue" style="left:410px; top:90px;">inferable</span>
+    <span class="lab blue" style="left:410px; top:50px;">trained-on</span>
+    <span class="lab gray" style="left:410px; top:238px;">soft memorization sits here &mdash; and coin-flip records sit outside</span>
+  </div>
+  <p class="muted" style="margin-top:12px;">Both inclusions are strict: soft memorization separates the inner two; Proposition 6's chance-level records separate the outer two.</p>
+</div>
+
+<!-- MIA as ranker -->
+<div class="slide bg-dark">
+  <h2>MIA as Extraction's Ranker</h2>
+  <div class="divider"></div>
+  <p>Extraction is expensive: candidate generation, then verification against a corpus you may not hold.</p>
+  <div class="diagram-flow">
+    <div class="diagram-box">Corpus of candidates</div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box">Calibrated score $s(x)$</div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box">Top-$k$ only</div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box">Attempt extraction</div>
+  </div>
+  <div class="highlight">
+    <p>An attack too weak to accuse anyone can still be strong enough to <strong>sort</strong>. Ranking needs ordering, not calibrated certainty.</p>
+  </div>
+</div>
+
+<!-- Defense: DP -->
+<div class="slide bg-deep">
+  <h2>Defense &mdash; DP Fine-Tuning</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Recall (the DP ROC cap).</h3>
+    <p>If the training mechanism is $(\varepsilon,\delta)$-DP at record granularity, every membership test obeys</p>
+    <div class="math-block">
+      $$\mathrm{TPR}(\alpha) \;\le\; \min\big(1,\; e^{\varepsilon}\alpha + \delta\big) \quad\text{for all } \alpha\in[0,1].$$
+    </div>
+  </div>
+  <p>Post-processing closes the argument: any score built from $\theta$, however clever, inherits the cap.</p>
+  <div class="highlight">
+    <p>This is the only defense in the lecture that bounds <em>every future attack</em>.</p>
+  </div>
+</div>
+
+<!-- Prop 9 -->
+<div class="slide bg-dark m5-snug">
+  <h2>Proposition 9 &mdash; The Cap in AUC</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Proposition 9 (AUC ceiling under DP).</h3>
+    <p>For any membership test against an $(\varepsilon,\delta)$-DP mechanism,</p>
+    <div class="math-block">
+      $$\mathrm{AUC} \;\le\; 1 - \frac{(1-\delta)^2}{2\,e^{\varepsilon}} .$$
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Tight &mdash; it is the area under the capped ROC itself, and the one-number summary of that cap.</p>
+  </div>
+</div>
+
+<!-- Proof of Prop 9 -->
+<div class="slide bg-deep m5-tight">
+  <h2>Proof of Proposition 9</h2>
+  <div class="divider"></div>
+  <p>The two branches of the cap cross at $\alpha^\star = (1-\delta)e^{-\varepsilon}$. Integrating the smaller of the two:</p>
+  <div class="math-block">
+    $$\begin{aligned}
+      \mathrm{AUC} &\le \int_0^{\alpha^\star}\!\big(e^{\varepsilon}\alpha+\delta\big)\,\mathrm{d}\alpha \;+\; \int_{\alpha^\star}^{1}\! 1 \,\mathrm{d}\alpha\\[2pt]
+      &= \tfrac12 e^{\varepsilon}(\alpha^\star)^2 + \delta\alpha^\star + 1 - \alpha^\star\\[2pt]
+      &= 1 + \alpha^\star\Big(\tfrac{1-\delta}{2} + \delta - 1\Big)
+       \;=\; 1 - \frac{\alpha^\star(1-\delta)}{2}
+       \;=\; 1 - \frac{(1-\delta)^2}{2e^{\varepsilon}} . \qquad \blacksquare
+    \end{aligned}$$
+  </div>
+</div>
+
+<!-- DP numbers -->
+<div class="slide bg-dark">
+  <h2>Reading Proposition 9</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Budget</th><th>AUC ceiling</th><th>Verdict</th></tr>
+    <tr><td>$\varepsilon = 0.5$</td><td>0.697</td><td>Binding</td></tr>
+    <tr><td>$\varepsilon = 1$</td><td>0.816</td><td>Binding</td></tr>
+    <tr><td>$\varepsilon = 2$</td><td>0.932</td><td>Weak</td></tr>
+    <tr><td>$\varepsilon = 8$</td><td>0.9998</td><td>Vacuous</td></tr>
+  </table>
+  <div class="highlight">
+    <p>All rows at $\delta = 0$, computed from the formula above. A guarantee at $\varepsilon = 8$ forbids nothing an attack was going to achieve anyway.</p>
+  </div>
+</div>
+
+<!-- Other defenses -->
+<div class="slide bg-deep">
+  <h2>Defenses Without a Guarantee</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Measure</th><th>What it provably gives</th></tr>
+    <tr><td>Deduplication</td><td>Nothing formal; removes the repeat-count that acts as extra epochs</td></tr>
+    <tr><td>Data curation</td><td>Nothing formal; removes records rather than protecting them</td></tr>
+    <tr><td>Output filters</td><td>Blocks verbatim emission; leaves $\log p_\theta$ untouched</td></tr>
+    <tr><td>DP training</td><td>A bound on every attack, present and future</td></tr>
+  </table>
+  <div class="highlight">
+    <p>The first three change the empirical measurement. Only the last changes what is <em>possible</em>.</p>
+  </div>
+</div>
+
+<!-- Filter caveat -->
+<div class="slide bg-dark">
+  <h2>Why Output Filters Do Not Help Here</h2>
+  <div class="divider"></div>
+  <p>Proposition 8 showed extraction is one point on the ROC. Everything in &sect;02 needs only the scores.</p>
+  <div class="m5-chain">
+    <span>token log-probs</span>
+    <span class="arr focus">&rarr;</span>
+    <span class="blue">$s(x)$</span>
+    <span class="arr focus">&rarr;</span>
+    <span>membership call</span>
   </div>
   <ul class="arrow">
-    <li>MIA can fail per-record but still rank well in bulk</li>
-    <li>Top-of-distribution leakage: rare, repeated, distinctive</li>
-    <li>This is the operational use of MIA on pre-trained LLMs</li>
+    <li>A filter intercepts <em>generated text</em>, not the likelihood interface</li>
+    <li>Log-probs are exposed by most serving APIs, and by any open-weights release</li>
+    <li>Blocking verbatim output leaves the inferable set unchanged</li>
   </ul>
 </div>
 
-<!-- SLIDE — Defenses -->
+<!-- Legal -->
 <div class="slide bg-deep">
-  <h2>Defenses</h2>
+  <h2>Why Anyone Outside Asks</h2>
   <div class="divider"></div>
   <div class="grid-2" style="margin-top:8px;">
     <div class="card">
-      <h3>DP fine-tuning</h3>
-      <p>DP-SGD on the fine-tuning step.</p>
-      <p>Practical; bounds MIA advantage by $e^\varepsilon - 1 + \delta$.</p>
+      <h3>Deletion claims</h3>
+      <p>An erasure right needs a test for whether a record is still in the model.</p>
     </div>
     <div class="card">
-      <h3>DP pre-training</h3>
-      <p>Open challenge.</p>
-      <p>Trade-off too severe at trillion-token scale.</p>
-    </div>
-    <div class="card">
-      <h3>Deduplication</h3>
-      <p>Memorization scales with repetition (Carlini).</p>
-      <p>Dedup the corpus before training.</p>
-    </div>
-    <div class="card">
-      <h3>Curation &amp; filtering</h3>
-      <p>Strip PII, IDs, secrets pre-training.</p>
-      <p>Necessary; not sufficient.</p>
-    </div>
-  </div>
-</div>
-
-<!-- SLIDE — Legal landscape -->
-<div class="slide bg-dark">
-  <h2>Legal Landscape</h2>
-  <div class="divider"></div>
-  <div class="grid-2">
-    <div>
-      <h3>GDPR Right to Erasure</h3>
-      <p>Article 17: request deletion of personal data.</p>
-      <p>What does "delete from a trained model" mean?</p>
-      <p>MIA as <strong>test</strong> &mdash; if still detectable, not deleted.</p>
-    </div>
-    <div>
-      <h3>NYT v. OpenAI</h3>
-      <p>ChatGPT reproduces NYT articles verbatim.</p>
-      <p>Extraction (not MIA) provides clean legal evidence.</p>
+      <h3>Provenance claims</h3>
+      <p>Copyright disputes need evidence a specific work was trained on.</p>
     </div>
   </div>
   <div class="highlight">
-    <p>MIA &rarr; legal verification: useful, but the empirical wall bounds what auditors can claim.</p>
+    <p>Proposition 6 is the caution: an aggregate AUC of 0.75 does not license a claim about <em>one</em> record. Proposition 7 is the sharper caution &mdash; a date-split benchmark supports no claim about the model at all.</p>
   </div>
 </div>
 
 
 <!-- ═══════════════════════════════════════════════════════════════════ -->
-<!--  §05 — Synthesis                                                   -->
+<!--  §05 — Synthesis of the series                                     -->
 <!-- ═══════════════════════════════════════════════════════════════════ -->
 
 <div class="slide section-slide left">
   <div class="section-num">05</div>
   <h1>Synthesis</h1>
   <div class="divider"></div>
-  <p class="subtitle">Unified framework, open problems</p>
+  <p class="subtitle">Seventeen years, one likelihood ratio</p>
 </div>
 
-<!-- SLIDE — Unified framework -->
+<!-- One template -->
 <div class="slide bg-dark">
-  <h2>Every Attack: One Template</h2>
+  <h2>Every Attack Is One Object</h2>
   <div class="divider"></div>
+  <p>Across five lectures, every attack computes an estimate of</p>
   <div class="math-block">
-    $$\mathcal{A}(z) \;=\; \mathbf{1}\!\left[\frac{p(\text{signal} \mid z \in D)}{p(\text{signal} \mid z \notin D)} > \tau\right]$$
+    $$\Lambda(z) \;=\; \frac{p(\text{signal} \mid \text{in})}{p(\text{signal} \mid \text{out})}$$
   </div>
-  <p>Methods differ in two choices &mdash; <strong>signal</strong> and <strong>null</strong>.</p>
-  <p>Classifier vs. LLM: the template is the same; only what you can build the null from changes.</p>
+  <p>and thresholds it. Neyman&ndash;Pearson says nothing else can do better.</p>
+  <div class="highlight">
+    <p>Seventeen years of progress is seventeen years of better estimating one ratio.</p>
+  </div>
 </div>
 
-<!-- SLIDE — Instances table -->
+<!-- Three choices -->
 <div class="slide bg-deep">
-  <h2>Instances Across 17 Years</h2>
+  <h2>Three Choices, Nothing Else</h2>
+  <div class="divider"></div>
+  <div class="grid-3" style="margin-top:8px;">
+    <div class="card">
+      <h3>Statistic $T$</h3>
+      <p>What is read off the model: loss, logit, token profile, trajectory.</p>
+    </div>
+    <div class="card">
+      <h3>Conditioning</h3>
+      <p>What is held fixed: nothing, the class, the example, the token.</p>
+    </div>
+    <div class="card">
+      <h3>Null $\hat q$</h3>
+      <p>How the OUT law is estimated: population, shadows, references, neighbours, self-prompts.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Name an attack from any year; it is a point in this three-dimensional space.</p>
+  </div>
+</div>
+
+<!-- Closing chain figure -->
+<div class="slide bg-dark">
+  <h2>The Chain That Runs Through Everything</h2>
+  <div class="divider"></div>
+  <div class="m5-fig">
+    <svg width="1020" height="250" viewBox="0 0 1020 250">
+      <rect x="20" y="90" width="180" height="72" rx="10" fill="#003876" opacity="0.12" stroke="#003876" stroke-width="1.5"/>
+      <rect x="240" y="90" width="180" height="72" rx="10" fill="#003876" opacity="0.12" stroke="#003876" stroke-width="1.5"/>
+      <rect x="460" y="90" width="180" height="72" rx="10" fill="#003876" opacity="0.12" stroke="#003876" stroke-width="1.5"/>
+      <rect x="680" y="90" width="180" height="72" rx="10" fill="#003876" opacity="0.12" stroke="#003876" stroke-width="1.5"/>
+      <rect x="880" y="90" width="120" height="72" rx="10" fill="#003876" stroke="#003876" stroke-width="1.5"/>
+      <path d="M205,126 L235,126" stroke="#8a94a6" stroke-width="2.5" marker-end="url(#m5a5)"/>
+      <path d="M425,126 L455,126" stroke="#8a94a6" stroke-width="2.5" marker-end="url(#m5a5)"/>
+      <path d="M645,126 L675,126" stroke="#8a94a6" stroke-width="2.5" marker-end="url(#m5a5)"/>
+      <path d="M865,126 L875,126" stroke="#8a94a6" stroke-width="2.5" marker-end="url(#m5a5)"/>
+      <defs><marker id="m5a5" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 z" fill="#8a94a6"/></marker></defs>
+    </svg>
+    <span class="lab blue" style="left:110px; top:118px;">training</span>
+    <span class="lab gray" style="left:110px; top:144px;">leaves a trace</span>
+    <span class="lab blue" style="left:330px; top:118px;">statistic $T$</span>
+    <span class="lab gray" style="left:330px; top:144px;">reads the trace</span>
+    <span class="lab blue" style="left:550px; top:118px;">null $\hat q$</span>
+    <span class="lab gray" style="left:550px; top:144px;">says what is normal</span>
+    <span class="lab blue" style="left:770px; top:118px;">ratio $\Lambda$</span>
+    <span class="lab gray" style="left:770px; top:144px;">compares them</span>
+    <span class="lab white" style="left:940px; top:126px;">decision</span>
+  </div>
+  <p class="muted" style="margin-top:16px;">Break any link and the attack fails. &sect;03 showed the third link is also where <em>benchmarks</em> fail.</p>
+</div>
+
+<!-- Master table 1 -->
+<div class="slide bg-deep m5-snug">
+  <h2>Instances &mdash; The Classical Line</h2>
   <div class="divider"></div>
   <table>
-    <tr><th>Method</th><th>Signal</th><th>Null</th></tr>
-    <tr><td>Homer 2008</td><td>Allele distance</td><td>Population frequencies</td></tr>
-    <tr><td>Shokri 2017</td><td>Confidence vector</td><td>Shadow classifier</td></tr>
-    <tr><td>Yeom 2018</td><td>Loss</td><td>Global mean</td></tr>
-    <tr><td>LiRA 2022</td><td>Loss</td><td>Per-example Gaussian (shadows)</td></tr>
-    <tr><td>RMIA 2023</td><td>Loss ratio</td><td>Population percentile</td></tr>
-    <tr><td>InfoRMIA 2025</td><td>Per-token log-ratio</td><td>Token-weighted vs. ref</td></tr>
+    <tr><th>Attack</th><th>Statistic</th><th>Conditioning</th><th>Null estimator</th></tr>
+    <tr><td>Homer 2008</td><td>Allele-frequency distance</td><td>None</td><td>Reference panel</td></tr>
+    <tr><td>Shokri 2017</td><td>Confidence vector</td><td>Class</td><td>Shadow models</td></tr>
+    <tr><td>Yeom 2018</td><td>Loss</td><td>None</td><td>Average train loss</td></tr>
+    <tr><td>Sablayrolles 2019</td><td>Loss</td><td>None</td><td>Gibbs posterior</td></tr>
+    <tr><td>LiRA 2022</td><td>Logit $\phi(p)$</td><td>Example</td><td>Per-example Gaussians</td></tr>
+    <tr><td>Ye et al. 2022</td><td>Loss</td><td>Chosen set $V$</td><td>Empirical, on $V$</td></tr>
+    <tr><td>RMIA 2023</td><td>Pairwise ratio</td><td>Example, population</td><td>Population sample</td></tr>
   </table>
 </div>
 
-<!-- SLIDE — Four eras -->
-<div class="slide bg-dark">
+<!-- Master table 2 -->
+<div class="slide bg-dark m5-snug">
+  <h2>Instances &mdash; The Language-Model Line</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Attack</th><th>Statistic</th><th>Conditioning</th><th>Null estimator</th></tr>
+    <tr><td>Perplexity baseline</td><td>Mean token loss</td><td>None</td><td>Global threshold</td></tr>
+    <tr><td>Reference 2021</td><td>Log-ratio</td><td>Example</td><td>Second trained model</td></tr>
+    <tr><td>Neighbourhood 2023</td><td>Log-ratio</td><td>Example</td><td>Perturbations of $x$</td></tr>
+    <tr><td>SPV-MIA 2024</td><td>Probabilistic variation</td><td>Example</td><td>Self-prompted model</td></tr>
+    <tr><td>Min-K% 2024</td><td>Tail-mean surprisal</td><td>Token subset</td><td>Implicit, within $x$</td></tr>
+    <tr><td>CAMIA 2025</td><td>Loss trajectory features</td><td>Token position</td><td>Within-sequence dynamics</td></tr>
+    <tr><td>InfoRMIA 2025</td><td>Expected log Bayes factor</td><td>Example or token</td><td>Population marginal</td></tr>
+  </table>
+</div>
+
+<!-- Four eras -->
+<div class="slide bg-deep">
   <h2>Four Eras</h2>
   <div class="divider"></div>
   <table>
-    <tr><th>Era</th><th>Focus</th><th>Key advance</th></tr>
-    <tr><td>2008&ndash;2017</td><td>Empirical attacks</td><td>Shadow models, confidence thresholding</td></tr>
-    <tr><td>2018&ndash;2019</td><td>Theory</td><td>Yeom bound, BB $\approx$ WB</td></tr>
-    <tr><td>2020&ndash;2023</td><td>Modern MIA</td><td>LiRA, per-example calibration, RMIA</td></tr>
-    <tr><td>2023&ndash;2025</td><td>LLM MIA</td><td>Calibration strategies &mdash; and limits</td></tr>
+    <tr><th>Era</th><th>Question</th><th>Answer</th></tr>
+    <tr><td>Genomics, 2008</td><td>Is aggregate release safe?</td><td>No</td></tr>
+    <tr><td>Classifiers, 2017 to 2019</td><td>Does overfitting cause leakage?</td><td>Sufficient, not necessary</td></tr>
+    <tr><td>Calibration, 2021 to 2023</td><td>What is a good null?</td><td>Per example, not pooled</td></tr>
+    <tr><td>Language models, 2023 onward</td><td>Does any of it work at scale?</td><td>Fine-tuning yes, pre-training barely</td></tr>
+  </table>
+  <div class="highlight">
+    <p>The mathematics did not change across eras. The estimation problem got harder.</p>
+  </div>
+</div>
+
+<!-- Proved in this lecture -->
+<div class="slide bg-dark">
+  <h2>Proved in This Lecture</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Result</th><th>Content</th></tr>
+    <tr><td>Propositions 1 to 3</td><td>Membership shift, shift to advantage, two nulls two ceilings</td></tr>
+    <tr><td>Corollary 1</td><td>Calibrated ratio scales as capacity over data</td></tr>
+    <tr><td>Proposition 4</td><td>Calibration helps exactly when the null tracks difficulty</td></tr>
+    <tr><td>Lemma 1</td><td>Exchangeable neighbours give an exact-level rank test</td></tr>
+    <tr><td>Proposition 5</td><td>Tail selection converges to a conditional tail expectation</td></tr>
+    <tr><td>Theorem 1, Corollary 2</td><td>InfoRMIA decomposes, and reduces to a calibrated score</td></tr>
   </table>
 </div>
 
-<!-- SLIDE — Key takeaways -->
+<!-- Proved part 2 -->
+<div class="slide bg-deep">
+  <h2>Proved in This Lecture &mdash; Continued</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Result</th><th>Content</th></tr>
+    <tr><td>Proposition 6</td><td>Membership is one component of total variance</td></tr>
+    <tr><td>Corollary to 6</td><td>Aggregate AUC hides chance-level records</td></tr>
+    <tr><td>Proposition 7</td><td>A model-independent split measures text, not membership</td></tr>
+    <tr><td>Corollary to 7</td><td>A random split makes blind attacks powerless</td></tr>
+    <tr><td>Corollary 3</td><td>Fine-tuning inverts both signal-to-noise ratios</td></tr>
+    <tr><td>Proposition 8</td><td>Extraction is a membership test at exponentially small FPR</td></tr>
+    <tr><td>Proposition 9</td><td>DP caps AUC at $1-(1-\delta)^2/(2e^{\varepsilon})$</td></tr>
+  </table>
+</div>
+
+<!-- Claimed not proved -->
+<div class="slide bg-dark">
+  <h2>Claimed, Not Proved</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li>That M1 describes real training. It is a linearized single-pass caricature</li>
+    <li>That the AUC ceiling is universal. It is a finding on specific models and corpora</li>
+    <li>That self-prompted or neighbourhood nulls are valid on any given corpus</li>
+    <li>That token-level aggregation is principled. Its authors call it a proof of concept</li>
+  </ul>
+  <div class="highlight">
+    <p>Every number on these slides is traceable to a cited paper or computed on the slide itself.</p>
+  </div>
+</div>
+
+<!-- Takeaways -->
 <div class="slide bg-deep">
   <h2>Key Takeaways</h2>
   <div class="divider"></div>
   <ul class="check">
-    <li>LLM MIA = same LR template, harder null estimation</li>
-    <li>Four signature ideas: <strong>paraphrase</strong>, <strong>self-prompt</strong>, <strong>context variance</strong>, <strong>token weighting</strong></li>
-    <li>On <strong>pre-training</strong>: AUC ceiling around 0.7 even with strong attacks (Hayes et al.)</li>
-    <li>On <strong>fine-tuning</strong>: AUC 0.80&ndash;0.90 &mdash; the practical risk</li>
-    <li>For legal evidence: prefer <strong>extraction</strong> over MIA when possible</li>
+    <li>Calibration is not a trick. It is the removal of intrinsic difficulty from the statistic</li>
+    <li>The pre-training wall is a signal-to-noise fact, not a failure of imagination</li>
+    <li>An average over records says nothing about any single record</li>
+    <li>A benchmark whose splits differ in text distribution measures the split, not the model</li>
+    <li>Fine-tuning, not pre-training, is where membership leakage is real today</li>
   </ul>
 </div>
 
-<!-- SLIDE — Open problems -->
+<!-- If you have to run one -->
 <div class="slide bg-dark">
-  <h2>Open Problems</h2>
+  <h2>If You Have to Run One</h2>
   <div class="divider"></div>
-  <div class="grid-2" style="margin-top:8px;">
-    <div class="card">
-      <h3>Beat the AUC wall</h3>
-      <p>Can any attack reach AUC 0.8 on pre-training without distribution-shift artefacts?</p>
-    </div>
-    <div class="card">
-      <h3>Per-record reliability</h3>
-      <p>Auditing needs stable per-record calls, not just average AUC.</p>
-    </div>
-    <div class="card">
-      <h3>Multi-modal MIA</h3>
-      <p>CLIP, GPT-4V, Gemini &mdash; almost unexplored.</p>
-    </div>
-    <div class="card">
-      <h3>MIA on agents / RAG</h3>
-      <p>Training set vs. retrieval corpus &mdash; new threat models.</p>
-    </div>
+  <div class="m5-algo">
+    <div class="m5-algo-title">Audit recipe</div>
+    <ol>
+      <li>Build the split by <strong>random partition</strong> of one pool &mdash; never by date or source</li>
+      <li>Run a blind baseline first; if it succeeds, the benchmark is invalid and nothing else matters</li>
+      <li>Use the best per-example null you can afford; report calibrated scores, not raw loss</li>
+      <li>Report TPR at low FPR, not only AUC</li>
+      <li>Retrain with several seeds and report per-record stability, not just the aggregate</li>
+    </ol>
   </div>
 </div>
 
-<!-- SLIDE — Essential reading -->
+<!-- Open problems -->
 <div class="slide bg-deep">
+  <h2>Open Problems</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li>A pre-training benchmark that is both realistic and provably unconfounded</li>
+    <li>Per-record certificates: when may an auditor accuse a <em>specific</em> document?</li>
+    <li>A null estimator for corpora where neither references nor neighbours are exchangeable</li>
+    <li>Sequence-level aggregation of token evidence that is principled rather than heuristic</li>
+    <li>Defenses between deduplication and full DP that still bound something</li>
+  </ul>
+</div>
+
+<!-- Where the recipe runs out -->
+<div class="slide bg-dark">
+  <h2>Where the Recipe Runs Out</h2>
+  <div class="divider"></div>
+  <p>The likelihood-ratio template assumes a well-defined pair of hypotheses. Three settings break that:</p>
+  <ul class="arrow">
+    <li><strong>Continual training.</strong> &ldquo;In the training set&rdquo; stops being a binary</li>
+    <li><strong>Synthetic data.</strong> A record's influence arrives through a generated descendant</li>
+    <li><strong>Retrieval.</strong> Text influences outputs without ever entering $\theta$</li>
+  </ul>
+  <div class="highlight">
+    <p>In each case the question is not <em>better estimation</em>. It is <em>what the null hypothesis even is</em>.</p>
+  </div>
+</div>
+
+<!-- Essential reading -->
+<div class="slide bg-deep m5-snug">
   <h2>Essential Reading</h2>
   <div class="divider"></div>
   <table>
-    <tr><th>Paper</th><th>Contribution</th></tr>
-    <tr><td>Carlini et al. 2021</td><td>GPT-2 extraction</td></tr>
-    <tr><td>Mattern et al. 2023</td><td>Neighbourhood attack</td></tr>
-    <tr><td>Shi et al. 2024</td><td>Min-K% probing</td></tr>
-    <tr><td>Duan et al. 2024</td><td>"Do MIAs work on LLMs?"</td></tr>
-    <tr><td>Maini et al. 2024</td><td>Blind baselines</td></tr>
-    <tr><td><strong>Hayes et al. 2025</strong></td><td><strong>Limits of strong attacks at scale</strong></td></tr>
-    <tr><td>Tao &amp; Shokri 2025</td><td>InfoRMIA</td></tr>
+    <tr><th>Paper</th><th>Why</th></tr>
+    <tr><td>Carlini et al., S&amp;P 2022</td><td>Per-example calibration, done right</td></tr>
+    <tr><td>Mattern et al., Findings of ACL 2023</td><td>Neighbourhood nulls without a reference corpus</td></tr>
+    <tr><td>Duan et al., COLM 2024</td><td>The pre-training wall, measured</td></tr>
+    <tr><td>Fu et al., NeurIPS 2024</td><td>Self-prompt calibration for fine-tuned models</td></tr>
+    <tr><td>Das, Zhang, Tram&egrave;r, DATA-FM at ICLR 2025</td><td>Blind baselines and benchmark validity</td></tr>
+    <tr><td>Hayes et al., NeurIPS 2025</td><td>Strong attacks at scale, and per-record instability</td></tr>
+    <tr><td>Tao &amp; Shokri, 2025</td><td>InfoRMIA and token-level evidence</td></tr>
   </table>
 </div>
-
 
 <!-- Closer -->
 <div class="slide end-slide no-footer">
@@ -681,7 +2192,7 @@
 </div><!-- end deck -->
 
 <!-- Slide number + progress bar (fixed to viewport) -->
-<div class="slide-num" id="slideNum">1 / 38</div>
+<div class="slide-num" id="slideNum">1 / 123</div>
 <div class="progress-bar" id="progressBar" style="width:0.5%;"></div>
 
 <!-- Navigation -->

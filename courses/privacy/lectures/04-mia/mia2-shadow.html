@@ -10,688 +10,1782 @@
 <script defer src="../../../../reference/katex/katex.min.js"></script>
 <script defer src="../../../../reference/katex/contrib/auto-render.min.js"
   onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.cite-wide { max-width: 92% !important; }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+.cite-right { max-width: 92% !important; left: auto !important; right: 28px !important; transform: none !important; text-align: right !important; bottom: 18px !important; }
+.m2-algo { background: var(--light); border: 1px solid var(--slate); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 14px 22px; max-width: 920px; margin: 14px auto; }
+.m2-algo-title { font-weight: 600; color: var(--yonsei-blue); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 6px; }
+.m2-algo > ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.m2-algo > ol > li { counter-increment: step; padding: 7px 0 7px 52px; position: relative; line-height: 1.45; }
+.m2-algo > ol > li::before { content: counter(step) "."; position: absolute; left: 10px; top: 7px; font-weight: 700; color: var(--yonsei-blue); width: 32px; text-align: right; }
+.m2-algo > ol > li + li { border-top: 1px solid var(--slate); }
+.m2-fig { position: relative; width: fit-content; margin: 10px auto 0; }
+.m2-fig .lab { position: absolute; font-size: 1.15rem; color: var(--charcoal); transform: translate(-50%, -50%); white-space: nowrap; }
+.m2-fig .lab.blue { color: var(--yonsei-blue); font-weight: 600; }
+.m2-fig .lab.red { color: var(--warn); font-weight: 600; }
+.m2-fig .lab.green { color: var(--success); font-weight: 600; }
+.m2-fig .lab.gray { color: var(--gray-text); }
+.m2-fig .lab.white { color: var(--white); font-weight: 600; }
+.m2-fig .lab.amber { color: var(--amber); font-weight: 600; }
+.m2-chain { display: flex; justify-content: center; align-items: center; gap: 14px; margin: 20px 0 18px; font-size: 1.4rem; color: var(--charcoal); }
+.m2-chain .arr { color: var(--gray-text); }
+.m2-chain .arr.focus { color: var(--yonsei-blue); font-weight: 600; }
+.m2-chain .blue { color: var(--yonsei-blue); font-weight: 600; }
+.m2-tight .math-block { margin: 8px 0; }
+</style>
 </head>
 <body data-brand-logo="../../../../reference/kor-eng2.png">
 
 <div class="deck" id="deck">
 
-<!-- SLIDE 1: Title -->
+<!-- SLIDE: Title -->
 <div class="slide title-slide active">
   <img class="title-logo" src="../../../../reference/kor-eng2.png" alt="Yonsei University">
   <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 2 of 5</div>
   <h1>Membership Inference:<br>Shadow Models</h1>
   <div class="divider"></div>
-  <p class="subtitle">Shokri paradigm and extensions</p>
+  <p class="subtitle">Estimating the likelihood ratio by simulation</p>
   <p style="font-weight:500;">Albert No &nbsp;·&nbsp; Yonsei University</p>
   <p style="margin-top:6px;">2026</p>
 </div>
 
-<!-- SLIDE 2: Contents -->
+<!-- SLIDE: Contents -->
 <div class="slide">
   <h2>Contents</h2>
   <div class="divider"></div>
   <div class="toc-list">
     <div class="toc-item">
-      <div class="toc-num">01</div>
-      <div class="toc-rule"></div>
-      <div>
-        <div class="toc-label">Shokri et al. 2017</div>
-        <div class="toc-sub">MIA against cloud ML</div>
-      </div>
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">From optimal test to estimation problem</div>
+        <div class="toc-sub">The two unknown conditionals, and how to sample them</div></div>
     </div>
     <div class="toc-item">
-      <div class="toc-num">02</div>
-      <div class="toc-rule"></div>
-      <div>
-        <div class="toc-label">LOGAN</div>
-        <div class="toc-sub">Generative-model MIA</div>
-      </div>
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The Shokri paradigm</div>
+        <div class="toc-sub">Shadow models against cloud ML APIs</div></div>
     </div>
     <div class="toc-item">
-      <div class="toc-num">03</div>
-      <div class="toc-rule"></div>
-      <div>
-        <div class="toc-label">Seq2Seq</div>
-        <div class="toc-sub">MIA for translation and sequence models</div>
-      </div>
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Per-class models and the threshold baseline</div>
+        <div class="toc-sub">Why conditioning helps, why a threshold is a ratio test</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">LOGAN: generative models</div>
+        <div class="toc-sub">The discriminator is a density ratio</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Sequence models</div>
+        <div class="toc-sub">Perplexity, calibration, machine translation</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Synthesis</div>
+        <div class="toc-sub">One template, five attacks</div></div>
     </div>
   </div>
 </div>
 
-<!-- Part divider: Shokri et al. 2017 -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!--  SECTION 01 — FROM THE OPTIMAL TEST TO AN ESTIMATION PROBLEM     -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+
 <div class="slide section-slide left">
   <div class="section-num">01</div>
-  <h1>Shokri et al. 2017</h1>
+  <h1>From Optimal Test<br>to Estimation Problem</h1>
   <div class="divider"></div>
-  <p class="subtitle">MIA against black-box ML-as-a-service</p>
-</div>
-<!-- SLIDE 37 — Shokri Overview -->
-<div class="slide bg-dark">
-  <div class="pill">Shokri et al. 2017</div>
-  <h2>Shokri et al.: Paper Overview</h2>
-  <div class="divider"></div>
-  <p>First systematic <strong>black-box MIA</strong>.</p>
-  <ul class="arrow">
-    <li>Targets: <strong>Google Prediction API</strong>, <strong>Amazon ML</strong></li>
-    <li>Black-box: confidence vectors only</li>
-    <li>Introduced <strong>shadow model</strong> methodology</li>
-    <li>Up to <strong>93% attack accuracy</strong></li>
-  </ul>
-  <div class="cite">Shokri, Stronati, Song, Shmatikov, "Membership Inference Attacks Against ML Models", IEEE S&amp;P 2017</div>
+  <p class="subtitle">The two unknown conditionals, and how to sample them</p>
 </div>
 
-<!-- SLIDE 38 — Key Insight -->
-<div class="slide bg-deep">
-  <div class="pill">Shokri et al. 2017</div>
-  <h2>Key Insight</h2>
+<div class="slide m2-tight">
+  <h2>Where We Left Off</h2>
   <div class="divider"></div>
-  <div class="highlight" style="padding:28px 32px;">
-    <p><strong>Shadow models</strong> mimic the target. Controlled data yields <strong>labeled (prediction, in/out) pairs</strong> for an attack classifier.</p>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Recall (optimal attack).</h3>
+    <p>An attack optimal at any operating point agrees almost everywhere with a threshold rule on</p>
+    <div class="math-block">$\Lambda \;=\; \frac{p_1}{p_0}
+      \;=\; \frac{\text{density of what we observe when } z \text{ was trained on}}{\text{density when it was not}}.$</div>
   </div>
-  <p>Unsupervised problem <strong>reduced to supervised classification</strong>.</p>
-</div>
-
-<!-- SLIDE 39 — Architecture Overview (training pipeline) -->
-<div class="slide bg-dark">
-  <div class="pill">Shokri et al. 2017</div>
-  <h2>Attack Architecture — Training Pipeline</h2>
-  <div class="divider"></div>
-  <div style="display:flex; align-items:center; justify-content:center; gap:26px; margin:24px 0;">
-
-    <!-- Stage ① -->
-    <div>
-      <div style="font-weight:700; color:var(--yonsei-blue); font-size:16px; text-align:center; margin-bottom:14px;">① Train $k$ shadows $f_{\theta_j}$</div>
-      <div style="display:flex; flex-direction:column; gap:14px;">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <div style="width:108px; height:56px; display:flex; align-items:center; justify-content:center; border:2px solid #999; border-radius:8px; font-size:22px;">$D_1^s$</div>
-          <span style="font-size:28px; color:#333;">→</span>
-          <div style="width:170px; height:56px; display:flex; align-items:center; justify-content:center; background:#003876; color:#fff; border-radius:8px; font-size:22px;">$f_{\theta_1}$</div>
-        </div>
-        <div style="display:flex; align-items:center; gap:10px;">
-          <div style="width:108px; height:56px; display:flex; align-items:center; justify-content:center; border:2px solid #999; border-radius:8px; font-size:22px;">$D_2^s$</div>
-          <span style="font-size:28px; color:#333;">→</span>
-          <div style="width:170px; height:56px; display:flex; align-items:center; justify-content:center; background:#003876; color:#fff; border-radius:8px; font-size:22px;">$f_{\theta_2}$</div>
-        </div>
-        <div style="text-align:center; color:#999; font-size:26px; line-height:0.4;">⋮</div>
-        <div style="display:flex; align-items:center; gap:10px;">
-          <div style="width:108px; height:56px; display:flex; align-items:center; justify-content:center; border:2px solid #999; border-radius:8px; font-size:22px;">$D_k^s$</div>
-          <span style="font-size:28px; color:#333;">→</span>
-          <div style="width:170px; height:56px; display:flex; align-items:center; justify-content:center; background:#003876; color:#fff; border-radius:8px; font-size:22px;">$f_{\theta_k}$</div>
-        </div>
-      </div>
-    </div>
-
-    <span style="font-size:40px; color:#333;">→</span>
-
-    <!-- Stage ② -->
-    <div>
-      <div style="font-weight:700; color:var(--yonsei-blue); font-size:16px; text-align:center; margin-bottom:14px;">② Collect IN/OUT confidences</div>
-      <div style="padding:22px 26px; background:#f3f5fa; border:2.5px solid #003876; border-radius:10px; text-align:center; max-width:300px;">
-        <div style="font-weight:700; color:#003876; font-size:17px; margin-bottom:14px;">Labeled dataset</div>
-        <div style="font-size:18px;">$\{(\sigma(f_{\theta_j}(x)),\, \text{IN/OUT},\, c(x))\}$</div>
-        <div style="font-size:15px; color:#666; margin-top:10px;">$j = 1,\,\dots,\,k$</div>
-      </div>
-    </div>
-
-    <span style="font-size:40px; color:#333;">→</span>
-
-    <!-- Stage ③ -->
-    <div>
-      <div style="font-weight:700; color:var(--yonsei-blue); font-size:16px; text-align:center; margin-bottom:14px;">③ Train attack classifier</div>
-      <div style="padding:22px 26px; background:#c0392b; color:#fff; border-radius:10px; text-align:center; min-width:180px;">
-        <div style="font-size:26px; font-weight:700;">Attack $\mathcal{A}_c$</div>
-        <div style="font-size:14px; margin-top:8px;">binary classifier</div>
-        <div style="font-size:14px;">(one per class)</div>
-      </div>
-    </div>
+  <div class="m2-chain">
+    <span>MI game</span><span class="arr">&rarr;</span>
+    <span>advantage</span><span class="arr">&rarr;</span>
+    <span>total variation</span><span class="arr focus">&rarr;</span>
+    <span class="blue">likelihood ratio</span>
   </div>
-  <p style="text-align:center; margin-top:14px;"><strong>Train shadows $f_{\theta_j}$</strong> → <strong>collect IN/OUT confidences</strong> → <strong>train per-class attack classifier $\mathcal{A}_c$</strong>.</p>
+  <p class="muted">The lemma names the optimal statistic. It does not hand you the two densities.</p>
 </div>
 
-<!-- SLIDE 39b — Inference pipeline -->
-<div class="slide bg-deep">
-  <div class="pill">Shokri et al. 2017</div>
-  <h2>Attack Architecture — Inference</h2>
+<div class="slide">
+  <h2>Notation for This Lecture</h2>
   <div class="divider"></div>
-  <div style="display:flex; align-items:flex-start; justify-content:center; gap:14px; margin:32px 0;">
-
-    <!-- target record -->
-    <div style="display:flex; flex-direction:column; align-items:center; width:140px;">
-      <div style="width:140px; height:96px; display:flex; align-items:center; justify-content:center; border:2px solid #999; border-radius:10px; font-size:34px;">$x$</div>
-      <div style="font-size:14px; color:#666; margin-top:10px; text-align:center;">target record</div>
-    </div>
-
-    <span style="font-size:36px; color:#333; line-height:96px;">→</span>
-
-    <!-- Target -->
-    <div style="display:flex; flex-direction:column; align-items:center; width:200px;">
-      <div style="width:200px; height:96px; display:flex; align-items:center; justify-content:center; border:2.5px solid #003876; border-radius:10px; font-size:24px; gap:8px;"><span>Target</span><span>$f_\theta$</span></div>
-      <div style="font-size:14px; color:#666; margin-top:10px; text-align:center;">black-box</div>
-    </div>
-
-    <span style="font-size:36px; color:#333; line-height:96px;">→</span>
-
-    <!-- confidence -->
-    <div style="display:flex; flex-direction:column; align-items:center; width:220px;">
-      <div style="width:220px; height:96px; display:flex; align-items:center; justify-content:center; background:#f3f5fa; border:2px solid #003876; border-radius:10px; font-size:26px;">$\sigma(f_\theta(x))$</div>
-      <div style="font-size:14px; color:#666; margin-top:10px; text-align:center;">confidence vector</div>
-    </div>
-
-    <div style="display:flex; flex-direction:column; align-items:center; gap:2px; height:96px; justify-content:center;">
-      <div style="font-size:16px; color:#666;">$c = \arg\max$</div>
-      <span style="font-size:36px; color:#333; line-height:1;">→</span>
-    </div>
-
-    <!-- A_c -->
-    <div style="display:flex; flex-direction:column; align-items:center; width:160px;">
-      <div style="width:160px; height:96px; display:flex; align-items:center; justify-content:center; background:#c0392b; color:#fff; border-radius:10px; font-size:36px; font-weight:700;">$\mathcal{A}_c$</div>
-      <div style="font-size:14px; color:#666; margin-top:10px; text-align:center;">attack classifier</div>
-    </div>
-
-    <span style="font-size:36px; color:#333; line-height:96px;">→</span>
-
-    <!-- result -->
-    <div style="display:flex; flex-direction:column; align-items:center;">
-      <div style="height:96px; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:700; color:#003876;">IN / OUT</div>
-      <div style="font-size:14px; color:#666; margin-top:10px; text-align:center;">membership</div>
-    </div>
-  </div>
-  <p style="text-align:center; margin-top:24px;">Single query, single forward pass through $\mathcal{A}_c$ — black-box and cheap at inference time.</p>
+  <table>
+    <tr><th>Symbol</th><th>Meaning</th></tr>
+    <tr><td>$\mathcal{D},\; D \sim \mathcal{D}^n$</td><td>Record distribution, training set of $n$ i.i.d. records</td></tr>
+    <tr><td>$T,\; \theta = T(D)$</td><td>Randomized training algorithm and the model it returns</td></tr>
+    <tr><td>$z = (x, y)$</td><td>Target record under test</td></tr>
+    <tr><td>$\varphi = \Phi(\theta, z)$</td><td>Observable: what the API returns, e.g. $\sigma(f_\theta(x))$</td></tr>
+    <tr><td>$P_1,\; P_0$</td><td>Law of $\varphi$ when $z$ is in the training set, and when it is not</td></tr>
+  </table>
+  <p class="muted">Everything the attacker may do is a function of $\varphi$, possibly together with $z$ itself.</p>
 </div>
 
-<!-- SLIDE 40 — Detailed Pipeline -->
-<div class="slide bg-deep">
-  <div class="pill">Shokri et al. 2017</div>
-  <h2>Detailed Pipeline</h2>
+<div class="slide m2-tight">
+  <h2>The Two Conditionals, Precisely</h2>
   <div class="divider"></div>
-  <div class="card" style="padding:20px 24px;">
-    <ul class="num">
-      <li><strong>Shadow data:</strong> datasets $D_1^s, \ldots, D_k^s$ from a similar distribution</li>
-      <li><strong>Train shadows:</strong> $k$ models $f_{\theta_1}, \ldots, f_{\theta_k}$</li>
-      <li><strong>Collect predictions:</strong> shadows queried on train (in) and held-out (out)</li>
-      <li><strong>Attack dataset:</strong> $\{(\sigma(f_{\theta_j}(x)), \text{in/out})\}$</li>
-      <li><strong>Attack model:</strong> binary classifier $\mathcal{A}_c$ per class $c$</li>
-      <li><strong>Inference:</strong> query target, feed $\sigma(f_\theta(x))$ to $\mathcal{A}_{f_\theta(x)}$</li>
-    </ul>
+  <div class="card">
+    <h3>Definition (member and non-member laws).</h3>
+    <div class="math-block">$\begin{aligned}
+      P_1 &amp;= \text{law of } \Phi\bigl(T(D),\, Z\bigr), \quad Z \text{ drawn uniformly from } D, \\
+      P_0 &amp;= \text{law of } \Phi\bigl(T(D),\, Z'\bigr), \quad Z' \sim \mathcal{D} \text{ independent of } D.
+    \end{aligned}$</div>
   </div>
+  <p>Marginals over three randomness sources: the other $n-1$ records, training noise, target draw.</p>
 </div>
 
-<!-- SLIDE 41 — Shadow Model Training -->
-<div class="slide bg-dark">
-  <div class="pill">Shokri et al. 2017</div>
-  <h2>Shadow Model Training</h2>
+<div class="slide">
+  <h2>Two Densities the Attacker Cannot Write Down</h2>
   <div class="divider"></div>
-  <p>$k$ shadow models <strong>approximating target behavior</strong>:</p>
-  <div class="cols">
-    <div>
-      <h3>Requirements</h3>
-      <ul class="arrow">
-        <li><strong>Similar data distribution</strong></li>
-        <li>Same or similar <strong>architecture</strong></li>
-        <li>Same <strong>training procedure</strong> (epochs, optimizer)</li>
-      </ul>
-    </div>
-    <div>
-      <h3>Why It Works</h3>
-      <ul class="arrow">
-        <li>Similar <strong>overfitting patterns</strong></li>
-        <li>Member vs. non-member confidence gap: <strong>generalizable signal</strong></li>
-        <li><strong>Cross-model</strong> membership signature</li>
-      </ul>
-    </div>
+  <div class="m2-fig" style="transform:scale(1.12); transform-origin:top center; margin-bottom:46px;">
+    <svg width="880" height="320" viewBox="0 0 880 320">
+      <line x1="70" y1="265" x2="810" y2="265" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="70" y1="265" x2="70" y2="40" stroke="#1a1a1a" stroke-width="2"/>
+      <path d="M70 262 C 200 262, 245 75, 355 75 C 465 75, 505 262, 625 262"
+            fill="none" stroke="#003876" stroke-width="2.5" stroke-dasharray="8 6"/>
+      <path d="M190 262 C 320 262, 370 115, 480 115 C 595 115, 645 262, 795 262"
+            fill="none" stroke="#d94040" stroke-width="2.5" stroke-dasharray="8 6"/>
+      <text x="352" y="160" font-size="46" fill="#003876" text-anchor="middle">?</text>
+      <text x="486" y="185" font-size="46" fill="#d94040" text-anchor="middle">?</text>
+    </svg>
+    <span class="lab blue" style="left:300px; top:62px;">$p_1$</span>
+    <span class="lab red" style="left:560px; top:110px;">$p_0$</span>
+    <span class="lab gray" style="left:440px; top:295px;">observable $\varphi$</span>
   </div>
+  <p class="muted" style="text-align:center;">Shapes unknown; only the ratio of their heights matters.</p>
 </div>
 
-<!-- SLIDE 42 — Generating Shadow Data -->
-<div class="slide bg-deep">
-  <div class="pill">Shokri et al. 2017</div>
-  <h2>Three Shadow Data Strategies</h2>
+<div class="slide">
+  <h2>Why the Ratio Is Not Computable</h2>
   <div class="divider"></div>
   <div class="grid-3">
-    <div class="card">
-      <h3>Model-Based</h3>
-      <p><strong>Synthesize</strong> via hill-climbing on target.</p>
-    </div>
-    <div class="card">
-      <h3>Statistics-Based</h3>
-      <p><strong>Sample</strong> from public marginals.</p>
-    </div>
-    <div class="card">
-      <h3>Noisy Real Data</h3>
-      <p><strong>Related-domain</strong> or noisy public.</p>
-    </div>
+    <div class="card"><h3>Unknown $\mathcal{D}$</h3>
+      <p>The record distribution is exactly what the attacker lacks.</p></div>
+    <div class="card"><h3>Intractable $T$</h3>
+      <p>$p_1$ integrates over SGD noise, initialisation, batch order.</p></div>
+    <div class="card"><h3>Nuisance records</h3>
+      <p>Both densities marginalise the other $n-1$ training points.</p></div>
   </div>
   <div class="highlight">
-    <p>Later (Salem 2019): even <strong>unrelated data</strong> works.</p>
+    <p>The optimal statistic is <strong>defined</strong>, not <strong>available</strong>. That gap is this lecture.</p>
   </div>
 </div>
 
-<!-- SLIDE 43 — Collecting Attack Data -->
-<div class="slide bg-dark">
-  <div class="pill">Shokri et al. 2017</div>
-  <h2>Attack Data Collection</h2>
+<div class="slide">
+  <h2>Key Trick: Sample What You Cannot Integrate</h2>
   <div class="divider"></div>
-  <p>For each shadow model $f_{\theta_j}$:</p>
-  <div class="grid-2">
-    <div>
-      <h3 style="color:var(--success);">Member Queries</h3>
-      <p>Query on $x \in D_j^s$</p>
-      <p>Record $(\sigma(f_{\theta_j}(x)), \texttt{IN})$</p>
-    </div>
-    <div>
-      <h3 style="color:var(--warn);">Non-Member Queries</h3>
-      <p>Query on $x \notin D_j^s$</p>
-      <p>Record $(\sigma(f_{\theta_j}(x)), \texttt{OUT})$</p>
-    </div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Key trick.</h3>
+    <p>Cannot evaluate $p_1, p_0$. Can <strong>sample</strong> both: rerun the training game on data you own.</p>
+    <p>Membership is then known by construction.</p>
   </div>
-  <div style="height:36px;"></div>
-  <div class="card" style="padding:24px 30px; border-color:var(--yonsei-blue);">
-    <h3 style="margin-top:0;">Labeled attack dataset</h3>
-    <p>Aggregate IN/OUT confidence pairs across all $k$ shadows.</p>
-    <p style="font-size:1.15rem; margin-top:14px;"><strong>Assumption.</strong> The target's IN/OUT confidence gap mirrors the shadow gap.</p>
+  <div class="m2-chain">
+    <span>own data</span><span class="arr">&rarr;</span>
+    <span>own models</span><span class="arr">&rarr;</span>
+    <span>labelled observables</span><span class="arr focus">&rarr;</span>
+    <span class="blue">estimate $\Lambda$</span>
+  </div>
+  <p class="muted">Monte-Carlo, in the exact classical sense: replace an integral by replicates.</p>
+</div>
+
+<div class="slide">
+  <h2>The Shadow Recipe</h2>
+  <div class="divider"></div>
+  <div class="m2-algo">
+    <div class="m2-algo-title">Shadow-model construction</div>
+    <ol>
+      <li>Draw $k$ shadow sets $D_1^s, \dots, D_k^s$ of size $n$ from your best guess at $\mathcal{D}$.</li>
+      <li>Train $\theta_j = T(D_j^s)$ with the target's architecture and recipe.</li>
+      <li>Query $\theta_j$ on its own members: record $\varphi$ with label <strong>IN</strong>.</li>
+      <li>Query $\theta_j$ on fresh held-out records: record $\varphi$ with label <strong>OUT</strong>.</li>
+      <li>Fit any binary classifier to the pooled labelled set.</li>
+    </ol>
+  </div>
+  <p class="muted">Steps 1 to 4 are the estimator. Step 5 is where the ratio appears.</p>
+</div>
+
+<div class="slide">
+  <h2>Monte-Carlo Picture</h2>
+  <div class="divider"></div>
+  <div class="m2-fig" style="transform:scale(1.05); transform-origin:top center;">
+    <svg width="960" height="360" viewBox="0 0 960 360">
+      <g fill="none" stroke="#003876" stroke-width="2">
+        <rect x="30" y="40" width="150" height="46" rx="8"/>
+        <rect x="30" y="104" width="150" height="46" rx="8"/>
+        <rect x="30" y="232" width="150" height="46" rx="8"/>
+      </g>
+      <g font-size="17" fill="#003876" text-anchor="middle">
+        <text x="105" y="70">shadow 1</text>
+        <text x="105" y="134">shadow 2</text>
+        <text x="105" y="262">shadow k</text>
+      </g>
+      <g fill="#8a94a6"><circle cx="105" cy="186" r="3"/><circle cx="105" cy="198" r="3"/><circle cx="105" cy="210" r="3"/></g>
+      <g stroke="#8a94a6" stroke-width="1.6" fill="none">
+        <path d="M186 63 C 260 63, 280 150, 350 150"/>
+        <path d="M186 127 C 260 127, 285 152, 350 152"/>
+        <path d="M186 255 C 260 255, 285 160, 350 160"/>
+      </g>
+      <g fill="#003876">
+        <rect x="380" y="120" width="16" height="40"/><rect x="400" y="96" width="16" height="64"/>
+        <rect x="420" y="60" width="16" height="100"/><rect x="440" y="84" width="16" height="76"/>
+        <rect x="460" y="128" width="16" height="32"/>
+      </g>
+      <g fill="#d94040">
+        <rect x="380" y="270" width="16" height="30"/><rect x="400" y="248" width="16" height="52"/>
+        <rect x="420" y="228" width="16" height="72"/><rect x="440" y="216" width="16" height="84"/>
+        <rect x="460" y="244" width="16" height="56"/><rect x="480" y="272" width="16" height="28"/>
+      </g>
+      <line x1="372" y1="160" x2="510" y2="160" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="372" y1="300" x2="510" y2="300" stroke="#1a1a1a" stroke-width="2"/>
+      <path d="M540 160 L 600 160" stroke="#8a94a6" stroke-width="2" marker-end="url(#ah2)"/>
+      <path d="M540 300 L 600 300" stroke="#8a94a6" stroke-width="2" marker-end="url(#ah2)"/>
+      <defs><marker id="ah2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+        <path d="M0 0 L 9 4.5 L 0 9 z" fill="#8a94a6"/></marker></defs>
+      <path d="M620 160 C 660 160, 668 62, 715 62 C 762 62, 770 160, 830 160"
+            fill="none" stroke="#003876" stroke-width="2.5"/>
+      <path d="M620 300 C 665 300, 675 208, 725 208 C 775 208, 785 300, 845 300"
+            fill="none" stroke="#d94040" stroke-width="2.5"/>
+    </svg>
+    <span class="lab blue" style="left:445px; top:32px;">IN observables</span>
+    <span class="lab red" style="left:445px; top:332px;">OUT observables</span>
+    <span class="lab blue" style="left:718px; top:44px;">$\hat p_1$</span>
+    <span class="lab red" style="left:728px; top:190px;">$\hat p_0$</span>
   </div>
 </div>
 
-<!-- SLIDE 44 — Per-Class Attack Models -->
-<div class="slide bg-deep">
-  <div class="pill">Shokri et al. 2017</div>
-  <h2>Per-Class Attack Models</h2>
+<div class="slide m2-tight">
+  <h2>Assumption S &mdash; Faithful Shadows</h2>
   <div class="divider"></div>
-  <p>One <strong>binary classifier per class</strong> $c$:</p>
-  <div class="math-block">
-    $$\mathcal{A}_c : \mathbb{R}^{|\mathcal{C}|} \to \{0, 1\}$$
-  </div>
-  <p><strong>Input:</strong> confidence $\sigma(f_\theta(x))$ for class-$c$ predictions</p>
-  <p><strong>Output:</strong> member (1) or non-member (0)</p>
-  <div class="highlight">
-    <p><strong>Per-class:</strong> confidence distributions differ by class. Class-specific calibration required.</p>
-  </div>
-</div>
-
-<!-- SLIDE 45 — Attack Inference -->
-<div class="slide bg-dark">
-  <div class="pill">Shokri et al. 2017</div>
-  <h2>Attack Inference</h2>
-  <div class="divider"></div>
-  <p>Given target point $(x, y)$ and model $f_\theta$:</p>
-  <div class="card" style="padding:20px 24px;">
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Assumption S.</h3>
     <ul class="num">
-      <li>Query: $\mathbf{p} = \sigma(f_\theta(x))$</li>
-      <li>Predicted class: $c = \arg\max_i \mathbf{p}_i$</li>
-      <li>Attack: $\hat{m} = \mathcal{A}_c(\mathbf{p})$</li>
-      <li>If $\hat{m} = 1$: declare <strong>member</strong></li>
+      <li>Shadow records are i.i.d. from the same $\mathcal{D}$, and $|D_j^s| = n$.</li>
+      <li>The shadow trainer is the target trainer $T$, run with independent randomness.</li>
+      <li>Held-out probes are fresh draws from $\mathcal{D}$, independent of $D_j^s$.</li>
     </ul>
   </div>
-  <p>Classifier learns per-class <strong>confidence pattern</strong> separating members from non-members.</p>
+  <p class="muted">Strong on purpose. Everything after this lecture is an attack on one of the three clauses.</p>
 </div>
 
-<!-- SLIDE 46 — Results: Google -->
-<div class="slide bg-deep">
-  <div class="pill">Shokri et al. 2017</div>
+<div class="slide m2-tight">
+  <h2>Proposition 1 &mdash; Shadows Simulate Exactly</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Proposition 1.</h3>
+    <p>Under Assumption S, write $\theta_j = T(D_j^s)$, let $Z_j$ be uniform on $D_j^s$ and $Z_j' \sim \mathcal{D}$ fresh. Then</p>
+    <div class="math-block">$\Phi(\theta_j, Z_j) \sim P_1, \qquad \Phi(\theta_j, Z_j') \sim P_0,$</div>
+    <p>and across $j = 1, \dots, k$ these pairs are independent and identically distributed.</p>
+  </div>
+  <p class="muted">No approximation anywhere: the shadow game <em>is</em> the game.</p>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Proposition 1</h2>
+  <div class="divider"></div>
+  <ul class="num">
+    <li>Clauses 1&ndash;2 match data law and training kernel, hence the pairs agree:</li>
+  </ul>
+  <div class="math-block">$\bigl(D_j^s,\, \theta_j\bigr) \;\stackrel{d}{=}\; \bigl(D,\, T(D)\bigr) = (D, \theta).$</div>
+  <ul class="num" style="counter-reset:li 1;">
+    <li>Equality in distribution survives measurable maps: apply $(D, \theta) \mapsto \Phi(\theta, Z)$, $Z$ uniform on $D$.</li>
+    <li>OUT: clause 3 gives $Z_j' \perp \theta_j$, hence $(\theta_j, Z_j') \stackrel{d}{=} (\theta, Z')$ and $\Phi$ gives $P_0$.</li>
+    <li>Runs use independent draws and noise, so the $k$ pairs are i.i.d. $\;\square$</li>
+  </ul>
+  <div class="highlight">
+    <p>Consequence: unlimited labelled draws from $P_1$ and $P_0$, at the price of $k$ trainings.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>From Samples to a Decision Rule</h2>
+  <div class="divider"></div>
+  <p>Balance the shadow set: $b = 1$ on IN, $b = 0$ on OUT. Ordinary supervised learning follows.</p>
+  <div class="math-block">$b \sim \mathrm{Bernoulli}(\tfrac12), \qquad \varphi \mid b = 1 \sim P_1, \qquad \varphi \mid b = 0 \sim P_0.$</div>
+  <div class="card">
+    <h3>Population risk.</h3>
+    <div class="math-block">$R(\mathcal{A}) = \mathbb{E}\bigl[-b \log \mathcal{A}(\varphi) - (1-b)\log\bigl(1 - \mathcal{A}(\varphi)\bigr)\bigr],
+      \quad \mathcal{A} : \mathcal{U} \to (0,1).$</div>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Theorem 1 &mdash; Shadow Training Recovers the Ratio</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Theorem 1.</h3>
+    <p>The unique minimiser of $R$ over measurable $\mathcal{A}$ is</p>
+    <div class="math-block">$\mathcal{A}^\star(u) \;=\; \Pr[b = 1 \mid \varphi = u] \;=\; \frac{p_1(u)}{p_1(u) + p_0(u)} \;=\; \frac{\Lambda(u)}{1 + \Lambda(u)},$</div>
+    <p>a strictly increasing function of $\Lambda(u)$. Hence every threshold on $\mathcal{A}^\star$ is a likelihood-ratio test.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Theorem 1 &mdash; Outline</h2>
+  <div class="divider"></div>
+  <div class="m2-algo">
+    <div class="m2-algo-title">Three moves</div>
+    <ol>
+      <li><strong>Condition.</strong> Rewrite the risk as an average of one-variable losses.</li>
+      <li><strong>Minimise pointwise.</strong> The inner loss is strictly convex with an explicit minimiser.</li>
+      <li><strong>Invert the link.</strong> The posterior is a monotone transform of $\Lambda$, so thresholds carry over.</li>
+    </ol>
+  </div>
+  <div class="highlight">
+    <p>Nothing here is specific to log loss beyond one property: it is a <strong>proper</strong> scoring rule.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Theorem 1 &mdash; Step 1, Condition</h2>
+  <div class="divider"></div>
+  <p>Write $\eta(u) = \Pr[b = 1 \mid \varphi = u]$ and use the tower property:</p>
+  <div class="math-block">$R(\mathcal{A}) \;=\; \mathbb{E}_{\varphi}\Bigl[\, h\bigl(\eta(\varphi),\, \mathcal{A}(\varphi)\bigr)\Bigr],
+    \qquad h(\eta, a) = -\eta \log a - (1-\eta)\log(1-a).$</div>
+  <ul class="arrow">
+    <li>$\mathcal{A}$ is unconstrained, so its value at each $u$ can be chosen separately.</li>
+    <li>Minimising the average therefore reduces to minimising $h(\eta(u), \cdot)$ for every $u$.</li>
+  </ul>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Theorem 1 &mdash; Step 2, Minimise</h2>
+  <div class="divider"></div>
+  <div class="math-block">$\frac{\partial h}{\partial a} = -\frac{\eta}{a} + \frac{1-\eta}{1-a} = \frac{a - \eta}{a(1-a)},
+    \qquad \frac{\partial^2 h}{\partial a^2} = \frac{\eta}{a^2} + \frac{1-\eta}{(1-a)^2} \gt 0.$</div>
+  <ul class="arrow">
+    <li>Strictly convex in $a$ on $(0,1)$, with derivative vanishing only at $a = \eta$.</li>
+    <li>So the pointwise minimiser is $\mathcal{A}^\star(u) = \eta(u)$, and it is unique.</li>
+  </ul>
+  <p class="muted">This is the statement that log loss is proper: honest probabilities win.</p>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Theorem 1 &mdash; Step 3, Invert</h2>
+  <div class="divider"></div>
+  <ul class="num" style="counter-reset:li 2;">
+    <li>Bayes with a balanced prior gives $\eta(u) = \dfrac{\frac12 p_1(u)}{\frac12 p_1(u) + \frac12 p_0(u)} = \dfrac{\Lambda(u)}{1 + \Lambda(u)}$.</li>
+    <li>The map $t \mapsto t/(1+t)$ is strictly increasing on $[0, \infty)$, with inverse $s \mapsto s/(1-s)$.</li>
+  </ul>
+  <div class="math-block">$\mathcal{A}^\star(u) \gt s \iff \Lambda(u) \gt \frac{s}{1-s}. \qquad \square$</div>
+  <p class="muted">Sweeping $s$ sweeps the threshold on $\Lambda$: one trained score, every operating point.</p>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Theorem 1 &mdash; Recap</h2>
+  <div class="divider"></div>
+  <div class="math-block">$\begin{aligned}
+    \arg\min_{\mathcal{A}} R(\mathcal{A})
+      &amp;\stackrel{(1)}{=} \arg\min_{a(\cdot)} \mathbb{E}_\varphi\bigl[h(\eta(\varphi), a(\varphi))\bigr] \\
+      &amp;\stackrel{(2)}{=} \eta(\cdot) \\
+      &amp;\stackrel{(3)}{=} \frac{\Lambda(\cdot)}{1 + \Lambda(\cdot)}
+      \;\stackrel{(4)}{\equiv}\; \text{threshold rules on } \Lambda.
+  \end{aligned}$</div>
+  <p class="muted">(1) tower property &nbsp;·&nbsp; (2) strict convexity &nbsp;·&nbsp; (3) Bayes, balanced prior &nbsp;·&nbsp; (4) strict monotonicity.</p>
+</div>
+
+<div class="slide">
+  <h2>What Theorem 1 Buys</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card"><h3>Design</h3>
+      <p>Any calibrated classifier trained on shadow labels estimates $\Lambda$.</p></div>
+    <div class="card"><h3>Optimality</h3>
+      <p>At the population optimum the attack is Neyman-Pearson optimal at every size.</p></div>
+    <div class="card"><h3>Diagnosis</h3>
+      <p>A weak attack means a poor ratio estimate, not an absence of leakage.</p></div>
+  </div>
+  <div class="highlight">
+    <p>Shadow modelling is not a heuristic. It is <strong>Monte-Carlo estimation of a specified statistic</strong>.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Two Gaps Between Estimator and Estimand</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card"><h3>Statistical gap</h3>
+      <p>Finite $k$, finite capacity, finite probes. Shrinks with more shadows and better models.</p></div>
+    <div class="card"><h3>Specification gap</h3>
+      <p>Wrong $\mathcal{D}$, wrong architecture, wrong recipe. Does <strong>not</strong> shrink with more shadows.</p></div>
+  </div>
+  <p>The second gap is the interesting one: no amount of effort removes it.</p>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Mis-specification, Formally</h2>
+  <div class="divider"></div>
+  <p>Shadow game induces $Q_1, Q_0$; target game induces $P_1, P_0$. Calibrate under $Q$, deploy under $P$.</p>
+  <div class="math-block">$\alpha_Q(\phi) = \mathbb{E}_{Q_0}[\phi], \quad \pi_Q(\phi) = \mathbb{E}_{Q_1}[\phi];
+    \qquad \alpha_P(\phi) = \mathbb{E}_{P_0}[\phi], \quad \pi_P(\phi) = \mathbb{E}_{P_1}[\phi].$</div>
+  <ul class="arrow">
+    <li>$\alpha_Q, \pi_Q$: the rates the attacker measures on shadows.</li>
+    <li>$\alpha_P, \pi_P$: the rates that actually occur on the target.</li>
+  </ul>
+  <p class="muted">Same rule $\phi$, two different worlds. How far apart can its rates be?</p>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Corollary 1 &mdash; Mis-specification Costs at Most TV</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Corollary 1.</h3>
+    <p>For every randomized test $\phi : \mathcal{U} \to [0,1]$,</p>
+    <div class="math-block">$\bigl|\alpha_P(\phi) - \alpha_Q(\phi)\bigr| \le \mathrm{TV}(P_0, Q_0), \qquad
+      \bigl|\pi_P(\phi) - \pi_Q(\phi)\bigr| \le \mathrm{TV}(P_1, Q_1),$</div>
+    <p>hence the deployed advantage drops by at most $\mathrm{TV}(P_1,Q_1) + \mathrm{TV}(P_0,Q_0)$.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Corollary 1</h2>
+  <div class="divider"></div>
+  <ul class="num">
+    <li>For any $\phi$ with $0 \le \phi \le 1$ and any two laws $P, Q$ with densities $p, q$:</li>
+  </ul>
+  <div class="math-block">$\Bigl|\int \phi \, (p - q)\Bigr| \;\le\; \int \phi\,(p-q)_+ + \int \phi\,(q-p)_+
+    \;\le\; \int (p-q)_+ \;=\; \mathrm{TV}(P,Q).$</div>
+  <ul class="num" style="counter-reset:li 1;">
+    <li>Apply with $(P_0, Q_0)$ for size, $(P_1, Q_1)$ for power; subtract. $\;\square$</li>
+  </ul>
+  <p class="muted">Step one adds a non-negative term, then uses $0 \le \phi \le 1$ and $\mathrm{TV} = \int (p-q)_+$.</p>
+  <div class="highlight">
+    <p>One inequality covers every mismatch in Assumption S: data, trainer, probes.</p>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Reading Corollary 1</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card"><h3>Bound is uniform</h3>
+      <p>Holds for every test, so no cleverness escapes a badly wrong shadow world.</p></div>
+    <div class="card"><h3>Bound is loose</h3>
+      <p>TV is worst case. A shift that moves both laws together costs almost nothing.</p></div>
+    <div class="card"><h3>Repair is cheap</h3>
+      <p>The damage is often a shift in the score, removable by recalibrating the threshold.</p></div>
+  </div>
+  <div class="highlight">
+    <p>How much of Assumption S can be dropped is the subject of the next lecture.</p>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>The Shift That Breaks a Threshold</h2>
+  <div class="divider"></div>
+  <div class="m2-fig" style="transform:scale(1.06); transform-origin:top center;">
+    <svg width="920" height="340" viewBox="0 0 920 340">
+      <line x1="50" y1="285" x2="880" y2="285" stroke="#1a1a1a" stroke-width="2"/>
+      <path d="M60 282 C 130 282, 155 155, 225 155 C 295 155, 320 282, 390 282"
+            fill="none" stroke="#d94040" stroke-width="2.5"/>
+      <path d="M235 282 C 305 282, 330 155, 400 155 C 470 155, 495 282, 565 282"
+            fill="none" stroke="#003876" stroke-width="2.5"/>
+      <path d="M315 282 C 385 282, 410 195, 480 195 C 550 195, 575 282, 645 282"
+            fill="none" stroke="#d94040" stroke-width="2.5" stroke-dasharray="7 5"/>
+      <path d="M490 282 C 560 282, 585 195, 655 195 C 725 195, 750 282, 820 282"
+            fill="none" stroke="#003876" stroke-width="2.5" stroke-dasharray="7 5"/>
+      <line x1="312" y1="75" x2="312" y2="295" stroke="#1a1a1a" stroke-width="2"/>
+      <path d="M330 108 L 590 108" stroke="#8a94a6" stroke-width="2" marker-end="url(#ah3)"/>
+      <defs><marker id="ah3" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+        <path d="M0 0 L 9 4.5 L 0 9 z" fill="#8a94a6"/></marker></defs>
+    </svg>
+    <span class="lab red" style="left:225px; top:143px;">OUT</span>
+    <span class="lab blue" style="left:400px; top:143px;">IN</span>
+    <span class="lab gray" style="left:150px; top:118px;">shadow world</span>
+    <span class="lab gray" style="left:735px; top:180px;">target world</span>
+    <span class="lab gray" style="left:312px; top:56px;">threshold set on shadows</span>
+    <span class="lab gray" style="left:460px; top:90px;">systematic shift</span>
+    <span class="lab gray" style="left:460px; top:315px;">attack score</span>
+  </div>
+  <p class="muted" style="text-align:center;">Both laws move together: separation survives, the calibrated threshold does not.</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!--  SECTION 02 — THE SHOKRI PARADIGM                                -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>The Shokri Paradigm</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Shadow models against cloud ML APIs</p>
+</div>
+
+<div class="slide">
+  <h2>Shokri et al. &mdash; The Setting</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card"><h3>Target</h3>
+      <p>A classifier trained through Google Prediction API or Amazon ML, queried as a black box.</p></div>
+    <div class="card"><h3>Observable</h3>
+      <p>The confidence vector $\sigma(f_\theta(x)) \in \Delta^{C-1}$, nothing else.</p></div>
+  </div>
+  <div class="highlight">
+    <p>First systematic black-box membership attack, and the origin of the shadow recipe.</p>
+  </div>
+  <div class="cite cite-wide">Shokri, Stronati, Song, Shmatikov, "Membership Inference Attacks Against Machine Learning Models", IEEE S&amp;P 2017</div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Instantiating the Observable</h2>
+  <div class="divider"></div>
+  <p>The abstract $\varphi = \Phi(\theta, z)$ becomes concrete:</p>
+  <div class="math-block">$\Phi(\theta, z) \;=\; \bigl(\sigma(f_\theta(x)),\; y\bigr), \qquad
+    \sigma(v)_c = \frac{e^{v_c}}{\sum_{c'} e^{v_{c'}}}.$</div>
+  <ul class="arrow">
+    <li>Fixed dimension $C$: a single classifier can consume it.</li>
+    <li>Carries the model's uncertainty, which is what overfitting distorts.</li>
+    <li>The true label $y$ is known to the attacker, who supplied the record.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Attack Architecture &mdash; Training Pipeline</h2>
+  <div class="divider"></div>
+  <div class="m2-fig" style="transform:scale(1.18); transform-origin:top center;">
+    <svg width="980" height="340" viewBox="0 0 980 340">
+      <g fill="none" stroke="#8a94a6" stroke-width="2">
+        <rect x="20" y="52" width="98" height="48" rx="8"/>
+        <rect x="20" y="122" width="98" height="48" rx="8"/>
+        <rect x="20" y="244" width="98" height="48" rx="8"/>
+      </g>
+      <g fill="#003876">
+        <rect x="176" y="52" width="126" height="48" rx="8"/>
+        <rect x="176" y="122" width="126" height="48" rx="8"/>
+        <rect x="176" y="244" width="126" height="48" rx="8"/>
+      </g>
+      <g stroke="#8a94a6" stroke-width="2" marker-end="url(#ahp)">
+        <path d="M122 76 L 168 76"/><path d="M122 146 L 168 146"/><path d="M122 268 L 168 268"/>
+        <path d="M310 172 L 362 172"/><path d="M636 172 L 690 172"/>
+      </g>
+      <defs><marker id="ahp" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+        <path d="M0 0 L 9 4.5 L 0 9 z" fill="#8a94a6"/></marker></defs>
+      <g fill="#8a94a6"><circle cx="69" cy="202" r="3"/><circle cx="69" cy="214" r="3"/><circle cx="69" cy="226" r="3"/><circle cx="239" cy="202" r="3"/><circle cx="239" cy="214" r="3"/><circle cx="239" cy="226" r="3"/></g>
+      <rect x="372" y="92" width="256" height="160" rx="10" fill="#eef2f7" stroke="#003876" stroke-width="2.5"/>
+      <rect x="700" y="112" width="200" height="118" rx="10" fill="#d94040"/>
+      <g font-size="15" fill="#003876" text-anchor="middle">
+        <text x="69" y="34">shadow sets</text>
+        <text x="239" y="34">shadow models</text>
+        <text x="500" y="74">labelled observables</text>
+        <text x="800" y="94">attack classifier</text>
+      </g>
+      <g font-size="14" fill="#8a94a6" text-anchor="middle">
+        <text x="500" y="278">one row per query</text>
+        <text x="800" y="256">one per class</text>
+      </g>
+    </svg>
+    <span class="lab" style="left:69px; top:76px;">$D_1^s$</span>
+    <span class="lab" style="left:69px; top:146px;">$D_2^s$</span>
+    <span class="lab" style="left:69px; top:268px;">$D_k^s$</span>
+    <span class="lab white" style="left:239px; top:76px;">$f_{\theta_1}$</span>
+    <span class="lab white" style="left:239px; top:146px;">$f_{\theta_2}$</span>
+    <span class="lab white" style="left:239px; top:268px;">$f_{\theta_k}$</span>
+    <span class="lab blue" style="left:500px; top:150px;">$\bigl(\sigma(f_{\theta_j}(x)),\, c,\, b\bigr)$</span>
+    <span class="lab gray" style="left:500px; top:205px;">$b \in \{\text{IN}, \text{OUT}\}$</span>
+    <span class="lab white" style="left:800px; top:171px;">$\mathcal{A}_c$</span>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Attack Architecture &mdash; Inference</h2>
+  <div class="divider"></div>
+  <div class="m2-fig" style="transform:scale(1.12); transform-origin:top center; margin-bottom:36px;">
+    <svg width="990" height="290" viewBox="0 0 990 290">
+      <rect x="20" y="80" width="110" height="86" rx="10" fill="none" stroke="#8a94a6" stroke-width="2"/>
+      <rect x="182" y="80" width="180" height="86" rx="10" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <rect x="414" y="80" width="200" height="86" rx="10" fill="#eef2f7" stroke="#003876" stroke-width="2"/>
+      <rect x="666" y="80" width="150" height="86" rx="10" fill="#d94040"/>
+      <g stroke="#8a94a6" stroke-width="2" marker-end="url(#ahi)">
+        <path d="M134 123 L 176 123"/><path d="M366 123 L 408 123"/>
+        <path d="M618 123 L 660 123"/><path d="M820 123 L 866 123"/>
+      </g>
+      <defs><marker id="ahi" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+        <path d="M0 0 L 9 4.5 L 0 9 z" fill="#8a94a6"/></marker></defs>
+      <path d="M514 172 C 514 226, 660 226, 700 186" fill="none" stroke="#8a94a6" stroke-width="2"
+            stroke-dasharray="6 5" marker-end="url(#ahi)"/>
+      <g font-size="15" fill="#8a94a6" text-anchor="middle">
+        <text x="75" y="196">target record</text>
+        <text x="272" y="196">black box</text>
+        <text x="514" y="60">confidence vector</text>
+        <text x="600" y="252">predicted class selects the model</text>
+      </g>
+    </svg>
+    <span class="lab" style="left:75px; top:123px;">$x$</span>
+    <span class="lab blue" style="left:272px; top:123px;">target $f_\theta$</span>
+    <span class="lab blue" style="left:514px; top:123px;">$\sigma(f_\theta(x))$</span>
+    <span class="lab white" style="left:741px; top:123px;">$\mathcal{A}_c$</span>
+    <span class="lab blue" style="left:920px; top:123px;">IN / OUT</span>
+  </div>
+  <p class="muted" style="text-align:center;">One query, one forward pass: cheap, black-box, repeatable at scale.</p>
+</div>
+
+<div class="slide">
+  <h2>The Pipeline in the Theory's Language</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Pipeline step</th><th>What it does statistically</th></tr>
+    <tr><td>Train $k$ shadows</td><td>Draw $k$ independent replicates of the training game</td></tr>
+    <tr><td>Query members</td><td>Sample from $P_1$ (Proposition 1)</td></tr>
+    <tr><td>Query held-out</td><td>Sample from $P_0$ (Proposition 1)</td></tr>
+    <tr><td>Fit binary classifier</td><td>Estimate the posterior, hence $\Lambda$ (Theorem 1)</td></tr>
+    <tr><td>Threshold its score</td><td>Run a likelihood-ratio test at a chosen size</td></tr>
+  </table>
+  <p class="muted">Every engineering choice is an estimator choice in disguise.</p>
+</div>
+
+<div class="slide">
+  <h2>Three Ways to Get Shadow Data</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card"><h3>Model-based</h3>
+      <p>Synthesize records by hill climbing on the target's own confidences.</p></div>
+    <div class="card"><h3>Statistics-based</h3>
+      <p>Sample from published marginals of each feature.</p></div>
+    <div class="card"><h3>Noisy real data</h3>
+      <p>Take a related public corpus and perturb a fraction of features.</p></div>
+  </div>
+  <div class="highlight">
+    <p>All three are attempts to approximate $\mathcal{D}$, which is clause 1 of Assumption S.</p>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Model-Based Synthesis</h2>
+  <div class="divider"></div>
+  <div class="m2-algo">
+    <div class="m2-algo-title">Hill climbing on the target API</div>
+    <ol>
+      <li>Fix a target class $c$. Initialise a record $x$ with random feature values.</li>
+      <li>Query the target for $\sigma(f_\theta(x))_c$.</li>
+      <li>Propose $x'$ by resampling a small random subset of features.</li>
+      <li>Accept $x'$ if the class-$c$ confidence increased, otherwise keep $x$.</li>
+      <li>Once confidence exceeds a threshold, keep $x$ as a synthetic record for $c$.</li>
+    </ol>
+  </div>
+  <p class="muted">No auxiliary data at all: the target's confidence surface is the only guide.</p>
+</div>
+
+<div class="slide m2-tight">
+  <h2>What Synthesis Actually Estimates</h2>
+  <div class="divider"></div>
+  <p>Hill climbing favours high-confidence regions, so the synthetic law is $\mathcal{D}$ tilted toward confident points:</p>
+  <div class="math-block">$q(x) \;\propto\; \mathcal{D}(x)\, w\bigl(\sigma(f_\theta(x))_c\bigr), \qquad w \text{ increasing}.$</div>
+  <ul class="arrow">
+    <li>Good news: confident regions are where the membership signal lives.</li>
+    <li>Bad news: this is exactly a violation of clause 1, so Corollary 1 applies.</li>
+  </ul>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Collecting the Attack Training Set</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card"><h3>Member queries</h3>
+      <p>For $x \in D_j^s$ record $\bigl(\sigma(f_{\theta_j}(x)),\, c,\, \text{IN}\bigr)$.</p></div>
+    <div class="card"><h3>Non-member queries</h3>
+      <p>For fresh $x \notin D_j^s$ record $\bigl(\sigma(f_{\theta_j}(x)),\, c,\, \text{OUT}\bigr)$.</p></div>
+  </div>
+  <div class="math-block">$\mathcal{S} \;=\; \bigcup_{j=1}^{k} \Bigl\{\bigl(\sigma(f_{\theta_j}(x)),\, c(x),\, b\bigr)\Bigr\},
+    \qquad |\mathcal{S}| \approx 2kn.$</div>
+  <p class="muted">Balance the two labels, or reweight, so the posterior of Theorem 1 is the intended one.</p>
+</div>
+
+<div class="slide">
+  <h2>Pseudocode &mdash; Build and Train</h2>
+  <div class="divider"></div>
+  <div class="code-block"><span class="cm">// Phase 1: build attack training data</span>
+<span class="kw">for</span> j = 1 to k:
+    D_s[j]   &larr; <span class="fn">sample_data</span>(shadow_distribution)
+    hold[j]  &larr; <span class="fn">sample_data</span>(shadow_distribution)   <span class="cm">// disjoint</span>
+    f[j]     &larr; <span class="fn">train_model</span>(D_s[j])                <span class="cm">// target's recipe</span>
+    <span class="kw">for</span> x <span class="kw">in</span> D_s[j]:
+        S.<span class="fn">add</span>(f[j](x), <span class="fn">class</span>(x), <span class="str">"IN"</span>)
+    <span class="kw">for</span> x <span class="kw">in</span> hold[j]:
+        S.<span class="fn">add</span>(f[j](x), <span class="fn">class</span>(x), <span class="str">"OUT"</span>)
+
+<span class="cm">// Phase 2: train one attack model per class</span>
+<span class="kw">for</span> c <span class="kw">in</span> classes:
+    A[c] &larr; <span class="fn">train_binary_classifier</span>(S[c])</div>
+</div>
+
+<div class="slide">
+  <h2>Pseudocode &mdash; Attack</h2>
+  <div class="divider"></div>
+  <div class="code-block"><span class="cm">// Phase 3: attack a single record</span>
+<span class="kw">def</span> <span class="fn">attack</span>(target_model, x):
+    p &larr; target_model(x)        <span class="cm">// confidence vector</span>
+    c &larr; <span class="fn">argmax</span>(p)              <span class="cm">// route to the class model</span>
+    <span class="kw">return</span> A[c](p) &gt; tau        <span class="cm">// tau sets the operating point</span></div>
+  <div class="highlight">
+    <p>The threshold <code>tau</code> is not a detail: it picks the point on the ROC curve.</p>
+  </div>
+</div>
+
+<div class="slide">
   <h2>Results: Google Prediction API</h2>
   <div class="divider"></div>
   <table>
-    <tr><th>Dataset</th><th>Classes</th><th>Model Acc.</th><th>Attack Precision</th><th>Attack Recall</th></tr>
+    <tr><th>Dataset</th><th>Classes</th><th>Model acc.</th><th>Attack precision</th><th>Attack recall</th></tr>
     <tr><td>Purchase-100</td><td>100</td><td>67%</td><td><strong>93%</strong></td><td>91%</td></tr>
     <tr><td>Location-30</td><td>30</td><td>57%</td><td>78%</td><td>73%</td></tr>
-    <tr><td>CIFAR-100</td><td>100</td><td>—</td><td>85%</td><td>82%</td></tr>
+    <tr><td>CIFAR-100</td><td>100</td><td>&mdash;</td><td>85%</td><td>82%</td></tr>
   </table>
-  <div class="highlight">
-    <p>Commercial black-box services vulnerable. <strong>High precision</strong>: most positives correct.</p>
-  </div>
+  <p>Precision is measured at the attack's own operating point, on a balanced member and non-member split.</p>
+  <div class="cite">Shokri et al., IEEE S&amp;P 2017. Texas-100 row in the companion note.</div>
 </div>
 
-<!-- SLIDE 47 — Results: Amazon -->
-<div class="slide bg-dark">
-  <div class="pill">Shokri et al. 2017</div>
-  <h2>Results: Amazon ML</h2>
+<div class="slide">
+  <h2>Results: Amazon ML and Beyond</h2>
   <div class="divider"></div>
-  <p>Attack generalizes to Amazon ML.</p>
   <ul class="check">
-    <li>Effective across <strong>different ML platforms</strong></li>
-    <li>Model-type-agnostic</li>
-    <li><strong>More classes</strong>: higher vulnerability</li>
-    <li><strong>More overfitting</strong>: higher vulnerability</li>
+    <li>Attack transfers across platforms with no change of method.</li>
+    <li>Works without knowing the model family the service chose.</li>
+    <li>More classes: more vulnerable.</li>
+    <li>Larger train and test accuracy gap: more vulnerable.</li>
   </ul>
   <div class="highlight">
-    <p><strong>Platform-agnostic.</strong> Overfit confidence is a universal signature.</p>
+    <p>Platform-agnostic, because the estimated object is a property of the <strong>game</strong>, not the API.</p>
   </div>
 </div>
 
-<!-- SLIDE 48 — Why More Classes -->
-<div class="slide bg-deep">
-  <div class="pill">Shokri et al. 2017</div>
-  <h2>Class Count and Vulnerability</h2>
+<div class="slide m2-tight">
+  <h2>Why More Classes Leak More</h2>
   <div class="divider"></div>
-  <p>Output lives on the <strong>probability simplex</strong> $\Delta^{C-1}$:</p>
-  <div class="math-block">
-    $$\sigma(f_\theta(x)) \in \Delta^{C-1} = \left\{\mathbf{p} \in \mathbb{R}^C : p_i \geq 0, \sum_i p_i = 1\right\}$$
+  <p>The observable lives on the simplex, whose dimension grows with the number of classes:</p>
+  <div class="math-block">$\sigma(f_\theta(x)) \in \Delta^{C-1} = \Bigl\{p \in \mathbb{R}^C : p_c \ge 0,\; \textstyle\sum_c p_c = 1\Bigr\},
+    \qquad \dim = C - 1.$</div>
+  <p>A richer observable can only help: any coarse-view test is a fine-view test ignoring coordinates.</p>
+  <div class="highlight">
+    <p>Formally a data-processing statement, made precise in Section 03.</p>
   </div>
-  <div class="grid-2">
-    <div>
-      <h3>Few classes (C=2)</h3>
-      <p>Scalar output.</p>
-      <p>Limited signal.</p>
-    </div>
-    <div>
-      <h3>Many classes (C=100)</h3>
-      <p>99-dim vector. <strong>Much richer</strong> membership signature.</p>
-    </div>
-  </div>
-  <p>More dimensions → richer fingerprint → easier discrimination.</p>
 </div>
 
-<!-- SLIDE 49 — Limitations -->
-<div class="slide bg-dark">
-  <div class="pill">Shokri et al. 2017</div>
-  <h2>Limitations of Shadow Models</h2>
+<div class="slide">
+  <h2>Overfitting Is the Engine</h2>
+  <div class="divider"></div>
+  <div class="m2-fig" style="transform:scale(1.24); transform-origin:top center; margin-bottom:80px;">
+    <svg width="880" height="310" viewBox="0 0 880 310">
+      <line x1="80" y1="255" x2="820" y2="255" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="80" y1="255" x2="80" y2="35" stroke="#1a1a1a" stroke-width="2"/>
+      <path d="M80 230 C 200 180, 340 120, 800 70" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <path d="M80 230 C 200 190, 330 175, 800 205" fill="none" stroke="#d94040" stroke-width="2.5"/>
+      <path d="M700 82 L 700 196" stroke="#8a94a6" stroke-width="2" stroke-dasharray="5 4"/>
+      <path d="M712 88 L 712 190" stroke="#8a94a6" stroke-width="1.6"/>
+    </svg>
+    <span class="lab blue" style="left:640px; top:60px;">train accuracy</span>
+    <span class="lab red" style="left:640px; top:225px;">test accuracy</span>
+    <span class="lab gray" style="left:790px; top:140px;">gap</span>
+    <span class="lab gray" style="left:450px; top:285px;">training epochs</span>
+  </div>
+  <p class="muted" style="text-align:center;">The gap is the separation between $P_1$ and $P_0$, seen through accuracy.</p>
+</div>
+
+<div class="slide">
+  <h2>Limitations of the Shadow Recipe</h2>
   <div class="divider"></div>
   <ul class="arrow">
-    <li><strong>Data distribution:</strong> needs similar-distribution data</li>
-    <li><strong>Architecture knowledge:</strong> best when shadow matches target</li>
-    <li><strong>Cost:</strong> $k$ models, $k\times$ training</li>
-    <li><strong>Per-class classifiers:</strong> poor scaling</li>
-    <li><strong>No theory:</strong> empirical only, no optimality guarantees</li>
+    <li><strong>Data:</strong> needs a usable approximation of $\mathcal{D}$.</li>
+    <li><strong>Architecture:</strong> best when the shadow recipe matches the target's.</li>
+    <li><strong>Cost:</strong> $k$ full trainings per target, and one classifier per class.</li>
+    <li><strong>Average case:</strong> the classifier is fit to bulk behaviour, not to hard examples.</li>
   </ul>
   <div class="highlight">
-    <p><strong>Open question:</strong> drop the assumptions? (Yes: Salem, Sablayrolles.)</p>
+    <p>Clauses 1 and 2 are attacked next lecture; the average-case flaw waits for per-example calibration.</p>
   </div>
 </div>
 
-<!-- SLIDE 50 — Pseudocode (Phases 1-2) -->
-<div class="slide bg-deep">
-  <div class="pill">Shokri et al. 2017</div>
-  <h2>Pseudocode &mdash; Build &amp; Train</h2>
-  <div class="divider"></div>
-  <div class="code-block"><span class="cm">// Phase 1: Build attack training data</span>
-<span class="kw">for</span> j = 1 to k:
-    D_s[j] ← <span class="fn">sample_data</span>(distribution)
-    f[j]   ← <span class="fn">train_model</span>(D_s[j])
-    <span class="kw">for</span> x in D_s[j]:           <span class="cm">// members</span>
-        attack_data.<span class="fn">add</span>(f[j](x), <span class="str">"IN"</span>, <span class="fn">class</span>(x))
-    <span class="kw">for</span> x in holdout[j]:       <span class="cm">// non-members</span>
-        attack_data.<span class="fn">add</span>(f[j](x), <span class="str">"OUT"</span>, <span class="fn">class</span>(x))
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!--  SECTION 03 — PER-CLASS MODELS AND THE THRESHOLD BASELINE        -->
+<!-- ════════════════════════════════════════════════════════════════ -->
 
-<span class="cm">// Phase 2: Train attack classifiers</span>
-<span class="kw">for</span> c in classes:
-    A[c] ← <span class="fn">train_binary_classifier</span>(attack_data[c])</div>
-</div>
-
-<!-- SLIDE 50b — Pseudocode (Phase 3) -->
-<div class="slide bg-deep">
-  <div class="pill">Shokri et al. 2017</div>
-  <h2>Pseudocode &mdash; Attack</h2>
-  <div class="divider"></div>
-  <div class="code-block"><span class="cm">// Phase 3: Attack</span>
-<span class="kw">def</span> <span class="fn">attack</span>(target_model, x):
-    p ← target_model(x)
-    c ← <span class="fn">argmax</span>(p)
-    <span class="kw">return</span> A[c](p)   <span class="cm">// 1 = member, 0 = non-member</span></div>
-  <p>One classifier per class &mdash; routed by predicted label.</p>
-</div>
-
-<!-- SLIDE 51 — Threshold Baseline -->
-<div class="slide bg-dark">
-  <h2>Confidence Threshold Baseline</h2>
-  <div class="divider"></div>
-  <p>Simplest attack, pre-shadow:</p>
-  <div class="math-block">
-    $$\mathcal{A}(f_\theta, x) = \mathbf{1}\left[\max_c f_\theta(x)_c > \tau\right]$$
-  </div>
-  <p><strong>High confidence</strong> on $x$ → probably a member.</p>
-  <div class="grid-2">
-    <div>
-      <h3 style="color:var(--success);">Advantages</h3>
-      <ul>
-        <li>No shadows</li>
-        <li>No training</li>
-        <li>Single threshold</li>
-      </ul>
-    </div>
-    <div>
-      <h3 style="color:var(--warn);">Limitations</h3>
-      <ul>
-        <li>Ignores class structure</li>
-        <li>Uses only max, not full vector</li>
-        <li>Weak on calibrated models</li>
-      </ul>
-    </div>
-  </div>
-  <p><em>Often competitive with full shadow pipeline</em> (Salem et al. 2019).</p>
-</div>
-
-
-<!-- Part divider: LOGAN: Generative Models -->
 <div class="slide section-slide left">
-  <div class="section-num">02</div>
-  <h1>LOGAN: Generative Models</h1>
+  <div class="section-num">03</div>
+  <h1>Per-Class Models and<br>the Threshold Baseline</h1>
   <div class="divider"></div>
-  <p class="subtitle">MIA for GANs (Hayes et al. 2019)</p>
+  <p class="subtitle">Why conditioning helps, why a threshold is still a ratio test</p>
 </div>
-<!-- SLIDE 52 — LOGAN Overview -->
-<div class="slide bg-deep">
-  <div class="pill">Hayes et al. 2017</div>
-  <h2>LOGAN: MIA Against Generative Models</h2>
+
+<div class="slide m2-tight">
+  <h2>Per-Class Attack Models</h2>
   <div class="divider"></div>
-  <p>Shokri: <strong>classifiers</strong>.</p>
-  <p>Hayes et al.: MIA on <strong>GANs</strong>.</p>
+  <p>Shokri trains one binary attack model for each class label:</p>
+  <div class="math-block">$\mathcal{A}_c : \mathbb{R}^{|\mathcal{C}|} \to \{0,1\}, \qquad c \in \mathcal{C},$</div>
+  <p>and routes a query by its class, so the deployed attack is $\mathcal{A}_{c(z)}(\sigma(f_\theta(x)))$.</p>
   <div class="highlight">
-    <p><strong>Challenge:</strong> no confidence vector. Membership definition requires new signals.</p>
+    <p>Looks like an engineering convenience. It is a statement about likelihood ratios.</p>
   </div>
-  <ul class="arrow">
-    <li><strong>Memorization:</strong> GAN outputs close to training examples</li>
-    <li><strong>Discriminator</strong> score as membership signal</li>
-    <li><strong>Reconstruction error</strong> as membership signal</li>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Setup: Class-Conditional Laws</h2>
+  <div class="divider"></div>
+  <p>Class $c$ has prior $\pi_c$; write $P_b^c$ for the law of $\varphi$ given membership $b$, class $c$.</p>
+  <div class="math-block">$P_b \;=\; \sum_{c} \pi_c\, P_b^c, \qquad b \in \{0, 1\}.$</div>
+  <div class="card">
+    <h3>Standing assumption.</h3>
+    <p>$\pi_c$ is the same under both hypotheses: the target is drawn from $\mathcal{D}$ either way.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Lemma 1 &mdash; The Pooled Ratio Is an Average</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Lemma 1.</h3>
+    <p>Write $\Lambda_c = p_1^c / p_0^c$ for the class-$c$ ratio. Then for every $u$ with $p_0(u) \gt 0$,</p>
+    <div class="math-block">$\Lambda_{\text{pool}}(u) \;=\; \sum_c w_c(u)\, \Lambda_c(u),
+      \qquad w_c(u) = \frac{\pi_c\, p_0^c(u)}{p_0(u)},$</div>
+    <p>and the weights $w_c(u)$ are non-negative and sum to one.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Lemma 1</h2>
+  <div class="divider"></div>
+  <div class="math-block">$\begin{aligned}
+    \Lambda_{\text{pool}}(u) &amp;= \frac{\sum_c \pi_c\, p_1^c(u)}{p_0(u)}
+      \;\stackrel{(1)}{=}\; \sum_c \frac{\pi_c\, p_0^c(u)}{p_0(u)} \cdot \frac{p_1^c(u)}{p_0^c(u)} \\
+      &amp;\stackrel{(2)}{=}\; \sum_c w_c(u)\, \Lambda_c(u).
+  \end{aligned}$</div>
+  <ul class="num">
+    <li>(1) multiply and divide each term by $p_0^c(u)$.</li>
+    <li>(2) the weights sum to $\sum_c \pi_c p_0^c(u) / p_0(u) = 1$ by definition of the mixture. $\;\square$</li>
   </ul>
 </div>
 
-<!-- SLIDE 52b — GAN refresher (equations only, larger) -->
-<div class="slide bg-dark">
-  <div class="pill">Background</div>
-  <h2>GAN — In One Slide</h2>
+<div class="slide m2-tight">
+  <h2>Corollary 2 &mdash; Pooling Pulls Toward One</h2>
   <div class="divider"></div>
-  <p style="font-size:1.55rem; margin:22px 0;"><strong>Generator</strong> &nbsp;$G : \; z \mapsto G(z),\quad z\sim p_z$ &nbsp;(e.g. $\mathcal{N}(0,I)$).</p>
-  <p style="font-size:1.55rem; margin:22px 0;"><strong>Discriminator</strong> &nbsp;$D : \; x \mapsto D(x)\in[0,1]$.</p>
-  <p style="font-size:1.2rem; margin-top:34px;"><strong>Minimax objective</strong> (Goodfellow et al. 2014):</p>
-  <div class="math-block" style="font-size:1.75rem; padding:22px 28px;">
-    $$\min_G \;\max_D\; \mathbb{E}_{x\sim p_{\text{data}}}\!\big[\log D(x)\big] \;+\; \mathbb{E}_{z\sim p_z}\!\big[\log(1\!-\!D(G(z)))\big].$$
+  <div class="card">
+    <h3>Corollary 2.</h3>
+    <div class="math-block">$\min_c \Lambda_c(u) \;\le\; \Lambda_{\text{pool}}(u) \;\le\; \max_c \Lambda_c(u).$</div>
+    <p>Classes disagreeing in sign at the same $u$ pull the pooled ratio toward the uninformative $1$.</p>
+  </div>
+  <p class="muted">Immediate: a convex combination lies between its extremes.</p>
+</div>
+
+<div class="slide">
+  <h2>Why a Pooled Score Blurs</h2>
+  <div class="divider"></div>
+  <div class="m2-fig" style="transform:scale(1.18); transform-origin:top center;">
+    <svg width="960" height="330" viewBox="0 0 960 330">
+      <line x1="30" y1="255" x2="450" y2="255" stroke="#1a1a1a" stroke-width="2"/>
+      <path d="M40 252 C 110 252, 130 120, 200 120 C 270 120, 292 252, 360 252"
+            fill="none" stroke="#003876" stroke-width="2.5"/>
+      <path d="M80 252 C 150 252, 172 132, 242 132 C 312 132, 334 252, 404 252"
+            fill="none" stroke="#d94040" stroke-width="2.5"/>
+      <line x1="520" y1="255" x2="940" y2="255" stroke="#1a1a1a" stroke-width="2"/>
+      <path d="M528 252 C 560 252, 572 148, 608 148 C 644 148, 656 252, 690 252"
+            fill="none" stroke="#003876" stroke-width="2.5"/>
+      <path d="M572 252 C 604 252, 616 168, 652 168 C 688 168, 700 252, 734 252"
+            fill="none" stroke="#d94040" stroke-width="2.5"/>
+      <path d="M740 252 C 772 252, 784 148, 820 148 C 856 148, 868 252, 902 252"
+            fill="none" stroke="#003876" stroke-width="2.5" stroke-dasharray="6 4"/>
+      <path d="M776 252 C 806 252, 818 168, 852 168 C 886 168, 898 252, 928 252"
+            fill="none" stroke="#d94040" stroke-width="2.5" stroke-dasharray="6 4"/>
+      <line x1="484" y1="40" x2="484" y2="290" stroke="#c9d3de" stroke-width="2"/>
+    </svg>
+    <span class="lab gray" style="left:222px; top:36px;">pooled over classes</span>
+    <span class="lab gray" style="left:730px; top:36px;">conditioned on class</span>
+    <span class="lab blue" style="left:150px; top:112px;">IN</span>
+    <span class="lab red" style="left:330px; top:126px;">OUT</span>
+    <span class="lab gray" style="left:630px; top:290px;">class 1</span>
+    <span class="lab gray" style="left:842px; top:290px;">class 2</span>
+    <span class="lab gray" style="left:222px; top:290px;">score</span>
   </div>
 </div>
 
-<!-- SLIDE 53 — LOGAN Architecture -->
-<div class="slide bg-dark">
-  <div class="pill">Hayes et al. 2017</div>
-  <h2>LOGAN: Attack Architecture</h2>
+<div class="slide m2-tight">
+  <h2>Proposition 2 &mdash; Conditioning Never Hurts</h2>
   <div class="divider"></div>
-  <div class="cols">
-    <div>
-      <h3>Discriminator-Based</h3>
-      <p>Discriminator $D(x)$ as signal.</p>
-      <div class="math-block">$$\mathcal{A}(x) = \mathbf{1}[D(x) > \tau]$$</div>
-      <p>Real-vs-fake score encodes membership.</p>
-    </div>
-    <div>
-      <h3>Reconstruction-Based</h3>
-      <p>Closest generated image to $x$.</p>
-      <div class="math-block">$$\mathcal{A}(x) = \mathbf{1}[\min_z \|x - G(z)\| < \tau]$$</div>
-      <p>Close reconstruction: likely memorized.</p>
-    </div>
-  </div>
-</div>
-
-<!-- SLIDE 54 — LOGAN Shadow GANs -->
-<div class="slide bg-deep">
-  <div class="pill">Hayes et al. 2017</div>
-  <h2>Shadow GAN Approach</h2>
-  <div class="divider"></div>
-  <p>Stronger attacks: train <strong>shadow GANs</strong>.</p>
-  <div class="card" style="padding:20px 24px;">
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Proposition 2.</h3>
     <ul class="num">
-      <li>Train $k$ shadow GANs on known data</li>
-      <li>Extract discriminator features (members / non-members)</li>
-      <li>Train binary attack classifier</li>
-      <li>Apply to target GAN's discriminator</li>
+      <li>At every size $\alpha$, the best class-aware test dominates the best class-blind test.</li>
+      <li>For the advantage,</li>
     </ul>
+    <div class="math-block">$\begin{aligned}
+      \sup_{\text{class-aware}} \mathrm{Adv} \;&=\; \sum_c \pi_c\, \mathrm{TV}\bigl(P_1^c, P_0^c\bigr) \\
+      &\ge\; \mathrm{TV}(P_1, P_0) \;=\; \sup_{\text{class-blind}} \mathrm{Adv}.
+      \end{aligned}$</div>
+  </div>
+  <p class="muted">Part (i) is a subfamily argument; part (ii) is a triangle inequality.</p>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Proposition 2 &mdash; Part (i)</h2>
+  <div class="divider"></div>
+  <ul class="num">
+    <li>A class-blind test is a map $\phi : \mathcal{U} \to [0,1]$. A class-aware test is a map $\phi : \mathcal{C} \times \mathcal{U} \to [0,1]$.</li>
+    <li>Every class-blind test equals the class-aware test $\phi(c, u) = \phi(u)$, which simply ignores its first argument.</li>
+    <li>So class-blind tests form a <strong>subfamily</strong>, with the same size under $P_0$.</li>
+    <li>Maximising power over a superset can only increase it, at every $\alpha$.</li>
+  </ul>
+  <p class="muted">The whole ROC curve moves up or stays put. Nothing is assumed about the densities.</p>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Proposition 2 &mdash; Part (ii), Class-Aware Side</h2>
+  <div class="divider"></div>
+  <ul class="num">
+    <li>A class-aware rejection set is a family $S = \{S_c\}_c$, and</li>
+  </ul>
+  <div class="math-block">$\mathrm{Adv}(S) = \Bigl|\sum_c \pi_c \bigl(P_1^c(S_c) - P_0^c(S_c)\bigr)\Bigr|.$</div>
+  <ul class="num" style="counter-reset:li 1;">
+    <li>The sets $S_c$ are chosen independently, so the supremum splits: choose $S_c^\star = \{p_1^c \gt p_0^c\}$.</li>
+    <li>Each term reaches $\mathrm{TV}(P_1^c, P_0^c)$, giving $\sum_c \pi_c \mathrm{TV}(P_1^c, P_0^c)$.</li>
+  </ul>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Proposition 2 &mdash; Part (ii), Class-Blind Side</h2>
+  <div class="divider"></div>
+  <div class="math-block">$\begin{aligned}
+    \mathrm{TV}(P_1, P_0)
+      &amp;\stackrel{(1)}{=} \tfrac12 \int \Bigl|\sum_c \pi_c \bigl(p_1^c(u) - p_0^c(u)\bigr)\Bigr| \, du \\
+      &amp;\stackrel{(2)}{\le} \tfrac12 \sum_c \pi_c \int \bigl|p_1^c(u) - p_0^c(u)\bigr| \, du
+      \;\stackrel{(3)}{=}\; \sum_c \pi_c\, \mathrm{TV}(P_1^c, P_0^c). \;\square
+  \end{aligned}$</div>
+  <p class="muted">(1) mixture form &nbsp;·&nbsp; (2) triangle inequality &nbsp;·&nbsp; (3) definition of total variation.</p>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Key Trick: Mixing Is Data Processing</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Key trick.</h3>
+    <p>Discarding the label is a channel; total variation never increases under a channel.</p>
+  </div>
+  <ul class="arrow">
+    <li>Equality holds exactly when $p_1^c(u) - p_0^c(u)$ shares a sign across $c$, almost everywhere.</li>
+    <li>That is: all classes agree on which scores mean member. Rarely true when class difficulty varies.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Per-Class Models in Practice</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card"><h3>Gain</h3>
+      <p>Removes the between-class shift that flattens the pooled ratio.</p></div>
+    <div class="card"><h3>Cost</h3>
+      <p>Splits the shadow data $C$ ways, so each model sees fewer samples.</p></div>
+    <div class="card"><h3>Trade-off</h3>
+      <p>Conditioning helps only until the per-class estimate becomes noise.</p></div>
   </div>
   <div class="highlight">
-    <p><strong>Mode collapse</strong> increases vulnerability: poor coverage, stronger memorization.</p>
+    <p>Proposition 2 is about population laws. Finite data reintroduces the statistical gap.</p>
   </div>
 </div>
 
-<!-- SLIDE 55 — LOGAN Results -->
-<div class="slide bg-dark">
-  <div class="pill">Hayes et al. 2017</div>
-  <h2>LOGAN: Results</h2>
+<div class="slide m2-tight">
+  <h2>The Confidence-Threshold Baseline</h2>
+  <div class="divider"></div>
+  <p>The pre-shadow attack: declare member when the model is confident.</p>
+  <div class="math-block">$\mathcal{A}(\theta, z) = \mathbf{1}\bigl[s(x) \gt \tau\bigr], \qquad
+    s(x) = \max_c \sigma(f_\theta(x))_c.$</div>
+  <ul class="arrow">
+    <li>No shadow models, no training, one scalar knob.</li>
+    <li>Often nearly as good as the full pipeline, which demands an explanation.</li>
+  </ul>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Assumption MLR</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Assumption MLR (monotone likelihood ratio).</h3>
+    <p>Let $p_1^s, p_0^s$ be the densities of $s(X)$ under member and non-member. Assume</p>
+    <div class="math-block">$\Lambda_s(t) = \frac{p_1^s(t)}{p_0^s(t)} \quad \text{is non-decreasing in } t.$</div>
+  </div>
+  <p class="muted">In words: higher confidence is never weaker evidence of membership.</p>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proposition 3 &mdash; The Baseline Is a Ratio Test</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Proposition 3.</h3>
+    <p>Under Assumption MLR, for every $\alpha \in (0,1)$ there are $\tau$ and $\gamma \in [0,1]$ such that the test</p>
+    <div class="math-block">$\phi(t) = \mathbf{1}[t \gt \tau] + \gamma\, \mathbf{1}[t = \tau]$</div>
+    <p>is most powerful at level $\alpha$ among all tests that observe only $s$.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Proposition 3</h2>
+  <div class="divider"></div>
+  <ul class="num">
+    <li>Neyman-Pearson on $(p_1^s, p_0^s)$ gives a most powerful test $\mathbf{1}[\Lambda_s(t) \gt k]$, randomized at ties.</li>
+    <li>Assumption MLR makes $\Lambda_s$ non-decreasing, so its super-level set is an upper interval:</li>
+  </ul>
+  <div class="math-block">$\{t : \Lambda_s(t) \gt k\} = (\tau, \infty), \qquad \tau = \inf\{t : \Lambda_s(t) \gt k\}.$</div>
+  <ul class="num" style="counter-reset:li 2;">
+    <li>Calibrating $\gamma$ at $t = \tau$ to reach size exactly $\alpha$ completes the identification. $\;\square$</li>
+  </ul>
+</div>
+
+<div class="slide m2-tight">
+  <h2>What the Baseline Gives Up</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card"><h3>Assumption risk</h3>
+      <p>If MLR fails, thresholding is strictly sub-optimal even among tests of $s$.</p></div>
+    <div class="card"><h3>Information loss</h3>
+      <p>$s = g(\varphi)$ is a deterministic map, so by data processing</p>
+      <div class="math-block">$\mathrm{TV}(P_1^s, P_0^s) \le \mathrm{TV}(P_1, P_0).$</div></div>
+  </div>
+  <p>Same estimand, different observables, different assumptions.</p>
+</div>
+
+<div class="slide">
+  <h2>One Axis, Not Two Recipes</h2>
+  <div class="divider"></div>
+  <div class="m2-fig" style="transform:scale(1.26); transform-origin:top center;">
+    <svg width="900" height="340" viewBox="0 0 900 340">
+      <line x1="110" y1="290" x2="820" y2="290" stroke="#1a1a1a" stroke-width="2" marker-end="url(#axr)"/>
+      <line x1="110" y1="290" x2="110" y2="40" stroke="#1a1a1a" stroke-width="2" marker-end="url(#axr)"/>
+      <defs><marker id="axr" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+        <path d="M0 0 L 9 4.5 L 0 9 z" fill="#1a1a1a"/></marker></defs>
+      <circle cx="200" cy="248" r="9" fill="#d94040"/>
+      <circle cx="420" cy="176" r="9" fill="#003876"/>
+      <circle cx="580" cy="120" r="9" fill="#003876"/>
+      <circle cx="740" cy="70" r="9" fill="#8a94a6"/>
+      <path d="M212 240 L 408 184" stroke="#8a94a6" stroke-width="1.6" stroke-dasharray="5 4"/>
+      <path d="M432 168 L 568 128" stroke="#8a94a6" stroke-width="1.6" stroke-dasharray="5 4"/>
+      <path d="M592 112 L 728 78" stroke="#8a94a6" stroke-width="1.6" stroke-dasharray="5 4"/>
+    </svg>
+    <span class="lab red" style="left:216px; top:272px;">confidence threshold</span>
+    <span class="lab blue" style="left:430px; top:200px;">shadow, pooled</span>
+    <span class="lab blue" style="left:592px; top:144px;">shadow, per class</span>
+    <span class="lab gray" style="left:748px; top:44px;">per-example calibration</span>
+    <span class="lab gray" style="left:465px; top:318px;">richer observable</span>
+    <span class="lab gray" style="left:44px; top:165px;">better $\Lambda$</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!--  SECTION 04 — LOGAN: GENERATIVE MODELS                           -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>LOGAN:<br>Generative Models</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The discriminator is already a density ratio</p>
+</div>
+
+<div class="slide">
+  <h2>LOGAN &mdash; The Setting</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card"><h3>Target</h3>
+      <p>A generative adversarial network trained on private images.</p></div>
+    <div class="card"><h3>Problem</h3>
+      <p>No labels, no confidence vector. The abstract observable $\varphi$ has to be reinvented.</p></div>
+  </div>
+  <div class="highlight">
+    <p>Three access levels: samples only, generator weights, or the <strong>discriminator</strong>.</p>
+  </div>
+  <div class="cite cite-wide">Hayes, Melis, Danezis, De Cristofaro, "LOGAN: Membership Inference Attacks Against Generative Models", PoPETs 2019</div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>GAN Setup</h2>
+  <div class="divider"></div>
+  <p>$G$ pushes a latent $z \sim p_z$ to $G(z)$, inducing density $p_g$; $D$ scores realism.</p>
+  <div class="math-block">$V(G, D) \;=\; \mathbb{E}_{x \sim p_{\text{data}}}\bigl[\log D(x)\bigr]
+    \;+\; \mathbb{E}_{z \sim p_z}\bigl[\log\bigl(1 - D(G(z))\bigr)\bigr].$</div>
+  <div class="card">
+    <h3>The game.</h3>
+    <p>$\min_G \max_D V(G,D)$, with $D : \mathcal{X} \to (0,1)$ ranging over all measurable functions.</p>
+  </div>
+  <div class="cite">Goodfellow et al., "Generative Adversarial Nets", NeurIPS 2014</div>
+</div>
+
+<div class="slide">
+  <h2>The Game, Drawn</h2>
+  <div class="divider"></div>
+  <div class="m2-fig" style="transform:scale(1.24); transform-origin:top center;">
+    <svg width="920" height="320" viewBox="0 0 920 320">
+      <rect x="30" y="42" width="120" height="60" rx="9" fill="none" stroke="#8a94a6" stroke-width="2"/>
+      <rect x="30" y="212" width="120" height="60" rx="9" fill="none" stroke="#8a94a6" stroke-width="2"/>
+      <rect x="230" y="212" width="150" height="60" rx="9" fill="#003876"/>
+      <rect x="470" y="120" width="160" height="76" rx="9" fill="#d94040"/>
+      <g fill="none" stroke="#8a94a6" stroke-width="2" marker-end="url(#ahg)">
+        <path d="M154 72 C 300 72, 330 130, 462 148"/>
+        <path d="M154 242 L 224 242"/>
+        <path d="M384 242 C 420 242, 440 190, 462 172"/>
+        <path d="M634 158 L 706 158"/>
+      </g>
+      <defs><marker id="ahg" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+        <path d="M0 0 L 9 4.5 L 0 9 z" fill="#8a94a6"/></marker></defs>
+      <path d="M626 202 C 606 296, 470 300, 392 264" fill="none" stroke="#d94040" stroke-width="2"
+            stroke-dasharray="6 5" marker-end="url(#ahg2)"/>
+      <defs><marker id="ahg2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+        <path d="M0 0 L 9 4.5 L 0 9 z" fill="#d94040"/></marker></defs>
+      <g font-size="15" fill="#8a94a6" text-anchor="middle">
+        <text x="90" y="122">real records</text>
+        <text x="90" y="292">latent noise</text>
+        <text x="305" y="292">generator</text>
+        <text x="550" y="216">discriminator</text>
+        <text x="640" y="300">gradient of the loss</text>
+      </g>
+    </svg>
+    <span class="lab" style="left:90px; top:72px;">$x \sim p_{\text{data}}$</span>
+    <span class="lab" style="left:90px; top:242px;">$z \sim p_z$</span>
+    <span class="lab white" style="left:305px; top:242px;">$G(z) \sim p_g$</span>
+    <span class="lab white" style="left:550px; top:158px;">$D(x)$</span>
+    <span class="lab blue" style="left:790px; top:158px;">real or fake</span>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Theorem 2 &mdash; The Optimal Discriminator</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Theorem 2 (Goodfellow et al., 2014).</h3>
+    <p>Fix $G$ with induced density $p_g$. The maximiser of $V(G, \cdot)$ over measurable $D : \mathcal{X} \to (0,1)$ is</p>
+    <div class="math-block">$D^\star(x) \;=\; \frac{p_{\text{data}}(x)}{p_{\text{data}}(x) + p_g(x)},$</div>
+    <p>uniquely, at every $x$ where $p_{\text{data}}(x) + p_g(x) \gt 0$.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Theorem 2 &mdash; Step 1, Pointwise Form</h2>
+  <div class="divider"></div>
+  <p>Push the second expectation through the generator, so both integrals are over $\mathcal{X}$:</p>
+  <div class="math-block">$V(G,D) \;=\; \int_{\mathcal{X}} \Bigl[\, p_{\text{data}}(x) \log D(x) \;+\; p_g(x) \log\bigl(1 - D(x)\bigr) \Bigr] \, dx.$</div>
+  <ul class="arrow">
+    <li>$D$ is unconstrained, so its value at each $x$ may be optimised separately.</li>
+    <li>The problem reduces to maximising $t \mapsto a \log t + b \log(1-t)$ with $a = p_{\text{data}}(x)$, $b = p_g(x)$.</li>
+  </ul>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Theorem 2 &mdash; Step 2, One Variable</h2>
+  <div class="divider"></div>
+  <div class="math-block">$\frac{d}{dt}\bigl[a \log t + b \log(1-t)\bigr] = \frac{a}{t} - \frac{b}{1-t}
+    = \frac{a - (a+b)t}{t(1-t)}.$</div>
+  <ul class="num">
+    <li>The derivative vanishes only at $t = a/(a+b)$.</li>
+    <li>Second derivative $-a/t^2 - b/(1-t)^2 \lt 0$ on $(0,1)$, so that point is the unique maximum.</li>
+    <li>Substituting $a = p_{\text{data}}(x)$ and $b = p_g(x)$ gives $D^\star$. $\;\square$</li>
+  </ul>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Theorem 3 &mdash; The Value Is a Divergence</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Theorem 3 (Goodfellow et al., 2014).</h3>
+    <div class="math-block">$V(G, D^\star) \;=\; 2\,\mathrm{JSD}\bigl(p_{\text{data}} \,\|\, p_g\bigr) \;-\; 2\log 2,$</div>
+    <p>where $\mathrm{JSD}(P\|Q) = \tfrac12 \mathrm{KL}(P\|M) + \tfrac12 \mathrm{KL}(Q\|M)$ and $M = \tfrac12(P+Q)$. The minimum over $G$ is $-2\log 2$, attained exactly when $p_g = p_{\text{data}}$.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Theorem 3 &mdash; Steps 1 and 2</h2>
+  <div class="divider"></div>
+  <ul class="num">
+    <li>Substitute $D^\star$ and write $m = \tfrac12(p_{\text{data}} + p_g)$, so $p_{\text{data}} + p_g = 2m$.</li>
+    <li>Each logarithm splits off a constant $\log 2$:</li>
+  </ul>
+  <div class="math-block">$\begin{aligned}
+    V(G, D^\star) &amp;= \int p_{\text{data}} \log \frac{p_{\text{data}}}{2m} + \int p_g \log \frac{p_g}{2m} \\
+      &amp;= \mathrm{KL}(p_{\text{data}} \| m) + \mathrm{KL}(p_g \| m) - 2 \log 2.
+  \end{aligned}$</div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Theorem 3 &mdash; Step 3</h2>
+  <div class="divider"></div>
+  <ul class="num" style="counter-reset:li 2;">
+    <li>By definition the two divergences sum to $2\,\mathrm{JSD}(p_{\text{data}} \| p_g)$, giving the identity.</li>
+    <li>$\mathrm{JSD} \ge 0$, with equality if and only if $p_{\text{data}} = p_g$, so the minimum value is $-2\log 2$. $\;\square$</li>
+  </ul>
+  <div class="highlight">
+    <p>Training a GAN is minimising a divergence; the discriminator is the machine that measures it.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proposition 4 &mdash; Discriminator as Log-Ratio</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Proposition 4.</h3>
+    <p>With $\Lambda_D(x) = p_{\text{data}}(x)/p_g(x)$ and the logistic $\varsigma(t) = 1/(1+e^{-t})$,</p>
+    <div class="math-block">$D^\star(x) \;=\; \varsigma\bigl(\log \Lambda_D(x)\bigr).$</div>
+    <p>Since $\varsigma$ is strictly increasing, thresholding $D^\star$ is the same as thresholding $\Lambda_D$.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Proposition 4</h2>
+  <div class="divider"></div>
+  <div class="math-block">$D^\star(x) = \frac{p_{\text{data}}(x)}{p_{\text{data}}(x)+p_g(x)}
+    \;\stackrel{(1)}{=}\; \frac{1}{1 + p_g(x)/p_{\text{data}}(x)}
+    \;\stackrel{(2)}{=}\; \frac{1}{1 + e^{-\log \Lambda_D(x)}}.$</div>
+  <p class="muted">(1) divide numerator and denominator by $p_{\text{data}}(x)$ &nbsp;·&nbsp; (2) write the reciprocal ratio as an exponential. $\;\square$</p>
+  <div class="highlight">
+    <p>The discriminator does not resemble a likelihood-ratio test. It <strong>is</strong> one, up to a fixed link.</p>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Ratio, Seen</h2>
+  <div class="divider"></div>
+  <div class="m2-fig" style="transform:scale(1.24); transform-origin:top center; margin-bottom:80px;">
+    <svg width="900" height="320" viewBox="0 0 900 320">
+      <line x1="70" y1="265" x2="840" y2="265" stroke="#1a1a1a" stroke-width="2"/>
+      <path d="M80 262 C 190 262, 220 108, 330 108 C 440 108, 470 262, 580 262"
+            fill="none" stroke="#003876" stroke-width="2.5"/>
+      <path d="M300 262 C 410 262, 440 128, 550 128 C 660 128, 690 262, 800 262"
+            fill="none" stroke="#d94040" stroke-width="2.5"/>
+      <path d="M80 58 C 250 58, 340 72, 435 158 C 530 244, 630 250, 830 250"
+            fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-dasharray="7 5"/>
+      <line x1="70" y1="58" x2="88" y2="58" stroke="#8a94a6" stroke-width="2"/>
+      <line x1="70" y1="250" x2="88" y2="250" stroke="#8a94a6" stroke-width="2"/>
+    </svg>
+    <span class="lab blue" style="left:250px; top:96px;">$p_{\text{data}}$</span>
+    <span class="lab red" style="left:620px; top:118px;">$p_g$</span>
+    <span class="lab" style="left:150px; top:32px;">$D^\star(x)$</span>
+    <span class="lab gray" style="left:40px; top:58px;">1</span>
+    <span class="lab gray" style="left:40px; top:250px;">0</span>
+  </div>
+  <p class="muted" style="text-align:center;">Where the data density dominates, the discriminator saturates.</p>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Why This Makes an Attack</h2>
+  <div class="divider"></div>
+  <p>$D$ never sees $p_{\text{data}}$, only the finite training set. Model this with a smoothed empirical density $\hat p_{\text{train}}$.</p>
+  <div class="math-block">$D^\star(x) \;=\; \varsigma\Bigl(\log \frac{\hat p_{\text{train}}(x)}{p_g(x)}\Bigr).$</div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Reading.</h3>
+    <p>The numerator is elevated exactly on training records. Membership rides in the numerator.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>The Discriminator Attack</h2>
+  <div class="divider"></div>
+  <div class="math-block">$\mathcal{A}(x) = \mathbf{1}\bigl[D(x) \gt \tau\bigr].$</div>
+  <ul class="arrow">
+    <li>White-box discriminator access: no shadow models needed at all.</li>
+    <li>Theorem 1 asked us to <em>estimate</em> a ratio; here the defender trained the estimator for us.</li>
+    <li>This is why discriminator access is the strongest LOGAN setting.</li>
+  </ul>
+  <p class="muted">Caveat: $p_g$ is itself fit to the training set, so the null is only a proxy.</p>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Black Box: Only Samples</h2>
+  <div class="divider"></div>
+  <p>With generator access alone, the ratio must be rebuilt from geometry. Use the reconstruction distance</p>
+  <div class="math-block">$r(x) \;=\; \min_{z} \, \|x - G(z)\|, \qquad
+    \mathcal{A}(x) = \mathbf{1}\bigl[r(x) \lt \tau\bigr].$</div>
+  <ul class="arrow">
+    <li>Intuition: a memorised record is reproducible by some latent code.</li>
+    <li>The next proposition turns that intuition into an inequality.</li>
+  </ul>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proposition 5 &mdash; Reconstruction Bounds Density</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Proposition 5.</h3>
+    <p>Smooth the generator on $\mathbb{R}^m$ by $p_g^\sigma(x) = \int \mathcal{N}\bigl(x; G(z), \sigma^2 I\bigr) p_z(z)\, dz$. Then</p>
+    <div class="math-block">$p_g^\sigma(x) \;\le\; (2\pi\sigma^2)^{-m/2} \exp\Bigl(-\frac{r(x)^2}{2\sigma^2}\Bigr),
+      \qquad r(x) = \inf_z \|x - G(z)\|.$</div>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Proposition 5</h2>
+  <div class="divider"></div>
+  <ul class="num">
+    <li>For every $z$, $\|x - G(z)\| \ge r(x)$, so the Gaussian kernel obeys</li>
+  </ul>
+  <div class="math-block">$\mathcal{N}\bigl(x; G(z), \sigma^2 I\bigr) = (2\pi\sigma^2)^{-m/2} e^{-\|x - G(z)\|^2 / 2\sigma^2}
+    \;\le\; (2\pi\sigma^2)^{-m/2} e^{-r(x)^2 / 2\sigma^2}.$</div>
+  <ul class="num" style="counter-reset:li 1;">
+    <li>Free of $z$, and $p_z$ integrates to one, so the bound survives. $\;\square$</li>
+  </ul>
+  <p class="muted">Equivalently $-\log p_g^\sigma(x) \ge r(x)^2/2\sigma^2 + \tfrac{m}{2}\log(2\pi\sigma^2)$.</p>
+</div>
+
+<div class="slide m2-tight">
+  <h2>What Reconstruction Is Missing</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card"><h3>What it gives</h3>
+      <p>A certificate: large $r(x)$ forces low generator likelihood. A numerator surrogate.</p></div>
+    <div class="card"><h3>What it lacks</h3>
+      <p>No null model: nothing says how large $r(x)$ is for a comparable <strong>non-member</strong>.</p></div>
+  </div>
+  <div class="highlight">
+    <p>A one-sided statistic with no denominator. The calibration problem, in its first disguise.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Shadow GANs Restore the Denominator</h2>
+  <div class="divider"></div>
+  <div class="m2-algo">
+    <div class="m2-algo-title">Black-box LOGAN with shadows</div>
+    <ol>
+      <li>Train $k$ shadow GANs on data you own.</li>
+      <li>Compute $r(x)$ for shadow members and shadow non-members.</li>
+      <li>Fit a binary classifier to the labelled scores, which by Theorem 1 estimates the ratio.</li>
+      <li>Apply the classifier to reconstruction scores from the target generator.</li>
+    </ol>
+  </div>
+  <p class="muted">Same recipe as Shokri, with the observable changed from confidence to reconstruction.</p>
+</div>
+
+<div class="slide">
+  <h2>LOGAN: Reported Results</h2>
   <div class="divider"></div>
   <table>
-    <tr><th>Dataset</th><th>GAN Type</th><th>Attack Accuracy</th></tr>
+    <tr><th>Dataset</th><th>GAN type</th><th>Attack accuracy</th></tr>
     <tr><td>MNIST</td><td>DCGAN</td><td>~74%</td></tr>
     <tr><td>CIFAR-10</td><td>DCGAN</td><td>~69%</td></tr>
     <tr><td>CelebA</td><td>DCGAN</td><td>~72%</td></tr>
   </table>
-  <ul class="arrow">
-    <li>Lower than classifier MIA (GANs leak less) &mdash; still <strong>well above 50%</strong></li>
-    <li>Smaller training sets, more mode collapse → higher vulnerability</li>
-  </ul>
+  <p>Lower than classifier attacks, and still far above chance on a balanced split.</p>
+  <div class="cite">Hayes et al., PoPETs 2019</div>
+</div>
+
+<div class="slide">
+  <h2>Mode Collapse Raises the Ratio</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card"><h3>Collapsed $p_g$</h3>
+      <p>Mass concentrates on a few memorised records.</p></div>
+    <div class="card"><h3>Ratio sharpens</h3>
+      <p>The ratio $\hat p_{\text{train}} / p_g$ spikes near memorised records.</p></div>
+    <div class="card"><h3>Attack improves</h3>
+      <p>Small training sets and long training both push in this direction.</p></div>
+  </div>
   <div class="highlight">
-    <p><strong>Generative models also leak.</strong> MIA extends beyond classification.</p>
+    <p>Generalisation failure is again the engine, now measured by a divergence rather than an accuracy gap.</p>
   </div>
 </div>
 
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!--  SECTION 05 — SEQUENCE MODELS AND CALIBRATION                     -->
+<!-- ════════════════════════════════════════════════════════════════ -->
 
-<!-- Part divider: Seq2Seq: Machine Translation -->
 <div class="slide section-slide left">
-  <div class="section-num">03</div>
-  <h1>Seq2Seq: Machine Translation</h1>
+  <div class="section-num">05</div>
+  <h1>Sequence Models<br>and Calibration</h1>
   <div class="divider"></div>
-  <p class="subtitle">Sequence-model MIA (Hisamoto et al. 2020)</p>
-</div>
-<!-- SLIDE 56 — Hisamoto Overview -->
-<div class="slide bg-deep">
-  <div class="pill">Hisamoto et al. 2019</div>
-  <h2>MIA on Sequence-to-Sequence Models</h2>
-  <div class="divider"></div>
-  <p>Hisamoto et al.: MIA on <strong>machine translation</strong>.</p>
-  <p>Bridge from vision to NLP.</p>
-  <div class="grid-2">
-    <div>
-      <h3>Challenge</h3>
-      <p>No fixed-size confidence vector.</p>
-      <p>Variable-length output.</p>
-    </div>
-    <div>
-      <h3>Solution</h3>
-      <p><strong>Perplexity</strong> on source-target pair as signal.</p>
-    </div>
-  </div>
-  <div class="math-block">
-    $$\text{PPL}(x, y) = \exp\left(-\frac{1}{T}\sum_{t=1}^T \log p_\theta(y_t \mid y_{&lt;t}, x)\right)$$
-  </div>
+  <p class="subtitle">Perplexity, calibration, machine translation</p>
 </div>
 
-<!-- SLIDE 57 — Seq2Seq Attack -->
-<div class="slide bg-dark">
-  <div class="pill">Hisamoto et al. 2019</div>
-  <h2>Perplexity as Membership Signal</h2>
+<div class="slide m2-tight">
+  <h2>The Sequence Challenge</h2>
   <div class="divider"></div>
   <div class="grid-2">
-    <div>
-      <h3 style="color:var(--success);">Members</h3>
-      <ul>
-        <li>Seen pair</li>
-        <li><strong>High</strong> probability</li>
-        <li>Low perplexity</li>
-      </ul>
-    </div>
-    <div>
-      <h3 style="color:var(--warn);">Non-members</h3>
-      <ul>
-        <li>Unseen pair</li>
-        <li><strong>Lower</strong> probability</li>
-        <li>Higher perplexity</li>
-      </ul>
-    </div>
+    <div class="card"><h3>No fixed observable</h3>
+      <p>Output is a sequence, not a simplex point. No $|\mathcal{C}|$-vector to feed an attack model.</p></div>
+    <div class="card"><h3>Enormous output space</h3>
+      <p>Vocabulary raised to the length. Every plausible translation has tiny probability.</p></div>
   </div>
-  <p>Attack: $\mathcal{A}(x, y) = \mathbf{1}[\text{PPL}(x, y) < \tau]$</p>
   <div class="highlight">
-    <p><strong>Same intuition</strong> as loss-threshold, in sequence-model form.</p>
+    <p>Membership signal must be squeezed out of a scalar score.</p>
   </div>
+  <div class="cite cite-wide">Hisamoto, Post, Duh, "Membership Inference Attacks on Sequence-to-Sequence Models", TACL 2020</div>
 </div>
 
-<!-- SLIDE 58 — Seq2Seq Results -->
-<div class="slide bg-deep">
-  <div class="pill">Hisamoto et al. 2019</div>
-  <h2>Results &amp; Implications for NLP</h2>
+<div class="slide m2-tight">
+  <h2>Perplexity, Defined</h2>
   <div class="divider"></div>
-  <ul class="check">
-    <li>WMT translation models (English → German, etc.)</li>
-    <li>Perplexity attack: AUC well above 0.5</li>
-    <li>Smaller training sets → larger PPL gap</li>
-    <li>Fine-tuned models more vulnerable than from-scratch</li>
-  </ul>
-  <div class="highlight" style="padding:20px 24px;">
-    <p><strong>First sequence-model MIA.</strong> Perplexity: baseline for all LLM MIA work.</p>
+  <p>For a source $x$ and a target $y = (y_1, \dots, y_T)$ under model $\theta$:</p>
+  <div class="math-block">$\mathrm{PPL}(x,y) \;=\; \exp\Bigl(-\frac{1}{T} \sum_{t=1}^{T} \log p_\theta\bigl(y_t \mid y_{\lt t}, x\bigr)\Bigr).$</div>
+  <div class="card">
+    <h3>Rewriting.</h3>
+    <p>$-\log \mathrm{PPL}(x,y) = \frac{1}{T}\log p_\theta(y \mid x)$: the per-token log-likelihood, flipped and exponentiated.</p>
   </div>
 </div>
 
-<!-- SLIDE 59 — Seq2Seq to LLMs -->
-<div class="slide bg-dark">
-  <div class="pill">Hisamoto et al. 2019</div>
-  <h2>From Translation to Language Models</h2>
+<div class="slide m2-tight">
+  <h2>Proposition 6 &mdash; Perplexity Is a Degenerate LRT</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Proposition 6.</h3>
+    <p>Let $S(x,y) = \frac{1}{T}\log p_\theta(y \mid x)$. Then</p>
+    <div class="math-block">$\mathbf{1}\bigl[\mathrm{PPL}(x,y) \lt \tau\bigr] \;=\; \mathbf{1}\bigl[S(x,y) \gt -\log \tau\bigr],$</div>
+    <p>so under Assumption MLR it is most powerful among tests of $S$.</p>
+    <p>Data processing also gives $\mathrm{TV}(P_1^S, P_0^S) \le \mathrm{TV}(P_1, P_0)$.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Proposition 6</h2>
+  <div class="divider"></div>
+  <ul class="num">
+    <li>$\mathrm{PPL} = e^{-S}$ and $t \mapsto e^{-t}$ is strictly decreasing, so the two events coincide for every sample.</li>
+    <li>Proposition 3 applies verbatim with the confidence score replaced by $S$.</li>
+    <li>$S$ is a function of the observable; data processing gives the bound. $\;\square$</li>
+  </ul>
+  <div class="highlight">
+    <p>Nothing new in kind. The perplexity attack is the confidence threshold, in a different coordinate.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Optimal Only Within a Difficulty Class</h2>
+  <div class="divider"></div>
+  <p>Proposition 6 is conditional on the sentence: $S$ values are commensurable within, not across.</p>
+  <ul class="arrow">
+    <li>An easy sentence is scored high whether or not it was trained on.</li>
+    <li>A hard sentence is scored low either way.</li>
+    <li>A single global $\tau$ mixes both populations, exactly the pooling failure of Lemma 1.</li>
+  </ul>
+  <div class="highlight">
+    <p>The repair is a per-example null, not a better global threshold.</p>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>What a Global Threshold Sees</h2>
+  <div class="divider"></div>
+  <div class="m2-fig" style="transform:scale(1.02); transform-origin:top center;">
+    <svg width="900" height="330" viewBox="0 0 900 330">
+      <line x1="60" y1="285" x2="850" y2="285" stroke="#1a1a1a" stroke-width="2"/>
+      <path d="M80 282 C 150 282, 165 200, 225 200 C 285 200, 300 282, 370 282"
+            fill="none" stroke="#d94040" stroke-width="2.5"/>
+      <path d="M150 282 C 220 282, 235 200, 295 200 C 355 200, 370 282, 440 282"
+            fill="none" stroke="#003876" stroke-width="2.5"/>
+      <path d="M440 282 C 510 282, 525 200, 585 200 C 645 200, 660 282, 730 282"
+            fill="none" stroke="#d94040" stroke-width="2.5" stroke-dasharray="7 5"/>
+      <path d="M510 282 C 580 282, 595 200, 655 200 C 715 200, 730 282, 800 282"
+            fill="none" stroke="#003876" stroke-width="2.5" stroke-dasharray="7 5"/>
+      <line x1="470" y1="60" x2="470" y2="300" stroke="#8a94a6" stroke-width="2" stroke-dasharray="5 5"/>
+    </svg>
+    <span class="lab red" style="left:190px; top:186px;">hard, out</span>
+    <span class="lab blue" style="left:330px; top:186px;">hard, in</span>
+    <span class="lab red" style="left:552px; top:186px;">easy, out</span>
+    <span class="lab blue" style="left:722px; top:186px;">easy, in</span>
+    <span class="lab gray" style="left:470px; top:44px;">global $\tau$</span>
+    <span class="lab gray" style="left:455px; top:314px;">score $S$</span>
+  </div>
+  <p class="muted" style="text-align:center;">The threshold separates difficulty, not membership.</p>
+</div>
+
+<div class="slide m2-tight">
+  <h2>A Two-Group Model</h2>
+  <div class="divider"></div>
+  <p>Latent difficulty $g \in \{\text{easy}, \text{hard}\}$ with prior $\tfrac12$ each, membership $b \in \{0,1\}$:</p>
+  <div class="math-block">$S \mid (g, b) \;\sim\; \mathcal{N}\bigl(\mu_g + \Delta b, \; \sigma^2\bigr),
+    \qquad \mu_{\text{easy}} \gt \mu_{\text{hard}}, \quad \Delta \gt 0.$</div>
+  <ul class="arrow">
+    <li>$\Delta$ is the membership signal, identical in both groups.</li>
+    <li>$\mu_{\text{easy}} - \mu_{\text{hard}}$ is the nuisance, carrying no membership information.</li>
+  </ul>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proposition 7 &mdash; Pooling Costs Half the Population</h2>
+  <div class="divider"></div>
+  <div class="card" style="border-color:var(--yonsei-blue);">
+    <h3>Proposition 7.</h3>
+    <p>Fix $\alpha \in (0, \tfrac12)$. In the two-group model:</p>
+    <div class="math-block">$\begin{aligned}
+      \text{(i)}\;\; &amp;\text{calibrated test } \mathbf{1}[S - \mu_g \gt t]:\;\; \mathrm{TPR} = \Phi\bigl(\Phi^{-1}(\alpha) + \Delta/\sigma\bigr); \\
+      \text{(ii)}\;\; &amp;\text{as } (\mu_{\text{easy}} - \mu_{\text{hard}})/\sigma \to \infty, \text{ the global-threshold test obeys} \\
+      &amp;\mathrm{TPR} \to \tfrac12 \Phi\bigl(\Phi^{-1}(2\alpha) + \Delta/\sigma\bigr) \;\le\; \tfrac12 .
+    \end{aligned}$</div>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Proposition 7 &mdash; Part (i)</h2>
+  <div class="divider"></div>
+  <ul class="num">
+    <li>Given $g$, the centred score $S - \mu_g \sim \mathcal{N}(\Delta b, \sigma^2)$, a law free of $g$.</li>
+    <li>Size $\alpha$ therefore fixes $t = \sigma \Phi^{-1}(1-\alpha)$ in both groups at once.</li>
+    <li>Power follows:</li>
+  </ul>
+  <div class="math-block">$\mathrm{TPR} = \Pr\bigl[\mathcal{N}(\Delta, \sigma^2) \gt \sigma\Phi^{-1}(1-\alpha)\bigr]
+    = \Phi\bigl(\Delta/\sigma - \Phi^{-1}(1-\alpha)\bigr) = \Phi\bigl(\Phi^{-1}(\alpha) + \Delta/\sigma\bigr).$</div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Proposition 7 &mdash; Part (ii), Size</h2>
+  <div class="divider"></div>
+  <p>A global threshold $\tau$ has false-positive rate</p>
+  <div class="math-block">$\alpha \;=\; \tfrac12 \Phi\Bigl(\frac{\mu_{\text{easy}} - \tau}{\sigma}\Bigr)
+    + \tfrac12 \Phi\Bigl(\frac{\mu_{\text{hard}} - \tau}{\sigma}\Bigr).$</div>
+  <ul class="num">
+    <li>Growing the gap kills the hard-group term at any $\tau$ of size $\alpha \lt \tfrac12$.</li>
+    <li>Hence $\Phi\bigl((\mu_{\text{easy}} - \tau)/\sigma\bigr) \to 2\alpha$, so $\tau \to \mu_{\text{easy}} - \sigma \Phi^{-1}(2\alpha)$.</li>
+  </ul>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Proof of Proposition 7 &mdash; Part (ii), Power</h2>
+  <div class="divider"></div>
+  <div class="math-block">$\begin{aligned}
+    \mathrm{TPR} &amp;= \tfrac12 \Phi\Bigl(\frac{\mu_{\text{easy}} + \Delta - \tau}{\sigma}\Bigr)
+      + \tfrac12 \Phi\Bigl(\frac{\mu_{\text{hard}} + \Delta - \tau}{\sigma}\Bigr) \\
+    &amp;\longrightarrow \; \tfrac12 \Phi\bigl(\Phi^{-1}(2\alpha) + \Delta/\sigma\bigr) + 0 \;\le\; \tfrac12 .
+  \end{aligned}$</div>
+  <p class="muted">The second term dies for the same reason the hard group left the size equation. $\;\square$</p>
+  <div class="highlight">
+    <p>Half the population is structurally invisible, no matter how large the signal $\Delta$ is.</p>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>The Gap, Numerically</h2>
   <div class="divider"></div>
   <table>
-    <tr><th>Seq2Seq MIA</th><th>LLM MIA (future)</th></tr>
-    <tr><td>Source-target pair $(x, y)$</td><td>Text sequence $x = (x_1, \ldots, x_T)$</td></tr>
-    <tr><td>Conditional PPL: $p(y \mid x)$</td><td>Unconditional PPL: $p(x)$</td></tr>
-    <tr><td>Small training sets (millions)</td><td>Massive pre-training (trillions of tokens)</td></tr>
+    <tr><th>False-positive rate</th><th>Calibrated TPR</th><th>Global threshold TPR</th></tr>
+    <tr><td>1%</td><td>9.2%</td><td>7.3%</td></tr>
+    <tr><td>10%</td><td>38.9%</td><td>28.1%</td></tr>
+    <tr><td>ceiling</td><td>100%</td><td>50%</td></tr>
   </table>
-  <p><strong>New challenges:</strong> unknown training distribution, calibration for text difficulty. (see notes)</p>
+  <p class="muted">Two-group model, $\Delta/\sigma = 1$, large-gap limit. Illustrative arithmetic, not measurements.</p>
 </div>
 
-<!-- SLIDE 60 — Section 2 Summary -->
-<div class="slide bg-deep">
-  <h2>Shadow Model Era: Key Takeaways</h2>
+<div class="slide m2-tight">
+  <h2>Length Is a Second Nuisance</h2>
   <div class="divider"></div>
-  <div class="grid-2" style="margin-top:8px;">
-    <div class="card">
-      <h3>Shadow Models Work</h3>
-      <p>Expensive.</p>
-      <p>Strong data and architecture assumptions.</p>
-    </div>
-    <div class="card">
-      <h3>Confidence Leaks</h3>
-      <p>Rich signal.</p>
-      <p>More classes: more leakage.</p>
-    </div>
-    <div class="card">
-      <h3>Generative Models Too</h3>
-      <p>GANs and seq2seq also vulnerable.</p>
-    </div>
-    <div class="card">
-      <h3>NLP Is Next</h3>
-      <p>Seq2seq perplexity foreshadows LLM MIA.</p>
-    </div>
+  <p>If per-token log-probabilities have variance $v$ and are weakly dependent, then</p>
+  <div class="math-block">$\mathrm{Var}\bigl[S(x,y)\bigr] \;\approx\; \frac{v}{T}.$</div>
+  <ul class="arrow">
+    <li>Short sequences give noisy scores; long ones give stable scores.</li>
+    <li>At a global threshold, the extreme tail is populated by short sentences whatever their membership.</li>
+    <li>Length shifts the null, exactly as difficulty did.</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Variance Shrinks with Length</h2>
+  <div class="divider"></div>
+  <div class="m2-fig" style="transform:scale(1.22); transform-origin:top center; margin-bottom:74px;">
+    <svg width="880" height="320" viewBox="0 0 880 320">
+      <line x1="70" y1="280" x2="830" y2="280" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="70" y1="40" x2="70" y2="280" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="70" y1="160" x2="830" y2="160" stroke="#8a94a6" stroke-width="1.5" stroke-dasharray="5 5"/>
+      <path d="M110 52 C 260 118, 420 146, 800 154" fill="none" stroke="#8a94a6" stroke-width="2"/>
+      <path d="M110 268 C 260 202, 420 174, 800 166" fill="none" stroke="#8a94a6" stroke-width="2"/>
+      <g stroke="#d94040" stroke-width="3">
+        <line x1="150" y1="70" x2="150" y2="255"/>
+      </g>
+      <g stroke="#003876" stroke-width="3">
+        <line x1="620" y1="150" x2="620" y2="172"/>
+      </g>
+    </svg>
+    <span class="lab red" style="left:150px; top:296px;">short</span>
+    <span class="lab blue" style="left:620px; top:296px;">long</span>
+    <span class="lab gray" style="left:100px; top:24px;">score spread</span>
+    <span class="lab gray" style="left:790px; top:140px;">mean</span>
+    <span class="lab red" style="left:300px; top:58px;">false positives live here</span>
+  </div>
+  <p class="muted" style="text-align:center;">Spread $\approx \sqrt{v/T}$: the tail belongs to short sequences.</p>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Hisamoto et al.: The Protocol</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card"><h3>Alice</h3>
+      <p>Runs the translation service. Holds the private training corpus.</p></div>
+    <div class="card"><h3>Bob</h3>
+      <p>Queries with $(f, e)$ pairs, trains shadow models, guesses membership.</p></div>
+    <div class="card"><h3>Carol</h3>
+      <p>Neutral evaluator. Fixes probes and scores Bob without leaking labels.</p></div>
+  </div>
+  <p class="muted">Ten shadow models; shadow mean BLEU 38.6 &plusmn; 0.2 on newstest2018 against Alice's 42.6.</p>
+  <div class="cite">Hisamoto, Post, Duh, TACL 2020</div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Bob's Actual Features</h2>
+  <div class="divider"></div>
+  <p>Not perplexity. From the triple (source, reference, hypothesis) Bob computes</p>
+  <ul class="arrow">
+    <li>modified $1$&ndash;$4$-gram precisions;</li>
+    <li>smoothed sentence-level BLEU.</li>
+  </ul>
+  <div class="card">
+    <h3>Why.</h3>
+    <p>Black-box translation returns text, not probabilities. Adding the model score as a feature gave no improvement.</p>
+  </div>
+  <div class="cite cite-wide">Hisamoto et al., TACL 2020 &mdash; classifiers: perceptron, decision tree, naive Bayes, nearest neighbour, MLP</div>
+</div>
+
+<div class="slide">
+  <h2>Sentence-Level Result: Chance</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Classifier</th><th>Bob, held out</th><th>Alice, target</th></tr>
+    <tr><td>Perceptron</td><td>50.0</td><td>50.0</td></tr>
+    <tr><td>Decision tree</td><td>51.1</td><td>50.4</td></tr>
+    <tr><td>Naive Bayes</td><td>51.0</td><td>50.4</td></tr>
+    <tr><td>MLP</td><td>50.8</td><td>50.2</td></tr>
+  </table>
+  <p class="muted">Accuracy (%) on balanced probes. Sequence-to-sequence membership inference does not work sentence by sentence.</p>
+  <div class="cite">Hisamoto et al., TACL 2020, Table 2</div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Where Signal Does Appear</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card"><h3>Out-of-domain probes</h3>
+      <p>MLP accuracy 73.6 (EMEA), 97.9 (Koran), 84.8 (subtitles), 85.0 (TED).</p></div>
+    <div class="card"><h3>Rare-word probes</h3>
+      <p>MLP 89.0 when the source contains out-of-vocabulary tokens.</p></div>
   </div>
   <div class="highlight">
-    <p><strong>Open questions:</strong> attack without shadows? Optimal attack? Quantify overfitting vs. privacy?</p>
+    <p>Caveat: these subcorpora hold only non-members; an always-"out" classifier scores 100.</p>
+  </div>
+  <div class="cite">Hisamoto et al., TACL 2020, Tables 4 and 5</div>
+</div>
+
+<div class="slide">
+  <h2>Group Probes and the Shadow Shift</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Classifier</th><th>Bob, held out</th><th>Alice, raw</th><th>Alice, adjusted</th></tr>
+    <tr><td>Perceptron</td><td>68.1</td><td>50.0</td><td>59.0</td></tr>
+    <tr><td>Decision tree</td><td>64.4</td><td>52.0</td><td>61.0</td></tr>
+    <tr><td>Naive Bayes</td><td>70.0</td><td>50.0</td><td>50.0</td></tr>
+    <tr><td>MLP</td><td>70.0</td><td>50.0</td><td>52.0</td></tr>
+  </table>
+  <p class="muted">Probes of 500 sentences. "Adjusted" shifts features by the mean BLEU difference between shadows and Alice.</p>
+  <div class="cite">Hisamoto et al., TACL 2020, Table 6</div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Corollary 1, in the Wild</h2>
+  <div class="divider"></div>
+  <ul class="num">
+    <li>Shadow models translate worse than Alice, so shadow scores sit systematically low.</li>
+    <li>A classifier trained on that shifted law answers "in" almost always on Alice, landing at 50.</li>
+    <li>Subtracting the mean shift recovers 59&ndash;61 for the two linear-ish classifiers.</li>
+  </ul>
+  <div class="highlight">
+    <p>The mis-specification penalty of Corollary 1 is not a theoretical worry. It is the whole result.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>What Is Missing Is a Null</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card"><h3>Global threshold</h3>
+      <p>One number for every record. Difficulty, length and domain all move the score.</p></div>
+    <div class="card"><h3>Per-example null</h3>
+      <p>Ask what this record's score would be had it not been trained on, then compare.</p></div>
+  </div>
+  <div class="highlight">
+    <p>That comparison is the subject of the next two lectures.</p>
   </div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════ -->
-<!--  SECTION 3 — THEORETICAL FOUNDATIONS  (Slides 61-95)            -->
+<!--  SECTION 06 — SYNTHESIS                                           -->
 <!-- ════════════════════════════════════════════════════════════════ -->
 
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Synthesis</h1>
+  <div class="divider"></div>
+  <p class="subtitle">One template, five attacks</p>
+</div>
+
+<div class="slide">
+  <h2>Every Attack Names the Same Two Densities</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Attack</th><th>Observable</th><th>How the ratio is obtained</th></tr>
+    <tr><td>Confidence threshold</td><td>Maximum softmax score</td><td>Assumed monotone in the ratio</td></tr>
+    <tr><td>Shokri, pooled</td><td>Confidence vector</td><td>Learned from shadow models</td></tr>
+    <tr><td>Shokri, per class</td><td>Vector plus true label</td><td>Learned inside each class</td></tr>
+    <tr><td>LOGAN, white box</td><td>Discriminator output</td><td>Handed over by the defender</td></tr>
+    <tr><td>LOGAN, black box</td><td>Reconstruction distance</td><td>Numerator surrogate only</td></tr>
+    <tr><td>Sequence models</td><td>Per-token log-likelihood</td><td>Uncalibrated threshold</td></tr>
+  </table>
+</div>
+
+<div class="slide">
+  <h2>The Argument in Three Lines</h2>
+  <div class="divider"></div>
+  <div class="m2-chain">
+    <span>optimal attack</span><span class="arr">&rarr;</span>
+    <span>likelihood ratio</span><span class="arr focus">&rarr;</span>
+    <span class="blue">two unknown densities</span>
+  </div>
+  <div class="m2-chain">
+    <span>simulate the game</span><span class="arr">&rarr;</span>
+    <span>labelled scores</span><span class="arr focus">&rarr;</span>
+    <span class="blue">a classifier estimates the ratio</span>
+  </div>
+  <div class="m2-chain">
+    <span>shadow world</span><span class="arr">&rarr;</span>
+    <span>target world</span><span class="arr focus">&rarr;</span>
+    <span class="blue">error bounded by total variation</span>
+  </div>
+  <p class="muted" style="text-align:center;">Proposition 1, Theorem 1, Corollary 1.</p>
+  <div class="highlight">
+    <p>Every attack in this lecture is one of these three lines, instantiated.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>What to Carry Forward</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card"><h3>Simulation</h3>
+      <p>Shadow models sample the two conditionals exactly, given a faithful world.</p></div>
+    <div class="card"><h3>Estimation</h3>
+      <p>A proper loss turns those samples into a monotone function of the ratio.</p></div>
+    <div class="card"><h3>Fragility</h3>
+      <p>The whole edifice rests on the shadow law matching the target law.</p></div>
+  </div>
+  <div class="highlight">
+    <p>Next: how far the faithfulness assumption can be relaxed before the attack dies.</p>
+  </div>
+</div>
+
+<div class="slide m2-tight">
+  <h2>Two Open Threads</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card"><h3>Relaxation</h3>
+      <p>Drop the matching distribution, drop the matching architecture, drop the shadow models entirely. What survives?</p></div>
+    <div class="card"><h3>Calibration</h3>
+      <p>Replace one global threshold with a per-example null, so difficulty and length stop dominating.</p></div>
+  </div>
+  <p class="muted">Corollary 1 motivates the first; Proposition 7 motivates the second.</p>
+</div>
 
 <!-- Closer -->
 <div class="slide end-slide no-footer">
   <div class="big-word">End of Lecture 2</div>
-  <p class="big-word-sub">Next: Theoretical Foundations</p>
+  <p class="big-word-sub">Next: Relaxing the Shadow Assumptions</p>
 </div>
 
 </div><!-- end deck -->
 
 <!-- Slide number + progress bar (fixed to viewport) -->
-<div class="slide-num" id="slideNum">1 / 34</div>
+<div class="slide-num" id="slideNum">1 / 114</div>
 <div class="progress-bar" id="progressBar" style="width:0.5%;"></div>
 
 <!-- Navigation -->

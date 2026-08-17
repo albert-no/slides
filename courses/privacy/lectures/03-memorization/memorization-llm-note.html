@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Memorization in Large Language Models — Notes</title>
+<link rel="stylesheet" href="../../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../../reference/katex/katex.min.css">
+<script defer src="../../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  body { max-width: 880px; margin: 40px auto; padding: 0 32px 80px; color: var(--charcoal); line-height: 1.55; }
+  h1 { color: var(--yonsei-blue); font-size: 2.2rem; border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+  h2 { color: var(--yonsei-blue); margin-top: 40px; font-size: 1.6rem; }
+  h3 { font-size: 1.2rem; margin-top: 20px; }
+  article { margin-bottom: 40px; }
+  .math-block { background: var(--light); padding: 12px 16px; border-radius: 8px; margin: 14px 0; overflow-x: auto; }
+  .key { background: #f4f6f9; border-left: 3px solid var(--yonsei-blue); padding: 10px 14px; margin: 14px 0; }
+  p, li { font-size: 1.05rem; }
+</style>
+</head>
+<body>
+
+<h1>Memorization in Large Language Models — Companion Notes</h1>
+<p>Speaker's reading companion for Part II. The slides carry clean statements and the load-bearing proof steps; this file carries the conventions, the regularity assumptions the slides suppress, the estimator fine print, and the places where a slide says "sketch" and means it.</p>
+
+<!-- ============================================ -->
+<article>
+  <h2>0. Notation and sign conventions</h2>
+
+  <p>Two logarithms appear in this lecture and confusing them produces factors of $\log 2$ in every numerical statement.</p>
+
+  <ul>
+    <li><strong>Base two</strong> for every quantity whose unit is a <em>bit</em>: surprisal $\ell_t$, log-perplexity $\mathrm{px}_\theta$, exposure, guessing budgets, and the counting bound of Theorem 4.</li>
+    <li><strong>Natural log</strong> for likelihood objectives that are differentiated: the GCG surrogate, the DP-SGD analysis, and the alignment tilt $\exp(r/\beta)$.</li>
+  </ul>
+
+  <p>The per-token surprisal and the sequence log-likelihood are tied by the autoregressive factorization,</p>
+  <div class="math-block">$$\ell_t(x) = -\log_2 p_\theta(x_t \mid x_{&lt;t}), \qquad -\log_2 p_\theta(x) = \sum_{t=1}^{T} \ell_t(x),$$</div>
+  <p>so "log-perplexity of $x$" is the <em>sum</em> $-\log_2 p_\theta(x)$ in the Secret Sharer sections and the <em>mean</em> $\bar\ell(x)$ in the Min-K sections. Carlini et al. use the sum, because the canary template has fixed length and the two differ by a constant. Shi et al. use the mean, because their examples vary in length. The deck follows each paper's convention inside its own section and says so on the "Why the Mean Fails" slide; when comparing across sections, normalize first.</p>
+
+  <div class="key">
+    <p><strong>One more collision.</strong> $\tau$ denotes three different things in the literature quoted here: the ACR threshold (Schwarzschild), the probabilistic-extraction threshold (Cooper), and the singleton mass $\tau_1$ (Feldman). The deck keeps the subscript on $\tau_1$ everywhere for exactly this reason.</p>
+  </div>
+</article>
+
+<!-- ============================================ -->
+<article>
+  <h2>1. Exposure: the estimator, and what the null really says</h2>
+
+  <h3>1.1 Why rank and not probability</h3>
+  <p>Proposition 1 on the slides says exposure is invariant under any strictly increasing reparametrization of the score. That is stronger than it looks. It means exposure does not change if you switch tokenizers, change the template's fixed text, move from summed to mean surprisal, or rescale by temperature — as long as the transformation is monotone across the candidate set. A raw log-perplexity threshold has none of these invariances, which is why the same numerical threshold transfers across none of those changes.</p>
+
+  <h3>1.2 The tail bound is exact up to the floor</h3>
+  <p>Theorem 2 gives $\Pr_{H_0}[\mathrm{exposure} \ge t] = \lfloor |\mathcal{R}| 2^{-t}\rfloor / |\mathcal{R}| \le 2^{-t}$. The floor is the only slack. For $t$ well below $\log_2|\mathcal{R}|$ the bound is essentially an equality, so exposure is a genuine $p$-value: an exposure of $t$ bits is a $p$-value of $2^{-t}$ for the hypothesis "this canary was never trained on". Reporting exposure and reporting $-\log_2 p$ are the same act.</p>
+
+  <p>Corollary 1 on the slides bounds $\mathbb{E}_{H_0}[\mathrm{exposure}] \le \log_2 e \approx 1.44$ by the layer-cake formula. Worth checking directly: under $H_0$ the rank $R$ is uniform on $\{1,\dots,M\}$ with $M = |\mathcal{R}|$, so</p>
+  <div class="math-block">$$\mathbb{E}\big[\log_2 R\big] = \frac{1}{M}\sum_{r=1}^{M} \log_2 r = \log_2 \big( M! \big)^{1/M} \approx \log_2 M - \log_2 e,$$</div>
+  <p>by Stirling. Since exposure $= \log_2 M - \log_2 R$, its null mean is $\approx \log_2 e$. The layer-cake bound is therefore tight, not merely valid — which is the reason the deck states it as a calibration fact rather than a loose inequality.</p>
+
+  <h3>1.3 The skew-normal fit</h3>
+  <p>Proposition 3 reduces exposure to a CDF evaluation, $\mathrm{exposure} = -\log_2 F(\mathrm{px}_\theta(r^\star))$, and the estimator replaces $F$ by a parametric fit $\hat F$ to $m$ sampled candidates. Three cautions the slide compresses into "the estimate is only as good as the fit":</p>
+  <ul>
+    <li>The interesting regime is $F \approx 2^{-30}$, i.e. the far left tail. With $m \approx 10^5$ samples, no sampled point lies anywhere near there; the number reported is pure extrapolation from the fitted shape.</li>
+    <li>Carlini et al. choose a skew-normal because the empirical distribution of $\mathrm{px}_\theta$ over a template's candidate set is unimodal and left-skewed. This is an empirical observation about their templates, not a theorem.</li>
+    <li>Under-reporting is the safer error. If the true tail is heavier than skew-normal, $\hat F$ underestimates $F$ and exposure is over-reported; if lighter, exposure is under-reported. Published exposure numbers are best read as order-of-magnitude claims about the number of bits, not as three-significant-digit measurements.</li>
+  </ul>
+
+  <h3>1.4 Guessing entropy</h3>
+  <p>Proposition 2 identifies $\log_2$ of the rank-order attacker's guess count with $\log_2|\mathcal{R}| - \mathrm{exposure}$. In the security literature the expected number of guesses to recover a secret is the <em>guessing entropy</em> $G = \mathbb{E}[R]$, and Massey's inequality relates it to Shannon entropy, $G \ge \frac{1}{4} 2^{H} + 1$ for $H \ge 2$. The deck deliberately states the log-guess version rather than $\mathbb{E}[R]$: the log version is exactly linear in exposure, while $\mathbb{E}[R]$ is not, and Jensen goes the wrong way ($\mathbb{E}[\log_2 R] \le \log_2 \mathbb{E}[R]$). Any claim of the form "exposure $t$ means $2^{\log_2 M - t}$ expected guesses" is therefore an abuse; the honest statement is the one on the slide, about $\log_2$ of the guess count.</p>
+</article>
+
+<!-- ============================================ -->
+<article>
+  <h2>2. Feldman's long tail: what the sketch omits</h2>
+
+  <p>The deck states Theorem 3 as $\mathrm{err}(A) \ge \mathrm{opt} + \Omega(\tau_1(1 - \overline{\mathrm{mem}}(A)))$ and labels the argument a sketch. Here is what is genuinely proved in Feldman (STOC 2020) and what the four slide steps quietly assume.</p>
+
+  <h3>2.1 The actual model</h3>
+  <p>The data distribution is a mixture $D = \sum_j \pi_j D_j$ over subpopulations, and the mixture weights $\pi = (\pi_j)$ are themselves drawn from a prior. The prior is the load-bearing object: the theorem is a statement about the learner's expected error under a distribution over problem instances, not about a single fixed $D$. Feldman works with a prior in which the frequency histogram is long-tailed in the sense that a constant fraction $\tau_1$ of the total mass sits in subpopulations that will appear <em>exactly once</em> in a sample of size $n$.</p>
+
+  <p>The slide's phrase "singleton subpopulations, total mass $\tau_1$" is this quantity. Two consequences the slides do not have room for:</p>
+  <ul>
+    <li>$\tau_1$ depends on $n$. For a Zipf-like frequency prior with exponent near $1$, $\tau_1$ decays only logarithmically, which is why the effect does not disappear at scale.</li>
+    <li>A subpopulation seen once is information-theoretically indistinguishable, from the sample alone, from a mislabelled outlier. This is precisely why the learner cannot hedge: any rule that discards singletons also discards the $\tau_1$ mass.</li>
+  </ul>
+
+  <h3>2.2 Step 3, in full</h3>
+  <p>The slide writes $\Pr[h(x) = y_j] \le \mathrm{mem}(A,S,i) + 1/|\mathcal{Y}|$ for a fresh $x \sim D_j$ and calls it exchangeability. Written out: conditioned on the event that subpopulation $j$ contributed exactly one example $z_i = (x_i,y_i)$ to $S$, the pair $(x, x_i)$ is exchangeable, so the learner cannot distinguish the held-out point from the training point except through what it stored about $z_i$. If the learner did not memorize $z_i$ — if $\mathrm{mem}(A,S,i)$ is small — then its behaviour on the fresh $x$ is, up to that gap, its behaviour on an unseen label, i.e. chance, $1/|\mathcal{Y}|$.</p>
+
+  <p>What the sketch hides is the coupling error. The exchangeability argument is exact only in an idealized model where the subpopulation is a single point mass; for a genuine distribution $D_j$ with spread there is an additional term controlled by the within-subpopulation variation. Feldman handles this with a careful conditioning argument; the deck's slide says "the paper controls the frequency prior and the coupling error" and stops there. That is the honest boundary.</p>
+
+  <h3>2.3 What the theorem does and does not license</h3>
+  <div class="key">
+    <p><strong>Does.</strong> Rule out the hope that a learner can be simultaneously near-optimal on long-tailed data and free of per-example memorization. The trade-off is real and quantitative.</p>
+    <p><strong>Does not.</strong> Justify <em>verbatim</em> storage of any particular training string. The memorization score is a statement about label prediction, not about token reproduction. A model can have $\mathrm{mem}(A,S,i) = 1$ while being unable to emit $x_i$ from any prompt. Conflating the counterfactual notion with the reproduction notion is the single most common error in the applied literature, which is why the deck keeps the four objects in a table.</p>
+  </div>
+</article>
+
+<!-- ============================================ -->
+<article>
+  <h2>3. Min-K: the tail-clipping model and the choice of $K$</h2>
+
+  <h3>3.1 The model behind Proposition 6</h3>
+  <p>Proposition 6 assumes surprisals are i.i.d. across positions with density $f_0$ under $H_0$, and that memorization modifies the density only on $\{\ell \ge c\}$. Neither assumption is literally true and both are defensible as a first-order model.</p>
+  <ul>
+    <li><strong>Independence.</strong> Surprisals are strongly correlated within a sentence — a hard span makes several consecutive tokens hard. The effect is to reduce the effective sample size $T$, which weakens the test but does not change which statistic is informative.</li>
+    <li><strong>Tail clipping.</strong> The claim is that training on $x$ mostly reduces surprisal where surprisal was high: common function words were already near-deterministic and cannot improve, while rare names, numbers, and idiosyncratic phrasings are exactly what gradient descent fits. This is an empirical regularity, visible in the surprisal-profile figure, not a theorem.</li>
+  </ul>
+
+  <p>Granting both, the Neyman–Pearson statistic is a sum of per-token log-likelihood ratios, and every body token contributes exactly zero. That is the content of Proposition 6 and the reason the deck presents Min-K as a <em>principled</em> statistic rather than a heuristic.</p>
+
+  <h3>3.2 Why $K \approx 20\%$</h3>
+  <p>The proposition points at the set $\{t : \ell_t \ge c\}$, whose size is unknown. Min-K% replaces it by the top-$m$ order statistics with $m = \lceil KT/100 \rceil$. Two errors compete:</p>
+  <ul>
+    <li>$K$ too small: $m$ is a handful of tokens, the average is dominated by variance, and the test loses power on long examples.</li>
+    <li>$K$ too large: body tokens re-enter, each contributing zero signal and nonzero noise, and the statistic degrades toward the mean — the failure mode of Section 3's opening slide.</li>
+  </ul>
+  <p>Shi et al. report the optimum empirically at roughly $20\%$ on WikiMIA. There is no theory fixing this value; it is the location of the minimum of the two competing errors for their text lengths.</p>
+
+  <h3>3.3 Min-K%++ and the entropy correction</h3>
+  <p>Proposition 7 identifies $\mu_t$ with $-H_t$, the negated conditional entropy of the model's own next-token distribution, so the $z$-score numerator is $H_t - \ell_t(x)$: the amount by which the observed token is <em>less</em> surprising than a typical draw from the model at that position. This is the calibration a reference model used to provide, obtained instead from the target model's own logits.</p>
+
+  <p>Fine print the slide omits: $\mu_t$ and $\sigma_t$ as defined by Zhang et al. are moments of $\log p_\theta(v \mid x_{&lt;t})$ under the model distribution, i.e. $\mu_t = \sum_v p_\theta(v)\log p_\theta(v)$, and require a full pass over the vocabulary at each position. This is one softmax that is already computed, so the cost is negligible at inference, but it does require logit access — Min-K%++ is not applicable through an API that returns only sampled text.</p>
+
+  <div class="key">
+    <p><strong>Boundary with the MIA lecture.</strong> This deck stops at "which statistic". The questions of optimal tests, likelihood-ratio attacks with shadow models, and per-example calibration curves belong to the membership-inference lecture and are not repeated here. The only claim made in this deck is the sufficiency statement of Proposition 6.</p>
+  </div>
+</article>
+
+<!-- ============================================ -->
+<article>
+  <h2>4. The alignment tilt and the divergence attack</h2>
+
+  <p>Proposition 5 is a one-line consequence of the closed form $\pi^\star \propto \pi_{\mathrm{ref}} \exp(r/\beta)$: a reward that is constant on the support cancels against the partition function. The interesting part is what it licenses as an explanation.</p>
+
+  <p>The divergence attack of Nasr et al. drives the model into contexts — a single token repeated thousands of times — that are far outside anything the preference data covered. On those contexts the learned reward model is effectively uninformative, and Proposition 5 says the aligned policy reverts to the base policy there. Empirically the model exits the loop and begins sampling from something that looks like the pretraining distribution, which is exactly the predicted behaviour.</p>
+
+  <div class="key">
+    <p><strong>What this is not.</strong> It is a model of an observed phenomenon, not a proof that the attack works. Three gaps: (i) the closed form describes the optimum of the KL-regularized objective, and a finetuned model only approximates it; (ii) "the reward is flat off-distribution" is an assumption about generalization of the reward model, not a fact; (iii) the argument says nothing about <em>which</em> training data surfaces, only that the base conditional is recovered. The slide states the proposition and the caveat side by side for this reason.</p>
+  </div>
+
+  <p>The practically important corollary is monotone rather than mechanistic: any extraction rate measured on an aligned model is a lower bound on the base model's rate, because alignment can only redistribute conditional mass, never remove information from $\theta$. Refusal training is therefore a filter on the output channel, and Section 4's treatment of $n$-gram blocking makes the same point in a setting where it can be proved.</p>
+</article>
+
+<!-- ============================================ -->
+<article>
+  <h2>5. ACR: the counting theorem and the soundness of MiniPrompt</h2>
+
+  <h3>5.1 What Theorem 4 assumes</h3>
+  <p>The counting bound holds for every model $M$, with no assumption on architecture or training, because it is pure pigeonhole. The assumptions that <em>are</em> load-bearing:</p>
+  <ul>
+    <li><strong>Determinism.</strong> $M$ must be a function of the prompt. Greedy decoding at temperature zero qualifies; sampling does not, and with sampling the injectivity step fails outright.</li>
+    <li><strong>A fixed target length $n$.</strong> The bound counts targets of exactly $n$ tokens. Aggregating over lengths multiplies the count by the number of lengths considered, which is a polynomial factor against an exponential bound — harmless, but it should be stated.</li>
+    <li><strong>Prompts drawn from the same vocabulary.</strong> If the auditor may use a larger alphabet (system prompts, special tokens, images), $|\mathcal{V}|$ in the pigeonhole count is the prompt alphabet, not the output alphabet, and the exponent changes accordingly.</li>
+  </ul>
+
+  <p>The numerical corollary, $|\mathcal{V}| = 32000$, $n = 50$, $\tau = 2$, giving a certified fraction at most $2 \cdot 32000^{-25} \approx 2^{-373}$, is arithmetic on those three numbers and nothing else. It is not an empirical measurement and should never be quoted as one.</p>
+
+  <h3>5.2 The one-sided guarantee</h3>
+  <p>Proposition 9 is the reason ACR is usable as evidence. MiniPrompt performs a heuristic discrete search; it returns some prompt length $\hat L$ that works, which is at least the optimum $|x^\star|$, so the reported $\widehat{\mathrm{ACR}} = |y|/\hat L$ never exceeds the true ACR. Consequences:</p>
+  <ul>
+    <li>A positive finding is a <strong>certificate</strong>: an explicit prompt shorter than the target that provably elicits it. It can be checked in one forward pass by anyone, without trusting the search.</li>
+    <li>A negative finding is <strong>not</strong> evidence of absence. It says the search failed at the compute budget used.</li>
+    <li>Better search only moves reported ACR up. Published ACR numbers are therefore lower bounds that will drift upward as attacks improve, exactly like extraction rates.</li>
+  </ul>
+
+  <h3>5.3 Why the ratio excludes the trivial attack</h3>
+  <p>Proposition 8 is nearly trivial and is the whole reason ACR is not vacuous. Under the plain extractability definition, "repeat after me: $y$" is an admissible prompt and every string is extractable. Under ACR that witness has $|x| \ge |y|$ and certifies $\mathrm{ACR} \le 1$, below the default threshold. The length ratio is doing the work that a semantic constraint on the prompt would otherwise have to do — and a length constraint, unlike a semantic one, is checkable.</p>
+</article>
+
+<!-- ============================================ -->
+<article>
+  <h2>6. Defenses: accounting, group privacy, and the blocking induction</h2>
+
+  <h3>6.1 Theorem 5 and what "per-example" means</h3>
+  <p>The DP bound $\mathrm{mem}(A,S,i) \le (e^\varepsilon - 1) q_i + \delta$ follows by applying the DP inequality to the single event $E = \{h : h(x_i) = y_i\}$. Note the form of the bound: it is multiplicative in the baseline probability $q_i$, not additive. This matters because the crude version $e^\varepsilon - 1 + \delta$ is what everyone quotes and it is vacuous at any $\varepsilon$ above $\log 2$. The sharper version is informative whenever the string was unlikely to begin with — which is the regime of rare secrets, i.e. the regime one actually cares about.</p>
+
+  <p>Corollary 5 makes the vacuity concrete: at $\varepsilon = 8$, a value not unusual in large-scale DP training, $e^\varepsilon - 1 \approx 2980$, so the bound says something only when $q_i \lesssim 3.4 \times 10^{-4}$. For a canary in a nine-digit space the baseline is $10^{-9}$ and the bound is meaningful; for a common phrase it is not.</p>
+
+  <h3>6.2 Group privacy</h3>
+  <p>Proposition 11 states the standard group-privacy degradation: a group of $k$ records inherits $(k\varepsilon, \delta k e^{(k-1)\varepsilon})$-DP. The proof chains the DP inequality along a path of $k$ single-record edits, collecting one factor $e^\varepsilon$ per step and accumulating the $\delta$ terms geometrically. The consequence for language models is severe and often missed: DP-SGD with per-example clipping protects <em>examples</em>, and a secret appearing in $k$ documents is a group of size $k$. At $\varepsilon = 8$ and $k = 10$ the applicable budget is $80$, which is no guarantee at all. Deduplication is therefore not merely complementary to DP — it is a precondition for DP's guarantee to mean what one wants it to mean.</p>
+
+  <h3>6.3 The blocking induction, spelled out</h3>
+  <p>Definition 11 masks any token that would complete a training $n$-gram, then renormalizes. Proposition 12 claims the output shares no $n$-gram with $\mathcal{D}$. Induction on the position $t$: suppose the first $t-1$ emitted tokens contain no training $n$-gram. The token $x_t$ is drawn from $\tilde p(\cdot \mid x_{&lt;t})$, which assigns positive mass only where the indicator is $1$, so the $n$-gram $(x_{t-n+1}, \dots, x_t)$ is not in $G_n(\mathcal{D})$. Every $n$-gram of the output ends at some position $t$, so none is in $G_n(\mathcal{D})$.</p>
+
+  <p>Two boundary conditions the slide compresses to one muted line:</p>
+  <ul>
+    <li><strong>Degenerate renormalization.</strong> If every vocabulary item is masked, $\tilde p$ is $0/0$. Implementations fall back to unmasked sampling, which voids the guarantee at exactly the positions where it was binding. The proposition should be read as conditional on a survivor existing.</li>
+    <li><strong>Metric dependence.</strong> The guarantee is stated in the exact-$n$-gram metric and in no other. Under the LCS metric with span below $n$, or under any paraphrase-tolerant metric, the guarantee says nothing. Ippolito et al. show the practical version of this: blocked models still reproduce content with trivial rewording, so a verbatim filter provides "a false sense of privacy".</li>
+  </ul>
+
+  <div class="key">
+    <p><strong>The general shape.</strong> Deduplication bounds a coefficient, DP bounds a counterfactual, blocking bounds an output metric. None of the three bounds the quantity ACR measures — whether the weights compress the string. That is the gap the audit-based approach exists to fill, and it is why the closing table pairs every provable statement with its boundary.</p>
+  </div>
+</article>
+
+<!-- ============================================ -->
+<article>
+  <h2>7. The four objects, side by side</h2>
+
+  <p>The deck opens and closes with a four-row table. Restated here with the mathematical type of each object, which is the thing to remember:</p>
+
+  <ul>
+    <li><strong>Exposure</strong> — a function of a <em>candidate set</em>. Type: rank statistic on $\mathcal{R}$, calibrated to a uniform null. Requires the auditor to have inserted the secret and to know the template. Gives bits.</li>
+    <li><strong>Extractability</strong> — an <em>existential</em> statement over prompts. Type: a Boolean. Requires only query access; trivially true unless the prompt is constrained, which is what discoverability (fix the prompt to the true prefix) and ACR (constrain the prompt's length) each do differently.</li>
+    <li><strong>Counterfactual memorization</strong> — a <em>difference of two expectations over training runs</em>. Type: a real number in $[-1,1]$ attached to a training index, not to a string in isolation. Requires retraining; this is the object Feldman's theorem is about.</li>
+    <li><strong>Similarity-based memorization</strong> — a <em>distance</em> to the nearest training example. Type: a real number given a metric and a threshold. Built in Part I for images; the text analog is the LCS variant.</li>
+  </ul>
+
+  <p>The relations that do hold: discoverable $\Rightarrow$ extractable (Proposition 4); extractable $\Rightarrow$ member, so any extraction attack is a valid membership attack; $\tau$-memorized with $\tau > 1$ $\Rightarrow$ extractable. The relations that do <em>not</em> hold, and which are asserted surprisingly often: extractable does not imply counterfactually memorized (a model can emit a string it would have emitted anyway), and counterfactually memorized does not imply extractable (the influence can be on labels the model never verbalizes).</p>
+</article>
+
+</body>
+</html>

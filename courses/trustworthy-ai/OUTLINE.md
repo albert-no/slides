@@ -28,7 +28,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 |---|---|---|---|
 | 1 | `lec01-introduction.html` | Introduction & threat-model thinking | **revised 2026-08** (35 sl) |
 | 2 | `lec02-privacy-dp.html` | Privacy & differential privacy | **revised 2026-08** (84 sl) |
-| 3 | `lec03-mia.html` | Membership inference attacks | **drafted** (59 sl) |
+| 3 | `lec03-mia.html` | Membership inference attacks | **revised 2026-08** (63 sl) |
 | 4 | `lec04-memorization.html` | Memorization & training-data extraction | **drafted** (59 sl) |
 | 5 | `lec05-unlearning.html` | Machine unlearning | **drafted** (58 sl) |
 | 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **drafted** (58 sl) |
@@ -221,3 +221,70 @@ note). Added "Private Pretraining Arrives" (VaultGemma) to §06. Fixed: Ann-figu
 values made precise with audit cite; Copilot slide gained Huang FSE 2024 cite. §06 refreshed:
 Apple Intelligence DP synthetic data (2025), EU AI Act GPAI duties (Aug 2025). Note file synced
 (84 entries, order matches).
+
+---
+
+## lec03-mia.html
+
+**Topic:** Membership inference attacks (~90 min). What "was this example in the
+training set?" means and why it matters (privacy audit, litigation, extraction
+pre-step); overfitting/loss-gap intuition; shadow models at picture level; LiRA as
+"compare to a population of reference models"; evaluation done right (TPR at low FPR);
+MIA on LLMs and diffusion models; DP-vs-MIA in one line; 2025–26 frontier (strong-attack
+wall, dataset inference, courtroom use). Intuition pass — the rigorous treatment lives
+in `courses/privacy/lectures/04-mia/` (5-deck series); facts kept consistent with it.
+
+### Sections (63 slides, ~90 min — content-revised 2026-08 from 59, all citations source-verified)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:31`, `:43` | |
+| **01 — The Question** | 3–11 | `:80` | one yes-or-no question `:88` · member vs non-member worlds `:113` · cancer-cohort harm `:126` · **Who Asks, and Why (audit / courts / extraction; added 2026-08)** `:148` · threat model `:161` · score + threshold `:175` |
+| **02 — The Basic Attack** | 12–20 | `:189` | train loss < test loss `:197` · loss score `:206` · **two-bells overlap (SVG)** `:216` · overfitting drives MIA (caveat: small gap ≠ safe) `:238` · 3-line threshold attack `:247` · confidence baseline `:259` · Yeom theory anchor (sufficient, not necessary) `:272` · Colab demo `:284` |
+| **03 — Shadow Models** | 21–26 | `:300` | shadow idea `:321` · **shadow pipeline (SVG)** `:333` · learned attack `:360` · why it transfers `:373` |
+| **04 — Stronger Attacks** | 27–36 | `:387` | difficulty vs membership `:395` · per-example calibration `:408` · likelihood ratio `:417` · **LiRA** `:431` · **in-vs-out bells (SVG)** `:445` · label-only `:465` · average accuracy lies `:478` · **TPR at low FPR** (retitled 2026-08) `:487` · **ROC tail (SVG)** `:501` |
+| **05 — What It Means** | 37–43 | `:522` | $(\varepsilon,\delta)$-DP recall `:530` · DP caps the attacker `:542` · TPR $\le e^{\varepsilon}\cdot$FPR$+\delta$ `:551` · empirical $\varepsilon$ auditing `:560` · trust but verify `:573` · canaries + one-run auditing `:587` |
+| **06 — Modern Models** | 44–54 | `:602` | MIA meets foundation models `:610` · Min-K% `:623` · **diffusion duplication histogram (real fig)** `:636` · Duan web-scale doubt `:656` · why scale breaks it `:665` · benchmark trap (temporal confound, blind baselines) `:678` · **Give the Attack Everything (Hayes wall; added 2026-08)** `:692` · **dataset inference (added 2026-08)** `:706` · **MIA in the Courtroom (added 2026-08)** `:719` · open debate `:729` |
+| **07 — Defenses** | 55–61 | `:744` | shrink the gap `:752` · heuristics not proof `:764` · DP-SGD `:777` · why DP-SGD stops MIA `:793` · utility cost `:806` · defender's checklist `:815` |
+| Takeaways / Closer | 62–63 | — | `:829`, `:842` |
+
+**Key definitions / citations (all source-verified 2026-08):**
+- Shadow models — `:321` — Shokri, Stronati, Song, and Shmatikov, IEEE S&P 2017.
+- Loss attack / advantage-vs-gap — `:206`, `:272` — Yeom, Giacomelli, Fredrikson, and Jha,
+  "Privacy Risk in Machine Learning: Analyzing the Connection to Overfitting", IEEE CSF 2018
+  (full title restored 2026-08). Overfitting **sufficient, not necessary** — matches
+  `courses/privacy/lectures/04-mia/` (mia3).
+- Confidence baseline — `:259` — Salem et al., "ML-Leaks", NDSS 2019 (re-attributed 2026-08;
+  was wrongly cited to Shokri 2017).
+- Likelihood-ratio framing — `:417` — Sablayrolles et al., ICML 2019.
+- LiRA + TPR-at-low-FPR standard — `:431`, `:487` — Carlini et al., "Membership Inference
+  Attacks From First Principles", IEEE S&P 2022.
+- Label-only — `:465` — Choquette-Choo, Tramèr, Carlini, and Papernot, ICML 2021.
+- $(\varepsilon,\delta)$-DP — `:530` — Dwork, Kenthapadi, McSherry, Mironov, and Naor,
+  EUROCRYPT 2006 (fixed 2026-08; was misattributed to TCC 2006 — same fix as lec02).
+- One-run auditing — `:587` — Steinke, Nasr, and Jagielski, NeurIPS 2023.
+- Min-K% — `:623` — Shi et al., ICLR 2024.
+- Diffusion extraction/duplication — `:636` — Carlini et al., USENIX Security 2023, Fig. 5.
+- Web-scale doubt — `:656` — Duan et al., COLM 2024.
+- Blind baselines / temporal confound — `:678` — Das, Zhang, and Tramèr, DATA-FM at ICLR 2025
+  (direction fixed 2026-08: members are the *older* text, non-members post-cutoff).
+- Strong-attack wall — `:692` — Hayes, Shumailov, et al., NeurIPS 2025.
+- Dataset inference — `:706` — Maini, Jia, Papernot, and Dziedzic, NeurIPS 2024.
+- MIA-as-evidence position — `:719` — Zhang, Das, Kamath, and Tramèr, IEEE SaTML 2025.
+- DP-SGD — `:777` — Abadi et al., ACM CCS 2016.
+
+**Real image:** duplication histogram `figs/carlini_duplicates.png` (Carlini et al.,
+"Extracting Training Data from Diffusion Models", USENIX Security 2023, Fig. 5 —
+attribution verified against arXiv 2301.13188) `:642`; also used by `lec04-memorization.html`.
+**SVG figures:** two-bells loss overlap `:216`, member/model/non-member world cards `:113`,
+shadow pipeline `:333`, in-vs-out bells `:445`, ROC tail `:501`. Citations use `.cite-left`.
+Page number: bold `.slide-num` only.
+
+**2026-08 content revision (59→63):** every citation/number fetched and verified (deck is
+nearly number-free; no invented results tables found). Added: "Who Asks, and Why" (§01);
+"Give the Attack Everything" (Hayes 2025 strong-MIA wall), "Ask About a Dataset, Not a
+Record" (Maini dataset inference), "MIA in the Courtroom" (Zhang SaTML 2025) to §06.
+Fixed: benchmark-trap direction (members older, not newer); "precision at low FPR" →
+"TPR at low FPR" (3 places); "zero gap ⇒ safe" folklore removed (sufficient-not-necessary);
+$(\varepsilon,\delta)$-DP origin TCC→EUROCRYPT 2006; ML-Leaks attribution; Yeom full title.
+`lec03tech.html` audited — math correct, no changes. Note file synced (63 entries, order matches).

@@ -1,6 +1,6 @@
 # trustworthy-ai/ — Trustworthy AI course
 
-Undergraduate course for juniors/seniors (15 weeks × 1.5 hr), mixed majors with
+Undergraduate course for sophomores/juniors (15 weeks × 1.5 hr), mixed majors with
 basic Python/Colab experience. **Mode:** concept introduction + motivation first —
 foundational works, a little recent work, light technical detail, no proofs.
 At most one intuitive formula per key concept.
@@ -26,7 +26,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 
 | Wk | File | Topic | Status |
 |---|---|---|---|
-| 1 | `lec01-introduction.html` | Introduction & threat-model thinking | **drafted** (47 sl) |
+| 1 | `lec01-introduction.html` | Introduction & threat-model thinking | **revised 2026-08** (35 sl) |
 | 2 | `lec02-privacy-dp.html` | Privacy & differential privacy | **drafted** (84 sl) |
 | 3 | `lec03-mia.html` | Membership inference attacks | **drafted** (59 sl) |
 | 4 | `lec04-memorization.html` | Memorization & training-data extraction | **drafted** (59 sl) |
@@ -122,29 +122,44 @@ When drafting a stub, read the corresponding leaf `OUTLINE.md` there first and
 
 ## lec01-introduction.html
 
-**Topic:** What "trustworthy" means; AI fails differently than software; the five
-trust dimensions; threat-model thinking (knowledge × timing); the 15-week map; how
-demos work. Sets the vocabulary used all term.
+**Topic:** Course overview (~30 min). What "trustworthy" means; AI fails differently
+than software; the six trust dimensions; threat-model thinking (knowledge × timing);
+the course map — fifteen topics in four groups (content areas, not a fixed timetable);
+how the course works. Sets the vocabulary used all term.
 
-### Sections (47 slides, ~35–40 min)
+### Sections (35 slides, ~30 min — trimmed 2026-08 from 47, all incidents source-verified)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:27`, `:39` | |
-| **01 — Why Trust?** | 3–12 | `:69` | Bias/COMPAS `:91` · Amazon · Mata v. Avianca · chatbots · memorization · deepfakes · prompt injection |
-| **02 — How AI Fails Differently** | 13–21 | `:206` | SW vs learned · failure in weights · **panda→gibbon image** `:244` · three sources · black box · **six trust dimensions** `:296` |
-| **03 — Threat-Model Thinking** | 22–31 | `:325` | **What is a threat model (+adversary SVG)** `:333` · house analogy · white/black-box · train/inference · **attack map 2×2 (SVG)** `:425` · medical-LLM worked example |
-| **04 — Trust Stack & Course Map** | 32–41 | `:491` | **trust stack (layered SVG)** `:499` · **4-module 15-week timeline (SVG)** `:523` · module previews · week-by-week · 2025–26 themes |
-| **05 — How We'll Work** | 42–46 | `:639` | concepts not proofs · hands-on demos · the goal |
-| Closer | 47 | — | |
+| **01 — Why Trust?** | 3–12 | `:68` | COMPAS `:91` · Amazon `:105` · Mata v. Avianca + Deloitte 2025 `:120` · Air Canada + $1 car `:138` · memorization `:156` · deepfake robocall `:170` · EchoLeak prompt injection `:183` · the pattern `:197` |
+| **02 — How AI Fails Differently** | 13–17 | `:212` | SW vs learned `:220` · **panda→gibbon image** `:238` · three failure sources `:248` · **six trust dimensions** `:260` |
+| **03 — Threat-Model Thinking** | 18–22 | `:275` | **What is a threat model (+adversary SVG)** `:284` · knowledge × timing merged 2×2 grid `:314` · **attack map 2×2 (SVG)** `:340` · no threat model, no answer `:366` |
+| **04 — Trust Stack & Course Map** | 23–30 | `:381` | **trust stack (layered SVG)** `:390` · course at a glance (4 topic-group cards) `:413` · Group 1–4 previews `:428`–`:464` · 2025–26 themes `:476` |
+| **05 — How We'll Work** | 31–34 | `:489` | concepts not proofs `:498` · optional demos & supplements `:515` · the goal `:531` |
+| Closer | 35 | `:543` | |
 
 **Visuals:** real image — panda→gibbon adversarial example (`figs/panda-gibbon.png`,
-Goodfellow et al. 2015) `:244`. SVG — adversary↔system threat diagram `:333`,
-attack-map 2×2 `:425`, layered trust-stack `:499`, 15-week module timeline `:523`.
+Goodfellow, Shlens, Szegedy, ICLR 2015, Figure 1; confidences 57.7%→99.3% verified
+against the paper) `:241`. SVG — adversary↔system threat diagram `:296`, attack-map
+2×2 `:344`, layered trust-stack `:394`. (15-week timeline SVG removed in the 2026-08
+trim: topics are presented as content areas, not a schedule.)
+**Key citations (all source-verified 2026-08):** Angwin et al., ProPublica 2016
+(COMPAS) · Dastin, Reuters 2018 (Amazon) · Mata v. Avianca, S.D.N.Y. 2023 ·
+Deloitte Australia / DEWR partial refund, Oct 2025 · Moffatt v. Air Canada, 2024
+BCCRT 149 · Carlini et al., USENIX Security 2021 + Nasr et al. 2023 (extraction) ·
+EchoLeak CVE-2025-32711 (M365 Copilot, June 2025).
 **Key framing:** threat model = *who* / *what they know* (white/black-box) / *what they
 can do* (train/inference-time); the 2×2 locates every attack. Examples-first: real
 incidents in §01 anchor the six trust dimensions. Citations use `.cite-left`. Page
 number: bold `.slide-num` only.
+
+**2026-08 trim (47→35):** week-by-week schedule slides, 15-week timeline SVG,
+medical-LLM worked example, house analogy, black-box slide, "failure lives in the
+weights", "bigger models new surprises", "dimensions interact" cut or merged; the
+white/black-box and train/inference slides merged into one knowledge×timing grid;
+Bing "Sydney" bullet deleted (unverifiable as prompt injection), replaced by
+verified EchoLeak 2025; Deloitte 2025 incident added. Note file synced (35 entries).
 
 ---
 

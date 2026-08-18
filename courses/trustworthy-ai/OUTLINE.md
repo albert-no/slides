@@ -30,7 +30,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 2 | `lec02-privacy-dp.html` | Privacy & differential privacy | **revised 2026-08** (84 sl) |
 | 3 | `lec03-mia.html` | Membership inference attacks | **revised 2026-08** (63 sl) |
 | 4 | `lec04-memorization.html` | Memorization & training-data extraction | **revised 2026-08** (58 sl) |
-| 5 | `lec05-unlearning.html` | Machine unlearning | **drafted** (58 sl) |
+| 5 | `lec05-unlearning.html` | Machine unlearning | **revised 2026-08** (66 sl) |
 | 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **drafted** (58 sl) |
 | 7 | `lec07-interpretability.html` | Interpretability & explainability | **drafted** (57 sl) |
 | 8 | `lec08-adversarial.html` | Adversarial examples (attack + defense) | **drafted** (56 sl) |
@@ -60,7 +60,7 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `lec02tech.html` | Wk 2 (privacy/DP) | (ε,δ)-DP def; ε/e^ε log-odds; sensitivity Δq; Laplace/Gaussian mechanisms; randomized-response algebra; DP-SGD (clip C + N(0,σ²C²) + accountant); composition/Rényi. Points to `courses/privacy/lectures/01-dp/` | **drafted** (21 sl) |
 | `lec03tech.html` | Wk 3 (MIA) | score+threshold; likelihood ratio Λ(x); LiRA (Gaussian fit + LR test); ROC / TPR@low-FPR; DP bound TPR ≤ e^ε·FPR + δ | **drafted** (11 sl) |
 | `lec04tech.html` | Wk 4 (memorization) | k-extractability def; memorization-fraction metric; log-linear scaling law | **drafted** (9 sl) |
-| `lec05tech.html` | Wk 5 (unlearning) | exact vs approx; (ε,δ) unlearning inequality; influence function θ₋ₓ ≈ θ̂ + (1/n)H⁻¹∇ℓ + Hessian infeasibility; gradient ascent; SISA cost | **drafted** (11 sl) |
+| `lec05tech.html` | Wk 5 (unlearning) | exact vs approx; (ε,δ) unlearning inequality; influence function θ₋ₓ ≈ θ̂ + (1/n)H⁻¹∇ℓ + Hessian infeasibility; gradient ascent; SISA cost | **fixed 2026-08** (11 sl: (ε,δ) cite Ginart→Guo/Sekhari + two-sided bound; SISA speedup R·L→R & 3/2) |
 | `lec06tech.html` | Wk 6 (hallucination) | reliability diagram; ECE = Σ_b (n_b/n)|acc_b−conf_b|; temperature scaling; conformal coverage Pr[y∈C(x)]≥1−α + threshold quantile; semantic entropy | **drafted** (14 sl) |
 | `lec07tech.html` | Wk 7 (interpretability) | Shapley φ_i + axioms; LIME surrogate objective; gradient saliency; integrated gradients; SAE reconstruction+sparsity, superposition | **drafted** (20 sl) |
 | `lec08tech.html` | Wk 8 (adversarial) | perturbation set B_p(x,ε); FGSM; PGD projected iteration; adversarial-training min-max; randomized-smoothing certified radius | **drafted** (19 sl) |
@@ -367,3 +367,86 @@ Three Flavors retaxonomized (eidetic/extractable cite misattribution removed); p
 prompt restored to the paper's exact wording; Somepalli cite removed from the Carlini Fig 5
 histogram slide; concrete verified numbers added (604/1,800; 10,000+/$200/150×; ~1000×;
 GPT-J ≥1%; 94/175M; ~1.9%; $1.5B). Note file synced (58 entries, order matches).
+
+---
+
+## lec05-unlearning.html
+
+**Topic:** Machine unlearning (~90 min). Why deletion is demanded (GDPR/CCPA privacy,
+copyright, safety); retraining as the gold standard; exact vs approximate; the
+$(\varepsilon,\delta)$ yardstick at intuition level; SISA as a picture; influence
+functions and the Hessian wall; gradient ascent, its failure modes, and NPO;
+LLM unlearning (Harry Potter, TOFU, WMDP/RMU, MUSE); verification (MIA audit, IDI,
+relearning, quantization recovery); the position-paper debate and the 2025–26
+frontier. Intuition pass — the rigorous treatment lives in
+`courses/privacy/lectures/05-unlearning/` (authoritative for shared facts); the
+position-paper debate expands in `talks/icml2026/`.
+
+### Sections (66 slides, ~90 min — content-revised 2026-08 from 58, all citations source-verified)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:31`, `:43` | |
+| **01 — Why Delete?** | 3–11 | `:76` | user changes mind `:84` · GDPR Art. 17 `:97` · **Delete for Three Reasons (privacy / copyright / safety; added 2026-08)** `:110` · **data lives in the weights (SVG)** `:123` · why not ignore `:148` · retraining expensive `:161` · enter machine unlearning (Cao & Yang) `:174` · a decade of work `:186` |
+| **02 — What Unlearning Means** | 12–19 | `:200` | gold standard = retrain `:208` · **two-models diagram (SVG)** `:220` · exact `:246` · approximate `:259` · **DP yardstick (Guo/Sekhari cite fixed 2026-08)** `:272` · forget/retain split `:286` · two things to get right `:300` |
+| **03 — How to Unlearn** | 20–34 | `:313` | retraining baseline `:321` · train in pieces `:334` · **SISA (SVG)** `:347` · deleting in SISA `:381` · slices `:394` · tradeoff `:407` · edit the weights `:420` · influence functions `:433` · Hessian catch `:447` · gradient ascent `:460` · ascent wrecks `:474` · **A Gentler Push: NPO (real fig; added 2026-08)** `:487` · method landscape `:499` · Colab `:511` |
+| **04 — Unlearning in LLMs** | 35–46 | `:527` | what do we forget `:535` · no single row `:548` · Harry Potter (+1 GPU hour) `:561` · the result `:575` · **TOFU (200×20=4,000; numbers verified 2026-08)** `:588` · **TOFU in One Picture (real fig; added 2026-08)** `:601` · why fictitious `:612` · **WMDP (real fig + 3,668 MCQs; reworked 2026-08)** `:625` · RMU `:645` · **MUSE: Six Boxes to Tick (real fig; added 2026-08)** `:658` · unlearning vs filtering `:670` |
+| **05 — Did It Really Forget?** | 47–55 | `:685` | verification is hard `:693` · MIA audit `:706` · **the tell persists (SVG)** `:719` · **Look Inside: IDI (real fig, Yonsei; added 2026-08)** `:739` · relearning attacks `:751` · **Relearning, Measured (real fig; added 2026-08)** `:764` · **Quantize, and It Comes Back (21%→83%; added 2026-08)** `:776` · dormant, not deleted `:790` |
+| **06 — Frontier 2025–26** | 56–64 | `:799` | **"overused" critique (+Yoon/Jun/No cite added 2026-08)** `:807` · **Does It Do What You Think? (position papers; added 2026-08)** `:821` · what guarantee holds `:834` · **robust unlearning (+Łucki 10-example fact)** `:847` · evaluation standards (TOFU/WMDP/MUSE) `:861` · unlearning meets privacy `:874` · open problems `:888` · where to go deeper `:902` |
+| Takeaways / Closer | 65–66 | — | `:913`, `:926` |
+
+**Key definitions / citations (all source-verified 2026-08):**
+- First "machine unlearning" — `:174` — Cao and Yang, IEEE S&P 2015.
+- Exact deletion definition — `:186` — Ginart, Guan, Valiant, and Zou, NeurIPS 2019
+  (arXiv 1907.05012). **No longer cited for the $(\varepsilon,\delta)$ definition** —
+  that was a misattribution, fixed 2026-08 on `:272` and in `lec05tech.html`.
+- $(\varepsilon,\delta)$-unlearning — `:272` — Guo, Goldstein, Hannun, and van der Maaten,
+  "Certified Data Removal from Machine Learning Models", ICML 2020 (arXiv 1911.03030);
+  Sekhari et al., NeurIPS 2021. Matches privacy deck Def 3.
+- SISA — `:347` — Bourtoule et al., "Machine Unlearning", IEEE S&P 2021. Speedup:
+  sharding cuts expected cost by the shard count; slicing saves at most another 3/2
+  (matches privacy deck Prop 3; tech deck's "R·L" claim fixed 2026-08).
+- Influence functions — `:433` — Koh and Liang, ICML 2017.
+- Gradient ascent / unrolling — `:460` — Thudi et al., "Unrolling SGD", IEEE EuroS&P 2022.
+- NPO — `:487` — Zhang, Lin, Bai, and Mei, "Negative Preference Optimization", COLM 2024.
+- Who's Harry Potter (~1 GPU hour, Llama-2-7b) — `:561` — Eldan and Russinovich, 2023
+  (arXiv 2310.02238).
+- TOFU (200 authors × 20 QA = 4,000) — `:588` — Maini, Feng, Schwarzschild, Lipton,
+  and Kolter, COLM 2024 (arXiv 2401.06121).
+- WMDP (3,668 MCQs) + RMU — `:625`, `:645` — Li et al., ICML 2024 (arXiv 2403.03218).
+- MUSE (six criteria) — `:658` — Shi, Wang, Li, et al., ICLR 2025 (arXiv 2407.06460).
+- IDI (instructor co-author) — `:739` — Jeon, Jeung, Kim, No, and Choi (Yonsei),
+  "An Information Theoretic Evaluation Metric For Strong Unlearning", AAAI 2026
+  (arXiv 2405.17878).
+- Benign relearning — `:764` — Hu, Fu, Wu, and Smith, "Unlearning or Obfuscating?",
+  ICLR 2025 (arXiv 2406.13356).
+- Quantization recovery (21%→83% after 4-bit) — `:776` — Zhang et al., "Catastrophic
+  Failure of LLM Unlearning via Quantization", ICLR 2025 (arXiv 2410.16454).
+- Adversarial perspective (10 unrelated examples undo RMU) — `:847` — Łucki et al.,
+  TMLR 2025 (arXiv 2409.18025).
+- Position papers — `:807`, `:821` — Cooper et al., "Machine Unlearning Doesn't Do What
+  You Think", NeurIPS 2025; Yoon, Jun, and No (Yonsei), "Position: 'Machine Unlearning'
+  Is Overused in LLMs", ICML 2026 (matches `courses/privacy/lectures/05-unlearning/`
+  and `talks/icml2026/`).
+
+**Real images** (`figs/`, cropped + cited, all copied from
+`courses/privacy/lectures/05-unlearning/figs/`): NPO vs GA collapse curves
+`figs/npo-ga-collapse.png` (Zhang COLM 2024 Fig 2) `:487`; TOFU pipeline
+`figs/tofu.png` (Maini COLM 2024 Fig 1) `:601`; WMDP overview `figs/WMDP.png`
+(Li ICML 2024 Fig 1) `:625`; MUSE six-way evaluation `figs/MUSE.png` (Shi ICLR 2025
+Fig 1) `:658`; IDI conceptual layer plot `figs/idi-conceptual.png` (Jeon AAAI 2026
+Fig 4(a)) `:739`; benign-relearning pipeline `figs/benign-relearn-pipeline.png`
+(Hu ICLR 2025 Fig 2 left) `:764`. **SVG figures:** data-in-weights `:123`,
+two-models-compared `:220`, SISA shard diagram `:347`, member/non-member bells `:719`.
+Citations use `.cite-left`. Page number: bold `.slide-num` only.
+
+**2026-08 content revision (58→66):** every citation/number fetched and verified.
+Added 8 slides: Delete for Three Reasons (§01), A Gentler Push: NPO (§03), TOFU in
+One Picture + MUSE: Six Boxes to Tick (§04), Look Inside: IDI + Relearning, Measured +
+Quantize, and It Comes Back (§05), Does It Do What You Think? (§06). Fixed:
+$(\varepsilon,\delta)$-unlearning misattributed to Ginart 2019 → Guo ICML 2020 +
+Sekhari 2021 (main `:272` and `lec05tech.html` slide 4, which also gained the
+two-sided-bound clause); `lec05tech.html` SISA speedup "R·L" → shard-count + 3/2
+(fix-errors-only pass, deck stays 11 sl). WMDP slide reworked around the real figure;
+concrete verified numbers added (4,000 QA; 3,668 MCQs; 21%→83%; 10 examples;
+~1 GPU hour). Note file synced (66 entries, order matches).

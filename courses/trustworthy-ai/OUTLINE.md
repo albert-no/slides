@@ -39,7 +39,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 11 | `lec11-prompt-injection.html` | Prompt injection & agentic safety | **revised 2026-08** (63 sl) |
 | 12 | `lec12-watermark.html` | Watermarking, deepfakes & provenance | **revised 2026-08** (64 sl) |
 | 13 | `lec13-fairness-defs.html` | Fairness I — definitions & impossibility | **revised 2026-08** (58 sl) |
-| 14 | `lec14-fairness-mitigation.html` | Fairness II — mitigation & accountability | **drafted** (55 sl) |
+| 14 | `lec14-fairness-mitigation.html` | Fairness II — mitigation & accountability | **revised 2026-08** (61 sl) |
 | 15 | `lec15-governance.html` | Governance, frontier & demo showcase | **drafted** (53 sl) |
 
 Every deck has a companion **speaker script** `lecNN-…-note.html` (one entry per slide:
@@ -69,7 +69,7 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `lec11tech.html` | Wk 11 (prompt injection) | data-vs-control plane; confused deputy; agent threat model; capabilities/least privilege; taint tracking; dual-LLM pattern (security model, not equations) | **checked 2026-08** (9 sl: security model verified — dual-LLM matches Willison 2023, CaMeL cite correct; two prose-dash lint warnings fixed) |
 | `lec12tech.html` | Wk 12 (watermark) | green-list logit bias; null Binomial(T,γ); detection z = (|s|_G−γT)/√(Tγ(1−γ)); false-positive bound; z ∝ √T; robustness–quality tradeoff | **checked 2026-08** (10 sl: FP rate at τ=4 fixed "&lt;" → "≈ 3×10⁻⁵" per KGW; no Thm 4.3 stated — consistent with the corrected math in `courses/privacy/lectures/06-watermark/`) |
 | `lec13tech.html` | Wk 13 (fairness defs) | demographic parity / equalized odds / calibration as conditional-prob defs; base rates; impossibility theorem (Chouldechova/Kleinberg) + proof sketch | **fixed 2026-08** (15 sl: base-rate identity was inverted (1−p)/p → p/(1−p) per Chouldechova eq 2.6; proof-sketch step 1 corrected (calibration ≠ "PPV = base rate" → predictive parity demands equal PPV across groups); unverifiable numeric-wedge table replaced with an exactly derivable two-value-score construction; impossibility attribution now dual Chouldechova + Kleinberg) |
-| `lec14tech.html` | Wk 14 (fairness mitigation) | reweighing w(g,y); penalized min Loss+λ·Unfairness; constrained form; reductions (Agarwal 2018); post-processing per-group thresholds (Hardt 2016) | **drafted** (17 sl) |
+| `lec14tech.html` | Wk 14 (fairness mitigation) | reweighing w(g,y); penalized min Loss+λ·Unfairness; constrained form; reductions (Agarwal 2018); post-processing per-group thresholds (Hardt 2016) | **checked 2026-08** (17 sl: reweighing formula verified against Kamiran & Calders; reductions + Hardt ROC intuition verified against papers; one fix — cite venue "KIS 2012" → "Knowledge and Information Systems 2012") |
 | `lec15tech.html` | Wk 15 (governance) | EU AI Act risk-tier taxonomy; NIST RMF as Govern→Map→Measure→Manage loop; what "measurable" audit metrics mean (deliberately light — governance is non-mathematical) | **drafted** (6 sl) |
 
 ## Backup / swap-in materials (not in the 15-week core)
@@ -1063,3 +1063,80 @@ bullets matched to the actual figure panels (software engineer / housekeeper, no
 CEO/nurse); Amazon claim tightened to Reuters-verified wording; frontier slide
 rewritten around verified content. `lec13tech.html` fixed (see supplement table).
 Note file synced (58 entries, order matches).
+
+## lec14-fairness-mitigation.html
+
+**Topic:** Fairness II — mitigation & accountability (~90 min). Picks up where lec13's
+definitions end: three places to intervene in the pipeline (pre-/in-/post-processing),
+one intuition + picture per method with formal math in `lec14tech.html` (reweighing
+w(g,y), penalized/constrained objectives, reductions, per-group ROC thresholds);
+the fairness–accuracy tradeoff and the impossibility recap (defined and proved in
+lec13 — referenced, not redone); accountability (model cards, datasheets, audits —
+Gender Shades figure + Actionable Auditing follow-up — impact assessments, EU AI Act
+touchpoint only, governance is lec15); generative & LLM fairness (Bianchi figure
+shared with lec13, Gemini overcorrection referenced briefly — the full case is
+lec13's — plus LLM decision bias, prompt steering, post-training as mitigation,
+resume-screening risk, and the 2025 both-ways regulatory squeeze).
+
+### Sections (61 slides, ~90 min — content-revised 2026-08 from 55, all citations source-verified)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:32`, `:44` | |
+| **01 — Three Places to Intervene** | 3–8 | `:81` | we measured bias; now fix it `:89` · what mitigation means `:102` · ML pipeline (SVG) `:113` · which stage can you touch `:145` · black-box reality `:157` |
+| **02 — Pre-Processing** | 9–15 | `:171` | bias is in the data `:179` · **Reweighing (Kamiran & Calders)** `:192` · reweighing picture (SVG) `:206` · relabeling `:234` · representation repair `:247` · pros and cons `:260` |
+| **03 — In-Processing** | 16–23 | `:273` | Loss+λ·penalty `:281` · constraint τ `:290` · **Reductions (Agarwal et al. ICML 2018)** `:303` · why reductions are handy `:316` · **Adversarial Debiasing (Zhang et al. AIES 2018; adversary reads the prediction — fixed 2026-08)** `:329` · adversary's job `:354` · pros and cons `:367` |
+| **04 — Post-Processing** | 24–34 | `:380` | leave the model alone `:388` · recall equalized odds `:401` · **Group-Specific Thresholds (Hardt et al., SVG)** `:413` · post-hoc recipe `:436` · **What Post-Processing Needs (added 2026-08)** `:450` · accuracy cost `:463` · lending demo ×3 (illustrative numbers) `:476` `:487` `:509` · **Toolkits Ship These Methods (Fairlearn + AIF360; added 2026-08)** `:522` |
+| **05 — The Tradeoff** | 35–40 | `:536` | frontier curve (SVG) `:544` · which fairness `:565` · impossibility (recap of lec13) `:578` · no free lunch `:586` · a choice, not a formula `:599` |
+| **06 — Accountability** | 41–50 | `:613` | mitigation needs a record `:621` · **Model Cards (Mitchell et al.)** `:634` · **Datasheets (Gebru et al.)** `:647` · audits `:660` · **Gender Shades figure (`figs/gender-shades.png`, FAT* 2018 Table 4)** `:673` · reading the table (0–0.8% vs 20.8–34.7%) `:684` · **The Audit Worked (Raji & Buolamwini AIES 2019, before/after bar SVG; added 2026-08)** `:697` · impact assessments `:736` · documentation becomes law (EU AI Act touchpoint) `:749` |
+| **07 — Generative & LLM Fairness** | 51–59 | `:763` | **Bianchi figure (`figs/bianchi-occupations.png`, shared with lec13)** `:771` · debias a generator `:789` · **Overcorrection Is Its Own Bias (Gemini Feb 2024, merged from 2 slides; case detail lives in lec13)** `:802` · **Do LLMs Discriminate? (Tamkin et al.; added 2026-08)** `:816` · **Prompting the Bias Away (added 2026-08)** `:831` · **Post-Training as Mitigation (Eloundou et al. ICLR 2025; added 2026-08)** `:846` · **Screening Is Still Risky (Wilson & Caliskan AIES 2024; added 2026-08)** `:861` · **Regulation Pulls Both Ways (EO 14319; added 2026-08)** `:875` |
+| Wrap-up / Closer | 60–61 | — | key takeaways `:889` · closer ("λ") `:903` |
+
+**Key citations (all source-verified 2026-08):**
+- Reweighing — `:202` — Kamiran & Calders, "Data Preprocessing Techniques for
+  Classification without Discrimination", Knowledge and Information Systems 2012
+  (w = Pexp/Pobs verified against the paper).
+- Reductions — `:312` — Agarwal, Beygelzimer, Dudík, Langford, Wallach, "A Reductions
+  Approach to Fair Classification", ICML 2018.
+- Adversarial debiasing — `:350` — Zhang, Lemoine, Mitchell, "Mitigating Unwanted
+  Biases with Adversarial Learning", AIES 2018 (adversary predicts the group from the
+  predictor's *output*, not shared features — deck fixed accordingly).
+- Post-processing — `:409`, `:446` — Hardt, Price, Srebro, "Equality of Opportunity in
+  Supervised Learning", NeurIPS 2016.
+- Toolkits — `:531` — Fairlearn (fairlearn.org, community-driven); AI Fairness 360
+  (IBM → LF AI & Data, July 2020).
+- Model cards — `:643` — Mitchell et al. (9 authors incl. Raji, Gebru), FAT* 2019.
+- Datasheets — `:656` — Gebru et al., CACM Dec 2021.
+- Gender Shades — `:680` — Buolamwini & Gebru, FAT* 2018 Table 4 (DF error
+  20.8/34.5/34.7%; LM 0.0/0.8/0.3%); follow-up `:732` — Raji & Buolamwini, "Actionable
+  Auditing", AIES 2019 (7 months, DF error 20.8→1.5 MSFT, 34.5→4.1 Face++, 34.7→17.0
+  IBM; unaudited Amazon 31.4%, Kairos 22.5%).
+- Generative/LLM — `:785` Bianchi et al., FAccT 2023 Fig 1; `:812` Google blog Feb 2024
+  (Gemini); `:827`/`:842` Tamkin et al. (Anthropic), 2023 (70 decisions; steering
+  prompts → gap near zero, ~92% aligned); `:857` Eloundou et al. (OpenAI),
+  "First-Person Fairness in Chatbots", ICLR 2025 (<0.1% harmful stereotypes; ~3–12×
+  reduction from post-training); `:871` Wilson & Caliskan, AIES 2024 (85.1% vs 11.1%);
+  `:884` Executive Order 14319, July 2025.
+
+**Figures:** `figs/gender-shades.png` (FAT* 2018 Table 4, verified against paper) `:678`;
+`figs/bianchi-occupations.png` (FAccT 2023 Fig 1, shared with lec13) `:775`; inline
+SVGs: pipeline `:118`, reweighing cells `:211`, adversarial architecture `:334`,
+thresholds `:418`, demo tradeoff `:492`, frontier curve `:549`, audit before/after
+bars `:702`. Citations use `.cite-left`.
+
+**2026-08 content revision (55→61):** every citation/number fetched and verified.
+Added 8 slides: What Post-Processing Needs (§04); Toolkits Ship These Methods (§04);
+The Audit Worked (§06); Do LLMs Discriminate?, Prompting the Bias Away, Post-Training
+as Mitigation, Screening Is Still Risky, Regulation Pulls Both Ways (§07). Removed 2:
+overcorrection pair merged into one slide (case detail is lec13's); vague unverifiable
+"Frontier 2025-26" slide deleted. Fixes: **adversarial debiasing misdescription**
+(adversary "recovers the group from the features" → from the model's *prediction*,
+per Zhang et al.; SVG and follow-up slide reworked, wrong "same as representation
+repair" claim removed); **reweighing cite venue** "KIS 2012" → full journal name;
+**Gender Shades reading slide** ("over a third" wrong for Microsoft at 20.8% →
+verified ranges 0–0.8% vs 20.8–34.7%); **Bianchi slide** bullets matched to the actual
+figure panels (software engineer / housekeeper) + full verified title, consistent with
+lec13; §07 divider retitled Generative & LLM Fairness; Key Takeaways gained an LLM
+line. Lending-demo numbers (72%/50%, 84%→80%, 22→2) are labeled illustrative.
+`lec14tech.html` checked (see supplement table). Note file synced (61 entries, order
+matches).

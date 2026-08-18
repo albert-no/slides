@@ -38,7 +38,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 10 | `lec10-jailbreak.html` | Jailbreaks & LLM safety | **revised 2026-08** (57 sl) |
 | 11 | `lec11-prompt-injection.html` | Prompt injection & agentic safety | **revised 2026-08** (63 sl) |
 | 12 | `lec12-watermark.html` | Watermarking, deepfakes & provenance | **revised 2026-08** (64 sl) |
-| 13 | `lec13-fairness-defs.html` | Fairness I — definitions & impossibility | **drafted** (54 sl) |
+| 13 | `lec13-fairness-defs.html` | Fairness I — definitions & impossibility | **revised 2026-08** (58 sl) |
 | 14 | `lec14-fairness-mitigation.html` | Fairness II — mitigation & accountability | **drafted** (55 sl) |
 | 15 | `lec15-governance.html` | Governance, frontier & demo showcase | **drafted** (53 sl) |
 
@@ -68,7 +68,7 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `lec10tech.html` | Wk 10 (jailbreak) | RLHF KL-penalized objective; GCG target `min -log Pr["Sure, here"]`; gradient-guided token swaps | **checked 2026-08** (12 sl: RLHF KL objective + GCG target verified correct, no changes) |
 | `lec11tech.html` | Wk 11 (prompt injection) | data-vs-control plane; confused deputy; agent threat model; capabilities/least privilege; taint tracking; dual-LLM pattern (security model, not equations) | **checked 2026-08** (9 sl: security model verified — dual-LLM matches Willison 2023, CaMeL cite correct; two prose-dash lint warnings fixed) |
 | `lec12tech.html` | Wk 12 (watermark) | green-list logit bias; null Binomial(T,γ); detection z = (|s|_G−γT)/√(Tγ(1−γ)); false-positive bound; z ∝ √T; robustness–quality tradeoff | **checked 2026-08** (10 sl: FP rate at τ=4 fixed "&lt;" → "≈ 3×10⁻⁵" per KGW; no Thm 4.3 stated — consistent with the corrected math in `courses/privacy/lectures/06-watermark/`) |
-| `lec13tech.html` | Wk 13 (fairness defs) | demographic parity / equalized odds / calibration as conditional-prob defs; base rates; impossibility theorem (Kleinberg/Chouldechova) + proof sketch | **drafted** (15 sl) |
+| `lec13tech.html` | Wk 13 (fairness defs) | demographic parity / equalized odds / calibration as conditional-prob defs; base rates; impossibility theorem (Chouldechova/Kleinberg) + proof sketch | **fixed 2026-08** (15 sl: base-rate identity was inverted (1−p)/p → p/(1−p) per Chouldechova eq 2.6; proof-sketch step 1 corrected (calibration ≠ "PPV = base rate" → predictive parity demands equal PPV across groups); unverifiable numeric-wedge table replaced with an exactly derivable two-value-score construction; impossibility attribution now dual Chouldechova + Kleinberg) |
 | `lec14tech.html` | Wk 14 (fairness mitigation) | reweighing w(g,y); penalized min Loss+λ·Unfairness; constrained form; reductions (Agarwal 2018); post-processing per-group thresholds (Hardt 2016) | **drafted** (17 sl) |
 | `lec15tech.html` | Wk 15 (governance) | EU AI Act risk-tier taxonomy; NIST RMF as Govern→Map→Measure→Manage loop; what "measurable" audit metrics mean (deliberately light — governance is non-mathematical) | **drafted** (6 sl) |
 
@@ -993,3 +993,73 @@ ICLR 2024 dilution counterpoint added; Aaronson cite matched to the privacy deck
 verified form; "~800 words" → "~800 tokens". `lec12tech.html` checked: FP rate at
 τ=4 corrected "&lt;" → "≈ 3×10⁻⁵" (1−Φ(4)≈3.2×10⁻⁵, and KGW state ≈3×10⁻⁵); states
 no Thm 4.3 (stays 10 sl). Note file synced (58 entries, order matches).
+
+## lec13-fairness-defs.html
+
+**Topic:** Fairness I — definitions & impossibility (~90 min). Where bias enters the
+pipeline (data, labels — Amazon recruiting + Obermeyer cost-proxy case — feedback
+loops, proxy features); three group-fairness definitions at plain-English level
+(demographic parity, equalized odds / equal opportunity, calibration — one glanceable
+conditional-probability line each; the formal stack + impossibility proof sketch live
+in `lec13tech.html`); COMPAS as the anchor case (ProPublica FPR gap vs Northpointe's
+predictive-parity/calibration defense — both "right" under different definitions,
+which IS the impossibility story); the impossibility theorem (Chouldechova 2017 +
+Kleinberg et al. ITCS 2017) as base-rate intuition, no proof in the main deck;
+individual (Dwork) and counterfactual (Kusner) fairness one slide each; fairness in
+generative models (Bianchi occupation grid, Gemini overcorrection, Gender Shades,
+BBQ, NYC Local Law 144 + Colorado AI Act). Gender Shades *figure* stays in lec14
+(this deck cites the numbers only, no figure duplication).
+
+### Sections (58 slides, ~90 min — content-revised 2026-08 from 54, all citations source-verified)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:27`, `:39` | |
+| **01 — Sources of Bias** | 3–13 | `:72` | model mirrors its world `:80` · bias is not a bug `:92` · three entry points `:101` · biased data `:112` · **Biased Labels: Amazon hiring (Reuters 2018)** `:125` · label is the problem `:138` · **Case: Cost as a Proxy for Need (Obermeyer, 17.7%→46.5% bar SVG; added 2026-08)** `:150` · feedback loops (SVG) `:175` · why "just drop race" fails `:201` · notation A/Y/Ŷ `:213` |
+| **02 — Group Fairness Criteria** | 14–22 | `:226` | confusion matrix per group (SVG) `:234` · demographic parity `:259` · parity ignores the truth `:269` · equalized odds `:281` · equal opportunity variant `:294` · calibration `:307` · calibration trusts the score `:317` · three criteria side by side `:329` |
+| **03 — The COMPAS Case** | 23–29 | `:343` | what COMPAS is `:351` · ProPublica investigation `:364` · **False Positives, By Group (44.9% vs 23.5% bar SVG + 47.7%/28.0% FNR mirror)** `:374` · **Northpointe Responds (predictive parity)** `:397` · both sides were right `:410` · could COMPAS be both? `:422` |
+| **04 — The Impossibility Theorem** | 30–39 | `:432` | base rates `:440` · **The Impossibility Theorem (Chouldechova + Kleinberg, plain-English)** `:449` · two proofs, same wall `:461` · pick-two-of-three triangle (SVG) `:473` · demo setup `:493` · **Demo: The Numbers Don't Reconcile (derivable Ŝ∈{0.2,0.8} construction, FPR 0.20/0.02, FNR 0.20/0.73)** `:508` · why the gap is forced `:523` · which one to pick `:536` · choosing by context `:545` |
+| **05 — Individual & Causal Fairness** | 40–46 | `:557` | group fairness can hide harm `:565` · individual fairness (Dwork) `:577` · the "similar" metric problem `:589` · **A Causal View (counterfactual fairness, Kusner)** `:602` · fair and unfair paths (causal-graph SVG) `:612` · causal fairness needs a model `:637` |
+| **06 — Fairness in Generative Models** | 47–56 | `:650` | new surface, old problem `:658` · **Text-to-Image Stereotyping (Bianchi Fig 1, `figs/bianchi-occupations.png`)** `:671` · **When the Fix Overcorrects (Gemini pause Feb 2024; added 2026-08)** `:692` · **Gender Shades (34.7% vs 0.8%)** `:706` · auditing is the tool `:716` · **Auditing LLMs: The BBQ Benchmark (added 2026-08)** `:729` · **The Law Notices (NYC LL144 + Colorado AI Act; added 2026-08)** `:743` · frontier 2025–26 `:760` |
+| Wrap-up / Closer | 56–58 | — | open tension `:773` · key takeaways `:786` · closer ("Pick two.") `:799` |
+
+**Key citations (all source-verified 2026-08):**
+- ProPublica — `:370` — Angwin, Larson, Mattu, Kirchner, "Machine Bias", ProPublica 2016;
+  methodology + exact rates (FPR 44.85%/23.45%, FNR 27.99%/47.72%) — `:393` — Larson et
+  al., "How We Analyzed the COMPAS Recidivism Algorithm", ProPublica 2016.
+- Northpointe rebuttal — `:406` — Dieterich, Mendoza, Brennan, "COMPAS Risk Scales:
+  Demonstrating Accuracy Equity and Predictive Parity", Northpointe, July 2016.
+- Impossibility — `:457`, `:469` — Chouldechova, "Fair Prediction with Disparate
+  Impact", Big Data 2017 (also `:313` calibration def); Kleinberg, Mullainathan,
+  Raghavan, "Inherent Trade-Offs in the Fair Determination of Risk Scores", ITCS 2017.
+- Group-fairness definitions — `:265`/`:585` Dwork, Hardt, Pitassi, Reingold, Zemel,
+  "Fairness Through Awareness", ITCS 2012; `:290` Hardt, Price, Srebro, "Equality of
+  Opportunity in Supervised Learning", NeurIPS 2016.
+- Counterfactual fairness — `:608` — Kusner, Loftus, Russell, Silva, NeurIPS 2017.
+- Label bias cases — `:134` Dastin, Reuters, Oct 2018 (Amazon tool penalized "women's");
+  `:171` Obermeyer, Powers, Vogeli, Mullainathan, Science 2019 (17.7%→46.5%).
+- Generative — `:688` Bianchi et al., "Easily Accessible Text-to-Image Generation
+  Amplifies Demographic Stereotypes at Large Scale", FAccT 2023 Fig 1; `:702` Google
+  blog, Feb 2024 (Gemini pause); `:712` Buolamwini & Gebru, FAT* 2018 (34.7%/0.8%);
+  `:739` Parrish et al., "BBQ: A Hand-Built Bias Benchmark for Question Answering",
+  Findings of ACL 2022 (nine dimensions; +3.4pp stereotype-aligned accuracy).
+
+**Figures:** `figs/bianchi-occupations.png` (FAccT 2023 Fig 1, shared with lec14) `:673`;
+inline SVGs: Obermeyer bar chart `:155`, feedback loop `:180`, confusion matrix `:238`,
+COMPAS FPR bars `:379`, pick-two triangle `:477`, causal graph `:617`. Citations use
+`.cite-left`.
+
+**2026-08 content revision (54→58):** every citation/number fetched and verified.
+Added 4 slides: Case: Cost as a Proxy for Need (§01, Obermeyer); When the Fix
+Overcorrects (§06, Gemini Feb 2024); Auditing LLMs: The BBQ Benchmark (§06); The Law
+Notices (§06, NYC LL144 + Colorado AI Act incl. 2026 court suspension). Fixes:
+**impossibility misattribution** (FPR/FNR form was credited to Kleinberg alone → dual
+Chouldechova + Kleinberg, with each paper's actual form distinguished); **unverifiable
+demo numbers replaced** (FPR "0.42/0.20" → exactly derivable calibrated two-value-score
+construction); **COMPAS SVG numbers upgraded** from illustrative 45%/23% to verified
+44.9%/23.5% + FNR mirror line + methodology cite; **Gender Shades corrected** (vague
+"34-point gap", "FAccT 2018" → 34.7%/0.8%, FAT* 2018); **Bianchi title completed** +
+bullets matched to the actual figure panels (software engineer / housekeeper, not
+CEO/nurse); Amazon claim tightened to Reuters-verified wording; frontier slide
+rewritten around verified content. `lec13tech.html` fixed (see supplement table).
+Note file synced (58 entries, order matches).

@@ -33,7 +33,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 5 | `lec05-unlearning.html` | Machine unlearning | **revised 2026-08** (66 sl) |
 | 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **revised 2026-08** (61 sl) |
 | 7 | `lec07-interpretability.html` | Interpretability & explainability | **revised 2026-08** (64 sl) |
-| 8 | `lec08-adversarial.html` | Adversarial examples (attack + defense) | **drafted** (56 sl) |
+| 8 | `lec08-adversarial.html` | Adversarial examples (attack + defense) | **revised 2026-08** (63 sl) |
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **drafted** (55 sl) |
 | 10 | `lec10-jailbreak.html` | Jailbreaks & LLM safety | **drafted** (54 sl) |
 | 11 | `lec11-prompt-injection.html` | Prompt injection & agentic safety | **drafted** (58 sl) |
@@ -63,7 +63,7 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `lec05tech.html` | Wk 5 (unlearning) | exact vs approx; (ε,δ) unlearning inequality; influence function θ₋ₓ ≈ θ̂ + (1/n)H⁻¹∇ℓ + Hessian infeasibility; gradient ascent; SISA cost | **fixed 2026-08** (11 sl: (ε,δ) cite Ginart→Guo/Sekhari + two-sided bound; SISA speedup R·L→R & 3/2) |
 | `lec06tech.html` | Wk 6 (hallucination) | reliability diagram; ECE = Σ_b (n_b/n)|acc_b−conf_b|; temperature scaling; conformal coverage Pr[y∈C(x)]≥1−α + threshold quantile; semantic entropy | **checked 2026-08** (14 sl: math verified, Angelopoulos & Bates cite title completed) |
 | `lec07tech.html` | Wk 7 (interpretability) | Shapley φ_i + axioms; LIME surrogate objective; gradient saliency; integrated gradients; SAE reconstruction+sparsity, superposition | **checked 2026-08** (20 sl: math verified, no changes needed) |
-| `lec08tech.html` | Wk 8 (adversarial) | perturbation set B_p(x,ε); FGSM; PGD projected iteration; adversarial-training min-max; randomized-smoothing certified radius | **drafted** (19 sl) |
+| `lec08tech.html` | Wk 8 (adversarial) | perturbation set B_p(x,ε); FGSM; PGD projected iteration; adversarial-training min-max; randomized-smoothing certified radius | **checked 2026-08** (19 sl: math verified incl. Cohen Thm 1 radius, no changes needed) |
 | `lec09tech.html` | Wk 9 (poisoning) | poison fraction α; clean-label feature-collision objective; backdoor blended objective; spectral signatures; activation clustering | **drafted** (16 sl) |
 | `lec10tech.html` | Wk 10 (jailbreak) | RLHF KL-penalized objective; GCG target `min -log Pr["Sure, here"]`; gradient-guided token swaps | **drafted** (12 sl) |
 | `lec11tech.html` | Wk 11 (prompt injection) | data-vs-control plane; confused deputy; agent threat model; capabilities/least privilege; taint tracking; dual-LLM pattern (security model, not equations) | **drafted** (9 sl) |
@@ -593,3 +593,80 @@ feature example replaced by verified "scam emails" (Templeton 2024); Steering fo
 Safety hedged ("could", "still early days") and cited; missing Olsson and Elhage
 (superposition) cites added. `lec07tech.html` audited: all math correct, no changes
 (stays 20 sl). Note file synced (64 entries, order matches).
+
+## lec08-adversarial.html
+
+**Topic:** Adversarial examples — attack and defense (~90 min). Panda→gibbon
+phenomenon and why it exists (linearity, features-not-bugs, intuition only); threat
+model (budget ε, L∞/L2, white/black box, transferability + Papernot commercial-API
+numbers); attacks as pictures (FGSM one step, PGD iterate, C&W, targeted vs
+untargeted); defenses (adversarial training, robustness–accuracy tradeoff, certified
+robustness / randomized smoothing at voting-intuition level); the arms race
+(obfuscated gradients, Athalye 9/7/6+1, adaptive attacks, RobustBench scoreboard);
+physical & beyond (stop sign, glasses, patches, audio, multimodal jailbreak images,
+distribution shift / ImageNet-C touchpoint, NIST AI 100-2 frontier). Math lives in
+`lec08tech.html`.
+
+### Sections (63 slides, ~90 min — content-revised 2026-08 from 56, all citations source-verified)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:32`, `:44` | |
+| **01 — The Phenomenon** | 3–13 | `:77` | **panda→gibbon (99.3%, verified Fig 1) ** `:98` · anatomy (57.7%→99.3%, fixed 2026-08) `:110` · Intriguing Properties `:123` · boundary picture (SVG) `:156` · close to the edge `:178` · **Why? Too Linear Inside (added 2026-08)** `:190` · **Why? Features, Not Bugs (added 2026-08)** `:204` |
+| **02 — The Threat Model** | 14–21 | `:219` | budget ‖δ‖≤ε `:240` · L∞ vs L2 `:253` · allowed region (SVG) `:267` · white vs black box `:286` · transferability `:299` · **Why Transfer Is Scary (Amazon 96% / Google 89%, ~800 queries; verified 2026-08)** `:312` |
+| **03 — The Attacks** | 22–32 | `:326` | core idea `:334` · gradient sign `:343` · FGSM `:356` · FGSM by hand `:370` · PGD `:395` · steps in ball (SVG) `:409` · PGD benchmark `:432` · C&W `:445` · targeted vs untargeted `:457` |
+| **04 — The Defenses** | 33–44 | `:471` | defender's goal `:479` · radius (SVG) `:491` · adversarial training `:511` · it works `:526` · the cost `:538` · **Robustness vs Accuracy (Tsipras; added 2026-08)** `:551` · empirical vs certified `:565` · certified robustness `:578` · randomized smoothing `:590` · why voting certifies `:603` · certified catch `:615` |
+| **05 — The Arms Race** | 45–51 | `:629` | recurring story `:637` · obfuscated gradients `:650` · **A False Sense of Security (fixed 2026-08: 9 defenses, 7 obfuscated, 6 broken + 1 partial)** `:662` · adaptive attacks `:674` · how to test honestly `:687` · **The Scoreboard: RobustBench (added 2026-08)** `:700` |
+| **06 — Physical & Beyond** | 52–61 | `:715` | off the screen `:723` · **stop sign (Speed Limit 45; 100% lab / 84.8% drive-by; verified 2026-08)** `:735` · **Adversarial Glasses (added 2026-08)** `:755` · adversarial patches (+Thys cite) `:769` · beyond vision (C&W audio 99.9%) `:783` · **Attacking Multimodal Models (Qi AAAI 2024; rewritten 2026-08)** `:796` · **Related: The World Also Shifts (added 2026-08)** `:810` · **ImageNet-C (added 2026-08)** `:824` · **2025-26 Frontier (NIST AI 100-2; rewritten 2026-08)** `:838` |
+| Takeaways / Closer | 62–63 | — | key takeaways `:851` · closer `:864` |
+
+**Key definitions / citations (all source-verified 2026-08):**
+- Panda→gibbon (57.7% panda → 99.3% gibbon, ε=.007) + linearity explanation — `:106`,
+  `:201` — Goodfellow, Shlens, and Szegedy, "Explaining and Harnessing Adversarial
+  Examples", ICLR 2015 (Figure 1; "the primary cause ... is their linear nature").
+- Intriguing properties + transfer — `:131` — Szegedy et al., ICLR 2014.
+- Features-not-bugs — `:215` — Ilyas et al., NeurIPS 2019.
+- Black-box transfer to commercial APIs (Amazon 96%, Google 89%, ~800 queries) —
+  `:322` — Papernot, McDaniel, and Goodfellow, arXiv 2016.
+- PGD + adversarial training — `:404`, `:522` — Madry et al., ICLR 2018.
+- C&W attack — `:453` — Carlini and Wagner, IEEE S&P 2017.
+- Robustness–accuracy tradeoff — `:561` — Tsipras et al., "Robustness May Be at Odds
+  with Accuracy", ICLR 2019.
+- Randomized smoothing certificate — `:599` — Cohen, Rosenfeld, and Kolter, ICML 2019.
+- Obfuscated gradients (9 ICLR-2018 defenses examined, 7 obfuscated, 6 fully +
+  1 partially broken) — `:659`, `:662` — Athalye, Carlini, and Wagner, ICML 2018.
+- RobustBench (CIFAR-10 L∞ 8/255: standard 94.8/0.0, best 93.7/73.7, AutoAttack) —
+  `:711` — robustbench.github.io, accessed Aug 2026.
+- Stop-sign attack (target "Speed Limit 45"; 100% lab, 84.8% drive-by, LISA-CNN) —
+  `:751` — Eykholt et al., CVPR 2018 (Figure 1; abstract).
+- Adversarial glasses (dodge 80%+, impersonate 87.9%) — `:765` — Sharif, Bhagavatula,
+  Bauer, and Reiter, ACM CCS 2016.
+- Adversarial patch — `:780` — Brown et al., arXiv 2017; person-hiding held patch —
+  Thys, Van Ranst, and Goedemé, CVPR-W 2019.
+- Audio adversarial examples (99.9% similar waveform → any phrase, 100% vs
+  DeepSpeech) — `:793` — Carlini and Wagner, arXiv 2018 (venue unverified; cited
+  year-only).
+- Multimodal jailbreak image — `:806` — Qi et al., "Visual Adversarial Examples
+  Jailbreak Aligned Large Language Models", AAAI 2024.
+- ImageNet-C (15 corruptions × 5 severities = 75 sets) — `:834` — Hendrycks and
+  Dietterich, ICLR 2019.
+- NIST adversarial-ML taxonomy — `:848` — NIST AI 100-2 E2025, March 2025.
+
+**Figures:** panda + noise + gibbon capture (Goodfellow Fig 1,
+`figs/panda-gibbon.png`) `:103`; stop-sign photo pair (Eykholt Fig 1 capture,
+`figs/eykholt-stopsign.png`) `:748`; inline SVG: boundary crossing
+`:161`, L∞ box vs L2 ball `:272`, PGD steps in ball `:414`, robustness radius `:496`.
+Citations use `.cite-left`. Page number: bold `.slide-num` only.
+
+**2026-08 content revision (56→63):** every citation/number fetched and verified.
+Added 7 slides: Why? Too Linear Inside + Why? Features, Not Bugs (§01), Robustness vs
+Accuracy (§04), The Scoreboard: RobustBench (§05), Adversarial Glasses (§06),
+Related: The World Also Shifts + ImageNet-C (§06). Fixed: "broke seven defenses" →
+verified 9 examined / 7 obfuscated / 6 fully + 1 partially broken (Athalye); panda
+confidences rounded → exact 57.7% / 99.3%; stop-sign slide gained target class and
+verified success rates; transfer-is-scary gained verified Papernot numbers; patches
+"wearable" claim replaced by verified held-patch (Thys); 2025-26 Frontier rewritten
+around NIST AI 100-2 (unverified "certificates that finally scale" bullet deleted).
+Section 06 renamed Physical & Multimodal → Physical & Beyond. `lec08tech.html`
+audited: all math correct incl. Cohen certified radius, no changes (stays 19 sl).
+Note file synced (63 entries, order matches).

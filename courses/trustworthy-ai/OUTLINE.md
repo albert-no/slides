@@ -34,7 +34,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **revised 2026-08** (61 sl) |
 | 7 | `lec07-interpretability.html` | Interpretability & explainability | **revised 2026-08** (64 sl) |
 | 8 | `lec08-adversarial.html` | Adversarial examples (attack + defense) | **revised 2026-08** (63 sl) |
-| 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **drafted** (55 sl) |
+| 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **revised 2026-08** (61 sl) |
 | 10 | `lec10-jailbreak.html` | Jailbreaks & LLM safety | **drafted** (54 sl) |
 | 11 | `lec11-prompt-injection.html` | Prompt injection & agentic safety | **drafted** (58 sl) |
 | 12 | `lec12-watermark.html` | Watermarking, deepfakes & provenance | **drafted** (55 sl) |
@@ -64,7 +64,7 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `lec06tech.html` | Wk 6 (hallucination) | reliability diagram; ECE = Σ_b (n_b/n)|acc_b−conf_b|; temperature scaling; conformal coverage Pr[y∈C(x)]≥1−α + threshold quantile; semantic entropy | **checked 2026-08** (14 sl: math verified, Angelopoulos & Bates cite title completed) |
 | `lec07tech.html` | Wk 7 (interpretability) | Shapley φ_i + axioms; LIME surrogate objective; gradient saliency; integrated gradients; SAE reconstruction+sparsity, superposition | **checked 2026-08** (20 sl: math verified, no changes needed) |
 | `lec08tech.html` | Wk 8 (adversarial) | perturbation set B_p(x,ε); FGSM; PGD projected iteration; adversarial-training min-max; randomized-smoothing certified radius | **checked 2026-08** (19 sl: math verified incl. Cohen Thm 1 radius, no changes needed) |
-| `lec09tech.html` | Wk 9 (poisoning) | poison fraction α; clean-label feature-collision objective; backdoor blended objective; spectral signatures; activation clustering | **drafted** (16 sl) |
+| `lec09tech.html` | Wk 9 (poisoning) | poison fraction α; clean-label feature-collision objective; backdoor blended objective; spectral signatures; activation clustering | **checked 2026-08** (16 sl: math verified incl. Poison Frogs ℓ∞ form; blended-objective cite reworded, not verbatim BadNets) |
 | `lec10tech.html` | Wk 10 (jailbreak) | RLHF KL-penalized objective; GCG target `min -log Pr["Sure, here"]`; gradient-guided token swaps | **drafted** (12 sl) |
 | `lec11tech.html` | Wk 11 (prompt injection) | data-vs-control plane; confused deputy; agent threat model; capabilities/least privilege; taint tracking; dual-LLM pattern (security model, not equations) | **drafted** (9 sl) |
 | `lec12tech.html` | Wk 12 (watermark) | green-list logit bias; null Binomial(T,γ); detection z = (|s|_G−γT)/√(Tγ(1−γ)); false-positive bound; z ∝ √T; robustness–quality tradeoff | **drafted** (10 sl) |
@@ -670,3 +670,88 @@ around NIST AI 100-2 (unverified "certificates that finally scale" bullet delete
 Section 06 renamed Physical & Multimodal → Physical & Beyond. `lec08tech.html`
 audited: all math correct incl. Cohen certified radius, no changes (stays 19 sl).
 Note file synced (63 entries, order matches).
+
+## lec09-poisoning.html
+
+**Topic:** Data poisoning & backdoors (~90 min). Train-time vs inference-time
+attacks; web-scraped corpora as the attack surface (supply-chain frame);
+availability vs targeted taxonomy; clean-label poisoning at picture level (Poison
+Frogs, feature collision); BadNets trigger backdoors (real Gu Fig 7 capture, clean
+accuracy vs attack success); web-scale poisoning (Carlini split-view /
+frontrunning, $60 for 0.01%); artist tools (Glaze, Nightshade); LLM poisoning
+(instruction-tuning poisoning, near-constant poison count / 250-documents result,
+sleeper agents); defenses (data curation, spectral signatures, activation
+clustering, Neural Cleanse, fine-pruning); model-stealing one-slide touchpoint
+(full deck: `backup-model-stealing.html`). Math lives in `lec09tech.html`.
+
+### Sections (61 slides, ~90 min — content-revised 2026-08 from 55, all citations source-verified)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:32`, `:44` | |
+| **01 — The Train-Time Threat** | 3–9 | `:77` | two places to attack `:85` · pipeline cracks (SVG) `:123` · supply chain `:147` |
+| **02 — Data Poisoning** | 10–18 | `:174` | two goals `:182` · SVM poisoning (Biggio) `:207` · boundary tilt (SVG) `:220` · clean-label `:257` · **Poison Frogs (one poison image, transfer setting; verified 2026-08)** `:270` · feature collision (SVG) `:285` |
+| **03 — Backdoors and Triggers** | 19–27 | `:308` | backdoor idea `:316` · BadNets `:329` · **trigger pipeline (Gu Fig 7 capture, verified)** `:342` · clean accuracy stays high `:354` · two numbers `:367` · **stop sign (Post-it, >90% flip, 95% confidence; fixed 2026-08)** `:381` |
+| **04 — Web-Scale Poisoning** | 28–36 | `:422` | **Poisoning Is Practical ($60, 10 datasets; fixed 2026-08)** `:443` · split-view (SVG) `:456` · frontrunning `:482` · **tiny fraction (0.01% of LAION-400M ≈ $60; fixed 2026-08)** `:496` · **Glaze (added 2026-08)** `:519` · **Nightshade (added 2026-08)** `:533` |
+| **05 — Backdoors in Language Models** | 37–45 | `:548` | tuning is a new target `:556` · **Poisoned Instructions (Wan ICML 2023, ~100 examples; fixed 2026-08)** `:569` · text trigger `:583` · **How Much Poison Is Needed? (added 2026-08)** `:596` · **250 Documents Are Enough (SVG; added 2026-08)** `:610` · **Sleeper Agents (2023/2024 code trigger; fixed 2026-08)** `:632` · safety training misses it `:646` |
+| **06 — Defenses, Frontier 2025–26** | 46–58 | `:673` | two lines of defense `:681` · **Defending the Pipeline (hashes + randomized snapshots; added 2026-08)** `:693` · spectral signatures `:708` · outlier picture (SVG) `:721` · activation clustering `:741` · Neural Cleanse `:754` · fine-pruning `:767` · demo `:780` · **Related Threat: Model Stealing (added 2026-08)** `:821` · **Frontier 2025–26 (rewritten 2026-08)** `:835` |
+| Takeaways / Closer | 59–61 | — | what to remember `:848` · key takeaway `:862` · closer `:870` |
+
+**Key definitions / citations (all source-verified 2026-08):**
+- SVM poisoning (first formal study) — `:216` — Biggio, Nelson, and Laskov,
+  "Poisoning Attacks against Support Vector Machines", ICML 2012.
+- Poison Frogs clean-label attack (one poison image suffices in the
+  transfer-learning test) — `:266`, `:281` — Shafahi et al., NeurIPS 2018.
+- BadNets (trigger stickers, >90% stop signs → speed-limit, real photo fooled at
+  95% confidence, clean accuracy level with baseline) — `:156`, `:338`, `:350`,
+  `:391` — Gu, Dolan-Gavitt, and Garg, 2017 (arXiv 1708.06733; Figure 7).
+- Web-scale poisoning ($60 buys 0.01% of LAION-400M; split-view = expired
+  domains; frontrunning = snapshot timing; defenses = integrity hashes +
+  randomized snapshots) — `:452`, `:478`, `:492`, `:502`, `:704` — Carlini et
+  al., IEEE S&P 2024.
+- Glaze (style cloak, >92% mimicry disruption) — `:529` — Shan et al., USENIX
+  Security 2023.
+- Nightshade (<100 samples corrupt one SDXL prompt) — `:543` — Shan et al.,
+  IEEE S&P 2024.
+- Instruction-tuning poisoning (~100 examples skew hundreds of tasks; larger
+  models more vulnerable) — `:579` — Wan, Wallace, Shen, and Klein, ICML 2023.
+- Near-constant poison count (~250 documents backdoor 600M–13B models,
+  Chinchilla-optimal 6B–260B tokens; 20× more clean data does not raise the
+  bar) — `:606`, `:628` — Souly et al., 2025 (arXiv 2510.07192; UK AI Security
+  Institute, Anthropic, Alan Turing Institute).
+- Sleeper agents (2023 secure / 2024 exploitable code; survives SFT, RL, and
+  adversarial training; largest models most persistent) — `:642`, `:655` —
+  Hubinger et al., 2024 (arXiv 2401.05566). Distinct from Souri et al.
+  "Sleeper Agent" (not referenced here).
+- Spectral signatures — `:717` — Tran, Li, and Madry, NeurIPS 2018.
+- Activation clustering — `:750` — Chen et al., 2018 (arXiv 1811.03728).
+- Neural Cleanse — `:763` — Wang et al., IEEE S&P 2019.
+- Fine-pruning — `:776` — Liu, Dolan-Gavitt, and Garg, RAID 2018.
+- Model stealing — `:831` — Tramèr, Zhang, Juels, Reiter, and Ristenpart,
+  USENIX Security 2016.
+
+**Figures:** BadNets clean + yellow-square/bomb/flower trigger stop signs (Gu
+Fig 7 capture, `figs/badnets-trigger.png`) `:347`; inline SVG: pipeline cracks
+`:128`, boundary tilt `:225`, feature collision `:290`, split-view `:461`,
+poison-count scaling `:615`, spectral outlier `:726`. Citations use
+`.cite-left`. Page number: bold `.slide-num` only.
+
+**2026-08 content revision (55→61):** every citation/number fetched and verified.
+Added 6 slides: Artists Fight Back: Glaze + Nightshade: Poison as Deterrent (§04),
+How Much Poison Is Needed? + 250 Documents Are Enough (§05), Defending the
+Pipeline (§06), Related Threat: Model Stealing (§06). Fixed: stop-sign slide
+gained verified BadNets numbers (>90% flip, 95%-confidence street photo, clean
+accuracy level); Poisoning Is Practical gained verified $60 / 10-datasets / no-
+insider numbers; Tiny Fraction now states the verified 0.01%-of-LAION-400M ≈ $60
+guarantee (unverified "a handful of examples can suffice" deleted); Poisoned
+Instructions gained verified Wan numbers (~100 examples, larger models more
+vulnerable); Sleeper Agents corrected to the 2023/2024 code-vulnerability trigger
+and lab-planted framing; Safety Training Misses It gained verified SFT/RL/
+adversarial-training findings; Frontier rewritten around verified anchors
+(unverified "provable bounds on tolerable poison" deleted); What to Remember
+extended to six verified points. Note-file error fixed: trigger described as "red
+square" → yellow square/bomb/flower per Gu Fig 7. `lec09tech.html` audited: math
+correct (feature-collision ℓ∞ form verified against Poison Frogs Appendix C);
+one cite fixed — λ-blended backdoor objective no longer attributed verbatim to
+BadNets, now "standard formalization of" Gu 2017 (stays 16 sl). Note file synced
+(61 entries, order matches).

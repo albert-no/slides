@@ -40,7 +40,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 12 | `lec12-watermark.html` | Watermarking, deepfakes & provenance | **revised 2026-08** (64 sl) |
 | 13 | `lec13-fairness-defs.html` | Fairness I — definitions & impossibility | **revised 2026-08** (58 sl) |
 | 14 | `lec14-fairness-mitigation.html` | Fairness II — mitigation & accountability | **revised 2026-08** (61 sl) |
-| 15 | `lec15-governance.html` | Governance, frontier & demo showcase | **drafted** (53 sl) |
+| 15 | `lec15-governance.html` | Governance, frontier & demo showcase | **revised 2026-08** (66 sl) |
 
 Every deck has a companion **speaker script** `lecNN-…-note.html` (one entry per slide:
 title + 1–2 sentence script + **Key takeaway**). Scripts also exist for lec 1–2.
@@ -70,7 +70,7 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `lec12tech.html` | Wk 12 (watermark) | green-list logit bias; null Binomial(T,γ); detection z = (|s|_G−γT)/√(Tγ(1−γ)); false-positive bound; z ∝ √T; robustness–quality tradeoff | **checked 2026-08** (10 sl: FP rate at τ=4 fixed "&lt;" → "≈ 3×10⁻⁵" per KGW; no Thm 4.3 stated — consistent with the corrected math in `courses/privacy/lectures/06-watermark/`) |
 | `lec13tech.html` | Wk 13 (fairness defs) | demographic parity / equalized odds / calibration as conditional-prob defs; base rates; impossibility theorem (Chouldechova/Kleinberg) + proof sketch | **fixed 2026-08** (15 sl: base-rate identity was inverted (1−p)/p → p/(1−p) per Chouldechova eq 2.6; proof-sketch step 1 corrected (calibration ≠ "PPV = base rate" → predictive parity demands equal PPV across groups); unverifiable numeric-wedge table replaced with an exactly derivable two-value-score construction; impossibility attribution now dual Chouldechova + Kleinberg) |
 | `lec14tech.html` | Wk 14 (fairness mitigation) | reweighing w(g,y); penalized min Loss+λ·Unfairness; constrained form; reductions (Agarwal 2018); post-processing per-group thresholds (Hardt 2016) | **checked 2026-08** (17 sl: reweighing formula verified against Kamiran & Calders; reductions + Hardt ROC intuition verified against papers; one fix — cite venue "KIS 2012" → "Knowledge and Information Systems 2012") |
-| `lec15tech.html` | Wk 15 (governance) | EU AI Act risk-tier taxonomy; NIST RMF as Govern→Map→Measure→Manage loop; what "measurable" audit metrics mean (deliberately light — governance is non-mathematical) | **drafted** (6 sl) |
+| `lec15tech.html` | Wk 15 (governance) | EU AI Act risk-tier taxonomy; NIST RMF as Govern→Map→Measure→Manage loop; what "measurable" audit metrics mean (deliberately light — governance is non-mathematical) | **checked 2026-08** (6 sl: tiers verified still accurate post-Omnibus; EU cite normalized; tier bullets de-dashed for lint) |
 
 ## Backup / swap-in materials (not in the 15-week core)
 
@@ -1140,3 +1140,69 @@ lec13; §07 divider retitled Generative & LLM Fairness; Key Takeaways gained an 
 line. Lending-demo numbers (72%/50%, 84%→80%, 22→2) are labeled illustrative.
 `lec14tech.html` checked (see supplement table). Note file synced (61 entries, order
 matches).
+
+## lec15-governance.html
+
+**Topic:** Governance, the frontier & course wrap-up (~90 min, capstone). Nearly
+math-free. Connects the course's threads via the trust stack (data → model → output →
+society), then risk frameworks (NIST AI RMF + GenAI Profile), regulation (EU AI Act
+incl. Digital Omnibus timeline and GPAI rules; US patchwork + executive-order
+whiplash; Korea AI Basic Act; summits/AISIs + International AI Safety Report),
+auditing & red-teaming incl. frontier-lab safety frameworks (Anthropic RSP/ASL,
+OpenAI Preparedness, GDM FSF), open problems, and the wrap-up (five questions, Demo
+Showcase kept, one lesson). Formal structures live in `lec15tech.html` (deliberately
+light).
+
+### Sections (66 slides, ~90 min — content-revised 2026-08 from 53, all citations source-verified)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:26`, `:38` | |
+| **01 — Connect the Threads** | 3–13 | `:71` | trust stack (SVG) `:93` · data thread `:121` · **reliability thread (hallucination/calibration/interpretability; added 2026-08)** `:134` · adversary `:147` · accountability `:160` · the pattern `:173` · **Bommasani foundation-models stakes** `:206` |
+| **02 — Risk Frameworks** | 14–22 | `:220` | NIST AI RMF `:240` · four functions (SVG loop) `:253` · Map/Measure/Manage `:278` `:291` `:304` · **GenAI Profile (NIST AI 600-1, confabulation; added 2026-08)** `:317` |
+| **03 — Regulation** | 23–39 | `:340` | **Weidinger taxonomy (4 of 6 risk areas)** `:348` · EU risk tiers (pyramid SVG) `:375` · banned `:397` · high risk `:410` · **EU timeline incl. Digital Omnibus deferral (SVG; added 2026-08)** `:436` · **GPAI rules + Code of Practice (added 2026-08)** `:466` · US patchwork `:480` · **US whiplash timeline (EO 14110→14179→14319→preemption push, SVG; added 2026-08)** `:493` · **Korea AI Basic Act ×2 (added 2026-08)** `:523` `:537` · Anderljung frontier regulation `:551` · **summit timeline (Bletchley→Seoul→Paris→New Delhi, SVG; added 2026-08)** `:577` · **International AI Safety Report (added 2026-08)** `:606` |
+| **04 — Auditing & Red-Teaming** | 40–52 | `:620` | red-teaming `:640` · audit loop (SVG) `:653` · dangerous-capability evals `:678` · **frontier safety frameworks (if-then flow SVG; added 2026-08)** `:691` · **Anthropic RSP/ASL `:715` · OpenAI Preparedness v2 `:728` · GDM FSF v3 `:741` (all added 2026-08)** · model cards `:767` · audit limits `:792` |
+| **05 — Open Problems for 2026+** | 53–59 | `:802` | web-scale privacy `:823` · robust unlearning `:836` · agentic safety `:849` · provenance+fairness `:862` · tensions `:875` |
+| **06 — Wrap-Up** | 60–66 | `:884` | reading an AI headline `:892` · five questions `:905` · **Demo Showcase (course logistics, kept)** `:919` · one lesson `:935` · key takeaways `:943` · closer ("Thank you") `:957` |
+
+**Key citations (all source-verified 2026-08):**
+- Foundation models — `:216` — Bommasani et al., "On the Opportunities and Risks of
+  Foundation Models", 2021 (arXiv 2108.07258).
+- NIST — `:250`/`:275` AI RMF 1.0, 2023; `:327` Generative AI Profile (NIST AI 600-1),
+  July 2024 (12 GenAI risks incl. confabulation).
+- Taxonomy — `:359` — Weidinger et al., "Taxonomy of Risks Posed by Language Models",
+  FAccT 2022 (six risk areas; slide shows four, intro says so).
+- EU — `:394`/`:420` Regulation (EU) 2024/1689 (the AI Act); `:463` Regulation (EU)
+  2026/1744 (Digital Omnibus on AI: high-risk duties → Dec 2027 / Aug 2028); `:477`
+  General-Purpose AI Code of Practice, July 2025 (10^25 FLOP systemic-risk threshold).
+- US — `:520` — Executive Orders 14110 (2023, rescinded), 14179 (Jan 2025), 14319
+  (July 2025); Dec 2025 preemption push. No federal AI statute as of mid-2026.
+- Korea — `:534`/`:548` — AI Basic Act, effective Jan 2026 (MSIT; high-impact AI;
+  GenAI labeling; 10^26 FLOP duty threshold; fines ≤ 30M KRW, 1-year grace).
+- Frontier — `:561`/`:688` Anderljung et al., "Frontier AI Regulation", 2023 (arXiv
+  2307.03718); `:725` Anthropic RSP 2023 (rev. 2026) + ASL-3 activation May 2025
+  (Claude Opus 4); `:738` OpenAI Preparedness Framework v2, Apr 2025; `:751` Google
+  DeepMind Frontier Safety Framework v3, Sept 2025 (CCLs; added manipulation +
+  misalignment).
+- International — `:616` — International AI Safety Report, 2026 (Bengio chair, 100+
+  experts, ~30 countries); summits slide `:577` (Bletchley 2023; Seoul 2024, 16 labs;
+  Paris 2025; New Delhi 2026, 89 endorsers) verified against gov.uk/summit records.
+
+**Figures:** all inline SVGs (no captured images): trust stack `:99`, RMF loop `:259`,
+EU tier pyramid `:381`, EU timeline `:442`, US whiplash timeline `:499`, summit
+timeline `:583`, audit loop `:659`, if-then framework flow `:697`. Citations use
+`.cite-left`.
+
+**2026-08 content revision (53→66):** every citation/number/date fetched and verified
+(EU/Korea/US law via primary or law-firm trackers; lab frameworks via anthropic.com,
+cdn.openai.com PDF, deepmind.google). Added 13 slides: reliability thread (§01);
+GenAI Profile (§02); EU timeline, GPAI rules, US whiplash, Korea Basic Act ×2, summit
+timeline, International AI Safety Report (§03); frontier safety frameworks, Anthropic
+ASL, OpenAI Preparedness, DeepMind FSF (§04). Fixes: **"social scoring of citizens by
+governments" → "by public or private actors"** (Art 5 scope verified); **Weidinger
+intro** now says four of the paper's six risk areas; EU cites normalized to
+"Regulation (EU) 2024/1689"; US-approach slide rewritten (patchwork; first binding
+rules from states); Key Takeaways gained EU/US/Korea + if-then-commitments lines;
+trust-stack SVG gained reliability + society labels. Course-logistics Demo Showcase
+slide kept per course scaffolding. `lec15tech.html` errors-only pass (EU cite fixed,
+tier bullets de-dashed; still 6 sl). Note file synced (66 entries, order matches).

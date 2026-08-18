@@ -31,7 +31,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 3 | `lec03-mia.html` | Membership inference attacks | **revised 2026-08** (63 sl) |
 | 4 | `lec04-memorization.html` | Memorization & training-data extraction | **revised 2026-08** (58 sl) |
 | 5 | `lec05-unlearning.html` | Machine unlearning | **revised 2026-08** (66 sl) |
-| 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **drafted** (58 sl) |
+| 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **revised 2026-08** (61 sl) |
 | 7 | `lec07-interpretability.html` | Interpretability & explainability | **drafted** (57 sl) |
 | 8 | `lec08-adversarial.html` | Adversarial examples (attack + defense) | **drafted** (56 sl) |
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **drafted** (55 sl) |
@@ -61,7 +61,7 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `lec03tech.html` | Wk 3 (MIA) | score+threshold; likelihood ratio Λ(x); LiRA (Gaussian fit + LR test); ROC / TPR@low-FPR; DP bound TPR ≤ e^ε·FPR + δ | **drafted** (11 sl) |
 | `lec04tech.html` | Wk 4 (memorization) | k-extractability def; memorization-fraction metric; log-linear scaling law | **drafted** (9 sl) |
 | `lec05tech.html` | Wk 5 (unlearning) | exact vs approx; (ε,δ) unlearning inequality; influence function θ₋ₓ ≈ θ̂ + (1/n)H⁻¹∇ℓ + Hessian infeasibility; gradient ascent; SISA cost | **fixed 2026-08** (11 sl: (ε,δ) cite Ginart→Guo/Sekhari + two-sided bound; SISA speedup R·L→R & 3/2) |
-| `lec06tech.html` | Wk 6 (hallucination) | reliability diagram; ECE = Σ_b (n_b/n)|acc_b−conf_b|; temperature scaling; conformal coverage Pr[y∈C(x)]≥1−α + threshold quantile; semantic entropy | **drafted** (14 sl) |
+| `lec06tech.html` | Wk 6 (hallucination) | reliability diagram; ECE = Σ_b (n_b/n)|acc_b−conf_b|; temperature scaling; conformal coverage Pr[y∈C(x)]≥1−α + threshold quantile; semantic entropy | **checked 2026-08** (14 sl: math verified, Angelopoulos & Bates cite title completed) |
 | `lec07tech.html` | Wk 7 (interpretability) | Shapley φ_i + axioms; LIME surrogate objective; gradient saliency; integrated gradients; SAE reconstruction+sparsity, superposition | **drafted** (20 sl) |
 | `lec08tech.html` | Wk 8 (adversarial) | perturbation set B_p(x,ε); FGSM; PGD projected iteration; adversarial-training min-max; randomized-smoothing certified radius | **drafted** (19 sl) |
 | `lec09tech.html` | Wk 9 (poisoning) | poison fraction α; clean-label feature-collision objective; backdoor blended objective; spectral signatures; activation clustering | **drafted** (16 sl) |
@@ -450,3 +450,75 @@ two-sided-bound clause); `lec05tech.html` SISA speedup "R·L" → shard-count + 
 (fix-errors-only pass, deck stays 11 sl). WMDP slide reworked around the real figure;
 concrete verified numbers added (4,000 QA; 3,668 MCQs; 21%→83%; 10 examples;
 ~1 GPU hour). Note file synced (66 entries, order matches).
+
+## lec06-hallucination.html
+
+**Topic:** Hallucination, calibration & reliability (~90 min). What hallucination is
+(and is not); why next-token training produces confident falsehoods (Kalai binary-grading
+argument at intuition level); real harms (Lacey v. State Farm as anchor case — Mata v.
+Avianca lives in lec01, one-line callback only); calibration with the reliability-diagram
+picture and a glanceable ECE; conformal prediction as "sets with a coverage promise";
+semantic entropy at intuition level; RAG grounding; benchmarks (TruthfulQA, Vectara HHEM);
+reasoning-model hallucination; sycophancy one-slide touchpoint (full treatment in
+`backup-sycophancy.html`). Math lives in `lec06tech.html`.
+
+### Sections (61 slides, ~90 min — content-revised 2026-08 from 58, all citations source-verified)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:26`, `:38` | |
+| **01 — What Hallucination Is** | 3–10 | `:71` | definition (Ji survey) `:79` · fluency fools us `:91` · **Fake Citations, Again (Lacey v. State Farm, $31,100; new anchor 2026-08)** `:104` · **Invented Medical Facts (Med-Gemini "basilar ganglia"; rewritten 2026-08)** `:119` · two flavors of wrong `:133` · not the same as a bug `:146` · why this matters `:158` |
+| **02 — Why Models Hallucinate** | 11–19 | `:171` | training objective `:179` · no truth grounding `:188` · plausible beats true `:201` · pressure to always answer (+Kalai cite) `:223` · exam-taking analogy (+Kalai cite) `:237` · **Guessing, Measured (SimpleQA wrong/abstain SVG bars; added 2026-08)** `:251` · where errors concentrate `:279` · knowledge cutoff `:292` |
+| **03 — Calibration** | 20–31 | `:305` | confidence as a number `:313` · calibration promise `:322` · reliability diagram (SVG) `:334` · over- vs under-confident `:356` · measuring the gap (ECE, Guo) `:369` · reading ECE `:383` · bigger is not better `:395` · temperature `:408` · Kadavath self-knowledge `:422` · verbalized confidence (+Xiong ICLR 2024 cite added 2026-08) `:435` · Colab `:449` |
+| **04 — Conformal Prediction** | 32–40 | `:465` | one answer to a set `:473` · coverage guarantee `:486` · distribution-free `:498` · how it works `:511` · prediction-set picture (SVG) `:524` · abstention `:547` · medical triage `:560` · trade-off `:573` |
+| **05 — Detection & Grounding** | 41–51 | `:582` | two strategies `:590` · self-consistency (+SelfCheckGPT cite added 2026-08) `:603` · semantic entropy (Farquhar) `:617` · entropy picture (SVG) `:630` · RAG `:655` · why RAG helps `:668` · RAG is not a cure `:681` · teaching "I don't know" `:694` · scoring rule (+Kalai cite) `:707` · detection Colab `:717` |
+| **06 — Frontier 2025–26** | 52–59 | `:733` | **TruthfulQA (817 Qs, 58% vs 94%; added 2026-08)** `:741` · benchmarks + Vectara HHEM chart (SVG) `:755` · **Reasoning Models Hallucinate Too (o3 33% / o4-mini 48% / o1 16% PersonQA; reworked 2026-08)** `:794` · **Sycophancy touchpoint (real fig; added 2026-08)** `:808` · factuality evaluations `:820` · open problems `:833` · demos `:847` |
+| Takeaways / Closer | 60–61 | — | `:862`, `:876` |
+
+**Key definitions / citations (all source-verified 2026-08):**
+- Hallucination survey — `:79` — Ji et al., ACM Computing Surveys 2023.
+- Anchor case — `:104` — Special Master sanctions order, Lacey v. State Farm,
+  C.D. Cal., May 2025 ($31,100; ~1/3 of citations flawed; two cited cases nonexistent).
+  Avianca callback only (lec01 owns that case).
+- Med-Gemini "basilar ganglia" — `:119` — Google Med-Gemini paper 2024; error surfaced
+  by The Verge, 2025 (verified via secondary reports).
+- Why LMs hallucinate (binary grading rewards guessing) — `:223`, `:237`, `:707` —
+  Kalai, Nachum, Vempala, and Zhang, 2025 (arXiv 2509.04664).
+- SimpleQA wrong/abstain rates (o4-mini 75%/1% vs gpt-5-thinking-mini 26%/52%) —
+  `:251` — OpenAI "Why language models hallucinate" blog, 2025 (table is in the blog,
+  not the arXiv paper; verified via secondary coverage — openai.com blocks fetch).
+- Calibration / ECE / temperature — `:369`–`:419` — Guo, Pleiss, Sun, and Weinberger,
+  ICML 2017.
+- Self-knowledge — `:422` — Kadavath et al., "Language Models (Mostly) Know What They
+  Know", 2022.
+- Verbalized confidence — `:435` — Xiong et al., ICLR 2024 (arXiv 2306.13063).
+- Conformal — `:486`, `:495`, `:521` — Angelopoulos and Bates, "A Gentle Introduction to
+  Conformal Prediction and Distribution-Free Uncertainty Quantification", 2021
+  (arXiv 2107.07511; title completed 2026-08 here and in `lec06tech.html`).
+- Self-consistency — `:603` — Manakul, Liusie, and Gales, "SelfCheckGPT", EMNLP 2023.
+- Semantic entropy — `:617` — Farquhar et al., Nature 630, 625–630 (2024).
+- RAG — `:655` — Lewis et al., NeurIPS 2020.
+- TruthfulQA (817 Qs, 38 categories, best model 58% vs humans 94%, larger = less
+  truthful) — `:741` — Lin, Hilton, and Evans, ACL 2022 (arXiv 2109.07958).
+- Vectara HHEM summarization hallucination rates — `:755` — leaderboard README,
+  May 2026 (chart data verified against the repo).
+- Reasoning-model rates (o3 33%, o4-mini 48%, o1 16% on PersonQA) — `:794` —
+  OpenAI o3/o4-mini System Card, April 2025.
+- Sycophancy — `:808` — Sharma et al., ICLR 2024 (Figure 5); GPT-4o rollback quote
+  "overly flattering or agreeable" — OpenAI "Sycophancy in GPT-4o", 2025.
+
+**Figures:** real image `figs/sharma-sycophancy.png` (Sharma ICLR 2024 Fig 5, shared
+with `backup-sycophancy.html`) `:808`. **SVG:** SimpleQA wrong/abstain bars `:251`,
+reliability diagram `:334`, prediction-set threshold picture `:524`, entropy clusters
+`:630`, RAG pipeline `:655`, Vectara HHEM bar chart `:755`. Citations use `.cite-left`.
+
+**2026-08 content revision (58→61):** every citation/number fetched and verified.
+Added 3 slides: Guessing, Measured (§02); TruthfulQA (§06); Sycophancy touchpoint (§06).
+Replaced the fake-citation anchor (Avianca → Lacey v. State Farm; Avianca kept as a
+one-line callback since lec01 covers it) and rewrote Invented Medical Facts around the
+verified Med-Gemini error. Reworked Reasoning Models around verified PersonQA numbers.
+Added missing cites (Kalai ×3, Xiong, SelfCheckGPT); completed the Angelopoulos & Bates
+title (also in `lec06tech.html` — otherwise fix-errors-only, math verified, stays 14 sl).
+Flagged as secondary-verified: Lacey "hundreds of filings" tracker line `:115`, SimpleQA
+abstention split `:251`, Med-Gemini narrative `:119`, GPT-4o rollback line `:816`.
+Note file synced (61 entries, order matches).

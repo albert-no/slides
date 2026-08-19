@@ -849,6 +849,19 @@ correct (feature-collision ℓ∞ form verified against Poison Frogs Appendix C)
 one cite fixed — λ-blended backdoor objective no longer attributed verbatim to
 BadNets, now "standard formalization of" Gu 2017 (stays 16 sl). Note file synced
 (61 entries, order matches).
+**2026-08 note enrichment:** `lec09-poisoning-note.html` upgraded from speaker script
+(383 lines) to Script &amp; Companion Notes (677 lines; 61 entries unchanged): per-entry
+`.detail` blocks with rigorous definitions (poisoning threat model, poison budget α,
+availability/targeted/backdoor taxonomy, clean vs dirty label, x⊕t trigger operator,
+CA/ASR, split-view & frontrunning mechanics, ε-spectral separability Def 3.1, Neural
+Cleanse A(x,m,Δ) + MAD index, fine-pruning), theorems with proofs or labeled verified
+sketches (Biggio bilevel/KKT gradient vs arXiv 1206.6389; Poison Frogs Eq 1 +
+forward-backward splitting vs arXiv 1804.00792; BadNets λ-blend + numbers vs arXiv
+1708.06733; Tran Lemmas 3.1–3.3 Chebyshev sketch vs arXiv 1811.00636; Souly 250-doc
+numbers vs arXiv 2510.07192 + Anthropic blog; Tramèr d+1 equation-solving vs arXiv
+1609.02943; general bilevel form, 40,000-image arithmetic, defense-evasion synthesis
+labeled course notes), and 16 verified links (all 200; Neural Cleanse PDF via Internet
+Archive; Tay via Microsoft blog).
 
 ## lec10-jailbreak.html
 

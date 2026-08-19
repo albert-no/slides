@@ -1118,6 +1118,8 @@ verified form; "~800 words" → "~800 tokens". `lec12tech.html` checked: FP rate
 τ=4 corrected "&lt;" → "≈ 3×10⁻⁵" (1−Φ(4)≈3.2×10⁻⁵, and KGW state ≈3×10⁻⁵); states
 no Thm 4.3 (stays 10 sl). Note file synced (58 entries, order matches).
 
+**2026-08 note enrichment:** `lec12-watermark-note.html` upgraded from speaker script (376 lines) to Script &amp; Companion Notes (772 lines; 58 entries unchanged): per-entry `.detail` blocks with rigorous definitions (soft watermark, spike entropy, distortion-free generation, CGZ soundness/completeness/undetectability, TV/AUROC, C2PA), full proofs (KGW Thm 4.2 four-step, Thm 4.3 in corrected form + explicit misprint warning, green-mass boost Prop, Gumbel-max + Aaronson equivalence, exponential-minimum sampling, Zhao Unigram Thm 3.7 sketch, Sadasivan Thm 1, Berry–Esseen FP bound, Hoeffding tail), and 30 verified links — all consistent with `courses/privacy/lectures/06-watermark/`.
+
 ## lec13-fairness-defs.html
 
 **Topic:** Fairness I — definitions & impossibility (~90 min). Where bias enters the

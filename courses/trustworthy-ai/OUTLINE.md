@@ -661,6 +661,24 @@ Safety hedged ("could", "still early days") and cited; missing Olsson and Elhage
 (superposition) cites added. `lec07tech.html` audited: all math correct, no changes
 (stays 20 sl). Note file synced (64 entries, order matches).
 
+**2026-08 note enrichment:** `lec07-interpretability-note.html` upgraded from speaker
+script (401 lines) to Script &amp; Companion Notes (773 lines; 64 entries unchanged):
+per-entry `.detail` blocks with rigorous definitions (additive feature attribution
+class, full LIME objective + K-LASSO, cooperative game + SHAP conditional-expectation
+value, gradient saliency + Taylor rationale, IG path integral + Sensitivity(a)/
+Implementation Invariance, linear probes + control tasks/selectivity + linear
+representation hypothesis, scaled dot-product attention, residual stream + QK/OV
+circuits, induction-head two-head mechanism, polysemanticity/privileged basis,
+superposition hypothesis, dictionary learning, exact Bricken SAE equations + loss,
+feature clamping, GDPR Art. 22(1) + Arts. 13–15 verbatim, faithfulness vs
+plausibility), theorem blocks with verified proofs (Shapley subset↔permutation
+equivalence + full existence/uniqueness via unanimity basis, labeled course notes;
+SHAP Theorem 1 statement; IG Completeness with full FTC proof + Prop 2 pointer), and
+Background blocks with 35 verified links (LIME/SHAP/IG/Adebayo/probing/attention-debate
+arXiv, five transformer-circuits.pub papers, Golden Gate Claude, Neuronpedia +
+Gemma Scope, GDPR/AI-Act texts, Wachter DOI, biology-of-LLM + circuit-tracing
+open-sourcing, Chen CoT faithfulness, Amodei essay).
+
 ## lec08-adversarial.html
 
 **Topic:** Adversarial examples — attack and defense (~90 min). Panda→gibbon

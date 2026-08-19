@@ -485,6 +485,22 @@ two-sided-bound clause); `lec05tech.html` SISA speedup "R·L" → shard-count + 
 concrete verified numbers added (4,000 QA; 3,668 MCQs; 21%→83%; 10 examples;
 ~1 GPU hour). Note file synced (66 entries, order matches).
 
+**2026-08 note enrichment:** `lec05-unlearning-note.html` upgraded from speaker script
+(413 lines) to Script &amp; Companion Notes (829 lines; 66 entries unchanged): per-entry
+`.detail` blocks with rigorous definitions (Ginart deletion, exact and
+$(\varepsilon,\delta)$-certified unlearning with quantifiers, SISA formalized, A1–A3
+convex setting, GA/NPO/RMU losses, TOFU truth-ratio KS metric, IDI, suppression vs
+deletion / adaptation class), full proofs (exact⟹certified, retraining exact,
+SISA shard + slicing cost with the $3R/(2R+1)\to3/2$ limit, IFT influence derivation +
+Newton-step $MG^2/(2\lambda^3n^2)$ bound via two lemmas, GA-has-no-optimum, GA-vs-NPO
+toy divergence rates, NPO self-limiting theorem + $\beta\to0$ GA limit, one-family
+gradient-weight proposition, exact-deletion-misses-the-concept, $p$-value uniformity +
+best-of-$k$, prompt-relativity, output-metrics blindness, TV audit cap, attacks
+one-sided, gate construction, DP⟹certified + $1/n$ vs $1/n^2$ noise calculus, Sekhari
+deletion-capacity statement), and Background blocks (GDPR Art. 17 / CCPA / Google Spain
+C-131/12; 24 verified links) — all consistent with
+`courses/privacy/lectures/05-unlearning/`.
+
 ## lec06-hallucination.html
 
 **Topic:** Hallucination, calibration & reliability (~90 min). What hallucination is

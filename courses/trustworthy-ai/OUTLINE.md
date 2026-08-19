@@ -755,6 +755,15 @@ around NIST AI 100-2 (unverified "certificates that finally scale" bullet delete
 Section 06 renamed Physical & Multimodal → Physical & Beyond. `lec08tech.html`
 audited: all math correct incl. Cohen certified radius, no changes (stays 19 sl).
 Note file synced (63 entries, order matches).
+**2026-08 note enrichment:** `lec08-adversarial-note.html` upgraded from speaker script
+(395 lines) to Script &amp; Companion Notes (821 lines; 63 entries unchanged): per-entry
+`.detail` blocks with rigorous definitions (adversarial example, ℓp threat models, ball
+nesting, transfer attack, robust risk, smoothed classifier, covariate/label shift, CE/mCE),
+theorems with proofs or labeled verified sketches (FGSM ℓ∞-optimality, ℓ∞/ℓ2 projection
+closed forms, linear-classifier robustness radius — all "(derivation: course notes)";
+Madry min-max + Danskin Thm A.1; C&W formulation; Cohen Thm 1 + Neyman–Pearson sketch;
+Tsipras Thm 2.1 tradeoff sketch), and 29 verified links — Athalye 9/7/6+1 census, EOT,
+RP2, AutoAttack composition all verified against the papers.
 
 ## lec09-poisoning.html
 

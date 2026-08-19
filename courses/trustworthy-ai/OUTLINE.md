@@ -231,6 +231,18 @@ values made precise with audit cite; Copilot slide gained Huang FSE 2024 cite. �
 Apple Intelligence DP synthetic data (2025), EU AI Act GPAI duties (Aug 2025). Note file synced
 (84 entries, order matches).
 
+**2026-08 note enrichment:** `lec02-privacy-dp-note.html` upgraded from speaker script to
+**script + companion notes** (521→1034 lines; 84 entries unchanged). Heaviest math of the
+note series, kept consistent with `courses/privacy/lectures/01-dp/` (dp2–dp5): full proofs
+for the Laplace mechanism, post-processing invariance, basic/adaptive composition, group
+privacy, the coin protocol's $\ln 3$, the RR unbiased estimator + Chebyshev sample bound,
+and the privacy-loss tail lemma; Gaussian mechanism as Dwork & Roth Thm 3.22 with verified
+sketch (full proof pointer: Thm A.1); DP-SGD theorem + three-step accounting from dp5.
+Rigorous definitions (neighboring add/remove, $(\varepsilon,\delta)$-DP, $\Delta_1/\Delta_2$,
+LDP, PLRV, clipping/noise multiplier) and verified backgrounds with primary-source links
+(DMNS TCC 2006 DOI, Warner JASA 1965 scan, Abadi 2016, Gboard DP-FTRL, VaultGemma, Apple
+PCC/synthetic data, EUR-Lex AI Act).
+
 ---
 
 ## lec03-mia.html

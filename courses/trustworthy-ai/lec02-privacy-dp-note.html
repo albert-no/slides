@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 2 — Script</title>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 2 — Script &amp; Companion Notes</title>
 <link rel="stylesheet" href="../../reference/colors_and_type.css">
 <link rel="stylesheet" href="../../reference/katex/katex.min.css">
 <script defer src="../../reference/katex/katex.min.js"></script>
@@ -10,9 +10,14 @@ h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); pad
 article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
 article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 .kt { color: var(--yonsei-blue); font-weight: 700; }
+.detail { margin: 12px 0 0 14px; padding: 2px 0 2px 18px; border-left: 3px solid #ccd7e4; }
+.detail h3 { color: var(--yonsei-blue); font-size: 1.05rem; margin: 12px 0 4px; }
+.detail p { margin: 6px 0; }
+.detail ul { margin: 4px 0 8px; padding-left: 22px; }
+.detail li { margin-bottom: 4px; }
 </style></head><body>
-<h1>Lecture 2 — Privacy &amp; Differential Privacy · Speaker Script</h1>
-<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+<h1>Lecture 2 — Privacy &amp; Differential Privacy · Speaker Script &amp; Companion Notes</h1>
+<p><em>One entry per slide, in order; section headers match slide titles. Each entry keeps the spoken script and key takeaway, followed by companion notes: rigorous definitions with full quantifiers, formal theorem statements with proofs (or labeled sketches with pointers), and verified backgrounds with links for every real-world case. The authoritative mathematical treatment this file follows is the privacy course, <code>courses/privacy/lectures/01-dp/</code>.</em></p>
 
 <article>
 <h2>Privacy &amp; Differential Privacy</h2>
@@ -42,42 +47,99 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>A Model Remembers</h2>
 <p>Training presses data into the weights. Most blends into general patterns, but some survives nearly verbatim, and rare or repeated examples stick the most.</p>
 <p><span class="kt">Key takeaway:</span> "It's just statistics" is not a privacy guarantee.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Extractable memorization</strong> (Nasr et al. 2023): a training string $s$ is <em>extractably memorized</em> by a model $M$ if an adversary, <em>without</em> prior knowledge of the training set, can construct a prompt $p$ such that $M(p)$ emits $s$ verbatim. This is the operational notion behind every attack in this section: memorization is defined by what an attacker can pull out, not by what the weights "contain."</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2311.17035">Nasr et al., "Scalable Extraction of Training Data from (Production) Language Models" (2023)</a> — defines extractable memorization and demonstrates it at scale, from open models to ChatGPT.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>GPT-2 Knew Real People</h2>
 <p>Carlini and colleagues showed that a short prompt can make GPT-2 recite real names, home addresses, phone numbers, and emails, copied straight out of the training text.</p>
 <p><span class="kt">Key takeaway:</span> A short prompt can pull out a real person's contact details.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Carlini et al. (USENIX Security 2021) formalized the <em>training-data extraction attack</em>: query the model, collect high-likelihood generations, and filter with membership signals. Against GPT-2 (trained on public web scrapes) they extracted hundreds of verbatim training sequences, including personally identifiable information — names, phone numbers, and email addresses of real people. The slide's figure is Figure 1 of this paper.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2012.07805">Carlini et al., "Extracting Training Data from Large Language Models," USENIX Security 2021</a> — the GPT-2 extraction study.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The Secret Sharer</h2>
 <p>The clean experiment: plant a fake secret, a "canary" like a made-up credit-card number, in the data. After enough training the model memorizes it, and the right prompt makes it spill.</p>
 <p><span class="kt">Key takeaway:</span> Memorization is measurable: plant a secret and watch it come back.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Canary:</strong> a synthetic secret sequence $s[r]$ (a fixed format $s$ filled with a random value $r$, e.g. a fake credit-card number) inserted into the training data, chosen so that it cannot be learned from anything else in the corpus.</p>
+<p><strong>Exposure</strong> (Carlini et al. 2019, Def. 4): with randomness space $\mathcal R$ (all possible fill-in values $r$),
+$$\mathrm{exposure}_\theta(s[r]) \;=\; \log_2 |\mathcal R| \;-\; \log_2 \mathrm{rank}_\theta(s[r]),$$
+where $\mathrm{rank}_\theta(s[r])$ is the rank of the inserted canary among all candidates, ordered by the model's log-perplexity. Exposure $\approx 0$ means the model ranks the true secret no better than chance; exposure near $\log_2|\mathcal R|$ means the secret is the model's top guess and can be extracted by search.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1802.08232">Carlini, Liu, Erlingsson, Kos, Song, "The Secret Sharer: Evaluating and Testing Unintended Memorization in Neural Networks," USENIX Security 2019</a> — introduces the canary/exposure methodology; finds unintended memorization is persistent and not simply a symptom of overfitting.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Make ChatGPT Leak</h2>
 <p>In 2023, asking ChatGPT to "repeat the word 'poem' forever" eventually broke the loop and dumped chunks of raw training data, including real names and contact info.</p>
 <p><span class="kt">Key takeaway:</span> Even production chat models can be tricked into leaking training data.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Nasr et al. (2023) showed that existing extraction techniques suffice against unaligned open models (Pythia, GPT-Neo, LLaMA, Falcon), but aligned ChatGPT resists them — so they introduced the <em>divergence attack</em>: asking the model to repeat a word forever eventually breaks it out of its chatbot-style distribution, after which it emits raw training data, including personal contact information. In aggregate the paper extracts gigabytes of training data across model families.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2311.17035">Nasr et al., "Scalable Extraction of Training Data from (Production) Language Models" (2023)</a> — the "repeat the word poem forever" divergence attack on ChatGPT.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Image Models Copy Too</h2>
 <p>It is not just text. Stable Diffusion regenerates near-exact copies of real training photos, especially images that were duplicated in the dataset. The figure is from Carlini et al.'s 2023 extraction study: a real training photo of a real person, next to the model's near-identical generation.</p>
 <p><span class="kt">Key takeaway:</span> Generative image models can reproduce identifiable training photos.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Carlini et al. (USENIX Security 2023) ran a generate-and-filter pipeline against diffusion models and extracted over a thousand near-copies of training examples from state-of-the-art models — from photographs of individual people to trademarked logos. By training hundreds of diffusion models they also isolated which modeling and data decisions drive memorization; duplicated training images are the most vulnerable.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2301.13188">Carlini et al., "Extracting Training Data from Diffusion Models," USENIX Security 2023</a> — source of the slide's real-vs-generated portrait pair.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Copilot Leaks Secrets</h2>
 <p>Code models train on public repos, secrets and all. Live API keys, passwords, and tokens left in old commits can be suggested right back by GitHub Copilot — a 2024 study extracted thousands of hard-coded credentials from its suggestions, some of them real, live secrets.</p>
 <p><span class="kt">Key takeaway:</span> A secret in the data becomes a secret in the model.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Huang, Li, Wu, Zhang, and Lyu built the Hard-coded Credential Revealer (HCR): prompts constructed from GitHub files that originally contained credentials, used to test whether commercial code-completion tools regurgitate them. The study (published in Proc. ACM Softw. Eng. / FSE 2024) shows neural code-completion tools, including GitHub Copilot, emit memorized hard-coded credentials — the concrete leak class behind this slide.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2309.07639">Huang et al., "Your Code Secret Belongs to Me: Neural Code Completion Tools Can Memorize Hard-Coded Credentials," FSE 2024</a> — the HCR study.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Three Kinds of Leak</h2>
 <p>Attackers ask escalating questions: membership (was Alice in the data?), attribute (what is Alice's diagnosis?), and reconstruction (rebuild Alice's full record). Each is harder and each is worse.</p>
 <p><span class="kt">Key takeaway:</span> Leakage ranges from "were you here?" to "here is your whole record."</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Fix a training set $D$ drawn from a population and a trained model $\theta \sim \mathrm{train}(D)$. The three leak classes, as adversary games (formulation: course notes):</p>
+<ul>
+<li><strong>Membership inference.</strong> Given $\theta$ and a target record $x$, output $\hat b \in \{0,1\}$ guessing whether $x \in D$. Success is measured by the advantage $\mathrm{TPR} - \mathrm{FPR}$ over the two cases.</li>
+<li><strong>Attribute inference.</strong> Given $\theta$ and a partial record $x_{\mathrm{known}}$, output a guess of the hidden sensitive attribute $x_{\mathrm{sens}}$ of that individual's record in $D$.</li>
+<li><strong>Reconstruction.</strong> Given $\theta$ (or a set of released statistics), output entire records of $D$. Classical result: answering too many counting queries too accurately permits reconstruction of almost the whole dataset — the Dinur–Nissim reconstruction attacks (see Dwork &amp; Roth, §8, where blatant non-privacy from accurate query answers is formalized).</li>
+</ul>
+<p>The ordering on the slide is by adversary goal strength: reconstruction success implies attribute disclosure, which implies membership-level information. DP is calibrated to block the weakest goal — membership — and therefore blocks all three.</p>
+</div>
 </article>
 
 <article>
@@ -90,18 +152,46 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>The Anonymization Myth</h2>
 <p>Deleting names does not anonymize data. Quasi-identifiers like ZIP, age, sex, and dates remain, and combining them with a public list re-identifies people.</p>
 <p><span class="kt">Key takeaway:</span> Anonymity is about linkage, not about one missing column.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Quasi-identifier:</strong> a set of attributes (e.g. ZIP code, birth date, sex) none of which identifies a person alone, but whose combination is unique or near-unique in the population and can be joined against an external identified dataset (Sweeney 2000).</p>
+<p><strong>Linkage attack:</strong> re-identification by joining a "de-identified" release with a public identified dataset on the quasi-identifier columns. Sweeney's classic demonstration joined an anonymized state employee health-insurance release with the purchased Cambridge, MA voter roll on {ZIP, birth date, sex}.</p>
+<p><strong>$k$-anonymity</strong> (Sweeney, IJUFKS 2002): a release satisfies $k$-anonymity if every record is indistinguishable from at least $k-1$ others on the quasi-identifier attributes. It is a syntactic property of one table — it makes no guarantee against attackers with richer side information, which is exactly the gap DP later closes.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://dataprivacylab.org/projects/identifiability/paper1.pdf">Sweeney, "Simple Demographics Often Identify People Uniquely," Data Privacy WP3, 2000</a> — quasi-identifiers and the linkage methodology.</li>
+<li><a href="https://dataprivacylab.org/dataprivacy/projects/kanonymity/kanonymity.pdf">Sweeney, "k-Anonymity: A Model for Protecting Privacy," IJUFKS 10(5):557–570, 2002</a> — the formal $k$-anonymity model.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>87% From Three Fields</h2>
 <p>Latanya Sweeney's 2000 study estimated that ZIP code, birth date, and sex together uniquely identified 87% of Americans on 1990 census data; a later re-estimate on 2000 census data put it at 63% — still a majority. Cross "anonymous" medical data against a public voter roll and you get a name.</p>
 <p><span class="kt">Key takeaway:</span> Three innocuous fields are enough to single out most people.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The exact numbers: Sweeney (2000), using 1990 US Census summary data, estimated that 87% of the US population (216 of 248 million) was uniquely identified by {5-digit ZIP, full birth date, sex}. Golle (WPES 2006) re-ran the estimate on Census 2000 data and obtained 63% — lower, but still a solid majority from three "harmless" fields.</p>
+<ul>
+<li><a href="https://dataprivacylab.org/projects/identifiability/paper1.pdf">Sweeney, "Simple Demographics Often Identify People Uniquely," 2000</a> — the 87% estimate.</li>
+<li><a href="https://crypto.stanford.edu/~pgolle/papers/census.pdf">Golle, "Revisiting the Uniqueness of Simple Demographics in the US Population," WPES 2006</a> — the 63% re-estimate on Census 2000.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Netflix and AOL: Linkage Wins</h2>
 <p>Two famous "anonymized" releases, both broken. Netflix movie ratings were linked to named users via public IMDb reviews; AOL's 2006 search logs used random IDs, but the queries themselves named the user and a journalist traced one to a real person.</p>
 <p><span class="kt">Key takeaway:</span> The content is the identifier; sparse "anonymous" data links to public records.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p><strong>Netflix Prize (2006–2008).</strong> Netflix published anonymized movie ratings of about 500,000 subscribers as a recommender-system contest dataset. Narayanan and Shmatikov showed that high-dimensional sparse data defeats anonymization: an adversary who knows only a few of a subscriber's ratings (with imprecise dates) can identify the subscriber's full record, and they demonstrated linkage against public IMDb reviews. Their attack is robust to perturbation of the data.</p>
+<p><strong>AOL search logs (2006).</strong> AOL released three months of search queries — about 20 million queries — with user names replaced by random numeric IDs. Days later, New York Times reporters Michael Barbaro and Tom Zeller Jr. traced user No. 4417749 through her own queries to Thelma Arnold, a 62-year-old widow in Lilburn, Georgia. The identifier was removed; the content itself identified her.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/cs/0610105">Narayanan &amp; Shmatikov, "How To Break Anonymity of the Netflix Prize Dataset" (2006; published as "Robust De-anonymization of Large Sparse Datasets," IEEE S&amp;P 2008)</a> — the Netflix de-anonymization.</li>
+<li><a href="https://www.nytimes.com/2006/08/09/technology/09aol.html">Barbaro &amp; Zeller, "A Face Is Exposed for AOL Searcher No. 4417749," New York Times, Aug 9, 2006</a> — the AOL re-identification story.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -114,36 +204,101 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>The Attacker's Toolkit</h2>
 <p>Four standard probes: membership inference (was this in training?), model inversion (rebuild a typical input), extraction (emit memorized text), and gradient leakage (invert a shared update).</p>
 <p><span class="kt">Key takeaway:</span> Four named attacks cover most privacy threats to a model.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<ul>
+<li><strong>Membership inference:</strong> given a record $x$ and (black-box) access to $\theta$, decide whether $x$ was in the training set (Shokri et al. 2017).</li>
+<li><strong>Model inversion:</strong> given $\theta$ and a target label (e.g. a person's name in a face classifier), reconstruct a representative input for that label by exploiting the model's confidence outputs (Fredrikson et al. 2015).</li>
+<li><strong>Extraction:</strong> craft prompts that make a generative model emit memorized training sequences verbatim (Carlini et al. 2021).</li>
+<li><strong>Gradient leakage:</strong> given a gradient $g = \nabla_\theta \mathcal L(\theta; x, y)$ shared during distributed training, invert it to recover the private input $(x, y)$ (Zhu et al. 2019).</li>
+</ul>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1610.05820">Shokri, Stronati, Song, Shmatikov, "Membership Inference Attacks against Machine Learning Models" (IEEE S&amp;P 2017)</a></li>
+<li><a href="https://www.cs.cmu.edu/~mfredrik/papers/fjr2015ccs.pdf">Fredrikson, Jha, Ristenpart, "Model Inversion Attacks that Exploit Confidence Information and Basic Countermeasures," CCS 2015</a></li>
+<li><a href="https://arxiv.org/abs/2012.07805">Carlini et al., "Extracting Training Data from Large Language Models," USENIX Security 2021</a></li>
+<li><a href="https://arxiv.org/abs/1906.08935">Zhu, Liu, Han, "Deep Leakage from Gradients," NeurIPS 2019</a></li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Membership Inference</h2>
 <p>A membership inference attack asks one crisp question: was this specific record used to train the model? It is the unit test of privacy, the simplest leak to measure.</p>
 <p><span class="kt">Key takeaway:</span> Membership inference is the baseline measurable leak.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Membership-inference game</strong> (formulation: course notes). A challenger flips $b \sim \mathrm{Bernoulli}(1/2)$; if $b = 1$ it trains $\theta$ on a dataset containing the target $x$, if $b = 0$ on the same dataset without $x$. The adversary sees $\theta$ (or query access) and $x$, and outputs $\hat b$. Its <em>advantage</em> is $\mathrm{TPR} - \mathrm{FPR} = \Pr[\hat b = 1 \mid b = 1] - \Pr[\hat b = 1 \mid b = 0]$. Shokri et al. instantiate the attack by training "shadow models" on data like the target's, then training a classifier to distinguish member from non-member prediction vectors.</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>DP bounds every membership test</strong> (hypothesis-testing view; stated in the privacy course dp2 deck, citing Wasserman &amp; Zhou, "A Statistical Framework for Differential Privacy," JASA 2010). If $M$ is $\varepsilon$-DP, then any test distinguishing neighbors $D$ (with Alice) from $D'$ (without) with false-alarm probability $q$ and miss probability $p$ satisfies
+$$1 \le p + e^{\varepsilon} q \qquad\text{and}\qquad 1 \le q + e^{\varepsilon} p.$$
+<em>Proof.</em> Let $T$ be the test's rejection region (outputs on which it says "Alice is in"). By $\varepsilon$-DP, $1 - p = \Pr[M(D) \in T] \le e^{\varepsilon} \Pr[M(D') \in T] = e^{\varepsilon} q$, so $1 \le p + e^{\varepsilon} q$; swapping the roles of $D, D'$ gives the second inequality. $\blacksquare$ (proof: privacy course 01-dp, dp2 deck)</p>
+<p>Consequence: with small $\varepsilon$, no attacker — regardless of side information — can be simultaneously sensitive and specific. This is why membership inference is exactly the attack DP is built to stop.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1610.05820">Shokri et al., "Membership Inference Attacks against Machine Learning Models" (IEEE S&amp;P 2017)</a> — the shadow-model attack that started the field.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The Tell: Lower Loss</h2>
 <p>A model fits points it actually saw with lower loss. But the loss distributions for members and non-members overlap, so any threshold leaves error, and that overlap is the attacker's miss rate.</p>
 <p><span class="kt">Key takeaway:</span> Members have lower loss, but overlap limits how well an attacker can tell.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Loss-threshold attack:</strong> declare "member" iff $\mathcal L(\theta; x, y) \le \tau$ for a threshold $\tau$. Its ROC curve is generated by sweeping $\tau$ over the two loss distributions (members vs non-members); the overlap of those distributions lower-bounds the sum of error rates, exactly as in the two-bells picture later in this lecture. Yeom et al. analyze this attack and tie its advantage to overfitting: the larger the train–test loss gap, the stronger the attack.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1709.01604">Yeom, Giacomelli, Fredrikson, Jha, "Privacy Risk in Machine Learning: Analyzing the Connection to Overfitting" (2017)</a> — formalizes loss-based membership inference and its link to the generalization gap.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Model Inversion</h2>
 <p>Fredrikson and colleagues turned a model's confidence scores into a reconstructed face: given a name and access to the model, output a recognizable image of that person.</p>
 <p><span class="kt">Key takeaway:</span> Confidence outputs can be inverted into a recognizable input.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Model inversion as optimization</strong> (formulation: course notes, following Fredrikson et al.): for a classifier $f_\theta$ with a target class $y$ (a person's name), reconstruct
+$$\hat x \;=\; \arg\max_{x} \; f_\theta(x)_y,$$
+i.e. gradient ascent in <em>input</em> space on the confidence assigned to the target class, optionally with an image prior. The output is not a training image, but a class-representative reconstruction — for a face classifier trained on one person per class, that is a recognizable face.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://www.cs.cmu.edu/~mfredrik/papers/fjr2015ccs.pdf">Fredrikson, Jha, Ristenpart, "Model Inversion Attacks that Exploit Confidence Information and Basic Countermeasures," CCS 2015</a> — recovers recognizable face images given only a name and model access; source of the slide's figure.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>When Leakage Meets Law</h2>
 <p>In 2023 The New York Times sued OpenAI, with a complaint showing near-verbatim regurgitation of paywalled article text. Memorization became a courtroom exhibit.</p>
 <p><span class="kt">Key takeaway:</span> Memorization is now a legal liability, not just a technical one.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p><em>The New York Times Company v. Microsoft Corporation, OpenAI, Inc., et al.</em>, No. 1:23-cv-11195 (S.D.N.Y., filed Dec 27, 2023). The Times, represented by Susman Godfrey and Rothwell Figg, sued Microsoft and the OpenAI entities for copyright infringement. The complaint's exhibits show GPT-4 producing near-verbatim excerpts of Times articles — memorization presented as courtroom evidence.</p>
+<ul>
+<li><a href="https://nytco-assets.nytimes.com/2023/12/NYT_Complaint_Dec2023.pdf">The complaint (PDF, hosted by The New York Times Company)</a> — see the verbatim-output exhibits.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Regulators Step In</h2>
 <p>Governments treat training data as personal data. Italy briefly banned ChatGPT in 2023 over GDPR, which grants a right to deletion, and the EU AI Act raises documentation duties. Beyond fines, leakage is a business risk: copyright and privacy lawsuits, GDPR penalties that scale with revenue, and lost trust from users and partners.</p>
 <p><span class="kt">Key takeaway:</span> Privacy law now applies directly to model training data.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p><strong>Italy's ChatGPT block (2023).</strong> On March 31, 2023 the Italian data-protection authority (Garante) ordered an immediate temporary limitation on OpenAI's processing of Italian users' data, citing the lack of a legal basis for collecting personal data to train the models, missing notices, inaccurate outputs, and absent age verification; service resumed after OpenAI implemented changes.</p>
+<p><strong>GDPR.</strong> Article 17 grants the right to erasure ("right to be forgotten") — the legal pressure behind machine unlearning later in this lecture. GDPR fines scale up to 4% of global annual revenue.</p>
+<p><strong>EU AI Act.</strong> Regulation (EU) 2024/1689; its obligations for general-purpose AI models (training-data documentation among them) apply from August 2, 2025.</p>
+<ul>
+<li><a href="https://www.garanteprivacy.it/home/docweb/-/docweb-display/docweb/9870847">Garante, March 31, 2023 announcement on ChatGPT</a> — the temporary limitation order.</li>
+<li><a href="https://gdpr-info.eu/art-17-gdpr/">GDPR Article 17 — Right to erasure</a> — full legal text.</li>
+<li><a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj">Regulation (EU) 2024/1689 (AI Act), EUR-Lex</a> — official text.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -162,6 +317,15 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>A 2006 Idea</h2>
 <p>Differential privacy, introduced by Dwork and colleagues in 2006, is a mathematical definition of privacy. Not a patch or a heuristic, but a property an algorithm provably has or lacks.</p>
 <p><span class="kt">Key takeaway:</span> DP is a definition you can prove an algorithm satisfies.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The attribution, precisely: pure $\varepsilon$-DP and the Laplace mechanism are from Dwork, McSherry, Nissim, and Smith, "Calibrating Noise to Sensitivity in Private Data Analysis" (TCC 2006). The $(\varepsilon,\delta)$ relaxation is from Dwork, Kenthapadi, McSherry, Mironov, and Naor, "Our Data, Ourselves: Privacy via Distributed Noise Generation" (EUROCRYPT 2006). The standard textbook treatment is Dwork &amp; Roth (2014), free online.</p>
+<ul>
+<li><a href="https://doi.org/10.1007/11681878_14">Dwork, McSherry, Nissim, Smith, "Calibrating Noise to Sensitivity in Private Data Analysis," TCC 2006</a> — $\varepsilon$-DP and the Laplace mechanism.</li>
+<li><a href="https://doi.org/10.1007/11761679_29">Dwork, Kenthapadi, McSherry, Mironov, Naor, "Our Data, Ourselves," EUROCRYPT 2006</a> — the $(\varepsilon,\delta)$ relaxation.</li>
+<li><a href="https://www.cis.upenn.edu/~aaroth/Papers/privacybook.pdf">Dwork &amp; Roth, "The Algorithmic Foundations of Differential Privacy" (2014), free PDF</a> — the reference text for everything in this lecture.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -180,6 +344,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Plausible Deniability</h2>
 <p>If the output is almost the same either way, no one can tell which world produced it, so Alice can credibly deny being in the data. Deniability is the human meaning of the math.</p>
 <p><span class="kt">Key takeaway:</span> Indistinguishable outputs give each person plausible deniability.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Log-odds form of pure DP</strong> (source: lec02tech / privacy course): $M$ is $\varepsilon$-DP iff for all neighbors $D \sim D'$ and every output $y$,
+$$\left| \log \frac{\Pr[M(D) = y]}{\Pr[M(D') = y]} \right| \le \varepsilon.$$
+Bayesian reading of deniability: whatever prior odds an observer holds on "Alice is in the data" vs "Alice is not," seeing the output multiplies those odds by at most $e^{\varepsilon}$. With $\varepsilon$ small, no output can make the observer much more confident than they already were — that is plausible deniability, quantified.</p>
+</div>
 </article>
 
 <article>
@@ -192,12 +362,28 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Randomness Is Required</h2>
 <p>A deterministic release cannot be DP: same input always gives the same output, so one changed record is detectable. DP algorithms are always randomized; randomness is the source of deniability.</p>
 <p><span class="kt">Key takeaway:</span> No randomness, no privacy.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Theorem.</strong> No deterministic, non-constant mechanism is $\varepsilon$-DP for any finite $\varepsilon$.</p>
+<p><em>Proof.</em> Let $f$ be deterministic and non-constant, so there exist datasets $A, B$ with $f(A) \ne f(B)$. Transform $A$ into $B$ one record at a time; along this chain of neighboring datasets the value of $f$ must change at some step, so there exist <em>neighbors</em> $D \sim D'$ with $f(D) \ne f(D')$. Take $S = \{f(D)\}$. Then $\Pr[f(D) \in S] = 1$ while $\Pr[f(D') \in S] = 0$, so the ratio $\Pr[f(D) \in S] / \Pr[f(D') \in S]$ is infinite and no finite $\varepsilon$ satisfies the DP inequality. $\blacksquare$ (derivation: course notes, generalizing the deterministic-mean counterexample in privacy course dp2)</p>
+<p>Interpretation: an attacker who knows everyone's data except Alice's can compute the deterministic output for both hypotheses about Alice and read her record off the released value. Only randomness prevents this.</p>
+</div>
 </article>
 
 <article>
 <h2>Formal Definition</h2>
 <p>Here is the definition. For neighboring datasets $D, D'$ and every outcome set $S$, $\Pr[M(D)\in S]\le e^{\varepsilon}\Pr[M(D')\in S]+\delta$. The map $M$ is randomized; small $\varepsilon,\delta$ mean the two worlds look alike.</p>
 <p><span class="kt">Key takeaway:</span> $(\varepsilon,\delta)$-DP bounds the output probability ratio between neighbors.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>$(\varepsilon,\delta)$-differential privacy</strong> (Dwork, Kenthapadi, McSherry, Mironov, Naor, EUROCRYPT 2006). A randomized mechanism $M : \mathcal D \to \mathcal Y$ is $(\varepsilon,\delta)$-DP if
+$$\forall\, D \sim D' \;\; \forall\, \text{measurable } S \subseteq \mathcal Y: \quad \Pr[M(D) \in S] \;\le\; e^{\varepsilon}\, \Pr[M(D') \in S] + \delta,$$
+where the probability is over $M$'s internal randomness only, and the condition is required for <em>every</em> neighboring pair and <em>every</em> event — a worst-case guarantee, with no distributional assumption on the data.</p>
+<p><strong>Pure $\varepsilon$-DP</strong> (Dwork, McSherry, Nissim, Smith, TCC 2006) is the case $\delta = 0$. Since neighboring is symmetric, pure DP is equivalent to the two-sided bound
+$$e^{-\varepsilon} \;\le\; \frac{\Pr[M(D) \in S]}{\Pr[M(D') \in S]} \;\le\; e^{\varepsilon}$$
+for all neighbors and all $S$ with nonzero denominator (source: privacy course dp2).</p>
+<p>Note the quantifier structure: DP is a property of the <em>algorithm</em> $M$, not of any particular dataset or output. That is what makes it provable.</p>
+</div>
 </article>
 
 <article>
@@ -210,6 +396,18 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Neighboring Datasets</h2>
 <p>Neighboring datasets $D$ and $D'$ differ by exactly one person's record: take $D$, remove one row, get $D'$. DP compares the algorithm across every such neighboring pair.</p>
 <p><span class="kt">Key takeaway:</span> "Neighbors" means differing by a single person.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Convention used in this course (add/remove, "unbounded DP"):</strong> $D \sim D'$ iff $D'$ can be obtained from $D$ by adding or removing exactly one record, i.e. the multiset symmetric difference satisfies $|D \,\triangle\, D'| = 1$. This is the convention the deck and the tech supplement use ("take $D$, remove one row, get $D'$"); note $|D'| = |D| \pm 1$.</p>
+<p><strong>Alternative (replace, "bounded DP"):</strong> $D = (X_1,\dots,X_i,\dots,X_n)$ and $D' = (X_1,\dots,X_i',\dots,X_n)$ differ in one record's <em>value</em>, with $|D| = |D'| = n$. The privacy course (dp2) states this as its primary definition, with add/remove as the variant. The two are equivalent up to a factor of at most 2 in $\varepsilon$: a replacement is one removal followed by one addition, so an $\varepsilon$-DP mechanism under add/remove is $2\varepsilon$-DP under replace, by group privacy below.</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>Group privacy</strong> (Dwork &amp; Roth 2014). If $M$ is $\varepsilon$-DP and $D, D''$ differ in at most $t$ records, then for every event $S$,
+$$\Pr[M(D) \in S] \;\le\; e^{t\varepsilon}\, \Pr[M(D'') \in S].$$
+<em>Proof.</em> Build a telescoping chain $D = D_0 \sim D_1 \sim \cdots \sim D_t = D''$ in which consecutive datasets are neighbors (change the differing records one at a time). Applying the DP inequality at each hop,
+$$\Pr[M(D_0) \in S] \le e^{\varepsilon} \Pr[M(D_1) \in S] \le e^{2\varepsilon} \Pr[M(D_2) \in S] \le \cdots \le e^{t\varepsilon} \Pr[M(D_t) \in S]. \;\blacksquare$$
+(proof: privacy course 01-dp, dp3 deck)</p>
+<p>Consequence: DP protects small groups at linearly degraded strength — a family of 4 under $\varepsilon = 0.5$ still has a factor-$e^{2} \approx 7.4$ guarantee, but for $t = 20$ the bound $e^{10}$ is vacuous. DP is an <em>individual</em>-level guarantee by design.</p>
+</div>
 </article>
 
 <article>
@@ -228,12 +426,30 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>$\varepsilon$ in the Wild</h2>
 <p>Deployed values vary widely. Apple's own whitepaper reports $\varepsilon = 4$ to $8$ per item with budgets reset daily — and outside auditors measured up to $\varepsilon = 16$ per day overall. The 2020 US Census used one global budget of roughly $\varepsilon \approx 17$ for the redistricting release. There is no single correct $\varepsilon$.</p>
 <p><span class="kt">Key takeaway:</span> Real-world $\varepsilon$ choices are inconsistent, so read reported numbers carefully.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p><strong>Apple.</strong> Apple's own whitepaper documents per-feature, per-donation budgets: $\varepsilon = 4$ for Lookup Hints (two donations/day), $\varepsilon = 4$ for emoji (one/day), $\varepsilon = 8$ for QuickType (two/day), $\varepsilon = 2$ for Health types (one/day) — with the budget renewed daily. Tang et al. reverse-engineered the macOS 10.12 implementation and found the permitted overall loss reaches $\varepsilon = 16$ per day across the four initially announced applications, compounding day after day since opt-in.</p>
+<p><strong>US Census 2020.</strong> The Census Bureau's TopDown algorithm in the Disclosure Avoidance System (DAS) was the first DP deployment for a decennial census. The parameters announced June 9, 2021 for the redistricting (P.L. 94-171) release: global $\varepsilon = 19.61$, split as $\varepsilon = 17.14$ for the persons file (the "$\approx 17$" on the slide) and $\varepsilon = 2.47$ for housing units.</p>
+<ul>
+<li><a href="https://www.apple.com/privacy/docs/Differential_Privacy_Overview.pdf">Apple, "Differential Privacy Overview" (whitepaper)</a> — the per-feature budgets.</li>
+<li><a href="https://arxiv.org/abs/1709.02753">Tang, Korolova, Bai, Wang, Wang, "Privacy Loss in Apple's Implementation of Differential Privacy on MacOS 10.12" (2017)</a> — the independent $\varepsilon \le 16$/day audit.</li>
+<li><a href="https://www.census.gov/newsroom/press-releases/2021/2020-census-key-parameters.html">US Census Bureau press release, June 9, 2021</a> — the official 2020 Census DAS parameters.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Meet $\delta$</h2>
 <p>The parameter $\delta$ is a small failure probability, the chance the guarantee slips. A common rule keeps $\delta \ll 1/n$, where $n$ is the dataset size, so keep it well below one over the number of people.</p>
 <p><span class="kt">Key takeaway:</span> $\delta$ is a tiny failure probability, kept well below $1/n$.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>In $(\varepsilon,\delta)$-DP, $\delta$ is additive slack on the probability-ratio guarantee: with probability at least $1-\delta$ the output behaves as under pure $\varepsilon$-DP, and with probability at most $\delta$ the guarantee may fail outright (this reading is made precise by the privacy-loss tail lemma in the "Overlap Is Privacy" entry).</p>
+<p><strong>Why $\delta \ll 1/n$:</strong> Dwork &amp; Roth warn that values of $\delta$ on the order of $1/n$ are "very dangerous: they permit 'preserving privacy' by publishing the complete records of a small number of database participants." Concretely, the mechanism "pick one of the $n$ records uniformly and publish it in full" violates any reasonable privacy notion, yet satisfies $(\varepsilon, \delta)$-DP with $\delta \approx 1/n$ — each fixed person's record appears with probability only $1/n$. So $\delta$ must be negligible compared to $1/n$ for the guarantee to mean anything per person. (source: Dwork &amp; Roth 2014, §2.3; example: course notes)</p>
+<ul>
+<li><a href="https://www.cis.upenn.edu/~aaroth/Papers/privacybook.pdf">Dwork &amp; Roth, "The Algorithmic Foundations of Differential Privacy" (2014)</a> — see the discussion of $\delta$ following Definition 2.4.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -246,6 +462,15 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Superpower 1: Post-Processing</h2>
 <p>The first superpower: anything you compute from a DP output is still DP. Round it, plot it, feed it to a model, the guarantee carries through. You cannot undo privacy by clever analysis.</p>
 <p><span class="kt">Key takeaway:</span> Post-processing a DP output can never break its privacy.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Post-processing invariance</strong> (Dwork &amp; Roth 2014, Prop. 2.1). Let $M$ be $\varepsilon$-DP and let $f$ be <em>any</em> function of $M$'s output — possibly randomized, with randomness independent of $M$'s and of the data. Then $f \circ M$ is $\varepsilon$-DP.</p>
+<p><em>Proof.</em> First take $f$ deterministic. For any event $O$ in $f$'s output space and neighbors $D \sim D'$,
+$$\Pr[f(M(D)) \in O] \;=\; \Pr[M(D) \in f^{-1}(O)] \;\le\; e^{\varepsilon} \Pr[M(D') \in f^{-1}(O)] \;=\; e^{\varepsilon} \Pr[f(M(D')) \in O],$$
+using the DP guarantee on the event $f^{-1}(O)$. For randomized $f$, write $f(\cdot) = g(\cdot, W)$ with $W$ the independent seed; conditioning on $W = w$ makes $g(\cdot, w)$ deterministic, so the bound holds for each $w$, and averaging over $W$ preserves the inequality. $\blacksquare$ (proof: privacy course 01-dp, dp3 deck)</p>
+<p>The same argument gives the $(\varepsilon,\delta)$ version: $f \circ M$ is $(\varepsilon,\delta)$-DP whenever $M$ is.</p>
+<p><strong>Boundary of the superpower:</strong> post-processing means computing on the <em>released output only</em>. Any computation that touches the raw data $D$ again is a new query, and its cost is governed by composition (see "Many Samples Break It"), not post-processing.</p>
+</div>
 </article>
 
 <article>
@@ -258,18 +483,48 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>A Warm-Up: Guess the Nationality</h2>
 <p>An intuition pump. Male heights are roughly $\mathcal{N}(170,10^2)$ in Korea and $\mathcal{N}(168,10^2)$ in Japan. You meet one 171 cm person; which country? The means differ by 2 cm while each spread is 10 cm, so the bells are nearly equally tall there and your best guess barely beats a coin flip.</p>
 <p><span class="kt">Key takeaway:</span> Two close, wide distributions are hard to tell apart from one sample.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>How much better than a coin flip?</strong> With equal priors on Korea ($\mathcal N(170, 10^2)$) and Japan ($\mathcal N(168, 10^2)$), the Bayes-optimal test is the likelihood-ratio test, which for equal variances thresholds at the midpoint: guess Korea iff $x \ge 169$. Its error probability is
+$$\Pr[X &lt; 169 \mid \mathcal N(170,10^2)] \;=\; \Phi\!\left(\tfrac{169-170}{10}\right) \;=\; \Phi(-0.1) \;\approx\; 0.460,$$
+and by symmetry the same for the other class. So the best possible accuracy from one sample is $\Phi(0.1) \approx 54\%$ — barely above the 50% coin flip, exactly as the slide claims. (derivation: course notes)</p>
+<p>This is the quantitative template for DP: privacy holds when the "with Alice" and "without Alice" output distributions are two close, wide bells, so that even the optimal distinguisher is near chance.</p>
+</div>
 </article>
 
 <article>
 <h2>Overlap Is Privacy</h2>
 <p>The more two distributions overlap, the less any test can separate them. In DP, output-with-Alice and output-without-Alice are two bells, and DP caps the gap at $e^{\varepsilon}$ in the odds.</p>
 <p><span class="kt">Key takeaway:</span> Small $\varepsilon$ forces overlap, and Alice hides in it.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Privacy loss random variable</strong> (source: privacy course dp4). For neighbors $D \sim D'$, define the privacy loss function at output $y$:
+$$I_{D,D'}(y) \;=\; \log \frac{\Pr[M(D) = y]}{\Pr[M(D') = y]}$$
+(densities in the continuous case). The <em>privacy loss random variable</em> is $I_{D,D'}(Y)$ with $Y \sim M(D)$ — the log-likelihood ratio the best possible adversary observes. Pure $\varepsilon$-DP is exactly the statement $|I_{D,D'}(y)| \le \varepsilon$ for all $y$ and all neighboring pairs.</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>Tail lemma</strong> (source: privacy course dp4): if for all neighbors $\Pr[I_{D,D'}(Y) > \varepsilon] \le \delta$, then $M$ is $(\varepsilon,\delta)$-DP.</p>
+<p><em>Proof.</em> Fix neighbors $D, D'$ and any event $S$. Split outputs into the good set $G = \{y : I_{D,D'}(y) \le \varepsilon\}$ and the bad set $B = G^c$, which has $\Pr[M(D) \in B] \le \delta$ by assumption. Then
+$$\Pr[M(D) \in S] \;\le\; \Pr[M(D) \in S \cap G] + \Pr[M(D) \in B] \;\le\; \Pr[M(D) \in S \cap G] + \delta.$$
+On $G$ the pointwise ratio is at most $e^{\varepsilon}$, so $\Pr[M(D) \in S \cap G] \le e^{\varepsilon} \Pr[M(D') \in S \cap G] \le e^{\varepsilon} \Pr[M(D') \in S]$. Combining, $\Pr[M(D) \in S] \le e^{\varepsilon} \Pr[M(D') \in S] + \delta$. $\blacksquare$ (proof: privacy course 01-dp, dp4 deck)</p>
+<p>This is the precise sense in which "overlap is privacy": DP caps the adversary's log-odds at $\varepsilon$ except on a $\delta$-probability tail, and it is also the engine of the Gaussian mechanism's proof later.</p>
+</div>
 </article>
 
 <article>
 <h2>Many Samples Break It</h2>
 <p>Now measure 1000 people from each country and compare averages. They concentrate near 170 and 168, the bells barely overlap, and the 2 cm gap becomes clear. Repeated queries erode privacy, so DP limits how much you ask.</p>
 <p><span class="kt">Key takeaway:</span> Repeated queries accumulate and eventually break privacy.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Why 1000 samples separate the bells:</strong> the sample mean of $n = 1000$ heights has standard deviation $10/\sqrt{1000} \approx 0.32$ cm, far below the 2 cm gap — the bells of the <em>averages</em> barely overlap, so the test becomes near-perfect. (derivation: course notes)</p>
+<p><strong>Sequential (basic) composition</strong> (Dwork, McSherry, Nissim, Smith, TCC 2006; adaptive form). Let $M_1$ be $\varepsilon_1$-DP, and let $M_2(\cdot, a_1)$ be $\varepsilon_2$-DP for every fixed value $a_1$ of $M_1$'s output (so the second query may <em>depend</em> on the first answer). Then the joint release $M(D) = (M_1(D),\, M_2(D, M_1(D)))$ is $(\varepsilon_1 + \varepsilon_2)$-DP.</p>
+<p><em>Proof.</em> For discrete outputs and neighbors $D \sim D'$, factorize by the chain rule:
+$$\Pr[M(D) = (a_1, a_2)] \;=\; \Pr[M_1(D) = a_1]\; \Pr[M_2(D, a_1) = a_2].$$
+The first factor is at most $e^{\varepsilon_1} \Pr[M_1(D') = a_1]$ by $M_1$'s guarantee; the second is at most $e^{\varepsilon_2} \Pr[M_2(D', a_1) = a_2]$ by $M_2$'s guarantee at the fixed value $a_1$. Hence
+$$\Pr[M(D) = (a_1, a_2)] \;\le\; e^{\varepsilon_1 + \varepsilon_2}\, \Pr[M(D') = (a_1, a_2)],$$
+and summing this pointwise bound over any set $T$ of output pairs gives the DP inequality for $T$. $\blacksquare$ (proof: privacy course 01-dp, dp3 deck)</p>
+<p><strong>Corollary ($k$-fold).</strong> $k$ adaptively chosen releases, each $\varepsilon_i$-DP, jointly satisfy $\left(\sum_{i=1}^k \varepsilon_i\right)$-DP; with $(\varepsilon_i, \delta_i)$ guarantees, the sums $\left(\sum_i \varepsilon_i, \sum_i \delta_i\right)$ compose likewise. This is why $\varepsilon$ is called a <em>budget</em>: every query spends some, and the spend adds up.</p>
+</div>
 </article>
 
 <article>
@@ -300,18 +555,50 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Randomized Response</h2>
 <p>Randomized response is privacy from before computers, a 1965 survey technique by Warner for sensitive yes/no questions. It is still the cleanest intuition for DP.</p>
 <p><span class="kt">Key takeaway:</span> Randomized response is DP's oldest and clearest example.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Randomized response, general form</strong> (source: privacy course dp2). Each respondent holds a sensitive bit $D_i \in \{0,1\}$ and reports
+$$Y_i \;=\; \begin{cases} D_i &amp; \text{w.p. } \tfrac12 + \gamma \\[2pt] 1 - D_i &amp; \text{w.p. } \tfrac12 - \gamma \end{cases} \qquad 0 &lt; \gamma \le \tfrac12,$$
+with each flip independent. The dial $\gamma$ trades privacy for utility: $\gamma = \tfrac12$ means $Y_i = D_i$ always (full utility, zero privacy); $\gamma = 0$ means $Y_i$ is a fair coin (perfect privacy, zero utility).</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>Theorem.</strong> Randomized response $M(D) = (Y_1, \dots, Y_n)$ is $\varepsilon_\gamma$-DP with
+$$\varepsilon_\gamma \;=\; \ln\frac{\tfrac12+\gamma}{\tfrac12-\gamma},$$
+and for small $\gamma$, $\varepsilon_\gamma = 4\gamma + O(\gamma^3)$ — the "$4\gamma$-DP" reading. (The proof is given under "The Coin Protocol" below for $\gamma = \tfrac14$; the general case is identical with $\gamma$ in place of $\tfrac14$. Source: privacy course 01-dp, dp2 deck.)</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://www.csc2.ncsu.edu/faculty/mpsingh/local/Social/f15/wrap/readings/Warner-Randomized-Response-2283137.pdf">Warner, "Randomized Response: A Survey Technique for Eliminating Evasive Answer Bias" (JASA Vol. 60, No. 309, March 1965, pp. 63&ndash;69)</a> — the original paper, four decades before DP; Warner's goal was honest survey answers to sensitive questions, and the privacy guarantee came as a by-product.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The Coin Protocol</h2>
 <p>The respondent flips a coin in secret. Heads: answer truthfully. Tails: flip again and answer by that coin. The surveyor never sees the flips, so every answer has deniability.</p>
 <p><span class="kt">Key takeaway:</span> A hidden coin gives each respondent deniable answers.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>The coin protocol is the $\gamma = \tfrac14$ instance of randomized response: on heads (probability $\tfrac12$) answer truthfully; on tails, answer by a second fair coin. So the truth is reported w.p. $\tfrac12 + \tfrac12 \cdot \tfrac12 = \tfrac34 = \tfrac12 + \gamma$ with $\gamma = \tfrac14$.</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>Theorem.</strong> The coin protocol is $\varepsilon$-DP with $\varepsilon = \ln 3 \approx 1.10$.</p>
+<p><em>Proof.</em> Neighbors differ in one respondent's bit, say respondent $i$'s: $D_i = 1$ vs $D_i' = 0$. Reports are independent, and only factor $i$ differs between the two worlds, so every other factor cancels in the ratio:
+$$\frac{\Pr[M(D) = y]}{\Pr[M(D') = y]} \;=\; \frac{\Pr[Y_i = y_i \mid D_i = 1]}{\Pr[Y_i = y_i \mid D_i' = 0]} \;\in\; \left\{ \frac{3/4}{1/4},\; \frac{1/4}{3/4} \right\},$$
+since respondent $i$ reports a given value w.p. $\tfrac34$ (it matches their bit) or $\tfrac14$ (it is the flip). Both ratios lie in $[e^{-\ln 3}, e^{\ln 3}]$; summing the pointwise bound over any event $O$ gives $\Pr[M(D) \in O] \le 3\Pr[M(D') \in O]$, i.e. $(\ln 3)$-DP — and equality holds when $y_i = D_i$, so $\ln 3$ is exact. The general-$\gamma$ proof replaces $\tfrac34/\tfrac14$ by $(\tfrac12+\gamma)/(\tfrac12-\gamma)$, giving $\varepsilon_\gamma$ from the previous entry. $\blacksquare$ (proof: privacy course 01-dp, dp2 deck)</p>
+</div>
 </article>
 
 <article>
 <h2>Recovering the Truth</h2>
 <p>Half answer truthfully and half flip a fair coin, forcing 25% "yes." Solving $0.70=\tfrac12 p+\tfrac12\cdot\tfrac12$ gives $p=0.90$. So observing 70% "yes" implies a true rate of 90%.</p>
 <p><span class="kt">Key takeaway:</span> Known noise can be subtracted to recover the true aggregate.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Debiasing.</strong> Each report has $\mathbb{E}[Y_i] = D_i(\tfrac12+\gamma) + (1-D_i)(\tfrac12-\gamma) = 2\gamma D_i + \tfrac12 - \gamma$ — affine in $D_i$ with slope $2\gamma$, hence invertible for any $\gamma > 0$. Inverting gives the unbiased per-person estimator
+$$\hat D_i \;=\; \frac{Y_i - \tfrac12 + \gamma}{2\gamma}, \qquad \mathbb{E}[\hat D_i] = D_i,$$
+and $\hat p = \tfrac1n\sum_i \hat D_i$ satisfies $\mathbb{E}[\hat p] = p$, the true fraction. In the coin protocol ($\gamma = \tfrac14$): $\mathbb{E}[\bar Y] = \tfrac{p}{2} + \tfrac14$, so $\hat p = 2\bar Y - \tfrac12$ — with $\bar Y = 0.70$ this is $0.90$, exactly the slide's arithmetic.</p>
+<p><strong>Accuracy.</strong> Since $\mathrm{Var}[Y_i] \le \tfrac14$ (a Bernoulli variable),
+$$\mathrm{Var}[\hat p] \;=\; \frac{1}{4n^2\gamma^2}\sum_{i=1}^n \mathrm{Var}[Y_i] \;\le\; \frac{1}{16\,n\gamma^2}, \qquad \text{std.\ dev.} \le \frac{1}{4\gamma\sqrt n}.$$
+Chebyshev's inequality then gives $\Pr[|\hat p - p| > \alpha] \le \beta$ once $n \ge \dfrac{1}{16\,\gamma^2\beta\,\alpha^2}$. Anchor numbers: $\gamma = 0.1$, $\alpha = \beta = 0.05$ requires $n = 50{,}000$ respondents — privacy is paid for in sample size, at rate $n \propto 1/\gamma^2$. (proof: privacy course 01-dp, dp2 deck)</p>
+</div>
 </article>
 
 <article>
@@ -324,36 +611,103 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Local vs Central DP</h2>
 <p>Two models. In local DP, noise is added on each person's device, so no trusted collector is needed. In central DP, a trusted curator holds raw data and adds noise once. Local trusts no one but needs far more noise.</p>
 <p><span class="kt">Key takeaway:</span> Local DP trusts no one but pays in extra noise.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Local differential privacy.</strong> A local randomizer $R$ is $\varepsilon$-LDP if for <em>all pairs</em> of individual inputs $x, x'$ and all output events $S$:
+$$\Pr[R(x) \in S] \;\le\; e^{\varepsilon}\, \Pr[R(x') \in S].$$
+Each person randomizes their own record before it leaves their device; the curator only ever sees noisy reports, so no trusted party is needed. Randomized response is the canonical $\varepsilon_\gamma$-LDP mechanism. Central DP instead lets a trusted curator see raw data and add a single dose of noise to the aggregate.</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>The price of distrust</strong> (source: privacy course dp2, central-vs-local comparison). Estimating a fraction $p$ from $n$ bits:</p>
+<ul>
+<li><em>Local (RR):</em> one coin per user; per-user noise variances add, giving typical error $\approx \dfrac{1}{4\gamma\sqrt n}$.</li>
+<li><em>Central (Laplace):</em> one $\mathrm{Lap}(0, \tfrac{1}{n\varepsilon})$ draw on the final average (the mean has sensitivity $1/n$), giving typical error $\approx \dfrac{1}{n\varepsilon}$.</li>
+</ul>
+<p>Trusting a curator buys a full $\sqrt n$ factor of accuracy — a gap fundamental to the local model, not an artifact of randomized response.</p>
+</div>
 </article>
 
 <article>
 <h2>Local DP in Products</h2>
 <p>Local DP ships today. Apple used it in 2017 for emoji and typing statistics, and Google's RAPPOR collected anonymous stats in Chrome. Strong privacy, but it needs many users.</p>
 <p><span class="kt">Key takeaway:</span> Local DP is real and deployed, at population scale.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://machinelearning.apple.com/research/learning-with-privacy-at-scale">Apple, "Learning with Privacy at Scale" (Machine Learning Journal, Dec. 2017)</a> — Apple's own account of its local-DP deployment for popular emoji, QuickType suggestions, and Safari usage: reports are privatized on-device before transmission, under per-donation privacy budgets.</li>
+<li><a href="https://arxiv.org/abs/1407.6981">Erlingsson, Pihur &amp; Korolova, "RAPPOR: Randomized Aggregatable Privacy-Preserving Ordinal Response" (CCS 2014)</a> — Google's Chrome telemetry system, the first industrial local-DP deployment; it is randomized response applied to Bloom-filter bits, with a two-level (permanent + instantaneous) randomization protecting repeated reports from the same user.</li>
+</ul>
+<p>Both deployments confirm the previous entry's math: population-scale user bases are what make the local model's $1/\sqrt n$ error tolerable.</p>
+</div>
 </article>
 
 <article>
 <h2>The Laplace Mechanism</h2>
 <p>To release a number privately, add noise around the true value: $\tilde q = q + \text{noise}$, with noise proportional to $\Delta q/\varepsilon$. Smaller $\varepsilon$ or bigger sensitivity means more noise.</p>
 <p><span class="kt">Key takeaway:</span> Noise scales with sensitivity over $\varepsilon$.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Laplace distribution.</strong> $\mathrm{Lap}(0, b)$ has density $\frac{1}{2b}e^{-|z|/b}$ on $\mathbb{R}$, mean $0$, variance $2b^2$, and tail $\Pr[|Z| > t\,b] = e^{-t}$.</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>Theorem (Dwork, McSherry, Nissim &amp; Smith, TCC 2006).</strong> For $f : \mathcal X^n \to \mathbb{R}^k$ with $\ell_1$ sensitivity $\Delta_1$, the mechanism
+$$M(D) \;=\; f(D) + (Y_1, \dots, Y_k), \qquad Y_i \overset{\text{iid}}{\sim} \mathrm{Lap}(0,\, \Delta_1/\varepsilon)$$
+is $\varepsilon$-DP.</p>
+<p><em>Proof.</em> With $b = \Delta_1/\varepsilon$, independence gives the product density $f_{M(D)}(z) = \prod_{i=1}^k \frac{1}{2b}\exp(-|z_i - f(D)_i|/b)$. For neighbors $D \sim D'$ and any $z \in \mathbb{R}^k$,
+$$\frac{f_{M(D)}(z)}{f_{M(D')}(z)} \;=\; \prod_{i=1}^k \exp\!\Bigl(\frac{|z_i - f(D')_i| - |z_i - f(D)_i|}{b}\Bigr) \;\le\; \prod_{i=1}^k \exp\!\Bigl(\frac{|f(D)_i - f(D')_i|}{b}\Bigr) \;=\; \exp\!\Bigl(\frac{\|f(D)-f(D')\|_1}{b}\Bigr),$$
+where the inequality is the triangle inequality $|z - a'| - |z - a| \le |a - a'|$ applied per coordinate — the observation $z$ drops out entirely. By the definition of sensitivity, $\|f(D)-f(D')\|_1 \le \Delta_1$, and the calibration $b = \Delta_1/\varepsilon$ makes the bound $e^{\Delta_1/b} = e^{\varepsilon}$. Integrating the pointwise density bound over any event $T \subseteq \mathbb{R}^k$ gives $\Pr[M(D) \in T] \le e^{\varepsilon}\Pr[M(D') \in T]$. $\blacksquare$ (proof: privacy course 01-dp, dp2 deck)</p>
+<p><strong>Accuracy.</strong> Per coordinate the noise has variance $2\Delta_1^2/\varepsilon^2$, and the Laplace tail gives
+$$\Pr\!\Bigl[\,|M(D)_i - f(D)_i| > \frac{\Delta_1}{\varepsilon}\ln\frac{1}{\beta}\Bigr] \;=\; \beta,$$
+so with probability $1-\beta$ the error is at most $(\Delta_1/\varepsilon)\ln(1/\beta)$ — independent of the dataset size $n$. (source: privacy course dp2)</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://doi.org/10.1007/11681878_14">Dwork, McSherry, Nissim &amp; Smith, "Calibrating Noise to Sensitivity in Private Data Analysis" (TCC 2006)</a> — the paper that introduced both the Laplace mechanism and differential privacy itself.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Sensitivity</h2>
 <p>Sensitivity $\Delta q$ is how much one person can change the answer. "How many patients?" changes by 1, so a count has sensitivity 1; an average or sum can be much higher. Calibrate noise to the worst-case one-person change.</p>
 <p><span class="kt">Key takeaway:</span> Sensitivity is the worst-case effect of a single person.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>$\ell_1$ sensitivity.</strong> For $f : \mathcal X^n \to \mathbb{R}^k$,
+$$\Delta_1 \;=\; \max_{D,\,D' \text{ neighbors}} \|f(D) - f(D')\|_1.$$
+<strong>$\ell_2$ sensitivity.</strong> $\Delta_2 = \max_{D \sim D'} \|f(D) - f(D')\|_2$. Always $\Delta_2 \le \Delta_1 \le \sqrt{k}\,\Delta_2$; the Gaussian mechanism pays $\Delta_2$, Laplace pays $\Delta_1$, and in high dimension the $\sqrt{k}$ gap is why Gaussian noise wins in ML. Both are properties of the <em>query</em> $f$ alone, computable before seeing any data. (source: privacy course dp2/dp4)</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>Worked examples</strong> (source: privacy course dp2):</p>
+<ul>
+<li><em>Counting query</em> $f(D) = |\{i : X_i \text{ has the property}\}|$: adding, removing, or changing one record moves the count by at most $1$, so $\Delta_1 = 1$ at any dataset size.</li>
+<li><em>Mean query</em> $f(D) = \tfrac1n \sum_i X_i$ with $X_i \in [a,b]$ (replace convention, fixed $n$): $|f(D) - f(D')| = |X_i' - X_i|/n \le (b-a)/n$ — the mean's sensitivity shrinks like $1/n$, which is why averages get cheap to privatize on large datasets.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Noisy Count Example</h2>
 <p>Concretely, a true count of 1000 patients plus small noise might be reported as 1003. Whether any one patient is in or out is now hidden by that noise.</p>
 <p><span class="kt">Key takeaway:</span> A small perturbation masks any one person's membership.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Concrete calibration.</strong> A count has $\Delta_1 = 1$, so at $\varepsilon = 1$ the Laplace mechanism adds $\mathrm{Lap}(0, 1)$ noise. By the Laplace tail bound from the previous entry with $\beta = 0.01$: with probability $99\%$ the reported count is within $\ln 100 \approx 4.6$ of the truth — whether the hospital has $1{,}000$ patients or $10$ million. The absolute error is constant in $n$, so the <em>relative</em> error vanishes as data grows. (source: privacy course dp2)</p>
+<p>Meanwhile any one patient shifts the true count by exactly $1$, well inside the typical noise magnitude — that is the precise sense in which "1003" hides whether you are in the 1000.</p>
+</div>
 </article>
 
 <article>
 <h2>Gaussian Mechanism</h2>
 <p>The other standard choice is bell-curve noise. The Gaussian mechanism pairs naturally with $(\varepsilon,\delta)$-DP and is the workhorse inside private deep learning. Same recipe, different noise shape.</p>
 <p><span class="kt">Key takeaway:</span> Gaussian noise is the default for private deep learning.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Gaussian mechanism.</strong> $M(D) = f(D) + \mathcal N(0, \sigma^2 I)$ for $f : \mathcal X^n \to \mathbb{R}^d$, calibrated to the $\ell_2$ sensitivity $\Delta_2$. Gaussian noise <em>cannot</em> give pure $\varepsilon$-DP — the likelihood ratio of two shifted Gaussians diverges in the tail — which is exactly what the $\delta$ in $(\varepsilon,\delta)$-DP absorbs. (source: privacy course dp4)</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>Theorem (Dwork &amp; Roth 2014, Thm. 3.22).</strong> For $\varepsilon \in (0,1)$ and
+$$\sigma \;\ge\; \frac{\Delta_2\sqrt{2\ln(1.25/\delta)}}{\varepsilon},$$
+the Gaussian mechanism is $(\varepsilon,\delta)$-DP.</p>
+<p><em>Proof sketch</em> (structure from privacy course dp4, which carries the full proof). (1) Reduce to one dimension: by rotation invariance of $\mathcal N(0,\sigma^2 I)$, only the component along the shift direction $f(D)-f(D')$ matters; let $K = \|f(D)-f(D')\|_2 \le \Delta_2$. (2) Compute the privacy loss $I(y)$: subtracting two Gaussian log-densities leaves a function <em>linear</em> in $y$, so $I(Y)$ is itself Gaussian — with mean $K^2/2\sigma^2$ and variance $K^2/\sigma^2$. (3) Apply the Gaussian tail bound to $\Pr[I(Y) > \varepsilon]$; the stated $\sigma$ (the $1.25 = 5/4$ gives the needed slack) makes this tail at most $\delta$ whenever $\varepsilon &lt; 1$. (4) Invoke the tail lemma from "Overlap Is Privacy" to convert the tail bound into $(\varepsilon,\delta)$-DP. $\square$</p>
+<p>The complete calculation is Theorem A.1 in Appendix A of <a href="https://www.cis.upenn.edu/~aaroth/Papers/privacybook.pdf">Dwork &amp; Roth, <em>The Algorithmic Foundations of Differential Privacy</em> (free PDF)</a>. Note the $\varepsilon &lt; 1$ restriction is real: for $\varepsilon \ge 1$ this calibration is not valid, and modern treatments use R&eacute;nyi-DP or optimal ("analytic") Gaussian-mechanism calibrations instead.</p>
+<p><strong>Why it is the deep-learning default:</strong> gradients live in very high dimension $d$, where $\Delta_2 \le \Delta_1 \le \sqrt d\,\Delta_2$ makes $\ell_2$ calibration up to $\sqrt d$ quieter than Laplace — and Gaussian noise composes tightly across thousands of steps under the accountants of Section 05.</p>
+</div>
 </article>
 
 <article>
@@ -384,18 +738,65 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>DP-SGD</h2>
 <p>DP-SGD, from Abadi and colleagues in 2016, is the workhorse. Compute a per-example gradient, clip it to a maximum length, add Gaussian noise to the batch sum, take the step, and track the spent $\varepsilon$.</p>
 <p><span class="kt">Key takeaway:</span> DP-SGD = clip, add noise, step, account.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>DP-SGD</strong> (single-sample form analyzed in the privacy course, dp5). Inputs: dataset $D$ of $n$ records, loss $\ell$, step size $\alpha$, steps $T$, clip norm $G$, noise scale $\sigma$. Initialize $\theta_0$; for $t = 1, \dots, T$:</p>
+<ul>
+<li>Sample $x_t \sim D$ uniformly; compute the per-sample gradient $g_t = \nabla_\theta \ell(\theta_{t-1}; x_t)$.</li>
+<li><em>Clip:</em> $\bar g_t = g_t \cdot \min(1,\, G/\|g_t\|_2)$.</li>
+<li><em>Noise:</em> $\tilde g_t = \bar g_t + Z$, $Z \sim \mathcal N(0, \sigma^2 I)$.</li>
+<li>Update $\theta_t = \theta_{t-1} - \alpha\,\tilde g_t$ (with projection if constrained).</li>
+</ul>
+<p>Abadi et al.'s production version replaces the single sample by a random "lot" (minibatch) and adds noise to the clipped gradient <em>sum</em>; the analysis is the same three ingredients with lot-sampling rate $q$. The <em>noise multiplier</em> is $\sigma/G$, the knob reported in practice.</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>Theorem (DP-SGD privacy; privacy course dp5).</strong> DP-SGD above is $(\varepsilon,\delta)$-DP if
+$$\sigma \;\ge\; \frac{2G\sqrt{2T\log(1/\delta)}}{n\varepsilon}.$$</p>
+<p><em>Proof sketch</em> (three-step accounting, labeled a sketch; source: privacy course 01-dp, dp5 deck):</p>
+<ul>
+<li><em>Step 1 — one step is a Gaussian mechanism.</em> If the differing record is the one sampled, both clipped gradients have norm at most $G$, so $\|\bar g_t - \bar g_t'\|_2 \le 2G = \Delta_2$; the Gaussian-mechanism theorem gives a per-step cost $\varepsilon_0 \approx 2G\sqrt{2\log(1/\delta)}/\sigma$.</li>
+<li><em>Step 2 — subsampling amplifies.</em> The differing record is touched only with probability $q = 1/n$ per step; running an $(\varepsilon_0,\delta_0)$-DP mechanism on a random $q$-fraction costs roughly $(q\varepsilon_0,\, q\delta_0) = (\varepsilon_0/n,\, \delta_0/n)$.</li>
+<li><em>Step 3 — compose $T$ adaptive steps.</em> $\sqrt T$-style (advanced) composition gives total $\approx (\sqrt T\,\varepsilon_0/n,\; T\delta_0/n)$; solving $\varepsilon \approx \sqrt T\,\varepsilon_0/n$ for $\sigma$ yields the stated bound. $\square$</li>
+</ul>
+<p>Abadi et al.'s <em>moments accountant</em> replaces step 3's generic composition with a tight computation of the privacy-loss moment generating function, saving large constant factors — it is what made $\varepsilon$ single-digit for real deep models.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1607.00133">Abadi, Chu, Goodfellow, McMahan, Mironov, Talwar &amp; Zhang, "Deep Learning with Differential Privacy" (CCS 2016)</a> — the DP-SGD paper: clipping, lot subsampling, and the moments accountant.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Why Clip, Why Noise?</h2>
 <p>Clipping bounds one example's influence so no single record dominates the step; that bound is the sensitivity. Noise then hides each example's contribution, giving every gradient step the same two-worlds deniability.</p>
 <p><span class="kt">Key takeaway:</span> Clip to cap each example's effect; noise to hide it.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Clipping.</strong> $\bar g = g \cdot \min\!\big(1,\, G/\|g\|_2\big)$: the direction is preserved, the norm is capped at $G$.</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>Why clipping is necessary.</strong> Calibrated noise needs the gradient's sensitivity, but deep networks admit no useful a-priori Lipschitz constant: $\sup_x \|\nabla_\theta \ell(\theta; x)\|_2$ is effectively unbounded, and one outlier could dominate an update. Clipping does not <em>assume</em> a bound — it <em>enforces</em> one: for neighbors, if the differing record is sampled, the triangle inequality gives
+$$\|\bar g_t - \bar g_t'\|_2 \;\le\; \|\bar g_t\|_2 + \|\bar g_t'\|_2 \;\le\; 2G,$$
+which is exactly the finite $\ell_2$ sensitivity the Gaussian mechanism needs. (source: privacy course dp5)</p>
+<p><strong>The cost.</strong> Whenever $\|g\|_2 > G$ the clipped gradient is a <em>biased</em> estimate of the true gradient — DP-SGD deliberately trades unbiasedness for bounded sensitivity ("privacy first, unbiasedness second"). The noise then hides which record was present, giving every gradient step the two-worlds guarantee.</p>
+</div>
 </article>
 
 <article>
 <h2>The Privacy Accountant</h2>
 <p>Training takes thousands of noisy steps, each spending budget. A privacy accountant tracks the total $\varepsilon$ using tools like the moments accountant or Renyi DP, giving a tight running total.</p>
 <p><span class="kt">Key takeaway:</span> The accountant tracks cumulative $\varepsilon$ across all steps.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Basic composition</strong> (proved under "Many Samples Break It"): $k$ adaptive releases with budgets $(\varepsilon_i, \delta_i)$ jointly satisfy $\big(\sum_i \varepsilon_i,\, \sum_i \delta_i\big)$-DP — linear growth.</p>
+<p><strong>Advanced composition</strong> (Dwork &amp; Roth 2014, Thm. 3.20). For all $\varepsilon, \delta, \delta' \ge 0$, $k$-fold adaptive composition of $(\varepsilon,\delta)$-DP mechanisms satisfies $(\varepsilon', k\delta + \delta')$-DP with
+$$\varepsilon' \;=\; \sqrt{2k\ln(1/\delta')}\;\varepsilon \;+\; k\varepsilon(e^{\varepsilon}-1).$$
+For small $\varepsilon$ the first term dominates: the budget grows like $\sqrt k\,\varepsilon$ rather than $k\varepsilon$, by allowing another tiny failure probability $\delta'$. This $\sqrt T$ growth is what step 3 of the DP-SGD accounting uses.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://www.cis.upenn.edu/~aaroth/Papers/privacybook.pdf">Dwork &amp; Roth, <em>The Algorithmic Foundations of Differential Privacy</em>, Thm. 3.20 (free PDF)</a> — advanced composition, with proof.</li>
+<li><a href="https://arxiv.org/abs/1607.00133">Abadi et al. (CCS 2016)</a> — the <em>moments accountant</em>: track the log-MGF ("moments") of the privacy-loss random variable per step, add them across steps, and convert to $(\varepsilon,\delta)$ once at the end — much tighter than applying advanced composition step by step.</li>
+<li><a href="https://arxiv.org/abs/1702.07476">Mironov, "R&eacute;nyi Differential Privacy" (CSF 2017)</a> — the clean formalization: measure privacy as a bound on R&eacute;nyi divergence of order $\alpha$; RDP composes by simple addition and converts to $(\varepsilon,\delta)$-DP at the end. Modern DP libraries account in RDP.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -408,30 +809,73 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>More Data Helps</h2>
 <p>Privacy gets cheaper as the dataset grows. The noise is per-step, not per-person, so with more people each one matters less and the per-person noise washes out.</p>
 <p><span class="kt">Key takeaway:</span> Big datasets make DP cheaper.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p>Read it directly off the DP-SGD noise bound $\sigma \ge \dfrac{2G\sqrt{2T\log(1/\delta)}}{n\varepsilon}$: at a fixed privacy target $(\varepsilon,\delta)$ and step count $T$, the required noise scales like $\sigma \propto 1/n$ — ten times the data, one tenth the noise. Equivalently, at fixed noise $\sigma$ the achieved budget is $\varepsilon \approx \dfrac{2G\sqrt{2T\log(1/\delta)}}{n\sigma} \propto 1/n$. (derivation: course notes, direct rearrangement of the dp5 theorem)</p>
+<p>The mechanism is subsampling amplification: with more people, the chance any given step touches <em>your</em> record is $1/n$, so each person's exposure per step shrinks with the population. This is the deep reason DP is most practical exactly where the stakes are largest — population-scale datasets.</p>
+</div>
 </article>
 
 <article>
 <h2>Federated Learning</h2>
 <p>Federated learning sends the model to the data: each phone computes an update locally and only updates leave, as McMahan and colleagues described in 2017. Raw data never leaves the device.</p>
 <p><span class="kt">Key takeaway:</span> Federated learning trains on data that never leaves the device.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Federated averaging (FedAvg), schematically</strong> (formulation: course notes, summarizing McMahan et al.). In round $t$, the server broadcasts the current model $\theta_t$ to a random subset of clients; client $k$ runs a few epochs of local SGD on its own data $D_k$ (size $n_k$) and returns only the model update $\Delta_k$; the server aggregates
+$$\theta_{t+1} \;=\; \theta_t + \sum_k \frac{n_k}{\sum_j n_j}\, \Delta_k.$$
+Raw data never leaves the device; only updates travel.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1602.05629">McMahan, Moore, Ramage, Hampson &amp; Ag&uuml;era y Arcas, "Communication-Efficient Learning of Deep Networks from Decentralized Data"</a> — the FedAvg paper the slide's "McMahan and colleagues, 2017" refers to.</li>
+<li><a href="https://research.google/blog/federated-learning-collaborative-machine-learning-without-centralized-training-data/">Google Research blog, "Federated Learning: Collaborative Machine Learning without Centralized Training Data" (2017)</a> — the accessible announcement of the paradigm.</li>
+</ul>
+<p><em>Caution for the next entries:</em> federated learning by itself is an architecture, not a privacy guarantee — the updates can still leak (two slides ahead).</p>
+</div>
 </article>
 
 <article>
 <h2>FL in Your Pocket</h2>
 <p>You already use it. Gboard learns next-word prediction across millions of phones, while your actual keystrokes are never uploaded. The model improves; the typing stays local.</p>
 <p><span class="kt">Key takeaway:</span> Federated learning is already running on your phone.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://research.google/blog/federated-learning-collaborative-machine-learning-without-centralized-training-data/">Google Research blog (2017)</a> — Gboard on Android was the launch application: the keyboard learns suggestion models across phones while keystrokes stay on-device.</li>
+<li><a href="https://research.google/blog/federated-learning-with-formal-differential-privacy-guarantees/">Google Research blog, "Federated Learning with Formal Differential Privacy Guarantees" (Feb. 28, 2022)</a> — the milestone follow-up: Gboard's Spanish next-word-prediction model, trained with the DP-FTRL algorithm across user devices, became (to the authors' knowledge) the first production neural network trained directly on user data with a formal DP guarantee ($\rho = 0.81$ zero-concentrated DP at user level; roughly 6,500 devices per round over 2,000 rounds).</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>FL Still Leaks</h2>
 <p>But keeping data local is not the same as privacy. The shared gradients still encode the inputs, and raw gradients can be inverted to reconstruct a user's image.</p>
 <p><span class="kt">Key takeaway:</span> Local data plus shared gradients is not enough on its own.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Gradient inversion.</strong> An adversary (e.g. an honest-but-curious server) who observes a client's shared gradient $g$ for known model $\theta$ reconstructs the private input by optimization:
+$$(\hat x, \hat y) \;=\; \arg\min_{x', y'} \big\| \nabla_\theta\, \mathcal L(\theta; x', y') - g \big\|^2,$$
+matching dummy data's gradient to the observed one (formulation: course notes). For small batches this recovers training images and text near pixel-perfectly — the gradient is effectively an encoding of the input.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1906.08935">Zhu, Liu &amp; Han, "Deep Leakage from Gradients" (NeurIPS 2019)</a> — the paper that demonstrated the attack, recovering inputs from shared gradients in federated settings.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Plugging the Leak</h2>
 <p>Combine two defenses on the updates. Secure aggregation lets the server see only the sum of updates, and DP noise is added to those updates. Together they give federated learning that actually protects users.</p>
 <p><span class="kt">Key takeaway:</span> Secure aggregation plus DP noise makes federated learning safe.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Secure aggregation</strong> is a cryptographic protocol in which clients' updates are masked so that the server can compute only their <em>sum</em>, never an individual update — killing single-client gradient inversion. <strong>DP on the updates</strong> (clip each client's update, add noise to the aggregate) then bounds what even the sum reveals about any one user. The two are complementary: cryptography controls <em>who sees what</em>, DP controls <em>what the visible thing reveals</em>. Note the unit here is <em>user-level</em> DP — neighbors differ in one entire user, not one record.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://eprint.iacr.org/2017/281">Bonawitz et al., "Practical Secure Aggregation for Privacy-Preserving Machine Learning" (IACR ePrint 2017/281)</a> — the deployed secure-aggregation protocol for federated learning.</li>
+<li><a href="https://arxiv.org/abs/1710.06963">McMahan, Ramage, Talwar &amp; Zhang, "Learning Differentially Private Recurrent Language Models" (ICLR 2018)</a> — user-level DP combined with federated averaging (DP-FedAvg), the template for the Gboard deployment of the previous entry.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -444,18 +888,44 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Private Fine-Tuning Works</h2>
 <p>Good news first: DP fine-tuning of large pretrained models reaches near non-private accuracy. Pretrain on public data, fine-tune privately, with steady momentum through 2023-25.</p>
 <p><span class="kt">Key takeaway:</span> Pretrain publicly, fine-tune privately, lose little accuracy.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>The public-pretrain / private-fine-tune split.</strong> The DP guarantee covers only the <em>fine-tuning</em> dataset: neighbors differ in one fine-tuning record, while the pretraining corpus is treated as public and gets no protection. This is what makes the accuracy numbers good — most of the model's capability is bought with unprotected data — and it is also the caveat to keep in mind when the "public" corpus is scraped web text (see "The Web-Scale Puzzle").</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2110.06500">Yu et al., "Differentially Private Fine-tuning of Language Models" (ICLR 2022)</a> — parameter-efficient DP fine-tuning (e.g. LoRA-style adapters) of large pretrained LMs approaching non-private utility at single-digit $\varepsilon$.</li>
+<li><a href="https://arxiv.org/abs/2110.05679">Li, Tram&egrave;r, Liang &amp; Hashimoto, "Large Language Models Can Be Strong Differentially Private Learners"</a> — full DP fine-tuning made to work via careful hyperparameters and memory-efficient ("ghost") clipping; bigger pretrained models turn out to be <em>easier</em>, not harder, to fine-tune privately.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Private Pretraining Arrives</h2>
 <p>In 2025 Google released VaultGemma, a 1B-parameter LLM pretrained from scratch with DP-SGD under a sequence-level guarantee of $\varepsilon \le 2$, guided by new scaling laws for DP training. Its utility sits near non-private models from about five years earlier — a real gap, but now a measured one.</p>
 <p><span class="kt">Key takeaway:</span> Fully DP pretraining is now demonstrated, at a quantified utility cost.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Unit of privacy.</strong> VaultGemma's guarantee is <em>sequence-level</em> $(\varepsilon \le 2.0,\ \delta \le 1.1\times 10^{-10})$-DP, where a sequence is 1024 consecutive tokens from the training stream. Sequence-level is weaker than user-level: information a person spreads across many sequences (or many documents) is not covered by the single-sequence guarantee — the same unit-of-privacy question the web-scale entry raises.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://research.google/blog/vaultgemma-the-worlds-most-capable-differentially-private-llm/">Google Research blog, "VaultGemma" (Sept. 12, 2025)</a> — the announcement: a 1B-parameter open model, described as the largest model trained from scratch with differential privacy, with the guarantee above and new DP scaling laws used to choose the training configuration. The utility comparison to roughly five-year-old non-private models is the blog's own framing.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Private Synthetic Data</h2>
 <p>Another approach: generate a safe, shareable dataset under DP. The generator carries the privacy guarantee, you train freely on its output, and post-processing keeps it private. This is deployed: Apple uses DP synthetic data to improve Apple Intelligence text features (2025).</p>
 <p><span class="kt">Key takeaway:</span> DP synthetic data lets you share sensitive datasets safely.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Why "train freely on its output" is rigorous.</strong> Suppose the generator-training procedure $G$ is $(\varepsilon,\delta)$-DP as a function of the sensitive dataset $D$. Sampling synthetic data from the released generator and training any downstream model on those samples is a (randomized) function of $G$'s output alone — it never touches $D$ again. By post-processing invariance (proved under "Superpower 1"), the downstream model, and anything built from it, inherits the same $(\varepsilon,\delta)$ guarantee with no further budget spent. (derivation: course notes, direct corollary of the post-processing theorem)</p>
+<p>The fine print: the guarantee only covers what flowed through $G$. If the synthetic pipeline is tuned by repeatedly comparing against the real data, those comparisons are new queries and must be accounted.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://machinelearning.apple.com/research/differential-privacy-aggregate-trends">Apple, "Understanding Aggregate Trends for Apple Intelligence Using Differential Privacy" (Apr. 14, 2025)</a> — the deployment the slide cites: DP over anonymous device signals for short Genmoji-style prompts, and DP-selected synthetic emails for longer text features, "without Apple collecting emails from the device."</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -468,24 +938,58 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Auditing Privacy</h2>
 <p>We can estimate the real $\varepsilon$ by attacking the model: run membership attacks and measure the leak. Sometimes the guarantee is loose. The motto is trust, but verify.</p>
 <p><span class="kt">Key takeaway:</span> Audit the empirical $\varepsilon$, do not just trust the proof.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>From attacks to a lower bound on $\varepsilon$.</strong> The hypothesis-testing bound from "Membership Inference" says any attack against an $(\varepsilon,\delta)$-DP mechanism obeys $\mathrm{TPR} \le e^{\varepsilon}\,\mathrm{FPR} + \delta$. Run a concrete attack (e.g. membership inference against planted canaries) and measure its operating point $(\mathrm{FPR}, \mathrm{TPR})$; then any $\varepsilon$ the system could truthfully claim must satisfy
+$$\hat\varepsilon \;\ge\; \ln\!\frac{\mathrm{TPR} - \delta}{\mathrm{FPR}}.$$
+(derivation: course notes, inverting the hypothesis-testing bound.) The audit thus produces a certified <em>lower</em> bound on the true privacy loss: if $\hat\varepsilon$ exceeds the claimed $\varepsilon$, the implementation is broken (a real failure mode — clipping bugs, correlated noise, wrong sampling); if it is far below, the analysis may simply be loose.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2006.07709">Jagielski, Ullman &amp; Oprea, "Auditing Differentially Private Machine Learning: How Private is Private SGD?"</a> — the auditing methodology: data-poisoning attacks turned into quantitative lower bounds on DP-SGD's real-world $\varepsilon$.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Unlearning as Plan B</h2>
 <p>If you cannot prevent memorization, can you delete it later? Machine unlearning aims to remove one person after training without retraining from scratch.</p>
 <p><span class="kt">Key takeaway:</span> Unlearning is the fallback when prevention fails.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Exact unlearning.</strong> An unlearning procedure $U$ is exact if for every dataset $D$ and record $x \in D$, the distribution of $U(\text{model trained on } D,\, x)$ equals the distribution of training from scratch on $D \setminus \{x\}$ — the deleted person's influence is provably gone, not just attenuated. Approximate notions relax equality to closeness (often in a DP-style $(\varepsilon,\delta)$ sense).</p>
+<p><strong>SISA</strong> (<em>Sharded, Isolated, Sliced, Aggregated</em>): partition the data into shards, train an isolated constituent model per shard (checkpointing along data "slices"), and aggregate their predictions. Deleting a record requires retraining only its shard, from the checkpoint before the record's slice — exact unlearning at a fraction of full retraining cost.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1912.03817">Bourtoule et al., "Machine Unlearning" (IEEE S&amp;P 2021)</a> — the SISA framework and the case for exact, verifiable deletion.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Privacy in the Stack</h2>
 <p>Privacy is also a systems problem. Apple's Private Cloud Compute (2024) and confidential computing on trusted hardware enable server-side inference without exposing data. DP and secure hardware are complementary.</p>
 <p><span class="kt">Key takeaway:</span> Hardware-based protections complement DP.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://security.apple.com/blog/private-cloud-compute/">Apple Security Research blog, "Private Cloud Compute" (June 10, 2024)</a> — Apple's system for cloud AI inference on custom Apple-silicon servers. Core guarantees: <em>stateless computation</em> (request data is used only to answer the request and never retained), <em>no privileged runtime access</em> (no remote shells or debug paths that could bypass protections), <em>non-targetability</em> (an attacker cannot aim at a specific user's data), and <em>verifiable transparency</em> (production software images published in a tamper-proof log for external researchers to inspect).</li>
+</ul>
+<p>Complementarity, precisely: confidential/trusted hardware controls <em>who can observe the computation</em>; DP bounds <em>what any released output reveals</em> about one person. Neither subsumes the other — PCC without DP still returns exact answers, and DP without hardware protection still exposes raw data to the curator.</p>
+</div>
 </article>
 
 <article>
 <h2>The Law Is Catching Up</h2>
 <p>Regulation is pushing DP and auditing into practice: GDPR's right to be forgotten, the EU AI Act — whose duties for general-purpose AI models apply since August 2025 — and a wave of US state privacy laws.</p>
 <p><span class="kt">Key takeaway:</span> Law is increasingly forcing privacy engineering into products.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://gdpr-info.eu/art-17-gdpr/">GDPR Article 17 — Right to erasure ("right to be forgotten")</a> — the legal driver behind machine unlearning: data subjects can demand deletion of their personal data, and "we already trained on it" is not an exemption.</li>
+<li><a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj">Regulation (EU) 2024/1689 (the EU AI Act), official text on EUR-Lex</a> — obligations for general-purpose AI model providers (training-data documentation and copyright/privacy-relevant transparency among them) apply from August 2, 2025, as the deck states.</li>
+</ul>
+<p>The regulatory logic connects back to the technical content: DP gives a <em>provable</em> answer to "does the model leak person X?", and auditing (two entries back) gives the empirical check — exactly the kind of evidence documentation-style obligations ask for.</p>
+</div>
 </article>
 
 <article>
@@ -498,6 +1002,15 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Where to Go Deeper</h2>
 <p>For the full mathematical treatment, look at reconstruction attacks, pure versus approximate DP, composition, Renyi DP, and the complete DP-SGD analysis.</p>
 <p><span class="kt">Key takeaway:</span> The rigorous version goes far beyond today's intuition.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://www.cis.upenn.edu/~aaroth/Papers/privacybook.pdf">Dwork &amp; Roth, <em>The Algorithmic Foundations of Differential Privacy</em> (2014, free PDF)</a> — the canonical text for everything this lecture gestured at: pure vs approximate DP (Ch. 2&ndash;3), the Gaussian mechanism with full proof (Thm. 3.22 and Appendix A), advanced composition (Thm. 3.20), and reconstruction attacks — the Dinur&ndash;Nissim result that too many accurate answers allow reconstructing the whole database — in Ch. 8.</li>
+<li><a href="https://arxiv.org/abs/1702.07476">Mironov, "R&eacute;nyi Differential Privacy"</a> — the accounting language of modern DP libraries.</li>
+<li><a href="https://arxiv.org/abs/1607.00133">Abadi et al., "Deep Learning with Differential Privacy"</a> — the complete DP-SGD analysis, including the moments accountant this lecture only sketched.</li>
+</ul>
+<p>Within this program, the full mathematical treatment — every proof in this note in slide form, plus the exponential mechanism, truncated Laplace, and DP-ERM theory — is the privacy course's DP module (<code>courses/privacy/lectures/01-dp/</code>, decks dp1&ndash;dp5), which this note's statements follow.</p>
+</div>
 </article>
 
 <article>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 4 — Script</title>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 4 — Script &amp; Companion Notes</title>
 <link rel="stylesheet" href="../../reference/colors_and_type.css">
 <link rel="stylesheet" href="../../reference/katex/katex.min.css">
 <script defer src="../../reference/katex/katex.min.js"></script>
@@ -10,9 +10,14 @@ h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); pad
 article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
 article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 .kt { color: var(--yonsei-blue); font-weight: 700; }
+.detail { margin: 16px 0 4px 14px; padding: 2px 0 2px 18px; border-left: 3px solid var(--slate); }
+.detail h3 { color: var(--yonsei-blue); font-size: 1.05rem; margin: 16px 0 6px; }
+.detail p, .detail ul, .detail ol { margin: 8px 0; }
+.detail table { border-collapse: collapse; margin: 10px 0; }
+.detail th, .detail td { border: 1px solid var(--slate); padding: 4px 12px; text-align: left; }
 </style></head><body>
-<h1>Lecture 4 — Memorization &amp; Training-Data Extraction · Speaker Script</h1>
-<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+<h1>Lecture 4 — Memorization &amp; Training-Data Extraction · Script &amp; Companion Notes</h1>
+<p><em>One entry per slide, in order. Section headers match slide titles. Each entry carries the spoken script and key takeaway, followed by companion notes: rigorous definitions of the terms the slide gestures at, formal theorem statements with proofs, and background reading with links.</em></p>
 
 <article>
 <h2>Memorization &amp; Training-Data Extraction</h2>
@@ -36,54 +41,133 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>The Question</h2>
 <p>We train models to generalize, to learn patterns rather than copy examples. But in practice, some examples come back out word for word.</p>
 <p><span class="kt">Key takeaway:</span> Generalization and verbatim copying both happen during training.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>The training objective.</strong> An autoregressive language model defines a distribution over token sequences $x = (x_1,\dots,x_n)$ by the chain rule, $p_\theta(x) = \prod_{i=1}^{n} p_\theta(x_i \mid x_{\lt i})$, and is trained to minimize the negative log-likelihood (cross-entropy) over the training corpus $\mathcal{D}$:</p>
+$$\mathcal{L}(\theta) \;=\; -\,\mathbb{E}_{x\sim\mathcal{D}}\!\left[\sum_{i=1}^{|x|}\log p_\theta(x_i \mid x_{\lt i})\right].$$
+<p>Nothing in this objective distinguishes "learn the pattern" from "store the string": both strictly reduce the loss on the training sequences. Generalization and verbatim storage are two ways of fitting the same objective, and a trained model does some of each. The rest of the lecture is about measuring how much of the second kind there is.</p>
+</div>
 </article>
 
 <article>
 <h2>A Working Definition</h2>
 <p>A model has memorized an example if a short prompt makes it reproduce that example exactly. The key word is specific: this is reciting one record, not learning a general fact.</p>
 <p><span class="kt">Key takeaway:</span> Memorization means reproducing a specific training record verbatim.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Operational memorization.</strong> The working definition is <em>attack-based</em>: a training string $s$ counts as memorized by a model $f_\theta$ if some interaction with the deployed model reproduces $s$ exactly. The lecture instantiates "interaction" three ways, each made formal on a later slide:</p>
+<ul>
+<li><em>Prefix extraction</em> — greedy decoding from a $k$-token training prefix returns $s$ ("What 'Extractable' Means").</li>
+<li><em>Extractable vs discoverable</em> — the same test split by whether the tester knows the training data (Nasr et al., "Extractable vs Discoverable").</li>
+<li><em>Counterfactual memorization</em> — a training-time definition that compares models trained with and without the record ("Not the Same as Learning").</li>
+</ul>
+<p>The operational definitions are the ones that matter for deployment risk: they correspond to something an adversary can actually do with query access.</p>
+</div>
 </article>
 
 <article>
 <h2>Three Flavors</h2>
 <p>Memorization comes in flavors: verbatim, where the exact text or pixels come back; near-duplicate, where the content is the same with small changes; and stylistic, where only the voice or look is reproduced. This lecture focuses on the first two — style is a much fuzzier line.</p>
 <p><span class="kt">Key takeaway:</span> We study verbatim and near-duplicate copying; style imitation is a separate, fuzzier issue.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<ul>
+<li><strong>Verbatim:</strong> exact token-sequence equality, $\hat{s} = s$. Unambiguous, and the definition used in the text-extraction results of Section 02.</li>
+<li><strong>Near-duplicate:</strong> a distance below a threshold, $d(\hat{s}, s) \le \delta$ for a chosen metric $d$ — for text, edit distance or a long shared substring; for images, pixel-space $\ell_2$ distance or embedding similarity (SSCD, defined on "Copy or Create?"). Every near-duplicate claim must state its $(d, \delta)$; the diffusion results of Section 04 do exactly that.</li>
+<li><strong>Stylistic:</strong> reproduction of voice, layout, or artistic style with no shared content. There is no accepted formal definition, which is why this lecture (and most of the measurement literature) sets it aside.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>What "Extractable" Means</h2>
 <p>A string is $k$-extractable if feeding the model a $k$-token prefix makes it continue with the exact training text. This is the practical definition from Carlini et al. (ICLR 2023), because it matches what an attacker can actually do.</p>
 <p><span class="kt">Key takeaway:</span> Extractable means an adversary can pull the string out with a short prompt.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Greedy decoding.</strong> $f_{\text{greedy}}$ generates deterministically, one token at a time: $\hat{x}_{t+1} = \arg\max_v\, p_\theta(v \mid p, \hat{x}_{\le t})$ — always the single most likely next token, no sampling.</p>
+<p><strong>$k$-extractable</strong> (Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023; also the deck's technical supplement). A training string $s$ is $k$-extractable from $f$ if there is a $k$-token prefix $p$ — the exact $k$ tokens that precede $s$ in the training data — such that</p>
+$$f_{\text{greedy}}(p) = s, \qquad |p| = k.$$
+<p>Three features make this operational: the prefix is known (it sits in the training data), the decoding is deterministic, and the match is exact — every token of $s$ must agree. The definition is monotone in $k$: a longer prefix can only unlock more strings, which is the "context" driver measured in Section 03.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2202.07646">Carlini, Ippolito, Jagielski, Lee, Tramèr, Zhang, "Quantifying Memorization Across Neural Language Models," ICLR 2023 (arXiv 2202.07646)</a> — the paper this definition and Section 03's scaling results come from.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Extractable vs Discoverable</h2>
 <p>Two testing regimes, from Nasr et al. Discoverable memorization: the tester holds the training data and prompts with the true prefix — this measures everything the model has stored, an audit upper bound. Extractable memorization: the attacker has no training data and must find prompts blind — this measures what actually leaks in the real world.</p>
 <p><span class="kt">Key takeaway:</span> Discoverable is the audit upper bound; extractable is the real-world risk.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Verbatim from Nasr et al. (2023), with $\mathrm{Gen}$ the model's generation routine:</p>
+<p><strong>Definition 1 (Extractable memorization).</strong> Given a model with a generation routine $\mathrm{Gen}$, an example $x$ from the training set $X$ is <em>extractably memorized</em> if an adversary (without access to $X$) can construct a prompt $p$ that makes the model produce $x$ (i.e., $\mathrm{Gen}(p) = x$).</p>
+<p><strong>Definition 2 (Discoverable memorization).</strong> For a model $\mathrm{Gen}$ and an example $[p \,\|\, x]$ from the training set $X$, we say that $x$ is <em>discoverably memorized</em> if $\mathrm{Gen}(p) = x$.</p>
+<p>Discoverable memorization hands the tester the true training prefix $p$, so it upper-bounds what any prompt-finding adversary could achieve with that prefix length; extractable memorization is what an adversary achieves blind. The paper notes that prior work found many LLMs discoverably memorize roughly 1% of their training sets when prompted with about 50 tokens of true context — consistent with the GPT-J number on "A Predictable Curve" — while extractable rates measured before their attack were far lower. Their divergence attack (Section 02) largely closed that gap.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2311.17035">Nasr et al., "Scalable Extraction of Training Data from (Production) Language Models," 2023 (arXiv 2311.17035)</a> — source of both definitions and of the ChatGPT attack later in this lecture.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Why It Happens</h2>
 <p>Training rewards predicting the next token. Rare strings are easiest to predict by simply storing them, repeated strings get reinforced, and large models have spare capacity. So memorization is a side effect of fitting the data well.</p>
 <p><span class="kt">Key takeaway:</span> Memorization falls out of the training objective itself.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Why the objective stores unpredictable strings</strong> (derivation: course notes). Take a training string $s$ with no learnable structure — say a random account number. Its contribution to the loss is $-\log p_\theta(s \mid \text{context})$, and because $s$ is unpredictable from patterns, no amount of generalization lowers this term: the <em>only</em> way gradient descent can reduce it is to raise $p_\theta(s)$ directly, i.e., to store the string. Duplication compounds this: if $s$ occurs $r$ times, it contributes $r$ identical loss terms and thus $r$ reinforcing gradient updates per epoch — the duplication driver of Section 03. Capacity supplies the third ingredient: modern networks have far more parameters than needed to fit the patterns alone.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1611.03530">Zhang, Bengio, Hardt, Recht, Vinyals, "Understanding Deep Learning Requires Rethinking Generalization," ICLR 2017 (arXiv 1611.03530)</a> — standard architectures can perfectly fit completely random labels, demonstrating the raw storage capacity that memorization spends.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Some Memorization Is Necessary</h2>
 <p>Feldman's STOC 2020 result gives the surprising twist: on long-tailed data, where many examples are one-of-a-kind, memorizing those rare examples is provably necessary to reach the best accuracy. A model that memorizes nothing must give up performance on the tail.</p>
 <p><span class="kt">Key takeaway:</span> On long-tailed data, some memorization is required for accuracy — it cannot simply be banned.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Informal statement.</strong> Model the data as a mixture of many small subpopulations whose frequencies follow a long-tailed prior. In a sample of $n$ points, many subpopulations appear exactly once ("singletons"), yet collectively they carry a constant fraction of the test distribution. Any algorithm that fails to fit its singletons pays that unfitted mass as extra test error. Hence near-optimal accuracy <em>forces</em> the algorithm to fit — label-memorize — its one-off examples, even when their labels look arbitrary.</p>
+<p><strong>Formal statement</strong> (Feldman, "Does Learning Require Memorization? A Short Tale about a Long Tail," STOC 2020, Theorem 2.3). In Feldman's setting the domain is split into $N$ subpopulations, a frequency vector is drawn from a prior $\pi$ (with marginal $\bar\pi^N$ over a single subpopulation's frequency), labels are drawn from a product prior $\mathcal{F}$, and $Z$ is the multiset of $n$ training instances. For every learning algorithm $A$ and every dataset $Z$:</p>
+$$\mathrm{err}(\pi, \mathcal{F}, A \mid Z) \;\ge\; \mathrm{opt}(\pi, \mathcal{F} \mid Z) \;+\; \sum_{\ell \in [n]} \tau_\ell \cdot \mathrm{errn}_Z(A, \ell), \qquad \tau_\ell := \frac{\mathbb{E}_{\alpha\sim\bar\pi^N}\!\left[\alpha^{\ell+1}(1-\alpha)^{n-\ell}\right]}{\mathbb{E}_{\alpha\sim\bar\pi^N}\!\left[\alpha^{\ell}(1-\alpha)^{n-\ell}\right]},$$
+<p>where $\mathrm{err}$ is the expected test error given $Z$, $\mathrm{opt}$ is the best achievable, and $\mathrm{errn}_Z(A,\ell)$ is $A$'s expected training error on the examples whose instance appears exactly $\ell$ times in $Z$. The singleton case reads $\mathrm{err} \ge \mathrm{opt} + \tau_1 \cdot \mathbb{E}[\mathrm{errn}_Z(A,1)]$: an algorithm whose excess error over $\mathrm{opt}$ is at most $\varepsilon$ must keep its error on singletons below $\varepsilon/\tau_1$ — for long-tailed priors, where $\tau_1$ is large (on the order of the tail's total frequency mass divided by the number of singletons), this means fitting essentially all of them.</p>
+<p><strong>Proof sketch</strong> (verified against arXiv 1906.05271, Section 2.2; full proof there). (1) Decompose the expected test error by subpopulation, grouped by the number of times $\ell$ each subpopulation appears in $Z$. (2) By exchangeability, conditioned on $Z$ the posterior expected true frequency of a subpopulation observed $\ell$ times is exactly the ratio of prior moments $\tau_\ell$ — a Bayesian analogue of the Good–Turing estimate. (3) Because labels are drawn from a product prior, observing other subpopulations reveals nothing about this one's label; for a subpopulation seen $\ell$ times the algorithm's best evidence is those $\ell$ examples themselves, so any error it makes <em>on those training examples</em> recurs on the subpopulation's unseen mass, weighted by $\tau_\ell$. Summing over subpopulations gives the displayed bound.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1906.05271">Feldman, "Does Learning Require Memorization? A Short Tale about a Long Tail," STOC 2020 (arXiv 1906.05271)</a> — Theorem 2.3 and its proof.</li>
+<li><a href="https://arxiv.org/abs/2008.03703">Feldman, Zhang, "What Neural Networks Memorize and Why," NeurIPS 2020 (arXiv 2008.03703)</a> — empirical companion: influence estimates showing memorized examples support accuracy on visually similar rare test examples.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The Secret Sharer</h2>
 <p>Carlini and colleagues introduced a clean experiment: plant a fake secret in the data, train the model normally, then prompt it and see if the secret comes back. This turns a vague worry into a controlled test.</p>
 <p><span class="kt">Key takeaway:</span> Plant a secret, train, and check if it leaks.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Canary template.</strong> Fix a format string with a randomness slot, $s[r]$ — e.g. "My credit card number is $\langle r\rangle$" — and draw $r$ uniformly from a randomness space $\mathcal{R}$ (in the paper's running example, a 9-digit number, so $|\mathcal{R}| = 10^9$ and the canary carries $\log_2 10^9 \approx 29.9$ bits of entropy). The instantiated canary $s[r]$ is inserted into the training data; everything downstream ("The Canary" through "Turning Leakage into a Number") is about testing how much of $r$ the trained model reveals.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1802.08232">Carlini, Liu, Erlingsson, Kos, Song, "The Secret Sharer: Evaluating and Testing Unintended Memorization in Neural Networks," USENIX Security 2019 (arXiv 1802.08232)</a> — the canary methodology and the exposure metric.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The Canary</h2>
 <p>The planted secret is called a canary: a made-up, unique string such as a fake credit-card number. Because it is unique, any reappearance must be memorization rather than coincidence.</p>
 <p><span class="kt">Key takeaway:</span> A unique canary makes leakage unambiguous.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Why uniqueness gives causality.</strong> Because $r$ is sampled fresh, independently of all real data, the trained model's information about $r$ can only have come from the single inserted record — there is no confound with "the model saw it elsewhere." Absent memorization, the chance of the model preferring the true $r$ over any particular alternative is the symmetric baseline $1/|\mathcal{R}|$ per guess; this exchangeability is exactly what the exposure metric's null bound (two slides ahead) formalizes.</p>
+</div>
 </article>
 
 <article>
@@ -96,12 +180,39 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Turning Leakage into a Number</h2>
 <p>To quantify it, rank the true canary against all equally likely alternatives. If the model ranks the true canary near the top, it has leaked; if it sits deep in the pile, it stayed hidden. This rank becomes a repeatable memorization score.</p>
 <p><span class="kt">Key takeaway:</span> Memorization can be scored, not just observed.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Rank.</strong> Let $L_\theta(s[r'])$ be the model's log-perplexity of the candidate canary $s[r']$. The rank of the true canary is its position among all instantiations:</p>
+$$\mathrm{rank}_\theta(s[r]) \;=\; \bigl|\{\, r' \in \mathcal{R} \;:\; L_\theta(s[r']) \le L_\theta(s[r]) \,\}\bigr|.$$
+<p><strong>Exposure</strong> (Carlini et al. 2019, Definition 4):</p>
+$$\mathrm{exposure}_\theta(s[r]) \;=\; \log_2 |\mathcal{R}| \;-\; \log_2 \mathrm{rank}_\theta(s[r]).$$
+<p>Exposure ranges from $0$ (rank $|\mathcal{R}|$: maximally hidden) to $\log_2|\mathcal{R}|$ (rank 1: the model prefers the true canary to every alternative — with $|\mathcal{R}| = 10^9$, about $29.9$).</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>Null tail bound</strong> (derivation: course notes, consistent with Carlini et al. 2019, Section 4). If the canary was <em>not</em> in the training data, then $r$ is exchangeable with every $r' \in \mathcal{R}$, so $\mathrm{rank}_\theta(s[r])$ is uniform on $\{1, \dots, |\mathcal{R}|\}$. Hence for any $t \ge 0$:</p>
+$$\Pr\bigl[\mathrm{exposure} \ge t\bigr] \;=\; \Pr\bigl[\mathrm{rank} \le |\mathcal{R}|\, 2^{-t}\bigr] \;=\; \frac{\lfloor |\mathcal{R}|\, 2^{-t} \rfloor}{|\mathcal{R}|} \;\le\; 2^{-t}.$$
+<p>So exposure doubles as a p-value: observing exposure $\ge t$ under the no-memorization null has probability at most $2^{-t}$. An exposure near $30$ on a $10^9$-space canary is overwhelming evidence of memorization — and means the canary is top-ranked, i.e., practically extractable.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1802.08232">Carlini et al., "The Secret Sharer," USENIX Security 2019 (arXiv 1802.08232)</a> — Definition 4 (exposure) and the estimation procedures used in practice.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Not the Same as Learning</h2>
 <p>Generalizing means learning that cards have sixteen digits, which is useful and harmless. Memorizing means storing Alice's exact number, which is useless and a leak. The danger is the specific record.</p>
 <p><span class="kt">Key takeaway:</span> The harm is in the specific record, not the general pattern.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Counterfactual memorization</strong> (Feldman–Zhang; Zhang et al. 2021). For a (randomized) training algorithm $A$, dataset $D$, example $z \in D$, and a per-example performance measure $M(f, z)$ (e.g. accuracy or probability assigned to $z$):</p>
+$$\mathrm{mem}(A, D, z) \;=\; \mathbb{E}_{f \sim A(D)}\bigl[M(f, z)\bigr] \;-\; \mathbb{E}_{f \sim A(D \setminus \{z\})}\bigl[M(f, z)\bigr].$$
+<p>This is the causal version of the slide's distinction: it asks how much the model's behavior on $z$ depends on $z$'s own presence in training. "Cards have sixteen digits" survives removing Alice's record ($\mathrm{mem} \approx 0$: generalization); Alice's exact number does not ($\mathrm{mem}$ large: memorization). It is also the quantity that differential privacy provably bounds ("Differential Privacy," Section 06).</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2112.12938">Zhang, Ippolito, Lee, Jagielski, Tramèr, Carlini, "Counterfactual Memorization in Neural Language Models," NeurIPS 2023 (arXiv 2112.12938)</a> — the definition above, measured at scale in language models.</li>
+<li><a href="https://arxiv.org/abs/2008.03703">Feldman, Zhang, "What Neural Networks Memorize and Why," NeurIPS 2020 (arXiv 2008.03703)</a> — the original leave-one-out memorization estimator for image classifiers.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -114,54 +225,113 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>From Canary to the Wild</h2>
 <p>The canary was planted deliberately. The real concern is whether we can extract genuine data the model saw that nobody planted on purpose.</p>
 <p><span class="kt">Key takeaway:</span> The dangerous case is leaking real data, not planted secrets.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Threat model</strong> (Carlini et al. 2021). The adversary has black-box query access to the model: it can request generations and read the model's per-token probabilities, but has no access to the weights, the architecture internals, or the training data. Extraction succeeds if the adversary recovers a verbatim training string it did not already know. This is the weakest realistic access level — anything extractable here is extractable from a public API.</p>
+</div>
 </article>
 
 <article>
 <h2>GPT-2 Knew Real People</h2>
 <p>Carlini and colleagues showed that short prompts make GPT-2 recite real names, home addresses, phone numbers, and emails, copied straight out of the training text.</p>
 <p><span class="kt">Key takeaway:</span> A short prompt can surface a real person's contact details.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>The paper's two definitions (Carlini et al., USENIX Security 2021):</p>
+<p><strong>Definition 1 (Model Knowledge Extraction).</strong> A string $s$ is <em>extractable</em> from an LM $f_\theta$ if there exists a prefix $c$ such that $s$ is produced by generating from $f_\theta(c)$ with an appropriate decoding strategy (e.g. greedy decoding).</p>
+<p><strong>Definition 2 ($k$-Eidetic Memorization).</strong> A string $s$ is <em>$k$-eidetic memorized</em> (for $k \ge 1$) by $f_\theta$ if $s$ is extractable from $f_\theta$ and $s$ appears in at most $k$ examples in the training data $X$: $|\{x \in X : s \subseteq x\}| \le k$.</p>
+<p>"Examples" are documents (for GPT-2, one webpage = one example), and the count is over distinct documents containing $s$, not total occurrences — so a string repeated many times on a single page still counts as $k = 1$. Small $k$ is the alarming regime: the study confirmed memorized strings that appeared in just one training document.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2012.07805">Carlini et al., "Extracting Training Data from Large Language Models," USENIX Security 2021 (arXiv 2012.07805)</a> — both definitions, the attack, and the recovered-content analysis.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The Extraction Pipeline</h2>
 <p>The pipeline is simple: with only query access to GPT-2, generate a flood of samples, rank them by the model's confidence and keep the top 1,800, then check those against the web and by manual search. 604 came back confirmed as memorized training data.</p>
 <p><span class="kt">Key takeaway:</span> Generate, rank by confidence, verify — 604 of 1,800 candidates were real training data.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>The pipeline, precisely</strong> (Carlini et al. 2021). Three generation strategies — top-$n$ sampling from an empty prompt, sampling with a decaying temperature, and sampling conditioned on short snippets of internet text — each produce 200,000 samples. Candidates are then ranked by six membership metrics, each of the form "target-model confidence, calibrated against a reference" (next slide). Taking the top 100 samples per metric per strategy gives $3 \times 6 \times 100 = 1{,}800$ candidates, which the authors verified by searching the web and, with OpenAI's assistance, the training data itself. The result: <em>604 unique memorized training examples out of 1,800 candidates — an aggregate true-positive rate of 33.5%</em> (up to 67% for the best strategy–metric pair).</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2012.07805">Carlini et al., 2021 (arXiv 2012.07805)</a> — Sections 5–6 give the full pipeline and evaluation.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Why Confidence Betrays It</h2>
 <p>For novel text the model hesitates, spreading probability around. For a memorized string it is nearly certain. That unusual confidence is the signal that flags a likely copy.</p>
 <p><span class="kt">Key takeaway:</span> Memorized text is text the model is too sure about.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Perplexity.</strong> The model's confidence on a sequence $x$ is summarized by</p>
+$$\mathrm{PPL}_\theta(x) \;=\; \exp\!\left(-\frac{1}{n}\sum_{i=1}^{n}\log p_\theta(x_i \mid x_{\lt i})\right),$$
+<p>low perplexity = high confidence. Low perplexity alone also flags genuinely common text ("I love you"), so the pipeline's metrics <em>calibrate</em> the target model's perplexity against references that also find common text easy: the perplexity of a smaller model from the same family (GPT-2 small/medium vs XL), the string's zlib compression length, and the perplexity of the same text lower-cased. A string that is uniquely easy for the target model but not for the references — a large confidence <em>ratio</em> — is the memorization signal.</p>
+</div>
 </article>
 
 <article>
 <h2>What Came Out of GPT-2</h2>
 <p>The 604 confirmed strings were not harmless boilerplate. They included people's contact details, code snippets, and chunks of news and forum text.</p>
 <p><span class="kt">Key takeaway:</span> The leaked content was real and sometimes sensitive.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The confirmed categories in the paper include named individuals' contact information (names, phone numbers, email and physical addresses), IRC conversation logs, verbatim code, 128-bit UUIDs, and news text — with some memorized strings traceable to a single training document ($k = 1$ in the eidetic sense). The authors disclosed to OpenAI before publication.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2012.07805">Carlini et al., 2021 (arXiv 2012.07805)</a> — Table of memorized-content categories and the case studies.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The "Repeat Forever" Attack</h2>
 <p>In 2023, Nasr and colleagues found a trick on ChatGPT: the prompt "Repeat this word forever: poem poem poem". This trivial instruction set up the leak.</p>
 <p><span class="kt">Key takeaway:</span> A trivial prompt can break a deployed model's guardrails.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>In November 2023 a DeepMind-led team (Nasr, Carlini, and colleagues) disclosed the <em>divergence attack</em>: asking ChatGPT (gpt-3.5-turbo) to repeat a single word forever eventually makes the generation "diverge" from chat behavior, after which the model emits raw text that includes verbatim pretraining data. The attack needed no jailbreak in the usual sense — just the repetition instruction — and was disclosed to OpenAI (August 2023) before the public write-up.</p>
+<ul>
+<li><a href="https://not-just-memorization.github.io/extracting-training-data-from-chatgpt.html">"Extracting Training Data from ChatGPT" — the authors' explainer post (Nov 2023)</a> — readable walkthrough with live examples.</li>
+<li><a href="https://arxiv.org/abs/2311.17035">Nasr et al., 2023 (arXiv 2311.17035)</a> — the full paper, covering open models, semi-closed models, and ChatGPT.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The Loop Breaks</h2>
 <p>The model repeats the word for a while, then diverges, dumping raw memorized text including real names, emails, and phone numbers.</p>
 <p><span class="kt">Key takeaway:</span> When the loop breaks, memorized training data spills out.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Divergence.</strong> The paper's term for the moment the generation escapes the aligned-chat distribution: after long single-token repetition, the model stops behaving like a chat assistant and produces text resembling raw base-LM sampling — and a measurable fraction of that text is verbatim training data. <strong>Verification:</strong> emitted text counts as training data only if it appears verbatim, as a long match, in a large auxiliary index of web text (roughly 10 TB) queried efficiently with suffix arrays — so the reported leaks are confirmed copies, not coincidences.</p>
+</div>
 </article>
 
 <article>
 <h2>Scale of the Leak</h2>
 <p>The attack was cheap and broad: over ten thousand unique memorized strings for about two hundred dollars of queries, with training data emitted at 150 times the normal rate — including real personal contact information — from a deployed, aligned chat model.</p>
 <p><span class="kt">Key takeaway:</span> Alignment did not prevent large-scale extraction.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The paper's own numbers: under the divergence attack the model emits training data at a rate <em>150× higher</em> than when behaving properly, and with about <em>$200 USD</em> of queries the authors extracted <em>over 10,000 unique verbatim-memorized training examples</em>, including personally identifiable information — with the extrapolation that a better-funded adversary could recover far more. This is the extractable-memorization measurement (Definition 1, earlier) performed on a production, aligned model.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2311.17035">Nasr et al., 2023 (arXiv 2311.17035)</a> — Section on extracting from ChatGPT; rates and costs as quoted.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Patched, Not Solved</h2>
 <p>After disclosure, the specific prompt was blocked. But blocking one prompt does not remove the memorized data, which still lives in the weights.</p>
 <p><span class="kt">Key takeaway:</span> Patching a prompt is not the same as deleting the data.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>System-level vs model-level defense.</strong> Refusing the "repeat forever" instruction is a <em>system-level</em> patch: it removes one path to the memorized content while the content itself — the high-probability continuation stored in $\theta$ — is untouched, and remains reachable by any other prompt that triggers divergence. Actually removing a memorized record from the weights is the (much harder) <em>machine unlearning</em> problem, one of the open problems at the end of this lecture.</p>
+</div>
 </article>
 
 <article>
@@ -180,36 +350,83 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>A Measurable Quantity</h2>
 <p>Memorization is not all-or-nothing. We count how many training strings are extractable and track that fraction as conditions change. It moves predictably.</p>
 <p><span class="kt">Key takeaway:</span> We can measure the fraction of data a model memorizes.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Memorization fraction</strong> (Carlini et al., ICLR 2023; deck technical supplement). Fix a set $D$ of prefix–continuation pairs $(p, s)$ sampled from the training data, with fixed prefix and continuation lengths. The measured quantity is the fraction that reproduce exactly under greedy decoding:</p>
+$$\mathrm{Mem}(f) \;=\; \frac{1}{|D|}\sum_{(p,s)\in D} \mathbf{1}\!\left[\, f_{\text{greedy}}(p) = s \,\right].$$
+<p>This turns the yes/no notion of $k$-extractability into a rate that can be plotted against model size, duplication, and context length — the next three slides.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2202.07646">Carlini et al., "Quantifying Memorization Across Neural Language Models," ICLR 2023 (arXiv 2202.07646)</a> — the measurement methodology behind all of Section 03.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Three Drivers</h2>
 <p>Three factors push memorization up: bigger models store more, duplicated data sticks harder, and longer prompting context unlocks more of what is stored.</p>
 <p><span class="kt">Key takeaway:</span> Model size, duplication, and context length all increase measured memorization.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>The three measured variables: $N$ = number of model parameters, $r$ = number of times the target string is duplicated in the training data, $k$ = number of context tokens in the prompt. Carlini et al. (ICLR 2023) report that $\mathrm{Mem}$ grows <em>log-linearly in each</em>, holding the others fixed — three separate log-linear relationships, combined into one fitted law on "A Predictable Curve."</p>
+</div>
 </article>
 
 <article>
 <h2>Bigger Means More</h2>
 <p>Holding the data fixed and growing the model, the amount memorized climbs steadily. Capacity that is not needed for generalization gets spent on storing examples.</p>
 <p><span class="kt">Key takeaway:</span> Larger models memorize more of the same data.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>The measured law</strong> (empirical, Carlini et al. ICLR 2023, on models trained on the Pile, up to GPT-J 6B): <em>a tenfold increase in model size corresponds to an increase in memorization of about 19 percentage points</em>, with the data and evaluation held fixed. This is an empirical regression, not a theorem — but it is remarkably stable across the studied range, which is what makes it usable for forecasting ("The Uncomfortable Trend"). The capacity reading of the slide is quantified directly by the Morris et al. result at the end of the lecture (≈3.6 bits/parameter).</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2202.07646">Carlini et al., ICLR 2023 (arXiv 2202.07646)</a> — model-size relationship and the 19-percentage-point figure.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Duplication Is the Big One</h2>
 <p>A string that appears many times in training is far more likely to leak — and superlinearly so: Kandpal and colleagues found a sequence seen ten times is generated roughly a thousand times more often than one seen once.</p>
 <p><span class="kt">Key takeaway:</span> Duplication is the strongest single driver, and its effect is superlinear.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Superlinearity, precisely.</strong> Let $g(d)$ be the expected rate at which a model regenerates (verbatim) a training sequence that occurs $d$ times in the training data. Kandpal, Wallace &amp; Raffel (ICML 2022) measure $g$ and find it grows much faster than the proportional baseline $g(d) \approx d \cdot g(1)$: <em>a sequence present 10 times is generated on average about 1,000 times more often than a sequence present once</em> — a factor of ~1,000 where linearity would predict 10. They also show the flip side: existing extraction and membership-inference attacks owe much of their success to duplicated sequences, and their measured effectiveness drops sharply on deduplicated models.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2202.06539">Kandpal, Wallace, Raffel, "Deduplicating Training Data Mitigates Privacy Risks in Language Models," ICML 2022 (arXiv 2202.06539)</a> — the superlinear duplication law.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The Long Tail</h2>
 <p>Web data is full of accidental duplicates: boilerplate, mirrors, reposts, and quoted text. A leaked secret copied across many forums is exactly the kind of thing that gets memorized, and you rarely control what gets duplicated.</p>
 <p><span class="kt">Key takeaway:</span> Accidental duplication is everywhere in scraped data.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>How bad is it in practice? Lee et al. (ACL 2022) audited standard corpora and found, among other things, a single 61-word English sentence repeated more than 60,000 times in C4. Note the two tails coexist: scraped web data is long-tailed in Feldman's sense (many one-off strings, which large models can still memorize) <em>and</em> heavy at the duplicated head (boilerplate and reposts, which the superlinear law makes the dominant leak source).</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2107.06499">Lee et al., "Deduplicating Training Data Makes Language Models Better," ACL 2022 (arXiv 2107.06499)</a> — the duplication audit of C4 and friends (defense side on "Deduplication").</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>A Predictable Curve</h2>
 <p>Memorization scales log-linearly with these drivers: each tenfold increase in size, duplication, or context adds a steady amount. Carlini and colleagues measured that GPT-J, at 6 billion parameters, memorizes at least one percent of its training set. This is a built-in property of training, not a bug to patch out.</p>
 <p><span class="kt">Key takeaway:</span> The growth follows a smooth, predictable curve — and it is already large.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>The fitted scaling law</strong> (empirical; deck technical supplement, from Carlini et al. ICLR 2023):</p>
+$$\mathrm{Mem} \;\approx\; a\,\log N \;+\; b\,\log r \;+\; c\,\log k \;+\; d, \qquad a, b, c \gt 0,$$
+<p>with $N$ = parameters, $r$ = duplication count, $k$ = context tokens. Log-linear means each $10\times$ in any driver adds a constant increment ($a\log 10$, $b\log 10$, or $c\log 10$ respectively) — a steady slope on a log axis, not a bump to patch out. The headline calibration point: <em>GPT-J (6B) memorizes at least 1% of its training dataset, the Pile</em>. Independently, Nasr et al. note prior work finding that many LLMs discoverably memorize roughly 1% of training data at ~50 tokens of context — the two measurements agree.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2202.07646">Carlini et al., ICLR 2023 (arXiv 2202.07646)</a> — the three log-linear relationships and the GPT-J ≥1% result.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -228,30 +445,71 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Not Just Text</h2>
 <p>Image generators train on billions of scraped images, many of real people. Some of those images come back nearly pixel for pixel.</p>
 <p><span class="kt">Key takeaway:</span> The same leakage risk applies to images.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The reference study for this section is Carlini et al. (2023), which extracted training images from state-of-the-art diffusion models — Stable Diffusion (trained on web-scraped LAION image–caption pairs) and Google's Imagen — recovering over a thousand training examples across their experiments, from photographs of individual people to trademarked logos, and showing diffusion models are substantially less private than earlier generative models such as GANs.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2301.13188">Carlini, Hayes, Nasr, Jagielski, Sehwag, Tramèr, Balle, Ippolito, Wallace, "Extracting Training Data from Diffusion Models," USENIX Security 2023 (arXiv 2301.13188)</a> — the section's main source.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>A Quick Picture</h2>
 <p>A diffusion model turns pure noise into an image through a step-by-step denoising process. Ideally each output is new, but sometimes the result is a memorized training image.</p>
 <p><span class="kt">Key takeaway:</span> Diffusion builds images from noise, and can reconstruct stored ones.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Diffusion in two equations</strong> (standard DDPM setup; recap: course notes). The <em>forward</em> process gradually noises a training image $x_0$: at step $t$,</p>
+$$q(x_t \mid x_0) = \mathcal{N}\!\left(\sqrt{\bar\alpha_t}\, x_0,\; (1-\bar\alpha_t) I\right),$$
+<p>with a schedule $\bar\alpha_t \downarrow 0$, so $x_T$ is (nearly) pure Gaussian noise. Training fits a denoiser $\varepsilon_\theta(x_t, t)$ to predict the added noise — equivalently, to estimate the score of the noised data distribution. <em>Generation</em> starts from $x_T \sim \mathcal{N}(0, I)$ and integrates the learned reverse (denoising) chain back to an image. Memorization in this picture: for some prompts/noise, the learned reverse chain does not sample fresh content but reconverges to a specific stored training $x_0$ — which is exactly what the extraction definitions on the next slide test for.</p>
+</div>
 </article>
 
 <article>
 <h2>Stable Diffusion Copies</h2>
 <p>Carlini and colleagues showed Stable Diffusion regenerating near-exact training photos of a real, identifiable person, prompted by her name from the training caption. Across the study they recovered 94 training images from 175 million generations.</p>
 <p><span class="kt">Key takeaway:</span> A caption can summon a near-exact training photo — rare per query, real in aggregate.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>From Carlini et al. (2023), adapting the LLM definitions to images:</p>
+<p><strong>Definition 1 (($\ell, \delta$)-Diffusion Extraction).</strong> An example $x$ is <em>extractable</em> from a diffusion model $f_\theta$ if there exists an efficient algorithm $\mathcal{A}$ (that does not receive $x$ as input) such that $\hat{x} = \mathcal{A}(f_\theta)$ satisfies $\ell(x, \hat{x}) \le \delta$. Here $\ell$ is a distance and $\delta$ the identity threshold; the paper uses the normalized Euclidean distance $\ell_2(a,b) = \sqrt{\sum_i (a_i - b_i)^2 / d}$ ($d$ = dimension).</p>
+<p><strong>Definition 2 (($k, \ell, \delta$)-Eidetic Memorization).</strong> $x$ is $(k,\ell,\delta)$-eidetic memorized if $x$ is extractable and at most $k$ training examples $\hat{x} \in X$ satisfy $\ell(x, \hat{x}) \le \delta$ — the image analogue of $k$-eidetic memorization from Section 02.</p>
+<p><strong>The headline numbers:</strong> out of 175 million generated images, <em>94 images were $(\ell_2, 0.15)$-extracted</em> from Stable Diffusion — direct near-copies of training images. The best-known example, a photograph of evangelist Ann Graham Lotz, is regenerated from her name in the caption with $\ell_2$ distance $0.031$ from the training image: nearly identical.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2301.13188">Carlini et al., 2023 (arXiv 2301.13188)</a> — Definitions 1–2 and the Stable Diffusion / Imagen extraction results.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Duplication Drives It Again</h2>
 <p>Just as with text, duplicated images are the ones that leak: the histogram from Carlini's paper shows most successfully extracted images appeared one hundred or more times in the training set.</p>
 <p><span class="kt">Key takeaway:</span> Duplication drives image memorization too.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>The attack pipeline</strong> (Carlini et al. 2023). (1) Bias the search toward likely-memorized content: select the 350,000 most-duplicated training examples and use their captions as prompts. (2) Generate 500 images per prompt (175 million total). (3) Detect memorization <em>without training-set access</em> via density: build a graph on each prompt's 500 generations with an edge whenever two generations are near-identical under (a modified) $\ell_2$; if the largest clique has size at least 10, predict that clique's image is memorized. The logic: fresh samples from a diverse distribution rarely coincide, so many near-identical independent generations indicate the model reconverging to one stored image. Predicted images were then verified against the actual training set.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2301.13188">Carlini et al., 2023 (arXiv 2301.13188)</a> — Section 4 (extraction from Stable Diffusion) for the pipeline and the duplication histogram.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Copy or Create?</h2>
 <p>Somepalli and colleagues searched generated images against the training set and found about 1.9 percent were near-duplicates of a training image — content copied even when the pixels differ.</p>
 <p><span class="kt">Key takeaway:</span> A real share of "new" images are actually copies.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>SSCD similarity.</strong> Somepalli et al. (CVPR 2023) score copying with SSCD, a self-supervised <em>copy-detection</em> embedding: images are mapped to feature vectors trained so that copies (including crops, recolorings, and re-compositions) land close together, and similarity is the inner product of normalized features. Unlike pixel $\ell_2$, this catches <em>content</em> replication when pixels differ — the "same object, new background" cases.</p>
+<p><strong>The finding:</strong> generating from Stable Diffusion and searching against a 12M-image subset of its training data (LAION Aesthetics v2 6+), generations with SSCD similarity $\ge 0.5$ to some training image — a threshold the authors validate as genuine content copying — account for about <em>1.88% of random generations</em>. Note the complementary roles: Carlini et al. count near-pixel-exact copies (rare, 94 confirmed); Somepalli et al. count semantic content copies (about 1 in 50).</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2212.03860">Somepalli, Singla, Goldblum, Geiping, Goldstein, "Diffusion Art or Digital Forgery? Investigating Data Replication in Diffusion Models," CVPR 2023 (arXiv 2212.03860)</a> — the SSCD-based replication study.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -270,12 +528,41 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>NYT v. OpenAI</h2>
 <p>Much training data is copyrighted — news, books, code, art — and in December 2023 The New York Times sued OpenAI and Microsoft. The complaint's central evidence was regurgitation: prompts made the model reproduce near-verbatim, paywalled article text, and shown side by side the output matched the original — the same words, in the same order. In March 2025 the court largely denied the motion to dismiss, letting the core copyright claims proceed toward trial.</p>
 <p><span class="kt">Key takeaway:</span> Memorized output is now courtroom evidence, and the case survived dismissal.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p><em>The New York Times Co. v. Microsoft Corp. &amp; OpenAI</em> was filed in December 2023 in the Southern District of New York. The complaint's exhibits show side-by-side comparisons of GPT-4 outputs reproducing long passages of Times articles near-verbatim — memorization evidence in the technical sense of this lecture, presented as evidence of copying in the legal sense. On March 26, 2025, Judge Sidney Stein largely denied the defendants' motions to dismiss — the direct copyright-infringement claims (except conduct more than three years pre-filing) and the contributory-infringement claims proceed — while dismissing the common-law unfair-competition claims and most of the DMCA §1202 claims; the explanatory opinion issued on April 4, 2025, covering the Times, Daily News, and Center for Investigative Reporting actions together. The case is in discovery; no merits ruling on fair use has been made as of this writing.</p>
+<ul>
+<li><a href="https://nytco-assets.nytimes.com/2023/12/NYT_Complaint_Dec2023.pdf">The complaint (Dec 2023, official NYT Co. copy, PDF)</a> — the regurgitation exhibits are the memorable part.</li>
+<li><a href="https://www.nysd.uscourts.gov/sites/default/files/2025-04/yf%2023cv11195%20OpenAI%20MTD%20opinion%20april%204%202025.pdf">Opinion on the motions to dismiss (S.D.N.Y., April 4, 2025, official court PDF)</a> — Judge Stein's reasoning on which claims proceed.</li>
+<li><a href="https://en.wikipedia.org/wiki/The_New_York_Times_v._Microsoft_and_OpenAI">Wikipedia: The New York Times v. Microsoft and OpenAI</a> — maintained procedural timeline.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Copy or Transform?</h2>
 <p>Developers argue training is transformative learning, like a person reading; rights holders argue verbatim output is plain copying. Memorization is the crux: a model that only generalizes has a stronger fair-use case, while one that recites its sources looks like a copier. The stakes are already real — in 2025 Anthropic settled a suit over pirated books for 1.5 billion dollars — but the law is still being written, and its outcomes will shape how models are trained. Less memorization is now a legal goal as well as an engineering one.</p>
 <p><span class="kt">Key takeaway:</span> The legal fight hinges on copy vs transform, and memorization decides which one it looks like.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Fair use, 17 U.S.C. § 107.</strong> US law makes fair use a case-by-case balancing test; the statutory factors are (verbatim from the statute):</p>
+<ol>
+<li>the purpose and character of the use, including whether such use is of a commercial nature or is for nonprofit educational purposes;</li>
+<li>the nature of the copyrighted work;</li>
+<li>the amount and substantiality of the portion used in relation to the copyrighted work as a whole; and</li>
+<li>the effect of the use upon the potential market for or value of the copyrighted work.</li>
+</ol>
+<p>"Transformative" use — the developers' argument — lives in factor 1. Memorization cuts against factors 3 and 4 at once: verbatim regurgitation is the whole "amount and substantiality" of the work, delivered to a potential customer. That is why measured memorization rates (Sections 03 and 06) are now litigation-relevant quantities.</p>
+<h3>Background &amp; further reading</h3>
+<p><em>Bartz v. Anthropic</em> (N.D. Cal.): authors sued over books used in training. In June 2025, Judge William Alsup granted partial summary judgment: training LLMs on lawfully acquired books qualified as fair use, but downloading and retaining pirated copies did not — sending the piracy claims toward trial. Anthropic then settled for <em>$1.5 billion</em>, covering roughly 480,000 works (about $3,000 per work), with preliminary approval in September 2025 and final approval in July 2026 — the largest publicly reported copyright recovery to date.</p>
+<ul>
+<li><a href="https://www.copyright.gov/title17/92chap1.html#107">17 U.S.C. § 107 (official text, copyright.gov)</a> — the four factors.</li>
+<li><a href="https://storage.courtlistener.com/recap/gov.uscourts.cand.434709/gov.uscourts.cand.434709.231.0_2.pdf">Judge Alsup's Order on Fair Use, Bartz v. Anthropic (June 2025, PDF via CourtListener)</a> — the training-vs-piracy split.</li>
+<li><a href="https://authorsguild.org/advocacy/artificial-intelligence/what-authors-need-to-know-about-the-anthropic-settlement/">Authors Guild, "What Authors Need to Know About the Anthropic Settlement"</a> — settlement mechanics and per-work amounts.</li>
+<li><a href="https://www.jurist.org/news/2026/07/judge-approves-record-1-5-billion-settlement-involving-anthropic/">JURIST, "Judge approves record $1.5 billion settlement involving Anthropic" (July 2026)</a> — final approval.</li>
+<li><a href="https://en.wikipedia.org/wiki/Bartz_v._Anthropic">Wikipedia: Bartz v. Anthropic</a> — maintained case timeline.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -288,36 +575,90 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>The Toolbox</h2>
 <p>Three families of defense: deduplicate the data, filter the output for verbatim spans, and add formal privacy during training. Each helps; none fully solves the problem.</p>
 <p><span class="kt">Key takeaway:</span> Defenses are complementary, not complete.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>The three families sit at three intervention points in the pipeline, and their guarantees differ in kind:</p>
+<ul>
+<li><strong>Data-level (deduplication):</strong> shrink the $\log r$ term of the scaling law before training. Empirical benefit, no formal guarantee.</li>
+<li><strong>Inference-level (output filtering):</strong> block verbatim spans at generation time. System-level control; the weights still memorize.</li>
+<li><strong>Training-level (differential privacy):</strong> bound every record's influence on the trained model. The only <em>provable</em> guarantee of the three, and the most expensive.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Deduplication</h2>
 <p>Removing repeats before training attacks the strongest driver. Lee and colleagues showed it also makes models better, not just safer, making it the cheapest win available.</p>
 <p><span class="kt">Key takeaway:</span> Deduplication improves quality and reduces leakage at once.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Lee et al. (ACL 2022) built exact-substring and near-duplicate deduplication tools for web-scale corpora and measured the effects: models trained on standard (undeduplicated) data emit copied training text in over 1% of unprompted output; after deduplication, models emit memorized text about <em>10× less frequently</em>, reach the same or better accuracy, and — because the data is smaller — train in fewer steps. A defense that simultaneously improves the model is why this is deployed first everywhere.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2107.06499">Lee, Ippolito, Nystrom, Zhang, Eck, Callison-Burch, Carlini, "Deduplicating Training Data Makes Language Models Better," ACL 2022 (arXiv 2107.06499)</a> — tools, measurements, and the 10× figure.</li>
+<li><a href="https://arxiv.org/abs/2202.06539">Kandpal, Wallace, Raffel, ICML 2022 (arXiv 2202.06539)</a> — the privacy side: attacks weaken substantially on deduplicated models.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Dedup Is Not Enough</h2>
 <p>Even unique, seen-once strings can be memorized in large models, and near-duplicates slip past exact matching. Deduplication lowers the risk but never to zero.</p>
 <p><span class="kt">Key takeaway:</span> Deduplication is a strong first line, not a wall.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Two precise reasons the residual is nonzero. (1) <em>Singletons leak:</em> the GPT-2 study confirmed $k{=}1$ eidetic memorization — strings from a single training document — and Feldman's theorem says fitting one-off examples is not an accident but a consequence of optimizing accuracy on long-tailed data; dedup by definition cannot remove content that appears once. (2) <em>Near-duplicates evade matching:</em> exact-substring dedup misses reformatted, re-quoted, or lightly edited copies, which still act as duplicates for the $\log r$ driver. So dedup moves the curve down; the scaling law's other terms ($\log N$, $\log k$) keep growing.</p>
+</div>
 </article>
 
 <article>
 <h2>Output Filtering</h2>
 <p>Deployed code and chat systems check generations for long verbatim matches and block text that copies a source too closely. It catches obvious copying but misses paraphrase and small leaks.</p>
 <p><span class="kt">Key takeaway:</span> Filtering stops blatant copying, not subtle leaks.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The deployed example is GitHub Copilot: it offers a duplication-detection setting whose "Block" mode suppresses suggestions that match publicly available code on GitHub, and (when matches are allowed) a code-referencing feature that shows the matching repositories and their licenses. The structural limits of any such filter: it tests <em>verbatim similarity at generation time</em>, so paraphrased regurgitation, short leaked spans below the match threshold, and content absent from the reference index all pass — and the memorized content remains in the weights (same point as "Patched, Not Solved").</p>
+<ul>
+<li><a href="https://docs.github.com/en/copilot/using-github-copilot/finding-public-code-that-matches-github-copilot-suggestions">GitHub Docs: "Finding public code that matches GitHub Copilot suggestions"</a> — the duplication filter's Block mode and code referencing.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Differential Privacy</h2>
 <p>Differential privacy trains so that any single example barely moves the model. If no one record changes the output much, no one record can be memorized. The catch is that this guarantee is paid for in accuracy.</p>
 <p><span class="kt">Key takeaway:</span> Differential privacy provably bounds per-example memorization.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>($\varepsilon,\delta$)-Differential Privacy</strong> (Dwork, McSherry, Nissim, Smith 2006; $(\varepsilon,\delta)$ relaxation Dwork et al. 2006). A randomized algorithm $M$ is $(\varepsilon, \delta)$-DP if for all pairs of datasets $D, D'$ differing in one record (here: add/remove one training example) and all measurable output sets $S$:</p>
+$$\Pr[M(D) \in S] \;\le\; e^{\varepsilon}\, \Pr[M(D') \in S] \;+\; \delta.$$
+<p>Here $M$ is the whole training procedure and its output is the trained model (or anything computed from it).</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>DP bounds counterfactual memorization</strong> (derivation: course notes). Let $A$ be an $(\varepsilon,\delta)$-DP training algorithm and let $E$ be any behavioral event about the trained model — e.g. "$f$ reproduces record $z$ verbatim under some fixed prompt," or any $\{f : M(f,z) \ge c\}$. Since $D$ and $D \setminus \{z\}$ are adjacent, the DP inequality gives directly</p>
+$$\Pr[A(D) \in E] \;\le\; e^{\varepsilon}\, \Pr[A(D\setminus\{z\}) \in E] + \delta,$$
+<p>so the counterfactual gap obeys</p>
+$$\Pr[A(D) \in E] - \Pr[A(D\setminus\{z\}) \in E] \;\le\; (e^{\varepsilon} - 1)\Pr[A(D\setminus\{z\}) \in E] + \delta \;\le\; e^{\varepsilon} - 1 + \delta.$$
+<p>Reading: whatever the model does having seen $z$, it would have done almost as probably <em>without ever seeing</em> $z$ — with small $\varepsilon$, no single record can be the reason its contents come out. This also caps canary exposure in distribution: the null-tail argument from Section 01 degrades only by the same $e^\varepsilon$ factor. Note what is <em>not</em> covered: content duplicated across many records (the group-privacy cost grows as $e^{k\varepsilon}$ for $k$ copies) — which is why dedup and DP are complements, not substitutes.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://doi.org/10.1007/11681878_14">Dwork, McSherry, Nissim, Smith, "Calibrating Noise to Sensitivity in Private Data Analysis," TCC 2006</a> — the original DP definition.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The Privacy Tax</h2>
 <p>Differential privacy is the strongest defense and the costliest: strong settings hurt accuracy, training is expensive at scale, and it is rarely used for the largest foundation models yet.</p>
 <p><span class="kt">Key takeaway:</span> The strongest guarantee comes at the highest cost.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>DP-SGD</strong> (Abadi et al., CCS 2016) is how the definition is implemented for deep learning. Each step: compute <em>per-example</em> gradients $g_i$, clip each to norm at most $C$, $\bar{g}_i = g_i \cdot \min(1, C / \lVert g_i \rVert_2)$, then average and add Gaussian noise:</p>
+$$\tilde{g} \;=\; \frac{1}{B}\left(\sum_{i} \bar{g}_i + \mathcal{N}(0, \sigma^2 C^2 I)\right).$$
+<p>Clipping caps any one example's influence on the update; the noise hides the remainder; the <em>moments accountant</em> tracks the accumulated $(\varepsilon, \delta)$ across all training steps. The tax is visible in the mechanics: per-example gradients cost memory and compute, clipping biases the updates, and the noise scale needed for small $\varepsilon$ grows with training length — which is why full-scale DP pretraining of frontier LLMs remains rare.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1607.00133">Abadi, Chu, Goodfellow, McMahan, Mironov, Talwar, Zhang, "Deep Learning with Differential Privacy," CCS 2016 (arXiv 1607.00133)</a> — DP-SGD and the moments accountant.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -330,24 +671,59 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Frontier: Whole Books Come Back</h2>
 <p>Extraction has scaled from strings to entire books. Cooper and colleagues showed Llama 3.1 70B memorizes nearly the entire first Harry Potter book, and 2026 follow-up work extracted long book passages from production chatbots — some without any jailbreak at all. This is the copyright question from Section 05, now with lab evidence.</p>
 <p><span class="kt">Key takeaway:</span> Frontier models can carry, and emit, whole copyrighted books.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Probabilistic extraction</strong> (Hayes et al., NAACL 2025). Deterministic greedy decoding understates leakage for deployed models, which sample. Let $p_{\text{ext}}(s \mid p)$ be the probability that one sampled generation from prompt $p$ yields the target $s$. Then $s$ is <strong>$(n, q)$-discoverably extractable</strong> if an adversary making $n$ sampled attempts succeeds at least once with probability at least $q$:</p>
+$$1 - \bigl(1 - p_{\text{ext}}(s \mid p)\bigr)^{n} \;\ge\; q.$$
+<p>Even tiny per-query probabilities become near-certain extraction at scale — the right lens for querying a public API millions of times.</p>
+<h3>Background &amp; further reading</h3>
+<p><strong>Open-weight models</strong> — Cooper et al. (2025) applied this probabilistic lens across 200 books and 14 open-weight LLMs (thousands of book–model experiments), sliding a window of 100-token sequences (50-token prefix, 50-token suffix) through each book. Headline: Llama 3.1 70B memorizes <em>Harry Potter and the Sorcerer's Stone</em> nearly in its entirety — extraction coverage ≈96.3% — with nearly half the book extractable even demanding per-sequence success probability ≥50%; other books recur too (e.g. <em>The Alchemist</em>, coverage ≈49.1%), while most books show far less. <strong>Production chatbots</strong> — Ahmed et al. (2026) probed deployed systems (Claude 3.7 Sonnet, GPT-4.1, Gemini 2.5 Pro, Grok 3) with a two-phase attack: probe for memorized openings, then iteratively ask for continuations; they recover long near-verbatim book passages, in some model–book pairs without any jailbreak, and quantify it with a verbatim-recall metric.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2410.19482">Hayes, Swanberg, Chaudhari, Yona, Shumailov, Nasr, Choquette-Choo, Lee, Cooper, "Measuring Memorization in Language Models via Probabilistic Extraction," NAACL 2025 (arXiv 2410.19482)</a> — the $(n,q)$-extraction framework.</li>
+<li><a href="https://arxiv.org/abs/2505.12546">Cooper et al., "Extracting Memorized Pieces of (Copyrighted) Books from Open-Weight Language Models," 2025 (arXiv 2505.12546)</a> — the 200-book study; Harry Potter coverage figures.</li>
+<li><a href="https://arxiv.org/abs/2601.02671">Ahmed, Cooper, Koyejo, Liang, 2026 (arXiv 2601.02671)</a> — book extraction from production chatbots.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Frontier: How Much Fits?</h2>
 <p>Morris and colleagues measured storage capacity directly: GPT-family models store about 3.6 bits per parameter, and models memorize until that capacity fills, then start generalizing. Memorization and generalization draw on one shared budget.</p>
 <p><span class="kt">Key takeaway:</span> Memorization has a measurable capacity, shared with generalization.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Compression-based memorization</strong> (Morris et al. 2025). A model $\theta$ has memorized an input $x$ to the extent that $x$ can be described more briefly when $\theta$ is available — a Kolmogorov-style notion made practical by estimating description lengths with model likelihoods. The key move is decomposing this into <em>unintended memorization</em> (information $\theta$ retains about a specific dataset) and <em>generalization</em> (information about the underlying data-generating process); measuring the former on data with no learnable structure (random strings) isolates raw storage.</p>
+<p><strong>The findings:</strong> GPT-family transformers have a storage capacity of approximately <em>3.6 bits per parameter</em>; models memorize until that capacity fills, after which unintended memorization plateaus and "grokking"-style generalization begins — supporting the slide's shared-budget picture, and giving a first-principles reason why the $\log N$ term of Section 03's scaling law exists.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2505.24832">Morris, Sitawarin, Guo, Kokhlikyan, Suh, Rush, Chaudhuri, Mahloujifar, "How Much Do Language Models Memorize?", 2025 (arXiv 2505.24832)</a> — the capacity measurement and the memorization/generalization decomposition.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Frontier: Memorized PII</h2>
 <p>The sharpest harm is personal data coming back out. PII, meaning personally identifiable information such as names, emails, and numbers, is scattered through scraped web data and becomes extractable when duplicated or rare-but-stored.</p>
 <p><span class="kt">Key takeaway:</span> The worst leaks attach a real name and address.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>PII</strong> (NIST SP 800-122): any information about an individual that either (1) can be used to <em>distinguish or trace</em> that individual's identity — name, social security number, date and place of birth, biometric records — or (2) is <em>linked or linkable</em> to the individual, such as medical, educational, financial, or employment information. Both prongs matter for extraction: category (2) items that look harmless in isolation become identifying when a model emits them attached to a name — exactly the pattern in the GPT-2 and ChatGPT extractions, where names arrived with phone numbers, emails, and addresses. Note also why both memorization regimes hurt here: duplicated PII (a signature block reposted across forums) leaks via the superlinear duplication law, while rare PII (one leaked database dump) is the long-tail content Feldman's theorem says accurate models fit.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://nvlpubs.nist.gov/nistpubs/legacy/sp/nistspecialpublication800-122.pdf">NIST Special Publication 800-122, "Guide to Protecting the Confidentiality of Personally Identifiable Information (PII)" (PDF)</a> — the standard US definition.</li>
+<li><a href="https://arxiv.org/abs/2012.07805">Carlini et al., 2021 (arXiv 2012.07805)</a> — the memorized-PII categories recovered from GPT-2.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Open Problems</h2>
 <p>Open questions remain: measuring memorization in closed models, cutting it without hurting accuracy, erasing specific data after training, and agreeing on a legal line for how much is too much.</p>
 <p><span class="kt">Key takeaway:</span> The core problems are still unsolved.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Each open problem connects to material above. <em>Measuring closed models:</em> without training-data access only extractable (not discoverable) memorization is observable — the Nasr and Ahmed attacks are the current state of the art, and gaps between the two regimes remain unquantified for production systems. <em>Cutting memorization without hurting accuracy:</em> Feldman's theorem sets a genuine floor on long-tailed data, so the question is how closely practical training can approach it. <em>Erasing after training:</em> machine unlearning — removing a specific record's influence from trained weights with a verifiable guarantee — has no scalable solution; today's "removal" is output filtering. <em>The legal line:</em> the NYT and Bartz cases will start drawing it, but no court has yet said how much measured memorization is too much.</p>
+</div>
 </article>
 
 <article>

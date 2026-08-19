@@ -390,6 +390,18 @@ prompt restored to the paper's exact wording; Somepalli cite removed from the Ca
 histogram slide; concrete verified numbers added (604/1,800; 10,000+/$200/150×; ~1000×;
 GPT-J ≥1%; 94/175M; ~1.9%; $1.5B). Note file synced (58 entries, order matches).
 
+**2026-08 note enrichment:** `lec04-memorization-note.html` upgraded from speaker script
+(365 lines) to Script &amp; Companion Notes (741 lines; 58 entries unchanged): per-entry
+`.detail` blocks with rigorous definitions (NLL objective, $k$-extractable, Nasr
+extractable/discoverable Defs 1–2, canary $s[r]$ + rank + exposure, counterfactual
+memorization, $k$-eidetic, Λ-style calibrated-perplexity metrics, Mem$(f)$ + scaling law,
+DDPM recap, $(\ell,\delta)$/$(k,\ell,\delta)$-diffusion extraction, SSCD, §107 four factors,
+$(\varepsilon,\delta)$-DP, DP-SGD, $(n,q)$-probabilistic extraction, Morris compression
+memorization, NIST PII), proofs (Feldman Thm 2.3 statement + verified sketch, exposure
+null-tail bound, DP ⇒ bounded counterfactual memorization), and case backgrounds with
+29 verified links (NYT v. OpenAI complaint + Apr 2025 MTD opinion; Bartz v. Anthropic
+fair-use order + settlement) — all consistent with `courses/privacy/lectures/03-memorization/`.
+
 ---
 
 ## lec05-unlearning.html

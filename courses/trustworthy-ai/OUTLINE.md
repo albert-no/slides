@@ -1269,7 +1269,14 @@ line. Lending-demo numbers (72%/50%, 84%→80%, 22→2) are labeled illustrative
 `lec14tech.html` checked (see supplement table). Note file synced (61 entries, order
 matches).
 
-## lec15-governance.html
+**2026-08 note enrichment:** `lec14-fairness-mitigation-note.html` upgraded from speaker
+script (383 lines) to Script &amp; Companion Notes (695 lines; 61 entries unchanged):
+per-entry `.detail` blocks with rigorous definitions (fairness-gap functionals, derived
+predictor Def 4.1, discrimination score, first-person fairness), proofs (reweighing
+independence, massaging flip count, reductions Thm 1/3 sketch, adversarial Props 2–3
+with entropy proofs, Hardt LP + ROC geometry + Prop 5.2/Cor 5.3, DP error lower bound),
+and 23 verified links — consistent with `lec14tech.html` and the lec13 note (impossibility
+proofs referenced, not duplicated).
 
 **Topic:** Governance, the frontier & course wrap-up (~90 min, capstone). Nearly
 math-free. Connects the course's threads via the trust stack (data → model → output →

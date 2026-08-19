@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 14 — Script</title>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 14 — Script &amp; Companion Notes</title>
 <link rel="stylesheet" href="../../reference/colors_and_type.css">
 <link rel="stylesheet" href="../../reference/katex/katex.min.css">
 <script defer src="../../reference/katex/katex.min.js"></script>
@@ -10,9 +10,13 @@ h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); pad
 article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
 article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 .kt { color: var(--yonsei-blue); font-weight: 700; }
+.detail { margin: 12px 0 0 14px; padding: 2px 0 2px 18px; border-left: 3px solid var(--slate); }
+.detail h3 { color: var(--yonsei-blue); font-size: 1.05rem; margin: 14px 0 4px; }
+.detail p, .detail li { font-size: 0.97rem; line-height: 1.6; }
+.detail ol, .detail ul { padding-left: 22px; }
 </style></head><body>
-<h1>Lecture 14 — Fairness II: Mitigation &amp; Accountability · Speaker Script</h1>
-<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+<h1>Lecture 14 — Fairness II: Mitigation &amp; Accountability · Script &amp; Companion Notes</h1>
+<p><em>One entry per slide, in order; section headers match slide titles. Each entry keeps the spoken script and key takeaway, followed by companion material in indented blocks: rigorous definitions, formal theorem statements with proofs or labeled sketches, and brief verified backgrounds with links. The formal treatment follows Kamiran&ndash;Calders (KAIS 2012), Agarwal et al. (ICML 2018), Zhang&ndash;Lemoine&ndash;Mitchell (AIES 2018), and Hardt&ndash;Price&ndash;Srebro (NeurIPS 2016); the rigorous fairness definitions themselves live in the Lecture 13 companion notes and are only restated briefly here. External facts and links were checked against the primary sources.</em></p>
 
 <article>
 <h2>Fairness II: Mitigation &amp; Accountability</h2>
@@ -36,30 +40,55 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>We Measured Bias; Now Fix It</h2>
 <p>Models fail unevenly across groups: loans skew by zip code, hiring filters skew by gender, face systems fail on darker skin. Measuring those gaps was lecture one; closing them is this lecture.</p>
 <p><span class="kt">Key takeaway:</span> Measuring is easy; closing the gap is the real work.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Standing setup for this lecture.</strong> Data are triples $(X, A, Y) \sim \mathcal{D}$: features $X$, protected (group) attribute $A$ with $\Pr[A = a] = \pi_a \gt 0$, and binary label $Y$; a classifier outputs $\hat Y$, possibly via a score $R = s(X) \in [0,1]$ and a threshold. The group-conditional quantities that all of today&rsquo;s methods manipulate are the <em>selection rate</em> $\Pr[\hat Y = 1 \mid A = a]$, the <em>true-positive rate</em> $\mathrm{TPR}_a = \Pr[\hat Y = 1 \mid Y = 1, A = a]$, the <em>false-positive rate</em> $\mathrm{FPR}_a = \Pr[\hat Y = 1 \mid Y = 0, A = a]$, and the <em>base rate</em> $p_a = \Pr[Y = 1 \mid A = a]$. The fairness criteria themselves &mdash; demographic parity ($\hat Y \perp A$), equalized odds ($\hat Y \perp A \mid Y$), calibration/sufficiency &mdash; were stated rigorously, with the impossibility results, in the Lecture 13 companion notes; this lecture takes them as given and asks how to shrink the corresponding gaps.</p>
+</div>
 </article>
 
 <article>
 <h2>What Mitigation Means</h2>
 <p>Bias mitigation is any change to the data, the model, or the outputs that shrinks a measured fairness gap. It is a deliberate edit, not a lucky side effect of higher accuracy.</p>
 <p><span class="kt">Key takeaway:</span> Mitigation is an intentional change aimed at a specific gap.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Fairness gap as a functional.</strong> Fix a criterion and define its gap, e.g. the demographic-parity gap $\Delta_{\mathrm{DP}}(\hat Y) = \bigl|\Pr[\hat Y = 1 \mid A = a] - \Pr[\hat Y = 1 \mid A = b]\bigr|$ or the equalized-odds gap $\Delta_{\mathrm{EO}}(\hat Y) = \max_{y \in \{0,1\}} \bigl|\Pr[\hat Y = 1 \mid Y = y, A = a] - \Pr[\hat Y = 1 \mid Y = y, A = b]\bigr|$. <strong>Bias mitigation</strong> is an intervention $T$ applied at one of three loci &mdash; to the training data ($\mathcal{D} \mapsto \tilde{\mathcal{D}}$, then train as usual), to the training problem (replace ERM by a penalized or constrained objective), or to the trained outputs ($\hat Y \mapsto \tilde Y = g(R, A)$) &mdash; chosen so that the resulting predictor satisfies $\Delta(\cdot) \le \tau$ for a target level $\tau$, at quantified cost in risk. The point of the definition is intent: the gap $\Delta$ is named in advance and the intervention is evaluated against it (formalization: course notes).</p>
+</div>
 </article>
 
 <article>
 <h2>The Machine Learning Pipeline</h2>
 <p>Data flows into training, and training produces outputs. Bias can enter, and be removed, at each stage: pre-process the data, in-process the training, post-process the outputs.</p>
 <p><span class="kt">Key takeaway:</span> Three stages, three families of fix.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>The three families, formally:</p>
+<ul>
+<li><strong>Pre-processing:</strong> a map on the training data alone &mdash; reweight examples ($w(a, y)$ per group&ndash;label cell), relabel ($Y_i \mapsto Y_i'$ for selected $i$), or re-encode features ($X \mapsto \varphi(X)$) &mdash; after which any off-the-shelf learner runs unchanged.</li>
+<li><strong>In-processing:</strong> change the objective: $\min_\theta \mathrm{Loss}(\theta) + \lambda\,\mathrm{Unfairness}(\theta)$, or the constrained form $\min_\theta \mathrm{Loss}(\theta)$ s.t. $\mathrm{gap}(\theta) \le \tau$.</li>
+<li><strong>Post-processing:</strong> restrict to <em>derived predictors</em> &mdash; possibly randomized functions of the frozen score and the group, $\tilde Y = g(R, A)$, defined precisely in Section 04 (Hardt&ndash;Price&ndash;Srebro, Definition 4.1).</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Which Stage Can You Touch?</h2>
 <p>Pre-processing assumes you own the data. In-processing assumes you control training. Post-processing assumes only access to the scores. Access shrinks from left to right, and so does the cost of deploying the fix.</p>
 <p><span class="kt">Key takeaway:</span> Choose the stage you actually have access to.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Access requirements, stated exactly.</strong> Pre-processing needs the training set with $A$ recorded. In-processing needs the training pipeline (loss, gradients, retraining budget) and $A$ during training. Post-processing needs neither: it needs only the score $R$, the group $A$ at decision time, and a labeled held-out sample per group to estimate the rates being equalized. Note the asymmetry: pre- and in-processing can drop $A$ at deployment, while threshold post-processing must read $A$ for every decision &mdash; a requirement that is itself sometimes legally or practically blocked (see &ldquo;What Post-Processing Needs&rdquo;).</p>
+</div>
 </article>
 
 <article>
 <h2>The Black-Box Reality</h2>
 <p>Often you cannot retrain the model you must fix: it is a vendor API with locked weights, or simply too expensive to retrain. When the model is sealed, post-processing is the only door left.</p>
 <p><span class="kt">Key takeaway:</span> A sealed model forces you to work on the outputs.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>&ldquo;Sealed model&rdquo; formalized.</strong> The black-box setting grants query access to $R = s(X)$ but no access to $s$&rsquo;s parameters or training data. The mitigations available are then exactly the derived predictors $\tilde Y = g(R, A)$ of Section 04: every group-dependent threshold rule, and every randomization over such rules, is implementable with query access alone &mdash; and Hardt&ndash;Price&ndash;Srebro&rsquo;s optimality results (Section 04) say this class already contains the best equalized-odds predictor obtainable from $R$.</p>
+</div>
 </article>
 
 <article>
@@ -72,36 +101,79 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>The Bias Is in the Data</h2>
 <p>A model learns the patterns it is shown. If past hiring favored one group, the labels record that history and the model copies it forward. Fix the data, and the model never learns the bias.</p>
 <p><span class="kt">Key takeaway:</span> Biased labels teach biased models.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Recall from Lecture 13</strong> (companion notes, &ldquo;Three Places Bias Enters&rdquo;): <em>sampling bias</em> &mdash; the training distribution is a selected version of the deployment distribution, with selection correlated with $A$; <em>label (measurement) bias</em> &mdash; the recorded $Y$ is a proxy for the construct of interest $Y^{*}$ with group-correlated error, so the learner consistently estimates $\Pr[Y \mid X]$, not $\Pr[Y^{*} \mid X]$. Pre-processing attacks precisely these two mechanisms: reweighing and resampling correct the joint frequencies of $(A, Y)$, and relabeling edits the recorded $Y$ itself. Neither can recover an unobserved $Y^{*}$; they can only impose a chosen statistical relationship between $A$ and $Y$ on the training set.</p>
+</div>
 </article>
 
 <article>
 <h2>Reweighing</h2>
 <p>Reweighing assigns each example a weight $w(g,y)$ equal to the ratio of the product of the marginals to the joint probability. Underrepresented group-and-outcome pairs get a larger weight, so the loss listens to every cell equally.</p>
 <p><span class="kt">Key takeaway:</span> Weight the examples so the data looks balanced, without deleting any.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Reweighing (Kamiran &amp; Calders 2012, &sect;5.2).</strong> With empirical probabilities computed on the training set, every example with group $A = a$ and label $Y = y$ receives the weight</p>
+$$w(a, y) \;=\; \frac{P_{\mathrm{exp}}(a, y)}{P_{\mathrm{obs}}(a, y)} \;=\; \frac{\Pr[A = a]\,\Pr[Y = y]}{\Pr[A = a,\, Y = y]},$$
+<p>the probability the cell <em>would</em> have if $A$ and $Y$ were independent, divided by the probability it actually has. Cells that are rarer than independence predicts get $w \gt 1$; over-represented cells get $w \lt 1$. The weighted training set is passed to any learner that accepts instance weights (equivalently, one resamples with probabilities proportional to $w$ &mdash; the paper&rsquo;s &ldquo;sampling&rdquo; variant).</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>Claim (Kamiran &amp; Calders 2012: &ldquo;it is easy to see that $D_W$ is unbiased&rdquo;).</strong> Let $\tilde{\mathcal{D}}$ be the reweighted distribution, $\tilde P(a, y) \propto w(a, y)\, P(a, y)$. Then $\tilde{\mathcal{D}}$ satisfies $A \perp Y$ exactly, and it preserves both marginals.</p>
+<p><em>Proof.</em> The normalizer is $Z = \sum_{a, y} w(a, y) P(a, y) = \sum_{a, y} P(a) P(y) = \bigl(\sum_a P(a)\bigr)\bigl(\sum_y P(y)\bigr) = 1$, so directly $\tilde P(a, y) = w(a, y) P(a, y) = P(a) P(y)$. The marginals follow by summing: $\tilde P(a) = \sum_y P(a)P(y) = P(a)$ and $\tilde P(y) = P(y)$. Hence $\tilde P(a, y) = \tilde P(a)\, \tilde P(y)$ for every cell: independence holds, i.e. the discrimination measure $\Pr[Y = 1 \mid A = a] - \Pr[Y = 1 \mid A = b]$ is $0$ under $\tilde{\mathcal{D}}$, while no example is deleted and the overall positive rate is unchanged. $\square$ (Statement verified against the paper; the two-line expansion is course notes.)</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://doi.org/10.1007/s10115-011-0463-8">Kamiran &amp; Calders, &ldquo;Data preprocessing techniques for classification without discrimination&rdquo;, Knowledge and Information Systems 33(1):1&ndash;33, 2012</a> &mdash; open access; reweighing is Algorithm 3, &sect;5.2.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Reweighing: The Picture</h2>
 <p>Before reweighing, the group-outcome cells have very uneven counts. After reweighing, each cell contributes equally to the loss. No example is removed; only its influence is rescaled.</p>
 <p><span class="kt">Key takeaway:</span> Reweighing lifts rare cells without throwing data away.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Worked example (the paper&rsquo;s Example 3).</strong> In Kamiran &amp; Calders&rsquo; ten-record job-application table, $\Pr[A = f] = 0.5$ and $\Pr[Y = +] = 0.6$, but only $20\%$ of records are females with a positive label. Independence would predict $P_{\mathrm{exp}}(f, +) = 0.5 \times 0.6 = 0.3$, so</p>
+$$w(f, +) = \frac{0.5 \times 0.6}{0.2} = 1.5,$$
+<p>and likewise $w(f, -) = 0.2/0.3 \approx 0.67$, $w(m, +) = 0.3/0.4 = 0.75$, $w(m, -) = 0.2/0.1 = 2$. Multiplying each cell&rsquo;s frequency by its weight restores exactly the product-of-marginals table &mdash; the &ldquo;after&rdquo; picture on the slide &mdash; without touching a single label (numbers verified against the paper).</p>
+</div>
 </article>
 
 <article>
 <h2>Relabeling</h2>
 <p>Relabeling flips a few borderline labels to even out the outcomes: promote some rejected minority records, demote some accepted majority ones. It is sometimes called "massaging" the labels and must be used with care, since you are editing ground truth.</p>
 <p><span class="kt">Key takeaway:</span> Flip a handful of boundary labels, cautiously.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Massaging (Kamiran &amp; Calders 2012, &sect;5.1, Algorithms 1&ndash;2).</strong> With groups $b$ (deprived) and $w$ (favored) of sizes $|D_b|, |D_w|$, the <em>promotion candidates</em> are the examples with $A = b, Y = -$ and the <em>demotion candidates</em> those with $A = w, Y = +$. A ranker (any scoring classifier trained on $D$) orders promotion candidates by descending positive-class score and demotion candidates by ascending score, so the flips happen closest to the decision boundary, minimizing the accuracy impact. The top $M$ of each list are flipped &mdash; equal numbers, so the overall positive rate is unchanged.</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>How many flips.</strong> Flipping one promotion&ndash;demotion pair changes the empirical discrimination $\mathrm{disc}(D) = \Pr[Y = + \mid A = w] - \Pr[Y = + \mid A = b]$ by $-\bigl(\tfrac{1}{|D_b|} + \tfrac{1}{|D_w|}\bigr)$; setting $\mathrm{disc}(D) - M\bigl(\tfrac{1}{|D_b|} + \tfrac{1}{|D_w|}\bigr) = 0$ gives the paper&rsquo;s Algorithm-1 formula</p>
+$$M \;=\; \frac{\mathrm{disc}(D)\,\cdot\, |D_b| \cdot |D_w|}{|D|},$$
+<p>using $|D_b| + |D_w| = |D|$ (verified against the paper, which also proves via its Theorem 1 that this is the minimal number of edits that zeroes the discrimination at fixed class distribution). The caution on the slide is genuine: unlike reweighing, massaging changes recorded ground truth, and the paper itself recommends it only when the discrimination in the labels &mdash; not just the sampling &mdash; is what you intend to remove.</p>
+</div>
 </article>
 
 <article>
 <h2>Representation Repair</h2>
 <p>Representation repair learns a new feature encoding that keeps what predicts the target but erases what predicts the group. If the features carry no signal about the protected attribute, no downstream model can use it.</p>
 <p><span class="kt">Key takeaway:</span> Erase the group signal from the features themselves.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Fair representation learning.</strong> Learn a (possibly randomized) encoder $Z = \varphi(X)$ with two competing goals: $Z$ should remain predictive of $Y$, while carrying no information about $A$ &mdash; ideally $Z \perp A$, or in relaxed form a bound on how well any classifier can recover $A$ from $Z$. If $Z \perp A$ holds exactly, then <em>any</em> downstream predictor $\hat Y = h(Z)$ satisfies demographic parity, because $\hat Y$ is a function of a variable independent of $A$ (formalization: course notes). The founding instance is Zemel et al.&rsquo;s <em>Learning Fair Representations</em>: map individuals to a small set of prototypes, and optimize an objective that &ldquo;encode[s] the data as well as possible, while simultaneously obfuscating any information about membership in the protected group,&rdquo; combining a group-fairness (statistical-parity) term with reconstruction and prediction terms; modern variants replace the obfuscation term with an adversary (next slides) applied to the representation instead of the prediction.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://proceedings.mlr.press/v28/zemel13.html">Zemel, Wu, Swersky, Pitassi &amp; Dwork, &ldquo;Learning Fair Representations&rdquo;, ICML 2013 (PMLR 28(3):325&ndash;333)</a> &mdash; the prototype-based formulation; quote above is from the abstract.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Pre-Processing: Pros and Cons</h2>
 <p>Pre-processing is model-agnostic, reusable, and easy to explain to a regulator. But editing labels is risky, proxy features can leak the group back in, and nothing guarantees fairness at the moment of decision.</p>
 <p><span class="kt">Key takeaway:</span> Simple and portable, but no output-time guarantee.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Why there is no output-time guarantee.</strong> Reweighing makes $A \perp Y$ hold in the <em>training distribution</em>; it does not constrain the learned $f$. The trained classifier reads $X$, and $X$ may still be arbitrarily informative about $A$ (proxies: zip code, purchasing history, word choice). Concretely, if $A$ is a deterministic function of some coordinate of $X$ and $Y$ correlates with that coordinate given the reweighted labels, the ERM solution on $\tilde{\mathcal{D}}$ can have $\hat Y = f(X)$ dependent on $A$ even though $A \perp Y$ under $\tilde{\mathcal{D}}$ &mdash; independence of the label from the group does not imply independence of the <em>prediction</em> from the group (derivation: course notes). This is exactly the gap that in-processing (constrain $f$ directly) and post-processing (constrain the output) close.</p>
+</div>
 </article>
 
 <article>
@@ -114,42 +186,103 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Add Fairness to the Objective</h2>
 <p>We minimize the usual loss plus a fairness penalty scaled by $\lambda$. The penalty measures unfairness, and $\lambda$ controls how much accuracy we are willing to spend to reduce it.</p>
 <p><span class="kt">Key takeaway:</span> A single knob $\lambda$ trades accuracy for fairness during training.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Penalized objective.</strong></p>
+$$\min_\theta \; \underbrace{\mathrm{Loss}(\theta)}_{\text{accuracy}} \;+\; \lambda\, \underbrace{\mathrm{Unfairness}(\theta)}_{\text{penalty}}, \qquad \lambda \ge 0,$$
+<p>where $\mathrm{Unfairness}$ is a differentiable surrogate for the chosen gap &mdash; e.g. for demographic parity the squared difference of group-mean scores, $\bigl(\mathbb{E}[f_\theta(X) \mid A = a] - \mathbb{E}[f_\theta(X) \mid A = b]\bigr)^2$, estimated per batch. $\lambda = 0$ recovers ordinary training; $\lambda \to \infty$ forces the surrogate gap to $0$ regardless of accuracy. The exact $0$&ndash;$1$ gaps are non-differentiable, so in-processing always optimizes a relaxation; the achieved gap must still be <em>measured</em> after training, on held-out data.</p>
+</div>
 </article>
 
 <article>
 <h2>Fairness as a Constraint</h2>
 <p>Instead of a soft penalty, we can demand the fairness gap stay below a hard budget $\tau$ while minimizing loss. This is an explicit promise rather than a gentle nudge.</p>
 <p><span class="kt">Key takeaway:</span> A constraint pins the gap below a chosen ceiling.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Constrained objective.</strong> $\min_\theta \mathrm{Loss}(\theta)$ subject to $\mathrm{gap}(\theta) \le \tau$, where $\mathrm{gap}$ is the demographic-parity or equalized-odds violation and $\tau \ge 0$ is the promised ceiling.</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>Penalty and constraint are Lagrange-dual views of each other.</strong> The Lagrangian $L(\theta, \lambda) = \mathrm{Loss}(\theta) + \lambda(\mathrm{gap}(\theta) - \tau)$ turns the constrained problem into $\min_\theta \max_{\lambda \ge 0} L$; for fixed $\lambda$ the inner minimization is exactly the penalized objective. Over <em>randomized</em> classifiers the feasible region and objective are linear, the problem is convex, and strong duality holds: every budget $\tau$ that is active at the optimum corresponds to an optimal multiplier $\lambda^{*}(\tau)$ whose penalized solution coincides with the constrained one (standard convex duality; derivation: course notes). The practical difference is what you control: $\lambda$ only indirectly controls the achieved gap, while $\tau$ is the gap you promise &mdash; at the price of solving the harder constrained problem, which is precisely what the reductions approach (next slide) automates.</p>
+</div>
 </article>
 
 <article>
 <h2>The Reductions Approach</h2>
 <p>The reductions approach of Agarwal and colleagues turns a fairness constraint into a sequence of ordinary training calls: reweight, train a plain classifier, check the gap, adjust, repeat until the constraint holds.</p>
 <p><span class="kt">Key takeaway:</span> Reduce fair classification to repeated standard training.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Setup (Agarwal, Beygelzimer, Dud&iacute;k, Langford &amp; Wallach, ICML 2018).</strong> Optimize over randomized classifiers $Q \in \Delta(\mathcal{H})$. Many fairness criteria are linear constraints on <em>conditional moments</em> $\mu_j(h) = \mathbb{E}\bigl[g_j(X, A, Y, h(X)) \mid \mathcal{E}_j\bigr]$ (e.g. for demographic parity, $\mathbb{E}[h(X) \mid A = a]$ for each group; equalized odds conditions additionally on $Y$), giving the constrained ERM</p>
+$$\min_{Q \in \Delta} \; \mathrm{err}(Q) \quad \text{s.t.} \quad \mathbf{M} \boldsymbol{\mu}(Q) \le \mathbf{c},$$
+<p>with Lagrangian $L(Q, \boldsymbol{\lambda}) = \widehat{\mathrm{err}}(Q) + \boldsymbol{\lambda}^{\top}(\mathbf{M}\widehat{\boldsymbol{\mu}}(Q) - \widehat{\mathbf{c}})$, $\boldsymbol{\lambda} \ge 0$, $\lVert \boldsymbol{\lambda} \rVert_1 \le B$. A pair $(Q, \boldsymbol{\lambda})$ is a <em>$\nu$-approximate saddle point</em> if neither player can improve $L$ by more than $\nu$.</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>Guarantees (verified against arXiv:1803.02453; labeled sketch).</strong></p>
+<ul>
+<li><strong>Convergence (their Theorem 1).</strong> Running exponentiated-gradient updates on $\boldsymbol{\lambda}$ against best responses of the $Q$-player yields, after $T$ rounds, an average pair with suboptimality $\nu_T \le \frac{B \log(|\mathcal{K}|+1)}{\eta T} + \eta \rho^2 B$; a $\nu$-approximate saddle point is reached in $O\bigl(\rho^2 B^2 \log(|\mathcal{K}|+1)/\nu^2\bigr)$ iterations ($\rho$ bounds the constraint violations, $\mathcal{K}$ indexes constraints).</li>
+<li><strong>Statistical guarantee (their Theorem 3).</strong> With $\nu \propto n^{-\alpha}$ and $B \propto n^{\alpha}$ ($\alpha \le 1/2$), the returned randomized classifier $\widehat{Q}$ satisfies, relative to the best feasible $Q^{*}$: $\;\mathrm{err}(\widehat{Q}) \le \mathrm{err}(Q^{*}) + \widetilde{O}(n^{-\alpha})$ and $\gamma_k(\widehat{Q}) \le c_k + \sum_j |M_{k,j}|\, \widetilde{O}(n_j^{-\alpha})$ for every constraint $k$ &mdash; near-optimal error and near-feasibility, with the constraint slack scaling in the per-group sample sizes $n_j$.</li>
+</ul>
+<p><em>Proof idea.</em> The $\boldsymbol{\lambda}$-player runs a no-regret (exponentiated-gradient) algorithm while the $Q$-player best-responds; by the Freund&ndash;Schapire argument the average play converges to a saddle point of the empirical Lagrangian, and uniform convergence of $\widehat{\mathrm{err}}$ and $\widehat{\boldsymbol{\mu}}$ transfers the empirical guarantee to the population (full proofs: &sect;3 and Appendix A of the paper).</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1803.02453">Agarwal, Beygelzimer, Dud&iacute;k, Langford &amp; Wallach, &ldquo;A Reductions Approach to Fair Classification&rdquo;, ICML 2018 (arXiv:1803.02453)</a> &mdash; the algorithm is implemented as <code>ExponentiatedGradient</code> in Fairlearn.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Why Reductions Are Handy</h2>
 <p>Because it is just a wrapper around training, it works with any standard classifier, handles many fairness definitions, and comes with provable guarantees. The fairness logic sits outside; the learner stays untouched inside.</p>
 <p><span class="kt">Key takeaway:</span> A clean wrapper that reuses any existing learner.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>The inner call is cost-sensitive classification.</strong> For fixed multipliers $\boldsymbol{\lambda}$, the $Q$-player&rsquo;s best response is a single deterministic classifier minimizing a reweighted cost: each example $i$ gets costs for predicting $0$ or $1$,</p>
+$$C_i^{\hat y} \;=\; \mathbf{1}\{Y_i \ne \hat y\} \;+\; \sum_{k, j} \frac{M_{k,j}\, \lambda_k}{p_j}\, g_j(X_i, A_i, Y_i, \hat y)\, \mathbf{1}\{(X_i, A_i, Y_i) \in \mathcal{E}_j\}, \qquad \hat y \in \{0, 1\},$$
+<p>(verified against arXiv:1803.02453, &sect;3). This is why <em>any</em> learner that can minimize weighted classification error &mdash; logistic regression, boosting, a neural network &mdash; plugs in unchanged: the fairness logic lives entirely in how the costs are set, and the guarantee applies to whatever base learner approximately best-responds. The output is a randomized ensemble of the classifiers produced along the way.</p>
+</div>
 </article>
 
 <article>
 <h2>Adversarial Debiasing</h2>
 <p>Two networks compete: the predictor solves the target task while an adversary tries to guess the protected group from the predictor's output. Training the predictor to fool the adversary strips the group signal out of its predictions.</p>
 <p><span class="kt">Key takeaway:</span> Make the prediction useless for guessing the group.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Setup (Zhang, Lemoine &amp; Mitchell, AIES 2018).</strong> A predictor with weights $W$ produces $\hat Y$ from $X$, trained on loss $L_P(\hat y, y)$; an adversary with weights $U$ tries to predict the protected attribute $Z$, trained on loss $L_A(\hat z, z)$. <em>What the adversary reads determines which fairness notion is enforced</em> (verified from the paper, &sect;3):</p>
+<ul>
+<li><strong>Demographic parity:</strong> the adversary sees only $\hat Y$ &mdash; fooling it makes $\hat Y$ carry no information about $Z$.</li>
+<li><strong>Equalized odds:</strong> the adversary sees both $\hat Y$ and the true label $Y$ &mdash; fooling it removes the information about $Z$ in $\hat Y$ <em>beyond</em> what $Y$ already provides.</li>
+<li><strong>Equal opportunity (on class $y$):</strong> same as parity but the adversary trains only on examples with $Y = y$.</li>
+</ul>
+<p><strong>Predictor update (their Eq. 1).</strong> The predictor&rsquo;s weights move along</p>
+$$\nabla_W L_P \;-\; \mathrm{proj}_{\nabla_W L_A} \nabla_W L_P \;-\; \alpha\, \nabla_W L_A,$$
+<p>with $\mathrm{proj}_v x := 0$ when $v = 0$ and $\alpha$ a tunable coefficient. The projection term removes from the predictor&rsquo;s gradient its component along the adversary&rsquo;s gradient &mdash; the predictor never moves in a direction that <em>helps</em> the adversary &mdash; and the $-\alpha \nabla_W L_A$ term actively pushes the adversary&rsquo;s loss up. The construction works for classification or regression, and for discrete or continuous $Z$.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1801.07593">Zhang, Lemoine &amp; Mitchell, &ldquo;Mitigating Unwanted Biases with Adversarial Learning&rdquo;, AIES 2018 (arXiv:1801.07593)</a> &mdash; implemented as <code>AdversarialDebiasing</code> in AI Fairness 360.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The Adversary's Job</h2>
 <p>The adversary's success measures how much group information the prediction leaks. The predictor is trained both to solve its task and to defeat the adversary, so its predictions lose their group signal. If the prediction cannot reveal the group, the decision is blind to it.</p>
 <p><span class="kt">Key takeaway:</span> The adversary's failure is the predictor's fairness.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Proposition (Zhang et al. 2018, Propositions 2&ndash;3).</strong> Let $(X, Y, Z) \sim \mathcal{D}$ with $Z$ discrete. Suppose the adversary is trained for demographic parity (input: $\hat y$ only), is expressive enough that at convergence it minimizes the cross-entropy $\mathbb{E}[-\log \Pr(A(\hat y) = z)]$, and the predictor completely fools it &mdash; the adversary&rsquo;s loss equals $H(Z)$, the entropy of $Z$. Then $\hat Y \perp Z$: the predictor satisfies demographic parity. If instead the adversary receives $(\hat y, y)$ and cannot beat $H(Z \mid Y)$, then $\hat Y \perp Z \mid Y$: equalized odds.</p>
+<p><em>Proof (the paper&rsquo;s, verified).</em> An optimal adversary can sample $A(\hat y) \sim (Z \mid \hat Y = \hat y)$, achieving loss exactly the conditional entropy $H(Z \mid \hat Y)$. If $\hat Y$ and $Z$ were dependent, then $H(Z \mid \hat Y) \lt H(Z)$, so the optimal adversary would achieve loss strictly below $H(Z)$ &mdash; contradicting the assumption that it is held to $H(Z)$. Hence $\hat Y \perp Z$. The equalized-odds case is identical with everything conditioned on $Y$: dependence would give $H(Z \mid \hat Y, Y) \lt H(Z \mid Y)$. $\square$</p>
+<p>The caveats are the assumptions: the guarantee needs an <em>optimal</em> adversary and actual convergence of the two-player dynamics &mdash; both routinely violated with deep networks (the authors note the required convexity &ldquo;assumptions are not satisfied in most use cases involving neural networks&rdquo;), which is why the adversary&rsquo;s failure must be checked empirically, not assumed.</p>
+</div>
 </article>
 
 <article>
 <h2>In-Processing: Pros and Cons</h2>
 <p>In-processing usually gives the best accuracy-fairness balance because it optimizes the real objective and supports many definitions. But it needs full training access, is harder to tune and debug, and requires retraining whenever the goal changes.</p>
 <p><span class="kt">Key takeaway:</span> Best balance, highest access requirement.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Where the formal guarantees stop.</strong> The reductions guarantee (Theorem 3 above) applies to the <em>randomized</em> classifier returned by the saddle-point computation, with a base learner that can approximately minimize cost-sensitive error; the adversarial guarantee (Propositions 2&ndash;3 above) needs an optimal, converged adversary. Both degrade silently when the inner optimization fails &mdash; unlike post-processing, where the constraint is enforced by construction on the four numbers you can directly measure. That is the precise content of &ldquo;harder to tune and debug.&rdquo;</p>
+</div>
 </article>
 
 <article>
@@ -162,48 +295,88 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Leave the Model Alone</h2>
 <p>The model outputs a risk score; we decide where to cut it off, and we may pick a different cutoff for each group. It is surgery on the threshold rather than on the trained weights.</p>
 <p><span class="kt">Key takeaway:</span> The decision rule is a separate, editable layer.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Derived predictor (Hardt, Price &amp; Srebro 2016, Definition 4.1).</strong> A predictor $\tilde Y$ is <em>derived</em> from a score $R$ and the protected attribute $A$ if it is a possibly randomized function of $(R, A)$ alone; in particular $\tilde Y$ is independent of $X$ conditional on $(R, A)$. This is the exact formalization of &ldquo;surgery on the threshold&rdquo;: the construction may use the joint distribution of $(R, A, Y)$ (estimated from held-out data) to <em>choose</em> the rule, but the deployed rule reads only the score and the group. Everything in this section &mdash; group thresholds, randomized thresholds, the linear program &mdash; is a search over this class.</p>
+</div>
 </article>
 
 <article>
 <h2>Recall: Equalized Odds</h2>
 <p>Equalized odds, from Hardt, Price, and Srebro, asks for equal true-positive and false-positive rates across groups: the error rates should not depend on which group you belong to.</p>
 <p><span class="kt">Key takeaway:</span> Equal error rates across groups is the post-processing target.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Equalized odds (their Definition 2.1).</strong> $\hat Y$ satisfies equalized odds with respect to $A$ and $Y$ if $\hat Y \perp A \mid Y$; for binary variables, $\Pr[\hat Y = 1 \mid A = a, Y = y] = \Pr[\hat Y = 1 \mid A = b, Y = y]$ for $y \in \{0, 1\}$ &mdash; equal TPR and equal FPR. <strong>Equal opportunity (Definition 2.2)</strong> requires this only at $y = 1$. The Lecture 13 companion notes state these with full context (separation, the COMPAS dispute, and the conflict with calibration); here they serve as the constraint the derived predictor must satisfy.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1610.02413">Hardt, Price &amp; Srebro, &ldquo;Equality of Opportunity in Supervised Learning&rdquo;, NeurIPS 2016 (arXiv:1610.02413)</a> &mdash; definitions in &sect;2, post-processing construction in &sect;4.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Group-Specific Thresholds</h2>
 <p>With one shared score we choose a different cutoff per group, picked so both groups land on the same true-positive and false-positive rates. Group A might be cut at 0.55 while group B is cut at 0.40.</p>
 <p><span class="kt">Key takeaway:</span> Different cutoffs can equalize the rates.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>The ROC geometry (Hardt&ndash;Price&ndash;Srebro, &sect;4.2; verified).</strong> For a score $R$, each threshold $t$ in group $a$ realizes a point $\bigl(\mathrm{FPR}_a(t), \mathrm{TPR}_a(t)\bigr)$ on that group&rsquo;s ROC curve, and <em>randomizing between two thresholds</em> realizes any point in the convex hull &mdash; the whole region under the group&rsquo;s ROC curve. Equalized odds demands one common point $\gamma = (\mathrm{FPR}, \mathrm{TPR})$ for all groups, so the feasible set is the <em>intersection</em> of the regions under the group-conditional ROC curves (above the diagonal). The optimal rule has, per group, the form</p>
+$$\tilde Y = \mathbf{1}[\, R \gt T_a \,],$$
+<p>where $T_a$ is either a fixed threshold $t_a$ or a randomization between two thresholds $\underline{t}_a \lt \bar t_a$: predict $1$ above $\bar t_a$, predict $0$ below $\underline{t}_a$, and flip a biased coin in between. Since the groups&rsquo; curves generally do not touch except where they cross, at least one group typically sits strictly below its own ROC curve &mdash; that group&rsquo;s score is deliberately used sub-optimally, which is where the accuracy cost (two slides ahead) comes from. The effective ROC curve of equalized-odds predictors is the pointwise minimum of the group curves: performance is pinned to the worst-served group, which is exactly the incentive the definition is designed to create.</p>
+</div>
 </article>
 
 <article>
 <h2>The Post-Hoc Recipe</h2>
 <p>Train a model normally, measure each group's rates on held-out data, search for thresholds that match those rates, then deploy one cutoff per group. The model itself never changes.</p>
 <p><span class="kt">Key takeaway:</span> Four steps, all after training is done.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>The search is a linear program (Hardt&ndash;Price&ndash;Srebro, &sect;4.1; verified, sketch).</strong> For a binary predictor $\hat Y$, a derived predictor is fully specified by four probabilities $p_{\hat y a} = \Pr[\tilde Y = 1 \mid \hat Y = \hat y, A = a]$. Writing $\gamma_a(\tilde Y) = \bigl(\mathrm{FPR}_a, \mathrm{TPR}_a\bigr)$, their Lemma 4.3 shows $\tilde Y$ is derived iff $\gamma_a(\tilde Y)$ lies in the polytope $P_a(\hat Y) = \mathrm{convhull}\{(0,0),\, \gamma_a(\hat Y),\, \gamma_a(1 - \hat Y),\, (1,1)\}$ for each group, and Lemma 4.2 says equalized odds is exactly $\gamma_0(\tilde Y) = \gamma_1(\tilde Y)$. The optimal fair post-processing is therefore</p>
+$$\min_{\tilde Y}\; \mathbb{E}\,\ell(\tilde Y, Y) \quad \text{s.t.} \quad \gamma_a(\tilde Y) \in P_a(\hat Y)\;\; \forall a, \qquad \gamma_0(\tilde Y) = \gamma_1(\tilde Y),$$
+<p>a linear program in the four variables whose coefficients come from the joint distribution of $(\hat Y, A, Y)$ (their Proposition 4.4: the LP solution <em>is</em> the optimal equalized-odds derived predictor). In practice the joint distribution is estimated from the held-out set &mdash; that is the entire data requirement of the recipe.</p>
+</div>
 </article>
 
 <article>
 <h2>What Post-Processing Needs</h2>
 <p>The recipe is cheap but not requirement-free: you need held-out data with true outcomes for each group, the group attribute available at decision time, and the willingness to defend an openly different rule per group. Any one of these can be the blocker in practice.</p>
 <p><span class="kt">Key takeaway:</span> Cheap to compute, but it has real preconditions.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>The three preconditions, precisely.</strong> (i) The LP&rsquo;s coefficients are the group-conditional rates, so you need labeled outcomes $Y$ per group on held-out data &mdash; with rare groups the estimates $\widehat{\mathrm{TPR}}_a, \widehat{\mathrm{FPR}}_a$ carry sampling error of order $1/\sqrt{n_a}$, and the deployed rule only satisfies equalized odds up to that error. (ii) The derived predictor is a function of $(R, A)$, so $A$ must be read at every decision &mdash; unavailable or prohibited in some deployments. (iii) The rule is <em>explicitly</em> group-dependent, and near the thresholds it is randomized: two identical scores can receive different decisions by coin flip. All three are visible in the construction above, not side effects (reading: course notes on &sect;4 of Hardt&ndash;Price&ndash;Srebro).</p>
+</div>
 </article>
 
 <article>
 <h2>The Accuracy Cost</h2>
 <p>Matching the rates often means ignoring signal: rejecting a high-scoring applicant or accepting a lower-scoring one purely to align the groups. The simplicity of post-processing is paid for in overall accuracy.</p>
 <p><span class="kt">Key takeaway:</span> Simple to apply, but it costs accuracy.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>How bad can &ldquo;post-hoc only&rdquo; be? (Hardt&ndash;Price&ndash;Srebro, &sect;5; verified statements.)</strong> Their Proposition 5.2: for any distribution with Bayes-optimal regressor $R^{*}(X, A) = \Pr[Y = 1 \mid X, A]$, any loss, and any <em>oblivious</em> property $C$ (one depending only on the joint law of $(Y, A, \hat Y)$), there is a predictor derived from $(R^{*}, A)$ that is optimal among <em>all</em> predictors satisfying $C$. <strong>Corollary 5.3:</strong> an optimal equalized-odds (or equal-opportunity) predictor can be derived from the Bayes-optimal regressor and $A$ &mdash; post-processing loses nothing <em>when the score is the true conditional probability</em>. Their Theorem 5.6 extends this with a quantitative bound: deriving from an approximately optimal score is approximately optimal, with the excess loss controlled by a conditional Kolmogorov distance between the score and $R^{*}$. The accuracy cost on this slide is therefore not an artifact of post-processing: it is the price of the <em>constraint</em>, plus a second, avoidable term that appears only when the frozen score is far from calibrated &mdash; in which case in-processing can strictly beat any post-hoc fix.</p>
+</div>
 </article>
 
 <article>
 <h2>Demo: A Lending Model</h2>
 <p>Consider a lending model with two groups. A single shared cutoff approves 72% of group A but only 50% of group B, with overall accuracy at 84%. We are about to lower group B's cutoff.</p>
 <p><span class="kt">Key takeaway:</span> A 22-point approval gap is our starting point.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>The demo&rsquo;s numbers are synthetic (a classroom illustration, not a dataset result). The quantities on screen: <em>approval rate</em> per group $\Pr[\hat Y = 1 \mid A = g] = \Pr[R \ge t_g \mid A = g]$, the <em>approval gap</em> (a demographic-parity gap, here $0.72 - 0.50 = 0.22$), and <em>overall accuracy</em> $\Pr[\hat Y = Y]$. Note the demo equalizes <em>approval rates</em> &mdash; demographic parity &mdash; rather than error rates; the same one-knob mechanics would apply to an equalized-odds target, with the search running over the ROC picture two slides back.</p>
+</div>
 </article>
 
 <article>
 <h2>Demo: Watch the Tradeoff Move</h2>
 <p>As we drop group B's cutoff, the approval gap closes from 22 points to 2 points, but overall accuracy slips from 84% to 80%. The fairness gain and the accuracy loss happen together.</p>
 <p><span class="kt">Key takeaway:</span> Closing the gap by 20 points cost 4 points of accuracy.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Why both numbers move together.</strong> Lowering $t_B$ monotonically raises $\Pr[R \ge t_B \mid A = B]$, closing the gap. Every newly approved applicant with $Y = 0$ adds a false positive; every one with $Y = 1$ removes a false negative. If the original shared cutoff was (near) accuracy-optimal, the marginal applicants being admitted have $\Pr[Y = 1 \mid R] \lt 1/2$, so the false positives outnumber the removed false negatives and accuracy falls &mdash; the 4-point slide is the integral of that imbalance over the moved threshold range (derivation: course notes).</p>
+</div>
 </article>
 
 <article>
@@ -216,6 +389,14 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Toolkits Ship These Methods</h2>
 <p>Everything in this lecture is available off the shelf. Fairlearn is a community-driven Python toolkit with reductions training and threshold post-processing; AI Fairness 360, started at IBM and now under the Linux Foundation, ships reweighing, adversarial debiasing, and equalized-odds post-processing. Both start with metrics: measure the gap before you pick a fix.</p>
 <p><span class="kt">Key takeaway:</span> You do not have to implement any of this from scratch.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The mapping from this lecture to code, verified against each project&rsquo;s documentation: Fairlearn implements the Agarwal et al. reductions as <code>ExponentiatedGradient</code> and <code>GridSearch</code> and the Hardt et al. post-processing as <code>ThresholdOptimizer</code>; AIF360&rsquo;s algorithm list includes <code>Reweighing</code> (Kamiran &amp; Calders 2012), <code>AdversarialDebiasing</code> (Zhang et al. 2018), and <code>EqOddsPostprocessing</code> (Hardt et al. 2016).</p>
+<ul>
+<li><a href="https://fairlearn.org/">Fairlearn</a> &mdash; open-source, community-driven fairness toolkit (metrics, reductions, threshold post-processing).</li>
+<li><a href="https://github.com/Trusted-AI/AIF360">AI Fairness 360 (Trusted-AI/AIF360)</a> &mdash; extensible bias-detection and mitigation library; hosted under the LF AI &amp; Data Foundation.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -228,18 +409,41 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Fairness Versus Accuracy</h2>
 <p>Pushing a fairness gap toward zero usually drops accuracy. The result is a frontier of achievable trade-offs, not a single best operating point.</p>
 <p><span class="kt">Key takeaway:</span> You choose a point on a curve, not a maximum.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Proposition (a floor on the cost of exact parity).</strong> Let the groups have proportions $\pi_a, \pi_b \gt 0$ and base rates $p_a \ne p_b$. Then every classifier $\hat Y$ satisfying exact demographic parity has</p>
+$$\Pr[\hat Y \ne Y] \;\ge\; \min(\pi_a, \pi_b)\, \lvert p_a - p_b \rvert \;\gt\; 0.$$
+<p><em>Proof (derivation: course notes).</em> Parity forces a common selection rate $\beta = \Pr[\hat Y = 1 \mid A = g]$ for both groups. Within group $g$, the error decomposes as $\mathrm{FP} + \mathrm{FN}$ where $\mathrm{FP} - \mathrm{FN} = \Pr[\hat Y = 1 \mid A = g] - \Pr[Y = 1 \mid A = g] = \beta - p_g$, so $\Pr[\hat Y \ne Y \mid A = g] \ge \lvert \beta - p_g \rvert$. Averaging, the total error is at least $\varphi(\beta) = \pi_a \lvert \beta - p_a \rvert + \pi_b \lvert \beta - p_b \rvert$, a piecewise-linear function minimized at an endpoint of $[\min(p_a, p_b), \max(p_a, p_b)]$, with value $\pi_b \lvert p_a - p_b \rvert$ at $\beta = p_a$ and $\pi_a \lvert p_a - p_b \rvert$ at $\beta = p_b$. Hence the bound. $\square$ Even a perfect predictor of $Y$ violates parity by exactly $\lvert p_a - p_b \rvert$, so when base rates differ the frontier genuinely slopes: zero gap and zero excess error cannot coexist. Menon &amp; Williamson give the refined picture: for fairness-constrained risk the optimal classifier is an instance-dependent <em>thresholding of the class-probability function</em>, and the size of the tradeoff is governed by the alignment between the target&rsquo;s class probability $\Pr[Y = 1 \mid X]$ and the group-membership probability $\Pr[A = 1 \mid X]$.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://proceedings.mlr.press/v81/menon18a.html">Menon &amp; Williamson, &ldquo;The cost of fairness in binary classification&rdquo;, FAT* 2018 (PMLR 81)</a> &mdash; quantifies the accuracy&ndash;fairness frontier via cost-sensitive risks.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Which Fairness?</h2>
 <p>The definitions themselves conflict. Equal approval rates pulls one way and equal error rates pulls another, and when base rates differ both cannot hold. Optimizing the gap you chose can worsen the one you ignored.</p>
 <p><span class="kt">Key takeaway:</span> Improving one fairness metric can hurt another.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>The two pulls, formally.</strong> Demographic parity constrains the unconditional selection rates: $\Pr[\hat Y = 1 \mid A = a] = \Pr[\hat Y = 1 \mid A = b]$. Equalized odds constrains the $Y$-conditional rates: $\mathrm{TPR}_a = \mathrm{TPR}_b$ and $\mathrm{FPR}_a = \mathrm{FPR}_b$. If both held with base rates $p_a \ne p_b$, the selection rate in group $g$ is $\beta = p_g\,\mathrm{TPR} + (1 - p_g)\,\mathrm{FPR}$; equating the two groups forces $(p_a - p_b)(\mathrm{TPR} - \mathrm{FPR}) = 0$, i.e. $\mathrm{TPR} = \mathrm{FPR}$ &mdash; a predictor no better than random with respect to $Y$ (derivation: course notes; this is the parity-vs-separation clash treated at length in the Lecture 13 companion notes). So a mitigation tuned to one gap will, in general, move the other &mdash; measure both.</p>
+</div>
 </article>
 
 <article>
 <h2>The Impossibility</h2>
 <p>When base rates differ across groups, no decision rule satisfies every fairness definition simultaneously. This is a proven theorem, not a gap in our cleverness, so some residual gap must remain.</p>
 <p><span class="kt">Key takeaway:</span> Perfect fairness on all definitions is mathematically impossible.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Restatement (proved in full in the Lecture 13 companion notes; only the statements here).</strong> <em>Chouldechova (2017):</em> if a binary classifier satisfies predictive parity ($\mathrm{PPV}_a = \mathrm{PPV}_b$), equal false-positive rates ($\gt 0$), and equal false-negative rates across two groups, then the base rates are equal, $p_a = p_b$ &mdash; contrapositive: with unequal base rates, calibrated-style fairness and equal error rates cannot coexist. <em>Kleinberg&ndash;Mullainathan&ndash;Raghavan (2017):</em> a risk score that is simultaneously calibrated within groups and balanced for the positive and negative classes exists only under perfect prediction or equal base rates. Consequence for <em>mitigation</em>: the Hardt et al. post-processor that enforces equalized odds necessarily breaks within-group calibration of the decisions whenever $p_a \ne p_b$; no cleverer algorithm avoids this, so choosing the constraint to enforce is choosing which fairness property to give up.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, &ldquo;Fair prediction with disparate impact&rdquo;, Big Data 2017 (arXiv:1703.00056)</a> &mdash; the binary-classifier form.</li>
+<li><a href="https://arxiv.org/abs/1609.05807">Kleinberg, Mullainathan &amp; Raghavan, &ldquo;Inherent Trade-Offs in the Fair Determination of Risk Scores&rdquo;, ITCS 2017 (arXiv:1609.05807)</a> &mdash; the score form.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -270,48 +474,98 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Model Cards</h2>
 <p>A model card, introduced by Mitchell and colleagues, is a short spec sheet that travels with the model: intended and out-of-scope use, performance broken down by group, and known limitations.</p>
 <p><span class="kt">Key takeaway:</span> Report performance per group, not just on average.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Mitchell, Wu, Zaldivar, Barnes, Vasserman, Hutchinson, Spitzer, Raji &amp; Gebru proposed model cards at FAT* 2019 (Atlanta, Jan 2019): short documents accompanying trained models that state intended use cases, evaluation procedures, and &mdash; the fairness-critical part &mdash; &ldquo;benchmarked evaluation in a variety of conditions, such as across different cultural, demographic, or phenotypic groups,&rdquo; including intersectional combinations. The disaggregated-performance requirement is what turns a fairness claim into something a reader can check against the Gender Shades-style failure mode of a strong average hiding a weak subgroup.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/1810.03993">Mitchell et al., &ldquo;Model Cards for Model Reporting&rdquo;, FAT* 2019 (arXiv:1810.03993)</a> &mdash; the proposal, with two worked example cards.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Datasheets for Datasets</h2>
 <p>Datasheets, from Gebru and colleagues, apply the same idea one step earlier: document how and why the data was collected, who is in it and who is missing, and what preprocessing was applied.</p>
 <p><span class="kt">Key takeaway:</span> Document the data as carefully as the model.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Gebru, Morgenstern, Vecchione, Wortman Vaughan, Wallach, Daum&eacute; III &amp; Crawford (Communications of the ACM, Dec 2021; first circulated 2018) propose that every dataset ship with a datasheet answering structured questions on motivation, composition, collection process, preprocessing, recommended uses, distribution, and maintenance &mdash; by analogy with the datasheets that accompany electronic components. For this lecture the key entries are composition (&ldquo;who is in it, who is missing&rdquo;) and preprocessing: a reweighed or massaged training set (Section 02) is exactly the kind of deliberate edit a datasheet is designed to disclose.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/1803.09010">Gebru et al., &ldquo;Datasheets for Datasets&rdquo;, CACM 64(12), 2021 (arXiv:1803.09010)</a> &mdash; the question framework.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Audits</h2>
 <p>An audit is an independent test of the deployed system: probe it with realistic inputs and measure gaps the builder may have missed. It can be run by an internal team or an outside party.</p>
 <p><span class="kt">Key takeaway:</span> Verify fairness from the outside, not just on paper.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Algorithmic audit.</strong> In Raji &amp; Buolamwini&rsquo;s formulation, an algorithmic audit &ldquo;involves the collection and analysis of outcomes from a fixed algorithm or defined model within a system&rdquo; &mdash; typically by stimulating the system with a designed mock population (here: a demographically balanced face benchmark) and measuring per-subgroup outcomes the vendor never reported. The audit is <em>external</em> and <em>black-box</em>: it needs only API access, which is what makes it possible for parties with no inside knowledge and, as the next slides show, what gives its publication leverage.</p>
+</div>
 </article>
 
 <article>
 <h2>The Gender Shades Audit</h2>
 <p>The 2018 Gender Shades audit by Buolamwini and Gebru tested three commercial gender classifiers — Microsoft, Face++, and IBM — and broke error rates down by gender, skin tone, and their intersection. This is Table 4 of the paper; give the class a moment to scan it.</p>
 <p><span class="kt">Key takeaway:</span> An audit means breaking performance down by subgroup.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Buolamwini &amp; Gebru (FAT* 2018) built the Pilot Parliaments Benchmark &mdash; parliamentarian portraits balanced by gender and Fitzpatrick skin type &mdash; and evaluated the binary gender classifiers of Microsoft, Face++ (Megvii), and IBM on it. From the abstract: &ldquo;darker-skinned females are the most misclassified group (with error rates of up to 34.7%). The maximum error rate for lighter-skinned males is 0.8%.&rdquo; The methodological point carried by Table 4 is intersectionality: the audit reports every gender $\times$ skin-type cell, not just marginals.</p>
+<ul>
+<li><a href="https://proceedings.mlr.press/v81/buolamwini18a.html">Buolamwini &amp; Gebru, &ldquo;Gender Shades: Intersectional Accuracy Disparities in Commercial Gender Classification&rdquo;, FAT* 2018 (PMLR 81)</a> &mdash; paper and PDF.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Reading the Gender Shades Table</h2>
 <p>All three classifiers were near-perfect on lighter-skinned men, with error between 0 and 0.8 percent, but erred on 20.8 to 34.7 percent of darker-skinned women. Every vendor had the same worst subgroup. Neither the gender column nor the skin-tone column alone reveals how bad the intersection is.</p>
 <p><span class="kt">Key takeaway:</span> The intersection hides the harm the marginals miss.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The per-vendor darker-female error rates in the May 2017 audit, verified against the paper: Microsoft $20.8\%$, Face++ $34.5\%$, IBM $34.7\%$ &mdash; &ldquo;ranging from 20.8% for Microsoft to 34.7% for IBM&rdquo; &mdash; against lighter-male errors of $0.0$&ndash;$0.8\%$. The aggregation lesson is quantitative: a vendor could report a respectable overall error while a single intersectional cell fails one time in three, because the failing cell is a small fraction of an unbalanced benchmark. This is why the model-card requirement of <em>disaggregated</em> reporting (previous slides) names intersectional groups explicitly.</p>
+</div>
 </article>
 
 <article>
 <h2>The Audit Worked</h2>
 <p>Raji and Buolamwini's 2019 follow-up, Actionable Auditing, re-tested the same vendors: within seven months all three had shipped new APIs, and error on darker-skinned women fell from 20.8 to 1.5 percent at Microsoft, 34.5 to 4.1 at Face++, and 34.7 to 17.0 at IBM. Companies that were not publicly audited, like Amazon at 31.4 percent and Kairos at 22.5, still lagged behind.</p>
 <p><span class="kt">Key takeaway:</span> Public, named audits produced fast, measurable fixes.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Raji (then University of Toronto) &amp; Buolamwini (MIT Media Lab) re-ran the Pilot Parliaments Benchmark in August 2018, about 15 months after the original May 2017 audit. Verified from the paper: within 7 months of the audit&rsquo;s release all three targets shipped new API versions (IBM first, in 66 days; Microsoft in 189 days, one day before Face++). Darker-female error fell to $1.52\%$ (Microsoft, from $20.8\%$), $4.1\%$ (Face++, from $34.5\%$), and $16.97\%$ (IBM, from $34.7\%$) &mdash; a $17.7$&ndash;$30.4$ percentage-point drop, the largest improvement of any subgroup. The non-targeted companies audited for the first time in 2018 lagged far behind: Amazon (Rekognition) at $31.37\%$ and Kairos at $22.50\%$ darker-female error. The paper&rsquo;s inference &mdash; public, named disclosure is what moved the targets &mdash; is the empirical case for audits as an accountability mechanism rather than a courtesy.</p>
+<ul>
+<li><a href="https://dam-prod.media.mit.edu/x/2019/01/24/AIES-19_paper_223.pdf">Raji &amp; Buolamwini, &ldquo;Actionable Auditing: Investigating the Impact of Publicly Naming Biased Performance Results of Commercial AI Products&rdquo;, AIES 2019 (PDF)</a> &mdash; Tables 1&ndash;2 hold the numbers above.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Impact Assessments</h2>
 <p>An impact assessment asks before deployment, not after harm: who could this hurt, what is the worst-case error, and is there a way to appeal a decision? It is increasingly required by law for high-risk uses.</p>
 <p><span class="kt">Key takeaway:</span> Ask who could be harmed before you ship.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The concrete legal instance: Article 27 of the EU AI Act requires a <em>fundamental rights impact assessment</em> before first deployment of certain high-risk AI systems, for deployers that are public bodies or private entities providing public services. The assessment must describe the processes in which the system will be used, the categories of persons and groups likely to be affected, the specific risks of harm to them, the human-oversight measures, and the measures to be taken if the risks materialize &mdash; and the results are notified to the market-surveillance authority.</p>
+<ul>
+<li><a href="https://artificialintelligenceact.eu/article/27/">EU AI Act, Article 27 &mdash; Fundamental Rights Impact Assessment for High-Risk AI Systems</a> &mdash; consolidated text at the AI Act Explorer.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Documentation Becomes Law</h2>
 <p>Regulators now mandate these records. The EU AI Act requires technical documentation and logged risk assessments for high-risk systems, turning voluntary practice into a legal duty.</p>
 <p><span class="kt">Key takeaway:</span> Documentation is shifting from best practice to legal requirement.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Article 11 of the EU AI Act (in force since August 2024, with high-risk obligations phasing in) requires that technical documentation for a high-risk AI system &ldquo;be drawn up before that system is placed on the market or put into service and shall be kept up-to-date,&rdquo; containing at minimum the elements of Annex IV &mdash; which include the system&rsquo;s design specifications, the training data and its provenance, and the metrics used to measure accuracy and discriminatory impacts. Functionally this makes something very close to a model card plus datasheet a legal artifact rather than a voluntary one.</p>
+<ul>
+<li><a href="https://artificialintelligenceact.eu/article/11/">EU AI Act, Article 11 &mdash; Technical Documentation</a> &mdash; consolidated text at the AI Act Explorer, with Annex IV linked.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -324,48 +578,106 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Generators Amplify Stereotypes</h2>
 <p>Bianchi and colleagues showed that text-to-image models exaggerate demographic stereotypes: "a software engineer" returns white men, "a housekeeper" returns women of color, with no identity cue in the prompt. Counter-prompts and guardrails did not prevent it. We saw this figure last lecture; today it motivates the mitigation question.</p>
 <p><span class="kt">Key takeaway:</span> Generators do not just reflect stereotypes, they amplify them.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Bianchi, Kalluri, Durmus et al. (FAccT 2023) prompted accessible text-to-image systems with neutral occupation and trait phrases and found that &ldquo;ordinary prompts produce stereotypes,&rdquo; with demographic skews in generated occupations <em>exceeding</em> the skews in labor statistics &mdash; amplification, not mere reflection &mdash; and that &ldquo;stereotypes persist despite mitigation strategies&rdquo;: neither user-side counter-prompts nor the vendors&rsquo; own guardrails prevented them. The full case discussion lives in the Lecture 13 companion notes; today&rsquo;s relevance is the finding that the cheap fixes (prompting, filters) were already tested by the authors and failed, which motivates the three-stage analysis on the next slide.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2211.03759">Bianchi et al., &ldquo;Easily Accessible Text-to-Image Generation Amplifies Demographic Stereotypes at Large Scale&rdquo;, FAccT 2023 (arXiv:2211.03759)</a> &mdash; Figure 1 is the slide&rsquo;s figure.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>How to Debias a Generator</h2>
 <p>The same three stages apply: rebalance the training images, fine-tune the model toward balance, or inject diversity into the prompt at request time. The prompt-side fix is the cheapest and the most fragile.</p>
 <p><span class="kt">Key takeaway:</span> Cheaper fixes are also more brittle.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>What &ldquo;balanced generation&rdquo; means formally.</strong> For a neutral prompt $c$ (no demographic cue), let $q_c$ be the distribution of a perceived demographic attribute over the model&rsquo;s outputs, and fix a reference distribution $r_c$ (uniform over groups, or a population/occupation statistic &mdash; itself a normative choice). The fairness target is a bound on a divergence $d(q_c, r_c)$. The three stages then act at the three loci of the pipeline: reweight or rebalance the training corpus so the <em>data&rsquo;s</em> conditional demographics match $r_c$ (pre); fine-tune with a penalty on $d(q_c, r_c)$ estimated from generations (in); or rewrite the prompt / re-rank the samples at request time (post). The post fix touches only $c$, so any prompt that slips past the rewriter is untreated &mdash; the precise sense in which it is cheapest and most fragile (formalization: course notes).</p>
+</div>
 </article>
 
 <article>
 <h2>Overcorrection Is Its Own Bias</h2>
 <p>We saw the Gemini case last lecture: in 2024 its prompt rewriting inserted diversity into every request, including specific historical scenes, and Google paused people-image generation. Balance helps a generic "a doctor" but breaks a known historical figure — fairness is context-dependent, and a blunt rule cannot tell the two apart.</p>
 <p><span class="kt">Key takeaway:</span> A heavy-handed fix without context is just a new bias.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>In February 2024 Google&rsquo;s Gemini produced demographically &ldquo;diverse&rdquo; but historically wrong images (e.g. for prompts about specific historical figures and eras), and on February 22 Google paused people-image generation entirely. Google&rsquo;s own post-mortem (Prabhakar Raghavan, Feb 23, 2024) names both failure modes: the tuning to show a range of people &ldquo;failed to account for cases that should clearly <em>not</em> show a range,&rdquo; and over time &ldquo;the model became way more cautious than we intended and refused to answer certain prompts entirely.&rdquo; In this lecture&rsquo;s terms: an unconditional post-processing rule was applied where the fairness target is prompt-dependent &mdash; over-correction on one axis is under-correction on another.</p>
+<ul>
+<li><a href="https://blog.google/products/gemini/gemini-image-generation-issue/">Google (Raghavan), &ldquo;Gemini image generation got it wrong. We&rsquo;ll do better.&rdquo;, Feb 23, 2024</a> &mdash; the official account and quotes above.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Do LLMs Discriminate?</h2>
 <p>Anthropic's discrimination evaluation posed 70 hypothetical decisions — loans, hiring, visas — and swapped only the person's age, race, and gender. The model favored women and minority profiles over the white-male baseline and penalized people over 60. Bias runs in both directions, not just the classic one.</p>
 <p><span class="kt">Key takeaway:</span> Test LLM decisions by swapping only the demographics.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>The discrimination score.</strong> Tamkin et al. generate 70 yes/no decision scenarios (loan approval, hiring, visa grants, &hellip;) and, holding each scenario fixed, vary only the subject&rsquo;s demographics: age $\in \{20, 30, \ldots, 100\}$, gender $\in$ {male, female, non-binary}, race $\in$ {white, Black, Asian, Hispanic, Native American}. With $p_{\mathrm{norm}}(\text{yes}) = p(\text{yes}) / (p(\text{yes}) + p(\text{no}))$ from the model&rsquo;s next-token probabilities, the <em>discrimination score</em> for a demographic value is the difference in $\mathrm{logit}\,[p_{\mathrm{norm}}(\text{yes})]$ relative to the baseline profile, a 60-year-old white male. A logit difference is additive and comparable across scenarios with different overall approval rates &mdash; that is why the score is defined on the log-odds scale.</p>
+<h3>Background &amp; further reading</h3>
+<p>Verified findings on Claude 2.0: positive discrimination (higher approval log-odds) for women, non-binary people, and non-white groups, and negative discrimination for ages above 60 &mdash; larger when demographics were stated explicitly than when implied by names. The mixed direction is the point for mitigation: an intervention must be able to shrink gaps in <em>both</em> directions, not just the historically familiar one.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2312.03689">Tamkin, Askell, Lovitt, Durmus, Joseph, Kravec, Nguyen, Kaplan &amp; Ganguli (Anthropic), &ldquo;Evaluating and Mitigating Discrimination in Language Model Decisions&rdquo;, 2023 (arXiv:2312.03689)</a> &mdash; dataset and prompts released.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Prompting the Bias Away</h2>
 <p>In the same study, adding "discrimination is illegal" or "ignore all demographics" to the prompt dropped the measured gap to near zero while the decisions stayed about 92 percent aligned with the defaults. Remarkably effective here — but it is a patch on the prompt, not a guarantee about the model.</p>
 <p><span class="kt">Key takeaway:</span> System-prompt steering can nearly eliminate the measured gap.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Verified from the paper: the tested interventions append instructions to the prompt &mdash; &ldquo;Illegal to discriminate,&rdquo; &ldquo;Ignore demographics,&rdquo; &ldquo;Really (1&times;/2&times;/4&times;) don&rsquo;t discriminate,&rdquo; and variants asking the model to reason aloud about avoiding bias. &ldquo;A range of interventions are able to reduce the discrimination score almost completely to zero,&rdquo; and the two best &mdash; <em>Illegal to discriminate</em> and <em>Ignore demographics</em> &mdash; &ldquo;achieve a good tradeoff between low discrimination score ($\approx 0.15$) and high correlation with the original decisions ($\approx 92\%$).&rdquo; The scope limits are worth stating precisely: the result is for one model family, on hypothetical prompts, measured by the score above &mdash; a mitigation of the <em>measured</em> gap on the audited task, which is exactly why the resume-screening slide two ahead matters.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2312.03689">Tamkin et al., arXiv:2312.03689</a> &mdash; interventions in &sect;4 and Figure 5.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Post-Training as Mitigation</h2>
 <p>OpenAI replayed real chatbot conversations with only the user's name swapped — Emily versus Lakisha. Harmful gender stereotypes appeared in under 0.1 percent of responses, worst in open-ended story writing at over 2 percent on an older model, and post-training — alignment tuning such as RLHF after pretraining — cut measured bias roughly 3 to 12 times.</p>
 <p><span class="kt">Key takeaway:</span> Post-training is itself a large-scale bias mitigation.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>First-person fairness; counterfactual name-swap.</strong> Eloundou et al. study fairness toward the chatbot&rsquo;s <em>user</em> (first-person), not a third party being classified. The method replays real ChatGPT prompts twice, changing only the user&rsquo;s name to one associated with a different gender or race (the name pairs follow the Bertrand&ndash;Mullainathan audit tradition &mdash; Emily/Greg vs. Lakisha/Jamal), and compares response pairs. A <em>Language Model as Research Assistant</em> (LMRA) rates the pairs for harmful stereotypes, with ratings validated against independent human annotation; the metric is the net difference between forward and reverse stereotypes, so random response variation cancels.</p>
+<h3>Background &amp; further reading</h3>
+<p>Verified numbers (ICLR 2025 paper): across random English prompts, harmful gender stereotypes are detected &ldquo;at rates below 0.1%&rdquo; (1 in 1,000) for the models considered; the worst task is open-ended generation, where the older GPT-3.5-turbo has mean harmful-gender-stereotype ratings &ldquo;above 2% on write a story&rdquo; while all other models stay below 1% on every task. Comparing each model to its checkpoint before reinforcement learning: &ldquo;the final model has biases that are roughly 3-12 times smaller than prior to RL&rdquo; &mdash; post-training, not pretraining-data curation, is doing the heavy lifting, which is the sense in which alignment tuning is itself a deployed bias mitigation.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2410.19803">Eloundou, Beutel, Robinson, Gu-Lemberg, Brakman, Mishkin, Shah, Heidecke, Weng &amp; Kalai (OpenAI), &ldquo;First-Person Fairness in Chatbots&rdquo;, ICLR 2025 (arXiv:2410.19803)</a> &mdash; method in &sect;3, RL comparison in &sect;4.5.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Screening Is Still Risky</h2>
 <p>Chat fairness does not transfer to high-stakes use. Wilson and Caliskan ranked over 500 real resumes with LLM-based retrieval: white-associated names were favored in 85.1 percent of cases and female-associated names in only 11.1 percent. Audit the task you actually deploy.</p>
 <p><span class="kt">Key takeaway:</span> Fairness results do not transfer across tasks.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Wilson &amp; Caliskan (AIES 2024) audited resume screening via <em>retrieval</em>: massive text-embedding (MTE) models rank real resumes against job descriptions &mdash; over 500 publicly available resumes and 500 job postings across nine occupations, with names swapped as the demographic signal. Verified from the abstract: &ldquo;the MTEs are biased, significantly favoring White-associated names in 85.1% of cases and female-associated names in only 11.1% of cases&rdquo;; intersectionally, &ldquo;Black males are disadvantaged in up to 100% of cases.&rdquo; Note the architecture: embedding-based retrieval has no chat post-training in the loop, so the mitigation that helped in the previous two slides never gets to act &mdash; the concrete mechanism behind &ldquo;fairness results do not transfer across tasks.&rdquo;</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2407.20371">Wilson &amp; Caliskan, &ldquo;Gender, Race, and Intersectional Bias in Resume Screening via Language Model Retrieval&rdquo;, AIES 2024 (arXiv:2407.20371)</a> &mdash; numbers above from the abstract; code released.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Regulation Pulls Both Ways</h2>
 <p>Mitigation now faces legal pressure from both directions: audit and documentation mandates for high-risk uses on one side, and on the other a 2025 US executive order barring "ideological" outputs in LLMs procured by the federal government. Under-correcting and over-correcting both carry legal risk.</p>
 <p><span class="kt">Key takeaway:</span> The law now punishes both too little and too much correction.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>One direction: the EU AI Act&rsquo;s documentation and impact-assessment duties (Articles 11 and 27, linked in Section 06) make <em>insufficient</em> bias work a compliance failure for high-risk systems. The other: US Executive Order 14319, &ldquo;Preventing Woke AI in the Federal Government&rdquo; (signed July 23, 2025), requires that LLMs procured by federal agencies comply with &ldquo;Unbiased AI Principles&rdquo; of &ldquo;truth-seeking&rdquo; and &ldquo;ideological neutrality,&rdquo; and names DEI-motivated output shaping &mdash; including &ldquo;manipulation of racial or sexual representation in model outputs&rdquo; &mdash; as prohibited in that context; contracts must carry compliance terms with decommissioning-cost liability for violations. A Gemini-style demographic prompt-rewrite (three slides back) is close to the order&rsquo;s central example, so the same mitigation can be mandatory under one regime and disqualifying under another &mdash; the operating point really is a policy choice.</p>
+<ul>
+<li><a href="https://www.federalregister.gov/documents/2025/07/28/2025-14217/preventing-woke-ai-in-the-federal-government">Federal Register, Executive Order 14319, &ldquo;Preventing Woke AI in the Federal Government&rdquo; (July 23, 2025; published July 28, 2025)</a> &mdash; official text.</li>
+<li><a href="https://www.whitehouse.gov/presidential-actions/2025/07/preventing-woke-ai-in-the-federal-government/">White House, &ldquo;Preventing Woke AI in the Federal Government&rdquo; (presidential action page)</a> &mdash; same text as issued.</li>
+</ul>
+</div>
 </article>
 
 <article>

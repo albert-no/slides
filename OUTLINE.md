@@ -145,6 +145,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Statistical indistinguishability (heights example, intuition) | `courses/trustworthy-ai/lec02-privacy-dp.html:581` |
 | DP-SGD intuition (clip + noise) / formal algorithm | `lec02-privacy-dp.html:853` · formal in `lec02tech.html` |
 | Formal math per lecture (definitions, derivations, algorithms) | `courses/trustworthy-ai/lecNNtech.html` (15 supplements) |
+| AI governance & regulation (EU AI Act + Omnibus timeline, US EOs, Korea AI Basic Act, NIST RMF/GenAI Profile, frontier-lab safety frameworks, summits/AISIs) | `courses/trustworthy-ai/lec15-governance.html` (see leaf OUTLINE §03–04) |
 
 ## Cross-references
 

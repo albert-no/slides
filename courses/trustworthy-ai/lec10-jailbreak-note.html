@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 10 — Script</title>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 10 — Script &amp; Companion Notes</title>
 <link rel="stylesheet" href="../../reference/colors_and_type.css">
 <link rel="stylesheet" href="../../reference/katex/katex.min.css">
 <script defer src="../../reference/katex/katex.min.js"></script>
@@ -10,9 +10,14 @@ h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); pad
 article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
 article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 .kt { color: var(--yonsei-blue); font-weight: 700; }
+.detail { margin: 12px 0 4px; padding: 2px 0 2px 18px; border-left: 3px solid var(--slate); }
+.detail h3 { color: var(--yonsei-blue); font-size: 1.05rem; margin: 12px 0 4px; }
+.detail ul { margin: 4px 0; }
+.detail li { margin: 3px 0; }
+.detail .src { color: var(--gray-text); font-size: 0.9rem; }
 </style></head><body>
-<h1>Lecture 10 — Jailbreaks &amp; LLM Safety · Speaker Script</h1>
-<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+<h1>Lecture 10 — Jailbreaks &amp; LLM Safety · Script &amp; Companion Notes</h1>
+<p><em>One entry per slide, in order. Each entry keeps the speaker script and key takeaway; a <strong>detailed companion</strong> block below adds rigorous definitions, formal statements and proofs, and vetted background links. Section headers match slide titles.</em></p>
 
 <article>
 <h2>Jailbreaks &amp; LLM Safety</h2>
@@ -48,24 +53,81 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Instruction Tuning First</h2>
 <p>The first step is instruction tuning: fine-tune on many prompt-and-answer demonstrations so the model learns to answer questions rather than merely continue text.</p>
 <p><span class="kt">Key takeaway:</span> Instruction tuning turns a text continuer into an assistant.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Write a language model as a policy $\pi_\theta(y\mid x)$ that assigns a probability to a response $y=(y_1,\dots,y_T)$ given a prompt $x$, factored autoregressively as $\pi_\theta(y\mid x)=\prod_{t=1}^{T}\pi_\theta(y_t\mid x,y_{<t})$.</p>
+<p><strong>Pretraining</strong> maximizes next-token likelihood over a large corpus: $\max_\theta \; \mathbb{E}_{u\sim\mathcal{D}}\big[\sum_t \log \pi_\theta(u_t\mid u_{<t})\big]$. This yields a "base" model that continues text but has no notion of an instruction.</p>
+<p><strong>Supervised fine-tuning (SFT)</strong>, a.k.a. instruction tuning, is the same maximum-likelihood objective restricted to a curated set $\mathcal{D}_{\text{SFT}}=\{(x^{(i)},y^{(i)})\}$ of human-written prompt–response demonstrations:
+$$\mathcal{L}_{\text{SFT}}(\theta)=-\,\mathbb{E}_{(x,y)\sim\mathcal{D}_{\text{SFT}}}\Big[\sum_{t=1}^{|y|}\log \pi_\theta(y_t\mid x,y_{<t})\Big].$$
+In InstructGPT this is stage 1 of a three-stage pipeline (SFT → reward model → RL). <span class="src">(derivation: standard MLE objective; pipeline per Ouyang et al. 2022, §3.)</span></p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2203.02155">Ouyang et al., "Training language models to follow instructions with human feedback" (InstructGPT), NeurIPS 2022</a> — the SFT → RM → PPO recipe.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>RLHF: Learn From Preferences</h2>
 <p>Reinforcement Learning from Human Feedback shows the model two replies, has a human pick the better one, trains a reward model on those picks, and then tunes the model to score well. This is the InstructGPT recipe.</p>
 <p><span class="kt">Key takeaway:</span> Human preferences become a signal the model is optimized against.</p>
+<div class="detail">
+<h3>Definitions — the reward model via Bradley–Terry</h3>
+<p>Collect comparison data: for a prompt $x$ sample two responses and let a human label which is preferred, giving triples $(x, y_w, y_l)$ where $y_w$ ("winner") is preferred to $y_l$ ("loser"). Fit a scalar <strong>reward model</strong> $r_\phi(x,y)$ under the <strong>Bradley–Terry</strong> model of pairwise comparison, which posits that the probability one item beats another is a logistic function of the reward gap:
+$$\Pr[\,y_w \succ y_l \mid x\,]=\sigma\big(r_\phi(x,y_w)-r_\phi(x,y_l)\big),\qquad \sigma(z)=\frac{1}{1+e^{-z}}.$$
+Maximum-likelihood over the comparison dataset $\mathcal{D}$ gives the reward-model loss
+$$\mathcal{L}_{\text{RM}}(\phi)=-\,\mathbb{E}_{(x,y_w,y_l)\sim\mathcal{D}}\Big[\log \sigma\big(r_\phi(x,y_w)-r_\phi(x,y_l)\big)\Big].$$
+The reward is identifiable only up to an additive function of $x$ (a shift by any $c(x)$ leaves every difference, hence the likelihood, unchanged). <span class="src">(BT model: Bradley &amp; Terry 1952; loss form per Ouyang et al. 2022, Stiennon et al. 2020. Derivation of the shift-invariance: course notes — the objective depends only on $r(x,y_w)-r(x,y_l)$.)</span></p>
+<p><strong>Policy optimization (stage 3).</strong> The instruction-tuned model $\pi_{\text{ref}}$ is then fine-tuned by RL (PPO) to maximize expected reward while a KL term leashes it to $\pi_{\text{ref}}$ — stated in full on the next slide.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2203.02155">Ouyang et al. 2022 (InstructGPT)</a> — full three-stage RLHF pipeline.</li>
+<li><a href="https://arxiv.org/abs/2305.18290">Rafailov et al., "Direct Preference Optimization" (DPO), NeurIPS 2023</a> — reparameterizes the same BT+KL objective so the policy is trained directly on preferences without a separate reward model or RL loop.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Optimize Against the Reward</h2>
 <p>Concretely, the model is tuned to maximize the reward score on its replies, while a penalty keeps it from drifting too far from the original model. The reward pulls toward good behavior; the penalty keeps it sane.</p>
 <p><span class="kt">Key takeaway:</span> Behavior is shaped by maximizing a learned score under a drift penalty.</p>
+<div class="detail">
+<h3>The RLHF objective</h3>
+<p>With frozen reward $r_\phi$ and reference policy $\pi_{\text{ref}}$ (the SFT model), RLHF trains the policy $\pi_\theta$ to
+$$\max_{\theta}\; \mathbb{E}_{x\sim\mathcal{D},\,y\sim\pi_\theta(\cdot\mid x)}\big[\,r_\phi(x,y)\,\big]\;-\;\beta\,\mathbb{E}_{x\sim\mathcal{D}}\Big[\mathrm{KL}\big(\pi_\theta(\cdot\mid x)\,\|\,\pi_{\text{ref}}(\cdot\mid x)\big)\Big].$$
+The first term rewards replies humans rated highly; the KL "leash" with strength $\beta>0$ penalizes drifting from $\pi_{\text{ref}}$ (small $\beta$ chases the score and risks reward hacking; large $\beta$ stays safe but learns less). InstructGPT optimizes this with PPO. <span class="src">(Objective per Ouyang et al. 2022, Eq. 2; also lec10tech.html slide "The RLHF Objective".)</span></p>
+<h3>Theorem &amp; proof — the KL-regularized optimum</h3>
+<p><em>Statement.</em> For each fixed prompt $x$, the objective above is maximized by the Gibbs (exponential-tilt) policy
+$$\pi^\star(y\mid x)=\frac{1}{Z(x)}\,\pi_{\text{ref}}(y\mid x)\,\exp\!\Big(\tfrac{1}{\beta}\,r_\phi(x,y)\Big),\qquad Z(x)=\sum_{y}\pi_{\text{ref}}(y\mid x)\,e^{r_\phi(x,y)/\beta}.$$
+<em>Proof.</em> Fix $x$ and write $p(y)=\pi(y\mid x)$, $q(y)=\pi_{\text{ref}}(y\mid x)$. The per-prompt objective is $J(p)=\sum_y p(y)r(y)-\beta\sum_y p(y)\log\frac{p(y)}{q(y)}$ subject to $\sum_y p(y)=1$, $p\ge 0$. Define $p^\star(y)=q(y)e^{r(y)/\beta}/Z$ with $Z=\sum_y q(y)e^{r(y)/\beta}$. Then for any feasible $p$,
+$$J(p^\star)-J(p)=\beta\sum_y p(y)\log\frac{p(y)}{p^\star(y)}=\beta\,\mathrm{KL}(p\,\|\,p^\star)\ge 0,$$
+with equality iff $p=p^\star$. (Substitute $r(y)=\beta\log\frac{p^\star(y)}{q(y)}+\beta\log Z$ into $J$ and simplify; the $\beta\log Z$ term is constant in $p$.) By Gibbs' inequality the KL is nonnegative and zero only at $p=p^\star$, so $p^\star$ is the unique maximizer. $\qquad\blacksquare$ <span class="src">(derivation: course notes; the same closed form underlies DPO, Rafailov et al. 2023, Eq. 4.)</span></p>
+<p>DPO exploits exactly this: invert the optimum to $r(x,y)=\beta\log\frac{\pi^\star(y\mid x)}{\pi_{\text{ref}}(y\mid x)}+\beta\log Z(x)$, plug into the Bradley–Terry loss so $\log Z(x)$ cancels in the difference, and train the policy directly on preferences.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2203.02155">Ouyang et al. 2022</a> — PPO with the KL penalty.</li>
+<li><a href="https://arxiv.org/abs/2305.18290">Rafailov et al. 2023 (DPO)</a> — closed-form optimum used to remove the RL loop.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Constitutional AI</h2>
 <p>Constitutional AI replaces much of the human labor with AI feedback. You write a short list of principles, the model critiques and revises its own answers against those principles, and you train on the revisions.</p>
 <p><span class="kt">Key takeaway:</span> A model can supervise its own harmlessness from a written set of rules.</p>
+<div class="detail">
+<h3>Definitions — the two-stage recipe (Bai et al. 2022)</h3>
+<p>The only human oversight is a written list of principles (the "constitution"); no human labels of harmful outputs are used. The method has two stages:</p>
+<ul>
+<li><strong>Supervised stage (critique → revision → SFT).</strong> Sample responses from an initial (helpful-only) model on red-team prompts; ask the model to <em>critique</em> its own response against a randomly drawn constitutional principle, then <em>revise</em> it; fine-tune the original model on the revised responses. This produces the "SL-CAI" model.</li>
+<li><strong>RL stage (RLAIF).</strong> Sample response pairs from the SL-CAI model; have a model (not a human) judge which response better satisfies the constitution, yielding a dataset of <em>AI preferences</em>; train a preference/reward model on these, then optimize the policy with RL against it — RL from AI Feedback. Chain-of-thought reasoning is used in the judgments to improve quality and transparency.</li>
+</ul>
+<p><strong>Do not confuse</strong> Constitutional AI (Bai et al. 2022, a <em>training</em> method) with <strong>Constitutional Classifiers</strong> (Sharma et al. 2025, a <em>deployment-time guard</em>, covered later in this lecture). Different papers, different mechanisms. <span class="src">(Two-stage recipe verified against the Bai et al. 2022 abstract and §2–3.)</span></p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2212.08073">Bai et al., "Constitutional AI: Harmlessness from AI Feedback", Anthropic 2022</a> — SL (critique–revision) + RLAIF.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -96,12 +158,32 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Shallow Alignment</h2>
 <p>The refusal often hinges on just the first few tokens of the reply. If you can force a compliant opening like "Sure, here is how", the rest of the answer tends to follow along.</p>
 <p><span class="kt">Key takeaway:</span> Control the first tokens and you often control the whole reply.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Qi et al. formalize "shallow safety alignment" as safety behavior concentrated in the distribution over the first few generated tokens. Measuring the per-token KL between the aligned and base models, $\mathrm{KL}\big(\pi_{\text{aligned}}(\cdot\mid x,y_{<t})\,\|\,\pi_{\text{base}}(\cdot\mid x,y_{<t})\big)$, they find the divergence is large for the first handful of positions $t$ and small thereafter — i.e. alignment mostly rewrites the opening tokens (typically a refusal preamble) and leaves the rest close to the base model. Prefilling a compliant prefix therefore skips the guarded region. <span class="src">(Qi et al., ICLR 2025, §2–3.)</span></p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2406.05946">Qi et al., "Safety Alignment Should Be Made More Than Just a Few Tokens Deep", ICLR 2025</a> — the per-token KL analysis and a deeper-alignment fix.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Two Failure Modes</h2>
 <p>The "Jailbroken" paper names two core reasons safety fails: competing objectives, where helpfulness fights harmlessness, and mismatched generalization, where safety covers less ground than capability.</p>
 <p><span class="kt">Key takeaway:</span> Two named failure modes explain most jailbreaks.</p>
+<div class="detail">
+<h3>Definitions — the two hypotheses (Wei, Haghtalab, Steinhardt 2023)</h3>
+<ul>
+<li><strong>Competing objectives.</strong> Safety training instills several objectives that can conflict — e.g. a pretraining/instruction-following drive to be helpful and obedient versus a harmlessness drive to refuse. An attacker constructs a prompt where satisfying safety requires disobeying an instruction, so the model's capabilities and safety goals are placed in direct conflict.</li>
+<li><strong>Mismatched generalization.</strong> Pretraining gives capabilities on a far broader input distribution than the (much smaller) safety-training distribution. A jailbreak lives in a region where <em>capability generalizes but safety does not</em> — the model still understands and can perform the task there, but no refusal was ever trained for that region (e.g. Base64, rare languages, ciphers).</li>
+</ul>
+<p>The paper's thesis is the need for <em>safety–capability parity</em>: safety mechanisms should be as sophisticated as the underlying model, and scaling alone will not resolve either failure mode. <span class="src">(Verified against the Wei et al. 2023 abstract and §2.)</span></p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2307.02483">Wei, Haghtalab &amp; Steinhardt, "Jailbroken: How Does LLM Safety Training Fail?", NeurIPS 2023</a> — the two failure modes and attacks derived from them.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -120,6 +202,16 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Refusal Is a Direction</h2>
 <p>Inside the model, refusal often looks like a single internal direction or feature. Suppress that feature and refusals vanish while capability stays intact, which makes "thin layer" literal in a geometric sense.</p>
 <p><span class="kt">Key takeaway:</span> The guard can be a single direction, and single things are easy to remove.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Arditi et al. find a single "refusal direction" $\hat r\in\mathbb{R}^{d}$ in the residual-stream activation space. They estimate it as a difference-in-means: with $h_\ell(x)$ the layer-$\ell$ residual activation for prompt $x$,
+$$r_\ell=\underbrace{\tfrac{1}{|\mathcal{H}|}\!\sum_{x\in\mathcal{H}} h_\ell(x)}_{\text{mean over harmful prompts}}-\underbrace{\tfrac{1}{|\mathcal{H}^c|}\!\sum_{x\in\mathcal{H}^c} h_\ell(x)}_{\text{mean over harmless prompts}},\qquad \hat r=r_\ell/\lVert r_\ell\rVert.$$
+<strong>Ablating</strong> this direction — projecting every activation onto its orthogonal complement, $h\mapsto h-(\hat r^\top h)\,\hat r$ — suppresses refusals across harmful prompts while leaving general capability intact. Conversely, <em>adding</em> $\hat r$ induces refusals even on harmless prompts. This gives a white-box jailbreak (and a weight-edit that permanently removes the guard) and is direct evidence that the refusal behavior is low-dimensional. <span class="src">(Arditi et al., NeurIPS 2024, §3–4.)</span></p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2406.11717">Arditi et al., "Refusal in Language Models Is Mediated by a Single Direction", NeurIPS 2024</a> — difference-in-means direction, ablation, and weight edit.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -132,6 +224,14 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>What a Jailbreak Is</h2>
 <p>A jailbreak is a prompt crafted to make an aligned model produce output its safety training was meant to block. We study the categories to defend against them, not to hand out attack recipes.</p>
 <p><span class="kt">Key takeaway:</span> Understanding attack shapes is a prerequisite for defending against them.</p>
+<div class="detail">
+<h3>Definitions — measuring attacks</h3>
+<p>Let $J(\cdot)$ be a transformation of a harmful request $x$ into an attack prompt $J(x)$ (a suffix, a persona wrapper, a translation, …), $\mathcal{X}_{\text{harm}}$ a benchmark set of harmful requests, and $\mathrm{harmful}(y)\in\{0,1\}$ a judge that flags whether output $y$ actually complies with the harmful intent (a classifier or human).</p>
+<ul>
+<li><strong>Attack success rate (ASR):</strong> $\displaystyle \mathrm{ASR}(J)=\frac{1}{|\mathcal{X}_{\text{harm}}|}\sum_{x\in\mathcal{X}_{\text{harm}}}\mathbf{1}\big[\mathrm{harmful}\big(\text{model}(J(x))\big)=1\big]$ — fraction of harmful requests the attack gets complied with. Reported ASR numbers depend heavily on the judge and benchmark, so compare only like-for-like.</li>
+<li><strong>Refusal rate:</strong> the fraction of requests (harmful or benign) the model declines; on benign requests this is the <em>over-refusal</em> / false-refusal rate a defense should keep low.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -144,6 +244,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Category: Fake Authority</h2>
 <p>Another category claims a special mode, a made-up "developer mode" or a pretend system message that grants permission. The model has no reliable way to verify who is talking or what is really authorized.</p>
 <p><span class="kt">Key takeaway:</span> The model cannot truly check authority, so claimed authority can mislead it.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2308.03825">Shen et al., "\"Do Anything Now\": Characterizing and Evaluating In-The-Wild Jailbreak Prompts on Large Language Models", ACM CCS 2024</a> — a measurement study of the "DAN" ("Do Anything Now") persona/roleplay family and other in-the-wild jailbreak prompts. DAN prompts instruct the model to adopt an unrestricted alter-ego; the "grandma exploit" wraps a harmful request as a nostalgic story ("my late grandmother used to read me…") to reframe it as harmless — both instances of persona/authority framing.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -178,8 +284,20 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>GCG: Adversarial Suffix</h2>
-<p>Greedy Coordinate Gradient appends a short suffix of seemingly random tokens, optimized so the model begins to comply. It reads as gibberish to a human but functions as a key that unlocks the model.</p>
+<p>Greedy Coordinate Gradient appends a short suffix of seemingly random tokens, optimized so the model begins to comply — Zou et al. elicited 99 of 100 harmful behaviors on Vicuna-7B. It reads as gibberish to a human but functions as a key that unlocks the model.</p>
 <p><span class="kt">Key takeaway:</span> A nonsense-looking suffix can be a precisely optimized attack.</p>
+<div class="detail">
+<h3>Definitions — the GCG optimization problem</h3>
+<p>Let the model input be tokens $x_{1:n}$ with a suffix occupying an index set $\mathcal{I}\subseteq\{1,\dots,n\}$, each $x_i$ drawn from vocabulary $V$. Fix a short affirmative <em>target</em> $t_{1:m}$ (e.g. "Sure, here is how to…"). GCG minimizes the negative log-likelihood of that target continuation over the choice of suffix tokens:
+$$\min_{\{x_i\}_{i\in\mathcal{I}},\; x_i\in V}\;\; \mathcal{L}(x_{1:n})\;=\;-\log \pi_\theta\big(t_{1:m}\,\big|\,x_{1:n}\big).$$
+This is a discrete combinatorial problem: each position holds one of $|V|\!\approx\!5\times10^4$ tokens, so exhaustive search is infeasible. <span class="src">(Objective per Zou et al. 2023, Eq. 3; also lec10tech.html "The Attack Objective".)</span></p>
+<h3>Algorithm — greedy coordinate gradient</h3>
+<p>GCG makes the discrete search tractable using a first-order signal. For each suffix position $i\in\mathcal{I}$, it forms the gradient of the loss with respect to the one-hot indicator $e_{x_i}$ of the current token, $\nabla_{e_{x_i}}\mathcal{L}\in\mathbb{R}^{|V|}$; the most negative coordinates name tokens that (to first order) would most reduce the loss if swapped in. It shortlists the top-$k$ such candidates per position, samples a batch of single-token substitutions from these shortlists, evaluates the <em>true</em> loss for each by a forward pass, and keeps the single substitution with lowest loss; repeat. Averaging the objective over several prompts and models yields a <em>universal, transferable</em> suffix. <span class="src">(Zou et al. 2023, Alg. 1–2.)</span></p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2307.15043">Zou et al., "Universal and Transferable Adversarial Attacks on Aligned Language Models" (GCG), 2023</a> — the objective, the algorithm, and transfer results.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -196,7 +314,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>It Transfers</h2>
-<p>A suffix tuned on open models you control often breaks closed models too. You optimize against what you can see, and the same string moves targets you cannot. One attack, many models.</p>
+<p>A suffix tuned on open models you control often breaks closed models too: up to 84% on GPT-3.5 and GPT-4 and 66% on PaLM-2, with Claude much lower (~2%) but not immune. You optimize against what you can see, and the same string moves targets you cannot.</p>
 <p><span class="kt">Key takeaway:</span> Shared training and safety recipes mean shared weak spots, so attacks transfer.</p>
 </article>
 
@@ -204,6 +322,14 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Black-Box Search: PAIR</h2>
 <p>PAIR needs no gradients. It uses one language model as the attacker: it proposes a prompt, reads the target's reply, and refines, often reaching a jailbreak in only a handful of queries.</p>
 <p><span class="kt">Key takeaway:</span> One model can automatically jailbreak another with only query access.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>PAIR (Prompt Automatic Iterative Refinement) is a black-box attack needing only query access (no gradients, no logits). An <em>attacker</em> LM proposes a candidate prompt; the <em>target</em> LM answers; a <em>judge</em> scores how jailbroken the answer is; the attacker conditions on that feedback and the conversation history to propose an improved prompt. The loop iterates a few rounds, and multiple parallel streams are run. Chao et al. report jailbreaks often within ~20 queries — orders of magnitude fewer than GCG's gradient search, and applicable to closed models. <span class="src">(Chao et al. 2023, §3.)</span></p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2310.08419">Chao et al., "Jailbreaking Black Box Large Language Models in Twenty Queries" (PAIR), 2023</a> — attacker/target/judge loop.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -216,24 +342,58 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Many-Shot Jailbreaking</h2>
 <p>Fill a long context with many fabricated examples of the model "answering" harmful questions, then ask the real one. The model imitates the pattern it has just been shown.</p>
 <p><span class="kt">Key takeaway:</span> In-context learning, the source of much usefulness, also makes models steerable toward harm.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Many-shot jailbreaking (MSJ) prepends $k$ fabricated dialogue "shots," each a harmful query paired with a compliant answer, then appends the real target query. It exploits in-context learning and only became practical with long context windows (hundreds of shots). Anil et al. show the attack succeeds across model families and combines multiplicatively with other jailbreaks. <span class="src">(Anil et al. 2024, §2.)</span></p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://www.anthropic.com/research/many-shot-jailbreaking">Anil et al., "Many-shot Jailbreaking", Anthropic 2024 (research page + PDF)</a> — long-context in-context attack.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The Power-Law Curve</h2>
 <p>Attack success rises smoothly as you add more in-context shots, following a power-law-like curve with no obvious ceiling within the context window. More shots, more leverage.</p>
 <p><span class="kt">Key takeaway:</span> The attack scales predictably with the number of fake examples.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Anil et al. report that the effectiveness of MSJ follows a power law in the number of shots $k$: on a log–log axis, the negative log-likelihood the model assigns to a harmful response (and the harmful-response rate) decreases approximately linearly in $\log k$, i.e. metric $\approx a - b\log k$ for constants $a,b>0$ over the tested range. The exponent is similar across model sizes, so larger models are not automatically safer against MSJ. This is an <em>empirical scaling law</em>, not a theorem. <span class="src">(Anil et al. 2024, Fig. 1 — empirical fit, no proof.)</span></p>
+</div>
 </article>
 
 <article>
 <h2>Low-Resource Languages</h2>
-<p>Translate the request into a rarely-seen language. Capability still understands the meaning, but safety tuning saw little of that language, so the refusal was never learned there.</p>
+<p>Translate the request into a rarely-seen language. Capability still understands the meaning, but safety tuning saw little of that language, so the refusal was never learned there — Yong et al. found translated harm bypassed GPT-4 about 79% of the time.</p>
 <p><span class="kt">Key takeaway:</span> Rare languages are a clean instance of the safety gap.</p>
+<div class="detail">
+<h3>Definitions &amp; result</h3>
+<p>A textbook case of mismatched generalization: the model's multilingual <em>capability</em> covers a low-resource language, but its safety <em>training</em> data barely does. Yong et al. translate AdvBench requests into low-resource languages (e.g. Zulu, Scots Gaelic), query GPT-4, and translate back. Combining low-resource translations raises the bypass rate to about 79%, versus under 1% in English — nearly matching gradient-based attacks, with only a public translation API. <span class="src">(Yong, Menghini &amp; Bach 2023, §3; ~79% combined-attack figure.)</span></p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2310.02446">Yong, Menghini &amp; Bach, "Low-Resource Languages Jailbreak GPT-4", 2023</a> — translation-based bypass.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Cipher Prompts</h2>
 <p>Wrap the request in a simple substitution or encoding that the model can read. It decodes, reasons, and replies in the same code, while a surface filter sees only ciphertext.</p>
 <p><span class="kt">Key takeaway:</span> Decoding is a capability the safety training did not follow.</p>
+</article>
+
+<article>
+<h2>Fine-Tuning Removes Safety</h2>
+<p>If a provider lets you fine-tune a model, you can strip its alignment. Qi et al. broke GPT-3.5 Turbo's guardrails with just 10 harmful examples for under twenty cents, and even benign fine-tuning degrades safety by accident.</p>
+<p><span class="kt">Key takeaway:</span> Fine-tuning access is itself an attack surface for safety.</p>
+<div class="detail">
+<h3>Result</h3>
+<p>Qi et al. identify three risk levels: (1) fine-tuning on a few explicitly harmful examples — as few as ~10, at a cost reported under \$0.20 via the OpenAI API — largely removes GPT-3.5 Turbo's safety; (2) fine-tuning on "identity-shifting" data that makes the model more obedient; (3) even <em>benign</em> fine-tuning on a normal downstream dataset measurably degrades safety as a side effect. The takeaway is that customization access reopens the alignment that RLHF installed. <span class="src">(Qi et al., ICLR 2024, §2–4.)</span></p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2310.03693">Qi et al., "Fine-tuning Aligned Language Models Compromises Safety, Even When Users Do Not Intend To!", ICLR 2024</a> — three-tier risk study.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -246,6 +406,14 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Recall: Adversarial Examples</h2>
 <p>In computer vision, a tiny crafted pixel change, invisible to a human, can flip a classifier's label. Such examples are found by optimizing against the model.</p>
 <p><span class="kt">Key takeaway:</span> Small, optimized input changes can flip a model's decision.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>For a classifier $f$, an input $x$ with true label $y$, a norm $\lVert\cdot\rVert$ and budget $\varepsilon$, an <strong>adversarial example</strong> is a perturbed input $x'=x+\delta$ with $\lVert\delta\rVert\le\varepsilon$ but $f(x')\neq y$ (untargeted) or $f(x')=y_{\text{target}}$ (targeted). It is typically found by solving $\max_{\lVert\delta\rVert\le\varepsilon}\;\ell\big(f(x+\delta),y\big)$ for a loss $\ell$. The jailbreak analogy: $x$ is the prompt, the constraint "small / human-plausible edit" replaces the norm ball, and the "label to flip" is refuse-versus-comply. In text the perturbation is discrete (token edits), which is exactly what GCG optimizes. <span class="src">(Definition: Szegedy et al. 2014; Goodfellow et al. 2015.)</span></p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1312.6199">Szegedy et al., "Intriguing Properties of Neural Networks", ICLR 2014</a> — first adversarial examples for deep nets.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -273,6 +441,36 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article>
+<h2>Red-Teaming: Attack to Defend</h2>
+<p>Before defending, teams deliberately hunt for harmful outputs. Ganguli et al. released a dataset of 38,961 human red-team attacks and found that RLHF models became harder to break as they scaled, unlike other model types.</p>
+<p><span class="kt">Key takeaway:</span> Red-teaming is the practice that turns unknown failures into known, fixable ones.</p>
+<div class="detail">
+<h3>Definitions &amp; result</h3>
+<p><strong>Red-teaming</strong> is the structured practice of adversarially probing a model to surface harmful outputs before deployment, so failures become known and fixable. Ganguli et al. release a dataset of 38,961 human-written red-team attacks across model types and sizes and report that RLHF models get <em>harder</em> to red-team as they scale, whereas plain and rejection-sampling models do not show that trend. <span class="src">(Ganguli et al. 2022, §3–4; the 38,961 figure is the released attack count.)</span></p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2209.07858">Ganguli et al., "Red Teaming Language Models to Reduce Harms", Anthropic 2022</a> — human red-team dataset and scaling findings.</li>
+<li><a href="https://www.anthropic.com/news/testing-our-safety-defenses-with-a-new-bug-bounty-program">Anthropic bug-bounty / red-team program</a> — external red-teamers rewarded for finding universal jailbreaks.</li>
+<li><a href="https://www.gov.uk/government/publications/ai-safety-institute-overview/introducing-the-ai-safety-institute">UK AI Safety Institute (now AI Security Institute)</a> and <a href="https://www.nist.gov/caisi">US AI standards/safety body at NIST (CAISI)</a> — government pre-deployment testing of frontier models.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>Red-Teaming at Scale</h2>
+<p>Human red-teaming is slow, so Perez et al. used one language model to generate test cases against another, surfacing tens of thousands of offensive replies automatically. This turns safety evaluation into a standing pipeline rather than a one-time check.</p>
+<p><span class="kt">Key takeaway:</span> Automated red-teaming scales evaluation far past human effort.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Perez et al. automate red-teaming: a "red" LM generates candidate test prompts, the target LM answers, and a classifier flags harmful answers; test generation is driven by zero/few-shot prompting, supervised learning, and RL to push toward failure-inducing inputs. Applied to a 280B chatbot, this surfaced tens of thousands of offensive replies and other failure categories. It reframes safety evaluation as a continuous, automated pipeline. <span class="src">(Perez et al., EMNLP 2022, §2–3.)</span></p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2202.03286">Perez et al., "Red Teaming Language Models with Language Models", EMNLP 2022</a> — LM-generated test cases.</li>
+</ul>
+</div>
+</article>
+
+<article>
 <h2>Defense in Layers</h2>
 <p>There is no single fix, so we stack defenses on three sides: screen the input before it runs, harden the model itself, and check the output before it ships.</p>
 <p><span class="kt">Key takeaway:</span> Safety comes from layered defenses, not one mechanism.</p>
@@ -292,14 +490,31 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>Constitutional Classifiers</h2>
-<p>Train guard classifiers from a set of principles, generate attacks against them, and train to catch those attacks. This raises the cost of a successful jailbreak considerably.</p>
-<p><span class="kt">Key takeaway:</span> Rule-trained guards, hardened against generated attacks, raise the attacker's cost.</p>
+<p>Anthropic's Sharma et al. wrap the model in input and output guard classifiers trained from written principles and hardened on generated attacks. Over 3,000+ estimated red-team hours no universal jailbreak was found, at a cost of only +0.38% production refusals and about 24% extra inference compute.</p>
+<p><span class="kt">Key takeaway:</span> System-level rule-trained guards can block universal jailbreaks at modest deployment cost.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>A <strong>constitutional classifier</strong> is a separate guard model, at the input <em>and</em> output, trained on synthetic data generated from a natural-language "constitution" that specifies allowed vs. disallowed content; the training set is augmented with generated jailbreak attempts so the guards learn to catch them. Reported results: a ~3,000-hour bug-bounty red-team found no universal jailbreak against the guarded system, and in automated evaluation the block rate on jailbreak attempts rose sharply while over-refusal on production traffic increased only +0.38% and inference compute rose about ×1.24. <span class="src">(Sharma et al. 2025, §4–5; figures verified against the paper title/abstract.)</span></p>
+<p><strong>Reminder:</strong> this is Sharma et al. 2025 (a deployment guard), <em>not</em> Bai et al. 2022 Constitutional AI (a training method) — the deck phase corrected a misattribution between the two; keep them separate.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2501.18837">Sharma et al. (Anthropic), "Constitutional Classifiers: Defending against Universal Jailbreaks across Thousands of Hours of Red Teaming", 2025</a> — input/output guard classifiers.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Circuit Breakers</h2>
 <p>Circuit breakers train the model to halt itself mid-harm by targeting the internal states that produce harmful output and rerouting them toward refusal or nonsense. Because they act on the internal cause rather than surface words, they stay robust even to unseen attack strings.</p>
 <p><span class="kt">Key takeaway:</span> Attacking the internal cause of harm is harder to bypass than filtering surface text.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Circuit breakers use "representation engineering": rather than filter inputs or outputs, training pushes the model's <em>internal representations</em> along harmful trajectories toward incoherent or refusal states. The method (RepBender / "short-circuiting") adds a loss that, on harmful-generation data, drives the residual-stream representations away from those that would continue the harmful completion, while a retain loss preserves benign behavior. Because it targets the internal cause rather than surface tokens, it generalizes to unseen attacks (including GCG-style suffixes) without adversarial training on them. <span class="src">(Zou et al., NeurIPS 2024, §3.)</span></p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2406.04313">Zou et al., "Improving Alignment and Robustness with Circuit Breakers", NeurIPS 2024</a> — representation-level short-circuiting.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -322,8 +537,16 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>Frontier 2025-26</h2>
-<p>The field is pushing toward robustness built into the model internals, automated red-teaming at large scale, and safety that holds across languages and tools, moving from surface patches toward deeper guarantees.</p>
+<p>The field is pushing toward robustness built into the model internals and safety that holds across languages and tools. Yet cheap random-search attacks like Best-of-N (Hughes et al. 2024) still scale, and agents jailbreak far more easily than plain chatbots — so we move from surface patches toward deeper guarantees.</p>
 <p><span class="kt">Key takeaway:</span> The frontier is moving from surface patches toward internal, broad-coverage robustness.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Best-of-N (BoN) jailbreaking</strong> is a black-box attack: repeatedly apply random augmentations to a harmful prompt (e.g. random capitalization, character shuffles, or, for other modalities, audio/image perturbations) and query the model until one succeeds. Hughes et al. find ASR grows with the number of samples $N$ following a power-law-like trend, so more compute buys more success with no gradients and no model internals. Its persistence is why the "frontier" emphasis is on internal robustness (circuit breakers, deeper alignment) rather than surface filters. <span class="src">(Hughes et al. 2024, §2–3 — empirical scaling.)</span></p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2412.03556">Hughes et al., "Best-of-N Jailbreaking", 2024</a> — random-search attack that scales with samples.</li>
+</ul>
+</div>
 </article>
 
 <article>

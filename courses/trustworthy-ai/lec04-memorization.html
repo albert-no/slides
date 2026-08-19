@@ -50,7 +50,7 @@
     </div>
     <div class="toc-item">
       <div class="toc-num">03</div><div class="toc-rule"></div>
-      <div><div class="toc-label">How Much, and Why It Grows</div><div class="toc-sub">Size, duplication, training length</div></div>
+      <div><div class="toc-label">How Much, and Why It Grows</div><div class="toc-sub">Size, duplication, context</div></div>
     </div>
     <div class="toc-item">
       <div class="toc-num">04</div><div class="toc-rule"></div>
@@ -94,7 +94,7 @@
   <div class="divider"></div>
   <div class="def-card">
     <h3>Memorization</h3>
-    <p>A model has <strong>memorized</strong> a training example if a short prompt makes it reproduce that example, word for word.</p>
+    <p>A model has <strong>memorized</strong> an example if a short prompt reproduces it, word for word.</p>
   </div>
   <p class="muted">Not learning a fact. Reciting a specific record.</p>
 </div>
@@ -103,13 +103,13 @@
 <div class="slide">
   <h2>Three Flavors</h2>
   <div class="divider"></div>
-  <p>Researchers separate memorization into kinds.</p>
+  <p>Copying comes in <strong>degrees</strong>.</p>
   <div class="grid-3">
-    <div class="card"><h3>Verbatim</h3><p>The exact text comes back.</p></div>
-    <div class="card"><h3>Eidetic</h3><p>Recalled after very few sightings.</p></div>
-    <div class="card"><h3>$k$-extractable</h3><p>Recovered from a $k$-token prompt.</p></div>
+    <div class="card"><h3>Verbatim</h3><p>The exact text or pixels come back.</p></div>
+    <div class="card"><h3>Near-duplicate</h3><p>Same content, small changes.</p></div>
+    <div class="card"><h3>Stylistic</h3><p>The voice or look, not the record.</p></div>
   </div>
-  <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
+  <p class="muted">This lecture: verbatim and near-duplicate. Style is a fuzzier line.</p>
 </div>
 
 <!-- 7. k-Extractable -->
@@ -119,12 +119,26 @@
   <p>A string is <strong>$k$-extractable</strong> if a $k$-token prefix triggers it.</p>
   <div class="def-card">
     <h3>The test</h3>
-    <p>Feed the model $k$ tokens of context. If it then continues with the exact training text, that text is extractable.</p>
+    <p>Prompt with $k$ tokens of context. If the exact training text follows, it is extractable.</p>
   </div>
   <p class="muted">Extractable = an attacker can actually pull it out.</p>
+  <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
 </div>
 
-<!-- 8. Why It Happens -->
+<!-- 8. Extractable vs Discoverable -->
+<div class="slide">
+  <h2>Extractable vs Discoverable</h2>
+  <div class="divider"></div>
+  <p>Two ways to run that test, two different questions.</p>
+  <div class="grid-2">
+    <div class="card"><h3>Discoverable</h3><p>Tester <strong>has the training data</strong>: prompt with the true prefix. Measures what is stored.</p></div>
+    <div class="card"><h3>Extractable</h3><p>Attacker has <strong>no training data</strong>: must find a working prompt. Measures what leaks.</p></div>
+  </div>
+  <p class="muted">Discoverable = the audit upper bound. Extractable = the real-world risk.</p>
+  <div class="cite cite-left">Nasr et al., "Scalable Extraction of Training Data from (Production) Language Models", 2023.</div>
+</div>
+
+<!-- 9. Why It Happens -->
 <div class="slide">
   <h2>Why It Happens</h2>
   <div class="divider"></div>
@@ -137,7 +151,21 @@
   <p class="muted">Memorization is a side effect of fitting the data well.</p>
 </div>
 
-<!-- 9. The Secret Sharer -->
+<!-- 10. Some Memorization Is Necessary -->
+<div class="slide">
+  <h2>Some Memorization Is Necessary</h2>
+  <div class="divider"></div>
+  <p>Theory says you cannot always train it away.</p>
+  <ul class="arrow">
+    <li>Natural data has a <strong>long tail</strong> of one-off examples</li>
+    <li>Predicting rare cases well requires storing them</li>
+    <li>Forbid all memorization, and accuracy drops</li>
+  </ul>
+  <p class="muted">Partly a feature, not only a bug. The question is what gets stored.</p>
+  <div class="cite cite-left">Feldman, "Does Learning Require Memorization? A Short Tale about a Long Tail", STOC 2020.</div>
+</div>
+
+<!-- 11. The Secret Sharer -->
 <div class="slide">
   <h2>The Secret Sharer</h2>
   <div class="divider"></div>
@@ -251,16 +279,34 @@
   <div class="cite cite-left">Carlini et al., "Extracting Training Data from Large Language Models", USENIX Security 2021 — Figure 1.</div>
 </div>
 
-<!-- 17. The Attack Recipe -->
+<!-- 17. The Attack Recipe (pipeline SVG) -->
 <div class="slide">
-  <h2>The Extraction Recipe</h2>
+  <h2>The Extraction Pipeline</h2>
   <div class="divider"></div>
-  <p>How researchers pulled hundreds of memorized texts from GPT-2.</p>
-  <ul class="num">
-    <li>Generate a flood of samples from the model.</li>
-    <li>Keep the ones the model is <strong>very confident</strong> about.</li>
-    <li>Check those against the open web.</li>
-  </ul>
+  <p>Generate a flood, keep the <strong>overconfident</strong> ones, verify against the web.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 640 210" style="width:100%;max-width:940px;">
+      <defs><marker id="arp" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs>
+      <rect x="15" y="50" width="110" height="66" rx="8" fill="#003876"/>
+      <text x="70" y="79" font-size="17" fill="#fff" text-anchor="middle" font-weight="700">GPT-2</text>
+      <text x="70" y="100" font-size="13" fill="#dbe4ee" text-anchor="middle">query access</text>
+      <rect x="160" y="50" width="130" height="66" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="225" y="74" font-size="15" fill="#003876" text-anchor="middle" font-weight="700">generate</text>
+      <text x="225" y="94" font-size="13" fill="#1a1a1a" text-anchor="middle">many samples</text>
+      <rect x="325" y="50" width="140" height="66" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="395" y="74" font-size="15" fill="#003876" text-anchor="middle" font-weight="700">rank by confidence</text>
+      <text x="395" y="94" font-size="13" fill="#1a1a1a" text-anchor="middle">top 1,800 kept</text>
+      <rect x="500" y="50" width="125" height="66" rx="8" fill="#f4f6f9" stroke="#6b7280" stroke-width="2"/>
+      <text x="562" y="74" font-size="15" fill="#1a1a1a" text-anchor="middle" font-weight="700">check vs web</text>
+      <text x="562" y="94" font-size="13" fill="#1a1a1a" text-anchor="middle">manual search</text>
+      <line x1="125" y1="83" x2="158" y2="83" stroke="#6b7280" stroke-width="2.5" marker-end="url(#arp)"/>
+      <line x1="290" y1="83" x2="323" y2="83" stroke="#6b7280" stroke-width="2.5" marker-end="url(#arp)"/>
+      <line x1="465" y1="83" x2="498" y2="83" stroke="#6b7280" stroke-width="2.5" marker-end="url(#arp)"/>
+      <line x1="562" y1="116" x2="562" y2="160" stroke="#d94040" stroke-width="2.5" marker-end="url(#arp)"/>
+      <text x="562" y="182" font-size="16" fill="#d94040" text-anchor="middle" font-weight="700">604 confirmed</text>
+      <text x="562" y="202" font-size="16" fill="#d94040" text-anchor="middle" font-weight="700">memorized</text>
+    </svg>
+  </div>
   <div class="cite cite-left">Carlini et al., "Extracting Training Data from Large Language Models", USENIX Security 2021.</div>
 </div>
 
@@ -281,7 +327,7 @@
 <div class="slide">
   <h2>What Came Out of GPT-2</h2>
   <div class="divider"></div>
-  <p>The extracted strings were <strong>not</strong> harmless boilerplate.</p>
+  <p>The 604 confirmed strings were <strong>not</strong> harmless boilerplate.</p>
   <div class="grid-3">
     <div class="card"><h3>People</h3><p>Names, contact details.</p></div>
     <div class="card"><h3>Code</h3><p>Snippets, identifiers.</p></div>
@@ -297,7 +343,7 @@
   <p>A 2023 trick on a <strong>production chatbot</strong>.</p>
   <div class="def-card">
     <h3>The prompt</h3>
-    <p>"Repeat the word <strong>poem</strong> forever."</p>
+    <p>"Repeat this word forever: <strong>poem poem poem</strong>"</p>
   </div>
   <div class="cite cite-left">Nasr et al., "Scalable Extraction of Training Data from (Production) Language Models", 2023.</div>
 </div>
@@ -329,11 +375,12 @@
   <div class="divider"></div>
   <p>The repeat attack was <strong>cheap and broad</strong>.</p>
   <ul class="arrow">
-    <li>Thousands of unique memorized strings recovered</li>
+    <li>10,000+ unique memorized strings, for $200 of queries</li>
+    <li>Training data emitted at 150$\times$ the normal rate</li>
     <li>Including real personal contact information</li>
-    <li>On a deployed, aligned chat model</li>
   </ul>
-  <p class="muted">Alignment did not stop the leak.</p>
+  <p class="muted">A deployed, aligned chatbot. Alignment did not stop the leak.</p>
+  <div class="cite cite-left">Nasr et al., "Scalable Extraction of Training Data from (Production) Language Models", 2023.</div>
 </div>
 
 <!-- 23. Patched, Not Solved -->
@@ -366,7 +413,7 @@
   <div class="section-num">03</div>
   <h1>How Much, and Why It Grows</h1>
   <div class="divider"></div>
-  <p class="subtitle">Size, duplication, training length</p>
+  <p class="subtitle">Size, duplication, context</p>
 </div>
 
 <!-- 26. A Measurable Quantity -->
@@ -390,7 +437,7 @@
   <div class="grid-3">
     <div class="card"><h3>Model size</h3><p>Bigger models store more.</p></div>
     <div class="card"><h3>Duplication</h3><p>Repeated data sticks harder.</p></div>
-    <div class="card"><h3>Training length</h3><p>More passes, more recall.</p></div>
+    <div class="card"><h3>Context length</h3><p>Longer prompts unlock more.</p></div>
   </div>
   <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
 </div>
@@ -436,7 +483,8 @@
       <text x="240" y="24" font-size="15" fill="#6b7280" text-anchor="middle">times the string appears in training</text>
     </svg>
   </div>
-  <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
+  <p class="muted">Seen 10 times, a sequence is generated ~1000$\times$ more often than seen once.</p>
+  <div class="cite cite-left">Carlini et al., ICLR 2023 · Kandpal, Wallace, and Raffel, "Deduplicating Training Data Mitigates Privacy Risks in Language Models", ICML 2022.</div>
 </div>
 
 <!-- 30. The Long Tail -->
@@ -456,11 +504,11 @@
 <div class="slide">
   <h2>A Predictable Curve</h2>
   <div class="divider"></div>
-  <p>Memorization scales <strong>log-linearly</strong> with these drivers.</p>
+  <p>Memorization scales <strong>log-linearly</strong> with all three drivers.</p>
   <ul class="arrow">
-    <li>Each $10\times$ in size or duplication adds a steady bump</li>
-    <li>Not a glitch to patch out</li>
-    <li>A built-in property of how models train</li>
+    <li>Each $10\times$ in size, duplication, or context adds a steady bump</li>
+    <li>GPT-J (6B) memorizes at least 1% of its training set</li>
+    <li>A built-in property of how models train, not a glitch</li>
   </ul>
   <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
 </div>
@@ -520,7 +568,8 @@
       <p>It regenerates <strong>near-exact training photos</strong>.</p>
       <ul>
         <li>A real, identifiable person</li>
-        <li>Prompted by their caption</li>
+        <li>Prompted by her name from the caption</li>
+        <li>94 training images recovered among 175 million generations</li>
       </ul>
     </div>
   </div>
@@ -535,7 +584,8 @@
   <div style="display:flex;justify-content:center;margin:8px 0;">
     <img src="figs/carlini_duplicates.png" alt="Histogram: extraction succeeds mostly for images duplicated 100+ times in training data" style="max-height:380px;width:auto;display:block;">
   </div>
-  <div class="cite cite-left">Carlini et al., "Extracting Training Data from Diffusion Models", USENIX Security 2023 — Fig. 5.<br>Somepalli et al., "Diffusion Art or Digital Forgery?", CVPR 2023.</div>
+  <p class="muted">Most extracted images appeared 100+ times in the training set.</p>
+  <div class="cite cite-left">Carlini et al., "Extracting Training Data from Diffusion Models", USENIX Security 2023 — Fig. 5.</div>
 </div>
 
 <!-- 38. Copy or Create? -->
@@ -545,8 +595,8 @@
   <p>How often is a "new" image really a <strong>copy</strong>?</p>
   <ul>
     <li>Researchers searched generations against training</li>
-    <li>A measurable fraction were near-duplicates</li>
-    <li>Especially for over-represented captions</li>
+    <li>About 1.9% were near-duplicates of a training image</li>
+    <li>Content can be copied even when pixels differ</li>
   </ul>
   <div class="cite cite-left">Somepalli et al., "Diffusion Art or Digital Forgery?", CVPR 2023.</div>
 </div>
@@ -568,36 +618,11 @@
   <p class="subtitle">When regurgitation goes to court</p>
 </div>
 
-<!-- 41. Memorization Meets Copyright -->
-<div class="slide">
-  <h2>Memorization Meets Copyright</h2>
-  <div class="divider"></div>
-  <p>Much training data is <strong>copyrighted</strong>.</p>
-  <ul class="arrow">
-    <li>News articles, books, code, art</li>
-    <li>If the model recites it, who is liable?</li>
-    <li>A technical leak becomes a legal claim</li>
-  </ul>
-  <p class="muted">Memorization is now an exhibit in court.</p>
-</div>
-
-<!-- 42. NYT v. OpenAI -->
+<!-- 41. NYT v. OpenAI -->
 <div class="slide">
   <h2>NYT v. OpenAI</h2>
   <div class="divider"></div>
-  <p>In 2023, <strong>The New York Times sued OpenAI</strong>.</p>
-  <ul>
-    <li>The complaint showed near-verbatim article text</li>
-    <li>Prompts reproduced paywalled paragraphs</li>
-  </ul>
-  <p class="muted">Regurgitation became the central evidence.</p>
-</div>
-
-<!-- 43. Near-Verbatim (SVG) -->
-<div class="slide">
-  <h2>Near-Verbatim Output</h2>
-  <div class="divider"></div>
-  <p>Side by side, the model's text <strong>matched</strong> the original.</p>
+  <p>2023: <strong>The New York Times sued OpenAI</strong>, showing near-verbatim article text.</p>
   <div style="display:flex;justify-content:center;margin:8px 0;">
     <svg viewBox="0 0 480 180" style="width:100%;max-width:860px;">
       <rect x="30" y="30" width="180" height="120" rx="8" fill="#f4f6f9" stroke="#6b7280" stroke-width="2"/>
@@ -613,12 +638,13 @@
       <text x="240" y="96" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">=</text>
     </svg>
   </div>
-  <p class="muted">Same words, in the same order.</p>
+  <p class="muted">2025: the court let the core copyright claims proceed. Regurgitation is the central evidence.</p>
+  <div class="cite cite-left">The New York Times Co. v. Microsoft Corp. and OpenAI, S.D.N.Y., filed Dec. 2023; motion to dismiss largely denied, Mar. 2025.</div>
 </div>
 
-<!-- 44. The Fair-Use Debate -->
+<!-- 42. Copy or Transform? -->
 <div class="slide">
-  <h2>The Fair-Use Debate</h2>
+  <h2>Copy or Transform?</h2>
   <div class="divider"></div>
   <div class="grid-2">
     <div><h3>Developers</h3>
@@ -626,28 +652,9 @@
     <div><h3>Rights holders</h3>
       <p>Verbatim output is <strong>copying</strong>, plain and simple.</p></div>
   </div>
-  <p class="muted">Memorization is exactly where the two views collide.</p>
-</div>
-
-<!-- 45. Why Memorization Is the Crux -->
-<div class="slide">
-  <h2>Memorization Is the Crux</h2>
-  <div class="divider"></div>
-  <div class="highlight"><p>A model that <strong>only generalizes</strong> has a stronger fair-use case.</p></div>
-  <p>A model that <em>recites</em> its sources looks a lot more like a copier.</p>
-</div>
-
-<!-- 46. An Unsettled Question -->
-<div class="slide">
-  <h2>An Unsettled Question</h2>
-  <div class="divider"></div>
-  <p>The law is <strong>still being written</strong>.</p>
-  <ul class="arrow">
-    <li>Cases are ongoing across jurisdictions</li>
-    <li>Outcomes will shape how models are trained</li>
-    <li>Less memorization is now also a legal goal</li>
-  </ul>
-  <p class="muted">Engineering and law are pulling in the same direction.</p>
+  <div class="highlight"><p>A model that recites its sources looks like a <strong>copier</strong>. Memorization is the crux.</p></div>
+  <p class="muted">2025: Anthropic settled a pirated-books suit for $1.5B. The law is still being written.</p>
+  <div class="cite cite-left">Bartz v. Anthropic, N.D. Cal. — $1.5B settlement, preliminary approval Sept. 2025.</div>
 </div>
 
 <!-- ============ SECTION 06 ============ -->
@@ -743,16 +750,30 @@
   <p>In practice, teams stack several and accept residual risk.</p>
 </div>
 
-<!-- 55. Frontier: Production Extraction -->
+<!-- 55. Frontier: Whole Books Come Back -->
 <div class="slide">
-  <h2>Frontier: Production Extraction</h2>
+  <h2>Frontier: Whole Books Come Back</h2>
   <div class="divider"></div>
-  <p>Attacks now target <strong>deployed chat models</strong>, not just research ones.</p>
+  <p>Extraction has scaled from strings to <strong>entire books</strong>.</p>
   <ul>
-    <li>Cheap, scalable prompts pull out training data</li>
-    <li>Alignment and filters are partial barriers</li>
+    <li>Llama 3.1 70B memorizes nearly all of the first Harry Potter book</li>
+    <li>Production chatbots emit long book passages, some without any jailbreak</li>
   </ul>
-  <div class="cite cite-left">Nasr et al., "Scalable Extraction of Training Data from (Production) Language Models", 2023.</div>
+  <p class="muted">The copyright question from Section 05, now with lab evidence.</p>
+  <div class="cite cite-left">Cooper et al., "Extracting memorized pieces of (copyrighted) books from open-weight language models", 2025.<br>Ahmed, Cooper, Koyejo, and Liang, "Extracting books from production language models", 2026.</div>
+</div>
+
+<!-- 55b. Frontier: How Much Fits? -->
+<div class="slide">
+  <h2>Frontier: How Much Fits?</h2>
+  <div class="divider"></div>
+  <p>New work measures a model's <strong>storage capacity</strong> directly.</p>
+  <ul class="arrow">
+    <li>GPT-family models store about 3.6 bits per parameter</li>
+    <li>Models memorize until capacity fills, then start generalizing</li>
+  </ul>
+  <p class="muted">Memorization and generalization share one budget.</p>
+  <div class="cite cite-left">Morris et al., "How Much Do Language Models Memorize?", 2025.</div>
 </div>
 
 <!-- 56. Frontier: PII Memorization -->
@@ -801,7 +822,7 @@
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 59</div>
+<div class="slide-num" id="slideNum">1 / 58</div>
 
 </div><!-- .deck -->
 <script defer src="../../reference/deck.js"></script>

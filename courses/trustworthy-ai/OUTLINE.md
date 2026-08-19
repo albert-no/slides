@@ -161,6 +161,15 @@ white/black-box and train/inference slides merged into one knowledge×timing gri
 Bing "Sydney" bullet deleted (unverifiable as prompt injection), replaced by
 verified EchoLeak 2025; Deloitte 2025 incident added. Note file synced (35 entries).
 
+**2026-08 note enrichment:** `lec01-introduction-note.html` upgraded from speaker
+script to **script + companion notes** (227→443 lines; 35 entries unchanged).
+Per-entry `.detail` blocks add formal definitions (threat-model tuple, ε-ball/FGSM,
+(ε,δ)-DP, ECE, equalized odds, watermark z-test, extractable/k-eidetic memorization)
+and verified backgrounds with primary-source links for every incident (Mata v. Avianca
+sanctions order PDF, Deloitte/DEWR refund, ProPublica COMPAS, Reuters Amazon, Moffatt
+v. Air Canada CRT decision, $1 Tahoe chatbot, Carlini/Nasr extraction, FCC robocall
+orders + Kramer acquittal, EchoLeak NVD/MSRC, Goodfellow ICLR 2015).
+
 ---
 
 ## lec02-privacy-dp.html

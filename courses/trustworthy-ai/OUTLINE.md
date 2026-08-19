@@ -1341,3 +1341,20 @@ rules from states); Key Takeaways gained EU/US/Korea + if-then-commitments lines
 trust-stack SVG gained reliability + society labels. Course-logistics Demo Showcase
 slide kept per course scaffolding. `lec15tech.html` errors-only pass (EU cite fixed,
 tier bullets de-dashed; still 6 sl). Note file synced (66 entries, order matches).
+
+**2026-08 note enrichment:** `lec15-governance-note.html` upgraded from speaker script
+(413 lines) to Script &amp; Companion Notes (737 lines; 66 entries unchanged). Nearly
+math-free deck, so depth went to verbatim legal/framework language and verified
+backgrounds+links rather than proofs: AI Act Art 3 definitions quoted verbatim (AI
+system, provider, deployer, GPAI model, systemic risk, conformity assessment), Art 5
+prohibition list, Art 50 duties, Art 51 10^25 presumption, Arts 53/55 GPAI duties,
+Digital Omnibus (Reg (EU) 2026/1744) deferral detail; NIST AI 100-1 verbatim (risk
+def, 7 trustworthiness characteristics, all four function definitions) + AI 600-1
+(confabulation def, full 12-risk list); all four US EOs (14110/14179/14319/14365)
+with FR citations + Action Plan; Korea Basic Act detail (CSET translation); four
+summits + Seoul commitments verbatim; RSP v3.4/ASL-3 activation, Preparedness v2
+(severe-harm def verbatim), FSF v3 CCL def verbatim; audit/red-team terms of art
+(Raji, EO 14110 red-teaming def, Dijkstra EWD340 dictum); course-thread definitions
+((ε,δ)-DP, ECE, adversarial/poisoning/jailbreak, fairness criteria, certified
+removal) cross-linked to lec02–14 companion notes. 51 verified links (all 2xx;
+EUR-Lex returns 202 to curl, fine in browser).

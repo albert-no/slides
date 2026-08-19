@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 15 — Script</title>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 15 — Script &amp; Companion Notes</title>
 <link rel="stylesheet" href="../../reference/colors_and_type.css">
 <link rel="stylesheet" href="../../reference/katex/katex.min.css">
 <script defer src="../../reference/katex/katex.min.js"></script>
@@ -10,9 +10,13 @@ h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); pad
 article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
 article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 .kt { color: var(--yonsei-blue); font-weight: 700; }
+.detail { margin: 12px 0 0 14px; padding: 2px 0 2px 18px; border-left: 3px solid var(--slate); }
+.detail h3 { color: var(--yonsei-blue); font-size: 1.05rem; margin: 14px 0 4px; }
+.detail p, .detail li { font-size: 0.97rem; line-height: 1.6; }
+.detail ol, .detail ul { padding-left: 22px; }
 </style></head><body>
-<h1>Lecture 15 — Governance, the Frontier &amp; Wrap-up · Speaker Script</h1>
-<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+<h1>Lecture 15 — Governance, the Frontier &amp; Wrap-up · Script &amp; Companion Notes</h1>
+<p><em>One entry per slide, in order. Each entry keeps the spoken script and key takeaway, then adds companion notes: precise definitions of governance terms of art, verbatim statutory and framework language, and verified backgrounds with links. Key sources: Regulation (EU) 2024/1689 as amended by Regulation (EU) 2026/1744, NIST AI 100-1 and AI 600-1, Anthropic RSP (v3.4), OpenAI Preparedness Framework v2, Google DeepMind FSF v3, and the International AI Safety Report 2026. This lecture is nearly math-free, so the depth here is legal and institutional rather than theorem-and-proof.</em></p>
 
 <article>
 <h2>Governance, the Frontier &amp; Wrap-up</h2>
@@ -36,36 +40,71 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>One Course, Many Threads</h2>
 <p>We studied privacy, hallucination and interpretability, adversarial robustness, fairness, and provenance as if they were separate problems. They are not; they share a common shape.</p>
 <p><span class="kt">Key takeaway:</span> Distinct failures, one underlying structure.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>The course's threads correspond one-to-one to the standard vocabulary of trustworthiness in governance documents: the NIST AI RMF's seven <em>characteristics of trustworthy AI</em> (stated verbatim under "The NIST AI RMF" below) name exactly these properties — validity/reliability (Lectures 6–7), safety and security/resilience (Lectures 8–11), accountability/transparency and explainability (Lectures 7, 12), privacy (Lectures 2–5), and fairness (Lectures 13–14). When a regulator says "trustworthy," this enumerated list is usually what is legally or procedurally meant.</p>
+</div>
 </article>
 
 <article>
 <h2>The Trust Stack</h2>
 <p>Picture four layers: data, model, output, society. Trust can be built or broken at each. Every topic we covered lives on one of the arrows between these layers.</p>
 <p><span class="kt">Key takeaway:</span> Map each threat to the layer it attacks.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>A useful formalization (formalization: course notes): view the pipeline as a composition of maps
+$$ D \;\xrightarrow{\ \text{train}\ }\; \theta \;\xrightarrow{\ \text{infer}\ }\; Y \;\xrightarrow{\ \text{deploy}\ }\; \text{outcomes}, $$
+where $D$ is the training corpus, $\theta$ the learned parameters, and $Y$ the outputs. Each trust property is a constraint on one arrow: <strong>privacy</strong> constrains the train map (e.g. differential privacy requires it to be insensitive to any single record of $D$); <strong>reliability and calibration</strong> constrain the infer map ($Y$ must track truth, and confidence must track accuracy); <strong>robustness</strong> constrains behavior under adversarial perturbation of inputs to any arrow (poisoning perturbs $D$, adversarial examples perturb the input at inference, jailbreaks perturb the prompt); <strong>accountability and provenance</strong> constrain the deploy map (attribution of outputs to systems and of systems to responsible parties). A "broken promise at a layer" is a violated constraint on the corresponding arrow.</p>
+</div>
 </article>
 
 <article>
 <h2>Thread: What the Data Holds</h2>
 <p>Privacy, memorization, and unlearning are three views of one fact: a model is a lossy copy of its data, and lossy is not safe.</p>
 <p><span class="kt">Key takeaway:</span> Data-layer risk is one root cause with three names.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Differential privacy</strong> (the formal promise this thread revolves around). A randomized mechanism $M$ satisfies $(\varepsilon,\delta)$-differential privacy if for all pairs of datasets $D, D'$ differing in one record and all measurable sets $T$ of outputs,
+$$ \Pr[M(D) \in T] \;\le\; e^{\varepsilon}\, \Pr[M(D') \in T] + \delta . $$
+No single person's presence or absence can change the output distribution by more than a factor $e^{\varepsilon}$ (plus slack $\delta$). <strong>Memorization</strong> is the failure mode DP bounds: the model's behavior depends detectably on individual training records (extractable verbatim strings, membership-inference advantage). <strong>Unlearning</strong> is the post-hoc repair: removing one record's influence without retraining. Full rigorous treatment, with proofs: the Lecture 2 (DP), Lecture 3 (membership inference), Lecture 4 (memorization), and Lecture 5 (unlearning) companion notes.</p>
+</div>
 </article>
 
 <article>
 <h2>Thread: When the Model Is Wrong</h2>
 <p>Hallucination, calibration, and interpretability form the reliability thread: the model can be fluently wrong, its confidence should track truth, and we want to see why it answered as it did.</p>
 <p><span class="kt">Key takeaway:</span> Reliability is trust in the output itself.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Calibration.</strong> A probabilistic classifier $f$ is calibrated if $\Pr[Y = 1 \mid f(X) = p] = p$ for every confidence value $p$ it emits — among all predictions made with confidence 70%, exactly 70% should be correct. The standard summary metric is the <strong>expected calibration error</strong>: with predictions grouped into bins $B_1,\dots,B_M$ by confidence,
+$$ \mathrm{ECE} = \sum_{m=1}^{M} \frac{|B_m|}{n}\, \bigl| \mathrm{acc}(B_m) - \mathrm{conf}(B_m) \bigr| . $$
+<strong>Hallucination</strong> (NIST's term is <em>confabulation</em>; see "The Generative AI Profile" below) is fluent output unsupported by the training data or the prompt. Formal treatment: Lecture 6 (hallucination and calibration) and Lecture 7 (interpretability) companion notes.</p>
+</div>
 </article>
 
 <article>
 <h2>Thread: The Adversary</h2>
 <p>An attacker can poison the data, fool the model with adversarial examples, or jailbreak the output. Same intent, three entry points along the stack.</p>
 <p><span class="kt">Key takeaway:</span> Adversaries strike wherever the stack is weakest.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<ul>
+<li><strong>Adversarial example:</strong> for a classifier $f$ and correctly classified input $(x, y)$, a perturbation $\delta$ with $\lVert \delta \rVert \le \epsilon$ (small in the chosen norm) such that $f(x + \delta) \ne y$. Attacks the inference-time input.</li>
+<li><strong>Data poisoning:</strong> the adversary controls a fraction of the training set and crafts it to induce targeted misclassifications or backdoors in the trained model. Attacks the data layer.</li>
+<li><strong>Jailbreak:</strong> a prompt engineered so that an aligned model produces output violating its deployment policy — an attack on the output-control layer rather than on model weights or data.</li>
+</ul>
+<p>Formal treatment and defenses: Lecture 8 (adversarial examples), Lecture 9 (poisoning), Lectures 10–11 (jailbreaks and prompt injection) companion notes.</p>
+</div>
 </article>
 
 <article>
 <h2>Thread: Who Answers for It</h2>
 <p>Provenance, fairness, and accountability ask who made this, who bears the errors, and who must explain and fix the harm. Trust is a social property, not only a model property.</p>
 <p><span class="kt">Key takeaway:</span> Accountability is about people and institutions, not weights.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Watermark detection</strong> is a hypothesis test: given a text, test $H_0$ ("not generated by the watermarked model") against $H_1$, typically via a $z$-statistic counting green-list tokens; the false-positive rate is controlled analytically under $H_0$. <strong>Group-fairness criteria</strong> are constraints on the joint distribution of prediction $\hat{Y}$, outcome $Y$, and group $A$: demographic parity requires $\hat{Y} \perp A$; equalized odds requires $\hat{Y} \perp A \mid Y$. <strong>Accountability</strong> (governance term of art): the obligation of an identified party to explain, justify, and remedy a system's behavior — it attaches to legal persons, never to models. Formal treatment: Lecture 12 (watermarking), Lectures 13–14 (fairness) companion notes.</p>
+</div>
 </article>
 
 <article>
@@ -84,12 +123,28 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>What Governance Means</h2>
 <p>Governance is the rules, roles, and checks around a system: frameworks for reasoning about risk, regulation for what the law requires, and auditing for verifying claims.</p>
 <p><span class="kt">Key takeaway:</span> Frameworks, regulation, and auditing are the three pillars.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<ul>
+<li><strong>Risk-management framework:</strong> a voluntary, structured process for identifying, assessing, and treating risks across a system's life cycle. Non-binding: it guides, but no penalty attaches to ignoring it.</li>
+<li><strong>Regulation:</strong> legally binding rules enacted by a public authority, with defined obligations, enforcement powers, and penalties for non-compliance.</li>
+<li><strong>Audit:</strong> a structured, evidence-producing assessment of a system or organization against defined criteria, ideally by a party independent of the builder (formal definition under "Trust, but Verify" below).</li>
+</ul>
+<p>The three differ in <em>who binds whom</em>: frameworks bind no one, regulation binds by law, audits verify whether either promise was kept.</p>
+</div>
 </article>
 
 <article>
 <h2>Foundation Models Raise the Stakes</h2>
 <p>Bommasani and colleagues named the shift: one model trained once and reused everywhere means a single flaw propagates broadly, with hard-to-predict capabilities and few actors holding wide societal reach.</p>
 <p><span class="kt">Key takeaway:</span> Centralized, reused models concentrate both power and risk.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Foundation model</strong> (Bommasani et al. 2021, the paper that coined the term): a model "trained on broad data at scale" that is "adaptable to a wide range of downstream tasks." The governance-relevant properties they emphasize are <em>emergence</em> (capabilities not explicitly designed in) and <em>homogenization</em> (many downstream systems inherit one upstream model's flaws).</p>
+<h3>Background &amp; further reading</h3>
+<p>The 2021 Stanford report "On the Opportunities and Risks of Foundation Models" introduced the term and framed the single-point-of-failure argument this slide summarizes. The EU AI Act's "general-purpose AI model" category (defined below at "Rules for General-Purpose AI") is the legal descendant of this concept.</p>
+<ul><li><a href="https://arxiv.org/abs/2108.07258">Bommasani et al., "On the Opportunities and Risks of Foundation Models" (arXiv 2108.07258)</a> — the report that named the paradigm.</li></ul>
+</div>
 </article>
 
 <article>
@@ -108,36 +163,68 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>The NIST AI RMF</h2>
 <p>The NIST AI Risk Management Framework is a voluntary US standard: a common process for identifying, assessing, and reducing AI risk across a system's life cycle.</p>
 <p><span class="kt">Key takeaway:</span> A voluntary but widely adopted baseline for managing AI risk.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Risk</strong> (NIST AI 100-1, verbatim): "the composite measure of an event's probability of occurring and the magnitude or degree of the consequences of the corresponding event." Informally, risk $\approx$ probability $\times$ severity — the same two-axis picture the EU AI Act's tiers discretize.</p>
+<p><strong>Trustworthy AI characteristics</strong> (verbatim list): "valid and reliable, safe, secure and resilient, accountable and transparent, explainable and interpretable, privacy-enhanced, and fair with harmful bias managed."</p>
+<h3>Background &amp; further reading</h3>
+<p>The AI RMF 1.0 was published by the US National Institute of Standards and Technology in January 2023 as NIST AI 100-1. It is voluntary — it creates no legal duties — but it is widely referenced by US agencies, procurement rules, and company policies, making it the de facto shared vocabulary for AI risk in the US.</p>
+<ul><li><a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf">NIST AI 100-1, "Artificial Intelligence Risk Management Framework (AI RMF 1.0)", Jan 2023 (PDF)</a> — the framework itself.</li></ul>
+</div>
 </article>
 
 <article>
 <h2>Map, Measure, Manage</h2>
 <p>The RMF runs four functions continuously. Govern wraps the other three with culture, roles, and oversight, while Map, Measure, and Manage form the operational loop.</p>
 <p><span class="kt">Key takeaway:</span> Govern sits over Map, Measure, and Manage.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>GOVERN</strong> (NIST AI 100-1, verbatim): the function that "cultivates and implements a culture of risk management within organizations designing, developing, deploying, evaluating, or acquiring AI systems." Unlike the other three, GOVERN is cross-cutting: NIST specifies that it "applies to all stages of organizations' AI risk management processes and procedures," while Map, Measure, and Manage are applied per-system and per-context.</p>
+</div>
 </article>
 
 <article>
 <h2>Map</h2>
 <p>Mapping means understanding context before building: who is affected, what could go wrong and for whom, and what the system is actually for.</p>
 <p><span class="kt">Key takeaway:</span> You cannot manage a risk you never named.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>MAP</strong> (NIST AI 100-1, verbatim): "The MAP function establishes the context to frame risks related to an AI system." Its first category, MAP 1, is "Context is established and understood" — intended purposes, users and their expectations, potential impacts, and organizational risk tolerances are documented before anything is measured. NIST notes that outputs of MAP "are the basis for the MEASURE and MANAGE functions."</p>
+</div>
 </article>
 
 <article>
 <h2>Measure</h2>
 <p>Measuring turns mapped risks into numbers: accuracy gaps across groups, leakage and attack-success rates, robustness under stress tests.</p>
 <p><span class="kt">Key takeaway:</span> A metric is a promise you can check.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>MEASURE</strong> (NIST AI 100-1, verbatim): "The MEASURE function employs quantitative, qualitative, or mixed-method tools, techniques, and methodologies to analyze, assess, benchmark, and monitor AI risk and related impacts." NIST adds: "AI systems should be tested before their deployment and regularly while in operation." The concrete metrics this course defined — group accuracy gaps, membership-inference advantage, attack-success rate, calibration error, watermark detection power — are exactly what MEASURE consumes.</p>
+</div>
 </article>
 
 <article>
 <h2>Manage</h2>
 <p>Managing means acting on the measurements: prioritize the worst risks, then mitigate, accept, or decline to deploy, and keep monitoring after release.</p>
 <p><span class="kt">Key takeaway:</span> Risk management is a loop, not a one-time checkbox.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>MANAGE</strong> (NIST AI 100-1, verbatim): "The MANAGE function entails allocating risk resources to mapped and measured risks on a regular basis and as defined by the GOVERN function. Risk treatment comprises plans to respond to, recover from, and communicate about incidents or events." The four canonical treatments are mitigate, accept, transfer, or avoid (decline to deploy) — the same taxonomy as classical enterprise risk management.</p>
+</div>
 </article>
 
 <article>
 <h2>The Generative AI Profile</h2>
 <p>In 2024 NIST added a companion profile for generative AI: it names twelve risks, including confabulation, NIST's word for hallucination, and maps each to the four RMF functions.</p>
 <p><span class="kt">Key takeaway:</span> The RMF now speaks generative AI natively.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Confabulation</strong> (NIST AI 600-1, verbatim): "a phenomenon in which GAI systems generate and confidently present erroneous or false content in response to prompts." NIST chose the term over "hallucination" deliberately.</p>
+<p>The twelve risks "unique to or exacerbated by" generative AI, as enumerated in AI 600-1 §2: (1) CBRN Information or Capabilities; (2) Confabulation; (3) Dangerous, Violent, or Hateful Content; (4) Data Privacy; (5) Environmental Impacts; (6) Harmful Bias or Homogenization; (7) Human-AI Configuration; (8) Information Integrity; (9) Information Security; (10) Intellectual Property; (11) Obscene, Degrading, and/or Abusive Content; (12) Value Chain and Component Integration.</p>
+<h3>Background &amp; further reading</h3>
+<p>NIST AI 600-1, the "Generative Artificial Intelligence Profile," was published in July 2024 as a cross-sectoral companion to the AI RMF: for each of the twelve risks it lists suggested actions keyed to Govern/Map/Measure/Manage subcategories.</p>
+<ul><li><a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf">NIST AI 600-1, "Generative Artificial Intelligence Profile", July 2024 (PDF)</a> — the profile, with the full risk-by-risk action tables.</li></ul>
+</div>
 </article>
 
 <article>
@@ -156,96 +243,236 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>A Taxonomy of Risks</h2>
 <p>Weidinger and colleagues catalogued the harms of language models into six risk areas; we highlight four: discrimination, information hazards, misinformation, and malicious use. A shared map of harms must precede sensible rules.</p>
 <p><span class="kt">Key takeaway:</span> Name the harms before regulating them.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>The six risk areas of Weidinger et al. (verbatim headings): I. Discrimination, Exclusion and Toxicity; II. Information Hazards; III. Misinformation Harms; IV. Malicious Uses; V. Human-Computer Interaction Harms; VI. Automation, Access, and Environmental Harms. The slide highlights areas I–IV; areas V–VI (anthropomorphization harms, labor displacement, compute footprint) round out the taxonomy.</p>
+<h3>Background &amp; further reading</h3>
+<p>The taxonomy originated at DeepMind as a 2021 preprint and was published at FAccT 2022 ("Taxonomy of Risks posed by Language Models"). It became a standard reference map: both the NIST GenAI Profile's twelve risks and lab safety policies cover substantially the same territory with different groupings.</p>
+<ul><li><a href="https://arxiv.org/abs/2112.04359">Weidinger et al., "Ethical and social risks of harm from Language Models" (arXiv 2112.04359)</a> — the full taxonomy with mechanisms and examples per area.</li></ul>
+</div>
 </article>
 
 <article>
 <h2>Risk-Based Regulation</h2>
 <p>The guiding idea: match the rules to the stakes. A spam filter, a hiring tool, and a medical device should not face identical duties.</p>
 <p><span class="kt">Key takeaway:</span> Heavier risk earns heavier obligations.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Risk-based (risk-proportionate) regulation:</strong> a regulatory design in which the stringency of legal duties is a function of the assessed risk of the <em>use</em>, not of the technology as such — the same model can be unregulated in one deployment and heavily regulated in another. The alternative designs it is contrasted with are blanket (technology-based) regulation, which attaches uniform duties to the technology itself, and sectoral regulation, which leaves each domain regulator to stretch existing law. The EU AI Act is the canonical risk-based instrument; its tiers discretize the probability-times-severity notion of risk defined above.</p>
+</div>
 </article>
 
 <article>
 <h2>EU AI Act: Risk Tiers</h2>
 <p>The EU AI Act sorts systems into four tiers: unacceptable, high, limited, and minimal risk, from outright banned down to essentially unregulated.</p>
 <p><span class="kt">Key takeaway:</span> Four tiers, with duties rising toward the top.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Article 3 of Regulation (EU) 2024/1689, verbatim:</p>
+<ul>
+<li><strong>'AI system'</strong> (Art 3(1)): "a machine-based system that is designed to operate with varying levels of autonomy and that may exhibit adaptiveness after deployment, and that, for explicit or implicit objectives, infers, from the input it receives, how to generate outputs such as predictions, content, recommendations, or decisions that can influence physical or virtual environments."</li>
+<li><strong>'provider'</strong> (Art 3(3)): "a natural or legal person, public authority, agency or other body that develops an AI system or a general-purpose AI model or that has an AI system or a general-purpose AI model developed and places it on the market or puts the AI system into service under its own name or trademark, whether for payment or free of charge."</li>
+<li><strong>'deployer'</strong> (Art 3(4)): "a natural or legal person, public authority, agency or other body using an AI system under its authority except where the AI system is used in the course of a personal non-professional activity." Most duties fall on providers; deployers carry use-context duties (e.g. deepfake disclosure).</li>
+</ul>
+<p>The tiers map to legal bases: unacceptable = the prohibited practices of Art 5; high = classification under Art 6 with Annex III; limited = the transparency duties of Art 50; minimal = systems falling under none of these provisions, which face no new duties.</p>
+<h3>Background &amp; further reading</h3>
+<p>Regulation (EU) 2024/1689 ("the AI Act") was published in the Official Journal in July 2024 and has been in force since August 2024, with duties phasing in over years (timeline below). It is the first comprehensive horizontal AI law of a major jurisdiction.</p>
+<ul>
+<li><a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng">Regulation (EU) 2024/1689, official text (EUR-Lex)</a> — the Act itself.</li>
+<li><a href="https://artificialintelligenceact.eu/article/3/">AI Act Explorer, Article 3 (definitions)</a> — a navigable unofficial mirror.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Unacceptable Risk: Banned</h2>
 <p>Some uses are prohibited outright, such as social scoring by public or private actors, manipulation of the vulnerable, and most untargeted facial scraping for surveillance.</p>
 <p><span class="kt">Key takeaway:</span> No paperwork makes a banned use legal.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Article 5(1) prohibits placing on the market or using AI systems that: (a) deploy subliminal or purposefully manipulative techniques that materially distort behavior and cause significant harm; (b) exploit vulnerabilities due to age, disability, or socio-economic situation; (c) perform social scoring leading to detrimental treatment; (d) predict criminal risk solely from profiling or personality traits; (e) "create or expand facial recognition databases through the untargeted scraping of facial images from the internet or CCTV footage" (verbatim); (f) infer emotions in workplaces or education (except for medical or safety reasons); (g) biometrically categorise people to infer sensitive attributes such as race, political opinions, or sexual orientation; (h) use real-time remote biometric identification in publicly accessible spaces for law enforcement, subject to narrow, judicially authorized exceptions.</p>
+<h3>Background &amp; further reading</h3>
+<p>The prohibitions have applied since 2 February 2025 — the first AI Act duties to bite — and were not deferred by the 2026 Digital Omnibus.</p>
+<ul><li><a href="https://artificialintelligenceact.eu/article/5/">AI Act, Article 5 (prohibited practices), full text</a> — all eight prohibitions with their exceptions.</li></ul>
+</div>
 </article>
 
 <article>
 <h2>High Risk: Strict Duties</h2>
 <p>High-risk systems such as hiring, credit, and medical tools are allowed but face heavy obligations: risk assessments, quality data, human oversight, logging, and transparency.</p>
 <p><span class="kt">Key takeaway:</span> Allowed, but only under serious controls.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Classification</strong> (Art 6): a system is high-risk if it is a safety component of a product covered by EU product-safety legislation listed in Annex I (e.g. medical devices, machinery), or if it falls in a use case listed in Annex III — whose eight areas are biometrics, critical infrastructure, education, employment and worker management, access to essential private and public services (including credit and insurance), law enforcement, migration and border control, and administration of justice and democratic processes.</p>
+<p><strong>Duties</strong> (Chapter III, Section 2, Arts 8–15): a continuous risk-management system; data-governance and quality requirements for training, validation, and test data; technical documentation; automatic logging; transparency and instructions to deployers; effective human oversight; and accuracy, robustness, and cybersecurity appropriate to the purpose.</p>
+<p><strong>'conformity assessment'</strong> (Art 3(20), verbatim): "the process of demonstrating whether the requirements set out in Chapter III, Section 2 relating to a high-risk AI system have been fulfilled" — the gate a high-risk system must pass before CE-marking and market entry.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://artificialintelligenceact.eu/article/6/">AI Act, Article 6 (classification rules for high-risk systems)</a></li>
+<li><a href="https://artificialintelligenceact.eu/annex/3/">AI Act, Annex III (the high-risk use-case list)</a></li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Limited and Minimal Risk</h2>
 <p>Limited-risk systems mainly owe transparency, such as disclosing that a user is talking to a machine or that content is AI-made. Minimal-risk tools, the vast majority, face no special rules.</p>
 <p><span class="kt">Key takeaway:</span> Most everyday systems fall in the lightest tiers.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Article 50 imposes five transparency duties: (i) providers must ensure people interacting with an AI system are informed, unless it is obvious from context; (ii) providers of generative systems must mark synthetic audio, image, video, and text output in a machine-readable, detectable format; (iii) deployers must disclose deepfakes (with a carve-out for evidently artistic or satirical work); (iv) deployers of emotion-recognition or biometric-categorisation systems must inform the persons exposed; (v) AI-generated text published to inform the public on matters of public interest must be disclosed, unless it underwent human editorial review with human responsibility. The information must be provided "in a clear and distinguishable manner at the latest at the time of the first interaction or exposure" (verbatim). These duties apply from 2 August 2026 and were not deferred by the Digital Omnibus.</p>
+<h3>Background &amp; further reading</h3>
+<ul><li><a href="https://artificialintelligenceact.eu/article/50/">AI Act, Article 50 (transparency obligations), full text</a></li></ul>
+</div>
 </article>
 
 <article>
 <h2>EU AI Act: The Timeline</h2>
 <p>The Act has been in force since 2024, but its duties phase in over years: bans in February 2025, general-purpose AI rules in August 2025, transparency in August 2026. A 2026 amendment, the Digital Omnibus, pushed the high-risk duties out to December 2027 and August 2028.</p>
 <p><span class="kt">Key takeaway:</span> "In force" and "applies" are different dates; the hardest duties were deferred.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The staged application is set by Art 113: the Act entered into force in August 2024, twenty days after Official Journal publication; the prohibitions and AI-literacy provisions (Chapters I–II) applied from 2 February 2025; the GPAI, governance, and penalties provisions from 2 August 2025; the general application date, including Art 50 transparency, is 2 August 2026; the Annex I product-embedded route originally followed on 2 August 2027.</p>
+<p>The <strong>Digital Omnibus on AI, Regulation (EU) 2026/1744</strong>, was published in the Official Journal on 24 July 2026 and entered into force on 27 July 2026. It deferred the high-risk regime: Annex III standalone high-risk duties moved from 2 August 2026 to <strong>2 December 2027</strong>, and Annex I product-embedded duties from 2 August 2027 to <strong>2 August 2028</strong>. Not deferred: the Art 5 prohibitions (applying since February 2025), the GPAI obligations (since August 2025), and the Art 50 transparency duties (from August 2026).</p>
+<ul>
+<li><a href="https://artificialintelligenceact.eu/article/113/">AI Act, Article 113 (entry into force and application)</a> — the original date table.</li>
+<li><a href="https://artificialintelligenceact.eu/implementation-timeline/">AI Act Explorer implementation timeline</a> — the phased dates, updated for the Omnibus.</li>
+<li><a href="https://eur-lex.europa.eu/eli/reg/2026/1744/oj/eng">Regulation (EU) 2026/1744 (Digital Omnibus on AI), official text (EUR-Lex)</a></li>
+<li><a href="https://www.whitecase.com/insight-alert/eu-ai-omnibus-enters-force-amending-ai-act">White &amp; Case, "EU AI Omnibus enters force, amending the AI Act"</a> — a clear summary of what moved and what did not.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Rules for General-Purpose AI</h2>
 <p>Foundation models get their own duties, live since August 2025: technical documentation, a training-data summary, and an EU copyright policy. Above a large compute threshold the Act presumes systemic risk and adds safety duties; a voluntary Code of Practice is the compliance path most major labs signed.</p>
 <p><span class="kt">Key takeaway:</span> The EU regulates the model itself, not only its uses.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<ul>
+<li><strong>'general-purpose AI model'</strong> (Art 3(63), verbatim): "an AI model, including where such an AI model is trained with a large amount of data using self-supervision at scale, that displays significant generality and is capable of competently performing a wide range of distinct tasks regardless of the way the model is placed on the market and that can be integrated into a variety of downstream systems or applications," excluding models used only for research and prototyping before market placement.</li>
+<li><strong>'systemic risk'</strong> (Art 3(65), verbatim): "a risk that is specific to the high-impact capabilities of general-purpose AI models, having a significant impact on the Union market due to their reach, or due to actual or reasonably foreseeable negative effects on public health, safety, public security, fundamental rights, or the society as a whole, that can be propagated at scale across the value chain."</li>
+<li><strong>The $10^{25}$ FLOP presumption</strong> (Art 51(2)): a GPAI model is presumed to have high-impact capabilities — and hence systemic risk — "when the cumulative amount of computation used for its training measured in floating point operations is greater than $10^{25}$." The Commission can adjust the threshold by delegated act (Art 51(3)).</li>
+</ul>
+<p><strong>Duties.</strong> All GPAI providers (Art 53): maintain technical documentation, supply information to downstream providers, put in place an EU copyright-compliance policy, and publish a summary of training content. Systemic-risk providers additionally (Art 55): perform model evaluations including adversarial testing, assess and mitigate systemic risks, report serious incidents, and ensure adequate cybersecurity.</p>
+<h3>Background &amp; further reading</h3>
+<p>The <strong>GPAI Code of Practice</strong>, published by the Commission on 10 July 2025, is the voluntary compliance vehicle: three chapters (Transparency, with a Model Documentation Form; Copyright; and Safety and Security, the latter only for systemic-risk models). Roughly two dozen companies signed, including Amazon, Anthropic, Google, IBM, Microsoft, Mistral, and OpenAI; xAI signed only the Safety and Security chapter, and Meta declined to sign, citing legal uncertainty.</p>
+<ul>
+<li><a href="https://artificialintelligenceact.eu/article/51/">AI Act, Article 51 (systemic-risk classification)</a>; <a href="https://artificialintelligenceact.eu/article/53/">Article 53 (GPAI provider duties)</a>; <a href="https://artificialintelligenceact.eu/article/55/">Article 55 (systemic-risk duties)</a></li>
+<li><a href="https://digital-strategy.ec.europa.eu/en/policies/contents-code-gpai">European Commission, the GPAI Code of Practice (official page)</a></li>
+<li><a href="https://en.wikipedia.org/wiki/General-Purpose_AI_Code_of_Practice">Wikipedia, "General-Purpose AI Code of Practice"</a> — signatory list and chapter summaries.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The US Approach</h2>
 <p>The US still has no single AI law: executive orders steer federal agencies, sector regulators stretch existing law, and states add their own rules such as hiring audits and state AI acts. The first binding US AI rules came from states, not Congress.</p>
 <p><span class="kt">Key takeaway:</span> A shifting patchwork, not a single statute.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p><strong>NYC Local Law 144</strong> requires employers using automated employment decision tools (AEDTs) on NYC candidates to commission an annual independent bias audit — impact ratios across sex and race/ethnicity categories — publish a summary, and notify candidates; the city's Department of Consumer and Worker Protection adopted the implementing rules in April 2023. It is the earliest binding algorithmic-audit mandate in the US.</p>
+<p>The <strong>Colorado AI Act</strong> (SB 24-205), signed May 2024, was the first comprehensive US state AI law: a duty of reasonable care on developers and deployers of "high-risk" AI systems to prevent algorithmic discrimination, with impact assessments and consumer notices. Its effective date has been pushed twice — to 30 June 2026 by a special-session bill in August 2025, then to 1 January 2027 (with a narrowed scope) in May 2026 — a live illustration of the US patchwork's instability.</p>
+<ul>
+<li><a href="https://rules.cityofnewyork.us/wp-content/uploads/2023/04/DCWP-NOA-for-Use-of-Automated-Employment-Decisionmaking-Tools-2.pdf">NYC DCWP, adopted rules for automated employment decision tools (PDF)</a> — the Local Law 144 bias-audit rules.</li>
+<li><a href="https://leg.colorado.gov/bills/sb24-205">Colorado SB 24-205, "Consumer Protections for Artificial Intelligence"</a> — official bill page with amendment history.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>US: Whiplash at the Top</h2>
 <p>Federal direction reversed within fifteen months: the 2023 safety order was rescinded in January 2025, replaced by a deregulatory order and an Action Plan, and by late 2025 the administration was pushing to preempt state laws. As of mid-2026 there is still no federal AI statute.</p>
 <p><span class="kt">Key takeaway:</span> US federal AI policy can flip with each administration.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><strong>EO 14110</strong>, "Safe, Secure, and Trustworthy Development and Use of Artificial Intelligence" (30 Oct 2023, 88 FR 75191): the Biden safety order — required developers of dual-use foundation models trained above $10^{26}$ FLOP (or $10^{23}$ for biological-sequence models) to report training runs and red-team results to the government under Defense Production Act authority. <a href="https://www.govinfo.gov/content/pkg/FR-2023-11-01/pdf/2023-24283.pdf">Official text (Federal Register PDF)</a>.</li>
+<li><strong>EO 14179</strong>, "Removing Barriers to American Leadership in Artificial Intelligence" (23 Jan 2025, 90 FR 8741): revoked the Biden AI policies including EO 14110 and ordered an AI Action Plan within 180 days. <a href="https://www.govinfo.gov/content/pkg/FR-2025-01-31/pdf/2025-02172.pdf">Official text (PDF)</a>.</li>
+<li><strong>"Winning the Race: America's AI Action Plan"</strong> (July 2025): the resulting strategy — deregulatory, infrastructure- and export-focused. <a href="https://www.whitehouse.gov/wp-content/uploads/2025/07/Americas-AI-Action-Plan.pdf">Official PDF</a>.</li>
+<li><strong>EO 14319</strong>, "Preventing Woke AI in the Federal Government" (23 July 2025): imposes "Unbiased AI Principles" — truth-seeking and ideological neutrality — on LLMs procured by federal agencies, with OMB implementation guidance issued December 2025. <a href="https://www.govinfo.gov/content/pkg/FR-2025-07-28/pdf/2025-14217.pdf">Official text (PDF)</a>.</li>
+<li><strong>EO 14365</strong>, "Ensuring a National Policy Framework for Artificial Intelligence" (11 Dec 2025, 90 FR 58499): the preemption push the slide's timeline ends on — creates a DOJ AI Litigation Task Force to challenge state AI laws, directs Commerce to catalog conflicting state statutes (naming Colorado's), conditions BEAD broadband funds, and seeks a federal preemptive standard from Congress, with carve-outs for child safety, compute infrastructure, and state procurement. <a href="https://www.govinfo.gov/content/pkg/FR-2025-12-16/pdf/2025-23092.pdf">Official text (Federal Register PDF)</a>.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Korea: The AI Basic Act</h2>
 <p>Korea passed the AI Basic Act in December 2024, the first comprehensive national AI law after the EU's, in force since January 2026 and enforced by MSIT. It regulates high-impact AI in areas like health, energy, hiring, and biometrics.</p>
 <p><span class="kt">Key takeaway:</span> This is the law AI systems in Korea now work under.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Official name: the <strong>Framework Act on the Development of Artificial Intelligence and Establishment of Trust</strong> (인공지능 발전과 신뢰 기반 조성 등에 관한 기본법), commonly "AI Basic Act" or "AI Framework Act." The National Assembly passed it on 26 December 2024; it was promulgated on 21 January 2025 and took effect on 22 January 2026, making Korea the second jurisdiction after the EU with a comprehensive horizontal AI statute. The Ministry of Science and ICT (MSIT) is the enforcing authority, with much of the detail — including the compute threshold below — delegated to Presidential Decree. Like the EU Act it is risk-based, with a "high-impact AI" category playing the role of the EU's high-risk tier.</p>
+<ul>
+<li><a href="https://cset.georgetown.edu/wp-content/uploads/t0625_south_korea_ai_law_EN.pdf">CSET, official English translation of the Act (PDF)</a> — the full statutory text.</li>
+<li><a href="https://fpf.org/blog/south-koreas-new-ai-framework-act-a-balancing-act-between-innovation-and-regulation/">Future of Privacy Forum, "South Korea's New AI Framework Act"</a> — a clause-by-clause analysis.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>AI Basic Act: What It Requires</h2>
 <p>The duties echo the EU with lighter penalties: label generative-AI content users could mistake for real, extra safety duties above a compute threshold, and a domestic representative for large foreign providers. Fines top out around 30 million won, with a one-year grace period.</p>
 <p><span class="kt">Key takeaway:</span> EU-style duties, Korean-scale enforcement.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>The Act's key obligations: (i) <strong>generative-AI transparency</strong> — notify users they are dealing with generative AI and label outputs that could be mistaken for reality; (ii) <strong>high-impact AI duties</strong> — risk management, explanation, human oversight, and documentation for AI used in domains such as health, energy, recruitment, loan screening, and biometrics; (iii) <strong>safety duties by compute</strong> — training compute above a Presidential-Decree threshold, set at $10^{26}$ FLOP, triggers risk identification, mitigation, and reporting duties; (iv) <strong>domestic representative</strong> — foreign providers above revenue/user thresholds must designate a representative in Korea; (v) <strong>penalties</strong> — administrative fines up to 30 million KRW (about USD 21k), far below EU AI Act maxima, with MSIT signaling a one-year enforcement grace period.</p>
+<h3>Background &amp; further reading</h3>
+<ul><li><a href="https://cset.georgetown.edu/wp-content/uploads/t0625_south_korea_ai_law_EN.pdf">CSET English translation of the Act (PDF)</a> — Arts on generative-AI labeling, high-impact AI, and the domestic representative.</li></ul>
+</div>
 </article>
 
 <article>
 <h2>Regulating the Frontier</h2>
 <p>Anderljung and colleagues argue the largest models may need their own regime: pre-deployment safety evaluations, registration of very large training runs, and duties scaled to capability.</p>
 <p><span class="kt">Key takeaway:</span> Frontier models may warrant capability-based rules.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>"Frontier AI Regulation: Managing Emerging Risks to Public Safety" (2023) is a multi-institution white paper (authors spanning OpenAI, GovAI, academia, and civil society) arguing that frontier models — those that could possess dangerous capabilities — need dedicated regulatory building blocks: safety standards, registration and reporting requirements for large training runs, and mechanisms to ensure compliance, including pre-deployment risk assessment. Its intellectual fingerprints are visible in the compute-threshold triggers of EO 14110 ($10^{26}$), the EU AI Act ($10^{25}$), and Korea's Basic Act ($10^{26}$).</p>
+<ul><li><a href="https://arxiv.org/abs/2307.03718">Anderljung et al., "Frontier AI Regulation: Managing Emerging Risks to Public Safety" (arXiv 2307.03718)</a></li></ul>
+</div>
 </article>
 
 <article>
 <h2>Regulation Is Global</h2>
 <p>A model trained in one country ships everywhere, so the strictest market often sets the effective bar, standards diverge, and compliance becomes a design constraint.</p>
 <p><span class="kt">Key takeaway:</span> Going online does not let you opt out of jurisdiction.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Brussels effect</strong> (term coined by Anu Bradford): the EU's unilateral ability to set de facto global standards — multinationals adopt the strictest (EU) rule worldwide because maintaining one compliant product line is cheaper than market-by-market variants (de facto effect), and firms then lobby home governments to adopt matching rules (de jure effect). GDPR is the canonical example; whether the AI Act repeats it is an open question the slide gestures at.</p>
+<h3>Background &amp; further reading</h3>
+<ul><li><a href="https://en.wikipedia.org/wiki/Brussels_effect">Wikipedia, "Brussels effect"</a> — overview and the GDPR precedent.</li></ul>
+</div>
 </article>
 
 <article>
 <h2>Summits and Safety Institutes</h2>
 <p>Governments now coordinate on frontier risk: the first safety summit at Bletchley in 2023, sixteen labs signing safety commitments in Seoul in 2024, a pivot to "action" in Paris in 2025, and a declaration with 89 endorsers in New Delhi in 2026. National AI safety institutes now test frontier models.</p>
 <p><span class="kt">Key takeaway:</span> Frontier oversight has become an international project.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><strong>Bletchley Park, 1–2 Nov 2023:</strong> the first AI Safety Summit; the Bletchley Declaration — signed by 28 countries plus the EU, including both the US and China — was the first joint governmental statement on frontier-AI risk. <a href="https://www.gov.uk/government/publications/ai-safety-summit-2023-the-bletchley-declaration/the-bletchley-declaration-by-countries-attending-the-ai-safety-summit-1-2-november-2023">The Bletchley Declaration (gov.uk)</a>.</li>
+<li><strong>Seoul, May 2024:</strong> sixteen frontier AI companies signed the Frontier AI Safety Commitments — publish a safety framework, define thresholds at which risks would be intolerable, and "not develop or deploy a model or system at all, if mitigations cannot be applied to keep risks below the thresholds" (verbatim). <a href="https://www.gov.uk/government/publications/frontier-ai-safety-commitments-ai-seoul-summit-2024/frontier-ai-safety-commitments-ai-seoul-summit-2024">Frontier AI Safety Commitments (gov.uk)</a>.</li>
+<li><strong>Paris, 10–11 Feb 2025:</strong> rebranded the "AI Action Summit"; its Statement on Inclusive and Sustainable AI was signed by some sixty countries plus the EU and African Union — but the US and UK declined to sign, marking the pivot from safety to competitiveness. <a href="https://www.elysee.fr/en/emmanuel-macron/2025/02/11/statement-on-inclusive-and-sustainable-artificial-intelligence-for-people-and-the-planet">The Paris statement (elysee.fr)</a>.</li>
+<li><strong>New Delhi, 18–19 Feb 2026:</strong> the AI Impact Summit adopted the New Delhi Declaration with 89 endorsers at adoption (India's Press Information Bureau subsequently reports 92 as more joined). <a href="https://www.pib.gov.in/PressReleasePage.aspx?PRID=2231208">PIB press release on the Declaration</a>.</li>
+<li><strong>Safety institutes:</strong> the UK AI Safety Institute (est. Nov 2023) was renamed the <em>AI Security Institute</em> in February 2025; Korea launched its AI Safety Institute in November 2024 under MSIT; the US AI Safety Institute was reorganized as the <em>Center for AI Standards and Innovation</em> (CAISI) in June 2025 — the renames tracking each government's framing. <a href="https://www.aisi.gov.uk/">UK AI Security Institute</a>.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The International AI Safety Report</h2>
 <p>The report, chaired by Yoshua Bengio and written by over a hundred experts with backing from around thirty countries, gives policymakers a shared scientific baseline. The 2026 edition's headline: capabilities are outpacing governance.</p>
 <p><span class="kt">Key takeaway:</span> Policymakers now have an IPCC-style evidence base for AI risk.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Mandated by the nations at Bletchley, the report synthesizes the scientific evidence on general-purpose AI capabilities and risks without making policy recommendations — the deliberate analogy is the IPCC's role in climate. The first full edition appeared in January 2025; the 2026 edition was released on 3 February 2026. Per the 2026 edition itself: "29 nations, the UN, the OECD, and the EU each nominated a representative to the report's Expert Advisory Panel. Over 100 AI experts contributed." Yoshua Bengio chairs.</p>
+<ul>
+<li><a href="https://internationalaisafetyreport.org/">internationalaisafetyreport.org</a> — official site, all editions.</li>
+<li><a href="https://arxiv.org/abs/2501.17805">International AI Safety Report 2025 (arXiv 2501.17805)</a>; <a href="https://arxiv.org/abs/2602.21012">International AI Safety Report 2026 (arXiv 2602.21012)</a>.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -258,60 +485,125 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Trust, but Verify</h2>
 <p>A vendor's claim is not evidence. "Our model is safe" is marketing until an audit turns it into a test.</p>
 <p><span class="kt">Key takeaway:</span> Claims must be checkable, not just asserted.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Algorithmic audit</strong> (per Raji et al. 2020, the standard reference): a structured assessment of an AI system against an organization's declared values, principles, or criteria, in which — verbatim from the paper — "each stage of the audit yields a set of documents that together form an overall audit report, drawing on an organization's values or principles to assess the fit of decisions made throughout." The essential elements: defined criteria, structured procedure, and documented evidence; independence of the auditor determines whether it is an internal or external audit (see "External Audits" below).</p>
+<h3>Background &amp; further reading</h3>
+<ul><li><a href="https://arxiv.org/abs/2001.00973">Raji et al., "Closing the AI Accountability Gap: Defining an End-to-End Framework for Internal Algorithmic Auditing" (arXiv 2001.00973)</a> — the audit framework this section builds on.</li></ul>
+</div>
 </article>
 
 <article>
 <h2>Red-Teaming</h2>
 <p>Red-teaming hires people to break your own model: crafting jailbreaks, probing for leaks and bias, and finding failures before an attacker does. The idea is borrowed from security.</p>
 <p><span class="kt">Key takeaway:</span> Attack your own system to defend it.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>AI red-teaming</strong> — the US government's formal definition, from EO 14110 (verbatim): "a structured testing effort to find flaws and vulnerabilities in an AI system, often in a controlled environment and in collaboration with developers of AI." The term descends from Cold-War-era military exercises via computer security's penetration testing.</p>
+<h3>Background &amp; further reading</h3>
+<p>The reference empirical study of red-teaming language models at scale is Ganguli et al. (Anthropic, 2022), which systematically red-teamed models of several sizes and safety trainings and released the resulting attack transcripts as a dataset for building safer models.</p>
+<ul><li><a href="https://arxiv.org/abs/2209.07858">Ganguli et al., "Red Teaming Language Models to Reduce Harms: Methods, Scaling Behaviors, and Lessons Learned" (arXiv 2209.07858)</a></li></ul>
+</div>
 </article>
 
 <article>
 <h2>The Audit Loop</h2>
 <p>Red-teaming and auditing form a cycle: break, measure, disclose, repair, and repeat. Each pass should leave the system safer than before.</p>
 <p><span class="kt">Key takeaway:</span> Auditing is continuous, not a single gate.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The loop on the slide mirrors the internal-audit framework of Raji et al. (2020, linked at "Trust, but Verify"), which is explicitly designed to support development "end-to-end," applied "throughout the internal organization development lifecycle," with each stage producing documents that accumulate into the audit report. The regulatory versions of the loop are the EU AI Act's continuous risk-management system (Art 9, for high-risk systems) and post-market monitoring duties, and NIST's instruction that systems be tested "before their deployment and regularly while in operation."</p>
+</div>
 </article>
 
 <article>
 <h2>Dangerous-Capability Evals</h2>
 <p>Some evaluations test for the worst things a model could do, such as aiding cyber-attacks or bioweapon design, or deceiving and evading oversight, ideally measured by independent teams before release.</p>
 <p><span class="kt">Key takeaway:</span> Test explicitly for catastrophic capabilities.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The agenda-setting paper is Shevlane et al. (2023, DeepMind-led with broad co-authorship), "Model evaluation for extreme risks": frontier developers should run evaluations both for <em>dangerous capabilities</em> (could the model cause extreme harm if misused or misaligned?) and for <em>alignment</em> (would it apply its capabilities harmfully?), and these results should feed deployment and training go/no-go decisions. This paper is the direct intellectual ancestor of the lab frameworks on the next slides.</p>
+<ul><li><a href="https://arxiv.org/abs/2305.15324">Shevlane et al., "Model evaluation for extreme risks" (arXiv 2305.15324)</a></li></ul>
+</div>
 </article>
 
 <article>
 <h2>Frontier Safety Frameworks</h2>
 <p>The big labs publish if-then commitments: run capability tests, define a red line, and if a model crosses it, put safeguards in place before scaling or shipping. Voluntary and self-enforced, but public, so outsiders can check the promise.</p>
 <p><span class="kt">Key takeaway:</span> A public if-then promise is checkable in a way "we are careful" is not.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>If-then (capability-threshold) commitment</strong> (formalization: course notes): a published policy of the form "if evaluation $E$ shows capability above threshold $\tau$, then safeguard set $S$ must be in place before further training or deployment." The commitment is falsifiable by outsiders in a way "we take safety seriously" is not: the evaluations, thresholds, and required safeguards are named in advance.</p>
+<h3>Background &amp; further reading</h3>
+<p>The multilateral anchor is the Seoul Frontier AI Safety Commitments (May 2024): sixteen companies committed to publish such frameworks, define "intolerable" risk thresholds, and — verbatim — "not develop or deploy a model or system at all, if mitigations cannot be applied to keep risks below the thresholds." The next three slides examine the three most-cited implementations.</p>
+<ul><li><a href="https://www.gov.uk/government/publications/frontier-ai-safety-commitments-ai-seoul-summit-2024/frontier-ai-safety-commitments-ai-seoul-summit-2024">Frontier AI Safety Commitments, AI Seoul Summit 2024 (gov.uk)</a></li></ul>
+</div>
 </article>
 
 <article>
 <h2>Anthropic: AI Safety Levels</h2>
 <p>Anthropic's Responsible Scaling Policy defines AI Safety Levels modeled on biosafety levels, with stronger safeguards at higher tiers. ASL-3 was first activated in 2025 for Claude Opus 4 as a precaution, adding weight-theft defenses and classifiers against bioweapon misuse.</p>
 <p><span class="kt">Key takeaway:</span> Tiered safeguards that ratchet up with capability.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>AI Safety Levels (ASL):</strong> capability tiers, explicitly modeled on the BSL biosafety levels, each pairing a <em>Capability Threshold</em> (what the model can do) with a required <em>Deployment Standard</em> (safeguards on use) and <em>Security Standard</em> (safeguards on the weights). Crossing a threshold obligates the corresponding standards before further deployment or scaling.</p>
+<h3>Background &amp; further reading</h3>
+<p>The Responsible Scaling Policy was first published 19 September 2023 (v1.0) and has been revised repeatedly; the current version is v3.4 (effective 8 July 2026). ASL-3 was activated for the first time on 22 May 2025, at the launch of Claude Opus 4 — as a precaution: Anthropic stated it had "not yet determined whether Claude Opus 4 has definitively passed the Capabilities Threshold." The ASL-3 deployment standard added constitutional-classifier guards against CBRN-weapons assistance plus jailbreak bounties; the security standard targets weight theft with over 100 controls, including two-party authorization and egress bandwidth limits.</p>
+<ul>
+<li><a href="https://www.anthropic.com/responsible-scaling-policy">Anthropic, Responsible Scaling Policy (current version)</a></li>
+<li><a href="https://www.anthropic.com/news/activating-asl3-protections">Anthropic, "Activating AI Safety Level 3 protections" (May 2025)</a> — the ASL-3 activation announcement.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>OpenAI: Preparedness Framework</h2>
 <p>OpenAI's framework tracks a short list of frontier risk categories: biological and chemical, cybersecurity, and AI self-improvement. High capability requires safeguards before deployment; Critical capability requires safeguards during development itself.</p>
 <p><span class="kt">Key takeaway:</span> The riskiest capabilities gate development, not just release.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Tracked Categories</strong> (Preparedness Framework v2, April 2025): Biological and Chemical capability, Cybersecurity, and AI Self-improvement; each is graded at High or Critical capability thresholds. The core commitment, verbatim: "do not deploy models that reach a High capability threshold until the associated risks that they pose are sufficiently minimized," and if a model reaches a Critical threshold, safeguards are required "during development" itself. A risk qualifies as tracked if it meets five criteria: plausible, measurable, severe, net new, and instantaneous or irremediable. <strong>Severe harm</strong> is defined verbatim as "the death or grave injury of thousands of people or hundreds of billions of dollars of economic damage."</p>
+<h3>Background &amp; further reading</h3>
+<p>Version 2 (15 April 2025) restructured the original framework: alongside Tracked Categories it introduced Research Categories (e.g. long-range autonomy, sandbagging) that are monitored but not yet threshold-gated.</p>
+<ul><li><a href="https://cdn.openai.com/pdf/18a02b5d-6b67-4cec-ab64-68cdfbddebcd/preparedness-framework-v2.pdf">OpenAI, Preparedness Framework, Version 2 (PDF)</a></li></ul>
+</div>
 </article>
 
 <article>
 <h2>DeepMind: Frontier Safety Framework</h2>
 <p>DeepMind's framework is built around Critical Capability Levels: capabilities that could enable severe harm without safeguards. Reaching one triggers security and deployment reviews; the 2025 update added harmful manipulation and misalignment risks.</p>
 <p><span class="kt">Key takeaway:</span> Defined capability thresholds trigger defined reviews.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Critical Capability Levels (CCLs)</strong>, verbatim: "capability thresholds at which frontier AI models or systems may pose heightened risk of severe harm" absent mitigations. Reaching a CCL triggers a defined response: a security review (protecting weights) and a deployment review (safeguards on use) before further rollout.</p>
+<h3>Background &amp; further reading</h3>
+<p>FSF v3.0 was announced 22 September 2025; it added a CCL for <em>harmful manipulation</em> (models capable of systematically changing beliefs and behavior in high-stakes contexts) and expanded protocols for misalignment risks, including scenarios where a model might resist shutdown or modification. A v3.1 update (April 2026) further reorganized thresholds into Tracked Capability Levels.</p>
+<ul><li><a href="https://deepmind.google/blog/strengthening-our-frontier-safety-framework/">Google DeepMind, "Strengthening our Frontier Safety Framework" (Sept 2025)</a> — the v3 announcement, with a link to the framework text.</li></ul>
+</div>
 </article>
 
 <article>
 <h2>External Audits</h2>
 <p>The builder should not be the only judge. Independent labs test the same claims, regulators may demand access, and conflicts of interest get checked, much like financial audits.</p>
 <p><span class="kt">Key takeaway:</span> Independent eyes, on the record.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Internal vs external audit</strong> (terms of art): an internal audit is conducted by the developing organization against its own criteria (the Raji et al. framework above); an external audit is conducted by a party independent of the developer — a third-party lab, a regulator, or a certification body — whose incentives are (ideally) not aligned with passing the system. The regulatory instantiation is the EU AI Act's <em>conformity assessment</em> (Art 3(20), quoted at "High Risk: Strict Duties"): the mandated demonstration that a high-risk system meets Chapter III Section 2 requirements before market entry. The financial-audit analogy on the slide is standard: like accounting audits, value comes from independence, defined standards, and liability for the auditor's signature.</p>
+</div>
 </article>
 
 <article>
 <h2>Model and System Cards</h2>
 <p>A model or system card is a short public fact sheet: intended use, a training-data summary, evaluation results, known limits, and tested failure modes. Think of it as a nutrition label.</p>
 <p><span class="kt">Key takeaway:</span> Standardized disclosure makes systems comparable.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The proposal originates with Mitchell et al. (2019), "Model Cards for Model Reporting": short standardized documents accompanying trained models that report intended use and, crucially, evaluation disaggregated across relevant groups and conditions — so a fairness gap cannot hide inside an aggregate accuracy number. Its dataset-side counterpart is Gebru et al.'s "Datasheets for Datasets": provenance, composition, collection process, and recommended uses for the data itself. Today's frontier "system cards" (multi-hundred-page safety reports accompanying model launches) are the direct descendants; the EU AI Act's Art 53 technical-documentation duty and the GPAI Code's Model Documentation Form make a version of this legally required.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/1810.03993">Mitchell et al., "Model Cards for Model Reporting" (arXiv 1810.03993)</a></li>
+<li><a href="https://arxiv.org/abs/1803.09010">Gebru et al., "Datasheets for Datasets" (arXiv 1803.09010)</a></li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -324,6 +616,11 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Auditing Has Limits</h2>
 <p>Audits show the presence of flaws, not their absence. Passing a test means we did not find the failure, not that none exists, and black-box access makes deep audits hard.</p>
 <p><span class="kt">Key takeaway:</span> A clean audit is reassuring, never a proof of safety.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The slide's logic is Dijkstra's classic dictum about testing, from his 1972 Turing Award lecture "The Humble Programmer" (verbatim): "program testing can be a very effective way to show the presence of bugs, but is hopelessly inadequate for showing their absence." An audit is a finite set of tests over an astronomically large input space; absence of found failures bounds nothing without additional structure (which is why formal guarantees like DP, certified robustness, and certified removal — where they exist — are qualitatively different from any battery of tests). Black-box API access compounds the problem: the auditor cannot inspect weights, training data, or internal activations, only sample the input-output behavior.</p>
+<ul><li><a href="https://www.cs.utexas.edu/~EWD/transcriptions/EWD03xx/EWD340.html">E. W. Dijkstra, "The Humble Programmer" (EWD340, 1972 Turing lecture)</a> — source of the dictum.</li></ul>
+</div>
 </article>
 
 <article>
@@ -342,30 +639,57 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Meaningful Privacy at Web Scale</h2>
 <p>What does a privacy budget mean when pretraining on the whole internet? Whose privacy is protected, what counts as one person's data, and how do we keep utility? A clean definition at that scale is still open.</p>
 <p><span class="kt">Key takeaway:</span> Web-scale privacy lacks a satisfying definition.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The sharpest statement of the problem is Brown et al. (2022), "What Does it Mean for a Language Model to Preserve Privacy?": data sanitization and differential privacy both rest on narrow assumptions — a well-defined "record" per person, a clean private/public boundary — that natural language violates, since text about one person is routinely written by another and sensitivity depends on context. Their conclusion (per the abstract): existing protection methods "cannot guarantee a generic and meaningful notion of privacy" for language models. The $(\varepsilon,\delta)$-DP definition (stated at "Thread: What the Data Holds") is precise about <em>neighboring datasets</em>; the open problem is that "differing in one record" is not a faithful model of one person's presence on the web.</p>
+<ul><li><a href="https://arxiv.org/abs/2202.05520">Brown et al., "What Does it Mean for a Language Model to Preserve Privacy?" (arXiv 2202.05520)</a></li></ul>
+</div>
 </article>
 
 <article>
 <h2>Robust Unlearning</h2>
 <p>The law says "delete me", but can a model comply? We want to remove one person without full retraining, prove the data is gone, and resist re-extraction afterward. Verified deletion at scale is unsolved.</p>
 <p><span class="kt">Key takeaway:</span> Provable, durable forgetting is still out of reach.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Exact unlearning:</strong> after removing record $z$, the released model must be distributed identically to one retrained from scratch on $D \setminus \{z\}$ — the gold standard, trivially achieved by retraining and prohibitively expensive at scale. <strong>Certified removal</strong> (Guo et al. 2020) relaxes this DP-style; in the authors' words, it is "a very strong theoretical guarantee that a model from which data is removed cannot be distinguished from a model that never observed the data to begin with" — formally, the removal mechanism's output distribution must be within multiplicative $e^{\varepsilon}$ bounds of the retrain-from-scratch distribution. Their constructions cover linear classifiers; nothing comparable exists for frontier-scale networks, which is the open problem. The legal driver is GDPR Article 17, the right to erasure.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1911.03030">Guo et al., "Certified Data Removal from Machine Learning Models" (arXiv 1911.03030)</a></li>
+<li><a href="https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng">Regulation (EU) 2016/679 (GDPR), official text — Art 17 is the right to erasure</a></li>
+</ul>
+<p>Full rigorous treatment of unlearning definitions and methods: the Lecture 5 companion notes.</p>
+</div>
 </article>
 
 <article>
 <h2>Agentic Safety</h2>
 <p>Models now take actions, calling tools, browsing, and running code. A jailbreak then becomes a real-world action, and errors compound across steps, so safety must cover behavior, not only text.</p>
 <p><span class="kt">Key takeaway:</span> Acting systems raise the stakes of every failure.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>AI agent</strong> (working definition, course notes): a model run in a loop that observes state, selects actions from a tool set (API calls, browsing, code execution), and receives observations, iterating toward a goal. Two structural reasons agents raise stakes (derivation: course notes): (i) <em>error compounding</em> — if each step succeeds independently with probability $p$, an $n$-step chain succeeds with probability $p^n$; even $p = 0.99$ gives $0.99^{100} \approx 0.37$ over 100 steps, so per-step reliability that looks excellent yields workflows that usually fail; (ii) <em>irreversibility</em> — a chatbot's failure is a bad string a human can discard, while an agent's failure is an executed side effect (a sent email, a payment, a deleted file), so the human-review checkpoint disappears exactly where errors are amplified. Prompt injection — adversarial instructions embedded in content the agent reads — is the jailbreak analog for agents; see the Lecture 11 companion notes.</p>
+</div>
 </article>
 
 <article>
 <h2>Provenance and Fairness Together</h2>
 <p>Each goal is hard alone and they interact: watermarks must survive editing, fairness fixes can shift harm rather than erase it, and optimizing one objective can quietly hurt another.</p>
 <p><span class="kt">Key takeaway:</span> We lack tools that hold multiple trust goals at once.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The rigorous single-goal treatments this slide composes: watermark detection power and robustness to editing are developed formally in the Lecture 12 companion notes (including the corrected detection bound for the green-list scheme); the fairness-intervention trade-offs — how post-processing and constrained training move error mass between groups rather than eliminating it — are developed in the Lecture 14 companion notes. The open problem is joint: no current framework certifies two trust properties simultaneously under a shared perturbation model (e.g. paraphrasing that both evades a watermark and shifts group error rates).</p>
+</div>
 </article>
 
 <article>
 <h2>Tensions Are Permanent</h2>
 <p>Privacy, utility, fairness, and openness pull against each other. Governance manages these trade-offs; it does not make them disappear.</p>
 <p><span class="kt">Key takeaway:</span> Trade-offs are inherent, not a temporary nuisance.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>"Permanent" is not rhetoric: some of these tensions are theorems. The fairness impossibility results — calibration and equal error rates across groups cannot hold simultaneously except in degenerate cases (equal base rates or a perfect predictor) — are stated and proved in the Lecture 13 companion notes; the privacy-utility trade-off is quantified by the DP lower bounds in the Lecture 2 companion notes. Where a trade-off is a theorem, governance can only choose a point on the frontier and make the choice explicit and accountable — it cannot legislate the frontier away.</p>
+</div>
 </article>
 
 <article>

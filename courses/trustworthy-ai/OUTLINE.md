@@ -987,7 +987,8 @@ Problems only — full treatment stays in `backup-agentic-autonomy.html` (not ab
 - SpAIware persistent memory exfiltration — `:427` — Rehberger, Sept 2024 (ChatGPT macOS
   app); fixed by OpenAI.
 - CamoLeak (Copilot Chat, per-image exfil) + GitHub MCP private-repo leak — `:441` —
-  CVE-2025-59145, Legit Security, Oct 2025; Invariant Labs, May 2025.
+  reported via HackerOne, no CVE (GitHub-rated CVSS 9.6), Legit Security, Oct 2025;
+  Invariant Labs, May 2025.
 - Spotlighting — `:617` — Hines et al., "Defending Against Indirect Prompt Injection
   Attacks With Spotlighting", 2024 (arXiv 2403.14720).
 - Instruction hierarchy — `:630` — Wallace et al. (OpenAI), "The Instruction Hierarchy:
@@ -1024,6 +1025,22 @@ title completed + venue added; Zhan et al. adaptive-attacks cite added to Where 
 Stand; quarantine-SVG label overlap fixed. `lec11tech.html` checked: security model
 verified (dual-LLM matches Willison 2023; CaMeL cite correct), two prose-dash lint
 warnings fixed (stays 9 sl). Note file synced (63 entries, order matches).
+
+**2026-08 note enrichment:** `lec11-prompt-injection-note.html` upgraded from speaker
+script to **script + companion notes** (395→736 lines; 63 entries unchanged). Per-entry
+`.detail` blocks: prompt injection formalized (f over one token stream, x = τ(s,u,d),
+agent loop x_{t+1} = x_t ∥ a_t ∥ o_t, injection success as unauthorized action — all
+labeled course notes); control/data-plane and confused-deputy (Hardy 1988) definitions
+expanded from lec11tech; full Greshake et al. taxonomy (4 injection methods × 6 threat
+types) stated from arXiv 2302.12173; defense formalisms (spotlighting variants,
+instruction hierarchy, taint/IFC lattice, dual-LLM invariant, CaMeL capabilities,
+Saltzer–Schroeder least privilege); the "no clean escape / unsolvable by prompting
+alone" argument given as a labeled 5-step informal argument (not a theorem), empirically
+anchored to Zhan et al. 2025. Incident backgrounds + 24 verified links (all fetched:
+arXiv ×7, Willison ×3, Brave ×2, CVE.org/MSRC/Aim, Legit/Register/Invariant,
+embracethered, Ars, OWASP ×2, MIT Hardy, MIT Saltzer, dblp). Note and deck both
+corrected 2026-08-19: CamoLeak has NO CVE — the previously cited "CVE-2025-59145"
+is an unrelated npm color-name malware record.
 
 ## lec12-watermark.html
 

@@ -573,6 +573,23 @@ Flagged as secondary-verified: Lacey "hundreds of filings" tracker line `:115`, 
 abstention split `:251`, Med-Gemini narrative `:119`, GPT-4o rollback line `:816`.
 Note file synced (61 entries, order matches).
 
+**2026-08 note enrichment:** `lec06-hallucination-note.html` upgraded from speaker
+script (383 lines) to Script &amp; Companion Notes (723 lines; 61 entries unchanged):
+per-entry `.detail` blocks with rigorous definitions (KNVZ valid/error hallucination
+formalization, factuality vs faithfulness quadrants, autoregressive MLE = KL
+minimization, Guo perfect-calibration Eq. 1 + ECE Eq. 3 with binning caveats,
+temperature scaling with limits, exchangeability, split-conformal recipe, semantic
+entropy with Rao–Blackwellized + discrete estimators, RAG-Sequence/RAG-Token,
+FActScore), theorem blocks with verified proofs/sketches (Kalai–Vempala Corollary 1
+monofact lower bound + 3-step sketch, KNVZ IIV-reduction Corollary 1 + Appendix-A
+partition sketch, KNVZ Theorem 2 singleton-rate floor, conformal coverage Theorem D.1
+with the complete rank-uniformity proof + D.2 tightness, threshold-scoring
+λ/(1+λ) and 5p−4 derivations labeled course notes), and brief Background blocks with
+26 verified links (Lacey docket + Volokh + Charlotin tracker, Avianca order PDF,
+Verge Med-Gemini + arXiv 2404.18416, GPT-5 and o3/o4-mini system cards, TruthfulQA,
+SimpleQA, Vectara HHEM ×2, Sharma sycophancy + OpenAI GPT-4o rollback + TechCrunch,
+Kadavath, Xiong, SelfCheckGPT, Farquhar Nature, Lewis RAG, Guo, A&B, Ji survey).
+
 ## lec07-interpretability.html
 
 **Topic:** Interpretability & explainability (~90 min). Why black-box accuracy alone

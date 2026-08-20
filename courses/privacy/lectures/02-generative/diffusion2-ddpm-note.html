@@ -55,6 +55,14 @@
 
   <p>This justifies the conditional density</p>
   <div class="math-block">$$q\bigl(X^{(n)} \mid X^{(0)}\bigr) \;=\; \mathcal{N}\!\bigl(\sqrt{\bar\alpha_n}\,X^{(0)},\; 1-\bar\alpha_n\bigr).$$</div>
+
+  <h3>1.4 The schedule and the signal budget</h3>
+  <p>Proposition 2 says that $\bar\alpha_n$ is the <em>signal share</em> and $1-\bar\alpha_n$ the <em>noise share</em> of $X^{(n)}$. The schedule is chosen so that this budget slides smoothly from all-signal to all-noise. For the original DDPM choice — $\beta_n$ linear from $10^{-4}$ to $0.02$ with $N = 1000$ — the numbers are:</p>
+  <div class="math-block">$$\begin{array}{c|ccccc}
+    n & 0 & 250 & 500 & 750 & 1000 \\ \hline
+    \bar\alpha_n & 1.00 & 0.53 & 0.08 & 0.003 & 4\times 10^{-5}
+  \end{array}$$</div>
+  <p>Two design constraints are visible. Each individual $\beta_n$ must be small, because the reverse-step Gaussian approximation of Section 3 is a small-noise expansion. And $\bar\alpha_N$ must be near zero, because $L_N$ in Section 4 measures exactly how far $q(X^{(N)} \mid X^{(0)})$ is from the $\mathcal{N}(0,1)$ prior used at sampling time. A long chain of tiny steps satisfies both; a short chain of large steps satisfies neither.</p>
 </article>
 
 <!-- =================================================== -->
@@ -100,9 +108,23 @@
 <article>
   <h2>3. Reverse conditional and two routes to the score</h2>
 
-  <h3>3.1 Bayes derivation of the mean</h3>
-  <p>Apply the small-$\beta_n$ analogue of Lecture 1 (Theorem 1) to the VP transition $X^{(n)} \mid X^{(n-1)} \sim \mathcal{N}(\sqrt{1-\beta_n}\,X^{(n-1)}, \beta_n)$. The "rescaled" version of the step lets us reuse the same Taylor-+-complete-square argument, yielding</p>
+  <h3>3.1 Rescaling the step, then applying the small-noise rule</h3>
+  <p>The small-noise reverse rule of Lecture 1 applies to a purely <em>additive</em> observation $Y = X + Z$, $Z \sim \mathcal{N}(0,\sigma^2)$ independent, $\sigma^2 \ll 1$:</p>
+  <div class="math-block">$$X \mid Y = y \;\overset{\text{approx.}}{\sim}\; \mathcal{N}\!\bigl(y + \sigma^2\,\partial_y \log P_X(y),\; \sigma^2\bigr).$$</div>
+  <p>The VP transition $X^{(n)} = \sqrt{1-\beta_n}\,X^{(n-1)} + \sqrt{\beta_n}\,Z^{(n)}$ is <em>not</em> of this form: the signal is scaled before the noise is added. One division repairs this. Set</p>
+  <div class="math-block">$$W \;:=\; \frac{X^{(n)}}{\sqrt{1-\beta_n}} \;=\; X^{(n-1)} + \sqrt{\frac{\beta_n}{1-\beta_n}}\;Z^{(n)},\qquad \sigma_{\text{eff}}^2 \;=\; \frac{\beta_n}{1-\beta_n} \;=\; \beta_n + O(\beta_n^2).$$</div>
+  <p>The pair $(X^{(n-1)}, W)$ is now exactly the additive small-noise setting, and since $W$ is a deterministic bijection of $X^{(n)}$, conditioning on $W$ is conditioning on $X^{(n)}$. Hence</p>
+  <div class="math-block">$$X^{(n-1)} \mid X^{(n)} \;\approx\; \mathcal{N}\!\bigl(W + \sigma_{\text{eff}}^2\,\partial_w \log P_W(W),\; \sigma_{\text{eff}}^2\bigr).$$</div>
+  <p>It remains to convert the score of $W$ into the score of $X^{(n)}$. Because $W = X^{(n)}/\sqrt{1-\beta_n}$, the change-of-variables formula for densities gives</p>
+  <div class="math-block">$$P_W(w) \;=\; \sqrt{1-\beta_n}\;P_{X^{(n)}}\!\bigl(\sqrt{1-\beta_n}\,w\bigr),$$</div>
+  <p>and differentiating the logarithm (the constant $\log\sqrt{1-\beta_n}$ drops out, and the chain rule contributes the inner derivative $\sqrt{1-\beta_n}$):</p>
+  <div class="math-block">$$\partial_w \log P_W(w) \;=\; \sqrt{1-\beta_n}\;\partial_x \log P_{X^{(n)}}(x)\Big|_{x = \sqrt{1-\beta_n}\,w}.$$</div>
+  <p>Substituting $w = X^{(n)}/\sqrt{1-\beta_n}$, so that $x = X^{(n)}$, and using $\sigma_{\text{eff}}^2 = \beta_n/(1-\beta_n)$:</p>
+  <div class="math-block">$$W + \sigma_{\text{eff}}^2\,\partial_w \log P_W(W) \;=\; \frac{X^{(n)}}{\sqrt{1-\beta_n}} + \frac{\beta_n}{1-\beta_n}\sqrt{1-\beta_n}\,\partial_x \log P_{X^{(n)}}(X^{(n)}) \;=\; \frac{X^{(n)} + \beta_n\,\partial_x \log P_{X^{(n)}}(X^{(n)})}{\sqrt{1-\beta_n}}.$$</div>
+  <p>Note that the $\sqrt{1-\beta_n}$ factors combine <em>exactly</em>: no expansion is needed for the mean. The only approximation is in the variance, where $\sigma_{\text{eff}}^2 = \beta_n + O(\beta_n^2)$ is replaced by $\beta_n$, together with the small-noise rule itself. We record the result:</p>
   <div class="math-block">$$X^{(n-1)} \mid X^{(n)} \;\approx\; \mathcal{N}\!\bigl(\mu(X^{(n)}, n),\, \beta_n\bigr),\qquad \mu(X^{(n)}, n) = \frac{1}{\sqrt{1-\beta_n}}\!\left(X^{(n)} + \beta_n\,\partial_x \log P_{X^{(n)}}(X^{(n)})\right).$$</div>
+
+  <h3>3.2 Two routes to the score</h3>
   <p>The unknown is the score $s(\,\cdot\,;n) = \partial_x \log P_{X^{(n)}}$. Two complementary derivations of the training loss recover this score:</p>
   <ul>
     <li><strong>Lecture 1 route.</strong> Train a denoiser $f_\theta$ for squared error; convert via Tweedie.</li>
@@ -192,6 +214,12 @@
   <div class="math-block">$$\partial_{x} \log q(X^{(n)} \mid X^{(0)}) \;=\; -\frac{X^{(n)} - \sqrt{\bar\alpha_n}\,X^{(0)}}{1-\bar\alpha_n} \;=\; -\frac{\epsilon}{\sqrt{1-\bar\alpha_n}},$$</div>
   <p>one can rewrite</p>
   <div class="math-block">$$\tilde\mu_n(X^{(n)}, X^{(0)}) \;=\; \frac{1}{\sqrt{1-\beta_n}}\!\left[X^{(n)} + \beta_n\,\partial_x \log q(X^{(n)} \mid X^{(0)})\right].$$</div>
+  <p>This rewrite is an <em>identity</em>, not an approximation, and it is worth verifying explicitly. Expand the right-hand side using the closed form of the conditional score:</p>
+  <div class="math-block">$$\frac{1}{\sqrt{1-\beta_n}}\!\left[X^{(n)} - \frac{\beta_n\bigl(X^{(n)} - \sqrt{\bar\alpha_n}X^{(0)}\bigr)}{1-\bar\alpha_n}\right] \;=\; \frac{X^{(n)}}{\sqrt{1-\beta_n}}\cdot\frac{1-\bar\alpha_n-\beta_n}{1-\bar\alpha_n} \;+\; \frac{\beta_n\sqrt{\bar\alpha_n}\,X^{(0)}}{\sqrt{1-\beta_n}\,(1-\bar\alpha_n)}.$$</div>
+  <p>The key algebraic fact is</p>
+  <div class="math-block">$$1-\bar\alpha_n-\beta_n \;=\; 1 - (1-\beta_n)\bar\alpha_{n-1} - \beta_n \;=\; (1-\beta_n)\bigl(1-\bar\alpha_{n-1}\bigr),$$</div>
+  <p>which turns the first coefficient into $\sqrt{1-\beta_n}\,(1-\bar\alpha_{n-1})/(1-\bar\alpha_n)$. For the second, $\sqrt{\bar\alpha_n}/\sqrt{1-\beta_n} = \sqrt{\bar\alpha_{n-1}}$, giving $\sqrt{\bar\alpha_{n-1}}\,\beta_n/(1-\bar\alpha_n)$. Both coefficients now agree with Theorem 5 exactly.</p>
+  <p>Two remarks. First, the same identity $1-\bar\alpha_n-\beta_n = (1-\beta_n)(1-\bar\alpha_{n-1})$ appeared in the one-shot proof (Proposition 2) and in the precision computation of §5.2; it is the workhorse of every VP algebraic simplification. Second, notice that the score form makes the structural point immediately: $\tilde\mu_n$ and the model mean $\mu_\theta$ have the <em>same functional shape</em>, differing only in which score they use — the data-conditional one versus the marginal one. That is what collapses mean matching to score matching in §6.4.</p>
   <p>This matches the small-$\beta_n$ Bayes-derivation form, but with the <em>data-conditional</em> score in place of the marginal score. The DDPM model parameterizes</p>
   <div class="math-block">$$\mu_\theta(X^{(n)}, n) = \frac{1}{\sqrt{1-\beta_n}}\!\left[X^{(n)} + \beta_n\,s_\theta(X^{(n)}, n)\right],$$</div>
   <p>using the marginal score. Mean matching of $\tilde\mu_n \approx \mu_\theta$ thus reduces to score matching.</p>
@@ -207,8 +235,13 @@
   <p>(Standard exercise. The general formula carries trace and log-det terms; isotropic-equal-variance kills both.)</p>
 
   <h3>6.2 Reverse-step loss collapses to mean matching</h3>
-  <p>By Theorem 5, $q(X^{(n-1)} \mid X^{(n)}, X^{(0)})$ has variance $\tilde\beta_n$. The DDPM model fixes its reverse covariance also to $\tilde\beta_n$ (or $\beta_n$ — both are common; here use $\beta_n$ for the deck-aligned form). Apply Lemma 2:</p>
+  <p>By Theorem 5 the target posterior has variance $\tilde\beta_n = \beta_n(1-\bar\alpha_{n-1})/(1-\bar\alpha_n)$, while the DDPM model fixes its reverse variance to a constant $\sigma_n^2$. Lemma 2 requires the two variances to be equal, so it is worth being precise about how the two candidate choices relate.</p>
+  <p>The ratio is</p>
+  <div class="math-block">$$\frac{\tilde\beta_n}{\beta_n} \;=\; \frac{1-\bar\alpha_{n-1}}{1-\bar\alpha_n} \;\in\; (0, 1].$$</div>
+  <p>At $n = 1$ we have $\bar\alpha_0 = 1$, so $\tilde\beta_1 = 0$: knowing both $X^{(1)}$ and $X^{(0)}$ determines $X^{(0)}$, and the posterior degenerates. But for moderate and large $n$, $\bar\alpha_{n-1}$ and $\bar\alpha_n$ differ by the factor $1-\beta_n \approx 1$ and both are far from $1$, so the ratio is essentially $1$ and $\tilde\beta_n \approx \beta_n$. Ho et al. report that the two choices $\sigma_n^2 = \beta_n$ and $\sigma_n^2 = \tilde\beta_n$ give comparable sample quality; they correspond to upper and lower bounds on the reverse-step entropy for data with unit and zero variance respectively.</p>
+  <p>We take $\sigma_n^2 = \beta_n$, which is the choice that makes the prefactors below match the deck. With equal variances, Lemma 2 gives</p>
   <div class="math-block">$$L_{n-1} \;=\; \frac{1}{2\beta_n}\,\mathbb{E}_q\bigl[\,\bigl\|\tilde\mu_n(X^{(n)}, X^{(0)}) - \mu_\theta(X^{(n)}, n)\bigr\|^2\,\bigr].$$</div>
+  <p>(Strictly, using $\sigma_n^2 = \beta_n$ against a target of variance $\tilde\beta_n$ leaves an extra $\tfrac12(\tilde\beta_n/\beta_n - 1 - \log(\tilde\beta_n/\beta_n))$ term in the KL. It is $\theta$-free, hence irrelevant to the gradient, and $O((1-\tilde\beta_n/\beta_n)^2)$ in size.)</p>
 
   <h3>6.3 Why this is not "ordinary" mean matching</h3>
   <p>$\tilde\mu_n$ depends on $X^{(0)}$; $\mu_\theta$ does not. So we are matching a network's prediction to a quantity it cannot fully observe. This is exactly score matching in disguise: the $X^{(0)}$-dependence is averaged out in expectation, leaving the score of the marginal as the optimal target. (Formal proof in Lecture 3, Theorem 6 (Vincent 2011).)</p>

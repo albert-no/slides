@@ -43,87 +43,87 @@
 <body>
 
 <h1>MIA 5 · LLM Membership Inference — Overview</h1>
-<p class="meta">A one-page tour of Lecture 5. For full slides see <code>mia5-llm.html</code>; for detailed walkthroughs see <code>mia5-llm-note.html</code>.</p>
+<p class="meta">One page on the closing lecture of the membership-inference series. Full slides: <code>mia5-llm.html</code> (123 slides). Assumptions, provenance of every number, and delivery notes: <code>mia5-llm-note.html</code>.</p>
 
 <div class="tldr">
-  <strong>One-line summary.</strong> The classical MIA toolkit (Lecture 4) does not transfer to LLMs because shadow-model training is infeasible and the training distribution is unknown. Lecture 5 surveys shadow-free LLM MIAs — perplexity baselines, neighbourhood comparison, self-prompted calibration, context-aware variance, and token-weighted likelihood ratios (InfoRMIA) — and the sobering benchmark evidence that pre-training MIA on open LLMs is still close to random.
+  <strong>One-line summary.</strong> Every LLM membership attack computes the same score, $s(x) = \log p_\theta(x) - \log q(x)$, and differs only in how it estimates the null $q$. A model-based signal-to-noise argument explains why the pre-training regime is intrinsically hard; the empirical record then shows that most published successes measure the benchmark's construction rather than the model, and that even a well-calibrated attack with good aggregate AUC decides individual records by something close to a coin flip.
 </div>
 
-<h2><span class="pill">§1</span> Why LLMs break the classical toolkit</h2>
+<h2><span class="pill">§1</span> Why pre-training MIA is structurally hard</h2>
+<p>A deliberately simple model — one SGD epoch, frozen gradients, a fixed initialisation — is enough to see the shape of the problem. It is a statement about the model, <em>not</em> a theorem about real LLMs.</p>
 <ul class="takeaways">
-  <li><strong>Scale.</strong> LiRA needs 64–256 shadow models. For a 7B-parameter LLM trained on a trillion tokens, this is impossible compute.</li>
-  <li><strong>Unknown training distribution.</strong> No public reference distribution exists for frontier model training mixes.</li>
-  <li><strong>One-pass training.</strong> Modern LLMs see most pre-training data once, weakening the overfitting signal Yeom-style attacks rely on.</li>
-  <li><strong>Three threat models</strong>: pre-training (hardest), fine-tuning (most tractable), context/RAG (a different problem).</li>
+  <li><strong>Effect size.</strong> One pass over $x$ lowers its loss by $\Delta(x) = \eta E\,\|g_x\|^2$.</li>
+  <li><strong>Signal to noise.</strong> With Gaussian scores, $\mathrm{AUC} = \Phi(\rho/\sqrt2)$ and $\mathrm{AUC} \approx \tfrac12 + \rho/(2\sqrt\pi)$ for small $\rho$: AUC is <em>linear</em> in the ratio near chance.</li>
+  <li><strong>Two nulls, two ceilings.</strong> Pooled: $\rho \propto \eta E$, so the signal dies with one epoch and a small step. Calibrated (per-example): $\rho = \|g_x\|^2/\sqrt{N v_x}$ — the learning rate cancels, and the ratio decays as $N^{-1/2}$.</li>
+  <li><strong>Three regimes.</strong> Pre-training (hardest), fine-tuning (tractable — see §4), context and retrieval (a different problem, where the membership hypothesis is no longer well posed).</li>
 </ul>
 
-<h2><span class="pill">§2</span> Perplexity baseline and why it fails</h2>
-<p>The natural first attack is to threshold $\text{PPL}(x) = \exp\!\left(-\frac{1}{T}\sum_t \log p_\theta(x_t \mid x_{&lt;t})\right)$ — members should have lower perplexity. The failure mode: perplexity confounds <strong>memorization</strong> with <strong>intrinsic predictability</strong>. "The cat sat on the mat" has low perplexity even if unseen; a technical sentence has high perplexity even if memorized. Every subsequent LLM MIA is some form of calibration that strips out the predictability term.</p>
+<h2><span class="pill">§2</span> Calibration is the whole subject</h2>
+<p>Fix the definition first, then read the literature as a list of estimators:</p>
+$$s(x) \;=\; \log p_\theta(x) - \log q(x), \qquad q \text{ = the null: what a model that never saw } x \text{ would assign.}$$
+<p>Under a difficulty-plus-noise model, calibration helps <strong>exactly when</strong> the null's estimation error is smaller than the difficulty spread it removes ($\sigma_\delta^2 &lt; \sigma_a^2$). A bad reference model makes an attack worse — that inequality is the reason.</p>
+<table>
+  <tr><th>Estimator of the null</th><th>How it builds $q$</th><th>What it assumes</th></tr>
+  <tr><td>Raw perplexity</td><td>Constant</td><td>Nothing (and removes nothing)</td></tr>
+  <tr><td>Reference model</td><td>A second LM's log-probability</td><td>The reference's error is smaller than the difficulty spread</td></tr>
+  <tr><td>Neighbourhood</td><td>Mask spans, refill, average</td><td>Neighbours are exchangeable with $x$ under the null</td></tr>
+  <tr><td>SPV-MIA</td><td>Reference fine-tuned on the target's own generations</td><td>Generations match the distribution, rarely reproduce records</td></tr>
+  <tr><td>Context-aware</td><td>Shape of the per-token loss curve, not its mean</td><td>Member loss falls faster and stays smoother</td></tr>
+  <tr><td>Token selection / weighting</td><td>Min-$k$% tail; InfoRMIA per-token Bayes factor</td><td>Selection changes the estimand; weighting derives it</td></tr>
+</table>
+<p>The information-theoretic identity closes the loop: averaging the log-ratio over the population gives $\log\frac{p(x\mid\theta)}{p(x)}$ plus a term that does not involve $x$. For a fixed model, the optimal ranking <em>is</em> the calibrated score with $q$ = the population marginal.</p>
 
-<h2><span class="pill">§3</span> Neighbourhood attack</h2>
-<p>Generate $K$ neighbours of $x$ by masking spans and filling with a separate reference LM. Score:</p>
-$$s(x) = \log p_\theta(x) - \frac{1}{K}\sum_k \log p_\theta(\tilde x^{(k)}).$$
-<p>If the target memorized $x$, it strongly prefers the exact wording over perturbations. <strong>No shadow training</strong> needed — practical for frozen LLMs. Weakens on highly structured text (code, math).</p>
-
-<h2><span class="pill">§4</span> SPV-MIA — self-prompted calibration</h2>
-<p>For fine-tuned models, prompt the target with a prefix of $x$ and sample $K$ continuations from the target itself. Score is the gap between the actual $x$'s log-probability and the average log-probability of the self-generated continuations. AUC ~0.85 on LLaMA fine-tuning regimes. Strong for fine-tuning, degrades to baseline on pre-training.</p>
-
-<h2><span class="pill">§5</span> Context-aware MIA</h2>
-<p>If $x$ is truly memorized, $p_\theta(x \mid c)$ should be high <em>and stable</em> across different prefixes $c$. Score is the variance of $\log p_\theta(x \mid c)$ over a set of prefixes — <strong>members have low variance</strong>. Complementary signal to perplexity: combining the two outperforms either alone.</p>
-
-<h2><span class="pill">§6</span> InfoRMIA — token-weighted likelihood ratio (SOTA)</h2>
-<p>Perplexity averages all tokens equally, but memorization signal lives in rare informative tokens. InfoRMIA weights each token by its informativeness under a reference model:</p>
-$$s(x) = \sum_t w_t \cdot \big[\log p_\theta(x_t \mid x_{&lt;t}) - \log p_{\text{ref}}(x_t \mid x_{&lt;t})\big],$$
-<p>with $w_t$ large when the reference is uncertain. This is a Monte-Carlo estimator of the mutual information $I(\mathbf{1}[z\in D]; x_t \mid x_{&lt;t})$. <strong>State of the art on WikiMIA</strong>: ~0.74 AUC, ~12% TPR at 1% FPR.</p>
-
-<h2><span class="pill">§7</span> Scaling and benchmarks</h2>
+<h2><span class="pill">§3</span> The empirical wall</h2>
 <ul class="takeaways">
-  <li><strong>Bigger models memorize more</strong> verbatim text, log-linearly with capacity (Carlini scaling laws).</li>
-  <li><strong>More duplicates → more memorization</strong> — a document appearing 100× is memorized far more reliably than one appearing once.</li>
-  <li><strong>WikiMIA</strong> (pre/post-cutoff Wikipedia): MIA AUC ~0.6–0.75 with modern attacks. Easy to construct but leaks distributional shift signal.</li>
-  <li><strong>MIMIR</strong> (known-training-set open LLMs): MIA AUC ~0.55 — pre-training detection on Pythia-scale models is barely above random with current methods. The honest benchmark.</li>
+  <li><strong>Pre-training attacks barely work.</strong> On MIMIR — seven Pile domains, members and non-members from one pool — no attack or target model exceeds AUC 0.6, except on GitHub (Duan et al., COLM 2024).</li>
+  <li><strong>Benchmarks measure their own construction.</strong> On eight published evaluation datasets, <em>blind</em> attacks that never query the model beat state-of-the-art MIAs. WikiMIA: 83.9 → 99.0 AUC blind (Das, Zhang &amp; Tramèr, DATA-FM at ICLR 2025). Date-controlled splits close the gap.</li>
+  <li><strong>Why that is a validity failure, not a success.</strong> If members and non-members come from different laws $Q_1 \ne Q_0$, the achievable advantage is $\mathrm{TV}(Q_1, Q_0)$ and it is attained <em>without the model</em>. A random split forces expected blind advantage to zero — the only sound test.</li>
+  <li><strong>Good AUC still means coin flips per record.</strong> Retraining a 302M target 127 times: LiRA reaches AUC 0.752 ± 0.007, yet about 15.4% of true positives at $10^{-3}$ FPR are statistically indistinguishable from a coin flip, and 42.2% once highly unstable records are counted (Hayes et al., NeurIPS 2025). Membership contributes $\rho^2/(\rho^2+4)$ of the score's variance — under 1% at $\rho = 0.2$.</li>
 </ul>
 
-<h2><span class="pill">§8</span> From MIA to extraction</h2>
-<p>Pipeline: prompt the model with diverse continuations → score each with an MIA detector → surface top-scoring outputs as candidate verbatim training data. Distinguish <strong>extractable</strong> (model spontaneously emits the text) from <strong>inferable</strong> (MIA can recognise it when offered). Inferable set is larger; both notions create legal obligations under regimes like GDPR.</p>
-
-<h2><span class="pill">§9</span> Defenses for LLMs</h2>
+<h2><span class="pill">§4</span> Fine-tuning, extraction, defenses</h2>
 <ul class="takeaways">
-  <li><strong>DP fine-tuning</strong>: practical, $\varepsilon \in [1, 8]$ typically costs &lt;2% accuracy, reduces SPV-MIA AUC substantially. DP pre-training at frontier scale still open.</li>
-  <li><strong>Deduplication</strong>: highest-impact, cheapest defense. Removing exact/near-duplicates cuts extractable memorization by an order of magnitude.</li>
-  <li><strong>Machine unlearning</strong>: post-hoc removal of specific documents, with MIA as the verification tool.</li>
-  <li><strong>Legal context</strong>: GDPR right to erasure, NYT v. OpenAI (2023), and ongoing litigation use MIA-style evidence — MIA is now a regulatory tool, not just research.</li>
+  <li><strong>The regime reverses.</strong> Same model, different constants: pooled signal scales with epochs $E$, calibrated signal with $\sqrt{N/N'}$. Small dataset plus many epochs moves both the right way — which is why fine-tuning attacks report the numbers pre-training attacks cannot.</li>
+  <li><strong>Extractable ⊊ inferable.</strong> Greedy extraction is a membership test with false-positive rate at most $2^{-h}$, so extraction implies inference. The converse fails: a record the model prefers but never emits is overwhelmingly inferable. Verbatim recovery is a decoding accident; membership evidence is a likelihood ratio.</li>
+  <li><strong>DP is the only guarantee.</strong> The $(\varepsilon,\delta)$ ROC cap gives $\mathrm{AUC} \le 1 - (1-\delta)^2/(2e^\varepsilon)$: 0.697 at $\varepsilon = 0.5$, 0.816 at $\varepsilon = 1$, 0.932 at $\varepsilon = 2$, 0.9998 at $\varepsilon = 8$. Large budgets forbid nothing.</li>
+  <li><strong>Everything else is a mechanism, not a bound.</strong> Deduplication removes the repeat count that acts as extra epochs; curation removes records rather than protecting them; output filters block emission and leave the likelihood interface — and hence the whole of §2 — untouched.</li>
 </ul>
+
+<h2><span class="pill">§5</span> Where the series lands</h2>
+<p>Homer's genomic attack (2008), the shadow-model paradigm (2017), the theoretical clarification (2018–2019), the per-example era (2021–2023) and the LLM era (2023–2025) are one template:</p>
+$$\text{score}(x) \;=\; \log \frac{\Pr[\text{observation} \mid x \in D]}{\Pr[\text{observation} \mid x \notin D]}.$$
+<p>What changes is the observation (allele frequencies, confidence vector, loss, logit, token sequence) and how the denominator is estimated. Optimality is Neyman–Pearson throughout; the research frontier has always been the denominator.</p>
 
 <h2>Take-home matrix</h2>
 <table>
-  <tr><th>Attack</th><th>Shadows / Ref</th><th>Calibration</th><th>Best regime</th></tr>
-  <tr><td>Perplexity</td><td>None</td><td>None</td><td>Baseline only</td></tr>
-  <tr><td>Reference-PPL</td><td>1 reference LM</td><td>Subtract ref PPL</td><td>When reference is available</td></tr>
-  <tr><td>Neighbourhood</td><td>1 mask-LM</td><td>Local perturbations</td><td>Frozen LLM, natural text</td></tr>
-  <tr><td>SPV-MIA</td><td>None (self)</td><td>Self-prompted samples</td><td>Fine-tuning detection</td></tr>
-  <tr><td>Context-aware</td><td>None</td><td>Prefix variance</td><td>Complementary signal</td></tr>
-  <tr><td>InfoRMIA</td><td>1 reference LM</td><td>Token weighting</td><td>Pre-training (SOTA)</td></tr>
+  <tr><th>Attack</th><th>Extra models</th><th>Null it estimates</th><th>Regime it was shown in</th></tr>
+  <tr><td>Perplexity</td><td>None</td><td>Constant</td><td>Baseline everywhere</td></tr>
+  <tr><td>Reference model</td><td>1 reference LM</td><td>Global difficulty</td><td>Pre-training; sensitive to reference data</td></tr>
+  <tr><td>Neighbourhood</td><td>1 mask-filling LM</td><td>Local, from $x$ itself</td><td>Natural text; weak on code and maths</td></tr>
+  <tr><td>SPV-MIA</td><td>1 self-trained reference</td><td>Target's own distribution</td><td>Fine-tuned targets only</td></tr>
+  <tr><td>Context-aware</td><td>None</td><td>Loss-curve shape</td><td>MIMIR (paper avoids WikiMIA as confounded)</td></tr>
+  <tr><td>InfoRMIA</td><td>Reference models</td><td>Population marginal</td><td>Fine-tuned classifiers and LMs; token level is a proof of concept</td></tr>
 </table>
 
 <h2>Three things to remember</h2>
 <ol>
-  <li><strong>Calibration is the entire problem.</strong> Raw perplexity confounds memorization with predictability. Every LLM MIA strips one of these out.</li>
-  <li><strong>Shadow-free or it doesn't ship.</strong> Anything requiring re-pretraining a frontier LLM is academically interesting but practically irrelevant.</li>
-  <li><strong>Honest benchmarks lower expectations.</strong> Pre-training MIA on open LLMs (MIMIR) is barely above random with current methods. Fine-tuning MIA is reliable; pre-training MIA is an open problem.</li>
+  <li><strong>One score, many nulls.</strong> Every attack in the literature is $\log p_\theta(x) - \log q(x)$; the disagreement is entirely about $q$.</li>
+  <li><strong>Check the split before the attack.</strong> A benchmark whose members and non-members differ in distribution measures that difference. Run a blind baseline first; if it wins, the evaluation is invalid, not the attack impressive.</li>
+  <li><strong>Aggregate AUC licenses no accusation.</strong> Per-record decisions are unstable even when the curve looks good, and members are the more unstable side.</li>
 </ol>
 
 <h2>Open problems</h2>
 <ul>
-  <li>Reliable pre-training MIA on frontier-scale LLMs (MIMIR baseline is ~random).</li>
-  <li>Multi-modal MIA for vision-language models.</li>
-  <li>Reference-free attacks beyond neighbourhood.</li>
-  <li>MIA in agent/RAG settings, where "training data" is a moving target.</li>
-  <li>Audit-grade DP certificates derived from MIA results.</li>
+  <li>A pre-training benchmark that is both realistic and provably unconfounded.</li>
+  <li>Per-record certificates — what would justify an accusation about one document?</li>
+  <li>Null estimation without exchangeability: code, mathematics, structured records.</li>
+  <li>Principled aggregation of token-level evidence, beyond averaging or min-$k$.</li>
+  <li>Defenses between deduplication and full DP that still bound something.</li>
+  <li>Continual training, synthetic data and retrieval, where "training data" stops being well defined.</li>
 </ul>
 
 <h2>Where this series ends</h2>
-<p>Five lectures have traced MIA from Homer's genomic attack (Lecture 1) through Shokri's shadow paradigm (Lecture 2) and the theoretical clarification (Lecture 3) to the modern per-example era (Lecture 4) and finally to LLMs (Lecture 5). The unifying claim: <strong>every optimal MIA is a likelihood-ratio test</strong>; what changes across settings is how the null and alternative distributions are calibrated. The frontier is shadow-free calibration at LLM scale, and the next frontier is per-example DP audits derived from those attacks.</p>
+<p>The series began with a genomic attack that needed no machine learning and ends with attacks on models too large to retrain. The constant is the likelihood ratio; the difficulty is always the denominator. The honest closing position: <strong>fine-tuning membership inference is real, pre-training membership inference is unresolved, and most published evidence to the contrary is a property of the benchmark</strong>. The methodological lesson — audit the split before you believe the curve — outlives any particular attack.</p>
 
 </body>
 </html>

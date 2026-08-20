@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Speaker Notes &mdash; LLM Watermarking</title>
+<link rel="stylesheet" href="../../../../reference/katex/katex.min.css">
+<script defer src="../../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  :root{
+    --blue:#003876; --ink:#1a1a1a; --muted:#5a6473; --light:#f3f5f8;
+    --slate:#dde3ea; --accent:#003876;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;
+    color:var(--ink); line-height:1.6; margin:0; background:#fff;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:56px 28px 120px;}
+  header.doc{border-bottom:3px solid var(--blue); padding-bottom:22px; margin-bottom:14px;}
+  header.doc .kicker{color:var(--blue); font-weight:700; letter-spacing:.08em; text-transform:uppercase; font-size:.72rem;}
+  header.doc h1{font-size:2rem; line-height:1.2; margin:.35rem 0 .5rem; color:var(--blue);}
+  header.doc p{color:var(--muted); margin:.2rem 0; font-size:.95rem;}
+  .toc{background:var(--light); border-radius:10px; padding:18px 24px; margin:24px 0 40px; font-size:.9rem;}
+  .toc h2{font-size:.8rem; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin:0 0 10px;}
+  .toc ol{margin:0; padding-left:1.4em; columns:2; column-gap:34px;}
+  .toc li{margin:2px 0; break-inside:avoid;}
+  .toc a{color:var(--ink); text-decoration:none;}
+  .toc a:hover{color:var(--blue); text-decoration:underline;}
+  .slide-note{margin:0 0 38px; padding-top:8px; border-top:1px solid var(--slate);}
+  .slide-note:first-of-type{border-top:none;}
+  .snum{display:inline-block; background:var(--blue); color:#fff; font-weight:700; font-size:.78rem;
+    border-radius:6px; padding:3px 10px; margin-bottom:8px; letter-spacing:.03em;}
+  .stag{display:inline-block; color:var(--muted); font-size:.72rem; text-transform:uppercase;
+    letter-spacing:.07em; margin-left:8px; vertical-align:middle;}
+  .slide-note h3{color:var(--blue); font-size:1.28rem; margin:.1rem 0 .6rem; line-height:1.25;}
+  .slide-note p{margin:.55rem 0;}
+  .slide-note ul{margin:.5rem 0; padding-left:1.3em;}
+  .slide-note li{margin:.32rem 0;}
+  .say{background:#fbfcfe; border-left:3px solid var(--blue); padding:12px 18px; border-radius:0 8px 8px 0; margin:14px 0;}
+  .say::before{content:"Say it like this"; display:block; font-size:.68rem; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--blue); font-weight:700; margin-bottom:5px;}
+  .say p{margin:.3rem 0; font-style:italic; color:#33404f;}
+  .board{background:var(--light); border-radius:8px; padding:12px 18px; margin:14px 0; font-size:.92rem;}
+  .board::before{content:"On the board / derivation"; display:block; font-size:.68rem; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--muted); font-weight:700; margin-bottom:6px;}
+  .ask{border:1px dashed var(--slate); border-radius:8px; padding:10px 16px; margin:14px 0; font-size:.9rem;}
+  .ask::before{content:"Anticipated question"; display:block; font-size:.68rem; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--muted); font-weight:700; margin-bottom:5px;}
+  .key{font-weight:600; color:var(--blue);}
+  strong{color:#11203a;}
+  code{background:var(--light); padding:1px 5px; border-radius:4px; font-size:.88em;}
+  .timing{float:right; color:var(--muted); font-size:.78rem; font-weight:500; margin-top:6px;}
+  hr.sec{border:none; border-top:2px solid var(--blue); margin:46px 0 30px; opacity:.5;}
+  .sec-label{color:var(--blue); font-weight:700; letter-spacing:.05em; font-size:1rem; margin:0 0 4px;}
+  @media print{
+    .wrap{max-width:none; padding:0 12mm;}
+    .slide-note{break-inside:avoid;}
+    a{color:var(--ink); text-decoration:none;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc">
+  <div class="kicker">Privacy series &middot; Lecture 06</div>
+  <h1>LLM Watermarking &mdash; Speaker Notes</h1>
+  <p>Companion to <code>watermark.html</code>. One entry per slide, ids <code>#s1</code>&hellip;<code>#sN</code> matching slide numbers.</p>
+  <p>Detection as a hypothesis test &middot; green-list &middot; distortion-free &middot; undetectable &middot; limits &middot; robustness &middot; beyond standard LLMs</p>
+</header>
+
+<div class="toc">
+  <h2>Slides</h2>
+  <ol>
+    <li><a href="#s1">LLM Watermarking</a></li>
+    <li><a href="#s2">Contents</a></li>
+    <li><a href="#s3">Detection Is a Hypothesis Test</a></li>
+    <li><a href="#s4">The Central Question</a></li>
+    <li><a href="#s5">Why Anyone Wants This</a></li>
+    <li><a href="#s6">Two Adversaries, Two Errors</a></li>
+    <li><a href="#s7">Three Design Goals</a></li>
+    <li><a href="#s8">Recall &mdash; Optimal Detection</a></li>
+    <li><a href="#s9">The Frame for the Whole Lecture</a></li>
+    <li><a href="#s10">What a Detector Must Report</a></li>
+    <li><a href="#s11">Roadmap</a></li>
+    <li><a href="#s12">The Green-List Watermark</a></li>
+    <li><a href="#s13">The Core Idea &mdash; Tilt Toward Green</a></li>
+    <li><a href="#s14">Setup and Notation</a></li>
+    <li><a href="#s15">Watermarked Sampling &mdash; The $\delta$-Tilt</a></li>
+    <li><a href="#s16">What the Tilt Does</a></li>
+    <li><a href="#s17">Proposition 1 &mdash; Green Mass After the Tilt</a></li>
+    <li><a href="#s18">Proof of Proposition 1</a></li>
+    <li><a href="#s19">The Detection Statistic</a></li>
+    <li><a href="#s20">The Null Hypothesis, Stated Precisely</a></li>
+    <li><a href="#s21">Theorem 2 &mdash; Why $z$ Is Standard Normal</a></li>
+    <li><a href="#s22">Proof of Theorem 2</a></li>
+    <li><a href="#s23">When the Null Fails</a></li>
+    <li><a href="#s24">The $z$-Test Is Not Optimal</a></li>
+    <li><a href="#s25">Definition 3 &mdash; Spike Entropy</a></li>
+    <li><a href="#s26">Spike Entropy &mdash; The Two Extremes</a></li>
+    <li><a href="#s27">Theorem 4 &mdash; Detection Power from Entropy</a></li>
+    <li><a href="#s28">Proof of Theorem 4 &mdash; Outline</a></li>
+    <li><a href="#s29">Proof &mdash; Steps 1 and 2</a></li>
+    <li><a href="#s30">Proof &mdash; Step 3</a></li>
+    <li><a href="#s31">Proof &mdash; Step 4</a></li>
+    <li><a href="#s32">Reading the Bound</a></li>
+    <li><a href="#s33">Measured Power vs Length</a></li>
+    <li><a href="#s34">Low-Entropy Text Is Unwatermarkable</a></li>
+    <li><a href="#s35">Theorem 5 &mdash; The Quality Cost</a></li>
+    <li><a href="#s36">Proof of Theorem 5</a></li>
+    <li><a href="#s37">Green-List Is Not Distortion-Free</a></li>
+    <li><a href="#s38">The One Knob: $\delta$</a></li>
+    <li><a href="#s39">Section 03 &mdash; Distortion-Free Sampling</a></li>
+    <li><a href="#s40">What Would "Free" Mean?</a></li>
+    <li><a href="#s41">Recall &mdash; The Gumbel Distribution</a></li>
+    <li><a href="#s42">Theorem 6 &mdash; The Gumbel-Max Trick</a></li>
+    <li><a href="#s43">Proof of Theorem 6 &mdash; Outline</a></li>
+    <li><a href="#s44">Proof &mdash; Step 1</a></li>
+    <li><a href="#s45">Proof &mdash; Steps 2 and 3</a></li>
+    <li><a href="#s46">Corollary &mdash; The Max Carries No Information</a></li>
+    <li><a href="#s47">Three Faces of One Sampler</a></li>
+    <li><a href="#s48">The Picture</a></li>
+    <li><a href="#s49">Alternative Proof &mdash; Exponential Minimum</a></li>
+    <li><a href="#s50">Aaronson's Rule</a></li>
+    <li><a href="#s51">Proposition 7 &mdash; Aaronson $\equiv$ Gumbel-Max</a></li>
+    <li><a href="#s52">Definition 8 &mdash; Distortion-Free</a></li>
+    <li><a href="#s53">Theorem 9 &mdash; Exponential Minimum Is Distortion-Free</a></li>
+    <li><a href="#s54">What Distortion-Free Does <em>Not</em> Say</a></li>
+    <li><a href="#s55">The Fine Print: One Key, Many Calls</a></li>
+    <li><a href="#s56">Kuditipudi &mdash; Inverse Transform Sampling</a></li>
+    <li><a href="#s57">Theorem 10 &mdash; ITS Is Distortion-Free</a></li>
+    <li><a href="#s58">Detection Without the Model</a></li>
+    <li><a href="#s59">The p-Value Is a Permutation Test</a></li>
+    <li><a href="#s60">Lemma 11 &mdash; Why the Cost Separates</a></li>
+    <li><a href="#s61">Definition 12 &mdash; Watermark Potential</a></li>
+    <li><a href="#s62">Lemma 13 &mdash; The Clean p-Value Bound</a></li>
+    <li><a href="#s63">Definition 14 &mdash; Cost Under Edits</a></li>
+    <li><a href="#s64">Lemma 15 &mdash; Edit-Distance Robustness</a></li>
+    <li><a href="#s65">Reading Lemma 15 Honestly</a></li>
+    <li><a href="#s66">What Actually Survives</a></li>
+    <li><a href="#s67">Definition 16 &mdash; Unbiased Reweighting</a></li>
+    <li><a href="#s68">Two Unbiased Reweightings</a></li>
+    <li><a href="#s69">Theorem 18 &mdash; From One Token to a Sequence</a></li>
+    <li><a href="#s70">Section 04 &mdash; Undetectability</a></li>
+    <li><a href="#s71">Recall &mdash; Indistinguishability and Post-Processing</a></li>
+    <li><a href="#s72">Definition 19 &mdash; A Watermarking Scheme</a></li>
+    <li><a href="#s73">Definition 20 &mdash; Empirical Entropy</a></li>
+    <li><a href="#s74">Definitions 21&ndash;22 &mdash; Sound and Complete</a></li>
+    <li><a href="#s75">Why Completeness Must Be Conditional</a></li>
+    <li><a href="#s76">Definition 24 &mdash; Undetectable</a></li>
+    <li><a href="#s77">Distortion-Free $\ne$ Undetectable</a></li>
+    <li><a href="#s78">Separating the Two Notions</a></li>
+    <li><a href="#s79">Warm-Up Construction</a></li>
+    <li><a href="#s80">Why It Needs Min-Entropy</a></li>
+    <li><a href="#s81">Removing the Min-Entropy Assumption</a></li>
+    <li><a href="#s82">Theorem 25 &mdash; The Warm-Up, With a PRF</a></li>
+    <li><a href="#s83">The Efficient Scheme, One Bit at a Time</a></li>
+    <li><a href="#s84">The Detection Score</a></li>
+    <li><a href="#s85">Proposition 26 &mdash; The Score Gap Is Entropy</a></li>
+    <li><a href="#s86">Proof of Proposition 26</a></li>
+    <li><a href="#s87">From One Response to Many</a></li>
+    <li><a href="#s88">Theorems 27&ndash;28 &mdash; The Main Results</a></li>
+    <li><a href="#s89">Section 05 &mdash; Limits and Impossibility</a></li>
+    <li><a href="#s90">Lemma 29 &mdash; Model Entropy Is the Wrong Quantity</a></li>
+    <li><a href="#s91">Theorem 30 &mdash; Low Empirical Entropy Cannot Be Watermarked</a></li>
+    <li><a href="#s92">Lemma 31 &mdash; Undetectability Is Only Computational</a></li>
+    <li><a href="#s93">Lemma 32 &mdash; The Distortion-Free Impossibility</a></li>
+    <li><a href="#s94">The Wall, Measured</a></li>
+    <li><a href="#s95">Proposition 33 &mdash; Detection Costs Distortion</a></li>
+    <li><a href="#s96">Proof of Proposition 33</a></li>
+    <li><a href="#s97">Reading the Tradeoff</a></li>
+    <li><a href="#s98">Theorem 34 &mdash; Undetectable Implies Removable</a></li>
+    <li><a href="#s99">The Three-Way Tension</a></li>
+    <li><a href="#s100">Section 06 &mdash; Robustness and Semantics</a></li>
+    <li><a href="#s101">The Attack Surface</a></li>
+    <li><a href="#s102">What Paraphrase Actually Costs</a></li>
+    <li><a href="#s103">Fix the Green List</a></li>
+    <li><a href="#s104">Theorem 35 &mdash; R&eacute;nyi Bound on the Tilt</a></li>
+    <li><a href="#s105">Theorem 36 &mdash; Power and Its Assumptions</a></li>
+    <li><a href="#s106">Theorem 37 &mdash; Surviving $\eta$ Edits</a></li>
+    <li><a href="#s107">Proof of Theorem 37</a></li>
+    <li><a href="#s108">Three Ways to Make the Signal Survive</a></li>
+    <li><a href="#s109">Adaptive $\delta_t$</a></li>
+    <li><a href="#s110">Reading a Robustness Table Honestly</a></li>
+    <li><a href="#s111">Section 07 &mdash; Beyond Standard LLMs</a></li>
+    <li><a href="#s112">Radioactivity</a></li>
+    <li><a href="#s113">De-duplication Buys Back the Null</a></li>
+    <li><a href="#s114">Why This Is a Membership-Inference Result</a></li>
+    <li><a href="#s115">How Little Watermarked Data Is Enough</a></li>
+    <li><a href="#s116">Tournament Sampling</a></li>
+    <li><a href="#s117">Score and the Non-Distortion Hierarchy</a></li>
+    <li><a href="#s118">When There Is No Previous Token</a></li>
+    <li><a href="#s119">dgMARK</a></li>
+    <li><a href="#s120">dgMARK Detection</a></li>
+    <li><a href="#s121">Open Problems</a></li>
+    <li><a href="#s122">Takeaways</a></li>
+    <li><a href="#s123">Q&amp;A</a></li>
+  </ol>
+</div>
+
+<hr class="sec">
+<p class="sec-label">Front matter</p>
+
+<div class="slide-note" id="s1">
+  <span class="snum">Slide 1</span><span class="stag">Title</span>
+  <span class="timing">~0:00</span>
+  <h3>LLM Watermarking</h3>
+  <p>Frame the lecture in one sentence before the contents slide: this is the provenance direction of the course, and unlike memorization or membership inference, here <strong>we control the generator</strong>.</p>
+  <div class="say"><p>"Everything so far has been about reading a signal out of a model somebody else trained. Today we plant the signal ourselves, and the question becomes how strong a statistical claim we can buy, and what it costs."</p></div>
+</div>
+
+<div class="slide-note" id="s2">
+  <span class="snum">Slide 2</span><span class="stag">Contents</span>
+  <span class="timing">~0:02</span>
+  <h3>Contents</h3>
+  <p>Seven sections. Point out that 01 is a framing section, 02&ndash;04 are three increasingly strong quality guarantees (biased, distortion-free, undetectable), 05 is where the guarantees break, and 06&ndash;07 are practice.</p>
+  <div class="ask"><p><em>"Is this the same as the AI-detector tools schools use?"</em> &mdash; No. Those are post-hoc classifiers with no calibrated false-positive rate. Say we will return to why that distinction is the whole lecture.</p></div>
+</div>
+
+<hr class="sec">
+<p class="sec-label">01 &mdash; Detection is a hypothesis test</p>
+
+<div class="slide-note" id="s3">
+  <span class="snum">Slide 3</span><span class="stag">Section divider 01</span>
+  <span class="timing">~0:04</span>
+  <h3>Detection Is a Hypothesis Test</h3>
+  <p>The organising claim of the deck. Every scheme in Sections 02&ndash;07 is a way of increasing the separation between two distributions, and every attack is a way of shrinking it.</p>
+</div>
+
+<div class="slide-note" id="s4">
+  <span class="snum">Slide 4</span><span class="stag">Motivation</span>
+  <span class="timing">~0:05</span>
+  <h3>The Central Question</h3>
+  <p>Contrast post-hoc detection with watermarking. The decisive difference is not accuracy, it is <span class="key">calibration</span>: a watermark detector has a null distribution you can compute in closed form, so it can quote a p-value.</p>
+  <div class="say"><p>"A classifier that is 99% accurate tells you nothing about the one person you are about to accuse. A p-value of ten-to-the-minus-six does."</p></div>
+</div>
+
+<div class="slide-note" id="s5">
+  <span class="snum">Slide 5</span><span class="stag">Motivation</span>
+  <span class="timing">~0:07</span>
+  <h3>Why Anyone Wants This</h3>
+  <p>Four use cases. Flag that the last two &mdash; keeping synthetic text out of the next corpus, and catching distillation &mdash; require detecting the watermark <em>after it has passed through training</em>. That is radioactivity, Section 07.</p>
+</div>
+
+<div class="slide-note" id="s6">
+  <span class="snum">Slide 6</span><span class="stag">Threat model</span>
+  <span class="timing">~0:09</span>
+  <h3>Two Adversaries, Two Errors</h3>
+  <p>Removal raises type II, spoofing raises type I. Students usually only think about removal; spoofing is the reason schemes are keyed and why publishing the detector is dangerous.</p>
+  <div class="board"><p>Write the 2&times;2 confusion table once and label the two attacks as arrows into the two off-diagonal cells.</p></div>
+</div>
+
+<div class="slide-note" id="s7">
+  <span class="snum">Slide 7</span><span class="stag">Goals</span>
+  <span class="timing">~0:11</span>
+  <h3>Three Design Goals</h3>
+  <p>Detectable, quality-preserving, robust. Promise explicitly that Section 05 will show the three cannot be had simultaneously in the strong forms, and that the deck is organised by which one you relax.</p>
+</div>
+
+<div class="slide-note" id="s8">
+  <span class="snum">Slide 8</span><span class="stag">Recall</span>
+  <span class="timing">~0:13</span>
+  <h3>Recall &mdash; Optimal Detection</h3>
+  <p>Self-contained recall card: total variation is the best achievable advantage, and Neyman&ndash;Pearson says the optimal test thresholds the likelihood ratio. Do not re-derive; just re-anchor.</p>
+  <div class="say"><p>"We proved both of these when we did membership inference. I am restating them because watermark detection is the same game with different players: $P_1$ and $P_0$ are now induced by a secret key instead of by training-set membership."</p></div>
+</div>
+
+<div class="slide-note" id="s9">
+  <span class="snum">Slide 9</span><span class="stag">Figure &middot; framing</span>
+  <span class="timing">~0:15</span>
+  <h3>The Frame for the Whole Lecture</h3>
+  <p>Two binomial-shaped densities, a threshold, shaded FPR and TPR. Every later result moves one of these curves. Point at the overlap and say the overlap <em>is</em> the residual entropy of the text.</p>
+  <div class="ask"><p><em>"Why binomial and not Gaussian?"</em> &mdash; It is binomial exactly, Gaussian asymptotically; Theorem 2 makes that precise, including the rate.</p></div>
+</div>
+
+<div class="slide-note" id="s10">
+  <span class="snum">Slide 10</span><span class="stag">Methodology</span>
+  <span class="timing">~0:17</span>
+  <h3>What a Detector Must Report</h3>
+  <p>Size, power, p-value. Repeat the low-FPR lesson from the membership-inference lectures: average accuracy and AUC hide exactly the regime that matters for accusation.</p>
+</div>
+
+<div class="slide-note" id="s11">
+  <span class="snum">Slide 11</span><span class="stag">Roadmap</span>
+  <span class="timing">~0:19</span>
+  <h3>Roadmap</h3>
+  <p>Four questions map to Sections 02&ndash;05. If time is short, Sections 06&ndash;07 can be compressed to their figure slides.</p>
+</div>
+
+<hr class="sec">
+<p class="sec-label">02 &mdash; The green-list watermark</p>
+
+<div class="slide-note" id="s12">
+  <span class="snum">Slide 12</span><span class="stag">Section divider 02</span>
+  <span class="timing">~0:21</span>
+  <h3>The Green-List Watermark</h3>
+  <p>The scheme everyone means when they say "LLM watermark". Announce the plan: rule, statistic, null, power theorem, cost theorem.</p>
+</div>
+
+<div class="slide-note" id="s13">
+  <span class="snum">Slide 13</span><span class="stag">Intuition</span>
+  <span class="timing">~0:22</span>
+  <h3>The Core Idea &mdash; Tilt Toward Green</h3>
+  <p>Use the coloured token strip. The essential point is that the partition is <strong>re-drawn every step</strong> from the preceding context, so there is no fixed set of banned words to discover.</p>
+  <div class="say"><p>"A human writing this sentence has no idea which half of the dictionary is green at each position, so on average they hit green half the time. The model hits it more. That gap is the entire watermark."</p></div>
+</div>
+
+<div class="slide-note" id="s14">
+  <span class="snum">Slide 14</span><span class="stag">Setup</span>
+  <span class="timing">~0:24</span>
+  <h3>Setup and Notation</h3>
+  <p>Fix $N$, $\gamma$, $\delta$, $\alpha = e^\delta$, window $h$. Warn that $\alpha$ will appear in every bound in this section.</p>
+</div>
+
+<div class="slide-note" id="s15">
+  <span class="snum">Slide 15</span><span class="stag">Definition</span>
+  <span class="timing">~0:26</span>
+  <h3>Watermarked Sampling &mdash; The $\delta$-Tilt</h3>
+  <p>Show both forms: logit shift and multiplicative tilt. The second equality is just factoring $e^{\delta \mathbb{1}[\cdot]}$ out of the softmax.</p>
+  <div class="board"><p>$\hat p(v) \propto \alpha^{\mathbb{1}[v \in G]} p(v)$ &mdash; write it this way and the rest of the section is algebra on a one-parameter exponential family.</p></div>
+</div>
+
+<div class="slide-note" id="s16">
+  <span class="snum">Slide 16</span><span class="stag">Figure</span>
+  <span class="timing">~0:28</span>
+  <h3>What the Tilt Does</h3>
+  <p>Bar chart before and after. Emphasise the near-deterministic case: if one bar already has mass 0.99, multiplying the others by $\alpha$ changes almost nothing. That is the seed of Theorem 4 and of the impossibility results.</p>
+</div>
+
+<div class="slide-note" id="s17">
+  <span class="snum">Slide 17</span><span class="stag">Proposition 1</span>
+  <span class="timing">~0:30</span>
+  <h3>Proposition 1 &mdash; Green Mass After the Tilt</h3>
+  <p>State the Möbius map $\varphi_\alpha(g) = \alpha g/(1+(\alpha-1)g)$. Note the fixed points at 0 and 1: the tilt cannot create green mass out of nothing, and cannot exceed certainty.</p>
+</div>
+
+<div class="slide-note" id="s18">
+  <span class="snum">Slide 18</span><span class="stag">Proof</span>
+  <span class="timing">~0:32</span>
+  <h3>Proof of Proposition 1</h3>
+  <p>Three lines. Do it on the board rather than reading the slide; the only trick is splitting the normalizer into green and red and using $\sum_R p = 1-g$.</p>
+  <div class="board"><p>$\hat g - g = \dfrac{g(1-g)(\alpha-1)}{1+(\alpha-1)g}$ &mdash; the gain is largest at $g \approx 1/2$ and vanishes at both ends.</p></div>
+</div>
+
+<div class="slide-note" id="s19">
+  <span class="snum">Slide 19</span><span class="stag">Definition</span>
+  <span class="timing">~0:34</span>
+  <h3>The Detection Statistic</h3>
+  <p>Stress what the detector does <em>not</em> need: no model forward pass, no prompt, no logits. Only the key and the text. This is why it is deployable at platform scale, and it is also exactly why it is suboptimal (slide 24).</p>
+</div>
+
+<div class="slide-note" id="s20">
+  <span class="snum">Slide 20</span><span class="stag">Hypothesis</span>
+  <span class="timing">~0:36</span>
+  <h3>The Null Hypothesis, Stated Precisely</h3>
+  <p>Quote the paper's $H_0$ verbatim, then give the operational version: independent Bernoulli$(\gamma)$ indicators. Make students say out loud what independence requires &mdash; distinct seeding contexts.</p>
+  <div class="ask"><p><em>"Independent of what randomness?"</em> &mdash; Over the key. For fixed key and fixed text everything is deterministic; the null is a statement about the PRF output being unpredictable to someone who did not use it.</p></div>
+</div>
+
+<div class="slide-note" id="s21">
+  <span class="snum">Slide 21</span><span class="stag">Theorem 2</span>
+  <span class="timing">~0:38</span>
+  <h3>Theorem 2 &mdash; Why $z$ Is Standard Normal</h3>
+  <p>CLT plus a Berry&ndash;Esseen rate. The rate is not decoration: a claimed p-value of $10^{-6}$ sits far in the tail, where a $O(T^{-1/2})$ uniform error can dominate the quantity being reported.</p>
+</div>
+
+<div class="slide-note" id="s22">
+  <span class="snum">Slide 22</span><span class="stag">Proof</span>
+  <span class="timing">~0:40</span>
+  <h3>Proof of Theorem 2</h3>
+  <p>Moments, Lindeberg&ndash;Lévy, Berry&ndash;Esseen. Highlight the $\gamma \to 0$ blow-up of $\rho$: aggressive small green lists give a bigger per-token signal but a worse Gaussian approximation.</p>
+  <div class="say"><p>"Small $\gamma$ is a coin that lands heads rarely. It carries more information per success, and it takes longer before you may pretend it is a Gaussian."</p></div>
+</div>
+
+<div class="slide-note" id="s23">
+  <span class="snum">Slide 23</span><span class="stag">Caveat</span>
+  <span class="timing">~0:42</span>
+  <h3>When the Null Fails</h3>
+  <p>Pseudorandom, not random. Repeated $n$-grams reuse the same green list, so indicators correlate and the false-positive guarantee evaporates. Both remedies are in the original paper; the de-duplication remedy returns as a theorem in Section 07.</p>
+</div>
+
+<div class="slide-note" id="s24">
+  <span class="snum">Slide 24</span><span class="stag">Optimality</span>
+  <span class="timing">~0:44</span>
+  <h3>The $z$-Test Is Not Optimal</h3>
+  <p>Connect back to the recall card on slide 8. The LRT would weight each token by its own likelihood ratio, which requires $p^{(t)}$ at detection time. The $z$-test is a deliberate trade of power for deployability.</p>
+  <div class="board"><p>$\log \Lambda = \sum_t \log \dfrac{\hat p^{(t)}(x_t)}{p^{(t)}(x_t)} = \sum_t \big(\delta \mathbb{1}[x_t \in G_t] - \log Z_t\big)$ &mdash; note it is a <em>weighted</em> green count, with weights $-\log Z_t$ that the $z$-test throws away.</p></div>
+</div>
+
+<div class="slide-note" id="s25">
+  <span class="snum">Slide 25</span><span class="stag">Definition 3</span>
+  <span class="timing">~0:46</span>
+  <h3>Definition 3 &mdash; Spike Entropy</h3>
+  <p>Not Shannon entropy. It is a soft count of coordinates above $1/z$; the modulus $z$ chooses the resolution. Introduce it as "the entropy notion that happens to make the next proof work".</p>
+</div>
+
+<div class="slide-note" id="s26">
+  <span class="snum">Slide 26</span><span class="stag">Bounds</span>
+  <span class="timing">~0:48</span>
+  <h3>Spike Entropy &mdash; The Two Extremes</h3>
+  <p>Concave and symmetric on the simplex, so max at the centre and min at a vertex. The vertex value $1/(1+z)$ is the number to remember: it is the entropy floor that Section 05 turns into an impossibility statement.</p>
+</div>
+
+<div class="slide-note" id="s27">
+  <span class="snum">Slide 27</span><span class="stag">Theorem 4</span>
+  <span class="timing">~0:50</span>
+  <h3>Theorem 4 &mdash; Detection Power from Entropy</h3>
+  <p>The central quantitative result of Section 02. Read the modulus $z^\star$ aloud and note it is determined by $\delta$ and $\gamma$ alone. Mean <em>and</em> variance are both controlled, which is what makes the $z$-test usable.</p>
+</div>
+
+<div class="slide-note" id="s28">
+  <span class="snum">Slide 28</span><span class="stag">Proof outline</span>
+  <span class="timing">~0:52</span>
+  <h3>Proof of Theorem 4 &mdash; Outline</h3>
+  <p>Four steps. The move worth naming is step 2: Jensen applied in the <em>lower</em> direction, exploiting convexity in the coordinates other than $k$ together with permutation symmetry.</p>
+  <div class="say"><p>"We are allowed to replace all the other coordinates by their average, and that only makes the bound weaker &mdash; which is exactly what a lower bound is allowed to do."</p></div>
+</div>
+
+<div class="slide-note" id="s29">
+  <span class="snum">Slide 29</span><span class="stag">Proof</span>
+  <span class="timing">~0:54</span>
+  <h3>Proof &mdash; Steps 1 and 2</h3>
+  <p>Define $f_k$, note symmetry and convexity in $p_{-k}$, flatten. Students should check that $\bar p_i = (1-p_k)/(N-1)$ is a probability vector.</p>
+</div>
+
+<div class="slide-note" id="s30">
+  <span class="snum">Slide 30</span><span class="stag">Proof</span>
+  <span class="timing">~0:56</span>
+  <h3>Proof &mdash; Step 3</h3>
+  <p>Pure algebra. The single non-obvious inequality is dropping $-\alpha$ from numerator and denominator, valid because the fraction exceeds one. Then divide by $1+(\alpha-1)\gamma$ and the spike-entropy summand appears.</p>
+</div>
+
+<div class="slide-note" id="s31">
+  <span class="snum">Slide 31</span><span class="stag">Proof</span>
+  <span class="timing">~0:58</span>
+  <h3>Proof &mdash; Step 4</h3>
+  <p>Average over $k$, multiply by $|G| = \gamma N$, sum over $t$. Variance: independent but non-identical Bernoullis, variances add.</p>
+</div>
+
+<div class="slide-note" id="s32">
+  <span class="snum">Slide 32</span><span class="stag">Numbers</span>
+  <span class="timing">~1:00</span>
+  <h3>Reading the Bound</h3>
+  <p>Two clean specialisations plus the paper's own worked example. All numbers on this slide are from Section 4.1 of the ICML paper; do not paraphrase them upward.</p>
+</div>
+
+<div class="slide-note" id="s33">
+  <span class="snum">Slide 33</span><span class="stag">Real figure</span>
+  <span class="timing">~1:02</span>
+  <h3>Measured Power vs Length</h3>
+  <p>Figure 3(b) of the original paper, $\gamma = 0.25$. Ask the room to read off the $\sqrt{T}$ growth and the $\delta$ ordering before you say it.</p>
+</div>
+
+<div class="slide-note" id="s34">
+  <span class="snum">Slide 34</span><span class="stag">Limit</span>
+  <span class="timing">~1:04</span>
+  <h3>Low-Entropy Text Is Unwatermarkable</h3>
+  <p>The curve hits chance level at zero entropy. Give the paper's own examples: a memorized quotation, a for-loop, a formatted date. Note that memorization and unwatermarkability are the same phenomenon seen from two sides.</p>
+  <div class="ask"><p><em>"Can we not just raise $\delta$?"</em> &mdash; No: at zero entropy $\varphi_\alpha(g)$ has $g \in \{0,1\}$, both fixed points. Slide 18 already proved the gain is $g(1-g)$-shaped.</p></div>
+</div>
+
+<div class="slide-note" id="s35">
+  <span class="snum">Slide 35</span><span class="stag">Theorem 5</span>
+  <span class="timing">~1:06</span>
+  <h3>Theorem 5 &mdash; The Quality Cost</h3>
+  <p>Read the bound as: the expected cross-entropy of the tilted sampler against the raw model &mdash; i.e. log-perplexity &mdash; is at most $\beta$ times the raw entropy. Two sanity checks worth saying aloud. $\delta = 0$ gives $\beta = 1$ and equality. $H(p) = 0$ gives cost $0$, which is the previous slide's "unwatermarkable" claim seen from the quality side: no freedom, no damage, no signal.</p>
+  <div class="ask"><p><em>"Is $\beta H(p)$ tight?"</em> &mdash; No. At $\gamma \to 1$ every token is green, the tilt cancels, and the truth is $H(p)$ while the bound gives $\alpha H(p)$. It holds uniformly over entropy levels; it is not sharp.</p></div>
+</div>
+
+<div class="slide-note" id="s36">
+  <span class="snum">Slide 36</span><span class="stag">Erratum</span>
+  <span class="timing">~1:08</span>
+  <h3>Proof of Theorem 5 &mdash; and a correction to the paper</h3>
+  <p><strong>The published statement has its inequality reversed.</strong> Kirchenbauer et al. print, as their Theorem 4.3, $\mathbb{E}_{G,R}\sum_k \hat p_k \ln p_k \le \beta P^\star$ with $P^\star = \sum_k p_k \ln p_k$, described as "the perplexity of the original model". But $P^\star = -H(p) \le 0$ and $\beta \ge 1$, so $\beta P^\star \le P^\star$: as printed, the theorem asserts that watermarking drives log-perplexity <em>up to at least</em> $\beta H(p)$ &mdash; a lower bound on the damage, the opposite of what the surrounding prose promises.</p>
+  <p>Their Appendix F derives the pointwise bound $\mathbb{E}[\hat p_k] \le \beta p_k$ correctly. The last line then multiplies it through by $\ln p_k$, which is negative, without flipping the sense. Flipping it gives $\mathbb{E}\sum_k \hat p_k \ln p_k \ge \beta P^\star$, equivalently the slide's $\mathbb{E}\big[-\sum_k \hat p_k \ln p_k\big] \le \beta H(p)$ &mdash; a real upper bound, and exactly the statement the paper's own text describes when it says a minimal-entropy step suffers no perplexity impact.</p>
+  <p class="muted">Two smaller slips in the same appendix, neither affecting the corrected result: Eq. (11) carries $\alpha p_k$ in the numerator for both colours, where the red-list term should be $p_k$ &mdash; which is what their own $(1-\gamma)p_k$ bound actually uses; and $\hat p_k$ is defined as an expectation and then has $\mathbb{E}_{G,R}$ applied to it a second time.</p>
+  <div class="say"><p>"The proof is two lines, and the second line is where the paper slips. Watch the sign of $\ln p_k$."</p></div>
+</div>
+
+<div class="slide-note" id="s37">
+  <span class="snum">Slide 37</span><span class="stag">Consequence</span>
+  <span class="timing">~1:08</span>
+  <h3>Green-List Is Not Distortion-Free</h3>
+  <p>The transition slide into Section 03. Averaging over the key does not undo the tilt, because $\varphi_\alpha(g) &gt; g$ pointwise. So the marginal distribution really moved.</p>
+  <div class="say"><p>"So we paid for detectability with distribution. The obvious question is whether the payment was necessary &mdash; and the answer, surprisingly, is no."</p></div>
+</div>
+
+<div class="slide-note" id="s38">
+  <span class="snum">Slide 38</span><span class="stag">Real figure</span>
+  <span class="timing">~1:10</span>
+  <h3>The One Knob: $\delta$</h3>
+  <p>Figure 2 (left) of the ICML paper: $z$-score against oracle-model perplexity. Markers are $\delta$, colours are $\gamma$. The curve is the frontier that Section 06's quality-first decoders try to beat.</p>
+</div>
+
+<hr class="sec">
+<p class="sec-label">03 &mdash; Distortion-free sampling</p>
+
+<div class="slide-note" id="s39">
+  <span class="snum">Slide 39</span><span class="stag">Divider</span>
+  <span class="timing">~1:12</span>
+  <h3>Section 03 &mdash; Distortion-Free Sampling</h3>
+  <p>Pause here. The section answers one question: can we get the detection signal without moving the output distribution at all?</p>
+</div>
+
+<div class="slide-note" id="s40">
+  <span class="snum">Slide 40</span><span class="stag">Motivation</span>
+  <span class="timing">~1:13</span>
+  <h3>What Would "Free" Mean?</h3>
+  <p>The sampler consumes randomness anyway. If we replace true randomness with pseudorandomness derived from a secret key, the marginal law is unchanged but the output becomes a function of the key.</p>
+  <div class="say"><p>"Nothing about the distribution changes. What changes is <em>which</em> of the equally likely continuations you get &mdash; and that choice is a signature."</p></div>
+</div>
+
+<div class="slide-note" id="s41">
+  <span class="snum">Slide 41</span><span class="stag">Recall</span>
+  <span class="timing">~1:15</span>
+  <h3>Recall &mdash; The Gumbel Distribution</h3>
+  <p>Self-contained card. Give all three representations; the proof on slide 49 uses the exponential one, the proof on slides 44&ndash;45 uses the CDF.</p>
+  <div class="board"><p>Write $\Pr[G \le g] = \exp(-e^{-g})$ and beside it $G = -\log E$, $E \sim \mathrm{Exp}(1)$. Leave both on the board for the next six slides.</p></div>
+</div>
+
+<div class="slide-note" id="s42">
+  <span class="snum">Slide 42</span><span class="stag">Theorem 6</span>
+  <span class="timing">~1:17</span>
+  <h3>Theorem 6 &mdash; The Gumbel-Max Trick</h3>
+  <p>The statement card. Emphasise that the randomness has been moved out of the sampler and into an additive noise vector &mdash; the selection itself is now deterministic.</p>
+  <div class="ask"><p><em>"Why is that useful?"</em> &mdash; Because a deterministic selection can be reproduced by anyone who can reproduce the noise, i.e. by the key holder.</p></div>
+</div>
+
+<div class="slide-note" id="s43">
+  <span class="snum">Slide 43</span><span class="stag">Proof outline</span>
+  <span class="timing">~1:19</span>
+  <h3>Proof of Theorem 6 &mdash; Outline</h3>
+  <p>Three steps. Flag the substitution $u = e^{-m}$ as the only trick; everything else is bookkeeping.</p>
+</div>
+
+<div class="slide-note" id="s44">
+  <span class="snum">Slide 44</span><span class="stag">Proof step</span>
+  <span class="timing">~1:21</span>
+  <h3>Proof &mdash; Step 1</h3>
+  <p>The shift $\ell_v$ enters only through $e^{\ell_v}e^{-m}$. Say that out loud: it is why the product over $w$ collapses into $Z$ on the next slide.</p>
+</div>
+
+<div class="slide-note" id="s45">
+  <span class="snum">Slide 45</span><span class="stag">Proof step</span>
+  <span class="timing">~1:23</span>
+  <h3>Proof &mdash; Steps 2 and 3</h3>
+  <p>The integral is over "$M_v$ sits at $m$ and everyone else is below". After the substitution it is $\int_0^\infty e^{-uZ}du = 1/Z$.</p>
+  <div class="board"><p>Do the substitution on the board rather than pointing at the slide &mdash; the limit flip $(-\infty,\infty)\to(\infty,0)\to(0,\infty)$ is where students lose it.</p></div>
+</div>
+
+<div class="slide-note" id="s46">
+  <span class="snum">Slide 46</span><span class="stag">Corollary</span>
+  <span class="timing">~1:25</span>
+  <h3>Corollary &mdash; The Max Carries No Information</h3>
+  <p>The maximum is Gumbel$(\log Z, 1)$ regardless of the winner, so max and argmax are independent. Useful later: a detector reading the max value alone learns nothing about the token.</p>
+</div>
+
+<div class="slide-note" id="s47">
+  <span class="snum">Slide 47</span><span class="stag">Recap chain</span>
+  <span class="timing">~1:27</span>
+  <h3>Three Faces of One Sampler</h3>
+  <p>The chain that organises the rest of the section. Every scheme ahead &mdash; Aaronson, EXP, ITS, SynthID's ancestor &mdash; is one of these three written differently.</p>
+</div>
+
+<div class="slide-note" id="s48">
+  <span class="snum">Slide 48</span><span class="stag">Diagram</span>
+  <span class="timing">~1:29</span>
+  <h3>The Picture</h3>
+  <p>Bars are logits, stems are the added noise, the green stem wins. Make the point that a low-probability token can win &mdash; with exactly its own probability.</p>
+</div>
+
+<div class="slide-note" id="s49">
+  <span class="snum">Slide 49</span><span class="stag">Alt proof</span>
+  <span class="timing">~1:31</span>
+  <h3>Alternative Proof &mdash; Exponential Minimum</h3>
+  <p>The one-line proof for anyone who knows the exponential race. $\min$ of $\mathrm{Exp}(p_v)$ is $\mathrm{Exp}(\sum p_v)$ and the winner is $v$ with probability $p_v/\sum p_w$.</p>
+  <div class="ask"><p><em>"Why teach both proofs?"</em> &mdash; The integral proof gives the law of the max as a by-product; the race proof gives the intuition and the algorithm.</p></div>
+</div>
+
+<div class="slide-note" id="s50">
+  <span class="snum">Slide 50</span><span class="stag">Scheme</span>
+  <span class="timing">~1:33</span>
+  <h3>Aaronson's Rule</h3>
+  <p>Aaronson never published a paper; the rule circulated through a talk and blog post and was formalised as "EXP" by Kuditipudi et al. Say that explicitly &mdash; students will look for the citation.</p>
+</div>
+
+<div class="slide-note" id="s51">
+  <span class="snum">Slide 51</span><span class="stag">Proposition 7</span>
+  <span class="timing">~1:35</span>
+  <h3>Proposition 7 &mdash; Aaronson $\equiv$ Gumbel-Max</h3>
+  <p>Take logs, note $\log r_v \lt 0$ so the map is monotone, and land on $\arg\min E_v/p_v$. The punchline is $-\log(-\log \mathrm{Unif}) \sim \mathrm{Gumbel}$.</p>
+</div>
+
+<div class="slide-note" id="s52">
+  <span class="snum">Slide 52</span><span class="stag">Definition 8</span>
+  <span class="timing">~1:37</span>
+  <h3>Definition 8 &mdash; Distortion-Free</h3>
+  <p>Read the quantifiers aloud: probability over the key, fixed $\mu$, one token. This is the definition slide 54 will dissect.</p>
+</div>
+
+<div class="slide-note" id="s53">
+  <span class="snum">Slide 53</span><span class="stag">Theorem 9</span>
+  <span class="timing">~1:39</span>
+  <h3>Theorem 9 &mdash; Exponential Minimum Is Distortion-Free</h3>
+  <p>Three lines, because slide 49 did the work. Point at the chain on slide 47 as you finish.</p>
+</div>
+
+<div class="slide-note" id="s54">
+  <span class="snum">Slide 54</span><span class="stag">Key distinction</span>
+  <span class="timing">~1:41</span>
+  <h3>What Distortion-Free Does <em>Not</em> Say</h3>
+  <p>The most-misunderstood point in the area. Distortion-freeness is a statement about the marginal over the key. Conditioned on the key, the text is a deterministic function of it &mdash; and that is precisely what the detector exploits.</p>
+  <div class="say"><p>"If the text were genuinely independent of the key, no detector could exist. The guarantee is about averaging, not independence."</p></div>
+</div>
+
+<div class="slide-note" id="s55">
+  <span class="snum">Slide 55</span><span class="stag">Fine print</span>
+  <span class="timing">~1:43</span>
+  <h3>The Fine Print: One Key, Many Calls</h3>
+  <p>Lemma 2.1 needs fresh i.i.d. key elements. Reuse the same $\xi$ and you get literally the same text twice &mdash; each marginal is right, the joint is absurd. The paper's fix is a random offset into a long key sequence.</p>
+</div>
+
+<div class="slide-note" id="s56">
+  <span class="snum">Slide 56</span><span class="stag">Scheme</span>
+  <span class="timing">~1:45</span>
+  <h3>Kuditipudi &mdash; Inverse Transform Sampling</h3>
+  <p>Key element is a pair: a uniform and a permutation. Stress the permutation's role &mdash; without it the scheme systematically favours low-index tokens and the detector's statistic becomes text-dependent.</p>
+</div>
+
+<div class="slide-note" id="s57">
+  <span class="snum">Slide 57</span><span class="stag">Theorem 10</span>
+  <span class="timing">~1:47</span>
+  <h3>Theorem 10 &mdash; ITS Is Distortion-Free</h3>
+  <p>One interval, width exactly $\mu(y)$. Note the theorem holds for an <em>arbitrary fixed</em> permutation &mdash; which is why the practical scheme can share one permutation across positions.</p>
+</div>
+
+<div class="slide-note" id="s58">
+  <span class="snum">Slide 58</span><span class="stag">Detection</span>
+  <span class="timing">~1:49</span>
+  <h3>Detection Without the Model</h3>
+  <p>Big contrast with Section 02: this detector never queries the LLM. It correlates the key's uniforms with the ranks of the emitted tokens.</p>
+</div>
+
+<div class="slide-note" id="s59">
+  <span class="snum">Slide 59</span><span class="stag">Key trick</span>
+  <span class="timing">~1:51</span>
+  <h3>The p-Value Is a Permutation Test</h3>
+  <p>The test is exact for any statistic and needs no CLT, no independence assumption, no null model. That is the structural advantage over the $z$-test of slide 19 &mdash; at the price of $T$ resamples per detection.</p>
+  <div class="ask"><p><em>"So why does anyone still use the $z$-test?"</em> &mdash; Cost. One pass versus $T$ alignments, and the $z$-test needs no key resampling.</p></div>
+</div>
+
+<div class="slide-note" id="s60">
+  <span class="snum">Slide 60</span><span class="stag">Lemma 11</span>
+  <span class="timing">~1:53</span>
+  <h3>Lemma 11 &mdash; Why the Cost Separates</h3>
+  <p>The expected gap is $C_0(1-p(Y_i|Y_{:i-1}))$: the model's <em>uncertainty</em> at that position. Same message as spike entropy, different functional.</p>
+</div>
+
+<div class="slide-note" id="s61">
+  <span class="snum">Slide 61</span><span class="stag">Definition 12</span>
+  <span class="timing">~1:55</span>
+  <h3>Definition 12 &mdash; Watermark Potential</h3>
+  <p>Average of $1 - p(y_i|y_{:i-1})$. Say plainly that this is the distortion-free counterpart of spike entropy, and that Section 05 will turn it into an impossibility result.</p>
+</div>
+
+<div class="slide-note" id="s62">
+  <span class="snum">Slide 62</span><span class="stag">Lemma 13</span>
+  <span class="timing">~1:57</span>
+  <h3>Lemma 13 &mdash; The Clean p-Value Bound</h3>
+  <p>Exponential in $k\alpha^2$, linear-in-$n$ union bound. Mention the EXP analogue (Lemma 2.8) so the two schemes stay parallel in the students' heads.</p>
+</div>
+
+<div class="slide-note" id="s63">
+  <span class="snum">Slide 63</span><span class="stag">Definition 14</span>
+  <span class="timing">~1:59</span>
+  <h3>Definition 14 &mdash; Cost Under Edits</h3>
+  <p>Standard Levenshtein recursion with a per-token cost plugged in. Three branches: match, delete, insert. Only $\gamma$ is a design choice.</p>
+</div>
+
+<div class="slide-note" id="s64">
+  <span class="snum">Slide 64</span><span class="stag">Lemma 15</span>
+  <span class="timing">~2:01</span>
+  <h3>Lemma 15 &mdash; Edit-Distance Robustness</h3>
+  <p>Read the exponent aloud: signal $\alpha(Y)$ minus damage $\gamma\varepsilon$, clipped at zero, squared, times the block size. Everything before the exponential is a union bound over alignments.</p>
+</div>
+
+<div class="slide-note" id="s65">
+  <span class="snum">Slide 65</span><span class="stag">Honesty</span>
+  <span class="timing">~2:03</span>
+  <h3>Reading Lemma 15 Honestly</h3>
+  <p>Quote the authors' own admission that the bound is vacuous for $\varepsilon = \Omega(1/\log k)$. This is the measurement-validity discipline: state what is proved, then state what is merely observed.</p>
+  <div class="say"><p>"A theorem that says nothing for realistic edit budgets is still worth stating &mdash; but you have to say that it says nothing."</p></div>
+</div>
+
+<div class="slide-note" id="s66">
+  <span class="snum">Slide 66</span><span class="stag">Real figure</span>
+  <span class="timing">~2:05</span>
+  <h3>What Actually Survives</h3>
+  <p>Figure 4(b), LLaMA-7B: median p-value against the fraction of substituted tokens. Contrast with the previous slide &mdash; empirics far outrun the proof.</p>
+</div>
+
+<div class="slide-note" id="s67">
+  <span class="snum">Slide 67</span><span class="stag">Definition 16</span>
+  <span class="timing">~2:07</span>
+  <h3>Definition 16 &mdash; Unbiased Reweighting</h3>
+  <p>Hu et al. restate distortion-freeness at the level of distributions: a random map on the simplex whose mean is the identity. Same content, more convenient algebra.</p>
+</div>
+
+<div class="slide-note" id="s68">
+  <span class="snum">Slide 68</span><span class="stag">Constructions</span>
+  <span class="timing">~2:09</span>
+  <h3>Two Unbiased Reweightings</h3>
+  <p>$\delta$-reweight is inverse transform sampling collapsed to a point mass; $\gamma$-reweight shuffles, discards the bottom half of the CDF and doubles the top. Their Theorem 11 proves hard and soft red lists are biased &mdash; the formal version of slide 37.</p>
+</div>
+
+<div class="slide-note" id="s69">
+  <span class="snum">Slide 69</span><span class="stag">Theorem 18</span>
+  <span class="timing">~2:11</span>
+  <h3>Theorem 18 &mdash; From One Token to a Sequence</h3>
+  <p>Per-token unbiasedness lifts to the sequence only if the codes are independent. Context-code collisions break that, so the scheme skips reweighting on any repeated context code. Same failure mode as the $z$-test's null on slide 23, fixed by bookkeeping rather than by assumption.</p>
+</div>
+
+<hr class="sec">
+<p class="sec-label">04 &mdash; Undetectability</p>
+
+<div class="slide-note" id="s70">
+  <span class="snum">Slide 70</span><span class="stag">Divider</span>
+  <span class="timing">~2:13</span>
+  <h3>Section 04 &mdash; Undetectability</h3>
+  <p>Shift of register: from statistics to cryptography. Warn the room that the definitions get quantifier-heavy and that this is the point.</p>
+</div>
+
+<div class="slide-note" id="s71">
+  <span class="snum">Slide 71</span><span class="stag">Recall</span>
+  <span class="timing">~2:14</span>
+  <h3>Recall &mdash; Indistinguishability and Post-Processing</h3>
+  <p>Self-contained card. The privacy course used the statistical flavour; watermarking needs the computational one, because the two distributions <em>must</em> differ for detection to be possible at all.</p>
+  <div class="ask"><p><em>"Why can't we just use total variation?"</em> &mdash; Because TV zero would kill detection. The gap has to exist and be computationally invisible.</p></div>
+</div>
+
+<div class="slide-note" id="s72">
+  <span class="snum">Slide 72</span><span class="stag">Definition 19</span>
+  <span class="timing">~2:16</span>
+  <h3>Definition 19 &mdash; A Watermarking Scheme</h3>
+  <p>Three algorithms. Stress what $\mathrm{Detect}$ does <em>not</em> get: no prompt, no model. That constraint drives every design choice in the section.</p>
+</div>
+
+<div class="slide-note" id="s73">
+  <span class="snum">Slide 73</span><span class="stag">Definition 20</span>
+  <span class="timing">~2:18</span>
+  <h3>Definition 20 &mdash; Empirical Entropy</h3>
+  <p>Per-output, not per-model. Its expectation is the Shannon entropy. The substring version is what makes partial-text detection statable.</p>
+  <div class="board"><p>Write $H_e = -\log \Pr[x]$ next to $H = \mathbb{E}[-\log \Pr[x]]$ so the distinction is visible for the rest of the lecture.</p></div>
+</div>
+
+<div class="slide-note" id="s74">
+  <span class="snum">Slide 74</span><span class="stag">Definitions 21&ndash;22</span>
+  <span class="timing">~2:20</span>
+  <h3>Definitions 21&ndash;22 &mdash; Sound and Complete</h3>
+  <p>Soundness is unconditional (no false positives, ever). Completeness carries the entropy side condition. Note the asymmetry out loud &mdash; students assume it is a technical convenience; slide 75 shows it is forced.</p>
+</div>
+
+<div class="slide-note" id="s75">
+  <span class="snum">Slide 75</span><span class="stag">Discussion</span>
+  <span class="timing">~2:22</span>
+  <h3>Why Completeness Must Be Conditional</h3>
+  <p>If the model is deterministic on a prompt, watermarked and clean outputs are the same string. Flagging it would violate soundness. Substring-completeness (their Definition 8) is the window version.</p>
+</div>
+
+<div class="slide-note" id="s76">
+  <span class="snum">Slide 76</span><span class="stag">Definition 24</span>
+  <span class="timing">~2:24</span>
+  <h3>Definition 24 &mdash; Undetectable</h3>
+  <p>Adaptive oracle access to both the real model and the (possibly) watermarked one. Only $sk$ is secret. Contrast with Definition 8, which quantified over a single fixed $\mu$.</p>
+</div>
+
+<div class="slide-note" id="s77">
+  <span class="snum">Slide 77</span><span class="stag">Distinction</span>
+  <span class="timing">~2:26</span>
+  <h3>Distortion-Free $\ne$ Undetectable</h3>
+  <p>Two axes: exact-vs-computational, and per-token-vs-whole-transcript. Draw the two boxes and do not let the class collapse them.</p>
+</div>
+
+<div class="slide-note" id="s78">
+  <span class="snum">Slide 78</span><span class="stag">Separation</span>
+  <span class="timing">~2:28</span>
+  <h3>Separating the Two Notions</h3>
+  <p>Forward direction fails by key reuse: identical outputs on repeated prompts, each marginal still perfect. Reverse direction holds only computationally, by Lemma 31 on slide 92.</p>
+  <div class="say"><p>"Distortion-freeness is exact but local. Undetectability is global but computational. If a paper claims one and you need the other, read carefully."</p></div>
+</div>
+
+<div class="slide-note" id="s79">
+  <span class="snum">Slide 79</span><span class="stag">Construction</span>
+  <span class="timing">~2:30</span>
+  <h3>Warm-Up Construction</h3>
+  <p>Rejection sampling onto a pseudorandom $2^{-b}$ slice. The equivalence argument is the heart: if the oracle is never queried twice, it returns fresh randomness, so the loop is plain sampling.</p>
+</div>
+
+<div class="slide-note" id="s80">
+  <span class="snum">Slide 80</span><span class="stag">Why min-entropy</span>
+  <span class="timing">~2:32</span>
+  <h3>Why It Needs Min-Entropy</h3>
+  <p>The no-repeats condition is a min-entropy condition, not a Shannon one. Give the standard counterexample: half the mass on one string plus a huge uniform tail has large entropy and tiny min-entropy.</p>
+</div>
+
+<div class="slide-note" id="s81">
+  <span class="snum">Slide 81</span><span class="stag">Fix</span>
+  <span class="timing">~2:34</span>
+  <h3>Removing the Min-Entropy Assumption</h3>
+  <p>Watermark only the high-empirical-entropy branch, and do the case split on $p$. The implementation trick &mdash; sample once, compute $H_e$, then enter the loop &mdash; avoids ever computing $p$.</p>
+</div>
+
+<div class="slide-note" id="s82">
+  <span class="snum">Slide 82</span><span class="stag">Theorem 25</span>
+  <span class="timing">~2:36</span>
+  <h3>Theorem 25 &mdash; The Warm-Up, With a PRF</h3>
+  <p>Worth dwelling on: the scheme's own running time $2^b$ bounds the security it may assume from the PRF, forcing $b = O(\log\lambda)$ and only weak soundness. Section 4 of the paper fixes this with a genuinely efficient construction.</p>
+</div>
+
+<div class="slide-note" id="s83">
+  <span class="snum">Slide 83</span><span class="stag">Scheme</span>
+  <span class="timing">~2:38</span>
+  <h3>The Efficient Scheme, One Bit at a Time</h3>
+  <p>Binary tokens for exposition. The key replaces the coin: $x_j = 1$ iff $u_j \le p_j(1)$. Point back to Theorem 10 &mdash; this <em>is</em> inverse transform sampling.</p>
+</div>
+
+<div class="slide-note" id="s84">
+  <span class="snum">Slide 84</span><span class="stag">Score</span>
+  <span class="timing">~2:40</span>
+  <h3>The Detection Score</h3>
+  <p>Two branches, both of the form $\ln(1/\text{tail})$. Emphasise that the detector needs neither prompt nor model, which is exactly what Definition 19 demanded.</p>
+</div>
+
+<div class="slide-note" id="s85">
+  <span class="snum">Slide 85</span><span class="stag">Proposition 26</span>
+  <span class="timing">~2:42</span>
+  <h3>Proposition 26 &mdash; The Score Gap Is Entropy</h3>
+  <p>The single cleanest statement in the lecture: expected excess score equals $\ln 2$ times the entropy. Zero entropy, zero signal &mdash; not approximately, exactly.</p>
+</div>
+
+<div class="slide-note" id="s86">
+  <span class="snum">Slide 86</span><span class="stag">Proof</span>
+  <span class="timing">~2:44</span>
+  <h3>Proof of Proposition 26</h3>
+  <p>Two integrals of $\ln(1/u)$. The substitution $1-u \mapsto u$ in the second integral is the only step; then $\int_0^q \ln(1/u)du = q - q\ln q$.</p>
+  <div class="board"><p>Do $\int_0^q \ln(1/u)\,du = q - q\ln q$ on the board; students rarely have it memorised.</p></div>
+</div>
+
+<div class="slide-note" id="s87">
+  <span class="snum">Slide 87</span><span class="stag">Engineering</span>
+  <span class="timing">~2:46</span>
+  <h3>From One Response to Many</h3>
+  <p>Three escalating problems: fixed key too short, PRF on $j$ alone collides across responses, nonce unknown to the detector. The resolution &mdash; recover the nonce from the response's own high-entropy prefix &mdash; is why the scheme's first tokens are "spent".</p>
+</div>
+
+<div class="slide-note" id="s88">
+  <span class="snum">Slide 88</span><span class="stag">Theorems 27&ndash;28</span>
+  <span class="timing">~2:48</span>
+  <h3>Theorems 27&ndash;28 &mdash; The Main Results</h3>
+  <p>$O(\lambda\sqrt L)$-complete and substring-complete. Read $b(L)$ as an entropy price. Then transition: the next section proves this price cannot be avoided.</p>
+</div>
+
+<hr class="sec">
+<p class="sec-label">05 &mdash; Limits and impossibility</p>
+
+<div class="slide-note" id="s89">
+  <span class="snum">Slide 89</span><span class="stag">Divider</span>
+  <span class="timing">~2:50</span>
+  <h3>Section 05 &mdash; Limits and Impossibility</h3>
+  <p>The spine of the lecture. Everything before this built schemes; this section says what no scheme can do.</p>
+</div>
+
+<div class="slide-note" id="s90">
+  <span class="snum">Slide 90</span><span class="stag">Lemma 29</span>
+  <span class="timing">~2:51</span>
+  <h3>Lemma 29 &mdash; Model Entropy Is the Wrong Quantity</h3>
+  <p>A one-paragraph proof with a two-branch model. High Shannon entropy, yet almost every actual output is the deterministic branch. This is why Definition 22 conditions on <em>empirical</em> entropy.</p>
+</div>
+
+<div class="slide-note" id="s91">
+  <span class="snum">Slide 91</span><span class="stag">Theorem 30</span>
+  <span class="timing">~2:53</span>
+  <h3>Theorem 30 &mdash; Low Empirical Entropy Cannot Be Watermarked</h3>
+  <p>Counting argument: at most $2^t$ low-entropy outputs, so $\exp(t)$ queries suffice to estimate both distributions on all of them. Necessity of the entropy condition, proved.</p>
+  <div class="ask"><p><em>"Does this apply to the green-list scheme too?"</em> &mdash; The theorem is about undetectable schemes; but slide 34 gave the same conclusion for KGW from the spike-entropy bound. Two arguments, one wall.</p></div>
+</div>
+
+<div class="slide-note" id="s92">
+  <span class="snum">Slide 92</span><span class="stag">Lemma 31</span>
+  <span class="timing">~2:55</span>
+  <h3>Lemma 31 &mdash; Undetectability Is Only Computational</h3>
+  <p>Enumerate keys, recover each accept set. Note the requirement that the key be of bounded size &mdash; the paper remarks on this explicitly.</p>
+  <div class="say"><p>"Any signal a detector can read, an unbounded adversary can read. The security is in the running time, nowhere else."</p></div>
+</div>
+
+<div class="slide-note" id="s93">
+  <span class="snum">Slide 93</span><span class="stag">Lemma 32</span>
+  <span class="timing">~2:57</span>
+  <h3>Lemma 32 &mdash; The Distortion-Free Impossibility</h3>
+  <p>The statistical twin of Theorem 30. Sum of the two error probabilities bounded below by $\mathbb{E}[e^{-cm\alpha(Y)}]$ on the high-probability set $V_c$. As potential vanishes the bound tends to one.</p>
+</div>
+
+<div class="slide-note" id="s94">
+  <span class="snum">Slide 94</span><span class="stag">Real figure</span>
+  <span class="timing">~2:59</span>
+  <h3>The Wall, Measured</h3>
+  <p>Figure 11(a). Each dot is one generation. The empty corner &mdash; low potential, low p-value &mdash; is the theorem made visible.</p>
+</div>
+
+<div class="slide-note" id="s95">
+  <span class="snum">Slide 95</span><span class="stag">Proposition 33</span>
+  <span class="timing">~3:01</span>
+  <h3>Proposition 33 &mdash; Detection Costs Distortion</h3>
+  <p><strong>Not from the literature.</strong> This proposition was written and derived by Claude for this deck, by algebra on Theorems 4 and 5; it appears in no paper, and the slide says so. Both sides are the paper's own certified quantities, so the corollary is sound &mdash; but state its provenance aloud rather than letting it pass as published.</p>
+  <p class="muted">Note also what it does and does not say: $\mu^\star$ is the <em>certified</em> green rate, a lower bound, so the proposition caps how much detection the Theorem-4 certificate can promise per unit of Theorem-5 distortion. It is not a statement about the true green rate.</p>
+</div>
+
+<div class="slide-note" id="s96">
+  <span class="snum">Slide 96</span><span class="stag">Proof</span>
+  <span class="timing">~3:03</span>
+  <h3>Proof of Proposition 33</h3>
+  <p>Three lines. The only inequality is $S(p,z^\star) \le 1$; the rest is algebra eliminating $\alpha$ in favour of $\beta$.</p>
+  <div class="board"><p>Write $\alpha - \beta = (\alpha-1)(1-\gamma)$ on the board; that single identity is the whole proof.</p></div>
+</div>
+
+<div class="slide-note" id="s97">
+  <span class="snum">Slide 97</span><span class="stag">Diagram</span>
+  <span class="timing">~3:05</span>
+  <h3>Reading the Tradeoff</h3>
+  <p>Concave, saturating at $1-\gamma$. The red dot at $\beta = 1$ is the formal statement that a provably distortion-free green list has provably zero certified power. Practitioners live on the steep part of this curve.</p>
+</div>
+
+<div class="slide-note" id="s98">
+  <span class="snum">Slide 98</span><span class="stag">Theorem 34</span>
+  <span class="timing">~3:07</span>
+  <h3>Theorem 34 &mdash; Undetectable Implies Removable</h3>
+  <p>The attack calls the watermarked model once per token, always taking the first token. Undetectability guarantees each conditional is right, so the assembled text is clean. Cost is linear in output length &mdash; expensive but not exotic.</p>
+  <div class="ask"><p><em>"Is this practical?"</em> &mdash; The paper's own estimate is that it multiplies generation cost by the output length. Impractical today, not impossible.</p></div>
+</div>
+
+<div class="slide-note" id="s99">
+  <span class="snum">Slide 99</span><span class="stag">Synthesis</span>
+  <span class="timing">~3:09</span>
+  <h3>The Three-Way Tension</h3>
+  <p>Each edge of the triangle is a theorem just proved. Leave this diagram up while you transition to Section 06 &mdash; every practical method there is a point inside the triangle, not at a corner.</p>
+</div>
+
+<hr class="sec">
+<p class="sec-label">06 &mdash; Robustness and semantics</p>
+
+<div class="slide-note" id="s100">
+  <span class="snum">Slide 100</span><span class="stag">Divider</span>
+  <span class="timing">~3:11</span>
+  <h3>Section 06 &mdash; Robustness and Semantics</h3>
+  <p>Everything up to here assumed the detector reads exactly what the sampler wrote. Announce the shift: from now on an adversary sits between them.</p>
+</div>
+
+<div class="slide-note" id="s101">
+  <span class="snum">Slide 101</span><span class="stag">Diagram</span>
+  <span class="timing">~3:12</span>
+  <h3>The Attack Surface</h3>
+  <p>Walk the pipeline left to right. The dashed red box is the adversary; it has the text and no key. Five attack families, one budget parameter $\eta$.</p>
+  <div class="board"><p>Write on the board: $y$ has $n$ tokens, $u$ has $m$, edit distance $\eta$. Every robustness theorem in this section bounds $z_u$ in terms of $z_y$ and $\eta$.</p></div>
+  <div class="ask"><p><em>"Why not just measure accuracy after the attack?"</em> &mdash; Because accuracy depends on the threshold, and the threshold depends on the corpus. Bounding the statistic is corpus-free.</p></div>
+</div>
+
+<div class="slide-note" id="s102">
+  <span class="snum">Slide 102</span><span class="stag">Measurement</span>
+  <span class="timing">~3:14</span>
+  <h3>What Paraphrase Actually Costs</h3>
+  <p>Flag clearly that this is an <em>empirical</em> finding, not a theorem. The quoted sentence is the paper's own, verbatim: 800 tokens on average at a $10^{-5}$ false-positive rate after strong human paraphrasing; all attacks tested detected with certainty after 400&ndash;800 tokens.</p>
+  <div class="say"><p>The honest slogan is not &ldquo;paraphrase breaks watermarks&rdquo;. It is &ldquo;paraphrase raises the price of a verdict from a tweet to a page&rdquo;.</p></div>
+  <div class="board"><p>$z \propto \varepsilon\sqrt{T}$: halving the per-token signal $\varepsilon$ needs $4\times$ the tokens for the same $z$.</p></div>
+</div>
+
+<div class="slide-note" id="s103">
+  <span class="snum">Slide 103</span><span class="stag">Construction</span>
+  <span class="timing">~3:16</span>
+  <h3>Fix the Green List</h3>
+  <p>Motivate by failure first: in KGW, $G_t = \mathrm{hash}(x_{t-1})$. Edit $x_{t-1}$ and $G_t$ is a fresh random set, so the indicator at $t$ becomes a coin flip. One edit corrupts two positions &mdash; the edited one and its successor &mdash; and under a $k$-gram hash, $k$ successors.</p>
+  <div class="say"><p>The whole robustness gain is one sentence: make the indicator local.</p></div>
+  <div class="ask"><p><em>"Can't the adversary just learn $G$?"</em> &mdash; Yes, and that is the stated price. Frequency analysis on enough watermarked text recovers the list. Robustness against edits was bought with security against a corpus-collecting adversary.</p></div>
+</div>
+
+<div class="slide-note" id="s104">
+  <span class="snum">Slide 104</span><span class="stag">Theorem 35</span>
+  <span class="timing">~3:18</span>
+  <h3>Theorem 35 &mdash; R&eacute;nyi Bound on the Tilt</h3>
+  <p>This is where the differential-privacy toolkit pays off. The proof in the paper is explicitly borrowed from DP: the $\delta$-tilt is a bounded multiplicative perturbation, so a max-divergence bound of $\delta$ falls out, which is exactly pure DP's log-odds condition.</p>
+  <div class="board"><p>$\alpha \to \infty$: $D_\infty \le \delta \Rightarrow (\delta,0)$-indistinguishable. $\alpha = 1$ plus Pinsker: $\mathrm{TV} \le \min\{\sqrt{\delta/2},\delta/4\}$.</p></div>
+  <div class="ask"><p><em>"Does this make it distortion-free?"</em> &mdash; No, and press on this. $\mathrm{TV} \gt 0$ strictly. It is a <em>uniform</em> distortion bound, which the Section 02 quality theorem was not.</p></div>
+</div>
+
+<div class="slide-note" id="s105">
+  <span class="snum">Slide 105</span><span class="stag">Theorem 36</span>
+  <span class="timing">~3:20</span>
+  <h3>Theorem 36 &mdash; Power and Its Assumptions</h3>
+  <p>State the bound, then spend the time on homophily. It says: raising a green token's probability now does not lower its probability later. Counter-examples exist &mdash; a model that must use each word once will repay the debt &mdash; and the paper argues this assumption is fundamental for <em>any</em> frequency-based watermark.</p>
+  <div class="ask"><p><em>"Is homophily testable?"</em> &mdash; Not directly. It is an assumption about the model's state transitions, not about the text. Worth saying out loud: this is the weakest link in the chain.</p></div>
+</div>
+
+<div class="slide-note" id="s106">
+  <span class="snum">Slide 106</span><span class="stag">Theorem 37</span>
+  <span class="timing">~3:22</span>
+  <h3>Theorem 37 &mdash; Surviving $\eta$ Edits</h3>
+  <p>The restored survive-edits inequality. Emphasize the shape: the penalty is $O(\eta/\sqrt{n})$ while the signal is $\Omega(\sqrt{n})$, so a constant fraction of the text can be edited before the two meet.</p>
+  <div class="board"><p>$z_y \asymp (e^\delta-1)\sqrt{n}$ versus loss $\eta/\sqrt{n}$; set equal $\Rightarrow \eta \asymp (e^\delta-1)n$.</p></div>
+  <div class="say"><p>The paper reports this is twice as robust as the KGW soft watermark; that comparison is in their Appendix D, and it is a constant factor, not an order.</p></div>
+</div>
+
+<div class="slide-note" id="s107">
+  <span class="snum">Slide 107</span><span class="stag">Proof</span>
+  <span class="timing">~3:24</span>
+  <h3>Proof of Theorem 37</h3>
+  <p>Four steps, and step 2 is the whole idea: a completely arbitrary adversary is compressed into two numbers, because the statistic only sees the green count and the length. Do step 4's case analysis at whatever speed the room needs &mdash; it is bookkeeping, not insight.</p>
+  <div class="board"><p>$f(x,y) = (x-\gamma y)/\sqrt{y}$; $\partial_x f = 1/\sqrt{y}$, $\partial_y f = -\gamma/(2\sqrt{y}) - (x-\gamma y)/(2y^{3/2})$.</p></div>
+</div>
+
+<div class="slide-note" id="s108">
+  <span class="snum">Slide 108</span><span class="stag">Survey</span>
+  <span class="timing">~3:26</span>
+  <h3>Three Ways to Make the Signal Survive</h3>
+  <p>The point of the slide is the highlight bar, not the three cards. Only the fixed green list carries an edit-distance theorem. Say explicitly what each of the other two <em>does</em> prove: permute-and-flip proves a decoder-quality optimality and distortion-freeness, not robustness; the semantic hash proves nothing unconditional and inherits whatever stability the embedding has.</p>
+  <div class="ask"><p><em>"So is the semantic hash worse?"</em> &mdash; Not necessarily worse in practice; worse in what you can promise. That distinction is the lecture's habit.</p></div>
+</div>
+
+<div class="slide-note" id="s109">
+  <span class="snum">Slide 109</span><span class="stag">Restored</span>
+  <span class="timing">~3:28</span>
+  <h3>Adaptive $\delta_t$</h3>
+  <p>The restored adaptive-strength equations. Two things to make sure land: (i) the gate uses a separate measurement model that the <em>detector also holds</em>, otherwise the detector cannot reconstruct $W$; (ii) the perturbation is a temperature <em>scaling</em> $\hat\ell = \ell\,(1+\delta \hat v)$, not a uniform additive shift, so small logits stay small.</p>
+  <div class="board"><p>Additive: $\ell + \delta\mathbb{1}[v \in G]$ moves every token equally. Multiplicative: $\ell(1+\delta\hat v)$ moves the already-likely tokens most.</p></div>
+  <div class="say"><p>The detection score is the average of $\delta\hat v$ over gated tokens &mdash; an approximation to the LRT, which is the closest the deployed literature gets to Section 01's optimality question.</p></div>
+</div>
+
+<div class="slide-note" id="s110">
+  <span class="snum">Slide 110</span><span class="stag">Method</span>
+  <span class="timing">~3:30</span>
+  <h3>Reading a Robustness Table Honestly</h3>
+  <p>Same discipline as the unlearning lecture's measurement-validity section. Question 3 is the one students skip: comparing two schemes at equal $\delta$ compares nothing, because $\delta$ means different things in different constructions. Fix the perplexity axis first.</p>
+  <div class="ask"><p><em>"What if the paper doesn't report perplexity?"</em> &mdash; Then the robustness number is uninterpretable. Say so.</p></div>
+</div>
+
+<hr class="sec">
+<p class="sec-label">07 &mdash; Beyond standard LLMs</p>
+
+<div class="slide-note" id="s111">
+  <span class="snum">Slide 111</span><span class="stag">Divider</span>
+  <span class="timing">~3:32</span>
+  <h3>Section 07 &mdash; Beyond Standard LLMs</h3>
+  <p>Three settings the standard framing does not cover: the watermark as a training-set tracer, watermarking at production scale, and watermarking without a causal context.</p>
+</div>
+
+<div class="slide-note" id="s112">
+  <span class="snum">Slide 112</span><span class="stag">Definitions 38&ndash;39</span>
+  <span class="timing">~3:34</span>
+  <h3>Radioactivity</h3>
+  <p>The novelty is the input type: detection now takes a <em>model</em>, not a text. Make the inclusion condition explicit &mdash; &ldquo;$B$ was not trained on $D$&rdquo; must be contained in $H_0$, or rejecting $H_0$ tells you nothing about training.</p>
+  <div class="say"><p>$\alpha \approx 0.5$ means the observation is equally likely under both hypotheses; $\alpha = 10^{-6}$ means one in a million under innocence.</p></div>
+</div>
+
+<div class="slide-note" id="s113">
+  <span class="snum">Slide 113</span><span class="stag">Proposition 40</span>
+  <span class="timing">~3:36</span>
+  <h3>De-duplication Buys Back the Null</h3>
+  <p>Call back explicitly to the earlier &ldquo;when the null fails&rdquo; slide. This is the same problem &mdash; correlated indicators from repeated context hashes &mdash; and here it has a clean fix promoted to a hypothesis of the proposition.</p>
+  <div class="board"><p>(1) $x_i$ pairwise distinct. (2) $x_i \notin c_i$. Then &ldquo;not trained on $D$&rdquo; $\subset$ &ldquo;$S(X_N) \sim \mathrm{Bin}(N,\gamma)$&rdquo;.</p></div>
+  <div class="ask"><p><em>"Why does condition (2) matter?"</em> &mdash; Because Alice crafts the contexts, and in the realistic setting those contexts are themselves watermarked. Without (2), $B$ can score high by echoing the prompt.</p></div>
+</div>
+
+<div class="slide-note" id="s114">
+  <span class="snum">Slide 114</span><span class="stag">Connection</span>
+  <span class="timing">~3:38</span>
+  <h3>Why This Is a Membership-Inference Result</h3>
+  <p>The key sentence: watermarking sidesteps calibration because Alice chose the feature, so the null is known in closed form. Contrast with the MIA lecture, where the whole difficulty was that per-example difficulty confounds the loss threshold and a blind baseline can beat a naive attack.</p>
+  <div class="say"><p>Read the table as a capability matrix, not a benchmark. The interesting cell is open-model unsupervised: MIA fails, the watermark works.</p></div>
+</div>
+
+<div class="slide-note" id="s115">
+  <span class="snum">Slide 115</span><span class="stag">Figure</span>
+  <span class="timing">~3:40</span>
+  <h3>How Little Watermarked Data Is Enough</h3>
+  <p>Two numbers, from two different settings &mdash; do not merge them. Open-model unsupervised: $p \lt 10^{-5}$ at $\rho \le 5\%$. Supervised closed-model: $p \lt 10^{-5}$ at $\rho = 1\%$.</p>
+  <div class="say"><p>The most important part of this figure is $\rho = 0$: all tests return uniform p-values. That is the calibration control, and it is what makes the rest of the curve worth reading.</p></div>
+</div>
+
+<div class="slide-note" id="s116">
+  <span class="snum">Slide 116</span><span class="stag">Figure</span>
+  <span class="timing">~3:42</span>
+  <h3>Tournament Sampling</h3>
+  <p>Trace one path through the bracket on the figure. The figure is drawn with $m = 3$ layers, hence $2^m = 8$ sampled candidates; deployment generally uses $m = 30$.</p>
+  <div class="board"><p>Seed $r_t = \mathrm{hash}(x_{t-4},\dots,x_{t-1};\,\text{key})$, i.e. $H = 4$.</p></div>
+  <div class="ask"><p><em>"Is this the Gumbel trick again?"</em> &mdash; Related but not identical. Gumbel picks one argmax over the whole vocabulary; the tournament runs a bracket over $2^m$ i.i.d. draws, which is what lets it stack $m$ independent bits of evidence per token.</p></div>
+</div>
+
+<div class="slide-note" id="s117">
+  <span class="snum">Slide 117</span><span class="stag">Definitions</span>
+  <span class="timing">~3:44</span>
+  <h3>Score and the Non-Distortion Hierarchy</h3>
+  <p>This slide is the payoff for Section 03's insistence on quantifiers. The paper explicitly says the phrase &ldquo;non-distortionary&rdquo; has been used for several distinct definitions in the literature and resolves it into a three-level hierarchy. Point out that our Definition 8 is their <em>single-token</em> level, and Kuditipudi's is closer to single-sequence.</p>
+  <div class="ask"><p><em>"Why not always take the strongest?"</em> &mdash; Because stronger non-distortion costs detectability and computation. They ship single-sequence.</p></div>
+</div>
+
+<div class="slide-note" id="s118">
+  <span class="snum">Slide 118</span><span class="stag">Setting</span>
+  <span class="timing">~3:46</span>
+  <h3>When There Is No Previous Token</h3>
+  <p>Set up the gap before showing the method: an ideal order-invariant predictor would make the decoding order irrelevant, but imperfect training makes real dLLMs order-sensitive. That gap is the channel.</p>
+  <div class="board"><p>$p(y\mid x) = \prod_i p(y_{\pi(i)} \mid y_{\pi(\lt i)}, x)$ for <em>any</em> permutation $\pi$ &mdash; in theory.</p></div>
+</div>
+
+<div class="slide-note" id="s119">
+  <span class="snum">Slide 119</span><span class="stag">Algorithm</span>
+  <span class="timing">~3:48</span>
+  <h3>dgMARK</h3>
+  <p>The one-line diff from generic decoding: restrict the argmax to positions whose candidate token already satisfies the parity condition, with a fallback when none does. Nothing is reweighted.</p>
+  <div class="ask"><p><em>"If probabilities are untouched, is it distortion-free?"</em> &mdash; Careful. The marginal over positions changes because the <em>order</em> changes, and order affects the conditionals in a real model. The claim is no explicit reweighting, which is weaker than Definition 8. Say that plainly.</p></div>
+</div>
+
+<div class="slide-note" id="s120">
+  <span class="snum">Slide 120</span><span class="stag">Detection</span>
+  <span class="timing">~3:50</span>
+  <h3>dgMARK Detection</h3>
+  <p>Close the loop with Section 01: this is literally the same one-proportion z-test, with $\gamma = 1/2$ and the indicator now a parity match rather than a green-list match. The interesting twist is the two-sided window statistic &mdash; edits shift indices and flip parity, so evidence can appear as a deficit as easily as a surplus, and squaring captures both.</p>
+  <div class="board"><p>$z_{\mathrm{win}} = \frac{1}{S}\sum_s z_s^2$ &mdash; a sum of squares, not a mean, because the sign is unreliable under index shifts.</p></div>
+</div>
+
+<div class="slide-note" id="s121">
+  <span class="snum">Slide 121</span><span class="stag">Closing</span>
+  <span class="timing">~3:52</span>
+  <h3>Open Problems</h3>
+  <p>Bullet one is the deck's own thread: we proved on the z-test slide that the deployed statistic is not the LRT, and nothing since has produced one. Invite students to treat that as a project.</p>
+</div>
+
+<div class="slide-note" id="s122">
+  <span class="snum">Slide 122</span><span class="stag">Closing</span>
+  <span class="timing">~3:54</span>
+  <h3>Takeaways</h3>
+  <p>Five lines, one per section arc. If time is short, the third is the one worth repeating: distortion-freeness is a statement about the marginal over the key, and it does not say the text is independent of the key given the seed.</p>
+</div>
+
+<div class="slide-note" id="s123">
+  <span class="snum">Slide 123</span><span class="stag">Closer</span>
+  <span class="timing">~3:55</span>
+  <h3>Q&amp;A</h3>
+  <p>Likely questions: whether a public-key scheme exists (open); whether an attacker can strip a watermark cheaply (Theorem 34 says yes in principle, at linear cost); whether low-entropy code can be watermarked (no &mdash; the entropy floor is a theorem, not an engineering gap).</p>
+</div>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 13 — Script</title>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 13 — Script &amp; Companion Notes</title>
 <link rel="stylesheet" href="../../reference/colors_and_type.css">
 <link rel="stylesheet" href="../../reference/katex/katex.min.css">
 <script defer src="../../reference/katex/katex.min.js"></script>
@@ -10,9 +10,13 @@ h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); pad
 article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
 article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 .kt { color: var(--yonsei-blue); font-weight: 700; }
+.detail { margin: 12px 0 0 14px; padding: 2px 0 2px 18px; border-left: 3px solid var(--slate); }
+.detail h3 { color: var(--yonsei-blue); font-size: 1.05rem; margin: 14px 0 4px; }
+.detail p, .detail li { font-size: 0.97rem; line-height: 1.6; }
+.detail ol, .detail ul { padding-left: 22px; }
 </style></head><body>
-<h1>Lecture 13 — Fairness I: Definitions &amp; Impossibility · Speaker Script</h1>
-<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+<h1>Lecture 13 — Fairness I: Definitions &amp; Impossibility · Script &amp; Companion Notes</h1>
+<p><em>One entry per slide, in order; section headers match slide titles. Each entry keeps the spoken script and key takeaway, followed by companion material in indented blocks: rigorous definitions, formal theorem statements with complete proofs, and brief verified backgrounds with links. The formal treatment follows Chouldechova (Big Data 2017), Kleinberg&ndash;Mullainathan&ndash;Raghavan (ITCS 2017), Hardt&ndash;Price&ndash;Srebro (NeurIPS 2016), and Dwork et al. (ITCS 2012); external facts and links were checked against the primary sources.</em></p>
 
 <article>
 <h2>Fairness I: Definitions &amp; Impossibility</h2>
@@ -36,54 +40,131 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>A Model Mirrors Its World</h2>
 <p>A model learns patterns from training data, which is a record of past decisions and outcomes. If the past was biased, the model absorbs that bias.</p>
 <p><span class="kt">Key takeaway:</span> Garbage in, garbage out applies to fairness too.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Supervised-learning setup.</strong> Training data are draws $(X_i, A_i, Y_i) \sim \mathcal{D}$ from a joint distribution over features $X$, group attribute $A$, and label $Y$; the learner picks $f$ to minimize empirical risk $\frac{1}{n}\sum_i \ell(f(X_i), Y_i)$. The population-optimal (Bayes) classifier is $f^*(x) = \mathbf{1}[\eta(x) \ge 1/2]$ with $\eta(x) = \Pr[Y=1 \mid X=x]$ computed <em>under $\mathcal{D}$</em>. Every learning guarantee is fidelity to $\mathcal{D}$ &mdash; the recorded past &mdash; not to any normative standard. If $\mathcal{D}$ encodes historically biased decisions, the best-fitting model reproduces them by construction (derivation: course notes).</p>
+</div>
 </article>
 
 <article>
 <h2>Bias Is Not a Bug</h2>
 <p>Often the model works exactly as designed: it faithfully reproduces a world that was already unfair. High accuracy on biased data is not fairness.</p>
 <p><span class="kt">Key takeaway:</span> Accuracy and fairness are different goals.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Accuracy vs. fairness as functionals.</strong> Accuracy $\Pr[\hat Y = Y]$ is a functional of the joint law of $(\hat Y, Y)$ alone; every fairness criterion in this lecture additionally involves $A$ (e.g. $\Pr[\hat Y = 1 \mid A = a]$). Maximizing the first places no constraint on the second: a classifier can be Bayes-optimal on $\mathcal{D}$ and arbitrarily disparate across groups, because the two objectives measure different aspects of the same joint distribution (derivation: course notes).</p>
+</div>
 </article>
 
 <article>
 <h2>Three Places Bias Enters</h2>
 <p>Bias can enter through biased data (some groups under-sampled), biased labels (the target itself records prejudice), and feedback loops (predictions reshape future data).</p>
 <p><span class="kt">Key takeaway:</span> Data, labels, and loops are the three entry points.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<ul>
+<li><strong>Sampling (representation) bias:</strong> the training distribution is a selected version of the deployment distribution, $\mathcal{D}_{\text{train}}(x,a,y) \propto \Pr[S = 1 \mid x,a,y]\,\mathcal{D}(x,a,y)$ for a selection event $S$ that depends on $A$; per-group risk then degrades for under-sampled groups.</li>
+<li><strong>Label (measurement) bias:</strong> the recorded label $Y$ is a proxy for the construct of interest $Y^{*}$, and the measurement error is correlated with $A$; the model consistently estimates $\Pr[Y \mid X]$, not $\Pr[Y^{*} \mid X]$.</li>
+<li><strong>Feedback loop:</strong> data collected at round $t{+}1$ depend on the decisions of the model deployed at round $t$: $\mathcal{D}_{t+1} = g(\mathcal{D}_t, \pi_t)$, so an initial disparity can be amplified rather than averaged out.</li>
+</ul>
+<p>(Formalizations: course notes.)</p>
+</div>
 </article>
 
 <article>
 <h2>Biased Data: Who Got Sampled</h2>
 <p>If a dataset under-represents a group, the model performs worse for that group. Classic example: face datasets skewed toward lighter skin tones.</p>
 <p><span class="kt">Key takeaway:</span> A model is only as broad as its training examples.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The canonical documented case is face analysis: Buolamwini and Gebru showed the standard face benchmarks were heavily skewed toward lighter-skinned subjects, built a balanced benchmark (skin type $\times$ gender), and exposed large per-subgroup error gaps in commercial systems &mdash; details in the &ldquo;Gender Shades&rdquo; entry below.</p>
+<ul>
+<li><a href="https://proceedings.mlr.press/v81/buolamwini18a.html">Buolamwini &amp; Gebru, &ldquo;Gender Shades&rdquo; (FAccT / PMLR 81, 2018)</a> &mdash; dataset skew measured, balanced benchmark introduced.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Biased Labels: A Hiring Example</h2>
-<p>Train a resume screener on past hires from a company that historically hired mostly men. "Good candidate" becomes "looks like past hires", and the model penalizes signals of being a woman. Amazon scrapped exactly such a tool in 2018.</p>
+<p>Train a resume screener on ten years of past hires from a company that mostly hired men. "Good candidate" becomes "looks like past hires": Reuters revealed in 2018 that Amazon's experimental tool penalized resumes containing the word "women's", and the project was scrapped.</p>
 <p><span class="kt">Key takeaway:</span> When the label encodes past prejudice, the model learns it.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Amazon built an experimental resume-scoring tool from 2014 that rated candidates one to five stars; trained on a decade of male-dominated hiring records, it taught itself that male candidates were preferable and penalized resumes containing the word &ldquo;women's&rdquo;. Reuters broke the story in October 2018 after speaking with five members of the team; the project was scrapped.</p>
+<ul>
+<li><a href="https://www.bbc.com/news/technology-45809919">BBC, &ldquo;Amazon scrapped 'sexist AI' tool&rdquo; (Oct 2018)</a> &mdash; accessible summary of the Reuters reporting.</li>
+<li><a href="https://www.reuters.com/article/us-amazon-com-jobs-automation-insight-idUSKCN1MK08G">Reuters, &ldquo;Amazon scraps secret AI recruiting tool that showed bias against women&rdquo; (Oct 2018)</a> &mdash; the original report.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The Label Is the Problem</h2>
 <p>We rarely measure what we care about. We want "will repay the loan" but record "was approved before". The proxy carries the old prejudice forward, so picking the target variable is itself a fairness decision.</p>
 <p><span class="kt">Key takeaway:</span> Choosing what to predict is a fairness choice.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Proxy-label problem.</strong> Let $Y^{*}$ be the outcome we care about (e.g. &ldquo;would repay&rdquo;) and $Y$ the recorded label (e.g. &ldquo;was approved and repaid&rdquo;). The learner consistently estimates $\eta(x) = \Pr[Y = 1 \mid X = x]$; no amount of data or model capacity recovers $\Pr[Y^{*} = 1 \mid X = x]$ unless the link between $Y$ and $Y^{*}$ is known. When the discrepancy between $Y$ and $Y^{*}$ depends on $A$ &mdash; as when past gatekeepers treated groups differently &mdash; the induced error is systematically group-aligned: target-variable choice is itself a fairness decision (derivation: course notes; the Obermeyer case on the next slide is the measured real-world instance).</p>
+</div>
+</article>
+
+<article>
+<h2>Case: Cost as a Proxy for Need</h2>
+<p>Obermeyer and colleagues (Science 2019) found a health-risk algorithm used healthcare <em>cost</em> as the label for health <em>need</em>. Because less money is spent on Black patients at the same level of sickness, the proxy hid need: fixing the label would raise the share of Black patients flagged for extra care from about $17.7\%$ to $46.5\%$.</p>
+<p><span class="kt">Key takeaway:</span> A biased proxy label produced large-scale, measurable harm.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Obermeyer, Powers, Vogeli, and Mullainathan (Science, Oct 2019) audited a widely used commercial risk algorithm that ranked patients by predicted future <em>cost</em> to allocate high-risk care-management programs. At equal risk scores, Black patients were considerably sicker than White patients, because unequal access means less is spent on Black patients at the same level of need. Remedying the label would raise the fraction of Black patients flagged for extra help from $17.7\%$ to $46.5\%$.</p>
+<ul>
+<li><a href="https://www.science.org/doi/10.1126/science.aax2342">Obermeyer et al., &ldquo;Dissecting racial bias in an algorithm used to manage the health of populations&rdquo;, Science 366 (2019)</a> &mdash; the primary paper.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Feedback Loops: A Lending Example</h2>
 <p>Deny a group more often, and they build no credit track record, so the next dataset "shows" they are risky. The bias confirms itself in a closed loop.</p>
 <p><span class="kt">Key takeaway:</span> Predictions today become the biased data of tomorrow.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Feedback-loop dynamics.</strong> Let $\pi_t$ be the decision policy at round $t$ and suppose the round-$(t{+}1)$ training set contains outcomes only for individuals with $\pi_t(x) = 1$ (approved applicants generate repayment records; rejected ones generate nothing). The learner then estimates $\Pr[Y = 1 \mid X, \text{approved}]$, a selectively censored quantity, and disparities in $\pi_t$ propagate into $\pi_{t+1}$ (derivation: course notes).</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1706.09847">Ensign, Friedler, Neville, Scheidegger &amp; Venkatasubramanian, &ldquo;Runaway Feedback Loops in Predictive Policing&rdquo; (FAT* 2018)</a> &mdash; models the loop formally, shows predictive policing can converge to repeatedly patrolling the same neighborhoods regardless of true crime rates, and proposes fixes.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Why "Just Drop Race" Fails</h2>
 <p>Removing the sensitive column does not remove the bias. ZIP code, name, and school all correlate with race, so the model rebuilds the proxy on its own.</p>
 <p><span class="kt">Key takeaway:</span> Blindness to a feature is not fairness.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Fairness through unawareness.</strong> Constrain the classifier to $\hat Y = f(X_{-A})$, where $X_{-A}$ is the feature vector with $A$ (and explicit proxies) deleted.</p>
+<p><strong>Precise failure (redundant encodings).</strong> Unawareness restricts the <em>syntax</em> of the classifier, not the joint distribution. Whenever $A$ is statistically dependent on $X_{-A}$ (i.e. $I(A; X_{-A}) \gt 0$), $f(X_{-A})$ can remain dependent on $A$; in the extreme where $A = g(X_{-A})$ almost surely &mdash; a <em>redundant encoding</em> &mdash; any classifier that uses $A$ can be simulated exactly without it, so unawareness imposes no distributional constraint at all (derivation: course notes). Dwork et al. call this &ldquo;discrimination based on redundant encoding&rdquo; and describe it as a successful attack against &ldquo;fairness through blindness&rdquo;: with rich behavioral data, group membership is embedded &ldquo;holographically&rdquo; in the record.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1104.3913">Dwork, Hardt, Pitassi, Reingold &amp; Zemel, &ldquo;Fairness Through Awareness&rdquo; (ITCS 2012)</a> &mdash; Appendix A (&ldquo;Catalog of Evils&rdquo;), item 2.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Setting Up the Notation</h2>
 <p>We fix three symbols for the rest of the lecture: $A$ is the protected group attribute, $Y$ is the true label, and $\hat Y$ is the model's prediction. Example: race, re-offends, "high risk".</p>
 <p><span class="kt">Key takeaway:</span> $A$, $Y$, $\hat Y$ are the vocabulary for every fairness definition.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Fix one probability space for the whole lecture, with a random tuple drawn from the population:</p>
+<ul>
+<li>$X \in \mathcal{X}$ &mdash; observed features; $A \in \{a, b\}$ &mdash; protected (group) attribute, which may or may not be a coordinate of $X$;</li>
+<li>$Y \in \{0, 1\}$ &mdash; true label (&ldquo;re-offends&rdquo;, &ldquo;repays&rdquo;);</li>
+<li>$\hat S \in [0, 1]$ &mdash; a risk score $\hat S = s(X)$, and $\hat Y = \mathbf{1}[\hat S \ge t]$ &mdash; the thresholded binary prediction;</li>
+<li>$p_a = \Pr[Y = 1 \mid A = a]$ &mdash; the base rate (prevalence) of group $a$.</li>
+</ul>
+<p>All fairness criteria below are statements about the joint distribution of $(A, Y, \hat Y)$ or $(A, Y, \hat S)$. This matches the technical supplement (lec13tech) and the papers' notation &mdash; Chouldechova writes $S$, $R$, $Y$ for score, race, outcome.</p>
+</div>
 </article>
 
 <article>
@@ -96,48 +177,123 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>The Confusion Matrix, Per Group</h2>
 <p>Every group-fairness metric is read off the confusion matrix: true positives, false positives, false negatives, true negatives. The trick is to compute it separately for each group and compare.</p>
 <p><span class="kt">Key takeaway:</span> Fairness metrics compare confusion-matrix cells across groups.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>For each group $g$, the per-group confusion quantities are conditional probabilities:</p>
+$$\mathrm{TPR}_g = \Pr[\hat Y = 1 \mid Y = 1, A = g], \qquad \mathrm{FPR}_g = \Pr[\hat Y = 1 \mid Y = 0, A = g],$$
+$$\mathrm{FNR}_g = 1 - \mathrm{TPR}_g, \qquad \mathrm{PPV}_g = \Pr[Y = 1 \mid \hat Y = 1, A = g].$$
+<p>With base rate $p_g$, the predicted-positive cell masses within group $g$ are $\Pr[\hat Y = 1, Y = 1 \mid A = g] = p_g(1 - \mathrm{FNR}_g)$ and $\Pr[\hat Y = 1, Y = 0 \mid A = g] = (1 - p_g)\,\mathrm{FPR}_g$; hence by Bayes,</p>
+$$\mathrm{PPV}_g = \frac{p_g (1 - \mathrm{FNR}_g)}{p_g (1 - \mathrm{FNR}_g) + (1 - p_g)\,\mathrm{FPR}_g}.$$
+<p>This relation is the engine of the impossibility theorem in section 04 (derivation: course notes; it rearranges to Chouldechova's identity, stated there).</p>
+</div>
 </article>
 
 <article>
 <h2>Demographic Parity</h2>
 <p>Intuition: every group gets positive predictions at the same rate. Formally, $\Pr[\hat Y = 1 \mid A = a] = \Pr[\hat Y = 1 \mid A = b]$. Same approval rate, period.</p>
 <p><span class="kt">Key takeaway:</span> Demographic parity equalizes the positive-prediction rate.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Demographic (statistical) parity &mdash; independence.</strong> $\hat Y \perp A$; equivalently $\Pr[\hat Y = 1 \mid A = a] = \Pr[\hat Y = 1 \mid A = b]$ for all groups. Only the joint law of $(\hat Y, A)$ appears; $Y$ plays no role. Formalized as &ldquo;statistical parity&rdquo; by Dwork et al. (ITCS 2012).</p>
+<p><strong>Ratio form &mdash; the disparate-impact ($80\%$) rule.</strong> The disparate-impact ratio is $\mathrm{DI} = \dfrac{\min_g \Pr[\hat Y = 1 \mid A = g]}{\max_g \Pr[\hat Y = 1 \mid A = g]}$. US enforcement practice uses the EEOC four-fifths rule (Uniform Guidelines on Employee Selection Procedures, 29 CFR &sect;1607.4(D), 1978): a selection rate for any race, sex, or ethnic group &ldquo;which is less than four-fifths (4/5) (or eighty percent) of the rate for the group with the highest rate will generally be regarded by the Federal enforcement agencies as evidence of adverse impact&rdquo;. It is an evidentiary rule of thumb, not a mathematical fairness definition.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://www.ecfr.gov/current/title-29/section-1607.4">29 CFR &sect;1607.4 (eCFR)</a> &mdash; the four-fifths rule, verbatim, in the current Code of Federal Regulations.</li>
+<li><a href="https://arxiv.org/abs/1104.3913">Dwork et al., &ldquo;Fairness Through Awareness&rdquo; (ITCS 2012)</a> &mdash; statistical parity defined and critiqued.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Parity Ignores the Truth</h2>
 <p>Demographic parity looks only at $\hat Y$, never at $Y$. It demands equal selection rates even if the groups genuinely differ in outcomes, so it is strong on access but blind to who actually qualifies.</p>
 <p><span class="kt">Key takeaway:</span> Parity equalizes access without checking the truth.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Remark (parity excludes the perfect predictor).</strong> If $p_a \neq p_b$, the perfect predictor $\hat Y = Y$ violates demographic parity, since $\Pr[\hat Y = 1 \mid A = g] = p_g$. So under differing base rates, parity <em>forces</em> errors on at least one group. <em>Proof:</em> immediate from the definition (derivation: course notes).</p>
+<p><strong>Remark (parity does not protect individuals).</strong> Dwork et al.'s &ldquo;self-fulfilling prophecy&rdquo;: deliberately select <em>unqualified</em> members of a group at exactly the parity-satisfying rate &mdash; statistical parity holds, yet the group's members are harmed and a bad track record is manufactured to &ldquo;justify&rdquo; future discrimination. Parity constrains the selection rate, not who is selected.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1104.3913">Dwork et al. (ITCS 2012)</a> &mdash; Appendix A, item 5 (self-fulfilling prophecy).</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Equalized Odds</h2>
 <p>Intuition: equal error rates, conditioned on the true label. Formally, $\Pr[\hat Y = 1 \mid Y = y, A = a]$ is the same across groups for each value of $y$. This means matched false-positive and true-positive rates.</p>
 <p><span class="kt">Key takeaway:</span> Equalized odds equalizes error rates given the truth.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Equalized odds &mdash; separation</strong> (Hardt, Price &amp; Srebro 2016, Definition 2.1). $\hat Y$ satisfies equalized odds with respect to $A$ and $Y$ if $\hat Y$ and $A$ are independent conditional on $Y$: $\hat Y \perp A \mid Y$. For binary $\hat Y$ this reads: for each $y \in \{0, 1\}$,</p>
+$$\Pr[\hat Y = 1 \mid Y = y,\, A = a] = \Pr[\hat Y = 1 \mid Y = y,\, A = b].$$
+<p>The case $y = 1$ demands equal true-positive rates; $y = 0$ demands equal false-positive rates. The score-level analogue is Kleinberg et al.'s pair of <em>balance</em> conditions &mdash; equal average score for the positive class across groups, and likewise for the negative class (section 04).</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1610.02413">Hardt, Price &amp; Srebro, &ldquo;Equality of Opportunity in Supervised Learning&rdquo; (NeurIPS 2016)</a> &mdash; definitions, the post-processing construction, and the FICO case study.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Equal Odds, Equal Mistakes</h2>
 <p>Because we condition on $Y$, innocent people share the same false-alarm rate and guilty people share the same hit rate. A weaker version, equal opportunity, only fixes the false-negative side.</p>
 <p><span class="kt">Key takeaway:</span> Equalized odds shares the burden of errors across groups.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Equal opportunity</strong> (Hardt et al. 2016, Definition 2.2). $\Pr[\hat Y = 1 \mid Y = 1, A = a] = \Pr[\hat Y = 1 \mid Y = 1, A = b]$ &mdash; equalized odds restricted to the advantaged outcome $y = 1$ only: equal true-positive (equivalently false-negative) rates, with the $y = 0$ constraint dropped.</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>Remark.</strong> Unlike demographic parity, equalized odds is compatible with perfect prediction: $\hat Y = Y$ gives $\Pr[\hat Y = 1 \mid Y = y, A = g] = y$ for every group. Hardt et al. further show how to <em>post-process</em> any learned score (via group-dependent randomized thresholds) into an optimally accurate predictor satisfying equalized odds or equal opportunity.</p>
+</div>
 </article>
 
 <article>
 <h2>Calibration</h2>
 <p>Intuition: a score means the same thing in every group. Formally, $\Pr[Y = 1 \mid \hat S = s, A = a] = s$ for every group. Among everyone scored $0.7$, roughly $70\%$ are truly positive.</p>
 <p><span class="kt">Key takeaway:</span> Calibration makes the score's meaning group-independent.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Calibration within groups.</strong> For every score value $s$ and every group $g$: $\Pr[Y = 1 \mid \hat S = s, A = g] = s$. The score is simultaneously numerically honest and group-blind in meaning.</p>
+<p><strong>Test fairness / matched conditional frequencies</strong> (Chouldechova 2017, Definition 2.1). The group-independence part alone: for all $s$, $\Pr[Y = 1 \mid \hat S = s, A = a] = \Pr[Y = 1 \mid \hat S = s, A = b]$ &mdash; the score means the <em>same</em> thing in each group, though not necessarily the value $s$ itself. As an independence statement: sufficiency, $Y \perp A \mid \hat S$.</p>
+<p><strong>Predictive parity (PPV parity).</strong> For the thresholded classifier: $\mathrm{PPV}_a = \mathrm{PPV}_b$, i.e. $\Pr[Y = 1 \mid \hat Y = 1, A = a] = \Pr[Y = 1 \mid \hat Y = 1, A = b]$. Chouldechova (&sect;2.1) notes that test fairness of the underlying score implies that the PPV of the coarsened high/low-risk score does not depend on the group &mdash; predictive parity is the binary shadow of calibration.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1610.07524">Chouldechova, &ldquo;Fair prediction with disparate impact&rdquo; (Big Data 5(2), 2017)</a> &mdash; definitions and the COMPAS calibration plot (her Figure 1).</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Calibration Trusts the Score</h2>
 <p>Calibration is what makes a risk score usable: a $0.7$ should mean $0.7$ no matter the group, otherwise the same number misleads different people. Natural for lenders, judges, and doctors reading a probability.</p>
 <p><span class="kt">Key takeaway:</span> Calibration is the property decision-makers implicitly assume.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Kleinberg et al. give the decision-theoretic reason calibration is non-negotiable for a score that will be <em>read</em>: if calibration within groups fails on some score bin, then people in the same bin from different groups have different actual positive rates &mdash; so a rational decision-maker has a clear incentive to treat the two groups differently within that bin, and the score invites exactly the group-conditioned treatment it was supposed to prevent.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/1609.05807">Kleinberg, Mullainathan &amp; Raghavan (ITCS 2017)</a> &mdash; &sect;1, the incentive argument for calibration (their condition (A)).</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Three Criteria, Three Questions</h2>
 <p>Side by side: demographic parity equalizes $\Pr[\hat Y = 1]$, equalized odds equalizes error rates given $Y$, calibration equalizes the meaning of the score. Each is reasonable on its own.</p>
 <p><span class="kt">Key takeaway:</span> Three sensible criteria that, as we will see, will not coexist.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>The three criteria are the three canonical ways to place one (conditional) independence bar among $A$, $Y$, and the prediction:</p>
+<ul>
+<li><strong>Independence</strong> (demographic parity): $\hat Y \perp A$;</li>
+<li><strong>Separation</strong> (equalized odds): $\hat Y \perp A \mid Y$;</li>
+<li><strong>Sufficiency</strong> (calibration / test fairness): $Y \perp A \mid \hat S$.</li>
+</ul>
+<p>This trichotomy &mdash; and the pairwise tensions among the three &mdash; is the organizing frame of the Barocas&ndash;Hardt&ndash;Narayanan textbook.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://fairmlbook.org/">Barocas, Hardt &amp; Narayanan, <em>Fairness and Machine Learning: Limitations and Opportunities</em> (free online textbook)</a> &mdash; the classification chapter develops all three criteria and their pairwise incompatibilities.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -150,30 +306,73 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>What COMPAS Is</h2>
 <p>COMPAS is a commercial recidivism risk score, sold by the company Northpointe, used in US courts. It outputs a 1-to-10 risk score that judges saw during bail and sentencing.</p>
 <p><span class="kt">Key takeaway:</span> A risk score with real consequences for real defendants.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>COMPAS (Correctional Offender Management Profiling for Alternative Sanctions) is a proprietary recidivism risk-and-needs assessment sold by Northpointe (now part of Equivant). It outputs decile risk scores from 1 to 10, and was used by courts and corrections agencies at bail, sentencing, and parole decision points. ProPublica's analysis used two years of COMPAS scores from the Broward County Sheriff's Office in Florida.</p>
+<ul>
+<li><a href="https://www.propublica.org/article/how-we-analyzed-the-compas-recidivism-algorithm">ProPublica, &ldquo;How We Analyzed the COMPAS Recidivism Algorithm&rdquo; (May 2016)</a> &mdash; methodology, data, and score definitions.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The ProPublica Investigation</h2>
-<p>In 2016, ProPublica journalists audited COMPAS by race and found that among defendants who did not re-offend, Black defendants were flagged high-risk far more often. That is a false-positive-rate gap.</p>
+<p>In 2016, ProPublica journalists audited COMPAS by race and found that among defendants who did not re-offend, Black defendants were flagged high-risk nearly twice as often as White defendants. That is a false-positive-rate gap.</p>
 <p><span class="kt">Key takeaway:</span> ProPublica found unequal false-positive rates across race.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>&ldquo;Machine Bias&rdquo; (Angwin, Larson, Mattu &amp; Kirchner, May 23, 2016) analyzed COMPAS scores for defendants in Broward County, Florida, matched against roughly two years of subsequent arrest records. Among defendants who did not re-offend, Black defendants were nearly twice as likely as white defendants to be labeled higher-risk; the companion methodology article publishes the contingency tables and code.</p>
+<ul>
+<li><a href="https://www.propublica.org/article/machine-bias-risk-assessments-in-criminal-sentencing">ProPublica, &ldquo;Machine Bias&rdquo; (May 23, 2016)</a> &mdash; the investigation.</li>
+<li><a href="https://www.propublica.org/article/how-we-analyzed-the-compas-recidivism-algorithm">ProPublica, &ldquo;How We Analyzed the COMPAS Recidivism Algorithm&rdquo;</a> &mdash; methodology and exact rates.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>False Positives, By Group</h2>
-<p>The bar chart shows, among people who did not re-offend, the share labeled high-risk: much higher for Black defendants than White. (Figures illustrative of the ProPublica analysis; a real chart is the TODO.)</p>
+<p>Among people who did not re-offend, $44.9\%$ of Black defendants were labeled high-risk versus $23.5\%$ of White defendants (ProPublica's published analysis). The mirror image: White re-offenders were mislabeled low-risk at $47.7\%$ versus $28.0\%$.</p>
 <p><span class="kt">Key takeaway:</span> Innocent Black defendants were far more likely to be wrongly flagged.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>ProPublica's published contingency-table rates (Broward County data, two-year follow-up), with the formal quantity each number estimates:</p>
+<ul>
+<li>$\mathrm{FPR}_{\text{Black}} = \Pr[\hat Y = 1 \mid Y = 0, A = \text{Black}] = 44.85\%$ vs. $\mathrm{FPR}_{\text{white}} = 23.45\%$ &mdash; among defendants who did <em>not</em> re-offend, the share labeled higher-risk;</li>
+<li>$\mathrm{FNR}_{\text{Black}} = \Pr[\hat Y = 0 \mid Y = 1, A = \text{Black}] = 27.99\%$ vs. $\mathrm{FNR}_{\text{white}} = 47.72\%$ &mdash; among defendants who did re-offend, the share labeled lower-risk.</li>
+</ul>
+<p>Chouldechova (footnote 4) cites the same data rounded &mdash; Black: FPR $45\%$, FNR $28\%$; white: FPR $23\%$, FNR $48\%$ &mdash; together with the recidivism base rates $p_{\text{Black}} = 51\%$, $p_{\text{white}} = 39\%$ that will drive the impossibility argument.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://www.propublica.org/article/how-we-analyzed-the-compas-recidivism-algorithm">ProPublica methodology article</a> &mdash; the exact rates above.</li>
+<li><a href="https://arxiv.org/abs/1610.07524">Chouldechova (2017)</a> &mdash; footnote 4 and &sect;2.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Northpointe Responds</h2>
-<p>The vendor argued the score was fair: a given risk score predicted the same re-offense rate for Black and White defendants alike. That property is exactly calibration.</p>
+<p>The vendor's technical rebuttal argued the score was fair: a given risk score predicted the same re-offense rate for Black and White defendants alike — "predictive parity". That property is exactly calibration.</p>
 <p><span class="kt">Key takeaway:</span> Northpointe defended the tool on calibration grounds.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Predictive parity, formalized</strong> (Northpointe's defense): $\Pr[Y = 1 \mid \hat Y = 1, A = \text{Black}] = \Pr[Y = 1 \mid \hat Y = 1, A = \text{white}]$ &mdash; equal PPV &mdash; and, at the score level, that $\Pr[Y = 1 \mid \hat S = s, A]$ does not depend on race (test fairness). Chouldechova's Figure 1 shows the COMPAS decile scores approximately satisfy test fairness, and Flores et al. (2016) verified the same adherence via logistic regression.</p>
+<h3>Background &amp; further reading</h3>
+<p>Northpointe's research team published a rebuttal &mdash; Dieterich, Mendoza &amp; Brennan, &ldquo;COMPAS Risk Scales: Demonstrating Accuracy Equity and Predictive Parity&rdquo; (Northpointe, 2016) &mdash; arguing ProPublica used the wrong fairness measures and that the scales are equally accurate and equally predictive across races. ProPublica answered with a technical response standing by its analysis.</p>
+<ul>
+<li><a href="https://www.documentcloud.org/documents/2998391-ProPublicaCommentary-Final070616/">Dieterich, Mendoza &amp; Brennan (Northpointe, 2016) rebuttal (DocumentCloud)</a> &mdash; the full technical report.</li>
+<li><a href="https://www.propublica.org/article/technical-response-to-northpointe">ProPublica, &ldquo;Technical Response to Northpointe&rdquo;</a> &mdash; the counter-reply.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Both Sides Were Right</h2>
 <p>No one was lying. ProPublica measured equalized odds (false-positive rates) and found them unequal; Northpointe measured calibration and found it held. They simply checked different fairness criteria.</p>
 <p><span class="kt">Key takeaway:</span> The disagreement was about definitions, not facts.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Translation into the formal criteria.</strong> In Kleinberg et al.'s terminology (&sect;1): &ldquo;the critique by Angwin et al. focused on the risk tool's violation of conditions (B) and (C)&rdquo; &mdash; the balance (error-rate) conditions &mdash; while &ldquo;the counter-arguments established that it satisfies condition (A)&rdquo; &mdash; calibration within groups. Both measurements are correct statements about the same joint distribution; they instantiate different conditional-independence requirements ($\hat Y \perp A \mid Y$ vs. $Y \perp A \mid \hat S$), and section 04 shows no non-trivial score on this data could satisfy both.</p>
+</div>
 </article>
 
 <article>
@@ -192,24 +391,74 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>The Key Ingredient: Base Rates</h2>
 <p>The base rate $p_a = \Pr[Y = 1 \mid A = a]$ is how common a positive outcome is in a group. When two groups have different base rates, the impossibility kicks in.</p>
 <p><span class="kt">Key takeaway:</span> Differing base rates are what force the conflict.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Base rate.</strong> $p_g = \Pr[Y = 1 \mid A = g]$. In Kleinberg et al.'s finite-population notation, the group-$t$ base rate is $\mu_t / N_t$, where $N_t$ is the group size and $\mu_t$ its number of positive-class members. In the COMPAS data the two-year recidivism base rates were $51\%$ (Black defendants) vs. $39\%$ (white defendants) &mdash; the gap that makes the impossibility bind (Chouldechova, footnote 4).</p>
+</div>
 </article>
 
 <article>
 <h2>The Impossibility Theorem</h2>
-<p>Kleinberg, Mullainathan, and Raghavan (2017): if base rates differ between groups, no score can be calibrated and have equal false-positive and false-negative rates at the same time, except in trivial cases (perfect prediction or equal base rates).</p>
+<p>Chouldechova (2017) and Kleinberg, Mullainathan, and Raghavan (2017): if base rates differ between groups, no score can be calibrated and have equal false-positive and false-negative rates at the same time, except in trivial cases (perfect prediction or equal base rates).</p>
 <p><span class="kt">Key takeaway:</span> Calibration plus equal error rates is impossible when base rates differ.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Theorem (Chouldechova 2017, binary-prediction form).</strong> Consider a binary classifier on two groups with prevalences $p_a, p_b \in (0, 1)$, each group predicting positive with positive probability. If the classifier satisfies predictive parity ($\mathrm{PPV}_a = \mathrm{PPV}_b$), equal false-positive rates with $\mathrm{FPR}_a = \mathrm{FPR}_b \gt 0$, and equal false-negative rates, then $p_a = p_b$. Contrapositive: when base rates differ, a test-fair (calibrated) score cannot have equal false-positive and false-negative rates across groups.</p>
+<p><strong>Theorem 1.1 (Kleinberg&ndash;Mullainathan&ndash;Raghavan 2017, score form).</strong> Consider a risk assignment into bins with scores $v_b \in [0, 1]$ and the conditions:
+(A) <em>calibration within groups</em> &mdash; in every bin $b$ and group $t$, the expected fraction of the bin's group-$t$ members who are positive-class equals $v_b$;
+(B) <em>balance for the negative class</em> &mdash; the average score of negative-class members is the same in both groups;
+(C) <em>balance for the positive class</em> &mdash; the average score of positive-class members is the same in both groups.
+If an instance admits a risk assignment satisfying (A), (B), and (C), then the instance must either allow perfect prediction ($p_\sigma \in \{0, 1\}$ for every feature vector $\sigma$) or have equal base rates.</p>
+<p><strong>Theorem 1.2 (approximate version).</strong> There is a continuous $f$ with $f(x) \to 0$ as $x \to 0$ such that any risk assignment satisfying the $\varepsilon$-approximate versions of (A), (B), (C) forces the instance to be $f(\varepsilon)$-approximately perfectly predictable or to have $f(\varepsilon)$-approximately equal base rates. So even <em>approximate</em> joint fairness is impossible away from the trivial cases.</p>
+<p>Both statements verified against the papers; proofs in the next entry.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1610.07524">Chouldechova, &ldquo;Fair prediction with disparate impact&rdquo; (Big Data 2017; arXiv:1610.07524)</a>.</li>
+<li><a href="https://arxiv.org/abs/1609.05807">Kleinberg, Mullainathan &amp; Raghavan, &ldquo;Inherent Trade-Offs in the Fair Determination of Risk Scores&rdquo; (ITCS 2017; arXiv:1609.05807)</a>.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Two Proofs, Same Wall</h2>
 <p>The same result was found independently in 2017: Chouldechova framed it directly through the COMPAS error rates, while Kleinberg, Mullainathan, and Raghavan gave the general three-criteria version.</p>
 <p><span class="kt">Key takeaway:</span> Two independent proofs reached the same impossibility.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Proof 1: via Chouldechova's base-rate identity.</strong> (The identity is her eq. (2.4) in the arXiv version, eq. (2.6) in the published Big Data version; the short proof of the identity below is a derivation: course notes, checked against her statement.)</p>
+<p><em>Lemma (base-rate identity).</em> For any binary classifier and any group with prevalence $p \in (0, 1)$ and $\Pr[\hat Y = 1] \gt 0$,</p>
+$$\mathrm{FPR} \;=\; \frac{p}{1 - p} \cdot \frac{1 - \mathrm{PPV}}{\mathrm{PPV}} \cdot \big(1 - \mathrm{FNR}\big).$$
+<p><em>Proof.</em> Count the two ways to land in the predicted-positive cell: $\Pr[\hat Y = 1, Y = 1] = p\,(1 - \mathrm{FNR})$ and $\Pr[\hat Y = 1, Y = 0] = (1 - p)\,\mathrm{FPR}$. By the definition of PPV,</p>
+$$\mathrm{PPV} = \frac{p\,(1 - \mathrm{FNR})}{p\,(1 - \mathrm{FNR}) + (1 - p)\,\mathrm{FPR}} \;\iff\; (1 - p)\,\mathrm{FPR} \cdot \mathrm{PPV} = p\,(1 - \mathrm{FNR})(1 - \mathrm{PPV}),$$
+<p>and dividing both sides by $(1 - p)\,\mathrm{PPV}$ gives the identity. $\square$</p>
+<p><em>Impossibility.</em> Suppose the groups share $\mathrm{PPV}_a = \mathrm{PPV}_b$, $\mathrm{FNR}_a = \mathrm{FNR}_b$, and $\mathrm{FPR}_a = \mathrm{FPR}_b \gt 0$. Writing the identity in each group and dividing,</p>
+$$1 = \frac{\mathrm{FPR}_a}{\mathrm{FPR}_b} = \frac{p_a/(1 - p_a)}{p_b/(1 - p_b)},$$
+<p>and since $x \mapsto x/(1 - x)$ is strictly increasing on $(0, 1)$, this forces $p_a = p_b$. $\square$</p>
+<p><strong>Proof 2: Kleinberg&ndash;Mullainathan&ndash;Raghavan.</strong> (Their argument, verified against &sect;2 of the paper; condensed but complete for two groups.)</p>
+<ol>
+<li><em>Calibration fixes each group's total score.</em> Condition (A) says: in each bin $b$, the expected score mass handed to group-$t$ members of the bin ($v_b$ times their expected count) equals the expected number of group-$t$ positives in the bin. Summing over bins: the total expected score assigned to group $t$ equals $\mu_t$, its number of positive-class members.</li>
+<li><em>Balance turns the totals into two lines.</em> Let $x$ be the average score of a negative-class member and $y$ the average score of a positive-class member &mdash; by (B) and (C) these are the <em>same in both groups</em>. Splitting group $t$'s total score by class: $(N_t - \mu_t)\,x + \mu_t\, y = \mu_t$ &mdash; one linear equation in $(x, y)$ per group.</li>
+<li><em>Solve the system.</em> Dividing by $N_t$: $(1 - \rho_t)\,x + \rho_t\, y = \rho_t$ with base rate $\rho_t = \mu_t / N_t$. Both lines pass through $(x, y) = (0, 1)$. If $\rho_1 = \rho_2$, the two equations coincide &mdash; equal base rates. If $\rho_1 \neq \rho_2$, the lines are distinct, and two distinct lines meet in at most one point, so $(x, y) = (0, 1)$.</li>
+<li><em>$(x, y) = (0, 1)$ means perfect prediction.</em> $y = 1$ forces every positive-class member into bins of score $1$, and $x = 0$ forces every negative-class member into bins of score $0$; calibration then forces $p_\sigma = 1$ on the former and $p_\sigma = 0$ on the latter &mdash; perfect prediction. $\square$</li>
+</ol>
+<p><strong>How the two forms relate.</strong> Chouldechova's is the binary-prediction version: calibration enters as PPV parity of the thresholded score, and the two error-rate equalities are the binary shadows of KMR's balance conditions (B) and (C). KMR's is the score version, needing no threshold; they describe Chouldechova's setting as binary prediction with &ldquo;a form of calibration adapted to binary prediction&rdquo; (equal fraction of true positives among the positively labeled in each group). One wall, two coordinate systems. Each paper notes the other as independent concurrent work.</p>
+</div>
 </article>
 
 <article>
 <h2>Pick Two of Three</h2>
 <p>The triangle has calibration, equal false-positive rate, and equal false-negative rate at its corners. Any two are achievable together; all three are not, whenever base rates differ.</p>
 <p><span class="kt">Key takeaway:</span> You may pick any two corners, never all three.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Remark (each pair is consistent; derivation: course notes, consistent with the technical supplement).</strong> The identity $\mathrm{FPR} = \frac{p}{1-p} \cdot \frac{1 - \mathrm{PPV}}{\mathrm{PPV}} \cdot (1 - \mathrm{FNR})$ is one equation per group linking the three quantities, so pinning any <em>two</em> of $\{\mathrm{PPV}, \mathrm{FPR}, \mathrm{FNR}\}$ equal across groups leaves the third free to absorb the base-rate difference:</p>
+<ul>
+<li><em>Equal FPR $+$ equal FNR</em> (equalized odds, no calibration): achievable &mdash; trivially by constant classifiers, non-trivially by Hardt et al.'s post-processing; the identity then makes the PPVs differ.</li>
+<li><em>Equal PPV $+$ equal FNR</em>: consistent &mdash; the FPRs then differ by exactly the base-rate odds ratio (next entries).</li>
+<li><em>Equal PPV $+$ equal FPR</em>: consistent &mdash; the FNRs absorb the gap.</li>
+</ul>
+<p>Demanding all three simultaneously collapses the identity to $p_a = p_b$, which is the theorem.</p>
+</div>
 </article>
 
 <article>
@@ -220,14 +469,28 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>Demo: The Numbers Don't Reconcile</h2>
-<p>With base rates $0.50$ and $0.25$, a calibrated score yields false-positive rates of about $0.42$ and $0.20$ for the two groups. No threshold rescues both error rates; the base-rate gap forces the split.</p>
+<p>With base rates $0.50$ and $0.25$, a calibrated two-value score ($\hat S \in \{0.2, 0.8\}$, threshold $0.5$) yields false-positive rates of $0.20$ versus $0.02$ and false-negative rates of $0.20$ versus $0.73$. No threshold rescues both error rates; the base-rate gap forces the split.</p>
 <p><span class="kt">Key takeaway:</span> Calibration holds, yet the error rates pull apart.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>The wedge, fully worked (derivation: course notes; matches the table in the technical supplement).</strong> Each group receives a two-value score $\hat S \in \{0.2, 0.8\}$ that is calibrated within the group: $\Pr[Y = 1 \mid \hat S = s, A = g] = s$. Let $w_g = \Pr[\hat S = 0.8 \mid A = g]$. Calibration pins the mix to the base rate: $p_g = 0.8\,w_g + 0.2\,(1 - w_g) = 0.2 + 0.6\,w_g$, so $p_A = 0.50 \Rightarrow w_A = \tfrac{1}{2}$ and $p_B = 0.25 \Rightarrow w_B = \tfrac{1}{12}$.</p>
+<p>Threshold at $t = 0.5$, so $\hat Y = 1 \iff \hat S = 0.8$. By Bayes,</p>
+$$\mathrm{FPR}_g = \frac{\Pr[\hat S = 0.8,\, Y = 0 \mid A = g]}{1 - p_g} = \frac{0.2\, w_g}{1 - p_g}, \qquad \mathrm{FNR}_g = \frac{\Pr[\hat S = 0.2,\, Y = 1 \mid A = g]}{p_g} = \frac{0.2\,(1 - w_g)}{p_g}.$$
+<p>Group A: $\mathrm{FPR}_A = \frac{0.2 \cdot 1/2}{0.5} = 0.20$ and $\mathrm{FNR}_A = \frac{0.2 \cdot 1/2}{0.5} = 0.20$. Group B: $\mathrm{FPR}_B = \frac{0.2 \cdot 1/12}{0.75} = \frac{1}{45} \approx 0.022$ and $\mathrm{FNR}_B = \frac{0.2 \cdot 11/12}{0.25} = \frac{11}{15} \approx 0.733$.</p>
+<p>Sanity check against the identity: $\mathrm{PPV} = 0.8$ in both groups (calibration at $\hat S = 0.8$), so $\mathrm{FPR}_g = \frac{p_g}{1 - p_g} \cdot \frac{0.2}{0.8} \cdot (1 - \mathrm{FNR}_g)$: group A gives $1 \cdot 0.25 \cdot 0.8 = 0.20$; group B gives $\tfrac{1}{3} \cdot 0.25 \cdot \tfrac{4}{15} = \tfrac{1}{45}$ &mdash; both match. And no re-thresholding fixes it: any threshold yields error rates driven by the score mixes $w_g$, which calibration has already pinned to the unequal base rates.</p>
+</div>
 </article>
 
 <article>
 <h2>Why the Gap Is Forced</h2>
 <p>Calibration ties each score to its group's base rate. Different base rates mean different score mixes, so the errors must land unevenly, and fixing one error rate breaks the other. The conflict is arithmetic.</p>
 <p><span class="kt">Key takeaway:</span> The gap is forced by arithmetic, not by a bad model.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Quantifying the forced gap (derivation: course notes, from the verified identity).</strong> Hold predictive parity and equal FNR exactly. Dividing the base-rate identity across groups,</p>
+$$\frac{\mathrm{FPR}_a}{\mathrm{FPR}_b} = \frac{p_a/(1 - p_a)}{p_b/(1 - p_b)},$$
+<p>the base-rate <em>odds ratio</em>. With the COMPAS base rates $p_{\text{Black}} = 0.51$, $p_{\text{white}} = 0.39$: $\frac{0.51/0.49}{0.39/0.61} \approx 1.63$ &mdash; before any modeling choice, a test-fair score with equal FNR must give Black defendants roughly $1.6\times$ the white false-positive rate. (The observed ratio, $44.85/23.45 \approx 1.9$, is larger because COMPAS satisfies the parity conditions only approximately.)</p>
+</div>
 </article>
 
 <article>
@@ -252,36 +515,78 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Group Fairness Can Hide Harm</h2>
 <p>Equal group averages can mask injustice to individuals: accept strong and weak members of a group at just the right rate, the averages match, yet specific people are still wronged.</p>
 <p><span class="kt">Key takeaway:</span> Group balance is not person-level fairness.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Remark (group criteria are population-level).</strong> Every criterion in section 02 is an equality of conditional probabilities &mdash; a constraint on the joint distribution of $(A, Y, \hat Y)$; permuting <em>which</em> individuals within a group receive $\hat Y = 1$ leaves all of them untouched. Dwork et al.'s catalogue makes this concrete: in the &ldquo;self-fulfilling prophecy&rdquo;, unqualified members of a group are selected at exactly the parity-satisfying rate &mdash; statistical parity holds while individuals are wronged and future discrimination is &ldquo;justified&rdquo; (remark: course notes; examples: Dwork et al., Appendix A).</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1104.3913">Dwork et al. (ITCS 2012)</a> &mdash; Appendix A, &ldquo;Catalog of Evils&rdquo;.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Individual Fairness</h2>
 <p>Intuition: similar people should receive similar outcomes. Dwork and colleagues formalized this as Fairness Through Awareness: two individuals who are similar for the task should get nearly the same prediction.</p>
 <p><span class="kt">Key takeaway:</span> Treat similar individuals similarly.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Lipschitz fairness</strong> (Dwork, Hardt, Pitassi, Reingold &amp; Zemel 2012, Definition 2.1). Let $V$ be the set of individuals and $A$ a set of outcomes, and let a classifier be a randomized mapping $M : V \to \Delta(A)$ from individuals to distributions over outcomes. Given a task-specific similarity metric $d : V \times V \to \mathbb{R}$ and a distance $D$ on $\Delta(A)$ (total variation, or their $D_\infty$), the mapping $M$ satisfies the $(D, d)$-Lipschitz property if</p>
+$$D(Mx, My) \le d(x, y) \qquad \text{for every } x, y \in V.$$
+<p>Similar individuals ($d(x, y)$ small) must receive nearly indistinguishable outcome distributions. The fair classifier is then chosen by minimizing expected loss subject to the Lipschitz constraint &mdash; a linear program (their Lemma 2.2), hence exactly solvable. Note the definitional shift: the constraint quantifies over <em>pairs of individuals</em>, not over groups.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1104.3913">Dwork et al., &ldquo;Fairness Through Awareness&rdquo; (ITCS 2012; arXiv:1104.3913)</a> &mdash; the definition, the LP, and the connection to differential privacy (the Lipschitz condition generalizes DP).</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The Hard Part: "Similar"</h2>
 <p>The whole idea rests on a similarity metric: who counts as similar for this task? Defining that metric well is the real problem, and a bad metric just relaunders the bias.</p>
 <p><span class="kt">Key takeaway:</span> The hard question moves into the similarity metric.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Remark (the metric carries the normativity).</strong> The guarantee is only as strong as $d$: if $d$ is uniformly large, the Lipschitz condition is vacuous; if $d$ is learned from biased data, the bias is re-imported through the constraint itself. Dwork et al. treat the metric as an external input to the framework, and they prove the bridge to group fairness: the Lipschitz condition implies statistical parity between two groups <em>if and only if</em> the Earthmover distance between the groups (under $d$) is small &mdash; individual fairness yields group fairness exactly when the metric already sees the groups as similar.</p>
+</div>
 </article>
 
 <article>
 <h2>A Causal View</h2>
-<p>Causal fairness asks a counterfactual: would the decision change if this person had been a different race, with everything else held equal? If yes, the protected attribute caused the outcome.</p>
+<p>Causal fairness asks a counterfactual: would the decision change if this person had been a different race, with everything else held equal? Counterfactual fairness (Kusner et al., 2017) demands that it does not — otherwise the protected attribute caused the outcome.</p>
 <p><span class="kt">Key takeaway:</span> Causal fairness asks whether the attribute caused the decision.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Structural causal model</strong> (Pearl, as used by Kusner et al.): a triple $(U, V, F)$ &mdash; latent background variables $U$, observables $V$, and structural equations $F = \{f_1, \dots, f_n\}$ giving each $V_i$ as a function of its parents and background variables. The counterfactual $\hat Y_{A \leftarrow a'}(U)$ is the prediction obtained by intervening to set $A = a'$ while holding the background $U$ fixed.</p>
+<p><strong>Counterfactual fairness</strong> (Kusner, Loftus, Russell &amp; Silva, NeurIPS 2017, Definition 5). Predictor $\hat Y$ is counterfactually fair if under any context $X = x$ and $A = a$, for every outcome $y$ and every attainable $a'$:</p>
+$$\Pr\big[\hat Y_{A \leftarrow a}(U) = y \,\big|\, X = x, A = a\big] \;=\; \Pr\big[\hat Y_{A \leftarrow a'}(U) = y \,\big|\, X = x, A = a\big].$$
+<p>Both sides condition on the individual's <em>actual</em> observation $(x, a)$; only the intervention differs. Read: had this same individual (same $U$) belonged to a different group, the prediction's distribution would be unchanged.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1703.06856">Kusner, Loftus, Russell &amp; Silva, &ldquo;Counterfactual Fairness&rdquo; (NeurIPS 2017; arXiv:1703.06856)</a> &mdash; the definition and algorithms.</li>
+<li><a href="https://papers.nips.cc/paper_files/paper/2017/hash/a486cd07e4ac3d270571622f4f316ec5-Abstract.html">NeurIPS 2017 proceedings page</a>.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Fair and Unfair Paths</h2>
 <p>A causal graph lets us separate how an attribute matters. A path through a legitimate factor like a test score may be allowed, while a path through a proxy like ZIP code may be ruled unfair.</p>
 <p><span class="kt">Key takeaway:</span> Some causal paths are acceptable, others are proxies for bias.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Path-specific reading (course notes).</strong> In the causal graph, the total effect of $A$ on $\hat Y$ decomposes over directed paths. A path-specific fairness judgment declares some paths legitimate (e.g. $A \to \text{test score} \to \hat Y$, if the score is accepted as a genuine qualification) and others illegitimate (e.g. $A \to \text{ZIP} \to \hat Y$, a proxy channel), and requires only the illegitimate path-specific effects to vanish. Counterfactual fairness is the strictest special case: <em>every</em> path from $A$ counts as unfair.</p>
+</div>
 </article>
 
 <article>
 <h2>Causal Fairness Needs a Model</h2>
 <p>Counterfactuals require a causal graph: you must assume how the variables relate, and different assumptions yield different verdicts. The framing is powerful but demanding to apply.</p>
 <p><span class="kt">Key takeaway:</span> Causal fairness is only as good as its assumed graph.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Remark (identification; course notes).</strong> Evaluating $\Pr[\hat Y_{A \leftarrow a'} = y \mid X = x, A = a]$ requires the posterior over the latent $U$ given $(x, a)$ &mdash; a quantity determined by the structural equations $F$, not by observational data alone. Distinct SCMs can induce the <em>same</em> observational distribution yet different counterfactuals, so the fairness verdict can flip under empirically indistinguishable assumptions. The assumed graph is doing real, untestable work &mdash; which is both the framework's honesty and its cost.</p>
+</div>
 </article>
 
 <article>
@@ -298,26 +603,88 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>Text-to-Image Stereotyping</h2>
-<p>Prompt a generator with a neutral occupation and watch the skew: "a CEO" returns mostly men, "a nurse" mostly women. The model often amplifies, not just mirrors, the imbalance in its training data. (A real occupation-grid figure is the TODO.)</p>
-<p><span class="kt">Key takeaway:</span> Generators exaggerate occupational stereotypes.</p>
+<p>Bianchi and colleagues (FAccT 2023) prompted Stable Diffusion with neutral occupations: "a software engineer" returned white men, "a housekeeper" women of color — the figure on the slide is from the paper. Stereotypes appeared without any identity cue in the prompt, and guardrails or counter-prompts did not prevent it.</p>
+<p><span class="kt">Key takeaway:</span> Generators amplify occupational stereotypes even from neutral prompts.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Bianchi et al. (FAccT 2023) prompted text-to-image systems, including Stable Diffusion, with plain occupation and trait descriptions and found that ordinary prompts &mdash; carrying no demographic cue at all &mdash; produce stereotyped and amplified demographic imagery, and that neither user counter-prompting nor system guardrails prevented it.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2211.03759">Bianchi, Kalluri, Durmus, Ladhak, Cheng, Nozza, Hashimoto, Jurafsky, Zou &amp; Caliskan, &ldquo;Easily Accessible Text-to-Image Generation Amplifies Demographic Stereotypes at Large Scale&rdquo; (FAccT 2023)</a> &mdash; the paper the slide's figure is from.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>When the Fix Overcorrects</h2>
+<p>Crude balancing has its own failure mode: Google's Gemini injected diversity into image prompts and produced historically inaccurate results, such as racially diverse WWII German soldiers. In February 2024 Google paused Gemini's people-image generation and apologized.</p>
+<p><span class="kt">Key takeaway:</span> Fairness patches need context, not a fixed quota.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>In February 2024, Google's Gemini app generated historically inaccurate, demographically diversified images: the tuning that encouraged diverse depictions was applied even in contexts where it made no sense. Google paused Gemini's image generation of people and on February 23, 2024 published an explanation and apology, acknowledging outputs that were &ldquo;inaccurate or even offensive&rdquo;.</p>
+<ul>
+<li><a href="https://blog.google/products/gemini/gemini-image-generation-issue/">Google, &ldquo;Gemini image generation got it wrong. We'll do better.&rdquo; (Feb 23, 2024)</a> &mdash; the official post announcing the pause.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Gender Shades</h2>
-<p>Buolamwini and Gebru's landmark 2018 audit of commercial face classifiers found error rates highest for darker-skinned women and lowest for lighter-skinned men, with accuracy gaps up to about 34 points.</p>
+<p>Buolamwini and Gebru's landmark 2018 audit of commercial gender classifiers found error rates up to $34.7\%$ for darker-skinned women and at most $0.8\%$ for lighter-skinned men — gaps invisible in single-attribute checks.</p>
 <p><span class="kt">Key takeaway:</span> Gender Shades exposed huge intersectional accuracy gaps.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Intersectional audit (course notes).</strong> Partition the benchmark by the product of attributes &mdash; here skin type $\times$ binary gender &mdash; and report $\mathrm{err}_g = \Pr[\hat Y \neq Y \mid G = g]$ per cell rather than per marginal attribute. Marginal parity can coexist with a large $\max_g \mathrm{err}_g - \min_g \mathrm{err}_g$ concentrated in one intersection, which is exactly what the audit found.</p>
+<h3>Background &amp; further reading</h3>
+<p>Buolamwini and Gebru (FAccT 2018) showed existing face benchmarks skewed heavily toward lighter-skinned subjects, built a balanced benchmark, and audited three commercial gender classifiers: darker-skinned women were the most misclassified group, with error rates up to $34.7\%$, while the maximum error for lighter-skinned men was $0.8\%$.</p>
+<ul>
+<li><a href="https://proceedings.mlr.press/v81/buolamwini18a.html">Buolamwini &amp; Gebru, &ldquo;Gender Shades: Intersectional Accuracy Disparities in Commercial Gender Classification&rdquo; (PMLR 81:77&ndash;91, 2018)</a> &mdash; the paper.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Auditing Is the Tool</h2>
 <p>When you cannot define $Y$, you measure outputs: build a balanced benchmark across groups, run the system, and tabulate the gaps. Gender Shades set the template for this kind of audit.</p>
 <p><span class="kt">Key takeaway:</span> Auditing turns a fairness complaint into a measurable number.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Black-box output audit (course notes).</strong> Fix a benchmark $\{(x_i, g_i)\}$ balanced across groups, run the system, and estimate a disparity functional &mdash; e.g. $\Delta = \max_g \mathrm{err}_g - \min_g \mathrm{err}_g$ for classifiers, or a distributional gap between output statistics across prompt groups for generators. The audit needs no access to weights or training data: it turns &ldquo;the system feels biased&rdquo; into an estimable quantity with confidence intervals.</p>
+</div>
+</article>
+
+<article>
+<h2>Auditing LLMs: The BBQ Benchmark</h2>
+<p>BBQ (Parrish et al., Findings of ACL 2022) asks questions the context cannot answer, across nine social dimensions; the right answer is "unknown", but models tend to pick the stereotyped person instead. Even with disambiguating evidence, accuracy ran $3.4$ points higher when the correct answer fit a social bias.</p>
+<p><span class="kt">Key takeaway:</span> Ambiguous questions expose the stereotypes a model falls back on.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>BBQ (Bias Benchmark for QA) poses hand-built questions along nine social dimensions in two conditions: an <em>ambiguous</em> context where the correct answer is &ldquo;unknown&rdquo;, and a <em>disambiguated</em> context that supplies the answer. Models tested fell back on stereotypes in the ambiguous condition; even with disambiguating evidence they averaged &ldquo;up to 3.4 percentage points higher accuracy when the correct answer aligns with a social bias&rdquo;, a gap widening past 5 points on gender-targeted examples.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2110.08193">Parrish, Chen, Nangia, Padmakumar, Phang, Thompson, Htut &amp; Bowman, &ldquo;BBQ: A Hand-Built Bias Benchmark for Question Answering&rdquo; (Findings of ACL 2022)</a> &mdash; the benchmark paper.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>The Law Notices</h2>
+<p>Fairness auditing is becoming law: NYC Local Law 144 (in force July 2023) requires annual independent, published bias audits of automated hiring tools, and the Colorado AI Act (2024) was the first broad US state AI law — though its enforcement was delayed and then suspended by courts in 2026 amid litigation.</p>
+<p><span class="kt">Key takeaway:</span> Audit mandates turn fairness definitions into compliance questions.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p><strong>NYC Local Law 144 (of 2021).</strong> Prohibits employers and employment agencies from using an automated employment decision tool (AEDT) unless the tool has undergone a bias audit within one year of use, information about the audit is publicly available, and candidates receive the required notices. Enforcement by the Department of Consumer and Worker Protection began July 5, 2023 &mdash; among the first mandatory algorithmic bias-audit regimes in the US.</p>
+<p><strong>Colorado SB 24-205, &ldquo;Consumer Protections for Artificial Intelligence&rdquo; (2024).</strong> The first comprehensive US state AI law: developers and deployers of high-risk AI systems owe a duty of reasonable care to protect consumers from algorithmic discrimination, with documentation, impact-assessment, and disclosure obligations. Its effective date slipped from February 1, 2026 to June 30, 2026; in April 2026 xAI filed a federal constitutional challenge, the US DOJ intervened on xAI's side, and on April 27, 2026 a federal court paused enforcement while the case proceeds &mdash; the law's status remains in flux.</p>
+<ul>
+<li><a href="https://www.nyc.gov/site/dca/about/automated-employment-decision-tools.page">NYC DCWP, Automated Employment Decision Tools (Local Law 144)</a> &mdash; official requirements and FAQ.</li>
+<li><a href="https://leg.colorado.gov/bills/sb24-205">Colorado General Assembly, SB 24-205</a> &mdash; bill text and history.</li>
+<li><a href="https://www.nortonrosefulbright.com/en-us/knowledge/publications/de3ad9de/xai-sues-doj-intervenes-enforcement-of-colorado-ai-act-suspended">Norton Rose Fulbright, &ldquo;xAI sues, DOJ intervenes, enforcement of Colorado AI Act suspended&rdquo; (2026)</a> &mdash; the litigation timeline.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Frontier 2025–26</h2>
-<p>Fairness work now centers on foundation models: auditing text and image generators at scale, studying intersectional gaps rather than single attributes, and noting that naive "balancing" fixes can backfire and draw their own backlash.</p>
-<p><span class="kt">Key takeaway:</span> The frontier is large-scale audits and intersectional gaps.</p>
+<p>Fairness work now centers on foundation models: benchmarks probing bias in open-ended generation, intersectional gaps rather than single attributes, and regulation that arrives and immediately gets contested in court. The 2016 definitions still anchor every metric in use.</p>
+<p><span class="kt">Key takeaway:</span> New surfaces and new laws, but the same underlying definitions.</p>
 </article>
 
 <article>

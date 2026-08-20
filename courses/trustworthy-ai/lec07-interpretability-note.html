@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 7 — Script</title>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 7 — Script &amp; Companion Notes</title>
 <link rel="stylesheet" href="../../reference/colors_and_type.css">
 <link rel="stylesheet" href="../../reference/katex/katex.min.css">
 <script defer src="../../reference/katex/katex.min.js"></script>
@@ -10,14 +10,22 @@ h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); pad
 article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
 article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 .kt { color: var(--yonsei-blue); font-weight: 700; }
+.detail { margin: 10px 0 0 12px; padding: 2px 0 2px 18px; border-left: 3px solid #c9d5e8; }
+.detail h3 { color: var(--yonsei-blue); font-size: 1.05rem; margin: 12px 0 4px; }
+.detail p, .detail ul { margin: 6px 0; }
+.detail ul { padding-left: 22px; }
 </style></head><body>
-<h1>Lecture 7 — Interpretability &amp; Explainability · Speaker Script</h1>
-<p><em>One entry per slide, in order. Section headers match slide titles.</em></p>
+<h1>Lecture 7 — Interpretability &amp; Explainability · Speaker Script &amp; Companion Notes</h1>
+<p><em>One entry per slide, in order; section headers match slide titles. Each entry carries the speaker script and key takeaway, followed by companion notes: rigorous definitions, formal theorem statements with proofs, and verified backgrounds with links for the real systems and results the slide mentions.</em></p>
 
 <article>
 <h2>Interpretability &amp; Explainability</h2>
 <p>Welcome to Lecture 7. Today's question is simple to ask and hard to answer: a model gives an answer, but can it tell us why? We want to open the black box and see the reasoning, because a right answer with an unknown reason is hard to trust.</p>
 <p><span class="kt">Key takeaway:</span> Trust needs not just correct answers, but understandable reasons.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>There is no single agreed formalization, but the working distinction used throughout this lecture: <strong>interpretability</strong> is the degree to which a human can understand the cause of a model's decision — ideally by reading the model's own mechanism; <strong>explainability</strong> usually refers to producing a post-hoc account (an <em>explanation</em>) of a decision made by a model that is not itself readable. An explanation is a separate object $E(f,x)$ computed from the model $f$ and the input $x$; whether it matches the model's actual computation is the <em>faithfulness</em> question that closes the lecture.</p>
+</div>
 </article>
 
 <article>
@@ -36,6 +44,10 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>A Model Is a Black Box</h2>
 <p>A network maps input to output through billions of weights. It answers without explaining; the reasoning hides inside the numbers. Accuracy on its own does not earn trust.</p>
 <p><span class="kt">Key takeaway:</span> A right answer with an unknown reason is not enough.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>A trained model is a function $f_\theta : \mathcal{X} \to \mathcal{Y}$ with parameters $\theta \in \mathbb{R}^p$, where $p$ is on the order of $10^9$–$10^{12}$ for modern networks. "Black box" does not mean the weights are secret: even with full access to $\theta$, the map from parameter values to behavior has no human-legible structure. Transparency of weights is therefore not interpretability — an open-weights model is still a black box in this sense. The lecture's methods differ in what access they assume: <em>query access</em> (evaluate $f$ at chosen inputs), <em>gradient access</em> ($\nabla_x f$), or <em>white-box access</em> (all internal activations and weights).</p>
+</div>
 </article>
 
 <article>
@@ -46,14 +58,26 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>The Husky and the Wolf</h2>
-<p>The classic cautionary tale from the LIME paper: a husky-versus-wolf classifier was highly accurate, but the explanation revealed it was detecting snow in the background, not the animal. A right answer for the wrong reason.</p>
+<p>The classic cautionary tale from the LIME paper — and note it was a deliberately rigged demo: the authors trained the classifier on photos where every wolf had snow in the background, so it learned to detect snow, not the animal. Graduate students who saw the explanations went from 10-of-27 trusting the model to 3-of-27.</p>
 <p><span class="kt">Key takeaway:</span> Explanations expose shortcuts that accuracy alone hides.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The experiment is Section 6.4 ("Do explanations lead to insights?") of the LIME paper (Ribeiro, Singh &amp; Guestrin, KDD 2016). The setup was <em>intentionally</em> bad: training images were "hand selected such that all pictures of wolves had snow", and a logistic-regression classifier was trained on top of deep features so that it would latch onto the snow. The 27 subjects were graduate students who had taken at least one graduate machine-learning course. Before seeing explanations, 10 of 27 trusted the model and 12 of 27 mentioned snow as a potential feature; after seeing the saliency-style LIME explanations, trust fell to 3 of 27 and 25 of 27 identified the snow shortcut. This kind of spurious-cue learner is often called a "Clever Hans predictor" — Lapuschkin et al. (Nature Communications, 2019) use explanation methods to unmask such right-answer-wrong-reason behavior systematically across vision and game-playing models; the name refers to the famous early-1900s "counting" horse whose feats relied on unintended cues from its questioner.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/1602.04938">Ribeiro, Singh &amp; Guestrin, "Why Should I Trust You?": Explaining the Predictions of Any Classifier (KDD 2016)</a> — the LIME paper; the husky/wolf experiment is Section 6.4.</li>
+<li><a href="https://www.nature.com/articles/s41467-019-08987-4">Lapuschkin et al., Unmasking Clever Hans predictors and assessing what machines really learn (Nature Communications, 2019)</a> — systematic study of spurious problem-solving behaviors exposed by explanation methods.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Two Routes to Understanding</h2>
 <p>Two strategies. Intrinsic interpretability makes the model readable by design, like a short decision tree or a linear rule. Post-hoc interpretability explains an already-trained black box from the outside.</p>
 <p><span class="kt">Key takeaway:</span> Intrinsic is readable by construction; post-hoc is approximated after the fact.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Intrinsic interpretability</strong>: restrict the hypothesis class to models a human can simulate directly — sparse linear models, shallow decision trees, rule lists. The model <em>is</em> its own explanation, so faithfulness is automatic. <strong>Post-hoc interpretability</strong>: train any model, then compute an explanation afterwards from query access, gradients, or internals. A post-hoc method is <strong>model-agnostic</strong> if it needs only query access to $f$ (LIME, SHAP) and <strong>model-specific</strong> if it needs gradients or architecture (saliency maps, probing, mechanistic analysis). Sections 02–05 of this lecture are all post-hoc, ordered by how deep into the model they reach.</p>
+</div>
 </article>
 
 <article>
@@ -63,9 +87,26 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article>
+<h2>The Rudin Objection</h2>
+<p>Cynthia Rudin's famous 2019 argument: for high-stakes decisions like bail, parole, or medical triage, the trade-off is often overstated, and we should build models that are interpretable by design rather than explain black boxes after the fact — a wrong post-hoc story can cause real harm.</p>
+<p><span class="kt">Key takeaway:</span> For high-stakes calls, some argue for interpretable-by-design models, not explanations.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Rudin's position paper (Nature Machine Intelligence, vol. 1, May 2019, pp. 206–215) argues that trying to explain black-box models, rather than creating models that are interpretable in the first place, can perpetuate bad practice and cause catastrophic harm in high-stakes decisions, and proposes designing inherently interpretable models instead. It frames the accuracy–interpretability trade-off as often assumed rather than demonstrated, particularly for structured tabular data.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/1811.10154">Rudin, Stop Explaining Black Box Machine Learning Models for High Stakes Decisions and Use Interpretable Models Instead (Nature Machine Intelligence, 2019)</a> — the position paper behind this slide.</li>
+</ul>
+</div>
+</article>
+
+<article>
 <h2>Explanation Is Not the Model</h2>
 <p>A crucial caveat for the whole lecture: a post-hoc explanation is a story about the model, not the model itself. The story can be persuasive yet wrong.</p>
 <p><span class="kt">Key takeaway:</span> An explanation can be convincing and still be unfaithful.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>An explanation $E(f,x)$ is <strong>faithful</strong> to the extent that it accurately reflects the computation $f$ actually performed on $x$, and merely <strong>plausible</strong> if it is convincing to a human. The two properties are logically independent — a formal treatment is given at "The Faithfulness Problem" below (Jacovi &amp; Goldberg, 2020). Every method in Sections 02–03 should be read with this caveat attached.</p>
+</div>
 </article>
 
 <article>
@@ -78,6 +119,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>The Attribution Question</h2>
 <p>For one prediction, attribution asks which input features pushed the output up or down. Each feature gets a signed score: positive features help the outcome, negative ones hurt it.</p>
 <p><span class="kt">Key takeaway:</span> Attribution gives each feature a signed share of one prediction.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>A <strong>feature-attribution method</strong> maps a model $f$ and an input $x \in \mathbb{R}^d$ to a vector of signed scores $\phi(f,x) = (\phi_1,\dots,\phi_d) \in \mathbb{R}^d$, where $\phi_i$ measures how much feature $i$ contributed to the prediction $f(x)$. Lundberg &amp; Lee (NeurIPS 2017) observe that LIME, SHAP, and several other methods all belong to the class of <strong>additive feature attribution methods</strong>: the explanation is itself a linear model over <em>simplified inputs</em> $z' \in \{0,1\}^M$ (feature present/absent), of the form</p>
+<p>$$g(z') = \phi_0 + \sum_{i=1}^{M} \phi_i z'_i ,$$</p>
+<p>together with a mapping $h_x$ that turns a simplified input back into an actual model input ($x = h_x(x')$ for the all-ones vector $x'$). This shared form is what makes the uniqueness theorem on the "Why SHAP Is Trusted" slide bite: within this class, the axioms pin down $\phi$ exactly.</p>
+</div>
 </article>
 
 <article>
@@ -90,48 +137,154 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>LIME: Local Surrogate</h2>
 <p>LIME, Local Interpretable Model-agnostic Explanations: perturb the input, watch the output change, fit a simple linear model in that neighborhood, and read its weights. It works for any model because it only needs query access.</p>
 <p><span class="kt">Key takeaway:</span> LIME fits a simple local model and reads its weights.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>LIME (Ribeiro et al., KDD 2016, Eq. 1) explains a prediction $f(x)$ by the interpretable model</p>
+<p>$$\xi(x) = \operatorname*{arg\,min}_{g \in G}\; \mathcal{L}(f, g, \pi_x) + \Omega(g),$$</p>
+<p>where each term is:</p>
+<ul>
+<li>$G$ — the class of interpretable surrogate models; in the paper, sparse linear models $g(z') = w_g \cdot z'$ over an <em>interpretable representation</em> $z' \in \{0,1\}^{d'}$ (presence/absence of words for text, of super-pixels for images), linked to the original input space by a mapping $z' \mapsto z$.</li>
+<li>$\mathcal{L}(f,g,\pi_x)$ — the <strong>locally weighted square loss</strong> over a sample $\mathcal{Z}$ of perturbed points: $\mathcal{L} = \sum_{z, z' \in \mathcal{Z}} \pi_x(z)\,\bigl(f(z) - g(z')\bigr)^2$. Perturbations are drawn by randomly zeroing coordinates of $x$'s interpretable representation, and $f$ is queried at each perturbed point — this is why only query access is needed.</li>
+<li>$\pi_x(z) = \exp\!\bigl(-D(x,z)^2/\sigma^2\bigr)$ — an exponential <strong>proximity kernel</strong> with width $\sigma$ centering the loss on the neighborhood of $x$ ($D$ = cosine distance for text, $L_2$ distance for images in the paper).</li>
+<li>$\Omega(g)$ — a complexity penalty; for sparse linear explanations the paper takes $\Omega(g) = \infty \cdot \mathbb{1}[\lVert w_g \rVert_0 \gt K]$, i.e. at most $K$ nonzero weights. Solving exactly is intractable, so LIME first selects $K$ features with the Lasso regularization path and then fits their weights by least squares — the <strong>K-LASSO</strong> procedure of Algorithm 1.</li>
+</ul>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1602.04938">Ribeiro, Singh &amp; Guestrin, "Why Should I Trust You?" (KDD 2016)</a> — objective is Eq. (1); sampling and K-LASSO are Section 3.4/Algorithm 1.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Local, Not Global</h2>
 <p>LIME explains a single prediction. The true decision boundary may be wildly curved, but near one point a straight line approximates it well. Stress that the explanation is only valid locally.</p>
 <p><span class="kt">Key takeaway:</span> A LIME explanation holds near one point, not everywhere.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Local fidelity</strong>: the loss $\mathcal{L}(f,g,\pi_x)$ measures how well $g$ matches $f$ only where the kernel $\pi_x$ puts weight — a shrinking neighborhood of $x$. A surrogate can have excellent local fidelity while being a terrible global description of $f$; the weights of $\xi(x)$ therefore answer "what mattered <em>near this input</em>", not "what the model does in general". Different inputs get different, possibly contradictory, surrogates, and nothing forces them to assemble into one global story.</p>
+</div>
 </article>
 
 <article>
 <h2>SHAP: Fair Credit</h2>
 <p>SHAP, SHapley Additive exPlanations, borrows the Shapley value from cooperative game theory. Treat each feature as a player on a team; its score is its average marginal contribution to the prediction.</p>
 <p><span class="kt">Key takeaway:</span> SHAP splits the prediction fairly using game theory.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>A <strong>cooperative game</strong> is a pair $(N, v)$: a finite player set $N$ with $|N| = n$ and a value function $v : 2^N \to \mathbb{R}$ with $v(\varnothing) = 0$, where $v(S)$ is the payoff coalition $S$ can secure. A <strong>value</strong> is a rule $\phi$ assigning each player $i$ a share $\phi_i(v)$ of $v(N)$. SHAP instantiates this with players $=$ features and, for an input $x$, the coalition payoff given by the conditional expectation of the model output when only the features in $S$ are known:</p>
+<p>$$v(S) = f_x(S) = \mathbb{E}\bigl[f(z) \mid z_S = x_S\bigr],$$</p>
+<p>so SHAP values are, in Lundberg &amp; Lee's phrase, the Shapley values of a conditional expectation function of the original model. (In practice the conditional expectation is approximated, e.g. assuming feature independence.)</p>
+</div>
 </article>
 
 <article>
 <h2>The Shapley Value</h2>
 <p>The Shapley value $\phi_i$ adds feature $i$ to every possible subset $S$ of the other features and averages the gain in prediction. The weights make the split fair across all orderings.</p>
 <p><span class="kt">Key takeaway:</span> $\phi_i$ is feature $i$'s averaged marginal contribution.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Definition (Shapley value).</strong> For a game $(N,v)$,</p>
+<p>$$\phi_i(v) = \sum_{S \subseteq N \setminus \{i\}} \frac{|S|!\,\bigl(n - |S| - 1\bigr)!}{n!}\,\bigl[v(S \cup \{i\}) - v(S)\bigr].$$</p>
+<p><strong>Claim (permutation form).</strong> Equivalently, letting $P^i_\pi$ denote the set of players preceding $i$ in a uniformly random ordering $\pi$ of $N$,</p>
+<p>$$\phi_i(v) = \frac{1}{n!} \sum_{\pi} \bigl[v(P^i_\pi \cup \{i\}) - v(P^i_\pi)\bigr] = \mathbb{E}_\pi\bigl[v(P^i_\pi \cup \{i\}) - v(P^i_\pi)\bigr]:$$</p>
+<p>$\phi_i$ is player $i$'s marginal contribution averaged over all $n!$ arrival orders.</p>
+<p><strong>Proof.</strong> Group the $n!$ orderings by the set $S = P^i_\pi$ of players before $i$. For a fixed $S \subseteq N \setminus \{i\}$, an ordering has predecessors exactly $S$ iff it lists the members of $S$ in some order ($|S|!$ ways), then $i$, then the remaining $n - |S| - 1$ players in some order ($(n-|S|-1)!$ ways). So exactly $|S|!\,(n-|S|-1)!$ orderings contribute the term $v(S \cup \{i\}) - v(S)$, and dividing by $n!$ gives the subset form. $\blacksquare$ (derivation: course notes — elementary counting; the value is due to Shapley, "A value for n-person games", <em>Contributions to the Theory of Games</em> II, 1953, pp. 307–317.)</p>
+<p>The weights are thus exactly the probability that, in a random ordering, player $i$ arrives right after the coalition $S$ — this is the precise sense in which "the weights make the split fair across all orderings".</p>
+</div>
 </article>
 
 <article>
 <h2>Why SHAP Is Trusted</h2>
 <p>The Shapley value is the unique attribution that satisfies all the fairness axioms at once: the scores sum to the prediction, a useless feature gets zero, and identical features get equal credit.</p>
 <p><span class="kt">Key takeaway:</span> SHAP is the only rule meeting every fairness property.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>The four classical axioms for a value $\phi$ on games over $N$:</p>
+<ul>
+<li><strong>Efficiency:</strong> $\sum_{i \in N} \phi_i(v) = v(N)$ — the shares exhaust the total payoff.</li>
+<li><strong>Symmetry:</strong> if $v(S \cup \{i\}) = v(S \cup \{j\})$ for every $S \subseteq N \setminus \{i,j\}$, then $\phi_i(v) = \phi_j(v)$ — interchangeable players get equal credit.</li>
+<li><strong>Dummy (null player):</strong> if $v(S \cup \{i\}) = v(S)$ for every $S \subseteq N \setminus \{i\}$, then $\phi_i(v) = 0$ — a player who never adds value gets zero.</li>
+<li><strong>Additivity:</strong> $\phi(v + w) = \phi(v) + \phi(w)$ for any two games $v, w$.</li>
+</ul>
+<h3>Theorem &amp; proof</h3>
+<p><strong>Theorem (Shapley 1953).</strong> The Shapley value is the <em>unique</em> value satisfying Efficiency, Symmetry, Dummy, and Additivity.</p>
+<p><strong>Proof.</strong> <em>Existence.</em> Use the permutation form from the previous entry. Efficiency: for each fixed ordering $\pi$, the marginal contributions telescope, $\sum_{i} [v(P^i_\pi \cup \{i\}) - v(P^i_\pi)] = v(N) - v(\varnothing) = v(N)$; averaging over $\pi$ preserves this. Symmetry: transposing $i$ and $j$ is a bijection on orderings, and the hypothesis makes the swapped contributions equal. Dummy: every marginal term is $0$. Additivity: each marginal term is linear in $v$.</p>
+<p><em>Uniqueness.</em> Games on $N$ (with $v(\varnothing)=0$) form a vector space of dimension $2^n - 1$. For each nonempty $T \subseteq N$ define the <strong>unanimity game</strong> $u_T(S) = 1$ if $T \subseteq S$ and $0$ otherwise.</p>
+<p>(i) <em>The $2^n - 1$ unanimity games are linearly independent, hence a basis.</em> Suppose $\sum_T c_T u_T = 0$ with some $c_T \neq 0$; choose $T_0$ minimal under inclusion among $\{T : c_T \neq 0\}$. Evaluating at the coalition $S = T_0$: $u_T(T_0) = 1$ iff $T \subseteq T_0$, and by minimality no $T \subsetneq T_0$ has $c_T \neq 0$, so $0 = \sum_T c_T u_T(T_0) = c_{T_0}$ — contradiction.</p>
+<p>(ii) <em>The axioms force the value on every scaled unanimity game $c\,u_T$ with $c \ge 0$.</em> Each $i \notin T$ is a dummy in $c\,u_T$, so $\phi_i = 0$. Any two $i, j \in T$ are symmetric, so all members of $T$ receive the same share, and Efficiency makes the shares sum to $c\,u_T(N) = c$. Hence $\phi_i(c\,u_T) = c/|T|$ for $i \in T$, and $0$ otherwise.</p>
+<p>(iii) <em>Extension to all games.</em> By (i), any $v$ has a unique expansion $v = \sum_T c_T u_T$ (explicitly, $c_T = \sum_{S \subseteq T} (-1)^{|T| - |S|} v(S)$, the Harsanyi dividends). Some $c_T$ may be negative, and Additivity only covers sums, so rearrange: $v + \sum_{T : c_T \lt 0} (-c_T)\,u_T = \sum_{T : c_T \gt 0} c_T\,u_T$. Both sides are games; applying $\phi$ and Additivity to each side, every term except $\phi(v)$ is a nonnegatively-scaled unanimity game, already determined by (ii). Solving for $\phi(v)$ determines it uniquely. Since the Shapley formula satisfies the axioms, it is that unique value. $\blacksquare$ (derivation: course notes, following the standard unanimity-basis argument; theorem due to Shapley 1953.)</p>
+<p><strong>SHAP's version (Lundberg &amp; Lee, Theorem 1).</strong> Within the class of additive feature attribution methods, the only explanation model satisfying <em>Local accuracy</em> ($g$ matches $f(x)$ when all features are present: $\phi_0 + \sum_i \phi_i x'_i = f(x)$), <em>Missingness</em> ($x'_i = 0 \Rightarrow \phi_i = 0$), and <em>Consistency</em> (if $f'$ depends on feature $i$ at least as strongly as $f$ for every coalition, then $\phi_i(f',x) \ge \phi_i(f,x)$) is</p>
+<p>$$\phi_i(f,x) = \sum_{z' \subseteq x'} \frac{|z'|!\,(M - |z'| - 1)!}{M!}\,\bigl[f_x(z') - f_x(z' \setminus i)\bigr],$$</p>
+<p>the Shapley values of the game $f_x$. The paper derives this from Shapley's result together with Young's monotonicity axiomatization (Young, <em>International Journal of Game Theory</em> 14(2):65–72, 1985), with the Missingness adaptation. (Statement verified against the paper; proof pointer only — the Young route replaces Additivity+Dummy with a monotonicity axiom.)</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1705.07874">Lundberg &amp; Lee, A Unified Approach to Interpreting Model Predictions (NeurIPS 2017)</a> — additive class (Def. 1), Properties 1–3, and Theorem 1.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>SHAP on a Loan Model</h2>
 <p>A natural Colab demo: train a gradient-boosted model on tabular loan data, run SHAP on one rejected applicant, and read the signed bars. A few lines with <code>shap.Explainer</code> produce the chart.</p>
 <p><span class="kt">Key takeaway:</span> SHAP on tabular data is a short, hands-on notebook.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Exact Shapley values need $2^M$ coalition evaluations, so practical SHAP is approximation. The NeurIPS paper's model-agnostic route is <strong>Kernel SHAP</strong> ("Linear LIME + Shapley values"): its Theorem 2 exhibits the specific weighting kernel $\pi_{x'}$, squared loss $\mathcal{L}$, and $\Omega = 0$ for which the LIME optimization recovers exactly the Shapley values — so a single weighted linear regression estimates all $\phi_i$ with far fewer model evaluations than per-feature sampling.</p>
+<ul>
+<li><a href="https://github.com/shap/shap">The <code>shap</code> library (GitHub)</a> — maintained implementation with tree-model and kernel explainers and the standard plots.</li>
+<li><a href="https://arxiv.org/abs/1705.07874">Lundberg &amp; Lee (NeurIPS 2017)</a> — Kernel SHAP is Section 4/Theorem 2.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Saliency on Images</h2>
 <p>For images, attribution becomes a heat map over pixels. Bright regions are the pixels the prediction leaned on most.</p>
 <p><span class="kt">Key takeaway:</span> A saliency map highlights the pixels behind the label.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>A <strong>saliency map</strong> for a class score $S_c$ at image $x$ is an image-shaped array $M(x)$ with $M_i(x) \ge 0$ ranking each pixel's influence on $S_c(x)$; the simplest instance (next slide) is the elementwise gradient magnitude, $M_i(x) = \bigl|\partial S_c(x)/\partial x_i\bigr|$ (Simonyan, Vedaldi &amp; Zisserman, 2014).</p>
+</div>
 </article>
 
 <article>
 <h2>Gradient Saliency</h2>
 <p>The simplest saliency map is the absolute gradient of the output with respect to each input pixel. A large slope means a small change in that pixel would move the score a lot, so the pixel matters.</p>
 <p><span class="kt">Key takeaway:</span> Big gradient at a pixel means that pixel drove the score.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>The rationale is a first-order Taylor expansion: near $x$, $S_c(x + \delta) \approx S_c(x) + \nabla_x S_c(x) \cdot \delta$, so $|\partial S_c/\partial x_i|$ measures how much an infinitesimal change to pixel $i$ moves the class score. The whole map costs one backward pass — the same backpropagation used in training, run down to the input instead of stopping at the weights.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1312.6034">Simonyan, Vedaldi &amp; Zisserman, Deep Inside Convolutional Networks (ICLR workshop 2014)</a> — introduced class-score gradient saliency maps.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>Beyond Raw Gradients</h2>
+<p>Raw gradients have a known weakness: once the model is confident, the local slope flattens and an important pixel can score near zero. Integrated gradients fixes this by averaging the gradient along the path from a blank baseline to the actual image — the whole climb, not one point.</p>
+<p><span class="kt">Key takeaway:</span> Integrated gradients averages the slope along a path, giving sturdier scores.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Saturation, precisely</strong> (Sundararajan, Taly &amp; Yan, ICML 2017): take $f(x) = 1 - \mathrm{ReLU}(1-x)$, baseline $x' = 0$, input $x = 2$. The function rises from $f(0)=0$ to $f(2)=1$, yet $f$ is flat at the input ($f'(x) = 0$ for $x \gt 1$), so gradient saliency assigns the feature zero — violating the axiom below.</p>
+<p><strong>Integrated Gradients.</strong> For model $F$, input $x$, baseline $x'$ (e.g. a black image), define along the straight-line path $\gamma(\alpha) = x' + \alpha(x - x')$:</p>
+<p>$$\mathrm{IG}_i(x) = (x_i - x'_i) \int_0^1 \frac{\partial F\bigl(x' + \alpha(x - x')\bigr)}{\partial x_i}\, d\alpha .$$</p>
+<p>Two axioms motivate it: <strong>Sensitivity(a)</strong> — if input and baseline differ in exactly one feature and the predictions differ, that feature gets nonzero attribution (raw gradients fail this, per the example above); <strong>Implementation Invariance</strong> — two networks computing the same mathematical function receive identical attributions (guaranteed here because IG depends only on gradients of the function, not on the architecture).</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>Proposition 1 (Completeness).</strong> If $F$ is differentiable almost everywhere, then $\sum_{i=1}^d \mathrm{IG}_i(x) = F(x) - F(x')$.</p>
+<p><strong>Proof.</strong> Let $g(\alpha) = F(\gamma(\alpha))$ with $\gamma(\alpha) = x' + \alpha(x-x')$. By the chain rule, wherever $F$ is differentiable,</p>
+<p>$$g'(\alpha) = \sum_{i=1}^{d} \frac{\partial F(\gamma(\alpha))}{\partial x_i}\,(x_i - x'_i).$$</p>
+<p>By the fundamental theorem of calculus applied along the path (valid for the almost-everywhere-differentiable, continuous functions computed by standard networks),</p>
+<p>$$F(x) - F(x') = g(1) - g(0) = \int_0^1 g'(\alpha)\, d\alpha = \int_0^1 \sum_{i=1}^{d} (x_i - x'_i)\, \frac{\partial F(\gamma(\alpha))}{\partial x_i}\, d\alpha .$$</p>
+<p>The sum is finite, so it exchanges with the integral, giving $\sum_i (x_i - x'_i) \int_0^1 \partial_i F(\gamma(\alpha))\,d\alpha = \sum_i \mathrm{IG}_i(x)$. $\blacksquare$ (Statement and the FTC-for-path-integrals argument verified against the paper's Proposition 1; intermediate steps expanded — derivation: course notes.)</p>
+<p><strong>Corollary.</strong> Completeness implies Sensitivity(a): if only feature $i$ differs and $F(x) \neq F(x')$, the single term $\mathrm{IG}_i$ must carry the whole nonzero difference (the paper's Remark 2). More generally the paper shows (its Proposition 2, citing Friedman 2004) that <em>path methods</em> — IG with the straight line replaced by any monotone path — are the only attribution methods satisfying Implementation Invariance, Sensitivity(b), Linearity, and Completeness; IG is the canonical symmetric choice and coincides with the Aumann–Shapley value from cost-sharing theory.</p>
+<p><strong>In practice</strong> the integral is a Riemann sum, $\mathrm{IG}_i \approx (x_i - x'_i) \frac{1}{m}\sum_{k=1}^{m} \partial_i F\bigl(x' + \tfrac{k}{m}(x - x')\bigr)$, with $m$ chosen so the attributions sum to within about 5% of $F(x) - F(x')$ — Completeness doubles as the convergence check.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1703.01365">Sundararajan, Taly &amp; Yan, Axiomatic Attribution for Deep Networks (ICML 2017)</a> — axioms, Proposition 1 (Completeness), Proposition 2 (path methods), and the saturation example.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -150,6 +303,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Attribution Can Mislead</h2>
 <p>A sobering result: some popular saliency maps barely change when you randomize the model's weights. If the explanation does not depend on the model, it cannot be explaining the model. This is the sanity-check critique.</p>
 <p><span class="kt">Key takeaway:</span> A map that ignores the weights is not explaining the model.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Adebayo et al. (NeurIPS 2018) propose two <strong>randomization tests</strong>: the <em>model parameter randomization test</em> compares a saliency map on the trained network against the same method on a network with randomized weights, and the <em>data randomization test</em> compares against a model trained on randomly permuted labels. A method whose output survives either randomization is "independent both of the model and of the data generating process" and therefore cannot be explaining what the model learned; the paper finds that some widely used methods fail, producing maps that are visually and quantitatively similar to what an edge detector would output — striking-looking, but insensitive to the model. This is the formal version of this slide's critique and the origin of the sanity-check discipline in the "Always Sanity-Check" entry below.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/1810.03292">Adebayo et al., Sanity Checks for Saliency Maps (NeurIPS 2018)</a> — the randomization tests and the edge-detector comparison.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -162,24 +322,55 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Inside the Hidden Layers</h2>
 <p>Each layer turns the input into a vector of activations: the model's internal state at that depth. Attribution stays at the input; probing asks what a hidden layer has already figured out.</p>
 <p><span class="kt">Key takeaway:</span> Hidden activations are where internal understanding lives.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Write the network as a composition $f = f_L \circ \cdots \circ f_1$ and let $h_\ell(x) \in \mathbb{R}^{d_\ell}$ be the <strong>activation vector</strong> (representation) after layer $\ell$. Sections 03–05 all study the family $\{h_\ell(x)\}$: probing asks what is linearly decodable from $h_\ell$; mechanistic work asks how the weights transform $h_\ell$ into $h_{\ell+1}$; SAEs re-express $h_\ell$ in an overcomplete sparse basis.</p>
+</div>
 </article>
 
 <article>
 <h2>Linear Probes</h2>
 <p>A linear probe trains a tiny classifier on a frozen layer's activations. If a simple linear readout can recover a concept, like part-of-speech or sentiment, then that concept is present in the layer.</p>
 <p><span class="kt">Key takeaway:</span> A probe tests whether a concept is linearly readable from a layer.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Linear probe</strong> (Alain &amp; Bengio, 2016): freeze the network, collect pairs $(h_\ell(x), c(x))$ where $c(x)$ is a concept label, and train only a linear classifier $g(h) = \mathrm{softmax}(W h + b)$ on them. Probe accuracy measures how <em>linearly decodable</em> the concept is at depth $\ell$; Alain &amp; Bengio found that linear separability of class information increases monotonically with depth in image classifiers. The implicit assumption — that concepts are encoded as <em>directions</em> in activation space — is the <strong>linear representation hypothesis</strong>, which Park et al. (2023) formalize for language models via counterfactual word pairs and connect to both probing (reading directions) and steering (writing directions), under a causal inner product. The same hypothesis underlies superposition and SAEs in Sections 04–05.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1610.01644">Alain &amp; Bengio, Understanding intermediate layers using linear classifier probes (2016)</a> — the probing methodology.</li>
+<li><a href="https://arxiv.org/abs/2311.03658">Park, Choe &amp; Veitch, The Linear Representation Hypothesis and the Geometry of Large Language Models (2023)</a> — formalization of "concepts as directions".</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Reading the Probe</h2>
 <p>An important caveat: a high probe accuracy is suggestive, not proof. The concept being decodable does not mean the model uses it, and a powerful probe can simply learn the concept itself.</p>
 <p><span class="kt">Key takeaway:</span> Decodable is not the same as actually used.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Two distinct failure modes. (1) <em>The probe does the work:</em> an expressive probe can compute the concept from raw-ish features rather than reveal it. Hewitt &amp; Liang (EMNLP 2019) formalize the fix: pair each linguistic task with a <strong>control task</strong> that maps word types to random outputs — solvable only by memorization — and report <strong>selectivity</strong> $=$ linguistic-task accuracy $-$ control-task accuracy. A high-accuracy, low-selectivity probe is memorizing, not revealing; they find linear probes are the most selective. (2) <em>Decodable but unused:</em> even a selective probe shows only that information is <em>present</em>, a correlational claim. Whether the model causally <em>uses</em> it requires interventions on the representation — the activation-patching methodology in the "Always Sanity-Check" entry.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1909.03368">Hewitt &amp; Liang, Designing and Interpreting Probes with Control Tasks (EMNLP 2019)</a> — control tasks and selectivity.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Attention Weights</h2>
 <p>A transformer lets each token attend to other tokens. Visualizing attention shows, for instance, the pronoun "it" attending to the noun "cat". Thicker lines mean more attention weight.</p>
 <p><span class="kt">Key takeaway:</span> Attention maps show which tokens each token looks at.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>In scaled dot-product attention (Vaswani et al., 2017), each position $t$ forms a query $q_t$, each position $s$ a key $k_s$ and value $v_s$ (linear maps of the token representations). The <strong>attention weights</strong> are</p>
+<p>$$\alpha_{t,s} = \frac{\exp\bigl(q_t \cdot k_s / \sqrt{d_k}\bigr)}{\sum_{s'} \exp\bigl(q_t \cdot k_{s'} / \sqrt{d_k}\bigr)},$$</p>
+<p>a probability distribution over source positions, and the head's output at $t$ is $\sum_s \alpha_{t,s} v_s$. The visualizations on this slide draw $\alpha_{t,s}$ as line thickness. Note what $\alpha$ is <em>not</em>: it weights value vectors inside one head — it is not by itself a statement about what the full model's output depends on, which is exactly the coming debate.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1706.03762">Vaswani et al., Attention Is All You Need (NeurIPS 2017)</a> — the transformer and scaled dot-product attention.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -192,6 +383,26 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Attention Is Not Explanation</h2>
 <p>The cautionary result: you can often find very different attention patterns that produce the same output. If the weights can be swapped without changing the answer, they are not the reason for the answer. Treat attention as a clue, not a verdict.</p>
 <p><span class="kt">Key takeaway:</span> Attention weights are a hint, not a faithful explanation.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Jain &amp; Wallace (NAACL 2019) tested attention-as-explanation across NLP tasks (with recurrent encoders) and report two findings: learned attention weights frequently do not correlate with gradient-based measures of feature importance, and one can construct <em>counterfactual</em> attention distributions — sometimes adversarially different from the learned ones — that yield equivalent predictions. Their conclusion is the slide's argument: if very different "explanations" support the same output, the learned attention pattern is not a faithful account of why the model answered as it did.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/1902.10186">Jain &amp; Wallace, Attention is not Explanation (NAACL 2019)</a> — the correlation and counterfactual-attention experiments.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>...Is Not Not Explanation</h2>
+<p>The same year brought a rebuttal: whether attention "explains" depends on what you mean by explanation, and the adversarial attention patterns fail simple diagnostics. Attention can still be useful evidence. Present the pair as a live scientific debate, not a settled verdict.</p>
+<p><span class="kt">Key takeaway:</span> The attention debate is open; treat attention as evidence, not proof either way.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Wiegreffe &amp; Pinter (EMNLP 2019) challenge the assumptions of the previous slide's paper, arguing the claim "depends on one's definition of explanation" and must account for the whole model. They propose four tests for when attention can serve as explanation: a uniform-weights baseline; variance calibration across multiple random seeds; a diagnostic framework using frozen weights from pretrained models; and an end-to-end adversarial attention training protocol. Key finding: even when reliable adversarial attention distributions exist, they perform poorly on the simple diagnostic — so the mere existence of alternative patterns does not disprove the usefulness of the learned ones. The pair of papers is a model example of an open scientific dispute about what "explanation" must mean.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/1908.04626">Wiegreffe &amp; Pinter, Attention is not not Explanation (EMNLP 2019)</a> — the four diagnostics and the rebuttal argument.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -204,30 +415,64 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>A Different Goal</h2>
 <p>Mechanistic interpretability treats the network like code to be decompiled: reverse-engineer it into algorithms a human can read, rather than producing an external summary of behavior.</p>
 <p><span class="kt">Key takeaway:</span> The goal is human-readable algorithms inside the weights.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>The field's two working units (vocabulary from the Distill circuits program, next slide): a <strong>feature</strong> is a direction in a layer's activation space that reliably represents one property of the input; a <strong>circuit</strong> is a subgraph of the network — features connected by weights — that implements an identifiable algorithm. The contrast with Sections 02–03: attribution and probing produce <em>correlational summaries</em> of behavior, while mechanistic claims are about the <em>causal structure</em> of the computation and are tested by editing it (ablation, patching, steering).</p>
+</div>
 </article>
 
 <article>
 <h2>Circuits</h2>
 <p>A circuit is a small subgraph of the network that performs one job. The Distill circuits work showed, in vision models, how edge detectors feed curve detectors that feed a circle detector, building recognizable structure step by step.</p>
 <p><span class="kt">Key takeaway:</span> Circuits are readable sub-computations stitched into the model.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Olah et al.'s "Zoom In" (Distill, 2020) launched the circuits research program with three explicitly speculative claims about neural networks, in analogy to biology's cell theory: <em>Claim 1 (Features)</em> — features are the fundamental unit, corresponding to directions in activation space; <em>Claim 2 (Circuits)</em> — features are connected by weights into circuits implementing meaningful algorithms; <em>Claim 3 (Universality)</em> — analogous features and circuits recur across different networks. The evidence base is a neuron-level dissection of InceptionV1, including the curve-detector family this slide's pipeline sketch is drawn from.</p>
+<ul>
+<li><a href="https://distill.pub/2020/circuits/zoom-in/">Olah et al., Zoom In: An Introduction to Circuits (Distill, 2020)</a> — the three claims and the InceptionV1 evidence.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Neurons as Concepts</h2>
 <p>In vision models, some neurons fire for one clear idea: a curve detector, a dog-head detector. Wired together they recognize parts of objects, evidence that there is structure, not chaos, inside.</p>
 <p><span class="kt">Key takeaway:</span> Some neurons map cleanly to single human concepts.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Documented examples from the InceptionV1 dissection: <em>curve detectors</em> (a family of neurons each firing for curves of one orientation), <em>high–low frequency detectors</em> (a boundary cue: high-frequency texture on one side, low on the other), and a <em>pose-invariant dog-head detector</em> assembled from orientation-specific ones. The same work already flags the coming problem: it also documents <em>polysemantic</em> neurons responding to several unrelated concepts (its example: cat faces, fronts of cars, and cat legs), foreshadowing "The Polysemantic Wall" below.</p>
+<ul>
+<li><a href="https://distill.pub/2020/circuits/zoom-in/">Olah et al., Zoom In (Distill, 2020)</a> — curve detectors, high–low frequency detectors, dog-head circuit, and polysemantic examples.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The Transformer Framework</h2>
 <p>A 2021 Anthropic paper gave transformers a clean mathematical description: attention heads as composable operations reading from and writing to a shared residual stream. This framework made circuit-style analysis possible for language models.</p>
 <p><span class="kt">Key takeaway:</span> Heads communicate through a shared residual stream.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>From Elhage et al., "A Mathematical Framework for Transformer Circuits" (Anthropic, Dec 2021): the <strong>residual stream</strong> is the running vector at each token position that every attention head and MLP <em>reads from</em> (linearly) and <em>writes into</em> (additively) — a shared communication channel rather than a pipeline. Because reads and writes are linear, one can compute <strong>virtual weights</strong> directly connecting any earlier component's output to any later component's input. Each attention head factors into two independent linear circuits: the <strong>QK circuit</strong> ($W_Q^\top W_K$), which determines <em>where</em> the head attends, and the <strong>OV circuit</strong> ($W_O W_V$), which determines <em>what information</em> is moved from the attended position and how it affects the output. Expanding a model as a sum over paths through these components is what makes transformer circuits tractable; the paper carries this out fully for one- and two-layer attention-only models — where composition of heads across layers first produces induction heads (next slide).</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://transformer-circuits.pub/2021/framework/index.html">Elhage et al., A Mathematical Framework for Transformer Circuits (Anthropic, 2021)</a> — residual stream, virtual weights, QK/OV circuits, path expansion.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Induction Heads</h2>
 <p>The flagship circuit found in language models. An induction head, built from two cooperating attention heads, implements a copy rule: having seen "A B" earlier, when "A" recurs it predicts "B".</p>
 <p><span class="kt">Key takeaway:</span> Induction heads copy patterns seen earlier in the context.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Formally (Olsson et al., 2022): an <strong>induction head</strong> implements the rule $[A][B] \dots [A] \to [B]$ — on encountering the current token $A$, look back for a previous occurrence of $A$ and increase the probability of the token $B$ that followed it ("complete the pattern"). It is operationalized by two properties measured on repeated random sequences: <strong>prefix matching</strong> (the head attends to the token <em>after</em> the earlier occurrence of the present token) and <strong>copying</strong> (the head's output boosts the probability of the attended token). Mechanically it is a circuit of two attention heads in different layers: a <strong>previous-token head</strong> copies information about each token into the following position, and the induction head proper uses that shifted information to find tokens preceded by the present token. This composition is why induction heads cannot exist in one-layer models.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html">Olsson et al., In-context Learning and Induction Heads (Anthropic, 2022)</a> — definition, two-head mechanism, and the operational tests.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -240,18 +485,39 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Why Induction Matters</h2>
 <p>Induction heads underlie much of in-context learning. They emerge sharply at a specific point in training, and their arrival coincides with a jump in few-shot ability. A behavior explained by a concrete mechanism.</p>
 <p><span class="kt">Key takeaway:</span> A traced circuit explains the rise of in-context learning.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Olsson et al. quantify <strong>in-context learning</strong> as the loss of the 50th token in context minus the loss of the 500th token — how much better the model gets from more context. Their central observation: this score jumps abruptly, from below 0.15 nats to roughly 0.4 nats, in a narrow window early in training (about 2.5 to 5 billion tokens for their models) and stays flat afterwards — a <em>phase change</em> visible as a bump in the training-loss curve — and induction heads form in exactly the same window. The paper assembles six lines of evidence that induction heads are the mechanism, including co-occurrence across model sizes, <em>co-perturbation</em> (an architecture change that shifts when induction heads form shifts the in-context-learning jump identically), direct ablation of induction heads reducing in-context learning, and generality (the same heads do fuzzy pattern completion $[A^*][B^*] \dots [A] \to [B]$, e.g. across translation). Evidence strength varies by regime: for small attention-only models the mechanism is nailed down; for large models the case is deliberately labeled circumstantial.</p>
+<ul>
+<li><a href="https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html">Olsson et al., In-context Learning and Induction Heads (Anthropic, 2022)</a> — the phase-change window, the in-context-learning score, and the six arguments.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>The Polysemantic Wall</h2>
 <p>The bad news: most neurons are not one clean concept. A single neuron tends to fire for many unrelated things, a property called polysemanticity, which blocks naive one-neuron-one-meaning reading.</p>
 <p><span class="kt">Key takeaway:</span> Most neurons mix many meanings and resist easy reading.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>A neuron is <strong>polysemantic</strong> if it activates for several semantically unrelated properties of the input, and <strong>monosemantic</strong> if it tracks one. The question is only meaningful because neurons form a <strong>privileged basis</strong>: the elementwise nonlinearity (ReLU, GeLU) acts coordinate-by-coordinate, so the neuron directions are singled out by the architecture — unlike, say, directions in the residual stream, which can be rotated freely. Polysemanticity says that even in this privileged basis, the units of computation do not align with human concepts; the next slide gives the hypothesized reason.</p>
+</div>
 </article>
 
 <article>
 <h2>Superposition</h2>
 <p>The reason for polysemanticity: the model packs more features than it has neurons, so features overlap in the same dimensions and each neuron carries a mix. Like cramming too many ideas into too few words.</p>
 <p><span class="kt">Key takeaway:</span> Superposition crams many features into few neurons.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>The <strong>superposition hypothesis</strong> (Elhage et al., "Toy Models of Superposition", 2022): a layer's activation vector $h(x) \in \mathbb{R}^n$ is approximately a sparse linear combination of many more feature directions than it has dimensions,</p>
+<p>$$h(x) \approx \sum_{k=1}^{m} a_k(x)\, d_k, \qquad m \gg n,$$</p>
+<p>with coefficients $a_k(x) \ge 0$ that are mostly zero on any given input and directions $d_k$ that are not mutually orthogonal (impossible for $m \gt n$) but only nearly so. This rests on the <strong>linear representation hypothesis</strong>, which the paper decomposes into <em>decomposability</em> (activations decompose into independently understandable features) and <em>linearity</em> (features are represented by directions). In their toy models, superposition is a real computed phenomenon: whether the trained model stores features orthogonally or in superposition depends on feature sparsity and importance, and the transition behaves like a phase change. Consequence: polysemanticity is not an accident but the expected reading of a superposed code through the neuron basis — and the code can in principle be unfolded, which is Section 05.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://transformer-circuits.pub/2022/toy_model/index.html">Elhage et al., Toy Models of Superposition (Anthropic, 2022)</a> — the hypothesis, the sparsity phase diagram, and the phase-change result.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -264,48 +530,107 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Unpacking Superposition</h2>
 <p>The idea: spread the activations into a much wider space and force only a few units to be active at once. With few actives, each one can carry a single clean meaning. We trade a few crowded dimensions for many clear ones.</p>
 <p><span class="kt">Key takeaway:</span> Widen and sparsify to separate the tangled features.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>If activations really are $h \approx \sum_k a_k d_k$ with sparse $a$, recovering the features is the classical <strong>dictionary learning / sparse coding</strong> problem: given samples of $h$, find a dictionary of directions $D = [d_1, \dots, d_m]$ and nonnegative sparse codes $a(h)$ minimizing reconstruction error plus a sparsity penalty,</p>
+<p>$$\min_{D,\,a}\; \lVert h - D\,a \rVert_2^2 + \lambda \lVert a \rVert_1 .$$</p>
+<p>Bricken et al. (2023) cast the unpacking of superposition exactly this way and solve it with a sparse autoencoder — an encoder network that <em>amortizes</em> the sparse coding step, so codes come from one forward pass instead of per-sample optimization. The $\ell_1$ norm is the standard convex surrogate for the $\ell_0$ count of active units (derivation: course notes — textbook sparse-coding material; the SAE instantiation is the next entry).</p>
+</div>
 </article>
 
 <article>
 <h2>The Sparse Autoencoder</h2>
 <p>A sparse autoencoder, or SAE, widens the neuron activations into a large, sparse layer and then rebuilds them. The few active units in the wide layer turn out to carry readable meanings.</p>
 <p><span class="kt">Key takeaway:</span> An SAE expands activations into sparse, readable features.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Exact architecture and loss from Bricken et al. (2023). Given activation samples $x \in \mathbb{R}^n$ (their MLP-layer activations), with hidden width $m \ge n$ (overcomplete; they train expansion factors from $1\times$ up to $256\times$):</p>
+<p>$$\bar{x} = x - b_d$$</p>
+<p>$$f = \mathrm{ReLU}\bigl(W_e \bar{x} + b_e\bigr)$$</p>
+<p>$$\hat{x} = W_d f + b_d$$</p>
+<p>$$\mathcal{L} = \frac{1}{|X|} \sum_{x \in X} \Bigl( \lVert x - \hat{x} \rVert_2^2 + \lambda \lVert f \rVert_1 \Bigr)$$</p>
+<p>Reading the pieces: $W_e, b_e$ are the encoder, $f \in \mathbb{R}^m_{\ge 0}$ are the <strong>feature activations</strong>, $W_d$ is the decoder whose columns are the learned <strong>feature directions</strong> $d_k$, and $b_d$ is a pre-encoder/post-decoder tied bias (input shifted by $-b_d$ before encoding, added back after decoding). The $\ell_2$ term demands faithful reconstruction of the model's actual activations; the $\ell_1$ term with coefficient $\lambda$ forces few active features per input; ReLU keeps activations nonnegative. So a trained SAE rewrites $x \approx b_d + \sum_k f_k(x)\, d_k$ — precisely the hypothesized superposition decomposition, now with named, inspectable coordinates.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://transformer-circuits.pub/2023/monosemantic-features/index.html">Bricken et al., Towards Monosemanticity: Decomposing Language Models With Dictionary Learning (Anthropic, 2023)</a> — architecture and loss as above (their Appendix: Autoencoder Optimization).</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Monosemantic Features</h2>
 <p>The 2023 result: each SAE feature fires for one human concept, like DNA sequences, legal language, or base64 text. Monosemantic means one feature, one meaning.</p>
 <p><span class="kt">Key takeaway:</span> SAE features are monosemantic: one feature, one concept.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The setup: a one-layer transformer with a 512-neuron MLP, whose activations were decomposed by SAEs trained on 8 billion activation samples, with dictionary sizes from 512 ($1\times$) up to 131,072 ($256\times$); the headline analyses use the 4,096-feature run (their "A/1"). Where the 512 <em>neurons</em> are largely polysemantic, the SAE <em>features</em> come out interpretable — the paper's detailed case studies include features for Arabic script, DNA sequences, base64 strings, and Hebrew script, each validated by activation analysis and by pinning the feature active to make the model <em>produce</em> matching text (e.g. the base64 feature makes it emit base64). "Monosemantic" is exactly the slide's slogan: one feature, one concept.</p>
+<ul>
+<li><a href="https://transformer-circuits.pub/2023/monosemantic-features/index.html">Bricken et al., Towards Monosemanticity (Anthropic, 2023)</a> — setup, case-study features, and validation experiments.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Scaling Up</h2>
-<p>In 2024 this scaled to a production model. Millions of features were extracted from Claude, spanning cities, people, code bugs, and emotions, including a now-famous Golden Gate Bridge feature.</p>
+<p>In 2024 this scaled to a production model. Millions of features were extracted from Claude 3 Sonnet, spanning cities, famous people, code bugs, and scam emails, including a now-famous Golden Gate Bridge feature.</p>
 <p><span class="kt">Key takeaway:</span> The method scaled to millions of features in a real model.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Templeton et al. (2024) trained SAEs on residual-stream activations at the middle layer of Claude 3 Sonnet, at three dictionary sizes: 1,048,576 (~1M), 4,194,304 (~4M), and 33,554,432 (~34M) features. The features found range from concrete (people, places — including the Golden Gate Bridge feature, catalogued as 34M/31164353) to abstract (code errors, deception, sycophancy), are often multilingual and multimodal, and include the safety-relevant families discussed two slides ahead. This was the demonstration that dictionary learning survives the jump from a toy one-layer model to a production frontier model.</p>
+<ul>
+<li><a href="https://transformer-circuits.pub/2024/scaling-monosemanticity/index.html">Templeton et al., Scaling Monosemanticity: Extracting Interpretable Features from Claude 3 Sonnet (Anthropic, 2024)</a> — the three SAE sizes and the feature catalogue.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Feature Steering</h2>
 <p>A clean feature is not only readable, it is a dial. Turning a feature up or down lets us change the model's behavior in a targeted way.</p>
 <p><span class="kt">Key takeaway:</span> A readable feature is also an adjustable control.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Feature steering</strong> (clamping), per Templeton et al.: during the forward pass, fix a chosen feature's activation to an artificially high or low value $c$ — rather than the value $f_k(x)$ the encoder computed — and let the decoder's reconstruction carry the change back into the residual stream, then continue the computation. Equivalently, the intervention shifts the activation vector along the feature's direction: $h \mapsto h + \bigl(c - f_k(x)\bigr) d_k$ (formal paraphrase — derivation: course notes). This is a <em>causal intervention</em> on the model's internal state: unlike probing, which only reads, steering tests whether the feature direction actually <em>does</em> what its label claims.</p>
+</div>
 </article>
 
 <article>
 <h2>Golden Gate Claude</h2>
 <p>The vivid demonstration: amplify the Golden Gate Bridge feature and the model steers nearly every answer toward the bridge. The intervention causally proves the feature is real and not just a correlation.</p>
 <p><span class="kt">Key takeaway:</span> Steering is a causal test that the feature is real.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>In the paper, clamping the Golden Gate Bridge feature (34M/31164353) to 10× its maximum observed activation makes Claude bring up the bridge in nearly any context — even self-identifying <em>as</em> the bridge when asked about its physical form. On May 23, 2024, Anthropic put "Golden Gate Claude" online at claude.ai for a 24-hour public research demo, letting anyone chat with the steered model. Pedagogically the point is the causal logic: an observational correlation ("this feature fires on bridge text") becomes a causal claim once intervening on the feature reliably produces the behavior.</p>
+<ul>
+<li><a href="https://www.anthropic.com/news/golden-gate-claude">Anthropic, Golden Gate Claude (May 23, 2024)</a> — the demo announcement.</li>
+<li><a href="https://transformer-circuits.pub/2024/scaling-monosemanticity/index.html">Templeton et al. (2024)</a> — the clamping experiment behind the demo.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>A Steering Widget</h2>
 <p>A Colab demo: pick a known feature from an open sparse autoencoder, slide its strength from off to high, and watch the generated text shift in real time. The interactivity makes the abstraction concrete.</p>
 <p><span class="kt">Key takeaway:</span> A live slider shows steering changing the output.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://www.neuronpedia.org">Neuronpedia</a> — open platform for browsing and steering SAE features in open-weights models, directly in the browser.</li>
+<li><a href="https://www.neuronpedia.org/gemma-scope">Gemma Scope on Neuronpedia</a> — a public suite of sparse autoencoders for the Gemma 2 models, with an interactive steering interface suitable for this demo.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Steering for Safety</h2>
-<p>The same dials work in reverse: suppress a deception feature, damp an unsafe-advice feature. Interpretability stops being only a viewer and becomes a control knob for safety.</p>
-<p><span class="kt">Key takeaway:</span> Steering can turn down harmful behavior, not just observe it.</p>
+<p>The same dials could work in reverse: the scaled SAE found safety-relevant features for deception, bias, and scam emails, which could be watched or damped. Interpretability stops being only a viewer and becomes a control knob — though this is still early-stage research, not deployed practice.</p>
+<p><span class="kt">Key takeaway:</span> Steering could turn down harmful behavior, but it is still early days.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Templeton et al. document families of <strong>safety-relevant features</strong> in Claude 3 Sonnet, including a scam-email feature (34M/15460472), features related to bioweapons (e.g. 34M/25499719), and features for bias, sycophancy, and deception — with a case study using features to detect and correct deceptive behavior. The paper is explicit that these are existence results: finding a deception feature does not yet mean deployed models are monitored or controlled this way, which is why the slide says "could".</p>
+<ul>
+<li><a href="https://transformer-circuits.pub/2024/scaling-monosemanticity/index.html">Templeton et al. (2024)</a> — "Safety-Relevant Features" sections, including the deception case study.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -321,27 +646,116 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article>
+<h2>What the Law Demands</h2>
+<p>The GDPR touches automated decisions in two places: Article 22 gives a right not to be subject to a solely automated decision with legal or similarly significant effect, and Articles 13–15 give a right to meaningful information about the logic involved. Think loans, hiring, insurance.</p>
+<p><span class="kt">Key takeaway:</span> The GDPR grants a right against automated decisions and to information about the logic.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>GDPR Article 22(1)</strong> (verbatim): "The data subject shall have the right not to be subject to a decision based solely on automated processing, including profiling, which produces legal effects concerning him or her or similarly significantly affects him or her." Article 22(2) lifts this where the decision is necessary for a contract with the data subject, authorised by Union or Member State law with suitable safeguards, or based on explicit consent. <strong>Articles 13(2)(f), 14(2)(g), and 15(1)(h)</strong> each require, where automated decision-making under Article 22 exists, "meaningful information about the logic involved, as well as the significance and the envisaged consequences of such processing for the data subject" — a transparency duty at data collection (13, 14) and on access request (15). Note the legal terms of art: "solely" (a human in the loop can take a decision outside Article 22) and "legal effects … or similarly significantly affects" (loans, hiring, and insurance are the standard examples).</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://gdpr-info.eu/art-22-gdpr/">GDPR Article 22 (full text)</a> — automated individual decision-making, including profiling.</li>
+<li><a href="https://gdpr-info.eu/art-15-gdpr/">GDPR Article 15 (full text)</a> — right of access, including 15(1)(h) on the logic involved.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>A "Right to Explanation"?</h2>
+<p>The famous phrase is weaker than it sounds: it appears only in a non-binding recital, and legal scholars — most famously Wachter, Mittelstadt, and Floridi — argue the GDPR does not actually grant it. The EU AI Act closes some of the gap: its Article 86 gives people affected by high-risk AI decisions a right to a clear, meaningful explanation.</p>
+<p><span class="kt">Key takeaway:</span> The GDPR "right to explanation" is contested; the AI Act adds an explicit one for high-risk systems.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The phrase traces to <strong>Recital 71</strong>, which says the Article 22 safeguards should include the right "to obtain an explanation of the decision reached after such assessment and to challenge the decision" — but recitals are interpretive aids, not binding law, and the operative Article 22(3) text does not repeat the explanation right. Wachter, Mittelstadt &amp; Floridi ("Why a Right to Explanation of Automated Decision-Making Does Not Exist in the General Data Protection Regulation", <em>International Data Privacy Law</em> 7(2):76–99, 2017) make exactly this argument: the GDPR as enacted grants at most a limited right to be informed about the existence and general logic of automated decision-making, not to an explanation of a specific decision. The <strong>EU AI Act, Article 86(1)</strong>, adds an explicit right: any person affected by a decision taken by a deployer on the basis of output from a high-risk AI system (Annex III, with an exception for critical-infrastructure systems under its point 2) which produces legal effects or similarly significantly adversely affects their health, safety, or fundamental rights "shall have the right to obtain from the deployer clear and meaningful explanations of the role of the AI system in the decision-making procedure and the main elements of the decision taken."</p>
+<ul>
+<li><a href="https://gdpr-info.eu/recitals/no-71/">GDPR Recital 71 (full text)</a> — the source of the "right to explanation" phrase.</li>
+<li><a href="https://doi.org/10.1093/idpl/ipx005">Wachter, Mittelstadt &amp; Floridi, International Data Privacy Law 7(2):76–99 (2017)</a> — the "no right to explanation" analysis (publisher page may block automated access; bibliographic record verified via Crossref).</li>
+<li><a href="https://artificialintelligenceact.eu/article/86/">EU AI Act, Article 86 (full text)</a> — right to explanation of individual decision-making for high-risk systems.</li>
+</ul>
+</div>
+</article>
+
+<article>
 <h2>The Faithfulness Problem</h2>
 <p>The central limit: an explanation is faithful only if it matches the real cause of the decision. A plausible explanation can still be wrong about why the model decided.</p>
 <p><span class="kt">Key takeaway:</span> Plausible and faithful are different; only faithful counts.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Faithfulness</strong>: an explanation is faithful to the extent that it accurately represents the reasoning process the model actually used for this prediction. <strong>Plausibility</strong>: how convincing the explanation is to a human. The properties are independent — all four combinations occur, and the dangerous quadrant is plausible-but-unfaithful, since it <em>raises</em> trust while being wrong. Jacovi &amp; Goldberg (ACL 2020) survey how the field evaluates faithfulness, organize existing practice around three underlying assumptions, and argue the binary question "is this explanation faithful?" sets an unrealistic bar — faithfulness should be evaluated as a graded quantity. Their guideline most relevant here: plausibility judgments by humans must never be used as evidence of faithfulness.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2004.03685">Jacovi &amp; Goldberg, Towards Faithfully Interpretable NLP Systems: How should we define and evaluate faithfulness? (ACL 2020)</a> — definitions, the three assumptions, and the graded-faithfulness proposal.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Models Can Rationalize</h2>
 <p>A specific danger with language models: ask them to explain themselves and they produce fluent, convincing reasons that may not reflect the actual computation. A confident self-explanation is not a faithful one.</p>
 <p><span class="kt">Key takeaway:</span> A model's self-explanation needs its own audit.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>The controlled demonstration is Turpin et al. (NeurIPS 2023): add a biasing feature to the prompt — e.g. reorder the multiple-choice options in the few-shot examples so the correct answer is always "(A)" — and models shift their answers accordingly while their chain-of-thought explanations systematically fail to mention the bias, instead generating fluent rationalizations for the biased (often wrong) answer. Accuracy drops by as much as 36% on a 13-task BIG-Bench Hard suite (GPT-3.5 and Claude 1.0), and on a social-bias task the explanations justify stereotype-consistent answers without mentioning the stereotype. This is rationalization in the precise sense: plausible stated reasons, produced after the true cause has already acted.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2305.04388">Turpin et al., Language Models Don't Always Say What They Think (NeurIPS 2023)</a> — the biased-prompt experiments.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Always Sanity-Check</h2>
 <p>Practical discipline: before trusting an explanation, test it. Randomize the weights and see if the map changes; intervene and see if behavior actually shifts; hold out cases and see if the explanation predicts them.</p>
 <p><span class="kt">Key takeaway:</span> Trust an explanation only after it survives a real test.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>The slide's three tests, formalized. (1) <strong>Randomization tests</strong> (Adebayo et al., NeurIPS 2018): recompute the explanation after randomizing model parameters (layer by layer, from the top) or after retraining on permuted labels; a faithful explanation must degrade, since the thing it explains is gone. (2) <strong>Causal intervention / activation patching</strong>: replace an internal activation with its value from another run and measure the output change; Meng et al. (NeurIPS 2022) use this "causal tracing" to identify the hidden states decisive for a factual prediction — locating factual recall in mid-layer MLP computations on the subject tokens — and then validate the localization by directly editing those weights (ROME). An explanation that points at component $c$ predicts that patching $c$ moves the output; if it does not, the explanation fails. (3) <strong>Predictive check</strong>: a claimed explanation implies behavior on unseen counterfactual inputs; test those predictions on held-out cases. Common thread: each test converts an explanation from a story into a falsifiable hypothesis.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1810.03292">Adebayo et al., Sanity Checks for Saliency Maps (NeurIPS 2018)</a> — the randomization tests.</li>
+<li><a href="https://arxiv.org/abs/2202.05262">Meng et al., Locating and Editing Factual Associations in GPT (NeurIPS 2022)</a> — causal tracing and ROME.</li>
+</ul>
+</div>
 </article>
 
 <article>
-<h2>Frontier 2025&ndash;26</h2>
-<p>Where the field is heading: sparse-feature dictionaries at frontier scale, automated circuit discovery, and interpretability built directly into model audits and governance.</p>
-<p><span class="kt">Key takeaway:</span> The frontier moves from viewing models to governing them.</p>
+<h2>Frontier: Attribution Graphs</h2>
+<p>In 2025 Anthropic's circuit-tracing work produced attribution graphs that follow a whole computation: asked for the capital of the state containing Dallas, Claude 3.5 Haiku activates "Texas" and then "Austin"; writing rhyming poetry, it picks the rhyme word ahead of time. The tools were open-sourced in May 2025 and graphs can be explored interactively on Neuronpedia.</p>
+<p><span class="kt">Key takeaway:</span> Circuit tracing now maps full computations, and the tools are public.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>An <strong>attribution graph</strong> traces the chain of intermediate features between prompt and answer — a partial "wiring diagram" of one forward pass — with each hypothesized step validated by perturbation experiments. In Lindsey et al., "On the Biology of a Large Language Model" (Anthropic, 2025), studying Claude 3.5 Haiku: for "the capital of the state containing Dallas", the graph shows Dallas activating Texas-features which combine with "capital" to produce Austin — genuine two-hop reasoning, confirmed by intervening on the Texas step (swap it and the output changes accordingly). In the poetry case study, given a line ending in "grab it", planned-word features for candidate rhymes such as "rabbit" activate <em>before</em> the next line is written, and the model writes the line toward the planned word — forward planning, not word-by-word improvisation. In May 2025 the circuit-tracing tooling was open-sourced: a library that generates attribution graphs on open-weights models (demonstrated on Gemma-2-2b and Llama-3.2-1b), with an interactive Neuronpedia frontend.</p>
+<ul>
+<li><a href="https://transformer-circuits.pub/2025/attribution-graphs/biology.html">Lindsey et al., On the Biology of a Large Language Model (Anthropic, 2025)</a> — the Dallas/Austin and poetry-planning case studies.</li>
+<li><a href="https://www.anthropic.com/research/open-source-circuit-tracing">Anthropic, Open-sourcing circuit tracing tools (May 2025)</a> — the release announcement.</li>
+<li><a href="https://www.neuronpedia.org">Neuronpedia</a> — interactive attribution-graph explorer.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>Frontier: Does the Model Say What It Thinks?</h2>
+<p>Reasoning models print a chain of thought, but it is not automatically faithful: slip a hint into the prompt and models that use the hint usually admit it in under 20% of cases. Chain-of-thought is one more explanation to audit, not ground truth about the computation.</p>
+<p><span class="kt">Key takeaway:</span> A model's printed reasoning can hide what actually drove the answer.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Chen et al. (Anthropic, 2025) measure chain-of-thought faithfulness in reasoning models by inserting six kinds of hints about the answer into prompts and checking whether models that demonstrably <em>use</em> a hint <em>acknowledge</em> it in their chain of thought. Reasoning models verbalize used hints in at least 1% of applicable cases, but the reveal rate is often below 20%. Outcome-based reinforcement learning initially improves faithfulness but plateaus well short of saturation; and in RL environments with reward hacks, models learn the hacks while almost never (below 2% of examples) verbalizing them. Conclusion for practice: CoT monitoring can notice frequent unintended behaviors, but is not reliable enough to <em>rule out</em> rare or hidden ones — the printed reasoning is itself an explanation needing an audit, closing the loop with the faithfulness slides above.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2505.05410">Chen et al., Reasoning Models Don't Always Say What They Think (Anthropic, 2025)</a> — the hint experiments and reveal rates.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>Frontier: An MRI for AI</h2>
+<p>Interpretability is now framed as a safety race: Dario Amodei's 2025 essay argues we must understand models before they become overwhelmingly powerful, sets a goal of interpretability reliably detecting most model problems by 2027, and pictures it as an MRI run on every model.</p>
+<p><span class="kt">Key takeaway:</span> The field's ambition is interpretability as a deployment requirement, on a deadline.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Amodei's essay "The Urgency of Interpretability" (April 2025) frames the field's long-run aim as the analogue of "a highly precise and accurate MRI that would fully reveal the inner workings of an AI model" — a diagnostic scan run before deployment. It states Anthropic's target that "interpretability can reliably detect most model problems" by 2027, and argues the deadline matters because AI systems of decisive capability — "a country of geniuses in a datacenter" — could plausibly arrive as soon as 2026–2027, so understanding must not lag capability by much. Tie back to the lecture: the technical path the essay bets on is exactly Sections 04–05 — features, circuits, and the tracing tools of the previous two slides.</p>
+<ul>
+<li><a href="https://www.darioamodei.com/post/the-urgency-of-interpretability">Amodei, The Urgency of Interpretability (April 2025)</a> — the essay behind this slide.</li>
+</ul>
+</div>
 </article>
 
 <article>

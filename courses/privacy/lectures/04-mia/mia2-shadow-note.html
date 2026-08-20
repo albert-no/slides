@@ -37,31 +37,68 @@
 <p class="meta">Companion to <code>mia2-shadow.html</code>. Detail that doesn't fit on the slides.</p>
 
 <section>
-  <h2>Slide 13 — Results: Google Prediction API (full table)</h2>
+  <h2>Slide 41 — Results: Google Prediction API (full table)</h2>
 
-  <p>The slide shows three datasets. The fourth result (Texas-100) is moved here to keep element budget within 5:</p>
+  <p>The slide shows three datasets. The fourth result (Texas-100) is moved here to keep the element budget within 5:</p>
 
   <table>
     <tr><th>Dataset</th><th>Classes</th><th>Model Acc.</th><th>Attack Precision</th><th>Attack Recall</th></tr>
     <tr><td>Texas-100</td><td>100</td><td>53%</td><td>90%</td><td>87%</td></tr>
   </table>
 
-  <p>Texas-100 mirrors the Purchase-100 pattern: many classes, low model accuracy, high attack precision. The trend holds: more classes and more overfitting increase vulnerability.</p>
+  <p>Texas-100 mirrors the Purchase-100 pattern: many classes, low model accuracy, high attack precision. The trend holds — more classes and more overfitting increase vulnerability. Source: Shokri, Stronati, Song, Shmatikov, IEEE S&amp;P 2017.</p>
 </section>
 
 <section>
-  <h2>Slide 28 — From Translation to Language Models (full comparison)</h2>
+  <h2>Slides 14, 26 — proof bookkeeping omitted from the slides</h2>
 
-  <p>The slide shows the first three comparison rows. The remaining two rows are here for completeness:</p>
+  <h3>Proposition 1 (shadows simulate exactly)</h3>
+  <p>The slide states the four steps. The measure-theoretic detail kept off the slide: the shadow draws are i.i.d. across $j$ because the sampling of $D_j^s$, the training randomness $\rho_j$, and the probe draw are independent across shadows by construction. Hence the empirical measure of the labelled scores converges weakly to $P_b$ by the Glivenko–Cantelli theorem, and the Monte-Carlo error is $O_p(k^{-1/2})$ uniformly over any Donsker class of test functions. None of this is needed for the exactness claim, which is a statement about one draw, not about the limit.</p>
 
-  <table>
-    <tr><th>Seq2Seq MIA</th><th>LLM MIA (future)</th></tr>
-    <tr><td>Known training data distribution</td><td>Unknown, web-scale training data</td></tr>
-    <tr><td>Global threshold works</td><td>Need calibration (text difficulty varies)</td></tr>
-  </table>
+  <h3>Corollary 1 (mis-specification costs at most TV)</h3>
+  <p>The bound is stated for the advantage. The same argument gives the pointwise ROC version: for any test $\phi$, $|\mathbb{E}_Q[\phi] - \mathbb{E}_P[\phi]| \le \mathrm{TV}(Q, P)$ applied separately under $b=1$ and $b=0$, so both TPR and FPR move by at most the total variation between the shadow world and the target world. The advantage bound is the difference of the two, hence the factor that appears on the slide.</p>
+</section>
 
-  <h3>Why calibration matters for LLMs</h3>
-  <p>In seq2seq, sentence pairs come from a controlled corpus so the perplexity distribution is relatively homogeneous. For LLMs trained on web-scale data, a rare technical document and a common news article have very different baseline perplexities — a global threshold will falsely label all rare-domain text as members. Calibration approaches (e.g., Min-K%, zlib ratio, neighborhood comparisons) address this by normalizing perplexity against a reference distribution. This distinction is a central motivation for the LLM MIA literature in Lecture 5.</p>
+<section>
+  <h2>Slide 68 — the GAN objective actually used in practice</h2>
+
+  <p>The slide states the minimax objective $V(G,D)$ in its original form because that is the form Theorems 2 and 3 are proved for. In practice the generator is trained on the <strong>non-saturating</strong> surrogate: instead of minimising $\log(1 - D(G(z)))$, one maximises $\log D(G(z))$. The two have the same fixed point but the surrogate has a non-vanishing gradient when $D$ is confident, which is exactly the regime at the start of training. The optimal-discriminator identity is unaffected: $D^\star$ depends only on the inner maximisation.</p>
+
+  <p>Source: Goodfellow, Pouget-Abadie, Mirza, Xu, Warde-Farley, Ozair, Courville, Bengio, "Generative Adversarial Nets", NeurIPS 2014.</p>
+</section>
+
+<section>
+  <h2>Slides 102–107 — Hisamoto et al., what the paper actually reports</h2>
+
+  <p>Worth stating out loud in the lecture, because it corrects a common summary of this paper. Bob's attack does <strong>not</strong> use perplexity. The features are modified 1–4-gram precisions plus smoothed sentence-level BLEU, computed from the (source, reference, hypothesis) triple; black-box translation returns text, not probabilities. The authors report that adding the model score as an extra feature gave no improvement.</p>
+
+  <p>Perplexity appears in this deck as the <em>natural likelihood-ratio statistic</em> for a sequence model (Proposition 6) and as the object whose calibration failure Proposition 7 quantifies. It is the theory scaffold, not Hisamoto's attack signal.</p>
+
+  <h3>Numbers, with their source table</h3>
+  <ul>
+    <li>Sentence-level accuracy on Alice is at chance for all four classifiers (Table 2).</li>
+    <li>Out-of-domain subcorpora (Table 4) and out-of-vocabulary probes (Table 5) show real signal, but those subcorpora contain only out-probes, so a degenerate always-"out" classifier scores 100. The perceptron does exactly this. Only the MLP numbers are informative.</li>
+    <li>Group probes of 500 sentences (Table 6) give 64–70 on Bob's held-out data but 50–52 on Alice; subtracting the mean shadow-to-Alice BLEU shift recovers 59–61 for the two linear-ish classifiers.</li>
+    <li>Shadow models translate worse than Alice: shadow mean BLEU 38.6 ± 0.2 on newstest2018 against Alice's 42.6. That gap <em>is</em> the mis-specification of Assumption S, measured.</li>
+  </ul>
+
+  <p>Source: Hisamoto, Post, Duh, "Membership Inference Attacks on Sequence-to-Sequence Models: Is My Data In Your Machine Translation System?", TACL 2020.</p>
+</section>
+
+<section>
+  <h2>Slide 99 — where the numbers in "The Gap, Numerically" come from</h2>
+
+  <p>These are evaluations of the two formulas in Proposition 7 at $\Delta/\sigma = 1$, not measurements. Calibrated: $\Phi(\Phi^{-1}(\alpha) + 1)$. Global threshold, large-gap limit: $\tfrac12\Phi(\Phi^{-1}(2\alpha) + 1)$. At $\alpha = 0.01$ these give $\Phi(-1.326) = 0.092$ and $\tfrac12\Phi(-1.054) = 0.073$; at $\alpha = 0.10$, $\Phi(-0.282) = 0.389$ and $\tfrac12\Phi(0.158) = 0.281$. The ceiling row is the $\Delta/\sigma \to \infty$ limit of each expression.</p>
+
+  <p>The point to make verbally: the calibrated test can reach 1, the pooled test cannot exceed $\tfrac12$ no matter how strong the membership signal is. Half the population is structurally invisible, and no amount of threshold tuning recovers it.</p>
+</section>
+
+<section>
+  <h2>Slide 108 — from seq2seq to language models</h2>
+
+  <p>In seq2seq the corpus is controlled, so sentence difficulty varies over a narrow band and a single threshold is merely inefficient. On web-scale training data the band is enormous: a rare technical document and a common news article have wildly different baseline log-likelihoods, so a global threshold labels rare-domain text as member regardless of membership. This is Proposition 7 with the group gap taken to its extreme.</p>
+
+  <p>The response in the literature is to replace the fixed threshold with a per-example null — normalise the score against a reference obtained from a second model, a compressor, or perturbed neighbours of the same example. That is the calibration thread the remaining lectures pick up.</p>
 </section>
 
 </body>

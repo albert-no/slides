@@ -46,6 +46,15 @@
 
   <h3>1.4 What $\omega$ does, formally</h3>
   <p>Setting $\omega \neq 1$ samples not from $p_t(\,\cdot\,\mid y)$ but from a tilted distribution $\propto p_t(\mathbf{x})\,p_t(y \mid \mathbf{x})^\omega$. As $\omega \uparrow$, the classifier term dominates: the sampler concentrates on $\mathbf{x}$ values the classifier confidently labels $y$. This trades sample diversity for class fidelity (FID often improves up to $\omega \approx 4$, then degrades).</p>
+
+  <div class="prop"><span class="thm-name">Proposition 2 (tilted fixed point).</span> Write $\tilde p_t(\mathbf{x}) \propto p_t(\mathbf{x})\,p_t(y\mid\mathbf{x})^{\omega}$. Then
+  <div class="math-block">$$\nabla_{\mathbf{x}}\log \tilde p_t(\mathbf{x}) \;=\; \nabla_{\mathbf{x}}\log p_t(\mathbf{x}) + \omega\,\nabla_{\mathbf{x}}\log p_t(y \mid \mathbf{x}),$$</div>
+  which is exactly the drift correction used by the guided sampler.</div>
+  <p><strong>Proof.</strong> $\log\tilde p_t = \log p_t + \omega\log p_t(y\mid\cdot) - \log Z_t$; the normalizer $Z_t$ does not depend on $\mathbf{x}$, so its gradient vanishes. $\square$</p>
+  <p>Equivalently $\tilde p_t \propto p_t(\mathbf{x}\mid y)^{\omega}\,p_t(\mathbf{x})^{1-\omega}$ — a geometric interpolation (extrapolation for $\omega &gt; 1$) between the conditional and unconditional laws.</p>
+
+  <h3>1.5 Caveat: the tilt is not a diffusion</h3>
+  <p>Proposition 2 identifies only the <em>fixed point</em> of the guided drift at each fixed $t$. For $\omega \neq 1$ the family $\{\tilde p_t\}_{t}$ is <strong>not</strong> the marginal flow of any forward diffusion: the guided reverse SDE is not the exact time reversal of anything, and its terminal law is not $\tilde p_0$ in general. Guidance is best read as a heuristic whose per-time target is the tilt above; the empirical fidelity/diversity trade-off is not derived from a convergence theorem. State this explicitly rather than claiming exact sampling from $p_0(\cdot\mid y)$.</p>
 </article>
 
 <!-- =================================================== -->
@@ -67,6 +76,26 @@
   <p>with $\eta_t \sim \mathcal{N}(0, I)$ fresh at each time. $\zeta_t$ has the same forward-marginal law as $\Omega(X^{(t)})$ would, so concatenating $\zeta_t$ with the current $\bar\Omega$-state produces an in-domain input for the score network.</p>
 
   <p>Why this is reasonable: the forward kernel factors across coordinates (Gaussian noise is independent per pixel), so $\Omega(X^{(t)}) \mid \Omega(X^{(0)})$ has exactly the marginal we used to sample $\zeta_t$. The approximation lies in <em>independence</em>: in the true joint $p_t(\bar\Omega, \Omega)$, the noised parts are correlated through $X^{(0)}$, while the substituted $\zeta_t$ is sampled with a fresh noise unrelated to the running $Z^{(t)}$. The error vanishes at $t = 0$ (since $\zeta_0 = Y$) and grows at most linearly in step size for stable score networks.</p>
+
+  <h3>2.3a Two exact statements behind the approximation</h3>
+  <div class="lem"><span class="thm-name">Lemma 1 (coordinatewise forward).</span> The VP forward kernel factors over pixels:
+  <div class="math-block">$$p_{t\mid 0}(\mathbf{x} \mid \mathbf{x}_0) \;=\; \prod_{i \in \mathcal{I}} \mathcal{N}\!\bigl(x_i;\ \sqrt{\bar\alpha_t}\,x_{0,i},\ (1-\bar\alpha_t)\bigr),$$</div>
+  hence $\Omega(X^{(t)}) \mid X^{(0)}$ and $\bar\Omega(X^{(t)}) \mid X^{(0)}$ are conditionally independent, and $\Omega(X^{(t)}) \mid \Omega(X^{(0)}) = Y$ depends on $Y$ alone.</div>
+  <p><strong>Proof.</strong> Marginalizing a product kernel over the unobserved coordinates leaves the observed factors untouched; each factor depends only on the matching coordinate of $\mathbf{x}_0$. $\square$</p>
+
+  <div class="prop"><span class="thm-name">Proposition 3 (the paste is exact in law).</span> With $\zeta_t = \sqrt{\bar\alpha_t}\,Y + \sqrt{1-\bar\alpha_t}\,\eta_t$, $\eta_t \sim \mathcal{N}(0, I)$, one has
+  <div class="math-block">$$\zeta_t \;\stackrel{d}{=}\; \Omega(X^{(t)}) \,\bigm|\, \Omega(X^{(0)}) = Y .$$</div></div>
+  <p><strong>Proof.</strong> Immediate from Lemma 1: the conditional law on the right is the product of the per-pixel Gaussians with means $\sqrt{\bar\alpha_t}\,Y_i$ and variance $1-\bar\alpha_t$. $\square$</p>
+
+  <h3>2.3b Where the approximation actually lives</h3>
+  <p>The ideal conditional score obeys the exact tower decomposition</p>
+  <div class="math-block">$$p_t\bigl(z \mid \Omega(X^{(0)}) = Y\bigr) \;=\; \int p_t\bigl(z \mid \Omega(X^{(t)}) = \zeta,\ \Omega(X^{(0)}) = Y\bigr)\; p_t\bigl(\zeta \mid \Omega(X^{(0)}) = Y\bigr)\, d\zeta .$$</div>
+  <p>The sampler makes exactly two substitutions:</p>
+  <ol>
+    <li><strong>Drop the clean conditioning.</strong> Replace $p_t(z \mid \Omega(X^{(t)}) = \zeta,\ \Omega(X^{(0)}) = Y)$ by $p_t(z \mid \Omega(X^{(t)}) = \zeta)$ — i.e. assume the noisy observation is a sufficient statistic for the clean one. Error $\to 0$ as $t \to 0$.</li>
+    <li><strong>Replace the integral by one fresh draw.</strong> Sample a single $\zeta_t$ per step instead of averaging, and resample it independently at every step, so successive $\zeta$'s are not coupled to each other or to the running $Z^{(t)}$.</li>
+  </ol>
+  <p>Both substitutions are exact at $t = 0$ (Proposition 3 with $\bar\alpha_0 = 1$ gives $\zeta_0 = Y$), which is why the returned sample satisfies $\Omega(X^{(0)}) = Y$ on the nose. Nothing here is exact in between: the RePaint resampling loop is a practical remedy for approximation 2.</p>
 
   <h3>2.4 Inpainting sampler</h3>
   <ol>
@@ -154,10 +183,28 @@
   <div class="thm"><span class="thm-name">Theorem 1 (reverse rate matrix, Sun et al. 2022 / Campbell et al. 2022).</span> If the forward CTMC has rate matrix $Q_t$ and marginals $\{p_t\}$, then the time-reversed process $\bar X_t = X_{T-t}$ is a CTMC with rate matrix
   <div class="math-block">$$\overline{Q}_t(y, x) \;=\; \frac{p_t(y)}{p_t(x)}\,Q_t(x, y) \quad (y \neq x), \qquad \overline{Q}_t(x, x) = -\sum_{y \neq x}\overline{Q}_t(y, x).$$</div></div>
 
-  <h3>5.2 Heuristic derivation</h3>
-  <p>For small $\Delta t$, the joint $(X_t, X_{t+\Delta t})$ has probability $p_t(x)\,Q_t(y, x)\,\Delta t$ at $y \neq x$. Reversing roles, $(X_{t+\Delta t}, X_t)$ has probability $p_{t+\Delta t}(y)\,\overline{Q}_t(x, y)\,\Delta t$. Equating and using $p_{t+\Delta t}(y) \to p_t(y)$:</p>
-  <div class="math-block">$$p_t(x)\,Q_t(y, x) \;=\; p_t(y)\,\overline{Q}_t(x, y) \quad\Longrightarrow\quad \overline{Q}_t(x, y) = \frac{p_t(x)}{p_t(y)}\,Q_t(y, x).$$</div>
-  <p>Relabeling indices yields the form in Theorem 1. (A rigorous derivation uses the time-reversal of the Kolmogorov forward equation; see Anderson 1991, §4.)</p>
+  <h3>5.2 Proof by infinitesimal Bayes</h3>
+  <p><em>Key trick.</em> Reverse one infinitesimal step rather than the whole path; Bayes applied to two adjacent times is all the structure needed. This is the discrete analogue of Anderson's argument, and considerably shorter.</p>
+  <p><strong>Step 1 (one small step).</strong> By definition of the rate matrix, for any pair of states,</p>
+  <div class="math-block">$$\Pr\bigl[X_{t+\Delta t} = x \mid X_t = y\bigr] \;=\; \delta_{xy} + Q_t(x, y)\,\Delta t + o(\Delta t),$$</div>
+  <p>with $y$ the earlier state and $x$ the later one. This is the only place the forward model enters.</p>
+  <p><strong>Step 2 (Bayes on the pair).</strong> For $y \neq x$,</p>
+  <div class="math-block">$$\begin{aligned}
+    \Pr\bigl[X_t = y \mid X_{t+\Delta t} = x\bigr]
+      &= \frac{\Pr[X_{t+\Delta t} = x \mid X_t = y]\;p_t(y)}{p_{t+\Delta t}(x)} \\
+      &= \frac{Q_t(x, y)\,\Delta t + o(\Delta t)}{p_{t+\Delta t}(x)}\;p_t(y)
+       \;=\; \frac{p_t(y)}{p_t(x)}\,Q_t(x,y)\,\Delta t + o(\Delta t),
+  \end{aligned}$$</div>
+  <p>using $p_{t+\Delta t}(x) = p_t(x) + O(\Delta t)$ and $p_t(x) &gt; 0$ (so the $O(\Delta t)$ correction is absorbed into $o(\Delta t)$ after multiplication by $\Delta t$).</p>
+  <p><strong>Step 3 (divide and pass to the limit).</strong> Divide by $\Delta t$ and let $\Delta t \downarrow 0$. The left-hand side is by definition the reverse transition rate from $x$ to $y$, so</p>
+  <div class="math-block">$$\overline{Q}_t(y, x) \;=\; \lim_{\Delta t \downarrow 0}\frac{\Pr[X_t = y \mid X_{t+\Delta t} = x]}{\Delta t} \;=\; \frac{p_t(y)}{p_t(x)}\,Q_t(x, y). \qquad \square$$</div>
+  <p>The diagonal is then forced by conservation of mass, $\overline{Q}_t(x,x) = -\sum_{y \neq x}\overline{Q}_t(y,x)$.</p>
+  <p><strong>Sanity checks.</strong> (i) If the chain is stationary and reversible, detailed balance $p(y)Q(x,y) = p(x)Q(y,x)$ gives $\overline{Q} = Q$ — a reversible chain looks the same backwards. (ii) For the absorbing forward, $Q_t(x, [\mathrm{M}]) = 0$ for $x \neq [\mathrm{M}]$, so $\overline{Q}_t(y, [\mathrm{M}])$ is supported on $y \neq [\mathrm{M}]$: the reverse process only <em>unmasks</em>, never re-masks.</p>
+
+  <h3>5.2a Why "score": the fine-grid limit</h3>
+  <p>On a one-dimensional grid of spacing $h$, the ratio is the gradient in disguise:</p>
+  <div class="math-block">$$\frac{p(x+h)}{p(x)} \;=\; \exp\bigl\{\log p(x+h) - \log p(x)\bigr\} \;\approx\; 1 + h\,\partial_x \log p(x).$$</div>
+  <p>So the ratio vector carries the same first-order information as $\nabla\log p$, expressed without derivatives — which is what makes it usable on an unordered alphabet.</p>
 
   <h3>5.3 The discrete score is a ratio</h3>
   <p>The reverse generator depends on the marginals only through the <em>ratio vector</em></p>
@@ -196,6 +243,32 @@
 
   <h3>6.5 Implementation note: the $C(r)$ term is a $\theta$-constant</h3>
   <p>The constant $r(\log r - 1)$ inside $\ell$ does not depend on $\theta$; it could be dropped without changing optima. It is kept so that $\mathcal{L}_{\mathrm{SE}}$ is non-negative and reaches $0$ at the optimum — useful for monitoring training. Practically, computing $r = p_t(y)/p_t(x)$ at training time uses the same forward kernel as continuous diffusion: for absorbing/uniform forward, the ratio is closed-form given $X^{(0)}$ (analog of the conditional score in continuous diffusion).</p>
+
+  <h3>6.6 Denoising score entropy</h3>
+  <p>$\mathcal{L}_{\mathrm{SE}}$ is not directly usable: the target $p_t(y)/p_t(x)$ is precisely the intractable object. The fix mirrors denoising score matching — replace the marginal ratio by the <em>kernel</em> ratio conditioned on $X^{(0)}$, which is closed-form, and let the expectation do the rest.</p>
+  <div class="thm"><span class="thm-name">Theorem 3 (denoising score entropy, Lou–Meng–Ermon 2024).</span> Define
+  <div class="math-block">$$\mathcal{L}_{\mathrm{DSE}}(\theta) \;=\; \mathbb{E}_{X_0,\,X_t}\!\left[\sum_{y \neq X_t} \ell\!\Bigl(s_\theta(X_t, t)_y,\; \frac{p_{t\mid 0}(y \mid X_0)}{p_{t\mid 0}(X_t \mid X_0)}\Bigr)\right].$$</div>
+  Every minimizer satisfies $s_{\theta^\star}(x, t)_y = p_t(y)/p_t(x)$ for all $x$ in the support of $p_t$ and all $y \neq x$. Hence $\mathcal{L}_{\mathrm{DSE}}$ and $\mathcal{L}_{\mathrm{SE}}$ have the same minimizers, but only the former is computable.</div>
+
+  <p><em>Key trick.</em> $\ell(s, r) = s - r\log s + r(\log r - 1)$ is <strong>affine in $r$</strong> apart from the $\theta$-free term $r(\log r - 1)$. So an expectation over the random target passes straight through onto $r$ alone.</p>
+
+  <p><strong>Step 1 (decouple).</strong> Write $R_y = p_{t\mid 0}(y \mid X_0)/p_{t\mid 0}(X_t \mid X_0)$ and condition on $X_t$:</p>
+  <div class="math-block">$$\mathcal{L}_{\mathrm{DSE}}(\theta) \;=\; \mathbb{E}_{X_t}\!\left[\sum_{y \neq X_t}\Bigl(s_\theta(X_t,t)_y - \mathbb{E}\bigl[R_y \mid X_t\bigr]\log s_\theta(X_t,t)_y\Bigr)\right] + C,$$</div>
+  <p>with $C = \mathbb{E}\bigl[\sum_y R_y(\log R_y - 1)\bigr]$ independent of $\theta$. Each pair $(X_t, y)$ now owns one free scalar, so the problem is a family of independent scalar minimizations.</p>
+
+  <p><strong>Step 2 (minimize pointwise).</strong> Fix $x$ and $y \neq x$, set $\bar r = \mathbb{E}[R_y \mid X_t = x]$, and minimize $s \mapsto s - \bar r\log s$ over $s &gt; 0$: $1 - \bar r/s = 0$ gives $s^\star = \bar r$, and $\partial_s^2 = \bar r/s^2 &gt; 0$ makes it the unique minimizer. So the network is driven to a conditional expectation, exactly as in denoising score matching.</p>
+
+  <p><strong>Step 3 (the average telescopes).</strong> The posterior of $X_0$ given $X_t = x$ is $p_0(x_0)p_{t\mid 0}(x \mid x_0)/p_t(x)$, so</p>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}\bigl[R_y \mid X_t = x\bigr]
+      &= \sum_{x_0} \frac{p_0(x_0)\,p_{t\mid 0}(x \mid x_0)}{p_t(x)}\cdot\frac{p_{t\mid 0}(y \mid x_0)}{p_{t\mid 0}(x \mid x_0)} \\
+      &= \frac{1}{p_t(x)}\sum_{x_0} p_0(x_0)\,p_{t\mid 0}(y \mid x_0)
+       \;=\; \frac{p_t(y)}{p_t(x)}.
+  \end{aligned}$$</div>
+  <p>The kernel evaluated at $x$ cancels between the posterior weight and the target, and what remains is the marginal at $y$. Combining with Step 2, $s^\star = p_t(y)/p_t(x)$. $\square$</p>
+
+  <p><strong>Recap chain.</strong> $\arg\min_s \mathbb{E}[\ell(s, R_y) \mid X_t = x] \stackrel{\text{affine in } r}{=} \arg\min_s \{s - \mathbb{E}[R_y \mid x]\log s\} \stackrel{\text{convexity}}{=} \mathbb{E}[R_y \mid X_t = x] \stackrel{\text{telescope}}{=} p_t(y)/p_t(x)$.</p>
+  <p><strong>Speaking point.</strong> The pattern is identical to Vincent's theorem in the continuous case: an intractable target is replaced by a conditional one whose posterior average is exactly the intractable target. Only the divergence changes — squared error there, score entropy here, because the object being learned is positive rather than signed.</p>
 </article>
 
 <!-- =================================================== -->

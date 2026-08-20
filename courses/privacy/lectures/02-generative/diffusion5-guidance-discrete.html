@@ -25,26 +25,65 @@
   text-transform: uppercase;
   margin-bottom: 8px;
 }
-.d5-algo ol { padding-left: 24px; margin: 0; }
-.d5-algo li { margin-bottom: 6px; line-height: 1.5; }
+.d5-algo > ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.d5-algo > ol > li {
+  counter-increment: step;
+  padding: 7px 0 7px 52px;
+  position: relative;
+  line-height: 1.45;
+}
+.d5-algo > ol > li::before {
+  content: counter(step) ".";
+  position: absolute;
+  left: 10px;
+  top: 7px;
+  font-weight: 700;
+  color: var(--yonsei-blue);
+  width: 32px;
+  text-align: right;
+}
+.d5-algo > ol > li + li { border-top: 1px solid var(--slate); }
+.d5-algo ol ol { list-style: lower-alpha; padding-left: 26px; margin: 4px 0 0; }
+.d5-algo ol ol li { padding: 3px 0; line-height: 1.45; }
+.d5-fig { position: relative; width: fit-content; margin: 12px auto 0; }
+.d5-fig .lab {
+  position: absolute;
+  font-size: 1.15rem;
+  color: var(--charcoal);
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+}
+.d5-fig .lab.blue { color: var(--yonsei-blue); font-weight: 600; }
+.d5-fig .lab.red { color: var(--warn); font-weight: 600; }
+.d5-fig .lab.green { color: var(--success); font-weight: 600; }
+.d5-fig .lab.gray { color: var(--gray-text); }
+.d5-fig .lab.amber { color: var(--amber); font-weight: 600; }
+.d5-chain {
+  display: flex; justify-content: center; align-items: center;
+  gap: 14px; margin: 24px 0 22px;
+  font-size: 1.4rem; color: var(--charcoal);
+}
+.d5-chain .arr { color: var(--gray-text); }
+.d5-chain .arr.focus { color: var(--yonsei-blue); font-weight: 600; }
+.d5-tight .math-block { margin: 8px 0; }
 </style>
 </head>
 <body data-brand-logo="../../../../reference/kor-eng2.png">
 
 <div class="deck" id="deck">
 
-<!-- SLIDE 1: Title -->
+<!-- SLIDE: Title -->
 <div class="slide title-slide active">
   <img class="title-logo" src="../../../../reference/kor-eng2.png" alt="Yonsei University">
   <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 5 of 5</div>
   <h1>Guidance and<br>Discrete Diffusion</h1>
   <div class="divider"></div>
-  <p class="subtitle">Classifier, classifier-free, inpainting, discrete transitions</p>
+  <p class="subtitle">Steering the reverse process, and leaving the continuum</p>
   <p style="font-weight:500;">Albert No &nbsp;·&nbsp; Yonsei University</p>
   <p style="margin-top:6px;">2026</p>
 </div>
 
-<!-- SLIDE 2: Contents -->
+<!-- SLIDE: Contents -->
 <div class="slide">
   <h2>Contents</h2>
   <div class="divider"></div>
@@ -62,7 +101,7 @@
       <div class="toc-rule"></div>
       <div>
         <div class="toc-label">Inpainting</div>
-        <div class="toc-sub">Conditioning on a subset of pixels</div>
+        <div class="toc-sub">Hard constraints and the noised observation</div>
       </div>
     </div>
     <div class="toc-item">
@@ -70,7 +109,7 @@
       <div class="toc-rule"></div>
       <div>
         <div class="toc-label">Classifier-free guidance</div>
-        <div class="toc-sub">A single dual-role network</div>
+        <div class="toc-sub">One network, two roles, one identity</div>
       </div>
     </div>
     <div class="toc-item">
@@ -78,14 +117,14 @@
       <div class="toc-rule"></div>
       <div>
         <div class="toc-label">Discrete diffusion</div>
-        <div class="toc-sub">Transition matrices, ratio score, score entropy</div>
+        <div class="toc-sub">Rate matrices, ratio score, score entropy</div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ====================================================================
-     PART 01: Classifier Guidance
+     PART 01: Classifier guidance
      ==================================================================== -->
 <div class="slide section-slide left">
   <div class="section-num">01</div>
@@ -94,69 +133,358 @@
   <p class="subtitle">Bayes decomposition and the $\omega$-scaled reverse SDE</p>
 </div>
 
-<!-- SLIDE: Why conditional generation matters -->
+<!-- SLIDE: why conditional generation (F1) -->
 <div class="slide">
   <h2>Why Conditional Generation</h2>
   <div class="divider"></div>
-  <p>Real applications rarely want a sample from $P_{\mathbf{X}}$. They want a sample from $P_{\mathbf{X}\,|\,Y}$ for some signal $Y$:</p>
-  <ul>
-    <li><strong>Text-to-image</strong>: $Y$ is a prompt — "a cat in a spacesuit".</li>
-    <li><strong>Class-conditional</strong>: $Y$ is a label — generate a "dog".</li>
-    <li><strong>Inpainting / editing</strong>: $Y$ is a partial image, mask, or layout.</li>
-    <li><strong>Inverse problems</strong>: $Y$ is a measurement (low-res, noisy, blurred).</li>
-  </ul>
-  <div class="highlight">
-    <p>Unconditional generation is the warm-up. Controllability is the product.</p>
+  <p>Applications want a sample from $P_{\mathbf X\,|\,Y}$, not from $P_{\mathbf X}$.</p>
+  <div class="d5-fig">
+    <svg width="880" height="250" viewBox="0 0 880 250">
+      <defs>
+        <marker id="a5a" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 z" fill="#666666"/>
+        </marker>
+      </defs>
+      <text x="130" y="16" text-anchor="middle" font-size="17" fill="#666666">conditioning signal Y</text>
+      <rect x="30" y="30" width="200" height="40" rx="6" fill="none" stroke="#666666"/>
+      <rect x="30" y="82" width="200" height="40" rx="6" fill="none" stroke="#666666"/>
+      <rect x="30" y="134" width="200" height="40" rx="6" fill="none" stroke="#666666"/>
+      <rect x="30" y="186" width="200" height="40" rx="6" fill="none" stroke="#666666"/>
+      <text x="130" y="56" text-anchor="middle" font-size="17" fill="#1a1a1a">text prompt</text>
+      <text x="130" y="108" text-anchor="middle" font-size="17" fill="#1a1a1a">class label</text>
+      <text x="130" y="160" text-anchor="middle" font-size="17" fill="#1a1a1a">masked image</text>
+      <text x="130" y="212" text-anchor="middle" font-size="17" fill="#1a1a1a">measurement</text>
+      <line x1="240" y1="50" x2="350" y2="118" stroke="#666666" stroke-width="1.4" marker-end="url(#a5a)"/>
+      <line x1="240" y1="102" x2="350" y2="124" stroke="#666666" stroke-width="1.4" marker-end="url(#a5a)"/>
+      <line x1="240" y1="154" x2="350" y2="132" stroke="#666666" stroke-width="1.4" marker-end="url(#a5a)"/>
+      <line x1="240" y1="206" x2="350" y2="138" stroke="#666666" stroke-width="1.4" marker-end="url(#a5a)"/>
+      <rect x="360" y="82" width="210" height="92" rx="8" fill="#003876"/>
+      <text x="465" y="122" text-anchor="middle" font-size="17" fill="#ffffff">guided reverse</text>
+      <text x="465" y="146" text-anchor="middle" font-size="17" fill="#ffffff">process</text>
+      <line x1="580" y1="128" x2="655" y2="128" stroke="#666666" stroke-width="1.4" marker-end="url(#a5a)"/>
+      <rect x="665" y="72" width="112" height="112" rx="6" fill="#c9d3de" stroke="#666666"/>
+      <text x="721" y="208" text-anchor="middle" font-size="17" fill="#666666">sample</text>
+    </svg>
   </div>
+  <p class="muted">Unconditional generation is the warm-up; control is the product.</p>
 </div>
 
-<!-- SLIDE: Conditional motivation (approaches) -->
+<!-- SLIDE: two approaches -->
 <div class="slide">
   <h2>Two Approaches</h2>
   <div class="divider"></div>
-  <p><strong>Naive:</strong> train a separate conditional score $s_\theta(\mathbf{x}\,|\,Y=y)$ per condition.</p>
-  <p>Expensive; does not scale; needs paired $(X, Y)$ for every $Y$.</p>
-  <div class="highlight">
-    <p><strong>Classifier guidance:</strong> reuse a pretrained unconditional score.</p>
-    <p>Steer with a small auxiliary classifier on the noisy state.</p>
+  <div class="grid-2">
+    <div class="card">
+      <h3>One model per condition.</h3>
+      <ul class="tight">
+        <li>Train $s_\theta(\cdot\,|\,y)$ separately for each $y$</li>
+        <li>Needs paired data for every $y$</li>
+        <li>Does not scale past a few labels</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Guidance.</h3>
+      <ul class="tight">
+        <li>Train the unconditional score once</li>
+        <li>Steer it at sampling time</li>
+        <li>One generator, any condition</li>
+      </ul>
+    </div>
   </div>
+  <p class="muted">Guidance moves conditioning out of training and into the sampler.</p>
   <div class="cite">Dhariwal &amp; Nichol, "Diffusion Models Beat GANs on Image Synthesis", NeurIPS 2021.</div>
 </div>
 
-<!-- SLIDE: Bayes decomposition -->
+<!-- SLIDE: recall reverse SDE -->
 <div class="slide">
-  <h2>Bayes Decomposition</h2>
+  <h2>Recall &mdash; The Reverse SDE</h2>
   <div class="divider"></div>
-  <p>Bayes' rule:</p>
-  <div class="math-block" style="margin: 8px 0;">$$P_{\mathbf{X}\,|\,Y}(\mathbf{x}\,|\,y) = \frac{P_{Y\,|\,\mathbf{X}}(y\,|\,\mathbf{x})\,P_{\mathbf{X}}(\mathbf{x})}{P_Y(y)}.$$</div>
-  <p>Take $\nabla_{\mathbf{x}}\log$; the prior $P_Y(y)$ drops:</p>
-  <div class="math-block" style="margin: 8px 0;">$$\nabla_{\mathbf{x}} \log P_{\mathbf{X}\,|\,Y}(\mathbf{x}\,|\,y) \;=\; \nabla_{\mathbf{x}} \log P_{\mathbf{X}}(\mathbf{x}) \;+\; \nabla_{\mathbf{x}} \log P_{Y\,|\,\mathbf{X}}(y\,|\,\mathbf{x}).$$</div>
+  <div class="card">
+    <h3>Time reversal.</h3>
+    <p>A forward diffusion $d\mathbf X_t = f(\mathbf X_t,t)\,dt + g(t)\,d\mathbf Z_t$ runs backwards as</p>
+    <div class="math-block">$$d\bar{\mathbf X}_t = \Big(f - g^2\,\nabla_{\mathbf x}\log p_t(\bar{\mathbf X}_t)\Big)dt + g\,d\bar{\mathbf Z}_t.$$</div>
+  </div>
+  <p>Everything is known except the score $\nabla_{\mathbf x}\log p_t$.</p>
+  <p class="muted">Sampling means integrating this from noise down to $t=0$.</p>
+</div>
+
+<!-- SLIDE: recall score and epsilon -->
+<div class="slide">
+  <h2>Recall &mdash; Score and Noise</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Two units, one object.</h3>
+    <p>With the forward kernel $\mathcal N\big(\sqrt{\bar\alpha_n}\,\mathbf x^{(0)},\,(1-\bar\alpha_n)I_d\big)$,</p>
+    <div class="math-block">$$\nabla_{\mathbf x}\log p_n(\mathbf x) \;=\; -\,\frac{\varepsilon_\theta(\mathbf x, n)}{\sqrt{1-\bar\alpha_n}}.$$</div>
+  </div>
+  <p>The score points uphill; the noise prediction points downhill.</p>
+  <p class="muted">Every statement below can be read in either currency.</p>
+</div>
+
+<!-- SLIDE: what conditioning requires -->
+<div class="slide">
+  <h2>What Conditioning Requires</h2>
+  <div class="divider"></div>
+  <p>The reverse SDE of the conditioned process needs</p>
+  <div class="math-block">$$\nabla_{\mathbf x}\log p_t(\mathbf x\,|\,y) \qquad \text{at every noise level } t.$$</div>
+  <ul>
+    <li><strong>Have:</strong> the unconditional score, trained once.</li>
+    <li><strong>Want:</strong> the conditional score, for arbitrary $y$.</li>
+  </ul>
   <div class="highlight">
-    <p>Conditional score = unconditional score + classifier gradient.</p>
+    <p>Bayes' rule is the bridge between them.</p>
   </div>
 </div>
 
-<!-- SLIDE: Time-dependent classifier -->
+<!-- SLIDE: proposition, Bayes decomposition -->
 <div class="slide">
-  <h2>Classifier on Noisy Inputs</h2>
+  <h2>The Conditional Score</h2>
   <div class="divider"></div>
-  <p>Sampling operates on noisy state $\mathbf{X}^{(n)}$.</p>
-  <p>Train a classifier matched to that noise level:</p>
-  <div class="math-block">$$c_\phi(\mathbf{X}^{(n)}, y, n) \;\approx\; P_{Y\,|\,\mathbf{X}^{(n)}}(y\,|\,\mathbf{X}^{(n)}).$$</div>
-  <p>Standard classifier; noise index $n$ as extra input.</p>
-  <p>Trained on noisy images from the forward process.</p>
+  <div class="card">
+    <h3>Proposition (Bayes decomposition).</h3>
+    <p>Fix $y$ with $p_t(y) &gt; 0$. For every $t$ and every $\mathbf x$,</p>
+    <div class="math-block">$$\nabla_{\mathbf x}\log p_t(\mathbf x\,|\,y) = \nabla_{\mathbf x}\log p_t(\mathbf x) + \nabla_{\mathbf x}\log p_t(y\,|\,\mathbf x).$$</div>
+  </div>
+  <p>Here $p_t(y\,|\,\mathbf x)$ is the label posterior at noise level $t$.</p>
+  <p class="muted">An identity, not an approximation.</p>
 </div>
 
-<!-- SLIDE: Classifier-guided reverse SDE -->
+<!-- SLIDE: proof outline -->
 <div class="slide">
-  <h2>Guided Reverse SDE</h2>
+  <h2>Proof Outline</h2>
   <div class="divider"></div>
-  <p>Replace unconditional score by the Bayes-decomposed conditional, classifier term amplified by $\omega &gt; 1$:</p>
-  <div class="math-block">$$d\bar{\mathbf{X}}_t = \Bigl(f - g^2\bigl(\nabla\log p_t(\bar{\mathbf{X}}_t) + \omega\,\nabla \log c_\phi(\bar{\mathbf{X}}_t, y, t)\bigr)\Bigr)dt + g\,d\bar{\mathbf{Z}}_t.$$</div>
-  <div class="highlight">
-    <p>Larger $\omega$: sharper, more label-consistent samples.</p>
-    <p>Trades diversity for fidelity.</p>
+  <ol class="tight">
+    <li>Bayes' rule, applied at noise level $t$.</li>
+    <li>Take logarithms; the quotient becomes a sum.</li>
+    <li>Differentiate in $\mathbf x$; the label marginal is a constant.</li>
+  </ol>
+  <div class="card">
+    <h3>Key trick.</h3>
+    <p>Differentiate in $\mathbf x$, never in $y$. The intractable normalizer $p_t(y)$ carries no $\mathbf x$ and dies.</p>
   </div>
+  <p class="muted">Three lines, all exact.</p>
+</div>
+
+<!-- SLIDE: step 1 -->
+<div class="slide">
+  <h2>Step 1 &mdash; Bayes at Level $t$</h2>
+  <div class="divider"></div>
+  <p>Both densities are marginals of the <b>noisy</b> state, not of the data.</p>
+  <div class="math-block">$$p_t(\mathbf x\,|\,y) \;=\; \frac{p_t(y\,|\,\mathbf x)\;p_t(\mathbf x)}{p_t(y)}.$$</div>
+  <div class="highlight">
+    <p>Noising touches $\mathbf X$ only, so $p_t(y) = p_0(y)$ for every $t$.</p>
+  </div>
+  <p class="muted">The label marginal is constant in $t$, and constant in $\mathbf x$.</p>
+</div>
+
+<!-- SLIDE: step 2 -->
+<div class="slide">
+  <h2>Step 2 &mdash; Take Logarithms</h2>
+  <div class="divider"></div>
+  <p>The quotient splits into three terms.</p>
+  <div class="math-block">$$\log p_t(\mathbf x\,|\,y) \;=\; \underbrace{\log p_t(\mathbf x)}_{\text{generator}} \;+\; \underbrace{\log p_t(y\,|\,\mathbf x)}_{\text{classifier}} \;-\; \underbrace{\log p_t(y)}_{\text{constant in }\mathbf x}.$$</div>
+  <p>Two of the three depend on $\mathbf x$; the third does not.</p>
+  <p class="muted">The intractable term is isolated before it is discarded.</p>
+</div>
+
+<!-- SLIDE: step 3 -->
+<div class="slide">
+  <h2>Step 3 &mdash; Differentiate</h2>
+  <div class="divider"></div>
+  <p>Apply $\nabla_{\mathbf x}$ term by term. The last one vanishes:</p>
+  <div class="math-block" style="margin:10px 0;">$$\nabla_{\mathbf x}\log p_t(y) = 0.$$</div>
+  <div class="math-block" style="margin:10px 0;">$$\nabla_{\mathbf x}\log p_t(\mathbf x\,|\,y) = \nabla_{\mathbf x}\log p_t(\mathbf x) + \nabla_{\mathbf x}\log p_t(y\,|\,\mathbf x). \qquad\blacksquare$$</div>
+  <p class="muted">The unknown normalizer is never computed, only differentiated away.</p>
+</div>
+
+<!-- SLIDE: proof recap -->
+<div class="slide">
+  <h2>Proof Recap</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+  \nabla_{\mathbf x}\log p_t(\mathbf x\,|\,y)
+  &\;\stackrel{\text{Bayes}}{=}\; \nabla_{\mathbf x}\log\frac{p_t(y\,|\,\mathbf x)\,p_t(\mathbf x)}{p_t(y)}\\[2pt]
+  &\;\stackrel{\text{log splits}}{=}\; \nabla_{\mathbf x}\big[\log p_t(y\,|\,\mathbf x) + \log p_t(\mathbf x) - \log p_t(y)\big]\\[2pt]
+  &\;\stackrel{\text{constant}}{=}\; \nabla_{\mathbf x}\log p_t(\mathbf x) + \nabla_{\mathbf x}\log p_t(y\,|\,\mathbf x).
+  \end{aligned}$$</div>
+  <p class="muted">Conditional score equals unconditional score plus classifier gradient.</p>
+</div>
+
+<!-- SLIDE: reading the decomposition (F3) -->
+<div class="slide">
+  <h2>Reading the Decomposition</h2>
+  <div class="divider"></div>
+  <div class="d5-fig">
+    <svg width="820" height="300" viewBox="0 0 820 300">
+      <defs>
+        <marker id="a5b" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 z" fill="#003876"/>
+        </marker>
+        <marker id="a5c" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 z" fill="#d94040"/>
+        </marker>
+        <marker id="a5d" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 z" fill="#2e8b57"/>
+        </marker>
+      </defs>
+      <ellipse cx="250" cy="180" rx="130" ry="72" fill="#c9d3de" opacity="0.55"/>
+      <ellipse cx="590" cy="165" rx="130" ry="72" fill="#c9d3de" opacity="0.55"/>
+      <text x="250" y="278" text-anchor="middle" font-size="17" fill="#666666">mode A</text>
+      <text x="590" y="262" text-anchor="middle" font-size="17" fill="#666666">mode B, carries label y</text>
+      <circle cx="420" cy="215" r="6" fill="#1a1a1a"/>
+      <line x1="420" y1="215" x2="315" y2="188" stroke="#003876" stroke-width="2.4" marker-end="url(#a5b)"/>
+      <line x1="420" y1="215" x2="500" y2="152" stroke="#d94040" stroke-width="2.4" marker-end="url(#a5c)"/>
+      <line x1="420" y1="215" x2="388" y2="120" stroke="#2e8b57" stroke-width="2.4" marker-end="url(#a5d)"/>
+    </svg>
+    <span class="lab blue" style="left:250px; top:228px;">$\nabla\log p_t(\mathbf x)$</span>
+    <span class="lab red" style="left:620px; top:120px;">$\omega\nabla\log p_t(y\,|\,\mathbf x)$</span>
+    <span class="lab green" style="left:345px; top:96px;">guided</span>
+  </div>
+  <p class="muted">Prior pulls onto the data; classifier pulls toward the label.</p>
+</div>
+
+<!-- SLIDE: classifier must see noise (F4) -->
+<div class="slide">
+  <h2>The Classifier Must See Noise</h2>
+  <div class="divider"></div>
+  <p>The sampler evaluates the classifier at $\mathbf X_t$, never at clean data.</p>
+  <div class="d5-fig">
+    <svg width="820" height="240" viewBox="0 0 820 240">
+      <defs>
+        <pattern id="p5a" width="11" height="11" patternUnits="userSpaceOnUse">
+          <circle cx="3" cy="3" r="1.7" fill="#666666"/>
+          <circle cx="8.5" cy="8.5" r="1.7" fill="#666666"/>
+        </pattern>
+      </defs>
+      <rect x="80" y="14" width="140" height="140" fill="#c9d3de"/>
+      <circle cx="150" cy="84" r="42" fill="#003876"/>
+      <rect x="80" y="14" width="140" height="140" fill="url(#p5a)" opacity="0.15"/>
+      <rect x="340" y="14" width="140" height="140" fill="#c9d3de"/>
+      <circle cx="410" cy="84" r="42" fill="#003876" opacity="0.45"/>
+      <rect x="340" y="14" width="140" height="140" fill="url(#p5a)" opacity="0.6"/>
+      <rect x="600" y="14" width="140" height="140" fill="#c9d3de"/>
+      <circle cx="670" cy="84" r="42" fill="#003876" opacity="0.08"/>
+      <rect x="600" y="14" width="140" height="140" fill="url(#p5a)" opacity="1"/>
+      <text x="150" y="182" text-anchor="middle" font-size="17" fill="#1a1a1a">confident</text>
+      <text x="410" y="182" text-anchor="middle" font-size="17" fill="#1a1a1a">unsure</text>
+      <text x="670" y="182" text-anchor="middle" font-size="17" fill="#1a1a1a">useless</text>
+      <line x1="80" y1="200" x2="740" y2="200" stroke="#666666" stroke-width="1.4"/>
+    </svg>
+    <span class="lab gray" style="left:150px; top:220px;">$t = 0$</span>
+    <span class="lab gray" style="left:410px; top:220px;">$t$ mid</span>
+    <span class="lab gray" style="left:670px; top:220px;">$t = T$</span>
+  </div>
+  <p class="muted">An off-the-shelf classifier is trained on the left panel only.</p>
+</div>
+
+<!-- SLIDE: training the noisy classifier -->
+<div class="slide">
+  <h2>Training the Noisy Classifier</h2>
+  <div class="divider"></div>
+  <div class="d5-algo">
+    <div class="d5-algo-title">Noise-conditioned classifier</div>
+    <ol>
+      <li>Draw a labelled pair $(\mathbf X^{(0)}, Y)$ and a level $n \sim \mathrm{Unif}\{1,\dots,N\}$.</li>
+      <li>Corrupt: $\mathbf X^{(n)} = \sqrt{\bar\alpha_n}\,\mathbf X^{(0)} + \sqrt{1-\bar\alpha_n}\,\bar\varepsilon$.</li>
+      <li>Cross-entropy step on $c_\phi(\mathbf X^{(n)}, n)$ against $Y$.</li>
+      <li>Leave the generator $\varepsilon_\theta$ frozen throughout.</li>
+    </ol>
+  </div>
+  <p>The level $n$ enters as an ordinary input, exactly as in the denoiser.</p>
+  <p class="muted">A small network, trained on data the forward process already makes.</p>
+</div>
+
+<!-- SLIDE: guided reverse SDE -->
+<div class="slide">
+  <h2>The Guided Reverse SDE</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (classifier guidance).</h3>
+    <div class="math-block">$$d\bar{\mathbf X}_t = \Big(f - g^2\big[\nabla\log p_t(\bar{\mathbf X}_t) + \omega\,\nabla\log c_\phi(\bar{\mathbf X}_t, y, t)\big]\Big)dt + g\,d\bar{\mathbf Z}_t.$$</div>
+  </div>
+  <ul>
+    <li>$\omega = 1$: the exact conditional reverse SDE.</li>
+    <li>$\omega &gt; 1$: the label is deliberately over-weighted.</li>
+  </ul>
+  <div class="cite">Dhariwal &amp; Nichol, "Diffusion Models Beat GANs on Image Synthesis", NeurIPS 2021.</div>
+</div>
+
+<!-- SLIDE: guidance in epsilon form -->
+<div class="slide">
+  <h2>Guidance in $\varepsilon$-Form</h2>
+  <div class="divider"></div>
+  <p>Discrete samplers speak $\varepsilon$, so translate once and for all.</p>
+  <div class="math-block">$$\widehat\varepsilon(\mathbf x, y, n) = \varepsilon_\theta(\mathbf x, n) - \omega\sqrt{1-\bar\alpha_n}\;\nabla_{\mathbf x}\log c_\phi(\mathbf x, y, n).$$</div>
+  <p>Run DDPM or DDIM unchanged, with $\widehat\varepsilon$ in place of $\varepsilon_\theta$.</p>
+  <p class="muted">The sign flip is the score-to-noise conversion, nothing more.</p>
+</div>
+
+<!-- SLIDE: guided sampler -->
+<div class="slide">
+  <h2>Classifier-Guided Sampler</h2>
+  <div class="divider"></div>
+  <div class="d5-algo">
+    <div class="d5-algo-title">Sampling with a classifier</div>
+    <ol>
+      <li>Draw $\mathbf X^{(N)} \sim \mathcal N(0, I_d)$ and fix the target $y$.</li>
+      <li>For $n = N, \dots, 1$:
+        <ol>
+          <li>evaluate $\varepsilon_\theta(\mathbf X^{(n)}, n)$;</li>
+          <li>backpropagate $\log c_\phi(\mathbf X^{(n)}, y, n)$ to its input;</li>
+          <li>form $\widehat\varepsilon$ and take one reverse step.</li>
+        </ol>
+      </li>
+      <li>Return $\mathbf X^{(0)}$.</li>
+    </ol>
+  </div>
+  <p class="muted">One extra backward pass per step, through a small network.</p>
+</div>
+
+<!-- SLIDE: what omega samples -->
+<div class="slide">
+  <h2>What $\omega$ Actually Samples</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Proposition (tilted target).</h3>
+    <p>The guided drift is the exact reverse drift of the tilted family</p>
+    <div class="math-block">$$\tilde p_t(\mathbf x) \;\propto\; p_t(\mathbf x)\,p_t(y\,|\,\mathbf x)^{\omega} \;=\; p_t(\mathbf x\,|\,y)^{\omega}\,p_t(\mathbf x)^{1-\omega}.$$</div>
+  </div>
+  <p>A geometric interpolation, extrapolated past $\omega = 1$.</p>
+  <p class="muted">Guidance does not sample $p_t(\cdot\,|\,y)$ unless $\omega = 1$.</p>
+</div>
+
+<!-- SLIDE: proof of tilt + caveat -->
+<div class="slide">
+  <h2>Proof, and a Caveat</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+  \nabla_{\mathbf x}\log\tilde p_t(\mathbf x)
+  &= \nabla_{\mathbf x}\log p_t(\mathbf x) + \omega\,\nabla_{\mathbf x}\log p_t(y\,|\,\mathbf x)\\[2pt]
+  &= \omega\,\nabla_{\mathbf x}\log p_t(\mathbf x\,|\,y) + (1-\omega)\,\nabla_{\mathbf x}\log p_t(\mathbf x).
+  \end{aligned}$$</div>
+  <div class="card">
+    <h3>Caveat.</h3>
+    <p>For $\omega \neq 1$, $\{\tilde p_t\}$ is <b>no</b> forward diffusion's marginal flow.</p>
+    <p>A heuristic with a clean fixed point.</p>
+  </div>
+</div>
+
+<!-- SLIDE: the tilt in a picture -->
+<div class="slide">
+  <h2>The Tilt in a Picture</h2>
+  <div class="divider"></div>
+  <div class="d5-fig">
+    <svg width="800" height="270" viewBox="0 0 800 270">
+      <line x1="50" y1="230" x2="760" y2="230" stroke="#666666" stroke-width="1.4"/>
+      <path d="M 60 230 C 210 230, 190 90, 340 90 C 490 90, 470 230, 620 230" fill="none" stroke="#666666" stroke-width="2.2"/>
+      <path d="M 250 230 C 350 230, 340 105, 430 105 C 520 105, 510 230, 610 230" fill="none" stroke="#003876" stroke-width="2.6"/>
+      <path d="M 350 230 C 410 230, 415 40, 455 40 C 495 40, 500 230, 560 230" fill="none" stroke="#2e8b57" stroke-width="2.6"/>
+    </svg>
+    <span class="lab gray" style="left:150px; top:120px;">$p_t(\mathbf x)$</span>
+    <span class="lab blue" style="left:660px; top:140px;">$p_t(\mathbf x\,|\,y)$</span>
+    <span class="lab green" style="left:470px; top:28px;">$\omega = 3$</span>
+  </div>
+  <p class="muted">Sharper and more label-faithful, at the cost of diversity.</p>
 </div>
 
 <!-- ====================================================================
@@ -166,154 +494,521 @@
   <div class="section-num">02</div>
   <h1>Inpainting</h1>
   <div class="divider"></div>
-  <p class="subtitle">Conditioning on a fixed subset of the signal</p>
+  <p class="subtitle">A hard constraint, and how to noise it</p>
 </div>
 
-<!-- SLIDE: Inpainting task -->
+<!-- SLIDE: what is inpainting (F7) -->
 <div class="slide">
-  <h2>What Is Inpainting?</h2>
+  <h2>What Is Inpainting</h2>
   <div class="divider"></div>
-  <p>Given an image with part of its pixels <strong>observed</strong> and the rest <strong>missing</strong>, fill in the missing region <em>coherently</em> with the rest.</p>
+  <p>Part of the image is given; the rest must be invented, coherently.</p>
+  <div class="d5-fig">
+    <svg width="760" height="250" viewBox="0 0 760 250">
+      <defs>
+        <marker id="a5e" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 z" fill="#666666"/>
+        </marker>
+      </defs>
+      <rect x="40" y="20" width="240" height="180" fill="#c9d3de"/>
+      <path d="M 40 200 L 130 90 L 200 200 z" fill="#003876" opacity="0.75"/>
+      <circle cx="230" cy="65" r="26" fill="#003876" opacity="0.4"/>
+      <rect x="150" y="60" width="110" height="110" fill="#ffffff" stroke="#d94040" stroke-width="2.2" stroke-dasharray="7 5"/>
+      <line x1="300" y1="110" x2="420" y2="110" stroke="#666666" stroke-width="1.6" marker-end="url(#a5e)"/>
+      <rect x="450" y="20" width="240" height="180" fill="#c9d3de"/>
+      <path d="M 450 200 L 540 90 L 610 200 z" fill="#003876" opacity="0.75"/>
+      <circle cx="640" cy="65" r="26" fill="#003876" opacity="0.4"/>
+      <rect x="560" y="60" width="110" height="110" fill="none" stroke="#2e8b57" stroke-width="2.2" stroke-dasharray="7 5"/>
+      <text x="160" y="228" text-anchor="middle" font-size="17" fill="#666666">observed pixels</text>
+      <text x="570" y="228" text-anchor="middle" font-size="17" fill="#666666">completed sample</text>
+    </svg>
+  </div>
+  <p class="muted">Photo restoration, object removal, edit propagation.</p>
+</div>
+
+<!-- SLIDE: the task formally -->
+<div class="slide">
+  <h2>The Task, Formally</h2>
+  <div class="divider"></div>
+  <p>Fix an index set $\Omega \subset \{1,\dots,d\}$ of observed coordinates.</p>
+  <div class="math-block">$$\mathbf x \;=\; \big(\Omega(\mathbf x),\ \bar\Omega(\mathbf x)\big), \qquad \mathbf y \;=\; \Omega(\mathbf X^{(0)}).$$</div>
   <ul>
-    <li>Photo restoration (scratches, occlusions).</li>
-    <li>Object removal / replacement.</li>
-    <li>Consistent edit propagation around a mask.</li>
+    <li>$\Omega(\mathbf x)$: the observed half, given and <b>clean</b>.</li>
+    <li>$\bar\Omega(\mathbf x)$: the hidden half, to be sampled.</li>
   </ul>
+  <p class="muted">A mask, not a label. The conditioning is a hard equality.</p>
+</div>
+
+<!-- SLIDE: goal as conditional sampling -->
+<div class="slide">
+  <h2>Goal as Conditional Sampling</h2>
+  <div class="divider"></div>
+  <p>Draw the hidden half from its exact posterior:</p>
+  <div class="math-block">$$\bar\Omega(\mathbf X^{(0)}) \;\sim\; P_{\bar\Omega(\mathbf X^{(0)})\;|\;\Omega(\mathbf X^{(0)}) = \mathbf y}.$$</div>
+  <p>The conditioning event has probability zero, so no classifier $c_\phi$ expresses it.</p>
   <div class="highlight">
-    <p>Goal: $X^{(0)}$ with $\Omega(X^{(0)}) = Y$ (observed pixels match) and the rest sampled from $p_{\text{data}}$.</p>
+    <p>Guidance with the soft classifier replaced by a hard constraint.</p>
   </div>
 </div>
 
-<!-- SLIDE: Inpainting setup -->
+<!-- SLIDE: lemma coordinatewise -->
 <div class="slide">
-  <h2>Setup</h2>
+  <h2>The Forward Process Factorizes</h2>
   <div class="divider"></div>
-  <ul>
-    <li>$\Omega$: pixel-subsampling operator (the mask).</li>
-    <li>$Y = \Omega(X^{(0)})$: observed pixels, fixed throughout.</li>
-    <li>$\bar{\Omega}$: complementary pixels — the unknowns.</li>
-    <li>$Z^{(t)} = \bar{\Omega}(X^{(t)})$ is the part we still diffuse.</li>
-  </ul>
-  <p>Brownian motion decomposes coordinate-wise; the complement obeys its own SDE:</p>
-  <div class="math-block">$$dZ^{(t)} = \bar{\Omega}(f)\bigl(Z^{(t)}, t\bigr)\,dt + \bar{\Omega}(g)(t)\,d\bar{W}^{(t)}.$$</div>
+  <div class="card">
+    <h3>Lemma (coordinatewise forward).</h3>
+    <p>The forward kernel has diagonal covariance, so it acts on each coordinate separately:</p>
+    <div class="math-block">$$\Omega(\mathbf X^{(n)}) = \sqrt{\bar\alpha_n}\,\Omega(\mathbf X^{(0)}) + \sqrt{1-\bar\alpha_n}\,\Omega(\bar\varepsilon_n).$$</div>
+  </div>
+  <p class="muted">Noising the observed pixels needs the observation and nothing else.</p>
 </div>
 
-<!-- SLIDE: What we'd ideally compute -->
+<!-- SLIDE: proof of lemma -->
+<div class="slide">
+  <h2>Proof &mdash; Marginalize</h2>
+  <div class="divider"></div>
+  <p>The one-shot identity is a product over coordinates:</p>
+  <div class="math-block">$$q(\mathbf x^{(n)}\,|\,\mathbf x^{(0)}) = \textstyle\prod_{i=1}^{d}\mathcal N\big(x_i^{(n)};\,\sqrt{\bar\alpha_n}\,x_i^{(0)},\,1-\bar\alpha_n\big).$$</div>
+  <p>Integrating out $i \notin \Omega$ leaves the same product over $i \in \Omega$:</p>
+  <div class="highlight">$$\Omega(\mathbf X^{(n)})\;\big|\;\Omega(\mathbf X^{(0)}) = \mathbf y \;\sim\; \mathcal N\big(\sqrt{\bar\alpha_n}\,\mathbf y,\,(1-\bar\alpha_n)I\big). \qquad\blacksquare$$</div>
+</div>
+
+<!-- SLIDE: the ideal conditional score -->
 <div class="slide">
   <h2>The Ideal Conditional Score</h2>
   <div class="divider"></div>
-  <p>For Anderson reverse on the unknowns, we need the conditional score:</p>
-  <div class="math-block">$$\nabla_{Z^{(t)}}\,\log p_t\bigl(Z^{(t)}\,|\,\Omega(X^{(0)}) = Y\bigr).$$</div>
-  <p>Conditions on $Y$ at the <strong>clean</strong> end of the chain ($t = 0$).</p>
-  <p>Score network only saw fully-noisy training pairs $(X^{(t)}, t)$. <strong>Mismatch.</strong></p>
-  <div class="highlight">
-    <p>Need a way to inject $Y$ that the existing score net can consume.</p>
-  </div>
+  <p>The reverse process for the conditioned law would need</p>
+  <div class="math-block">$$\nabla\log p_n\big(\mathbf x^{(n)}\;\big|\;\Omega(\mathbf X^{(0)}) = \mathbf y\big).$$</div>
+  <ul>
+    <li>The conditioning is on the <b>clean</b> observation.</li>
+    <li>The trained network knows the unconditional score only.</li>
+    <li>It has no input slot for a clean constraint.</li>
+  </ul>
+  <p class="muted">So approximate, and know exactly where the approximation enters.</p>
 </div>
 
-<!-- SLIDE: Conditional score approximation -->
+<!-- SLIDE: out of domain (F9) -->
 <div class="slide">
-  <h2>Approximating the Conditional Score</h2>
+  <h2>Why Pasting Clean Pixels Fails</h2>
   <div class="divider"></div>
-  <p>Replace the clean observation with a noised version at level $t$:</p>
-  <div class="math-block">$$p_t\bigl(Z^{(t)}\,|\,\Omega(X^{(0)}) = Y\bigr) \;\approx\; p_t\bigl(Z^{(t)}\,|\,\hat{\Omega}(X^{(t)}) = \zeta_t\bigr),$$</div>
-  <p>where $\zeta_t$ is the forward process applied to $Y$ up to time $t$:</p>
-  <div class="math-block">$$\zeta_t \;=\; \sqrt{\bar{\alpha}_t}\,Y \;+\; \sqrt{1-\bar{\alpha}_t}\,\eta_t,\qquad \eta_t \sim \mathcal{N}(0,I).$$</div>
-  <p>Both sides now live at noise level $t$ — score net is in-domain.</p>
+  <div class="d5-fig">
+    <svg width="740" height="260" viewBox="0 0 740 260">
+      <defs>
+        <pattern id="p5b" width="11" height="11" patternUnits="userSpaceOnUse">
+          <circle cx="3" cy="3" r="1.7" fill="#666666"/>
+          <circle cx="8.5" cy="8.5" r="1.7" fill="#666666"/>
+        </pattern>
+      </defs>
+      <rect x="70" y="20" width="180" height="180" fill="#c9d3de"/>
+      <rect x="70" y="20" width="180" height="180" fill="url(#p5b)" opacity="0.75"/>
+      <text x="160" y="228" text-anchor="middle" font-size="17" fill="#2e8b57">training input</text>
+      <rect x="470" y="20" width="180" height="180" fill="#c9d3de"/>
+      <rect x="470" y="20" width="180" height="180" fill="url(#p5b)" opacity="0.75"/>
+      <rect x="470" y="20" width="180" height="78" fill="#c9d3de"/>
+      <path d="M 470 98 L 560 40 L 620 98 z" fill="#003876" opacity="0.75"/>
+      <line x1="470" y1="98" x2="650" y2="98" stroke="#d94040" stroke-width="2.4"/>
+      <text x="560" y="228" text-anchor="middle" font-size="17" fill="#d94040">clean paste</text>
+      <line x1="300" y1="110" x2="420" y2="110" stroke="#666666" stroke-width="1.6"/>
+      <line x1="345" y1="80" x2="375" y2="140" stroke="#d94040" stroke-width="2.6"/>
+      <line x1="375" y1="80" x2="345" y2="140" stroke="#d94040" stroke-width="2.6"/>
+    </svg>
+  </div>
+  <p class="muted">Uniform noise everywhere is what the network was trained on.</p>
 </div>
 
-<!-- SLIDE: Why the approximation works -->
+<!-- SLIDE: key idea, noise the observation -->
 <div class="slide">
-  <h2>Why It Works</h2>
+  <h2>Key Idea &mdash; Noise the Observation</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Key trick.</h3>
+    <p>Do not paste $\mathbf y$. Paste $\mathbf y$ corrupted to the current level.</p>
+    <div class="math-block">$$\zeta_n = \sqrt{\bar\alpha_n}\,\mathbf y + \sqrt{1-\bar\alpha_n}\,\eta_n, \qquad \eta_n \sim \mathcal N(0, I).$$</div>
+  </div>
+  <p>Both halves of the state then carry the same amount of noise.</p>
+  <p class="muted">The constraint is enforced in the noisy coordinates, level by level.</p>
+</div>
+
+<!-- SLIDE: proposition, zeta has the right law -->
+<div class="slide">
+  <h2>The Paste Is Exact</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Proposition.</h3>
+    <div class="math-block">$$\zeta_n \;\stackrel{d}{=}\; \Omega(\mathbf X^{(n)})\;\big|\;\Omega(\mathbf X^{(0)}) = \mathbf y.$$</div>
+  </div>
+  <p><b>Proof.</b> Both sides are $\mathcal N\big(\sqrt{\bar\alpha_n}\,\mathbf y, (1-\bar\alpha_n)I\big)$, by the Lemma. $\;\blacksquare$</p>
+  <p class="muted">The observed half of the trajectory is simulated exactly, at every level.</p>
+</div>
+
+<!-- SLIDE: where the approximation lives -->
+<div class="slide">
+  <h2>Where the Approximation Lives</h2>
+  <div class="divider"></div>
+  <p>Condition on the noised observation, then average it out:</p>
+  <div class="math-block">$$\begin{aligned}
+  p_n\big(\mathbf x\,\big|\,\Omega(\mathbf X^{(0)}) = \mathbf y\big) = \int &p_n\big(\mathbf x\,\big|\,\Omega(\mathbf X^{(n)}) = \zeta,\ \Omega(\mathbf X^{(0)}) = \mathbf y\big)\\[2pt]
+  &\times\; p\big(\zeta\,\big|\,\Omega(\mathbf X^{(0)}) = \mathbf y\big)\,d\zeta.
+  \end{aligned}$$</div>
+  <p class="muted">Exact. The method replaces it by two shortcuts.</p>
+</div>
+
+<!-- SLIDE: the two approximations -->
+<div class="slide">
+  <h2>The Two Approximations</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Drop the clean condition.</h3>
+      <ul class="tight">
+        <li>Keep only $\Omega(\mathbf X^{(n)}) = \zeta_n$</li>
+        <li>Extra clean information discarded</li>
+        <li>Puts the state back in domain</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>One draw, not the mixture.</h3>
+      <ul class="tight">
+        <li>Replace the integral by a single $\zeta_n$</li>
+        <li>Fresh $\eta_n$ at each step</li>
+        <li>Ignores correlation across levels</li>
+      </ul>
+    </div>
+  </div>
+  <p class="muted">Both are named, both are visible, neither is fatal.</p>
+</div>
+
+<!-- SLIDE: boundary check -->
+<div class="slide">
+  <h2>Boundary Check</h2>
   <div class="divider"></div>
   <ul>
-    <li>Forward kernel is a known Gaussian — the noised $\zeta_t$ has the law of $\Omega(X^{(t)})$ for a true clean observation.</li>
-    <li>Score net sees the same input distribution it was trained on.</li>
-    <li>At $t = 0$: $\zeta_0 = Y$ — boundary recovers the true condition.</li>
+    <li>$n = 0$: $\bar\alpha_0 = 1$, so $\zeta_0 = \mathbf y$. The constraint holds exactly.</li>
+    <li>$n = N$: the state is pure noise, and there is nothing to violate.</li>
+    <li>Intermediate $n$: the two halves may disagree about the same scene.</li>
   </ul>
   <div class="highlight">
-    <p>At each step, paste $\zeta_t$ into observed pixels, sample unknowns with the score net.</p>
+    <p>Error is largest in the middle of the trajectory.</p>
   </div>
+  <p class="muted">Repeated back-and-forth resampling buys agreement at extra cost.</p>
 </div>
 
-<!-- SLIDE: Inpainting sampler -->
+<!-- SLIDE: inpainting sampler -->
 <div class="slide">
-  <h2>Inpainting Sampler</h2>
+  <h2>The Inpainting Sampler</h2>
   <div class="divider"></div>
-  <div class="d5-algo" style="max-width:1040px; margin:36px auto 22px;">
-    <div class="d5-algo-title">Score-Guided Inpainting</div>
+  <div class="d5-algo">
+    <div class="d5-algo-title">Sampling under a mask</div>
     <ol>
-      <li>Sample $X^{(N)} \sim \mathcal{N}(0, I)$ on the full image.</li>
-      <li>For $n = N, N{-}1, \ldots, 1$:
-        <ol style="list-style:lower-alpha; padding-left:24px;">
-          <li>Sample $\epsilon_n \sim \mathcal{N}(0, I)$.</li>
-          <li>Form noised observation $\zeta_n = \beta_n\,Y + \gamma_n\,\epsilon_n$.</li>
-          <li>One reverse-SDE step using $\bar{\Omega}\bigl(s_\theta([\bar{Z}^{(n)}; \zeta_n], n)\bigr)$.</li>
+      <li>Draw $\mathbf X^{(N)} \sim \mathcal N(0, I_d)$.</li>
+      <li>For $n = N, \dots, 1$:
+        <ol>
+          <li>one unconditional reverse step to get $\mathbf X^{(n-1)}$;</li>
+          <li>draw $\eta$ and form $\zeta_{n-1} = \sqrt{\bar\alpha_{n-1}}\,\mathbf y + \sqrt{1-\bar\alpha_{n-1}}\,\eta$;</li>
+          <li>overwrite the observed coordinates: $\Omega(\mathbf X^{(n-1)}) \leftarrow \zeta_{n-1}$.</li>
         </ol>
       </li>
+      <li>Return $\mathbf X^{(0)}$; its observed half equals $\mathbf y$.</li>
     </ol>
   </div>
+  <p class="muted">No retraining. The unconditional network is reused verbatim.</p>
+</div>
+
+<!-- SLIDE: sampler picture (F10) -->
+<div class="slide">
+  <h2>The Sampler in a Picture</h2>
+  <div class="divider"></div>
+  <div class="d5-fig">
+    <svg width="880" height="235" viewBox="0 0 880 235">
+      <defs>
+        <pattern id="p5c" width="11" height="11" patternUnits="userSpaceOnUse">
+          <circle cx="3" cy="3" r="1.7" fill="#666666"/>
+          <circle cx="8.5" cy="8.5" r="1.7" fill="#666666"/>
+        </pattern>
+        <marker id="a5f" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 z" fill="#666666"/>
+        </marker>
+      </defs>
+      <rect x="30" y="30" width="150" height="150" fill="#c9d3de"/>
+      <rect x="30" y="30" width="150" height="150" fill="url(#p5c)" opacity="1"/>
+      <rect x="30" y="30" width="150" height="46" fill="#003876" opacity="0.9"/>
+      <rect x="250" y="30" width="150" height="150" fill="#c9d3de"/>
+      <rect x="250" y="30" width="150" height="150" fill="url(#p5c)" opacity="0.7"/>
+      <rect x="250" y="30" width="150" height="46" fill="#003876" opacity="0.7"/>
+      <rect x="470" y="30" width="150" height="150" fill="#c9d3de"/>
+      <rect x="470" y="30" width="150" height="150" fill="url(#p5c)" opacity="0.35"/>
+      <rect x="470" y="30" width="150" height="46" fill="#003876" opacity="0.5"/>
+      <rect x="690" y="30" width="150" height="150" fill="#c9d3de"/>
+      <path d="M 690 180 L 750 110 L 800 180 z" fill="#003876" opacity="0.6"/>
+      <rect x="690" y="30" width="150" height="46" fill="#003876" opacity="0.35"/>
+      <line x1="192" y1="105" x2="238" y2="105" stroke="#666666" stroke-width="1.6" marker-end="url(#a5f)"/>
+      <line x1="412" y1="105" x2="458" y2="105" stroke="#666666" stroke-width="1.6" marker-end="url(#a5f)"/>
+      <line x1="632" y1="105" x2="678" y2="105" stroke="#666666" stroke-width="1.6" marker-end="url(#a5f)"/>
+      <text x="105" y="205" text-anchor="middle" font-size="17" fill="#666666">noise</text>
+      <text x="765" y="205" text-anchor="middle" font-size="17" fill="#666666">sample</text>
+    </svg>
+    <span class="lab blue" style="left:105px; top:20px;">$\zeta_N$</span>
+    <span class="lab blue" style="left:325px; top:20px;">$\zeta_{n_1}$</span>
+    <span class="lab blue" style="left:545px; top:20px;">$\zeta_{n_2}$</span>
+    <span class="lab blue" style="left:765px; top:20px;">$\zeta_0 = \mathbf y$</span>
+  </div>
+  <p>Blue band: observed coordinates, overwritten at every level.</p>
+  <p class="muted">The noise level of the band always matches the rest of the state.</p>
+</div>
+
+<!-- SLIDE: variants -->
+<div class="slide">
+  <h2>Variants of the Same Idea</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>RePaint:</strong> alternate forward and reverse steps to reconcile the halves.</li>
+    <li><strong>ILVR:</strong> a low-pass constraint instead of a pixel mask.</li>
+    <li><strong>DPS:</strong> a general measurement, enforced by a likelihood gradient.</li>
+  </ul>
+  <p class="muted">All replace the exact conditional score with a tractable surrogate.</p>
+  <div class="cite">Lugmayr et al., "RePaint", CVPR 2022. &nbsp;&middot;&nbsp; Chung et al., "Diffusion Posterior Sampling&hellip;", ICLR&nbsp;2023.</div>
 </div>
 
 <!-- ====================================================================
-     PART 03: Classifier-Free Guidance
+     PART 03: Classifier-free guidance
      ==================================================================== -->
 <div class="slide section-slide left">
   <div class="section-num">03</div>
-  <h1>Classifier-Free Guidance</h1>
+  <h1>Classifier-Free<br>Guidance</h1>
   <div class="divider"></div>
-  <p class="subtitle">Guidance without an extra classifier</p>
+  <p class="subtitle">The classifier gradient, extracted from the generator</p>
 </div>
 
-<!-- SLIDE: CFG motivation -->
+<!-- SLIDE: why drop the classifier -->
 <div class="slide">
-  <h2>Why Drop the Classifier?</h2>
+  <h2>Why Drop the Classifier</h2>
   <div class="divider"></div>
-  <p>Classifier guidance: a second network trained on noisy inputs.</p>
-  <p>Evaluated at every sampling step.</p>
-  <p>Hard to train in the high-noise regime.</p>
+  <ul>
+    <li>A second model, trained on noisy data, at every level.</li>
+    <li>Classifier gradients are fragile and easy to fool.</li>
+    <li>Labels are finite; prompts are not.</li>
+    <li>Guidance is only as good as $c_\phi$.</li>
+  </ul>
   <div class="highlight">
-    <p><strong>Goal:</strong> one model providing both conditional and unconditional scores.</p>
+    <p>The generator already knows the label. Ask it twice.</p>
   </div>
   <div class="cite">Ho &amp; Salimans, "Classifier-Free Diffusion Guidance", NeurIPS Workshop 2021.</div>
 </div>
 
-<!-- SLIDE: CFG identity -->
+<!-- SLIDE: the idea -->
+<div class="slide">
+  <h2>The Idea</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Read Bayes backwards.</h3>
+    <p>The classifier gradient is a <b>difference of two scores</b>:</p>
+    <div class="math-block">$$\nabla\log p_t(y\,|\,\mathbf x) = \nabla\log p_t(\mathbf x\,|\,y) - \nabla\log p_t(\mathbf x).$$</div>
+  </div>
+  <p class="muted">Train one network to answer with and without the condition.</p>
+</div>
+
+<!-- SLIDE: theorem CFG identity -->
 <div class="slide">
   <h2>The CFG Identity</h2>
   <div class="divider"></div>
-  <p>Recall the Bayes decomposition:</p>
-  <div class="math-block">$$\nabla \log p_t(y\,|\,\mathbf{x}) \;=\; \nabla \log p_t(\mathbf{x}\,|\,y) - \nabla \log p_t(\mathbf{x}).$$</div>
-  <p>Substitute into the classifier-guided score:</p>
-  <div class="math-block">$$\nabla \log p_t(\mathbf{x}) + \omega\,\nabla \log p_t(y\,|\,\mathbf{x}) \;=\; \omega\,\nabla \log p_t(\mathbf{x}\,|\,y) + (1-\omega)\,\nabla \log p_t(\mathbf{x}).$$</div>
-  <p><strong>Exercise.</strong> Verify the substitution.</p>
+  <div class="card">
+    <h3>Theorem (classifier-free guidance).</h3>
+    <p>For every $\omega \in \mathbb R$, the classifier-guided score satisfies</p>
+    <div class="math-block">$$\begin{aligned}
+    s_t^{\omega}(\mathbf x, y) &:= \nabla\log p_t(\mathbf x) + \omega\,\nabla\log p_t(y\,|\,\mathbf x)\\[2pt]
+    &\;= \omega\,\nabla\log p_t(\mathbf x\,|\,y) + (1-\omega)\,\nabla\log p_t(\mathbf x).
+    \end{aligned}$$</div>
+  </div>
+  <p class="muted">No classifier on the right-hand side.</p>
 </div>
 
-<!-- SLIDE: CFG network -->
+<!-- SLIDE: proof outline -->
+<div class="slide">
+  <h2>Proof Outline</h2>
+  <div class="divider"></div>
+  <ol class="tight">
+    <li>Bayes at level $t$, solved for the classifier term.</li>
+    <li>Substitute into the guided score.</li>
+    <li>Collect the two copies of the unconditional score.</li>
+  </ol>
+  <div class="card">
+    <h3>Key trick.</h3>
+    <p>Nothing is approximated. The classifier is <b>eliminated</b>, not estimated.</p>
+  </div>
+  <p class="muted">Pure algebra on the identity already proved.</p>
+</div>
+
+<!-- SLIDE: step 1 -->
+<div class="slide">
+  <h2>Step 1 &mdash; Invert Bayes</h2>
+  <div class="divider"></div>
+  <p>Start from $p_t(y\,|\,\mathbf x) = p_t(\mathbf x\,|\,y)\,p_t(y)/p_t(\mathbf x)$ and take $\nabla_{\mathbf x}\log$:</p>
+  <div class="math-block">$$\nabla\log p_t(y\,|\,\mathbf x) = \nabla\log p_t(\mathbf x\,|\,y) - \nabla\log p_t(\mathbf x).$$</div>
+  <p>The same three-term split as before, read in the other direction.</p>
+  <p class="muted">$p_t(y)$ is constant in $\mathbf x$ and drops again.</p>
+</div>
+
+<!-- SLIDE: step 2 -->
+<div class="slide">
+  <h2>Step 2 &mdash; Substitute</h2>
+  <div class="divider"></div>
+  <p>Insert this into the guided score:</p>
+  <div class="math-block">$$s_t^{\omega}(\mathbf x, y) = \nabla\log p_t(\mathbf x) + \omega\big[\nabla\log p_t(\mathbf x\,|\,y) - \nabla\log p_t(\mathbf x)\big].$$</div>
+  <p>Two copies of the unconditional score appear, one of them scaled.</p>
+  <p class="muted">Everything is now expressed in generator quantities.</p>
+</div>
+
+<!-- SLIDE: step 3 -->
+<div class="slide">
+  <h2>Step 3 &mdash; Collect</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$s_t^{\omega}(\mathbf x, y) = \omega\,\nabla\log p_t(\mathbf x\,|\,y) + (1-\omega)\,\nabla\log p_t(\mathbf x). \qquad\blacksquare$$</div>
+  <ul>
+    <li>$\omega = 0$: purely unconditional.</li>
+    <li>$\omega = 1$: exactly the conditional score.</li>
+    <li>$\omega &gt; 1$: extrapolation beyond the conditional.</li>
+  </ul>
+  <p class="muted">An affine combination with coefficients summing to one.</p>
+</div>
+
+<!-- SLIDE: proof recap -->
+<div class="slide">
+  <h2>Proof Recap</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+  s_t^{\omega}
+  &\;\stackrel{\text{definition}}{=}\; \nabla\log p_t(\mathbf x) + \omega\,\nabla\log p_t(y\,|\,\mathbf x)\\[2pt]
+  &\;\stackrel{\text{Bayes}}{=}\; \nabla\log p_t(\mathbf x) + \omega\big[\nabla\log p_t(\mathbf x\,|\,y) - \nabla\log p_t(\mathbf x)\big]\\[2pt]
+  &\;\stackrel{\text{collect}}{=}\; \omega\,\nabla\log p_t(\mathbf x\,|\,y) + (1-\omega)\,\nabla\log p_t(\mathbf x).
+  \end{aligned}$$</div>
+  <p class="muted">Guidance without a classifier, at the price of a second forward pass.</p>
+</div>
+
+<!-- SLIDE: extrapolation picture (F11) -->
+<div class="slide">
+  <h2>Guidance as Extrapolation</h2>
+  <div class="divider"></div>
+  <div class="d5-fig">
+    <svg width="820" height="200" viewBox="0 0 820 200">
+      <defs>
+        <marker id="a5g" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 z" fill="#003876"/>
+        </marker>
+      </defs>
+      <line x1="60" y1="120" x2="770" y2="120" stroke="#666666" stroke-width="1.6"/>
+      <circle cx="150" cy="120" r="7" fill="#666666"/>
+      <circle cx="330" cy="120" r="7" fill="#003876"/>
+      <circle cx="690" cy="120" r="7" fill="#2e8b57"/>
+      <line x1="150" y1="88" x2="680" y2="88" stroke="#003876" stroke-width="2.2" marker-end="url(#a5g)"/>
+      <text x="150" y="152" text-anchor="middle" font-size="17" fill="#666666">unconditional</text>
+      <text x="330" y="152" text-anchor="middle" font-size="17" fill="#003876">conditional</text>
+      <text x="690" y="152" text-anchor="middle" font-size="17" fill="#2e8b57">guided</text>
+      <text x="415" y="72" text-anchor="middle" font-size="17" fill="#003876">walk further along the same direction</text>
+    </svg>
+    <span class="lab gray" style="left:150px; top:180px;">$\omega = 0$</span>
+    <span class="lab blue" style="left:330px; top:180px;">$\omega = 1$</span>
+    <span class="lab green" style="left:690px; top:180px;">$\omega = 3$</span>
+  </div>
+  <p class="muted">Guidance is an extrapolation, not an interpolation.</p>
+</div>
+
+<!-- SLIDE: dual-role network (F12) -->
 <div class="slide">
   <h2>A Dual-Role Network</h2>
   <div class="divider"></div>
-  <p>Train $\epsilon_\theta(\mathbf{X}^{(n)}, y, n)$ where $y$ is the label or null token $\varnothing$:</p>
-  <ul>
-    <li>$\epsilon_\theta(\mathbf{X}^{(n)}, y, n)$: conditional noise under label $y$.</li>
-    <li>$\epsilon_\theta(\mathbf{X}^{(n)}, \varnothing, n)$: unconditional noise.</li>
-  </ul>
-  <div class="highlight">
-    <p><strong>Training trick.</strong> Replace $y$ by $\varnothing$ with probability $p_\text{drop} \approx 0.1$–$0.2$.</p>
-    <p>Network learns both modes in a single pass.</p>
+  <p>One network, one extra input slot, and a null token $\varnothing$.</p>
+  <div class="d5-fig">
+    <svg width="800" height="215" viewBox="0 0 800 215">
+      <defs>
+        <marker id="a5h" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 z" fill="#666666"/>
+        </marker>
+      </defs>
+      <rect x="30" y="25" width="180" height="52" rx="6" fill="none" stroke="#003876" stroke-width="1.8"/>
+      <rect x="30" y="128" width="180" height="52" rx="6" fill="none" stroke="#666666" stroke-width="1.8"/>
+      <text x="120" y="57" text-anchor="middle" font-size="17" fill="#003876">condition</text>
+      <text x="120" y="160" text-anchor="middle" font-size="17" fill="#666666">null token</text>
+      <line x1="220" y1="51" x2="330" y2="90" stroke="#666666" stroke-width="1.5" marker-end="url(#a5h)"/>
+      <line x1="220" y1="154" x2="330" y2="118" stroke="#666666" stroke-width="1.5" marker-end="url(#a5h)"/>
+      <rect x="340" y="55" width="190" height="100" rx="8" fill="#003876"/>
+      <text x="435" y="112" text-anchor="middle" font-size="17" fill="#ffffff">one network</text>
+      <line x1="540" y1="105" x2="630" y2="105" stroke="#666666" stroke-width="1.5" marker-end="url(#a5h)"/>
+      <text x="710" y="98" text-anchor="middle" font-size="17" fill="#1a1a1a">conditional and</text>
+      <text x="710" y="122" text-anchor="middle" font-size="17" fill="#1a1a1a">unconditional output</text>
+    </svg>
+    <span class="lab blue" style="left:120px; top:8px;">$\varepsilon_\theta(\mathbf x, y, n)$</span>
+    <span class="lab gray" style="left:120px; top:200px;">$\varepsilon_\theta(\mathbf x, \varnothing, n)$</span>
   </div>
+  <p class="muted">Two answers from one set of weights.</p>
 </div>
 
-<!-- SLIDE: CFG sampling -->
+<!-- SLIDE: training with dropout -->
 <div class="slide">
-  <h2>CFG Sampling Rule</h2>
+  <h2>Training with Condition Dropout</h2>
   <div class="divider"></div>
-  <p>At inference, combine two forward passes:</p>
-  <div class="math-block">$$\tilde{\epsilon}(\mathbf{X}^{(n)}, y, n) \;=\; \omega\,\epsilon_\theta(\mathbf{X}^{(n)}, y, n) - (\omega - 1)\,\epsilon_\theta(\mathbf{X}^{(n)}, \varnothing, n),\qquad \omega &gt; 1.$$</div>
-  <p>Use $\tilde{\epsilon}$ in place of $\epsilon_\theta$ in any DDPM / DDIM sampler.</p>
-  <div class="highlight">
-    <p>Push toward label-consistent mode (weight $\omega$); pull back with unconditional (weight $\omega-1$).</p>
+  <div class="d5-algo">
+    <div class="d5-algo-title">Classifier-free training</div>
+    <ol>
+      <li>Draw $(\mathbf X^{(0)}, Y)$, a level $n$, and noise $\bar\varepsilon \sim \mathcal N(0, I_d)$.</li>
+      <li>With probability $p_{\mathrm{drop}}$, replace $Y$ by the null token $\varnothing$.</li>
+      <li>Gradient step on $\big\|\bar\varepsilon - \varepsilon_\theta(\mathbf X^{(n)}, Y, n)\big\|^2$.</li>
+    </ol>
   </div>
+  <p>The same loss as before, with one line added.</p>
+  <p class="muted">$p_{\mathrm{drop}}$ near $0.1$ leaves both roles well trained.</p>
+</div>
+
+<!-- SLIDE: from score to epsilon -->
+<div class="slide">
+  <h2>From Score to $\varepsilon$</h2>
+  <div class="divider"></div>
+  <p>Both scores carry the same factor $-1/\sqrt{1-\bar\alpha_n}$, so the identity transfers verbatim:</p>
+  <div class="math-block">$$\tilde\varepsilon(\mathbf x, y, n) = \omega\,\varepsilon_\theta(\mathbf x, y, n) + (1-\omega)\,\varepsilon_\theta(\mathbf x, \varnothing, n).$$</div>
+  <p>An affine combination of two network outputs.</p>
+  <p class="muted">Nothing else in the sampler changes.</p>
+</div>
+
+<!-- SLIDE: sampling rule -->
+<div class="slide">
+  <h2>The Sampling Rule</h2>
+  <div class="divider"></div>
+  <p>Regrouped into the form used in code:</p>
+  <div class="math-block">$$\tilde\varepsilon = \varepsilon_\theta(\mathbf x, \varnothing, n) + \omega\Big(\varepsilon_\theta(\mathbf x, y, n) - \varepsilon_\theta(\mathbf x, \varnothing, n)\Big).$$</div>
+  <p>Start unconditional, then walk $\omega$ steps along the condition direction.</p>
+  <p class="muted">Convention warning: some papers write $1 + w$ where this writes $\omega$.</p>
+</div>
+
+<!-- SLIDE: CFG sampler -->
+<div class="slide">
+  <h2>Classifier-Free Sampler</h2>
+  <div class="divider"></div>
+  <div class="d5-algo">
+    <div class="d5-algo-title">Sampling with CFG</div>
+    <ol>
+      <li>Draw $\mathbf X^{(N)} \sim \mathcal N(0, I_d)$ and fix the condition $y$.</li>
+      <li>For $n = N, \dots, 1$:
+        <ol>
+          <li>two forward passes: $\varepsilon_\theta(\cdot, y, n)$ and $\varepsilon_\theta(\cdot, \varnothing, n)$;</li>
+          <li>combine into $\tilde\varepsilon$ with weight $\omega$;</li>
+          <li>take one DDPM or DDIM step.</li>
+        </ol>
+      </li>
+      <li>Return $\mathbf X^{(0)}$.</li>
+    </ol>
+  </div>
+  <p class="muted">Two network calls per step, no auxiliary model, no backward pass.</p>
+</div>
+
+<!-- SLIDE: what CFG samples -->
+<div class="slide">
+  <h2>What CFG Samples</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Corollary.</h3>
+    <p>CFG with weight $\omega$ targets the same tilted family as classifier guidance:</p>
+    <div class="math-block">$$\tilde p_t(\mathbf x) \;\propto\; p_t(\mathbf x\,|\,y)^{\omega}\,p_t(\mathbf x)^{1-\omega}.$$</div>
+  </div>
+  <p>Same heuristic, same caveat at $\omega \neq 1$, no auxiliary model.</p>
+  <p class="muted">The classifier was never needed, only its gradient.</p>
 </div>
 
 <!-- SLIDE: CFG in practice -->
@@ -321,166 +1016,600 @@
   <h2>CFG in Practice</h2>
   <div class="divider"></div>
   <div class="grid-2">
-    <div>
-      <h3>Design levers</h3>
-      <ul>
-        <li>Drop probability $p_\text{drop}$</li>
-        <li>Guidance scale $\omega$</li>
-        <li>Null-token embedding (learnable)</li>
+    <div class="card">
+      <h3>What it buys.</h3>
+      <ul class="tight">
+        <li>Sharper, more faithful samples</li>
+        <li>One training run, one model</li>
+        <li>Works for text, class, layout</li>
       </ul>
     </div>
-    <div>
-      <h3>Trade-offs</h3>
-      <ul>
-        <li>Larger $\omega$: sharper, less diverse</li>
-        <li>Two passes per step: $2\times$ cost</li>
-        <li>No extra model to train</li>
+    <div class="card">
+      <h3>What it costs.</h3>
+      <ul class="tight">
+        <li>Two passes per sampling step</li>
+        <li>Diversity falls as $\omega$ grows</li>
+        <li>Saturation artifacts at large $\omega$</li>
       </ul>
     </div>
   </div>
+  <p class="muted">The default in modern text-to-image systems, with $\omega$ tuned by eye.</p>
 </div>
 
 <!-- ====================================================================
-     PART 04: Discrete Diffusion
+     PART 04: Discrete diffusion
      ==================================================================== -->
 <div class="slide section-slide left">
   <div class="section-num">04</div>
   <h1>Discrete Diffusion</h1>
   <div class="divider"></div>
-  <p class="subtitle">When data lives on $\{1, \ldots, K\}$ instead of $\mathbb{R}^d$</p>
+  <p class="subtitle">Rate matrices, ratio scores, score entropy</p>
 </div>
 
-<!-- SLIDE: Discrete motivation -->
+<!-- SLIDE: what breaks (F13) -->
 <div class="slide">
-  <h2>What Breaks in the Discrete Case</h2>
+  <h2>What Breaks on Tokens</h2>
   <div class="divider"></div>
-  <p>Continuous diffusion adds Gaussian noise.</p>
-  <p>Discrete data (tokens, categories) does not admit addition.</p>
-  <p>Substitute: <strong>random transitions</strong>.</p>
-  <p>Switch $x$ to a different value with some probability.</p>
-  <div class="highlight">
-    <p>Additive noise replaced by stochastic transitions.</p>
-    <p>Forward, reverse, score, loss: same recipe.</p>
+  <p>Every step so far assumed $\mathbf x + \varepsilon$ makes sense.</p>
+  <div class="d5-fig">
+    <svg width="840" height="230" viewBox="0 0 840 230">
+      <line x1="40" y1="180" x2="380" y2="180" stroke="#666666" stroke-width="1.5"/>
+      <path d="M 60 180 C 150 180, 140 60, 210 60 C 280 60, 270 180, 360 180" fill="none" stroke="#003876" stroke-width="2.4"/>
+      <text x="210" y="212" text-anchor="middle" font-size="17" fill="#666666">continuum: add a Gaussian</text>
+      <circle cx="500" cy="110" r="26" fill="none" stroke="#003876" stroke-width="2"/>
+      <circle cx="580" cy="110" r="26" fill="none" stroke="#003876" stroke-width="2"/>
+      <circle cx="660" cy="110" r="26" fill="none" stroke="#003876" stroke-width="2"/>
+      <circle cx="740" cy="110" r="26" fill="none" stroke="#003876" stroke-width="2"/>
+      <text x="500" y="117" text-anchor="middle" font-size="17" fill="#1a1a1a">a</text>
+      <text x="580" y="117" text-anchor="middle" font-size="17" fill="#1a1a1a">b</text>
+      <text x="660" y="117" text-anchor="middle" font-size="17" fill="#1a1a1a">c</text>
+      <text x="740" y="117" text-anchor="middle" font-size="17" fill="#1a1a1a">d</text>
+      <line x1="609" y1="110" x2="631" y2="110" stroke="#666666" stroke-width="2.4"/>
+      <line x1="620" y1="99" x2="620" y2="121" stroke="#666666" stroke-width="2.4"/>
+      <line x1="606" y1="96" x2="634" y2="124" stroke="#d94040" stroke-width="2.6"/>
+      <line x1="634" y1="96" x2="606" y2="124" stroke="#d94040" stroke-width="2.6"/>
+      <text x="620" y="212" text-anchor="middle" font-size="17" fill="#666666">alphabet: addition is undefined</text>
+    </svg>
   </div>
+  <p class="muted">No addition, no gradient, no $\nabla\log p$.</p>
 </div>
 
-<!-- SLIDE: Transition matrices -->
+<!-- SLIDE: replace addition by transitions -->
 <div class="slide">
-  <h2>Forward: Transition Matrices</h2>
+  <h2>Keep the Recipe, Change the Noise</h2>
   <div class="divider"></div>
-  <p>Let $p_t \in [0,1]^K$ be the law of $X_t$.</p>
-  <p>Transition matrix $Q_t \in \mathbb{R}^{K\times K}$ with entry $Q_t(y, x) = \Pr(X_{t+1} = y\,|\,X_t = x)$:</p>
-  <div class="math-block">$$p_{t+1} = Q_t\,p_t.$$</div>
-  <p>Valid noising: marginals converge $p_t \to \pi$ regardless of $p_0$.</p>
-  <p>Two standard choices: <strong>uniform</strong> and <strong>absorbing</strong> (masking).</p>
+  <ul>
+    <li><strong>Forward:</strong> resample tokens at random toward a simple law.</li>
+    <li><strong>Reverse:</strong> undo those jumps, one at a time.</li>
+    <li><strong>Score:</strong> replaced by ratios of probabilities.</li>
+  </ul>
+  <div class="highlight">
+    <p>Same skeleton: a known forward, a learned reverse.</p>
+  </div>
+  <p class="muted">Only the noise mechanism is negotiable.</p>
 </div>
 
-<!-- SLIDE: Uniform vs absorbing -->
+<!-- SLIDE: transition matrices -->
+<div class="slide">
+  <h2>Forward &mdash; Transition Matrices</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (discrete forward).</h3>
+    <p>On the state space $\mathcal X = \{1,\dots,K\}$, a Markov chain with</p>
+    <div class="math-block">$$\Pr\big[X^{(n)} = x \,\big|\, X^{(n-1)} = x'\big] = Q_n(x, x'), \qquad \sum_{x} Q_n(x,x') = 1.$$</div>
+  </div>
+  <p>Columns are probability vectors, so the marginals evolve as $p_n = Q_n\,p_{n-1}$.</p>
+  <p class="muted">The column convention keeps every formula below matrix-shaped.</p>
+</div>
+
+<!-- SLIDE: worked example, uniform kernel -->
+<div class="slide">
+  <h2>Example &mdash; Uniform Kernel</h2>
+  <div class="divider"></div>
+  <p>Keep the token, or resample it uniformly with probability $\epsilon$:</p>
+  <div class="math-block" style="margin:10px 0;">$$Q = (1-\epsilon)\,I + \frac{\epsilon}{K}\,\mathbf 1\mathbf 1^{\top}.$$</div>
+  <div class="math-block" style="margin:10px 0;">$$K = 3,\ \epsilon = 0.3: \qquad Q = \begin{pmatrix} 0.8 & 0.1 & 0.1\\ 0.1 & 0.8 & 0.1\\ 0.1 & 0.1 & 0.8 \end{pmatrix}.$$</div>
+  <p class="muted">Columns sum to one; iterating drives every state to the uniform law.</p>
+</div>
+
+<!-- SLIDE: uniform vs absorbing -->
 <div class="slide">
   <h2>Uniform vs. Absorbing</h2>
   <div class="divider"></div>
   <div class="grid-2">
-    <div>
-      <h3>Uniform</h3>
-      <p>Stay with prob $1-\epsilon$.</p>
-      <p>Otherwise jump uniformly to another token.</p>
-      <p>Stationary: uniform on $\{1,\ldots,K\}$.</p>
+    <div class="card">
+      <h3>Uniform.</h3>
+      <ul class="tight">
+        <li>Any token to any token</li>
+        <li>Stationary law: uniform</li>
+        <li>Hides which positions changed</li>
+      </ul>
     </div>
-    <div>
-      <h3>Absorbing (mask)</h3>
-      <p>Replace by $[\text{M}]$ at rate $\epsilon$.</p>
-      <p>Mask stays mask.</p>
-      <p>Stationary: all mass on $[\text{M}]$.</p>
+    <div class="card">
+      <h3>Absorbing.</h3>
+      <ul class="tight">
+        <li>Any token to a mask, never back</li>
+        <li>Stationary law: all masked</li>
+        <li>Marks exactly what is unknown</li>
+      </ul>
     </div>
   </div>
-  <p><strong>Exercise.</strong> Compute mixing time for both choices.</p>
+  <p class="muted">Absorbing usually wins for text: the mask is free information for the reverse.</p>
 </div>
 
-<!-- SLIDE: Continuous-time ODE -->
+<!-- SLIDE: transition graphs (F14) -->
 <div class="slide">
-  <h2>Continuous-Time Limit</h2>
+  <h2>Two Transition Graphs</h2>
   <div class="divider"></div>
-  <p>Take $\Delta t \to 0$. Discrete updates become a linear ODE:</p>
-  <div class="math-block">$$\frac{dp_t}{dt} = Q_t\,p_t,\qquad p_0 = p_\text{data}.$$</div>
-  <p>$Q_t$ now plays the role of a generator (rate matrix).</p>
+  <div class="d5-fig">
+    <svg width="800" height="250" viewBox="0 0 800 250">
+      <defs>
+        <marker id="a5i" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 z" fill="#d94040"/>
+        </marker>
+        <marker id="a5j" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 z" fill="#666666"/>
+        </marker>
+        <marker id="a5k" markerWidth="9" markerHeight="9" refX="1" refY="4.5" orient="auto">
+          <path d="M9,0 L0,4.5 L9,9 z" fill="#666666"/>
+        </marker>
+      </defs>
+      <circle cx="110" cy="60" r="28" fill="none" stroke="#003876" stroke-width="2"/>
+      <circle cx="250" cy="60" r="28" fill="none" stroke="#003876" stroke-width="2"/>
+      <circle cx="180" cy="185" r="28" fill="none" stroke="#003876" stroke-width="2"/>
+      <text x="110" y="67" text-anchor="middle" font-size="17" fill="#1a1a1a">a</text>
+      <text x="250" y="67" text-anchor="middle" font-size="17" fill="#1a1a1a">b</text>
+      <text x="180" y="192" text-anchor="middle" font-size="17" fill="#1a1a1a">c</text>
+      <line x1="140" y1="60" x2="220" y2="60" stroke="#666666" stroke-width="1.6" marker-end="url(#a5j)" marker-start="url(#a5k)"/>
+      <line x1="129" y1="86" x2="161" y2="159" stroke="#666666" stroke-width="1.6" marker-end="url(#a5j)" marker-start="url(#a5k)"/>
+      <line x1="231" y1="86" x2="199" y2="159" stroke="#666666" stroke-width="1.6" marker-end="url(#a5j)" marker-start="url(#a5k)"/>
+      <text x="180" y="232" text-anchor="middle" font-size="17" fill="#666666">uniform</text>
+      <circle cx="530" cy="60" r="28" fill="none" stroke="#003876" stroke-width="2"/>
+      <circle cx="670" cy="60" r="28" fill="none" stroke="#003876" stroke-width="2"/>
+      <circle cx="600" cy="185" r="30" fill="#003876"/>
+      <text x="530" y="67" text-anchor="middle" font-size="17" fill="#1a1a1a">a</text>
+      <text x="670" y="67" text-anchor="middle" font-size="17" fill="#1a1a1a">b</text>
+      <text x="600" y="192" text-anchor="middle" font-size="17" fill="#ffffff">M</text>
+      <line x1="546" y1="85" x2="578" y2="154" stroke="#d94040" stroke-width="1.8" marker-end="url(#a5i)"/>
+      <line x1="654" y1="85" x2="622" y2="154" stroke="#d94040" stroke-width="1.8" marker-end="url(#a5i)"/>
+      <text x="600" y="232" text-anchor="middle" font-size="17" fill="#666666">absorbing</text>
+    </svg>
+  </div>
+  <p class="muted">Left: every edge two-way. Right: every edge one-way into the mask.</p>
 </div>
 
-<!-- SLIDE: Reverse rate matrix -->
+<!-- SLIDE: absorbing kernel closed form -->
 <div class="slide">
-  <h2>Reverse Rate Matrix</h2>
+  <h2>Absorbing Kernel, in Closed Form</h2>
   <div class="divider"></div>
-  <p>For $x \ne y$, the reverse generator:</p>
-  <div class="math-block" style="margin: 8px 0;">$$\overline{Q}_t(y, x) \;=\; \frac{p_t(y)}{p_t(x)}\,Q_t(x, y).$$</div>
-  <p>Diagonal fixed by mass conservation:</p>
-  <div class="math-block" style="margin: 8px 0;">$$\overline{Q}_t(x, x) \;=\; -\sum_{y \ne x}\overline{Q}_t(y, x).$$</div>
+  <p>Mask each token at rate $\sigma(t)$ and write $\Lambda_t = \int_0^t \sigma(s)\,ds$:</p>
+  <div class="math-block">$$p_{t|0}(x\,|\,x_0) = e^{-\Lambda_t}\,\delta_{x, x_0} \;+\; \big(1 - e^{-\Lambda_t}\big)\,\delta_{x, \mathsf M}.$$</div>
+  <p>Each token survives an exponential time; once masked, it stays masked.</p>
+  <p class="muted">$\Lambda_T$ large: everything is masked, so the prior is a point mass.</p>
+</div>
+
+<!-- SLIDE: continuous-time limit -->
+<div class="slide">
+  <h2>The Continuous-Time Limit</h2>
+  <div class="divider"></div>
+  <p>Let the steps shrink and expand the one-step kernel to first order:</p>
+  <div class="math-block">$$Q^{(\Delta t)}_t = I + \Delta t\,Q_t + o(\Delta t).$$</div>
+  <p>Then $p_{t+\Delta t} = (I + \Delta t\,Q_t)\,p_t + o(\Delta t)$, so in the limit</p>
+  <div class="highlight">$$\frac{d}{dt}\,p_t = Q_t\,p_t.$$</div>
+  <p class="muted">The discrete counterpart of the Fokker–Planck equation.</p>
+</div>
+
+<!-- SLIDE: rate matrix -->
+<div class="slide">
+  <h2>Rate Matrices</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (rate matrix).</h3>
+    <div class="math-block">$$\Pr\big[X_{t+\Delta t} = y\,\big|\,X_t = x\big] = \delta_{xy} + Q_t(y,x)\,\Delta t + o(\Delta t).$$</div>
+    <p>Off-diagonals $Q_t(y,x) \ge 0$ are jump rates.</p>
+    <p>The diagonal absorbs them: $Q_t(x,x) = -\sum_{y \neq x} Q_t(y,x)$.</p>
+  </div>
+  <p class="muted">Rates, not probabilities: an off-diagonal entry may exceed one.</p>
+</div>
+
+<!-- SLIDE: theorem, reverse rate matrix -->
+<div class="slide">
+  <h2>Reversing a Jump Process</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (reverse rates).</h3>
+    <p>Let the forward marginals $p_t$ be everywhere positive.</p>
+    <p>The time reversal is again a jump process, with rates</p>
+    <div class="math-block">$$\bar Q_t(y, x) \;=\; \frac{p_t(y)}{p_t(x)}\;Q_t(x, y), \qquad y \neq x.$$</div>
+  </div>
+  <p class="muted">Note the swap: the forward rate is read at $(x,y)$, the reverse at $(y,x)$.</p>
+  <div class="cite">Campbell et al., "A Continuous Time Framework for Discrete Denoising Models", NeurIPS 2022.</div>
+</div>
+
+<!-- SLIDE: proof outline -->
+<div class="slide">
+  <h2>Proof Outline</h2>
+  <div class="divider"></div>
+  <ol class="tight">
+    <li>Expand the forward transition over $[t, t+\Delta t]$ to first order.</li>
+    <li>Apply Bayes to the pair $(X_t, X_{t+\Delta t})$.</li>
+    <li>Divide by $\Delta t$ and let $\Delta t \to 0$.</li>
+  </ol>
+  <div class="card">
+    <h3>Key trick.</h3>
+    <p>Reverse one infinitesimal step, not the whole path.</p>
+    <p>Bayes on two adjacent times suffices.</p>
+  </div>
+  <p class="muted">The discrete analogue of Anderson's argument, and far shorter.</p>
+</div>
+
+<!-- SLIDE: step 1 -->
+<div class="slide">
+  <h2>Step 1 &mdash; One Small Step</h2>
+  <div class="divider"></div>
+  <p>By definition of the rate matrix, for any pair of states,</p>
+  <div class="math-block">$$\Pr\big[X_{t+\Delta t} = x \,\big|\, X_t = y\big] = \delta_{xy} + Q_t(x, y)\,\Delta t + o(\Delta t).$$</div>
+  <p>Here $y$ is the earlier state, $x$ the later one.</p>
+  <p class="muted">This is the only place the forward model enters.</p>
+</div>
+
+<!-- SLIDE: step 2 -->
+<div class="slide">
+  <h2>Step 2 &mdash; Bayes on the Pair</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+  \Pr\big[X_t = y \,\big|\, X_{t+\Delta t} = x\big]
+  &= \frac{\Pr[X_{t+\Delta t} = x \,|\, X_t = y]\;p_t(y)}{p_{t+\Delta t}(x)}\\[2pt]
+  &= \frac{\big(\delta_{xy} + Q_t(x,y)\Delta t\big)\,p_t(y)}{p_t(x) + O(\Delta t)} + o(\Delta t).
+  \end{aligned}$$</div>
+  <p>For $y \neq x$ the leading term $\delta_{xy}$ vanishes, leaving order $\Delta t$.</p>
+  <p class="muted">The denominator is continuous in $t$, which is all that is used.</p>
+</div>
+
+<!-- SLIDE: step 3 -->
+<div class="slide">
+  <h2>Step 3 &mdash; Divide and Pass to the Limit</h2>
+  <div class="divider"></div>
+  <p>For $y \neq x$, divide by $\Delta t$ and send $\Delta t \to 0$:</p>
+  <div class="math-block">$$\bar Q_t(y,x) = \lim_{\Delta t \to 0}\frac{1}{\Delta t}\Pr\big[X_t = y\,\big|\,X_{t+\Delta t} = x\big] = \frac{p_t(y)}{p_t(x)}\,Q_t(x,y).$$</div>
+  <p>The diagonal follows from conservation of mass, $\sum_y \bar Q_t(y,x) = 0$. $\;\blacksquare$</p>
+  <p class="muted">The learned object is the ratio; the rest is the known forward.</p>
+</div>
+
+<!-- SLIDE: sanity checks -->
+<div class="slide">
+  <h2>Two Sanity Checks</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Reversible stationary chain:</strong> detailed balance $p(y)Q(x,y) = p(x)Q(y,x)$ gives $\bar Q = Q$.</li>
+    <li><strong>Absorbing forward:</strong> $Q_t(x, \mathsf M) = 0$, so $\bar Q_t$ only <b>unmasks</b>.</li>
+  </ul>
   <div class="highlight">
-    <p>Novel quantity: the <strong>marginal ratio</strong> $p_t(y)/p_t(x)$, the discrete analog of the score.</p>
+    <p>The reverse of masking is unmasking, and never re-masking.</p>
+  </div>
+  <p class="muted">Both checks fall straight out of the formula.</p>
+</div>
+
+<!-- SLIDE: proof recap -->
+<div class="slide">
+  <h2>Proof Recap</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+  \Pr\big[X_t = y\,\big|\,X_{t+\Delta t} = x\big]
+  &\;\stackrel{\text{Bayes}}{=}\; \frac{\Pr[X_{t+\Delta t} = x\,|\,X_t = y]\,p_t(y)}{p_{t+\Delta t}(x)}\\[2pt]
+  &\;\stackrel{\text{first order}}{=}\; \frac{p_t(y)}{p_t(x)}\,Q_t(x,y)\,\Delta t + o(\Delta t)\\[2pt]
+  &\;\stackrel{\text{divide}}{\Longrightarrow}\; \bar Q_t(y,x) = \frac{p_t(y)}{p_t(x)}\,Q_t(x,y).
+  \end{aligned}$$</div>
+  <p class="muted">One unknown quantity survives: the ratio of marginals.</p>
+</div>
+
+<!-- SLIDE: the discrete score is a ratio -->
+<div class="slide">
+  <h2>The Discrete Score</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (concrete score).</h3>
+    <p>At each state $x$, a vector of ratios indexed by the other states:</p>
+    <div class="math-block">$$s_\theta(x, t)_y \;\approx\; \frac{p_t(y)}{p_t(x)}, \qquad y \neq x.$$</div>
+  </div>
+  <p>Then $\bar Q_t(y,x) = s_\theta(x,t)_y\;Q_t(x,y)$: learned part times known part.</p>
+  <p class="muted">Ratios, not gradients. Nothing is differentiated in state space.</p>
+</div>
+
+<!-- SLIDE: why score, the fine-grid limit -->
+<div class="slide">
+  <h2>Why Call It a Score</h2>
+  <div class="divider"></div>
+  <p>On a fine grid of spacing $h$, the ratio is the gradient in disguise:</p>
+  <div class="math-block">$$\frac{p(x+h)}{p(x)} = \exp\big\{\log p(x+h) - \log p(x)\big\} \;\approx\; 1 + h\,\partial_x \log p(x).$$</div>
+  <div class="d5-fig">
+    <svg width="720" height="150" viewBox="0 0 720 150">
+      <path d="M 40 130 C 180 130, 170 30, 300 30 C 430 30, 420 130, 560 130" fill="none" stroke="#003876" stroke-width="2.2"/>
+      <line x1="40" y1="140" x2="680" y2="140" stroke="#666666" stroke-width="1.3"/>
+      <circle cx="360" cy="42" r="5" fill="#1a1a1a"/>
+      <circle cx="400" cy="52" r="5" fill="#1a1a1a"/>
+      <line x1="360" y1="140" x2="360" y2="42" stroke="#666666" stroke-width="1" stroke-dasharray="4 4"/>
+      <line x1="400" y1="140" x2="400" y2="52" stroke="#666666" stroke-width="1" stroke-dasharray="4 4"/>
+      <line x1="360" y1="120" x2="400" y2="120" stroke="#d94040" stroke-width="2"/>
+      <text x="380" y="112" text-anchor="middle" font-size="17" fill="#d94040">h</text>
+    </svg>
+  </div>
+  <p class="muted">Same object, expressed without derivatives.</p>
+</div>
+
+<!-- SLIDE: reverse sampler with s_theta -->
+<div class="slide">
+  <h2>Sampling the Reverse Chain</h2>
+  <div class="divider"></div>
+  <div class="d5-algo">
+    <div class="d5-algo-title">Reverse jump process</div>
+    <ol>
+      <li>Draw $X_T$ from the forward stationary law.</li>
+      <li>At state $x$ and time $t$, form the rates $\bar Q_t(y,x) = s_\theta(x,t)_y\,Q_t(x,y)$.</li>
+      <li>Hold for an exponential time of parameter $\sum_{y \neq x}\bar Q_t(y,x)$.</li>
+      <li>Jump to $y$ with probability proportional to $\bar Q_t(y,x)$.</li>
+      <li>Repeat until $t = 0$.</li>
+    </ol>
+  </div>
+  <p class="muted">Standard jump-process simulation, run backwards in time.</p>
+</div>
+
+<!-- SLIDE: squared loss fails -->
+<div class="slide">
+  <h2>Why the Squared Loss Fails</h2>
+  <div class="divider"></div>
+  <p>The obvious analogue of score matching would be</p>
+  <div class="math-block">$$\mathbb E\sum_{y \neq x}\Big(s_\theta(x,t)_y - \frac{p_t(y)}{p_t(x)}\Big)^{2}.$$</div>
+  <ul>
+    <li>Targets are positive; a square does not know that.</li>
+    <li>Ratios span orders of magnitude; the largest dominate.</li>
+    <li>Negative predictions give negative rates, which are meaningless.</li>
+  </ul>
+  <p class="muted">Positivity has to be built into the loss, not patched afterwards.</p>
+</div>
+
+<!-- SLIDE: score entropy definition -->
+<div class="slide">
+  <h2>Score Entropy</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (score entropy).</h3>
+    <p>For a prediction $s &gt; 0$ and a target $r &gt; 0$,</p>
+    <div class="math-block">$$\ell(s, r) \;=\; s \;-\; r\log s \;+\; r\big(\log r - 1\big).$$</div>
+  </div>
+  <p>This is the Bregman divergence of $u \mapsto u\log u - u$, evaluated at $(r, s)$.</p>
+  <p class="muted">A generalized KL divergence between two positive numbers.</p>
+</div>
+
+<!-- SLIDE: theorem, ell >= 0 -->
+<div class="slide">
+  <h2>Score Entropy Is a Divergence</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem.</h3>
+    <p>For all $s, r &gt; 0$:</p>
+    <ul class="tight">
+      <li>$\ell(s,r) \ge 0$, with equality if and only if $s = r$;</li>
+      <li>$s \mapsto \ell(s,r)$ is strictly convex;</li>
+      <li>$\ell(s,r) \to +\infty$ as $s \downarrow 0$.</li>
+    </ul>
+  </div>
+  <p class="muted">A proper loss, and a barrier that keeps predictions positive.</p>
+</div>
+
+<!-- SLIDE: proof -->
+<div class="slide">
+  <h2>Proof &mdash; Differentiate in $s$</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:10px 0;">$$\partial_s \ell(s,r) = 1 - \frac{r}{s}, \qquad \partial^2_s \ell(s,r) = \frac{r}{s^{2}} &gt; 0.$$</div>
+  <p>The unique stationary point is $s = r$, and convexity makes it the minimum:</p>
+  <div class="math-block" style="margin:10px 0;">$$\ell(r,r) = r - r\log r + r\log r - r = 0. \qquad\blacksquare$$</div>
+  <p class="muted">As $s \downarrow 0$ the term $-r\log s$ blows up: a built-in barrier.</p>
+</div>
+
+<!-- SLIDE: barrier picture (F17) -->
+<div class="slide">
+  <h2>The Barrier</h2>
+  <div class="divider"></div>
+  <div class="d5-fig">
+    <svg width="835" height="280" viewBox="0 0 760 255">
+      <line x1="60" y1="215" x2="710" y2="215" stroke="#666666" stroke-width="1.4"/>
+      <line x1="60" y1="30" x2="60" y2="215" stroke="#666666" stroke-width="1.4"/>
+      <polyline points="90,95 120,150 160,181 210,196 260,200 360,190 460,169 560,142 660,110"
+        fill="none" stroke="#003876" stroke-width="2.6"/>
+      <circle cx="260" cy="200" r="6" fill="#2e8b57"/>
+      <line x1="260" y1="200" x2="260" y2="215" stroke="#2e8b57" stroke-width="1.4"/>
+      <text x="158" y="66" text-anchor="middle" font-size="17" fill="#d94040">barrier as s goes to 0</text>
+      <text x="690" y="240" text-anchor="middle" font-size="17" fill="#666666">s</text>
+    </svg>
+    <span class="lab green" style="left:288px; top:253px;">$s = r$</span>
+    <span class="lab blue" style="left:659px; top:88px;">$\ell(s,r)$</span>
+  </div>
+  <p class="muted">Convex, zero at the target, infinite at the boundary.</p>
+</div>
+
+<!-- SLIDE: the target is unknown -->
+<div class="slide">
+  <h2>But the Target Is Unknown</h2>
+  <div class="divider"></div>
+  <p>The target $p_t(y)/p_t(x)$ is exactly the quantity we cannot compute.</p>
+  <p>Same obstacle as in the continuous case, and the same escape route.</p>
+  <div class="highlight">
+    <p>Replace the unknown marginal ratio by known kernel ratios, then average.</p>
+  </div>
+  <p class="muted">Denoising score matching, transplanted to the alphabet.</p>
+</div>
+
+<!-- SLIDE: theorem, denoising score entropy -->
+<div class="slide">
+  <h2>Denoising Score Entropy</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (denoising score entropy).</h3>
+    <div class="math-block">$$\mathcal L(\theta) = \mathbb E_{X_0,\,X_t}\;\sum_{y \neq X_t}\ell\Big(s_\theta(X_t,t)_y,\; \frac{p_{t|0}(y\,|\,X_0)}{p_{t|0}(X_t\,|\,X_0)}\Big).$$</div>
+    <p>Every minimizer satisfies $s_\theta(x,t)_y = p_t(y)/p_t(x)$.</p>
+  </div>
+  <p class="muted">Every ingredient on the right is a known forward kernel.</p>
+  <div class="cite">Lou, Meng &amp; Ermon, "Discrete Diffusion Modeling by Estimating the Ratios&hellip;", ICML&nbsp;2024.</div>
+</div>
+
+<!-- SLIDE: proof outline -->
+<div class="slide">
+  <h2>Proof Outline</h2>
+  <div class="divider"></div>
+  <ol class="tight">
+    <li>Condition on $X_t$; the loss decouples over pairs $(X_t, y)$.</li>
+    <li>Minimize pointwise in $s$; the minimizer is a posterior average.</li>
+    <li>Compute the average; the kernel cancels and the marginal survives.</li>
+  </ol>
+  <div class="card">
+    <h3>Key trick.</h3>
+    <p>$\ell$ is <b>linear</b> in $r$, up to a $\theta$-free term.</p>
+    <p>So the expectation passes straight through.</p>
   </div>
 </div>
 
-<!-- SLIDE: Discrete score -->
+<!-- SLIDE: step 1 -->
 <div class="slide">
-  <h2>The Discrete Score Is a Ratio</h2>
+  <h2>Step 1 &mdash; Decouple</h2>
   <div class="divider"></div>
-  <p>Continuous analog of the score $\nabla_{\mathbf{x}} \log p_t(\mathbf{x})$ becomes the marginal-ratio vector:</p>
-  <div class="math-block">$$s(x, t) = \bigl(p_t(1)/p_t(x),\; p_t(2)/p_t(x),\; \ldots,\; p_t(K)/p_t(x)\bigr)^\top \in [0, \infty)^K.$$</div>
-  <p>Learned by a neural network $s_\theta(x, t)$.</p>
-  <div class="highlight">
-    <p>Continuous: gradient of log density.</p>
-    <p>Discrete: ratio of densities between states.</p>
-  </div>
+  <p>Write $R_y = p_{t|0}(y\,|\,X_0)/p_{t|0}(X_t\,|\,X_0)$ and split off the $\theta$-free part:</p>
+  <div class="math-block">$$\mathcal L(\theta) = \mathbb E_{X_t}\sum_{y \neq X_t}\Big(s_\theta(X_t,t)_y - \mathbb E\big[R_y\,\big|\,X_t\big]\,\log s_\theta(X_t,t)_y\Big) + C.$$</div>
+  <p>Each pair $(X_t, y)$ now owns one free scalar.</p>
+  <p class="muted">The constant $C$ collects $\mathbb E[R_y(\log R_y - 1)]$, which no gradient sees.</p>
 </div>
 
-<!-- SLIDE: Why squared loss fails -->
+<!-- SLIDE: step 2 -->
 <div class="slide">
-  <h2>Squared Loss Fails</h2>
+  <h2>Step 2 &mdash; Minimize Pointwise</h2>
   <div class="divider"></div>
-  <p>Naive: regress $s_\theta(x, t)_y$ onto the target ratio:</p>
-  <div class="math-block">$$\mathcal{L}_\text{sq}(\theta) = \mathbb{E}\!\left[\bigl(s_\theta(x, t)_y - \tfrac{p_t(y)}{p_t(x)}\bigr)^2\right].$$</div>
-  <p>Minimizer can be negative.</p>
-  <p>Ratios are non-negative; the loss does not encode that constraint.</p>
-  <div class="highlight">
-    <p>Need a loss whose minimizer is automatically positive.</p>
-  </div>
+  <p>Minimize $s - \bar r\log s$ over $s &gt; 0$, where $\bar r = \mathbb E[R_y\,|\,X_t = x]$:</p>
+  <div class="math-block">$$1 - \frac{\bar r}{s} = 0 \quad\Longleftrightarrow\quad s^{\star} = \bar r = \mathbb E\big[R_y \,\big|\, X_t = x\big].$$</div>
+  <p>Strict convexity makes this the unique minimizer.</p>
+  <p class="muted">The network is pushed to a conditional expectation, exactly as in denoising.</p>
 </div>
 
-<!-- SLIDE: Score entropy loss -->
+<!-- SLIDE: step 3 -->
 <div class="slide">
-  <h2>Score Entropy Loss</h2>
+  <h2>Step 3 &mdash; The Average Telescopes</h2>
   <div class="divider"></div>
-  <p>Lou et al. (2024): the <strong>score entropy</strong> loss:</p>
-  <div class="math-block">$$\mathcal{L}_\text{SE}(\theta) = \mathbb{E}_{x_t \sim p_t}\!\left[\sum_{y \ne x_t} w_{x_t, y}\!\left(s_\theta(x_t, t)_y - \tfrac{p_t(y)}{p_t(x_t)}\,\log s_\theta(x_t, t)_y + C\!\bigl(\tfrac{p_t(y)}{p_t(x_t)}\bigr)\right)\right].$$</div>
-  <p>Constant $C(a) = a(\log a - 1)$ makes the minimum zero.</p>
-  <p>The $\log s_\theta$ term forces positivity.</p>
-  <p><strong>Exercise.</strong> Show the minimizer satisfies $s_{\theta^\star}(x, t)_y = p_t(y)/p_t(x)$ when $w_{x,y} &gt; 0$.</p>
-  <div class="cite">Lou, Meng &amp; Ermon, "Discrete Diffusion by Estimating Ratios of the Data Distribution", ICML&nbsp;2024.</div>
+  <div class="math-block">$$\begin{aligned}
+  \mathbb E\big[R_y \,\big|\, X_t = x\big]
+  &= \sum_{x_0} \frac{p_0(x_0)\,p_{t|0}(x\,|\,x_0)}{p_t(x)}\cdot\frac{p_{t|0}(y\,|\,x_0)}{p_{t|0}(x\,|\,x_0)}\\[2pt]
+  &= \frac{1}{p_t(x)}\sum_{x_0}p_0(x_0)\,p_{t|0}(y\,|\,x_0) \;=\; \frac{p_t(y)}{p_t(x)}. \qquad\blacksquare
+  \end{aligned}$$</div>
+  <p class="muted">The kernel at $x$ cancels between posterior and target; the marginal survives.</p>
 </div>
 
-<!-- SLIDE: Sequence-space note -->
+<!-- SLIDE: proof recap -->
+<div class="slide">
+  <h2>Proof Recap</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+  \arg\min_{s}\;\mathbb E\big[\ell(s, R_y)\,\big|\,X_t = x\big]
+  &\;\stackrel{\text{linear in }r}{=}\; \arg\min_{s}\;\big\{s - \mathbb E[R_y\,|\,x]\log s\big\}\\[2pt]
+  &\;\stackrel{\text{convexity}}{=}\; \mathbb E\big[R_y\,\big|\,X_t = x\big]\\[2pt]
+  &\;\stackrel{\text{telescope}}{=}\; \frac{p_t(y)}{p_t(x)}.
+  \end{aligned}$$</div>
+  <p class="muted">A tractable loss whose minimizer is the intractable ratio.</p>
+</div>
+
+<!-- SLIDE: sequence space -->
 <div class="slide">
   <h2>Sequence Space</h2>
   <div class="divider"></div>
-  <p>Real text: $\mathcal{X} = \{1, \ldots, K\}^L$.</p>
-  <p>Direct transition matrix has $K^L \times K^L$ entries. Intractable.</p>
-  <p><strong>Factored assumption:</strong> each token perturbed independently.</p>
-  <p>Implies the <strong>Hamming-sparsity condition</strong>:</p>
-  <div class="math-block">$$Q_t(\mathbf{y}, \mathbf{x}) = 0\quad\text{whenever}\quad d_\text{H}(\mathbf{y}, \mathbf{x}) \geq 2.$$</div>
-  <p>Reverse process needs $s_\theta$ only on Hamming-distance-1 pairs.</p>
+  <p>Text is a sequence of $L$ tokens over an alphabet of size $K$:</p>
+  <div class="math-block">$$|\mathcal X| = K^{L}.$$</div>
+  <ul>
+    <li>A full rate matrix has $K^{2L}$ entries.</li>
+    <li>The score at one state is a vector of length $K^{L} - 1$.</li>
+  </ul>
+  <p class="muted">Neither object can be stored, let alone learned. Structure must be imposed.</p>
 </div>
 
-<!-- SLIDE: Series recap -->
+<!-- SLIDE: token-factored forward -->
+<div class="slide">
+  <h2>Corrupt Each Position Alone</h2>
+  <div class="divider"></div>
+  <p>For $\mathbf y \neq \mathbf x$, define the forward rates by</p>
+  <div class="math-block">$$Q_t(\mathbf y, \mathbf x) = \begin{cases} Q^{\mathrm{tok}}_t(y_i, x_i), & \mathbf y, \mathbf x \text{ differ only at position } i,\\[2pt] 0, & \text{Hamming distance} \ge 2. \end{cases}$$</div>
+  <p>Two positions jumping in the same instant has probability $o(\Delta t)$.</p>
+  <p class="muted">Hamming-1 sparsity, obtained for free from independence.</p>
+</div>
+
+<!-- SLIDE: reverse inherits sparsity -->
+<div class="slide">
+  <h2>The Reverse Inherits the Sparsity</h2>
+  <div class="divider"></div>
+  <p>By the reverse-rate formula, $\bar Q_t(\mathbf y, \mathbf x) = \frac{p_t(\mathbf y)}{p_t(\mathbf x)} Q_t(\mathbf x, \mathbf y)$.</p>
+  <p>The second factor vanishes at Hamming distance $\ge 2$.</p>
+  <div class="highlight">
+    <p>Only single-token flips matter: $L(K-1)$ outputs, not $K^{L}$.</p>
+  </div>
+  <div class="d5-fig">
+    <svg width="700" height="142" viewBox="0 0 700 142">
+      <rect x="40" y="44" width="60" height="52" fill="none" stroke="#666666"/>
+      <rect x="110" y="44" width="60" height="52" fill="none" stroke="#666666"/>
+      <rect x="180" y="44" width="60" height="52" fill="none" stroke="#666666"/>
+      <rect x="250" y="44" width="60" height="52" fill="none" stroke="#666666"/>
+      <rect x="320" y="44" width="60" height="52" fill="#003876"/>
+      <line x1="382" y1="60" x2="470" y2="26" stroke="#666666" stroke-width="1.4"/>
+      <line x1="382" y1="70" x2="470" y2="70" stroke="#666666" stroke-width="1.4"/>
+      <line x1="382" y1="80" x2="470" y2="114" stroke="#666666" stroke-width="1.4"/>
+      <rect x="480" y="8" width="52" height="36" fill="none" stroke="#2e8b57"/>
+      <rect x="480" y="52" width="52" height="36" fill="none" stroke="#2e8b57"/>
+      <rect x="480" y="96" width="52" height="36" fill="none" stroke="#2e8b57"/>
+    </svg>
+    <span class="lab blue" style="left:350px; top:120px;">position $i$</span>
+    <span class="lab gray" style="left:634px; top:70px;">$K-1$ alternatives</span>
+  </div>
+</div>
+
+<!-- SLIDE: tau-leaping -->
+<div class="slide">
+  <h2>Sampling a Sequence</h2>
+  <div class="divider"></div>
+  <div class="d5-algo">
+    <div class="d5-algo-title">Tau-leaping</div>
+    <ol>
+      <li>Start from the stationary law: for absorbing noise, all positions masked.</li>
+      <li>At time $t$, one network call gives all $L(K-1)$ ratios.</li>
+      <li>Over a window $\tau$, let each position flip independently with probability $\tau\,\bar Q_t$.</li>
+      <li>Decrease $t$ by $\tau$ and repeat until $t = 0$.</li>
+    </ol>
+  </div>
+  <p class="muted">One network call per step, many positions updated at once.</p>
+</div>
+
+<!-- SLIDE: dictionary -->
+<div class="slide">
+  <h2>Continuous and Discrete, Side by Side</h2>
+  <div class="divider"></div>
+  <table>
+    <thead><tr><th>Continuous diffusion</th><th>Discrete diffusion</th></tr></thead>
+    <tbody>
+      <tr><td>Add Gaussian noise</td><td>Resample tokens at random</td></tr>
+      <tr><td>Fokker–Planck equation</td><td>$dp_t/dt = Q_t\,p_t$</td></tr>
+      <tr><td>Anderson time reversal</td><td>$\bar Q_t(y,x) = \frac{p_t(y)}{p_t(x)}Q_t(x,y)$</td></tr>
+      <tr><td>Score $\nabla\log p_t(\mathbf x)$</td><td>Ratios $p_t(y)/p_t(x)$</td></tr>
+      <tr><td>Denoising score matching</td><td>Denoising score entropy</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SLIDE: series recap -->
 <div class="slide">
   <h2>Series Recap</h2>
   <div class="divider"></div>
-  <ul>
-    <li><strong>Lecture 1.</strong> VE forward, Bayes-plus-Tweedie reverse, score.</li>
-    <li><strong>Lecture 2.</strong> VP forward, DDPM VLB, $\epsilon$-prediction.</li>
-    <li><strong>Lecture 3.</strong> SDE, Fokker–Planck, Anderson reverse, score matching.</li>
-    <li><strong>Lecture 4.</strong> DDIM: same marginals, deterministic ODE, inversion.</li>
-    <li><strong>Lecture 5.</strong> Guidance and discrete diffusion.</li>
+  <ul class="tight">
+    <li>A forward corruption chosen so its marginals stay closed-form.</li>
+    <li>A reverse process driven by the score, learned by denoising.</li>
+    <li>Deterministic samplers sharing those same marginals.</li>
+    <li>Conditioning as an additive correction to the score.</li>
+    <li>Discrete states: ratios in place of gradients.</li>
   </ul>
   <div class="highlight">
-    <p>One idea, many guises: forward corruption, reverse driven by the score.</p>
+    <p>One idea in many guises: known forward, learned reverse.</p>
   </div>
 </div>
 
@@ -490,8 +1619,9 @@
   <p class="big-word-sub">Thank you.</p>
 </div>
 
+
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 33</div>
+<div class="slide-num" id="slideNum">1 / 95</div>
 
 </div><!-- end deck -->
 

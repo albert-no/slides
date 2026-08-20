@@ -42,69 +42,70 @@
 </head>
 <body>
 
-<h1>MIA 4 · Modern Likelihood-Ratio Attacks — Overview</h1>
-<p class="meta">A one-page tour of Lecture 4. For full slides see <code>mia4-modern.html</code>; for detailed derivations see <code>mia4-modern-note.html</code>.</p>
+<h1>MIA 4 &middot; Modern Likelihood-Ratio Attacks &mdash; Overview</h1>
+<p class="meta">A one-page tour of this deck. Full slides: <code>mia4-modern.html</code>. Caveats, the fuller defense table and speaker asides: <code>mia4-modern-note.html</code>.</p>
 
 <div class="tldr">
-  <strong>One-line summary.</strong> Lecture 4 traces the shift from balanced-accuracy MIA evaluations to per-example likelihood-ratio attacks (LiRA), then to the cost-reduced relative-comparison attack (RMIA). All modern MIAs share the same shape: a likelihood ratio over a per-example statistic, calibrated either by shadow models, reference models, or population samples.
+  <strong>One line.</strong> The optimal membership test is a likelihood ratio; earlier decks proved that and stopped. This deck is about <em>estimating</em> that ratio &mdash; parametrically per example (LiRA), by nested conditioning (Ye et al.), by population rank (RMIA), from labels alone (boundary distance), and on diffusion models. Every attack in the series turns out to be the same estimator with three free choices: the statistic $\phi$, the conditioning set $\mathcal{C}$, and how the two densities are fitted.
 </div>
 
-<h2><span class="pill">§1</span> Defenses recap</h2>
-<p>Four families: regularization, output perturbation, training-time, architecture design. Only training-time defenses change the model's information content; everything else is an arms race that adaptive attackers undo. <strong>DP-SGD</strong> is the unique defense with formal guarantees: clipped gradients plus Gaussian noise yield an $(\varepsilon, \delta)$-DP bound, which in turn upper-bounds MIA advantage by $e^{\varepsilon}-1+\delta$.</p>
+<h2><span class="pill">§1</span> From optimal test to usable attack</h2>
+<p>Recall cards re-establish the four facts the deck builds on: the membership game, every optimal attack is a ratio test, the loss is a sufficient statistic under the Gibbs posterior, and total variation obeys data processing. The missing piece is stated bluntly &mdash; the optimal test needs two densities nobody has. The rest of the deck is four ways of estimating them, judged on <strong>TPR at low FPR</strong> on a log-log ROC, not on balanced accuracy.</p>
 
-<h2><span class="pill">§2</span> Why early evaluations misled</h2>
-<p>Balanced accuracy at the 50% threshold hides the vulnerable subpopulation. The right metric is <strong>TPR at low FPR</strong> (typically $10^{-3}$ or lower), evaluated on log-log ROC. Label-only attacks (Choquette-Choo et al. 2020) sweep away the "just hide the confidence vector" defense — even with predicted-class-only access, boundary-distance probes recover membership signal.</p>
-
-<h2><span class="pill">§3</span> LiRA (Carlini et al. 2022)</h2>
-<p>The Neyman–Pearson optimal attack, executed per example.</p>
+<h2><span class="pill">§2</span> LiRA &mdash; a parametric per-example test</h2>
 <ul class="takeaways">
-  <li><strong>Idea.</strong> For each target $z$, train $N$ shadow models with $z$ in/out of their training sets. Fit Gaussians to the resulting "in" and "out" loss distributions. Compute the per-example LLR for the actual target model.</li>
-  <li><strong>Score.</strong> $\Lambda(z) = p(\ell^* \mid z \in D) / p(\ell^* \mid z \notin D)$, where $\ell^*$ is the target's loss on $z$.</li>
-  <li><strong>Cost.</strong> 64–256 shadow models per attack budget — research-grade compute.</li>
-  <li><strong>Result.</strong> 8–10% TPR at 0.1% FPR on CIFAR-10, vs. &lt;1% for prior attacks. The 10–50× gain is what made the community accept per-example calibration as the new default.</li>
-  <li><strong>Online vs. offline.</strong> Online retrains shadows per query (best); offline reuses a fixed shadow set (practical).</li>
+  <li><strong>Definitions 1&ndash;3.</strong> The IN/OUT model distributions $\mathcal{Q}_{\mathrm{in}}(z), \mathcal{Q}_{\mathrm{out}}(z)$; the logit-scaled statistic $\phi(p) = \log\frac{p}{1-p}$; the Gaussian ratio $\Lambda(z) = \mathcal{N}(\ell; \mu_{\mathrm{in}}, \sigma_{\mathrm{in}}^2) / \mathcal{N}(\ell; \mu_{\mathrm{out}}, \sigma_{\mathrm{out}}^2)$.</li>
+  <li><strong>Theorem 1.</strong> Taking logs gives a quadratic in $\ell$ in general; with $\sigma_{\mathrm{in}} = \sigma_{\mathrm{out}}$ it collapses (Corollary 1) to $\log\Lambda = dz - \tfrac12 d^2$ &mdash; a per-example calibrated z-score with $z = (\ell-\mu_{\mathrm{out}})/\sigma$ and effect size $d = (\mu_{\mathrm{in}}-\mu_{\mathrm{out}})/\sigma$.</li>
+  <li><strong>Proposition 1.</strong> Pooling examples under one threshold cannot beat per-example calibration: the pooled ROC is a mixture, the per-example ROC is strictly concave, Jensen does the rest. This is why calibration buys TPR precisely in the low-FPR corner.</li>
+  <li><strong>Proposition 2.</strong> Offline LiRA, which sees only $\mu_{\mathrm{out}}, \sigma_{\mathrm{out}}$, is a one-sided z-test, UMP within the one-sided family by Karlin&ndash;Rubin; its score is one minus a p-value against the OUT null.</li>
+  <li><strong>Reported.</strong> Carlini et al. use 256 shadow models (64 for ImageNet); at $\mathrm{FPR} = 10^{-3}$ on CIFAR-10 they report 8.4% TPR against a best prior of 2.2%, and offline costs at most 20% of TPR at fixed shadow budget.</li>
 </ul>
 
-<h2><span class="pill">§4</span> Ye et al. 2022 — the unified hierarchy</h2>
-<p>All MIA variants fit into a three-level hierarchy by what they are allowed to know:</p>
-<table>
-  <tr><th>Level</th><th>Calibration source</th><th>Cost</th><th>Power</th></tr>
-  <tr><td>Population</td><td>Target model + population sample</td><td>Cheap</td><td>★★☆☆</td></tr>
-  <tr><td>Reference</td><td>+ reference models (no $z$)</td><td>Moderate</td><td>★★★☆</td></tr>
-  <tr><td>LiRA</td><td>+ per-example in/out shadows</td><td>Expensive</td><td>★★★★</td></tr>
-</table>
-<p>Provably monotone: LiRA dominates Reference dominates Population. The <strong>Privacy Meter</strong> tool implements all three as the standard auditing pipeline.</p>
+<h2><span class="pill">§3</span> The attack hierarchy &mdash; nested conditioning</h2>
+<p>Ye et al. give one template (Definition 5) and four conditioning sets (Definition 6): S per-label, P population, R reference, D per-record-per-model. <strong>Theorem 2</strong> is the honest version of the folklore hierarchy: if $V \subseteq V'$ then the optimal test under $V'$ is at least as powerful, proved as nesting &rarr; suprema &rarr; a data-processing step in total variation.</p>
+<p>Crucially the order is <strong>partial, not total</strong>. P conditions on $\theta$, R on $(x_z, y_z)$; neither contains the other, so the theorem says nothing about that pair &mdash; and Ye's experiments show S and P comparable, with R beating S on 19.84% of inputs. A dedicated slide lists what Theorem 2 does not say: it is a population-level statement about optimal tests, not about finite-sample estimates.</p>
 
-<h2><span class="pill">§5</span> RMIA (Zarifzadeh et al. 2024)</h2>
-<p>Cuts LiRA's cost by 30–100× while preserving most of the power.</p>
+<h2><span class="pill">§4</span> RMIA &mdash; pairwise ratios, few models</h2>
 <ul class="takeaways">
-  <li><strong>Idea.</strong> Replace the per-example Gaussian fit with a <em>population-relative percentile rank</em>.</li>
-  <li><strong>Score.</strong> For each candidate $z$, compute $r(z) = p_\theta(z) / \frac{1}{R}\sum_r p_{\theta_r}(z)$ for a few reference models, then rank against the same ratio on a population sample.</li>
-  <li><strong>Cost.</strong> 2–8 reference models, independent of how many points you query.</li>
-  <li><strong>Result.</strong> ~11% TPR at 0.1% FPR on CIFAR-10 with 8 reference models — within a couple of points of LiRA at a fraction of the compute.</li>
+  <li><strong>Proposition 3.</strong> The bottleneck in LiRA is estimating $\sigma(z)$: $\mathrm{sd}(\hat\sigma)/\sigma \approx 1/\sqrt{2(R-1)}$, so a few reference models give a scale estimate with tens of percent of relative error &mdash; and the low-FPR decision lives in the tail that $\hat\sigma$ controls.</li>
+  <li><strong>Definitions 7&ndash;8.</strong> RMIA replaces the per-example Gaussian fit with a pairwise ratio $\mathrm{LR}_\theta(x,z) = \Pr(\theta \mid x)/\Pr(\theta \mid z)$ and scores $x$ by the fraction of population points $z$ it beats by a margin $\gamma \ge 1$. Distribution-free rank statistic instead of a fitted scale.</li>
+  <li><strong>Reported.</strong> In the paper's own setup, RMIA leads at very small reference budgets (one to four models); LiRA needs a large budget before it can drop its global-variance fallback. Their LiRA column is <em>not</em> Carlini's &mdash; the deck carries an explicit cross-paper warning slide.</li>
 </ul>
 
-<h2><span class="pill">§6</span> Beyond classification — diffusion models</h2>
-<p>Diffusion training minimises a denoising loss across timesteps $t \in [0, T]$. Membership signal lives in the intermediate timesteps (small $t$ is too easy, large $t$ is pure noise). Aggregating the per-timestep reconstruction loss and applying LiRA-style per-example calibration recovers the same per-record auditing power as in classification. The lecture's "One Framework: All Attacks" slide makes this universality explicit: every modern attack is a likelihood ratio over some chosen statistic $\phi(z)$.</p>
+<h2><span class="pill">§5</span> Label-only access</h2>
+<p>If the API returns only the predicted class, the attack statistic becomes the <strong>distance to the decision boundary</strong> (Definition 9). Proposition 4: for a linear model that distance is exactly the logit divided by $\|w\|_2$, so Corollary 2 &mdash; hiding the confidence vector hides nothing, it only converts information into query budget. For deep models the distance is a proxy, estimated by a boundary walk; noise robustness is the cheaper proxy in the small-budget regime.</p>
 
-<h2>Take-home matrix</h2>
+<h2><span class="pill">§6</span> Defenses</h2>
+<p><strong>Definition 10</strong> is the DP-SGD update: clip each per-example gradient to norm $C$, add $\mathcal{N}(0, \sigma^2 C^2 I)$, average. Composed through an accountant it yields $(\varepsilon,\delta)$, and via the earlier deck's ROC cap $\mathrm{TPR} \le e^{\varepsilon}\mathrm{FPR} + \delta$ it gives a concrete ceiling at $\mathrm{FPR} = 10^{-3}$ &mdash; worked numerically on the slides, including the $\varepsilon$ at which the ceiling goes vacuous.</p>
+<p><strong>Proposition 5 and Corollary 3</strong> explain the graveyard of output-side defenses in one move. Perturbing the reported score is a channel applied after the model; by data processing it cannot increase total variation, so it cannot reduce the optimal adversary's advantage below what the underlying model already leaks. MemGuard is the worked instance: it moves the confidence vector, not the likelihood ratio, and the label-only attack walks around it.</p>
+
+<h2><span class="pill">§7</span> Beyond classification &mdash; diffusion models</h2>
+<p>There is no single loss, so <strong>Definition 11</strong> fixes a timestep and uses the per-timestep denoising error $\|\varepsilon - \varepsilon_\theta(\sqrt{\bar\alpha_t}x_0 + \sqrt{1-\bar\alpha_t}\varepsilon, t)\|_2^2$ as the statistic. Matsumoto et al. measure AUC against $t$ and find an interior peak: $t = 350$ under the cosine schedule and $t = 200$ under the linear one, both at $\bar\alpha_t \approx 0.7$. The two-endpoint explanation &mdash; too easy near $t=0$, pure noise near $t=T$ &mdash; is labelled intuition on the slides; the reported AUCs are modest, and the shape of the curve is the finding, not its height.</p>
+
+<h2><span class="pill">§8</span> Synthesis</h2>
+<p>Every attack in the series is the same estimator:</p>
+<p style="text-align:center">$\hat\Lambda(z) = \hat p(\phi(z) \mid z \in D, \mathcal{C}) \big/ \hat p(\phi(z) \mid z \notin D, \mathcal{C})$</p>
 <table>
-  <tr><th>Attack</th><th>Shadows</th><th>Calibration</th><th>TPR@0.1%FPR (CIFAR-10)</th></tr>
-  <tr><td>Threshold (Yeom)</td><td>0</td><td>None</td><td>~0.1%</td></tr>
-  <tr><td>Shadow class (Shokri)</td><td>10–100</td><td>Global</td><td>~0.5%</td></tr>
-  <tr><td>RMIA</td><td>2–8</td><td>Population rank</td><td>~9%</td></tr>
-  <tr><td>LiRA (offline)</td><td>64–256</td><td>Per-example Gaussian</td><td>~10%</td></tr>
+  <tr><th>Attack</th><th>Statistic $\phi$</th><th>Conditioning $\mathcal{C}$</th><th>How the densities are fitted</th></tr>
+  <tr><td>Loss threshold</td><td>Loss</td><td>None</td><td>One global scalar</td></tr>
+  <tr><td>Shadow classifier</td><td>Confidence vector</td><td>Class label</td><td>Learned discriminator</td></tr>
+  <tr><td>Population (Attack P)</td><td>Loss</td><td>Target model</td><td>Empirical, over population records</td></tr>
+  <tr><td>Reference (Attack R)</td><td>Loss</td><td>The record</td><td>Empirical, over reference models</td></tr>
+  <tr><td>LiRA</td><td>Logit-scaled loss</td><td>The record</td><td>Two fitted Gaussians</td></tr>
+  <tr><td>RMIA</td><td>Pairwise ratio</td><td>The record + population</td><td>Rank, no fit</td></tr>
+  <tr><td>Label-only</td><td>Boundary distance</td><td>The record</td><td>Threshold from a shadow model</td></tr>
+  <tr><td>Diffusion</td><td>Per-timestep error</td><td>The record + timestep</td><td>Per-example calibration</td></tr>
 </table>
 
 <h2>Three things to remember</h2>
 <ol>
-  <li><strong>Per-example calibration is the entire game.</strong> A global threshold cannot distinguish a memorized outlier from an easy non-member.</li>
-  <li><strong>Evaluate at low FPR.</strong> Balanced accuracy is the wrong number for any threat model auditors actually care about.</li>
-  <li><strong>DP-SGD is still the only formal defense.</strong> Everything else loses to an adaptive attacker.</li>
+  <li><strong>Per-example calibration is the whole game.</strong> A global threshold cannot tell a memorised outlier from an easy non-member &mdash; Proposition 1 says so, and says it exactly where the low-FPR regime lives.</li>
+  <li><strong>Richer conditioning helps only at the population level.</strong> Theorem 2 compares optimal tests; in finite samples a cheaper conditioning set with a better-estimated density can win, which is what RMIA exploits.</li>
+  <li><strong>Only training-time defenses can work.</strong> Anything applied to the output is post-processing, and Corollary 3 says post-processing cannot lower the optimal adversary's advantage.</li>
 </ol>
 
-<h2>Bridge to Lecture 5</h2>
-<p>The LiRA recipe — "train many shadow models, fit per-example densities" — collapses for large language models. Pre-training a single 7B-parameter LLM costs millions of dollars; 256 shadows is impossible. Lecture 5 builds MIA techniques engineered around that constraint: shadow-free (neighbourhood, self-prompt, context-aware) and token-weighted (InfoRMIA).</p>
+<h2>Bridge to the next deck</h2>
+<p>The recipe &mdash; train a shadow population, fit per-example densities &mdash; has a cost that scales with the target model. For a multi-billion-parameter language model no one can train the shadows, so the next deck rebuilds calibration without them: neighbourhood, self-prompt and context-aware constructions, token-weighted scores, and the empirical-wall results that question whether the signal is there at all.</p>
 
 </body>
 </html>

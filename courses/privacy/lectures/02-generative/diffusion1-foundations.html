@@ -10,6 +10,16 @@
 <script defer src="../../../../reference/katex/katex.min.js"></script>
 <script defer src="../../../../reference/katex/contrib/auto-render.min.js"
   onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.d1-fig { position: relative; width: fit-content; margin: 12px auto 0; }
+.d1-fig .lab { position: absolute; font-size: 1.15rem; color: var(--charcoal); transform: translate(-50%, -50%); white-space: nowrap; }
+.d1-fig .lab.blue { color: var(--yonsei-blue); font-weight: 600; }
+.d1-fig .lab.red { color: var(--warn); font-weight: 600; }
+.d1-fig .lab.green { color: var(--success); font-weight: 600; }
+.d1-chain { display: flex; justify-content: center; align-items: center; gap: 14px; margin: 18px 0 6px; font-size: 1.4rem; color: var(--charcoal); }
+.d1-chain .arr { color: var(--gray-text); }
+.d1-chain .arr.focus { color: var(--yonsei-blue); font-weight: 600; }
+</style>
 </head>
 <body data-brand-logo="../../../../reference/kor-eng2.png">
 
@@ -59,7 +69,7 @@
       <div class="toc-num">04</div>
       <div class="toc-rule"></div>
       <div>
-        <div class="toc-label">Score and Tweedie</div>
+        <div class="toc-label">Score &amp; Tweedie</div>
         <div class="toc-sub">Learning the score via denoising</div>
       </div>
     </div>
@@ -80,15 +90,49 @@
 <div class="slide">
   <h2>Realistic Is Not Enough</h2>
   <div class="divider"></div>
-  <p>One-photo generator: realistic, useless.</p>
-  <p>Good models need both:</p>
+  <p>One-photo generator: realistic, useless. Two requirements:</p>
   <ul>
     <li><strong>Realism</strong>: plausible samples</li>
     <li><strong>Diversity</strong>: match data spread (race, age, pose, $\ldots$)</li>
   </ul>
+  <div class="d1-fig">
+    <svg width="700" height="148" viewBox="0 0 700 148">
+      <rect x="60" y="12" width="48" height="48" rx="4" fill="#003876"/>
+      <rect x="126" y="12" width="48" height="48" rx="4" fill="#003876"/>
+      <rect x="192" y="12" width="48" height="48" rx="4" fill="#003876"/>
+      <rect x="258" y="12" width="48" height="48" rx="4" fill="#003876"/>
+      <rect x="324" y="12" width="48" height="48" rx="4" fill="#003876"/>
+      <rect x="60" y="82" width="48" height="48" rx="4" fill="#001f3f"/>
+      <rect x="126" y="82" width="48" height="48" rx="4" fill="#3d6fa5"/>
+      <rect x="192" y="82" width="48" height="48" rx="4" fill="#8fb3d0"/>
+      <rect x="258" y="82" width="48" height="48" rx="4" fill="#c9dcea"/>
+      <rect x="324" y="82" width="48" height="48" rx="4" fill="#5b8db8"/>
+      <text x="400" y="42" font-size="18" fill="#d94040" font-weight="600">realism only</text>
+      <text x="400" y="112" font-size="18" fill="#2e8b57" font-weight="600">realism + diversity</text>
+    </svg>
+  </div>
   <div class="highlight">
     <p>Learn the <strong>distribution</strong> $P_X$, not isolated points.</p>
   </div>
+</div>
+
+<!-- SLIDE: Mode collapse picture -->
+<div class="slide">
+  <h2>Mode Collapse in One Picture</h2>
+  <div class="divider"></div>
+  <p>Failure mode: all model mass on one plausible point.</p>
+  <div class="d1-fig">
+    <svg width="875" height="294" viewBox="0 0 700 235">
+      <line x1="40" y1="200" x2="670" y2="200" stroke="#666" stroke-width="1.5"/>
+      <path d="M 60 196 C 120 190, 140 70, 195 70 C 250 70, 270 160, 340 160 C 410 160, 430 55, 500 55 C 570 55, 610 190, 660 196" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <line x1="500" y1="196" x2="500" y2="78" stroke="#d94040" stroke-width="5"/>
+      <polygon points="500,60 491,82 509,82" fill="#d94040"/>
+    </svg>
+    <span class="lab blue" style="left:244px; top:56px;">$P_X$: two modes</span>
+    <span class="lab red" style="left:625px; top:40px;">$P_\theta$: one point</span>
+    <span class="lab" style="left:425px; top:278px;">samples realistic, spread lost</span>
+  </div>
+  <p>Realism alone cannot detect this: distribution matching can.</p>
 </div>
 
 <!-- SLIDE: Sampling is non-trivial (Cauchy) -->
@@ -97,20 +141,82 @@
   <div class="divider"></div>
   <p>Closed-form density does not imply easy sampling.</p>
   <p><strong>Cauchy</strong> with scale $\gamma &gt; 0$:</p>
-  <div class="math-block">$$f(x) = \frac{1}{\pi}\,\frac{\gamma}{x^2+\gamma^2}.$$</div>
-  <p>How do we draw $X \sim f$ from this formula alone?</p>
-  <p><strong>Exercise.</strong> Verify $\int_{-\infty}^{\infty} f(x)\,dx = 1$.</p>
+  <div class="math-block" style="margin:8px 0">$$f(x) = \frac{1}{\pi}\,\frac{\gamma}{x^2+\gamma^2}.$$</div>
+  <div class="d1-fig">
+    <svg width="660" height="190" viewBox="0 0 660 190">
+      <line x1="40" y1="128" x2="620" y2="128" stroke="#666" stroke-width="1.5"/>
+      <path d="M 50 126 C 160 124, 240 36, 320 36 C 400 36, 480 124, 600 126" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <text x="180" y="154" font-size="22" fill="#d94040" font-weight="700" text-anchor="middle">?</text>
+      <text x="255" y="154" font-size="22" fill="#d94040" font-weight="700" text-anchor="middle">?</text>
+      <text x="320" y="154" font-size="22" fill="#d94040" font-weight="700" text-anchor="middle">?</text>
+      <text x="385" y="154" font-size="22" fill="#d94040" font-weight="700" text-anchor="middle">?</text>
+      <text x="460" y="154" font-size="22" fill="#d94040" font-weight="700" text-anchor="middle">?</text>
+      <text x="320" y="182" font-size="17" fill="#d94040" text-anchor="middle">a curve is not a sampler</text>
+    </svg>
+  </div>
 </div>
 
 <!-- SLIDE: Inverse transform sampling -->
 <div class="slide">
   <h2>Inverse Transform Sampling (1D)</h2>
   <div class="divider"></div>
-  <p>Let $F_X$ be the CDF, $U \sim \text{Unif}[0,1]$. Then:</p>
-  <div class="math-block">$$\Pr\bigl(F_X^{-1}(U)\leq x\bigr) = \Pr\bigl(U \leq F_X(x)\bigr) = F_X(x).$$</div>
-  <p>So $F_X^{-1}(U) \sim f_X$.</p>
-  <p>Generate $U$ via fair coin flips:</p>
-  <div class="math-block">$$U \approx 0.U_1 U_2 \cdots U_n\,{}_{(2)},\quad U_i \sim \text{Bernoulli}(\tfrac{1}{2}).$$</div>
+  <div class="card">
+    <h3>Proposition (inverse-transform sampling).</h3>
+    <p>$F_X$ continuous, strictly increasing; $U \sim \mathrm{Unif}[0,1]$. Then:</p>
+    <div class="math-block">$$F_X^{-1}(U) \;\stackrel{(d)}{=}\; X.$$</div>
+  </div>
+  <p><strong>Proof.</strong> $\Pr\bigl(F_X^{-1}(U)\leq x\bigr) = \Pr\bigl(U \leq F_X(x)\bigr) = F_X(x)$. $\blacksquare$</p>
+  <p class="muted">One uniform draw + one inverse CDF = one exact sample.</p>
+</div>
+
+<!-- SLIDE: Inverse transform picture -->
+<div class="slide">
+  <h2>Inverse Transform &mdash; the Picture</h2>
+  <div class="divider"></div>
+  <div class="d1-fig">
+    <svg width="864" height="360" viewBox="0 0 720 300">
+      <line x1="110" y1="30" x2="110" y2="260" stroke="#666" stroke-width="1.5"/>
+      <line x1="110" y1="260" x2="690" y2="260" stroke="#666" stroke-width="1.5"/>
+      <line x1="110" y1="50" x2="650" y2="50" stroke="#999" stroke-width="1" stroke-dasharray="3,5"/>
+      <path d="M 120 255 C 260 248, 300 160, 380 140 C 460 120, 500 60, 660 52" fill="none" stroke="#003876" stroke-width="3"/>
+      <line x1="110" y1="119" x2="435" y2="119" stroke="#d94040" stroke-width="2" stroke-dasharray="6,5"/>
+      <line x1="435" y1="119" x2="435" y2="260" stroke="#d94040" stroke-width="2" stroke-dasharray="6,5"/>
+      <circle cx="110" cy="119" r="5" fill="#d94040"/>
+      <circle cx="435" cy="119" r="5" fill="#003876"/>
+      <circle cx="435" cy="260" r="5" fill="#003876"/>
+    </svg>
+    <span class="lab" style="left:102px; top:60px;">$1$</span>
+    <span class="lab" style="left:102px; top:312px;">$0$</span>
+    <span class="lab red" style="left:90px; top:143px;">$u$</span>
+    <span class="lab blue" style="left:720px; top:102px;">$F_X$</span>
+    <span class="lab blue" style="left:522px; top:341px;">$x = F_X^{-1}(u)$</span>
+  </div>
+  <p>Draw the height uniformly; read the sample off the horizontal axis.</p>
+</div>
+
+<!-- SLIDE: Cauchy worked example -->
+<div class="slide">
+  <h2>Example &mdash; Sampling the Cauchy</h2>
+  <div class="divider"></div>
+  <p>Integrate the density: closed-form CDF.</p>
+  <div class="math-block">$$F(x) \;=\; \tfrac{1}{2} + \tfrac{1}{\pi}\,\arctan\!\bigl(\tfrac{x}{\gamma}\bigr).$$</div>
+  <p>Solve $F(x) = u$: explicit inverse.</p>
+  <div class="math-block">$$X \;=\; \gamma\,\tan\!\bigl(\pi\,(U - \tfrac{1}{2})\bigr) \;\sim\; f.$$</div>
+  <p>Numeric check: $U = 0.75 \Rightarrow X = \gamma\tan(\pi/4) = \gamma$.</p>
+  <p class="muted">Heavy tails for free: $U \to 1$ sends $X \to \infty$.</p>
+</div>
+
+<!-- SLIDE: Uniform from coin flips -->
+<div class="slide">
+  <h2>Where the Uniform Comes From</h2>
+  <div class="divider"></div>
+  <p>Binary expansion of fair bits:</p>
+  <div class="math-block" style="margin:6px 0">$$U = \textstyle\sum_{i=1}^{\infty} U_i\,2^{-i},\quad U_i \stackrel{\text{i.i.d.}}{\sim} \mathrm{Bernoulli}(\tfrac{1}{2}) \;\Rightarrow\; U \sim \mathrm{Unif}[0,1].$$</div>
+  <p>Truncation error after $n$ bits:</p>
+  <div class="math-block" style="margin:6px 0">$$\Bigl|\,U - \textstyle\sum_{i=1}^{n} U_i 2^{-i}\Bigr| \;\leq\; \textstyle\sum_{i=n+1}^{\infty} 2^{-i} \;=\; 2^{-n}.$$</div>
+  <div class="highlight">
+    <p>32 flips: error below $2.4 \times 10^{-10}$. Coin flips suffice for any 1D law.</p>
+  </div>
 </div>
 
 <!-- SLIDE: Curse of dimensionality -->
@@ -119,10 +225,44 @@
   <div class="divider"></div>
   <ul>
     <li>For $\mathbf{X} = (X_1, \ldots, X_d)$: no scalar CDF to invert.</li>
-    <li>Rejection and MCMC scale poorly with $d$.</li>
-    <li>Most generative models do not learn density.</li>
-    <li>They learn a <strong>transformation</strong> from easy noise to data.</li>
+    <li>Rejection from a box, target unit ball: accept rate $\pi^{d/2}/(2^d\,\Gamma(\tfrac{d}{2}+1))$.</li>
   </ul>
+  <div class="d1-fig">
+    <svg width="760" height="240" viewBox="0 0 760 240" role="img" aria-label="Acceptance rate of rejection sampling collapsing with dimension">
+      <line x1="60" y1="196" x2="700" y2="196" stroke="#666" stroke-width="1.5"/>
+      <rect x="77" y="44" width="66" height="152" fill="#003876"/>
+      <rect x="207" y="48" width="66" height="148" fill="#003876"/>
+      <rect x="337" y="58" width="66" height="138" fill="#003876"/>
+      <rect x="467" y="94" width="66" height="102" fill="#003876"/>
+      <rect x="597" y="188" width="66" height="8" fill="#d94040"/>
+      <text x="110" y="34" font-size="17" fill="#333" text-anchor="middle">0.79</text>
+      <text x="240" y="38" font-size="17" fill="#333" text-anchor="middle">0.52</text>
+      <text x="370" y="48" font-size="17" fill="#333" text-anchor="middle">0.16</text>
+      <text x="500" y="84" font-size="17" fill="#333" text-anchor="middle">0.0025</text>
+      <text x="630" y="178" font-size="17" fill="#d94040" text-anchor="middle">2.5&#215;10<tspan font-size="12" dy="-7">&#8722;8</tspan></text>
+      <text x="110" y="222" font-size="18" fill="#003876" font-weight="600" text-anchor="middle">d = 2</text>
+      <text x="240" y="222" font-size="18" fill="#003876" font-weight="600" text-anchor="middle">d = 3</text>
+      <text x="370" y="222" font-size="18" fill="#003876" font-weight="600" text-anchor="middle">d = 5</text>
+      <text x="500" y="222" font-size="18" fill="#003876" font-weight="600" text-anchor="middle">d = 10</text>
+      <text x="630" y="222" font-size="18" fill="#d94040" font-weight="600" text-anchor="middle">d = 20</text>
+    </svg>
+  </div>
+  <p class="muted">Bar height on a log scale. Images live at $d \sim 10^5$.</p>
+</div>
+
+<!-- SLIDE: Learn a map -->
+<div class="slide">
+  <h2>Learn a Map, Not a Density</h2>
+  <div class="divider"></div>
+  <p>Pushforward: model = tractable prior + learned map.</p>
+  <div class="math-block">$$P_\theta := (G_\theta)_{*}\pi,\qquad \text{goal: } P_\theta \approx P_X.$$</div>
+  <div class="diagram-flow" style="justify-content:center;">
+    <div class="diagram-box">$Z \sim \pi$<br>easy noise</div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box filled">$G_\theta$</div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box">$\tilde{X} \sim P_\theta$<br>samples</div>
+  </div>
   <div class="highlight">
     <p><strong>Diffusion</strong>: gradually corrupt data into noise, then <strong>reverse</strong> at generation time.</p>
   </div>
@@ -147,16 +287,55 @@
     X^{(0)} &= X, \\
     X^{(n)} &= X^{(n-1)} + Z^{(n)},\qquad Z^{(n)} \sim \mathcal{N}(0,\sigma^2)\ \text{i.i.d.}
   \end{aligned}$$</div>
+  <div class="d1-chain">
+    <span>$X^{(0)}$</span>
+    <span class="arr">$\xrightarrow{\;+Z^{(1)}\;}$</span>
+    <span>$X^{(1)}$</span>
+    <span class="arr">$\xrightarrow{\;+Z^{(2)}\;}$</span>
+    <span>$X^{(2)}$</span>
+    <span class="arr">$\cdots$</span>
+    <span class="arr">$\xrightarrow{\;+Z^{(N)}\;}$</span>
+    <span>$X^{(N)}$</span>
+  </div>
   <p>Variance grows each step: <strong>variance exploding</strong> (VE).</p>
+</div>
+
+<!-- SLIDE: Noising in pictures -->
+<div class="slide">
+  <h2>Noising in Pictures</h2>
+  <div class="divider"></div>
+  <div class="d1-fig">
+    <svg width="1026" height="310" viewBox="0 0 760 230">
+      <line x1="60" y1="170" x2="240" y2="170" stroke="#666" stroke-width="1.5"/>
+      <line x1="290" y1="170" x2="470" y2="170" stroke="#666" stroke-width="1.5"/>
+      <line x1="520" y1="170" x2="700" y2="170" stroke="#666" stroke-width="1.5"/>
+      <path d="M 70 168 C 95 165, 100 60, 118 60 C 136 60, 138 150, 150 150 C 162 150, 164 55, 182 55 C 200 55, 210 164, 230 168" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <path d="M 300 168 C 322 162, 330 92, 352 92 C 370 92, 378 128, 390 128 C 402 128, 406 88, 420 88 C 440 88, 445 160, 462 168" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <path d="M 530 166 C 560 160, 580 120, 610 120 C 640 120, 660 160, 690 166" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <line x1="245" y1="110" x2="278" y2="110" stroke="#d94040" stroke-width="2.5"/>
+      <polygon points="286,110 274,104 274,116" fill="#d94040"/>
+      <line x1="475" y1="110" x2="508" y2="110" stroke="#d94040" stroke-width="2.5"/>
+      <polygon points="516,110 504,104 504,116" fill="#d94040"/>
+    </svg>
+    <span class="lab blue" style="left:202px; top:270px;">$X^{(0)}$</span>
+    <span class="lab blue" style="left:520px; top:270px;">$X^{(n)}$</span>
+    <span class="lab blue" style="left:824px; top:270px;">$X^{(N)}$</span>
+    <span class="lab red" style="left:358px; top:116px;">$+Z$</span>
+    <span class="lab red" style="left:668px; top:116px;">$+Z$</span>
+  </div>
+  <p>Each step blurs the density; structure washes out into a wide Gaussian.</p>
 </div>
 
 <!-- SLIDE: Single-step corruption -->
 <div class="slide">
   <h2>$n$ Steps in One Shot</h2>
   <div class="divider"></div>
-  <p>Sum of independent Gaussians is Gaussian:</p>
-  <div class="math-block">$$X^{(n)} \stackrel{(d)}{=} X^{(0)} + \sqrt{n}\,Z,\quad Z \sim \mathcal{N}(0,\sigma^2).$$</div>
-  <p>Pick $n$, sample $Z$, jump directly to $X^{(n)}$.</p>
+  <p>Increments are independent Gaussians; variances add:</p>
+  <div class="math-block">$$\begin{aligned}
+    X^{(n)} - X^{(0)} &= \textstyle\sum_{k=1}^{n} Z^{(k)} \;\sim\; \mathcal{N}(0,\, n\sigma^2) \\
+    \Rightarrow\quad X^{(n)} &\stackrel{(d)}{=} X^{(0)} + \sqrt{n}\,Z,\qquad Z \sim \mathcal{N}(0,\sigma^2).
+  \end{aligned}$$</div>
+  <p>Pick $n$, sample one $Z$, jump directly to $X^{(n)}$.</p>
   <div class="highlight">
     <p><strong>Training trick</strong>: simulate one transition at a time, never the full chain.</p>
   </div>
@@ -168,9 +347,9 @@
   <div class="divider"></div>
   <p>Let $\mu_0, \sigma_0^2$ be mean and variance of $X^{(0)}$. By linearity:</p>
   <div class="math-block">$$\mathbb{E}[X^{(N)}] = \mu_0,\qquad \mathrm{Var}(X^{(N)}) = \sigma_0^2 + N\sigma^2.$$</div>
-  <p>For large $N$, the second term $N\sigma^2$ dominates. Say:</p>
+  <p>Large $N$: the term $N\sigma^2$ swamps $\sigma_0^2$. Gaussian approximation:</p>
   <div class="math-block">$$X^{(N)} \;\sim\; \mathcal{N}(\mu_0,\; \sigma_0^2 + N\sigma^2).$$</div>
-  <p><em>(Informal for VE; formal MGF proof in Lecture 2 for VP.)</em></p>
+  <p class="muted">Heuristic for VE; a variance-preserving chain makes this exact (MGF argument).</p>
 </div>
 
 <!-- SLIDE: Reverse process goal -->
@@ -178,11 +357,15 @@
   <h2>Goal: Reverse the Chain</h2>
   <div class="divider"></div>
   <p>Sampling from $\mathcal{N}(\mu_0, \sigma_0^2 + N\sigma^2)$ is trivial. Call it $\tilde{X}^{(N)}$.</p>
-  <p>Want a reverse rule:</p>
-  <div class="math-block">$$\begin{aligned}
-    &\tilde{X}^{(N)} \to \tilde{X}^{(N-1)} \to \cdots \to \tilde{X}^{(0)}, \\
-    &\tilde{X}^{(0)} \stackrel{(d)}{\approx} X.
-  \end{aligned}$$</div>
+  <p>Want a reverse rule, run in generation order:</p>
+  <div class="d1-chain">
+    <span>$\tilde{X}^{(N)}$</span>
+    <span class="arr focus">$\xrightarrow{\;\text{denoise}\;}$</span>
+    <span>$\tilde{X}^{(N-1)}$</span>
+    <span class="arr">$\rightarrow \cdots \rightarrow$</span>
+    <span>$\tilde{X}^{(0)}$</span>
+  </div>
+  <div class="math-block">$$\text{target: }\; \tilde{X}^{(0)} \stackrel{(d)}{\approx} X.$$</div>
   <div class="highlight">
     <p>Need <strong>reverse conditional</strong> $P_{X^{(n-1)}\,|\,X^{(n)}}$ at every step.</p>
   </div>
@@ -202,9 +385,22 @@
 <div class="slide">
   <h2>Setup</h2>
   <div class="divider"></div>
-  <p>Drop indices: $X = \tilde{X}^{(n-1)}$, $Z = \tilde{Z}^{(n)}$, $Y = \tilde{X}^{(n)}$.</p>
-  <div class="math-block">$$Y = X + Z,\qquad Y\,|\,X \sim \mathcal{N}(X, \sigma^2).$$</div>
-  <p>Want the reverse conditional $X\,|\,Y$.</p>
+  <p>Focus on one backward edge of the chain:</p>
+  <div class="d1-chain">
+    <span>$\tilde{X}^{(N)}$</span>
+    <span class="arr">$\rightarrow \cdots \rightarrow$</span>
+    <span>$\tilde{X}^{(n)}$</span>
+    <span class="arr focus">$\xrightarrow{\;\text{this step}\;}$</span>
+    <span>$\tilde{X}^{(n-1)}$</span>
+    <span class="arr">$\rightarrow \cdots \rightarrow$</span>
+    <span>$\tilde{X}^{(0)}$</span>
+  </div>
+  <p>Rename the endpoints and drop indices:</p>
+  <div class="math-block">$$\begin{aligned}
+    X &:= \tilde{X}^{(n-1)},\qquad Z := \tilde{Z}^{(n)},\qquad Y := \tilde{X}^{(n)}, \\
+    Y &= X + Z,\qquad Y\,|\,X \sim \mathcal{N}(X, \sigma^2).
+  \end{aligned}$$</div>
+  <p>Want the reverse conditional $X\,|\,Y$, in the regime $\sigma^2 \ll 1$.</p>
 </div>
 
 <!-- SLIDE: Proof outline -->
@@ -225,9 +421,33 @@
 <div class="slide">
   <h2>Step 1: Taylor Expand $P_X$</h2>
   <div class="divider"></div>
-  <p>Likelihood mass concentrates within $O(\sigma)$ of $y$, so $x$ is close to $y$:</p>
-  <div class="math-block">$$P_X(x) \;\approx\; P_X(y) + P'_X(y)(x-y).$$</div>
-  <p>Zeroth order: $P_X(y)$. Linear correction: $P'_X(y)(x-y)$.</p>
+  <p>Assume $P_X \in C^2$. Expand around the observed $y$:</p>
+  <div class="math-block">$$P_X(x) \;=\; P_X(y) + P'_X(y)(x-y) + O\bigl((x-y)^2\bigr).$$</div>
+  <p>Gaussian likelihood confines $x$ to $|x - y| \lesssim \sigma$.</p>
+  <div class="highlight">
+    <p><strong>Key trick.</strong> Remainder $O((x-y)^2) = O(\sigma^2)$: drop it, keep the linear term.</p>
+  </div>
+</div>
+
+<!-- SLIDE: Local expansion picture -->
+<div class="slide">
+  <h2>Why Local Expansion Works</h2>
+  <div class="divider"></div>
+  <div class="d1-fig">
+    <svg width="950" height="338" viewBox="0 0 760 270">
+      <rect x="380" y="40" width="120" height="180" fill="#f4f6f9"/>
+      <line x1="60" y1="220" x2="700" y2="220" stroke="#666" stroke-width="1.5"/>
+      <path d="M 80 205 C 200 190, 320 80, 440 110 C 560 140, 620 190, 690 200" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <line x1="320" y1="80" x2="580" y2="145" stroke="#d94040" stroke-width="2" stroke-dasharray="7,5"/>
+      <line x1="440" y1="110" x2="440" y2="220" stroke="#999" stroke-width="1.5" stroke-dasharray="4,4"/>
+      <circle cx="440" cy="110" r="5" fill="#003876"/>
+    </svg>
+    <span class="lab" style="left:550px; top:305px;">$y$</span>
+    <span class="lab blue" style="left:188px; top:206px;">$P_X$</span>
+    <span class="lab red" style="left:781px; top:163px;">tangent at $y$</span>
+    <span class="lab" style="left:550px; top:33px;">$|x - y| \lesssim \sigma$</span>
+  </div>
+  <p>Zoom to the noise scale: any smooth density looks linear.</p>
 </div>
 
 <!-- SLIDE: Approximate P_Y -->
@@ -241,7 +461,9 @@
     &amp;= P_X(y) + P'_X(y)\,\mathbb{E}_{X\sim\mathcal{N}(y,\sigma^2)}[X-y] \\
     &amp;= P_X(y).
   \end{aligned}$$</div>
-  <p>Linear term vanishes by Gaussian symmetry.</p>
+  <div class="highlight">
+    <p><strong>Key trick.</strong> Odd Gaussian moment vanishes: $\mathbb{E}[X - y] = 0$ under $\mathcal{N}(y,\sigma^2)$.</p>
+  </div>
 </div>
 
 <!-- SLIDE: Substitute into Bayes -->
@@ -254,25 +476,36 @@
     &amp;\approx P_{Y|X}(y\,|\,x)\!\left(1 + \tfrac{P'_X(y)}{P_X(y)}(x-y)\right) \\
     &amp;\approx \tfrac{1}{\sqrt{2\pi\sigma^2}}\,e^{-\frac{(x-y)^2}{2\sigma^2}}\,\exp\!\left(\tfrac{P'_X(y)}{P_X(y)}(x-y)\right).
   \end{aligned}$$</div>
-  <p>Replace $1+a$ by $e^a$ (first-order anyway).</p>
+  <div class="highlight">
+    <p><strong>Key trick.</strong> $1 + a \approx e^{a}$: agree to first order; error stays $O(\sigma^2)$.</p>
+  </div>
 </div>
 
-<!-- SLIDE: Complete the square -->
+<!-- SLIDE: Step 4 merge exponents -->
 <div class="slide">
-  <h2>Step 4: Complete the Square</h2>
+  <h2>Step 4: Merge the Exponents</h2>
   <div class="divider"></div>
-  <p>Merge exponentials. The quadratic becomes:</p>
-  <div class="math-block">$$(x-y)^2 - 2\sigma^2\tfrac{P'_X(y)}{P_X(y)}(x-y) + \!\left(\sigma^2\tfrac{P'_X(y)}{P_X(y)}\right)^{\!2} = \!\left(x - y - \sigma^2\tfrac{P'_X(y)}{P_X(y)}\right)^{\!2}.$$</div>
-  <p>Recover a Gaussian in $x$:</p>
-  <div class="math-block">$$P_{X|Y}(x\,|\,y) \approx \tfrac{1}{\sqrt{2\pi\sigma^2}}\exp\!\left(-\tfrac{1}{2\sigma^2}\!\left(x-y-\sigma^2\tfrac{P'_X(y)}{P_X(y)}\right)^{\!2}\right).$$</div>
+  <p>Shorthand for the log-derivative:</p>
+  <div class="math-block">$$\rho \;:=\; \frac{P'_X(y)}{P_X(y)} \;=\; \partial_y \log P_X(y).$$</div>
+  <p>Combine Gaussian and correction into one exponent:</p>
+  <div class="math-block">$$-\frac{(x-y)^2}{2\sigma^2} + \rho\,(x-y) \;=\; -\frac{1}{2\sigma^2}\Bigl[(x-y)^2 - 2\sigma^2\rho\,(x-y)\Bigr].$$</div>
+</div>
+
+<!-- SLIDE: Step 4 complete the square -->
+<div class="slide">
+  <h2>Step 4 (continued): Complete the Square</h2>
+  <div class="divider"></div>
+  <p><strong>Key trick.</strong> Add and subtract $(\sigma^2\rho)^2$ inside the bracket:</p>
+  <div class="math-block">$$(x-y)^2 - 2\sigma^2\rho\,(x-y) + (\sigma^2\rho)^2 - (\sigma^2\rho)^2 \;=\; \bigl(x - y - \sigma^2\rho\bigr)^2 - (\sigma^2\rho)^2.$$</div>
+  <p>$(\sigma^2\rho)^2$ is $x$-free: absorbed by normalization.</p>
+  <div class="math-block">$$P_{X|Y}(x\,|\,y) \;\approx\; \tfrac{1}{\sqrt{2\pi\sigma^2}}\exp\!\Bigl(-\tfrac{1}{2\sigma^2}\bigl(x - y - \sigma^2\rho\bigr)^2\Bigr).$$</div>
 </div>
 
 <!-- SLIDE: Proof recap -->
 <div class="slide">
   <h2>Proof Recap</h2>
   <div class="divider"></div>
-  <p>Single chain from Bayes to Gaussian:</p>
-  <div class="math-block">$$\begin{aligned}
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
     P_{X|Y}(x\,|\,y)
       &= \frac{P_{Y|X}(y\,|\,x)\,P_X(x)}{P_Y(y)} \\
       &\stackrel{(1)}{\approx}\; \frac{P_{Y|X}(y\,|\,x)\,\bigl[P_X(y) + P'_X(y)(x-y)\bigr]}{P_Y(y)} \\
@@ -282,12 +515,16 @@
   \end{aligned}$$</div>
 </div>
 
-<!-- SLIDE: Main result -->
+<!-- SLIDE: Main result as theorem -->
 <div class="slide">
-  <h2>Reverse Conditional, Compactly</h2>
+  <h2>Small-Noise Reverse Conditional</h2>
   <div class="divider"></div>
-  <p>Recognise $\dfrac{P'_X(y)}{P_X(y)} = \dfrac{\partial}{\partial y}\log P_X(y)$:</p>
-  <div class="math-block">$$X\,|\,Y \;\stackrel{\text{approx.}}{\sim}\; \mathcal{N}\!\left(Y + \sigma^2\,\tfrac{\partial}{\partial y}\log P_X(Y),\; \sigma^2\right).$$</div>
+  <div class="card">
+    <h3>Theorem (small-noise reverse conditional).</h3>
+    <p>$Y = X + Z$, $Z \sim \mathcal{N}(0,\sigma^2)$ independent, $P_X \in C^2$, $\sigma^2 \ll 1$:</p>
+    <div class="math-block">$$X\,|\,Y = y \;\stackrel{\text{approx.}}{\sim}\; \mathcal{N}\!\bigl(y + \sigma^2\,\partial_y \log P_X(y),\; \sigma^2\bigr).$$</div>
+  </div>
+  <p class="muted">Error $O(\sigma^2)$ in total variation for densities with bounded $C^2$ norm.</p>
   <div class="highlight">
     <p>Small $\sigma^2$: reverse conditional is Gaussian, mean shifted by the <strong>score</strong> $\partial_y \log P_X$.</p>
   </div>
@@ -297,10 +534,35 @@
 <div class="slide">
   <h2>Reverse Sampling Rule</h2>
   <div class="divider"></div>
-  <p>Step 4 result, with $X = \tilde{X}^{(n-1)}$ and $Y = \tilde{X}^{(n)}$:</p>
+  <p>Theorem, with $X = \tilde{X}^{(n-1)}$ and $Y = \tilde{X}^{(n)}$:</p>
   <div class="math-block">$$X\,|\,Y \;\sim\; \mathcal{N}\!\left(Y + \sigma^2\,\partial_y \log P_X(Y),\; \sigma^2\right).$$</div>
   <p>Substitute $X \to \tilde{x}^{(n-1)}$, $Y \to \tilde{x}^{(n)}$:</p>
   <div class="math-block">$$\tilde{x}^{(n-1)} = \tilde{x}^{(n)} + \sigma^2\,\partial \log P_{X^{(n)}}\!\bigl(\tilde{x}^{(n)}\bigr) + \tilde{z}^{(n)},\quad \tilde{z}^{(n)} \sim \mathcal{N}(0,\sigma^2).$$</div>
+</div>
+
+<!-- SLIDE: Score shift picture -->
+<div class="slide">
+  <h2>The Score Shift in a Picture</h2>
+  <div class="divider"></div>
+  <div class="d1-fig">
+    <svg width="988" height="319" viewBox="0 0 760 245">
+      <line x1="60" y1="170" x2="700" y2="170" stroke="#666" stroke-width="1.5"/>
+      <path d="M 80 166 C 140 160, 160 60, 215 60 C 270 60, 290 140, 360 140 C 430 140, 450 50, 520 50 C 590 50, 630 160, 680 166" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <line x1="85" y1="200" x2="118" y2="200" stroke="#005baa" stroke-width="2.5"/>
+      <polygon points="126,200 114,194 114,206" fill="#005baa"/>
+      <line x1="145" y1="200" x2="178" y2="200" stroke="#005baa" stroke-width="2.5"/>
+      <polygon points="186,200 174,194 174,206" fill="#005baa"/>
+      <line x1="335" y1="200" x2="302" y2="200" stroke="#005baa" stroke-width="2.5"/>
+      <polygon points="294,200 306,194 306,206" fill="#005baa"/>
+      <line x1="390" y1="200" x2="423" y2="200" stroke="#005baa" stroke-width="2.5"/>
+      <polygon points="431,200 419,194 419,206" fill="#005baa"/>
+      <line x1="665" y1="200" x2="632" y2="200" stroke="#005baa" stroke-width="2.5"/>
+      <polygon points="624,200 636,194 636,206" fill="#005baa"/>
+    </svg>
+    <span class="lab blue" style="left:195px; top:62px;">$P_{X^{(n)}}$</span>
+    <span class="lab blue" style="left:494px; top:296px;">$s(x) = \partial_x \log P_{X^{(n)}}(x)$: points uphill</span>
+  </div>
+  <p>Reverse step drifts by $\sigma^2 s$, toward data modes, then adds fresh noise.</p>
 </div>
 
 <!-- SLIDE: Why not subtract noise -->
@@ -311,7 +573,7 @@
   <p>Gaussian symmetry: $-Z \stackrel{(d)}{=} Z$. Independent noises add variance:</p>
   <div class="math-block">$$\mathrm{Var}\bigl(\tilde{x}^{(n)} - \tilde{z}^{(n)}\bigr) = \mathrm{Var}\bigl(\tilde{x}^{(n)}\bigr) + \sigma^2.$$</div>
   <div class="highlight">
-    <p>Variance <strong>grows</strong> — corrupts further, not denoise.</p>
+    <p>Variance <strong>grows</strong>: corrupts further, does not denoise.</p>
   </div>
 </div>
 
@@ -319,6 +581,7 @@
 <div class="slide">
   <h2>Estimation vs Distribution Matching</h2>
   <div class="divider"></div>
+  <p>Reverse process is <strong>distribution matching</strong>, not denoising.</p>
   <div class="grid-2">
     <div>
       <h3>Estimation (MMSE)</h3>
@@ -331,9 +594,63 @@
       <p>Need fresh randomness to restore the spread.</p>
     </div>
   </div>
-  <div class="highlight">
-    <p>Reverse process is <strong>distribution matching</strong>, not denoising.</p>
+  <div class="d1-fig">
+    <svg width="740" height="235" viewBox="0 0 740 235">
+      <line x1="50" y1="180" x2="355" y2="180" stroke="#666" stroke-width="1.5"/>
+      <line x1="400" y1="180" x2="705" y2="180" stroke="#666" stroke-width="1.5"/>
+      <path d="M 60 178 C 115 175, 135 72, 200 72 C 265 72, 285 175, 345 178" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <path d="M 148 178 C 178 176, 183 38, 200 38 C 217 38, 222 176, 252 178" fill="none" stroke="#d94040" stroke-width="2.5"/>
+      <path d="M 410 178 C 465 175, 485 72, 550 72 C 615 72, 635 175, 695 178" fill="none" stroke="#2e8b57" stroke-width="5"/>
+      <path d="M 410 178 C 465 175, 485 72, 550 72 C 615 72, 635 175, 695 178" fill="none" stroke="#003876" stroke-width="3" stroke-dasharray="10,11"/>
+      <text x="200" y="212" font-size="17" fill="#d94040" text-anchor="middle">estimate: spread lost</text>
+      <text x="550" y="212" font-size="17" fill="#2e8b57" text-anchor="middle">resample: spread restored</text>
+    </svg>
+    <span class="lab blue" style="left:92px; top:118px;">$P_X$</span>
+    <span class="lab red" style="left:200px; top:22px;">law of $\hat{X}(Y)$</span>
+    <span class="lab green" style="left:550px; top:52px;">$\hat{X}(Y) + \tilde{Z}$</span>
+    <span class="lab blue" style="left:676px; top:100px;">$P_X$ dashed</span>
   </div>
+</div>
+
+<!-- SLIDE: MMSE proposition -->
+<div class="slide">
+  <h2>The MMSE Estimator</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Proposition (MMSE = conditional mean).</h3>
+    <p>$\mathbb{E}[X^2] \lt \infty$. Over all measurable $\hat{X}(\cdot)$:</p>
+    <div class="math-block">$$\arg\min_{\hat{X}}\; \mathbb{E}\bigl[(\hat{X}(Y) - X)^2\bigr] \;=\; \mathbb{E}[X\,|\,Y].$$</div>
+  </div>
+  <p><strong>Plan.</strong> Split the error through $\mathbb{E}[X|Y]$; kill the cross term by the tower property.</p>
+</div>
+
+<!-- SLIDE: MMSE proof -->
+<div class="slide">
+  <h2>Proof &mdash; Orthogonality of the Error</h2>
+  <div class="divider"></div>
+  <p>Insert $\mathbb{E}[X|Y]$ and expand the square:</p>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}\bigl[(\hat{X}(Y) - X)^2\bigr]
+      &= \mathbb{E}\bigl[(\hat{X}(Y) - \mathbb{E}[X|Y])^2\bigr] + \mathbb{E}\bigl[(\mathbb{E}[X|Y] - X)^2\bigr] \\
+      &\quad + 2\,\mathbb{E}\bigl[(\hat{X}(Y) - \mathbb{E}[X|Y])(\mathbb{E}[X|Y] - X)\bigr].
+  \end{aligned}$$</div>
+  <ul>
+    <li><strong>Estimator gap</strong> $\mathbb{E}[(\hat{X}(Y) - \mathbb{E}[X|Y])^2]$: the only $\hat{X}$-dependent piece.</li>
+    <li><strong>Irreducible error</strong> $\mathbb{E}[(\mathbb{E}[X|Y] - X)^2]$: fixed by the noise level.</li>
+    <li><strong>Cross term</strong>: killed next.</li>
+  </ul>
+</div>
+
+<!-- SLIDE: MMSE proof continued -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; Killing the Cross Term</h2>
+  <div class="divider"></div>
+  <div class="highlight">
+    <p><strong>Key trick.</strong> Tower property: condition the cross term on $Y$.</p>
+  </div>
+  <div class="math-block">$$\mathbb{E}\Bigl[(\hat{X}(Y) - \mathbb{E}[X|Y])\,\underbrace{\mathbb{E}\bigl[\mathbb{E}[X|Y] - X \,\big|\, Y\bigr]}_{=\;0}\Bigr] \;=\; 0.$$</div>
+  <p>Remaining: $\mathbb{E}[(\hat{X}(Y) - \mathbb{E}[X|Y])^2] + \mathbb{E}[(\mathbb{E}[X|Y] - X)^2]$.</p>
+  <p>Second term is $\hat{X}$-free; first term $\geq 0$, zero iff $\hat{X}(Y) = \mathbb{E}[X|Y]$. $\blacksquare$</p>
 </div>
 
 <!-- SLIDE: Gaussian example of MMSE mismatch -->
@@ -344,7 +661,7 @@
   <div class="math-block">$$\hat{X}(Y) = \tfrac{\sigma_x^2}{\sigma_x^2 + \sigma_z^2}\,Y \;\sim\;\mathcal{N}\!\left(0,\,\tfrac{\sigma_x^4}{\sigma_x^2+\sigma_z^2}\right).$$</div>
   <p>Variance too small. Add fresh noise to match:</p>
   <div class="math-block">$$\tilde{X} = \mathbb{E}[X\,|\,Y] + \tilde{Z},\quad \tilde{Z} \sim \mathcal{N}\!\left(0,\,\tfrac{\sigma_x^2\,\sigma_z^2}{\sigma_x^2 + \sigma_z^2}\right) \;\Rightarrow\; \tilde{X}\sim\mathcal{N}(0,\sigma_x^2).$$</div>
-  <p><strong>Exercise.</strong> Show MMSE estimator equals $\mathbb{E}[X\,|\,Y]$. <em>Hint:</em> split via $\mathbb{E}[X\,|\,Y]$.</p>
+  <p>Numeric check: $\sigma_x = \sigma_z = 1$ gives $\mathrm{Var}(\hat{X}) = \tfrac{1}{2}$; fresh $\tfrac{1}{2}$ restores $1$.</p>
 </div>
 
 <!-- ====================================================================
@@ -380,8 +697,84 @@
     <div class="math-block">$$\mathbb{E}[X\,|\,Y=y] \;=\; y + \sigma^2\,\tfrac{\partial}{\partial y}\log P_Y(y).$$</div>
   </div>
   <p>Posterior mean of clean $X$ = noisy $y$ + scaled <strong>score of the noisy marginal</strong>.</p>
-  <p><strong>Exercise.</strong> Derive Tweedie from $P_Y(y) = \int P_X(x)\,P_Z(y-x)\,dx$ and $\partial_y P_Y$.</p>
+  <p>Exact identity, no small-$\sigma$ assumption. Proof: differentiate the convolution.</p>
   <div class="cite">Robbins, "An empirical Bayes approach to statistics," Berkeley Symp. 1956.</div>
+</div>
+
+<!-- SLIDE: Tweedie proof outline -->
+<div class="slide">
+  <h2>Tweedie &mdash; Proof Outline</h2>
+  <div class="divider"></div>
+  <p>Target identity:</p>
+  <div class="math-block">$$\sigma^2\,\partial_y \log P_Y(y) \;=\; \mathbb{E}[X\,|\,Y=y] - y.$$</div>
+  <ol>
+    <li><strong>Step 1.</strong> Write $P_Y$ as a convolution with the Gaussian kernel $\varphi_\sigma$.</li>
+    <li><strong>Step 2.</strong> Gaussian derivative identity: $\partial\varphi_\sigma$ = linear factor $\times$ $\varphi_\sigma$.</li>
+    <li><strong>Step 3.</strong> Differentiate $P_Y$ under the integral.</li>
+    <li><strong>Step 4.</strong> Recognize the posterior mean via Bayes; rearrange.</li>
+  </ol>
+</div>
+
+<!-- SLIDE: Tweedie proof 1 -->
+<div class="slide">
+  <h2>Proof &mdash; Differentiate the Convolution</h2>
+  <div class="divider"></div>
+  <p>Marginal as convolution, with $\varphi_\sigma(u) = (2\pi\sigma^2)^{-1/2}\,e^{-u^2/(2\sigma^2)}$:</p>
+  <div class="math-block" style="margin:8px 0">$$P_Y(y) \;=\; \textstyle\int P_X(x)\,\varphi_\sigma(y-x)\,dx.$$</div>
+  <p><strong>Key trick.</strong> Gaussian derivative = linear factor times the same Gaussian:</p>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \partial_y \varphi_\sigma(y-x) &= -\tfrac{y-x}{\sigma^2}\,\varphi_\sigma(y-x) \\
+    \Rightarrow\quad \partial_y P_Y(y) &= -\tfrac{1}{\sigma^2}\textstyle\int (y-x)\,P_X(x)\,\varphi_\sigma(y-x)\,dx.
+  \end{aligned}$$</div>
+</div>
+
+<!-- SLIDE: Tweedie proof 2 -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; Recognize the Posterior Mean</h2>
+  <div class="divider"></div>
+  <p>Split the integral into two pieces:</p>
+  <div class="math-block">$$\begin{aligned}
+    \partial_y P_Y(y)
+      &= -\tfrac{1}{\sigma^2}\Bigl[\,y\,P_Y(y) - \int x\,P_X(x)\,\varphi_\sigma(y-x)\,dx\Bigr] \\
+      &= -\tfrac{1}{\sigma^2}\bigl[\,y\,P_Y(y) - P_Y(y)\,\mathbb{E}[X\,|\,Y=y]\,\bigr].
+  \end{aligned}$$</div>
+  <p><strong>Key trick.</strong> Bayes: $P_{X|Y}(x\,|\,y) = P_X(x)\,\varphi_\sigma(y-x)/P_Y(y)$, so the integral is $P_Y(y)\,\mathbb{E}[X\,|\,Y=y]$.</p>
+  <p>Divide by $P_Y(y)$, rearrange: Tweedie. $\blacksquare$</p>
+</div>
+
+<!-- SLIDE: Tweedie recap -->
+<div class="slide">
+  <h2>Proof Recap &mdash; Tweedie in One Chain</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \sigma^2\,\partial_y \log P_Y(y)
+      &= \sigma^2\,\frac{\partial_y P_Y(y)}{P_Y(y)} \\
+      &\stackrel{\text{(conv.)}}{=}\; \frac{\sigma^2}{P_Y(y)}\int P_X(x)\,\partial_y\varphi_\sigma(y-x)\,dx \\
+      &\stackrel{(\partial\varphi_\sigma)}{=}\; -\frac{1}{P_Y(y)}\int (y-x)\,P_X(x)\,\varphi_\sigma(y-x)\,dx \\
+      &\stackrel{\text{(Bayes)}}{=}\; \mathbb{E}[X\,|\,Y=y] - y.
+  \end{aligned}$$</div>
+  <p>Every equality exact: unlike the reverse conditional, no small-$\sigma$ approximation.</p>
+</div>
+
+<!-- SLIDE: Reading Tweedie -->
+<div class="slide">
+  <h2>Reading Tweedie</h2>
+  <div class="divider"></div>
+  <div class="d1-fig">
+    <svg width="988" height="306" viewBox="0 0 760 235">
+      <line x1="60" y1="160" x2="700" y2="160" stroke="#666" stroke-width="1.5"/>
+      <path d="M 90 156 C 140 150, 155 45, 220 45 C 285 45, 300 150, 350 156" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <line x1="545" y1="130" x2="378" y2="130" stroke="#005baa" stroke-width="3"/>
+      <polygon points="366,130 380,123 380,137" fill="#005baa"/>
+      <circle cx="560" cy="160" r="5" fill="#d94040"/>
+      <circle cx="350" cy="160" r="5" fill="#2e8b57"/>
+    </svg>
+    <span class="lab blue" style="left:156px; top:91px;">$P_X$</span>
+    <span class="lab red" style="left:728px; top:242px;">$y$</span>
+    <span class="lab green" style="left:455px; top:247px;">$\mathbb{E}[X\,|\,Y=y]$</span>
+    <span class="lab blue" style="left:605px; top:137px;">$\sigma^2\,\partial_y \log P_Y(y)$</span>
+  </div>
+  <p>Denoising = one step uphill on the noisy log-density, toward the data mass.</p>
 </div>
 
 <!-- SLIDE: Learning the denoiser instead -->
@@ -391,7 +784,7 @@
   <p>Tweedie: posterior mean is the score in disguise. So train the <strong>denoiser</strong>.</p>
   <p>Network $f_\theta(x^{(n)};n)$ reconstructs $x^{(0)}$ from $x^{(n)}$:</p>
   <div class="math-block">$$\mathcal{L}(\theta) = \mathbb{E}\bigl[\,\|f_\theta(X^{(n)};n) - X^{(0)}\|^2\,\bigr].$$</div>
-  <p>Bayes-optimal squared-loss regressor is the conditional mean:</p>
+  <p>MMSE proposition: the optimal squared-loss regressor is the conditional mean.</p>
   <div class="math-block">$$f_\theta(x^{(n)};n) \;\approx\; \mathbb{E}[X^{(0)}\,|\,X^{(n)}=x^{(n)}].$$</div>
 </div>
 
@@ -400,37 +793,37 @@
   <h2>Denoiser to Score</h2>
   <div class="divider"></div>
   <p>Apply Tweedie to VE at level $n$ (effective noise variance $n\sigma^2$):</p>
-  <div class="math-block">$$f_\theta(x;n) \;\approx\; x + n\sigma^2\,\tfrac{\partial}{\partial x}\log P_{X^{(n)}}(x).$$</div>
+  <div class="math-block" style="margin:8px 0">$$f_\theta(x;n) \;\approx\; x + n\sigma^2\,\tfrac{\partial}{\partial x}\log P_{X^{(n)}}(x).$$</div>
   <p>Solve for the score:</p>
-  <div class="math-block">$$s_\theta(x;n) \;=\; \tfrac{f_\theta(x;n) - x}{n\sigma^2}.$$</div>
+  <div class="math-block" style="margin:8px 0">$$s_\theta(x;n) \;=\; \frac{f_\theta(x;n) - x}{n\sigma^2}.$$</div>
   <div class="highlight">
     <p>A denoising network <strong>is</strong> a score network. Training reduces to regression.</p>
   </div>
 </div>
 
-<!-- SLIDE: What we have so far -->
+<!-- SLIDE: Lecture recap -->
 <div class="slide">
-  <h2>What We Have</h2>
+  <h2>Lecture Recap</h2>
   <div class="divider"></div>
   <ul>
-    <li><strong>Forward</strong>: data into Gaussian noise</li>
-    <li><strong>Reverse</strong>: needs only the score at each level</li>
-    <li><strong>Training</strong>: denoiser + Tweedie</li>
+    <li><strong>Forward</strong>: data into Gaussian noise, one-shot jump $X^{(n)} = X^{(0)} + \sqrt{n}Z$</li>
+    <li><strong>Reverse</strong>: Gaussian step, mean shifted by the score (Bayes + Taylor)</li>
+    <li><strong>Training</strong>: MMSE regression + Tweedie recover the score</li>
   </ul>
+  <div class="math-block">$$f_\theta(x;n) \;\approx\; \mathbb{E}[X^{(0)}\,|\,X^{(n)}=x] \;=\; x + n\sigma^2\,s(x;n).$$</div>
   <div class="highlight">
-    <p>Missing: exact Gaussian terminal, ML-based loss, continuous-time SDE view.</p>
+    <p>Open: exact terminal law, likelihood-based objective, continuous-time limit.</p>
   </div>
-  <p><em>Lecture 2: variance-preserving process and DDPM bound.</em></p>
 </div>
 
-<!-- SLIDE: End / bridge -->
+<!-- SLIDE: End -->
 <div class="slide end-slide no-footer">
-  <div class="big-word">Next</div>
-  <p class="big-word-sub">Lecture 2: Variance Preserving Diffusion &amp; DDPM</p>
+  <div class="big-word">Q&amp;A</div>
+  <p class="big-word-sub">Forward noising &middot; Bayes-route reverse &middot; score &middot; Tweedie</p>
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 32</div>
+<div class="slide-num" id="slideNum">1 / 49</div>
 
 </div><!-- end deck -->
 

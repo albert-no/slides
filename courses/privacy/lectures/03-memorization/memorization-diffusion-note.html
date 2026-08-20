@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Memorization in Diffusion Models — Notes</title>
+<link rel="stylesheet" href="../../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../../reference/katex/katex.min.css">
+<script defer src="../../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  body { max-width: 880px; margin: 40px auto; padding: 0 32px 80px; color: var(--charcoal); line-height: 1.55; }
+  h1 { color: var(--yonsei-blue); font-size: 2.2rem; border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+  h2 { color: var(--yonsei-blue); margin-top: 40px; font-size: 1.6rem; }
+  h3 { font-size: 1.2rem; margin-top: 20px; }
+  article { margin-bottom: 40px; }
+  .math-block { background: var(--light); padding: 12px 16px; border-radius: 8px; margin: 14px 0; overflow-x: auto; }
+  .key { background: #f4f6f9; border-left: 3px solid var(--yonsei-blue); padding: 10px 14px; margin: 14px 0; }
+  p, li { font-size: 1.05rem; }
+</style>
+</head>
+<body>
+
+<h1>Memorization in Diffusion Models — Companion Notes</h1>
+<p>Speaker's reading companion. Off-slide derivations, regularity conditions, and bookkeeping for the memorization deck. Slide-side statements are kept clean; every proof step the slides compress is written out here in full.</p>
+
+<!-- ============================================ -->
+<article>
+  <h2>0. Sign conventions and the precision spectrum</h2>
+
+  <p>The deck states every curvature lemma in terms of <em>precision</em> eigenvalues. This is a bookkeeping choice, and it is worth being explicit about it once, because the published statements in the literature mix conventions and a careless reader will conclude that a manifestly non-negative quantity equals a negative number.</p>
+
+  <p>Fix a local Gaussian model $x \sim \mathcal{N}(\mu, \Sigma)$ with $\Sigma \succ 0$. Then</p>
+  <div class="math-block">$$\log p(x) = -\tfrac12 (x-\mu)^\top \Sigma^{-1} (x-\mu) + \text{const}, \qquad s(x) = \nabla \log p(x) = -\Sigma^{-1}(x-\mu),$$</div>
+  <div class="math-block">$$H \;=\; \nabla^2 \log p(x) \;=\; -\Sigma^{-1} \qquad (\text{independent of } x).$$</div>
+
+  <p>So $H \prec 0$: every eigenvalue of the log-density Hessian is strictly negative. Writing $\sigma_1^2, \dots, \sigma_D^2$ for the eigenvalues of $\Sigma$, define</p>
+  <div class="math-block">$$\Lambda_i \;:=\; -\lambda_i(H) \;=\; \frac{1}{\sigma_i^2} \;>\; 0.$$</div>
+
+  <div class="key">
+    <p><strong>Why this matters.</strong> Lemma 4.2 as printed in the paper reads $\sum_i (\lambda_i - \lambda_{i,c})^2 / \lambda_{i,c}$. If the $\lambda$ there are read as eigenvalues of the log-density Hessian, the denominator is negative and the whole sum is negative — impossible for an expected squared norm. Read as precisions $\Lambda_i = 1/\sigma_i^2$ the statement is correct and non-negative. The deck therefore states everything in $\Lambda$, and flags the sign explicitly on the "Local Gaussian Toolkit" slide.</p>
+  </div>
+
+  <p>Sharpness intuition in this convention: a <em>sharp</em> direction is one with small $\sigma_i$, hence large $\Lambda_i$, hence a large-magnitude negative Hessian eigenvalue. "Heavy negative-eigenvalue tail" in the empirical histograms means "a few very large precisions".</p>
+</article>
+
+<!-- ============================================ -->
+<article>
+  <h2>1. Levina–Bickel: the maximum-likelihood LID estimator</h2>
+
+  <p>The deck states the estimator and asserts it is an MLE. Here is the derivation, following Levina and Bickel (NeurIPS 2004).</p>
+
+  <h3>1.1 The local Poisson model</h3>
+  <p>Let $X_1, \dots, X_n$ be i.i.d. samples from a density $f$ on a $k$-dimensional manifold embedded in $\mathbb{R}^D$. Fix a point $x$ and consider the counting process</p>
+  <div class="math-block">$$N(r) \;=\; \#\{\, i \,:\, \|X_i - x\| \le r \,\}, \qquad 0 \le r \le R.$$</div>
+
+  <p>Assume $f$ is approximately constant, $f(x)$, in the small ball $B(x,R)$. The volume of a $k$-dimensional ball of radius $r$ is $V_k r^k$ with $V_k = \pi^{k/2} / \Gamma(k/2 + 1)$. Then the expected count is $\mathbb{E}[N(r)] \approx n f(x) V_k r^k$, and $N(r)$ is modelled as an inhomogeneous Poisson process in the radial variable with rate</p>
+  <div class="math-block">$$\lambda(r) \;=\; \frac{d}{dr}\Big( n f(x) V_k r^k \Big) \;=\; n f(x) V_k \, k \, r^{\,k-1}.$$</div>
+
+  <p>This is the sentence the slide compresses to "neighbours in a small ball form a Poisson process with rate $\propto r^{k-1}$". Write $\theta := \log\big(n f(x) V_k\big)$, so $\log \lambda(r) = \theta + \log k + (k-1)\log r$.</p>
+
+  <h3>1.2 The log-likelihood</h3>
+  <p>For an inhomogeneous Poisson process observed on $[0,R]$ with event times $T_1 \lt T_2 \lt \cdots \lt T_{N(R)}$ (here $T_i$ = distance to the $i$-th nearest neighbour of $x$), the log-likelihood is</p>
+  <div class="math-block">$$L(k, \theta) \;=\; \int_0^R \log \lambda(r) \, dN(r) \;-\; \int_0^R \lambda(r)\, dr.$$</div>
+  <p>Writing the integrated rate as $\int_0^R \lambda(r)\,dr = e^{\theta} R^{k}$ (absorbing the constants $n f(x) V_k$ into $\theta$),</p>
+  <div class="math-block">$$L(k,\theta) \;=\; \sum_{j=1}^{N(R)} \Big[\theta + \log k + (k-1)\log T_j\Big] \;-\; e^{\theta} R^{k}.$$</div>
+
+  <h3>1.3 Solving the score equations</h3>
+  <p>Differentiate in $\theta$:</p>
+  <div class="math-block">$$\frac{\partial L}{\partial \theta} \;=\; N(R) - e^{\theta} R^{k} \;=\; 0 \quad\Longrightarrow\quad e^{\hat\theta} R^{\hat k} = N(R).$$</div>
+  <p>Differentiate in $k$:</p>
+  <div class="math-block">$$\frac{\partial L}{\partial k} \;=\; \frac{N(R)}{k} + \sum_{j=1}^{N(R)} \log T_j \;-\; e^{\theta} R^{k} \log R \;=\; 0.$$</div>
+  <p>Substitute $e^{\hat\theta} R^{\hat k} = N(R)$ into the second equation:</p>
+  <div class="math-block">$$\frac{N(R)}{\hat k} \;=\; N(R)\log R - \sum_{j=1}^{N(R)} \log T_j \;=\; \sum_{j=1}^{N(R)} \log \frac{R}{T_j}.$$</div>
+  <p>Hence</p>
+  <div class="math-block">$$\hat k_R(x) \;=\; \left[ \frac{1}{N(R)} \sum_{j=1}^{N(R)} \log \frac{R}{T_j(x)} \right]^{-1}.$$</div>
+
+  <h3>1.4 From radius $R$ to $K$ neighbours</h3>
+  <p>In practice one fixes the number of neighbours $K$ rather than the radius. Set $R = T_K(x)$, the distance to the $K$-th nearest neighbour. Then $N(R) = K$, but the $K$-th term of the sum contributes $\log(T_K/T_K) = 0$, so only $K-1$ terms are informative; the standard bias correction replaces the divisor $K$ by $K-1$:</p>
+  <div class="math-block">$$\widehat{\mathrm{LID}}_K(x) \;=\; \left[ \frac{1}{K-1} \sum_{i=1}^{K-1} \log \frac{T_K(x)}{T_i(x)} \right]^{-1}.$$</div>
+  <p>This is exactly the formula on the slide. Note the estimator is scale-free: it depends only on the ratios $T_K/T_i$, so it is invariant under a global rescaling of the ambient metric.</p>
+
+  <div class="key">
+    <p><strong>Reading the two failure modes.</strong> If all $K$ neighbours sit at nearly the same distance (points on a shell), every $\log(T_K/T_i) \approx 0$, the bracket $\to 0$, and $\widehat{\mathrm{LID}} \to \infty$. If the neighbours are tightly clustered near $x$ while $T_K$ is far, the logs are large, the bracket is large, and $\widehat{\mathrm{LID}} \to 0$. Both are visible in the deck's schematic.</p>
+  </div>
+
+  <h3>1.5 Connection to the small-ball definition</h3>
+  <p>The definition on the slide is</p>
+  <div class="math-block">$$\mathrm{LID}(x) \;=\; \lim_{r \to 0^+} \frac{\log \Pr[\|X - x\| \le r]}{\log r}.$$</div>
+  <p>Under the local-uniformity assumption $\Pr[\|X-x\| \le r] \approx f(x) V_k r^k$, so the numerator is $k \log r + O(1)$ and the ratio $\to k$. The MLE above is the finite-sample counterpart: the Hill-type estimator of the tail exponent of the nearest-neighbour distance distribution.</p>
+</article>
+
+<!-- ============================================ -->
+<article>
+  <h2>2. Gaussian smoothing of a thin support — full proof</h2>
+
+  <p>Theorem (deck). Let $q$ be a density supported on a $k$-dimensional affine subspace $V \subset \mathbb{R}^D$, and let $p_\sigma = q * \mathcal{N}(0, \sigma^2 I_D)$. Decompose $x = (x_V, x_\perp)$ in an orthonormal basis adapted to $V$. Then</p>
+  <div class="math-block">$$\nabla^2 \log p_\sigma(x) \;=\; \begin{pmatrix} \nabla^2 \log q_\sigma(x_V) & 0 \\ 0 & -\sigma^{-2} I_{D-k} \end{pmatrix}.$$</div>
+
+  <h3>2.1 Step 1 — splitting the convolution</h3>
+  <p>Write $y \in V$ for the integration variable, so $q(y)\,dy$ is a measure on $V$ only. Then</p>
+  <div class="math-block">$$p_\sigma(x) = \int_V q(y) \, \frac{1}{(2\pi\sigma^2)^{D/2}} \exp\!\left( -\frac{\|x - y\|^2}{2\sigma^2} \right) dy.$$</div>
+  <p>Since $y \in V$, the vector $x - y$ decomposes orthogonally as $(x_V - y) \oplus x_\perp$, and Pythagoras gives $\|x-y\|^2 = \|x_V - y\|^2 + \|x_\perp\|^2$. The second term does not involve $y$ and factors out of the integral:</p>
+  <div class="math-block">$$p_\sigma(x) \;=\; \underbrace{\left[ \int_V q(y) \frac{e^{-\|x_V-y\|^2/2\sigma^2}}{(2\pi\sigma^2)^{k/2}}\,dy \right]}_{=\; q_\sigma(x_V)} \cdot \underbrace{\frac{e^{-\|x_\perp\|^2/2\sigma^2}}{(2\pi\sigma^2)^{(D-k)/2}}}_{\text{isotropic in } x_\perp}.$$</div>
+
+  <div class="key">
+    <p><strong>Key trick.</strong> The step above is where isotropy is used, and it is the only place. A Gaussian with covariance $\sigma^2 I$ is the unique kernel whose exponent is a squared Euclidean norm, hence the unique kernel that splits across <em>every</em> orthogonal decomposition. An anisotropic kernel splits only along its own eigendirections; if those are not aligned with $V$, the cross-terms survive and the Hessian is not block-diagonal.</p>
+  </div>
+
+  <h3>2.2 Step 2 — logarithms and two derivatives</h3>
+  <p>Taking logs turns the product into a sum of a function of $x_V$ alone and a function of $x_\perp$ alone:</p>
+  <div class="math-block">$$\log p_\sigma(x) \;=\; \log q_\sigma(x_V) \;-\; \frac{\|x_\perp\|^2}{2\sigma^2} \;+\; \text{const}.$$</div>
+  <p>Because the variables are separated, all mixed second partials $\partial^2/\partial x_V \partial x_\perp$ vanish, so the Hessian is block diagonal. The $x_V$ block is $\nabla^2 \log q_\sigma(x_V)$ by definition. The $x_\perp$ block is the Hessian of a pure isotropic quadratic:</p>
+  <div class="math-block">$$\nabla_{x_\perp}^2 \left( -\frac{\|x_\perp\|^2}{2\sigma^2} \right) \;=\; -\frac{1}{\sigma^2} I_{D-k}. \qquad \blacksquare$$</div>
+
+  <h3>2.3 The two corollaries</h3>
+  <p><strong>Corollary 1 (spectral read-off of LID).</strong> The normal block contributes exactly $D-k$ eigenvalues equal to $-\sigma^{-2}$. Generically the tangential block $\nabla^2 \log q_\sigma(x_V)$ has no eigenvalue at exactly $-\sigma^{-2}$, so</p>
+  <div class="math-block">$$\mathrm{LID} \;=\; k \;=\; D \;-\; \#\{\, i \,:\, \lambda_i(H) \approx -\sigma^{-2} \,\}.$$</div>
+  <p>The dimension estimate and the curvature estimate are therefore two readings of the same spectrum. This is the structural reason why Ross's LID-based detector and the SAIL sharpness-based detector agree on which prompts are memorized.</p>
+
+  <p><strong>Corollary 2 (a fully memorized point).</strong> If the model has collapsed onto a single training image, $p_0 = \delta_{x_0}$, then $k = 0$, $p_\sigma = \mathcal{N}(x_0, \sigma^2 I_D)$, and</p>
+  <div class="math-block">$$H = -\sigma^{-2} I_D, \qquad \operatorname{tr} H = -\frac{D}{\sigma^2},$$</div>
+  <p>the extreme value of the trace. Every finite-$k$ distribution has a strictly less negative trace, since the tangential block of a genuine density is flatter than $-\sigma^{-2}$ in at least the directions where $q_\sigma$ has spread. Memorization thus pushes the trace toward its floor, which is precisely what the empirical eigenvalue histograms show.</p>
+</article>
+
+<!-- ============================================ -->
+<article>
+  <h2>3. Simultaneous diagonalization of the two covariances</h2>
+
+  <p>Lemmas 4.2 and 4.3 both assume the conditional and unconditional local Gaussians share a mode $\mu$ and have <em>commuting</em> covariances $\Sigma \Sigma_c = \Sigma_c \Sigma$. That assumption is doing real work and deserves a note.</p>
+
+  <p>Two symmetric matrices commute if and only if they are simultaneously diagonalizable: there is an orthonormal basis $\{u_i\}$ with $\Sigma u_i = \sigma_i^2 u_i$ and $\Sigma_c u_i = \sigma_{i,c}^2 u_i$. Then</p>
+  <div class="math-block">$$H^\Delta := H_c - H = \Sigma^{-1} - \Sigma_c^{-1}, \qquad H^\Delta u_i = \left( \frac{1}{\sigma_i^2} - \frac{1}{\sigma_{i,c}^2} \right) u_i = (\Lambda_i - \Lambda_{i,c}) u_i.$$</div>
+
+  <p>Without commutation, $H^\Delta$ is still symmetric (a difference of symmetric matrices) so it still has a real spectrum, but its eigenvalues are no longer differences of the individual precisions, and the clean per-coordinate sums in the lemmas become trace expressions that do not factor. The lemmas remain <em>directionally</em> true — the metric still grows when the conditional collapses — but the closed forms are lost.</p>
+
+  <p>Interpretation of the assumption: conditioning on the prompt sharpens the local Gaussian along its existing principal directions rather than rotating them. This is reasonable when the prompt selects a mode of an already-present structure, and it is the regime in which the memorization signal is being measured.</p>
+
+  <h3>The key identity</h3>
+  <div class="math-block">$$s^\Delta(x) \;=\; s_c(x) - s(x) \;=\; -\Sigma_c^{-1}(x-\mu) + \Sigma^{-1}(x-\mu) \;=\; H^\Delta (x-\mu).$$</div>
+  <p>Everything downstream is a consequence of this one line: <em>the score gap is the curvature gap applied to the displacement</em>. It is what lets a first-order quantity (a score difference) report second-order information (curvature), and it is why higher moments of the same object climb the derivative ladder.</p>
+</article>
+
+<!-- ============================================ -->
+<article>
+  <h2>4. Lemma A and the moment ladder</h2>
+
+  <h3>4.1 Lemma A</h3>
+  <p><strong>Statement.</strong> For $z \sim \mathcal{N}(0, \Sigma)$ and any fixed matrix $A$, $\ \mathbb{E}\|Az\|^2 = \operatorname{tr}(A \Sigma A^\top)$.</p>
+  <p><strong>Proof.</strong> $\|Az\|^2 = z^\top A^\top A z = \operatorname{tr}(A^\top A\, z z^\top)$ by cyclicity of the trace. Trace and expectation are both linear, so</p>
+  <div class="math-block">$$\mathbb{E}\|Az\|^2 = \operatorname{tr}\!\big(A^\top A \, \mathbb{E}[zz^\top]\big) = \operatorname{tr}(A^\top A \Sigma) = \operatorname{tr}(A \Sigma A^\top). \qquad \blacksquare$$</div>
+  <p>Every one of the three SAIL lemmas is this identity applied to a different $A$.</p>
+
+  <h3>4.2 The general moment ladder</h3>
+  <p><strong>Proposition.</strong> With $x \sim \mathcal{N}(\mu, \Sigma_c)$ and $s^\Delta(x) = H^\Delta(x-\mu)$ as above, for every integer $m \ge 0$,</p>
+  <div class="math-block">$$\mathbb{E}\left\| \big(H^\Delta\big)^m s^\Delta(x) \right\|^2 \;=\; \sum_{i=1}^{D} \frac{\big(\Lambda_i - \Lambda_{i,c}\big)^{2m+2}}{\Lambda_{i,c}}.$$</div>
+  <p><strong>Proof.</strong> Set $A = (H^\Delta)^{m+1}$ and $z = x - \mu \sim \mathcal{N}(0, \Sigma_c)$, so that $(H^\Delta)^m s^\Delta(x) = A z$. By Lemma A,</p>
+  <div class="math-block">$$\mathbb{E}\|Az\|^2 = \operatorname{tr}\!\big(A \Sigma_c A^\top\big) = \operatorname{tr}\!\Big( \big(H^\Delta\big)^{m+1} \Sigma_c \big(H^\Delta\big)^{m+1} \Big),$$</div>
+  <p>using symmetry of $H^\Delta$. In the shared eigenbasis $\{u_i\}$ all three factors are diagonal, with entries $(\Lambda_i - \Lambda_{i,c})^{m+1}$, $\sigma_{i,c}^2 = 1/\Lambda_{i,c}$, and $(\Lambda_i - \Lambda_{i,c})^{m+1}$ respectively. The trace is the sum of the products of the diagonal entries. $\blacksquare$</p>
+
+  <div class="key">
+    <p><strong>Reading the ladder.</strong> $m=0$ gives $\sum_i (\Lambda_i - \Lambda_{i,c})^2 / \Lambda_{i,c}$, which is Lemma 4.2 — Wen's statistic. $m=1$ gives $\sum_i (\Lambda_i-\Lambda_{i,c})^4/\Lambda_{i,c}$, the proposed metric $\|H^\Delta s^\Delta\|^2$. Each rung raises the exponent by two, so each rung is more sensitive to the largest precision gap and less sensitive to the bulk. The trade-off is variance: higher powers of an estimated Hessian are noisier, which is why the ladder is not climbed indefinitely.</p>
+  </div>
+
+  <h3>4.3 Why the gap is weak at the first step</h3>
+  <p>At large $t$ both $p_t$ and $p_t(\cdot\mid c)$ are heavily smoothed toward $\mathcal{N}(0, \sigma_t^2 I)$, so $\Lambda_i \approx \Lambda_{i,c} \approx \sigma_t^{-2}$ for all $i$ and every rung of the ladder is near zero. The separation opens as $t$ decreases and the conditional collapses in a few directions. The empirical observation that the magnitude gap is already visible at the first sampling step is therefore stronger than the local-Gaussian model predicts, and is worth flagging in the talk as an experimental fact rather than a consequence of the theory.</p>
+</article>
+
+<!-- ============================================ -->
+<article>
+  <h2>5. Regularity for the Fisher / integration-by-parts identity</h2>
+
+  <p>The deck proves $\ \mathbb{E}\|\nabla \log p\|^2 = -\mathbb{E}[\operatorname{tr} \nabla^2 \log p]\ $ in two lines. The steps are:</p>
+  <div class="math-block">$$\int p\,(\partial_i \log p)^2 \;=\; \int (\partial_i p)(\partial_i \log p) \;=\; -\int p\, \partial_i^2 \log p,$$</div>
+  <p>the first equality from $\partial_i p = p\,\partial_i \log p$ and the second from integration by parts in the $i$-th coordinate, then summing over $i$.</p>
+
+  <p>Conditions under which each step is legitimate:</p>
+  <ul>
+    <li><strong>Positivity and smoothness.</strong> $p > 0$ everywhere and $p \in C^2$, so $\log p$ and its two derivatives exist pointwise. Gaussian-smoothed densities $p_\sigma$ satisfy this for any $\sigma > 0$, which is why the identity is safe to use at every noise level $t > 0$ even when $p_0$ is a point mass.</li>
+    <li><strong>Vanishing boundary term.</strong> Integration by parts drops $\big[ p\,\partial_i \log p \big]_{-\infty}^{\infty} = \big[\partial_i p\big]_{-\infty}^{\infty}$. This vanishes when $\partial_i p \to 0$ at infinity, which holds for any density with sub-exponential tails — in particular for $p_\sigma$, whose tails are Gaussian.</li>
+    <li><strong>Integrability.</strong> Both sides must be finite: $\mathbb{E}\|\nabla \log p\|^2 \lt \infty$ (finite Fisher information) and $\mathbb{E}|\operatorname{tr}\nabla^2 \log p| \lt \infty$. Again automatic for $p_\sigma$ with $\sigma > 0$; not automatic in the $\sigma \to 0$ limit, where both sides diverge like $D/\sigma^2$ (Corollary 2 above).</li>
+  </ul>
+
+  <p>Consequence worth stating in the talk: the identity is <em>not</em> a Gaussian fact. Lemma 4.1's Gaussian computation is a special case of a general relation between expected squared score and expected trace curvature. This is what licenses reading a score-norm detector as a curvature detector on real, non-Gaussian $p_t$.</p>
+</article>
+
+<!-- ============================================ -->
+<article>
+  <h2>6. Cross-attention algebra behind the padding effect</h2>
+
+  <p>The deck states the padding proposition; here is the computation in full.</p>
+
+  <h3>6.1 Setup</h3>
+  <p>CLIP's text encoder produces $77$ token embeddings $e_1, \dots, e_{77}$. Let $P$ index the real prompt tokens, let $\mathrm{eot}$ be the end-of-text position, and let $\mathcal{G}$ be the set of padding positions. Because the encoder is causal, position $\mathrm{eot}$ attends over all prompt tokens while padding positions attend over everything up to themselves — and in the standard implementation the padding embeddings are produced by the same trailing context, so</p>
+  <div class="math-block">$$e_k \;=\; e_{\text{eot}} \qquad \text{for all } k \in \mathcal{G}.$$</div>
+
+  <h3>6.2 Identical embeddings give identical keys and values</h3>
+  <p>In the U-Net's cross-attention, keys and values are linear maps of the text embeddings: $k_j = W_K e_j$, $v_j = W_V e_j$. Equal embeddings therefore give equal keys and equal values:</p>
+  <div class="math-block">$$k_j = k_{\text{eot}}, \quad v_j = v_{\text{eot}} \qquad \text{for all } j \in \mathcal{G} \cup \{\mathrm{eot}\}.$$</div>
+  <p>Equal keys give equal pre-softmax logits $\langle q, k_j \rangle / \sqrt{d}$, hence equal post-softmax weights. Writing $a_j$ for the attention weight the query would place on position $j$, all $|\mathcal{G}| + 1$ of these positions receive the same weight $a_{\text{eot}}$.</p>
+
+  <h3>6.3 The aggregated weight</h3>
+  <p>Since all of these positions also carry the same value vector $v_{\text{eot}}$, their contributions to the attention output add:</p>
+  <div class="math-block">$$\sum_{j \in \mathcal{G} \cup \{\mathrm{eot}\}} a_j v_j \;=\; \Big( (1 + |\mathcal{G}|)\, a_{\text{eot}} \Big) v_{\text{eot}} \;=:\; A_{\text{eot}}\, v_{\text{eot}}.$$</div>
+  <p>So the <em>effective</em> attention mass on the single EoT direction is</p>
+  <div class="math-block">$$A_{\text{eot}} \;=\; \big(1 + |\mathcal{G}|\big)\, a_{\text{eot}}.$$</div>
+
+  <div class="key">
+    <p><strong>Mechanism.</strong> With a short prompt, $|\mathcal{G}|$ is large and $A_{\text{eot}}$ dominates the conditioning signal: the U-Net is effectively conditioned on one vector rather than on a distributed representation of the caption. One vector selects one point in image space — a collapsed conditional, exactly the $\sigma_{i,c} \to 0$ regime of Section 3. This is why short prompts and duplicated captions are the two strongest empirical predictors of memorization.</p>
+  </div>
+
+  <h3>6.4 The two mitigations in this notation</h3>
+  <ul>
+    <li><strong>Mask the padding.</strong> Excluding $\mathcal{G}$ from the attention support sends $A_{\text{eot}} \mapsto a_{\text{eot}}$: the multiplier disappears entirely and the conditioning is redistributed over the prompt tokens. Removes the amplification but also removes whatever useful role the aggregate played during training.</li>
+    <li><strong>Randomize the padding embeddings.</strong> Replacing the padding embeddings with $m$ distinct vectors breaks the equal-key argument for the other $|\mathcal{G}| - m$ positions, giving $A_{\text{eot}} \mapsto (1+m)\,a_{\text{eot}}$ with $m \ll |\mathcal{G}|$. Softer: it damps the multiplier without changing the attention support, so it can be applied at inference time on a pretrained model.</li>
+  </ul>
+</article>
+
+<!-- ============================================ -->
+<article>
+  <h2>7. The finite-difference approximation of $H^\Delta s^\Delta$</h2>
+
+  <p>The proposed metric needs $H^\Delta s^\Delta$, but the Hessian of the log-density is $D \times D$ with $D$ in the tens of thousands, so it is never formed. The deck's Taylor slide replaces it with a directional derivative; here is the justification.</p>
+
+  <p>By definition $H^\Delta(x) = \nabla_x s^\Delta(x)$: the curvature gap is the Jacobian of the score gap. For any direction $u$, the Jacobian-vector product is a directional derivative:</p>
+  <div class="math-block">$$H^\Delta(x)\, u \;=\; \lim_{h \to 0} \frac{s^\Delta(x + h u) - s^\Delta(x)}{h}.$$</div>
+  <p>Taking $u = s^\Delta(x)$ itself gives the quantity we want. A first-order finite difference at a small step $h$ therefore costs <em>two</em> evaluations of the score gap — that is, four network evaluations (conditional and unconditional at each of two points) — and no Hessian is ever materialized.</p>
+
+  <p>Error control: Taylor with remainder gives</p>
+  <div class="math-block">$$\frac{s^\Delta(x+hu) - s^\Delta(x)}{h} \;=\; H^\Delta(x)\,u \;+\; \frac{h}{2}\,\nabla^2 s^\Delta(x)[u,u] \;+\; O(h^2),$$</div>
+  <p>so the bias is $O(h)$ while the variance of the difference quotient scales like $O(1/h)$ under score-estimation noise of fixed magnitude. The usual bias–variance compromise applies; a central difference $\big(s^\Delta(x+hu) - s^\Delta(x-hu)\big)/2h$ improves the bias to $O(h^2)$ at the cost of two more network evaluations.</p>
+</article>
+
+<!-- ============================================ -->
+<article>
+  <h2>8. Three definitions, one phenomenon — what not to conflate</h2>
+
+  <p>The deck opens by separating three mathematical objects that are all called "memorization". Speaker notes on why the separation matters:</p>
+
+  <ul>
+    <li><strong>Extraction / eidetic ($\ell, \delta, k$).</strong> A statement about an <em>attack</em>: there exists a short prompt from which an algorithm recovers the training example to within tolerance $\delta$, and the example is $k$-rare in the training set. This is the definition that transfers verbatim from LLMs to diffusion models, because it never mentions the model's internal geometry — only a prompt, a generator, and a distance.</li>
+    <li><strong>Similarity ($\mathrm{rep}_\tau$).</strong> A statement about an <em>output</em>: the generated image is within threshold $\tau$ of some training image in a fixed embedding. It depends on the embedding (SSCD, CLIP) and on $\tau$, and is silent about whether a short prompt could have found it. A model can score high on $\mathrm{rep}_\tau$ for reasons that are not memorization (genuinely common visual structure) and can memorize without triggering it (if the embedding is insensitive to the copied content).</li>
+    <li><strong>Verbatim categories (MV / RV / TV).</strong> A statement about the <em>relation between the output and the training set</em>: one image, several images, or a shared template. This is the only one of the three that distinguishes copying a work from copying a layout, which is exactly the distinction copyright law turns on.</li>
+  </ul>
+
+  <p>Practical consequence for reading the literature: a mitigation that lowers $\mathrm{rep}_\tau$ has not necessarily broken extractability, and a detector benchmarked on a public extraction prompt set has not necessarily been evaluated on template copying. Papers rarely say which object they mean; the slide's four-column table is the map to keep in mind.</p>
+</article>
+
+</body>
+</html>

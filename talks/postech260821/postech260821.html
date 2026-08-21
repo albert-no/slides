@@ -39,8 +39,11 @@
   .diagram-flow.md .diagram-arrow { font-size: 1.9rem; }
   /* Enlarged token strip (slide 7 opener illustration). */
   .token-line-xl .token { font-size: 1.7rem; padding: 14px 24px; margin: 5px; }
-  /* Extra-large token strip (safety-primer slide: 9 boxes on one line). */
+  /* Extra-large token strip (safety-primer slide: 9 boxes, forced one line). */
+  .token-line-xxl { white-space: nowrap; }
   .token-line-xxl .token { font-size: 1.85rem; padding: 16px 22px; margin: 5px; }
+  /* Continuation line under the primer strip, sized to read with it. */
+  .token-line-followup { font-size: 1.85rem; }
   .task-hub { display: inline-block; background: var(--yonsei-blue); color: #fff;
     padding: 12px 32px; border-radius: 8px; font-weight: 700; font-size: 1.8rem; }
   .task-leaf { background: var(--light); border: 2px solid var(--blue-light);
@@ -391,7 +394,6 @@
   <div class="spacer"></div>
   <ul>
     <li>Holds across <strong>0.5B–7B</strong> models, two RL objectives, three training regimes</li>
-    <li>Pass@1 <em>and</em> Pass@8 <em>and</em> Pass@64 improve together</li>
     <li>No measurable runtime overhead</li>
   </ul>
   <div class="cite">Kim and No, 2026 — Table 1. Math Avg: MATH-500, AIME 2024/2025, AMC 2023.</div>
@@ -401,13 +403,12 @@
 <div class="slide">
   <h2>Distinguished, Not Just Another Knob</h2>
   <div class="divider"></div>
-  <p>Matched training against explicit exploration baselines, changing only rollout construction:</p>
-  <div class="spacer-sm"></div>
   <table>
     <thead>
       <tr><th>Method</th><th>Pass@1</th><th>Pass@8</th><th>Pass@64</th><th>Rollout cost</th></tr>
     </thead>
     <tbody>
+      <tr><td>Base (before GRPO)</td><td>80.14</td><td>94.16</td><td>98.18</td><td>—</td></tr>
       <tr><td>GRPO</td><td>84.53</td><td>95.38</td><td>98.64</td><td>1.00×</td></tr>
       <tr><td><strong>GRPO + REFT</strong></td><td><strong>86.28</strong></td><td><strong>96.13</strong></td><td><strong>99.39</strong></td><td><strong>≈1.00×</strong></td></tr>
       <tr><td>Rollout-MT</td><td>85.06</td><td>95.45</td><td>98.33</td><td>3.80×</td></tr>
@@ -418,7 +419,6 @@
   <div class="spacer-sm"></div>
   <ul>
     <li>Baselines lift Pass@1 <em>or</em> Pass@8, but <strong>give back Pass@64</strong>; REFT improves all three</li>
-    <li>Position ablation: second-token 85.29, max-entropy 85.37; effect <strong>maximized at token one</strong></li>
   </ul>
   <div class="cite">Kim and No, 2026. Qwen2.5-3B-Instruct, GSM8K, GRPO, $G{=}8$. LoRA fine-tuning;<br>MT: Zhuang et al. 2025; LATR: Xing et al. 2025.</div>
 </div>
@@ -440,8 +440,8 @@
   <ul>
     <li><strong>Code RLVR, no reasoning marker</strong>: REFT improves all 12 comparisons (HumanEval+, MBPP+, LiveCodeBench)</li>
     <li>Decoupling <strong>strengthens at scale</strong>: a massive first-token probability drop barely moves accuracy<br>
-        Qwen2.5-72B: probability <strong>~14M× down</strong>, accuracy moves <strong>2.2 pp</strong><br>
-        Gemma4-31B-Instruct: probability <strong>~3.1M× down</strong>, accuracy moves <strong>0.03 pp</strong></li>
+        Qwen2.5-72B: probability <strong>~14M× down</strong>, accuracy moves <strong>92.48 → 90.25 (-2.2p)</strong><br>
+        Gemma4-31B-Instruct: probability <strong>~3.1M× down</strong>, accuracy moves <strong>96.66 → 96.63 (-0.03p)</strong></li>
   </ul>
   <div class="cite">Kim and No, 2026.</div>
 </div>
@@ -513,7 +513,7 @@
     <span class="token token-safe">first</span>
     <span class="token token-safe">.</span>
   </div>
-  <p class="muted" style="text-align:center;margin-top:10px;">… rest of reasoning left unsupervised</p>
+  <p class="muted token-line-followup" style="text-align:center;margin-top:10px;">… rest of reasoning left unsupervised</p>
   <div class="spacer"></div>
   <ul>
     <li>No closing &lt;/think&gt;: the primer <strong>initiates</strong> reasoning, it does not end it</li>
@@ -526,7 +526,7 @@
 <div class="slide">
   <h2>SafePath at a Glance</h2>
   <div class="divider"></div>
-  <img src="figs/safepath-fig2.png" alt="SafePath: base LRM vs training the primer vs dynamic reactivation at inference" style="flex:1;min-height:0;width:100%;object-fit:contain;display:block;margin:0 auto;">
+  <img src="figs/safepath-fig2.png" alt="SafePath: base LRM vs training the primer vs dynamic reactivation at inference" style="flex:1;min-height:0;width:100%;object-fit:contain;object-position:center top;display:block;margin:0 auto;">
   <div class="cite">Jeung et al., NeurIPS 2025 — Figure 2.</div>
 </div>
 
@@ -583,28 +583,6 @@
     </div>
   </div>
   <div class="cite">Jeung et al., NeurIPS 2025 — Figure 4.</div>
-</div>
-
-<!-- SLIDE 21 — Synthesis I+II -->
-<div class="slide">
-  <h2>One Lever, Two Directions</h2>
-  <div class="divider"></div>
-  <div class="grid-2">
-    <div class="card">
-      <h3 style="color:var(--accent);">REFT: open the root</h3>
-      <p>Diversify token 1 → exploration</p>
-      <p class="muted">rollout coverage where the model is artificially certain</p>
-    </div>
-    <div class="card">
-      <h3 style="color:var(--accent2);">SafePath: anchor the root</h3>
-      <p>Pin tokens 1–8 → safety</p>
-      <p class="muted">one soft cue, downstream reasoning left free</p>
-    </div>
-  </div>
-  <div class="spacer"></div>
-  <div class="highlight">
-    <p><strong>Same structural fact, used twice:</strong> trajectory starts are where control is cheapest and leverage largest.</p>
-  </div>
 </div>
 
 <!-- ============ PART 03 — Benign DPO ============ -->
@@ -933,28 +911,28 @@
   <h2>Other Lab Publications: Unlearning &amp; Safety</h2>
   <div class="divider"></div>
   <div class="pub">
-    <div class="pub-title">DUSK: Do Not Unlearn Shared Knowledge</div>
-    <div class="pub-authors"><u>Wonje Jeung</u>*, <u>Sangyeon Yoon</u>*, <u>Hyesoo Hong</u>*, <u>Soeun Kim</u>, Seungju Han, Youngjae Yu, and <u>Albert No</u> · <span class="pub-venue">ACL 2026 Findings</span></div>
-  </div>
-  <div class="pub">
-    <div class="pub-title">Rethinking Benign Relearning: Syntax as the Hidden Driver of Unlearning Failures</div>
-    <div class="pub-authors"><u>Sangyeon Yoon</u>, <u>Hyesoo Hong</u>, <u>Wonje Jeung</u>, and <u>Albert No</u> · <span class="pub-venue">ICLR 2026</span></div>
-  </div>
-  <div class="pub">
-    <div class="pub-title">A2D: Any-Order, Any-Step Safety Alignment for Diffusion Language Models</div>
-    <div class="pub-authors"><u>Wonje Jeung</u>*, <u>Sangyeon Yoon</u>*, <u>Yoonjun Cho</u>, <u>Dongjae Jeon</u>, <u>Sangwoo Shin</u>, <u>Hyesoo Hong</u>, and <u>Albert No</u> · <span class="pub-venue">ICLR 2026</span></div>
-  </div>
-  <div class="pub">
-    <div class="pub-title">An Information Theoretic Evaluation Metric For Strong Unlearning</div>
-    <div class="pub-authors"><u>Dongjae Jeon</u>*, <u>Wonje Jeung</u>*, Taeheon Kim, <u>Albert No</u><sup>&dagger;</sup>, and Jonghyun Choi<sup>&dagger;</sup> · <span class="pub-venue">AAAI 2026</span></div>
+    <div class="pub-title">R-TOFU: Unlearning in Large Reasoning Models</div>
+    <div class="pub-authors"><u>Sangyeon Yoon</u>, <u>Wonje Jeung</u>, and <u>Albert No</u> · <span class="pub-venue">EMNLP 2025</span></div>
   </div>
   <div class="pub">
     <div class="pub-title">SEPS: A Separability Measure for Robust Unlearning in LLMs</div>
     <div class="pub-authors"><u>Wonje Jeung</u>*, <u>Sangyeon Yoon</u>*, and <u>Albert No</u> · <span class="pub-venue">EMNLP 2025</span></div>
   </div>
   <div class="pub">
-    <div class="pub-title">R-TOFU: Unlearning in Large Reasoning Models</div>
-    <div class="pub-authors"><u>Sangyeon Yoon</u>, <u>Wonje Jeung</u>, and <u>Albert No</u> · <span class="pub-venue">EMNLP 2025</span></div>
+    <div class="pub-title">An Information Theoretic Evaluation Metric For Strong Unlearning</div>
+    <div class="pub-authors"><u>Dongjae Jeon</u>*, <u>Wonje Jeung</u>*, Taeheon Kim, <u>Albert No</u><sup>&dagger;</sup>, and Jonghyun Choi<sup>&dagger;</sup> · <span class="pub-venue">AAAI 2026</span></div>
+  </div>
+  <div class="pub">
+    <div class="pub-title">A2D: Any-Order, Any-Step Safety Alignment for Diffusion Language Models</div>
+    <div class="pub-authors"><u>Wonje Jeung</u>*, <u>Sangyeon Yoon</u>*, <u>Yoonjun Cho</u>, <u>Dongjae Jeon</u>, <u>Sangwoo Shin</u>, <u>Hyesoo Hong</u>, and <u>Albert No</u> · <span class="pub-venue">ICLR 2026</span></div>
+  </div>
+  <div class="pub">
+    <div class="pub-title">Rethinking Benign Relearning: Syntax as the Hidden Driver of Unlearning Failures</div>
+    <div class="pub-authors"><u>Sangyeon Yoon</u>, <u>Hyesoo Hong</u>, <u>Wonje Jeung</u>, and <u>Albert No</u> · <span class="pub-venue">ICLR 2026</span></div>
+  </div>
+  <div class="pub">
+    <div class="pub-title">DUSK: Do Not Unlearn Shared Knowledge</div>
+    <div class="pub-authors"><u>Wonje Jeung</u>*, <u>Sangyeon Yoon</u>*, <u>Hyesoo Hong</u>*, <u>Soeun Kim</u>, Seungju Han, Youngjae Yu, and <u>Albert No</u> · <span class="pub-venue">ACL 2026 Findings</span></div>
   </div>
 </div>
 
@@ -962,6 +940,22 @@
 <div class="slide pub-list">
   <h2>Other Lab Publications: Discrete Diffusion</h2>
   <div class="divider"></div>
+  <div class="pub">
+    <div class="pub-title">Information-Theoretic Discrete Diffusion</div>
+    <div class="pub-authors"><u>Moongyu Jeon</u>, <u>Sangwoo Shin</u>, <u>Dongjae Jeon</u>, and <u>Albert No</u> · <span class="pub-venue">NeurIPS 2025</span></div>
+  </div>
+  <div class="pub">
+    <div class="pub-title">Rainbow Padding: Mitigating Early Termination in Instruction-Tuned Diffusion LLMs</div>
+    <div class="pub-authors"><u>Bumjun Kim</u>*, <u>Dongjae Jeon</u>*, <u>Dueun Kim</u>*, <u>Wonje Jeung</u>, and <u>Albert No</u> · <span class="pub-venue">ICLR 2026</span></div>
+  </div>
+  <div class="pub">
+    <div class="pub-title">dgMARK: Decoding-Guided Watermarking for Diffusion Language Models</div>
+    <div class="pub-authors"><u>Pyo Min Hong</u> and <u>Albert No</u> · <span class="pub-venue">ICML 2026</span></div>
+  </div>
+  <div class="pub">
+    <div class="pub-title">Dependency-Aware Parallel Decoding via Attention for Diffusion LLMs</div>
+    <div class="pub-authors"><u>Bumjun Kim</u>*, <u>Dongjae Jeon</u>*, <u>Moongyu Jeon</u>*, and <u>Albert No</u> · <span class="pub-venue">ICML 2026</span></div>
+  </div>
   <div class="pub">
     <div class="pub-title">A Theoretical Analysis of Why Masked Diffusion Models Mitigate the Reversal Curse</div>
     <div class="pub-authors"><u>Moongyu Jeon</u>*, <u>Sangwoo Shin</u>*, <u>Bumjun Kim</u>, <u>Kyelim Lee</u>, and <u>Albert No</u> · <span class="pub-venue">submitted</span></div>
@@ -973,22 +967,6 @@
   <div class="pub">
     <div class="pub-title">JUMP: Single-Pass Membership Inference on Fine-Tuned Diffusion Language Models</div>
     <div class="pub-authors"><u>Yeachan Jun</u> and <u>Albert No</u> · <span class="pub-venue">submitted</span></div>
-  </div>
-  <div class="pub">
-    <div class="pub-title">Information-Theoretic Discrete Diffusion</div>
-    <div class="pub-authors"><u>Moongyu Jeon</u>, <u>Sangwoo Shin</u>, <u>Dongjae Jeon</u>, and <u>Albert No</u> · <span class="pub-venue">NeurIPS 2025</span></div>
-  </div>
-  <div class="pub">
-    <div class="pub-title">dgMARK: Decoding-Guided Watermarking for Diffusion Language Models</div>
-    <div class="pub-authors"><u>Pyo Min Hong</u> and <u>Albert No</u> · <span class="pub-venue">ICML 2026</span></div>
-  </div>
-  <div class="pub">
-    <div class="pub-title">Dependency-Aware Parallel Decoding via Attention for Diffusion LLMs</div>
-    <div class="pub-authors"><u>Bumjun Kim</u>*, <u>Dongjae Jeon</u>*, <u>Moongyu Jeon</u>*, and <u>Albert No</u> · <span class="pub-venue">ICML 2026</span></div>
-  </div>
-  <div class="pub">
-    <div class="pub-title">Rainbow Padding: Mitigating Early Termination in Instruction-Tuned Diffusion LLMs</div>
-    <div class="pub-authors"><u>Bumjun Kim</u>*, <u>Dongjae Jeon</u>*, <u>Dueun Kim</u>*, <u>Wonje Jeung</u>, and <u>Albert No</u> · <span class="pub-venue">ICLR 2026</span></div>
   </div>
 </div>
 

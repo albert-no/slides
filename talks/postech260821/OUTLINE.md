@@ -10,7 +10,7 @@ Folder renamed from `postech260819/` on 2026-08-20 (talk is actually
 
 ## Files
 
-- `postech260821.html` — the deck (46 slides: 41 main + Q&A closer,
+- `postech260821.html` — the deck (45 slides: 40 main + Q&A closer,
   then a backup divider + 3 backup slides)
 - `figs/` — paper figures (16 PNGs; author-provided renders as of 2026-08-15)
 - `figs/authors/` — lab-member headshots for section dividers (6 photos,
@@ -24,7 +24,7 @@ unlearning position (4 content slides) · two lab-publication slides before
 the closer. Each section divider carries the lab authors' photos
 (`.authors-row`).
 
-### Sections (46 slides total)
+### Sections (45 slides total)
 
 Letter-suffixed slides were added after the original numbering was fixed:
 12b/12c/26b/26d carry NeurIPS 2026 rebuttal experiments for REFT and
@@ -39,56 +39,61 @@ backup section (B0–B3); old 28 was split into a figure slide (B2, FedVPA-GP
 Figure 1) and a comments slide (B3). The 2026-08-20 revision split slide 17
 (primer text vs Figure-2 diagram → 17/17b), replaced slide 30 with two
 slides adapted from the ICML 2026 deck (30/30x), corrected the primer strip
-to exactly 8 tokens, and put submitted works first on 34d.
+to exactly 8 tokens, and put submitted works first on 34d. The 2026-08-21
+revision (day-of, 7 items) removed the synthesis slide 21, added a
+Base-(before-GRPO) row to 12b's table (Pass@1/8/64 = 80.14/94.16/98.18,
+arXiv 2605.28295 Tables 1/3), rewrote 12c's decoupling bullet with from→to
+accuracies (92.48→90.25, 96.66→96.63; rebuttal), forced 17's primer strip
+one-line with a larger follow-up line, pinned 17b's figure to the top, and
+reordered 34d chronologically (submitted works last).
 
 | # | Slide | Line |
 |---|---|---|
-| 1 | Title — Small Interventions, Large Effects (8/21) | 83 |
-| 2 | Hook: 1 Position · 8 Tokens · 10 Pairs | 95 |
-| 3 | Contents (4 parts) | 122 |
-| 4 | **01 Where Rollouts Begin** (divider, Soeun Kim) | 164 |
-| 5 | RLVR in One Picture (GRPO/DAPO flow, `diagram-flow lg`) | 175 |
-| 6 | The Diversity Bottleneck (3 prior fixes + shared assumption) | 199 |
-| 6b | Our Key Idea: Branch at the Root (SVG tree) | 225 |
-| 7 | An Unlikely Lever (opener: 1st response token; XL token strip) | 256 |
-| 8 | Sharp Prior, Flat Correctness (Fig 1; rank-20 = 2.7e-5; rank-~20 opener examples from Figs 9–11) | 283 |
-| 9 | First Tokens Route Continuations | 303 |
-| 10 | RLVR Sharpens the Wrong Habit (over-credited opener) | 328 |
-| 11 | Proposed Method: REFT, Diversify Only Token One (method flow) | 353 |
-| 12 | Consistent Gains, No Extra Cost (Table 1) | 377 |
-| 12b | Distinguished, Not Just Another Knob (vs MT/LATR baselines + rollout cost) | 401 |
+| 1 | Title — Small Interventions, Large Effects (8/21) | 86 |
+| 2 | Hook: 1 Position · 8 Tokens · 10 Pairs | 98 |
+| 3 | Contents (4 parts) | 125 |
+| 4 | **01 Where Rollouts Begin** (divider, Soeun Kim) | 167 |
+| 5 | RLVR in One Picture (GRPO/DAPO flow, `diagram-flow lg`) | 178 |
+| 6 | The Diversity Bottleneck (3 prior fixes + shared assumption) | 202 |
+| 6b | Our Key Idea: Branch at the Root (SVG tree) | 228 |
+| 7 | An Unlikely Lever (opener: 1st response token; XL token strip) | 259 |
+| 8 | Sharp Prior, Flat Correctness (Fig 1; rank-20 = 2.7e-5; rank-~20 opener examples from Figs 9–11) | 286 |
+| 9 | First Tokens Route Continuations | 306 |
+| 10 | RLVR Sharpens the Wrong Habit (over-credited opener) | 331 |
+| 11 | Proposed Method: REFT, Diversify Only Token One (method flow) | 356 |
+| 12 | Consistent Gains, No Extra Cost (Table 1) | 380 |
+| 12b | Distinguished, Not Just Another Knob (vs MT/LATR baselines + rollout cost; Base-before-GRPO row) | 403 |
 | 12c | Holds at Scale, Beyond Math (9B/14B gains, code RLVR, decoupling at scale — per-model lines) | 427 |
 | 13 | Explore in Training, Commit at Test | 450 |
 | 15 | **02 Eight Tokens of Safety** (divider, Jeung · Yoon) | 466 |
 | 16 | Reasoning Cuts Both Ways (LRM risk; safety-tax card at bottom) | 478 |
-| 17 | The Safety Primer (exactly 8 tokens: \n Let 's think about safety first . — XXL strip) | 500 |
-| 17b | SafePath at a Glance (Figure 2 full-width) | 526 |
+| 17 | The Safety Primer (exactly 8 tokens: \n Let 's think about safety first . — XXL strip, one line) | 500 |
+| 17b | SafePath at a Glance (Figure 2 full-width, top-pinned) | 526 |
 | 18 | Ninety Percent Less Harm (results) | 534 |
 | 19 | Initiate, Don't Terminate (soft vs harsh primer) | 549 |
 | 20 | The Primer Fires Again (emergent reactivation; enlarged fig 2c) | 562 |
-| 21 | One Lever, Two Directions (REFT ↔ SafePath synthesis) | 589 |
-| 22 | **03 Ten Harmless Pairs** (divider, Yoon · Jeung · Cho · Jeon) | 613 |
-| 23 | Fine-Tuning as a Service (OpenAI DPO API, min 10 pairs) | 627 |
-| 23b | Benign Data Attacks Exist, But… (TenBenign two-stage SFT + its tell) | 654 |
-| 24 | The Truly Benign Attack (benign prompt · prefer helpful) | 674 |
-| 25 | Frontier Models Fall for $2 (ASR 59/70/82%) | 688 |
-| 26 | The Margin Has One Exit (DPO mechanism) | 702 |
-| 26b | Why DPO, Not Just a Prefix (mechanism ablation on GPT-4o) | 717 |
-| 26d | Nothing to Pattern-Match (any prefix works; refusal-mixture 59.13→68.40) | 742 |
-| 27 | The Auditor's Dilemma (XSTest: same data, two intents) | 768 |
-| 29 | **04 Behavior Is Not Deletion** (divider, Yoon · Jun) | 797 |
-| 30 | One Term, Many Tasks (hub + 4 task leaves; adapted from icml2026 slide 2) | 809 |
-| 30x | Suppressed Is Not Removed (GDPR promise, Dist formula, claim-vs-measure mismatch) | 846 |
-| 30b | Surface Success Breaks Easily (paraphrase/fine-tune/quantization re-exposure) | 861 |
-| 30c | A Matter of Removing Influence (suppress vs retrain; derived capability) | 880 |
-| 34b | Papers in This Talk (4 featured entries: REFT · SafePath · Benign DPO · position) | 904 |
-| 34c | Other Lab Publications: Unlearning & Safety (6 entries, full width) | 932 |
-| 34d | Other Lab Publications: Discrete Diffusion (7 entries; submitted first: Reversal Curse · Confidence Shortcut · JUMP) | 962 |
-| 35 | Q&A closer (albertno@yonsei.ac.kr · ai-isl.yonsei.ac.kr) | 996 |
-| B0 | **Backup** (divider, dark) | 1004 |
-| B1 | Two Questions, One Object (SEAG/LSC connection; was slide 14) | 1012 |
-| B2 | Could Disentanglement Defend? (FedVPA-GP Figure 1; was slide 28) | 1031 |
-| B3 | Why a Factored Space Might Help (FedVPA-GP comments; was slide 28) | 1041 |
+| 22 | **03 Ten Harmless Pairs** (divider, Yoon · Jeung · Cho · Jeon) | 591 |
+| 23 | Fine-Tuning as a Service (OpenAI DPO API, min 10 pairs) | 605 |
+| 23b | Benign Data Attacks Exist, But… (TenBenign two-stage SFT + its tell) | 632 |
+| 24 | The Truly Benign Attack (benign prompt · prefer helpful) | 652 |
+| 25 | Frontier Models Fall for $2 (ASR 59/70/82%) | 666 |
+| 26 | The Margin Has One Exit (DPO mechanism) | 680 |
+| 26b | Why DPO, Not Just a Prefix (mechanism ablation on GPT-4o) | 695 |
+| 26d | Nothing to Pattern-Match (any prefix works; refusal-mixture 59.13→68.40) | 720 |
+| 27 | The Auditor's Dilemma (XSTest: same data, two intents) | 746 |
+| 29 | **04 Behavior Is Not Deletion** (divider, Yoon · Jun) | 775 |
+| 30 | One Term, Many Tasks (hub + 4 task leaves; adapted from icml2026 slide 2) | 787 |
+| 30x | Suppressed Is Not Removed (GDPR promise, Dist formula, claim-vs-measure mismatch) | 824 |
+| 30b | Surface Success Breaks Easily (paraphrase/fine-tune/quantization re-exposure) | 839 |
+| 30c | A Matter of Removing Influence (suppress vs retrain; derived capability) | 858 |
+| 34b | Papers in This Talk (4 featured entries: REFT · SafePath · Benign DPO · position) | 882 |
+| 34c | Other Lab Publications: Unlearning & Safety (6 entries, full width) | 910 |
+| 34d | Other Lab Publications: Discrete Diffusion (7 entries, chronological: NeurIPS 2025 · ICLR 2026 · ICML 2026 · submitted) | 940 |
+| 35 | Q&A closer (albertno@yonsei.ac.kr · ai-isl.yonsei.ac.kr) | 974 |
+| B0 | **Backup** (divider, dark) | 982 |
+| B1 | Two Questions, One Object (SEAG/LSC connection; was slide 14) | 990 |
+| B2 | Could Disentanglement Defend? (FedVPA-GP Figure 1; was slide 28) | 1009 |
+| B3 | Why a Factored Space Might Help (FedVPA-GP comments; was slide 28) | 1019 |
 
 ### Papers presented (ours)
 

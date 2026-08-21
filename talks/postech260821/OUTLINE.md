@@ -87,7 +87,7 @@ reordered 34d chronologically (submitted works last).
 | 30b | Surface Success Breaks Easily (paraphrase/fine-tune/quantization re-exposure) | 839 |
 | 30c | A Matter of Removing Influence (suppress vs retrain; derived capability) | 858 |
 | 34b | Papers in This Talk (4 featured entries: REFT · SafePath · Benign DPO · position) | 882 |
-| 34c | Other Lab Publications: Unlearning & Safety (6 entries, full width) | 910 |
+| 34c | Other Lab Publications: Unlearning & Safety (6 entries, chronological: EMNLP 2025 · AAAI 2026 · ICLR 2026 · ACL 2026 Findings) | 910 |
 | 34d | Other Lab Publications: Discrete Diffusion (7 entries, chronological: NeurIPS 2025 · ICLR 2026 · ICML 2026 · submitted) | 940 |
 | 35 | Q&A closer (albertno@yonsei.ac.kr · ai-isl.yonsei.ac.kr) | 974 |
 | B0 | **Backup** (divider, dark) | 982 |

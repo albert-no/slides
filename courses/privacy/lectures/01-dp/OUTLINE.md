@@ -2,6 +2,9 @@
 
 Eight-deck lecture series on differential privacy. `dp1`–`dp7` build the foundations (reconstruction attacks → pure DP → properties → approximate DP → DP-SGD → RDP → DP in ML / PATE). `dp8-fl` is the capstone applied talk (NeurIPS 2023: exact-optimal LDP mean estimation under shared randomness, with extensions to DP in modern ML).
 
+> **Reading this file.** 569 lines — prefer the per-deck section over the whole
+> file. `grep -n '^## ' OUTLINE.md` for the map, then `Read` the one deck's range.
+
 ## Files
 
 | File | Purpose |

@@ -11,6 +11,12 @@ All lecture decks live flat in this folder (`lecNN-*.html`). Arc climbs the
 **trust stack**: data → model → output → society. Real paper figures (cropped +
 cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SVG.
 
+> **Reading this file.** 1,360 lines — do not read it whole (~31k tokens). The
+> tables below (Modules, Lecture index, Technical supplements, Cross-folder reuse)
+> are the navigator; each deck then has its own `## lecNN-*.html` section. Working
+> on one lecture? Read that section only — `grep -n '^## ' OUTLINE.md` for the line
+> range, then `Read` with offset/limit. ~1.5k tokens instead of 31k.
+
 ## Modules
 
 | Module | Weeks | Theme |

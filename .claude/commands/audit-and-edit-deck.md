@@ -1,74 +1,76 @@
 # /audit-and-edit-deck
 
-Visually audit one or more decks by rendering every slide to PNG and checking for overflow, overlap, awkward line breaks, and other layout flaws that the static lint cannot catch. Then fix the issues found.
-
-This is the **visual** counterpart to `/audit-deck` (static-analysis only). When the user says "audit this slide" / "screenshot check" / "look for overflow" / similar, this is the right command.
+Visually audit one or more decks by rendering every slide to PNG and checking for overflow, overlap, awkward line breaks, and other layout flaws static lint cannot catch — then fix what you find. The **visual** counterpart to `/audit-deck`. Triggered by "audit this slide", "screenshot check", "look for overflow", or similar.
 
 ## Inputs
 
-A path argument — either a single HTML file or a folder.
+A path — a single HTML file, or a folder (audit every `*.html` directly inside it, skipping `*-note.html`, `*-standalone.html`, `*.standalone.html`, and `reference/`; one deck at a time). No path → the single deck in the cwd; if several, ask which.
 
-- **File** (`<path>/<deck>.html`): audit that one deck.
-- **Folder** (`<folder>/`): audit every `*.html` file directly in the folder whose name doesn't end in `-note.html`, `-standalone.html`, or `.standalone.html`. Skip the `reference/` folder. Process one deck at a time.
+## Token budget — binding
 
-If no path is given, default to the single `.html` deck under the current working directory (excluding notes / standalones). If the directory contains multiple decks, ask which one.
+A full-deck read is the most expensive routine operation in this repo. These are limits, not suggestions:
+
+- **Render at `-r 60`.** ~480 tokens/slide. `-r 150` is ~1,330 — 3× the cost for typography detail this audit does not check.
+- **`-r 150` is single-page only**, via `pdftoppm -f N -l N -r 150`, and only when fine text detail is genuinely in question. Never a full deck.
+- **Read the whole deck exactly once**, in step 3. Every later pass re-renders and re-reads **only the pages edited since**.
+- **Never re-read an unchanged slide.** If you already have the image in context, you have it.
+- **Don't read the reference docs whole.** `DESIGN_SYSTEM.md` §1 is the rule spine; `grep` GOTCHAS by symptom.
+
+State your intended page count and DPI before rendering. If a deck is large enough that one pass at `-r 60` is still heavy, say so and ask before proceeding rather than silently truncating.
 
 ## Workflow (per deck)
 
-0. **Toolchain check.** Confirm headless Chrome and `pdftoppm` are available (`command -v pdftoppm`; Chrome at the path below or `google-chrome`/`chromium`). If either is missing, try to install it (`brew install poppler` on macOS, or ask the user). If it is **confirmed unavailable and cannot be installed**, do not keep forcing the screenshot pipeline: tell the user plainly that no visual render is possible in this environment, and run the audit using `DESIGN_SYSTEM.md` → **Verifying without the toolchain (no-render fallback)** instead — slide map by grep, overflow by the Vertical-budget arithmetic, lint checks by targeted grep. Apply the same fix rules (step 4) to what that method finds, and flag in the final Output that **no visual render was performed** (the fallback cannot catch visual overlap, squashed math spacing, or drifted SVG overlays) — recommend re-running this command once tooling is available.
-1. **Render the deck to PDF** via headless Chrome:
-   ```bash
-   mkdir -p /tmp/<basename>-shots && cd /tmp/<basename>-shots
-   rm -f deck.pdf slide-*.png
-   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-     --headless=new --incognito --user-data-dir=/tmp/fresh-$RANDOM --disk-cache-size=1 \
-     --disable-gpu --no-sandbox \
-     --virtual-time-budget=30000 --run-all-compositor-stages-before-draw \
-     --print-to-pdf=deck.pdf --print-to-pdf-no-header \
-     "file://$(realpath <deck>.html)"
-   ```
-   **The `--virtual-time-budget=30000 --run-all-compositor-stages-before-draw` flags are required.** Without them, a large deck's `<img>` slides can be snapshotted before images finish layout, so Chrome scales the whole page to ~55% (anchored top-left, wide margins) — a **render artifact, not a slide defect**. If you see a whole-slide shrink on an image slide, re-render with these flags before "fixing" the slide; also confirm in a manual `Cmd+P` (which never shows it). See `GOTCHAS.md` → "Image slide shrinks to ~55% in headless print".
-2. **Split into PNGs** (one per slide) via poppler:
-   ```bash
-   pdftoppm -png -r 60 deck.pdf slide
-   ```
-   **`-r 60` is deliberate** (token economy — see CLAUDE.md → Agent workflow): the audit checks style (overflow, overlap, line breaks, squashed math), which low-DPI renders show fine. Re-render a *single* suspicious page at `-r 150` (`pdftoppm -f <N> -l <N> -r 150`) only when fine text detail must be confirmed. If `pdftoppm` is missing, instruct the user to `brew install poppler`. Do not silently skip — and if it can't be installed at all, use the step-0 fallback rather than abandoning the audit.
-3. **Read each `slide-NN.png`** with the `Read` tool and inspect for:
-   - **Figure or text overflow** past the 1280×720 slide rectangle.
-   - **Brand-footer collision** — `.brand-footer` lives at bottom-left (~40 px reserved). A `.highlight`, `.cite`, or trailing prose ending inside that region counts as overlap.
-   - **Text-on-figure / figure-on-figure overlap** — SVG labels positioned on top of arrows or other elements; HTML overlays drifting onto chart strokes.
-   - **Inappropriate line breaks** — math glyphs split across lines, captions wrapping mid-phrase, lone widows, em-dash orphans.
-   - **Squashed math spacing** — `\!` negative thin space pulling commas/labels into adjacent glyphs; literal `\#`/`\&` leftover from LaTeX escapes in HTML prose.
-4. **Fix issues in place.** Priority order:
-   1. Compress prose to noun phrases (Priority 1).
-   2. Combine adjacent `math-block` divs into one `aligned` block (saves ~30 px vertical).
-   3. Trim redundant intro/outro lines, `→ Part X` cross-references, or duplicated framing.
-   4. **Split the slide** into two consecutive slides — preferred over cramming.
-   - **Never shrink type.** Priority 0 in `DESIGN_SYSTEM.md` is non-negotiable.
-5. **Re-render only the affected pages** (`pdftoppm -f <N> -l <M> -r 60`) and re-read **only those PNGs** to confirm the fix. The full-deck read happens exactly once, in step 3 — never re-read the whole deck after a fix.
-6. After all fixes, run `python3 scripts/lint-deck.py <deck>` once and report.
-7. **Update `OUTLINE.md`** if any slide was added, split, removed, or reordered (line numbers must stay accurate).
+**0. Toolchain check.** `command -v pdftoppm`; Chrome at the path below or `google-chrome`/`chromium`. Missing → try to install (`brew install poppler`). Confirmed unavailable and uninstallable → do **not** keep forcing the pipeline: say plainly that no visual render is possible here, run the audit via `DESIGN_SYSTEM.md` §11 (slide map by grep, overflow by vertical-budget arithmetic, lint by targeted grep), apply the same fix rules, and flag in the Output that **no visual render was performed**.
+
+**1. Render to PDF.**
+```bash
+mkdir -p /tmp/<basename>-shots && cd /tmp/<basename>-shots
+rm -f deck.pdf slide-*.png
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --headless=new --incognito --user-data-dir=/tmp/fresh-$RANDOM --disk-cache-size=1 \
+  --disable-gpu --no-sandbox \
+  --virtual-time-budget=30000 --run-all-compositor-stages-before-draw \
+  --print-to-pdf=deck.pdf --print-to-pdf-no-header \
+  "file://$(realpath <deck>.html)"
+```
+`--virtual-time-budget=30000 --run-all-compositor-stages-before-draw` are **required**. Without them a large deck's `<img>` slides can be snapshotted before layout finishes, so Chrome scales the page to ~55% anchored top-left — a **render artifact, not a slide defect**. Seeing a whole-slide shrink on an image slide? Re-render with these flags and confirm in a manual `Cmd+P` before "fixing" anything (GOTCHAS §9).
+
+**2. Split to PNG.** `pdftoppm -png -r 60 deck.pdf slide` — see Token budget. Missing `pdftoppm` → `brew install poppler`; don't silently skip.
+
+**3. Read each `slide-NN.png` once** and inspect for:
+- Figure or text overflow past the 1280×720 rectangle.
+- **Brand-footer collision** — `.brand-footer` sits bottom-left with ~40 px reserved. A `.highlight`, `.cite`, or trailing prose ending in that region counts as overlap.
+- **Text-on-figure / figure-on-figure overlap** — SVG labels over arrows, HTML overlays drifting onto strokes.
+- **Bad line breaks** — math split across lines, captions wrapping mid-phrase, widows, em-dash orphans.
+- **Squashed math** — `\!` pulling glyphs together; stray `\#`/`\&` from LaTeX escapes.
+
+**4. Fix in place**, in priority order: compress prose to noun phrases → combine adjacent `math-block` divs into one `aligned` (~30 px) → trim redundant intro/outro and cross-references → **split the slide** (preferred over cramming). **Never shrink type** — Priority 0 is non-negotiable.
+
+**5. Verify narrowly.** Re-render only affected pages (`pdftoppm -f N -l M -r 60`) and re-read **only those**. The full-deck read already happened in step 3 and does not repeat.
+
+**6. Lint.** `python3 scripts/lint-deck.py <deck>` once, and report.
+
+**7. Update `OUTLINE.md`** if any slide was added, split, removed, or reordered — line numbers must stay accurate.
 
 ## Folder mode
 
-When the argument is a folder, run the per-deck workflow above against each matching `.html` file in sequence. Use a separate `/tmp/<basename>-shots/` directory per deck to avoid mixing PNGs. Report each deck's findings under a heading; do not interleave.
+Run the per-deck workflow against each matching file in sequence, a separate `/tmp/<basename>-shots/` per deck. Report each deck under its own heading; don't interleave. The token budget applies **per deck** — it does not amortize across a folder.
 
 ## Output
 
-After all fixes are committed to the file(s):
-
 - One-paragraph summary of what was wrong and how it was fixed.
-- Bullet list of slides modified (with slide-number references).
-- Note if any slide was split into multiple slides (and the new total slide count).
+- Slides modified, with numbers.
+- Any slide split (and the new total count).
 - Final lint status.
-- If the no-render fallback (step 0) was used: state explicitly that no visual render was performed and which checks were done by grep/arithmetic instead.
+- Pages rendered and read, at what DPI — so the cost is visible.
+- If the §11 fallback was used: say so explicitly, and which checks replaced the render.
 
-If no issues found, say so explicitly — don't fabricate findings.
+Found nothing? Say so. Don't fabricate findings.
 
 ## Do not
 
-- Shrink type, compress vertical rhythm, or pad with `.tiny` / `.small` to make content fit. Split the slide instead.
-- Re-read slides that haven't changed since the last read, or render fix-loop pages above `-r 60` without a concrete reason.
-- Silently skip slides because the tool errored. Surface the error.
-- Edit `-note.html` companion files unless the user explicitly asks.
-- Touch the canonical `reference/` files.
+- Shrink type, compress vertical rhythm, or pad with `.tiny`/`.small` to make content fit. Split instead.
+- Re-read unchanged slides, or render fix-loop pages above `-r 60` without a concrete stated reason.
+- Read `DESIGN_SYSTEM.md` or `GOTCHAS.md` cover to cover.
+- Silently skip slides because a tool errored. Surface the error.
+- Edit `-note.html` companions unless asked, or touch canonical `reference/` files.

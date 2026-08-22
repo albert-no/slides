@@ -7,11 +7,11 @@ Audit a deck against the talks design system. Produces a report — does not edi
 
 ## Workflow
 
-1. **Read only what you need**: `DESIGN_SYSTEM.md` **§1 Priorities** and **§2 Deck anatomy** (those sections, not the file); grep `reference/deck.css` / `deck.js` for the specific selectors in question. Never read the reference docs cover to cover.
+1. **Read canonical references**: `reference/deck.css`, `reference/deck.js`, `DESIGN_SYSTEM.md` (Priorities, Style rules, Deck anatomy).
 2. **Run `python3 scripts/lint-deck.py <deck>`** and capture the output verbatim. Optionally run `scripts/find-wordy.py` / `scripts/find-dense.py` for density hot spots.
 3. **Inspect every slide** and rate it on:
    - Consistency with the design system (classes used, accent patterns, divider placement).
-   - Style priorities from `DESIGN_SYSTEM.md` §1: one idea per slide, 7×7 density, `**strong**` / `*em*` usage, max one `.highlight`, math in `.math-block`, visual element + vertical budget (Priority 2).
+   - Style priorities from `DESIGN_SYSTEM.md`: one idea per slide, 7×7 density, `**strong**` / `*em*` usage, max one `.highlight`, math in `.math-block`, visual element + vertical budget (Priority 2).
    - Deck anatomy: title → TOC (if 3+ sections) → sections with dividers → closer; ghost-deck test on the `h2` sequence.
    - Visual richness: content slides without an exhibit or a `TODO real figure` marker.
 4. **Draft a report** with these sections:

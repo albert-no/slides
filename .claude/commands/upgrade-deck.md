@@ -7,7 +7,7 @@ Interactively pull a deck back in line with the current design system: strip per
 
 ## Workflow
 
-1. **Read only what you need**: `DESIGN_SYSTEM.md` **§1 Priorities** and **§2 Deck anatomy** (those sections only); grep `reference/deck.css` / `deck.js` for the specific selectors you are auditing. Never read the reference docs cover to cover.
+1. **Read only what you need**: `DESIGN_SYSTEM.md` **§1 Priorities** and **§2 Deck anatomy**, using the `offset`/`limit` from the doc's index block. Grep `reference/deck.css` / `deck.js` for the specific selectors you are auditing. Never read the reference docs cover to cover.
 2. **Check canonical wiring**: the deck must `<link>` `reference/colors_and_type.css` and `reference/deck.css`, and load `reference/deck.js` (relative path per depth — `../../reference/` for talks, `../../../../reference/` for course lectures). If the deck inlines copies of canonical CSS/JS instead, propose replacing them with links.
 3. **Override audit** — list per-deck `<style>` rules that shadow canonical tokens, each with a one-line rationale for removal (see `GOTCHAS.md` for symptoms):
    - Redefinitions of `p`, `li`, `h1`–`h3`, `.subtitle`, `.cite`, `.small`, `.tiny`, `.math-block`, `.muted`, `.code-block` font sizes.

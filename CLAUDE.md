@@ -10,14 +10,14 @@ These docs are reference material, not briefing material. Reading them cover-to-
 
 | Doc | How to enter it |
 |---|---|
-| `DESIGN_SYSTEM.md` (§-numbered) | **Never read whole.** Read §1 Priorities, then `grep` or `Read` the one numbered section you need. Its "How to read this file" table maps need → section. |
-| `GOTCHAS.md` (9 categories) | **Never read whole.** `grep` your symptom. |
+| `DESIGN_SYSTEM.md` (§1–§12) | **Never read whole.** Its section index gives every section's line range and literal `offset=…, limit=…` — read §1, then the one section your task needs, using those arguments. |
+| `GOTCHAS.md` (§1–§9) | **Never read whole.** `grep` your symptom, or jump to a category with its index `Read` arguments. |
 | `OUTLINE.md` | Read the leaf for the folder you're editing. Root only for cross-folder lookup. |
 | `reference/deck.css` | Authoritative for any class's real behavior. Grep the selector. |
 
 Three hard rules:
 
-1. **Read each reference doc at most once per session**, and by section. Re-opening a section you already read is a bug.
+1. **Enter by section, never whole.** Open the doc's index block (the first ~20 lines), take the `offset`/`limit` for the section you need, and read exactly that. A whole-file read of `DESIGN_SYSTEM.md` costs ~6k tokens against ~500–1.5k for a section; of `GOTCHAS.md`, ~4.7k against ~600. Read each section at most once per session — re-opening one you already read is a bug. If a range looks wrong, `python3 scripts/doc-index-lint.py --fix`; do not read the whole file to find your place.
 2. **Screenshot audits render at `-r 60`.** A full-deck pass is ~480 tokens/slide at 60 DPI and ~1,330 at 150 — 3× for detail the audit doesn't check. `-r 150` is for a *single* page where fine text is genuinely in question.
 3. **Re-read only what changed.** The full-deck read happens exactly once per audit; every later pass re-renders and re-reads only the slides edited since.
 
@@ -61,6 +61,7 @@ scripts/
   find-wordy.py  flag prose over the 7×7 word ceiling
   find-dense.py  flag over-stuffed slides
   outline-lint.py verify OUTLINE.md file:line pointers
+  doc-index-lint.py verify/regenerate the section index in the reference docs
 OUTLINE.md       per-folder content index (root / topic / leaf)
 backup/          dated snapshots of docs before major rewrites
 ```
@@ -75,6 +76,8 @@ Only authoring source and image assets are committed. `*.standalone.html` is a b
 4. `python3 scripts/find-wordy.py <deck>.html` after drafting prose-heavy slides; `find-dense.py` for over-stuffed ones.
 5. **Update `OUTLINE.md`** — any added/removed slide, renamed section, changed line range, or added/removed cited theorem, in the *same* edit. Line numbers are read as authoritative pointers. Verify with `python3 scripts/outline-lint.py`. Full rule: DESIGN_SYSTEM §10.
 6. Distribute: `python3 scripts/bundle.py <talk>/<talk>.html`.
+
+**Edited `DESIGN_SYSTEM.md` or `GOTCHAS.md`?** Run `python3 scripts/doc-index-lint.py --fix` in the same change — any inserted or deleted line shifts the section index, and a stale index sends the next reader to the wrong lines. The linter exits 2 when it is out of date.
 
 **If the toolchain is missing** — attempt the real tools first. Only when `command -v google-chrome pdftoppm python3 mutool convert gs` is empty and nothing installs, use DESIGN_SYSTEM §11 (grep slide map, budget arithmetic, targeted-grep lint). Say so explicitly in your report: that fallback cannot catch visual overlap, squashed math spacing, or drifted SVG overlays.
 

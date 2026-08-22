@@ -14,7 +14,7 @@ A full-deck read is the most expensive routine operation in this repo. These are
 - **`-r 150` is single-page only**, via `pdftoppm -f N -l N -r 150`, and only when fine text detail is genuinely in question. Never a full deck.
 - **Read the whole deck exactly once**, in step 3. Every later pass re-renders and re-reads **only the pages edited since**.
 - **Never re-read an unchanged slide.** If you already have the image in context, you have it.
-- **Don't read the reference docs whole.** `DESIGN_SYSTEM.md` §1 is the rule spine; `grep` GOTCHAS by symptom.
+- **Enter the reference docs by section.** Both carry an index block giving each section's `offset`/`limit` — use it. `DESIGN_SYSTEM.md` §1 is the rule spine; for a symptom, jump to the matching `GOTCHAS.md` category or grep it. Never read either whole.
 
 State your intended page count and DPI before rendering. If a deck is large enough that one pass at `-r 60` is still heavy, say so and ask before proceeding rather than silently truncating.
 

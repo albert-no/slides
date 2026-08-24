@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Learning Math 3 &mdash; Mutual Information &amp; Data Processing</title>
+
+<!-- Design system (canonical; all decks link to reference/). -->
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/deck.css">
+
+<!-- KaTeX for math rendering. -->
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- SLIDE 1 — Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Deep Learning Math &middot; Lecture 3</div>
+  <h1>Mutual Information<br>&amp; Data Processing</h1>
+  <div class="divider"></div>
+  <p class="subtitle">How much does $Y$ tell us about $X$?</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;&middot;&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Fall 2026</p>
+</div>
+
+<!-- SLIDE 2 — Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list" style="display:grid;grid-auto-flow:column;grid-template-rows:repeat(4,auto);grid-template-columns:1fr 1fr;gap:20px 44px">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Why Mutual Information?</div>
+        <div class="toc-sub">A layer is a channel</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Joint Random Variables</div>
+        <div class="toc-sub">Joint pmf, marginals, independence</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Joint &amp; Conditional Entropy</div>
+        <div class="toc-sub">$H(X,Y)$, $H(Y|X)$, chain rule</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Mutual Information</div>
+        <div class="toc-sub">Definition, Venn view, $I \geq 0$</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Data Processing</div>
+        <div class="toc-sub">DPI, Markov chains, XOR surprise</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Differential Entropy</div>
+        <div class="toc-sub">Continuous RVs, $h(X)$, its quirks</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">07</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Maximum Entropy</div>
+        <div class="toc-sub">The Gaussian wins</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 01 — WHY MUTUAL INFORMATION ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Why Mutual Information?</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A layer is a channel</p>
+</div>
+
+<!-- A layer is a channel -->
+<div class="slide">
+  <h2>A Layer Is a Channel</h2>
+  <div class="divider"></div>
+  <p>A network maps input $X$ through <strong>representations</strong>:</p>
+  <div style="display:flex;justify-content:center;margin:14px 0;">
+    <svg viewBox="0 0 780 170" style="width:100%;max-width:880px;">
+      <defs><marker id="ch-arr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
+      <rect x="20" y="45" width="120" height="80" rx="10" fill="#003876"/>
+      <text x="80" y="80" font-size="18" fill="#ffffff" text-anchor="middle" font-weight="700">input X</text>
+      <text x="80" y="105" font-size="14" fill="#c9d3de" text-anchor="middle">image, text</text>
+      <line x1="146" y1="85" x2="196" y2="85" stroke="#1a5296" stroke-width="2.5" marker-end="url(#ch-arr)"/>
+      <text x="171" y="72" font-size="14" fill="#666" text-anchor="middle">layer 1</text>
+      <rect x="202" y="45" width="110" height="80" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="257" y="90" font-size="18" fill="#003876" text-anchor="middle" font-weight="700">Z1</text>
+      <line x1="318" y1="85" x2="368" y2="85" stroke="#1a5296" stroke-width="2.5" marker-end="url(#ch-arr)"/>
+      <text x="343" y="72" font-size="14" fill="#666" text-anchor="middle">layer 2</text>
+      <rect x="374" y="45" width="110" height="80" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="429" y="90" font-size="18" fill="#003876" text-anchor="middle" font-weight="700">Z2</text>
+      <line x1="490" y1="85" x2="540" y2="85" stroke="#1a5296" stroke-width="2.5" marker-end="url(#ch-arr)"/>
+      <text x="515" y="72" font-size="14" fill="#666" text-anchor="middle">head</text>
+      <rect x="546" y="45" width="120" height="80" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="606" y="80" font-size="18" fill="#003876" text-anchor="middle" font-weight="700">output</text>
+      <text x="606" y="105" font-size="14" fill="#666" text-anchor="middle">prediction</text>
+    </svg>
+  </div>
+  <ul>
+    <li>Each layer: a <strong>channel</strong> from $X$ to $Z$</li>
+    <li>Question: how much information about $X$ <strong>survives</strong>?</li>
+  </ul>
+</div>
+
+<!-- Questions we cannot yet ask -->
+<div class="slide">
+  <h2>Questions We Cannot Yet Ask</h2>
+  <div class="divider"></div>
+  <p>Our tools so far handle <strong>one</strong> random variable:</p>
+  <div class="math-block" style="margin:8px 0">$$H(X) \;\text{ (prob01)}, \qquad D(P \,\|\, Q) \;\text{ (prob02)}$$</div>
+  <p>Data comes in <strong>pairs</strong> $(X, Y)$:</p>
+  <ul>
+    <li>How much does the <strong>label</strong> say about the image?</li>
+    <li>How much of $X$ remains in a <strong>feature</strong> $Z$?</li>
+    <li>How much uncertainty is <strong>left</strong> after observing $Y$?</li>
+  </ul>
+</div>
+
+<!-- Preview: information only decays -->
+<div class="slide">
+  <h2>Preview &mdash; Information Only Decays</h2>
+  <div class="divider"></div>
+  <p>Today's headline: the <strong>data processing inequality</strong></p>
+  <div class="math-block">$$X \to Z_1 \to Z_2 \quad\Longrightarrow\quad
+    I(X; Z_2) \;\leq\; I(X; Z_1) \;\leq\; H(X)$$</div>
+  <ul>
+    <li>$I$: today's measure of <strong>shared information</strong></li>
+    <li>Processing can <strong>destroy</strong> information, never create it</li>
+  </ul>
+  <div class="highlight">
+    <p>No layer, however clever, adds information about $X$.</p>
+  </div>
+</div>
+
+<!-- The route -->
+<div class="slide">
+  <h2>The Route</h2>
+  <div class="divider"></div>
+  <p>One definition at a time, up to the Gaussian:</p>
+  <div style="display:flex;justify-content:center;margin:14px 0;">
+    <svg viewBox="0 0 780 200" style="width:100%;max-width:880px;">
+      <defs><marker id="rt-arr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
+      <rect x="14" y="60" width="140" height="80" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="84" y="94" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">joint pmf</text>
+      <text x="84" y="118" font-size="14" fill="#666" text-anchor="middle">two RVs at once</text>
+      <line x1="158" y1="100" x2="192" y2="100" stroke="#1a5296" stroke-width="2.5" marker-end="url(#rt-arr)"/>
+      <rect x="198" y="60" width="140" height="80" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="268" y="94" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">H(X,Y), H(X|Y)</text>
+      <text x="268" y="118" font-size="14" fill="#666" text-anchor="middle">chain rule</text>
+      <line x1="342" y1="100" x2="376" y2="100" stroke="#1a5296" stroke-width="2.5" marker-end="url(#rt-arr)"/>
+      <rect x="382" y="60" width="130" height="80" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="447" y="94" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">I(X;Y), DPI</text>
+      <text x="447" y="118" font-size="14" fill="#666" text-anchor="middle">shared bits</text>
+      <line x1="516" y1="100" x2="550" y2="100" stroke="#1a5296" stroke-width="2.5" marker-end="url(#rt-arr)"/>
+      <rect x="556" y="60" width="100" height="80" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="606" y="94" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">h(X)</text>
+      <text x="606" y="118" font-size="14" fill="#666" text-anchor="middle">continuous</text>
+      <line x1="660" y1="100" x2="694" y2="100" stroke="#1a5296" stroke-width="2.5" marker-end="url(#rt-arr)"/>
+      <rect x="700" y="60" width="72" height="80" rx="10" fill="#003876"/>
+      <text x="736" y="94" font-size="15" fill="#ffffff" text-anchor="middle" font-weight="700">MaxEnt</text>
+      <text x="736" y="118" font-size="13" fill="#c9d3de" text-anchor="middle">Gaussian</text>
+    </svg>
+  </div>
+  <p class="muted">Discrete first; the continuous story repeats it with a twist.</p>
+</div>
+
+<!-- ===== SECTION 02 — JOINT RANDOM VARIABLES ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Joint Random Variables</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Joint pmf, marginals, independence</p>
+</div>
+
+<!-- Joint pmf -->
+<div class="slide">
+  <h2>Joint pmf</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (joint pmf).</h3>
+    <p>For $X \in \mathcal{X}$ and $Y \in \mathcal{Y}$:</p>
+    <div class="math-block" style="margin:8px 0">$$p_{X,Y}(x, y) = \Pr(X = x,\, Y = y)$$</div>
+  </div>
+  <ul>
+    <li>One table over <strong>all pairs</strong> $(x,y)$</li>
+    <li>Non-negative, sums to $1$</li>
+  </ul>
+</div>
+
+<!-- Running example -->
+<div class="slide">
+  <h2>Running Example &mdash; A 2&times;2 Joint pmf</h2>
+  <div class="divider"></div>
+  <p>Today's companion table, $X, Y \in \{0, 1\}$:</p>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <table style="text-align:center;">
+      <tr><th>$p_{X,Y}$</th><th>$y = 0$</th><th>$y = 1$</th><th><em>row sum</em> $\,p_X$</th></tr>
+      <tr><td><strong>$x = 0$</strong></td><td>$1/4$</td><td>$1/4$</td><td>$1/2$</td></tr>
+      <tr><td><strong>$x = 1$</strong></td><td>$1/2$</td><td>$0$</td><td>$1/2$</td></tr>
+      <tr><td><em>col sum</em> $\,p_Y$</td><td>$3/4$</td><td>$1/4$</td><td>$1$</td></tr>
+    </table>
+  </div>
+  <p class="muted">Every quantity today gets computed on this table.</p>
+</div>
+
+<!-- Marginals -->
+<div class="slide">
+  <h2>Marginals from the Joint</h2>
+  <div class="divider"></div>
+  <p><strong>Sum out</strong> the other variable:</p>
+  <div class="math-block">$$p_X(x) \;=\; \sum_{y \in \mathcal{Y}} p_{X,Y}(x, y)
+    \;=\; \sum_{y \in \mathcal{Y}} p_{X|Y}(x|y)\, p_Y(y)
+    \;=\; \mathbb{E}\bigl[p_{X|Y}(x|Y)\bigr]$$</div>
+  <ul>
+    <li>Row sums give $p_X$; column sums give $p_Y$</li>
+    <li>Last form: expectation over the random $Y$</li>
+  </ul>
+  <p class="muted">Joint knows everything; marginals forget the partner.</p>
+</div>
+
+<!-- Conditional pmf -->
+<div class="slide">
+  <h2>Conditional pmf</h2>
+  <div class="divider"></div>
+  <p><strong>Renormalize</strong> one column of the joint:</p>
+  <div class="math-block" style="margin:8px 0">$$p_{X|Y}(x|y) = \frac{p_{X,Y}(x,y)}{p_Y(y)}$$</div>
+  <p>Running example, condition on $Y = 0$ (mass $3/4$):</p>
+  <div class="math-block" style="margin:8px 0">$$p_{X|Y}(0|0) = \frac{1/4}{3/4} = \frac{1}{3},
+    \qquad p_{X|Y}(1|0) = \frac{1/2}{3/4} = \frac{2}{3}$$</div>
+  <p class="muted">A pmf over $x$ for each fixed $y$.</p>
+</div>
+
+<!-- Exercise: linearity -->
+<div class="slide">
+  <h2>Exercise &mdash; Linearity of Expectation</h2>
+  <div class="divider"></div>
+  <p><strong>Exercise.</strong> For any $f: \mathcal{X} \to \mathbb{R}$, $g: \mathcal{Y} \to \mathbb{R}$, show</p>
+  <div class="math-block">$$\mathbb{E}\bigl[f(X) + g(Y)\bigr] = \mathbb{E}\bigl[f(X)\bigr] + \mathbb{E}\bigl[g(Y)\bigr]$$</div>
+  <ul>
+    <li>Holds for <strong>any</strong> joint distribution</li>
+    <li>No independence needed</li>
+  </ul>
+  <p class="muted">Hint: expand over $p_{X,Y}$, sum out the partner.</p>
+</div>
+
+<!-- Independence -->
+<div class="slide">
+  <h2>Independence</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (independence).</h3>
+    <p>$X$ and $Y$ are independent if and only if</p>
+    <div class="math-block" style="margin:8px 0">$$p_{X,Y}(x, y) = p_X(x)\, p_Y(y)
+      \quad \text{for all } x \in \mathcal{X},\, y \in \mathcal{Y}$$</div>
+  </div>
+  <ul>
+    <li>Joint table = <strong>outer product</strong> of the marginals</li>
+    <li>Running example: $p_{X,Y}(1,1) = 0 \neq \tfrac12 \cdot \tfrac14$ &mdash; dependent</li>
+  </ul>
+</div>
+
+<!-- Exercises: independence -->
+<div class="slide">
+  <h2>Exercises &mdash; Independence Toolkit</h2>
+  <div class="divider"></div>
+  <p><strong>Exercise 1.</strong> If $p_{X,Y}(x,y) = \phi_1(x)\,\phi_2(y)$ for all $x, y$, show $X$ and $Y$ are independent.</p>
+  <p class="muted">Any factorization works; factors need not be pmfs.</p>
+  <p><strong>Exercise 2.</strong> For independent $X, Y$ and any $f, g$, show</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_{X,Y}\bigl[f(X)\, g(Y)\bigr]
+    = \mathbb{E}_X\bigl[f(X)\bigr]\; \mathbb{E}_Y\bigl[g(Y)\bigr]$$</div>
+</div>
+
+<!-- Random vectors -->
+<div class="slide">
+  <h2>Random Vectors</h2>
+  <div class="divider"></div>
+  <p>More than two: stack into a <strong>random vector</strong></p>
+  <div class="math-block">$$X^n = (X_1, \dots, X_n) \in \mathcal{X}^n, \qquad
+    p_{X^n}(x^n) = \Pr(X_1 = x_1, \dots, X_n = x_n)$$</div>
+  <ul>
+    <li>One pmf over all $n$-tuples</li>
+    <li>Same rules: marginalize, condition, factor</li>
+  </ul>
+</div>
+
+<!-- Supervised learning view -->
+<div class="slide">
+  <h2>Supervised Learning = Joint Distribution</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;align-items:start;">
+    <div style="text-align:center;">
+      <img src="../figs/binary_image.png" alt="5x5 binary image" style="max-height:280px;">
+      <p class="muted" style="margin-top:6px;">$X^{25} \in \{0,1\}^{25}$</p>
+    </div>
+    <div>
+      <p>A data point is a <strong>pair</strong> $(X, Y)$:</p>
+      <ul>
+        <li>$X$: random vector (the 5&times;5 image from prob01)</li>
+        <li>$Y \in \{0, 1, \dots, 9\}$: the label</li>
+      </ul>
+      <div class="highlight">
+        <p>Classification = learning $p_{Y|X}(y|x)$.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Model outputs a conditional pmf -->
+<div class="slide">
+  <h2>The Model Outputs a Conditional pmf</h2>
+  <div class="divider"></div>
+  <p>For an input image $X$, the network returns</p>
+  <div class="math-block" style="margin:8px 0">$$f(X) = (\hat{y}_0, \dots, \hat{y}_9),
+    \qquad \text{hope: } \hat{y}_i = \Pr(Y = i \mid X)$$</div>
+  <p>Given a hand-drawn digit that could be a 1 or a 7:</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr(Y = 1 \mid X) = \,?\, \qquad \Pr(Y = 7 \mid X) = \,?$$</div>
+  <p class="muted">Ambiguity lives in the conditional pmf, not the argmax.</p>
+</div>
+
+<!-- ===== SECTION 03 — JOINT & CONDITIONAL ENTROPY ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Joint &amp; Conditional Entropy</h1>
+  <div class="divider"></div>
+  <p class="subtitle">$H(X,Y)$, $H(Y|X)$, chain rule</p>
+</div>
+
+<!-- Joint entropy definition -->
+<div class="slide">
+  <h2>Joint Entropy</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (joint entropy).</h3>
+    <p>For jointly distributed $X, Y$ with pmf $p_{X,Y}$:</p>
+    <div class="math-block" style="margin:8px 0">$$H(X, Y)
+      = \mathbb{E}\Bigl[\log \frac{1}{p_{X,Y}(X, Y)}\Bigr]
+      = \sum_{x, y} p_{X,Y}(x, y) \log \frac{1}{p_{X,Y}(x, y)}$$</div>
+  </div>
+  <ul>
+    <li>Surprisal of the <strong>pair</strong>, priced by the joint pmf</li>
+    <li>Supports may differ: $X \in [M]$, $Y \in [N]$</li>
+  </ul>
+</div>
+
+<!-- Recall expectation of joint function -->
+<div class="slide">
+  <h2>Recall &mdash; Expectation over a Pair</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Recall (LOTUS, prob01).</h3>
+    <p>For any $f$ on pairs:</p>
+    <div class="math-block" style="margin:8px 0">$$\mathbb{E}\bigl[f(X, Y)\bigr]
+      = \sum_{x, y} p_{X,Y}(x, y)\, f(x, y)$$</div>
+  </div>
+  <ul>
+    <li>Same rule as one RV, alphabet = pairs</li>
+    <li>$H(X,Y)$: apply with $f = \log \tfrac{1}{p_{X,Y}}$</li>
+  </ul>
+</div>
+
+<!-- Worked example: H(X,Y) -->
+<div class="slide">
+  <h2>Example &mdash; $H(X,Y)$ on the Table</h2>
+  <div class="divider"></div>
+  <p>Three nonzero cells: $\tfrac14, \tfrac14, \tfrac12$</p>
+  <div class="math-block">$$H(X, Y)
+    = \tfrac14 \log 4 + \tfrac14 \log 4 + \tfrac12 \log 2
+    = \tfrac12 + \tfrac12 + \tfrac12 = 1.5 \text{ bits}$$</div>
+  <ul>
+    <li>The zero cell contributes $0$ (convention $0 \log \tfrac10 = 0$)</li>
+    <li>Compare: $H(X) = 1$, $H(Y) \approx 0.811$ bits</li>
+  </ul>
+  <p class="muted">$1.5$ is less than $1 + 0.811$: the pair shares something.</p>
+</div>
+
+<!-- Theorem: additivity under independence -->
+<div class="slide">
+  <h2>Theorem &mdash; Entropy Adds Under Independence</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 1 (additivity).</h3>
+    <p>If $X$ and $Y$ are independent, then</p>
+    <div class="math-block" style="margin:8px 0">$$H(X, Y) = H(X) + H(Y)$$</div>
+  </div>
+  <p class="muted">Independent sources: information simply accumulates.</p>
+</div>
+
+<!-- Proof overview -->
+<div class="slide">
+  <h2>Additivity &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <p>Target: split the joint surprisal</p>
+  <div class="math-block" style="margin:8px 0">$$\log \frac{1}{p_{X,Y}(x,y)}
+    = \log \frac{1}{p_X(x)} + \log \frac{1}{p_Y(y)}$$</div>
+  <ol>
+    <li><strong>Factor</strong> the pmf: $p_{X,Y} = p_X\, p_Y$ (independence)</li>
+    <li><strong>Split</strong> the log of a product</li>
+    <li><strong>Marginalize</strong>: each sum collapses to one variable</li>
+  </ol>
+</div>
+
+<!-- Proof steps 1-2 -->
+<div class="slide">
+  <h2>Proof &mdash; Factor and Split</h2>
+  <div class="divider"></div>
+  <p>Independence puts $p_X p_Y$ inside the log:</p>
+  <div class="math-block">$$\begin{aligned}
+    H(X, Y) &\stackrel{(\text{indep})}{=} \sum_{x, y} p_{X,Y}(x, y) \log \frac{1}{p_X(x)\, p_Y(y)} \\[2pt]
+    &\stackrel{(\log ab)}{=} \sum_{x, y} p_{X,Y}(x, y) \log \frac{1}{p_X(x)}
+      + \sum_{x, y} p_{X,Y}(x, y) \log \frac{1}{p_Y(y)}
+  \end{aligned}$$</div>
+  <p class="muted">Two double sums; each log now sees one variable.</p>
+</div>
+
+<!-- Proof step 3 -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; Marginalize Each Sum</h2>
+  <div class="divider"></div>
+  <p>Inner sums collapse the joint to a marginal:</p>
+  <div class="math-block">$$\begin{aligned}
+    \sum_{x} \log \frac{1}{p_X(x)} \underbrace{\sum_{y} p_{X,Y}(x, y)}_{=\, p_X(x)}
+    &+ \sum_{y} \log \frac{1}{p_Y(y)} \underbrace{\sum_{x} p_{X,Y}(x, y)}_{=\, p_Y(y)} \\[2pt]
+    &= H(X) + H(Y) \qquad \blacksquare
+  \end{aligned}$$</div>
+  <p class="muted">Key move: sum out the variable the log ignores.</p>
+</div>
+
+<!-- Proof summary + converse question -->
+<div class="slide">
+  <h2>Additivity &mdash; Summary &amp; a Question</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$H(X,Y)
+    \stackrel{(\text{factor})}{=} \mathbb{E}\Bigl[\log \tfrac{1}{p_X p_Y}\Bigr]
+    \stackrel{(\text{split})}{=} \mathbb{E}\Bigl[\log \tfrac{1}{p_X}\Bigr] + \mathbb{E}\Bigl[\log \tfrac{1}{p_Y}\Bigr]
+    = H(X) + H(Y)$$</div>
+  <ul>
+    <li>Correlated pair: $(X_1, X_2)$ tells barely more than $X_1$</li>
+  </ul>
+  <p><strong>Exercise.</strong> Does $H(X,Y) = H(X) + H(Y)$ <em>imply</em> independence?</p>
+  <p class="muted">Answer arrives with mutual information.</p>
+</div>
+
+<!-- Generalization to n -->
+<div class="slide">
+  <h2>Additivity for $n$ Variables</h2>
+  <div class="divider"></div>
+  <p>If $X_1, \dots, X_n$ are independent, i.e. $p_{X_1, \dots, X_n} = \prod_{i=1}^n p_{X_i}$:</p>
+  <div class="math-block">$$H(X_1, \dots, X_n) = \sum_{i=1}^n H(X_i)$$</div>
+  <p class="muted">Same proof: factor, split, marginalize, $n$ times.</p>
+</div>
+
+<!-- Guessing game setup -->
+<div class="slide">
+  <h2>Example &mdash; The Guessing Game Returns</h2>
+  <div class="divider"></div>
+  <p>Recall from prob01: Alice picks $X$ uniform on $\{1, \dots, 8\}$</p>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 760 190" style="width:100%;max-width:840px;">
+      <g font-size="17" font-weight="700" text-anchor="middle">
+        <rect x="40" y="20" width="640" height="44" rx="8" fill="#f4f6f9" stroke="#003876" stroke-width="1.5"/>
+        <text x="80" y="48" fill="#666">1</text><text x="160" y="48" fill="#666">2</text>
+        <text x="240" y="48" fill="#666">3</text><text x="320" y="48" fill="#666">4</text>
+        <text x="400" y="48" fill="#003876">5</text><text x="480" y="48" fill="#003876">6</text>
+        <text x="560" y="48" fill="#003876">7</text><text x="640" y="48" fill="#003876">8</text>
+      </g>
+      <line x1="360" y1="16" x2="360" y2="68" stroke="#1a5296" stroke-width="2.5"/>
+      <text x="360" y="90" font-size="15" fill="#1a5296" text-anchor="middle" font-weight="600">Q1: X in {5,6,7,8}?</text>
+      <text x="360" y="128" font-size="15" fill="#666" text-anchor="middle">Q2: X in {1,2,5,6}?&#160;&#160;&#160;&#160;Q3: X in {1,3,5,7}?</text>
+      <text x="360" y="166" font-size="15" fill="#003876" text-anchor="middle" font-weight="600">answers = bits Y1, Y2, Y3</text>
+    </svg>
+  </div>
+  <p>Each $Y_i \sim \text{Bern}(\tfrac12)$, so $H(Y_1) = H(Y_2) = H(Y_3) = 1$ bit</p>
+</div>
+
+<!-- Guessing game: joint entropy -->
+<div class="slide">
+  <h2>Guessing Game &mdash; Three Bits, Three Answers</h2>
+  <div class="divider"></div>
+  <p>The three answers are <strong>independent</strong>:</p>
+  <div class="math-block" style="margin:8px 0">$$p_{Y_1, Y_2, Y_3}(y_1, y_2, y_3) = \tfrac18
+    = p_{Y_1}(y_1)\, p_{Y_2}(y_2)\, p_{Y_3}(y_3) \quad \text{for all } (y_1, y_2, y_3)$$</div>
+  <div class="math-block" style="margin:8px 0">$$H(Y_1, Y_2, Y_3) = 1 + 1 + 1 = 3 = H(X)$$</div>
+  <ul>
+    <li>Each question earns exactly <strong>1 bit</strong></li>
+    <li>Total after three questions: $3$ bits = uncertainty in $X$</li>
+    <li>So three questions pin down $X$ deterministically</li>
+  </ul>
+</div>
+
+<!-- Conditional entropy motivation -->
+<div class="slide">
+  <h2>A Fourth, Overlapping Question</h2>
+  <div class="divider"></div>
+  <p>Q4: is $X \in \{4, 5, 6, 7\}$? &nbsp;Answer bit $Y_4$</p>
+  <ul>
+    <li>$Y_1$ (is $X \geq 5$?) and $Y_4$ <strong>overlap</strong>: not independent</li>
+    <li>Part of $Y_4$ is already known once $Y_1$ arrives</li>
+    <li>Expect: $H(Y_1, Y_4)$ strictly below $H(Y_1) + H(Y_4) = 2$</li>
+  </ul>
+  <div class="highlight">
+    <p>Wanted: the <strong>additional</strong> information in $Y_4$ once $Y_1$ is known.</p>
+  </div>
+</div>
+
+<!-- Conditional entropy definition -->
+<div class="slide">
+  <h2>Conditional Entropy</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (conditional entropy).</h3>
+    <p>Remaining uncertainty in $X$ once $Y$ is known:</p>
+    <div class="math-block" style="margin:8px 0">$$H(X|Y)
+      = \mathbb{E}\Bigl[\log \frac{1}{p_{X|Y}(X|Y)}\Bigr]
+      = \sum_{x, y} p_{X,Y}(x, y) \log \frac{1}{p_{X|Y}(x|y)}$$</div>
+  </div>
+  <ul>
+    <li>Surprisal priced by the <strong>conditional</strong> pmf</li>
+    <li>Averaged with the <strong>joint</strong> pmf: both $X$ and $Y$ are random</li>
+  </ul>
+</div>
+
+<!-- Two-stage view -->
+<div class="slide">
+  <h2>Conditional Entropy, Two Stages</h2>
+  <div class="divider"></div>
+  <p>Fix one outcome $y$ first &mdash; only $X$ stays random:</p>
+  <div class="math-block" style="margin:8px 0">$$H(X | Y = y)
+    = \sum_{x} p_{X|Y}(x|y) \log \frac{1}{p_{X|Y}(x|y)}$$</div>
+  <p>Then average the per-$y$ entropies:</p>
+  <div class="math-block" style="margin:8px 0">$$H(X|Y) = \sum_{y} p_Y(y)\, H(X | Y = y)$$</div>
+  <p class="muted">An entropy per column, weighted by column mass.</p>
+</div>
+
+<!-- Worked example H(Y|X) -->
+<div class="slide">
+  <h2>Example &mdash; $H(Y|X)$ on the Table</h2>
+  <div class="divider"></div>
+  <p>Condition on each <strong>row</strong>:</p>
+  <div class="math-block">$$\begin{aligned}
+    X = 0:&\;\; Y \sim (\tfrac12, \tfrac12) &&\Rightarrow\; H(Y|X{=}0) = 1 \\[2pt]
+    X = 1:&\;\; Y \sim (1, 0) &&\Rightarrow\; H(Y|X{=}1) = 0
+  \end{aligned}$$</div>
+  <div class="math-block" style="margin:8px 0">$$H(Y|X) = \tfrac12 \cdot 1 + \tfrac12 \cdot 0 = 0.5 \text{ bits}$$</div>
+  <p class="muted">Row $x=1$ is deterministic: zero leftover surprise.</p>
+</div>
+
+<!-- Worked example H(X|Y) -->
+<div class="slide">
+  <h2>Example &mdash; $H(X|Y)$ Is Different</h2>
+  <div class="divider"></div>
+  <p>Condition on each <strong>column</strong>:</p>
+  <div class="math-block">$$\begin{aligned}
+    Y = 0:&\;\; X \sim (\tfrac13, \tfrac23) \;\Rightarrow\; H(X|Y{=}0) \approx 0.918 \\[2pt]
+    Y = 1:&\;\; X \sim (1, 0) \;\Rightarrow\; H(X|Y{=}1) = 0 \\[6pt]
+    H(X|Y) =&\;\; \tfrac34 \cdot 0.918 + \tfrac14 \cdot 0 \approx 0.689 \text{ bits}
+  \end{aligned}$$</div>
+  <div class="highlight">
+    <p>$H(X|Y) \neq H(Y|X)$: conditioning is <strong>not symmetric</strong>.</p>
+  </div>
+</div>
+
+<!-- Chain rule statement -->
+<div class="slide">
+  <h2>Theorem &mdash; Chain Rule of Entropy</h2>
+  <div class="divider"></div>
+  <p>Intuition: info in $X$, plus what <strong>remains</strong> of $Y$, is the total</p>
+  <div class="card">
+    <h3>Theorem 2 (chain rule).</h3>
+    <div class="math-block" style="margin:8px 0">$$H(X, Y) = H(X) + H(Y|X)$$</div>
+    <p>Symmetrically: $H(X, Y) = H(Y) + H(X|Y)$.</p>
+  </div>
+  <p class="muted">The bookkeeping identity everything today leans on.</p>
+</div>
+
+<!-- Chain rule proof -->
+<div class="slide">
+  <h2>Chain Rule &mdash; Proof</h2>
+  <div class="divider"></div>
+  <p>One expectation, one product formula $p_{X,Y} = p_X \, p_{Y|X}$:</p>
+  <div class="math-block">$$\begin{aligned}
+    H(X) + H(Y|X)
+    &\stackrel{(\text{linearity})}{=} \mathbb{E}\Bigl[\log \tfrac{1}{p_X(X)} + \log \tfrac{1}{p_{Y|X}(Y|X)}\Bigr] \\[2pt]
+    &\stackrel{(\log a + \log b)}{=} \mathbb{E}\Bigl[\log \tfrac{1}{p_X(X)\, p_{Y|X}(Y|X)}\Bigr] \\[2pt]
+    &\stackrel{(\text{product rule})}{=} \mathbb{E}\Bigl[\log \tfrac{1}{p_{X,Y}(X,Y)}\Bigr]
+      = H(X, Y) \qquad \blacksquare
+  \end{aligned}$$</div>
+</div>
+
+<!-- Chain rule check -->
+<div class="slide">
+  <h2>Chain Rule &mdash; Check on the Table</h2>
+  <div class="divider"></div>
+  <p>Both decompositions land on the same total:</p>
+  <div class="math-block">$$\begin{aligned}
+    H(X) + H(Y|X) &= 1 + 0.5 &&= 1.5 \\[2pt]
+    H(Y) + H(X|Y) &\approx 0.811 + 0.689 &&= 1.5 = H(X,Y)
+  \end{aligned}$$</div>
+  <ul>
+    <li>Two roads, one joint entropy</li>
+    <li>Split differs; the <strong>sum</strong> is invariant</li>
+  </ul>
+</div>
+
+<!-- Exercise: guessing game conditional entropies -->
+<div class="slide">
+  <h2>Exercise &mdash; Guessing Game, Conditioned</h2>
+  <div class="divider"></div>
+  <p><strong>Exercise.</strong> In the guessing game, compute</p>
+  <ol>
+    <li>$H(Y_2 | Y_1)$ &mdash; independent questions</li>
+    <li>$H(Y_4 | Y_1)$ &mdash; overlapping questions</li>
+  </ol>
+  <p class="muted">Hint: build the joint table of $(Y_1, Y_4)$ from the 8 outcomes.</p>
+</div>
+
+<!-- Exercise answers -->
+<div class="slide">
+  <h2>Worked &mdash; $H(Y_4|Y_1)$</h2>
+  <div class="divider"></div>
+  <p>Joint of $(Y_1, Y_4)$: counts over $\{1,\dots,8\}$</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <table style="text-align:center;">
+      <tr><th>$p$</th><th>$y_4 = 1$</th><th>$y_4 = 0$</th></tr>
+      <tr><td><strong>$y_1 = 1$</strong></td><td>$3/8$ &nbsp;<em>{5,6,7}</em></td><td>$1/8$ &nbsp;<em>{8}</em></td></tr>
+      <tr><td><strong>$y_1 = 0$</strong></td><td>$1/8$ &nbsp;<em>{4}</em></td><td>$3/8$ &nbsp;<em>{1,2,3}</em></td></tr>
+    </table>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$H(Y_2|Y_1) = 1, \qquad
+    H(Y_4|Y_1) = H\bigl(\tfrac34\bigr) \approx 0.811 \;\text{bits}$$</div>
+  <p class="muted">$H(Y_1, Y_4) \approx 1.811$: the overlap costs $0.189$ bits.</p>
+</div>
+
+<!-- DPI I statement -->
+<div class="slide">
+  <h2>Theorem &mdash; Processing Cannot Add Entropy</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 3 (data processing I).</h3>
+    <p>For any deterministic function $f$:</p>
+    <div class="math-block" style="margin:8px 0">$$H(X) \;\geq\; H\bigl(f(X)\bigr)$$</div>
+  </div>
+  <ul>
+    <li>First of three data processing inequalities today</li>
+    <li>$f$ deterministic: $f(X)$ carries no new randomness</li>
+  </ul>
+</div>
+
+<!-- DPI I proof overview -->
+<div class="slide">
+  <h2>DPI I &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <p>One object, two chain-rule expansions:</p>
+  <div class="math-block" style="margin:8px 0">$$H\bigl(X, f(X)\bigr)$$</div>
+  <ol>
+    <li>Expand starting from $X$: get exactly $H(X)$</li>
+    <li>Expand starting from $f(X)$: get at least $H(f(X))$</li>
+    <li>Same left side &mdash; compare</li>
+  </ol>
+</div>
+
+<!-- DPI I proof way 1 -->
+<div class="slide">
+  <h2>DPI I &mdash; Step 1: Expand from $X$</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$H\bigl(X, f(X)\bigr)
+    \stackrel{(\text{chain})}{=} H(X) + \underbrace{H\bigl(f(X) \mid X\bigr)}_{=\,0}
+    = H(X)$$</div>
+  <ul>
+    <li>Given $X$, the value $f(X)$ is <strong>fixed</strong></li>
+    <li>A deterministic outcome has zero entropy</li>
+  </ul>
+  <p class="muted">The pair holds no more than $X$ alone.</p>
+</div>
+
+<!-- DPI I proof way 2 -->
+<div class="slide">
+  <h2>DPI I &mdash; Step 2: Expand from $f(X)$</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$H\bigl(X, f(X)\bigr)
+    \stackrel{(\text{chain})}{=} H\bigl(f(X)\bigr) + \underbrace{H\bigl(X \mid f(X)\bigr)}_{\geq\, 0}
+    \;\geq\; H\bigl(f(X)\bigr)$$</div>
+  <p>Combine with Step 1:</p>
+  <div class="math-block" style="margin:8px 0">$$H(X) = H\bigl(X, f(X)\bigr) \geq H\bigl(f(X)\bigr) \qquad \blacksquare$$</div>
+</div>
+
+<!-- DPI I summary -->
+<div class="slide">
+  <h2>DPI I &mdash; Summary &amp; Equality</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$H(X)
+    \stackrel{(1)}{=} H\bigl(X, f(X)\bigr)
+    \stackrel{(2)}{\geq} H\bigl(f(X)\bigr)$$</div>
+  <ul>
+    <li>Key trick: expand one joint entropy <strong>both ways</strong></li>
+    <li>Equality when $f$ is one-to-one and onto: relabeling loses nothing</li>
+    <li>Many-to-one $f$ (pooling, argmax, quantization): entropy drops</li>
+  </ul>
+  <div class="highlight">
+    <p>Post-processing cannot increase the amount of information.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 04 — MUTUAL INFORMATION ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Mutual Information</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Definition, Venn view, $I \geq 0$</p>
+</div>
+
+<!-- Definition -->
+<div class="slide">
+  <h2>Mutual Information</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (mutual information).</h3>
+    <p>Uncertainty removed from $X$ by observing $Y$:</p>
+    <div class="math-block" style="margin:8px 0">$$I(X; Y) = H(X) - H(X|Y),
+      \qquad I(Y; X) = H(Y) - H(Y|X)$$</div>
+  </div>
+  <ul>
+    <li>Before $Y$: uncertainty $H(X)$; after: $H(X|Y)$</li>
+    <li>The <strong>drop</strong> is what $Y$ told us</li>
+  </ul>
+</div>
+
+<!-- Venn diagram -->
+<div class="slide">
+  <h2>The Entropy Venn Diagram</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 760 310" style="width:100%;max-width:820px;">
+      <rect x="90" y="18" width="580" height="272" rx="14" fill="none" stroke="#9aa7b4" stroke-width="1.6" stroke-dasharray="7 5"/>
+      <text x="380" y="44" font-size="16" fill="#666" text-anchor="middle" font-weight="600">H(X,Y)</text>
+      <circle cx="300" cy="170" r="105" fill="#1a5296" fill-opacity="0.28" stroke="#003876" stroke-width="2.5"/>
+      <circle cx="460" cy="170" r="105" fill="#8d99a6" fill-opacity="0.30" stroke="#5b6770" stroke-width="2.5"/>
+      <text x="255" y="78" font-size="18" fill="#003876" text-anchor="middle" font-weight="700">H(X)</text>
+      <text x="505" y="78" font-size="18" fill="#5b6770" text-anchor="middle" font-weight="700">H(Y)</text>
+      <text x="245" y="168" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">H(X|Y)</text>
+      <text x="245" y="192" font-size="13" fill="#666" text-anchor="middle">only in X</text>
+      <text x="380" y="168" font-size="17" fill="#1a1a1a" text-anchor="middle" font-weight="700">I(X;Y)</text>
+      <text x="380" y="192" font-size="13" fill="#444" text-anchor="middle">shared</text>
+      <text x="516" y="168" font-size="17" fill="#5b6770" text-anchor="middle" font-weight="700">H(Y|X)</text>
+      <text x="516" y="192" font-size="13" fill="#666" text-anchor="middle">only in Y</text>
+    </svg>
+  </div>
+  <p class="muted">Two circles of uncertainty; the overlap is shared information.</p>
+</div>
+
+<!-- Venn identities -->
+<div class="slide">
+  <h2>Reading the Diagram &mdash; Identities</h2>
+  <div class="divider"></div>
+  <p>Every region gives an identity:</p>
+  <div class="math-block">$$\begin{aligned}
+    I(X; Y) &= H(X) - H(X|Y) \\[2pt]
+    &= H(Y) - H(Y|X) \\[2pt]
+    &= H(X) + H(Y) - H(X, Y)
+  \end{aligned}$$</div>
+  <p class="muted">Third form: add both circles, subtract the union once.</p>
+</div>
+
+<!-- Self information -->
+<div class="slide">
+  <h2>Special Case &mdash; $I(X; X)$</h2>
+  <div class="divider"></div>
+  <p>What does $X$ tell us about itself?</p>
+  <div class="math-block">$$I(X; X) = H(X) - \underbrace{H(X|X)}_{=\,0} = H(X)$$</div>
+  <ul>
+    <li>Observing $X$ removes <strong>all</strong> uncertainty in $X$</li>
+    <li>Entropy = <em>self</em>-information: circles fully overlap</li>
+  </ul>
+</div>
+
+<!-- Independence iff I=0 -->
+<div class="slide">
+  <h2>Special Case &mdash; Independence</h2>
+  <div class="divider"></div>
+  <p>If $X \perp Y$: knowing $Y$ changes nothing about $X$</p>
+  <div class="math-block" style="margin:8px 0">$$H(X|Y) = H(X) \quad\Longrightarrow\quad I(X; Y) = 0$$</div>
+  <p>Converse also holds: $I(X;Y) = 0$ implies independence</p>
+  <ul>
+    <li>Circles pull fully <strong>apart</strong>: zero overlap</li>
+    <li>Why the converse? The KL form, next</li>
+  </ul>
+</div>
+
+<!-- Worked example -->
+<div class="slide">
+  <h2>Example &mdash; $I(X;Y)$ on the Table</h2>
+  <div class="divider"></div>
+  <p>All three pieces already computed:</p>
+  <div class="math-block">$$\begin{aligned}
+    I(X; Y) &= H(X) - H(X|Y) &&= 1 - 0.689 &&= 0.311 \\[2pt]
+    &= H(Y) - H(Y|X) &&= 0.811 - 0.5 &&= 0.311 \\[2pt]
+    &= H(X) + H(Y) - H(X,Y) &&= 1.811 - 1.5 &&= 0.311
+  \end{aligned}$$</div>
+  <p class="muted">Three routes, one number: $0.311$ bits shared.</p>
+</div>
+
+<!-- MI as KL -->
+<div class="slide">
+  <h2>Mutual Information Is a KL Divergence</h2>
+  <div class="divider"></div>
+  <p>Unpack the definition into one log-ratio:</p>
+  <div class="math-block">$$I(X; Y)
+    = \mathbb{E}\Bigl[\log \frac{p_{X,Y}(X, Y)}{p_X(X)\, p_Y(Y)}\Bigr]
+    = D\bigl(p_{X,Y} \,\|\, p_X\, p_Y\bigr)$$</div>
+  <ul>
+    <li>Compare the joint against the <strong>independent</strong> version</li>
+    <li>$p_X p_Y$: same marginals, dependence deleted</li>
+  </ul>
+</div>
+
+<!-- Reading the KL form -->
+<div class="slide">
+  <h2>Reading the KL Form</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$I(X; Y) = D\bigl(p_{X,Y} \,\|\, p_X\, p_Y\bigr)$$</div>
+  <ul>
+    <li>$I$ = divergence from independence</li>
+    <li>$I(X;Y) = 0 \iff p_{X,Y} = p_X p_Y$ (KL equality case, prob02)</li>
+    <li>That settles the converse: zero MI <strong>means</strong> independent</li>
+  </ul>
+  <div class="highlight">
+    <p>MI measures the <strong>distance</strong> from "nothing shared".</p>
+  </div>
+</div>
+
+<!-- Symmetry -->
+<div class="slide">
+  <h2>Theorem &mdash; Symmetry</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 4 (symmetry).</h3>
+    <div class="math-block" style="margin:8px 0">$$I(X; Y) = I(Y; X)$$</div>
+  </div>
+  <div class="math-block">$$I(X; Y)
+    \stackrel{(\text{def})}{=} H(X) - H(X|Y)
+    \stackrel{(\text{chain})}{=} H(X) + H(Y) - H(X, Y)
+    \stackrel{(\text{def})}{=} I(Y; X) \;\; \blacksquare$$</div>
+  <p class="muted">$X$ tells about $Y$ exactly what $Y$ tells about $X$.</p>
+</div>
+
+<!-- Non-negativity statement -->
+<div class="slide">
+  <h2>Theorem &mdash; Non-Negativity</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 5 (non-negativity).</h3>
+    <div class="math-block" style="margin:8px 0">$$I(X; Y) \;\geq\; 0$$</div>
+    <p>Equality if and only if $X$ and $Y$ are independent.</p>
+  </div>
+  <p class="muted">Observation can never hurt, on average.</p>
+</div>
+
+<!-- Technique review -->
+<div class="slide">
+  <h2>Technique Review &mdash; KL Is Non-Negative</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Recall (information inequality, prob02).</h3>
+    <p>For any pmfs $P, Q$ on the same alphabet:</p>
+    <div class="math-block" style="margin:8px 0">$$D(P \,\|\, Q) \;\geq\; 0,
+      \qquad \text{equality iff } P = Q$$</div>
+  </div>
+  <ul>
+    <li>Proved by <strong>Jensen</strong> on the concave $\log$</li>
+    <li>Plan: rewrite $I$ as a KL, then invoke this</li>
+  </ul>
+</div>
+
+<!-- Proof overview -->
+<div class="slide">
+  <h2>$I \geq 0$ &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <p>Target: $H(X) - H(X|Y) \geq 0$</p>
+  <ol>
+    <li><strong>Merge</strong> the two surprisals into one log-ratio</li>
+    <li><strong>Rewrite</strong> the ratio over the joint: $\tfrac{p_{X|Y}}{p_X} = \tfrac{p_{X,Y}}{p_X p_Y}$</li>
+    <li><strong>Recognize</strong> the KL divergence, apply $D \geq 0$</li>
+  </ol>
+  <p class="muted">Alphabet for the KL: pairs $(x, y)$.</p>
+</div>
+
+<!-- Proof details -->
+<div class="slide">
+  <h2>$I \geq 0$ &mdash; Proof</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    H(X) - H(X|Y)
+    &\stackrel{(\text{merge})}{=} \mathbb{E}\Bigl[\log \frac{p_{X|Y}(X|Y)}{p_X(X)}\Bigr] \\[2pt]
+    &\stackrel{(\text{multiply by } \frac{p_Y}{p_Y})}{=} \mathbb{E}\Bigl[\log \frac{p_{X,Y}(X, Y)}{p_X(X)\, p_Y(Y)}\Bigr] \\[2pt]
+    &\stackrel{(\text{LOTUS})}{=} \sum_{x, y} p_{X,Y}(x, y) \log \frac{p_{X,Y}(x, y)}{p_X(x)\, p_Y(y)} \\[2pt]
+    &= D\bigl(p_{X,Y} \,\|\, p_X p_Y\bigr) \;\geq\; 0 \qquad \blacksquare
+  \end{aligned}$$</div>
+</div>
+
+<!-- Proof summary + corollary -->
+<div class="slide">
+  <h2>$I \geq 0$ &mdash; Summary &amp; Corollary</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$I(X;Y)
+    \stackrel{(\text{merge})}{=} \mathbb{E}\Bigl[\log \tfrac{p_{X,Y}}{p_X p_Y}\Bigr]
+    \stackrel{(\text{KL})}{\geq} 0$$</div>
+  <p>Rearranged, a corollary worth memorizing:</p>
+  <div class="math-block" style="margin:8px 0">$$H(X|Y) \;\leq\; H(X)$$</div>
+  <div class="highlight">
+    <p><strong>Conditioning never increases entropy</strong>: extra observations cannot add uncertainty on average.</p>
+  </div>
+</div>
+
+<!-- Implication in AI -->
+<div class="slide">
+  <h2>What MI Buys Us in AI</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Feature quality</strong>: $I(Z; Y)$ = label information a feature keeps</li>
+    <li><strong>Dependence detector</strong>: nonlinear, unlike correlation</li>
+    <li><strong>Invariant currency</strong>: bits, comparable across models</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$\text{correlation} = 0 \;\not\Rightarrow\; \text{independent},
+    \qquad I(X; Y) = 0 \;\Rightarrow\; \text{independent}$$</div>
+  <p class="muted">Next: what happens to $I$ when data flows through a pipeline.</p>
+</div>
+
+<!-- ===== SECTION 05 — DATA PROCESSING ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Data Processing</h1>
+  <div class="divider"></div>
+  <p class="subtitle">DPI, Markov chains, XOR surprise</p>
+</div>
+
+<!-- DPI II statement -->
+<div class="slide">
+  <h2>Theorem &mdash; Processing Loses Mutual Information</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 6 (data processing II).</h3>
+    <p>For any function $f: \mathcal{X} \to \mathbb{R}$:</p>
+    <div class="math-block" style="margin:8px 0">$$I(X; Y) \;\geq\; I\bigl(f(X); Y\bigr)$$</div>
+  </div>
+  <ul>
+    <li>Transforming $X$ cannot gain information about $Y$</li>
+    <li>Example: $Z = f(X)$ a pooled or quantized feature</li>
+  </ul>
+</div>
+
+<!-- DPI II technique review -->
+<div class="slide">
+  <h2>DPI II &mdash; Two Facts the Proof Needs</h2>
+  <div class="divider"></div>
+  <p><strong>Fact A.</strong> Redundant conditioning is free:</p>
+  <div class="math-block" style="margin:8px 0">$$H\bigl(Y \mid X, f(X)\bigr) = H(Y \mid X)$$</div>
+  <p class="muted">Given $X$, the extra condition $f(X)$ adds nothing new.</p>
+  <p><strong>Fact B.</strong> Conditioning never increases entropy (Theorem 5):</p>
+  <div class="math-block" style="margin:8px 0">$$H\bigl(Y \mid X, f(X)\bigr) \;\leq\; H\bigl(Y \mid f(X)\bigr)$$</div>
+</div>
+
+<!-- DPI II proof -->
+<div class="slide">
+  <h2>DPI II &mdash; Proof</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    I(X; Y) &\stackrel{(\text{def})}{=} H(Y) - H(Y|X) \\[2pt]
+    &\stackrel{(\text{Fact A})}{=} H(Y) - H\bigl(Y \mid X, f(X)\bigr) \\[2pt]
+    &\stackrel{(\text{Fact B})}{\geq} H(Y) - H\bigl(Y \mid f(X)\bigr) \\[2pt]
+    &\stackrel{(\text{def})}{=} I\bigl(f(X); Y\bigr) \qquad \blacksquare
+  \end{aligned}$$</div>
+  <p class="muted">Insert the redundant condition, then drop the stronger one.</p>
+</div>
+
+<!-- DPI II summary -->
+<div class="slide">
+  <h2>DPI II &mdash; Summary &amp; Implication</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$I(X; Y)
+    \stackrel{(\text{A})}{=} H(Y) - H(Y|X, f(X))
+    \stackrel{(\text{B})}{\geq} I(f(X); Y)$$</div>
+  <ul>
+    <li>Key trick: <strong>redundant conditioning</strong>, then relax it</li>
+    <li>Hand-crafted features $f(X)$: at best preserve label info</li>
+  </ul>
+  <div class="highlight">
+    <p>Feature engineering can only <strong>lose</strong> information about $Y$; it can still help optimization.</p>
+  </div>
+</div>
+
+<!-- Markov chain definition -->
+<div class="slide">
+  <h2>Markov Chains &mdash; $X - Y - Z$</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 700 110" style="width:100%;max-width:760px;">
+      <defs><marker id="mk-arr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
+      <rect x="60" y="25" width="130" height="60" rx="10" fill="#003876"/>
+      <text x="125" y="62" font-size="19" fill="#ffffff" text-anchor="middle" font-weight="700">X</text>
+      <line x1="196" y1="55" x2="276" y2="55" stroke="#1a5296" stroke-width="2.5" marker-end="url(#mk-arr)"/>
+      <rect x="284" y="25" width="130" height="60" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="349" y="62" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">Y</text>
+      <line x1="420" y1="55" x2="500" y2="55" stroke="#1a5296" stroke-width="2.5" marker-end="url(#mk-arr)"/>
+      <rect x="508" y="25" width="130" height="60" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="573" y="62" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">Z</text>
+    </svg>
+  </div>
+  <p>Three equivalent readings:</p>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    X - Y - Z \;&\Longleftrightarrow\; X \perp Z \text{ given } Y \\[2pt]
+    &\Longleftrightarrow\; X \text{ useless for } Z \text{ once } Y \text{ known} \\[2pt]
+    &\Longleftrightarrow\; p_{Z|X,Y}(z|x,y) = p_{Z|Y}(z|y) \;\;\forall x, y, z
+  \end{aligned}$$</div>
+</div>
+
+<!-- Markov examples -->
+<div class="slide">
+  <h2>Markov Chains Are Everywhere</h2>
+  <div class="divider"></div>
+  <p>Any pipeline where $Z$ is computed <strong>from $Y$ alone</strong>:</p>
+  <ul>
+    <li>data $\to$ representation $\to$ prediction</li>
+    <li>image $\to$ compressed file $\to$ reconstruction</li>
+    <li>signal $\to$ noisy channel $\to$ decoder output</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$X \to Y \to Z: \quad Z \text{ sees } X \text{ only through } Y$$</div>
+  <p class="muted">Special case: $Z = f(Y)$ deterministic. Randomized $Z$ also allowed.</p>
+</div>
+
+<!-- DPI III statement -->
+<div class="slide">
+  <h2>Theorem &mdash; DPI on a Markov Chain</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 7 (data processing III).</h3>
+    <p>If $X - Y - Z$ forms a Markov chain, then</p>
+    <div class="math-block" style="margin:8px 0">$$I(Y; Z) \;\geq\; I(X; Z)$$</div>
+  </div>
+  <ul>
+    <li>$Z$ shares more with its <strong>direct source</strong> $Y$ than with distant $X$</li>
+    <li>By symmetry of the chain: also $I(X; Y) \geq I(X; Z)$</li>
+  </ul>
+</div>
+
+<!-- DPI III proof -->
+<div class="slide">
+  <h2>DPI III &mdash; Proof</h2>
+  <div class="divider"></div>
+  <p>Same two moves, Markov property supplies Fact A:</p>
+  <div class="math-block">$$\begin{aligned}
+    I(Y; Z) &\stackrel{(\text{def})}{=} H(Z) - H(Z|Y) \\[2pt]
+    &\stackrel{(\text{Markov})}{=} H(Z) - H(Z \mid X, Y) \\[2pt]
+    &\stackrel{(\text{conditioning})}{\geq} H(Z) - H(Z|X) \\[2pt]
+    &\stackrel{(\text{def})}{=} I(X; Z) \qquad \blacksquare
+  \end{aligned}$$</div>
+</div>
+
+<!-- DPI III summary -->
+<div class="slide">
+  <h2>DPI III &mdash; Summary</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$I(Y;Z)
+    \stackrel{(\text{Markov})}{=} H(Z) - H(Z|X,Y)
+    \stackrel{(\text{cond.})}{\geq} H(Z) - H(Z|X)
+    = I(X;Z)$$</div>
+  <ul>
+    <li>Markov entered exactly once: $H(Z|Y) = H(Z|X,Y)$</li>
+    <li>DPI II is the special case $Z = f(X)$ of the chain $Y - X - f(X)$</li>
+  </ul>
+</div>
+
+<!-- Implication: deep nets -->
+<div class="slide">
+  <h2>Implication &mdash; Layers Only Forget</h2>
+  <div class="divider"></div>
+  <p>A feedforward net is a long Markov chain:</p>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 760 130" style="width:100%;max-width:840px;">
+      <defs><marker id="dn-arr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
+      <rect x="20" y="25" width="110" height="60" rx="10" fill="#003876"/>
+      <text x="75" y="62" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="700">X</text>
+      <line x1="136" y1="55" x2="176" y2="55" stroke="#1a5296" stroke-width="2.5" marker-end="url(#dn-arr)"/>
+      <rect x="182" y="25" width="110" height="60" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="237" y="62" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">Z1</text>
+      <line x1="298" y1="55" x2="338" y2="55" stroke="#1a5296" stroke-width="2.5" marker-end="url(#dn-arr)"/>
+      <rect x="344" y="25" width="110" height="60" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="399" y="62" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">Z2</text>
+      <line x1="460" y1="55" x2="500" y2="55" stroke="#1a5296" stroke-width="2.5" marker-end="url(#dn-arr)"/>
+      <rect x="506" y="25" width="110" height="60" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="561" y="62" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">Z3</text>
+      <text x="700" y="62" font-size="16" fill="#666" text-anchor="middle">...</text>
+      <text x="380" y="115" font-size="15" fill="#666" text-anchor="middle">I(X;Z1) &#8805; I(X;Z2) &#8805; I(X;Z3) &#8805; ...</text>
+    </svg>
+  </div>
+  <div class="highlight">
+    <p>Training shapes <strong>which</strong> information survives; the DPI says the total about $X$ can only shrink.</p>
+  </div>
+</div>
+
+<!-- Conditional MI -->
+<div class="slide">
+  <h2>Conditional Mutual Information</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (conditional MI).</h3>
+    <p>Information between $X$ and $Z$ once $Y$ is known:</p>
+    <div class="math-block" style="margin:8px 0">$$I(X; Z \mid Y)
+      = H(X|Y) - H(X \mid Y, Z)
+      = H(Z|Y) - H(Z \mid Y, X)$$</div>
+  </div>
+  <ul>
+    <li>$I(X; Z \mid Y) = 0 \iff X \perp Z$ given $Y$</li>
+    <li>That is exactly: $X - Y - Z$ is Markov</li>
+  </ul>
+</div>
+
+<!-- Question: order? -->
+<div class="slide">
+  <h2>Does Conditioning Shrink MI?</h2>
+  <div class="divider"></div>
+  <p>Entropy: conditioning never increases it. MI too?</p>
+  <div class="math-block" style="margin:8px 0">$$I(X; Z \mid Y) \;\overset{?}{\lessgtr}\; I(X; Z)$$</div>
+  <ul>
+    <li>Tempting guess: $Y$ known, less left to share</li>
+    <li><strong>False in general</strong>: no order holds either way</li>
+  </ul>
+  <p class="muted">A two-bit counterexample settles it.</p>
+</div>
+
+<!-- XOR setup -->
+<div class="slide">
+  <h2>Counterexample &mdash; The XOR Triple</h2>
+  <div class="divider"></div>
+  <p>Two fair coins $X, Z \;\text{i.i.d.}\; \text{Bern}(\tfrac12)$; their parity $Y = X \oplus Z$:</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <table style="text-align:center;">
+      <tr><th>$x$</th><th>$z$</th><th>$y = x \oplus z$</th><th>prob</th></tr>
+      <tr><td>0</td><td>0</td><td>0</td><td>$1/4$</td></tr>
+      <tr><td>0</td><td>1</td><td>1</td><td>$1/4$</td></tr>
+      <tr><td>1</td><td>0</td><td>1</td><td>$1/4$</td></tr>
+      <tr><td>1</td><td>1</td><td>0</td><td>$1/4$</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- XOR: I(X;Z) = 0 -->
+<div class="slide">
+  <h2>XOR &mdash; Step 1: $I(X; Z) = 0$</h2>
+  <div class="divider"></div>
+  <p>$X$ and $Z$ are independent <strong>by construction</strong>:</p>
+  <div class="math-block" style="margin:8px 0">$$p_{X,Z}(x, z) = \tfrac14 = p_X(x)\, p_Z(z)
+    \quad \text{for all } (x, z)$$</div>
+  <div class="math-block" style="margin:8px 0">$$I(X; Z) = 0$$</div>
+  <p class="muted">Unconditionally, the two coins share nothing.</p>
+</div>
+
+<!-- XOR: H(Z|Y) = 1 -->
+<div class="slide">
+  <h2>XOR &mdash; Step 2: $H(Z|Y) = 1$</h2>
+  <div class="divider"></div>
+  <p>Given the parity $Y = y$, $Z$ is still a fair coin:</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <table style="text-align:center;">
+      <tr><th>given</th><th>$z = 0$</th><th>$z = 1$</th></tr>
+      <tr><td><strong>$y = 0$</strong></td><td>$1/2$</td><td>$1/2$</td></tr>
+      <tr><td><strong>$y = 1$</strong></td><td>$1/2$</td><td>$1/2$</td></tr>
+    </table>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$H(Z \mid Y) = \tfrac12 \cdot 1 + \tfrac12 \cdot 1 = 1 \text{ bit}$$</div>
+  <p class="muted">Parity alone says nothing about either coin.</p>
+</div>
+
+<!-- XOR: conclude -->
+<div class="slide">
+  <h2>XOR &mdash; Step 3: $I(X; Z \mid Y) = 1$</h2>
+  <div class="divider"></div>
+  <p>But $Y$ <strong>and</strong> $X$ together determine $Z$:</p>
+  <div class="math-block" style="margin:8px 0">$$Z = X \oplus Y
+    \quad\Longrightarrow\quad H(Z \mid Y, X) = 0$$</div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    I(X; Z \mid Y) &= H(Z|Y) - H(Z \mid Y, X) = 1 - 0 = 1 \text{ bit} \\[4pt]
+    I(X; Z \mid Y) &= 1 \;\gt\; 0 = I(X; Z)
+  \end{aligned}$$</div>
+</div>
+
+<!-- XOR moral -->
+<div class="slide">
+  <h2>XOR &mdash; Conditioning Created Dependence</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Unconditionally: coins independent, $I(X;Z) = 0$</li>
+    <li>Given the parity: one coin <strong>reveals</strong> the other</li>
+    <li>"Explaining away": a shared effect couples its causes</li>
+  </ul>
+  <div class="highlight">
+    <p>Conditioning can <strong>increase</strong> mutual information. The Venn picture has no faithful 3-variable version.</p>
+  </div>
+</div>
+
+<!-- Opposite direction -->
+<div class="slide">
+  <h2>And the Opposite Direction</h2>
+  <div class="divider"></div>
+  <p>On a Markov chain $X - Y - Z$ the order flips:</p>
+  <div class="math-block" style="margin:8px 0">$$I(X; Z \mid Y) = 0,
+    \qquad I(X; Z) \;\text{can be large}$$</div>
+  <p>Extreme case $X = Y = Z$ (fair bit):</p>
+  <div class="math-block" style="margin:8px 0">$$I(X; Z \mid Y) = 0 \;\lt\; 1 = I(X; Z)$$</div>
+  <p class="muted">Both strict orders occur: no general relationship.</p>
+</div>
+
+<!-- Chain rule 2-var -->
+<div class="slide">
+  <h2>MI of a Pair &mdash; Chain Rule</h2>
+  <div class="divider"></div>
+  <p>Information that the pair $(X, Y)$ carries about $Z$:</p>
+  <div class="math-block">$$I(X, Y;\, Z) = I(X; Z) + I(Y; Z \mid X)$$</div>
+  <ul>
+    <li>First $X$'s contribution, then $Y$'s <strong>fresh</strong> contribution</li>
+    <li>Order-free total: could also start from $Y$</li>
+  </ul>
+</div>
+
+<!-- Chain rule n-var -->
+<div class="slide">
+  <h2>Chain Rule for $I(X^n; Y)$</h2>
+  <div class="divider"></div>
+  <p>Telescoping over the coordinates of $X^n$:</p>
+  <div class="math-block">$$\begin{aligned}
+    I(X^n; Y) &= I(X_1; Y) + I(X_2; Y \mid X_1) + I(X_3; Y \mid X_1, X_2) + \cdots \\[2pt]
+    &= \sum_{i=1}^{n} I\bigl(X_i; Y \mid X^{i-1}\bigr)
+  \end{aligned}$$</div>
+  <ul>
+    <li>Each term: what $X_i$ adds about $Y$, <strong>given the past</strong></li>
+    <li>Workhorse for sequences: pixels, tokens, time steps</li>
+  </ul>
+</div>
+
+<!-- ===== SECTION 06 — DIFFERENTIAL ENTROPY ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Differential Entropy</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Continuous RVs, $h(X)$, its quirks</p>
+</div>
+
+<!-- Why continuous -->
+<div class="slide">
+  <h2>Leaving the Discrete World</h2>
+  <div class="divider"></div>
+  <p>Most quantities in deep learning are <strong>real-valued</strong>:</p>
+  <ul>
+    <li>Pixel intensities, embeddings, activations</li>
+    <li>Gaussian noise in diffusion and regularization</li>
+  </ul>
+  <p>Two questions for this section:</p>
+  <ol>
+    <li>Does $I(X; Y)$ survive the move? <em>(yes, cleanly)</em></li>
+    <li>Does $H(X)$? <em>(with a twist)</em></li>
+  </ol>
+</div>
+
+<!-- pdf definition -->
+<div class="slide">
+  <h2>Density Instead of Mass</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (cdf and pdf).</h3>
+    <div class="math-block" style="margin:8px 0">$$F_X(x) = \Pr(X \leq x), \qquad
+      f_X(x) = \frac{\partial}{\partial x} F_X(x) \;\; (F_X \text{ differentiable})$$</div>
+  </div>
+  <ul>
+    <li>Probability = <strong>area</strong> under $f_X$, not a value of it</li>
+    <li>$f_X(x)$ can exceed $1$; only integrals are probabilities</li>
+  </ul>
+</div>
+
+<!-- Change of variables -->
+<div class="slide">
+  <h2>Change of Variables &mdash; $Y = aX$</h2>
+  <div class="divider"></div>
+  <p>Densities <strong>rescale</strong>; probability is conserved:</p>
+  <div class="math-block" style="margin:8px 0">$$f_Y(y) = \frac{1}{|a|}\, f_X\!\Bigl(\frac{y}{a}\Bigr),
+    \qquad |f_X(x)\, dx| = |f_Y(y)\, dy|$$</div>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 760 150" style="width:100%;max-width:780px;">
+      <defs><marker id="cv-arr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
+      <line x1="40" y1="120" x2="330" y2="120" stroke="#5b6770" stroke-width="1.5"/>
+      <rect x="80" y="40" width="120" height="80" fill="#1a5296" fill-opacity="0.30" stroke="#003876" stroke-width="2"/>
+      <text x="140" y="30" font-size="15" fill="#003876" text-anchor="middle" font-weight="700">f_X: Unif(0,1)</text>
+      <line x1="345" y1="80" x2="405" y2="80" stroke="#1a5296" stroke-width="2.5" marker-end="url(#cv-arr)"/>
+      <text x="375" y="65" font-size="14" fill="#666" text-anchor="middle">a = 2</text>
+      <line x1="420" y1="120" x2="730" y2="120" stroke="#5b6770" stroke-width="1.5"/>
+      <rect x="450" y="80" width="240" height="40" fill="#8d99a6" fill-opacity="0.35" stroke="#5b6770" stroke-width="2"/>
+      <text x="570" y="68" font-size="15" fill="#5b6770" text-anchor="middle" font-weight="700">f_Y: Unif(0,2), height 1/2</text>
+    </svg>
+  </div>
+  <p class="muted">Twice as wide, half as tall: total area stays 1.</p>
+</div>
+
+<!-- General change of variables -->
+<div class="slide">
+  <h2>Change of Variables &mdash; General $g$</h2>
+  <div class="divider"></div>
+  <p>For a bijective $g$ and $Y = g(X)$:</p>
+  <div class="math-block">$$f_Y(y) = f_X\bigl(g^{-1}(y)\bigr)\;
+    \Bigl|\frac{d}{dy}\, g^{-1}(y)\Bigr|$$</div>
+  <ul>
+    <li>Evaluate at the <strong>pre-image</strong>, correct by the stretch factor</li>
+    <li>Discrete pmfs never needed this: masses just move</li>
+  </ul>
+  <p class="muted">This stretch factor is where continuous entropy gets its quirks.</p>
+</div>
+
+<!-- Continuous KL -->
+<div class="slide">
+  <h2>KL Divergence for Densities</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (continuous KL).</h3>
+    <p>For densities $f, g$:</p>
+    <div class="math-block" style="margin:8px 0">$$D(f \,\|\, g)
+      = \mathbb{E}_f\Bigl[\log \frac{f(X)}{g(X)}\Bigr]
+      = \int f(x) \log \frac{f(x)}{g(x)}\, dx$$</div>
+  </div>
+  <p class="muted">Same formula as prob02; sums become integrals.</p>
+</div>
+
+<!-- Continuous KL >= 0 -->
+<div class="slide">
+  <h2>Theorem &mdash; $D(f \,\|\, g) \geq 0$ Survives</h2>
+  <div class="divider"></div>
+  <p>Jensen on the concave $\log$, exactly as in prob02:</p>
+  <div class="math-block">$$\begin{aligned}
+    D(f \,\|\, g)
+    &= -\int f(x) \log \frac{g(x)}{f(x)}\, dx \\[2pt]
+    &\stackrel{(\text{Jensen})}{\geq} -\log \int f(x)\, \frac{g(x)}{f(x)}\, dx
+    \;\stackrel{(\text{cancel})}{=}\; -\log 1 = 0 \qquad \blacksquare
+  \end{aligned}$$</div>
+  <p class="muted">Equality iff $f = g$: the Jensen equality case.</p>
+</div>
+
+<!-- Continuous MI -->
+<div class="slide">
+  <h2>Continuous Mutual Information</h2>
+  <div class="divider"></div>
+  <p>Define $I$ through its <strong>KL form</strong> &mdash; it needs no entropy:</p>
+  <div class="math-block">$$I(X; Y)
+    = \mathbb{E}\Bigl[\log \frac{f_{X,Y}(X, Y)}{f_X(X)\, f_Y(Y)}\Bigr]
+    = D\bigl(f_{X,Y} \,\|\, f_X f_Y\bigr)$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Longrightarrow\quad I(X; Y) \geq 0
+    \;\;\text{(continuous KL} \geq 0\text{)}$$</div>
+  <p class="muted">Divergence from independence, verbatim from the discrete case.</p>
+</div>
+
+<!-- Discretization -->
+<div class="slide">
+  <h2>Discretize &mdash; Bins Under the Density</h2>
+  <div class="divider"></div>
+  <p>Chop $\mathbb{R}$ into bins of width $\Delta$; let $X^\Delta$ = bin of $X$:</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 760 265" style="width:100%;max-width:820px;">
+      <line x1="60" y1="240" x2="700" y2="240" stroke="#5b6770" stroke-width="1.5"/>
+      <rect x="60" y="238" width="64" height="2" fill="#1a5296" fill-opacity="0.2"/>
+      <rect x="124" y="216" width="64" height="24" fill="#1a5296" fill-opacity="0.25" stroke="#003876" stroke-width="1"/>
+      <rect x="188" y="139" width="64" height="101" fill="#1a5296" fill-opacity="0.25" stroke="#003876" stroke-width="1"/>
+      <rect x="252" y="105" width="64" height="135" fill="#1a5296" fill-opacity="0.25" stroke="#003876" stroke-width="1"/>
+      <rect x="316" y="175" width="64" height="65" fill="#1a5296" fill-opacity="0.25" stroke="#003876" stroke-width="1"/>
+      <rect x="380" y="192" width="64" height="48" fill="#1a5296" fill-opacity="0.25" stroke="#003876" stroke-width="1"/>
+      <rect x="444" y="152" width="64" height="88" fill="#1a5296" fill-opacity="0.25" stroke="#003876" stroke-width="1"/>
+      <rect x="508" y="152" width="64" height="88" fill="#1a5296" fill-opacity="0.25" stroke="#003876" stroke-width="1"/>
+      <rect x="572" y="199" width="64" height="41" fill="#1a5296" fill-opacity="0.25" stroke="#003876" stroke-width="1"/>
+      <rect x="636" y="231" width="64" height="9" fill="#1a5296" fill-opacity="0.25" stroke="#003876" stroke-width="1"/>
+      <polyline points="60,240 68,240 76,239 84,239 92,238 100,237 108,236 116,235 124,233 132,230 140,226 148,222 156,216 164,210 172,202 180,193 188,184 196,173 204,162 212,151 220,139 228,129 236,119 244,111 252,105 260,102 268,100 276,101 284,105 292,110 300,118 308,127 316,136 324,146 332,157 340,166 348,175 356,182 364,188 372,193 380,195 388,196 396,196 404,194 412,192 420,188 428,183 436,178 444,172 452,167 460,161 468,156 476,152 484,149 492,146 500,144 508,144 516,144 524,146 532,149 540,152 548,157 556,162 564,168 572,174 580,180 588,187 596,193 604,199 612,205 620,210 628,215 636,219 644,223 652,226 660,229 668,231 676,233 684,235 692,236 700,237"
+        fill="none" stroke="#003876" stroke-width="3"/>
+      <text x="720" y="130" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">f_X</text>
+      <line x1="252" y1="248" x2="316" y2="248" stroke="#1a5296" stroke-width="2"/>
+      <text x="284" y="263" font-size="14" fill="#1a5296" text-anchor="middle" font-weight="600">width &#916;</text>
+    </svg>
+  </div>
+  <div class="math-block" style="margin:6px 0">$$P_{X^\Delta}(i) = \Pr\bigl(i\Delta \leq X \leq (i{+}1)\Delta\bigr)
+    \approx \Delta \cdot f_X(x_i)$$</div>
+</div>
+
+<!-- MI survives discretization -->
+<div class="slide">
+  <h2>MI Is Discretization-Proof</h2>
+  <div class="divider"></div>
+  <p>Compute the <strong>discrete</strong> MI of the binned pair:</p>
+  <div class="math-block">$$\begin{aligned}
+    I(X^\Delta; Y^\Delta)
+    &= \mathbb{E}\Bigl[\log \frac{P_{X^\Delta, Y^\Delta}}{P_{X^\Delta}\, P_{Y^\Delta}}\Bigr] \\[2pt]
+    &\stackrel{(P \approx \Delta f)}{=} \mathbb{E}\Bigl[\log \frac{\Delta^2\, f_{X,Y}(X, Y)}{\Delta f_X(X) \cdot \Delta f_Y(Y)}\Bigr]
+    \stackrel{(\Delta^2 \text{ cancels})}{=} \mathbb{E}\Bigl[\log \frac{f_{X,Y}}{f_X f_Y}\Bigr]
+  \end{aligned}$$</div>
+  <div class="highlight">
+    <p>The $\Delta$'s cancel: continuous MI = limit of discrete MI. No twist.</p>
+  </div>
+</div>
+
+<!-- H(X^Delta) theorem -->
+<div class="slide">
+  <h2>Theorem &mdash; Entropy of the Binned Variable</h2>
+  <div class="divider"></div>
+  <p>Now the same strategy on $H$:</p>
+  <div class="card">
+    <h3>Theorem 8 (discretization).</h3>
+    <p>As $\Delta \to 0$, with $h(X)$ defined below:</p>
+    <div class="math-block" style="margin:8px 0">$$H(X^\Delta) \;=\; h(X) - \log \Delta$$</div>
+  </div>
+  <p class="muted">One finite part, one part that blows up. Proof next.</p>
+</div>
+
+<!-- Proof -->
+<div class="slide">
+  <h2>Discretization &mdash; Proof</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    H(X^\Delta)
+    &\stackrel{(\text{def})}{=} \mathbb{E}\Bigl[\log \frac{1}{P_{X^\Delta}(X^\Delta)}\Bigr] \\[2pt]
+    &\stackrel{(P \approx \Delta f)}{=} \mathbb{E}\Bigl[\log \frac{1}{\Delta \cdot f_X(X)}\Bigr] \\[2pt]
+    &\stackrel{(\text{split log})}{=} \underbrace{\mathbb{E}\Bigl[\log \frac{1}{f_X(X)}\Bigr]}_{=:\, h(X)} - \log \Delta
+    \qquad \blacksquare
+  \end{aligned}$$</div>
+</div>
+
+<!-- Definition of h -->
+<div class="slide">
+  <h2>Differential Entropy</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (differential entropy).</h3>
+    <div class="math-block" style="margin:8px 0">$$h(X)
+      = \mathbb{E}\Bigl[\log \frac{1}{f_X(X)}\Bigr]
+      = \int f_X(x) \log \frac{1}{f_X(x)}\, dx$$</div>
+  </div>
+  <ul>
+    <li>Same shape as $H$: expected log-reciprocal, now of a <strong>density</strong></li>
+    <li>The finite part of $H(X^\Delta)$ after removing $-\log \Delta$</li>
+  </ul>
+</div>
+
+<!-- Reading the theorem -->
+<div class="slide">
+  <h2>Reading $H(X^\Delta) = h(X) - \log \Delta$</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$\Delta \to 0$: $-\log \Delta \to \infty$, so $H(X^\Delta) \to \infty$</li>
+    <li>Intuitive: finer bins, <strong>more distinguishable outcomes</strong></li>
+    <li>Exact real number = infinitely many bits</li>
+  </ul>
+  <div class="highlight">
+    <p>$h(X)$ is entropy <strong>relative to the grid</strong>: the part that does not depend on $\Delta$.</p>
+  </div>
+  <p class="muted">Consequence: $h$ inherits strange behavior. Three exhibits follow.</p>
+</div>
+
+<!-- Worked uniform -->
+<div class="slide">
+  <h2>Example &mdash; Uniform Densities</h2>
+  <div class="divider"></div>
+  <p>$U \sim \text{Unif}(0, 1)$: density $1$ on $[0,1]$</p>
+  <div class="math-block" style="margin:8px 0">$$h(U) = \int_0^1 1 \cdot \log \frac{1}{1}\, dx = 0 \text{ bits}$$</div>
+  <p>$V = 2U \sim \text{Unif}(0, 2)$: density $\tfrac12$ on $[0,2]$</p>
+  <div class="math-block" style="margin:8px 0">$$h(V) = \int_0^2 \tfrac12 \log 2\, dx = \log 2 = 1 \text{ bit}$$</div>
+  <p class="muted">General: $h(\text{Unif}(a,b)) = \log(b - a)$.</p>
+</div>
+
+<!-- Negative h -->
+<div class="slide">
+  <h2>Exhibit 1 &mdash; $h$ Can Be Negative</h2>
+  <div class="divider"></div>
+  <p>$U \sim \text{Unif}(0, \tfrac12)$: density $2$ on $[0, \tfrac12]$</p>
+  <div class="math-block">$$h(U) = \log\bigl(\tfrac12\bigr) = -\log 2 = -1 \text{ bit}$$</div>
+  <ul>
+    <li>Discrete $H \geq 0$ always; differential $h$ is <strong>not</strong></li>
+    <li>No contradiction: $h$ is normalized by the $\log \Delta$ term</li>
+    <li>Negative $h$ = concentrated on a set smaller than unit length</li>
+  </ul>
+</div>
+
+<!-- Not label invariant -->
+<div class="slide">
+  <h2>Exhibit 2 &mdash; No Label Invariance</h2>
+  <div class="divider"></div>
+  <p>Discrete entropy ignores <strong>relabeling</strong>: for one-to-one $f$, $H(X) = H(f(X))$</p>
+  <div class="math-block" style="margin:8px 0">$$X_1 \in \{1,2,3\},\; p = (0.4, 0.5, 0.1),
+    \qquad X_2 = 2 X_1 \in \{2,4,6\}: \quad H(X_1) = H(X_2)$$</div>
+  <p>Continuous: $U \sim \text{Unif}(0,1)$, $V = 2U$</p>
+  <div class="math-block" style="margin:8px 0">$$h(U) = 0 \;\neq\; 1 = h(V)$$</div>
+  <p class="muted">Stretching the axis manufactures differential entropy.</p>
+</div>
+
+<!-- Scaling law -->
+<div class="slide">
+  <h2>Exhibit 3 &mdash; The Scaling Law</h2>
+  <div class="divider"></div>
+  <p>The quirk, quantified via change of variables:</p>
+  <div class="math-block">$$\begin{aligned}
+    h(aX) &\stackrel{(\text{def})}{=} \mathbb{E}\Bigl[\log \frac{1}{f_{aX}(aX)}\Bigr]
+    \stackrel{(f_{aX} = \frac{1}{|a|} f_X)}{=} \mathbb{E}\Bigl[\log \frac{|a|}{f_X(X)}\Bigr] \\[2pt]
+    &= h(X) + \log |a|
+  \end{aligned}$$</div>
+  <ul>
+    <li>Rescaling shifts $h$ by exactly $\log|a|$</li>
+    <li>So in general $h(aX) \neq h(X)$</li>
+  </ul>
+</div>
+
+<!-- Translation invariance + property table -->
+<div class="slide">
+  <h2>What $h$ Keeps, What It Loses</h2>
+  <div class="divider"></div>
+  <p>Shifts leave the density shape untouched:</p>
+  <div class="math-block" style="margin:8px 0">$$h(X + c) = h(X), \qquad h(aX) = h(X) + \log|a|$$</div>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <table style="text-align:center;">
+      <tr><th>property</th><th>discrete $H$</th><th>differential $h$</th></tr>
+      <tr><td>non-negative</td><td>yes</td><td><strong>no</strong></td></tr>
+      <tr><td>relabeling / scale invariant</td><td>yes</td><td><strong>no</strong></td></tr>
+      <tr><td>translation invariant</td><td>yes</td><td>yes</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- Gaussian h -->
+<div class="slide">
+  <h2>Example &mdash; Gaussian Differential Entropy</h2>
+  <div class="divider"></div>
+  <p>$X \sim \mathcal{N}(0, \sigma^2)$, $f(x) = \tfrac{1}{\sqrt{2\pi\sigma^2}} e^{-x^2 / 2\sigma^2}$:</p>
+  <div class="math-block">$$h(X)
+    = \mathbb{E}\Bigl[\log \sqrt{2\pi\sigma^2} + \frac{X^2}{2\sigma^2} \log e\Bigr]
+    = \frac{1}{2} \log\bigl(2\pi e \sigma^2\bigr)$$</div>
+  <ul>
+    <li>Used $\mathbb{E}[X^2] = \sigma^2$</li>
+    <li>$\sigma = 1$: $h \approx 2.05$ bits; grows with $\log \sigma$</li>
+  </ul>
+  <p class="muted">Keep this number: it stars in Section 07.</p>
+</div>
+
+<!-- Conditional differential entropy -->
+<div class="slide">
+  <h2>Conditional Differential Entropy</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (conditional $h$).</h3>
+    <div class="math-block" style="margin:8px 0">$$h(X|Y)
+      = \mathbb{E}\Bigl[\log \frac{1}{f_{X|Y}(X|Y)}\Bigr]
+      = \int f_{X,Y}(x, y) \log \frac{1}{f_{X|Y}(x|y)}\, dx\, dy$$</div>
+  </div>
+  <p>Scaling passes through conditioning:</p>
+  <div class="math-block" style="margin:8px 0">$$h(aX \mid Y) = h(X \mid Y) + \log|a|$$</div>
+</div>
+
+<!-- I(aX;Y) = I(X;Y) -->
+<div class="slide">
+  <h2>Theorem &mdash; MI Ignores Rescaling</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 9 (scale invariance of MI).</h3>
+    <p>For any $a \neq 0$:</p>
+    <div class="math-block" style="margin:8px 0">$$I(aX; Y) = I(X; Y)$$</div>
+  </div>
+  <p class="muted">$h(aX)$ shifts by $\log|a|$ &mdash; but $I$ does not move.</p>
+</div>
+
+<!-- I(aX;Y) = I(X;Y): proof -->
+<div class="slide">
+  <h2>MI Ignores Rescaling &mdash; Proof</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    I(aX; Y) &= h(aX) - h(aX|Y)
+    = \bigl(h(X) + \log|a|\bigr) - \bigl(h(X|Y) + \log|a|\bigr) \\[4pt]
+    &= I(X; Y) \;\; \blacksquare
+  \end{aligned}$$</div>
+  <p class="muted">The two $\log|a|$ shifts cancel.</p>
+</div>
+
+<!-- Implication of invariance -->
+<div class="slide">
+  <h2>$h$ Is Coordinate-Bound, $I$ Is Not</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$aX$ tells about $Y$ exactly what $X$ does &mdash; and $I$ agrees</li>
+    <li>Units, normalization, feature scaling: $I$ unchanged</li>
+    <li>$h$ alone is grid-relative; <strong>differences</strong> of $h$ are meaningful</li>
+  </ul>
+  <div class="highlight">
+    <p>Mutual information is the <strong>physical</strong> quantity; differential entropy is its coordinate-dependent bookkeeping.</p>
+  </div>
+</div>
+
+<!-- Joint differential entropy / chain rule -->
+<div class="slide">
+  <h2>Theorem &mdash; Chain Rule for $h$</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 10 (chain rule, continuous).</h3>
+    <div class="math-block" style="margin:8px 0">$$h(X_1, X_2) = h(X_1) + h(X_2 \mid X_1)$$</div>
+  </div>
+  <div class="math-block">$$h(X_1, X_2)
+    = \mathbb{E}\Bigl[\log \tfrac{1}{f_{X_1,X_2}}\Bigr]
+    \stackrel{(f = f_1 \cdot f_{2|1})}{=} \mathbb{E}\Bigl[\log \tfrac{1}{f_{X_1}}\Bigr]
+    + \mathbb{E}\Bigl[\log \tfrac{1}{f_{X_2|X_1}}\Bigr] \;\; \blacksquare$$</div>
+  <p class="muted">Joint = marginal times conditional, exactly as for pmfs.</p>
+</div>
+
+<!-- Independence iff I=0, continuous -->
+<div class="slide">
+  <h2>Independence Test, Continuous</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 11.</h3>
+    <p>$X$ and $Y$ are independent if and only if</p>
+    <div class="math-block" style="margin:8px 0">$$I(X; Y) = 0$$</div>
+  </div>
+  <p class="muted">KL equality case again: $D(f_{X,Y} \| f_X f_Y) = 0$ iff densities match.</p>
+</div>
+
+<!-- Continuous DPI -->
+<div class="slide">
+  <h2>Theorem &mdash; DPI, Continuous</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 12 (data processing, continuous).</h3>
+    <p>If $X - Y - Z$ forms a Markov chain:</p>
+    <div class="math-block" style="margin:8px 0">$$I(X; Y) \;\geq\; I(X; Z)$$</div>
+  </div>
+  <p class="muted">Discrete DPI III, verbatim; $h$ replaces $H$.</p>
+</div>
+
+<!-- Continuous DPI: proof -->
+<div class="slide">
+  <h2>DPI, Continuous &mdash; Proof</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$I(Y; Z)
+    \stackrel{(\text{Markov})}{=} h(Z) - h(Z \mid Y, X)
+    \stackrel{(\text{cond.})}{\geq} h(Z) - h(Z|X)
+    = I(X; Z) \;\; \blacksquare$$</div>
+  <p class="muted">Same proof skeleton as the discrete case. Conditioning still non-increasing.</p>
+</div>
+
+<!-- ===== SECTION 07 — MAXIMUM ENTROPY ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">07</div>
+  <h1>Maximum Entropy</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The Gaussian wins</p>
+</div>
+
+<!-- Recall discrete maxent -->
+<div class="slide">
+  <h2>Recall &mdash; Discrete Maximum Entropy</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Recall (prob01).</h3>
+    <p>For $X \in \{1, \dots, K\}$:</p>
+    <div class="math-block" style="margin:8px 0">$$H(X) \leq \log K,
+      \qquad \text{equality iff uniform}$$</div>
+  </div>
+  <p>Continuous analogue: what is $\max h(X)$?</p>
+  <p class="muted">And over which family of densities?</p>
+</div>
+
+<!-- Bounded support exercise -->
+<div class="slide">
+  <h2>Exercise &mdash; Bounded Support</h2>
+  <div class="divider"></div>
+  <p><strong>Exercise.</strong> If $X \in [a, b]$ with probability 1, what is the maximum of $h(X)$?</p>
+  <div class="math-block" style="margin:8px 0">$$\max h(X) = \log(b - a),
+    \qquad \text{achieved by } \text{Unif}(a, b)$$</div>
+  <ul>
+    <li>Mirrors the discrete result: flat wins on a box</li>
+    <li>Hint: $D(f \,\|\, \text{unif}) \geq 0$</li>
+  </ul>
+</div>
+
+<!-- Need constraint -->
+<div class="slide">
+  <h2>Unbounded Support Needs a Budget</h2>
+  <div class="divider"></div>
+  <p>No bounds: spread mass wider and wider, $h \to \infty$</p>
+  <p>Standard budget: the <strong>second moment</strong></p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}[X^2] \;\leq\; P$$</div>
+  <ul>
+    <li>Reading: average <strong>energy / power</strong> at most $P$</li>
+    <li>Question: which density is maximally random under it?</li>
+  </ul>
+</div>
+
+<!-- MaxEnt theorem -->
+<div class="slide">
+  <h2>Theorem &mdash; Gaussian Maximizes $h$</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 13 (maximum differential entropy).</h3>
+    <p>Among all densities with $\mathbb{E}[X^2] \leq P$:</p>
+    <div class="math-block" style="margin:8px 0">$$h(X) \;\leq\; h\bigl(\mathcal{N}(0, P)\bigr) = \tfrac{1}{2} \log(2\pi e P)$$</div>
+    <p>Equality iff $X \sim \mathcal{N}(0, P)$.</p>
+  </div>
+  <p class="muted">The Gaussian is the maximally random use of an energy budget.</p>
+</div>
+
+<!-- Same-variance lineup -->
+<div class="slide">
+  <h2>Same Variance, Different Entropy</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 760 260" style="width:100%;max-width:820px;">
+      <line x1="40" y1="230" x2="720" y2="230" stroke="#5b6770" stroke-width="1.5"/>
+      <polyline points="196,230 196,153 564,153 564,230" fill="none" stroke="#8d99a6" stroke-width="2.5" stroke-dasharray="6 4"/>
+      <polyline points="40,228 51,228 61,227 72,227 82,226 93,226 104,225 114,225 125,224 136,223 146,222 157,220 168,219 178,217 189,215 199,213 210,210 221,207 231,204 242,200 252,195 263,190 274,184 284,177 295,169 306,160 316,149 327,137 338,123 348,107 359,88 369,66 380,41 391,66 401,88 412,107 422,123 433,137 444,149 454,160 465,169 476,177 486,184 497,190 508,195 518,200 529,204 539,207 550,210 561,213 571,215 582,217 592,219 603,220 614,222 624,223 635,224 646,225 656,225 667,226 678,226 688,227 699,227 709,228 720,228"
+        fill="none" stroke="#5b6770" stroke-width="2.5"/>
+      <polyline points="40,229 51,229 61,229 72,228 82,228 93,227 104,226 114,225 125,224 136,222 146,221 157,218 168,216 178,213 189,209 199,205 210,200 221,195 231,190 242,184 252,178 263,172 274,165 284,159 295,153 306,147 316,141 327,136 338,132 348,128 359,126 369,124 380,124 391,124 401,126 412,128 422,132 433,136 444,141 454,147 465,153 476,159 486,165 497,172 508,178 518,184 529,190 539,195 550,200 561,205 571,209 582,213 592,216 603,218 614,221 624,222 635,224 646,225 656,226 667,227 678,228 688,228 699,229 709,229 720,229"
+        fill="none" stroke="#003876" stroke-width="3.5"/>
+      <text x="115" y="40" font-size="16" fill="#003876" font-weight="700">Gaussian: h = 2.05 bits</text>
+      <text x="115" y="66" font-size="15" fill="#5b6770" font-weight="600">Laplace: h = 1.94 bits</text>
+      <text x="115" y="92" font-size="15" fill="#8d99a6" font-weight="600">Uniform: h = 1.79 bits</text>
+    </svg>
+  </div>
+  <p class="muted">All three have variance 1; the Gaussian carries the most $h$.</p>
+</div>
+
+<!-- Technique review -->
+<div class="slide">
+  <h2>Technique Review &mdash; Compare to the Candidate</h2>
+  <div class="divider"></div>
+  <p>The tool, once more: for any densities,</p>
+  <div class="math-block" style="margin:8px 0">$$D(f \,\|\, g) \geq 0$$</div>
+  <p>The trick, seen in prob02's mismatch proof:</p>
+  <ul>
+    <li>Let $g$ = the <strong>conjectured winner</strong> (here: Gaussian)</li>
+    <li>Expand $D(f \| g)$ until $h(f)$ and $h(g)$ both appear</li>
+    <li>Non-negativity then <strong>ranks</strong> them</li>
+  </ul>
+</div>
+
+<!-- Proof overview -->
+<div class="slide">
+  <h2>MaxEnt &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <p>Setup: $f$ any density with $\mathbb{E}_f[X^2] = P$; &nbsp;$g = \mathcal{N}(0, P)$ pdf</p>
+  <ol>
+    <li>Expand: $D(f \| g) = \mathbb{E}_f\bigl[\log \tfrac{1}{g(X)}\bigr] - h(f)$</li>
+    <li>Show the cross term equals $h(g)$ &mdash; <em>the magic step</em></li>
+    <li>Conclude: $0 \leq D(f \| g) = h(g) - h(f)$</li>
+  </ol>
+  <p class="muted">Step 2 works because $\log \tfrac{1}{g}$ is a quadratic in $x$.</p>
+</div>
+
+<!-- Proof step 1 -->
+<div class="slide">
+  <h2>MaxEnt &mdash; Step 1: Expand the KL</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    D(f \,\|\, g)
+    &\stackrel{(\text{def})}{=} \mathbb{E}_f\Bigl[\log \frac{f(X)}{g(X)}\Bigr] \\[2pt]
+    &\stackrel{(\text{split})}{=} \mathbb{E}_f\Bigl[\log \frac{1}{g(X)}\Bigr]
+      - \underbrace{\mathbb{E}_f\Bigl[\log \frac{1}{f(X)}\Bigr]}_{=\, h(f)}
+  \end{aligned}$$</div>
+  <p class="muted">Cross term: $f$-average of the Gaussian's surprisal.</p>
+</div>
+
+<!-- Proof step 2 -->
+<div class="slide">
+  <h2>MaxEnt &mdash; Step 2: The Magic Step</h2>
+  <div class="divider"></div>
+  <p>With $g(x) = \tfrac{1}{\sqrt{2\pi P}} e^{-x^2/2P}$, the surprisal is <strong>quadratic</strong>:</p>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}_f\Bigl[\log \tfrac{1}{g(X)}\Bigr]
+    &\stackrel{(\text{plug in } g)}{=} \log \sqrt{2\pi P} + \mathbb{E}_f\Bigl[\tfrac{X^2}{2P}\Bigr] \log e \\[2pt]
+    &\stackrel{(\mathbb{E}_f[X^2] = \mathbb{E}_g[X^2] = P)}{=} \log \sqrt{2\pi P} + \mathbb{E}_g\Bigl[\tfrac{X^2}{2P}\Bigr] \log e \\[2pt]
+    &\stackrel{(\text{same steps back})}{=} \mathbb{E}_g\Bigl[\log \tfrac{1}{g(X)}\Bigr] = h(g)
+  \end{aligned}$$</div>
+</div>
+
+<!-- Proof step 3 -->
+<div class="slide">
+  <h2>MaxEnt &mdash; Step 3: Conclude</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$0 \;\stackrel{(\text{KL})}{\leq}\; D(f \,\|\, g)
+    \;\stackrel{(1),(2)}{=}\; h(g) - h(f)$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Longrightarrow \quad h(f) \;\leq\; h(g) = \tfrac12 \log(2\pi e P)
+    \qquad \blacksquare$$</div>
+  <ul>
+    <li>Equality iff $D(f \| g) = 0$ iff $f = g$: <strong>only</strong> the Gaussian</li>
+  </ul>
+</div>
+
+<!-- Proof summary -->
+<div class="slide">
+  <h2>MaxEnt &mdash; Proof Summary</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$0
+    \stackrel{(\text{KL} \geq 0)}{\leq} D(f \,\|\, g)
+    \stackrel{(\text{split})}{=} \mathbb{E}_f\Bigl[\log \tfrac{1}{g}\Bigr] - h(f)
+    \stackrel{(\text{moments match})}{=} h(g) - h(f)$$</div>
+  <ul>
+    <li>Key trick: $\log \tfrac{1}{g}$ depends on $f$ <strong>only through</strong> $\mathbb{E}_f[X^2]$</li>
+    <li>The constraint is exactly what the Gaussian's quadratic log-density measures</li>
+  </ul>
+  <p class="muted">Same skeleton as prob01's $H \leq \log M$: compare to the flat candidate.</p>
+</div>
+
+<!-- Implication -->
+<div class="slide">
+  <h2>Implication &mdash; Why Gaussians Are Everywhere</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Under an energy budget, Gaussian = <strong>maximally random</strong></li>
+    <li>Worst-case noise assumption: nothing hides more</li>
+    <li>Diffusion models corrupt data with the maximally random choice</li>
+    <li>Modeling: unknown noise, fixed variance, Gaussian is the least-assuming pick</li>
+  </ul>
+  <div class="highlight">
+    <p>Gaussian noise is not a convenience; it is the <strong>extreme point</strong> of differential entropy.</p>
+  </div>
+</div>
+
+<!-- Recap chain -->
+<div class="slide">
+  <h2>Recap &mdash; Today's Chain</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    &H(X, Y) \stackrel{(\text{chain})}{=} H(X) + H(Y|X), \qquad
+      I(X; Y) \stackrel{(\text{KL})}{=} D(p_{X,Y} \,\|\, p_X p_Y) \geq 0 \\[4pt]
+    &H(X^\Delta) \stackrel{(\text{bins})}{=} h(X) - \log \Delta, \qquad
+      h(X) \stackrel{(\mathbb{E} X^2 \leq P)}{\leq} \tfrac12 \log(2\pi e P)
+  \end{aligned}$$</div>
+  <ul>
+    <li>MI: the overlap of two entropy circles; symmetric; non-negative</li>
+    <li>$h$: grid-relative, can be negative, shifts under scaling; $I$ immune</li>
+  </ul>
+</div>
+
+<!-- Recap DPI family -->
+<div class="slide">
+  <h2>Recap &mdash; The DPI Family</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \text{(I)}&\quad H(X) \geq H\bigl(f(X)\bigr) \\[2pt]
+    \text{(II)}&\quad I(X; Y) \geq I\bigl(f(X); Y\bigr) \\[2pt]
+    \text{(III)}&\quad X - Y - Z \;\Longrightarrow\; I(Y; Z) \geq I(X; Z)
+  \end{aligned}$$</div>
+  <ul>
+    <li>One moral: <strong>processing never creates information</strong></li>
+    <li>One caveat: conditioning can create <strong>dependence</strong> (XOR)</li>
+  </ul>
+</div>
+
+<!-- Bridge to prob04 -->
+<div class="slide">
+  <h2>Next &mdash; Sequences in Time</h2>
+  <div class="divider"></div>
+  <p>So far, <strong>single snapshots</strong>: one $(X, Y)$, frozen</p>
+  <p>But $X - Y - Z$ already looked like time steps:</p>
+  <div class="math-block" style="margin:8px 0">$$X_1 \to X_2 \to X_3 \to \cdots:
+    \quad \text{states that evolve, step by step}$$</div>
+  <ul>
+    <li>Where does the sequence settle in the long run?</li>
+    <li>What noise process turns data into pure randomness?</li>
+  </ul>
+  <div class="highlight">
+    <p>Next lecture: <strong>Markov processes and stationary distributions</strong>.</p>
+  </div>
+</div>
+
+<!-- Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$I(X;Y)$</div>
+  <p class="big-word-sub">Questions?</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 127</div>
+
+</div><!-- end deck -->
+
+<script src="../../../reference/deck.js"></script>
+</body>
+</html>

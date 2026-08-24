@@ -24,7 +24,7 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 3 | `prob03-mutual-information/` — joint/cond entropy, MI, DPI I–III, cond MI, differential entropy, MaxEnt Gaussian | prob 539–1210 | done (127 slides) |
 | 4 | `prob04-random-processes/` — Markov processes, stationary dist., discrete diffusion | prob 1211–1455 | done (99 slides) |
 | 5 | `prob05-concentration/` — Markov/Chebyshev/Chernoff, MGF, CLT sketch, LLN | prob 1457–1595 | done (107 slides) |
-| 6 | `prob06-generalization/` — Hoeffding, sub-Gaussian, union bound, finite-class generalization bound | new material (sequel to prob05) | planned |
+| 6 | `prob06-generalization/` — Hoeffding, sub-Gaussian, union bound, finite-class generalization bound | new material (sequel to prob05) | done (105 slides) |
 | 7 | `prob07-estimation/` — cond. expectation/tower, MLE/MAP, Fano (full proof), Naive Bayes, bias-variance, MMSE | prob 1563–1911 | planned |
 | 8 | `prob08-gaussian/` — MVN (3 defs, properties w/ proofs), Gaussian channel, Gaussian diffusion/DDPM, Gaussian discriminant | prob 1912–2519 (MIT OCW 6.436J citation) | planned |
 | 9 | `prob09-monte-carlo/` — Monte Carlo, importance sampling, variance trade-offs, policy gradient / RLHF hooks | new material | planned |
@@ -225,3 +225,52 @@ uniqueness. Conditional expectation (prob 1577–1592) deferred to prob07 per de
 plan. Added beyond the tex, flagged on-slide as illustration: Markov tightness
 example, KL-divergence form of the optimized Chernoff exponent, Gaussian-actual
 column in the ασ table.
+
+### prob06-generalization — From Concentration to Generalization (105 slides)
+
+`prob06-generalization/prob06-generalization.html` · **new material — not in tex**
+(textbook-canonical statements/proofs only; sequel to prob05). Lecture 6 — answers
+prob05's bridge (one fixed average → every hypothesis at once); recalls Chernoff/
+MGF rules/Gaussian MGF from prob05 by name without re-proving; the prob05 coin
+running example (Pr(X̄₁₀₀ ≥ 3/4)) returns to benchmark Hoeffding against Chernoff
+2.1×10⁻⁶ and exact 2.8×10⁻⁷; ends on a bridge to prob07 (how to *choose* ĥ →
+likelihood, MLE/MAP, bias–variance).
+
+| # | Section | Slides | Location |
+|---|---|---|---|
+| — | Title + TOC | 1–2 | prob06-generalization/prob06-generalization.html:23 |
+| 01 | Why Generalization? (train/test/gap cards, setup ℓ(h,z)∈[0,1] :139, true risk R(h) :153, empirical risk R̂_n :166, ERM :179, gap def :193, overfitting U-curve SVG :208, memorizer worked example R̂=0 vs R=1/2 :235, why fixed-h bounds fail for ĥ :245, route map SVG :260) | 3–13 | prob06-generalization/prob06-generalization.html:107 |
+| 02 | Recall — the prob05 Toolkit (Chernoff card :300, MGF product/scale rules :315, Gaussian MGF e^{t²σ²/2} :330, what Chernoff needed vs. boundedness-only :345) | 14–18 | prob06-generalization/prob06-generalization.html:292 |
+| 03 | Hoeffding's Lemma (goal :368, techniques: bounded-variance lemma Var ≤ (b−a)²/4 + midpoint proof :382, tilted distributions + bar-chart SVG :410, Taylor with Lagrange remainder :453, Thm 1 arc :466, 4-step proof ψ(0)=ψ'(0)=0 / ψ''=tilted variance / cap / integrate :492, proof summary chain :558, ±1 series sanity check (2k)! ≥ 2^k k! :573, any-mean corollary :585, what it buys) | 19–36 | prob06-generalization/prob06-generalization.html:360 |
+| 04 | Sub-Gaussian Variables (definition variance proxy :621, Gaussian equality example :633, bounded-variable proxy table :646, Thm 2 tail bound arc :662, Chernoff+envelope+optimize t*=ε/σ² proof :687, two-sided :709, tail-envelope SVG :721, closure rules: scaling c²σ² :744, Prop. sums add proxies + 3-line proof :758, averages σ²/n :782, one-card calculus recap :796) | 37–51 | prob06-generalization/prob06-generalization.html:613 |
+| 05 | Hoeffding's Inequality (Thm 3 arc exp(−2nε²/(b−a)²) :820, 3-step assembly proof :833, two-sided workhorse 2e^{−2nε²} :881, proof summary :894, coin returns table vs. prob05 :908, exponent 0.125-vs-0.1308 lesson :925, worked ±2%@95% → n ≥ 4,612 :939, Chebyshev-vs-Hoeffding table 12,500 vs 4,612 :951, what it buys) | 52–64 | prob06-generalization/prob06-generalization.html:812 |
+| 06 | The Union Bound (Thm 4 Boole :989, one-line indicator proof :1001, Venn SVG overlap-counted-twice :1012, 10⁴-model farm thought experiment :1036, farm worked example 3.7% :1049, small-test-set vacuous case n=25 :1063, Bonferroni δ/m split :1077, what it buys +ln m :1090) | 65–73 | prob06-generalization/prob06-generalization.html:981 |
+| 07 | The Generalization Theorem (finite classes: stumps/quantized nets :1112, risks recall card :1130, fixed h is a coin :1145, the trap ĥ not fixed :1159, the fix G_ε event :1172, Thm 5 arc sup gap ≤ √(ln(2|H|/δ)/2n) :1185, 3-step proof per-h → union → invert :1211, proof summary :1246, ε-tube SVG :1262, ERM corollary R(ĥ) ≤ min R + 2ε :1296, three-hop proof :1308, why-2ε SVG :1323, ln|H| = bits :1354, sample complexity 139/bit :1368, numbers table :1380, chart SVG n ≈ 739+139k :1397, confidence-is-cheap table :1425, VC/Rademacher road ahead (names only) :1441) | 74–95 | prob06-generalization/prob06-generalization.html:1104 |
+| 08 | Why ERM Works (license to train :1462, approximation-vs-estimation split :1478, trade-off U-curve SVG :1488, honest slide: ResNet-50 bound vacuous ε ≈ 14.9, open research :1514, what survives: test-set bound |H|=1, validation, leaderboard overfitting :1529) | 96–101 | prob06-generalization/prob06-generalization.html:1454 |
+| — | Recap chain, every-tool recap table, bridge to prob07, end slide R(ĥ) ≤ R(h*) + 2ε | 102–105 | prob06-generalization/prob06-generalization.html:1543 |
+
+Key theorems: **Thm 1** Hoeffding's lemma E[e^{tX}] ≤ exp(t²(b−a)²/8) for X∈[a,b],
+E[X]=0, full arc via tilted-distribution log-MGF (ψ'' = tilted variance ≤ (b−a)²/4,
+Taylor with remainder) (prob06-generalization/prob06-generalization.html:470);
+**Thm 2** sub-Gaussian tail Pr(X−μ ≥ ε) ≤ e^{−ε²/2σ²}, Chernoff + envelope +
+optimize (prob06-generalization/prob06-generalization.html:666); **Prop.**
+independent sums add variance proxies
+(prob06-generalization/prob06-generalization.html:762); **Thm 3** Hoeffding's
+inequality Pr(X̄_n−μ ≥ ε) ≤ exp(−2nε²/(b−a)²), assembled from Thm 1 + closure rules
++ Thm 2 (prob06-generalization/prob06-generalization.html:824); **Thm 4** union
+bound, one-line indicator proof
+(prob06-generalization/prob06-generalization.html:993); **Thm 5** finite-class
+uniform convergence sup_h |R−R̂_n| ≤ √(ln(2|H|/δ)/2n) w.p. ≥ 1−δ, full arc
+(prob06-generalization/prob06-generalization.html:1189); **Cor.** ERM guarantee
+R(ĥ) ≤ min_h R(h) + 2ε, three-hop proof
+(prob06-generalization/prob06-generalization.html:1300).
+Figures: all diagrams inline SVG with hand-computed numbers (overfitting U-curve,
+route map, tilting bar chart, sub-Gaussian tail envelope, union-bound Venn, ε-tube
+with ERM pick, why-2ε two-hop ladder, approximation-estimation trade-off, sample-
+complexity line n ≈ 739+139k). All numeric examples hand-computed: n ≥ 4,612 for
+±2%@95% (ln 40/0.0008), model-farm 10⁴×3.7×10⁻⁶ = 3.7%, vacuous n=25 case
+e^{−3.125} ≈ 0.044, sample-complexity table (10 → 1,199; 10³ → 2,120; 10⁶ → 3,501;
+2¹⁰⁰ → 14,600), ResNet-50 honest slide (25.6M params × 32 bits → ln|H| ≈ 5.7×10⁸,
+n = 1.28×10⁶ → ε ≈ 14.9). Cross-deck numbers (Chernoff 2.1×10⁻⁶, exact 2.8×10⁻⁷,
+exponent 0.1308) taken from prob05's published slides. Illustrative-only counts
+flagged on-slide: decision-stump class size 256d, ResNet-50 parameter count.

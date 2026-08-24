@@ -31,7 +31,7 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 10 | `opt01-svd-lowrank/` — rank/range/null, SVD, pseudo-inverse, spectral & nuclear norms, Eckart–Young–Mirsky, Netflix | opt 1–435 | done (119 slides) |
 | 11 | `opt02-regression-erm/` — least squares θ\*=A†B (full proof), ERM/Bayes risk, ridge + closed form | opt 436–794, 1463–1517 | done (111 slides) |
 | 12 | `opt03-convexity-gd/` — convexity, L-smoothness, co-coercivity, strong convexity, PL, GD O(1/T) + linear rate | opt 795–1319 | done (135 slides) |
-| 13 | `opt04-sgd/` — SGD O(1/√K) proof, mini-batching, strongly-convex SGD O(log k/k) | opt 1320–1462, 1520–1600 | planned |
+| 13 | `opt04-sgd/` — SGD O(1/√K) proof, mini-batching, strongly-convex SGD O(log k/k) | opt 1320–1462, 1520–1600 | done (118 slides) |
 
 Dropped from source by request: operator theory (opt 1603–1761), acceleration/AGM
 (1765–1889), GDM/RMSprop/Adam (1981–2056), SAM (2060–2091).
@@ -621,3 +621,76 @@ descent-lemma Step 2 makes the implicit Cauchy–Schwarz explicit,
 co-coercivity (ii) proof makes g_x's L-smoothness explicit, and all worked
 numeric examples above (the tex sets up the running objects but computes
 none of them).
+
+### opt04-sgd — Stochastic Gradient Descent (118 slides)
+
+`opt04-sgd/opt04-sgd.html` · **opt 1320–1462, 1520–1600** (SGD setup,
+unbiasedness, full O(1/√K) convex proof for the averaged iterate,
+mini-batch 1/b variance, strongly-convex SGD O(log k/k) with decreasing
+steps). Lecture 13 — the course finale: answers opt03's bridge (full
+gradients cost N backprops; sample one instead and pay with variance);
+recalls opt03 (tangent floor, telescoping, unrolling), prob01 (uniform
+expectation, Jensen), prob05 (variance of averages), prob07 (tower) by
+name without re-proving. Per Albert's request, operator theory,
+Nesterov/acceleration, and GDM/RMSprop/Adam math are all dropped —
+momentum/RMSprop/Adam appear as one names-only slide. Running example
+L_i(θ) = ½(θ − c_i)², c = (0, 3, 6) (θ* = 3, σ² = 6 at every θ) carried
+through: full gradient by hand → sampled spread {0,−3,−6} at θ=0 → four
+SGD steps at α = ½ (draws 6,0,3,6: θ = 3, 1.5, 2.25, 4.125) vs GD → same
+draws at α = 0.1 → noise floors 2.0 vs 0.316 → Thm 2 constants G²+σ² = 42,
+D = 3, bound 19.44/√(K+1) → b=1 vs b=3 variance 6 vs 2 (27 triples) →
+strongly-convex rewrite L = f + ½θ² (μ=1, G=3), schedule 1/(k+1) makes the
+iterate the running average of sampled c's → bound 30(1+log(k+1))/(k+1)
+vs Thm 2, crossover ≈ 10³. Closes the whole course: 13-deck map,
+what-you-can-now-read, end slide θ_{k+1} = θ_k − α g_k.
+
+| # | Section | Slides | Location |
+|---|---|---|---|
+| — | Title + TOC | 1–2 | opt04-sgd/opt04-sgd.html:36 |
+| 01 | Why SGD? (bill for one GD step :144, N is millions :155, sample-don't-sum :178, four results :193, route map SVG :217) | 3–8 | opt04-sgd/opt04-sgd.html:136 |
+| 02 | The Finite-Sum Objective (ERM recall opt02 :248, GD priced :260, running example :272, three-parabolas SVG :286, full gradient by hand :315, the gap :332) | 9–15 | opt04-sgd/opt04-sgd.html:240 |
+| 03 | The Stochastic Gradient (algorithm box :351, three-candidates SVG :365, TR uniform expectation (prob01) :395, Thm 1 unbiasedness :408 + proof :421, worked check table :435, unbiased ≠ zero :452, truth + noise σ²=6 :467, epochs remark :480) | 16–25 | opt04-sgd/opt04-sgd.html:343 |
+| 04 | SGD by Hand (α=½ midpoint step :499, run table :511, GD comparison :529, two-paths SVG :550, 2-D companion :581, contour SVG :594, reading the picture :636, averaged iterate θ̄₄ = 2.175 :657) | 26–34 | opt04-sgd/opt04-sgd.html:491 |
+| 05 | Noise vs Progress (α=0.1 table :682, error recursion :703, mean dies/variance survives :717, noise floor ασ²/(2−α) table :730, racing-to-floors SVG :749, step-size dial :778, three escape plans :799) | 35–42 | opt04-sgd/opt04-sgd.html:674 |
+| 06 | The O(1/√K) Theorem (E_k notation :830, variance assumption honestly :843, bounded gradients :856, running constants :873, Thm 2 :886, reading :901, overview :914, Steps 1–9 one idea/slide :930–:1142 with TRs tangent floor :960, tower :1006, telescoping :1033, balance :1072, Jensen :1128 interleaved; one-step inequality read :992, balance U-curve SVG :1099, skeleton :1157, worked bound table :1173, GD-vs-SGD total work :1192, average-vs-last remark :1211) | 43–69 | opt04-sgd/opt04-sgd.html:822 |
+| 07 | Mini-Batching (update :1236, still unbiased :1248, TR variance of averages (prob05) :1260, Thm 3 :1274 + proof :1287, b=1 vs b=3 worked :1298, histogram SVG :1315, full-batch corner :1349, what b buys :1366, GPU price :1380, choosing b :1401) | 70–81 | opt04-sgd/opt04-sgd.html:1228 |
+| 08 | Strongly Convex SGD (regularized problem :1421, kill-the-floor schedule :1433, running example rewritten :1446, Thm 4 :1458, reading :1471, overview :1484, TR unrolling (opt03) :1498, Steps 1a/1b weights = 1/(k+1) :1510–:1523, worked running average :1536 + table :1546, TR splitting square :1564, Steps 2a/2b :1576–:1589, TR strong floor (opt03) :1602, Steps 3a/3b contraction :1616–:1630, Step 4 schedule :1644, Step 5a weighted telescope a₀=0 :1657, TR harmonic sum + integral SVG :1670, Step 5b :1701, Step 6 Jensen :1714, skeleton :1727, log-removable remark :1742, worked bound table :1754, log-log rates SVG :1773) | 82–108 | opt04-sgd/opt04-sgd.html:1413 |
+| 09 | In Practice (recipe table :1808, proved-vs-run honesty :1826, descendants names only :1844) | 109–112 | opt04-sgd/opt04-sgd.html:1800 |
+| 10 | Closing the Course (today as one chain :1876, every-tool table :1891, 13-deck course map SVG :1909, what you can now read :1961, end slide θ_{k+1} = θ_k − α g_k :1981) | 113–118 | opt04-sgd/opt04-sgd.html:1868 |
+
+Key theorems: **Thm 1** unbiasedness E[∇L_{i_k}(θ)] = ∇L(θ), two-line
+proof via uniform expectation (opt04-sgd/opt04-sgd.html:408); **Thm 2**
+convex SGD O(1/√K): with α = D/(√(G²+σ²)√(K+1)), E[L(θ̄_K) − L*] ≤
+√(G²+σ²)·D/√(K+1) for the averaged iterate — full 9-step proof
+(opt04-sgd/opt04-sgd.html:886); **Thm 3** mini-batch variance σ²/b for
+i.i.d. with-replacement batches, proved via prob05's variance of averages
+(opt04-sgd/opt04-sgd.html:1274); **Thm 4** strongly convex SGD with
+α_k = 1/(μ(k+1)): E[F(x̄_k) − F(x*)] ≤ (2(G²+σ²)/μ)·(1+log(k+1))/(k+1) —
+full 6-step proof via unrolling, weighted telescope with vanishing head,
+harmonic sum (opt04-sgd/opt04-sgd.html:1458).
+Figures: all diagrams inline SVG with hand-computed geometry (route map,
+three parabolas + average via exact Bézier, three-candidates number line,
+SGD-vs-GD iterate paths, 2-D contours with midpoint-exact SGD/GD paths at
+26 px/unit, racing-to-different-floors curves from the exact recursion,
+balance-point U-curve for 0.045/α + 21α, b=1 vs b=3 histogram from the 27
+enumerated triples, harmonic-sum integral boxes, log-log rate comparison,
+13-deck course map).
+Deviations from tex: tex's Lipschitz constant L renamed G (clash with
+opt03's smoothness L; noted on-slide); Thm 4 stated for E[F(x̄_k) − F(x*)]
+with F = f + (μ/2)‖x‖² (tex writes f and omits the expectation); tex
+1435/1446 final-constant typo (√(L²+σ²) misplaced) corrected to
+√(G²+σ²)·D/√(K+1); tex 1582–1583 average /k corrected to /(k+1); index
+inconsistency at tex 1426/1432 resolved (θ_{K+1} after summing k=0..K);
+tex 1363 I_k ∈ → I_k ⊆; tex 1375's garbled mini-batch sentence rendered
+as variance ÷b / compute ×b / GPU parallelism; spelling typos fixed
+silently (convditional, bith, miminzer). Honesty caveats on-slide: the
+quadratic running example is not globally Lipschitz (G = 6 valid on the
+interval the run lives in); bounded variance labeled an assumption.
+Added beyond the tex per mandate: noise-floor recursion v∞ = ασ²/(2−α)
+with numeric floors 2.0/0.316; the 2-D contour companion; GD-vs-SGD total
+work O(N/ε) vs O(1/ε²) table; balance U-curve; b=1/b=3 histogram
+enumeration; θ_i = 1/(k+1) running-average simplification of the unrolled
+weights; harmonic-sum technique review with integral picture; Thm 2 vs
+Thm 4 worked bound comparison (crossover ≈ 10³); and all worked numeric
+tables (the tex sets up the running example but computes none of the
+runs).

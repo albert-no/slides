@@ -23,7 +23,7 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 2 | `prob02-kl-crossentropy/` — mismatch thm, KL ≥ 0, horse racing, CE loss = KL to one-hot | prob 249–538 | done (69 slides) |
 | 3 | `prob03-mutual-information/` — joint/cond entropy, MI, DPI I–III, cond MI, differential entropy, MaxEnt Gaussian | prob 539–1210 | done (127 slides) |
 | 4 | `prob04-random-processes/` — Markov processes, stationary dist., discrete diffusion | prob 1211–1455 | done (99 slides) |
-| 5 | `prob05-concentration/` — Markov/Chebyshev/Chernoff, MGF, CLT sketch, LLN | prob 1457–1595 | planned |
+| 5 | `prob05-concentration/` — Markov/Chebyshev/Chernoff, MGF, CLT sketch, LLN | prob 1457–1595 | done (107 slides) |
 | 6 | `prob06-generalization/` — Hoeffding, sub-Gaussian, union bound, finite-class generalization bound | new material (sequel to prob05) | planned |
 | 7 | `prob07-estimation/` — cond. expectation/tower, MLE/MAP, Fano (full proof), Naive Bayes, bias-variance, MMSE | prob 1563–1911 | planned |
 | 8 | `prob08-gaussian/` — MVN (3 defs, properties w/ proofs), Gaussian channel, Gaussian diffusion/DDPM, Gaussian discriminant | prob 1912–2519 (MIT OCW 6.436J citation) | planned |
@@ -176,3 +176,52 @@ tex per mandate: proofs for Thm 1/2, eigenvalue technique review + by-hand eigen
 solutions of both running chains, symmetric-P exercise solution, convergence-rate
 slides (second eigenvalue), numeric evolution table/chart, and the diffusion
 forward/backward picture slides.
+
+### prob05-concentration — Concentration Inequalities & the Law of Large Numbers (107 slides)
+
+`prob05-concentration/prob05-concentration.html` · source: prob 1457–1595.
+Lecture 5 — answers prob04's teaser (averages of many draws); recalls expectation/
+variance from prob01 and independence from prob03 instead of redefining; one running
+example (mean of n fair coin flips, Pr(X̄_n ≥ 3/4)) is re-answered by every bound;
+ends on a bridge to prob06 (tail bounds uniform over a hypothesis class → Hoeffding
++ union bound).
+
+| # | Section | Slides | Location |
+|---|---|---|---|
+| — | Title + TOC | 1–2 | prob05-concentration/prob05-concentration.html:23 |
+| 01 | Why Averages? (minibatch loss / test accuracy / Monte Carlo cards, how-many-samples question, three-bounds preview, route map SVG) | 3–8 | prob05-concentration/prob05-concentration.html:115 |
+| 02 | Warm-Up (expectation :237 / variance :253 recall from prob01, independence recall from prob03, product-rule proof, variance adds, coin running example :313, why not just compute it) | 9–16 | prob05-concentration/prob05-concentration.html:229 |
+| 03 | Markov's Inequality (indicator technique :349, Thm 1 arc: statement :386, threshold form :398, 3-step proof, coin answer 0.67, tightness example :493, what it buys) | 17–29 | prob05-concentration/prob05-concentration.html:341 |
+| 04 | Chebyshev's Inequality (squaring technique, Thm 2 arc, ασ-rule table :626, Var(X̄_n)=σ²/n :642, coin answer, Markov-vs-Chebyshev 4/n chart :675, 50,000-samples computation :698) | 30–42 | prob05-concentration/prob05-concentration.html:521 |
+| 05 | Law of Large Numbers (convergence-in-probability def :718 + picture, Thm 3 arc, sample-path SVG :812, tails-vanish chart :834, where AI leans on it, the-gap teaser :872) | 43–53 | prob05-concentration/prob05-concentration.html:710 |
+| 06 | Moment Generating Functions (def :896, moment machine M'(0)/M''(0), Taylor view, Bernoulli MGF :953, Gaussian MGF exercise via completing the square, Thm 4 uniqueness :1038, Prop. sums→products :1053, Gaussian-sum worked, coin-sum MGF :1095) | 54–69 | prob05-concentration/prob05-concentration.html:888 |
+| 07 | Chernoff Bound (exponentiating-the-event technique :1142, Thm 5 arc :1166, free parameter t, coin 3-step optimization t*=ln 3 → exponent 0.1308 :1238, KL-exponent view :1278, 18,444-samples revisit :1295, what it buys) | 70–84 | prob05-concentration/prob05-concentration.html:1119 |
+| 08 | Three Bounds Head-to-Head (escalation table, numeric table on Pr(X̄_n ≥ 3/4) :1361, log-scale chart :1376, takeaway) | 85–89 | prob05-concentration/prob05-concentration.html:1338 |
+| 09 | Central Limit Theorem (shape question, standardization, Thm 6 :1452, sketch scope caveat, Taylor-at-zero + compound-interest-limit techniques, 3-step MGF sketch, Bin(16,½)-vs-bell chart :1569, what it buys) | 90–103 | prob05-concentration/prob05-concentration.html:1420 |
+| — | Recap chain, one-coin-every-tool recap table, bridge to prob06, end slide | 104–107 | prob05-concentration/prob05-concentration.html:1617 |
+
+Key theorems: **Thm 1** Markov Pr(X ≥ αE[X]) ≤ 1/α, non-negative X, full arc
+(prob05-concentration/prob05-concentration.html:386); **Thm 2** Chebyshev
+Pr(|X−μ| ≥ ασ) ≤ 1/α², full arc (prob05-concentration/prob05-concentration.html:558);
+**Thm 3** weak LLN X̄_n → μ in probability, proved via Chebyshev + Var(X̄_n)=σ²/n
+(prob05-concentration/prob05-concentration.html:756); **Thm 4** MGF uniqueness,
+stated without proof as in the tex
+(prob05-concentration/prob05-concentration.html:1038); **Prop.** MGFs turn
+independent sums into products
+(prob05-concentration/prob05-concentration.html:1053); **Thm 5** Chernoff
+Pr(X ≥ α) ≤ M(t)e^{−tα} for all t > 0, full arc
+(prob05-concentration/prob05-concentration.html:1166); **Thm 6** CLT, MGF-based
+sketch flagged non-rigorous as in the tex
+(prob05-concentration/prob05-concentration.html:1452).
+Figures: all diagrams inline SVG (route map, indicator step, tightening-density
+picture, LLN sample path with fixed seed, exact-vs-Chebyshev decay, Markov-vs-
+Chebyshev 4/n curve, step-vs-exponential lid, log-scale head-to-head,
+Bin(16,½)-vs-bell). All numeric tables hand-computed from binomial sums (exact
+Pr(S₁₆ ≥ 12) = 2517/65536 ≈ 0.038; Chernoff exponent D(Bern(3/4)‖Bern(1/2)) ≈
+0.1308). Deviations from tex: prob 1569 "mean 0" fixed to mean μ; prob 1571–1572
+garbled LLN bound σ²/(nε) fixed to σ²/(nε²); prob 1542 "M(Y)(t)" fixed to M_Y(t);
+prob 1529's incomplete Gaussian-sum exercise completed via MGF product +
+uniqueness. Conditional expectation (prob 1577–1592) deferred to prob07 per deck
+plan. Added beyond the tex, flagged on-slide as illustration: Markov tightness
+example, KL-divergence form of the optimized Chernoff exponent, Gaussian-actual
+column in the ασ table.

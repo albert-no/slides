@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Learning Math 5 &mdash; Concentration Inequalities &amp; the Law of Large Numbers</title>
+
+<!-- Design system (canonical; all decks link to reference/). -->
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/deck.css">
+
+<!-- KaTeX for math rendering. -->
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- SLIDE 1 — Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Deep Learning Math &middot; Lecture 5</div>
+  <h1>Concentration Inequalities<br>&amp; the Law of Large Numbers</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Why averages can be trusted</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;&middot;&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Fall 2026</p>
+</div>
+
+<!-- SLIDE 2 — Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list" style="display:grid;grid-auto-flow:column;grid-template-rows:repeat(5,auto);grid-template-columns:1fr 1fr;gap:16px 44px">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Why Averages?</div>
+        <div class="toc-sub">Every AI number is an average</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Warm-Up</div>
+        <div class="toc-sub">Mean, variance, independence</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Markov's Inequality</div>
+        <div class="toc-sub">One number in, one bound out</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Chebyshev's Inequality</div>
+        <div class="toc-sub">Variance enters, tails shrink</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Law of Large Numbers</div>
+        <div class="toc-sub">$\bar{X}_n \to \mu$, with a proof</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Moment Generating Functions</div>
+        <div class="toc-sub">All moments in one function</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">07</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Chernoff Bound</div>
+        <div class="toc-sub">Exponentially small tails</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">08</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Three Bounds Head-to-Head</div>
+        <div class="toc-sub">One coin, three answers</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">09</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Central Limit Theorem</div>
+        <div class="toc-sub">The shape of fluctuations (sketch)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 01 — WHY AVERAGES ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Why Averages?</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Every AI number is an average</p>
+</div>
+
+<!-- Averages everywhere -->
+<div class="slide">
+  <h2>Every AI Number Is an Average</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Minibatch loss</h3>
+      <p>Mean loss over a batch</p>
+      <p class="muted">stand-in for the true loss</p>
+    </div>
+    <div class="card">
+      <h3>Test accuracy</h3>
+      <p>Fraction correct = mean of 0/1</p>
+      <p class="muted">stand-in for true accuracy</p>
+    </div>
+    <div class="card">
+      <h3>Monte Carlo</h3>
+      <p>Mean of sampled values</p>
+      <p class="muted">stand-in for an expectation</p>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:14px;">One object three times: a <strong>sample mean</strong> replacing an expectation</p>
+</div>
+
+<!-- The gamble -->
+<div class="slide">
+  <h2>The Gamble Behind Every Average</h2>
+  <div class="divider"></div>
+  <p>What we can compute vs. what we want:</p>
+  <div class="math-block" style="margin:8px 0">$$\underbrace{\bar{X}_n = \frac{1}{n}\sum_{i=1}^{n} X_i}_{\text{computable, random}}
+    \qquad \text{vs.} \qquad
+    \underbrace{\mu = \mathbb{E}[X]}_{\text{wanted, fixed}}$$</div>
+  <ul>
+    <li>Report $\bar{X}_n$, hope it is near $\mu$</li>
+    <li>Hope is not an argument: $\bar{X}_n$ is <strong>random</strong></li>
+  </ul>
+  <div class="highlight">
+    <p>Today's question: <strong>how likely</strong> is $\bar{X}_n$ to be far from $\mu$?</p>
+  </div>
+</div>
+
+<!-- How many samples -->
+<div class="slide">
+  <h2>How Many Samples Do I Need?</h2>
+  <div class="divider"></div>
+  <p>Concrete engineering question:</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\!\left( |\bar{X}_n - \mu| \geq 0.01 \right) \leq 0.05
+    \quad \text{needs} \quad n \geq \; ?$$</div>
+  <ul>
+    <li>Estimate a model's accuracy within $\pm 1\%$</li>
+    <li>Confidence $95\%$: wrong at most once in $20$</li>
+  </ul>
+  <p class="muted">Today answers this twice: a safe answer, then a much cheaper one.</p>
+</div>
+
+<!-- Preview: three bounds -->
+<div class="slide">
+  <h2>Preview &mdash; Three Bounds, One Trick</h2>
+  <div class="divider"></div>
+  <p>Each bound = the previous idea on a <strong>transformed</strong> variable:</p>
+  <table>
+    <thead><tr><th>Bound</th><th>Uses</th><th>Transform</th><th>Tail decay</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Markov</strong></td><td>mean</td><td>$X$ itself</td><td>$1/\alpha$</td></tr>
+      <tr><td><strong>Chebyshev</strong></td><td>+ variance</td><td>$(X-\mu)^2$</td><td>$1/\alpha^2$</td></tr>
+      <tr><td><strong>Chernoff</strong></td><td>whole MGF</td><td>$e^{tX}$</td><td>$e^{-c\alpha}$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="margin-top:10px;">More knowledge in, sharper bound out. One proof engine: Markov.</p>
+</div>
+
+<!-- Route -->
+<div class="slide">
+  <h2>The Route</h2>
+  <div class="divider"></div>
+  <p>One escalation, two payoffs:</p>
+  <div style="display:flex;justify-content:center;margin:14px 0;">
+    <svg viewBox="0 0 780 240" style="width:100%;max-width:880px;">
+      <defs><marker id="rt-arr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
+      <rect x="14" y="60" width="150" height="80" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="89" y="94" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">Markov</text>
+      <text x="89" y="118" font-size="14" fill="#666" text-anchor="middle">uses the mean</text>
+      <line x1="168" y1="100" x2="216" y2="100" stroke="#1a5296" stroke-width="2.5" marker-end="url(#rt-arr)"/>
+      <text x="192" y="48" font-size="13" fill="#666" text-anchor="middle">square the deviation</text>
+      <rect x="222" y="60" width="150" height="80" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="297" y="94" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">Chebyshev</text>
+      <text x="297" y="118" font-size="14" fill="#666" text-anchor="middle">uses the variance</text>
+      <line x1="376" y1="100" x2="424" y2="100" stroke="#1a5296" stroke-width="2.5" marker-end="url(#rt-arr)"/>
+      <text x="400" y="48" font-size="13" fill="#666" text-anchor="middle">exponentiate</text>
+      <rect x="430" y="60" width="150" height="80" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="505" y="94" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">Chernoff</text>
+      <text x="505" y="118" font-size="14" fill="#666" text-anchor="middle">uses the MGF</text>
+      <line x1="584" y1="100" x2="694" y2="100" stroke="#1a5296" stroke-width="2.5" marker-end="url(#rt-arr)"/>
+      <rect x="700" y="20" width="72" height="72" rx="10" fill="#003876"/>
+      <text x="736" y="50" font-size="15" fill="#ffffff" text-anchor="middle" font-weight="700">LLN</text>
+      <text x="736" y="72" font-size="12" fill="#c9d3de" text-anchor="middle">converge</text>
+      <rect x="700" y="108" width="72" height="72" rx="10" fill="#003876"/>
+      <text x="736" y="138" font-size="15" fill="#ffffff" text-anchor="middle" font-weight="700">CLT</text>
+      <text x="736" y="160" font-size="12" fill="#c9d3de" text-anchor="middle">bell shape</text>
+      <line x1="297" y1="144" x2="297" y2="200" stroke="#9aa4af" stroke-width="2"/>
+      <text x="297" y="222" font-size="14" fill="#666" text-anchor="middle">proves the Law of Large Numbers</text>
+    </svg>
+  </div>
+  <p class="muted">One running example all lecture: the average of $n$ fair coin flips.</p>
+</div>
+
+<!-- ===== SECTION 02 — WARM-UP ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Warm-Up</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Mean, variance, independence &mdash; recalled from prob01 and prob03</p>
+</div>
+
+<!-- Recall expectation -->
+<div class="slide">
+  <h2>Recall (prob01) &mdash; Expectation</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (expectation).</strong> For a random variable $X$ with pmf $p_X$:</p>
+    <div class="math-block" style="margin:8px 0">$$\mathbb{E}[X] = \sum_x x\, p_X(x), \qquad
+      \mathbb{E}[g(X)] = \sum_x g(x)\, p_X(x) \;\;\text{(LOTUS)}$$</div>
+  </div>
+  <ul>
+    <li><strong>Linearity</strong>: $\mathbb{E}[aX + bY] = a\,\mathbb{E}[X] + b\,\mathbb{E}[Y]$, always</li>
+    <li><strong>Monotonicity</strong>: $X \leq Y$ pointwise $\Rightarrow$ $\mathbb{E}[X] \leq \mathbb{E}[Y]$</li>
+  </ul>
+  <p class="muted">Monotonicity does today's heavy lifting: bound the variable, bound its mean.</p>
+</div>
+
+<!-- Recall variance -->
+<div class="slide">
+  <h2>Recall (prob01) &mdash; Variance</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (variance).</strong> Spread around the mean $\mu = \mathbb{E}[X]$:</p>
+    <div class="math-block" style="margin:8px 0">$$\mathrm{Var}(X) = \mathbb{E}\!\left[(X-\mu)^2\right]
+      = \mathbb{E}[X^2] - \mu^2, \qquad \sigma = \sqrt{\mathrm{Var}(X)}$$</div>
+  </div>
+  <ul>
+    <li>Scaling: $\mathrm{Var}(aX) = a^2\,\mathrm{Var}(X)$</li>
+    <li>Bernoulli($p$): $\;\mathbb{E}[X^2] = p$, so $\mathrm{Var}(X) = p(1-p)$</li>
+  </ul>
+  <p class="muted">Fair coin ($p = \tfrac12$): variance $\tfrac14$, the largest a coin can have.</p>
+</div>
+
+<!-- Recall independence -->
+<div class="slide">
+  <h2>Recall (prob03) &mdash; Independence</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (independence).</strong> $X \perp Y$ when the joint pmf factorizes:</p>
+    <div class="math-block" style="margin:8px 0">$$p_{X,Y}(x,y) = p_X(x)\, p_Y(y) \quad \text{for all } x, y$$</div>
+  </div>
+  <p>Consequence we need today &mdash; <strong>products of expectations</strong>:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}[g(X)\, h(Y)] = \mathbb{E}[g(X)]\; \mathbb{E}[h(Y)]$$</div>
+  <p class="muted">Any function of $X$ times any function of $Y$. Proof: next slide.</p>
+</div>
+
+<!-- Product rule proof -->
+<div class="slide">
+  <h2>Product Rule &mdash; One-Slide Proof</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}[g(X)h(Y)]
+    &\stackrel{(\text{LOTUS})}{=} \sum_{x,y} g(x)h(y)\, p_{X,Y}(x,y) \\[4pt]
+    &\stackrel{(\text{indep.})}{=} \sum_{x,y} g(x)h(y)\, p_X(x)\, p_Y(y) \\[4pt]
+    &\stackrel{(\text{factor})}{=} \Big(\sum_x g(x) p_X(x)\Big)\Big(\sum_y h(y) p_Y(y)\Big)
+      = \mathbb{E}[g(X)]\,\mathbb{E}[h(Y)] \;\; \blacksquare
+  \end{aligned}$$</div>
+  <p class="muted">The double sum splits because the joint pmf splits.</p>
+</div>
+
+<!-- Variance adds -->
+<div class="slide">
+  <h2>Variance Adds Under Independence</h2>
+  <div class="divider"></div>
+  <p>Center first: $\tilde{X} = X - \mu_X$, $\tilde{Y} = Y - \mu_Y$, both mean $0$</p>
+  <div class="math-block">$$\begin{aligned}
+    \mathrm{Var}(X+Y)
+    &\stackrel{(\text{def})}{=} \mathbb{E}\big[(\tilde{X} + \tilde{Y})^2\big]
+      = \mathbb{E}[\tilde{X}^2] + 2\,\mathbb{E}[\tilde{X}\tilde{Y}] + \mathbb{E}[\tilde{Y}^2] \\[4pt]
+    &\stackrel{(\text{product rule})}{=} \mathrm{Var}(X) + 2\,\underbrace{\mathbb{E}[\tilde{X}]\,\mathbb{E}[\tilde{Y}]}_{=\,0}
+      + \mathrm{Var}(Y)
+  \end{aligned}$$</div>
+  <div class="highlight">
+    <p>Independent noise <strong>adds in variance</strong>, not in size: the cross term dies.</p>
+  </div>
+</div>
+
+<!-- Running example -->
+<div class="slide">
+  <h2>Running Example &mdash; $n$ Coin Flips</h2>
+  <div class="divider"></div>
+  <p>Fair coins $X_1, \dots, X_n$ i.i.d. Bernoulli($\tfrac12$); their average:</p>
+  <div class="math-block" style="margin:8px 0">$$\bar{X}_n = \frac{1}{n}\sum_{i=1}^n X_i,
+    \qquad \mathbb{E}[\bar{X}_n] \stackrel{(\text{linearity})}{=} \tfrac12$$</div>
+  <p>One tail question, asked to every bound today:</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\!\left(\bar{X}_n \geq \tfrac34\right) \;=\; ?$$</div>
+  <p class="muted">At least $75\%$ heads from a fair coin: how unlikely, as a function of $n$?</p>
+</div>
+
+<!-- Why not exact -->
+<div class="slide">
+  <h2>Why Not Just Compute It?</h2>
+  <div class="divider"></div>
+  <p>For coins the tail is an exact binomial sum:</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\!\left(\bar{X}_n \geq \tfrac34\right)
+    = \sum_{k \geq 3n/4} \binom{n}{k} 2^{-n}$$</div>
+  <ul>
+    <li>Works only because we know the <strong>full distribution</strong></li>
+    <li>Real losses / accuracies: distribution unknown</li>
+  </ul>
+  <div class="highlight">
+    <p>Goal: bounds from <strong>partial knowledge</strong> only &mdash; a mean, a variance, an MGF.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 03 — MARKOV ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Markov's Inequality</h1>
+  <div class="divider"></div>
+  <p class="subtitle">One number in, one bound out</p>
+</div>
+
+<!-- Technique: indicators -->
+<div class="slide">
+  <h2>Technique &mdash; Indicator Variables</h2>
+  <div class="divider"></div>
+  <p>Turn an <strong>event</strong> into a <strong>random variable</strong>:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbf{1}\{A\} = \begin{cases} 1 &amp; \text{if } A \text{ happens} \\ 0 &amp; \text{otherwise} \end{cases}$$</div>
+  <p>Its mean <strong>is</strong> the probability:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[\mathbf{1}\{A\}\big]
+    = 1 \cdot \Pr(A) + 0 \cdot \Pr(A^c) = \Pr(A)$$</div>
+  <p class="muted">Bounding a probability = bounding the mean of an indicator.</p>
+</div>
+
+<!-- Indicator trick picture -->
+<div class="slide">
+  <h2>Technique &mdash; The Indicator Trick</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 700 260" style="width:100%;max-width:760px;">
+      <line x1="60" y1="230" x2="670" y2="230" stroke="#222" stroke-width="2"/>
+      <line x1="60" y1="230" x2="60" y2="20" stroke="#222" stroke-width="2"/>
+      <line x1="60" y1="230" x2="600" y2="50" stroke="#003876" stroke-width="3"/>
+      <line x1="60" y1="230" x2="330" y2="230" stroke="#9aa4af" stroke-width="4"/>
+      <line x1="330" y1="230" x2="330" y2="140" stroke="#9aa4af" stroke-width="4" stroke-dasharray="2 4"/>
+      <line x1="330" y1="140" x2="670" y2="140" stroke="#9aa4af" stroke-width="4"/>
+      <line x1="330" y1="230" x2="330" y2="238" stroke="#222" stroke-width="2"/>
+      <text x="330" y="256" font-size="16" fill="#222" text-anchor="middle" font-weight="700">a</text>
+      <line x1="52" y1="140" x2="60" y2="140" stroke="#222" stroke-width="2"/>
+      <text x="44" y="146" font-size="16" fill="#222" text-anchor="end" font-weight="700">a</text>
+      <text x="640" y="245" font-size="15" fill="#666" text-anchor="middle">x</text>
+      <text x="560" y="40" font-size="15" fill="#003876" font-weight="700">blue: the variable</text>
+      <text x="560" y="120" font-size="15" fill="#666" font-weight="700">gray: the step</text>
+    </svg>
+  </div>
+  <p>Blue $y = x$ always sits above gray $y = a \cdot \mathbf{1}\{x \geq a\}$ (for $x \geq 0$)</p>
+  <p class="muted">A cheap step function hides under the variable. Take expectations next.</p>
+</div>
+
+<!-- Markov statement -->
+<div class="slide">
+  <h2>Theorem &mdash; Markov's Inequality</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 1 (Markov's inequality).</h3>
+    <p>If $X$ is a <strong>non-negative</strong> random variable, then for any $\alpha \gt 0$:</p>
+    <div class="math-block" style="margin:8px 0">$$\Pr\!\big( X \geq \alpha\, \mathbb{E}[X] \big) \;\leq\; \frac{1}{\alpha}$$</div>
+  </div>
+  <p class="muted">Exceeding $\alpha$ times your mean: probability at most $1/\alpha$.</p>
+</div>
+
+<!-- Markov threshold form -->
+<div class="slide">
+  <h2>Markov &mdash; Threshold Form</h2>
+  <div class="divider"></div>
+  <p>Equivalent statement, for any absolute level $a \gt 0$:</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr(X \geq a) \;\leq\; \frac{\mathbb{E}[X]}{a}$$</div>
+  <ul>
+    <li>Substitute $a = \alpha\,\mathbb{E}[X]$ to move between the two forms</li>
+    <li>$\alpha$-form: level in <strong>units of the mean</strong>; $a$-form: an <strong>absolute</strong> level</li>
+  </ul>
+  <p class="muted">We prove the $a$-form; proofs below use whichever is cleaner.</p>
+</div>
+
+<!-- Markov proof overview -->
+<div class="slide">
+  <h2>Markov &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <p>Target: $\Pr(X \geq a) \leq \mathbb{E}[X] / a$ for fixed $a \gt 0$</p>
+  <ol>
+    <li><strong>Dominate</strong>: the pointwise bound $a\,\mathbf{1}\{X \geq a\} \leq X$</li>
+    <li><strong>Average</strong>: take $\mathbb{E}$ on both sides (monotonicity)</li>
+    <li><strong>Read off</strong>: $\mathbb{E}[\mathbf{1}] = \Pr$, divide by $a$</li>
+  </ol>
+  <p class="muted">Three lines. Non-negativity is used exactly once &mdash; watch for it.</p>
+</div>
+
+<!-- Markov proof step 1 -->
+<div class="slide">
+  <h2>Markov Proof &mdash; Step 1: Dominate</h2>
+  <div class="divider"></div>
+  <p>Claim: for every outcome, $\;a\,\mathbf{1}\{X \geq a\} \leq X$</p>
+  <div class="math-block">$$\begin{aligned}
+    \text{if } X \geq a: &\quad a \cdot 1 = a \;\leq\; X &&\text{(the event itself)} \\[4pt]
+    \text{if } X \lt a: &\quad a \cdot 0 = 0 \;\leq\; X &&\text{(needs } X \geq 0\text{!)}
+  \end{aligned}$$</div>
+  <div class="highlight">
+    <p>Non-negativity enters <strong>here and only here</strong>: the zero branch must stay below $X$.</p>
+  </div>
+</div>
+
+<!-- Markov proof step 2 -->
+<div class="slide">
+  <h2>Markov Proof &mdash; Step 2: Average</h2>
+  <div class="divider"></div>
+  <p>Pointwise inequality + monotonicity of $\mathbb{E}$ (Warm-Up):</p>
+  <div class="math-block">$$\begin{aligned}
+    a\,\mathbf{1}\{X \geq a\} \;\leq\; X \quad
+    &\stackrel{(\text{monotone } \mathbb{E})}{\Longrightarrow} \quad
+    \mathbb{E}\big[a\,\mathbf{1}\{X \geq a\}\big] \;\leq\; \mathbb{E}[X] \\[4pt]
+    &\stackrel{(\text{linearity})}{\Longrightarrow} \quad
+    a\; \mathbb{E}\big[\mathbf{1}\{X \geq a\}\big] \;\leq\; \mathbb{E}[X]
+  \end{aligned}$$</div>
+  <p class="muted">An inequality between random variables becomes one between numbers.</p>
+</div>
+
+<!-- Markov proof step 3 -->
+<div class="slide">
+  <h2>Markov Proof &mdash; Step 3: Read Off</h2>
+  <div class="divider"></div>
+  <p>Indicator mean = probability, then divide by $a \gt 0$:</p>
+  <div class="math-block" style="margin:8px 0">$$a \Pr(X \geq a) \leq \mathbb{E}[X]
+    \quad\Longrightarrow\quad \Pr(X \geq a) \leq \frac{\mathbb{E}[X]}{a} \qquad \blacksquare$$</div>
+  <p>The lecture-note form: substitute $a = \alpha\,\mathbb{E}[X]$</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\!\big(X \geq \alpha\,\mathbb{E}[X]\big)
+    \leq \frac{\mathbb{E}[X]}{\alpha\,\mathbb{E}[X]} = \frac{1}{\alpha}$$</div>
+</div>
+
+<!-- Markov proof summary -->
+<div class="slide">
+  <h2>Markov &mdash; Proof Summary</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$a \Pr(X \geq a)
+    \stackrel{(\mathbb{E}[\mathbf{1}] = \Pr)}{=} \mathbb{E}\big[a\,\mathbf{1}\{X \geq a\}\big]
+    \stackrel{(\text{dominate})}{\leq} \mathbb{E}[X]$$</div>
+  <ul>
+    <li>The trick: hide a <strong>step function</strong> under the variable</li>
+    <li>Weight carrier: monotonicity of expectation</li>
+  </ul>
+  <p class="muted">Every bound today reruns this one argument on a transformed variable.</p>
+</div>
+
+<!-- Markov worked example -->
+<div class="slide">
+  <h2>Coin Flips &mdash; Markov's Answer</h2>
+  <div class="divider"></div>
+  <p>$\bar{X}_n \geq 0$ with mean $\tfrac12$; threshold $\tfrac34 = \tfrac32 \cdot \tfrac12$, so $\alpha = \tfrac32$:</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\!\left(\bar{X}_n \geq \tfrac34\right)
+    \;\leq\; \frac{1}{\alpha} = \frac{\mathbb{E}[\bar{X}_n]}{3/4} = \frac{1/2}{3/4} = \frac{2}{3}$$</div>
+  <ul>
+    <li>Valid for <strong>every</strong> $n$: 1 flip or 1 million</li>
+    <li>And that is the problem: the bound <strong>never improves</strong></li>
+  </ul>
+  <p class="muted">$n$ does not appear: Markov cannot see averaging at all.</p>
+</div>
+
+<!-- Markov tightness -->
+<div class="slide">
+  <h2>Markov Is Tight &mdash; Blame the Input</h2>
+  <div class="divider"></div>
+  <p>Some variable with mean $\mu$ <strong>achieves</strong> the bound at threshold $a$:</p>
+  <div class="math-block" style="margin:8px 0">$$X = \begin{cases} a &amp; \text{w.p. } \mu / a \\ 0 &amp; \text{w.p. } 1 - \mu/a \end{cases}
+    \qquad \mathbb{E}[X] = \mu, \qquad \Pr(X \geq a) = \frac{\mu}{a}$$</div>
+  <ul>
+    <li>Knowing <strong>only the mean</strong>, no better bound exists</li>
+    <li>Sharper bounds must <strong>feed in more</strong> than the mean</li>
+  </ul>
+  <p class="muted">Illustration beyond the lecture notes: why the fix is more input, not more cleverness.</p>
+</div>
+
+<!-- Markov implication -->
+<div class="slide">
+  <h2>Markov &mdash; What It Buys</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Cost: one number ($\mathbb{E}[X]$) + non-negativity</li>
+    <li>Non-negativity is <strong>essential</strong>: for $X = \pm 1$ fair, $\mathbb{E}[X] = 0$, yet $\Pr(X \geq 1) = \tfrac12$</li>
+    <li>Rarely used raw: used as the <strong>engine</strong> inside better bounds</li>
+  </ul>
+  <div class="highlight">
+    <p>Next: run Markov on the <strong>squared deviation</strong> &mdash; variance enters.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 04 — CHEBYSHEV ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Chebyshev's Inequality</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Variance enters, tails shrink</p>
+</div>
+
+<!-- Chebyshev idea -->
+<div class="slide">
+  <h2>Idea &mdash; Bound Distance, Not Size</h2>
+  <div class="divider"></div>
+  <p>The real question is <strong>two-sided</strong>: how far from the mean?</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\big( |X - \mu| \geq a \big) \;=\; ?$$</div>
+  <ul>
+    <li>$|X - \mu|$ is not the variable Markov likes: no mean handy</li>
+    <li>But $(X - \mu)^2$ is <strong>non-negative</strong> with known mean: $\sigma^2$</li>
+  </ul>
+  <div class="highlight">
+    <p>Escalation step 1: apply Markov to the <strong>transformed variable</strong> $(X-\mu)^2$.</p>
+  </div>
+</div>
+
+<!-- Chebyshev technique -->
+<div class="slide">
+  <h2>Technique &mdash; Squaring the Event</h2>
+  <div class="divider"></div>
+  <p>For non-negative quantities, squaring keeps order:</p>
+  <div class="math-block" style="margin:8px 0">$$|X - \mu| \geq a
+    \quad\Longleftrightarrow\quad (X-\mu)^2 \geq a^2 \qquad (a \gt 0)$$</div>
+  <ul>
+    <li>Same event, two descriptions &mdash; so <strong>same probability</strong></li>
+    <li>Right side: a tail of the non-negative variable $(X-\mu)^2$</li>
+  </ul>
+  <p class="muted">Rewriting the event is free; it just changes which variable Markov sees.</p>
+</div>
+
+<!-- Chebyshev statement -->
+<div class="slide">
+  <h2>Theorem &mdash; Chebyshev's Inequality</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 2 (Chebyshev's inequality).</h3>
+    <p>Let $X$ have mean $\mu$ and variance $\sigma^2$. For any $\alpha \gt 0$:</p>
+    <div class="math-block" style="margin:8px 0">$$\Pr\!\big( |X - \mu| \geq \alpha \sigma \big) \;\leq\; \frac{1}{\alpha^2}$$</div>
+  </div>
+  <p>Equivalent $\epsilon$-form, for any $\epsilon \gt 0$: &nbsp;
+    $\Pr\!\big( |X - \mu| \geq \epsilon \big) \leq \sigma^2 / \epsilon^2$</p>
+  <p class="muted">No non-negativity assumption on $X$: the square provides it.</p>
+</div>
+
+<!-- Chebyshev proof overview -->
+<div class="slide">
+  <h2>Chebyshev &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <p>Target: $\Pr(|X - \mu| \geq \alpha\sigma) \leq 1/\alpha^2$</p>
+  <ol>
+    <li><strong>Square</strong> the event: $|X-\mu| \geq \alpha\sigma \iff (X-\mu)^2 \geq \alpha^2\sigma^2$</li>
+    <li><strong>Markov</strong> on $Y = (X-\mu)^2$: non-negative, mean $\sigma^2$</li>
+    <li><strong>Simplify</strong>: $\sigma^2$ cancels</li>
+  </ol>
+  <p class="muted">All new work is in step 1; step 2 is Theorem 1 verbatim.</p>
+</div>
+
+<!-- Chebyshev proof step 1 -->
+<div class="slide">
+  <h2>Chebyshev Proof &mdash; Step 1: Square</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\Pr\!\big( |X - \mu| \geq \alpha\sigma \big)
+    \stackrel{(\text{same event})}{=} \Pr\!\big( (X-\mu)^2 \geq \alpha^2 \sigma^2 \big)$$</div>
+  <p>Set $Y = (X - \mu)^2$ and check Markov's entry ticket:</p>
+  <ul>
+    <li>$Y \geq 0$ &nbsp;&#10003; (a square)</li>
+    <li>$\mathbb{E}[Y] = \mathbb{E}[(X-\mu)^2] = \sigma^2$ &nbsp;&#10003; (definition of variance)</li>
+  </ul>
+</div>
+
+<!-- Chebyshev proof step 2 -->
+<div class="slide">
+  <h2>Chebyshev Proof &mdash; Step 2: Markov</h2>
+  <div class="divider"></div>
+  <p>Theorem 1 (threshold form) on $Y$ at level $a = \alpha^2\sigma^2$:</p>
+  <div class="math-block">$$\begin{aligned}
+    \Pr\!\big( Y \geq \alpha^2\sigma^2 \big)
+    &\stackrel{(\text{Markov})}{\leq} \frac{\mathbb{E}[Y]}{\alpha^2 \sigma^2} \\[4pt]
+    &\stackrel{(\mathbb{E}[Y] = \sigma^2)}{=} \frac{\sigma^2}{\alpha^2\sigma^2}
+      \;=\; \frac{1}{\alpha^2} \qquad \blacksquare
+  \end{aligned}$$</div>
+  <p class="muted">The $\epsilon$-form: same steps with $a = \epsilon^2$, giving $\sigma^2/\epsilon^2$.</p>
+</div>
+
+<!-- Chebyshev proof summary -->
+<div class="slide">
+  <h2>Chebyshev &mdash; Proof Summary</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\Pr\!\big(|X-\mu| \geq \alpha\sigma\big)
+    \stackrel{(\text{square})}{=} \Pr\!\big((X-\mu)^2 \geq \alpha^2\sigma^2\big)
+    \stackrel{(\text{Markov})}{\leq} \frac{1}{\alpha^2}$$</div>
+  <ul>
+    <li>The trick: choose the variable Markov acts on</li>
+    <li>Squaring buys two things: <strong>two-sidedness</strong> and <strong>decay $1/\alpha^2$</strong></li>
+  </ul>
+  <p class="muted">Chebyshev is not a new proof &mdash; it is Markov with a better input.</p>
+</div>
+
+<!-- k-sigma reading -->
+<div class="slide">
+  <h2>Reading Chebyshev &mdash; The $\alpha\sigma$ Rule</h2>
+  <div class="divider"></div>
+  <p>Distribution-free tail budget, <strong>any</strong> $X$ with finite variance:</p>
+  <table>
+    <thead><tr><th>Deviation</th><th>Chebyshev bound</th><th>Gaussian actual</th></tr></thead>
+    <tbody>
+      <tr><td>$\geq 2\sigma$</td><td>$1/4 = 25\%$</td><td>$\approx 4.6\%$</td></tr>
+      <tr><td>$\geq 3\sigma$</td><td>$1/9 \approx 11.1\%$</td><td>$\approx 0.27\%$</td></tr>
+      <tr><td>$\geq 5\sigma$</td><td>$1/25 = 4\%$</td><td>$\approx 0.00006\%$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="margin-top:10px;">Worst case over all distributions vs. one nice distribution: a big gap. Remember it.</p>
+</div>
+
+<!-- Variance of sample mean -->
+<div class="slide">
+  <h2>Key Computation &mdash; Variance of $\bar{X}_n$</h2>
+  <div class="divider"></div>
+  <p>$X_1, \dots, X_n$ i.i.d., mean $\mu$, variance $\sigma^2$:</p>
+  <div class="math-block">$$\begin{aligned}
+    \mathrm{Var}(\bar{X}_n)
+    &\stackrel{(\text{scaling})}{=} \frac{1}{n^2}\,\mathrm{Var}\!\Big(\sum_{i=1}^n X_i\Big)
+    \stackrel{(\text{indep: adds})}{=} \frac{1}{n^2} \cdot n \sigma^2
+    = \frac{\sigma^2}{n}
+  \end{aligned}$$</div>
+  <div class="highlight">
+    <p>Averaging divides variance by $n$: the single engine behind LLN, error bars, minibatches.</p>
+  </div>
+</div>
+
+<!-- Chebyshev worked example -->
+<div class="slide">
+  <h2>Coin Flips &mdash; Chebyshev's Answer</h2>
+  <div class="divider"></div>
+  <p>$\mathrm{Var}(\bar{X}_n) = \frac{1/4}{n}$; the one-sided tail sits inside the two-sided one:</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\!\left(\bar{X}_n \geq \tfrac34\right)
+    \;\leq\; \Pr\!\left(|\bar{X}_n - \tfrac12| \geq \tfrac14\right)
+    \;\stackrel{(\epsilon\text{-form})}{\leq}\; \frac{1/(4n)}{(1/4)^2} = \frac{4}{n}$$</div>
+  <table>
+    <thead><tr><th>$n$</th><th>16</th><th>100</th><th>400</th></tr></thead>
+    <tbody>
+      <tr><td>bound $4/n$</td><td>$0.25$</td><td>$0.04$</td><td>$0.01$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="margin-top:10px;">Finally a bound that <strong>improves with $n$</strong>.</p>
+</div>
+
+<!-- Markov vs Chebyshev chart -->
+<div class="slide">
+  <h2>Markov vs. Chebyshev &mdash; Picture</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 760 260" style="width:100%;max-width:820px;">
+      <line x1="70" y1="230" x2="700" y2="230" stroke="#222" stroke-width="2"/>
+      <line x1="70" y1="230" x2="70" y2="20" stroke="#222" stroke-width="2"/>
+      <text x="60" y="30" font-size="14" fill="#666" text-anchor="end">1</text>
+      <text x="60" y="235" font-size="14" fill="#666" text-anchor="end">0</text>
+      <text x="390" y="255" font-size="15" fill="#666" text-anchor="middle">n flips</text>
+      <line x1="70" y1="96.6" x2="700" y2="96.6" stroke="#9aa4af" stroke-width="3"/>
+      <text x="560" y="86" font-size="15" fill="#9aa4af" font-weight="700">Markov: 2/3 forever</text>
+      <!-- Chebyshev 4/n, x = 70 + n*6.3 (n=6..100), y = 230 - 200*(4/n) -->
+      <polyline points="108,96.6 120,130 133,150 145,163.3 158,172.7 183,185.5 208,193.1 246,200 296,205.7 359,210.5 447,214.6 573,217.5 700,219"
+        fill="none" stroke="#003876" stroke-width="3"/>
+      <g fill="#003876"><circle cx="120" cy="130" r="5"/><circle cx="133" cy="150" r="5"/><circle cx="196" cy="190" r="0"/><circle cx="196" cy="190" r="5"/><circle cx="322" cy="208" r="5"/><circle cx="700" cy="219" r="5"/></g>
+      <text x="330" y="185" font-size="15" fill="#003876" font-weight="700">Chebyshev: 4/n</text>
+    </svg>
+  </div>
+  <p>Same question, same coin: variance turns a constant into a <strong>vanishing</strong> bound</p>
+</div>
+
+<!-- Chebyshev implication -->
+<div class="slide">
+  <h2>Chebyshev &mdash; How Many Samples?</h2>
+  <div class="divider"></div>
+  <p>Demand $\Pr(|\bar{X}_n - \mu| \geq \epsilon) \leq \delta$; Chebyshev delivers when:</p>
+  <div class="math-block" style="margin:8px 0">$$\frac{\sigma^2}{n\epsilon^2} \leq \delta
+    \quad\Longleftrightarrow\quad n \;\geq\; \frac{\sigma^2}{\epsilon^2 \delta}$$</div>
+  <p>Coin-accuracy demand from Section 01 ($\sigma^2 = \tfrac14$, $\epsilon = 0.01$, $\delta = 0.05$):</p>
+  <div class="math-block" style="margin:8px 0">$$n \;\geq\; \frac{1/4}{(0.01)^2 (0.05)} = 50{,}000$$</div>
+  <p class="muted">Safe, but expensive. Chernoff will cut this by almost $3\times$.</p>
+</div>
+
+<!-- ===== SECTION 05 — LLN ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Law of Large Numbers</h1>
+  <div class="divider"></div>
+  <p class="subtitle">$\bar{X}_n \to \mu$, with a proof</p>
+</div>
+
+<!-- Convergence in probability -->
+<div class="slide">
+  <h2>Definition &mdash; Convergence in Probability</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (convergence in probability).</h3>
+    <p>$Z_n \to c$ <strong>in probability</strong> if for every tolerance $\epsilon \gt 0$:</p>
+    <div class="math-block" style="margin:8px 0">$$\Pr\big( |Z_n - c| \gt \epsilon \big) \;\longrightarrow\; 0
+      \quad \text{as } n \to \infty$$</div>
+  </div>
+  <ul>
+    <li>Fix the band $[c - \epsilon,\, c + \epsilon]$ <strong>first</strong>, then grow $n$</li>
+    <li>Mass escaping the band $\to 0$, for every band width</li>
+  </ul>
+</div>
+
+<!-- band picture -->
+<div class="slide">
+  <h2>Convergence in Probability &mdash; Picture</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 760 240" style="width:100%;max-width:820px;">
+      <rect x="330" y="20" width="120" height="180" fill="#eaf0f7"/>
+      <line x1="60" y1="200" x2="720" y2="200" stroke="#222" stroke-width="2"/>
+      <line x1="390" y1="200" x2="390" y2="14" stroke="#003876" stroke-width="2" stroke-dasharray="7 6"/>
+      <path d="M 90 198 C 220 170, 300 140, 390 138 C 480 140, 560 170, 690 198" fill="none" stroke="#9aa4af" stroke-width="3"/>
+      <path d="M 200 199 C 300 170, 350 80, 390 78 C 430 80, 480 170, 580 199" fill="none" stroke="#1a5296" stroke-width="3"/>
+      <path d="M 300 200 C 345 170, 370 26, 390 25 C 410 26, 435 170, 480 200" fill="none" stroke="#003876" stroke-width="3.5"/>
+      <text x="390" y="228" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">mean</text>
+      <text x="330" y="224" font-size="14" fill="#666" text-anchor="end">band</text>
+      <text x="150" y="150" font-size="15" fill="#9aa4af" font-weight="700">small n</text>
+      <text x="612" y="110" font-size="15" fill="#1a5296" font-weight="700">larger n</text>
+      <text x="470" y="45" font-size="15" fill="#003876" font-weight="700">large n</text>
+    </svg>
+  </div>
+  <p>Distribution of $\bar{X}_n$ tightens; mass outside the fixed band $\to 0$</p>
+</div>
+
+<!-- LLN statement -->
+<div class="slide">
+  <h2>Theorem &mdash; Weak Law of Large Numbers</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 3 (weak law of large numbers).</h3>
+    <p>$X_1, X_2, \dots$ i.i.d. with mean $\mu$ and variance $\sigma^2 \lt \infty$. Then:</p>
+    <div class="math-block" style="margin:8px 0">$$\bar{X}_n = \frac{1}{n}\sum_{i=1}^n X_i
+      \;\longrightarrow\; \mu \quad \text{in probability}$$</div>
+  </div>
+  <p class="muted">A <em>strong</em> LLN also holds (probability-1 convergence); stated without proof, as in the notes.</p>
+</div>
+
+<!-- LLN proof overview -->
+<div class="slide">
+  <h2>Weak LLN &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <p>Target: $\Pr(|\bar{X}_n - \mu| \gt \epsilon) \to 0$ for every fixed $\epsilon \gt 0$</p>
+  <ol>
+    <li><strong>Center &amp; shrink</strong>: $\mathbb{E}[\bar{X}_n] = \mu$, $\;\mathrm{Var}(\bar{X}_n) = \sigma^2/n$ (Section 04)</li>
+    <li><strong>Chebyshev</strong> on $\bar{X}_n$ with the fixed $\epsilon$</li>
+    <li><strong>Let $n$ grow</strong>: the bound vanishes</li>
+  </ol>
+  <p class="muted">The whole theorem rides on one fact: averaging divides variance by $n$.</p>
+</div>
+
+<!-- LLN proof -->
+<div class="slide">
+  <h2>Weak LLN &mdash; Proof</h2>
+  <div class="divider"></div>
+  <p>Fix $\epsilon \gt 0$. Chebyshev ($\epsilon$-form) applied to $\bar{X}_n$:</p>
+  <div class="math-block">$$\begin{aligned}
+    \Pr\big( |\bar{X}_n - \mu| \gt \epsilon \big)
+    &\stackrel{(\text{Chebyshev})}{\leq} \frac{\mathrm{Var}(\bar{X}_n)}{\epsilon^2}
+    \stackrel{(\text{Var} = \sigma^2/n)}{=} \frac{\sigma^2}{n\,\epsilon^2} \\[4pt]
+    &\longrightarrow\; 0 \quad \text{as } n \to \infty \qquad \blacksquare
+  \end{aligned}$$</div>
+  <p class="muted">$\epsilon$ and $\sigma$ are fixed constants here; only $n$ moves.</p>
+</div>
+
+<!-- LLN proof summary -->
+<div class="slide">
+  <h2>Weak LLN &mdash; Proof Summary</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\Pr\big(|\bar{X}_n - \mu| \gt \epsilon\big)
+    \;\stackrel{(\text{Chebyshev})}{\leq}\; \frac{\sigma^2}{n \epsilon^2}
+    \;\stackrel{(n \to \infty)}{\longrightarrow}\; 0$$</div>
+  <ul>
+    <li>Key trick: none new &mdash; <strong>Chebyshev + variance $\sigma^2/n$</strong></li>
+    <li>Bonus: not just convergence, a <strong>rate</strong>: $\sigma^2 / (n\epsilon^2)$</li>
+  </ul>
+  <div class="highlight">
+    <p>Averages are trustworthy <strong>because</strong> averaging destroys variance.</p>
+  </div>
+</div>
+
+<!-- LLN sample path -->
+<div class="slide">
+  <h2>Seeing the LLN &mdash; One Sample Path</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 760 260" style="width:100%;max-width:820px;">
+      <line x1="70" y1="230" x2="730" y2="230" stroke="#222" stroke-width="2"/>
+      <line x1="70" y1="230" x2="70" y2="20" stroke="#222" stroke-width="2"/>
+      <line x1="70" y1="130" x2="730" y2="130" stroke="#003876" stroke-width="2" stroke-dasharray="7 6"/>
+      <rect x="70" y="120" width="660" height="20" fill="#eaf0f7" opacity="0.8"/>
+      <text x="742" y="135" font-size="15" fill="#003876" font-weight="700">1/2</text>
+      <text x="60" y="30" font-size="14" fill="#666" text-anchor="end">1</text>
+      <text x="60" y="235" font-size="14" fill="#666" text-anchor="end">0</text>
+      <text x="400" y="255" font-size="15" fill="#666" text-anchor="middle">n (1 to 200)</text>
+      <polyline points="70,30 77,96.7 83,150 90,144.3 97,163.3 103,175.5 110,153.1 116,163.3 123,159.4 130,166.8 136,172.9 143,169.1 150,174 156,170.7 163,167.9 169,165.5 176,169.4 183,167.1 189,170.5 196,173.6 203,166.6 209,160.2 216,154.4 223,153.4 229,156.5 236,155.5 242,150.8 249,146.4 256,149.3 262,148.6 269,148 276,144.3 282,146.9 289,143.4 296,140.1 302,139.9 309,139.6 315,139.3 322,139.1 329,136.3 335,133.7 342,133.6 349,133.5 355,133.4 362,135.6 368,135.5 375,135.4 382,133.2 388,135.2 395,133 402,133 408,131 415,129 422,129.1 428,130.9 435,132.7 441,134.4 448,134.3 455,134.3 461,134.2 468,134.1 475,132.4 481,134 488,132.4 495,130.8 501,130.8 508,129.2 514,130.7 521,132.2 528,132.2 534,132.1 541,133.5 548,134.8 554,134.8 561,136 567,136 574,135.9 581,134.5 587,134.5 594,134.4 601,133.1 607,131.8 614,133 621,133 627,131.8 634,132.9 640,132.9 647,134 654,134 660,132.8 667,132.8 674,132.7 680,133.8 687,133.7 694,134.8 700,133.7 707,134.7 713,133.6 720,133.6 727,132.5"
+        fill="none" stroke="#003876" stroke-width="3"/>
+    </svg>
+  </div>
+  <p>Running mean $\bar{X}_n$ of 200 simulated fair flips: wild early, glued to $\tfrac12$ late</p>
+  <p class="muted">Simulated once with a fixed seed; band = $\tfrac12 \pm 0.05$. Checkpoints: $\bar{X}_{10} = 0.30$, $\bar{X}_{200} = 0.49$.</p>
+</div>
+
+<!-- LLN exact tail chart -->
+<div class="slide">
+  <h2>Seeing the LLN &mdash; Tails Actually Vanish</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 760 260" style="width:100%;max-width:820px;">
+      <line x1="70" y1="230" x2="720" y2="230" stroke="#222" stroke-width="2"/>
+      <line x1="70" y1="230" x2="70" y2="20" stroke="#222" stroke-width="2"/>
+      <text x="60" y="30" font-size="14" fill="#666" text-anchor="end">1</text>
+      <text x="60" y="235" font-size="14" fill="#666" text-anchor="end">0</text>
+      <text x="400" y="255" font-size="15" fill="#666" text-anchor="middle">n flips</text>
+      <polyline points="70,30 194,130 318,163.3 442,180 566,190 690,196.7" fill="none" stroke="#9aa4af" stroke-width="3" stroke-dasharray="8 6"/>
+      <g fill="#9aa4af"><circle cx="70" cy="30" r="5"/><circle cx="194" cy="130" r="5"/><circle cx="318" cy="163.3" r="5"/><circle cx="442" cy="180" r="5"/><circle cx="566" cy="190" r="5"/><circle cx="690" cy="196.7" r="5"/></g>
+      <polyline points="70,105 194,172.2 318,200.8 442,214.6 566,221.7 690,225.5" fill="none" stroke="#003876" stroke-width="3"/>
+      <g fill="#003876"><circle cx="70" cy="105" r="5"/><circle cx="194" cy="172.2" r="5"/><circle cx="318" cy="200.8" r="5"/><circle cx="442" cy="214.6" r="5"/><circle cx="566" cy="221.7" r="5"/><circle cx="690" cy="225.5" r="5"/></g>
+      <text x="180" y="105" font-size="15" fill="#9aa4af" font-weight="700">Chebyshev bound 4/n</text>
+      <text x="300" y="228" font-size="15" fill="#003876" font-weight="700">exact tail</text>
+    </svg>
+  </div>
+  <p>$\Pr(|\bar{X}_n - \tfrac12| \geq \tfrac14)$, exact, at $n = 4, 8, \dots, 24$: &nbsp;$0.63 \to 0.29 \to 0.15 \to 0.08 \to 0.04 \to 0.02$</p>
+  <p class="muted">Bound valid everywhere &mdash; but the truth falls much faster. Foreshadowing.</p>
+</div>
+
+<!-- LLN implication -->
+<div class="slide">
+  <h2>LLN &mdash; Where AI Leans on It</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Test accuracy</strong> stabilizes as the test set grows: mean of 0/1 variables</li>
+    <li><strong>Minibatch gradients</strong>: batch mean $\to$ true gradient; std shrinks like $1/\sqrt{B}$</li>
+    <li><strong>Monte Carlo</strong>: sample mean $\to$ expectation, with rate $\sigma^2/(n\epsilon^2)$</li>
+  </ul>
+  <div class="highlight">
+    <p>Every "estimate by sampling" recipe is the weak LLN wearing a different hat.</p>
+  </div>
+  <p class="muted">Illustrations, not new theorems: each is Theorem 3 applied to a different $X_i$.</p>
+</div>
+
+<!-- gap teaser -->
+<div class="slide">
+  <h2>The Gap &mdash; Truth Beats the Bound</h2>
+  <div class="divider"></div>
+  <p>At $n = 16$, one-sided tail $\Pr(\bar{X}_{16} \geq \tfrac34)$:</p>
+  <div class="math-block" style="margin:8px 0">$$\text{Chebyshev: } 0.25
+    \qquad \text{exact: } \frac{2517}{65536} \approx 0.038$$</div>
+  <ul>
+    <li>Bound off by $6.5\times$ already &mdash; and the gap <strong>explodes</strong> with $n$</li>
+    <li>Diagnosis: variance is only <strong>two numbers</strong> of information</li>
+  </ul>
+  <div class="highlight">
+    <p>To capture exponential decay, feed Markov an <strong>exponential</strong>. Enter the MGF.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 06 — MGF ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Moment Generating Functions</h1>
+  <div class="divider"></div>
+  <p class="subtitle">All moments in one function</p>
+</div>
+
+<!-- MGF definition -->
+<div class="slide">
+  <h2>Definition &mdash; Moment Generating Function</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (moment generating function).</h3>
+    <p>For a random variable $X$, the MGF is the function of $t \in \mathbb{R}$:</p>
+    <div class="math-block" style="margin:8px 0">$$M_X(t) = \mathbb{E}\big[ e^{tX} \big]$$</div>
+  </div>
+  <ul>
+    <li>One random variable $\to$ one <strong>deterministic function</strong> of $t$</li>
+    <li>$M_X(0) = \mathbb{E}[1] = 1$ always</li>
+  </ul>
+  <p class="muted">Think: a summary of $X$ far richer than mean + variance.</p>
+</div>
+
+<!-- MGF first derivative -->
+<div class="slide">
+  <h2>Why "Moment Generating" &mdash; First Derivative</h2>
+  <div class="divider"></div>
+  <p>Differentiate in $t$, swap derivative and expectation (as in the notes):</p>
+  <div class="math-block">$$\begin{aligned}
+    \frac{\partial}{\partial t} M_X(t)
+    &\stackrel{(\text{swap})}{=} \mathbb{E}\!\left[ \frac{\partial}{\partial t} e^{tX} \right]
+    = \mathbb{E}\big[ X e^{tX} \big]
+  \end{aligned}$$</div>
+  <p>Evaluate at $t = 0$: $\;e^{0 \cdot X} = 1$, so</p>
+  <div class="math-block" style="margin:8px 0">$$M_X'(0) = \mathbb{E}[X]$$</div>
+  <p class="muted">The slope at zero is the mean.</p>
+</div>
+
+<!-- MGF second derivative -->
+<div class="slide">
+  <h2>Second Derivative, and the Pattern</h2>
+  <div class="divider"></div>
+  <p>Differentiate once more:</p>
+  <div class="math-block" style="margin:8px 0">$$\frac{\partial^2}{\partial t^2} M_X(t)
+    = \mathbb{E}\big[ X^2 e^{tX} \big]
+    \quad\Longrightarrow\quad M_X''(0) = \mathbb{E}[X^2]$$</div>
+  <p>Every derivative at $0$ produces the next <strong>moment</strong>:</p>
+  <div class="math-block" style="margin:8px 0">$$M_X^{(k)}(0) = \mathbb{E}[X^k]$$</div>
+  <p class="muted">Mean, second moment (so variance), third, fourth, ... all from one function.</p>
+</div>
+
+<!-- Taylor view -->
+<div class="slide">
+  <h2>Taylor View &mdash; Moments as Coefficients</h2>
+  <div class="divider"></div>
+  <p>Expand $e^{tX}$ as a series and take expectations termwise:</p>
+  <div class="math-block" style="margin:8px 0">$$M_X(t) = \mathbb{E}\!\left[ \sum_{k=0}^\infty \frac{(tX)^k}{k!} \right]
+    = 1 + \mathbb{E}[X]\, t + \frac{\mathbb{E}[X^2]}{2}\, t^2 + \cdots$$</div>
+  <ul>
+    <li>The MGF is the moments' <strong>generating series</strong> &mdash; hence the name</li>
+    <li>Near $t = 0$, mean and second moment dominate: the CLT will live here</li>
+  </ul>
+</div>
+
+<!-- Bernoulli MGF -->
+<div class="slide">
+  <h2>Worked Example &mdash; Bernoulli MGF</h2>
+  <div class="divider"></div>
+  <p>$X \sim$ Bernoulli($p$): two outcomes, direct computation:</p>
+  <div class="math-block" style="margin:8px 0">$$M_X(t) = \mathbb{E}[e^{tX}]
+    = (1-p)\, e^{t \cdot 0} + p\, e^{t \cdot 1} = 1 - p + p\, e^t$$</div>
+  <p>Sanity checks against the moment machine:</p>
+  <ul>
+    <li>$M_X'(t) = p e^t$, so $M_X'(0) = p = \mathbb{E}[X]$ &nbsp;&#10003;</li>
+    <li>$M_X''(0) = p = \mathbb{E}[X^2]$ (since $X^2 = X$) &nbsp;&#10003;</li>
+  </ul>
+  <p class="muted">The running example's building block &mdash; keep $1 - p + pe^t$ in view.</p>
+</div>
+
+<!-- Gaussian recall + exercise -->
+<div class="slide">
+  <h2>Exercise (from the notes) &mdash; Gaussian MGF</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (Gaussian).</strong> $X \sim \mathcal{N}(\mu, \sigma^2)$ has density</p>
+    <div class="math-block" style="margin:8px 0">$$f_X(x) = \frac{1}{\sqrt{2\pi\sigma^2}}
+      \exp\!\left( -\frac{(x-\mu)^2}{2\sigma^2} \right)$$</div>
+  </div>
+  <p><strong>Exercise.</strong> Show that its MGF is</p>
+  <div class="math-block" style="margin:8px 0">$$M_X(t) = \exp\!\left( \frac{t^2\sigma^2}{2} + t\mu \right)$$</div>
+</div>
+
+<!-- Completing the square technique -->
+<div class="slide">
+  <h2>Technique &mdash; Completing the Square</h2>
+  <div class="divider"></div>
+  <p>Any quadratic in $x$ is a shifted square plus a constant:</p>
+  <div class="math-block" style="margin:8px 0">$$-\frac{x^2 - 2bx}{2\sigma^2}
+    = -\frac{(x - b)^2}{2\sigma^2} + \frac{b^2}{2\sigma^2}$$</div>
+  <ul>
+    <li>The shifted square rebuilds a <strong>Gaussian density</strong> (integrates to 1)</li>
+    <li>The constant <strong>exits the integral</strong> &mdash; it is the answer</li>
+  </ul>
+  <p class="muted">Standard move for every Gaussian integral; it returns in prob08.</p>
+</div>
+
+<!-- Gaussian MGF solution 1 -->
+<div class="slide">
+  <h2>Gaussian MGF &mdash; Setting Up</h2>
+  <div class="divider"></div>
+  <p>Write out the expectation; merge the exponents:</p>
+  <div class="math-block">$$\begin{aligned}
+    M_X(t) &= \int \! e^{tx}\, \frac{1}{\sqrt{2\pi\sigma^2}}
+      e^{-\frac{(x-\mu)^2}{2\sigma^2}} dx
+    = \int \! \frac{1}{\sqrt{2\pi\sigma^2}}
+      \exp\!\Big( \underbrace{tx - \tfrac{(x-\mu)^2}{2\sigma^2}}_{\text{quadratic in } x} \Big) dx
+  \end{aligned}$$</div>
+  <p class="muted">Plan: complete the square in that exponent, in $x$.</p>
+</div>
+
+<!-- Gaussian MGF solution 2 -->
+<div class="slide">
+  <h2>Gaussian MGF &mdash; Completing the Square</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    tx - \frac{(x-\mu)^2}{2\sigma^2}
+    &\stackrel{(\text{expand})}{=} -\frac{x^2 - 2(\mu + \sigma^2 t)x + \mu^2}{2\sigma^2} \\[4pt]
+    &\stackrel{(\text{complete})}{=} -\frac{\big(x - (\mu + \sigma^2 t)\big)^2}{2\sigma^2}
+      + \frac{(\mu + \sigma^2 t)^2 - \mu^2}{2\sigma^2} \\[4pt]
+    &\stackrel{(\text{simplify})}{=} -\frac{(x - m)^2}{2\sigma^2} + \mu t + \frac{\sigma^2 t^2}{2},
+      \qquad m = \mu + \sigma^2 t
+  \end{aligned}$$</div>
+</div>
+
+<!-- Gaussian MGF solution 3 -->
+<div class="slide">
+  <h2>Gaussian MGF &mdash; Reading Off</h2>
+  <div class="divider"></div>
+  <p>The constant leaves; a $\mathcal{N}(m, \sigma^2)$ density remains:</p>
+  <div class="math-block">$$\begin{aligned}
+    M_X(t) &= e^{\mu t + \sigma^2 t^2 / 2}
+      \underbrace{\int \frac{1}{\sqrt{2\pi\sigma^2}} e^{-\frac{(x-m)^2}{2\sigma^2}} dx}_{=\,1}
+    = \exp\!\left( \frac{t^2 \sigma^2}{2} + t\mu \right) \;\; \blacksquare
+  \end{aligned}$$</div>
+  <ul>
+    <li>Sanity: $M_X'(0) = \mu$ &nbsp;&#10003;, &nbsp;$M_X''(0) = \mu^2 + \sigma^2 = \mathbb{E}[X^2]$ &nbsp;&#10003;</li>
+  </ul>
+</div>
+
+<!-- Uniqueness theorem -->
+<div class="slide">
+  <h2>Theorem &mdash; The MGF Is a Fingerprint</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 4 (uniqueness).</h3>
+    <p>If $M_X(t) = M_Y(t)$ for all $t$, then $X$ and $Y$ have the same distribution:</p>
+    <div class="math-block" style="margin:8px 0">$$F_X(x) = F_Y(x) \quad \text{for all } x$$</div>
+  </div>
+  <ul>
+    <li>Proof out of scope (as in the notes) &mdash; we <strong>use</strong> it, twice</li>
+    <li>Usage pattern: compute an MGF, <strong>recognize</strong> it, name the distribution</li>
+  </ul>
+</div>
+
+<!-- MGF of sums -->
+<div class="slide">
+  <h2>Proposition &mdash; MGFs Turn Sums into Products</h2>
+  <div class="divider"></div>
+  <p>$X \perp Y$, $Z = X + Y$; apply the Warm-Up product rule to $g = h = \exp$:</p>
+  <div class="math-block">$$\begin{aligned}
+    M_Z(t) = \mathbb{E}\big[ e^{t(X+Y)} \big]
+    &\stackrel{(\text{split})}{=} \mathbb{E}\big[ e^{tX} e^{tY} \big] \\[4pt]
+    &\stackrel{(\text{product rule})}{=} \mathbb{E}\big[e^{tX}\big]\, \mathbb{E}\big[e^{tY}\big]
+    = M_X(t)\, M_Y(t)
+  \end{aligned}$$</div>
+  <div class="highlight">
+    <p>Sums of independent variables &mdash; hard to convolve, <strong>trivial to multiply</strong>.</p>
+  </div>
+</div>
+
+<!-- Sum of Gaussians -->
+<div class="slide">
+  <h2>Worked Example &mdash; Sum of Independent Gaussians</h2>
+  <div class="divider"></div>
+  <p>$X \sim \mathcal{N}(\mu_1, \sigma_1^2) \perp Y \sim \mathcal{N}(\mu_2, \sigma_2^2)$; multiply MGFs:</p>
+  <div class="math-block" style="margin:8px 0">$$M_{X+Y}(t) = e^{\mu_1 t + \sigma_1^2 t^2/2} \, e^{\mu_2 t + \sigma_2^2 t^2/2}
+    = e^{(\mu_1 + \mu_2)t + (\sigma_1^2 + \sigma_2^2) t^2 / 2}$$</div>
+  <p>Recognize a Gaussian MGF; invoke the fingerprint (Theorem 4):</p>
+  <div class="math-block" style="margin:8px 0">$$X + Y \;\sim\; \mathcal{N}\big(\mu_1 + \mu_2,\; \sigma_1^2 + \sigma_2^2\big)$$</div>
+  <p class="muted">Three tools in one line: Gaussian MGF, product rule, uniqueness.</p>
+</div>
+
+<!-- Coin sum MGF -->
+<div class="slide">
+  <h2>Running Example &mdash; MGF of the Coin Sum</h2>
+  <div class="divider"></div>
+  <p>$S_n = X_1 + \cdots + X_n$, i.i.d. fair coins; product rule $n$ times:</p>
+  <div class="math-block" style="margin:8px 0">$$M_{S_n}(t) = \prod_{i=1}^n M_{X_i}(t)
+    = \left( \frac{1 + e^t}{2} \right)^{\! n}$$</div>
+  <ul>
+    <li>Bernoulli MGF with $p = \tfrac12$: $\;\tfrac12 + \tfrac12 e^t$</li>
+    <li>The exponent $n$ is the seed of <strong>exponential</strong> tail bounds</li>
+  </ul>
+  <p class="muted">Chernoff will feed exactly this into Markov.</p>
+</div>
+
+<!-- MGF recap -->
+<div class="slide">
+  <h2>MGF &mdash; What We Now Own</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Moment machine</h3>
+      <p>$M^{(k)}(0) = \mathbb{E}[X^k]$</p>
+      <p class="muted">derivatives at zero</p>
+    </div>
+    <div class="card">
+      <h3>Fingerprint</h3>
+      <p>same MGF $\Rightarrow$ same law</p>
+      <p class="muted">recognize &amp; conclude</p>
+    </div>
+    <div class="card">
+      <h3>Sum $\to$ product</h3>
+      <p>$M_{X+Y} = M_X M_Y$</p>
+      <p class="muted">independence pays</p>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:14px;">Chernoff uses all of column 3; the CLT sketch uses all three.</p>
+</div>
+
+<!-- ===== SECTION 07 — CHERNOFF ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">07</div>
+  <h1>Chernoff Bound</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Exponentially small tails</p>
+</div>
+
+<!-- Chernoff idea -->
+<div class="slide">
+  <h2>Idea &mdash; Escalate Once More</h2>
+  <div class="divider"></div>
+  <p>The escalation pattern, third rung:</p>
+  <div class="math-block" style="margin:8px 0">$$X \;\xrightarrow{\;\text{Chebyshev}\;}\; (X - \mu)^2
+    \;\xrightarrow{\;\text{Chernoff}\;}\; e^{tX}$$</div>
+  <ul>
+    <li>$e^{tX}$ is <strong>always non-negative</strong> &mdash; Markov-ready, no centering needed</li>
+    <li>Its mean is <strong>exactly the MGF</strong>: $\mathbb{E}[e^{tX}] = M_X(t)$</li>
+    <li>Exponentials amplify tails, so Markov punishes them harder</li>
+  </ul>
+  <p class="muted">Same engine, richest input we have.</p>
+</div>
+
+<!-- Chernoff technique -->
+<div class="slide">
+  <h2>Technique &mdash; Exponentiating an Event</h2>
+  <div class="divider"></div>
+  <p>For $t \gt 0$, the map $x \mapsto e^{tx}$ is <strong>strictly increasing</strong>:</p>
+  <div class="math-block" style="margin:8px 0">$$X \geq \alpha
+    \quad\Longleftrightarrow\quad e^{tX} \geq e^{t\alpha}$$</div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 700 200" style="width:100%;max-width:700px;">
+      <line x1="60" y1="170" x2="670" y2="170" stroke="#222" stroke-width="2"/>
+      <line x1="60" y1="170" x2="60" y2="15" stroke="#222" stroke-width="2"/>
+      <line x1="60" y1="170" x2="380" y2="170" stroke="#9aa4af" stroke-width="4"/>
+      <line x1="380" y1="170" x2="380" y2="120" stroke="#9aa4af" stroke-width="4" stroke-dasharray="2 4"/>
+      <line x1="380" y1="120" x2="670" y2="120" stroke="#9aa4af" stroke-width="4"/>
+      <path d="M 60 168 C 220 164, 330 150, 420 110 C 490 78, 550 45, 610 20" fill="none" stroke="#003876" stroke-width="3"/>
+      <line x1="380" y1="170" x2="380" y2="178" stroke="#222" stroke-width="2"/>
+      <text x="380" y="196" font-size="16" fill="#222" text-anchor="middle" font-weight="700">threshold</text>
+      <text x="565" y="105" font-size="15" fill="#9aa4af" font-weight="700">step: the event</text>
+      <text x="200" y="125" font-size="15" fill="#003876" font-weight="700">exponential: above it</text>
+    </svg>
+  </div>
+  <p class="muted">Rescaled: $e^{t(x - \alpha)} \geq \mathbf{1}\{x \geq \alpha\}$ for all $x$ &mdash; a smooth lid over the step.</p>
+</div>
+
+<!-- Chernoff statement -->
+<div class="slide">
+  <h2>Theorem &mdash; Chernoff Bound</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 5 (Chernoff bound).</h3>
+    <p>Let $X$ have MGF $M(t) = \mathbb{E}[e^{tX}]$ (finite at the $t$ used). For any $\alpha$:</p>
+    <div class="math-block" style="margin:8px 0">$$\Pr(X \geq \alpha) \;\leq\; M(t)\, e^{-t\alpha}
+      \qquad \text{for all } t \gt 0$$</div>
+  </div>
+  <ul>
+    <li>Not one bound: a <strong>family</strong>, one per $t \gt 0$</li>
+    <li>We may pick the <strong>best</strong> $t$ afterwards &mdash; for free</li>
+  </ul>
+</div>
+
+<!-- Chernoff proof overview -->
+<div class="slide">
+  <h2>Chernoff &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <p>Target: $\Pr(X \geq \alpha) \leq M(t)\, e^{-t\alpha}$ for each fixed $t \gt 0$</p>
+  <ol>
+    <li><strong>Exponentiate</strong> the event: $X \geq \alpha \iff e^{tX} \geq e^{t\alpha}$</li>
+    <li><strong>Markov</strong> on $e^{tX}$ at level $e^{t\alpha}$</li>
+    <li><strong>Rename</strong>: $\mathbb{E}[e^{tX}] = M(t)$</li>
+  </ol>
+  <p class="muted">Two slides ago this was Chebyshev's proof with a square. Same skeleton.</p>
+</div>
+
+<!-- Chernoff proof step 1 -->
+<div class="slide">
+  <h2>Chernoff Proof &mdash; Step 1: Exponentiate</h2>
+  <div class="divider"></div>
+  <p>Fix $t \gt 0$. Monotonicity of $x \mapsto e^{tx}$ (technique slide):</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr(X \geq \alpha)
+    \stackrel{(\text{same event})}{=} \Pr\!\big( e^{tX} \geq e^{t\alpha} \big)$$</div>
+  <p>Check Markov's entry ticket for $W = e^{tX}$:</p>
+  <ul>
+    <li>$W \gt 0$ &nbsp;&#10003; (exponentials are positive)</li>
+    <li>$\mathbb{E}[W] = M(t)$, assumed finite &nbsp;&#10003;</li>
+  </ul>
+</div>
+
+<!-- Chernoff proof step 2 -->
+<div class="slide">
+  <h2>Chernoff Proof &mdash; Step 2: Markov</h2>
+  <div class="divider"></div>
+  <p>Theorem 1 (threshold form) on $W = e^{tX}$ at level $e^{t\alpha}$:</p>
+  <div class="math-block">$$\begin{aligned}
+    \Pr\!\big( e^{tX} \geq e^{t\alpha} \big)
+    &\stackrel{(\text{Markov})}{\leq} \frac{\mathbb{E}\big[e^{tX}\big]}{e^{t\alpha}} \\[4pt]
+    &\stackrel{(\text{def MGF})}{=} M(t)\, e^{-t\alpha} \qquad \blacksquare
+  \end{aligned}$$</div>
+  <p class="muted">True for every $t \gt 0$ separately &mdash; that is the whole proof.</p>
+</div>
+
+<!-- Chernoff proof summary -->
+<div class="slide">
+  <h2>Chernoff &mdash; Proof Summary</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\Pr(X \geq \alpha)
+    \stackrel{(\text{exponentiate})}{=} \Pr\!\big(e^{tX} \geq e^{t\alpha}\big)
+    \stackrel{(\text{Markov})}{\leq} M(t)\, e^{-t\alpha}$$</div>
+  <ul>
+    <li>The trick: a <strong>tunable</strong> transform &mdash; $t$ is ours to choose</li>
+    <li>All distribution knowledge now flows in through $M(t)$</li>
+  </ul>
+  <div class="highlight">
+    <p>Markov three ways: on $X$, on $(X-\mu)^2$, on $e^{tX}$. One idea, three strengths.</p>
+  </div>
+</div>
+
+<!-- Optimize t -->
+<div class="slide">
+  <h2>The Free Parameter &mdash; Pick the Best $t$</h2>
+  <div class="divider"></div>
+  <p>Each $t$ gives a valid bound, so take the smallest:</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr(X \geq \alpha) \;\leq\; \min_{t \gt 0}\; M(t)\, e^{-t\alpha}$$</div>
+  <ul>
+    <li>Small $t$: weak amplification; huge $t$: $M(t)$ blows up</li>
+    <li>Sweet spot in between &mdash; found by <strong>calculus</strong>, per problem</li>
+  </ul>
+  <p class="muted">Now run the full recipe on the coin.</p>
+</div>
+
+<!-- Chernoff worked 1 -->
+<div class="slide">
+  <h2>Coin Flips &mdash; Chernoff, Step 1: Plug In</h2>
+  <div class="divider"></div>
+  <p>Tail of the sum: $\bar{X}_n \geq \tfrac34 \iff S_n \geq \tfrac{3n}{4}$; use $M_{S_n}(t) = \big(\tfrac{1+e^t}{2}\big)^n$:</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\!\left( S_n \geq \tfrac{3n}{4} \right)
+    \;\leq\; e^{-3nt/4} \left( \frac{1+e^t}{2} \right)^{\!n}
+    = \left[ e^{-3t/4}\, \frac{1+e^t}{2} \right]^{n}$$</div>
+  <div class="highlight">
+    <p>Everything is a <strong>power of $n$</strong>: beat $1$ per flip, win exponentially overall.</p>
+  </div>
+</div>
+
+<!-- Chernoff worked 2 -->
+<div class="slide">
+  <h2>Coin Flips &mdash; Chernoff, Step 2: Optimize $t$</h2>
+  <div class="divider"></div>
+  <p>Minimize the per-flip log-cost $g(t) = -\tfrac34 t + \ln\!\frac{1+e^t}{2}$:</p>
+  <div class="math-block" style="margin:8px 0">$$g'(t) = -\frac34 + \frac{e^t}{1+e^t} = 0
+    \quad\Longleftrightarrow\quad e^t = 3
+    \quad\Longleftrightarrow\quad t^\star = \ln 3$$</div>
+  <ul>
+    <li>Log of a min is min of the log: safe to optimize $g$</li>
+    <li>$e^t/(1+e^t)$ increases from $\tfrac12$ to $1$: unique solution</li>
+  </ul>
+</div>
+
+<!-- Chernoff worked 3 -->
+<div class="slide">
+  <h2>Coin Flips &mdash; Chernoff, Step 3: Evaluate</h2>
+  <div class="divider"></div>
+  <p>Plug $t^\star = \ln 3$ back (note $\tfrac{1 + e^{t^\star}}{2} = 2$):</p>
+  <div class="math-block" style="margin:8px 0">$$g(t^\star) = -\tfrac34 \ln 3 + \ln 2 \approx -0.1308
+    \quad\Longrightarrow\quad
+    \Pr\!\left( \bar{X}_n \geq \tfrac34 \right) \leq e^{-0.1308\, n}$$</div>
+  <table>
+    <thead><tr><th>$n$</th><th>16</th><th>100</th><th>400</th></tr></thead>
+    <tbody>
+      <tr><td>bound $e^{-0.1308 n}$</td><td>$0.12$</td><td>$2.1 \times 10^{-6}$</td><td>$1.9 \times 10^{-23}$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="margin-top:10px;">Chebyshev at $n = 400$: $0.01$. Chernoff: $10^{-23}$. Different universes.</p>
+</div>
+
+<!-- KL connection -->
+<div class="slide">
+  <h2>The Exponent Is a KL Divergence</h2>
+  <div class="divider"></div>
+  <p>Same three steps with a general target $a \gt \tfrac12$ give $t^\star = \ln\frac{a}{1-a}$ and:</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr(\bar{X}_n \geq a) \;\leq\; e^{-n\, D\left(\mathrm{Bern}(a)\, \|\, \mathrm{Bern}(1/2)\right)}$$</div>
+  <ul>
+    <li>Check $a = \tfrac34$: $\;D = \tfrac34\ln\tfrac{3}{2} + \tfrac14\ln\tfrac{1}{2} \approx 0.1308$ nats &nbsp;&#10003;</li>
+    <li>Recall prob02: KL = the cost of pretending $a$-biased data is fair</li>
+  </ul>
+  <p class="muted">Illustration beyond the notes: the optimized bound rediscovers KL on its own.</p>
+</div>
+
+<!-- Chernoff implication 1 -->
+<div class="slide">
+  <h2>Chernoff &mdash; How Many Samples, Revisited</h2>
+  <div class="divider"></div>
+  <p>Section 01 demand: $\Pr(|\bar{X}_n - \tfrac12| \geq 0.01) \leq 0.05$ for a fair coin</p>
+  <div class="math-block" style="margin:8px 0">$$2\, e^{-n D(\mathrm{Bern}(0.51) \| \mathrm{Bern}(0.5))}
+    = 2\, e^{-n \cdot 0.0002} \leq 0.05
+    \;\Longleftrightarrow\; n \geq \frac{\ln 40}{0.0002} \approx 18{,}444$$</div>
+  <ul>
+    <li>Factor $2$: both tails, symmetric for a fair coin</li>
+    <li>Chebyshev asked for $50{,}000$; Chernoff: $\approx 18{,}400$</li>
+  </ul>
+  <p class="muted">Observation: $D(\mathrm{Bern}(\tfrac12 + \epsilon) \| \mathrm{Bern}(\tfrac12)) \approx 2\epsilon^2$ &mdash; remember this shape.</p>
+</div>
+
+<!-- Chernoff implication 2 -->
+<div class="slide">
+  <h2>Chernoff &mdash; What It Buys</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Cost: the <strong>whole MGF</strong> (heaviest input so far)</li>
+    <li>Reward: tails shrinking <strong>exponentially in $n$</strong> for sums</li>
+    <li>Everywhere in ML theory: confidence bounds, bandit algorithms, generalization</li>
+  </ul>
+  <div class="highlight">
+    <p>Exponential tail bounds are why <strong>moderate</strong> sample sizes give strong guarantees.</p>
+  </div>
+  <p class="muted">The named workhorse (Hoeffding) is built exactly this way &mdash; that is prob06.</p>
+</div>
+
+<!-- ===== SECTION 08 — HEAD TO HEAD ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">08</div>
+  <h1>Three Bounds Head-to-Head</h1>
+  <div class="divider"></div>
+  <p class="subtitle">One coin, three answers</p>
+</div>
+
+<!-- Escalation recap -->
+<div class="slide">
+  <h2>The Escalation, Complete</h2>
+  <div class="divider"></div>
+  <table>
+    <thead><tr><th>Bound</th><th>Markov runs on</th><th>Needs</th><th>Tail decay in $n$</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Markov</strong></td><td>$\bar{X}_n$</td><td>mean</td><td>constant</td></tr>
+      <tr><td><strong>Chebyshev</strong></td><td>$(\bar{X}_n - \mu)^2$</td><td>+ variance</td><td>$c/n$</td></tr>
+      <tr><td><strong>Chernoff</strong></td><td>$e^{t S_n}$</td><td>MGF</td><td>$e^{-cn}$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="margin-top:10px;">One engine (Markov), three fuels. Better fuel, faster decay.</p>
+</div>
+
+<!-- Numeric table -->
+<div class="slide">
+  <h2>Numbers &mdash; $\Pr(\bar{X}_n \geq 3/4)$, Fair Coin</h2>
+  <div class="divider"></div>
+  <table>
+    <thead><tr><th>$n$</th><th>Markov</th><th>Chebyshev</th><th>Chernoff</th><th>exact</th></tr></thead>
+    <tbody>
+      <tr><td>$16$</td><td>$0.67$</td><td>$0.25$</td><td>$0.12$</td><td>$0.038$</td></tr>
+      <tr><td>$100$</td><td>$0.67$</td><td>$0.04$</td><td>$2.1 \times 10^{-6}$</td><td>$2.8 \times 10^{-7}$</td></tr>
+      <tr><td>$400$</td><td>$0.67$</td><td>$0.01$</td><td>$1.9 \times 10^{-23}$</td><td>$1.3 \times 10^{-24}$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="margin-top:10px;">Exact column: binomial sums, computed directly. Chernoff tracks the truth's <strong>exponent</strong>.</p>
+</div>
+
+<!-- Log chart -->
+<div class="slide">
+  <h2>Same Numbers, Log Scale</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 780 280" style="width:100%;max-width:840px;">
+      <line x1="70" y1="230" x2="700" y2="230" stroke="#222" stroke-width="2"/>
+      <line x1="70" y1="230" x2="70" y2="20" stroke="#222" stroke-width="2"/>
+      <text x="60" y="35" font-size="13" fill="#666" text-anchor="end">1</text>
+      <line x1="66" y1="80" x2="70" y2="80" stroke="#222" stroke-width="2"/>
+      <text x="60" y="85" font-size="13" fill="#666" text-anchor="end">1e-6</text>
+      <line x1="66" y1="130" x2="70" y2="130" stroke="#222" stroke-width="2"/>
+      <text x="60" y="135" font-size="13" fill="#666" text-anchor="end">1e-12</text>
+      <line x1="66" y1="180" x2="70" y2="180" stroke="#222" stroke-width="2"/>
+      <text x="60" y="185" font-size="13" fill="#666" text-anchor="end">1e-18</text>
+      <text x="60" y="235" font-size="13" fill="#666" text-anchor="end">1e-24</text>
+      <text x="385" y="256" font-size="15" fill="#666" text-anchor="middle">n flips (0 to 400)</text>
+      <line x1="70" y1="31.5" x2="700" y2="31.5" stroke="#9aa4af" stroke-width="3"/>
+      <text x="600" y="24" font-size="15" fill="#9aa4af" font-weight="700">Markov</text>
+      <polyline points="86,33.3 101,35.8 116,37.3 132,38.3 148,39.1 163,39.8 178,40.4 194,40.8 210,41.3 225,41.6 240,42 256,42.3 272,42.6 287,42.9 302,43.1 318,43.4 334,43.6 349,43.8 364,44 380,44.2 396,44.3 411,44.5 426,44.7 442,44.8 458,45 473,45.1 488,45.2 504,45.4 520,45.5 535,45.6 550,45.7 566,45.9 582,46 597,46.1 612,46.2 628,46.3 644,46.4 659,46.5 674,46.6 690,46.7"
+        fill="none" stroke="#1a5296" stroke-width="3" stroke-dasharray="8 6"/>
+      <text x="600" y="72" font-size="15" fill="#1a5296" font-weight="700">Chebyshev</text>
+      <polyline points="86,34.7 101,39.5 116,44.2 132,48.9 148,53.7 163,58.4 178,63.1 194,67.9 210,72.6 225,77.3 240,82.1 256,86.8 272,91.5 287,96.3 302,101 318,105.7 334,110.5 349,115.2 364,120 380,124.7 396,129.4 411,134.2 426,138.9 442,143.6 458,148.4 473,153.1 488,157.8 504,162.6 520,167.3 535,172 550,176.8 566,181.5 582,186.2 597,191 612,195.7 628,200.4 644,205.2 659,209.9 674,214.6 690,219.4"
+        fill="none" stroke="#003876" stroke-width="3.5"/>
+      <text x="440" y="190" font-size="15" fill="#003876" font-weight="700">Chernoff</text>
+    </svg>
+  </div>
+  <p>On a log scale, only Chernoff is a <strong>falling straight line</strong>: true exponential decay</p>
+</div>
+
+<!-- Takeaway -->
+<div class="slide">
+  <h2>Head-to-Head &mdash; Takeaway</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>All three are the <strong>same inequality</strong>, fed different variables</li>
+    <li>Trade-off: stronger assumptions $\to$ stronger conclusions</li>
+    <li>Markov: last resort. Chebyshev: variance only. Chernoff: the sharp tool</li>
+  </ul>
+  <div class="highlight">
+    <p>Concentration is a <strong>menu</strong>: pay with assumptions, receive decay rate.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 09 — CLT ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">09</div>
+  <h1>Central Limit Theorem</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The shape of fluctuations &mdash; a sketch via MGFs</p>
+</div>
+
+<!-- Beyond LLN -->
+<div class="slide">
+  <h2>Beyond the LLN &mdash; The Shape Question</h2>
+  <div class="divider"></div>
+  <p>LLN: fluctuations of $\bar{X}_n$ <strong>die</strong>. New question: dying <strong>how</strong>?</p>
+  <div class="math-block" style="margin:8px 0">$$\bar{X}_n - \mu \approx \frac{\sigma}{\sqrt{n}} \cdot (\text{what?})
+    \qquad \text{std of } \bar{X}_n = \frac{\sigma}{\sqrt{n}}$$</div>
+  <ul>
+    <li>Zoom in by $\sqrt{n}$: magnify the dying fluctuation to size $1$</li>
+    <li>Claim: what appears is <strong>always the same shape</strong> &mdash; a bell</li>
+  </ul>
+</div>
+
+<!-- Standardize -->
+<div class="slide">
+  <h2>Setup &mdash; Standardize Each Variable</h2>
+  <div class="divider"></div>
+  <p>From the notes: define $Y_i = (X_i - \mu)/\sigma$, so that</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}[Y] = 0, \qquad \mathbb{E}[Y^2] = \mathrm{Var}(Y) = 1$$</div>
+  <p>Through the moment machine (Section 06):</p>
+  <div class="math-block" style="margin:8px 0">$$M_Y'(0) = 0, \qquad M_Y''(0) = 1, \qquad M_Y(0) = 1$$</div>
+  <p class="muted">Units of $\sigma$, centered at $0$: all coins, dice, losses now look alike near $t = 0$.</p>
+</div>
+
+<!-- CLT statement -->
+<div class="slide">
+  <h2>Theorem &mdash; Central Limit Theorem</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 6 (central limit theorem).</h3>
+    <p>$X_1, X_2, \dots$ i.i.d. with mean $\mu$, variance $\sigma^2$. Then:</p>
+    <div class="math-block" style="margin:8px 0">$$Z_n = \sum_{i=1}^n \frac{X_i - \mu}{\sqrt{n}\,\sigma}
+      \;\xrightarrow{\;(d)\;}\; \mathcal{N}(0, 1)$$</div>
+  </div>
+  <p>$\xrightarrow{(d)}$ = <strong>in distribution</strong>: the CDF of $Z_n$ approaches the Gaussian CDF</p>
+  <p class="muted">Note $Z_n = \frac{1}{\sqrt{n}}\sum_i Y_i$: the standardized sum, zoomed by $\sqrt{n}$.</p>
+</div>
+
+<!-- Sketch disclaimer -->
+<div class="slide">
+  <h2>What "Sketch" Means Today</h2>
+  <div class="divider"></div>
+  <p>Following the notes, a <strong>non-rigorous</strong> MGF proof; we take on faith:</p>
+  <ul>
+    <li>$M_Y(t)$ exists near $t = 0$ (not guaranteed by finite variance)</li>
+    <li>MGF convergence $\Rightarrow$ distribution convergence (fingerprint, in the limit)</li>
+    <li>Error control in the Taylor step</li>
+  </ul>
+  <p class="muted">The full proof swaps MGFs for characteristic functions $\mathbb{E}[e^{itX}]$ &mdash; beyond this course.</p>
+</div>
+
+<!-- CLT proof overview -->
+<div class="slide">
+  <h2>CLT Sketch &mdash; Overview</h2>
+  <div class="divider"></div>
+  <p>Target: $M_{Z_n}(t) \to e^{t^2/2}$, the $\mathcal{N}(0,1)$ MGF</p>
+  <ol>
+    <li><strong>Product</strong>: independence turns $M_{Z_n}$ into a power of $M_Y$</li>
+    <li><strong>Taylor</strong>: near $0$, $M_Y(s) \approx 1 + s^2/2$</li>
+    <li><strong>Limit</strong>: $(1 + \frac{t^2}{2n})^n \to e^{t^2/2}$</li>
+    <li><strong>Recognize</strong>: that is the Gaussian fingerprint</li>
+  </ol>
+  <p class="muted">Every ingredient was built in Section 06.</p>
+</div>
+
+<!-- Technique Taylor -->
+<div class="slide">
+  <h2>Technique &mdash; Taylor at Zero</h2>
+  <div class="divider"></div>
+  <p>Second-order expansion of $M_Y$ around $t = 0$, coefficients known:</p>
+  <div class="math-block" style="margin:8px 0">$$M_Y(t) \approx M_Y(0) + M_Y'(0)\, t + \frac{M_Y''(0)}{2} t^2
+    = 1 + 0 \cdot t + \frac{t^2}{2}$$</div>
+  <ul>
+    <li>Standardization killed the linear term: <strong>that</strong> was its job</li>
+    <li>Valid for small $t$ &mdash; and $t/\sqrt{n}$ will be very small</li>
+  </ul>
+</div>
+
+<!-- Technique compound limit -->
+<div class="slide">
+  <h2>Technique &mdash; The Compound-Interest Limit</h2>
+  <div class="divider"></div>
+  <p>Classic calculus fact, for any fixed $x$:</p>
+  <div class="math-block" style="margin:8px 0">$$\left(1 + \frac{x}{n}\right)^{\!n} \;\longrightarrow\; e^{x}
+    \quad \text{as } n \to \infty$$</div>
+  <p>Numeric feel at $x = 1$: &nbsp;$(1.1)^{10} \approx 2.594$, &nbsp;$(1.01)^{100} \approx 2.705$, &nbsp;$e \approx 2.718$</p>
+  <p class="muted">Small gains, compounded $n$ times, become an exponential.</p>
+</div>
+
+<!-- CLT step 1 -->
+<div class="slide">
+  <h2>CLT Sketch &mdash; Step 1: Product</h2>
+  <div class="divider"></div>
+  <p>$Z_n = \frac{1}{\sqrt{n}} \sum_i Y_i$ with $Y_i$ i.i.d.; MGF of an independent sum:</p>
+  <div class="math-block">$$\begin{aligned}
+    M_{Z_n}(t)
+    &\stackrel{(\text{def})}{=} \mathbb{E}\!\left[ e^{\frac{t}{\sqrt{n}} \sum_i Y_i} \right]
+    \stackrel{(\text{indep.})}{=} \prod_{i=1}^n \mathbb{E}\!\left[ e^{\frac{t}{\sqrt{n}} Y_i} \right]
+    \stackrel{(\text{i.i.d.})}{=} M_Y\!\left( \frac{t}{\sqrt{n}} \right)^{\!n}
+  \end{aligned}$$</div>
+  <p class="muted">One unknown function, evaluated ever closer to $0$, raised to the $n$-th power.</p>
+</div>
+
+<!-- CLT step 2 -->
+<div class="slide">
+  <h2>CLT Sketch &mdash; Step 2: Taylor</h2>
+  <div class="divider"></div>
+  <p>Insert the expansion at $s = t/\sqrt{n}$ (small once $n$ is large):</p>
+  <div class="math-block" style="margin:8px 0">$$M_Y\!\left( \frac{t}{\sqrt{n}} \right)
+    \approx 1 + \frac{1}{2}\left( \frac{t}{\sqrt{n}} \right)^{\!2}
+    = 1 + \frac{t^2}{2n}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Longrightarrow\quad M_{Z_n}(t) \approx \left( 1 + \frac{t^2}{2n} \right)^{\!n}$$</div>
+  <p class="muted">Only the mean-0, variance-1 structure survives: universality begins here.</p>
+</div>
+
+<!-- CLT step 3 -->
+<div class="slide">
+  <h2>CLT Sketch &mdash; Step 3: Limit &amp; Recognize</h2>
+  <div class="divider"></div>
+  <p>Compound-interest limit with $x = t^2/2$, then the fingerprint:</p>
+  <div class="math-block" style="margin:8px 0">$$M_{Z_n}(t) \approx \left(1 + \frac{t^2}{2n}\right)^{\!n}
+    \;\longrightarrow\; e^{t^2 / 2}
+    \stackrel{(\text{Gaussian MGF: } \mu = 0,\, \sigma = 1)}{=} M_{\mathcal{N}(0,1)}(t)$$</div>
+  <p>Conclusion (sketch level): $\;Z_n \xrightarrow{(d)} \mathcal{N}(0,1) \qquad \blacksquare$</p>
+  <p class="muted">The limit MGF is Gaussian, whatever distribution the $X_i$ had.</p>
+</div>
+
+<!-- CLT summary -->
+<div class="slide">
+  <h2>CLT Sketch &mdash; Summary</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$M_{Z_n}(t)
+    \stackrel{(\text{indep.})}{=} M_Y\!\big(\tfrac{t}{\sqrt{n}}\big)^n
+    \stackrel{(\text{Taylor})}{\approx} \Big(1 + \tfrac{t^2}{2n}\Big)^{\!n}
+    \stackrel{(\text{limit})}{\longrightarrow} e^{t^2/2}$$</div>
+  <ul>
+    <li>Weight carriers: sum $\to$ product, and $M_Y''(0) = 1$</li>
+    <li>Individuality of $X$ lives in <strong>higher moments</strong> &mdash; crushed by $1/\sqrt{n}$ scaling</li>
+  </ul>
+</div>
+
+<!-- CLT picture -->
+<div class="slide">
+  <h2>Seeing the CLT &mdash; 16 Coins vs. the Bell</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 780 290" style="width:100%;max-width:840px;">
+      <line x1="60" y1="250" x2="720" y2="250" stroke="#222" stroke-width="2"/>
+      <g fill="#c9d3de" stroke="#9aa4af" stroke-width="1">
+        <rect x="151" y="248.2" width="28" height="1.8"/>
+        <rect x="188" y="241.5" width="28" height="8.5"/>
+        <rect x="226" y="222.2" width="28" height="27.8"/>
+        <rect x="264" y="183.3" width="28" height="66.7"/>
+        <rect x="301" y="127.8" width="28" height="122.2"/>
+        <rect x="338" y="75.4" width="28" height="174.6"/>
+        <rect x="376" y="53.6" width="28" height="196.4"/>
+        <rect x="414" y="75.4" width="28" height="174.6"/>
+        <rect x="451" y="127.8" width="28" height="122.2"/>
+        <rect x="488" y="183.3" width="28" height="66.7"/>
+        <rect x="526" y="222.2" width="28" height="27.8"/>
+        <rect x="564" y="241.5" width="28" height="8.5"/>
+        <rect x="601" y="248.2" width="28" height="1.8"/>
+      </g>
+      <polyline points="90,249.9 105,249.9 120,249.7 135,249.4 150,248.8 165,247.8 180,246 195,243.2 210,238.8 225,232.3 240,223 255,210.5 270,194.5 285,175.1 300,152.9 315,129 330,105.2 345,83.4 360,65.9 375,54.5 390,50.5 405,54.5 420,65.9 435,83.4 450,105.2 465,129 480,152.9 495,175.1 510,194.5 525,210.5 540,223 555,232.3 570,238.8 585,243.2 600,246 615,247.8 630,248.8 645,249.4 660,249.7 675,249.9 690,249.9"
+        fill="none" stroke="#003876" stroke-width="3.5"/>
+      <text x="390" y="275" font-size="15" fill="#666" text-anchor="middle">standardized value z (−4 to 4)</text>
+      <text x="590" y="105" font-size="15" fill="#003876" font-weight="700">N(0,1) density</text>
+      <text x="230" y="105" font-size="15" fill="#9aa4af" font-weight="700">Bin(16, 1/2),</text>
+      <text x="230" y="127" font-size="15" fill="#9aa4af" font-weight="700">standardized</text>
+    </svg>
+  </div>
+  <p>Already at $n = 16$: standardized coin-sum pmf hugs the bell (peak $0.393$ vs. $0.399$)</p>
+</div>
+
+<!-- CLT implication -->
+<div class="slide">
+  <h2>CLT &mdash; What It Buys</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Error bars</strong>: reported metrics fluctuate like $\mu \pm \sigma/\sqrt{n} \cdot z$</li>
+    <li><strong>Universality</strong>: sums of many small independent effects look Gaussian</li>
+    <li>Pairs with prob03's MaxEnt result: Gaussians as the default noise model</li>
+  </ul>
+  <div class="highlight">
+    <p>LLN says averages <strong>land</strong>; CLT says how they <strong>wobble</strong>: a bell of width $\sigma/\sqrt{n}$.</p>
+  </div>
+</div>
+
+<!-- ===== CLOSE ===== -->
+<!-- Recap chain -->
+<div class="slide">
+  <h2>Recap &mdash; Today's Chain</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    &\Pr(X \geq a) \stackrel{(\text{Thm 1})}{\leq} \tfrac{\mathbb{E}[X]}{a}, \qquad
+    \Pr(|X - \mu| \geq \alpha\sigma) \stackrel{(\text{Thm 2})}{\leq} \tfrac{1}{\alpha^2}, \qquad
+    \bar{X}_n \stackrel{(\text{Thm 3})}{\longrightarrow} \mu \\[6pt]
+    &\Pr(X \geq \alpha) \stackrel{(\text{Thm 5})}{\leq} M(t) e^{-t\alpha}, \qquad
+    \textstyle\sum_i \tfrac{X_i - \mu}{\sqrt{n}\sigma} \stackrel{(\text{Thm 6})}{\longrightarrow} \mathcal{N}(0,1)
+  \end{aligned}$$</div>
+  <ul>
+    <li>One engine: Markov + a chosen transform ($X$, square, exponential)</li>
+    <li>One helper: the MGF (moments, fingerprint, sum $\to$ product)</li>
+  </ul>
+</div>
+
+<!-- Recap running example -->
+<div class="slide">
+  <h2>Recap &mdash; One Coin, Every Tool</h2>
+  <div class="divider"></div>
+  <table>
+    <thead><tr><th>Tool</th><th>$\Pr(\bar{X}_{100} \geq \tfrac34)$</th><th>Lesson</th></tr></thead>
+    <tbody>
+      <tr><td>Markov</td><td>$0.67$</td><td>blind to $n$</td></tr>
+      <tr><td>Chebyshev</td><td>$0.04$</td><td>variance sees averaging</td></tr>
+      <tr><td>Chernoff</td><td>$2.1 \times 10^{-6}$</td><td>MGF sees the exponent</td></tr>
+      <tr><td>exact</td><td>$2.8 \times 10^{-7}$</td><td>truth: same exponent class</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="margin-top:10px;">Plus LLN: the average lands on $\tfrac12$. CLT: a bell of width $\tfrac{1}{2\sqrt{n}}$.</p>
+</div>
+
+<!-- Bridge to prob06 -->
+<div class="slide">
+  <h2>Next &mdash; From One Average to Many</h2>
+  <div class="divider"></div>
+  <p>Today: one average, one guarantee. Training: <strong>many models compete</strong></p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\!\left( \exists\, h \in \mathcal{H}:\;
+    |\hat{L}_n(h) - L(h)| \geq \epsilon \right) \;\leq\; ?$$</div>
+  <ul>
+    <li>Need tail bounds <strong>uniform over a hypothesis class</strong></li>
+    <li>Tools: Hoeffding (Chernoff, distribution-free) + the union bound</li>
+  </ul>
+  <div class="highlight">
+    <p>Next lecture: <strong>generalization</strong> &mdash; why low training loss can mean low test loss.</p>
+  </div>
+</div>
+
+<!-- Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$\bar{X}_n \to \mu$</div>
+  <p class="big-word-sub">Questions?</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 107</div>
+
+</div><!-- end deck -->
+
+<script src="../../../reference/deck.js"></script>
+</body>
+</html>

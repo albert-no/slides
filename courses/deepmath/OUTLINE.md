@@ -1,7 +1,7 @@
 # Deep Learning Math — content outline
 
 Mathematical foundations course for **junior (3rd-year) undergrad AI majors**. Two source
-scribe-note files (Albert's LaTeX): `probability25.tex` and `optimization25.tex`.
+scribe-note files (Albert's LaTeX): `tex/probability25.tex` and `tex/optimization25.tex`.
 Pace: slow and complete — every major theorem gets technique review → statement →
 proof overview → proof details → proof summary → implication. Motivation slides
 (why this math shows up in AI) open every deck. No slide-count cap.
@@ -19,7 +19,7 @@ and `courses/infotheory/lectures/07-diffusion/`.
 
 | # | Deck | Source (tex lines) | Status |
 |---|---|---|---|
-| 1 | `prob01-foundations/` — probability review, entropy, Jensen, H ≤ log M | prob 13–451 (through max-entropy) | planned |
+| 1 | `prob01-foundations/` — probability review, entropy, Jensen, H ≤ log M | prob 13–451 (through max-entropy) | done (72 slides) |
 | 2 | `prob02-kl-crossentropy/` — mismatch thm, KL ≥ 0, horse racing, CE loss = KL to one-hot | prob 249–538 | planned |
 | 3 | `prob03-mutual-information/` — joint/cond entropy, MI, DPI I–III, cond MI, differential entropy, MaxEnt Gaussian | prob 539–1210 | planned |
 | 4 | `prob04-random-processes/` — Markov processes, stationary dist., discrete diffusion | prob 1211–1455 | planned |
@@ -38,4 +38,26 @@ Dropped from source by request: operator theory (opt 1603–1761), acceleration/
 
 ## Per-deck outlines
 
-(added as each deck is generated)
+### prob01-foundations — Probability Foundations & Entropy (72 slides)
+
+`prob01-foundations/prob01-foundations.html` · source: prob 13–451.
+Lecture 1 — defines everything from scratch; ends on a bridge to prob02 (wrong
+distribution → cross-entropy/KL).
+
+| # | Section | Slides | Location |
+|---|---|---|---|
+| — | Title + TOC | 1–2 | prob01-foundations/prob01-foundations.html:26 |
+| 01 | Why Probability? (data = samples, models = distributions) | 3–6 | prob01-foundations/prob01-foundations.html:83 |
+| 02 | Probability Review (Ω, F, P; coin, 5×5 image, MNIST, CIFAR-10, |Ω| table) | 7–15 | prob01-foundations/prob01-foundations.html:185 |
+| 03 | Random Variables (map, pmf, expectation, LOTUS exercise) | 16–23 | prob01-foundations/prob01-foundations.html:320 |
+| 04 | Entropy (surprisal prob01-foundations/prob01-foundations.html:512, H def :548, worked examples, h₂(p), guessing game :678, AI examples :793) | 24–45 | prob01-foundations/prob01-foundations.html:478 |
+| 05 | Properties (Thm 1–3, Jensen technique review + induction proof, max-entropy proof) | 46–69 | prob01-foundations/prob01-foundations.html:887 |
+| — | Recap chain, bridge to prob02, end slide | 70–72 | prob01-foundations/prob01-foundations.html:1251 |
+
+Key theorems: **Thm 1** non-negativity H(X) ≥ 0 (prob01-foundations/prob01-foundations.html:899);
+**Thm 2** Jensen E[f(X)] ≤ f(E[X]) for concave f, proved by induction on support size
+(prob01-foundations/prob01-foundations.html:1002); **Thm 3** maximum entropy
+H(X) ≤ log M, equality iff uniform (prob01-foundations/prob01-foundations.html:1122).
+Figures: figs/binary_image.png, figs/mnist.png, figs/cifar10.jpeg, figs/jensen.png;
+all other diagrams inline SVG. Jensen proof (induction) is not in the tex (source
+states Jensen without proof) — added per full-treatment mandate.

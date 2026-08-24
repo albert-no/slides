@@ -22,7 +22,7 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 1 | `prob01-foundations/` — probability review, entropy, Jensen, H ≤ log M | prob 13–451 (through max-entropy) | done (72 slides) |
 | 2 | `prob02-kl-crossentropy/` — mismatch thm, KL ≥ 0, horse racing, CE loss = KL to one-hot | prob 249–538 | done (69 slides) |
 | 3 | `prob03-mutual-information/` — joint/cond entropy, MI, DPI I–III, cond MI, differential entropy, MaxEnt Gaussian | prob 539–1210 | done (127 slides) |
-| 4 | `prob04-random-processes/` — Markov processes, stationary dist., discrete diffusion | prob 1211–1455 | planned |
+| 4 | `prob04-random-processes/` — Markov processes, stationary dist., discrete diffusion | prob 1211–1455 | done (99 slides) |
 | 5 | `prob05-concentration/` — Markov/Chebyshev/Chernoff, MGF, CLT sketch, LLN | prob 1457–1595 | planned |
 | 6 | `prob06-generalization/` — Hoeffding, sub-Gaussian, union bound, finite-class generalization bound | new material (sequel to prob05) | planned |
 | 7 | `prob07-estimation/` — cond. expectation/tower, MLE/MAP, Fano (full proof), Naive Bayes, bias-variance, MMSE | prob 1563–1911 | planned |
@@ -134,3 +134,45 @@ bins-under-density, same-variance density comparison). XOR triple and guessing-g
 examples are the tex's own; the running 2×2 joint-pmf table and its per-theorem
 worked checks are not in the tex — added per worked-example mandate. Venn diagram
 and pipeline SVGs added per visual mandate.
+
+### prob04-random-processes — Random Processes & Markov Chains (99 slides)
+
+`prob04-random-processes/prob04-random-processes.html` · source: prob 1211–1455.
+Lecture 4 — answers prob03's teaser (sequences in time); recalls the chain rule of
+probability from prob03 instead of redefining; ends on a bridge to prob05 (averages
+of many draws → concentration).
+
+| # | Section | Slides | Location |
+|---|---|---|---|
+| — | Title + TOC | 1–2 | prob04-random-processes/prob04-random-processes.html:32 |
+| 01 | Why Sequences? (LM / diffusion / random-walk cards, one snapshot not enough, settling preview, route map) | 3–7 | prob04-random-processes/prob04-random-processes.html:124 |
+| 02 | Random Processes (def, i.i.d. process, coin flips, "my na_e is Albert" text example, modeling spectrum) | 8–13 | prob04-random-processes/prob04-random-processes.html:216 |
+| 03 | Markov Processes (memory-one idea, random walk example :335, 1st-order def :374, chain-rule recall (prob03) :390, factorization proposition + proof :406, kth-order def :449, next-token models, refined spectrum) | 14–26 | prob04-random-processes/prob04-random-processes.html:301 |
+| 04 | Transition Matrices (prob-vector + matrix×vector reviews, P def :562, column sums, π_i def :591, Thm 1 arc, binary chain :658, three-state chain :728) | 27–43 | prob04-random-processes/prob04-random-processes.html:513 |
+| 05 | Evolution in Time (Thm 2 π_t = P^t π_0 + proof, numeric evolution table :815, convergence chart :832, "distribution that does not move?" teaser) | 44–49 | prob04-random-processes/prob04-random-processes.html:780 |
+| 06 | Stationary Processes (def :881, sliding-window picture, random-walk counterexample + fan-out, Markov vs. stationary axes, full spectrum) | 50–56 | prob04-random-processes/prob04-random-processes.html:873 |
+| 07 | Stationary Distributions (three-state worked stationary example :1025, pinned start fails :1099, Thm 3 existence :1115, assumptions in pictures, binary worked, π* def :1184, eigen reviews :1199, eigen computations by hand :1244, symmetric-P exercise + solution :1310, random surfer) | 57–77 | prob04-random-processes/prob04-random-processes.html:1017 |
+| 08 | Limiting Distributions (π_∞ def :1381, α=1 no-limit caveat, Thm 4 arc, rate via second eigenvalue :1451) | 78–86 | prob04-random-processes/prob04-random-processes.html:1373 |
+| 09 | Discrete Diffusion (destroy-then-rebuild, ε-noising matrix :1515, sanity checks, uniform limit, data-dissolves picture :1554, denoiser f_θ, backwards generation, why it works) | 87–95 | prob04-random-processes/prob04-random-processes.html:1492 |
+| — | Recap chain, running-examples recap, bridge to prob05, end slide | 96–99 | prob04-random-processes/prob04-random-processes.html:1646 |
+
+Key theorems: **Prop.** Markov factorization P(x^n) = Π P(x_i|x_{i−1}) with proof
+(prob04-random-processes/prob04-random-processes.html:406); **Thm 1** one-step
+evolution π_i = P π_{i−1}, full arc overview/proof/summary
+(prob04-random-processes/prob04-random-processes.html:604); **Thm 2** t-step
+evolution π_t = P^t π_0 (prob04-random-processes/prob04-random-processes.html:788);
+**Thm 3** existence of a stationary initial distribution under finite-state +
+irreducible + aperiodic, stated without proof as in the tex
+(prob04-random-processes/prob04-random-processes.html:1115); **Thm 4** limiting ⟹
+stationary, with limit-both-sides proof
+(prob04-random-processes/prob04-random-processes.html:1411).
+Figures: all diagrams inline SVG — binary/three-state chain graphs, sliding window,
+random-walk fan-out, modeling spectrum, noising pixel-grid sequence; the tex's
+scribe12-markovex.png and scribe12-distribution.png are redrawn as SVG (noted on
+the slides). Deviations from tex: the tex's duplicated/contradictory binary-chain
+conditionals (p(1|0)=α and p(1|0)=1−α, prob 1297/1391) fixed to flip-α / stay-(1−α);
+the tex's π_t vs π_i index mismatch (prob 1281) normalized to π_i. Added beyond the
+tex per mandate: proofs for Thm 1/2, eigenvalue technique review + by-hand eigen
+solutions of both running chains, symmetric-P exercise solution, convergence-rate
+slides (second eigenvalue), numeric evolution table/chart, and the diffusion
+forward/backward picture slides.

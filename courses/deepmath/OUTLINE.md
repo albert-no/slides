@@ -29,7 +29,7 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 8 | `prob08-gaussian/` — MVN (3 defs, properties w/ proofs), Gaussian channel, Gaussian diffusion/DDPM, Gaussian discriminant | prob 1912–2519 (MIT OCW 6.436J citation) | done (131 slides) |
 | 9 | `prob09-monte-carlo/` — Monte Carlo, importance sampling, variance trade-offs, policy gradient / RLHF hooks | new material | done (117 slides) |
 | 10 | `opt01-svd-lowrank/` — rank/range/null, SVD, pseudo-inverse, spectral & nuclear norms, Eckart–Young–Mirsky, Netflix | opt 1–435 | done (119 slides) |
-| 11 | `opt02-regression-erm/` — least squares θ\*=A†B (full proof), ERM/Bayes risk, ridge + closed form | opt 436–794, 1463–1517 | planned |
+| 11 | `opt02-regression-erm/` — least squares θ\*=A†B (full proof), ERM/Bayes risk, ridge + closed form | opt 436–794, 1463–1517 | done (111 slides) |
 | 12 | `opt03-convexity-gd/` — convexity, L-smoothness, co-coercivity, strong convexity, PL, GD O(1/T) + linear rate | opt 795–1319 | planned |
 | 13 | `opt04-sgd/` — SGD O(1/√K) proof, mini-batching, strongly-convex SGD O(log k/k) | opt 1320–1462, 1520–1600 | planned |
 
@@ -493,3 +493,60 @@ rank, Thm 5 existence, convex-envelope characterization of nuclear norm,
 NP-hardness of rank-constrained completion, SVT scalability and
 exact-recovery-under-incoherence claims (as in source); Netflix Prize (2006)
 named with no invented statistics; LoRA name-drop only.
+
+### opt02-regression-erm — Linear Regression, ERM & Ridge (111 slides)
+
+`opt02-regression-erm/opt02-regression-erm.html` · **opt 436–794 + 1463–1517**
+(least squares, feature maps, multi-output, ERM/Bayes risk, ridge merged in).
+Lecture 11 — answers opt01's bridge (x = A†b, proof delivered as the deck
+centerpiece); recalls opt01 compact SVD / pseudo-inverse / rotations-are-free /
+orthogonal split as technique reviews, prob05 LLN, prob06 ERM +
+approximation/estimation split, prob07 MMSE / MAP / bias–variance, prob08
+symmetric-eigenvalue facts by name without re-proving. Running example
+(−1,0), (0,1), (1,3) carried through SVD by hand → θ\*=(4/3, 3/2), SSE=1/6 →
+normal equations → orthogonality check → feature map (exact fit) → ridge
+θ_λ=(4/(3+λ), 3/(2+λ)) with the λ=1 crossing. Ends bridging to opt03
+(convexity + gradient descent).
+
+| # | Section | Slides | Location |
+|---|---|---|---|
+| — | Title + TOC | 1–2 | opt02-regression-erm/opt02-regression-erm.html:23 |
+| 01 | Why Regression? (opt01 bridge answered :131, simplest trainable model, today's three results cards :171, route map SVG :194) | 3–7 | opt02-regression-erm/opt02-regression-erm.html:123 |
+| 02 | Linear Regression (data :251, linear model, height-weight SVG :275, dummy feature :305, interpretability, squared loss :329, training problem :341, running 3-point example + scatter SVG :353) | 8–16 | opt02-regression-erm/opt02-regression-erm.html:243 |
+| 03 | Matrix Form (stack the data :401, one objective one norm :414, tall/square/fat SVG :423, regression = tall case, running example has no exact solution :458, best we can do :472) | 17–23 | opt02-regression-erm/opt02-regression-erm.html:393 |
+| 04 | The Least-Squares Theorem (technique reviews 1–4: compact SVD :491, pseudo-inverse :506, rotations free :521, vector split :535; Thm 1 :550, reading :563, 5-step proof overview :575, Steps 1–5 one idea per slide :588–:653, every minimizer + smallest :664, uniqueness :677, proof-summary skeleton :688, key trick named :703, worked SVD :716, worked A† and θ\* :727, worked fitted line + residual table :741, implications :774, :788) | 24–46 | opt02-regression-erm/opt02-regression-erm.html:483 |
+| 05 | Geometry & Normal Equations (range(A) :808, projection picture SVG :821, solution is a projection AA†=U_cU_cᵀ :848, residual orthogonal :862, TR gradients of quadratics :876, Thm 2 :889, expansion proof both directions :902–:916, two formulas one answer (AᵀA)⁻¹Aᵀ=A† :930, worked normal equations :945, worked perpendicular check :957, which route when :969) | 47–59 | opt02-regression-erm/opt02-regression-erm.html:800 |
+| 06 | Feature Maps (bend the model (tex log/x/x² example) :991, feature map def :1003, worked add x² :1016, worked elimination, exact fit :1030, line-vs-parabola SVG :1042, more features never hurt training :1072, feature engineering → learning :1085) | 60–67 | opt02-regression-erm/opt02-regression-erm.html:983 |
+| 07 | Multi-Output Regression (vector labels :1107, objective splits by output :1120, m independent regressions Θₖ=A†Bₖ :1131, linear layer implication :1145) | 68–72 | opt02-regression-erm/opt02-regression-erm.html:1099 |
+| 08 | Empirical Risk Minimization (one frame :1164, recall prob06 card :1175, loss def :1188, two classic losses + SVG :1200, predictions vs label space (prob02 CE recall) :1227, expected risk :1239, Bayes risk & predictor :1254, f\*=E[Y\|X] via prob07 MMSE :1268, empirical risk + prob05 LLN :1280, approximation-vs-estimation SVG :1293, least squares is ERM table :1322, when ERM backfires :1337) | 73–85 | opt02-regression-erm/opt02-regression-erm.html:1156 |
+| 09 | Ridge Regression (fragile predictors :1359, Cauchy–Schwarz sensitivity :1370, regularizer def (tex ℓ1 typo fixed) :1382, regularized ERM :1395, Thm 3 :1407, reading (no rank condition) :1419, TR eigenvalue shift (prob08 recall) :1430, Lemma AᵀA+λI invertible :1443, proof overview :1457, Step 1 gradient :1469, Step 2 strict win :1480, proof summary :1494, ridge through SVD shrinkage :1507, λ→0⁺ = A†B answers least-norm teaser :1520, worked ridge :1533, turning-the-dial table + coefficient-vs-λ chart :1544, worked three fits SVG :1578, underfit/just-right/overfit panels :1600, ridge = MAP prior (prob07) :1634, what λ buys (bias–variance, validation) :1645) | 86–106 | opt02-regression-erm/opt02-regression-erm.html:1351 |
+| — | Closing: today-as-one-chain, every-tool table, bridge to opt03, end slide θ\*=A†B | 107–111 | opt02-regression-erm/opt02-regression-erm.html:1659 |
+
+Key theorems: **Thm 1** least-squares solution θ\* = A†B minimizes ‖Aθ−B‖₂²
+and is the least-norm minimizer, full 5-step SVD proof (insert SVD + complete
+basis, rotate residual, drop constant, split θ, solve surviving piece)
+(opt02-regression-erm/opt02-regression-erm.html:550); **Thm 2** normal
+equations AᵀAθ̂ = AᵀB characterize minimizers, expansion proof in both
+directions, (AᵀA)⁻¹Aᵀ = A† under full rank
+(opt02-regression-erm/opt02-regression-erm.html:889); **Lemma** AᵀA + λI is
+invertible for every A and λ > 0, eigenvalue-shift argument
+(opt02-regression-erm/opt02-regression-erm.html:1443); **Thm 3** ridge closed
+form θ\*_λ = (AᵀA+λI)⁻¹AᵀB, unique for any A, gradient + strict-verification
+proof (opt02-regression-erm/opt02-regression-erm.html:1407).
+Figures: all diagrams inline SVG with hand-computed geometry (route map,
+height-weight sketch, running-example scatter, tall/square/fat block shapes,
+projection of B onto range(A) with right-angle marker, line-vs-parabola fit,
+quadratic-vs-absolute loss curves, approximation-vs-estimation map,
+coefficient-vs-λ decay chart with the λ=1 crossing, three-fits comparison,
+underfit/just-right/overfit 3-panel).
+Deviations from tex: opt 500 y{(1)} → y^{(1)}; opt 538 U ∈ R^{n×n} → R^{N×N};
+opt 573 mismatched parenthesis fixed; opt 605 Θ dimension "n×m" → m×n; opt 611
+θ_k x → θ_kᵀx; opt 615 ‖·‖² on scalar residuals → (·)²; opt 1498 ℓ1
+regularizer formula (duplicated the ℓ2 formula) fixed to Σ\|θᵢ\|; opt 1513
+ridge exercise's full-rank assumption dropped (invertibility proved for any
+A); spelling fixes silently (Typlically). Added beyond the tex per mandate:
+Thm 2 normal equations + proof (tex states least squares only via SVD),
+AA† = U_cU_cᵀ projection derivation, ridge-through-SVD shrinkage
+σᵢ/(σᵢ²+λ), the λ→0⁺ → A†B limit, Bayes predictor under squared loss
+= E[Y\|X] via prob07 MMSE recall, and all worked numeric examples above (the
+tex sets up the running objects but computes none of them).

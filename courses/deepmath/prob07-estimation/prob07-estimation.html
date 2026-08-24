@@ -1,0 +1,1947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Learning Math 7 &mdash; Estimation: MLE, MAP &amp; Fundamental Limits</title>
+
+<!-- Design system (canonical; all decks link to reference/). -->
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/deck.css">
+
+<!-- KaTeX for math rendering. -->
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- SLIDE 1 — Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Deep Learning Math &middot; Lecture 7</div>
+  <h1>Estimation: MLE, MAP<br>&amp; Fundamental Limits</h1>
+  <div class="divider"></div>
+  <p class="subtitle">How to choose from data &mdash; and when no choice can work</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;&middot;&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Fall 2026</p>
+</div>
+
+<!-- SLIDE 2 — Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list" style="display:grid;grid-auto-flow:column;grid-template-rows:repeat(5,auto);grid-template-columns:1fr 1fr;gap:14px 44px">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Why Estimation?</div>
+        <div class="toc-sub">Training is estimation</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Conditional Expectation</div>
+        <div class="toc-sub">The tower property</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">The Estimation Problem</div>
+        <div class="toc-sub">Guess $y$ from $X = x$</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Maximum Likelihood</div>
+        <div class="toc-sub">Which $y$ makes $x$ likely?</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Maximum a Posteriori</div>
+        <div class="toc-sub">Priors change the answer</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Fano's Inequality</div>
+        <div class="toc-sub">When no estimator works</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">07</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Parameter Estimation</div>
+        <div class="toc-sub">MLE for $\theta$ &mdash; and CE loss</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">08</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Naive Bayes</div>
+        <div class="toc-sub">A classifier from counts</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">09</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Bias&ndash;Variance</div>
+        <div class="toc-sub">Two ways to be wrong</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">10</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">MMSE Estimation</div>
+        <div class="toc-sub">The conditional mean wins</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 01 — WHY ESTIMATION ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Why Estimation?</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Training is estimation</p>
+</div>
+
+<!-- Training is estimation -->
+<div class="slide">
+  <h2>Deep Learning, Estimation-Theory View</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Training</h3>
+      <p><strong>MLE</strong>: pick $\theta$ maximizing likelihood</p>
+      <p class="muted">cross-entropy loss, today &sect;07</p>
+    </div>
+    <div class="card">
+      <h3>Regularization</h3>
+      <p><strong>MAP</strong>: a prior on $\theta$</p>
+      <p class="muted">weight decay, today &sect;05</p>
+    </div>
+    <div class="card">
+      <h3>Fundamental limits</h3>
+      <p><strong>Fano</strong>: no estimator can win</p>
+      <p class="muted">error floor, today &sect;06</p>
+    </div>
+  </div>
+</div>
+
+<!-- prob06 open question -->
+<div class="slide">
+  <h2>The Question prob06 Left Open</h2>
+  <div class="divider"></div>
+  <p>Recall from <strong>prob06</strong>: any pick $\hat{h}$ generalizes,</p>
+  <div class="math-block" style="margin:8px 0">$$R(\hat{h}) \;\leq\; R(h^*) + 2\epsilon
+    \qquad \text{for the ERM pick } \hat{h}$$</div>
+  <ul>
+    <li>Certified: low train loss $\Rightarrow$ low test loss</li>
+    <li>Unanswered: <strong>which</strong> hypothesis to pick, and <strong>why</strong></li>
+  </ul>
+  <div class="highlight">
+    <p>Today's answer: pick by <strong>likelihood</strong> &mdash; and know when picking is hopeless.</p>
+  </div>
+</div>
+
+<!-- CE = MLE teaser -->
+<div class="slide">
+  <h2>A Claim to Prove Today</h2>
+  <div class="divider"></div>
+  <p>Recall from <strong>prob02</strong>: classifiers train on cross-entropy loss</p>
+  <div class="math-block" style="margin:8px 0">$$\mathcal{L}_{\text{CE}}
+    = \frac{1}{n} \sum_{i=1}^n \log \frac{1}{q_\theta(x_i)}$$</div>
+  <p><strong>Claim</strong>: minimizing $\mathcal{L}_{\text{CE}}$ <em>is</em> maximum likelihood estimation</p>
+  <p class="muted">Proved in &sect;07 &mdash; the prob02 loop closes</p>
+</div>
+
+<!-- Route map -->
+<div class="slide">
+  <h2>Today's Route</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:1040px;margin:0 auto;">
+  <svg viewBox="0 0 1040 300" style="width:100%">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#003876"/>
+      </marker>
+    </defs>
+    <!-- top row: tool -->
+    <rect x="30" y="30" width="260" height="76" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+    <text x="160" y="62" font-size="21" fill="#003876" text-anchor="middle" font-weight="700">conditional expectation</text>
+    <text x="160" y="88" font-size="17" fill="#5b6770" text-anchor="middle">tower property (&sect;02)</text>
+    <!-- main chain -->
+    <rect x="30" y="160" width="200" height="76" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/>
+    <text x="130" y="192" font-size="21" fill="#003876" text-anchor="middle" font-weight="700">MLE</text>
+    <text x="130" y="218" font-size="17" fill="#5b6770" text-anchor="middle">likelihood (&sect;03&ndash;04, 07)</text>
+    <rect x="290" y="160" width="200" height="76" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/>
+    <text x="390" y="192" font-size="21" fill="#003876" text-anchor="middle" font-weight="700">MAP</text>
+    <text x="390" y="218" font-size="17" fill="#5b6770" text-anchor="middle">+ prior (&sect;05, 08)</text>
+    <rect x="550" y="160" width="200" height="76" rx="10" fill="#fff" stroke="#c0392b" stroke-width="2"/>
+    <text x="650" y="192" font-size="21" fill="#c0392b" text-anchor="middle" font-weight="700">Fano</text>
+    <text x="650" y="218" font-size="17" fill="#5b6770" text-anchor="middle">error floor (&sect;06)</text>
+    <rect x="810" y="160" width="200" height="76" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/>
+    <text x="910" y="192" font-size="21" fill="#003876" text-anchor="middle" font-weight="700">MSE view</text>
+    <text x="910" y="218" font-size="17" fill="#5b6770" text-anchor="middle">bias&ndash;var, MMSE (&sect;09&ndash;10)</text>
+    <line x1="230" y1="198" x2="288" y2="198" stroke="#003876" stroke-width="2.5" marker-end="url(#arr)"/>
+    <line x1="490" y1="198" x2="548" y2="198" stroke="#003876" stroke-width="2.5" marker-end="url(#arr)"/>
+    <line x1="750" y1="198" x2="808" y2="198" stroke="#003876" stroke-width="2.5" marker-end="url(#arr)"/>
+    <!-- tool feeds MMSE -->
+    <path d="M 290 68 L 910 68 L 910 156" fill="none" stroke="#5b6770" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arr)"/>
+    <text x="600" y="56" font-size="16" fill="#5b6770" text-anchor="middle">the tool that proves the last theorem</text>
+  </svg>
+  </div>
+</div>
+
+<!-- Two estimation problems -->
+<div class="slide">
+  <h2>Two Faces of One Problem</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>Estimate a label $y$</h3>
+      <p>Given input $x$, guess the class</p>
+      <p class="muted">classification &mdash; &sect;03&ndash;06, &sect;08</p>
+    </div>
+    <div>
+      <h3>Estimate a parameter $\theta$</h3>
+      <p>Given samples $x_1, \dots, x_n$, fit the model</p>
+      <p class="muted">training &mdash; &sect;07, &sect;09</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Same recipe for both: <strong>maximize a likelihood</strong>.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 02 — CONDITIONAL EXPECTATION ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Conditional Expectation</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The tower property &mdash; today's workhorse</p>
+</div>
+
+<!-- Recall conditional pmf -->
+<div class="slide">
+  <h2>Recall &mdash; Conditional pmf (prob03)</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px">
+    <p><strong>Recall (prob03).</strong> $\;p_{X|Y}(x|y) = \dfrac{p_{X,Y}(x,y)}{p_Y(y)}$ &mdash; a valid pmf in $x$, for each fixed $y$</p>
+  </div>
+  <p>prob03's running table returns one more time:</p>
+  <table style="max-width:640px">
+    <thead><tr><th><span style="text-transform:none">$p_{X,Y}$</span></th><th><span style="text-transform:none">$y = 0$</span></th><th><span style="text-transform:none">$y = 1$</span></th><th><span style="text-transform:none">$p_X$</span></th></tr></thead>
+    <tbody>
+      <tr><td><strong>$x = 0$</strong></td><td>$1/4$</td><td>$1/4$</td><td>$1/2$</td></tr>
+      <tr><td><strong>$x = 1$</strong></td><td>$1/2$</td><td>$0$</td><td>$1/2$</td></tr>
+      <tr><td><strong>$p_Y$</strong></td><td>$3/4$</td><td>$1/4$</td><td>$1$</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Definition -->
+<div class="slide">
+  <h2>Definition &mdash; Conditional Expectation</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition.</h3>
+    <p>The conditional expectation of $X$ given $Y = y$:</p>
+    <div class="math-block" style="margin:8px 0">$$\mathbb{E}[X \mid Y = y]
+      = \sum_{x} x \, p_{X|Y}(x|y)
+      \qquad \text{or} \qquad
+      \mathbb{E}[X \mid Y = y] = \int x \, f_{X|Y}(x|y) \, dx$$</div>
+  </div>
+  <p>An ordinary expectation &mdash; under the <strong>conditional</strong> distribution</p>
+  <p class="muted">Deferred from prob05's LLN detour &mdash; paid back now</p>
+</div>
+
+<!-- Worked: conditional pmfs -->
+<div class="slide">
+  <h2>Worked &mdash; Conditional pmfs First</h2>
+  <div class="divider"></div>
+  <p>Condition the table on each value of $Y$:</p>
+  <div class="math-block" style="margin:8px 0">$$p_{X|Y}(1|0) = \frac{1/2}{3/4} = \frac{2}{3}, \qquad
+    p_{X|Y}(0|0) = \frac{1}{3}$$</div>
+  <div class="math-block" style="margin:8px 0">$$p_{X|Y}(1|1) = \frac{0}{1/4} = 0, \qquad
+    p_{X|Y}(0|1) = 1$$</div>
+  <ul>
+    <li>Seeing $Y = 0$: $X$ leans to $1$</li>
+    <li>Seeing $Y = 1$: $X$ is <strong>forced</strong> to $0$</li>
+  </ul>
+</div>
+
+<!-- Worked: conditional expectations -->
+<div class="slide">
+  <h2>Worked &mdash; Both Conditional Means</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\mathbb{E}[X \mid Y = 0]
+    = 0 \cdot \tfrac{1}{3} + 1 \cdot \tfrac{2}{3} = \tfrac{2}{3}
+    \qquad\qquad
+    \mathbb{E}[X \mid Y = 1]
+    = 0 \cdot 1 + 1 \cdot 0 = 0$$</div>
+  <ul>
+    <li>One number <strong>per value</strong> of $Y$</li>
+    <li>Compare: unconditional $\mathbb{E}[X] = \tfrac12$</li>
+  </ul>
+  <p class="muted">Observation changes the best guess &mdash; that is estimation</p>
+</div>
+
+<!-- E[X|Y] is a random variable -->
+<div class="slide">
+  <h2>$\mathbb{E}[X \mid Y]$ Is a Random Variable</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div>
+      <p>Write $g(y) = \mathbb{E}[X \mid Y = y]$: a <strong>function</strong> of $y$</p>
+      <p>Then $\mathbb{E}[X \mid Y] = g(Y)$: <strong>random</strong>, since $Y$ is</p>
+      <p class="muted">Before seeing $Y$: a machine awaiting input</p>
+    </div>
+    <div>
+      <svg viewBox="0 0 380 200" style="width:100%">
+        <defs>
+          <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#003876"/>
+          </marker>
+        </defs>
+        <circle cx="50" cy="60" r="26" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+        <text x="50" y="67" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">Y=0</text>
+        <circle cx="50" cy="150" r="26" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+        <text x="50" y="157" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">Y=1</text>
+        <line x1="80" y1="60" x2="240" y2="60" stroke="#003876" stroke-width="2.5" marker-end="url(#arr2)"/>
+        <line x1="80" y1="150" x2="240" y2="150" stroke="#003876" stroke-width="2.5" marker-end="url(#arr2)"/>
+        <text x="160" y="46" font-size="16" fill="#5b6770" text-anchor="middle">w.p. 3/4</text>
+        <text x="160" y="136" font-size="16" fill="#5b6770" text-anchor="middle">w.p. 1/4</text>
+        <rect x="248" y="36" width="110" height="48" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/>
+        <text x="303" y="66" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">2/3</text>
+        <rect x="248" y="126" width="110" height="48" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/>
+        <text x="303" y="156" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">0</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- pmf of E[X|Y] -->
+<div class="slide">
+  <h2>Its Own Distribution</h2>
+  <div class="divider"></div>
+  <p>On the running table, $\mathbb{E}[X \mid Y]$ takes two values:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}[X \mid Y] =
+    \begin{cases} 2/3 &amp; \text{w.p. } 3/4 \quad (Y = 0)\\[2pt]
+    0 &amp; \text{w.p. } 1/4 \quad (Y = 1)\end{cases}$$</div>
+  <p>A random variable &mdash; so it has an expectation of its own</p>
+  <p class="muted">What is $\mathbb{E}\big[\mathbb{E}[X \mid Y]\big]$? Next slide.</p>
+</div>
+
+<!-- Tower statement -->
+<div class="slide">
+  <h2>Theorem &mdash; The Tower Property</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 1 (tower property).</h3>
+    <p>For any random variables $X, Y$ (with $\mathbb{E}|X| \lt \infty$):</p>
+    <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ \mathbb{E}[X \mid Y] \big] = \mathbb{E}[X]$$</div>
+  </div>
+  <p class="muted">Also called the law of iterated expectations</p>
+</div>
+
+<!-- Tower proof -->
+<div class="slide">
+  <h2>Tower Property &mdash; Proof</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}\big[ \mathbb{E}[X \mid Y] \big]
+    &amp;\stackrel{(\text{LOTUS on } g(Y))}{=} \sum_y p_Y(y) \sum_x x \, p_{X|Y}(x|y) \\[4pt]
+    &amp;\stackrel{(\text{def. of } p_{X|Y})}{=} \sum_y \sum_x x \, p_{X,Y}(x,y)
+    \;\stackrel{(\text{swap sums})}{=}\; \sum_x x \, p_X(x) = \mathbb{E}[X] \qquad \blacksquare
+  \end{aligned}$$</div>
+  <ul>
+    <li>Recall LOTUS from <strong>prob01</strong>: $\mathbb{E}[g(Y)] = \sum_y g(y)\, p_Y(y)$</li>
+    <li>Marginalizing $y$ recovers $p_X$ &mdash; recall <strong>prob03</strong></li>
+  </ul>
+</div>
+
+<!-- Tower worked check -->
+<div class="slide">
+  <h2>Tower Check on the Table</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ \mathbb{E}[X \mid Y] \big]
+    = \underbrace{\tfrac{3}{4}}_{p_Y(0)} \cdot \underbrace{\tfrac{2}{3}}_{\mathbb{E}[X|Y=0]}
+    + \underbrace{\tfrac{1}{4}}_{p_Y(1)} \cdot \underbrace{0}_{\mathbb{E}[X|Y=1]}
+    = \tfrac{1}{2} = \mathbb{E}[X] \;\checkmark$$</div>
+  <ul>
+    <li>Scenario averages, weighted by scenario probability</li>
+    <li>No access to the joint table needed &mdash; only the pieces</li>
+  </ul>
+</div>
+
+<!-- Tower implication -->
+<div class="slide">
+  <h2>Why the Tower Matters Today</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Compute a hard $\mathbb{E}[\cdot]$ by <strong>conditioning first</strong></li>
+    <li>Inside $\mathbb{E}[\,\cdot \mid Y\,]$: anything depending only on $Y$ is a <strong>constant</strong></li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ h(Y) \, X \big]
+    = \mathbb{E}\big[ h(Y) \, \mathbb{E}[X \mid Y] \big]$$</div>
+  <div class="highlight">
+    <p>This one move kills the cross term in the <strong>MMSE proof</strong> (&sect;10).</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 03 — THE ESTIMATION PROBLEM ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>The Estimation Problem</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Guess $y$ from $X = x$</p>
+</div>
+
+<!-- Setup -->
+<div class="slide">
+  <h2>Setup &mdash; Sample and Label</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$X$: a <strong>sample</strong> (input) &mdash; image, height, sentence</li>
+    <li>$Y$: the <strong>label</strong> (output)</li>
+    <li>Known: the conditional model $p_{X|Y}(x|y)$</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$\text{observe } X = x
+    \quad\longrightarrow\quad \text{estimate } \hat{y}$$</div>
+  <p class="muted">Model known, label hidden &mdash; parameter estimation waits until &sect;07</p>
+</div>
+
+<!-- Heights example -->
+<div class="slide">
+  <h2>Running Example &mdash; Two Nationalities</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Example (heights).</h3>
+    <p>Nationality A: heights $\sim \mathcal{N}(170, 10^2)$ &nbsp;&middot;&nbsp; Nationality B: heights $\sim \mathcal{N}(180, 15^2)$</p>
+    <p>Label $Y = 0$ for A, $Y = 1$ for B; observation $X$ = height</p>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$X = 176 \;\text{cm}
+    \quad\longrightarrow\quad \hat{y} = \; ?$$</div>
+</div>
+
+<!-- Heights picture -->
+<div class="slide">
+  <h2>The Two Height Densities</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:980px;margin:0 auto;">
+  <svg viewBox="0 0 760 300" style="width:100%">
+    <line x1="30" y1="260" x2="730" y2="260" stroke="#5b6770" stroke-width="1.5"/>
+    <polyline points="30,260 44,260 58,260 72,259 86,259 100,258 114,256 128,253 142,248 156,240 170,230 184,217 198,199 212,178 226,153 240,127 254,101 268,77 282,57 296,45 310,41 324,45 338,57 352,77 366,101 380,127 394,153 408,178 422,199 436,217 450,230 464,240 478,248 492,253 506,256 520,258 534,259 548,259 562,260 576,260 590,260 604,260 618,260 632,260 646,260 660,260 674,260 688,260 702,260 716,260 730,260" fill="none" stroke="#003876" stroke-width="3"/>
+    <polyline points="30,259 44,259 58,259 72,258 86,257 100,256 114,254 128,252 142,249 156,245 170,240 184,234 198,227 212,219 226,210 240,200 254,189 268,177 282,165 296,154 310,143 324,133 338,125 352,119 366,115 380,114 394,115 408,119 422,125 436,133 450,143 464,154 478,165 492,177 506,189 520,200 534,210 548,219 562,227 576,234 590,240 604,245 618,249 632,252 646,254 660,256 674,257 688,258 702,259 716,259 730,259" fill="none" stroke="#c0392b" stroke-width="3"/>
+    <line x1="352" y1="260" x2="352" y2="50" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="7 5"/>
+    <text x="352" y="36" font-size="19" fill="#1a1a1a" text-anchor="middle" font-weight="700">x = 176</text>
+    <text x="240" y="90" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">A: N(170, 10&#178;)</text>
+    <text x="500" y="100" font-size="19" fill="#c0392b" text-anchor="middle" font-weight="700">B: N(180, 15&#178;)</text>
+    <text x="310" y="284" font-size="16" fill="#5b6770" text-anchor="middle">170</text>
+    <text x="380" y="284" font-size="16" fill="#5b6770" text-anchor="middle">180</text>
+    <text x="730" y="284" font-size="16" fill="#5b6770" text-anchor="end">height (cm)</text>
+  </svg>
+  </div>
+  <p class="muted">At $x = 176$: both densities positive &mdash; which wins?</p>
+</div>
+
+<!-- Two questions -->
+<div class="slide">
+  <h2>Two Questions, Two Estimators</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>Likelihood question</h3>
+      <p>"On which $y$ is $X = x$ <strong>most likely</strong>?"</p>
+      <p class="muted">compare $f_{X|Y}(x|y)$ over $y$ &mdash; MLE, &sect;04</p>
+    </div>
+    <div>
+      <h3>Posterior question</h3>
+      <p>"Given $X = x$, which $y$ is <strong>most probable</strong>?"</p>
+      <p class="muted">compare $p_{Y|X}(y|x)$ over $y$ &mdash; MAP, &sect;05</p>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:14px">Different questions &mdash; sometimes different answers (&sect;05)</p>
+</div>
+
+<!-- ===== SECTION 04 — MLE ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Maximum Likelihood</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Which $y$ makes the data most likely?</p>
+</div>
+
+<!-- MLE definition -->
+<div class="slide">
+  <h2>Definition &mdash; MLE</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (maximum likelihood estimator).</h3>
+    <div class="math-block" style="margin:8px 0">$$\hat{y}_{\text{MLE}}
+      = \operatorname*{argmax}_y \; f_{X|Y}(x|y)$$</div>
+    <p>Fix the observation $x$; rank the candidates $y$ by likelihood</p>
+  </div>
+  <ul>
+    <li>Needs only the conditional model $f_{X|Y}$ &mdash; <strong>no prior</strong> on $Y$</li>
+    <li>Discrete $X$: replace density $f$ by pmf $p$</li>
+  </ul>
+</div>
+
+<!-- MLE decision rule -->
+<div class="slide">
+  <h2>MLE on the Heights</h2>
+  <div class="divider"></div>
+  <p>Pick $\hat{y} = 0$ (nationality A) iff $f_{X|Y}(x|0) \gt f_{X|Y}(x|1)$:</p>
+  <div class="math-block" style="margin:8px 0">$$\frac{1}{\sqrt{2\pi \cdot 10^2}}
+    \exp\!\left( -\frac{(x-170)^2}{2 \cdot 10^2} \right)
+    \;\gt\;
+    \frac{1}{\sqrt{2\pi \cdot 15^2}}
+    \exp\!\left( -\frac{(x-180)^2}{2 \cdot 15^2} \right)$$</div>
+  <p class="muted">Two knowns fight: distance to the mean vs. spread</p>
+</div>
+
+<!-- MLE worked at 176 -->
+<div class="slide">
+  <h2>Worked &mdash; $x = 176$</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$f_{X|Y}(176 \mid 0)
+    = \tfrac{1}{10\sqrt{2\pi}} e^{-36/200} \approx 0.0333
+    \qquad
+    f_{X|Y}(176 \mid 1)
+    = \tfrac{1}{15\sqrt{2\pi}} e^{-16/450} \approx 0.0257$$</div>
+  <div class="math-block" style="margin:8px 0">$$0.0333 \;\gt\; 0.0257
+    \quad\Longrightarrow\quad \hat{y}_{\text{MLE}} = 0 \;\;(\text{A})$$</div>
+  <p class="muted">B's mean is closer ($4$ vs. $6$ cm) &mdash; but A's density is taller</p>
+</div>
+
+<!-- Decision regions -->
+<div class="slide">
+  <h2>MLE Decision Boundary</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:980px;margin:0 auto;">
+  <svg viewBox="0 0 760 300" style="width:100%">
+    <rect x="135" y="30" width="238" height="230" fill="#eef3f9"/>
+    <line x1="30" y1="260" x2="730" y2="260" stroke="#5b6770" stroke-width="1.5"/>
+    <polyline points="30,260 44,260 58,260 72,259 86,259 100,258 114,256 128,253 142,248 156,240 170,230 184,217 198,199 212,178 226,153 240,127 254,101 268,77 282,57 296,45 310,41 324,45 338,57 352,77 366,101 380,127 394,153 408,178 422,199 436,217 450,230 464,240 478,248 492,253 506,256 520,258 534,259 548,259 562,260 576,260 590,260 604,260 618,260 632,260 646,260 660,260 674,260 688,260 702,260 716,260 730,260" fill="none" stroke="#003876" stroke-width="3"/>
+    <polyline points="30,259 44,259 58,259 72,258 86,257 100,256 114,254 128,252 142,249 156,245 170,240 184,234 198,227 212,219 226,210 240,200 254,189 268,177 282,165 296,154 310,143 324,133 338,125 352,119 366,115 380,114 394,115 408,119 422,125 436,133 450,143 464,154 478,165 492,177 506,189 520,200 534,210 548,219 562,227 576,234 590,240 604,245 618,249 632,252 646,254 660,256 674,257 688,258 702,259 716,259 730,259" fill="none" stroke="#c0392b" stroke-width="3"/>
+    <line x1="373" y1="260" x2="373" y2="40" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="7 5"/>
+    <text x="373" y="30" font-size="18" fill="#1a1a1a" text-anchor="middle" font-weight="700">&#8776; 179</text>
+    <text x="258" y="290" font-size="18" fill="#003876" text-anchor="middle" font-weight="700">pick A</text>
+    <text x="520" y="290" font-size="18" fill="#c0392b" text-anchor="middle" font-weight="700">pick B</text>
+    <text x="86" y="290" font-size="18" fill="#c0392b" text-anchor="middle" font-weight="700">pick B</text>
+    <line x1="135" y1="260" x2="135" y2="40" stroke="#5b6770" stroke-width="1.5" stroke-dasharray="3 5"/>
+    <text x="135" y="30" font-size="16" fill="#5b6770" text-anchor="middle">&#8776; 145</text>
+  </svg>
+  </div>
+  <p class="muted">Unequal spreads: far tails belong to B &mdash; the wide curve wins extremes</p>
+</div>
+
+<!-- MLE worked at 185 -->
+<div class="slide">
+  <h2>Worked &mdash; $x = 185$</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$f_{X|Y}(185 \mid 0) \approx 0.0130
+    \qquad
+    f_{X|Y}(185 \mid 1) \approx 0.0252$$</div>
+  <div class="math-block" style="margin:8px 0">$$0.0130 \;\lt\; 0.0252
+    \quad\Longrightarrow\quad \hat{y}_{\text{MLE}} = 1 \;\;(\text{B})$$</div>
+  <p class="muted">Past the boundary $\approx 179$: the red curve is on top</p>
+</div>
+
+<!-- What MLE ignores -->
+<div class="slide">
+  <h2>What MLE Ignores</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>MLE never asks: how <strong>common</strong> is each nationality?</li>
+    <li>$99\%$ from A $\Rightarrow$ even $185$ cm is <em>probably from A</em></li>
+    <li>Base rates need a distribution on $Y$ &mdash; a <strong>prior</strong></li>
+  </ul>
+  <div class="highlight">
+    <p>Folding in the prior $p_Y$ gives the next estimator: <strong>MAP</strong>.</p>
+  </div>
+</div>
+<!-- ===== SECTION 05 — MAP ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Maximum a Posteriori</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Priors change the answer</p>
+</div>
+
+<!-- MAP definition -->
+<div class="slide">
+  <h2>Definition &mdash; MAP</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (maximum a posteriori estimator).</h3>
+    <div class="math-block" style="margin:8px 0">$$\hat{y}_{\text{MAP}}
+      = \operatorname*{argmax}_y \; p_{Y|X}(y|x)$$</div>
+    <p>Given $X = x$: rank candidates by <strong>posterior</strong> probability</p>
+  </div>
+  <ul>
+    <li>Extra requirement: the prior $p_Y(y)$ for all $y$</li>
+    <li>Continuous $Y$: replace pmf by density $f_{Y|X}$</li>
+  </ul>
+</div>
+
+<!-- Bayes rule -->
+<div class="slide">
+  <h2>From Model to Posterior &mdash; Bayes' Rule</h2>
+  <div class="divider"></div>
+  <p>We know $p_{X|Y}$, not $p_{Y|X}$ &mdash; flip with prob03's conditional pmf:</p>
+  <div class="math-block" style="margin:8px 0">$$p_{Y|X}(y|x)
+    = \frac{p_{X,Y}(x,y)}{p_X(x)}
+    = \frac{p_{X|Y}(x|y)\, p_Y(y)}{p_X(x)}$$</div>
+  <ul>
+    <li>Numerator: model $\times$ prior &mdash; both known</li>
+    <li>Denominator $p_X(x)$: what about it?</li>
+  </ul>
+</div>
+
+<!-- Drop the denominator -->
+<div class="slide">
+  <h2>$p_X(x)$ Does Not Matter</h2>
+  <div class="divider"></div>
+  <p>$p_X(x)$ is constant in $y$ &mdash; it cannot change the argmax:</p>
+  <div class="math-block" style="margin:8px 0">$$\hat{y}_{\text{MAP}}
+    = \operatorname*{argmax}_y \; p_{X|Y}(x|y)\, p_Y(y)$$</div>
+  <div class="highlight">
+    <p>MAP $=$ likelihood $\times$ prior. Uniform prior $\Rightarrow$ MAP $=$ <strong>MLE</strong>.</p>
+  </div>
+</div>
+
+<!-- Heights with prior -->
+<div class="slide">
+  <h2>Heights with a Prior</h2>
+  <div class="divider"></div>
+  <p>Suppose nationality A dominates: $p_Y(0) = \tfrac{9}{10}$, $\;p_Y(1) = \tfrac{1}{10}$</p>
+  <p>MAP picks $\hat{y} = 0$ iff</p>
+  <div class="math-block" style="margin:8px 0">$$\frac{1}{\sqrt{2\pi \cdot 10^2}}
+    e^{ -\frac{(x-170)^2}{2 \cdot 10^2} } \times \frac{9}{10}
+    \;\gt\;
+    \frac{1}{\sqrt{2\pi \cdot 15^2}}
+    e^{ -\frac{(x-180)^2}{2 \cdot 15^2} } \times \frac{1}{10}$$</div>
+  <p class="muted">Same densities as &sect;04 &mdash; each side rescaled by its prior</p>
+</div>
+
+<!-- MAP worked 176 -->
+<div class="slide">
+  <h2>Worked &mdash; $x = 176$, with Prior</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\underbrace{0.0333}_{f(176|0)} \times \tfrac{9}{10} \approx 0.0300
+    \qquad
+    \underbrace{0.0257}_{f(176|1)} \times \tfrac{1}{10} \approx 0.0026$$</div>
+  <div class="math-block" style="margin:8px 0">$$0.0300 \;\gt\; 0.0026
+    \quad\Longrightarrow\quad \hat{y}_{\text{MAP}} = 0 \;\;(\text{A})$$</div>
+  <p class="muted">Same verdict as MLE here &mdash; the prior only widened the margin</p>
+</div>
+
+<!-- MAP vs MLE disagree -->
+<div class="slide">
+  <h2>Worked &mdash; $x = 185$: They Disagree</h2>
+  <div class="divider"></div>
+  <table style="max-width:820px">
+    <thead><tr><th>Estimator</th><th>Score for A</th><th>Score for B</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td>MLE</td><td>$0.0130$</td><td>$\mathbf{0.0252}$</td><td><strong>B</strong></td></tr>
+      <tr><td>MAP $\left(\tfrac{9}{10}, \tfrac{1}{10}\right)$</td><td>$\mathbf{0.0117}$</td><td>$0.0025$</td><td><strong>A</strong></td></tr>
+    </tbody>
+  </table>
+  <p>A tall person &mdash; but tall people from A still outnumber people from B</p>
+  <p class="muted">Base rates flip a $2{:}1$ likelihood edge</p>
+</div>
+
+<!-- MAP picture -->
+<div class="slide">
+  <h2>The Prior Moves the Boundary</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:980px;margin:0 auto;">
+  <svg viewBox="0 0 760 300" style="width:100%">
+    <line x1="30" y1="260" x2="730" y2="260" stroke="#5b6770" stroke-width="1.5"/>
+    <polyline points="30,260 44,260 58,260 72,259 86,259 100,258 114,256 128,253 142,249 156,242 170,233 184,221 198,205 212,186 226,164 240,140 254,117 268,95 282,78 296,66 310,63 324,66 338,78 352,95 366,117 380,140 394,164 408,186 422,205 436,221 450,233 464,242 478,249 492,253 506,256 520,258 534,259 548,259 562,260 576,260 590,260 604,260 618,260 632,260 646,260 660,260 674,260 688,260 702,260 716,260 730,260" fill="none" stroke="#003876" stroke-width="3"/>
+    <polyline points="30,260 44,260 58,260 72,260 86,260 100,260 114,259 128,259 142,259 156,258 170,258 184,257 198,257 212,256 226,255 240,254 254,253 268,252 282,251 296,249 310,248 324,247 338,246 352,246 366,246 380,245 394,246 408,246 422,246 436,247 450,248 464,249 478,251 492,252 506,253 520,254 534,255 548,256 562,257 576,257 590,258 604,258 618,259 632,259 646,259 660,260 674,260 688,260 702,260 716,260 730,260" fill="none" stroke="#c0392b" stroke-width="3"/>
+    <line x1="373" y1="260" x2="373" y2="120" stroke="#5b6770" stroke-width="1.5" stroke-dasharray="3 5"/>
+    <text x="373" y="108" font-size="16" fill="#5b6770" text-anchor="middle">MLE &#8776; 179</text>
+    <line x1="484" y1="260" x2="484" y2="52" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="7 5"/>
+    <text x="484" y="40" font-size="18" fill="#1a1a1a" text-anchor="middle" font-weight="700">MAP &#8776; 195</text>
+    <text x="200" y="120" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">0.9 &#215; f(x|A)</text>
+    <text x="600" y="222" font-size="19" fill="#c0392b" text-anchor="middle" font-weight="700">0.1 &#215; f(x|B)</text>
+  </svg>
+  </div>
+  <p class="muted">A $9{:}1$ prior pushes the pick-B region $16$ cm to the right</p>
+</div>
+
+<!-- Bayes optimality statement -->
+<div class="slide">
+  <h2>Theorem &mdash; MAP Is Bayes Optimal</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 2 (Bayes optimality of MAP).</h3>
+    <p>Among <strong>all</strong> estimators $\hat{Y}(X)$, the MAP rule minimizes the probability of error:</p>
+    <div class="math-block" style="margin:8px 0">$$\hat{Y}_{\text{MAP}}(x) = \operatorname*{argmax}_y p_{Y|X}(y|x)
+      \;\;\text{minimizes}\;\; \Pr\big( \hat{Y}(X) \neq Y \big)$$</div>
+  </div>
+  <p class="muted">Not just reasonable &mdash; optimal for the $0/1$ error metric</p>
+</div>
+
+<!-- Bayes optimality proof 1 -->
+<div class="slide">
+  <h2>Proof &mdash; Score Any Estimator</h2>
+  <div class="divider"></div>
+  <p>Fix any rule $\hat{Y}(\cdot)$; condition on $X$ (tower property, Thm 1):</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\big( \hat{Y}(X) = Y \big)
+    = \mathbb{E}\Big[ \Pr\big( Y = \hat{Y}(X) \mid X \big) \Big]
+    = \sum_x p_X(x)\; p_{Y|X}\big( \hat{Y}(x) \mid x \big)$$</div>
+  <ul>
+    <li>Each $x$ contributes its posterior mass at the guessed label</li>
+    <li>Contributions are independent across $x$ &mdash; optimize pointwise</li>
+  </ul>
+</div>
+
+<!-- Bayes optimality proof 2 -->
+<div class="slide">
+  <h2>Proof &mdash; Maximize Each Term</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\Pr\big( \hat{Y}(X) = Y \big)
+    = \sum_x p_X(x)\, p_{Y|X}(\hat{Y}(x)|x)
+    \;\leq\; \sum_x p_X(x) \max_y p_{Y|X}(y|x)$$</div>
+  <ul>
+    <li>Equality iff $\hat{Y}(x) \in \operatorname*{argmax}_y p_{Y|X}(y|x)$ for every $x$ with $p_X(x) \gt 0$</li>
+    <li>That is exactly the MAP rule $\quad\blacksquare$</li>
+  </ul>
+</div>
+
+<!-- Regularization = MAP -->
+<div class="slide">
+  <h2>Implication &mdash; Regularization Is a Prior</h2>
+  <div class="divider"></div>
+  <p>Estimating a continuous parameter $\theta$: take logs of likelihood $\times$ prior</p>
+  <div class="math-block" style="margin:8px 0">$$\hat{\theta}_{\text{MAP}}
+    = \operatorname*{argmax}_\theta \; \Big[ \log f(x|\theta)
+    + \log f_\Theta(\theta) \Big]$$</div>
+  <ul>
+    <li>Gaussian prior $f_\Theta \propto e^{-\|\theta\|^2 / 2\tau^2}$: adds $-\tfrac{1}{2\tau^2}\|\theta\|^2$</li>
+    <li><strong>Weight decay</strong> = MAP with a Gaussian prior on the weights</li>
+  </ul>
+</div>
+
+<!-- ===== SECTION 06 — FANO ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Fano's Inequality</h1>
+  <div class="divider"></div>
+  <p class="subtitle">When no estimator can work</p>
+</div>
+
+<!-- Setup -->
+<div class="slide">
+  <h2>The Fundamental-Limit Question</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>True label $Y \in \mathcal{Y}$, input $X$ (say, an image)</li>
+    <li>Hard classification: $\hat{Y}(X) \in \mathcal{Y}$, a function of $X$</li>
+    <li>Error probability: $P_e = \Pr\big( Y \neq \hat{Y}(X) \big)$</li>
+  </ul>
+  <div class="highlight">
+    <p>MAP is the <strong>best</strong> rule (Thm 2) &mdash; but how good can the best be?</p>
+  </div>
+</div>
+
+<!-- Technique review 1 -->
+<div class="slide">
+  <h2>Technique Review 1 &mdash; Conditional Entropy</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px">
+    <p><strong>Recall (prob03).</strong> $\;H(Y|X) = \sum_x p_X(x)\, H(Y \mid X = x)$ &mdash; average leftover uncertainty in bits</p>
+  </div>
+  <ul>
+    <li>$H(Y|X) = 0$: $X$ pins $Y$ down &mdash; classification could be perfect</li>
+    <li>$H(Y|X)$ large: even knowing $X$, the label stays random</li>
+  </ul>
+  <p class="muted">Fano turns that leftover uncertainty into an error floor</p>
+</div>
+
+<!-- Technique review 2 -->
+<div class="slide">
+  <h2>Technique Review 2 &mdash; Chain Rule</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px">
+    <p><strong>Recall (prob03).</strong> $\;H(A, B) = H(A) + H(B|A)$ &mdash; in either order</p>
+  </div>
+  <p>Conditioning everything on a third variable $C$ preserves it:</p>
+  <div class="math-block" style="margin:8px 0">$$H(A, B \mid C) = H(A|C) + H(B|A, C)
+    = H(B|C) + H(A|B, C)$$</div>
+  <p class="muted">One joint uncertainty &mdash; two decomposition orders. Fano uses <strong>both</strong>.</p>
+</div>
+
+<!-- Technique review 3 -->
+<div class="slide">
+  <h2>Technique Review 3 &mdash; Two Entropy Bounds</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px">
+    <p><strong>Recall (prob01, Thm 3).</strong> $\;H(Z) \leq \log |\mathcal{Z}|$ &mdash; uniform is the ceiling</p>
+  </div>
+  <div class="card" style="padding:10px 16px">
+    <p><strong>Recall (prob03, from $I \geq 0$).</strong> $\;H(A|C) \leq H(A)$ &mdash; conditioning never hurts</p>
+  </div>
+  <ul>
+    <li>Binary $E$: $\;H(E) \leq \log 2 = 1$ bit</li>
+    <li>Determined given its condition: $\;H(A \mid A, C) = 0$</li>
+  </ul>
+</div>
+
+<!-- Technique review 4 -->
+<div class="slide">
+  <h2>Technique Review 4 &mdash; DPI, Entropy Form</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px">
+    <p><strong>Recall (prob03, DPI II).</strong> $\;I(Y; g(X)) \leq I(Y; X)$ &mdash; processing only forgets</p>
+  </div>
+  <p>Rewrite with $I(Y; \cdot) = H(Y) - H(Y|\cdot)$ and cancel $H(Y)$:</p>
+  <div class="math-block" style="margin:8px 0">$$H\big( Y \mid g(X) \big) \;\geq\; H(Y \mid X)$$</div>
+  <p class="muted">Any estimator $\hat{Y}(X)$ is such a $g$</p>
+</div>
+
+<!-- Fano statement -->
+<div class="slide">
+  <h2>Theorem &mdash; Fano's Inequality</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 3 (Fano's inequality).</h3>
+    <p>For any estimator $\hat{Y}(X) \in \mathcal{Y}$ of $Y \in \mathcal{Y}$:</p>
+    <div class="math-block" style="margin:8px 0">$$\Pr\big( Y \neq \hat{Y}(X) \big)
+      \;\geq\; \frac{H(Y|X) - 1}{\log |\mathcal{Y}|}$$</div>
+  </div>
+  <p class="muted">Any estimator &mdash; MAP, a neural network, anything computable from $X$</p>
+</div>
+
+<!-- Reading the bound -->
+<div class="slide">
+  <h2>Reading the Bound</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Numerator $H(Y|X) - 1$: leftover label uncertainty, minus one bit</li>
+    <li>Denominator $\log |\mathcal{Y}|$: bits to name a label outright</li>
+    <li>Depends only on the <strong>joint distribution</strong> $(X, Y)$ &mdash; not the model class</li>
+  </ul>
+  <div class="highlight">
+    <p>$H(Y|X) \gt 1$ bit $\;\Rightarrow\;$ a <strong>hard floor</strong> under every estimator's error.</p>
+  </div>
+</div>
+
+<!-- Proof overview -->
+<div class="slide">
+  <h2>Fano &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <p>Target: $\;H(Y|X) \leq 1 + P_e \log|\mathcal{Y}|$, then rearrange</p>
+  <ol>
+    <li>Introduce the <strong>error flag</strong> $E = \mathbf{1}\{\hat{Y}(X) \neq Y\}$</li>
+    <li>Expand $H(E, Y \mid \hat{Y})$ order 1: get $\geq H(Y|X)$ &nbsp;<em>(lower bound)</em></li>
+    <li>Expand $H(E, Y \mid \hat{Y})$ order 2: get $\leq 1 + P_e \log|\mathcal{Y}|$ &nbsp;<em>(upper bound)</em></li>
+    <li>Chain the two bounds; solve for $P_e$</li>
+  </ol>
+  <p class="muted">One quantity, two decompositions &mdash; the whole proof</p>
+</div>
+
+<!-- Step 1 -->
+<div class="slide">
+  <h2>Proof Step 1 &mdash; The Error Flag</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$E = \begin{cases}
+    1 &amp; \text{if } \hat{Y}(X) \neq Y \quad (\text{error})\\[2pt]
+    0 &amp; \text{if } \hat{Y}(X) = Y \quad (\text{correct})
+    \end{cases}$$</div>
+  <ul>
+    <li>Binary, with $p_E(1) = \Pr(Y \neq \hat{Y}(X)) = P_e$</li>
+    <li>$E$ is a <strong>function</strong> of the pair $(Y, \hat{Y})$ &mdash; used in Step 2</li>
+  </ul>
+  <p class="muted">The quantity to sandwich: $\;H(E, Y \mid \hat{Y})$</p>
+</div>
+
+<!-- Step 2 -->
+<div class="slide">
+  <h2>Proof Step 2 &mdash; First Expansion</h2>
+  <div class="divider"></div>
+  <p>Chain rule (review 2), order $Y$ then $E$, all given $\hat{Y}$:</p>
+  <div class="math-block" style="margin:8px 0">$$H(E, Y \mid \hat{Y})
+    \;\stackrel{(\text{chain})}{=}\; H(Y \mid \hat{Y}) + H(E \mid Y, \hat{Y})$$</div>
+  <p>Given both $Y$ and $\hat{Y}$, the flag $E$ is <strong>determined</strong>:</p>
+  <div class="math-block" style="margin:8px 0">$$H(E \mid Y, \hat{Y}) = 0
+    \quad\Longrightarrow\quad
+    H(E, Y \mid \hat{Y}) = H(Y \mid \hat{Y})$$</div>
+</div>
+
+<!-- Step 3 -->
+<div class="slide">
+  <h2>Proof Step 3 &mdash; DPI Enters</h2>
+  <div class="divider"></div>
+  <p>$\hat{Y}$ is a function of $X$ &mdash; review 4 applies with $g = \hat{Y}$:</p>
+  <div class="math-block" style="margin:8px 0">$$H(E, Y \mid \hat{Y})
+    = H(Y \mid \hat{Y})
+    \;\stackrel{(\text{DPI})}{\geq}\; H(Y \mid X)$$</div>
+  <ul>
+    <li><strong>Lower bound done</strong>: the guess can't know more than the input</li>
+    <li>This is where "any estimator" gets baked in</li>
+  </ul>
+</div>
+
+<!-- Step 4 -->
+<div class="slide">
+  <h2>Proof Step 4 &mdash; Second Expansion</h2>
+  <div class="divider"></div>
+  <p>Same quantity, chain rule in the <strong>other order</strong> ($E$ first):</p>
+  <div class="math-block" style="margin:8px 0">$$H(E, Y \mid \hat{Y})
+    \;\stackrel{(\text{chain})}{=}\; H(E \mid \hat{Y}) + H(Y \mid E, \hat{Y})$$</div>
+  <p>Now bound each of the two terms separately</p>
+  <p class="muted">Steps 5 and 6 &mdash; one term each</p>
+</div>
+
+<!-- Step 5 -->
+<div class="slide">
+  <h2>Proof Step 5 &mdash; The Flag Term</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$H(E \mid \hat{Y})
+    \;\stackrel{(\text{conditioning never hurts})}{\leq}\; H(E)
+    \;\stackrel{(\text{binary, prob01 Thm 3})}{\leq}\; \log 2 = 1 \text{ bit}$$</div>
+  <ul>
+    <li>A yes/no flag carries at most <strong>one bit</strong></li>
+    <li>This is the "$-1$" that ends up in Fano's numerator</li>
+  </ul>
+</div>
+
+<!-- Step 6 -->
+<div class="slide">
+  <h2>Proof Step 6 &mdash; The Label Term, Split by $E$</h2>
+  <div class="divider"></div>
+  <p>Conditional entropy averages over the condition (review 1):</p>
+  <div class="math-block" style="margin:8px 0">$$H(Y \mid E, \hat{Y})
+    = p_E(0)\, H(Y \mid E = 0, \hat{Y})
+    + p_E(1)\, H(Y \mid E = 1, \hat{Y})$$</div>
+  <ul>
+    <li>Two scenarios: guessed right, guessed wrong</li>
+    <li>Weights: $p_E(0) = 1 - P_e$, $\;p_E(1) = P_e$</li>
+  </ul>
+</div>
+
+<!-- Step 7 -->
+<div class="slide">
+  <h2>Proof Step 7 &mdash; Both Scenarios Bounded</h2>
+  <div class="divider"></div>
+  <p><strong>Correct</strong> ($E = 0$): $Y = \hat{Y}$, which is given &mdash; nothing left:</p>
+  <div class="math-block" style="margin:6px 0">$$H(Y \mid E = 0, \hat{Y}) = 0$$</div>
+  <p><strong>Error</strong> ($E = 1$): $Y$ is <em>some</em> label &mdash; at worst uniform (prob01 Thm 3):</p>
+  <div class="math-block" style="margin:6px 0">$$H(Y \mid E = 1, \hat{Y}) \;\leq\; \log |\mathcal{Y}|$$</div>
+</div>
+
+<!-- Step 8 -->
+<div class="slide">
+  <h2>Proof Step 8 &mdash; Assemble the Upper Bound</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    H(E, Y \mid \hat{Y})
+    &amp;\stackrel{(\text{step 4})}{=} H(E \mid \hat{Y}) + H(Y \mid E, \hat{Y}) \\[4pt]
+    &amp;\stackrel{(\text{steps 5--7})}{\leq} 1 + (1 - P_e) \cdot 0 + P_e \log |\mathcal{Y}|
+    \;=\; 1 + P_e \log |\mathcal{Y}|
+  \end{aligned}$$</div>
+  <p class="muted"><strong>Upper bound done</strong> &mdash; the sandwich is ready</p>
+</div>
+
+<!-- Step 9 -->
+<div class="slide">
+  <h2>Proof Step 9 &mdash; Close the Sandwich</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$H(Y|X)
+    \;\stackrel{(\text{step 3})}{\leq}\; H(E, Y \mid \hat{Y})
+    \;\stackrel{(\text{step 8})}{\leq}\; 1 + P_e \log |\mathcal{Y}|$$</div>
+  <p>Solve for $P_e$:</p>
+  <div class="math-block" style="margin:8px 0">$$P_e \;\geq\; \frac{H(Y|X) - 1}{\log |\mathcal{Y}|}
+    \qquad \blacksquare$$</div>
+</div>
+
+<!-- Proof summary -->
+<div class="slide">
+  <h2>Fano &mdash; Proof Summary</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    H(Y|X)
+    &amp;\;\stackrel{(\text{DPI})}{\leq}\; H(Y \mid \hat{Y})
+    \;\stackrel{(E \text{ free})}{=}\; H(E, Y \mid \hat{Y})
+    \;\stackrel{(\text{re-chain})}{=}\; H(E \mid \hat{Y}) + H(Y \mid E, \hat{Y}) \\[4pt]
+    &amp;\;\stackrel{(\text{bound both})}{\leq}\; 1 + P_e \log|\mathcal{Y}|
+  \end{aligned}$$</div>
+  <ul>
+    <li>The trick: attach a <strong>free</strong> error flag ($H(E|Y,\hat{Y}) = 0$), re-chain, pay $1$ bit</li>
+    <li>Weight carrier: DPI &mdash; $\hat{Y}$ knows at most $X$</li>
+  </ul>
+</div>
+
+<!-- Sandwich picture -->
+<div class="slide">
+  <h2>The Sandwich, as a Picture</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:960px;margin:0 auto;">
+  <svg viewBox="0 0 900 270" style="width:100%">
+    <rect x="300" y="20" width="300" height="60" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+    <text x="450" y="57" font-size="21" fill="#003876" text-anchor="middle" font-weight="700">H(E, Y | Y&#770;)</text>
+    <path d="M 380 84 L 200 170" fill="none" stroke="#003876" stroke-width="2.5"/>
+    <path d="M 520 84 L 700 170" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+    <rect x="40" y="175" width="320" height="60" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/>
+    <text x="200" y="205" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">= H(Y|Y&#770;) &#8805; H(Y|X)</text>
+    <text x="200" y="227" font-size="15" fill="#5b6770" text-anchor="middle">order Y first, then DPI</text>
+    <rect x="540" y="175" width="320" height="60" rx="10" fill="#fff" stroke="#c0392b" stroke-width="2"/>
+    <text x="700" y="205" font-size="19" fill="#c0392b" text-anchor="middle" font-weight="700">&#8804; 1 + P<tspan font-size="13" dy="4">e</tspan><tspan dy="-4"> log|Y|</tspan></text>
+    <text x="700" y="227" font-size="15" fill="#5b6770" text-anchor="middle">order E first, bound both terms</text>
+    <text x="450" y="150" font-size="18" fill="#5b6770" text-anchor="middle">one quantity, two expansions</text>
+    <text x="450" y="260" font-size="19" fill="#1a1a1a" text-anchor="middle" font-weight="700">H(Y|X) &#8804; 1 + P<tspan font-size="13" dy="4">e</tspan><tspan dy="-4"> log|Y|</tspan></text>
+  </svg>
+  </div>
+</div>
+
+<!-- Numeric example -->
+<div class="slide">
+  <h2>Worked &mdash; an 8-Class Problem</h2>
+  <div class="divider"></div>
+  <p>$|\mathcal{Y}| = 8$ classes ($\log 8 = 3$ bits); noisy labels leave $H(Y|X) = 2.5$ bits:</p>
+  <div class="math-block" style="margin:8px 0">$$P_e \;\geq\; \frac{2.5 - 1}{3} = 0.5$$</div>
+  <div class="highlight">
+    <p>No architecture, no dataset size, no training trick beats <strong>50% error</strong> here.</p>
+  </div>
+</div>
+
+<!-- Vacuous case -->
+<div class="slide">
+  <h2>When Fano Says Nothing</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$H(Y|X) \leq 1$ bit $\Rightarrow$ bound $\leq 0$: vacuous</li>
+    <li>Binary labels ($\log |\mathcal{Y}| = 1$): this form never bites</li>
+    <li>Sharper variants replace the "$1$" by $H(E)$ &mdash; same proof, keep $H(E)$ unbounded</li>
+  </ul>
+  <p class="muted">A lower bound tool &mdash; useful when uncertainty is genuinely large</p>
+</div>
+
+<!-- Implication -->
+<div class="slide">
+  <h2>What Fano Buys Us</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Label noise ceiling</strong>: mislabeled data inflates $H(Y|X)$ &mdash; accuracy caps</li>
+    <li><strong>Feature audit</strong>: features with small $I(X;Y)$ leave $H(Y|X)$ large &mdash; hopeless before training</li>
+    <li><strong>Theory workhorse</strong>: minimax lower bounds in learning theory start from Fano</li>
+  </ul>
+  <div class="highlight">
+    <p>&sect;04&ndash;05 gave the best estimators. Fano says even the best <strong>cannot cross this line</strong>.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 07 — PARAMETER ESTIMATION ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">07</div>
+  <h1>Parameter Estimation</h1>
+  <div class="divider"></div>
+  <p class="subtitle">MLE for $\theta$ &mdash; and why CE loss is MLE</p>
+</div>
+
+<!-- Setup -->
+<div class="slide">
+  <h2>New Target: a Parameter</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$X_1, \dots, X_n$ i.i.d. from $p_X$, parameterized by $\theta$</li>
+    <li>Observed: samples $x_1, \dots, x_n$ &mdash; estimate $\theta$</li>
+    <li>No distribution assumed on $\theta$ &mdash; so <strong>MLE</strong>, not MAP</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$\hat{\theta}_{\text{MLE}}
+    = \operatorname*{argmax}_\theta \; p_{X^n|\theta}(x^n|\theta)
+    = \operatorname*{argmax}_\theta \; \prod_{i=1}^n p_{X_i|\theta}(x_i|\theta)$$</div>
+</div>
+
+<!-- Log-likelihood -->
+<div class="slide">
+  <h2>Work with the Log-Likelihood</h2>
+  <div class="divider"></div>
+  <p>$\log$ is strictly increasing &mdash; same argmax, nicer algebra:</p>
+  <div class="math-block" style="margin:8px 0">$$\hat{\theta}_{\text{MLE}}
+    = \operatorname*{argmax}_\theta \; \sum_{i=1}^n \log p_{X_i|\theta}(x_i|\theta)$$</div>
+  <ul>
+    <li>Product of $n$ tiny numbers $\to$ sum of $n$ manageable ones</li>
+    <li>Sums differentiate term by term &mdash; calculus-ready</li>
+  </ul>
+</div>
+
+<!-- Bernoulli example setup -->
+<div class="slide">
+  <h2>Example &mdash; Bernoulli MLE</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Example (coin with unknown bias).</h3>
+    <p>$X_1, \dots, X_n$ i.i.d. Bernoulli, $\;p_X(1) = p$; parameter $\theta = p$</p>
+    <div class="math-block" style="margin:8px 0">$$p_X(x) = p^{x} (1-p)^{1-x}
+      \qquad \text{returns } p \text{ at } x{=}1, \;\; 1{-}p \text{ at } x{=}0$$</div>
+  </div>
+  <p class="muted">One formula for both outcomes &mdash; the exponent trick</p>
+</div>
+
+<!-- Bernoulli log-lik -->
+<div class="slide">
+  <h2>Bernoulli &mdash; Log-Likelihood</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \log p_{X^n}(x^n)
+    &amp;= \sum_{i=1}^n \log \Big[ p^{x_i} (1-p)^{1 - x_i} \Big] \\[4pt]
+    &amp;= \Big( \sum_{i=1}^n x_i \Big) \log p
+    + \Big( \sum_{i=1}^n (1 - x_i) \Big) \log (1-p)
+  \end{aligned}$$</div>
+  <p class="muted">Only two statistics survive: heads count, tails count</p>
+</div>
+
+<!-- Bernoulli derivative -->
+<div class="slide">
+  <h2>Bernoulli &mdash; Set the Derivative to Zero</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\frac{d}{dp}:\quad
+    \frac{1}{p} \sum_{i=1}^n x_i \;=\; \frac{1}{1-p} \sum_{i=1}^n (1 - x_i)$$</div>
+  <p>Cross-multiply and cancel:</p>
+  <div class="math-block" style="margin:8px 0">$$\hat{p} = \frac{1}{n} \sum_{i=1}^n x_i
+    \qquad \text{the empirical frequency of heads}$$</div>
+</div>
+
+<!-- Bernoulli sanity -->
+<div class="slide">
+  <h2>The Sanity Check That Matters</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>MLE $=$ count heads, divide by $n$ &mdash; what you would have guessed</li>
+    <li>Recall from <strong>prob05</strong> (LLN): $\hat{p} = \bar{X}_n \to p$ in probability</li>
+    <li>Recall from <strong>prob06</strong> (Hoeffding): $|\hat{p} - p| \leq \epsilon$ with $2e^{-2n\epsilon^2}$ confidence</li>
+  </ul>
+  <div class="highlight">
+    <p>The principled recipe and the obvious recipe <strong>agree</strong> &mdash; and concentration certifies it.</p>
+  </div>
+</div>
+
+<!-- Coin worked example -->
+<div class="slide">
+  <h2>Worked &mdash; 10 Flips, 7 Heads</h2>
+  <div class="divider"></div>
+  <p>MLE: $\hat{p} = 7/10 = 0.7$. Compare likelihoods $L(p) = p^7 (1-p)^3$:</p>
+  <table style="max-width:640px">
+    <thead><tr><th>candidate <span style="text-transform:none">$p$</span></th><th><span style="text-transform:none">$L(p)$</span></th></tr></thead>
+    <tbody>
+      <tr><td>$0.5$</td><td>$0.00098$</td></tr>
+      <tr><td>$\mathbf{0.7}$</td><td>$\mathbf{0.00222}$</td></tr>
+      <tr><td>$0.9$</td><td>$0.00048$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">The data is $2.3\times$ likelier under $0.7$ than under a fair coin</p>
+</div>
+
+<!-- Log-lik curve -->
+<div class="slide">
+  <h2>The Log-Likelihood Curve</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:900px;margin:0 auto;">
+  <svg viewBox="0 0 760 290" style="width:100%">
+    <line x1="40" y1="260" x2="720" y2="260" stroke="#5b6770" stroke-width="1.5"/>
+    <line x1="40" y1="260" x2="40" y2="30" stroke="#5b6770" stroke-width="1.5"/>
+    <polyline points="97,259 111,234 125,213 139,194 153,179 168,165 182,152 196,141 210,131 224,122 238,113 252,106 267,99 281,92 295,86 309,81 323,76 338,71 352,67 366,63 380,60 394,56 408,54 423,51 437,49 451,47 465,45 479,44 493,43 508,42 522,42 536,42 550,43 564,44 578,46 593,48 607,51 621,55 635,60 649,66 663,75 678,85 692,100 706,123 720,163" fill="none" stroke="#003876" stroke-width="3"/>
+    <line x1="522" y1="260" x2="522" y2="42" stroke="#c0392b" stroke-width="2" stroke-dasharray="7 5"/>
+    <circle cx="522" cy="42" r="6" fill="#c0392b"/>
+    <text x="522" y="284" font-size="17" fill="#c0392b" text-anchor="middle" font-weight="700">MLE: p = 0.7</text>
+    <text x="380" y="284" font-size="16" fill="#5b6770" text-anchor="middle">0.5</text>
+    <text x="60" y="45" font-size="17" fill="#5b6770">log L(p) = 7 log p + 3 log(1&#8722;p)</text>
+    <text x="40" y="284" font-size="16" fill="#5b6770" text-anchor="middle">0</text>
+    <text x="720" y="284" font-size="16" fill="#5b6770" text-anchor="middle">1</text>
+  </svg>
+  </div>
+  <p class="muted">Concave in $p$ &mdash; the zero-derivative point is the unique max</p>
+</div>
+
+<!-- Gaussian example setup -->
+<div class="slide">
+  <h2>Example &mdash; Gaussian MLE</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Example (Gaussian samples).</h3>
+    <p>$X_1, \dots, X_n$ i.i.d. $\mathcal{N}(\mu, \sigma^2)$; parameter $\theta = (\mu, \sigma^2)$</p>
+    <div class="math-block" style="margin:8px 0">$$\log f_{X^n}(x^n)
+      = \sum_{i=1}^n \left[ -\frac{(x_i - \mu)^2}{2\sigma^2}
+      - \frac{1}{2} \log 2\pi \sigma^2 \right]$$</div>
+  </div>
+  <p class="muted">Two unknowns &mdash; one derivative each</p>
+</div>
+
+<!-- Gaussian mu -->
+<div class="slide">
+  <h2>Gaussian &mdash; Solve for $\mu$</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\frac{\partial}{\partial \mu}:\quad
+    \sum_{i=1}^n \frac{x_i - \mu}{\sigma^2} = 0
+    \quad\Longrightarrow\quad
+    \hat{\mu} = \frac{1}{n} \sum_{i=1}^n x_i$$</div>
+  <ul>
+    <li>The sample mean again &mdash; $\sigma^2$ cancels entirely</li>
+    <li>Squared error's minimizer is the average</li>
+  </ul>
+</div>
+
+<!-- Gaussian sigma -->
+<div class="slide">
+  <h2>Gaussian &mdash; Solve for $\sigma^2$</h2>
+  <div class="divider"></div>
+  <p>Treat $t = \sigma^2$ as the variable:</p>
+  <div class="math-block" style="margin:8px 0">$$\frac{\partial}{\partial t}:\quad
+    \sum_{i=1}^n \frac{(x_i - \mu)^2}{2 t^2} = \frac{n}{2t}
+    \quad\Longrightarrow\quad
+    \widehat{\sigma^2} = \frac{1}{n} \sum_{i=1}^n (x_i - \hat{\mu})^2$$</div>
+  <ul>
+    <li>Average squared deviation from the fitted mean</li>
+    <li>Substituting $t$ turns a messy derivative into one line</li>
+  </ul>
+</div>
+
+<!-- CE = MLE 1 -->
+<div class="slide">
+  <h2>The Promised Proof &mdash; CE Loss Is MLE</h2>
+  <div class="divider"></div>
+  <p>Model $q_\theta$, samples $x_1, \dots, x_n$; divide the log-likelihood by $n$:</p>
+  <div class="math-block" style="margin:8px 0">$$\frac{1}{n} \sum_{i=1}^n \log \frac{1}{q_\theta(x_i)}
+    = \sum_{x} \hat{p}_n(x) \log \frac{1}{q_\theta(x)}
+    = H(\hat{p}_n, q_\theta)$$</div>
+  <ul>
+    <li>$\hat{p}_n$: empirical distribution &mdash; the fraction of samples at each $x$</li>
+    <li>Right side: <strong>cross-entropy</strong> $H(P, Q)$, exactly as in prob02</li>
+  </ul>
+</div>
+
+<!-- CE = MLE 2 -->
+<div class="slide">
+  <h2>CE Loss Is MLE &mdash; via prob02</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px">
+    <p><strong>Recall (prob02, Thm 6).</strong> $\;H(P, Q) = H(P) + D(P \,\|\, Q)$</p>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$\operatorname*{argmax}_\theta \; \text{log-likelihood}
+    = \operatorname*{argmin}_\theta \; H(\hat{p}_n, q_\theta)
+    = \operatorname*{argmin}_\theta \; D(\hat{p}_n \,\|\, q_\theta)$$</div>
+  <p class="muted">$H(\hat{p}_n)$ is constant in $\theta$ &mdash; only the KL term moves</p>
+</div>
+
+<!-- CE = MLE implication -->
+<div class="slide">
+  <h2>One Identity, Three Names</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\text{maximize likelihood}
+    \;\iff\; \text{minimize CE loss}
+    \;\iff\; \text{minimize } D(\hat{p}_n \| q_\theta)$$</div>
+  <ul>
+    <li>Every CE training run <strong>is</strong> maximum likelihood estimation</li>
+    <li>Equivalently: a <strong>KL projection</strong> of data onto the model class</li>
+  </ul>
+  <div class="highlight">
+    <p>prob02 defined the loss; prob07 reveals it was <strong>MLE all along</strong>.</p>
+  </div>
+</div>
+<!-- ===== SECTION 08 — NAIVE BAYES ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">08</div>
+  <h1>Naive Bayes</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A working classifier from counts alone</p>
+</div>
+
+<!-- Why a model assumption -->
+<div class="slide">
+  <h2>MAP Needs a Model &mdash; Models Are Huge</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Input $X^n = (X_1, \dots, X_n)$: $n$ binary features; label $Y$</li>
+    <li>Classification $=$ estimate $Y$ from $X^n$ &mdash; &sect;04&ndash;05 recipes apply</li>
+    <li>But a full model $p_{X^n|Y}$ has $\sim 2^n$ parameters <strong>per class</strong></li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$n = 49 \text{ pixels}
+    \quad\Longrightarrow\quad 2^{49} \approx 5.6 \times 10^{14} \text{ entries each}$$</div>
+  <p class="muted">Nobody has that table &mdash; an assumption must cut it down</p>
+</div>
+
+<!-- NB assumption -->
+<div class="slide">
+  <h2>The Naive Bayes Assumption</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Assumption (conditional independence).</h3>
+    <p>Given the label, the features are independent:</p>
+    <div class="math-block" style="margin:8px 0">$$\log p_{X^n|Y}(x^n|y)
+      = \sum_{i=1}^n \log p_{X_i|Y}(x_i|y)$$</div>
+  </div>
+  <ul>
+    <li>$2^n$ parameters $\to$ $n$ parameters per class</li>
+    <li>"Naive": over-simplified &mdash; yet works reasonably in simple cases</li>
+  </ul>
+</div>
+
+<!-- Spam example -->
+<div class="slide">
+  <h2>Example &mdash; Spam Filter</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div>
+      <p>$X_i = 1$ iff the mail contains dictionary word $i$</p>
+      <p>$Y = 1$: spam &nbsp;&middot;&nbsp; $Y = 0$: ham</p>
+      <p class="muted">Assumption: given spam, word occurrences are independent</p>
+    </div>
+    <div>
+      <svg viewBox="0 0 380 210" style="width:100%">
+        <rect x="20" y="20" width="180" height="170" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/>
+        <line x1="36" y1="50" x2="184" y2="50" stroke="#5b6770" stroke-width="2"/>
+        <line x1="36" y1="76" x2="160" y2="76" stroke="#c8d3e0" stroke-width="2"/>
+        <line x1="36" y1="98" x2="184" y2="98" stroke="#c8d3e0" stroke-width="2"/>
+        <line x1="36" y1="120" x2="150" y2="120" stroke="#c8d3e0" stroke-width="2"/>
+        <line x1="36" y1="142" x2="176" y2="142" stroke="#c8d3e0" stroke-width="2"/>
+        <line x1="36" y1="164" x2="120" y2="164" stroke="#c8d3e0" stroke-width="2"/>
+        <text x="110" y="42" font-size="15" fill="#003876" text-anchor="middle" font-weight="700">mail</text>
+        <rect x="240" y="30" width="120" height="40" rx="8" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+        <text x="300" y="56" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">free? x<tspan font-size="11" dy="4">1</tspan><tspan dy="-4">=1</tspan></text>
+        <rect x="240" y="85" width="120" height="40" rx="8" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+        <text x="300" y="111" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">meeting? x<tspan font-size="11" dy="4">2</tspan><tspan dy="-4">=0</tspan></text>
+        <rect x="240" y="140" width="120" height="40" rx="8" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+        <text x="300" y="166" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">winner? x<tspan font-size="11" dy="4">3</tspan><tspan dy="-4">=1</tspan></text>
+        <line x1="200" y1="60" x2="238" y2="50" stroke="#5b6770" stroke-width="2"/>
+        <line x1="200" y1="105" x2="238" y2="105" stroke="#5b6770" stroke-width="2"/>
+        <line x1="200" y1="150" x2="238" y2="160" stroke="#5b6770" stroke-width="2"/>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- MNIST example -->
+<div class="slide">
+  <h2>Example &mdash; Binarized MNIST</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;align-items:start">
+    <img src="../figs/mnist.png" alt="MNIST digits" style="max-height:340px">
+    <div>
+      <ul>
+        <li>Binarize to $7 \times 7$: each pixel $X_i \in \{0, 1\}$</li>
+        <li>Naive Bayes: pixels independent <strong>given the digit</strong></li>
+        <li>Clearly false &mdash; strokes are correlated &mdash; yet usable</li>
+      </ul>
+      <p class="muted">$49$ Bernoulli parameters per digit class, not $2^{49}$</p>
+    </div>
+  </div>
+</div>
+
+<!-- The classifier -->
+<div class="slide">
+  <h2>The Naive Bayes Classifier</h2>
+  <div class="divider"></div>
+  <p>MLE label (&sect;04), under the factorized model:</p>
+  <div class="math-block" style="margin:8px 0">$$\hat{y}_{\text{MLE}}
+    = \operatorname*{argmax}_y \sum_{i=1}^n \log p_{X_i|Y}(x_i|y)$$</div>
+  <p>Spam filter: each $p_{X_i|Y}(\cdot|y)$ is Bernoulli with parameter $p_{i|y}$</p>
+  <p class="muted">Still missing: where do the $p_{i|y}$ come from?</p>
+</div>
+
+<!-- Parameters by counting -->
+<div class="slide">
+  <h2>Fit the Parameters &mdash; by Counting</h2>
+  <div class="divider"></div>
+  <p>Training set $\{(\mathbf{x}^{(1)}, y^{(1)}), \dots, (\mathbf{x}^{(N)}, y^{(N)})\}$; MLE per parameter (&sect;07, Bernoulli):</p>
+  <div class="math-block" style="margin:8px 0">$$p_{i|y=1}
+    = \frac{\sum_{j=1}^N \mathbf{1}\{\mathbf{x}^{(j)}_i = 1 \text{ and } y^{(j)} = 1\}}
+    {\sum_{j=1}^N \mathbf{1}\{y^{(j)} = 1\}}
+    \qquad \text{(same with } y = 0\text{)}$$</div>
+  <ul>
+    <li>"Among spam mails, what fraction contains word $i$?"</li>
+    <li>&sect;07's Bernoulli MLE, once per word, once per class</li>
+  </ul>
+</div>
+
+<!-- Prior by counting -->
+<div class="slide">
+  <h2>Fit the Prior Too</h2>
+  <div class="divider"></div>
+  <p>$Y$ itself is Bernoulli &mdash; one more count gives the MAP ingredient:</p>
+  <div class="math-block" style="margin:8px 0">$$p_y = \Pr(Y = 1)
+    \;\approx\; \frac{1}{N} \sum_{j=1}^N \mathbf{1}\{y^{(j)} = 1\}$$</div>
+  <ul>
+    <li>The fraction of spam in the training set</li>
+    <li>Everything &sect;05 needs is now estimated from data</li>
+  </ul>
+</div>
+
+<!-- MAP posterior -->
+<div class="slide">
+  <h2>MAP with the Fitted Model</h2>
+  <div class="divider"></div>
+  <p>$\hat{y}_{\text{MAP}} = \operatorname*{argmax}_y p_{Y|X^n}(y|x^n)$, where Bayes' rule gives</p>
+  <div class="math-block" style="margin:8px 0">$$p_{Y|X^n}(1|x^n)
+    = \frac{\prod_i p_{X_i|Y}(x_i|1) \; p_Y(1)}
+    {\prod_i p_{X_i|Y}(x_i|0)\, p_Y(0) + \prod_i p_{X_i|Y}(x_i|1)\, p_Y(1)}$$</div>
+  <p class="muted">Every factor: an &sect;07-style count from the training set</p>
+</div>
+
+<!-- Tiny table -->
+<div class="slide">
+  <h2>Worked &mdash; a 10-Mail Training Set</h2>
+  <div class="divider"></div>
+  <p>$N = 10$: &nbsp;$4$ spam, $6$ ham &nbsp;$\Rightarrow$&nbsp; $p_Y(1) = 2/5$</p>
+  <table style="max-width:760px">
+    <thead><tr><th>word</th><th>in spam (of 4)</th><th>in ham (of 6)</th><th><span style="text-transform:none">$p_{i|1}$</span></th><th><span style="text-transform:none">$p_{i|0}$</span></th></tr></thead>
+    <tbody>
+      <tr><td>free</td><td>$3$</td><td>$1$</td><td>$3/4$</td><td>$1/6$</td></tr>
+      <tr><td>meeting</td><td>$1$</td><td>$4$</td><td>$1/4$</td><td>$2/3$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">Six counts &mdash; the whole classifier</p>
+</div>
+
+<!-- Tiny table posterior -->
+<div class="slide">
+  <h2>Worked &mdash; Classify a New Mail</h2>
+  <div class="divider"></div>
+  <p>New mail: contains "free", no "meeting" &mdash; $x = (1, 0)$:</p>
+  <div class="math-block" style="margin:8px 0">$$\text{spam: } \tfrac{3}{4} \cdot \tfrac{3}{4} \cdot \tfrac{2}{5} = 0.225
+    \qquad
+    \text{ham: } \tfrac{1}{6} \cdot \tfrac{1}{3} \cdot \tfrac{3}{5} \approx 0.033$$</div>
+  <div class="math-block" style="margin:8px 0">$$p_{Y|X^2}(1 \mid 1, 0)
+    = \frac{0.225}{0.225 + 0.033} \approx 0.87
+    \quad\Longrightarrow\quad \hat{y} = \text{spam}$$</div>
+</div>
+
+<!-- Zero count problem -->
+<div class="slide">
+  <h2>The Zero-Count Failure</h2>
+  <div class="divider"></div>
+  <p>Add the word "winner": in $2$ of $4$ spam, $0$ of $6$ ham</p>
+  <div class="math-block" style="margin:8px 0">$$p_{\text{winner}|0} = \frac{0}{6} = 0
+    \quad\Longrightarrow\quad
+    \prod_i p_{X_i|Y}(x_i|0) = 0 \;\;\text{for any mail with "winner"}$$</div>
+  <ul>
+    <li>One unseen combination <strong>vetoes</strong> the entire class</li>
+    <li>Rare words guarantee this happens in practice</li>
+  </ul>
+</div>
+
+<!-- Laplace smoothing -->
+<div class="slide">
+  <h2>Laplace Smoothing</h2>
+  <div class="divider"></div>
+  <p>Start every count from $1$ instead of $0$:</p>
+  <div class="math-block" style="margin:8px 0">$$p_{i|y=1}
+    = \frac{1 + \sum_j \mathbf{1}\{\mathbf{x}^{(j)}_i = 1 \text{ and } y^{(j)} = 1\}}
+    {2 + \sum_j \mathbf{1}\{y^{(j)} = 1\}}
+    \qquad \text{(same with } y = 0\text{)}$$</div>
+  <ul>
+    <li>Pretend one extra mail with the word, one without</li>
+    <li>Estimates pulled slightly toward $\tfrac12$; zeros impossible</li>
+  </ul>
+</div>
+
+<!-- Smoothing worked -->
+<div class="slide">
+  <h2>Worked &mdash; Smoothing the Table</h2>
+  <div class="divider"></div>
+  <table style="max-width:760px">
+    <thead><tr><th>word</th><th>MLE <span style="text-transform:none">$p_{i|0}$</span></th><th>smoothed <span style="text-transform:none">$p_{i|0}$</span></th></tr></thead>
+    <tbody>
+      <tr><td>free ($1$ of $6$)</td><td>$1/6 \approx 0.17$</td><td>$2/8 = 0.25$</td></tr>
+      <tr><td>meeting ($4$ of $6$)</td><td>$2/3 \approx 0.67$</td><td>$5/8 \approx 0.63$</td></tr>
+      <tr><td>winner ($0$ of $6$)</td><td>$0$ &mdash; veto</td><td>$1/8 = 0.125$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">The veto becomes a strong-but-finite vote &mdash; evidence can now outweigh it</p>
+</div>
+
+<!-- NB implication -->
+<div class="slide">
+  <h2>Naive Bayes &mdash; What to Take Away</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Whole pipeline $=$ today's theory: <strong>&sect;07</strong> fits, <strong>&sect;05</strong> classifies</li>
+    <li>Cost: linear in $n$ &mdash; counts, no gradient descent</li>
+    <li>Wrong-but-useful model: independence is false, predictions still land</li>
+  </ul>
+  <div class="highlight">
+    <p>Smoothing quietly <strong>biased</strong> the estimate to reduce wild variance &mdash; &sect;09 makes that trade precise.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 09 — BIAS-VARIANCE ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">09</div>
+  <h1>Bias&ndash;Variance</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Two ways an estimator can be wrong</p>
+</div>
+
+<!-- Estimator is an RV -->
+<div class="slide">
+  <h2>An Estimator Is a Random Variable</h2>
+  <div class="divider"></div>
+  <p>Sample $X_1, \dots, X_n$; estimator of a real parameter $\theta \in \Omega \subset \mathbb{R}$:</p>
+  <div class="math-block" style="margin:8px 0">$$\hat{\theta}_n \equiv \hat{\theta}(X_1, \dots, X_n)$$</div>
+  <ul>
+    <li>Random inputs $\Rightarrow$ random output &mdash; $\hat{\theta}_n$ has a distribution</li>
+    <li>That distribution depends on the <strong>true</strong> $\theta$: $\;\hat{\theta}_n \equiv \hat{\theta}(X_1, \dots, X_n; \theta)$</li>
+  </ul>
+  <p class="muted">New dataset, new estimate &mdash; quality must be judged on average</p>
+</div>
+
+<!-- Bias def -->
+<div class="slide">
+  <h2>Definition &mdash; Bias</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (bias).</h3>
+    <div class="math-block" style="margin:8px 0">$$\text{Bias}(\hat{\theta}_n)
+      = \mathbb{E}\big[ \hat{\theta}_n \big] - \theta$$</div>
+    <p><strong>Unbiased</strong>: $\mathbb{E}[\hat{\theta}_n] = \theta$ for all possible $\theta$</p>
+  </div>
+  <p class="muted">Systematic error &mdash; where the estimates <em>center</em>, vs. the truth</p>
+</div>
+
+<!-- Variance def -->
+<div class="slide">
+  <h2>Definition &mdash; Variance of an Estimator</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (variance).</h3>
+    <div class="math-block" style="margin:8px 0">$$\text{Var}(\hat{\theta}_n)
+      = \mathbb{E}\Big[ \big( \hat{\theta}_n - \mathbb{E}[\hat{\theta}_n] \big)^2 \Big]$$</div>
+  </div>
+  <ul>
+    <li>Scatter around its <strong>own</strong> center &mdash; not around $\theta$</li>
+    <li>Recall from <strong>prob01</strong>: same variance, new random variable</li>
+  </ul>
+</div>
+
+<!-- MSE def -->
+<div class="slide">
+  <h2>Definition &mdash; Mean Squared Error</h2>
+  <div class="divider"></div>
+  <p>Judge by the squared-error ($L_2$) loss $(\hat{\theta}_n - \theta)^2$; its risk:</p>
+  <div class="math-block" style="margin:8px 0">$$\text{MSE}(\hat{\theta}_n)
+    = \mathbb{E}\Big[ \big( \hat{\theta}_n - \theta \big)^2 \Big]$$</div>
+  <ul>
+    <li>Distance to the <strong>truth</strong> &mdash; bias and scatter both hurt</li>
+    <li>How exactly? The next theorem answers</li>
+  </ul>
+</div>
+
+<!-- Technique review -->
+<div class="slide">
+  <h2>Technique Review &mdash; Add and Subtract</h2>
+  <div class="divider"></div>
+  <p>To relate "distance to truth" and "distance to own center": insert the center</p>
+  <div class="math-block" style="margin:8px 0">$$\hat{\theta}_n - \theta
+    = \big( \hat{\theta}_n - \mathbb{E}[\hat{\theta}_n] \big)
+    + \big( \mathbb{E}[\hat{\theta}_n] - \theta \big)$$</div>
+  <ul>
+    <li>Recall the move from <strong>prob05</strong>: completing the square in the Gaussian MGF</li>
+    <li>Hope: the cross term dies &mdash; it will</li>
+  </ul>
+</div>
+
+<!-- BV theorem -->
+<div class="slide">
+  <h2>Theorem &mdash; Bias&ndash;Variance Decomposition</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 4 (bias&ndash;variance decomposition).</h3>
+    <div class="math-block" style="margin:8px 0">$$\mathbb{E}\Big[ \big( \hat{\theta}_n - \theta \big)^2 \Big]
+      = \text{Bias}(\hat{\theta}_n)^2 + \text{Var}(\hat{\theta}_n)$$</div>
+  </div>
+  <ul>
+    <li>Exact identity &mdash; no inequality, no assumption beyond finite variance</li>
+    <li>Unbiased estimator: MSE $=$ variance</li>
+  </ul>
+</div>
+
+<!-- BV proof 1 -->
+<div class="slide">
+  <h2>Proof &mdash; Insert the Center, Expand</h2>
+  <div class="divider"></div>
+  <p>Write $m = \mathbb{E}[\hat{\theta}_n]$; add and subtract it, square out:</p>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}\big[ (\hat{\theta}_n - \theta)^2 \big]
+    &amp;= \mathbb{E}\Big[ \big( (\hat{\theta}_n - m) + (m - \theta) \big)^2 \Big] \\[4pt]
+    &amp;= \underbrace{\mathbb{E}\big[ (\hat{\theta}_n - m)^2 \big]}_{\text{Var}}
+    + 2\, \mathbb{E}\big[ (\hat{\theta}_n - m)(m - \theta) \big]
+    + \underbrace{(m - \theta)^2}_{\text{Bias}^2}
+  \end{aligned}$$</div>
+  <p class="muted">Last term: constant &mdash; the expectation does nothing to it</p>
+</div>
+
+<!-- BV proof 2 -->
+<div class="slide">
+  <h2>Proof &mdash; The Cross Term Dies</h2>
+  <div class="divider"></div>
+  <p>$(m - \theta)$ is a constant &mdash; pull it out of the expectation:</p>
+  <div class="math-block" style="margin:8px 0">$$2 (m - \theta)\, \mathbb{E}\big[ \hat{\theta}_n - m \big]
+    = 2 (m - \theta) \big( \mathbb{E}[\hat{\theta}_n] - m \big) = 0$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Longrightarrow\quad
+    \text{MSE} = \text{Bias}^2 + \text{Var} \qquad \blacksquare$$</div>
+  <p class="muted">Deviations from your own mean average to zero &mdash; by definition of $m$</p>
+</div>
+
+<!-- Dartboard -->
+<div class="slide">
+  <h2>The Dartboard Picture</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:900px;margin:0 auto;">
+  <svg viewBox="0 0 760 300" style="width:100%">
+    <g>
+      <circle cx="190" cy="120" r="70" fill="none" stroke="#c8d3e0" stroke-width="2"/>
+      <circle cx="190" cy="120" r="40" fill="none" stroke="#c8d3e0" stroke-width="2"/>
+      <circle cx="190" cy="120" r="6" fill="#1a1a1a"/>
+      <circle cx="182" cy="112" r="5" fill="#003876"/>
+      <circle cx="199" cy="118" r="5" fill="#003876"/>
+      <circle cx="188" cy="131" r="5" fill="#003876"/>
+      <circle cx="197" cy="127" r="5" fill="#003876"/>
+      <text x="190" y="222" font-size="18" fill="#003876" text-anchor="middle" font-weight="700">low bias, low variance</text>
+      <text x="190" y="246" font-size="16" fill="#5b6770" text-anchor="middle">MSE small</text>
+    </g>
+    <g>
+      <circle cx="570" cy="120" r="70" fill="none" stroke="#c8d3e0" stroke-width="2"/>
+      <circle cx="570" cy="120" r="40" fill="none" stroke="#c8d3e0" stroke-width="2"/>
+      <circle cx="570" cy="120" r="6" fill="#1a1a1a"/>
+      <circle cx="604" cy="86" r="5" fill="#c0392b"/>
+      <circle cx="612" cy="94" r="5" fill="#c0392b"/>
+      <circle cx="598" cy="97" r="5" fill="#c0392b"/>
+      <circle cx="608" cy="104" r="5" fill="#c0392b"/>
+      <text x="570" y="222" font-size="18" fill="#c0392b" text-anchor="middle" font-weight="700">high bias, low variance</text>
+      <text x="570" y="246" font-size="16" fill="#5b6770" text-anchor="middle">tight &mdash; but off-center</text>
+    </g>
+  </svg>
+  </div>
+  <p class="muted">Truth $=$ bullseye &middot; each dart $=$ the estimate from one dataset</p>
+</div>
+
+<!-- Sample mean example -->
+<div class="slide">
+  <h2>Example &mdash; the Sample Mean</h2>
+  <div class="divider"></div>
+  <p>i.i.d. sample, mean $\mu$, variance $\sigma^2 \lt \infty$; estimator $\hat{X} = \tfrac{1}{n}\sum_i X_i$:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}[\hat{X}] = \mu \;\;\text{(unbiased, any } \mu\text{)}
+    \qquad
+    \text{Var}(\hat{X}) = \frac{\sigma^2}{n}
+    \qquad
+    \text{MSE} = 0^2 + \frac{\sigma^2}{n}$$</div>
+  <ul>
+    <li>Recall from <strong>prob05</strong>: the same $\sigma^2/n$ that powered Chebyshev &amp; LLN</li>
+    <li>MSE $\to 0$: the sample mean is <em>consistent</em></li>
+  </ul>
+</div>
+
+<!-- Shrinkage example setup -->
+<div class="slide">
+  <h2>Worked &mdash; Can Bias Ever Help?</h2>
+  <div class="divider"></div>
+  <p>Coin bias $p$, $n = 10$ flips, $S = \sum_i X_i$. Two estimators:</p>
+  <div class="math-block" style="margin:8px 0">$$\hat{p} = \frac{S}{10} \;\;\text{(MLE, unbiased)}
+    \qquad
+    \tilde{p} = \frac{S + 1}{12} \;\;\text{(Laplace-smoothed, \S 08)}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\text{Bias}(\tilde{p}) = \frac{1 - 2p}{12}
+    \qquad
+    \text{Var}(\tilde{p}) = \frac{10\, p (1-p)}{144}
+    \;\lt\; \frac{p(1-p)}{10} = \text{Var}(\hat{p})$$</div>
+</div>
+
+<!-- Shrinkage numbers -->
+<div class="slide">
+  <h2>Worked &mdash; the Numbers</h2>
+  <div class="divider"></div>
+  <table style="max-width:860px">
+    <thead><tr><th>true <span style="text-transform:none">$p$</span></th><th>MSE of <span style="text-transform:none">$\hat{p}$</span> (unbiased)</th><th>MSE of <span style="text-transform:none">$\tilde{p}$</span> (smoothed)</th><th>winner</th></tr></thead>
+    <tbody>
+      <tr><td>$0.5$</td><td>$0.0250$</td><td>$\mathbf{0.0174}$</td><td>biased $\tilde{p}$</td></tr>
+      <tr><td>$0.9$</td><td>$\mathbf{0.0090}$</td><td>$0.0107$</td><td>unbiased $\hat{p}$</td></tr>
+    </tbody>
+  </table>
+  <p>Near $\tfrac12$: the bias is tiny, the variance cut is large</p>
+  <p class="muted">Bias$^2$ + Var: only the <strong>sum</strong> matters</p>
+</div>
+
+<!-- MSE chart -->
+<div class="slide">
+  <h2>MSE Across All True $p$</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:900px;margin:0 auto;">
+  <svg viewBox="0 0 760 290" style="width:100%">
+    <line x1="40" y1="250" x2="720" y2="250" stroke="#5b6770" stroke-width="1.5"/>
+    <line x1="40" y1="250" x2="40" y2="30" stroke="#5b6770" stroke-width="1.5"/>
+    <polyline points="40,250 54,236 67,223 81,210 94,197 108,186 122,175 135,164 149,154 162,145 176,136 190,127 203,120 217,113 230,106 244,100 258,95 271,90 285,85 298,82 312,79 326,76 339,74 353,73 366,72 380,71 394,72 407,73 421,74 434,76 448,79 462,82 475,85 489,90 502,95 516,100 530,106 543,113 557,120 570,127 584,136 598,145 611,154 625,164 638,175 652,186 666,197 679,210 693,223 706,236 720,250" fill="none" stroke="#003876" stroke-width="3"/>
+    <polyline points="40,200 54,195 67,189 81,184 94,178 108,174 122,169 135,165 149,160 162,156 176,153 190,149 203,146 217,143 230,140 244,138 258,136 271,134 285,132 298,130 312,129 326,128 339,127 353,126 366,126 380,126 394,126 407,126 421,127 434,128 448,129 462,130 475,132 489,134 502,136 516,138 530,140 543,143 557,146 570,149 584,153 598,156 611,160 625,165 638,169 652,174 666,178 679,184 693,189 706,195 720,200" fill="none" stroke="#c0392b" stroke-width="3"/>
+    <text x="380" y="60" font-size="18" fill="#003876" text-anchor="middle" font-weight="700">MSE of S/10 (MLE)</text>
+    <text x="380" y="115" font-size="18" fill="#c0392b" text-anchor="middle" font-weight="700">MSE of (S+1)/12 (smoothed)</text>
+    <text x="40" y="274" font-size="16" fill="#5b6770" text-anchor="middle">0</text>
+    <text x="380" y="274" font-size="16" fill="#5b6770" text-anchor="middle">0.5</text>
+    <text x="720" y="274" font-size="16" fill="#5b6770" text-anchor="middle">1</text>
+    <line x1="134" y1="250" x2="134" y2="40" stroke="#c8d3e0" stroke-width="1.5" stroke-dasharray="4 5"/>
+    <line x1="626" y1="250" x2="626" y2="40" stroke="#c8d3e0" stroke-width="1.5" stroke-dasharray="4 5"/>
+    <text x="380" y="40" font-size="16" fill="#5b6770" text-anchor="middle">smoothed wins for p &#8776; 0.14 &#8211; 0.86</text>
+  </svg>
+  </div>
+</div>
+
+<!-- BV implication -->
+<div class="slide">
+  <h2>Implication &mdash; the Regularization Trade</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Weight decay (&sect;05), smoothing (&sect;08): <strong>accept bias, cut variance</strong></li>
+    <li>Recall from <strong>prob06</strong>: the overfitting U-curve &mdash; same trade, model-class axis</li>
+    <li>Unbiasedness is not sacred; MSE is the score</li>
+  </ul>
+  <div class="highlight">
+    <p>Next: with squared error as the score, which estimator of a <strong>random</strong> quantity is optimal?</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 10 — MMSE ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">10</div>
+  <h1>MMSE Estimation</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The conditional mean wins</p>
+</div>
+
+<!-- Setup -->
+<div class="slide">
+  <h2>Setup &mdash; Denoising</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:920px;margin:0 auto 10px;">
+  <svg viewBox="0 0 900 120" style="width:100%">
+    <defs>
+      <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#003876"/>
+      </marker>
+    </defs>
+    <rect x="20" y="30" width="150" height="60" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+    <text x="95" y="67" font-size="20" fill="#003876" text-anchor="middle" font-weight="700">source X</text>
+    <rect x="290" y="30" width="170" height="60" rx="10" fill="#fff" stroke="#c0392b" stroke-width="2"/>
+    <text x="375" y="67" font-size="20" fill="#c0392b" text-anchor="middle" font-weight="700">noise</text>
+    <rect x="580" y="30" width="290" height="60" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/>
+    <text x="725" y="60" font-size="20" fill="#003876" text-anchor="middle" font-weight="700">measurement Y</text>
+    <text x="725" y="82" font-size="16" fill="#5b6770" text-anchor="middle">recover: estimate of X</text>
+    <line x1="170" y1="60" x2="288" y2="60" stroke="#003876" stroke-width="2.5" marker-end="url(#arr3)"/>
+    <line x1="460" y1="60" x2="578" y2="60" stroke="#003876" stroke-width="2.5" marker-end="url(#arr3)"/>
+  </svg>
+  </div>
+  <p>Both random; joint distribution known. Score by mean squared error:</p>
+  <div class="math-block" style="margin:8px 0">$$\text{minimize} \quad
+    \mathbb{E}\Big[ \big( X - \hat{X}(Y) \big)^2 \Big]
+    \quad \text{over all functions } \hat{X}(\cdot)$$</div>
+</div>
+
+<!-- MMSE theorem -->
+<div class="slide">
+  <h2>Theorem &mdash; MMSE $=$ Conditional Mean</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 5 (MMSE estimator).</h3>
+    <p>Among <strong>all</strong> functions $\hat{X}(Y)$, the mean squared error is minimized by</p>
+    <div class="math-block" style="margin:8px 0">$$\hat{X}(Y) = \mathbb{E}[X \mid Y]$$</div>
+  </div>
+  <p class="muted">&sect;02's object returns as the answer &mdash; not just a tool</p>
+</div>
+
+<!-- MMSE proof overview -->
+<div class="slide">
+  <h2>MMSE &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <p>Same skeleton as Theorem 4 &mdash; insert the natural center, kill the cross term:</p>
+  <ol>
+    <li>Add and subtract $\mathbb{E}[X|Y]$ inside the square; expand</li>
+    <li>Cross term $= 0$ &mdash; by the <strong>tower property</strong> (Thm 1)</li>
+    <li>Drop the only term that depends on $\hat{X}$; read off the minimizer</li>
+  </ol>
+  <p class="muted">This time the center is <em>random</em> &mdash; that's why the tower is needed</p>
+</div>
+
+<!-- MMSE step 1 -->
+<div class="slide">
+  <h2>Proof Step 1 &mdash; Insert and Expand</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}\big[ (X - \hat{X}(Y))^2 \big]
+    &amp;= \mathbb{E}\Big[ \big( X - \mathbb{E}[X|Y] + \mathbb{E}[X|Y] - \hat{X}(Y) \big)^2 \Big] \\[4pt]
+    &amp;= \mathbb{E}\big[ (X - \mathbb{E}[X|Y])^2 \big]
+    + \underbrace{2\,\mathbb{E}\big[ (X - \mathbb{E}[X|Y])(\mathbb{E}[X|Y] - \hat{X}(Y)) \big]}_{\text{cross term}} \\[4pt]
+    &amp;\qquad + \mathbb{E}\big[ (\mathbb{E}[X|Y] - \hat{X}(Y))^2 \big]
+  \end{aligned}$$</div>
+  <p class="muted">Three terms &mdash; the middle one must die</p>
+</div>
+
+<!-- MMSE step 2 -->
+<div class="slide">
+  <h2>Proof Step 2 &mdash; Tower on the Cross Term</h2>
+  <div class="divider"></div>
+  <p>Tower first (Thm 1); given $Y$, both $\mathbb{E}[X|Y]$ and $\hat{X}(Y)$ are constants:</p>
+  <div class="math-block">$$\begin{aligned}
+    \text{cross}
+    &amp;\stackrel{(\text{tower})}{=} \mathbb{E}_Y\Big[ 2\, \mathbb{E}_X\big[ (X - \mathbb{E}[X|Y])(\mathbb{E}[X|Y] - \hat{X}(Y)) \,\big|\, Y \big] \Big] \\[4pt]
+    &amp;\stackrel{(\text{pull out})}{=} \mathbb{E}_Y\Big[ 2 \big( \mathbb{E}[X|Y] - \hat{X}(Y) \big)\, \mathbb{E}_X\big[ X - \mathbb{E}[X|Y] \,\big|\, Y \big] \Big]
+  \end{aligned}$$</div>
+  <p class="muted">Exactly &sect;02's "$h(Y)$ slides out of the inner expectation"</p>
+</div>
+
+<!-- MMSE step 3 -->
+<div class="slide">
+  <h2>Proof Step 3 &mdash; the Inner Factor Is Zero</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ X - \mathbb{E}[X|Y] \,\big|\, Y \big]
+    = \mathbb{E}[X|Y] - \mathbb{E}[X|Y] = 0$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Longrightarrow\quad \text{cross term} = \mathbb{E}_Y\big[ 2(\cdots) \cdot 0 \big] = 0$$</div>
+  <p class="muted">The residual $X - \mathbb{E}[X|Y]$ has conditional mean zero &mdash; by construction</p>
+</div>
+
+<!-- MMSE step 4 -->
+<div class="slide">
+  <h2>Proof Step 4 &mdash; Read Off the Minimizer</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ (X - \hat{X}(Y))^2 \big]
+    = \underbrace{\mathbb{E}\big[ (X - \mathbb{E}[X|Y])^2 \big]}_{\text{fixed: no } \hat{X}}
+    + \underbrace{\mathbb{E}\big[ (\mathbb{E}[X|Y] - \hat{X}(Y))^2 \big]}_{\geq\, 0,\; =\,0 \text{ iff } \hat{X} = \mathbb{E}[X|Y]}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Longrightarrow\quad
+    \hat{X}(Y) = \mathbb{E}[X \mid Y] \;\text{ is the MMSE estimator} \qquad \blacksquare$$</div>
+</div>
+
+<!-- MMSE proof summary -->
+<div class="slide">
+  <h2>MMSE &mdash; Proof Summary</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \mathbb{E}\big[ (X - \hat{X})^2 \big]
+    \;&amp;\stackrel{(\text{insert})}{=}\;
+    \mathbb{E}\big[ (X - \mathbb{E}[X|Y])^2 \big]
+    + 0
+    + \mathbb{E}\big[ (\mathbb{E}[X|Y] - \hat{X})^2 \big] \\[6pt]
+    \;&amp;\stackrel{(\text{drop} \geq 0)}{\geq}\;
+    \mathbb{E}\big[ (X - \mathbb{E}[X|Y])^2 \big]
+  \end{aligned}$$</div>
+  <ul>
+    <li>The trick: add-and-subtract, <strong>third time today</strong> (Thm 4, &sect;05 MGF, here)</li>
+    <li>Weight carrier: tower property &mdash; the cross term's inner mean is $0$</li>
+  </ul>
+</div>
+
+<!-- MMSE worked -->
+<div class="slide">
+  <h2>Worked &mdash; the Table, One Last Time</h2>
+  <div class="divider"></div>
+  <p>Estimate $X$ from $Y$ on prob03's table (&sect;02): $\hat{X}(0) = \tfrac23$, $\hat{X}(1) = 0$</p>
+  <div class="math-block" style="margin:8px 0">$$\text{MMSE}
+    = \underbrace{\tfrac14 (0 - \tfrac23)^2}_{(0,0)}
+    + \underbrace{\tfrac12 (1 - \tfrac23)^2}_{(1,0)}
+    + \underbrace{\tfrac14 (0 - 0)^2}_{(0,1)}
+    = \tfrac19 + \tfrac1{18} = \tfrac16$$</div>
+  <p>Best <strong>constant</strong> guess $\mathbb{E}[X] = \tfrac12$: MSE $= \text{Var}(X) = \tfrac14 \gt \tfrac16$</p>
+  <p class="muted">Watching $Y$ buys a third of the error</p>
+</div>
+
+<!-- MMSE implication -->
+<div class="slide">
+  <h2>Implication &mdash; Denoisers Learn $\mathbb{E}[X|Y]$</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Regression with MSE loss: the ideal predictor is $\mathbb{E}[Y_{\text{label}} \mid \text{input}]$</li>
+    <li>Recall <strong>prob04</strong>'s diffusion teaser: the ideal denoiser outputs the clean data's conditional mean</li>
+    <li>Estimation theory names the target; training approximates it</li>
+  </ul>
+  <div class="highlight">
+    <p><strong>The loss picks the estimator:</strong> $0/1$ $\to$ MAP (Thm 2); squared $\to$ $\mathbb{E}[X|Y]$ (Thm 5).</p>
+  </div>
+</div>
+
+<!-- ===== RECAP ===== -->
+<div class="slide">
+  <h2>Recap &mdash; Today's Chain</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    &amp;\mathbb{E}\big[\mathbb{E}[X|Y]\big] = \mathbb{E}[X]
+    \;\;\stackrel{(\text{likelihood})}{\Longrightarrow}\;\;
+    \hat{y}_{\text{MLE}} = \operatorname*{argmax}_y f(x|y)
+    \;\;\stackrel{(\times\, \text{prior})}{\Longrightarrow}\;\;
+    \hat{y}_{\text{MAP}} \;\text{Bayes optimal} \\[6pt]
+    &amp;\stackrel{(\text{limit})}{\Longrightarrow}\;
+    P_e \geq \tfrac{H(Y|X) - 1}{\log|\mathcal{Y}|}
+    \;\;\stackrel{(\text{MSE view})}{\Longrightarrow}\;
+    \text{MSE} = \text{Bias}^2 + \text{Var}
+    \;\;\Longrightarrow\;
+    \hat{X}_{\text{MMSE}} = \mathbb{E}[X|Y]
+  \end{aligned}$$</div>
+  <p class="muted">Recipes (MLE, MAP), one wall (Fano), one exact accounting (bias&ndash;variance)</p>
+</div>
+
+<!-- Recap table -->
+<div class="slide">
+  <h2>Recap &mdash; Every Tool, One Job</h2>
+  <div class="divider"></div>
+  <table>
+    <thead><tr><th>Tool</th><th>What it delivered</th></tr></thead>
+    <tbody>
+      <tr><td>tower property</td><td>scenario averages; killed the MMSE cross term</td></tr>
+      <tr><td>MLE</td><td>fit without a prior; CE loss unmasked</td></tr>
+      <tr><td>MAP</td><td>prior folded in; minimum error probability</td></tr>
+      <tr><td>Fano</td><td>error floor: $(H(Y|X) - 1)/\log|\mathcal{Y}|$</td></tr>
+      <tr><td>bias&ndash;variance</td><td>MSE $=$ Bias$^2$ $+$ Var, exactly</td></tr>
+      <tr><td>MMSE</td><td>conditional mean optimal for squared error</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Bridge -->
+<div class="slide">
+  <h2>Next &mdash; the Distribution That Kept Showing Up</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Heights model (&sect;03), MLE example (&sect;07), weight-decay prior (&sect;05): all <strong>Gaussian</strong></li>
+    <li>Recall <strong>prob03</strong>: max entropy under a variance budget &mdash; Gaussian</li>
+    <li>Recall <strong>prob05</strong>: CLT &mdash; sums become Gaussian</li>
+  </ul>
+  <div class="highlight">
+    <p>Next lecture: the <strong>multivariate Gaussian</strong> &mdash; its three definitions, and why $\mathbb{E}[X|Y]$ becomes <em>linear</em>.</p>
+  </div>
+</div>
+
+<!-- Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$\hat{X}(Y) = \mathbb{E}[X \mid Y]$</div>
+  <p class="big-word-sub">Questions?</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 126</div>
+
+</div><!-- end deck -->
+
+<script src="../../../reference/deck.js"></script>
+</body>
+</html>

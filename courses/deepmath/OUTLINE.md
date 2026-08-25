@@ -296,6 +296,8 @@ times (conditional means, tower check, MMSE = 1/6 vs constant-guess 1/4); ends o
 a bridge to prob08 (the Gaussian everywhere → multivariate Gaussian, linear
 E[X|Y]).
 
+Companion: `prob07-estimation/prob07-estimation-note.html` — detailed definitions, expanded proofs, lemmas, references.
+
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + TOC | 1–2 | prob07-estimation/prob07-estimation.html:23 |

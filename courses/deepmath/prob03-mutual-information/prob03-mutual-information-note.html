@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Deep Learning Math 3 — Mutual Information &amp; Data Processing · Notes</title>
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload='renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false},{left:"\\[",right:"\\]",display:true}]});'></script>
+<style>
+  body { max-width: 760px; margin: 48px auto; padding: 0 24px 96px; color: var(--charcoal); background: var(--white); font-family: 'Yonsei', 'Noto Sans', Arial, sans-serif; font-weight: 300; line-height: 1.65; }
+  h1 { font-size: 2rem; color: var(--yonsei-blue); margin-bottom: 4px; }
+  h2 { font-size: 1.4rem; color: var(--yonsei-blue); margin-top: 40px; border-bottom: 1px solid var(--slate); padding-bottom: 6px; }
+  h3 { font-size: 1.1rem; color: var(--blue-light); margin-top: 24px; }
+  p, li { font-size: 1rem; }
+  .meta { color: var(--gray-text); font-size: 0.95rem; margin-bottom: 24px; }
+  code { background: var(--light); padding: 1px 6px; border-radius: 4px; font-size: 0.92em; }
+  strong { color: var(--yonsei-blue); font-weight: 600; }
+  .deriv { background: var(--light); border-left: 3px solid var(--yonsei-blue); padding: 12px 18px; margin: 14px 0; border-radius: 0 6px 6px 0; }
+  table { border-collapse: collapse; margin: 14px 0; }
+  th, td { border: 1px solid var(--slate); padding: 6px 12px; font-size: 0.95rem; text-align: left; }
+  th { background: var(--light); color: var(--yonsei-blue); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>Deep Learning Math 3 · Mutual Information &amp; Data Processing &mdash; Notes</h1>
+<p class="meta">Companion to <code>prob03-mutual-information.html</code>. Full definitions with all conditions, expanded proofs (including the deck's exercises, solved), the Markov-chain formalities the slides compress, the differential-entropy caveats, independently verified numerics, and references. Throughout, $\log$ denotes $\log_2$ and information is measured in bits; $\log e = 1/\ln 2 \approx 1.4427$ converts nats to bits. Background from earlier lectures &mdash; entropy, LOTUS, Jensen (prob01) and KL divergence, the information inequality (prob02) &mdash; is cited from the companion notes <code>../prob01-foundations/prob01-foundations-note.html</code> and <code>../prob02-kl-crossentropy/prob02-kl-crossentropy-note.html</code> rather than re-proved.</p>
+
+<section>
+  <h2>1 &nbsp;Why Mutual Information?</h2>
+  <p>A feedforward network maps an input $X$ through representations $Z_1, Z_2, \dots$ to a prediction. Each layer is a <em>channel</em>: a (possibly random) map from what enters to what leaves. The tools of the first two lectures &mdash; $H(X)$ for one variable's uncertainty, $D(P \Vert Q)$ for the gap between two candidate distributions of one variable &mdash; cannot yet express the questions this picture raises: how much does the label say about the image, how much of $X$ remains in a feature $Z$, how much uncertainty is left after observing $Y$. All of them are questions about a <em>pair</em> of random variables, so the lecture builds the joint machinery first and then defines the answer, mutual information $I(X;Y)$.</p>
+  <p>The headline the deck previews is the data processing inequality: along any pipeline $X \to Z_1 \to Z_2$,</p>
+  <div class="deriv">\[ I(X; Z_2) \;\leq\; I(X; Z_1) \;\leq\; H(X). \]</div>
+  <p>The first inequality is Theorem 7 below (DPI III, Section 5.5) applied to the Markov chain $X - Z_1 - Z_2$; the second is immediate from the definition once it exists, since $I(X; Z_1) = H(X) - H(X|Z_1)$ and $H(X|Z_1) \geq 0$. Processing can destroy information about the input, never create it. The lecture ends on the continuous side of the same story &mdash; differential entropy, its quirks, and the fact that under an energy budget the Gaussian is the maximally random density &mdash; which is why Gaussian noise is the canonical worst case in AI models.</p>
+</section>
+
+<section>
+  <h2>2 &nbsp;Joint Random Variables</h2>
+
+  <h3>2.1 Joint pmf, marginals, conditionals</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (joint pmf).</strong> Let $X \in \mathcal{X}$ and $Y \in \mathcal{Y}$ be discrete random variables on a common probability space, with $\mathcal{X}, \mathcal{Y}$ finite (or countable) alphabets. Their joint pmf is</p>
+    \[ p_{X,Y}(x, y) = \Pr(X = x,\, Y = y), \qquad x \in \mathcal{X},\, y \in \mathcal{Y}, \]
+    <p style="margin:8px 0 0;">a single table over all pairs: $p_{X,Y}(x,y) \geq 0$ and $\sum_{x,y} p_{X,Y}(x,y) = 1$. The alphabets may differ ($X \in [M]$, $Y \in [N]$).</p>
+  </div>
+  <p>The joint determines everything about the pair. In particular the <strong>marginals</strong> are recovered by summing out the partner:</p>
+  <div class="deriv">
+    \[ p_X(x) = \sum_{y \in \mathcal{Y}} p_{X,Y}(x, y)
+       = \sum_{y \in \mathcal{Y}} p_{X|Y}(x|y)\, p_Y(y)
+       = \mathbb{E}\bigl[p_{X|Y}(x|Y)\bigr], \]
+    <p style="margin:8px 0 0;">where the middle form uses the conditional pmf below and the last form reads it as an expectation over the random $Y$ (this "average the conditionals" identity is the total probability rule; it recurs in prob07 as the tower property). Row sums of the table give $p_X$, column sums give $p_Y$. The converse fails: the marginals do <em>not</em> determine the joint &mdash; Section 4.4's product distribution $p_X p_Y$ has the same marginals as $p_{X,Y}$ but is in general a different table.</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (conditional pmf).</strong> For any $y$ with $p_Y(y) \gt 0$,</p>
+    \[ p_{X|Y}(x|y) = \frac{p_{X,Y}(x, y)}{p_Y(y)}, \]
+    <p style="margin:8px 0 0;">a valid pmf over $x$ for each fixed $y$ (non-negative; sums to $p_Y(y)/p_Y(y) = 1$). <strong>Degenerate case:</strong> if $p_Y(y) = 0$, the conditional $p_{X|Y}(\cdot|y)$ is undefined (0/0); it may be assigned arbitrarily without affecting any expectation, because every average below weights it by $p_{X,Y}(x,y) = 0$. All conditional-entropy sums in these notes therefore run over $\{y : p_Y(y) \gt 0\}$ only.</p>
+  </div>
+  <p><strong>Running example.</strong> The deck's companion table, used for every worked number today: $X, Y \in \{0,1\}$ with</p>
+  <table>
+    <tr><th>$p_{X,Y}$</th><th>$y=0$</th><th>$y=1$</th><th>row sum $p_X$</th></tr>
+    <tr><td>$x=0$</td><td>$1/4$</td><td>$1/4$</td><td>$1/2$</td></tr>
+    <tr><td>$x=1$</td><td>$1/2$</td><td>$0$</td><td>$1/2$</td></tr>
+    <tr><td>col sum $p_Y$</td><td>$3/4$</td><td>$1/4$</td><td>$1$</td></tr>
+  </table>
+  <p>Conditioning on $Y = 0$ (column mass $3/4$): $p_{X|Y}(0|0) = \tfrac{1/4}{3/4} = \tfrac13$, $p_{X|Y}(1|0) = \tfrac{1/2}{3/4} = \tfrac23$, as on the slide. The pair is dependent: $p_{X,Y}(1,1) = 0 \neq \tfrac12 \cdot \tfrac14 = p_X(1)\, p_Y(1)$.</p>
+
+  <h3>2.2 Independence, and the deck's three exercises solved</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (independence).</strong> $X$ and $Y$ are independent (written $X \perp Y$) if and only if</p>
+    \[ p_{X,Y}(x, y) = p_X(x)\, p_Y(y) \quad \text{for all } x \in \mathcal{X},\, y \in \mathcal{Y}. \]
+    <p style="margin:8px 0 0;">Equivalently, $p_{X|Y}(x|y) = p_X(x)$ for every $y$ with $p_Y(y) \gt 0$: observing $Y$ does not move the distribution of $X$.</p>
+  </div>
+  <p><strong>Exercise 1 (linearity of expectation).</strong> For any $f: \mathcal{X} \to \mathbb{R}$, $g: \mathcal{Y} \to \mathbb{R}$ and <em>any</em> joint distribution:</p>
+  <div class="deriv">
+    \[ \mathbb{E}\bigl[f(X) + g(Y)\bigr]
+       = \sum_{x, y} p_{X,Y}(x,y)\, \bigl[f(x) + g(y)\bigr] \]
+    \[ = \sum_{x} f(x) \underbrace{\sum_{y} p_{X,Y}(x,y)}_{p_X(x)}
+       + \sum_{y} g(y) \underbrace{\sum_{x} p_{X,Y}(x,y)}_{p_Y(y)}
+       = \mathbb{E}[f(X)] + \mathbb{E}[g(Y)]. \;\; \blacksquare \]
+  </div>
+  <p>No independence was used &mdash; the sum split before the pmf was ever factored. This is what lets every "merge two expectations" step in the entropy proofs below proceed without assumptions.</p>
+  <p><strong>Exercise 2 (factorization criterion).</strong> Suppose $p_{X,Y}(x,y) = \phi_1(x)\, \phi_2(y)$ for all $x, y$, where $\phi_1, \phi_2$ are any non-negative functions (not necessarily pmfs). Let $c_1 = \sum_x \phi_1(x)$ and $c_2 = \sum_y \phi_2(y)$. Summing the factorization over $y$, over $x$, and over both:</p>
+  <div class="deriv">
+    \[ p_X(x) = \phi_1(x)\, c_2, \qquad p_Y(y) = c_1\, \phi_2(y), \qquad 1 = c_1 c_2. \]
+    <p style="margin:8px 0 0;">Hence $p_X(x)\, p_Y(y) = \phi_1(x)\, \phi_2(y)\, c_1 c_2 = \phi_1(x)\, \phi_2(y) = p_{X,Y}(x,y)$: independent. $\blacksquare$ The moral: to certify independence one never needs to normalize the factors.</p>
+  </div>
+  <p><strong>Exercise 3 (products of expectations).</strong> If $X \perp Y$, then for any $f, g$:</p>
+  <div class="deriv">
+    \[ \mathbb{E}\bigl[f(X)\, g(Y)\bigr]
+       = \sum_{x,y} p_X(x)\, p_Y(y)\, f(x)\, g(y)
+       = \Bigl(\sum_x p_X(x) f(x)\Bigr) \Bigl(\sum_y p_Y(y) g(y)\Bigr) \]
+    \[ = \mathbb{E}[f(X)]\; \mathbb{E}[g(Y)]. \;\; \blacksquare \]
+  </div>
+  <p>Unlike Exercise 1, this one genuinely needs independence (the double sum factors only because the pmf does). The converse fails: $\mathbb{E}[XY] = \mathbb{E}[X]\mathbb{E}[Y]$ for the specific functions $f = g = \mathrm{id}$ is mere <em>uncorrelatedness</em>; Section 4.8 gives an uncorrelated, dependent pair.</p>
+
+  <h3>2.3 Random vectors; supervised learning as a joint distribution</h3>
+  <p>For more than two variables, stack: $X^n = (X_1, \dots, X_n) \in \mathcal{X}^n$ with $p_{X^n}(x^n) = \Pr(X_1 = x_1, \dots, X_n = x_n)$, one pmf over all $n$-tuples, subject to the same rules (marginalize by summing out coordinates, condition by renormalizing, factor when independent). A supervised-learning data point is a pair $(X, Y)$ with $X$ a random vector (prob01's $5{\times}5$ binary image, $X^{25} \in \{0,1\}^{25}$) and $Y \in \{0, \dots, 9\}$ a label; classification is the task of learning the conditional pmf $p_{Y|X}(y|x)$. A trained network outputs $f(X) = (\hat y_0, \dots, \hat y_9)$ with the hope $\hat y_i = \Pr(Y = i \mid X)$ &mdash; for an ambiguous digit the honest answer is a genuinely spread conditional (e.g. mass split between 1 and 7), which is information the argmax alone discards. This is the prob02 cross-entropy story restated jointly: the loss compares the model's conditional to the true one, per input.</p>
+</section>
+
+<section>
+  <h2>3 &nbsp;Joint &amp; Conditional Entropy</h2>
+
+  <h3>3.1 Joint entropy</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (joint entropy).</strong> For jointly distributed $X, Y$ with joint pmf $p_{X,Y}$,</p>
+    \[ H(X, Y)
+       = \mathbb{E}\Bigl[\log \frac{1}{p_{X,Y}(X, Y)}\Bigr]
+       = \sum_{x, y} p_{X,Y}(x, y) \log \frac{1}{p_{X,Y}(x, y)}, \]
+    <p style="margin:8px 0 0;">with the usual convention $0 \log \tfrac10 = 0$ (zero cells contribute nothing; equivalently the sum runs over the support). This is nothing new: it is prob01's entropy applied to the single random variable $(X,Y)$ whose alphabet is the product $\mathcal{X} \times \mathcal{Y}$, so $0 \leq H(X,Y) \leq \log(|\mathcal{X}|\,|\mathcal{Y}|)$ and every prob01 property applies verbatim. The expectation is expanded by LOTUS on pairs: $\mathbb{E}[f(X,Y)] = \sum_{x,y} p_{X,Y}(x,y) f(x,y)$. (The source notes' displayed definition drops the $\log$ in the summed form &mdash; a typo; the deck and the version above are correct.)</p>
+  </div>
+  <p><strong>Worked on the table, in full.</strong> Three nonzero cells $\tfrac14, \tfrac14, \tfrac12$:</p>
+  <div class="deriv">
+    \[ H(X,Y) = \tfrac14 \log 4 + \tfrac14 \log 4 + \tfrac12 \log 2
+       = \tfrac12 + \tfrac12 + \tfrac12 = 1.5 \text{ bits}. \]
+    <p style="margin:8px 0 6px;">The marginals: $p_X = (\tfrac12, \tfrac12)$ gives $H(X) = 1$ bit exactly, and $p_Y = (\tfrac34, \tfrac14)$ gives the binary entropy</p>
+    \[ H(Y) = h_2\bigl(\tfrac14\bigr) = \tfrac34 \log \tfrac43 + \tfrac14 \log 4
+       = 0.75 \times 0.41504 + 0.5 \approx 0.81128 \text{ bits}. \]
+    <p style="margin:8px 0 0;">So $H(X,Y) = 1.5 \lt 1.81128 = H(X) + H(Y)$: the deck's numbers ($1$, $0.811$, $1.5$) check out, and the strict gap of $0.31128$ bits is the pair's shared information &mdash; named in Section 4.</p>
+  </div>
+
+  <h3>3.2 Theorem 1 — additivity under independence</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 1 (additivity).</strong> If $X \perp Y$, then $H(X, Y) = H(X) + H(Y)$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof</strong> (the deck's three steps, with every sum shown). Independence lets us replace the joint pmf inside the log:</p>
+    \[ H(X,Y)
+       \overset{(\text{indep})}{=} \sum_{x,y} p_{X,Y}(x,y) \log \frac{1}{p_X(x)\, p_Y(y)}. \]
+    <p style="margin:8px 0 6px;">Split the log of the product ($\log \tfrac{1}{ab} = \log \tfrac1a + \log \tfrac1b$) and use linearity (Exercise 1's split, applied to the two functions $\log \tfrac{1}{p_X(x)}$ and $\log \tfrac{1}{p_Y(y)}$):</p>
+    \[ = \sum_{x,y} p_{X,Y}(x,y) \log \frac{1}{p_X(x)}
+       + \sum_{x,y} p_{X,Y}(x,y) \log \frac{1}{p_Y(y)}. \]
+    <p style="margin:8px 0 6px;">In each double sum the log depends on one variable only, so sum out the other one first; the inner sum collapses the joint to a marginal:</p>
+    \[ = \sum_{x} \log \frac{1}{p_X(x)} \underbrace{\sum_{y} p_{X,Y}(x,y)}_{=\,p_X(x)}
+       + \sum_{y} \log \frac{1}{p_Y(y)} \underbrace{\sum_{x} p_{X,Y}(x,y)}_{=\,p_Y(y)}
+       = H(X) + H(Y). \;\; \blacksquare \]
+  </div>
+  <p><strong>Note the weight.</strong> Independence was used only <em>inside</em> the log; the averaging weight stayed $p_{X,Y}$ throughout, and the marginalization step is valid for any joint. Both facts are reused in the chain-rule proof, where no independence is available.</p>
+  <p><strong>$n$ variables.</strong> If $X_1, \dots, X_n$ are (mutually) independent, i.e. $p_{X_1,\dots,X_n} = \prod_{i=1}^n p_{X_i}$, the same three moves &mdash; factor, split into $n$ sums, marginalize each &mdash; give $H(X_1, \dots, X_n) = \sum_{i=1}^n H(X_i)$. (Formally, induction on $n$: the pair $\bigl((X_1,\dots,X_{n-1}), X_n\bigr)$ is independent, apply Theorem 1, then the inductive hypothesis.)</p>
+  <p><strong>The converse question</strong> the deck poses as an exercise &mdash; does $H(X,Y) = H(X) + H(Y)$ imply independence? &mdash; is answered affirmatively in Section 4.7 once $I(X;Y)$ exists.</p>
+
+  <h3>3.3 The guessing game returns</h3>
+  <p>Prob01's game: Alice picks $X$ uniform on $\{1, \dots, 8\}$, $H(X) = 3$ bits. Bob's three questions define answer bits $Y_1 = \mathbf{1}\{X \in \{5,6,7,8\}\}$, $Y_2 = \mathbf{1}\{X \in \{1,2,5,6\}\}$, $Y_3 = \mathbf{1}\{X \in \{1,3,5,7\}\}$. Each set has four of the eight equally likely elements, so each $Y_i \sim \mathrm{Bern}(\tfrac12)$ and $H(Y_i) = 1$ bit. The triple is independent because the map $X \mapsto (Y_1, Y_2, Y_3)$ is a bijection from $\{1,\dots,8\}$ onto $\{0,1\}^3$ (the three questions are the three bits of $X - 1$ in disguise: each of the 8 answer patterns has exactly one preimage), so</p>
+  <div class="deriv">
+    \[ p_{Y_1,Y_2,Y_3}(y_1, y_2, y_3) = \tfrac18 = p_{Y_1}(y_1)\, p_{Y_2}(y_2)\, p_{Y_3}(y_3)
+       \quad \text{for all } (y_1,y_2,y_3), \]
+    <p style="margin:8px 0 0;">and Theorem 1 gives $H(Y_1, Y_2, Y_3) = 3 = H(X)$: each question earns exactly one bit, and after three the total equals the uncertainty in $X$ &mdash; consistent with the answers determining $X$ exactly.</p>
+  </div>
+  <p>A fourth question Q4, "is $X \in \{4,5,6,7\}$?" with answer bit $Y_4$, <em>overlaps</em> Q1: $Y_1$ and $Y_4$ are dependent, so part of $Y_4$'s bit is already delivered by $Y_1$, and $H(Y_1, Y_4)$ should fall strictly below $H(Y_1) + H(Y_4) = 2$. Quantifying "the additional information in $Y_4$ once $Y_1$ is known" is precisely what conditional entropy is for; the numbers are finished in Section 3.5.</p>
+
+  <h3>3.4 Conditional entropy and the chain rule</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (conditional entropy).</strong></p>
+    \[ H(X|Y)
+       = \mathbb{E}\Bigl[\log \frac{1}{p_{X|Y}(X|Y)}\Bigr]
+       = \sum_{x, y} p_{X,Y}(x, y) \log \frac{1}{p_{X|Y}(x|y)}, \]
+    <p style="margin:8px 0 0;">the surprisal priced by the <em>conditional</em> pmf but averaged with the <em>joint</em> pmf &mdash; both $X$ and $Y$ are random in the expectation. The sum runs over pairs with $p_{X,Y}(x,y) \gt 0$ (which forces $p_Y(y) \gt 0$, so every conditional that appears is well defined; the degenerate columns of Section 2.1 never enter). Since each term has $p_{X|Y}(x|y) \in (0, 1]$, every summand is $\geq 0$ and hence $H(X|Y) \geq 0$, with $H(X|Y) = 0$ iff $X$ is a deterministic function of $Y$ (each conditional puts all its mass on one point).</p>
+  </div>
+  <p><strong>Two-stage reading.</strong> Group the sum by $y$: with $H(X|Y{=}y) = \sum_x p_{X|Y}(x|y) \log \tfrac{1}{p_{X|Y}(x|y)}$ the ordinary entropy of the conditional pmf,</p>
+  <div class="deriv">
+    \[ H(X|Y) = \sum_{y} p_Y(y)\, H(X \mid Y = y): \]
+    <p style="margin:8px 0 0;">an entropy per column of the table, weighted by column mass. (Proof: substitute $p_{X,Y}(x,y) = p_Y(y)\, p_{X|Y}(x|y)$ into the definition and pull $p_Y(y)$ out of the inner sum.) Both readings are used interchangeably below.</p>
+  </div>
+  <p><strong>Worked on the table, both directions.</strong> Rows (condition on $X$): given $X = 0$, $Y \sim (\tfrac12, \tfrac12)$, entropy $1$; given $X = 1$, $Y \sim (1, 0)$, entropy $0$. So</p>
+  <div class="deriv">
+    \[ H(Y|X) = \tfrac12 \cdot 1 + \tfrac12 \cdot 0 = 0.5 \text{ bits}. \]
+    <p style="margin:8px 0 6px;">Columns (condition on $Y$): given $Y = 0$, $X \sim (\tfrac13, \tfrac23)$ with entropy</p>
+    \[ h_2\bigl(\tfrac13\bigr) = \tfrac13 \log 3 + \tfrac23 \log \tfrac32
+       \approx 0.52832 + 0.38998 = 0.91830; \]
+    <p style="margin:8px 0 6px;">given $Y = 1$, $X \sim (1, 0)$ with entropy $0$. So</p>
+    \[ H(X|Y) = \tfrac34 \times 0.91830 + \tfrac14 \times 0 \approx 0.68872 \text{ bits}. \]
+    <p style="margin:8px 0 0;">The deck's $0.918$ and $0.689$ check out, and $H(X|Y) \neq H(Y|X)$: conditioning is not symmetric (the two remainders differ even though, per the chain rule next, the two <em>totals</em> agree).</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 2 (chain rule).</strong> For any jointly distributed $X, Y$:</p>
+    \[ H(X, Y) = H(X) + H(Y|X) = H(Y) + H(X|Y). \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Start from the right-hand side; merge the two expectations by linearity (Exercise 1, no independence needed), then the two logs, then apply the product rule of probability $p_{X,Y}(x,y) = p_X(x)\, p_{Y|X}(y|x)$, valid on the support:</p>
+    \[ H(X) + H(Y|X)
+       = \mathbb{E}\Bigl[\log \tfrac{1}{p_X(X)} + \log \tfrac{1}{p_{Y|X}(Y|X)}\Bigr]
+       = \mathbb{E}\Bigl[\log \tfrac{1}{p_X(X)\, p_{Y|X}(Y|X)}\Bigr] \]
+    \[ = \mathbb{E}\Bigl[\log \tfrac{1}{p_{X,Y}(X, Y)}\Bigr] = H(X, Y). \]
+    <p style="margin:8px 0 0;">The second identity is the same computation with the roles of $X$ and $Y$ exchanged. $\blacksquare$</p>
+  </div>
+  <p>Contrast with Theorem 1: additivity needed independence to put $p_X p_Y$ inside the log; the chain rule needs nothing, because $p_X\, p_{Y|X}$ <em>always</em> equals the joint. Check on the table: $H(X) + H(Y|X) = 1 + 0.5 = 1.5$ and $H(Y) + H(X|Y) \approx 0.81128 + 0.68872 = 1.5 = H(X,Y)$ &mdash; two roads, one total, matching the deck.</p>
+  <p><strong>General chain rule</strong> (the deck stops at pairs; stated here for later use, e.g. prob07's Fano proof): iterating Theorem 2 on the pair $\bigl((X_1, \dots, X_{k-1}), X_k\bigr)$,</p>
+  <div class="deriv">
+    \[ H(X_1, \dots, X_n) = \sum_{i=1}^{n} H\bigl(X_i \mid X_1, \dots, X_{i-1}\bigr), \]
+    <p style="margin:8px 0 0;">with the $i = 1$ term read as $H(X_1)$. Theorem 1 is the special case where independence makes every conditional entropy unconditional.</p>
+  </div>
+
+  <h3>3.5 The guessing-game exercise, worked</h3>
+  <p><strong>$H(Y_2|Y_1)$.</strong> $Y_1$ and $Y_2$ are independent (two coordinates of the bijection in Section 3.3), so each conditional distribution of $Y_2$ is its marginal $\mathrm{Bern}(\tfrac12)$ and $H(Y_2|Y_1) = H(Y_2) = 1$ bit: an independent question retains its full value.</p>
+  <p><strong>$H(Y_4|Y_1)$.</strong> Build the joint of $(Y_1, Y_4)$ by counting outcomes of $X$ (each of the 8 values has mass $\tfrac18$):</p>
+  <table>
+    <tr><th>$p$</th><th>$y_4 = 1$</th><th>$y_4 = 0$</th></tr>
+    <tr><td>$y_1 = 1$ (i.e. $X \geq 5$)</td><td>$3/8$ &nbsp;($\{5,6,7\}$)</td><td>$1/8$ &nbsp;($\{8\}$)</td></tr>
+    <tr><td>$y_1 = 0$ (i.e. $X \leq 4$)</td><td>$1/8$ &nbsp;($\{4\}$)</td><td>$3/8$ &nbsp;($\{1,2,3\}$)</td></tr>
+  </table>
+  <div class="deriv">
+    <p style="margin:0 0 6px;">Given $y_1 = 1$ (mass $\tfrac12$): $Y_4 \sim (\tfrac34, \tfrac14)$, entropy $h_2(\tfrac34) = h_2(\tfrac14) \approx 0.81128$. Given $y_1 = 0$: $Y_4 \sim (\tfrac14, \tfrac34)$, same entropy. Hence</p>
+    \[ H(Y_4 \mid Y_1) = \tfrac12 \times 0.81128 + \tfrac12 \times 0.81128 \approx 0.811 \text{ bits}, \]
+    \[ H(Y_1, Y_4) = H(Y_1) + H(Y_4|Y_1) \approx 1 + 0.811 = 1.811 \text{ bits}. \]
+    <p style="margin:8px 0 0;">Since $Y_4 \sim \mathrm{Bern}(\tfrac12)$ too ($\{4,5,6,7\}$ has four elements), $H(Y_4) = 1$ and the overlap costs $H(Y_1) + H(Y_4) - H(Y_1, Y_4) \approx 0.189$ bits &mdash; the deck's numbers, and (Section 4) exactly $I(Y_1; Y_4)$.</p>
+  </div>
+
+  <h3>3.6 Theorem 3 — DPI I: processing cannot add entropy</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 3 (data processing I).</strong> For any deterministic function $f$ on $\mathcal{X}$:</p>
+    \[ H(X) \;\geq\; H\bigl(f(X)\bigr). \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Expand the single object $H(X, f(X))$ by the chain rule in both orders. Order one:</p>
+    \[ H\bigl(X, f(X)\bigr) = H(X) + H\bigl(f(X) \mid X\bigr) = H(X), \]
+    <p style="margin:8px 0 6px;">because given $X = x$ the value $f(X) = f(x)$ is a constant, and a deterministic outcome has zero entropy: $H(f(X)|X{=}x) = 0$ for every $x$, hence the average is $0$. Order two:</p>
+    \[ H\bigl(X, f(X)\bigr) = H\bigl(f(X)\bigr) + H\bigl(X \mid f(X)\bigr)
+       \;\geq\; H\bigl(f(X)\bigr), \]
+    <p style="margin:8px 0 0;">since conditional entropy is non-negative (Section 3.4). Equating the two expansions gives the claim. $\blacksquare$</p>
+  </div>
+  <p><strong>Equality analysis.</strong> Equality holds iff $H(X \mid f(X)) = 0$, i.e. iff $X$ is determined by $f(X)$ &mdash; equivalently, iff $f$ is <em>injective on the support of $X$</em> (each attained value $t = f(x)$ has a single preimage among outcomes of positive probability). The deck's "one-to-one and onto" is sufficient; surjectivity is not actually needed, and injectivity is only needed on the support. Relabelings lose nothing; genuinely many-to-one maps on the support (pooling, argmax, quantization) strictly drop entropy. Note this "expand one joint entropy both ways" trick returns as the engine of Fano's inequality in prob07.</p>
+</section>
+
+<section>
+  <h2>4 &nbsp;Mutual Information</h2>
+
+  <h3>4.1 Definition and the three equivalent forms</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (mutual information).</strong> For jointly distributed discrete $X, Y$:</p>
+    \[ I(X; Y) = H(X) - H(X|Y). \]
+    <p style="margin:8px 0 6px;">Before observing $Y$ the uncertainty about $X$ is $H(X)$; after, $H(X|Y)$ remains on average; the drop is what $Y$ told us about $X$. Two further forms are equivalent by the chain rule (Theorem 2), substituting $H(X|Y) = H(X,Y) - H(Y)$:</p>
+    \[ I(X; Y) = H(Y) - H(Y|X) = H(X) + H(Y) - H(X, Y). \]
+  </div>
+  <p>The third form is the Venn reading: two circles of areas $H(X)$ and $H(Y)$ inside the box $H(X,Y)$; the overlap is $I(X;Y)$, the private parts are $H(X|Y)$ and $H(Y|X)$. The picture is a faithful mnemonic for <em>two</em> variables &mdash; every region is non-negative, by Theorem 5 below and Section 3.4 &mdash; but Section 5.6's XOR example shows it has no faithful three-variable version (the "triple overlap" region would need to be negative), so treat it as bookkeeping, not as set theory.</p>
+  <p><strong>Two special cases from the definition alone.</strong></p>
+  <ul>
+    <li><strong>Self-information:</strong> $I(X; X) = H(X) - H(X|X) = H(X) - 0 = H(X)$. Observing $X$ removes all of its own uncertainty; entropy is the mutual information of a variable with itself (the circles coincide).</li>
+    <li><strong>Independence $\Rightarrow$ zero:</strong> if $X \perp Y$ then $p_{X|Y}(x|y) = p_X(x)$ for all relevant $y$, so $H(X|Y) = H(X)$ and $I(X;Y) = 0$. The converse &mdash; zero MI forces independence &mdash; needs the KL form, next.</li>
+  </ul>
+
+  <h3>4.2 The KL form</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition.</strong></p>
+    \[ I(X; Y)
+       = \mathbb{E}\Bigl[\log \frac{p_{X,Y}(X, Y)}{p_X(X)\, p_Y(Y)}\Bigr]
+       = D\bigl(p_{X,Y} \,\Vert\, p_X\, p_Y\bigr), \]
+    <p style="margin:8px 0 6px;">the KL divergence (prob02 note, Section 4.1) between the true joint and the <em>product of its own marginals</em> &mdash; the distribution with the same marginals but the dependence deleted. <strong>Derivation.</strong> Merge the two expectations defining $I$ (linearity, then the log difference):</p>
+    \[ H(X) - H(X|Y)
+       = \mathbb{E}\Bigl[\log \tfrac{1}{p_X(X)} - \log \tfrac{1}{p_{X|Y}(X|Y)}\Bigr]
+       = \mathbb{E}\Bigl[\log \frac{p_{X|Y}(X|Y)}{p_X(X)}\Bigr], \]
+    <p style="margin:8px 0 6px;">then multiply numerator and denominator by $p_Y(Y)$ and recognize $p_{X|Y}\, p_Y = p_{X,Y}$:</p>
+    \[ = \mathbb{E}\Bigl[\log \frac{p_{X,Y}(X, Y)}{p_X(X)\, p_Y(Y)}\Bigr]
+       = \sum_{x,y} p_{X,Y}(x,y) \log \frac{p_{X,Y}(x,y)}{p_X(x)\, p_Y(y)}
+       = D(p_{X,Y} \Vert p_X p_Y). \]
+    <p style="margin:8px 0 0;">The last step is LOTUS on the pair alphabet. $\blacksquare$ <strong>Support bookkeeping:</strong> the sum runs over the support of $p_{X,Y}$; there the marginals are automatically positive ($p_{X,Y}(x,y) \gt 0$ forces $p_X(x) \geq p_{X,Y}(x,y) \gt 0$), so unlike a general KL this one can never be $+\infty$ through a vanishing denominator &mdash; absolute continuity of the joint w.r.t. its own product-of-marginals is automatic. In particular $I(X;Y)$ is always finite for finite alphabets, bounded by $\min\{H(X), H(Y)\} \leq \log \min\{|\mathcal{X}|, |\mathcal{Y}|\}$.</p>
+  </div>
+
+  <h3>4.3 Theorems 4 and 5 — symmetry and non-negativity</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 4 (symmetry).</strong> $I(X; Y) = I(Y; X)$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Route through the third form, which is visibly symmetric:</p>
+    \[ I(X;Y) = H(X) - H(X|Y)
+       \overset{(\text{chain})}{=} H(X) - \bigl(H(X,Y) - H(Y)\bigr) \]
+    \[ = H(X) + H(Y) - H(X,Y)
+       \overset{(\text{chain})}{=} H(Y) - H(Y|X) = I(Y; X). \;\; \blacksquare \]
+    <p style="margin:8px 0 0;">(Alternatively: the KL form is symmetric in $X \leftrightarrow Y$ term by term.) What $X$ tells about $Y$ is exactly what $Y$ tells about $X$ &mdash; not obvious from the asymmetric-looking definition, and false for the two conditional entropies separately (Section 3.4's $0.5 \neq 0.689$).</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 5 (non-negativity).</strong> $I(X; Y) \geq 0$, with equality if and only if $X \perp Y$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> By Section 4.2, $I(X;Y) = D(p_{X,Y} \Vert p_X p_Y)$, a KL divergence between two pmfs on the pair alphabet $\mathcal{X} \times \mathcal{Y}$. The information inequality (prob02 note, Theorem 2, proved there by Jensen on the strictly concave $\log$, zero-mass cases included) gives $D \geq 0$ with equality iff the two arguments are equal as pmfs:</p>
+    \[ I(X;Y) = 0 \iff p_{X,Y}(x,y) = p_X(x)\, p_Y(y) \;\; \forall x, y
+       \iff X \perp Y. \;\; \blacksquare \]
+    <p style="margin:8px 0 0;">This settles the converse left open in Section 4.1: mutual information is a genuine, assumption-free <em>independence test</em> &mdash; it is zero exactly at independence and strictly positive at any dependence whatsoever.</p>
+  </div>
+  <p><strong>Corollary (conditioning cannot increase entropy).</strong> Rearranging $I(X;Y) = H(X) - H(X|Y) \geq 0$:</p>
+  <div class="deriv">
+    \[ H(X|Y) \;\leq\; H(X), \qquad \text{equality iff } X \perp Y. \]
+  </div>
+  <p><strong>The average is essential &mdash; a pointwise counterexample.</strong> The corollary bounds the <em>expected</em> posterior entropy; an individual observation can perfectly well raise uncertainty. Take $Y \sim \mathrm{Bern}$ with $p_Y = (\tfrac14, \tfrac34)$ (writing $p_Y(0) = \tfrac14$), and let $X \mid Y{=}0 \sim (\tfrac12, \tfrac12)$ while $X \mid Y{=}1 = 0$ deterministically. The joint is $p(0,0) = p(1,0) = \tfrac18$, $p(0,1) = \tfrac34$, $p(1,1) = 0$; marginally $p_X = (\tfrac78, \tfrac18)$, so</p>
+  <div class="deriv">
+    \[ H(X) = h_2\bigl(\tfrac18\bigr)
+       = \tfrac18 \log 8 + \tfrac78 \log \tfrac87
+       \approx 0.375 + 0.16856 = 0.54356 \text{ bits}, \]
+    \[ H(X \mid Y{=}0) = 1 \;\gt\; H(X) \approx 0.544,
+       \qquad H(X \mid Y{=}1) = 0, \]
+    \[ H(X|Y) = \tfrac14 \cdot 1 + \tfrac34 \cdot 0 = 0.25 \;\leq\; H(X). \]
+    <p style="margin:8px 0 0;">The unlikely observation $y = 0$ <em>increases</em> uncertainty about $X$ beyond the prior (from $0.544$ to a full bit), yet the average over observations still shrinks it, as Theorem 5 guarantees. "Observation never hurts" is a statement about expectations only.</p>
+  </div>
+
+  <h3>4.4 The running table and the Section 3 exercise, closed</h3>
+  <p><strong>Worked $I(X;Y)$, three routes.</strong> All ingredients were computed in Section 3:</p>
+  <div class="deriv">
+    \[ I(X;Y) = H(X) - H(X|Y) = 1 - 0.68872 = 0.31128, \]
+    \[ I(X;Y) = H(Y) - H(Y|X) = 0.81128 - 0.5 = 0.31128, \]
+    \[ I(X;Y) = H(X) + H(Y) - H(X,Y) = 1.81128 - 1.5 = 0.31128. \]
+    <p style="margin:8px 0 0;">Three routes, one number: $\approx 0.311$ bits shared, as on the slide. (Likewise the guessing game: $I(Y_1; Y_4) = 2 - 1.811 = 0.189$ bits &mdash; the overlap cost of Section 3.5, now named.)</p>
+  </div>
+  <p><strong>Additivity converse (Section 3.2's exercise).</strong> Yes: $H(X,Y) = H(X) + H(Y)$ implies independence. By the third form, the hypothesis says exactly $I(X;Y) = 0$, and Theorem 5's equality case forces $p_{X,Y} = p_X p_Y$. So Theorem 1 is in fact an equivalence: entropy is additive <em>precisely</em> for independent pairs.</p>
+
+  <h3>4.5 What MI buys in AI, and a dependence correlation misses</h3>
+  <p>MI is a nonlinear dependence detector in invariant units (bits), which is what makes quantities like $I(Z; Y)$ &mdash; the label information a learned feature retains &mdash; meaningful across architectures; this is the currency of the information-bottleneck analysis of deep networks [4, 5]. The deck's closing contrast, made precise: zero correlation does <em>not</em> imply independence, but zero MI does (Theorem 5). A standard example of the gap: $X$ uniform on $\{-1, 0, 1\}$ and $Y = X^2$. Then $\mathbb{E}[XY] = \mathbb{E}[X^3] = \tfrac{1}{3}(-1 + 0 + 1) = 0 = \mathbb{E}[X]\mathbb{E}[Y]$, so the pair is uncorrelated; yet $Y$ is a function of $X$, and</p>
+  <div class="deriv">
+    \[ I(X; Y) = H(Y) - \underbrace{H(Y|X)}_{=0} = h_2\bigl(\tfrac13\bigr) \approx 0.918 \text{ bits} \]
+    <p style="margin:8px 0 0;">(here $p_Y = (\tfrac13, \tfrac23)$ on $\{0, 1\}$). Cross-check via the other form: $H(X) - H(X|Y) = \log 3 - \tfrac23 \cdot 1 = 1.58496 - 0.66667 = 0.91830$. $\checkmark$ &mdash; strongly dependent, invisible to correlation.</p>
+  </div>
+</section>
+
+<section>
+  <h2>5 &nbsp;Data Processing</h2>
+
+  <h3>5.1 Two lemmas the deck compresses into "Fact A / Fact B"</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma A (redundant conditioning is free).</strong> For any deterministic $f$:</p>
+    \[ H\bigl(Y \mid X, f(X)\bigr) = H(Y \mid X). \]
+    <p style="margin:8px 0 0;"><strong>Proof.</strong> The pair $(X, f(X))$ takes only values of the form $(x, f(x))$ with positive probability, and on such a value the conditioning event $\{X = x,\, f(X) = f(x)\}$ equals $\{X = x\}$, so $p_{Y|X, f(X)}\bigl(y \mid x, f(x)\bigr) = p_{Y|X}(y|x)$ for every $y$. The two conditional entropies are therefore averages of identical per-event entropies with identical weights. $\blacksquare$ (Equivalently: $(X, f(X))$ and $X$ generate the same information &mdash; each determines the other &mdash; and conditional entropy depends only on what the condition determines.)</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma B (conditioning cannot increase conditional entropy).</strong> For any $X, Y, W$:</p>
+    \[ H(Y \mid X, W) \;\leq\; H(Y \mid W). \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> The gap is a conditional mutual information (Section 5.6's definition, second form): $H(Y|W) - H(Y|X,W) = I(X; Y \mid W)$, and</p>
+    \[ I(X; Y \mid W) = \sum_{w} p_W(w)\; I\bigl(X; Y \mid W = w\bigr) \;\geq\; 0, \]
+    <p style="margin:8px 0 0;">because each $I(X; Y \mid W{=}w)$ is the ordinary mutual information of the pair under the conditional joint $p_{X,Y|W}(\cdot,\cdot|w)$, hence $\geq 0$ by Theorem 5. $\blacksquare$ (The deck cites its "Fact B" as Theorem 5; strictly it is this conditional average of Theorem 5. Equality iff $X \perp Y$ given $W$.)</p>
+  </div>
+
+  <h3>5.2 Theorem 6 — DPI II</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 6 (data processing II).</strong> For any deterministic $f$ on $\mathcal{X}$:</p>
+    \[ I(X; Y) \;\geq\; I\bigl(f(X); Y\bigr). \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Insert the redundant condition, then relax the stronger one:</p>
+    \[ I(X; Y) = H(Y) - H(Y|X)
+       \overset{(\text{Lem. A})}{=} H(Y) - H\bigl(Y \mid X, f(X)\bigr) \]
+    \[ \overset{(\text{Lem. B},\, W = f(X))}{\geq} H(Y) - H\bigl(Y \mid f(X)\bigr)
+       = I\bigl(f(X); Y\bigr). \;\; \blacksquare \]
+  </div>
+  <p><strong>Reading, equality, and no converse.</strong> Transforming $X$ &mdash; pooling, quantizing, hand-crafting features &mdash; can at best <em>preserve</em> information about $Y$; it can still help optimization or generalization, which is a statement about learnability, not about information content. Equality holds iff Lemma B is tight, i.e. iff $X \perp Y$ given $f(X)$ &mdash; iff $f(X)$ is a <em>sufficient statistic</em> of $X$ for $Y$ (the chain $X - f(X) - Y$ is Markov). There is no converse inequality: $I(f(X); Y)$ can be anything from $I(X;Y)$ (sufficient $f$, e.g. injective) down to $0$ (constant $f$) with $I(X;Y)$ unchanged, so knowing the processed information floor tells you nothing about the raw information.</p>
+
+  <h3>5.3 Markov chains — the formal package</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (Markov chain / Markov triplet).</strong> $X - Y - Z$ holds iff $X$ and $Z$ are conditionally independent given $Y$:</p>
+    \[ p_{X,Z|Y}(x, z \mid y) = p_{X|Y}(x|y)\; p_{Z|Y}(z|y)
+       \quad \text{for all } x, z \text{ and all } y \text{ with } p_Y(y) \gt 0. \]
+    <p style="margin:8px 0 0;">(As in Section 2.1, nothing is required at $y$'s of zero mass.) Equivalent formulations, each proved below: (i) $p_{Z|X,Y}(z|x,y) = p_{Z|Y}(z|y)$ whenever $p_{X,Y}(x,y) \gt 0$ &mdash; "once $Y$ is known, $X$ is useless for predicting $Z$"; (ii) the joint factors as $p_{X,Y,Z} = p_Y \cdot p_{X|Y} \cdot p_{Z|Y}$ on the support; (iii) $Z - Y - X$ (the chain reads the same in both directions).</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proof of the equivalences.</strong> (def $\Rightarrow$ i): divide the definition by $p_{X|Y}(x|y)$, legal when $p_{X,Y}(x,y) \gt 0$ since then $p_{X|Y}(x|y) \gt 0$:</p>
+    \[ p_{Z|X,Y}(z|x,y) = \frac{p_{X,Z|Y}(x,z|y)}{p_{X|Y}(x|y)} = p_{Z|Y}(z|y). \]
+    <p style="margin:8px 0 6px;">(i $\Rightarrow$ ii): $p_{X,Y,Z} = p_{X,Y} \cdot p_{Z|X,Y} = p_Y\, p_{X|Y}\, p_{Z|Y}$ on the support. (ii $\Rightarrow$ def): divide by $p_Y(y)$. (def $\Leftrightarrow$ iii): the definition is literally symmetric under swapping the roles of $X$ and $Z$. $\blacksquare$</p>
+  </div>
+  <p>Instances: any pipeline where $Z$ is computed from $Y$ alone &mdash; data $\to$ representation $\to$ prediction; image $\to$ compressed file $\to$ reconstruction; signal $\to$ channel output $\to$ decoder output. The deterministic case $Z = f(Y)$ is the special case where $p_{Z|Y}(\cdot|y)$ is a point mass; randomized processing ($Z$ drawn from any kernel depending only on $y$) is equally allowed &mdash; this is strictly more general than DPI II.</p>
+
+  <h3>5.4 Theorem 7 — DPI III</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 7 (data processing III).</strong> If $X - Y - Z$, then</p>
+    \[ I(Y; Z) \;\geq\; I(X; Z), \qquad \text{and likewise} \qquad I(X; Y) \;\geq\; I(X; Z). \]
+    <p style="margin:8px 0 6px;"><strong>Proof of the first.</strong> Formulation (i) with the roles as stated says $H(Z|Y) = H(Z|X,Y)$ (the extra condition $X$ changes no conditional of $Z$; average as in Lemma A). Then</p>
+    \[ I(Y; Z) = H(Z) - H(Z|Y)
+       \overset{(\text{Markov})}{=} H(Z) - H(Z \mid X, Y) \]
+    \[ \overset{(\text{Lem. B},\, W = X)}{\geq} H(Z) - H(Z|X) = I(X; Z). \]
+    <p style="margin:8px 0 0;"><strong>The second</strong> follows by symmetry: $X - Y - Z$ iff $Z - Y - X$ (equivalence iii), and applying the first inequality to the reversed chain gives $I(Y; X) \geq I(Z; X)$, i.e. $I(X;Y) \geq I(X;Z)$ by Theorem 4. $\blacksquare$ (The source notes state this theorem with the inequality reversed, "$I(Z;X) \geq I(Z;Y)$", while their proof derives $I(Y;Z) \geq I(X;Z)$ &mdash; a statement-level typo; the deck and the version above are the correct direction.)</p>
+  </div>
+  <p><strong>DPI II as a special case.</strong> Given any $X, Y$ and deterministic $f$, the triple $Y - X - f(X)$ is Markov (given $X$, $f(X)$ is a constant, hence conditionally independent of anything). Reversing it, $f(X) - X - Y$ is Markov, and Theorem 7's first inequality on this chain reads $I(X; Y) \geq I(f(X); Y)$ &mdash; exactly Theorem 6. Chaining Theorem 7 down a deep net $X \to Z_1 \to Z_2 \to \cdots$ (each layer sees only its predecessor, so every contiguous triple is Markov) yields the monotone decay $I(X; Z_1) \geq I(X; Z_2) \geq \cdots$ of the deck's "layers only forget" slide: training chooses <em>which</em> information survives, the DPI caps <em>how much</em>.</p>
+
+  <h3>5.5 Conditional mutual information</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (conditional MI).</strong></p>
+    \[ I(X; Z \mid Y) = H(X|Y) - H(X \mid Y, Z) = H(Z|Y) - H(Z \mid Y, X), \]
+    <p style="margin:8px 0 0;">the information between $X$ and $Z$ once $Y$ is known. The two forms agree by the same chain-rule algebra as Theorem 4, applied conditionally. As shown in Lemma B's proof, $I(X;Z|Y) = \sum_y p_Y(y)\, I(X;Z \mid Y{=}y) \geq 0$, and it vanishes iff every conditional joint factors: $I(X; Z \mid Y) = 0 \iff X \perp Z$ given $Y$ $\iff X - Y - Z$ is Markov. Conditional MI is thus the <em>quantitative measure of how far a triple is from being a Markov chain</em>.</p>
+  </div>
+  <p><strong>Does conditioning shrink MI?</strong> For entropy, conditioning never increases the average (Section 4.3). The analogous guess $I(X; Z \mid Y) \leq I(X; Z)$ is <strong>false in general</strong>, and so is the reverse: no inequality holds either way. Both strict orders occur:</p>
+  <p><strong>Counterexample (XOR triple): conditioning can create dependence.</strong> Let $X, Z$ be i.i.d. $\mathrm{Bern}(\tfrac12)$ and $Y = X \oplus Z$ their parity. Verify the deck's three steps:</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Step 1.</strong> $I(X; Z) = 0$ by construction: $p_{X,Z}(x,z) = \tfrac14 = p_X(x)\, p_Z(z)$ for all four pairs.</p>
+    <p style="margin:8px 0 6px;"><strong>Step 2.</strong> $H(Z|Y) = 1$. From the four equally likely triples $(x, z, x \oplus z)$: given $Y = 0$, $(X,Z) \in \{(0,0), (1,1)\}$ equally, so $Z \mid Y{=}0 \sim \mathrm{Bern}(\tfrac12)$; given $Y = 1$, $(X,Z) \in \{(0,1), (1,0)\}$ equally, so $Z \mid Y{=}1 \sim \mathrm{Bern}(\tfrac12)$. Hence $H(Z|Y) = \tfrac12 \cdot 1 + \tfrac12 \cdot 1 = 1$ bit &mdash; the parity alone says nothing about either coin.</p>
+    <p style="margin:8px 0 6px;"><strong>Step 3.</strong> XOR is its own inverse: $Y = X \oplus Z \iff Z = X \oplus Y$, so given $(X, Y)$ the value of $Z$ is determined and $H(Z \mid Y, X) = 0$. Therefore</p>
+    \[ I(X; Z \mid Y) = H(Z|Y) - H(Z \mid Y, X) = 1 - 0 = 1
+       \;\gt\; 0 = I(X; Z). \]
+    <p style="margin:8px 0 0;">Note also that given $Y$, the pair $(X, Z)$ is far from conditionally independent even though each is marginally still fair: $p_{X,Z|Y}(0,0|0) = \tfrac12 \neq \tfrac14 = p_{X|Y}(0|0)\, p_{Z|Y}(0|0)$.</p>
+  </div>
+  <p>This is the "explaining away" pattern: two independent causes are coupled by conditioning on their common effect (once the alarm's state is known, learning one cause changes the odds of the other). It is also the promised failure of the three-variable Venn diagram: the would-be triple-overlap $I(X;Z) - I(X;Z|Y) = 0 - 1 = -1$ bit is negative, so no area diagram can represent this triple.</p>
+  <p><strong>Opposite direction.</strong> On a Markov chain $X - Y - Z$ the conditional MI is $0$ while $I(X;Z)$ can be large; the extreme case $X = Y = Z$ a single fair bit gives $I(X; Z \mid Y) = 0 \lt 1 = I(X; Z)$. With the XOR triple this completes the claim: no general relationship between $I(X;Z|Y)$ and $I(X;Z)$.</p>
+
+  <h3>5.6 Chain rule for mutual information</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition (chain rule for $I$).</strong></p>
+    \[ I(X, Y;\, Z) = I(X; Z) + I(Y; Z \mid X), \]
+    <p style="margin:8px 0 6px;">where $I(X,Y;Z)$ is the MI between the pair $(X,Y)$ (as one variable) and $Z$. <strong>Proof.</strong> Add and subtract $H(Z|X)$:</p>
+    \[ I(X, Y; Z) = H(Z) - H(Z \mid X, Y) \]
+    \[ = \bigl[H(Z) - H(Z|X)\bigr] + \bigl[H(Z|X) - H(Z \mid X, Y)\bigr]
+       = I(X; Z) + I(Y; Z \mid X). \;\; \blacksquare \]
+  </div>
+  <p>First $X$'s contribution about $Z$, then $Y$'s <em>fresh</em> contribution given $X$. The total is order-free (start from $Y$ instead: $I(X,Y;Z) = I(Y;Z) + I(X; Z|Y)$ &mdash; same left side, different split; on the XOR triple with $Z$ in the role of the target: $0 + 1 = 1 + 0$, a nice consistency check). Iterating over the coordinates of a vector:</p>
+  <div class="deriv">
+    \[ I(X^n; Y) = \sum_{i=1}^{n} I\bigl(X_i;\, Y \mid X^{i-1}\bigr),
+       \qquad X^{i-1} = (X_1, \dots, X_{i-1}), \]
+    <p style="margin:8px 0 0;">proved by induction: split $(X^{n-1}, X_n)$ with the two-variable rule and apply the hypothesis to $X^{n-1}$. Each term is what coordinate $i$ adds about $Y$ given the past &mdash; the workhorse decomposition for sequences (pixels, tokens, time steps), and every term is $\geq 0$, so information about $Y$ only accumulates as coordinates are revealed.</p>
+  </div>
+</section>
+
+<section>
+  <h2>6 &nbsp;Differential Entropy</h2>
+
+  <h3>6.1 Densities, and what changes when mass becomes density</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (cdf, pdf).</strong> For a real-valued $X$, the cumulative distribution function is $F_X(x) = \Pr(X \leq x)$. If $F_X$ is differentiable, the probability density function is</p>
+    \[ f_X(x) = \frac{\partial}{\partial x} F_X(x), \qquad
+       \Pr(a \leq X \leq b) = \int_a^b f_X(x)\, dx. \]
+    <p style="margin:8px 0 0;">Probability is <em>area</em> under $f_X$, never a value of it: $f_X(x)$ can exceed $1$ (e.g. $\mathrm{Unif}(0, \tfrac12)$ has density $2$), and $\Pr(X = x) = 0$ for every point. All statements in this section assume $X$ has a density (absolutely continuous law); mixed or discrete parts break the formulas &mdash; see the caveats in Section 6.4.</p>
+  </div>
+  <p><strong>Change of variables.</strong> The first genuinely new phenomenon. If $Y = aX$ with $a \neq 0$, then for $a \gt 0$: $F_Y(y) = \Pr(aX \leq y) = F_X(y/a)$, and differentiating, $f_Y(y) = \tfrac1a f_X(y/a)$; for $a \lt 0$ the cdf flips ($F_Y(y) = 1 - F_X(y/a)$) and the derivative picks up the sign. Both cases:</p>
+  <div class="deriv">
+    \[ f_Y(y) = \frac{1}{|a|}\, f_X\!\Bigl(\frac{y}{a}\Bigr), \]
+    <p style="margin:8px 0 6px;">which is conservation of probability, $|f_X(x)\, dx| = |f_Y(y)\, dy|$ with $|dx/dy| = 1/|a|$: stretch the axis by $a$ and the density must compress by $|a|$ to keep total area $1$ (the deck's picture: $\mathrm{Unif}(0,1) \to \mathrm{Unif}(0,2)$, twice as wide, half as tall). Generally, for bijective differentiable $g$ and $Y = g(X)$:</p>
+    \[ f_Y(y) = f_X\bigl(g^{-1}(y)\bigr)\, \Bigl|\frac{d}{dy} g^{-1}(y)\Bigr|. \]
+    <p style="margin:8px 0 0;">Discrete pmfs never needed a correction factor &mdash; masses just move with their labels. This stretch factor is the sole source of every quirk of differential entropy below.</p>
+  </div>
+
+  <h3>6.2 KL and MI go through unchanged</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (KL for densities).</strong> For densities $f, g$ on $\mathbb{R}$:</p>
+    \[ D(f \,\Vert\, g) = \mathbb{E}_f\Bigl[\log \frac{f(X)}{g(X)}\Bigr]
+       = \int f(x) \log \frac{f(x)}{g(x)}\, dx \;\in\; [0, +\infty], \]
+    <p style="margin:8px 0 0;">with the prob02 conventions transplanted: the integrand is $0$ where $f = 0$, and $D = +\infty$ unless $g \gt 0$ (Lebesgue-)almost everywhere $f \gt 0$ (absolute continuity, $f \ll g$).</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem (information inequality, continuous).</strong> $D(f \Vert g) \geq 0$, equality iff $f = g$ almost everywhere. <strong>Proof</strong> &mdash; Jensen, exactly as in prob02 with sums replaced by integrals:</p>
+    \[ D(f \Vert g) = -\int f(x) \log \frac{g(x)}{f(x)}\, dx
+       \;\overset{(\text{Jensen})}{\geq}\; -\log \int f(x)\, \frac{g(x)}{f(x)}\, dx \]
+    \[ = -\log \int_{\{f \gt 0\}} g(x)\, dx \;\geq\; -\log 1 = 0. \;\; \blacksquare \]
+    <p style="margin:8px 0 0;">($\log$ is concave, so $-\log$ is convex and Jensen reverses; the final integral is $\leq 1$ since $g$ integrates to $1$ over all of $\mathbb{R}$ &mdash; the same two-inequality structure as the rigorous discrete proof in the prob02 note, Section 3.4. Equality in Jensen requires $g/f$ constant $f$-a.e., and equality in the last step requires $g$ to carry no mass off $\{f \gt 0\}$; together $f = g$ a.e.)</p>
+  </div>
+  <p><strong>Continuous MI.</strong> Define it through the KL form &mdash; no entropy needed:</p>
+  <div class="deriv">
+    \[ I(X; Y) = \mathbb{E}\Bigl[\log \frac{f_{X,Y}(X, Y)}{f_X(X)\, f_Y(Y)}\Bigr]
+       = D\bigl(f_{X,Y} \,\Vert\, f_X f_Y\bigr) \;\geq\; 0, \]
+    <p style="margin:8px 0 0;">non-negativity immediate from the theorem above; equality iff $f_{X,Y} = f_X f_Y$ a.e., i.e. independence (Theorem 11 below). As in Section 4.2, absolute continuity of the joint w.r.t. the product of its own marginals holds automatically wherever $f_{X,Y} \gt 0$.</p>
+  </div>
+  <p><strong>MI is discretization-proof.</strong> Chop $\mathbb{R}$ into bins of width $\Delta$ and let $X^\Delta$ be the index of $X$'s bin, so $P_{X^\Delta}(i) = \Pr\bigl(i\Delta \leq X \leq (i{+}1)\Delta\bigr) \approx \Delta\, f_X(x_i)$ for a point $x_i$ in bin $i$ (exact for some $x_i$, by the mean value theorem, when $f_X$ is continuous). Then</p>
+  <div class="deriv">
+    \[ I(X^\Delta; Y^\Delta)
+       = \mathbb{E}\Bigl[\log \frac{P_{X^\Delta,Y^\Delta}}{P_{X^\Delta}\, P_{Y^\Delta}}\Bigr]
+       \approx \mathbb{E}\Bigl[\log \frac{\Delta^2\, f_{X,Y}(X,Y)}{\Delta f_X(X) \cdot \Delta f_Y(Y)}\Bigr]
+       = \mathbb{E}\Bigl[\log \frac{f_{X,Y}}{f_X f_Y}\Bigr], \]
+    <p style="margin:8px 0 0;">the bin widths cancel <em>exactly</em> in the ratio, and $I(X^\Delta; Y^\Delta) \to I(X;Y)$ as $\Delta \to 0$ [1, Sec. 8.5]. Mutual information survives the continuum limit with no correction: it is the same physical quantity in both worlds.</p>
+  </div>
+
+  <h3>6.3 Theorem 8 and the definition of $h$</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 8 (discretization).</strong> With $X^\Delta$ as above and $f_X$ Riemann-integrable,</p>
+    \[ H(X^\Delta) \;=\; h(X) - \log \Delta \;+\; o(1) \quad (\Delta \to 0), \]
+    <p style="margin:8px 0 6px;">where the <strong>differential entropy</strong> is</p>
+    \[ h(X) = \mathbb{E}\Bigl[\log \frac{1}{f_X(X)}\Bigr]
+       = \int f_X(x) \log \frac{1}{f_X(x)}\, dx. \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> By the mean value theorem pick $x_i$ in bin $i$ with $P_{X^\Delta}(i) = \Delta f_X(x_i)$ exactly. Then</p>
+    \[ H(X^\Delta) = \sum_i \Delta f_X(x_i) \log \frac{1}{\Delta f_X(x_i)}
+       = \underbrace{\sum_i \Delta\, f_X(x_i) \log \frac{1}{f_X(x_i)}}_{\to\, h(X)}
+       \;-\; \log \Delta \underbrace{\sum_i \Delta f_X(x_i)}_{=\,1}, \]
+    <p style="margin:8px 0 0;">and the first sum is a Riemann sum for the $h(X)$ integral. $\blacksquare$ The deck presents the identity with the $\approx$ absorbed (its proof chain writes $P \approx \Delta f$); the version above is the precise limit statement [1, Thm 8.3.1].</p>
+  </div>
+  <p><strong>Reading it.</strong> As $\Delta \to 0$, $-\log \Delta \to +\infty$, so $H(X^\Delta) \to \infty$: an exact real number carries infinitely many bits (finer bins = more distinguishable outcomes). Differential entropy is the finite remainder once the grid's own contribution $-\log \Delta$ is subtracted &mdash; <em>entropy relative to the grid</em>, not an absolute information content. Concretely, $h$ compares $X$'s spread to a unit-length reference: $H(X^\Delta) \approx h(X) + 10$ bits at $\Delta = 2^{-10}$, of which $10$ bits are pure grid.</p>
+  <p><strong>Existence caveats the deck omits.</strong> The defining integral need not converge: $h$ can be $+\infty$ (very heavy tails, e.g. $f(x) \propto 1/(x \ln^2 x)$ on $[e, \infty)$), can be $-\infty$ (mass concentrating on arbitrarily small sets), or can fail to exist when positive and negative parts both diverge. And $h$ is only defined for distributions <em>with a density</em>: a discrete or mixed $X$ has $H(X^\Delta)$ bounded (or with a different growth law), and no $h$. All theorems below implicitly assume the relevant $h$'s are finite.</p>
+
+  <h3>6.4 Worked examples and the three exhibits</h3>
+  <p><strong>Uniform.</strong> $U \sim \mathrm{Unif}(a,b)$ has density $\tfrac{1}{b-a}$ on $[a,b]$, so</p>
+  <div class="deriv">
+    \[ h(U) = \int_a^b \frac{1}{b-a} \log (b-a)\, dx = \log(b - a). \]
+    <p style="margin:8px 0 0;">Checks: $\mathrm{Unif}(0,1)$: $h = \log 1 = 0$; $\mathrm{Unif}(0,2)$: $h = \log 2 = 1$ bit &mdash; the deck's two integrals.</p>
+  </div>
+  <ul>
+    <li><strong>Exhibit 1 ($h$ can be negative).</strong> $U \sim \mathrm{Unif}(0, \tfrac12)$: $h(U) = \log \tfrac12 = -1$ bit. No contradiction with $H \geq 0$ &mdash; $h$ is the grid-normalized part, and a variable concentrated on a set shorter than unit length sits <em>below</em> the reference. ($H(X^\Delta) = -1 - \log \Delta$ is still positive for every $\Delta \lt \tfrac12$.)</li>
+    <li><strong>Exhibit 2 (no label/relabeling invariance).</strong> Discrete entropy depends only on the multiset of probabilities: for one-to-one $f$, $H(f(X)) = H(X)$ (DPI I equality case) &mdash; e.g. $X_1 \in \{1,2,3\}$ with $p = (0.4, 0.5, 0.1)$ and $X_2 = 2X_1 \in \{2,4,6\}$ have identical entropies. Continuously this fails: $U \sim \mathrm{Unif}(0,1)$, $V = 2U \sim \mathrm{Unif}(0,2)$, yet $h(U) = 0 \neq 1 = h(V)$. The bijection $u \mapsto 2u$ stretched the axis and thereby <em>manufactured</em> differential entropy. In general $h$ is <strong>not invariant under bijections</strong>: for smooth bijective $g$, plugging the change-of-variables formula into the definition gives $h(g(X)) = h(X) + \mathbb{E}\bigl[\log |g'(X)|\bigr]$ &mdash; the average log-stretch is added.</li>
+    <li><strong>Exhibit 3 (the scaling law, the quirk quantified).</strong> For $a \neq 0$, using $f_{aX}(y) = \tfrac{1}{|a|} f_X(y/a)$ evaluated at $y = aX$:
+      <div class="deriv">
+        \[ h(aX) = \mathbb{E}\Bigl[\log \frac{1}{f_{aX}(aX)}\Bigr]
+           = \mathbb{E}\Bigl[\log \frac{|a|}{f_X(X)}\Bigr]
+           = h(X) + \log |a|. \]
+      </div>
+      Consistent with both exhibits: $a = 2$ adds $1$ bit; $|a| \lt 1$ subtracts. Translation, by contrast, is free &mdash; $f_{X+c}(y) = f_X(y - c)$ has the same shape, so $h(X + c) = h(X)$.</li>
+  </ul>
+  <table>
+    <tr><th>property</th><th>discrete $H$</th><th>differential $h$</th></tr>
+    <tr><td>non-negative</td><td>yes</td><td><strong>no</strong> (Exhibit 1)</td></tr>
+    <tr><td>relabeling / scale invariant</td><td>yes</td><td><strong>no</strong> (Exhibits 2&ndash;3)</td></tr>
+    <tr><td>translation invariant</td><td>yes (relabeling)</td><td>yes</td></tr>
+  </table>
+  <p><strong>Gaussian differential entropy, in full.</strong> $X \sim \mathcal{N}(\mu, \sigma^2)$, $f(x) = \tfrac{1}{\sqrt{2\pi\sigma^2}}\, e^{-(x-\mu)^2/2\sigma^2}$. The surprisal is a quadratic:</p>
+  <div class="deriv">
+    \[ \log \frac{1}{f(x)} = \log \sqrt{2\pi\sigma^2} + \frac{(x-\mu)^2}{2\sigma^2} \log e, \]
+    <p style="margin:8px 0 6px;">(the $\log e$ converts the exponent from nats), and taking expectations with $\mathbb{E}[(X-\mu)^2] = \sigma^2$:</p>
+    \[ h(X) = \tfrac12 \log(2\pi\sigma^2) + \tfrac12 \log e
+       = \tfrac12 \log\bigl(2\pi e \sigma^2\bigr). \]
+    <p style="margin:8px 0 0;">By translation invariance the mean drops out (the deck states the $\mu = 0$ case). Numerically at $\sigma = 1$: $\tfrac12 \log_2(2\pi e) = \tfrac12 \log_2 17.0795 \approx \tfrac12 \times 4.0942 \approx 2.047$ bits &mdash; the deck's $2.05$. It grows like $\log \sigma$, as the scaling law demands ($\mathcal{N}(0,\sigma^2) = \sigma \cdot \mathcal{N}(0,1)$, adding $\log \sigma$). The deck's same-variance lineup also checks: at variance $1$, Laplace ($b = 1/\sqrt2$) has $h = \log_2(2be) = \log_2(\sqrt2\, e) = \tfrac12 + \log_2 e \approx 1.943$ bits, and $\mathrm{Unif}$ of variance $1$ (width $\sqrt{12}$) has $h = \log_2 \sqrt{12} \approx 1.792$ bits &mdash; the deck's $1.94$ and $1.79$; the Gaussian's $2.047$ tops both, previewing Section 7.</p>
+  </div>
+
+  <h3>6.5 Conditional $h$ and the continuous theorems</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (conditional differential entropy).</strong></p>
+    \[ h(X|Y) = \mathbb{E}\Bigl[\log \frac{1}{f_{X|Y}(X|Y)}\Bigr]
+       = \int f_{X,Y}(x, y) \log \frac{1}{f_{X|Y}(x|y)}\, dx\, dy, \]
+    <p style="margin:8px 0 0;">with $f_{X|Y}(x|y) = f_{X,Y}(x,y)/f_Y(y)$ where $f_Y(y) \gt 0$. Scaling passes through conditioning: for fixed $y$, $aX \mid Y{=}y$ has density $\tfrac{1}{|a|} f_{X|Y}(\cdot/a \mid y)$, so the same computation as Exhibit 3 gives $h(aX \mid Y) = h(X|Y) + \log|a|$. Unlike its discrete counterpart, $h(X|Y)$ can be negative; but the identity $I(X;Y) = h(X) - h(X|Y)$ (same merge-the-logs derivation as Section 4.2, with densities) together with $I \geq 0$ still gives $h(X|Y) \leq h(X)$: conditioning cannot increase differential entropy either.</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 9 (MI ignores rescaling).</strong> For $a \neq 0$: $I(aX; Y) = I(X; Y)$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Both entropy terms shift by the same amount and the shifts cancel:</p>
+    \[ I(aX; Y) = h(aX) - h(aX \mid Y)
+       = \bigl(h(X) + \log|a|\bigr) - \bigl(h(X|Y) + \log|a|\bigr) = I(X;Y). \;\; \blacksquare \]
+    <p style="margin:8px 0 0;">(More generally, the same cancellation works for any bijective smooth $g$ with $\mathbb{E}[\log|g'(X)|]$ finite: $I(g(X); Y) = I(X;Y)$ &mdash; MI is invariant under invertible reparametrization of either argument.) This is the resolution of the quirks: $aX$ tells about $Y$ exactly what $X$ does, and $I$ agrees. Units, normalization, feature scaling leave $I$ untouched. $h$ alone is coordinate-bound bookkeeping; <em>differences</em> of $h$ (like $I$) are the physical quantities.</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 10 (chain rule for $h$).</strong> $h(X_1, X_2) = h(X_1) + h(X_2 \mid X_1)$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> The joint density factors as marginal times conditional, $f_{X_1,X_2} = f_{X_1} \cdot f_{X_2|X_1}$, exactly as for pmfs; split the log and the expectation:</p>
+    \[ h(X_1, X_2) = \mathbb{E}\Bigl[\log \tfrac{1}{f_{X_1,X_2}}\Bigr]
+       = \mathbb{E}\Bigl[\log \tfrac{1}{f_{X_1}(X_1)}\Bigr]
+       + \mathbb{E}\Bigl[\log \tfrac{1}{f_{X_2|X_1}(X_2|X_1)}\Bigr]. \;\; \blacksquare \]
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 11 (independence test, continuous).</strong> $X \perp Y \iff I(X;Y) = 0$.</p>
+    <p style="margin:8px 0 0;"><strong>Proof.</strong> $I(X;Y) = D(f_{X,Y} \Vert f_X f_Y)$, and the continuous information inequality (Section 6.2) vanishes iff its arguments agree a.e.: $f_{X,Y} = f_X f_Y$ almost everywhere, which is exactly independence for continuous variables. $\blacksquare$</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 12 (DPI, continuous).</strong> If $X - Y - Z$ (conditional densities factoring, mirroring Section 5.3), then $I(X; Y) \geq I(X; Z)$ and $I(Y;Z) \geq I(X;Z)$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof</strong> &mdash; the discrete skeleton verbatim with $h$ for $H$: Markov gives $f_{Z|X,Y} = f_{Z|Y}$, hence $h(Z|Y) = h(Z \mid X, Y)$, and conditioning is still non-increasing (conditional version, via conditional MI $\geq 0$ integrated over the conditioning variable, as in Lemma B):</p>
+    \[ I(Y; Z) = h(Z) - h(Z|Y)
+       \overset{(\text{Markov})}{=} h(Z) - h(Z \mid X, Y)
+       \overset{(\text{cond.})}{\geq} h(Z) - h(Z|X) = I(X; Z), \]
+    <p style="margin:8px 0 0;">and the $I(X;Y)$ bound follows by chain reversal as in Theorem 7. $\blacksquare$ (The source notes' version of this proof carries two typos &mdash; the statement's inequality written as "$I(X;Y) \geq I(Z;X)$" with the middle line "$h(Z|Y,Z)$" for $h(Z|Y,X)$; the deck's rendering, reproduced above, is the corrected one.)</p>
+  </div>
+</section>
+
+<section>
+  <h2>7 &nbsp;Maximum Entropy</h2>
+
+  <h3>7.1 Recall, and the bounded-support exercise solved</h3>
+  <p>Prob01's discrete result: for $X \in \{1, \dots, K\}$, $H(X) \leq \log K$ with equality iff uniform &mdash; proved there by comparing to the flat candidate. The continuous analogue must first decide <em>over which family</em> to maximize $h$, since without any constraint $h$ is unbounded (spread $\mathrm{Unif}(0, L)$ has $h = \log L \to \infty$).</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Exercise (bounded support), solved.</strong> If $X \in [a,b]$ with probability $1$ and has density $f$, then $h(X) \leq \log(b-a)$, with equality iff $X \sim \mathrm{Unif}(a,b)$. <strong>Proof.</strong> Let $u = \tfrac{1}{b-a}$ on $[a,b]$ be the uniform density. Then</p>
+    \[ 0 \;\leq\; D(f \,\Vert\, u)
+       = \int_a^b f(x) \log \frac{f(x)}{1/(b-a)}\, dx
+       = -h(X) + \log(b - a), \]
+    <p style="margin:8px 0 0;">since $\log \tfrac{1}{u} = \log(b-a)$ is constant and $f$ integrates to $1$. Rearranged: $h(X) \leq \log(b-a)$; equality iff $D(f \Vert u) = 0$ iff $f = u$ a.e. $\blacksquare$ Flat wins on a box, mirroring the discrete result (with $\log(b-a)$ playing the role of $\log K$).</p>
+  </div>
+  <p><strong>Unbounded support needs a budget.</strong> The standard constraint is the second moment, $\mathbb{E}[X^2] \leq P$ &mdash; read as average energy or power at most $P$ (the channel-coding tradition, [1, Ch. 9]). The question: which density is maximally random under it?</p>
+
+  <h3>7.2 Theorem 13 — the Gaussian maximizes $h$</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 13 (maximum differential entropy).</strong> Among all densities $f$ with $\mathbb{E}_f[X^2] \leq P$:</p>
+    \[ h(X) \;\leq\; h\bigl(\mathcal{N}(0, P)\bigr) = \tfrac12 \log(2\pi e P), \]
+    <p style="margin:8px 0 0;">with equality if and only if $X \sim \mathcal{N}(0, P)$.</p>
+  </div>
+  <p><strong>Proof, expanded</strong> (the deck's compare-to-the-candidate argument, which is the tex's argument, run once with the constraint as an inequality so the "$\leq P$" case is covered too). Let $f$ be any density with $\mathbb{E}_f[X^2] \leq P$ and finite $h(f)$, and let $g(x) = \tfrac{1}{\sqrt{2\pi P}}\, e^{-x^2/2P}$ be the $\mathcal{N}(0, P)$ density. (The source notes write the normalization as $\tfrac{1}{2\pi P}$ &mdash; a typo for $\tfrac{1}{\sqrt{2\pi P}}$; the deck is correct.)</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Step 1 (expand the KL).</strong> Split the log-ratio; the second term is $h(f)$:</p>
+    \[ D(f \,\Vert\, g)
+       = \mathbb{E}_f\Bigl[\log \frac{f(X)}{g(X)}\Bigr]
+       = \mathbb{E}_f\Bigl[\log \frac{1}{g(X)}\Bigr] - h(f). \]
+    <p style="margin:8px 0 6px;"><strong>Step 2 (the magic step).</strong> The Gaussian's surprisal is a <em>quadratic</em>, so its $f$-average depends on $f$ only through $\mathbb{E}_f[X^2]$:</p>
+    \[ \mathbb{E}_f\Bigl[\log \frac{1}{g(X)}\Bigr]
+       = \log \sqrt{2\pi P} + \frac{\mathbb{E}_f[X^2]}{2P} \log e
+       \;\leq\; \log \sqrt{2\pi P} + \frac{P}{2P} \log e, \]
+    <p style="margin:8px 0 6px;">using the budget $\mathbb{E}_f[X^2] \leq P$. The right-hand side is what the same two lines give with $f$ replaced by $g$ itself (for which $\mathbb{E}_g[X^2] = P$ exactly), i.e. it equals $\mathbb{E}_g\bigl[\log \tfrac{1}{g(X)}\bigr] = h(g) = \tfrac12 \log(2\pi e P)$.</p>
+    <p style="margin:8px 0 6px;"><strong>Step 3 (conclude).</strong> Chain the two steps with the information inequality:</p>
+    \[ 0 \;\leq\; D(f \,\Vert\, g)
+       = \mathbb{E}_f\Bigl[\log \tfrac{1}{g(X)}\Bigr] - h(f)
+       \;\leq\; h(g) - h(f), \]
+    <p style="margin:8px 0 0;">so $h(f) \leq h(g)$. <strong>Equality</strong> forces both inequalities tight: $D(f \Vert g) = 0$ gives $f = g$ a.e. (which then makes the budget tight automatically, $\mathbb{E}_f[X^2] = P$); conversely $f = g$ plainly attains it. Only the Gaussian. $\blacksquare$</p>
+  </div>
+  <p><strong>Remarks.</strong></p>
+  <ul>
+    <li><strong>Where the tightness lives.</strong> The proof works because $\log \tfrac1g$ is exactly the constrained statistic (a quadratic): the constraint $\mathbb{E}[X^2] \leq P$ is precisely what the Gaussian's log-density measures. This is the same skeleton as $H \leq \log K$ (constant $\log \tfrac1u$ = "no constraint beyond support") and the bounded-support exercise; the general principle &mdash; the MaxEnt density under linear constraints on statistics $T_i$ is $\propto \exp(\sum_i \lambda_i T_i(x))$ &mdash; is Jaynes' maximum-entropy principle [6].</li>
+    <li><strong>Variance vs. second moment.</strong> Under a variance budget $\mathrm{Var}(X) \leq \sigma^2$ with free mean, the winner is $\mathcal{N}(\mu, \sigma^2)$ for any $\mu$ (translation invariance of $h$; apply the theorem to $X - \mathbb{E}[X]$, noting $\mathbb{E}[(X - \mathbb{E}X)^2] = \mathrm{Var}(X)$). Under the raw second-moment budget the mean is forced to $0$: a nonzero mean wastes budget without adding entropy, since $\mathbb{E}[X^2] = \mathrm{Var}(X) + (\mathbb{E}X)^2$.</li>
+    <li><strong>Why Gaussians are everywhere in AI.</strong> With only an energy scale known, the Gaussian is the least-assuming (maximally random) noise model, and as worst-case noise nothing hides more information at fixed power &mdash; the deck's same-variance lineup ($2.05$ vs $1.94$ vs $1.79$ bits, verified in Section 6.4) is Theorem 13 in three data points. Diffusion models corrupt data toward the maximally random distribution at the given variance; that story continues in prob04 (discrete diffusion) and prob08 (Gaussian diffusion).</li>
+  </ul>
+</section>
+
+<section>
+  <h2>References</h2>
+  <ol>
+    <li>T. M. Cover and J. A. Thomas, <em>Elements of Information Theory</em>, 2nd ed., Wiley-Interscience, 2006. DOI: <a href="https://doi.org/10.1002/047174882X">10.1002/047174882X</a>. (Ch. 2: joint/conditional entropy, chain rules, mutual information, conditional MI, data processing inequality; Ch. 8: differential entropy, the discretization theorem 8.3.1, maximum entropy; the treatment followed here.)</li>
+    <li>C. E. Shannon, "A Mathematical Theory of Communication," <em>Bell System Technical Journal</em>, vol. 27, pp. 379&ndash;423, 623&ndash;656, 1948. DOI: <a href="https://doi.org/10.1002/j.1538-7305.1948.tb01338.x">10.1002/j.1538-7305.1948.tb01338.x</a>. (Origin of entropy, conditional entropy, and the quantity $H(X) - H(X|Y)$; also of the Gaussian maximum-entropy result, Sec. 20.)</li>
+    <li>S. Kullback and R. A. Leibler, "On Information and Sufficiency," <em>Annals of Mathematical Statistics</em>, vol. 22, no. 1, pp. 79&ndash;86, 1951. DOI: <a href="https://doi.org/10.1214/aoms/1177729694">10.1214/aoms/1177729694</a>. (The divergence underlying the KL form of MI and every non-negativity argument above.)</li>
+    <li>N. Tishby, F. C. Pereira, W. Bialek, "The Information Bottleneck Method," Proc. 37th Allerton Conference, 1999. arXiv: <a href="https://arxiv.org/abs/physics/0004057">physics/0004057</a>. (The $I(Z;Y)$-vs-$I(Z;X)$ trade-off behind the deck's "feature quality" and "layers only forget" slides.)</li>
+    <li>R. Shwartz-Ziv and N. Tishby, "Opening the Black Box of Deep Neural Networks via Information," 2017. arXiv: <a href="https://arxiv.org/abs/1703.00810">1703.00810</a>. (The layer-as-Markov-chain reading of a deep net and the empirical study of $I(X; Z_\ell)$ along training; contested empirically, but the framing used in Section 5.)</li>
+    <li>E. T. Jaynes, "Information Theory and Statistical Mechanics," <em>Physical Review</em>, vol. 106, no. 4, pp. 620&ndash;630, 1957. DOI: <a href="https://doi.org/10.1103/PhysRev.106.620">10.1103/PhysRev.106.620</a>. (The maximum-entropy principle generalizing Section 7's theorem.)</li>
+    <li>D. J. C. MacKay, <em>Information Theory, Inference, and Learning Algorithms</em>, Cambridge University Press, 2003. Free online: <a href="https://www.inference.org.uk/mackay/itila/">inference.org.uk/mackay/itila</a>. (Gentler parallel treatment of joint/conditional entropy and mutual information, Ch. 8.)</li>
+  </ol>
+</section>
+
+</body>
+</html>

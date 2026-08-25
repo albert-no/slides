@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Deep Learning Math 7 — Estimation: MLE, MAP &amp; Fundamental Limits · Notes</title>
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload='renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false},{left:"\\[",right:"\\]",display:true}]});'></script>
+<style>
+  body { max-width: 760px; margin: 48px auto; padding: 0 24px 96px; color: var(--charcoal); background: var(--white); font-family: 'Yonsei', 'Noto Sans', Arial, sans-serif; font-weight: 300; line-height: 1.65; }
+  h1 { font-size: 2rem; color: var(--yonsei-blue); margin-bottom: 4px; }
+  h2 { font-size: 1.4rem; color: var(--yonsei-blue); margin-top: 40px; border-bottom: 1px solid var(--slate); padding-bottom: 6px; }
+  h3 { font-size: 1.1rem; color: var(--blue-light); margin-top: 24px; }
+  p, li { font-size: 1rem; }
+  .meta { color: var(--gray-text); font-size: 0.95rem; margin-bottom: 24px; }
+  code { background: var(--light); padding: 1px 6px; border-radius: 4px; font-size: 0.92em; }
+  strong { color: var(--yonsei-blue); font-weight: 600; }
+  .deriv { background: var(--light); border-left: 3px solid var(--yonsei-blue); padding: 12px 18px; margin: 14px 0; border-radius: 0 6px 6px 0; }
+  table { border-collapse: collapse; margin: 14px 0; }
+  th, td { border: 1px solid var(--slate); padding: 6px 12px; font-size: 0.95rem; text-align: left; }
+  th { background: var(--light); color: var(--yonsei-blue); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>Deep Learning Math 7 · Estimation: MLE, MAP &amp; Fundamental Limits &mdash; Notes</h1>
+<p class="meta">Companion to <code>prob07-estimation.html</code>. Full formal statements with every condition the slides abbreviate (for which $y$ the conditional expectation $\mathbb{E}[X \mid Y = y]$ is even defined, the finite-mean hypothesis in the tower property, likelihood as a function of the <em>candidate</em> rather than a distribution over it, the "for all $\theta$" quantifier hidden inside "unbiased", the finite-second-moment standing assumption of the MSE sections), and every proof expanded with its skipped steps restored: the tower property with the sum swap justified, Bayes optimality of MAP with the pointwise-optimization step made precise, Fano's inequality proved in its <em>sharp</em> form $h_2(P_e) + P_e \log(|\mathcal{Y}| - 1) \geq H(Y|X)$ with every inequality justified and the deck's coarser form derived from it, the Bernoulli and Gaussian MLEs with the second-order checks the slides omit, the bias&ndash;variance identity line by line, and the MMSE theorem with the orthogonality principle stated as its own corollary. Every worked number on the slides has been re-derived from scratch here; <strong>all of them check out</strong> (roundings are exhibited to one more digit where useful). Three slips in the LaTeX source that the deck already corrects silently are flagged where they occur (Sections 5.5, 7.4, 8.4). Background from earlier lectures &mdash; entropy (prob01), KL and cross-entropy (prob02), conditional entropy / mutual information / DPI (prob03), concentration (prob05), generalization (prob06) &mdash; is cited from those companion notes rather than re-proved. <strong>Conventions:</strong> statements are written for discrete variables (pmfs, sums); the continuous reading (densities, integrals) holds verbatim with $\sum \leftrightarrow \int$, and the one genuinely delicate continuous point &mdash; conditioning on the probability-zero event $\{Y = y\}$ &mdash; is flagged where it arises, not papered over. As in prob01&ndash;prob03, $\log$ is base $2$ and entropies are in bits.</p>
+
+<section>
+  <h2>1 &nbsp;Why Estimation?</h2>
+
+  <h3>1.1 Deep learning through the estimation lens</h3>
+  <p>The deck's three cards, unpacked. <em>Training</em>: a network with weights $\theta$ defines a model distribution $q_\theta$; training on cross-entropy loss selects the $\theta$ that maximizes the likelihood of the data &mdash; that this is literally maximum likelihood estimation is Theorem-level content, proved in Section 7.5. <em>Regularization</em>: weight decay adds $\lambda \|\theta\|^2$ to the loss; Section 5.6 shows this is exactly maximum a posteriori estimation with a Gaussian prior on the weights. <em>Fundamental limits</em>: no matter the architecture or the optimizer, the error probability of <em>any</em> classifier is floored by Fano's inequality (Section 6), a statement about the joint distribution of input and label, not about the model class.</p>
+
+  <h3>1.2 The question prob06 left open</h3>
+  <p>Prob06's finite-class theorem certified the ERM pick: $R(\hat h) \leq R(h^*) + 2\epsilon$ with high probability when $n \gg \ln|\mathcal{H}|$ (prob06 note, Sections 7.3&ndash;7.4). That is a statement about <em>whatever</em> hypothesis empirical risk minimization returns &mdash; it never says how a hypothesis should be scored in the first place, nor why low empirical loss is the right thing to minimize. Today supplies the principle (likelihood), the correction for base rates (the prior), the fundamental limit (Fano), and the exact error accounting for the squared-error view (bias&ndash;variance, MMSE).</p>
+
+  <h3>1.3 Two faces of one problem</h3>
+  <p>Two estimation problems alternate through the lecture, sharing one recipe. (i) <em>Inference</em>: the model $p_{X|Y}$ is known, a label $y$ is hidden, an input $x$ is observed &mdash; estimate $y$ (Sections 3&ndash;6, 8). (ii) <em>Learning</em>: the model family $p_{X|\theta}$ is known up to a parameter, i.i.d. samples $x_1, \dots, x_n$ are observed &mdash; estimate $\theta$ (Sections 7, 9). In both cases an <em>estimator</em> is a function of the observation only (a rule fixed before the data arrive); the recipe is: maximize a likelihood, optionally weighted by a prior.</p>
+</section>
+
+<section>
+  <h2>2 &nbsp;Conditional Expectation</h2>
+
+  <h3>2.1 Definition, with its conditions</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (conditional expectation given $Y = y$).</strong> For jointly distributed $X, Y$ and any $y$ with $p_Y(y) \gt 0$:</p>
+    \[ \mathbb{E}[X \mid Y = y] \;=\; \sum_{x} x \, p_{X|Y}(x \mid y), \qquad
+       p_{X|Y}(x \mid y) = \frac{p_{X,Y}(x,y)}{p_Y(y)}, \]
+    <p style="margin:8px 0 0;">provided the sum converges absolutely. Continuous case: $\mathbb{E}[X \mid Y = y] = \int x\, f_{X|Y}(x|y)\, dx$ with $f_{X|Y}(x|y) = f_{X,Y}(x,y)/f_Y(y)$ wherever $f_Y(y) \gt 0$.</p>
+  </div>
+  <p>Fine print the slide compresses. (i) The conditional pmf $p_{X|Y}(\cdot \mid y)$ is a genuine pmf in $x$ for each <em>fixed</em> $y$ (non-negative; sums to $p_Y(y)/p_Y(y) = 1$), so the conditional expectation is an <em>ordinary</em> expectation under a different distribution &mdash; every rule from prob01 (linearity, LOTUS, monotonicity) applies to it verbatim. (ii) It is defined only for $y$ in the support of $Y$; values off the support never enter any expectation and may be set arbitrarily. (iii) The absolute-convergence proviso is automatic when $\mathbb{E}|X| \lt \infty$, since $\sum_x |x|\, p_{X|Y}(x|y) \leq \mathbb{E}|X| / p_Y(y)$. (iv) <em>Continuous flag:</em> for continuous $Y$ the event $\{Y = y\}$ has probability zero, so "conditioning on it" cannot mean an elementary conditional probability; the density formula above is the honest calculus-level definition (a limit of conditioning on $\{y \leq Y \leq y + \delta\}$), and the measure-theoretic construction that makes it canonical is beyond this course. Everything below is proved in the discrete setting where no such subtlety exists.</p>
+
+  <h3>2.2 Worked: the running table, all four conditionals</h3>
+  <p>The joint table (returning from prob03, with the margins recomputed here):</p>
+  <table>
+    <thead><tr><th>$p_{X,Y}$</th><th>$y=0$</th><th>$y=1$</th><th>$p_X$</th></tr></thead>
+    <tbody>
+      <tr><td>$x=0$</td><td>$1/4$</td><td>$1/4$</td><td>$1/2$</td></tr>
+      <tr><td>$x=1$</td><td>$1/2$</td><td>$0$</td><td>$1/2$</td></tr>
+      <tr><td>$p_Y$</td><td>$3/4$</td><td>$1/4$</td><td>$1$</td></tr>
+    </tbody>
+  </table>
+  <div class="deriv">
+    <p style="margin:0 0 6px;">Conditioning on $Y = 0$ (mass $3/4$): $\;p_{X|Y}(1|0) = \frac{1/2}{3/4} = \frac{2}{3}$, $\;p_{X|Y}(0|0) = \frac{1/4}{3/4} = \frac{1}{3}$ (sums to $1$ &#10003;). Conditioning on $Y = 1$ (mass $1/4$): $\;p_{X|Y}(1|1) = \frac{0}{1/4} = 0$, $\;p_{X|Y}(0|1) = \frac{1/4}{1/4} = 1$.</p>
+    \[ \mathbb{E}[X \mid Y=0] = 0 \cdot \tfrac13 + 1 \cdot \tfrac23 = \tfrac23, \qquad
+       \mathbb{E}[X \mid Y=1] = 0 \cdot 1 + 1 \cdot 0 = 0, \]
+    <p style="margin:8px 0 0;">against the unconditional $\mathbb{E}[X] = p_X(1) = \tfrac12$. All four slide values verified. Seeing $Y = 1$ <em>forces</em> $X = 0$ because the cell $(1,1)$ carries zero mass.</p>
+  </div>
+
+  <h3>2.3 $\mathbb{E}[X \mid Y]$ is a random variable</h3>
+  <p>Define $g(y) = \mathbb{E}[X \mid Y = y]$ on the support of $Y$ &mdash; an ordinary (non-random) function. Then $\mathbb{E}[X \mid Y]$ <em>means</em> the composition $g(Y)$: a random variable, because $Y$ is. On the table, $g(0) = \tfrac23$, $g(1) = 0$, so $\mathbb{E}[X|Y]$ takes the value $\tfrac23$ with probability $\tfrac34$ and $0$ with probability $\tfrac14$ &mdash; it has a pmf, hence its own expectation, which is exactly the quantity the tower property computes. Keeping the two readings separate ($g(y)$: a number per scenario; $g(Y)$: a random variable) is what makes the proofs in Sections 5.5 and 10 one-liners rather than mysteries.</p>
+
+  <h3>2.4 Theorem 1: the tower property, full proof</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 1 (tower property / law of iterated expectations).</strong> If $\mathbb{E}|X| \lt \infty$, then</p>
+    \[ \mathbb{E}\big[ \mathbb{E}[X \mid Y] \big] = \mathbb{E}[X]. \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> $\mathbb{E}[X|Y] = g(Y)$ is a function of $Y$, so LOTUS (prob01 note, Section 3) evaluates its expectation against $p_Y$:</p>
+    \[ \mathbb{E}\big[ g(Y) \big] = \sum_y g(y)\, p_Y(y)
+       = \sum_y p_Y(y) \sum_x x \, p_{X|Y}(x|y). \]
+    <p style="margin:8px 0 6px;">Substitute the definition $p_{X|Y}(x|y) = p_{X,Y}(x,y)/p_Y(y)$; the $p_Y(y)$ cancels (legitimate: the outer sum only visits $y$ with $p_Y(y) \gt 0$):</p>
+    \[ \mathbb{E}\big[ g(Y) \big] = \sum_y \sum_x x\, p_{X,Y}(x,y). \]
+    <p style="margin:8px 0 6px;">Swap the two sums. This is the step the slide labels "(swap sums)" without justification: a double series may be reordered when it converges absolutely, and here $\sum_y \sum_x |x|\, p_{X,Y}(x,y) = \mathbb{E}|X| \lt \infty$ &mdash; this is exactly where the finite-mean hypothesis is used. After the swap, the inner sum over $y$ marginalizes the joint pmf (prob03 note, Section 2):</p>
+    \[ \sum_x x \sum_y p_{X,Y}(x,y) = \sum_x x\, p_X(x) = \mathbb{E}[X]. \ \blacksquare \]
+  </div>
+  <p><strong>Worked check</strong> (slide verified): $\mathbb{E}[\mathbb{E}[X|Y]] = \tfrac34 \cdot \tfrac23 + \tfrac14 \cdot 0 = \tfrac{2}{4} = \tfrac12 = \mathbb{E}[X]$ &#10003;. The reading to keep: a hard expectation may be computed as <em>scenario averages, weighted by scenario probabilities</em> &mdash; without ever assembling the joint distribution.</p>
+
+  <h3>2.5 The pull-out property &mdash; stated on the slide, proved here</h3>
+  <p>The deck's "why it matters" slide displays $\mathbb{E}[h(Y)X] = \mathbb{E}\big[h(Y)\,\mathbb{E}[X|Y]\big]$ with no proof. It deserves one, since it alone kills the MMSE cross term in Section 10.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma 2.1 (taking out what is known).</strong> For any function $h$ with $\mathbb{E}\big|h(Y) X\big| \lt \infty$:</p>
+    \[ \mathbb{E}\big[ h(Y)\, X \big] \;=\; \mathbb{E}\big[ h(Y)\, \mathbb{E}[X \mid Y] \big]. \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Expand the left side over the joint pmf, factor it through the conditional, and pull $h(y)$ (constant in $x$) out of the inner sum:</p>
+    \[ \sum_y \sum_x h(y)\, x \, p_{X,Y}(x,y)
+       = \sum_y p_Y(y)\, h(y) \sum_x x\, p_{X|Y}(x|y)
+       = \sum_y p_Y(y)\, h(y)\, g(y), \]
+    <p style="margin:8px 0 0;">and the right-hand sum is $\mathbb{E}[h(Y)\, g(Y)]$ by LOTUS on the pair. Reordering is again licensed by absolute convergence. $\blacksquare$</p>
+  </div>
+  <p>Equivalent slogan: <em>inside</em> a conditional expectation given $Y$, anything that depends only on $Y$ is a constant and slides out: $\mathbb{E}[h(Y) X \mid Y] = h(Y)\, \mathbb{E}[X \mid Y]$. Lemma 2.1 is this slogan followed by the tower property.</p>
+</section>
+
+<section>
+  <h2>3 &nbsp;The Estimation Problem</h2>
+
+  <h3>3.1 Setup</h3>
+  <p>$X$ is the observed <em>sample</em> (an input: image, height, sentence); $Y$ is the hidden <em>label</em>. The standing assumption of Sections 3&ndash;6: the conditional model $p_{X|Y}(x|y)$ (or density $f_{X|Y}$) is <em>known exactly</em> for every $y$ &mdash; nature draws $Y$, then draws $X$ from the known conditional, and we see only $X = x$. An estimator is a function $\hat{y}(x)$ of the observation. How the model itself gets known &mdash; estimated from data &mdash; is deliberately postponed to Section 7; Section 8 then runs the full pipeline (fit the model, then classify) end to end.</p>
+  <div class="deriv">
+    <p style="margin:0;"><strong>Running example (two nationalities).</strong> Heights from nationality A follow $\mathcal{N}(170, 10^2)$, from nationality B follow $\mathcal{N}(180, 15^2)$ (cm). Label $Y = 0$ for A, $Y = 1$ for B; observation $X$ = height. Given $X = 176$: which nationality?</p>
+  </div>
+
+  <h3>3.2 Likelihood versus probability &mdash; the distinction the slides use silently</h3>
+  <p>Fix the observation $x$ and read the model backwards: the <strong>likelihood function</strong> is $L_x(y) = f_{X|Y}(x \mid y)$, a function of the <em>candidate</em> $y$ with the data $x$ frozen. Three things it is not. (i) It is not a probability distribution over $y$: summed or integrated over $y$ it need not give $1$ (at $x = 176$ below, $0.0333 + 0.0257 = 0.0590$). (ii) Its individual values are not probabilities of anything when $X$ is continuous &mdash; a density value can exceed $1$. (iii) Comparing $L_x(y)$ across $y$ is nonetheless meaningful: for continuous $X$, $\Pr(x \leq X \leq x + \delta \mid Y = y) \approx f_{X|Y}(x|y)\,\delta$ for small $\delta$, so ratios of densities are ratios of probabilities of the same small window &mdash; that is precisely why an argmax over $y$ makes sense. "Probability" answers <em>forward</em> questions (data unknown, parameter fixed); "likelihood" ranks <em>backward</em> candidates (data fixed, parameter unknown).</p>
+
+  <h3>3.3 Two questions, two estimators</h3>
+  <p>"On which $y$ is the observed $x$ most likely?" ranks $f_{X|Y}(x|y)$ over $y$ &mdash; the MLE, needing only the model. "Given $x$, which $y$ is most probable?" ranks the posterior $p_{Y|X}(y|x)$ &mdash; the MAP estimator, needing additionally a prior $p_Y$. The two answers coincide under a uniform prior (Section 5.2) and genuinely differ otherwise (Section 5.3's $x = 185$).</p>
+</section>
+
+<section>
+  <h2>4 &nbsp;Maximum Likelihood</h2>
+
+  <h3>4.1 Definition</h3>
+  <div class="deriv">
+    <p style="margin:0;"><strong>Definition (maximum likelihood estimator).</strong> $\;\hat{y}_{\text{MLE}}(x) = \operatorname*{argmax}_y f_{X|Y}(x \mid y)$ (pmf $p_{X|Y}$ for discrete $X$). If several $y$ tie, any fixed tie-breaking rule may be used; if the supremum is not attained, the MLE does not exist (examples in 4.5).</p>
+  </div>
+
+  <h3>4.2 Worked: the heights, all four density values from scratch</h3>
+  <p>The decision rule "pick A iff $f_{X|Y}(x|0) \gt f_{X|Y}(x|1)$" with the Gaussian densities. The normalizing constants: $\tfrac{1}{10\sqrt{2\pi}} = 0.0398942$ and $\tfrac{1}{15\sqrt{2\pi}} = 0.0265962$.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>At $x = 176$.</strong> Exponents: $-(176-170)^2/200 = -36/200 = -0.18$ and $-(176-180)^2/450 = -16/450 = -0.035556$.</p>
+    \[ f(176 \mid 0) = 0.0398942 \times e^{-0.18} = 0.0398942 \times 0.835270 = 0.033322, \]
+    \[ f(176 \mid 1) = 0.0265962 \times e^{-0.035556} = 0.0265962 \times 0.965069 = 0.025667. \]
+    <p style="margin:8px 0 6px;">Slide's $0.0333 \gt 0.0257$ verified $\Rightarrow \hat{y}_{\text{MLE}} = 0$ (A). Note B's mean is <em>closer</em> ($|176-180| = 4$ vs. $|176-170| = 6$), yet A wins: A's smaller spread concentrates more density near its mean &mdash; the taller, narrower curve is still on top at $176$.</p>
+    <p style="margin:8px 0 6px;"><strong>At $x = 185$.</strong> Exponents: $-225/200 = -1.125$ and $-25/450 = -0.055556$.</p>
+    \[ f(185 \mid 0) = 0.0398942 \times 0.324652 = 0.012952, \]
+    \[ f(185 \mid 1) = 0.0265962 \times 0.945959 = 0.025159. \]
+    <p style="margin:8px 0 0;">Slide's $0.0130 \lt 0.0252$ verified $\Rightarrow \hat{y}_{\text{MLE}} = 1$ (B).</p>
+  </div>
+
+  <h3>4.3 The decision boundary, solved exactly</h3>
+  <p>The slide's SVG marks boundaries "$\approx 179$" and "$\approx 145$" without derivation. Equate the two densities and take (natural) logs:</p>
+  <div class="deriv">
+    \[ -\ln 10 - \frac{(x-170)^2}{200} \;=\; -\ln 15 - \frac{(x-180)^2}{450}. \]
+    <p style="margin:8px 0 6px;">Rearrange and multiply by $1800$: $\;4(x-180)^2 - 9(x-170)^2 = -1800 \ln\tfrac{15}{10} = -729.837$. Expanding,</p>
+    \[ -5x^2 + 1620x - 130500 = -729.837
+       \;\iff\; x^2 - 324x + 25954.03 = 0, \]
+    <p style="margin:8px 0 0;">with discriminant $324^2 - 4 \times 25954.03 = 1159.87$, $\sqrt{1159.87} = 34.06$, so $x = \tfrac{324 \pm 34.06}{2} = \mathbf{179.03}$ or $\mathbf{145.03}$. Both slide markers verified.</p>
+  </div>
+  <p>Why <em>two</em> crossings: unequal variances make the log-density difference a genuine quadratic in $x$, opening downward for the wider curve. B's $\sigma = 15$ beats A not only above $179$ but also below $145$ &mdash; extreme heights in either direction are better explained by the wide distribution. (Equal variances would cancel the $x^2$ terms and leave a single linear boundary.)</p>
+
+  <h3>4.4 What MLE ignores</h3>
+  <p>The likelihood question never asks how <em>common</em> each label is. If $99\%$ of the population is from A, then even at $185$ cm most such people are tall A-nationals, simply because there are so many more of them. Base-rate information is a distribution on $Y$ &mdash; a prior &mdash; and folding it in is Section 5. (The classic failure mode of ignoring it: rare-disease testing, where a positive result on an accurate test is still usually a false positive.)</p>
+
+  <h3>4.5 Omitted edge cases: non-uniqueness and non-existence</h3>
+  <p>The argmax notation hides two possible pathologies, both standard [2, Ch.&nbsp;7] and both absent from today's well-behaved examples.</p>
+  <p><strong>Non-uniqueness.</strong> Let $X_1, \dots, X_n$ be i.i.d. uniform on $[\theta, \theta + 1]$. The likelihood of $\theta$ is $1$ if $\max_i x_i - 1 \leq \theta \leq \min_i x_i$ and $0$ otherwise: an entire <em>interval</em> of maximizers. Any point of it is "the" MLE; the definition needs a tie-break. (Ties also occur in classification whenever two class-conditional densities cross exactly at the observed $x$ &mdash; e.g. $x = 179.03$ above.)</p>
+  <p><strong>Non-existence.</strong> (i) $X_1, \dots, X_n$ i.i.d. uniform on the <em>open</em> interval $(0, \theta)$: the likelihood $\theta^{-n} \mathbf{1}\{\theta \gt \max_i x_i\}$ increases as $\theta \downarrow \max_i x_i$ but is $0$ at the limit &mdash; supremum not attained. (ii) A two-component Gaussian mixture with both means and variances free: setting one component's mean at $x_1$ and letting its variance $\to 0$ drives the likelihood to $+\infty$, so no maximizer exists over the full parameter space. Deep-learning moral: an unpenalized likelihood over a too-flexible family can be degenerate; priors/regularization (Section 5.6) are one cure. (iii) Boundary maxima are not pathological but need care: Bernoulli with all heads puts the MLE at $\hat p = 1$, an endpoint where no interior zero-derivative condition holds &mdash; Section 7.2.</p>
+</section>
+
+<section>
+  <h2>5 &nbsp;Maximum a Posteriori</h2>
+
+  <h3>5.1 Definition and Bayes' rule</h3>
+  <div class="deriv">
+    <p style="margin:0;"><strong>Definition (maximum a posteriori estimator).</strong> $\;\hat{y}_{\text{MAP}}(x) = \operatorname*{argmax}_y p_{Y|X}(y \mid x)$. Requires the prior $p_Y(y)$ for all $y$ in addition to the model; for continuous $Y$ replace pmfs by densities.</p>
+  </div>
+  <p>The posterior is not given directly &mdash; the model runs in the direction $Y \to X$. Flip it with two applications of the conditional-pmf definition (this <em>is</em> Bayes' rule; nothing new is assumed):</p>
+  \[ p_{Y|X}(y|x) = \frac{p_{X,Y}(x,y)}{p_X(x)} = \frac{p_{X|Y}(x|y)\, p_Y(y)}{p_X(x)},
+     \qquad p_X(x) = \sum_{y'} p_{X|Y}(x|y')\, p_{Y}(y'). \]
+
+  <h3>5.2 The evidence drops out</h3>
+  <p>The denominator $p_X(x)$ (the <em>evidence</em>) is the same positive number for every candidate $y$, and an argmax is invariant under multiplication by a positive constant. Hence</p>
+  \[ \hat{y}_{\text{MAP}}(x) = \operatorname*{argmax}_y \; p_{X|Y}(x|y)\, p_Y(y)
+     \;=\; \operatorname*{argmax}_y \; \big[\text{likelihood} \times \text{prior}\big]. \]
+  <p>Immediate corollary: if $p_Y$ is uniform over a finite label set, the prior factor is constant and <strong>MAP $=$ MLE</strong>. So MLE is the special case "no preference among labels", and every difference between the two estimators is driven entirely by the prior.</p>
+
+  <h3>5.3 Worked: the heights with a $9{:}1$ prior</h3>
+  <p>Prior $p_Y(0) = \tfrac{9}{10}$, $p_Y(1) = \tfrac{1}{10}$. Using Section 4.2's density values:</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>At $x = 176$:</strong> scores $0.033322 \times 0.9 = 0.029990 \approx 0.0300$ for A versus $0.025667 \times 0.1 = 0.002567 \approx 0.0026$ for B &mdash; slide verified; same verdict as MLE, wider margin. As a posterior: $\Pr(Y{=}0 \mid X{=}176) = \frac{0.029990}{0.029990 + 0.002567} = 0.921$.</p>
+    <p style="margin:8px 0 0;"><strong>At $x = 185$:</strong> scores $0.012952 \times 0.9 = 0.011657 \approx 0.0117$ for A versus $0.025159 \times 0.1 = 0.002516 \approx 0.0025$ for B &mdash; slide's disagreement table verified: MLE says B ($0.0130 \lt 0.0252$), MAP says A. The likelihood favors B by a factor $\approx 1.94$ ("a $2{:}1$ likelihood edge"), but the prior favors A by $9{:}1$; the product favors A by $\approx 4.6{:}1$, i.e. $\Pr(Y{=}0 \mid X{=}185) = \frac{0.011657}{0.011657+0.002516} = 0.822$. Tall people from A still outnumber people from B.</p>
+  </div>
+  <p><strong>The shifted boundary, solved exactly</strong> (slide's "MAP $\approx 195$"): the boundary condition multiplies Section 4.3's equation by the prior ratio, adding $\ln 9 = 2.19722$ to the log balance:</p>
+  \[ \frac{(x-180)^2}{450} - \frac{(x-170)^2}{200} = -\ln\tfrac{15}{10} - \ln 9 = -2.60269, \]
+  <p>which after the same algebra becomes $x^2 - 324x + 25163.03 = 0$, discriminant $4323.87$, $\sqrt{\cdot} = 65.76$, roots $x = \mathbf{194.88}$ and $\mathbf{129.12}$. Slide verified, including its caption: the pick-B threshold moves $194.88 - 179.03 = 15.85 \approx 16$ cm to the right.</p>
+
+  <h3>5.4 Theorem 2: MAP is Bayes optimal &mdash; full proof</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 2 (Bayes optimality of MAP).</strong> Among all estimators $\hat{Y}(X)$ (all functions of $X$ into the label set), the MAP rule minimizes the error probability $\Pr\big(\hat{Y}(X) \neq Y\big)$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Minimizing the error probability is the same as maximizing the success probability $\Pr(\hat Y(X) = Y) = 1 - \Pr(\hat Y(X) \neq Y)$. Fix any rule $\hat{Y}(\cdot)$. Write the success probability as the expectation of an indicator and condition on $X$ via the tower property (Theorem 1, applied to the bounded variable $\mathbf{1}\{Y = \hat Y(X)\}$, whose mean is trivially finite):</p>
+    \[ \Pr\big(\hat{Y}(X) = Y\big)
+       = \mathbb{E}\Big[ \mathbf{1}\{Y = \hat{Y}(X)\} \Big]
+       = \mathbb{E}\Big[ \, \mathbb{E}\big[ \mathbf{1}\{Y = \hat{Y}(X)\} \,\big|\, X \big] \Big]. \]
+    <p style="margin:8px 0 6px;">Given $X = x$, the guess $\hat Y(x)$ is a fixed label, so the inner conditional expectation is the posterior mass at that label: $\mathbb{E}[\mathbf{1}\{Y = \hat Y(x)\} \mid X = x] = p_{Y|X}(\hat{Y}(x) \mid x)$. LOTUS over $X$ then gives</p>
+    \[ \Pr\big(\hat{Y}(X) = Y\big)
+       = \sum_x p_X(x)\; p_{Y|X}\big( \hat{Y}(x) \,\big|\, x \big). \]
+    <p style="margin:8px 0 6px;">Here is the pointwise-optimization step, made precise: the sum is over disjoint choices &mdash; the value $\hat Y(x)$ chosen at one $x$ appears in exactly one term and constrains no other term. Bounding each term separately,</p>
+    \[ \sum_x p_X(x)\, p_{Y|X}(\hat{Y}(x)|x)
+       \;\leq\; \sum_x p_X(x)\, \max_y\, p_{Y|X}(y|x), \]
+    <p style="margin:8px 0 0;">with equality if and only if $\hat{Y}(x) \in \operatorname*{argmax}_y p_{Y|X}(y|x)$ for every $x$ with $p_X(x) \gt 0$ &mdash; which is exactly the MAP rule (any tie-break attains the same optimum). Since the upper bound is a fixed number independent of the rule, and MAP attains it, MAP maximizes success probability, i.e. minimizes error probability. $\blacksquare$</p>
+  </div>
+  <p>Three remarks the deck has no room for. (i) <em>Continuous inputs:</em> replace $\sum_x p_X(x)$ by $\int f_X(x)\,dx$; the argument is untouched. (ii) <em>Randomized rules don't help:</em> a randomized estimator is a probability mixture over deterministic rules; its success probability is the corresponding mixture of theirs, hence at most the maximum &mdash; MAP remains optimal in the wider class. (iii) <em>Optimality is loss-specific:</em> "Bayes optimal" here means optimal for the $0/1$ loss. Under squared error the optimum is a different functional of the same posterior &mdash; the conditional mean (Theorem 5, Section 10). The posterior is the sufficient object; the loss picks which summary of it to report.</p>
+  <p><em>Source note:</em> the LaTeX source (line 1661 of <code>probability25.tex</code>) states the MAP rule as $\operatorname*{argmax}_y p_{X|Y}(x|y)$, dropping the prior factor; the deck's statement (posterior argmax) is the correct one and is what is proved above.</p>
+
+  <h3>5.5 MAP $\to$ regularization: Gaussian prior $=$ ridge, Laplace prior $=$ lasso</h3>
+  <p>For a continuous parameter $\theta$ with prior density $f_\Theta$, take logs of likelihood $\times$ prior (logs preserve the argmax; Section 7.1):</p>
+  \[ \hat{\theta}_{\text{MAP}}
+     = \operatorname*{argmax}_\theta \Big[ \log f(x \mid \theta) + \log f_\Theta(\theta) \Big]
+     = \operatorname*{argmin}_\theta \Big[ \underbrace{-\log f(x \mid \theta)}_{\text{training loss}} \;\underbrace{-\log f_\Theta(\theta)}_{\text{penalty}} \Big]. \]
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Gaussian prior.</strong> $f_\Theta(\theta) \propto e^{-\|\theta\|^2/2\tau^2}$ gives penalty $\tfrac{1}{2\tau^2}\|\theta\|^2$ plus a constant: <strong>$L_2$ regularization</strong> &mdash; <em>weight decay</em> in deep learning, <em>ridge regression</em> in statistics. The strength $\lambda = \tfrac{1}{2\tau^2}$: a tighter prior (small $\tau$) is a stronger pull toward $0$.</p>
+    <p style="margin:8px 0 0;"><strong>Laplace prior</strong> (omitted by the deck, the natural companion): $f_\Theta(\theta) \propto e^{-\|\theta\|_1/b}$ gives penalty $\tfrac{1}{b}\|\theta\|_1$: <strong>$L_1$ regularization</strong> &mdash; the <em>lasso</em>. The Laplace density's kink at $0$ is why $L_1$-regularized solutions have exact zeros (sparse weights), while the smooth Gaussian prior only shrinks them.</p>
+  </div>
+  <p><em>Caveat (improper priors).</em> "Uniform prior $\Rightarrow$ MAP $=$ MLE" is exact on a finite label set or bounded parameter set. On an unbounded $\Theta$ (all of $\mathbb{R}^d$), a uniform "prior" has infinite total mass &mdash; it is <em>improper</em>, not a probability density. The recipe "maximize likelihood $\times$ 1" still produces the MLE, and posteriors can remain well-defined if the likelihood decays fast enough, but statements like Theorem 2 no longer have a probabilistic interpretation until a proper prior is put back. MLE-as-flat-MAP is a useful mnemonic, not a theorem, in the unbounded case.</p>
+</section>
+
+<section>
+  <h2>6 &nbsp;Fano's Inequality</h2>
+
+  <h3>6.1 The question, and the imported toolkit</h3>
+  <p>Theorem 2 crowned MAP the best possible rule for error probability. Fano's inequality answers the next question &mdash; how good can the best possibly be? &mdash; with a floor that binds <em>every</em> estimator $\hat Y(X)$, MAP included, in terms of the joint distribution of $(X, Y)$ alone. Error probability: $P_e = \Pr(Y \neq \hat{Y}(X))$.</p>
+  <p>Four facts are imported; the first three are stated and proved in the earlier companion notes and only re-stated here, the fourth is derived below because the deck's form of it is one step away from the cited one.</p>
+  <ul>
+    <li><strong>Conditional entropy</strong> (prob03 note, Section 3): $H(Y|X) = \sum_x p_X(x) H(Y \mid X = x)$, the average leftover uncertainty; $0 \leq H(Y|X) \leq H(Y)$.</li>
+    <li><strong>Uniform ceiling</strong> (prob01 note, Section 5): a variable supported on at most $m$ values has entropy $\leq \log m$, with equality iff uniform. In particular a binary variable has $H(E) = h_2(p) = p \log\tfrac1p + (1-p)\log\tfrac{1}{1-p} \leq \log 2 = 1$ bit.</li>
+    <li><strong>Conditioning never hurts</strong> (prob03 note, Section 4, from $I \geq 0$): $H(A \mid C) \leq H(A)$, and more generally $H(A \mid B, C) \leq H(A \mid C)$.</li>
+    <li><strong>DPI</strong> (prob03 note, Section 5): if $\hat Y = g(X)$ then $Y - X - \hat Y$ is a Markov chain and $I(Y; \hat{Y}) \leq I(Y; X)$.</li>
+  </ul>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>DPI, entropy form (deck's Review 4, derived).</strong> Write both mutual informations as entropy drops, $I(Y; \hat Y) = H(Y) - H(Y|\hat Y)$ and $I(Y; X) = H(Y) - H(Y|X)$; the DPI $I(Y;\hat Y) \leq I(Y;X)$ becomes, after cancelling $H(Y)$ and flipping the sign:</p>
+    \[ H\big( Y \mid \hat{Y}(X) \big) \;\geq\; H(Y \mid X). \]
+    <p style="margin:8px 0 0;">Processing the input can only lose information about the label &mdash; the guess never knows more than the input it was computed from.</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Two small lemmas the proof leans on</strong> (used by the deck without proof).</p>
+    <p style="margin:8px 0 6px;"><strong>Lemma 6.1 (conditional chain rule).</strong> $H(A, B \mid C) = H(A \mid C) + H(B \mid A, C)$, in either order of $A, B$. <em>Proof.</em> Factor the conditional pmf, $p(a, b \mid c) = p(a \mid c)\, p(b \mid a, c)$, take $\log\frac{1}{\cdot}$ of both sides, and average over the joint distribution of $(A, B, C)$: the left side averages to $H(A,B \mid C)$, the two right-side terms to $H(A|C)$ and $H(B|A,C)$. The other order swaps the roles of $a$ and $b$. $\square$</p>
+    <p style="margin:8px 0 0;"><strong>Lemma 6.2 (functions carry no conditional entropy).</strong> If $Z = g(W)$ then $H(Z \mid W) = 0$; more generally $H(Z \mid W, V) = 0$. <em>Proof.</em> Given $W = w$, the conditional pmf of $Z$ puts mass $1$ on the single point $g(w)$, and the entropy of a point mass is $1 \cdot \log 1 = 0$; average over $w$ (and $v$). $\square$</p>
+  </div>
+
+  <h3>6.2 The theorem &mdash; sharp form and the deck's form</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 3 (Fano's inequality [1, Thm 2.10.1]).</strong> Let $Y \in \mathcal{Y}$ with $2 \leq |\mathcal{Y}| \lt \infty$, let $\hat{Y} = \hat{Y}(X) \in \mathcal{Y}$ be any estimator, and let $P_e = \Pr(Y \neq \hat{Y})$. Then</p>
+    \[ h_2(P_e) + P_e \log\big( |\mathcal{Y}| - 1 \big) \;\geq\; H(Y \mid X)
+       \tag{sharp} \]
+    <p style="margin:8px 0 6px;">and consequently, weakening $h_2(P_e) \leq 1$ and $\log(|\mathcal{Y}|-1) \leq \log|\mathcal{Y}|$,</p>
+    \[ P_e \;\geq\; \frac{H(Y|X) - 1}{\log |\mathcal{Y}|}. \tag{deck} \]
+  </div>
+  <p>The deck proves the weak form directly; the note proves the sharp form &mdash; the same nine steps, keeping two quantities the deck rounds up &mdash; and then coarsens. This costs nothing and pays off twice: the sharp form is the citable standard, and it is the only version that says anything for binary labels (6.5).</p>
+
+  <h3>6.3 The proof, every step justified</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Step 1 (error flag).</strong> Define $E = \mathbf{1}\{\hat{Y} \neq Y\}$: binary, $p_E(1) = P_e$, $p_E(0) = 1 - P_e$, and $E$ is a deterministic function of the pair $(Y, \hat{Y})$. The quantity to be computed twice: $H(E, Y \mid \hat{Y})$.</p>
+    <p style="margin:8px 0 6px;"><strong>Step 2 (first expansion &mdash; $Y$ before $E$).</strong> Lemma 6.1 with $A = Y$, $B = E$, $C = \hat{Y}$:</p>
+    \[ H(E, Y \mid \hat{Y}) = H(Y \mid \hat{Y}) + H(E \mid Y, \hat{Y})
+       = H(Y \mid \hat{Y}), \]
+    <p style="margin:8px 0 6px;">the second term vanishing by Lemma 6.2 ($E$ is a function of $(Y, \hat Y)$). The flag is <em>free</em>: attaching it costs no entropy in this order.</p>
+    <p style="margin:8px 0 6px;"><strong>Step 3 (DPI).</strong> By the entropy form of the DPI (6.1), since $\hat Y$ is a function of $X$:</p>
+    \[ H(E, Y \mid \hat{Y}) = H(Y \mid \hat{Y}) \;\geq\; H(Y \mid X). \]
+    <p style="margin:8px 0 6px;">This is the only step where "any estimator" enters &mdash; nothing about $\hat Y$ is used except that it is computed from $X$. <em>Lower bound done.</em></p>
+    <p style="margin:8px 0 6px;"><strong>Step 4 (second expansion &mdash; $E$ before $Y$).</strong> Lemma 6.1 in the other order:</p>
+    \[ H(E, Y \mid \hat{Y}) = H(E \mid \hat{Y}) + H(Y \mid E, \hat{Y}). \]
+    <p style="margin:8px 0 6px;"><strong>Step 5 (flag term).</strong> Conditioning never hurts, then the binary ceiling:</p>
+    \[ H(E \mid \hat{Y}) \;\leq\; H(E) = h_2(P_e) \;\leq\; 1 \text{ bit}. \]
+    <p style="margin:8px 0 6px;">The sharp form keeps $h_2(P_e)$; the deck rounds to $1$ here &mdash; that is where its "$-1$" comes from.</p>
+    <p style="margin:8px 0 6px;"><strong>Step 6 (label term, split by the flag).</strong> By definition of conditional entropy, conditioning on the pair $(E, \hat Y)$ averages over the values of $E$ first:</p>
+    \[ H(Y \mid E, \hat{Y}) = (1 - P_e)\, H(Y \mid E = 0, \hat{Y})
+       + P_e\, H(Y \mid E = 1, \hat{Y}), \]
+    <p style="margin:8px 0 6px;">where $H(Y \mid E = e, \hat{Y}) = \sum_{\hat y} p_{\hat Y | E}(\hat y \mid e)\, H(Y \mid E = e, \hat{Y} = \hat y)$ is itself an average over the guess within each scenario.</p>
+    <p style="margin:8px 0 6px;"><strong>Step 7 (both scenarios bounded).</strong> <em>Correct scenario:</em> given $E = 0$ and $\hat{Y} = \hat y$, the label is determined ($Y = \hat y$), so every $H(Y \mid E{=}0, \hat Y{=}\hat y) = 0$ and the average is $0$. <em>Error scenario:</em> given $E = 1$ and $\hat{Y} = \hat y$, the label satisfies $Y \neq \hat y$, so $Y$ is supported on at most the $|\mathcal{Y}| - 1$ remaining labels; by the uniform ceiling, $H(Y \mid E{=}1, \hat Y{=}\hat y) \leq \log(|\mathcal{Y}| - 1)$ for every $\hat y$, hence also after averaging. (The deck rounds this to $\log|\mathcal{Y}|$ &mdash; the second coarsening.)</p>
+    <p style="margin:8px 0 6px;"><strong>Step 8 (assemble the upper bound).</strong> Steps 4&ndash;7:</p>
+    \[ H(E, Y \mid \hat{Y}) \;\leq\; h_2(P_e) + (1 - P_e)\cdot 0 + P_e \log(|\mathcal{Y}| - 1). \]
+    <p style="margin:8px 0 6px;"><strong>Step 9 (close the sandwich).</strong> Chain Steps 3 and 8 through the common middle quantity:</p>
+    \[ H(Y \mid X) \;\leq\; H(E, Y \mid \hat{Y}) \;\leq\; h_2(P_e) + P_e \log(|\mathcal{Y}| - 1), \]
+    <p style="margin:8px 0 0;">which is the sharp form. Weakening via $h_2(P_e) \leq 1$ and $\log(|\mathcal{Y}|-1) \leq \log|\mathcal{Y}|$ gives $H(Y|X) \leq 1 + P_e \log|\mathcal{Y}|$; solving for $P_e$ (dividing by $\log|\mathcal{Y}| \gt 0$) gives the deck's bound. $\blacksquare$</p>
+  </div>
+  <p>The proof in one sentence: one quantity, $H(E, Y \mid \hat Y)$, expanded by the chain rule in two orders &mdash; the $Y$-first order plus DPI makes it at least the leftover uncertainty $H(Y|X)$; the $E$-first order makes it at most "one flag plus, on errors, one label among the wrong ones" &mdash; and the two readings sandwich $P_e$.</p>
+
+  <h3>6.4 Worked: the 8-class example, both forms</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;">$|\mathcal{Y}| = 8$, so $\log 8 = 3$ bits; noisy labels leave $H(Y|X) = 2.5$ bits. Deck's form:</p>
+    \[ P_e \;\geq\; \frac{2.5 - 1}{3} = \frac{1.5}{3} = 0.5. \qquad \text{(slide verified)} \]
+    <p style="margin:8px 0 0;">Sharp form: $h_2(P_e) + P_e \log 7 \geq 2.5$ with $\log 7 = 2.807$. The left side is increasing in $P_e$ on the relevant range; numerically it equals $2.5$ at $P_e \approx 0.536$ (at $0.53$: $0.997 + 1.488 = 2.485 \lt 2.5$; at $0.55$: $0.993 + 1.544 = 2.537 \gt 2.5$). So the honest floor is $\approx 53.6\%$ error &mdash; the deck's $50\%$ is a slightly generous round-down, as a weakened bound must be. No architecture, dataset size, or training trick evades either number: the floor depends only on the joint distribution of $(X, Y)$.</p>
+  </div>
+
+  <h3>6.5 Edge cases: when the deck's form is vacuous, and binary labels</h3>
+  <p><strong>Vacuous regime.</strong> If $H(Y|X) \leq 1$ bit, the deck's numerator is $\leq 0$ and the bound says $P_e \geq (\text{something} \leq 0)$ &mdash; true and useless. Fano is a <em>lower-bound</em> tool for genuinely uncertain problems; it never certifies that a problem is easy.</p>
+  <p><strong>Binary labels, $|\mathcal{Y}| = 2$.</strong> The deck's form has $\log|\mathcal{Y}| = 1$ and never bites (its floor is $H(Y|X) - 1 \leq H(Y) - 1 \leq 0$). The sharp form, by contrast, has $\log(|\mathcal{Y}| - 1) = \log 1 = 0$, leaving</p>
+  \[ h_2(P_e) \;\geq\; H(Y \mid X)
+     \quad\Longrightarrow\quad P_e \;\geq\; h_2^{-1}\big( H(Y|X) \big), \]
+  <p>where $h_2^{-1}$ is the inverse of $h_2$ on $[0, \tfrac12]$. This is a real constraint: e.g. $H(Y|X) = 0.5$ bits forces $P_e \geq 0.110$ (check: $h_2(0.110) = 0.110 \times 3.184 + 0.890 \times 0.168 = 0.500$). This is exactly the "sharper variant" the deck's vacuous-case slide alludes to with "replace the $1$ by $H(E)$" &mdash; keep $h_2(P_e)$ unrounded in Step 5 and keep $|\mathcal{Y}|-1$ in Step 7, and the same nine steps deliver it.</p>
+
+  <h3>6.6 What Fano buys</h3>
+  <p><em>Label-noise ceiling:</em> mislabeled training data is randomness in $Y$ that no feature can remove; it inflates $H(Y|X)$ and caps achievable accuracy before any model is chosen. <em>Feature audit:</em> since $H(Y|X) = H(Y) - I(X; Y)$, features carrying little mutual information about the label leave $H(Y|X)$ large &mdash; the task is certifiably hopeless with those features, a diagnosis available before training. <em>Theory workhorse:</em> minimax lower bounds in statistics and learning theory routinely run Fano over a carefully built finite family of hard distributions [1, Ch. 2; 5, Ch. 15]. Direction matters: Fano converts uncertainty into an error <em>floor</em>; it says nothing about achievability &mdash; that side belongs to the estimators of Sections 4&ndash;5.</p>
+</section>
+
+<section>
+  <h2>7 &nbsp;Parameter Estimation</h2>
+
+  <h3>7.1 Setup, and why the log is legitimate</h3>
+  <p>$X_1, \dots, X_n$ i.i.d. from a distribution $p_{X|\theta}$ known up to the parameter $\theta$; observed values $x_1, \dots, x_n$; no distribution is assumed on $\theta$ (so MAP is unavailable and MLE is the tool). By independence the sample likelihood factorizes, and the MLE is</p>
+  \[ \hat{\theta}_{\text{MLE}}
+     = \operatorname*{argmax}_\theta \prod_{i=1}^n p_{X|\theta}(x_i \mid \theta)
+     = \operatorname*{argmax}_\theta \underbrace{\sum_{i=1}^n \log p_{X|\theta}(x_i \mid \theta)}_{\ell(\theta), \text{ the log-likelihood}}. \]
+  <div class="deriv">
+    <p style="margin:0;"><strong>Why the second equality holds.</strong> If $\phi$ is strictly increasing, then $u \mapsto \phi(u)$ preserves order, so $L(\theta^*) \geq L(\theta)\ \forall \theta \iff \phi(L(\theta^*)) \geq \phi(L(\theta))\ \forall\theta$: the argmax sets of $L$ and $\phi \circ L$ coincide. Apply with $\phi = \log$ (strictly increasing on $(0,\infty)$; candidates with $L = 0$ are never maximizers when any positive value is attainable). Practical payoff: a product of $n$ tiny numbers becomes a sum of $n$ manageable ones, differentiable term by term &mdash; and numerically stable.</p>
+  </div>
+
+  <h3>7.2 Bernoulli MLE, with the second-order check</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Example.</strong> $X_i$ i.i.d. Bernoulli($p$), $\theta = p \in (0,1)$. The exponent trick writes the pmf in one formula, $p_X(x) = p^x (1-p)^{1-x}$ ($= p$ at $x = 1$, $= 1-p$ at $x = 0$). With $k = \sum_i x_i$ heads:</p>
+    \[ \ell(p) = \sum_{i=1}^n \log\big[ p^{x_i} (1-p)^{1-x_i} \big]
+       = k \log p + (n - k) \log(1 - p). \]
+    <p style="margin:8px 0 6px;">Only two statistics survive: the heads count $k$ and the tails count $n - k$. Differentiate on $(0,1)$ and set to zero:</p>
+    \[ \ell'(p) = \frac{k}{p} - \frac{n-k}{1-p} = 0
+       \;\iff\; k(1-p) = (n-k)p \;\iff\; k = np
+       \;\iff\; \hat{p} = \frac{k}{n}. \]
+    <p style="margin:8px 0 6px;">(Cross-multiplying is safe: $p, 1-p \gt 0$ in the interior. The $-kp$ terms cancel on both sides &mdash; the deck's "cross-multiply and cancel".)</p>
+    <p style="margin:8px 0 0;"><strong>Second-order check (omitted by the deck):</strong> $\ell''(p) = -\frac{k}{p^2} - \frac{n-k}{(1-p)^2} \lt 0$ for every $p \in (0,1)$ (both terms are $\leq 0$ and at least one is strictly negative for $n \geq 1$), so $\ell$ is strictly concave: the critical point is the unique global maximum. This is what the slide's "concave &mdash; the zero-derivative point is the unique max" asserts.</p>
+  </div>
+  <p><strong>Boundary cases</strong> (edge cases the argmax hides): if $k = 0$, then $\ell(p) = n\log(1-p)$ is strictly decreasing and $\ell'$ never vanishes in the interior; the maximum over $[0,1]$ sits at the endpoint $\hat p = 0$ (consistent with $k/n$). Symmetrically $k = n$ gives $\hat p = 1$. Interior calculus finds the MLE only when $0 \lt k \lt n$; the formula $\hat p = k/n$ happens to cover all three cases. Estimating $\hat p \in \{0, 1\}$ from finite data is exactly the zero-count pathology that ambushes Naive Bayes in Section 8.6.</p>
+  <p><strong>Sanity chain</strong> (deck verified): $\hat p = \bar X_n$, so prob05's LLN gives $\hat p \to p$ in probability, and prob06's Hoeffding gives $\Pr(|\hat p - p| \geq \epsilon) \leq 2e^{-2n\epsilon^2}$ &mdash; the principled recipe agrees with the obvious one, and concentration certifies it.</p>
+
+  <h3>7.3 Worked: 10 flips, 7 heads &mdash; the likelihood table re-derived</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;">$n = 10$, $k = 7$: $\hat p = 0.7$. The likelihood $L(p) = p^7 (1-p)^3$ at the slide's three candidates:</p>
+    \[ L(0.5) = 0.5^{10} = \frac{1}{1024} = 0.000977 \approx 0.00098, \]
+    \[ L(0.7) = 0.7^7 \times 0.3^3 = 0.0823543 \times 0.027 = 0.002224 \approx 0.00222, \]
+    \[ L(0.9) = 0.9^7 \times 0.1^3 = 0.4782969 \times 0.001 = 0.000478 \approx 0.00048. \]
+    <p style="margin:8px 0 0;">All three slide values verified, and $L(0.7)/L(0.5) = 2.28$ &mdash; the slide's "$2.3\times$ likelier than a fair coin". Note the absolute values are tiny (every specific 10-flip sequence is unlikely); only the <em>ratios</em> matter, which is likelihood thinking in miniature (Section 3.2).</p>
+  </div>
+
+  <h3>7.4 Gaussian MLE, both parameters, with the checks</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Example.</strong> $X_i$ i.i.d. $\mathcal{N}(\mu, \sigma^2)$, $\theta = (\mu, \sigma^2)$. Log-likelihood (dropping nothing):</p>
+    \[ \ell(\mu, \sigma^2) = \sum_{i=1}^n \left[ -\frac{(x_i - \mu)^2}{2\sigma^2} - \frac{1}{2}\log 2\pi\sigma^2 \right]. \]
+    <p style="margin:8px 0 6px;"><strong>Solve for $\mu$</strong> ($\sigma^2$ fixed): $\;\frac{\partial \ell}{\partial \mu} = \sum_i \frac{x_i - \mu}{\sigma^2} = 0 \iff \sum_i x_i = n\mu \iff \hat{\mu} = \frac{1}{n}\sum_i x_i$; and $\frac{\partial^2 \ell}{\partial \mu^2} = -\frac{n}{\sigma^2} \lt 0$, so this is a maximum in $\mu$ for <em>every</em> fixed $\sigma^2$ &mdash; which is why $\sigma^2$ "cancels entirely": the optimal $\mu$ does not depend on it. (Equivalently: the sample mean minimizes $\sum_i (x_i - \mu)^2$ &mdash; the mean-minimizes-the-quadratic fact, proved in the prob06 note, Lemma 3.1 Step A.)</p>
+    <p style="margin:8px 0 6px;"><strong>Solve for $\sigma^2$</strong>: substitute $t = \sigma^2$ and $S = \sum_i (x_i - \hat{\mu})^2$, so $\ell(t) = -\frac{S}{2t} - \frac{n}{2}\log(2\pi t)$:</p>
+    \[ \ell'(t) = \frac{S}{2t^2} - \frac{n}{2t} = 0
+       \;\iff\; t = \frac{S}{n}
+       \;\iff\; \widehat{\sigma^2} = \frac{1}{n}\sum_{i=1}^n (x_i - \hat{\mu})^2. \]
+    <p style="margin:8px 0 0;"><strong>Second-order check:</strong> $\ell''(t) = -\frac{S}{t^3} + \frac{n}{2t^2}$, and at $\hat t = S/n$: $\ell''(\hat t) = -\frac{n^3}{S^2} + \frac{n^3}{2S^2} = -\frac{n^3}{2S^2} \lt 0$ (for $S \gt 0$, i.e. not all samples identical) &mdash; a genuine maximum. Since $\ell(t) \to -\infty$ both as $t \downarrow 0$ (the $-S/2t$ term) and as $t \to \infty$ (the $-\log t$ term), the unique critical point is the global maximum.</p>
+  </div>
+  <p><em>Source note:</em> the LaTeX source (line 1749) writes $\widehat{\sigma^2} = \frac1n \sum (x_i - \mu)^2$ with the unknown $\mu$; the deck correctly plugs in $\hat\mu$. <strong>Omitted detail worth knowing:</strong> the MLE of the variance is <em>biased</em>. Using the identity $\sum_i (x_i - \bar{x})^2 = \sum_i (x_i - \mu)^2 - n(\bar{x} - \mu)^2$ (expand the square around $\mu$: the cross term is $-2(\bar{x} - \mu)\sum_i (x_i - \mu) = -2n(\bar{x} - \mu)^2$, which combines with the $+n(\bar{x} - \mu)^2$ from the last term) and taking expectations, $\mathbb{E}\big[\sum_i (X_i - \bar X)^2\big] = n\sigma^2 - n \cdot \frac{\sigma^2}{n} = (n-1)\sigma^2$, so</p>
+  \[ \mathbb{E}\big[ \widehat{\sigma^2} \big] = \frac{n-1}{n}\,\sigma^2
+     \qquad\Longrightarrow\qquad \text{Bias}\big(\widehat{\sigma^2}\big) = -\frac{\sigma^2}{n}. \]
+  <p>The MLE systematically underestimates the variance (it measures spread around the <em>fitted</em> center, which hugs the data); dividing by $n - 1$ instead of $n$ removes the bias. A live example, one section early, that maximum likelihood does not imply unbiasedness &mdash; Section 9's vocabulary makes the trade-off precise.</p>
+
+  <h3>7.5 The promised proof: cross-entropy training <em>is</em> MLE</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Claim (from the deck's Section 1, proved here in full).</strong> For a model family $q_\theta$ over a finite alphabet and samples $x_1, \dots, x_n$, maximizing the likelihood is minimizing the cross-entropy loss, which is minimizing a KL divergence:</p>
+    \[ \operatorname*{argmax}_\theta \sum_{i=1}^n \log q_\theta(x_i)
+       = \operatorname*{argmin}_\theta H(\hat{p}_n, q_\theta)
+       = \operatorname*{argmin}_\theta D(\hat{p}_n \,\|\, q_\theta). \]
+    <p style="margin:8px 0 6px;"><strong>Step 1 (regroup by value &mdash; the skipped step).</strong> Let $N_x = \#\{i : x_i = x\}$ and let $\hat{p}_n(x) = N_x / n$ be the <em>empirical distribution</em> (non-negative, sums to $\sum_x N_x/n = 1$: a genuine pmf). Grouping the $n$ terms of the loss by which symbol they evaluate:</p>
+    \[ \frac{1}{n} \sum_{i=1}^n \log\frac{1}{q_\theta(x_i)}
+       = \frac{1}{n} \sum_x N_x \log\frac{1}{q_\theta(x)}
+       = \sum_x \hat{p}_n(x) \log\frac{1}{q_\theta(x)}
+       = H(\hat{p}_n, q_\theta), \]
+    <p style="margin:8px 0 6px;">the cross-entropy of the pair $(\hat p_n, q_\theta)$ exactly as defined in prob02. Since $\frac1n \sum_i \log \frac{1}{q_\theta(x_i)} = -\frac1n \ell(\theta)$, maximizing $\ell$ is minimizing $H(\hat p_n, q_\theta)$ &mdash; the first equality of the claim (dividing by the constant $n \gt 0$ and negating flips argmax to argmin, by 7.1's monotone-map argument with $\phi(u) = -u/n$).</p>
+    <p style="margin:8px 0 0;"><strong>Step 2 (split off the constant).</strong> By prob02's mismatch theorem (prob02 note, Section 3): $H(P, Q) = H(P) + D(P \| Q)$. With $P = \hat{p}_n$ fixed by the data and $Q = q_\theta$ the only $\theta$-dependent piece, $H(\hat p_n)$ is an additive constant in $\theta$, so the argmin transfers to the KL term. $\blacksquare$</p>
+  </div>
+  <p>Three names, one computation: every cross-entropy training run is maximum likelihood estimation, and equivalently a KL <em>projection</em> of the empirical distribution onto the model class $\{q_\theta\}$. If the class contains $\hat p_n$ itself, the projection lands on it exactly ($D = 0$) &mdash; the Bernoulli case 7.2 is the one-parameter instance, where $q_p$ can match any empirical frequency and the MLE $\hat p = k/n$ <em>is</em> the empirical distribution. For classifiers the same regrouping runs on pairs $(x_i, y_i)$ with conditional models $q_\theta(y|x)$; the bookkeeping is identical. The prob02 loop closes: the loss defined there for coding reasons was MLE all along.</p>
+</section>
+
+<section>
+  <h2>8 &nbsp;Naive Bayes</h2>
+
+  <h3>8.1 The parameter blow-up, counted exactly</h3>
+  <p>Features $X^n = (X_1, \dots, X_n)$, each binary; label $Y$ binary. To run Section 5's MAP classifier one needs the class-conditional model $p_{X^n|Y}(\cdot \mid y)$ for each $y$: a pmf on $\{0,1\}^n$, i.e. $2^n$ numbers summing to $1$ &mdash; $2^n - 1$ free parameters <em>per class</em>. For $7\times7$ binarized images, $n = 49$:</p>
+  \[ 2^{49} = 562{,}949{,}953{,}421{,}312 \approx 5.63 \times 10^{14} \quad \text{(slide's } 5.6\times10^{14}\text{ verified).} \]
+  <p>No dataset fills that table; an assumption must cut it down.</p>
+
+  <h3>8.2 The assumption, and what it actually says</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Assumption (conditional independence).</strong> Given the label, the features are mutually independent:</p>
+    \[ p_{X^n|Y}(x^n \mid y) = \prod_{i=1}^n p_{X_i|Y}(x_i \mid y)
+       \quad\text{equivalently}\quad
+       \log p_{X^n|Y}(x^n|y) = \sum_{i=1}^n \log p_{X_i|Y}(x_i|y). \]
+  </div>
+  <p>(The two displays are equivalent by taking $\log$ / exponentiating; the deck shows the log form.) The count drops from $2^n - 1$ to $n$ Bernoulli parameters per class ($p_{i|y} = \Pr(X_i = 1 \mid Y = y)$), plus one prior parameter: $2n + 1$ numbers in total for binary labels. Note precisely what is assumed: independence <em>given the class</em> &mdash; not marginal independence. In the spam filter, "free" and "winner" are certainly correlated across all mail (both flag spam); the assumption says that <em>within</em> the spam pile, seeing one tells you nothing further about the other. That is still false in general (Section 8.6's "wrong-but-useful"), but it is a much weaker falsehood than marginal independence.</p>
+
+  <h3>8.3 Fitting: why "counting" is exactly MLE</h3>
+  <p>The deck asserts the counting formulas; here is why they are the MLE. Given training data $\{(\mathbf{x}^{(j)}, y^{(j)})\}_{j=1}^N$, the full log-likelihood under the NB model with prior parameter $p_y$ is</p>
+  \[ \sum_{j=1}^N \log p_Y(y^{(j)})
+     \;+\; \sum_{i=1}^n \;\sum_{j:\, y^{(j)} = 1} \log p_{X_i|Y}(x^{(j)}_i \mid 1)
+     \;+\; \sum_{i=1}^n \;\sum_{j:\, y^{(j)} = 0} \log p_{X_i|Y}(x^{(j)}_i \mid 0). \]
+  <p>The three groups share no parameters, and within the feature groups each $(i, y)$ pair has its own parameter $p_{i|y}$ appearing in its own inner sum only &mdash; so the joint maximization <em>separates</em> into $2n + 1$ independent one-dimensional Bernoulli MLE problems, each solved by Section 7.2's count-and-divide:</p>
+  <div class="deriv">
+    \[ p_{i|y} = \frac{\#\{j : x^{(j)}_i = 1 \text{ and } y^{(j)} = y\}}{\#\{j : y^{(j)} = y\}}
+       \qquad\text{("among class-}y\text{ mails, the fraction containing word } i\text{")}, \]
+    \[ p_y = \Pr(Y = 1) \;\text{estimated by}\; \frac{1}{N}\#\{j : y^{(j)} = 1\}
+       \qquad\text{(the fraction of spam in the training set).} \]
+  </div>
+  <p><em>Source note:</em> the LaTeX source (line 1791) writes the prior estimate with $\mathbf{1}\{y^{(j)} = 0\}$ while calling it $\Pr(Y = 1)$; the deck's version (count $y^{(j)} = 1$) is the correct one. With the fitted model and prior, Section 5's MAP posterior is computable by Bayes' rule with the products factorized &mdash; every ingredient is a count.</p>
+
+  <h3>8.4 Worked: the 10-mail training set, every number re-derived</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;">$N = 10$: $4$ spam, $6$ ham. Prior: $p_Y(1) = \tfrac{4}{10} = \tfrac{2}{5}$, $p_Y(0) = \tfrac{3}{5}$ &#10003;. Counts: "free" in $3$ of $4$ spam, $1$ of $6$ ham; "meeting" in $1$ of $4$ spam, $4$ of $6$ ham. Hence</p>
+    \[ p_{\text{free}|1} = \tfrac34, \quad p_{\text{free}|0} = \tfrac16, \quad
+       p_{\text{meet}|1} = \tfrac14, \quad p_{\text{meet}|0} = \tfrac46 = \tfrac23. \qquad \text{(all four verified)} \]
+    <p style="margin:8px 0 6px;"><strong>Classify a new mail</strong> with "free", without "meeting": $x = (1, 0)$. Under conditional independence the class scores (numerators of Bayes' rule) are</p>
+    \[ \text{spam:}\;\; p_{\text{free}|1} \cdot \big(1 - p_{\text{meet}|1}\big) \cdot p_Y(1)
+       = \tfrac34 \cdot \tfrac34 \cdot \tfrac25 = \tfrac{9}{40} = 0.225, \]
+    \[ \text{ham:}\;\; p_{\text{free}|0} \cdot \big(1 - p_{\text{meet}|0}\big) \cdot p_Y(0)
+       = \tfrac16 \cdot \tfrac13 \cdot \tfrac35 = \tfrac{1}{30} = 0.0333. \]
+    <p style="margin:8px 0 0;">(Note the $1 - p$ factors: the mail <em>lacks</em> "meeting", so the Bernoulli pmf contributes $1 - p_{\text{meet}|y}$ &mdash; the slide's $\tfrac34$ and $\tfrac13$ are these complements.) Posterior, exactly: over the common denominator $120$, $\tfrac{9}{40} = \tfrac{27}{120}$ and $\tfrac{1}{30} = \tfrac{4}{120}$, so $p_{Y|X^2}(1 \mid 1, 0) = \frac{27}{27 + 4} = \frac{27}{31} = 0.871 \approx 0.87$ &mdash; slide verified; verdict spam.</p>
+  </div>
+
+  <h3>8.5 The zero-count veto</h3>
+  <p>Add "winner": present in $2$ of $4$ spam but $0$ of $6$ ham, so the MLE sets $p_{\text{winner}|0} = \tfrac{0}{6} = 0$. Then <em>any</em> mail containing "winner" has ham score $\prod_i p_{X_i|Y}(x_i|0) = 0$ exactly &mdash; a single unseen word&ndash;class combination vetoes the entire class, no matter how ham-like the other $10{,}000$ words are. This is the boundary MLE $\hat p \in \{0,1\}$ of Section 7.2 doing real damage: with rare words and finite $N$, some counts <em>will</em> be zero (the same finite-sample fluctuation prob05 quantified), so the failure is guaranteed in practice, not exotic.</p>
+
+  <h3>8.6 Laplace smoothing, and its Bayesian reading</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Laplace smoothing.</strong> Start every count from $1$:</p>
+    \[ p_{i|y} = \frac{1 + \#\{j : x^{(j)}_i = 1,\; y^{(j)} = y\}}{2 + \#\{j : y^{(j)} = y\}}. \]
+    <p style="margin:8px 0 6px;">One pretend mail with the word and one without, per class: estimates are pulled toward $\tfrac12$, and zeros (and ones) become impossible &mdash; the numerator is $\geq 1$ and $\leq$ denominator $- 1$.</p>
+    <p style="margin:8px 0 0;"><strong>Worked, ham column</strong> (slide verified): free, $1$ of $6$: $\tfrac{1+1}{2+6} = \tfrac28 = 0.25$ (vs. MLE $\tfrac16 = 0.167$); meeting, $4$ of $6$: $\tfrac{5}{8} = 0.625$ (vs. $\tfrac23 = 0.667$); winner, $0$ of $6$: $\tfrac{1}{8} = 0.125$ (vs. $0$ &mdash; the veto becomes a strong-but-finite vote that enough contrary evidence can outweigh).</p>
+  </div>
+  <p><strong>Where the "$+1$/$+2$" comes from</strong> (omitted by the deck): put a Beta prior on the Bernoulli parameter. With $k$ successes in $m$ trials and prior density $\propto p^{\alpha-1}(1-p)^{\beta-1}$, the posterior is Beta($\alpha + k$, $\beta + m - k$). The smoothed estimate $\frac{k+1}{m+2}$ is the <em>posterior mean</em> under the uniform prior $\alpha = \beta = 1$ (Laplace's rule of succession), and equally the <em>MAP</em> estimate under Beta($2, 2$). Either way, smoothing is Section 5 applied to the parameters themselves: a prior belief ("no word is impossible in either class") folded into estimation. It deliberately biases the estimate toward $\tfrac12$ to kill the wild variance of small-count MLEs &mdash; the exact trade Section 9 prices.</p>
+
+  <h3>8.7 Why wrong-but-useful</h3>
+  <p>The independence assumption is plainly false (strokes in a digit are correlated; spam words co-occur), so the fitted $p_{X^n|Y}$ is the wrong distribution and the posterior $0.87$ above should not be read as a calibrated probability. Why does classification still work? Because the classifier reports only an <strong>argmax</strong>: it is correct whenever the true and modeled score <em>rankings</em> agree at the observed $x$, which is far weaker than the distributions agreeing. Two structural reasons the ranking survives: (i) double-counting correlated evidence typically inflates <em>both</em> class scores, moving posteriors toward $0/1$ (overconfidence) more than it flips their order; (ii) in log space NB is a linear classifier &mdash; $\log\frac{\text{score}(1)}{\text{score}(0)}$ is a sum of per-feature weights plus a bias &mdash; and linear decision boundaries are often adequate even when the generative story behind them is wrong. The cost side is equally instructive: fitting is counting, one pass, no gradients, $O(nN)$; the model is the assumption, and the assumption is the price of tractability. (Discussion: [3, &sect;8.2.2]; [2, Ch. 7] for the estimation side.)</p>
+</section>
+
+<section>
+  <h2>9 &nbsp;Bias&ndash;Variance</h2>
+
+  <h3>9.1 The estimator is a random variable</h3>
+  <p>An estimator of a real parameter $\theta \in \Omega \subset \mathbb{R}$ is a function of the sample, $\hat{\theta}_n = \hat{\theta}(X_1, \dots, X_n)$: random inputs, hence a random output with a distribution of its own. Two subtleties the slide states quickly: (i) that distribution depends on the <em>true</em> $\theta$ (the sample was drawn under it), so every expectation below is "under $\theta$", written $\mathbb{E}$ with $\theta$ fixed; (ii) quality must therefore be a property of the <em>distribution</em> of $\hat\theta_n$ &mdash; a new dataset gives a new estimate, and single realizations are not gradeable.</p>
+
+  <h3>9.2 The three definitions, with fine print</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definitions.</strong> For an estimator $\hat{\theta}_n$ of $\theta$ (all expectations under the true $\theta$; $\mathbb{E}[\hat\theta_n^2] \lt \infty$ standing):</p>
+    \[ \text{Bias}(\hat{\theta}_n) = \mathbb{E}[\hat{\theta}_n] - \theta, \qquad
+       \text{Var}(\hat{\theta}_n) = \mathbb{E}\big[ (\hat{\theta}_n - \mathbb{E}[\hat{\theta}_n])^2 \big], \]
+    \[ \text{MSE}(\hat{\theta}_n) = \mathbb{E}\big[ (\hat{\theta}_n - \theta)^2 \big]. \]
+  </div>
+  <p>Readings: bias is the systematic error &mdash; where the estimates <em>center</em> versus the truth; variance is scatter around the estimator's <em>own</em> center (not around $\theta$); MSE is the risk under squared-error loss &mdash; distance to the <em>truth</em>, where both failure modes hurt. "Unbiased" means $\mathbb{E}[\hat\theta_n] = \theta$ <em>for all possible $\theta$</em> &mdash; the quantifier matters: the constant estimator $\hat\theta \equiv 5$ satisfies the equation at the single point $\theta = 5$ but is not unbiased. All three quantities are functions of the unknown $\theta$ in general (the worked example in 9.5 shows the winner between two estimators genuinely changing with $\theta$).</p>
+
+  <h3>9.3 Theorem 4: the decomposition, line by line</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 4 (bias&ndash;variance decomposition).</strong> If $\mathbb{E}[\hat{\theta}_n^2] \lt \infty$, then, exactly,</p>
+    \[ \text{MSE}(\hat{\theta}_n) = \text{Bias}(\hat{\theta}_n)^2 + \text{Var}(\hat{\theta}_n). \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Write $m = \mathbb{E}[\hat{\theta}_n]$ (a constant, once $\theta$ is fixed). Add and subtract it inside the square &mdash; the same move as prob05's completing-the-square and Section 10's proof:</p>
+    \[ (\hat{\theta}_n - \theta)^2 = \big( (\hat{\theta}_n - m) + (m - \theta) \big)^2
+       = (\hat{\theta}_n - m)^2 + 2(\hat{\theta}_n - m)(m - \theta) + (m - \theta)^2. \]
+    <p style="margin:8px 0 6px;">Take expectations term by term (linearity, prob01). First term: $\text{Var}(\hat\theta_n)$ by definition. Third term: $(m - \theta)^2$ is a constant &mdash; expectation does nothing &mdash; and equals $\text{Bias}^2$ by definition. Cross term: $(m - \theta)$ is constant, so it pulls out,</p>
+    \[ 2(m - \theta)\, \mathbb{E}\big[ \hat{\theta}_n - m \big]
+       = 2(m - \theta)\big( \mathbb{E}[\hat{\theta}_n] - m \big) = 2(m-\theta) \cdot 0 = 0, \]
+    <p style="margin:8px 0 0;">since $m$ <em>is</em> $\mathbb{E}[\hat\theta_n]$ &mdash; deviations from one's own mean average to zero by construction. $\blacksquare$</p>
+  </div>
+  <p>An identity, not an inequality: nothing was bounded, no assumption made beyond finite second moment. Immediate corollary: for an unbiased estimator, MSE $=$ variance. And the moral the deck builds toward: since only the <em>sum</em> is the score, deliberately accepting bias to cut variance can lower the MSE &mdash; unbiasedness is not sacred.</p>
+
+  <h3>9.4 Example: the sample mean</h3>
+  <p>i.i.d. sample with mean $\mu$ and variance $\sigma^2 \lt \infty$; estimator $\hat X = \bar{X}_n = \tfrac1n \sum_i X_i$. Unbiased for every $\mu$: $\mathbb{E}[\bar X_n] = \mu$ by linearity. Variance: $\text{Var}(\bar X_n) = \sigma^2/n$ (independence; prob05 note, Section 2). Hence $\text{MSE} = 0^2 + \sigma^2/n \to 0$: the sample mean is <em>consistent</em> (converges to $\mu$ in probability &mdash; Chebyshev on the vanishing MSE; this is precisely prob05's LLN argument re-told in estimation vocabulary).</p>
+
+  <h3>9.5 Worked: can bias help? The smoothed coin, in full</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Setup.</strong> Coin bias $p$, $n = 10$ flips, $S = \sum_i X_i \sim \text{Binomial}(10, p)$, so $\mathbb{E}[S] = 10p$, $\text{Var}(S) = 10p(1-p)$. Estimators: the MLE $\hat{p} = S/10$ and the Laplace-smoothed $\tilde{p} = \frac{S+1}{12}$ (Section 8.6's rule with $m = 10$).</p>
+    <p style="margin:8px 0 6px;"><strong>Moments of $\hat p$:</strong> $\mathbb{E}[\hat p] = p$ (unbiased); $\text{Var}(\hat p) = \frac{10p(1-p)}{100} = \frac{p(1-p)}{10} = \text{MSE}(\hat p)$.</p>
+    <p style="margin:8px 0 6px;"><strong>Moments of $\tilde p$:</strong> $\mathbb{E}[\tilde p] = \frac{10p + 1}{12}$, so</p>
+    \[ \text{Bias}(\tilde{p}) = \frac{10p + 1}{12} - p = \frac{10p + 1 - 12p}{12} = \frac{1 - 2p}{12}, \qquad
+       \text{Var}(\tilde{p}) = \frac{\text{Var}(S)}{144} = \frac{10\,p(1-p)}{144}. \]
+    <p style="margin:8px 0 6px;">Both slide formulas verified; and $\frac{10}{144} = 0.069 \lt 0.100 = \frac{1}{10}$, so the smoothed estimator has $31\%$ less variance at <em>every</em> $p$ &mdash; shrinking toward $\tfrac12$ compresses the scatter. By Theorem 4, $\text{MSE}(\tilde p) = \frac{(1-2p)^2}{144} + \frac{10p(1-p)}{144} $.</p>
+    <p style="margin:8px 0 6px;"><strong>The numbers</strong> (slide's table, re-derived): at $p = 0.5$: $\text{MSE}(\hat p) = \frac{0.25}{10} = 0.0250$; $\text{MSE}(\tilde p) = \frac{0 + 2.5}{144} = 0.01736 \approx 0.0174$ &mdash; smoothed wins (its bias is exactly zero there, and it keeps the variance cut). At $p = 0.9$: $\text{MSE}(\hat p) = \frac{0.09}{10} = 0.0090$; $\text{MSE}(\tilde p) = \frac{(-0.8/12)^2 \cdot 144 + 10 \cdot 0.09}{144} = \frac{0.64 + 0.9}{144} = 0.01069 \approx 0.0107$ &mdash; unbiased wins (near the edge, shrinking toward $\tfrac12$ is shrinking in the wrong direction). All four table entries verified.</p>
+    <p style="margin:8px 0 0;"><strong>The crossings, solved exactly</strong> (slide's "$\approx 0.14$&ndash;$0.86$"): set the MSEs equal with $q = p(1-p)$, noting $(1-2p)^2 = 1 - 4q$: $\;\frac{144\,q}{10} = (1 - 4q) + 10q \iff 14.4\,q - 10\,q = 1 - 4q \iff 8.4\,q = 1 \iff q = \frac{5}{42}$. Then $p^2 - p + \frac{5}{42} = 0$ gives $p = \frac{1 \pm \sqrt{11/21}}{2} = \frac{1 \pm 0.7237}{2}$, i.e. $p = \mathbf{0.138}$ and $p = \mathbf{0.862}$. Slide verified: the biased estimator wins on the middle $72\%$ of the parameter range.</p>
+  </div>
+  <p><strong>The regularization trade, named.</strong> Weight decay (Section 5.6) and Laplace smoothing (Section 8.6) are the same move: accept a controlled pull toward a default (zero weights, a fair coin) in exchange for a large cut in sensitivity to the sample. The decomposition makes it an accounting identity rather than folklore &mdash; and connects to prob06's U-curve, which is the same bias&ndash;variance tension with model-class size as the knob.</p>
+</section>
+
+<section>
+  <h2>10 &nbsp;MMSE Estimation</h2>
+
+  <h3>10.1 Setup</h3>
+  <p>Now <em>both</em> $X$ (source) and $Y$ (noisy measurement) are random with known joint distribution, and the score is mean squared error: find, among <strong>all</strong> functions $\hat{X}(\cdot)$ of the measurement, the minimizer of $\mathbb{E}\big[ (X - \hat{X}(Y))^2 \big]$. Standing assumption: $\mathbb{E}[X^2] \lt \infty$ (otherwise every estimator has infinite MSE and the question is empty); competitors may be restricted to $\mathbb{E}[\hat X(Y)^2] \lt \infty$, since any other has infinite MSE by the triangle inequality and can be discarded.</p>
+
+  <h3>10.2 Theorem 5, with the orthogonality argument</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma 10.1 (orthogonality of the residual).</strong> For every function $g$ with $\mathbb{E}|g(Y)(X - \mathbb{E}[X|Y])| \lt \infty$:</p>
+    \[ \mathbb{E}\Big[ \big( X - \mathbb{E}[X \mid Y] \big)\, g(Y) \Big] = 0. \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Split by linearity into $\mathbb{E}[g(Y) X] - \mathbb{E}\big[g(Y)\, \mathbb{E}[X|Y]\big]$, and the two terms are equal by Lemma 2.1 (pull-out). Equivalently, in the conditioned form: $\mathbb{E}[X - \mathbb{E}[X|Y] \mid Y] = \mathbb{E}[X|Y] - \mathbb{E}[X|Y] = 0$, so multiplying by the $Y$-measurable $g(Y)$ and towering gives $0$. $\square$</p>
+    <p style="margin:8px 0 0;">The residual $X - \mathbb{E}[X|Y]$ is <em>orthogonal to every function of $Y$</em> &mdash; the estimation error left after the conditional mean cannot be predicted any further from $Y$, linearly or nonlinearly. Geometric reading: in the space of finite-second-moment random variables with inner product $\langle U, V\rangle = \mathbb{E}[UV]$, the functions of $Y$ form a subspace, and $\mathbb{E}[X|Y]$ is the orthogonal projection of $X$ onto it. The theorem below is the Pythagorean theorem for this projection.</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 5 (MMSE estimator is the conditional mean).</strong> For any function $\hat{X}(\cdot)$:</p>
+    \[ \mathbb{E}\big[ (X - \hat{X}(Y))^2 \big] \;\geq\; \mathbb{E}\big[ (X - \mathbb{E}[X|Y])^2 \big], \]
+    <p style="margin:8px 0 6px;">with equality iff $\hat{X}(Y) = \mathbb{E}[X|Y]$ with probability $1$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> <em>Step 1 (insert and expand).</em> Add and subtract $\mathbb{E}[X|Y]$ &mdash; the add-and-subtract move for the third time today &mdash; and square out:</p>
+    \[ \mathbb{E}\big[ (X - \hat{X}(Y))^2 \big]
+       = \mathbb{E}\big[ (X - \mathbb{E}[X|Y])^2 \big]
+       + \text{cross}
+       + \mathbb{E}\big[ (\mathbb{E}[X|Y] - \hat{X}(Y))^2 \big], \]
+    \[ \text{cross} = 2\, \mathbb{E}\Big[ \big(X - \mathbb{E}[X|Y]\big) \big(\mathbb{E}[X|Y] - \hat{X}(Y)\big) \Big]. \]
+    <p style="margin:8px 0 6px;"><em>Steps 2&ndash;3 (the cross term dies).</em> The second factor is a function of $Y$ alone &mdash; call it $g(Y) = \mathbb{E}[X|Y] - \hat X(Y)$. Lemma 10.1 applies verbatim: cross $= 2 \cdot 0 = 0$. (Spelled out with the tower, as on the slides: condition on $Y$; given $Y$, $g(Y)$ is a constant and slides out of the inner expectation, whose remaining factor is $\mathbb{E}[X - \mathbb{E}[X|Y] \mid Y] = 0$; the outer expectation of $2\,g(Y)\cdot 0$ is $0$. This is why the <em>random</em> center needs the tower where Theorem 4's constant center needed only linearity.)</p>
+    <p style="margin:8px 0 0;"><em>Step 4 (read off the minimizer).</em> What remains is a fixed number plus a non-negative penalty:</p>
+    \[ \mathbb{E}\big[ (X - \hat{X}(Y))^2 \big]
+       = \underbrace{\mathbb{E}\big[ (X - \mathbb{E}[X|Y])^2 \big]}_{\text{no } \hat{X} \text{ anywhere}}
+       + \underbrace{\mathbb{E}\big[ (\mathbb{E}[X|Y] - \hat{X}(Y))^2 \big]}_{\geq 0;\; = 0 \text{ iff } \hat{X}(Y) = \mathbb{E}[X|Y] \text{ w.p. } 1}. \]
+    <p style="margin:8px 0 0;">Dropping the penalty gives the inequality; it vanishes exactly when $\hat X$ agrees with the conditional mean almost surely, which settles both the minimizer and its uniqueness. $\blacksquare$</p>
+  </div>
+  <p>The achieved optimum has a name and a formula: $\text{MMSE} = \mathbb{E}\big[(X - \mathbb{E}[X|Y])^2\big] = \mathbb{E}\big[\text{Var}(X \mid Y)\big]$ (tower the square, and note that given $Y$ the inner expectation is precisely the conditional variance). The average <em>leftover</em> spread after seeing the measurement &mdash; the squared-error analogue of Fano's $H(Y|X)$.</p>
+
+  <h3>10.3 Worked: the table, one last time &mdash; with a cross-check</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;">On Section 2's table, the optimal estimator is $\hat{X}(0) = \mathbb{E}[X|Y{=}0] = \tfrac23$, $\hat{X}(1) = 0$. Sum the squared error over the three cells with mass:</p>
+    \[ \text{MMSE} = \underbrace{\tfrac14 \big(0 - \tfrac23\big)^2}_{(x,y)=(0,0)}
+       + \underbrace{\tfrac12 \big(1 - \tfrac23\big)^2}_{(1,0)}
+       + \underbrace{\tfrac14 (0 - 0)^2}_{(0,1)}
+       = \tfrac14 \cdot \tfrac49 + \tfrac12 \cdot \tfrac19
+       = \tfrac19 + \tfrac1{18} = \tfrac{3}{18} = \tfrac16. \]
+    <p style="margin:8px 0 6px;"><strong>Cross-check via conditional variances:</strong> given $Y = 0$, $X$ is Bernoulli($\tfrac23$) with variance $\tfrac23 \cdot \tfrac13 = \tfrac29$; given $Y = 1$, $X \equiv 0$ with variance $0$; so $\mathbb{E}[\text{Var}(X|Y)] = \tfrac34 \cdot \tfrac29 + \tfrac14 \cdot 0 = \tfrac16$ &#10003; &mdash; same answer by the formula at the end of 10.2.</p>
+    <p style="margin:8px 0 0;"><strong>Against the best constant:</strong> the best $Y$-blind guess is the constant minimizing $\mathbb{E}[(X - c)^2]$, which is $c = \mathbb{E}[X] = \tfrac12$ with MSE $= \text{Var}(X) = \tfrac12 - \tfrac14 = \tfrac14$ (mean-minimizes-the-quadratic: prob06 note, Lemma 3.1 Step A). Slide verified: $\tfrac16 \lt \tfrac14$ &mdash; watching $Y$ removes a third of the error. The gap is exactly the <em>law of total variance</em>: $\text{Var}(X) = \mathbb{E}[\text{Var}(X|Y)] + \text{Var}(\mathbb{E}[X|Y])$, and indeed $\text{Var}(\mathbb{E}[X|Y]) = \tfrac34 \cdot (\tfrac23)^2 - (\tfrac12)^2 = \tfrac13 - \tfrac14 = \tfrac1{12} = \tfrac14 - \tfrac16$ &#10003;. What observation buys is precisely the variance <em>of</em> the conditional mean.</p>
+  </div>
+
+  <h3>10.4 The loss picks the estimator</h3>
+  <p>Regression with MSE loss aims, by Theorem 5, at the conditional mean $\mathbb{E}[Y_{\text{label}} \mid \text{input}]$: the network is a parameterized guess at that function, and training pushes it toward the target the theorem names. Prob04's diffusion teaser is the same statement: the ideal denoiser trained with squared error outputs $\mathbb{E}[\text{clean} \mid \text{noisy}]$ &mdash; estimation theory names the target, optimization approximates it (prob08 computes it in closed form for the Gaussian channel, where it becomes linear). The lecture's closing table, completed with one row the deck omits: $0/1$ loss $\to$ posterior mode (MAP, Theorem 2); squared loss $\to$ conditional mean (Theorem 5); absolute loss $\to$ conditional <em>median</em> (same insert-and-compare proof pattern, run on $|{\cdot}|$ instead of $({\cdot})^2$). The posterior is the object; the loss chooses which of its summaries to report.</p>
+</section>
+
+<section>
+  <h2>References</h2>
+  <ol>
+    <li>T. M. Cover and J. A. Thomas, <em>Elements of Information Theory</em>, 2nd ed., Wiley-Interscience, 2006. DOI: <a href="https://doi.org/10.1002/047174882X">10.1002/047174882X</a>. (&sect;2.10: Fano's inequality in the sharp form of Section 6.2, with the same error-flag proof; standard modern source for the result, which originates in Robert M. Fano's early-1950s MIT information-theory course &mdash; Fano himself never published it in a journal, and citing Cover &amp; Thomas is the accepted attribution. Ch. 2: the entropy toolkit recalled from prob01&ndash;prob03.)</li>
+    <li>G. Casella and R. L. Berger, <em>Statistical Inference</em>, 2nd ed., Duxbury / Thomson Learning, 2002. (Ch. 6&ndash;7: likelihood, MLE including the non-existence and non-uniqueness pathologies of Section 4.5, Bayes estimators; Ch. 7.3: bias, MSE, and the bias&ndash;variance decomposition; &sect;7.2.2: the Gaussian MLE and the $(n{-}1)/n$ bias of Section 7.4.)</li>
+    <li>C. M. Bishop, <em>Pattern Recognition and Machine Learning</em>, Springer, 2006. Free PDF at the publisher-authorized Microsoft Research page: <a href="https://www.microsoft.com/en-us/research/publication/pattern-recognition-machine-learning/">microsoft.com/en-us/research/publication/pattern-recognition-machine-learning</a>. (&sect;1.2.5&ndash;&sect;3.1: MLE, MAP, and the Gaussian-prior/regularization correspondence of Section 5.6; &sect;2.1&ndash;2.2: the Beta&ndash;Bernoulli conjugacy behind Laplace smoothing; &sect;8.2.2: conditional independence and naive Bayes; &sect;1.5.5 and &sect;3.2: squared loss, the conditional mean, and bias&ndash;variance.)</li>
+    <li>E. L. Lehmann and G. Casella, <em>Theory of Point Estimation</em>, 2nd ed., Springer, 1998. DOI: <a href="https://doi.org/10.1007/b98854">10.1007/b98854</a>. (Ch. 1&ndash;2: estimators, unbiasedness, MSE and the decomposition at full rigor; Ch. 4: Bayes and MMSE estimation, conditional expectation as the $L_2$ projection of Section 10.2.)</li>
+    <li>T. M. Cover and J. A. Thomas, op. cit., Ch. 2, together with the prob01&ndash;prob06 companion notes in this repository (<code>../prob01-foundations/prob01-foundations-note.html</code> &mdash; LOTUS, entropy ceiling; <code>../prob02-kl-crossentropy/prob02-kl-crossentropy-note.html</code> &mdash; the mismatch theorem $H(P,Q) = H(P) + D(P\|Q)$ used in Section 7.5; <code>../prob03-mutual-information/prob03-mutual-information-note.html</code> &mdash; conditional entropy, chain rule, DPI; <code>../prob05-concentration/prob05-concentration-note.html</code> &mdash; variance of averages, LLN; <code>../prob06-generalization/prob06-generalization-note.html</code> &mdash; Hoeffding, the ERM corollary, mean-minimizes-the-quadratic), which state and prove every imported lemma cited by section number in the text.</li>
+  </ol>
+</section>
+
+</body>
+</html>

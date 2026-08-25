@@ -43,6 +43,7 @@ Dropped from source by request: operator theory (opt 1603–1761), acceleration/
 `prob01-foundations/prob01-foundations.html` · source: prob 13–451.
 Lecture 1 — defines everything from scratch; ends on a bridge to prob02 (wrong
 distribution → cross-entropy/KL).
+Companion: `prob01-foundations/prob01-foundations-note.html` — detailed definitions, expanded proofs, lemmas, references.
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -68,6 +69,7 @@ states Jensen without proof) — added per full-treatment mandate.
 Lecture 2 — answers prob01's teaser (wrong distribution Q); recalls entropy/Jensen
 from prob01 instead of redefining; ends on a bridge to prob03 (two RVs → mutual
 information).
+Companion: `prob02-kl-crossentropy/prob02-kl-crossentropy-note.html` — detailed definitions, expanded proofs, lemmas, references.
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -100,6 +102,7 @@ as a hinted exercise (commented out in the tex too).
 Lecture 3 — answers prob02's teaser (two RVs); recalls entropy from prob01 and KL
 from prob02 instead of redefining; ends on a bridge to prob04 (sequences in time →
 Markov processes).
+Companion: `prob03-mutual-information/prob03-mutual-information-note.html` — detailed definitions, expanded proofs, lemmas, references.
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -141,6 +144,9 @@ and pipeline SVGs added per visual mandate.
 Lecture 4 — answers prob03's teaser (sequences in time); recalls the chain rule of
 probability from prob03 instead of redefining; ends on a bridge to prob05 (averages
 of many draws → concentration).
+
+Companion: `prob04-random-processes/prob04-random-processes-note.html` — detailed
+definitions, expanded proofs, lemmas, references.
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -185,6 +191,7 @@ variance from prob01 and independence from prob03 instead of redefining; one run
 example (mean of n fair coin flips, Pr(X̄_n ≥ 3/4)) is re-answered by every bound;
 ends on a bridge to prob06 (tail bounds uniform over a hypothesis class → Hoeffding
 + union bound).
+Companion: `prob05-concentration/prob05-concentration-note.html` — detailed definitions, expanded proofs, lemmas, references.
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -236,6 +243,8 @@ running example (Pr(X̄₁₀₀ ≥ 3/4)) returns to benchmark Hoeffding agains
 2.1×10⁻⁶ and exact 2.8×10⁻⁷; ends on a bridge to prob07 (how to *choose* ĥ →
 likelihood, MLE/MAP, bias–variance).
 
+Companion: `prob06-generalization/prob06-generalization-note.html` — detailed definitions, expanded proofs, lemmas, references.
+
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + TOC | 1–2 | prob06-generalization/prob06-generalization.html:23 |
@@ -282,16 +291,18 @@ expectation/tower (prob 1577–1592, deferred here from prob05 per deck plan).
 Lecture 7 — answers prob06's bridge (how to *choose* ĥ → likelihood); recalls
 prob02 CE loss, prob03 conditional pmf + heights model, prob04 diffusion teaser,
 prob05 MGF add-and-subtract, prob06 H(Y|X)/chain rule/DPI by name without
-re-proving; prob03's two-coin table (p(0,0)=1/2, p(1,0)=p(0,1)=1/4) returns three
+re-proving; prob03's two-coin table (p(0,0)=p(0,1)=1/4, p(1,0)=1/2) returns three
 times (conditional means, tower check, MMSE = 1/6 vs constant-guess 1/4); ends on
 a bridge to prob08 (the Gaussian everywhere → multivariate Gaussian, linear
 E[X|Y]).
+
+Companion: `prob07-estimation/prob07-estimation-note.html` — detailed definitions, expanded proofs, lemmas, references.
 
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + TOC | 1–2 | prob07-estimation/prob07-estimation.html:23 |
 | 01 | Why Estimation? (DL as estimation cards :132, prob06's open question :155, claim CE=MLE to prove today :171, route map SVG :182, inference vs. learning faces :220) | 3–8 | prob07-estimation/prob07-estimation.html:123 |
-| 02 | Conditional Expectation (recall prob03 conditional pmf :249, definition :267, worked pmfs-first on prob03 table :283, both conditional means 2/3 and 0 :298, E[X|Y] is an RV :314, its own distribution :348, Thm 1 tower arc :360, proof :372, tower check 7/12·... = E[X]=1/4 :388, why it matters today :402) | 9–19 | prob07-estimation/prob07-estimation.html:240 |
+| 02 | Conditional Expectation (recall prob03 conditional pmf :249, definition :267, worked pmfs-first on prob03 table :283, both conditional means 2/3 and 0 :298, E[X|Y] is an RV :314, its own distribution :348, Thm 1 tower arc :360, proof :372, tower check 3/4·2/3 + 1/4·0 = E[X] = 1/2 :388, why it matters today :402) | 9–19 | prob07-estimation/prob07-estimation.html:240 |
 | 03 | The Estimation Problem (sample/label setup :425, two-nationalities running example :439, two height densities SVG N(170,10²) vs N(180,15²) :452, two questions → two estimators :473) | 20–24 | prob07-estimation/prob07-estimation.html:416 |
 | 04 | Maximum Likelihood (definition :500, MLE on heights :516, worked x=176 → 0.0333>0.0257 → A :529, decision-boundary SVG ≈179 :543, worked x=185 → B :565, what MLE ignores :577) | 25–31 | prob07-estimation/prob07-estimation.html:491 |
 | 05 | Maximum a Posteriori (definition :598, Bayes' rule derivation :614, evidence drops out :628, heights with 9:1 prior :640, worked x=176 :654, worked x=185 — MLE/MAP disagree 0.0117 vs 0.0025 :666, prior moves boundary SVG ≈195 :681, Thm 2 MAP is Bayes optimal arc :701, 2-step proof :714, regularization is a prior :741) | 32–43 | prob07-estimation/prob07-estimation.html:589 |
@@ -345,11 +356,13 @@ and `courses/infotheory/lectures/07-diffusion/` — this deck stops at the exact
 forward process + Gaussian reverse-step form, no variational objective); ends on a
 bridge to prob09 (integrals stop closing → Monte Carlo).
 
+Companion: `prob08-gaussian/prob08-gaussian-note.html` — detailed definitions, expanded proofs, lemmas, references.
+
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + TOC | 1–2 | prob08-gaussian/prob08-gaussian.html:24 |
 | 01 | Why Gaussians? (default noise model cards, 1D-so-far gap, today's claims, route map SVG) | 3–8 | prob08-gaussian/prob08-gaussian.html:115 |
-| 02 | Warm-Up: Two Dimensions (jointly Gaussian pair :233, joint density :248, coupling picture, running example ρ=1/2 :287 + ellipse SVG, Thm 1 statement :322, slicing SVG, worked conditional :357, what the general case needs) | 9–18 | prob08-gaussian/prob08-gaussian.html:223 |
+| 02 | Warm-Up: Two Dimensions (jointly Gaussian pair :233, joint density :248, coupling picture, running example ρ=0.6 :287 + ellipse SVG, Thm 1 statement :322, slicing SVG, worked conditional :357, what the general case needs) | 9–18 | prob08-gaussian/prob08-gaussian.html:223 |
 | 03 | Positive Semidefinite Matrices (PD/PSD def :393, bowl-vs-trough SVG, PD certificate :434, spectral decomposition :462, worked eigenpairs :475, symmetric square root :489 + worked :502, inverse, factorization exercise + solution, why this buys a density :553) | 19–31 | prob08-gaussian/prob08-gaussian.html:384 |
 | 04 | Three Definitions (three-roads cards :575, Def 1 density :599, white noise :613, Def 2 constructive X=DW+μ :626 + coloring SVG, Def 3 projection :667 + shadow SVG, degeneracy :703, equivalence map :733) | 32–41 | prob08-gaussian/prob08-gaussian.html:566 |
 | 05 | Vector Means & Covariances (mean vector :772, covariance matrix :784, self-covariance :800, PSD exercise + solution :813, correlation coefficient :840) | 42–48 | prob08-gaussian/prob08-gaussian.html:763 |
@@ -398,6 +411,8 @@ prob04 chain rule of probability, prob05 LLN/Chebyshev, prob06 Hoeffding,
 prob07 MSE decomposition by name without re-proving; ends by closing the
 probability half (prob01–prob09 recap map) and bridging to opt01 (SVD & least
 squares — the optimization half).
+
+Companion: `prob09-monte-carlo/prob09-monte-carlo-note.html` — detailed definitions, expanded proofs, lemmas, references.
 
 | # | Section | Slides | Location |
 |---|---|---|---|

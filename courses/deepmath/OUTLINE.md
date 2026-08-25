@@ -356,11 +356,13 @@ and `courses/infotheory/lectures/07-diffusion/` — this deck stops at the exact
 forward process + Gaussian reverse-step form, no variational objective); ends on a
 bridge to prob09 (integrals stop closing → Monte Carlo).
 
+Companion: `prob08-gaussian/prob08-gaussian-note.html` — detailed definitions, expanded proofs, lemmas, references.
+
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + TOC | 1–2 | prob08-gaussian/prob08-gaussian.html:24 |
 | 01 | Why Gaussians? (default noise model cards, 1D-so-far gap, today's claims, route map SVG) | 3–8 | prob08-gaussian/prob08-gaussian.html:115 |
-| 02 | Warm-Up: Two Dimensions (jointly Gaussian pair :233, joint density :248, coupling picture, running example ρ=1/2 :287 + ellipse SVG, Thm 1 statement :322, slicing SVG, worked conditional :357, what the general case needs) | 9–18 | prob08-gaussian/prob08-gaussian.html:223 |
+| 02 | Warm-Up: Two Dimensions (jointly Gaussian pair :233, joint density :248, coupling picture, running example ρ=0.6 :287 + ellipse SVG, Thm 1 statement :322, slicing SVG, worked conditional :357, what the general case needs) | 9–18 | prob08-gaussian/prob08-gaussian.html:223 |
 | 03 | Positive Semidefinite Matrices (PD/PSD def :393, bowl-vs-trough SVG, PD certificate :434, spectral decomposition :462, worked eigenpairs :475, symmetric square root :489 + worked :502, inverse, factorization exercise + solution, why this buys a density :553) | 19–31 | prob08-gaussian/prob08-gaussian.html:384 |
 | 04 | Three Definitions (three-roads cards :575, Def 1 density :599, white noise :613, Def 2 constructive X=DW+μ :626 + coloring SVG, Def 3 projection :667 + shadow SVG, degeneracy :703, equivalence map :733) | 32–41 | prob08-gaussian/prob08-gaussian.html:566 |
 | 05 | Vector Means & Covariances (mean vector :772, covariance matrix :784, self-covariance :800, PSD exercise + solution :813, correlation coefficient :840) | 42–48 | prob08-gaussian/prob08-gaussian.html:763 |

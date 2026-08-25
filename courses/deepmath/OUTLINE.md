@@ -102,6 +102,7 @@ as a hinted exercise (commented out in the tex too).
 Lecture 3 — answers prob02's teaser (two RVs); recalls entropy from prob01 and KL
 from prob02 instead of redefining; ends on a bridge to prob04 (sequences in time →
 Markov processes).
+Companion: `prob03-mutual-information/prob03-mutual-information-note.html` — detailed definitions, expanded proofs, lemmas, references.
 
 | # | Section | Slides | Location |
 |---|---|---|---|

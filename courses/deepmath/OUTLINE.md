@@ -412,6 +412,8 @@ prob07 MSE decomposition by name without re-proving; ends by closing the
 probability half (prob01–prob09 recap map) and bridging to opt01 (SVD & least
 squares — the optimization half).
 
+Companion: `prob09-monte-carlo/prob09-monte-carlo-note.html` — detailed definitions, expanded proofs, lemmas, references.
+
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + TOC | 1–2 | prob09-monte-carlo/prob09-monte-carlo.html:23 |

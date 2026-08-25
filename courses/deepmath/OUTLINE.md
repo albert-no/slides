@@ -47,21 +47,25 @@ Companion: `prob01-foundations/prob01-foundations-note.html` — detailed defini
 
 | # | Section | Slides | Location |
 |---|---|---|---|
-| — | Title + TOC | 1–2 | prob01-foundations/prob01-foundations.html:26 |
-| 01 | Why Probability? (data = samples, models = distributions) | 3–6 | prob01-foundations/prob01-foundations.html:83 |
-| 02 | Probability Review (Ω, F, P; coin, 5×5 image, MNIST, CIFAR-10, |Ω| table) | 7–15 | prob01-foundations/prob01-foundations.html:185 |
-| 03 | Random Variables (map, pmf, expectation, LOTUS exercise) | 16–23 | prob01-foundations/prob01-foundations.html:320 |
-| 04 | Entropy (surprisal prob01-foundations/prob01-foundations.html:512, H def :548, worked examples, h₂(p), guessing game :678, AI examples :793) | 24–45 | prob01-foundations/prob01-foundations.html:478 |
-| 05 | Properties (Thm 1–3, Jensen technique review + induction proof, max-entropy proof) | 46–69 | prob01-foundations/prob01-foundations.html:887 |
-| — | Recap chain, bridge to prob02, end slide | 70–72 | prob01-foundations/prob01-foundations.html:1251 |
+| — | Title + TOC | 1–2 | prob01-foundations/prob01-foundations.html:43 |
+| 01 | Why Probability? (collecting data = sampling xᵢ ~ P :103, models learn distributions :148) | 3–5 | prob01-foundations/prob01-foundations.html:103 |
+| 02 | Probability Review (Ω, F, P; coin, 5×5 image, MNIST, CIFAR-10, |Ω| table) | 6–14 | prob01-foundations/prob01-foundations.html:190 |
+| 03 | Random Variables (map, pmf, expectation, LOTUS exercise) | 15–22 | prob01-foundations/prob01-foundations.html:325 |
+| 04 | Entropy (surprisal :513, H def :552, worked examples, h₂(p), guessing game :682, twenty-questions tree :728, two dice :795, AI examples :834, explore-vs-exploit bandit :901, explorativeness :939) | 23–45 | prob01-foundations/prob01-foundations.html:483 |
+| 05 | Properties (Thm 1–3, Jensen technique review + induction proof, max-entropy proof, entropy scale :1283) | 46–69 | prob01-foundations/prob01-foundations.html:967 |
+| — | Recap chain, bridge to prob02, end slide | 70–72 | prob01-foundations/prob01-foundations.html:1357 |
 
-Key theorems: **Thm 1** non-negativity H(X) ≥ 0 (prob01-foundations/prob01-foundations.html:899);
+Key theorems: **Thm 1** non-negativity H(X) ≥ 0 (prob01-foundations/prob01-foundations.html:975);
 **Thm 2** Jensen E[f(X)] ≤ f(E[X]) for concave f, proved by induction on support size
-(prob01-foundations/prob01-foundations.html:1002); **Thm 3** maximum entropy
-H(X) ≤ log M, equality iff uniform (prob01-foundations/prob01-foundations.html:1122).
-Figures: figs/binary_image.png, figs/mnist.png, figs/cifar10.jpeg, figs/jensen.png;
-all other diagrams inline SVG. Jensen proof (induction) is not in the tex (source
-states Jensen without proof) — added per full-treatment mandate.
+(statement prob01-foundations/prob01-foundations.html:1078); **Thm 3** maximum entropy
+H(X) ≤ log M, equality iff uniform (prob01-foundations/prob01-foundations.html:1198).
+Figures: figs/binary_image.png, figs/mnist.png, figs/cifar10.jpeg, figs/jensen.png,
+figs/mnist-three.png (the real MNIST "3" cropped out of figs/mnist.png, reused on the
+models-learn-distributions slide so the pmf peaks at label 3); all other diagrams inline SVG. Slides 4, 5,
+37 (question tree), 41, 43 (bandit), 54 (Jensen points) and 67 (D₁/D₂ pmfs) carry KaTeX
+labels as absolutely-positioned HTML spans over the SVG (deck-local `.p1-fig`/`.fl` CSS in
+the deck's own `<style>` block — KaTeX skips SVG `<text>`). Jensen proof (induction) is not
+in the tex (source states Jensen without proof) — added per full-treatment mandate.
 
 ### prob02-kl-crossentropy — KL Divergence & Cross-Entropy Loss (69 slides)
 

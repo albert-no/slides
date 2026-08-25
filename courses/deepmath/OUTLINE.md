@@ -291,7 +291,7 @@ expectation/tower (prob 1577–1592, deferred here from prob05 per deck plan).
 Lecture 7 — answers prob06's bridge (how to *choose* ĥ → likelihood); recalls
 prob02 CE loss, prob03 conditional pmf + heights model, prob04 diffusion teaser,
 prob05 MGF add-and-subtract, prob06 H(Y|X)/chain rule/DPI by name without
-re-proving; prob03's two-coin table (p(0,0)=1/2, p(1,0)=p(0,1)=1/4) returns three
+re-proving; prob03's two-coin table (p(0,0)=p(0,1)=1/4, p(1,0)=1/2) returns three
 times (conditional means, tower check, MMSE = 1/6 vs constant-guess 1/4); ends on
 a bridge to prob08 (the Gaussian everywhere → multivariate Gaussian, linear
 E[X|Y]).
@@ -302,7 +302,7 @@ Companion: `prob07-estimation/prob07-estimation-note.html` — detailed definiti
 |---|---|---|---|
 | — | Title + TOC | 1–2 | prob07-estimation/prob07-estimation.html:23 |
 | 01 | Why Estimation? (DL as estimation cards :132, prob06's open question :155, claim CE=MLE to prove today :171, route map SVG :182, inference vs. learning faces :220) | 3–8 | prob07-estimation/prob07-estimation.html:123 |
-| 02 | Conditional Expectation (recall prob03 conditional pmf :249, definition :267, worked pmfs-first on prob03 table :283, both conditional means 2/3 and 0 :298, E[X|Y] is an RV :314, its own distribution :348, Thm 1 tower arc :360, proof :372, tower check 7/12·... = E[X]=1/4 :388, why it matters today :402) | 9–19 | prob07-estimation/prob07-estimation.html:240 |
+| 02 | Conditional Expectation (recall prob03 conditional pmf :249, definition :267, worked pmfs-first on prob03 table :283, both conditional means 2/3 and 0 :298, E[X|Y] is an RV :314, its own distribution :348, Thm 1 tower arc :360, proof :372, tower check 3/4·2/3 + 1/4·0 = E[X] = 1/2 :388, why it matters today :402) | 9–19 | prob07-estimation/prob07-estimation.html:240 |
 | 03 | The Estimation Problem (sample/label setup :425, two-nationalities running example :439, two height densities SVG N(170,10²) vs N(180,15²) :452, two questions → two estimators :473) | 20–24 | prob07-estimation/prob07-estimation.html:416 |
 | 04 | Maximum Likelihood (definition :500, MLE on heights :516, worked x=176 → 0.0333>0.0257 → A :529, decision-boundary SVG ≈179 :543, worked x=185 → B :565, what MLE ignores :577) | 25–31 | prob07-estimation/prob07-estimation.html:491 |
 | 05 | Maximum a Posteriori (definition :598, Bayes' rule derivation :614, evidence drops out :628, heights with 9:1 prior :640, worked x=176 :654, worked x=185 — MLE/MAP disagree 0.0117 vs 0.0025 :666, prior moves boundary SVG ≈195 :681, Thm 2 MAP is Bayes optimal arc :701, 2-step proof :714, regularization is a prior :741) | 32–43 | prob07-estimation/prob07-estimation.html:589 |

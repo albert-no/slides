@@ -243,6 +243,8 @@ running example (Pr(X̄₁₀₀ ≥ 3/4)) returns to benchmark Hoeffding agains
 2.1×10⁻⁶ and exact 2.8×10⁻⁷; ends on a bridge to prob07 (how to *choose* ĥ →
 likelihood, MLE/MAP, bias–variance).
 
+Companion: `prob06-generalization/prob06-generalization-note.html` — detailed definitions, expanded proofs, lemmas, references.
+
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + TOC | 1–2 | prob06-generalization/prob06-generalization.html:23 |

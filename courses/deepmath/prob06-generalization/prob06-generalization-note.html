@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Deep Learning Math 6 — From Concentration to Generalization · Notes</title>
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload='renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false},{left:"\\[",right:"\\]",display:true}]});'></script>
+<style>
+  body { max-width: 760px; margin: 48px auto; padding: 0 24px 96px; color: var(--charcoal); background: var(--white); font-family: 'Yonsei', 'Noto Sans', Arial, sans-serif; font-weight: 300; line-height: 1.65; }
+  h1 { font-size: 2rem; color: var(--yonsei-blue); margin-bottom: 4px; }
+  h2 { font-size: 1.4rem; color: var(--yonsei-blue); margin-top: 40px; border-bottom: 1px solid var(--slate); padding-bottom: 6px; }
+  h3 { font-size: 1.1rem; color: var(--blue-light); margin-top: 24px; }
+  p, li { font-size: 1rem; }
+  .meta { color: var(--gray-text); font-size: 0.95rem; margin-bottom: 24px; }
+  code { background: var(--light); padding: 1px 6px; border-radius: 4px; font-size: 0.92em; }
+  strong { color: var(--yonsei-blue); font-weight: 600; }
+  .deriv { background: var(--light); border-left: 3px solid var(--yonsei-blue); padding: 12px 18px; margin: 14px 0; border-radius: 0 6px 6px 0; }
+  table { border-collapse: collapse; margin: 14px 0; }
+  th, td { border: 1px solid var(--slate); padding: 6px 12px; font-size: 0.95rem; text-align: left; }
+  th { background: var(--light); color: var(--yonsei-blue); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>Deep Learning Math 6 · From Concentration to Generalization &mdash; Notes</h1>
+<p class="meta">Companion to <code>prob06-generalization.html</code>. Full formal statements with every condition the slides abbreviate (the i.i.d. sampling model, boundedness of the loss, the exact meaning of "sub-Gaussian with variance proxy $\sigma^2$", "fixed before the sample" versus "chosen after"), every proof expanded with skipped steps restored &mdash; in particular the tilted-distribution proof of Hoeffding's lemma, usually the most-skipped argument in this subject, is written out line by line &mdash; and every result the deck states without proof is proved here (the mean-minimizes-the-quadratic step, the $(2k)! \geq 2^k k!$ sanity inequality, the reverse direction tail $\Rightarrow$ MGF of the sub-Gaussian equivalence at the level feasible without measure theory). Every worked number on the slides is re-derived from scratch; the handful of off-by-one rounding slips found are flagged explicitly in Sections 7.6&ndash;7.7. Background from Lecture 5 (Markov, Chernoff, MGF calculus, the Gaussian MGF, the coin's exact and optimal-Chernoff tails) is cited from the companion note <code>../prob05-concentration/prob05-concentration-note.html</code> rather than re-proved. <strong>Convention:</strong> as in the prob05 note, a random variable may be discrete (pmf $p_X$, expectations are sums) or continuous (pdf $f_X$, expectations are integrals); every statement holds in both readings with $\sum \leftrightarrow \int$, and the one place where the continuous case needs genuine extra care (differentiating an MGF under the expectation) is flagged, not papered over.</p>
+
+<section>
+  <h2>1 &nbsp;Why Generalization?</h2>
+
+  <h3>1.1 The statistical learning setup, in full</h3>
+  <p>Everything in this lecture lives in one probabilistic model, so it deserves a complete statement. There is an unknown distribution $\mathcal{D}$ over an example space $\mathcal{Z}$ (for supervised learning $\mathcal{Z} = \mathcal{X} \times \mathcal{Y}$ and an example is a pair $z = (x, y)$). The <em>sample</em> is</p>
+  \[ Z_1, \dots, Z_n \ \overset{\text{i.i.d.}}{\sim}\ \mathcal{D}, \]
+  <p>meaning two separate things, both used later: each $Z_i$ has marginal distribution $\mathcal{D}$ (<em>identically distributed</em>), and the joint distribution factorizes, $p_{Z_1,\dots,Z_n} = \prod_i p_{Z_i}$ (<em>mutually independent</em>). A <em>hypothesis</em> $h$ is a candidate model &mdash; a function $\mathcal{X} \to \mathcal{Y}$, or more abstractly any object that a <em>loss function</em> can grade: $\ell(h, z) \in [0, 1]$ measures how badly $h$ handles the single example $z$. Boundedness of $\ell$ is a standing assumption of the whole lecture &mdash; it is what feeds Hoeffding's lemma in Section 3; the interval $[0,1]$ is a normalization (any loss bounded in $[0, c]$ rescales, and Section 4.2 tracks the constant $c$ explicitly). The canonical example is the 0/1 loss $\ell(h, (x,y)) = \mathbf{1}\{h(x) \neq y\}$, whose expectation is an error rate.</p>
+
+  <h3>1.2 True risk, empirical risk, ERM, gap &mdash; the four definitions</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definitions.</strong> For a hypothesis $h$ and the sample $Z_1, \dots, Z_n$:</p>
+    \[ R(h) = \mathbb{E}_{Z \sim \mathcal{D}}\big[\ell(h, Z)\big], \qquad
+       \hat{R}_n(h) = \frac{1}{n} \sum_{i=1}^{n} \ell(h, Z_i), \]
+    \[ \hat{h} = \operatorname*{argmin}_{h \in \mathcal{H}} \hat{R}_n(h) \ \ \text{(ERM over a class } \mathcal{H}\text{)}, \qquad
+       \mathrm{gap}(h) = R(h) - \hat{R}_n(h). \]
+  </div>
+  <p>Reading the types carefully &mdash; this is the source of every subtlety later. $R(h)$ is a <em>fixed number</em> for each $h$ (an expectation over a fresh $Z$, independent of the sample); it depends on the unknown $\mathcal{D}$, so it is not computable. $\hat{R}_n(h)$ is a <em>random variable</em> (a function of the sample); for each <em>fixed</em> $h$ it is exactly the sample mean $\bar{X}_n$ of prob05 with $X_i = \ell(h, Z_i)$. The ERM output $\hat{h}$ is a <em>random hypothesis</em> &mdash; a function of the sample &mdash; and that single fact is what breaks the naive application of concentration (1.4). If several $h$ tie for the minimum, $\hat h$ is any fixed tie-breaking choice; nothing below depends on which. Training loss and test-set accuracy are both instances of $\hat{R}_n$, computed on different samples; "generalization" is the claim that $\mathrm{gap}(\hat h)$ is small with high probability &mdash; a theorem, not a hope.</p>
+
+  <h3>1.3 Worked example: the memorizer, verified</h3>
+  <p>The deck's extreme case, with its hypotheses made explicit. Let the inputs $X_i$ be distinct with probability $1$ (e.g. $X$ has a continuous distribution, so a repeat has probability $0$ &mdash; this condition is implicit on the slide), and let the labels be independent fair coins carrying <em>no information</em> about $x$: $Y \sim \mathrm{Bernoulli}(\tfrac12)$ independent of $X$. The memorizer is the lookup table $h_{\text{mem}}(x) = Y_i$ if $x = X_i$ for some training index $i$, and $0$ otherwise. Then:</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Training loss.</strong> On each training point, $h_{\text{mem}}(X_i) = Y_i$ by construction (the $X_i$ are distinct, so the lookup is unambiguous), hence every 0/1 loss term is $0$ and $\hat{R}_n(h_{\text{mem}}) = 0$.</p>
+    <p style="margin:8px 0 0;"><strong>True risk.</strong> A fresh $(X, Y) \sim \mathcal{D}$ misses the lookup table with probability $1$ (continuity), so $h_{\text{mem}}(X) = 0$; the fresh label is an independent fair coin, so $\Pr(h_{\text{mem}}(X) \neq Y) = \Pr(Y = 1) = \tfrac12$. Hence $R(h_{\text{mem}}) = \tfrac12$ and $\mathrm{gap} = \tfrac12 - 0 = \tfrac12$. Slide verified.</p>
+  </div>
+  <p>Note what the example proves: <em>without</em> restricting the hypothesis class, the gap of a data-dependent hypothesis can be as large as the loss range allows, at every $n$. Any generalization theorem must therefore charge for the size of $\mathcal{H}$ somewhere &mdash; the memorizer's class (all lookup tables) is effectively infinite, and Theorem 5's $\ln|\mathcal{H}|$ price on it is $\infty$: the bound correctly refuses to certify it.</p>
+
+  <h3>1.4 Why prob05 is not enough: fixed versus chosen</h3>
+  <p>Prob05's inequalities bound $\Pr(|\bar X_n - \mu| \geq \epsilon)$ for a sample mean of i.i.d. terms. For a <em>fixed</em> $h$ &mdash; chosen before the sample is drawn, so that the terms $\ell(h, Z_i)$ are honest i.i.d. draws &mdash; this applies verbatim (Section 7.2 does it). For $\hat h$ it does not: the event "$\hat h = h$" depends on the whole sample, so conditional on the choice, the losses $\ell(\hat h, Z_i)$ are no longer i.i.d. draws with mean $R(\hat h)$ &mdash; ERM <em>selected</em> a hypothesis precisely because its empirical losses came out low, i.e. it hunts for the downward fluctuations that concentration says are rare <em>per hypothesis</em> but that become likely when many hypotheses are searched (Section 6.4 quantifies exactly this with the model farm). The fix is not to bound the chosen one but to bound <strong>every $h$ at once</strong> &mdash; uniform convergence &mdash; so that whatever the algorithm picks, it lands inside an already-certified event. The route: Hoeffding's lemma (bounded $\Rightarrow$ Gaussian-like MGF, Section 3) $\to$ Hoeffding's inequality (exponential tail for one $h$, Section 5) $\to$ union bound (pay for many looks, Section 6) $\to$ the finite-class theorem and its ERM corollary (Section 7).</p>
+</section>
+
+<section>
+  <h2>2 &nbsp;Recall &mdash; the prob05 Toolkit</h2>
+  <p>Three results are imported by name; all are stated and proved in the prob05 companion note, cited here with their fine print since the deck's recall cards drop it.</p>
+  <h3>2.1 Chernoff bound</h3>
+  <p>For any random variable $X$, any threshold $\alpha$, and any $t \gt 0$ with $M_X(t) = \mathbb{E}[e^{tX}] \lt \infty$:</p>
+  \[ \Pr(X \geq \alpha) \;\leq\; e^{-t\alpha}\, M_X(t). \]
+  <p>Engine: Markov's inequality applied to the non-negative variable $e^{tX}$, using that $x \mapsto e^{tx}$ is strictly increasing for $t \gt 0$ so $\{X \geq \alpha\} = \{e^{tX} \geq e^{t\alpha}\}$ is the same event. The parameter $t$ is free and is optimized at the end &mdash; prob05 note Section 7. The finiteness proviso never bites today: every variable in this lecture is bounded, so $M_X$ is finite for all $t$ (the expectation of a bounded positive variable is finite).</p>
+  <h3>2.2 MGF calculus</h3>
+  <p>For independent $X, Y$ and constant $c$: $\ M_{X+Y}(t) = M_X(t)\,M_Y(t)$ and $M_{cX}(t) = M_X(ct)$. The product rule is the independence product rule $\mathbb{E}[g(X)h(Y)] = \mathbb{E}[g(X)]\,\mathbb{E}[h(Y)]$ applied to $g = h = \exp(t\,\cdot)$; the $n$-fold version $\mathbb{E}\big[\prod_i e^{tX_i}\big] = \prod_i \mathbb{E}[e^{tX_i}]$ for mutually independent $X_1, \dots, X_n$ follows by the induction spelled out in prob05 note Section 2.3, and is the exact form used in Sections 4.5 and 5 below. The scale rule is the substitution $e^{t(cX)} = e^{(tc)X}$.</p>
+  <h3>2.3 Gaussian MGF</h3>
+  <p>For $X \sim \mathcal{N}(\mu, \sigma^2)$: $\ \mathbb{E}[e^{t(X-\mu)}] = e^{t^2\sigma^2/2}$ for all $t \in \mathbb{R}$, proved by completing the square (prob05 note Section 6.5). This exact shape, $\exp(t^2 \cdot (\text{constant})/2)$, is today's yardstick: Section 3 shows every bounded variable's MGF sits under such an envelope, and Section 4 names the class of variables that do.</p>
+  <h3>2.4 What is genuinely new</h3>
+  <p>Prob05's Chernoff computation for the coin used the coin's <em>exact</em> MGF. For a loss $\ell(h, Z)$ the distribution &mdash; hence the MGF &mdash; is unknown (it depends on $\mathcal{D}$ and on $h$); all that is known structurally is $\ell \in [0,1]$. Today's first job is therefore an MGF <em>bound</em> from boundedness alone. That is Hoeffding's lemma.</p>
+</section>
+
+<section>
+  <h2>3 &nbsp;Hoeffding's Lemma</h2>
+
+  <h3>3.1 Technique 1: variance of a bounded variable</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma 3.1 (bounded variance).</strong> If $Y \in [a, b]$ (with probability $1$; variance automatically exists since $Y$ is bounded), then $\mathrm{Var}(Y) \leq \tfrac{(b-a)^2}{4}$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Two steps, each with its own sub-lemma. <em>Step A (the mean minimizes the quadratic).</em> For any constant $c$, expand around the mean $\mu_Y = \mathbb{E}[Y]$:</p>
+    \[ \mathbb{E}\big[(Y - c)^2\big] = \mathbb{E}\big[\big((Y - \mu_Y) + (\mu_Y - c)\big)^2\big]
+       = \mathrm{Var}(Y) + (\mu_Y - c)^2, \]
+    <p style="margin:8px 0 6px;">because the cross term $2(\mu_Y - c)\,\mathbb{E}[Y - \mu_Y] = 0$ by linearity. So $c \mapsto \mathbb{E}[(Y-c)^2]$ is $\mathrm{Var}(Y)$ plus a non-negative parabola, minimized exactly at $c = \mu_Y$; in particular, for the midpoint $m = \tfrac{a+b}{2}$,</p>
+    \[ \mathrm{Var}(Y) \;\leq\; \mathbb{E}\big[(Y - m)^2\big]. \]
+    <p style="margin:8px 0 6px;"><em>Step B (deviations from the midpoint).</em> Since $a \leq Y \leq b$ pointwise, $Y - m \in \big[-\tfrac{b-a}{2},\, \tfrac{b-a}{2}\big]$, so $(Y - m)^2 \leq \big(\tfrac{b-a}{2}\big)^2$ pointwise; monotonicity of expectation (prob05 note Lemma 2.1) gives</p>
+    \[ \mathbb{E}\big[(Y - m)^2\big] \;\leq\; \Big(\frac{b-a}{2}\Big)^{\!2} = \frac{(b-a)^2}{4}. \ \blacksquare \]
+  </div>
+  <p><strong>Tightness</strong> (slide's last line, checked): $Y = a$ or $b$ with probability $\tfrac12$ each has mean $m$ and $\mathrm{Var}(Y) = \mathbb{E}[(Y - m)^2] = \big(\tfrac{b-a}{2}\big)^2$ exactly &mdash; both proof inequalities are equalities. For $[a,b] = [0,1]$ this is the fair coin, whose variance $\tfrac14$ prob05 already identified as the largest any coin can have; Lemma 3.1 is the same fact for arbitrary bounded variables.</p>
+
+  <h3>3.2 Technique 2: tilted distributions</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (exponential tilting).</strong> Let $X$ have pmf $p_X$ (density: same formulas with $f_X$) and $M_X(t) = \mathbb{E}[e^{tX}] \lt \infty$. The <em>tilted distribution</em> at parameter $t$ is</p>
+    \[ p_t(x) \;=\; \frac{e^{tx}\, p_X(x)}{M_X(t)}. \]
+    <p style="margin:8px 0 0;"><strong>Well-definedness, checked.</strong> Numerator $\geq 0$ always; $M_X(t) \gt 0$ because $e^{tX} \gt 0$ pointwise (indeed $M_X(t) \geq e^{t\mu}$ by Jensen, though positivity is all that is needed); and the total mass is $\sum_x p_t(x) = \frac{1}{M_X(t)} \sum_x e^{tx} p_X(x) = \frac{M_X(t)}{M_X(t)} = 1$. So $p_t$ is a genuine probability distribution for every $t$ in the finiteness domain, with $p_0 = p_X$.</p>
+  </div>
+  <p>Two facts about tilting carry the whole proof. (i) <em>Direction:</em> for $t \gt 0$ the reweighting factor $e^{tx}$ grows in $x$, so mass shifts toward large values (this is intuition, not used formally). (ii) <em>Support preservation</em>, which <em>is</em> used formally: $p_t(x) \gt 0$ exactly where $p_X(x) \gt 0$, because $e^{tx}$ is strictly positive everywhere &mdash; tilting can move weight along the support but can never create mass outside it. In particular, if $X \in [a,b]$ with probability $1$, then a random variable distributed as $p_t$ is also in $[a,b]$ with probability $1$, for <em>every</em> $t$. Write $\mathbb{E}_t$ and $\mathrm{Var}_t$ for mean and variance under $p_t$. (Aside for orientation: tilted families are exactly the exponential families of statistics, and $p_t$ is the Gibbs reweighting of statistical mechanics; nothing below uses this.)</p>
+
+  <h3>3.3 Technique 3: Taylor with Lagrange remainder</h3>
+  <p>The calculus fact, stated with its hypotheses: if $f$ is twice differentiable on an interval containing $0$ and $t$, then there exists $\xi$ strictly between $0$ and $t$ with</p>
+  \[ f(t) = f(0) + f'(0)\, t + \frac{f''(\xi)}{2}\, t^2. \]
+  <p>This is an <em>exact equality</em> &mdash; the unknown point $\xi$ absorbs the entire error &mdash; so a uniform bound on $f''$ over the interval becomes a bound on $f$ with no approximation loss. (Standard proof via Rolle's theorem / the mean value theorem; any calculus text, e.g. [2, App. A] for the form used in concentration arguments.) Prob05's CLT sketch used Taylor asymptotically near $0$; here the remainder form does the work at every fixed $t$.</p>
+
+  <h3>3.4 Theorem 1, with the full proof</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 1 (Hoeffding's lemma [1], 1963).</strong> If $X \in [a, b]$ with probability $1$ and $\mathbb{E}[X] = 0$, then for all $t \in \mathbb{R}$:</p>
+    \[ \mathbb{E}\big[e^{tX}\big] \;\leq\; \exp\!\Big( \frac{t^2 (b-a)^2}{8} \Big). \]
+  </div>
+  <p>(Note $a \leq 0 \leq b$ is forced: a variable confined to $[a,b]$ has its mean in $[a,b]$.) The target is the log-MGF $\psi(t) = \log M(t)$, $M(t) = \mathbb{E}[e^{tX}]$, and the claim $\psi(t) \leq \tfrac{t^2(b-a)^2}{8}$. Since $X$ is bounded, $M(t)$ is finite for all $t$, and it is twice differentiable with</p>
+  \[ M'(t) = \mathbb{E}\big[X e^{tX}\big], \qquad M''(t) = \mathbb{E}\big[X^2 e^{tX}\big]. \]
+  <p>For a finite-valued $X$ this is termwise differentiation of a finite sum &mdash; elementary; for a general bounded $X$ the swap of derivative and expectation is justified by dominated convergence, with the bound $|X|e^{tX} \leq \max(|a|,|b|)\, e^{|t|\max(|a|,|b|)}$ doing the domination &mdash; the same caveat, flagged the same way, as prob05 note Section 6.2. Since $M \gt 0$, $\psi$ is also twice differentiable, and Technique 3 applies. The four steps:</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Step 1 (start flat).</strong> $\psi(0) = \log M(0) = \log \mathbb{E}[e^0] = \log 1 = 0$. By the chain rule $\psi'(t) = M'(t)/M(t)$, so</p>
+    \[ \psi'(0) = \frac{M'(0)}{M(0)} = \frac{\mathbb{E}[X]}{1} = 0, \]
+    <p style="margin:8px 0 6px;">using $M'(0) = \mathbb{E}[X e^{0}] = \mathbb{E}[X] = 0$ &mdash; the zero-mean hypothesis kills the linear term.</p>
+    <p style="margin:8px 0 6px;"><strong>Step 2 (identify the derivatives as tilted moments).</strong> First derivative:</p>
+    \[ \psi'(t) = \frac{M'(t)}{M(t)} = \frac{\mathbb{E}[X e^{tX}]}{M(t)}
+       = \sum_x x\, \frac{e^{tx} p_X(x)}{M(t)} = \sum_x x\, p_t(x) = \mathbb{E}_t[X], \]
+    <p style="margin:8px 0 6px;">the mean under the tilted distribution. Second derivative, by the quotient rule on $\psi' = M'/M$:</p>
+    \[ \psi''(t) = \frac{M''(t)\,M(t) - M'(t)^2}{M(t)^2}
+       = \frac{M''(t)}{M(t)} - \Big(\frac{M'(t)}{M(t)}\Big)^{\!2}
+       = \mathbb{E}_t[X^2] - \big(\mathbb{E}_t[X]\big)^2 = \mathrm{Var}_t(X), \]
+    <p style="margin:8px 0 6px;">where $M''(t)/M(t) = \sum_x x^2 p_t(x) = \mathbb{E}_t[X^2]$ by the same computation as for $\psi'$. The curvature of the log-MGF <em>is</em> a variance &mdash; in particular $\psi$ is convex, and more importantly the variance is with respect to a distribution we know something about.</p>
+    <p style="margin:8px 0 6px;"><strong>Step 3 (cap the curvature).</strong> By support preservation (3.2), the tilted distribution lives on $[a, b]$ for every $t$; by Lemma 3.1 applied under $p_t$:</p>
+    \[ \psi''(t) = \mathrm{Var}_t(X) \;\leq\; \frac{(b-a)^2}{4} \qquad \text{for every } t \in \mathbb{R}. \]
+    <p style="margin:8px 0 6px;">This is the only place boundedness is used &mdash; and it is used through the tilted variable, which is why support preservation had to be checked.</p>
+    <p style="margin:8px 0 6px;"><strong>Step 4 (integrate the cap).</strong> Taylor with Lagrange remainder at $0$ (Technique 3), some $\xi$ between $0$ and $t$:</p>
+    \[ \psi(t) = \underbrace{\psi(0)}_{0} + \underbrace{\psi'(0)}_{0}\, t + \frac{\psi''(\xi)}{2}\, t^2
+       \;\leq\; \frac{1}{2}\cdot\frac{(b-a)^2}{4}\, t^2 = \frac{t^2 (b-a)^2}{8}. \]
+    <p style="margin:8px 0 0;">Exponentiate ($\exp$ is increasing): $\mathbb{E}[e^{tX}] = e^{\psi(t)} \leq \exp\big(\tfrac{t^2(b-a)^2}{8}\big)$. $\blacksquare$</p>
+  </div>
+  <p>The deck's one-line summary chain is exactly Steps 4&ndash;2&ndash;3 read backwards: $\psi(t) \overset{\text{Taylor}}{=} \tfrac{\psi''(\xi)}{2}t^2 \overset{\psi'' = \mathrm{Var}}{=} \tfrac{\mathrm{Var}_\xi(X)}{2}t^2 \overset{\text{support}}{\leq} \tfrac{(b-a)^2}{8}t^2$. Zero distribution knowledge entered &mdash; only the interval.</p>
+
+  <h3>3.5 Sanity check: fair signs, with the skipped inequality proved</h3>
+  <p>$X = \pm 1$ with probability $\tfrac12$ each (a <em>Rademacher</em> variable): mean $0$, $[a,b] = [-1,1]$. Direct computation, expanding both exponentials in series and noting the odd terms cancel:</p>
+  \[ \mathbb{E}\big[e^{tX}\big] = \frac{e^t + e^{-t}}{2} = \cosh t = \sum_{k=0}^{\infty} \frac{t^{2k}}{(2k)!}. \]
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Claim (deck states, does not prove):</strong> $(2k)! \geq 2^k\, k!$ for all $k \geq 0$, hence $\cosh t \leq e^{t^2/2}$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Write $(2k)! = k! \cdot (k+1)(k+2)\cdots(2k)$. Each of the $k$ trailing factors satisfies $k + i \geq 2i$ (equivalent to $k \geq i$, true for $i = 1, \dots, k$), so their product is at least $\prod_{i=1}^{k} 2i = 2^k k!$. Hence $(2k)! \geq 2^k (k!)^2 \geq 2^k k!$ &mdash; the claim holds with room to spare. Termwise in the (everywhere absolutely convergent) series:</p>
+    \[ \cosh t = \sum_{k=0}^\infty \frac{t^{2k}}{(2k)!} \;\leq\; \sum_{k=0}^\infty \frac{t^{2k}}{2^k k!}
+       = \sum_{k=0}^\infty \frac{(t^2/2)^k}{k!} = e^{t^2/2}. \ \blacksquare \]
+  </div>
+  <p>The lemma's promise for $[-1,1]$ is $\exp\big(\tfrac{t^2 \cdot 2^2}{8}\big) = e^{t^2/2}$ &mdash; the same answer, confirming the constant $8$. <strong>Unimprovability of the constant</strong> (deck's parenthetical, made precise): suppose some envelope $\mathbb{E}[e^{tX}] \leq e^{ct^2}$ held for all $t$ for every mean-zero $X \in [a,b]$. Taking logs and Taylor-expanding both sides at $t = 0$ (Step 2 gives $\psi(t) = \tfrac{\mathrm{Var}(X)}{2}t^2 + o(t^2)$), the inequality at small $t$ forces $c \geq \tfrac{\mathrm{Var}(X)}{2}$ for every admissible $X$; the two-point variable of 3.1 has $\mathrm{Var} = \tfrac{(b-a)^2}{4}$, forcing $c \geq \tfrac{(b-a)^2}{8}$. So no smaller constant works for the whole class.</p>
+
+  <h3>3.6 Corollary: any mean, same width</h3>
+  <p>For $X \in [a,b]$ with arbitrary mean $\mu$: the centered variable $X - \mu$ has mean $0$ and lies in $[a - \mu,\, b - \mu]$, an interval of the <em>same width</em> $b - a$. Theorem 1 applied to it gives, for all $t$,</p>
+  \[ \mathbb{E}\big[e^{t(X - \mu)}\big] \;\leq\; \exp\!\Big( \frac{t^2 (b-a)^2}{8} \Big), \]
+  <p>the form used from now on. What the lemma buys: every bounded variable has its MGF under a <em>Gaussian envelope</em> with variance parameter $\tfrac{(b-a)^2}{4}$ &mdash; for losses in $[0,1]$, envelope $e^{t^2/8}$ &mdash; so Chernoff becomes usable with zero knowledge of the distribution. Variables admitting such an envelope deserve a name.</p>
+</section>
+
+<section>
+  <h2>4 &nbsp;Sub-Gaussian Variables</h2>
+
+  <h3>4.1 Definition, with the fine print</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (sub-Gaussian with variance proxy $\sigma^2$).</strong> A random variable $X$ with finite mean $\mu$ is <em>$\sigma^2$-sub-Gaussian</em> if</p>
+    \[ \mathbb{E}\big[e^{t(X - \mu)}\big] \;\leq\; \exp\!\Big( \frac{t^2 \sigma^2}{2} \Big)
+       \qquad \text{for all } t \in \mathbb{R}. \]
+  </div>
+  <p>Fine print the slide compresses. (i) The quantifier is <em>every</em> real $t$, both signs &mdash; that is what makes the two-sided tail bound of 4.3 come for free. (ii) $\sigma^2$ is a <em>proxy</em>, not the variance: it is any constant making the envelope valid, and it is not unique &mdash; if $\sigma^2$ works, every larger constant works. One can show a valid proxy always satisfies $\sigma^2 \geq \mathrm{Var}(X)$ (the small-$t$ Taylor comparison of 3.5), so the best proxy is at least the variance and may be strictly larger. (iii) "Sub-Gaussian with parameter $\sigma$" in other texts (e.g. [3]) sometimes means a norm-based definition; all versions agree up to absolute constants, and 4.4 proves the direction that connects them. (iv) The definition implicitly requires $M_{X-\mu}(t)$ finite for all $t$ &mdash; part of the condition, satisfied automatically by bounded variables and Gaussians.</p>
+
+  <h3>4.2 The two canonical examples, and every bounded variable</h3>
+  <p><strong>Gaussian.</strong> $X \sim \mathcal{N}(\mu, \sigma^2)$ has $\mathbb{E}[e^{t(X-\mu)}] = e^{t^2\sigma^2/2}$ with <em>equality</em> for every $t$ (2.3): the Gaussian is $\sigma^2$-sub-Gaussian with its own variance as proxy, the tightest possible by (ii) above. The definition is calibrated so its eponym passes exactly.</p>
+  <p><strong>Rademacher.</strong> $X = \pm 1$ equiprobably: 3.5 showed $\mathbb{E}[e^{tX}] = \cosh t \leq e^{t^2/2}$, so it is $1$-sub-Gaussian &mdash; again with proxy equal to its variance ($\mathrm{Var} = 1$), hence unimprovable. Gaussian and Rademacher are the two benchmark members of the class: one continuous and unbounded, one two-valued; both sit exactly on their envelopes near $t = 0$.</p>
+  <p><strong>Every bounded variable</strong> &mdash; the answer to "why bounded $\Rightarrow$ sub-Gaussian with $\sigma = \tfrac{b-a}{2}$": Theorem 1 in the centered form 3.6 says $X \in [a,b]$ satisfies the definition with $\tfrac{t^2\sigma^2}{2} = \tfrac{t^2(b-a)^2}{8}$, i.e. proxy $\sigma^2 = \tfrac{(b-a)^2}{4}$, i.e. $\sigma = \tfrac{b-a}{2}$ &mdash; <em>half the width</em> of the support, the largest standard deviation the support permits (Lemma 3.1), regardless of the distribution on it. The slide's table, checked: $\pm1$ signs, width $2$, proxy $\tfrac{2^2}{4} = 1$; coin flip or $0/1$ loss, width $1$, proxy $\tfrac14$; loss clipped to $[0,c]$, width $c$, proxy $\tfrac{c^2}{4}$. All three verified. Bounded losses &mdash; the machine-learning case &mdash; are automatically sub-Gaussian.</p>
+
+  <h3>4.3 Theorem 2: the tail bound, full proof</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 2 (sub-Gaussian tails).</strong> If $X$ is $\sigma^2$-sub-Gaussian with mean $\mu$ (and $\sigma \gt 0$), then for every $\epsilon \gt 0$:</p>
+    \[ \Pr\big( X - \mu \geq \epsilon \big) \;\leq\; \exp\!\Big( -\frac{\epsilon^2}{2\sigma^2} \Big),
+       \qquad \Pr\big( |X - \mu| \geq \epsilon \big) \;\leq\; 2\exp\!\Big( -\frac{\epsilon^2}{2\sigma^2} \Big). \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> <em>Steps 1&ndash;2 (Chernoff, then envelope).</em> For any $t \gt 0$, Chernoff (2.1) applied to $X - \mu$ at threshold $\epsilon$, then the definition:</p>
+    \[ \Pr(X - \mu \geq \epsilon) \;\leq\; e^{-t\epsilon}\, \mathbb{E}\big[e^{t(X-\mu)}\big]
+       \;\leq\; \exp\!\Big( \frac{t^2\sigma^2}{2} - t\epsilon \Big). \]
+    <p style="margin:8px 0 6px;">The unknown distribution has left the argument: only $\sigma^2$ remains. <em>Step 3 (optimize the free $t$).</em> The exponent $g(t) = \tfrac{\sigma^2}{2}t^2 - \epsilon t$ is a upward parabola; $g'(t) = \sigma^2 t - \epsilon = 0$ at $t^* = \tfrac{\epsilon}{\sigma^2}$, which is admissible ($t^* \gt 0$ since $\epsilon, \sigma^2 \gt 0$), and</p>
+    \[ g(t^*) = \frac{\sigma^2}{2}\cdot\frac{\epsilon^2}{\sigma^4} - \epsilon\cdot\frac{\epsilon}{\sigma^2}
+       = \frac{\epsilon^2}{2\sigma^2} - \frac{\epsilon^2}{\sigma^2} = -\frac{\epsilon^2}{2\sigma^2}. \]
+    <p style="margin:8px 0 0;">Since the bound holds for every $t \gt 0$, it holds at $t^*$: $\Pr(X - \mu \geq \epsilon) \leq e^{-\epsilon^2/2\sigma^2}$. <em>Lower tail:</em> $-X$ (mean $-\mu$) satisfies $\mathbb{E}[e^{t(-X+\mu)}] = \mathbb{E}[e^{(-t)(X-\mu)}] \leq e^{(-t)^2\sigma^2/2} = e^{t^2\sigma^2/2}$ &mdash; the envelope is even in $t$, so $-X$ is $\sigma^2$-sub-Gaussian too, and the one-sided bound applies to it: $\Pr(X - \mu \leq -\epsilon) = \Pr((-X) - (-\mu) \geq \epsilon) \leq e^{-\epsilon^2/2\sigma^2}$. The two-sided event is the union of the two one-sided events; add the bounds (this is already a two-event union bound, ahead of Section 6). $\blacksquare$</p>
+  </div>
+  <p>This is exactly prob05's Chernoff routine with one substitution: the envelope stands in for the true MGF. The picture-slide's claim is the content: sub-Gaussian means the true tail never pokes above the Gaussian envelope $e^{-\epsilon^2/2\sigma^2}$ &mdash; for a bounded variable the true tail in fact drops to $0$ at the support edge, strictly below the envelope, which never reaches $0$.</p>
+
+  <h3>4.4 Omitted detail: the reverse direction (tails $\Rightarrow$ MGF)</h3>
+  <p>Theorem 2 is one direction of an equivalence: Gaussian-type tails also imply a sub-Gaussian MGF envelope, with a worse constant. The deck omits this entirely; here is the statement and a proof at the level of this course (one exponential-comparison lemma plus one integral). It is what justifies treating "sub-Gaussian" as a property of tails rather than of the MGF.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition (tail $\Rightarrow$ envelope).</strong> Suppose $Y$ has mean $0$ and $\Pr(|Y| \geq \epsilon) \leq 2e^{-\epsilon^2/(2\sigma^2)}$ for all $\epsilon \gt 0$. Then $\mathbb{E}[e^{\lambda Y}] \leq e^{8\lambda^2\sigma^2}$ for all $\lambda \in \mathbb{R}$, i.e. $Y$ is $16\sigma^2$-sub-Gaussian. (The constant $16$ is convenient, not optimal.)</p>
+    <p style="margin:8px 0 6px;"><strong>Lemma A.</strong> $e^x \leq x + e^{x^2}$ for all real $x$. <em>Proof.</em> Three ranges. For $x \geq 1$: $x^2 \geq x$ so $e^{x^2} \geq e^x$, and adding $x \gt 0$ only helps. For $x \leq 0$: the standard bound $e^x \leq 1 + x + \tfrac{x^2}{2}$ holds there (the function $h(x) = 1 + x + \tfrac{x^2}{2} - e^x$ has $h(0) = 0$ and $h'(x) = 1 + x - e^x \leq 0$ everywhere, so $h$ is non-increasing and $h \geq 0$ on $x \leq 0$), and $1 + \tfrac{x^2}{2} \leq e^{x^2}$ since $e^u \geq 1 + u$. For $0 \leq x \leq 1$: $e^x = 1 + x + x^2\sum_{k \geq 2} \tfrac{x^{k-2}}{k!} \leq 1 + x + x^2(e - 2) \leq 1 + x + x^2 \leq x + e^{x^2}$, again by $e^u \geq 1 + u$. $\square$</p>
+    <p style="margin:8px 0 6px;"><strong>Lemma B (squared-exponential moment).</strong> For $0 \lt s \leq \tfrac{1}{4\sigma^2}$: writing the expectation of a non-negative variable through its tail (the layer-cake identity, $\mathbb{E}[g(V)] = g(0) + \int_0^\infty g'(u)\Pr(V \geq u)\,du$ for increasing differentiable $g \geq 0$, here $g(u) = e^{su}$, $V = Y^2$):</p>
+    \[ \mathbb{E}\big[e^{sY^2}\big] = 1 + \int_0^\infty s\,e^{su}\, \Pr(Y^2 \geq u)\, du
+       \;\leq\; 1 + 2s \int_0^\infty e^{su}\, e^{-u/(2\sigma^2)}\, du
+       = 1 + \frac{2s}{\tfrac{1}{2\sigma^2} - s}, \]
+    <p style="margin:8px 0 6px;">the integral converging because $s \lt \tfrac{1}{2\sigma^2}$. For $s \leq \tfrac{1}{4\sigma^2}$ the denominator is $\geq \tfrac{1}{4\sigma^2}$, so $\mathbb{E}[e^{sY^2}] \leq 1 + 8s\sigma^2 \leq e^{8s\sigma^2}$. $\square$</p>
+    <p style="margin:8px 0 6px;"><strong>Proof of the Proposition.</strong> <em>Small $\lambda$</em> ($\lambda^2 \leq \tfrac{1}{4\sigma^2}$): Lemma A pointwise at $x = \lambda Y$, then expectations, then $\mathbb{E}[Y] = 0$ and Lemma B at $s = \lambda^2$:</p>
+    \[ \mathbb{E}\big[e^{\lambda Y}\big] \;\leq\; \lambda\,\mathbb{E}[Y] + \mathbb{E}\big[e^{\lambda^2 Y^2}\big]
+       \;\leq\; e^{8\lambda^2\sigma^2}. \]
+    <p style="margin:8px 0 0;"><em>Large $\lambda$</em> ($\lambda^2 \gt \tfrac{1}{4\sigma^2}$): by Young's inequality $uv \leq \tfrac{u^2 + v^2}{2}$ with $u = \sqrt{2}\,\lambda\sigma$, $v = \tfrac{Y}{\sqrt{2}\,\sigma}$: pointwise $\lambda Y \leq \lambda^2\sigma^2 + \tfrac{Y^2}{4\sigma^2}$, so $\mathbb{E}[e^{\lambda Y}] \leq e^{\lambda^2\sigma^2}\, \mathbb{E}[e^{Y^2/(4\sigma^2)}] \leq e^{\lambda^2\sigma^2} \cdot 3$ (Lemma B at $s = \tfrac{1}{4\sigma^2}$: bound $1 + 2 = 3$). Since $3 = e^{\ln 3} \leq e^{1.1}$ and $1.1 \leq 4.4\,\lambda^2\sigma^2$ in this range (where $\lambda^2\sigma^2 \gt \tfrac14$), this gives $\mathbb{E}[e^{\lambda Y}] \leq e^{5.4\lambda^2\sigma^2} \leq e^{8\lambda^2\sigma^2}$. $\blacksquare$</p>
+  </div>
+  <p>Together with Theorem 2, this says the MGF envelope and the Gaussian tail bound are the <em>same property</em> up to the value of the constant (a factor $16$ here; sharper arguments bring it down, see [3, Prop. 2.5.2] for the full list of five equivalent characterizations, including moment growth $\mathbb{E}|Y|^k \leq (C\sigma\sqrt{k})^k$). None of the lecture's results need the reverse direction; it is included because "sub-Gaussian" is used tail-first in most of the literature the deck points to.</p>
+
+  <h3>4.5 Closure rules, with full proofs</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Rule 1 (scaling).</strong> If $X$ is $\sigma^2$-sub-Gaussian (mean $\mu$) and $c \in \mathbb{R}$, then $cX$ (mean $c\mu$) is $c^2\sigma^2$-sub-Gaussian.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> For any $t$: $\mathbb{E}[e^{t(cX - c\mu)}] = \mathbb{E}[e^{(tc)(X-\mu)}] \leq e^{(tc)^2\sigma^2/2} = e^{t^2(c^2\sigma^2)/2}$, using the definition at the (still arbitrary real) argument $tc$. The case $c = 0$ is trivial. $\square$</p>
+    <p style="margin:8px 0 6px;"><strong>Rule 2 (independent sums).</strong> If $X_1, \dots, X_n$ are mutually independent and $X_i$ is $\sigma_i^2$-sub-Gaussian (mean $\mu_i$), then $\sum_i X_i$ (mean $\sum_i \mu_i$) is $\big(\sum_i \sigma_i^2\big)$-sub-Gaussian.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> For any $t$, the $n$-fold product rule (2.2; the functions $e^{t(x_i - \mu_i)}$ of independent variables), then each envelope:</p>
+    \[ \mathbb{E}\Big[ e^{t \sum_i (X_i - \mu_i)} \Big]
+       = \prod_{i=1}^n \mathbb{E}\big[ e^{t(X_i - \mu_i)} \big]
+       \;\leq\; \prod_{i=1}^n e^{t^2\sigma_i^2/2}
+       = \exp\!\Big( \frac{t^2}{2} \sum_{i=1}^n \sigma_i^2 \Big). \ \square \]
+    <p style="margin:8px 0 6px;"><strong>Consequence (averages).</strong> $X_i$ i.i.d., each $\sigma^2$-sub-Gaussian: Rule 2 gives $\sum_i X_i$ proxy $n\sigma^2$; Rule 1 with $c = \tfrac1n$ gives $\bar{X}_n = \tfrac1n \sum_i X_i$ proxy $\tfrac{n\sigma^2}{n^2} = \tfrac{\sigma^2}{n}$. Averaging shrinks the proxy by $n$ &mdash; the sub-Gaussian analogue of $\mathrm{Var}(\bar X_n) = \sigma^2/n$ (prob05 note Lemma 4.1).</p>
+  </div>
+  <p><strong>Where independence is needed</strong> (beyond the deck): Rule 2's product step is the only use. Without independence, proxies do <em>not</em> add &mdash; but sub-Gaussianity survives with the worse constant $\big(\sum_i \sigma_i\big)^2$ (provable with H&ouml;lder's inequality); the extreme case $X_1 = X_2 = \dots$ shows this is the right order, since then the sum is $nX_1$ with proxy $n^2\sigma^2$ by Rule 1. Today every sum is a sum of independent losses, so the clean additive rule applies.</p>
+</section>
+
+<section>
+  <h2>5 &nbsp;Hoeffding's Inequality</h2>
+
+  <h3>5.1 Theorem 3, assembled</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 3 (Hoeffding's inequality [1], 1963).</strong> Let $X_1, \dots, X_n$ be independent with $X_i \in [a, b]$ (with probability $1$) and common mean $\mu$; let $\epsilon \gt 0$. Then</p>
+    \[ \Pr\big( \bar{X}_n - \mu \geq \epsilon \big) \;\leq\; \exp\!\Big( -\frac{2 n \epsilon^2}{(b-a)^2} \Big),
+       \qquad \Pr\big( |\bar{X}_n - \mu| \geq \epsilon \big) \;\leq\; 2\exp\!\Big( -\frac{2 n \epsilon^2}{(b-a)^2} \Big). \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Pure assembly. <em>Step 1:</em> each $X_i - \mu \in [a - \mu, b - \mu]$, width $b - a$, mean $0$; Theorem 1 (via 3.6) makes each $X_i$ $\tfrac{(b-a)^2}{4}$-sub-Gaussian. Identical distributions are <em>not</em> needed &mdash; only the shared range and mean. <em>Step 2:</em> Rule 2 then Rule 1 (4.5): $\bar X_n$ has mean $\mu$ (linearity) and proxy</p>
+    \[ \frac{1}{n^2} \cdot n \cdot \frac{(b-a)^2}{4} = \frac{(b-a)^2}{4n}. \]
+    <p style="margin:8px 0 0;"><em>Step 3:</em> Theorem 2 with this proxy: $\Pr(\bar X_n - \mu \geq \epsilon) \leq \exp\big(-\tfrac{\epsilon^2}{2 (b-a)^2/(4n)}\big) = \exp\big(-\tfrac{2n\epsilon^2}{(b-a)^2}\big)$. Two-sided: each $-X_i \in [-b, -a]$, same width, mean $-\mu$, so the one-sided bound applies to the lower tail identically; add. $\blacksquare$</p>
+  </div>
+  <p>The deck's summary chain unpacked, since it silently re-derives the same bound Chernoff-first: for $t \gt 0$, $\Pr(\bar X_n - \mu \geq \epsilon) \leq e^{-t\epsilon}\,\mathbb{E}[e^{t(\bar X_n - \mu)}] = e^{-t\epsilon} \prod_i \mathbb{E}[e^{\frac tn (X_i - \mu)}]$ (scale rule inside the product rule), $\leq e^{-t\epsilon}\, e^{n \cdot \frac{(t/n)^2 (b-a)^2}{8}} = e^{\frac{t^2(b-a)^2}{8n} - t\epsilon}$; minimizing over $t$ (parabola, $t^* = \tfrac{4n\epsilon}{(b-a)^2}$) gives exponent $-\tfrac{2n\epsilon^2}{(b-a)^2}$ &mdash; the same constant, so the slide's remark is right that the $2$ upstairs and the $8$ in the lemma are one constant moved around. <strong>Omitted generalization</strong> (Hoeffding's own statement [1]): with different ranges $X_i \in [a_i, b_i]$, the same assembly gives $\Pr\big(\sum_i (X_i - \mathbb{E}X_i) \geq \epsilon\big) \leq \exp\big(-\tfrac{2\epsilon^2}{\sum_i (b_i - a_i)^2}\big)$ &mdash; nothing new is needed, only Rule 2 with unequal proxies.</p>
+
+  <h3>5.2 The coin returns: all three numbers verified</h3>
+  <p>Fair coin, $[a,b] = [0,1]$, $\mu = \tfrac12$, $\epsilon = \tfrac14$, $n = 100$:</p>
+  \[ \Pr\big( \bar{X}_{100} \geq \tfrac34 \big) \;\leq\; e^{-2 \cdot 100 \cdot (1/4)^2} = e^{-200/16} = e^{-12.5} = 3.7266\ldots \times 10^{-6}, \]
+  <p>the slide's $3.7 \times 10^{-6}$. The comparison rows: prob05's optimal Chernoff bound is $e^{-100\,\mathrm{KL}(3/4\,\|\,1/2)}$ with $\mathrm{KL}(\tfrac34\|\tfrac12) = \tfrac34\ln\tfrac32 + \tfrac14\ln\tfrac12 = 0.130812$, giving $e^{-13.0812} = 2.084 \times 10^{-6} \approx 2.1 \times 10^{-6}$ &mdash; verified. The exact tail $\Pr(S_{100} \geq 75) = \sum_{k=75}^{100}\binom{100}{k}2^{-100} = 2.818 \times 10^{-7} \approx 2.8 \times 10^{-7}$ &mdash; recomputed here from scratch, matching the slide and the prob05 note. The lesson slide's exponents: Hoeffding $2\epsilon^2 = 2 \cdot \tfrac{1}{16} = 0.125$ per flip versus optimal $0.1308$; the price of knowing only the range is $\tfrac{0.1308 - 0.125}{0.1308} = 4.4\%$ of the exponent &mdash; the slide's "$\approx 4\%$" is fair (the exact figure is $4.4\%$). Near-optimal tails, zero distribution knowledge.</p>
+
+  <h3>5.3 Worked example: $\pm 2\%$ at $95\%$, the inversion in full</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;">Demand $\Pr(|\bar X_n - \mu| \geq 0.02) \leq 0.05$ for losses in $[0,1]$. Two-sided Hoeffding gives the bound $2e^{-2n(0.02)^2}$; set it $\leq 0.05$ and solve, step by step:</p>
+    \[ 2e^{-2n(0.02)^2} \leq 0.05
+       \iff e^{2n \cdot 0.0004} \geq \frac{2}{0.05} = 40
+       \iff n \geq \frac{\ln 40}{0.0008}. \]
+    <p style="margin:8px 0 0;">$\ln 40 = 3.68888$, so $n \geq 4611.10$, i.e. $n \geq 4612$ samples (integer ceiling) &mdash; slide verified. Chebyshev on the same question (prob05 note 4.7, worst-case coin variance $\tfrac14$): $\tfrac{1}{4n\epsilon^2} \leq 0.05 \iff n \geq \tfrac{1}{4 \cdot 0.0004 \cdot 0.05} = 12{,}500$ &mdash; verified; ratio $\tfrac{12500}{4612} = 2.71$, the slide's "$\tfrac{1}{2.7}$ of the data". At $\delta = 0.001$: Chebyshev $\tfrac{1}{4 \cdot 0.0004 \cdot 0.001} = 625{,}000$; Hoeffding $\tfrac{\ln 2000}{0.0008} = 9501.13 \to 9{,}502$ &mdash; both verified. The scaling behind the widening gap: Chebyshev's $n \propto \tfrac{1}{\delta}$ versus Hoeffding's $n \propto \ln\tfrac{1}{\delta}$.</p>
+  </div>
+  <p>What Hoeffding buys, summarized with the dependencies explicit: $n \geq \tfrac{\ln(2/\delta)}{2\epsilon^2}$ &mdash; distribution-free (only the range enters), <em>logarithmic</em> in $\tfrac1\delta$ (confidence is cheap), quadratic in $\tfrac1\epsilon$ (precision is expensive). One fixed hypothesis is now fully handled; ERM searches many.</p>
+</section>
+
+<section>
+  <h2>6 &nbsp;The Union Bound</h2>
+
+  <h3>6.1 Theorem 4, with the one-line proof expanded</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 4 (union bound / Boole's inequality).</strong> For any events $A_1, \dots, A_m$ &mdash; no independence, no disjointness, no structure whatsoever:</p>
+    \[ \Pr\!\Big( \bigcup_{j=1}^m A_j \Big) \;\leq\; \sum_{j=1}^m \Pr(A_j). \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Pointwise indicator inequality first: for every outcome $\omega$,</p>
+    \[ \mathbf{1}\Big\{ \bigcup_j A_j \Big\}(\omega) \;\leq\; \sum_{j=1}^m \mathbf{1}\{A_j\}(\omega). \]
+    <p style="margin:8px 0 6px;">Check by cases: if $\omega$ lies in none of the $A_j$, both sides are $0$; if $\omega$ lies in at least one, the left side is $1$ while the right side counts the number of $A_j$ containing $\omega$, which is $\geq 1$. Take expectations (monotonicity + linearity, prob05 note Lemma 2.1), and use $\mathbb{E}[\mathbf{1}\{A\}] = \Pr(A)$ on every term. $\blacksquare$</p>
+  </div>
+  <p>The proof also delivers the equality condition the slide asserts: the pointwise gap is the number of memberships minus one on the union, so equality holds iff outcomes in two or more $A_j$ have total probability $0$ &mdash; "equality iff (essentially) disjoint; overlap is double-counted". The bound extends verbatim to countably many events (sum on the right, same proof with monotone convergence &mdash; not needed today, where $m = |\mathcal{H}|$ is finite).</p>
+
+  <h3>6.2 Omitted detail: how loose is it?</h3>
+  <p>Exact inclusion&ndash;exclusion for two events, $\Pr(A_1 \cup A_2) = \Pr(A_1) + \Pr(A_2) - \Pr(A_1 \cap A_2)$, shows the slack is precisely the overlap mass. Two regimes matter in practice. (i) <em>Small individual probabilities:</em> for independent events with $\Pr(A_j) = p$, the truth is $1 - (1-p)^m \approx mp - \binom{m}{2}p^2$, and the bound $mp$ overshoots by $O(m^2p^2)$ &mdash; negligible when $mp \ll 1$. Today's model farm (6.3): bound $3.727\%$, exact-if-independent $1 - (1 - 3.7266\times10^{-6})^{10^4} = 3.658\%$ &mdash; the union bound gives away almost nothing. (ii) <em>Large total:</em> once $\sum_j \Pr(A_j) \gt 1$ the bound is vacuous while the truth is still a probability; the $n = 25$ farm below is exactly this regime. Deeper looseness in the generalization application: the events $B_h$ for similar hypotheses $h$ are strongly overlapping (similar classifiers err together), and the union bound charges them as if disjoint &mdash; this, not Hoeffding, is the slack that VC/Rademacher theory (7.8) recovers.</p>
+
+  <h3>6.3 The model farm, verified</h3>
+  <p>$m = 10^4$ useless models (true accuracy $50\%$: each is a fixed hypothesis with $R = \tfrac12$), each shown on the same $n = 100$ test points; $A_j$ = "model $j$ shows $\geq 75\%$". Per model, Hoeffding (5.2): $\Pr(A_j) \leq e^{-12.5} = 3.7266 \times 10^{-6}$ &mdash; note this holds for <em>each fixed</em> $j$ regardless of how the models relate, since each $A_j$ concerns one fixed hypothesis. Union:</p>
+  \[ \Pr\Big( \bigcup_{j=1}^{10^4} A_j \Big) \;\leq\; 10^4 \times 3.7266 \times 10^{-6} = 0.0373 = 3.7\%, \]
+  <p>verified ($3.73\%$, slide rounds to $3.7\%$): with probability $\geq 96\%$, no guesser fakes $75\%$. Shrink the test set to $n = 25$: per model $e^{-2 \cdot 25 \cdot (1/4)^2} = e^{-3.125} = 0.04394 \approx 0.044$, union $10^4 \times 0.0439 = 439.4 \approx 440$ &mdash; vacuous, verified. And rightly vacuous: the <em>expected number</em> of faking guessers is $10^4 \times 0.0439 \approx 439$ (that is what the sum of probabilities literally is, by linearity over indicators), so several <em>will</em> fake $75\%$; if the models' test scores were independent, the probability that at least one fakes would be $1 - (1 - 0.0439)^{10^4} \approx 1$ to machine precision. The exponent must beat the head count: $e^{-2n\epsilon^2} \cdot m \leq \delta$ requires $n \geq \tfrac{\ln m + \ln(1/\delta)}{2\epsilon^2}$ &mdash; $n$ grows with $\ln m$.</p>
+
+  <h3>6.4 Budgeting: the Bonferroni split</h3>
+  <p>To keep the total failure probability $\leq \delta$ over $m$ events, give each event a budget of $\delta/m$: if $\Pr(A_j) \leq \tfrac{\delta}{m}$ for each $j$, then $\Pr(\bigcup_j A_j) \leq m \cdot \tfrac{\delta}{m} = \delta$. (Statistics name: Bonferroni correction for multiple comparisons.) The reason this is affordable with exponential tails: pushing a per-event Hoeffding budget from $\delta$ down to $\delta/m$ costs $e^{-2n\epsilon^2} \leq \tfrac{\delta}{m}$ instead of $\leq \delta$, i.e. an additive $+\ln m$ inside the exponent's requirement &mdash; a factor $m$ in probability is only $\ln m$ in samples. This one accounting rule, applied to $\mathcal{H}$, is the next section.</p>
+</section>
+
+<section>
+  <h2>7 &nbsp;The Generalization Theorem</h2>
+
+  <h3>7.1 Finite hypothesis classes</h3>
+  <p>$\mathcal{H} = \{h_1, \dots, h_{|\mathcal{H}|}\}$ finite. The slide's two examples, unpacked. <em>Decision stumps on 8-bit images:</em> a stump thresholds a single pixel; choosing which of $d$ pixels and which of the $256$ possible 8-bit threshold values gives $|\mathcal{H}| = 256\,d$ (counting one orientation of the decision; allowing both "$\geq$ predicts 1" and "$\geq$ predicts 0" doubles it &mdash; the slide counts one). <em>Quantized nets:</em> any architecture whose weights are stored in $k$ bits total takes at most $2^k$ distinct configurations, so $|\mathcal{H}| = 2^k$. The second example is the important one: <strong>every model that fits in a finite file is a member of a finite class</strong>, with $\ln|\mathcal{H}| = k \ln 2$ proportional to its description length in bits &mdash; the reading developed in 7.7.</p>
+
+  <h3>7.2 The key observation: a fixed hypothesis is a coin</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma 7.1.</strong> Fix $h$ before the sample. Set $W_i = \ell(h, Z_i)$. Then $W_1, \dots, W_n$ are i.i.d., $W_i \in [0,1]$, $\mathbb{E}[W_i] = R(h)$, and $\hat{R}_n(h) = \bar{W}_n$. Consequently, by two-sided Hoeffding (Theorem 3 with $[a,b] = [0,1]$):</p>
+    \[ \Pr\big( |\hat{R}_n(h) - R(h)| \geq \epsilon \big) \;\leq\; 2 e^{-2n\epsilon^2}. \]
+    <p style="margin:8px 0 0;"><strong>Proof.</strong> Each $W_i$ is the <em>same fixed function</em> $z \mapsto \ell(h, z)$ applied to $Z_i$; identical functions of identically distributed inputs are identically distributed, and functions of independent inputs are independent (the factorization of the joint law is preserved under coordinatewise maps &mdash; prob03 note, independence of functions). $W_i \in [0,1]$ since $\ell$ is; $\mathbb{E}[W_i] = \mathbb{E}[\ell(h, Z_i)] = \mathbb{E}_{Z\sim\mathcal{D}}[\ell(h,Z)] = R(h)$ since $Z_i \sim \mathcal{D}$; and $\hat R_n(h) = \tfrac1n\sum_i W_i$ by definition. $\blacksquare$</p>
+  </div>
+  <p><strong>The trap, stated precisely.</strong> The lemma's proof uses that $h$ is the same fixed function for every $i$, chosen without reference to the sample. Substituting $h = \hat h$ breaks the very first step: $\hat h$ is itself a function of $(Z_1, \dots, Z_n)$, so $\ell(\hat h, Z_i)$ is a function of the <em>whole</em> sample, not of $Z_i$ alone &mdash; the terms are neither independent nor mean-$R(\hat h)$, and Theorem 3's hypotheses fail. This is not pedantry: ERM actively <em>selects for</em> hypotheses whose empirical losses fluctuated low, and 6.3's farm showed the best of $10^4$ fixed hypotheses violating its own per-hypothesis bound is routine at small $n$. The fix: bound all hypotheses <em>simultaneously</em>, so the certificate exists before any selection happens. Define the uniform convergence event</p>
+  \[ G_\epsilon \;=\; \big\{ \, |\hat{R}_n(h) - R(h)| \leq \epsilon \ \text{ for all } h \in \mathcal{H} \, \big\}. \]
+  <p>On $G_\epsilon$, <em>whatever</em> $h$ any algorithm picks &mdash; ERM, SGD, a human staring at the data &mdash; its gap is $\leq \epsilon$, because the guarantee quantifies over all of $\mathcal{H}$ in advance. Data-dependence of the choice becomes irrelevant. (For finite $\mathcal{H}$, $G_\epsilon$ is a finite intersection of events, so there are no measurability subtleties.)</p>
+
+  <h3>7.3 Theorem 5, with the full three-step proof</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 5 (uniform convergence, finite class).</strong> $\mathcal{H}$ finite, $Z_1, \dots, Z_n$ i.i.d. $\sim \mathcal{D}$, $\ell \in [0,1]$, $\delta \in (0,1)$. With probability at least $1 - \delta$,</p>
+    \[ \sup_{h \in \mathcal{H}} \big| R(h) - \hat{R}_n(h) \big|
+       \;\leq\; \sqrt{ \frac{ \ln\!\big( 2 |\mathcal{H}| / \delta \big) }{ 2n } }. \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Fix $\epsilon \gt 0$, to be chosen in Step 3. <em>Step 1 (one hypothesis).</em> For each fixed $h \in \mathcal{H}$, let $B_h = \{ |\hat R_n(h) - R(h)| \gt \epsilon \}$. Lemma 7.1: $\Pr(B_h) \leq 2e^{-2n\epsilon^2}$. <em>Step 2 (union over the class).</em> The failure event "some hypothesis deviates" is exactly $\bigcup_{h \in \mathcal{H}} B_h$ (and its complement is $G_\epsilon$, up to the boundary case $= \epsilon$ which only helps). Theorem 4 &mdash; whose total indifference to how the $B_h$ overlap and depend on each other is precisely what is needed, since they are heavily dependent (all built from one sample):</p>
+    \[ \Pr\Big( \bigcup_{h \in \mathcal{H}} B_h \Big)
+       \;\leq\; \sum_{h \in \mathcal{H}} \Pr(B_h)
+       \;\leq\; 2\, |\mathcal{H}|\, e^{-2n\epsilon^2}. \]
+    <p style="margin:8px 0 6px;"><em>Step 3 (invert).</em> Set the right side equal to the budget $\delta$ and solve for $\epsilon$, each step reversible:</p>
+    \[ 2 |\mathcal{H}|\, e^{-2n\epsilon^2} = \delta
+       \iff e^{2n\epsilon^2} = \frac{2|\mathcal{H}|}{\delta}
+       \iff 2n\epsilon^2 = \ln\frac{2|\mathcal{H}|}{\delta}
+       \iff \epsilon = \sqrt{ \frac{\ln(2|\mathcal{H}|/\delta)}{2n} }, \]
+    <p style="margin:8px 0 0;">(the log is positive since $2|\mathcal{H}| \geq 2 \gt \delta$, so the square root is real). With this $\epsilon$: $\Pr\big( \sup_h |R - \hat R_n| \gt \epsilon \big) \leq \delta$, i.e. the displayed bound holds with probability $\geq 1 - \delta$. (For finite $\mathcal{H}$ the sup is a max over finitely many values &mdash; no analytic care needed.) $\blacksquare$</p>
+  </div>
+  <p>Reading: one sample, one guarantee, every hypothesis. The trick, in the deck's words: pay for the search <em>before</em> it happens; the exponential tail beats the head count because $|\mathcal{H}|$ enters only through $\ln$.</p>
+
+  <h3>7.4 The ERM corollary, three hops in full</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Corollary (ERM guarantee).</strong> Let $\hat h$ be any empirical risk minimizer and $h^* \in \operatorname{argmin}_{h \in \mathcal{H}} R(h)$ a true-risk minimizer (both exist: finite class). On the event of Theorem 5 &mdash; probability $\geq 1 - \delta$ &mdash; with $\epsilon = \sqrt{\tfrac{\ln(2|\mathcal{H}|/\delta)}{2n}}$:</p>
+    \[ R(\hat{h}) \;\leq\; \min_{h \in \mathcal{H}} R(h) + 2\epsilon. \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> On $G_\epsilon$, every $h$ satisfies both $R(h) \leq \hat R_n(h) + \epsilon$ and $\hat R_n(h) \leq R(h) + \epsilon$. Chain three inequalities:</p>
+    \[ R(\hat{h})
+       \;\overset{\text{(tube at } \hat h\text{)}}{\leq}\; \hat{R}_n(\hat{h}) + \epsilon
+       \;\overset{\text{(ERM)}}{\leq}\; \hat{R}_n(h^*) + \epsilon
+       \;\overset{\text{(tube at } h^*\text{)}}{\leq}\; \big(R(h^*) + \epsilon\big) + \epsilon
+       = R(h^*) + 2\epsilon. \ \blacksquare \]
+  </div>
+  <p>Anatomy of the three hops, since each uses a different resource: hop 1 is the <em>upper</em> half of the tube at the (random!) $\hat h$ &mdash; legitimate because $G_\epsilon$ covers every hypothesis, including whichever one $\hat h$ turns out to be; the middle hop is the <em>definition</em> of ERM ($\hat h$ minimizes $\hat R_n$, so its empirical risk is $\leq$ that of $h^*$) &mdash; no probability at all; hop 3 is the <em>lower</em> half of the tube at the fixed $h^*$. The tube is crossed twice &mdash; once at each hypothesis &mdash; hence $2\epsilon$, not $\epsilon$; the deck's two-hop ladder picture is this proof drawn as risk levels. Both tube directions were genuinely used, which is why Theorem 5 had to be two-sided.</p>
+
+  <h3>7.5 Reading the rate: $\ln|\mathcal{H}|$ is bits</h3>
+  <p>For the class of all models describable in $k$ bits, $|\mathcal{H}| = 2^k$ and</p>
+  \[ \epsilon \;=\; \sqrt{ \frac{\ln(2 \cdot 2^k/\delta)}{2n} } \;=\; \sqrt{ \frac{k \ln 2 + \ln(2/\delta)}{2n} }, \]
+  <p>by $\ln(2^k) = k\ln 2$ &mdash; description length enters <em>linearly</em> in the numerator. Complexity is measured in bits needed to write the model down, an echo of prob01's $\log M$ as the information in a choice among $M$ alternatives. Inverting for $n$ (same algebra as Step 3): the gap is $\leq \epsilon$ with confidence $1 - \delta$ as soon as</p>
+  \[ n \;\geq\; \frac{ \ln|\mathcal{H}| + \ln(2/\delta) }{ 2 \epsilon^2 }. \]
+  <p>Per bit of model, the marginal cost is $\tfrac{\ln 2}{2\epsilon^2}$ samples $= \tfrac{0.6931}{2 \cdot 0.0025} = 138.6 \approx 139$ at $\epsilon = 0.05$ &mdash; verified. Precision dominates: halving $\epsilon$ quadruples $n$; confidence is nearly free ($\ln$ of $\tfrac1\delta$).</p>
+
+  <h3>7.6 The numbers table, re-derived (one rounding slip found)</h3>
+  <p>Setting $\epsilon = 0.05$, $\delta = 0.05$: $n \geq 200\big(\ln|\mathcal{H}| + \ln 40\big)$ with $\ln 40 = 3.6889$. Row by row:</p>
+  <table>
+    <tr><th>$|\mathcal{H}|$</th><th>$\ln|\mathcal{H}|$</th><th>$200(\ln|\mathcal{H}| + 3.6889)$</th><th>$n$ needed (ceiling)</th><th>slide</th></tr>
+    <tr><td>$10$</td><td>$2.3026$</td><td>$1198.29$</td><td>$1{,}199$</td><td>$1{,}199$ &#10003;</td></tr>
+    <tr><td>$10^3$</td><td>$6.9078$</td><td>$2119.33$</td><td>$2{,}120$</td><td>$2{,}120$ &#10003;</td></tr>
+    <tr><td>$10^6$</td><td>$13.8155$</td><td>$3500.88$</td><td>$3{,}501$</td><td>$3{,}501$ &#10003;</td></tr>
+    <tr><td>$2^{100}$</td><td>$69.3147$</td><td>$14600.72$</td><td>$14{,}601$</td><td>$14{,}600$ (off by 1)</td></tr>
+  </table>
+  <p><strong>Discrepancy, for the record:</strong> the last row's requirement is $n \geq 14{,}600.72$, so the smallest integer sample size is $14{,}601$; the slide's $14{,}600$ (also on the chart) rounds down instead of up. The qualitative claim is untouched: a million hypotheses cost only $\tfrac{3501}{1199} \approx 2.9\times$ the data of ten &mdash; logs are kind.</p>
+
+  <h3>7.7 The chart and the confidence table, re-derived (same slip pattern)</h3>
+  <p>The chart's line: $n = 200\ln 40 + (200\ln 2)\,k = 737.78 + 138.63\,k$. The slide's caption "$n \approx 739 + 139\,k$" rounds each coefficient up-ish; the honest rounding of the intercept is $738$. Its plotted points, exactly: $k = 10$: $2124.07 \to$ ceiling $2{,}125$ (slide: $2{,}124$); $k = 50$: $7669.25 \to 7{,}670$ (slide: $7{,}669$); $k = 100$: $14600.72 \to 14{,}601$ (slide: $14{,}600$). So all three chart labels round the raw value down instead of taking the ceiling &mdash; each off by one sample, immaterial at this scale but noted. Confidence table at $\epsilon = 0.05$, extra samples over the $95\%$ baseline $= 200\big(\ln(2/\delta) - \ln 40\big)$: at $99.9\%$, $200(\ln 2000 - \ln 40) = 200\ln 50 = 782.4 \to$ slide's $+782$ (rounded down; ceiling-vs-ceiling gives $+783$); at $1 - 10^{-9}$, $\ln(2 \times 10^9) = 21.416$, extra $= 3545.5 \to$ slide's $+3{,}545$ (same rounding). The headline stands: from $95\%$ to one-in-a-billion failure costs a few thousand samples &mdash; confidence is nearly free.</p>
+
+  <h3>7.8 What breaks for infinite classes &mdash; and the road ahead</h3>
+  <p>All linear classifiers in $\mathbb{R}^d$ form an uncountable class: $|\mathcal{H}| = \infty$, $\ln|\mathcal{H}| = \infty$, and Theorem 5 says nothing &mdash; the union bound charged every member separately, and infinitely many members cost infinitely much. But the charge was too crude: on any <em>fixed</em> $n$ sample points, infinitely many linear classifiers produce only finitely many distinct labelings (at most $O(n^d)$ of them), so "different hypotheses" that behave identically on the data were each billed separately for the same event. <strong>VC dimension</strong> replaces $\ln|\mathcal{H}|$ by the logarithm of the number of achievable <em>behaviors on $n$ points</em> (via the growth function and the symmetrization argument); <strong>Rademacher complexity</strong> replaces it by a direct measurement of how well $\mathcal{H}$ can correlate with random $\pm1$ signs on the sample. Both yield bounds of the same $\sqrt{\text{complexity}/n}$ shape, with the Hoeffding-plus-union skeleton surviving inside the proofs. Developed properly in [4, Ch. 6&ndash;26 selections] and [5, Ch. 3]; the deck names them and stops, and so do these notes.</p>
+</section>
+
+<section>
+  <h2>8 &nbsp;Why ERM Works</h2>
+
+  <h3>8.1 The license to train, and the trade-off</h3>
+  <p>Theorem 5 certifies the proxy that ERM minimizes: when $n \gg \ln|\mathcal{H}|$, $\hat R_n \approx R$ everywhere on $\mathcal{H}$, so minimizing the computable $\hat R_n$ is nearly minimizing the wanted $R$ &mdash; training loss becomes a certified preview of test loss, which is what "learning is possible" means in this framework. The corollary splits the achievable risk into two competing terms:</p>
+  \[ R(\hat{h}) \;\leq\; \underbrace{\min_{h \in \mathcal{H}} R(h)}_{\text{approximation}}
+     \;+\; \underbrace{2\sqrt{ \tfrac{\ln(2|\mathcal{H}|/\delta)}{2n} }}_{\text{estimation}}. \]
+  <p>Growing $\mathcal{H}$ shrinks the approximation term (a richer class contains better hypotheses &mdash; the min over a superset is no larger) and grows the estimation term ($\ln|\mathcal{H}|$ in the numerator). Their sum is the U-curve of Section 1's overfitting picture, now derived rather than drawn; more data pushes the estimation curve down, so the optimal class size grows with the dataset. (Prob07 and the optimization track pick up this decomposition by name.)</p>
+
+  <h3>8.2 Honest slide: deep nets break this bound &mdash; numbers verified</h3>
+  <p>ResNet-50: $25.6 \times 10^6$ parameters $\times\, 32$ bits $= 8.192 \times 10^8$ bits, so $\ln|\mathcal{H}| = 8.192\times10^8 \ln 2 = 5.678 \times 10^8 \approx 5.7 \times 10^8$ &mdash; verified. With $n = 1.28 \times 10^6$ (ImageNet) and dropping the negligible $\ln(2/\delta)$:</p>
+  \[ \epsilon \;=\; \sqrt{ \frac{5.678 \times 10^8}{2 \times 1.28 \times 10^6} }
+     \;=\; \sqrt{221.8} \;=\; 14.9, \]
+  <p>verified ($14.89$; the slide's displayed fraction $\tfrac{5.7\times10^8}{2.56\times10^6}$ is the same computation with $2n$ evaluated). A certified gap of $14.9$ on a loss bounded by $1$ is vacuous by a factor of $\sim\!15$; the observed gap is a few percent. The right reading, itemized: the bound is <em>sufficient, not necessary</em> &mdash; its failure certifies nothing about failure to generalize; the culprit is uniformity, which pays for all $2^{8\times10^8}$ weight settings while SGD only ever visits a vanishing sliver of them; and closing the factor &mdash; explaining why heavily overparameterized nets generalize &mdash; is open research (implicit bias of SGD, margin/PAC-Bayes/compression bounds, and more; entry points in [4, Ch. 26 notes] and the literature). The theory in this lecture is not wrong at scale &mdash; it is loose at scale, and honestly so.</p>
+
+  <h3>8.3 What survives at deep-learning scale</h3>
+  <p>Three direct survivors, each an instance of today's theorems with small effective $|\mathcal{H}|$. (i) <em>The test-set bound:</em> a held-out test set is fresh data, and the single trained model is one fixed hypothesis with respect to it &mdash; $|\mathcal{H}| = 1$, Hoeffding applies exactly, and the 5.3 computation says $4{,}612$ test samples certify $\pm 2\%$ at $95\%$ confidence <em>unconditionally, whatever the model is</em>. (ii) <em>Validation and early stopping:</em> comparing $m$ candidate checkpoints on a validation set is a union bound over $m$ fixed hypotheses &mdash; $m$ is small (tens), so the $+\ln m$ price is trivial. (iii) <em>Leaderboard overfitting, explained:</em> a public leaderboard evaluated on one fixed test set is the model farm of 6.3 &mdash; thousands of submissions selecting on the same sample's fluctuations &mdash; and the theory predicts exactly the observed effect: the top of the leaderboard is biased upward, increasingly so as submissions grow and the test set stays fixed. Concentration versus selection pressure is the whole story, on both sides of the ledger.</p>
+  <p><strong>The chain, end to end</strong> (deck's recap, with pointers): bounded $\Rightarrow$ sub-Gaussian (Thm 1, &sect;3) $\Rightarrow$ exponential tail for one average (Thm 2&ndash;3, &sect;4&ndash;5) $\Rightarrow$ simultaneous over $\mathcal{H}$ (Thm 4, &sect;6) $\Rightarrow$ uniform $\epsilon$-tube (Thm 5, &sect;7.3) $\Rightarrow$ $R(\hat h) \leq R(h^*) + 2\epsilon$ (Cor., &sect;7.4). One engine (Chernoff), one lemma (the bounded-MGF envelope), one accounting rule (union). What the lecture leaves open &mdash; how to <em>choose</em> $\hat h$, rather than certify whatever was chosen &mdash; is prob07's subject: likelihood, MLE/MAP, bias&ndash;variance.</p>
+</section>
+
+<section>
+  <h2>References</h2>
+  <ol>
+    <li>W. Hoeffding, &ldquo;Probability Inequalities for Sums of Bounded Random Variables,&rdquo; <em>Journal of the American Statistical Association</em>, vol. 58, no. 301, pp. 13&ndash;30, 1963. DOI: <a href="https://doi.org/10.1080/01621459.1963.10500830">10.1080/01621459.1963.10500830</a>. (The original: Theorem 1 here is his Lemma; Theorem 3 with per-variable ranges $[a_i, b_i]$ is his Theorem 2.)</li>
+    <li>S. Boucheron, G. Lugosi, and P. Massart, <em>Concentration Inequalities: A Nonasymptotic Theory of Independence</em>, Oxford University Press, 2013. DOI: <a href="https://doi.org/10.1093/acprof:oso/9780199535255.001.0001">10.1093/acprof:oso/9780199535255.001.0001</a>. (&sect;2.3&ndash;2.6: sub-Gaussian variables, Hoeffding's lemma and inequality in the tilted-log-MGF style of Section 3.)</li>
+    <li>R. Vershynin, <em>High-Dimensional Probability: An Introduction with Applications in Data Science</em>, Cambridge University Press, 2018. DOI: <a href="https://doi.org/10.1017/9781108231596">10.1017/9781108231596</a>; free copy on the author's page. (Prop. 2.5.2: the five equivalent characterizations of sub-Gaussian behind Section 4.4; Ch. 2: Hoeffding.)</li>
+    <li>S. Shalev-Shwartz and S. Ben-David, <em>Understanding Machine Learning: From Theory to Algorithms</em>, Cambridge University Press, 2014. Free PDF at the authors&rsquo; Cambridge-authorized page: <a href="https://www.cs.huji.ac.il/~shais/UnderstandingMachineLearning/">cs.huji.ac.il/~shais/UnderstandingMachineLearning</a>. (Ch. 2&ndash;4: finite classes, uniform convergence, and the ERM corollary exactly as in Sections 7.3&ndash;7.4; Ch. 6: VC dimension.)</li>
+    <li>M. Mohri, A. Rostamizadeh, and A. Talwalkar, <em>Foundations of Machine Learning</em>, 2nd ed., MIT Press, 2018. Book page: <a href="https://cs.nyu.edu/~mohri/mlbook/">cs.nyu.edu/~mohri/mlbook</a>. (Ch. 2: the finite-class PAC bounds; Ch. 3: Rademacher complexity and VC dimension; App. D: concentration inequalities.)</li>
+  </ol>
+</section>
+
+</body>
+</html>

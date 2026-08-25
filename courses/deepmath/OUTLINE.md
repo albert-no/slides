@@ -43,6 +43,7 @@ Dropped from source by request: operator theory (opt 1603–1761), acceleration/
 `prob01-foundations/prob01-foundations.html` · source: prob 13–451.
 Lecture 1 — defines everything from scratch; ends on a bridge to prob02 (wrong
 distribution → cross-entropy/KL).
+Companion: `prob01-foundations/prob01-foundations-note.html` — detailed definitions, expanded proofs, lemmas, references.
 
 | # | Section | Slides | Location |
 |---|---|---|---|

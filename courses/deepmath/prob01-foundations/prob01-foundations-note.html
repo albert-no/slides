@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Deep Learning Math 1 — Probability Foundations &amp; Entropy · Notes</title>
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload='renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false},{left:"\\[",right:"\\]",display:true}]});'></script>
+<style>
+  body { max-width: 760px; margin: 48px auto; padding: 0 24px 96px; color: var(--charcoal); background: var(--white); font-family: 'Yonsei', 'Noto Sans', Arial, sans-serif; font-weight: 300; line-height: 1.65; }
+  h1 { font-size: 2rem; color: var(--yonsei-blue); margin-bottom: 4px; }
+  h2 { font-size: 1.4rem; color: var(--yonsei-blue); margin-top: 40px; border-bottom: 1px solid var(--slate); padding-bottom: 6px; }
+  h3 { font-size: 1.1rem; color: var(--blue-light); margin-top: 24px; }
+  p, li { font-size: 1rem; }
+  .meta { color: var(--gray-text); font-size: 0.95rem; margin-bottom: 24px; }
+  code { background: var(--light); padding: 1px 6px; border-radius: 4px; font-size: 0.92em; }
+  strong { color: var(--yonsei-blue); font-weight: 600; }
+  .deriv { background: var(--light); border-left: 3px solid var(--yonsei-blue); padding: 12px 18px; margin: 14px 0; border-radius: 0 6px 6px 0; }
+</style>
+</head>
+<body>
+
+<h1>Deep Learning Math 1 · Probability Foundations &amp; Entropy &mdash; Notes</h1>
+<p class="meta">Companion to <code>prob01-foundations.html</code>. Full definitions, expanded proofs, edge cases, and the lemmas the deck uses without proof. Throughout, $\log$ denotes $\log_2$ and entropies are in bits; $\ln$ is the natural logarithm.</p>
+
+<section>
+  <h2>1 &nbsp;Why Probability?</h2>
+  <p>The deck's opening claim is that every object of deep learning is a probabilistic object. Slightly more carefully:</p>
+  <ul>
+    <li><strong>Data are samples.</strong> A dataset $x_1,\dots,x_n$ is modeled as $n$ independent draws from an unknown distribution $P$ on a sample space $\Omega$ (the space of all possible images, sentences, etc.). "Learning" means inferring structure of $P$ &mdash; its high-mass regions, its conditionals given a label &mdash; from these finitely many draws. The i.i.d. assumption is itself a modeling choice: it fails for time series, curated datasets, or feedback loops, and later lectures (random processes, concentration) treat what happens when it holds or is relaxed.</li>
+    <li><strong>Models are distributions.</strong> A classifier does not output a label; it outputs a probability mass function over labels (a <em>soft label</em>) &mdash; the softmax layer exists precisely to turn arbitrary real scores into a valid pmf. A generative model <em>is</em> a distribution over $\Omega$ from which we can sample. An RL policy is a conditional distribution over actions given a state.</li>
+  </ul>
+  <p>The lecture's technical goal is one number: the entropy $H(X)$, which summarizes how uncertain a distribution is, together with its exact range $0 \leq H(X) \leq \log M$ and the proof technique (Jensen's inequality) that recurs throughout the course &mdash; KL non-negativity in Lecture 2, the ELBO in generative modeling.</p>
+</section>
+
+<section>
+  <h2>2 &nbsp;Probability Review</h2>
+
+  <h3>2.1 Sample space, events, and the event collection</h3>
+  <p>The <strong>sample space</strong> $\Omega$ is the set of all possible outcomes of the experiment. An <strong>event</strong> $E$ is a subset of $\Omega$; the event "$E$ occurred" means the realized outcome $\omega$ satisfies $\omega \in E$. The <strong>event collection</strong> $\mathcal{F}$ is a family of subsets of $\Omega$ &mdash; the events to which we are willing to assign probabilities.</p>
+  <p>The slides say "a (measurable) subset" and move on; here is what that parenthesis hides. In a fully rigorous treatment $\mathcal{F}$ must be a <strong>$\sigma$-algebra</strong>: (i) $\Omega \in \mathcal{F}$; (ii) if $E \in \mathcal{F}$ then the complement $E^c \in \mathcal{F}$; (iii) if $E_1, E_2, \dots \in \mathcal{F}$ then $\bigcup_{i=1}^{\infty} E_i \in \mathcal{F}$. These closure properties guarantee that logical combinations of legitimate questions ("not $E$", "$E_1$ or $E_2$") are again legitimate questions. When $\Omega$ is <em>finite or countable</em> &mdash; every example in this lecture &mdash; one may always take $\mathcal{F} = 2^{\Omega}$, the collection of <em>all</em> subsets, and measurability is a non-issue. The distinction only bites for uncountable $\Omega$ (e.g. $\Omega = [0,1]$), where not every subset can consistently be assigned a probability; this course stays discrete until differential entropy (Lecture 3).</p>
+
+  <h3>2.2 Probability measure: the axioms and their first consequences</h3>
+  <p>A <strong>probability measure</strong> is a map $P : \mathcal{F} \rightarrow [0,1]$ satisfying the Kolmogorov axioms:</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Axioms.</strong> (i) $P(E) \geq 0$ for every $E \in \mathcal{F}$; (ii) $P(\Omega) = 1$; (iii) <em>countable additivity:</em> if $E_1, E_2, \dots$ are pairwise disjoint events, then</p>
+    \[ P\Bigl(\bigcup_{i=1}^{\infty} E_i\Bigr) = \sum_{i=1}^{\infty} P(E_i). \]
+  </div>
+  <p>The two facts quoted on the slides are consequences, not axioms:</p>
+  <ul>
+    <li><strong>$P(\emptyset) = 0$.</strong> Take $E_1 = \Omega$ and $E_i = \emptyset$ for $i \geq 2$ in (iii): $1 = P(\Omega) = 1 + \sum_{i \geq 2} P(\emptyset)$, forcing $P(\emptyset) = 0$.</li>
+    <li><strong>Monotonicity ("larger event, larger probability").</strong> If $A \subseteq B$, write $B = A \cup (B \setminus A)$, a disjoint union. Additivity gives $P(B) = P(A) + P(B \setminus A) \geq P(A)$, since the second term is non-negative by (i).</li>
+  </ul>
+  <p>The triple $(\Omega, \mathcal{F}, P)$ is the complete probabilistic model. For finite $\Omega$ with $\mathcal{F} = 2^{\Omega}$, specifying $P$ is equivalent to specifying the numbers $P(\{\omega\})$ for each outcome $\omega$, non-negative and summing to $1$; then $P(E) = \sum_{\omega \in E} P(\{\omega\})$.</p>
+
+  <h3>2.3 Example &mdash; fair coin</h3>
+  <p>$\Omega = \{H, T\}$ and $\mathcal{F} = \bigl\{\emptyset, \{H\}, \{T\}, \{H,T\}\bigr\}$ &mdash; all four subsets. The measure $P(\emptyset) = 0$, $P(\{H\}) = P(\{T\}) = \tfrac12$, $P(\{H,T\}) = 1$ satisfies the axioms; note additivity is what forces $P(\{H,T\}) = P(\{H\}) + P(\{T\}) = 1$, so the only free choice was the single number $P(\{H\})$.</p>
+
+  <h3>2.4 Example &mdash; images as sample spaces, and the counting</h3>
+  <p>A $5\times 5$ binary image is a point of $\Omega = \{0,1\}^{5\times 5}$, so $|\Omega| = 2^{25} \approx 3.4 \times 10^7$. The event collection is the full power set, and a set with $N$ elements has exactly $2^N$ subsets (each element is independently in or out), so $|\mathcal{F}| = 2^{2^{25}}$ &mdash; already unimaginably large for a toy image.</p>
+  <p><strong>Notation warning</strong> (from the slides, worth internalizing): $[0,1]$ is the real interval, an uncountable set; $\{0,1\}$ is a two-element set. The probability measure maps <em>into</em> $[0,1]$; binary pixels live <em>in</em> $\{0,1\}$.</p>
+  <p>The same pattern gives the table on the slides: MNIST has $\Omega = \{0,\dots,255\}^{28\times 28}$ with $|\Omega| = 256^{784} = 2^{6272} \approx 10^{1888}$; CIFAR-10 has $\Omega = \{0,\dots,255\}^{3\times 32\times 32}$ with $|\Omega| = 2^{24576} \approx 10^{7398}$; ImageNet at $224 \times 224$ RGB has $|\Omega| = 2^{1204224} \approx 10^{362508}$. (Conversion: $2^{k} = 10^{k \log_{10} 2}$ with $\log_{10} 2 \approx 0.30103$.)</p>
+  <p><strong>Omitted remark &mdash; why the sizes matter.</strong> The number of atoms in the observable universe is roughly $10^{80}$. So no dataset can ever "cover" even a vanishing fraction of $\Omega$, and a uniform distribution over $\Omega$ would make every dataset useless: a uniformly random pixel array is noise with overwhelming probability. Real data distributions concentrate enormous mass on a tiny, structured subset (the "natural images"). That concentration is exactly the structure a model tries to learn, and it is why generative modeling is possible at all despite the astronomical ambient space.</p>
+</section>
+
+<section>
+  <h2>3 &nbsp;Random Variables</h2>
+
+  <h3>3.1 Definition</h3>
+  <p>A <strong>random variable</strong> is a map $X : \Omega \rightarrow \mathbb{R}$: it converts an outcome into a number. (The rigorous definition adds the measurability requirement that $\{\omega : X(\omega) \leq t\} \in \mathcal{F}$ for every $t \in \mathbb{R}$, so that probabilities of statements about $X$ are defined. With $\mathcal{F} = 2^{\Omega}$ on a discrete space, every map is measurable, so the condition is automatic in this lecture.)</p>
+  <p><strong>Notation.</strong> Uppercase $X$ is the random variable (a function); lowercase $x$ is a realization (a number). "$X = x$" abbreviates the event $\{\omega \in \Omega : X(\omega) = x\}$.</p>
+  <p>The deck's two examples: on $\Omega = \{0,1\}^{5\times 5}$, let $X(\omega)$ be the number of $1$-pixels in $\omega$ (the displayed digit "2" has $X(\omega) = 11$); on $\Omega = \{H,T\}^7$, let $X$ count occurrences of the pattern $HT$, so $X(HTHTHHH) = 2$. Both illustrate that a random variable deliberately <em>discards</em> information: many distinct outcomes share the same value.</p>
+
+  <h3>3.2 pmf</h3>
+  <p>The <strong>probability mass function</strong> (pmf) of $X$ is</p>
+  <div class="deriv">\[ p_X(x) = \Pr(X = x) = P\bigl(\{\omega : X(\omega) = x\}\bigr). \]</div>
+  <p>We write $\mathcal{X}$ for the set of values $X$ can take (the <em>alphabet</em> or support). Since the events $\{X = x\}$, $x \in \mathcal{X}$, partition $\Omega$, additivity gives $\sum_{x \in \mathcal{X}} p_X(x) = 1$, and $p_X(x) \geq 0$ always. Conversely, any such collection of numbers is the pmf of some random variable. In this sense the pmf <strong>completely characterizes</strong> the random variable: any question about probabilities of $X$-values is answered by $p_X$ alone, with the underlying $(\Omega, \mathcal{F}, P)$ no longer needed. From Section 4 on, we work exclusively with pmfs.</p>
+
+  <h3>3.3 Expectation and the law of the unconscious statistician</h3>
+  <p>The <strong>expectation</strong> of a discrete random variable $X$ is the probability-weighted average</p>
+  <div class="deriv">\[ \mathbb{E}[X] = \sum_{x \in \mathcal{X}} x \cdot p_X(x), \]</div>
+  <p>e.g. $\mathbb{E}[X] = \tfrac16(1+2+3+4+5+6) = 3.5$ for a fair die. (For infinite alphabets the sum must converge absolutely for the expectation to be well-defined; all sums in this lecture do.)</p>
+  <p>The deck leaves the following as an exercise with a hint. Here is the full solution, since the identity is used constantly &mdash; entropy itself is defined through it.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition (LOTUS &mdash; law of the unconscious statistician).</strong> For any function $f : \mathcal{X} \rightarrow \mathbb{R}$,</p>
+    \[ \mathbb{E}[f(X)] = \sum_{x \in \mathcal{X}} f(x)\, p_X(x). \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Following the hint, define the new random variable $Y = f(X)$, with alphabet $\mathcal{Y} = f(\mathcal{X})$. Its pmf is obtained by additivity over the disjoint events $\{X = x\}$, $x \in f^{-1}(y)$:</p>
+    \[ p_Y(y) = \Pr\bigl(f(X) = y\bigr) = \sum_{x :\, f(x) = y} p_X(x). \]
+    <p style="margin:8px 0 6px;">Applying the definition of expectation to $Y$ and substituting:</p>
+    \[ \mathbb{E}[f(X)] = \mathbb{E}[Y] = \sum_{y \in \mathcal{Y}} y\, p_Y(y)
+       = \sum_{y \in \mathcal{Y}} \sum_{x :\, f(x) = y} y\, p_X(x)
+       = \sum_{y \in \mathcal{Y}} \sum_{x :\, f(x) = y} f(x)\, p_X(x)
+       = \sum_{x \in \mathcal{X}} f(x)\, p_X(x), \]
+    <p style="margin:8px 0 0;">where the third equality uses $y = f(x)$ inside the inner sum, and the last holds because the sets $f^{-1}(y)$, $y \in \mathcal{Y}$, partition $\mathcal{X}$ &mdash; every $x$ appears in the double sum exactly once. $\blacksquare$</p>
+  </div>
+  <p>The name is a joke: people apply the formula "unconsciously", as if it were the definition of $\mathbb{E}[f(X)]$, when the definition actually requires first finding the pmf of $f(X)$. The proposition says the shortcut is legitimate.</p>
+</section>
+
+<section>
+  <h2>4 &nbsp;Entropy</h2>
+
+  <h3>4.1 Surprisal</h3>
+  <p>Setting for the rest of the lecture: $X$ is a discrete random variable with pmf $p_X$ on a finite alphabet, canonically $\mathcal{X} = \{0, 1, \dots, M-1\}$ (except where an infinite alphabet is explicitly allowed, as in the geometric exercise below).</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (surprisal).</strong> The surprisal of $X$ at the outcome $x$ is</p>
+    \[ S(x) = \log \frac{1}{p_X(x)} = -\log p_X(x). \]
+  </div>
+  <p>The motivating example: let $X$ indicate a serious earthquake ($X=1$) versus a normal day ($X=0$). Observing $X = 0$, an outcome with $p_X(0) \approx 1$, carries essentially no surprise; observing the rare $X = 1$ is very surprising. Surprise should be large exactly when $p_X(x)$ is small, which $-\log p_X(x)$ delivers: it is $0$ at $p = 1$ and tends to $+\infty$ as $p \rightarrow 0^{+}$.</p>
+
+  <h3>4.2 Why the logarithm?</h3>
+  <p>Three properties single out $\log(1/p)$ among decreasing functions of $p$:</p>
+  <ul>
+    <li><strong>Certainty is unsurprising:</strong> $p = 1 \Rightarrow S = 0$.</li>
+    <li><strong>Monotonicity:</strong> $S$ is strictly decreasing in $p$.</li>
+    <li><strong>Independent surprises add:</strong> if two independent events have probabilities $p$ and $q$, the pair has probability $pq$, and
+      \[ \log\frac{1}{pq} = \log\frac{1}{p} + \log\frac{1}{q}. \]
+      The logarithm is essentially the only continuous function turning products into sums (Cauchy's functional equation), so additivity of information across independent observations forces the log.</li>
+  </ul>
+  <p><strong>Omitted remark (from the source notes).</strong> There is a deeper axiomatic justification: Shannon's original paper [2] and later Khinchin-style axiom systems show that continuity + monotonicity in $M$ for uniform distributions + a grouping/recursivity axiom characterize $H(X) = -\sum p \log p$ up to the base of the logarithm. This course does not develop the axiomatics. Other information measures exist and are useful, notably the <strong>R&eacute;nyi entropy</strong> of order $\alpha \geq 0$, $\alpha \neq 1$:
+  \[ H_\alpha(X) = \frac{1}{1-\alpha} \log \sum_{x \in \mathcal{X}} p_X(x)^{\alpha}, \]
+  which recovers Shannon entropy in the limit $\alpha \rightarrow 1$ [4].</p>
+
+  <h3>4.3 Entropy: definition and conventions</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (entropy).</strong> The entropy of $X$ is its expected surprisal:</p>
+    \[ H(X) = \mathbb{E}[S(X)] = \mathbb{E}\bigl[-\log p_X(X)\bigr] = \sum_{x \in \mathcal{X}} p_X(x) \log\frac{1}{p_X(x)}. \]
+  </div>
+  <p>Note the middle expression applies LOTUS with $f(x) = -\log p_X(x)$ &mdash; the pmf appears both as the weighting and inside the function being averaged. Two conventions:</p>
+  <ul>
+    <li><strong>Base 2; unit "bits".</strong> All logs are base 2 unless stated. Base $e$ gives "nats"; since $\log_2 t = \ln t / \ln 2$, entropies convert by the constant factor $1/\ln 2 \approx 1.4427$, and every theorem in this lecture is base-independent.</li>
+    <li><strong>$0 \cdot \log 0 = 0$.</strong> Terms with $p_X(x) = 0$ are defined to contribute $0$, equivalently the sum runs only over the support $\{x : p_X(x) \gt 0\}$. This is not arbitrary; it is continuity:
+      <div class="deriv">
+        \[ \lim_{t \rightarrow 0^{+}} t \log\frac{1}{t} = 0, \quad\text{since}\quad
+        \lim_{t \rightarrow 0^{+}} t \ln t = \lim_{t \rightarrow 0^{+}} \frac{\ln t}{1/t}
+        \overset{\text{l'H&ocirc;pital}}{=} \lim_{t \rightarrow 0^{+}} \frac{1/t}{-1/t^{2}} = \lim_{t \rightarrow 0^{+}} (-t) = 0. \]
+      </div>
+      So an impossible outcome adds nothing to the uncertainty, and $H$ is a continuous function of the pmf on the probability simplex, boundary included. This convention quietly matters in several proofs below (equality conditions, the endpoints of $h_2$).</li>
+  </ul>
+  <p><strong>Two readings of the same number.</strong> Entropy is the <em>uncertainty</em> about $X$ before observing it, and equally the <em>amount of information</em> gained by observing it &mdash; resolving uncertainty and acquiring information are the same event viewed from opposite sides of the observation.</p>
+
+  <h3>4.4 Worked examples, fully computed</h3>
+  <p><strong>Fair coin.</strong> $p_X(H) = p_X(T) = \tfrac12$: both surprisals equal $\log 2 = 1$, so
+  \[ H(X) = \tfrac12 \log 2 + \tfrac12 \log 2 = 1 \text{ bit}. \]
+  One fair coin toss is the unit of uncertainty.</p>
+  <p><strong>Biased coin.</strong> $p_X(0) = 0.01$, $p_X(1) = 0.99$:</p>
+  <div class="deriv">
+    \[ H(X) = 0.01 \log\frac{1}{0.01} + 0.99 \log\frac{1}{0.99}
+      = 0.01 \times 6.644 + 0.99 \times 0.0145 \]
+    \[ \approx 0.0664 + 0.0144 \approx 0.081 \text{ bits}. \]
+  </div>
+  <p>The rare outcome is individually very surprising ($\log 100 \approx 6.64$ bits) but carries weight only $0.01$; the common outcome is nearly unsurprising. Both terms are small &mdash; for different reasons &mdash; so a heavily biased coin is nearly deterministic in entropy terms. Comparing the two coins answers the slide's question "which is more random?": $H = 1$ bit versus $H \approx 0.081$ bits agrees with the obvious intuition that the fair coin is far more uncertain.</p>
+  <p><strong>Binary entropy function.</strong> For $X \sim \mathrm{Bernoulli}(p)$,
+  \[ h_2(p) = -p \log p - (1-p)\log(1-p). \]
+  Basic facts, all visible in the slide's plot: $h_2(0) = h_2(1) = 0$ (using the $0\log 0$ convention); $h_2$ is symmetric, $h_2(p) = h_2(1-p)$, since swapping the labels of the two outcomes cannot change uncertainty; and $h_2$ peaks at $p = \tfrac12$ with $h_2(\tfrac12) = 1$ (a special case of the maximum-entropy theorem below, or of the concavity computed in Section 5.2). E.g. $h_2(0.01) \approx 0.081$ as above.</p>
+  <p><strong>Fair die.</strong> Uniform on $6$ faces, $p_X(x) = \tfrac16$: every surprisal is $\log 6$, so
+  \[ H(X) = \sum_{x=1}^{6} \tfrac16 \log 6 = \log 6 \approx 2.585 \text{ bits}. \]
+  In general a uniform distribution on $M$ values has entropy exactly $\log M$ &mdash; the constant surprisal makes the average trivial. This is the case of equality in Theorem 3.</p>
+  <p><strong>Three outcomes.</strong> $p = (\tfrac12, \tfrac14, \tfrac14)$ has surprisals $(1, 2, 2)$ bits, so
+  \[ H(X) = \tfrac12 \cdot 1 + \tfrac14 \cdot 2 + \tfrac14 \cdot 2 = 1.5 \text{ bits}, \]
+  between the fair coin ($1$ bit) and the uniform distribution on $3$ symbols ($\log 3 \approx 1.585$ bits). Dyadic pmfs like this one (all masses powers of $\tfrac12$) are exactly those whose surprisals are integers; they will reappear when entropy is connected to optimal code lengths [1, Ch. 5].</p>
+
+  <h3>4.5 The guessing game</h3>
+  <p>Alice picks a number uniformly from $\{0, \dots, 7\}$; Bob asks yes/no questions. Compare:</p>
+  <ul>
+    <li><strong>Q1:</strong> "Is your number in $\{0,1,2,3\}$?" &mdash; answer is yes with probability $\tfrac12$;</li>
+    <li><strong>Q2:</strong> "Is your number in $\{3,6\}$?" &mdash; answer is yes with probability $\tfrac14$.</li>
+  </ul>
+  <p>The <em>answer</em> to each question is itself a binary random variable, and its entropy measures how much Bob expects to learn:</p>
+  <div class="deriv">
+    \[ H(\text{answer to Q1}) = h_2\bigl(\tfrac12\bigr) = 1 \text{ bit}, \]
+    \[ H(\text{answer to Q2}) = h_2\bigl(\tfrac14\bigr) = \tfrac14 \cdot 2 + \tfrac34 \log\tfrac43 \approx 0.811 \text{ bits}. \]
+  </div>
+  <p>Q1 is the more informative question. Intuitively, a question whose answer Bob can already half-guess (Q2 is "no" three times out of four) teaches him less on average. A perfectly balanced question extracts the maximum $1$ bit per answer.</p>
+  <p><strong>Twenty-questions view.</strong> Halving questions shrink the candidate set $8 \rightarrow 4 \rightarrow 2 \rightarrow 1$, so $\log 8 = 3$ balanced questions always identify Alice's number &mdash; and $H(X) = \log 8 = 3$ bits for uniform Alice. This is the operational meaning of entropy previewed here and made precise by source-coding theory: entropy is the average number of optimal yes/no questions (equivalently, code bits) needed to determine $X$ [1, Ch.&nbsp;5]. For non-uniform $X$ the statement holds up to less than one extra question per symbol, with the dyadic case exact.</p>
+
+  <h3>4.6 Two dice</h3>
+  <p>Two pmfs on the same six faces:</p>
+  <ul>
+    <li>$D_1 = \bigl(\tfrac19, \tfrac19, \tfrac19, \tfrac29, \tfrac29, \tfrac29\bigr)$ &mdash; mild non-uniformity;</li>
+    <li>$D_2 = \bigl(\tfrac12, \tfrac14, \tfrac18, \tfrac{1}{16}, \tfrac{1}{32}, \tfrac{1}{32}\bigr)$ &mdash; strongly concentrated (and dyadic).</li>
+  </ul>
+  <div class="deriv">
+    \[ H(D_1) = 3 \cdot \tfrac19 \log 9 + 3 \cdot \tfrac29 \log \tfrac92
+       = \tfrac13 \log 9 + \tfrac23 \log 4.5 \]
+    \[ \approx \tfrac13 (3.170) + \tfrac23 (2.170) \approx 1.057 + 1.447 \approx 2.503 \text{ bits}, \]
+    \[ H(D_2) = \tfrac12 \cdot 1 + \tfrac14 \cdot 2 + \tfrac18 \cdot 3 + \tfrac{1}{16} \cdot 4 + \tfrac{1}{32} \cdot 5 + \tfrac{1}{32} \cdot 5
+       = \tfrac{8 + 8 + 6 + 4 + \tfrac54 + \tfrac54}{16} = \tfrac{31}{16} \approx 1.938 \text{ bits}. \]
+  </div>
+  <p>$D_1$ is the more uncertain die: it is closer to uniform. Both entropies sit below $\log 6 \approx 2.585$, foreshadowing the maximum-entropy theorem.</p>
+
+  <h3>4.7 AI examples</h3>
+  <p><strong>Classifier soft labels.</strong> A digit classifier over labels $\{0,\dots,4\}$ outputs a pmf $f(x)$ &mdash; a soft guess, like a weather forecast. For two images,</p>
+  <div class="deriv">
+    \[ f(x_1) = (0.6, 0.1, 0.1, 0.1, 0.1): \quad
+       H\bigl(f(x_1)\bigr) = 0.6 \log\tfrac{1}{0.6} + 4 \times 0.1 \log 10 \]
+    \[ \approx 0.442 + 1.329 \approx 1.771 \text{ bits}, \]
+    \[ f(x_2) = (0.4, 0.4, 0.2, 0, 0): \quad
+       H\bigl(f(x_2)\bigr) = 2 \times 0.4 \log 2.5 + 0.2 \log 5 \]
+    \[ \approx 1.058 + 0.464 \approx 1.522 \text{ bits} \]
+  </div>
+  <p>(the two zero entries of $f(x_2)$ contribute nothing, by the $0 \log 0$ convention). So entropy ranks $x_1$ as the harder sample: its mass is spread over all five labels, while $f(x_2)$ has effectively a three-label support. Note the comparison is not obvious by eye &mdash; $f(x_2)$ has the smaller top probability gap between its two leaders &mdash; which is precisely why a scalar summary is useful.</p>
+  <p><strong>Data valuation / active learning.</strong> "Which unlabeled sample is most helpful to train on next?" One classical answer: score each candidate by the entropy of the model's current soft label and prioritize high-entropy (most-confused) samples &mdash; these are the ones the model can learn most from (uncertainty sampling; see [6]).</p>
+  <p><strong>Exploration in RL.</strong> With strategies $\{A, B, C, D, E\}$ and current belief "A is best", compare two stochastic policies $S_1 = (0.6, 0.1, 0.1, 0.1, 0.1)$ and $S_2 = (0.4, 0.4, 0.2, 0, 0)$. These are numerically the same pmfs as above, so $H(S_1) \approx 1.771 \gt H(S_2) \approx 1.522$: $S_1$ is the more <em>explorative</em> policy &mdash; it reserves probability for every option, while $S_2$ can never try $D$ or $E$. Entropy is used exactly this way as an exploration bonus/regularizer in modern RL.</p>
+
+  <h3>4.8 Exercise &mdash; geometric distribution, solved</h3>
+  <p>Let $X$ be geometric with $p = \tfrac12$: $\;p_X(x) = 2^{-x}$ for $x \in \{1, 2, 3, \dots\}$ (this is a valid pmf: $\sum_{x \geq 1} 2^{-x} = 1$). This is the first infinite-alphabet example; the entropy sum is an infinite series and must be checked for convergence.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;">The surprisal of outcome $x$ is $\log 2^{x} = x$ bits &mdash; exactly the outcome itself. Hence</p>
+    \[ H(X) = \sum_{x=1}^{\infty} p_X(x) \cdot x = \mathbb{E}[X]. \]
+    <p style="margin:8px 0 6px;">It remains to evaluate $\mathbb{E}[X] = \sum_{x \geq 1} x\, 2^{-x}$. Let $T = \sum_{x=1}^{\infty} x\, 2^{-x}$ (the series converges, e.g. by the ratio test). Then</p>
+    \[ T - \tfrac12 T = \sum_{x=1}^{\infty} x\, 2^{-x} - \sum_{x=1}^{\infty} x\, 2^{-(x+1)}
+      = \sum_{x=1}^{\infty} x\, 2^{-x} - \sum_{x=2}^{\infty} (x-1)\, 2^{-x}
+      = \sum_{x=1}^{\infty} 2^{-x} = 1, \]
+    <p style="margin:8px 0 0;">so $\tfrac12 T = 1$, i.e. $\mathbb{E}[X] = 2$ and $\boxed{H(X) = 2 \text{ bits}}$. $\blacksquare$</p>
+  </div>
+  <p><strong>Remark.</strong> An infinite alphabet with finite entropy &mdash; and note $\log |\mathcal{X}| = \infty$ here, so the maximum-entropy bound of Section 5 is vacuous (it genuinely requires finite $M$ to say anything). There even exist pmfs on $\{1,2,\dots\}$ with $H(X) = \infty$ (e.g. $p_X(x) \propto 1/(x \log^2 x)$), so finiteness of entropy on infinite alphabets is a real hypothesis, not a formality.</p>
+</section>
+
+<section>
+  <h2>5 &nbsp;Properties of Entropy</h2>
+
+  <h3>5.1 Theorem 1 &mdash; non-negativity</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 1.</strong> $H(X) \geq 0$, with equality if and only if $X$ is deterministic (i.e. $p_X(x^*) = 1$ for some single value $x^*$).</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Every probability satisfies $0 \leq p_X(x) \leq 1$, so $\tfrac{1}{p_X(x)} \geq 1$ on the support and every surprisal is $\geq \log 1 = 0$. An expectation of a non-negative random variable is non-negative:</p>
+    \[ H(X) = \mathbb{E}\Bigl[\log \tfrac{1}{p_X(X)}\Bigr] \geq \mathbb{E}[\log 1] = 0. \]
+    <p style="margin:8px 0 0;"><strong>Equality.</strong> $H(X) = \sum_x p_X(x) \log \tfrac{1}{p_X(x)}$ is a sum of non-negative terms, so it vanishes iff every term vanishes: $p_X(x) \log \tfrac{1}{p_X(x)} = 0$ for all $x$, i.e. every $p_X(x) \in \{0, 1\}$ (the factor $p_X(x)$ kills the term at $0$ &mdash; the $0\log 0$ convention again &mdash; and the log kills it at $1$; strictly between, both factors are strictly positive). Since the masses sum to $1$ and each is $0$ or $1$, exactly one value $x^*$ has $p_X(x^*) = 1$: $X$ is deterministic. Conversely a deterministic $X$ has the single term $1 \cdot \log 1 = 0$. $\blacksquare$</p>
+  </div>
+  <p>So zero entropy characterizes "no randomness at all". Next question: which pmf sits at the <em>top</em> of the scale? The plot of $h_2$ suggests: uniform. Proving it needs a tool.</p>
+
+  <h3>5.2 Background &mdash; convexity and concavity</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition.</strong> A function $f : I \rightarrow \mathbb{R}$ on an interval $I$ is <strong>convex</strong> if for all $x, y \in I$ and all $\lambda \in [0, 1]$,</p>
+    \[ \lambda f(x) + (1-\lambda) f(y) \;\geq\; f\bigl(\lambda x + (1-\lambda) y\bigr), \]
+    <p style="margin:8px 0 0;">and <strong>concave</strong> if the reverse inequality holds ($\leq$). Geometrically: convex means every chord lies on or above the graph; concave, on or below. $f$ is <em>strictly</em> convex/concave if the inequality is strict whenever $x \neq y$ and $0 \lt \lambda \lt 1$. Note $f$ is concave iff $-f$ is convex.</p>
+  </div>
+  <p>The slides check membership by picture ($x^2$ convex, $\log x$ concave, $h_2$ concave). The deck's hint is the second-derivative test, which we now state and prove, since both Jensen's equality analysis and the exercises rely on it.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma (second-derivative test).</strong> If $f$ is twice differentiable on an interval and $f''(t) \leq 0$ throughout, then $f$ is concave; if $f''(t) \lt 0$ throughout, $f$ is strictly concave. (Signs reversed for convexity.)</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Fix $x \lt y$, $\lambda \in (0,1)$, and let $z = \lambda x + (1-\lambda) y$, so $z - x = (1-\lambda)(y - x)$ and $y - z = \lambda (y - x)$, both positive. By the mean value theorem there are $\xi_1 \in (x, z)$ and $\xi_2 \in (z, y)$ with</p>
+    \[ f(z) - f(x) = f'(\xi_1)(z - x), \qquad f(y) - f(z) = f'(\xi_2)(y - z). \]
+    <p style="margin:8px 0 6px;">Since $f'' \leq 0$, $f'$ is non-increasing and $\xi_1 \lt \xi_2$ gives $f'(\xi_1) \geq f'(\xi_2)$. Therefore</p>
+    \[ \lambda\bigl(f(z) - f(x)\bigr) = \lambda(1-\lambda)(y-x)\, f'(\xi_1)
+       \;\geq\; \lambda(1-\lambda)(y-x)\, f'(\xi_2) = (1-\lambda)\bigl(f(y) - f(z)\bigr), \]
+    <p style="margin:8px 0 0;">and rearranging yields $f(z) \geq \lambda f(x) + (1-\lambda) f(y)$: concavity. If $f'' \lt 0$ then $f'$ is strictly decreasing, the middle inequality is strict, and $f$ is strictly concave. $\blacksquare$</p>
+  </div>
+  <p><strong>The key example.</strong> $f(t) = \log t$ on $(0, \infty)$ has $f''(t) = -\tfrac{1}{t^2 \ln 2} \lt 0$: the logarithm is <em>strictly</em> concave. This single fact powers Theorem 3, and (next lecture) KL non-negativity.</p>
+  <p><strong>Exercise from the deck, solved &mdash; $h_2$ is concave.</strong> For $p \in (0,1)$, differentiate $h_2(p) = -p\log p - (1-p)\log(1-p)$:</p>
+  <div class="deriv">
+    \[ h_2'(p) = -\log p - \tfrac{1}{\ln 2} + \log(1-p) + \tfrac{1}{\ln 2} = \log\frac{1-p}{p}, \]
+    \[ h_2''(p) = \frac{1}{\ln 2}\Bigl(-\frac{1}{1-p} - \frac{1}{p}\Bigr) = -\frac{1}{p(1-p)\ln 2} \lt 0. \]
+  </div>
+  <p>So $h_2$ is strictly concave on $(0,1)$; by continuity (with the endpoint convention) it is concave on $[0,1]$. As a byproduct, $h_2'(p) = 0$ iff $p = \tfrac12$, confirming the peak at the fair coin. The convexity of $x^2$ is the same test: $(x^2)'' = 2 \gt 0$.</p>
+
+  <h3>5.3 Theorem 2 &mdash; Jensen's inequality</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 2 (Jensen [3]).</strong> Let $f$ be concave and $X$ a random variable taking finitely many values in the domain of $f$. Then</p>
+    \[ \mathbb{E}[f(X)] \;\leq\; f\bigl(\mathbb{E}[X]\bigr). \]
+    <p style="margin:8px 0 0;">For convex $f$ the inequality reverses. If $f$ is strictly concave, equality holds if and only if $X$ is constant (all its probability mass on one point).</p>
+  </div>
+  <p><strong>How to read it.</strong> Concavity compares a two-point mixture with the function value at the two-point average; Jensen upgrades this to an arbitrary pmf: the weighted average of function values, $\mathbb{E}[f(X)] = \sum_i p_i f(x_i)$, never exceeds the function evaluated at the weighted average input, $f(\sum_i p_i x_i)$. Jensen is thus the "many-point" generalization of the definition &mdash; and the proof is exactly an induction that reduces many points to two.</p>
+  <p><strong>Proof (induction on the support size $M$).</strong> Write the claim for a pmf $(p_1, \dots, p_M)$ on points $(x_1, \dots, x_M)$:</p>
+  <div class="deriv">
+    \[ \sum_{i=1}^{M} p_i f(x_i) \;\leq\; f\Bigl(\sum_{i=1}^{M} p_i x_i\Bigr). \]
+    <p style="margin:8px 0 6px;"><em>Base case $M = 1$:</em> both sides equal $f(x_1)$. <em>Base case $M = 2$:</em> with $p_2 = 1 - p_1$, the claim reads</p>
+    \[ p_1 f(x_1) + (1 - p_1) f(x_2) \;\leq\; f\bigl(p_1 x_1 + (1-p_1) x_2\bigr), \]
+    <p style="margin:8px 0 6px;">which is precisely the definition of concavity with $\lambda = p_1$.</p>
+    <p style="margin:8px 0 6px;"><em>Induction step.</em> Assume the claim for every pmf on $M - 1$ points; take a pmf on $M$ points. If $p_M = 1$ the claim is trivial (it is the $M = 1$ case), so assume $p_M \lt 1$ and peel off the $M$-th atom:</p>
+    \[ \sum_{i=1}^{M} p_i f(x_i) = p_M f(x_M) + (1 - p_M) \sum_{i=1}^{M-1} q_i f(x_i),
+       \qquad q_i = \frac{p_i}{1 - p_M}. \]
+    <p style="margin:8px 0 6px;">The renormalized weights satisfy $q_i \geq 0$ and $\sum_{i=1}^{M-1} q_i = \frac{1 - p_M}{1 - p_M} = 1$: a valid pmf on $M - 1$ points. Now apply the induction hypothesis to the inner sum, then two-point concavity (with $\lambda = p_M$) to recombine:</p>
+    \[ \begin{aligned}
+      p_M f(x_M) + (1-p_M) \sum_{i=1}^{M-1} q_i f(x_i)
+        \;&\leq\; p_M f(x_M) + (1-p_M)\, f\Bigl(\sum_{i=1}^{M-1} q_i x_i\Bigr) \\
+        \;&\leq\; f\Bigl(p_M x_M + (1-p_M) \sum_{i=1}^{M-1} q_i x_i\Bigr)
+        \;=\; f\Bigl(\sum_{i=1}^{M} p_i x_i\Bigr),
+    \end{aligned} \]
+    <p style="margin:8px 0 0;">the last equality because $(1 - p_M)\, q_i = p_i$. This is $\mathbb{E}[f(X)] \leq f(\mathbb{E}[X])$. $\blacksquare$</p>
+  </div>
+  <p><strong>Equality for strictly concave $f$ (the part the slides state without proof).</strong> If $X$ is constant, both sides are $f$ of that constant &mdash; equality. Conversely, suppose $X$ takes two distinct values $x \neq y$ with positive probabilities. Group the outcomes: run the argument with atom masses $p = \Pr(X = x) \gt 0$ on $x$ and $1 - p$ on the conditional mixture of everything else. Tracing the induction, the final recombination step applies two-point concavity to two distinct points with interior weight, which is <em>strict</em> for strictly concave $f$; hence $\mathbb{E}[f(X)] \lt f(\mathbb{E}[X])$. (Alternative slick proof for the differentiable case: strict concavity gives the supporting-line bound $f(t) \leq f(m) + f'(m)(t - m)$ with equality only at $t = m$, where $m = \mathbb{E}[X]$; take expectations of both sides. This one-line version is worth remembering.)</p>
+  <p><strong>Why we care.</strong> Today: maximum entropy. Next lecture: $D(P \Vert Q) \geq 0$. Throughout ML: whenever an expectation is trapped under a $\log$ (log-likelihoods, ELBO), Jensen moves the expectation inside at the cost of an inequality in a known direction.</p>
+
+  <h3>5.4 Theorem 3 &mdash; maximum entropy</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 3.</strong> For a random variable $X$ on a finite alphabet $\mathcal{X}$ with $|\mathcal{X}| = M$,</p>
+    \[ H(X) \;\leq\; \log |\mathcal{X}| = \log M, \]
+    <p style="margin:8px 0 0;">with equality if and only if $X$ is uniform on $\mathcal{X}$, i.e. $p_X(x) = \tfrac{1}{M}$ for all $x$.</p>
+  </div>
+  <p><strong>Proof.</strong> A subtlety first: we may assume $p_X(x) \gt 0$ for all $x \in \mathcal{X}$. If some values had zero mass, restrict to the support $\mathcal{X}' = \{x : p_X(x) \gt 0\}$: by the $0\log0$ convention $H$ is unchanged, and $\log |\mathcal{X}'| \leq \log M$, so proving the bound on the support proves it on $\mathcal{X}$. (This also shows equality forces full support &mdash; see below.)</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;">Apply Jensen to the random variable $\tfrac{1}{p_X(X)}$, which is positive, using the (strictly) concave function $\log$:</p>
+    \[ H(X) = \mathbb{E}\Bigl[\log \frac{1}{p_X(X)}\Bigr]
+      \;\leq\; \log\, \mathbb{E}\Bigl[\frac{1}{p_X(X)}\Bigr]. \]
+    <p style="margin:8px 0 6px;">Now evaluate the inner expectation by LOTUS (Section 3.3), with $f(x) = \tfrac{1}{p_X(x)}$ &mdash; the pmf cancels itself:</p>
+    \[ \mathbb{E}\Bigl[\frac{1}{p_X(X)}\Bigr] = \sum_{x \in \mathcal{X}} p_X(x) \cdot \frac{1}{p_X(x)}
+      = \sum_{x \in \mathcal{X}} 1 = M. \]
+    <p style="margin:8px 0 0;">Combining, $H(X) \leq \log M$. $\blacksquare$</p>
+  </div>
+  <p><strong>Equality.</strong> The only inequality used was Jensen with the strictly concave $\log$, which is tight iff the random quantity inside is constant: $\tfrac{1}{p_X(x)} = c$ for all $x$ in the support, i.e. $p_X(x) = \tfrac1c$ there. Summing to $1$ over the support forces $c = |\text{support}|$; and to reach the full bound $\log M$ (rather than $\log$ of a smaller support) the support must be all of $\mathcal{X}$, giving $p_X(x) = \tfrac{1}{M}$ for every $x$: the uniform distribution. Conversely, the uniform distribution attains $H = \log M$ by the fair-die computation. $\blacksquare$</p>
+  <p><strong>Sanity checks against every example of the lecture.</strong> Fair coin: $H = 1 = \log 2$, tight (uniform). Biased coin: $0.081 \lt 1$. Dice: $H(D_1) \approx 2.503$ and $H(D_2) \approx 1.938$, both below $\log 6 \approx 2.585$, and $D_1$ (closer to uniform) is closer to the ceiling. Fair die: $\log 6$ exactly, tight. Soft labels: $1.771$ and $1.522$, both below $\log 5 \approx 2.322$. The theorem also explains the guessing game: a uniform Alice is the hardest opponent &mdash; $\log M$ is simultaneously the number of bits needed to index $M$ items and the entropy of the uniform pick, and any non-uniform strategy of Alice's would lower the entropy and give Bob structure to exploit.</p>
+  <p><strong>Scale of uncertainty.</strong> Theorems 1 and 3 bracket every pmf on $M$ symbols:
+  \[ 0 \;\leq\; H(X) \;\leq\; \log M, \]
+  with the deterministic distributions at the floor and the uniform distribution alone at the ceiling. Entropy turns "how random is this pmf?" into a position on one axis.</p>
+
+  <h3>5.5 Bridge to Lecture 2</h3>
+  <p>The surprisal $\log\frac{1}{p_X(x)}$ uses the <em>true</em> pmf. A learned model only has a guess $Q$, and one can ask how $\mathbb{E}\bigl[\log \tfrac{1}{Q(X)}\bigr]$ (the <em>cross-entropy</em> of $Q$ against $p_X$) compares to $H(X)$. The source notes prove, by the same Jensen pattern applied to $\mathbb{E}\bigl[\log\tfrac{Q(X)}{p_X(X)}\bigr]$, that the mismatched description is never cheaper: $\mathbb{E}\bigl[\log \tfrac{1}{Q(X)}\bigr] \geq H(X)$ with equality iff $Q = p_X$, and the gap defines the KL divergence $D(p_X \Vert Q) \geq 0$. That theorem, its $p_X(x) = 0$ edge case, and the gambling interpretation are the content of Lecture 2 (<code>prob02-kl-crossentropy</code>) and its companion note.</p>
+</section>
+
+<section>
+  <h2>References</h2>
+  <ol>
+    <li>T. M. Cover and J. A. Thomas, <em>Elements of Information Theory</em>, 2nd ed., Wiley-Interscience, 2006. DOI: <a href="https://doi.org/10.1002/047174882X">10.1002/047174882X</a>. (Chapter 2: entropy and its properties; Chapter 5: source coding and the twenty-questions interpretation; Chapter 6: gambling.)</li>
+    <li>C. E. Shannon, "A Mathematical Theory of Communication," <em>Bell System Technical Journal</em>, vol. 27, pp. 379&ndash;423, 623&ndash;656, 1948. DOI: <a href="https://doi.org/10.1002/j.1538-7305.1948.tb01338.x">10.1002/j.1538-7305.1948.tb01338.x</a>. (Origin of entropy and the axiomatic characterization of $-\sum p \log p$.)</li>
+    <li>J. L. W. V. Jensen, "Sur les fonctions convexes et les in&eacute;galit&eacute;s entre les valeurs moyennes," <em>Acta Mathematica</em>, vol. 30, pp. 175&ndash;193, 1906. DOI: <a href="https://doi.org/10.1007/BF02418571">10.1007/BF02418571</a>. (Jensen's inequality, cited on the Theorem 2 slide.)</li>
+    <li>A. R&eacute;nyi, "On Measures of Entropy and Information," in <em>Proceedings of the Fourth Berkeley Symposium on Mathematical Statistics and Probability</em>, vol. 1, pp. 547&ndash;561, University of California Press, 1961. (The R&eacute;nyi entropy family mentioned in the "why the logarithm" remark.)</li>
+    <li>D. J. C. MacKay, <em>Information Theory, Inference, and Learning Algorithms</em>, Cambridge University Press, 2003. Free online: <a href="https://www.inference.org.uk/mackay/itila/">inference.org.uk/mackay/itila</a>. (Gentler parallel treatment of entropy, surprisal, and the guessing-game view.)</li>
+    <li>B. Settles, "Active Learning Literature Survey," Computer Sciences Technical Report 1648, University of Wisconsin&ndash;Madison, 2009. <a href="https://burrsettles.com/pub/settles.activelearning.pdf">burrsettles.com/pub/settles.activelearning.pdf</a>. (Entropy-based uncertainty sampling, behind the data-valuation slide.)</li>
+    <li>Datasets referenced on the slides: MNIST (Y. LeCun, C. Cortes, C. J. C. Burges, <a href="http://yann.lecun.com/exdb/mnist/">yann.lecun.com/exdb/mnist</a>); CIFAR-10 (A. Krizhevsky, "Learning Multiple Layers of Features from Tiny Images," 2009, <a href="https://www.cs.toronto.edu/~kriz/cifar.html">cs.toronto.edu/~kriz/cifar.html</a>); ImageNet (J. Deng et al., "ImageNet: A Large-Scale Hierarchical Image Database," CVPR 2009, DOI: <a href="https://doi.org/10.1109/CVPR.2009.5206848">10.1109/CVPR.2009.5206848</a>).</li>
+  </ol>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Learning Math 4 &mdash; Random Processes &amp; Markov Chains</title>
+
+<!-- Design system (canonical; all decks link to reference/). -->
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/deck.css">
+
+<!-- KaTeX for math rendering. -->
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+
+<style>
+.prob04-algo { background:var(--light); border-left:3px solid var(--yonsei-blue); padding:16px 22px; border-radius:0 10px 10px 0; max-width:880px; margin:14px auto 0; }
+.prob04-algo ol { margin:0; padding-left:0; list-style:none; counter-reset:step; }
+.prob04-algo ol li { counter-increment:step; padding:8px 0 8px 56px; position:relative; line-height:1.45; }
+.prob04-algo ol li::before { content:counter(step) "."; position:absolute; left:12px; top:8px;
+                             font-weight:700; color:var(--yonsei-blue); width:36px; text-align:right; }
+.prob04-algo ol li + li { border-top:1px solid var(--slate); }
+</style>
+</head>
+<body data-brand-logo="../../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- SLIDE 1 — Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Deep Learning Math &middot; Lecture 4</div>
+  <h1>Random Processes<br>&amp; Markov Chains</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Where do sequences settle?</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;&middot;&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Fall 2026</p>
+</div>
+
+<!-- SLIDE 2 — Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list" style="display:grid;grid-auto-flow:column;grid-template-rows:repeat(5,auto);grid-template-columns:1fr 1fr;gap:16px 44px">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Why Sequences?</div>
+        <div class="toc-sub">AI runs on sequences</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Random Processes</div>
+        <div class="toc-sub">$\{X_n\}$, i.i.d. and its limits</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Markov Processes</div>
+        <div class="toc-sub">Memory of length one (or $k$)</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Transition Matrices</div>
+        <div class="toc-sub">One step = one multiplication</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Evolution in Time</div>
+        <div class="toc-sub">$\pi_t = P^t \pi_0$</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Stationary Processes</div>
+        <div class="toc-sub">Shift-invariant in distribution</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">07</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Stationary Distributions</div>
+        <div class="toc-sub">$\pi^\star = P\pi^\star$, an eigenvector</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">08</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Limiting Distributions</div>
+        <div class="toc-sub">Limits are stationary</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">09</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Discrete Diffusion</div>
+        <div class="toc-sub">Noise forward, learn backward</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 01 — WHY SEQUENCES ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Why Sequences?</h1>
+  <div class="divider"></div>
+  <p class="subtitle">AI runs on sequences</p>
+</div>
+
+<!-- AI runs on sequences -->
+<div class="slide">
+  <h2>AI Runs on Sequences</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Language models</h3>
+      <p>Text = token after token</p>
+      <p class="muted">next symbol given the past</p>
+    </div>
+    <div class="card">
+      <h3>Diffusion models</h3>
+      <p>Image = noised step by step</p>
+      <p class="muted">a chain of corruptions</p>
+    </div>
+    <div class="card">
+      <h3>Random walks</h3>
+      <p>Surfer hops link to link</p>
+      <p class="muted">PageRank, exploration</p>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:14px;">Illustrations of one object: a <strong>sequence of random variables</strong></p>
+</div>
+
+<!-- One snapshot is not enough -->
+<div class="slide">
+  <h2>One Snapshot Is Not Enough</h2>
+  <div class="divider"></div>
+  <p>Our tools so far act on <strong>one or two</strong> random variables:</p>
+  <div class="math-block" style="margin:8px 0">$$H(X) \;\text{ (prob01)}, \qquad
+    D(P \,\|\, Q) \;\text{ (prob02)}, \qquad I(X; Y) \;\text{ (prob03)}$$</div>
+  <p>Real data arrives as a <strong>whole sequence</strong>:</p>
+  <div class="math-block" style="margin:8px 0">$$X_1, \; X_2, \; X_3, \; \dots$$</div>
+  <p class="muted">New questions: how do steps depend? where does it settle?</p>
+</div>
+
+<!-- Preview -->
+<div class="slide">
+  <h2>Preview &mdash; Where Sequences Settle</h2>
+  <div class="divider"></div>
+  <p>Today's headline: some chains <strong>forget where they started</strong></p>
+  <div class="math-block">$$\pi^\star = P\,\pi^\star:
+    \quad \text{the long-run distribution is an \textbf{eigenvector}}$$</div>
+  <ul>
+    <li>Evolution of probabilities = <strong>matrix multiplication</strong></li>
+    <li>Long-run behavior = <strong>linear algebra</strong>, not simulation</li>
+  </ul>
+  <div class="highlight">
+    <p>Probability meets linear algebra: the fixed point of a chain is an eigenvector.</p>
+  </div>
+</div>
+
+<!-- Route -->
+<div class="slide">
+  <h2>The Route</h2>
+  <div class="divider"></div>
+  <p>From sequences to generative diffusion, one definition at a time:</p>
+  <div style="display:flex;justify-content:center;margin:14px 0;">
+    <svg viewBox="0 0 780 200" style="width:100%;max-width:880px;">
+      <defs><marker id="rt-arr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
+      <rect x="14" y="60" width="130" height="80" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="79" y="94" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">process</text>
+      <text x="79" y="118" font-size="14" fill="#666" text-anchor="middle">i.i.d. vs real</text>
+      <line x1="148" y1="100" x2="182" y2="100" stroke="#1a5296" stroke-width="2.5" marker-end="url(#rt-arr)"/>
+      <rect x="188" y="60" width="130" height="80" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="253" y="94" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">Markov</text>
+      <text x="253" y="118" font-size="14" fill="#666" text-anchor="middle">memory = 1</text>
+      <line x1="322" y1="100" x2="356" y2="100" stroke="#1a5296" stroke-width="2.5" marker-end="url(#rt-arr)"/>
+      <rect x="362" y="60" width="130" height="80" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="427" y="94" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">matrix P</text>
+      <text x="427" y="118" font-size="14" fill="#666" text-anchor="middle">one step</text>
+      <line x1="496" y1="100" x2="530" y2="100" stroke="#1a5296" stroke-width="2.5" marker-end="url(#rt-arr)"/>
+      <rect x="536" y="60" width="120" height="80" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="596" y="94" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">&pi;* = P&pi;*</text>
+      <text x="596" y="118" font-size="14" fill="#666" text-anchor="middle">fixed point</text>
+      <line x1="660" y1="100" x2="694" y2="100" stroke="#1a5296" stroke-width="2.5" marker-end="url(#rt-arr)"/>
+      <rect x="700" y="60" width="72" height="80" rx="10" fill="#003876"/>
+      <text x="736" y="94" font-size="15" fill="#ffffff" text-anchor="middle" font-weight="700">diffusion</text>
+      <text x="736" y="118" font-size="13" fill="#c9d3de" text-anchor="middle">generate</text>
+    </svg>
+  </div>
+  <p class="muted">Two running examples all lecture: a 2-state chain and a 3-state chain.</p>
+</div>
+
+<!-- ===== SECTION 02 — RANDOM PROCESSES ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Random Processes</h1>
+  <div class="divider"></div>
+  <p class="subtitle">$\{X_n\}$, i.i.d. and its limits</p>
+</div>
+
+<!-- Definition random process -->
+<div class="slide">
+  <h2>Definition &mdash; Random Process</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (random process).</h3>
+    <p>A random process is a <strong>sequence of random variables</strong></p>
+    <div class="math-block" style="margin:8px 0">$$\mathbf{X} = \{X_n\}_{n=1}^{\infty}$$</div>
+  </div>
+  <ul>
+    <li>Index $n$: <strong>time</strong> (step, token position, iteration)</li>
+    <li>Each $X_n$: one random variable, as in prob01</li>
+  </ul>
+</div>
+
+<!-- iid process -->
+<div class="slide">
+  <h2>The Simplest Process &mdash; i.i.d.</h2>
+  <div class="divider"></div>
+  <p><strong>i.i.d.</strong> = independent and identically distributed</p>
+  <div class="card">
+    <h3>Definition (i.i.d. process).</h3>
+    <p>The joint pmf <strong>factorizes into marginals</strong>:</p>
+    <div class="math-block" style="margin:8px 0">$$P_{X^n}(x^n) \;=\; \prod_{i=1}^{n} P_{X_i}(x_i)$$</div>
+  </div>
+  <p class="muted">Notation from prob03: $X^n = (X_1, \dots, X_n)$, one joint distribution.</p>
+</div>
+
+<!-- iid example -->
+<div class="slide">
+  <h2>i.i.d. Example &mdash; Coin Flips</h2>
+  <div class="divider"></div>
+  <p>Fair coin, flipped four times, as an illustration:</p>
+  <div class="math-block" style="margin:8px 0">$$P(\texttt{HTHH})
+    = \tfrac12 \cdot \tfrac12 \cdot \tfrac12 \cdot \tfrac12 = \tfrac{1}{16}$$</div>
+  <ul>
+    <li>Every length-4 string: probability $\tfrac{1}{16}$, no exceptions</li>
+    <li>Past flips <strong>never help</strong> predict the next one</li>
+  </ul>
+</div>
+
+<!-- Text is not iid -->
+<div class="slide">
+  <h2>Text Is Not i.i.d.</h2>
+  <div class="divider"></div>
+  <p>Fill in the missing letter:</p>
+  <div class="code-block" style="text-align:center;font-size:1.6rem;">my na_e is Albert</div>
+  <ul>
+    <li>Everyone reads <strong>m</strong>: neighbors reveal the blank</li>
+    <li>Under i.i.d., neighbors reveal <strong>nothing</strong>: $P(X_i \mid \text{rest}) = P(X_i)$</li>
+  </ul>
+  <div class="highlight">
+    <p>Real symbol sequences are <strong>highly correlated</strong>: text does not follow an i.i.d. distribution.</p>
+  </div>
+</div>
+
+<!-- Spectrum v1 -->
+<div class="slide">
+  <h2>The Modeling Spectrum</h2>
+  <div class="divider"></div>
+  <p>Between i.i.d. and reality sits a <strong>bridge</strong>:</p>
+  <div style="display:flex;justify-content:center;margin:18px 0;">
+    <svg viewBox="0 0 780 150" style="width:100%;max-width:840px;">
+      <line x1="40" y1="75" x2="740" y2="75" stroke="#222" stroke-width="3"/>
+      <line x1="40" y1="55" x2="40" y2="95" stroke="#222" stroke-width="3"/>
+      <line x1="390" y1="55" x2="390" y2="95" stroke="#003876" stroke-width="4"/>
+      <line x1="740" y1="55" x2="740" y2="95" stroke="#222" stroke-width="3"/>
+      <text x="40" y="125" font-size="17" fill="#222" text-anchor="middle" font-weight="700">i.i.d.</text>
+      <text x="40" y="145" font-size="14" fill="#666" text-anchor="middle">no correlation</text>
+      <text x="390" y="38" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">1st-order Markov</text>
+      <text x="740" y="125" font-size="17" fill="#222" text-anchor="middle" font-weight="700">practical</text>
+      <text x="740" y="145" font-size="14" fill="#666" text-anchor="middle">rich correlation</text>
+    </svg>
+  </div>
+  <p class="muted">Markov: keep <em>some</em> correlation, stay tractable. Next section.</p>
+</div>
+
+<!-- ===== SECTION 03 — MARKOV PROCESSES ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Markov Processes</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Memory of length one (or $k$)</p>
+</div>
+
+<!-- Idea -->
+<div class="slide">
+  <h2>Idea &mdash; Memory of Length One</h2>
+  <div class="divider"></div>
+  <p><strong>Markov</strong>: the next step depends only on the <strong>present</strong></p>
+  <div style="display:flex;justify-content:center;margin:16px 0;">
+    <svg viewBox="0 0 760 120" style="width:100%;max-width:800px;">
+      <defs><marker id="mk-arr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker>
+      <marker id="mk-arr-g" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#b9c2cc"/></marker></defs>
+      <rect x="30" y="35" width="110" height="56" rx="10" fill="#f4f6f9" stroke="#b9c2cc" stroke-width="2"/>
+      <text x="85" y="70" font-size="17" fill="#9aa4af" text-anchor="middle" font-weight="700">X<tspan dy="4" font-size="12">1</tspan></text>
+      <line x1="144" y1="63" x2="184" y2="63" stroke="#b9c2cc" stroke-width="2.5" marker-end="url(#mk-arr-g)"/>
+      <rect x="190" y="35" width="110" height="56" rx="10" fill="#f4f6f9" stroke="#b9c2cc" stroke-width="2"/>
+      <text x="245" y="70" font-size="17" fill="#9aa4af" text-anchor="middle" font-weight="700">&#8943;</text>
+      <line x1="304" y1="63" x2="344" y2="63" stroke="#b9c2cc" stroke-width="2.5" marker-end="url(#mk-arr-g)"/>
+      <rect x="350" y="35" width="130" height="56" rx="10" fill="#003876"/>
+      <text x="415" y="70" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="700">X<tspan dy="4" font-size="12">i&minus;1</tspan><tspan dy="-4"> now</tspan></text>
+      <line x1="484" y1="63" x2="524" y2="63" stroke="#1a5296" stroke-width="3" marker-end="url(#mk-arr)"/>
+      <rect x="530" y="35" width="120" height="56" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2.5"/>
+      <text x="590" y="70" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">X<tspan dy="4" font-size="12">i</tspan><tspan dy="-4"> next</tspan></text>
+      <text x="245" y="115" font-size="14" fill="#9aa4af" text-anchor="middle">past: irrelevant given the present</text>
+    </svg>
+  </div>
+  <p class="muted">prob03 met the 3-variable case $X - Y - Z$ (data processing). Today: whole processes.</p>
+</div>
+
+<!-- Random walk -->
+<div class="slide">
+  <h2>Example &mdash; Random Walk</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$X_0 = 0, \qquad
+    X_n = \begin{cases} X_{n-1} + 1 & \text{with prob. } 1/2 \\[2pt]
+    X_{n-1} - 1 & \text{with prob. } 1/2 \end{cases}$$</div>
+  <div style="display:flex;justify-content:center;margin:14px 0;">
+    <svg viewBox="0 0 760 110" style="width:100%;max-width:800px;">
+      <defs><marker id="rw-arr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
+      <line x1="40" y1="60" x2="720" y2="60" stroke="#222" stroke-width="2.5"/>
+      <circle cx="380" cy="60" r="9" fill="#003876"/>
+      <text x="380" y="95" font-size="16" fill="#222" text-anchor="middle" font-weight="700">0</text>
+      <line x1="360" y1="42" x2="290" y2="42" stroke="#1a5296" stroke-width="2.5" marker-end="url(#rw-arr)"/>
+      <text x="325" y="28" font-size="15" fill="#003876" text-anchor="middle" font-weight="700">1/2</text>
+      <line x1="400" y1="42" x2="470" y2="42" stroke="#1a5296" stroke-width="2.5" marker-end="url(#rw-arr)"/>
+      <text x="435" y="28" font-size="15" fill="#003876" text-anchor="middle" font-weight="700">1/2</text>
+      <circle cx="280" cy="60" r="6" fill="#ffffff" stroke="#003876" stroke-width="2"/>
+      <circle cx="480" cy="60" r="6" fill="#ffffff" stroke="#003876" stroke-width="2"/>
+      <text x="280" y="95" font-size="15" fill="#666" text-anchor="middle">&minus;1</text>
+      <text x="480" y="95" font-size="15" fill="#666" text-anchor="middle">+1</text>
+    </svg>
+  </div>
+  <p class="muted">Step up or down by 1, a fair coin each time.</p>
+</div>
+
+<!-- Random walk memoryless -->
+<div class="slide">
+  <h2>Random Walk &mdash; Only the Present Matters</h2>
+  <div class="divider"></div>
+  <p>Suppose we know $X_{101} = 51$:</p>
+  <div class="math-block" style="margin:8px 0">$$X_{102} = \begin{cases} 52 & \text{with prob. } 1/2 \\[2pt]
+    50 & \text{with prob. } 1/2 \end{cases}$$</div>
+  <p>Extra information $X_{100} = 50$: <strong>changes nothing</strong></p>
+  <div class="highlight">
+    <p>Given the present, the past is irrelevant: the defining Markov property.</p>
+  </div>
+</div>
+
+<!-- 1st order Markov definition -->
+<div class="slide">
+  <h2>Definition &mdash; 1st-Order Markov Process</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (1st-order Markov).</h3>
+    <p>A random process $\mathbf{X}$ with, for every step $i$,</p>
+    <div class="math-block" style="margin:8px 0">$$P(X_i \mid X_{i-1}, \dots, X_1)
+      \;=\; P(X_i \mid X_{i-1})$$</div>
+  </div>
+  <ul>
+    <li>Conditioning on the full past = conditioning on <strong>one step</strong></li>
+    <li>i.i.d. is the special case with <strong>no</strong> dependence at all</li>
+  </ul>
+</div>
+
+<!-- Recall chain rule -->
+<div class="slide">
+  <h2>Recall (prob03) &mdash; Chain Rule of Probability</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <h3>Recall (conditional pmf, prob03).</h3>
+    <p>Any joint pmf peels off one variable at a time:</p>
+    <div class="math-block" style="margin:8px 0">$$P_{X^n}(x^n)
+      \;=\; \prod_{i=1}^{n} P_{X_i \mid X^{i-1}}(x_i \mid x^{i-1})$$</div>
+  </div>
+  <ul>
+    <li>Holds for <strong>every</strong> process, Markov or not</li>
+    <li>Plan: let the Markov property <strong>shorten each factor</strong></li>
+  </ul>
+</div>
+
+<!-- Factorization statement -->
+<div class="slide">
+  <h2>Proposition &mdash; Markov Factorization</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Proposition 1 (factorization).</h3>
+    <p>For a 1st-order Markov process:</p>
+    <div class="math-block" style="margin:8px 0">$$P_{X^n}(x^n)
+      \;=\; \prod_{i=1}^{n} P_{X_i \mid X_{i-1}}(x_i \mid x_{i-1})$$</div>
+  </div>
+  <p class="muted">The joint distribution of the whole path, from pairwise pieces only.</p>
+</div>
+
+<!-- Factorization proof -->
+<div class="slide">
+  <h2>Markov Factorization &mdash; Proof</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    P_{X^n}(x^n)
+    &\stackrel{(\text{chain rule})}{=} \prod_{i=1}^{n} P_{X_i \mid X^{i-1}}(x_i \mid x^{i-1}) \\[4pt]
+    &\stackrel{(\text{Markov})}{=} \prod_{i=1}^{n} P_{X_i \mid X_{i-1}}(x_i \mid x_{i-1})
+    \qquad \blacksquare
+  \end{aligned}$$</div>
+  <ul>
+    <li>Chain rule: always true, no assumption</li>
+    <li>Markov property: each factor <strong>forgets</strong> all but one step</li>
+  </ul>
+</div>
+
+<!-- Factorization implication -->
+<div class="slide">
+  <h2>Factorization &mdash; Why It Matters</h2>
+  <div class="divider"></div>
+  <p>Alphabet size $m = 27$, sequence length $n = 10$, as an illustration:</p>
+  <div class="math-block" style="margin:8px 0">$$\underbrace{m^n \approx 2 \times 10^{14}}_{\text{full joint table}}
+    \qquad \text{vs.} \qquad
+    \underbrace{m^2 = 729}_{\text{one-step table}}$$</div>
+  <ul>
+    <li>Markov: model the whole path with <strong>one small table</strong></li>
+    <li>That table is next section's <strong>transition matrix</strong></li>
+  </ul>
+</div>
+
+<!-- kth order definition -->
+<div class="slide">
+  <h2>Definition &mdash; $k$th-Order Markov Process</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition ($k$th-order Markov).</h3>
+    <p>The next step depends only on the <strong>last $k$ steps</strong>:</p>
+    <div class="math-block" style="margin:8px 0">$$P_{X_i \mid X^{i-1}}(x_i \mid x^{i-1})
+      \;=\; P_{X_i \mid X_{i-k}^{i-1}}(x_i \mid x_{i-k}^{i-1})$$</div>
+  </div>
+  <p class="muted">Notation: $x_{i-k}^{i-1} = (x_{i-k}, \dots, x_{i-1})$, the length-$k$ recent past.</p>
+</div>
+
+<!-- kth order factorization -->
+<div class="slide">
+  <h2>$k$th Order &mdash; Factorization</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Proposition 2 (factorization, $k$th order).</h3>
+    <div class="math-block" style="margin:8px 0">$$P_{X^n}(x^n)
+      \;=\; \prod_{i=1}^{n} P_{X_i \mid X_{i-k}^{i-1}}(x_i \mid x_{i-k}^{i-1})$$</div>
+  </div>
+  <ul>
+    <li>Same proof: chain rule, then drop all but $k$ steps</li>
+    <li>Larger $k$: more memory, larger tables ($m^k$ contexts)</li>
+  </ul>
+</div>
+
+<!-- LM illustration -->
+<div class="slide">
+  <h2>Illustration &mdash; Next-Token Models</h2>
+  <div class="divider"></div>
+  <p>A language model scores the next token from <strong>recent context</strong>:</p>
+  <div class="math-block" style="margin:8px 0">$$P(X_i \mid \underbrace{x_{i-k}, \dots, x_{i-1}}_{\text{context window}})$$</div>
+  <ul>
+    <li>Finite context window: a <strong>$k$th-order flavor</strong></li>
+    <li>$m^k$ contexts explode fast: neural nets <strong>compress</strong> the table</li>
+  </ul>
+  <p class="muted">Illustration only: today's math is the exact finite-state case.</p>
+</div>
+
+<!-- Spectrum refined -->
+<div class="slide">
+  <h2>The Spectrum, Refined</h2>
+  <div class="divider"></div>
+  <p>Memory length $k$ interpolates the spectrum:</p>
+  <div style="display:flex;justify-content:center;margin:18px 0;">
+    <svg viewBox="0 0 780 160" style="width:100%;max-width:840px;">
+      <line x1="40" y1="75" x2="740" y2="75" stroke="#222" stroke-width="3"/>
+      <line x1="40" y1="55" x2="40" y2="95" stroke="#222" stroke-width="3"/>
+      <line x1="240" y1="55" x2="240" y2="95" stroke="#003876" stroke-width="4"/>
+      <line x1="460" y1="55" x2="460" y2="95" stroke="#003876" stroke-width="4"/>
+      <line x1="740" y1="55" x2="740" y2="95" stroke="#222" stroke-width="3"/>
+      <text x="340" y="80" font-size="16" fill="#666" text-anchor="middle">&#8943;</text>
+      <text x="600" y="80" font-size="16" fill="#666" text-anchor="middle">&#8943;</text>
+      <text x="40" y="125" font-size="17" fill="#222" text-anchor="middle" font-weight="700">i.i.d.</text>
+      <text x="240" y="38" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">1st-order Markov</text>
+      <text x="460" y="125" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">kth-order Markov</text>
+      <text x="740" y="125" font-size="17" fill="#222" text-anchor="middle" font-weight="700">practical</text>
+    </svg>
+  </div>
+  <p class="muted">One more stop appears later today: <em>stationary</em> processes.</p>
+</div>
+
+<!-- ===== SECTION 04 — TRANSITION MATRICES ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Transition Matrices</h1>
+  <div class="divider"></div>
+  <p class="subtitle">One step = one multiplication</p>
+</div>
+
+<!-- Technique review: probability vectors -->
+<div class="slide">
+  <h2>Technique Review &mdash; Probability Vectors</h2>
+  <div class="divider"></div>
+  <p>A distribution over $n$ states, packed as a <strong>vector</strong>:</p>
+  <div class="math-block" style="margin:8px 0">$$\pi = \begin{bmatrix} \pi(1) \\ \vdots \\ \pi(n) \end{bmatrix},
+    \qquad \pi(u) \geq 0, \qquad \sum_{u=1}^{n} \pi(u) = 1$$</div>
+  <ul>
+    <li>Example, two states: $\pi = [\,3/4, \; 1/4\,]^\top$</li>
+    <li>Entries: <strong>probability mass</strong> sitting on each state</li>
+  </ul>
+</div>
+
+<!-- Technique review: matrix-vector -->
+<div class="slide">
+  <h2>Technique Review &mdash; Matrix &times; Vector</h2>
+  <div class="divider"></div>
+  <p>Row $u$ of $A$, dotted with $v$:</p>
+  <div class="math-block" style="margin:8px 0">$$(A v)_u = \sum_{w} A_{u,w} \, v_w$$</div>
+  <p>Worked, $2 \times 2$:</p>
+  <div class="math-block" style="margin:8px 0">$$\begin{bmatrix} \tfrac34 & \tfrac14 \\[2pt] \tfrac14 & \tfrac34 \end{bmatrix}
+    \begin{bmatrix} 1 \\ 0 \end{bmatrix}
+    = \begin{bmatrix} \tfrac34 \cdot 1 + \tfrac14 \cdot 0 \\[2pt] \tfrac14 \cdot 1 + \tfrac34 \cdot 0 \end{bmatrix}
+    = \begin{bmatrix} \tfrac34 \\[2pt] \tfrac14 \end{bmatrix}$$</div>
+  <p class="muted">Each output entry mixes the input entries with weights.</p>
+</div>
+
+<!-- Setup -->
+<div class="slide">
+  <h2>Setup &mdash; Finite States, One Fixed Rule</h2>
+  <div class="divider"></div>
+  <p>Two assumptions for the rest of the lecture:</p>
+  <ul>
+    <li><strong>Finite states</strong>: $X_i \in \mathcal{X} = \{1, \dots, n\}$ for all $i$</li>
+    <li><strong>Same rule every step</strong>: $P_{X_i \mid X_{i-1}}(x_i \mid x_{i-1})$ does not depend on $i$</li>
+  </ul>
+  <div class="highlight">
+    <p>One fixed one-step rule + finite states = the whole process fits in <strong>one matrix</strong>.</p>
+  </div>
+</div>
+
+<!-- Transition matrix definition -->
+<div class="slide">
+  <h2>Definition &mdash; Transition Matrix</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (transition matrix).</h3>
+    <p>The $n \times n$ matrix $P$ with entries</p>
+    <div class="math-block" style="margin:8px 0">$$P_{u,v} \;=\; \Pr(X_i = u \mid X_{i-1} = v)$$</div>
+  </div>
+  <ul>
+    <li>Column $v$: distribution of the next state, <strong>starting from $v$</strong></li>
+    <li>Row $u$: all the ways to <strong>arrive at $u$</strong></li>
+  </ul>
+</div>
+
+<!-- Columns sum to one -->
+<div class="slide">
+  <h2>Columns Sum to One</h2>
+  <div class="divider"></div>
+  <p>Fix the current state $v$ and add up column $v$:</p>
+  <div class="math-block" style="margin:8px 0">$$\sum_{u=1}^{n} P_{u,v}
+    = \sum_{u=1}^{n} \Pr(X_i = u \mid X_{i-1} = v) = 1$$</div>
+  <ul>
+    <li>The next state lands <strong>somewhere</strong>: probabilities exhaust</li>
+    <li>All entries nonnegative: $P$ is a <strong>(column-)stochastic matrix</strong></li>
+  </ul>
+  <p class="muted">Convention alert: many books use rows instead. Transpose everything to translate.</p>
+</div>
+
+<!-- State distribution vector -->
+<div class="slide">
+  <h2>State Distribution at Time $i$</h2>
+  <div class="divider"></div>
+  <p>Where the chain is at step $i$, as a probability vector:</p>
+  <div class="math-block" style="margin:8px 0">$$\pi_i = \begin{bmatrix}
+    \Pr(X_i = 1) \\ \Pr(X_i = 2) \\ \vdots \\ \Pr(X_i = n) \end{bmatrix}$$</div>
+  <ul>
+    <li>$\pi_0$: the <strong>initial distribution</strong>, chosen by us</li>
+    <li>Question: how does $\pi_{i-1}$ become $\pi_i$?</li>
+  </ul>
+</div>
+
+<!-- One-step theorem -->
+<div class="slide">
+  <h2>Theorem &mdash; One Step Is One Multiplication</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 1 (one-step evolution).</h3>
+    <p>For every step $i \geq 1$:</p>
+    <div class="math-block" style="margin:8px 0">$$\pi_i \;=\; P \, \pi_{i-1}$$</div>
+  </div>
+  <p class="muted">Probability flow through the chain = plain matrix-vector multiplication.</p>
+</div>
+
+<!-- One-step proof overview -->
+<div class="slide">
+  <h2>One-Step Evolution &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <p>Target: $\Pr(X_i = u) = (P\,\pi_{i-1})_u$ for every state $u$</p>
+  <ol>
+    <li><strong>Split</strong> the event $\{X_i = u\}$ by the previous state (total probability)</li>
+    <li><strong>Rename</strong> each term with $P_{u,v}$ and $(\pi_{i-1})_v$</li>
+    <li><strong>Recognize</strong> the row-times-vector formula</li>
+  </ol>
+  <p class="muted">One line each. Total probability: prob01's case-split, now over states.</p>
+</div>
+
+<!-- One-step proof -->
+<div class="slide">
+  <h2>One-Step Evolution &mdash; Proof</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \Pr(X_i = u)
+    &\stackrel{(\text{total prob.})}{=} \sum_{v=1}^{n} \Pr(X_{i-1} = v)\,\Pr(X_i = u \mid X_{i-1} = v) \\[4pt]
+    &\stackrel{(\text{rename})}{=} \sum_{v=1}^{n} P_{u,v} \, (\pi_{i-1})_v \\[4pt]
+    &\stackrel{(\text{row} \times \text{vector})}{=} (P \, \pi_{i-1})_u
+    \qquad \blacksquare
+  \end{aligned}$$</div>
+</div>
+
+<!-- One-step summary/implication -->
+<div class="slide">
+  <h2>One-Step Evolution &mdash; Summary</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\Pr(X_i = u)
+    \stackrel{(\text{split})}{=} \sum_v \Pr(\text{was } v) \Pr(v \to u)
+    \stackrel{(\text{read off})}{=} (P\pi_{i-1})_u$$</div>
+  <ul>
+    <li>The trick: total probability <strong>is</strong> a dot product</li>
+    <li>Everything about $\{\pi_i\}$ is now <strong>linear algebra</strong></li>
+  </ul>
+  <div class="highlight">
+    <p>The entire future of the distribution lives inside one matrix $P$.</p>
+  </div>
+</div>
+
+<!-- Running example: binary chain diagram -->
+<div class="slide">
+  <h2>Running Example &mdash; Binary Chain</h2>
+  <div class="divider"></div>
+  <p>Two states. Flip with probability $\alpha \lt \tfrac12$, stay with $1 - \alpha$:</p>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 640 220" style="width:100%;max-width:660px;">
+      <defs><marker id="bc-arr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#003876"/></marker></defs>
+      <circle cx="180" cy="120" r="46" fill="#f4f6f9" stroke="#003876" stroke-width="3"/>
+      <text x="180" y="130" font-size="26" fill="#003876" text-anchor="middle" font-weight="700">0</text>
+      <circle cx="460" cy="120" r="46" fill="#f4f6f9" stroke="#003876" stroke-width="3"/>
+      <text x="460" y="130" font-size="26" fill="#003876" text-anchor="middle" font-weight="700">1</text>
+      <path d="M 222 100 C 280 70, 360 70, 418 100" fill="none" stroke="#003876" stroke-width="2.5" marker-end="url(#bc-arr)"/>
+      <text x="320" y="68" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">&alpha;</text>
+      <path d="M 418 140 C 360 170, 280 170, 222 140" fill="none" stroke="#003876" stroke-width="2.5" marker-end="url(#bc-arr)"/>
+      <text x="320" y="192" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">&alpha;</text>
+      <path d="M 148 88 C 100 40, 190 10, 172 76" fill="none" stroke="#666" stroke-width="2.5" marker-end="url(#bc-arr)"/>
+      <text x="120" y="30" font-size="16" fill="#666" text-anchor="middle">1&minus;&alpha;</text>
+      <path d="M 492 88 C 540 40, 450 10, 468 76" fill="none" stroke="#666" stroke-width="2.5" marker-end="url(#bc-arr)"/>
+      <text x="522" y="30" font-size="16" fill="#666" text-anchor="middle">1&minus;&alpha;</text>
+    </svg>
+  </div>
+  <p class="muted">A noisy bit that occasionally flips. Numbers today: $\alpha = 1/4$.</p>
+</div>
+
+<!-- Binary chain matrix -->
+<div class="slide">
+  <h2>Binary Chain &mdash; Transition Matrix</h2>
+  <div class="divider"></div>
+  <p>Columns = current state, rows = next state:</p>
+  <div class="math-block" style="margin:8px 0">$$P = \begin{pmatrix} 1-\alpha & \alpha \\ \alpha & 1-\alpha \end{pmatrix}
+    \;\;\stackrel{\alpha = 1/4}{=}\;\;
+    \begin{pmatrix} \tfrac34 & \tfrac14 \\[2pt] \tfrac14 & \tfrac34 \end{pmatrix}$$</div>
+  <ul>
+    <li>Column sums: $(1-\alpha) + \alpha = 1$ &nbsp;&#10003;</li>
+    <li>Symmetric: flipping $0 \to 1$ and $1 \to 0$ equally likely</li>
+  </ul>
+</div>
+
+<!-- Binary chain one step -->
+<div class="slide">
+  <h2>Binary Chain &mdash; One Step by Hand</h2>
+  <div class="divider"></div>
+  <p>Start pinned at $0$: $\;\pi_0 = [1, 0]^\top$</p>
+  <div class="math-block" style="margin:8px 0">$$\pi_1 = P\,\pi_0
+    = \begin{pmatrix} 1-\alpha & \alpha \\ \alpha & 1-\alpha \end{pmatrix}
+      \begin{bmatrix} 1 \\ 0 \end{bmatrix}
+    = \begin{bmatrix} 1-\alpha \\ \alpha \end{bmatrix}
+    = \begin{bmatrix} \tfrac34 \\[2pt] \tfrac14 \end{bmatrix}$$</div>
+  <ul>
+    <li>Reading: after one step, flipped with probability $\alpha$</li>
+    <li>Matches the diagram: mass $\alpha$ leaks across</li>
+  </ul>
+</div>
+
+<!-- Binary chain second step -->
+<div class="slide">
+  <h2>Binary Chain &mdash; A Second Step</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\pi_2 = P\,\pi_1
+    = \begin{bmatrix} (1-\alpha)^2 + \alpha^2 \\[2pt] 2\alpha(1-\alpha) \end{bmatrix}
+    \;\;\stackrel{\alpha = 1/4}{=}\;\;
+    \begin{bmatrix} \tfrac58 \\[2pt] \tfrac38 \end{bmatrix}$$</div>
+  <ul>
+    <li>Stay twice or flip twice: back at $0$</li>
+    <li>Mass drifts toward a 50/50 split: $1 \to \tfrac34 \to \tfrac58 \to \cdots$</li>
+  </ul>
+  <p class="muted">Where is this heading? Section 05.</p>
+</div>
+
+<!-- ABC chain diagram -->
+<div class="slide">
+  <h2>Second Example &mdash; Three-State Chain</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div style="flex:1.3;display:flex;justify-content:center;">
+      <svg viewBox="0 0 460 330" style="width:100%;max-width:430px;">
+        <defs><marker id="abc-arr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#003876"/></marker></defs>
+        <circle cx="230" cy="95" r="42" fill="#f4f6f9" stroke="#003876" stroke-width="3"/>
+        <text x="230" y="105" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">A</text>
+        <circle cx="105" cy="255" r="42" fill="#f4f6f9" stroke="#003876" stroke-width="3"/>
+        <text x="105" y="265" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">B</text>
+        <circle cx="355" cy="255" r="42" fill="#f4f6f9" stroke="#003876" stroke-width="3"/>
+        <text x="355" y="265" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">C</text>
+        <path d="M 196 122 C 160 155, 140 185, 126 217" fill="none" stroke="#003876" stroke-width="2.5" marker-end="url(#abc-arr)"/>
+        <text x="138" y="165" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">0.5</text>
+        <path d="M 147 262 C 210 290, 250 290, 313 262" fill="none" stroke="#003876" stroke-width="2.5" marker-end="url(#abc-arr)"/>
+        <text x="230" y="298" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">0.5</text>
+        <path d="M 336 217 C 320 185, 300 155, 264 122" fill="none" stroke="#003876" stroke-width="2.5" marker-end="url(#abc-arr)"/>
+        <text x="322" y="165" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">0.5</text>
+        <path d="M 208 56 C 180 8, 268 2, 250 54" fill="none" stroke="#666" stroke-width="2.5" marker-end="url(#abc-arr)"/>
+        <text x="230" y="16" font-size="15" fill="#666" text-anchor="middle">0.5</text>
+        <path d="M 66 234 C 18 210, 24 290, 70 280" fill="none" stroke="#666" stroke-width="2.5" marker-end="url(#abc-arr)"/>
+        <text x="24" y="248" font-size="15" fill="#666" text-anchor="middle">0.5</text>
+        <path d="M 394 234 C 442 210, 436 290, 390 280" fill="none" stroke="#666" stroke-width="2.5" marker-end="url(#abc-arr)"/>
+        <text x="436" y="248" font-size="15" fill="#666" text-anchor="middle">0.5</text>
+      </svg>
+    </div>
+    <div style="flex:1;">
+      <ul>
+        <li>Stay put: prob. $0.5$</li>
+        <li>Else rotate: $A \to B \to C \to A$</li>
+      </ul>
+      <p class="muted">Redrawn from the lecture notes' Markov transition figure.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ABC matrix -->
+<div class="slide">
+  <h2>Three-State Chain &mdash; Matrix</h2>
+  <div class="divider"></div>
+  <p>Order states $(A, B, C)$; column = current state:</p>
+  <div class="math-block" style="margin:8px 0">$$P = \begin{pmatrix}
+    0.5 & 0 & 0.5 \\ 0.5 & 0.5 & 0 \\ 0 & 0.5 & 0.5 \end{pmatrix}$$</div>
+  <ul>
+    <li>Column $A$: half stays at $A$, half moves to $B$</li>
+    <li>Every column sums to $1$ &nbsp;&#10003;</li>
+  </ul>
+  <p class="muted">This chain returns in Section 07 with a surprise.</p>
+</div>
+
+<!-- ===== SECTION 05 — EVOLUTION IN TIME ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Evolution in Time</h1>
+  <div class="divider"></div>
+  <p class="subtitle">$\pi_t = P^t \pi_0$</p>
+</div>
+
+<!-- n-step theorem -->
+<div class="slide">
+  <h2>Theorem &mdash; $t$ Steps Is One Matrix Power</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 2 ($t$-step evolution).</h3>
+    <p>For every $t \geq 0$:</p>
+    <div class="math-block" style="margin:8px 0">$$\pi_t \;=\; P^t \, \pi_0$$</div>
+  </div>
+  <p class="muted">All of time, compressed into powers of one matrix.</p>
+</div>
+
+<!-- n-step proof -->
+<div class="slide">
+  <h2>$t$-Step Evolution &mdash; Proof</h2>
+  <div class="divider"></div>
+  <p>Unroll Theorem 1, one step at a time:</p>
+  <div class="math-block">$$\pi_t
+    \stackrel{(\text{Thm 1})}{=} P\,\pi_{t-1}
+    \stackrel{(\text{Thm 1})}{=} P\,(P\,\pi_{t-2}) = P^2 \pi_{t-2}
+    \;=\; \cdots \;=\; P^t \pi_0 \quad \blacksquare$$</div>
+  <ul>
+    <li>Formally: induction on $t$, base case $\pi_0 = P^0 \pi_0$</li>
+    <li>Uses the fixed rule: the <strong>same</strong> $P$ at every step</li>
+  </ul>
+</div>
+
+<!-- Numeric powers table -->
+<div class="slide">
+  <h2>Binary Chain &mdash; Numeric Evolution</h2>
+  <div class="divider"></div>
+  <p>$\alpha = \tfrac14$, start at $\pi_0 = [1, 0]^\top$; each row: one multiplication by $P$</p>
+  <table>
+    <thead><tr><th>$t$</th><th>$\Pr(X_t = 0)$</th><th>$\Pr(X_t = 1)$</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>$1$</td><td>$0$</td></tr>
+      <tr><td>1</td><td>$3/4 = 0.75$</td><td>$1/4$</td></tr>
+      <tr><td>2</td><td>$5/8 = 0.625$</td><td>$3/8$</td></tr>
+      <tr><td>3</td><td>$9/16 \approx 0.563$</td><td>$7/16$</td></tr>
+      <tr><td>4</td><td>$17/32 \approx 0.531$</td><td>$15/32$</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Convergence picture -->
+<div class="slide">
+  <h2>Binary Chain &mdash; Convergence Picture</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 760 250" style="width:100%;max-width:820px;">
+      <line x1="70" y1="220" x2="700" y2="220" stroke="#222" stroke-width="2"/>
+      <line x1="70" y1="220" x2="70" y2="15" stroke="#222" stroke-width="2"/>
+      <line x1="70" y1="110" x2="700" y2="110" stroke="#003876" stroke-width="2" stroke-dasharray="7 6"/>
+      <text x="712" y="115" font-size="15" fill="#003876" font-weight="700">1/2</text>
+      <text x="60" y="25" font-size="14" fill="#666" text-anchor="end">1</text>
+      <text x="60" y="225" font-size="14" fill="#666" text-anchor="end">0</text>
+      <text x="390" y="245" font-size="15" fill="#666" text-anchor="middle">step t</text>
+      <polyline points="80,20 170,65 260,87.5 350,98.8 440,104.4 530,107.2 620,108.6"
+        fill="none" stroke="#003876" stroke-width="3"/>
+      <g fill="#003876"><circle cx="80" cy="20" r="5"/><circle cx="170" cy="65" r="5"/><circle cx="260" cy="87.5" r="5"/><circle cx="350" cy="98.8" r="5"/><circle cx="440" cy="104.4" r="5"/><circle cx="530" cy="107.2" r="5"/><circle cx="620" cy="108.6" r="5"/></g>
+      <polyline points="80,200 170,155 260,132.5 350,121.2 440,115.6 530,112.8 620,111.4"
+        fill="none" stroke="#9aa4af" stroke-width="3"/>
+      <g fill="#9aa4af"><circle cx="80" cy="200" r="5"/><circle cx="170" cy="155" r="5"/><circle cx="260" cy="132.5" r="5"/><circle cx="350" cy="121.2" r="5"/><circle cx="440" cy="115.6" r="5"/><circle cx="530" cy="112.8" r="5"/><circle cx="620" cy="111.4" r="5"/></g>
+      <text x="150" y="40" font-size="15" fill="#003876" font-weight="700">start at 0</text>
+      <text x="150" y="195" font-size="15" fill="#9aa4af" font-weight="700">start at 1</text>
+    </svg>
+  </div>
+  <p>$\Pr(X_t = 0)$ from both starts: <strong>both converge to $\tfrac12$</strong></p>
+</div>
+
+<!-- Teaser -->
+<div class="slide">
+  <h2>A Distribution That Does Not Move?</h2>
+  <div class="divider"></div>
+  <p>Both starting points drift toward $[\tfrac12, \tfrac12]^\top$</p>
+  <ul>
+    <li>Gap to $\tfrac12$ <strong>halves</strong> every step: $\tfrac12, \tfrac14, \tfrac18, \tfrac{1}{16}, \dots$</li>
+    <li>Guess: some special $\pi$ satisfies $P\pi = \pi$ and never moves</li>
+  </ul>
+  <div class="highlight">
+    <p>Two questions ahead: <strong>which distributions stand still</strong>, and <strong>do chains reach them</strong>?</p>
+  </div>
+  <p class="muted">First, a general-purpose notion: stationary <em>processes</em>.</p>
+</div>
+
+<!-- ===== SECTION 06 — STATIONARY PROCESSES ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Stationary Processes</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Shift-invariant in distribution</p>
+</div>
+
+<!-- Stationary definition -->
+<div class="slide">
+  <h2>Definition &mdash; Stationary Process</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (stationary process).</h3>
+    <p>A process is <strong>stationary</strong> if for all $i$ and all window lengths $n$:</p>
+    <div class="math-block" style="margin:8px 0">$$(X_i, \dots, X_{i+n-1})
+      \;\stackrel{d}{=}\; (X_{i+1}, \dots, X_{i+n})$$</div>
+  </div>
+  <ul>
+    <li>$\stackrel{d}{=}$: equal <strong>in distribution</strong> (same joint pmf)</li>
+    <li>Shift any window by one step: statistics unchanged</li>
+  </ul>
+</div>
+
+<!-- Sliding window picture -->
+<div class="slide">
+  <h2>Picture &mdash; Sliding the Window</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:12px 0;">
+    <svg viewBox="0 0 760 210" style="width:100%;max-width:800px;">
+      <g>
+        <rect x="40" y="80" width="70" height="50" rx="8" fill="#f4f6f9" stroke="#b9c2cc" stroke-width="2"/>
+        <rect x="130" y="80" width="70" height="50" rx="8" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+        <rect x="220" y="80" width="70" height="50" rx="8" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+        <rect x="310" y="80" width="70" height="50" rx="8" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+        <rect x="400" y="80" width="70" height="50" rx="8" fill="#f4f6f9" stroke="#b9c2cc" stroke-width="2"/>
+        <rect x="490" y="80" width="70" height="50" rx="8" fill="#f4f6f9" stroke="#b9c2cc" stroke-width="2"/>
+        <text x="75" y="112" font-size="16" fill="#666" text-anchor="middle">X<tspan dy="4" font-size="11">1</tspan></text>
+        <text x="165" y="112" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">X<tspan dy="4" font-size="11">2</tspan></text>
+        <text x="255" y="112" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">X<tspan dy="4" font-size="11">3</tspan></text>
+        <text x="345" y="112" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">X<tspan dy="4" font-size="11">4</tspan></text>
+        <text x="435" y="112" font-size="16" fill="#666" text-anchor="middle">X<tspan dy="4" font-size="11">5</tspan></text>
+        <text x="525" y="112" font-size="16" fill="#666" text-anchor="middle">X<tspan dy="4" font-size="11">6</tspan></text>
+      </g>
+      <path d="M 130 68 L 130 52 L 380 52 L 380 68" fill="none" stroke="#003876" stroke-width="3"/>
+      <text x="255" y="38" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">window at i = 2</text>
+      <path d="M 220 142 L 220 158 L 470 158 L 470 142" fill="none" stroke="#9aa4af" stroke-width="3"/>
+      <text x="345" y="182" font-size="16" fill="#9aa4af" text-anchor="middle" font-weight="700">shifted window, i = 3</text>
+      <text x="620" y="112" font-size="18" fill="#003876" text-anchor="middle" font-weight="700">same joint</text>
+      <text x="620" y="136" font-size="18" fill="#003876" text-anchor="middle" font-weight="700">distribution</text>
+    </svg>
+  </div>
+  <p class="muted">Stationary: the clock has no origin. Statistics do not depend on time.</p>
+</div>
+
+<!-- Random walk not stationary -->
+<div class="slide">
+  <h2>Counterexample &mdash; Random Walk</h2>
+  <div class="divider"></div>
+  <p>Random walk again: $X_0 = 0$, $\;X_n = X_{n-1} \pm 1$</p>
+  <div class="math-block" style="margin:8px 0">$$X_1 \in \{+1, -1\},
+    \qquad X_2 \in \{+2, 0, -2\},
+    \qquad X_3 \in \{\pm 3, \pm 1\}$$</div>
+  <ul>
+    <li>Support keeps <strong>growing</strong>: $X_n$ is "more random" than $X_0$</li>
+    <li>$X_1 \stackrel{d}{=} X_2$ already fails: <strong>not stationary</strong></li>
+  </ul>
+</div>
+
+<!-- Random walk fan-out -->
+<div class="slide">
+  <h2>Random Walk &mdash; The Fan-Out</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 700 300" style="width:100%;max-width:720px;">
+      <g stroke="#b9c2cc" stroke-width="2">
+        <line x1="110" y1="130" x2="290" y2="60"/><line x1="110" y1="130" x2="290" y2="200"/>
+        <line x1="290" y1="60" x2="470" y2="25"/><line x1="290" y1="60" x2="470" y2="130"/>
+        <line x1="290" y1="200" x2="470" y2="130"/><line x1="290" y1="200" x2="470" y2="235"/>
+      </g>
+      <circle cx="110" cy="130" r="22" fill="#003876"/>
+      <text x="110" y="136" font-size="15" fill="#ffffff" text-anchor="middle" font-weight="700">0</text>
+      <g fill="#f4f6f9" stroke="#003876" stroke-width="2.5">
+        <circle cx="290" cy="60" r="22"/><circle cx="290" cy="200" r="22"/>
+        <circle cx="470" cy="25" r="22"/><circle cx="470" cy="130" r="22"/><circle cx="470" cy="235" r="22"/>
+      </g>
+      <g font-size="15" fill="#003876" text-anchor="middle" font-weight="700">
+        <text x="290" y="66">+1</text><text x="290" y="206">&minus;1</text>
+        <text x="470" y="31">+2</text><text x="470" y="136">0</text><text x="470" y="241">&minus;2</text>
+      </g>
+      <g font-size="15" fill="#666" text-anchor="middle">
+        <text x="110" y="288">t = 0</text><text x="290" y="288">t = 1</text><text x="470" y="288">t = 2</text>
+        <text x="580" y="130">&#8943; spread grows</text>
+      </g>
+    </svg>
+  </div>
+  <p class="muted">Markov, yes. Stationary, no: the distribution widens every step.</p>
+</div>
+
+<!-- Remarks -->
+<div class="slide">
+  <h2>Markov vs. Stationary &mdash; Independent Axes</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>Markov, not stationary</h3>
+      <p>Random walk: memory 1, spread grows</p>
+    </div>
+    <div>
+      <h3>Stationary, not Markov</h3>
+      <p>Stationary allows <strong>infinite</strong> dependencies</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Two separate properties: <strong>short memory</strong> vs. <strong>time-invariant statistics</strong>.</p>
+  </div>
+</div>
+
+<!-- Full spectrum -->
+<div class="slide">
+  <h2>The Full Spectrum</h2>
+  <div class="divider"></div>
+  <p>Stationarity: closer to practice than any fixed memory $k$:</p>
+  <div style="display:flex;justify-content:center;margin:18px 0;">
+    <svg viewBox="0 0 780 170" style="width:100%;max-width:840px;">
+      <line x1="40" y1="85" x2="740" y2="85" stroke="#222" stroke-width="3"/>
+      <line x1="40" y1="65" x2="40" y2="105" stroke="#222" stroke-width="3"/>
+      <line x1="200" y1="65" x2="200" y2="105" stroke="#222" stroke-width="3"/>
+      <line x1="380" y1="65" x2="380" y2="105" stroke="#222" stroke-width="3"/>
+      <line x1="560" y1="65" x2="560" y2="105" stroke="#003876" stroke-width="4"/>
+      <line x1="740" y1="65" x2="740" y2="105" stroke="#222" stroke-width="3"/>
+      <text x="290" y="90" font-size="16" fill="#666" text-anchor="middle">&#8943;</text>
+      <text x="470" y="90" font-size="16" fill="#666" text-anchor="middle">&#8943;</text>
+      <text x="650" y="90" font-size="16" fill="#666" text-anchor="middle">&#8943;</text>
+      <text x="40" y="135" font-size="17" fill="#222" text-anchor="middle" font-weight="700">i.i.d.</text>
+      <text x="200" y="48" font-size="17" fill="#222" text-anchor="middle" font-weight="700">1st-order Markov</text>
+      <text x="380" y="135" font-size="17" fill="#222" text-anchor="middle" font-weight="700">kth-order Markov</text>
+      <text x="560" y="48" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">stationary</text>
+      <text x="740" y="135" font-size="17" fill="#222" text-anchor="middle" font-weight="700">practical</text>
+    </svg>
+  </div>
+  <p class="muted">Redrawn from the lecture notes. Next: when is a <em>Markov</em> chain stationary?</p>
+</div>
+
+<!-- ===== SECTION 07 — STATIONARY DISTRIBUTIONS ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">07</div>
+  <h1>Stationary Distributions</h1>
+  <div class="divider"></div>
+  <p class="subtitle">$\pi^\star = P\pi^\star$, an eigenvector</p>
+</div>
+
+<!-- ABC uniform start -->
+<div class="slide">
+  <h2>Worked &mdash; Three-State Chain, Uniform Start</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div style="flex:1.1;display:flex;justify-content:center;">
+      <svg viewBox="0 0 460 300" style="width:100%;max-width:360px;">
+        <defs><marker id="abc2-arr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#003876"/></marker></defs>
+        <circle cx="230" cy="80" r="40" fill="#f4f6f9" stroke="#003876" stroke-width="3"/>
+        <text x="230" y="90" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">A</text>
+        <circle cx="110" cy="230" r="40" fill="#f4f6f9" stroke="#003876" stroke-width="3"/>
+        <text x="110" y="240" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">B</text>
+        <circle cx="350" cy="230" r="40" fill="#f4f6f9" stroke="#003876" stroke-width="3"/>
+        <text x="350" y="240" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">C</text>
+        <path d="M 198 106 C 165 140, 145 165, 130 195" fill="none" stroke="#003876" stroke-width="2.5" marker-end="url(#abc2-arr)"/>
+        <path d="M 150 238 C 210 265, 250 265, 310 238" fill="none" stroke="#003876" stroke-width="2.5" marker-end="url(#abc2-arr)"/>
+        <path d="M 330 195 C 315 165, 295 140, 262 106" fill="none" stroke="#003876" stroke-width="2.5" marker-end="url(#abc2-arr)"/>
+        <g font-size="15" fill="#003876" text-anchor="middle" font-weight="700">
+          <text x="140" y="148">0.5</text><text x="230" y="272">0.5</text><text x="320" y="148">0.5</text>
+        </g>
+        <text x="230" y="26" font-size="15" fill="#666" text-anchor="middle">+ self-loops 0.5</text>
+      </svg>
+    </div>
+    <div style="flex:1;">
+      <p>Initial distribution:</p>
+      <div class="math-block" style="margin:8px 0">$$P(A) = P(B) = P(C) = \tfrac13$$</div>
+      <p>Question: what is $\pi_2$?</p>
+    </div>
+  </div>
+</div>
+
+<!-- ABC one step for A -->
+<div class="slide">
+  <h2>Worked &mdash; One Step for State A</h2>
+  <div class="divider"></div>
+  <p>Who can land on $A$? Only $A$ (stay) and $C$ (rotate):</p>
+  <div class="math-block">$$\begin{aligned}
+    \Pr(X_2 = A)
+    &= \Pr(X_1 = A)\Pr(A \mid A) + \Pr(X_1 = C)\Pr(A \mid C) \\[4pt]
+    &= \tfrac13 \cdot \tfrac12 + \tfrac13 \cdot \tfrac12 \;=\; \tfrac13
+  \end{aligned}$$</div>
+  <p class="muted">Total probability again: exactly one row of $\pi_2 = P\pi_1$.</p>
+</div>
+
+<!-- ABC all states -->
+<div class="slide">
+  <h2>Worked &mdash; All States Stay at 1/3</h2>
+  <div class="divider"></div>
+  <p>Same computation for $B$ and $C$, by the rotation symmetry:</p>
+  <div class="math-block" style="margin:8px 0">$$\pi_2 = \begin{bmatrix} \tfrac13 \\ \tfrac13 \\ \tfrac13 \end{bmatrix} = \pi_1
+    \quad\Longrightarrow\quad \pi_t = \begin{bmatrix} \tfrac13 \\ \tfrac13 \\ \tfrac13 \end{bmatrix}
+    \;\;\text{for all } t$$</div>
+  <ul>
+    <li>Repeat the argument: <strong>every</strong> step keeps $\tfrac13$ each</li>
+    <li>Uniform start: this chain's distribution <strong>never moves</strong></li>
+  </ul>
+</div>
+
+<!-- ABC stationary as process -->
+<div class="slide">
+  <h2>Worked &mdash; The Process Is Stationary</h2>
+  <div class="divider"></div>
+  <p>With the uniform start, windows shift without changing distribution:</p>
+  <div class="math-block" style="margin:8px 0">$$(X_i, \dots, X_{i+n-1})
+    \;\stackrel{d}{=}\; (X_{i+1}, \dots, X_{i+n})$$</div>
+  <ul>
+    <li>Marginals equal at all times, transitions the <strong>same rule</strong> always</li>
+    <li>Section 06's definition: satisfied</li>
+  </ul>
+  <div class="highlight">
+    <p>A Markov chain <strong>becomes a stationary process</strong> when started from the right distribution.</p>
+  </div>
+</div>
+
+<!-- ABC non-uniform start -->
+<div class="slide">
+  <h2>Same Chain, Different Start</h2>
+  <div class="divider"></div>
+  <p>Now pin the start: $\Pr(X_1 = A) = 1$</p>
+  <div class="math-block" style="margin:8px 0">$$\pi_1 = \begin{bmatrix} 1 \\ 0 \\ 0 \end{bmatrix}
+    \;\longrightarrow\;
+    \pi_2 = \begin{bmatrix} \tfrac12 \\ \tfrac12 \\ 0 \end{bmatrix}
+    \;\neq\; \pi_1$$</div>
+  <ul>
+    <li>$X_1 \stackrel{d}{=} X_2$ fails: <strong>not stationary</strong> anymore</li>
+    <li>Same matrix $P$, different verdict</li>
+  </ul>
+  <p class="muted">Stationarity is a property of the chain <em>and</em> its initial distribution.</p>
+</div>
+
+<!-- Existence theorem -->
+<div class="slide">
+  <h2>Theorem &mdash; When a Standing-Still Start Exists</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 3 (existence; stated without proof).</h3>
+    <p>A Markov chain that is <strong>finite-state, irreducible, aperiodic</strong> has a stationary initial distribution.</p>
+  </div>
+  <ul>
+    <li>"Reasonable assumptions" rule out broken chains (next slide)</li>
+    <li>Proof: beyond this course</li>
+  </ul>
+</div>
+
+<!-- Assumptions in pictures -->
+<div class="slide">
+  <h2>The Assumptions, in Pictures</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>Irreducible</h3>
+      <p>Every state can reach every state</p>
+      <div style="display:flex;justify-content:center;">
+        <svg viewBox="0 0 300 120" style="width:100%;max-width:260px;">
+          <g fill="#f4f6f9" stroke="#c0392b" stroke-width="2.5">
+            <circle cx="60" cy="60" r="26"/><circle cx="150" cy="60" r="26"/><circle cx="240" cy="60" r="26"/>
+          </g>
+          <path d="M 90 52 C 105 40, 120 40, 122 52" fill="none" stroke="#c0392b" stroke-width="2"/>
+          <path d="M 122 68 C 120 80, 105 80, 90 68" fill="none" stroke="#c0392b" stroke-width="2"/>
+          <line x1="185" y1="35" x2="205" y2="85" stroke="#c0392b" stroke-width="3"/>
+          <text x="150" y="112" font-size="13" fill="#c0392b" text-anchor="middle">broken: island state unreachable</text>
+        </svg>
+      </div>
+    </div>
+    <div>
+      <h3>Aperiodic</h3>
+      <p>No rigid cycle forcing the clock</p>
+      <div style="display:flex;justify-content:center;">
+        <svg viewBox="0 0 300 120" style="width:100%;max-width:260px;">
+          <g fill="#f4f6f9" stroke="#c0392b" stroke-width="2.5">
+            <circle cx="95" cy="60" r="26"/><circle cx="205" cy="60" r="26"/>
+          </g>
+          <path d="M 123 48 C 145 30, 160 30, 178 48" fill="none" stroke="#c0392b" stroke-width="2"/>
+          <path d="M 178 72 C 160 90, 145 90, 123 72" fill="none" stroke="#c0392b" stroke-width="2"/>
+          <text x="150" y="20" font-size="13" fill="#c0392b" text-anchor="middle">1</text>
+          <text x="150" y="108" font-size="13" fill="#c0392b" text-anchor="middle">broken: forced 2-cycle (prob. 1)</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <p class="muted">Informal glosses. Both running examples satisfy all three conditions (for $0 \lt \alpha \lt 1$).</p>
+</div>
+
+<!-- Binary uniform check -->
+<div class="slide">
+  <h2>Worked &mdash; Binary Chain, Uniform Start</h2>
+  <div class="divider"></div>
+  <p>Take $\pi_0 = [\tfrac12, \tfrac12]^\top$:</p>
+  <div class="math-block" style="margin:8px 0">$$P\,\pi_0 =
+    \begin{pmatrix} 1-\alpha & \alpha \\ \alpha & 1-\alpha \end{pmatrix}
+    \begin{bmatrix} \tfrac12 \\[2pt] \tfrac12 \end{bmatrix}
+    = \begin{bmatrix} \tfrac{1-\alpha}{2} + \tfrac{\alpha}{2} \\[2pt] \tfrac{\alpha}{2} + \tfrac{1-\alpha}{2} \end{bmatrix}
+    = \begin{bmatrix} \tfrac12 \\[2pt] \tfrac12 \end{bmatrix}$$</div>
+  <ul>
+    <li>Hence $\pi_t = [\tfrac12, \tfrac12]^\top$ for <strong>all</strong> $t$</li>
+    <li>Exactly the value both curves converged to in Section 05</li>
+  </ul>
+</div>
+
+<!-- Stationary distribution definition -->
+<div class="slide">
+  <h2>Definition &mdash; Stationary Distribution</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (stationary distribution).</h3>
+    <p>A probability vector $\pi^\star$ with</p>
+    <div class="math-block" style="margin:8px 0">$$\pi^\star \;=\; P\,\pi^\star$$</div>
+  </div>
+  <ul>
+    <li>A <strong>fixed point</strong> of one-step evolution</li>
+    <li>Start there, stay there: the chain runs as a stationary process</li>
+  </ul>
+</div>
+
+<!-- Eigen review 1 -->
+<div class="slide">
+  <h2>Technique Review &mdash; Eigenvalues &amp; Eigenvectors</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <h3>Recall (linear algebra).</h3>
+    <p>$v \neq 0$ is an <strong>eigenvector</strong> of $A$ with <strong>eigenvalue</strong> $\lambda$ if</p>
+    <div class="math-block" style="margin:8px 0">$$A v = \lambda v$$</div>
+  </div>
+  <ul>
+    <li>$A$ only <strong>rescales</strong> $v$: direction unchanged</li>
+    <li>Eigenvalues solve the characteristic equation $\det(A - \lambda I) = 0$</li>
+  </ul>
+</div>
+
+<!-- Eigen review 2 -->
+<div class="slide">
+  <h2>Technique Review &mdash; The 2&times;2 Recipe</h2>
+  <div class="divider"></div>
+  <p>For a $2 \times 2$ matrix, two mechanical steps:</p>
+  <ol>
+    <li><strong>Eigenvalues</strong>: expand $\det(A - \lambda I) = 0$, solve the quadratic</li>
+    <li><strong>Eigenvectors</strong>: for each $\lambda$, solve $(A - \lambda I)v = 0$</li>
+  </ol>
+  <div class="math-block" style="margin:8px 0">$$\det \begin{pmatrix} a - \lambda & b \\ c & d - \lambda \end{pmatrix}
+    = (a-\lambda)(d-\lambda) - bc$$</div>
+  <p class="muted">Refresher for what comes next: we solve both chains by hand.</p>
+</div>
+
+<!-- Reading pi* as eigenvector -->
+<div class="slide">
+  <h2>$\pi^\star$ Is an Eigenvector</h2>
+  <div class="divider"></div>
+  <p>Compare the two equations:</p>
+  <div class="math-block" style="margin:8px 0">$$\pi^\star = P\,\pi^\star
+    \qquad\Longleftrightarrow\qquad P\,v = \lambda v \;\text{ with } \lambda = 1$$</div>
+  <ul>
+    <li>$\pi^\star$: eigenvector of $P$ for <strong>eigenvalue $1$</strong></li>
+    <li>Extra constraint: entries nonnegative, summing to $1$ (<strong>normalize</strong>)</li>
+  </ul>
+  <div class="highlight">
+    <p>Finding where a chain stands still = an <strong>eigenvector computation</strong>.</p>
+  </div>
+</div>
+
+<!-- Binary eigenvalues -->
+<div class="slide">
+  <h2>Binary Chain &mdash; Eigenvalues by Hand</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \det(P - \lambda I)
+    &= (1 - \alpha - \lambda)^2 - \alpha^2 \\[4pt]
+    &\stackrel{(a^2 - b^2)}{=} (1 - \alpha - \lambda - \alpha)(1 - \alpha - \lambda + \alpha) \\[4pt]
+    &= (1 - 2\alpha - \lambda)(1 - \lambda) \;=\; 0
+  \end{aligned}$$</div>
+  <p>Eigenvalues: $\;\lambda_1 = 1$, $\;\lambda_2 = 1 - 2\alpha$ &nbsp;($= \tfrac12$ at $\alpha = \tfrac14$)</p>
+  <p class="muted">$\lambda = 1$ appears, as promised. The other eigenvalue returns in Section 08.</p>
+</div>
+
+<!-- Binary eigenvector -->
+<div class="slide">
+  <h2>Binary Chain &mdash; Eigenvector for $\lambda = 1$</h2>
+  <div class="divider"></div>
+  <p>Solve $(P - I)v = 0$:</p>
+  <div class="math-block" style="margin:8px 0">$$\begin{pmatrix} -\alpha & \alpha \\ \alpha & -\alpha \end{pmatrix}
+    \begin{bmatrix} v_1 \\ v_2 \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \end{bmatrix}
+    \quad\Longrightarrow\quad v_1 = v_2$$</div>
+  <p>Normalize to a probability vector:</p>
+  <div class="math-block" style="margin:8px 0">$$\pi^\star = \begin{bmatrix} \tfrac12 \\[2pt] \tfrac12 \end{bmatrix}$$</div>
+</div>
+
+<!-- Binary check -->
+<div class="slide">
+  <h2>Binary Chain &mdash; Sanity Check</h2>
+  <div class="divider"></div>
+  <p>Multiply back, at $\alpha = \tfrac14$:</p>
+  <div class="math-block" style="margin:8px 0">$$P\,\pi^\star =
+    \begin{pmatrix} \tfrac34 & \tfrac14 \\[2pt] \tfrac14 & \tfrac34 \end{pmatrix}
+    \begin{bmatrix} \tfrac12 \\[2pt] \tfrac12 \end{bmatrix}
+    = \begin{bmatrix} \tfrac38 + \tfrac18 \\[2pt] \tfrac18 + \tfrac38 \end{bmatrix}
+    = \begin{bmatrix} \tfrac12 \\[2pt] \tfrac12 \end{bmatrix} \;\;\checkmark$$</div>
+  <ul>
+    <li>Same answer as the uniform-start worked example</li>
+    <li>Same answer the numeric table crept toward</li>
+  </ul>
+</div>
+
+<!-- ABC solve -->
+<div class="slide">
+  <h2>Three-State Chain &mdash; Solve $\pi^\star = P\pi^\star$</h2>
+  <div class="divider"></div>
+  <p>Write out the three rows of $\pi^\star = P \pi^\star$:</p>
+  <div class="math-block">$$\begin{aligned}
+    \pi_A &= 0.5\,\pi_A + 0.5\,\pi_C \\
+    \pi_B &= 0.5\,\pi_A + 0.5\,\pi_B \\
+    \pi_C &= 0.5\,\pi_B + 0.5\,\pi_C
+  \end{aligned}$$</div>
+  <p class="muted">Three equations, plus the normalization $\pi_A + \pi_B + \pi_C = 1$.</p>
+</div>
+
+<!-- ABC solution -->
+<div class="slide">
+  <h2>Three-State Chain &mdash; Solution</h2>
+  <div class="divider"></div>
+  <p>Simplify each row (subtract, cancel the $0.5$):</p>
+  <div class="math-block" style="margin:8px 0">$$\pi_A = \pi_C, \qquad \pi_B = \pi_A, \qquad \pi_C = \pi_B$$</div>
+  <p>All equal; normalize:</p>
+  <div class="math-block" style="margin:8px 0">$$\pi^\star = \begin{bmatrix} \tfrac13 \\ \tfrac13 \\ \tfrac13 \end{bmatrix}$$</div>
+  <p class="muted">Exactly the uniform start that made the process stationary. No coincidence.</p>
+</div>
+
+<!-- Exercise -->
+<div class="slide">
+  <h2>Exercise &mdash; Symmetric Transition Matrix</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Exercise.</h3>
+    <p>Show: if $P$ is <strong>symmetric</strong> ($P^\top = P$), the uniform distribution is stationary.</p>
+    <div class="math-block" style="margin:8px 0">$$\pi^\star = \begin{bmatrix} \tfrac1n \\ \vdots \\ \tfrac1n \end{bmatrix}$$</div>
+  </div>
+  <p><strong>Hint.</strong> Columns sum to $1$. What do symmetric <em>rows</em> sum to?</p>
+</div>
+
+<!-- Exercise solution -->
+<div class="slide">
+  <h2>Exercise &mdash; Solution</h2>
+  <div class="divider"></div>
+  <p>Symmetric $P$: row $u$ = column $u$, so rows sum to $1$</p>
+  <div class="math-block" style="margin:8px 0">$$(P\,\pi^\star)_u
+    = \sum_{v} P_{u,v} \cdot \tfrac1n
+    = \tfrac1n \underbrace{\textstyle\sum_{v} P_{u,v}}_{\text{row sum} \;=\; 1}
+    = \tfrac1n \qquad \blacksquare$$</div>
+  <ul>
+    <li>Both running examples are symmetric: uniform $\pi^\star$, twice confirmed</li>
+    <li>Keep this fact: it powers the <strong>diffusion</strong> section</li>
+  </ul>
+</div>
+
+<!-- PageRank illustration -->
+<div class="slide">
+  <h2>Illustration &mdash; Random Surfer</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div style="flex:1;">
+      <ul>
+        <li>States: web pages; transitions: links</li>
+        <li>Surfer clicks forever: where does mass settle?</li>
+        <li>PageRank-style scores: read off $\pi^\star$</li>
+      </ul>
+      <p class="muted">Illustration of the concept, not today's math.</p>
+    </div>
+    <div style="flex:1;display:flex;justify-content:center;">
+      <svg viewBox="0 0 340 240" style="width:100%;max-width:320px;">
+        <defs><marker id="pr-arr" markerWidth="9" markerHeight="7" refX="7" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 z" fill="#1a5296"/></marker></defs>
+        <g stroke="#1a5296" stroke-width="2" fill="none" marker-end="url(#pr-arr)">
+          <line x1="95" y1="70" x2="205" y2="60"/>
+          <line x1="235" y1="85" x2="185" y2="165"/>
+          <line x1="150" y1="185" x2="90" y2="105"/>
+          <line x1="112" y1="90" x2="152" y2="160"/>
+        </g>
+        <circle cx="75" cy="75" r="34" fill="#003876"/>
+        <circle cx="240" cy="60" r="26" fill="#f4f6f9" stroke="#003876" stroke-width="2.5"/>
+        <circle cx="170" cy="185" r="30" fill="#1a5296"/>
+        <g font-size="14" text-anchor="middle" font-weight="700">
+          <text x="75" y="80" fill="#ffffff">.45</text>
+          <text x="240" y="65" fill="#003876">.20</text>
+          <text x="170" y="190" fill="#ffffff">.35</text>
+        </g>
+        <text x="170" y="232" font-size="14" fill="#666" text-anchor="middle">node size ~ stationary mass</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 08 — LIMITING DISTRIBUTIONS ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">08</div>
+  <h1>Limiting Distributions</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Limits are stationary</p>
+</div>
+
+<!-- Limiting definition -->
+<div class="slide">
+  <h2>Definition &mdash; Limiting Distribution</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (limiting distribution).</h3>
+    <p>If the limit exists,</p>
+    <div class="math-block" style="margin:8px 0">$$\pi_\infty \;=\; \lim_{t \to \infty} \pi_t$$</div>
+  </div>
+  <ul>
+    <li>Entry-wise limit of the vectors $\pi_t = P^t \pi_0$</li>
+    <li>May depend on the initial distribution $\pi_0$</li>
+  </ul>
+</div>
+
+<!-- Caveat: may not exist -->
+<div class="slide">
+  <h2>Caveat &mdash; The Limit May Not Exist</h2>
+  <div class="divider"></div>
+  <p>Binary chain at the excluded extreme $\alpha = 1$ (always flip), as an illustration:</p>
+  <div class="math-block" style="margin:8px 0">$$\pi_0 = \begin{bmatrix} 1 \\ 0 \end{bmatrix}
+    \;\to\; \begin{bmatrix} 0 \\ 1 \end{bmatrix}
+    \;\to\; \begin{bmatrix} 1 \\ 0 \end{bmatrix}
+    \;\to\; \begin{bmatrix} 0 \\ 1 \end{bmatrix} \;\to\; \cdots$$</div>
+  <ul>
+    <li>Oscillates forever: <strong>no limit</strong> (a periodic chain)</li>
+    <li>Hence the "if it exists" in the definition</li>
+  </ul>
+</div>
+
+<!-- Limiting is stationary theorem -->
+<div class="slide">
+  <h2>Theorem &mdash; Limits Are Stationary</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 4 (limiting $\Rightarrow$ stationary).</h3>
+    <p>If the limiting distribution $\pi_\infty$ exists, then it is a stationary distribution:</p>
+    <div class="math-block" style="margin:8px 0">$$\pi_\infty = P\,\pi_\infty$$</div>
+  </div>
+  <p class="muted">Wherever a chain settles, it must stand still.</p>
+</div>
+
+<!-- Limiting proof -->
+<div class="slide">
+  <h2>Limits Are Stationary &mdash; Proof</h2>
+  <div class="divider"></div>
+  <p>Take $t \to \infty$ on both sides of Theorem 1:</p>
+  <div class="math-block">$$\begin{aligned}
+    \pi_{t+1} &\;=\; P\,\pi_t \\[4pt]
+    \lim_{t\to\infty} \pi_{t+1} &\stackrel{(\text{same sequence})}{=} \pi_\infty, \qquad
+    \lim_{t\to\infty} P\,\pi_t \stackrel{(P \text{ fixed, entries linear})}{=} P\,\pi_\infty \\[4pt]
+    \pi_\infty &\;=\; P\,\pi_\infty \qquad \blacksquare
+  \end{aligned}$$</div>
+  <p class="muted">Left side: the shifted sequence has the same limit. Right side: finite sums of limits.</p>
+</div>
+
+<!-- Limiting implication -->
+<div class="slide">
+  <h2>Limits Are Stationary &mdash; Implication</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Candidates for long-run behavior: <strong>only</strong> the solutions of $\pi = P\pi$</li>
+    <li>No simulation needed: solve an <strong>eigenvector equation</strong></li>
+    <li>Converse can fail: stationary $\pi^\star$ may exist, yet no limit ($\alpha = 1$)</li>
+  </ul>
+  <div class="highlight">
+    <p>To know where a chain can end up, run linear algebra, not the chain.</p>
+  </div>
+</div>
+
+<!-- Closed form setup -->
+<div class="slide">
+  <h2>How Fast? &mdash; Decompose the Start</h2>
+  <div class="divider"></div>
+  <p>Binary chain: eigenvectors $[\tfrac12, \tfrac12]^\top$ ($\lambda = 1$) and $[1, -1]^\top$ ($\lambda = 1 - 2\alpha$)</p>
+  <p>Write the pinned start in that basis:</p>
+  <div class="math-block" style="margin:8px 0">$$\pi_0 = \begin{bmatrix} 1 \\ 0 \end{bmatrix}
+    = \underbrace{\begin{bmatrix} \tfrac12 \\[2pt] \tfrac12 \end{bmatrix}}_{\pi^\star}
+    + \; \tfrac12 \underbrace{\begin{bmatrix} 1 \\ -1 \end{bmatrix}}_{\text{error direction}}$$</div>
+  <p class="muted">Check: $\tfrac12 + \tfrac12 = 1$ and $\tfrac12 - \tfrac12 = 0$. &#10003;</p>
+</div>
+
+<!-- Closed form apply -->
+<div class="slide">
+  <h2>How Fast? &mdash; Apply $P^t$</h2>
+  <div class="divider"></div>
+  <p>$P$ fixes $\pi^\star$ and rescales the error direction by its eigenvalue:</p>
+  <div class="math-block">$$\begin{aligned}
+    \pi_t = P^t \pi_0
+    &\stackrel{(\text{linearity})}{=} P^t \pi^\star + \tfrac12\, P^t \begin{bmatrix} 1 \\ -1 \end{bmatrix} \\[4pt]
+    &\stackrel{(\text{eigen})}{=} \pi^\star + \tfrac12\, (1 - 2\alpha)^t \begin{bmatrix} 1 \\ -1 \end{bmatrix}
+  \end{aligned}$$</div>
+  <p class="muted">Each multiplication by $P$: one more factor of $(1 - 2\alpha)$ on the error.</p>
+</div>
+
+<!-- Rate of convergence -->
+<div class="slide">
+  <h2>How Fast? &mdash; Geometric Convergence</h2>
+  <div class="divider"></div>
+  <p>At $\alpha = \tfrac14$: error factor $1 - 2\alpha = \tfrac12$</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr(X_t = 0) = \tfrac12 + \tfrac12 \left(\tfrac12\right)^t:
+    \quad 1, \; \tfrac34, \; \tfrac58, \; \tfrac{9}{16}, \; \tfrac{17}{32}, \dots$$</div>
+  <ul>
+    <li>Exactly the Section 05 table: mystery solved</li>
+    <li>Second eigenvalue = <strong>speed of forgetting</strong> the start</li>
+  </ul>
+  <div class="highlight">
+    <p>Eigenvalue $1$: where the chain settles. The <strong>next-largest</strong> eigenvalue: how fast.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 09 — DISCRETE DIFFUSION ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">09</div>
+  <h1>Discrete Diffusion</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Noise forward, learn backward</p>
+</div>
+
+<!-- Idea -->
+<div class="slide">
+  <h2>Idea &mdash; Destroy, Then Learn to Rebuild</h2>
+  <div class="divider"></div>
+  <p>Start from data: $X_0 \sim p_0$ (the data distribution)</p>
+  <ul>
+    <li><strong>Forward</strong>: corrupt step by step with a Markov chain</li>
+    <li><strong>Backward</strong>: train a network to undo one step</li>
+    <li><strong>Generate</strong>: start from pure noise, undo repeatedly</li>
+  </ul>
+  <div class="highlight">
+    <p>Today's chain machinery tells us exactly <strong>what "pure noise" is</strong>: the limiting distribution.</p>
+  </div>
+</div>
+
+<!-- Noising matrix -->
+<div class="slide">
+  <h2>The Noising Matrix</h2>
+  <div class="divider"></div>
+  <p>States $\{1, \dots, n\}$; keep with prob. $1 - \epsilon$, else jump uniformly:</p>
+  <div class="math-block" style="margin:8px 0">$$P = \begin{bmatrix}
+    1-\epsilon & \tfrac{\epsilon}{n-1} & \cdots & \tfrac{\epsilon}{n-1} \\[2pt]
+    \tfrac{\epsilon}{n-1} & 1-\epsilon & \cdots & \tfrac{\epsilon}{n-1} \\
+    \vdots & & \ddots & \vdots \\
+    \tfrac{\epsilon}{n-1} & \tfrac{\epsilon}{n-1} & \cdots & 1-\epsilon
+  \end{bmatrix}$$</div>
+  <p class="muted">The forward process: a 1st-order Markov chain, $\pi_{t+1} = P\pi_t$.</p>
+</div>
+
+<!-- Sanity checks -->
+<div class="slide">
+  <h2>Noising Matrix &mdash; Sanity Checks</h2>
+  <div class="divider"></div>
+  <p>Column sums:</p>
+  <div class="math-block" style="margin:8px 0">$$(1 - \epsilon) + (n-1)\cdot\tfrac{\epsilon}{n-1} = 1
+    \qquad \checkmark \;\text{ (stochastic)}$$</div>
+  <p>Symmetry:</p>
+  <div class="math-block" style="margin:8px 0">$$P_{u,v} = P_{v,u} \;=\; \tfrac{\epsilon}{n-1}
+    \;\;\text{ for } u \neq v \qquad \checkmark \;\text{ (symmetric)}$$</div>
+</div>
+
+<!-- Uniform stationary -->
+<div class="slide">
+  <h2>Pure Noise = Uniform</h2>
+  <div class="divider"></div>
+  <p>$P$ is symmetric: the Section 07 exercise applies directly</p>
+  <div class="math-block" style="margin:8px 0">$$\pi^\star = \begin{bmatrix} \tfrac1n \\ \vdots \\ \tfrac1n \end{bmatrix},
+    \qquad \pi_\infty = \pi^\star \;\text{ (uniform)}$$</div>
+  <ul>
+    <li>Limiting distribution: <strong>uniform</strong>, whatever the data $p_0$ was</li>
+    <li>For large $N$: $\pi_N \approx \pi^\star$, and $\pi_N$ is <strong>easy to sample</strong></li>
+  </ul>
+</div>
+
+<!-- Forward chain picture -->
+<div class="slide">
+  <h2>Forward Chain &mdash; Data Dissolves</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 760 200" style="width:100%;max-width:800px;">
+      <defs><marker id="df-arr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
+      <g>
+        <rect x="40" y="30" width="120" height="120" rx="8" fill="#ffffff" stroke="#003876" stroke-width="2.5"/>
+        <g fill="#003876">
+          <rect x="50" y="40" width="25" height="25"/><rect x="78" y="40" width="25" height="25"/><rect x="106" y="40" width="25" height="25"/>
+          <rect x="50" y="68" width="25" height="25"/><rect x="50" y="96" width="25" height="25"/><rect x="78" y="96" width="25" height="25"/>
+          <rect x="50" y="124" width="25" height="25"/>
+        </g>
+      </g>
+      <line x1="170" y1="90" x2="240" y2="90" stroke="#1a5296" stroke-width="2.5" marker-end="url(#df-arr)"/>
+      <text x="205" y="75" font-size="15" fill="#666" text-anchor="middle">P</text>
+      <g>
+        <rect x="250" y="30" width="120" height="120" rx="8" fill="#ffffff" stroke="#003876" stroke-width="2.5"/>
+        <g fill="#003876">
+          <rect x="260" y="40" width="25" height="25"/><rect x="316" y="40" width="25" height="25"/>
+          <rect x="260" y="68" width="25" height="25"/><rect x="288" y="96" width="25" height="25"/>
+          <rect x="260" y="124" width="25" height="25"/><rect x="316" y="124" width="25" height="25"/>
+        </g>
+      </g>
+      <line x1="380" y1="90" x2="450" y2="90" stroke="#1a5296" stroke-width="2.5" marker-end="url(#df-arr)"/>
+      <text x="415" y="75" font-size="15" fill="#666" text-anchor="middle">&#8943;</text>
+      <g>
+        <rect x="460" y="30" width="120" height="120" rx="8" fill="#ffffff" stroke="#003876" stroke-width="2.5"/>
+        <g fill="#003876">
+          <rect x="498" y="40" width="25" height="25"/><rect x="470" y="68" width="25" height="25"/>
+          <rect x="526" y="68" width="25" height="25"/><rect x="498" y="96" width="25" height="25"/>
+          <rect x="470" y="124" width="25" height="25"/><rect x="526" y="124" width="25" height="25"/>
+        </g>
+      </g>
+      <line x1="590" y1="90" x2="660" y2="90" stroke="#1a5296" stroke-width="2.5" marker-end="url(#df-arr)"/>
+      <text x="625" y="75" font-size="15" fill="#666" text-anchor="middle">P</text>
+      <text x="700" y="85" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">X<tspan dy="4" font-size="12">N</tspan></text>
+      <text x="700" y="108" font-size="14" fill="#666" text-anchor="middle">~ uniform</text>
+      <g font-size="15" fill="#666" text-anchor="middle">
+        <text x="100" y="175">X<tspan dy="4" font-size="11">0</tspan><tspan dy="-4"> ~ p</tspan><tspan dy="4" font-size="11">0</tspan><tspan dy="-4"> (data)</tspan></text>
+        <text x="310" y="175">X<tspan dy="4" font-size="11">1</tspan></text>
+        <text x="520" y="175">X<tspan dy="4" font-size="11">t</tspan></text>
+      </g>
+    </svg>
+  </div>
+  <p>Each step flips symbols with prob. $\epsilon$: structure <strong>dissolves into uniform noise</strong></p>
+</div>
+
+<!-- Denoiser -->
+<div class="slide">
+  <h2>Learning to Denoise</h2>
+  <div class="divider"></div>
+  <p>Train a neural network to <strong>undo one step</strong>:</p>
+  <div class="math-block" style="margin:8px 0">$$X_t \;\approx\; f_\theta(X_{t+1}, \, t)$$</div>
+  <ul>
+    <li>Input: the noisier symbol $X_{t+1}$ and the step index $t$</li>
+    <li>Training data: free, from running the forward chain on real data</li>
+  </ul>
+  <p class="muted">One small denoising task per step, instead of one giant generation task.</p>
+</div>
+
+<!-- Generation algorithm -->
+<div class="slide">
+  <h2>Generation &mdash; Run the Chain Backwards</h2>
+  <div class="divider"></div>
+  <div class="prob04-algo">
+    <ol>
+      <li>Sample $\tilde{X}_N$ from the <strong>uniform</strong> distribution ($\approx \pi_N$, for large $N$)</li>
+      <li>For $t = N-1, \dots, 0$: &nbsp;$\tilde{X}_t = f_\theta(\tilde{X}_{t+1}, \, t)$</li>
+      <li>Output $\tilde{X}_0$: behaves like a fresh sample from $p_0$</li>
+    </ol>
+  </div>
+  <p class="muted" style="margin-top:12px;">Uniform noise in, data-like sample out.</p>
+</div>
+
+<!-- Why it works -->
+<div class="slide">
+  <h2>Why It Works &mdash; The Markov Picture</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Forward</strong>: limiting distribution uniform, so noise is a <strong>known, samplable</strong> start</li>
+    <li><strong>Backward</strong>: each learned step retraces one Markov transition</li>
+    <li>Chain length $N$: large enough that $\pi_N \approx \pi^\star$</li>
+  </ul>
+  <div class="highlight">
+    <p>Key idea of <strong>generative diffusion</strong>: the chain picks its noise distribution for free.</p>
+  </div>
+</div>
+
+<!-- ===== RECAP & BRIDGE ===== -->
+
+<!-- Recap chain -->
+<div class="slide">
+  <h2>Recap &mdash; Today's Chain</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    &P_{X^n} \stackrel{(\text{Markov})}{=} \textstyle\prod_i P_{X_i \mid X_{i-1}}, \qquad
+      \pi_i \stackrel{(\text{Thm 1})}{=} P\,\pi_{i-1}, \qquad
+      \pi_t \stackrel{(\text{Thm 2})}{=} P^t \pi_0 \\[6pt]
+    &\pi^\star \stackrel{(\text{def})}{=} P\,\pi^\star \;\;\text{(eigenvalue 1)}, \qquad
+      \pi_\infty \stackrel{(\text{Thm 4})}{=} P\,\pi_\infty
+  \end{aligned}$$</div>
+  <ul>
+    <li>Sequence models: i.i.d. &rarr; Markov &rarr; stationary &rarr; practical</li>
+    <li>Long-run behavior: an <strong>eigenvector computation</strong></li>
+  </ul>
+</div>
+
+<!-- Recap running examples -->
+<div class="slide">
+  <h2>Recap &mdash; The Running Examples</h2>
+  <div class="divider"></div>
+  <table>
+    <thead><tr><th>Chain</th><th>$P$</th><th>$\pi^\star$</th><th>Role</th></tr></thead>
+    <tbody>
+      <tr><td>Binary, flip $\alpha$</td><td>$2 \times 2$ symmetric</td><td>$[\tfrac12, \tfrac12]^\top$</td><td>every computation by hand</td></tr>
+      <tr><td>A / B / C rotate</td><td>$3 \times 3$</td><td>$[\tfrac13, \tfrac13, \tfrac13]^\top$</td><td>stationary process demo</td></tr>
+      <tr><td>Diffusion, $\epsilon$-mix</td><td>$n \times n$ symmetric</td><td>uniform</td><td>generative noising</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="margin-top:10px;">One story three times: symmetric chain, uniform fixed point, geometric forgetting.</p>
+</div>
+
+<!-- Bridge to prob05 -->
+<div class="slide">
+  <h2>Next &mdash; Averages of Many Draws</h2>
+  <div class="divider"></div>
+  <p>Today: where the <strong>distribution</strong> of $X_t$ settles</p>
+  <p>Next puzzle: what does the <strong>average</strong> of many draws do?</p>
+  <div class="math-block" style="margin:8px 0">$$\bar{X}_n = \frac{1}{n} \sum_{i=1}^{n} X_i
+    \;\;\longrightarrow\;\; ?$$</div>
+  <ul>
+    <li>How fast does an empirical mean concentrate?</li>
+    <li>Tools: Markov, Chebyshev, Chernoff inequalities</li>
+  </ul>
+  <div class="highlight">
+    <p>Next lecture: <strong>concentration of measure</strong>: why averages are trustworthy.</p>
+  </div>
+</div>
+
+<!-- Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$\pi^\star = P\,\pi^\star$</div>
+  <p class="big-word-sub">Questions?</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 99</div>
+
+</div><!-- end deck -->
+
+<script src="../../../reference/deck.js"></script>
+</body>
+</html>

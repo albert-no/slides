@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>opt04 &mdash; Stochastic Gradient Descent</title>
+
+<!-- Design system (canonical; all decks link to reference/). -->
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/deck.css">
+
+<!-- KaTeX for math rendering. -->
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+
+<style>
+.o4-algo { background:var(--light); border-left:3px solid var(--yonsei-blue); padding:16px 22px; border-radius:0 10px 10px 0; max-width:880px; margin:18px auto 0; }
+.o4-algo ol { margin:0; padding-left:0; list-style:none; counter-reset:step; }
+.o4-algo ol li { counter-increment:step; padding:8px 0 8px 56px; position:relative; line-height:1.45; }
+.o4-algo ol li::before { content:counter(step) "."; position:absolute; left:12px; top:8px;
+  font-weight:700; color:var(--yonsei-blue); width:36px; text-align:right; }
+.o4-algo ol li + li { border-top:1px solid var(--slate); }
+.o4-chain { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:10px 8px; margin:22px auto 0; max-width:1080px; }
+.o4-chain .step { background:var(--light); border:1px solid var(--slate); border-radius:10px; padding:10px 16px; text-align:center; line-height:1.35; }
+.o4-chain .step.hot { background:#eaf0f7; border-color:var(--yonsei-blue); }
+.o4-chain .arr { color:var(--yonsei-blue); font-weight:700; }
+</style>
+</head>
+<body data-brand-logo="../../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- SLIDE 1 — Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Deep Learning Math &middot; Lecture 13</div>
+  <h1>Stochastic<br>Gradient Descent</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Sample one gradient &mdash; train on millions</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;&middot;&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Fall 2026</p>
+</div>
+
+<!-- SLIDE 2 — Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list" style="display:grid;grid-auto-flow:column;grid-template-rows:repeat(5,auto);grid-template-columns:1fr 1fr;gap:14px 44px">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Why SGD?</div>
+        <div class="toc-sub">One step should not cost a full pass</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">The Finite-Sum Objective</div>
+        <div class="toc-sub">$N$ losses, one average; the running example</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">The Stochastic Gradient</div>
+        <div class="toc-sub">Sampled, unbiased, noisy</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">SGD by Hand</div>
+        <div class="toc-sub">Noisy vs clean descent paths</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Noise vs Progress</div>
+        <div class="toc-sub">The step-size dial</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">The $O(1/\sqrt{K})$ Theorem</div>
+        <div class="toc-sub">Full proof, averaged iterate</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">07</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Mini-Batching</div>
+        <div class="toc-sub">Variance &divide; $b$</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">08</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Strongly Convex SGD</div>
+        <div class="toc-sub">Decreasing steps: $O(\log k / k)$</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">09</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">In Practice</div>
+        <div class="toc-sub">Last iterate, epochs, descendants</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">10</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Closing the Course</div>
+        <div class="toc-sub">13 decks, one toolkit</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 01 — WHY SGD? ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Why SGD?</h1>
+  <div class="divider"></div>
+  <p class="subtitle">One step should not cost a full pass</p>
+</div>
+
+<!-- the bill -->
+<div class="slide">
+  <h2>The Bill for One GD Step</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\theta_{k+1} \;=\; \theta_k - \alpha\,\underbrace{\frac{1}{N}\sum_{i=1}^{N} \nabla \mathcal{L}_i(\theta_k)}_{N \text{ gradients, every step}}$$</div>
+  <ul>
+    <li>opt03's guarantees: all still true</li>
+    <li>The price tag: <strong>one step = one full pass</strong> over the data</li>
+  </ul>
+</div>
+
+<!-- N is millions -->
+<div class="slide">
+  <h2>And $N$ Is Millions</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Vision</h3>
+      <p>Millions of labeled images</p>
+      <p class="muted">one loss term each</p>
+    </div>
+    <div class="card">
+      <h3>Language models</h3>
+      <p>Web-scale training text</p>
+      <p class="muted">the notes' own example</p>
+    </div>
+    <div class="card">
+      <h3>Consequence</h3>
+      <p>Full $\nabla \mathcal{L}$: unaffordable per step</p>
+      <p class="muted">even once is a lot</p>
+    </div>
+  </div>
+</div>
+
+<!-- the idea -->
+<div class="slide">
+  <h2>The Idea &mdash; Sample, Don't Sum</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\text{pick one index } i_k \text{ at random:}\qquad
+    \nabla \mathcal{L}_{i_k}(\theta_k) \;\approx\; \nabla \mathcal{L}(\theta_k)$$</div>
+  <ul>
+    <li>One gradient per step &mdash; $N$ times cheaper</li>
+    <li>Wrong on every step, right <strong>on average</strong></li>
+  </ul>
+  <div class="highlight">
+    <p><strong>Trade exactness for cheapness.</strong> SGD is the training algorithm of deep learning.</p>
+  </div>
+</div>
+
+<!-- today's results -->
+<div class="slide">
+  <h2>Today's Four Results</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>Unbiasedness</h3>
+      <p>$\mathbb{E}[g_k] = \nabla \mathcal{L}(\theta_k)$ &mdash; sampling is honest</p>
+    </div>
+    <div>
+      <h3>Convex rate</h3>
+      <p>$O(1/\sqrt{K})$ for the averaged iterate &mdash; full proof</p>
+    </div>
+    <div>
+      <h3>Mini-batching</h3>
+      <p>$b$ samples: variance drops by $1/b$</p>
+    </div>
+    <div>
+      <h3>Strongly convex rate</h3>
+      <p>Decreasing steps: $O(\log k / k)$ &mdash; full proof</p>
+    </div>
+  </div>
+</div>
+
+<!-- route map -->
+<div class="slide">
+  <h2>Route Map</h2>
+  <div class="divider"></div>
+  <div class="o4-chain">
+    <div class="step">full pass<br><strong>too expensive</strong></div>
+    <div class="arr">$\rightarrow$</div>
+    <div class="step">sample $i_k$<br><strong>unbiased</strong>, variance $\sigma^2$</div>
+    <div class="arr">$\rightarrow$</div>
+    <div class="step">dial $\alpha$<br>noise vs progress</div>
+    <div class="arr">$\rightarrow$</div>
+    <div class="step hot">convex<br>$O(1/\sqrt{K})$</div>
+  </div>
+  <div class="o4-chain">
+    <div class="step">batch $b$<br>variance $\sigma^2/b$</div>
+    <div class="arr">$\rightarrow$</div>
+    <div class="step hot">$+\,\mu$, steps $\alpha_k \downarrow$<br>$O(\log k/k)$</div>
+    <div class="arr">$\rightarrow$</div>
+    <div class="step">close the course<br>13 decks, one map</div>
+  </div>
+  <p class="muted" style="text-align:center;margin-top:18px;">every box: stated, proved, computed by hand</p>
+</div>
+
+<!-- ===== SECTION 02 — FINITE-SUM OBJECTIVE ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>The Finite-Sum Objective</h1>
+  <div class="divider"></div>
+  <p class="subtitle">$N$ losses, one average; the running example</p>
+</div>
+
+<!-- finite sum -->
+<div class="slide">
+  <h2>The Finite-Sum Objective</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathcal{L}(\theta) \;=\; \frac{1}{N}\sum_{i=1}^{N} \mathcal{L}_i(\theta),
+    \qquad \mathcal{L}_i(\theta) = \ell\big(h_\theta(x^{(i)}),\, y^{(i)}\big)$$</div>
+  <ul>
+    <li>One term per data point &mdash; ERM, exactly as in opt02</li>
+    <li>Recall opt02: model $h_\theta$, loss $\ell$, minimize the empirical risk</li>
+  </ul>
+</div>
+
+<!-- full GD priced -->
+<div class="slide">
+  <h2>Full Gradient Descent, Priced</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\theta_{k+1} = \theta_k - \alpha\, \frac{1}{N}\sum_{i=1}^{N} \nabla \ell\big(h_{\theta_k}(x^{(i)}), y^{(i)}\big)$$</div>
+  <ul>
+    <li>Cost per step: $N$ backpropagations</li>
+    <li>$K$ steps: $K \times N$ gradient evaluations</li>
+  </ul>
+  <p class="muted">opt03's theory is unchanged &mdash; only the price changed</p>
+</div>
+
+<!-- running example -->
+<div class="slide">
+  <h2>Running Example &mdash; Three Losses</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathcal{L}_i(\theta) = \tfrac{1}{2}(\theta - c_i)^2,
+    \qquad c_1 = 0,\; c_2 = 3,\; c_3 = 6$$</div>
+  <div class="math-block" style="margin:8px 0">$$\mathcal{L}(\theta) = \frac{1}{3}\sum_{i=1}^{3} \mathcal{L}_i(\theta)
+    = \tfrac{1}{2}(\theta - 3)^2 + 3$$</div>
+  <ul>
+    <li>Minimizer $\theta^\star = 3$; optimal value $\mathcal{L}^\star = 3$</li>
+    <li>$N = 3$ &mdash; small enough to enumerate <strong>everything</strong></li>
+  </ul>
+</div>
+
+<!-- parabolas SVG -->
+<div class="slide">
+  <h2>Three Losses and Their Average</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:820px;margin:6px auto 0;">
+    <svg viewBox="0 0 640 360" style="width:100%;">
+      <line x1="40" y1="330" x2="610" y2="330" stroke="#c9d2da" stroke-width="2"/>
+      <!-- component parabolas, quadratic Bezier (exact) -->
+      <path d="M 70 258 Q 320 618 570 -822" fill="none" stroke="#c9d2da" stroke-width="2.5"/>
+      <path d="M 70 -120 Q 320 780 570 -120" fill="none" stroke="#c9d2da" stroke-width="2.5"/>
+      <path d="M 70 -822 Q 320 618 570 258" fill="none" stroke="#c9d2da" stroke-width="2.5"/>
+      <!-- average L, offset +3 -->
+      <path d="M 70 -228 Q 320 672 570 -228" fill="none" stroke="#003876" stroke-width="3.5"/>
+      <circle cx="170" cy="330" r="5" fill="#5a6673"/>
+      <circle cx="320" cy="330" r="5" fill="#5a6673"/>
+      <circle cx="470" cy="330" r="5" fill="#5a6673"/>
+      <circle cx="320" cy="222" r="6" fill="#003876"/>
+      <text x="150" y="352" font-size="17" fill="#5a6673">c1 = 0</text>
+      <text x="300" y="352" font-size="17" fill="#5a6673">c2 = 3</text>
+      <text x="450" y="352" font-size="17" fill="#5a6673">c3 = 6</text>
+      <text x="336" y="216" font-size="18" fill="#003876" font-weight="700">L (average), min at 3</text>
+      <text x="80" y="120" font-size="17" fill="#8a949e">L1</text>
+      <text x="250" y="60" font-size="17" fill="#8a949e">L2</text>
+      <text x="545" y="120" font-size="17" fill="#8a949e">L3</text>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">each data point pulls toward its own $c_i$; the average settles at $3$</p>
+</div>
+
+<!-- full gradient by hand -->
+<div class="slide">
+  <h2>The Full Gradient by Hand</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\nabla \mathcal{L}_i(\theta) = \theta - c_i,
+    \qquad \nabla \mathcal{L}(\theta) = \theta - 3$$</div>
+  <table>
+    <thead>
+      <tr><th>at &theta; = 0</th><th>i = 1</th><th>i = 2</th><th>i = 3</th><th>average</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span style="text-transform:none">$\nabla \mathcal{L}_i(0)$</span></td><td>$0$</td><td>$-3$</td><td>$-6$</td><td>$\mathbf{-3}$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">full gradient at $0$: also $-3$ &mdash; the average of the three</p>
+</div>
+
+<!-- one number to watch -->
+<div class="slide">
+  <h2>One Number to Watch</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathcal{L}(\theta) - \mathcal{L}^\star \;=\; \tfrac{1}{2}(\theta - 3)^2$$</div>
+  <ul>
+    <li>The <strong>gap</strong>: how much loss is left on the table</li>
+    <li>Every table today reports it &mdash; theorems bound its expectation</li>
+  </ul>
+</div>
+
+<!-- ===== SECTION 03 — THE STOCHASTIC GRADIENT ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>The Stochastic Gradient</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Sampled, unbiased, noisy</p>
+</div>
+
+<!-- SGD algorithm -->
+<div class="slide">
+  <h2>The SGD Update</h2>
+  <div class="divider"></div>
+  <div class="o4-algo">
+    <ol>
+      <li>Sample an index $i_k$ uniformly from $\{1, \dots, N\}$</li>
+      <li>Compute <strong>one</strong> gradient: $g_k = \nabla \mathcal{L}_{i_k}(\theta_k)$</li>
+      <li>Step: $\theta_{k+1} = \theta_k - \alpha\, g_k$</li>
+    </ol>
+  </div>
+  <p class="muted" style="margin-top:14px;">cost per step: $1$ gradient instead of $N$</p>
+</div>
+
+<!-- which gradient -->
+<div class="slide">
+  <h2>Which Gradient Do You Get?</h2>
+  <div class="divider"></div>
+  <p>Running example at $\theta = 0$: three equally likely outcomes</p>
+  <div style="width:100%;max-width:780px;margin:6px auto 0;">
+    <svg viewBox="0 0 640 220" style="width:100%;">
+      <line x1="60" y1="110" x2="600" y2="110" stroke="#c9d2da" stroke-width="2"/>
+      <line x1="560" y1="102" x2="560" y2="118" stroke="#5a6673" stroke-width="2"/>
+      <line x1="320" y1="102" x2="320" y2="118" stroke="#5a6673" stroke-width="2"/>
+      <line x1="80" y1="102" x2="80" y2="118" stroke="#5a6673" stroke-width="2"/>
+      <text x="553" y="140" font-size="17" fill="#5a6673">0</text>
+      <text x="308" y="140" font-size="17" fill="#5a6673">-3</text>
+      <text x="68" y="140" font-size="17" fill="#5a6673">-6</text>
+      <!-- three candidate gradient values -->
+      <circle cx="560" cy="80" r="7" fill="#8a949e"/>
+      <circle cx="320" cy="80" r="7" fill="#8a949e"/>
+      <circle cx="80" cy="80" r="7" fill="#8a949e"/>
+      <text x="530" y="58" font-size="16" fill="#8a949e">g = 0 (i=1)</text>
+      <text x="288" y="58" font-size="16" fill="#8a949e">g = -3 (i=2)</text>
+      <text x="50" y="58" font-size="16" fill="#8a949e">g = -6 (i=3)</text>
+      <!-- mean marker -->
+      <line x1="320" y1="150" x2="320" y2="180" stroke="#003876" stroke-width="3"/>
+      <text x="334" y="176" font-size="17" fill="#003876" font-weight="700">mean = full gradient = -3</text>
+      <text x="335" y="200" font-size="15" fill="#5a6673">each with probability 1/3</text>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">a random variable whose average is the truth</p>
+</div>
+
+<!-- TR expectation -->
+<div class="slide">
+  <h2>Technique Review &mdash; Uniform Expectation</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (prob01).</strong> Discrete expectation:
+    $\mathbb{E}[X] = \sum_x x\, p(x)$</p>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$i \sim \mathrm{Unif}\{1,\dots,N\}:
+    \qquad \mathbb{E}\big[a_{i}\big] = \sum_{i=1}^{N} \frac{1}{N}\, a_i$$</div>
+  <p class="muted">a uniform index turns a sum into an expectation &mdash; and back</p>
+</div>
+
+<!-- Thm 1 -->
+<div class="slide">
+  <h2>Theorem 1 &mdash; Unbiasedness</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 1 (SGD is unbiased)</h3>
+    <p>$i_k \sim \mathrm{Unif}\{1,\dots,N\}$, independent of the past. Then for any $\theta$:</p>
+    <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[\nabla \mathcal{L}_{i_k}(\theta)\big]
+      \;=\; \frac{1}{N}\sum_{i=1}^{N} \nabla \mathcal{L}_i(\theta) \;=\; \nabla \mathcal{L}(\theta)$$</div>
+  </div>
+  <p class="muted">"wrong every step, right on average" &mdash; made precise</p>
+</div>
+
+<!-- proof -->
+<div class="slide">
+  <h2>Proof</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[\nabla \mathcal{L}_{i_k}(\theta)\big]
+    \;\stackrel{\text{(prob01)}}{=}\; \sum_{i=1}^{N} \mathbb{P}(i_k = i)\, \nabla \mathcal{L}_i(\theta)
+    \;\stackrel{\text{(unif)}}{=}\; \frac{1}{N}\sum_{i=1}^{N} \nabla \mathcal{L}_i(\theta)
+    \;=\; \nabla \mathcal{L}(\theta) \qquad \blacksquare$$</div>
+  <ul>
+    <li>Two lines &mdash; the design <em>makes</em> it true</li>
+    <li>Uniform weights $1/N$ match the average in $\mathcal{L}$ exactly</li>
+  </ul>
+</div>
+
+<!-- worked check -->
+<div class="slide">
+  <h2>Worked Check &mdash; Running Example</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>point</th><th>possible g (prob 1/3 each)</th><th>mean of g</th><th>true gradient</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>$\theta = 0$</td><td>$\{0, -3, -6\}$</td><td>$-3$</td><td>$-3$ ✓</td></tr>
+      <tr><td>$\theta = 3$</td><td>$\{3, 0, -3\}$</td><td>$0$</td><td>$0$ ✓</td></tr>
+      <tr><td>$\theta = 6$</td><td>$\{6, 3, 0\}$</td><td>$3$</td><td>$3$ ✓</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">unbiased at every point &mdash; the spread never changes</p>
+</div>
+
+<!-- unbiased but not zero -->
+<div class="slide">
+  <h2>Unbiased Is Not Zero</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\text{at } \theta^\star = 3:\qquad g \in \{3,\, 0,\, -3\},
+    \qquad \mathbb{E}[g] = 0,\qquad g \ne 0 \text{ w.p. } 2/3$$</div>
+  <ul>
+    <li>At the minimizer: the <strong>average</strong> pull vanishes, individual pulls don't</li>
+    <li>SGD cannot sit still &mdash; it gets kicked off $\theta^\star$</li>
+  </ul>
+  <div class="highlight">
+    <p><strong>The central tension of today.</strong> Noise never sleeps &mdash; even at the solution.</p>
+  </div>
+</div>
+
+<!-- noise decomposition -->
+<div class="slide">
+  <h2>Gradient = Truth + Noise</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$g_k = \nabla \mathcal{L}(\theta_k) + n_k,
+    \qquad \mathbb{E}[n_k] = 0,\qquad \operatorname{Var}(n_k) = \sigma^2$$</div>
+  <ul>
+    <li>Running example: $n \in \{3, 0, -3\}$ at <strong>every</strong> $\theta$</li>
+    <li>Recall variance (prob01): $\operatorname{Var}(n) = \mathbb{E}[n^2] = \frac{9 + 0 + 9}{3} = 6$</li>
+    <li>So here $\sigma^2 = 6$, uniformly in $\theta$</li>
+  </ul>
+</div>
+
+<!-- epochs -->
+<div class="slide">
+  <h2>In Practice &mdash; Epochs</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Practice: sample <strong>without replacement</strong> until data is exhausted</li>
+    <li>One full cycle = one <strong>epoch</strong>; then reshuffle, repeat</li>
+  </ul>
+  <p class="muted">today's analysis: with replacement (independent draws) &mdash; the clean case</p>
+</div>
+
+<!-- ===== SECTION 04 — SGD BY HAND ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>SGD by Hand</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Noisy vs clean descent paths</p>
+</div>
+
+<!-- setup of the run -->
+<div class="slide">
+  <h2>Four SGD Steps, $\alpha = 1/2$</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\theta_{k+1} = \theta_k - \tfrac{1}{2}(\theta_k - c_{i_k})
+    \;=\; \tfrac{1}{2}\theta_k + \tfrac{1}{2} c_{i_k}$$</div>
+  <ul>
+    <li>Each step: jump to the <strong>midpoint</strong> of $\theta_k$ and the sampled $c_{i_k}$</li>
+    <li>One fixed sampled run: draws $c = 6,\; 0,\; 3,\; 6$</li>
+  </ul>
+</div>
+
+<!-- SGD table -->
+<div class="slide">
+  <h2>The Run, Tabulated</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>k</th><th>drawn c</th><th>g_k</th><th>next iterate</th><th>gap at next</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>$0$</td><td>$6$</td><td>$-6$</td><td>$\theta_1 = 3$</td><td>$0$</td></tr>
+      <tr><td>$1$</td><td>$0$</td><td>$3$</td><td>$\theta_2 = 1.5$</td><td>$1.125$</td></tr>
+      <tr><td>$2$</td><td>$3$</td><td>$-1.5$</td><td>$\theta_3 = 2.25$</td><td>$0.281$</td></tr>
+      <tr><td>$3$</td><td>$6$</td><td>$-3.75$</td><td>$\theta_4 = 4.125$</td><td>$0.633$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">start $\theta_0 = 0$ (gap $4.5$) &mdash; hits $\theta^\star$ at $k=1$, then gets kicked away</p>
+</div>
+
+<!-- GD comparison -->
+<div class="slide">
+  <h2>GD on the Same Problem</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>k</th><th>GD iterate</th><th>GD gap</th><th>SGD iterate</th><th>SGD gap</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>$1$</td><td>$1.5$</td><td>$1.125$</td><td>$3$</td><td>$0$</td></tr>
+      <tr><td>$2$</td><td>$2.25$</td><td>$0.281$</td><td>$1.5$</td><td>$1.125$</td></tr>
+      <tr><td>$3$</td><td>$2.625$</td><td>$0.070$</td><td>$2.25$</td><td>$0.281$</td></tr>
+      <tr><td>$4$</td><td>$2.8125$</td><td>$0.018$</td><td>$4.125$</td><td>$0.633$</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>GD: monotone, gap $\times\, 1/4$ per step &mdash; but each step costs $N$ gradients</li>
+    <li>SGD: lucky, unlucky, never settled &mdash; at $1/N$ the price</li>
+  </ul>
+</div>
+
+<!-- 1-D path chart -->
+<div class="slide">
+  <h2>The Two Paths</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:820px;margin:6px auto 0;">
+    <svg viewBox="0 0 640 360" style="width:100%;">
+      <line x1="80" y1="330" x2="600" y2="330" stroke="#c9d2da" stroke-width="2"/>
+      <line x1="80" y1="330" x2="80" y2="40" stroke="#c9d2da" stroke-width="2"/>
+      <line x1="80" y1="140" x2="600" y2="140" stroke="#2e8b57" stroke-width="2" stroke-dasharray="7 6"/>
+      <text x="540" y="132" font-size="16" fill="#2e8b57">target 3</text>
+      <!-- GD path -->
+      <polyline points="80,320 200,230 320,185 440,162.5 560,151.2" fill="none" stroke="#8a949e" stroke-width="3"/>
+      <circle cx="80" cy="320" r="5" fill="#8a949e"/><circle cx="200" cy="230" r="5" fill="#8a949e"/>
+      <circle cx="320" cy="185" r="5" fill="#8a949e"/><circle cx="440" cy="162.5" r="5" fill="#8a949e"/>
+      <circle cx="560" cy="151.2" r="5" fill="#8a949e"/>
+      <!-- SGD path -->
+      <polyline points="80,320 200,140 320,230 440,185 560,72.5" fill="none" stroke="#003876" stroke-width="3.5"/>
+      <circle cx="80" cy="320" r="6" fill="#003876"/><circle cx="200" cy="140" r="6" fill="#003876"/>
+      <circle cx="320" cy="230" r="6" fill="#003876"/><circle cx="440" cy="185" r="6" fill="#003876"/>
+      <circle cx="560" cy="72.5" r="6" fill="#003876"/>
+      <text x="470" y="60" font-size="17" fill="#003876" font-weight="700">SGD: jagged</text>
+      <text x="470" y="192" font-size="17" fill="#5a6673">GD: smooth</text>
+      <text x="70" y="352" font-size="16" fill="#5a6673">k=0</text>
+      <text x="550" y="352" font-size="16" fill="#5a6673">k=4</text>
+      <text x="40" y="330" font-size="16" fill="#5a6673">0</text>
+      <text x="40" y="145" font-size="16" fill="#5a6673">3</text>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">iterate value vs step &mdash; same $\alpha = 1/2$, same problem</p>
+</div>
+
+<!-- 2D setup -->
+<div class="slide">
+  <h2>Two Dimensions, Same Story</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathcal{L}_i(\theta) = \tfrac{1}{2}\lVert \theta - c_i \rVert^2,
+    \qquad c_1 = (0,0),\; c_2 = (6,0),\; c_3 = (3,6)$$</div>
+  <ul>
+    <li>Average pull: toward the centroid $\bar{c} = (3, 2) = \theta^\star$</li>
+    <li>With $\alpha = 1/2$: SGD step = midpoint toward the <strong>sampled</strong> data point</li>
+  </ul>
+  <p class="muted">added 2-D companion (not in the notes) &mdash; same losses, one more dimension</p>
+</div>
+
+<!-- contour SVG -->
+<div class="slide">
+  <h2>Noisy vs Clean, on Contours</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:800px;margin:6px auto 0;">
+    <!-- scale: 26 px per unit, center (3,2) at (320,190); circular contours since Hessian = I -->
+    <svg viewBox="0 0 640 340" style="width:100%;">
+      <circle cx="320" cy="190" r="26" fill="none" stroke="#c9d2da" stroke-width="1.5"/>
+      <circle cx="320" cy="190" r="52" fill="none" stroke="#c9d2da" stroke-width="1.5"/>
+      <circle cx="320" cy="190" r="104" fill="none" stroke="#c9d2da" stroke-width="1.5"/>
+      <circle cx="320" cy="190" r="156" fill="none" stroke="#c9d2da" stroke-width="1.5"/>
+      <circle cx="320" cy="190" r="208" fill="none" stroke="#c9d2da" stroke-width="1.5"/>
+      <!-- data points -->
+      <rect x="236" y="236" width="12" height="12" fill="#8a949e"/>
+      <rect x="392" y="236" width="12" height="12" fill="#8a949e"/>
+      <rect x="314" y="80" width="12" height="12" fill="#8a949e"/>
+      <text x="216" y="266" font-size="15" fill="#8a949e">c1</text>
+      <text x="410" y="266" font-size="15" fill="#8a949e">c2</text>
+      <text x="332" y="92" font-size="15" fill="#8a949e">c3</text>
+      <!-- GD path (clean, green) -->
+      <polyline points="476,34 398,112 359,151 339.5,170.5 329.75,180.25 324.9,185.1"
+        fill="none" stroke="#2e8b57" stroke-width="3"/>
+      <circle cx="398" cy="112" r="4.5" fill="#2e8b57"/><circle cx="359" cy="151" r="4.5" fill="#2e8b57"/>
+      <circle cx="339.5" cy="170.5" r="4.5" fill="#2e8b57"/><circle cx="329.75" cy="180.25" r="4.5" fill="#2e8b57"/>
+      <!-- SGD path (noisy, blue) -->
+      <polyline points="476,34 437,138 339.5,190 329.75,138 363.9,190 302.9,216"
+        fill="none" stroke="#003876" stroke-width="3.5"/>
+      <circle cx="476" cy="34" r="6" fill="#003876"/>
+      <circle cx="437" cy="138" r="5" fill="#003876"/><circle cx="339.5" cy="190" r="5" fill="#003876"/>
+      <circle cx="329.75" cy="138" r="5" fill="#003876"/><circle cx="363.9" cy="190" r="5" fill="#003876"/>
+      <circle cx="302.9" cy="216" r="5" fill="#003876"/>
+      <!-- minimizer -->
+      <circle cx="320" cy="190" r="6" fill="#2e8b57"/>
+      <text x="490" y="30" font-size="16" fill="#5a6673">start (9,8)</text>
+      <text x="248" y="182" font-size="16" fill="#2e8b57" font-weight="700">min</text>
+      <text x="60" y="60" font-size="17" fill="#003876" font-weight="700">SGD (sampled pulls)</text>
+      <text x="60" y="86" font-size="17" fill="#2e8b57">GD (average pull)</text>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">draws $c_2, c_1, c_3, c_2, c_1$ &mdash; every point the exact midpoint, by hand</p>
+</div>
+
+<!-- reading the picture -->
+<div class="slide">
+  <h2>Reading the Picture</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Far from the minimum</h3>
+      <p>All three pulls point roughly the right way</p>
+      <p class="muted">noise barely matters &mdash; fast progress</p>
+    </div>
+    <div class="card">
+      <h3>Near the minimum</h3>
+      <p>The three pulls disagree &mdash; toward $c_1$? $c_2$? $c_3$?</p>
+      <p class="muted">noise dominates &mdash; the iterate wanders</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p><strong>Two phases.</strong> A progress phase, then a noise phase &mdash; the proof will price both.</p>
+  </div>
+</div>
+
+<!-- averaged iterate -->
+<div class="slide">
+  <h2>First Fix &mdash; Average the Iterates</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\bar{\theta}_4 = \tfrac{1}{5}(0 + 3 + 1.5 + 2.25 + 4.125) = 2.175$$</div>
+  <table>
+    <thead>
+      <tr><th>candidate</th><th>value</th><th>gap</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>last iterate $\theta_4$</td><td>$4.125$</td><td>$0.633$</td></tr>
+      <tr><td>averaged iterate $\bar{\theta}_4$</td><td>$2.175$</td><td>$\mathbf{0.340}$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">averaging cancels bounce &mdash; the theorem in &sect;06 bounds exactly this average</p>
+</div>
+
+<!-- ===== SECTION 05 — NOISE VS PROGRESS ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Noise vs Progress</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The step-size dial</p>
+</div>
+
+<!-- small step run -->
+<div class="slide">
+  <h2>Same Draws, Small Step ($\alpha = 0.1$)</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>k</th><th>drawn c</th><th>iterate</th><th>gap</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>$1$</td><td>$6$</td><td>$0.6$</td><td>$2.88$</td></tr>
+      <tr><td>$2$</td><td>$0$</td><td>$0.54$</td><td>$3.03$</td></tr>
+      <tr><td>$3$</td><td>$3$</td><td>$0.786$</td><td>$2.45$</td></tr>
+      <tr><td>$4$</td><td>$6$</td><td>$1.307$</td><td>$1.43$</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>Kicks are tiny &mdash; but so is progress</li>
+    <li>$\alpha = 1/2$ reached the neighborhood of $3$ in one step</li>
+  </ul>
+</div>
+
+<!-- error recursion -->
+<div class="slide">
+  <h2>The Error Recursion</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$e_k = \theta_k - 3:\qquad
+    e_{k+1} \;=\; (1-\alpha)\, e_k \;+\; \alpha\, n_k,
+    \qquad n_k \in \{3, 0, -3\}$$</div>
+  <ul>
+    <li>Contraction $(1-\alpha)$ on the old error, fresh noise injected each step</li>
+    <li>$n_k$ independent of $e_k$ &mdash; the draw doesn't look at the iterate</li>
+  </ul>
+  <p class="muted">added illustration (not in the notes) &mdash; exact for the running example</p>
+</div>
+
+<!-- mean and variance -->
+<div class="slide">
+  <h2>Mean Dies, Variance Survives</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}[e_k] = (1-\alpha)^k\, e_0 \;\to\; 0$$</div>
+  <div class="math-block" style="margin:8px 0">$$v_{k+1} \stackrel{\text{(prob05: indep. sum)}}{=} (1-\alpha)^2 v_k + \alpha^2 \sigma^2
+    \;\;\to\;\; v_\infty = \frac{\alpha\, \sigma^2}{2 - \alpha}$$</div>
+  <ul>
+    <li>Recall prob05: independent terms &mdash; variances add</li>
+    <li>Fixed point: solve $v = (1-\alpha)^2 v + \alpha^2 \sigma^2$</li>
+  </ul>
+</div>
+
+<!-- noise floor numbers -->
+<div class="slide">
+  <h2>The Noise Floor, Numerically</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>step size</th><th>contraction per step</th><th>floor on E[error&sup2;]</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>$\alpha = 0.5$</td><td>$\times\, 0.25$</td><td>$\dfrac{0.5 \cdot 6}{1.5} = 2.0$</td></tr>
+      <tr><td>$\alpha = 0.1$</td><td>$\times\, 0.81$</td><td>$\dfrac{0.1 \cdot 6}{1.9} \approx 0.32$</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>Big step: race to the floor &mdash; a high floor</li>
+    <li>Small step: crawl to the floor &mdash; a low floor</li>
+  </ul>
+</div>
+
+<!-- noise floor SVG -->
+<div class="slide">
+  <h2>Racing to Different Floors</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:820px;margin:6px auto 0;">
+    <svg viewBox="0 0 640 360" style="width:100%;">
+      <line x1="60" y1="340" x2="600" y2="340" stroke="#c9d2da" stroke-width="2"/>
+      <line x1="60" y1="340" x2="60" y2="40" stroke="#c9d2da" stroke-width="2"/>
+      <!-- floors -->
+      <line x1="60" y1="270" x2="600" y2="270" stroke="#8a949e" stroke-width="1.5" stroke-dasharray="6 6"/>
+      <line x1="60" y1="320.5" x2="600" y2="320.5" stroke="#8a949e" stroke-width="1.5" stroke-dasharray="6 6"/>
+      <text x="450" y="262" font-size="15" fill="#8a949e">floor 2.0</text>
+      <text x="450" y="314" font-size="15" fill="#8a949e">floor 0.32</text>
+      <!-- alpha = 0.5 -->
+      <polyline points="60,60 77,217.5 94,256.9 111,266.7 128,269.2 145,269.8 200,270 300,270 400,270 570,270"
+        fill="none" stroke="#003876" stroke-width="3.5"/>
+      <!-- alpha = 0.1 -->
+      <polyline points="60,60 77,109.5 94,149.6 111,182 128,208.4 145,229.8 162,246.9 179,261 196,272.4 213,281.7 230,288.9 264,299.7 298,306.9 332,311.7 366,314.7 400,316.7 485,319.2 570,320.1"
+        fill="none" stroke="#2e8b57" stroke-width="3"/>
+      <text x="200" y="240" font-size="17" fill="#003876" font-weight="700">a = 0.5: fast, high floor</text>
+      <text x="290" y="140" font-size="17" fill="#2e8b57" font-weight="700">a = 0.1: slow, low floor</text>
+      <text x="20" y="66" font-size="15" fill="#5a6673">9</text>
+      <text x="20" y="344" font-size="15" fill="#5a6673">0</text>
+      <text x="300" y="359" font-size="15" fill="#5a6673">step k</text>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">$\mathbb{E}[e_k^2]$ from the exact recursion, $e_0 = -3$</p>
+</div>
+
+<!-- the dial -->
+<div class="slide">
+  <h2>The Step-Size Dial</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Turn $\alpha$ up</h3>
+      <p>Progress term shrinks fast</p>
+      <p class="muted">noise term grows &mdash; big floor</p>
+    </div>
+    <div class="card">
+      <h3>Turn $\alpha$ down</h3>
+      <p>Noise term shrinks &mdash; low floor</p>
+      <p class="muted">progress crawls</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p><strong>Balance the two.</strong> The convergence theorem picks $\alpha$ at exactly the balance point.</p>
+  </div>
+</div>
+
+<!-- escape plans -->
+<div class="slide">
+  <h2>Three Escape Plans</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Tune and average</h3>
+      <p>Fix $\alpha$ to the horizon $K$; average the iterates</p>
+      <p class="muted">&sect;06: $O(1/\sqrt{K})$</p>
+    </div>
+    <div class="card">
+      <h3>Shrink the noise</h3>
+      <p>Average $b$ samples per step</p>
+      <p class="muted">&sect;07: variance $\sigma^2/b$</p>
+    </div>
+    <div class="card">
+      <h3>Shrink the step</h3>
+      <p>Decreasing $\alpha_k$ &mdash; floor falls over time</p>
+      <p class="muted">&sect;08: $O(\log k / k)$</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 06 — THE O(1/sqrt K) THEOREM ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>The $O(1/\sqrt{K})$ Theorem</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Full proof, one idea per slide</p>
+</div>
+
+<!-- E_k -->
+<div class="slide">
+  <h2>Notation &mdash; Conditioning on the Past</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_k[\,\cdot\,] \;=\; \mathbb{E}\big[\,\cdot \;\big|\; \theta_0, \dots, \theta_k\big]$$</div>
+  <ul>
+    <li>Freeze the trajectory so far; average only over the fresh draw $i_k$</li>
+    <li>Recall conditional expectation (prob07) &mdash; a function of the past</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$\textbf{Assumption (unbiased):}\qquad \mathbb{E}_k[g_k] = \nabla \mathcal{L}(\theta_k)$$</div>
+  <p class="muted">uniform sampling delivers this &mdash; Theorem 1, conditioned on the past</p>
+</div>
+
+<!-- variance assumption -->
+<div class="slide">
+  <h2>The Variance Assumption, Honestly</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\textbf{Assumption (bounded variance):}\qquad
+    \mathbb{E}_k\big[\lVert g_k - \mathbb{E}_k[g_k] \rVert^2\big] \;\le\; \sigma^2 \quad \text{for all } k$$</div>
+  <ul>
+    <li>An <strong>assumption</strong>, not a theorem &mdash; it can fail</li>
+    <li>Running example: variance $= 6$ at every $\theta$, so $\sigma^2 = 6$ ✓</li>
+  </ul>
+  <p class="muted">for deep nets: taken on faith, checked empirically &mdash; be aware</p>
+</div>
+
+<!-- bounded gradients -->
+<div class="slide">
+  <h2>Bounded Gradients from Lipschitz</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (opt03).</strong> $\mathcal{L}$ is $G$-Lipschitz:
+    $\lvert \mathcal{L}(x) - \mathcal{L}(y) \rvert \le G \lVert x - y \rVert$
+    &mdash; equivalently $\lVert \nabla \mathcal{L} \rVert \le G$</p>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_k\big[\lVert g_k \rVert^2\big]
+    \;\stackrel{\text{(prob07: bias--variance)}}{=}\;
+    \underbrace{\lVert \nabla \mathcal{L}(\theta_k) \rVert^2}_{\le\, G^2}
+    + \underbrace{\operatorname{Var}_k(g_k)}_{\le\, \sigma^2}
+    \;\le\; G^2 + \sigma^2$$</div>
+  <p class="muted">notes write $L$ for this constant &mdash; renamed $G$ to dodge opt03's smoothness $L$</p>
+</div>
+
+<!-- running constants -->
+<div class="slide">
+  <h2>Running Example &mdash; the Constants</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>A quadratic is <strong>not</strong> globally Lipschitz &mdash; but the run stayed in $[0, 4.125]$</li>
+    <li>On $[-3, 9]$: $\lvert \nabla \mathcal{L} \rvert = \lvert \theta - 3 \rvert \le 6$, so take $G = 6$</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$G^2 + \sigma^2 = 36 + 6 = 42,
+    \qquad D = \lvert \theta_0 - \theta^\star \rvert = 3$$</div>
+  <p class="muted">honest caveat: constants valid on the interval the run lives in</p>
+</div>
+
+<!-- Thm 2 -->
+<div class="slide">
+  <h2>Theorem 2 &mdash; SGD on Convex Problems</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 2 ($O(1/\sqrt{K})$ rate)</h3>
+    <p>$\mathcal{L}$ convex, $G$-Lipschitz, minimizer $\theta^\star$; unbiased $g_k$ with variance $\le \sigma^2$; constant step</p>
+    <div class="math-block" style="margin:8px 0">$$\alpha = \frac{\lVert \theta_0 - \theta^\star \rVert}{\sqrt{G^2 + \sigma^2}\,\sqrt{K+1}}
+      \;\;\Longrightarrow\;\;
+      \mathbb{E}\big[\mathcal{L}(\bar{\theta}_K) - \mathcal{L}(\theta^\star)\big]
+      \;\le\; \frac{\sqrt{G^2 + \sigma^2}\; \lVert \theta_0 - \theta^\star \rVert}{\sqrt{K+1}}$$</div>
+    <p>for the averaged iterate $\displaystyle \bar{\theta}_K = \frac{1}{K+1} \sum_{k=0}^{K} \theta_k$</p>
+  </div>
+</div>
+
+<!-- reading the statement -->
+<div class="slide">
+  <h2>Reading the Statement</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Averaged</strong> iterate $\bar{\theta}_K$ &mdash; not the last one (&sect;04's fix)</li>
+    <li><strong>Expected</strong> gap &mdash; the guarantee averages over the sampling</li>
+    <li>$\alpha$ needs the horizon $K$ and distance $D$ &mdash; a theory dial</li>
+    <li>No smoothness needed &mdash; Lipschitz + convex suffice</li>
+  </ul>
+  <p class="muted">rate $O(1/\sqrt{K})$ &mdash; slower than GD's $O(1/K)$, but each step is $N\times$ cheaper</p>
+</div>
+
+<!-- proof overview -->
+<div class="slide">
+  <h2>Proof Overview</h2>
+  <div class="divider"></div>
+  <ol style="columns:2;column-gap:48px;">
+    <li><strong>Expand</strong> the squared distance after one step</li>
+    <li><strong>Unbiasedness</strong> under $\mathbb{E}_k$ &mdash; the true gradient appears</li>
+    <li><strong>Convexity floor</strong> &mdash; inner product $\ge$ gap <span class="muted">(opt03)</span></li>
+    <li><strong>Second moment</strong> $\le G^2 + \sigma^2$</li>
+    <li><strong>Tower</strong> &mdash; total expectation <span class="muted">(prob07)</span></li>
+    <li><strong>Telescope</strong> the sum over $k$ <span class="muted">(opt03)</span></li>
+    <li><strong>Balance</strong> the two terms with $\alpha$</li>
+    <li><strong>Jensen</strong> &mdash; pass to the averaged iterate <span class="muted">(prob01)</span></li>
+  </ol>
+</div>
+
+<!-- step 1 -->
+<div class="slide">
+  <h2>Step 1 &mdash; Expand the Square</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}\lVert \theta_{k+1} - \theta^\star \rVert^2
+    \;&\stackrel{\text{(update)}}{=}\; \lVert \theta_k - \alpha g_k - \theta^\star \rVert^2\\[4pt]
+    &=\; \lVert \theta_k - \theta^\star \rVert^2
+    - 2\alpha \langle g_k,\, \theta_k - \theta^\star \rangle
+    + \alpha^2 \lVert g_k \rVert^2\end{aligned}$$</div>
+  <ul>
+    <li>Pure algebra &mdash; nothing probabilistic yet</li>
+    <li>Every term still random through $g_k$</li>
+  </ul>
+</div>
+
+<!-- step 2 -->
+<div class="slide">
+  <h2>Step 2 &mdash; Condition on the Past</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_k \langle g_k,\, \theta_k - \theta^\star \rangle
+    \;\stackrel{(\theta_k \text{ frozen})}{=}\;
+    \langle \mathbb{E}_k[g_k],\, \theta_k - \theta^\star \rangle
+    \;\stackrel{\text{(unbiased)}}{=}\;
+    \langle \nabla \mathcal{L}(\theta_k),\, \theta_k - \theta^\star \rangle$$</div>
+  <ul>
+    <li>Under $\mathbb{E}_k$: $\theta_k - \theta^\star$ is a constant &mdash; slides out by linearity</li>
+    <li>The <strong>only</strong> place unbiasedness enters the proof</li>
+  </ul>
+</div>
+
+<!-- TR tangent floor -->
+<div class="slide">
+  <h2>Technique Review &mdash; the Tangent Floor</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (opt03).</strong> $\mathcal{L}$ convex:
+    $\mathcal{L}(y) \ge \mathcal{L}(x) + \langle \nabla \mathcal{L}(x),\, y - x \rangle$
+    &mdash; tangents stay below</p>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$y = \theta^\star,\; x = \theta_k:\qquad
+    \langle \nabla \mathcal{L}(\theta_k),\, \theta_k - \theta^\star \rangle
+    \;\ge\; \mathcal{L}(\theta_k) - \mathcal{L}(\theta^\star)$$</div>
+  <p class="muted">the inner product dominates the gap &mdash; same move as opt03's Theorem 8</p>
+</div>
+
+<!-- step 3+4 -->
+<div class="slide">
+  <h2>Steps 3 + 4 &mdash; the One-Step Inequality</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \mathbb{E}_k \lVert \theta_{k+1} - \theta^\star \rVert^2
+    &amp;\;=\; \lVert \theta_k - \theta^\star \rVert^2
+      - 2\alpha \langle \nabla \mathcal{L}(\theta_k), \theta_k - \theta^\star \rangle
+      + \alpha^2\, \mathbb{E}_k \lVert g_k \rVert^2 \\[4px]
+    &amp;\;\stackrel{\text{(floor, 2nd moment)}}{\le}\;
+      \lVert \theta_k - \theta^\star \rVert^2
+      - 2\alpha \big(\mathcal{L}(\theta_k) - \mathcal{L}(\theta^\star)\big)
+      + \alpha^2 (G^2 + \sigma^2)
+  \end{aligned}$$</div>
+  <p class="muted">both assumptions spent &mdash; the rest is bookkeeping</p>
+</div>
+
+<!-- reading the one-step -->
+<div class="slide">
+  <h2>Reading the One-Step Inequality</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_k \lVert \theta_{k+1} - \theta^\star \rVert^2
+    \;\le\; \lVert \theta_k - \theta^\star \rVert^2
+    \;-\; \underbrace{2\alpha \big(\mathcal{L}(\theta_k) - \mathcal{L}^\star\big)}_{\text{progress: } \propto\, \alpha}
+    \;+\; \underbrace{\alpha^2 (G^2 + \sigma^2)}_{\text{noise rent: } \propto\, \alpha^2}$$</div>
+  <ul>
+    <li>Each step: distance falls by the gap, rises by the rent</li>
+    <li>Small $\alpha$: rent $\alpha^2$ dies faster than progress $\alpha$ &mdash; hope!</li>
+  </ul>
+</div>
+
+<!-- TR tower -->
+<div class="slide">
+  <h2>Technique Review &mdash; Tower Property</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (prob07, Theorem 1).</strong> Tower property:
+    $\mathbb{E}\big[\mathbb{E}[X \mid Y]\big] = \mathbb{E}[X]$</p>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[\mathbb{E}_k[\,\cdot\,]\big] = \mathbb{E}[\,\cdot\,]
+    \qquad \text{(average over the past too)}$$</div>
+  <p class="muted">conditional statements become unconditional &mdash; one outer expectation</p>
+</div>
+
+<!-- step 5 -->
+<div class="slide">
+  <h2>Step 5 &mdash; Total Expectation</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E} \lVert \theta_{k+1} - \theta^\star \rVert^2
+    \;\stackrel{\text{(tower)}}{\le}\; \mathbb{E} \lVert \theta_k - \theta^\star \rVert^2
+    - 2\alpha\, \mathbb{E}\big[\mathcal{L}(\theta_k) - \mathcal{L}(\theta^\star)\big]
+    + \alpha^2 (G^2 + \sigma^2)$$</div>
+  <ul>
+    <li>Take $\mathbb{E}$ of both sides; tower collapses $\mathbb{E}\,\mathbb{E}_k$ to $\mathbb{E}$</li>
+    <li>Now an inequality between plain numbers, indexed by $k$</li>
+  </ul>
+</div>
+
+<!-- TR telescoping -->
+<div class="slide">
+  <h2>Technique Review &mdash; Telescoping</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (opt03).</strong> Telescoping sum:
+    $\sum_{k=0}^{K} (a_k - a_{k+1}) = a_0 - a_{K+1}$ &mdash; the middle cancels</p>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$a_k = \mathbb{E} \lVert \theta_k - \theta^\star \rVert^2:
+    \qquad \text{one-step inequalities stack into one global bound}$$</div>
+  <p class="muted">exactly the move that proved GD's $O(1/T)$ in opt03</p>
+</div>
+
+<!-- step 6 -->
+<div class="slide">
+  <h2>Step 6 &mdash; Sum and Telescope</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$2\alpha \sum_{k=0}^{K} \mathbb{E}\big[\mathcal{L}(\theta_k) - \mathcal{L}(\theta^\star)\big]
+    \;\le\; \underbrace{\lVert \theta_0 - \theta^\star \rVert^2 - \mathbb{E}\lVert \theta_{K+1} - \theta^\star \rVert^2}_{\text{telescoped}}
+    \;+\; (K+1)\, \alpha^2 (G^2 + \sigma^2)$$</div>
+  <ul>
+    <li>Sum the one-step inequality over $k = 0, \dots, K$; distances cancel in pairs</li>
+    <li>Drop $-\mathbb{E}\lVert \theta_{K+1} - \theta^\star \rVert^2 \le 0$ &mdash; only helps</li>
+  </ul>
+</div>
+
+<!-- step 7 -->
+<div class="slide">
+  <h2>Step 7 &mdash; the Two Terms Appear</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\frac{1}{K+1} \sum_{k=0}^{K} \mathbb{E}\big[\mathcal{L}(\theta_k) - \mathcal{L}(\theta^\star)\big]
+    \;\le\; \underbrace{\frac{\lVert \theta_0 - \theta^\star \rVert^2}{2\alpha (K+1)}}_{\text{progress term } \downarrow \text{ in } \alpha}
+    \;+\; \underbrace{\frac{\alpha}{2} (G^2 + \sigma^2)}_{\text{noise term } \uparrow \text{ in } \alpha}$$</div>
+  <ul>
+    <li>Divide by $2\alpha(K+1)$ &mdash; the average expected gap on the left</li>
+    <li>&sect;05's dial, now as a formula</li>
+  </ul>
+</div>
+
+<!-- TR balance -->
+<div class="slide">
+  <h2>Technique Review &mdash; Balancing Two Terms</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Tool.</strong> Minimize $\varphi(\alpha) = \dfrac{a}{\alpha} + b\,\alpha$ over $\alpha \gt 0$</p>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$\varphi'(\alpha) = -\frac{a}{\alpha^2} + b = 0
+    \;\;\Longrightarrow\;\; \alpha^\star = \sqrt{a/b},
+    \qquad \varphi(\alpha^\star) = 2\sqrt{ab}$$</div>
+  <ul>
+    <li>Optimum: the two terms are <strong>equal</strong> &mdash; perfectly balanced</li>
+  </ul>
+</div>
+
+<!-- step 8 -->
+<div class="slide">
+  <h2>Step 8 &mdash; Balance with $\alpha$</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$a = \frac{D^2}{2(K+1)},\;\; b = \frac{G^2+\sigma^2}{2}:
+    \qquad \alpha^\star = \frac{D}{\sqrt{G^2+\sigma^2}\,\sqrt{K+1}}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\text{value} \;=\; 2\sqrt{ab}
+    \;=\; \frac{\sqrt{G^2 + \sigma^2}\; D}{\sqrt{K+1}},
+    \qquad D = \lVert \theta_0 - \theta^\star \rVert$$</div>
+  <p class="muted">the $\sqrt{K+1}$ in the rate is born here &mdash; the price of balancing noise</p>
+</div>
+
+<!-- U curve -->
+<div class="slide">
+  <h2>The Balance Point, Drawn</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:820px;margin:6px auto 0;">
+    <svg viewBox="0 0 640 360" style="width:100%;">
+      <line x1="60" y1="340" x2="620" y2="340" stroke="#c9d2da" stroke-width="2"/>
+      <line x1="60" y1="340" x2="60" y2="30" stroke="#c9d2da" stroke-width="2"/>
+      <!-- progress term 0.045/alpha (dashed gray) -->
+      <polyline points="78,43 96,191.5 132,265.8 167,290 227,307.9 348,321.4 600,330.1"
+        fill="none" stroke="#8a949e" stroke-width="2" stroke-dasharray="6 5"/>
+      <!-- noise term 21 alpha (dashed gray) -->
+      <polyline points="78,336.5 600,236" fill="none" stroke="#8a949e" stroke-width="2" stroke-dasharray="6 5"/>
+      <!-- sum (blue U) -->
+      <polyline points="78,40 96,184.6 132,251.9 168,269.7 227,275.8 348,266 492,244.3 600,226.2"
+        fill="none" stroke="#003876" stroke-width="3.5"/>
+      <circle cx="227" cy="275.8" r="7" fill="#003876"/>
+      <line x1="227" y1="275.8" x2="227" y2="340" stroke="#003876" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <text x="196" y="359" font-size="16" fill="#003876" font-weight="700">a* = 0.046</text>
+      <text x="250" y="300" font-size="16" fill="#003876">min = 1.94</text>
+      <text x="120" y="120" font-size="16" fill="#8a949e">progress term</text>
+      <text x="430" y="220" font-size="16" fill="#8a949e">noise term</text>
+      <text x="380" y="290" font-size="17" fill="#003876" font-weight="700">sum: the bound</text>
+      <text x="560" y="359" font-size="15" fill="#5a6673">a</text>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">running example, $K = 99$: $\;0.045/\alpha + 21\alpha$ &mdash; equal terms at the bottom</p>
+</div>
+
+<!-- TR Jensen -->
+<div class="slide">
+  <h2>Technique Review &mdash; Jensen</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (prob01, Theorem 2).</strong> Jensen: convex $f$ pushed through an average only goes down:
+    $f\big(\tfrac{1}{n}\textstyle\sum_i x_i\big) \le \tfrac{1}{n}\textstyle\sum_i f(x_i)$</p>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$\mathcal{L}(\bar{\theta}_K)
+    = \mathcal{L}\Big(\frac{1}{K+1}\sum_{k=0}^K \theta_k\Big)
+    \;\le\; \frac{1}{K+1}\sum_{k=0}^K \mathcal{L}(\theta_k)$$</div>
+  <p class="muted">the average of the losses controls the loss of the average</p>
+</div>
+
+<!-- step 9 -->
+<div class="slide">
+  <h2>Step 9 &mdash; Pass to the Average</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[\mathcal{L}(\bar{\theta}_K) - \mathcal{L}(\theta^\star)\big]
+    \;\stackrel{\text{(Jensen)}}{\le}\;
+    \frac{1}{K+1}\sum_{k=0}^{K} \mathbb{E}\big[\mathcal{L}(\theta_k) - \mathcal{L}(\theta^\star)\big]
+    \;\stackrel{\text{(Step 8)}}{\le}\;
+    \frac{\sqrt{G^2+\sigma^2}\, D}{\sqrt{K+1}} \;\;\blacksquare$$</div>
+  <ul>
+    <li>Jensen inside the expectation, then linearity</li>
+    <li>The telescoped average is exactly what Step 7 bounded</li>
+  </ul>
+</div>
+
+<!-- proof summary -->
+<div class="slide">
+  <h2>Proof Summary &mdash; the Skeleton</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\text{expand}
+    \;\stackrel{\text{unbiased}}{\longrightarrow}\; \text{true gradient}
+    \;\stackrel{\text{convex}}{\longrightarrow}\; \text{gap}
+    \;\stackrel{\text{tower}}{\longrightarrow}\; \mathbb{E}
+    \;\stackrel{\text{telescope}}{\longrightarrow}\; \text{sum}
+    \;\stackrel{\text{balance}}{\longrightarrow}\; \sqrt{K}
+    \;\stackrel{\text{Jensen}}{\longrightarrow}\; \bar{\theta}_K$$</div>
+  <div class="highlight">
+    <p><strong>Key trick:</strong> pick $\alpha$ where progress and noise pay equally &mdash; $\sqrt{K}$ is the price.</p>
+  </div>
+</div>
+
+<!-- worked numbers -->
+<div class="slide">
+  <h2>Worked Numbers &mdash; Running Example</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$G^2 + \sigma^2 = 42,\;\; D = 3:
+    \qquad \text{bound} = \frac{19.44}{\sqrt{K+1}}$$</div>
+  <table>
+    <thead>
+      <tr><th>horizon K</th><th>step</th><th>guaranteed gap</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>$99$</td><td>$0.046$</td><td>$1.94$</td></tr>
+      <tr><td>$999$</td><td>$0.015$</td><td>$0.61$</td></tr>
+      <tr><td>$9999$</td><td>$0.005$</td><td>$0.19$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">slow &mdash; but every one of those steps costs a single gradient</p>
+</div>
+
+<!-- total work -->
+<div class="slide">
+  <h2>Why SGD Wins &mdash; Total Work</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>method</th><th>steps to gap &epsilon;</th><th>gradients per step</th><th>total gradients</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>GD <span class="muted">(opt03, Thm 8)</span></td><td><span style="text-transform:none">$O(1/\epsilon)$</span></td><td>$N$</td><td><span style="text-transform:none">$O(N/\epsilon)$</span></td></tr>
+      <tr><td>SGD <span class="muted">(Thm 2)</span></td><td><span style="text-transform:none">$O(1/\epsilon^2)$</span></td><td>$1$</td><td><span style="text-transform:none">$O(1/\epsilon^2)$</span></td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>SGD wins whenever $N \gg 1/\epsilon$ &mdash; and $N$ is <strong>millions</strong></li>
+  </ul>
+  <p class="muted">added arithmetic, from the two theorems &mdash; moderate accuracy is all training needs</p>
+</div>
+
+<!-- average vs last remark -->
+<div class="slide">
+  <h2>Remark &mdash; Average vs Last Iterate</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Theory (today)</h3>
+      <p>Bound holds for $\bar{\theta}_K$ &mdash; the running average</p>
+    </div>
+    <div class="card">
+      <h3>Practice</h3>
+      <p>Common: keep only the final iterate $\theta_K$</p>
+    </div>
+  </div>
+  <p class="muted">the notes flag this honestly &mdash; a real theory-practice gap to remember</p>
+</div>
+
+<!-- ===== SECTION 07 — MINI-BATCHING ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">07</div>
+  <h1>Mini-Batching</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Average $b$ samples: variance &divide; $b$</p>
+</div>
+
+<!-- minibatch update -->
+<div class="slide">
+  <h2>The Mini-Batch Update</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\theta_{k+1} \;=\; \theta_k - \alpha\, \frac{1}{b} \sum_{i \in I_k} \nabla \mathcal{L}_i(\theta_k),
+    \qquad I_k \subseteq \{1, \dots, N\},\;\; \lvert I_k \rvert = b \ll N$$</div>
+  <ul>
+    <li>A random batch of $b$ indices &mdash; between SGD ($b=1$) and GD ($b=N$)</li>
+    <li>What deep learning actually runs</li>
+  </ul>
+</div>
+
+<!-- still unbiased -->
+<div class="slide">
+  <h2>Still Unbiased</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\Big[\frac{1}{b} \sum_{j=1}^{b} \nabla \mathcal{L}_{i_j}(\theta)\Big]
+    \;\stackrel{\text{(linearity)}}{=}\; \frac{1}{b} \sum_{j=1}^{b} \mathbb{E}\big[\nabla \mathcal{L}_{i_j}(\theta)\big]
+    \;\stackrel{\text{(Thm 1)}}{=}\; \nabla \mathcal{L}(\theta)$$</div>
+  <ul>
+    <li>Each batch member is unbiased; the average of unbiased is unbiased</li>
+  </ul>
+</div>
+
+<!-- TR var of averages -->
+<div class="slide">
+  <h2>Technique Review &mdash; Variance of Averages</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (prob05).</strong> i.i.d. $X_1, \dots, X_b$ with variance $\sigma^2$:
+    $\operatorname{Var}(\bar{X}_b) = \dfrac{\sigma^2}{b}$</p>
+  </div>
+  <ul>
+    <li>Independence: variances add; averaging divides by $b^2$</li>
+    <li>The engine of prob05's law of large numbers &mdash; reused here verbatim</li>
+  </ul>
+</div>
+
+<!-- Thm 3 -->
+<div class="slide">
+  <h2>Theorem 3 &mdash; Variance &divide; $b$</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 3 (mini-batch variance)</h3>
+    <p>Batch of $b$ indices drawn i.i.d. uniform (with replacement); per-sample variance $\sigma^2$. Then</p>
+    <div class="math-block" style="margin:8px 0">$$\operatorname{Var}\Big(\frac{1}{b} \sum_{j=1}^{b} \nabla \mathcal{L}_{i_j}(\theta)\Big)
+      \;=\; \frac{\sigma^2}{b}$$</div>
+  </div>
+  <p class="muted">notes: subset sampling, variance even smaller &mdash; proved here: the i.i.d. case</p>
+</div>
+
+<!-- proof -->
+<div class="slide">
+  <h2>Proof</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$g^{(1)}, \dots, g^{(b)} \text{ i.i.d. copies of the single-sample gradient}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\operatorname{Var}\Big(\frac{1}{b}\sum_{j=1}^b g^{(j)}\Big)
+    \;\stackrel{\text{(indep.)}}{=}\; \frac{1}{b^2} \sum_{j=1}^b \operatorname{Var}\big(g^{(j)}\big)
+    \;=\; \frac{b\,\sigma^2}{b^2} \;=\; \frac{\sigma^2}{b} \qquad \blacksquare$$</div>
+  <p class="muted">prob05's variance-of-averages, applied to gradients</p>
+</div>
+
+<!-- worked b1 vs b3 -->
+<div class="slide">
+  <h2>Worked &mdash; $b = 1$ vs $b = 3$</h2>
+  <div class="divider"></div>
+  <p>Running example at $\theta = 0$, drawing with replacement:</p>
+  <table>
+    <thead>
+      <tr><th>batch size</th><th>possible batch gradients</th><th>variance</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>$b = 1$</td><td>$\{0, -3, -6\}$, each $1/3$</td><td>$6$</td></tr>
+      <tr><td>$b = 3$</td><td>means of $27$ triples: $0, -1, \dots, -6$</td><td>$6/3 = \mathbf{2}$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">all $27$ triples enumerable by hand &mdash; the mean concentrates at $-3$</p>
+</div>
+
+<!-- histogram SVG -->
+<div class="slide">
+  <h2>The Concentration, Drawn</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:860px;margin:6px auto 0;">
+    <svg viewBox="0 0 640 300" style="width:100%;">
+      <!-- left panel: b=1 -->
+      <line x1="40" y1="250" x2="280" y2="250" stroke="#c9d2da" stroke-width="2"/>
+      <rect x="60" y="70" width="40" height="180" fill="#8fa8c4"/>
+      <rect x="140" y="70" width="40" height="180" fill="#003876"/>
+      <rect x="220" y="70" width="40" height="180" fill="#8fa8c4"/>
+      <text x="70" y="272" font-size="15" fill="#5a6673">-6</text>
+      <text x="150" y="272" font-size="15" fill="#5a6673">-3</text>
+      <text x="234" y="272" font-size="15" fill="#5a6673">0</text>
+      <text x="100" y="40" font-size="17" fill="#1a1a1a" font-weight="700">b = 1, Var 6</text>
+      <!-- right panel: b=3, counts 1,3,6,7,6,3,1 of 27 -->
+      <line x1="360" y1="250" x2="620" y2="250" stroke="#c9d2da" stroke-width="2"/>
+      <rect x="368" y="230" width="24" height="20" fill="#8fa8c4"/>
+      <rect x="404" y="190" width="24" height="60" fill="#8fa8c4"/>
+      <rect x="440" y="130" width="24" height="120" fill="#8fa8c4"/>
+      <rect x="476" y="110" width="24" height="140" fill="#003876"/>
+      <rect x="512" y="130" width="24" height="120" fill="#8fa8c4"/>
+      <rect x="548" y="190" width="24" height="60" fill="#8fa8c4"/>
+      <rect x="584" y="230" width="24" height="20" fill="#8fa8c4"/>
+      <text x="372" y="272" font-size="15" fill="#5a6673">-6</text>
+      <text x="480" y="272" font-size="15" fill="#5a6673">-3</text>
+      <text x="592" y="272" font-size="15" fill="#5a6673">0</text>
+      <text x="430" y="40" font-size="17" fill="#1a1a1a" font-weight="700">b = 3, Var 2</text>
+      <text x="410" y="66" font-size="14" fill="#8a949e">counts 1,3,6,7,6,3,1 of 27</text>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">batch-gradient distribution at $\theta = 0$ &mdash; averaging squeezes it toward the truth</p>
+</div>
+
+<!-- full batch corner -->
+<div class="slide">
+  <h2>The Full-Batch Corner</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>sampling</th><th>batch gradient</th><th>variance</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>$b = 1$</td><td>random, spread $6$ wide</td><td>$6$</td></tr>
+      <tr><td>$b = 3$, with replacement</td><td>random, concentrated</td><td>$2$</td></tr>
+      <tr><td>$b = 3$, without replacement</td><td>always $-3$ &mdash; the full gradient</td><td>$0$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">GD is the $b = N$, no-repeats corner of mini-batch SGD</p>
+</div>
+
+<!-- what b buys -->
+<div class="slide">
+  <h2>What $b$ Buys in the Rate</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\sigma^2 \;\to\; \frac{\sigma^2}{b}
+    \quad\Longrightarrow\quad
+    \text{Thm 2 bound: } \frac{\sqrt{G^2 + \sigma^2/b}\; D}{\sqrt{K+1}}$$</div>
+  <ul>
+    <li>Big help when noise dominates ($\sigma^2 \gg G^2$)</li>
+    <li>Running example: $\sqrt{42} \to \sqrt{38}$ &mdash; modest, since $G^2 = 36$ dominates</li>
+  </ul>
+  <p class="muted">honest reading: batching attacks only the noise part of the bill</p>
+</div>
+
+<!-- the price -->
+<div class="slide">
+  <h2>The Price: $b$ Gradients per Step</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Sequential machine</h3>
+      <p>Variance &divide; $b$, compute &times; $b$</p>
+      <p class="muted">roughly a wash</p>
+    </div>
+    <div class="card">
+      <h3>GPU / parallel</h3>
+      <p>The $b$ gradients run <strong>simultaneously</strong></p>
+      <p class="muted">variance &divide; $b$ at almost no wall-clock cost</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p><strong>Why batches exist.</strong> Mini-batching is variance reduction that hardware gives away for free.</p>
+  </div>
+</div>
+
+<!-- choosing b -->
+<div class="slide">
+  <h2>Choosing $b$</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Fill the hardware: $b$ up to what memory and parallelism allow</li>
+    <li>Diminishing returns: past the point where $\sigma^2/b \ll G^2$, extra $b$ buys little</li>
+    <li>$b$ is a systems dial as much as a math dial</li>
+  </ul>
+  <p class="muted">the analysis stays identical &mdash; only $\sigma^2$ shrinks</p>
+</div>
+
+<!-- ===== SECTION 08 — STRONGLY CONVEX SGD ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">08</div>
+  <h1>Strongly Convex SGD</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Decreasing steps: $O(\log k / k)$</p>
+</div>
+
+<!-- regularized problem -->
+<div class="slide">
+  <h2>The Regularized Problem</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\min_x\;\; F(x) \;=\; f(x) + \frac{\mu}{2} \lVert x \rVert^2,
+    \qquad f \text{ convex, } G\text{-Lipschitz}$$</div>
+  <ul>
+    <li>Ridge shape &mdash; recall opt02's regularized least squares</li>
+    <li>Recall opt03: convex $+$ $\frac{\mu}{2}\lVert x \rVert^2$ is $\mu$-strongly convex</li>
+  </ul>
+</div>
+
+<!-- decreasing schedule -->
+<div class="slide">
+  <h2>Kill the Floor &mdash; Shrink the Step</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$x_{k+1} \;=\; x_k - \alpha_k \big(g_k + \mu x_k\big),
+    \qquad \alpha_k = \frac{1}{\mu (k+1)},\qquad x_0 = 0$$</div>
+  <ul>
+    <li>$\mu$-term differentiated exactly; only $f$ is sampled: $\mathbb{E}_k[g_k] = \nabla f(x_k)$</li>
+    <li>&sect;05: noise floor $\propto \alpha$ &mdash; a shrinking $\alpha_k$ drags the floor to $0$</li>
+    <li>No horizon needed &mdash; the schedule is <strong>anytime</strong></li>
+  </ul>
+</div>
+
+<!-- running example rewritten -->
+<div class="slide">
+  <h2>Running Example, Rewritten</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathcal{L}(\theta) = \underbrace{7.5 - 3\theta}_{f(\theta)} + \underbrace{\tfrac{1}{2}\theta^2}_{\mu = 1}$$</div>
+  <ul>
+    <li>Check: $\tfrac{1}{2}(\theta - c_i)^2 = \big(\tfrac{c_i^2}{2} - c_i \theta\big) + \tfrac{1}{2}\theta^2$ &mdash; average the first part</li>
+    <li>$f$ linear: convex, $G = 3$ honestly (no interval caveat this time)</li>
+    <li>Sampled gradient of $f$: $g_k = -c_{i_k}$, so $\sigma^2 = 6$ as before</li>
+  </ul>
+</div>
+
+<!-- Thm 4 -->
+<div class="slide">
+  <h2>Theorem 4 &mdash; Strongly Convex SGD</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 4 ($O(\log k / k)$ rate)</h3>
+    <p>$f$ convex and $G$-Lipschitz; $x^\star$ minimizes $F$; unbiased $g_k$ with variance $\le \sigma^2$; steps $\alpha_k = \frac{1}{\mu(k+1)},\; x_0 = 0$. Then</p>
+    <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[F(\bar{x}_k) - F(x^\star)\big]
+      \;\le\; \frac{2 (G^2 + \sigma^2)}{\mu} \cdot \frac{1 + \log(k+1)}{k+1},
+      \qquad \bar{x}_k = \frac{1}{k+1} \sum_{i=0}^{k} x_i$$</div>
+  </div>
+</div>
+
+<!-- reading -->
+<div class="slide">
+  <h2>Reading the Statement</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$\lVert x_0 - x^\star \rVert$ is <strong>absent</strong> &mdash; the schedule erases the start</li>
+    <li>$\log k / k$: eventually far faster than $1/\sqrt{k}$</li>
+    <li>Valid at every $k$ &mdash; no horizon tuning</li>
+    <li>Averaged iterate again</li>
+  </ul>
+  <p class="muted">strong convexity turns noise tolerance into a near-$1/k$ rate</p>
+</div>
+
+<!-- proof overview -->
+<div class="slide">
+  <h2>Proof Overview</h2>
+  <div class="divider"></div>
+  <ol>
+    <li><strong>Unroll</strong> the recursion &mdash; the iterate is a convex combination of $-g_i/\mu$</li>
+    <li><strong>Second moment</strong> of the step $\le 4(G^2 + \sigma^2)$ <span class="muted">(Jensen twice)</span></li>
+    <li><strong>One-step inequality</strong> via the strong-convexity floor <span class="muted">(opt03)</span></li>
+    <li><strong>Plug the schedule</strong> &mdash; a weighted telescope with a vanishing head</li>
+    <li><strong>Harmonic sum</strong> $\le 1 + \log$ <span class="muted">(integral comparison)</span></li>
+    <li><strong>Jensen</strong> &mdash; pass to the average <span class="muted">(prob01)</span></li>
+  </ol>
+</div>
+
+<!-- TR unrolling -->
+<div class="slide">
+  <h2>Technique Review &mdash; Unrolling a Recursion</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (opt03).</strong> $y_{k+1} = \beta_k\, y_k + z_k$ unrolls: apply repeatedly, collect products</p>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$y_{k+1} \;=\; \Big(\prod_{s=0}^{k} \beta_s\Big) y_0
+    \;+\; \sum_{i=0}^{k} \Big(\prod_{s=i+1}^{k} \beta_s\Big)\, z_i$$</div>
+  <p class="muted">opt03 unrolled GD on quadratics this way &mdash; same move, new coefficients</p>
+</div>
+
+<!-- step 1a -->
+<div class="slide">
+  <h2>Step 1a &mdash; Unroll the Update</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$x_{k+1}
+    \;=\; (1 - \alpha_k \mu)\, x_k + \alpha_k \mu \Big(\frac{-g_k}{\mu}\Big)
+    \;\;\Longrightarrow\;\;
+    x_{k+1} = \sum_{i=0}^{k} \theta_i \Big(\frac{-g_i}{\mu}\Big)$$</div>
+  <div class="math-block" style="margin:8px 0">$$\theta_i \;=\; \alpha_i \mu \prod_{s=i+1}^{k} (1 - \alpha_s \mu)
+    \qquad (x_0 = 0 \text{ kills the head term})$$</div>
+  <p class="muted">each step: blend the old iterate with the new target $-g_k/\mu$</p>
+</div>
+
+<!-- step 1b -->
+<div class="slide">
+  <h2>Step 1b &mdash; the Weights Are Uniform</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\alpha_i \mu = \frac{1}{i+1},\quad 1 - \alpha_s \mu = \frac{s}{s+1}:
+    \qquad \theta_i = \frac{1}{i+1} \cdot \frac{i+1}{i+2} \cdot \frac{i+2}{i+3} \cdots \frac{k}{k+1}
+    = \frac{1}{k+1}$$</div>
+  <ul>
+    <li>The product telescopes &mdash; every weight equals $\frac{1}{k+1}$</li>
+    <li>So $\sum_i \theta_i = 1$: a genuine <strong>convex combination</strong></li>
+  </ul>
+</div>
+
+<!-- worked: running average -->
+<div class="slide">
+  <h2>Worked &mdash; SGD Becomes a Running Average</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\text{running example: } \frac{-g_j}{\mu} = c_{i_j}
+    \;\;\Longrightarrow\;\;
+    x_{k+1} = \frac{1}{k+1} \sum_{j=0}^{k} c_{i_j} \;=\; \text{mean of sampled targets}$$</div>
+  <p class="muted">this schedule computes the sample mean &mdash; prob05's LLN, rediscovered as an optimizer</p>
+</div>
+
+<!-- worked: running average, tabulated -->
+<div class="slide">
+  <h2>The Running Average, Checked</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>k</th><th>drawn c</th><th>iterate</th><th>check</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>$1$</td><td>$6$</td><td>$6$</td><td>$= 6$</td></tr>
+      <tr><td>$2$</td><td>$0$</td><td>$3$</td><td>$= (6+0)/2$</td></tr>
+      <tr><td>$3$</td><td>$3$</td><td>$3$</td><td>$= (6+0+3)/3$</td></tr>
+      <tr><td>$4$</td><td>$6$</td><td>$3.75$</td><td>$= (6+0+3+6)/4$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">same draws $6, 0, 3, 6$ as the $\alpha = 1/2$ run &mdash; the schedule averages them exactly</p>
+</div>
+
+<!-- TR 2a2b2 -->
+<div class="slide">
+  <h2>Technique Review &mdash; Splitting a Square</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (prob01, Jensen).</strong> $\lVert \cdot \rVert^2$ is convex:
+    $\big\lVert \tfrac{a + b}{2} \big\rVert^2 \le \tfrac{1}{2} \lVert a \rVert^2 + \tfrac{1}{2} \lVert b \rVert^2$</p>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$\times\, 4:\qquad \lVert a + b \rVert^2 \;\le\; 2 \lVert a \rVert^2 + 2 \lVert b \rVert^2$$</div>
+  <p class="muted">the standard price for splitting a sum inside a square</p>
+</div>
+
+<!-- step 2a -->
+<div class="slide">
+  <h2>Step 2a &mdash; Split the Step's Second Moment</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E} \lVert g_k + \mu x_k \rVert^2
+    \;\stackrel{\text{(split)}}{\le}\; 2\, \mathbb{E} \lVert g_k \rVert^2 + 2 \mu^2\, \mathbb{E} \lVert x_k \rVert^2
+    \;\le\; 2 (G^2 + \sigma^2) + 2 \mu^2\, \mathbb{E} \lVert x_k \rVert^2$$</div>
+  <ul>
+    <li>First term: &sect;06's decomposition again &mdash; $\mathbb{E}\lVert g_k \rVert^2 \le G^2 + \sigma^2$</li>
+    <li>Second term: the iterate itself &mdash; needs Step 1</li>
+  </ul>
+</div>
+
+<!-- step 2b -->
+<div class="slide">
+  <h2>Step 2b &mdash; the Iterate Is Tame</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E} \lVert x_k \rVert^2
+    = \mathbb{E} \Big\lVert \sum_i \theta_i \frac{-g_i}{\mu} \Big\rVert^2
+    \;\stackrel{\text{(Jensen, convex comb.)}}{\le}\;
+    \sum_i \theta_i\, \frac{\mathbb{E}\lVert g_i \rVert^2}{\mu^2}
+    \;\le\; \frac{G^2 + \sigma^2}{\mu^2}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Longrightarrow\qquad \mathbb{E} \lVert g_k + \mu x_k \rVert^2 \;\le\; 4 (G^2 + \sigma^2)$$</div>
+  <p class="muted">convex combinations cannot blow up &mdash; the whole point of Step 1</p>
+</div>
+
+<!-- TR strong convexity floor -->
+<div class="slide">
+  <h2>Technique Review &mdash; the Strong Floor</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (opt03).</strong> $F$ $\mu$-strongly convex:
+    $F(y) \ge F(x) + \langle \nabla F(x), y - x \rangle + \frac{\mu}{2} \lVert y - x \rVert^2$</p>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$y = x^\star:\qquad
+    \langle \nabla F(x_k),\, x_k - x^\star \rangle
+    \;\ge\; F(x_k) - F(x^\star) + \frac{\mu}{2} \lVert x_k - x^\star \rVert^2$$</div>
+  <p class="muted">beats &sect;06's tangent floor by $\frac{\mu}{2}\lVert x_k - x^\star \rVert^2$ &mdash; this term buys the rate</p>
+</div>
+
+<!-- step 3a -->
+<div class="slide">
+  <h2>Step 3a &mdash; Expand, Condition</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_k \lVert x_{k+1} - x^\star \rVert^2
+    \;=\; \lVert x_k - x^\star \rVert^2
+    - 2 \alpha_k \big\langle \nabla F(x_k),\, x_k - x^\star \big\rangle
+    + \alpha_k^2\, \mathbb{E}_k \lVert g_k + \mu x_k \rVert^2$$</div>
+  <ul>
+    <li>Same expansion as &sect;06 Step 1 &mdash; the step is now $g_k + \mu x_k$</li>
+    <li>Unbiasedness: $\mathbb{E}_k[g_k + \mu x_k] = \nabla f(x_k) + \mu x_k = \nabla F(x_k)$</li>
+  </ul>
+</div>
+
+<!-- step 3b -->
+<div class="slide">
+  <h2>Step 3b &mdash; Apply Floor and Moment</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_k \lVert x_{k+1} - x^\star \rVert^2
+    \;\le\; (1 - \alpha_k \mu)\, \lVert x_k - x^\star \rVert^2
+    - 2 \alpha_k \big(F(x_k) - F(x^\star)\big)
+    + 4 \alpha_k^2 (G^2 + \sigma^2)$$</div>
+  <ul>
+    <li>The floor's extra $\frac{\mu}{2}\lVert x_k - x^\star\rVert^2$ became a <strong>contraction</strong> $(1 - \alpha_k \mu)$</li>
+    <li>Moment bound from Step 2 caps the rent</li>
+  </ul>
+</div>
+
+<!-- step 4 -->
+<div class="slide">
+  <h2>Step 4 &mdash; Plug the Schedule</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\alpha_k = \frac{1}{\mu(k+1)}:\qquad
+    1 - \alpha_k \mu = \frac{k}{k+1},\qquad \frac{1}{2\alpha_k} = \frac{\mu (k+1)}{2}$$</div>
+  <div class="math-block" style="margin:8px 0">$$F(x_k) - F(x^\star)
+    \;\le\; \frac{\mu k}{2} \lVert x_k - x^\star \rVert^2
+    - \frac{\mu (k+1)}{2}\, \mathbb{E}_k \lVert x_{k+1} - x^\star \rVert^2
+    + \frac{2 (G^2 + \sigma^2)}{\mu (k+1)}$$</div>
+  <p class="muted">divide Step 3b by $2\alpha_k$, rearrange &mdash; note the coefficients $\frac{\mu k}{2}$ and $\frac{\mu(k+1)}{2}$</p>
+</div>
+
+<!-- step 5a -->
+<div class="slide">
+  <h2>Step 5a &mdash; a Weighted Telescope</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$a_i = \frac{\mu\, i}{2}\, \mathbb{E} \lVert x_i - x^\star \rVert^2:
+    \qquad \mathbb{E}\big[F(x_i) - F(x^\star)\big] \;\le\; a_i - a_{i+1} + \frac{2(G^2+\sigma^2)}{\mu (i+1)}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\sum_{i=0}^{k} (a_i - a_{i+1})
+    \;\stackrel{\text{(telescope)}}{=}\; a_0 - a_{k+1} \;\le\; a_0 \;=\; \frac{\mu \cdot 0}{2} \lVert x_0 - x^\star \rVert^2 \;=\; 0$$</div>
+  <div class="highlight">
+    <p><strong>The magic:</strong> zero weight at $i = 0$ &mdash; the schedule erases the start.</p>
+  </div>
+</div>
+
+<!-- TR harmonic -->
+<div class="slide">
+  <h2>Technique Review &mdash; the Harmonic Sum</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Tool.</strong> $\displaystyle \sum_{i=1}^{n} \frac{1}{i} \;\le\; 1 + \log n$
+    &mdash; boxes under the curve $1/x$</p>
+  </div>
+  <div style="width:100%;max-width:640px;margin:6px auto 0;">
+    <svg viewBox="0 0 640 320" style="width:100%;">
+      <line x1="40" y1="300" x2="600" y2="300" stroke="#c9d2da" stroke-width="2"/>
+      <!-- first box, height 1 -->
+      <rect x="40" y="100" width="85" height="200" fill="#dfe7f0" stroke="#8fa8c4"/>
+      <!-- boxes 1/2 .. 1/6 under curve -->
+      <rect x="125" y="200" width="85" height="100" fill="#eaf0f7" stroke="#8fa8c4"/>
+      <rect x="210" y="233.3" width="85" height="66.7" fill="#eaf0f7" stroke="#8fa8c4"/>
+      <rect x="295" y="250" width="85" height="50" fill="#eaf0f7" stroke="#8fa8c4"/>
+      <rect x="380" y="260" width="85" height="40" fill="#eaf0f7" stroke="#8fa8c4"/>
+      <rect x="465" y="266.7" width="85" height="33.3" fill="#eaf0f7" stroke="#8fa8c4"/>
+      <!-- curve 1/x -->
+      <polyline points="125,100 146.25,140 167.5,166.7 210,200 252.5,220 295,233.3 380,250 465,260 550,266.7"
+        fill="none" stroke="#003876" stroke-width="3.5"/>
+      <text x="60" y="90" font-size="16" fill="#5a6673">the 1</text>
+      <text x="300" y="200" font-size="17" fill="#003876" font-weight="700">1/x</text>
+      <text x="330" y="290" font-size="15" fill="#5a6673">area = log n</text>
+      <text x="120" y="318" font-size="15" fill="#5a6673">1</text>
+      <text x="545" y="318" font-size="15" fill="#5a6673">n</text>
+    </svg>
+  </div>
+</div>
+
+<!-- step 5b -->
+<div class="slide">
+  <h2>Step 5b &mdash; Sum the Noise Rents</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}\sum_{i=0}^{k} \mathbb{E}\big[F(x_i) - F(x^\star)\big]
+    \;&\le\; 0 + \sum_{i=0}^{k} \frac{2 (G^2 + \sigma^2)}{\mu (i+1)}\\[4pt]
+    &\stackrel{\text{(harmonic)}}{\le}\; \frac{2 (G^2 + \sigma^2)}{\mu} \big(1 + \log(k+1)\big)\end{aligned}$$</div>
+  <ul>
+    <li>Telescope contributed nothing &mdash; only the rents remain</li>
+    <li>Rents shrink like $1/i$: their sum grows only like $\log$</li>
+  </ul>
+</div>
+
+<!-- step 6 -->
+<div class="slide">
+  <h2>Step 6 &mdash; Jensen, Once More</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}\mathbb{E}\big[F(\bar{x}_k) - F(x^\star)\big]
+    \;&\stackrel{\text{(Jensen, prob01)}}{\le}\;
+    \frac{1}{k+1} \sum_{i=0}^{k} \mathbb{E}\big[F(x_i) - F(x^\star)\big]\\[4pt]
+    &\le\; \frac{2 (G^2 + \sigma^2)}{\mu} \cdot \frac{1 + \log(k+1)}{k+1} \;\;\blacksquare\end{aligned}$$</div>
+  <ul>
+    <li>Divide Step 5b by $k+1$; $F$ convex &mdash; the average passes inside</li>
+  </ul>
+</div>
+
+<!-- proof summary -->
+<div class="slide">
+  <h2>Proof Summary &mdash; the Skeleton</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}&\text{unroll}
+    \;\stackrel{\text{convex comb.}}{\longrightarrow}\; \text{tame iterates}
+    \;\stackrel{\text{strong floor}}{\longrightarrow}\; \text{contraction}
+    \;\stackrel{\text{schedule}}{\longrightarrow}\; a_0 = 0\\[4pt]
+    &\qquad\stackrel{\text{harmonic}}{\longrightarrow}\; \log
+    \;\stackrel{\text{Jensen}}{\longrightarrow}\; \bar{x}_k\end{aligned}$$</div>
+  <div class="highlight">
+    <p><strong>Key trick:</strong> the schedule zeroes the telescope's head &mdash; only harmonically-shrinking rents remain.</p>
+  </div>
+</div>
+
+<!-- remark optimality -->
+<div class="slide">
+  <h2>Remark &mdash; the $\log$ Is Removable</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>This bound: $O(\log k / k)$ &mdash; already far beyond $O(1/\sqrt{k})$</li>
+    <li>The optimal rate for this problem class: $O(1/k)$ <span class="muted">(stated, not proved)</span></li>
+    <li>Sharper averaging schemes remove the $\log$ &mdash; beyond today</li>
+  </ul>
+  <p class="muted">honest scoreboard: our proof is one $\log$ away from optimal</p>
+</div>
+
+<!-- worked bound -->
+<div class="slide">
+  <h2>Worked Bound &mdash; Running Example</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mu = 1,\; G^2 + \sigma^2 = 15:
+    \qquad \text{bound} = 30\, \frac{1 + \log(k+1)}{k+1}$$</div>
+  <table>
+    <thead>
+      <tr><th>k</th><th>bound (Thm 4)</th><th>convex bound (Thm 2)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>$99$</td><td>$1.68$</td><td>$1.16$</td></tr>
+      <tr><td>$999$</td><td>$\mathbf{0.24}$</td><td>$0.37$</td></tr>
+      <tr><td>$9999$</td><td>$\mathbf{0.031}$</td><td>$0.116$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">constants favor Thm 2 early; the better rate takes over by $k \approx 10^3$</p>
+</div>
+
+<!-- rate comparison SVG -->
+<div class="slide">
+  <h2>The Two Rates, Drawn</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:820px;margin:6px auto 0;">
+    <svg viewBox="0 0 640 340" style="width:100%;">
+      <line x1="60" y1="310" x2="600" y2="310" stroke="#c9d2da" stroke-width="2"/>
+      <line x1="60" y1="310" x2="60" y2="40" stroke="#c9d2da" stroke-width="2"/>
+      <!-- convex slope -1/2 (gray) -->
+      <polyline points="100,101.3 240,148.8 380,196.3 520,243.8" fill="none" stroke="#8a949e" stroke-width="3"/>
+      <!-- strongly convex ~ -1 (blue) -->
+      <polyline points="100,60.4 240,133.6 380,214.4 520,298.8" fill="none" stroke="#003876" stroke-width="3.5"/>
+      <circle cx="100" cy="101.3" r="4.5" fill="#8a949e"/><circle cx="240" cy="148.8" r="4.5" fill="#8a949e"/>
+      <circle cx="380" cy="196.3" r="4.5" fill="#8a949e"/><circle cx="520" cy="243.8" r="4.5" fill="#8a949e"/>
+      <circle cx="100" cy="60.4" r="5" fill="#003876"/><circle cx="240" cy="133.6" r="5" fill="#003876"/>
+      <circle cx="380" cy="214.4" r="5" fill="#003876"/><circle cx="520" cy="298.8" r="5" fill="#003876"/>
+      <text x="330" y="150" font-size="17" fill="#8a949e">convex: slope -1/2</text>
+      <text x="140" y="230" font-size="17" fill="#003876" font-weight="700">strongly convex: log k / k</text>
+      <text x="90" y="330" font-size="15" fill="#5a6673">k=10</text>
+      <text x="500" y="330" font-size="15" fill="#5a6673">k=10000</text>
+      <text x="14" y="50" font-size="15" fill="#5a6673">gap</text>
+      <text x="300" y="336" font-size="14" fill="#8a949e">(log-log axes)</text>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">both bounds on the running example &mdash; crossover near $k = 10^3$</p>
+</div>
+
+<!-- ===== SECTION 09 — IN PRACTICE ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">09</div>
+  <h1>In Practice</h1>
+  <div class="divider"></div>
+  <p class="subtitle">What practice keeps, what it drops</p>
+</div>
+
+<!-- recipe -->
+<div class="slide">
+  <h2>The Recipe Deep Learning Runs</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>ingredient</th><th>the math behind it</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>sample data, not sum it</td><td>Thm 1 &mdash; unbiasedness</td></tr>
+      <tr><td>mini-batches on GPUs</td><td>Thm 3 &mdash; variance &divide; $b$, parallel for free</td></tr>
+      <tr><td>step-size schedules ($\alpha_k \downarrow$)</td><td>Thm 4 &mdash; shrink the noise floor</td></tr>
+      <tr><td>tolerate the noise</td><td>Thm 2 &mdash; convergence despite the kicks</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">every knob on a training run touched a theorem today</p>
+</div>
+
+<!-- proved vs run -->
+<div class="slide">
+  <h2>What We Proved vs What We Run</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>today's theory</th><th>training practice</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>convex loss</td><td>deep nets: nonconvex</td></tr>
+      <tr><td>averaged iterate</td><td>last iterate</td></tr>
+      <tr><td>with-replacement sampling</td><td>shuffled epochs</td></tr>
+      <tr><td>bounded variance, assumed</td><td>checked empirically at best</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">honest ledger &mdash; the guarantees are a compass, not a warranty</p>
+</div>
+
+<!-- descendants -->
+<div class="slide">
+  <h2>The Descendants (Names Only)</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Momentum</h3>
+      <p>Average past <strong>gradients</strong> into the step</p>
+    </div>
+    <div class="card">
+      <h3>RMSprop</h3>
+      <p>Scale steps by running gradient <strong>magnitudes</strong></p>
+    </div>
+    <div class="card">
+      <h3>Adam</h3>
+      <p>Both at once &mdash; today's default optimizer</p>
+    </div>
+  </div>
+  <ul style="margin-top:14px;">
+    <li>All three: SGD plus running averages &mdash; the core update survives inside each</li>
+  </ul>
+  <p class="muted">names only today &mdash; their math is a course of its own</p>
+</div>
+
+<!-- ===== SECTION 10 — CLOSING THE COURSE ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">10</div>
+  <h1>Closing the Course</h1>
+  <div class="divider"></div>
+  <p class="subtitle">13 decks, one toolkit</p>
+</div>
+
+<!-- today's chain -->
+<div class="slide">
+  <h2>Today, as One Chain</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\text{sample } i_k
+    \;\stackrel{\text{Thm 1}}{\rightsquigarrow}\; \mathbb{E}[g_k] = \nabla \mathcal{L}
+    \;\stackrel{\text{Thm 2}}{\rightsquigarrow}\; O\!\Big(\tfrac{1}{\sqrt{K}}\Big)
+    \;\stackrel{\text{Thm 3}}{\rightsquigarrow}\; \sigma^2 / b
+    \;\stackrel{\text{Thm 4}}{\rightsquigarrow}\; O\!\Big(\tfrac{\log k}{k}\Big)$$</div>
+  <ul>
+    <li>One sampled gradient &mdash; honest on average, priced by its variance</li>
+    <li>Every rate: a balance between progress bought and noise paid</li>
+  </ul>
+</div>
+
+<!-- every tool -->
+<div class="slide">
+  <h2>Every Tool, One Line Each</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>tool</th><th>one line</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Thm 1 unbiasedness</td><td><span style="text-transform:none">$\mathbb{E}[\nabla \mathcal{L}_{i}] = \nabla \mathcal{L}$ &mdash; uniform sampling is honest</span></td></tr>
+      <tr><td>noise floor <span class="muted">(added)</span></td><td><span style="text-transform:none">constant $\alpha$: error variance settles at $\alpha\sigma^2/(2-\alpha)$</span></td></tr>
+      <tr><td>Thm 2 convex rate</td><td><span style="text-transform:none">balanced $\alpha$: gap $\le \sqrt{G^2+\sigma^2}\, D / \sqrt{K+1}$</span></td></tr>
+      <tr><td>Thm 3 mini-batch</td><td><span style="text-transform:none">$b$ i.i.d. samples: variance $\sigma^2 / b$</span></td></tr>
+      <tr><td>Thm 4 strong convexity</td><td><span style="text-transform:none">$\alpha_k = \tfrac{1}{\mu(k+1)}$: gap $\le \tfrac{2(G^2+\sigma^2)}{\mu} \tfrac{1+\log(k+1)}{k+1}$</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- course map -->
+<div class="slide">
+  <h2>The Whole Course, One Map</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:960px;margin:6px auto 0;">
+    <svg viewBox="0 0 640 260" style="width:100%;">
+      <!-- probability row -->
+      <text x="10" y="30" font-size="15" fill="#5a6673" font-weight="700">PROBABILITY</text>
+      <g font-size="12" fill="#1a1a1a">
+        <rect x="10" y="45" width="62" height="50" rx="6" fill="#eef2f6" stroke="#c9d2da"/>
+        <text x="16" y="65">01 entropy</text><text x="16" y="82">Jensen</text>
+        <rect x="80" y="45" width="62" height="50" rx="6" fill="#eef2f6" stroke="#c9d2da"/>
+        <text x="86" y="65">02 KL</text><text x="86" y="82">cross-ent.</text>
+        <rect x="150" y="45" width="62" height="50" rx="6" fill="#eef2f6" stroke="#c9d2da"/>
+        <text x="156" y="65">03 mutual</text><text x="156" y="82">info, DPI</text>
+        <rect x="220" y="45" width="62" height="50" rx="6" fill="#eef2f6" stroke="#c9d2da"/>
+        <text x="226" y="65">04 Markov</text><text x="226" y="82">diffusion</text>
+        <rect x="290" y="45" width="62" height="50" rx="6" fill="#eef2f6" stroke="#c9d2da"/>
+        <text x="296" y="65">05 concen-</text><text x="296" y="82">tration</text>
+        <rect x="360" y="45" width="62" height="50" rx="6" fill="#eef2f6" stroke="#c9d2da"/>
+        <text x="366" y="65">06 general-</text><text x="366" y="82">ization</text>
+        <rect x="430" y="45" width="62" height="50" rx="6" fill="#eef2f6" stroke="#c9d2da"/>
+        <text x="436" y="65">07 estima-</text><text x="436" y="82">tion, tower</text>
+        <rect x="500" y="45" width="62" height="50" rx="6" fill="#eef2f6" stroke="#c9d2da"/>
+        <text x="506" y="65">08 Gauss-</text><text x="506" y="82">ian, DDPM</text>
+        <rect x="570" y="45" width="62" height="50" rx="6" fill="#eef2f6" stroke="#c9d2da"/>
+        <text x="576" y="65">09 Monte</text><text x="576" y="82">Carlo</text>
+      </g>
+      <!-- bridge arrow -->
+      <path d="M 601 95 C 601 140, 60 110, 48 155" fill="none" stroke="#003876" stroke-width="2.5"/>
+      <polygon points="48,163 42,150 56,151" fill="#003876"/>
+      <!-- optimization row -->
+      <text x="10" y="150" font-size="15" fill="#5a6673" font-weight="700">OPTIMIZATION</text>
+      <g font-size="13" fill="#1a1a1a">
+        <rect x="10" y="165" width="140" height="55" rx="6" fill="#eef2f6" stroke="#c9d2da"/>
+        <text x="18" y="187">10 SVD, low rank</text><text x="18" y="206">Eckart-Young</text>
+        <rect x="170" y="165" width="140" height="55" rx="6" fill="#eef2f6" stroke="#c9d2da"/>
+        <text x="178" y="187">11 regression</text><text x="178" y="206">ERM, ridge</text>
+        <rect x="330" y="165" width="140" height="55" rx="6" fill="#eef2f6" stroke="#c9d2da"/>
+        <text x="338" y="187">12 convexity</text><text x="338" y="206">GD rates</text>
+        <rect x="490" y="165" width="142" height="55" rx="6" fill="#003876"/>
+        <text x="498" y="187" fill="#ffffff" font-weight="700">13 SGD</text>
+        <text x="498" y="206" fill="#ffffff">today - the finale</text>
+      </g>
+      <line x1="150" y1="192" x2="170" y2="192" stroke="#003876" stroke-width="2.5"/>
+      <line x1="310" y1="192" x2="330" y2="192" stroke="#003876" stroke-width="2.5"/>
+      <line x1="470" y1="192" x2="490" y2="192" stroke="#003876" stroke-width="2.5"/>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">every arrow used today: Jensen (01), variance of averages (05), tower (07), telescoping (12)</p>
+</div>
+
+<!-- what you can now read -->
+<div class="slide">
+  <h2>What You Can Now Read</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>literature (names only)</th><th>the decks that unlock it</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>stochastic approximation &mdash; Robbins&ndash;Monro line</td><td>today: Thm 2, Thm 4</td></tr>
+      <tr><td>Adam, momentum &mdash; optimizer papers</td><td>opt03 + today</td></tr>
+      <tr><td>diffusion models &mdash; DDPM line</td><td>prob04, prob08</td></tr>
+      <tr><td>policy gradient / RLHF</td><td>prob09 + today's SGD</td></tr>
+      <tr><td>generalization bounds</td><td>prob05, prob06</td></tr>
+      <tr><td>low-rank adaptation (LoRA line)</td><td>opt01, opt02</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">name-drops, honestly &mdash; the math walls are down; the papers are readable now</p>
+</div>
+
+<!-- end slide -->
+<div class="slide title-slide">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Deep Learning Math &middot; The End</div>
+  <h1 style="font-size:6rem;">$\theta_{k+1} = \theta_k - \alpha\, g_k$</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Thirteen lectures. One toolkit. Thank you.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / N</div>
+
+</div><!-- end deck -->
+<script src="../../../reference/deck.js"></script>
+</body>
+</html>

@@ -1,0 +1,2076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Learning Math 8 &mdash; The Multivariate Gaussian</title>
+
+<!-- Design system (canonical; all decks link to reference/). -->
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/deck.css">
+
+<!-- KaTeX for math rendering. -->
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- SLIDE 1 — Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Deep Learning Math &middot; Lecture 8</div>
+  <h1>The Multivariate Gaussian</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Three definitions, seven properties &mdash; every posterior in closed form</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;&middot;&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Fall 2026</p>
+</div>
+
+<!-- SLIDE 2 — Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list" style="display:grid;grid-auto-flow:column;grid-template-rows:repeat(5,auto);grid-template-columns:1fr 1fr;gap:14px 44px">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Why Gaussians?</div>
+        <div class="toc-sub">The default noise of deep learning</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Warm-Up: Two Dimensions</div>
+        <div class="toc-sub">One ellipse, one slice</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Positive Semidefinite Matrices</div>
+        <div class="toc-sub">The shape of covariance</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Three Definitions</div>
+        <div class="toc-sub">Density &middot; construction &middot; projection</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Vector Means &amp; Covariances</div>
+        <div class="toc-sub">The covariance matrix</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">The Properties Theorem</div>
+        <div class="toc-sub">Seven parts, proved</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">07</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">The Gaussian Channel</div>
+        <div class="toc-sub">The posterior is a shrinkage</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">08</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Gaussian Diffusion</div>
+        <div class="toc-sub">Noise until nothing remains</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">09</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Gaussian Discriminant</div>
+        <div class="toc-sub">MLE for mean and covariance</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 01 — WHY GAUSSIANS ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Why Gaussians?</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The default noise of deep learning</p>
+</div>
+
+<!-- Default noise model -->
+<div class="slide">
+  <h2>The Default Noise Model</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Diffusion models</h3>
+      <p>Every noising step adds $\varepsilon \sim \mathcal{N}(0, I)$</p>
+      <p class="muted">today &sect;08</p>
+    </div>
+    <div class="card">
+      <h3>VAE latents</h3>
+      <p>Encoder outputs $\mathcal{N}(\mu, \Sigma)$ over codes</p>
+      <p class="muted">diagonal $\Sigma$ &mdash; why? &sect;06</p>
+    </div>
+    <div class="card">
+      <h3>Weight init &middot; GDA</h3>
+      <p>$W_{ij} \sim \mathcal{N}(0, \sigma^2)$; Gaussian classes</p>
+      <p class="muted">classifier: &sect;09</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>One distribution carries the noise of the whole field.</p>
+  </div>
+</div>
+
+<!-- Recall -->
+<div class="slide">
+  <h2>Recall &mdash; the Gaussian Kept Winning</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Recall <strong>prob03</strong>: max entropy under a variance budget &mdash; Gaussian</li>
+    <li>Recall <strong>prob05</strong>: CLT &mdash; sums become Gaussian</li>
+    <li>Recall <strong>prob05</strong>: its MGF $e^{\mu t + \sigma^2 t^2/2}$ &mdash; in closed form</li>
+    <li>Recall <strong>prob07</strong>: heights model, MMSE $\hat{X} = \mathbb{E}[X|Y]$</li>
+  </ul>
+  <div class="highlight">
+    <p>prob07's promise: for Gaussians, $\mathbb{E}[X|Y]$ becomes <strong>linear</strong>. Today we prove it.</p>
+  </div>
+</div>
+
+<!-- The gap -->
+<div class="slide">
+  <h2>The Gap &mdash; One Dimension So Far</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Known: scalar $\mathcal{N}(\mu, \sigma^2)$ &mdash; one mean, one spread</li>
+    <li>Data: images, audio, embeddings &mdash; vectors in $\mathbb{R}^n$</li>
+    <li>Coordinates are <strong>correlated</strong> &mdash; neighboring pixels move together</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$X = (X_1, \dots, X_n)^\top
+    \quad\longrightarrow\quad \text{joint model } = \;?$$</div>
+  <p class="muted">Need: a mean vector, and a matrix of co-movements</p>
+</div>
+
+<!-- Today's claims -->
+<div class="slide">
+  <h2>Today's Claims &mdash; to Prove</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Conditioning stays Gaussian</strong>: $\mathbb{E}[X|Y]$ is linear in $Y$</li>
+    <li><strong>Uncorrelated = independent</strong> &mdash; for jointly Gaussian only</li>
+    <li><strong>Gaussian noising forgets</strong> any starting distribution</li>
+    <li><strong>MLE fit</strong>: $\widehat{\Sigma} = $ scatter matrix $/\,N$</li>
+  </ul>
+  <p class="muted">Each claim: statement, proof, then its AI payoff</p>
+</div>
+
+<!-- Route map -->
+<div class="slide">
+  <h2>Route Map</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:1080px;margin:0 auto;">
+  <svg viewBox="0 0 1080 260" style="width:100%">
+    <defs><marker id="rmArrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 z" fill="#5b6770"/></marker></defs>
+    <rect x="20" y="80" width="180" height="90" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+    <text x="110" y="118" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">2D warm-up</text>
+    <text x="110" y="146" font-size="16" fill="#5b6770" text-anchor="middle">ellipse + slice</text>
+    <rect x="240" y="80" width="180" height="90" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+    <text x="330" y="118" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">matrix tools</text>
+    <text x="330" y="146" font-size="16" fill="#5b6770" text-anchor="middle">PSD, sqrt, inverse</text>
+    <rect x="460" y="80" width="180" height="90" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+    <text x="550" y="118" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">3 definitions</text>
+    <text x="550" y="146" font-size="16" fill="#5b6770" text-anchor="middle">one object</text>
+    <rect x="680" y="80" width="180" height="90" rx="10" fill="#003876" stroke="#003876" stroke-width="2"/>
+    <text x="770" y="118" font-size="19" fill="#ffffff" text-anchor="middle" font-weight="700">7 properties</text>
+    <text x="770" y="146" font-size="16" fill="#cfd8e3" text-anchor="middle">all proved</text>
+    <rect x="900" y="80" width="160" height="90" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+    <text x="980" y="110" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">channel</text>
+    <text x="980" y="132" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">diffusion</text>
+    <text x="980" y="154" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">GDA</text>
+    <line x1="200" y1="125" x2="234" y2="125" stroke="#5b6770" stroke-width="2.5" marker-end="url(#rmArrow)"/>
+    <line x1="420" y1="125" x2="454" y2="125" stroke="#5b6770" stroke-width="2.5" marker-end="url(#rmArrow)"/>
+    <line x1="640" y1="125" x2="674" y2="125" stroke="#5b6770" stroke-width="2.5" marker-end="url(#rmArrow)"/>
+    <line x1="860" y1="125" x2="894" y2="125" stroke="#5b6770" stroke-width="2.5" marker-end="url(#rmArrow)"/>
+  </svg>
+  </div>
+  <p class="muted">One theorem in the middle powers all three applications</p>
+</div>
+
+<!-- ===== SECTION 02 — 2D WARM-UP ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Warm-Up: Two Dimensions</h1>
+  <div class="divider"></div>
+  <p class="subtitle">One ellipse, one slice</p>
+  <div class="cite">Sections 02&ndash;08 adapted from MIT OpenCourseWare &mdash; 6.436J / 15.085J Fundamentals of Probability, Fall 2018 &mdash; License: CC BY-NC-SA 4.0 &mdash; ocw.mit.edu</div>
+</div>
+
+<!-- 2D definition -->
+<div class="slide">
+  <h2>Definition &mdash; Jointly Gaussian Pair</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (2D Gaussian).</h3>
+    <p>$(X_1, X_2) \sim \mathcal{N}(\boldsymbol{\mu}, \Sigma)$ with mean $\boldsymbol{\mu} = (\mu_1, \mu_2)$ and</p>
+    <div class="math-block" style="margin:8px 0">$$\Sigma = \begin{bmatrix} \sigma_1^2 &amp; \rho\sigma_1\sigma_2 \\ \rho\sigma_1\sigma_2 &amp; \sigma_2^2 \end{bmatrix}$$</div>
+  </div>
+  <ul>
+    <li>Two spreads $\sigma_1, \sigma_2$ &mdash; plus one <strong>coupling</strong> $\rho$</li>
+    <li>$\Sigma$ is symmetric &mdash; co-movement has no direction</li>
+  </ul>
+</div>
+
+<!-- 2D pdf -->
+<div class="slide">
+  <h2>The Joint Density</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$f_{X_1,X_2}(x_1, x_2)
+    = \frac{1}{\sqrt{(2\pi)^2 \det(\Sigma)}}
+    \exp\!\left( -\tfrac{1}{2} (x - \boldsymbol{\mu})^\top \Sigma^{-1} (x - \boldsymbol{\mu}) \right)$$</div>
+  <ul>
+    <li>Here $x = (x_1, x_2)^\top$ &mdash; a point in the plane</li>
+    <li>Exponent: a <strong>quadratic form</strong> in $x - \boldsymbol{\mu}$</li>
+    <li>Needs $\det(\Sigma) &gt; 0$ and $\Sigma^{-1}$ &mdash; matrix conditions, &sect;03</li>
+  </ul>
+</div>
+
+<!-- rho gallery -->
+<div class="slide">
+  <h2>What the Coupling Does</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:980px;margin:0 auto;">
+  <svg viewBox="0 0 760 240" style="width:100%">
+    <g stroke="#5b6770" stroke-width="1">
+      <line x1="60" y1="120" x2="220" y2="120"/><line x1="140" y1="40" x2="140" y2="200"/>
+      <line x1="300" y1="120" x2="460" y2="120"/><line x1="380" y1="40" x2="380" y2="200"/>
+      <line x1="540" y1="120" x2="700" y2="120"/><line x1="620" y1="40" x2="620" y2="200"/>
+    </g>
+    <circle cx="140" cy="120" r="55" fill="none" stroke="#003876" stroke-width="3"/>
+    <circle cx="140" cy="120" r="28" fill="none" stroke="#003876" stroke-width="2" opacity="0.5"/>
+    <ellipse cx="380" cy="120" rx="70" ry="33" fill="none" stroke="#003876" stroke-width="3" transform="rotate(-45 380 120)"/>
+    <ellipse cx="380" cy="120" rx="35" ry="17" fill="none" stroke="#003876" stroke-width="2" opacity="0.5" transform="rotate(-45 380 120)"/>
+    <ellipse cx="620" cy="120" rx="70" ry="33" fill="none" stroke="#003876" stroke-width="3" transform="rotate(45 620 120)"/>
+    <ellipse cx="620" cy="120" rx="35" ry="17" fill="none" stroke="#003876" stroke-width="2" opacity="0.5" transform="rotate(45 620 120)"/>
+    <text x="140" y="230" font-size="18" fill="#1a1a1a" text-anchor="middle" font-weight="700">rho = 0</text>
+    <text x="380" y="230" font-size="18" fill="#1a1a1a" text-anchor="middle" font-weight="700">rho = 0.6</text>
+    <text x="620" y="230" font-size="18" fill="#1a1a1a" text-anchor="middle" font-weight="700">rho = -0.6</text>
+  </svg>
+  </div>
+  <p class="muted">Level sets of the density: circles tilt into ellipses as $\rho$ moves</p>
+</div>
+
+<!-- Worked Sigma -->
+<div class="slide">
+  <h2>Running Example &mdash; Fixed Numbers</h2>
+  <div class="divider"></div>
+  <p>Take $\sigma_1 = \sigma_2 = 1$ and coupling $\rho = 0.6$:</p>
+  <div class="math-block" style="margin:8px 0">$$\Sigma = \begin{bmatrix} 1 &amp; 0.6 \\ 0.6 &amp; 1 \end{bmatrix},
+    \qquad \det \Sigma = 1 - 0.36 = 0.64,
+    \qquad \Sigma^{-1} = \frac{1}{0.64}\begin{bmatrix} 1 &amp; -0.6 \\ -0.6 &amp; 1 \end{bmatrix}$$</div>
+  <ul>
+    <li>Determinant positive &mdash; the density exists</li>
+    <li>This $\Sigma$ returns in every section today</li>
+  </ul>
+</div>
+
+<!-- Contour SVG -->
+<div class="slide">
+  <h2>The Running Example, Drawn</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:900px;margin:0 auto;">
+  <svg viewBox="0 0 760 340" style="width:100%">
+    <line x1="60" y1="170" x2="700" y2="170" stroke="#5b6770" stroke-width="1.5"/>
+    <line x1="380" y1="20" x2="380" y2="320" stroke="#5b6770" stroke-width="1.5"/>
+    <ellipse cx="380" cy="170" rx="202" ry="101" fill="none" stroke="#003876" stroke-width="2" opacity="0.45" transform="rotate(-45 380 170)"/>
+    <ellipse cx="380" cy="170" rx="101" ry="51" fill="none" stroke="#003876" stroke-width="3" transform="rotate(-45 380 170)"/>
+    <line x1="290" y1="260" x2="470" y2="80" stroke="#c0392b" stroke-width="2" stroke-dasharray="6 5"/>
+    <text x="500" y="70" font-size="17" fill="#c0392b" font-weight="700">long axis: eigenvalue 1.6</text>
+    <text x="640" y="192" font-size="16" fill="#5b6770" text-anchor="end">x1</text>
+    <text x="396" y="36" font-size="16" fill="#5b6770">x2</text>
+    <text x="238" y="120" font-size="17" fill="#003876" font-weight="700">1-sigma</text>
+    <text x="152" y="300" font-size="17" fill="#003876" opacity="0.6" font-weight="700">2-sigma</text>
+  </svg>
+  </div>
+  <p class="muted">Positive coupling tilts the mass along $x_1 = x_2$ &mdash; eigenvalues 1.6 and 0.4 (&sect;03)</p>
+</div>
+
+<!-- Thm 1 statement -->
+<div class="slide">
+  <h2>Theorem &mdash; Conditioning Stays Gaussian</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 1 (2D conditional).</h3>
+    <p>Let $(X_1, X_2) \sim \mathcal{N}(\boldsymbol{\mu}, \Sigma)$ with entries $\sigma_{ij}$ and $\sigma_{22} &gt; 0$. Then $X_1 \mid X_2 = x_2$ is Gaussian:</p>
+    <div class="math-block" style="margin:8px 0">$$X_1 \mid X_2 = x_2 \;\sim\; \mathcal{N}\!\left( \mu_1 + \frac{\sigma_{12}}{\sigma_{22}}(x_2 - \mu_2),\;\; \sigma_{11} - \frac{\sigma_{12}\sigma_{21}}{\sigma_{22}} \right)$$</div>
+  </div>
+  <p class="muted">Proof in &sect;06 &mdash; a corollary of the general properties theorem</p>
+</div>
+
+<!-- Slicing SVG -->
+<div class="slide">
+  <h2>Conditioning = Slicing the Ellipse</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:900px;margin:0 auto;">
+  <svg viewBox="0 0 760 340" style="width:100%">
+    <line x1="60" y1="170" x2="700" y2="170" stroke="#5b6770" stroke-width="1.5"/>
+    <line x1="380" y1="20" x2="380" y2="320" stroke="#5b6770" stroke-width="1.5"/>
+    <ellipse cx="380" cy="170" rx="202" ry="101" fill="none" stroke="#003876" stroke-width="2" opacity="0.4" transform="rotate(-45 380 170)"/>
+    <ellipse cx="380" cy="170" rx="101" ry="51" fill="none" stroke="#003876" stroke-width="2.5" opacity="0.7" transform="rotate(-45 380 170)"/>
+    <line x1="90" y1="90" x2="700" y2="90" stroke="#c0392b" stroke-width="3"/>
+    <text x="97" y="72" font-size="18" fill="#c0392b" font-weight="700">slice: x2 = 1</text>
+    <polyline points="308,90 328,86 348,74 368,56 388,44 408,42 428,52 448,68 468,82 488,88 508,90" fill="none" stroke="#1a7a3d" stroke-width="3"/>
+    <circle cx="428" cy="90" r="6" fill="#1a7a3d"/>
+    <line x1="428" y1="90" x2="428" y2="170" stroke="#1a7a3d" stroke-width="2" stroke-dasharray="5 4"/>
+    <text x="436" y="150" font-size="18" fill="#1a7a3d" font-weight="700">mean 0.6</text>
+    <text x="540" y="52" font-size="17" fill="#1a7a3d">conditional density of X1</text>
+    <text x="640" y="192" font-size="16" fill="#5b6770" text-anchor="end">x1</text>
+  </svg>
+  </div>
+  <p class="muted">Fix a value of $X_2$: the cut through the mass is again a bell curve</p>
+</div>
+
+<!-- Worked conditional -->
+<div class="slide">
+  <h2>Worked &mdash; the Running Example</h2>
+  <div class="divider"></div>
+  <p>Zero means, $\sigma_{11} = \sigma_{22} = 1$, $\sigma_{12} = 0.6$; observe $X_2 = 1$:</p>
+  <div class="math-block" style="margin:8px 0">$$X_1 \mid X_2 = 1 \;\sim\; \mathcal{N}\!\left( 0 + \tfrac{0.6}{1}\cdot 1,\;\; 1 - \tfrac{0.36}{1} \right)
+    = \mathcal{N}(0.6,\; 0.64)$$</div>
+  <ul>
+    <li>Mean moved <strong>toward the evidence</strong>, scaled by the coupling</li>
+    <li>Variance dropped $1 \to 0.64$ &mdash; observing $X_2$ always helps</li>
+    <li>Sanity: coupling $0$ &mdash; no update; coupling $\pm 1$ &mdash; variance $0$</li>
+  </ul>
+</div>
+
+<!-- Bridge to matrices -->
+<div class="slide">
+  <h2>What the General Case Needs</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>In $\mathbb{R}^n$: which matrices $\Sigma$ are <strong>legal covariances</strong>?</li>
+    <li>The density needs $\Sigma^{-1}$ and $\det \Sigma &gt; 0$</li>
+    <li>The construction needs a <strong>square root</strong> of $\Sigma$</li>
+  </ul>
+  <div class="highlight">
+    <p>All three answers come from one fact: covariance matrices are <strong>positive semidefinite</strong>.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 03 — PSD MATRICES ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Positive Semidefinite Matrices</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The shape of covariance</p>
+</div>
+
+<!-- PD/PSD definition -->
+<div class="slide">
+  <h2>Definition &mdash; Definite &amp; Semidefinite</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (PD / PSD).</h3>
+    <p>Let $A$ be a real symmetric $n \times n$ matrix.</p>
+    <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+      A &gt; 0 \;\;(\text{positive definite})
+      \quad&amp;\Longleftrightarrow\quad x^\top A x &gt; 0 \;\; \forall x \neq 0 \\[2pt]
+      A \geq 0 \;\;(\text{positive semidefinite})
+      \quad&amp;\Longleftrightarrow\quad x^\top A x \geq 0 \;\; \forall x
+    \end{aligned}$$</div>
+  </div>
+  <p class="muted">One number per direction: the quadratic form $x^\top A x$</p>
+</div>
+
+<!-- Bowl picture -->
+<div class="slide">
+  <h2>Picture &mdash; Bowl vs. Trough</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:980px;margin:0 auto;">
+  <svg viewBox="0 0 760 250" style="width:100%">
+    <g stroke="#5b6770" stroke-width="1">
+      <line x1="50" y1="130" x2="330" y2="130"/><line x1="190" y1="30" x2="190" y2="230"/>
+      <line x1="430" y1="130" x2="710" y2="130"/><line x1="570" y1="30" x2="570" y2="230"/>
+    </g>
+    <ellipse cx="190" cy="130" rx="100" ry="62" fill="none" stroke="#003876" stroke-width="2.5"/>
+    <ellipse cx="190" cy="130" rx="60" ry="37" fill="none" stroke="#003876" stroke-width="2.5" opacity="0.7"/>
+    <ellipse cx="190" cy="130" rx="24" ry="15" fill="none" stroke="#003876" stroke-width="2.5" opacity="0.45"/>
+    <line x1="460" y1="70" x2="700" y2="70" stroke="#c0392b" stroke-width="2.5"/>
+    <line x1="460" y1="105" x2="700" y2="105" stroke="#c0392b" stroke-width="2.5" opacity="0.7"/>
+    <line x1="460" y1="155" x2="700" y2="155" stroke="#c0392b" stroke-width="2.5" opacity="0.7"/>
+    <line x1="460" y1="190" x2="700" y2="190" stroke="#c0392b" stroke-width="2.5"/>
+    <text x="190" y="248" font-size="18" fill="#003876" text-anchor="middle" font-weight="700">A &#62; 0: bowl, closed contours</text>
+    <text x="570" y="248" font-size="18" fill="#c0392b" text-anchor="middle" font-weight="700">A singular: flat direction</text>
+  </svg>
+  </div>
+  <p class="muted">Level sets of $x^\top A x$: a flat direction means some $x^\top A x = 0$</p>
+</div>
+
+<!-- Worked PD check -->
+<div class="slide">
+  <h2>Worked &mdash; a PD Certificate</h2>
+  <div class="divider"></div>
+  <p>Claim: $A = \begin{bmatrix} 2 &amp; 1 \\ 1 &amp; 2 \end{bmatrix}$ is positive definite.</p>
+  <div class="math-block" style="margin:8px 0">$$x^\top A x
+    = 2x_1^2 + 2x_1 x_2 + 2x_2^2
+    = x_1^2 + x_2^2 + (x_1 + x_2)^2 \;&gt;\; 0 \quad (x \neq 0)$$</div>
+  <ul>
+    <li>Trick: rewrite as a <strong>sum of squares</strong></li>
+    <li>This $A$ is today's matrix workbench</li>
+  </ul>
+</div>
+
+<!-- Spectral facts -->
+<div class="slide">
+  <h2>Facts from Linear Algebra</h2>
+  <div class="divider"></div>
+  <p>For real symmetric $A$ (stated, from linear algebra):</p>
+  <ul>
+    <li>All $n$ eigenvalues are <strong>real</strong></li>
+    <li>$A &gt; 0$: all eigenvalues positive</li>
+    <li>$A \geq 0$: all eigenvalues nonnegative</li>
+    <li>Eigenvectors form an <strong>orthonormal basis</strong> of $\mathbb{R}^n$</li>
+  </ul>
+  <p class="muted">Distinct eigenvalues give orthogonal eigenvectors; repeated ones can be chosen so</p>
+</div>
+
+<!-- Spectral decomposition -->
+<div class="slide">
+  <h2>Spectral Decomposition</h2>
+  <div class="divider"></div>
+  <p>Every symmetric $A$ splits along its eigenbasis:</p>
+  <div class="math-block" style="margin:8px 0">$$A = \sum_{i=1}^{n} \lambda_i\, z_i z_i^\top,
+    \qquad z_i^\top z_j = \begin{cases} 1 &amp; i = j \\ 0 &amp; i \neq j \end{cases}$$</div>
+  <ul>
+    <li>A sum of <strong>rank-one</strong> pieces, one per direction</li>
+    <li>Functions of $A$: act on the $\lambda_i$, keep the $z_i$</li>
+  </ul>
+</div>
+
+<!-- Worked eigen -->
+<div class="slide">
+  <h2>Worked &mdash; Eigenpairs of the Workbench</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$A = \begin{bmatrix} 2 &amp; 1 \\ 1 &amp; 2 \end{bmatrix}:
+    \qquad \lambda_1 = 3,\; z_1 = \tfrac{1}{\sqrt{2}}\begin{bmatrix} 1 \\ 1 \end{bmatrix};
+    \qquad \lambda_2 = 1,\; z_2 = \tfrac{1}{\sqrt{2}}\begin{bmatrix} 1 \\ -1 \end{bmatrix}$$</div>
+  <ul>
+    <li>Check: $A z_1 = \tfrac{1}{\sqrt{2}}(3, 3)^\top = 3 z_1$ &nbsp;&#10003;</li>
+    <li>Check: $A z_2 = \tfrac{1}{\sqrt{2}}(1, -1)^\top = 1 \cdot z_2$ &nbsp;&#10003;</li>
+    <li>Both eigenvalues positive &mdash; PD, confirming the sum-of-squares certificate</li>
+  </ul>
+</div>
+
+<!-- Square root -->
+<div class="slide">
+  <h2>The Symmetric Square Root</h2>
+  <div class="divider"></div>
+  <p>For $A \geq 0$, all $\lambda_i \geq 0$, so define</p>
+  <div class="math-block" style="margin:8px 0">$$B = \sum_{i=1}^{n} \sqrt{\lambda_i}\, z_i z_i^\top
+    \qquad\Longrightarrow\qquad B^2 = \sum_i \lambda_i z_i z_i^\top = A$$</div>
+  <ul>
+    <li>Cross terms vanish: $z_i z_i^\top z_j z_j^\top = 0$ for $i \neq j$</li>
+    <li>Write $B = A^{1/2}$ &mdash; symmetric, and PSD itself</li>
+  </ul>
+</div>
+
+<!-- Worked sqrt -->
+<div class="slide">
+  <h2>Worked &mdash; Square Root of the Workbench</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$A^{1/2} = \sqrt{3}\, z_1 z_1^\top + 1\cdot z_2 z_2^\top
+    = \begin{bmatrix} \tfrac{\sqrt{3}+1}{2} &amp; \tfrac{\sqrt{3}-1}{2} \\[2pt] \tfrac{\sqrt{3}-1}{2} &amp; \tfrac{\sqrt{3}+1}{2} \end{bmatrix}
+    \approx \begin{bmatrix} 1.366 &amp; 0.366 \\ 0.366 &amp; 1.366 \end{bmatrix}$$</div>
+  <ul>
+    <li>Check the top-left of $B^2$: $\tfrac{(\sqrt{3}+1)^2 + (\sqrt{3}-1)^2}{4} = \tfrac{8}{4} = 2$ &nbsp;&#10003;</li>
+    <li>Off-diagonal: $2 \cdot \tfrac{(\sqrt{3}+1)(\sqrt{3}-1)}{4} = \tfrac{2 \cdot 2}{4} = 1$ &nbsp;&#10003;</li>
+  </ul>
+</div>
+
+<!-- Inverse -->
+<div class="slide">
+  <h2>The Inverse, Same Recipe</h2>
+  <div class="divider"></div>
+  <p>For $A &gt; 0$, all $\lambda_i &gt; 0$, so define</p>
+  <div class="math-block" style="margin:8px 0">$$A^{-1} = \sum_{i=1}^{n} \frac{1}{\lambda_i}\, z_i z_i^\top
+    \qquad\Longrightarrow\qquad A^{-1} A = \sum_i z_i z_i^\top = I$$</div>
+  <ul>
+    <li>Same directions &mdash; reciprocal weights</li>
+    <li>PD is exactly what makes the density's $\Sigma^{-1}$ exist</li>
+  </ul>
+</div>
+
+<!-- Exercise A = B^T B -->
+<div class="slide">
+  <h2>Exercise &mdash; Factorizing a PSD Matrix</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Exercise.</h3>
+    <p>For positive semidefinite $A$: show there exists a matrix $B$ with</p>
+    <div class="math-block" style="margin:8px 0">$$A = B^\top B$$</div>
+  </div>
+  <p class="muted">Hint: you have just built a good candidate</p>
+</div>
+
+<!-- Solution -->
+<div class="slide">
+  <h2>Solution &mdash; the Root Works</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$B := A^{1/2}
+    \qquad\Longrightarrow\qquad
+    B^\top B \;\stackrel{(B \text{ symmetric})}{=}\; B\,B = A \qquad \blacksquare$$</div>
+  <ul>
+    <li>Converse holds too: $x^\top B^\top B x = \lVert Bx \rVert^2 \geq 0$</li>
+    <li>So PSD $=$ &ldquo;a squared matrix&rdquo; &mdash; exactly like $\sigma^2 \geq 0$</li>
+  </ul>
+</div>
+
+<!-- Why PSD matters -->
+<div class="slide">
+  <h2>Why This Buys a Density</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Take $A &gt; 0$ and the form $q(x) = x^\top A x$</li>
+    <li>$q(x) \to \infty$ as $\lVert x \rVert \to \infty$ &mdash; every direction climbs</li>
+    <li>So $e^{-q(x)} \to 0$: the tails die, the integral is finite</li>
+  </ul>
+  <div class="highlight">
+    <p>PD quadratic exponent $\Rightarrow$ a <strong>valid probability density</strong> &mdash; Definition 1, next.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 04 — THREE DEFINITIONS ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Three Definitions</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Density &middot; construction &middot; projection</p>
+</div>
+
+<!-- Overview -->
+<div class="slide">
+  <h2>Three Roads to One Object</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>1 &middot; Density</h3>
+      <p>Write down the formula for $f_X(x)$</p>
+      <p class="muted">needs $V &gt; 0$</p>
+    </div>
+    <div class="card">
+      <h3>2 &middot; Construction</h3>
+      <p>Build it: $X = DW + \mu$ from i.i.d. noise</p>
+      <p class="muted">how samplers work</p>
+    </div>
+    <div class="card">
+      <h3>3 &middot; Projection</h3>
+      <p>Every $a^\top X$ is scalar normal</p>
+      <p class="muted">how proofs work</p>
+    </div>
+  </div>
+  <p class="muted">The source states their equivalence; the map of what we prove closes this section</p>
+</div>
+
+<!-- Def 1 -->
+<div class="slide">
+  <h2>Definition 1 &mdash; by Density</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition 1 (density).</h3>
+    <p>$X \in \mathbb{R}^n$ is (nondegenerate) multivariate normal if</p>
+    <div class="math-block" style="margin:8px 0">$$f_X(x) = \frac{1}{(2\pi)^{n/2} |V|^{1/2}}
+      \exp\!\left( -\tfrac{1}{2}(x - \mu)^\top V^{-1} (x - \mu) \right)$$</div>
+    <p>for some $\mu \in \mathbb{R}^n$ and positive definite $V$.</p>
+  </div>
+  <p class="muted">The 2D formula of &sect;02, now for any $n$ &mdash; $|V|$ is $\det V$</p>
+</div>
+
+<!-- Standard case -->
+<div class="slide">
+  <h2>Special Case &mdash; White Noise</h2>
+  <div class="divider"></div>
+  <p>Set $\mu = 0$ and $V = I$:</p>
+  <div class="math-block" style="margin:8px 0">$$f_W(w) = \frac{1}{(2\pi)^{n/2}} e^{-\frac{1}{2} w^\top w}
+    = \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi}} e^{-w_i^2/2}$$</div>
+  <ul>
+    <li>Exponent splits &mdash; $n$ independent $\mathcal{N}(0,1)$ coordinates</li>
+    <li>Write $W \sim \mathcal{N}(0, I)$: the raw material for everything</li>
+  </ul>
+</div>
+
+<!-- Def 2 -->
+<div class="slide">
+  <h2>Definition 2 &mdash; by Construction</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition 2 (constructive).</h3>
+    <p>$X$ is multivariate normal if</p>
+    <div class="math-block" style="margin:8px 0">$$X = DW + \mu,$$</div>
+    <p>with $W$ a vector of independent $\mathcal{N}(0,1)$ variables and $D$ a real matrix.</p>
+  </div>
+  <ul>
+    <li>Mix white noise linearly, then shift</li>
+    <li>No invertibility asked of $D$ &mdash; degenerate cases included</li>
+  </ul>
+</div>
+
+<!-- Coloring SVG -->
+<div class="slide">
+  <h2>Picture &mdash; Coloring White Noise</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:1020px;margin:0 auto;">
+  <svg viewBox="0 0 900 260" style="width:100%">
+    <defs><marker id="colArrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 z" fill="#5b6770"/></marker></defs>
+    <circle cx="140" cy="130" r="70" fill="none" stroke="#003876" stroke-width="3"/>
+    <circle cx="140" cy="130" r="36" fill="none" stroke="#003876" stroke-width="2" opacity="0.5"/>
+    <text x="140" y="238" font-size="18" fill="#1a1a1a" text-anchor="middle" font-weight="700">W: white noise</text>
+    <line x1="230" y1="130" x2="320" y2="130" stroke="#5b6770" stroke-width="2.5" marker-end="url(#colArrow)"/>
+    <text x="275" y="112" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">D</text>
+    <ellipse cx="430" cy="130" rx="98" ry="40" fill="none" stroke="#003876" stroke-width="3" transform="rotate(-35 430 130)"/>
+    <ellipse cx="430" cy="130" rx="50" ry="20" fill="none" stroke="#003876" stroke-width="2" opacity="0.5" transform="rotate(-35 430 130)"/>
+    <text x="430" y="238" font-size="18" fill="#1a1a1a" text-anchor="middle" font-weight="700">DW: stretched + tilted</text>
+    <line x1="540" y1="130" x2="630" y2="130" stroke="#5b6770" stroke-width="2.5" marker-end="url(#colArrow)"/>
+    <text x="585" y="112" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">+ mu</text>
+    <ellipse cx="760" cy="90" rx="98" ry="40" fill="none" stroke="#c0392b" stroke-width="3" transform="rotate(-35 760 90)"/>
+    <circle cx="760" cy="90" r="4" fill="#c0392b"/>
+    <text x="760" y="238" font-size="18" fill="#1a1a1a" text-anchor="middle" font-weight="700">X = DW + mu</text>
+  </svg>
+  </div>
+  <p class="muted">Every Gaussian: a linear image of white noise &mdash; how samplers draw it</p>
+</div>
+
+<!-- Def 3 -->
+<div class="slide">
+  <h2>Definition 3 &mdash; by Projection</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition 3 (projection).</h3>
+    <p>$X$ is multivariate normal if for <strong>every</strong> vector $a \in \mathbb{R}^n$,</p>
+    <div class="math-block" style="margin:8px 0">$$a^\top X \;\text{ is univariate normal.}$$</div>
+  </div>
+  <ul>
+    <li>Reduces every question to scalars &mdash; where prob05 tools apply</li>
+    <li>Every 1D shadow is a bell curve</li>
+  </ul>
+</div>
+
+<!-- Projection SVG -->
+<div class="slide">
+  <h2>Picture &mdash; Every Shadow Is Normal</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:900px;margin:0 auto;">
+  <svg viewBox="0 0 760 320" style="width:100%">
+    <defs><marker id="prArrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 z" fill="#5b6770"/></marker></defs>
+    <ellipse cx="380" cy="120" rx="150" ry="62" fill="none" stroke="#003876" stroke-width="3" transform="rotate(-25 380 120)"/>
+    <ellipse cx="380" cy="120" rx="76" ry="31" fill="none" stroke="#003876" stroke-width="2" opacity="0.5" transform="rotate(-25 380 120)"/>
+    <line x1="120" y1="260" x2="660" y2="260" stroke="#5b6770" stroke-width="2"/>
+    <line x1="260" y1="180" x2="260" y2="252" stroke="#5b6770" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#prArrow)"/>
+    <line x1="380" y1="190" x2="380" y2="252" stroke="#5b6770" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#prArrow)"/>
+    <line x1="500" y1="180" x2="500" y2="252" stroke="#5b6770" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#prArrow)"/>
+    <polyline points="180,258 220,252 260,238 300,214 340,192 380,184 420,192 460,214 500,238 540,252 580,258" fill="none" stroke="#c0392b" stroke-width="3"/>
+    <text x="600" y="240" font-size="18" fill="#c0392b" font-weight="700">a&#8319;X</text>
+    <text x="660" y="284" font-size="16" fill="#5b6770" text-anchor="end">axis a</text>
+  </svg>
+  </div>
+  <p class="muted">Project the cloud onto any direction $a$ &mdash; the histogram is Gaussian</p>
+</div>
+
+<!-- Degeneracy -->
+<div class="slide">
+  <h2>Degeneracy &mdash; When the PDF Dies</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div>
+      <ul>
+        <li>Definition 1 needs $V &gt; 0$ &mdash; a real density</li>
+        <li>Singular $V$: all mass on a <strong>subspace</strong>, no pdf</li>
+        <li>Definitions 2 and 3 <strong>still valid</strong></li>
+      </ul>
+      <div class="math-block" style="margin:8px 0">$$D = \begin{bmatrix} 1 \\ 1 \end{bmatrix}:
+        \;\; X_2 = X_1,\;\; V = \begin{bmatrix} 1 &amp; 1 \\ 1 &amp; 1 \end{bmatrix}$$</div>
+    </div>
+    <div>
+      <svg viewBox="0 0 340 260" style="width:100%">
+        <line x1="30" y1="130" x2="310" y2="130" stroke="#5b6770" stroke-width="1.5"/>
+        <line x1="170" y1="20" x2="170" y2="240" stroke="#5b6770" stroke-width="1.5"/>
+        <line x1="60" y1="240" x2="280" y2="20" stroke="#003876" stroke-width="5" opacity="0.8"/>
+        <circle cx="120" cy="180" r="4" fill="#003876"/>
+        <circle cx="150" cy="150" r="4" fill="#003876"/>
+        <circle cx="185" cy="115" r="4" fill="#003876"/>
+        <circle cx="215" cy="85" r="4" fill="#003876"/>
+        <text x="252" y="52" font-size="17" fill="#003876" font-weight="700">x2 = x1</text>
+      </svg>
+    </div>
+  </div>
+  <p class="muted">$\det V = 0$: an ellipse squeezed flat into a line</p>
+</div>
+
+<!-- Equivalence map -->
+<div class="slide">
+  <h2>Equivalence &mdash; What We Actually Prove</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:960px;margin:0 auto;">
+  <svg viewBox="0 0 840 250" style="width:100%">
+    <defs>
+      <marker id="eqB" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 z" fill="#003876"/></marker>
+      <marker id="eqG" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L8,4.5 L0,9 z" fill="#8a949e"/></marker>
+    </defs>
+    <rect x="20" y="80" width="220" height="70" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+    <text x="130" y="122" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">Def 2: X = DW + mu</text>
+    <rect x="310" y="20" width="220" height="70" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+    <text x="420" y="62" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">Def 1: density</text>
+    <rect x="310" y="150" width="220" height="70" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+    <text x="420" y="192" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">Def 3: projections</text>
+    <line x1="245" y1="95" x2="303" y2="66" stroke="#003876" stroke-width="3" marker-end="url(#eqB)"/>
+    <text x="240" y="46" font-size="16" fill="#003876" font-weight="700">proved: part 4 (D invertible)</text>
+    <line x1="245" y1="135" x2="303" y2="168" stroke="#003876" stroke-width="3" marker-end="url(#eqB)"/>
+    <text x="238" y="212" font-size="16" fill="#003876" font-weight="700">proved: part 3</text>
+    <line x1="560" y1="55" x2="640" y2="55" stroke="#8a949e" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#eqG)"/>
+    <line x1="560" y1="185" x2="640" y2="185" stroke="#8a949e" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#eqG)"/>
+    <text x="655" y="50" font-size="16" fill="#5b6770">reverse directions:</text>
+    <text x="655" y="72" font-size="16" fill="#5b6770">stated in the source,</text>
+    <text x="655" y="94" font-size="16" fill="#5b6770">not proved today</text>
+    <text x="655" y="190" font-size="16" fill="#5b6770">(same status)</text>
+  </svg>
+  </div>
+  <p class="muted">Solid arrows: proved in &sect;06. Dashed: asserted equivalent by the source</p>
+</div>
+
+<!-- ===== SECTION 05 — MEANS AND COVARIANCES ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Vector Means &amp; Covariances</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The covariance matrix</p>
+</div>
+
+<!-- Mean vector -->
+<div class="slide">
+  <h2>The Mean Vector</h2>
+  <div class="divider"></div>
+  <p>For a random vector $X = (X_1, \dots, X_n)^\top$:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}[X] = \begin{bmatrix} \mathbb{E}[X_1] \\ \vdots \\ \mathbb{E}[X_n] \end{bmatrix}$$</div>
+  <ul>
+    <li>Expectation acts <strong>coordinate-wise</strong></li>
+    <li>Linearity survives: $\mathbb{E}[AX + b] = A\,\mathbb{E}[X] + b$</li>
+  </ul>
+</div>
+
+<!-- Covariance matrix -->
+<div class="slide">
+  <h2>The Covariance Matrix</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (covariance).</h3>
+    <p>For $X \in \mathbb{R}^n$ and $Y \in \mathbb{R}^m$:</p>
+    <div class="math-block" style="margin:8px 0">$$\operatorname{Cov}(X, Y) = \mathbb{E}\big[ (X - \mathbb{E}[X])(Y - \mathbb{E}[Y])^\top \big]
+      \;\in\; \mathbb{R}^{n \times m}$$</div>
+  </div>
+  <ul>
+    <li>Entry $(i,j)$: plain scalar $\operatorname{Cov}(X_i, Y_j)$</li>
+    <li>An outer product averaged &mdash; all pairwise co-movements at once</li>
+  </ul>
+</div>
+
+<!-- Cov(X,X) -->
+<div class="slide">
+  <h2>The Self-Covariance $\operatorname{Cov}(X, X)$</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Square, $n \times n$, and <strong>symmetric</strong></li>
+    <li>Diagonal: the variances $\operatorname{Var}(X_i)$</li>
+    <li>Off-diagonal: couplings $\operatorname{Cov}(X_i, X_j)$</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$\operatorname{Cov}(X, X)
+    = \begin{bmatrix} \operatorname{Var}(X_1) &amp; \cdots &amp; \operatorname{Cov}(X_1, X_n) \\ \vdots &amp; \ddots &amp; \vdots \\ \operatorname{Cov}(X_n, X_1) &amp; \cdots &amp; \operatorname{Var}(X_n) \end{bmatrix}$$</div>
+</div>
+
+<!-- Exercise PSD -->
+<div class="slide">
+  <h2>Exercise &mdash; Covariance Is PSD</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Exercise.</h3>
+    <p>Show that $\operatorname{Cov}(X, X)$ is nonnegative definite.</p>
+  </div>
+  <p class="muted">Hint: test the quadratic form with an arbitrary $a \in \mathbb{R}^n$</p>
+</div>
+
+<!-- Solution -->
+<div class="slide">
+  <h2>Solution &mdash; a Variance in Disguise</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    a^\top \operatorname{Cov}(X, X)\, a
+    &amp;\stackrel{(\text{def.})}{=} \mathbb{E}\big[ a^\top (X - \mathbb{E}X)(X - \mathbb{E}X)^\top a \big] \\[2pt]
+    &amp;\stackrel{(\text{scalar})}{=} \mathbb{E}\big[ (a^\top (X - \mathbb{E}X))^2 \big]
+    = \operatorname{Var}(a^\top X) \;\geq\; 0 \qquad \blacksquare
+  \end{aligned}$$</div>
+  <ul>
+    <li>Every direction's variance sits inside the matrix</li>
+    <li>So legal covariances $=$ PSD matrices &mdash; &sect;03 was no detour</li>
+  </ul>
+</div>
+
+<!-- Correlation -->
+<div class="slide">
+  <h2>Correlation Coefficient</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\rho_{ij} = \frac{\operatorname{Cov}(X_i, X_j)}{\sqrt{\operatorname{Var}(X_i)\operatorname{Var}(X_j)}},
+    \qquad -1 \leq \rho_{ij} \leq 1$$</div>
+  <ul>
+    <li>Normalized coupling &mdash; scale-free measure of linear dependence</li>
+    <li>$\rho_{ij} = 0$: the pair is <strong>uncorrelated</strong></li>
+    <li>Running example $\Sigma$: $\rho_{12} = 0.6 / (1 \cdot 1) = 0.6$ &#10003;</li>
+  </ul>
+</div>
+
+<!-- ===== SECTION 06 — PROPERTIES THEOREM ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>The Properties Theorem</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Seven parts, proved</p>
+</div>
+
+<!-- Statement 1-3 -->
+<div class="slide">
+  <h2>Theorem 2 &mdash; Parts 1&ndash;3</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 2 (properties of the multivariate normal).</h3>
+    <p>Let $X = DW + \mu$, with $W$ of independent $\mathcal{N}(0,1)$ components. Then:</p>
+    <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+      &amp;\textbf{1.}\;\; X_i \sim \mathcal{N}(\mu_i, \cdot) \;\;\text{&mdash; each component normal} \\[2pt]
+      &amp;\textbf{2.}\;\; \operatorname{Cov}(X, X) = D D^\top \\[2pt]
+      &amp;\textbf{3.}\;\; Y = CX + d \;\Longrightarrow\; Y \sim \mathcal{N}(C\mu + d,\; C D D^\top C^\top)
+    \end{aligned}$$</div>
+  </div>
+  <p class="muted">Closure: linear maps of Gaussians stay Gaussian</p>
+</div>
+
+<!-- Statement 4-6 -->
+<div class="slide">
+  <h2>Theorem 2 &mdash; Parts 4&ndash;6</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 2, continued.</h3>
+    <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+      &amp;\textbf{4.}\;\; D \text{ invertible} \;\Longrightarrow\; X \text{ has the Definition-1 density with } V = DD^\top \\[2pt]
+      &amp;\textbf{5.}\;\; \text{the distribution of } X \text{ is determined by } (\mu, V) \text{ alone} \\[2pt]
+      &amp;\textbf{6.}\;\; \text{components uncorrelated} \;\Longleftrightarrow\; \text{components independent}
+    \end{aligned}$$</div>
+  </div>
+  <p class="muted">Part 6 is special to Gaussians &mdash; false in general</p>
+</div>
+
+<!-- Statement 7 -->
+<div class="slide">
+  <h2>Theorem 2 &mdash; Part 7 (Conditionals)</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 2, part 7.</h3>
+    <p>Suppose, with $V_{YY} &gt; 0$:</p>
+    <div class="math-block" style="margin:8px 0">$$\begin{bmatrix} X \\ Y \end{bmatrix}
+      \sim \mathcal{N}\!\left( \begin{bmatrix} \mu_X \\ \mu_Y \end{bmatrix},
+      \begin{bmatrix} V_{XX} &amp; V_{XY} \\ V_{YX} &amp; V_{YY} \end{bmatrix} \right)$$</div>
+    <p>(a) $\mathbb{E}[X \mid Y] = \mu_X + V_{XY} V_{YY}^{-1} (Y - \mu_Y)$ &nbsp;&middot;&nbsp;
+       (b) $\tilde{X} = X - \mathbb{E}[X|Y]$ is independent of $Y$ &nbsp;&middot;&nbsp;
+       (c) $\operatorname{Cov}(\tilde{X}, \tilde{X}) = V_{XX} - V_{XY} V_{YY}^{-1} V_{YX}$</p>
+  </div>
+</div>
+
+<!-- Roadmap -->
+<div class="slide">
+  <h2>Proof Roadmap &mdash; One Tool per Part</h2>
+  <div class="divider"></div>
+  <table>
+    <thead><tr><th>Part</th><th>Claim</th><th>Key tool</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>components normal</td><td>sums of independent Gaussians</td></tr>
+      <tr><td>2</td><td>$\operatorname{Cov} = DD^\top$</td><td>$\mathbb{E}[WW^\top] = I$</td></tr>
+      <tr><td>3</td><td>linear closure</td><td>compose the construction</td></tr>
+      <tr><td>4</td><td>the density</td><td>change of variables</td></tr>
+      <tr><td>5</td><td>$(\mu, V)$ suffices</td><td>MGF uniqueness (prob05)</td></tr>
+      <tr><td>6</td><td>uncorrelated = independent</td><td>matching + part 5</td></tr>
+      <tr><td>7</td><td>conditionals</td><td>orthogonality + part 6</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- P1 technique -->
+<div class="slide">
+  <h2>Part 1 &mdash; Technique Review</h2>
+  <div class="divider"></div>
+  <p>Recall from <strong>prob05</strong> (MGF products + uniqueness):</p>
+  <div class="math-block" style="margin:8px 0">$$U \sim \mathcal{N}(\mu_u, \sigma_u^2) \perp V \sim \mathcal{N}(\mu_v, \sigma_v^2)
+    \;\;\Longrightarrow\;\;
+    aU + bV \sim \mathcal{N}(a\mu_u + b\mu_v,\; a^2\sigma_u^2 + b^2\sigma_v^2)$$</div>
+  <ul>
+    <li>Independent sums: MGFs multiply; the product is again a Gaussian MGF</li>
+    <li>Extends to any finite sum by induction</li>
+  </ul>
+</div>
+
+<!-- P1 proof -->
+<div class="slide">
+  <h2>Part 1 &mdash; Proof</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    X_i = e_i^\top (DW + \mu)
+    &amp;\stackrel{(\text{expand})}{=} \sum_{j=1}^{n} d_{ij} W_j + \mu_i
+    \quad\text{&mdash; independent normals, summed} \\[4pt]
+    \mathbb{E}[X_i]
+    &amp;\stackrel{(\mathbb{E}[W] = 0)}{=} e_i^\top \mu = \mu_i \qquad \blacksquare
+  \end{aligned}$$</div>
+  <ul>
+    <li>Linear combination of independent normals &mdash; normal, by the review</li>
+    <li>Same argument gives $a^\top X$ normal for every $a$: Definition 3 holds</li>
+  </ul>
+</div>
+
+<!-- P2 technique -->
+<div class="slide">
+  <h2>Part 2 &mdash; Technique: $\mathbb{E}[WW^\top] = I$</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\big( \mathbb{E}[WW^\top] \big)_{ij} = \mathbb{E}[W_i W_j]
+    = \begin{cases} \operatorname{Var}(W_i) = 1 &amp; i = j \\ \mathbb{E}[W_i]\,\mathbb{E}[W_j] = 0 &amp; i \neq j \end{cases}$$</div>
+  <ul>
+    <li>Diagonal: unit variances</li>
+    <li>Off-diagonal: independence factorizes the product</li>
+  </ul>
+  <p class="muted">White noise has the identity as covariance &mdash; hence the name</p>
+</div>
+
+<!-- P2 proof -->
+<div class="slide">
+  <h2>Part 2 &mdash; Proof</h2>
+  <div class="divider"></div>
+  <p>Zero-mean case ($\mu = 0$) for simplicity:</p>
+  <div class="math-block">$$\begin{aligned}
+    \operatorname{Cov}(X, X)
+    &amp;= \mathbb{E}[XX^\top]
+    \stackrel{(X = DW)}{=} \mathbb{E}[DWW^\top D^\top] \\[2pt]
+    &amp;\stackrel{(D \text{ fixed})}{=} D\, \mathbb{E}[WW^\top]\, D^\top
+    = D D^\top \qquad \blacksquare
+    \end{aligned}$$</div>
+  <ul>
+    <li>Constants slide out of expectations &mdash; on both sides</li>
+    <li>General $\mu$: centering removes it first</li>
+  </ul>
+</div>
+
+<!-- P3 proof -->
+<div class="slide">
+  <h2>Part 3 &mdash; Proof</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$Y = CX + d
+    \stackrel{(X = DW + \mu)}{=} \underbrace{(CD)}_{\text{new } D}\, W + \underbrace{(C\mu + d)}_{\text{new } \mu}$$</div>
+  <ul>
+    <li>Still a linear map of white noise &mdash; multivariate normal by Definition 2</li>
+    <li>Mean: $\mathbb{E}[Y] = C\mu + d$ &mdash; linearity</li>
+    <li>Covariance: $(CD)(CD)^\top = C D D^\top C^\top$ &mdash; part 2 &nbsp;$\blacksquare$</li>
+  </ul>
+</div>
+
+<!-- P3 corollary: marginals -->
+<div class="slide">
+  <h2>Corollary &mdash; All Marginals Are Gaussian</h2>
+  <div class="divider"></div>
+  <p>Pick coordinates $S = \{i_1, \dots, i_k\}$; let $C$ select those rows:</p>
+  <div class="math-block" style="margin:8px 0">$$X_S = C X \;\sim\; \mathcal{N}\big( \mu_S,\; V_{SS} \big)
+    \quad\text{&mdash; the corresponding sub-vector and sub-block}$$</div>
+  <ul>
+    <li>Marginalizing $=$ multiplying by a <strong>selector matrix</strong> &mdash; part 3</li>
+    <li>No integral computed: read the answer off $\mu$ and $V$</li>
+  </ul>
+</div>
+
+<!-- P3 implication -->
+<div class="slide">
+  <h2>Part 3 &mdash; What It Buys</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Linear layers preserve Gaussianity</strong> &mdash; mean and covariance track exactly</li>
+    <li><strong>Whitening</strong>: $V^{-1/2}(X - \mu) \sim \mathcal{N}(0, I)$ &mdash; undo the coloring of &sect;04</li>
+    <li><strong>Reparameterization trick</strong>: sample $\mathcal{N}(\mu, \Sigma)$ as $\Sigma^{1/2} W + \mu$</li>
+  </ul>
+  <div class="highlight">
+    <p>One family, closed under every affine map &mdash; no other continuous family does this.</p>
+  </div>
+</div>
+
+<!-- P4 technique -->
+<div class="slide">
+  <h2>Part 4 &mdash; Technique: Change of Variables</h2>
+  <div class="divider"></div>
+  <p>Recall the density transform (1D version in <strong>prob03</strong>):</p>
+  <div class="math-block" style="margin:8px 0">$$X = g(W),\; g \text{ invertible, linear } g(w) = Dw:
+    \qquad f_X(x) = \frac{f_W(D^{-1} x)}{|\det D|}$$</div>
+  <ul>
+    <li>Densities reweight by the <strong>volume stretch</strong> of the map</li>
+    <li>For linear maps the stretch is constant: $|\det D|$</li>
+  </ul>
+</div>
+
+<!-- P4 proof 1 -->
+<div class="slide">
+  <h2>Part 4 &mdash; Proof, Step 1</h2>
+  <div class="divider"></div>
+  <p>Take $\mu = 0$ and $X = DW$ with $D$ invertible. The source density:</p>
+  <div class="math-block" style="margin:8px 0">$$f_W(w) = \frac{1}{(2\pi)^{n/2}} \exp\!\left( -\tfrac{1}{2} w^\top w \right)
+    \quad\text{&mdash; white noise, from &sect;04}$$</div>
+  <p>Apply change of variables with $w = D^{-1} x$:</p>
+  <div class="math-block" style="margin:8px 0">$$f_X(x) = \frac{1}{(2\pi)^{n/2}\, |\det D|}
+    \exp\!\left( -\tfrac{1}{2} (D^{-1}x)^\top (D^{-1}x) \right)$$</div>
+</div>
+
+<!-- P4 proof 2 -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; Massage the Exponent</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    (D^{-1}x)^\top (D^{-1}x)
+    &amp;\stackrel{(\text{transpose})}{=} x^\top (D^{-1})^\top D^{-1} x \\[4pt]
+    &amp;\stackrel{((AB)^{-1} = B^{-1}A^{-1})}{=} x^\top (D D^\top)^{-1} x
+    \;=\; x^\top V^{-1} x, \qquad V := DD^\top
+  \end{aligned}$$</div>
+  <ul>
+    <li>The quadratic form organizes itself around $V = DD^\top$</li>
+    <li>By part 2 this $V$ <strong>is</strong> the covariance of $X$</li>
+  </ul>
+</div>
+
+<!-- P4 proof 3 -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; Normalize</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$|\det D| = \big( \det D \cdot \det D^\top \big)^{1/2} = |DD^\top|^{1/2} = |V|^{1/2}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Longrightarrow\quad f_X(x) = \frac{1}{(2\pi)^{n/2} |V|^{1/2}}
+    \exp\!\left( -\tfrac{1}{2} x^\top V^{-1} x \right) \qquad \blacksquare$$</div>
+  <ul>
+    <li>Exactly the Definition-1 density with $V = DD^\top$</li>
+    <li>General $\mu$: replace $x$ by $x - \mu$ &mdash; a shift changes no volume</li>
+  </ul>
+</div>
+
+<!-- P4 summary -->
+<div class="slide">
+  <h2>Part 4 &mdash; Proof Summary</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$f_W \;\xrightarrow{\;w = D^{-1}x,\; \div |\det D|\;}\;
+    f_X \;\xrightarrow{\;(D^{-1})^\top D^{-1} = V^{-1}\;}\;
+    \text{Definition-1 form}$$</div>
+  <ul>
+    <li>Trick: the inverse map reassembles into $V = DD^\top$</li>
+    <li>Proves the solid arrow Def 2 $\to$ Def 1 of the &sect;04 map</li>
+  </ul>
+  <p class="muted">Invertible $D$ needed twice: for $D^{-1}$ and for $|V| &gt; 0$</p>
+</div>
+
+<!-- P5 technique -->
+<div class="slide">
+  <h2>Part 5 &mdash; Technique: MGF Recall</h2>
+  <div class="divider"></div>
+  <p>Recall from <strong>prob05</strong>, upgraded to vectors:</p>
+  <div class="math-block" style="margin:8px 0">$$M_X(s) = \mathbb{E}\big[ e^{s^\top X} \big], \quad s \in \mathbb{R}^n
+    \qquad\text{scalar Gaussian: } M(t) = e^{\mu t + \sigma^2 t^2 / 2}$$</div>
+  <ul>
+    <li><strong>Uniqueness</strong> (prob05, stated): the MGF pins down the distribution</li>
+    <li>Works with no density &mdash; degenerate case included</li>
+  </ul>
+</div>
+
+<!-- P5 proof -->
+<div class="slide">
+  <h2>Part 5 &mdash; Proof</h2>
+  <div class="divider"></div>
+  <p>Fix $s$; the scalar $s^\top X$ is normal (part 1's argument):</p>
+  <div class="math-block">$$\begin{aligned}
+    s^\top X \sim \mathcal{N}(s^\top \mu,\; s^\top V s)
+    \;\;&amp;\Longrightarrow\;\;
+    M_X(s) = \mathbb{E}\big[ e^{s^\top X} \big]
+    \stackrel{(\text{scalar MGF at } t = 1)}{=}
+    \exp\!\left( s^\top \mu + \tfrac{1}{2} s^\top V s \right)
+  \end{aligned}$$</div>
+  <ul>
+    <li>Mean of $s^\top X$: linearity; variance: the &sect;05 quadratic form $s^\top V s$</li>
+    <li>MGF depends on $(\mu, V)$ only $\Rightarrow$ uniqueness closes it &nbsp;$\blacksquare$</li>
+  </ul>
+</div>
+
+<!-- P5 implication -->
+<div class="slide">
+  <h2>Part 5 &mdash; What It Buys</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>A Gaussian <strong>is</strong> its mean and covariance &mdash; nothing else to know</li>
+    <li>The notation $X \sim \mathcal{N}(\mu, V)$ is now fully justified</li>
+    <li>Holds even when no density exists</li>
+  </ul>
+  <div class="highlight">
+    <p>Gaussians equal in distribution: match $\mu$, match $V$. Done. Used in part 6.</p>
+  </div>
+</div>
+
+<!-- P6 statement + caveat -->
+<div class="slide">
+  <h2>Part 6 &mdash; the Dangerous Equivalence</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\text{components of } X \text{ uncorrelated}
+    \quad\Longleftrightarrow\quad \text{components independent}$$</div>
+  <ul>
+    <li>General random variables: uncorrelated does <strong>not</strong> imply independent</li>
+    <li>Correlation sees only <em>linear</em> dependence &mdash; recall prob03's MI discussion</li>
+    <li>Jointly Gaussian: the implication <strong>upgrades to equivalence</strong></li>
+  </ul>
+  <p class="muted">Requires joint Gaussianity of the vector &mdash; not just Gaussian marginals</p>
+</div>
+
+<!-- P6 proof forward -->
+<div class="slide">
+  <h2>Part 6 &mdash; Proof, Easy Direction</h2>
+  <div class="divider"></div>
+  <p>Independent $\Rightarrow$ uncorrelated (any distribution):</p>
+  <div class="math-block" style="margin:8px 0">$$\operatorname{Cov}(X_i, X_j)
+    = \mathbb{E}[X_i X_j] - \mathbb{E}[X_i]\,\mathbb{E}[X_j]
+    \stackrel{(\text{indep.})}{=} \mathbb{E}[X_i]\mathbb{E}[X_j] - \mathbb{E}[X_i]\mathbb{E}[X_j] = 0$$</div>
+  <ul>
+    <li>Products of independent variables factorize in expectation</li>
+    <li>The content of part 6 is the <strong>converse</strong></li>
+  </ul>
+</div>
+
+<!-- P6 proof converse -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; the Matching Trick</h2>
+  <div class="divider"></div>
+  <p>Assume uncorrelated: $V$ is diagonal.</p>
+  <ul>
+    <li>Build $Y$: <strong>independent</strong> normals, same means, same variances as $X$</li>
+    <li>Then $Y$ is multivariate normal with the same $(\mu, V)$</li>
+    <li>Part 5: same $(\mu, V)$ $\Rightarrow$ <strong>same distribution</strong></li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$X \stackrel{d}{=} Y,\;\; Y \text{ independent}
+    \quad\Longrightarrow\quad X \text{ independent} \qquad \blacksquare$$</div>
+</div>
+
+<!-- P6 alternative -->
+<div class="slide">
+  <h2>Part 6 &mdash; Alternative: Factorize the Density</h2>
+  <div class="divider"></div>
+  <p>When $V$ is diagonal and invertible, the exponent splits:</p>
+  <div class="math-block" style="margin:8px 0">$$f_X(x) = \frac{1}{(2\pi)^{n/2} |V|^{1/2}}
+    \exp\!\left( -\sum_{i=1}^{n} \frac{(x_i - \mu_i)^2}{2 V_{ii}} \right)
+    = \prod_{i=1}^{n} f_{X_i}(x_i)$$</div>
+  <ul>
+    <li>Product density $=$ independence &mdash; direct confirmation</li>
+    <li>The matching proof also covers the degenerate case</li>
+  </ul>
+</div>
+
+<!-- P6 implication -->
+<div class="slide">
+  <h2>Part 6 &mdash; What It Buys</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Independence testing becomes <strong>linear algebra</strong>: check off-diagonals</li>
+    <li>VAE encoders output diagonal $\Sigma$ &mdash; latents made independent by design</li>
+    <li>Coming in part 7: uncorrelated residual $\Rightarrow$ independent residual</li>
+  </ul>
+  <div class="highlight">
+    <p>For Gaussians only: <strong>zero covariance kills all dependence</strong>, not just linear.</p>
+  </div>
+</div>
+
+<!-- P7 overview -->
+<div class="slide">
+  <h2>Part 7 &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <p>Zero means throughout (shift back at the end). Target: $\mathbb{E}[X|Y]$ and the residual.</p>
+  <ul>
+    <li><strong>Step 1</strong> &mdash; guess a linear estimate $\hat{X} = V_{XY} V_{YY}^{-1} Y$</li>
+    <li><strong>Step 2</strong> &mdash; show $X - \hat{X}$ is uncorrelated with $Y$ &mdash; then independent</li>
+    <li><strong>Step 3</strong> &mdash; conclude $\hat{X} = \mathbb{E}[X \mid Y]$</li>
+    <li><strong>Step 4</strong> &mdash; parts (b), (c): residual independence + covariance</li>
+  </ul>
+  <p class="muted">The trick: make the error orthogonal to the evidence</p>
+</div>
+
+<!-- P7 step 1 -->
+<div class="slide">
+  <h2>Part 7, Step 1 &mdash; the Guess</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\hat{X} := V_{XY}\, V_{YY}^{-1}\, Y$$</div>
+  <ul>
+    <li>Linear in $Y$ &mdash; the simplest candidate that could work</li>
+    <li>Shape check: $(n \times m)(m \times m)(m) = n$-vector &#10003;</li>
+    <li>1D preview: $\hat{X} = \frac{\sigma_{12}}{\sigma_{22}} Y$ &mdash; Theorem 1's slope</li>
+  </ul>
+  <p class="muted">Why linear can be enough: everything Gaussian stays Gaussian</p>
+</div>
+
+<!-- P7 step 2 -->
+<div class="slide">
+  <h2>Part 7, Step 2 &mdash; Error Orthogonal to Evidence</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}\big[ (X - \hat{X})\, Y^\top \big]
+    &amp;\stackrel{(\text{split})}{=} \mathbb{E}[X Y^\top] - V_{XY} V_{YY}^{-1}\, \mathbb{E}[Y Y^\top] \\[4pt]
+    &amp;\stackrel{(\text{defs.})}{=} V_{XY} - V_{XY} V_{YY}^{-1} V_{YY} \;=\; 0
+  \end{aligned}$$</div>
+  <ul>
+    <li>The guess was engineered to make this cancel</li>
+    <li>So $X - \hat{X}$ and $Y$ are <strong>uncorrelated</strong></li>
+  </ul>
+</div>
+
+<!-- P7 step 2b -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; Uncorrelated to Independent</h2>
+  <div class="divider"></div>
+  <p>Recap: $\mathbb{E}[(X - \hat{X})Y^\top] = 0$. Now upgrade it:</p>
+  <ul>
+    <li>$(X - \hat{X},\, Y)$ is a <strong>linear map</strong> of $(X, Y)$ &mdash; jointly normal by part 3</li>
+    <li>Jointly normal + uncorrelated $\Rightarrow$ <strong>independent</strong> &mdash; part 6</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$X - \hat{X} \;\perp\!\!\!\perp\; Y$$</div>
+  <p class="muted">This is where the Gaussian assumption earns its keep</p>
+</div>
+
+<!-- P7 step 3 -->
+<div class="slide">
+  <h2>Part 7, Step 3 &mdash; Naming the Guess</h2>
+  <div class="divider"></div>
+  <p>For any measurable $g$, independence + zero mean give:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ (X - \hat{X})\, g(Y) \big]
+    = \mathbb{E}[X - \hat{X}]\; \mathbb{E}[g(Y)] = 0$$</div>
+  <ul>
+    <li>Recall <strong>prob07</strong>: this orthogonality property <em>characterizes</em> $\mathbb{E}[X|Y]$</li>
+    <li>$\hat{X}$ is a function of $Y$ passing the test for every $g$</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$\Longrightarrow\quad \mathbb{E}[X \mid Y] = V_{XY} V_{YY}^{-1} Y \qquad \text{(a)} \;\;\blacksquare$$</div>
+</div>
+
+<!-- P7 part b -->
+<div class="slide">
+  <h2>Part 7(b) &mdash; the Residual Decouples</h2>
+  <div class="divider"></div>
+  <p>Define the residual $\tilde{X} = X - \mathbb{E}[X|Y] = X - \hat{X}$.</p>
+  <ul>
+    <li>Step 2: $\tilde{X}$ independent of $Y$</li>
+    <li>$\mathbb{E}[X|Y]$: a function of $Y$ &mdash; so $\tilde{X}$ decouples from it too &nbsp;$\blacksquare$</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$X = \underbrace{\mathbb{E}[X|Y]}_{\text{explained by } Y}
+    \;+\; \underbrace{\tilde{X}}_{\text{independent leftover}}$$</div>
+  <p class="muted">Signal plus noise &mdash; with genuine independence, not just orthogonality</p>
+</div>
+
+<!-- P7 part c expand -->
+<div class="slide">
+  <h2>Part 7(c) &mdash; Expand the Residual</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \operatorname{Cov}(\tilde{X}, \tilde{X})
+    &amp;= \mathbb{E}\big[ (X - \hat{X})(X - \hat{X})^\top \big] \\[4pt]
+    &amp;\stackrel{(\text{expand})}{=} \mathbb{E}[XX^\top] - \mathbb{E}[X\hat{X}^\top]
+      - \mathbb{E}[\hat{X}X^\top] + \mathbb{E}[\hat{X}\hat{X}^\top]
+  \end{aligned}$$</div>
+  <ul>
+    <li>Four terms &mdash; evaluate each with $\hat{X} = V_{XY}V_{YY}^{-1}Y$</li>
+    <li>First term: $V_{XX}$ by definition</li>
+  </ul>
+</div>
+
+<!-- P7 part c evaluate -->
+<div class="slide">
+  <h2>Proof (continued) &mdash; All Three Match</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}[X \hat{X}^\top]
+    &amp;= \mathbb{E}[X Y^\top]\, V_{YY}^{-1} V_{YX} = V_{XY} V_{YY}^{-1} V_{YX} \\[3pt]
+    \mathbb{E}[\hat{X}\hat{X}^\top]
+    &amp;= V_{XY} V_{YY}^{-1}\, \mathbb{E}[YY^\top]\, V_{YY}^{-1} V_{YX}
+    = V_{XY} V_{YY}^{-1} V_{YX}
+  \end{aligned}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\operatorname{Cov}(\tilde{X}, \tilde{X})
+    = V_{XX} - V_{XY} V_{YY}^{-1} V_{YX} \qquad \text{(c)} \;\;\blacksquare$$</div>
+  <p class="muted">Minus one copy: two cross terms cancel one square term</p>
+</div>
+
+<!-- P7 summary -->
+<div class="slide">
+  <h2>Part 7 &mdash; Proof Summary</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \hat{X} = V_{XY}V_{YY}^{-1}Y
+    \;\;&amp;\stackrel{(\text{engineered})}{\Longrightarrow}\;\;
+    (X - \hat{X}) \perp\!\!\!\perp Y \\[2pt]
+    \;\;&amp;\stackrel{(\text{orthogonality})}{\Longrightarrow}\;\;
+    \hat{X} = \mathbb{E}[X|Y]
+    \;\;\stackrel{(\text{expand})}{\Longrightarrow}\;\;
+    \text{(b), (c)}
+    \end{aligned}$$</div>
+  <ul>
+    <li>Weight carried by: <strong>part 6</strong> (uncorrelated $\to$ independent)</li>
+    <li>Key trick: <strong>guess linear, verify orthogonal</strong></li>
+  </ul>
+</div>
+
+<!-- Conditional distribution -->
+<div class="slide">
+  <h2>The Conditional Distribution, Assembled</h2>
+  <div class="divider"></div>
+  <p>Restoring the means, part 7 packages as:</p>
+  <div class="math-block" style="margin:8px 0">$$X \mid Y = y \;\sim\; \mathcal{N}\!\Big(
+    \mu_X + V_{XY} V_{YY}^{-1} (y - \mu_Y),\;\;
+    V_{XX} - V_{XY} V_{YY}^{-1} V_{YX} \Big)$$</div>
+  <ul>
+    <li>Mean: <strong>linear</strong> in the observation $y$</li>
+    <li>Covariance: <strong>constant</strong> &mdash; the data's value never changes your uncertainty</li>
+    <li>prob07's promise delivered: the MMSE estimator is linear</li>
+  </ul>
+</div>
+
+<!-- 2D revisit -->
+<div class="slide">
+  <h2>Theorem 1, Finally Proved</h2>
+  <div class="divider"></div>
+  <p>Set $X = X_1$ and $Y = X_2$: every block is a scalar.</p>
+  <div class="math-block" style="margin:8px 0">$$X_1 \mid X_2 = x_2 \;\sim\; \mathcal{N}\!\left(
+    \mu_1 + \frac{\sigma_{12}}{\sigma_{22}}(x_2 - \mu_2),\;\;
+    \sigma_{11} - \frac{\sigma_{12}\sigma_{21}}{\sigma_{22}} \right)$$</div>
+  <ul>
+    <li>$V_{XY}V_{YY}^{-1} \to \sigma_{12}/\sigma_{22}$ &mdash; the slicing slope of &sect;02</li>
+    <li>Running example: mean $0.6$, variance $0.64$ &mdash; matches the worked slide &#10003; $\blacksquare$</li>
+  </ul>
+</div>
+
+<!-- Theorem recap -->
+<div class="slide">
+  <h2>Theorem 2 &mdash; Recap</h2>
+  <div class="divider"></div>
+  <table>
+    <thead><tr><th>Part</th><th>Trick that carried it</th><th>Payoff</th></tr></thead>
+    <tbody>
+      <tr><td>1&ndash;3</td><td>compose linear maps of $W$</td><td>closure, marginals, whitening</td></tr>
+      <tr><td>4</td><td>change of variables</td><td>the density, from scratch</td></tr>
+      <tr><td>5</td><td>MGF of $s^\top X$</td><td>$(\mu, V)$ is everything</td></tr>
+      <tr><td>6</td><td>matching + part 5</td><td>uncorrelated $=$ independent</td></tr>
+      <tr><td>7</td><td>guess linear, verify orthogonal</td><td>conditionals in closed form</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">Now: point the machine at three AI workloads</p>
+</div>
+
+<!-- ============ 07 GAUSSIAN CHANNEL ============ -->
+<div class="slide section-slide left">
+  <div class="section-num">07</div>
+  <h1>The Gaussian Channel</h1>
+  <p class="subtitle">One observation through noise &mdash; part 7 in action</p>
+</div>
+
+<div class="slide">
+  <h2>Setup &mdash; Signal Plus Noise</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$Y = X + Z, \qquad
+    X \sim \mathcal{N}(0, \sigma_x^2), \quad
+    Z \sim \mathcal{N}(0, \sigma_z^2), \quad X \perp\!\!\!\perp Z$$</div>
+  <div style="width:100%; margin:8px auto; text-align:center">
+  <svg viewBox="0 0 560 130" style="width:100%; max-width:560px">
+    <defs><marker id="arr7" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#003876"/></marker></defs>
+    <rect x="30" y="40" width="120" height="46" rx="8" fill="#eef3fa" stroke="#003876" stroke-width="1.5"/>
+    <text x="90" y="68" text-anchor="middle" font-size="16" fill="#003876">signal X</text>
+    <circle cx="280" cy="63" r="20" fill="#fff" stroke="#003876" stroke-width="1.5"/>
+    <text x="280" y="70" text-anchor="middle" font-size="18" fill="#003876">+</text>
+    <rect x="400" y="40" width="130" height="46" rx="8" fill="#eef3fa" stroke="#003876" stroke-width="1.5"/>
+    <text x="465" y="68" text-anchor="middle" font-size="16" fill="#003876">observe Y</text>
+    <line x1="150" y1="63" x2="256" y2="63" stroke="#003876" stroke-width="1.5" marker-end="url(#arr7)"/>
+    <line x1="280" y1="12" x2="280" y2="39" stroke="#c0392b" stroke-width="1.5" marker-end="url(#arr7)"/>
+    <text x="300" y="18" font-size="14" fill="#c0392b">noise Z</text>
+    <line x1="304" y1="63" x2="396" y2="63" stroke="#003876" stroke-width="1.5" marker-end="url(#arr7)"/>
+  </svg>
+  </div>
+  <ul>
+    <li>Goal: the <strong>posterior</strong> $X \mid Y = y$ &mdash; in closed form</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Step 1 &mdash; the Joint Covariance</h2>
+  <div class="divider"></div>
+  <p>$(X, Y)$ is a linear map of $(X, Z)$ &mdash; jointly Gaussian by part 3.</p>
+  <div class="math-block">$$\begin{aligned}
+    \operatorname{Var}(Y) &amp;\stackrel{(\text{indep.})}{=} \sigma_x^2 + \sigma_z^2 \\[3pt]
+    \operatorname{Cov}(X, Y) &amp;= \mathbb{E}[X(X+Z)]
+    \stackrel{(X \perp Z)}{=} \mathbb{E}[X^2] = \sigma_x^2
+  \end{aligned}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\begin{pmatrix} X \\ Y \end{pmatrix} \sim
+    \mathcal{N}\!\left( 0,\;
+    \begin{pmatrix} \sigma_x^2 &amp; \sigma_x^2 \\ \sigma_x^2 &amp; \sigma_x^2 + \sigma_z^2 \end{pmatrix} \right)$$</div>
+</div>
+
+<div class="slide">
+  <h2>Step 2 &mdash; Read Off Part 7</h2>
+  <div class="divider"></div>
+  <p>Substitute $V_{XY} = \sigma_x^2$, $V_{YY} = \sigma_x^2 + \sigma_z^2$:</p>
+  <div class="math-block" style="margin:8px 0">$$X \mid Y = y \;\sim\; \mathcal{N}\!\left(
+    \frac{\sigma_x^2}{\sigma_x^2 + \sigma_z^2}\, y,\;\;
+    \frac{\sigma_x^2 \sigma_z^2}{\sigma_x^2 + \sigma_z^2} \right)$$</div>
+  <ul>
+    <li>Posterior mean: $y$ <strong>shrunk</strong> toward the prior mean $0$</li>
+    <li>Posterior variance: harmonic-mean form &mdash; smaller than <em>both</em> $\sigma_x^2$ and $\sigma_z^2$</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Recall prob07 &mdash; the Promise, Kept</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>prob07</strong>: MMSE estimator $=$ conditional mean $\mathbb{E}[X|Y]$</li>
+    <li>There we <em>asserted</em> the Gaussian case is linear &mdash; now it's a corollary</li>
+  </ul>
+  <p>Worked example: $\sigma_x^2 = 1$, $\sigma_z^2 = 1/3$:</p>
+  <div class="math-block" style="margin:8px 0">$$\hat{X} = \frac{1}{1 + 1/3}\, y = \frac{3}{4}\, y,
+    \qquad \operatorname{Var}(X \mid Y) = \frac{1 \cdot 1/3}{4/3} = \frac{1}{4}$$</div>
+  <p class="muted">Clean noise (small $\sigma_z^2$) $\to$ trust the observation more</p>
+</div>
+
+<div class="slide">
+  <h2>Picture &mdash; Shrinkage</h2>
+  <div class="divider"></div>
+  <div style="width:100%; margin:8px auto; text-align:center">
+  <svg viewBox="0 0 560 260" style="width:100%; max-width:540px">
+    <line x1="60" y1="220" x2="520" y2="220" stroke="#888" stroke-width="1"/>
+    <line x1="290" y1="30" x2="290" y2="240" stroke="#888" stroke-width="1"/>
+    <text x="510" y="240" font-size="13" fill="#555">y</text>
+    <text x="298" y="42" font-size="13" fill="#555">estimate</text>
+    <line x1="90" y1="320" x2="490" y2="120" stroke="#bbb" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <text x="440" y="128" font-size="13" fill="#999">identity: trust y fully</text>
+    <line x1="90" y1="295" x2="490" y2="145" stroke="#003876" stroke-width="2.5"/>
+    <text x="386" y="188" font-size="14" fill="#003876">slope 3/4: shrink to prior</text>
+    <circle cx="290" cy="220" r="4" fill="#c0392b"/>
+    <text x="240" y="248" font-size="13" fill="#c0392b">prior mean 0</text>
+  </svg>
+  </div>
+  <p class="muted">The noisier the channel, the flatter the line &mdash; slope $\sigma_x^2 / (\sigma_x^2 + \sigma_z^2)$</p>
+</div>
+
+<div class="slide">
+  <h2>Sanity Checks &mdash; the Two Extremes</h2>
+  <div class="divider"></div>
+  <table>
+    <thead><tr><th>Regime</th><th>Posterior mean</th><th>Posterior variance</th><th>Reading</th></tr></thead>
+    <tbody>
+      <tr><td>$\sigma_z^2 \to 0$</td><td>$\to y$</td><td>$\to 0$</td><td>noiseless: believe the data</td></tr>
+      <tr><td>$\sigma_z^2 \to \infty$</td><td>$\to 0$</td><td>$\to \sigma_x^2$</td><td>useless data: keep the prior</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>Every Bayesian update interpolates between these poles</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Two Ways to Sample the Same Pair</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div class="card">
+      <h3>Forward (causal)</h3>
+      <p>$X \sim \mathcal{N}(0, \sigma_x^2)$<br>
+      $Y = X + Z$, $\;Z \sim \mathcal{N}(0, \sigma_z^2)$</p>
+    </div>
+    <div class="card">
+      <h3>Observation-first</h3>
+      <p>$Y \sim \mathcal{N}(0, \sigma_x^2 + \sigma_z^2)$<br>
+      $X = \dfrac{\sigma_x^2}{\sigma_x^2 + \sigma_z^2} Y
+        + \sqrt{\dfrac{\sigma_x^2 \sigma_z^2}{\sigma_x^2 + \sigma_z^2}}\; W$</p>
+    </div>
+  </div>
+  <ul>
+    <li>$W \sim \mathcal{N}(0,1)$ fresh, independent of $Y$ &mdash; legal by part 7(b)</li>
+    <li>Same joint distribution &mdash; both give $\mathcal{N}(0, V)$ with the &sect;07 covariance</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Why the Second Ordering Matters</h2>
+  <div class="divider"></div>
+  <div class="highlight">
+    <p>Sampling the hidden $X$: <strong>MMSE estimate $+$ fresh Gaussian noise at the posterior variance</strong>.</p>
+  </div>
+  <ul>
+    <li>Estimation and generation: the <em>same</em> formula, two uses</li>
+    <li>Exactly the move diffusion models make when reversing time &mdash; next section</li>
+  </ul>
+</div>
+
+<!-- ============ 08 GAUSSIAN DIFFUSION ============ -->
+<div class="slide section-slide left">
+  <div class="section-num">08</div>
+  <h1>Gaussian Diffusion</h1>
+  <p class="subtitle">Noise a data point until nothing remains &mdash; in closed form</p>
+</div>
+
+<div class="slide">
+  <h2>Recall prob04 &mdash; the Teaser, Cashed In</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>prob04</strong>: Markov chains, stationary distributions, the diffusion teaser</li>
+    <li>There: <em>discrete</em> states, transition matrices</li>
+    <li>Today: continuous state, <strong>Gaussian</strong> transition kernel</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$X_0 \sim f_0 \;\;\longrightarrow\;\; X_1
+    \;\;\longrightarrow\;\; X_2 \;\;\longrightarrow\;\; \cdots
+    \;\;\longrightarrow\;\; \text{pure noise?}$$</div>
+  <p class="muted">Same question as prob04: where does the chain settle?</p>
+</div>
+
+<div class="slide">
+  <h2>The Noising Recursion</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$X_n = \sqrt{1-\beta}\; X_{n-1} + \sqrt{\beta}\; Z_n,
+    \qquad Z_n \sim \mathcal{N}(0, 1) \text{ i.i.d.}, \quad \beta \in (0,1)$$</div>
+  <ul>
+    <li>Shrink the current point, add fresh Gaussian noise</li>
+    <li>One-step conditional, by part 3:</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$X_n \mid X_{n-1} = x \;\sim\; \mathcal{N}\big( \sqrt{1-\beta}\, x,\; \beta \big)$$</div>
+</div>
+
+<div class="slide">
+  <h2>Why Those Coefficients &mdash; Variance Preserving</h2>
+  <div class="divider"></div>
+  <p>Suppose $\mathbb{E}[X_{n-1}] = 0$, $\operatorname{Var}(X_{n-1}) = 1$:</p>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}[X_n] &amp;= \sqrt{1-\beta}\cdot 0 + \sqrt{\beta}\cdot 0 = 0 \\[3pt]
+    \operatorname{Var}(X_n) &amp;\stackrel{(\text{indep.})}{=} (1-\beta)\cdot 1 + \beta \cdot 1 = 1
+  \end{aligned}$$</div>
+  <ul>
+    <li>$\mathcal{N}(0,1)$ passes through unchanged &mdash; a <strong>fixed point</strong></li>
+    <li>Suggests: everything else flows <em>toward</em> $\mathcal{N}(0,1)$</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Picture &mdash; the Noising Chain</h2>
+  <div class="divider"></div>
+  <div style="width:100%; margin:8px auto; text-align:center">
+  <svg viewBox="0 0 640 210" style="width:100%; max-width:620px">
+    <defs><marker id="arr8" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#003876"/></marker></defs>
+    <ellipse cx="80" cy="100" rx="18" ry="52" fill="#eef3fa" stroke="#003876" stroke-width="1.5" transform="rotate(-30 80 100)"/>
+    <ellipse cx="230" cy="100" rx="28" ry="50" fill="#eef3fa" stroke="#003876" stroke-width="1.5" transform="rotate(-20 230 100)"/>
+    <ellipse cx="390" cy="100" rx="40" ry="47" fill="#eef3fa" stroke="#003876" stroke-width="1.5" transform="rotate(-10 390 100)"/>
+    <circle cx="550" cy="100" r="45" fill="#eef3fa" stroke="#003876" stroke-width="1.5"/>
+    <line x1="112" y1="100" x2="192" y2="100" stroke="#003876" stroke-width="1.5" marker-end="url(#arr8)"/>
+    <line x1="268" y1="100" x2="342" y2="100" stroke="#003876" stroke-width="1.5" marker-end="url(#arr8)"/>
+    <line x1="436" y1="100" x2="498" y2="100" stroke="#003876" stroke-width="1.5" marker-end="url(#arr8)"/>
+    <text x="80" y="185" text-anchor="middle" font-size="14" fill="#555">data x_0</text>
+    <text x="230" y="185" text-anchor="middle" font-size="14" fill="#555">x_25</text>
+    <text x="390" y="185" text-anchor="middle" font-size="14" fill="#555">x_75</text>
+    <text x="550" y="185" text-anchor="middle" font-size="14" fill="#555">x_200: pure noise</text>
+  </svg>
+  </div>
+  <ul>
+    <li>Structure dissolves; the shape rounds toward the standard Gaussian</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Exercise (from the source)</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Exercise.</h3>
+    <p>What is the limiting distribution of $X_n$ as $n \to \infty$? Does it depend on $f_0$?</p>
+  </div>
+  <ul>
+    <li>Intuition says $\mathcal{N}(0,1)$ &mdash; the fixed point</li>
+    <li>Tool that settles it: the <strong>MGF telescope</strong>, next</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Technique &mdash; MGFs Under Affine Maps</h2>
+  <div class="divider"></div>
+  <p>Recall from <strong>prob05</strong> (and part 5):</p>
+  <div class="math-block">$$\begin{aligned}
+    M_{aX}(t) &amp;= M_X(at) \\[3pt]
+    M_{U+V}(t) &amp;\stackrel{(U \perp V)}{=} M_U(t)\, M_V(t) \\[3pt]
+    Z \sim \mathcal{N}(0,1)\!: \;\; M_Z(t) &amp;= e^{t^2/2}
+  \end{aligned}$$</div>
+  <ul>
+    <li>Convergence of MGFs $\Rightarrow$ convergence in distribution (prob05, stated)</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Telescope, Step 1 &mdash; One Recursion</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    M_{X_n}(t)
+    &amp;= \mathbb{E}\big[ e^{t(\sqrt{1-\beta}X_{n-1} + \sqrt{\beta}Z_n)} \big] \\[3pt]
+    &amp;\stackrel{(\text{indep.})}{=} M_{X_{n-1}}\!\big( \sqrt{1-\beta}\, t \big) \cdot
+      M_{Z_n}\!\big( \sqrt{\beta}\, t \big) \\[3pt]
+    &amp;\stackrel{(\text{std. normal})}{=} M_{X_{n-1}}\!\big( \sqrt{1-\beta}\, t \big) \cdot
+      e^{\beta t^2 / 2}
+  \end{aligned}$$</div>
+  <ul>
+    <li>Each step: <strong>compress the argument</strong>, multiply in a Gaussian factor</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Telescope, Step 2 &mdash; Iterate Down to $X_0$</h2>
+  <div class="divider"></div>
+  <p>Apply twice, collect the exponents (geometric sum):</p>
+  <div class="math-block">$$\begin{aligned}
+    M_{X_n}(t) &amp;= M_{X_{n-2}}\big( (1-\beta)\, t \big) \cdot
+      \exp\!\Big( \tfrac{t^2}{2} \big( 1 - (1-\beta)^2 \big) \Big) \\[4pt]
+    &amp;\;\;\vdots \\[2pt]
+    &amp;= M_{X_0}\!\big( (1-\beta)^{n/2}\, t \big) \cdot
+      \exp\!\Big( \tfrac{t^2}{2} \big( 1 - (1-\beta)^n \big) \Big)
+  \end{aligned}$$</div>
+  <p class="muted">Source's two-step exponent had a typo ($1-(1-\beta)$); the geometric sum gives $1-(1-\beta)^2$</p>
+</div>
+
+<div class="slide">
+  <h2>Theorem 3 &mdash; the Chain Forgets</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 3.</h3>
+    <p>For any initial $X_0$ with an MGF, $\;X_n \xrightarrow{\;d\;} \mathcal{N}(0, 1)$ as $n \to \infty$.</p>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$(1-\beta)^{n/2} t \to 0
+    \;\;\Longrightarrow\;\; M_{X_0}\big((1-\beta)^{n/2} t\big) \to M_{X_0}(0) = 1
+    \;\;\Longrightarrow\;\; M_{X_n}(t) \to e^{t^2/2}$$</div>
+  <ul>
+    <li>Limit MGF is standard normal's &mdash; MGF convergence closes it &nbsp;$\blacksquare$</li>
+    <li><strong>Any</strong> $f_0$: the data distribution is forgotten geometrically fast</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>The Real Prize &mdash; a Closed Form for Every $n$</h2>
+  <div class="divider"></div>
+  <p>Condition on $X_0 = x_0$: the telescope's $M_{X_0}$ factor becomes $e^{(1-\beta)^{n/2} x_0 t}$, so</p>
+  <div class="math-block" style="margin:8px 0">$$X_n \mid X_0 = x_0 \;\sim\;
+    \mathcal{N}\!\Big( (1-\beta)^{n/2}\, x_0,\;\; 1 - (1-\beta)^n \Big)$$</div>
+  <ul>
+    <li>Jump to <strong>any</strong> noise level in one sample &mdash; no $n$-step simulation</li>
+    <li>Signal decays as $(1-\beta)^{n/2}$; noise fills in exactly the lost variance</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>DDPM Notation &mdash; the Same Formula</h2>
+  <div class="divider"></div>
+  <p>Diffusion papers write $\bar\alpha_n := (1-\beta)^n$:</p>
+  <div class="math-block" style="margin:8px 0">$$q(x_n \mid x_0) = \mathcal{N}\!\big( \sqrt{\bar\alpha_n}\, x_0,\;\; 1 - \bar\alpha_n \big)
+    \qquad\Longleftrightarrow\qquad
+    x_n = \sqrt{\bar\alpha_n}\, x_0 + \sqrt{1 - \bar\alpha_n}\; \epsilon$$</div>
+  <ul>
+    <li>$\epsilon \sim \mathcal{N}(0,1)$ &mdash; the "one-shot sampling" trick in every DDPM codebase</li>
+    <li>Our derivation <strong>is</strong> the DDPM forward process (constant schedule)</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Worked Schedule &mdash; $\beta = 0.02$</h2>
+  <div class="divider"></div>
+  <div style="width:100%; margin:4px auto; text-align:center">
+  <svg viewBox="0 0 720 320" style="width:100%; max-width:640px">
+    <line x1="60" y1="280" x2="690" y2="280" stroke="#888" stroke-width="1"/>
+    <line x1="60" y1="30" x2="60" y2="280" stroke="#888" stroke-width="1"/>
+    <text x="60" y="300" text-anchor="middle" font-size="13" fill="#555">0</text>
+    <text x="360" y="300" text-anchor="middle" font-size="13" fill="#555">n = 100</text>
+    <text x="660" y="300" text-anchor="middle" font-size="13" fill="#555">200</text>
+    <text x="40" y="285" text-anchor="end" font-size="13" fill="#555">0</text>
+    <text x="40" y="45" text-anchor="end" font-size="13" fill="#555">1</text>
+    <polyline points="60,40 90,84 135,135 210,193 285,227 360,248 510,268 660,276"
+      fill="none" stroke="#003876" stroke-width="2.5"/>
+    <polyline points="60,280 90,236 135,185 210,127 285,93 360,72 510,52 660,44"
+      fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="7 4"/>
+    <text x="200" y="130" font-size="14" fill="#003876">signal weight (1-b)^n</text>
+    <text x="380" y="115" font-size="14" fill="#c0392b">noise variance 1-(1-b)^n</text>
+  </svg>
+  </div>
+  <p class="muted">At $n = 100$: signal weight $(0.98)^{100} \approx 0.133$ &mdash; the data is mostly gone</p>
+</div>
+
+<div class="slide">
+  <h2>Reversing One Step &mdash; the Source's Claim</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Generation needs the <strong>reverse</strong> kernel $X_{n-1} \mid X_n$</li>
+    <li>Source claims: for small $\beta$, the reverse step is <strong>approximately Gaussian</strong></li>
+    <li>Not proved in the source &mdash; we make it plausible via &sect;07</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$X_{n-1} \mid X_n = x_n \;\approx\; \mathcal{N}(\mu(x_n),\; \tilde\sigma^2)
+    \quad \text{for small } \beta$$</div>
+</div>
+
+<div class="slide">
+  <h2>Reverse Step via the Gaussian Channel</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Late in the chain: $X_{n-1} \approx \mathcal{N}(0,1)$ &mdash; Theorem 3</li>
+    <li>Then noising <em>is</em> a &sect;07 channel: signal $\sqrt{1-\beta}X_{n-1}$, noise $\beta$. Part 7:</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$X_{n-1} \mid X_n = x_n \;\approx\;
+    \mathcal{N}\!\big( \sqrt{1-\beta}\; x_n,\;\; \beta \big)$$</div>
+  <ul>
+    <li>Mean $\frac{\sqrt{1-\beta}}{(1-\beta) + \beta} x_n = \sqrt{1-\beta}\, x_n$; variance $\frac{(1-\beta)\beta}{1} = (1-\beta)\beta \approx \beta$</li>
+    <li><strong>Approximation</strong>: exact only at stationarity &mdash; flagged, not proved</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Vectors &mdash; Nothing Changes</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$X_n = \sqrt{1-\beta}\; X_{n-1} + \sqrt{\beta}\; Z_n,
+    \qquad Z_n \sim \mathcal{N}(0, I_d) \;\; \text{in } \mathbb{R}^d$$</div>
+  <ul>
+    <li>Coordinates evolve independently &mdash; part 6 with diagonal covariance</li>
+    <li>Limit: $\mathcal{N}(0, I_d)$; closed form: $\mathcal{N}\big((1-\beta)^{n/2} x_0,\, (1-(1-\beta)^n) I_d\big)$</li>
+    <li>An image is just $d = 3 \times 256 \times 256$ coordinates</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Generation &mdash; the Algorithm Skeleton</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>1.</strong> Sample $x_T \sim \mathcal{N}(0, I_d)$ &mdash; legal because the chain forgot $f_0$ (Thm 3)</li>
+    <li><strong>2.</strong> For $n = T, \ldots, 1$: sample $x_{n-1} \sim \mathcal{N}(\mu_\theta(x_n, n),\, \beta I_d)$</li>
+    <li><strong>3.</strong> Output $x_0$ &mdash; a fresh draw from (approximately) $f_0$</li>
+  </ul>
+  <div style="width:100%; margin:8px auto; text-align:center">
+  <svg viewBox="0 0 640 110" style="width:100%; max-width:620px">
+    <defs><marker id="arr9" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#003876"/></marker></defs>
+    <circle cx="70" cy="55" r="34" fill="#eef3fa" stroke="#003876" stroke-width="1.5"/>
+    <text x="70" y="60" text-anchor="middle" font-size="13" fill="#555">noise</text>
+    <rect x="230" y="28" width="180" height="54" rx="8" fill="#fff" stroke="#c0392b" stroke-width="1.5"/>
+    <text x="320" y="52" text-anchor="middle" font-size="14" fill="#c0392b">neural net predicts</text>
+    <text x="320" y="72" text-anchor="middle" font-size="14" fill="#c0392b">the reverse mean</text>
+    <ellipse cx="550" cy="55" rx="20" ry="40" fill="#eef3fa" stroke="#003876" stroke-width="1.5" transform="rotate(-25 550 55)"/>
+    <text x="550" y="105" text-anchor="middle" font-size="13" fill="#555">data</text>
+    <line x1="106" y1="55" x2="224" y2="55" stroke="#003876" stroke-width="1.5" marker-end="url(#arr9)"/>
+    <line x1="412" y1="55" x2="518" y2="55" stroke="#003876" stroke-width="1.5" marker-end="url(#arr9)"/>
+  </svg>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Scope &mdash; Today vs. the Full Story</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div class="card">
+      <h3>Today (probability)</h3>
+      <p>Exact forward process &bull; closed-form $q(x_n|x_0)$ &bull; $\mathcal{N}(0,I)$ limit &bull; Gaussian reverse steps</p>
+    </div>
+    <div class="card">
+      <h3>Beyond today (learning)</h3>
+      <p>Training $\mu_\theta$ &bull; the variational objective &bull; noise-prediction losses &bull; samplers and schedules</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>The <em>probability</em> in a diffusion model: fully yours &mdash; the rest is optimization.</p>
+  </div>
+</div>
+
+<!-- ============ 09 GDA ============ -->
+<div class="slide section-slide left">
+  <div class="section-num">09</div>
+  <h1>Gaussian Discriminant Analysis</h1>
+  <p class="subtitle">Fit one Gaussian per class &mdash; and the trace trick that fits it</p>
+</div>
+
+<div class="slide">
+  <h2>Setup &mdash; One Gaussian per Class</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Recall <strong>prob07</strong>: classifying heights &mdash; the $1$D version of today</li>
+    <li>Now features $x \in \mathbb{R}^n$, classes $y \in \{0, 1\}$</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$X \mid Y = y \;\sim\; \mathcal{N}(\mu_y,\, \Sigma_y),
+    \qquad \mathbb{P}(Y = y) = \pi_y$$</div>
+  <ul>
+    <li>A <strong>generative</strong> classifier: model how each class produces data</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>The Decision Rule</h2>
+  <div class="divider"></div>
+  <p>Classify a new $x$ by the larger posterior (Bayes, prob02):</p>
+  <div class="math-block" style="margin:8px 0">$$\hat{y}(x) = \arg\max_{y}\; \pi_y\, f_{X|Y=y}(x)
+    = \arg\max_{y}\; \pi_y \cdot
+    \frac{\exp\!\big( -\tfrac{1}{2}(x - \mu_y)^\top \Sigma_y^{-1} (x - \mu_y) \big)}{(2\pi)^{n/2} |\Sigma_y|^{1/2}}$$</div>
+  <ul>
+    <li>Definition 1's density, twice &mdash; compare and pick</li>
+    <li>Equal priors: pick the class whose <strong>Mahalanobis distance</strong> is smaller</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Picture &mdash; Two Classes, One Boundary</h2>
+  <div class="divider"></div>
+  <div style="width:100%; margin:8px auto; text-align:center">
+  <svg viewBox="0 0 620 270" style="width:100%; max-width:600px">
+    <g transform="rotate(-20 200 135)">
+      <ellipse cx="200" cy="135" rx="120" ry="60" fill="none" stroke="#003876" stroke-width="1.5"/>
+      <ellipse cx="200" cy="135" rx="80" ry="40" fill="none" stroke="#003876" stroke-width="1.5" opacity="0.6"/>
+      <ellipse cx="200" cy="135" rx="40" ry="20" fill="none" stroke="#003876" stroke-width="1.5" opacity="0.35"/>
+    </g>
+    <g transform="rotate(15 450 135)">
+      <ellipse cx="450" cy="135" rx="100" ry="55" fill="none" stroke="#c0392b" stroke-width="1.5"/>
+      <ellipse cx="450" cy="135" rx="66" ry="36" fill="none" stroke="#c0392b" stroke-width="1.5" opacity="0.6"/>
+      <ellipse cx="450" cy="135" rx="33" ry="18" fill="none" stroke="#c0392b" stroke-width="1.5" opacity="0.35"/>
+    </g>
+    <path d="M330,10 C310,90 340,180 320,260" fill="none" stroke="#333" stroke-width="2" stroke-dasharray="7 4"/>
+    <text x="200" y="245" text-anchor="middle" font-size="14" fill="#003876">class 0</text>
+    <text x="460" y="245" text-anchor="middle" font-size="14" fill="#c0392b">class 1</text>
+    <text x="345" y="30" font-size="13" fill="#333">boundary</text>
+  </svg>
+  </div>
+  <p class="muted">Different $\Sigma_y$ &mdash; the boundary curves (quadratic); equal $\Sigma$ would make it a line</p>
+</div>
+
+<div class="slide">
+  <h2>Unknown Parameters &mdash; Back to MLE</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Reality: $\mu_y, \Sigma_y, \pi_y$ are not given &mdash; <strong>estimate from data</strong></li>
+    <li>Recall <strong>prob07</strong>: maximum likelihood &mdash; maximize $\log$-probability of the sample</li>
+    <li>Per class, the problem reduces to: fit one Gaussian to $N$ i.i.d. points</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$x^{(1)}, \ldots, x^{(N)} \overset{\text{i.i.d.}}{\sim}
+    \mathcal{N}(\mu, \Sigma)
+    \qquad \text{find} \;\; \hat\mu, \hat\Sigma$$</div>
+</div>
+
+<div class="slide">
+  <h2>The Log-Likelihood</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\ell(\mu, \Sigma)
+    = -\frac{Nn}{2}\log 2\pi \;-\; \frac{N}{2}\log|\Sigma|
+    \;-\; \frac{1}{2}\sum_{i=1}^{N} (x^{(i)} - \mu)^\top \Sigma^{-1} (x^{(i)} - \mu)$$</div>
+  <ul>
+    <li>Sum of $N$ copies of $\log$ Definition 1</li>
+    <li>Two unknowns: a vector $\mu$ and a <strong>matrix</strong> $\Sigma$ &mdash; differentiate in turn</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Fit $\mu$ &mdash; the Easy Half</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \nabla_\mu\, \ell
+    &amp;\stackrel{(\text{quadratic form})}{=} \sum_{i=1}^{N} \Sigma^{-1}(x^{(i)} - \mu)
+    \;=\; \Sigma^{-1}\!\left( \sum_{i=1}^{N} x^{(i)} - N\mu \right) \\[4pt]
+    \nabla_\mu\, \ell = 0
+    \;\;&amp;\Longrightarrow\;\;
+    \hat\mu = \frac{1}{N}\sum_{i=1}^{N} x^{(i)}
+  \end{aligned}$$</div>
+  <ul>
+    <li>The sample mean &mdash; regardless of $\Sigma$ (since $\Sigma^{-1}$ is invertible)</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Fit $\Sigma$ &mdash; Reparametrize First</h2>
+  <div class="divider"></div>
+  <p>Differentiating in $\Sigma^{-1}$ is easier: set the <strong>precision</strong> $\Phi := \Sigma^{-1}$, use $|\Sigma| = |\Phi|^{-1}$:</p>
+  <div class="math-block" style="margin:8px 0">$$\ell(\mu, \Phi)
+    = -\frac{Nn}{2}\log 2\pi \;+\; \frac{N}{2}\log|\Phi|
+    \;-\; \frac{1}{2}\sum_{i=1}^{N} (x^{(i)} - \mu)^\top \Phi\, (x^{(i)} - \mu)$$</div>
+  <ul>
+    <li>$\log|\Sigma|$ flipped sign &mdash; now everything is <em>increasing-friendly</em> in $\Phi$</li>
+    <li>Next obstacle: the sum of quadratic forms &mdash; enter the trace trick</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Technique &mdash; the Trace Trick</h2>
+  <div class="divider"></div>
+  <p>A scalar equals its own trace; trace is cyclic:</p>
+  <div class="math-block" style="margin:8px 0">$$v^\top \Phi\, v
+    \stackrel{(1\times 1)}{=} \operatorname{tr}\!\big( v^\top \Phi\, v \big)
+    \stackrel{(\text{cyclic})}{=} \operatorname{tr}\!\big( v\, v^\top \Phi \big)$$</div>
+  <ul>
+    <li>Turns a quadratic form into a <strong>linear</strong> function of $\Phi$</li>
+    <li>Linear in $\Phi$ $\Rightarrow$ trivial to differentiate</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Collect the Data &mdash; the Scatter Matrix</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$S := \sum_{i=1}^{N} (x^{(i)} - \mu)(x^{(i)} - \mu)^\top
+    \qquad\Longrightarrow\qquad
+    \sum_{i=1}^{N} (x^{(i)} - \mu)^\top \Phi (x^{(i)} - \mu)
+    = \operatorname{tr}(S\, \Phi)$$</div>
+  <div class="math-block" style="margin:8px 0">$$\ell(\mu, \Phi)
+    = \text{const} \;+\; \frac{N}{2}\log|\Phi| \;-\; \frac{1}{2}\operatorname{tr}(S\, \Phi)$$</div>
+  <ul>
+    <li>All $N$ data points compressed into one PSD matrix $S$ (&sect;05 exercise's argument)</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Technique &mdash; Two Matrix Derivatives</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \nabla_X \operatorname{tr}(A X) &amp;= A^\top
+      &amp;&amp;\text{(trace is linear; exercise below)} \\[4pt]
+    \nabla_X \log|X| &amp;= X^{-\top}
+      &amp;&amp;\text{(the matrix log-derivative; exercise below)}
+  \end{aligned}$$</div>
+  <ul>
+    <li>Both are the source's exercises &mdash; hints on the exercise slide</li>
+    <li>Sanity, $1\times 1$ case: $\frac{d}{dx}(ax) = a$, $\;\frac{d}{dx}\log x = 1/x$ &#10003;</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Fit $\Sigma$ &mdash; Solve</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \nabla_\Phi\, \ell
+    &amp;\stackrel{(\text{two identities})}{=} \frac{N}{2}\, \Phi^{-\top} - \frac{1}{2} S^\top
+    \;\stackrel{(\text{symmetry})}{=}\; \frac{N}{2}\, \Sigma - \frac{1}{2} S \\[4pt]
+    \nabla_\Phi\, \ell = 0
+    \;\;&amp;\Longrightarrow\;\;
+    \hat\Sigma = \frac{S}{N}
+  \end{aligned}$$</div>
+  <ul>
+    <li>$\Phi^{-\top} = \Sigma^\top = \Sigma$ and $S^\top = S$: both symmetric</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Theorem 4 &mdash; Gaussian MLE</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 4 (Gaussian MLE).</h3>
+    <p>For i.i.d. $x^{(1)}, \ldots, x^{(N)} \sim \mathcal{N}(\mu, \Sigma)$:</p>
+    <div class="math-block" style="margin:8px 0">$$\hat\mu = \frac{1}{N}\sum_{i} x^{(i)},
+      \qquad
+      \hat\Sigma = \frac{1}{N}\sum_{i} (x^{(i)} - \hat\mu)(x^{(i)} - \hat\mu)^\top$$</div>
+  </div>
+  <ul>
+    <li>Sample mean, sample covariance &mdash; the intuitive answers, now <em>derived</em></li>
+    <li>Remark: $\hat\Sigma$ is <strong>biased</strong>; $\frac{1}{N-1}$ gives the unbiased version (recall prob07)</li>
+  </ul>
+</div>
+
+<div class="slide">
+  <h2>Exercises (from the source)</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div class="card">
+      <h3>Exercise A.</h3>
+      <p>Show $\nabla_X \operatorname{tr}(AX) = A^\top$.</p>
+      <p class="muted">Hint: $\operatorname{tr}(AX) = \sum_{i,j} A_{ij} X_{ji}$ &mdash; read off $\partial / \partial X_{ji}$.</p>
+    </div>
+    <div class="card">
+      <h3>Exercise B.</h3>
+      <p>Show $\nabla_X \log|X| = X^{-\top}$.</p>
+      <p class="muted">Hint: cofactor expansion of $|X|$ along one row, then the adjugate formula for $X^{-1}$.</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>GDA &mdash; the Full Pipeline</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Fit</strong>: per class $y$, compute $\hat\mu_y$, $\hat\Sigma_y$ (Theorem 4) and $\hat\pi_y = N_y / N$</li>
+    <li><strong>Predict</strong>: plug into the decision rule &mdash; largest $\hat\pi_y\, f_{\mathcal{N}(\hat\mu_y, \hat\Sigma_y)}(x)$</li>
+    <li>Every step closed-form &mdash; no gradient descent, no tuning</li>
+  </ul>
+  <div class="highlight">
+    <p>A full classifier from two results: Definition 1 rules, Theorem 4 fits.</p>
+  </div>
+</div>
+
+<!-- ============ CLOSE ============ -->
+<div class="slide">
+  <h2>Today, as One Chain</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \text{PSD } V &amp;\;\Rightarrow\; V^{1/2} \text{ exists}
+      \;\Rightarrow\; X = DW + \mu \text{ builds every Gaussian} \\[3pt]
+    \text{MGF} &amp;\;\Rightarrow\; (\mu, V) \text{ is everything}
+      \;\Rightarrow\; \text{uncorrelated} = \text{independent} \\[3pt]
+    \text{orthogonality} &amp;\;\Rightarrow\; X\mid Y \text{ Gaussian, linear mean}
+      \;\Rightarrow\; \text{channel, diffusion, GDA}
+  \end{aligned}$$</div>
+  <p class="muted">One object, three definitions, seven properties &mdash; and three AI systems fell out</p>
+</div>
+
+<div class="slide">
+  <h2>Recap &mdash; Every Tool, One Job</h2>
+  <div class="divider"></div>
+  <table>
+    <thead><tr><th>Tool</th><th>Job today</th></tr></thead>
+    <tbody>
+      <tr><td>spectral decomposition</td><td>square root $V^{1/2}$ &mdash; Definition 2 exists</td></tr>
+      <tr><td>change of variables</td><td>the density (part 4)</td></tr>
+      <tr><td>MGF uniqueness</td><td>parts 5, 6 and the diffusion limit</td></tr>
+      <tr><td>orthogonality of MMSE</td><td>part 7 &mdash; conditionals</td></tr>
+      <tr><td>Gaussian channel</td><td>posterior shrinkage; reverse diffusion step</td></tr>
+      <tr><td>trace trick</td><td>$\hat\Sigma = S / N$ (Theorem 4)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="slide">
+  <h2>Bridge &mdash; When Closed Form Runs Out</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Everything today was exact <strong>because everything was Gaussian</strong></li>
+    <li>Non-Gaussian posterior? Nonlinear model? The integrals stop closing</li>
+    <li>$\mathbb{E}[g(X)]$ with no antiderivative &mdash; what then?</li>
+  </ul>
+  <div class="highlight">
+    <p><strong>Next (prob09):</strong> when you can't integrate &mdash; <em>sample</em>. Monte Carlo methods.</p>
+  </div>
+</div>
+
+<div class="slide end-slide">
+  <div class="big-word">$X = DW + \mu$</div>
+  <p class="big-word-sub">Questions?</p>
+</div>
+
+</div><!-- end deck -->
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 131</div>
+
+<script src="../../../reference/deck.js"></script>
+</body>
+</html>

@@ -1,0 +1,2093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>opt03 &mdash; Convexity &amp; Gradient Descent</title>
+
+<!-- Design system (canonical; all decks link to reference/). -->
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/deck.css">
+
+<!-- KaTeX for math rendering. -->
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+
+<style>
+.o3-algo { background:var(--light); border-left:3px solid var(--yonsei-blue); padding:16px 22px; border-radius:0 10px 10px 0; max-width:880px; margin:18px auto 0; }
+.o3-algo ol { margin:0; padding-left:0; list-style:none; counter-reset:step; }
+.o3-algo ol li { counter-increment:step; padding:8px 0 8px 56px; position:relative; line-height:1.45; }
+.o3-algo ol li::before { content:counter(step) "."; position:absolute; left:12px; top:8px;
+  font-weight:700; color:var(--yonsei-blue); width:36px; text-align:right; }
+.o3-algo ol li + li { border-top:1px solid var(--slate); }
+</style>
+</head>
+<body data-brand-logo="../../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- SLIDE 1 — Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Deep Learning Math &middot; Lecture 12</div>
+  <h1>Convexity &amp;<br>Gradient Descent</h1>
+  <div class="divider"></div>
+  <p class="subtitle">No formula left &mdash; prove the iteration works</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;&middot;&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Fall 2026</p>
+</div>
+
+<!-- SLIDE 2 — Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list" style="display:grid;grid-auto-flow:column;grid-template-rows:repeat(5,auto);grid-template-columns:1fr 1fr;gap:14px 44px">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Why Convexity?</div>
+        <div class="toc-sub">Training is gradient descent</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Convexity</div>
+        <div class="toc-sub">Chord above, tangent below, Hessian PSD</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Smoothness</div>
+        <div class="toc-sub">Descent lemma: the parabola lid</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Smooth and Convex</div>
+        <div class="toc-sub">Co-coercivity</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Strong Convexity</div>
+        <div class="toc-sub">Curvature floor + the PL condition</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Gradient Descent</div>
+        <div class="toc-sub">The algorithm, by hand</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">07</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Rate I &mdash; $O(1/T)$</div>
+        <div class="toc-sub">Convex + smooth: telescoping</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">08</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Rate II &mdash; Linear</div>
+        <div class="toc-sub">Strongly convex: contraction</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">09</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Closing</div>
+        <div class="toc-sub">Recap + bridge to opt04</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 01 — WHY CONVEXITY? ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Why Convexity?</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Training is gradient descent</p>
+</div>
+
+<!-- opt02 bridge answered -->
+<div class="slide">
+  <h2>opt02's Bridge, Answered</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>opt02's luxury: $\theta^\star = A^{\dagger}B$ &mdash; one formula</li>
+    <li>Logistic regression, neural nets: $\nabla f = 0$ has no formula</li>
+    <li>Today: <strong>iterate</strong> instead</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$x^{(k+1)} = x^{(k)} - \alpha_k\, \nabla f(x^{(k)})$$</div>
+  <div class="highlight">
+    <p><strong>Training <em>is</em> this update.</strong> Everything else in deep learning refines it.</p>
+  </div>
+</div>
+
+<!-- the new questions -->
+<div class="slide">
+  <h2>Three Questions About One Update</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Does it go down?</h3>
+      <p>Needs a <strong>speed limit</strong> on $\nabla f$</p>
+      <p class="muted">smoothness $L$ &mdash; &sect;03</p>
+    </div>
+    <div class="card">
+      <h3>Does it reach $x^\star$?</h3>
+      <p>Needs <strong>no false valleys</strong></p>
+      <p class="muted">convexity &mdash; &sect;02, &sect;07</p>
+    </div>
+    <div class="card">
+      <h3>How fast?</h3>
+      <p>Needs a <strong>curvature floor</strong></p>
+      <p class="muted">strong convexity $\mu$ &mdash; &sect;05, &sect;08</p>
+    </div>
+  </div>
+</div>
+
+<!-- today's three results -->
+<div class="slide">
+  <h2>Today's Three Results</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:12px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px;">
+    <h3 style="margin:0;">Descent lemma &mdash; every step drops $f$</h3>
+    <div>$f(x^+) \leq f(x) - \tfrac{\alpha}{2}\|\nabla f(x)\|^2$</div>
+  </div>
+  <div class="card" style="padding:12px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px;">
+    <h3 style="margin:0;">Convex rate &mdash; $O(1/T)$, by telescoping</h3>
+    <div>$f(x_T) - f^\star \leq \tfrac{\|x_0 - x^\star\|^2}{2\alpha T}$</div>
+  </div>
+  <div class="card" style="padding:12px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px;">
+    <h3 style="margin:0;">Strongly convex &mdash; geometric contraction</h3>
+    <div>$\|x_i - x^\star\|^2 \leq c^{\,i}\, \|x_0 - x^\star\|^2$</div>
+  </div>
+</div>
+
+<!-- learning rate theory -->
+<div class="slide">
+  <h2>The Constants Are Learning-Rate Theory</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$L$: how fast the <strong>gradient</strong> can change &mdash; sets the safe step $\alpha = 1/L$</li>
+    <li>$2/L$: the divergence cliff &mdash; "loss explodes" has a formula</li>
+    <li>$\mu$: curvature floor &mdash; sets the <strong>speed</strong> of convergence</li>
+  </ul>
+  <div class="highlight">
+    <p>Tuning a learning rate in practice = estimating $L$ by trial and error.</p>
+  </div>
+</div>
+
+<!-- route map -->
+<div class="slide">
+  <h2>Route Map</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:1040px;margin:24px auto 0;">
+    <svg viewBox="0 0 1040 300" style="width:100%;">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a97a5"/>
+        </marker>
+      </defs>
+      <!-- top row -->
+      <rect x="20" y="40" width="180" height="70" rx="10" fill="#f2f5f8" stroke="#003876" stroke-width="2"/>
+      <text x="110" y="70" text-anchor="middle" font-size="19" fill="#003876" font-weight="700">convexity</text>
+      <text x="110" y="94" text-anchor="middle" font-size="17" fill="#5a6673">chord, tangent, Hessian</text>
+      <rect x="260" y="40" width="180" height="70" rx="10" fill="#f2f5f8" stroke="#003876" stroke-width="2"/>
+      <text x="350" y="70" text-anchor="middle" font-size="19" fill="#003876" font-weight="700">smoothness L</text>
+      <text x="350" y="94" text-anchor="middle" font-size="17" fill="#5a6673">gradient speed limit</text>
+      <rect x="500" y="40" width="180" height="70" rx="10" fill="#f2f5f8" stroke="#003876" stroke-width="2"/>
+      <text x="590" y="70" text-anchor="middle" font-size="19" fill="#003876" font-weight="700">descent lemma</text>
+      <text x="590" y="94" text-anchor="middle" font-size="17" fill="#5a6673">quadratic lid on f</text>
+      <rect x="740" y="40" width="200" height="70" rx="10" fill="#003876"/>
+      <text x="840" y="70" text-anchor="middle" font-size="19" fill="#ffffff" font-weight="700">gradient descent</text>
+      <text x="840" y="94" text-anchor="middle" font-size="17" fill="#cfd9e4">each step drops f</text>
+      <line x1="200" y1="75" x2="255" y2="75" stroke="#8a97a5" stroke-width="2.5" marker-end="url(#arr)"/>
+      <line x1="440" y1="75" x2="495" y2="75" stroke="#8a97a5" stroke-width="2.5" marker-end="url(#arr)"/>
+      <line x1="680" y1="75" x2="735" y2="75" stroke="#8a97a5" stroke-width="2.5" marker-end="url(#arr)"/>
+      <!-- down -->
+      <line x1="840" y1="110" x2="840" y2="165" stroke="#8a97a5" stroke-width="2.5" marker-end="url(#arr)"/>
+      <!-- bottom row (right to left) -->
+      <rect x="740" y="170" width="200" height="70" rx="10" fill="#f2f5f8" stroke="#003876" stroke-width="2"/>
+      <text x="840" y="200" text-anchor="middle" font-size="19" fill="#003876" font-weight="700">rate O(1/T)</text>
+      <text x="840" y="224" text-anchor="middle" font-size="17" fill="#5a6673">convex: telescope</text>
+      <rect x="500" y="170" width="180" height="70" rx="10" fill="#f2f5f8" stroke="#003876" stroke-width="2"/>
+      <text x="590" y="200" text-anchor="middle" font-size="19" fill="#003876" font-weight="700">strong convexity</text>
+      <text x="590" y="224" text-anchor="middle" font-size="17" fill="#5a6673">floor + PL condition</text>
+      <rect x="260" y="170" width="180" height="70" rx="10" fill="#f2f5f8" stroke="#003876" stroke-width="2"/>
+      <text x="350" y="200" text-anchor="middle" font-size="19" fill="#003876" font-weight="700">linear rate</text>
+      <text x="350" y="224" text-anchor="middle" font-size="17" fill="#5a6673">contraction, unroll</text>
+      <rect x="20" y="170" width="180" height="70" rx="10" fill="#ffffff" stroke="#8a97a5" stroke-width="2" stroke-dasharray="6 5"/>
+      <text x="110" y="200" text-anchor="middle" font-size="19" fill="#5a6673" font-weight="700">opt04</text>
+      <text x="110" y="224" text-anchor="middle" font-size="17" fill="#8a97a5">sample the gradient</text>
+      <line x1="735" y1="205" x2="685" y2="205" stroke="#8a97a5" stroke-width="2.5" marker-end="url(#arr)"/>
+      <line x1="495" y1="205" x2="445" y2="205" stroke="#8a97a5" stroke-width="2.5" marker-end="url(#arr)"/>
+      <line x1="255" y1="205" x2="205" y2="205" stroke="#8a97a5" stroke-width="2.5" marker-end="url(#arr)"/>
+    </svg>
+  </div>
+</div>
+
+<!-- ===== SECTION 02 — CONVEXITY ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Convexity</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Chord above, tangent below, Hessian PSD</p>
+</div>
+
+<!-- definition -->
+<div class="slide">
+  <h2>Definition &mdash; Convex Function</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition.</h3>
+    <p>$f:\mathbb{R}^d \rightarrow \mathbb{R}$ is <strong>convex</strong> if for all $x, y \in \mathbb{R}^d$ and $t \in [0,1]$:</p>
+    <div class="math-block" style="margin:8px 0">$$f\big(tx + (1-t)y\big) \;\leq\; t f(x) + (1-t) f(y)$$</div>
+  </div>
+  <ul>
+    <li>Left: $f$ at a point <strong>on the segment</strong> from $y$ to $x$</li>
+    <li>Right: the <strong>chord</strong> value at the same point</li>
+  </ul>
+</div>
+
+<!-- chord SVG -->
+<div class="slide">
+  <h2>Chord Above the Graph</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:860px;margin:12px auto 0;">
+    <svg viewBox="0 0 640 330" style="width:100%;">
+      <line x1="30" y1="300" x2="620" y2="300" stroke="#c9d2da" stroke-width="2"/>
+      <!-- parabola f(u)=u^2, X=320+130u, Y=280-60u^2 -->
+      <polyline points="60,40 125,145 190,220 255,265 320,280 385,265 450,220 515,145 580,40"
+        fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <!-- chord u=-1 to u=1.5 -->
+      <line x1="190" y1="220" x2="515" y2="145" stroke="#003876" stroke-width="3"/>
+      <circle cx="190" cy="220" r="7" fill="#003876"/>
+      <circle cx="515" cy="145" r="7" fill="#003876"/>
+      <!-- midpoint marker: t=0.5, u=0.25 -->
+      <line x1="352.5" y1="300" x2="352.5" y2="182.5" stroke="#8a97a5" stroke-width="2" stroke-dasharray="5 4"/>
+      <circle cx="352.5" cy="182.5" r="6" fill="#003876"/>
+      <circle cx="352.5" cy="276" r="6" fill="#1a1a1a"/>
+      <text x="196" y="252" font-size="19" fill="#003876" font-weight="700">y</text>
+      <text x="512" y="178" font-size="19" fill="#003876" font-weight="700">x</text>
+      <text x="368" y="176" font-size="18" fill="#003876">chord value</text>
+      <text x="368" y="272" font-size="18" fill="#1a1a1a">f on segment</text>
+      <text x="80" y="90" font-size="20" fill="#1a1a1a" font-weight="700">f</text>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">every chord sits on or above the graph &mdash; for every pair $x, y$</p>
+</div>
+
+<!-- convex vs nonconvex -->
+<div class="slide">
+  <h2>Convex vs. Nonconvex</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:1000px;margin:10px auto 0;">
+    <svg viewBox="0 0 1000 330" style="width:100%;">
+      <!-- left: bowl -->
+      <line x1="20" y1="290" x2="470" y2="290" stroke="#c9d2da" stroke-width="2"/>
+      <polyline points="60,60 105,150 150,215 195,255 240,268 285,255 330,215 375,150 420,60"
+        fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/>
+      <line x1="105" y1="150" x2="375" y2="150" stroke="#003876" stroke-width="2.5"/>
+      <circle cx="240" cy="268" r="7" fill="#2e8b57"/>
+      <text x="150" y="315" font-size="19" fill="#003876" font-weight="700">convex: one valley</text>
+      <text x="256" y="278" font-size="17" fill="#2e8b57">global min</text>
+      <!-- right: wavy -->
+      <line x1="530" y1="290" x2="980" y2="290" stroke="#c9d2da" stroke-width="2"/>
+      <path d="M 560 70 C 610 250, 650 265, 690 210 C 720 170, 745 165, 775 205 C 810 258, 860 268, 940 80"
+        fill="none" stroke="#1a1a1a" stroke-width="3.5"/>
+      <!-- chord cutting below -->
+      <line x1="630" y1="248" x2="850" y2="255" stroke="#d94040" stroke-width="2.5"/>
+      <circle cx="655" cy="252" r="7" fill="#d94040"/>
+      <circle cx="845" cy="262" r="7" fill="#2e8b57"/>
+      <text x="640" y="315" font-size="19" fill="#d94040" font-weight="700">nonconvex: chord cuts the graph</text>
+      <text x="590" y="225" font-size="17" fill="#d94040">local min traps GD</text>
+      <text x="861" y="255" font-size="17" fill="#2e8b57">global</text>
+    </svg>
+  </div>
+</div>
+
+<!-- why AI cares -->
+<div class="slide">
+  <h2>Why AI Cares</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Deep-net losses: <strong>nonconvex</strong> &mdash; many valleys, saddles</li>
+    <li>Convex world: every local minimum is <strong>global</strong></li>
+    <li>All of today's guarantees live in the convex world</li>
+  </ul>
+  <div class="highlight">
+    <p><strong>Convexity = the world where GD provably works.</strong> Nonconvex practice borrows every tool from it.</p>
+  </div>
+</div>
+
+<!-- gradient recall -->
+<div class="slide">
+  <h2>The Gradient, Recalled</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\nabla f(x) = \begin{bmatrix}
+    \frac{\partial}{\partial x_1} f(x)\\
+    \vdots \\
+    \frac{\partial}{\partial x_d} f(x)
+  \end{bmatrix} \in \mathbb{R}^d$$</div>
+  <ul>
+    <li>$d$-dimensional generalization of the derivative</li>
+    <li>Directional derivative along $v$: &nbsp;$\langle \nabla f(x), v\rangle = \nabla f(x)^{\top} v$</li>
+    <li>$\nabla f(x)$ points in the <strong>maximally increasing</strong> direction</li>
+  </ul>
+</div>
+
+<!-- first-order characterization -->
+<div class="slide">
+  <h2>First-Order Characterization</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Property (tangent floor).</h3>
+    <p>$f$ differentiable and convex. Then for all $x, y \in \mathbb{R}^d$:</p>
+    <div class="math-block" style="margin:8px 0">$$f(y) \;\geq\; f(x) + \langle \nabla f(x),\, y - x\rangle$$</div>
+  </div>
+  <ul>
+    <li>The tangent plane at any $x$ sits <strong>below</strong> the whole graph</li>
+    <li>Follows directly from the chord definition</li>
+  </ul>
+</div>
+
+<!-- tangent SVG -->
+<div class="slide">
+  <h2>Tangent Below the Graph</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:860px;margin:12px auto 0;">
+    <svg viewBox="0 0 640 340" style="width:100%;">
+      <line x1="30" y1="330" x2="620" y2="330" stroke="#c9d2da" stroke-width="2"/>
+      <!-- parabola -->
+      <polyline points="60,40 125,145 190,220 255,265 320,280 385,265 450,220 515,145 580,40"
+        fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <!-- tangent at u=-1: from (60,100) to (320,340) -->
+      <line x1="60" y1="100" x2="320" y2="340" stroke="#003876" stroke-width="3"/>
+      <circle cx="190" cy="220" r="7" fill="#003876"/>
+      <text x="160" y="255" font-size="19" fill="#003876" font-weight="700">x</text>
+      <text x="255" y="330" font-size="18" fill="#003876">tangent at x: always below</text>
+      <text x="500" y="90" font-size="20" fill="#1a1a1a" font-weight="700">f</text>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">one gradient at $x$ gives a global lower bound on $f$</p>
+</div>
+
+<!-- 1D remark -->
+<div class="slide">
+  <h2>Why &mdash; the 1D Picture</h2>
+  <div class="divider"></div>
+  <p>Claim in $d = 1$: &nbsp;$f(y) \geq f(x) + f'(x)(y - x)$.</p>
+  <div class="math-block" style="margin:8px 0">$$\frac{f(y) - f(x)}{y - x} \;\leq\; f'(x) \;\;\text{if } y \lt x,
+    \qquad
+    \frac{f(y) - f(x)}{y - x} \;\geq\; f'(x) \;\;\text{if } y \gt x$$</div>
+  <ul>
+    <li>Secant slopes <strong>sandwich</strong> the tangent slope</li>
+    <li>Both cases rearrange to the same inequality</li>
+  </ul>
+  <p class="muted">the chord definition forces secant slopes to grow with $y$</p>
+</div>
+
+<!-- Hessian -->
+<div class="slide">
+  <h2>The Hessian, Recalled</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\nabla^2 f(x) = \begin{bmatrix}
+    \frac{\partial^2 f}{\partial x_1 \partial x_1} & \cdots & \frac{\partial^2 f}{\partial x_1 \partial x_d}\\
+    \vdots & & \vdots\\
+    \frac{\partial^2 f}{\partial x_d \partial x_1} & \cdots & \frac{\partial^2 f}{\partial x_d \partial x_d}
+  \end{bmatrix} \in \mathbb{R}^{d \times d}$$</div>
+  <ul>
+    <li>Symmetric (mixed partials agree)</li>
+    <li>Curvature along direction $v$: &nbsp;$v^{\top} \nabla^2 f(x)\, v$</li>
+  </ul>
+</div>
+
+<!-- PSD recall -->
+<div class="slide">
+  <h2>Recall (prob08 / opt01) &mdash; PSD</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall.</strong> Symmetric $A \succeq 0$ (positive semidefinite) means:</p>
+    <div class="math-block" style="margin:8px 0">$$v^{\top} A v \geq 0 \;\; \forall v
+      \quad\Longleftrightarrow\quad \text{all eigenvalues } \lambda_i \geq 0$$</div>
+  </div>
+  <ul>
+    <li>Eigenvalues of the Hessian = curvatures along eigenvectors</li>
+    <li>$A \succeq B$ means $A - B \succeq 0$</li>
+  </ul>
+</div>
+
+<!-- second-order characterization -->
+<div class="slide">
+  <h2>Theorem 1 &mdash; Second-Order Characterization</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 1.</h3>
+    <p>$f:\mathbb{R}^d \rightarrow \mathbb{R}$ twice-differentiable. Then $f$ is convex <strong>if and only if</strong></p>
+    <div class="math-block" style="margin:8px 0">$$\nabla^2 f(x) \succeq 0 \quad \text{for every } x$$</div>
+    <p>Equivalently: $v^{\top} \nabla^2 f(x)\, v \geq 0$ for all $v \in \mathbb{R}^d$.</p>
+  </div>
+  <p class="muted">stated as in the notes &mdash; our working convexity test</p>
+</div>
+
+<!-- worked: convexity check -->
+<div class="slide">
+  <h2>Worked &mdash; Is It Convex?</h2>
+  <div class="divider"></div>
+  <p>Test $f(x) = x_1^2 + x_1 x_2 + x_2^2$:</p>
+  <div class="math-block" style="margin:8px 0">$$\nabla^2 f = \begin{bmatrix} 2 & 1 \\ 1 & 2 \end{bmatrix},
+    \qquad \det(\nabla^2 f - \lambda I) = (2-\lambda)^2 - 1 = 0$$</div>
+  <div class="math-block" style="margin:8px 0">$$\lambda_1 = 3, \;\; \lambda_2 = 1 \;\; \geq 0
+    \;\;\Rightarrow\;\; \text{convex} \; \checkmark$$</div>
+  <p class="muted">eigenvalues by hand &mdash; the prob08/opt01 skill, reused</p>
+</div>
+
+<!-- worked: saddle -->
+<div class="slide">
+  <h2>Worked &mdash; a Saddle Is Not Convex</h2>
+  <div class="divider"></div>
+  <p>Test $f(x) = x_1^2 - x_2^2$:</p>
+  <div class="math-block" style="margin:8px 0">$$\nabla^2 f = \begin{bmatrix} 2 & 0 \\ 0 & -2 \end{bmatrix},
+    \qquad \lambda_2 = -2 \lt 0 \;\;\Rightarrow\;\; \text{not convex}$$</div>
+  <ul>
+    <li>$\nabla f(0) = 0$, yet $(0,0)$ is <strong>no minimum</strong>: $f(0, x_2) = -x_2^2$</li>
+    <li>Without convexity, $\nabla f = 0$ certifies nothing</li>
+  </ul>
+</div>
+
+<!-- running example intro -->
+<div class="slide">
+  <h2>The Running Example</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Carried through the whole deck.</h3>
+    <div class="math-block" style="margin:8px 0">$$f(x) = 2x_1^2 + \tfrac{1}{2}x_2^2
+      = \tfrac{1}{2} x^{\top} \begin{bmatrix} 4 & 0 \\ 0 & 1 \end{bmatrix} x,
+      \qquad \nabla^2 f = \begin{bmatrix} 4 & 0 \\ 0 & 1 \end{bmatrix}$$</div>
+  </div>
+  <ul>
+    <li>Eigenvalues $\{4, 1\}$ &mdash; read off the diagonal &mdash; convex $\checkmark$</li>
+    <li>Minimizer $x^\star = 0$, &nbsp;$f^\star = 0$, &nbsp;$\nabla f(x) = (4x_1,\, x_2)$</li>
+  </ul>
+</div>
+
+<!-- running example contours -->
+<div class="slide">
+  <h2>Running Example &mdash; Contours</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:600px;margin:6px auto 0;">
+    <svg viewBox="0 0 640 340" style="width:100%;">
+      <!-- axes -->
+      <line x1="40" y1="170" x2="600" y2="170" stroke="#c9d2da" stroke-width="2"/>
+      <line x1="320" y1="12" x2="320" y2="328" stroke="#c9d2da" stroke-width="2"/>
+      <!-- ellipses: scale 36 px/unit; rx=sqrt(c/2)*36, ry=sqrt(2c)*36 -->
+      <ellipse cx="320" cy="170" rx="80.5" ry="161" fill="none" stroke="#8a97a5" stroke-width="2"/>
+      <ellipse cx="320" cy="170" rx="54" ry="108" fill="none" stroke="#8a97a5" stroke-width="2"/>
+      <ellipse cx="320" cy="170" rx="27" ry="54" fill="none" stroke="#8a97a5" stroke-width="2"/>
+      <circle cx="320" cy="170" r="6" fill="#003876"/>
+      <text x="332" y="192" font-size="18" fill="#003876" font-weight="700">x* = 0</text>
+      <text x="560" y="160" font-size="19" fill="#5a6673">x1</text>
+      <text x="330" y="30" font-size="19" fill="#5a6673">x2</text>
+      <text x="408" y="98" font-size="17" fill="#5a6673">f = 10, 4.5, 1.125</text>
+    </svg>
+  </div>
+  <ul>
+    <li><strong>Stiff</strong> direction $x_1$: curvature $4$ &mdash; narrow</li>
+    <li><strong>Soft</strong> direction $x_2$: curvature $1$ &mdash; wide</li>
+  </ul>
+</div>
+
+<!-- ===== SECTION 03 — SMOOTHNESS ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Smoothness</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A speed limit on the gradient &mdash; and the descent lemma</p>
+</div>
+
+<!-- Lipschitz -->
+<div class="slide">
+  <h2>Lipschitz Continuity</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition.</h3>
+    <p>$f$ is <strong>$L$-Lipschitz</strong> if for all $x_1, x_2$:</p>
+    <div class="math-block" style="margin:8px 0">$$|f(x_1) - f(x_2)| \;\leq\; L\, \|x_1 - x_2\|$$</div>
+  </div>
+  <ul>
+    <li>$f$ limited in how fast it can <strong>change</strong></li>
+    <li>Slope never exceeds $L$, in any direction</li>
+  </ul>
+</div>
+
+<!-- L-smooth -->
+<div class="slide">
+  <h2>Definition &mdash; $L$-Smooth</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition.</h3>
+    <p>Differentiable $f$ is <strong>$L$-smooth</strong> if $\nabla f$ is $L$-Lipschitz:</p>
+    <div class="math-block" style="margin:8px 0">$$\|\nabla f(x_1) - \nabla f(x_2)\| \;\leq\; L\, \|x_1 - x_2\|$$</div>
+  </div>
+  <ul>
+    <li>Now the <strong>gradient</strong> is limited in how fast it changes</li>
+    <li>Curvature bounded by $L$ &mdash; no sign condition: smooth $\neq$ convex</li>
+  </ul>
+</div>
+
+<!-- Hessian upper bound -->
+<div class="slide">
+  <h2>Theorem 2 &mdash; Bounded Hessian</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 2.</h3>
+    <p>$f$ &nbsp;$L$-smooth and twice-differentiable. Then</p>
+    <div class="math-block" style="margin:8px 0">$$\nabla^2 f(x) \;\preceq\; L I \quad \text{for every } x$$</div>
+  </div>
+  <ul>
+    <li>$LI - \nabla^2 f(x) \succeq 0$: all Hessian eigenvalues $\leq L$</li>
+    <li>Mirror image of Theorem 1's $\succeq 0$</li>
+  </ul>
+</div>
+
+<!-- proof sketch -->
+<div class="slide">
+  <h2>Proof Sketch &mdash; as in the Notes</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\nabla f(x + tv) - \nabla f(x) \;=\; \int_0^t \nabla^2 f(x + sv)\, v \; ds
+    \qquad \text{(FTC along } v\text{)}$$</div>
+  <ul>
+    <li>Smoothness: left side has norm $\leq L t \|v\|$</li>
+    <li>Divide by $t$, let $t \rightarrow 0$: &nbsp;$\|\nabla^2 f(x)\, v\| \leq L\|v\|$ for all $v$</li>
+    <li>Hence $v^{\top} \nabla^2 f(x) v \leq L \|v\|^2$, i.e. $\nabla^2 f \preceq LI$</li>
+  </ul>
+  <p class="muted">rough sketch &mdash; <strong>Exercise (from the notes):</strong> make it rigorous</p>
+</div>
+
+<!-- running example L -->
+<div class="slide">
+  <h2>Running Example &mdash; $L = 4$</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\nabla^2 f = \begin{bmatrix} 4 & 0 \\ 0 & 1 \end{bmatrix} \;\preceq\; 4I
+    \qquad\Rightarrow\qquad L = \lambda_{\max} = 4$$</div>
+  <ul>
+    <li>For quadratics: $L$ = largest Hessian eigenvalue</li>
+    <li>Earlier check $f = x_1^2 + x_1 x_2 + x_2^2$: eigenvalues $\{3,1\}$ &nbsp;$\Rightarrow$&nbsp; $L = 3$</li>
+  </ul>
+  <p class="muted">the constant you will feed into the step size</p>
+</div>
+
+<!-- technique review: segment -->
+<div class="slide">
+  <h2>Technique Review &mdash; Restrict to a Segment</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (calculus).</strong> To compare $f(x)$ and $f(y)$, walk the segment:</p>
+    <div class="math-block" style="margin:8px 0">$$g(t) = f\big(x + t(y-x)\big), \qquad
+      g'(t) = \nabla f\big(x + t(y-x)\big)^{\top} (y - x)$$</div>
+    <div class="math-block" style="margin:8px 0">$$g(1) = g(0) + \int_0^1 g'(t)\, dt \qquad \text{(FTC)}$$</div>
+  </div>
+  <ul>
+    <li>$g(0) = f(x)$, &nbsp;$g(1) = f(y)$ &mdash; a $d$-dim fact becomes 1D calculus</li>
+  </ul>
+</div>
+
+<!-- technique review: CS -->
+<div class="slide">
+  <h2>Technique Review &mdash; Cauchy&ndash;Schwarz</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall.</strong> For any $u, v \in \mathbb{R}^d$:</p>
+    <div class="math-block" style="margin:8px 0">$$\langle u, v\rangle \;\leq\; \|u\|\,\|v\|$$</div>
+  </div>
+  <ul>
+    <li>Turns an inner product into a product of norms</li>
+    <li>Today's use: inner product with a gradient difference $\rightarrow$ apply smoothness</li>
+  </ul>
+</div>
+
+<!-- descent lemma statement -->
+<div class="slide">
+  <h2>Lemma 1 &mdash; the Descent Lemma</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Lemma 1 (descent lemma).</h3>
+    <p>$f$ &nbsp;$L$-smooth. Then for all $x, \delta \in \mathbb{R}^d$:</p>
+    <div class="math-block" style="margin:8px 0">$$f(x + \delta) \;\leq\; f(x) + \langle \nabla f(x), \delta\rangle + \frac{L}{2}\|\delta\|^2$$</div>
+  </div>
+  <p class="muted">a quadratic <strong>lid</strong> with curvature $L$ &mdash; convexity not needed</p>
+</div>
+
+<!-- lid picture -->
+<div class="slide">
+  <h2>The Picture &mdash; a Parabola Lid</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:860px;margin:6px auto 0;">
+    <svg viewBox="0 0 640 340" style="width:100%;">
+      <line x1="30" y1="330" x2="620" y2="330" stroke="#c9d2da" stroke-width="2"/>
+      <!-- f(u)=u^2+u: X=320+150u, Y=300-70f -->
+      <polyline points="80,233 132,269 185,293 237,304 267,305 290,303 320,300 380,282 425,257 470,222 515,178 560,124"
+        fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/>
+      <!-- lid: u+1.5u^2, u in [-1.4,1.32]: pts -->
+      <polyline points="110,192 170,239 230,275 275,293 320,300 365,290 410,262 455,217 500,155 522,120"
+        fill="none" stroke="#003876" stroke-width="3" stroke-dasharray="8 6"/>
+      <!-- tangent y=u from u=-0.5 to 1.6 -->
+      <line x1="245" y1="335" x2="560" y2="188" stroke="#8a97a5" stroke-width="2.5"/>
+      <circle cx="320" cy="300" r="7" fill="#003876"/>
+      <text x="300" y="328" font-size="19" fill="#003876" font-weight="700">x</text>
+      <text x="430" y="140" font-size="18" fill="#003876">lid: tangent + (L/2)||d||^2</text>
+      <text x="88" y="215" font-size="20" fill="#1a1a1a" font-weight="700">f</text>
+      <text x="500" y="230" font-size="17" fill="#5a6673">tangent at x</text>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">lid touches at $x$, then opens with curvature $L$ &mdash; $f$ can never pierce it</p>
+</div>
+
+<!-- proof overview -->
+<div class="slide">
+  <h2>Descent Lemma &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\text{Target:}\quad f(y) \leq f(x) + \langle \nabla f(x), y - x\rangle + \tfrac{L}{2}\|y - x\|^2
+    \qquad (y = x + \delta)$$</div>
+  <ol>
+    <li>Restrict to the segment: define $g(t)$ &nbsp;<span class="muted">(TR: segment)</span></li>
+    <li>Bound the slope drift $g'(t) - g'(0)$ &nbsp;<span class="muted">(TR: Cauchy&ndash;Schwarz + smoothness)</span></li>
+    <li>Integrate from $0$ to $1$ &nbsp;<span class="muted">(TR: FTC)</span></li>
+  </ol>
+</div>
+
+<!-- step 1 -->
+<div class="slide">
+  <h2>Step 1 &mdash; Set Up $g$</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$g(t) = f\big(x + t(y - x)\big), \qquad
+    g'(t) = \nabla f\big(x + t(y-x)\big)^{\top}(y - x)$$</div>
+  <ul>
+    <li>$g(0) = f(x)$, &nbsp;$g(1) = f(y)$, &nbsp;$g'(0) = \nabla f(x)^{\top}(y-x)$</li>
+    <li>Plan: show $g'(t)$ cannot exceed $g'(0)$ by more than $Lt\|y-x\|^2$</li>
+  </ul>
+</div>
+
+<!-- step 2 -->
+<div class="slide">
+  <h2>Step 2 &mdash; Bound the Slope Drift</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    g'(t) - g'(0) &= \big(\nabla f(x + t(y-x)) - \nabla f(x)\big)^{\top}(y-x)\\[4px]
+    &\stackrel{\text{(CS)}}{\leq} \big\|\nabla f(x + t(y-x)) - \nabla f(x)\big\|\; \|y-x\|\\[4px]
+    &\stackrel{\text{(smooth)}}{\leq} L\,\|t(y-x)\|\; \|y-x\| \;=\; L t\, \|y-x\|^2
+  \end{aligned}$$</div>
+  <p class="muted">smoothness applied between $x + t(y-x)$ and $x$: distance $t\|y-x\|$</p>
+</div>
+
+<!-- step 3 -->
+<div class="slide">
+  <h2>Step 3 &mdash; Integrate</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    f(y) = g(1) &\stackrel{\text{(FTC)}}{=} g(0) + \int_0^1 g'(t)\, dt\\[4px]
+    &\stackrel{\text{(Step 2)}}{\leq} g(0) + \int_0^1 \big(g'(0) + Lt\|y-x\|^2\big)\, dt\\[4px]
+    &= f(x) + \nabla f(x)^{\top}(y - x) + \frac{L}{2}\|y-x\|^2 \qquad \blacksquare
+  \end{aligned}$$</div>
+  <p class="muted">$\int_0^1 L t \, dt = L/2$ &mdash; where the $\tfrac{L}{2}$ comes from</p>
+</div>
+
+<!-- proof summary -->
+<div class="slide">
+  <h2>Proof Summary &mdash; the Skeleton</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$f(y)
+    \stackrel{\text{(segment)}}{=} g(0) + \!\int_0^1\! g'(t)\, dt
+    \stackrel{\text{(CS + smooth)}}{\leq} f(x) + g'(0) + \!\int_0^1\! Lt\|y{-}x\|^2 dt
+    \stackrel{\text{(integrate)}}{=} \text{lid}$$</div>
+  <div class="highlight">
+    <p><strong>Key trick:</strong> reduce to 1D along the segment; smoothness bounds the slope drift.</p>
+  </div>
+</div>
+
+<!-- implication -->
+<div class="slide">
+  <h2>What the Descent Lemma Buys</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>One gradient at $x$ controls $f$ at <strong>every</strong> nearby point</li>
+    <li>Plug $\delta = -\alpha \nabla f(x)$: a guaranteed decrease &mdash; &sect;06</li>
+    <li>Works for nonconvex $f$ too &mdash; deep-learning analyses start here</li>
+  </ul>
+  <div class="highlight">
+    <p>The single most-used inequality of today. Every convergence proof opens with it.</p>
+  </div>
+</div>
+
+<!-- sandwich theorem -->
+<div class="slide">
+  <h2>Theorem 3 &mdash; the Smoothness Sandwich</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 3.</h3>
+    <p>$f$ &nbsp;$L$-smooth with minimizer $x^\star$. Then for all $z$:</p>
+    <div class="math-block" style="margin:8px 0">$$\frac{1}{2L}\|\nabla f(z)\|^2 \;\leq\; f(z) - f(x^\star) \;\leq\; \frac{L}{2}\|z - x^\star\|^2$$</div>
+  </div>
+  <p class="muted">the suboptimality gap, squeezed from both sides</p>
+</div>
+
+<!-- reading the statement -->
+<div class="slide">
+  <h2>Reading the Statement</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Right: <strong>distance</strong> to $x^\star$ controls the value gap</li>
+    <li>Left: <strong>gradient norm</strong> certifies the value gap</li>
+    <li>Small gradient $\Rightarrow$ provably near-optimal value</li>
+  </ul>
+  <p class="muted">no convexity assumed &mdash; only smoothness and a minimizer</p>
+</div>
+
+<!-- proof right -->
+<div class="slide">
+  <h2>Proof &mdash; Right Side</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    f(z) &\stackrel{\text{(Lem 1 at } x^\star\text{)}}{\leq}
+      f(x^\star) + \langle \nabla f(x^\star), z - x^\star\rangle + \frac{L}{2}\|z - x^\star\|^2\\[4px]
+    &\stackrel{(\nabla f(x^\star) = 0)}{=} f(x^\star) + \frac{L}{2}\|z - x^\star\|^2
+  \end{aligned}$$</div>
+  <ul>
+    <li>Descent lemma centered at $x^\star$; minimizer kills the linear term</li>
+  </ul>
+</div>
+
+<!-- proof left setup -->
+<div class="slide">
+  <h2>Proof &mdash; Left Side, the Idea</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$f(x^\star) = \inf_y f(y)
+    \;\stackrel{\text{(Lem 1)}}{\leq}\;
+    \inf_y \Big[ f(z) + \langle \nabla f(z), y - z\rangle + \frac{L}{2}\|y - z\|^2 \Big]$$</div>
+  <ul>
+    <li>Minimizing $f$ is hard &mdash; minimize its <strong>lid</strong> at $z$ instead</li>
+    <li>The lid is a quadratic in $y$: closed-form minimum</li>
+  </ul>
+</div>
+
+<!-- proof left: minimize in t -->
+<div class="slide">
+  <h2>Proof &mdash; Left Side, Minimize the Lid</h2>
+  <div class="divider"></div>
+  <p>Reparameterize $y = z + tu$ with $\|u\| = 1$, $t \in \mathbb{R}$:</p>
+  <div class="math-block" style="margin:8px 0">$$\inf_{u,\,t}\; \big(\nabla f(z)^{\top} u\big)\, t + \frac{L}{2} t^2$$</div>
+  <div class="math-block" style="margin:8px 0">$$t^\ast = -\frac{1}{L} \nabla f(z)^{\top} u
+    \quad\Longrightarrow\quad \text{inner inf} = -\frac{1}{2L}\big(\nabla f(z)^{\top} u\big)^2$$</div>
+  <p class="muted">1D quadratic in $t$: vertex at $t^\ast$ &mdash; direction $u$ still free</p>
+</div>
+
+<!-- proof left: best direction -->
+<div class="slide">
+  <h2>Proof &mdash; Left Side, Best Direction</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\inf_{\|u\|=1} -\frac{1}{2L}\big(\nabla f(z)^{\top} u\big)^2
+    \;\stackrel{\text{(CS, tight)}}{=}\; -\frac{1}{2L}\|\nabla f(z)\|^2
+    \quad \text{at } u = \frac{\nabla f(z)}{\|\nabla f(z)\|}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Rightarrow\;\; f(x^\star) \leq f(z) - \frac{1}{2L}\|\nabla f(z)\|^2 \qquad \blacksquare$$</div>
+  <p class="muted">largest projection of $\nabla f(z)$ onto a unit vector: along itself</p>
+</div>
+
+<!-- sandwich numeric -->
+<div class="slide">
+  <h2>Sandwich, Checked on the Running Example</h2>
+  <div class="divider"></div>
+  <p>At $z = (2,2)$: &nbsp;$f(z) = 10$, &nbsp;$\nabla f(z) = (8, 2)$, &nbsp;$L = 4$:</p>
+  <div class="math-block" style="margin:8px 0">$$\frac{\|\nabla f(z)\|^2}{2L} = \frac{64 + 4}{8} = 8.5
+    \;\leq\; 10
+    \;\leq\; \frac{L}{2}\|z\|^2 = 2 \cdot 8 = 16 \;\; \checkmark$$</div>
+  <ul>
+    <li>Both bounds hold &mdash; and neither is wildly loose here</li>
+  </ul>
+</div>
+
+<!-- ===== SECTION 04 — SMOOTH AND CONVEX ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Smooth and Convex</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Co-coercivity: gradients cannot twist</p>
+</div>
+
+<!-- both at once -->
+<div class="slide">
+  <h2>Two Bounds Meet</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Smoothness: quadratic <strong>lid</strong> above $f$ &nbsp;<span class="muted">(Lemma 1)</span></li>
+    <li>Convexity: tangent <strong>floor</strong> below $f$ &nbsp;<span class="muted">(&sect;02)</span></li>
+    <li>Squeeze $f$ between them $\Rightarrow$ the gradient itself gets constrained</li>
+  </ul>
+  <div class="highlight">
+    <p>Payoff: <strong>co-coercivity</strong> &mdash; the stability engine behind every GD rate in &sect;07&ndash;&sect;08.</p>
+  </div>
+</div>
+
+<!-- lemma statement -->
+<div class="slide">
+  <h2>Lemma 2 &mdash; Co-coercivity</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Lemma 2.</h3>
+    <p>$f$ convex and $L$-smooth. For all $x, y$:</p>
+    <div class="math-block" style="margin:4px 0">$$\text{(i)}\;\; f(y) - f(x) \;\leq\; \langle \nabla f(y), y - x\rangle - \frac{1}{2L}\|\nabla f(y) - \nabla f(x)\|^2$$</div>
+    <div class="math-block" style="margin:4px 0">$$\text{(ii)}\;\; \langle \nabla f(y) - \nabla f(x),\, y - x\rangle \;\geq\; \frac{1}{L}\|\nabla f(x) - \nabla f(y)\|^2$$</div>
+    <p class="muted" style="margin:4px 0 0;">(ii) is called <strong>co-coercivity</strong></p>
+  </div>
+</div>
+
+<!-- meaning -->
+<div class="slide">
+  <h2>What Co-coercivity Says</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Move from $x$ to $y$ &nbsp;$\rightarrow$&nbsp; gradient change <strong>aligns</strong> with the move</li>
+    <li>Alignment is quantitative: at least $\frac{1}{L}\|\nabla f(y) - \nabla f(x)\|^2$</li>
+    <li>The gradient field cannot <strong>twist or oscillate</strong></li>
+  </ul>
+  <div class="highlight">
+    <p>A non-twisting gradient field is what makes gradient descent stable and predictable.</p>
+  </div>
+</div>
+
+<!-- proof (i) overview -->
+<div class="slide">
+  <h2>Proof of (i) &mdash; Overview</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\text{Target:}\quad
+    f(y) - f(x) \leq \langle \nabla f(y), y - x\rangle - \tfrac{1}{2L}\|\nabla f(y) - \nabla f(x)\|^2$$</div>
+  <ol>
+    <li>Lid at $x$ (smoothness), evaluated at $x + z$</li>
+    <li>Floor at $y$ (convexity), evaluated at the same $x + z$</li>
+    <li>Chain them; rearrange &mdash; $z$ still free</li>
+    <li>Choose the $z$ that makes the bound strongest</li>
+  </ol>
+</div>
+
+<!-- proof (i) two bounds -->
+<div class="slide">
+  <h2>Proof of (i) &mdash; One Point, Two Bounds</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    f(x+z) &\stackrel{\text{(lid at } x\text{)}}{\leq} f(x) + \langle \nabla f(x), z\rangle + \frac{L}{2}\|z\|^2\\[4px]
+    f(x+z) &\stackrel{\text{(floor at } y\text{)}}{\geq} f(y) + \langle \nabla f(y),\, x + z - y\rangle
+  \end{aligned}$$</div>
+  <ul>
+    <li>Same point $x + z$, squeezed from above and below</li>
+  </ul>
+</div>
+
+<!-- proof (i) rearrange -->
+<div class="slide">
+  <h2>Proof of (i) &mdash; Chain and Rearrange</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$f(y) + \langle \nabla f(y), x + z - y\rangle
+    \;\leq\; f(x) + \langle \nabla f(x), z\rangle + \frac{L}{2}\|z\|^2$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Rightarrow\quad
+    \langle \nabla f(y) - \nabla f(x),\, z\rangle - \frac{L}{2}\|z\|^2
+    \;\leq\; f(x) - f(y) - \langle \nabla f(y),\, x - y\rangle$$</div>
+  <p class="muted">true for <strong>every</strong> $z$ &mdash; so pick the one that hurts most</p>
+</div>
+
+<!-- proof (i) optimal z -->
+<div class="slide">
+  <h2>Proof of (i) &mdash; the Best $z$</h2>
+  <div class="divider"></div>
+  <p>Plug $z = \frac{1}{L}\big(\nabla f(y) - \nabla f(x)\big)$:</p>
+  <div class="math-block" style="margin:8px 0">$$\text{LHS} = \frac{1}{L}\|\nabla f(y) - \nabla f(x)\|^2 - \frac{1}{2L}\|\nabla f(y) - \nabla f(x)\|^2
+    = \frac{1}{2L}\|\nabla f(y) - \nabla f(x)\|^2$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Rightarrow\;\;
+    f(y) - f(x) \leq \langle \nabla f(y), y - x\rangle - \frac{1}{2L}\|\nabla f(y) - \nabla f(x)\|^2 \qquad \blacksquare$$</div>
+  <p class="muted">maximizing a linear-minus-quadratic in $z$ &mdash; completing the square in disguise (&sect;05 names it)</p>
+</div>
+
+<!-- proof (ii) overview -->
+<div class="slide">
+  <h2>Proof of (ii) &mdash; Overview</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\text{Target:}\quad
+    \langle \nabla f(y) - \nabla f(x), y - x\rangle \geq \tfrac{1}{L}\|\nabla f(x) - \nabla f(y)\|^2$$</div>
+  <ol>
+    <li>Tilt: $g_x(z) = f(z) - \nabla f(x)^{\top} z$</li>
+    <li>Check: $g_x$ convex, $L$-smooth, minimized at $z = x$</li>
+    <li>Apply the sandwich (Thm 3) to $g_x$</li>
+    <li>Symmetrize with $g_y$; add the two inequalities</li>
+  </ol>
+</div>
+
+<!-- proof (ii) tilt -->
+<div class="slide">
+  <h2>Proof of (ii) &mdash; the Tilted Function</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$g_x(z) = f(z) - \nabla f(x)^{\top} z,
+    \qquad \nabla g_x(z) = \nabla f(z) - \nabla f(x)$$</div>
+  <ul>
+    <li>Convex: a linear tilt keeps convexity</li>
+    <li>$L$-smooth: gradients shifted by a <strong>constant</strong> &mdash; same Lipschitz bound</li>
+    <li>$\nabla g_x(x) = 0$ + convex &nbsp;$\Rightarrow$&nbsp; minimized at $z = x$</li>
+  </ul>
+  <p class="muted">tilting makes <em>our</em> point $x$ the minimizer &mdash; Thm 3 now applies at $x$</p>
+</div>
+
+<!-- proof (ii) sandwich -->
+<div class="slide">
+  <h2>Proof of (ii) &mdash; Apply the Sandwich</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$g_x(y) - g_x(x)
+    \;\stackrel{\text{(Thm 3, left)}}{\geq}\; \frac{1}{2L}\|\nabla g_x(y)\|^2
+    = \frac{1}{2L}\|\nabla f(y) - \nabla f(x)\|^2$$</div>
+  <ul>
+    <li>Thm 3's left inequality, for $g_x$ with minimizer $x$</li>
+  </ul>
+</div>
+
+<!-- proof (ii) symmetrize -->
+<div class="slide">
+  <h2>Proof of (ii) &mdash; Symmetrize</h2>
+  <div class="divider"></div>
+  <p>Same construction with $x$ and $y$ swapped ($g_y(z) = f(z) - \nabla f(y)^{\top} z$):</p>
+  <div class="math-block" style="margin:8px 0">$$g_y(x) - g_y(y) \;\geq\; \frac{1}{2L}\|\nabla f(x) - \nabla f(y)\|^2$$</div>
+  <ul>
+    <li>Two mirror inequalities, each worth $\frac{1}{2L}\|\cdot\|^2$</li>
+  </ul>
+</div>
+
+<!-- proof (ii) add -->
+<div class="slide">
+  <h2>Proof of (ii) &mdash; Add Them</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    g_x(y) - g_x(x) + g_y(x) - g_y(y)
+    &= \big(\nabla f(y) - \nabla f(x)\big)^{\top}(y - x)\\[4px]
+    &\quad \text{($f$-terms cancel; linear tilts pair up)}
+  \end{aligned}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Rightarrow\;\;
+    \langle \nabla f(y) - \nabla f(x), y - x\rangle \geq \frac{1}{L}\|\nabla f(x) - \nabla f(y)\|^2 \qquad \blacksquare$$</div>
+</div>
+
+<!-- proof summary -->
+<div class="slide">
+  <h2>Proof Summary &mdash; Co-coercivity</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\text{tilt } f \;\rightarrow\; x \text{ becomes minimizer}
+    \;\rightarrow\; \text{sandwich at } x \;\rightarrow\; \text{symmetrize} \;\rightarrow\; \text{add}$$</div>
+  <div class="highlight">
+    <p><strong>Key trick:</strong> tilt so your point becomes the minimizer &mdash; then quote the sandwich.</p>
+  </div>
+</div>
+
+<!-- numeric check -->
+<div class="slide">
+  <h2>Co-coercivity, Checked on the Running Example</h2>
+  <div class="divider"></div>
+  <p>$x = (2,2)$, $y = (0,0)$: &nbsp;$\nabla f(x) - \nabla f(y) = (8,2)$, &nbsp;$x - y = (2,2)$:</p>
+  <div class="math-block" style="margin:8px 0">$$\langle (8,2), (2,2)\rangle = 20
+    \;\;\geq\;\; \frac{1}{L}\|(8,2)\|^2 = \frac{68}{4} = 17 \;\;\checkmark$$</div>
+  <ul>
+    <li>Gradient change and displacement: strongly aligned, as promised</li>
+  </ul>
+</div>
+
+<!-- ===== SECTION 05 — STRONG CONVEXITY ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Strong Convexity</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A curvature floor &mdash; and the PL condition</p>
+</div>
+
+<!-- definition -->
+<div class="slide">
+  <h2>Definition &mdash; $\mu$-Strongly Convex</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition.</h3>
+    <p>Convex $f$ is <strong>$\mu$-strongly convex</strong> if for all $x, y$:</p>
+    <div class="math-block" style="margin:8px 0">$$f(y) \;\geq\; f(x) + \langle \nabla f(x), y - x\rangle + \frac{\mu}{2}\|y - x\|^2$$</div>
+  </div>
+  <ul>
+    <li>Tangent floor <strong>plus</strong> a parabola of curvature $\mu$</li>
+    <li>$f$ curves at least like a quadratic, everywhere</li>
+  </ul>
+</div>
+
+<!-- two-parabola sandwich SVG -->
+<div class="slide">
+  <h2>The Two-Parabola Sandwich</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:860px;margin:6px auto 0;">
+    <svg viewBox="0 0 640 340" style="width:100%;">
+      <line x1="30" y1="330" x2="620" y2="330" stroke="#c9d2da" stroke-width="2"/>
+      <!-- f(u)=u^2+u charcoal; floor u+0.5u^2 gray dashed; lid u+1.5u^2 blue dashed -->
+      <!-- X=320+150u, Y=300-70*val -->
+      <!-- f -->
+      <polyline points="80,233 132,269 185,293 237,304 267,305 290,303 320,300 380,282 425,257 470,222 515,178 560,124"
+        fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/>
+      <!-- floor: u+0.5u^2 at u=-1.6:0.32*... compute: u=-1.6: -1.6+1.28=-0.32 ->322; -1.2:-1.2+0.72=-0.48->334; -0.8:-0.8+0.32=-0.48->334; -0.4:-0.4+0.08=-0.32->322; 0:0->300; 0.4:0.4+0.08=0.48->266; 0.8:0.8+0.32=1.12->222; 1.2:1.2+0.72=1.92->166; 1.6:1.6+1.28=2.88->98 -->
+      <polyline points="80,322 140,334 200,334 260,322 320,300 380,266 440,222 500,166 560,98"
+        fill="none" stroke="#8a97a5" stroke-width="3" stroke-dasharray="8 6"/>
+      <!-- lid -->
+      <polyline points="110,192 170,239 230,275 275,293 320,300 365,290 410,262 455,217 500,155 522,120"
+        fill="none" stroke="#003876" stroke-width="3" stroke-dasharray="8 6"/>
+      <circle cx="320" cy="300" r="7" fill="#1a1a1a"/>
+      <text x="308" y="328" font-size="19" fill="#1a1a1a" font-weight="700">x</text>
+      <text x="418" y="140" font-size="18" fill="#003876">lid: curvature L</text>
+      <text x="478" y="105" font-size="18" fill="#8a97a5">floor: curvature mu</text>
+      <text x="88" y="215" font-size="20" fill="#1a1a1a" font-weight="700">f</text>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">$\mu$-strongly convex + $L$-smooth: $f$ trapped between two parabolas touching at $x$</p>
+</div>
+
+<!-- Hessian floor -->
+<div class="slide">
+  <h2>Theorem 4 &mdash; Hessian Floor</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 4.</h3>
+    <p>$f$ &nbsp;$\mu$-strongly convex and twice-differentiable. Then</p>
+    <div class="math-block" style="margin:8px 0">$$\nabla^2 f(x) \;\succeq\; \mu I \quad \text{for every } x$$</div>
+  </div>
+  <ul>
+    <li>All Hessian eigenvalues $\geq \mu$ &mdash; mirror of Theorem 2</li>
+    <li>Running example: eigenvalues $\{4, 1\}$ &nbsp;$\Rightarrow$&nbsp; $\mu = 1$, $L = 4$</li>
+  </ul>
+  <p class="muted">stated as in the notes</p>
+</div>
+
+<!-- ridge recall -->
+<div class="slide">
+  <h2>Recall (opt02) &mdash; Ridge Buys $\mu$</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (opt02, ridge).</strong> $f(\theta) = \|A\theta - B\|^2 + \lambda \|\theta\|^2$:</p>
+    <div class="math-block" style="margin:8px 0">$$\nabla^2 f = 2\big(A^{\top}A + \lambda I\big) \;\succeq\; 2\lambda I$$</div>
+  </div>
+  <ul>
+    <li>$2\lambda$-strongly convex &mdash; for <strong>any</strong> $A$, even rank-deficient</li>
+    <li>opt02's eigenvalue-shift lemma, now read as: <strong>regularization buys strong convexity</strong></li>
+  </ul>
+</div>
+
+<!-- monotonicity convex -->
+<div class="slide">
+  <h2>Theorem 5 &mdash; Gradient Monotonicity</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 5.</h3>
+    <p>$f$ convex and differentiable. For all $x, y$:</p>
+    <div class="math-block" style="margin:8px 0">$$\big(\nabla f(x) - \nabla f(y)\big)^{\top}(x - y) \;\geq\; 0$$</div>
+  </div>
+  <ul>
+    <li>Gradients never point "against" the displacement</li>
+    <li>Co-coercivity's $\geq \frac{1}{L}\|\cdot\|^2$ sharpened this to a quantity</li>
+  </ul>
+</div>
+
+<!-- proof -->
+<div class="slide">
+  <h2>Proof &mdash; Add Two Floors</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    f(y) &\geq f(x) + \nabla f(x)^{\top}(y - x) \qquad \text{(floor at } x\text{)}\\[4px]
+    f(x) &\geq f(y) + \nabla f(y)^{\top}(x - y) \qquad \text{(floor at } y\text{)}
+  \end{aligned}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\text{add:}\quad 0 \geq \big(\nabla f(x) - \nabla f(y)\big)^{\top}(y - x)
+    \;\;\Longleftrightarrow\;\; \big(\nabla f(x) - \nabla f(y)\big)^{\top}(x - y) \geq 0 \;\;\blacksquare$$</div>
+  <p class="muted">the $f$-values cancel in the sum &mdash; only gradient terms survive</p>
+</div>
+
+<!-- strong monotonicity -->
+<div class="slide">
+  <h2>Theorem 6 &mdash; Strong Monotonicity</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 6.</h3>
+    <p>$f$ &nbsp;$\mu$-strongly convex. For all $x, y$:</p>
+    <div class="math-block" style="margin:8px 0">$$\big(\nabla f(x) - \nabla f(y)\big)^{\top}(x - y) \;\geq\; \mu \|x - y\|^2$$</div>
+  </div>
+  <ul>
+    <li>Same statement, now with a quantitative floor</li>
+  </ul>
+</div>
+
+<!-- proof -->
+<div class="slide">
+  <h2>Proof &mdash; Same Trick, Stronger Floors</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    f(y) &\geq f(x) + \nabla f(x)^{\top}(y - x) + \tfrac{\mu}{2}\|y - x\|^2\\[4px]
+    f(x) &\geq f(y) + \nabla f(y)^{\top}(x - y) + \tfrac{\mu}{2}\|x - y\|^2
+  \end{aligned}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\text{add:}\quad
+    \big(\nabla f(x) - \nabla f(y)\big)^{\top}(x - y) \;\geq\; \mu\|x - y\|^2 \qquad \blacksquare$$</div>
+  <p class="muted">two $\frac{\mu}{2}$ terms combine into one $\mu$</p>
+</div>
+
+<!-- technique review: completing the square -->
+<div class="slide">
+  <h2>Technique Review &mdash; Completing the Square</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (norm version).</strong> For any $g, d \in \mathbb{R}^d$ and $\mu \gt 0$:</p>
+    <div class="math-block" style="margin:8px 0">$$\langle g, d\rangle - \frac{\mu}{2}\|d\|^2
+      \;=\; -\frac{1}{2}\Big\| \sqrt{\mu}\, d - \tfrac{1}{\sqrt{\mu}} g \Big\|^2 + \frac{1}{2\mu}\|g\|^2$$</div>
+  </div>
+  <ul>
+    <li>Check: expand the square &mdash; cross term $= \langle g, d\rangle$, extra terms match</li>
+    <li>Use: drop the (negative) square $\rightarrow$ bound by $\frac{1}{2\mu}\|g\|^2$</li>
+  </ul>
+</div>
+
+<!-- PL statement -->
+<div class="slide">
+  <h2>Lemma 3 &mdash; the PL Condition</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Lemma 3 (Polyak&ndash;Lojasiewicz).</h3>
+    <p>$f$ &nbsp;$\mu$-strongly convex with minimizer $x^\star$. Then for all $x$:</p>
+    <div class="math-block" style="margin:8px 0">$$\|\nabla f(x)\|^2 \;\geq\; 2\mu\, \big(f(x) - f(x^\star)\big)$$</div>
+  </div>
+  <p class="muted">strong convexity $\Rightarrow$ PL; the inequality itself is the "PL condition"</p>
+</div>
+
+<!-- PL reading -->
+<div class="slide">
+  <h2>Reading PL &mdash; Gradient Norm Measures the Gap</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$2\mu\big(f(x) - f^\star\big)
+    \;\stackrel{\text{(PL)}}{\leq}\; \|\nabla f(x)\|^2
+    \;\stackrel{\text{(Thm 3)}}{\leq}\; 2L\big(f(x) - f^\star\big)$$</div>
+  <ul>
+    <li>Gradient norm $\approx$ suboptimality, up to the ratio $\mu / L$</li>
+    <li>Flat gradient $\Rightarrow$ <strong>already near-optimal</strong> &mdash; no hidden bad valleys</li>
+  </ul>
+</div>
+
+<!-- PL proof 1 -->
+<div class="slide">
+  <h2>Proof of PL &mdash; Rearrange the Floor</h2>
+  <div class="divider"></div>
+  <p>Strong-convexity floor at $x$, evaluated at $y = x^\star$:</p>
+  <div class="math-block" style="margin:8px 0">$$f(x^\star) \;\geq\; f(x) + \langle \nabla f(x), x^\star - x\rangle + \frac{\mu}{2}\|x^\star - x\|^2$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Rightarrow\quad
+    f(x) - f(x^\star) \;\leq\; \langle \nabla f(x), x - x^\star\rangle - \frac{\mu}{2}\|x^\star - x\|^2$$</div>
+  <p class="muted">exactly the linear-minus-quadratic shape of the technique review</p>
+</div>
+
+<!-- PL proof 2 -->
+<div class="slide">
+  <h2>Proof of PL &mdash; Complete the Square</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    f(x) - f(x^\star)
+    &\stackrel{\text{(complete sq.)}}{=} -\frac{1}{2}\Big\|\sqrt{\mu}(x - x^\star) - \tfrac{1}{\sqrt{\mu}}\nabla f(x)\Big\|^2
+      + \frac{1}{2\mu}\|\nabla f(x)\|^2\\[4px]
+    &\stackrel{\text{(drop square)}}{\leq} \frac{1}{2\mu}\|\nabla f(x)\|^2
+  \end{aligned}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Rightarrow\;\; \|\nabla f(x)\|^2 \geq 2\mu\big(f(x) - f(x^\star)\big) \qquad \blacksquare$$</div>
+</div>
+
+<!-- PL numeric -->
+<div class="slide">
+  <h2>PL, Checked on the Running Example</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\|\nabla f(x)\|^2 = 16x_1^2 + x_2^2
+    \;\;\geq\;\; 2\mu\big(f(x) - f^\star\big) = 4x_1^2 + x_2^2 \;\;\checkmark$$</div>
+  <ul>
+    <li>Holds for every $x$, with slack in the stiff direction</li>
+    <li>Equality pattern: tight where curvature equals $\mu$ (the $x_2$ axis)</li>
+  </ul>
+</div>
+
+<!-- PL as own condition -->
+<div class="slide">
+  <h2>PL as an Assumption of Its Own</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>The PL inequality mentions no chords, no floors &mdash; convexity absent</li>
+    <li>Notes: PL by itself already <strong>guarantees linear convergence</strong> of GD</li>
+    <li>Delivered in &sect;08 &mdash; two lines, once the descent lemma lands</li>
+  </ul>
+  <div class="highlight">
+    <p>Strong convexity suffices for PL &mdash; not conversely. PL: the weaker, portable assumption.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 06 — GRADIENT DESCENT ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Gradient Descent</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The algorithm &mdash; and when it must converge</p>
+</div>
+
+<!-- the problem -->
+<div class="slide">
+  <h2>The Problem</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\min_{x \in \mathbb{R}^d} \; f(x)$$</div>
+  <ul>
+    <li>$f$ convex: &nbsp;$x$ is a solution $\iff \nabla f(x) = 0$</li>
+    <li>But $\nabla f(x) = 0$ rarely has a closed form &mdash; opt02's lesson</li>
+    <li>Plan: <strong>walk downhill</strong>, one gradient at a time</li>
+  </ul>
+</div>
+
+<!-- algorithm -->
+<div class="slide">
+  <h2>The Algorithm</h2>
+  <div class="divider"></div>
+  <div class="o3-algo">
+    <h3 style="margin:0 0 6px;color:var(--yonsei-blue);">Gradient Descent</h3>
+    <ol>
+      <li>Pick a starting point $x^{(0)}$ and step sizes $\alpha_k \gt 0$</li>
+      <li>Repeat: &nbsp;$x^{(k+1)} = x^{(k)} - \alpha_k \, \nabla f\big(x^{(k)}\big)$</li>
+      <li>Stop when $\|\nabla f(x^{(k)})\|$ is small</li>
+    </ol>
+  </div>
+  <ul style="margin-top:14px;">
+    <li>$-\nabla f$: the maximally <strong>decreasing</strong> direction</li>
+    <li>$\alpha_k$: the <strong>step size</strong> &mdash; deep learning's "learning rate"</li>
+  </ul>
+</div>
+
+<!-- 1D intuition -->
+<div class="slide">
+  <h2>1D Intuition &mdash; the Sign Does the Steering</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:860px;margin:6px auto 0;">
+    <svg viewBox="0 0 640 300" style="width:100%;">
+      <defs>
+        <marker id="arrb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#003876"/>
+        </marker>
+      </defs>
+      <line x1="30" y1="270" x2="620" y2="270" stroke="#c9d2da" stroke-width="2"/>
+      <polyline points="60,40 105,125 150,180 195,218 240,240 285,248 330,240 375,218 420,180 465,125 510,40"
+        fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/>
+      <!-- left point: slope negative, move right -->
+      <circle cx="130" cy="157" r="7" fill="#003876"/>
+      <line x1="130" y1="157" x2="205" y2="157" stroke="#003876" stroke-width="3" marker-end="url(#arrb)"/>
+      <text x="70" y="130" font-size="18" fill="#003876">f'(x) &lt; 0: step right</text>
+      <!-- right point -->
+      <circle cx="445" cy="150" r="7" fill="#003876"/>
+      <line x1="445" y1="150" x2="370" y2="150" stroke="#003876" stroke-width="3" marker-end="url(#arrb)"/>
+      <text x="400" y="120" font-size="18" fill="#003876">f'(x) &gt; 0: step left</text>
+      <circle cx="285" cy="248" r="7" fill="#2e8b57"/>
+      <text x="262" y="238" font-size="17" fill="#2e8b57">min</text>
+    </svg>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$x^{(1)} = x^{(0)} - \alpha f'(x^{(0)}) \qquad \text{one rule handles both signs}$$</div>
+</div>
+
+<!-- running example setup -->
+<div class="slide">
+  <h2>Running Example &mdash; GD, Set Up by Hand</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\nabla f(x) = (4x_1,\, x_2), \qquad \alpha = \frac{1}{L} = \frac{1}{4}$$</div>
+  <div class="math-block" style="margin:8px 0">$$x^+ = x - \tfrac{1}{4}(4x_1, x_2) = \big(0,\; \tfrac{3}{4} x_2\big)$$</div>
+  <ul>
+    <li>Stiff direction $x_1$: solved in <strong>one step</strong> &mdash; factor $1 - \alpha \cdot 4 = 0$</li>
+    <li>Soft direction $x_2$: shrinks by $1 - \alpha \cdot 1 = \frac{3}{4}$ per step</li>
+  </ul>
+</div>
+
+<!-- iterations table -->
+<div class="slide">
+  <h2>Four Iterations by Hand &nbsp;($\alpha = 1/4$)</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>k</th><th>x(k)</th><th>f(x(k))</th><th>dist. squared to x*</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>0</td><td>$(2,\ 2)$</td><td>$10$</td><td>$8$</td></tr>
+      <tr><td>1</td><td>$(0,\ 1.5)$</td><td>$1.125$</td><td>$2.25$</td></tr>
+      <tr><td>2</td><td>$(0,\ 1.125)$</td><td>$0.6328$</td><td>$1.2656$</td></tr>
+      <tr><td>3</td><td>$(0,\ 0.8438)$</td><td>$0.3560$</td><td>$0.7119$</td></tr>
+      <tr><td>4</td><td>$(0,\ 0.6328)$</td><td>$0.2002$</td><td>$0.4004$</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- path SVG -->
+<div class="slide">
+  <h2>The Path on the Contours &nbsp;($\alpha = 1/4$)</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:800px;margin:6px auto 0;">
+    <svg viewBox="0 0 640 340" style="width:100%;">
+      <line x1="40" y1="170" x2="600" y2="170" stroke="#c9d2da" stroke-width="2"/>
+      <line x1="320" y1="12" x2="320" y2="328" stroke="#c9d2da" stroke-width="2"/>
+      <!-- scale 36 px/unit -->
+      <ellipse cx="320" cy="170" rx="80.5" ry="161" fill="none" stroke="#c9d2da" stroke-width="2"/>
+      <ellipse cx="320" cy="170" rx="27" ry="54" fill="none" stroke="#c9d2da" stroke-width="2"/>
+      <ellipse cx="320" cy="170" rx="20.2" ry="40.5" fill="none" stroke="#c9d2da" stroke-width="2"/>
+      <ellipse cx="320" cy="170" rx="15.2" ry="30.4" fill="none" stroke="#c9d2da" stroke-width="2"/>
+      <!-- path (2,2)->(0,1.5)->(0,1.125)->(0,0.844)->(0,0.633) -->
+      <polyline points="392,98 320,116 320,129.5 320,139.6 320,147.2"
+        fill="none" stroke="#003876" stroke-width="3"/>
+      <circle cx="392" cy="98" r="7" fill="#003876"/>
+      <circle cx="320" cy="116" r="6" fill="#003876"/>
+      <circle cx="320" cy="129.5" r="6" fill="#003876"/>
+      <circle cx="320" cy="139.6" r="6" fill="#003876"/>
+      <circle cx="320" cy="147.2" r="6" fill="#003876"/>
+      <circle cx="320" cy="170" r="6" fill="#2e8b57"/>
+      <text x="404" y="92" font-size="18" fill="#003876" font-weight="700">x(0)</text>
+      <text x="334" y="196" font-size="17" fill="#2e8b57">x*</text>
+      <text x="560" y="160" font-size="18" fill="#5a6673">x1</text>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">$\alpha = 1/L$ never overshoots &mdash; straight into the valley, then down the soft axis</p>
+</div>
+
+<!-- zigzag SVG -->
+<div class="slide">
+  <h2>Bigger Step &mdash; Zigzag &nbsp;($\alpha = 0.45$)</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:800px;margin:6px auto 0;">
+    <svg viewBox="0 0 640 340" style="width:100%;">
+      <line x1="40" y1="170" x2="600" y2="170" stroke="#c9d2da" stroke-width="2"/>
+      <line x1="320" y1="12" x2="320" y2="328" stroke="#c9d2da" stroke-width="2"/>
+      <!-- scale 55 px/unit; contours f=10, 5.725, 3.46 (clipped ok) -->
+      <ellipse cx="320" cy="170" rx="123" ry="246" fill="none" stroke="#c9d2da" stroke-width="2"/>
+      <ellipse cx="320" cy="170" rx="93" ry="186" fill="none" stroke="#c9d2da" stroke-width="2"/>
+      <ellipse cx="320" cy="170" rx="72.3" ry="144.7" fill="none" stroke="#c9d2da" stroke-width="2"/>
+      <!-- path: (2,2)(−1.6,1.1)(1.28,0.605)(−1.024,0.333)(0.819,0.183) -->
+      <polyline points="430,60 232,109.5 390.4,136.7 263.7,151.7 365,159.9"
+        fill="none" stroke="#003876" stroke-width="3"/>
+      <circle cx="430" cy="60" r="7" fill="#003876"/>
+      <circle cx="232" cy="109.5" r="6" fill="#003876"/>
+      <circle cx="390.4" cy="136.7" r="6" fill="#003876"/>
+      <circle cx="263.7" cy="151.7" r="6" fill="#003876"/>
+      <circle cx="365" cy="159.9" r="6" fill="#003876"/>
+      <circle cx="320" cy="170" r="6" fill="#2e8b57"/>
+      <text x="442" y="56" font-size="18" fill="#003876" font-weight="700">x(0)</text>
+      <text x="334" y="196" font-size="17" fill="#2e8b57">x*</text>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">$x_1$-factor $1 - 4\alpha = -0.8$: sign flips each step &mdash; $(2,2) \rightarrow (-1.6, 1.1) \rightarrow (1.28, 0.605) \rightarrow \cdots$ still converges</p>
+</div>
+
+<!-- divergence SVG -->
+<div class="slide">
+  <h2>Too Big &mdash; Divergence &nbsp;($\alpha = 0.6 \gt 2/L$)</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:800px;margin:6px auto 0;">
+    <svg viewBox="0 0 640 340" style="width:100%;">
+      <line x1="40" y1="170" x2="600" y2="170" stroke="#c9d2da" stroke-width="2"/>
+      <line x1="320" y1="12" x2="320" y2="328" stroke="#c9d2da" stroke-width="2"/>
+      <!-- scale 45 px/unit; contours f=10, 3 -->
+      <ellipse cx="320" cy="170" rx="100.6" ry="201" fill="none" stroke="#c9d2da" stroke-width="2"/>
+      <ellipse cx="320" cy="170" rx="55.1" ry="110.2" fill="none" stroke="#c9d2da" stroke-width="2"/>
+      <!-- path: (2,2)(−2.8,0.8)(3.92,0.32)(−5.488,0.128) -->
+      <polyline points="410,80 194,134 496.4,155.6 73,164.2"
+        fill="none" stroke="#d94040" stroke-width="3"/>
+      <circle cx="410" cy="80" r="7" fill="#d94040"/>
+      <circle cx="194" cy="134" r="6" fill="#d94040"/>
+      <circle cx="496.4" cy="155.6" r="6" fill="#d94040"/>
+      <circle cx="73" cy="164.2" r="6" fill="#d94040"/>
+      <circle cx="320" cy="170" r="6" fill="#2e8b57"/>
+      <text x="422" y="76" font-size="18" fill="#d94040" font-weight="700">x(0)</text>
+      <text x="60" y="192" font-size="18" fill="#d94040">x1 explodes: 2, -2.8, 3.92, -5.49, ...</text>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">$x_1$-factor $1 - 4\alpha = -1.4$: magnitude grows &mdash; the "loss explodes" plot, as arithmetic</p>
+</div>
+
+<!-- three step sizes -->
+<div class="slide">
+  <h2>Three Step Sizes, One Lesson</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>step</th><th>stiff-axis factor <span style="text-transform:none">$1 - 4\alpha$</span></th><th>behavior</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>$\alpha = 0.25$</td><td>$0$</td><td>monotone, fastest here</td></tr>
+      <tr><td>$\alpha = 0.45$</td><td>$-0.8$</td><td>zigzag, still converges</td></tr>
+      <tr><td>$\alpha = 0.60$</td><td>$-1.4$</td><td style="color:var(--warn);font-weight:700;">diverges</td></tr>
+    </tbody>
+  </table>
+  <div class="highlight">
+    <p>The cliff sits exactly at $\alpha = 2/L$: factor $|1 - L\alpha| = 1$. Smoothness $L$ <em>is</em> learning-rate theory.</p>
+  </div>
+</div>
+
+<!-- convergence theorem -->
+<div class="slide">
+  <h2>Theorem 7 &mdash; GD Converges (Smooth Case)</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 7.</h3>
+    <p>$f$ &nbsp;$L$-smooth with a global minimum. GD with constant $\alpha \in (0, 2/L)$:</p>
+    <div class="math-block" style="margin:8px 0">$$f\big(x^{(k+1)}\big) \leq f\big(x^{(k)}\big),
+      \qquad f\big(x^{(k)}\big) \text{ converges},
+      \qquad \big\|\nabla f\big(x^{(k)}\big)\big\| \rightarrow 0$$</div>
+  </div>
+  <p class="muted">no convexity: the limit is a stationary point, not necessarily a global minimum</p>
+</div>
+
+<!-- proof step 1 -->
+<div class="slide">
+  <h2>Proof &mdash; One Step Through the Lid</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    f\big(x^{(k+1)}\big) &= f\big(x^{(k)} - \alpha \nabla f(x^{(k)})\big)\\[4px]
+    &\stackrel{\text{(Lem 1, } \delta = -\alpha\nabla f\text{)}}{\leq}
+      f\big(x^{(k)}\big) - \alpha \|\nabla f(x^{(k)})\|^2 + \frac{L\alpha^2}{2}\|\nabla f(x^{(k)})\|^2\\[4px]
+    &= f\big(x^{(k)}\big) - \alpha\Big(1 - \frac{L\alpha}{2}\Big)\|\nabla f(x^{(k)})\|^2
+  \end{aligned}$$</div>
+  <p class="muted">descent lemma with the GD step plugged in as $\delta$</p>
+</div>
+
+<!-- proof step 2 -->
+<div class="slide">
+  <h2>Proof &mdash; Monotone and Bounded</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$\alpha \lt 2/L$ &nbsp;$\Rightarrow$&nbsp; coefficient $\alpha(1 - L\alpha/2) \gt 0$</li>
+    <li>So $f(x^{(k)})$ is <strong>non-increasing</strong></li>
+    <li>Bounded below by $f(x^\star)$ &nbsp;$\Rightarrow$&nbsp; it converges &nbsp;<span class="muted">(monotone convergence)</span></li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$f(x^{(0)}) \geq f(x^{(1)}) \geq \cdots \geq f(x^\star)
+    \quad\Longrightarrow\quad f(x^{(k)}) \downarrow \text{ some limit}$$</div>
+</div>
+
+<!-- proof step 3 -->
+<div class="slide">
+  <h2>Proof &mdash; Gradients Must Vanish</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\alpha\Big(1 - \frac{L\alpha}{2}\Big) \sum_{k=0}^{K} \|\nabla f(x^{(k)})\|^2
+    \;\leq\; f(x^{(0)}) - f(x^{(K+1)}) \;\leq\; f(x^{(0)}) - f(x^\star)$$</div>
+  <ul>
+    <li>Per-step drops <strong>sum</strong>; the sum stays finite as $K \rightarrow \infty$</li>
+    <li>A convergent series has vanishing terms: $\|\nabla f(x^{(k)})\|^2 \rightarrow 0$ &nbsp;$\blacksquare$</li>
+  </ul>
+  <p class="muted">first sighting of telescoping &mdash; named properly in &sect;07</p>
+</div>
+
+<!-- remark -->
+<div class="slide">
+  <h2>Reading the Theorem</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Looks modest &mdash; it is the <strong>load-bearing</strong> fact of deep learning</li>
+    <li>Steeper gradient changes (larger $L$) $\Rightarrow$ smaller safe step</li>
+    <li>The notes call it beautiful: steepness and step size, exactly related</li>
+  </ul>
+  <div class="highlight">
+    <p><strong>Exercise (from the notes).</strong> Is smoothness necessary? Interpret $\alpha \lt 2/L$ &mdash; hint: the divergence slide.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 07 — RATE I: O(1/T) ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">07</div>
+  <h1>Rate I &mdash; $O(1/T)$</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Convex + smooth: the gap shrinks like $1/T$</p>
+</div>
+
+<!-- assumptions and goal -->
+<div class="slide">
+  <h2>Assumptions and Goal</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$f$ convex, $L$-smooth, minimizer $x^\star$</li>
+    <li>Constant step $0 \lt \alpha \leq 1/L$; iterates $x_0, x_1, \ldots, x_T$</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$\text{Goal:}\qquad f(x_T) - f(x^\star) \;\leq\; \frac{\|x_0 - x^\star\|^2}{2\alpha T}$$</div>
+  <p class="muted">&sect;06 gave convergence; now convexity buys a <strong>rate</strong></p>
+</div>
+
+<!-- theorem -->
+<div class="slide">
+  <h2>Theorem 8 &mdash; $O(1/T)$ Convergence</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 8.</h3>
+    <p>$f$ convex, $L$-smooth, minimizer $x^\star$; GD with $\alpha \leq 1/L$. Then</p>
+    <div class="math-block" style="margin:8px 0">$$f(x_T) - f(x^\star) \;\leq\; \frac{\|x_0 - x^\star\|^2}{2\alpha T}
+      \;\;\stackrel{(\alpha = 1/L)}{=}\;\; \frac{L\,\|x_0 - x^\star\|^2}{2T}$$</div>
+  </div>
+  <p class="muted">only the starting distance and $T$ appear &mdash; dimension-free</p>
+</div>
+
+<!-- overview -->
+<div class="slide">
+  <h2>Proof Overview</h2>
+  <div class="divider"></div>
+  <ol>
+    <li>One step through the lid: guaranteed decrease &nbsp;<span class="muted">(Lemma 1)</span></li>
+    <li>Bring in $x^\star$: convexity floor at $x$ &nbsp;<span class="muted">(&sect;02)</span></li>
+    <li>Complete the square: gap $\leq$ change in squared distance &nbsp;<span class="muted">(TR)</span></li>
+    <li>Telescope over $T$ steps &nbsp;<span class="muted">(TR: telescoping)</span></li>
+    <li>Last iterate $\leq$ average &nbsp;<span class="muted">(monotone from step 1)</span></li>
+  </ol>
+</div>
+
+<!-- step 1 -->
+<div class="slide">
+  <h2>Step 1 &mdash; Guaranteed Decrease</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    f(x^+) &\stackrel{\text{(Thm 7 proof)}}{\leq} f(x) - \alpha\Big(1 - \frac{L\alpha}{2}\Big)\|\nabla f(x)\|^2\\[4px]
+    &\stackrel{(\alpha \leq 1/L)}{\leq} f(x) - \frac{\alpha}{2}\|\nabla f(x)\|^2
+  \end{aligned}$$</div>
+  <ul>
+    <li>$\alpha \leq 1/L \Rightarrow L\alpha/2 \leq 1/2$: coefficient at least $\alpha/2$</li>
+    <li>Notation: $x = x_{i-1}$, $x^+ = x_i$ for one generic step</li>
+  </ul>
+</div>
+
+<!-- step 2 -->
+<div class="slide">
+  <h2>Step 2 &mdash; Bring In the Optimum</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\nabla f(x)^{\top}(x^\star - x) \;\leq\; f(x^\star) - f(x)
+    \qquad \text{(convexity floor at } x\text{)}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Rightarrow\quad
+    f(x^+) - f(x^\star) \;\leq\; \nabla f(x)^{\top}(x - x^\star) - \frac{\alpha}{2}\|\nabla f(x)\|^2$$</div>
+  <p class="muted">add the floor to Step 1 &mdash; the unknown $f(x)$ cancels out</p>
+</div>
+
+<!-- TR completing square -->
+<div class="slide">
+  <h2>Technique Review &mdash; the Square, Completed Again</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall.</strong> With $g = \nabla f(x)$, $d = x - x^\star$, and any $\alpha \gt 0$:</p>
+    <div class="math-block" style="margin:8px 0">$$\langle g, d\rangle - \frac{\alpha}{2}\|g\|^2
+      \;=\; \frac{1}{2\alpha}\Big( \|d\|^2 - \|d - \alpha g\|^2 \Big)$$</div>
+  </div>
+  <ul>
+    <li>Check: expand $\|d - \alpha g\|^2 = \|d\|^2 - 2\alpha\langle g, d\rangle + \alpha^2\|g\|^2$</li>
+    <li>Note: $d - \alpha g = x - \alpha \nabla f(x) - x^\star = x^+ - x^\star$</li>
+  </ul>
+</div>
+
+<!-- step 3 -->
+<div class="slide">
+  <h2>Step 3 &mdash; the Distance Identity</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    f(x^+) - f(x^\star)
+    &\stackrel{\text{(Step 2)}}{\leq} \nabla f(x)^{\top}(x - x^\star) - \frac{\alpha}{2}\|\nabla f(x)\|^2\\[4px]
+    &\stackrel{\text{(complete sq.)}}{=} \frac{1}{2\alpha}\Big(\|x - x^\star\|^2 - \|x^+ - x^\star\|^2\Big)
+  \end{aligned}$$</div>
+  <div class="highlight">
+    <p>Each value gap is paid in <strong>squared distance burned</strong> &mdash; a telescoping shape.</p>
+  </div>
+</div>
+
+<!-- corollary distance shrinks -->
+<div class="slide">
+  <h2>Corollary &mdash; the Distance Also Shrinks</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$0 \;\leq\; f(x^+) - f(x^\star)
+    \;\leq\; \frac{1}{2\alpha}\Big(\|x - x^\star\|^2 - \|x^+ - x^\star\|^2\Big)$$</div>
+  <ul>
+    <li>$\Rightarrow\; \|x^+ - x^\star\| \leq \|x - x^\star\|$: every step moves <strong>closer</strong> to $x^\star$</li>
+    <li>Not obvious from the picture &mdash; value and distance improve together</li>
+  </ul>
+</div>
+
+<!-- TR telescoping -->
+<div class="slide">
+  <h2>Technique Review &mdash; Telescoping Sums</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall.</strong> For any sequence $a_0, a_1, \ldots, a_T$:</p>
+    <div class="math-block" style="margin:8px 0">$$\sum_{i=1}^{T} \big(a_{i-1} - a_i\big) \;=\; a_0 - a_T$$</div>
+  </div>
+  <ul>
+    <li>Adjacent terms cancel in pairs; only the <strong>endpoints</strong> survive</li>
+    <li>The key trick of this proof &mdash; and of &sect;06's vanishing gradients</li>
+  </ul>
+</div>
+
+<!-- step 4 -->
+<div class="slide">
+  <h2>Step 4 &mdash; Telescope</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \sum_{i=1}^{T} \big(f(x_i) - f(x^\star)\big)
+    &\stackrel{\text{(Step 3, each } i\text{)}}{\leq}
+      \frac{1}{2\alpha} \sum_{i=1}^{T} \Big(\|x_{i-1} - x^\star\|^2 - \|x_i - x^\star\|^2\Big)\\[4px]
+    &\stackrel{\text{(telescope)}}{=} \frac{1}{2\alpha}\Big(\|x_0 - x^\star\|^2 - \|x_T - x^\star\|^2\Big)
+      \;\stackrel{\text{(drop)}}{\leq}\; \frac{\|x_0 - x^\star\|^2}{2\alpha}
+  \end{aligned}$$</div>
+  <p class="muted">$T$ inequalities added; the middle distances all cancel</p>
+</div>
+
+<!-- step 5 -->
+<div class="slide">
+  <h2>Step 5 &mdash; From Sum to Last Iterate</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$f(x_T) - f(x^\star)
+    \;\stackrel{\text{(monotone)}}{\leq}\; \frac{1}{T}\sum_{i=1}^{T} \big(f(x_i) - f(x^\star)\big)
+    \;\stackrel{\text{(Step 4)}}{\leq}\; \frac{\|x_0 - x^\star\|^2}{2\alpha T} \qquad \blacksquare$$</div>
+  <ul>
+    <li>Step 1 made $f(x_i)$ non-increasing: the last term is the smallest</li>
+    <li>Smallest term $\leq$ average of the terms</li>
+  </ul>
+</div>
+
+<!-- proof summary -->
+<div class="slide">
+  <h2>Proof Summary &mdash; the Skeleton</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\text{lid} \;\rightarrow\; +\,\text{floor at } x
+    \;\rightarrow\; \text{complete the square}
+    \;\rightarrow\; \text{telescope}
+    \;\rightarrow\; \text{last} \leq \text{average}$$</div>
+  <div class="highlight">
+    <p><strong>Key trick:</strong> telescoping &mdash; gaps priced in squared distance; the sum collapses to endpoints.</p>
+  </div>
+</div>
+
+<!-- corollary complexity -->
+<div class="slide">
+  <h2>Corollary &mdash; Iteration Complexity $O(1/\varepsilon)$</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$f(x_T) - f^\star \leq \varepsilon
+    \quad \Longleftarrow \quad T \;\geq\; \frac{\|x_0 - x^\star\|^2}{2\alpha\, \varepsilon}
+    \;=\; O\!\Big(\frac{1}{\varepsilon}\Big)$$</div>
+  <ul>
+    <li>Running example, $\alpha = 1/4$: bound $T \geq 16/\varepsilon$</li>
+    <li>$\varepsilon = 0.01 \Rightarrow 1600$ iterations guaranteed</li>
+  </ul>
+</div>
+
+<!-- bound vs reality -->
+<div class="slide">
+  <h2>Bound vs. Reality on the Running Example</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>T</th><th>bound 16 / T</th><th>actual f(x_T)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>$1$</td><td>$16$</td><td>$1.125$</td></tr>
+      <tr><td>$2$</td><td>$8$</td><td>$0.6328$</td></tr>
+      <tr><td>$4$</td><td>$4$</td><td>$0.2002$</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>Honest but <strong>loose</strong>: the runner has more than convexity &mdash; $\mu = 1 \gt 0$</li>
+    <li>Strong convexity should buy a much faster rate &mdash; &sect;08</li>
+  </ul>
+</div>
+
+<!-- ===== SECTION 08 — RATE II: LINEAR ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">08</div>
+  <h1>Rate II &mdash; Linear</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Strong convexity: a constant factor every step</p>
+</div>
+
+<!-- goal -->
+<div class="slide">
+  <h2>The Goal &mdash; From $1/T$ to $c^{\,T}$</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\|x_i - x^\star\|^2 \;\leq\; c^{\,i}\, \|x_0 - x^\star\|^2,
+    \qquad c \lt 1$$</div>
+  <ul>
+    <li>Exponentially fast &mdash; called the <strong>linear rate</strong> (a line on the log plot)</li>
+    <li>Price: assume $\mu$-strong convexity on top of $L$-smoothness</li>
+    <li>Tool to build: a <strong>stronger co-coercivity</strong></li>
+  </ul>
+</div>
+
+<!-- h theorem -->
+<div class="slide">
+  <h2>Theorem 9 &mdash; Subtract the Floor</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 9.</h3>
+    <p>$f$ &nbsp;$\mu$-strongly convex, $L$-smooth, twice-differentiable. Then</p>
+    <div class="math-block" style="margin:8px 0">$$h(x) = f(x) - \frac{\mu}{2}\|x\|^2
+      \quad \text{is convex and } (L - \mu)\text{-smooth}$$</div>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$\text{Proof:}\quad \mu I \preceq \nabla^2 f \preceq L I
+    \;\Rightarrow\; 0 \preceq \nabla^2 h = \nabla^2 f - \mu I \preceq (L - \mu) I \;\;\blacksquare$$</div>
+</div>
+
+<!-- gradient of h -->
+<div class="slide">
+  <h2>What $h$ Knows About $f$</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\nabla h(x) = \nabla f(x) - \mu x
+    \qquad\Rightarrow\qquad
+    \nabla h(x) - \nabla h(y) = \underbrace{\nabla f(x) - \nabla f(y)}_{\Delta g} - \mu \underbrace{(x - y)}_{\Delta x}$$</div>
+  <ul>
+    <li>Shorthand from here: $\Delta g = \nabla f(x) - \nabla f(y)$, &nbsp;$\Delta x = x - y$</li>
+    <li>Every fact about $h$ translates into $\Delta g$, $\Delta x$ language</li>
+  </ul>
+</div>
+
+<!-- co-coercivity of h -->
+<div class="slide">
+  <h2>Co-coercivity, Applied to $h$</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\langle \nabla h(x) - \nabla h(y),\, x - y\rangle
+    \;\geq\; \frac{1}{L - \mu}\,\|\nabla h(x) - \nabla h(y)\|^2$$</div>
+  <ul>
+    <li>Lemma 2 (ii) applies: $h$ is convex and $(L-\mu)$-smooth &nbsp;<span class="muted">(Thm 9)</span></li>
+    <li>In shorthand: $\langle \Delta g - \mu \Delta x,\, \Delta x\rangle \geq \frac{1}{L-\mu}\|\Delta g - \mu \Delta x\|^2$</li>
+  </ul>
+  <p class="muted">now unpack &mdash; two slides of algebra</p>
+</div>
+
+<!-- expand -->
+<div class="slide">
+  <h2>Unpack &mdash; Expand the Square</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\|\Delta g - \mu \Delta x\|^2
+    = \|\Delta g\|^2 - 2\mu \langle \Delta g, \Delta x\rangle + \mu^2 \|\Delta x\|^2$$</div>
+  <div class="math-block" style="margin:8px 0">$$(L - \mu)\Big(\langle \Delta g, \Delta x\rangle - \mu\|\Delta x\|^2\Big)
+    \;\geq\; \|\Delta g\|^2 - 2\mu \langle \Delta g, \Delta x\rangle + \mu^2 \|\Delta x\|^2$$</div>
+  <p class="muted">multiplied both sides by $L - \mu \gt 0$ &mdash; direction preserved</p>
+</div>
+
+<!-- collect -->
+<div class="slide">
+  <h2>Unpack &mdash; Collect Terms</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$(L + \mu)\,\langle \Delta g, \Delta x\rangle
+    \;\geq\; \|\Delta g\|^2 + \big(\mu(L-\mu) + \mu^2\big)\|\Delta x\|^2
+    \;=\; \|\Delta g\|^2 + \mu L\, \|\Delta x\|^2$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Rightarrow\quad
+    \langle \Delta g, \Delta x\rangle \;\geq\; \frac{1}{L + \mu}\|\Delta g\|^2 + \frac{\mu L}{L + \mu}\|\Delta x\|^2$$</div>
+  <div class="highlight">
+    <p><strong>Extended co-coercivity:</strong> alignment now pays in <em>both</em> currencies &mdash; gradient norm <em>and</em> distance.</p>
+  </div>
+</div>
+
+<!-- theorem 10 -->
+<div class="slide">
+  <h2>Theorem 10 &mdash; Linear Convergence</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 10.</h3>
+    <p>$f$ &nbsp;$\mu$-strongly convex, $L$-smooth; GD with $0 \lt \alpha \leq \frac{2}{\mu + L}$. Then</p>
+    <div class="math-block" style="margin:8px 0">$$\|x^+ - x^\star\|^2 \;\leq\;
+      \Big(1 - \frac{2\alpha \mu L}{\mu + L}\Big)\, \|x - x^\star\|^2$$</div>
+  </div>
+  <ul>
+    <li>Write $c = 1 - \frac{2\alpha\mu L}{\mu + L} \lt 1$: one step = one factor of $c$</li>
+  </ul>
+</div>
+
+<!-- overview -->
+<div class="slide">
+  <h2>Proof Overview</h2>
+  <div class="divider"></div>
+  <ol>
+    <li>Expand $\|x^+ - x^\star\|^2$ &mdash; a recursion in the making</li>
+    <li>Extended co-coercivity at $(x, x^\star)$ &mdash; note $\nabla f(x^\star) = 0$</li>
+    <li>Group; the step condition kills the gradient term</li>
+    <li>Unroll the recursion &nbsp;<span class="muted">(TR: unrolling)</span></li>
+    <li>Function values follow via the sandwich &nbsp;<span class="muted">(Thm 3)</span></li>
+  </ol>
+</div>
+
+<!-- step 1 -->
+<div class="slide">
+  <h2>Step 1 &mdash; Expand the Square</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \|x^+ - x^\star\|^2 &= \|x - \alpha \nabla f(x) - x^\star\|^2\\[4px]
+    &= \|x - x^\star\|^2 - 2\alpha\, \nabla f(x)^{\top}(x - x^\star) + \alpha^2 \|\nabla f(x)\|^2
+  \end{aligned}$$</div>
+  <ul>
+    <li>Middle term: exactly what extended co-coercivity bounds</li>
+  </ul>
+</div>
+
+<!-- step 2 -->
+<div class="slide">
+  <h2>Step 2 &mdash; Co-coercivity at the Optimum</h2>
+  <div class="divider"></div>
+  <p>Extended co-coercivity with $y = x^\star$, where $\nabla f(x^\star) = 0$:</p>
+  <div class="math-block" style="margin:8px 0">$$\nabla f(x)^{\top}(x - x^\star)
+    \;\geq\; \frac{1}{L + \mu}\|\nabla f(x)\|^2 + \frac{\mu L}{L + \mu}\|x - x^\star\|^2$$</div>
+  <ul>
+    <li>$\Delta g = \nabla f(x) - 0$, &nbsp;$\Delta x = x - x^\star$</li>
+  </ul>
+</div>
+
+<!-- step 3 -->
+<div class="slide">
+  <h2>Step 3 &mdash; Group; Kill the Gradient Term</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\|x^+ - x^\star\|^2 \;\leq\;
+    \Big(1 - \frac{2\alpha \mu L}{L + \mu}\Big)\|x - x^\star\|^2
+    + \Big(\alpha^2 - \frac{2\alpha}{L + \mu}\Big)\|\nabla f(x)\|^2$$</div>
+  <ul>
+    <li>$\alpha \leq \frac{2}{L + \mu}$ &nbsp;$\Rightarrow$&nbsp; $\alpha^2 - \frac{2\alpha}{L+\mu} \leq 0$: drop the term</li>
+    <li>Left with the contraction: $\|x^+ - x^\star\|^2 \leq c\, \|x - x^\star\|^2$</li>
+  </ul>
+</div>
+
+<!-- TR unrolling -->
+<div class="slide">
+  <h2>Technique Review &mdash; Unrolling a Recursion</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall.</strong> If $a_i \leq c\, a_{i-1}$ for every $i$, then</p>
+    <div class="math-block" style="margin:8px 0">$$a_i \;\leq\; c\, a_{i-1} \;\leq\; c^2 a_{i-2} \;\leq\; \cdots \;\leq\; c^{\,i} a_0$$</div>
+  </div>
+  <ul>
+    <li>Apply the same inequality $i$ times &mdash; compound interest, in reverse</li>
+  </ul>
+</div>
+
+<!-- step 4 -->
+<div class="slide">
+  <h2>Step 4 &mdash; Unroll</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\|x_i - x^\star\|^2 \;\leq\; c\, \|x_{i-1} - x^\star\|^2
+    \;\leq\; \cdots \;\leq\; c^{\,i}\, \|x_0 - x^\star\|^2$$</div>
+  <ul>
+    <li>GD is a <strong>contraction</strong>: every step multiplies the error by $c \lt 1$</li>
+    <li>The notes' word: the map $x \mapsto x - \alpha\nabla f(x)$ is contractive</li>
+  </ul>
+</div>
+
+<!-- step 5 -->
+<div class="slide">
+  <h2>Step 5 &mdash; Function Values Follow</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$f(x_i) - f(x^\star)
+    \;\stackrel{\text{(Thm 3, right)}}{\leq}\; \frac{L}{2}\|x_i - x^\star\|^2
+    \;\stackrel{\text{(Step 4)}}{\leq}\; \frac{L}{2}\, c^{\,i}\, \|x_0 - x^\star\|^2 \qquad \blacksquare$$</div>
+  <ul>
+    <li>Distance contracts $\Rightarrow$ value gap contracts, same $c$</li>
+  </ul>
+</div>
+
+<!-- proof summary -->
+<div class="slide">
+  <h2>Proof Summary &mdash; the Skeleton</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\text{expand square}
+    \;\rightarrow\; \text{co-coercivity at } (x, x^\star)
+    \;\rightarrow\; \text{drop gradient term}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\rightarrow\; \text{unroll}
+    \;\rightarrow\; \text{sandwich}$$</div>
+  <div class="highlight">
+    <p><strong>Key trick:</strong> one step contracts, unrolling is free. The work: extended co-coercivity.</p>
+  </div>
+</div>
+
+<!-- remark log -->
+<div class="slide">
+  <h2>Remark &mdash; $O(\log(1/\varepsilon))$ Iterations</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$c^{\,T}\|x_0 - x^\star\|^2 \leq \varepsilon
+    \quad\Longleftarrow\quad
+    T \;\geq\; \frac{\log\big(\|x_0 - x^\star\|^2 / \varepsilon\big)}{\log(1/c)} = O\!\Big(\log \frac{1}{\varepsilon}\Big)$$</div>
+  <ul>
+    <li>Running example ($c = 0.6$), $\varepsilon = 10^{-6}$: $T \approx 32$ steps</li>
+    <li>The $O(1/\varepsilon)$ bound would promise $1.6 \times 10^{7}$ &mdash; strong convexity changed the game</li>
+  </ul>
+</div>
+
+<!-- running example contraction -->
+<div class="slide">
+  <h2>Running Example &mdash; Contraction, Measured</h2>
+  <div class="divider"></div>
+  <p>$L = 4$, $\mu = 1$: &nbsp;$\alpha = \frac{1}{4} \leq \frac{2}{5}$ $\checkmark$, &nbsp;$c = 1 - \frac{2 \cdot \frac{1}{4} \cdot 4}{5} = 0.6$</p>
+  <table>
+    <thead>
+      <tr><th>i</th><th>actual dist. squared</th><th>bound: <span style="text-transform:none">$0.6^{\,i} \times 8$</span></th></tr>
+    </thead>
+    <tbody>
+      <tr><td>$1$</td><td>$2.25$</td><td>$4.8$</td></tr>
+      <tr><td>$2$</td><td>$1.2656$</td><td>$2.88$</td></tr>
+      <tr><td>$3$</td><td>$0.7119$</td><td>$1.728$</td></tr>
+      <tr><td>$4$</td><td>$0.4004$</td><td>$1.0368$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">observed per-step ratio $(3/4)^2 = 0.5625 \leq 0.6$ &mdash; theorem honored, nearly tight</p>
+</div>
+
+<!-- shrinkage chart -->
+<div class="slide">
+  <h2>Geometric Shrinkage, Drawn</h2>
+  <div class="divider"></div>
+  <div style="width:100%;max-width:860px;margin:6px auto 0;">
+    <svg viewBox="0 0 640 320" style="width:100%;">
+      <!-- axis -->
+      <line x1="60" y1="280" x2="600" y2="280" stroke="#c9d2da" stroke-width="2"/>
+      <line x1="60" y1="20" x2="60" y2="280" stroke="#c9d2da" stroke-width="2"/>
+      <!-- scale: 30px per unit, base y=280; groups at i=0..4 -->
+      <!-- i=0: actual 8 (240px), bound 8 -->
+      <rect x="90" y="40" width="34" height="240" fill="#003876"/>
+      <rect x="128" y="40" width="34" height="240" fill="none" stroke="#8a97a5" stroke-width="2.5"/>
+      <!-- i=1: 2.25 (67.5), 4.8 (144) -->
+      <rect x="196" y="212.5" width="34" height="67.5" fill="#003876"/>
+      <rect x="234" y="136" width="34" height="144" fill="none" stroke="#8a97a5" stroke-width="2.5"/>
+      <!-- i=2: 1.2656 (38), 2.88 (86.4) -->
+      <rect x="302" y="242" width="34" height="38" fill="#003876"/>
+      <rect x="340" y="193.6" width="34" height="86.4" fill="none" stroke="#8a97a5" stroke-width="2.5"/>
+      <!-- i=3: 0.7119 (21.4), 1.728 (51.8) -->
+      <rect x="408" y="258.6" width="34" height="21.4" fill="#003876"/>
+      <rect x="446" y="228.2" width="34" height="51.8" fill="none" stroke="#8a97a5" stroke-width="2.5"/>
+      <!-- i=4: 0.4004 (12), 1.0368 (31.1) -->
+      <rect x="514" y="268" width="34" height="12" fill="#003876"/>
+      <rect x="552" y="248.9" width="34" height="31.1" fill="none" stroke="#8a97a5" stroke-width="2.5"/>
+      <!-- labels -->
+      <text x="112" y="302" font-size="18" fill="#5a6673" text-anchor="middle">i = 0</text>
+      <text x="218" y="302" font-size="18" fill="#5a6673" text-anchor="middle">i = 1</text>
+      <text x="324" y="302" font-size="18" fill="#5a6673" text-anchor="middle">i = 2</text>
+      <text x="430" y="302" font-size="18" fill="#5a6673" text-anchor="middle">i = 3</text>
+      <text x="536" y="302" font-size="18" fill="#5a6673" text-anchor="middle">i = 4</text>
+      <rect x="420" y="30" width="18" height="18" fill="#003876"/>
+      <text x="446" y="45" font-size="17" fill="#1a1a1a">actual</text>
+      <rect x="510" y="30" width="18" height="18" fill="none" stroke="#8a97a5" stroke-width="2.5"/>
+      <text x="536" y="45" font-size="17" fill="#1a1a1a">bound</text>
+      <text x="30" y="45" font-size="17" fill="#5a6673">8</text>
+    </svg>
+  </div>
+  <p class="muted" style="text-align:center;">squared distance to $x^\star$: actual run vs. the $c^{\,i} \cdot 8$ guarantee</p>
+</div>
+
+<!-- PL rate -->
+<div class="slide">
+  <h2>Bonus &mdash; PL Alone Gives the Linear Rate</h2>
+  <div class="divider"></div>
+  <p>Assume only: $L$-smooth + PL. Take $\alpha = 1/L$:</p>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    f(x^+) &\stackrel{\text{(Rate I, Step 1)}}{\leq} f(x) - \frac{1}{2L}\|\nabla f(x)\|^2\\[4px]
+    &\stackrel{\text{(PL)}}{\leq} f(x) - \frac{\mu}{L}\big(f(x) - f(x^\star)\big)
+  \end{aligned}$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Rightarrow\quad f(x^+) - f(x^\star) \;\leq\; \Big(1 - \frac{\mu}{L}\Big)\big(f(x) - f(x^\star)\big)$$</div>
+</div>
+
+<!-- PL rate unroll -->
+<div class="slide">
+  <h2>Bonus &mdash; Unroll the PL Rate</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$f(x_i) - f(x^\star) \;\leq\; \Big(1 - \frac{\mu}{L}\Big)^{i}\, \big(f(x_0) - f(x^\star)\big)$$</div>
+  <ul>
+    <li><strong>No convexity used</strong> &mdash; only smoothness + PL</li>
+    <li>Delivers the notes' claim from &sect;05; derivation added here (two lines)</li>
+    <li>Running example: $1 - \mu/L = 3/4$; actual value ratio $9/16 \leq 3/4$ $\checkmark$</li>
+  </ul>
+</div>
+
+<!-- ===== SECTION 09 — CLOSING ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">09</div>
+  <h1>Closing</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Recap + bridge to opt04</p>
+</div>
+
+<!-- one chain -->
+<div class="slide">
+  <h2>Today, as One Chain</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \text{chord def.} &\rightsquigarrow \text{tangent floor}
+      \rightsquigarrow \nabla^2 f \succeq 0\\[4px]
+    +\, L\text{-smooth} &\rightsquigarrow \text{descent lemma (lid)}
+      \rightsquigarrow \text{GD drops } f \;\; (\alpha \lt 2/L)\\[4px]
+    +\, \text{convex} &\rightsquigarrow \text{telescope} \rightsquigarrow O(1/T)\\[4px]
+    +\, \mu\text{-strong} &\rightsquigarrow \text{co-coercivity}^{+} \rightsquigarrow
+      \|x_i - x^\star\|^2 \leq c^{\,i}\|x_0 - x^\star\|^2
+  \end{aligned}$$</div>
+</div>
+
+<!-- every tool -->
+<div class="slide">
+  <h2>Every Tool, One Line Each</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>result</th><th>one line</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Lemma 1 (descent)</td><td>quadratic lid: $f(x{+}\delta) \leq f(x) + \langle\nabla f, \delta\rangle + \frac{L}{2}\|\delta\|^2$</td></tr>
+      <tr><td>Thm 3 (sandwich)</td><td>$\frac{1}{2L}\|\nabla f\|^2 \leq f - f^\star \leq \frac{L}{2}\|z - x^\star\|^2$</td></tr>
+      <tr><td>Lemma 2 (co-coercivity)</td><td>gradient change aligns with displacement</td></tr>
+      <tr><td>Lemma 3 (PL)</td><td>$\|\nabla f\|^2 \geq 2\mu (f - f^\star)$</td></tr>
+      <tr><td>Thm 8 ($O(1/T)$)</td><td>convex + smooth: telescope the distance</td></tr>
+      <tr><td>Thm 10 (linear)</td><td>strongly convex: contract by $c$, unroll</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- constants -->
+<div class="slide">
+  <h2>The Constants You Now Own</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$\alpha = 1/L$: the theoretically safe learning rate</li>
+    <li>$\alpha = 2/L$: the divergence cliff &mdash; computed, drawn, proven</li>
+    <li>$\mu/L$: the speed of training &mdash; ridge's $\lambda$ buys $\mu$</li>
+  </ul>
+  <div class="highlight">
+    <p>Tuning a learning rate = estimating $L$. Regularizing = purchasing $\mu$. Today named both.</p>
+  </div>
+</div>
+
+<!-- bridge -->
+<div class="slide">
+  <h2>Next &mdash; opt04: Stochastic Gradients</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Today's $\nabla f$: a sum over <strong>all $N$ data points</strong></li>
+    <li>One step = one full pass &mdash; too expensive at millions of samples</li>
+    <li>Sample a mini-batch &nbsp;$\rightarrow$&nbsp; $\nabla f$ becomes a <strong>random variable</strong></li>
+    <li>Recall prob05/prob09: sampled averages concentrate</li>
+  </ul>
+  <div class="highlight">
+    <p><strong>Keep the descent, pay with variance.</strong> SGD and its $O(1/\sqrt{K})$ rate &mdash; opt04.</p>
+  </div>
+</div>
+
+<!-- end slide -->
+<div class="slide title-slide">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Deep Learning Math &middot; Lecture 12</div>
+  <h1 style="font-size:6rem;">$x^{+} = x - \alpha\, \nabla f(x)$</h1>
+  <div class="divider"></div>
+  <p class="subtitle">One update. Three guarantees. Questions?</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / N</div>
+
+</div><!-- end deck -->
+<script src="../../../reference/deck.js"></script>
+</body>
+</html>

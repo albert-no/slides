@@ -1,0 +1,1787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Learning Math 9 &mdash; Monte Carlo &amp; Importance Sampling</title>
+
+<!-- Design system (canonical; all decks link to reference/). -->
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/deck.css">
+
+<!-- KaTeX for math rendering. -->
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- SLIDE 1 — Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Deep Learning Math &middot; Lecture 9</div>
+  <h1>Monte Carlo &amp;<br>Importance Sampling</h1>
+  <div class="divider"></div>
+  <p class="subtitle">When you can't integrate &mdash; sample</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;&middot;&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Fall 2026</p>
+</div>
+
+<!-- SLIDE 2 — Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list" style="display:grid;grid-auto-flow:column;grid-template-rows:repeat(5,auto);grid-template-columns:1fr 1fr;gap:14px 44px">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Why Sampling?</div>
+        <div class="toc-sub">Integrals that never close</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Recall &mdash; the Toolkit</div>
+        <div class="toc-sub">prob01, prob05, prob06 in cards</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">The Monte Carlo Estimator</div>
+        <div class="toc-sub">Sample, evaluate, average</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Error Scaling &amp; Dimension</div>
+        <div class="toc-sub">$1/\sqrt{n}$ never sees $d$</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Importance Sampling</div>
+        <div class="toc-sub">Sample from $q$, correct by weights</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">The Variance of IS</div>
+        <div class="toc-sub">The proposal decides everything</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">07</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Self-Normalized IS</div>
+        <div class="toc-sub">Unknown constants cancel</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">08</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">The Score-Function Gradient</div>
+        <div class="toc-sub">Differentiate through sampling</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">09</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Off-Policy &amp; RLHF</div>
+        <div class="toc-sub">Old samples, new policy</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">10</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Closing the Probability Half</div>
+        <div class="toc-sub">Nine decks, one toolkit</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 01 — WHY SAMPLING ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Why Sampling?</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Integrals that never close</p>
+</div>
+
+<!-- Three integrals -->
+<div class="slide">
+  <h2>Three Expectations Nobody Can Compute</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Bayesian posterior</h3>
+      <p>$\int \tilde{p}(\theta)\, d\theta$ over $\mathbb{R}^d$</p>
+      <p class="muted">$d$ in the millions</p>
+    </div>
+    <div class="card">
+      <h3>Expected return (RL)</h3>
+      <p>$\mathbb{E}[R(\tau)]$ over trajectories $\tau$</p>
+      <p class="muted">every action sequence</p>
+    </div>
+    <div class="card">
+      <h3>LM output reward</h3>
+      <p>$\mathbb{E}[r(X)]$ over token sequences</p>
+      <p class="muted">$|\mathcal{V}|^{T}$ outcomes</p>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:14px;">All the same object: $\mathbb{E}_p[f(X)]$ &mdash; and none closes</p>
+</div>
+
+<!-- prob08 cliffhanger -->
+<div class="slide">
+  <h2>prob08's Cliffhanger, Cashed In</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>prob08: every integral closed &mdash; <strong>because everything was Gaussian</strong></li>
+    <li>Non-Gaussian $p$, nonlinear $f$: no antiderivative, no formula</li>
+    <li>Discrete worlds: $|\mathcal{V}|^{T}$ terms &mdash; no time to sum</li>
+  </ul>
+  <div class="highlight">
+    <p>Today's answer: if you can't integrate, <strong>sample</strong>.</p>
+  </div>
+</div>
+
+<!-- The idea -->
+<div class="slide">
+  <h2>The Idea &mdash; Integration by Averaging</h2>
+  <div class="divider"></div>
+  <p>Draw from $p$, evaluate $f$, average:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_p[f(X)] \;\approx\; \frac{1}{n} \sum_{i=1}^{n} f(X_i),
+    \qquad X_i \stackrel{\text{i.i.d.}}{\sim} p$$</div>
+  <ul>
+    <li>The LLN (prob05) says the average <strong>converges</strong></li>
+    <li>Concentration (prob05, prob06) says <strong>how fast</strong></li>
+  </ul>
+</div>
+
+<!-- Today's upgrades -->
+<div class="slide">
+  <h2>Today's Three Upgrades</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Estimate</h3>
+      <p>Monte Carlo: unbiased, error $\sigma_f/\sqrt{n}$</p>
+      <p class="muted">Theorems 1&ndash;2</p>
+    </div>
+    <div class="card">
+      <h3>Redirect</h3>
+      <p>Importance sampling: <strong>choose</strong> the sampler</p>
+      <p class="muted">Theorems 3&ndash;4</p>
+    </div>
+    <div class="card">
+      <h3>Differentiate</h3>
+      <p>Gradients <strong>through</strong> sampling</p>
+      <p class="muted">Theorem 5 &mdash; REINFORCE</p>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:14px;">The variance trade-off is the thread through all three</p>
+</div>
+
+<!-- Route map -->
+<div class="slide">
+  <h2>Route Map</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 900 250" style="width:100%;max-width:960px;">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#003876"/>
+        </marker>
+      </defs>
+      <rect x="20" y="80" width="180" height="80" rx="10" fill="#f2f5f9" stroke="#003876" stroke-width="2"/>
+      <text x="110" y="114" font-size="16" text-anchor="middle" fill="#222" font-weight="700">E[f(X)]</text>
+      <text x="110" y="138" font-size="14" text-anchor="middle" fill="#666">no closed form</text>
+      <line x1="200" y1="120" x2="248" y2="120" stroke="#003876" stroke-width="2.5" marker-end="url(#arr)"/>
+      <rect x="250" y="80" width="180" height="80" rx="10" fill="#f2f5f9" stroke="#003876" stroke-width="2"/>
+      <text x="340" y="108" font-size="16" text-anchor="middle" fill="#222" font-weight="700">Monte Carlo</text>
+      <text x="340" y="130" font-size="14" text-anchor="middle" fill="#666">sample + average</text>
+      <text x="340" y="150" font-size="13" text-anchor="middle" fill="#003876" font-weight="700">Thm 1-2</text>
+      <line x1="430" y1="120" x2="478" y2="120" stroke="#003876" stroke-width="2.5" marker-end="url(#arr)"/>
+      <rect x="480" y="80" width="180" height="80" rx="10" fill="#f2f5f9" stroke="#003876" stroke-width="2"/>
+      <text x="570" y="108" font-size="16" text-anchor="middle" fill="#222" font-weight="700">Importance</text>
+      <text x="570" y="130" font-size="14" text-anchor="middle" fill="#666">choose the sampler</text>
+      <text x="570" y="150" font-size="13" text-anchor="middle" fill="#003876" font-weight="700">Thm 3-4</text>
+      <line x1="660" y1="120" x2="708" y2="120" stroke="#003876" stroke-width="2.5" marker-end="url(#arr)"/>
+      <rect x="710" y="80" width="180" height="80" rx="10" fill="#f2f5f9" stroke="#003876" stroke-width="2"/>
+      <text x="800" y="108" font-size="16" text-anchor="middle" fill="#222" font-weight="700">Gradients</text>
+      <text x="800" y="130" font-size="14" text-anchor="middle" fill="#666">REINFORCE, RLHF</text>
+      <text x="800" y="150" font-size="13" text-anchor="middle" fill="#003876" font-weight="700">Thm 5</text>
+      <text x="340" y="205" font-size="14" text-anchor="middle" fill="#666">error ~ 1/sqrt(n), any dimension</text>
+      <text x="570" y="205" font-size="14" text-anchor="middle" fill="#666">variance: 0 to infinity</text>
+      <text x="800" y="205" font-size="14" text-anchor="middle" fill="#666">policy gradient + KL</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ===== SECTION 02 — RECALL ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Recall &mdash; the Toolkit</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Refreshed, not re-proved</p>
+</div>
+
+<!-- Recall prob01 -->
+<div class="slide">
+  <h2>Recall (prob01) &mdash; Expectation &amp; Variance</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (LOTUS + variance).</strong> For $X \sim p$ and a function $f$:</p>
+    <div class="math-block" style="margin:8px 0">$$\mathbb{E}_p[f(X)] = \sum_x f(x)\, p(x), \qquad
+      \mathrm{Var}(Y) = \mathbb{E}[Y^2] - \mathbb{E}[Y]^2$$</div>
+  </div>
+  <ul>
+    <li>Densities: replace the sum by $\int f(x) p(x)\, dx$</li>
+    <li>Linearity: $\mathbb{E}[aY + bZ] = a\,\mathbb{E}[Y] + b\,\mathbb{E}[Z]$, always</li>
+  </ul>
+</div>
+
+<!-- Recall prob05 -->
+<div class="slide">
+  <h2>Recall (prob05) &mdash; Averages Concentrate</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (LLN + Chebyshev).</strong> $Y_i$ i.i.d., mean $\mu$, variance $\sigma^2$:</p>
+    <div class="math-block" style="margin:8px 0">$$\mathrm{Var}(\bar{Y}_n) = \frac{\sigma^2}{n}, \qquad
+      \Pr\big( |\bar{Y}_n - \mu| \geq \epsilon \big) \leq \frac{\sigma^2}{n \epsilon^2}$$</div>
+  </div>
+  <ul>
+    <li>Independent variances <strong>add</strong>; scaling by $\tfrac1n$ squares</li>
+    <li>LLN: $\bar{Y}_n \to \mu$ in probability</li>
+  </ul>
+</div>
+
+<!-- Recall prob06 -->
+<div class="slide">
+  <h2>Recall (prob06) &mdash; Hoeffding</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (Hoeffding's inequality).</strong> $Y_i$ i.i.d. in $[a,b]$, mean $\mu$:</p>
+    <div class="math-block" style="margin:8px 0">$$\Pr\big( |\bar{Y}_n - \mu| \geq \epsilon \big)
+      \;\leq\; 2 \exp\!\left( -\frac{2 n \epsilon^2}{(b-a)^2} \right)$$</div>
+  </div>
+  <ul>
+    <li>Exponential in $n$, from the <strong>range alone</strong></li>
+    <li>Proved in prob06 via sub-Gaussian MGFs</li>
+  </ul>
+</div>
+
+<!-- What's new -->
+<div class="slide">
+  <h2>What Is Genuinely New Today</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>prob05&ndash;06: the distribution was <strong>given</strong>; we bounded its averages</li>
+    <li>Today: the sampler is <strong>ours to design</strong></li>
+    <li>Same target $\mu$, many samplers &mdash; wildly different variances</li>
+  </ul>
+  <div class="highlight">
+    <p>New question: not "how fast does it concentrate" but <strong>"which sampler should I build?"</strong></p>
+  </div>
+</div>
+
+<!-- ===== SECTION 03 — MONTE CARLO ESTIMATOR ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>The Monte Carlo Estimator</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Sample, evaluate, average</p>
+</div>
+
+<!-- Target -->
+<div class="slide">
+  <h2>The Target</h2>
+  <div class="divider"></div>
+  <p>One number we want but cannot compute:</p>
+  <div class="math-block" style="margin:8px 0">$$\mu \;=\; \mathbb{E}_p[f(X)]
+    \;=\; \sum_x f(x)\, p(x) \;\;\text{or}\;\; \int f(x)\, p(x)\, dx$$</div>
+  <ul>
+    <li>Assumed: we can <strong>sample</strong> $X \sim p$</li>
+    <li>Assumed: we can <strong>evaluate</strong> $f(x)$ at any sample</li>
+  </ul>
+  <p class="muted">Not assumed: any formula for the sum or integral</p>
+</div>
+
+<!-- Definition -->
+<div class="slide">
+  <h2>Definition &mdash; the Monte Carlo Estimator</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Definition (Monte Carlo estimator).</strong> For $X_1, \dots, X_n \stackrel{\text{i.i.d.}}{\sim} p$:</p>
+    <div class="math-block" style="margin:8px 0">$$\hat{\mu}_n \;=\; \frac{1}{n} \sum_{i=1}^{n} f(X_i)$$</div>
+  </div>
+  <ul>
+    <li>Exactly prob05's $\bar{Y}_n$ with $Y_i = f(X_i)$</li>
+    <li>Everything we proved about sample means <strong>applies verbatim</strong></li>
+  </ul>
+</div>
+
+<!-- Thm 1 statement -->
+<div class="slide">
+  <h2>Theorem 1 &mdash; Unbiasedness</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 1 (unbiasedness).</h3>
+    <p>If $\mathbb{E}_p[f(X)]$ exists, then for every $n \geq 1$:</p>
+    <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ \hat{\mu}_n \big] \;=\; \mu$$</div>
+  </div>
+  <p class="muted">On average, the estimator is exactly right &mdash; at <strong>any</strong> $n$</p>
+</div>
+
+<!-- Thm 1 proof -->
+<div class="slide">
+  <h2>Theorem 1 &mdash; Proof</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}\big[ \hat{\mu}_n \big]
+    \;&amp;\stackrel{(\text{linearity})}{=}\; \frac{1}{n} \sum_{i=1}^{n} \mathbb{E}\big[ f(X_i) \big] \\[4pt]
+    &amp;\stackrel{(X_i \sim p,\ \text{LOTUS})}{=}\; \frac{1}{n} \cdot n\, \mathbb{E}_p[f(X)] \;=\; \mu \qquad \blacksquare
+  \end{aligned}$$</div>
+  <p class="muted">Two ingredients only: linearity of $\mathbb{E}$, identical marginals</p>
+  <p class="muted">Independence not even needed here &mdash; it pays off in the variance</p>
+</div>
+
+<!-- Thm 1 implication -->
+<div class="slide">
+  <h2>What Unbiasedness Buys</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>No systematic error to correct &mdash; all error is <strong>noise</strong></li>
+    <li>Averaging independent runs keeps the target fixed</li>
+    <li>MSE = variance (bias term is zero; prob07's decomposition)</li>
+  </ul>
+  <p class="muted">Contrast coming in Section 07: a useful estimator that is <strong>not</strong> unbiased</p>
+</div>
+
+<!-- Thm 2 statement -->
+<div class="slide">
+  <h2>Theorem 2 &mdash; Variance</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 2 (variance of the MC estimator).</h3>
+    <p>If $\sigma_f^2 = \mathrm{Var}_p\big(f(X)\big) \lt \infty$, then:</p>
+    <div class="math-block" style="margin:8px 0">$$\mathrm{Var}\big( \hat{\mu}_n \big) \;=\; \frac{\sigma_f^2}{n}$$</div>
+  </div>
+  <p class="muted">The whole difficulty of Monte Carlo lives in one constant: $\sigma_f^2$</p>
+</div>
+
+<!-- Thm 2 proof -->
+<div class="slide">
+  <h2>Theorem 2 &mdash; Proof</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \mathrm{Var}\big( \hat{\mu}_n \big)
+    \;&amp;\stackrel{(\mathrm{Var}(cY) = c^2 \mathrm{Var}(Y))}{=}\; \frac{1}{n^2}\, \mathrm{Var}\!\left( \sum_{i=1}^n f(X_i) \right) \\[4pt]
+    &amp;\stackrel{(\text{independence: variances add})}{=}\; \frac{1}{n^2} \cdot n\, \sigma_f^2 \;=\; \frac{\sigma_f^2}{n} \qquad \blacksquare
+  \end{aligned}$$</div>
+  <p class="muted">Both rules proved in prob05 &mdash; reused, not re-derived</p>
+</div>
+
+<!-- RMSE -->
+<div class="slide">
+  <h2>RMSE &mdash; the Error Yardstick</h2>
+  <div class="divider"></div>
+  <p>Recall (prob07): $\text{MSE} = \text{Bias}^2 + \mathrm{Var}$. Here bias $= 0$:</p>
+  <div class="math-block" style="margin:8px 0">$$\text{RMSE}\big( \hat{\mu}_n \big)
+    = \sqrt{ \mathbb{E}\big[ (\hat{\mu}_n - \mu)^2 \big] }
+    = \frac{\sigma_f}{\sqrt{n}}$$</div>
+  <ul>
+    <li>Typical error shrinks like $1/\sqrt{n}$</li>
+    <li>$10\times$ more accuracy costs $100\times$ more samples</li>
+  </ul>
+</div>
+
+<!-- Guarantee: Chebyshev -->
+<div class="slide">
+  <h2>Accuracy Guarantee I &mdash; Chebyshev (prob05)</h2>
+  <div class="divider"></div>
+  <p>Apply prob05's Chebyshev to $\hat{\mu}_n$, variance $\sigma_f^2/n$:</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\big( |\hat{\mu}_n - \mu| \geq \epsilon \big)
+    \;\leq\; \frac{\sigma_f^2}{n \epsilon^2} \;\longrightarrow\; 0$$</div>
+  <ul>
+    <li>LLN (prob05): $\hat{\mu}_n \to \mu$ in probability &mdash; <strong>consistency</strong></li>
+    <li>Needs only finite variance</li>
+  </ul>
+</div>
+
+<!-- Guarantee: Hoeffding -->
+<div class="slide">
+  <h2>Accuracy Guarantee II &mdash; Hoeffding (prob06)</h2>
+  <div class="divider"></div>
+  <p>If additionally $f(x) \in [a,b]$ for all $x$:</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\big( |\hat{\mu}_n - \mu| \geq \epsilon \big)
+    \;\leq\; 2 \exp\!\left( -\frac{2 n \epsilon^2}{(b-a)^2} \right)$$</div>
+  <p>Inverted: error $\leq \epsilon$ with confidence $1 - \delta$ once</p>
+  <div class="math-block" style="margin:8px 0">$$n \;\geq\; \frac{(b-a)^2 \ln(2/\delta)}{2 \epsilon^2}$$</div>
+</div>
+
+<!-- Worked example: pi setup -->
+<div class="slide">
+  <h2>Worked Example &mdash; $\pi$ by Darts</h2>
+  <div class="divider"></div>
+  <p>Throw uniform darts at the square $[-1,1]^2$; count hits in the disk:</p>
+  <div class="math-block" style="margin:8px 0">$$f(x,y) = \mathbf{1}\{x^2 + y^2 \leq 1\}, \qquad
+    \mathbb{E}[f] = \frac{\text{disk area}}{\text{square area}} = \frac{\pi \cdot 1^2}{2 \cdot 2} = \frac{\pi}{4}$$</div>
+  <ul>
+    <li>Estimator: $\hat{\pi}_n = 4 \cdot \dfrac{\#\text{hits}}{n}$</li>
+    <li>Unbiased by Theorem 1: $\mathbb{E}[\hat{\pi}_n] = 4 \cdot \tfrac{\pi}{4} = \pi$</li>
+  </ul>
+</div>
+
+<!-- Darts SVG -->
+<div class="slide">
+  <h2>The Dartboard</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:4px 0;">
+    <svg viewBox="0 0 640 300" style="width:100%;max-width:700px;">
+      <!-- square [-1,1]^2 mapped to (170..430)x(20..280); center (300,150), half-side 130 -->
+      <rect x="170" y="20" width="260" height="260" fill="#f8fafc" stroke="#222" stroke-width="2"/>
+      <circle cx="300" cy="150" r="130" fill="#eaf0f7" stroke="#003876" stroke-width="2.5"/>
+      <!-- darts: cx = 300 + 130x, cy = 150 - 130y -->
+      <circle cx="365" cy="85" r="7" fill="#003876"/>
+      <circle cx="183" cy="46" r="7" fill="#999"/>
+      <circle cx="326" cy="228" r="7" fill="#003876"/>
+      <circle cx="248" cy="137" r="7" fill="#003876"/>
+      <circle cx="404" cy="241" r="7" fill="#999"/>
+      <circle cx="339" cy="33" r="7" fill="#003876"/>
+      <text x="520" y="90" font-size="16" fill="#003876" font-weight="700">in: 4</text>
+      <text x="520" y="120" font-size="16" fill="#999" font-weight="700">out: 2</text>
+      <text x="520" y="170" font-size="15" fill="#222">hit rate 4/6</text>
+      <text x="60" y="90" font-size="15" fill="#666">disk area</text>
+      <text x="60" y="112" font-size="15" fill="#666">over square</text>
+      <text x="60" y="134" font-size="15" fill="#666">= pi/4</text>
+      <text x="300" y="298" font-size="14" fill="#666" text-anchor="middle">6 illustrative darts (positions chosen by hand, not random)</text>
+    </svg>
+  </div>
+  <p class="muted">Estimate: $\hat{\pi} = 4 \cdot \tfrac{4}{6} = \tfrac{8}{3} \approx 2.67$ &mdash; noisy at $n = 6$, as it should be</p>
+</div>
+
+<!-- Six darts by hand -->
+<div class="slide">
+  <h2>Six Darts by Hand</h2>
+  <div class="divider"></div>
+  <table>
+    <thead><tr><th>dart <span style="text-transform:none">$(x,y)$</span></th><th><span style="text-transform:none">$x^2 + y^2$</span></th><th>hit?</th></tr></thead>
+    <tbody>
+      <tr><td>$(0.5,\ 0.5)$</td><td>$0.50$</td><td><strong>in</strong></td></tr>
+      <tr><td>$(-0.9,\ 0.8)$</td><td>$1.45$</td><td>out</td></tr>
+      <tr><td>$(0.2,\ -0.6)$</td><td>$0.40$</td><td><strong>in</strong></td></tr>
+      <tr><td>$(-0.4,\ 0.1)$</td><td>$0.17$</td><td><strong>in</strong></td></tr>
+      <tr><td>$(0.8,\ -0.7)$</td><td>$1.13$</td><td>out</td></tr>
+      <tr><td>$(0.3,\ 0.9)$</td><td>$0.90$</td><td><strong>in</strong></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Exact statistics -->
+<div class="slide">
+  <h2>The Estimator's Exact Statistics</h2>
+  <div class="divider"></div>
+  <p>Each dart's $f$ is Bernoulli with $p = \tfrac{\pi}{4} \approx 0.7854$:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathrm{Var}(f) = p(1-p) \approx 0.7854 \times 0.2146 \approx 0.1685$$</div>
+  <div class="math-block" style="margin:8px 0">$$\mathrm{Var}(\hat{\pi}_n) = \frac{16 \times 0.1685}{n} = \frac{2.70}{n},
+    \qquad \text{RMSE} \approx \frac{1.64}{\sqrt{n}}$$</div>
+  <p class="muted">Theorem 2 with $\hat{\pi}_n$ = average of $4 f(X_i)$; $\mathrm{Var}(4f) = 16\,\mathrm{Var}(f)$</p>
+</div>
+
+<!-- Darts per digit -->
+<div class="slide">
+  <h2>How Many Darts per Digit?</h2>
+  <div class="divider"></div>
+  <table>
+    <thead><tr><th>darts <span style="text-transform:none">$n$</span></th><th>RMSE <span style="text-transform:none">$\approx 1.64/\sqrt{n}$</span></th><th>digits of <span style="text-transform:none">$\pi$</span></th></tr></thead>
+    <tbody>
+      <tr><td>$10^2$</td><td>$0.164$</td><td>$\approx 1$</td></tr>
+      <tr><td>$10^4$</td><td>$0.0164$</td><td>$\approx 2$</td></tr>
+      <tr><td>$10^6$</td><td>$0.00164$</td><td>$\approx 3$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="margin-top:10px;">Each extra digit costs $100\times$ the darts &mdash; the $1/\sqrt{n}$ law in action</p>
+</div>
+
+<!-- Guarantee two ways -->
+<div class="slide">
+  <h2>Guarantee, Two Ways &mdash; $|\hat{\pi} - \pi| \leq 0.01$ at $95\%$</h2>
+  <div class="divider"></div>
+  <table>
+    <thead><tr><th>Tool</th><th>Requirement</th><th><span style="text-transform:none">$n$</span></th></tr></thead>
+    <tbody>
+      <tr><td>Chebyshev (prob05)</td><td>$n \geq \frac{2.70}{0.05 \times 0.01^2}$</td><td>$539{,}200$</td></tr>
+      <tr><td>Hoeffding (prob06)</td><td>$n \geq \frac{16 \ln 40}{2 \times 0.01^2}$</td><td>$295{,}111$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="margin-top:10px;">Range of $4f$: $[0,4]$, so $(b-a)^2 = 16$; $\ln 40 \approx 3.689$</p>
+  <p class="muted">RMSE view: already $\approx 0.005$ at $n = 10^5$ &mdash; guarantees are conservative</p>
+</div>
+
+<!-- What MC never asked -->
+<div class="slide">
+  <h2>What Monte Carlo Never Asked</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>No smoothness of $f$ &mdash; indicators are fine</li>
+    <li>No formula for $p$ &mdash; only the ability to sample</li>
+    <li>No geometry of the domain &mdash; only $\sigma_f \lt \infty$</li>
+  </ul>
+  <div class="highlight">
+    <p>Requirements: <strong>sample</strong> from $p$, <strong>evaluate</strong> $f$, finite $\sigma_f^2$. Nothing else.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 04 — ERROR SCALING & DIMENSION ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Error Scaling &amp; Dimension</h1>
+  <div class="divider"></div>
+  <p class="subtitle">$1/\sqrt{n}$ never sees $d$</p>
+</div>
+
+<!-- Remarkable absence -->
+<div class="slide">
+  <h2>The Remarkable Absence</h2>
+  <div class="divider"></div>
+  <p>Let $X \in \mathbb{R}^d$ &mdash; any $d$. Theorem 2 still reads:</p>
+  <div class="math-block" style="margin:8px 0">$$\text{RMSE} \;=\; \frac{\sigma_f}{\sqrt{n}}$$</div>
+  <ul>
+    <li>The dimension $d$ appears <strong>nowhere</strong></li>
+    <li>The proof never touched the domain &mdash; only $Y_i = f(X_i)$, a scalar</li>
+  </ul>
+  <p class="muted">Caveat kept for later: $\sigma_f$ itself can grow with $d$</p>
+</div>
+
+<!-- Grid competitor -->
+<div class="slide">
+  <h2>The Competitor &mdash; Grid Integration</h2>
+  <div class="divider"></div>
+  <p>Deterministic rule on $[0,1]^d$: evaluate $f$ on a grid, sum the boxes</p>
+  <div class="math-block" style="margin:8px 0">$$m \text{ points} \;\Rightarrow\; \text{spacing } h = m^{-1/d},
+    \qquad \text{error} \;\sim\; C\, h^2 = C\, m^{-2/d}$$</div>
+  <ul>
+    <li>$h^2$: midpoint-rule error for smooth $f$ (second-order rule)</li>
+    <li>Constants $C$ suppressed throughout &mdash; scaling is the point</li>
+  </ul>
+</div>
+
+<!-- Grid cost -->
+<div class="slide">
+  <h2>Grid Cost of Accuracy $\epsilon = 10^{-2}$</h2>
+  <div class="divider"></div>
+  <p>Invert error $= m^{-2/d}$: &nbsp;$m = \epsilon^{-d/2}$</p>
+  <table>
+    <thead><tr><th>dimension <span style="text-transform:none">$d$</span></th><th>grid points <span style="text-transform:none">$m = 10^{d}$</span></th></tr></thead>
+    <tbody>
+      <tr><td>$1$</td><td>$10$</td></tr>
+      <tr><td>$2$</td><td>$100$</td></tr>
+      <tr><td>$6$</td><td>$10^6$</td></tr>
+      <tr><td>$20$</td><td>$10^{20}$</td></tr>
+      <tr><td>$100$</td><td>$10^{100}$</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- MC cost -->
+<div class="slide">
+  <h2>Monte Carlo Cost of the Same $\epsilon$</h2>
+  <div class="divider"></div>
+  <p>Set RMSE $= \sigma_f/\sqrt{n} = 10^{-2}$:</p>
+  <div class="math-block" style="margin:8px 0">$$n \;=\; \sigma_f^2 \times 10^4 \qquad \text{for every } d$$</div>
+  <ul>
+    <li>$d = 2$ or $d = 10^6$: <strong>same</strong> sample count</li>
+    <li>$10^{100}$ grid points is not a computation &mdash; it is a fantasy</li>
+  </ul>
+  <div class="highlight">
+    <p>This is the <strong>curse of dimensionality</strong> &mdash; and Monte Carlo's escape from it.</p>
+  </div>
+</div>
+
+<!-- Chart -->
+<div class="slide">
+  <h2>Error vs. Work &mdash; the Picture</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:4px 0;">
+    <svg viewBox="0 0 720 310" style="width:100%;max-width:780px;">
+      <!-- log-log: x = log10(work) 0..10 -> 80..680 ; y = log10(error) 0..-5 -> 40..260 -->
+      <line x1="80" y1="260" x2="690" y2="260" stroke="#222" stroke-width="2"/>
+      <line x1="80" y1="260" x2="80" y2="30" stroke="#222" stroke-width="2"/>
+      <text x="385" y="298" font-size="15" fill="#222" text-anchor="middle" font-weight="700">samples / grid points (log scale)</text>
+      <text x="30" y="145" font-size="15" fill="#222" text-anchor="middle" font-weight="700" transform="rotate(-90 30 145)">error (log scale)</text>
+      <!-- grid d=1: slope -2 -->
+      <line x1="80" y1="40" x2="230" y2="260" stroke="#2e7d32" stroke-width="3"/>
+      <text x="240" y="180" font-size="14" fill="#2e7d32" font-weight="700">grid, d=1 (slope -2)</text>
+      <!-- MC: slope -1/2 -->
+      <line x1="80" y1="40" x2="680" y2="260" stroke="#003876" stroke-width="3.5"/>
+      <text x="480" y="185" font-size="14" fill="#003876" font-weight="700">Monte Carlo (slope -1/2)</text>
+      <text x="480" y="205" font-size="13" fill="#003876">= grid at d=4</text>
+      <!-- grid d=20: slope -0.1 -->
+      <line x1="80" y1="40" x2="680" y2="84" stroke="#b23b3b" stroke-width="3"/>
+      <text x="500" y="66" font-size="14" fill="#b23b3b" font-weight="700">grid, d=20 (slope -0.1)</text>
+      <!-- ticks -->
+      <text x="80" y="278" font-size="13" fill="#666" text-anchor="middle">1</text>
+      <text x="380" y="278" font-size="13" fill="#666" text-anchor="middle">10^5</text>
+      <text x="680" y="278" font-size="13" fill="#666" text-anchor="middle">10^10</text>
+      <text x="66" y="45" font-size="13" fill="#666" text-anchor="end">1</text>
+      <text x="66" y="265" font-size="13" fill="#666" text-anchor="end">10^-5</text>
+    </svg>
+  </div>
+  <p class="muted">Grid slope $-2/d$ flattens as $d$ grows; MC's $-\tfrac12$ never moves</p>
+</div>
+
+<!-- Crossover -->
+<div class="slide">
+  <h2>The Crossover at $d = 4$</h2>
+  <div class="divider"></div>
+  <p>Compare exponents of the error, per unit of work:</p>
+  <div class="math-block" style="margin:8px 0">$$\text{grid: } m^{-2/d} \qquad \text{vs.} \qquad \text{MC: } n^{-1/2},
+    \qquad \frac{2}{d} = \frac{1}{2} \;\Leftrightarrow\; d = 4$$</div>
+  <ul>
+    <li>$d \lt 4$: a second-order grid <strong>wins</strong> (smooth $f$)</li>
+    <li>$d \gt 4$: Monte Carlo wins &mdash; increasingly absurdly</li>
+  </ul>
+</div>
+
+<!-- Caveats -->
+<div class="slide">
+  <h2>The Honest Caveats</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$\sigma_f$ can be enormous &mdash; rare events (Section 05)</li>
+    <li>Very smooth $f$, low $d$: quadrature rules dominate</li>
+    <li><strong>Quasi-Monte Carlo</strong>: structured points, better rates &mdash; name only</li>
+  </ul>
+  <p class="muted">MC's claim is robustness, not supremacy everywhere</p>
+</div>
+
+<!-- Implication -->
+<div class="slide">
+  <h2>Implication for AI</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Expectations over images, trajectories, token sequences: $d$ huge</li>
+    <li>Grids are ruled out at $d \approx 10$ already</li>
+    <li>Minibatch losses, generation, evaluation: all Monte Carlo estimates</li>
+  </ul>
+  <div class="highlight">
+    <p>In high dimension, <strong>sampling is the only game in town</strong>.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 05 — IMPORTANCE SAMPLING ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Importance Sampling</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Sample from $q$, correct by weights</p>
+</div>
+
+<!-- Two failure modes -->
+<div class="slide">
+  <h2>Two Ways Vanilla MC Fails</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>Can't sample $p$</h3>
+      <p>Posteriors known only up to a constant</p>
+      <p class="muted">fix in Section 07</p>
+    </div>
+    <div>
+      <h3>Rare events</h3>
+      <p>$f$ lives where $p$ almost never goes</p>
+      <p class="muted">fix: this section</p>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:14px;">Both fixes share one identity &mdash; Theorem 3</p>
+</div>
+
+<!-- Rare event by hand -->
+<div class="slide">
+  <h2>A Rare Event by Hand</h2>
+  <div class="divider"></div>
+  <p>Target: $X \sim \text{Exp}(1)$, density $p(x) = e^{-x}$ on $x \geq 0$. Estimate:</p>
+  <div class="math-block" style="margin:8px 0">$$\mu = \Pr(X \gt 10) = \int_{10}^{\infty} e^{-x}\, dx = e^{-10} \approx 4.5 \times 10^{-5}$$</div>
+  <p class="muted">$e^{5} \approx 148.4$, so $e^{10} = (e^5)^2 \approx 22{,}026$ &mdash; one hit per $22{,}026$ samples</p>
+</div>
+
+<!-- Vanilla MC on rare event -->
+<div class="slide">
+  <h2>Vanilla MC on the Rare Event</h2>
+  <div class="divider"></div>
+  <p>$f = \mathbf{1}\{x \gt 10\}$ is Bernoulli($\mu$); relative error:</p>
+  <div class="math-block" style="margin:8px 0">$$\frac{\text{RMSE}}{\mu} = \frac{\sqrt{\mu(1-\mu)}}{\mu \sqrt{n}}
+    \approx \frac{1}{\sqrt{n \mu}}$$</div>
+  <ul>
+    <li>$10\%$ relative error: $n \approx \dfrac{100}{\mu} = 100\, e^{10} \approx 2.2 \times 10^6$</li>
+    <li>Most samples say $0$ &mdash; almost all work is <strong>wasted</strong></li>
+  </ul>
+</div>
+
+<!-- The fix -->
+<div class="slide">
+  <h2>The Fix &mdash; Change the Sampler</h2>
+  <div class="divider"></div>
+  <p>Idea: sample where $f$ <strong>lives</strong>, then correct the bookkeeping</p>
+  <p>Technique &mdash; multiply and divide by a new density $q$:</p>
+  <div class="math-block" style="margin:8px 0">$$f(x)\, p(x) \;=\; \underbrace{f(x)\, \frac{p(x)}{q(x)}}_{\text{new integrand}} \; \cdot \; q(x)$$</div>
+  <p class="muted">Legal wherever $q(x) \gt 0$ &mdash; the one condition to police</p>
+</div>
+
+<!-- Thm 3 statement -->
+<div class="slide">
+  <h2>Theorem 3 &mdash; the IS Identity</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 3 (importance sampling identity).</h3>
+    <p>Let $q$ be a density with $q(x) \gt 0$ wherever $f(x)\, p(x) \neq 0$. Then:</p>
+    <div class="math-block" style="margin:8px 0">$$\mathbb{E}_p\big[ f(X) \big] \;=\;
+      \mathbb{E}_q\!\left[ f(X)\, \frac{p(X)}{q(X)} \right]$$</div>
+  </div>
+  <p class="muted">Same number, <strong>any</strong> admissible sampler $q$ &mdash; the proposal</p>
+</div>
+
+<!-- Thm 3 proof overview -->
+<div class="slide">
+  <h2>Theorem 3 &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <ol>
+    <li><strong>Expand</strong>: write the $q$-expectation as an integral (LOTUS)</li>
+    <li><strong>Cancel</strong>: $\tfrac{p}{q} \cdot q = p$ wherever $q \gt 0$</li>
+    <li><strong>Patch</strong>: the region $q = 0$ contributes nothing &mdash; support condition</li>
+  </ol>
+  <p class="muted">Three lines; the only subtlety is step 3</p>
+</div>
+
+<!-- Thm 3 proof -->
+<div class="slide">
+  <h2>Theorem 3 &mdash; Proof</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}_q\!\left[ f(X) \tfrac{p(X)}{q(X)} \right]
+    \;&amp;\stackrel{(\text{LOTUS})}{=}\; \int_{\{q \gt 0\}} f(x)\, \frac{p(x)}{q(x)}\, q(x)\, dx
+    \;\stackrel{(\text{cancel})}{=}\; \int_{\{q \gt 0\}} f(x)\, p(x)\, dx \\[4pt]
+    &amp;\stackrel{(\text{support cond.})}{=}\; \int f(x)\, p(x)\, dx \;=\; \mathbb{E}_p\big[ f(X) \big] \qquad \blacksquare
+  \end{aligned}$$</div>
+  <p class="muted">Last tag: on $\{q = 0\}$ the condition forces $f p = 0$ &mdash; nothing is lost</p>
+  <p class="muted">Discrete case: same three steps with sums</p>
+</div>
+
+<!-- Support counterexample -->
+<div class="slide">
+  <h2>Why the Support Condition Is Real</h2>
+  <div class="divider"></div>
+  <p>$p$ uniform on $\{1,2,3,4\}$, $f = \mathbf{1}\{x = 4\}$, so $\mu = \tfrac14$</p>
+  <p>Proposal $q$ uniform on $\{1,2,3\}$ &mdash; misses $x = 4$:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_q\!\left[ f(X) \tfrac{p(X)}{q(X)} \right]
+    = \sum_{x=1}^{3} \mathbf{1}\{x = 4\} \cdot \tfrac{3}{4} \cdot \tfrac13 = 0 \;\neq\; \tfrac14$$</div>
+  <p class="muted">Every sample reports $0$, forever &mdash; <strong>biased</strong>, no warning sign</p>
+</div>
+
+<!-- IS estimator -->
+<div class="slide">
+  <h2>Definition &mdash; the IS Estimator</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Definition (importance sampling estimator).</strong> For $X_1, \dots, X_n \stackrel{\text{i.i.d.}}{\sim} q$:</p>
+    <div class="math-block" style="margin:8px 0">$$\hat{\mu}_n^{\,\text{IS}} = \frac{1}{n} \sum_{i=1}^{n} w(X_i)\, f(X_i),
+      \qquad w(x) = \frac{p(x)}{q(x)}$$</div>
+  </div>
+  <ul>
+    <li><strong>Corollary.</strong> Unbiased: Theorem 3 + Theorem 1 applied under $q$</li>
+    <li>$w$: the <strong>importance weight</strong> &mdash; a likelihood ratio</li>
+  </ul>
+</div>
+
+<!-- Weights view -->
+<div class="slide">
+  <h2>Weights Are Likelihood Ratios</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$w(x) \gt 1$: $q$ <strong>under-visits</strong> $x$ &mdash; each such sample counts extra</li>
+    <li>$w(x) \lt 1$: $q$ <strong>over-visits</strong> $x$ &mdash; each counts less</li>
+    <li>Bookkeeping exact on average: $\mathbb{E}_q[w(X)] = \int p = 1$</li>
+  </ul>
+  <div class="highlight">
+    <p>IS = sampling from the wrong distribution, <strong>on purpose</strong>, with exact accounting.</p>
+  </div>
+</div>
+
+<!-- p vs q picture -->
+<div class="slide">
+  <h2>Proposal vs. Target &mdash; the Picture</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:4px 0;">
+    <svg viewBox="0 0 720 310" style="width:100%;max-width:780px;">
+      <line x1="80" y1="260" x2="690" y2="260" stroke="#222" stroke-width="2"/>
+      <line x1="80" y1="260" x2="80" y2="30" stroke="#222" stroke-width="2"/>
+      <text x="385" y="298" font-size="15" fill="#222" text-anchor="middle" font-weight="700">x</text>
+      <!-- p(x) = e^{-x}, y = 260 - 110*v -->
+      <polyline points="80,150 155,193 230,220 305,236 380,245 455,251 530,255 605,257 680,258"
+        fill="none" stroke="#003876" stroke-width="3.5"/>
+      <text x="250" y="200" font-size="15" fill="#003876" font-weight="700">target p = Exp(1)</text>
+      <!-- q(x) = 2e^{-2x} -->
+      <polyline points="80,40 155,179 230,230 305,249 380,256 455,258.5 530,259.4 605,259.8 680,260"
+        fill="none" stroke="#b23b3b" stroke-width="3.5"/>
+      <text x="130" y="70" font-size="15" fill="#b23b3b" font-weight="700">proposal q = Exp(2)</text>
+      <!-- weight bars at samples: w = e^x / 2 -->
+      <rect x="105" y="248" width="10" height="12" fill="#888"/>
+      <rect x="152" y="244" width="10" height="16" fill="#888"/>
+      <rect x="227" y="233" width="10" height="27" fill="#888"/>
+      <rect x="527" y="60" width="10" height="200" fill="#b23b3b"/>
+      <text x="532" y="48" font-size="14" fill="#b23b3b" text-anchor="middle" font-weight="700">w = 10</text>
+      <text x="180" y="240" font-size="13" fill="#555" text-anchor="middle">w &#8776; 0.6-1.4</text>
+      <text x="515" y="120" font-size="14" fill="#555" text-anchor="end">bars: weight w(x) = p(x)/q(x)</text>
+      <text x="515" y="142" font-size="14" fill="#555" text-anchor="end">of a sample landing there</text>
+    </svg>
+  </div>
+  <p class="muted">Where $q$ rarely goes, the rare visit carries a huge weight &mdash; Section 06's warning</p>
+</div>
+
+<!-- Magic proposal -->
+<div class="slide">
+  <h2>IS on the Rare Event &mdash; a Tailored Proposal</h2>
+  <div class="divider"></div>
+  <p>Target: $\mu = \Pr(X \gt 10)$, $p(x) = e^{-x}$. Choose the <strong>shifted</strong> exponential:</p>
+  <div class="math-block" style="margin:8px 0">$$q(x) = e^{-(x - 10)} \quad \text{for } x \geq 10,
+    \qquad \text{(zero below 10)}$$</div>
+  <ul>
+    <li>Every sample lands inside the event $\{x \gt 10\}$</li>
+    <li>Support condition: $f p \neq 0$ only on $x \gt 10$ &mdash; covered ✓</li>
+  </ul>
+</div>
+
+<!-- Every sample same -->
+<div class="slide">
+  <h2>Every Sample Says the Same Thing</h2>
+  <div class="divider"></div>
+  <p>Compute the weighted integrand at any sample $x \geq 10$:</p>
+  <div class="math-block" style="margin:8px 0">$$f(x)\, w(x) = 1 \cdot \frac{e^{-x}}{e^{-(x-10)}} = e^{-10}
+    \qquad \text{for every } x$$</div>
+  <ul>
+    <li>The estimator returns $e^{-10}$ <strong>exactly</strong> &mdash; from $n = 1$</li>
+    <li>Variance: $\mathrm{Var}_q(f\,w) = 0$ &mdash; vanilla MC needed $2.2 \times 10^6$ samples</li>
+  </ul>
+</div>
+
+<!-- Too good -->
+<div class="slide">
+  <h2>Too Good &mdash; What Just Happened?</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>We aimed $q$ exactly at where $f \cdot p$ lives</li>
+    <li>The weight <strong>canceled</strong> all randomness of the integrand</li>
+    <li>Luck? No &mdash; a theorem, and a warning, both in Section 06</li>
+  </ul>
+  <div class="highlight">
+    <p>The proposal $q$ is a <strong>dial</strong>: variance $0$ at one end, $\infty$ at the other.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 06 — VARIANCE OF IS ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>The Variance of IS</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The proposal decides everything</p>
+</div>
+
+<!-- Var of IS -->
+<div class="slide">
+  <h2>Variance of the IS Estimator</h2>
+  <div class="divider"></div>
+  <p>Theorem 2 under $q$, applied to the function $f \cdot w$:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathrm{Var}\big( \hat{\mu}_n^{\,\text{IS}} \big)
+    = \frac{1}{n} \left( \mathbb{E}_q\big[ (f\, w)^2 \big] - \mu^2 \right)$$</div>
+  <ul>
+    <li>$\mu$ is fixed by the problem &mdash; $q$ only moves the <strong>second moment</strong></li>
+    <li>Good $q$: small $\mathbb{E}_q[(fw)^2]$. Bad $q$: it diverges</li>
+  </ul>
+</div>
+
+<!-- Object to watch -->
+<div class="slide">
+  <h2>The Object to Watch</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_q\big[ (f\, w)^2 \big]
+    = \int \frac{f(x)^2\, p(x)^2}{q(x)}\, dx$$</div>
+  <ul>
+    <li>$q$ sits <strong>downstairs</strong>: small $q$ where $|f| p$ is big blows it up</li>
+    <li>Making $q$ large somewhere makes it small elsewhere &mdash; a budget</li>
+  </ul>
+  <p class="muted">Everything in this section is about this one integral</p>
+</div>
+
+<!-- Technique: Jensen -->
+<div class="slide">
+  <h2>Technique Review &mdash; Jensen (prob01)</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (Jensen, convex case).</strong> The square is convex, so for any $Y$:</p>
+    <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ Y^2 \big] \;\geq\; \big( \mathbb{E}[Y] \big)^2$$</div>
+  </div>
+  <ul>
+    <li>Proved in prob01 (concave form; flip the sign)</li>
+    <li>Equality iff $Y$ is <strong>constant</strong> &mdash; the case to engineer</li>
+  </ul>
+</div>
+
+<!-- Thm 4 statement -->
+<div class="slide">
+  <h2>Theorem 4 &mdash; the Optimal Proposal</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 4 (optimal proposal).</h3>
+    <p>Let $c = \mathbb{E}_p\big[ |f(X)| \big] \gt 0$. Over all admissible $q$, the variance of one IS sample is minimized by</p>
+    <div class="math-block" style="margin:8px 0">$$q^*(x) = \frac{|f(x)|\, p(x)}{c},
+      \qquad \min_q \mathrm{Var} = c^2 - \mu^2$$</div>
+  </div>
+  <p class="muted">If $f \geq 0$: $c = \mu$, so the minimum is <strong>zero</strong></p>
+</div>
+
+<!-- Thm 4 overview -->
+<div class="slide">
+  <h2>Theorem 4 &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <ol>
+    <li><strong>Floor</strong>: for every $q$, $\;\mathbb{E}_q[(fw)^2] \geq c^2$ &mdash; by Jensen</li>
+    <li><strong>Attained</strong>: plugging $q^*$ gives exactly $c^2$</li>
+  </ol>
+  <p class="muted">Then $\mathrm{Var} = \mathbb{E}_q[(fw)^2] - \mu^2 \geq c^2 - \mu^2$, with equality at $q^*$</p>
+</div>
+
+<!-- Thm 4 step 1 -->
+<div class="slide">
+  <h2>Proof Step 1 &mdash; the Floor</h2>
+  <div class="divider"></div>
+  <p>Apply Jensen to the non-negative variable $Y = |f(X)|\, w(X)$ under $q$:</p>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}_q\big[ (f w)^2 \big] \;=\; \mathbb{E}_q\big[ Y^2 \big]
+    \;&amp;\stackrel{(\text{Jensen})}{\geq}\; \big( \mathbb{E}_q[ Y ] \big)^2 \\[4pt]
+    &amp;\stackrel{(\text{Thm 3 on } |f|)}{=}\; \big( \mathbb{E}_p[\, |f(X)| \,] \big)^2 \;=\; c^2
+  \end{aligned}$$</div>
+  <p class="muted">The floor $c^2$ is the same for <strong>every</strong> admissible $q$</p>
+</div>
+
+<!-- Thm 4 step 2 -->
+<div class="slide">
+  <h2>Proof Step 2 &mdash; $q^*$ Attains the Floor</h2>
+  <div class="divider"></div>
+  <p>Under $q^*= |f| p / c$, the variable $Y$ is <strong>constant</strong>:</p>
+  <div class="math-block">$$\begin{aligned}
+    |f(x)|\, w^*(x) \;=\; \frac{|f(x)|\, p(x)}{q^*(x)}
+    \;&amp;\stackrel{(\text{plug } q^*)}{=}\; \frac{|f(x)|\, p(x) \cdot c}{|f(x)|\, p(x)} \;=\; c \\[4pt]
+    \Rightarrow\quad \mathbb{E}_{q^*}\big[ (f w^*)^2 \big] \;&amp;=\; c^2 \qquad \blacksquare
+  \end{aligned}$$</div>
+  <p class="muted">Jensen's equality case (constant $Y$), engineered on purpose</p>
+</div>
+
+<!-- Thm 4 summary -->
+<div class="slide">
+  <h2>Theorem 4 &mdash; Proof Summary</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_q\big[ (fw)^2 \big]
+    \;\stackrel{(\text{Jensen})}{\geq}\; \big( \mathbb{E}_q[\, |f| w \,] \big)^2
+    \;\stackrel{(\text{Thm 3})}{=}\; c^2
+    \;\stackrel{(q = q^*)}{=}\; \mathbb{E}_{q^*}\big[ (fw^*)^2 \big]$$</div>
+  <ul>
+    <li>The trick: make $|f| \cdot w$ <strong>constant</strong> &mdash; kill Jensen's gap</li>
+    <li>Weight carrier: sampling proportional to $|f|\, p$</li>
+  </ul>
+</div>
+
+<!-- Zero variance check -->
+<div class="slide">
+  <h2>Zero Variance, Verified on the Rare Event</h2>
+  <div class="divider"></div>
+  <p>Section 05's example: $f = \mathbf{1}\{x \gt 10\}$, $p = e^{-x}$, so $c = \mu = e^{-10}$:</p>
+  <div class="math-block" style="margin:8px 0">$$q^*(x) = \frac{\mathbf{1}\{x \gt 10\}\, e^{-x}}{e^{-10}}
+    = e^{-(x-10)} \;\; \text{on } x \gt 10$$</div>
+  <ul>
+    <li><strong>Exactly</strong> the shifted exponential we guessed</li>
+    <li>Theorem 4 explains the magic: $f \geq 0$, $q = q^*$, variance $0$</li>
+  </ul>
+</div>
+
+<!-- The catch -->
+<div class="slide">
+  <h2>The Catch &mdash; $q^*$ Needs the Answer</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Normalizer of $q^*$: $c = \mathbb{E}_p[|f|]$ &mdash; for $f \geq 0$, the <strong>very target</strong> $\mu$</li>
+    <li>Sampling $q^*$ exactly = already done</li>
+  </ul>
+  <div class="highlight">
+    <p>$q^*$ is a <strong>compass</strong>, not an algorithm: aim $q$ at $|f| \cdot p$, not at $p$.</p>
+  </div>
+</div>
+
+<!-- Disaster teaser -->
+<div class="slide">
+  <h2>The Other End of the Dial</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Theorem 4: best case, variance $c^2 - \mu^2$ (possibly $0$)</li>
+    <li>No matching upper bound was claimed &mdash; because <strong>none exists</strong></li>
+    <li>Next: an innocent-looking $q$ with variance $= \infty$</li>
+  </ul>
+</div>
+
+<!-- Infinite variance setup -->
+<div class="slide">
+  <h2>Worked Example &mdash; a Light-Tailed Proposal</h2>
+  <div class="divider"></div>
+  <p>Target $p = \text{Exp}(1)$; estimate $\mu = \mathbb{E}_p[X] = 1$ with $f(x) = x$</p>
+  <p>Proposal $q = \text{Exp}(2)$ &mdash; <strong>lighter</strong> tail than the target:</p>
+  <div class="math-block" style="margin:8px 0">$$p(x) = e^{-x}, \qquad q(x) = 2 e^{-2x}, \qquad
+    w(x) = \frac{e^{-x}}{2 e^{-2x}} = \frac{e^{x}}{2}$$</div>
+  <p class="muted">The weight grows <strong>exponentially</strong> in $x$ &mdash; the red flag</p>
+</div>
+
+<!-- Weights blow up -->
+<div class="slide">
+  <h2>The Weights Alone Blow Up</h2>
+  <div class="divider"></div>
+  <p>Second moment of the bare weight $w(X)$, $X \sim q$:</p>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}_q\big[ w^2 \big]
+    \;&amp;\stackrel{(\text{LOTUS})}{=}\; \int_0^\infty \frac{e^{2x}}{4} \cdot 2 e^{-2x}\, dx
+    \;\stackrel{(\text{exact cancel})}{=}\; \int_0^\infty \frac{1}{2}\, dx \;=\; \infty
+  \end{aligned}$$</div>
+  <ul>
+    <li>Yet $\mathbb{E}_q[w] = \int_0^\infty e^{-x} dx = 1$ &mdash; mean fine, variance <strong>infinite</strong></li>
+  </ul>
+</div>
+
+<!-- Still unbiased -->
+<div class="slide">
+  <h2>Unbiased, Consistent &mdash; and Useless</h2>
+  <div class="divider"></div>
+  <p>For the actual estimate ($f(x) = x$), the same cancellation:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_q\big[ X w(X) \big] = \int_0^\infty x\, e^{-x}\, dx = 1 \;\;✓
+    \qquad \mathbb{E}_q\big[ (X w)^2 \big] = \int_0^\infty \frac{x^2}{2}\, dx = \infty$$</div>
+  <ul>
+    <li>Chebyshev: vacuous. RMSE: undefined. No $1/\sqrt{n}$ rate</li>
+    <li>Consistency survives (strong LLN needs only a finite mean &mdash; name only)</li>
+    <li>In practice: long quiet stretches, then <strong>catastrophic jumps</strong></li>
+  </ul>
+</div>
+
+<!-- Tail rule -->
+<div class="slide">
+  <h2>The Tail Rule of Thumb</h2>
+  <div class="divider"></div>
+  <p>Contrast: the <strong>heavier</strong>-tailed $q = \text{Exp}(\tfrac12)$, $q(x) = \tfrac12 e^{-x/2}$:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_q\big[ w^2 \big]
+    = \int_0^\infty \frac{e^{-2x}}{\tfrac12 e^{-x/2}}\, dx
+    = 2 \int_0^\infty e^{-3x/2}\, dx = \frac{4}{3}$$</div>
+  <div class="highlight">
+    <p>Proposal tails: <strong>at least as heavy</strong> as the target's.</p>
+  </div>
+</div>
+
+<!-- Degeneracy histogram -->
+<div class="slide">
+  <h2>Weight Degeneracy &mdash; the Picture</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:4px 0;">
+    <svg viewBox="0 0 640 300" style="width:100%;max-width:700px;">
+      <line x1="80" y1="250" x2="600" y2="250" stroke="#222" stroke-width="2"/>
+      <line x1="80" y1="250" x2="80" y2="30" stroke="#222" stroke-width="2"/>
+      <text x="340" y="288" font-size="15" fill="#222" text-anchor="middle" font-weight="700">sample i</text>
+      <text x="30" y="140" font-size="15" fill="#222" text-anchor="middle" font-weight="700" transform="rotate(-90 30 140)">weight share</text>
+      <!-- shares 1,2,1,1,95 % of height 210 -->
+      <rect x="110" y="247.9" width="70" height="2.1" fill="#003876"/>
+      <rect x="205" y="245.8" width="70" height="4.2" fill="#003876"/>
+      <rect x="300" y="247.9" width="70" height="2.1" fill="#003876"/>
+      <rect x="395" y="247.9" width="70" height="2.1" fill="#003876"/>
+      <rect x="490" y="50.5" width="70" height="199.5" fill="#b23b3b"/>
+      <text x="525" y="40" font-size="15" fill="#b23b3b" text-anchor="middle" font-weight="700">95%</text>
+      <text x="145" y="238" font-size="13" fill="#003876" text-anchor="middle">1%</text>
+      <text x="240" y="236" font-size="13" fill="#003876" text-anchor="middle">2%</text>
+      <text x="335" y="238" font-size="13" fill="#003876" text-anchor="middle">1%</text>
+      <text x="430" y="238" font-size="13" fill="#003876" text-anchor="middle">1%</text>
+    </svg>
+  </div>
+  <p class="muted">Weights $(0.1,\ 0.2,\ 0.1,\ 0.1,\ 9.5)$: one sample carries $95\%$ of the estimate</p>
+</div>
+
+<!-- One sample in disguise -->
+<div class="slide">
+  <h2>Five Samples, One in Disguise</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>The estimate is basically $f$ at <strong>one</strong> point &mdash; noise, not an average</li>
+    <li>Symptom of tail mismatch: most weights tiny, one giant</li>
+    <li>Diagnosis tool coming next: <strong>effective sample size</strong></li>
+  </ul>
+  <p class="muted">Degeneracy is the finite-$n$ face of the infinite-variance disease</p>
+</div>
+
+<!-- ===== SECTION 07 — SELF-NORMALIZED IS ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">07</div>
+  <h1>Self-Normalized IS</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Unknown constants cancel</p>
+</div>
+
+<!-- Missing constant -->
+<div class="slide">
+  <h2>The Missing Constant</h2>
+  <div class="divider"></div>
+  <p>Bayesian posterior: $p(x) = \tilde{p}(x) / Z$</p>
+  <ul>
+    <li>$\tilde{p}$ = prior $\times$ likelihood: <strong>computable</strong> at any $x$</li>
+    <li>$Z = \int \tilde{p}$: the impossible integral we started with</li>
+    <li>True weight $w = p/q$ needs $Z$ &mdash; stuck?</li>
+  </ul>
+</div>
+
+<!-- Unnormalized weights -->
+<div class="slide">
+  <h2>Unnormalized Weights</h2>
+  <div class="divider"></div>
+  <p>Define what we <strong>can</strong> compute:</p>
+  <div class="math-block" style="margin:8px 0">$$\tilde{w}(x) = \frac{\tilde{p}(x)}{q(x)} = Z \cdot w(x)$$</div>
+  <ul>
+    <li>Off from the true weight by the <strong>same</strong> factor $Z$, every sample</li>
+    <li>A ratio of weighted sums would cancel it&hellip;</li>
+  </ul>
+</div>
+
+<!-- SNIS definition -->
+<div class="slide">
+  <h2>Definition &mdash; Self-Normalized IS</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Definition (self-normalized IS, SNIS).</strong> For $X_i \stackrel{\text{i.i.d.}}{\sim} q$:</p>
+    <div class="math-block" style="margin:8px 0">$$\hat{\mu}_n^{\,\text{SN}} =
+      \frac{\sum_{i=1}^n \tilde{w}(X_i)\, f(X_i)}{\sum_{i=1}^n \tilde{w}(X_i)}$$</div>
+  </div>
+  <ul>
+    <li>Replace $\tilde{w}$ by $c\, \tilde{w}$: $c$ cancels top and bottom &mdash; $Z$-free ✓</li>
+  </ul>
+</div>
+
+<!-- Two estimators one ratio -->
+<div class="slide">
+  <h2>Two MC Estimators, One Ratio</h2>
+  <div class="divider"></div>
+  <p>Divide both sums by $n$ and look at each piece (Theorem 1 under $q$):</p>
+  <div class="math-block" style="margin:8px 0">$$\frac{1}{n} \sum_i \tilde{w}(X_i) f(X_i) \;\to\; \mathbb{E}_q[\tilde{w} f] = Z \mu,
+    \qquad \frac{1}{n} \sum_i \tilde{w}(X_i) \;\to\; \mathbb{E}_q[\tilde{w}] = Z$$</div>
+  <ul>
+    <li>Numerator: IS estimator of $Z\mu$; denominator: of $Z$</li>
+    <li>Both convergences: LLN (prob05)</li>
+  </ul>
+</div>
+
+<!-- Consistency -->
+<div class="slide">
+  <h2>Consistency &mdash; Sketch</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\hat{\mu}_n^{\,\text{SN}}
+    = \frac{\tfrac1n \sum_i \tilde{w}_i f_i}{\tfrac1n \sum_i \tilde{w}_i}
+    \;\longrightarrow\; \frac{Z \mu}{Z} = \mu$$</div>
+  <ul>
+    <li>Top and bottom converge (LLN); the ratio follows</li>
+    <li><em>Flagged sketch</em>: "ratio of limits" uses the continuous-mapping step, named not proved</li>
+    <li>Needs $Z \gt 0$ &mdash; true for any density</li>
+  </ul>
+</div>
+
+<!-- Biased -->
+<div class="slide">
+  <h2>Honest Flag &mdash; SNIS Is Biased</h2>
+  <div class="divider"></div>
+  <p>Expectations do not pass through ratios: $\mathbb{E}\!\left[ \tfrac{A}{B} \right] \neq \tfrac{\mathbb{E}[A]}{\mathbb{E}[B]}$</p>
+  <p>Mini-example: $A = 1$, $B$ uniform on $\{1, 3\}$:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\!\left[ \frac{A}{B} \right] = \frac{1}{2}\Big( 1 + \frac13 \Big) = \frac{2}{3}
+    \;\neq\; \frac{\mathbb{E}[A]}{\mathbb{E}[B]} = \frac{1}{2}$$</div>
+  <p class="muted">SNIS: biased at finite $n$, consistent as $n \to \infty$ &mdash; the price of dropping $Z$</p>
+</div>
+
+<!-- ESS definition -->
+<div class="slide">
+  <h2>Effective Sample Size &mdash; a Heuristic</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Definition (effective sample size, ESS).</strong> For weights $\tilde{w}_1, \dots, \tilde{w}_n$:</p>
+    <div class="math-block" style="margin:8px 0">$$n_{\text{eff}} = \frac{\big( \sum_i \tilde{w}_i \big)^2}{\sum_i \tilde{w}_i^2}$$</div>
+  </div>
+  <ul>
+    <li>Scale-invariant: $c\,\tilde{w}$ leaves it unchanged &mdash; fits SNIS</li>
+    <li><em>Heuristic</em>, not a theorem: a diagnostic, not a guarantee</li>
+  </ul>
+</div>
+
+<!-- ESS sanity checks -->
+<div class="slide">
+  <h2>ESS &mdash; Sanity Checks by Hand</h2>
+  <div class="divider"></div>
+  <p>Equal weights $\tilde{w}_i = c$: &nbsp;$n_{\text{eff}} = \dfrac{(nc)^2}{n c^2} = n$ &mdash; full strength</p>
+  <p>Section 06's degenerate five, $(0.1,\ 0.2,\ 0.1,\ 0.1,\ 9.5)$:</p>
+  <div class="math-block" style="margin:8px 0">$$n_{\text{eff}} = \frac{(10.0)^2}{0.01 + 0.04 + 0.01 + 0.01 + 90.25}
+    = \frac{100}{90.32} \approx 1.11$$</div>
+  <p class="muted">Five samples, effectively <strong>one</strong> &mdash; matches the histogram's story</p>
+</div>
+
+<!-- ESS caveats -->
+<div class="slide">
+  <h2>What ESS Is Not</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Not a variance bound &mdash; ignores $f$ entirely</li>
+    <li>Can look healthy while a heavy tail hides <em>unseen</em> huge weights</li>
+    <li>Standard reading: $n_{\text{eff}} \ll n$ means <strong>fix the proposal</strong></li>
+  </ul>
+  <p class="muted">Cheap, universal, imperfect &mdash; the field's favorite dashboard light</p>
+</div>
+
+<!-- Where it runs -->
+<div class="slide">
+  <h2>Where SNIS Runs in AI</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Posterior inference</h3>
+      <p>$Z$ unknown by construction</p>
+    </div>
+    <div class="card">
+      <h3>Particle filters</h3>
+      <p>Reweight, resample, repeat</p>
+      <p class="muted">name only</p>
+    </div>
+    <div class="card">
+      <h3>Off-policy evaluation</h3>
+      <p>Judge a new policy on old data</p>
+      <p class="muted">Section 09</p>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:14px;">Next: the missing third upgrade &mdash; gradients</p>
+</div>
+
+<!-- ===== SECTION 08 — SCORE-FUNCTION GRADIENT ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">08</div>
+  <h1>The Score-Function Gradient</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Differentiate through sampling</p>
+</div>
+
+<!-- New kind of problem -->
+<div class="slide">
+  <h2>A New Kind of Problem</h2>
+  <div class="divider"></div>
+  <p>Policy / generator $\pi_\theta$: a distribution <strong>we control</strong> through $\theta$</p>
+  <div class="math-block" style="margin:8px 0">$$J(\theta) = \mathbb{E}_{X \sim \pi_\theta}\big[ R(X) \big]
+    \qquad \longrightarrow \; \max_\theta$$</div>
+  <ul>
+    <li>RL: $X$ = trajectory, $R$ = return</li>
+    <li>LM: $X$ = generated text, $R$ = reward score</li>
+  </ul>
+  <p class="muted">To climb, we need $\nabla_\theta J$ &mdash; and $J$ is already un-computable</p>
+</div>
+
+<!-- Why naive fails -->
+<div class="slide">
+  <h2>Why Plain MC Doesn't Give a Gradient</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$\theta$ lives <strong>inside the sampler</strong>, not inside $R$</li>
+    <li>MC on samples estimates $J(\theta)$ at one $\theta$ &mdash; a number</li>
+    <li>$R(X_i)$ carries no $\tfrac{\partial}{\partial \theta}$ to average</li>
+  </ul>
+  <div class="highlight">
+    <p>Needed: rewrite $\nabla_\theta\, \mathbb{E}_{\pi_\theta}[\cdot]$ as $\mathbb{E}_{\pi_\theta}[\,\cdot\,]$ of something &mdash; then sample it.</p>
+  </div>
+</div>
+
+<!-- Log-derivative trick -->
+<div class="slide">
+  <h2>Technique Review &mdash; the Log-Derivative Trick</h2>
+  <div class="divider"></div>
+  <p>Chain rule on $\log$, read <strong>backwards</strong>:</p>
+  <div class="math-block" style="margin:8px 0">$$\nabla_\theta \log g(\theta) = \frac{\nabla_\theta\, g(\theta)}{g(\theta)}
+    \qquad \Longleftrightarrow \qquad
+    \nabla_\theta\, g(\theta) = g(\theta)\, \nabla_\theta \log g(\theta)$$</div>
+  <ul>
+    <li>Turns a bare $\nabla \pi_\theta$ into $\pi_\theta \times (\text{something})$</li>
+    <li>A $\pi_\theta$ factor is exactly what an expectation needs</li>
+  </ul>
+</div>
+
+<!-- Thm 5 statement -->
+<div class="slide">
+  <h2>Theorem 5 &mdash; the Score-Function Identity</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 5 (score-function / REINFORCE identity).</h3>
+    <p>Finite $\mathcal{X}$, $\pi_\theta(x) \gt 0$, differentiable in $\theta$; $R$ fixed. Then:</p>
+    <div class="math-block" style="margin:8px 0">$$\nabla_\theta\, \mathbb{E}_{X \sim \pi_\theta}\big[ R(X) \big]
+      \;=\; \mathbb{E}_{X \sim \pi_\theta}\big[ R(X)\, \nabla_\theta \log \pi_\theta(X) \big]$$</div>
+  </div>
+  <p class="muted">$\nabla_\theta \log \pi_\theta(x)$: the <strong>score</strong> &mdash; hence the name</p>
+</div>
+
+<!-- Thm 5 overview -->
+<div class="slide">
+  <h2>Theorem 5 &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <ol>
+    <li><strong>Expand</strong>: $J(\theta) = \sum_x \pi_\theta(x) R(x)$</li>
+    <li><strong>Swap</strong>: $\nabla$ through the (finite) sum</li>
+    <li><strong>Log-derivative</strong>: $\nabla \pi_\theta = \pi_\theta \nabla \log \pi_\theta$, reread as an expectation</li>
+  </ol>
+  <p class="muted">One genuinely new idea &mdash; step 3</p>
+</div>
+
+<!-- Step 1 -->
+<div class="slide">
+  <h2>Proof Step 1 &mdash; Expand the Expectation</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$J(\theta)
+    \;\stackrel{(\text{LOTUS})}{=}\; \sum_{x \in \mathcal{X}} \pi_\theta(x)\, R(x)$$</div>
+  <ul>
+    <li>$R(x)$: fixed numbers &mdash; all $\theta$-dependence sits in $\pi_\theta$</li>
+    <li>Finitely many terms, each differentiable in $\theta$</li>
+  </ul>
+</div>
+
+<!-- Step 2 -->
+<div class="slide">
+  <h2>Proof Step 2 &mdash; Swap $\nabla$ and $\sum$</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\nabla_\theta J(\theta)
+    \;\stackrel{(\text{finite sum})}{=}\; \sum_{x} R(x)\, \nabla_\theta\, \pi_\theta(x)$$</div>
+  <ul>
+    <li>Finite sums: differentiate term by term &mdash; automatic</li>
+    <li><em>Honest flag</em>: continuous $\mathcal{X}$ needs an interchange condition (dominated convergence &mdash; name only)</li>
+  </ul>
+</div>
+
+<!-- Step 3 -->
+<div class="slide">
+  <h2>Proof Step 3 &mdash; Log-Derivative, Then Reread</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    \sum_x R(x)\, \nabla_\theta \pi_\theta(x)
+    \;&amp;\stackrel{(\text{log-derivative})}{=}\; \sum_x R(x)\, \pi_\theta(x)\, \nabla_\theta \log \pi_\theta(x) \\[4pt]
+    &amp;\stackrel{(\text{LOTUS backwards})}{=}\; \mathbb{E}_{\pi_\theta}\big[ R(X)\, \nabla_\theta \log \pi_\theta(X) \big] \qquad \blacksquare
+  \end{aligned}$$</div>
+  <p class="muted">The inserted $\pi_\theta$ is what lets us read the sum as an expectation again</p>
+</div>
+
+<!-- Thm 5 summary -->
+<div class="slide">
+  <h2>Theorem 5 &mdash; Proof Summary</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\nabla_\theta\, \mathbb{E}_{\pi_\theta}[R]
+    \;\stackrel{(\text{swap})}{=}\; \sum_x R\, \nabla \pi_\theta
+    \;\stackrel{(\log\text{-trick})}{=}\; \sum_x \pi_\theta \cdot R\, \nabla \log \pi_\theta
+    \;\stackrel{(\text{reread})}{=}\; \mathbb{E}_{\pi_\theta}\big[ R\, \nabla \log \pi_\theta \big]$$</div>
+  <ul>
+    <li>The trick: multiply and divide by $\pi_\theta$ &mdash; IS's move, reused</li>
+    <li>What it buys: the gradient is again an <strong>expectation</strong></li>
+  </ul>
+</div>
+
+<!-- REINFORCE estimator -->
+<div class="slide">
+  <h2>The REINFORCE Estimator</h2>
+  <div class="divider"></div>
+  <p>Theorem 5 + Theorem 1: sample and average the new integrand</p>
+  <div class="math-block" style="margin:8px 0">$$\hat{g}_n = \frac{1}{n} \sum_{i=1}^{n} R(X_i)\, \nabla_\theta \log \pi_\theta(X_i),
+    \qquad X_i \sim \pi_\theta$$</div>
+  <ul>
+    <li><strong>Unbiased</strong> estimate of $\nabla_\theta J$ &mdash; then gradient ascent</li>
+    <li>Needs: sampling $\pi_\theta$, evaluating $R$, differentiating $\log \pi_\theta$</li>
+  </ul>
+</div>
+
+<!-- Worked check setup -->
+<div class="slide">
+  <h2>Worked Check &mdash; a Two-Action Policy</h2>
+  <div class="divider"></div>
+  <p>Actions $\{a, b\}$; policy $\pi_\theta(a) = \sigma(\theta)$ (sigmoid); rewards $R(a) = 1$, $R(b) = 0$</p>
+  <p><strong>Direct route</strong> &mdash; here $J$ is computable:</p>
+  <div class="math-block" style="margin:8px 0">$$J(\theta) = \sigma(\theta) \cdot 1 + (1 - \sigma(\theta)) \cdot 0 = \sigma(\theta),
+    \qquad \nabla_\theta J = \sigma(\theta)\big( 1 - \sigma(\theta) \big)$$</div>
+  <p class="muted">Sigmoid derivative $\sigma' = \sigma(1 - \sigma)$ &mdash; the yardstick to match</p>
+</div>
+
+<!-- Worked check identity -->
+<div class="slide">
+  <h2>Worked Check &mdash; the Identity Agrees</h2>
+  <div class="divider"></div>
+  <p>Scores: $\nabla \log \sigma(\theta) = 1 - \sigma$; &nbsp;$\nabla \log (1 - \sigma(\theta)) = -\sigma$</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ R\, \nabla \log \pi_\theta \big]
+    = \sigma \cdot 1 \cdot (1 - \sigma) \;+\; (1 - \sigma) \cdot 0 \cdot (-\sigma)
+    = \sigma (1 - \sigma) \;\;✓$$</div>
+  <p class="muted">At $\theta = 0$: both sides $= \tfrac12 \cdot \tfrac12 = \tfrac14$</p>
+</div>
+
+<!-- Reading the identity -->
+<div class="slide">
+  <h2>Reading the Identity</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Each sample pushes $\log \pi_\theta(X_i)$ <strong>up</strong>, scaled by its reward</li>
+    <li>High-reward samples: made more likely; zero-reward: untouched</li>
+    <li>No gradient of $R$ needed &mdash; black boxes, human ratings, all fine</li>
+  </ul>
+  <div class="highlight">
+    <p>Learning signal = <strong>reward-weighted log-likelihood ascent</strong> on your own samples.</p>
+  </div>
+</div>
+
+<!-- Baseline lemma -->
+<div class="slide">
+  <h2>Baselines &mdash; Free Variance Reduction</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Lemma (baseline invariance).</strong> The score has mean zero, so for any constant $b$:</p>
+    <div class="math-block" style="margin:8px 0">$$\mathbb{E}_{\pi_\theta}\big[ (R(X) - b)\, \nabla_\theta \log \pi_\theta(X) \big]
+      = \nabla_\theta J(\theta)$$</div>
+  </div>
+  <p>Proof of mean-zero score:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_{\pi_\theta}\big[ \nabla \log \pi_\theta \big]
+    = \sum_x \pi_\theta \frac{\nabla \pi_\theta}{\pi_\theta}
+    = \nabla \sum_x \pi_\theta(x) = \nabla\, 1 = 0 \qquad \blacksquare$$</div>
+</div>
+
+<!-- Baseline at work -->
+<div class="slide">
+  <h2>Baseline at Work &mdash; the Toy, Revisited</h2>
+  <div class="divider"></div>
+  <p>Two-action policy at $\theta = 0$; single-sample gradient estimates:</p>
+  <table>
+    <thead><tr><th>sample</th><th>no baseline</th><th>baseline <span style="text-transform:none">$b = \tfrac12$</span></th></tr></thead>
+    <tbody>
+      <tr><td>$a$ (prob $\tfrac12$)</td><td>$1 \cdot \tfrac12 = \tfrac12$</td><td>$\tfrac12 \cdot \tfrac12 = \tfrac14$</td></tr>
+      <tr><td>$b$ (prob $\tfrac12$)</td><td>$0 \cdot (-\tfrac12) = 0$</td><td>$(-\tfrac12)(-\tfrac12) = \tfrac14$</td></tr>
+      <tr><td><strong>mean / variance</strong></td><td>$\tfrac14$ / $\tfrac{1}{16}$</td><td>$\tfrac14$ / $\mathbf{0}$</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="margin-top:10px;">Same mean, variance killed &mdash; the estimator became constant</p>
+</div>
+
+<!-- Pipeline -->
+<div class="slide">
+  <h2>The REINFORCE Pipeline</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 900 240" style="width:100%;max-width:960px;">
+      <defs>
+        <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#003876"/>
+        </marker>
+      </defs>
+      <rect x="20" y="70" width="150" height="80" rx="10" fill="#eaf0f7" stroke="#003876" stroke-width="2"/>
+      <text x="95" y="104" font-size="15" text-anchor="middle" fill="#222" font-weight="700">policy</text>
+      <text x="95" y="128" font-size="14" text-anchor="middle" fill="#666">parameters</text>
+      <line x1="170" y1="110" x2="213" y2="110" stroke="#003876" stroke-width="2.5" marker-end="url(#arr2)"/>
+      <rect x="215" y="70" width="150" height="80" rx="10" fill="#f2f5f9" stroke="#003876" stroke-width="2"/>
+      <text x="290" y="104" font-size="15" text-anchor="middle" fill="#222" font-weight="700">sample n</text>
+      <text x="290" y="128" font-size="14" text-anchor="middle" fill="#666">outputs</text>
+      <line x1="365" y1="110" x2="408" y2="110" stroke="#003876" stroke-width="2.5" marker-end="url(#arr2)"/>
+      <rect x="410" y="70" width="150" height="80" rx="10" fill="#f2f5f9" stroke="#003876" stroke-width="2"/>
+      <text x="485" y="104" font-size="15" text-anchor="middle" fill="#222" font-weight="700">score each</text>
+      <text x="485" y="128" font-size="14" text-anchor="middle" fill="#666">reward R, black box</text>
+      <line x1="560" y1="110" x2="603" y2="110" stroke="#003876" stroke-width="2.5" marker-end="url(#arr2)"/>
+      <rect x="605" y="70" width="170" height="80" rx="10" fill="#f2f5f9" stroke="#003876" stroke-width="2"/>
+      <text x="690" y="98" font-size="15" text-anchor="middle" fill="#222" font-weight="700">average</text>
+      <text x="690" y="120" font-size="14" text-anchor="middle" fill="#666">(R - b) x grad-log-prob</text>
+      <text x="690" y="140" font-size="13" text-anchor="middle" fill="#003876" font-weight="700">Thm 5 + Thm 1</text>
+      <!-- feedback arrow -->
+      <path d="M 690 150 L 690 200 L 95 200 L 95 152" fill="none" stroke="#b23b3b" stroke-width="2.5" marker-end="url(#arr2)"/>
+      <text x="392" y="222" font-size="14" text-anchor="middle" fill="#b23b3b" font-weight="700">gradient ascent step on the policy</text>
+    </svg>
+  </div>
+  <p class="muted">One loop of policy-gradient learning &mdash; every box is today's math</p>
+</div>
+
+<!-- ===== SECTION 09 — OFF-POLICY & RLHF ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">09</div>
+  <h1>Off-Policy &amp; RLHF</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Old samples, new policy</p>
+</div>
+
+<!-- Off-policy problem -->
+<div class="slide">
+  <h2>The Off-Policy Problem</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Samples on disk: drawn from $\pi_{b}$ &mdash; yesterday's policy, logged data</li>
+    <li>Wanted: expectations under <strong>today's</strong> $\pi_\theta$</li>
+    <li>Fresh samples per update: one full generation each &mdash; expensive</li>
+  </ul>
+  <p class="muted">Reusing stale samples for a new distribution &mdash; we own this tool now</p>
+</div>
+
+<!-- It's IS -->
+<div class="slide">
+  <h2>Old Samples, New Policy &mdash; It's Theorem 3</h2>
+  <div class="divider"></div>
+  <p>IS identity with target $\pi_\theta$, proposal $\pi_b$:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_{\pi_\theta}\big[ R(X) \big]
+    = \mathbb{E}_{\pi_b}\!\left[ \frac{\pi_\theta(X)}{\pi_b(X)}\, R(X) \right]$$</div>
+  <ul>
+    <li>Weights: ratio of the two policies at the logged sample</li>
+    <li>Support condition: $\pi_b$ must cover everything $\pi_\theta$ can do</li>
+  </ul>
+</div>
+
+<!-- Sequences multiply -->
+<div class="slide">
+  <h2>Sequences Multiply Weights</h2>
+  <div class="divider"></div>
+  <p>Chain rule of probability (prob04) on a length-$T$ sequence:</p>
+  <div class="math-block" style="margin:8px 0">$$w(x) = \frac{\pi_\theta(x)}{\pi_b(x)}
+    = \prod_{t=1}^{T} \frac{\pi_\theta(x_t \mid x_{\lt t})}{\pi_b(x_t \mid x_{\lt t})}$$</div>
+  <ul>
+    <li>One modest ratio per token &mdash; $T$ of them, <strong>multiplied</strong></li>
+    <li>Small drifts compound into giant or vanishing weights</li>
+  </ul>
+</div>
+
+<!-- Degeneracy grows -->
+<div class="slide">
+  <h2>Degeneracy Grows With Length</h2>
+  <div class="divider"></div>
+  <p><em>Caricature</em>: independent tokens, each with $\mathbb{E}[w_t^2] = 1.1$:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ w^2 \big] = \prod_{t=1}^{100} \mathbb{E}\big[ w_t^2 \big]
+    = 1.1^{100} = e^{100 \ln 1.1} \approx e^{9.53} \approx 13{,}800$$</div>
+  <ul>
+    <li>ESS heuristic $n_{\text{eff}} \approx n / \mathbb{E}[w^2]$: &nbsp;$10^6$ samples $\to$ $n_{\text{eff}} \approx 73$</li>
+    <li>Each factor $\geq 1$ always ($\mathbb{E}[w_t] = 1$ + Jensen) &mdash; growth is the rule</li>
+  </ul>
+</div>
+
+<!-- Keep ratio near 1 -->
+<div class="slide">
+  <h2>Keep the Ratio Near One</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Lesson: off-policy weights are safe only while $\pi_\theta \approx \pi_b$</li>
+    <li>Practical methods <strong>constrain</strong> the per-step ratio (clipping, trust regions &mdash; names only)</li>
+    <li>Needed: a principled meter for "how far has $\pi_\theta$ drifted?"</li>
+  </ul>
+  <p class="muted">We built exactly that meter in prob02&hellip;</p>
+</div>
+
+<!-- Recall KL -->
+<div class="slide">
+  <h2>Recall (prob02) &mdash; KL Divergence</h2>
+  <div class="divider"></div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (KL divergence).</strong> For distributions $P, Q$:</p>
+    <div class="math-block" style="margin:8px 0">$$D(P \,\|\, Q) = \sum_x P(x) \log \frac{P(x)}{Q(x)}
+      \;\geq\; 0, \qquad = 0 \text{ iff } P = Q$$</div>
+  </div>
+  <ul>
+    <li>Proved in prob02 via Jensen</li>
+    <li>Note: it is the mean <strong>log-weight</strong> under $P$ &mdash; today's objects again</li>
+  </ul>
+</div>
+
+<!-- RLHF objective -->
+<div class="slide">
+  <h2>The RLHF-Shaped Objective</h2>
+  <div class="divider"></div>
+  <p>Reward-tune a language model $\pi_\theta$ without losing the reference $\pi_{\text{ref}}$:</p>
+  <div class="math-block" style="margin:8px 0">$$\max_\theta \;\; \mathbb{E}_{X \sim \pi_\theta}\big[ r(X) \big]
+    \;-\; \beta\, D\big( \pi_\theta \,\|\, \pi_{\text{ref}} \big)$$</div>
+  <ul>
+    <li>First term: estimated by sampling + Theorem 5 &mdash; $r$ from human preferences</li>
+    <li>Second term: KL leash &mdash; stay near the reference model</li>
+    <li>$\beta$: the dial between reward chasing and drift</li>
+  </ul>
+  <p class="muted"><em>Scope</em>: the schematic objective family &mdash; no claims about any specific algorithm</p>
+</div>
+
+<!-- One pipeline -->
+<div class="slide">
+  <h2>One Pipeline, Every Tool of Today</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>Estimate</h3>
+      <p>Sample outputs, average rewards &mdash; MC (Thm 1&ndash;2)</p>
+      <h3 style="margin-top:14px;">Differentiate</h3>
+      <p>Score-function gradient (Thm 5) + baseline</p>
+    </div>
+    <div>
+      <h3>Reuse</h3>
+      <p>Off-policy weights $\pi_\theta / \pi_b$ &mdash; IS (Thm 3), watch ESS</p>
+      <h3 style="margin-top:14px;">Constrain</h3>
+      <p>KL leash to the reference (prob02)</p>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:14px;">Modern RLHF-style training, spelled in this course's vocabulary</p>
+</div>
+
+<!-- ===== SECTION 10 — CLOSING ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">10</div>
+  <h1>Closing the Probability Half</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Nine decks, one toolkit</p>
+</div>
+
+<!-- Recap chain -->
+<div class="slide">
+  <h2>Recap &mdash; Today's Chain</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    &amp;\mathbb{E}_p[f] \;\stackrel{(\text{Thm 1, 2})}{\approx}\; \hat{\mu}_n \pm \frac{\sigma_f}{\sqrt{n}}
+    \;\stackrel{(\text{Thm 3})}{=}\; \mathbb{E}_q\big[ f\, \tfrac{p}{q} \big] \;\;\forall\, \text{admissible } q \\[6pt]
+    &amp;\stackrel{(\text{Thm 4})}{\Longrightarrow}\; \text{aim } q \text{ at } |f|\, p
+    \qquad \stackrel{(\text{Thm 5})}{\Longrightarrow}\; \nabla_\theta \mathbb{E}_{\pi_\theta}[R]
+    = \mathbb{E}_{\pi_\theta}\big[ R\, \nabla \log \pi_\theta \big]
+  \end{aligned}$$</div>
+  <p class="muted">One engine (LLN + variance accounting) + one move (multiply-and-divide)</p>
+</div>
+
+<!-- Recap table -->
+<div class="slide">
+  <h2>Recap &mdash; Every Tool, One Job</h2>
+  <div class="divider"></div>
+  <table>
+    <thead><tr><th>Tool</th><th>What it delivered</th></tr></thead>
+    <tbody>
+      <tr><td>MC estimator (Thm 1&ndash;2)</td><td>unbiased, RMSE $\sigma_f/\sqrt{n}$, any $d$</td></tr>
+      <tr><td>IS identity (Thm 3)</td><td>any sampler $q$, exact accounting</td></tr>
+      <tr><td>optimal proposal (Thm 4)</td><td>variance $0$ to $\infty$ &mdash; aim at $|f| p$</td></tr>
+      <tr><td>SNIS + ESS</td><td>unknown $Z$; biased-but-consistent; diagnostics</td></tr>
+      <tr><td>score identity (Thm 5)</td><td>gradients through sampling + baselines</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Nine decks map -->
+<div class="slide">
+  <h2>Nine Decks, One Arc</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 900 290" style="width:100%;max-width:960px;">
+      <defs>
+        <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+        </marker>
+      </defs>
+      <!-- row 1 -->
+      <rect x="30" y="20" width="250" height="60" rx="8" fill="#f2f5f9" stroke="#003876" stroke-width="1.5"/>
+      <text x="155" y="45" font-size="14" text-anchor="middle" fill="#003876" font-weight="700">prob01</text>
+      <text x="155" y="66" font-size="13" text-anchor="middle" fill="#555">probability, entropy, Jensen</text>
+      <rect x="325" y="20" width="250" height="60" rx="8" fill="#f2f5f9" stroke="#003876" stroke-width="1.5"/>
+      <text x="450" y="45" font-size="14" text-anchor="middle" fill="#003876" font-weight="700">prob02</text>
+      <text x="450" y="66" font-size="13" text-anchor="middle" fill="#555">KL, cross-entropy loss</text>
+      <rect x="620" y="20" width="250" height="60" rx="8" fill="#f2f5f9" stroke="#003876" stroke-width="1.5"/>
+      <text x="745" y="45" font-size="14" text-anchor="middle" fill="#003876" font-weight="700">prob03</text>
+      <text x="745" y="66" font-size="13" text-anchor="middle" fill="#555">mutual information, DPI</text>
+      <line x1="280" y1="50" x2="323" y2="50" stroke="#888" stroke-width="2" marker-end="url(#arr3)"/>
+      <line x1="575" y1="50" x2="618" y2="50" stroke="#888" stroke-width="2" marker-end="url(#arr3)"/>
+      <!-- row 2 -->
+      <rect x="30" y="115" width="250" height="60" rx="8" fill="#f2f5f9" stroke="#003876" stroke-width="1.5"/>
+      <text x="155" y="140" font-size="14" text-anchor="middle" fill="#003876" font-weight="700">prob04</text>
+      <text x="155" y="161" font-size="13" text-anchor="middle" fill="#555">Markov chains, diffusion</text>
+      <rect x="325" y="115" width="250" height="60" rx="8" fill="#f2f5f9" stroke="#003876" stroke-width="1.5"/>
+      <text x="450" y="140" font-size="14" text-anchor="middle" fill="#003876" font-weight="700">prob05</text>
+      <text x="450" y="161" font-size="13" text-anchor="middle" fill="#555">concentration, LLN</text>
+      <rect x="620" y="115" width="250" height="60" rx="8" fill="#f2f5f9" stroke="#003876" stroke-width="1.5"/>
+      <text x="745" y="140" font-size="14" text-anchor="middle" fill="#003876" font-weight="700">prob06</text>
+      <text x="745" y="161" font-size="13" text-anchor="middle" fill="#555">Hoeffding, generalization</text>
+      <line x1="745" y1="80" x2="745" y2="113" stroke="#888" stroke-width="2" marker-end="url(#arr3)"/>
+      <line x1="618" y1="145" x2="575" y2="145" stroke="#888" stroke-width="2" marker-start="url(#arr3)"/>
+      <line x1="323" y1="145" x2="280" y2="145" stroke="#888" stroke-width="2" marker-start="url(#arr3)"/>
+      <!-- row 3 -->
+      <rect x="30" y="210" width="250" height="60" rx="8" fill="#f2f5f9" stroke="#003876" stroke-width="1.5"/>
+      <text x="155" y="235" font-size="14" text-anchor="middle" fill="#003876" font-weight="700">prob07</text>
+      <text x="155" y="256" font-size="13" text-anchor="middle" fill="#555">MLE, MAP, Fano, MMSE</text>
+      <rect x="325" y="210" width="250" height="60" rx="8" fill="#f2f5f9" stroke="#003876" stroke-width="1.5"/>
+      <text x="450" y="235" font-size="14" text-anchor="middle" fill="#003876" font-weight="700">prob08</text>
+      <text x="450" y="256" font-size="13" text-anchor="middle" fill="#555">the multivariate Gaussian</text>
+      <rect x="620" y="210" width="250" height="60" rx="8" fill="#eaf0f7" stroke="#003876" stroke-width="3"/>
+      <text x="745" y="235" font-size="14" text-anchor="middle" fill="#003876" font-weight="700">prob09 (today)</text>
+      <text x="745" y="256" font-size="13" text-anchor="middle" fill="#555">Monte Carlo, IS, REINFORCE</text>
+      <line x1="155" y1="175" x2="155" y2="208" stroke="#888" stroke-width="2" marker-end="url(#arr3)"/>
+      <line x1="280" y1="240" x2="323" y2="240" stroke="#888" stroke-width="2" marker-end="url(#arr3)"/>
+      <line x1="575" y1="240" x2="618" y2="240" stroke="#888" stroke-width="2" marker-end="url(#arr3)"/>
+    </svg>
+  </div>
+</div>
+
+<!-- What the half gave -->
+<div class="slide">
+  <h2>What the Probability Half Gave You</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>Measure</h3>
+      <p>entropy, KL, mutual information (prob01&ndash;03)</p>
+      <h3 style="margin-top:14px;">Model</h3>
+      <p>Markov chains, Gaussians, diffusion (prob04, prob08)</p>
+    </div>
+    <div>
+      <h3>Guarantee</h3>
+      <p>concentration, generalization (prob05&ndash;06)</p>
+      <h3 style="margin-top:14px;">Estimate</h3>
+      <p>MLE, MMSE, Monte Carlo (prob07, prob09)</p>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:14px;">Every deck's headline theorem now sits in one connected toolkit</p>
+</div>
+
+<!-- Bridge to opt01 -->
+<div class="slide">
+  <h2>Bridge &mdash; From Estimating to Optimizing</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>We can now <strong>estimate</strong> any expectation and <strong>bound</strong> the error</li>
+    <li>But every estimator ended in an $\operatorname{argmin}$ / $\operatorname{argmax}$ we never examined</li>
+    <li>How does one actually <strong>solve</strong> for $\theta$?</li>
+  </ul>
+  <div class="highlight">
+    <p><strong>Next (opt01):</strong> the optimization half &mdash; SVD, least squares, solving for $\theta$.</p>
+  </div>
+</div>
+
+<!-- Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$\mathbb{E}_p[f(X)] = \mathbb{E}_q\!\big[ f(X)\, \tfrac{p(X)}{q(X)} \big]$</div>
+  <p class="big-word-sub">Questions?</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 117</div>
+
+</div><!-- end deck -->
+
+<script src="../../../reference/deck.js"></script>
+</body>
+</html>

@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Learning Math 1 — Probability Foundations &amp; Entropy</title>
+
+<!-- Design system (canonical; all decks link to reference/). -->
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/deck.css">
+
+<!-- KaTeX for math rendering. -->
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- SLIDE 1 — Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Deep Learning Math &middot; Lecture 1</div>
+  <h1>Probability Foundations<br>&amp; Entropy</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Why probability is the language of AI</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;&middot;&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Fall 2026</p>
+</div>
+
+<!-- SLIDE 2 — Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Why Probability?</div>
+        <div class="toc-sub">Data, images, models as distributions</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Probability Review</div>
+        <div class="toc-sub">Sample space, events, probability measure</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Random Variables</div>
+        <div class="toc-sub">pmf, expectation</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Entropy</div>
+        <div class="toc-sub">Surprisal, definition, worked examples</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Properties of Entropy</div>
+        <div class="toc-sub">Jensen's inequality, $0 \leq H \leq \log M$</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 01 — WHY PROBABILITY ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Why Probability?</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The language of AI</p>
+</div>
+
+<!-- Data = samples -->
+<div class="slide">
+  <h2>Data = Samples from a Distribution</h2>
+  <div class="divider"></div>
+  <p>Every dataset: draws from an <strong>unknown distribution</strong> $P$.</p>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 760 230" style="width:100%;max-width:860px;">
+      <ellipse cx="130" cy="115" rx="105" ry="78" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="130" y="108" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">unknown</text>
+      <text x="130" y="132" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">distribution P</text>
+      <line x1="245" y1="115" x2="330" y2="115" stroke="#1a5296" stroke-width="2.5" marker-end="url(#arr1)"/>
+      <text x="288" y="100" font-size="15" fill="#666" text-anchor="middle">sample</text>
+      <g stroke="#1a5296" stroke-width="1.5" fill="#ffffff">
+        <rect x="345" y="45" width="52" height="52"/>
+        <rect x="405" y="45" width="52" height="52"/>
+        <rect x="345" y="105" width="52" height="52"/>
+        <rect x="405" y="105" width="52" height="52"/>
+      </g>
+      <text x="371" y="78" font-size="16" fill="#1a1a1a" text-anchor="middle">x1</text>
+      <text x="431" y="78" font-size="16" fill="#1a1a1a" text-anchor="middle">x2</text>
+      <text x="371" y="138" font-size="16" fill="#1a1a1a" text-anchor="middle">x3</text>
+      <text x="431" y="138" font-size="16" fill="#1a1a1a" text-anchor="middle">x4</text>
+      <text x="401" y="188" font-size="17" fill="#666" text-anchor="middle">... xn</text>
+      <line x1="475" y1="115" x2="558" y2="115" stroke="#1a5296" stroke-width="2.5" marker-end="url(#arr1)"/>
+      <text x="516" y="100" font-size="15" fill="#666" text-anchor="middle">collect</text>
+      <rect x="572" y="72" width="165" height="86" rx="10" fill="#003876"/>
+      <text x="654" y="108" font-size="19" fill="#ffffff" text-anchor="middle" font-weight="700">training set</text>
+      <text x="654" y="134" font-size="16" fill="#c9d3de" text-anchor="middle">MNIST, CIFAR, ...</text>
+      <defs><marker id="arr1" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
+    </svg>
+  </div>
+  <p>Learning = inferring structure of $P$ from samples</p>
+</div>
+
+<!-- Models = distributions -->
+<div class="slide">
+  <h2>Models = Distributions</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 760 240" style="width:100%;max-width:860px;">
+      <rect x="40" y="80" width="90" height="90" fill="#f4f6f9" stroke="#1a5296" stroke-width="2"/>
+      <text x="85" y="130" font-size="30" fill="#003876" text-anchor="middle" font-weight="700">2</text>
+      <text x="85" y="195" font-size="15" fill="#666" text-anchor="middle">input image</text>
+      <line x1="145" y1="125" x2="235" y2="125" stroke="#1a5296" stroke-width="2.5" marker-end="url(#arr2)"/>
+      <rect x="250" y="85" width="170" height="80" rx="12" fill="#003876"/>
+      <text x="335" y="132" font-size="20" fill="#ffffff" text-anchor="middle" font-weight="700">classifier f</text>
+      <line x1="435" y1="125" x2="520" y2="125" stroke="#1a5296" stroke-width="2.5" marker-end="url(#arr2)"/>
+      <g>
+        <rect x="540" y="65" width="30" height="120" fill="#003876"/>
+        <rect x="580" y="125" width="30" height="60" fill="#c9d3de"/>
+        <rect x="620" y="95" width="30" height="90" fill="#c9d3de"/>
+        <rect x="660" y="165" width="30" height="20" fill="#c9d3de"/>
+        <rect x="700" y="175" width="30" height="10" fill="#c9d3de"/>
+      </g>
+      <line x1="532" y1="185" x2="740" y2="185" stroke="#666" stroke-width="1.5"/>
+      <text x="555" y="208" font-size="15" fill="#666" text-anchor="middle">0</text>
+      <text x="595" y="208" font-size="15" fill="#666" text-anchor="middle">1</text>
+      <text x="635" y="208" font-size="15" fill="#666" text-anchor="middle">2</text>
+      <text x="675" y="208" font-size="15" fill="#666" text-anchor="middle">3</text>
+      <text x="715" y="208" font-size="15" fill="#666" text-anchor="middle">4</text>
+      <text x="635" y="45" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">pmf over labels</text>
+      <defs><marker id="arr2" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
+    </svg>
+  </div>
+  <ul>
+    <li>Classifier output = <strong>pmf over labels</strong> (soft label)</li>
+    <li>Generative model = distribution over images</li>
+    <li>RL policy = distribution over actions</li>
+  </ul>
+</div>
+
+<!-- Today's questions -->
+<div class="slide">
+  <h2>Three Questions for Today</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>What is a random image?</h3>
+      <p>Sample space, events, probability measure</p>
+    </div>
+    <div class="card">
+      <h3>How uncertain is a prediction?</h3>
+      <p>Entropy: the measure of uncertainty</p>
+    </div>
+    <div class="card">
+      <h3>What is maximal uncertainty?</h3>
+      <p>The bound $H(X) \leq \log M$, proved</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p><strong>One number</strong> summarizes the randomness of any distribution.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 02 — PROBABILITY REVIEW ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Probability Review</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Sample space, events, probability measure</p>
+</div>
+
+<!-- Sample space and events -->
+<div class="slide">
+  <h2>Sample Space and Events</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div>
+      <p><strong>Sample space</strong> $\Omega$: set of all possible outcomes</p>
+      <p><strong>Event</strong> $E$: a (measurable) subset of $\Omega$</p>
+      <p><strong>Event collection</strong> $\mathcal{F}$: set of events</p>
+    </div>
+    <div style="display:flex;justify-content:center;">
+      <svg viewBox="0 0 340 250" style="width:100%;max-width:400px;">
+        <ellipse cx="170" cy="128" rx="150" ry="105" fill="#f4f6f9" stroke="#003876" stroke-width="2.5"/>
+        <text x="52" y="52" font-size="24" fill="#003876" font-weight="700">&#937;</text>
+        <ellipse cx="215" cy="150" rx="68" ry="45" fill="#c9d3de" stroke="#1a5296" stroke-width="2"/>
+        <text x="215" y="157" font-size="21" fill="#003876" text-anchor="middle" font-weight="700">E</text>
+        <circle cx="110" cy="100" r="4" fill="#1a5296"/>
+        <circle cx="140" cy="170" r="4" fill="#1a5296"/>
+        <circle cx="190" cy="80" r="4" fill="#1a5296"/>
+        <text x="118" y="92" font-size="15" fill="#666">outcome</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- Probability measure -->
+<div class="slide">
+  <h2>Probability Measure</h2>
+  <div class="divider"></div>
+  <p>Assigns each event a number in $[0,1]$:</p>
+  <div class="math-block">$$P : \mathcal{F} \;\rightarrow\; [0, 1]$$</div>
+  <ul>
+    <li>$P(\emptyset) = 0$, &nbsp; $P(\Omega) = 1$</li>
+    <li>Larger event, larger probability</li>
+  </ul>
+  <div class="highlight">
+    <p>Triple $(\Omega, \mathcal{F}, P)$: the full probabilistic model.</p>
+  </div>
+</div>
+
+<!-- Fair coin -->
+<div class="slide">
+  <h2>Example &mdash; Fair Coin</h2>
+  <div class="divider"></div>
+  <p>Sample space $\Omega = \{H, T\}$, events:</p>
+  <div class="math-block">$$\mathcal{F} = \bigl\{\, \emptyset,\; \{H\},\; \{T\},\; \{H, T\} \,\bigr\}$$</div>
+  <p>Probability measure:</p>
+  <div class="math-block" style="margin:8px 0">$$P(\emptyset) = 0, \qquad P(\{H\}) = P(\{T\}) = \tfrac{1}{2}, \qquad P(\{H, T\}) = 1$$</div>
+  <p class="muted">Every subset gets a probability: four events total.</p>
+</div>
+
+<!-- 5x5 binary image -->
+<div class="slide">
+  <h2>Example &mdash; 5&times;5 Binary Image</h2>
+  <div class="divider"></div>
+  <p>An image = a 25-dimensional binary vector:</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <img src="../figs/binary_image.png" alt="5x5 binary image and its 0-1 matrix" style="max-height:280px;">
+  </div>
+  <div class="math-block" style="margin:8px 0">$$\Omega = \{0,1\}^{5\times 5}, \qquad |\Omega| = 2^{25}, \qquad |\mathcal{F}| = 2^{2^{25}}$$</div>
+  <p class="muted">Careful: $[0,1]$ is an interval; $\{0,1\}$ has two elements.</p>
+</div>
+
+<!-- MNIST -->
+<div class="slide">
+  <h2>Example &mdash; MNIST</h2>
+  <div class="divider"></div>
+  <p>Grayscale 28&times;28, pixel intensity 0 to 255:</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <img src="../figs/mnist.png" alt="MNIST digit samples" style="max-height:250px;">
+  </div>
+  <div class="math-block" style="margin:8px 0">$$\Omega = \{0, 1, \dots, 255\}^{28 \times 28}$$</div>
+  <p>The probability on $\Omega$ is <strong>not uniform</strong> (of course)</p>
+</div>
+
+<!-- CIFAR-10 -->
+<div class="slide">
+  <h2>Example &mdash; CIFAR-10</h2>
+  <div class="divider"></div>
+  <p>RGB color 32&times;32, three channels:</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <img src="../figs/cifar10.jpeg" alt="CIFAR-10 samples" style="max-height:320px;">
+  </div>
+  <div class="math-block" style="margin:8px 0">$$\Omega = \{0, 1, \dots, 255\}^{3 \times 32 \times 32}$$</div>
+</div>
+
+<!-- Sample space table -->
+<div class="slide">
+  <h2>Sample Spaces of Real Data</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Dataset</th><th>$\Omega$</th><th>$|\Omega|$</th></tr>
+    <tr><td>Fair coin</td><td>$\{H, T\}$</td><td>$2$</td></tr>
+    <tr><td>5&times;5 binary</td><td>$\{0,1\}^{25}$</td><td>$2^{25} \approx 3.4 \times 10^{7}$</td></tr>
+    <tr><td>MNIST</td><td>$\{0,\dots,255\}^{28\times 28}$</td><td>$2^{6272} \approx 10^{1888}$</td></tr>
+    <tr><td>CIFAR-10</td><td>$\{0,\dots,255\}^{3\times 32\times 32}$</td><td>$2^{24576} \approx 10^{7398}$</td></tr>
+    <tr><td>ImageNet</td><td>$\{0,\dots,255\}^{3\times 224\times 224}$</td><td>$2^{1204224} \approx 10^{362508}$</td></tr>
+  </table>
+</div>
+
+<!-- Astronomical -->
+<div class="slide">
+  <h2>Astronomical, and Non-Uniform</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 560 250" style="width:100%;max-width:720px;">
+      <ellipse cx="280" cy="128" rx="255" ry="108" fill="#f4f6f9" stroke="#003876" stroke-width="2.5"/>
+      <text x="70" y="52" font-size="22" fill="#003876" font-weight="700">&#937; = all pixel arrays</text>
+      <ellipse cx="330" cy="150" rx="52" ry="26" fill="#003876"/>
+      <text x="330" y="156" font-size="15" fill="#ffffff" text-anchor="middle" font-weight="700">natural images</text>
+      <circle cx="140" cy="120" r="3.5" fill="#999"/>
+      <circle cx="200" cy="180" r="3.5" fill="#999"/>
+      <circle cx="250" cy="90" r="3.5" fill="#999"/>
+      <circle cx="420" cy="90" r="3.5" fill="#999"/>
+      <circle cx="460" cy="160" r="3.5" fill="#999"/>
+      <text x="150" y="205" font-size="15" fill="#666">random noise: almost all of &#937;</text>
+    </svg>
+  </div>
+  <ul>
+    <li>Atoms in the universe: roughly $10^{80}$</li>
+    <li>Almost every element of $\Omega$: pure noise</li>
+  </ul>
+  <div class="highlight">
+    <p>Data distributions put <strong>huge mass on tiny regions</strong>: that structure is what models learn.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 03 — RANDOM VARIABLES ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Random Variables</h1>
+  <div class="divider"></div>
+  <p class="subtitle">From outcomes to numbers</p>
+</div>
+
+<!-- RV definition -->
+<div class="slide">
+  <h2>Random Variable</h2>
+  <div class="divider"></div>
+  <p>A map from sample space to real numbers:</p>
+  <div class="math-block">$$X : \Omega \;\rightarrow\; \mathbb{R}$$</div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 620 210" style="width:100%;max-width:760px;">
+      <ellipse cx="130" cy="105" rx="110" ry="82" fill="#f4f6f9" stroke="#003876" stroke-width="2.5"/>
+      <text x="55" y="45" font-size="22" fill="#003876" font-weight="700">&#937;</text>
+      <circle cx="100" cy="80" r="5" fill="#1a5296"/>
+      <circle cx="160" cy="120" r="5" fill="#1a5296"/>
+      <circle cx="110" cy="150" r="5" fill="#1a5296"/>
+      <line x1="330" y1="160" x2="590" y2="160" stroke="#1a1a1a" stroke-width="2"/>
+      <g stroke="#1a1a1a" stroke-width="2">
+        <line x1="370" y1="154" x2="370" y2="166"/>
+        <line x1="450" y1="154" x2="450" y2="166"/>
+        <line x1="530" y1="154" x2="530" y2="166"/>
+      </g>
+      <text x="370" y="190" font-size="17" fill="#1a1a1a" text-anchor="middle">0</text>
+      <text x="450" y="190" font-size="17" fill="#1a1a1a" text-anchor="middle">1</text>
+      <text x="530" y="190" font-size="17" fill="#1a1a1a" text-anchor="middle">2</text>
+      <path d="M 105 80 C 250 40 330 90 447 152" fill="none" stroke="#1a5296" stroke-width="2" marker-end="url(#arr3)"/>
+      <path d="M 165 120 C 280 100 380 120 527 152" fill="none" stroke="#1a5296" stroke-width="2" marker-end="url(#arr3)"/>
+      <path d="M 115 150 C 240 190 300 185 367 158" fill="none" stroke="#1a5296" stroke-width="2" marker-end="url(#arr3)"/>
+      <text x="330" y="60" font-size="19" fill="#003876" font-weight="700">X: convert sample to number</text>
+      <defs><marker id="arr3" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
+    </svg>
+  </div>
+  <p class="muted">Uppercase $X$: the random variable. Lowercase $x$: a realization.</p>
+</div>
+
+<!-- RV example: count of ones -->
+<div class="slide">
+  <h2>Example &mdash; Count of Ones</h2>
+  <div class="divider"></div>
+  <p>On $\Omega = \{0,1\}^{5\times 5}$: let $X$ = number of 1's</p>
+  <div class="cols">
+    <div style="display:flex;justify-content:center;">
+      <svg viewBox="0 0 210 210" style="width:100%;max-width:250px;">
+        <g stroke="#1a5296" stroke-width="1.5">
+          <rect x="5" y="5" width="40" height="40" fill="#ffffff"/><rect x="45" y="5" width="40" height="40" fill="#003876"/><rect x="85" y="5" width="40" height="40" fill="#003876"/><rect x="125" y="5" width="40" height="40" fill="#003876"/><rect x="165" y="5" width="40" height="40" fill="#ffffff"/>
+          <rect x="5" y="45" width="40" height="40" fill="#ffffff"/><rect x="45" y="45" width="40" height="40" fill="#ffffff"/><rect x="85" y="45" width="40" height="40" fill="#ffffff"/><rect x="125" y="45" width="40" height="40" fill="#003876"/><rect x="165" y="45" width="40" height="40" fill="#ffffff"/>
+          <rect x="5" y="85" width="40" height="40" fill="#ffffff"/><rect x="45" y="85" width="40" height="40" fill="#003876"/><rect x="85" y="85" width="40" height="40" fill="#003876"/><rect x="125" y="85" width="40" height="40" fill="#003876"/><rect x="165" y="85" width="40" height="40" fill="#ffffff"/>
+          <rect x="5" y="125" width="40" height="40" fill="#ffffff"/><rect x="45" y="125" width="40" height="40" fill="#003876"/><rect x="85" y="125" width="40" height="40" fill="#ffffff"/><rect x="125" y="125" width="40" height="40" fill="#ffffff"/><rect x="165" y="125" width="40" height="40" fill="#ffffff"/>
+          <rect x="5" y="165" width="40" height="40" fill="#ffffff"/><rect x="45" y="165" width="40" height="40" fill="#003876"/><rect x="85" y="165" width="40" height="40" fill="#003876"/><rect x="125" y="165" width="40" height="40" fill="#003876"/><rect x="165" y="165" width="40" height="40" fill="#ffffff"/>
+        </g>
+      </svg>
+    </div>
+    <div>
+      <p>This outcome $\omega$: the digit "2"</p>
+      <div class="math-block" style="margin:10px 0">$$X(\omega) = 11$$</div>
+      <p class="muted">Eleven blue pixels: one number per image.</p>
+    </div>
+  </div>
+</div>
+
+<!-- RV example: 7 tosses -->
+<div class="slide">
+  <h2>Example &mdash; Seven Coin Tosses</h2>
+  <div class="divider"></div>
+  <p>On $\Omega = \{H,T\}^{7}$: let $X$ = number of heads followed by a tail</p>
+  <div style="display:flex;justify-content:center;margin:14px 0;">
+    <svg viewBox="0 0 620 150" style="width:100%;max-width:700px;">
+      <g font-size="34" font-weight="700" text-anchor="middle">
+        <text x="70" y="70" fill="#003876">H</text>
+        <text x="150" y="70" fill="#003876">T</text>
+        <text x="230" y="70" fill="#003876">H</text>
+        <text x="310" y="70" fill="#003876">T</text>
+        <text x="390" y="70" fill="#1a1a1a">H</text>
+        <text x="470" y="70" fill="#1a1a1a">H</text>
+        <text x="550" y="70" fill="#1a1a1a">H</text>
+      </g>
+      <path d="M 55 90 L 55 105 L 165 105 L 165 90" fill="none" stroke="#1a5296" stroke-width="2.5"/>
+      <text x="110" y="132" font-size="17" fill="#1a5296" text-anchor="middle" font-weight="700">HT pair 1</text>
+      <path d="M 215 90 L 215 105 L 325 105 L 325 90" fill="none" stroke="#1a5296" stroke-width="2.5"/>
+      <text x="270" y="132" font-size="17" fill="#1a5296" text-anchor="middle" font-weight="700">HT pair 2</text>
+    </svg>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$X(HTHTHHH) = 2$$</div>
+</div>
+
+<!-- pmf -->
+<div class="slide">
+  <h2>Probability Mass Function</h2>
+  <div class="divider"></div>
+  <p>The pmf of a random variable $X$:</p>
+  <div class="math-block">$$p_X(x) = \Pr(X = x)$$</div>
+  <ul>
+    <li>$\mathcal{X}$: set of possible values of $X$</li>
+    <li>Uppercase $X$ random, lowercase $x$ realization</li>
+  </ul>
+  <div class="highlight">
+    <p>The pmf <strong>completely characterizes</strong> the random variable.</p>
+  </div>
+</div>
+
+<!-- pmf example: die -->
+<div class="slide">
+  <h2>Example &mdash; pmf of a Fair Die</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 560 260" style="width:100%;max-width:680px;">
+      <line x1="70" y1="210" x2="530" y2="210" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="70" y1="210" x2="70" y2="40" stroke="#1a1a1a" stroke-width="2"/>
+      <g fill="#003876">
+        <rect x="100" y="110" width="46" height="100"/>
+        <rect x="170" y="110" width="46" height="100"/>
+        <rect x="240" y="110" width="46" height="100"/>
+        <rect x="310" y="110" width="46" height="100"/>
+        <rect x="380" y="110" width="46" height="100"/>
+        <rect x="450" y="110" width="46" height="100"/>
+      </g>
+      <g font-size="17" fill="#1a1a1a" text-anchor="middle">
+        <text x="123" y="238">1</text><text x="193" y="238">2</text><text x="263" y="238">3</text>
+        <text x="333" y="238">4</text><text x="403" y="238">5</text><text x="473" y="238">6</text>
+      </g>
+      <line x1="62" y1="110" x2="78" y2="110" stroke="#1a1a1a" stroke-width="2"/>
+      <text x="52" y="116" font-size="16" fill="#1a1a1a" text-anchor="end">1/6</text>
+      <text x="300" y="30" font-size="18" fill="#003876" text-anchor="middle" font-weight="700">uniform pmf on six values</text>
+    </svg>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$p_X(x) = \tfrac{1}{6}, \qquad x \in \mathcal{X} = \{1, 2, 3, 4, 5, 6\}$$</div>
+</div>
+
+<!-- Expectation -->
+<div class="slide">
+  <h2>Expectation</h2>
+  <div class="divider"></div>
+  <p class="muted">Probability-weighted average of the values:</p>
+  <div class="card">
+    <h3>Definition (expectation).</h3>
+    <div class="math-block" style="margin:8px 0">$$\mathbb{E}[X] = \sum_{x \in \mathcal{X}} x \cdot p_X(x)$$</div>
+  </div>
+  <p>Fair die:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}[X] = \tfrac{1}{6}(1 + 2 + 3 + 4 + 5 + 6) = 3.5$$</div>
+</div>
+
+<!-- LOTUS -->
+<div class="slide">
+  <h2>Expectation of a Function</h2>
+  <div class="divider"></div>
+  <p><strong>Exercise.</strong> For any $f : \mathcal{X} \rightarrow \mathbb{R}$, show</p>
+  <div class="math-block">$$\mathbb{E}[f(X)] = \sum_{x \in \mathcal{X}} f(x) \cdot p_X(x)$$</div>
+  <p><em>Hint:</em> set a new random variable $Y = f(X)$</p>
+  <div class="highlight">
+    <p>We use this <strong>constantly</strong> today: entropy is $\mathbb{E}[f(X)]$ for one special $f$.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 04 — ENTROPY ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Entropy</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Measuring uncertainty</p>
+</div>
+
+<!-- Surprise motivation -->
+<div class="slide">
+  <h2>How Surprising Is an Outcome?</h2>
+  <div class="divider"></div>
+  <p>Indicator $X$: &nbsp;$X = 1$ serious earthquake, $X = 0$ otherwise</p>
+  <div class="grid-2">
+    <div class="card">
+      <h3>$X = 0$ (typical day)</h3>
+      <p>$p_X(0) \approx 1$</p>
+      <p class="muted">No surprise at all</p>
+    </div>
+    <div class="card">
+      <h3>$X = 1$ (earthquake)</h3>
+      <p>$p_X(1)$ small</p>
+      <p class="muted">Very surprising</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p><strong>Rare event = surprising.</strong> Surprise should grow as $p_X(x)$ shrinks.</p>
+  </div>
+</div>
+
+<!-- Surprisal definition -->
+<div class="slide">
+  <h2>Surprisal</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (surprisal).</h3>
+    <div class="math-block" style="margin:8px 0">$$S(x) = \log \frac{1}{p_X(x)} = -\log p_X(x)$$</div>
+  </div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 540 200" style="width:100%;max-width:560px;">
+      <line x1="60" y1="175" x2="510" y2="175" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="60" y1="175" x2="60" y2="25" stroke="#1a1a1a" stroke-width="2"/>
+      <polyline fill="none" stroke="#003876" stroke-width="3" points="86.2,35.0 94.1,48.2 102.0,58.7 109.9,67.4 117.8,74.8 125.6,81.3 133.5,87.0 141.4,92.1 149.2,96.8 157.1,101.1 165.0,105.0 172.9,108.7 180.8,112.1 188.6,115.2 196.5,118.2 204.4,121.1 212.2,123.8 220.1,126.3 228.0,128.7 235.9,131.0 243.8,133.3 251.6,135.4 259.5,137.4 267.4,139.4 275.2,141.2 283.1,143.1 291.0,144.8 298.9,146.5 306.8,148.1 314.6,149.7 322.5,151.3 330.4,152.8 338.2,154.2 346.1,155.6 354.0,157.0 361.9,158.3 369.8,159.6 377.6,160.9 385.5,162.1 393.4,163.3 401.2,164.5 409.1,165.7 417.0,166.8 424.9,167.9 432.8,169.0 440.6,170.0 448.5,171.1 456.4,172.1 464.2,173.1 472.1,174.0 480.0,175.0"/>
+      <circle cx="480" cy="175" r="5" fill="#1a5296"/>
+      <text x="480" y="195" font-size="16" fill="#1a1a1a" text-anchor="middle">1</text>
+      <circle cx="270" cy="140" r="5" fill="#1a5296"/>
+      <text x="270" y="195" font-size="16" fill="#1a1a1a" text-anchor="middle">1/2</text>
+      <text x="292" y="130" font-size="15" fill="#666">S = 1 bit</text>
+      <text x="510" y="195" font-size="17" fill="#1a1a1a" text-anchor="middle">p</text>
+      <text x="115" y="38" font-size="18" fill="#003876" font-weight="700">S(x) = -log p</text>
+      <text x="140" y="66" font-size="15" fill="#666">rare outcome: huge surprise</text>
+      <text x="360" y="158" font-size="15" fill="#666">certain: zero surprise</text>
+    </svg>
+  </div>
+</div>
+
+<!-- Why log -->
+<div class="slide">
+  <h2>Why the Logarithm?</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Certain outcome: $p = 1 \Rightarrow S = 0$</li>
+    <li>Rarer outcome, larger surprise: $S$ decreasing in $p$</li>
+    <li>Independent surprises <strong>add</strong>:</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$\log \frac{1}{p \cdot q} = \log\frac{1}{p} + \log\frac{1}{q}$$</div>
+  <p class="muted">Deeper axiomatic justification exists (information theory); other measures too, e.g. Renyi entropy.</p>
+</div>
+
+<!-- Entropy definition -->
+<div class="slide">
+  <h2>Entropy &mdash; Definition</h2>
+  <div class="divider"></div>
+  <p>Expected surprisal of $X$ with $\mathcal{X} = \{0, 1, \dots, M-1\}$:</p>
+  <div class="math-block">$$\begin{aligned}
+    H(X) &= \mathbb{E}[S(X)] \\
+         &= \mathbb{E}\bigl[-\log p_X(X)\bigr] \\
+         &= \sum_{x} p_X(x) \log \frac{1}{p_X(x)}
+  \end{aligned}$$</div>
+  <p>Conventions: $0 \cdot \log 0 = 0$; &nbsp;$\log$ is base 2; unit is <strong>bits</strong></p>
+</div>
+
+<!-- Two readings -->
+<div class="slide">
+  <h2>Entropy Reads Two Ways</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>Uncertainty</h3>
+      <p>How unpredictable is $X$ <em>before</em> observing?</p>
+    </div>
+    <div>
+      <h3>Information</h3>
+      <p>How much do we learn <em>after</em> observing?</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Same number: <strong>resolving uncertainty = gaining information</strong>.</p>
+  </div>
+</div>
+
+<!-- Fair coin worked -->
+<div class="slide">
+  <h2>Worked Example &mdash; Fair Coin</h2>
+  <div class="divider"></div>
+  <p>$p_X(H) = p_X(T) = 1/2$:</p>
+  <div class="math-block">$$H(X) = \tfrac{1}{2}\log 2 + \tfrac{1}{2}\log 2 = 1 \text{ bit}$$</div>
+  <div class="highlight">
+    <p>One fair coin toss = <strong>exactly one bit</strong> of uncertainty.</p>
+  </div>
+</div>
+
+<!-- Biased coin worked -->
+<div class="slide">
+  <h2>Worked Example &mdash; Biased Coin</h2>
+  <div class="divider"></div>
+  <p>$p_X(0) = 0.01$, $p_X(1) = 0.99$:</p>
+  <div class="math-block">$$\begin{aligned}
+    H(X) &= 0.01 \log \frac{1}{0.01} + 0.99 \log \frac{1}{0.99} \\
+         &\approx 0.066 + 0.014 \;\approx\; 0.081 \text{ bits}
+  \end{aligned}$$</div>
+  <p>Rare outcome: surprisal $\log 100 \approx 6.64$ bits, but weight only $0.01$</p>
+</div>
+
+<!-- More random? -->
+<div class="slide">
+  <h2>Which Is More Random?</h2>
+  <div class="divider"></div>
+  <p>Both binary, $\mathcal{X} = \{0, 1\}$:</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 620 230" style="width:100%;max-width:700px;">
+      <g fill="#003876">
+        <rect x="80" y="90" width="55" height="100"/>
+        <rect x="160" y="90" width="55" height="100"/>
+      </g>
+      <g fill="#c9d3de">
+        <rect x="390" y="12" width="55" height="178"/>
+      </g>
+      <rect x="470" y="188" width="55" height="2" fill="#c9d3de"/>
+      <rect x="470" y="172" width="55" height="18" fill="#003876"/>
+      <line x1="60" y1="190" x2="250" y2="190" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="370" y1="190" x2="560" y2="190" stroke="#1a1a1a" stroke-width="2"/>
+      <g font-size="16" fill="#1a1a1a" text-anchor="middle">
+        <text x="107" y="215">0</text><text x="187" y="215">1</text>
+        <text x="417" y="215">0</text><text x="497" y="215">1</text>
+      </g>
+      <text x="147" y="55" font-size="18" fill="#003876" text-anchor="middle" font-weight="700">X: (1/2, 1/2)</text>
+      <text x="467" y="55" font-size="18" fill="#666" text-anchor="middle" font-weight="700">Y: (0.99, 0.01)</text>
+      <text x="147" y="245" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">H(X) = 1 bit</text>
+      <text x="467" y="245" font-size="17" fill="#666" text-anchor="middle" font-weight="700">H(Y) = 0.081 bits</text>
+    </svg>
+  </div>
+  <p>Entropy agrees with intuition: $X$ far more uncertain than $Y$</p>
+</div>
+
+<!-- Binary entropy function -->
+<div class="slide">
+  <h2>Binary Entropy Function</h2>
+  <div class="divider"></div>
+  <p>Bernoulli($p$): &nbsp;$h_2(p) = -p \log p - (1-p)\log(1-p)$</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 540 300" style="width:100%;max-width:620px;">
+      <line x1="60" y1="250" x2="510" y2="250" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="60" y1="250" x2="60" y2="25" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="60" y1="40" x2="480" y2="40" stroke="#c9d3de" stroke-width="1.5" stroke-dasharray="6 5"/>
+      <line x1="270" y1="250" x2="270" y2="40" stroke="#c9d3de" stroke-width="1.5" stroke-dasharray="6 5"/>
+      <polyline fill="none" stroke="#003876" stroke-width="3" points="60,250.0 77,199.1 94,165.5 110,138.8 127,116.8 144,98.4 161,83.0 178,70.4 194,60.1 211,52.0 228,46.1 245,42.2 262,40.2 270,40.0 278,40.2 295,42.2 312,46.1 329,52.0 346,60.1 362,70.4 379,83.0 396,98.4 413,116.8 430,138.8 446,165.5 463,199.1 480,250.0"/>
+      <circle cx="270" cy="40" r="5" fill="#1a5296"/>
+      <circle cx="64" cy="233" r="5" fill="#1a5296"/>
+      <text x="52" y="46" font-size="16" fill="#1a1a1a" text-anchor="end">1</text>
+      <text x="52" y="256" font-size="16" fill="#1a1a1a" text-anchor="end">0</text>
+      <text x="270" y="276" font-size="16" fill="#1a1a1a" text-anchor="middle">1/2</text>
+      <text x="480" y="276" font-size="16" fill="#1a1a1a" text-anchor="middle">1</text>
+      <text x="515" y="276" font-size="17" fill="#1a1a1a" text-anchor="middle">p</text>
+      <text x="290" y="28" font-size="16" fill="#003876" font-weight="700">peak: fair coin, 1 bit</text>
+      <text x="95" y="222" font-size="15" fill="#666">h(0.01) = 0.081</text>
+    </svg>
+  </div>
+  <p class="muted">Symmetric: $h_2(p) = h_2(1-p)$; zero at both ends.</p>
+</div>
+
+<!-- Fair die worked -->
+<div class="slide">
+  <h2>Worked Example &mdash; Fair Die</h2>
+  <div class="divider"></div>
+  <p>Uniform on six faces, $p_X(x) = 1/6$:</p>
+  <div class="math-block">$$H(X) = \sum_{x=1}^{6} \tfrac{1}{6} \log 6 = \log 6 \approx 2.585 \text{ bits}$$</div>
+  <p class="muted">Uniform pmf: entropy is just $\log$ of the alphabet size. Keep this in mind.</p>
+</div>
+
+<!-- Three outcomes worked -->
+<div class="slide">
+  <h2>Worked Example &mdash; Three Outcomes</h2>
+  <div class="divider"></div>
+  <p>$p = \bigl(\tfrac{1}{2}, \tfrac{1}{4}, \tfrac{1}{4}\bigr)$: surprisals $1, 2, 2$ bits</p>
+  <div class="math-block">$$H(X) = \tfrac{1}{2}\cdot 1 + \tfrac{1}{4}\cdot 2 + \tfrac{1}{4}\cdot 2 = 1.5 \text{ bits}$$</div>
+  <p>Between coin ($1$ bit) and uniform-on-3 ($\log 3 \approx 1.585$)</p>
+</div>
+
+<!-- Guessing game -->
+<div class="slide">
+  <h2>Guessing Game</h2>
+  <div class="divider"></div>
+  <p>Alice picks a number 0 to 7; Bob asks yes/no questions</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 700 240" style="width:100%;max-width:760px;">
+      <text x="30" y="70" font-size="18" fill="#003876" font-weight="700">Q1</text>
+      <g stroke="#1a5296" stroke-width="1.5">
+        <rect x="70" y="40" width="56" height="48" fill="#003876"/><rect x="130" y="40" width="56" height="48" fill="#003876"/><rect x="190" y="40" width="56" height="48" fill="#003876"/><rect x="250" y="40" width="56" height="48" fill="#003876"/>
+        <rect x="310" y="40" width="56" height="48" fill="#ffffff"/><rect x="370" y="40" width="56" height="48" fill="#ffffff"/><rect x="430" y="40" width="56" height="48" fill="#ffffff"/><rect x="490" y="40" width="56" height="48" fill="#ffffff"/>
+      </g>
+      <g font-size="20" text-anchor="middle" font-weight="700">
+        <text x="98" y="71" fill="#ffffff">0</text><text x="158" y="71" fill="#ffffff">1</text><text x="218" y="71" fill="#ffffff">2</text><text x="278" y="71" fill="#ffffff">3</text>
+        <text x="338" y="71" fill="#1a1a1a">4</text><text x="398" y="71" fill="#1a1a1a">5</text><text x="458" y="71" fill="#1a1a1a">6</text><text x="518" y="71" fill="#1a1a1a">7</text>
+      </g>
+      <text x="570" y="71" font-size="16" fill="#666">yes w.p. 1/2</text>
+      <text x="30" y="180" font-size="18" fill="#003876" font-weight="700">Q2</text>
+      <g stroke="#1a5296" stroke-width="1.5">
+        <rect x="70" y="150" width="56" height="48" fill="#ffffff"/><rect x="130" y="150" width="56" height="48" fill="#ffffff"/><rect x="190" y="150" width="56" height="48" fill="#ffffff"/><rect x="250" y="150" width="56" height="48" fill="#003876"/>
+        <rect x="310" y="150" width="56" height="48" fill="#ffffff"/><rect x="370" y="150" width="56" height="48" fill="#ffffff"/><rect x="430" y="150" width="56" height="48" fill="#003876"/><rect x="490" y="150" width="56" height="48" fill="#ffffff"/>
+      </g>
+      <g font-size="20" text-anchor="middle" font-weight="700">
+        <text x="98" y="181" fill="#1a1a1a">0</text><text x="158" y="181" fill="#1a1a1a">1</text><text x="218" y="181" fill="#1a1a1a">2</text><text x="278" y="181" fill="#ffffff">3</text>
+        <text x="338" y="181" fill="#1a1a1a">4</text><text x="398" y="181" fill="#1a1a1a">5</text><text x="458" y="181" fill="#ffffff">6</text><text x="518" y="181" fill="#1a1a1a">7</text>
+      </g>
+      <text x="570" y="181" font-size="16" fill="#666">yes w.p. 1/4</text>
+    </svg>
+  </div>
+  <p><strong>Q1</strong>: is it in $\{0,1,2,3\}$? &nbsp; <strong>Q2</strong>: is it in $\{3, 6\}$?</p>
+</div>
+
+<!-- Guessing game answer -->
+<div class="slide">
+  <h2>Which Question Is More Informative?</h2>
+  <div class="divider"></div>
+  <p>Entropy of the yes/no <strong>answer</strong>:</p>
+  <div class="math-block">$$\begin{aligned}
+    H(\text{answer to Q1}) &= h_2\bigl(\tfrac{1}{2}\bigr) = 1 \text{ bit} \\
+    H(\text{answer to Q2}) &= h_2\bigl(\tfrac{1}{4}\bigr) \approx 0.811 \text{ bits}
+  \end{aligned}$$</div>
+  <div class="highlight">
+    <p><strong>Q1 wins</strong>: higher-entropy answer = more informative question.</p>
+  </div>
+</div>
+
+<!-- Twenty questions -->
+<div class="slide">
+  <h2>Twenty-Questions View</h2>
+  <div class="divider"></div>
+  <p>Halving questions pin down Alice's number:</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 640 230" style="width:100%;max-width:760px;">
+      <g stroke="#1a5296" stroke-width="1.5" fill="#f4f6f9">
+        <rect x="60" y="20" width="480" height="42"/>
+        <rect x="60" y="80" width="240" height="42"/>
+        <rect x="60" y="140" width="120" height="42"/>
+      </g>
+      <rect x="60" y="196" width="60" height="24" fill="#003876"/>
+      <g font-size="17" fill="#1a1a1a">
+        <text x="300" y="47" text-anchor="middle">8 candidates</text>
+        <text x="180" y="107" text-anchor="middle">4 candidates</text>
+        <text x="120" y="167" text-anchor="middle">2</text>
+      </g>
+      <text x="90" y="213" font-size="14" fill="#ffffff" text-anchor="middle" font-weight="700">1</text>
+      <g font-size="16" fill="#003876" font-weight="700">
+        <text x="560" y="47">Q1</text>
+        <text x="320" y="107">Q2</text>
+        <text x="200" y="167">Q3</text>
+      </g>
+    </svg>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$\log 8 = 3 \text{ questions}$$</div>
+  <p class="muted">Entropy = number of good yes/no questions needed, on average.</p>
+</div>
+
+<!-- Dice question -->
+<div class="slide">
+  <h2>Two Dice &mdash; Which More Uncertain?</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 660 250" style="width:100%;max-width:780px;">
+      <line x1="40" y1="200" x2="300" y2="200" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="360" y1="200" x2="620" y2="200" stroke="#1a1a1a" stroke-width="2"/>
+      <g fill="#003876">
+        <rect x="55" y="167" width="30" height="33"/><rect x="95" y="167" width="30" height="33"/><rect x="135" y="167" width="30" height="33"/>
+        <rect x="175" y="134" width="30" height="66"/><rect x="215" y="134" width="30" height="66"/><rect x="255" y="134" width="30" height="66"/>
+      </g>
+      <g fill="#1a5296">
+        <rect x="375" y="52" width="30" height="148"/><rect x="415" y="126" width="30" height="74"/><rect x="455" y="163" width="30" height="37"/>
+        <rect x="495" y="181" width="30" height="19"/><rect x="535" y="191" width="30" height="9"/><rect x="575" y="191" width="30" height="9"/>
+      </g>
+      <g font-size="15" fill="#1a1a1a" text-anchor="middle">
+        <text x="70" y="222">1</text><text x="110" y="222">2</text><text x="150" y="222">3</text><text x="190" y="222">4</text><text x="230" y="222">5</text><text x="270" y="222">6</text>
+        <text x="390" y="222">1</text><text x="430" y="222">2</text><text x="470" y="222">3</text><text x="510" y="222">4</text><text x="550" y="222">5</text><text x="590" y="222">6</text>
+      </g>
+      <text x="170" y="35" font-size="18" fill="#003876" text-anchor="middle" font-weight="700">D1: (1/9, 1/9, 1/9, 2/9, 2/9, 2/9)</text>
+      <text x="490" y="35" font-size="18" fill="#1a5296" text-anchor="middle" font-weight="700">D2: (1/2, 1/4, 1/8, 1/16, 1/32, 1/32)</text>
+    </svg>
+  </div>
+  <p>Same six faces, different pmfs. Guess first, then compute.</p>
+</div>
+
+<!-- Dice computed -->
+<div class="slide">
+  <h2>Two Dice &mdash; Computing $H$</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    H(D_1) &= 3\cdot\tfrac{1}{9}\log 9 + 3\cdot\tfrac{2}{9}\log\tfrac{9}{2} \approx 2.503 \text{ bits} \\
+    H(D_2) &= \tfrac{1}{2}\!\cdot\!1 + \tfrac{1}{4}\!\cdot\!2 + \tfrac{1}{8}\!\cdot\!3 + \tfrac{1}{16}\!\cdot\!4 + \tfrac{2}{32}\!\cdot\!5 = \tfrac{31}{16} \approx 1.938
+  \end{aligned}$$</div>
+  <p><strong>$D_1$ is more uncertain</strong>: closer to uniform</p>
+  <p class="muted">Both below $\log 6 \approx 2.585$: a hint of things to come.</p>
+</div>
+
+<!-- Classifier soft labels -->
+<div class="slide">
+  <h2>AI Example &mdash; Classifier Soft Labels</h2>
+  <div class="divider"></div>
+  <p>Digit classifier $f$ (labels 0 to 4) outputs a <strong>pmf</strong>:</p>
+  <div class="math-block">$$f(x) = (0.4,\; 0.4,\; 0.2,\; 0,\; 0)$$</div>
+  <ul>
+    <li>Reads: digit "0" w.p. $0.4$, digit "2" w.p. $0.2$</li>
+    <li>Soft guessing, like a weather forecast</li>
+  </ul>
+</div>
+
+<!-- Which sample harder -->
+<div class="slide">
+  <h2>Which Sample Is Harder?</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 660 240" style="width:100%;max-width:780px;">
+      <line x1="40" y1="190" x2="300" y2="190" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="360" y1="190" x2="620" y2="190" stroke="#1a1a1a" stroke-width="2"/>
+      <g fill="#003876">
+        <rect x="55" y="70" width="30" height="120"/><rect x="95" y="170" width="30" height="20"/><rect x="135" y="170" width="30" height="20"/>
+        <rect x="175" y="170" width="30" height="20"/><rect x="215" y="170" width="30" height="20"/>
+      </g>
+      <g fill="#1a5296">
+        <rect x="375" y="110" width="30" height="80"/><rect x="415" y="110" width="30" height="80"/><rect x="455" y="150" width="30" height="40"/>
+        <rect x="495" y="188" width="30" height="2"/><rect x="535" y="188" width="30" height="2"/>
+      </g>
+      <g font-size="15" fill="#1a1a1a" text-anchor="middle">
+        <text x="70" y="212">0</text><text x="110" y="212">1</text><text x="150" y="212">2</text><text x="190" y="212">3</text><text x="230" y="212">4</text>
+        <text x="390" y="212">0</text><text x="430" y="212">1</text><text x="470" y="212">2</text><text x="510" y="212">3</text><text x="550" y="212">4</text>
+      </g>
+      <text x="150" y="40" font-size="18" fill="#003876" text-anchor="middle" font-weight="700">f(x1) = (0.6, 0.1, 0.1, 0.1, 0.1)</text>
+      <text x="490" y="40" font-size="18" fill="#1a5296" text-anchor="middle" font-weight="700">f(x2) = (0.4, 0.4, 0.2, 0, 0)</text>
+    </svg>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$H(f(x_1)) \approx 1.771 \text{ bits}, \qquad H(f(x_2)) \approx 1.522 \text{ bits}$$</div>
+  <p class="muted">Entropy ranks $x_1$ as more uncertain: mass spread over all five labels.</p>
+</div>
+
+<!-- Data valuation -->
+<div class="slide">
+  <h2>AI Example &mdash; Data Valuation</h2>
+  <div class="divider"></div>
+  <p>Which sample is most <strong>helpful for training</strong>?</p>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 720 170" style="width:100%;max-width:820px;">
+      <rect x="20" y="45" width="170" height="80" rx="10" fill="#f4f6f9" stroke="#1a5296" stroke-width="2"/>
+      <text x="105" y="80" font-size="17" fill="#1a1a1a" text-anchor="middle">unlabeled pool</text>
+      <text x="105" y="104" font-size="15" fill="#666" text-anchor="middle">candidate samples</text>
+      <line x1="200" y1="85" x2="260" y2="85" stroke="#1a5296" stroke-width="2.5" marker-end="url(#arr4)"/>
+      <rect x="272" y="45" width="180" height="80" rx="10" fill="#003876"/>
+      <text x="362" y="80" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="700">score by entropy</text>
+      <text x="362" y="104" font-size="15" fill="#c9d3de" text-anchor="middle">of soft label f(x)</text>
+      <line x1="462" y1="85" x2="522" y2="85" stroke="#1a5296" stroke-width="2.5" marker-end="url(#arr4)"/>
+      <rect x="534" y="45" width="170" height="80" rx="10" fill="#f4f6f9" stroke="#1a5296" stroke-width="2"/>
+      <text x="619" y="80" font-size="17" fill="#1a1a1a" text-anchor="middle">train on the</text>
+      <text x="619" y="104" font-size="17" fill="#1a1a1a" text-anchor="middle">challenging ones</text>
+      <defs><marker id="arr4" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
+    </svg>
+  </div>
+  <ul>
+    <li>Challenging samples teach the model most</li>
+    <li>High-entropy prediction = model still confused there</li>
+  </ul>
+</div>
+
+<!-- RL exploration -->
+<div class="slide">
+  <h2>AI Example &mdash; Explore vs Exploit</h2>
+  <div class="divider"></div>
+  <p>Go strategies A to E; current belief: A is best</p>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    S_1 &= (0.6,\; 0.1,\; 0.1,\; 0.1,\; 0.1) \\
+    S_2 &= (0.4,\; 0.4,\; 0.2,\; 0.0,\; 0.0)
+  \end{aligned}$$</div>
+  <ul>
+    <li>Exploit A, but reserve probability for exploration</li>
+    <li>$H(S_1) \approx 1.771 > H(S_2) \approx 1.522$: &nbsp;$S_1$ more explorative</li>
+  </ul>
+  <div class="highlight">
+    <p>Entropy = a measure of <strong>explorativeness</strong> of a policy.</p>
+  </div>
+</div>
+
+<!-- Geometric exercise -->
+<div class="slide">
+  <h2>Exercise &mdash; Geometric Distribution</h2>
+  <div class="divider"></div>
+  <p>Let $X$ be geometric with $p = 1/2$:</p>
+  <div class="math-block">$$p_X(x) = \frac{1}{2^x}, \qquad x \geq 1$$</div>
+  <p><strong>Exercise.</strong> What is $H(X)$?</p>
+  <p><em>Hint:</em> surprisal of outcome $x$ is exactly $x$ bits, so $H(X) = \mathbb{E}[X]$</p>
+</div>
+
+<!-- ===== SECTION 05 — PROPERTIES ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Properties of Entropy</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Jensen's inequality and $0 \leq H \leq \log M$</p>
+</div>
+
+<!-- Non-negativity statement -->
+<div class="slide">
+  <h2>Theorem &mdash; Non-Negativity</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 1 (non-negativity).</h3>
+    <p>Entropy is non-negative:</p>
+    <div class="math-block" style="margin:8px 0">$$H(X) \geq 0$$</div>
+    <p>with equality if and only if $X$ is deterministic.</p>
+  </div>
+  <p class="muted">A sanity floor: no distribution has negative uncertainty.</p>
+</div>
+
+<!-- Non-negativity proof -->
+<div class="slide">
+  <h2>Proof &mdash; Non-Negativity</h2>
+  <div class="divider"></div>
+  <p>Every probability satisfies $0 \leq p_X(x) \leq 1$:</p>
+  <div class="math-block">$$H(X) = \mathbb{E}\Bigl[\log \frac{1}{p_X(X)}\Bigr]
+    \;\stackrel{(p_X \leq 1)}{\geq}\; \mathbb{E}[\log 1] = 0 \qquad \blacksquare$$</div>
+  <p><strong>Equality</strong>: needs $p_X(x)\log p_X(x) = 0$ for all $x$</p>
+  <p>So every $p_X(x)$ is $0$ or $1$: &nbsp;$X$ deterministic</p>
+</div>
+
+<!-- Question: max -->
+<div class="slide">
+  <h2>Question &mdash; Which pmf Maximizes $H$?</h2>
+  <div class="divider"></div>
+  <p>Floor is settled. What about the <strong>ceiling</strong>?</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 540 240" style="width:100%;max-width:600px;">
+      <line x1="60" y1="200" x2="510" y2="200" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="60" y1="200" x2="60" y2="20" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="270" y1="200" x2="270" y2="32" stroke="#c9d3de" stroke-width="1.5" stroke-dasharray="6 5"/>
+      <polyline fill="none" stroke="#003876" stroke-width="3" points="60,200.0 77,159.3 94,132.4 110,111.0 127,93.4 144,78.7 161,66.4 178,56.3 194,48.1 211,41.6 228,36.9 245,33.8 262,32.2 270,32.0 278,32.2 295,33.8 312,36.9 329,41.6 346,48.1 362,56.3 379,66.4 396,78.7 413,93.4 430,111.0 446,132.4 463,159.3 480,200.0"/>
+      <circle cx="270" cy="32" r="6" fill="#1a5296"/>
+      <text x="270" y="226" font-size="16" fill="#1a1a1a" text-anchor="middle">1/2</text>
+      <text x="300" y="18" font-size="17" fill="#003876" font-weight="700">binary case: peak at uniform</text>
+    </svg>
+  </div>
+  <p>Guess: <strong>uniform</strong> maximizes entropy. To prove it we need a tool.</p>
+</div>
+
+<!-- Technique review: convexity -->
+<div class="slide">
+  <h2>Technique Review &mdash; Convex Functions</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (convex).</h3>
+    <p>$f$ is convex if for all $x, y$ and $0 \leq \lambda \leq 1$:</p>
+    <div class="math-block" style="margin:8px 0">$$\lambda f(x) + (1-\lambda) f(y) \;\geq\; f\bigl(\lambda x + (1-\lambda) y\bigr)$$</div>
+  </div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <img src="../figs/jensen.png" alt="chord above a convex curve" style="max-height:190px;">
+  </div>
+</div>
+
+<!-- Concave -->
+<div class="slide">
+  <h2>Technique Review &mdash; Concave Functions</h2>
+  <div class="divider"></div>
+  <p>Flip the inequality: $f$ concave if</p>
+  <div class="math-block" style="margin:8px 0">$$\lambda f(x) + (1-\lambda) f(y) \;\leq\; f\bigl(\lambda x + (1-\lambda) y\bigr)$$</div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 540 232" style="width:100%;max-width:560px;">
+      <polyline fill="none" stroke="#003876" stroke-width="3" points="77,221.1 94,194.6 110,170.3 127,148.4 144,128.8 161,111.5 178,96.5 194,83.8 211,73.4 228,65.3 245,59.6 262,56.1 270,55.2 278,55.0 295,56.1 312,59.6 329,65.4 346,73.5 362,83.9 379,96.6 396,111.7 413,129.0 430,148.7 446,170.6 463,194.9 480,221.5"/>
+      <line x1="110" y1="170.3" x2="430" y2="148.7" stroke="#666" stroke-width="2"/>
+      <circle cx="110" cy="170.3" r="5" fill="#1a1a1a"/>
+      <circle cx="430" cy="148.7" r="5" fill="#1a1a1a"/>
+      <circle cx="270" cy="159.5" r="6" fill="#666"/>
+      <circle cx="270" cy="55.2" r="6" fill="#003876"/>
+      <line x1="270" y1="159.5" x2="270" y2="62" stroke="#c9d3de" stroke-width="1.5" stroke-dasharray="5 4"/>
+      <text x="270" y="194" font-size="16" fill="#666" text-anchor="middle">chord: average of values</text>
+      <text x="278" y="42" font-size="16" fill="#003876" font-weight="700">curve: value at average</text>
+      <text x="110" y="196" font-size="16" fill="#1a1a1a" text-anchor="middle">x</text>
+      <text x="442" y="140" font-size="16" fill="#1a1a1a">y</text>
+    </svg>
+  </div>
+  <p class="muted">Chord under the curve. Key example: $\log$ is concave.</p>
+</div>
+
+<!-- Examples convex/concave -->
+<div class="slide">
+  <h2>Convex or Concave?</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>$x^2$</h3>
+      <p><strong>Convex</strong>: chord above</p>
+    </div>
+    <div class="card">
+      <h3>$\log x$</h3>
+      <p><strong>Concave</strong>: chord below</p>
+    </div>
+    <div class="card">
+      <h3>$h_2(p)$</h3>
+      <p><strong>Concave</strong>: the arch we plotted</p>
+    </div>
+  </div>
+  <p><strong>Exercise.</strong> Show the binary entropy $h_2(p)$ is concave</p>
+  <p class="muted">Hint: second derivative.</p>
+</div>
+
+<!-- Jensen statement -->
+<div class="slide">
+  <h2>Jensen's Inequality &mdash; Statement</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 2 (Jensen's inequality).</h3>
+    <p>Let $f$ be concave. Then</p>
+    <div class="math-block" style="margin:8px 0">$$\mathbb{E}[f(X)] \;\leq\; f\bigl(\mathbb{E}[X]\bigr)$$</div>
+    <p>For strictly concave $f$: equality iff $X$ is constant.</p>
+    <div class="cite">Jensen, Acta Mathematica 1906</div>
+  </div>
+  <p class="muted">For convex $f$ the inequality flips.</p>
+</div>
+
+<!-- Jensen reading -->
+<div class="slide">
+  <h2>Jensen &mdash; Reading the Statement</h2>
+  <div class="divider"></div>
+  <p>Concavity compares <strong>two</strong> points; Jensen compares <strong>any pmf</strong>:</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 540 240" style="width:100%;max-width:640px;">
+      <polyline fill="none" stroke="#003876" stroke-width="3" points="60,250.0 77,221.1 94,194.6 110,170.3 127,148.4 144,128.8 161,111.5 178,96.5 194,83.8 211,73.4 228,65.3 245,59.6 262,56.1 270,55.2 278,55.0 295,56.1 312,59.6 329,65.4 346,73.5 362,83.9 379,96.6 396,111.7 413,129.0 430,148.7 446,170.6 463,194.9 480,221.5"/>
+      <g fill="#1a1a1a">
+        <circle cx="94" cy="194.6" r="5"/>
+        <circle cx="178" cy="96.5" r="5"/>
+        <circle cx="312" cy="59.6" r="5"/>
+        <circle cx="446" cy="170.6" r="5"/>
+      </g>
+      <circle cx="255" cy="130" r="6" fill="#666"/>
+      <circle cx="255" cy="58" r="6" fill="#003876"/>
+      <line x1="255" y1="122" x2="255" y2="66" stroke="#c9d3de" stroke-width="1.5" stroke-dasharray="5 4"/>
+      <text x="265" y="140" font-size="16" fill="#666">E[f(X)]: mix of values</text>
+      <text x="265" y="42" font-size="16" fill="#003876" font-weight="700">f(E[X]): value at the mix</text>
+      <text x="80" y="222" font-size="15" fill="#1a1a1a">x1</text>
+      <text x="168" y="126" font-size="15" fill="#1a1a1a">x2</text>
+      <text x="310" y="88" font-size="15" fill="#1a1a1a">x3</text>
+      <text x="452" y="198" font-size="15" fill="#1a1a1a">x4</text>
+    </svg>
+  </div>
+  <p class="muted">Weighted average of $f$ values never beats $f$ at the weighted average input.</p>
+</div>
+
+<!-- Jensen proof overview -->
+<div class="slide">
+  <h2>Jensen &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <p>Target, for pmf $(p_1, \dots, p_M)$ on points $(x_1, \dots, x_M)$:</p>
+  <div class="math-block" style="margin:8px 0">$$\sum_{i=1}^{M} p_i f(x_i) \;\leq\; f\Bigl(\sum_{i=1}^{M} p_i x_i\Bigr)$$</div>
+  <p>Induction on the support size $M$:</p>
+  <ol>
+    <li>Base $M = 2$: exactly the definition of concavity</li>
+    <li>Step: peel off one atom, renormalize the rest</li>
+  </ol>
+</div>
+
+<!-- Jensen base case -->
+<div class="slide">
+  <h2>Jensen Proof &mdash; Base Case</h2>
+  <div class="divider"></div>
+  <p>$M = 2$: pmf $(p_1, p_2)$ with $p_2 = 1 - p_1$</p>
+  <div class="math-block">$$p_1 f(x_1) + (1-p_1) f(x_2)
+    \;\stackrel{(\text{concavity},\ \lambda = p_1)}{\leq}\;
+    f\bigl(p_1 x_1 + (1-p_1) x_2\bigr)$$</div>
+  <p>Left side is $\mathbb{E}[f(X)]$, right side is $f(\mathbb{E}[X])$</p>
+  <p class="muted">The definition of concavity, wearing expectation notation.</p>
+</div>
+
+<!-- Jensen induction split -->
+<div class="slide">
+  <h2>Jensen Proof &mdash; Peel One Atom</h2>
+  <div class="divider"></div>
+  <p>Assume true for $M - 1$ points. Split off atom $M$ (take $p_M \lt 1$):</p>
+  <div class="math-block">$$\sum_{i=1}^{M} p_i f(x_i) = p_M f(x_M) + (1 - p_M) \sum_{i=1}^{M-1} q_i f(x_i),
+    \qquad q_i = \frac{p_i}{1 - p_M}$$</div>
+  <p>The $q_i$ sum to one: a <strong>valid pmf on $M-1$ points</strong></p>
+  <p class="muted">Renormalizing is the whole trick: the rest is bookkeeping.</p>
+</div>
+
+<!-- Jensen induction step -->
+<div class="slide">
+  <h2>Jensen Proof &mdash; Induction Step</h2>
+  <div class="divider"></div>
+  <p>Recap: peeled form $p_M f(x_M) + (1-p_M)\sum_i q_i f(x_i)$</p>
+  <div class="math-block">$$\begin{aligned}
+    p_M f(x_M) + (1-p_M)\sum_{i=1}^{M-1} q_i f(x_i)
+      &\stackrel{(\text{IH on } q)}{\leq} p_M f(x_M) + (1-p_M)\, f\Bigl(\sum_{i=1}^{M-1} q_i x_i\Bigr) \\
+      &\stackrel{(\text{concavity})}{\leq} f\Bigl(p_M x_M + (1-p_M)\sum_{i=1}^{M-1} q_i x_i\Bigr) \\
+      &= f\Bigl(\sum_{i=1}^{M} p_i x_i\Bigr) = f(\mathbb{E}[X]) \qquad \blacksquare
+  \end{aligned}$$</div>
+</div>
+
+<!-- Jensen proof summary -->
+<div class="slide">
+  <h2>Jensen &mdash; Proof Summary</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\mathbb{E}[f(X)]
+    \;\stackrel{(\text{peel})}{=}\; p_M f(x_M) + (1-p_M)\,\mathbb{E}_q[f]
+    \;\stackrel{(\text{IH})}{\leq}\; \cdots
+    \;\stackrel{(\text{2-pt def.})}{\leq}\; f(\mathbb{E}[X])$$</div>
+  <ul>
+    <li><strong>Key trick</strong>: renormalize the rest into a smaller pmf</li>
+    <li>Two-point concavity does all the lifting</li>
+    <li>Equality (strict $f$): all mass at one point</li>
+  </ul>
+</div>
+
+<!-- Jensen implication -->
+<div class="slide">
+  <h2>Jensen &mdash; Why We Care</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Today</strong>: maximum entropy, $H(X) \leq \log M$</li>
+    <li><strong>Next lecture</strong>: KL divergence is non-negative</li>
+    <li><strong>Everywhere in ML</strong>: log-likelihood lower bounds (ELBO)</li>
+  </ul>
+  <div class="highlight">
+    <p>One-line recipe: expectation trapped under a $\log$? <strong>Push it inside.</strong></p>
+  </div>
+</div>
+
+<!-- Max entropy statement -->
+<div class="slide">
+  <h2>Theorem &mdash; Maximum Entropy</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 3 (maximum entropy).</h3>
+    <p>For a random variable $X \in \mathcal{X}$ with $|\mathcal{X}| = M$:</p>
+    <div class="math-block" style="margin:8px 0">$$H(X) \;\leq\; \log |\mathcal{X}| = \log M$$</div>
+    <p>with equality if and only if $X$ is uniform.</p>
+  </div>
+  <p class="muted">The ceiling we guessed: uniform is the most uncertain pmf.</p>
+</div>
+
+<!-- Max entropy proof overview -->
+<div class="slide">
+  <h2>Max Entropy &mdash; Proof Overview</h2>
+  <div class="divider"></div>
+  <p>Target: $H(X) \leq \log M$. Three moves:</p>
+  <ol>
+    <li>Write $H(X)$ as $\mathbb{E}\bigl[\log \tfrac{1}{p_X(X)}\bigr]$</li>
+    <li>Jensen: $\log$ concave, push $\mathbb{E}$ inside</li>
+    <li>Cancellation: $\mathbb{E}\bigl[\tfrac{1}{p_X(X)}\bigr]$ collapses to $M$</li>
+  </ol>
+  <p class="muted">Step 3 is the punchline: watch the pmf cancel itself.</p>
+</div>
+
+<!-- Max entropy proof: Jensen -->
+<div class="slide">
+  <h2>Proof &mdash; Apply Jensen</h2>
+  <div class="divider"></div>
+  <p>The random quantity inside is $\tfrac{1}{p_X(X)}$; $\log$ is concave:</p>
+  <div class="math-block">$$H(X) = \mathbb{E}\Bigl[\log \frac{1}{p_X(X)}\Bigr]
+    \;\stackrel{(\text{Jensen})}{\leq}\;
+    \log\, \mathbb{E}\Bigl[\frac{1}{p_X(X)}\Bigr]$$</div>
+  <p>One unknown left: the expectation on the right</p>
+</div>
+
+<!-- Max entropy proof: cancellation -->
+<div class="slide">
+  <h2>Proof &mdash; The Cancellation</h2>
+  <div class="divider"></div>
+  <p>Expand the expectation over $x$ with weights $p_X(x)$:</p>
+  <div class="math-block">$$\mathbb{E}\Bigl[\frac{1}{p_X(X)}\Bigr]
+    \;\stackrel{(\mathbb{E}[f(X)])}{=}\; \sum_{x=1}^{M} p_X(x) \cdot \frac{1}{p_X(x)}
+    \;=\; \sum_{x=1}^{M} 1 \;=\; M$$</div>
+  <div class="math-block" style="margin:8px 0">$$\therefore\; H(X) \leq \log M \qquad \blacksquare$$</div>
+  <p class="muted">Weight $p_X(x)$ meets value $1/p_X(x)$: each term is exactly 1.</p>
+</div>
+
+<!-- Max entropy equality -->
+<div class="slide">
+  <h2>Proof &mdash; Equality Condition</h2>
+  <div class="divider"></div>
+  <p>Jensen (strictly concave $\log$) is tight iff the inside is <strong>constant</strong>:</p>
+  <div class="math-block">$$\frac{1}{p_X(x)} = c \ \ \text{for all } x
+    \quad\Longrightarrow\quad p_X(x) = \frac{1}{M}$$</div>
+  <p>Constant pmf summing to one: the <strong>uniform</strong> distribution</p>
+  <p class="muted">Matches the fair die: $H = \log 6$ exactly.</p>
+</div>
+
+<!-- Max entropy proof summary -->
+<div class="slide">
+  <h2>Max Entropy &mdash; Proof Summary</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$H(X)
+    \;=\; \mathbb{E}\Bigl[\log \tfrac{1}{p_X(X)}\Bigr]
+    \;\stackrel{(\text{Jensen})}{\leq}\; \log \mathbb{E}\Bigl[\tfrac{1}{p_X(X)}\Bigr]
+    \;\stackrel{(\text{cancel})}{=}\; \log M$$</div>
+  <ul>
+    <li><strong>Key trick</strong>: $1/p_X$ inside its own expectation cancels</li>
+    <li>Jensen direction set by concavity of $\log$</li>
+    <li>Tight iff $p_X$ uniform</li>
+  </ul>
+</div>
+
+<!-- Implication: scale -->
+<div class="slide">
+  <h2>Implication &mdash; The Entropy Scale</h2>
+  <div class="divider"></div>
+  <p>Every six-outcome pmf lives on one axis:</p>
+  <div style="display:flex;justify-content:center;margin:14px 0;">
+    <svg viewBox="0 0 700 180" style="width:100%;max-width:820px;">
+      <line x1="60" y1="90" x2="640" y2="90" stroke="#1a1a1a" stroke-width="3"/>
+      <g stroke="#1a1a1a" stroke-width="2.5">
+        <line x1="60" y1="80" x2="60" y2="100"/>
+        <line x1="640" y1="80" x2="640" y2="100"/>
+      </g>
+      <g stroke="#1a5296" stroke-width="2.5">
+        <line x1="495" y1="80" x2="495" y2="100"/>
+        <line x1="621" y1="80" x2="621" y2="100"/>
+      </g>
+      <text x="60" y="65" font-size="17" fill="#1a1a1a" text-anchor="middle" font-weight="700">0</text>
+      <text x="60" y="130" font-size="15" fill="#666" text-anchor="middle">deterministic</text>
+      <text x="495" y="65" font-size="17" fill="#1a5296" text-anchor="middle" font-weight="700">1.94</text>
+      <text x="495" y="130" font-size="15" fill="#666" text-anchor="middle">D2</text>
+      <text x="621" y="65" font-size="17" fill="#1a5296" text-anchor="middle" font-weight="700">2.50</text>
+      <text x="621" y="155" font-size="15" fill="#666" text-anchor="middle">D1</text>
+      <text x="640" y="35" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">log 6 = 2.585</text>
+      <text x="640" y="130" font-size="15" fill="#003876" text-anchor="middle" font-weight="700">fair die</text>
+    </svg>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$0 \;\leq\; H(X) \;\leq\; \log M$$</div>
+</div>
+
+<!-- Implication: bits -->
+<div class="slide">
+  <h2>Implication &mdash; Bits to Describe $X$</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$\log M$ = bits to index $M$ items</li>
+    <li>Guessing game: 8 numbers, $\log 8 = 3$ questions</li>
+    <li>Uniform Alice is the <strong>hardest opponent</strong></li>
+  </ul>
+  <div class="highlight">
+    <p>Uniform = maximal ignorance: no structure to exploit.</p>
+  </div>
+</div>
+
+<!-- Sanity checks -->
+<div class="slide">
+  <h2>Sanity Check &mdash; All Examples</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Distribution</th><th>$H$ (bits)</th><th>$\log M$</th></tr>
+    <tr><td>Fair coin</td><td>$1$</td><td>$\log 2 = 1$ &nbsp;(tight!)</td></tr>
+    <tr><td>Biased coin $(0.01, 0.99)$</td><td>$0.081$</td><td>$1$</td></tr>
+    <tr><td>Dice $D_1$, $D_2$</td><td>$2.503$, $1.938$</td><td>$\log 6 \approx 2.585$</td></tr>
+    <tr><td>Soft labels $f(x_1)$, $f(x_2)$</td><td>$1.771$, $1.522$</td><td>$\log 5 \approx 2.322$</td></tr>
+  </table>
+  <p class="muted">Tight exactly when uniform, as the theorem promised.</p>
+</div>
+
+<!-- Recap chain -->
+<div class="slide">
+  <h2>Recap &mdash; Today's Chain</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    &(\Omega, \mathcal{F}, P)
+      \;\xrightarrow{\;X:\Omega\to\mathbb{R}\;} p_X(x)
+      \;\xrightarrow{\;\text{surprisal}\;} S(x) = \log\tfrac{1}{p_X(x)} \\[6pt]
+    &H(X) = \mathbb{E}[S(X)], \qquad
+      0 \;\stackrel{(\text{Thm 1})}{\leq}\; H(X) \;\stackrel{(\text{Jensen})}{\leq}\; \log M
+  \end{aligned}$$</div>
+  <ul>
+    <li>Datasets = sample spaces; models = distributions</li>
+    <li>Entropy: expected surprisal, in bits</li>
+    <li>Extremes: deterministic vs uniform</li>
+  </ul>
+</div>
+
+<!-- Bridge -->
+<div class="slide">
+  <h2>Next &mdash; The Wrong Distribution</h2>
+  <div class="divider"></div>
+  <p>Surprisal used the <strong>true</strong> pmf $p_X$. But a model only has a guess $Q$:</p>
+  <div class="math-block">$$\mathbb{E}\Bigl[\log \frac{1}{Q(X)}\Bigr] \;\;\stackrel{?}{\gtrless}\;\; H(X)$$</div>
+  <ul>
+    <li>How much does the mismatch cost?</li>
+    <li>Same Jensen trick, one more twist</li>
+  </ul>
+  <div class="highlight">
+    <p>Next lecture: <strong>cross-entropy and KL divergence</strong> &mdash; the loss function of deep learning.</p>
+  </div>
+</div>
+
+<!-- Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">$H(X) \leq \log M$</div>
+  <p class="big-word-sub">Questions?</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 72</div>
+
+</div><!-- end deck -->
+
+<script src="../../../reference/deck.js"></script>
+</body>
+</html>

@@ -69,6 +69,7 @@ states Jensen without proof) — added per full-treatment mandate.
 Lecture 2 — answers prob01's teaser (wrong distribution Q); recalls entropy/Jensen
 from prob01 instead of redefining; ends on a bridge to prob03 (two RVs → mutual
 information).
+Companion: `prob02-kl-crossentropy/prob02-kl-crossentropy-note.html` — detailed definitions, expanded proofs, lemmas, references.
 
 | # | Section | Slides | Location |
 |---|---|---|---|

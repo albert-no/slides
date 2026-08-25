@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Deep Learning Math 4 — Random Processes &amp; Markov Chains · Notes</title>
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload='renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false},{left:"\\[",right:"\\]",display:true}]});'></script>
+<style>
+  body { max-width: 760px; margin: 48px auto; padding: 0 24px 96px; color: var(--charcoal); background: var(--white); font-family: 'Yonsei', 'Noto Sans', Arial, sans-serif; font-weight: 300; line-height: 1.65; }
+  h1 { font-size: 2rem; color: var(--yonsei-blue); margin-bottom: 4px; }
+  h2 { font-size: 1.4rem; color: var(--yonsei-blue); margin-top: 40px; border-bottom: 1px solid var(--slate); padding-bottom: 6px; }
+  h3 { font-size: 1.1rem; color: var(--blue-light); margin-top: 24px; }
+  p, li { font-size: 1rem; }
+  .meta { color: var(--gray-text); font-size: 0.95rem; margin-bottom: 24px; }
+  code { background: var(--light); padding: 1px 6px; border-radius: 4px; font-size: 0.92em; }
+  strong { color: var(--yonsei-blue); font-weight: 600; }
+  .deriv { background: var(--light); border-left: 3px solid var(--yonsei-blue); padding: 12px 18px; margin: 14px 0; border-radius: 0 6px 6px 0; }
+  table { border-collapse: collapse; margin: 14px 0; }
+  th, td { border: 1px solid var(--slate); padding: 6px 12px; font-size: 0.95rem; text-align: left; }
+  th { background: var(--light); color: var(--yonsei-blue); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>Deep Learning Math 4 · Random Processes &amp; Markov Chains &mdash; Notes</h1>
+<p class="meta">Companion to <code>prob04-random-processes.html</code>. Full definitions with all conditions and conventions, every proof expanded (with the results the deck states without proof &mdash; existence and uniqueness of stationary distributions, convergence &mdash; proved in full at the level the deck uses them), edge cases and counterexamples, independently verified numerics, and references. <strong>Convention alert (used everywhere):</strong> following the deck and the source notes, transition matrices are <em>column-stochastic</em> &mdash; $P_{u,v} = \Pr(X_i = u \mid X_{i-1} = v)$, columns sum to $1$, distributions are column vectors, and one step is $\pi_i = P\pi_{i-1}$. Most textbooks (e.g. [2], [3]) use the row convention; to translate, transpose everything ($P_{\text{here}} = P_{\text{book}}^\top$, and their row-vector update $\pi P$ becomes our $P\pi$). Background from earlier lectures is cited from the companion notes <code>../prob01-foundations/prob01-foundations-note.html</code>, <code>../prob02-kl-crossentropy/prob02-kl-crossentropy-note.html</code>, and <code>../prob03-mutual-information/prob03-mutual-information-note.html</code> rather than re-proved. All random variables in these notes take finitely many values.</p>
+
+<section>
+  <h2>1 &nbsp;Why Sequences?</h2>
+  <p>Lectures 1&ndash;3 built tools for one or two random variables at a time: entropy $H(X)$ (prob01), divergence $D(P \Vert Q)$ (prob02), mutual information $I(X;Y)$ and conditional distributions (prob03). The three motivating systems on the deck's opening cards &mdash; a language model emitting token after token, a diffusion model corrupting an image step by step, a random surfer hopping link to link &mdash; are all instances of a single new object: a <em>sequence</em> of random variables $X_1, X_2, X_3, \dots$ evolving in time. Two genuinely new questions arise that no single snapshot can answer: <strong>how do successive steps depend on each other</strong>, and <strong>where does the sequence settle in the long run</strong>?</p>
+  <p>The lecture's headline, previewed on slide&nbsp;5 and delivered in Sections 7&ndash;8: for a well-behaved chain the long-run distribution $\pi^\star$ is characterized <em>algebraically</em>, as a solution of $\pi^\star = P\pi^\star$ &mdash; an eigenvector of the transition matrix for eigenvalue $1$. Long-run behavior is linear algebra, not simulation. Section 9 then cashes this in for generative modeling: a discrete diffusion model is nothing but a Markov chain whose limiting distribution is deliberately chosen to be easy to sample.</p>
+  <p>Two running examples carry every computation: a <strong>binary chain</strong> (flip with probability $\alpha$, stay with $1-\alpha$; numbers at $\alpha = \tfrac14$) and a <strong>three-state rotation chain</strong> ($A \to B \to C \to A$ with probability $\tfrac12$, stay with $\tfrac12$). Both are solved completely by hand below.</p>
+</section>
+
+<section>
+  <h2>2 &nbsp;Random Processes</h2>
+
+  <h3>2.1 Definition, with the fine print</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (discrete-time random process).</strong> A random process is a sequence of random variables</p>
+    \[ \mathbf{X} = \{X_n\}_{n=1}^{\infty}, \]
+    <p style="margin:8px 0 0;">all defined on a common probability space, each $X_n$ taking values in a common finite alphabet $\mathcal{X}$. The index $n$ is read as <em>time</em> (step, token position, iteration). The process is described by its <em>finite-dimensional distributions</em>: the joint pmfs $P_{X^n}(x^n) = P_{X_1, \dots, X_n}(x_1, \dots, x_n)$ for every $n$, in the prob03 notation $X^n = (X_1, \dots, X_n)$, $x^n = (x_1, \dots, x_n)$.</p>
+  </div>
+  <p><strong>Fine print the deck omits.</strong> (i) The joint pmfs must be <em>consistent</em>: marginalizing $P_{X^{n+1}}$ over $x_{n+1}$ must return $P_{X^n}$ &mdash; automatic when, as here, the pmfs come from one underlying space. (ii) Conversely, that any consistent family of finite-dimensional distributions really is realized by a process on some probability space is the <em>Kolmogorov extension theorem</em>, which we use silently and do not prove; see [6, Thm. A.3.1]. For everything in this lecture, finite windows $X^n$ suffice, so nothing below depends on this subtlety.</p>
+
+  <h3>2.2 The i.i.d. process, and the coin-flip check</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (i.i.d. process).</strong> $\mathbf{X}$ is <em>independent and identically distributed</em> if all $X_n$ share one marginal pmf $P_X$ and every joint pmf factorizes into marginals:</p>
+    \[ P_{X^n}(x^n) = \prod_{i=1}^{n} P_{X}(x_i) \qquad \text{for all } n, x^n. \]
+  </div>
+  <p>(The deck writes $\prod_i P_{X_i}(x_i)$, allowing per-index marginals; "identically distributed" additionally makes them all equal &mdash; both properties are used later, e.g. in Section 6.) <strong>Verifying the deck's coin example:</strong> a fair coin flipped four times gives, for the string HTHH,</p>
+  <div class="deriv">
+    \[ P(\texttt{HTHH}) = \tfrac12 \cdot \tfrac12 \cdot \tfrac12 \cdot \tfrac12 = \tfrac{1}{16}, \]
+    <p style="margin:8px 0 0;">and identically for each of the $2^4 = 16$ length-4 strings &mdash; the uniform distribution on $\{\mathrm{H,T}\}^4$. Correct as stated.</p>
+  </div>
+
+  <h3>2.3 Why "neighbors reveal nothing" under i.i.d. &mdash; a one-line proof</h3>
+  <p>The deck's text slide (<code>my na_e is Albert</code>) claims that under i.i.d. the conditional pmf of one symbol given all the others equals its marginal. Proof: for any $i$ and any values $x^n$ with positive probability of the conditioning event,</p>
+  <div class="deriv">
+    \[ P(X_i = x_i \mid X_j = x_j, \, j \neq i)
+       = \frac{\prod_{j=1}^{n} P_X(x_j)}{\prod_{j \neq i} P_X(x_j)}
+       = P_X(x_i), \]
+    <p style="margin:8px 0 0;">using the factorization in both numerator and denominator (the denominator is the joint of the others, obtained by summing the factorized joint over $x_i$, which pulls out $\sum_{x_i} P_X(x_i) = 1$). $\blacksquare$</p>
+  </div>
+  <p>Real text violates this massively &mdash; every reader fills in <strong>m</strong> from the neighbors &mdash; so text is not i.i.d. The modeling spectrum (deck's slide 13) places first-order Markov as the first tractable step away from i.i.d. toward "rich correlation"; Sections 3 and 6 refine this spectrum twice.</p>
+</section>
+
+<section>
+  <h2>3 &nbsp;Markov Processes</h2>
+
+  <h3>3.1 First-order Markov property, stated precisely</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (1st-order Markov process).</strong> $\mathbf{X}$ is a 1st-order Markov process if for every $i \geq 2$ and every $x^i$ such that $P_{X^{i-1}}(x^{i-1}) \gt 0$,</p>
+    \[ P_{X_i \mid X^{i-1}}(x_i \mid x^{i-1}) \;=\; P_{X_i \mid X_{i-1}}(x_i \mid x_{i-1}). \]
+  </div>
+  <p>Two conditions the slide's compact form leaves implicit: the identity is required for <em>every</em> step $i$ and <em>every</em> history of positive probability (conditional pmfs are undefined on zero-probability histories, so nothing is required there); and it is a statement about conditional <em>distributions</em>, i.e. it must hold for every value $x_i$. In words: given the present $X_{i-1}$, the further past $X^{i-2}$ is irrelevant to $X_i$. This is the process version of the three-variable Markov chain $X - Y - Z$ from prob03 (see the prob03 note, data-processing section); indeed the definition says exactly that $X^{i-2} - X_{i-1} - X_i$ forms a Markov triple for every $i$. The i.i.d. case is the degenerate instance in which even $X_{i-1}$ is irrelevant.</p>
+
+  <h3>3.2 The random walk is Markov &mdash; and a general recipe</h3>
+  <p>The deck's walk: $X_0 = 0$ and $X_n = X_{n-1} \pm 1$ with probability $\tfrac12$ each, the signs chosen fresh each step. Its Markov property is an instance of a lemma worth isolating, because it covers every "recursively generated" process at once.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma A (recursion $\Rightarrow$ Markov).</strong> Let $Z_1, Z_2, \dots$ be independent random variables, independent of $X_0$, and define $X_n = g_n(X_{n-1}, Z_n)$ for deterministic functions $g_n$. Then $\{X_n\}$ is a 1st-order Markov process.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Fix $i$ and a positive-probability history $x^{i-1}$ (we index from $0$; the argument is the same from $1$). The history $X^{i-1} = x^{i-1}$ is an event determined by $(X_0, Z_1, \dots, Z_{i-1})$ only, since each $X_k$ is, by unwinding the recursion, a function of $(X_0, Z_1, \dots, Z_k)$. Hence $Z_i$ is independent of that event, and</p>
+    \[ P(X_i = x_i \mid X^{i-1} = x^{i-1})
+       = P\bigl(g_i(x_{i-1}, Z_i) = x_i \mid X^{i-1} = x^{i-1}\bigr)
+       = P\bigl(g_i(x_{i-1}, Z_i) = x_i\bigr). \]
+    <p style="margin:8px 0 0;">The result depends on the history only through $x_{i-1}$; conditioning on $X_{i-1} = x_{i-1}$ alone gives the same value by the identical computation (average the display over histories ending in $x_{i-1}$). $\blacksquare$</p>
+  </div>
+  <p>For the walk, $g(x, z) = x + z$ with $Z_n = \pm 1$ uniform. The deck's numeric illustration checks out: given $X_{101} = 51$, the next state is $52$ or $50$ with probability $\tfrac12$ each, and the extra datum $X_{100} = 50$ changes nothing &mdash; exactly the display above with $g(51, \pm 1) \in \{52, 50\}$.</p>
+
+  <h3>3.3 Markov factorization: Proposition 1, proof completed</h3>
+  <p><strong>Imported lemma (chain rule of probability, prob03).</strong> For any process and any $x^n$ with $P_{X^n}(x^n) \gt 0$,</p>
+  \[ P_{X^n}(x^n) = \prod_{i=1}^{n} P_{X_i \mid X^{i-1}}(x_i \mid x^{i-1}), \]
+  <p>with the convention that the $i = 1$ factor is the unconditional $P_{X_1}(x_1)$ (empty conditioning). Proof in the prob03 companion note: telescope the definition of conditional pmf, $P_{X_i \mid X^{i-1}} = P_{X^i} / P_{X^{i-1}}$, and cancel. If $P_{X^n}(x^n) = 0$ the identity holds too, reading any undefined factor past the first zero as irrelevant: the first vanishing factor already makes the product $0$.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition 1 (Markov factorization).</strong> For a 1st-order Markov process,</p>
+    \[ P_{X^n}(x^n) = \prod_{i=1}^{n} P_{X_i \mid X_{i-1}}(x_i \mid x_{i-1}), \]
+    <p style="margin:8px 0 6px;">again with the $i = 1$ factor read as $P_{X_1}(x_1)$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> If $P_{X^n}(x^n) \gt 0$, every prefix has positive probability, so every factor in the chain rule is defined; apply the Markov property to each factor with $i \geq 2$:</p>
+    \[ P_{X^n}(x^n)
+       \;\overset{\text{(chain rule)}}{=}\; \prod_{i=1}^{n} P_{X_i \mid X^{i-1}}(x_i \mid x^{i-1})
+       \;\overset{\text{(Markov, each } i \geq 2)}{=}\; \prod_{i=1}^{n} P_{X_i \mid X_{i-1}}(x_i \mid x_{i-1}). \]
+    <p style="margin:8px 0 0;">If $P_{X^n}(x^n) = 0$, let $i^\ast$ be the first index whose prefix probability vanishes; the factor at $i^\ast$ (conditional on the positive-probability prefix $x^{i^\ast - 1}$) is $0$, so the right-hand side is $0$ as well. $\blacksquare$</p>
+  </div>
+  <p><strong>Converse, which the deck does not state:</strong> factorization is not just a consequence but a <em>characterization</em>. If a process satisfies $P_{X^n}(x^n) = \prod_i Q_i(x_i \mid x_{i-1})$ for every $n$ and some conditional pmfs $Q_i$, then it is 1st-order Markov, and $Q_i = P_{X_i \mid X_{i-1}}$ wherever defined. Proof: divide the length-$i$ factorization by the length-$(i-1)$ one (positive-probability histories) to get $P_{X_i \mid X^{i-1}}(x_i \mid x^{i-1}) = Q_i(x_i \mid x_{i-1})$, whose right side depends on the history only through $x_{i-1}$; averaging over compatible histories identifies it with $P_{X_i \mid X_{i-1}}(x_i \mid x_{i-1})$, exactly as in Lemma A. This equivalence is what lets Section 9 treat "define the process by its transition kernel" and "assume the Markov property" interchangeably.</p>
+  <p><strong>Why it matters, deck's count verified.</strong> With alphabet size $m = 27$ and length $n = 10$, the full joint table has $m^n = 27^{10} = 205{,}891{,}132{,}094{,}649 \approx 2.06 \times 10^{14}$ entries, versus $m^2 = 729$ for the one-step table. Both deck numbers are correct ($2 \times 10^{14}$ is the stated approximation). The one-step table is next section's transition matrix.</p>
+
+  <h3>3.4 $k$th-order Markov processes</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition ($k$th-order Markov).</strong> For every $i$ and every positive-probability history,</p>
+    \[ P_{X_i \mid X^{i-1}}(x_i \mid x^{i-1}) \;=\; P_{X_i \mid X_{i-k}^{i-1}}(x_i \mid x_{i-k}^{i-1}), \]
+    <p style="margin:8px 0 0;">where $x_{i-k}^{i-1} = (x_{i-k}, \dots, x_{i-1})$ is the length-$k$ recent past; for $i \leq k$ the window is truncated at the start of the sequence (condition on all of $x^{i-1}$), so the requirement is vacuous there.</p>
+  </div>
+  <p><strong>Proposition 2</strong> (deck's $k$th-order factorization) follows exactly as Proposition 1: chain rule, then shorten each factor with $i \gt k$ by the defining property, keeping the truncated factors for $i \leq k$ &mdash; the same truncation convention applies to the displayed product. The parameter count generalizes the $m^2$ of Section 3.3: one needs a conditional distribution for each of $m^k$ contexts, i.e. a table of $m^k (m-1)$ free parameters &mdash; the exponential blow-up in $k$ that the deck's next-token-model slide points at. A transformer with a length-$k$ context window is exactly a $k$th-order model whose table is <em>compressed</em> into network weights rather than stored; the deck flags this as illustration only, and these notes stay with the exact finite-state case.</p>
+</section>
+
+<section>
+  <h2>4 &nbsp;Transition Matrices</h2>
+
+  <h3>4.1 Homogeneity, and the two standing assumptions</h3>
+  <p>From here on (deck slide 29) two assumptions hold for the rest of the lecture and these notes:</p>
+  <ul>
+    <li><strong>Finite state space:</strong> $X_i \in \mathcal{X} = \{1, \dots, n\}$ for all $i$. (Note the collision of notation: $n$ is now the number of <em>states</em>, no longer a sequence length; the deck makes the same switch silently.)</li>
+    <li><strong>Time-homogeneity:</strong> the transition rule $P_{X_i \mid X_{i-1}}(u \mid v)$ is the same function of $(u, v)$ for every $i$. A Markov process with this property is called a (time-)<em>homogeneous Markov chain</em>.</li>
+  </ul>
+  <p>Homogeneity is what makes "the" transition matrix meaningful; without it there would be a different matrix $P^{(i)}$ at each step, and Theorem 2 below would read $\pi_t = P^{(t)} \cdots P^{(1)} \pi_0$ instead of a clean power. (Section 9's <em>reverse-time</em> chain is a natural example that is Markov but not homogeneous.)</p>
+
+  <h3>4.2 The transition matrix and the column convention</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (transition matrix).</strong> The $n \times n$ matrix $P$ with entries</p>
+    \[ P_{u,v} \;=\; \Pr(X_i = u \mid X_{i-1} = v), \]
+    <p style="margin:8px 0 6px;">independent of $i$ by homogeneity. Column $v$ holds the distribution of the next state given the current state $v$; row $u$ collects all the ways to arrive at $u$. Every entry is nonnegative, and every <strong>column sums to one</strong>:</p>
+    \[ \sum_{u=1}^{n} P_{u,v} = \sum_{u=1}^{n} \Pr(X_i = u \mid X_{i-1} = v) = 1, \]
+    <p style="margin:8px 0 0;">because conditional on $X_{i-1} = v$ the next state is <em>some</em> element of $\mathcal{X}$ and the conditional pmf sums to $1$. A nonnegative matrix with unit column sums is called <em>column-stochastic</em>. Compactly: $\mathbf{1}^\top P = \mathbf{1}^\top$, where $\mathbf{1}$ is the all-ones vector.</p>
+  </div>
+  <p>A <em>probability vector</em> is $\pi \in \mathbb{R}^n$ with $\pi(u) \geq 0$ and $\sum_u \pi(u) = 1$; the set of all of them is the simplex $\Delta_n$, a closed and bounded (compact) subset of $\mathbb{R}^n$ &mdash; compactness is used in the existence proof of Section 7.4. The <em>state distribution at time $i$</em> is the probability vector $\pi_i$ with entries $(\pi_i)_u = \Pr(X_i = u)$; $\pi_0$ is the initial distribution, chosen by the modeler. Note that $P$ maps probability vectors to probability vectors: nonnegativity is clear, and $\mathbf{1}^\top (P\pi) = (\mathbf{1}^\top P)\pi = \mathbf{1}^\top \pi = 1$.</p>
+  <p><strong>Source-notes discrepancy, for the record.</strong> The LaTeX source's binary-chain example defines its transition probabilities self-contradictorily ($p_{X_i \mid X_{i-1}}(0 \mid 1) = p_{X_i \mid X_{i-1}}(1 \mid 0) = \alpha$ <em>and</em> "$p_{X_i \mid X_{i-1}}(1 \mid 0) = p_{X_i \mid X_{i-1}}(0 \mid 1) = 1 - \alpha$" &mdash; the same two conditionals twice, a copy-paste slip). The deck's reading is the intended one and is what the stated matrix implements: <em>flip</em> with probability $\alpha$ ($P_{0,1} = P_{1,0} = \alpha$), <em>stay</em> with probability $1 - \alpha$ ($P_{0,0} = P_{1,1} = 1 - \alpha$). All slide numerics are consistent with this reading.</p>
+
+  <h3>4.3 Theorem 1: one step is one multiplication</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 1 (one-step evolution).</strong> For every $i \geq 1$: $\;\pi_i = P\,\pi_{i-1}$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Fix a state $u$. The events $\{X_{i-1} = v\}$, $v = 1, \dots, n$, partition the sample space, so the law of total probability (prob01's case split, over states) gives</p>
+    \[ \Pr(X_i = u)
+       = \sum_{v=1}^{n} \Pr(X_{i-1} = v)\, \Pr(X_i = u \mid X_{i-1} = v), \]
+    <p style="margin:8px 0 6px;">where terms with $\Pr(X_{i-1} = v) = 0$ are read as $0$ (their conditional factor is undefined but multiplied by zero mass &mdash; the deck's sum carries the same silent convention). Renaming the factors as $(\pi_{i-1})_v$ and $P_{u,v}$,</p>
+    \[ \Pr(X_i = u) = \sum_{v=1}^{n} P_{u,v}\, (\pi_{i-1})_v = (P\,\pi_{i-1})_u, \]
+    <p style="margin:8px 0 0;">the row-$u$-times-vector formula. As $u$ was arbitrary, $\pi_i = P\pi_{i-1}$. $\blacksquare$</p>
+  </div>
+  <p>Note the proof uses only total probability and homogeneity &mdash; the Markov property is not needed for the <em>marginal</em> flow. Markovianity is what makes $P$ alone determine all <em>joint</em> statistics (Proposition 1), which Sections 6&ndash;7 need.</p>
+
+  <h3>4.4 Binary chain: both steps by hand, verified</h3>
+  <p>States $\{0, 1\}$; flip probability $\alpha$, at the running value $\alpha = \tfrac14$:</p>
+  \[ P = \begin{pmatrix} 1-\alpha &amp; \alpha \\ \alpha &amp; 1-\alpha \end{pmatrix}
+     = \begin{pmatrix} \tfrac34 &amp; \tfrac14 \\[2pt] \tfrac14 &amp; \tfrac34 \end{pmatrix}. \]
+  <p>Column sums $(1-\alpha) + \alpha = 1$: stochastic. Symmetric: $P^\top = P$. Start pinned at $0$, $\pi_0 = [1, 0]^\top$:</p>
+  <div class="deriv">
+    \[ \pi_1 = P\pi_0 = \begin{bmatrix} 1-\alpha \\ \alpha \end{bmatrix}
+       = \begin{bmatrix} \tfrac34 \\[2pt] \tfrac14 \end{bmatrix}, \]
+    \[ \pi_2 = P\pi_1 = \begin{bmatrix} (1-\alpha)^2 + \alpha^2 \\[2pt] \alpha(1-\alpha) + (1-\alpha)\alpha \end{bmatrix}
+       = \begin{bmatrix} (1-\alpha)^2 + \alpha^2 \\[2pt] 2\alpha(1-\alpha) \end{bmatrix}
+       = \begin{bmatrix} \tfrac{9}{16} + \tfrac{1}{16} \\[2pt] 2 \cdot \tfrac14 \cdot \tfrac34 \end{bmatrix}
+       = \begin{bmatrix} \tfrac{5}{8} \\[2pt] \tfrac{3}{8} \end{bmatrix}. \]
+    <p style="margin:8px 0 0;">Both match the deck. Sanity: the entries sum to $(1-\alpha)^2 + 2\alpha(1-\alpha) + \alpha^2 = \bigl((1-\alpha) + \alpha\bigr)^2 = 1$. The probabilistic reading of the top entry &mdash; return to $0$ in two steps by staying twice or flipping twice &mdash; is exactly the two-path expansion of $(P^2)_{0,0}$.</p>
+  </div>
+  <p>The deck announces $\alpha \lt \tfrac12$; the theory below needs only $0 \lt \alpha \lt 1$ (at $\alpha = \tfrac12$ the chain mixes in one step; for $\alpha \gt \tfrac12$ it converges with oscillation, the error factor $1 - 2\alpha$ of Section 8 being negative). The excluded endpoints: $\alpha = 0$ (reducible: never leaves its start) and $\alpha = 1$ (periodic: Section 8.2).</p>
+
+  <h3>4.5 Three-state chain: matrix read off the diagram, verified</h3>
+  <p>Stay with probability $0.5$, otherwise rotate $A \to B \to C \to A$. Ordering states $(A, B, C)$ and filling <em>columns</em> from the diagram (column = current state):</p>
+  <div class="deriv">
+    \[ P = \begin{pmatrix} 0.5 &amp; 0 &amp; 0.5 \\ 0.5 &amp; 0.5 &amp; 0 \\ 0 &amp; 0.5 &amp; 0.5 \end{pmatrix}. \]
+    <p style="margin:8px 0 0;">Check each column: from $A$, stay at $A$ ($0.5$) or move to $B$ ($0.5$) &mdash; column $(0.5, 0.5, 0)^\top$ &#10003;; from $B$: stay or move to $C$ &#10003;; from $C$: stay or move to $A$ &#10003;. All columns sum to $1$. This $P$ is <em>not</em> symmetric ($P_{B,A} = 0.5 \neq 0 = P_{A,B}$) &mdash; but it is <em>doubly stochastic</em> (rows also sum to $1$), which is what Section 7.8 actually needs; the deck's recap-slide phrasing "one story three times: symmetric chain" glosses this: the rotation chain is doubly stochastic rather than symmetric, and that weaker property already forces the uniform fixed point.</p>
+  </div>
+  <p>This chain is redrawn from the source notes' figure; the source states the same dynamics. It returns in Section 7 with its "surprise": started uniformly it never moves.</p>
+</section>
+
+<section>
+  <h2>5 &nbsp;Evolution in Time</h2>
+
+  <h3>5.1 Theorem 2, by induction</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 2 ($t$-step evolution).</strong> For every $t \geq 0$: $\;\pi_t = P^t \pi_0$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Induction on $t$. Base case $t = 0$: $P^0 = I$ and $\pi_0 = I\pi_0$. Induction step: assume $\pi_{t-1} = P^{t-1}\pi_0$; then by Theorem 1,</p>
+    \[ \pi_t = P\,\pi_{t-1} = P\,(P^{t-1}\pi_0) = P^t \pi_0, \]
+    <p style="margin:8px 0 0;">using associativity of matrix multiplication. Homogeneity enters through Theorem 1's use of the <em>same</em> $P$ at every step. $\blacksquare$</p>
+  </div>
+
+  <h3>5.2 $t$-step transitions and the Chapman&ndash;Kolmogorov equation</h3>
+  <p>The deck moves straight to numerics; here is the standard structural statement hiding inside $P^t$, with full proof. First, a lemma extending the Markov property from "next step" to "whole future" &mdash; used both here and in Section 9.3.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma B (block Markov property).</strong> For a Markov chain, for any $i$, any $s \geq 1$, and any positive-probability values: conditioned on $X_i = v$, the future block $(X_{i+1}, \dots, X_{i+s})$ is independent of the past $X^{i-1}$; in particular</p>
+    \[ \Pr(X_{i+s} = u \mid X_i = v, \, X^{i-1} = x^{i-1}) = \Pr(X_{i+s} = u \mid X_i = v). \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> By Proposition 1, the conditional pmf of the future given the whole history is a product of one-step factors that depend on the history only through $v$:</p>
+    \[ P\bigl(x_{i+1}, \dots, x_{i+s} \mid x^{i-1}, v\bigr)
+       = \frac{\prod_{j=1}^{i+s} P(x_j \mid x_{j-1})}{\prod_{j=1}^{i} P(x_j \mid x_{j-1})}
+       = \prod_{j=i+1}^{i+s} P(x_j \mid x_{j-1}), \]
+    <p style="margin:8px 0 0;">(writing $P(x_j \mid x_{j-1})$ for the one-step conditionals, the $j = 1$ factor unconditional). The right side does not involve $x^{i-1}$, which is precisely conditional independence of the future block from the past given the present; summing over intermediate coordinates $x_{i+1}, \dots, x_{i+s-1}$ preserves this and yields the displayed marginal statement. $\blacksquare$</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition 3 ($t$-step transition probabilities; Chapman&ndash;Kolmogorov).</strong> For a homogeneous chain, for all $i, t \geq 0$,</p>
+    \[ \Pr(X_{i+t} = u \mid X_i = v) = (P^t)_{u,v}, \]
+    <p style="margin:8px 0 6px;">and consequently, for all $s, t \geq 0$,</p>
+    \[ (P^{s+t})_{u,w} = \sum_{v=1}^{n} (P^s)_{u,v}\,(P^t)_{v,w}. \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> First claim by induction on $t$: trivial at $t = 0$; for the step, split on the state one step before the end and use total probability, then Lemma B (with the roles of "past" and "present" at times $i$ and $i+t-1$) to reduce the conditioning, then homogeneity:</p>
+    \[ \Pr(X_{i+t} = u \mid X_i = v)
+       = \sum_{z} \Pr(X_{i+t} = u \mid X_{i+t-1} = z, X_i = v)\, \Pr(X_{i+t-1} = z \mid X_i = v) \]
+    \[ = \sum_{z} P_{u,z}\, (P^{t-1})_{z,v} = (P \cdot P^{t-1})_{u,v} = (P^t)_{u,v}. \]
+    <p style="margin:8px 0 0;">(Terms with $\Pr(X_{i+t-1} = z \mid X_i = v) = 0$ are read as $0$.) The second claim is now pure algebra &mdash; $P^{s+t} = P^s P^t$ written entrywise &mdash; but its probabilistic content is the useful part: to go from $w$ to $u$ in $s + t$ steps, condition on the state $v$ after the first $t$ steps and sum over it. $\blacksquare$</p>
+  </div>
+
+  <h3>5.3 Numeric evolution, independently verified</h3>
+  <p>Binary chain, $\alpha = \tfrac14$, $\pi_0 = [1, 0]^\top$. Iterating $\pi_{t} = P\pi_{t-1}$ by hand: with $p_t = \Pr(X_t = 0)$, the top row of the update reads $p_{t+1} = \tfrac34 p_t + \tfrac14 (1 - p_t) = \tfrac14 + \tfrac12 p_t$. Then:</p>
+  <table>
+    <tr><th>$t$</th><th>recursion $p_{t+1} = \tfrac14 + \tfrac12 p_t$</th><th>$\Pr(X_t = 0)$</th><th>$\Pr(X_t = 1)$</th><th>deck</th></tr>
+    <tr><td>0</td><td>&mdash;</td><td>$1$</td><td>$0$</td><td>&#10003;</td></tr>
+    <tr><td>1</td><td>$\tfrac14 + \tfrac12 = \tfrac34$</td><td>$0.75$</td><td>$\tfrac14$</td><td>&#10003;</td></tr>
+    <tr><td>2</td><td>$\tfrac14 + \tfrac38 = \tfrac58$</td><td>$0.625$</td><td>$\tfrac38$</td><td>&#10003;</td></tr>
+    <tr><td>3</td><td>$\tfrac14 + \tfrac{5}{16} = \tfrac{9}{16}$</td><td>$0.5625$</td><td>$\tfrac{7}{16}$</td><td>&#10003; ($\approx 0.563$)</td></tr>
+    <tr><td>4</td><td>$\tfrac14 + \tfrac{9}{32} = \tfrac{17}{32}$</td><td>$0.53125$</td><td>$\tfrac{15}{32}$</td><td>&#10003; ($\approx 0.531$)</td></tr>
+  </table>
+  <p>All five rows of the deck's table are correct. The teaser slide's observation also checks: the gaps to $\tfrac12$ are $\tfrac12, \tfrac14, \tfrac18, \tfrac{1}{16}, \tfrac{1}{32}$ &mdash; exactly halving each step, since the recursion gives $p_{t+1} - \tfrac12 = \tfrac12 (p_t - \tfrac12)$. So $p_t = \tfrac12 + \tfrac12 \cdot (\tfrac12)^t$ in closed form; Section 8.5 re-derives this from the eigendecomposition and identifies the factor $\tfrac12$ as the second eigenvalue $1 - 2\alpha$. The convergence chart (start at $0$ and start at $1$ both approaching $\tfrac12$) plots this closed form and its mirror image $\tfrac12 - \tfrac12 (\tfrac12)^t$; by the symmetry of $P$ under swapping the two states, the start-at-$1$ curve is exactly the reflection.</p>
+</section>
+
+<section>
+  <h2>6 &nbsp;Stationary Processes</h2>
+
+  <h3>6.1 Definition, and an equivalence the deck uses silently</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (stationary process).</strong> $\mathbf{X}$ is <em>stationary</em> if for all $i \geq 1$ and all window lengths $m \geq 1$,</p>
+    \[ (X_i, \dots, X_{i+m-1}) \;\overset{d}{=}\; (X_{i+1}, \dots, X_{i+m}), \]
+    <p style="margin:8px 0 0;">where $\overset{d}{=}$ means equality of joint pmfs: $P_{X_i^{i+m-1}}(x^m) = P_{X_{i+1}^{i+m}}(x^m)$ for every $x^m \in \mathcal{X}^m$.</p>
+  </div>
+  <p>Shifting by one step for every window is equivalent to shifting by <em>any</em> number of steps: iterating the definition $k$ times gives $(X_i, \dots, X_{i+m-1}) \overset{d}{=} (X_{i+k}, \dots, X_{i+k+m-1})$ for all $k \geq 0$ (induction on $k$; each application shifts the same fixed window length $m$). This stronger-looking form &mdash; "the clock has no origin", all statistics invariant under any time shift &mdash; is the standard textbook definition [1, Ch. 4], and it is the form the deck's sliding-window picture actually depicts. Taking $m = 1$: all marginals coincide, $X_1 \overset{d}{=} X_2 \overset{d}{=} \cdots$. An i.i.d. process is stationary (its joints are products of one fixed marginal, invariant under shifts).</p>
+
+  <h3>6.2 The random walk is not stationary &mdash; full computation</h3>
+  <p>Already the $m = 1$ consequence fails. With $X_0 = 0$ and independent $\pm 1$ steps:</p>
+  <div class="deriv">
+    \[ X_1 = \begin{cases} +1 &amp; \text{w.p. } \tfrac12 \\ -1 &amp; \text{w.p. } \tfrac12 \end{cases}
+       \qquad
+       X_2 = \begin{cases} +2 &amp; \text{w.p. } \tfrac14 \\ 0 &amp; \text{w.p. } \tfrac12 \\ -2 &amp; \text{w.p. } \tfrac14 \end{cases}
+       \qquad
+       X_3 = \begin{cases} \pm 3 &amp; \text{w.p. } \tfrac18 \text{ each} \\ \pm 1 &amp; \text{w.p. } \tfrac38 \text{ each.} \end{cases} \]
+    <p style="margin:8px 0 0;">($X_2$: two up-down orderings give $0$; $X_3$: $\binom{3}{1} = 3$ paths reach each of $\pm 1$, out of $8$.) The supports already differ, so $X_1 \overset{d}{=} X_2$ fails and the process is not stationary. Quantitatively the "more random over time" intuition is variance growth: $X_t$ is a sum of $t$ independent steps of variance $1$, so $\operatorname{Var}(X_t) = t$ (variance of a sum of independent variables adds; prob01 note). The deck's fan-out picture is this computation drawn as a tree.</p>
+  </div>
+  <p>The walk's state space is infinite ($\mathbb{Z}$), which is fine here &mdash; stationarity is defined without finiteness &mdash; but note it sits outside the finite-state standing assumption of Sections 4&ndash;9; it is used only as a counterexample.</p>
+
+  <h3>6.3 Markov and stationary are independent axes &mdash; both counterexamples made concrete</h3>
+  <p><strong>Markov, not stationary:</strong> the random walk (memory one by Lemma A; not stationary by Section 6.2). Also any chain started off a stationary distribution, e.g. the binary chain from $\pi_0 = [1,0]^\top$: Section 5.3 shows $\pi_0 \neq \pi_1$.</p>
+  <p><strong>Stationary, not Markov (of any order):</strong> the deck asserts stationary processes "allow infinite dependencies" without an example; here is a standard one, fully worked. Flip a fair coin once to choose a bias $B \in \{\tfrac14, \tfrac34\}$ (each with probability $\tfrac12$); given $B = b$, let $X_1, X_2, \dots$ be i.i.d. Bernoulli($b$).</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><em>It is stationary:</em> for any window, conditioning on $B$ gives a product pmf that depends only on the window's <em>values</em>, not its location:</p>
+    \[ \Pr(X_{i} = x_1, \dots, X_{i+m-1} = x_m)
+       = \mathbb{E}\bigl[\, B^{s} (1-B)^{m-s} \,\bigr], \qquad s = \textstyle\sum_j x_j, \]
+    <p style="margin:8px 0 6px;">independent of $i$. <em>It is not 1st-order Markov:</em> with moments $\mathbb{E}[B] = \tfrac12$, $\mathbb{E}[B^2] = \tfrac12(\tfrac{1}{16} + \tfrac{9}{16}) = \tfrac{5}{16}$, $\mathbb{E}[B^3] = \tfrac12(\tfrac{1}{64} + \tfrac{27}{64}) = \tfrac{7}{32}$:</p>
+    \[ \Pr(X_3 = 1 \mid X_2 = 1) = \frac{\mathbb{E}[B^2]}{\mathbb{E}[B]} = \frac{5/16}{1/2} = \frac58, \]
+    \[ \Pr(X_3 = 1 \mid X_2 = 1, X_1 = 1) = \frac{\mathbb{E}[B^3]}{\mathbb{E}[B^2]} = \frac{7/32}{5/16} = \frac{7}{10}. \]
+    <p style="margin:8px 0 0;">$\tfrac58 \neq \tfrac{7}{10}$: the extra past changes the prediction, so the Markov property fails. The same moment computation with longer histories shows no finite memory $k$ suffices &mdash; every additional observed $1$ pushes the posterior on $B$ further toward $\tfrac34$. (Statistically: the past is evidence about the hidden $B$, and evidence accumulates forever.)</p>
+  </div>
+  <p>So the two properties are genuinely orthogonal: <em>short memory</em> versus <em>time-invariant statistics</em>. The refined spectrum slide places "stationary" between $k$th-order Markov and "practical"; read this as a statement about the <em>stationary</em> members of each class (an i.i.d. process is a stationary 1st-order Markov chain, etc.) &mdash; as the random walk shows, Markov alone does not imply stationary, so the containments are along the "assumption strength for modeling" axis, not set inclusion of all processes.</p>
+</section>
+
+<section>
+  <h2>7 &nbsp;Stationary Distributions</h2>
+
+  <h3>7.1 Worked: the rotation chain, uniform start &mdash; all three states</h3>
+  <p>Initial distribution $\pi_1 = [\tfrac13, \tfrac13, \tfrac13]^\top$ (the deck indexes this example from $1$, following the source). Who can land on $A$? Only $A$ (stay, prob. $\tfrac12$) and $C$ (rotate, prob. $\tfrac12$):</p>
+  <div class="deriv">
+    \[ \Pr(X_2 = A) = \tfrac13 \cdot \tfrac12 + \tfrac13 \cdot \tfrac12 = \tfrac13. \]
+    <p style="margin:8px 0 6px;">Identically for the others &mdash; by the same two-term split ($B$ receives from $A$ and $B$; $C$ from $B$ and $C$), or in one shot as the matrix product:</p>
+    \[ P\pi_1 = \begin{pmatrix} 0.5 &amp; 0 &amp; 0.5 \\ 0.5 &amp; 0.5 &amp; 0 \\ 0 &amp; 0.5 &amp; 0.5 \end{pmatrix}
+       \begin{bmatrix} \tfrac13 \\ \tfrac13 \\ \tfrac13 \end{bmatrix}
+       = \begin{bmatrix} \tfrac16 + \tfrac16 \\ \tfrac16 + \tfrac16 \\ \tfrac16 + \tfrac16 \end{bmatrix}
+       = \begin{bmatrix} \tfrac13 \\ \tfrac13 \\ \tfrac13 \end{bmatrix} = \pi_1. \]
+    <p style="margin:8px 0 0;">So $\pi_t = [\tfrac13, \tfrac13, \tfrac13]^\top$ for all $t$, by induction. Deck verified.</p>
+  </div>
+
+  <h3>7.2 From "marginals never move" to "the process is stationary" &mdash; the missing lemma</h3>
+  <p>The deck's next slide claims the resulting <em>process</em> is stationary. Equal marginals alone do not give equal window distributions in general; what closes the gap is homogeneity. Here is the precise statement, both directions.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma C.</strong> A homogeneous Markov chain is a stationary process if and only if its marginals satisfy $\pi_i = \pi_1$ for all $i$, i.e. iff $P\pi_1 = \pi_1$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> ($\Rightarrow$) Stationarity with window length $1$ gives equal marginals directly, and Theorem 1 turns "equal for all $i$" into $P\pi_1 = \pi_1$.</p>
+    <p style="margin:8px 0 6px;">($\Leftarrow$) By Proposition 1 (started at index $i$, which is legitimate since by Lemma B the process from time $i$ onward is again a Markov chain with the same one-step rule), the pmf of any window is</p>
+    \[ \Pr(X_i = x_1, X_{i+1} = x_2, \dots, X_{i+m-1} = x_m)
+       = \pi_i(x_1) \prod_{j=2}^{m} P_{x_j, x_{j-1}}. \]
+    <p style="margin:8px 0 0;">The transition factors are the same for every $i$ (homogeneity), and $\pi_i(x_1) = \pi_1(x_1)$ by hypothesis; so the window pmf does not depend on $i$, which is stationarity. $\blacksquare$</p>
+  </div>
+  <p>This is the honest content of the deck's slide "a Markov chain becomes a stationary process when started from the right distribution", and it motivates the central definition:</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (stationary distribution).</strong> A probability vector $\pi^\star$ with</p>
+    \[ \pi^\star = P\,\pi^\star. \]
+    <p style="margin:8px 0 0;">A fixed point of one-step evolution: start there, stay there &mdash; and by Lemma C, starting there makes the chain a stationary process.</p>
+  </div>
+  <p><strong>Pinned start fails (deck verified):</strong> from $\pi_1 = [1, 0, 0]^\top$, one multiplication gives $\pi_2 = $ column $A$ of $P$ $ = [\tfrac12, \tfrac12, 0]^\top \neq \pi_1$, so $X_1 \overset{d}{=} X_2$ fails and the process is not stationary. Same matrix, different start, different verdict: stationarity of the process is a property of the pair (chain, initial distribution).</p>
+
+  <h3>7.3 Irreducible and aperiodic, defined precisely</h3>
+  <p>The deck gives pictures only; here are the definitions its Theorem 3 needs.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (irreducible).</strong> $P$ is irreducible if for every ordered pair of states $(u, v)$ there exists $t \geq 1$ with $(P^t)_{u,v} \gt 0$: every state can reach every state in some number of steps.</p>
+    <p style="margin:8px 0 6px;"><strong>Definition (period, aperiodic).</strong> The period of a state $u$ is $\gcd\{\, t \geq 1 : (P^t)_{u,u} \gt 0 \,\}$ (the gcd of all possible return times). The chain is aperiodic if every state has period $1$. In an irreducible chain all states share one period [2, Lem. 1.6], so it suffices to check one state.</p>
+  </div>
+  <p>Handy sufficient condition: a self-loop ($P_{u,u} \gt 0$) makes state $u$ have period $1$. Checks for the running examples: the binary chain with $0 \lt \alpha \lt 1$ is irreducible ($P_{1,0} = \alpha \gt 0$ and back) and aperiodic ($P_{0,0} = 1 - \alpha \gt 0$); the rotation chain is irreducible ($A \to B \to C \to A$ with positive probability) and aperiodic (self-loops $\tfrac12$). The deck's broken examples: an unreachable island state kills irreducibility; the deterministic 2-cycle ($\alpha = 1$ binary chain) has return times $\{2, 4, 6, \dots\}$, period $2$, killing aperiodicity.</p>
+
+  <h3>7.4 Theorem 3, upgraded: existence proved, uniqueness proved, roles of the assumptions separated</h3>
+  <p>The deck states: "finite-state, irreducible, aperiodic $\Rightarrow$ a stationary initial distribution exists", proof beyond the course. In fact the three assumptions do three different jobs, and the first two jobs are provable with only undergraduate tools. We do both here; aperiodicity is needed only for <em>convergence</em> (Section 8.4).</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 3a (existence &mdash; finiteness alone suffices).</strong> Every finite-state chain (no irreducibility or aperiodicity needed) has at least one stationary distribution.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof (Ces&agrave;ro averaging).</strong> Pick any $\pi_0 \in \Delta_n$ and let $\pi_t = P^t\pi_0$. Form the running averages</p>
+    \[ \mu_T = \frac{1}{T} \sum_{t=0}^{T-1} \pi_t \;\in\; \Delta_n \]
+    <p style="margin:8px 0 6px;">(a convex combination of probability vectors is one). The simplex $\Delta_n$ is closed and bounded in $\mathbb{R}^n$, so by Bolzano&ndash;Weierstrass some subsequence $\mu_{T_k} \to \mu \in \Delta_n$. Now compute how far $\mu_T$ is from being fixed &mdash; the sum telescopes:</p>
+    \[ P\mu_T - \mu_T = \frac{1}{T}\sum_{t=0}^{T-1} (\pi_{t+1} - \pi_t) = \frac{\pi_T - \pi_0}{T},
+       \qquad \bigl\| P\mu_T - \mu_T \bigr\|_1 \leq \frac{2}{T} \;\longrightarrow\; 0, \]
+    <p style="margin:8px 0 0;">since any two probability vectors differ by at most $2$ in $\ell_1$ norm. The map $\mu \mapsto P\mu - \mu$ is continuous (it is linear), so along the subsequence, $P\mu - \mu = \lim (P\mu_{T_k} - \mu_{T_k}) = 0$: $\mu$ is stationary. $\blacksquare$</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 3b (irreducible $\Rightarrow$ positive and unique).</strong> If $P$ is irreducible, every stationary distribution has all entries strictly positive, and the stationary distribution is unique.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof, positivity.</strong> Let $\pi = P\pi$, hence $\pi = P^t\pi$ for all $t$ (Theorem 2 with $\pi_0 = \pi$). Some entry is positive, say $\pi_v \gt 0$. For any state $u$, irreducibility supplies $t$ with $(P^t)_{u,v} \gt 0$, and then</p>
+    \[ \pi_u = \sum_{w} (P^t)_{u,w}\, \pi_w \;\geq\; (P^t)_{u,v}\, \pi_v \;\gt\; 0. \]
+    <p style="margin:8px 0 6px;"><strong>Proof, uniqueness.</strong> Let $\pi$ and $\mu$ both be stationary; both are entrywise positive. Set $c = \min_u \pi_u / \mu_u$, attained at some state $u^\ast$, and let $\nu = \pi - c\,\mu$. Then $\nu \geq 0$ entrywise, $\nu_{u^\ast} = 0$, and $P\nu = P\pi - cP\mu = \pi - c\mu = \nu$ by linearity. Suppose $\nu \neq 0$: some $\nu_v \gt 0$. The positivity argument above used only "$\nu \geq 0$, $P^t\nu = \nu$, some entry positive" &mdash; not normalization &mdash; so it applies verbatim and forces $\nu_{u^\ast} \gt 0$, a contradiction. Hence $\nu = 0$, i.e. $\pi = c\mu$; summing entries, $1 = c \cdot 1$, so $\pi = \mu$. $\blacksquare$</p>
+  </div>
+  <p><strong>Counterexamples showing the assumptions are sharp</strong> (the "edge cases" the deck's picture slide gestures at):</p>
+  <ul>
+    <li><em>Reducible chain, non-unique $\pi^\star$:</em> $P = I$ on two states. Every probability vector is stationary &mdash; existence (consistent with Theorem 3a) but a whole segment of fixed points. Long-run behavior then genuinely depends on the start.</li>
+    <li><em>Periodic chain:</em> $\alpha = 1$ binary chain, $P = \bigl(\begin{smallmatrix} 0 &amp; 1 \\ 1 &amp; 0 \end{smallmatrix}\bigr)$. Irreducible, so by 3a+3b a unique stationary distribution exists &mdash; it is $[\tfrac12, \tfrac12]^\top$ &mdash; yet from a pinned start the chain <em>never converges</em> to it (Section 8.2). Aperiodicity is exactly what rules this out; it plays no role in existence or uniqueness.</li>
+    <li><em>Infinite state space:</em> the random walk on $\mathbb{Z}$ has <em>no</em> stationary distribution (a shift-invariance argument: any fixed point would have to give every integer equal mass, and no pmf on infinitely many states can; this is where "finite-state" earns its place).</li>
+  </ul>
+
+  <h3>7.5 Eigenvector reading, and where $\lambda = 1$ sits in the spectrum</h3>
+  <p>Comparing $\pi^\star = P\pi^\star$ with $Pv = \lambda v$: a stationary distribution is an eigenvector of $P$ with eigenvalue $1$, normalized to lie in the simplex (nonnegative entries summing to $1$). Two facts the deck asserts implicitly, both with one-line proofs:</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma D.</strong> For any column-stochastic $P$: (i) $1$ is an eigenvalue of $P$; (ii) every eigenvalue $\lambda$ of $P$ satisfies $|\lambda| \leq 1$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> (i) Column sums $=1$ means $\mathbf{1}^\top P = \mathbf{1}^\top$, so $1$ is an eigenvalue of $P^\top$; a matrix and its transpose have the same characteristic polynomial $\det(P - \lambda I) = \det(P^\top - \lambda I)$, hence the same eigenvalues. (An eigen<em>vector</em> for $1$ in the simplex is supplied by Theorem 3a.) (ii) If $Pv = \lambda v$ with $v \neq 0$, take $\ell_1$ norms:</p>
+    \[ |\lambda| \, \|v\|_1 = \|Pv\|_1
+       = \sum_u \Bigl| \sum_w P_{u,w} v_w \Bigr|
+       \leq \sum_w |v_w| \sum_u P_{u,w}
+       = \|v\|_1, \]
+    <p style="margin:8px 0 0;">so $|\lambda| \leq 1$ (triangle inequality, swap the sums, use unit column sums). $\blacksquare$</p>
+  </div>
+  <p>This is the elementary edge of the <strong>Perron&ndash;Frobenius theorem</strong>, which we state honestly and do not prove: for an irreducible nonnegative matrix, the spectral radius is itself an eigenvalue, simple, with an entrywise-positive eigenvector; if in addition the chain is aperiodic (the matrix is <em>primitive</em>), every other eigenvalue has modulus strictly less than $1$ [5, Ch. 8], [2, Ch. 12]. Theorem 3b above recovers the "simple, positive eigenvector" part for stochastic matrices without the general machinery; the strict gap $|\lambda_2| \lt 1$ is what makes the convergence in Section 8 geometric.</p>
+
+  <h3>7.6 Binary chain: eigen-analysis by hand, verified</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Eigenvalues.</strong></p>
+    \[ \det(P - \lambda I) = (1 - \alpha - \lambda)^2 - \alpha^2
+       = (1 - \alpha - \lambda - \alpha)(1 - \alpha - \lambda + \alpha)
+       = (1 - 2\alpha - \lambda)(1 - \lambda), \]
+    <p style="margin:8px 0 6px;">by $a^2 - b^2 = (a-b)(a+b)$ with $a = 1 - \alpha - \lambda$, $b = \alpha$. Roots: $\lambda_1 = 1$ and $\lambda_2 = 1 - 2\alpha$ ($= \tfrac12$ at $\alpha = \tfrac14$). Deck verified; both satisfy Lemma D.</p>
+    <p style="margin:8px 0 6px;"><strong>Eigenvector for $\lambda_1 = 1$.</strong> $(P - I)v = 0$ reads $-\alpha v_1 + \alpha v_2 = 0$ (both rows are multiples of this), so $v_1 = v_2$; normalizing to the simplex, $\pi^\star = [\tfrac12, \tfrac12]^\top$. Multiply-back check at $\alpha = \tfrac14$: $P\pi^\star = [\tfrac38 + \tfrac18, \tfrac18 + \tfrac38]^\top = [\tfrac12, \tfrac12]^\top$ &#10003;.</p>
+    <p style="margin:8px 0 0;"><strong>Eigenvector for $\lambda_2 = 1 - 2\alpha$</strong> (the deck uses it in Section 08 without deriving it): $(P - (1-2\alpha)I)v = 0$ reads $\alpha v_1 + \alpha v_2 = 0$, so $v \propto [1, -1]^\top$. Note $\mathbf{1}^\top v = 0$: eigenvectors for eigenvalues $\neq 1$ of a column-stochastic matrix always have zero entry-sum, since $\mathbf{1}^\top v = \mathbf{1}^\top P v = \lambda\, \mathbf{1}^\top v$ forces $(1 - \lambda)\,\mathbf{1}^\top v = 0$. This is why the "error direction" carries no probability mass.</p>
+  </div>
+
+  <h3>7.7 Rotation chain: stationary solve verified, plus its full spectrum</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;">The three rows of $\pi^\star = P\pi^\star$:</p>
+    \[ \pi_A = \tfrac12 \pi_A + \tfrac12 \pi_C, \qquad
+       \pi_B = \tfrac12 \pi_A + \tfrac12 \pi_B, \qquad
+       \pi_C = \tfrac12 \pi_B + \tfrac12 \pi_C. \]
+    <p style="margin:8px 0 0;">Subtract $\tfrac12 \pi_A$ from the first and double: $\pi_A = \pi_C$; likewise $\pi_B = \pi_A$ and $\pi_C = \pi_B$. All equal; the normalization $\pi_A + \pi_B + \pi_C = 1$ gives $\pi^\star = [\tfrac13, \tfrac13, \tfrac13]^\top$ &mdash; exactly the uniform start of Section 7.1, "no coincidence" now a theorem (Lemma C). Deck verified. By Theorem 3b it is the <em>only</em> stationary distribution of this chain.</p>
+  </div>
+  <p><strong>Secondary detail the deck omits: the other two eigenvalues are complex.</strong> Write $P = \tfrac12 I + \tfrac12 C$ where $C$ is the cyclic permutation matrix sending $A \mapsto B \mapsto C \mapsto A$. $C$ has eigenvalues the cube roots of unity $1, \omega, \bar\omega$ with $\omega = e^{2\pi i/3}$, so $P$ has eigenvalues $\tfrac12(1 + 1) = 1$ and $\tfrac12(1 + \omega),\ \tfrac12(1 + \bar\omega)$. Their modulus:</p>
+  \[ \Bigl| \tfrac12 (1 + \omega) \Bigr|
+     = \tfrac12 \bigl| \tfrac12 + i\tfrac{\sqrt3}{2} \bigr|
+     = \tfrac12 \cdot 1 = \tfrac12, \]
+  <p>with argument $\pm 60^\circ$. So this chain also forgets its start at geometric rate $\tfrac12$ per step &mdash; but <em>spiraling</em>: the error component rotates by $60^\circ$ while shrinking by half each step, which is why its trajectories circle the uniform point rather than approaching monotonically. Complex second eigenvalues are the norm, not the exception, for chains with a preferred direction of circulation.</p>
+
+  <h3>7.8 The symmetric-$P$ exercise, solved, and the sharper statement</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Exercise (deck).</strong> If $P^\top = P$, the uniform vector $\pi^\star = [\tfrac1n, \dots, \tfrac1n]^\top$ is stationary.</p>
+    <p style="margin:8px 0 6px;"><strong>Solution.</strong> Symmetry converts the (always true) unit <em>column</em> sums into unit <em>row</em> sums: $\sum_v P_{u,v} = \sum_v P_{v,u} = 1$. Then for each state $u$,</p>
+    \[ (P\pi^\star)_u = \sum_{v=1}^{n} P_{u,v} \cdot \frac1n = \frac1n \sum_{v=1}^{n} P_{u,v} = \frac1n. \qquad \blacksquare \]
+  </div>
+  <p><strong>Sharper statement.</strong> The proof used only unit row sums, so: <em>uniform is stationary if and only if $P$ is doubly stochastic</em> (columns <em>and</em> rows sum to $1$; the "only if" direction: $(P\pi^\star)_u = \tfrac1n$ forces row sums $1$). Symmetric stochastic matrices are doubly stochastic, but not conversely &mdash; the rotation chain of Section 7.7 is doubly stochastic and asymmetric, which is the honest reason all three of the deck's running examples share the uniform fixed point. The binary chain and Section 9's noising matrix are genuinely symmetric; the rotation chain rides on the weaker property.</p>
+
+  <h3>7.9 Random surfer</h3>
+  <p>The PageRank picture: states are pages, transitions follow links, and a page's score is its entry of $\pi^\star$ &mdash; where a surfer clicking forever spends its time. The deck labels this "illustration, not today's math", and correctly so: a raw web graph is neither irreducible (dead ends, disconnected pieces) nor aperiodic, so the actual algorithm mixes the link-following matrix with a uniform "teleport" matrix, $P_{\text{PR}} = (1 - d)\,P_{\text{links}} + d \cdot \tfrac1n \mathbf{1}\mathbf{1}^\top$ with damping $d \approx 0.15$, making every entry positive &mdash; hence irreducible and aperiodic, so Theorem 3 applies and iteration converges [7]. Note the structural identity with Section 9's noising matrix: both are "mostly structured, a little uniform", and positivity is doing the same job in both.</p>
+</section>
+
+<section>
+  <h2>8 &nbsp;Limiting Distributions</h2>
+
+  <h3>8.1 Definition</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (limiting distribution).</strong> If the entrywise limit exists,</p>
+    \[ \pi_\infty = \lim_{t \to \infty} \pi_t = \lim_{t \to \infty} P^t \pi_0. \]
+    <p style="margin:8px 0 0;">"Entrywise" means each coordinate $(\pi_t)_u$, a sequence of real numbers, converges. $\pi_\infty$ is automatically a probability vector: entries are limits of nonnegative numbers, and $\sum_u (\pi_\infty)_u = \lim_t \sum_u (\pi_t)_u = 1$ (finitely many coordinates, so limit and finite sum interchange). In general $\pi_\infty$ may depend on $\pi_0$ &mdash; e.g. for the reducible chain $P = I$, $\pi_\infty = \pi_0$ for every start.</p>
+  </div>
+
+  <h3>8.2 The limit may not exist: the periodic counterexample, verified</h3>
+  <p>Binary chain at the excluded extreme $\alpha = 1$ (always flip): from $\pi_0 = [1, 0]^\top$,</p>
+  \[ \pi_0 = \begin{bmatrix} 1 \\ 0 \end{bmatrix} \to \begin{bmatrix} 0 \\ 1 \end{bmatrix}
+     \to \begin{bmatrix} 1 \\ 0 \end{bmatrix} \to \begin{bmatrix} 0 \\ 1 \end{bmatrix} \to \cdots \]
+  <p>&mdash; $P\,[1,0]^\top = [0,1]^\top$ and back, so $(\pi_t)_0 = 1, 0, 1, 0, \dots$ has no limit. This is precisely the period-2 chain of Section 7.3, and it separates two notions the deck is careful to keep apart: its stationary distribution exists and is unique ($[\tfrac12, \tfrac12]^\top$, by Theorems 3a&ndash;3b since the chain is irreducible), but the limiting distribution from a pinned start does not exist. Stationary is about <em>standing still if started there</em>; limiting is about <em>being approached</em>.</p>
+
+  <h3>8.3 Theorem 4: limits are stationary, proof with the two limit facts spelled out</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 4 (limiting $\Rightarrow$ stationary).</strong> If $\pi_\infty = \lim_t \pi_t$ exists, then $\pi_\infty = P\,\pi_\infty$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Take $t \to \infty$ in the identity $\pi_{t+1} = P\pi_t$ (Theorem 1). Left side: $\{\pi_{t+1}\}$ is the same sequence as $\{\pi_t\}$ shifted by one, so it has the same limit $\pi_\infty$ (a shifted convergent sequence converges to the same limit). Right side: each entry of $P\pi_t$ is a <em>finite</em> linear combination $\sum_v P_{u,v} (\pi_t)_v$ of convergent real sequences, so it converges to the same combination of the limits, $\sum_v P_{u,v} (\pi_\infty)_v = (P\pi_\infty)_u$ (limit laws for sums and scalar multiples; equivalently, the linear map $P$ is continuous). Equating the two limits: $\pi_\infty = P\pi_\infty$. $\blacksquare$</p>
+  </div>
+  <p><strong>Implication, stated carefully.</strong> The candidates for long-run behavior are exactly the solutions of the eigenvector equation &mdash; computable without simulation. The converse fails in two distinct ways: a stationary distribution may exist while no limit does (the periodic chain, Section 8.2), and limits may exist but differ by starting point (the reducible chain $P = I$). Ruling out both failure modes is exactly the job of aperiodicity and irreducibility, which brings us to the convergence theorem the deck's chart quietly invokes.</p>
+
+  <h3>8.4 The convergence theorem, with a complete elementary proof</h3>
+  <p>The deck's Section 05 chart asserts that <em>both</em> starts converge to $\pi^\star$; that is a theorem, and at this level it can be proved in full. The engine is a contraction estimate due to Doeblin.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma E (Doeblin contraction).</strong> Suppose every entry of the column-stochastic matrix $P$ satisfies $P_{u,v} \geq \delta \gt 0$. Then for any two probability vectors $\mu, \nu$:</p>
+    \[ \| P\mu - P\nu \|_1 \;\leq\; (1 - n\delta)\, \| \mu - \nu \|_1 . \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Let $w = \mu - \nu$; its entries sum to $0$, since both inputs sum to $1$. Because $\sum_v w_v = 0$, we may subtract the constant $\delta$ from every matrix entry without changing the product:</p>
+    \[ (Pw)_u = \sum_v P_{u,v} w_v = \sum_v (P_{u,v} - \delta)\, w_v . \]
+    <p style="margin:8px 0 6px;">Every modified entry $P_{u,v} - \delta$ is $\geq 0$ by hypothesis, so the triangle inequality gives $|(Pw)_u| \leq \sum_v (P_{u,v} - \delta)|w_v|$. Sum over $u$ and swap the sums:</p>
+    \[ \|Pw\|_1 \leq \sum_v |w_v| \sum_u (P_{u,v} - \delta)
+       = \sum_v |w_v| \,(1 - n\delta) = (1 - n\delta)\|w\|_1 . \]
+    <p style="margin:8px 0 0;">(Column sums are $1$, and each column loses $\delta$ exactly $n$ times. Note $\delta \leq \tfrac1n$ always, since a column of $n$ entries each $\geq \delta$ sums to $1$; so the factor $1 - n\delta \in [0, 1)$.) $\blacksquare$</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 5 (fundamental convergence theorem, finite case).</strong> Let $P$ be irreducible and aperiodic on $n$ states, with (unique, by Thms. 3a&ndash;3b) stationary distribution $\pi^\star$. Then for <em>every</em> initial distribution $\pi_0$,</p>
+    \[ \pi_t \;\longrightarrow\; \pi^\star \qquad (t \to \infty), \]
+    <p style="margin:8px 0 6px;">and the convergence is geometric: there are constants $C$ and $\rho \lt 1$ with $\|\pi_t - \pi^\star\|_1 \leq C\rho^{\,t}$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> A standard number-theoretic fact, which we import: irreducible + aperiodic implies some power $P^r$ has <em>all entries strictly positive</em> [2, Prop. 1.7]. Let $\delta \gt 0$ be the least entry of $P^r$ and $\theta = 1 - n\delta \lt 1$. Since $\pi^\star = P^r \pi^\star$, Lemma E applied to $P^r$ gives, for any $t = qr + s$ with $0 \leq s \lt r$,</p>
+    \[ \|\pi_t - \pi^\star\|_1
+       = \bigl\| (P^r)^q (P^s \pi_0) - (P^r)^q \pi^\star \bigr\|_1
+       \leq \theta^{\,q} \, \| P^s\pi_0 - \pi^\star \|_1
+       \leq 2\,\theta^{\,q} \leq 2\,\theta^{\,t/r - 1}, \]
+    <p style="margin:8px 0 0;">using Lemma E $q$ times, then the crude bound $2$ on the $\ell_1$ distance of probability vectors. This is the claim with $\rho = \theta^{1/r}$ and $C = 2/\theta$. $\blacksquare$</p>
+  </div>
+  <p>Binary chain reality check: $P$ itself has least entry $\delta = \alpha = \tfrac14$ with $n = 2$, so Lemma E contracts by $1 - 2\alpha = \tfrac12$ per step &mdash; <em>exactly</em> the second eigenvalue. For this chain the Doeblin bound is tight, which the closed form below confirms.</p>
+
+  <h3>8.5 Rate via the second eigenvalue: the deck's derivation completed and verified</h3>
+  <p>The deck decomposes the pinned start in the eigenbasis of Section 7.6 and applies $P^t$. In full, for general $\alpha$ and general start $\pi_0 = [p_0, 1 - p_0]^\top$:</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Decomposition.</strong> $\{\pi^\star, [1,-1]^\top\}$ is a basis of $\mathbb{R}^2$ (eigenvectors for distinct eigenvalues are independent); writing $\pi_0 = a\,\pi^\star + b\,[1,-1]^\top$ and matching entries: $a(\tfrac12) + b = p_0$ and $a(\tfrac12) - b = 1 - p_0$. Adding: $a = 1$ (the mass constraint again: only $\pi^\star$ carries entry-sum). Subtracting: $b = p_0 - \tfrac12$. For the deck's $p_0 = 1$: $b = \tfrac12$, i.e.</p>
+    \[ \begin{bmatrix} 1 \\ 0 \end{bmatrix}
+       = \underbrace{\begin{bmatrix} \tfrac12 \\[2pt] \tfrac12 \end{bmatrix}}_{\pi^\star}
+       + \; \tfrac12 \underbrace{\begin{bmatrix} 1 \\ -1 \end{bmatrix}}_{\text{error direction}}
+       \qquad \checkmark \; (\tfrac12 + \tfrac12 = 1, \; \tfrac12 - \tfrac12 = 0). \]
+    <p style="margin:8px 0 6px;"><strong>Apply $P^t$</strong> (linearity, then eigenvalue action $P^t v = \lambda^t v$, proved by iterating $Pv = \lambda v$):</p>
+    \[ \pi_t = P^t \pi_0 = \pi^\star + \bigl(p_0 - \tfrac12\bigr)(1 - 2\alpha)^t \begin{bmatrix} 1 \\ -1 \end{bmatrix},
+       \qquad \text{i.e.} \qquad
+       \Pr(X_t = 0) = \tfrac12 + \bigl(p_0 - \tfrac12\bigr)(1 - 2\alpha)^t . \]
+    <p style="margin:8px 0 0;"><strong>Verification at $\alpha = \tfrac14$, $p_0 = 1$:</strong> $\Pr(X_t = 0) = \tfrac12 + \tfrac12 (\tfrac12)^t = 1, \tfrac34, \tfrac58, \tfrac{9}{16}, \tfrac{17}{32}, \dots$ &mdash; the Section 5.3 table exactly, and the same closed form obtained there from the scalar recursion. With $p_0 = 0$ (start at $1$): $\tfrac12 - \tfrac12(\tfrac12)^t = 0, \tfrac14, \tfrac38, \dots$, the chart's second curve. Deck verified throughout.</p>
+  </div>
+  <p><strong>The general principle</strong> (stated, honestly cited): for an irreducible aperiodic chain, order the eigenvalues $1 = \lambda_1 \gt |\lambda_2| \geq \dots \geq |\lambda_n|$ (strict by Perron&ndash;Frobenius, Section 7.5). The error $\pi_t - \pi^\star$ is eventually dominated by the $\lambda_2$-component, so $\|\pi_t - \pi^\star\| = O\bigl(t^{m-1} |\lambda_2|^t\bigr)$ where $m$ is the multiplicity of $\lambda_2$ (the polynomial factor appears only when $P$ is not diagonalizable). The gap $1 - |\lambda_2|$ is the <em>spectral gap</em>, the central quantity of mixing-time theory [2, Ch. 12]. Eigenvalue $1$: where the chain settles; eigenvalue $2$: how fast &mdash; the deck's closing slogan, now with its precise meaning attached.</p>
+</section>
+
+<section>
+  <h2>9 &nbsp;Discrete Diffusion</h2>
+
+  <h3>9.1 The forward (noising) chain</h3>
+  <p>Data first: $X_0 \sim p_0$, the data distribution on $n$ symbols (for sequences of tokens, apply the construction independently to each coordinate; today's math is the single-symbol case, as in the deck). The forward process is the homogeneous Markov chain with the deck's noising matrix: keep the symbol with probability $1 - \epsilon$, otherwise jump to one of the other $n - 1$ symbols uniformly,</p>
+  \[ P_{u,v} = \begin{cases} 1 - \epsilon &amp; u = v \\[2pt] \dfrac{\epsilon}{n-1} &amp; u \neq v, \end{cases}
+     \qquad 0 \lt \epsilon \lt 1. \]
+  <p><strong>Sanity checks, verified.</strong> Column sums: $(1 - \epsilon) + (n-1)\cdot\tfrac{\epsilon}{n-1} = 1$ &#10003; (stochastic). Symmetry: $P_{u,v} = P_{v,u}$ for all $u, v$ &#10003;. Moreover every entry is strictly positive, so the chain is irreducible and aperiodic outright &mdash; Theorems 3a, 3b, and 5 all apply with $r = 1$.</p>
+  <p>A form that makes everything below transparent: with $J = \mathbf{1}\mathbf{1}^\top$ (all-ones matrix) and $u = \tfrac1n \mathbf{1}$ (uniform vector),</p>
+  <div class="deriv">
+    \[ P = (1 - \beta)\, I + \frac{\beta}{n} J, \qquad \beta = \frac{n\,\epsilon}{n-1}. \]
+    <p style="margin:8px 0 0;"><em>Check:</em> diagonal $= (1-\beta) + \tfrac{\beta}{n} = 1 - \beta\tfrac{n-1}{n} = 1 - \epsilon$ &#10003;; off-diagonal $= \tfrac{\beta}{n} = \tfrac{\epsilon}{n-1}$ &#10003;. Interpretation: with probability $1 - \beta$ keep the symbol, with probability $\beta$ <em>resample uniformly from all $n$ symbols</em> (resampling may land on the same symbol, which is why $\beta \gt \epsilon$). This "uniform-kernel" form is exactly the discrete-diffusion transition of [8, 9, 10].</p>
+  </div>
+
+  <h3>9.2 Pure noise = uniform: stationary, unique, and the exact convergence rate</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Stationarity.</strong> $P$ is symmetric, so by the Section 7.8 exercise the uniform vector $\pi^\star = u = [\tfrac1n, \dots, \tfrac1n]^\top$ is stationary; by Theorem 3b (irreducible: all entries positive) it is the <em>unique</em> stationary distribution.</p>
+    <p style="margin:8px 0 6px;"><strong>Exact evolution (stronger than the deck's limit claim).</strong> Decompose any start as $\pi_0 = u + (\pi_0 - u)$, where the error $v = \pi_0 - u$ has $\mathbf{1}^\top v = 1 - 1 = 0$, hence $Jv = \mathbf{1}(\mathbf{1}^\top v) = 0$. Then</p>
+    \[ Pv = (1-\beta)v + \frac{\beta}{n} J v = (1 - \beta)\, v,
+       \qquad P u = u, \]
+    <p style="margin:8px 0 6px;">so every zero-sum vector is an eigenvector with eigenvalue $\lambda_2 = 1 - \beta = 1 - \tfrac{n\epsilon}{n-1}$ (multiplicity $n - 1$), and by linearity, exactly:</p>
+    \[ \pi_t = P^t \pi_0 = u + \Bigl(1 - \frac{n\epsilon}{n-1}\Bigr)^{t} (\pi_0 - u),
+       \qquad
+       \|\pi_t - u\|_1 = \Bigl|1 - \frac{n\epsilon}{n-1}\Bigr|^{t} \, \|\pi_0 - u\|_1 \leq 2\,|\lambda_2|^t. \]
+    <p style="margin:8px 0 0;">For $0 \lt \epsilon \lt 1$, $|\lambda_2| \lt 1$ (the extreme $\lambda_2 = -1$ needs $\epsilon = 1$ <em>and</em> $n = 2$ &mdash; the periodic flip chain again), so $\pi_t \to u$ geometrically <em>whatever the data distribution $p_0$ was</em>. Consistency check at $n = 2$: $\lambda_2 = 1 - 2\epsilon$, the binary chain's second eigenvalue with $\alpha = \epsilon$. &#10003;</p>
+  </div>
+  <p>This upgrades the deck's two claims &mdash; "limiting distribution: uniform, whatever $p_0$ was" and "for large $N$, $\pi_N \approx \pi^\star$" &mdash; to a closed form with an explicit error bound: to make $\|\pi_N - u\|_1 \leq \eta$ it suffices that $N \geq \log(2/\eta) / \log(1/|\lambda_2|)$. That is the principled answer to "how long must the forward chain run": long enough for $|\lambda_2|^N$ to be negligible. The deck's data-dissolves picture is this formula drawn in pixels: each step multiplies the structured part of the distribution by $\lambda_2$.</p>
+
+  <h3>9.3 What the denoiser is really approximating</h3>
+  <p>The deck writes the learned reverse step as $X_t \approx f_\theta(X_{t+1}, t)$ and says training data comes free from running the forward chain on real data. The object being approximated has an exact formula. By Bayes' rule (prob03 note) applied to one forward step,</p>
+  <div class="deriv">
+    \[ \Pr(X_t = x \mid X_{t+1} = y)
+       = \frac{\Pr(X_{t+1} = y \mid X_t = x)\, \Pr(X_t = x)}{\Pr(X_{t+1} = y)}
+       = \frac{P_{y,x}\, \pi_t(x)}{\pi_{t+1}(y)}, \]
+    <p style="margin:8px 0 0;">whenever $\pi_{t+1}(y) \gt 0$ (guaranteed here for $t \geq 1$, since all entries of $P$ are positive). Note this <em>reverse kernel depends on $t$</em> through $\pi_t$ &mdash; the reverse chain is Markov (next lemma) but <em>not homogeneous</em>, even though the forward chain is: early in the forward process $\pi_t$ still resembles the data and the reverse step must be data-like; late in the process $\pi_t \approx u$ and the reverse kernel degenerates toward the forward one. This is exactly why the network takes the step index $t$ as an input.</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma F (reversed chains are Markov).</strong> If $(X_0, \dots, X_N)$ is a Markov chain, so is the reversed sequence $(X_N, X_{N-1}, \dots, X_0)$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> The Markov property of the forward chain says (Lemma B): given $X_s$, the past $X^{s-1}$ and the future $(X_{s+1}, \dots, X_N)$ are conditionally independent. Conditional independence is symmetric between the two blocks &mdash; $P(a, c \mid b) = P(a \mid b)P(c \mid b)$ treats $a$ and $c$ identically. But "given the present, past and future independent" is also exactly the Markov property of the <em>reversed</em> sequence, whose "past" is the forward future. Concretely: $\Pr(X_{s-1} = a \mid X_s = b, X_{s+1} = c_1, \dots, X_N = c_{N-s}) = \Pr(X_{s-1} = a \mid X_s = b)$, since given $X_s = b$ the left block $\{X_{s-1} = a\}$ is independent of the right block. $\blacksquare$</p>
+  </div>
+  <p>So generation by repeatedly undoing steps is not a heuristic: the reverse-time process is a bona fide (inhomogeneous) Markov chain, and its transition kernels are the Bayes posteriors above. What is learned, and where the approximation enters: the true posterior depends on $p_0$ (through $\pi_t = P^t p_0$), which is unknown; the network $f_\theta(\cdot, t)$ is trained to imitate it from forward-corrupted data samples. Two honest gaps between the deck's schematic and practice: (i) real discrete-diffusion models output a <em>distribution</em> over symbols and sample from it (or predict $X_0$ directly and re-noise), rather than a single point estimate $\tilde X_t = f_\theta(\tilde X_{t+1}, t)$; the training loss is a cross-entropy-type objective &mdash; prob02's loss, deployed once per step [8, 9]; (ii) practical schedules make $\epsilon$ depend on $t$, an inhomogeneous forward chain &mdash; the analysis of Section 9.2 goes through with $\prod_s \lambda_2(\epsilon_s)$ in place of $\lambda_2^t$.</p>
+
+  <h3>9.4 The generation algorithm, and why it works</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Generation (deck's algorithm).</strong> (1)&nbsp;Sample $\tilde X_N \sim$ uniform. (2)&nbsp;For $t = N-1, \dots, 0$: $\tilde X_t = f_\theta(\tilde X_{t+1}, t)$. (3)&nbsp;Output $\tilde X_0$.</p>
+    <p style="margin:8px 0 0;"><strong>Why it works, assembled from today's theorems.</strong> The forward chain makes $\pi_N$ provably close to uniform (Section 9.2's bound, with rate from Theorem 5's machinery) &mdash; so replacing the true $\pi_N$ by the uniform distribution in step (1) incurs a controlled error, and the uniform distribution is trivially samplable. If each learned kernel matches the true reverse kernel (Section 9.3), then by Lemma F running them in sequence reproduces the joint law of the reversed chain, and the marginal of its final output is exactly $p_0$. Every ingredient &mdash; "pure noise is uniform", "how large $N$", "undoing steps is legitimate" &mdash; is a statement about Markov chains, stationary distributions, and limits: the chain picks its noise distribution for free.</p>
+  </div>
+  <p><strong>Pointers, kept deliberately out of scope here:</strong> this uniform-kernel discrete diffusion is the framework of Sohl-Dickstein et al. [8] specialized to finite alphabets, developed as multinomial diffusion by Hoogeboom et al. [10] and generalized (uniform, absorbing, and structured kernels) as D3PM by Austin et al. [9]. The continuous/Gaussian counterpart (DDPM [11]) is this course's prob08, where the deck's teaser is cashed in with MGF tools; graduate-level treatments of diffusion live in the infotheory and privacy tracks of this repo and are intentionally not imported here.</p>
+</section>
+
+<section>
+  <h2>References</h2>
+  <ol>
+    <li>T. M. Cover and J. A. Thomas, <em>Elements of Information Theory</em>, 2nd ed., Wiley-Interscience, 2006. DOI: <a href="https://doi.org/10.1002/047174882X">10.1002/047174882X</a>. (Ch. 4: stationary processes, Markov chains, stationary distributions &mdash; the source notes' primary reference; entropy rates, which this lecture stops short of, are also there.)</li>
+    <li>D. A. Levin and Y. Peres, with E. L. Wilmer, <em>Markov Chains and Mixing Times</em>, 2nd ed., American Mathematical Society, 2017. DOI: <a href="https://doi.org/10.1090/mbk/107">10.1090/mbk/107</a>; free copy: <a href="https://pages.uoregon.edu/dlevin/MARKOV/">pages.uoregon.edu/dlevin/MARKOV</a>. (Ch. 1: irreducibility, aperiodicity, Prop. 1.7 used in Theorem 5; Ch. 4: convergence theorem; Ch. 12: spectral gap and eigenvalue rates.)</li>
+    <li>J. R. Norris, <em>Markov Chains</em>, Cambridge University Press, 1997. DOI: <a href="https://doi.org/10.1017/CBO9780511810633">10.1017/CBO9780511810633</a>. (Standard first course; row-vector convention &mdash; transpose to compare, per Section 4.2.)</li>
+    <li>A. A. Markov's original chains and the extension theorem aside, the measure-theoretic foundations used silently in Section 2.1 are in R. Durrett, <em>Probability: Theory and Examples</em>, 5th ed., Cambridge University Press, 2019. DOI: <a href="https://doi.org/10.1017/9781108591034">10.1017/9781108591034</a>. (Kolmogorov extension theorem; Markov chains, Ch. 5.)</li>
+    <li>R. A. Horn and C. R. Johnson, <em>Matrix Analysis</em>, 2nd ed., Cambridge University Press, 2013. (Ch. 8: Perron&ndash;Frobenius theory for nonnegative matrices, cited at statement level in Section 7.5.)</li>
+    <li>O. Kallenberg, <em>Foundations of Modern Probability</em>, 3rd ed., Springer, 2021. DOI: <a href="https://doi.org/10.1007/978-3-030-61871-1">10.1007/978-3-030-61871-1</a>. (Alternative source for the extension theorem and stationarity in full generality.)</li>
+    <li>S. Brin and L. Page, "The Anatomy of a Large-Scale Hypertextual Web Search Engine," <em>Computer Networks and ISDN Systems</em>, vol. 30, pp. 107&ndash;117, 1998. DOI: <a href="https://doi.org/10.1016/S0169-7552(98)00110-X">10.1016/S0169-7552(98)00110-X</a>. (PageRank; the damping construction of Section 7.9.)</li>
+    <li>J. Sohl-Dickstein, E. Weiss, N. Maheswaranathan, S. Ganguli, "Deep Unsupervised Learning using Nonequilibrium Thermodynamics," ICML 2015. arXiv: <a href="https://arxiv.org/abs/1503.03585">1503.03585</a>. (The original diffusion-model framework, including a binomial/discrete forward chain.)</li>
+    <li>J. Austin, D. D. Johnson, J. Ho, D. Tarlow, R. van den Berg, "Structured Denoising Diffusion Models in Discrete State-Spaces," NeurIPS 2021. arXiv: <a href="https://arxiv.org/abs/2107.03006">2107.03006</a>. (D3PM: the uniform transition matrix of Section 9.1 is their $Q^{\text{uniform}}$, up to the row/column transpose.)</li>
+    <li>E. Hoogeboom, D. Nielsen, P. Jaini, P. Forr&eacute;, M. Welling, "Argmax Flows and Multinomial Diffusion: Learning Categorical Distributions," NeurIPS 2021. arXiv: <a href="https://arxiv.org/abs/2102.05379">2102.05379</a>. (Multinomial diffusion: the resample-uniform form of Section 9.1.)</li>
+    <li>J. Ho, A. Jain, P. Abbeel, "Denoising Diffusion Probabilistic Models," NeurIPS 2020. arXiv: <a href="https://arxiv.org/abs/2006.11239">2006.11239</a>. (DDPM, the Gaussian counterpart; treated in this course's prob08.)</li>
+  </ol>
+</section>
+
+</body>
+</html>

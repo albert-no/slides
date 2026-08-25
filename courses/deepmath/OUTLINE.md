@@ -145,6 +145,9 @@ Lecture 4 — answers prob03's teaser (sequences in time); recalls the chain rul
 probability from prob03 instead of redefining; ends on a bridge to prob05 (averages
 of many draws → concentration).
 
+Companion: `prob04-random-processes/prob04-random-processes-note.html` — detailed
+definitions, expanded proofs, lemmas, references.
+
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + TOC | 1–2 | prob04-random-processes/prob04-random-processes.html:32 |

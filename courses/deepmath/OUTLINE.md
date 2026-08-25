@@ -191,6 +191,7 @@ variance from prob01 and independence from prob03 instead of redefining; one run
 example (mean of n fair coin flips, Pr(X̄_n ≥ 3/4)) is re-answered by every bound;
 ends on a bridge to prob06 (tail bounds uniform over a hypothesis class → Hoeffding
 + union bound).
+Companion: `prob05-concentration/prob05-concentration-note.html` — detailed definitions, expanded proofs, lemmas, references.
 
 | # | Section | Slides | Location |
 |---|---|---|---|

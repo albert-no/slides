@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Deep Learning Math 5 — Concentration Inequalities &amp; the Law of Large Numbers · Notes</title>
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload='renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false},{left:"\\[",right:"\\]",display:true}]});'></script>
+<style>
+  body { max-width: 760px; margin: 48px auto; padding: 0 24px 96px; color: var(--charcoal); background: var(--white); font-family: 'Yonsei', 'Noto Sans', Arial, sans-serif; font-weight: 300; line-height: 1.65; }
+  h1 { font-size: 2rem; color: var(--yonsei-blue); margin-bottom: 4px; }
+  h2 { font-size: 1.4rem; color: var(--yonsei-blue); margin-top: 40px; border-bottom: 1px solid var(--slate); padding-bottom: 6px; }
+  h3 { font-size: 1.1rem; color: var(--blue-light); margin-top: 24px; }
+  p, li { font-size: 1rem; }
+  .meta { color: var(--gray-text); font-size: 0.95rem; margin-bottom: 24px; }
+  code { background: var(--light); padding: 1px 6px; border-radius: 4px; font-size: 0.92em; }
+  strong { color: var(--yonsei-blue); font-weight: 600; }
+  .deriv { background: var(--light); border-left: 3px solid var(--yonsei-blue); padding: 12px 18px; margin: 14px 0; border-radius: 0 6px 6px 0; }
+  table { border-collapse: collapse; margin: 14px 0; }
+  th, td { border: 1px solid var(--slate); padding: 6px 12px; font-size: 0.95rem; text-align: left; }
+  th { background: var(--light); color: var(--yonsei-blue); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>Deep Learning Math 5 · Concentration Inequalities &amp; the Law of Large Numbers &mdash; Notes</h1>
+<p class="meta">Companion to <code>prob05-concentration.html</code>. Full formal statements with every condition the slides abbreviate (non-negativity for Markov, variance existence for Chebyshev, MGF domain and finiteness, the exact modes of convergence behind the LLN and CLT), every proof expanded with skipped steps restored, tightness examples and loose-vs-tight diagnostics, and the CLT sketch made precise at statement level with an honest list of what is omitted. Every worked number on the slides is re-derived here from scratch. Background from earlier lectures is cited from the companion notes <code>../prob01-foundations/prob01-foundations-note.html</code> (expectation, LOTUS, Jensen), and <code>../prob03-mutual-information/prob03-mutual-information-note.html</code> (independence, factorization) rather than re-proved. <strong>Convention:</strong> earlier notes in this series fixed all random variables to finitely many values; this lecture needs Gaussians, so that restriction is relaxed &mdash; a random variable may be discrete (pmf $p_X$, expectations are sums) or continuous (pdf $f_X$, expectations are integrals), and every statement below holds in both readings with $\sum \leftrightarrow \int$. Where a claim genuinely requires more care in the continuous case (differentiating under an expectation, MGF uniqueness), the gap is flagged explicitly instead of papered over.</p>
+
+<section>
+  <h2>1 &nbsp;Why Averages?</h2>
+  <p>Every number a working AI pipeline reports is a <em>sample mean</em> standing in for an expectation: a minibatch loss for the population loss, a test accuracy (mean of $0/1$ correctness indicators) for the true accuracy, a Monte Carlo average for an integral. The computable object and the wanted object are different in kind:</p>
+  \[ \bar{X}_n = \frac{1}{n}\sum_{i=1}^{n} X_i \ \ \text{(computable, random)}, \qquad \mu = \mathbb{E}[X] \ \ \text{(wanted, fixed)}. \]
+  <p>The lecture's engineering question is quantitative: how large must $n$ be so that
+  $\Pr(|\bar{X}_n - \mu| \geq 0.01) \leq 0.05$ &mdash; accuracy within $\pm 1\%$, confidence $95\%$? It is answered twice below: Chebyshev gives the safe answer $n \geq 50{,}000$ (Section 4.7), Chernoff the much cheaper $n \geq 18{,}444$ (Section 7.7).</p>
+  <p>The structural claim of the deck's preview table is worth stating as a slogan and then earning: <strong>there is only one inequality in this lecture</strong> &mdash; Markov's. Chebyshev is Markov applied to the transformed variable $(X-\mu)^2$; Chernoff is Markov applied to $e^{tX}$. Each transform feeds more distributional knowledge into the same engine (mean only $\to$ mean and variance $\to$ the whole MGF) and buys a faster tail decay ($1/\alpha$ $\to$ $1/\alpha^2$ $\to$ $e^{-c\alpha}$). The proofs below are deliberately written so this reuse is literal, not metaphorical.</p>
+  <p>One running example carries all numerics: $X_1, \dots, X_n$ i.i.d. fair coins (Bernoulli($\tfrac12$)) and the tail question $\Pr(\bar{X}_n \geq \tfrac34)$.</p>
+</section>
+
+<section>
+  <h2>2 &nbsp;Warm-Up: Mean, Variance, Independence</h2>
+
+  <h3>2.1 Expectation, and the two properties that do today's work</h3>
+  <p>From the prob01 companion note (definitions and LOTUS proved there): $\mathbb{E}[X] = \sum_x x\, p_X(x)$, and for any function $g$, $\mathbb{E}[g(X)] = \sum_x g(x)\, p_X(x)$ (LOTUS &mdash; law of the unconscious statistician); in the continuous case, the same with $f_X\,dx$. Two consequences are used constantly today. <strong>Linearity</strong>, $\mathbb{E}[aX + bY] = a\,\mathbb{E}[X] + b\,\mathbb{E}[Y]$ with no independence needed, is proved in the prob01 note. <strong>Monotonicity</strong> the deck states without proof, so:</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma 2.1 (monotonicity of expectation).</strong> (i) If $Z \geq 0$ (for every outcome), then $\mathbb{E}[Z] \geq 0$. (ii) If $X \leq Y$ pointwise and both have finite expectations, then $\mathbb{E}[X] \leq \mathbb{E}[Y]$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> (i) $\mathbb{E}[Z] = \sum_z z\, p_Z(z)$ ranges only over values $z \geq 0$ with weights $p_Z(z) \geq 0$; a sum (or integral) of non-negative terms is non-negative. (ii) Apply (i) to $Z = Y - X \geq 0$ and use linearity: $0 \leq \mathbb{E}[Y - X] = \mathbb{E}[Y] - \mathbb{E}[X]$. $\blacksquare$</p>
+  </div>
+  <p>The deck's comment "monotonicity does today's heavy lifting" is exact: it is the single step that converts each pointwise domination ($a\mathbf{1}\{X \geq a\} \leq X$ in Section 3, and its squared and exponentiated cousins) into an inequality between numbers.</p>
+
+  <h3>2.2 Variance</h3>
+  <p>With $\mu = \mathbb{E}[X]$ (assumed finite), the variance is $\mathrm{Var}(X) = \mathbb{E}[(X-\mu)^2]$ whenever $\mathbb{E}[X^2]$ is finite; $\sigma = \sqrt{\mathrm{Var}(X)}$. The deck's alternative form and scaling rule, with the one-line proofs it skips:</p>
+  <div class="deriv">
+    \[ \mathbb{E}[(X-\mu)^2] = \mathbb{E}[X^2 - 2\mu X + \mu^2] = \mathbb{E}[X^2] - 2\mu\,\mathbb{E}[X] + \mu^2 = \mathbb{E}[X^2] - \mu^2 \]
+    <p style="margin:8px 0 0;">by linearity ($\mu$ is a constant), and $\mathrm{Var}(aX) = \mathbb{E}[(aX - a\mu)^2] = a^2\, \mathbb{E}[(X-\mu)^2] = a^2 \mathrm{Var}(X)$. Also $\mathrm{Var}(X + c) = \mathrm{Var}(X)$ for constant $c$, since centering removes $c$.</p>
+  </div>
+  <p><strong>Bernoulli($p$):</strong> $X^2 = X$ (both values $0,1$ are idempotent), so $\mathbb{E}[X^2] = \mathbb{E}[X] = p$ and $\mathrm{Var}(X) = p - p^2 = p(1-p)$. The deck's remark that the fair coin has "the largest variance a coin can have" is the elementary bound $p(1-p) \leq \tfrac14$: indeed $\tfrac14 - p(1-p) = (p - \tfrac12)^2 \geq 0$, with equality iff $p = \tfrac12$. So $\mathrm{Var} = \tfrac14$ at $p=\tfrac12$, and every numeric below that uses $\sigma^2 = \tfrac14$ is also the worst case over all coins.</p>
+
+  <h3>2.3 Independence and the product rule</h3>
+  <p>From the prob03 companion note: $X \perp Y$ iff $p_{X,Y}(x,y) = p_X(x)\,p_Y(y)$ for all $x,y$ (densities factorize in the continuous case). The consequence the lecture needs, with the deck's proof expanded:</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma 2.2 (product rule).</strong> If $X \perp Y$ and $g, h$ are functions with $\mathbb{E}|g(X)| \lt \infty$, $\mathbb{E}|h(Y)| \lt \infty$, then</p>
+    \[ \mathbb{E}[g(X)\, h(Y)] = \mathbb{E}[g(X)]\; \mathbb{E}[h(Y)]. \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> LOTUS for the pair $(X,Y)$, then factorization, then separation of the double sum:</p>
+    \[ \sum_{x,y} g(x)h(y)\, p_{X,Y}(x,y) = \sum_{x,y} g(x)h(y)\, p_X(x) p_Y(y) = \Big(\sum_x g(x) p_X(x)\Big)\Big(\sum_y h(y) p_Y(y)\Big), \]
+    <p style="margin:8px 0 0;">the last step because each summand is a product of an $x$-only and a $y$-only factor, so summing over $y$ first pulls the $x$-factor out of the inner sum. (For infinite alphabets or densities the rearrangement is justified by absolute convergence &mdash; that is what the integrability hypotheses are for; the deck, working with finite sums, does not need them.) $\blacksquare$</p>
+  </div>
+  <p><strong>Extension used silently later:</strong> for $X_1, \dots, X_n$ mutually independent, $\mathbb{E}\big[\prod_i g_i(X_i)\big] = \prod_i \mathbb{E}[g_i(X_i)]$ &mdash; induction on $n$, using that $(X_1, \dots, X_{n-1})$ is jointly independent of $X_n$ so Lemma 2.2 applies with $g = \prod_{i \lt n} g_i$ treated as one function of the first block. This $n$-fold version is exactly what turns the MGF of a sum into a product of $n$ factors in Sections 6.7 and 9.</p>
+
+  <h3>2.4 Variance adds under independence</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma 2.3.</strong> If $X \perp Y$ (finite variances), then $\mathrm{Var}(X+Y) = \mathrm{Var}(X) + \mathrm{Var}(Y)$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Center: $\tilde{X} = X - \mu_X$, $\tilde{Y} = Y - \mu_Y$, both mean $0$, and $X + Y - \mathbb{E}[X+Y] = \tilde X + \tilde Y$. Expand the square and use linearity:</p>
+    \[ \mathrm{Var}(X+Y) = \mathbb{E}\big[(\tilde{X}+\tilde{Y})^2\big] = \mathbb{E}[\tilde{X}^2] + 2\,\mathbb{E}[\tilde{X}\tilde{Y}] + \mathbb{E}[\tilde{Y}^2]. \]
+    <p style="margin:8px 0 0;">The cross term: $\tilde X$ is a function of $X$ and $\tilde Y$ of $Y$, so Lemma 2.2 gives $\mathbb{E}[\tilde{X}\tilde{Y}] = \mathbb{E}[\tilde{X}]\,\mathbb{E}[\tilde{Y}] = 0 \cdot 0 = 0$. The outer terms are the two variances. $\blacksquare$</p>
+  </div>
+  <p><strong>Fine print worth knowing:</strong> the proof only used $\mathbb{E}[\tilde X \tilde Y] = 0$, i.e. <em>uncorrelatedness</em>, which is weaker than independence; and by induction, for $X_1, \dots, X_n$ pairwise uncorrelated (in particular i.i.d.), $\mathrm{Var}(\sum_i X_i) = \sum_i \mathrm{Var}(X_i)$ &mdash; the cross terms vanish pairwise. This is the form used for $\bar X_n$ in Section 4.5.</p>
+
+  <h3>2.5 The running example, and why "just compute it" is not an option</h3>
+  <p>For the fair-coin average, linearity gives $\mathbb{E}[\bar X_n] = \tfrac1n \sum_i \mathbb{E}[X_i] = \tfrac1n \cdot n \cdot \tfrac12 = \tfrac12$. The tail question has an exact answer, since $S_n = n \bar X_n \sim \mathrm{Bin}(n, \tfrac12)$:</p>
+  \[ \Pr\!\big(\bar{X}_n \geq \tfrac34\big) = \Pr\!\big(S_n \geq \tfrac{3n}{4}\big) = \sum_{k = \lceil 3n/4 \rceil}^{n} \binom{n}{k} 2^{-n}, \]
+  <p>(the deck writes $k \geq 3n/4$; the ceiling makes the summation limit explicit for $n$ not divisible by $4$). This formula is used below to <em>grade</em> the bounds &mdash; but it exists only because the coin's full distribution is known. For a real loss or accuracy the distribution is unknown, and the entire point of the lecture is bounds that consume only partial knowledge: a mean (Markov), a mean and variance (Chebyshev), an MGF (Chernoff).</p>
+</section>
+
+<section>
+  <h2>3 &nbsp;Markov's Inequality</h2>
+
+  <h3>3.1 Indicators: events as random variables</h3>
+  <p>For an event $A$, the indicator $\mathbf{1}\{A\}$ equals $1$ if $A$ happens and $0$ otherwise. Its expectation is the probability, by direct computation over its two values:</p>
+  \[ \mathbb{E}\big[\mathbf{1}\{A\}\big] = 1 \cdot \Pr(A) + 0 \cdot \Pr(A^c) = \Pr(A). \]
+  <p>So bounding a probability is the same task as bounding the mean of a $\{0,1\}$-valued variable &mdash; which monotonicity (Lemma 2.1) knows how to do from a pointwise domination.</p>
+
+  <h3>3.2 Statement, both forms, all conditions</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 1 (Markov's inequality).</strong> Let $X$ be a random variable with $X \geq 0$ (with probability $1$) and $\mathbb{E}[X] \lt \infty$. Then:</p>
+    <p style="margin:8px 0 6px;"><em>Threshold form.</em> For every $a \gt 0$,</p>
+    \[ \Pr(X \geq a) \;\leq\; \frac{\mathbb{E}[X]}{a}. \]
+    <p style="margin:8px 0 6px;"><em>Relative form (the lecture-note form).</em> If moreover $\mathbb{E}[X] \gt 0$, then for every $\alpha \gt 0$,</p>
+    \[ \Pr\!\big(X \geq \alpha\,\mathbb{E}[X]\big) \;\leq\; \frac{1}{\alpha}. \]
+  </div>
+  <p>Conditions unpacked. (i) <em>Non-negativity</em> is essential (counterexample in 3.6) and is used exactly once in the proof. (ii) The threshold form is the primitive one; the relative form is the substitution $a = \alpha\,\mathbb{E}[X]$, which requires $\mathbb{E}[X] \gt 0$ so that $a \gt 0$ (if $\mathbb{E}[X] = 0$ then $X = 0$ a.s. and $\Pr(X \geq a) = 0$ anyway, so nothing is lost). (iii) If $\mathbb{E}[X] = \infty$ the threshold form is trivially true but empty. (iv) The bound is informative only for $a \gt \mathbb{E}[X]$ (equivalently $\alpha \gt 1$); otherwise the right-hand side is $\geq 1$ and says nothing a probability did not already satisfy.</p>
+
+  <h3>3.3 Proof, with the skipped justifications restored</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Step 1 (dominate).</strong> Claim: for every outcome, $a\,\mathbf{1}\{X \geq a\} \leq X$. Case $X \geq a$: the left side is $a \cdot 1 = a \leq X$ by the very event being indicated. Case $X \lt a$: the left side is $a \cdot 0 = 0 \leq X$ &mdash; and <em>this</em> step is where non-negativity of $X$ enters, and the only place it is used.</p>
+    <p style="margin:8px 0 6px;"><strong>Step 2 (average).</strong> A pointwise inequality between random variables passes to expectations by Lemma 2.1(ii), and the constant $a$ exits by linearity:</p>
+    \[ a\, \mathbb{E}\big[\mathbf{1}\{X \geq a\}\big] = \mathbb{E}\big[a\,\mathbf{1}\{X \geq a\}\big] \;\leq\; \mathbb{E}[X]. \]
+    <p style="margin:8px 0 6px;"><strong>Step 3 (read off).</strong> The indicator's mean is the probability (3.1), so $a \Pr(X \geq a) \leq \mathbb{E}[X]$; divide by $a \gt 0$ (dividing by a positive number preserves the inequality):</p>
+    \[ \Pr(X \geq a) \leq \frac{\mathbb{E}[X]}{a}, \qquad\text{and with } a = \alpha\,\mathbb{E}[X]: \quad \Pr\big(X \geq \alpha\,\mathbb{E}[X]\big) \leq \frac{\mathbb{E}[X]}{\alpha\,\mathbb{E}[X]} = \frac1\alpha. \ \blacksquare \]
+  </div>
+
+  <h3>3.4 Coin answer, verified</h3>
+  <p>$\bar X_n \geq 0$ (an average of $0$s and $1$s) with $\mathbb{E}[\bar X_n] = \tfrac12$; the threshold $\tfrac34$ is $\alpha = \tfrac{3/4}{1/2} = \tfrac32$ means, so</p>
+  \[ \Pr\!\big(\bar{X}_n \geq \tfrac34\big) \;\leq\; \frac{1/2}{3/4} = \frac{2}{3} \approx 0.67, \]
+  <p>matching the slide. The bound is valid for every $n$ and <em>independent of</em> $n$: Markov consumes only the mean, and $\mathbb{E}[\bar X_n] = \tfrac12$ does not change with $n$. Markov is structurally blind to averaging.</p>
+
+  <h3>3.5 Tightness: the two-point distribution, and the equality condition</h3>
+  <p>Knowing only the mean, Markov cannot be improved. Fix $\mu \gt 0$ and a threshold $a \geq \mu$ and let</p>
+  <div class="deriv">
+    \[ X = \begin{cases} a &amp; \text{with probability } \mu/a, \\ 0 &amp; \text{with probability } 1 - \mu/a. \end{cases} \]
+    <p style="margin:8px 0 0;">The condition $a \geq \mu$ makes $\mu/a \in (0, 1]$ a legitimate probability (the deck leaves this constraint implicit). Check: $\mathbb{E}[X] = a \cdot \tfrac{\mu}{a} + 0 = \mu$, and $\Pr(X \geq a) = \Pr(X = a) = \tfrac{\mu}{a}$ &mdash; exactly Markov's bound. So among all non-negative variables with mean $\mu$, the supremum of $\Pr(X \geq a)$ <em>equals</em> $\mu/a$: any improvement must feed in more than the mean.</p>
+  </div>
+  <p><strong>Equality analysis</strong> (beyond the deck): equality in Theorem 1 forces both inequalities in the proof to be equalities, i.e. $\mathbb{E}[X - a\mathbf{1}\{X \geq a\}] = 0$ with a non-negative integrand, so $X = a\mathbf{1}\{X \geq a\}$ a.s.: $X$ takes only the values $0$ and $a$. The two-point example is the <em>only</em> shape achieving equality. Conversely this diagnoses when Markov is loose: any mass strictly between $0$ and $a$, or above $a$, is thrown away. For $\bar X_n$, whose mass piles up near $\tfrac12$, almost everything is thrown away &mdash; hence the uselessly constant $\tfrac23$.</p>
+
+  <h3>3.6 Non-negativity is essential; how Markov is actually used</h3>
+  <p>The deck's counterexample, checked: $X = \pm 1$ with probability $\tfrac12$ each has $\mathbb{E}[X] = 0$, so the (illegal) threshold form at $a = 1$ would claim $\Pr(X \geq 1) \leq 0/1 = 0$; the truth is $\Pr(X \geq 1) = \tfrac12$. The failure is in proof Step 1: on the branch $X \lt a$ the step function's value $0$ no longer sits below $X$ when $X$ can be negative. In practice Markov is rarely applied raw; it is the <em>engine</em>: Sections 4 and 7 apply it to $(X-\mu)^2$ and $e^{tX}$, both of which are non-negative <em>by construction</em> &mdash; that is precisely why those transforms are chosen.</p>
+</section>
+
+<section>
+  <h2>4 &nbsp;Chebyshev's Inequality</h2>
+
+  <h3>4.1 Statement, both forms, all conditions</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 2 (Chebyshev's inequality).</strong> Let $X$ have finite mean $\mu$ and finite variance $\sigma^2$ (i.e. $\mathbb{E}[X^2] \lt \infty$; no sign or boundedness assumption on $X$). Then:</p>
+    <p style="margin:8px 0 6px;"><em>Relative ($\alpha\sigma$) form.</em> If $\sigma \gt 0$, for every $\alpha \gt 0$,</p>
+    \[ \Pr\!\big(|X - \mu| \geq \alpha\sigma\big) \;\leq\; \frac{1}{\alpha^2}. \]
+    <p style="margin:8px 0 6px;"><em>Absolute ($\epsilon$) form.</em> For every $\epsilon \gt 0$,</p>
+    \[ \Pr\!\big(|X - \mu| \geq \epsilon\big) \;\leq\; \frac{\sigma^2}{\epsilon^2}. \]
+  </div>
+  <p>Conditions unpacked. (i) Existence of the variance is the real hypothesis: for a heavy-tailed $X$ with $\mathbb{E}[X^2] = \infty$ the $\epsilon$-form is vacuous and the $\alpha\sigma$-form is not even well posed. (ii) The two forms translate via $\epsilon = \alpha\sigma$ (needs $\sigma \gt 0$; if $\sigma = 0$ then $X = \mu$ a.s. and the $\epsilon$-form gives the correct $0$). (iii) The bound is two-sided &mdash; it controls $|X-\mu|$, both tails at once &mdash; and is informative only for $\alpha \gt 1$.</p>
+
+  <h3>4.2 Proof: Markov on the squared deviation</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Step 1 (square the event).</strong> For $c \gt 0$, the map $u \mapsto u^2$ is strictly increasing on $u \geq 0$, so for the non-negative quantity $|X - \mu|$:</p>
+    \[ |X-\mu| \geq c \iff (X-\mu)^2 \geq c^2. \]
+    <p style="margin:8px 0 6px;">These are the <em>same event</em> described twice, hence have the same probability. Set $Y = (X-\mu)^2$ and check Markov's entry ticket: $Y \geq 0$ (a square), and $\mathbb{E}[Y] = \sigma^2 \lt \infty$ by the variance hypothesis &mdash; the definition of variance, no computation needed.</p>
+    <p style="margin:8px 0 6px;"><strong>Step 2 (Markov).</strong> Theorem 1 (threshold form) on $Y$ at level $c^2$:</p>
+    \[ \Pr\!\big(|X - \mu| \geq c\big) = \Pr\!\big(Y \geq c^2\big) \;\leq\; \frac{\mathbb{E}[Y]}{c^2} = \frac{\sigma^2}{c^2}. \]
+    <p style="margin:8px 0 0;">With $c = \epsilon$ this is the $\epsilon$-form; with $c = \alpha\sigma$ the $\sigma^2$ cancels: $\sigma^2/(\alpha^2\sigma^2) = 1/\alpha^2$. $\blacksquare$</p>
+  </div>
+  <p>Note what squaring bought, beyond the $1/\alpha^2$ decay: <em>two-sidedness</em>. Markov alone can only see one tail of a non-negative variable; the square folds both tails of $X$ into one tail of $Y$.</p>
+
+  <h3>4.3 Tightness: a three-point distribution achieving equality</h3>
+  <p>The deck asserts (via the $\alpha\sigma$-table's "worst case over all distributions") that Chebyshev, like Markov, cannot be improved from its inputs alone. The witness, for any $\alpha \geq 1$:</p>
+  <div class="deriv">
+    \[ X = \begin{cases} \mu + \alpha\sigma &amp; \text{w.p. } \tfrac{1}{2\alpha^2}, \\[2pt] \mu &amp; \text{w.p. } 1 - \tfrac{1}{\alpha^2}, \\[2pt] \mu - \alpha\sigma &amp; \text{w.p. } \tfrac{1}{2\alpha^2}. \end{cases} \]
+    <p style="margin:8px 0 0;">Check: $\mathbb{E}[X] = \mu$ by symmetry; $\mathrm{Var}(X) = (\alpha\sigma)^2 \cdot \tfrac{1}{2\alpha^2} \cdot 2 = \sigma^2$; and $\Pr(|X - \mu| \geq \alpha\sigma) = \tfrac{1}{2\alpha^2} + \tfrac{1}{2\alpha^2} = \tfrac{1}{\alpha^2}$, equality. ($\alpha \geq 1$ keeps the middle probability non-negative.) So the $\alpha\sigma$-rule is exactly the worst case; distributions with light tails (next subsection) sit far below it.</p>
+  </div>
+
+  <h3>4.4 The $\alpha\sigma$-rule table, re-derived</h3>
+  <p>Chebyshev's column is $1/\alpha^2$: $\ \alpha=2$: $\tfrac14 = 25\%$; $\alpha=3$: $\tfrac19 \approx 11.1\%$; $\alpha=5$: $\tfrac1{25} = 4\%$. The Gaussian column is the two-sided tail $2Q(\alpha)$ where $Q(\alpha) = 1 - \Phi(\alpha)$ is the standard normal upper tail: $2Q(2) = 0.0455 \approx 4.6\%$, $2Q(3) = 0.0027 = 0.27\%$, $2Q(5) = 5.73 \times 10^{-7} \approx 0.00006\%$. All three rows of the slide check out. The lesson is the loose-vs-tight diagnostic for Chebyshev: it is <em>tight</em> for the adversarial three-point shape of 4.3, and <em>loose by orders of magnitude</em> (a factor $\approx 70{,}000$ at $5\sigma$) for light-tailed distributions &mdash; because two numbers, $\mu$ and $\sigma^2$, cannot see tail lightness. Chernoff's whole purpose is to feed that missing information in.</p>
+
+  <h3>4.5 The key computation: $\mathrm{Var}(\bar X_n) = \sigma^2/n$</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma 4.1.</strong> For $X_1, \dots, X_n$ i.i.d. (pairwise uncorrelated suffices) with variance $\sigma^2$:</p>
+    \[ \mathrm{Var}(\bar{X}_n) = \mathrm{Var}\!\Big(\frac1n \sum_{i=1}^n X_i\Big) \overset{\text{(scaling)}}{=} \frac{1}{n^2}\,\mathrm{Var}\!\Big(\sum_{i=1}^n X_i\Big) \overset{\text{(Lemma 2.3, } n\text{-fold)}}{=} \frac{1}{n^2} \cdot n\sigma^2 = \frac{\sigma^2}{n}. \]
+    <p style="margin:8px 0 0;">Scaling is 2.2 with $a = \tfrac1n$; additivity is the pairwise-uncorrelated induction noted after Lemma 2.3. $\blacksquare$</p>
+  </div>
+  <p>This single identity powers everything that follows: the coin bound $4/n$, the weak LLN, error bars, and the variance argument for minibatching (reused by name in opt04).</p>
+
+  <h3>4.6 Coin answer, verified</h3>
+  <p>Fair coin: $\mathrm{Var}(\bar X_n) = \tfrac{1/4}{n} = \tfrac{1}{4n}$. The one-sided tail sits inside the two-sided event ($\bar X_n \geq \tfrac34$ implies $|\bar X_n - \tfrac12| \geq \tfrac14$, so the first event's probability is at most the second's &mdash; monotonicity of probability under set inclusion):</p>
+  \[ \Pr\!\big(\bar{X}_n \geq \tfrac34\big) \;\leq\; \Pr\!\big(|\bar{X}_n - \tfrac12| \geq \tfrac14\big) \;\overset{(\epsilon\text{-form})}{\leq}\; \frac{1/(4n)}{(1/4)^2} = \frac{16}{4n} = \frac{4}{n}. \]
+  <p>Slide table verified: $n = 16$: $4/16 = 0.25$; $n = 100$: $0.04$; $n = 400$: $0.01$. First bound that improves with $n$ &mdash; because variance, unlike the mean, sees averaging.</p>
+
+  <h3>4.7 Sample-size answer: $50{,}000$, verified</h3>
+  <p>Demand $\Pr(|\bar X_n - \mu| \geq \epsilon) \leq \delta$. The $\epsilon$-form applied to $\bar X_n$ (mean $\mu$, variance $\sigma^2/n$ by Lemma 4.1) delivers this as soon as $\tfrac{\sigma^2}{n\epsilon^2} \leq \delta$, i.e. $n \geq \tfrac{\sigma^2}{\epsilon^2\delta}$. With the Section 1 demand ($\sigma^2 = \tfrac14$ for a coin &mdash; the worst case by 2.2, so this is distribution-safe over all coins; $\epsilon = 0.01$, $\delta = 0.05$):</p>
+  \[ n \;\geq\; \frac{1/4}{(0.01)^2 \cdot 0.05} = \frac{0.25}{10^{-4} \cdot 0.05} = \frac{0.25}{5 \times 10^{-6}} = 50{,}000. \]
+  <p>Slide verified. Note the scaling this encodes: $n \propto 1/\delta$. Halving the failure probability doubles the samples &mdash; polynomial-in-$1/\delta$ cost. Chernoff will make this logarithmic in $1/\delta$ (Section 7.8).</p>
+
+  <h3>4.8 Omitted refinement: the one-sided (Cantelli) inequality</h3>
+  <p>The slides pay a small price folding the one-sided question into a two-sided bound. The one-sided analogue of Chebyshev, not on the deck but a two-line illustration of "choose the transform":</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Cantelli's inequality.</strong> For $X$ with mean $\mu$, variance $\sigma^2$, and any $a \gt 0$: $\ \Pr(X - \mu \geq a) \leq \dfrac{\sigma^2}{\sigma^2 + a^2}$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> For any $\lambda \geq 0$, the event $\{X - \mu \geq a\}$ is contained in $\{(X - \mu + \lambda)^2 \geq (a+\lambda)^2\}$ (on the event, $X - \mu + \lambda \geq a + \lambda \gt 0$; then square). Markov on the non-negative $(X-\mu+\lambda)^2$, whose mean is $\sigma^2 + \lambda^2$ (expand; the cross term has mean $0$):</p>
+    \[ \Pr(X - \mu \geq a) \;\leq\; \frac{\sigma^2 + \lambda^2}{(a+\lambda)^2}, \qquad \text{minimized at } \lambda = \frac{\sigma^2}{a} \text{ giving } \frac{\sigma^2}{\sigma^2 + a^2}. \ \blacksquare \]
+  </div>
+  <p>For the coin: $\Pr(\bar X_n \geq \tfrac34) \leq \frac{1/(4n)}{1/(4n) + 1/16} = \frac{4}{n + 4}$ &mdash; a hair better than $4/n$, and a preview of Chernoff's structure: introduce a free parameter, optimize it at the end.</p>
+</section>
+
+<section>
+  <h2>5 &nbsp;Law of Large Numbers</h2>
+
+  <h3>5.1 Convergence in probability, stated precisely</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition.</strong> Random variables $Z_n$ converge <em>in probability</em> to the constant $c$ (written $Z_n \xrightarrow{p} c$) if for <em>every</em> $\epsilon \gt 0$,</p>
+    \[ \lim_{n\to\infty} \Pr\big(|Z_n - c| \gt \epsilon\big) = 0. \]
+  </div>
+  <p>Quantifier order matters and is the content of the deck's "fix the band first" bullet: the tolerance $\epsilon$ is fixed <em>before</em> $n$ grows, and the statement must hold for every fixed band, however narrow. (Whether one writes $\gt \epsilon$ or $\geq \epsilon$ inside is immaterial: the $\geq \epsilon$ event contains the $\gt \epsilon$ event and is contained in the $\gt \epsilon/2$ event, so the two formulations define the same notion.) The definition extends verbatim to a random limit $Z$ in place of $c$; today only constant limits appear.</p>
+
+  <h3>5.2 The weak LLN, with proof and rate</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 3 (weak law of large numbers).</strong> Let $X_1, X_2, \dots$ be i.i.d. with finite mean $\mu$ and finite variance $\sigma^2$. Then $\bar{X}_n \xrightarrow{p} \mu$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Fix $\epsilon \gt 0$. The average $\bar X_n$ has mean $\mu$ (linearity) and variance $\sigma^2/n$ (Lemma 4.1). Chebyshev's $\epsilon$-form applied to the random variable $\bar X_n$:</p>
+    \[ \Pr\big(|\bar{X}_n - \mu| \gt \epsilon\big) \;\leq\; \Pr\big(|\bar{X}_n - \mu| \geq \epsilon\big) \;\leq\; \frac{\mathrm{Var}(\bar X_n)}{\epsilon^2} = \frac{\sigma^2}{n\epsilon^2}. \]
+    <p style="margin:8px 0 0;">With $\epsilon$ and $\sigma$ fixed, the right side is a constant over $n$ and tends to $0$ as $n \to \infty$. Since $\epsilon \gt 0$ was arbitrary, this is convergence in probability. $\blacksquare$</p>
+  </div>
+  <p>The proof gives more than convergence: an explicit <em>rate</em>, $\sigma^2/(n\epsilon^2)$. This is what "estimate by sampling" recipes actually invoke &mdash; test accuracy, minibatch gradients (per-coordinate: batch-mean standard deviation shrinks like $1/\sqrt{B}$ since the variance shrinks like $1/B$), Monte Carlo: each is Theorem 3 applied to a different choice of $X_i$, not a new theorem.</p>
+
+  <h3>5.3 The strong LLN and the hierarchy of convergence modes</h3>
+  <p>The deck states without proof that a strong law also holds. Precisely:</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Strong LLN (Kolmogorov; stated, not proved).</strong> If $X_1, X_2, \dots$ are i.i.d. with $\mathbb{E}|X_1| \lt \infty$ and mean $\mu$, then</p>
+    \[ \Pr\Big( \lim_{n\to\infty} \bar{X}_n = \mu \Big) = 1 \qquad \text{(almost-sure convergence, } \bar X_n \xrightarrow{a.s.} \mu\text{)}. \]
+  </div>
+  <p>Two upgrades over Theorem 3 at once: the <em>mode</em> is stronger (a.s. convergence means the single random sequence $n \mapsto \bar X_n(\omega)$ converges for all outcomes but a probability-zero set, whereas convergence in probability only controls each time $n$ separately), and the <em>hypothesis</em> is weaker (finite mean suffices; no variance needed). The proof is genuinely harder &mdash; see [5, Thm. 2.4.1] or Etemadi's elementary proof [7]. The general hierarchy, for the record: almost-sure convergence $\Rightarrow$ convergence in probability $\Rightarrow$ convergence in distribution (Section 9.1), and none of the arrows reverses in general; for a <em>constant</em> limit the last arrow does reverse. [5, Ch. 2&ndash;3].</p>
+
+  <h3>5.4 The deck's LLN visuals, audited</h3>
+  <p>The sample-path slide is a simulation (fixed seed, checkpoints $\bar X_{10} = 0.30$, $\bar X_{200} = 0.49$) &mdash; illustrative, not re-derivable, and plausible: at $n=200$ the standard deviation of $\bar X_n$ is $\tfrac{1}{2\sqrt{200}} \approx 0.035$, so $0.49$ is well within one standard deviation of $\tfrac12$. The <em>tails-vanish</em> chart is exact and re-computable: $\Pr(|\bar X_n - \tfrac12| \geq \tfrac14) = \Pr\big(S_n \leq \tfrac{n}{4}\big) + \Pr\big(S_n \geq \tfrac{3n}{4}\big)$ with $S_n \sim \mathrm{Bin}(n,\tfrac12)$, giving at $n = 4, 8, 12, 16, 20, 24$:</p>
+  \[ 0.6250,\ \ 0.2891,\ \ 0.1460,\ \ 0.0768,\ \ 0.0414,\ \ 0.0227, \]
+  <p>which rounds to the slide's $0.63 \to 0.29 \to 0.15 \to 0.08 \to 0.04 \to 0.02$. (Sample computation, $n=8$: $2\sum_{k=0}^{2}\binom{8}{k} 2^{-8} = 2(1 + 8 + 28)/256 = 74/256 = 0.2891$; the factor $2$ is the tail symmetry of Bin($n,\tfrac12$).) The <em>gap</em> slide at $n = 16$: $\Pr(\bar X_{16} \geq \tfrac34) = \Pr(S_{16} \geq 12) = \big(\binom{16}{12} + \binom{16}{13} + \binom{16}{14} + \binom{16}{15} + \binom{16}{16}\big) 2^{-16} = (1820 + 560 + 120 + 16 + 1)/65536 = 2517/65536 = 0.0384$, matching the slide's $\approx 0.038$; Chebyshev's $0.25$ is off by a factor $0.25/0.0384 = 6.5$, as claimed &mdash; and the gap grows without bound in $n$, since the truth decays exponentially (Section 8) while $4/n$ decays polynomially.</p>
+
+  <h3>5.5 Source-notes discrepancies, for the record</h3>
+  <p>The LaTeX source's LLN remark (prob 1560&ndash;1571) contains two slips that the deck silently fixes, both confirmed against the correct derivation above: (i) it declares "$Z_n$ is a random variable with mean $0$ and variance $\sigma^2/n$" &mdash; the mean of $Z_n = \bar X_n$ is $\mu$, not $0$; (ii) its final Chebyshev bound reads $\tfrac{\sigma^2}{n\epsilon}$ &mdash; the denominator must be $n\epsilon^2$ ($\epsilon$-form with $\epsilon$ squared), as in Theorem 3's proof. A third, minor: the source's Gaussian-sum exercise sentence (prob 1521&ndash;1523) is truncated mid-sentence ("Show that the sum of independent Gaussian $X \sim \mathcal{N}(\mu_1, \sigma_1^2)$"); the deck completes it as the worked example verified in Section 6.7 below.</p>
+</section>
+
+<section>
+  <h2>6 &nbsp;Moment Generating Functions</h2>
+
+  <h3>6.1 Definition, domain, and finiteness &mdash; the fine print</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (moment generating function).</strong> For a random variable $X$,</p>
+    \[ M_X(t) = \mathbb{E}\big[e^{tX}\big] \in (0, \infty], \qquad t \in \mathbb{R}. \]
+  </div>
+  <p>Because $e^{tX} \gt 0$, the expectation always makes sense as a number in $(0, \infty]$ &mdash; but it may be $+\infty$. Fine print the deck compresses into "finite at the $t$ used": (i) $M_X(0) = \mathbb{E}[1] = 1$ always. (ii) The <em>effective domain</em> $\{t : M_X(t) \lt \infty\}$ is an interval containing $0$ (by convexity of $M_X$, which follows from convexity of $t \mapsto e^{tx}$ for each fixed $x$); it may be all of $\mathbb{R}$ (bounded variables, Gaussians), a half-line, or the degenerate $\{0\}$. (iii) Existence of all moments does <em>not</em> guarantee a nondegenerate domain: a random variable with density proportional to $(1+|x|)^{-4}$ has finite mean and variance yet $M_X(t) = \infty$ for every $t \neq 0$, since $e^{tx}$ outruns any polynomial decay. This is exactly the gap that makes the CLT sketch of Section 9 non-rigorous under the stated hypotheses. (iv) For every variable in this lecture &mdash; Bernoulli and its sums (bounded) and Gaussians &mdash; $M_X$ is finite on all of $\mathbb{R}$, so the fine print never bites in the worked examples.</p>
+
+  <h3>6.2 The moment machine: $M^{(k)}(0) = \mathbb{E}[X^k]$</h3>
+  <p>Differentiate under the expectation, as the source notes do:</p>
+  <div class="deriv">
+    \[ M_X'(t) = \mathbb{E}\Big[\tfrac{\partial}{\partial t} e^{tX}\Big] = \mathbb{E}\big[X e^{tX}\big], \qquad M_X''(t) = \mathbb{E}\big[X^2 e^{tX}\big], \]
+    <p style="margin:8px 0 0;">and at $t = 0$, where $e^{0 \cdot X} = 1$: $\ M_X'(0) = \mathbb{E}[X]$, $\ M_X''(0) = \mathbb{E}[X^2]$; iterating, $M_X^{(k)}(0) = \mathbb{E}[X^k]$ for every $k \geq 1$.</p>
+  </div>
+  <p><strong>Justifying the swap.</strong> For a finite-valued $X$ the expectation is a finite sum and differentiating termwise is elementary calculus &mdash; nothing to check, and this covers the Bernoulli/coin computations. In general, the swap is legitimate whenever $M_X$ is finite on an open interval $(-t_0, t_0)$ around $0$: then $M_X$ is infinitely differentiable there and the formula holds, by a dominated-convergence argument [4, &sect;21; 5, &sect;2.3 exercises]. We state this and use it; the proof belongs to a measure-theory course. Combined with $\mathrm{Var}(X) = \mathbb{E}[X^2] - \mu^2$ (2.2), the first two derivatives at $0$ already recover mean and variance &mdash; the fact the CLT sketch runs on.</p>
+
+  <h3>6.3 The Taylor view</h3>
+  <p>Expanding $e^{tX} = \sum_{k \geq 0} (tX)^k / k!$ and taking expectations termwise,</p>
+  \[ M_X(t) = 1 + \mathbb{E}[X]\,t + \frac{\mathbb{E}[X^2]}{2}\,t^2 + \frac{\mathbb{E}[X^3]}{6}\,t^3 + \cdots \]
+  <p>&mdash; the moments are the Taylor coefficients (times $k!$), hence the name "moment generating". (Termwise expectation is again automatic for finite-valued $X$; in general it is valid inside the interval of finiteness [4, &sect;21].) The behavior of $M_X$ <em>near $t = 0$</em> is governed by the low moments; this locality is what makes the CLT universal: after standardization, all distributions share the same expansion $1 + t^2/2 + \cdots$ to second order, and the $1/\sqrt{n}$ scaling pushes everything into that shared neighborhood.</p>
+
+  <h3>6.4 Bernoulli MGF, verified</h3>
+  <div class="deriv">
+    \[ X \sim \text{Bernoulli}(p): \quad M_X(t) = (1-p)\,e^{t\cdot 0} + p\, e^{t \cdot 1} = 1 - p + p e^t. \]
+    <p style="margin:8px 0 0;">Sanity against 6.2: $M_X'(t) = p e^t$, so $M_X'(0) = p = \mathbb{E}[X]$; $M_X''(0) = p = \mathbb{E}[X^2]$ (correct, since $X^2 = X$), giving $\mathrm{Var} = p - p^2 = p(1-p)$, agreeing with 2.2. For the fair coin: $M_X(t) = \tfrac{1 + e^t}{2}$.</p>
+  </div>
+
+  <h3>6.5 Gaussian MGF: the exercise solved in full</h3>
+  <p>Claim (source notes' exercise): $X \sim \mathcal{N}(\mu, \sigma^2)$, with density $f_X(x) = \tfrac{1}{\sqrt{2\pi\sigma^2}} \exp\big({-\tfrac{(x-\mu)^2}{2\sigma^2}}\big)$, has</p>
+  \[ M_X(t) = \exp\!\Big( \frac{t^2\sigma^2}{2} + t\mu \Big) \qquad \text{for all } t \in \mathbb{R}. \]
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Step 1 (set up).</strong> By LOTUS, merging the two exponentials:</p>
+    \[ M_X(t) = \int_{-\infty}^{\infty} \frac{1}{\sqrt{2\pi\sigma^2}} \exp\!\Big( tx - \frac{(x-\mu)^2}{2\sigma^2} \Big)\, dx. \]
+    <p style="margin:8px 0 6px;"><strong>Step 2 (complete the square).</strong> Work on the exponent as a quadratic in $x$. Expand, collect, and complete:</p>
+    \[ tx - \frac{(x-\mu)^2}{2\sigma^2} = \frac{2\sigma^2 t x - x^2 + 2\mu x - \mu^2}{2\sigma^2} = -\frac{x^2 - 2(\mu + \sigma^2 t)x + \mu^2}{2\sigma^2}. \]
+    <p style="margin:8px 0 6px;">With $m = \mu + \sigma^2 t$, the numerator is $x^2 - 2mx + \mu^2 = (x-m)^2 - m^2 + \mu^2$, so the exponent equals</p>
+    \[ -\frac{(x-m)^2}{2\sigma^2} + \frac{m^2 - \mu^2}{2\sigma^2}, \qquad \frac{m^2 - \mu^2}{2\sigma^2} = \frac{(\mu + \sigma^2 t)^2 - \mu^2}{2\sigma^2} = \frac{2\mu\sigma^2 t + \sigma^4 t^2}{2\sigma^2} = \mu t + \frac{\sigma^2 t^2}{2}. \]
+    <p style="margin:8px 0 6px;"><strong>Step 3 (read off).</strong> The constant (in $x$) part exits the integral; what remains under the integral is exactly the $\mathcal{N}(m, \sigma^2)$ density, which integrates to $1$:</p>
+    \[ M_X(t) = e^{\mu t + \sigma^2 t^2/2} \underbrace{\int_{-\infty}^{\infty} \frac{1}{\sqrt{2\pi\sigma^2}} e^{-\frac{(x-m)^2}{2\sigma^2}}\, dx}_{=\ 1} = \exp\!\Big( \frac{t^2\sigma^2}{2} + t\mu \Big). \ \blacksquare \]
+  </div>
+  <p>Sanity via 6.2: $M_X'(t) = (\mu + \sigma^2 t) M_X(t)$, so $M_X'(0) = \mu$; $M_X''(t) = \big(\sigma^2 + (\mu + \sigma^2 t)^2\big) M_X(t)$, so $M_X''(0) = \sigma^2 + \mu^2 = \mathbb{E}[X^2]$ &mdash; both match the slide's checks. Standard normal ($\mu = 0, \sigma = 1$): $M(t) = e^{t^2/2}$, the target the CLT sketch aims at.</p>
+
+  <h3>6.6 Uniqueness (Theorem 4): precise statement, and a subtlety the deck cannot show</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 4 (MGF uniqueness; stated, not proved).</strong> If $M_X(t) = M_Y(t) \lt \infty$ for all $t$ in some open interval $(-t_0, t_0)$ around $0$, then $X$ and $Y$ have the same distribution: $F_X(x) = F_Y(x)$ for all $x$.</p>
+  </div>
+  <p>Notes. (i) The deck/source phrase "for all $t$" tacitly includes <em>finiteness</em>; the honest hypothesis is finiteness plus agreement on a neighborhood of $0$ &mdash; agreement only at points where both are $+\infty$ carries no information. (ii) The proof is genuinely out of scope: the standard route shows a finite-MGF distribution is determined by its moments via analytic continuation of the Laplace transform, or passes through characteristic functions [4, &sect;30; 5, &sect;3.3]. (iii) A subtlety worth recording, since it explains why finiteness is not decoration: <em>moments alone do not determine a distribution</em>. The lognormal distribution has all moments finite, yet there are infinitely many other distributions with exactly the same moment sequence [4, &sect;30, Heyde's example]. No contradiction with Theorem 4 &mdash; the lognormal's MGF is infinite for every $t \gt 0$, so the theorem never applies to it. The MGF-as-fingerprint usage pattern (compute, recognize, conclude) is valid precisely when the computed MGF is finite near $0$ &mdash; true in both uses below (Gaussian sums, CLT sketch).</p>
+
+  <h3>6.7 Sums become products; the two worked examples verified</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition (independence $\Rightarrow$ MGF factorizes).</strong> If $X \perp Y$ and $Z = X + Y$, then for every $t$,</p>
+    \[ M_Z(t) = \mathbb{E}\big[e^{t(X+Y)}\big] = \mathbb{E}\big[e^{tX} e^{tY}\big] \overset{\text{(Lemma 2.2)}}{=} \mathbb{E}\big[e^{tX}\big]\,\mathbb{E}\big[e^{tY}\big] = M_X(t)\, M_Y(t), \]
+    <p style="margin:8px 0 0;">applying the product rule with $g(x) = e^{tx}$, $h(y) = e^{ty}$. (For unbounded variables, both sides may be $+\infty$; the identity holds in $(0,\infty]$ because the product rule for <em>non-negative</em> functions needs no integrability &mdash; both sides are sums/integrals of non-negative terms and the same rearrangement applies.) By the $n$-fold extension in 2.3: for $X_1, \dots, X_n$ independent, $M_{X_1 + \cdots + X_n}(t) = \prod_i M_{X_i}(t)$. $\blacksquare$</p>
+  </div>
+  <p><strong>Scaling companion</strong> (used in the CLT step, and recalled by prob06 as one of the "MGF rules"): $M_{aX}(t) = \mathbb{E}[e^{t(aX)}] = \mathbb{E}[e^{(at)X}] = M_X(at)$ &mdash; pure substitution, no independence involved.</p>
+  <p><strong>Sum of independent Gaussians, verified.</strong> $X \sim \mathcal{N}(\mu_1, \sigma_1^2) \perp Y \sim \mathcal{N}(\mu_2, \sigma_2^2)$:</p>
+  \[ M_{X+Y}(t) = e^{\mu_1 t + \sigma_1^2 t^2/2}\, e^{\mu_2 t + \sigma_2^2 t^2/2} = e^{(\mu_1 + \mu_2)t + (\sigma_1^2 + \sigma_2^2)t^2/2}, \]
+  <p>which is the MGF of $\mathcal{N}(\mu_1 + \mu_2,\, \sigma_1^2 + \sigma_2^2)$, everywhere finite; Theorem 4 applies and identifies the distribution of $X + Y$ as exactly that Gaussian. (Consistency check: the mean adds by linearity and the variance adds by Lemma 2.3 &mdash; the MGF route additionally proves the <em>shape</em> is Gaussian, which no moment bookkeeping could.)</p>
+  <p><strong>Coin sum, verified.</strong> $S_n = X_1 + \cdots + X_n$, i.i.d. fair coins: $M_{S_n}(t) = \big(\tfrac{1+e^t}{2}\big)^n$ by the $n$-fold product with 6.4's factor. The exponent $n$ sitting on the MGF is, one section later, the seed of the exponential tail bound.</p>
+</section>
+
+<section>
+  <h2>7 &nbsp;Chernoff Bound</h2>
+
+  <h3>7.1 Statement, conditions, and the lower-tail twin</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 5 (Chernoff bound).</strong> Let $X$ have MGF $M(t) = \mathbb{E}[e^{tX}]$. For any $\alpha \in \mathbb{R}$ and any $t \gt 0$ with $M(t) \lt \infty$:</p>
+    \[ \Pr(X \geq \alpha) \;\leq\; M(t)\, e^{-t\alpha}. \]
+    <p style="margin:8px 0 0;">Since each $t$ gives a valid bound, so does the best one: $\Pr(X \geq \alpha) \leq \inf_{t \gt 0} M(t)e^{-t\alpha}$.</p>
+  </div>
+  <p>Conditions unpacked. (i) The only hypothesis is finiteness of $M$ at the $t$ actually used &mdash; no non-negativity ($e^{tX}$ supplies it), no variance assumption. If $M(t) = \infty$ for all $t \gt 0$ the bound is vacuous, never wrong. (ii) $\alpha$ needs no sign restriction, but the bound is useful only for $\alpha$ above the mean: for $\alpha \leq \mathbb{E}[X]$, Jensen's inequality (prob01 note) gives $M(t) = \mathbb{E}[e^{tX}] \geq e^{t\mathbb{E}[X]} \geq e^{t\alpha}$, so the right-hand side is $\geq 1$. (iii) <em>Lower tail:</em> the mirror statement $\Pr(X \leq \alpha) \leq M(t)e^{-t\alpha}$ holds for every $t \lt 0$ &mdash; same proof with the decreasing map $x \mapsto e^{tx}$ flipping the event. Equivalently, apply Theorem 5 to $-X$ at level $-\alpha$. This twin is what the two-sided "factor 2" in 7.7 quietly uses.</p>
+
+  <h3>7.2 Proof: Markov on the exponentiated variable</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Step 1 (exponentiate the event).</strong> Fix $t \gt 0$. The map $x \mapsto e^{tx}$ is strictly increasing, so</p>
+    \[ X \geq \alpha \iff e^{tX} \geq e^{t\alpha} \]
+    <p style="margin:8px 0 6px;">&mdash; the same event, hence the same probability. Set $W = e^{tX}$ and check Markov's entry ticket: $W \gt 0$ (exponentials are positive &mdash; note this holds regardless of the sign of $X$, which is why no centering was needed), and $\mathbb{E}[W] = M(t) \lt \infty$ by hypothesis.</p>
+    <p style="margin:8px 0 6px;"><strong>Step 2 (Markov).</strong> Theorem 1, threshold form, on $W$ at level $e^{t\alpha} \gt 0$:</p>
+    \[ \Pr(X \geq \alpha) = \Pr\big(W \geq e^{t\alpha}\big) \;\leq\; \frac{\mathbb{E}[W]}{e^{t\alpha}} = M(t)\, e^{-t\alpha}. \ \blacksquare \]
+  </div>
+  <p>Chebyshev's proof with the square swapped for an exponential &mdash; the "one engine, three fuels" claim is now fully cashed. The new feature is the <em>free parameter</em>: the transform is tunable, and the tuning happens after the inequality is proved, at zero logical cost, because every $t$ yields a true statement.</p>
+
+  <h3>7.3 Coin flips: the three-step optimization, every step verified</h3>
+  <p><strong>Step 1 (plug in).</strong> $\bar X_n \geq \tfrac34 \iff S_n \geq \tfrac{3n}{4}$ (multiply by $n \gt 0$). Chernoff on $S_n$ with $M_{S_n}(t) = \big(\tfrac{1+e^t}{2}\big)^n$ (6.7):</p>
+  \[ \Pr\!\Big(S_n \geq \frac{3n}{4}\Big) \;\leq\; e^{-3nt/4} \Big(\frac{1+e^t}{2}\Big)^{\!n} = \Big[ e^{-3t/4}\, \frac{1+e^t}{2} \Big]^{n} = e^{n g(t)}, \quad g(t) = -\frac{3t}{4} + \ln\frac{1+e^t}{2}. \]
+  <p><strong>Step 2 (optimize $t$).</strong> Minimizing the bound over $t \gt 0$ is the same as minimizing $g$ ($u \mapsto e^{nu}$ is increasing, so the log of the min is the min of the log). Differentiate:</p>
+  <div class="deriv">
+    \[ g'(t) = -\frac34 + \frac{e^t}{1+e^t} = 0 \iff \frac{e^t}{1+e^t} = \frac34 \iff e^t = 3 \iff t^\star = \ln 3 \gt 0. \]
+    <p style="margin:8px 0 0;">(Solve: $4e^t = 3 + 3e^t$.) This critical point is the unique minimizer: $\tfrac{e^t}{1+e^t}$ is strictly increasing in $t$ (it is the logistic function), climbing from $\tfrac12$ at $t=0$ toward $1$, so $g'$ is negative before $t^\star$ and positive after; equivalently $g''(t) = \tfrac{e^t}{(1+e^t)^2} \gt 0$, so $g$ is strictly convex.</p>
+  </div>
+  <p><strong>Step 3 (evaluate).</strong> At $t^\star = \ln 3$: $e^{t^\star} = 3$, so $\tfrac{1+e^{t^\star}}{2} = 2$ and</p>
+  \[ g(t^\star) = -\frac34 \ln 3 + \ln 2 = -0.823959\ldots + 0.693147\ldots = -0.130812\ldots \approx -0.1308, \]
+  \[ \Pr\!\big(\bar X_n \geq \tfrac34\big) \;\leq\; e^{-0.1308\, n}. \]
+  <p>Slide table verified: $n=16$: $e^{-2.0930} = 0.1233 \approx 0.12$; $n=100$: $e^{-13.081} = 2.08 \times 10^{-6} \approx 2.1 \times 10^{-6}$; $n=400$: $e^{-52.325} = 1.89 \times 10^{-23} \approx 1.9 \times 10^{-23}$. Against Chebyshev's $0.01$ at $n=400$: twenty-one orders of magnitude &mdash; the slide's "different universes" is, if anything, restrained.</p>
+
+  <h3>7.4 The optimized exponent is a KL divergence</h3>
+  <p>Run the same three steps at a general level $a$ with $\tfrac12 \lt a \lt 1$: $g_a(t) = -at + \ln\tfrac{1+e^t}{2}$, and $g_a'(t) = 0$ gives $\tfrac{e^t}{1+e^t} = a$, i.e. $e^{t^\star} = \tfrac{a}{1-a}$, $t^\star = \ln\tfrac{a}{1-a} \gt 0$. Substituting back, with $\tfrac{1 + e^{t^\star}}{2} = \tfrac{1}{2(1-a)}$:</p>
+  <div class="deriv">
+    \[ g_a(t^\star) = -a \ln\frac{a}{1-a} + \ln\frac{1}{2(1-a)} = -a\ln a + a \ln(1-a) - \ln 2 - \ln(1-a) \]
+    \[ = -\big[ a \ln(2a) + (1-a)\ln(2(1-a)) \big] = -\Big[ a \ln\frac{a}{1/2} + (1-a)\ln\frac{1-a}{1/2} \Big] \]
+    \[ = -\,D\big(\mathrm{Bern}(a)\,\Vert\,\mathrm{Bern}(\tfrac12)\big), \]
+    <p style="margin:8px 0 0;">the KL divergence of prob02 (in nats). Hence $\Pr(\bar X_n \geq a) \leq e^{-n D(\mathrm{Bern}(a) \Vert \mathrm{Bern}(1/2))}$.</p>
+  </div>
+  <p>Check at $a = \tfrac34$: $D = \tfrac34\ln\tfrac{3/4}{1/2} + \tfrac14\ln\tfrac{1/4}{1/2} = \tfrac34\ln\tfrac32 + \tfrac14\ln\tfrac12 = 0.304099 - 0.173287 = 0.130812$ nats &mdash; identical to $-g(t^\star)$ from 7.3, as it must be. The optimized Chernoff bound rediscovers, mechanically, information theory's cost of pretending $a$-biased data came from a fair coin; Section 8 shows this exponent is not just an upper bound but the <em>true</em> decay rate.</p>
+
+  <h3>7.5 The quadratic approximation $D(\mathrm{Bern}(\tfrac12 + \epsilon) \Vert \mathrm{Bern}(\tfrac12)) \approx 2\epsilon^2$</h3>
+  <p>The slide's closing observation, derived. Write $h(\epsilon) = D(\mathrm{Bern}(\tfrac12+\epsilon) \Vert \mathrm{Bern}(\tfrac12)) = (\tfrac12+\epsilon)\ln(1+2\epsilon) + (\tfrac12-\epsilon)\ln(1-2\epsilon)$. Then $h(0) = 0$; differentiating, $h'(\epsilon) = \ln(1+2\epsilon) - \ln(1-2\epsilon)$, so $h'(0) = 0$; and $h''(\epsilon) = \tfrac{2}{1+2\epsilon} + \tfrac{2}{1-2\epsilon}$, so $h''(0) = 4$. Taylor: $h(\epsilon) = \tfrac{4}{2}\epsilon^2 + O(\epsilon^3) = 2\epsilon^2 + O(\epsilon^3)$. Check at $\epsilon = 0.01$: $2\epsilon^2 = 2 \times 10^{-4}$, while the exact value is $0.51\ln\tfrac{0.51}{0.5} + 0.49\ln\tfrac{0.49}{0.5} = 0.000200013$ &mdash; the approximation is accurate to five significant figures already. (This $2\epsilon^2$ is exactly the exponent of prob06's Hoeffding inequality specialized to coins &mdash; the "remember this shape" pointer on the slide.)</p>
+
+  <h3>7.6 Sample-size revisited: $18{,}444$, verified</h3>
+  <p>The Section 1 demand for a fair coin: $\Pr(|\bar X_n - \tfrac12| \geq 0.01) \leq 0.05$. The deviation event splits into two tails, $\{\bar X_n \geq 0.51\}$ and $\{\bar X_n \leq 0.49\}$; the union bound (probability of a union is at most the sum) plus the upper-tail bound of 7.4 and its lower-tail twin (7.1(iii)) &mdash; equal by the symmetry $D(\mathrm{Bern}(0.49) \Vert \mathrm{Bern}(0.5)) = D(\mathrm{Bern}(0.51) \Vert \mathrm{Bern}(0.5))$ for a fair reference coin &mdash; give</p>
+  \[ \Pr\big(|\bar X_n - \tfrac12| \geq 0.01\big) \;\leq\; 2\, e^{-n D(\mathrm{Bern}(0.51) \Vert \mathrm{Bern}(0.5))} = 2\,e^{-n \cdot 0.000200013}. \]
+  <p>Requiring $2e^{-nD} \leq 0.05$: $\ n \geq \tfrac{\ln 40}{D}$. With the slide's rounded $D \approx 0.0002$: $n \geq \tfrac{3.68888}{0.0002} = 18{,}444.4$, the slide's $\approx 18{,}444$. With the exact $D = 0.000200013$: $n \geq 18{,}443.2$, so the integer requirement is $n \geq 18{,}444$ either way &mdash; the rounding is harmless. Against Chebyshev's $50{,}000$ (4.7): a $2.7\times$ saving, from the same data and the same failure budget, purchased entirely by knowing the MGF instead of only the variance.</p>
+
+  <h3>7.7 Exponential vs. polynomial: the scaling in $\delta$, with explicit numbers</h3>
+  <p>The structural difference the head-to-head section visualizes, isolated as arithmetic. Fix the coin question $\Pr(\bar X_n \geq \tfrac34) \leq \delta$ and solve each bound for $n$:</p>
+  <table>
+    <thead><tr><th>Target $\delta$</th><th>Chebyshev: $n \geq 4/\delta$</th><th>Chernoff: $n \geq \ln(1/\delta)/0.1308$</th></tr></thead>
+    <tbody>
+      <tr><td>$10^{-2}$</td><td>$400$</td><td>$36$</td></tr>
+      <tr><td>$10^{-6}$</td><td>$4{,}000{,}000$</td><td>$106$</td></tr>
+      <tr><td>$10^{-9}$</td><td>$4 \times 10^{9}$</td><td>$159$</td></tr>
+    </tbody>
+  </table>
+  <p>(Chernoff entries: $\ln(10^6) = 13.816$, $/0.1308 = 105.6 \to 106$; $\ln(10^9) = 20.72$, $/0.1308 = 158.4 \to 159$.) Polynomial bounds pay $1/\delta$; exponential bounds pay $\ln(1/\delta)$. This is why "moderate sample sizes give strong guarantees" in ML theory: pushing failure probability from $10^{-2}$ to $10^{-9}$ costs Chernoff a factor $4.4$ in samples and costs Chebyshev a factor $10^{7}$.</p>
+</section>
+
+<section>
+  <h2>8 &nbsp;Three Bounds Head-to-Head</h2>
+  <p>The escalation table needs no new mathematics &mdash; each row was proved above. The numeric table, every entry re-derived:</p>
+  <table>
+    <thead><tr><th>$n$</th><th>Markov $= 2/3$</th><th>Chebyshev $= 4/n$</th><th>Chernoff $= e^{-0.130812 n}$</th><th>exact $= \Pr(S_n \geq \lceil 3n/4 \rceil)$</th></tr></thead>
+    <tbody>
+      <tr><td>$16$</td><td>$0.67$</td><td>$0.25$</td><td>$0.1233$</td><td>$2517/65536 = 0.0384$</td></tr>
+      <tr><td>$100$</td><td>$0.67$</td><td>$0.04$</td><td>$2.08 \times 10^{-6}$</td><td>$2.82 \times 10^{-7}$</td></tr>
+      <tr><td>$400$</td><td>$0.67$</td><td>$0.01$</td><td>$1.89 \times 10^{-23}$</td><td>$1.30 \times 10^{-24}$</td></tr>
+    </tbody>
+  </table>
+  <p>The exact column is $\sum_{k \geq 3n/4} \binom{n}{k} 2^{-n}$ evaluated directly ($n=16$ was expanded coefficient-by-coefficient in 5.4; $n = 100, 400$ are the same finite sums, machine-evaluated: $2.8181 \times 10^{-7}$ and $1.2959 \times 10^{-24}$). All slide entries ($0.038$, $2.8\times 10^{-7}$, $1.3 \times 10^{-24}$) confirmed.</p>
+  <p><strong>Why Chernoff "tracks the truth's exponent."</strong> On a log scale the exact tail and the Chernoff bound are parallel lines: at $n = 400$, $\tfrac1n \ln(1/\text{exact}) = 0.13758$ vs. the Chernoff exponent $0.13081$. The residual gap is subexponential: Cram&eacute;r's large-deviations theorem [5, &sect;2.7] says the true exponent equals the optimized Chernoff exponent, $\lim_n \tfrac1n \ln \Pr(\bar X_n \geq a) = -D(\mathrm{Bern}(a) \Vert \mathrm{Bern}(\tfrac12))$; the remaining polynomial factor (of order $1/\sqrt{n}$, the Bahadur&ndash;Rao correction) is why the exact numbers sit one order of magnitude below the bound while decaying at the same rate. So Chernoff is not merely the best of the three bounds &mdash; at the exponential scale it is <em>unimprovable</em>. Chebyshev, by contrast, is off by the unbounded factor $(4/n)e^{+0.1308 n}$; and Markov, by a constant that never moves. Diagnosis in one sentence: each bound is exactly as good as the information it eats.</p>
+</section>
+
+<section>
+  <h2>9 &nbsp;Central Limit Theorem</h2>
+
+  <h3>9.1 Convergence in distribution, stated precisely</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition.</strong> $Z_n \xrightarrow{(d)} Z$ (<em>in distribution</em>) if $F_{Z_n}(x) \to F_Z(x)$ at every point $x$ where $F_Z$ is continuous.</p>
+  </div>
+  <p>The continuity-point restriction is a real part of the definition that the deck's gloss ("the CDF of $Z_n$ approaches the Gaussian CDF") can afford to drop <em>only because</em> the limit here is $\mathcal{N}(0,1)$, whose CDF $\Phi$ is continuous everywhere &mdash; so in this lecture the convergence really is at every $x$. (Why the restriction exists in general: let $Z_n = \tfrac1n$ deterministically; then $Z_n \to 0$ in every reasonable sense, yet $F_{Z_n}(0) = 0$ for all $n$ while $F_0(0) = 1$ &mdash; convergence fails exactly at the limit CDF's jump.) In the hierarchy of 5.3 this is the weakest mode: it constrains only the distributions, not the random variables jointly.</p>
+
+  <h3>9.2 Statement, and the standardization that feeds it</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 6 (central limit theorem, Lindeberg&ndash;L&eacute;vy).</strong> Let $X_1, X_2, \dots$ be i.i.d. with mean $\mu$ and variance $\sigma^2 \in (0, \infty)$. Then</p>
+    \[ Z_n = \sum_{i=1}^{n} \frac{X_i - \mu}{\sqrt{n}\,\sigma} \;\xrightarrow{(d)}\; \mathcal{N}(0,1). \]
+  </div>
+  <p>Equivalent bookkeeping used by the deck: with $Y_i = (X_i - \mu)/\sigma$ (so $\mathbb{E}[Y] = 0$, $\mathbb{E}[Y^2] = \mathrm{Var}(Y) = 1$, hence $M_Y(0) = 1$, $M_Y'(0) = 0$, $M_Y''(0) = 1$ by 6.2), $Z_n = \tfrac{1}{\sqrt n}\sum_i Y_i$; and $Z_n = \tfrac{\bar X_n - \mu}{\sigma/\sqrt n}$, the sample mean centered and rescaled by its own standard deviation $\sigma/\sqrt{n}$ (Lemma 4.1). The theorem's full hypotheses are exactly as stated &mdash; finite variance, i.i.d.; note it needs <em>no</em> MGF assumption. That mismatch between the theorem's hypotheses and the sketch's tools is precisely what makes the proof below a sketch.</p>
+
+  <h3>9.3 What the sketch omits: the honest list</h3>
+  <p>The deck's caveat slide names three gaps; here is each one made precise.</p>
+  <ul>
+    <li><strong>Gap 1 &mdash; the MGF may not exist.</strong> The sketch manipulates $M_Y(t)$, but finite variance does not give a finite MGF (the $(1+|x|)^{-4}$-density example of 6.1 satisfies Theorem 6's hypotheses while $M_Y(t) = \infty$ for all $t \neq 0$). So the sketch cannot even be <em>started</em> for some distributions the theorem covers.</li>
+    <li><strong>Gap 2 &mdash; pointwise MGF convergence must imply convergence in distribution.</strong> This is true but nontrivial: if $M_{Z_n}(t) \to M_Z(t) \lt \infty$ for all $t$ in an open interval around $0$, then $Z_n \xrightarrow{(d)} Z$ (Curtiss's theorem [8]). It is the "fingerprint, in the limit" the deck takes on faith.</li>
+    <li><strong>Gap 3 &mdash; the Taylor step needs error control.</strong> Writing $M_Y(s) \approx 1 + s^2/2$ hides a remainder; one must know the remainder is $o(s^2)$ and track it through the $n$-th power. Under Gap 1's assumption this is genuinely fine &mdash; made rigorous in 9.4.</li>
+  </ul>
+  <p><strong>The real proof</strong> replaces the MGF by the characteristic function $\varphi_X(t) = \mathbb{E}[e^{itX}]$, which exists for <em>every</em> random variable (since $|e^{itX}| = 1$), satisfies the same product/scale rules, has $\varphi_Y(s) = 1 - s^2/2 + o(s^2)$ under finite variance, and comes with L&eacute;vy's continuity theorem in place of Curtiss's. The argument is then <em>formally identical</em> to the sketch below with $t \mapsto it$; see [5, &sect;3.4] or [4, &sect;27]. So the sketch is not a wrong proof &mdash; it is the right proof run on the wrong transform, and the deck's decision to present it is a fair trade of complex analysis for honesty about the gaps.</p>
+
+  <h3>9.4 The sketch, made precise at statement level</h3>
+  <p><strong>Standing assumption for this subsection (Gap 1 granted):</strong> $M_Y$ is finite on an open interval around $0$. Then each step is a genuine lemma.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Step 1 (product &mdash; exact, no approximation).</strong> By the $n$-fold product rule (6.7) and the scale rule with $a = \tfrac{1}{\sqrt n}$:</p>
+    \[ M_{Z_n}(t) = \mathbb{E}\Big[ e^{\frac{t}{\sqrt n}\sum_i Y_i} \Big] = \prod_{i=1}^{n} \mathbb{E}\Big[ e^{\frac{t}{\sqrt n} Y_i} \Big] = M_Y\!\Big(\frac{t}{\sqrt n}\Big)^{\! n}, \]
+    <p style="margin:8px 0 6px;">using independence for the product and identical distribution to collapse it to a power. This identity is exact for every $n$ and every $t$ with $t/\sqrt{n}$ in the finiteness interval.</p>
+    <p style="margin:8px 0 6px;"><strong>Step 2 (Taylor, with the remainder stated).</strong> By 6.2, $M_Y$ is twice differentiable at $0$ with $M_Y(0) = 1$, $M_Y'(0) = 0$, $M_Y''(0) = 1$; Taylor's theorem with Peano remainder gives, as $s \to 0$,</p>
+    \[ M_Y(s) = 1 + \frac{s^2}{2} + r(s), \qquad r(s) = o(s^2). \]
+    <p style="margin:8px 0 6px;">At $s = t/\sqrt{n}$ with $t$ fixed: $M_Y(t/\sqrt n) = 1 + \tfrac{t^2}{2n} + r_n$ where $n\, r_n \to 0$. Standardization is what killed the linear term &mdash; without it the expansion would carry a $\mu t \sqrt{n}$-scale term that ruins the limit.</p>
+    <p style="margin:8px 0 6px;"><strong>Step 3 (limit lemma, proved).</strong> <em>If $c_n \to 0$ with $n\,c_n \to x$, then $(1 + c_n)^n \to e^x$.</em> Proof: for $n$ large, $|c_n| \lt 1$ and $\ln(1 + c_n) = c_n + O(c_n^2)$ (Taylor of $\ln$ at $1$), so $n \ln(1 + c_n) = n c_n + n \cdot O(c_n^2) \to x + 0$, since $n c_n^2 = (n c_n) \cdot c_n \to x \cdot 0 = 0$; exponentiate (continuity of $\exp$). Applying it with $c_n = \tfrac{t^2}{2n} + r_n$ (so $n c_n \to \tfrac{t^2}{2}$):</p>
+    \[ M_{Z_n}(t) = \Big(1 + \frac{t^2}{2n} + r_n\Big)^{\! n} \;\longrightarrow\; e^{t^2/2} \qquad \text{for every fixed } t. \]
+    <p style="margin:8px 0 0;"><strong>Step 4 (recognize and conclude).</strong> $e^{t^2/2}$ is the $\mathcal{N}(0,1)$ MGF (6.5 with $\mu = 0$, $\sigma = 1$), finite everywhere; by Curtiss's theorem (Gap 2, cited not proved), $Z_n \xrightarrow{(d)} \mathcal{N}(0,1)$. $\blacksquare$ <em>(modulo Gap 2; and under the extra assumption of Gap 1)</em></p>
+  </div>
+  <p>Note the division of labor: Steps 1&ndash;3 are fully proved here; the entire remaining debt of the "sketch" is Gap 1 (an added hypothesis) and Gap 2 (one cited theorem). The universality mechanism is visible in Step 2: after standardization, <em>only</em> $M_Y''(0) = 1$ survives into the limit &mdash; every higher moment of $Y$ is buried in $r_n$ and crushed by the $1/\sqrt{n}$ scaling. Coins, dice, and losses genuinely become indistinguishable in the limit.</p>
+
+  <h3>9.5 The compound-interest limit's numeric check</h3>
+  <p>The deck's feel-for-the-limit numbers at $x = 1$: $(1 + \tfrac{1}{10})^{10} = 1.1^{10} = 2.5937 \approx 2.594$; $(1 + \tfrac{1}{100})^{100} = 1.01^{100} = 2.7048 \approx 2.705$; limit $e = 2.71828\ldots \approx 2.718$. All three verified.</p>
+
+  <h3>9.6 The Bin(16, &frac12;) picture, verified, and what the CLT does and does not buy</h3>
+  <p>The chart overlays the standardized pmf of $S_{16} \sim \mathrm{Bin}(16, \tfrac12)$ on the $\mathcal{N}(0,1)$ density. To compare a pmf with a density, each probability mass is divided by the lattice spacing of the standardized values &mdash; adjacent values of $S_{16}$ sit $\Delta z = 1/\sigma_{S_{16}} = \tfrac12$ apart (since $\sigma_{S_{16}} = \sqrt{16 \cdot \tfrac14} = 2$), so the bar height at the center is $\Pr(S_{16} = 8) / \Delta z = \binom{16}{8} 2^{-16} \times 2 = \tfrac{12870}{65536} \times 2 = 0.19638 \times 2 = 0.3928 \approx 0.393$, against the Gaussian peak $\tfrac{1}{\sqrt{2\pi}} = 0.3989 \approx 0.399$ &mdash; both slide numbers confirmed, agreement to $1.5\%$ at $n$ as small as $16$.</p>
+  <p><strong>What the CLT buys:</strong> the <em>shape</em> of typical fluctuations &mdash; error bars $\mu \pm z\,\sigma/\sqrt n$, and the universality of the Gaussian noise model (pairing with prob03's maximum-entropy characterization). Quantitatively, the Berry&ndash;Esseen theorem [5, &sect;3.4.4] bounds the CDF error by $C\,\mathbb{E}|Y|^3/\sqrt{n}$ for an absolute constant $C$ &mdash; a $1/\sqrt n$ convergence rate, stated here for completeness since the deck stops at the picture.</p>
+  <p><strong>What it does not buy: guarantees.</strong> The CLT is a limit statement about the <em>center</em> of the distribution; it comes with no error bound in the far tails at fixed $n$, which is exactly the concentration inequalities' job. Instructive coincidence on today's coin: the normal approximation to $\Pr(\bar X_{100} \geq \tfrac34)$ is $Q(5) = 2.87 \times 10^{-7}$ (the threshold is $z = \tfrac{0.75 - 0.5}{0.5/10} = 5$ standard deviations), remarkably close to the exact $2.82 \times 10^{-7}$ &mdash; but this accuracy is luck, not law: nothing certifies it in advance, whereas Chernoff's $2.08 \times 10^{-6}$ is a <em>proved ceiling</em>. Use the CLT to describe fluctuations, and concentration bounds to certify them. That division &mdash; description vs. certification &mdash; is the bridge to prob06, where certification is extended from one average to a whole hypothesis class via Hoeffding plus the union bound.</p>
+</section>
+
+<section>
+  <h2>References</h2>
+  <ol>
+    <li>S. Boucheron, G. Lugosi, and P. Massart, <em>Concentration Inequalities: A Nonasymptotic Theory of Independence</em>, Oxford University Press, 2013. DOI: <a href="https://doi.org/10.1093/acprof:oso/9780199535255.001.0001">10.1093/acprof:oso/9780199535255.001.0001</a>. (Ch. 2: the Cram&eacute;r&ndash;Chernoff method &mdash; Sections 7&ndash;8's optimization done in full generality; the standard modern reference for everything this lecture opens.)</li>
+    <li>R. Vershynin, <em>High-Dimensional Probability: An Introduction with Applications in Data Science</em>, Cambridge University Press, 2018. DOI: <a href="https://doi.org/10.1017/9781108231596">10.1017/9781108231596</a>; free copy on the author's page. (Ch. 1&ndash;2: Markov/Chebyshev/Chernoff, sub-Gaussian variables &mdash; the road prob06 takes.)</li>
+    <li>H. Chernoff, &ldquo;A Measure of Asymptotic Efficiency for Tests of a Hypothesis Based on the Sum of Observations,&rdquo; <em>Annals of Mathematical Statistics</em>, vol. 23, no. 4, pp. 493&ndash;507, 1952. DOI: <a href="https://doi.org/10.1214/aoms/1177729330">10.1214/aoms/1177729330</a>. (The original exponential bound; the KL form of the exponent in Section 7.4 is already here.)</li>
+    <li>P. Billingsley, <em>Probability and Measure</em>, 3rd ed., Wiley, 1995. (&sect;21: differentiation under the expectation and moment expansions used in 6.2&ndash;6.3; &sect;30: the moment problem, MGF determinacy, and Heyde's lognormal example cited in 6.6; &sect;27: the characteristic-function CLT.)</li>
+    <li>R. Durrett, <em>Probability: Theory and Examples</em>, 5th ed., Cambridge University Press, 2019. DOI: <a href="https://doi.org/10.1017/9781108591034">10.1017/9781108591034</a>. (Thm. 2.4.1: strong LLN; &sect;2.7: large deviations / Cram&eacute;r's theorem behind Section 8; &sect;3.4: the rigorous CLT and Berry&ndash;Esseen.)</li>
+    <li>T. M. Cover and J. A. Thomas, <em>Elements of Information Theory</em>, 2nd ed., Wiley-Interscience, 2006. DOI: <a href="https://doi.org/10.1002/047174882X">10.1002/047174882X</a>. (Ch. 11: the method of types &mdash; the KL exponent of Section 7.4 as the exact large-deviations rate; the course's standing reference for KL, prob02.)</li>
+    <li>N. Etemadi, &ldquo;An Elementary Proof of the Strong Law of Large Numbers,&rdquo; <em>Zeitschrift f&uuml;r Wahrscheinlichkeitstheorie und verwandte Gebiete</em>, vol. 55, pp. 119&ndash;122, 1981. (The most accessible proof of the theorem stated in 5.3.)</li>
+    <li>J. H. Curtiss, &ldquo;A Note on the Theory of Moment Generating Functions,&rdquo; <em>Annals of Mathematical Statistics</em>, vol. 13, no. 4, pp. 430&ndash;433, 1942. (MGF convergence implies convergence in distribution &mdash; Gap 2 of Section 9.3.)</li>
+  </ol>
+</section>
+
+</body>
+</html>

@@ -22,14 +22,17 @@ Four decks, one per ~50-minute block. Merge later if desired.
 | Deck | Topic |
 |---|---|
 | `sangnam1-what-is-learning.html` | A model is a function · everything becomes numbers · rules out, data in · the four-line recipe |
-| sangnam2-linear-regression-and-overfitting *(planned)* | Loss and training on a straight line · overfitting · model size · amount of data · **scaling laws** |
+| `sangnam2-linear-regression-and-overfitting.html` | Loss and training on a straight line · overfitting · model size · amount of data · **scaling laws** |
 | sangnam3-training-and-classification *(planned)* | Gradient descent as downhill-in-fog · threshold lines · soft thresholding → **logistic regression is linear regression plus a squash** · deep learning |
 | sangnam4-frontier-and-risks *(planned)* | Diffusion · text-to-image/video · LLMs · **RLVR** · AI in mathematics · the incident column |
 | `figs/` | Figures captured from the source PDF and from cited papers/press |
 
 Captured so far: `cifar10.png` (CIFAR-10 sample grid), `mnist-vector.png` (digit as
 pixel matrix), `word-embeddings.png` (words as points), `price-chart.png` (BTC/KRW
-candlesticks with moving averages).
+candlesticks with moving averages), and fourteen plots lifted from the source PDF
+for Deck 2 — `f-hw-scatter`, `f-hw-fit`, `f-curve-linear`, `f-curve-quad`,
+`f-D-linear`, `f-DD-linear`, `f-D-poly7`, `f-DD-poly7`, `f-more-data`,
+`f-triptych`, `f-val-poly6`, `f-val-quad`, `f-aug-dog`, `f-aug-digit`.
 
 ---
 
@@ -105,7 +108,80 @@ well?" (pp. 23–24), and the recipe (p. 25).
 **Deliberate omissions here:** no optimization, no overfitting yet, no gradient
 descent — all three are set up as open questions on `:856` and answered in Decks 2–3.
 
+## sangnam2-linear-regression-and-overfitting.html
+
+52 slides. Tracks source pp. 26–57, minus the closed-form solve (pp. 29–32, 35–39),
+cross-validation (p. 55) and regularization (p. 56); section 04 is new material,
+added on Albert's brief ("model size, amount of data, possibly scaling laws").
+Notation stays at $ax + b$, one squared-error line, and a weighted sum — no
+derivatives, no matrices, no normal equations.
+
+Fourteen of the twenty-one exhibits are Albert's own matplotlib plots, cropped out
+of the source PDF; the rest are inline SVG.
+
+| Part | Topic | Line |
+|---|---|---|
+| Title / This Session | | `:48-83` |
+| **01** — Fitting a line | one input, two dials | `:84-317` |
+| | The Recipe, Unchanged (deck-1 callback) | `:92` |
+| | Heights and Weights (`f-hw-scatter`) | `:108` |
+| | The Job: Height In, Weight Out (SVG function box) | `:119` |
+| | **A Family of Straight Lines** — $\mathcal{G}=\{g_{a,b}(x)=ax+b\}$ | `:146` |
+| | Which of These Is Best? (SVG, three candidates) | `:168` |
+| | Measure Every Miss (SVG residuals) | `:192` |
+| | Why Square the Gaps? | `:221` |
+| | **One Number for the Whole Dataset** — mean squared error | `:235` |
+| | Training Is Turning the Dials (SVG bowl) | `:248` |
+| | The Winning Line (`f-hw-fit`) | `:271` |
+| | What the Dials Tell You (slope as business quantity) | `:282` |
+| | Linear Regression, Complete (four-line recipe) | `:301` |
+| **02** — More columns, more shapes | many inputs, curved columns | `:318-439` |
+| | Two Inputs Instead of One (SVG plane) | `:326` |
+| | Many Inputs, Same Shape — $g(x)=w_1x_1+\cdots+w_dx_d+b$ | `:350` |
+| | A Table You Already Have (churn table) | `:364` |
+| | A Straight Line Cannot Bend (`f-curve-linear`) | `:379` |
+| | Give It a Curved Column (`f-curve-quad`) | `:390` |
+| | **Still a Weighted Sum** — $z_1=x$, $z_2=x^2$ | `:401` |
+| | You Can Always Add Columns (powers / products / transforms) | `:416` |
+| **03** — Overfitting | the one failure mode to recognise | `:440-724` |
+| | Ten Points, One Line (`f-D-linear`) | `:448` |
+| | Nudge One Point (`f-DD-linear`) | `:459` |
+| | A Curve Through Every Point (`f-D-poly7`) | `:470` |
+| | Nudge One Point Again (`f-DD-poly7`) | `:481` |
+| | **Memorising Is Not Learning** | `:492` |
+| | Three Fits, Same Data (`f-triptych`) | `:511` |
+| | Two Ways to Be Wrong (bias / variance, in words) | `:522` |
+| | More Data Tames It (`f-more-data`) | `:541` |
+| | You Cannot Just Look (2 columns vs 2,000) | `:552` |
+| | **Hold Some Data Back** (SVG 80/20 split) | `:576` |
+| | Perfect on Train, Lost Elsewhere (`f-val-poly6`) | `:597` |
+| | When the Two Scores Agree (`f-val-quad`) | `:608` |
+| | Train, Validation, Test | `:619` |
+| | Prefer the Simpler Story (**Occam's razor**, SVG 2 vs 40 dials) | `:642` |
+| | **Reading the Two Numbers** (diagnosis table) | `:671` |
+| | If You Are Overfitting (more data · simpler family · augment · generate) | `:686` |
+| | A Shifted Dog Is Still a Dog (`f-aug-dog`) | `:698` |
+| | But It Depends on Your Data (`f-aug-digit`, mirrored '2') | `:712` |
+| **04** — Model, data, compute | new material, not in the source | `:725-890` |
+| | The Classic Picture (SVG U-curve) | `:733` |
+| | Then the Curve Broke (SVG **double descent**) | `:756` |
+| | Three Dials | `:776` |
+| | **Scaling Laws** (SVG straight line on a log plot) | `:799` |
+| | Balance the Dials (**Chinchilla**, Hoffmann et al. 2022) | `:820` |
+| | Compute Is Buyable, Data Is Not | `:840` |
+| | What This Means for You | `:854` |
+| | Today in Five Lines | `:878` |
+| Closer — "Fit the pattern, not the noise." | | `:891` |
+
+**Key named items:** mean squared error; bias-variance trade-off; train/validation/test
+split; Occam's razor; double descent; scaling laws; Hoffmann et al., "Training
+Compute-Optimal Large Language Models" (2022).
+
+**Deliberate omissions here:** no closed-form least-squares solve, no
+cross-validation, no regularization (all three cut on Albert's instruction).
+Gradient descent is named only as "turning the dials" — the mechanism lands in Deck 3.
+
 ## Status
 
-Deck 1 complete and linted. Decks 2–4 authored in order, one at a time, each
-committed to the PR as it lands.
+Decks 1 and 2 complete, linted, and screenshot-audited. Decks 3–4 authored in
+order, one at a time, each committed as it lands.

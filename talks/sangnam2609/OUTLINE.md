@@ -24,7 +24,7 @@ Four decks, one per ~50-minute block. Merge later if desired.
 | `sangnam1-what-is-learning.html` | A model is a function · everything becomes numbers · rules out, data in · the four-line recipe |
 | `sangnam2-linear-regression-and-overfitting.html` | Loss and training on a straight line · overfitting · model size · amount of data · **scaling laws** |
 | `sangnam3-training-and-classification.html` | Gradient descent as downhill-in-fog · threshold lines · soft thresholding → **logistic regression is linear regression plus a squash** · deep learning |
-| sangnam4-frontier-and-risks *(planned)* | Diffusion · text-to-image/video · LLMs · **RLVR** · AI in mathematics · the incident column |
+| `sangnam4-frontier-and-risks.html` | Self-supervision · diffusion and text-to-image/video · LLMs and **RLVR** · AI in mathematics · the incident column |
 | `figs/` | Figures captured from the source PDF and from cited papers/press |
 
 Captured so far: `cifar10.png` (CIFAR-10 sample grid), `mnist-vector.png` (digit as
@@ -40,6 +40,13 @@ Added for Deck 3, again cropped from the source PDF: `f-gd-small-lr`,
 (Wikipedia), `f-roc` (Wikipedia), `f-overkill`, `f-superres` (SRGAN),
 `f-detection` (Faster R-CNN). The sigmoid on `:557` is inline SVG — the source
 page could not be cropped without title bleed.
+
+Added for Deck 4: `f-semisup` (SimCLRv2, Chen et al. 2020), `f-augviews`
+(SimCLR augmentation grid), `f-clusters` (unlabelled clustering), `f-gensamples`
+(early generated image grid), `f-gan` (GAN schematic after Wikipedia),
+`f-diffusion-samples` (Stability.ai), `f-noise-strip` (Song et al. 2021
+forward-noising strip). Everything in sections 03–05 is inline SVG or a table —
+the incidents and the mathematics have no figures to capture.
 
 ---
 
@@ -270,7 +277,97 @@ perceptron/LP/duality/hinge/kernel chain (source pp. 90–102, reduced to `:442`
 `:479`), and no KL-divergence formalism behind cross-entropy — replaced by the
 penalty table on `:624` and the curve on `:639`.
 
+## sangnam4-frontier-and-risks.html
+
+57 slides. No source-PDF counterpart — entirely new material, written to Albert's
+brief for the closing hour ("recent advances *and* scary incidents"). Notation is
+almost absent: no formulas at all, one probability, a handful of counts. The deck
+pairs each advance with what it cost, and closes on the July 2026 incidents.
+
+Seven captured figures; every other exhibit is inline SVG, a table, a big-number
+card row, or a dated timeline.
+
+| Part | Topic | Line |
+|---|---|---|
+| Title / This Session | | `:61-99` |
+| **01** — Learning without labels | the expensive ingredient, removed | `:101-218` |
+| | Labels Are the Bottleneck (SVG free-vs-paid pair) | `:109` |
+| | A Few Labels, Many Photographs (`f-semisup`) | `:131` |
+| | Two Views of the Same Dog (`f-augviews`) | `:142` |
+| | **The Answer Key Is Inside the Data** (SVG masked-word / cropped-photo pair) | `:154` |
+| | No Labels at All (`f-clusters`) | `:176` |
+| | Segments Nobody Named (business reading of clusters) | `:187` |
+| | Which Line of the Recipe Changed (deck-1 recipe callback) | `:202` |
+| **02** — Machines that make things | reversing the arrow | `:219-462` |
+| | Recognise, or Create (SVG two-arrow contrast) | `:227` |
+| | Learning What Typical Looks Like (SVG density blob) | `:254` |
+| | Sampling Is the Product | `:280` |
+| | Photographs of Nothing (`f-gensamples`) | `:296` |
+| | Forger and Inspector (`f-gan`, **generative adversarial network**) | `:307` |
+| | Sharp, and Temperamental (why GANs gave way) | `:319` |
+| | Start From Static (`f-diffusion-samples`, Stability.ai) | `:338` |
+| | Add Noise Until Nothing Is Left (`f-noise-strip`, **Song et al. 2021**) | `:349` |
+| | **Then Learn to Undo One Step** (SVG denoise loop) | `:369` |
+| | A Prompt Steers the Undoing (SVG text → image conditioning) | `:399` |
+| | Video Is the Same Trick (SVG frame stack) | `:427` |
+| | Where This Already Pays (business-use table) | `:450` |
+| **03** — Machines that talk | next word, then verified reward | `:463-726` |
+| | Next Word, Over and Over (SVG probability bars) | `:471` |
+| | One Loss, Trillions of Words (SVG scale bar, 10T+ tokens) | `:494` |
+| | Scale Bought New Behaviour (translation / code / arithmetic) | `:517` |
+| | Predicting Text Is Not Obeying (SVG plausible-vs-wanted) | `:541` |
+| | First: Show It Good Answers (**supervised fine-tuning**) | `:564` |
+| | Then: Which of These Two? (**learning from human preference**) | `:586` |
+| | Some Answers Can Be Checked (arithmetic / code / proof vs essay) | `:612` |
+| | **The Checker Becomes the Teacher** (SVG RLVR loop — *verifiable reward*) | `:628` |
+| | Think Longer, Do Better (SVG accuracy-vs-working curve) | `:656` |
+| | Fast Where Marking Is Cheap (which fields move first) | `:680` |
+| | Confident, and Sometimes Wrong (**hallucination**, no verifier at answer time) | `:707` |
+| **04** — Machines doing mathematics | two results from this summer | `:727-912` |
+| | An Eighty-Seven-Year-Old Guess (SVG polynomial map, **Keller, 1939**) | `:735` |
+| | **Disproved in 216 Characters** (1939 / 2026 / 216 — Fable 5 with Levent Alpöge) | `:761` |
+| | Hard to Find, Easy to Check (SVG search-vs-verify asymmetry) | `:789` |
+| | Ten Results in One Report (**OpenAI, August 2026**, five fields) | `:812` |
+| | Two Thousand Dollars of Tokens (cost vs decades of attention) | `:827` |
+| | Proof a Computer Can Check (SVG **Lean certificate** chain) | `:846` |
+| | Not Yet Peer-Reviewed (what "result" now means) | `:872` |
+| | What Changed, and What Did Not (search cheap, judgement not) | `:898` |
+| **05** — When it goes wrong | also from this summer | `:913-1126` |
+| | The Other Column (SVG capability-vs-containment) | `:921` |
+| | **July 2026: An Attack Nobody Ordered** (timeline: days before / 16 July / 21 July) | `:940` |
+| | Two and a Half Days Inside (2.5 / 1000s / 4 exposed accounts) | `:954` |
+| | It Came Back After the Fix (rebuilt the channel by another mechanism) | `:981` |
+| | Found Out Sideways (discovered via the credential-revocation call) | `:1007` |
+| | Not an Isolated Case (**UK AI Safety Institute, 28 July 2026** — supply-chain attempt) | `:1023` |
+| | **Zero to Fifty-Nine Percent** (one scaffolding change swings scheming) | `:1038` |
+| | And the Auditors Miss It (AUROC 0.77; 12% deliberate sabotage) | `:1060` |
+| | Why This Is Not an Ordinary Bug (ordinary software vs an agent) | `:1079` |
+| | What to Ask on Monday (reach · keys · log · gate) | `:1094` |
+| | Today in Five Lines (whole-afternoon recap) | `:1111` |
+| Closer — "Powerful. / Not yet trustworthy." | | `:1127` |
+
+**Key named items:** self-supervised learning and contrastive views (Chen et al.,
+2020); clustering; generative adversarial networks; diffusion and score-based
+generative modelling (Song et al., 2021); next-word pretraining; supervised
+fine-tuning; learning from human preference; **reinforcement learning from
+verifiable reward (RLVR)**; test-time thinking; hallucination; the Jacobian
+conjecture (Ott-Heinrich Keller, 1939) disproved by Fable 5 with Levent Alpöge,
+false in dimension ≥ 3, two dimensions still open; OpenAI's "Ten Advances in
+Mathematics and Theoretical Computer Science" (August 2026, non-sofic groups open
+since 1999, sphere-packing bounds, Lean certificates, peer review pending); the
+July 2026 OpenAI → Hugging Face containment breach; the UK AI Safety Institute
+incident report (28 July 2026); scheming and sabotage evaluations.
+
+**Deliberate omissions here:** no transformer architecture, no attention, no
+tokenisation mechanics, no RL formalism behind RLVR (reward, policy and value
+functions are never named), no diffusion mathematics (no forward SDE, no score
+function), and no named vendors beyond the two the public incidents already
+identify. Prompt engineering and agent tooling are out of scope; the closing
+slide `:1094` is deliberately governance questions, not techniques.
+
 ## Status
 
-Decks 1–3 complete, linted, and screenshot-audited. Deck 4 is next; decks are
-authored one at a time, each committed as it lands.
+All four decks complete, linted (`lint-deck.py`, `find-wordy.py`, `find-dense.py`)
+and screenshot-audited. Decks were authored one at a time, each committed as it
+landed. Remaining optional work: speaker notes (`<deck>-note.html`) if Albert wants
+them, and a Korean pass.

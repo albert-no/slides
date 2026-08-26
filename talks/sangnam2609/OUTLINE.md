@@ -23,7 +23,7 @@ Four decks, one per ~50-minute block. Merge later if desired.
 |---|---|
 | `sangnam1-what-is-learning.html` | A model is a function · everything becomes numbers · rules out, data in · the four-line recipe |
 | `sangnam2-linear-regression-and-overfitting.html` | Loss and training on a straight line · overfitting · model size · amount of data · **scaling laws** |
-| sangnam3-training-and-classification *(planned)* | Gradient descent as downhill-in-fog · threshold lines · soft thresholding → **logistic regression is linear regression plus a squash** · deep learning |
+| `sangnam3-training-and-classification.html` | Gradient descent as downhill-in-fog · threshold lines · soft thresholding → **logistic regression is linear regression plus a squash** · deep learning |
 | sangnam4-frontier-and-risks *(planned)* | Diffusion · text-to-image/video · LLMs · **RLVR** · AI in mathematics · the incident column |
 | `figs/` | Figures captured from the source PDF and from cited papers/press |
 
@@ -33,6 +33,13 @@ candlesticks with moving averages), and fourteen plots lifted from the source PD
 for Deck 2 — `f-hw-scatter`, `f-hw-fit`, `f-curve-linear`, `f-curve-quad`,
 `f-D-linear`, `f-DD-linear`, `f-D-poly7`, `f-DD-poly7`, `f-more-data`,
 `f-triptych`, `f-val-poly6`, `f-val-quad`, `f-aug-dog`, `f-aug-digit`.
+
+Added for Deck 3, again cropped from the source PDF: `f-gd-small-lr`,
+`f-gd-large-lr`, `f-gd-contour`, `f-gd-init`, `f-landscape` (losslandscape.com),
+`f-clf-boundary`, `f-clf-many`, `f-clf-none`, `f-soft-guess`, `f-prec-recall`
+(Wikipedia), `f-roc` (Wikipedia), `f-overkill`, `f-superres` (SRGAN),
+`f-detection` (Faster R-CNN). The sigmoid on `:557` is inline SVG — the source
+page could not be cropped without title bleed.
 
 ---
 
@@ -181,7 +188,89 @@ Compute-Optimal Large Language Models" (2022).
 cross-validation, no regularization (all three cut on Albert's instruction).
 Gradient descent is named only as "turning the dials" — the mechanism lands in Deck 3.
 
+## sangnam3-training-and-classification.html
+
+58 slides. Tracks source pp. 58–132: gradient descent (pp. 59–77), classification
+and the decision line (pp. 84–99), soft thresholding and logistic regression
+(pp. 103–112), precision/recall/ROC (pp. 118–124), and the deep-learning bridge
+(pp. 125–132). Notation stays at a weighted sum, one squared-error line, and one
+sigmoid definition — no derivatives, no updates rule, no matrices.
+
+Fourteen exhibits are captured figures; the remaining twenty-one are inline SVG.
+
+| Part | Topic | Line |
+|---|---|---|
+| Title / This Session | | `:48-87` |
+| **01** — Downhill in the fog | searching a space you cannot see | `:88-320` |
+| | Two Dials, One Score (squared-error loss, deck-2 callback) | `:96` |
+| | The High-School Answer (SVG parabola, slope $=0$) | `:109` |
+| | No Formula for a Billion Dials (2 / a million / billions) | `:128` |
+| | Standing on a Hillside in Fog (`f-landscape`) | `:143` |
+| | All You Can Feel Is the Slope (SVG hiker in fog) | `:154` |
+| | **Look, Step, Repeat** — names *gradient descent* | `:176` |
+| | Steps Too Small (`f-gd-small-lr`) | `:193` |
+| | Steps Too Large (`f-gd-large-lr`) | `:204` |
+| | The Step Size Is a Choice — names *learning rate* | `:215` |
+| | Two Dials at Once (`f-gd-contour`, two step sizes) | `:234` |
+| | Where You Start Matters (`f-gd-init`, two valleys) | `:245` |
+| | The Ground Is Not a Bowl (SVG plateau / local / deeper) | `:258` |
+| | Too Much Data for One Step — names *stochastic gradient descent* | `:278` |
+| | Downhill Search in Five Lines | `:306` |
+| **02** — Drawing the line | when the answer is a label | `:321-492` |
+| | Number or Label? (regression vs classification) | `:329` |
+| | Two Clouds, One Line (`f-clf-boundary`) | `:350` |
+| | **Still a Weighted Sum** — $s(x)=w_1x_1+\cdots+w_dx_d+b$ | `:361` |
+| | Counting Mistakes (SVG, 2 on the wrong side) | `:377` |
+| | A Score With No Slope (SVG staircase) | `:405` |
+| | Many Lines Work (`f-clf-many`) | `:431` |
+| | Prefer the Widest Gap (SVG corridor, **Cortes and Vapnik, 1995**) | `:442` |
+| | Sometimes No Line Works (`f-clf-none`) | `:468` |
+| | Then Allow a Few Mistakes (penalty per violation) | `:479` |
+| **03** — Soft answers | a line, plus a squash | `:493-725` |
+| | Hard Answer, Soft Answer (churn verdict vs churn risk) | `:501` |
+| | Probably Red, Certainly Blue (`f-soft-guess`) | `:522` |
+| | Distance Is Confidence (SVG, distance from the line) | `:532` |
+| | Squash It Into a Probability (SVG sigmoid) | `:556` |
+| | **Logistic Regression** — $g(x)=\sigma(w_1x_1+\cdots+b)$, $\sigma(s)=1/(1+e^{-s})$ | `:580` |
+| | **A Line Plus a Squash** (SVG chain: columns → weighted sum → squash → 0.72) | `:596` |
+| | Scoring a Probability (penalty table) | `:624` |
+| | Confident and Wrong Is Expensive (SVG $-\log p$, names *cross-entropy*) | `:639` |
+| | Now the Score Has a Slope (why classifiers output probabilities) | `:661` |
+| | More Than Two Labels (`cifar10.png`, Krizhevsky 2009) | `:675` |
+| | One Score per Label, Then Normalise (SVG bars, names *softmax*) | `:686` |
+| **04** — Reading the errors | which mistake is cheaper? | `:726-838` |
+| | Where to Put the Threshold (SVG slider) | `:734` |
+| | Two Ways to Be Wrong (false alarm / miss) | `:754` |
+| | **Precision and Recall** (`f-prec-recall`) | `:775` |
+| | Which Mistake Is Cheaper? (screening / spam / fraud / loans) | `:793` |
+| | Sweep the Threshold (`f-roc`, area under the curve) | `:806` |
+| | **Accuracy Is a Trap** — 99.9% by always saying "fine" | `:826` |
+| **05** — Stacking the boxes | where deep learning comes in | `:839-1058` |
+| | Straight Lines Run Out (SVG ring inside a ring) | `:847` |
+| | **Stack the Boxes** (SVG layered network) | `:872` |
+| | Same Four Lines (only the family changed) | `:901` |
+| | Any Shape, In Principle (**Cybenko, 1989; Hornik, 1991**) | `:918` |
+| | Depth Buys Reuse (SVG pixels → edges → parts → car) | `:936` |
+| | Sharper Pictures (`f-superres`, **Ledig et al., CVPR 2017**) | `:966` |
+| | Finding Things in a Photo (`f-detection`, **Ren et al., NeurIPS 2015**) | `:981` |
+| | Filling In a Blank (SVG masked sentence — language-model training) | `:1000` |
+| | You Might Not Need It (`f-overkill`) | `:1027` |
+| | Today in Five Lines | `:1046` |
+| Closer — "Take the slope. Then squash it." | | `:1059` |
+
+**Key named items:** gradient descent; learning rate; stochastic gradient descent;
+local minima; the zero-one loss and its missing slope; support vector machine
+(Cortes and Vapnik, 1995); sigmoid; logistic regression; cross-entropy; softmax;
+precision, recall and ROC/AUC; universal approximation (Cybenko, 1989; Hornik,
+1991); SRGAN (Ledig et al., CVPR 2017); Faster R-CNN (Ren et al., NeurIPS 2015).
+
+**Deliberate omissions here:** no gradient formulas or update rule (Albert's brief:
+high-level only), no momentum/RMSProp/ADAM/LR-schedule block (source pp. 78–83), no
+perceptron/LP/duality/hinge/kernel chain (source pp. 90–102, reduced to `:442` and
+`:479`), and no KL-divergence formalism behind cross-entropy — replaced by the
+penalty table on `:624` and the curve on `:639`.
+
 ## Status
 
-Decks 1 and 2 complete, linted, and screenshot-audited. Decks 3–4 authored in
-order, one at a time, each committed as it lands.
+Decks 1–3 complete, linted, and screenshot-audited. Deck 4 is next; decks are
+authored one at a time, each committed as it lands.

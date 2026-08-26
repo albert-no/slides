@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Training, and Classifying &mdash; Sangnam AI Leader, Week 3 (Part 3)</title>
+
+<!-- Design system (canonical; all decks link to reference/). -->
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+
+<!-- KaTeX for math rendering (self-hosted). -->
+<link rel="stylesheet" href="../../reference/katex/katex.min.css">
+<script defer src="../../reference/katex/katex.min.js"></script>
+<script defer src="../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+
+<style>
+  /* Numbered step box — the search loop and the four-line recipe. */
+  .sn-loop { background: var(--light); border-left: 3px solid var(--yonsei-blue);
+             border-radius: 0 10px 10px 0; padding: 16px 24px; max-width: 900px; }
+  .sn-loop ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+  .sn-loop ol li { counter-increment: step; padding: 8px 0 8px 52px; position: relative; line-height: 1.45; }
+  .sn-loop ol li::before { content: counter(step) "."; position: absolute; left: 10px; top: 8px;
+                           font-weight: 700; color: var(--yonsei-blue); width: 32px; text-align: right; }
+  .sn-loop ol li + li { border-top: 1px solid var(--slate); }
+
+  /* Plain data table. */
+  .sn-table { border-collapse: collapse; width: 100%; max-width: 1000px; margin: 0 auto; }
+  .sn-table th, .sn-table td { padding: 11px 16px; text-align: left; border-bottom: 1px solid var(--slate); }
+  .sn-table th { color: var(--yonsei-blue); font-weight: 700; border-bottom: 2px solid var(--yonsei-blue); }
+  .sn-table td.sn-y { color: var(--accent); font-weight: 700; }
+  .sn-table tr td:first-child { color: var(--gray-text); }
+
+  /* Left-anchored citation for slides whose bottom centre is occupied. */
+  .cite-left { max-width: 92% !important; left: 28px !important; transform: none !important;
+               text-align: left !important; bottom: 46px !important; }
+
+  /* Figure caption sitting directly under a captured plot. */
+  .sn-cap { text-align: center; color: var(--gray-text); margin-top: 8px; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1 — TITLE -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Machine Learning &middot; Part 3</div>
+  <h1>Training, and Classifying</h1>
+  <div class="divider"></div>
+  <p class="subtitle">How the search actually runs, and what changes when the answer is a label.</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;&middot;&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Sangnam AI Leader &middot; Week 3</p>
+</div>
+
+<!-- 2 — CONTENTS -->
+<div class="slide">
+  <h2>This Session</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Downhill in the Fog</div><div class="toc-sub">Searching without a formula</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Drawing the Line</div><div class="toc-sub">When the answer is a label</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Soft Answers</div><div class="toc-sub">A line plus a squash</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Reading the Errors</div><div class="toc-sub">Which mistake is cheaper?</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Stacking the Boxes</div><div class="toc-sub">Where deep learning comes in</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 3 — SECTION 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Downhill in the Fog</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Searching a space you cannot see</p>
+</div>
+
+<!-- 4 — the score -->
+<div class="slide">
+  <h2>Two Dials, One Score</h2>
+  <div class="divider"></div>
+  <p>A model is a set of dials. A loss scores every setting.</p>
+  <div class="math-block">
+    $$\text{loss}(a,b) \;=\; \frac{1}{n}\sum_{i=1}^{n}\bigl(y_i - (a x_i + b)\bigr)^2$$
+  </div>
+  <div class="highlight">
+    <p>Training is the search for the lowest score.</p>
+  </div>
+</div>
+
+<!-- 5 — the high-school answer -->
+<div class="slide">
+  <h2>The High-School Answer</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 620 260" style="width:100%;max-width:860px;">
+      <line x1="60" y1="228" x2="590" y2="228" stroke="#8a8f98" stroke-width="2"/>
+      <line x1="60" y1="16" x2="60" y2="228" stroke="#8a8f98" stroke-width="2"/>
+      <path d="M92,32 Q325,368 558,32" fill="none" stroke="#003876" stroke-width="3.5"/>
+      <line x1="230" y1="200" x2="420" y2="200" stroke="#d94040" stroke-width="3.5"/>
+      <circle cx="325" cy="200" r="7" fill="#d94040"/>
+      <text x="325" y="180" font-size="18" fill="#d94040" text-anchor="middle" font-weight="700">slope = 0</text>
+      <text x="325" y="252" font-size="17" fill="#666" text-anchor="middle">dial setting</text>
+      <text x="34" y="120" font-size="17" fill="#666" text-anchor="middle" transform="rotate(-90 34 120)">score</text>
+    </svg>
+  </div>
+  <p class="sn-cap">Where the curve is flat, the score is lowest. Solve for that point.</p>
+</div>
+
+<!-- 6 — no formula -->
+<div class="slide">
+  <h2>No Formula for a Billion Dials</h2>
+  <div class="divider"></div>
+  <table class="sn-table">
+    <tr><th>Model</th><th>Dials</th><th>Flat point</th></tr>
+    <tr><td>Straight line</td><td>2</td><td class="sn-y">solvable by hand</td></tr>
+    <tr><td>Small network</td><td>a million</td><td>no closed form</td></tr>
+    <tr><td>Language model</td><td>billions</td><td>no closed form</td></tr>
+  </table>
+  <div class="highlight">
+    <p>Beyond the simplest models, nobody solves. Everybody searches.</p>
+  </div>
+</div>
+
+<!-- 7 — the landscape -->
+<div class="slide">
+  <h2>Standing on a Hillside in Fog</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <img src="figs/f-landscape.png" alt="Rendered loss surface of a neural network, a rugged mountain landscape"
+         style="max-height:400px;width:auto;display:block;">
+  </div>
+  <p class="cite">Loss surface of a trained network &middot; losslandscape.com</p>
+</div>
+
+<!-- 8 — the slope -->
+<div class="slide">
+  <h2>All You Can Feel Is the Slope</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 640 240" style="width:100%;max-width:880px;">
+      <defs><marker id="d3-a1" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto">
+        <path d="M0,0 L8,3.2 L0,6.4 Z" fill="#d94040"/></marker></defs>
+      <path d="M40,44 C180,60 250,150 360,178 C470,206 560,208 610,206" fill="none" stroke="#003876" stroke-width="4"/>
+      <circle cx="250" cy="150" r="9" fill="#003876"/>
+      <line x1="250" y1="150" x2="352" y2="176" stroke="#d94040" stroke-width="3.5" marker-end="url(#d3-a1)"/>
+      <text x="318" y="145" font-size="18" fill="#d94040" font-weight="700">downhill</text>
+      <ellipse cx="330" cy="96" rx="200" ry="46" fill="#c3d2e2" opacity="0.55"/>
+      <text x="330" y="102" font-size="19" fill="#4a5a6a" text-anchor="middle">fog: the rest is invisible</text>
+      <text x="608" y="234" font-size="17" fill="#666" text-anchor="end">lowest point, unknown</text>
+    </svg>
+  </div>
+  <div class="highlight">
+    <p>No map. One local reading: which way is down.</p>
+  </div>
+</div>
+
+<!-- 9 — the loop -->
+<div class="slide">
+  <h2>Look, Step, Repeat</h2>
+  <div class="divider"></div>
+  <div class="sn-loop">
+    <ol>
+      <li>Start anywhere.</li>
+      <li>Feel which way the score drops fastest.</li>
+      <li>Take a step that way.</li>
+      <li>Repeat until stepping stops helping.</li>
+    </ol>
+  </div>
+  <div class="highlight">
+    <p><strong>Gradient descent.</strong> Every large model is trained this way.</p>
+  </div>
+</div>
+
+<!-- 10 — steps too small -->
+<div class="slide">
+  <h2>Steps Too Small</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <img src="figs/f-gd-small-lr.png" alt="Descent on a parabola with very small steps, barely leaving the start"
+         style="max-height:430px;width:auto;display:block;">
+  </div>
+  <p class="sn-cap">Ten steps, almost no progress. Correct direction, wasted time.</p>
+</div>
+
+<!-- 11 — steps too large -->
+<div class="slide">
+  <h2>Steps Too Large</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <img src="figs/f-gd-large-lr.png" alt="Descent on a parabola with oversized steps, bouncing further out each time"
+         style="max-height:430px;width:auto;display:block;">
+  </div>
+  <p class="sn-cap">Each step overshoots the valley and lands higher than the last.</p>
+</div>
+
+<!-- 12 — the step size -->
+<div class="slide">
+  <h2>The Step Size Is a Choice</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="gap:22px 30px;">
+    <div class="card">
+      <h3 style="color:var(--warn);">Too small</h3>
+      <p>Slow. Weeks of chips for one run.</p>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--warn);">Too large</h3>
+      <p>The score climbs instead of falling.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Called the <strong>learning rate</strong>. Nobody derives it. It is tuned.</p>
+  </div>
+</div>
+
+<!-- 13 — two dials at once -->
+<div class="slide">
+  <h2>Two Dials at Once</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <img src="figs/f-gd-contour.png" alt="Two contour maps of the same loss surface with descent paths at two step sizes"
+         style="max-height:340px;width:auto;display:block;">
+  </div>
+  <p class="sn-cap">Same landscape, same start. Left takes bigger steps than right.</p>
+</div>
+
+<!-- 14 — where you start -->
+<div class="slide">
+  <h2>Where You Start Matters</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <img src="figs/f-gd-init.png" alt="Two contour maps of a bumpy surface; two starting points reach two different valleys"
+         style="max-height:330px;width:auto;display:block;">
+  </div>
+  <div class="highlight">
+    <p>Two starting points, two different valleys. So run it several times.</p>
+  </div>
+</div>
+
+<!-- 15 — not a bowl -->
+<div class="slide">
+  <h2>The Ground Is Not a Bowl</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 660 250" style="width:100%;max-width:900px;">
+      <line x1="40" y1="222" x2="640" y2="222" stroke="#8a8f98" stroke-width="2"/>
+      <path d="M50,40 C120,120 160,132 230,130 C300,128 320,60 380,150 C420,208 450,196 500,150 C550,104 570,180 630,196"
+            fill="none" stroke="#003876" stroke-width="4"/>
+      <circle cx="200" cy="131" r="8" fill="#c3a25a"/>
+      <text x="200" y="112" font-size="17" fill="#c3a25a" text-anchor="middle" font-weight="700">flat: no signal</text>
+      <circle cx="424" cy="196" r="8" fill="#d94040"/>
+      <text x="424" y="242" font-size="17" fill="#d94040" text-anchor="middle" font-weight="700">a valley, not the valley</text>
+      <circle cx="558" cy="163" r="8" fill="#2e8b57"/>
+      <text x="596" y="140" font-size="17" fill="#2e8b57" text-anchor="middle" font-weight="700">deeper</text>
+    </svg>
+  </div>
+  <p class="sn-cap">Downhill search settles in whichever dip it fell into.</p>
+</div>
+
+<!-- 16 — sampling -->
+<div class="slide">
+  <h2>Too Much Data for One Step</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 640 190" style="width:100%;max-width:880px;">
+      <defs><marker id="d3-a2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#8a8f98"/></marker></defs>
+      <rect x="14" y="30" width="200" height="120" rx="10" fill="#f4f6f9" stroke="#c3d2e2" stroke-width="2"/>
+      <text x="114" y="72" font-size="19" fill="#666" text-anchor="middle">all examples</text>
+      <text x="114" y="112" font-size="26" fill="#1a1a1a" text-anchor="middle" font-weight="700">billions</text>
+      <line x1="222" y1="90" x2="278" y2="90" stroke="#8a8f98" stroke-width="2.5" marker-end="url(#d3-a2)"/>
+      <text x="250" y="72" font-size="16" fill="#666" text-anchor="middle">draw</text>
+      <rect x="288" y="42" width="150" height="96" rx="10" fill="#fff" stroke="#003876" stroke-width="3"/>
+      <text x="363" y="78" font-size="19" fill="#003876" text-anchor="middle">a handful</text>
+      <text x="363" y="114" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">256</text>
+      <line x1="446" y1="90" x2="502" y2="90" stroke="#8a8f98" stroke-width="2.5" marker-end="url(#d3-a2)"/>
+      <rect x="512" y="42" width="118" height="96" rx="10" fill="#f4f6f9" stroke="#c3d2e2" stroke-width="2"/>
+      <text x="571" y="80" font-size="19" fill="#666" text-anchor="middle">one</text>
+      <text x="571" y="110" font-size="19" fill="#666" text-anchor="middle">step</text>
+      <text x="330" y="180" font-size="17" fill="#666" text-anchor="middle">a rough direction, computed cheaply, millions of times</text>
+    </svg>
+  </div>
+  <div class="highlight">
+    <p>Sampling instead of totalling: <strong>stochastic gradient descent</strong>.</p>
+  </div>
+</div>
+
+<!-- 17 — recap of section 1 -->
+<div class="slide">
+  <h2>Downhill Search in Five Lines</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>No formula once the dials are many</li>
+    <li>Feel the slope, step, repeat</li>
+    <li>Step size decides speed and stability</li>
+    <li>Restart from several points</li>
+    <li>Sample the data, do not total it</li>
+  </ul>
+  <div class="spacer"></div>
+  <p class="muted">Slopes are computed by the software, never by hand.</p>
+</div>
+
+<!-- 18 — SECTION 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Drawing the Line</h1>
+  <div class="divider"></div>
+  <p class="subtitle">When the answer is a label, not a number</p>
+</div>
+
+<!-- 19 — number or label -->
+<div class="slide">
+  <h2>Number or Label?</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="gap:22px 30px;">
+    <div>
+      <h3 style="color:var(--yonsei-blue);">Regression</h3>
+      <p>Answer on a scale. Revenue, weight, days.</p>
+      <p class="muted">Being close counts as good.</p>
+    </div>
+    <div>
+      <h3 style="color:var(--accent);">Classification</h3>
+      <p>Answer from a short list. Spam or not, pass or fail.</p>
+      <p class="muted">Close means nothing. Right or wrong.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Same recipe. Different loss, because the answer changed shape.</p>
+  </div>
+</div>
+
+<!-- 20 — two clouds one line -->
+<div class="slide">
+  <h2>Two Clouds, One Line</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <img src="figs/f-clf-boundary.png" alt="Scatter of two labelled groups separated by a straight decision boundary"
+         style="max-height:380px;width:auto;display:block;">
+  </div>
+  <p class="sn-cap">Two measurements per customer. One line splits the labels.</p>
+</div>
+
+<!-- 21 — still a weighted sum -->
+<div class="slide">
+  <h2>Still a Weighted Sum</h2>
+  <div class="divider"></div>
+  <div class="math-block">
+    $$s(x) \;=\; w_1 x_1 + w_2 x_2 + \cdots + w_d x_d + b$$
+  </div>
+  <ul>
+    <li>Score above zero: one label</li>
+    <li>Score below zero: the other</li>
+  </ul>
+  <div class="highlight">
+    <p>The same machinery. A line, then a verdict on its sign.</p>
+  </div>
+</div>
+
+<!-- 22 — counting mistakes -->
+<div class="slide">
+  <h2>Counting Mistakes</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 600 250" style="width:100%;max-width:840px;">
+      <line x1="46" y1="222" x2="576" y2="222" stroke="#8a8f98" stroke-width="2"/>
+      <line x1="46" y1="14" x2="46" y2="222" stroke="#8a8f98" stroke-width="2"/>
+      <line x1="70" y1="30" x2="520" y2="210" stroke="#1a1a1a" stroke-width="3"/>
+      <g fill="#003876">
+        <circle cx="300" cy="52" r="6"/><circle cx="352" cy="76" r="6"/><circle cx="404" cy="46" r="6"/>
+        <circle cx="450" cy="92" r="6"/><circle cx="492" cy="60" r="6"/><circle cx="530" cy="104" r="6"/>
+        <circle cx="380" cy="120" r="6"/><circle cx="470" cy="140" r="6"/>
+      </g>
+      <g stroke="#d94040" stroke-width="3">
+        <path d="M96,186 l11,11 M107,186 l-11,11"/><path d="M144,164 l11,11 M155,164 l-11,11"/>
+        <path d="M180,198 l11,11 M191,198 l-11,11"/><path d="M232,176 l11,11 M243,176 l-11,11"/>
+        <path d="M268,204 l11,11 M279,204 l-11,11"/><path d="M330,196 l11,11 M341,196 l-11,11"/>
+      </g>
+      <circle cx="386" cy="126" r="17" fill="none" stroke="#d94040" stroke-width="3"/>
+      <path d="M244,120 l11,11 M255,120 l-11,11" stroke="#d94040" stroke-width="3"/>
+      <circle cx="250" cy="126" r="17" fill="none" stroke="#d94040" stroke-width="3"/>
+      <text x="576" y="246" font-size="17" fill="#d94040" text-anchor="end" font-weight="700">2 on the wrong side</text>
+    </svg>
+  </div>
+  <p class="sn-cap">Simplest loss there is: the number of examples the line gets wrong.</p>
+</div>
+
+<!-- 23 — no slope -->
+<div class="slide">
+  <h2>A Score With No Slope</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 620 220" style="width:100%;max-width:860px;">
+      <line x1="54" y1="188" x2="596" y2="188" stroke="#8a8f98" stroke-width="2"/>
+      <line x1="54" y1="14" x2="54" y2="188" stroke="#8a8f98" stroke-width="2"/>
+      <g stroke="#003876" stroke-width="4" fill="none">
+        <path d="M60,40 H170"/><path d="M170,76 H300"/><path d="M300,112 H430"/><path d="M430,148 H560"/>
+      </g>
+      <g fill="#d94040">
+        <circle cx="170" cy="58" r="5"/><circle cx="300" cy="94" r="5"/><circle cx="430" cy="130" r="5"/>
+      </g>
+      <text x="115" y="30" font-size="17" fill="#666" text-anchor="middle">4 wrong</text>
+      <text x="235" y="66" font-size="17" fill="#666" text-anchor="middle">3 wrong</text>
+      <text x="365" y="102" font-size="17" fill="#666" text-anchor="middle">2 wrong</text>
+      <text x="495" y="138" font-size="17" fill="#666" text-anchor="middle">1 wrong</text>
+      <text x="325" y="212" font-size="17" fill="#666" text-anchor="middle">nudge the line a little &rarr; the count does not move</text>
+    </svg>
+  </div>
+  <div class="highlight">
+    <p>A staircase has nowhere to feel downhill. The count is unusable as a guide.</p>
+  </div>
+</div>
+
+<!-- 24 — many lines -->
+<div class="slide">
+  <h2>Many Lines Work</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <img src="figs/f-clf-many.png" alt="The same two labelled groups with two different separating lines drawn"
+         style="max-height:370px;width:auto;display:block;">
+  </div>
+  <p class="sn-cap">Both lines score zero mistakes. The loss cannot choose between them.</p>
+</div>
+
+<!-- 25 — widest gap -->
+<div class="slide">
+  <h2>Prefer the Widest Gap</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 620 230" style="width:100%;max-width:860px;">
+      <rect x="46" y="16" width="540" height="180" fill="#fbfcfd" stroke="#e6ebf1" stroke-width="1.5"/>
+      <polygon points="70,196 470,16 566,16 566,42 166,196" fill="#c3d2e2" opacity="0.45"/>
+      <line x1="70" y1="196" x2="566" y2="16" stroke="#003876" stroke-width="3.5"/>
+      <line x1="118" y1="196" x2="566" y2="34" stroke="#8a8f98" stroke-width="2" stroke-dasharray="7 5"/>
+      <line x1="52" y1="180" x2="520" y2="16" stroke="#8a8f98" stroke-width="2" stroke-dasharray="7 5"/>
+      <g fill="#003876">
+        <circle cx="300" cy="48" r="6"/><circle cx="380" cy="36" r="6"/><circle cx="466" cy="60" r="6"/>
+        <circle cx="248" cy="34" r="6"/><circle cx="418" cy="88" r="6"/>
+      </g>
+      <g stroke="#d94040" stroke-width="3">
+        <path d="M132,160 l11,11 M143,160 l-11,11"/><path d="M196,176 l11,11 M207,176 l-11,11"/>
+        <path d="M262,166 l11,11 M273,166 l-11,11"/><path d="M330,180 l11,11 M341,180 l-11,11"/>
+      </g>
+      <text x="452" y="170" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">widest empty corridor</text>
+      <text x="330" y="222" font-size="17" fill="#666" text-anchor="middle">the line furthest from both groups survives new data better</text>
+    </svg>
+  </div>
+  <p class="cite">Cortes and Vapnik, 1995 &mdash; support vector machine</p>
+</div>
+
+<!-- 26 — no line works -->
+<div class="slide">
+  <h2>Sometimes No Line Works</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <img src="figs/f-clf-none.png" alt="Labelled groups that overlap; circled points fall on the wrong side of every line"
+         style="max-height:370px;width:auto;display:block;">
+  </div>
+  <p class="sn-cap">Circled points sit on the wrong side of any straight line you draw.</p>
+</div>
+
+<!-- 27 — allow mistakes -->
+<div class="slide">
+  <h2>Then Allow a Few Mistakes</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Demanding perfection returns nothing at all</li>
+    <li>Instead: charge a penalty per violation</li>
+    <li>Wide corridor, small penalty bill</li>
+  </ul>
+  <div class="highlight">
+    <p>Real data overlaps. A method that insists on a clean split is unusable.</p>
+  </div>
+</div>
+
+<!-- 28 — SECTION 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Soft Answers</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A line, plus a squash</p>
+</div>
+
+<!-- 29 — hard vs soft -->
+<div class="slide">
+  <h2>Hard Answer, Soft Answer</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="gap:22px 30px;">
+    <div>
+      <h3 style="color:var(--gray-text);">Hard</h3>
+      <p>&ldquo;This customer will churn.&rdquo;</p>
+      <p class="muted">No room to act differently.</p>
+    </div>
+    <div>
+      <h3 style="color:var(--yonsei-blue);">Soft</h3>
+      <p>&ldquo;Churn risk 72 percent.&rdquo;</p>
+      <p class="muted">Rank, triage, set a threshold.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>A weather forecast says 70 percent, not &ldquo;rain&rdquo;. That is the useful shape.</p>
+  </div>
+</div>
+
+<!-- 30 — probably red, certainly blue -->
+<div class="slide">
+  <h2>Probably Red, Certainly Blue</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <img src="figs/f-soft-guess.png" alt="Two labelled groups; one point sits on the boundary, another sits deep inside its group"
+         style="max-height:400px;width:auto;display:block;">
+  </div>
+</div>
+
+<!-- 31 — distance is confidence -->
+<div class="slide">
+  <h2>Distance Is Confidence</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 620 200" style="width:100%;max-width:880px;">
+      <line x1="46" y1="100" x2="586" y2="100" stroke="#1a1a1a" stroke-width="3"/>
+      <text x="316" y="128" font-size="17" fill="#666" text-anchor="middle">the line: score exactly zero</text>
+      <circle cx="150" cy="40" r="8" fill="#003876"/>
+      <text x="150" y="24" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">far above</text>
+      <circle cx="330" cy="86" r="8" fill="#c3a25a"/>
+      <text x="330" y="70" font-size="17" fill="#c3a25a" text-anchor="middle" font-weight="700">just above</text>
+      <circle cx="480" cy="164" r="8" fill="#d94040"/>
+      <text x="480" y="186" font-size="17" fill="#d94040" text-anchor="middle" font-weight="700">far below</text>
+      <text x="150" y="60" font-size="16" fill="#666" text-anchor="middle">certain</text>
+      <text x="330" y="52" font-size="16" fill="#666" text-anchor="middle">unsure</text>
+      <text x="480" y="146" font-size="16" fill="#666" text-anchor="middle">certain, other way</text>
+    </svg>
+  </div>
+  <div class="highlight">
+    <p>The weighted sum already carries confidence. It is just not a probability.</p>
+  </div>
+</div>
+
+<!-- 32 — the squash -->
+<div class="slide">
+  <h2>Squash It Into a Probability</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 640 250" style="width:100%;max-width:880px;">
+      <line x1="60" y1="212" x2="612" y2="212" stroke="#8a8f98" stroke-width="2"/>
+      <line x1="60" y1="18" x2="60" y2="212" stroke="#8a8f98" stroke-width="2"/>
+      <line x1="60" y1="26" x2="612" y2="26" stroke="#c3d2e2" stroke-width="1.5" stroke-dasharray="6 5"/>
+      <line x1="60" y1="119" x2="612" y2="119" stroke="#c3d2e2" stroke-width="1.5" stroke-dasharray="6 5"/>
+      <text x="46" y="32" font-size="17" fill="#666" text-anchor="end">1</text>
+      <text x="46" y="125" font-size="17" fill="#666" text-anchor="end">0.5</text>
+      <text x="46" y="218" font-size="17" fill="#666" text-anchor="end">0</text>
+      <path d="M66,206 C200,204 258,198 336,119 C414,40 470,32 606,30" fill="none" stroke="#003876" stroke-width="4"/>
+      <circle cx="336" cy="119" r="7" fill="#d94040"/>
+      <text x="336" y="240" font-size="17" fill="#666" text-anchor="middle">weighted sum, from very negative to very positive</text>
+      <text x="150" y="182" font-size="17" fill="#666" text-anchor="middle">almost never</text>
+      <text x="520" y="66" font-size="17" fill="#666" text-anchor="middle">almost certain</text>
+      <text x="336" y="100" font-size="16" fill="#d94040" text-anchor="middle" font-weight="700">on the line: 0.5</text>
+    </svg>
+  </div>
+  <p class="sn-cap">An S-shaped squash maps any score onto the range zero to one.</p>
+</div>
+
+<!-- 33 — logistic regression -->
+<div class="slide">
+  <h2>Logistic Regression</h2>
+  <div class="divider"></div>
+  <div class="math-block">
+    $$g(x) \;=\; \sigma\bigl(w_1x_1 + \cdots + w_dx_d + b\bigr), \qquad \sigma(s) = \frac{1}{1+e^{-s}}$$
+  </div>
+  <ul>
+    <li>The dials are the same weights as before</li>
+    <li>The output is now a probability</li>
+  </ul>
+  <div class="highlight">
+    <p>The name says regression. The job is classification.</p>
+  </div>
+</div>
+
+<!-- 34 — the punchline -->
+<div class="slide">
+  <h2>A Line Plus a Squash</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 660 170" style="width:100%;max-width:920px;">
+      <defs><marker id="d3-a3" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#8a8f98"/></marker></defs>
+      <rect x="10" y="46" width="126" height="72" rx="9" fill="#f4f6f9" stroke="#c3d2e2" stroke-width="2"/>
+      <text x="73" y="78" font-size="18" fill="#666" text-anchor="middle">the columns</text>
+      <text x="73" y="103" font-size="20" fill="#1a1a1a" text-anchor="middle" font-weight="700">x</text>
+      <line x1="144" y1="82" x2="196" y2="82" stroke="#8a8f98" stroke-width="2.5" marker-end="url(#d3-a3)"/>
+      <rect x="206" y="36" width="168" height="92" rx="10" fill="#fff" stroke="#003876" stroke-width="3"/>
+      <text x="290" y="68" font-size="18" fill="#003876" text-anchor="middle">weighted sum</text>
+      <text x="290" y="100" font-size="18" fill="#003876" text-anchor="middle" font-weight="700">linear regression</text>
+      <line x1="382" y1="82" x2="434" y2="82" stroke="#8a8f98" stroke-width="2.5" marker-end="url(#d3-a3)"/>
+      <rect x="444" y="36" width="92" height="92" rx="10" fill="#fff" stroke="#003876" stroke-width="3"/>
+      <path d="M456,112 C482,110 486,104 490,82 C494,60 498,54 524,52" fill="none" stroke="#003876" stroke-width="3"/>
+      <text x="490" y="24" font-size="17" fill="#003876" text-anchor="middle">squash</text>
+      <line x1="544" y1="82" x2="590" y2="82" stroke="#8a8f98" stroke-width="2.5" marker-end="url(#d3-a3)"/>
+      <rect x="600" y="46" width="54" height="72" rx="9" fill="#f4f6f9" stroke="#c3d2e2" stroke-width="2"/>
+      <text x="627" y="78" font-size="16" fill="#666" text-anchor="middle">prob.</text>
+      <text x="627" y="102" font-size="19" fill="#1a1a1a" text-anchor="middle" font-weight="700">0.72</text>
+      <text x="330" y="160" font-size="17" fill="#666" text-anchor="middle">one extra box on the end of a machine you already have</text>
+    </svg>
+  </div>
+</div>
+
+<!-- 35 — scoring a probability -->
+<div class="slide">
+  <h2>Scoring a Probability</h2>
+  <div class="divider"></div>
+  <table class="sn-table">
+    <tr><th>You said</th><th>It happened</th><th>Penalty</th></tr>
+    <tr><td>90 percent rain</td><td>rain</td><td class="sn-y">tiny</td></tr>
+    <tr><td>50 percent rain</td><td>rain</td><td>moderate</td></tr>
+    <tr><td>5 percent rain</td><td>rain</td><td class="sn-y">enormous</td></tr>
+  </table>
+  <div class="highlight">
+    <p>Penalty depends on how much probability you gave the thing that occurred.</p>
+  </div>
+</div>
+
+<!-- 36 — the penalty curve -->
+<div class="slide">
+  <h2>Confident and Wrong Is Expensive</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 620 240" style="width:100%;max-width:860px;">
+      <line x1="66" y1="204" x2="592" y2="204" stroke="#8a8f98" stroke-width="2"/>
+      <line x1="66" y1="14" x2="66" y2="204" stroke="#8a8f98" stroke-width="2"/>
+      <path d="M78,20 C122,132 190,186 300,196 C412,206 490,202 586,201" fill="none" stroke="#003876" stroke-width="4"/>
+      <text x="66" y="228" font-size="17" fill="#666" text-anchor="middle">0</text>
+      <text x="586" y="228" font-size="17" fill="#666" text-anchor="middle">1</text>
+      <text x="326" y="232" font-size="17" fill="#666" text-anchor="middle">probability you gave the true answer</text>
+      <text x="40" y="110" font-size="17" fill="#666" text-anchor="middle" transform="rotate(-90 40 110)">penalty</text>
+      <line x1="96" y1="52" x2="196" y2="52" stroke="#d94040" stroke-width="2" stroke-dasharray="6 4"/>
+      <text x="204" y="58" font-size="17" fill="#d94040" font-weight="700">unbounded near zero</text>
+    </svg>
+  </div>
+  <div class="highlight">
+    <p>Called <strong>cross-entropy</strong>. Ruling out the truth costs the most.</p>
+  </div>
+</div>
+
+<!-- 37 — now it has a slope -->
+<div class="slide">
+  <h2>Now the Score Has a Slope</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Counting mistakes: a staircase, no downhill</li>
+    <li>Penalising probabilities: a smooth surface</li>
+    <li>Nudge a weight, the penalty moves</li>
+  </ul>
+  <div class="highlight">
+    <p>This is why classifiers output probabilities. The search needs a slope.</p>
+  </div>
+</div>
+
+<!-- 38 — more than two labels -->
+<div class="slide">
+  <h2>More Than Two Labels</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <img src="figs/cifar10.png" alt="Grid of small photographs arranged in ten labelled rows"
+         style="max-height:380px;width:auto;display:block;">
+  </div>
+  <p class="cite">CIFAR-10 &middot; Krizhevsky, 2009 &mdash; ten classes</p>
+</div>
+
+<!-- 39 — softmax -->
+<div class="slide">
+  <h2>One Score per Label, Then Normalise</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 640 200" style="width:100%;max-width:900px;">
+      <defs><marker id="d3-a4" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#8a8f98"/></marker></defs>
+      <text x="106" y="24" font-size="17" fill="#666" text-anchor="middle">raw scores</text>
+      <g font-size="17" fill="#1a1a1a">
+        <text x="40" y="60">cat</text><text x="40" y="98">dog</text><text x="40" y="136">ship</text>
+      </g>
+      <g fill="#c3d2e2">
+        <rect x="88" y="44" width="96" height="20" rx="4"/><rect x="88" y="82" width="42" height="20" rx="4"/>
+        <rect x="88" y="120" width="20" height="20" rx="4"/>
+      </g>
+      <g font-size="16" fill="#666">
+        <text x="196" y="60">3.1</text><text x="142" y="98">1.2</text><text x="120" y="136">0.4</text>
+      </g>
+      <line x1="248" y1="90" x2="316" y2="90" stroke="#8a8f98" stroke-width="2.5" marker-end="url(#d3-a4)"/>
+      <text x="282" y="72" font-size="16" fill="#666" text-anchor="middle">softmax</text>
+      <text x="452" y="24" font-size="17" fill="#666" text-anchor="middle">probabilities</text>
+      <g font-size="17" fill="#1a1a1a">
+        <text x="336" y="60">cat</text><text x="336" y="98">dog</text><text x="336" y="136">ship</text>
+      </g>
+      <g fill="#003876">
+        <rect x="384" y="44" width="164" height="20" rx="4"/><rect x="384" y="82" width="42" height="20" rx="4"/>
+        <rect x="384" y="120" width="14" height="20" rx="4"/>
+      </g>
+      <g font-size="16" fill="#003876" font-weight="700">
+        <text x="560" y="60">0.78</text><text x="438" y="98">0.16</text><text x="410" y="136">0.06</text>
+      </g>
+      <text x="330" y="186" font-size="17" fill="#666" text-anchor="middle">all positive, adding to one</text>
+    </svg>
+  </div>
+  <div class="highlight">
+    <p>The two-label squash, generalised. One number per label.</p>
+  </div>
+</div>
+
+<!-- 40 — SECTION 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Reading the Errors</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Which mistake is cheaper?</p>
+</div>
+
+<!-- 41 — the threshold -->
+<div class="slide">
+  <h2>Where to Put the Threshold</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 640 190" style="width:100%;max-width:900px;">
+      <rect x="56" y="70" width="528" height="34" rx="6" fill="#f4f6f9" stroke="#c3d2e2" stroke-width="2"/>
+      <text x="56" y="132" font-size="17" fill="#666" text-anchor="middle">0.0</text>
+      <text x="584" y="132" font-size="17" fill="#666" text-anchor="middle">1.0</text>
+      <line x1="320" y1="52" x2="320" y2="122" stroke="#003876" stroke-width="4"/>
+      <text x="320" y="40" font-size="18" fill="#003876" text-anchor="middle" font-weight="700">0.5</text>
+      <line x1="188" y1="58" x2="188" y2="116" stroke="#d94040" stroke-width="3" stroke-dasharray="6 4"/>
+      <text x="188" y="160" font-size="17" fill="#d94040" text-anchor="middle">catch more, cry wolf more</text>
+      <line x1="470" y1="58" x2="470" y2="116" stroke="#2e8b57" stroke-width="3" stroke-dasharray="6 4"/>
+      <text x="470" y="160" font-size="17" fill="#2e8b57" text-anchor="middle">flag less, miss more</text>
+      <text x="320" y="182" font-size="17" fill="#666" text-anchor="middle">the model gives a probability; the threshold is a business decision</text>
+    </svg>
+  </div>
+</div>
+
+<!-- 42 — two ways to be wrong -->
+<div class="slide">
+  <h2>Two Ways to Be Wrong</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="gap:22px 30px;">
+    <div class="card">
+      <h3 style="color:var(--warn);">False alarm</h3>
+      <p>Flagged, but clean.</p>
+      <p class="muted">Wasted inspection. Annoyed customer.</p>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--warn);">Miss</h3>
+      <p>Cleared, but faulty.</p>
+      <p class="muted">Recall, lawsuit, undetected fraud.</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>One threshold trades one for the other. You cannot cut both.</p>
+  </div>
+</div>
+
+<!-- 43 — precision and recall -->
+<div class="slide">
+  <h2>Precision and Recall</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:300px 1fr;align-items:start;gap:26px 34px;">
+    <img src="figs/f-prec-recall.png" alt="Diagram of retrieved and relevant sets overlapping, labelling the four outcomes"
+         style="width:100%;height:auto;display:block;">
+    <div>
+      <h3 style="color:var(--yonsei-blue);">Precision</h3>
+      <p>Of the ones you flagged, how many were real?</p>
+      <div class="spacer"></div>
+      <h3 style="color:var(--yonsei-blue);">Recall</h3>
+      <p>Of the real ones, how many did you flag?</p>
+    </div>
+  </div>
+  <p class="cite cite-left">Diagram after Wikipedia, &ldquo;Precision and recall&rdquo;</p>
+</div>
+
+<!-- 44 — which mistake is cheaper -->
+<div class="slide">
+  <h2>Which Mistake Is Cheaper?</h2>
+  <div class="divider"></div>
+  <table class="sn-table">
+    <tr><th>Application</th><th>Prefer</th><th>Because</th></tr>
+    <tr><td>Disease screening</td><td class="sn-y">false alarms</td><td>a second test is cheap</td></tr>
+    <tr><td>Spam filter</td><td class="sn-y">misses</td><td>a lost invoice is not</td></tr>
+    <tr><td>Fraud alert</td><td class="sn-y">false alarms</td><td>a call costs less than the loss</td></tr>
+    <tr><td>Loan approval</td><td>neither cheaply</td><td>regulated both ways</td></tr>
+  </table>
+</div>
+
+<!-- 45 — sweep the threshold -->
+<div class="slide">
+  <h2>Sweep the Threshold</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:340px 1fr;align-items:start;gap:26px 34px;">
+    <img src="figs/f-roc.png" alt="ROC curves, plotting catch rate against false-alarm rate for several classifiers"
+         style="width:100%;height:auto;display:block;">
+    <div>
+      <ul>
+        <li>Each point: one threshold</li>
+        <li>Up and left is better</li>
+        <li>The diagonal is coin-flipping</li>
+      </ul>
+      <div class="spacer"></div>
+      <p>Area under the curve grades the model, not the threshold.</p>
+    </div>
+  </div>
+  <p class="cite cite-left">Diagram after Wikipedia, &ldquo;Receiver operating characteristic&rdquo;</p>
+</div>
+
+<!-- 46 — accuracy is a trap -->
+<div class="slide">
+  <h2>Accuracy Is a Trap</h2>
+  <div class="divider"></div>
+  <p>One part in a thousand is defective.</p>
+  <div class="math-block">
+    $$\text{always say } \textsf{“fine”} \;\Longrightarrow\; 99.9\% \text{ accurate}$$
+  </div>
+  <div class="highlight">
+    <p>It catches nothing. Ask for the catch rate, never the accuracy.</p>
+  </div>
+</div>
+
+<!-- 47 — SECTION 05 -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Stacking the Boxes</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Where deep learning comes in</p>
+</div>
+
+<!-- 48 — lines run out -->
+<div class="slide">
+  <h2>Straight Lines Run Out</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 620 250" style="width:100%;max-width:840px;">
+      <rect x="46" y="14" width="530" height="200" fill="#fbfcfd" stroke="#e6ebf1" stroke-width="1.5"/>
+      <g fill="#003876">
+        <circle cx="311" cy="114" r="6"/><circle cx="340" cy="96" r="6"/><circle cx="286" cy="92" r="6"/>
+        <circle cx="330" cy="136" r="6"/><circle cx="282" cy="140" r="6"/><circle cx="356" cy="120" r="6"/>
+        <circle cx="264" cy="116" r="6"/><circle cx="310" cy="80" r="6"/>
+      </g>
+      <g stroke="#d94040" stroke-width="3">
+        <path d="M154,58 l11,11 M165,58 l-11,11"/><path d="M240,32 l11,11 M251,32 l-11,11"/>
+        <path d="M350,30 l11,11 M361,30 l-11,11"/><path d="M446,60 l11,11 M457,60 l-11,11"/>
+        <path d="M486,116 l11,11 M497,116 l-11,11"/><path d="M446,172 l11,11 M457,172 l-11,11"/>
+        <path d="M350,192 l11,11 M361,192 l-11,11"/><path d="M240,190 l11,11 M251,190 l-11,11"/>
+        <path d="M152,170 l11,11 M163,170 l-11,11"/><path d="M120,114 l11,11 M131,114 l-11,11"/>
+      </g>
+      <line x1="70" y1="200" x2="552" y2="40" stroke="#8a8f98" stroke-width="2.5" stroke-dasharray="8 5"/>
+      <text x="311" y="240" font-size="18" fill="#666" text-anchor="middle">no straight line puts the ring on one side</text>
+    </svg>
+  </div>
+</div>
+
+<!-- 49 — stack the boxes -->
+<div class="slide">
+  <h2>Stack the Boxes</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 660 250" style="width:100%;max-width:920px;">
+      <g stroke="#c3d2e2" stroke-width="1.2">
+        <path d="M96,60 L216,50 M96,60 L216,110 M96,60 L216,170 M96,125 L216,50 M96,125 L216,110 M96,125 L216,170 M96,190 L216,50 M96,190 L216,110 M96,190 L216,170"/>
+        <path d="M216,50 L336,60 M216,50 L336,125 M216,50 L336,190 M216,110 L336,60 M216,110 L336,125 M216,110 L336,190 M216,170 L336,60 M216,170 L336,125 M216,170 L336,190"/>
+        <path d="M336,60 L456,90 M336,60 L456,150 M336,125 L456,90 M336,125 L456,150 M336,190 L456,90 M336,190 L456,150"/>
+        <path d="M456,90 L570,120 M456,150 L570,120"/>
+      </g>
+      <g fill="#f4f6f9" stroke="#8a8f98" stroke-width="2">
+        <circle cx="96" cy="60" r="15"/><circle cx="96" cy="125" r="15"/><circle cx="96" cy="190" r="15"/>
+      </g>
+      <g fill="#fff" stroke="#003876" stroke-width="2.5">
+        <circle cx="216" cy="50" r="15"/><circle cx="216" cy="110" r="15"/><circle cx="216" cy="170" r="15"/>
+        <circle cx="336" cy="60" r="15"/><circle cx="336" cy="125" r="15"/><circle cx="336" cy="190" r="15"/>
+        <circle cx="456" cy="90" r="15"/><circle cx="456" cy="150" r="15"/>
+      </g>
+      <circle cx="570" cy="120" r="17" fill="#003876"/>
+      <text x="96" y="228" font-size="17" fill="#666" text-anchor="middle">columns in</text>
+      <text x="336" y="228" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">weighted sum, squash, repeat</text>
+      <text x="570" y="228" font-size="17" fill="#666" text-anchor="middle">answer</text>
+    </svg>
+  </div>
+  <p class="sn-cap">Each circle is a weighted sum followed by a squash. Nothing new inside.</p>
+</div>
+
+<!-- 50 — same four lines -->
+<div class="slide">
+  <h2>Same Four Lines</h2>
+  <div class="divider"></div>
+  <div class="sn-loop">
+    <ol>
+      <li><strong>Examples.</strong> Photographs and their labels.</li>
+      <li><strong>Family.</strong> A stack of boxes with a billion dials.</li>
+      <li><strong>Loss.</strong> Penalty on the probability given the true label.</li>
+      <li><strong>Search.</strong> Feel the slope, step, repeat.</li>
+    </ol>
+  </div>
+  <div class="highlight">
+    <p>Deep learning changed line two. Lines one, three and four are unchanged.</p>
+  </div>
+</div>
+
+<!-- 51 — any shape -->
+<div class="slide">
+  <h2>Any Shape, In Principle</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 620 232" style="width:100%;max-width:860px;">
+      <line x1="50" y1="192" x2="590" y2="192" stroke="#8a8f98" stroke-width="2"/>
+      <path d="M60,150 C110,40 150,36 200,96 C250,156 288,168 330,110 C372,52 414,44 466,104 C510,154 550,150 584,128"
+            fill="none" stroke="#8a8f98" stroke-width="3" stroke-dasharray="7 5"/>
+      <path d="M60,150 H100 V72 H140 V44 H180 V70 H220 V122 H260 V158 H300 V138 H340 V88 H380 V50 H420 V52 H460 V102 H500 V142 H540 V148 H584"
+            fill="none" stroke="#003876" stroke-width="3.5"/>
+      <text x="470" y="34" font-size="17" fill="#8a8f98" text-anchor="middle">the shape you want</text>
+      <text x="180" y="222" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">enough boxes, arbitrarily close</text>
+    </svg>
+  </div>
+  <p class="cite">Universal approximation &middot; Cybenko, 1989; Hornik, 1991</p>
+</div>
+
+<!-- 52 — depth buys reuse -->
+<div class="slide">
+  <h2>Depth Buys Reuse</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 660 150" style="width:100%;max-width:920px;">
+      <defs><marker id="d3-a5" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#8a8f98"/></marker></defs>
+      <rect x="10" y="34" width="140" height="66" rx="9" fill="#f4f6f9" stroke="#c3d2e2" stroke-width="2"/>
+      <text x="80" y="62" font-size="18" fill="#666" text-anchor="middle">pixels</text>
+      <text x="80" y="86" font-size="17" fill="#999" text-anchor="middle">raw numbers</text>
+      <line x1="158" y1="67" x2="196" y2="67" stroke="#8a8f98" stroke-width="2.5" marker-end="url(#d3-a5)"/>
+      <rect x="204" y="34" width="140" height="66" rx="9" fill="#fff" stroke="#003876" stroke-width="2.5"/>
+      <text x="274" y="62" font-size="18" fill="#003876" text-anchor="middle">edges</text>
+      <text x="274" y="86" font-size="17" fill="#666" text-anchor="middle">light meets dark</text>
+      <line x1="352" y1="67" x2="390" y2="67" stroke="#8a8f98" stroke-width="2.5" marker-end="url(#d3-a5)"/>
+      <rect x="398" y="34" width="140" height="66" rx="9" fill="#fff" stroke="#003876" stroke-width="2.5"/>
+      <text x="468" y="62" font-size="18" fill="#003876" text-anchor="middle">parts</text>
+      <text x="468" y="86" font-size="17" fill="#666" text-anchor="middle">wheel, eye, corner</text>
+      <line x1="546" y1="67" x2="584" y2="67" stroke="#8a8f98" stroke-width="2.5" marker-end="url(#d3-a5)"/>
+      <rect x="592" y="34" width="60" height="66" rx="9" fill="#003876"/>
+      <text x="622" y="72" font-size="18" fill="#fff" text-anchor="middle">car</text>
+      <text x="330" y="140" font-size="17" fill="#666" text-anchor="middle">early layers serve every later one</text>
+    </svg>
+  </div>
+  <div class="highlight">
+    <p>Nobody programmed &ldquo;edge&rdquo;. The search found it useful.</p>
+  </div>
+</div>
+
+<!-- 53 — super resolution -->
+<div class="slide">
+  <h2>Sharper Pictures</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <img src="figs/f-superres.png" alt="Four versions of the same photograph at increasing sharpness"
+         style="max-height:330px;width:auto;display:block;">
+  </div>
+  <ul>
+    <li><strong>Examples.</strong> Blurred image, sharp image</li>
+    <li><strong>Loss.</strong> Pixel-by-pixel difference</li>
+  </ul>
+  <p class="cite">Ledig et al., CVPR 2017 &mdash; SRGAN</p>
+</div>
+
+<!-- 54 — detection -->
+<div class="slide">
+  <h2>Finding Things in a Photo</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:430px 1fr;align-items:start;gap:26px 34px;">
+    <img src="figs/f-detection.png" alt="Four photographs with coloured boxes drawn around detected objects and labels"
+         style="width:100%;height:auto;display:block;">
+    <div>
+      <ul>
+        <li><strong>Examples.</strong> Image, box, label</li>
+        <li><strong>Loss.</strong> Box error plus label penalty</li>
+      </ul>
+      <div class="spacer"></div>
+      <p>Two answers at once, so two penalties added together.</p>
+    </div>
+  </div>
+  <p class="cite cite-left">Ren et al., NeurIPS 2015 &mdash; Faster R-CNN</p>
+</div>
+
+<!-- 55 — filling in a blank -->
+<div class="slide">
+  <h2>Filling In a Blank</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;">
+    <svg viewBox="0 0 640 170" style="width:100%;max-width:900px;">
+      <g font-size="22" fill="#1a1a1a">
+        <text x="30" y="60">The</text><text x="82" y="60">quarterly</text><text x="212" y="60">report</text><text x="308" y="60">was</text>
+        <text x="452" y="60">last</text><text x="520" y="60">Friday.</text>
+      </g>
+      <rect x="366" y="34" width="72" height="34" rx="6" fill="#f4f6f9" stroke="#003876" stroke-width="2.5" stroke-dasharray="6 4"/>
+      <text x="402" y="60" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">?</text>
+      <g font-size="19" fill="#666">
+        <text x="120" y="118">filed</text><text x="240" y="118">published</text><text x="400" y="118">eaten</text><text x="500" y="118">released</text>
+      </g>
+      <g fill="#003876">
+        <rect x="118" y="128" width="70" height="12" rx="3"/><rect x="238" y="128" width="96" height="12" rx="3"/>
+        <rect x="398" y="128" width="6" height="12" rx="3"/><rect x="498" y="128" width="84" height="12" rx="3"/>
+      </g>
+      <text x="320" y="164" font-size="17" fill="#666" text-anchor="middle">hide a word, ask for it back: labels for free, at internet scale</text>
+    </svg>
+  </div>
+  <div class="highlight">
+    <p>How language models are trained. The text is its own answer key.</p>
+  </div>
+</div>
+
+<!-- 56 — overkill -->
+<div class="slide">
+  <h2>You Might Not Need It</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:300px 1fr;align-items:start;gap:26px 34px;">
+    <img src="figs/f-overkill.png" alt="Cartoon of an enormous many-dialled machine being used to hammer a single nail"
+         style="width:100%;height:auto;display:block;">
+    <div>
+      <ul>
+        <li>Simple problem, simple model</li>
+        <li>A table of numbers rarely needs a network</li>
+        <li>Costs land on you every month</li>
+      </ul>
+      <div class="spacer"></div>
+      <p class="muted">Deep learning is a tool, not a badge.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 57 — recap -->
+<div class="slide">
+  <h2>Today in Five Lines</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Training is downhill search, not solving</li>
+    <li>Step size and starting point are choices</li>
+    <li>Classification draws a line, then squashes it</li>
+    <li>A probability out gives the search its slope</li>
+    <li>Deep learning stacks the same box, many times</li>
+  </ul>
+</div>
+
+<!-- 58 — closer -->
+<div class="slide end-slide no-footer">
+  <p class="big-word">Take the slope.</p>
+  <p class="big-word">Then squash it.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 58</div>
+
+</div><!-- end deck -->
+
+<script src="../../reference/deck.js"></script>
+</body>
+</html>

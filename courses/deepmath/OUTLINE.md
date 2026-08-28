@@ -589,6 +589,8 @@ checked (20 ≥ 17) → PL checked → four GD iterations by hand at α = 1/4 �
 measured contraction ratio 0.5625 ≤ 0.6. Ends bridging to opt04 (SGD: keep
 the descent, pay with variance).
 
+Companion: `opt03-convexity-gd/opt03-convexity-gd-note.html` — detailed definitions, expanded proofs, lemmas, references.
+
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + TOC | 1–2 | opt03-convexity-gd/opt03-convexity-gd.html:32 |

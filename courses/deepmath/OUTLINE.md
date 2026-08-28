@@ -529,6 +529,8 @@ normal equations → orthogonality check → feature map (exact fit) → ridge
 θ_λ=(4/(3+λ), 3/(2+λ)) with the λ=1 crossing. Ends bridging to opt03
 (convexity + gradient descent).
 
+Companion: `opt02-regression-erm/opt02-regression-erm-note.html` — detailed definitions, expanded proofs, lemmas, references.
+
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + TOC | 1–2 | opt02-regression-erm/opt02-regression-erm.html:23 |

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Deep Learning Math 11 — Linear Regression, ERM &amp; Ridge · Notes</title>
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload='renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false},{left:"\\[",right:"\\]",display:true}]});'></script>
+<style>
+  body { max-width: 760px; margin: 48px auto; padding: 0 24px 96px; color: var(--charcoal); background: var(--white); font-family: 'Yonsei', 'Noto Sans', Arial, sans-serif; font-weight: 300; line-height: 1.65; }
+  h1 { font-size: 2rem; color: var(--yonsei-blue); margin-bottom: 4px; }
+  h2 { font-size: 1.4rem; color: var(--yonsei-blue); margin-top: 40px; border-bottom: 1px solid var(--slate); padding-bottom: 6px; }
+  h3 { font-size: 1.1rem; color: var(--blue-light); margin-top: 24px; }
+  p, li { font-size: 1rem; }
+  .meta { color: var(--gray-text); font-size: 0.95rem; margin-bottom: 24px; }
+  code { background: var(--light); padding: 1px 6px; border-radius: 4px; font-size: 0.92em; }
+  strong { color: var(--yonsei-blue); font-weight: 600; }
+  .deriv { background: var(--light); border-left: 3px solid var(--yonsei-blue); padding: 12px 18px; margin: 14px 0; border-radius: 0 6px 6px 0; }
+  table { border-collapse: collapse; margin: 14px 0; }
+  th, td { border: 1px solid var(--slate); padding: 6px 12px; font-size: 0.95rem; text-align: left; }
+  th { background: var(--light); color: var(--yonsei-blue); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>Deep Learning Math 11 &middot; Linear Regression, ERM &amp; Ridge &mdash; Notes</h1>
+<p class="meta">Companion to <code>opt02-regression-erm.html</code>. The deck's three theorems are proved on the slides; this note supplies what those proofs assume, what they leave implicit, and what the lecture states without argument. Specifically: the two gradient rules taken &ldquo;check entrywise&rdquo; are derived (Section 2.4); Theorem 1's proof is restated as one continuous argument with the orthonormal completion, the block-norm identity and the argmin-shift step made explicit, plus the claim that the minimizer set is exactly $A^{\dagger}B + \operatorname{null}(A)$ (Section 3); the normal equations are shown to be <em>always consistent</em> &mdash; a fact the deck needs and never states (Proposition 4.2); the &ldquo;more features never hurt&rdquo; slide is proved, and the parabola's exact fit is explained by the Vandermonde determinant rather than by elimination luck (Section 6); the Bayes predictor $f^\star = \mathbb{E}[Y\mid X]$ and $R^\star = \mathbb{E}[\operatorname{Var}(Y\mid X)]$, cited to prob07 on the slides, are proved here (Section 8.2); the deck's &ldquo;minimize $\hat{R}$ and hope $R$ follows&rdquo; is made precise &mdash; pointwise LLN is <em>not</em> enough, and the approximation/estimation split with the $2\sup$ bound is proved (Section 8.4); ridge's SVD shrinkage formula and the $\lambda\to0^{+}$ limit are derived rather than asserted (Sections 9.4&ndash;9.5); the MAP correspondence is derived with the explicit constant $\lambda = \sigma^2/\tau^2$ (Section 9.6); and the bias&ndash;variance slide is turned into a theorem &mdash; <strong>Hoerl&ndash;Kennard</strong>: there is always a $\lambda \gt 0$ strictly beating least squares in parameter MSE, for every $0 \lt \lambda \lt 2\sigma^2/\max_i (v_i^{\top}\theta_0)^2$ (Section 9.7). Two classical results the deck omits are added: least squares is the Gaussian MLE, and the <strong>Gauss&ndash;Markov theorem</strong> (Section 5). Two cautions the slides do not raise: forming $A^{\top}A$ squares the condition number, so the normal equations are the wrong route numerically (Section 4.5); and ridge as written penalizes the intercept and is not invariant to feature rescaling (Section 9.8). Every number on the slides has been recomputed &mdash; $A^{\top}A = \operatorname{diag}(3,2)$, $A^{\top}B = (4,3)$, $\sigma = \sqrt3, \sqrt2$, $A^{\dagger}$, $\theta^\star = (\tfrac43, \tfrac32)$, the residuals $(\tfrac16, -\tfrac13, \tfrac16)$ and $\mathrm{SSE} = \tfrac16$, the parabola $1 + \tfrac32 x + \tfrac12 x^2$, $\theta^\star_\lambda = (\tfrac{4}{3+\lambda}, \tfrac{3}{2+\lambda})$ and the $\lambda = 1$ crossing at $(1,1)$ &mdash; and <strong>all check out</strong>. <strong>Conventions:</strong> $A \in \mathbb{R}^{N\times n}$ (rows = examples), $B \in \mathbb{R}^{N}$, $\operatorname{rank}(A) = r$; compact SVD $A = U_c\Sigma_cV_c^{\top}$ with $\Sigma_c = \operatorname{diag}(\sigma_1,\dots,\sigma_r)$, all $\sigma_i \gt 0$; $J(\theta) = \tfrac12\|A\theta - B\|_2^2$; all opt01 references are to the companion note <code>opt01-svd-lowrank-note.html</code>.</p>
+
+<section>
+  <h2>1 &nbsp;What This Lecture Actually Claims</h2>
+  <p>opt01 ended on a teaser: $x = A^{\dagger}b$ &ldquo;solves&rdquo; systems that have no solution. That sentence is meaningless until &ldquo;solves&rdquo; is given a definition, and the definition is <em>minimizes $\|A\theta - B\|_2$</em>. Once fixed, three questions have to be answered, and the deck answers all three:</p>
+  <ol>
+    <li><strong>Does a minimizer exist?</strong> Not obvious &mdash; $\mathbb{R}^n$ is not compact and $J$ is not coercive when $\operatorname{null}(A) \neq \{0\}$. Theorem 1's proof settles it constructively.</li>
+    <li><strong>Is it unique, and if not, which one do we mean?</strong> The minimizer set is an affine subspace; $A^{\dagger}B$ is singled out by least norm, and Section 9.5 shows that tie-break is not arbitrary.</li>
+    <li><strong>Is minimizing the training miss the right thing to do at all?</strong> Section 8 says: only conditionally. Section 9 fixes the objective when it is not.</li>
+  </ol>
+  <p>The lecture is the one place in the course where a training problem closes in a formula. Everything from opt03 onward exists because that stops being true. (Historically the formula is old: Legendre published the method in 1805 [1] and Gauss claimed use from 1795, publishing the Gaussian-error justification of Proposition 5.1 in 1809 [2]. The dispute is the first priority fight in mathematical statistics.)</p>
+</section>
+
+<section>
+  <h2>2 &nbsp;Setup</h2>
+
+  <h3>2.1 Data, model, design matrix</h3>
+  <p>Data $(\mathbf{x}^{(1)},y^{(1)}),\dots,(\mathbf{x}^{(N)},y^{(N)})$ with $\mathbf{x}^{(i)}\in\mathbb{R}^n$, $y^{(i)}\in\mathbb{R}$; model $f_\theta(\mathbf{x}) = \theta^{\top}\mathbf{x}$. Stacking rows gives the <em>design matrix</em> $A\in\mathbb{R}^{N\times n}$ with $A_{ij} = x^{(i)}_j$ and the label vector $B \in \mathbb{R}^N$, so that $A\theta$ is the vector of all $N$ predictions and</p>
+  \[ \sum_{i=1}^{N}\big(\theta^{\top}\mathbf{x}^{(i)} - y^{(i)}\big)^2 \;=\; \|A\theta - B\|_2^2 . \]
+  <p>The <em>dummy feature</em> trick &mdash; prepending a constant $1$ to every $\mathbf{x}^{(i)}$ &mdash; buys an intercept at the cost of nothing: the model stays linear in $\theta$, which is the only linearity Theorem 1 uses. It is worth being explicit that &ldquo;linear model&rdquo; in this lecture means <em>linear in the parameters</em>, never linear in the inputs; Section 6 exploits exactly that gap.</p>
+
+  <h3>2.2 Harmless rescalings of the objective</h3>
+  <p>The deck drops $\tfrac1N$ and inserts $\tfrac12$ freely. Both are licensed by the same triviality, worth stating once: for $c \gt 0$ and any $g$, $\operatorname*{argmin}_\theta c\,g(\theta) = \operatorname*{argmin}_\theta g(\theta)$, and $\operatorname*{argmin}_\theta\,(g(\theta) + \text{const}) = \operatorname*{argmin}_\theta g(\theta)$. Both are used in Theorem 1's Step 3. Note that this is <em>not</em> true once a regularizer is present: rescaling the fit term by $c$ while leaving $\lambda\|\theta\|^2$ alone is the same as dividing $\lambda$ by $c$, which is why the $\tfrac1N$ convention has to be fixed before quoting a numeric $\lambda$ (Section 9.8).</p>
+
+  <h3>2.3 Why squared loss &mdash; the honest answer</h3>
+  <p>The slides motivate $(\hat y - y)^2$ as &ldquo;zero iff exact, grows with the miss.&rdquo; So does $|\hat y - y|$, which the deck lists as the robust alternative. The real reasons squared loss is the default are three, and only the first is about the data:</p>
+  <ul>
+    <li><em>Statistical.</em> It is the negative log-likelihood of Gaussian noise, up to constants (Proposition 5.1), so it is the right loss exactly when the residuals are Gaussian and homoscedastic.</li>
+    <li><em>Geometric.</em> It is the only loss for which minimizing is orthogonal projection, hence the only one giving a closed form (Sections 3&ndash;4). $\ell_1$ regression has no formula; it is a linear program.</li>
+    <li><em>Decision-theoretic.</em> Its Bayes predictor is the conditional mean (Section 8.2), a quantity we know how to interpret. The $\ell_1$ Bayes predictor is the conditional <em>median</em> &mdash; a different, equally legitimate target.</li>
+  </ul>
+  <p>Squared loss also has a real cost the deck flags in one line: it punishes big misses quadratically, so a single outlier can move $\theta^\star$ arbitrarily far. The formula's convenience and its fragility have the same source.</p>
+
+  <h3>2.4 The two gradient rules, derived</h3>
+  <p>The deck's technique review asserts $\nabla_\theta(b^{\top}\theta) = b$ and $\nabla_\theta(\theta^{\top}Q\theta) = 2Q\theta$ for symmetric $Q$, with &ldquo;check entrywise.&rdquo; Here is the check.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma 2.1.</strong> For $b \in \mathbb{R}^n$ and $Q\in\mathbb{R}^{n\times n}$: $\nabla_\theta (b^{\top}\theta) = b$, and $\nabla_\theta(\theta^{\top}Q\theta) = (Q + Q^{\top})\theta$, which is $2Q\theta$ when $Q = Q^{\top}$.</p>
+    <p style="margin:8px 0 0;"><em>Proof.</em> $b^{\top}\theta = \sum_j b_j\theta_j$, so $\partial_k = b_k$. For the quadratic, $\theta^{\top}Q\theta = \sum_{i,j}Q_{ij}\theta_i\theta_j$; differentiating in $\theta_k$, the terms with $i = k \neq j$ contribute $\sum_j Q_{kj}\theta_j$, those with $j = k\neq i$ contribute $\sum_i Q_{ik}\theta_i$, and the single term $i=j=k$ contributes $2Q_{kk}\theta_k$, which is exactly what the two sums give at $j=k$ and $i=k$. So $\partial_k = (Q\theta)_k + (Q^{\top}\theta)_k$. $\blacksquare$</p>
+  </div>
+  <p>Applying it to $J(\theta) = \tfrac12\theta^{\top}A^{\top}A\theta - (A^{\top}B)^{\top}\theta + \tfrac12\|B\|_2^2$ (expand $\|A\theta-B\|_2^2 = \theta^{\top}A^{\top}A\theta - 2B^{\top}A\theta + B^{\top}B$, using $\theta^{\top}A^{\top}B = B^{\top}A\theta$ since both are scalars) gives the deck's</p>
+  \[ \nabla J(\theta) \;=\; A^{\top}A\theta - A^{\top}B \;=\; A^{\top}(A\theta - B), \]
+  <p>the symmetry hypothesis being satisfied because $A^{\top}A$ is symmetric. Note that Theorem 2's proof below does <em>not</em> actually need calculus &mdash; the exact expansion does all the work &mdash; which is why the deck can prove an if-and-only-if rather than a first-order necessary condition.</p>
+</section>
+
+<section>
+  <h2>3 &nbsp;Theorem 1: $\theta^\star = A^{\dagger}B$</h2>
+
+  <h3>3.1 Statement</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 1.</strong> Let $A\in\mathbb{R}^{N\times n}$ have rank $r$ and let $B\in\mathbb{R}^N$ be arbitrary. Then $J(\theta) = \tfrac12\|A\theta-B\|_2^2$ attains its minimum, the set of minimizers is the affine subspace $A^{\dagger}B + \operatorname{null}(A)$, and $A^{\dagger}B$ is the unique minimizer of smallest Euclidean norm. The minimizer is unique iff $r = n$.</p>
+  </div>
+  <p>No hypothesis on shape or rank. The deck's five steps are reproduced below as a single argument, with three points filled in that the slides pass over: the existence of the completion $\tilde U$, the block-norm identity, and the &ldquo;all minimizers&rdquo; claim (the slides assert the minimizer set without deriving it).</p>
+
+  <h3>3.2 Proof</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><em>Step 1 &mdash; SVD and completion.</em> Write $A = U_c\Sigma_cV_c^{\top}$ (opt01 Section 4.4). The columns of $U_c$ are $r$ orthonormal vectors in $\mathbb{R}^N$ and $r \leq N$, so by Gram&ndash;Schmidt applied to any completion to a basis (opt01 Lemma 2.5) there is $\tilde U \in \mathbb{R}^{N\times(N-r)}$ with $[\,U_c\ \tilde U\,] =: U$ orthogonal. The bookkeeping identities $U_c^{\top}U_c = I_r$, $\tilde U^{\top}\tilde U = I_{N-r}$, $\tilde U^{\top}U_c = 0$ are exactly the statement $U^{\top}U = I_N$ read blockwise.</p>
+    <p style="margin:10px 0 6px;"><em>Step 2 &mdash; rotate.</em> By orthogonal invariance (opt01 Theorem 4), $\|A\theta - B\|_2 = \|U^{\top}(A\theta - B)\|_2$. Blockwise,</p>
+    \[ U^{\top}(A\theta - B) = \begin{bmatrix} U_c^{\top} \\ \tilde U^{\top}\end{bmatrix}\big(U_c\Sigma_cV_c^{\top}\theta - B\big) = \begin{bmatrix} \Sigma_cV_c^{\top}\theta - U_c^{\top}B \\[2pt] -\,\tilde U^{\top}B\end{bmatrix}, \]
+    <p style="margin:6px 0 6px;">using $U_c^{\top}U_c = I_r$ in the top block and $\tilde U^{\top}U_c = 0$ in the bottom. For a stacked vector $z = (z_1; z_2)$ one has $\|z\|_2^2 = \|z_1\|_2^2 + \|z_2\|_2^2$ &mdash; the coordinates are simply partitioned &mdash; so</p>
+    \[ J(\theta) \;=\; \underbrace{\tfrac12\big\|\Sigma_cV_c^{\top}\theta - U_c^{\top}B\big\|_2^2}_{=:\,J_1(\theta)} \;+\; \underbrace{\tfrac12\big\|\tilde U^{\top}B\big\|_2^2}_{\text{independent of }\theta}. \]
+    <p style="margin:10px 0 6px;"><em>Step 3 &mdash; drop the constant.</em> By Section 2.2, $\operatorname{argmin} J = \operatorname{argmin} J_1$. (The dropped constant is not noise: it is $\tfrac12\|(I - U_cU_c^{\top})B\|_2^2$, the squared distance from $B$ to $\operatorname{range}(A)$ &mdash; the error no $\theta$ can remove. Section 4 reads it geometrically.)</p>
+    <p style="margin:10px 0 6px;"><em>Step 4 &mdash; split $\theta$.</em> By opt01 Theorem 2 applied to $S = \operatorname{range}(V_c)$, every $\theta$ decomposes uniquely as $\theta = \theta_1 + \theta_2$ with $\theta_1\in S$, $\theta_2\in S^{\perp} = \operatorname{null}(V_c^{\top})$, and $\|\theta\|_2^2 = \|\theta_1\|_2^2+\|\theta_2\|_2^2$. Since $V_c^{\top}\theta_2 = 0$, $J_1(\theta) = J_1(\theta_1)$: the objective is blind to $\theta_2$. Note also $A\theta_2 = U_c\Sigma_c V_c^{\top}\theta_2 = 0$, so $S^{\perp} \subseteq \operatorname{null}(A)$; conversely $A\theta = 0 \Rightarrow \Sigma_cV_c^{\top}\theta = U_c^{\top}A\theta= 0 \Rightarrow V_c^{\top}\theta = 0$ as $\Sigma_c$ is invertible. Hence $\operatorname{null}(A) = \operatorname{range}(V_c)^{\perp}$ exactly.</p>
+    <p style="margin:10px 0 6px;"><em>Step 5 &mdash; solve.</em> Parametrize $\theta_1 = V_cc$, $c\in\mathbb{R}^r$; then $V_c^{\top}\theta_1 = V_c^{\top}V_cc = c$ and $J_1 = \tfrac12\|\Sigma_cc - U_c^{\top}B\|_2^2 \geq 0$, with equality iff $c = c^\star := \Sigma_c^{-1}U_c^{\top}B$ &mdash; possible because $\Sigma_c$ is invertible, and this is where positivity of the $\sigma_i$ is used. So the minimum of $J_1$ is $0$, attained precisely on $\theta_1 = V_c\Sigma_c^{-1}U_c^{\top}B = A^{\dagger}B$ (which lies in $\operatorname{range}(V_c)$, as required) plus any $\theta_2\in\operatorname{null}(A)$. Existence and the minimizer set are both settled.</p>
+    <p style="margin:10px 0 0;"><em>Least norm.</em> $A^{\dagger}B \in \operatorname{range}(V_c) \perp \operatorname{null}(A)$, so for $\theta_2\in\operatorname{null}(A)$, $\|A^{\dagger}B + \theta_2\|_2^2 = \|A^{\dagger}B\|_2^2 + \|\theta_2\|_2^2 \geq \|A^{\dagger}B\|_2^2$ with equality iff $\theta_2 = 0$. <em>Uniqueness.</em> The minimizer set is a single point iff $\operatorname{null}(A) = \{0\}$ iff $r = n$ (opt01 Theorem 1, rank&ndash;nullity). $\blacksquare$</p>
+  </div>
+
+  <h3>3.3 What the proof really used</h3>
+  <p>Only three things: that rotations preserve $\ell_2$ length, that $\Sigma_c$ is invertible, and Pythagoras. The deck names the trick &mdash; <em>rotate until the problem is diagonal</em> &mdash; and it is worth noticing that this is the same move as opt01's Theorems 6, 7 and 8. The reason it works here and nowhere later in the course is that the objective is a squared $\ell_2$ norm of an affine function of $\theta$; replace the norm ($\ell_1$) or the affinity (a neural network) and the rotation buys nothing.</p>
+
+  <h3>3.4 The running example, recomputed</h3>
+  <p>$A = \left[\begin{smallmatrix}1 &amp; -1\\ 1 &amp; 0\\ 1 &amp; 1\end{smallmatrix}\right]$, $B = (0,1,3)$. First the deck's claim that no exact solution exists: rows 1 and 2 give $\theta_0 - \theta_1 = 0$ and $\theta_0 = 1$, hence $\theta = (1,1)$, and row 3 then demands $\theta_0+\theta_1 = 2 = 3$. &#10003; Contradiction, so $B \notin \operatorname{range}(A)$.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>SVD.</strong> $A^{\top}A = \left[\begin{smallmatrix}3 &amp; 0\\ 0 &amp; 2\end{smallmatrix}\right]$ &#10003; (the off-diagonal is $\sum_i x_i = -1+0+1 = 0$, which is what &ldquo;centered inputs&rdquo; means). Already diagonal, so $V_c = I_2$, $\sigma_1 = \sqrt3$, $\sigma_2 = \sqrt2$ &#10003;, and</p>
+    \[ u_1 = \tfrac{Av_1}{\sigma_1} = \tfrac{1}{\sqrt3}(1,1,1), \qquad u_2 = \tfrac{Av_2}{\sigma_2} = \tfrac{1}{\sqrt2}(-1,0,1) \quad\text{&#10003;} \]
+    <p style="margin:6px 0 6px;">(orthonormal: $u_1^{\top}u_2 = \tfrac{1}{\sqrt6}(-1+0+1) = 0$ &#10003;). Then</p>
+    \[ A^{\dagger} = V_c\Sigma_c^{-1}U_c^{\top} = \tfrac{1}{\sqrt3}\tfrac{1}{\sqrt3}\!\begin{bmatrix}1&amp;1&amp;1\\0&amp;0&amp;0\end{bmatrix} + \tfrac{1}{\sqrt2}\tfrac{1}{\sqrt2}\!\begin{bmatrix}0&amp;0&amp;0\\-1&amp;0&amp;1\end{bmatrix} = \begin{bmatrix}\tfrac13 &amp; \tfrac13 &amp; \tfrac13\\[2pt] -\tfrac12 &amp; 0 &amp; \tfrac12\end{bmatrix} \ \text{&#10003;}, \]
+    <p style="margin:6px 0 0;">so $\theta^\star = A^{\dagger}B = \big(\tfrac{0+1+3}{3},\ \tfrac{-0+3}{2}\big) = \big(\tfrac43, \tfrac32\big)$ &#10003;. The deck's reading is exact: row 1 of $A^{\dagger}$ averages the labels, row 2 is the end-to-end difference quotient $\tfrac{y^{(3)}-y^{(1)}}{2}$ &mdash; both consequences of $V_c = I$ and the symmetric design.</p>
+  </div>
+  <p>Fitted values and residuals: $\hat y = \tfrac43 + \tfrac32x$ gives $\hat y(-1) = -\tfrac16$, $\hat y(0) = \tfrac43$, $\hat y(1) = \tfrac{17}{6}$, so the residuals $y - \hat y$ are $\tfrac16, -\tfrac13, \tfrac16$ and $\mathrm{SSE} = \tfrac{1}{36}+\tfrac{4}{36}+\tfrac{1}{36} = \tfrac16$ &#10003;. (The deck's objective carries a $\tfrac12$; the quoted $\tfrac16$ is the unhalved sum of squares, which is the standard reporting convention.) Two independent cross-checks the slides do not run:</p>
+  <ul>
+    <li><em>The fit passes through $(\bar x, \bar y)$.</em> Whenever an intercept column is present, the first normal equation reads $\sum_i(y^{(i)} - \hat y^{(i)}) = 0$, i.e. $\bar y = \theta_0 + \theta_1\bar x$. Here $\bar x = 0$, $\bar y = \tfrac43 = \theta_0$ &#10003;.</li>
+    <li><em>The textbook slope formula.</em> $\theta_1 = \frac{\sum_i (x^{(i)}-\bar x)(y^{(i)}-\bar y)}{\sum_i(x^{(i)}-\bar x)^2} = \frac{(-1)(0-\tfrac43) + 0 + (1)(3-\tfrac43)}{2} = \frac{\tfrac43+\tfrac53}{2} = \tfrac32$ &#10003;.</li>
+  </ul>
+  <p>For completeness, $\mathrm{SST} = \sum_i(y^{(i)}-\bar y)^2 = \tfrac{16}{9}+\tfrac19+\tfrac{25}{9} = \tfrac{14}{3}$, so $R^2 = 1 - \tfrac{\mathrm{SSE}}{\mathrm{SST}} = 1 - \tfrac{1/6}{14/3} = \tfrac{27}{28}\approx 0.964$.</p>
+</section>
+
+<section>
+  <h2>4 &nbsp;Geometry and the Normal Equations</h2>
+
+  <h3>4.1 The projection picture</h3>
+  <p>As $\theta$ ranges over $\mathbb{R}^n$, $A\theta$ ranges over exactly $\operatorname{range}(A)$ &mdash; a subspace of $\mathbb{R}^N$ of dimension $r$. So the problem &ldquo;minimize $\|A\theta - B\|_2$&rdquo; is, verbatim, &ldquo;find the point of $\operatorname{range}(A)$ closest to $B$.&rdquo; The deck's picture is the whole content of the theorem: the closest point is the orthogonal projection, and the residual is perpendicular to the subspace. Formally:</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition 4.1 (projection).</strong> Let $S\subseteq\mathbb{R}^N$ be a subspace and $B \in \mathbb{R}^N$. There is a unique $\hat B \in S$ minimizing $\|B - s\|_2$ over $s\in S$, namely the $\hat B$ from the orthogonal decomposition $B = \hat B + (B-\hat B)$, $\hat B \in S$, $B - \hat B \in S^{\perp}$; and it is characterized by $B - \hat B \perp S$.</p>
+    <p style="margin:8px 0 0;"><em>Proof.</em> Existence and uniqueness of the decomposition is opt01 Theorem 2. For any $s\in S$, $B - s = (B-\hat B) + (\hat B - s)$ with the first term in $S^{\perp}$ and the second in $S$, so by Pythagoras $\|B-s\|_2^2 = \|B-\hat B\|_2^2 + \|\hat B - s\|_2^2 \geq \|B-\hat B\|_2^2$, equality iff $s = \hat B$. Conversely if $B - \hat B\perp S$ with $\hat B \in S$ the same computation shows $\hat B$ minimizes. $\blacksquare$</p>
+  </div>
+  <p>Combining with Theorem 1: $\hat B = AA^{\dagger}B = U_cU_c^{\top}B$, which is the orthogonal projector onto $\operatorname{range}(A)$ (opt01 Section 5.3). The leftover constant discarded in Theorem 1's Step 3 was $\tfrac12\|B - \hat B\|_2^2$, the irreducible error &mdash; so nothing was thrown away; it was <em>named</em>.</p>
+
+  <h3>4.2 Theorem 2 (normal equations)</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 2.</strong> $\theta$ minimizes $J$ $\iff$ $A^{\top}(A\theta - B) = 0$, i.e. $A^{\top}A\theta = A^{\top}B$.</p>
+    <p style="margin:8px 0 6px;"><em>Proof (exact expansion, no calculus).</em> Fix $\theta$ and let $h\in\mathbb{R}^n$ be arbitrary. Then</p>
+    \[ J(\theta+h) = \tfrac12\|A\theta - B + Ah\|_2^2 = J(\theta) + h^{\top}A^{\top}(A\theta - B) + \tfrac12\|Ah\|_2^2 . \]
+    <p style="margin:6px 0 0;">($\Leftarrow$) If $A^{\top}(A\theta-B) = 0$ the middle term vanishes and $J(\theta+h) = J(\theta) + \tfrac12\|Ah\|_2^2\geq J(\theta)$ for every $h$: $\theta$ is a global minimizer. ($\Rightarrow$) If $g := A^{\top}(A\theta - B)\neq 0$, take $h = -tg$ with $t \gt 0$; then $J(\theta+h) = J(\theta) - t\|g\|_2^2 + \tfrac{t^2}{2}\|Ag\|_2^2$, which is $\lt J(\theta)$ for all small enough $t \gt 0$ (specifically any $t \lt 2\|g\|_2^2/\|Ag\|_2^2$, with any $t\gt0$ working if $Ag = 0$). So $\theta$ is not a minimizer. $\blacksquare$</p>
+  </div>
+  <p>Two remarks the deck does not make. First, this proof is <em>exact</em>: the expansion has no remainder term, which is why a stationary point is automatically a global minimum &mdash; a property of quadratics, not a general fact, and the reason opt03 has to introduce convexity to recover it. Second, the equivalence is the algebraic form of Proposition 4.1: $A^{\top}(A\theta - B) = 0$ says the residual is orthogonal to every column of $A$, i.e. to $\operatorname{range}(A)$.</p>
+
+  <h3>4.3 The normal equations are always consistent</h3>
+  <p>The deck writes down $A^{\top}A\theta = A^{\top}B$ and moves on. But a linear system can be unsolvable &mdash; that is the entire premise of the lecture &mdash; so it is a genuine gap that this one never is. It follows from Theorem 1 (a minimizer exists, hence a solution exists), but the direct argument is worth having.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition 4.2.</strong> $\operatorname{range}(A^{\top}A) = \operatorname{range}(A^{\top})$ and $\operatorname{null}(A^{\top}A) = \operatorname{null}(A)$. Consequently $A^{\top}A\theta = A^{\top}B$ is consistent for every $B$.</p>
+    <p style="margin:8px 0 0;"><em>Proof.</em> If $A\theta = 0$ then $A^{\top}A\theta = 0$. Conversely if $A^{\top}A\theta = 0$ then $\|A\theta\|_2^2 = \theta^{\top}A^{\top}A\theta = 0$, so $A\theta = 0$; the null spaces agree. By rank&ndash;nullity (opt01 Theorem 1) $\operatorname{rank}(A^{\top}A) = n - \dim\operatorname{null}(A) = \operatorname{rank}(A) = \operatorname{rank}(A^{\top})$. Since $\operatorname{range}(A^{\top}A)\subseteq\operatorname{range}(A^{\top})$ trivially and the dimensions match, they are equal. Finally $A^{\top}B\in\operatorname{range}(A^{\top}) = \operatorname{range}(A^{\top}A)$. $\blacksquare$</p>
+  </div>
+
+  <h3>4.4 When $A$ has full column rank</h3>
+  <p>If $r = n$ then $\operatorname{null}(A^{\top}A) = \operatorname{null}(A) = \{0\}$ and $A^{\top}A\in\mathbb{R}^{n\times n}$ is invertible, giving the familiar $\theta^\star = (A^{\top}A)^{-1}A^{\top}B$. This agrees with Theorem 1 because $(A^{\top}A)^{-1}A^{\top} = A^{\dagger}$ in that case (opt01 Section 5.4): with $V_c$ square orthogonal, $A^{\top}A = V_c\Sigma_c^2V_c^{\top}$ and $(A^{\top}A)^{-1}A^{\top} = V_c\Sigma_c^{-2}V_c^{\top}V_c\Sigma_cU_c^{\top} = V_c\Sigma_c^{-1}U_c^{\top}$. On the running example, $A^{\top}A = \operatorname{diag}(3,2)$ is invertible, so $\theta^\star = \operatorname{diag}(\tfrac13,\tfrac12)(4,3) = (\tfrac43,\tfrac32)$ &#10003; &mdash; agreeing with the SVD route, as it must.</p>
+  <p>Full column rank requires $N \geq n$: at least as many examples as features. When $N \lt n$ &mdash; the overparametrized regime, which is the normal one in deep learning &mdash; $A^{\top}A$ is <em>never</em> invertible, infinitely many $\theta$ achieve zero training error, and $A^{\dagger}B$ is the minimum-norm interpolant. Section 9.5 and reference [13] pick that thread up.</p>
+
+  <h3>4.5 A caution the deck omits: never actually form $A^{\top}A$</h3>
+  <p>The normal equations are the right <em>theory</em> and the wrong <em>algorithm</em>. For $A$ of full column rank the 2-norm condition number is $\kappa_2(A) = \sigma_1/\sigma_n$, and since the singular values of $A^{\top}A$ are $\sigma_i^2$,</p>
+  \[ \kappa_2(A^{\top}A) = \kappa_2(A)^2 . \]
+  <p>Forming $A^{\top}A$ therefore squares the sensitivity to rounding: an $A$ with $\kappa_2 = 10^{8}$ &mdash; unremarkable for polynomial or nearly-collinear features &mdash; yields a Gram matrix numerically singular in double precision. The standard remedy is to work with $A$ directly: compute a thin QR factorization $A = QR$ and solve the triangular system $R\theta = Q^{\top}B$, whose error growth is governed by $\kappa_2(A)$, not its square; or use the SVD, which additionally handles rank deficiency. Trefethen&ndash;Bau [15, Lectures 11, 18&ndash;19] gives the full comparison. This is why library routines (<code>numpy.linalg.lstsq</code>, LAPACK's <code>gelsd</code>) call an SVD or QR rather than inverting a Gram matrix, and it is a second, purely numerical reason ridge helps: adding $\lambda I$ moves $\sigma_i^2 \mapsto \sigma_i^2+\lambda$, capping the condition number at $(\sigma_1^2+\lambda)/\lambda$.</p>
+</section>
+
+<section>
+  <h2>5 &nbsp;What Kind of Estimator Is $\theta^\star$?</h2>
+  <p>The deck treats least squares as a deterministic optimization problem, which it is. But every claim about &ldquo;fitting well&rdquo; presupposes a data-generating story, and two classical results say precisely how good $\theta^\star$ is under one. Both are omitted from the slides; both are one paragraph.</p>
+  <p>Throughout this section: $B = A\theta_0 + \varepsilon$ with $A$ deterministic of full column rank, $\mathbb{E}[\varepsilon] = 0$, $\operatorname{Cov}(\varepsilon) = \sigma^2I_N$.</p>
+
+  <h3>5.1 Least squares is the Gaussian MLE</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition 5.1.</strong> If moreover $\varepsilon\sim\mathcal{N}(0,\sigma^2I_N)$, then the maximum-likelihood estimate of $\theta$ is exactly $\operatorname*{argmin}_\theta\|A\theta-B\|_2^2$.</p>
+    <p style="margin:8px 0 0;"><em>Proof.</em> The log-likelihood is $\log p(B\mid\theta) = -\tfrac{N}{2}\log(2\pi\sigma^2) - \tfrac{1}{2\sigma^2}\|B - A\theta\|_2^2$. Only the last term depends on $\theta$, and maximizing it is minimizing $\|A\theta - B\|_2^2$. $\blacksquare$</p>
+  </div>
+  <p>So squared loss is not an aesthetic choice; it is a distributional assumption in disguise. Heavier-tailed noise makes a different loss the MLE &mdash; Laplace noise gives $\ell_1$, which is why $\ell_1$ regression is the robust one.</p>
+
+  <h3>5.2 Gauss&ndash;Markov: $\theta^\star$ is BLUE</h3>
+  <p>Unbiasedness first: $\mathbb{E}[\theta^\star] = (A^{\top}A)^{-1}A^{\top}\mathbb{E}[B] = (A^{\top}A)^{-1}A^{\top}A\theta_0 = \theta_0$, and $\operatorname{Cov}(\theta^\star) = \sigma^2(A^{\top}A)^{-1}$ by $\operatorname{Cov}(CB) = C\operatorname{Cov}(B)C^{\top}$ with $C = (A^{\top}A)^{-1}A^{\top}$.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem (Gauss&ndash;Markov).</strong> Among all estimators of the form $\tilde\theta = CB$ that are unbiased for every $\theta_0$, the least-squares estimator has the smallest covariance in the Loewner order: $\operatorname{Cov}(\tilde\theta) - \operatorname{Cov}(\theta^\star)\succeq 0$.</p>
+    <p style="margin:8px 0 6px;"><em>Proof.</em> Unbiasedness for every $\theta_0$ means $CA\theta_0 = \theta_0$ for all $\theta_0$, i.e. $CA = I_n$. Write $C = (A^{\top}A)^{-1}A^{\top} + D$; then $CA = I + DA$, so $DA = 0$. Hence</p>
+    \[ \operatorname{Cov}(\tilde\theta) = \sigma^2CC^{\top} = \sigma^2\big[(A^{\top}A)^{-1} + (A^{\top}A)^{-1}A^{\top}D^{\top} + DA(A^{\top}A)^{-1} + DD^{\top}\big] = \sigma^2(A^{\top}A)^{-1} + \sigma^2DD^{\top}, \]
+    <p style="margin:6px 0 0;">the two cross terms vanishing because $DA = 0$ and $(DA)^{\top} = A^{\top}D^{\top} = 0$. Since $DD^{\top}\succeq0$ always, the difference is PSD. $\blacksquare$</p>
+  </div>
+  <p>Read the hypotheses carefully, because Section 9 violates one of them on purpose. Gauss&ndash;Markov optimizes only over <em>linear</em> and <em>unbiased</em> estimators. Ridge is linear but biased, so it is not a competitor &mdash; and Hoerl&ndash;Kennard (Theorem 9.4) shows that dropping unbiasedness strictly improves mean squared error. &ldquo;Best&rdquo; in BLUE is a statement about a restricted class, not about the problem.</p>
+</section>
+
+<section>
+  <h2>6 &nbsp;Feature Maps: Nonlinear Fits from a Linear Solver</h2>
+
+  <h3>6.1 The move</h3>
+  <p>Replace $\mathbf{x}$ by $\phi(\mathbf{x}) \in \mathbb{R}^d$ and fit $f_\theta(\mathbf{x}) = \theta^{\top}\phi(\mathbf{x})$. The design matrix becomes $\Phi$ with rows $\phi(\mathbf{x}^{(i)})^{\top}$, and <em>every result above applies verbatim</em> with $A$ replaced by $\Phi$ &mdash; because not one of the proofs used any structure of $A$'s entries. The model is nonlinear in $\mathbf{x}$ and linear in $\theta$; the solver only ever sees the second. This is the single most-reused idea in the course: it is what makes kernel methods, polynomial regression, random features, and the final linear layer of a network all the same computation.</p>
+
+  <h3>6.2 &ldquo;More features never hurt&rdquo; &mdash; proved, and its catch</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition 6.1.</strong> Let $\Phi_1 \in\mathbb{R}^{N\times d_1}$ and let $\Phi_2 = [\,\Phi_1\ \ \Psi\,]$ append extra feature columns. Then $\min_{\theta}\|\Phi_2\theta - B\|_2^2 \leq \min_{\theta}\|\Phi_1\theta - B\|_2^2$.</p>
+    <p style="margin:8px 0 0;"><em>Proof.</em> $\operatorname{range}(\Phi_1)\subseteq\operatorname{range}(\Phi_2)$: any $\Phi_1\theta$ equals $\Phi_2(\theta;0)$. A minimum over a larger set is no larger. $\blacksquare$</p>
+  </div>
+  <p>So the <em>training</em> error is monotone non-increasing in the feature set &mdash; that is a theorem, not a heuristic. The catch, which the deck flags in one line and Sections 8.5 and 9 develop: <em>test</em> error is not monotone. Proposition 6.1 is exactly the statement that ERM cannot be used to choose $d$; adding features always looks better by the criterion being optimized. This is the structural reason model selection needs a held-out set or a penalty.</p>
+
+  <h3>6.3 The parabola example, and why it is exact</h3>
+  <p>With $\phi(x) = (1,x,x^2)$ and the running data $x = -1,0,1$, $y = 0,1,3$, the design matrix and its determinant are</p>
+  \[ \Phi = \begin{bmatrix} 1 &amp; -1 &amp; 1\\ 1 &amp; 0 &amp; 0\\ 1 &amp; 1 &amp; 1\end{bmatrix}, \qquad \det\Phi = \prod_{i \lt j}(x_j - x_i) = (0-(-1))(1-(-1))(1-0) = 2 \neq 0 . \]
+  <p>Solving $\Phi\theta = B$ exactly: $\theta_0 = 1$ from row 2; rows 1 and 3 give $\theta_0 - \theta_1+\theta_2 = 0$ and $\theta_0+\theta_1+\theta_2 = 3$, so $\theta_1 = \tfrac32$ and $\theta_2 = \tfrac12$. Thus $f(x) = 1 + \tfrac32x+\tfrac12x^2$, and the fit is exact: $f(-1) = 1-\tfrac32+\tfrac12 = 0$ &#10003;, $f(0) = 1$ &#10003;, $f(1) = 1+\tfrac32+\tfrac12 = 3$ &#10003;. Zero training error, versus $\mathrm{SSE} = \tfrac16$ for the line.</p>
+  <p>The deck's elimination makes this look like arithmetic luck. It is not:</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition 6.2 (Vandermonde).</strong> For nodes $x_1,\dots,x_m$, the matrix $V_{ij} = x_i^{\,j-1}$ ($m\times m$) has $\det V = \prod_{i \lt j}(x_j - x_i)$. Hence $V$ is invertible iff the nodes are distinct, and there is then exactly one degree-$(m{-}1)$ polynomial through any $m$ prescribed values.</p>
+    <p style="margin:8px 0 0;"><em>Proof sketch.</em> Regard $\det V$ as a polynomial in $x_m$ of degree $m-1$; it vanishes whenever $x_m = x_i$ for $i \lt m$ (two equal rows), so it equals $c\prod_{i \lt m}(x_m-x_i)$ with $c$ the coefficient of $x_m^{m-1}$, which by cofactor expansion is the $(m{-}1)$-node Vandermonde determinant. Induct. $\blacksquare$</p>
+  </div>
+  <p>So a degree-$(N{-}1)$ polynomial <em>always</em> interpolates $N$ points with distinct $x$-values, and the exactness of this parabola is a fact about $N = 3$, not about this data. That is precisely why it is not evidence that the parabola is a better model &mdash; a point the deck's next slide makes and this proposition explains.</p>
+
+  <h3>6.4 Where feature maps stop</h3>
+  <p>Two limits the slides note in passing, worth naming. <em>Cost:</em> full degree-$p$ polynomial features in $n$ variables number $\binom{n+p}{p}$ &mdash; for $n = 100$, $p = 3$ that is $176{,}851$; the map is exponential in $p$. Kernel methods dodge the explicit map by working with the $N\times N$ Gram matrix $K_{ij} = \langle\phi(\mathbf{x}^{(i)}),\phi(\mathbf{x}^{(j)})\rangle$, trading $\mathcal{O}(Nd^2)$ for $\mathcal{O}(N^3)$ &mdash; good when $d \gg N$, useless when $N$ is millions. <em>Design:</em> $\phi$ must still be chosen by hand. The one-sentence summary of why the rest of the course exists: deep learning replaces the hand-designed $\phi$ with a learned one, at the cost of every closed form in this lecture.</p>
+</section>
+
+<section>
+  <h2>7 &nbsp;Multiple Outputs</h2>
+  <p>With $y^{(i)}\in\mathbb{R}^m$, stack labels into $B\in\mathbb{R}^{N\times m}$ and parameters into $\Theta\in\mathbb{R}^{n\times m}$, and measure the miss in Frobenius norm.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition 7.1.</strong> $\operatorname*{argmin}_{\Theta}\|A\Theta - B\|_F^2$ has minimum-norm solution $\Theta^\star = A^{\dagger}B$, obtained column by column.</p>
+    <p style="margin:8px 0 0;"><em>Proof.</em> By definition of the Frobenius norm as the sum of squared entries, grouped by column, $\|A\Theta - B\|_F^2 = \sum_{k=1}^{m}\|A\Theta_{:,k} - B_{:,k}\|_2^2$. The $k$-th summand involves only $\Theta_{:,k}$, so the objective separates into $m$ independent least-squares problems; apply Theorem 1 to each, giving $\Theta^\star_{:,k} = A^{\dagger}B_{:,k}$, i.e. $\Theta^\star = A^{\dagger}B$. Minimality of $\|\Theta\|_F$ follows since each column is separately of least norm. $\blacksquare$</p>
+  </div>
+  <p>The practical content: the expensive object is the factorization of $A$, and it does not depend on $B$. One SVD (or QR) serves all $m$ outputs, and serves any future $B$ as well &mdash; refitting with new labels is a matrix multiply. Note also that the outputs do not interact at all under Frobenius loss; if you want them coupled (shared low-rank structure across tasks), you must change the objective &mdash; e.g. penalize $\|\Theta\|_*$, which is opt01 Section 6.5 and the multi-task / LoRA connection.</p>
+</section>
+
+<section>
+  <h2>8 &nbsp;Empirical Risk Minimization</h2>
+
+  <h3>8.1 The framework</h3>
+  <p>Assume $(X,Y)\sim P$ i.i.d., fix a loss $\ell$ and a function class $\mathcal{F}$. The <em>risk</em> and the <em>empirical risk</em> are</p>
+  \[ R[f] = \mathbb{E}_{(X,Y)\sim P}\big[\ell(f(X),Y)\big], \qquad \hat R[f] = \frac1N\sum_{i=1}^{N}\ell\big(f(\mathbf{x}^{(i)}),y^{(i)}\big), \]
+  <p>and ERM returns $\hat f \in \operatorname*{argmin}_{f\in\mathcal{F}}\hat R[f]$. Least squares is the instance $\ell(\hat y,y) = (\hat y - y)^2$, $\mathcal{F} = \{\theta^{\top}\mathbf{x}\}$ &mdash; and the deck's point is that this lecture has been doing ERM all along, with a class so small that the argmin has a formula.</p>
+
+  <h3>8.2 The Bayes predictor for squared loss</h3>
+  <p>The slides cite this to prob07; here is the proof, since the whole ERM narrative rests on knowing what $R$ is trying to reach.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 8.1.</strong> Over <em>all</em> measurable $f$ with $\mathbb{E}[f(X)^2] \lt \infty$, $R[f] = \mathbb{E}[(f(X)-Y)^2]$ is minimized by $f^\star(\mathbf{x}) = \mathbb{E}[Y\mid X=\mathbf{x}]$, and $R^\star = R[f^\star] = \mathbb{E}\big[\operatorname{Var}(Y\mid X)\big]$.</p>
+    <p style="margin:8px 0 6px;"><em>Proof.</em> Condition on $X$ and add and subtract $f^\star(X)$:</p>
+    \[ \mathbb{E}\big[(f(X)-Y)^2\,\big|\,X\big] = \mathbb{E}\big[(Y - f^\star(X))^2\,\big|\,X\big] + 2\big(f^\star(X)-f(X)\big)\mathbb{E}\big[Y-f^\star(X)\,\big|\,X\big] + \big(f^\star(X)-f(X)\big)^2 . \]
+    <p style="margin:6px 0 0;">The cross term vanishes because $\mathbb{E}[Y\mid X] = f^\star(X)$ by definition, and $f, f^\star$ are $X$-measurable so they factor out of the conditional expectation. Taking expectations, $R[f] = \mathbb{E}[\operatorname{Var}(Y\mid X)] + \mathbb{E}[(f^\star(X)-f(X))^2] \geq \mathbb{E}[\operatorname{Var}(Y\mid X)]$, with equality iff $f = f^\star$ almost surely. $\blacksquare$</p>
+  </div>
+  <p>Two consequences. $R^\star \gt 0$ in general: the <em>noise floor</em> is not a modelling failure, and driving training error below it is by definition fitting noise. And the identity $R[f] = R^\star + \mathbb{E}[(f - f^\star)^2]$ says excess risk is exactly squared $L^2(P)$ distance to the conditional mean &mdash; the cleanest justification for the geometric language of Section 4.</p>
+
+  <h3>8.3 Why $\hat R$ at all</h3>
+  <p>$R$ is unavailable: it is an expectation under the unknown $P$. What we have is a sample, and for each <em>fixed</em> $f$ the strong law gives $\hat R[f]\to R[f]$ almost surely, with $\mathbb{E}[\hat R[f]] = R[f]$ exactly. So $\hat R$ is an unbiased, consistent estimate of $R$ &mdash; per function.</p>
+
+  <h3>8.4 The gap in &ldquo;minimize $\hat R$ and hope $R$ follows&rdquo;</h3>
+  <p>The deck's phrasing is honest but hides the actual difficulty, and it is worth being precise about it because it is the reason statistical learning theory exists. Pointwise convergence is <em>not enough</em>: $\hat f$ is chosen using the data, so $\hat R[\hat f]$ is <em>not</em> an unbiased estimate of $R[\hat f]$ &mdash; the same sample that picks the function then grades it, and $\hat f$ is precisely the function that looks best on this sample. Concretely, with $\mathcal{F}$ all measurable functions, take $\hat f$ to be $y^{(i)}$ at each $\mathbf{x}^{(i)}$ and $0$ elsewhere: $\hat R[\hat f] = 0$ while $R[\hat f]$ is as bad as it gets. Nothing in the LLN is violated; the LLN was never applied to a data-dependent $f$.</p>
+  <p>What repairs it is <em>uniform</em> convergence over $\mathcal{F}$.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition 8.2.</strong> Let $\Delta := \sup_{f\in\mathcal{F}}\big|\hat R[f]-R[f]\big|$ and let $\hat f$ minimize $\hat R$ over $\mathcal{F}$. Then</p>
+    \[ R[\hat f] \;-\; \inf_{f\in\mathcal{F}} R[f] \;\leq\; 2\Delta . \]
+    <p style="margin:8px 0 0;"><em>Proof.</em> Let $f_\varepsilon\in\mathcal{F}$ with $R[f_\varepsilon]\leq\inf_{\mathcal F}R+\varepsilon$. Then $R[\hat f]\leq \hat R[\hat f]+\Delta \leq \hat R[f_\varepsilon]+\Delta\leq R[f_\varepsilon]+2\Delta \leq \inf_{\mathcal F}R + 2\Delta+\varepsilon$, the second inequality by optimality of $\hat f$ for $\hat R$. Let $\varepsilon\downarrow0$. $\blacksquare$</p>
+  </div>
+  <p>So ERM is sound exactly to the extent that $\Delta$ is small, and $\Delta$ is a property of $\mathcal{F}$, not of the algorithm. Bounding it is what VC dimension and Rademacher complexity do [8, 9]: for a class of Rademacher complexity $\mathfrak{R}_N(\mathcal{F})$ and bounded loss, $\mathbb{E}\Delta \leq 2\mathfrak{R}_N(\mathcal{F})$, which for linear predictors with $\|\theta\|\leq b$ and $\|\mathbf{x}\|\leq c$ is $\mathcal{O}(bc/\sqrt N)$ &mdash; note the norm bound, which is the theoretical shadow of ridge. Adding the approximation term gives the decomposition the deck draws as two arrows:</p>
+  \[ \underbrace{R[\hat f]-R^\star}_{\text{excess risk}} \;=\; \underbrace{\Big(\inf_{f\in\mathcal{F}}R[f]-R^\star\Big)}_{\text{approximation: }\mathcal{F}\text{ too small}} \;+\; \underbrace{\Big(R[\hat f]-\inf_{f\in\mathcal{F}}R[f]\Big)}_{\text{estimation: }\leq\,2\Delta} . \]
+  <p>Enlarging $\mathcal{F}$ drives the first term down and the second up. That trade-off is the whole of model selection, and it is why Proposition 6.1 (&ldquo;more features never hurt&rdquo;) is about the wrong quantity.</p>
+
+  <h3>8.5 When ERM misleads &mdash; and the modern caveat</h3>
+  <p>The deck's failure list is right: too-rich $\mathcal{F}$ (memorization), tiny $N$, distribution shift ($\hat R$ estimates the wrong $R$), and a loss that is not what you care about (squared error under an outlier-ridden $P$, or accuracy optimized through cross-entropy). To these should be added the observation that classical uniform-convergence bounds are <em>vacuous</em> for modern networks: Zhang et al. [10] showed a standard architecture can fit random labels on CIFAR-10 to zero training error, so its capacity term admits no useful bound, and yet the same architecture generalizes on real labels. And the &ldquo;more capacity is worse past the interpolation point&rdquo; picture is itself incomplete: <em>double descent</em> [11] finds test error rising to a peak at $d\approx N$ and then <em>falling again</em> as $d$ grows past it, with the minimum-norm interpolant $A^{\dagger}B$ &mdash; Theorem 1's own answer &mdash; as the object being analyzed [12, 13]. The classical U-curve on the deck is the left half of the picture; it is correct as far as it goes, and the course-level honest statement is that a complete theory is not settled.</p>
+</section>
+
+<section>
+  <h2>9 &nbsp;Ridge Regression</h2>
+
+  <h3>9.1 The objective</h3>
+  \[ J_\lambda(\theta) \;=\; \tfrac12\|A\theta - B\|_2^2 \;+\; \tfrac{\lambda}{2}\|\theta\|_2^2, \qquad \lambda \gt 0 . \]
+  <p>Three separate motivations converge on this one formula, and it is worth keeping them distinct because they suggest different ways to choose $\lambda$:</p>
+  <ul>
+    <li><em>Algebraic.</em> $A^{\top}A$ may be singular, or nearly so; adding $\lambda I$ makes it invertible and caps the condition number (Section 4.5). This is Tikhonov's motivation [3] and needs no probability at all.</li>
+    <li><em>Statistical.</em> Trading a little bias for a lot of variance strictly reduces MSE (Theorem 9.4).</li>
+    <li><em>Bayesian.</em> It is MAP estimation under a Gaussian prior, with $\lambda$ pinned to the noise-to-prior variance ratio (Section 9.6).</li>
+  </ul>
+
+  <h3>9.2 Theorem 3</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Lemma 9.1.</strong> For $\lambda \gt 0$, $A^{\top}A + \lambda I$ is symmetric positive definite, hence invertible.</p>
+    <p style="margin:8px 0 0;"><em>Proof.</em> Symmetry is clear. For $\theta \neq 0$, $\theta^{\top}(A^{\top}A+\lambda I)\theta = \|A\theta\|_2^2 + \lambda\|\theta\|_2^2 \geq \lambda\|\theta\|_2^2 \gt 0$. A positive-definite matrix has trivial null space ($M\theta = 0 \Rightarrow \theta^{\top}M\theta = 0 \Rightarrow \theta = 0$), hence is invertible. Note this holds for <em>every</em> $A$ &mdash; no rank assumption. $\blacksquare$</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 3.</strong> For $\lambda \gt 0$, $J_\lambda$ has the unique minimizer $\theta^\star_\lambda = (A^{\top}A+\lambda I)^{-1}A^{\top}B$.</p>
+    <p style="margin:8px 0 6px;"><em>Proof.</em> Write $M = A^{\top}A+\lambda I$. Expanding exactly as in Theorem 2, for any $\theta$ and $h$,</p>
+    \[ J_\lambda(\theta + h) \;=\; J_\lambda(\theta) \;+\; h^{\top}\big(M\theta - A^{\top}B\big) \;+\; \tfrac12 h^{\top}Mh . \]
+    <p style="margin:6px 0 0;">Take $\theta = \theta^\star_\lambda = M^{-1}A^{\top}B$, which exists by Lemma 9.1; the linear term vanishes and $J_\lambda(\theta^\star_\lambda + h) = J_\lambda(\theta^\star_\lambda) + \tfrac12h^{\top}Mh \gt J_\lambda(\theta^\star_\lambda)$ for every $h\neq0$, by positive definiteness. So $\theta^\star_\lambda$ is a minimizer and it is the only one. $\blacksquare$</p>
+  </div>
+  <p>Compare with Theorem 1: uniqueness there needed $r = n$; here it is free for any $\lambda \gt 0$. The regularizer buys strict convexity, and strict convexity is exactly what makes the argmin a point rather than a set.</p>
+
+  <h3>9.3 The running example</h3>
+  <p>$A^{\top}A + \lambda I = \operatorname{diag}(3+\lambda,\,2+\lambda)$, so</p>
+  \[ \theta^\star_\lambda = \Big(\frac{4}{3+\lambda},\ \frac{3}{2+\lambda}\Big) . \]
+  <p>Check: $\lambda = 0$ gives $(\tfrac43,\tfrac32)$ &#10003; (Theorem 1's answer); $\lambda = 1$ gives $(1,1)$ &#10003;; $\lambda = 4$ gives $(\tfrac47,\tfrac12)$ &#10003;; $\lambda\to\infty$ gives $(0,0)$, as it must. Both coordinates shrink monotonically, and the intercept shrinks <em>faster in relative terms where the corresponding $\sigma_i$ is smaller</em> &mdash; here $\sigma_2^2 = 2 \lt 3 = \sigma_1^2$, so the slope coordinate is damped more aggressively at equal $\lambda$: at $\lambda = 1$ the slope has lost $\tfrac13$ of its value against $\tfrac14$ for the intercept. That is the general rule, and Proposition 9.2 is why.</p>
+
+  <h3>9.4 What ridge does in the SVD basis</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition 9.2 (shrinkage).</strong> With $A = U_c\Sigma_cV_c^{\top}$ of rank $r$ and $\lambda \gt 0$,</p>
+    \[ \theta^\star_\lambda \;=\; \sum_{i=1}^{r}\frac{\sigma_i}{\sigma_i^2+\lambda}\,\big(u_i^{\top}B\big)\,v_i, \qquad\text{versus}\qquad A^{\dagger}B \;=\; \sum_{i=1}^{r}\frac{1}{\sigma_i}\big(u_i^{\top}B\big)v_i . \]
+    <p style="margin:8px 0 6px;"><em>Proof.</em> Complete $V_c$ to an orthogonal $V = [\,V_c\ \tilde V\,]\in\mathbb{R}^{n\times n}$ (Section 3.2, Step 1, applied on the other side). Then $A^{\top}A = V\Lambda V^{\top}$ with $\Lambda = \operatorname{diag}(\sigma_1^2,\dots,\sigma_r^2,0,\dots,0)$, so</p>
+    \[ (A^{\top}A+\lambda I)^{-1} = V(\Lambda + \lambda I)^{-1}V^{\top}, \]
+    <p style="margin:6px 0 6px;">using $I = VV^{\top}$ and the fact that inverting a matrix conjugated by an orthogonal matrix inverts the middle factor. Multiplying by $A^{\top} = V_c\Sigma_cU_c^{\top}$ and using $V^{\top}V_c = \left[\begin{smallmatrix}I_r\\0\end{smallmatrix}\right]$, only the first $r$ diagonal entries survive:</p>
+    \[ (A^{\top}A+\lambda I)^{-1}A^{\top} = V_c\,\operatorname{diag}\!\Big(\tfrac{\sigma_i}{\sigma_i^2+\lambda}\Big)\,U_c^{\top}, \]
+    <p style="margin:6px 0 0;">and applying it to $B$ gives the stated sum. $\blacksquare$</p>
+  </div>
+  <p>So ridge replaces the filter factor $1/\sigma_i$ by $\sigma_i/(\sigma_i^2+\lambda) = \tfrac{1}{\sigma_i}\cdot\tfrac{\sigma_i^2}{\sigma_i^2+\lambda}$. The correction factor is in $(0,1)$, near $1$ when $\sigma_i^2 \gg \lambda$ and near $\sigma_i^2/\lambda \approx 0$ when $\sigma_i^2\ll\lambda$: <em>directions the data measures well pass through nearly untouched; directions it barely measures are suppressed.</em> That is the precise sense in which ridge is a smooth version of truncating small singular values, and it explains the algebraic motivation quantitatively &mdash; the unregularized $1/\sigma_i$ amplifies whatever noise lands along $u_i$ by a factor that blows up as $\sigma_i\to0$, while $\sigma_i/(\sigma_i^2+\lambda)$ is bounded by $1/(2\sqrt\lambda)$ for every $\sigma_i$ (AM&ndash;GM).</p>
+  <p>It also gives the standard summary statistic, the <em>effective degrees of freedom</em> [7, §3.4.1]: the ridge fit is $\hat B = A\theta^\star_\lambda = HB$ with $H = U_c\operatorname{diag}(\sigma_i^2/(\sigma_i^2+\lambda))U_c^{\top}$, so</p>
+  \[ \mathrm{df}(\lambda) = \operatorname{tr}(H) = \sum_{i=1}^{r}\frac{\sigma_i^2}{\sigma_i^2+\lambda}, \]
+  <p>which decreases from $r$ at $\lambda = 0$ to $0$ as $\lambda\to\infty$ &mdash; a continuous model-complexity dial where subset selection offers only integers. On the running example $\mathrm{df}(1) = \tfrac34+\tfrac23 = \tfrac{17}{12}\approx1.42$ out of $2$.</p>
+
+  <h3>9.5 The limit $\lambda\to0^{+}$</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition 9.3.</strong> $\displaystyle\lim_{\lambda\to0^{+}}\theta^\star_\lambda = A^{\dagger}B$, for every $A$ &mdash; including rank-deficient $A$.</p>
+    <p style="margin:8px 0 0;"><em>Proof.</em> In Proposition 9.2 the sum runs over $i \leq r$ only, so every $\sigma_i \gt 0$ and $\sigma_i/(\sigma_i^2+\lambda)\to1/\sigma_i$ as $\lambda\to0^{+}$; the sum is finite, so the limit passes term by term. $\blacksquare$</p>
+  </div>
+  <p>This is a genuinely informative fact and the deck states only the invertible case. Even when $J$ has infinitely many minimizers, the ridge path selects one particular point in the limit &mdash; and it is $A^{\dagger}B$, the <em>minimum-norm</em> one. The least-norm tie-break of Theorem 1 is therefore not an arbitrary convention: it is what vanishing $\ell_2$ regularization picks out. The same phenomenon reappears for gradient descent from the origin (opt03) and is the object of study in the interpolation literature [12, 13]. Note also that the convergence is not uniform in $A$ &mdash; consistent with $A\mapsto A^{\dagger}$ being discontinuous (opt01 Section 5.6).</p>
+
+  <h3>9.6 Ridge as MAP estimation</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition.</strong> Let $B\mid\theta \sim \mathcal{N}(A\theta,\sigma^2I_N)$ and put the prior $\theta\sim\mathcal{N}(0,\tau^2I_n)$. Then the posterior mode is $\theta^\star_\lambda$ with $\lambda = \sigma^2/\tau^2$.</p>
+    <p style="margin:8px 0 6px;"><em>Proof.</em> By Bayes, $-\log p(\theta\mid B) = \tfrac{1}{2\sigma^2}\|A\theta - B\|_2^2 + \tfrac{1}{2\tau^2}\|\theta\|_2^2 + \text{const}$. Multiplying by $\sigma^2 \gt 0$ (Section 2.2) leaves</p>
+    \[ \tfrac12\|A\theta-B\|_2^2 + \tfrac{\sigma^2}{2\tau^2}\|\theta\|_2^2 = J_\lambda(\theta), \qquad \lambda = \frac{\sigma^2}{\tau^2}. \ \blacksquare \]
+  </div>
+  <p>The constant is the point. $\lambda$ is not a free knob but a ratio: large noise or a tight prior means heavy regularization; a diffuse prior ($\tau\to\infty$) recovers least squares. Since $\sigma^2$ and $\tau^2$ are unknown in practice, $\lambda$ is chosen by cross-validation &mdash; for ridge specifically there is a closed-form leave-one-out shortcut and its rotation-invariant cousin, generalized cross-validation [6], both computable from one SVD across the whole $\lambda$ grid, since Proposition 9.2 gives every $\theta^\star_\lambda$ from the same factorization.</p>
+  <p>Interpreting the same objective as a constrained problem, $\min\|A\theta-B\|_2^2$ subject to $\|\theta\|_2 \leq t$, gives the picture where the round $\ell_2$ ball generically touches the elliptical contours away from any axis. Swapping in the $\ell_1$ ball, whose corners lie on the axes, is the lasso [14] and is what makes it select variables; ridge never sets a coefficient exactly to zero, as Proposition 9.2 makes plain (every filter factor is strictly positive).</p>
+
+  <h3>9.7 Bias, variance, and a theorem the deck states as a picture</h3>
+  <p>Keep the model of Section 5. Ridge is biased: $\mathbb{E}[\theta^\star_\lambda] = (A^{\top}A+\lambda I)^{-1}A^{\top}A\,\theta_0 \neq \theta_0$ for $\lambda \gt 0$. Gauss&ndash;Markov therefore does not apply, and that is the opening rather than a defect.</p>
+  <p>Take $A$ of full column rank, write $a_i = v_i^{\top}\theta_0$ and $\eta_i = u_i^{\top}\varepsilon$, so $u_i^{\top}B = \sigma_ia_i+\eta_i$ with $\mathbb{E}\eta_i = 0$, $\operatorname{Var}\eta_i = \sigma^2$, and the $\eta_i$ uncorrelated (the $u_i$ are orthonormal). By Proposition 9.2 the $i$-th coordinate of $\theta^\star_\lambda$ in the $v$-basis is $\sigma_i(\sigma_ia_i+\eta_i)/(\sigma_i^2+\lambda)$, so its bias is $-\lambda a_i/(\sigma_i^2+\lambda)$ and its variance is $\sigma^2\sigma_i^2/(\sigma_i^2+\lambda)^2$. Summing (Parseval, the $v_i$ being orthonormal):</p>
+  \[ \mathrm{MSE}(\lambda) \;=\; \mathbb{E}\big\|\theta^\star_\lambda - \theta_0\big\|_2^2 \;=\; \sum_{i=1}^{n}\frac{\lambda^2a_i^2 \;+\; \sigma^2\sigma_i^2}{(\sigma_i^2+\lambda)^2} . \]
+  <p>The numerator displays the trade-off in one line: the first term is squared bias, increasing in $\lambda$ from $0$; the second is variance, and the denominator drives it down. At $\lambda = 0$ this is $\mathrm{MSE}(0) = \sigma^2\sum_i\sigma_i^{-2} = \sigma^2\operatorname{tr}((A^{\top}A)^{-1})$, the Gauss&ndash;Markov value &mdash; which is enormous when any $\sigma_i$ is small.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 9.4 (Hoerl&ndash;Kennard, 1970 [4]).</strong> For every $\theta_0$ and every $\sigma^2 \gt 0$, $\mathrm{MSE}(\lambda) \lt \mathrm{MSE}(0)$ for all $\lambda$ with $0 \lt \lambda \lt 2\sigma^2/\max_i a_i^2$. In particular there always exists a $\lambda \gt 0$ whose ridge estimator beats least squares in mean squared error.</p>
+    <p style="margin:8px 0 6px;"><em>Proof.</em> Compare term by term. Fix $i$ and set $D_i(\lambda) := \dfrac{\lambda^2a_i^2+\sigma^2\sigma_i^2}{(\sigma_i^2+\lambda)^2} - \dfrac{\sigma^2}{\sigma_i^2}$. Multiplying by the positive quantity $\sigma_i^2(\sigma_i^2+\lambda)^2$,</p>
+    \[ \sigma_i^2\lambda^2a_i^2 + \sigma^2\sigma_i^4 - \sigma^2(\sigma_i^2+\lambda)^2 \;=\; \sigma_i^2\lambda^2a_i^2 - 2\sigma^2\sigma_i^2\lambda - \sigma^2\lambda^2 \;=\; \lambda\Big[\lambda\big(\sigma_i^2a_i^2 - \sigma^2\big) - 2\sigma^2\sigma_i^2\Big]. \]
+    <p style="margin:6px 0 6px;">For $\lambda \gt 0$ this is negative as soon as $\lambda(\sigma_i^2a_i^2-\sigma^2) \lt 2\sigma^2\sigma_i^2$, for which $\lambda\,\sigma_i^2a_i^2 \lt 2\sigma^2\sigma_i^2$ &mdash; that is, $\lambda \lt 2\sigma^2/a_i^2$ &mdash; is sufficient. Requiring it for every $i$ gives the stated range, which is a nonempty interval whenever $\sigma^2 \gt 0$. Summing the strictly negative $D_i$ proves the claim. (Equivalently, differentiating gives $\mathrm{MSE}'(\lambda) = 2\sum_i\sigma_i^2(\lambda a_i^2-\sigma^2)/(\sigma_i^2+\lambda)^3$, so $\mathrm{MSE}'(0) = -2\sigma^2\sum_i\sigma_i^{-4} \lt 0$: the curve leaves $\lambda = 0$ strictly downhill.) $\blacksquare$</p>
+  </div>
+  <p>The deck draws the U-shaped curve; this is the theorem behind it, and the sharp part is that the descent at $\lambda = 0$ is <em>unconditional</em>. Unbiasedness is never optimal here. The catch is equally sharp: the useful range $2\sigma^2/\max_ia_i^2$ depends on the unknown $\theta_0$ and $\sigma^2$, so the theorem guarantees a good $\lambda$ exists without telling you which &mdash; hence cross-validation. This is the same phenomenon as Stein's paradox and the James&ndash;Stein estimator [5]: in dimension $\geq 3$, shrinking a natural unbiased estimator toward a point dominates it everywhere.</p>
+
+  <h3>9.8 Two cautions the slides do not raise</h3>
+  <ul>
+    <li><strong>The intercept is being penalized.</strong> Written as $\lambda\|\theta\|_2^2$ over all coordinates, ridge shrinks $\theta_0$ &mdash; visible in the running example, where the intercept goes $\tfrac43\to1\to\tfrac47$. Standard practice excludes it: center $B$ and the feature columns, fit the slopes with a penalty, and recover the intercept as $\bar y$. Penalizing the intercept makes the fit depend on where the origin of $y$ sits, which is not a modelling assumption anyone intends.</li>
+    <li><strong>Ridge is not scale-equivariant.</strong> Least squares is: rescaling a feature column by $c$ rescales its coefficient by $1/c$ and leaves the fit unchanged. Ridge does not commute with that rescaling, because $\|\theta\|_2^2$ weights all coordinates equally &mdash; measuring a length in millimetres instead of metres changes the answer. Features are therefore standardized to unit variance before ridge, always. The same remark applies to lasso.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>10 &nbsp;What the Deck Leaves Out</h2>
+  <ol>
+    <li><strong>Weighted and generalized least squares.</strong> If $\operatorname{Cov}(\varepsilon) = \Sigma \neq \sigma^2I$, the efficient estimator minimizes $(A\theta-B)^{\top}\Sigma^{-1}(A\theta-B)$; substituting $\Sigma^{-1/2}$ into the data reduces it to the ordinary case. Gauss&ndash;Markov is stated for the homoscedastic case only.</li>
+    <li><strong>Lasso and the elastic net.</strong> Swapping $\|\theta\|_2^2$ for $\|\theta\|_1$ gives sparse solutions and no closed form; it is a convex program [17] solved by coordinate descent or proximal methods. The $\ell_1$ story is the direct sibling of opt01's nuclear norm &mdash; convex surrogate for a counting objective &mdash; and connects to opt03's proximal machinery.</li>
+    <li><strong>Choosing $\lambda$ in practice.</strong> $K$-fold CV, leave-one-out with the closed-form hat-matrix shortcut, and generalized cross-validation [6]; also the whole regularization path, computable at the cost of one SVD.</li>
+    <li><strong>Inference.</strong> Standard errors, $t$- and $F$-tests, confidence and prediction intervals &mdash; everything that makes least squares a statistical procedure rather than a curve fit. Note ridge's biasedness makes naive intervals invalid.</li>
+    <li><strong>Diagnostics and robustness.</strong> Leverage $h_{ii}$, Cook's distance, and the fact that a single high-leverage outlier can move $\theta^\star$ without bound; Huber loss and $\ell_1$ regression as the fixes.</li>
+    <li><strong>Iterative solvers.</strong> For $N$ or $n$ in the millions, neither the SVD ($\mathcal{O}(Nn^2)$) nor the normal equations are affordable; LSQR, conjugate gradients on the normal equations, and sketching methods are [16, Ch. 5&ndash;6]. This is the bridge to opt03&ndash;opt04, where the closed form is abandoned entirely.</li>
+    <li><strong>Nonlinear least squares.</strong> $f_\theta$ nonlinear in $\theta$ destroys every result here; Gauss&ndash;Newton and Levenberg&ndash;Marquardt recover local versions, and Levenberg&ndash;Marquardt's damping term is literally ridge applied to the linearized subproblem.</li>
+  </ol>
+</section>
+
+<h2>References</h2>
+<ol>
+  <li>A.-M. Legendre, <em>Nouvelles méthodes pour la détermination des orbites des comètes</em>, Paris, 1805 &mdash; first publication of the method of least squares. <a href="https://archive.org/details/nouvellesmthod00lege">archive.org</a></li>
+  <li>C. F. Gauss, <em>Theoria Motus Corporum Coelestium</em>, 1809 &mdash; least squares with the Gaussian error law and the priority claim to 1795. <a href="https://archive.org/details/theoriamotuscor00gausgoog">archive.org</a></li>
+  <li>A. N. Tikhonov, &ldquo;Solution of incorrectly formulated problems and the regularization method,&rdquo; <em>Soviet Math. Dokl.</em> 4 (1963), 1035&ndash;1038 &mdash; the $\lambda I$ term for ill-posed inverse problems.</li>
+  <li>A. E. Hoerl and R. W. Kennard, &ldquo;Ridge regression: biased estimation for nonorthogonal problems,&rdquo; <em>Technometrics</em> 12(1) (1970), 55&ndash;67 &mdash; Theorem 9.4. <a href="https://doi.org/10.1080/00401706.1970.10488634">doi:10.1080/00401706.1970.10488634</a></li>
+  <li>W. James and C. Stein, &ldquo;Estimation with quadratic loss,&rdquo; <em>Proc. Fourth Berkeley Symp.</em> 1 (1961), 361&ndash;379 &mdash; shrinkage dominates the unbiased estimator in dimension $\geq 3$. <a href="https://projecteuclid.org/euclid.bsmsp/1200512173">projecteuclid</a></li>
+  <li>G. H. Golub, M. Heath and G. Wahba, &ldquo;Generalized cross-validation as a method for choosing a good ridge parameter,&rdquo; <em>Technometrics</em> 21(2) (1979), 215&ndash;223. <a href="https://doi.org/10.1080/00401706.1979.10489751">doi:10.1080/00401706.1979.10489751</a></li>
+  <li>T. Hastie, R. Tibshirani and J. Friedman, <em>The Elements of Statistical Learning</em>, 2nd ed., Springer, 2009 &mdash; Ch. 3 for ridge, lasso, effective degrees of freedom; Ch. 7 for the bias&ndash;variance decomposition. <a href="https://hastie.su.domains/ElemStatLearn/">free PDF</a></li>
+  <li>V. N. Vapnik, <em>The Nature of Statistical Learning Theory</em>, 2nd ed., Springer, 2000 &mdash; ERM, uniform convergence, VC dimension. <a href="https://doi.org/10.1007/978-1-4757-3264-1">doi:10.1007/978-1-4757-3264-1</a></li>
+  <li>P. L. Bartlett and S. Mendelson, &ldquo;Rademacher and Gaussian complexities: risk bounds and structural results,&rdquo; <em>JMLR</em> 3 (2002), 463&ndash;482 &mdash; the modern form of the $\Delta$ bound in Proposition 8.2. <a href="https://www.jmlr.org/papers/v3/bartlett02a.html">jmlr.org</a></li>
+  <li>C. Zhang, S. Bengio, M. Hardt, B. Recht and O. Vinyals, &ldquo;Understanding deep learning requires rethinking generalization,&rdquo; ICLR 2017. <a href="https://arxiv.org/abs/1611.03530">arXiv:1611.03530</a></li>
+  <li>M. Belkin, D. Hsu, S. Ma and S. Mandal, &ldquo;Reconciling modern machine learning practice and the bias&ndash;variance trade-off,&rdquo; <em>PNAS</em> 116(32) (2019) &mdash; double descent. <a href="https://arxiv.org/abs/1812.11118">arXiv:1812.11118</a></li>
+  <li>T. Hastie, A. Montanari, S. Rosset and R. J. Tibshirani, &ldquo;Surprises in high-dimensional ridgeless least squares interpolation,&rdquo; <em>Ann. Statist.</em> 50(2) (2022) &mdash; the $\lambda\to0^{+}$ limit of Section 9.5 analyzed. <a href="https://arxiv.org/abs/1903.08560">arXiv:1903.08560</a></li>
+  <li>P. L. Bartlett, P. M. Long, G. Lugosi and A. Tsigler, &ldquo;Benign overfitting in linear regression,&rdquo; <em>PNAS</em> 117(48) (2020) &mdash; when the minimum-norm interpolant $A^{\dagger}B$ generalizes. <a href="https://arxiv.org/abs/1906.11300">arXiv:1906.11300</a></li>
+  <li>R. Tibshirani, &ldquo;Regression shrinkage and selection via the lasso,&rdquo; <em>JRSS-B</em> 58(1) (1996), 267&ndash;288. <a href="https://doi.org/10.1111/j.2517-6161.1996.tb02080.x">doi:10.1111/j.2517-6161.1996.tb02080.x</a></li>
+  <li>L. N. Trefethen and D. Bau III, <em>Numerical Linear Algebra</em>, SIAM, 1997 &mdash; Lectures 11 and 18&ndash;19 for the conditioning argument of Section 4.5 and the QR/SVD routes. <a href="https://doi.org/10.1137/1.9780898719574">doi:10.1137/1.9780898719574</a></li>
+  <li>G. H. Golub and C. F. Van Loan, <em>Matrix Computations</em>, 4th ed., Johns Hopkins, 2013 &mdash; Ch. 5 for least squares algorithms, Ch. 6 for modified and regularized problems.</li>
+  <li>S. Boyd and L. Vandenberghe, <em>Convex Optimization</em>, Cambridge, 2004 &mdash; §1.2 and Ch. 4 for least squares as the model tractable problem; picked up in opt03. <a href="https://web.stanford.edu/~boyd/cvxbook/">free PDF</a></li>
+  <li>Companion notes in this series: <code>opt01-svd-lowrank-note.html</code> (SVD, pseudo-inverse, Eckart&ndash;Young&ndash;Mirsky &mdash; every linear-algebra fact used above), <code>prob07-*-note.html</code> (conditional expectation and the Bayes predictor of Section 8.2), and, in the sequel, <code>opt03-convexity-gd-note.html</code> (what replaces the closed form when there is none).</li>
+</ol>
+
+</body>
+</html>

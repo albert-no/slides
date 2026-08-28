@@ -669,6 +669,8 @@ iterate the running average of sampled c's → bound 30(1+log(k+1))/(k+1)
 vs Thm 2, crossover ≈ 10³. Closes the whole course: 13-deck map,
 what-you-can-now-read, end slide θ_{k+1} = θ_k − α g_k.
 
+Companion: `opt04-sgd/opt04-sgd-note.html` — detailed definitions, expanded proofs, lemmas, references.
+
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + TOC | 1–2 | opt04-sgd/opt04-sgd.html:36 |

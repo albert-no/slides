@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Deep Learning Math 13 — Stochastic Gradient Descent · Notes</title>
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload='renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false},{left:"\\[",right:"\\]",display:true}]});'></script>
+<style>
+  body { max-width: 760px; margin: 48px auto; padding: 0 24px 96px; color: var(--charcoal); background: var(--white); font-family: 'Yonsei', 'Noto Sans', Arial, sans-serif; font-weight: 300; line-height: 1.65; }
+  h1 { font-size: 2rem; color: var(--yonsei-blue); margin-bottom: 4px; }
+  h2 { font-size: 1.4rem; color: var(--yonsei-blue); margin-top: 40px; border-bottom: 1px solid var(--slate); padding-bottom: 6px; }
+  h3 { font-size: 1.1rem; color: var(--blue-light); margin-top: 24px; }
+  p, li { font-size: 1rem; }
+  .meta { color: var(--gray-text); font-size: 0.95rem; margin-bottom: 24px; }
+  code { background: var(--light); padding: 1px 6px; border-radius: 4px; font-size: 0.92em; }
+  strong { color: var(--yonsei-blue); font-weight: 600; }
+  .deriv { background: var(--light); border-left: 3px solid var(--yonsei-blue); padding: 12px 18px; margin: 14px 0; border-radius: 0 6px 6px 0; }
+  table { border-collapse: collapse; margin: 14px 0; }
+  th, td { border: 1px solid var(--slate); padding: 6px 12px; font-size: 0.95rem; text-align: left; }
+  th { background: var(--light); color: var(--yonsei-blue); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>Deep Learning Math 13 · Stochastic Gradient Descent — Notes</h1>
+
+<p class="meta">
+Companion notes for the slide deck <code>opt04-sgd.html</code>. The deck states four theorems &mdash; unbiasedness of the sampled gradient, the $O(1/\sqrt{K})$ convex rate, the $\sigma^2/b$ mini-batch variance, and the $O(\log k / k)$ strongly convex rate &mdash; and proves the last three step by step across roughly forty slides. What a deck cannot carry is the surrounding apparatus: the probability space the randomness lives on, why $\mathbb{E}_k$ is legitimate and what it conditions on, why every inequality in a proof is allowed to be taken inside an expectation, what happens when the standing assumptions fail, and which of the deck's honest caveats (&ldquo;bounded variance is an assumption&rdquo;, &ldquo;theory averages, practice does not&rdquo;, &ldquo;without replacement is even better&rdquo;) have real theorems behind them. These notes supply all of that.
+</p>
+
+<p class="meta">
+Sections: <strong>&sect;1</strong> what is actually claimed, and the standing hypotheses. <strong>&sect;2</strong> the sampling scheme, the filtration, Theorem 1 in full, non-uniform and importance sampling, with- versus without-replacement. <strong>&sect;3</strong> the noise variable: the second-moment identity, the several inequivalent things &ldquo;$\sigma^2$&rdquo; can mean, and what breaks in deep learning. <strong>&sect;4</strong> the constant-step noise floor, solved exactly for the running example and stated in general. <strong>&sect;5</strong> Theorem 2 with every step proved, plus the balance lemma, horizon-free schedules, and the matching lower bound. <strong>&sect;6</strong> mini-batching, including the without-replacement correction the deck only gestures at. <strong>&sect;7</strong> Theorem 4 in full, with the two steps the deck compresses (the unrolling and the second-moment bound) done carefully, and an exact computation of the truth on the running example. <strong>&sect;8</strong> Robbins&ndash;Monro, almost-sure convergence, and the nonconvex case. <strong>&sect;9</strong> what the deck leaves out.
+</p>
+
+<p class="meta">
+<strong>Conventions.</strong> $\mathcal{L}(\theta) = \frac1N\sum_{i=1}^N \mathcal{L}_i(\theta)$ throughout, with $\theta \in \mathbb{R}^d$; the deck's one-dimensional running example is $\mathcal{L}_i(\theta) = \tfrac12(\theta-c_i)^2$ with $c = (0,3,6)$, so $\mathcal{L}(\theta) = \tfrac12(\theta-3)^2 + 3$, $\theta^\star = 3$, $\mathcal{L}^\star = 3$, and the gap is $\mathcal{L}(\theta)-\mathcal{L}^\star = \tfrac12(\theta-3)^2$. Following the deck, <strong>$G$</strong> denotes the Lipschitz constant of the objective ($\lVert\nabla\mathcal{L}\rVert \le G$) &mdash; the source notes call it $L$, but $L$ is reserved here for opt03's smoothness constant, and today's headline theorems use <em>no</em> smoothness at all. $D = \lVert\theta_0-\theta^\star\rVert$. $\sigma^2$ is a bound on the conditional variance of the sampled gradient. One notation warning: the deck's Step 1a of Theorem 4 writes $\theta_i$ for the unrolling <em>weights</em> while $\theta$ is the parameter everywhere else; these notes call the weights $w_i$ and reserve $x_k$ for the iterates in that section, matching the deck's own switch from $\theta$ to $x$ in &sect;08.
+</p>
+
+<h2>1 &nbsp;What This Lecture Actually Claims</h2>
+
+<h3>1.1 &nbsp;The problem</h3>
+
+<p>
+Every result today concerns the <strong>finite-sum</strong> (empirical risk) objective introduced in opt02,
+</p>
+
+\[ \min_{\theta \in \mathbb{R}^d} \; \mathcal{L}(\theta) \;=\; \frac{1}{N}\sum_{i=1}^{N} \mathcal{L}_i(\theta), \qquad \mathcal{L}_i(\theta) = \ell\big(h_\theta(x^{(i)}), y^{(i)}\big), \]
+
+<p>
+and its algorithm is one line: draw an index, take one gradient, step.
+</p>
+
+\[ i_k \sim \mathrm{Unif}\{1,\dots,N\}, \qquad g_k = \nabla \mathcal{L}_{i_k}(\theta_k), \qquad \theta_{k+1} = \theta_k - \alpha_k\, g_k. \]
+
+<p>
+The motivation on the deck's first slides is a cost argument, and it is worth stating quantitatively because it is the entire reason the rest of the lecture exists. Gradient descent needs $O(1/\varepsilon)$ steps for an $\varepsilon$-accurate convex objective (opt03, Theorem 8), and each step costs $N$ gradient evaluations: $O(N/\varepsilon)$ total. SGD needs $O(1/\varepsilon^2)$ steps (Theorem 2 below) at one gradient each: $O(1/\varepsilon^2)$ total, <em>independent of $N$</em>. SGD wins whenever $N \gg 1/\varepsilon$. With $N$ in the millions and $\varepsilon$ the modest accuracy a training run actually needs, this is not close.
+</p>
+
+<div class="deriv">
+<p><strong>The structural point.</strong> The $N$-independence is not an artefact of loose analysis. Theorem 2's bound involves only $G$, $\sigma$, $D$ and $K$ &mdash; the number of terms $N$ appears nowhere. What replaces it is $\sigma^2$, which measures how much the individual $\nabla \mathcal{L}_i$ disagree with each other. A dataset of a million near-identical points has a tiny $\sigma^2$ and SGD is nearly as good as GD at $1/N$ the price; a dataset of a million wildly heterogeneous points has a large $\sigma^2$ and pays for it in the constant, not in the rate.</p>
+</div>
+
+<h3>1.2 &nbsp;The four theorems and what each one needs</h3>
+
+<p>
+The deck is careful to keep the hypotheses of the four results separate, and the table below makes that explicit. Note that <em>none</em> of them assumes smoothness ($L$-Lipschitz gradient) &mdash; this is the sharpest contrast with opt03, where every rate began with the descent lemma. The price is that the rates are stated for an <strong>averaged</strong> iterate rather than the last one, and are $O(1/\sqrt{K})$ rather than $O(1/K)$.
+</p>
+
+<table>
+<thead><tr><th>result</th><th>hypotheses</th><th>conclusion</th><th>where</th></tr></thead>
+<tbody>
+<tr><td>Thm 1 (unbiased)</td><td>uniform sampling, independent of the past</td><td>$\mathbb{E}_k[g_k] = \nabla\mathcal{L}(\theta_k)$</td><td>&sect;2.2</td></tr>
+<tr><td>Thm 2 (convex rate)</td><td>$\mathcal{L}$ convex, $G$-Lipschitz; unbiased; $\operatorname{Var}_k \le \sigma^2$; constant $\alpha$ tuned to $K$</td><td>$\mathbb{E}[\mathcal{L}(\bar\theta_K)-\mathcal{L}^\star] \le \dfrac{\sqrt{G^2+\sigma^2}\,D}{\sqrt{K+1}}$</td><td>&sect;5</td></tr>
+<tr><td>Thm 3 (mini-batch)</td><td>$b$ indices i.i.d. uniform, with replacement</td><td>batch-gradient variance $= \sigma^2/b$</td><td>&sect;6</td></tr>
+<tr><td>Thm 4 (strongly convex)</td><td>$F = f + \frac\mu2\lVert\cdot\rVert^2$, $f$ convex $G$-Lipschitz; $\alpha_k = \frac{1}{\mu(k+1)}$, $x_0=0$</td><td>$\mathbb{E}[F(\bar x_k)-F^\star] \le \dfrac{2(G^2+\sigma^2)}{\mu}\cdot\dfrac{1+\log(k+1)}{k+1}$</td><td>&sect;7</td></tr>
+</tbody>
+</table>
+
+<p>
+Three things the deck states as slogans and that these notes turn into statements. First, &ldquo;the noise never sleeps&rdquo;: at $\theta^\star$ the <em>average</em> pull vanishes but individual pulls do not, so a constant step size cannot converge &mdash; &sect;4 computes the exact floor. Second, &ldquo;balance progress against noise&rdquo;: the $\sqrt{K}$ in Theorem 2 is born from minimizing $a/\alpha + b\alpha$, and &sect;5.4 proves that this is the best a constant step can do. Third, &ldquo;shrinking steps kill the floor&rdquo;: &sect;7 shows that the specific schedule $\alpha_k = 1/(\mu(k+1))$ does something stronger than shrink the floor &mdash; it makes the telescope's head term vanish identically, which is why $\lVert x_0 - x^\star\rVert$ is absent from Theorem 4.
+</p>
+
+<h3>1.3 &nbsp;What is <em>not</em> claimed</h3>
+
+<ul>
+<li><strong>Nothing about the last iterate.</strong> Theorems 2 and 4 bound the loss at $\bar\theta_K$. The last iterate satisfies a weaker bound in general (&sect;5.8, &sect;7.7); the deck flags this honestly as a theory&ndash;practice gap.</li>
+<li><strong>Nothing almost surely.</strong> Both are in-expectation bounds. Almost-sure convergence needs the Robbins&ndash;Monro conditions and a supermartingale argument (&sect;8); high-probability bounds need tail assumptions on the noise (&sect;8.3).</li>
+<li><strong>Nothing nonconvex.</strong> Convexity is used in exactly one place in each proof (the tangent-line floor), and it is essential. The nonconvex analogue bounds $\min_k \mathbb{E}\lVert\nabla\mathcal{L}(\theta_k)\rVert^2$, needs smoothness back, and is stated in &sect;8.4.</li>
+<li><strong>Nothing about generalization.</strong> Everything here is about minimizing the <em>empirical</em> risk. Why the minimizer generalizes is prob05&ndash;prob06 territory, and why SGD's particular noise helps it generalize is open research (&sect;9.6).</li>
+</ul>
+
+<h2>2 &nbsp;The Stochastic Gradient: Sampling and Unbiasedness</h2>
+
+<h3>2.1 &nbsp;The probability space, and what $\mathbb{E}_k$ means</h3>
+
+<p>
+The deck writes $\mathbb{E}_k[\,\cdot\,] = \mathbb{E}[\,\cdot \mid \theta_0,\dots,\theta_k]$ and moves on. That is the right picture, but the object needs a moment's care, because every subsequent proof consists of taking a <em>deterministic</em> inequality and putting $\mathbb{E}_k$ in front of it.
+</p>
+
+<p>
+Fix a horizon and let $i_0, i_1, i_2, \dots$ be independent random variables, each uniform on $\{1,\dots,N\}$, defined on a probability space $(\Omega, \mathcal{F}, \mathbb{P})$. Define the <strong>filtration</strong>
+</p>
+
+\[ \mathcal{F}_k \;=\; \sigma(i_0, i_1, \dots, i_{k-1}), \qquad \mathcal{F}_0 = \{\emptyset, \Omega\} \ \text{(trivial)}, \]
+
+<p>
+the information available <em>before</em> the $k$-th draw is made. Write $\mathbb{E}_k[\,\cdot\,] = \mathbb{E}[\,\cdot \mid \mathcal{F}_k]$.
+</p>
+
+<div class="deriv">
+<p><strong>Lemma 2.1 (measurability).</strong> If $\theta_0$ is deterministic and $\theta_{k+1} = \theta_k - \alpha_k \nabla\mathcal{L}_{i_k}(\theta_k)$, then $\theta_k$ is $\mathcal{F}_k$-measurable for every $k$.</p>
+<p><em>Proof.</em> Induction. $\theta_0$ is constant, hence measurable with respect to the trivial $\sigma$-algebra $\mathcal{F}_0$. If $\theta_k$ is $\mathcal{F}_k$-measurable, then $\theta_{k+1}$ is a measurable function of the pair $(\theta_k, i_k)$, and $\sigma(\mathcal{F}_k, i_k) = \mathcal{F}_{k+1}$. $\blacksquare$</p>
+</div>
+
+<p>
+Lemma 2.1 is what licenses the two moves used constantly below.
+</p>
+
+<ul>
+<li><strong>Pull out what is known.</strong> $\mathbb{E}_k[\langle \theta_k - \theta^\star, g_k\rangle] = \langle \theta_k - \theta^\star, \mathbb{E}_k[g_k]\rangle$, because $\theta_k$ is $\mathcal{F}_k$-measurable. Without Lemma 2.1 this step is simply false, and it is the step that makes unbiasedness useful: the inner product is linear in $g_k$, so the noise integrates away exactly. (Contrast $\mathbb{E}_k\lVert g_k\rVert^2$, which is <em>not</em> $\lVert \nabla\mathcal{L}(\theta_k)\rVert^2$ &mdash; the square is not linear, and the discrepancy is precisely the variance; see &sect;3.2.)</li>
+<li><strong>Tower.</strong> $\mathbb{E}[\mathbb{E}_k[X]] = \mathbb{E}[X]$ (prob07). Every proof establishes a one-step inequality under $\mathbb{E}_k$, then applies the tower property to get an inequality between total expectations, which is what can be summed over $k$.</li>
+</ul>
+
+<p>
+Also note that $i_k$ is independent of $\mathcal{F}_k$: the algorithm samples the index without looking at the current iterate. This is a modelling assumption and it is what the deck means by &ldquo;the draw doesn't look at the iterate&rdquo;. Curriculum learning, importance sampling with adaptive weights, and hard-example mining all violate it, and all need a separate analysis.
+</p>
+
+<h3>2.2 &nbsp;Theorem 1, in full</h3>
+
+<div class="deriv">
+<p><strong>Theorem 2.2 (unbiasedness; = deck Theorem 1).</strong> Let $i_k \sim \mathrm{Unif}\{1,\dots,N\}$ be independent of $\mathcal{F}_k$, and suppose each $\mathcal{L}_i$ is differentiable at $\theta_k$. Then</p>
+\[ \mathbb{E}_k\big[\nabla \mathcal{L}_{i_k}(\theta_k)\big] \;=\; \nabla \mathcal{L}(\theta_k) \qquad \text{almost surely.} \]
+<p><em>Proof.</em> Because $i_k \perp \mathcal{F}_k$ and $\theta_k$ is $\mathcal{F}_k$-measurable, conditioning on $\mathcal{F}_k$ freezes $\theta_k$ at its realised value and leaves the law of $i_k$ untouched. So for a fixed point $\theta$,</p>
+\[ \mathbb{E}\big[\nabla\mathcal{L}_{i_k}(\theta)\big] \;=\; \sum_{i=1}^{N} \mathbb{P}(i_k = i)\, \nabla\mathcal{L}_i(\theta) \;=\; \frac{1}{N}\sum_{i=1}^N \nabla\mathcal{L}_i(\theta) \;=\; \nabla\Big(\frac{1}{N}\sum_{i=1}^N \mathcal{L}_i\Big)(\theta) \;=\; \nabla\mathcal{L}(\theta), \]
+<p>the last-but-one equality by linearity of the derivative on a <em>finite</em> sum. Substituting $\theta = \theta_k$ gives the claim. $\blacksquare$</p>
+</div>
+
+<p>
+Three remarks the two-line slide proof cannot make room for.
+</p>
+
+<ul>
+<li><strong>The finiteness matters.</strong> Exchanging $\nabla$ with the average is trivial for a finite sum. For a population risk $\mathcal{L}(\theta) = \mathbb{E}_{(x,y)\sim P}[\ell(h_\theta(x),y)]$ the same statement is an interchange of derivative and integral, and needs a dominated-convergence hypothesis (e.g. a local integrable Lipschitz envelope for $\theta \mapsto \ell(h_\theta(x),y)$). It is true in every setting of practical interest, but it is a theorem, not an identity.</li>
+<li><strong>Non-differentiable losses.</strong> ReLU networks and hinge losses are not differentiable everywhere. The correct object is then a stochastic <em>subgradient</em>: $\mathbb{E}_k[g_k] \in \partial\mathcal{L}(\theta_k)$ requires $\mathbb{E}[\partial\mathcal{L}_i] = \partial\mathcal{L}$, which holds for the finite sum by Moreau&ndash;Rockafellar (opt03 &sect;9.3). Everything in &sect;5 goes through verbatim with subgradients, since the only property used is the tangent-line floor $\langle g, \theta-\theta^\star\rangle \ge \mathcal{L}(\theta)-\mathcal{L}^\star$ in expectation.</li>
+<li><strong>Unbiasedness is designed, not discovered.</strong> The uniform weight $1/N$ was chosen to match the weight $1/N$ in the objective. Change one and you must change the other &mdash; which is exactly what &sect;2.3 does.</li>
+</ul>
+
+<h3>2.3 &nbsp;Non-uniform sampling and importance weights</h3>
+
+<p>
+Nothing forces uniform sampling. Let $p = (p_1,\dots,p_N)$ be any distribution with $p_i \gt 0$ for all $i$, draw $i_k \sim p$, and use the <strong>reweighted</strong> gradient
+</p>
+
+\[ g_k \;=\; \frac{1}{N p_{i_k}}\, \nabla \mathcal{L}_{i_k}(\theta_k). \]
+
+<div class="deriv">
+<p><strong>Proposition 2.3 (importance sampling).</strong> $g_k$ is unbiased for every such $p$, and its variance is minimized by $p_i \propto \lVert \nabla\mathcal{L}_i(\theta_k)\rVert$, at which choice</p>
+\[ \mathbb{E}_k\lVert g_k\rVert^2 \;=\; \Big(\frac{1}{N}\sum_{i=1}^N \lVert\nabla\mathcal{L}_i(\theta_k)\rVert\Big)^{\!2} \;\le\; \frac{1}{N}\sum_{i=1}^N \lVert\nabla\mathcal{L}_i(\theta_k)\rVert^2, \]
+<p>the right-hand side being the uniform-sampling value.</p>
+<p><em>Proof.</em> Unbiasedness: $\mathbb{E}_k[g_k] = \sum_i p_i \cdot \frac{1}{Np_i}\nabla\mathcal{L}_i = \frac1N\sum_i \nabla\mathcal{L}_i = \nabla\mathcal{L}$ &mdash; the $p_i$ cancels, which is the whole trick. Second moment: writing $a_i = \lVert\nabla\mathcal{L}_i\rVert$,</p>
+\[ \mathbb{E}_k\lVert g_k \rVert^2 \;=\; \sum_i p_i \frac{a_i^2}{N^2p_i^2} \;=\; \frac{1}{N^2}\sum_i \frac{a_i^2}{p_i}. \]
+<p>By Cauchy&ndash;Schwarz, $\big(\sum_i a_i\big)^2 = \big(\sum_i \frac{a_i}{\sqrt{p_i}}\sqrt{p_i}\big)^2 \le \big(\sum_i \frac{a_i^2}{p_i}\big)\big(\sum_i p_i\big) = \sum_i \frac{a_i^2}{p_i}$, with equality iff $a_i/\sqrt{p_i} \propto \sqrt{p_i}$, i.e. $p_i \propto a_i$. So the minimum of $\frac{1}{N^2}\sum_i a_i^2/p_i$ over distributions $p$ equals $\frac{1}{N^2}(\sum_i a_i)^2 = (\frac1N\sum_i a_i)^2$. The final inequality is Jensen (or Cauchy&ndash;Schwarz again) applied to the average of the $a_i$: the square of a mean is at most the mean of the squares. $\blacksquare$</p>
+</div>
+
+<p>
+Since $\mathbb{E}_k\lVert g_k\rVert^2$ is the only place the noise enters the proof of Theorem 2, reducing it reduces the bound directly. The catch is practical rather than mathematical: the optimal $p$ depends on all $N$ gradient norms at the <em>current</em> $\theta_k$, which costs a full pass to compute &mdash; precisely what SGD was invented to avoid. Cheap surrogates (fixed $p_i \propto \lVert x^{(i)}\rVert$ for linear models, or stale norms refreshed occasionally) recover part of the gain, and this is the standard theory of importance-sampling SGD [1, &sect;5.4].
+</p>
+
+<h3>2.4 &nbsp;With replacement, without replacement, and epochs</h3>
+
+<p>
+The deck is explicit that its analysis samples <em>with replacement</em> (independent draws) while practice shuffles the data and makes a pass &mdash; an <strong>epoch</strong> &mdash; before reshuffling. The gap is real and was open for a surprisingly long time.
+</p>
+
+<p>
+Under random reshuffling, $i_k$ is <em>not</em> independent of the past: having drawn point 7 this epoch, the conditional probability of drawing it again is zero. Consequently $\mathbb{E}_k[g_k] \ne \nabla\mathcal{L}(\theta_k)$ in general and Theorem 2.2 fails at the level of an individual step. What survives is a statement per epoch: over a full sweep, every gradient is used exactly once, so the <em>sum</em> of the sampled gradients over one epoch equals $N\nabla\mathcal{L}$ evaluated at $N$ <em>different</em> points &mdash; which is $N \nabla\mathcal{L}(\theta)$ plus an error controlled by how far the iterate moves within the epoch, i.e. by $\alpha$.
+</p>
+
+<p>
+This is why reshuffling helps: the within-epoch errors are $O(\alpha)$ and partially cancel, giving rates like $O(1/(K^2))$ per-epoch behaviour under strong convexity versus $O(1/K)$ for with-replacement sampling, once $K$ exceeds a threshold. The clean modern reference is Mishchenko, Khaled and Richt&aacute;rik [19], which also explains why the older analyses needed the noncommutative arithmetic&ndash;geometric-mean conjecture and how to avoid it. For this lecture the honest summary is: <em>with replacement is the analysable case and is never better than what practice does</em>.
+</p>
+
+<h3>2.5 &nbsp;The running example, computed completely</h3>
+
+<p>
+With $\mathcal{L}_i(\theta) = \tfrac12(\theta-c_i)^2$ and $c = (0,3,6)$: $\nabla\mathcal{L}_i(\theta) = \theta - c_i$ and $\nabla\mathcal{L}(\theta) = \theta - \bar c = \theta - 3$. The sampled gradient at any $\theta$ takes the three values $\theta, \theta-3, \theta-6$ with probability $1/3$ each; their mean is $\theta - 3$ for every $\theta$, which is the deck's worked check at $\theta \in \{0,3,6\}$.
+</p>
+
+<p>
+Two features of this example are worth naming because they are <em>not</em> generic and it is easy to over-generalise from them.
+</p>
+
+<ul>
+<li><strong>The noise is state-independent.</strong> $n_k := g_k - \nabla\mathcal{L}(\theta_k) = (\theta_k - c_{i_k}) - (\theta_k - 3) = 3 - c_{i_k} \in \{3,0,-3\}$, with no $\theta_k$ in it at all. This happens because all three $\mathcal{L}_i$ have the <em>same</em> second derivative, so the individual gradients differ from the average by a constant offset. Generic finite sums have $\sigma^2(\theta)$ varying with $\theta$, often growing with $\lVert\theta\rVert$; the bounded-variance assumption then becomes a genuine restriction (&sect;3.3).</li>
+<li><strong>The noise does not vanish at $\theta^\star$.</strong> $\operatorname{Var}(n) = \frac{9+0+9}{3} = 6$ at $\theta = 3$ as much as anywhere else. This is the &ldquo;unbiased is not zero&rdquo; slide, and it is the entire reason a constant step size cannot converge. The opposite regime &mdash; $\sigma^2(\theta^\star) = 0$, meaning every $\mathcal{L}_i$ is minimized at the same point &mdash; is the <em>interpolation</em> regime, and it changes the theory qualitatively (&sect;3.3).</li>
+</ul>
+
+<h2>3 &nbsp;Noise: Variance, Second Moments, and What Can Fail</h2>
+
+<h3>3.1 &nbsp;The second-moment identity</h3>
+
+<p>
+The deck's slide &ldquo;Bounded Gradients from Lipschitz&rdquo; asserts a decomposition and attributes it to prob07. Stated carefully:
+</p>
+
+<div class="deriv">
+<p><strong>Lemma 3.1 (bias&ndash;variance split of the second moment).</strong> For any random vector $g$ with $\mathbb{E}\lVert g\rVert^2 \lt \infty$ and any sub-$\sigma$-algebra $\mathcal{G}$,</p>
+\[ \mathbb{E}\big[\lVert g\rVert^2 \mid \mathcal{G}\big] \;=\; \big\lVert \mathbb{E}[g\mid\mathcal{G}]\big\rVert^2 \;+\; \mathbb{E}\big[\lVert g - \mathbb{E}[g\mid\mathcal{G}]\rVert^2 \mid \mathcal{G}\big]. \]
+<p><em>Proof.</em> Write $m = \mathbb{E}[g\mid\mathcal{G}]$ and expand $\lVert g\rVert^2 = \lVert (g-m) + m\rVert^2 = \lVert g-m\rVert^2 + 2\langle g-m, m\rangle + \lVert m\rVert^2$. Condition on $\mathcal{G}$: the middle term is $2\langle \mathbb{E}[g-m\mid\mathcal{G}], m\rangle = 0$ because $m$ is $\mathcal{G}$-measurable and $\mathbb{E}[g-m\mid\mathcal{G}] = 0$. $\blacksquare$</p>
+</div>
+
+<p>
+Applied with $\mathcal{G} = \mathcal{F}_k$ and $g = g_k$, and using Theorem 2.2 for $m = \nabla\mathcal{L}(\theta_k)$:
+</p>
+
+\[ \mathbb{E}_k\big[\lVert g_k\rVert^2\big] \;=\; \underbrace{\lVert\nabla\mathcal{L}(\theta_k)\rVert^2}_{\le\, G^2 \text{ if } \mathcal{L} \text{ is } G\text{-Lipschitz}} \;+\; \underbrace{\operatorname{Var}_k(g_k)}_{\le\, \sigma^2 \text{ by assumption}} \;\le\; G^2 + \sigma^2. \tag{3.1} \]
+
+<p>
+This single inequality is the only thing about the noise that Theorem 2's proof ever uses. It is why the theorem's constant is $\sqrt{G^2+\sigma^2}$ and not, say, $G + \sigma$: what enters is a second moment, and second moments add under the orthogonal decomposition of Lemma 3.1.
+</p>
+
+<p>
+<strong>Check on the running example at $\theta = 9$.</strong> The three sampled gradients are $9, 6, 3$, with second moment $(81+36+9)/3 = 42$. The decomposition predicts $\lVert\nabla\mathcal{L}(9)\rVert^2 + \sigma^2 = 6^2 + 6 = 42$. Exact, as it must be &mdash; (3.1) is an identity before the two bounds are applied, and $\theta = 9$ is where the Lipschitz bound $G = 6$ on $[-3,9]$ is attained.
+</p>
+
+<h3>3.2 &nbsp;Three inequivalent meanings of &ldquo;$\sigma^2$&rdquo;</h3>
+
+<p>
+The literature uses one symbol for several conditions of increasing strength, and mixing them up is a common source of confusion when comparing rate statements.
+</p>
+
+<table>
+<thead><tr><th>condition</th><th>statement</th><th>who needs it</th></tr></thead>
+<tbody>
+<tr><td>uniform bounded variance</td><td>$\operatorname{Var}_k(g_k) \le \sigma^2$ for all $\theta$</td><td>Theorems 2 and 4 as stated on the deck</td></tr>
+<tr><td>variance at the optimum</td><td>$\sigma_\star^2 = \frac1N\sum_i \lVert\nabla\mathcal{L}_i(\theta^\star)\rVert^2$</td><td>modern smooth analyses; $\sigma_\star^2 = 0$ is interpolation</td></tr>
+<tr><td>expected smoothness / growth</td><td>$\mathbb{E}_k\lVert g_k\rVert^2 \le A(\mathcal{L}(\theta_k)-\mathcal{L}^\star) + B\lVert\nabla\mathcal{L}\rVert^2 + C$</td><td>analyses that must cover unbounded domains</td></tr>
+</tbody>
+</table>
+
+<p>
+The first is the strongest and the least realistic. It is genuinely satisfied in the running example ($\sigma^2 = 6$ everywhere, &sect;2.5); it is not satisfied by, for example, least squares with heterogeneous inputs, where the per-sample gradient $ (\langle a_i,\theta\rangle - y_i)a_i$ has variance growing quadratically in $\lVert\theta\rVert$. In that setting the honest statement is the third row, which reduces to bounded variance on a bounded domain, and the theorems survive with modified constants [1, &sect;4.3].
+</p>
+
+<h3>3.3 &nbsp;When the assumption fails, and what replaces it</h3>
+
+<p>
+The deck flags &ldquo;bounded variance is an assumption, not a theorem &mdash; it can fail&rdquo; and leaves it there. Three ways it fails, and the repair in each case:
+</p>
+
+<ul>
+<li><strong>Unbounded domain.</strong> A quadratic is not globally Lipschitz, so neither $G$ nor $\sigma^2$ is globally finite &mdash; which is exactly the deck's own caveat that its constants $G=6$, $D=3$ are valid on the interval $[-3,9]$ where the run lives. The clean repairs are either to project onto a compact convex set (projected SGD, same proof with the nonexpansiveness of the projection inserted; opt03 &sect;9.4) or to drop Lipschitzness and assume smoothness instead, which lets $\lVert\nabla\mathcal{L}\rVert^2 \le 2L(\mathcal{L}-\mathcal{L}^\star)$ absorb the growth (opt03's Theorem 3 sandwich).</li>
+<li><strong>Interpolation.</strong> If the model can fit every training point exactly &mdash; the overparameterized regime of deep learning &mdash; then $\nabla\mathcal{L}_i(\theta^\star) = 0$ for every $i$, so $\sigma_\star^2 = 0$ and the noise <em>does</em> sleep at the solution. Then constant-step SGD converges linearly, at a rate governed by $L/\mu$ rather than by $\sigma^2$, with no averaging and no schedule. This is the theory of Ma, Bassily and Belkin [18], and it is a much better model of a modern training run's final phase than anything on the deck.</li>
+<li><strong>Heavy tails.</strong> Gradient noise in transformer training is empirically heavy-tailed; the variance may be infinite, only a $\kappa$-th moment finite for some $\kappa \in (1,2]$. Then no bounded-variance analysis applies, and the standard fix is <strong>gradient clipping</strong>, which trades a controlled bias for a bounded second moment. Zhang et al. [20] give a matching theory and use it to explain why adaptive methods outperform plain SGD on attention models.</li>
+</ul>
+
+<h3>3.4 &nbsp;Why $\sigma^2$ is the right price tag</h3>
+
+<p>
+It is worth pausing on why a variance, of all things, is what SGD pays for. Both headline rates have the shape
+</p>
+
+\[ \text{(progress term, shrinking in } \alpha) \;+\; (\text{noise term, growing in } \alpha), \]
+
+<p>
+and the noise term is always $\alpha^2 \cdot \mathbb{E}\lVert g\rVert^2$, coming from the $\alpha^2\lVert g_k\rVert^2$ produced when the update is squared. A first-order method that only used $g_k$ linearly would pay nothing for noise; it is the <em>quadratic</em> in the distance-to-optimum potential $\lVert\theta_k-\theta^\star\rVert^2$ that converts noise into cost. This is the same phenomenon as in prob05: sums of independent zero-mean terms cancel in mean and accumulate in variance.
+</p>
+
+<h2>4 &nbsp;Constant Step Size: the Noise Floor</h2>
+
+<h3>4.1 &nbsp;The running example, solved exactly</h3>
+
+<p>
+The deck's &sect;05 derives the error recursion and its fixed point. Here is the derivation with the signs tracked and the independence hypothesis made explicit.
+</p>
+
+<p>
+Let $e_k = \theta_k - \theta^\star = \theta_k - 3$. With $g_k = \theta_k - c_{i_k}$ and $n_k = 3 - c_{i_k}$ (so that $g_k = \nabla\mathcal{L}(\theta_k) + n_k$ as in &sect;2.5),
+</p>
+
+\[ e_{k+1} \;=\; \theta_k - \alpha g_k - 3 \;=\; e_k - \alpha(e_k + n_k) \;=\; (1-\alpha)\,e_k \;-\; \alpha\, n_k. \tag{4.1} \]
+
+<p>
+(The deck writes $+\alpha n_k$; since $n_k$ is symmetric about $0$ &mdash; it takes values $3,0,-3$ with probabilities $\tfrac13,\tfrac13,\tfrac13$ &mdash; the two recursions have identical laws and identical variances, so nothing downstream changes.)
+</p>
+
+<div class="deriv">
+<p><strong>Proposition 4.1 (exact mean and variance).</strong> With $\theta_0$ deterministic, $m_k = \mathbb{E}[e_k]$ and $v_k = \operatorname{Var}(e_k)$ satisfy</p>
+\[ m_{k+1} = (1-\alpha)m_k, \qquad v_{k+1} = (1-\alpha)^2 v_k + \alpha^2\sigma^2, \qquad v_0 = 0, \]
+<p>hence, for $0 \lt \alpha \lt 2$,</p>
+\[ m_k = (1-\alpha)^k e_0 \to 0, \qquad v_k \;=\; \frac{\alpha\sigma^2}{2-\alpha}\Big(1 - (1-\alpha)^{2k}\Big) \;\longrightarrow\; v_\infty = \frac{\alpha\,\sigma^2}{2-\alpha}. \]
+<p>Consequently $\mathbb{E}\big[\mathcal{L}(\theta_k) - \mathcal{L}^\star\big] = \tfrac12\mathbb{E}[e_k^2] = \tfrac12(m_k^2 + v_k) \to \dfrac{\alpha\sigma^2}{2(2-\alpha)}$.</p>
+<p><em>Proof.</em> Take expectations in (4.1) and use $\mathbb{E}[n_k] = 0$ together with the independence of $n_k$ from $\mathcal{F}_k$ (hence from $e_k$): the mean recursion is immediate. For the variance, $e_{k+1} - m_{k+1} = (1-\alpha)(e_k - m_k) - \alpha n_k$ is a sum of two <em>independent</em> zero-mean terms, so variances add (prob05): $v_{k+1} = (1-\alpha)^2 v_k + \alpha^2 \operatorname{Var}(n_k) = (1-\alpha)^2 v_k + \alpha^2\sigma^2$. This is an affine recursion $v_{k+1} = r v_k + s$ with $r = (1-\alpha)^2 \in [0,1)$ and $s = \alpha^2\sigma^2$; its unique fixed point is $v_\star = s/(1-r) = \alpha^2\sigma^2/(2\alpha - \alpha^2) = \alpha\sigma^2/(2-\alpha)$, and $v_k - v_\star = r^k(v_0 - v_\star)$ gives the closed form. The final display is the gap identity $\mathcal{L}(\theta)-\mathcal{L}^\star = \tfrac12(\theta-3)^2$ together with $\mathbb{E}[e^2] = (\mathbb{E}e)^2 + \operatorname{Var}(e)$. $\blacksquare$</p>
+</div>
+
+<p>
+This is worth dwelling on, because it is an <em>exact</em> statement, not a bound: with a constant step, SGD on this problem converges in distribution to a stationary random variable centred at $\theta^\star$ with variance $\alpha\sigma^2/(2-\alpha)$, and it never does better. Everything the general theory says about noise floors is visible here without a single inequality.
+</p>
+
+<h3>4.2 &nbsp;The floor, numerically</h3>
+
+<p>
+With $\sigma^2 = 6$, $e_0 = -3$ (i.e. $\theta_0 = 0$), Proposition 4.1 gives $\mathbb{E}[e_k^2] = m_k^2 + v_k$ exactly:
+</p>
+
+<table>
+<thead><tr><th>$k$</th><th>$0$</th><th>$1$</th><th>$2$</th><th>$3$</th><th>$4$</th><th>$6$</th><th>$8$</th><th>floor $v_\infty$</th></tr></thead>
+<tbody>
+<tr><td>$\alpha = 0.5$</td><td>$9$</td><td>$3.75$</td><td>$2.44$</td><td>$2.11$</td><td>$2.03$</td><td>$2.002$</td><td>$2.000$</td><td>$\mathbf{2.0}$</td></tr>
+<tr><td>$\alpha = 0.1$</td><td>$9$</td><td>$7.35$</td><td>$6.01$</td><td>$4.93$</td><td>$4.05$</td><td>$2.77$</td><td>$1.93$</td><td>$\mathbf{0.316}$</td></tr>
+</tbody>
+</table>
+
+<p>
+This is the deck's &ldquo;racing to different floors&rdquo; picture with numbers attached. The large step is at its floor after about four steps and stays there; the small step is still far above its floor after eight and will need roughly $\log(0.316/9)/\log(0.81) \approx 16$ more steps to approach it. The corresponding expected gaps are $\tfrac12 v_\infty = 1.0$ and $0.158$.
+</p>
+
+<p>
+Compare with the deck's hand-run at $\alpha = 1/2$, which produced iterates $3, 1.5, 2.25, 4.125$ with gaps $0, 1.125, 0.281, 0.633$. Those are one realisation; Proposition 4.1 describes the ensemble the realisation is drawn from, and the observed gaps oscillating around $1$ is exactly the predicted floor $\tfrac12 v_\infty = 1$. The deterministic GD run with the same step size gives $1.5, 2.25, 2.625, 2.8125$ with gaps $1.125, 0.281, 0.070, 0.018$, decreasing geometrically forever &mdash; the noiseless comparison.
+</p>
+
+<h3>4.3 &nbsp;The general statement</h3>
+
+<p>
+The exact solvability above is special to a one-dimensional quadratic. The general phenomenon is a theorem:
+</p>
+
+<div class="deriv">
+<p><strong>Theorem 4.2 (constant-step SGD converges to a neighbourhood).</strong> Let $\mathcal{L}$ be $L$-smooth and $\mu$-strongly convex, let $g_k$ be unbiased with $\operatorname{Var}_k(g_k) \le \sigma^2$, and let $0 \lt \alpha \le 1/L$. Then</p>
+\[ \mathbb{E}\big[\lVert\theta_k - \theta^\star\rVert^2\big] \;\le\; (1-\alpha\mu)^k\,\lVert\theta_0-\theta^\star\rVert^2 \;+\; \frac{\alpha\,\sigma^2}{\mu}. \]
+<p><em>Sketch.</em> Expand the square as in Lemma 5.1 below, use the strong-convexity floor (Lemma 7.3) instead of the plain tangent floor to obtain a contraction factor $(1-\alpha\mu)$, and bound the noise term by $\alpha^2\sigma^2$; then unroll the affine recursion $u_{k+1} \le (1-\alpha\mu)u_k + \alpha^2\sigma^2$ and sum the geometric series, whose limit is $\alpha^2\sigma^2/(\alpha\mu) = \alpha\sigma^2/\mu$. $\blacksquare$</p>
+</div>
+
+<p>
+The structure matches Proposition 4.1: a geometrically decaying transient plus a floor proportional to $\alpha\sigma^2$. (In the running example $\mu = L = 1$, and the general bound's floor $\alpha\sigma^2/\mu = 3$ at $\alpha = 0.5$ is a factor $1.5$ above the exact value $2$ &mdash; the usual price of an inequality-based argument.) The sharp constants and the general treatment are in Bottou, Curtis and Nocedal [1, Thm. 4.6]; see also Moulines and Bach [22] for the non-asymptotic analysis in the machine-learning setting.
+</p>
+
+<h3>4.4 &nbsp;Three ways out</h3>
+
+<p>
+Theorem 4.2 organises the rest of the lecture. The floor is proportional to $\alpha \sigma^2 / \mu$, so there are exactly three dials:
+</p>
+
+<ul>
+<li><strong>Tune $\alpha$ to the horizon and average.</strong> Choose $\alpha$ as a function of $K$ so that the transient has died by step $K$ and the floor is at the accuracy you want. This is Theorem 2 (&sect;5), and the optimal trade-off produces $1/\sqrt{K}$.</li>
+<li><strong>Shrink $\sigma^2$.</strong> Average $b$ samples per step: the floor drops by $b$. This is Theorem 3 (&sect;6), and it is nearly free on parallel hardware.</li>
+<li><strong>Shrink $\alpha_k$ over time.</strong> Drive the floor to zero as the iteration proceeds, slowly enough that the transient still dies. This is Theorem 4 (&sect;7), and the classical conditions for &ldquo;slowly enough&rdquo; are Robbins&ndash;Monro's (&sect;8.1).</li>
+</ul>
+
+<h2>5 &nbsp;Theorem 2 &mdash; the Convex $O(1/\sqrt{K})$ Rate</h2>
+
+<h3>5.1 &nbsp;Statement and hypotheses</h3>
+
+<div class="deriv">
+<p><strong>Theorem 5.1 (= deck Theorem 2).</strong> Let $\mathcal{L}$ be convex and $G$-Lipschitz on a convex set containing the iterates, with a minimizer $\theta^\star$ and $D = \lVert\theta_0-\theta^\star\rVert$. Run $\theta_{k+1} = \theta_k - \alpha g_k$ with $\mathbb{E}_k[g_k] = \nabla\mathcal{L}(\theta_k)$ and $\operatorname{Var}_k(g_k) \le \sigma^2$, for $k = 0,\dots,K$, and set $\bar\theta_K = \frac{1}{K+1}\sum_{k=0}^K \theta_k$. Then for any constant step $\alpha \gt 0$,</p>
+\[ \mathbb{E}\big[\mathcal{L}(\bar\theta_K) - \mathcal{L}^\star\big] \;\le\; \frac{D^2}{2\alpha(K+1)} \;+\; \frac{\alpha}{2}\big(G^2+\sigma^2\big), \tag{5.1} \]
+<p>and the choice $\alpha = \dfrac{D}{\sqrt{G^2+\sigma^2}\,\sqrt{K+1}}$ minimizes the right-hand side, giving</p>
+\[ \mathbb{E}\big[\mathcal{L}(\bar\theta_K) - \mathcal{L}^\star\big] \;\le\; \frac{\sqrt{G^2+\sigma^2}\;D}{\sqrt{K+1}}. \tag{5.2} \]
+</div>
+
+<p>
+Note what is <em>not</em> assumed: no smoothness, no strong convexity, no bound on $N$, nothing about the geometry of the $\mathcal{L}_i$ individually. Note also that (5.1) is the substantive statement and (5.2) is a corollary of the one-variable minimization in &sect;5.4; separating them is useful because (5.1) is what you use when $\alpha$ is fixed by other considerations.
+</p>
+
+<h3>5.2 &nbsp;The one-step inequality</h3>
+
+<p>
+Everything rests on a single lemma, which is deck Steps 1&ndash;4 assembled.
+</p>
+
+<div class="deriv">
+<p><strong>Lemma 5.2 (one step).</strong> Under the hypotheses of Theorem 5.1,</p>
+\[ \mathbb{E}_k\big[\lVert\theta_{k+1}-\theta^\star\rVert^2\big] \;\le\; \lVert\theta_k-\theta^\star\rVert^2 \;-\; 2\alpha\big(\mathcal{L}(\theta_k)-\mathcal{L}^\star\big) \;+\; \alpha^2\big(G^2+\sigma^2\big). \tag{5.3} \]
+<p><em>Proof.</em> Four steps.</p>
+<p><em>(i) Expand.</em> Purely algebraic, no probability yet:</p>
+\[ \lVert\theta_{k+1}-\theta^\star\rVert^2 = \lVert\theta_k - \alpha g_k - \theta^\star\rVert^2 = \lVert\theta_k-\theta^\star\rVert^2 - 2\alpha\langle g_k, \theta_k-\theta^\star\rangle + \alpha^2\lVert g_k\rVert^2. \]
+<p><em>(ii) Condition.</em> Apply $\mathbb{E}_k$. The first term is $\mathcal{F}_k$-measurable and passes through. In the second, $\theta_k - \theta^\star$ is $\mathcal{F}_k$-measurable (Lemma 2.1), so it comes out of the conditional expectation and unbiasedness (Theorem 2.2) replaces $g_k$ by the true gradient:</p>
+\[ \mathbb{E}_k\big[\langle g_k, \theta_k-\theta^\star\rangle\big] = \big\langle \mathbb{E}_k[g_k], \theta_k-\theta^\star\big\rangle = \big\langle \nabla\mathcal{L}(\theta_k), \theta_k-\theta^\star\big\rangle. \]
+<p>This is the <em>only</em> place unbiasedness is used in the whole proof. The third term is handled by (3.1): $\mathbb{E}_k\lVert g_k\rVert^2 \le G^2+\sigma^2$.</p>
+<p><em>(iii) Convexity floor.</em> By the first-order characterization of convexity (opt03, Theorem 2.2) applied at $\theta_k$ with $y = \theta^\star$,</p>
+\[ \mathcal{L}^\star = \mathcal{L}(\theta^\star) \;\ge\; \mathcal{L}(\theta_k) + \langle\nabla\mathcal{L}(\theta_k), \theta^\star - \theta_k\rangle \quad\Longleftrightarrow\quad \langle\nabla\mathcal{L}(\theta_k), \theta_k-\theta^\star\rangle \;\ge\; \mathcal{L}(\theta_k) - \mathcal{L}^\star. \]
+<p>Convexity enters here and nowhere else. Because the coefficient $-2\alpha$ is negative, lower-bounding the inner product upper-bounds the whole expression &mdash; the direction matters and is easy to get backwards.</p>
+<p><em>(iv) Combine.</em> Substituting (ii) and (iii) into (i) gives (5.3). $\blacksquare$</p>
+</div>
+
+<h3>5.3 &nbsp;Tower, telescope, and the averaged bound</h3>
+
+<p>
+Take total expectations in (5.3) using the tower property $\mathbb{E}[\mathbb{E}_k[\cdot]] = \mathbb{E}[\cdot]$ (prob07), and write $u_k = \mathbb{E}\lVert\theta_k-\theta^\star\rVert^2$ and $\delta_k = \mathbb{E}[\mathcal{L}(\theta_k)-\mathcal{L}^\star] \ge 0$:
+</p>
+
+\[ u_{k+1} \;\le\; u_k - 2\alpha\,\delta_k + \alpha^2(G^2+\sigma^2) \qquad\Longleftrightarrow\qquad 2\alpha\,\delta_k \;\le\; u_k - u_{k+1} + \alpha^2(G^2+\sigma^2). \]
+
+<p>
+Sum over $k = 0,\dots,K$. The $u_k - u_{k+1}$ terms telescope (opt03 &sect;7):
+</p>
+
+\[ 2\alpha\sum_{k=0}^K \delta_k \;\le\; u_0 - u_{K+1} + (K+1)\alpha^2(G^2+\sigma^2) \;\le\; D^2 + (K+1)\alpha^2(G^2+\sigma^2), \]
+
+<p>
+where the last step discards $-u_{K+1} \le 0$ &mdash; a small but genuine loss, and the reason the bound says nothing about where the iterates end up. Dividing by $2\alpha(K+1)$:
+</p>
+
+\[ \frac{1}{K+1}\sum_{k=0}^{K}\delta_k \;\le\; \frac{D^2}{2\alpha(K+1)} + \frac{\alpha}{2}(G^2+\sigma^2). \tag{5.4} \]
+
+<p>
+Finally, Jensen. The function $\mathcal{L}$ is convex and $\bar\theta_K$ is an average of the $\theta_k$, so $\mathcal{L}(\bar\theta_K) \le \frac{1}{K+1}\sum_k \mathcal{L}(\theta_k)$ pointwise (prob01, Theorem 2); subtracting $\mathcal{L}^\star$ and taking expectations, and using linearity of expectation on the finite sum,
+</p>
+
+\[ \mathbb{E}\big[\mathcal{L}(\bar\theta_K)-\mathcal{L}^\star\big] \;\le\; \frac{1}{K+1}\sum_{k=0}^K \delta_k \;\le\; \text{(5.4)}, \]
+
+<p>
+which is (5.1). $\blacksquare$
+</p>
+
+<div class="deriv">
+<p><strong>Why the average, and not the last iterate?</strong> The telescoped sum controls the <em>average</em> of the gaps $\delta_k$, and nothing in the argument says $\delta_K$ is any smaller than the others &mdash; indeed &sect;4 shows that with a constant step the gaps hover at a floor rather than decreasing. Jensen is the device that converts &ldquo;the average of the gaps is small&rdquo; into a statement about a single point you can actually output. Without convexity, Jensen fails and there is no averaged-iterate theorem at all, which is one reason the nonconvex results in &sect;8.4 take the different form &ldquo;the best gradient norm along the trajectory is small&rdquo;.</p>
+</div>
+
+<h3>5.4 &nbsp;The balance lemma</h3>
+
+<div class="deriv">
+<p><strong>Lemma 5.3.</strong> For $a, b \gt 0$, $\varphi(\alpha) = \dfrac{a}{\alpha} + b\alpha$ on $\alpha \gt 0$ is strictly convex, attains its minimum at $\alpha^\star = \sqrt{a/b}$, and $\varphi(\alpha^\star) = 2\sqrt{ab}$; at the optimum the two terms are equal.</p>
+<p><em>Proof.</em> $\varphi'(\alpha) = -a/\alpha^2 + b$ vanishes iff $\alpha^2 = a/b$; $\varphi''(\alpha) = 2a/\alpha^3 \gt 0$ on the positive axis, so the critical point is the global minimum. Then $\varphi(\alpha^\star) = a\sqrt{b/a} + b\sqrt{a/b} = 2\sqrt{ab}$, and each term equals $\sqrt{ab}$. (Equivalently, AM&ndash;GM: $\frac{a}{\alpha}+b\alpha \ge 2\sqrt{ab}$ with equality iff $\frac a\alpha = b\alpha$.) $\blacksquare$</p>
+</div>
+
+<p>
+Apply it to (5.1) with $a = \dfrac{D^2}{2(K+1)}$ and $b = \dfrac{G^2+\sigma^2}{2}$:
+</p>
+
+\[ \alpha^\star = \sqrt{\frac{D^2}{2(K+1)}\cdot\frac{2}{G^2+\sigma^2}} = \frac{D}{\sqrt{G^2+\sigma^2}\sqrt{K+1}}, \qquad \varphi(\alpha^\star) = 2\sqrt{\frac{D^2(G^2+\sigma^2)}{4(K+1)}} = \frac{\sqrt{G^2+\sigma^2}\,D}{\sqrt{K+1}}, \]
+
+<p>
+which is (5.2). The $\sqrt{K+1}$ is born exactly here: the progress term falls like $1/(\alpha K)$ and the noise term grows like $\alpha$, so the best a constant step can do is their geometric mean, $1/\sqrt K$. The deck's U-curve slide plots this for $K = 99$ in the running example: $\varphi(\alpha) = 0.045/\alpha + 21\alpha$, minimized at $\alpha^\star = \sqrt{0.045/21} = 0.0463$ with value $2\sqrt{0.045\cdot 21} = 1.944$.
+</p>
+
+<h3>5.5 &nbsp;Numbers, and how loose the bound is</h3>
+
+<p>
+The deck's constants for the running example are $G = 6$ (Lipschitz on $[-3,9]$), $\sigma^2 = 6$, so $G^2+\sigma^2 = 42$, and $D = 3$; the bound is $\sqrt{42}\cdot 3/\sqrt{K+1} = 19.44/\sqrt{K+1}$. Since this problem is a one-dimensional quadratic, the truth can be computed exactly from the linear recursion (4.1) &mdash; $\bar\theta_K$ is a Gaussian-like linear functional of the i.i.d. draws, and its mean and variance follow from summing the covariances $\operatorname{Cov}(e_k,e_l) = \alpha^2\sigma^2\sum_{j\lt\min(k,l)}(1-\alpha)^{k+l-2-2j}$.
+</p>
+
+<table>
+<thead><tr><th>$K$</th><th>tuned $\alpha$</th><th>Theorem 5.1 bound</th><th>exact $\mathbb{E}[\mathcal{L}(\bar\theta_K)-\mathcal{L}^\star]$</th><th>exact, last iterate</th></tr></thead>
+<tbody>
+<tr><td>$99$</td><td>$0.0463$</td><td>$1.944$</td><td>$0.227$</td><td>$0.072$</td></tr>
+<tr><td>$999$</td><td>$0.0146$</td><td>$0.615$</td><td>$0.024$</td><td>$0.022$</td></tr>
+<tr><td>$9999$</td><td>$0.0046$</td><td>$0.194$</td><td>&mdash;</td><td>&mdash;</td></tr>
+</tbody>
+</table>
+
+<p>
+The bound is loose by roughly an order of magnitude, for identifiable reasons: $G = 6$ is the worst-case gradient norm over the whole interval while the run spends its time near $\theta^\star$ where $\lVert\nabla\mathcal{L}\rVert \approx 0$; the discarded $-u_{K+1}$ costs something; and Jensen is not tight. What the bound gets exactly right is the <em>rate</em>: the exact values fall by a factor $\approx\sqrt{10}$ per decade of $K$, matching $K^{-1/2}$. That is the correct way to read a bound of this kind &mdash; the constant is a warranty, the exponent is the physics.
+</p>
+
+<h3>5.6 &nbsp;The Lipschitz caveat, taken seriously</h3>
+
+<p>
+The deck notes honestly that &ldquo;a quadratic is not globally Lipschitz &mdash; but the run stayed in $[0, 4.125]$&rdquo;, and takes $G = 6$ on $[-3,9]$. Strictly, Theorem 5.1's hypothesis is that $\lVert\nabla\mathcal{L}(\theta_k)\rVert \le G$ <em>at every iterate</em>, which is a statement about a random trajectory, not about a fixed interval. Three ways to make this airtight, in increasing order of honesty:
+</p>
+
+<ul>
+<li><strong>Project.</strong> Replace the update by $\theta_{k+1} = \Pi_C(\theta_k - \alpha g_k)$ for a compact convex $C \ni \theta^\star$ on which $\lVert\nabla\mathcal{L}\rVert \le G$. The proof is unchanged: the projection is nonexpansive and $\Pi_C(\theta^\star) = \theta^\star$, so $\lVert\Pi_C(z)-\theta^\star\rVert \le \lVert z-\theta^\star\rVert$ and step (i) of Lemma 5.2 only improves. This is the standard statement of the theorem [2], [4, &sect;6.1].</li>
+<li><strong>Assume smoothness instead.</strong> Drop Lipschitzness and use $L$-smoothness: the analogous result is $\mathbb{E}[\mathcal{L}(\bar\theta_K)-\mathcal{L}^\star] \le \frac{D^2}{2\alpha(K+1)} + \frac{\alpha\sigma^2}{2}$ for $\alpha \le 1/(2L)$, giving $O(1/K + \sigma/\sqrt K)$ &mdash; the fast GD rate plus a noise term, which reduces to opt03's $O(1/K)$ when $\sigma = 0$.</li>
+<li><strong>Verify a posteriori.</strong> Bound the iterates first (Lemma 5.2 with the crude floor $\delta_k \ge 0$ already gives $u_{k+1} \le u_k + \alpha^2(G^2+\sigma^2)$, hence $u_k \le D^2 + k\alpha^2(G^2+\sigma^2)$), then take $G$ to be the Lipschitz constant on the resulting ball. With the tuned $\alpha$ this ball has radius $O(D)$, so the argument closes.</li>
+</ul>
+
+<h3>5.7 &nbsp;Horizon-free step sizes</h3>
+
+<p>
+The tuned $\alpha$ needs $K$, $D$, $G$ and $\sigma$ in advance, which the deck correctly calls &ldquo;a theory dial&rdquo;. The standard fix is the decaying schedule $\alpha_k = \dfrac{D}{\sqrt{G^2+\sigma^2}\sqrt{k+1}}$. Redoing &sect;5.3 with $\alpha_k$ inside the sum gives
+</p>
+
+\[ \sum_{k=0}^{K}\alpha_k \delta_k \;\le\; \frac{D^2}{2} + \frac{G^2+\sigma^2}{2}\sum_{k=0}^K \alpha_k^2, \]
+
+<p>
+and with $\sum_{k=0}^K \alpha_k \ge c_1 D\sqrt{K}/\sqrt{G^2+\sigma^2}$, $\sum_{k=0}^K\alpha_k^2 \le c_2 D^2\log K/(G^2+\sigma^2)$, the $\alpha_k$-weighted average of the iterates satisfies a bound of order $D\sqrt{G^2+\sigma^2}\,\log K/\sqrt{K}$ &mdash; the same rate up to a logarithm, valid at every $K$ simultaneously. The logarithm is removable by <strong>suffix averaging</strong> (average only the last half of the iterates) or by a doubling trick; see Rakhlin, Shamir and Sridharan [7] and Lacoste-Julien, Schmidt and Bach [6].
+</p>
+
+<h3>5.8 &nbsp;Is $1/\sqrt{K}$ the best possible?</h3>
+
+<p>
+Yes, and this is worth knowing before concluding that the analysis is crude. For the class of convex $G$-Lipschitz functions on a ball of radius $D$, accessed through a stochastic first-order oracle with variance $\sigma^2$, <em>every</em> algorithm has worst-case error $\Omega\big(\sqrt{G^2+\sigma^2}\,D/\sqrt{K}\big)$ after $K$ oracle calls. The information-theoretic lower bound is due to Nemirovski and Yudin and is given in modern form, with matching constants, by Agarwal, Bartlett, Ravikumar and Wainwright [10]. So Theorem 5.1 is optimal in $K$, $D$ and the noise level, not merely the best we could prove. The gap with opt03's GD rate $O(1/K)$ is therefore not a proof artefact: it is the intrinsic price of a noisy oracle, and it is paid back in the $N$-fold cheaper steps.
+</p>
+
+<div class="deriv">
+<p><strong>The accounting, once more.</strong> To reach expected gap $\varepsilon$: GD needs $O(1/\varepsilon)$ steps &times; $N$ gradients $= O(N/\varepsilon)$; SGD needs $O\big((G^2+\sigma^2)D^2/\varepsilon^2\big)$ steps &times; $1$ gradient. Crossover at $N \approx 1/\varepsilon$. For $N = 10^6$ and $\varepsilon = 10^{-2}$, SGD is $10^4$ times cheaper. And a training run is not trying to reach $\varepsilon = 10^{-8}$ &mdash; the empirical risk is itself only a proxy for the population risk, whose statistical error is $O(1/\sqrt N)$ (prob05, prob06), so optimizing far below that is wasted effort.</p>
+</div>
+
+<h2>6 &nbsp;Mini-Batching</h2>
+
+<h3>6.1 &nbsp;The update, and why it is still unbiased</h3>
+
+<p>
+The mini-batch update averages $b$ sampled gradients per step:
+</p>
+
+\[ \theta_{k+1} \;=\; \theta_k - \alpha\,\frac{1}{b}\sum_{j=1}^{b} \nabla\mathcal{L}_{i_{k,j}}(\theta_k), \qquad i_{k,1},\dots,i_{k,b} \ \text{i.i.d. } \mathrm{Unif}\{1,\dots,N\}. \]
+
+<p>
+Unbiasedness is immediate from linearity: $\mathbb{E}_k\big[\frac1b\sum_j \nabla\mathcal{L}_{i_{k,j}}\big] = \frac1b\sum_j \mathbb{E}_k[\nabla\mathcal{L}_{i_{k,j}}] = \frac1b \cdot b\,\nabla\mathcal{L}(\theta_k) = \nabla\mathcal{L}(\theta_k)$. The average of unbiased estimators is unbiased regardless of dependence; independence is needed only for the variance.
+</p>
+
+<h3>6.2 &nbsp;Theorem 3, with replacement</h3>
+
+<div class="deriv">
+<p><strong>Theorem 6.1 (= deck Theorem 3).</strong> If $g^{(1)},\dots,g^{(b)}$ are i.i.d. copies of the single-sample stochastic gradient at $\theta$, with $\operatorname{Var}(g^{(j)}) = \sigma^2$ (meaning $\mathbb{E}\lVert g^{(j)} - \nabla\mathcal{L}(\theta)\rVert^2 = \sigma^2$), then</p>
+\[ \operatorname{Var}\Big(\frac1b\sum_{j=1}^b g^{(j)}\Big) \;=\; \frac{\sigma^2}{b}. \]
+<p><em>Proof.</em> Write $n^{(j)} = g^{(j)} - \nabla\mathcal{L}(\theta)$, so the $n^{(j)}$ are i.i.d., zero-mean, with $\mathbb{E}\lVert n^{(j)}\rVert^2 = \sigma^2$. Then</p>
+\[ \mathbb{E}\Big\lVert \frac1b\sum_j n^{(j)}\Big\rVert^2 = \frac{1}{b^2}\sum_{j}\sum_{l} \mathbb{E}\big\langle n^{(j)}, n^{(l)}\big\rangle = \frac{1}{b^2}\Big(\sum_j \mathbb{E}\lVert n^{(j)}\rVert^2 + \sum_{j\ne l}\big\langle \mathbb{E} n^{(j)}, \mathbb{E} n^{(l)}\big\rangle\Big) = \frac{b\sigma^2}{b^2} = \frac{\sigma^2}{b}, \]
+<p>the cross terms vanishing because independence lets the expectation factor and each factor is zero. $\blacksquare$</p>
+</div>
+
+<p>
+This is prob05's variance-of-averages applied verbatim to vectors: variances add for independent terms, and the $1/b$ in the average squares to $1/b^2$, leaving $1/b$.
+</p>
+
+<h3>6.3 &nbsp;Without replacement &mdash; the correction the deck gestures at</h3>
+
+<p>
+The deck's Theorem 3 slide notes that the source material treats subset sampling, where &ldquo;the variance is even smaller&rdquo;, and proves only the i.i.d. case. Here is the exact statement, which also explains the deck's &ldquo;full-batch corner&rdquo; slide.
+</p>
+
+<div class="deriv">
+<p><strong>Proposition 6.2 (finite-population correction).</strong> Let $I \subseteq \{1,\dots,N\}$ be a uniformly random subset of size $b$ (sampling <em>without</em> replacement) and let $\sigma^2 = \frac1N\sum_{i=1}^N\lVert\nabla\mathcal{L}_i(\theta)-\nabla\mathcal{L}(\theta)\rVert^2$. Then the batch gradient is unbiased and</p>
+\[ \operatorname{Var}\Big(\frac1b\sum_{i\in I}\nabla\mathcal{L}_i(\theta)\Big) \;=\; \frac{\sigma^2}{b}\cdot\frac{N-b}{N-1}. \]
+<p><em>Proof.</em> Put $n_i = \nabla\mathcal{L}_i(\theta) - \nabla\mathcal{L}(\theta)$, so $\sum_{i=1}^N n_i = 0$ and $\frac1N\sum_i \lVert n_i\rVert^2 = \sigma^2$. Let $Z_i = \mathbf{1}\{i \in I\}$, so $\mathbb{P}(Z_i=1) = b/N$ and, for $i \ne l$, $\mathbb{P}(Z_i = Z_l = 1) = \frac{b(b-1)}{N(N-1)}$. Unbiasedness: $\mathbb{E}[\frac1b\sum_i Z_i n_i] = \frac1b\cdot\frac bN \sum_i n_i = 0$. For the second moment,</p>
+\[ \mathbb{E}\Big\lVert\frac1b\sum_i Z_i n_i\Big\rVert^2 = \frac{1}{b^2}\Big( \frac{b}{N}\sum_i \lVert n_i\rVert^2 + \frac{b(b-1)}{N(N-1)}\sum_{i\ne l}\langle n_i, n_l\rangle \Big). \]
+<p>Now $\sum_{i \ne l}\langle n_i,n_l\rangle = \lVert\sum_i n_i\rVert^2 - \sum_i\lVert n_i\rVert^2 = -N\sigma^2$, since the $n_i$ sum to zero. Substituting and using $\sum_i\lVert n_i\rVert^2 = N\sigma^2$,</p>
+\[ = \frac{1}{b^2}\Big(\frac{b}{N}N\sigma^2 - \frac{b(b-1)}{N(N-1)}N\sigma^2\Big) = \frac{\sigma^2}{b}\Big(1 - \frac{b-1}{N-1}\Big) = \frac{\sigma^2}{b}\cdot\frac{N-b}{N-1}. \qquad \blacksquare \]
+</div>
+
+<p>
+The correction factor $\frac{N-b}{N-1}$ is $1$ at $b=1$ (no difference: one draw is one draw) and $0$ at $b = N$ (the batch <em>is</em> the whole dataset, so the batch gradient is the full gradient and has no variance). That is precisely the deck's claim that &ldquo;GD is the $b=N$, no-repeats corner of mini-batch SGD&rdquo;, now with a formula.
+</p>
+
+<p>
+<strong>Check on the running example</strong> ($N=3$, $\sigma^2 = 6$, at $\theta = 0$ where the three sampled gradients are $0,-3,-6$):
+</p>
+
+<table>
+<thead><tr><th>$b$</th><th>with replacement, $\sigma^2/b$</th><th>without replacement, formula</th><th>without replacement, by enumeration</th></tr></thead>
+<tbody>
+<tr><td>$1$</td><td>$6$</td><td>$6 \cdot \frac{2}{2} = 6$</td><td>values $0,-3,-6$: variance $6$</td></tr>
+<tr><td>$2$</td><td>$3$</td><td>$3\cdot\frac{1}{2} = 1.5$</td><td>means $-1.5,-3,-4.5$: variance $1.5$</td></tr>
+<tr><td>$3$</td><td>$2$</td><td>$2\cdot\frac{0}{2} = 0$</td><td>the only batch has mean $-3$: variance $0$</td></tr>
+</tbody>
+</table>
+
+<h3>6.4 &nbsp;The deck's histogram, derived</h3>
+
+<p>
+For $b = 3$ <em>with</em> replacement at $\theta = 0$, the batch gradient is $\frac13(u_1+u_2+u_3)$ with $u_j$ i.i.d. uniform on $\{0,-3,-6\}$. Writing $u_j = -3 s_j$ with $s_j \in \{0,1,2\}$, the batch gradient is $-(s_1+s_2+s_3)$, and the number of triples with $s_1+s_2+s_3 = s$ is the coefficient of $x^s$ in $(1+x+x^2)^3$, namely
+</p>
+
+\[ (1+x+x^2)^3 = 1 + 3x + 6x^2 + 7x^3 + 6x^4 + 3x^5 + x^6, \]
+
+<p>
+which is the deck's &ldquo;counts $1,3,6,7,6,3,1$ of $27$&rdquo;. The mean is $-3$ and the variance is $\operatorname{Var}(s_1+s_2+s_3) = 3\cdot\operatorname{Var}(s_1) = 3\cdot\frac{(0-1)^2+(1-1)^2+(2-1)^2}{3} = 2$, matching Theorem 6.1: $\sigma^2/b = 6/3 = 2$.
+</p>
+
+<h3>6.5 &nbsp;What $b$ actually buys</h3>
+
+<p>
+Substituting $\sigma^2 \to \sigma^2/b$ into Theorem 5.1 gives the bound $\dfrac{\sqrt{G^2+\sigma^2/b}\;D}{\sqrt{K+1}}$, and the honest reading is the deck's: <em>batching attacks only the noise part of the bill</em>. In the running example $G^2 = 36$ dominates $\sigma^2 = 6$, so $b = 3$ improves $\sqrt{42} = 6.48$ to $\sqrt{38} = 6.16$ &mdash; a 5% gain for three times the work per step. Batching pays when $\sigma^2 \gg G^2$, i.e. when the disagreement among data points dwarfs the size of the average gradient, which is the situation early in training and near a noisy optimum.
+</p>
+
+<p>
+The systems argument is the one that actually decides $b$ in practice:
+</p>
+
+<ul>
+<li><strong>Sequentially, batching is close to a wash.</strong> Variance $\div\, b$ at compute $\times\, b$. In the $\sigma$-dominated regime the bound improves like $1/\sqrt b$ while the cost grows like $b$: a losing trade.</li>
+<li><strong>On parallel hardware it is nearly free.</strong> The $b$ gradients are independent and are computed simultaneously; wall-clock per step is roughly constant until memory or interconnect saturates. Mini-batching is variance reduction that the hardware gives away &mdash; which is why it exists.</li>
+<li><strong>There is a critical batch size.</strong> Past the point where $\sigma^2/b \ll G^2$ (equivalently, where the gradient's signal dominates its noise), further increases in $b$ buy essentially nothing in steps-to-target while still costing compute. McCandlish et al. [21] formalise this as the <em>gradient noise scale</em> and predict the observed knee in large-batch training curves; Goyal et al. [24] give the companion empirical recipe (linear scaling of $\alpha$ with $b$, plus warmup) that makes large batches trainable in the first place.</li>
+</ul>
+
+<p>
+Note that the linear scaling rule has a theoretical shadow in Theorem 5.1: the optimal $\alpha$ is proportional to $1/\sqrt{G^2+\sigma^2/b}$, which for $\sigma$-dominated noise is proportional to $\sqrt b$, not $b$. The discrepancy between $\sqrt b$ and the empirically successful $b$ is one of the honest open gaps between this theory and practice.
+</p>
+
+<h2>7 &nbsp;Strongly Convex SGD &mdash; Theorem 4</h2>
+
+<h3>7.1 &nbsp;The setting</h3>
+
+<p>
+The deck changes notation here, from $\theta$ to $x$, and changes problem, from a general finite sum to an explicitly regularized one:
+</p>
+
+\[ \min_{x\in\mathbb{R}^d} \; F(x) \;=\; f(x) + \frac{\mu}{2}\lVert x\rVert^2, \qquad f \ \text{convex and } G\text{-Lipschitz}, \]
+
+<p>
+with the update
+</p>
+
+\[ x_{k+1} \;=\; x_k - \alpha_k\big(g_k + \mu x_k\big), \qquad \alpha_k = \frac{1}{\mu(k+1)}, \qquad x_0 = 0, \tag{7.1} \]
+
+<p>
+where $g_k$ is an unbiased estimate of $\nabla f(x_k)$ with $\operatorname{Var}_k(g_k)\le\sigma^2$. Three design choices deserve comment.
+</p>
+
+<ul>
+<li><strong>Only $f$ is sampled.</strong> The regularizer $\frac\mu2\lVert x\rVert^2$ is differentiated exactly &mdash; it costs nothing, since it does not depend on the data. So $\mathbb{E}_k[g_k + \mu x_k] = \nabla f(x_k) + \mu x_k = \nabla F(x_k)$ and the <em>whole</em> step is an unbiased estimate of $\nabla F(x_k)$, with the same variance $\sigma^2$ as $g_k$.</li>
+<li><strong>$F$ is $\mu$-strongly convex</strong> by opt03 &sect;5.1: a convex function plus $\frac\mu2\lVert\cdot\rVert^2$ is $\mu$-strongly convex, so $x^\star$ exists and is unique (opt03, Prop. 5.2). This is a ridge-regularized objective, exactly opt02's regularized least squares in shape.</li>
+<li><strong>The schedule is anytime.</strong> $\alpha_k = 1/(\mu(k+1))$ needs $\mu$ but not $K$, so unlike Theorem 5.1 there is no horizon to guess. It also blows up as $\mu \to 0$, which is the correct signal: without strong convexity no rate of this kind holds, and the theorem degenerates rather than lying.</li>
+</ul>
+
+<p>
+<strong>The deck's rewritten running example.</strong> Completing the square in the finite sum,
+</p>
+
+\[ \mathcal{L}_i(\theta) = \tfrac12(\theta-c_i)^2 = \Big(\tfrac{c_i^2}{2} - c_i\theta\Big) + \tfrac12\theta^2 \quad\Longrightarrow\quad \mathcal{L}(\theta) = \underbrace{7.5 - 3\theta}_{f(\theta)} + \underbrace{\tfrac12\theta^2}_{\mu = 1}, \]
+
+<p>
+since $\frac13\sum_i c_i^2/2 = (0+4.5+18)/3 = 7.5$ and $\frac13\sum_i c_i = 3$. Now $f$ is <em>linear</em>, hence convex with $G = 3$ globally &mdash; no interval caveat, unlike &sect;5.6. The sampled gradient is $g_k = \nabla f_{i_k}(\theta) = -c_{i_k} \in \{0,-3,-6\}$, with mean $-3 = \nabla f$ and variance $6 = \sigma^2$, so $G^2+\sigma^2 = 9+6 = 15$ &mdash; and here (3.1) holds with equality, since $\mathbb{E}\lVert g\rVert^2 = (0+9+36)/3 = 15$.
+</p>
+
+<h3>7.2 &nbsp;Statement</h3>
+
+<div class="deriv">
+<p><strong>Theorem 7.1 (= deck Theorem 4).</strong> Under the setting of &sect;7.1, with $\bar x_k = \frac{1}{k+1}\sum_{i=0}^k x_i$,</p>
+\[ \mathbb{E}\big[F(\bar x_k) - F(x^\star)\big] \;\le\; \frac{2(G^2+\sigma^2)}{\mu}\cdot\frac{1+\log(k+1)}{k+1} \qquad \text{for every } k \ge 0. \]
+</div>
+
+<p>
+Two features to notice before the proof. First, $\lVert x_0 - x^\star\rVert$ is <strong>absent</strong>: the bound does not depend on where you started. &sect;7.5 shows exactly why &mdash; the schedule puts weight $0$ on the initial condition in a weighted telescope. Second, the rate $\log k / k$ beats $1/\sqrt k$ eventually but not immediately; &sect;7.7 computes the crossover.
+</p>
+
+<h3>7.3 &nbsp;Step 1 &mdash; unrolling, and why the weights are uniform</h3>
+
+<p>
+Rewrite (7.1) as a convex blend. Since $\alpha_k \mu \cdot \frac{-g_k}{\mu} = -\alpha_k g_k$,
+</p>
+
+\[ x_{k+1} \;=\; (1-\alpha_k\mu)\,x_k \;+\; \alpha_k\mu\cdot\Big(\frac{-g_k}{\mu}\Big), \]
+
+<p>
+so each step moves the iterate a fraction $\alpha_k\mu$ of the way toward the &ldquo;target&rdquo; $-g_k/\mu$. Unrolling the affine recursion $y_{k+1} = \beta_k y_k + z_k$ (opt03 &sect;6.2, same move) gives
+</p>
+
+\[ x_{k+1} \;=\; \Big(\prod_{s=0}^{k}(1-\alpha_s\mu)\Big)x_0 \;+\; \sum_{i=0}^{k} w_i^{(k)}\Big(\frac{-g_i}{\mu}\Big), \qquad w_i^{(k)} = \alpha_i\mu\!\!\prod_{s=i+1}^{k}\!(1-\alpha_s\mu), \]
+
+<p>
+and $x_0 = 0$ kills the head term. (These are the deck's $\theta_i$; renamed to $w_i$ to avoid colliding with the parameter $\theta$ of &sect;&sect;1&ndash;6.)
+</p>
+
+<div class="deriv">
+<p><strong>Lemma 7.2 (uniform weights).</strong> With $\alpha_i = \frac{1}{\mu(i+1)}$ one has $\alpha_i\mu = \frac{1}{i+1}$ and $1-\alpha_s\mu = \frac{s}{s+1}$, hence</p>
+\[ w_i^{(k)} \;=\; \frac{1}{i+1}\prod_{s=i+1}^{k}\frac{s}{s+1} \;=\; \frac{1}{i+1}\cdot\frac{i+1}{k+1} \;=\; \frac{1}{k+1} \quad\text{for every } i = 0,\dots,k, \]
+<p>so $\sum_{i=0}^k w_i^{(k)} = 1$: the iterate $x_{k+1}$ is a genuine <strong>convex combination</strong> of the targets $-g_i/\mu$, indeed their plain average.</p>
+<p><em>Proof.</em> The product $\prod_{s=i+1}^k \frac{s}{s+1}$ telescopes to $\frac{i+1}{k+1}$ (every numerator cancels the previous denominator); for $i = k$ the empty product is $1$ and $w_k^{(k)} = \frac{1}{k+1}$ as well. $\blacksquare$</p>
+</div>
+
+<p>
+This is a striking identity, and it is the reason the schedule $1/(\mu(k+1))$ is chosen rather than any other decaying sequence: it makes SGD compute a <em>running average</em> of the targets. In the running example $\mu = 1$ and $-g_j/\mu = c_{i_j}$, so
+</p>
+
+\[ x_{k+1} \;=\; \frac{1}{k+1}\sum_{j=0}^{k} c_{i_j} \;=\; \text{the sample mean of the drawn targets,} \]
+
+<p>
+which the deck checks against the draws $6,0,3,6$: $x_1 = 6$, $x_2 = 3$, $x_3 = 3$, $x_4 = 3.75$. The optimizer has rediscovered prob05's law of large numbers.
+</p>
+
+<h3>7.4 &nbsp;Step 2 &mdash; the second moment of the step</h3>
+
+<div class="deriv">
+<p><strong>Lemma 7.3.</strong> For every $k$, $\ \mathbb{E}\lVert x_k\rVert^2 \le \dfrac{G^2+\sigma^2}{\mu^2}\ $ and consequently $\ \mathbb{E}\lVert g_k+\mu x_k\rVert^2 \le 4(G^2+\sigma^2)$.</p>
+<p><em>Proof.</em> For $k = 0$ the first claim is trivial ($x_0=0$). For $k \ge 1$, Lemma 7.2 writes $x_k = \sum_{i=0}^{k-1} w_i(-g_i/\mu)$ with $w_i \ge 0$ summing to $1$; since $\lVert\cdot\rVert^2$ is convex, Jensen gives</p>
+\[ \Big\lVert \sum_i w_i \frac{-g_i}{\mu}\Big\rVert^2 \le \sum_i w_i \frac{\lVert g_i\rVert^2}{\mu^2} \quad\Longrightarrow\quad \mathbb{E}\lVert x_k\rVert^2 \le \sum_i w_i \frac{\mathbb{E}\lVert g_i\rVert^2}{\mu^2} \le \frac{G^2+\sigma^2}{\mu^2}, \]
+<p>using $\mathbb{E}\lVert g_i\rVert^2 \le G^2+\sigma^2$ from (3.1) &mdash; here $G$ bounds $\lVert\nabla f\rVert$. For the second claim, convexity of $\lVert\cdot\rVert^2$ again gives $\lVert a+b\rVert^2 \le 2\lVert a\rVert^2+2\lVert b\rVert^2$ (apply Jensen to $\lVert\frac{a+b}{2}\rVert^2 \le \frac12\lVert a\rVert^2+\frac12\lVert b\rVert^2$ and multiply by $4$), so</p>
+\[ \mathbb{E}\lVert g_k + \mu x_k\rVert^2 \le 2\,\mathbb{E}\lVert g_k\rVert^2 + 2\mu^2\,\mathbb{E}\lVert x_k\rVert^2 \le 2(G^2+\sigma^2) + 2(G^2+\sigma^2) = 4(G^2+\sigma^2). \qquad\blacksquare \]
+</div>
+
+<div class="deriv">
+<p><strong>A gap in the slide version, closed.</strong> The deck writes this bound with $\mathbb{E}_k$ in Step 3a, as though $\mathbb{E}_k\lVert g_k+\mu x_k\rVert^2 \le 4(G^2+\sigma^2)$ held conditionally. It does not: $\lVert x_k\rVert^2$ is $\mathcal{F}_k$-measurable and can be arbitrarily large on a bad trajectory, so only the <em>total</em> expectation is bounded. The repair is to take total expectations at the end of Step 3a and apply Lemma 7.3 there, which is what &sect;7.5 does. Nothing about the final statement changes &mdash; only the order in which the expectations are taken.</p>
+</div>
+
+<p>
+Note also why Lemma 7.2 was needed <em>before</em> Lemma 7.3: without knowing that the $w_i$ form a convex combination, there is no reason for $\mathbb{E}\lVert x_k\rVert^2$ to be bounded at all. The uniform-weight identity is doing structural work, not just decoration. On the running example the bound $\mathbb{E}\lVert x_k\rVert^2 \le 15$ is attained exactly at $k=1$ (where $x_1 = c_{i_0}$ and $\mathbb{E}[c^2] = 15$) and is loose thereafter, since $\mathbb{E}[x_k^2] = 9 + 6/k$.
+</p>
+
+<h3>7.5 &nbsp;Steps 3&ndash;5 &mdash; the strong floor, the schedule, the telescope</h3>
+
+<p>
+<strong>The floor.</strong> Since $F$ is $\mu$-strongly convex (opt03, Theorem 5.1), for all $x,y$: $F(y) \ge F(x) + \langle\nabla F(x), y-x\rangle + \frac\mu2\lVert y-x\rVert^2$. Taking $x = x_k$, $y = x^\star$ and rearranging,
+</p>
+
+\[ \big\langle \nabla F(x_k),\, x_k - x^\star\big\rangle \;\ge\; F(x_k) - F(x^\star) + \frac{\mu}{2}\lVert x_k-x^\star\rVert^2. \tag{7.2} \]
+
+<p>
+This is (iii) of Lemma 5.2 with an extra term $\frac\mu2\lVert x_k-x^\star\rVert^2$, and that extra term is the entire source of the improved rate.
+</p>
+
+<p>
+<strong>Expand and condition.</strong> Exactly as in Lemma 5.2, with the step $g_k+\mu x_k$ in place of $g_k$, using $\mathbb{E}_k[g_k+\mu x_k] = \nabla F(x_k)$:
+</p>
+
+\[ \mathbb{E}_k\lVert x_{k+1}-x^\star\rVert^2 = \lVert x_k-x^\star\rVert^2 - 2\alpha_k\big\langle\nabla F(x_k), x_k-x^\star\big\rangle + \alpha_k^2\,\mathbb{E}_k\lVert g_k+\mu x_k\rVert^2. \]
+
+<p>
+Now take total expectations (tower), insert the floor (7.2) &mdash; legitimately, since the coefficient $-2\alpha_k$ is negative &mdash; and apply Lemma 7.3 to the last term:
+</p>
+
+\[ \mathbb{E}\lVert x_{k+1}-x^\star\rVert^2 \;\le\; (1-\alpha_k\mu)\,\mathbb{E}\lVert x_k-x^\star\rVert^2 \;-\; 2\alpha_k\,\mathbb{E}\big[F(x_k)-F(x^\star)\big] \;+\; 4\alpha_k^2(G^2+\sigma^2). \tag{7.3} \]
+
+<p>
+The $\frac\mu2\lVert x_k-x^\star\rVert^2$ from the floor, multiplied by $-2\alpha_k$, became $-\alpha_k\mu\lVert x_k-x^\star\rVert^2$ and turned the leading coefficient into a <strong>contraction</strong> $(1-\alpha_k\mu)$.
+</p>
+
+<p>
+<strong>Plug the schedule.</strong> With $\alpha_k = \frac{1}{\mu(k+1)}$ we have $1-\alpha_k\mu = \frac{k}{k+1}$ and $\frac{1}{2\alpha_k} = \frac{\mu(k+1)}{2}$. Dividing (7.3) by $2\alpha_k$ and rearranging,
+</p>
+
+\[ \mathbb{E}\big[F(x_k)-F(x^\star)\big] \;\le\; \underbrace{\frac{\mu k}{2}\,\mathbb{E}\lVert x_k-x^\star\rVert^2}_{=\;a_k} \;-\; \underbrace{\frac{\mu(k+1)}{2}\,\mathbb{E}\lVert x_{k+1}-x^\star\rVert^2}_{=\;a_{k+1}} \;+\; \frac{2(G^2+\sigma^2)}{\mu(k+1)}, \tag{7.4} \]
+
+<p>
+because $\frac{\mu(k+1)}{2}\cdot\frac{k}{k+1} = \frac{\mu k}{2}$ and $2\alpha_k\cdot 2(G^2+\sigma^2) = \frac{2(G^2+\sigma^2)}{\mu(k+1)}$.
+</p>
+
+<div class="deriv">
+<p><strong>The trick.</strong> Define $a_i = \frac{\mu i}{2}\mathbb{E}\lVert x_i-x^\star\rVert^2$. The schedule was chosen so that the coefficients in (7.4) are <em>exactly</em> $a_k$ and $a_{k+1}$ &mdash; a weighted telescope. Summing $i = 0,\dots,k$,</p>
+\[ \sum_{i=0}^{k}(a_i - a_{i+1}) \;=\; a_0 - a_{k+1} \;\le\; a_0 \;=\; \frac{\mu\cdot 0}{2}\,\mathbb{E}\lVert x_0-x^\star\rVert^2 \;=\; \mathbf{0}. \]
+<p>The weight $\frac{\mu i}{2}$ vanishes at $i=0$. That is why the initial distance is absent from Theorem 7.1: not because the analysis was clever about it, but because the schedule assigns it weight zero. A constant step size cannot do this &mdash; its telescope head is $\frac{1}{2\alpha}D^2$, which is exactly the term that forced Theorem 5.1 to trade $\alpha$ against $D$.</p>
+</div>
+
+<p>
+<strong>The harmonic sum.</strong> What remains is the sum of the noise rents.
+</p>
+
+<div class="deriv">
+<p><strong>Lemma 7.4.</strong> $\displaystyle\sum_{j=1}^{n}\frac1j \;\le\; 1 + \log n$ for every $n \ge 1$.</p>
+<p><em>Proof.</em> For $j \ge 2$ and $x \in [j-1,j]$ we have $\frac1j \le \frac1x$, so $\frac1j \le \int_{j-1}^{j}\frac{dx}{x}$. Summing from $j=2$ to $n$ gives $\sum_{j=2}^n \frac1j \le \int_1^n\frac{dx}{x} = \log n$; adding the $j=1$ term gives the claim. $\blacksquare$</p>
+</div>
+
+<p>
+Summing (7.4) over $i = 0,\dots,k$ and using $\sum_{i=0}^k \frac{1}{i+1} = \sum_{j=1}^{k+1}\frac1j \le 1+\log(k+1)$:
+</p>
+
+\[ \sum_{i=0}^{k}\mathbb{E}\big[F(x_i)-F(x^\star)\big] \;\le\; 0 \;+\; \frac{2(G^2+\sigma^2)}{\mu}\big(1+\log(k+1)\big). \]
+
+<p>
+<strong>Jensen.</strong> $F$ is convex and $\bar x_k$ is the average of $x_0,\dots,x_k$, so dividing by $k+1$,
+</p>
+
+\[ \mathbb{E}\big[F(\bar x_k)-F(x^\star)\big] \;\le\; \frac{1}{k+1}\sum_{i=0}^{k}\mathbb{E}\big[F(x_i)-F(x^\star)\big] \;\le\; \frac{2(G^2+\sigma^2)}{\mu}\cdot\frac{1+\log(k+1)}{k+1}. \qquad\blacksquare \]
+
+<p>
+The whole skeleton, in one line: <em>unroll</em> $\to$ tame iterates $\to$ <em>strong floor</em> $\to$ contraction $\to$ <em>schedule</em> $\to$ $a_0 = 0$ $\to$ <em>harmonic</em> $\to$ $\log$ $\to$ <em>Jensen</em> $\to$ $\bar x_k$. Note that the $\log$ enters at exactly one place: the rents shrink like $1/i$, and $\sum 1/i$ grows like $\log$.
+</p>
+
+<h3>7.6 &nbsp;The bound against the truth</h3>
+
+<p>
+The running example is again exactly solvable, and unusually informative here because Lemma 7.2 identifies the iterate as a sample mean. With $\mu=1$, $G^2+\sigma^2 = 15$, the bound is $30\,\frac{1+\log(k+1)}{k+1}$. The truth:
+</p>
+
+<ul>
+<li><strong>Last iterate.</strong> $x_k$ is the mean of $k$ i.i.d. draws from $\{0,3,6\}$, so $\mathbb{E}[F(x_k)-F^\star] = \tfrac12\operatorname{Var}(x_k) = \tfrac12\cdot\frac{6}{k} = \frac{3}{k}$.</li>
+<li><strong>Averaged iterate.</strong> Writing $x_i - 3 = S_i/i$ with $S_i = \sum_{j\lt i}(c_{i_j}-3)$ and using $\mathbb{E}[S_iS_l] = 6\min(i,l)$, one gets $\sum_{i,l\ge1}\frac{6\min(i,l)}{il} = 6\sum_{i,l}\frac{1}{\max(i,l)} = 6(2k-H_k)$, and with the $x_0 = 0$ term contributing $(-3)^2$,</li>
+</ul>
+
+\[ \mathbb{E}\big[F(\bar x_k)-F^\star\big] \;=\; \frac{9 + 12k - 6H_k}{2(k+1)^2} \;\approx\; \frac{6}{k}. \]
+
+<table>
+<thead><tr><th>$k$</th><th>Theorem 7.1 bound</th><th>exact, averaged $\bar x_k$</th><th>exact, last $x_k$</th><th>Thm 5.1 bound (same problem)</th></tr></thead>
+<tbody>
+<tr><td>$99$</td><td>$1.68$</td><td>$0.0583$</td><td>$0.0303$</td><td>$1.16$</td></tr>
+<tr><td>$999$</td><td>$\mathbf{0.237}$</td><td>$0.0060$</td><td>$0.0030$</td><td>$0.367$</td></tr>
+<tr><td>$9999$</td><td>$\mathbf{0.031}$</td><td>$0.0006$</td><td>$0.0003$</td><td>$0.116$</td></tr>
+</tbody>
+</table>
+
+<p>
+(The last column is Theorem 5.1 applied to the <em>rewritten</em> problem, where $G = 3$ honestly, so the constant is $\sqrt{15}\cdot 3 = 11.62$ rather than the $19.44$ of &sect;5.5 &mdash; the same objective, but a legitimate global Lipschitz constant for $f$ once the quadratic part is peeled off. This is why the two tables in the deck carry different numbers for what looks like the same problem.)
+</p>
+
+<p>
+Two readings. First, <strong>the averaged iterate is genuinely worse than the last</strong> here &mdash; by an asymptotic factor of exactly $2$ ($6/k$ against $3/k$) &mdash; because averaging drags in the early, high-variance iterates and the deterministic $x_0 = 0$. This is a concrete instance of the deck's honest &ldquo;theory averages, practice keeps the last iterate&rdquo; remark: practice is not being sloppy, it is exploiting something the proof technique cannot see. Second, <strong>the last iterate here attains the statistical limit</strong>: $3/k = \sigma^2/(2\mu k)$, which is the best any estimator of the mean from $k$ samples can do. SGD with this schedule is not merely converging; it is the sample mean, and no algorithm can beat it on this problem.
+</p>
+
+<h3>7.7 &nbsp;Removing the log, and the crossover</h3>
+
+<p>
+The deck states, without proof, that the optimal rate for this problem class is $O(1/k)$ and that sharper averaging removes the $\log$. Precisely:
+</p>
+
+<ul>
+<li><strong>Weighted averaging.</strong> Replacing the uniform average by weights proportional to $i+1$, i.e. $\bar x_k = \frac{2}{(k+1)(k+2)}\sum_{i=0}^k (i+1)x_i$, removes the logarithm and gives $\mathbb{E}[F(\bar x_k)-F^\star] \le \frac{2(G^2+\sigma^2)}{\mu(k+1)}$. This is Lacoste-Julien, Schmidt and Bach [6], and the proof is the same weighted telescope with a different weight sequence.</li>
+<li><strong>Suffix averaging.</strong> Averaging only the last half of the iterates also removes the $\log$; Rakhlin, Shamir and Sridharan [7].</li>
+<li><strong>Last iterate.</strong> For the last iterate the $\log$ is <em>not</em> removable: Shamir and Zhang [8] prove an $O(\log k / k)$ upper bound and Harvey, Liaw, Plan and Randhawa [9] prove a matching $\Omega(\log k/k)$ lower bound for nonsmooth strongly convex SGD. So the deck's honest scoreboard &mdash; &ldquo;our proof is one $\log$ away from optimal&rdquo; &mdash; is exactly right for the averaged iterate and exactly wrong to try to fix for the last one.</li>
+<li><strong>Lower bound.</strong> No algorithm can beat $\Omega\big(\sigma^2/(\mu k)\big)$ for this class [10], and &sect;7.6 exhibits a problem where SGD attains it.</li>
+</ul>
+
+<p>
+<strong>Crossover with Theorem 5.1.</strong> The deck's tables show Theorem 2's constant winning at $k=99$ and Theorem 4's rate winning by $k = 999$. Solving $30\frac{1+\log(k+1)}{k+1} = \frac{11.62}{\sqrt{k+1}}$ numerically gives $k+1 \approx 300$, so the exact crossover is $k \approx 299$; the deck's &ldquo;near $10^3$&rdquo; is a statement about the resolution of its table, not the true switch point. In general the crossover sits where $\frac{2(G^2+\sigma^2)}{\mu}\frac{\log k}{k} \approx \frac{\sqrt{G^2+\sigma^2}D}{\sqrt k}$, i.e. at $k \approx \frac{(G^2+\sigma^2)\log^2 k}{\mu^2D^2}$ &mdash; later when the problem is badly conditioned ($\mu$ small), which is the familiar warning that asymptotically better rates can be irrelevant at realistic horizons.
+</p>
+
+<h2>8 &nbsp;Beyond the Four Theorems</h2>
+
+<p>
+The deck's closing sections name-drop step-size schedules, momentum, RMSprop and Adam, and the &ldquo;Robbins&ndash;Monro line&rdquo;, deliberately without math. This section supplies the statements behind the names, at the level a reader of these notes can now verify.
+</p>
+
+<h3>8.1 &nbsp;Robbins&ndash;Monro: which schedules work at all</h3>
+
+<p>
+Sections 4 and 7 exhibited two schedules &mdash; constant (converges to a neighbourhood) and $1/(\mu(k+1))$ (converges). The classical characterization of which decaying schedules work predates all of the above by four decades.
+</p>
+
+<div class="deriv">
+<p><strong>The Robbins&ndash;Monro conditions [3].</strong> A step-size sequence $\alpha_k \gt 0$ is admissible if</p>
+\[ \sum_{k=0}^{\infty}\alpha_k = \infty \qquad\text{and}\qquad \sum_{k=0}^{\infty}\alpha_k^2 \lt \infty. \]
+<p>The first says the steps must be able to travel an unbounded distance &mdash; otherwise $\sum_k\alpha_k\lVert g_k\rVert \le G'\sum_k\alpha_k \lt \infty$ bounds the total movement and the iterates simply cannot reach $x^\star$ from a far enough start. The second says the accumulated noise, whose contribution to the squared error enters as $\alpha_k^2$ (&sect;3.4), must be summable so the variance does not blow up.</p>
+</div>
+
+<p>
+The canonical family is $\alpha_k \propto k^{-p}$ with $p \in (\tfrac12, 1]$: $\sum k^{-p} = \infty$ requires $p \le 1$, $\sum k^{-2p} \lt \infty$ requires $p \gt \tfrac12$. Note where the section's own schedules land: $\alpha_k \equiv \alpha$ fails the second condition (hence the noise floor of &sect;4); $\alpha_k \propto 1/\sqrt{k+1}$ from &sect;5.7 is exactly on the excluded boundary $p = \tfrac12$ &mdash; which is why it earned only an $O(\log K/\sqrt K)$ <em>average</em>-iterate rate and not almost-sure convergence; $\alpha_k = 1/(\mu(k+1))$ is $p = 1$, admissible, the aggressive end of the window.
+</p>
+
+<p>
+Robbins and Monro's theorem [3] &mdash; strengthened to the modern supermartingale form by Robbins and Siegmund [23] &mdash; delivers something the four theorems in this deck never do: <strong>almost-sure</strong> convergence, $x_k \to x^\star$ with probability one, rather than convergence of an expectation. The gap matters. $\mathbb{E}[F(\bar x_k)-F^\star]\to0$ leaves open, for instance, that a vanishing fraction of runs diverges; the almost-sure statement does not. The tool is the Robbins&ndash;Siegmund lemma: if $V_{k+1} \le (1+a_k)V_k - b_k + c_k$ with $V_k, a_k,b_k,c_k \ge 0$ adapted, $\sum a_k \lt \infty$ and $\sum c_k \lt \infty$, then $V_k$ converges almost surely and $\sum b_k \lt\infty$. Applied with $V_k = \lVert x_k-x^\star\rVert^2$, inequality (7.3) is already in this shape, with $c_k = \alpha_k^2\cdot\text{const}$ &mdash; summable exactly under the second Robbins&ndash;Monro condition.
+</p>
+
+<h3>8.2 &nbsp;Polyak&ndash;Ruppert averaging</h3>
+
+<p>
+&sect;7.6 showed averaging <em>hurting</em>. That is an artifact of averaging from step $0$ under an aggressive schedule. The Polyak&ndash;Juditsky theorem [17] shows that the opposite combination &mdash; a <em>slow</em> schedule $\alpha_k \propto k^{-p}$ with $p \in (\tfrac12,1)$, plus averaging &mdash; is asymptotically optimal: $\sqrt k(\bar x_k - x^\star)$ converges in distribution to a Gaussian whose covariance matches the Cram&eacute;r&ndash;Rao/maximum-likelihood limit, i.e. the same covariance a second-order method with exact Hessian information would achieve. The slogan: <em>take sloppy long steps, then average away the sloppiness</em>. The averaging that looked wasteful in &sect;7.6 is, with the right schedule, how a first-order method recovers second-order efficiency for free.
+</p>
+
+<h3>8.3 &nbsp;Variance reduction: escaping the $1/\sqrt K$ floor</h3>
+
+<p>
+&sect;5.8's lower bound $\Omega(\sqrt{G^2+\sigma^2}\,D/\sqrt K)$ applies to algorithms that see only unbiased gradient samples. A finite sum is more than that: the same $N$ functions recur, so past gradients remain <em>relevant</em>, not merely historical. Exploiting this breaks the lower bound &mdash; it does not contradict it, because the algorithm is outside the class.
+</p>
+
+<ul>
+<li><strong>SVRG</strong> [12] keeps a snapshot $\tilde x$ with its full gradient $\nabla\mathcal{L}(\tilde x)$ (recomputed every few epochs) and uses the estimator $g_k = \nabla\mathcal{L}_{i_k}(x_k) - \nabla\mathcal{L}_{i_k}(\tilde x) + \nabla\mathcal{L}(\tilde x)$. It is unbiased by the same one-line argument as Theorem 2.2 (the two extra terms have equal conditional means), and its variance $\to 0$ as $x_k,\tilde x\to x^\star$, since the two sampled gradients are then evaluated at nearby points.</li>
+<li><strong>SAGA</strong> [13] does the same with a stored table of the most recent gradient of each $\mathcal{L}_i$, trading $O(N)$ memory for the periodic full-gradient pass.</li>
+</ul>
+
+<p>
+For smooth strongly convex finite sums both achieve <em>linear</em> convergence &mdash; $\varepsilon$ in $O\big((N+\kappa)\log\frac1\varepsilon\big)$ gradient evaluations, against SGD's $O(\sigma^2/(\mu\varepsilon))$ and full GD's $O(N\kappa\log\frac1\varepsilon)$. This is the honest counterpoint to &sect;1.1: SGD's $N$-independence is not the last word on finite sums. In deep learning these methods are nonetheless rarely used, because $N$ is enormous, snapshots are expensive, the objective is nonconvex, and (per &sect;3.3) large models often sit close to interpolation, where $\sigma_\star^2 \approx 0$ makes plain SGD already fast [18].
+</p>
+
+<h3>8.4 &nbsp;The descendants: momentum, RMSprop, Adam</h3>
+
+<p>
+The deck names these three and stops. What each adds to $x_{k+1}=x_k-\alpha g_k$:
+</p>
+
+<ul>
+<li><strong>Momentum</strong> replaces the step by an exponential moving average of past gradients, $m_k = \beta m_{k-1} + g_k$, $x_{k+1} = x_k - \alpha m_k$. On a quadratic this damps oscillation across the high-curvature directions and accumulates progress along the low-curvature ones &mdash; the same disease opt03 &sect;7 diagnosed as ill-conditioning. In the deterministic smooth convex case Nesterov's variant provably improves $O(1/k)$ to $O(1/k^2)$ [5]; in the stochastic case the improvement is to the transient, not to the $\sigma^2$-dominated asymptotic term, which &sect;5.8's lower bound forbids improving.</li>
+<li><strong>RMSprop</strong> tracks a running average of squared gradient coordinates, $v_k = \beta_2 v_{k-1} + (1-\beta_2)g_k^{\odot2}$, and divides coordinatewise: $x_{k+1} = x_k - \alpha\, g_k / (\sqrt{v_k}+\epsilon)$. This is a diagonal preconditioner &mdash; a cheap surrogate for the Hessian scaling of opt03, giving each coordinate its own effective step size.</li>
+<li><strong>Adam</strong> [14] is both at once, plus bias correction for the fact that $m_0=v_0=0$ biases the early averages toward zero. It is the default optimizer for deep learning.</li>
+</ul>
+
+<p>
+Two honest caveats worth knowing. Adam's original convergence proof is <em>wrong</em>: Reddi, Kale and Kumar [15] exhibit a simple convex problem on which Adam does not converge, and propose AMSGrad. And weight decay as usually implemented in Adam is not $\ell_2$ regularization &mdash; adding $\lambda\lVert x\rVert^2$ to the loss interacts with the coordinatewise rescaling, so the effective penalty is not the intended one; AdamW [16] decouples them, and is what modern training actually uses. Both facts illustrate the deck's own closing point: the guarantees are a compass, not a warranty.
+</p>
+
+<h3>8.5 &nbsp;Nonconvex SGD: what survives</h3>
+
+<p>
+The deck's ledger lists &ldquo;convex loss&rdquo; against &ldquo;deep nets: nonconvex&rdquo; and leaves it there. Something does survive, provided the objective is $L$-smooth (which the deck never assumed, but deep-learning theory generally does):
+</p>
+
+<div class="deriv">
+<p><strong>Theorem (Ghadimi&ndash;Lan [11], informal).</strong> For $L$-smooth, possibly nonconvex $\mathcal{L}$ bounded below, with $\mathbb{E}_k[g_k]=\nabla\mathcal{L}(x_k)$ and $\operatorname{Var}_k(g_k)\le\sigma^2$, SGD with $\alpha \asymp \min\{1/L, \varepsilon^2/(L\sigma^2)\}$ satisfies</p>
+\[ \min_{k \lt K}\ \mathbb{E}\big\lVert\nabla\mathcal{L}(x_k)\big\rVert^2 \;\le\; \varepsilon^2 \qquad\text{after}\qquad K = O\!\left(\frac{\sigma^2}{\varepsilon^4} + \frac{1}{\varepsilon^2}\right) \ \text{iterations.} \]
+</div>
+
+<p>
+Read the statement carefully, because every weakening is deliberate. The target is $\lVert\nabla\mathcal{L}\rVert$, not $\mathcal{L}-\mathcal{L}^\star$: without convexity, a small gradient does not certify a small gap, so the guarantee is <strong>stationarity, not optimality</strong>. It is the <em>minimum</em> over iterates, so one cannot say <em>which</em> iterate is good, only that one of them is. And the rate is $\varepsilon^{-4}$, not $\varepsilon^{-2}$ &mdash; a real degradation, and known to be unimprovable in this class. It is a much weaker guarantee than Theorems 5.1 or 7.1, and it is nonetheless the guarantee under which essentially all of modern deep learning operates.
+</p>
+
+<h2>9 &nbsp;What the Deck Leaves Out</h2>
+
+<p>
+A short inventory, so that the boundary of the four theorems is explicit.
+</p>
+
+<ul>
+<li><strong>No smoothness anywhere.</strong> Uniquely among the optimization decks, all four theorems assume only convexity plus a Lipschitz/variance budget. That is what makes them apply to hinge loss and ReLU networks &mdash; and also what caps the rates at $1/\sqrt K$ and $\log k/k$. Adding $L$-smoothness gives strictly better constants and enables the interpolation and nonconvex results of &sect;3.3 and &sect;8.5.</li>
+<li><strong>High-probability bounds.</strong> Everything here bounds a mean. Markov's inequality converts a mean bound into a $1/\delta$-dependence on the confidence, which is weak; genuine $\log(1/\delta)$ bounds require sub-Gaussian noise and martingale concentration (prob05's Azuma&ndash;Hoeffding, applied to $\sum\alpha_k\langle n_k, x_k-x^\star\rangle$).</li>
+<li><strong>Last-iterate guarantees.</strong> Both convergence theorems bound $\bar x$; practice reports $x_K$. &sect;5.3 and &sect;7.7 give the state of the art ($O(\log k/k)$ for the strongly convex last iterate, with a matching lower bound [9]).</li>
+<li><strong>Without-replacement sampling.</strong> Every proof uses i.i.d. draws; every training loop shuffles. &sect;2.4 and [19] cover the gap, which is favourable in practice and analytically harder.</li>
+<li><strong>Generalization.</strong> The four theorems bound the <em>empirical</em> risk $\mathcal{L}$ over the given $N$ points. Whether small $\mathcal{L}$ implies small population risk is prob06's question, entirely separate; &sect;5.8 notes the consequence, that driving $\varepsilon$ far below the $O(1/\sqrt N)$ statistical error is wasted computation.</li>
+<li><strong>Constrained and composite problems.</strong> Projected SGD (&sect;5.6) is stated but not analysed; proximal SGD, which handles a nonsmooth regularizer such as $\ell_1$ exactly rather than by subgradient, is standard [1, &sect;6].</li>
+<li><strong>Adaptivity to unknown parameters.</strong> Theorem 5.1's tuned step size needs $D$, $G$, $\sigma$ and $K$; Theorem 7.1 needs $\mu$. Parameter-free and AdaGrad-style methods attain nearly the same rates while estimating these on the fly.</li>
+</ul>
+
+<p>
+Read as a whole, the deck's arc is a single accounting identity applied four times: one step buys $2\alpha(\mathcal{L}(\theta_k)-\mathcal{L}^\star)$ of progress and pays $\alpha^2\mathbb{E}\lVert g_k\rVert^2$ in noise. Theorem 1 makes the purchase honest; Theorem 2 balances the two sides once; Theorem 3 lowers the price; Theorem 4 rebalances at every step. Every knob on a training run &mdash; batch size, learning-rate schedule, warmup, averaging &mdash; is a move in that one ledger.
+</p>
+
+<h2>References</h2>
+
+<ol>
+<li>L. Bottou, F. E. Curtis and J. Nocedal. <em>Optimization Methods for Large-Scale Machine Learning.</em> SIAM Review 60(2):223&ndash;311, 2018. <a href="https://arxiv.org/abs/1606.04838">arXiv:1606.04838</a> &mdash; the standard survey; &sect;4.3 for the variance conditions, &sect;5.4 for importance sampling, Thm. 4.6 for the constant-step neighbourhood.</li>
+<li>A. Nemirovski, A. Juditsky, G. Lan and A. Shapiro. <em>Robust Stochastic Approximation Approach to Stochastic Programming.</em> SIAM J. Optimization 19(4):1574&ndash;1609, 2009. <a href="https://doi.org/10.1137/070704277">doi:10.1137/070704277</a> &mdash; the modern form of Theorem 5.1, including the projected and robust variants.</li>
+<li>H. Robbins and S. Monro. <em>A Stochastic Approximation Method.</em> Annals of Mathematical Statistics 22(3):400&ndash;407, 1951. <a href="https://doi.org/10.1214/aoms/1177729586">doi:10.1214/aoms/1177729586</a> &mdash; the origin of the field and of the $\sum\alpha_k=\infty$, $\sum\alpha_k^2\lt\infty$ conditions.</li>
+<li>S. Bubeck. <em>Convex Optimization: Algorithms and Complexity.</em> Foundations and Trends in Machine Learning 8(3&ndash;4), 2015. <a href="https://arxiv.org/abs/1405.4980">arXiv:1405.4980</a> &mdash; &sect;6.1 for projected SGD; the cleanest short treatment of the lower bounds.</li>
+<li>Y. Nesterov. <em>Lectures on Convex Optimization.</em> 2nd ed., Springer, 2018. <a href="https://doi.org/10.1007/978-3-319-91578-4">doi:10.1007/978-3-319-91578-4</a> &mdash; accelerated methods and the deterministic lower bounds.</li>
+<li>S. Lacoste-Julien, M. Schmidt and F. Bach. <em>A Simpler Approach to Obtaining an O(1/t) Convergence Rate for the Projected Stochastic Subgradient Method.</em> 2012. <a href="https://arxiv.org/abs/1212.2002">arXiv:1212.2002</a> &mdash; removes the $\log$ from Theorem 7.1 by weighting the average.</li>
+<li>A. Rakhlin, O. Shamir and K. Sridharan. <em>Making Gradient Descent Optimal for Strongly Convex Stochastic Optimization.</em> ICML 2012. <a href="https://arxiv.org/abs/1109.5647">arXiv:1109.5647</a> &mdash; suffix averaging; also the horizon-free analysis behind &sect;5.7.</li>
+<li>O. Shamir and T. Zhang. <em>Stochastic Gradient Descent for Non-smooth Optimization: Convergence Results and Optimal Averaging Schemes.</em> ICML 2013. <a href="https://arxiv.org/abs/1212.1824">arXiv:1212.1824</a> &mdash; last-iterate rates, $O(\log k/k)$.</li>
+<li>N. J. A. Harvey, C. Liaw, Y. Plan and S. Randhawa. <em>Tight Analyses for Non-Smooth Stochastic Gradient Descent.</em> COLT 2019. <a href="https://arxiv.org/abs/1812.05217">arXiv:1812.05217</a> &mdash; the matching $\Omega(\log k/k)$ lower bound: the last-iterate logarithm is real.</li>
+<li>A. Agarwal, P. L. Bartlett, P. Ravikumar and M. J. Wainwright. <em>Information-Theoretic Lower Bounds on the Oracle Complexity of Stochastic Convex Optimization.</em> IEEE Trans. Information Theory 58(5):3235&ndash;3249, 2012. <a href="https://arxiv.org/abs/1009.0571">arXiv:1009.0571</a> &mdash; the $\Omega(1/\sqrt K)$ and $\Omega(\sigma^2/(\mu k))$ lower bounds of &sect;5.8 and &sect;7.7, proved by reduction to hypothesis testing (prob03's Fano).</li>
+<li>S. Ghadimi and G. Lan. <em>Stochastic First- and Zeroth-Order Methods for Nonconvex Stochastic Programming.</em> SIAM J. Optimization 23(4):2341&ndash;2368, 2013. <a href="https://arxiv.org/abs/1309.5549">arXiv:1309.5549</a> &mdash; the $O(\varepsilon^{-4})$ stationarity result of &sect;8.5.</li>
+<li>R. Johnson and T. Zhang. <em>Accelerating Stochastic Gradient Descent using Predictive Variance Reduction.</em> NeurIPS 2013. <a href="https://papers.nips.cc/paper/2013/hash/ac1dd209cbcc5e5d1c6e28598e8cbbe8-Abstract.html">papers.nips.cc</a> &mdash; SVRG.</li>
+<li>A. Defazio, F. Bach and S. Lacoste-Julien. <em>SAGA: A Fast Incremental Gradient Method With Support for Non-Strongly Convex Composite Objectives.</em> NeurIPS 2014. <a href="https://arxiv.org/abs/1407.0202">arXiv:1407.0202</a></li>
+<li>D. P. Kingma and J. Ba. <em>Adam: A Method for Stochastic Optimization.</em> ICLR 2015. <a href="https://arxiv.org/abs/1412.6980">arXiv:1412.6980</a></li>
+<li>S. J. Reddi, S. Kale and S. Kumar. <em>On the Convergence of Adam and Beyond.</em> ICLR 2018. <a href="https://arxiv.org/abs/1904.09237">arXiv:1904.09237</a> &mdash; the counterexample to Adam's original proof; AMSGrad.</li>
+<li>I. Loshchilov and F. Hutter. <em>Decoupled Weight Decay Regularization.</em> ICLR 2019. <a href="https://arxiv.org/abs/1711.05101">arXiv:1711.05101</a> &mdash; AdamW.</li>
+<li>B. T. Polyak and A. B. Juditsky. <em>Acceleration of Stochastic Approximation by Averaging.</em> SIAM J. Control and Optimization 30(4):838&ndash;855, 1992. <a href="https://doi.org/10.1137/0330046">doi:10.1137/0330046</a> &mdash; asymptotic optimality of averaged SGD (&sect;8.2).</li>
+<li>S. Ma, R. Bassily and M. Belkin. <em>The Power of Interpolation: Understanding the Effectiveness of SGD in Modern Over-parametrized Learning.</em> ICML 2018. <a href="https://arxiv.org/abs/1712.06559">arXiv:1712.06559</a> &mdash; $\sigma_\star^2 = 0$ and linear rates under interpolation.</li>
+<li>K. Mishchenko, A. Khaled and P. Richt&aacute;rik. <em>Random Reshuffling: Simple Analysis with Vast Improvements.</em> NeurIPS 2020. <a href="https://arxiv.org/abs/2006.05988">arXiv:2006.05988</a> &mdash; the without-replacement gap of &sect;2.4.</li>
+<li>J. Zhang, T. He, S. Sra and A. Jadbabaie. <em>Why Gradient Clipping Accelerates Training: A Theoretical Justification for Adaptivity.</em> ICLR 2020. <a href="https://arxiv.org/abs/1905.11881">arXiv:1905.11881</a> &mdash; the heavy-tail repair of &sect;3.3.</li>
+<li>S. McCandlish, J. Kaplan, D. Amodei et al. <em>An Empirical Model of Large-Batch Training.</em> 2018. <a href="https://arxiv.org/abs/1812.06162">arXiv:1812.06162</a> &mdash; gradient noise scale and the critical batch size (&sect;6.5).</li>
+<li>E. Moulines and F. Bach. <em>Non-Asymptotic Analysis of Stochastic Approximation Algorithms for Machine Learning.</em> NeurIPS 2011. <a href="https://papers.nips.cc/paper/2011/hash/40008b9a5380fcacce3976bf7c08af5b-Abstract.html">papers.nips.cc</a> &mdash; sharp constant-step and decaying-step constants; the neighbourhood of &sect;4.3.</li>
+<li>H. Robbins and D. Siegmund. <em>A Convergence Theorem for Non Negative Almost Supermartingales and Some Applications.</em> In <em>Optimizing Methods in Statistics</em>, Academic Press, 1971. <a href="https://doi.org/10.1016/B978-0-12-604550-5.50015-8">doi:10.1016/B978-0-12-604550-5.50015-8</a> &mdash; the almost-sure convergence tool of &sect;8.1.</li>
+<li>P. Goyal, P. Doll&aacute;r, R. Girshick et al. <em>Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour.</em> 2017. <a href="https://arxiv.org/abs/1706.02677">arXiv:1706.02677</a> &mdash; the linear scaling rule and warmup (&sect;6.5).</li>
+<li><strong>Companion notes in this course.</strong> Expectation, tower property and conditional variance: <code>prob07-estimation-tower-note.html</code>. Concentration and variance of averages (the $\sigma^2/b$ intuition): <code>prob05-concentration-note.html</code>. Generalization: <code>prob06-generalization-note.html</code>. Jensen's inequality: <code>prob01-entropy-jensen-note.html</code>. Convexity, smoothness, strong convexity, conditioning and the deterministic GD rates this deck perturbs: <code>opt03-convexity-gd-note.html</code>. Empirical risk minimization, ridge regression and the finite-sum objective: <code>opt02-regression-erm-note.html</code>. Low-rank structure: <code>opt01-svd-lowrank-note.html</code>.</li>
+</ol>
+
+</body>
+</html>

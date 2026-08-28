@@ -468,6 +468,8 @@ name. Running example A=[[3,0],[4,5]] carried through SVD → pseudo-inverse →
 norms → EYM; rank-1 sidekick C=[[1,1],[2,2]]; 5×4 rank-2 Netflix toy. Ends
 bridging to opt02 (x = A†b as the least-squares solution, proof next deck).
 
+Companion: `opt01-svd-lowrank/opt01-svd-lowrank-note.html` — detailed definitions, expanded proofs, lemmas, references.
+
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + TOC | 1–2 | opt01-svd-lowrank/opt01-svd-lowrank.html:23 |

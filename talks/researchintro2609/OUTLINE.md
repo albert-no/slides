@@ -4,79 +4,76 @@ One deck, one seminar session. Audience is **first-year graduate students with n
 prior research experience**: they have finished technical coursework and are taking
 LLM / agent / RL courses, so the vocabulary is there and the notion of "a project"
 is not. The deliverable being described is **a semester project, not a paper** —
-nontrivial, but below workshop-paper scale (slide 15 places the bar explicitly).
+nontrivial, but below workshop-paper scale (slide 9 places the bar explicitly).
 
 | Deck | Slides | Companion |
 |---|---|---|
-| `researchintro2609.html` | 58 | none |
+| `researchintro2609.html` | 33 | none |
 
 ## The through-line
 
-The whole deck runs on one analogy, stated on slide 6 and never dropped: **a project
-is a new artwork**. Each section pairs the artist's version of a discipline with the
-researcher's, in that order — art first, research second. Keep that pairing when
-editing; the art slide is the intuition and the research slide is the payload, and a
-research slide without its art twin loses the argument.
+Two ideas carry the deck, in this order:
 
-Extra CSS local to this deck (`:20-38`): `.ri-steps` (numbered step list, adapted
-from `sangnam2-what-is-learning.html`'s `.sn-recipe`), `.ri-label` (museum wall-card
-panel), `.ri-fig` (centred SVG wrapper), `.cite-left` (left-aligned citation).
+1. **A project is a new artwork** — new, nontrivial, defensible. Stated once on
+   slide 5, echoed once on the wall-label slide (`:596`), and otherwise left alone.
+   The analogy is a frame, not a running commentary: an earlier 58-slide draft
+   paired every research slide with an art twin and was cut for that reason. Do not
+   re-add art slides.
+2. **Start by reproducing** (§02). Copying a known result is not the project; it is
+   the fastest way into one, because reproduction is where the gap becomes visible.
+   Slides 11–13 carry this and are the spine of the deck's practical advice.
 
-Visually rich by construction: ~21 inline SVG exhibits, no captured figures. Art
-movements are drawn as an SVG timeline rather than reproduced — the canonical works
-(Picasso, Duchamp) are not public domain, and the dates carry a hedging citation.
+Extra CSS local to this deck (`:20-40`): `.ri-steps` (numbered step list, adapted
+from `sangnam2-what-is-learning.html`'s `.sn-recipe`), `.ri-label` (wall-card panel),
+`.ri-airy` (roomier bullets, used only on slide 5), `.ri-fig` (centred SVG wrapper),
+`.cite-left` (left-aligned citation).
+
+Visually rich by construction: 12 inline SVG exhibits, no captured figures.
 
 ## Sections
 
 | Part | Topic | Line |
 |---|---|---|
-| Title / Contents | | `:41-84` |
-| **01** — The Analogy | what a project is, and the four things it is not | `:85-376` |
-| | Two Kinds of Question (2×2: homework / assigned / tutorial / yours) | `:126` |
-| | Project as Artwork — the central analogy | `:157` |
-| | What an artwork owes → what a project owes | `:185`, `:208` |
-| | Four failures: paint-by-numbers, forgery, reprint, doodle | `:223`, `:257` |
-| | The four triviality tests: single prompt · existing repo · swapped dataset · rerun | `:271`, `:297`, `:313`, `:334` |
-| | Where the Bar Sits — prompt / homework / **project** / workshop / conference | `:351` |
-| **02** — Survey | art history, and why a literature map is not a list | `:377-668` |
-| | Movements Answer Constraints (art timeline, 1870s–1960s) | `:400` |
-| | Our Field Has Movements (2012 AlexNet → now agents/embodiment) | `:456` |
-| | Each Wave Removed a Blocker | `:492` |
-| | Why Physical AI, Now — the open column | `:506` |
-| | Mapping the Frontier — settled / contested / blocked | `:561` |
-| | How to Survey — five concrete moves | `:581` |
-| | A Survey Is a Map, not a list | `:621` |
-| | Timing the Wave — too early / the window / too late | `:642` |
-| **03** — Nontriviality | the question you never stop asking | `:669-884` |
-| | The artist's running question → yours | `:677`, `:691` |
-| | The Two-Day Test (Albert's tip, rendered as a branch) | `:727` |
-| | The Escalation Ladder: task → problem → research question | `:752` |
-| | Worked escalations: fine-tune · RAG bot · RL agent | `:775`, `:790`, `:805` |
-| | Find the Bottleneck; Shrink the Claim | `:820`, `:848` |
-| | Five Questions Before Committing | `:869` |
-| **04** — Justification | the wall label, and the skeptic | `:885-1043` |
-| | Every Artwork Has a Label → Your Project's Wall Label (5 lines) | `:893`, `:907` |
-| | The Positioning Sentence ("Unlike X, which assumes Y, we…") | `:921` |
-| | The Skeptic in the Room — four questions, as speech bubbles | `:940` |
-| | "Isn't This Just X?" — the four-move answer | `:983` |
-| | The Smallest Convincing Experiment; A Negative Result Counts | `:998`, `:1024` |
-| **05** — Working Habit | what to do over the next month | `:1044-1238` |
-| | Read More Than Feels Reasonable (skim 20 / read 3 / reproduce 1) | `:1052` |
-| | GPT as Accelerator, Not Author | `:1075` |
-| | A Sketchbook of Bad Ideas | `:1100` |
-| | The Weekly Loop; Four Weeks to a Topic | `:1129`, `:1154` |
-| | Traps That Catch Everyone | `:1184` |
-| | One Page Before Any Code — the actual assignment | `:1200` |
-| | Three Questions to Carry: is it new · is it hard · can I say why | `:1216` |
-| Closer — "Start reading" | | `:1239` |
+| Title / Contents | | `:44-82` |
+| **01** — What a Project Is | novel, nontrivial, not a copy | `:83-240` |
+| | The Problem Nobody Hands You (2×2: homework / assigned / tutorial / yours) | `:92` |
+| | Project as Artwork — the central analogy, two question blocks | `:125` |
+| | What a Project Owes — new · nontrivial · defensible | `:153` |
+| | Not a Project — four failure rows | `:176` |
+| | The Single-Prompt Test | `:190` |
+| | Where the Bar Sits — prompt / homework / **project** / workshop / conference | `:216` |
+| **02** — Where to Start | reproduce, then find what breaks | `:241-426` |
+| | Start by Reproducing — reproduce → disagree → the gap is yours | `:250` |
+| | What Reproduction Breaks — four findings, four questions | `:278` |
+| | A Reproduction Becomes a Project — worked RAG-QA example, 4 steps | `:292` |
+| | Three Ways In — break it · move it · measure it | `:307` |
+| | Worked escalations: fine-tune · RAG bot · RL agent | `:330`, `:345`, `:360` |
+| | The Two-Day Test (Albert's tip, rendered as a branch) | `:375` |
+| | Find the Bottleneck | `:400` |
+| **03** — Reading the Field | what is open, and why people care | `:427-586` |
+| | Where the Field Has Been (2012 AlexNet → now agents/embodiment) | `:436` |
+| | Why Physical AI, Now — the open column | `:472` |
+| | Mapping the Frontier — settled / contested / blocked | `:504` |
+| | How to Survey — five concrete moves | `:524` |
+| | Read More Than Feels Reasonable (skim 20 / read 3 / reproduce 1) | `:540` |
+| | GPT as Accelerator, Not Author | `:563` |
+| **04** — Justify, Then Start | the label, the sentence, the first experiment | `:587-706` |
+| | Your Project's Wall Label — question · stakes · difficulty · difference · evidence | `:596` |
+| | The Positioning Sentence ("Unlike X, which assumes Y, we…") | `:610` |
+| | The Smallest Convincing Experiment | `:629` |
+| | Four Weeks to a Topic | `:655` |
+| | One Page Before Any Code — the actual assignment | `:685` |
+| Closer — "Start reading" | | `:700` |
 
 ## Notes for future edits
 
-- The **one-page brief** (`:1200`) is the concrete ask the seminar ends on. If the
-  seminar's assignment changes, that slide and the closer (`:1239`) change together.
-- Slides 35–37 are the only worked examples, and they are deliberately drawn from
-  the courses the audience is taking now (fine-tuning, RAG, RL). Swap the domain
-  before swapping the structure — all three follow task → *and then?* → problem →
-  question.
-- The deck has no dated claims except the ML timeline (`:456`); refresh its right
+- The **one-page brief** (`:685`) is the concrete ask the seminar ends on. If the
+  seminar's assignment changes, that slide and the closer (`:700`) change together.
+- The "Not a Project" table (`:176`) says *reimplement a paper, **and stop***, not
+  "reimplement a paper". Reproduction is endorsed in §02; keep the two consistent if
+  either is reworded.
+- Slides 15–17 are the worked escalations, deliberately drawn from the courses the
+  audience is taking now (fine-tuning, RAG, RL). Swap the domain before swapping the
+  structure — all three follow task → *and then?* → problem → question.
+- The deck has no dated claims except the ML timeline (`:436`); refresh its right
   end when "now" moves.

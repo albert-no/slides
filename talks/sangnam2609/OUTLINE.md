@@ -10,7 +10,7 @@ Concepts, pictures, and stories.
 | **Day 1, part 1** (1 h) | `sangnam1-ai-today.html` | 64 |
 | **Day 1, part 2** (1 h) | `sangnam2-what-is-learning.html` | 53 |
 | **Day 2** (1.5 h) | `sangnam3-linear-regression-and-overfitting.html` | 32 |
-| | `sangnam4-training-and-classification.html` | 36 |
+| | `sangnam4-training-and-classification.html` | 37 |
 | | `sangnam5-frontier.html` | 28 |
 
 Day 1 is story then foundations; Day 2 is the machinery, and its three decks run
@@ -203,40 +203,44 @@ is inline SVG and two tables. No closed-form solve anywhere — training is sear
 
 ## sangnam4-training-and-classification.html — Day 2, part 4
 
-36 slides. Gradient descent as downhill-in-fog, then classification, then one
-sentence of deep learning: stack the same box. Nine captured figures.
+37 slides. Opens on the linear-regression loss and reframes fitting as
+minimisation; then gradient descent as downhill-in-fog, then classification, then
+one sentence of deep learning: stack the same box. Nine captured figures.
 
 | Part | Topic | Line |
 |---|---|---|
 | Title / This Session | | `:47-86` |
-| **01** — Downhill in the fog | searching a space you cannot see | `:87-225` |
-| | The High-School Answer (slope = 0) | `:95` |
-| | No Formula for a Billion Dials | `:114` |
-| | Standing on a Hillside in Fog (`f-landscape.png`) | `:129` |
-| | All You Can Feel Is the Slope | `:140` |
-| | **Look, Step, Repeat** — the loop | `:162` |
-| | The Step Size Is a Choice (learning rate) | `:179` |
-| | Too Much Data for One Step (mini-batches) | `:198` |
-| **02** — Drawing the line | classification as a sign test | `:226-330` |
-| | Number or Label? · Two Clouds, One Line (`f-clf-boundary.png`) | `:234, :255` |
-| | Counting Mistakes · A Score With No Slope | `:266, :294` |
-| | Sometimes No Line Works (`f-clf-none.png`) | `:320` |
-| **03** — Soft answers | probabilities, and the slope they restore | `:331-452` |
-| | Hard Answer, Soft Answer · Distance Is Confidence | `:339, :360` |
-| | Squash It Into a Probability (inline sigmoid SVG) | `:384` |
-| | **Logistic Regression** — a line plus a squash | `:408` |
-| | Scoring a Probability · Now the Score Has a Slope | `:424, :439` |
-| **04** — Reading the errors | thresholds and the metrics that matter | `:453-532` |
-| | Where to Put the Threshold · Two Ways to Be Wrong | `:461, :481` |
-| | Precision and Recall (`f-prec-recall.png`) | `:502` |
-| | Accuracy Is a Trap (class imbalance) | `:520` |
-| **05** — Stacking the boxes | deep learning in four slides | `:533-673` |
-| | Straight Lines Run Out · Stack the Boxes | `:541, :566` |
-| | Same Four Lines (the recipe, unchanged) | `:595` |
-| | Depth Buys Reuse (pixels → edges → parts → car) | `:612` |
-| | You Might Not Need It (`f-overkill.png`) | `:642` |
-| | Today in Five Lines | `:661` |
-| Closer — "Take the slope. Then squash it." | | `:674` |
+| **01** — Downhill in the fog | searching a space you cannot see | `:87-294` |
+| | **The Score, Written Out** — the MSE this deck minimises | `:95` |
+| | Fitting Is Finding a Minimum (contour rings in the $a,b$ plane) | `:121` |
+| | The Only Question Training Asks (dials / score / smallest) | `:148` |
+| | The High-School Answer (slope = 0) | `:164` |
+| | No Formula for a Billion Dials | `:183` |
+| | Standing on a Hillside in Fog (`f-landscape.png`) | `:198` |
+| | All You Can Feel Is the Slope | `:209` |
+| | **Look, Step, Repeat** — the loop | `:231` |
+| | The Step Size Is a Choice (learning rate) | `:248` |
+| | Too Much Data for One Step (mini-batches) | `:267` |
+| **02** — Drawing the line | classification as a sign test | `:295-345` |
+| | Number or Label? · Two Clouds, One Line (`f-clf-boundary.png`) | `:303, :324` |
+| | Sometimes No Line Works (`f-clf-none.png`) | `:335` |
+| **03** — Soft answers | probabilities, and the slope they restore | `:346-475` |
+| | Hard Answer, Soft Answer · Distance Is Confidence | `:354, :375` |
+| | Squash It Into a Probability (inline sigmoid SVG) | `:399` |
+| | **Logistic Regression** — a line plus a squash | `:423` |
+| | Scoring a Probability | `:439` |
+| | Now the Score Has a Slope (step vs smooth, in one plot) | `:454` |
+| **04** — Reading the errors | thresholds and the metrics that matter | `:476-555` |
+| | Where to Put the Threshold · Two Ways to Be Wrong | `:484, :504` |
+| | Precision and Recall (`f-prec-recall.png`) | `:525` |
+| | Accuracy Is a Trap (class imbalance) | `:543` |
+| **05** — Stacking the boxes | deep learning in four slides | `:556-696` |
+| | Straight Lines Run Out · Stack the Boxes | `:564, :589` |
+| | Same Four Lines (the recipe, unchanged) | `:618` |
+| | Depth Buys Reuse (pixels → edges → parts → car) | `:635` |
+| | You Might Not Need It (`f-overkill.png`) | `:665` |
+| | Today in Five Lines | `:684` |
+| Closer — "Take the slope. Then squash it." | | `:697` |
 
 ---
 
@@ -304,12 +308,16 @@ of section 04 — double descent, the three dials, scaling laws, balance, the da
 wall, the commercial framing. "The Classic Picture" was kept and moved into
 section 03.
 
-Part 4: the loss recap, the too-small/too-large step pictures, two dials at once,
+Part 4: the too-small/too-large step pictures, two dials at once,
 where you start, "not a bowl", the section-01 recap, "still a weighted sum", the
 maximum-margin chain (many lines / widest gap / allow mistakes), "probably red,
 certainly blue", the line-plus-squash diagram, the penalty curve, multi-class and
 softmax, "which mistake is cheaper", the threshold sweep and ROC curves, universal
-approximation, and the three application showcases.
+approximation, and the three application showcases. Cut later, on review: "Counting
+Mistakes" and "A Score With No Slope" — the staircase point now lives on the one
+slide that needs it, "Now the Score Has a Slope" (`:454`).
+
+Part 3, on review: "Two Inputs Instead of One" (the flat-sheet picture).
 
 Part 5: sections 04 and 05 (now Part 1), "a few labels, many photos", "two views",
 "segments nobody named", "made-up photographs", the GAN detour, "where this already

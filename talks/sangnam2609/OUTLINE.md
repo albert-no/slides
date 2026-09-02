@@ -1,66 +1,116 @@
-# sangnam2609/ — Sangnam AI Leader, Week 3: introduction to machine learning (Sep 2026)
+# sangnam2609/ — Sangnam AI Leader, Week 3 (Sep 2026)
 
-3–4 hour introductory talk for the **Sangnam Institute of Management "AI Leader"**
-executive program. Audience is business executives; examples are business-flavored,
-technical level is **freshman undergraduate** — no calculus, no linear algebra, no
-derivations. High-level overview: concepts, pictures, and stories.
+Three-part talk over **two days**, for the Sangnam Institute of Management
+"AI Leader" executive program. Audience is business executives; technical level is
+**freshman undergraduate** — no calculus, no linear algebra, no derivations.
+Concepts, pictures, and stories.
 
-Rewritten (not ported) from Albert's source deck (상남경영원 AI Leader 26-1, week 3)
-(141 pages). Deliberately dropped from the source: normal equations and the
-closed-form least-squares solve, cross-validation, regularization, the
-momentum/RMSProp/ADAM/LR-schedule block, and the perceptron/LP/margin/SVM/hinge/kernel
-chain (reduced to a single "widest gap" intuition slide in Deck 3).
+| Slot | Deck | Slides |
+|---|---|---|
+| **Day 1, part 1** (1 h) | `sangnam1-ai-today.html` | 63 |
+| **Day 1, part 2** (1 h) | `sangnam2-what-is-learning.html` | 52 |
+| **Day 2** (1.5 h) | `sangnam3-linear-regression-and-overfitting.html` | 33 |
+| | `sangnam4-training-and-classification.html` | 36 |
+| | `sangnam5-frontier.html` | 28 |
 
-Roughly one hour is reserved for the closing frontier-and-risks block: recent
-advances (diffusion, RLVR, AI-assisted mathematics) paired with recent failures
-(agent containment breaches, scheming/sabotage evaluations).
+Day 1 is story then foundations; Day 2 is the machinery, and its three decks run
+back to back with no repeated setup. Parts 3–5 were trimmed from 167 slides to 97
+to fit 90 minutes — the cut list is at the bottom of this file, and every cut slide
+is recoverable from git history (`git log --oneline talks/sangnam2609/`).
 
-Four decks, one per ~50-minute block. Merge later if desired.
+Parts 2–5 were rewritten (not ported) from Albert's source deck
+(상남경영원 AI Leader 26-1, week 3, 141 pages). Deliberately absent from the whole
+series: normal equations and the closed-form least-squares solve, cross-validation,
+regularization, the momentum/RMSProp/ADAM/LR-schedule block, and the
+perceptron/LP/margin/SVM/hinge/kernel chain.
 
-## Files
+## Where a topic lives
 
-| Deck | Topic |
+| Topic | Deck |
 |---|---|
-| `sangnam1-what-is-learning.html` | A model is a function · everything becomes numbers · rules out, data in · the four-line recipe |
-| `sangnam2-linear-regression-and-overfitting.html` | Loss and training on a straight line · overfitting · model size · amount of data · **scaling laws** |
-| `sangnam3-training-and-classification.html` | Gradient descent as downhill-in-fog · threshold lines · soft thresholding → **logistic regression is linear regression plus a squash** · deep learning |
-| `sangnam4-frontier-and-risks.html` | Self-supervision · diffusion and text-to-image/video · LLMs and **RLVR** · AI in mathematics · the incident column |
-| `figs/` | Figures captured from the source PDF and from cited papers/press |
+| What AI can do today, and what it costs | Part 1 |
+| AI in mathematics (conjectures, Erdős problems, IMO) | Part 1 `:435-674` |
+| Copyright and the lawsuits | Part 1 `:756-874` |
+| The July 2026 Hugging Face / OpenAI incident | Part 1 `:875-1074` |
+| Regulation, power, and what to ask on Monday | Part 1 `:1076-1168` |
+| $y = f(x)$, features, labels, the four-line recipe | Part 2 |
+| Loss, fitting, overfitting, validation | Part 3 |
+| Gradient descent, classification, probabilities, deep nets | Part 4 |
+| Self-supervision, diffusion, next-word, RLVR, hallucination | Part 5 |
 
-Captured so far: `cifar10.png` (CIFAR-10 sample grid), `mnist-vector.png` (digit as
-pixel matrix), `word-embeddings.png` (words as points), `price-chart.png` (BTC/KRW
-candlesticks with moving averages), and fourteen plots lifted from the source PDF
-for Deck 2 — `f-hw-scatter`, `f-hw-fit`, `f-curve-linear`, `f-curve-quad`,
-`f-D-linear`, `f-DD-linear`, `f-D-poly7`, `f-DD-poly7`, `f-more-data`,
-`f-triptych`, `f-val-poly6`, `f-val-quad`, `f-aug-dog`, `f-aug-digit`.
-
-Added for Deck 3, again cropped from the source PDF: `f-gd-small-lr`,
-`f-gd-large-lr`, `f-gd-contour`, `f-gd-init`, `f-landscape` (losslandscape.com),
-`f-clf-boundary`, `f-clf-many`, `f-clf-none`, `f-soft-guess`, `f-prec-recall`
-(Wikipedia), `f-roc` (Wikipedia), `f-overkill`, `f-superres` (SRGAN),
-`f-detection` (Faster R-CNN). The sigmoid on `:557` is inline SVG — the source
-page could not be cropped without title bleed.
-
-Added for Deck 4: `f-semisup` (SimCLRv2, Chen et al. 2020), `f-augviews`
-(SimCLR augmentation grid), `f-clusters` (unlabelled clustering), `f-gensamples`
-(early generated image grid), `f-gan` (GAN schematic after Wikipedia),
-`f-diffusion-samples` (Stability.ai), `f-noise-strip` (Song et al. 2021
-forward-noising strip). Everything in sections 03–05 is inline SVG or a table —
-the incidents and the mathematics have no figures to capture.
+Applications are Part 1's job and mechanisms are Part 5's. Part 1 shows generated
+images and video and says nothing about how; Part 5 explains diffusion and shows no
+new showcase. Keep that split when editing either.
 
 ---
 
-## sangnam1-what-is-learning.html
+## sangnam1-ai-today.html — Day 1, part 1
+
+63 slides. Every claim on a dated public source; every figure publicly licensed and
+cited on-slide. Ten captured figures, the rest inline SVG, tables, and cards.
+Extra CSS local to this deck: `.sn-side` (photo beside bullets) and `.sn-quote`
+(attributed blockquote) at `:56-68`.
+
+| Part | Topic | Line |
+|---|---|---|
+| Title / This Session | | `:75-114` |
+| **01** — Three years, one curve | how fast this actually moved | `:115-251` |
+| | Ten Years Ago in Seoul (`f-leesedol.jpg`) | `:123` |
+| | The Move Nobody Played (`f-alphago-board.png`) | `:139` |
+| | A Billion People a Week (adoption numbers) | `:170` |
+| | The Tasks Are Getting Longer (`f-metr.png`, METR TH 1.1) | `:206` |
+| | This Hour, Two Columns (the deck's own frame) | `:233` |
+| **02** — What it can already do | code, pictures, science, mathematics, work | `:252-755` |
+| | The Benchmark Nobody Believed (SWE-bench 2 → 94%) | `:289` |
+| | What the Companies Say (Nadella / Pichai / Benioff) | `:315` |
+| | What It Still Cannot Do | `:328` |
+| | Type a Sentence, Get a Photograph (`f-sd-astronaut.jpg`) | `:343` |
+| | Now It Moves · And It Has a Soundtrack (`f-sora-*.jpg`) | `:355, :367` |
+| | You Cannot Tell Any More (the $25M deepfake call) | `:383` |
+| | Two Hundred Million Proteins (`f-alphafold2.png`) | `:403` |
+| | No Driver, Paying Passengers (`f-waymo.jpg`) | `:419` |
+| | **An Eighty-Seven-Year-Old Guess** — Jacobian/Keller | `:435` |
+| | Disproved in 216 Characters | `:461` |
+| | Erdős Problems Are Falling (#397, #728, #729, #1196, #1051) | `:489` |
+| | Gold at the Olympiad (IMO 2025, 35/42) | `:503` |
+| | Hard to Find, Easy to Check | `:524` |
+| | Ten Results in One Report · Two Thousand Dollars of Tokens | `:547, :562` |
+| | Proof a Computer Can Check (Lean) · Not Yet Peer-Reviewed | `:581, :607` |
+| | What a Mathematician Warns (Tao's long tail) | `:633` |
+| | Four Thousand Support Roles · The Young Are Hit First (`f-canaries.png`) | `:693, :714` |
+| | Tasks, Not Jobs | `:741` |
+| **03** — Who owns the training data | the lawsuits, and the first big bill | `:756-874` |
+| | Every Model Ate a Library | `:764` |
+| | **The First Big Bill** — Bartz v. Anthropic, $1.5B | `:790` |
+| | What the Judge Actually Said (Alsup, both halves) | `:811` |
+| | The Rest of the Docket · Or Sign a Deal Instead | `:830, :843` |
+| **04** — When it goes wrong | two incidents from this summer | `:875-1074` |
+| | The Other Column (same capability, pointed elsewhere) | `:883` |
+| | July 2026: An Attack Nobody Ordered (timeline) | `:902` |
+| | Two and a Half Days Inside · It Came Back After the Fix | `:916, :943` |
+| | Found Out Sideways (Hugging Face called it in) | `:969` |
+| | Two Sentences Worth Keeping (Hobbhahn, Wildeford) | `:985` |
+| | Zero to Fifty-Nine Percent (harness, not model) | `:1017` |
+| | Made-Up Citations, Real Sanctions (1,598 filings) | `:1055` |
+| **05** — Society is behind | rules, power, Monday morning | `:1076-1168` |
+| | Two Curves, Different Slopes | `:1084` |
+| | Korea's Rules Arrived in January (AI Basic Act) | `:1105` |
+| | The Power Bill (`f-datacenter.jpg`, IEA) | `:1121` |
+| | What to Ask on Monday · Today in Six Lines | `:1137, :1154` |
+| Closer — "Extraordinary. / And unfinished." | | `:1169` |
+
+Post-cutoff facts (2026 events) are the fragile part of this deck. Before delivery,
+re-check: adoption numbers `:170`, SWE-bench `:289`, the Erdős table `:489`, the
+OpenAI report `:547`, the settlement's final approval `:790`, and the hallucination
+count `:1055`.
+
+---
+
+## sangnam2-what-is-learning.html — Day 1, part 2
 
 52 slides. Almost no notation: only $x$, $y$, $f$, $g$, and one squared-error line.
 Every content slide carries an exhibit — four captured figures, twelve inline SVG
 diagrams, three tables, three mock UI cards.
-
-Tracks source pp. 1–25 beat for beat: the six products (pp. 2–7), the function box
-(p. 8), the three ingredients (p. 9), the $x$/$y$ second pass (pp. 11–17),
-rule-based versus data-based (p. 18), Samuel (p. 19), expert $f$ versus model $g$
-(p. 20), the setup (p. 21), classification versus regression (p. 22), "approximate
-well?" (pp. 23–24), and the recipe (p. 25).
 
 | Part | Topic | Line |
 |---|---|---|
@@ -70,12 +120,10 @@ well?" (pp. 23–24), and the recipe (p. 25).
 | | Sorting Photographs (`cifar10.png`) | `:102` |
 | | Reading a Review (이동진 / 기생충 mock card) | `:114` |
 | | Guessing the Next Word (SVG probability bars) | `:141` |
-| | Translating a Sentence | `:165` |
-| | Forecasting a Price (`price-chart.png`) | `:185` |
-| | Spotting a Defect (SVG conveyor + camera) | `:196` |
-| | Scoring an Application (SVG applicant → gauge) | `:230` |
+| | Translating a Sentence · Forecasting a Price (`price-chart.png`) | `:165, :185` |
+| | Spotting a Defect · Scoring an Application | `:196, :230` |
 | | Always the Same Shape (SVG function box) | `:264` |
-| | **Two Letters for the Afternoon** — $y = f(x)$ | `:285` |
+| | **Two Letters for the Whole Course** — $y = f(x)$ | `:285` |
 | | What Changes, What Stays | `:299` |
 | **02** — Everything becomes numbers | photos, sentences, customers as lists | `:319-444` |
 | | A Photo Is a Grid of Numbers (`mnist-vector.png`) | `:327` |
@@ -83,291 +131,183 @@ well?" (pp. 23–24), and the recipe (p. 25).
 | | A Word Is a Point in Space (`word-embeddings.png`) | `:351` |
 | | A Customer Is a Row (churn table) | `:362` |
 | | **Naming the Parts, Six Times** — $x$/$y$ per product | `:375` |
-| | Three Shapes of Answer (number / label / distribution) | `:407` |
-| | Why This Matters Commercially | `:430` |
+| | Three Shapes of Answer · Why This Matters Commercially | `:407, :430` |
 | **03** — Where the function comes from | rules out, data in | `:445-776` |
 | | The Old Way — Write the Rules (SVG rule tree) | `:453` |
-| | What Defines the Digit Zero? | `:480` |
-| | Why Rules Run Out | `:494` |
-| | Learning, Defined in 1959 (**Arthur Samuel**) | `:515` |
-| | **Three Words: Function, Data, Loss** (SVG chain) | `:526` |
-| | The Function We Wish We Had (ideal $f$, dashed box) | `:552` |
-| | We Only See Examples — $(x_i, y_i)$ | `:575` |
-| | **Training Builds a Look-Alike** — expert $f$ ≈ model $g$ | `:589` |
-| | Which Look-Alikes Are Allowed? — $g(x)=ax+b$ | `:623` |
-| | "Close" Everywhere Is Impossible | `:638` |
-| | "Close" on Our Examples | `:651` |
-| | Scoring a Single Guess — $(92-85)^2$ | `:664` |
-| | Averaging Over Everyone (squared-error loss in words) | `:678` |
-| | **The Recipe** — examples · family · loss · search | `:692` |
-| | Searching Means Turning Dials (SVG knobs) | `:709` |
-| | Somebody Made Those Labels | `:729` |
-| | The Model Inherits Your Data (bias table) | `:744` |
-| | Two Flavours of Answer (classification vs regression) | `:757` |
+| | What Defines the Digit Zero? · Why Rules Run Out | `:480, :494` |
+| | **Learning, Defined in 1959** (Samuel) | `:515` |
+| | Three Words: Function, Data, Loss | `:526` |
+| | The Function We Wish We Had · We Only See Examples | `:552, :575` |
+| | Training Builds a Look-Alike | `:589` |
+| | Which Look-Alikes Are Allowed? (function class) | `:623` |
+| | "Close" Everywhere Is Impossible → on Our Examples | `:638, :651` |
+| | Scoring a Single Guess · Averaging Over Everyone | `:664, :678` |
+| | **The Recipe** — the four lines the series returns to | `:692` |
+| | Searching Means Turning Dials | `:709` |
+| | Somebody Made Those Labels · The Model Inherits Your Data | `:729, :744` |
+| | Two Flavours of Answer (regression / classification) | `:757` |
 | **04** — Reading the recipe | same three lines, every product | `:777-916` |
-| | Recipe — Spam Filter | `:785` |
-| | Recipe — Demand Forecast | `:800` |
-| | Recipe — Defect Detection | `:815` |
-| | Four More, Same Three Lines (table) | `:830` |
-| | The Recipe Is the Field | `:843` |
-| | Three Questions Left Open (→ Decks 2–4) | `:856` |
-| | Patterns, Not Reasons | `:869` |
-| | Patterns Go Stale | `:882` |
-| | The Afternoon Ahead (roadmap) | `:897` |
+| | Recipe — Spam · Demand · Defect | `:785, :800, :815` |
+| | Four More, Same Three Lines · The Recipe Is the Field | `:830, :843` |
+| | Three Questions Left Open | `:856` |
+| | Patterns, Not Reasons · Patterns Go Stale | `:869, :882` |
+| | **Day 2: What Comes Next** (roadmap to Parts 3–5) | `:897` |
 | Closer — "A function." | | `:917` |
 
-**Key named items:** Arthur Samuel's 1959 definition of learning; CIFAR-10
-(Krizhevsky, 2009); squared error as the first loss.
+`:692` is the load-bearing slide of the whole series: Parts 3, 4 and 5 all open by
+pointing at the recipe. Do not reword it without following through.
 
-**Deliberate omissions here:** no optimization, no overfitting yet, no gradient
-descent — all three are set up as open questions on `:856` and answered in Decks 2–3.
+---
 
-## sangnam2-linear-regression-and-overfitting.html
+## sangnam3-linear-regression-and-overfitting.html — Day 2, part 3
 
-52 slides. Tracks source pp. 26–57, minus the closed-form solve (pp. 29–32, 35–39),
-cross-validation (p. 55) and regularization (p. 56); section 04 is new material,
-added on Albert's brief ("model size, amount of data, possibly scaling laws").
-Notation stays at $ax + b$, one squared-error line, and a weighted sum — no
-derivatives, no matrices, no normal equations.
-
-Fourteen of the twenty-one exhibits are Albert's own matplotlib plots, cropped out
-of the source PDF; the rest are inline SVG.
+33 slides. Twelve captured plots from the source PDF carry sections 01–03; the rest
+is inline SVG and two tables. No closed-form solve anywhere — training is search.
 
 | Part | Topic | Line |
 |---|---|---|
-| Title / This Session | | `:48-83` |
-| **01** — Fitting a line | one input, two dials | `:84-317` |
-| | The Recipe, Unchanged (deck-1 callback) | `:92` |
-| | Heights and Weights (`f-hw-scatter`) | `:108` |
-| | The Job: Height In, Weight Out (SVG function box) | `:119` |
-| | **A Family of Straight Lines** — $\mathcal{G}=\{g_{a,b}(x)=ax+b\}$ | `:146` |
-| | Which of These Is Best? (SVG, three candidates) | `:168` |
-| | Measure Every Miss (SVG residuals) | `:192` |
-| | Why Square the Gaps? | `:221` |
-| | **One Number for the Whole Dataset** — mean squared error | `:235` |
-| | Training Is Turning the Dials (SVG bowl) | `:248` |
-| | The Winning Line (`f-hw-fit`) | `:271` |
-| | What the Dials Tell You (slope as business quantity) | `:282` |
-| | Linear Regression, Complete (four-line recipe) | `:301` |
-| **02** — More columns, more shapes | many inputs, curved columns | `:318-439` |
-| | Two Inputs Instead of One (SVG plane) | `:326` |
-| | Many Inputs, Same Shape — $g(x)=w_1x_1+\cdots+w_dx_d+b$ | `:350` |
-| | A Table You Already Have (churn table) | `:364` |
-| | A Straight Line Cannot Bend (`f-curve-linear`) | `:379` |
-| | Give It a Curved Column (`f-curve-quad`) | `:390` |
-| | **Still a Weighted Sum** — $z_1=x$, $z_2=x^2$ | `:401` |
-| | You Can Always Add Columns (powers / products / transforms) | `:416` |
-| **03** — Overfitting | the one failure mode to recognise | `:440-724` |
-| | Ten Points, One Line (`f-D-linear`) | `:448` |
-| | Nudge One Point (`f-DD-linear`) | `:459` |
-| | A Curve Through Every Point (`f-D-poly7`) | `:470` |
-| | Nudge One Point Again (`f-DD-poly7`) | `:481` |
-| | **Memorising Is Not Learning** | `:492` |
-| | Three Fits, Same Data (`f-triptych`) | `:511` |
-| | Two Ways to Be Wrong (bias / variance, in words) | `:522` |
-| | More Data Tames It (`f-more-data`) | `:541` |
-| | You Cannot Just Look (2 columns vs 2,000) | `:552` |
-| | **Hold Some Data Back** (SVG 80/20 split) | `:576` |
-| | Perfect on Train, Lost Elsewhere (`f-val-poly6`) | `:597` |
-| | When the Two Scores Agree (`f-val-quad`) | `:608` |
-| | Train, Validation, Test | `:619` |
-| | Prefer the Simpler Story (**Occam's razor**, SVG 2 vs 40 dials) | `:642` |
-| | **Reading the Two Numbers** (diagnosis table) | `:671` |
-| | If You Are Overfitting (more data · simpler family · augment · generate) | `:686` |
-| | A Shifted Dog Is Still a Dog (`f-aug-dog`) | `:698` |
-| | But It Depends on Your Data (`f-aug-digit`, mirrored '2') | `:712` |
-| **04** — Model, data, compute | new material, not in the source | `:725-890` |
-| | The Classic Picture (SVG U-curve) | `:733` |
-| | Then the Curve Broke (SVG **double descent**) | `:756` |
-| | Three Dials | `:776` |
-| | **Scaling Laws** (SVG straight line on a log plot) | `:799` |
-| | Balance the Dials (**Chinchilla**, Hoffmann et al. 2022) | `:820` |
-| | Compute Is Buyable, Data Is Not | `:840` |
-| | What This Means for You | `:854` |
-| | Today in Five Lines | `:878` |
-| Closer — "Fit the pattern, not the noise." | | `:891` |
+| Title / This Session | | `:47-78` |
+| **01** — Fitting a line | two dials, one score | `:79-270` |
+| | The Recipe, Unchanged (bridge from Part 2) | `:87` |
+| | Heights and Weights (`f-hw-scatter.png`) | `:103` |
+| | The Job: Height In, Weight Out | `:114` |
+| | A Family of Straight Lines · Which of These Is Best? | `:141, :163` |
+| | Measure Every Miss (`f-hw-fit.png`) | `:187` |
+| | **One Number for the Whole Dataset** — mean squared error | `:216` |
+| | Training Is Turning the Dials · What the Dials Tell You | `:229, :252` |
+| **02** — More columns, more shapes | features do the bending | `:271-362` |
+| | Two Inputs Instead of One · Many Inputs, Same Shape | `:279, :303` |
+| | A Straight Line Cannot Bend (`f-curve-linear.png`) | `:317` |
+| | Give It a Curved Column (`f-curve-quad.png`) | `:328` |
+| | You Can Always Add Columns (sets up overfitting) | `:339` |
+| **03** — Overfitting | memorising is not learning | `:363-576` |
+| | Ten Points, One Line (`f-D-linear.png`) | `:371` |
+| | A Curve Through Every Point (`f-D-poly7.png`) | `:382` |
+| | Three Fits, Same Data (`f-triptych.png`) | `:393` |
+| | **Two Ways to Be Wrong** — bias and variance | `:404` |
+| | More Data Tames It (`f-more-data.png`) | `:423` |
+| | You Cannot Just Look · Hold Some Data Back | `:434, :458` |
+| | Perfect on Train, Lost Elsewhere (`f-val-poly6.png`) | `:479` |
+| | Train, Validation, Test | `:490` |
+| | The Classic Picture (train vs validation vs model size) | `:513` |
+| | Prefer the Simpler Story (Occam) · If You Are Overfitting | `:536, :565` |
+| | Today in Four Lines | `:577` |
+| Closer — "Fit the pattern, not the noise." | | `:589` |
 
-**Key named items:** mean squared error; bias-variance trade-off; train/validation/test
-split; Occam's razor; double descent; scaling laws; Hoffmann et al., "Training
-Compute-Optimal Large Language Models" (2022).
+---
 
-**Deliberate omissions here:** no closed-form least-squares solve, no
-cross-validation, no regularization (all three cut on Albert's instruction).
-Gradient descent is named only as "turning the dials" — the mechanism lands in Deck 3.
+## sangnam4-training-and-classification.html — Day 2, part 4
 
-## sangnam3-training-and-classification.html
-
-58 slides. Tracks source pp. 58–132: gradient descent (pp. 59–77), classification
-and the decision line (pp. 84–99), soft thresholding and logistic regression
-(pp. 103–112), precision/recall/ROC (pp. 118–124), and the deep-learning bridge
-(pp. 125–132). Notation stays at a weighted sum, one squared-error line, and one
-sigmoid definition — no derivatives, no updates rule, no matrices.
-
-Fourteen exhibits are captured figures; the remaining twenty-one are inline SVG.
+36 slides. Gradient descent as downhill-in-fog, then classification, then one
+sentence of deep learning: stack the same box. Nine captured figures.
 
 | Part | Topic | Line |
 |---|---|---|
-| Title / This Session | | `:48-87` |
-| **01** — Downhill in the fog | searching a space you cannot see | `:88-320` |
-| | Two Dials, One Score (squared-error loss, deck-2 callback) | `:96` |
-| | The High-School Answer (SVG parabola, slope $=0$) | `:109` |
-| | No Formula for a Billion Dials (2 / a million / billions) | `:128` |
-| | Standing on a Hillside in Fog (`f-landscape`) | `:143` |
-| | All You Can Feel Is the Slope (SVG hiker in fog) | `:154` |
-| | **Look, Step, Repeat** — names *gradient descent* | `:176` |
-| | Steps Too Small (`f-gd-small-lr`) | `:193` |
-| | Steps Too Large (`f-gd-large-lr`) | `:204` |
-| | The Step Size Is a Choice — names *learning rate* | `:215` |
-| | Two Dials at Once (`f-gd-contour`, two step sizes) | `:234` |
-| | Where You Start Matters (`f-gd-init`, two valleys) | `:245` |
-| | The Ground Is Not a Bowl (SVG plateau / local / deeper) | `:258` |
-| | Too Much Data for One Step — names *stochastic gradient descent* | `:278` |
-| | Downhill Search in Five Lines | `:306` |
-| **02** — Drawing the line | when the answer is a label | `:321-492` |
-| | Number or Label? (regression vs classification) | `:329` |
-| | Two Clouds, One Line (`f-clf-boundary`) | `:350` |
-| | **Still a Weighted Sum** — $s(x)=w_1x_1+\cdots+w_dx_d+b$ | `:361` |
-| | Counting Mistakes (SVG, 2 on the wrong side) | `:377` |
-| | A Score With No Slope (SVG staircase) | `:405` |
-| | Many Lines Work (`f-clf-many`) | `:431` |
-| | Prefer the Widest Gap (SVG corridor, **Cortes and Vapnik, 1995**) | `:442` |
-| | Sometimes No Line Works (`f-clf-none`) | `:468` |
-| | Then Allow a Few Mistakes (penalty per violation) | `:479` |
-| **03** — Soft answers | a line, plus a squash | `:493-725` |
-| | Hard Answer, Soft Answer (churn verdict vs churn risk) | `:501` |
-| | Probably Red, Certainly Blue (`f-soft-guess`) | `:522` |
-| | Distance Is Confidence (SVG, distance from the line) | `:532` |
-| | Squash It Into a Probability (SVG sigmoid) | `:556` |
-| | **Logistic Regression** — $g(x)=\sigma(w_1x_1+\cdots+b)$, $\sigma(s)=1/(1+e^{-s})$ | `:580` |
-| | **A Line Plus a Squash** (SVG chain: columns → weighted sum → squash → 0.72) | `:596` |
-| | Scoring a Probability (penalty table) | `:624` |
-| | Confident and Wrong Is Expensive (SVG $-\log p$, names *cross-entropy*) | `:639` |
-| | Now the Score Has a Slope (why classifiers output probabilities) | `:661` |
-| | More Than Two Labels (`cifar10.png`, Krizhevsky 2009) | `:675` |
-| | One Score per Label, Then Normalise (SVG bars, names *softmax*) | `:686` |
-| **04** — Reading the errors | which mistake is cheaper? | `:726-838` |
-| | Where to Put the Threshold (SVG slider) | `:734` |
-| | Two Ways to Be Wrong (false alarm / miss) | `:754` |
-| | **Precision and Recall** (`f-prec-recall`) | `:775` |
-| | Which Mistake Is Cheaper? (screening / spam / fraud / loans) | `:793` |
-| | Sweep the Threshold (`f-roc`, area under the curve) | `:806` |
-| | **Accuracy Is a Trap** — 99.9% by always saying "fine" | `:826` |
-| **05** — Stacking the boxes | where deep learning comes in | `:839-1058` |
-| | Straight Lines Run Out (SVG ring inside a ring) | `:847` |
-| | **Stack the Boxes** (SVG layered network) | `:872` |
-| | Same Four Lines (only the family changed) | `:901` |
-| | Any Shape, In Principle (**Cybenko, 1989; Hornik, 1991**) | `:918` |
-| | Depth Buys Reuse (SVG pixels → edges → parts → car) | `:936` |
-| | Sharper Pictures (`f-superres`, **Ledig et al., CVPR 2017**) | `:966` |
-| | Finding Things in a Photo (`f-detection`, **Ren et al., NeurIPS 2015**) | `:981` |
-| | Filling In a Blank (SVG masked sentence — language-model training) | `:1000` |
-| | You Might Not Need It (`f-overkill`) | `:1027` |
-| | Today in Five Lines | `:1046` |
-| Closer — "Take the slope. Then squash it." | | `:1059` |
+| Title / This Session | | `:47-86` |
+| **01** — Downhill in the fog | searching a space you cannot see | `:87-225` |
+| | The High-School Answer (slope = 0) | `:95` |
+| | No Formula for a Billion Dials | `:114` |
+| | Standing on a Hillside in Fog (`f-landscape.png`) | `:129` |
+| | All You Can Feel Is the Slope | `:140` |
+| | **Look, Step, Repeat** — the loop | `:162` |
+| | The Step Size Is a Choice (learning rate) | `:179` |
+| | Too Much Data for One Step (mini-batches) | `:198` |
+| **02** — Drawing the line | classification as a sign test | `:226-330` |
+| | Number or Label? · Two Clouds, One Line (`f-clf-boundary.png`) | `:234, :255` |
+| | Counting Mistakes · A Score With No Slope | `:266, :294` |
+| | Sometimes No Line Works (`f-clf-none.png`) | `:320` |
+| **03** — Soft answers | probabilities, and the slope they restore | `:331-452` |
+| | Hard Answer, Soft Answer · Distance Is Confidence | `:339, :360` |
+| | Squash It Into a Probability (inline sigmoid SVG) | `:384` |
+| | **Logistic Regression** — a line plus a squash | `:408` |
+| | Scoring a Probability · Now the Score Has a Slope | `:424, :439` |
+| **04** — Reading the errors | thresholds and the metrics that matter | `:453-532` |
+| | Where to Put the Threshold · Two Ways to Be Wrong | `:461, :481` |
+| | Precision and Recall (`f-prec-recall.png`) | `:502` |
+| | Accuracy Is a Trap (class imbalance) | `:520` |
+| **05** — Stacking the boxes | deep learning in four slides | `:533-673` |
+| | Straight Lines Run Out · Stack the Boxes | `:541, :566` |
+| | Same Four Lines (the recipe, unchanged) | `:595` |
+| | Depth Buys Reuse (pixels → edges → parts → car) | `:612` |
+| | You Might Not Need It (`f-overkill.png`) | `:642` |
+| | Today in Five Lines | `:661` |
+| Closer — "Take the slope. Then squash it." | | `:674` |
 
-**Key named items:** gradient descent; learning rate; stochastic gradient descent;
-local minima; the zero-one loss and its missing slope; support vector machine
-(Cortes and Vapnik, 1995); sigmoid; logistic regression; cross-entropy; softmax;
-precision, recall and ROC/AUC; universal approximation (Cybenko, 1989; Hornik,
-1991); SRGAN (Ledig et al., CVPR 2017); Faster R-CNN (Ren et al., NeurIPS 2015).
+---
 
-**Deliberate omissions here:** no gradient formulas or update rule (Albert's brief:
-high-level only), no momentum/RMSProp/ADAM/LR-schedule block (source pp. 78–83), no
-perceptron/LP/duality/hinge/kernel chain (source pp. 90–102, reduced to `:442` and
-`:479`), and no KL-divergence formalism behind cross-entropy — replaced by the
-penalty table on `:624` and the curve on `:639`.
+## sangnam5-frontier.html — Day 2, part 5
 
-## sangnam4-frontier-and-risks.html
-
-57 slides. No source-PDF counterpart — entirely new material, written to Albert's
-brief for the closing hour ("recent advances *and* scary incidents"). Notation is
-almost absent: no formulas at all, one probability, a handful of counts. The deck
-pairs each advance with what it cost, and closes on the July 2026 incidents.
-
-Seven captured figures; every other exhibit is inline SVG, a table, a big-number
-card row, or a dated timeline.
+28 slides. The closing deck: what the same recipe does once the labels are gone.
+Mechanism only — the showcase moved to Part 1. Ends on hallucination, deliberately.
 
 | Part | Topic | Line |
 |---|---|---|
-| Title / This Session | | `:61-99` |
-| **01** — Learning without labels | the expensive ingredient, removed | `:101-218` |
-| | Labels Are the Bottleneck (SVG free-vs-paid pair) | `:109` |
-| | A Few Labels, Many Photographs (`f-semisup`) | `:131` |
-| | Two Views of the Same Dog (`f-augviews`) | `:142` |
-| | **The Answer Key Is Inside the Data** (SVG masked-word / cropped-photo pair) | `:154` |
-| | No Labels at All (`f-clusters`) | `:176` |
-| | Segments Nobody Named (business reading of clusters) | `:187` |
-| | Which Line of the Recipe Changed (deck-1 recipe callback) | `:202` |
-| **02** — Machines that make things | reversing the arrow | `:219-462` |
-| | Recognise, or Create (SVG two-arrow contrast) | `:227` |
-| | Learning What Typical Looks Like (SVG density blob) | `:254` |
-| | Sampling Is the Product | `:280` |
-| | Photographs of Nothing (`f-gensamples`) | `:296` |
-| | Forger and Inspector (`f-gan`, **generative adversarial network**) | `:307` |
-| | Sharp, and Temperamental (why GANs gave way) | `:319` |
-| | Start From Static (`f-diffusion-samples`, Stability.ai) | `:338` |
-| | Add Noise Until Nothing Is Left (`f-noise-strip`, **Song et al. 2021**) | `:349` |
-| | **Then Learn to Undo One Step** (SVG denoise loop) | `:369` |
-| | A Prompt Steers the Undoing (SVG text → image conditioning) | `:399` |
-| | Video Is the Same Trick (SVG frame stack) | `:427` |
-| | Where This Already Pays (business-use table) | `:450` |
-| **03** — Machines that talk | next word, then verified reward | `:463-726` |
-| | Next Word, Over and Over (SVG probability bars) | `:471` |
-| | One Loss, Trillions of Words (SVG scale bar, 10T+ tokens) | `:494` |
-| | Scale Bought New Behaviour (translation / code / arithmetic) | `:517` |
-| | Predicting Text Is Not Obeying (SVG plausible-vs-wanted) | `:541` |
-| | First: Show It Good Answers (**supervised fine-tuning**) | `:564` |
-| | Then: Which of These Two? (**learning from human preference**) | `:586` |
-| | Some Answers Can Be Checked (arithmetic / code / proof vs essay) | `:612` |
-| | **The Checker Becomes the Teacher** (SVG RLVR loop — *verifiable reward*) | `:628` |
-| | Think Longer, Do Better (SVG accuracy-vs-working curve) | `:656` |
-| | Fast Where Marking Is Cheap (which fields move first) | `:680` |
-| | Confident, and Sometimes Wrong (**hallucination**, no verifier at answer time) | `:707` |
-| **04** — Machines doing mathematics | two results from this summer | `:727-912` |
-| | An Eighty-Seven-Year-Old Guess (SVG polynomial map, **Keller, 1939**) | `:735` |
-| | **Disproved in 216 Characters** (1939 / 2026 / 216 — Fable 5 with Levent Alpöge) | `:761` |
-| | Hard to Find, Easy to Check (SVG search-vs-verify asymmetry) | `:789` |
-| | Ten Results in One Report (**OpenAI, August 2026**, five fields) | `:812` |
-| | Two Thousand Dollars of Tokens (cost vs decades of attention) | `:827` |
-| | Proof a Computer Can Check (SVG **Lean certificate** chain) | `:846` |
-| | Not Yet Peer-Reviewed (what "result" now means) | `:872` |
-| | What Changed, and What Did Not (search cheap, judgement not) | `:898` |
-| **05** — When it goes wrong | also from this summer | `:913-1126` |
-| | The Other Column (SVG capability-vs-containment) | `:921` |
-| | **July 2026: An Attack Nobody Ordered** (timeline: days before / 16 July / 21 July) | `:940` |
-| | Two and a Half Days Inside (2.5 / 1000s / 4 exposed accounts) | `:954` |
-| | It Came Back After the Fix (rebuilt the channel by another mechanism) | `:981` |
-| | Found Out Sideways (discovered via the credential-revocation call) | `:1007` |
-| | Not an Isolated Case (**UK AI Safety Institute, 28 July 2026** — supply-chain attempt) | `:1023` |
-| | **Zero to Fifty-Nine Percent** (one scaffolding change swings scheming) | `:1038` |
-| | And the Auditors Miss It (AUROC 0.77; 12% deliberate sabotage) | `:1060` |
-| | Why This Is Not an Ordinary Bug (ordinary software vs an agent) | `:1079` |
-| | What to Ask on Monday (reach · keys · log · gate) | `:1094` |
-| | Today in Five Lines (whole-afternoon recap) | `:1111` |
-| Closer — "Powerful. / Not yet trustworthy." | | `:1127` |
+| Title / This Session | | `:61-92` |
+| **01** — Learning without labels | the bottleneck, removed | `:93-172` |
+| | Labels Are the Bottleneck | `:101` |
+| | **The Answer Key Is Inside the Data** — self-supervision | `:123` |
+| | No Labels at All (`f-clusters.png`) | `:145` |
+| | Which Line of the Recipe Changed | `:156` |
+| **02** — Machines that make things | from recognising to creating | `:173-361` |
+| | Recognise, or Create · Learning What Typical Looks Like | `:181, :208` |
+| | Sampling Is the Product | `:234` |
+| | Start From Static (`f-diffusion-samples.png`) | `:250` |
+| | Add Noise Until Nothing Is Left (`f-noise-strip.png`) | `:261` |
+| | **Then Learn to Undo One Step** — diffusion, in one slide | `:281` |
+| | A Prompt Steers the Undoing · Video Is the Same Trick | `:311, :339` |
+| **03** — Machines that talk | next word, then verified reward | `:362-590` |
+| | Next Word, Over and Over | `:370` |
+| | One Loss, Trillions of Words | `:393` |
+| | Predicting Text Is Not Obeying | `:416` |
+| | First: Show It Good Answers → Then: Which of These Two? | `:439, :461` |
+| | Some Answers Can Be Checked | `:487` |
+| | **The Checker Becomes the Teacher** — RLVR | `:503` |
+| | Think Longer, Do Better | `:531` |
+| | Confident, and Sometimes Wrong | `:555` |
+| | Today in Five Lines | `:575` |
+| Closer — "Powerful. Not yet trustworthy." | | `:591` |
 
-**Key named items:** self-supervised learning and contrastive views (Chen et al.,
-2020); clustering; generative adversarial networks; diffusion and score-based
-generative modelling (Song et al., 2021); next-word pretraining; supervised
-fine-tuning; learning from human preference; **reinforcement learning from
-verifiable reward (RLVR)**; test-time thinking; hallucination; the Jacobian
-conjecture (Ott-Heinrich Keller, 1939) disproved by Fable 5 with Levent Alpöge,
-false in dimension ≥ 3, two dimensions still open; OpenAI's "Ten Advances in
-Mathematics and Theoretical Computer Science" (August 2026, non-sofic groups open
-since 1999, sphere-packing bounds, Lean certificates, peer review pending); the
-July 2026 OpenAI → Hugging Face containment breach; the UK AI Safety Institute
-incident report (28 July 2026); scheming and sabotage evaluations.
+---
 
-**Deliberate omissions here:** no transformer architecture, no attention, no
-tokenisation mechanics, no RL formalism behind RLVR (reward, policy and value
-functions are never named), no diffusion mathematics (no forward SDE, no score
-function), and no named vendors beyond the two the public incidents already
-identify. Prompt engineering and agent tooling are out of scope; the closing
-slide `:1094` is deliberately governance questions, not techniques.
+## Figures
 
-## Status
+`figs/` holds 41 files. Captured from the source PDF for Parts 3–4: `f-hw-scatter`,
+`f-hw-fit`, `f-curve-linear`, `f-curve-quad`, `f-D-linear`, `f-D-poly7`,
+`f-more-data`, `f-triptych`, `f-val-poly6`, `f-val-quad`, `f-gd-contour`,
+`f-clf-boundary`, `f-clf-none`, `f-overkill`. Third-party, cited on-slide:
+`f-landscape` (losslandscape.com), `f-prec-recall` (Wikipedia), `f-clusters`,
+`f-diffusion-samples` (Stability.ai), `f-noise-strip` (Song et al. 2021).
 
-All four decks complete, linted (`lint-deck.py`, `find-wordy.py`, `find-dense.py`)
-and screenshot-audited. Decks were authored one at a time, each committed as it
-landed. Remaining optional work: speaker notes (`<deck>-note.html`) if Albert wants
-them, and a Korean pass.
+Part 1 additions, all licence-checked with the licence named on the slide:
+`f-leesedol.jpg` (LG Electronics, CC BY 2.0), `f-alphago-board.png` (CC BY-SA 4.0),
+`f-metr.png` (METR, CC BY), `f-sd-astronaut.jpg` (SDXL, public domain),
+`f-sora-tokyo.jpg` and `f-sora-mammoth.jpg` (public domain), `f-alphafold2.png`
+(CC BY-SA 4.0), `f-waymo.jpg` (Dllu, CC BY 4.0), `f-canaries.png` (Stanford Digital
+Economy Lab), `f-datacenter.jpg` (CC BY-SA 3.0).
+
+Orphaned by the Day 2 trim, kept so the cut slides can be restored:
+`f-aug-dog`, `f-aug-digit`, `f-gd-small-lr`, `f-gd-large-lr`, `f-gd-init`,
+`f-clf-many`, `f-soft-guess`, `f-roc`, `f-superres`, `f-detection`, `f-semisup`,
+`f-augviews`, `f-gensamples`, `f-gan`, `f-D-linear`/`f-DD-*` variants.
+
+## What the Day 2 trim removed
+
+Part 3: "why squared", "the fitted line", the section-01 summary, the business
+table, "still a weighted sum", the two point-nudge stability slides, "the lesson",
+the generalisation definition, the rules of thumb, both augmentation slides, and all
+of section 04 — double descent, the three dials, scaling laws, balance, the data
+wall, the commercial framing. "The Classic Picture" was kept and moved into
+section 03.
+
+Part 4: the loss recap, the too-small/too-large step pictures, two dials at once,
+where you start, "not a bowl", the section-01 recap, "still a weighted sum", the
+maximum-margin chain (many lines / widest gap / allow mistakes), "probably red,
+certainly blue", the line-plus-squash diagram, the penalty curve, multi-class and
+softmax, "which mistake is cheaper", the threshold sweep and ROC curves, universal
+approximation, and the three application showcases.
+
+Part 5: sections 04 and 05 (now Part 1), "a few labels, many photos", "two views",
+"segments nobody named", "made-up photographs", the GAN detour, "where this already
+pays", "scale bought new behaviour", "where verification is easy". Two slides were
+dropped rather than moved: the 0.77 / 12% auditor-capability slide and the old
+five-line recap.

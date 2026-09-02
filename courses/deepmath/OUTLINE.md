@@ -468,6 +468,8 @@ name. Running example A=[[3,0],[4,5]] carried through SVD → pseudo-inverse →
 norms → EYM; rank-1 sidekick C=[[1,1],[2,2]]; 5×4 rank-2 Netflix toy. Ends
 bridging to opt02 (x = A†b as the least-squares solution, proof next deck).
 
+Companion: `opt01-svd-lowrank/opt01-svd-lowrank-note.html` — detailed definitions, expanded proofs, lemmas, references.
+
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + TOC | 1–2 | opt01-svd-lowrank/opt01-svd-lowrank.html:23 |
@@ -527,6 +529,8 @@ normal equations → orthogonality check → feature map (exact fit) → ridge
 θ_λ=(4/(3+λ), 3/(2+λ)) with the λ=1 crossing. Ends bridging to opt03
 (convexity + gradient descent).
 
+Companion: `opt02-regression-erm/opt02-regression-erm-note.html` — detailed definitions, expanded proofs, lemmas, references.
+
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + TOC | 1–2 | opt02-regression-erm/opt02-regression-erm.html:23 |
@@ -584,6 +588,8 @@ as eigenvalues → sandwich checked at (2,2) (8.5 ≤ 10 ≤ 16) → co-coercivi
 checked (20 ≥ 17) → PL checked → four GD iterations by hand at α = 1/4 →
 measured contraction ratio 0.5625 ≤ 0.6. Ends bridging to opt04 (SGD: keep
 the descent, pay with variance).
+
+Companion: `opt03-convexity-gd/opt03-convexity-gd-note.html` — detailed definitions, expanded proofs, lemmas, references.
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -662,6 +668,8 @@ strongly-convex rewrite L = f + ½θ² (μ=1, G=3), schedule 1/(k+1) makes the
 iterate the running average of sampled c's → bound 30(1+log(k+1))/(k+1)
 vs Thm 2, crossover ≈ 10³. Closes the whole course: 13-deck map,
 what-you-can-now-read, end slide θ_{k+1} = θ_k − α g_k.
+
+Companion: `opt04-sgd/opt04-sgd-note.html` — detailed definitions, expanded proofs, lemmas, references.
 
 | # | Section | Slides | Location |
 |---|---|---|---|

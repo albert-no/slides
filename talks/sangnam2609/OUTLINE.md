@@ -1,4 +1,4 @@
-# sangnam2609/ — Sangnam AI Leader, Week 3 (Sep 2026)
+# sangnam2609/ — Sangnam AI Leader (Sep 2026)
 
 Three-part talk over **two days**, for the Sangnam Institute of Management
 "AI Leader" executive program. Audience is business executives; technical level is
@@ -7,7 +7,7 @@ Concepts, pictures, and stories.
 
 | Slot | Deck | Slides |
 |---|---|---|
-| **Day 1, part 1** (1 h) | `sangnam1-ai-today.html` | 63 |
+| **Day 1, part 1** (1 h) | `sangnam1-ai-today.html` | 64 |
 | **Day 1, part 2** (1 h) | `sangnam2-what-is-learning.html` | 52 |
 | **Day 2** (1.5 h) | `sangnam3-linear-regression-and-overfitting.html` | 33 |
 | | `sangnam4-training-and-classification.html` | 36 |
@@ -19,7 +19,7 @@ to fit 90 minutes — the cut list is at the bottom of this file, and every cut 
 is recoverable from git history (`git log --oneline talks/sangnam2609/`).
 
 Parts 2–5 were rewritten (not ported) from Albert's source deck
-(상남경영원 AI Leader 26-1, week 3, 141 pages). Deliberately absent from the whole
+(상남경영원 AI Leader 26-1, 141 pages). Deliberately absent from the whole
 series: normal equations and the closed-form least-squares solve, cross-validation,
 regularization, the momentum/RMSProp/ADAM/LR-schedule block, and the
 perceptron/LP/margin/SVM/hinge/kernel chain.
@@ -29,10 +29,10 @@ perceptron/LP/margin/SVM/hinge/kernel chain.
 | Topic | Deck |
 |---|---|
 | What AI can do today, and what it costs | Part 1 |
-| AI in mathematics (conjectures, Erdős problems, IMO) | Part 1 `:435-674` |
-| Copyright and the lawsuits | Part 1 `:756-874` |
-| The July 2026 Hugging Face / OpenAI incident | Part 1 `:875-1074` |
-| Regulation, power, and what to ask on Monday | Part 1 `:1076-1168` |
+| AI in mathematics (conjectures, Erdős problems, IMO) | Part 1 `:447-696` |
+| Copyright and the lawsuits | Part 1 `:801-921` |
+| The July 2026 Hugging Face / OpenAI incident | Part 1 `:922-1138` |
+| Regulation, power, and what to ask on Monday | Part 1 `:1139-1231` |
 | $y = f(x)$, features, labels, the four-line recipe | Part 2 |
 | Loss, fitting, overfitting, validation | Part 3 |
 | Gradient descent, classification, probabilities, deep nets | Part 4 |
@@ -46,63 +46,67 @@ new showcase. Keep that split when editing either.
 
 ## sangnam1-ai-today.html — Day 1, part 1
 
-63 slides. Every claim on a dated public source; every figure publicly licensed and
+64 slides. Every claim on a dated public source; every figure publicly licensed and
 cited on-slide. Ten captured figures, the rest inline SVG, tables, and cards.
-Extra CSS local to this deck: `.sn-side` (photo beside bullets) and `.sn-quote`
-(attributed blockquote) at `:56-68`.
+Extra CSS local to this deck: `.sn-a` (accent inline link to a video or source) at
+`:42-44`, `.sn-side` (photo beside bullets) at `:60-65`, `.sn-quote` (attributed
+blockquote) at `:67-73`.
 
 | Part | Topic | Line |
 |---|---|---|
-| Title / This Session | | `:75-114` |
-| **01** — Three years, one curve | how fast this actually moved | `:115-251` |
-| | Ten Years Ago in Seoul (`f-leesedol.jpg`) | `:123` |
-| | The Move Nobody Played (`f-alphago-board.png`) | `:139` |
-| | A Billion People a Week (adoption numbers) | `:170` |
-| | The Tasks Are Getting Longer (`f-metr.png`, METR TH 1.1) | `:206` |
-| | This Hour, Two Columns (the deck's own frame) | `:233` |
-| **02** — What it can already do | code, pictures, science, mathematics, work | `:252-755` |
-| | The Benchmark Nobody Believed (SWE-bench 2 → 94%) | `:289` |
-| | What the Companies Say (Nadella / Pichai / Benioff) | `:315` |
-| | What It Still Cannot Do | `:328` |
-| | Type a Sentence, Get a Photograph (`f-sd-astronaut.jpg`) | `:343` |
-| | Now It Moves · And It Has a Soundtrack (`f-sora-*.jpg`) | `:355, :367` |
-| | You Cannot Tell Any More (the $25M deepfake call) | `:383` |
-| | Two Hundred Million Proteins (`f-alphafold2.png`) | `:403` |
-| | No Driver, Paying Passengers (`f-waymo.jpg`) | `:419` |
-| | **An Eighty-Seven-Year-Old Guess** — Jacobian/Keller | `:435` |
-| | Disproved in 216 Characters | `:461` |
-| | Erdős Problems Are Falling (#397, #728, #729, #1196, #1051) | `:489` |
-| | Gold at the Olympiad (IMO 2025, 35/42) | `:503` |
-| | Hard to Find, Easy to Check | `:524` |
-| | Ten Results in One Report · Two Thousand Dollars of Tokens | `:547, :562` |
-| | Proof a Computer Can Check (Lean) · Not Yet Peer-Reviewed | `:581, :607` |
-| | What a Mathematician Warns (Tao's long tail) | `:633` |
-| | Four Thousand Support Roles · The Young Are Hit First (`f-canaries.png`) | `:693, :714` |
-| | Tasks, Not Jobs | `:741` |
-| **03** — Who owns the training data | the lawsuits, and the first big bill | `:756-874` |
-| | Every Model Ate a Library | `:764` |
-| | **The First Big Bill** — Bartz v. Anthropic, $1.5B | `:790` |
-| | What the Judge Actually Said (Alsup, both halves) | `:811` |
-| | The Rest of the Docket · Or Sign a Deal Instead | `:830, :843` |
-| **04** — When it goes wrong | two incidents from this summer | `:875-1074` |
-| | The Other Column (same capability, pointed elsewhere) | `:883` |
-| | July 2026: An Attack Nobody Ordered (timeline) | `:902` |
-| | Two and a Half Days Inside · It Came Back After the Fix | `:916, :943` |
-| | Found Out Sideways (Hugging Face called it in) | `:969` |
-| | Two Sentences Worth Keeping (Hobbhahn, Wildeford) | `:985` |
-| | Zero to Fifty-Nine Percent (harness, not model) | `:1017` |
-| | Made-Up Citations, Real Sanctions (1,598 filings) | `:1055` |
-| **05** — Society is behind | rules, power, Monday morning | `:1076-1168` |
-| | Two Curves, Different Slopes | `:1084` |
-| | Korea's Rules Arrived in January (AI Basic Act) | `:1105` |
-| | The Power Bill (`f-datacenter.jpg`, IEA) | `:1121` |
-| | What to Ask on Monday · Today in Six Lines | `:1137, :1154` |
-| Closer — "Extraordinary. / And unfinished." | | `:1169` |
+| Title / This Session | | `:79-118` |
+| **01** — Three years, one curve | how fast this actually moved | `:119-255` |
+| | Ten Years Ago in Seoul (`f-leesedol.jpg`) | `:127` |
+| | The Move Nobody Played (`f-alphago-board.png`) | `:143` |
+| | A Billion People a Week (adoption numbers) | `:174` |
+| | The Tasks Are Getting Longer (`f-metr.png`, METR TH 1.1) | `:210` |
+| | This Hour, Two Columns (the deck's own frame) | `:237` |
+| **02** — What it can already do | code, pictures, science, mathematics, work | `:256-800` |
+| | The Benchmark Nobody Believed (SWE-bench 2 → 94%) | `:293` |
+| | What the Companies Say (Nadella / Pichai / Benioff) | `:319` |
+| | What It Still Cannot Do (four concrete failures) | `:332` |
+| | Type a Sentence, Get a Photograph (`f-sd-astronaut.jpg`) | `:347` |
+| | Now It Moves · And It Has a Soundtrack (`f-sora-*.jpg`, both link the clip) | `:359, :372` |
+| | You Cannot Tell Any More (the $25M Arup deepfake call) | `:389` |
+| | Two Hundred Million Proteins (`f-alphafold2.png`) | `:415` |
+| | No Driver, Paying Passengers (`f-waymo.jpg`) | `:431` |
+| | **An Eighty-Seven-Year-Old Guess** — Jacobian/Keller, in plain words | `:447` |
+| | Disproved in 216 Characters | `:478` |
+| | What Is an Erdős Problem? (1,220 catalogued, 47% solved) | `:506` |
+| | Erdős Problems Are Falling (#397, #728, #729, #1196, #1051) | `:532` |
+| | Gold at the Olympiad (IMO 2025, 35/42) | `:547` |
+| | Hard to Find, Easy to Check | `:568` |
+| | Ten Results in One Report (why each matters) · Two Thousand Dollars of Tokens | `:591, :607` |
+| | Proof a Computer Can Check (Lean) · Not Yet Peer-Reviewed | `:626, :652` |
+| | What a Mathematician Warns (Tao's long tail) | `:678` |
+| | Four Thousand Support Roles · The Young Are Hit First (`f-canaries.png`) | `:738, :759` |
+| | Reading That Plot Too · Tasks, Not Jobs | `:770, :786` |
+| **03** — Who owns the training data | the lawsuits, and the first big bill | `:801-921` |
+| | Every Model Ate a Library | `:809` |
+| | **The First Big Bill** — Bartz v. Anthropic, $1.5B | `:835` |
+| | What the Judge Actually Said (Alsup, both halves) | `:856` |
+| | The Rest of the Docket (four named cases) · Or Sign a Deal Instead | `:875, :889` |
+| **04** — When it goes wrong | two incidents from this summer | `:922-1138` |
+| | The Other Column (same capability, pointed elsewhere) | `:930` |
+| | July 2026: An Attack Nobody Ordered (timeline) | `:949` |
+| | Two and a Half Days Inside · It Came Back After the Fix | `:963, :990` |
+| | Found Out Sideways (the revoke request that gave it away) | `:1016` |
+| | Two Sentences Worth Keeping (Hobbhahn, Wildeford) | `:1033` |
+| | A Second Case, a Different Lab (UK AISI, 122/19/1) | `:1050` |
+| | Fifty-Nine Percent, or Three (harness, not model) | `:1076` |
+| | Made-Up Citations, Real Sanctions (1,598 filings) | `:1118` |
+| **05** — Society is behind | rules, power, Monday morning | `:1139-1231` |
+| | Two Curves, Different Slopes | `:1147` |
+| | Korea's Rules Arrived in January (AI Basic Act) | `:1168` |
+| | The Power Bill (`f-datacenter.jpg`, IEA) | `:1184` |
+| | What to Ask on Monday · Today in Six Lines | `:1200, :1217` |
+| Closer — "Extraordinary. / And unfinished." | | `:1232` |
 
 Post-cutoff facts (2026 events) are the fragile part of this deck. Before delivery,
-re-check: adoption numbers `:170`, SWE-bench `:289`, the Erdős table `:489`, the
-OpenAI report `:547`, the settlement's final approval `:790`, and the hallucination
-count `:1055`.
+re-check: adoption numbers `:174`, SWE-bench `:293`, the Erdős counts `:506` and the
+Erdős table `:532`, the OpenAI report `:591`, the settlement's final approval `:835`,
+the AISI incident numbers `:1050`, the scheming figures `:1076`, and the hallucination
+count `:1118`.
 
 ---
 

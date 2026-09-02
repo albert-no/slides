@@ -9,7 +9,7 @@ Concepts, pictures, and stories.
 |---|---|---|
 | **Day 1, part 1** (1 h) | `sangnam1-ai-today.html` | 64 |
 | **Day 1, part 2** (1 h) | `sangnam2-what-is-learning.html` | 53 |
-| **Day 2** (1.5 h) | `sangnam3-linear-regression-and-overfitting.html` | 33 |
+| **Day 2** (1.5 h) | `sangnam3-linear-regression-and-overfitting.html` | 32 |
 | | `sangnam4-training-and-classification.html` | 36 |
 | | `sangnam5-frontier.html` | 28 |
 
@@ -166,7 +166,7 @@ pointing at the recipe. Do not reword it without following through.
 
 ## sangnam3-linear-regression-and-overfitting.html — Day 2, part 3
 
-33 slides. Twelve captured plots from the source PDF carry sections 01–03; the rest
+32 slides. Twelve captured plots from the source PDF carry sections 01–03; the rest
 is inline SVG and two tables. No closed-form solve anywhere — training is search.
 
 | Part | Topic | Line |
@@ -180,24 +180,24 @@ is inline SVG and two tables. No closed-form solve anywhere — training is sear
 | | Measure Every Miss (`f-hw-fit.png`) | `:187` |
 | | **One Number for the Whole Dataset** — mean squared error | `:216` |
 | | Training Is Turning the Dials · What the Dials Tell You | `:229, :252` |
-| **02** — More columns, more shapes | features do the bending | `:271-362` |
-| | Two Inputs Instead of One · Many Inputs, Same Shape | `:279, :303` |
-| | A Straight Line Cannot Bend (`f-curve-linear.png`) | `:317` |
-| | Give It a Curved Column (`f-curve-quad.png`) | `:328` |
-| | You Can Always Add Columns (sets up overfitting) | `:339` |
-| **03** — Overfitting | memorising is not learning | `:363-576` |
-| | Ten Points, One Line (`f-D-linear.png`) | `:371` |
-| | A Curve Through Every Point (`f-D-poly7.png`) | `:382` |
-| | Three Fits, Same Data (`f-triptych.png`) | `:393` |
-| | **Two Ways to Be Wrong** — bias and variance | `:404` |
-| | More Data Tames It (`f-more-data.png`) | `:423` |
-| | You Cannot Just Look · Hold Some Data Back | `:434, :458` |
-| | Perfect on Train, Lost Elsewhere (`f-val-poly6.png`) | `:479` |
-| | Train, Validation, Test | `:490` |
-| | The Classic Picture (train vs validation vs model size) | `:513` |
-| | Prefer the Simpler Story (Occam) · If You Are Overfitting | `:536, :565` |
-| | Today in Four Lines | `:577` |
-| Closer — "Fit the pattern, not the noise." | | `:589` |
+| **02** — More columns, more shapes | features do the bending | `:271-366` |
+| | Many Inputs, Same Shape (columns → weights → one number) | `:279` |
+| | A Straight Line Cannot Bend (`f-curve-linear.png`) | `:321` |
+| | Give It a Curved Column (`f-curve-quad.png`) | `:332` |
+| | You Can Always Add Columns (sets up overfitting) | `:343` |
+| **03** — Overfitting | memorising is not learning | `:367-580` |
+| | Ten Points, One Line (`f-D-linear.png`) | `:375` |
+| | A Curve Through Every Point (`f-D-poly7.png`) | `:386` |
+| | Three Fits, Same Data (`f-triptych.png`) | `:397` |
+| | **Two Ways to Be Wrong** — bias and variance | `:408` |
+| | More Data Tames It (`f-more-data.png`) | `:427` |
+| | You Cannot Just Look · Hold Some Data Back | `:438, :462` |
+| | Perfect on Train, Lost Elsewhere (`f-val-poly6.png`) | `:483` |
+| | Train, Validation, Test | `:494` |
+| | The Classic Picture (train vs validation vs model size) | `:517` |
+| | Prefer the Simpler Story (Occam) · If You Are Overfitting | `:540, :569` |
+| | Today in Four Lines | `:581` |
+| Closer — "Fit the pattern, not the noise." | | `:593` |
 
 ---
 

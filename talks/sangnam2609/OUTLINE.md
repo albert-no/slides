@@ -8,7 +8,7 @@ Concepts, pictures, and stories.
 | Slot | Deck | Slides |
 |---|---|---|
 | **Day 1, part 1** (1 h) | `sangnam1-ai-today.html` | 64 |
-| **Day 1, part 2** (1 h) | `sangnam2-what-is-learning.html` | 52 |
+| **Day 1, part 2** (1 h) | `sangnam2-what-is-learning.html` | 53 |
 | **Day 2** (1.5 h) | `sangnam3-linear-regression-and-overfitting.html` | 33 |
 | | `sangnam4-training-and-classification.html` | 36 |
 | | `sangnam5-frontier.html` | 28 |
@@ -112,8 +112,8 @@ count `:1118`.
 
 ## sangnam2-what-is-learning.html — Day 1, part 2
 
-52 slides. Almost no notation: only $x$, $y$, $f$, $g$, and one squared-error line.
-Every content slide carries an exhibit — four captured figures, twelve inline SVG
+53 slides. Almost no notation: only $x$, $y$, $f$, $g$, and one squared-error line.
+Every content slide carries an exhibit — four captured figures, thirteen inline SVG
 diagrams, three tables, three mock UI cards.
 
 | Part | Topic | Line |
@@ -136,7 +136,7 @@ diagrams, three tables, three mock UI cards.
 | | A Customer Is a Row (churn table) | `:362` |
 | | **Naming the Parts, Six Times** — $x$/$y$ per product | `:375` |
 | | Three Shapes of Answer · Why This Matters Commercially | `:407, :430` |
-| **03** — Where the function comes from | rules out, data in | `:445-776` |
+| **03** — Where the function comes from | rules out, data in | `:445-804` |
 | | The Old Way — Write the Rules (SVG rule tree) | `:453` |
 | | What Defines the Digit Zero? · Why Rules Run Out | `:480, :494` |
 | | **Learning, Defined in 1959** (Samuel) | `:515` |
@@ -144,21 +144,22 @@ diagrams, three tables, three mock UI cards.
 | | The Function We Wish We Had · We Only See Examples | `:552, :575` |
 | | Training Builds a Look-Alike | `:589` |
 | | Which Look-Alikes Are Allowed? (function class) | `:623` |
-| | "Close" Everywhere Is Impossible → on Our Examples | `:638, :651` |
-| | Scoring a Single Guess · Averaging Over Everyone | `:664, :678` |
-| | **The Recipe** — the four lines the series returns to | `:692` |
-| | Searching Means Turning Dials | `:709` |
-| | Somebody Made Those Labels · The Model Inherits Your Data | `:729, :744` |
-| | Two Flavours of Answer (regression / classification) | `:757` |
-| **04** — Reading the recipe | same three lines, every product | `:777-916` |
-| | Recipe — Spam · Demand · Defect | `:785, :800, :815` |
-| | Four More, Same Three Lines · The Recipe Is the Field | `:830, :843` |
-| | Three Questions Left Open | `:856` |
-| | Patterns, Not Reasons · Patterns Go Stale | `:869, :882` |
-| | **Day 2: What Comes Next** (roadmap to Parts 3–5) | `:897` |
-| Closer — "A function." | | `:917` |
+| | What $a\,x + b$ Looks Like (scatter + fitted line, $a$/$b$ labelled) | `:638` |
+| | "Close" Everywhere Is Impossible → on Our Examples | `:666, :679` |
+| | Scoring a Single Guess · Averaging Over Everyone | `:692, :706` |
+| | **The Recipe** — the four lines the series returns to | `:720` |
+| | Searching Means Turning Dials | `:737` |
+| | Somebody Made Those Labels · The Model Inherits Your Data | `:757, :772` |
+| | Two Flavours of Answer (regression / classification) | `:785` |
+| **04** — Reading the recipe | same three lines, every product | `:805-944` |
+| | Recipe — Spam · Demand · Defect | `:813, :828, :843` |
+| | Four More, Same Three Lines · The Recipe Is the Field | `:858, :871` |
+| | Three Questions Left Open | `:884` |
+| | Patterns, Not Reasons · Patterns Go Stale | `:897, :910` |
+| | **Day 2: What Comes Next** (roadmap to Parts 3–5) | `:925` |
+| Closer — "A function." | | `:945` |
 
-`:692` is the load-bearing slide of the whole series: Parts 3, 4 and 5 all open by
+`:720` is the load-bearing slide of the whole series: Parts 3, 4 and 5 all open by
 pointing at the recipe. Do not reword it without following through.
 
 ---

@@ -9,6 +9,16 @@ proof overview → proof details → proof summary → implication. Motivation s
 Decks live at `courses/deepmath/<deck>/<deck>.html` (reference path `../../../reference/`).
 Shared source images in `figs/`.
 
+**Accessible editions.** Every deck's speaker note also ships as a screen-reader Markdown
+edition at `<deck>/<deck>-note.md` (13 files, ~12.8k lines total). These are written for a
+blind student who reads through a Markdown-to-braille/speech converter, so they follow a
+fixed contract: plain ASCII only (no smart quotes, em dashes, Unicode math or diacritics),
+all math in LaTeX (`$…$` inline, `$$…$$` display with `\tag{}` for numbered equations),
+every figure replaced by a verbal description, every table linearised into bullets with an
+explicit legend, and no reference to the slides or the visual layout — each file stands
+alone. Section numbering matches the HTML note it derives from. When a note changes, its
+`.md` edition must change in the same edit.
+
 **Cross-folder overlap** (this course is the *undergrad math-foundations* treatment —
 differentiate, don't duplicate): entropy/KL/MI/Fano have a grad-level treatment in
 `courses/infotheory/lectures/01-entropy/`; differential entropy + MaxEnt Gaussian in
@@ -44,6 +54,7 @@ Dropped from source by request: operator theory (opt 1603–1761), acceleration/
 Lecture 1 — defines everything from scratch; ends on a bridge to prob02 (wrong
 distribution → cross-entropy/KL).
 Companion: `prob01-foundations/prob01-foundations-note.html` — detailed definitions, expanded proofs, lemmas, references.
+Accessible edition: `prob01-foundations/prob01-foundations-note.md` — screen-reader Markdown edition of that note (803 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -74,6 +85,7 @@ Lecture 2 — answers prob01's teaser (wrong distribution Q); recalls entropy/Je
 from prob01 instead of redefining; ends on a bridge to prob03 (two RVs → mutual
 information).
 Companion: `prob02-kl-crossentropy/prob02-kl-crossentropy-note.html` — detailed definitions, expanded proofs, lemmas, references.
+Accessible edition: `prob02-kl-crossentropy/prob02-kl-crossentropy-note.md` — screen-reader Markdown edition of that note (763 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -107,6 +119,7 @@ Lecture 3 — answers prob02's teaser (two RVs); recalls entropy from prob01 and
 from prob02 instead of redefining; ends on a bridge to prob04 (sequences in time →
 Markov processes).
 Companion: `prob03-mutual-information/prob03-mutual-information-note.html` — detailed definitions, expanded proofs, lemmas, references.
+Accessible edition: `prob03-mutual-information/prob03-mutual-information-note.md` — screen-reader Markdown edition of that note (1285 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -151,6 +164,7 @@ of many draws → concentration).
 
 Companion: `prob04-random-processes/prob04-random-processes-note.html` — detailed
 definitions, expanded proofs, lemmas, references.
+Accessible edition: `prob04-random-processes/prob04-random-processes-note.md` — screen-reader Markdown edition of that note (1222 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -196,6 +210,7 @@ example (mean of n fair coin flips, Pr(X̄_n ≥ 3/4)) is re-answered by every b
 ends on a bridge to prob06 (tail bounds uniform over a hypothesis class → Hoeffding
 + union bound).
 Companion: `prob05-concentration/prob05-concentration-note.html` — detailed definitions, expanded proofs, lemmas, references.
+Accessible edition: `prob05-concentration/prob05-concentration-note.md` — screen-reader Markdown edition of that note (1180 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -248,6 +263,7 @@ running example (Pr(X̄₁₀₀ ≥ 3/4)) returns to benchmark Hoeffding agains
 likelihood, MLE/MAP, bias–variance).
 
 Companion: `prob06-generalization/prob06-generalization-note.html` — detailed definitions, expanded proofs, lemmas, references.
+Accessible edition: `prob06-generalization/prob06-generalization-note.md` — screen-reader Markdown edition of that note (1131 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -301,6 +317,7 @@ a bridge to prob08 (the Gaussian everywhere → multivariate Gaussian, linear
 E[X|Y]).
 
 Companion: `prob07-estimation/prob07-estimation-note.html` — detailed definitions, expanded proofs, lemmas, references.
+Accessible edition: `prob07-estimation/prob07-estimation-note.md` — screen-reader Markdown edition of that note (1538 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -361,6 +378,7 @@ forward process + Gaussian reverse-step form, no variational objective); ends on
 bridge to prob09 (integrals stop closing → Monte Carlo).
 
 Companion: `prob08-gaussian/prob08-gaussian-note.html` — detailed definitions, expanded proofs, lemmas, references.
+Accessible edition: `prob08-gaussian/prob08-gaussian-note.md` — screen-reader Markdown edition of that note (1534 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -417,6 +435,7 @@ probability half (prob01–prob09 recap map) and bridging to opt01 (SVD & least
 squares — the optimization half).
 
 Companion: `prob09-monte-carlo/prob09-monte-carlo-note.html` — detailed definitions, expanded proofs, lemmas, references.
+Accessible edition: `prob09-monte-carlo/prob09-monte-carlo-note.md` — screen-reader Markdown edition of that note (704 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -469,6 +488,7 @@ norms → EYM; rank-1 sidekick C=[[1,1],[2,2]]; 5×4 rank-2 Netflix toy. Ends
 bridging to opt02 (x = A†b as the least-squares solution, proof next deck).
 
 Companion: `opt01-svd-lowrank/opt01-svd-lowrank-note.html` — detailed definitions, expanded proofs, lemmas, references.
+Accessible edition: `opt01-svd-lowrank/opt01-svd-lowrank-note.md` — screen-reader Markdown edition of that note (732 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -530,6 +550,7 @@ normal equations → orthogonality check → feature map (exact fit) → ridge
 (convexity + gradient descent).
 
 Companion: `opt02-regression-erm/opt02-regression-erm-note.html` — detailed definitions, expanded proofs, lemmas, references.
+Accessible edition: `opt02-regression-erm/opt02-regression-erm-note.md` — screen-reader Markdown edition of that note (467 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -590,6 +611,7 @@ measured contraction ratio 0.5625 ≤ 0.6. Ends bridging to opt04 (SGD: keep
 the descent, pay with variance).
 
 Companion: `opt03-convexity-gd/opt03-convexity-gd-note.html` — detailed definitions, expanded proofs, lemmas, references.
+Accessible edition: `opt03-convexity-gd/opt03-convexity-gd-note.md` — screen-reader Markdown edition of that note (722 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -670,6 +692,7 @@ vs Thm 2, crossover ≈ 10³. Closes the whole course: 13-deck map,
 what-you-can-now-read, end slide θ_{k+1} = θ_k − α g_k.
 
 Companion: `opt04-sgd/opt04-sgd-note.html` — detailed definitions, expanded proofs, lemmas, references.
+Accessible edition: `opt04-sgd/opt04-sgd-note.md` — screen-reader Markdown edition of that note (681 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|

@@ -32,7 +32,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 
 | Wk | File | Topic | Status |
 |---|---|---|---|
-| 1 | `lec01-introduction.html` | Introduction & threat-model thinking | **revised 2026-08** (35 sl) |
+| 1 | `lec01-introduction.html` | Introduction & threat-model thinking | **revised 2026-09** (46 sl, ~40 min) |
 | 2 | `lec02-privacy-dp.html` | Privacy & differential privacy | **revised 2026-08** (84 sl) |
 | 3 | `lec03-mia.html` | Membership inference attacks | **revised 2026-08** (63 sl) |
 | 4 | `lec04-memorization.html` | Memorization & training-data extraction | **revised 2026-08** (58 sl) |
@@ -128,53 +128,79 @@ When drafting a stub, read the corresponding leaf `OUTLINE.md` there first and
 
 ## lec01-introduction.html
 
-**Topic:** Course overview (~30 min). What "trustworthy" means; AI fails differently
-than software; the six trust dimensions; threat-model thinking (knowledge × timing);
-the course map — fifteen topics in four groups (content areas, not a fixed timetable);
-how the course works. Sets the vocabulary used all term.
+**Topic:** Motivational course overview (~40 min). Capability outran trust; a long
+examples-first middle (one real incident per trust dimension, balanced across fairness,
+privacy, reliability, robustness, security, safety, provenance, data ownership, society);
+why learned systems fail differently; the seven trust dimensions; threat-model thinking
+(who / knows / can do; knowledge × timing); the trust stack and the fifteen-topic map.
+Sets the vocabulary used all term.
 
-### Sections (35 slides, ~30 min — trimmed 2026-08 from 47, all incidents source-verified)
+### Sections (46 slides, ~40 min — rebuilt 2026-09 from the 35-slide 2026-08 deck; "scary examples" imported from `talks/sangnam2609/sangnam1-ai-today.html`)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
-| Title / Contents | 1–2 | `:27`, `:39` | |
-| **01 — Why Trust?** | 3–12 | `:68` | COMPAS `:91` · Amazon `:105` · Mata v. Avianca + Deloitte 2025 `:120` · Air Canada + $1 car `:138` · memorization `:156` · deepfake robocall `:170` · EchoLeak prompt injection `:183` · the pattern `:197` |
-| **02 — How AI Fails Differently** | 13–17 | `:212` | SW vs learned `:220` · **panda→gibbon image** `:238` · three failure sources `:248` · **six trust dimensions** `:260` |
-| **03 — Threat-Model Thinking** | 18–22 | `:275` | **What is a threat model (+adversary SVG)** `:284` · knowledge × timing merged 2×2 grid `:314` · **attack map 2×2 (SVG)** `:340` · no threat model, no answer `:366` |
-| **04 — Trust Stack & Course Map** | 23–30 | `:381` | **trust stack (layered SVG)** `:390` · course at a glance (4 topic-group cards) `:413` · Group 1–4 previews `:428`–`:464` · 2025–26 themes `:476` |
-| **05 — How We'll Work** | 31–34 | `:489` | concepts not proofs `:498` · optional demos & supplements `:515` · the goal `:531` |
-| Closer | 35 | `:543` | |
+| Title / Contents | 1–2 | `:45`, `:57` | title "Can We Trust It?" |
+| **01 — The Gap** | 3–6 | `:86` | **METR task-length plot** `:94` · AI decides real outcomes `:105` · two curves SVG `:120` |
+| **02 — When It Goes Wrong** | 7–32 | `:143` | *fairness* COMPAS bars SVG `:151` · Gender Shades table `:182` · Amazon pipeline SVG `:195` · *privacy* GPT-2 extraction `:225` · "poem" divergence SVG `:240` · Samsung + Garante `:270` · *reliability* Avianca + Deloitte fake-citation card `:306` · Charlotin 1,598 filings `:338` · Air Canada + $1 car chat bubbles `:360` · sycophancy (Sharma Fig. 5) `:390` · *robustness* panda→gibbon `:406` · stop-sign stickers `:417` · *security* Base64 jailbreak `:432` · EchoLeak SVG `:444` · *safety* Uber Tempe `:475` · July 2026 escaped agent timeline `:491` · it came back `:508` · 59% vs 3% scheming `:540` · *provenance* Pope puffer `:566` · Sora frame + NH robocall `:581` · Arup $25M `:596` · *data* Bartz $1.5B SVG `:618` · *society* Canaries plot `:648` · EU pyramid + Korea AI Basic Act `:663` · **the pattern (7-row table)** `:691` |
+| **03 — Why AI Fails Differently** | 33–36 | `:708` | SW vs learned SVG `:716` · three sources SVG `:751` · **seven dimensions** `:783` |
+| **04 — Threat-Model Thinking** | 37–40 | `:800` | **what is a threat model (+adversary SVG, EchoLeak worked example)** `:808` · **attack map 2×2 SVG** `:845` · no threat model, no answer (59/3 + panda/stop sign) `:872` |
+| **05 — This Course** | 41–45 | `:896` | **trust stack SVG** `:904` · course at a glance (4 group cards) `:930` · concepts first, demos optional `:944` · the goal (headline→property→threat flow SVG) `:964` |
+| Closer | 46 | `:999` | "Trust?" |
 
-**Visuals:** real image — panda→gibbon adversarial example (`figs/panda-gibbon.png`,
-Goodfellow, Shlens, Szegedy, ICLR 2015, Figure 1; confidences 57.7%→99.3% verified
-against the paper) `:241`. SVG — adversary↔system threat diagram `:296`, attack-map
-2×2 `:344`, layered trust-stack `:394`. (15-week timeline SVG removed in the 2026-08
-trim: topics are presented as content areas, not a schedule.)
-**Key citations (all source-verified 2026-08):** Angwin et al., ProPublica 2016
-(COMPAS) · Dastin, Reuters 2018 (Amazon) · Mata v. Avianca, S.D.N.Y. 2023 ·
-Deloitte Australia / DEWR partial refund, Oct 2025 · Moffatt v. Air Canada, 2024
-BCCRT 149 · Carlini et al., USENIX Security 2021 + Nasr et al. 2023 (extraction) ·
-EchoLeak CVE-2025-32711 (M365 Copilot, June 2025).
+**Visuals (real images, all in `figs/`):** `metr-task-length.png` (METR Time Horizon 1.1,
+Jan 2026, CC BY) `:99` · `gender-shades.png` (Buolamwini & Gebru 2018, Table 4) `:188` ·
+`gpt2-extraction.png` (Carlini et al. 2021, Fig. 1; source PNG is cropped at the bottom)
+`:230` · `sharma-sycophancy.png` (Sharma et al. ICLR 2024, Fig. 5) `:395` ·
+`panda-gibbon.png` (Goodfellow et al. 2015, Fig. 1) `:411` · `eykholt-stopsign.png`
+(Eykholt et al. CVPR 2018, Fig. 1) `:422` · `wei-jailbroken.png` (Wei et al. NeurIPS 2023,
+Fig. 1) `:438` · `uber-tempe-ntsb.jpg` (NTSB, public domain, via Commons) `:480` ·
+`pope-puffer-midjourney.jpg` (AI-generated, PD, via Commons) `:571` · `sora-tokyo.jpg`
+(OpenAI Sora "Tokyo Walk", PD, via Commons) `:586` · `canaries-22-25.png` (Stanford
+Digital Economy Lab, Fig. 2) `:653`. **SVG diagrams:** two curves `:126`, COMPAS bars
+`:158`, Amazon pipeline `:201`, poem divergence `:246`, you⇄model data flow `:286`, fake
+citation card `:322`, chat bubbles `:376`, EchoLeak flow `:450`, patched-route `:514`,
+59%/3% bars `:546`, library→model `:624`, EU risk pyramid `:669`, SW vs learned `:722`,
+three sources `:757`, adversary↔system `:822`, attack map `:851`, trust stack `:910`,
+headline→question flow `:976`.
+
+**Key citations:** Angwin et al., ProPublica 2016 (COMPAS) · Buolamwini & Gebru, FAT* 2018
+· Dastin, Reuters 2018 (Amazon) · Carlini et al., USENIX Sec 2021 + Nasr et al. 2023
+(extraction) · Bloomberg May 2023 (Samsung) + Garante order 30 Mar 2023 · Mata v. Avianca,
+S.D.N.Y. 2023 · Deloitte/DEWR Oct 2025 · Charlotin, AI Hallucination Cases, June 2026 ·
+Moffatt v. Air Canada, 2024 BCCRT 149 · Sharma et al. ICLR 2024 + OpenAI Apr 2025 (GPT-4o
+rollback) · Goodfellow et al. ICLR 2015 · Eykholt et al. CVPR 2018 · Wei et al. NeurIPS 2023
+· EchoLeak CVE-2025-32711 · NTSB HWY18MH010 · OpenAI / Hugging Face July 2026 incident
+(via TIME 24 Jul 2026) · arXiv 2603.01608 (scheming) · Midjourney Pope, Mar 2023 · NH
+robocall FCC orders 2024 · Arup deepfake, HK police Feb 2024 · Bartz v. Anthropic, N.D.
+Cal. 2025 · Brynjolfsson, Chandar & Chen, "Canaries" 2025–26 · Regulation (EU) 2024/1689 ·
+Korea AI Basic Act (eff. 2026-01-22).
+
+**Fragile facts (post-knowledge-cutoff, imported from sangnam1 — re-verify before
+teaching):** July 2026 OpenAI/Hugging Face escaped-evaluation incident (dates, 2.5 days,
+4 accounts) `:491`–`:538`; scheming paper arXiv 2603.01608 (59% vs 3%) `:540`; Charlotin
+counts 1,598 / $145k / 15 (9 June 2026 snapshot) `:338`; Korea AI Basic Act details `:663`.
+sangnam1 dates the Canaries paper "August 2026"; the original working paper is August
+2025, so the slide cites "2025–26" `:648`. The note file marks the same entries
+"post-cutoff".
+
 **Key framing:** threat model = *who* / *what they know* (white/black-box) / *what they
-can do* (train/inference-time); the 2×2 locates every attack. Examples-first: real
-incidents in §01 anchor the six trust dimensions. Citations use `.cite-left`. Page
-number: bold `.slide-num` only.
+can do* (train/inference-time); "a safety number describes a deployment, not a model"
+(59% vs 3%) motivates section 04. Seven dimensions (fairness, privacy, reliability,
+robustness, security, safety, provenance) + transparency; the 2026-08 deck had six.
+Citations use `.cite-left`; one exhibit per slide.
 
-**2026-08 trim (47→35):** week-by-week schedule slides, 15-week timeline SVG,
-medical-LLM worked example, house analogy, black-box slide, "failure lives in the
-weights", "bigger models new surprises", "dimensions interact" cut or merged; the
-white/black-box and train/inference slides merged into one knowledge×timing grid;
-Bing "Sydney" bullet deleted (unverifiable as prompt injection), replaced by
-verified EchoLeak 2025; Deloitte 2025 incident added. Note file synced (35 entries).
+**2026-09 rebuild (35→46):** added METR plot, Gender Shades, "poem" split-out,
+Samsung/Garante, Charlotin, sycophancy, stop sign, Base64 jailbreak, Uber Tempe, July
+2026 escaped agent (2 slides), scheming, Pope puffer, Arup, Bartz, Canaries, EU/Korea
+rules; cut Group 1–4 preview slides, "What's New in 2025–26", "How We'll Work" divider
+(folded into one slide), knowledge×timing grid (merged into the attack map). Note file
+re-synced to 46 entries (590 lines): old `.detail` blocks reused verbatim, new
+backgrounds with primary links for every added incident, Group 1–4 previews preserved
+under "The Course at a Glance". `lec01tech.html` untouched.
 
-**2026-08 note enrichment:** `lec01-introduction-note.html` upgraded from speaker
-script to **script + companion notes** (227→443 lines; 35 entries unchanged).
-Per-entry `.detail` blocks add formal definitions (threat-model tuple, ε-ball/FGSM,
-(ε,δ)-DP, ECE, equalized odds, watermark z-test, extractable/k-eidetic memorization)
-and verified backgrounds with primary-source links for every incident (Mata v. Avianca
-sanctions order PDF, Deloitte/DEWR refund, ProPublica COMPAS, Reuters Amazon, Moffatt
-v. Air Canada CRT decision, $1 Tahoe chatbot, Carlini/Nasr extraction, FCC robocall
-orders + Kramer acquittal, EchoLeak NVD/MSRC, Goodfellow ICLR 2015).
+**2026-08 history:** 47→35 trim (schedule slides, timeline SVG, house analogy cut; Bing
+"Sydney" replaced by EchoLeak; Deloitte added) and note enrichment to script + companion
+notes (227→443 lines, formal definitions + primary-source links).
 
 ---
 

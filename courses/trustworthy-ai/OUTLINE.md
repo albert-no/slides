@@ -35,7 +35,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 1 | `lec01-introduction.html` | Introduction & threat-model thinking | **revised 2026-09** (44 sl, ~40 min) |
 | 2 | `lec02-privacy-dp.html` | Privacy & differential privacy | **revised 2026-09** (94 sl, 15 figs) |
 | 3 | `lec03-mia.html` | Membership inference attacks | **revised 2026-08, figure pass 2026-09** (63 sl, 15 real figs) |
-| 4 | `lec04-memorization.html` | Memorization & training-data extraction | **revised 2026-08** (58 sl) |
+| 4 | `lec04-memorization.html` | Memorization & training-data extraction | **revised 2026-08, figure pass 2026-09** (60 sl, 26 real figs) |
 | 5 | `lec05-unlearning.html` | Machine unlearning | **revised 2026-08** (66 sl) |
 | 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **revised 2026-08** (61 sl) |
 | 7 | `lec07-interpretability.html` | Interpretability & explainability | **revised 2026-08** (64 sl) |
@@ -419,58 +419,85 @@ the 2025–26 frontier. Intuition pass — the rigorous treatment lives in
 `courses/privacy/lectures/03-memorization/` (exposure, k-eidetic, scaling-law decks);
 facts kept consistent with it.
 
-### Sections (58 slides, ~90 min — content-revised 2026-08 from 59, all citations source-verified)
+### Sections (60 slides, ~90 min — content-revised 2026-08 from 59; figure pass 2026-09 58→60, all citations source-verified)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:27`, `:40` | |
-| **01 — What Is Memorization** | 3–15 | `:72` | working definition `:93` · three flavors (verbatim / near-duplicate / stylistic; retaxonomized 2026-08) `:104` · $k$-extractable `:117` · **Extractable vs Discoverable (added 2026-08)** `:130` · why it happens `:143` · **Some Memorization Is Necessary (Feldman long tail; added 2026-08)** `:156` · Secret Sharer `:170` · canary `:183` · **canary-leak pipeline (SVG)** `:195` · exposure-rank idea `:220` |
-| **02 — Extracting Text from LLMs** | 16–26 | `:246` | **GPT-2 PII (real fig)** `:264` · **extraction pipeline (SVG; redrawn 2026-08 with 1,800/604 numbers)** `:284` · confidence signal `:315` · what came out (604 strings) `:328` · repeat-forever "poem poem poem" prompt (exact wording restored 2026-08) `:341` · **loop breaks (SVG)** `:353` · scale of the leak (10,000+ strings / $200 / 150×; added 2026-08) `:374` · patched-not-solved `:388` · Colab demo `:397` |
-| **03 — How Much, and Why It Grows** | 27–34 | `:412` | measurable fraction `:421` · three drivers (size / duplication / **context** — third driver fixed 2026-08, was "training length") `:434` · **size curve (SVG)** `:447` · **duplication bars (SVG)** + Kandpal ~1000× line `:469` · long tail of duplicates `:492` · log-linear curve + GPT-J ≥1% (added 2026-08) `:505` |
-| **04 — Image & Diffusion Models** | 35–41 | `:526` | not just text `:535` · diffusion picture `:548` · **Ann Graham Lotz copy (real fig; 94/175M added 2026-08)** `:561` · **duplication histogram (real fig; Somepalli cite removed 2026-08)** `:581` · Somepalli ~1.9% near-duplicates `:593` |
-| **05 — Copyright & the Law** | 42–44 | `:614` | **compressed 6→2 slides 2026-08** (backup copyright deck owns the topic) · NYT v. OpenAI + **side-by-side SVG** + Mar 2025 MTD ruling `:623` · Copy or Transform? (fair-use collision + Bartz v. Anthropic $1.5B) `:647` |
-| **06 — Mitigations & Frontier** | 45–56 | `:662` | toolbox `:671` · deduplication (Lee ACL 2022) `:684` · dedup limits `:697` · output filtering `:710` · DP `:722` · privacy tax `:734` · no silver bullet `:747` · **Frontier: Whole Books Come Back (Cooper 2025 + Ahmed 2026; replaced generic production-extraction slide)** `:755` · **Frontier: How Much Fits? (Morris 3.6 bits/param; added 2026-08)** `:768` · memorized PII `:781` · open problems `:794` |
-| Takeaways / Closer | 57–58 | — | `:807`, `:819` |
+| **01 — What Is Memorization** | 3–15 | `:72` | working definition + **Cooper Fig 1 (real fig)** `:112` · three flavors (verbatim / near-duplicate / stylistic; retaxonomized 2026-08) `:127` · $k$-extractable + **prefix→suffix SVG** `:140` · **Extractable vs Discoverable (added 2026-08)** `:169` · why it happens + **loss-bars SVG** `:182` · **Some Memorization Is Necessary (Feldman Fig 1(a), real fig)** `:210` · Secret Sharer + **Secret Sharer Fig 6 (real fig)** `:225` · canary `:242` · **canary-leak pipeline (SVG)** `:254` · exposure + **Secret Sharer Fig 7 (real fig)** `:279` · pattern-vs-record SVG `:296` |
+| **02 — Extracting Text from LLMs** | 16–26 | `:319` | canary-vs-wild SVG `:328` · **GPT-2 PII (real fig)** `:350` · **extraction pipeline (SVG; redrawn 2026-08 with 1,800/604 numbers)** `:370` · confidence signal + **zlib-vs-perplexity Fig 3 (real fig)** `:401` · what came out (604 strings) + **Table 1 (real fig)** `:418` · repeat-forever prompt + **ChatGPT screenshot Fig 5 (real fig)** `:432` · **loop breaks (SVG)** `:448` · scale of the leak (10,000+ / $200 / 150×) + **Nasr Fig 1 (real fig)** `:469` · patched-not-solved + **Nasr Fig 9 extrapolation (real fig)** `:486` · Colab demo `:499` |
+| **03 — How Much, and Why It Grows** | 27–35 | `:514` | measurable fraction + **Carlini Fig 2(a,b) (real fig)** `:523` · three drivers (size / duplication / **context** — third driver fixed 2026-08, was "training length") `:538` · **Bigger Means More — Carlini Fig 1(a) (real fig; replaced SVG 2026-09)** `:551` · **Duplication Is the Big One — Kandpal Fig 1 (real fig; replaced SVG 2026-09)** + ~1000× line `:567` · long tail of duplicates + **Kandpal Fig 3(a) (real fig)** `:583` · **A Predictable Curve — Carlini Fig 1 (real fig)** `:600` · **Reading the Curves (added 2026-09; GPT-J ≥1% + log-linear SVG)** `:612` |
+| **04 — Image & Diffusion Models** | 36–42 | `:651` | not just text + **Somepalli Fig 1 pairs (real fig)** `:660` · diffusion picture `:675` · **Ann Graham Lotz copy (real fig; 94/175M added 2026-08)** `:688` · **duplication histogram (real fig; Somepalli cite removed 2026-08)** `:708` · Somepalli ~1.9% near-duplicates + **Somepalli Fig 5 histograms (real fig)** `:720` |
+| **05 — Copyright & the Law** | 43–45 | `:743` | **compressed 6→2 slides 2026-08** (backup copyright deck owns the topic) · NYT v. OpenAI + **complaint p. 30 side-by-side (real fig; replaced SVG 2026-09)** + Mar 2025 MTD ruling `:752` · Copy or Transform? (fair-use collision + Bartz v. Anthropic $1.5B) `:764` |
+| **06 — Mitigations & Frontier** | 46–58 | `:779` | toolbox `:788` · deduplication (Lee ACL 2022) + **Lee Fig 3 / Fig 2 (real figs)** `:801` · dedup limits + near-duplicate SVG `:817` · output filtering + n-gram-filter SVG `:841` · DP + **VaultGemma Fig 1 (real fig)** `:871` · privacy tax + trade-off SVG `:887` · no silver bullet `:913` · **Frontier: Whole Books Come Back (Cooper 2025 Fig 3, real fig)** `:921` · **Frontier: Chatbots Recite Books Too (Ahmed 2026 Fig 1, real fig; split out 2026-09)** `:936` · **Frontier: How Much Fits? (Morris Fig 1, real fig; 3.6 bits/param)** `:952` · memorized PII + PII-pipeline SVG `:969` · open problems `:1004` |
+| Takeaways / Closer | 59–60 | — | `:1017`, `:1029` |
 
 **Key definitions / citations (all source-verified 2026-08):**
 - $k$-extractable (Def 3.1), scaling drivers (capacity / duplication / context), GPT-J ≥1% —
-  `:117`, `:434`, `:505` — Carlini et al., "Quantifying Memorization Across Neural Language
+  `:140`, `:538`, `:600` — Carlini et al., "Quantifying Memorization Across Neural Language
   Models", ICLR 2023 (arXiv 2202.07646).
-- GPT-2 extraction, Fig 1 PII, 604 of 1,800 candidates — `:264`, `:284` — Carlini et al.,
+- GPT-2 extraction, Fig 1 PII, 604 of 1,800 candidates — `:350`, `:370` — Carlini et al.,
   "Extracting Training Data from Large Language Models", USENIX Security 2021 (arXiv 2012.07805).
-- Secret Sharer canary/exposure — `:170` — Carlini, Liu, Erlingsson, Kos, and Song,
+- Secret Sharer canary/exposure — `:225` — Carlini, Liu, Erlingsson, Kos, and Song,
   USENIX Security 2019 (arXiv 1802.08232).
 - Extractable vs discoverable (Defs 1–2); poem attack; 10,000+ strings / $200 / 150× —
-  `:130`, `:341`, `:374` — Nasr et al., "Scalable Extraction of Training Data from (Production)
+  `:169`, `:432`, `:469` — Nasr et al., "Scalable Extraction of Training Data from (Production)
   Language Models", arXiv 2311.17035 (2023; published at ICLR 2025 as "…from Aligned,
   Production Language Models").
-- Learning requires memorization (long tail) — `:156` — Feldman, STOC 2020.
-- Superlinear duplication effect (10 copies → ~1000× more generation) — `:469` — Kandpal,
+- Learning requires memorization (long tail) — `:210` — Feldman, STOC 2020.
+- Superlinear duplication effect (10 copies → ~1000× more generation) — `:567` — Kandpal,
   Wallace, and Raffel, ICML 2022 (arXiv 2202.06539).
-- Deduplication (10× less memorized text) — `:684` — Lee et al., "Deduplicating Training Data
+- Deduplication (10× less memorized text) — `:801` — Lee et al., "Deduplicating Training Data
   Makes Language Models Better", ACL 2022 (arXiv 2107.06499).
 - Diffusion extraction: Ann Graham Lotz Fig 1, 94 images / 175M generations, Fig 5 duplication
-  histogram (most extracted ≥100 dupes) — `:561`, `:581` — Carlini et al., "Extracting Training
+  histogram (most extracted ≥100 dupes) — `:688`, `:708` — Carlini et al., "Extracting Training
   Data from Diffusion Models", USENIX Security 2023 (arXiv 2301.13188).
-- ~1.9% near-duplicate generations — `:593` — Somepalli et al., "Diffusion Art or Digital
+- ~1.9% near-duplicate generations — `:720` — Somepalli et al., "Diffusion Art or Digital
   Forgery?", CVPR 2023 (arXiv 2212.03860; paper reports 1.88% at similarity >0.5).
-- NYT v. OpenAI — `:623` — S.D.N.Y., filed Dec 2023; motion to dismiss largely denied
+- NYT v. OpenAI — `:752` — S.D.N.Y., filed Dec 2023; motion to dismiss largely denied
   Mar 26, 2025 (opinion Apr 4, 2025).
-- Bartz v. Anthropic $1.5B settlement — `:647` — N.D. Cal.; preliminary approval Sept 25, 2025
+- Bartz v. Anthropic $1.5B settlement — `:764` — N.D. Cal.; preliminary approval Sept 25, 2025
   (matches `courses/privacy/lectures/03-memorization/` anchor).
-- Whole-book extraction — `:755` — Cooper et al., arXiv 2505.12546 (Llama 3.1 70B / Harry
+- Whole-book extraction — `:921`, `:936` — Cooper et al., arXiv 2505.12546 (Llama 3.1 70B / Harry
   Potter); Ahmed, Cooper, Koyejo, and Liang, "Extracting books from production language
   models", arXiv 2601.02671 (2026).
-- Capacity ≈3.6 bits/parameter — `:768` — Morris et al., "How Much Do Language Models
+- Capacity ≈3.6 bits/parameter — `:952` — Morris et al., "How Much Do Language Models
   Memorize?", arXiv 2505.24832 (2025).
 
-**Real images** (`figs/`, cropped + cited): GPT-2 extraction `figs/gpt2-extraction.png`
-(Carlini 2021 Fig 1) `:268`; Ann Graham Lotz copy `figs/calrini-ann.png` (Carlini USENIX Sec
-2023 Fig 1) `:565`; duplication histogram `figs/carlini_duplicates.png` (Carlini USENIX Sec
-2023 Fig 5; shared with `lec03-mia.html`) `:585`. **SVG figures:** canary-leak pipeline `:195`,
-extraction pipeline `:284`, poem loop-break `:353`, size curve `:447`, duplication bars `:469`,
-diffusion noise→image strip `:548`, NYT side-by-side `:623`. Citations use `.cite-left`.
-Page number: bold `.slide-num` only.
+**Real images** (`figs/`, cropped + cited; 26 image slots after the 2026-09 figure pass):
+Cooper discoverable-extraction `figs/cooper-discoverable-extraction.png` (Cooper 2025 Fig 1 left) `:119`;
+Feldman SUN long tail `figs/feldman-long-tail.png` (Feldman 2020 Fig 1(a)) `:214`; Secret Sharer NMT
+insertions `figs/secret-sharer-fig6-insertions.png` (Fig 6) `:235` and exposure-vs-epoch
+`figs/secret-sharer-fig7-epochs.png` (Fig 7) `:283`; GPT-2 extraction `figs/gpt2-extraction.png`
+(Carlini 2021 Fig 1) `:354`; zlib-vs-perplexity `figs/carlini-zlib-perplexity.png` (Carlini 2021 Fig 3)
+`:405`; 604-example categories `figs/carlini-extraction-categories.png` (Carlini 2021 Table 1) `:422`;
+poem-attack screenshot `figs/nasr-poem-chatgpt.png` (Nasr 2023 Fig 5) `:441`; emission-rate bars
+`figs/nasr-emission-rate.png` (Nasr Fig 1; shared with `lec02-privacy-dp.html`) `:479`; extrapolation
+`figs/nasr-extrapolation.png` (Nasr Fig 9 left) `:492`; Carlini ICLR 2023 Fig 2(a,b)
+`figs/carlini-quantifying-fig2ab.png` `:527`, Fig 1(a) `figs/carlini-quantifying-fig1a.png` `:555`,
+Fig 1 `figs/carlini-quantifying-fig1.png` `:604`; Kandpal Fig 1 `figs/kandpal-duplicates.png` `:571`
+and Fig 3(a) `figs/kandpal-dup-histogram.png` `:593`; Somepalli Fig 1 pairs `figs/somepalli-pairs.png`
+`:664` and Fig 5 histograms `figs/somepalli_histograms.png` (shared with lec02) `:724`; Ann Graham Lotz
+copy `figs/calrini-ann.png` (Carlini USENIX Sec 2023 Fig 1) `:692`; duplication histogram
+`figs/carlini_duplicates.png` (Carlini USENIX Sec 2023 Fig 5; shared with `lec03-mia.html`) `:712`;
+NYT complaint p. 30 `figs/nyt-complaint-p30.png` (shared with lec02) `:756`; Lee dedup
+`figs/lee-dedup-memorization.png` (Fig 3) `:805` and `figs/lee-dedup-perplexity.png` (Fig 2) `:806`;
+VaultGemma `figs/vaultgemma-memorization.png` (Fig 1; shared with lec02) `:880`; Cooper books
+`figs/cooper-books-fig3.png` (Fig 3) `:925`; Ahmed Harry Potter recall `figs/ahmed-harry-potter.png`
+(Fig 1) `:940`; Morris capacity `figs/morris-capacity.png` (Fig 1) `:956`.
+**SVG figures:** pattern-vs-copy `:89`, $k$-extractable test `:144`, loss bars `:191`, canary-leak
+pipeline `:258`, pattern-vs-record `:305`, canary-vs-wild `:332`, extraction pipeline `:374`, poem
+loop-break `:452`, log-linear schematic `:620`, diffusion noise→image strip `:675` (diagram-flow),
+near-duplicate dedup `:826`, n-gram output filter `:849`, privacy/accuracy trade-off `:896`, PII
+pipeline `:978`. Citations use `.cite-left` with figure numbers. Page number: bold `.slide-num` only.
+
+**2026-09 figure pass (58→60, PR #24):** every content slide now carries a cited real figure or an
+SVG. Added slides: Reading the Curves (§03, holds the GPT-J ≥1% bullets that A Predictable Curve
+gave up for Carlini Fig 1) and Frontier: Chatbots Recite Books Too (§06; Ahmed 2026 split out of
+Whole Books Come Back, stating only figure-visible values: 95.8/76.8/70.3/4.0 nv-recall, N = 258/0/0/5,179).
+Three SVGs replaced by the real figures they sketched (size curve → Carlini Fig 1(a); duplication bars →
+Kandpal Fig 1; NYT side-by-side → complaint p. 30). Note file: one "Slide figure" sentence per figure
+(32 articles) + the two new articles; 60 entries, order matches.
 
 **2026-08 content revision (59→58):** every citation/number fetched and verified. Added:
 Extractable vs Discoverable (§01), Some Memorization Is Necessary (Feldman, §01),

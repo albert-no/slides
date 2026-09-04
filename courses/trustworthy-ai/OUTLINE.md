@@ -39,7 +39,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 5 | `lec05-unlearning.html` | Machine unlearning | **figures 2026-09** (67 sl) |
 | 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **figures 2026-09** (61 sl) |
 | 7 | `lec07-interpretability.html` | Interpretability & explainability | **revised 2026-08, figure pass 2026-09** (64 sl, 23 real figs) |
-| 8 | `lec08-adversarial.html` | Adversarial examples (attack + defense) | **revised 2026-08** (63 sl) |
+| 8 | `lec08-adversarial.html` | Adversarial examples (attack + defense) | **revised 2026-08, figure pass 2026-09** (63 sl, 25 real figs) |
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **revised 2026-08** (61 sl) |
 | 10 | `lec10-jailbreak.html` | Jailbreaks & LLM safety | **revised 2026-08** (57 sl) |
 | 11 | `lec11-prompt-injection.html` | Prompt injection & agentic safety | **revised 2026-08** (63 sl) |
@@ -912,51 +912,85 @@ distribution shift / ImageNet-C touchpoint, NIST AI 100-2 frontier). Math lives 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:32`, `:44` | |
-| **01 — The Phenomenon** | 3–13 | `:77` | **panda→gibbon (99.3%, verified Fig 1) ** `:98` · anatomy (57.7%→99.3%, fixed 2026-08) `:110` · Intriguing Properties `:123` · boundary picture (SVG) `:156` · close to the edge `:178` · **Why? Too Linear Inside (added 2026-08)** `:190` · **Why? Features, Not Bugs (added 2026-08)** `:204` |
-| **02 — The Threat Model** | 14–21 | `:219` | budget ‖δ‖≤ε `:240` · L∞ vs L2 `:253` · allowed region (SVG) `:267` · white vs black box `:286` · transferability `:299` · **Why Transfer Is Scary (Amazon 96% / Google 89%, ~800 queries; verified 2026-08)** `:312` |
-| **03 — The Attacks** | 22–32 | `:326` | core idea `:334` · gradient sign `:343` · FGSM `:356` · FGSM by hand `:370` · PGD `:395` · steps in ball (SVG) `:409` · PGD benchmark `:432` · C&W `:445` · targeted vs untargeted `:457` |
-| **04 — The Defenses** | 33–44 | `:471` | defender's goal `:479` · radius (SVG) `:491` · adversarial training `:511` · it works `:526` · the cost `:538` · **Robustness vs Accuracy (Tsipras; added 2026-08)** `:551` · empirical vs certified `:565` · certified robustness `:578` · randomized smoothing `:590` · why voting certifies `:603` · certified catch `:615` |
-| **05 — The Arms Race** | 45–51 | `:629` | recurring story `:637` · obfuscated gradients `:650` · **A False Sense of Security (fixed 2026-08: 9 defenses, 7 obfuscated, 6 broken + 1 partial)** `:662` · adaptive attacks `:674` · how to test honestly `:687` · **The Scoreboard: RobustBench (added 2026-08)** `:700` |
-| **06 — Physical & Beyond** | 52–61 | `:715` | off the screen `:723` · **stop sign (Speed Limit 45; 100% lab / 84.8% drive-by; verified 2026-08)** `:735` · **Adversarial Glasses (added 2026-08)** `:755` · adversarial patches (+Thys cite) `:769` · beyond vision (C&W audio 99.9%) `:783` · **Attacking Multimodal Models (Qi AAAI 2024; rewritten 2026-08)** `:796` · **Related: The World Also Shifts (added 2026-08)** `:810` · **ImageNet-C (added 2026-08)** `:824` · **2025-26 Frontier (NIST AI 100-2; rewritten 2026-08)** `:838` |
-| Takeaways / Closer | 62–63 | — | key takeaways `:851` · closer `:864` |
+| **01 — The Phenomenon** | 3–13 | `:77` | **panda→gibbon (99.3%, verified Fig 1) ** `:109` · anatomy (57.7%→99.3%, fixed 2026-08) `:121` · Intriguing Properties `:134` · boundary picture (SVG) `:183` · close to the edge `:205` · **Why? Too Linear Inside (added 2026-08)** `:229` · **Why? Features, Not Bugs (added 2026-08)** `:246` |
+| **02 — The Threat Model** | 14–21 | `:262` | budget ‖δ‖≤ε `:288` · L∞ vs L2 `:317` · allowed region (SVG) `:339` · white vs black box `:358` · transferability `:388` · **Why Transfer Is Scary (Amazon 96% / Google 89%, ~800 queries; verified 2026-08)** `:405` |
+| **03 — The Attacks** | 22–32 | `:430` | core idea `:438` · gradient sign `:460` · FGSM `:475` · FGSM by hand `:506` · PGD `:563` · steps in ball (SVG) `:595` · PGD benchmark `:618` · C&W `:633` · targeted vs untargeted `:648` |
+| **04 — The Defenses** | 33–44 | `:664` | defender's goal `:672` · radius (SVG) `:697` · adversarial training `:717` · it works `:733` · the cost `:749` · **Robustness vs Accuracy (Tsipras; added 2026-08)** `:764` · empirical vs certified `:779` · certified robustness `:810` · randomized smoothing `:835` · why voting certifies `:851` · certified catch `:867` |
+| **05 — The Arms Race** | 45–51 | `:885` | recurring story `:893` · obfuscated gradients `:906` · **A False Sense of Security (fixed 2026-08: 9 defenses, 7 obfuscated, 6 broken + 1 partial)** `:933` · adaptive attacks `:949` · how to test honestly `:981` · **The Scoreboard: RobustBench (added 2026-08)** `:994` |
+| **06 — Physical & Beyond** | 52–61 | `:1027` | off the screen `:1035` · **stop sign (Speed Limit 45; 100% lab / 84.8% drive-by; verified 2026-08)** `:1053` · **Adversarial Glasses (added 2026-08)** `:1073` · adversarial patches (+Thys cite) `:1090` · beyond vision (C&W audio 99.9%) `:1107` · **Attacking Multimodal Models (Qi AAAI 2024; rewritten 2026-08)** `:1121` · **Related: The World Also Shifts (added 2026-08)** `:1138` · **ImageNet-C (added 2026-08)** `:1154` · **2025-26 Frontier (NIST AI 100-2; rewritten 2026-08)** `:1171` |
+| Takeaways / Closer | 62–63 | — | key takeaways `:1187` · closer `:1200` |
 
 **Key definitions / citations (all source-verified 2026-08):**
-- Panda→gibbon (57.7% panda → 99.3% gibbon, ε=.007) + linearity explanation — `:106`,
-  `:201` — Goodfellow, Shlens, and Szegedy, "Explaining and Harnessing Adversarial
+- Panda→gibbon (57.7% panda → 99.3% gibbon, ε=.007) + linearity explanation — `:117`,
+  `:242` — Goodfellow, Shlens, and Szegedy, "Explaining and Harnessing Adversarial
   Examples", ICLR 2015 (Figure 1; "the primary cause ... is their linear nature").
-- Intriguing properties + transfer — `:131` — Szegedy et al., ICLR 2014.
-- Features-not-bugs — `:215` — Ilyas et al., NeurIPS 2019.
+- Intriguing properties + transfer — `:143` — Szegedy et al., ICLR 2014.
+- Features-not-bugs — `:257` — Ilyas et al., NeurIPS 2019.
 - Black-box transfer to commercial APIs (Amazon 96%, Google 89%, ~800 queries) —
-  `:322` — Papernot, McDaniel, and Goodfellow, arXiv 2016.
-- PGD + adversarial training — `:404`, `:522` — Madry et al., ICLR 2018.
-- C&W attack — `:453` — Carlini and Wagner, IEEE S&P 2017.
-- Robustness–accuracy tradeoff — `:561` — Tsipras et al., "Robustness May Be at Odds
+  `:425` — Papernot, McDaniel, and Goodfellow, arXiv 2016.
+- PGD + adversarial training — `:591`, `:729` — Madry et al., ICLR 2018.
+- C&W attack — `:644` — Carlini and Wagner, IEEE S&P 2017.
+- Robustness–accuracy tradeoff — `:775` — Tsipras et al., "Robustness May Be at Odds
   with Accuracy", ICLR 2019.
-- Randomized smoothing certificate — `:599` — Cohen, Rosenfeld, and Kolter, ICML 2019.
+- Randomized smoothing certificate — `:847` — Cohen, Rosenfeld, and Kolter, ICML 2019.
 - Obfuscated gradients (9 ICLR-2018 defenses examined, 7 obfuscated, 6 fully +
-  1 partially broken) — `:659`, `:662` — Athalye, Carlini, and Wagner, ICML 2018.
+  1 partially broken) — `:929`, `:945` — Athalye, Carlini, and Wagner, ICML 2018.
 - RobustBench (CIFAR-10 L∞ 8/255: standard 94.8/0.0, best 93.7/73.7, AutoAttack) —
-  `:711` — robustbench.github.io, accessed Aug 2026.
+  `:1022` — robustbench.github.io, accessed Aug 2026.
 - Stop-sign attack (target "Speed Limit 45"; 100% lab, 84.8% drive-by, LISA-CNN) —
-  `:751` — Eykholt et al., CVPR 2018 (Figure 1; abstract).
-- Adversarial glasses (dodge 80%+, impersonate 87.9%) — `:765` — Sharif, Bhagavatula,
+  `:1069` — Eykholt et al., CVPR 2018 (Figure 1; abstract).
+- Adversarial glasses (dodge 80%+, impersonate 87.9%) — `:1086` — Sharif, Bhagavatula,
   Bauer, and Reiter, ACM CCS 2016.
-- Adversarial patch — `:780` — Brown et al., arXiv 2017; person-hiding held patch —
+- Adversarial patch — `:1103` — Brown et al., arXiv 2017; person-hiding held patch —
   Thys, Van Ranst, and Goedemé, CVPR-W 2019.
 - Audio adversarial examples (99.9% similar waveform → any phrase, 100% vs
-  DeepSpeech) — `:793` — Carlini and Wagner, arXiv 2018 (venue unverified; cited
+  DeepSpeech) — `:1117` — Carlini and Wagner, arXiv 2018 (venue unverified; cited
   year-only).
-- Multimodal jailbreak image — `:806` — Qi et al., "Visual Adversarial Examples
+- Multimodal jailbreak image — `:1134` — Qi et al., "Visual Adversarial Examples
   Jailbreak Aligned Large Language Models", AAAI 2024.
-- ImageNet-C (15 corruptions × 5 severities = 75 sets) — `:834` — Hendrycks and
+- ImageNet-C (15 corruptions × 5 severities = 75 sets) — `:1167` — Hendrycks and
   Dietterich, ICLR 2019.
-- NIST adversarial-ML taxonomy — `:848` — NIST AI 100-2 E2025, March 2025.
+- NIST adversarial-ML taxonomy — `:1183` — NIST AI 100-2 E2025, March 2025.
 
-**Figures:** panda + noise + gibbon capture (Goodfellow Fig 1,
-`figs/panda-gibbon.png`) `:103`; stop-sign photo pair (Eykholt Fig 1 capture,
-`figs/eykholt-stopsign.png`) `:748`; inline SVG: boundary crossing
-`:161`, L∞ box vs L2 ball `:272`, PGD steps in ball `:414`, robustness radius `:496`.
-Citations use `.cite-left`. Page number: bold `.slide-num` only.
+**Real images** (`figs/`, cropped + cited; 25 image slots after the 2026-09 figure pass):
+panda + noise + gibbon `figs/panda-gibbon.png` (Goodfellow 2015 Fig 1) `:114`; AlexNet ostrich triples
+`figs/szegedy-fig5-alexnet.png` (Szegedy 2014 Fig 5) `:142`; near-linear logits vs ε
+`figs/goodfellow-fig4-linear.png` (Goodfellow Fig 4) `:240`; robust / non-robust dataset split
+`figs/ilyas-fig1-features.png` (Ilyas 2019 Fig 1) `:256`; cross-technique transfer matrix
+`figs/papernot-fig3-transfer.png` (Papernot 2016 Fig 3) `:399`; logistic-regression sign perturbation
+`figs/goodfellow-fig2-logreg.png` (Goodfellow Fig 2) `:469`; PGD loss over iterations
+`figs/madry-fig1-pgd-loss.png` (Madry 2018 Fig 1) `:627`; C&W L2/L∞/L0 examples
+`figs/cw-fig1-distilled.png` (Carlini & Wagner 2017 Fig 1) `:642`; targeted L2 digit grid
+`figs/cw-fig3-targeted.png` (C&W Fig 3) `:656`; simple vs robust boundary
+`figs/madry-fig3-boundary.png` (Madry Fig 3) `:728`; accuracy vs distortion `figs/athalye-fig1-advtrain.png`
+(Athalye 2018 Fig 1) `:743`; clean accuracy vs training ε `figs/tsipras-fig1-tradeoff.png` (Tsipras 2019
+Fig 1) `:758`; input gradients standard vs robust `figs/tsipras-fig2-gradients.png` (Tsipras Fig 2) `:774`;
+panda under σ = 0.5 noise `figs/cohen-fig2-smoothing.png` (Cohen 2019 Fig 2) `:845`; half-space worst case
+`figs/cohen-fig3-fstar.png` (Cohen Fig 3) `:861`; certified accuracy vs radius `figs/cohen-fig6-certified.png`
+(Cohen Fig 6) `:878`; nine-defense census `figs/athalye-tab1-defenses.png` (Athalye Table 1) `:943`;
+stop-sign photo pair `figs/eykholt-stopsign.png` (Eykholt 2018 Fig 1) `:1066`; adversarial eyeglasses
+`figs/sharif-fig4-glasses.png` (Sharif 2016 Fig 4) `:1084`; banana → toaster patch
+`figs/brown-fig1-toaster.png` (Brown 2017 Fig 1) `:1101`; overlaid audio waveforms
+`figs/cw-audio-fig2-waveform.png` (Carlini & Wagner 2018 Fig 2) `:1115`; MiniGPT-4 jailbreak panda
+`figs/qi-fig1-jailbreak.png` (Qi 2024 Fig 1) `:1132`; impulse-noise severities
+`figs/hendrycks-fig7-severity.png` (Hendrycks & Dietterich 2019 Fig 7) `:1148`; 15 corruption types
+`figs/hendrycks-fig1-corruptions.png` (Hendrycks Fig 1) `:1165`; NIST attack taxonomy
+`figs/nist-fig1-taxonomy.png` (NIST AI 100-2 E2025 Fig 1) `:1181`.
+**SVG** (25): confidence bars `:95`, 3×3 fooled grid `:157`, attacker → four systems `:171`, boundary
+crossing `:188`, nine nudges = one shove `:214`, threat-model rule boxes `:280`, ε-ball with δ `:298`,
+L∞ vs L2 pixel grids `:328`, L∞ box vs L2 ball `:344`, white vs black box `:368`, Amazon / Google bars
+`:414`, loss bowl (lower vs raise) `:444`, x + ε·sign = x_adv `:485`, 0.40 → 0.43 pixel scale `:516`,
+overshoot vs small steps `:543`, step → project → K loop `:573`, PGD steps in ball `:600`, dot vs ball
+`:681`, robustness radius `:702`, track record vs proof `:789`, radius vs boundary curve `:819`, smooth vs
+staircase loss `:915`, fixed vs adaptive attack `:959`, RobustBench grouped bars `:1004`, physical pipeline
+`:1044`. Citations use `.cite-left`. Page number: bold `.slide-num` only.
+
+**2026-09 figure pass (63 slides, unchanged count; PR #24):** every bullet-only content slide now carries
+a cited real figure crop or an inline SVG (23 new crops, 21 new SVGs; the two pre-existing captures and
+four pre-existing SVGs kept). Real figures sit beside the bullets in a `1fr auto` grid or stacked below
+them; every crop is trimmed of white margins, excludes the paper caption and table rules, and is cited
+with its figure/table number. Note file: one "Slide figure" sentence per real-figure article (23 new);
+63 entries, order matches.
 
 **2026-08 content revision (56→63):** every citation/number fetched and verified.
 Added 7 slides: Why? Too Linear Inside + Why? Features, Not Bugs (§01), Robustness vs

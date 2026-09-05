@@ -672,412 +672,57 @@ semantic entropy at intuition level; RAG grounding; benchmarks (TruthfulQA, Vect
 reasoning-model hallucination; sycophancy one-slide touchpoint (full treatment in
 `backup-sycophancy.html`). Math lives in `lec06tech.html`.
 
-### Sections (61 slides, ~90 min — content-revised 2026-08 from 58; figure pass 2026-09, count unchanged)
-
-| Section | Slides | Divider line | Notable slides |
-|---|---|---|---|
-| Title / Contents | 1–2 | `:26`, `:38` | |
-| **01 — What Hallucination Is** | 3–10 | `:71` | definition (Ji survey) `:79` · fluency fools us `:94` · **Fake Citations, Again (Lacey v. State Farm, $31,100; new anchor 2026-08)** `:110` · **Invented Medical Facts (Med-Gemini "basilar ganglia"; rewritten 2026-08)** `:128` · two flavors of wrong `:145` · not the same as a bug `:159` · why this matters `:174` |
-| **02 — Why Models Hallucinate** | 11–19 | `:187` | training objective `:195` · no truth grounding `:207` · plausible beats true `:224` · pressure to always answer (+Kalai cite) `:246` · exam-taking analogy (+Kalai cite) `:263` · **Guessing, Measured (SimpleQA wrong/abstain SVG bars; added 2026-08)** `:280` · where errors concentrate `:308` · knowledge cutoff `:325` |
-| **03 — Calibration** | 20–31 | `:341` | confidence as a number `:349` · calibration promise `:361` · reliability diagram (SVG) `:376` · over- vs under-confident `:398` · measuring the gap (ECE, Guo) `:412` · reading ECE `:429` · bigger is not better `:444` · temperature `:461` · Kadavath self-knowledge `:476` · verbalized confidence (+Xiong ICLR 2024 cite added 2026-08) `:490` · Colab `:505` |
-| **04 — Conformal Prediction** | 32–40 | `:521` | one answer to a set `:529` · coverage guarantee `:543` · distribution-free `:558` · how it works `:574` · prediction-set picture (SVG) `:590` · abstention `:613` · medical triage `:629` · trade-off `:645` |
-| **05 — Detection & Grounding** | 41–51 | `:655` | two strategies `:663` · self-consistency (+SelfCheckGPT cite added 2026-08) `:677` · semantic entropy (Farquhar) `:694` · entropy picture (SVG) `:708` · RAG `:733` · why RAG helps `:747` · RAG is not a cure `:763` · teaching "I don't know" `:779` · scoring rule (+Kalai cite) `:795` · detection Colab `:806` |
-| **06 — Frontier 2025–26** | 52–59 | `:822` | **TruthfulQA (817 Qs, 58% vs 94%; added 2026-08)** `:830` · benchmarks + Vectara HHEM chart (SVG) `:845` · **Reasoning Models Hallucinate Too (o3 33% / o4-mini 48% / o1 16% PersonQA; reworked 2026-08)** `:884` · **Sycophancy touchpoint (real fig; added 2026-08)** `:901` · factuality evaluations `:913` · open problems `:930` · demos `:944` |
-| Takeaways / Closer | 60–61 | — | `:959`, `:973` |
-
-**Key definitions / citations (all source-verified 2026-08):**
-- Hallucination survey — `:79` — Ji et al., ACM Computing Surveys 2023.
-- Anchor case — `:110` — Special Master sanctions order, Lacey v. State Farm,
-  C.D. Cal., May 2025 ($31,100; ~1/3 of citations flawed; two cited cases nonexistent).
-  Avianca callback only (lec01 owns that case).
-- Med-Gemini "basilar ganglia" — `:128` — Google Med-Gemini paper 2024; error surfaced
-  by The Verge, 2025 (verified via secondary reports).
-- Why LMs hallucinate (binary grading rewards guessing) — `:246`, `:263`, `:795` —
-  Kalai, Nachum, Vempala, and Zhang, 2025 (arXiv 2509.04664).
-- SimpleQA wrong/abstain rates (o4-mini 75%/1% vs gpt-5-thinking-mini 26%/52%) —
-  `:280` — OpenAI "Why language models hallucinate" blog, 2025 (table is in the blog,
-  not the arXiv paper; verified via secondary coverage — openai.com blocks fetch).
-- Calibration / ECE / temperature — `:412`–`:475` — Guo, Pleiss, Sun, and Weinberger,
-  ICML 2017.
-- Self-knowledge — `:476` — Kadavath et al., "Language Models (Mostly) Know What They
-  Know", 2022.
-- Verbalized confidence — `:490` — Xiong et al., ICLR 2024 (arXiv 2306.13063).
-- Conformal — `:543`, `:540`, `:587` — Angelopoulos and Bates, "A Gentle Introduction to
-  Conformal Prediction and Distribution-Free Uncertainty Quantification", 2021
-  (arXiv 2107.07511; title completed 2026-08 here and in `lec06tech.html`).
-- Self-consistency — `:677` — Manakul, Liusie, and Gales, "SelfCheckGPT", EMNLP 2023.
-- Semantic entropy — `:694` — Farquhar et al., Nature 630, 625–630 (2024).
-- RAG — `:733` — Lewis et al., NeurIPS 2020.
-- TruthfulQA (817 Qs, 38 categories, best model 58% vs humans 94%, larger = less
-  truthful) — `:830` — Lin, Hilton, and Evans, ACL 2022 (arXiv 2109.07958).
-- Vectara HHEM summarization hallucination rates — `:845` — leaderboard README,
-  May 2026 (chart data verified against the repo).
-- Reasoning-model rates (o3 33%, o4-mini 48%, o1 16% on PersonQA) — `:884` —
-  OpenAI o3/o4-mini System Card, April 2025.
-- Sycophancy — `:901` — Sharma et al., ICLR 2024 (Figure 5); GPT-4o rollback quote
-  "overly flattering or agreeable" — OpenAI "Sycophancy in GPT-4o", 2025.
-
-**Real images** (`figs/`, cropped + cited; 15 image slots after the 2026-09 figure pass):
-Kalai IIV reduction `figs/kalai-iiv.png` (Kalai et al. 2025 Fig 1) `:207`; GPT-4 calibration before/after
-RLHF `figs/kalai-gpt4-calibration.png` (Kalai 2025 Fig 2, from the GPT-4 report) `:246`; FActScore
-precision vs entity frequency `figs/factscore-frequency.png` (Min 2023 Fig 2) `:308`; LeNet vs ResNet
-reliability `figs/guo-lenet-resnet.png` (Guo 2017 Fig 1) `:444`; temperature scaling
-`figs/guo-temp-scaling.png` (Guo Fig 4, ResNet-110 CIFAR-100) `:461`; P(True) self-evaluation
-`figs/kadavath-ptrue.png` (Kadavath 2022 Fig 1) `:476`; verbalized confidence `figs/xiong-verbalized.png`
-(Xiong ICLR 2024 Fig 2) `:490`; conformal squirrels `figs/conformal-squirrels.png` (A&B 2021 Fig 1) `:529`;
-conformal recipe `figs/conformal-recipe.png` (A&B Fig 2) `:574`; SelfCheckGPT `figs/selfcheckgpt.png`
-(Manakul 2023 Fig 1) `:677`; semantic-entropy table `figs/semantic-entropy-table.png` (Kuhn, Gal, Farquhar
-ICLR 2023 Table 1) `:694`; RAG overview `figs/rag-overview.png` (Lewis 2020 Fig 1) `:733`; TruthfulQA by
-size `figs/truthfulqa-size.png` (Lin 2022 Fig 2) `:830`; sycophancy `figs/sharma-sycophancy.png` (Sharma
-ICLR 2024 Fig 5, shared with `backup-sycophancy.html`) `:901`; FActScore pipeline
-`figs/factscore-overview.png` (Min 2023 Fig 1) `:913`.
-**SVG** (32): grounding chain `:79`, twin citation cards `:94`, brief bar `:110`, basal/basilar blend `:128`,
-output↔world/source `:145`, bug vs hallucination `:159`, next-token bars `:195`, expected-score bars `:263`,
-SimpleQA wrong/abstain bars `:280`, cutoff timeline `:325`, gauge `:349`, 100-dot grid `:361`, reliability
-diagram `:376`, two mini reliability diagrams `:398`, bins with gaps `:412`, weighted bins `:429`, ten sets
-`:543`, black box + exchangeable `:558`, prediction-set threshold picture `:590`, set size → answer/defer
-`:613`, triage `:629`, coverage vs set-size curve `:645`, ground/detect pipeline `:663`, entropy clusters
-`:708`, citation chip → document `:747`, three failure points `:763`, reward bars `:779`, expected score
-5p−4 `:795`, Vectara HHEM bar chart `:845`, PersonQA bars `:884`. Citations use `.cite-left`.
-
-**2026-09 figure pass (61 slides, unchanged count; PR #24):** every bullet-only content slide now carries
-a cited real figure crop or an inline SVG (14 new crops, 26 new SVGs). Real figures sit beside the bullets
-in a `1fr auto` grid or stacked below the bullets; every crop excludes the paper caption and is cited with
-its figure number. Note file: one "Slide figure" sentence per real-figure article (14); 61 entries, order
-matches. Also normalized "$31,100"/"$5,000" in the note to "USD …" outside the `<span>$</span>` escapes.
-
-**2026-08 content revision (58→61):** every citation/number fetched and verified.
-Added 3 slides: Guessing, Measured (§02); TruthfulQA (§06); Sycophancy touchpoint (§06).
-Replaced the fake-citation anchor (Avianca → Lacey v. State Farm; Avianca kept as a
-one-line callback since lec01 covers it) and rewrote Invented Medical Facts around the
-verified Med-Gemini error. Reworked Reasoning Models around verified PersonQA numbers.
-Added missing cites (Kalai ×3, Xiong, SelfCheckGPT); completed the Angelopoulos & Bates
-title (also in `lec06tech.html` — otherwise fix-errors-only, math verified, stays 14 sl).
-Flagged as secondary-verified: Lacey "hundreds of filings" tracker line `:124`, SimpleQA
-abstention split `:280`, Med-Gemini narrative `:128`, GPT-4o rollback line `:909`.
-Note file synced (61 entries, order matches).
-
-**2026-08 note enrichment:** `lec06-hallucination-note.html` upgraded from speaker
-script (383 lines) to Script &amp; Companion Notes (723 lines; 61 entries unchanged):
-per-entry `.detail` blocks with rigorous definitions (KNVZ valid/error hallucination
-formalization, factuality vs faithfulness quadrants, autoregressive MLE = KL
-minimization, Guo perfect-calibration Eq. 1 + ECE Eq. 3 with binning caveats,
-temperature scaling with limits, exchangeability, split-conformal recipe, semantic
-entropy with Rao–Blackwellized + discrete estimators, RAG-Sequence/RAG-Token,
-FActScore), theorem blocks with verified proofs/sketches (Kalai–Vempala Corollary 1
-monofact lower bound + 3-step sketch, KNVZ IIV-reduction Corollary 1 + Appendix-A
-partition sketch, KNVZ Theorem 2 singleton-rate floor, conformal coverage Theorem D.1
-with the complete rank-uniformity proof + D.2 tightness, threshold-scoring
-λ/(1+λ) and 5p−4 derivations labeled course notes), and brief Background blocks with
-26 verified links (Lacey docket + Volokh + Charlotin tracker, Avianca order PDF,
-Verge Med-Gemini + arXiv 2404.18416, GPT-5 and o3/o4-mini system cards, TruthfulQA,
-SimpleQA, Vectara HHEM ×2, Sharma sycophancy + OpenAI GPT-4o rollback + TechCrunch,
-Kadavath, Xiong, SelfCheckGPT, Farquhar Nature, Lewis RAG, Guo, A&B, Ji survey).
-
-## lec07-interpretability.html
-
-**Topic:** Interpretability & explainability (~90 min). Why black-box accuracy alone
-does not earn trust; intrinsic vs post-hoc taxonomy plus the Rudin objection; feature
-attribution at intuition level (LIME local surrogate, SHAP/Shapley fair credit, gradient
-saliency, integrated gradients, Adebayo sanity-check failures); probing and the
-attention-is-(not-(not-))explanation debate; mechanistic interpretability (circuits,
-induction heads, superposition); sparse autoencoders, monosemantic features, Golden Gate
-Claude, feature steering; uses & limits (GDPR / "right to explanation" nuance,
-faithfulness, 2025–26 frontier: attribution graphs, CoT faithfulness, Amodei essay).
-Math lives in `lec07tech.html`.
-
-### Sections (64 slides, ~90 min — content-revised 2026-08 from 57, all citations source-verified)
-
-| Section | Slides | Divider line | Notable slides |
-|---|---|---|---|
-| Title / Contents | 1–2 | `:27`, `:39` | |
-| **01 — The Black Box** | 3–10 | `:72` | black box `:80` · why open it up `:110` · **Husky and the Wolf (reframed 2026-08: rigged demo, trust 10/27→3/27)** `:123` · intrinsic vs post-hoc `:140` · accuracy trade-off (SVG) `:155` · **The Rudin Objection (added 2026-08)** `:178` · explanation is not the model `:195` |
-| **02 — Feature Attribution** | 11–25 | `:218` | attribution question `:226` · bar chart (SVG) `:257` · LIME `:280` · local-not-global (LIME Fig 3) `:294` · SHAP `:304` · Shapley value `:318` · why trusted `:352` · loan demo `:381` · saliency on images (Simonyan Fig 2) `:396` · gradient saliency `:413` · **Beyond Raw Gradients (IG; added 2026-08)** `:447` · saliency Colab `:464` · what attribution answers `:479` · Adebayo sanity check `:491` |
-| **03 — Probing & Attention** | 26–33 | `:502` | hidden layers `:510` · linear probes `:540` · reading the probe `:556` · attention weights (Clark Fig 1) `:574` · looks like explanation `:584` · not explanation (Jain & Wallace) `:613` · **...Is Not Not Explanation (added 2026-08)** `:623` |
-| **04 — Mechanistic Interpretability** | 34–43 | `:651` | different goal `:659` · circuits (Olah car-detector) `:689` · neurons as concepts `:699` · transformer framework `:714` · induction heads `:749` · induction in action `:765` · why induction matters (+Olsson cite added 2026-08) `:784` · polysemantic wall `:811` · superposition (+Elhage cite added 2026-08) `:822` |
-| **05 — Sparse Autoencoders & Steering** | 44–52 | `:838` | unpacking superposition `:846` · SAE (SVG) `:861` · monosemantic features `:885` · **Scaling Up (Claude 3 Sonnet; verified examples 2026-08)** `:913` · feature steering (SVG) `:942` · Golden Gate Claude `:961` · steering widget `:989` · **Steering for Safety (hedged + cited 2026-08)** `:1004` |
-| **06 — Uses & Limits** | 53–63 | `:1037` | what it buys us `:1045` · **What the Law Demands (GDPR Art. 22 / Arts. 13–15; added 2026-08)** `:1056` · **A "Right to Explanation"? (added 2026-08)** `:1070` · faithfulness problem `:1101` · models can rationalize `:1125` · always sanity-check `:1153` · **Frontier: Attribution Graphs (added 2026-08)** `:1168` · **Frontier: CoT faithfulness (added 2026-08)** `:1185` · **Frontier: An MRI for AI (added 2026-08)** `:1198` · key takeaways `:1227` |
-| Closer | 64 | — | `:1240` |
-
-**Key definitions / citations (all source-verified 2026-08):**
-- LIME + husky/wolf experiment (rigged snow demo; trust 10/27→3/27) — `:134`, `:289` —
-  Ribeiro, Singh, and Guestrin, "Why Should I Trust You?", KDD 2016 (§6.4, Table 2).
-- Interpretable-by-design for high stakes — `:189` — Rudin, Nature Machine
-  Intelligence 1, 206–215 (2019).
-- SHAP / Shapley uniqueness — `:313`, `:348` — Lundberg and Lee, NeurIPS 2017.
-- Integrated gradients — `:458` — Sundararajan, Taly, and Yan, ICML 2017.
-- Saliency sanity checks (weight randomization) — `:496` — Adebayo et al., NeurIPS 2018.
-- Attention debate — `:619` Jain and Wallace, NAACL 2019; `:646` Wiegreffe and Pinter,
-  EMNLP 2019.
-- Circuits / curve & dog-head detectors — `:695`, `:710` — Olah et al., "Zoom In",
-  Distill 2020.
-- Transformer framework + induction heads — `:745`, `:759` — Elhage et al., Anthropic 2021.
-- Induction heads ↔ in-context learning — `:807` — Olsson et al., Anthropic 2022.
-- Superposition — `:832` — Elhage et al., "Toy Models of Superposition", Anthropic 2022.
-- SAE / monosemantic features (DNA, legal language, base64) — `:881`, `:909` —
-  Bricken et al., "Towards Monosemanticity", Anthropic 2023.
-- Millions of features in Claude 3 Sonnet; Golden Gate Claude; safety-relevant
-  features — `:938`–`:1032` — Templeton et al., "Scaling Monosemanticity", Anthropic 2024.
-- GDPR Art. 22 + Arts. 13–15; recital-only "right to explanation"; EU AI Act Art. 86 —
-  `:1056`–`:1097` — Wachter, Mittelstadt, and Floridi, International Data Privacy Law
-  7(2):76–99 (2017); AI Act text (Art. 86, applies from Aug 2026).
-- Attribution graphs (Dallas→Texas→Austin; rhyme planning; Neuronpedia) — `:1179` —
-  Lindsey et al., "On the Biology of a Large Language Model", Anthropic 2025;
-  circuit-tracing tools open-sourced May 2025.
-- CoT faithfulness (hint admitted <20% of the time) — `:1192` — Chen et al., "Reasoning
-  Models Don't Always Say What They Think", Anthropic 2025 (arXiv 2505.05410).
-- "MRI for AI"; detect most model problems by 2027 — `:1223` — Amodei, "The Urgency of
-  Interpretability", April 2025.
-
-**Real images** (`figs/`, cropped + cited; 23 image slots after the 2026-09 figure pass):
-husky/wolf + explanation `figs/lime-fig11-husky.png` (Ribeiro 2016 Fig 11) `:134`; CORELS rule list
-`figs/rudin-fig3-corels.png` (Rudin 2019 Fig 3) `:150`; "fictional" trade-off `figs/rudin-fig1-tradeoff.png`
-(Rudin Fig 1) `:189`; LIME pipeline `figs/lime-fig1-flu.png` (Ribeiro Fig 1) `:289`; LIME local fit
-`figs/lime-fig3-local.png` (Ribeiro Fig 3) `:298`; SHAP additive steps `figs/shap-fig1-additive.png`
-(Lundberg & Lee 2017 Fig 1) `:313`; class saliency maps `figs/simonyan-fig2-saliency.png` (Simonyan 2014
-Fig 2) `:407`; IG vs gradients `figs/ig-fig2-compare.png` (Sundararajan 2017 Fig 2, top 3 rows) `:458`;
-cascading randomization `figs/adebayo-fig2-cascade.png` (Adebayo 2018 Fig 2) `:496`; ResNet-50 probe error
-`figs/alain-fig4-resnet.png` (Alain & Bengio 2017 Fig 4) `:550`; control task `figs/hewitt-fig1-control.png`
-(Hewitt & Liang 2019 Fig 1) `:568`; BERT heads `figs/clark-fig1-heads.png` (Clark 2019 Fig 1) `:578`;
-adversarial attention `figs/jain-fig1-attention.png` (Jain & Wallace 2019 Fig 1) `:617`; car-detector
-circuit `figs/olah-zoomin-car.png` (Olah 2020) `:693`; curve detectors `figs/olah-zoomin-curves.png`
-(Olah 2020) `:708`; induction-head schematic `figs/lindsey-induction-head.png` (Lindsey 2025, Limitations)
-`:759`; induction on random tokens `figs/olsson-induction-head.png` (Olsson 2022) `:778`; superposition
-projection `figs/elhage-toy-projection.png` (Elhage 2022) `:816`; sparsity → superposition
-`figs/elhage-toy-sparsity.png` (Elhage 2022) `:831`; SAE pipeline `figs/cunningham-fig1-sae.png`
-(Cunningham 2024 Fig 1) `:855`; edge-detector comparison `figs/adebayo-fig1-edge.png` (Adebayo Fig 1)
-`:1162`; Dallas→Austin attribution graph `figs/lindsey-dallas-austin.png` (Lindsey 2025) `:1179`; CoT
-faithfulness bars `figs/chen-fig1-faithfulness.png` (Chen 2025 Fig 1) `:1192`.
-**SVG** (24): black box `:90`, accuracy trade-off `:160`, model vs story `:200`, signed attribution `:235`,
-attribution bar chart `:262`, Shapley orderings `:328`, efficiency bar `:362`, steep vs flat slope `:423`,
-layers → activation vector `:520`, attention arcs `:594`, 2019 debate timeline `:633`, describe vs explain
-`:668`, residual stream `:724`, loss curve with induction bump `:794`, SAE widen-rebuild `:866`,
-feature-activation bars `:895`, scaling 2023→2024 `:923`, steering dial `:947`, Golden Gate dial `:971`,
-safety dial in three steps `:1014`, GDPR recital / articles / AI Act boxes `:1080`, plausible vs faithful
-ellipses `:1107`, answer vs "because…" story `:1135`, 2025→2027 MRI timeline `:1208`. Citations use
-`.cite-left`. Page number: bold `.slide-num` only.
-
-**2026-09 figure pass (64 slides, unchanged count; PR #24):** every bullet-only content slide now carries
-a cited real figure crop or an inline SVG (23 new crops, 20 new SVGs; 4 hand-drawn sketch SVGs — LIME
-local line, saliency pair, attention lines, circuit graph — replaced by the papers' own figures). Real
-figures sit beside the bullets in a `1fr auto` grid or stacked below them; every crop is trimmed of white
-margins, excludes the paper caption, and is cited with its figure number (or the named figure for Distill /
-Anthropic web papers). Two bullets added (Saliency on Images ×3, Reading the Probe control task). Note
-file: one "Slide figure" sentence per real-figure article (23); 64 entries, order matches.
-
-**2026-08 content revision (57→64):** every citation/number fetched and verified.
-Added 8 slides: The Rudin Objection (§01), Beyond Raw Gradients (§02), ...Is Not Not
-Explanation (§03), What the Law Demands + A "Right to Explanation"? (§06), and three
-frontier slides (§06: Attribution Graphs, CoT faithfulness, An MRI for AI — replacing
-one stale unverifiable "Frontier 2025–26" slide). Fixed: husky/wolf reframed as the
-deliberately rigged demo it was, with verified trust numbers; unverified "emotions"
-feature example replaced by verified "scam emails" (Templeton 2024); Steering for
-Safety hedged ("could", "still early days") and cited; missing Olsson and Elhage
-(superposition) cites added. `lec07tech.html` audited: all math correct, no changes
-(stays 20 sl). Note file synced (64 entries, order matches).
-
-**2026-08 note enrichment:** `lec07-interpretability-note.html` upgraded from speaker
-script (401 lines) to Script &amp; Companion Notes (773 lines; 64 entries unchanged):
-per-entry `.detail` blocks with rigorous definitions (additive feature attribution
-class, full LIME objective + K-LASSO, cooperative game + SHAP conditional-expectation
-value, gradient saliency + Taylor rationale, IG path integral + Sensitivity(a)/
-Implementation Invariance, linear probes + control tasks/selectivity + linear
-representation hypothesis, scaled dot-product attention, residual stream + QK/OV
-circuits, induction-head two-head mechanism, polysemanticity/privileged basis,
-superposition hypothesis, dictionary learning, exact Bricken SAE equations + loss,
-feature clamping, GDPR Art. 22(1) + Arts. 13–15 verbatim, faithfulness vs
-plausibility), theorem blocks with verified proofs (Shapley subset↔permutation
-equivalence + full existence/uniqueness via unanimity basis, labeled course notes;
-SHAP Theorem 1 statement; IG Completeness with full FTC proof + Prop 2 pointer), and
-Background blocks with 35 verified links (LIME/SHAP/IG/Adebayo/probing/attention-debate
-arXiv, five transformer-circuits.pub papers, Golden Gate Claude, Neuronpedia +
-Gemma Scope, GDPR/AI-Act texts, Wachter DOI, biology-of-LLM + circuit-tracing
-open-sourcing, Chen CoT faithfulness, Amodei essay).
-
-## lec08-adversarial.html
-
-**Topic:** Adversarial examples — attack and defense (~90 min). Panda→gibbon
-phenomenon and why it exists (linearity, features-not-bugs, intuition only); threat
-model (budget ε, L∞/L2, white/black box, transferability + Papernot commercial-API
-numbers); attacks as pictures (FGSM one step, PGD iterate, C&W, targeted vs
-untargeted); defenses (adversarial training, robustness–accuracy tradeoff, certified
-robustness / randomized smoothing at voting-intuition level); the arms race
-(obfuscated gradients, Athalye 9/7/6+1, adaptive attacks, RobustBench scoreboard);
-physical & beyond (stop sign, glasses, patches, audio, multimodal jailbreak images,
-distribution shift / ImageNet-C touchpoint, NIST AI 100-2 frontier). Math lives in
-`lec08tech.html`.
-
-### Sections (63 slides, ~90 min — content-revised 2026-08 from 56, all citations source-verified)
+### Sections (65 slides, ~90 min — content-revised 2026-08 from 55; figure pass 2026-09 from 61; all citations source-verified)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:32`, `:44` | |
-| **01 — The Phenomenon** | 3–13 | `:77` | **panda→gibbon (99.3%, verified Fig 1) ** `:109` · anatomy (57.7%→99.3%, fixed 2026-08) `:121` · Intriguing Properties `:134` · boundary picture (SVG) `:183` · close to the edge `:205` · **Why? Too Linear Inside (added 2026-08)** `:229` · **Why? Features, Not Bugs (added 2026-08)** `:246` |
-| **02 — The Threat Model** | 14–21 | `:262` | budget ‖δ‖≤ε `:288` · L∞ vs L2 `:317` · allowed region (SVG) `:339` · white vs black box `:358` · transferability `:388` · **Why Transfer Is Scary (Amazon 96% / Google 89%, ~800 queries; verified 2026-08)** `:405` |
-| **03 — The Attacks** | 22–32 | `:430` | core idea `:438` · gradient sign `:460` · FGSM `:475` · FGSM by hand `:506` · PGD `:563` · steps in ball (SVG) `:595` · PGD benchmark `:618` · C&W `:633` · targeted vs untargeted `:648` |
-| **04 — The Defenses** | 33–44 | `:664` | defender's goal `:672` · radius (SVG) `:697` · adversarial training `:717` · it works `:733` · the cost `:749` · **Robustness vs Accuracy (Tsipras; added 2026-08)** `:764` · empirical vs certified `:779` · certified robustness `:810` · randomized smoothing `:835` · why voting certifies `:851` · certified catch `:867` |
-| **05 — The Arms Race** | 45–51 | `:885` | recurring story `:893` · obfuscated gradients `:906` · **A False Sense of Security (fixed 2026-08: 9 defenses, 7 obfuscated, 6 broken + 1 partial)** `:933` · adaptive attacks `:949` · how to test honestly `:981` · **The Scoreboard: RobustBench (added 2026-08)** `:994` |
-| **06 — Physical & Beyond** | 52–61 | `:1027` | off the screen `:1035` · **stop sign (Speed Limit 45; 100% lab / 84.8% drive-by; verified 2026-08)** `:1053` · **Adversarial Glasses (added 2026-08)** `:1073` · adversarial patches (+Thys cite) `:1090` · beyond vision (C&W audio 99.9%) `:1107` · **Attacking Multimodal Models (Qi AAAI 2024; rewritten 2026-08)** `:1121` · **Related: The World Also Shifts (added 2026-08)** `:1138` · **ImageNet-C (added 2026-08)** `:1154` · **2025-26 Frontier (NIST AI 100-2; rewritten 2026-08)** `:1171` |
-| Takeaways / Closer | 62–63 | — | key takeaways `:1187` · closer `:1200` |
+| **01 — The Train-Time Threat** | 3–9 | `:77` | two places to attack (SVG) `:85` · inference-time (SVG) `:102` · train-time (SVG) `:120` · pipeline cracks (SVG) `:138` · supply chain (Gu Fig 1) `:162` · hard to catch (SVG) `:179` |
+| **02 — Data Poisoning** | 10–19 | `:198` | two goals (SVG) `:206` · availability (Biggio Fig 3) `:223` · SVM poisoning (Biggio Fig 1) `:240` · boundary tilt (SVG) `:256` · targeted (SVG) `:280` · clean-label (Frogs Fig 6a) `:298` · **Poison Frogs (Frogs Fig 1; one poison image, transfer setting; verified 2026-08)** `:315` · feature collision (SVG) `:333` · **Collision, Measured (Frogs Fig 3b; added 2026-09)** `:355` |
+| **03 — Backdoors and Triggers** | 20–28 | `:368` | backdoor idea (SVG) `:376` · BadNets (Gu Fig 3) `:394` · **trigger pipeline (Gu Fig 7 capture, verified)** `:411` · clean accuracy stays high (Gu Fig 6) `:423` · two numbers (Gu Fig 4) `:440` · **stop sign (Gu Fig 8; Post-it, >90% flip, 95% confidence; fixed 2026-08)** `:458` · subtle triggers (SVG) `:475` · why it works (SVG) `:493` |
+| **04 — Web-Scale Poisoning** | 29–38 | `:512` | where big data comes from (SVG) `:520` · **Poisoning Is Practical (Carlini Fig 1; $60, 10 datasets; fixed 2026-08)** `:538` · split-view (SVG) `:555` · frontrunning (Carlini Fig 6) `:581` · **tiny fraction (0.01% of LAION-400M ≈ $60; fixed 2026-08)** `:598` · **Few Datasets Ship a Hash (Carlini Table 1; added 2026-09)** `:608` · no insider (SVG) `:620` · **Glaze (Fig 8; added 2026-08)** `:638` · **Nightshade (Fig 7; added 2026-08)** `:655` |
+| **05 — Backdoors in Language Models** | 39–48 | `:673` | tuning is a new target (SVG) `:681` · **Poisoned Instructions (Wan Fig 5; ICML 2023, ~100 examples; fixed 2026-08)** `:699` · text trigger (Wan Fig 1) `:716` · **How Much Poison Is Needed? (added 2026-08)** `:732` · **The Two Experiments (Souly Fig 1; added 2026-09)** `:746` · **250 Documents Are Enough (Souly Fig 2 replaces the hand-drawn SVG; added 2026-08)** `:761` · **Sleeper Agents (Hubinger Fig 1; 2023/2024 code trigger; fixed 2026-08)** `:773` · safety training misses it (Hubinger Fig 2) `:790` · why LLMs exposed (SVG) `:807` |
+| **06 — Defenses, Frontier 2025–26** | 49–62 | `:826` | two lines of defense (SVG) `:834` · **Defending the Pipeline (SVG; hashes + randomized snapshots; added 2026-08)** `:851` · spectral signatures (Tran Fig 3) `:871` · outlier picture (SVG) `:888` · **The Signature, Measured (Tran Fig 1; added 2026-09)** `:908` · activation clustering (Chen Fig 2) `:920` · Neural Cleanse (Wang Fig 1) `:936` · fine-pruning (Liu Fig 4) `:952` · demo (SVG) `:968` · never final (SVG) `:1001` · **Related Threat: Model Stealing (Tramèr Fig 1; added 2026-08)** `:1019` · **Frontier 2025–26 (SVG; rewritten 2026-08)** `:1036` |
+| Takeaways / Closer | 63–65 | — | what to remember `:1054` · key takeaway `:1068` · closer `:1076` |
 
-**Key definitions / citations (all source-verified 2026-08):**
-- Panda→gibbon (57.7% panda → 99.3% gibbon, ε=.007) + linearity explanation — `:117`,
-  `:242` — Goodfellow, Shlens, and Szegedy, "Explaining and Harnessing Adversarial
-  Examples", ICLR 2015 (Figure 1; "the primary cause ... is their linear nature").
-- Intriguing properties + transfer — `:143` — Szegedy et al., ICLR 2014.
-- Features-not-bugs — `:257` — Ilyas et al., NeurIPS 2019.
-- Black-box transfer to commercial APIs (Amazon 96%, Google 89%, ~800 queries) —
-  `:425` — Papernot, McDaniel, and Goodfellow, arXiv 2016.
-- PGD + adversarial training — `:591`, `:729` — Madry et al., ICLR 2018.
-- C&W attack — `:644` — Carlini and Wagner, IEEE S&P 2017.
-- Robustness–accuracy tradeoff — `:775` — Tsipras et al., "Robustness May Be at Odds
-  with Accuracy", ICLR 2019.
-- Randomized smoothing certificate — `:847` — Cohen, Rosenfeld, and Kolter, ICML 2019.
-- Obfuscated gradients (9 ICLR-2018 defenses examined, 7 obfuscated, 6 fully +
-  1 partially broken) — `:929`, `:945` — Athalye, Carlini, and Wagner, ICML 2018.
-- RobustBench (CIFAR-10 L∞ 8/255: standard 94.8/0.0, best 93.7/73.7, AutoAttack) —
-  `:1022` — robustbench.github.io, accessed Aug 2026.
-- Stop-sign attack (target "Speed Limit 45"; 100% lab, 84.8% drive-by, LISA-CNN) —
-  `:1069` — Eykholt et al., CVPR 2018 (Figure 1; abstract).
-- Adversarial glasses (dodge 80%+, impersonate 87.9%) — `:1086` — Sharif, Bhagavatula,
-  Bauer, and Reiter, ACM CCS 2016.
-- Adversarial patch — `:1103` — Brown et al., arXiv 2017; person-hiding held patch —
-  Thys, Van Ranst, and Goedemé, CVPR-W 2019.
-- Audio adversarial examples (99.9% similar waveform → any phrase, 100% vs
-  DeepSpeech) — `:1117` — Carlini and Wagner, arXiv 2018 (venue unverified; cited
-  year-only).
-- Multimodal jailbreak image — `:1134` — Qi et al., "Visual Adversarial Examples
-  Jailbreak Aligned Large Language Models", AAAI 2024.
-- ImageNet-C (15 corruptions × 5 severities = 75 sets) — `:1167` — Hendrycks and
-  Dietterich, ICLR 2019.
-- NIST adversarial-ML taxonomy — `:1183` — NIST AI 100-2 E2025, March 2025.
-
-**Real images** (`figs/`, cropped + cited; 25 image slots after the 2026-09 figure pass):
-panda + noise + gibbon `figs/panda-gibbon.png` (Goodfellow 2015 Fig 1) `:114`; AlexNet ostrich triples
-`figs/szegedy-fig5-alexnet.png` (Szegedy 2014 Fig 5) `:142`; near-linear logits vs ε
-`figs/goodfellow-fig4-linear.png` (Goodfellow Fig 4) `:240`; robust / non-robust dataset split
-`figs/ilyas-fig1-features.png` (Ilyas 2019 Fig 1) `:256`; cross-technique transfer matrix
-`figs/papernot-fig3-transfer.png` (Papernot 2016 Fig 3) `:399`; logistic-regression sign perturbation
-`figs/goodfellow-fig2-logreg.png` (Goodfellow Fig 2) `:469`; PGD loss over iterations
-`figs/madry-fig1-pgd-loss.png` (Madry 2018 Fig 1) `:627`; C&W L2/L∞/L0 examples
-`figs/cw-fig1-distilled.png` (Carlini & Wagner 2017 Fig 1) `:642`; targeted L2 digit grid
-`figs/cw-fig3-targeted.png` (C&W Fig 3) `:656`; simple vs robust boundary
-`figs/madry-fig3-boundary.png` (Madry Fig 3) `:728`; accuracy vs distortion `figs/athalye-fig1-advtrain.png`
-(Athalye 2018 Fig 1) `:743`; clean accuracy vs training ε `figs/tsipras-fig1-tradeoff.png` (Tsipras 2019
-Fig 1) `:758`; input gradients standard vs robust `figs/tsipras-fig2-gradients.png` (Tsipras Fig 2) `:774`;
-panda under σ = 0.5 noise `figs/cohen-fig2-smoothing.png` (Cohen 2019 Fig 2) `:845`; half-space worst case
-`figs/cohen-fig3-fstar.png` (Cohen Fig 3) `:861`; certified accuracy vs radius `figs/cohen-fig6-certified.png`
-(Cohen Fig 6) `:878`; nine-defense census `figs/athalye-tab1-defenses.png` (Athalye Table 1) `:943`;
-stop-sign photo pair `figs/eykholt-stopsign.png` (Eykholt 2018 Fig 1) `:1066`; adversarial eyeglasses
-`figs/sharif-fig4-glasses.png` (Sharif 2016 Fig 4) `:1084`; banana → toaster patch
-`figs/brown-fig1-toaster.png` (Brown 2017 Fig 1) `:1101`; overlaid audio waveforms
-`figs/cw-audio-fig2-waveform.png` (Carlini & Wagner 2018 Fig 2) `:1115`; MiniGPT-4 jailbreak panda
-`figs/qi-fig1-jailbreak.png` (Qi 2024 Fig 1) `:1132`; impulse-noise severities
-`figs/hendrycks-fig7-severity.png` (Hendrycks & Dietterich 2019 Fig 7) `:1148`; 15 corruption types
-`figs/hendrycks-fig1-corruptions.png` (Hendrycks Fig 1) `:1165`; NIST attack taxonomy
-`figs/nist-fig1-taxonomy.png` (NIST AI 100-2 E2025 Fig 1) `:1181`.
-**SVG** (25): confidence bars `:95`, 3×3 fooled grid `:157`, attacker → four systems `:171`, boundary
-crossing `:188`, nine nudges = one shove `:214`, threat-model rule boxes `:280`, ε-ball with δ `:298`,
-L∞ vs L2 pixel grids `:328`, L∞ box vs L2 ball `:344`, white vs black box `:368`, Amazon / Google bars
-`:414`, loss bowl (lower vs raise) `:444`, x + ε·sign = x_adv `:485`, 0.40 → 0.43 pixel scale `:516`,
-overshoot vs small steps `:543`, step → project → K loop `:573`, PGD steps in ball `:600`, dot vs ball
-`:681`, robustness radius `:702`, track record vs proof `:789`, radius vs boundary curve `:819`, smooth vs
-staircase loss `:915`, fixed vs adaptive attack `:959`, RobustBench grouped bars `:1004`, physical pipeline
-`:1044`. Citations use `.cite-left`. Page number: bold `.slide-num` only.
-
-**2026-09 figure pass (63 slides, unchanged count; PR #24):** every bullet-only content slide now carries
-a cited real figure crop or an inline SVG (23 new crops, 21 new SVGs; the two pre-existing captures and
-four pre-existing SVGs kept). Real figures sit beside the bullets in a `1fr auto` grid or stacked below
-them; every crop is trimmed of white margins, excludes the paper caption and table rules, and is cited
-with its figure/table number. Note file: one "Slide figure" sentence per real-figure article (23 new);
-63 entries, order matches.
-
-**2026-08 content revision (56→63):** every citation/number fetched and verified.
-Added 7 slides: Why? Too Linear Inside + Why? Features, Not Bugs (§01), Robustness vs
-Accuracy (§04), The Scoreboard: RobustBench (§05), Adversarial Glasses (§06),
-Related: The World Also Shifts + ImageNet-C (§06). Fixed: "broke seven defenses" →
-verified 9 examined / 7 obfuscated / 6 fully + 1 partially broken (Athalye); panda
-confidences rounded → exact 57.7% / 99.3%; stop-sign slide gained target class and
-verified success rates; transfer-is-scary gained verified Papernot numbers; patches
-"wearable" claim replaced by verified held-patch (Thys); 2025-26 Frontier rewritten
-around NIST AI 100-2 (unverified "certificates that finally scale" bullet deleted).
-Section 06 renamed Physical & Multimodal → Physical & Beyond. `lec08tech.html`
-audited: all math correct incl. Cohen certified radius, no changes (stays 19 sl).
-Note file synced (63 entries, order matches).
-**2026-08 note enrichment:** `lec08-adversarial-note.html` upgraded from speaker script
-(395 lines) to Script &amp; Companion Notes (821 lines; 63 entries unchanged): per-entry
-`.detail` blocks with rigorous definitions (adversarial example, ℓp threat models, ball
-nesting, transfer attack, robust risk, smoothed classifier, covariate/label shift, CE/mCE),
-theorems with proofs or labeled verified sketches (FGSM ℓ∞-optimality, ℓ∞/ℓ2 projection
-closed forms, linear-classifier robustness radius — all "(derivation: course notes)";
-Madry min-max + Danskin Thm A.1; C&W formulation; Cohen Thm 1 + Neyman–Pearson sketch;
-Tsipras Thm 2.1 tradeoff sketch), and 29 verified links — Athalye 9/7/6+1 census, EOT,
-RP2, AutoAttack composition all verified against the papers.
-
-## lec09-poisoning.html
-
-**Topic:** Data poisoning & backdoors (~90 min). Train-time vs inference-time
-attacks; web-scraped corpora as the attack surface (supply-chain frame);
-availability vs targeted taxonomy; clean-label poisoning at picture level (Poison
-Frogs, feature collision); BadNets trigger backdoors (real Gu Fig 7 capture, clean
-accuracy vs attack success); web-scale poisoning (Carlini split-view /
-frontrunning, $60 for 0.01%); artist tools (Glaze, Nightshade); LLM poisoning
-(instruction-tuning poisoning, near-constant poison count / 250-documents result,
-sleeper agents); defenses (data curation, spectral signatures, activation
-clustering, Neural Cleanse, fine-pruning); model-stealing one-slide touchpoint
-(full deck: `backup-model-stealing.html`). Math lives in `lec09tech.html`.
-
-### Sections (61 slides, ~90 min — content-revised 2026-08 from 55, all citations source-verified)
-
-| Section | Slides | Divider line | Notable slides |
-|---|---|---|---|
-| Title / Contents | 1–2 | `:32`, `:44` | |
-| **01 — The Train-Time Threat** | 3–9 | `:77` | two places to attack `:85` · pipeline cracks (SVG) `:123` · supply chain `:147` |
-| **02 — Data Poisoning** | 10–18 | `:174` | two goals `:182` · SVM poisoning (Biggio) `:207` · boundary tilt (SVG) `:220` · clean-label `:257` · **Poison Frogs (one poison image, transfer setting; verified 2026-08)** `:270` · feature collision (SVG) `:285` |
-| **03 — Backdoors and Triggers** | 19–27 | `:308` | backdoor idea `:316` · BadNets `:329` · **trigger pipeline (Gu Fig 7 capture, verified)** `:342` · clean accuracy stays high `:354` · two numbers `:367` · **stop sign (Post-it, >90% flip, 95% confidence; fixed 2026-08)** `:381` |
-| **04 — Web-Scale Poisoning** | 28–36 | `:422` | **Poisoning Is Practical ($60, 10 datasets; fixed 2026-08)** `:443` · split-view (SVG) `:456` · frontrunning `:482` · **tiny fraction (0.01% of LAION-400M ≈ $60; fixed 2026-08)** `:496` · **Glaze (added 2026-08)** `:519` · **Nightshade (added 2026-08)** `:533` |
-| **05 — Backdoors in Language Models** | 37–45 | `:548` | tuning is a new target `:556` · **Poisoned Instructions (Wan ICML 2023, ~100 examples; fixed 2026-08)** `:569` · text trigger `:583` · **How Much Poison Is Needed? (added 2026-08)** `:596` · **250 Documents Are Enough (SVG; added 2026-08)** `:610` · **Sleeper Agents (2023/2024 code trigger; fixed 2026-08)** `:632` · safety training misses it `:646` |
-| **06 — Defenses, Frontier 2025–26** | 46–58 | `:673` | two lines of defense `:681` · **Defending the Pipeline (hashes + randomized snapshots; added 2026-08)** `:693` · spectral signatures `:708` · outlier picture (SVG) `:721` · activation clustering `:741` · Neural Cleanse `:754` · fine-pruning `:767` · demo `:780` · **Related Threat: Model Stealing (added 2026-08)** `:821` · **Frontier 2025–26 (rewritten 2026-08)** `:835` |
-| Takeaways / Closer | 59–61 | — | what to remember `:848` · key takeaway `:862` · closer `:870` |
-
-**Key definitions / citations (all source-verified 2026-08):**
-- SVM poisoning (first formal study) — `:216` — Biggio, Nelson, and Laskov,
+**Key definitions / citations (all source-verified 2026-08; figure numbers checked against the PDFs 2026-09):**
+- SVM poisoning (first formal study) — `:236` (Fig 3), `:252` (Fig 1) — Biggio, Nelson, and Laskov,
   "Poisoning Attacks against Support Vector Machines", ICML 2012.
 - Poison Frogs clean-label attack (one poison image suffices in the
-  transfer-learning test) — `:266`, `:281` — Shafahi et al., NeurIPS 2018.
+  transfer-learning test) — `:311` (Fig 6a), `:329` (Fig 1), `:363` (Fig 3b) — Shafahi et al., NeurIPS 2018.
 - BadNets (trigger stickers, >90% stop signs → speed-limit, real photo fooled at
-  95% confidence, clean accuracy level with baseline) — `:156`, `:338`, `:350`,
-  `:391` — Gu, Dolan-Gavitt, and Garg, 2017 (arXiv 1708.06733; Figure 7).
+  95% confidence, clean accuracy level with baseline) — `:175` (Fig 1), `:407` (Fig 3), `:419` (Fig 7),
+  `:436` (Fig 6), `:454` (Fig 4), `:471` (Fig 8) — Gu, Dolan-Gavitt, and Garg, 2017 (arXiv 1708.06733).
 - Web-scale poisoning ($60 buys 0.01% of LAION-400M; split-view = expired
   domains; frontrunning = snapshot timing; defenses = integrity hashes +
-  randomized snapshots) — `:452`, `:478`, `:492`, `:502`, `:704` — Carlini et
+  randomized snapshots) — `:551` (Fig 1), `:577`, `:594` (Fig 6), `:604`, `:616` (Table 1), `:867` — Carlini et
   al., IEEE S&P 2024.
-- Glaze (style cloak, >92% mimicry disruption) — `:529` — Shan et al., USENIX
+- Glaze (style cloak, >92% mimicry disruption) — `:651` (Fig 8) — Shan et al., USENIX
   Security 2023.
-- Nightshade (<100 samples corrupt one SDXL prompt) — `:543` — Shan et al.,
+- Nightshade (<100 samples corrupt one SDXL prompt) — `:668` (Fig 7) — Shan et al.,
   IEEE S&P 2024.
 - Instruction-tuning poisoning (~100 examples skew hundreds of tasks; larger
-  models more vulnerable) — `:579` — Wan, Wallace, Shen, and Klein, ICML 2023.
+  models more vulnerable) — `:712` (Fig 5), `:728` (Fig 1) — Wan, Wallace, Shen, and Klein, ICML 2023.
 - Near-constant poison count (~250 documents backdoor 600M–13B models,
   Chinchilla-optimal 6B–260B tokens; 20× more clean data does not raise the
-  bar) — `:606`, `:628` — Souly et al., 2025 (arXiv 2510.07192; UK AI Security
+  bar) — `:742`, `:757` (Fig 1), `:769` (Fig 2) — Souly et al., 2025 (arXiv 2510.07192; UK AI Security
   Institute, Anthropic, Alan Turing Institute).
 - Sleeper agents (2023 secure / 2024 exploitable code; survives SFT, RL, and
-  adversarial training; largest models most persistent) — `:642`, `:655` —
+  adversarial training; largest models most persistent) — `:786` (Fig 1), `:803` (Fig 2) —
   Hubinger et al., 2024 (arXiv 2401.05566). Distinct from Souri et al.
   "Sleeper Agent" (not referenced here).
-- Spectral signatures — `:717` — Tran, Li, and Madry, NeurIPS 2018.
-- Activation clustering — `:750` — Chen et al., 2018 (arXiv 1811.03728).
-- Neural Cleanse — `:763` — Wang et al., IEEE S&P 2019.
-- Fine-pruning — `:776` — Liu, Dolan-Gavitt, and Garg, RAID 2018.
-- Model stealing — `:831` — Tramèr, Zhang, Juels, Reiter, and Ristenpart,
+- Spectral signatures — `:884` (Fig 3), `:916` (Fig 1) — Tran, Li, and Madry, NeurIPS 2018.
+- Activation clustering — `:932` (Fig 2) — Chen et al., 2018 (arXiv 1811.03728).
+- Neural Cleanse — `:948` (Fig 1) — Wang et al., IEEE S&P 2019.
+- Fine-pruning — `:964` (Fig 4) — Liu, Dolan-Gavitt, and Garg, RAID 2018.
+- Model stealing — `:1032` (Fig 1) — Tramèr, Zhang, Juels, Reiter, and Ristenpart,
   USENIX Security 2016.
 
-**Figures:** BadNets clean + yellow-square/bomb/flower trigger stop signs (Gu
-Fig 7 capture, `figs/badnets-trigger.png`) `:347`; inline SVG: pipeline cracks
-`:128`, boundary tilt `:225`, feature collision `:290`, split-view `:461`,
-poison-count scaling `:615`, spectral outlier `:726`. Citations use
+**Figures (28 cited crops in `figs/`, 2026-09 figure pass):** `badnets-approaches.png` (Gu Fig 1) `:173` · `biggio-multipoint.png` (Biggio Fig 3) `:234` · `biggio-gradient-attack.png` (Biggio Fig 1) `:250` · `frogs-schematic.png` (Frogs Fig 6a) `:309` · `frogs-transfer-attack.png` (Frogs Fig 1) `:327` · `frogs-feature-b.png` (Frogs Fig 3b) `:360` · `badnets-mnist-triggers.png` (Gu Fig 3) `:405` · `badnets-trigger.png` (Gu Fig 7) `:416` · `badnets-error-vs-poison.png` (Gu Fig 6) `:434` · `badnets-confusion.png` (Gu Fig 4) `:451` · `badnets-real-stopsign.png` (Gu Fig 8) `:469` · `carlini-cost.png` (Carlini Fig 1) `:549` · `carlini-wiki-cdf.png` (Carlini Fig 6) `:592` · `carlini-datasets-table.png` (Carlini Table 1) `:613` · `glaze-results.png` (Glaze Fig 8) `:649` · `nightshade-outputs.png` (Nightshade Fig 7) `:666` · `wan-trigger-phrases.png` (Wan Fig 5) `:710` · `wan-overview.png` (Wan Fig 1) `:726` · `souly-overview.png` (Souly Fig 1) `:751` · `souly-constant-count.png` (Souly Fig 2) `:766` · `sleeper-setup.png` (Hubinger Fig 1) `:784` · `sleeper-code-vuln.png` (Hubinger Fig 2) `:801` · `spectral-pipeline.png` (Tran Fig 3) `:881` · `spectral-histograms.png` (Tran Fig 1) `:913` · `actclust-pca.png` (Chen Fig 2) `:930` · `cleanse-illustration.png` (Wang Fig 1) `:946` · `finepr-activations.png` (Liu Fig 4) `:962` · `tramer-extraction.png` (Tramèr Fig 1) `:1030`.
+Inline SVG (23): two places `:95` · inference-time `:113` · train-time `:131` · pipeline cracks `:143` · hard to catch `:190` · two goals `:215` · boundary tilt `:261` · targeted `:291` · feature collision `:338` · backdoor idea `:387` · subtle triggers `:486` · why it works `:504` · where big data `:531` · split-view `:560` · no insider `:631` · tuning target `:692` · LLMs exposed `:818` · two lines `:843` · defending pipeline `:862` · spectral outlier `:893` · demo `:982` · never final `:1012` · frontier `:1046`. Citations use
 `.cite-left`. Page number: bold `.slide-num` only.
+
+**2026-09 figure pass (61→65):** 27 new cited crops (figure numbers checked against each PDF; `carlini-cost.png` re-cropped) and 16 new inline SVGs; the hand-drawn poison-count sketch on 250 Documents replaced by Souly Fig 2. Added 4 slides: Collision, Measured (Frogs Fig 3b), Few Datasets Ship a Hash (Carlini Table 1, split out of Tiny Fraction to avoid cite overlap), The Two Experiments (Souly Fig 1, split out of How Much Poison), The Signature, Measured (Tran Fig 1). the uncropped full-Fig-3 file frogs-feature-space.png removed. Note file: +4 articles, 44 "Slide figure" lines.
 
 **2026-08 content revision (55→61):** every citation/number fetched and verified.
 Added 6 slides: Artists Fight Back: Glaze + Nightshade: Poison as Deterrent (§04),

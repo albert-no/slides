@@ -45,7 +45,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 11 | `lec11-prompt-injection.html` | Prompt injection & agentic safety | **figure pass 2026-09** (66 sl) |
 | 12 | `lec12-watermark.html` | Watermarking, deepfakes & provenance | **revised 2026-08**, **figure pass 2026-09** (68 sl) |
 | 13 | `lec13-fairness-defs.html` | Fairness I — definitions & impossibility | **revised 2026-08**, **figure pass 2026-09** (62 sl) |
-| 14 | `lec14-fairness-mitigation.html` | Fairness II — mitigation & accountability | **revised 2026-08** (61 sl) |
+| 14 | `lec14-fairness-mitigation.html` | Fairness II — mitigation & accountability | **revised 2026-08, figure pass 2026-09** (69 sl) |
 | 15 | `lec15-governance.html` | Governance, frontier & demo showcase | **revised 2026-08** (66 sl) |
 
 Every deck has a companion **speaker script** `lecNN-…-note.html` (one entry per slide:
@@ -102,6 +102,7 @@ cropped-and-cited paper figure or a data-backed SVG:
 - `lec09` BadNets trigger strip (`figs/badnets-trigger.png`, Gu et al. 2017 Fig 7).
 - `lec10` Wei failure modes (`figs/wei-jailbroken.png`, NeurIPS 2023 Fig 1), GCG schematic (`figs/gcg-schematic.png`, Zou 2023 Fig 1 — replaced SVG), many-shot power-law (`figs/msj-powerlaw.png`, Anil et al. NeurIPS 2024 **Fig 1** — attribution corrected from Fig 2, 2026-08); 2026-09 figure pass added 18 more (Ouyang, Bai, Qi, Arditi, Zou GCG/CB, Chao, Yong, Yuan, Szegedy, Ganguli, Perez, Sharma, Hughes) — see its section.
 - `lec13`/`lec14` Bianchi occupation grid (`figs/bianchi-occupations.png`, FAccT 2023 Fig 1); `lec14` Gender Shades table (`figs/gender-shades.png`, FAT* 2018 Table 4). lec13 COMPAS TODO removed (illustrative SVG kept — real news graphic is copyrighted).
+- `lec14` figure pass 2026-09: 20 cited crops (AIF360 Figs. 1/4/5, Feldman Fig. 1, Agarwal Fig. 1, Zhang Fig. 2 + Table 3, Hardt Figs. 2/10/11, model card + datasheet examples, SMACTR Fig. 2, PPB faces, Actionable Auditing Tables 1–2, Tamkin Figs. 1/2/5, Eloundou Fig. 10, Wilson & Caliskan Fig. 2) + 14 SVGs; see the lec14 section.
 - `lec06` Vectara HHEM hallucination bar chart (inline SVG, data May 2026).
 - `backup-copyright` Somepalli pairs (`figs/somepalli-pairs.png`, CVPR 2023 Fig 1); `backup-sycophancy` Sharma preference forest plot (`figs/sharma-sycophancy.png`, ICLR 2024 Fig 5); `backup-model-stealing` Knockoff pipeline (`figs/knockoff-pipeline.png`, CVPR 2019 Fig 2) + SVD hidden-dim plot (`figs/stealing-projection.png`, Carlini ICML 2024 Fig 1); `backup-agentic-autonomy` CoinRun panel (`figs/coinrun-misgeneralization.png`, Langosco et al. ICML 2022 Fig 1).
 
@@ -1190,51 +1191,88 @@ shared with lec13, Gemini overcorrection referenced briefly — the full case is
 lec13's — plus LLM decision bias, prompt steering, post-training as mitigation,
 resume-screening risk, and the 2025 both-ways regulatory squeeze).
 
-### Sections (61 slides, ~90 min — content-revised 2026-08 from 55, all citations source-verified)
+### Sections (69 slides, ~90 min — content-revised 2026-08 from 55; figure pass 2026-09 from 61; all citations source-verified)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:32`, `:44` | |
-| **01 — Three Places to Intervene** | 3–8 | `:81` | we measured bias; now fix it `:89` · what mitigation means `:102` · ML pipeline (SVG) `:113` · which stage can you touch `:145` · black-box reality `:157` |
-| **02 — Pre-Processing** | 9–15 | `:171` | bias is in the data `:179` · **Reweighing (Kamiran & Calders)** `:192` · reweighing picture (SVG) `:206` · relabeling `:234` · representation repair `:247` · pros and cons `:260` |
-| **03 — In-Processing** | 16–23 | `:273` | Loss+λ·penalty `:281` · constraint τ `:290` · **Reductions (Agarwal et al. ICML 2018)** `:303` · why reductions are handy `:316` · **Adversarial Debiasing (Zhang et al. AIES 2018; adversary reads the prediction — fixed 2026-08)** `:329` · adversary's job `:354` · pros and cons `:367` |
-| **04 — Post-Processing** | 24–34 | `:380` | leave the model alone `:388` · recall equalized odds `:401` · **Group-Specific Thresholds (Hardt et al., SVG)** `:413` · post-hoc recipe `:436` · **What Post-Processing Needs (added 2026-08)** `:450` · accuracy cost `:463` · lending demo ×3 (illustrative numbers) `:476` `:487` `:509` · **Toolkits Ship These Methods (Fairlearn + AIF360; added 2026-08)** `:522` |
-| **05 — The Tradeoff** | 35–40 | `:536` | frontier curve (SVG) `:544` · which fairness `:565` · impossibility (recap of lec13) `:578` · no free lunch `:586` · a choice, not a formula `:599` |
-| **06 — Accountability** | 41–50 | `:613` | mitigation needs a record `:621` · **Model Cards (Mitchell et al.)** `:634` · **Datasheets (Gebru et al.)** `:647` · audits `:660` · **Gender Shades figure (`figs/gender-shades.png`, FAT* 2018 Table 4)** `:673` · reading the table (0–0.8% vs 20.8–34.7%) `:684` · **The Audit Worked (Raji & Buolamwini AIES 2019, before/after bar SVG; added 2026-08)** `:697` · impact assessments `:736` · documentation becomes law (EU AI Act touchpoint) `:749` |
-| **07 — Generative & LLM Fairness** | 51–59 | `:763` | **Bianchi figure (`figs/bianchi-occupations.png`, shared with lec13)** `:771` · debias a generator `:789` · **Overcorrection Is Its Own Bias (Gemini Feb 2024, merged from 2 slides; case detail lives in lec13)** `:802` · **Do LLMs Discriminate? (Tamkin et al.; added 2026-08)** `:816` · **Prompting the Bias Away (added 2026-08)** `:831` · **Post-Training as Mitigation (Eloundou et al. ICLR 2025; added 2026-08)** `:846` · **Screening Is Still Risky (Wilson & Caliskan AIES 2024; added 2026-08)** `:861` · **Regulation Pulls Both Ways (EO 14319; added 2026-08)** `:875` |
-| Wrap-up / Closer | 60–61 | — | key takeaways `:889` · closer ("λ") `:903` |
+| **01 — Three Places to Intervene** | 3–8 | `:81` | we measured bias; now fix it (gap bars SVG) `:89` · what mitigation means `:105` · ML pipeline (SVG) `:116` · which stage can you touch `:148` · black-box reality (sealed-model SVG) `:160` |
+| **02 — Pre-Processing** | 9–16 | `:177` | bias is in the data (loop SVG) `:185` · **Reweighing (Kamiran & Calders)** `:201` · reweighing picture (SVG) `:215` · **Reweighing, Measured (AIF360 Fig. 4; added 2026-09)** `:243` · relabeling (scatter SVG) `:253` · representation repair (Feldman Fig. 1) `:269` · pros and cons `:286` |
+| **03 — In-Processing** | 17–26 | `:299` | Loss+λ·penalty (slider SVG) `:307` · constraint τ (curve SVG) `:318` · **Reductions (Agarwal et al. ICML 2018; loop SVG)** `:334` · **Reductions, Measured (Agarwal Fig. 1; added 2026-09)** `:350` · why reductions are handy (wrapper SVG) `:364` · **Adversarial Debiasing (Zhang et al. AIES 2018; adversary reads the prediction — fixed 2026-08)** `:380` · adversary's job (Zhang Fig. 2) `:405` · **Adversarial Debiasing, Measured (Zhang Table 3; added 2026-09)** `:422` · pros and cons `:439` |
+| **04 — Post-Processing** | 27–38 | `:452` | leave the model alone (Hardt Fig. 10) `:460` · recall equalized odds `:477` · **Group-Specific Thresholds (Hardt et al., SVG)** `:489` · post-hoc recipe (Hardt Fig. 2) `:512` · **What Post-Processing Needs (added 2026-08)** `:529` · accuracy cost (Hardt Fig. 11) `:542` · lending demo ×3 (illustrative numbers; two-bells SVG) `:559` `:572` `:594` · **Toolkits Ship These Methods (Fairlearn + AIF360; added 2026-08)** `:607` · **One Pipeline, Three Doors (AIF360 Fig. 1; added 2026-09)** `:620` |
+| **05 — The Tradeoff** | 39–45 | `:630` | frontier curve (SVG) `:638` · **The Frontier, Measured (AIF360 Fig. 5(b); added 2026-09)** `:659` · which fairness (base-rate bars SVG) `:676` · impossibility (recap of lec13; Venn SVG) `:692` · no free lunch `:702` · a choice, not a formula `:715` |
+| **06 — Accountability** | 46–57 | `:729` | mitigation needs a record (record-card SVG) `:737` · **Model Cards (Mitchell et al., Fig. 2)** `:753` · **Datasheets (Gebru et al., Fig. 1 excerpt)** `:769` · audits (SMACTR, Raji et al. FAT* 2020 Fig. 2) `:785` · **An Audit Needs a Benchmark (PPB, Gender Shades Fig. 1; added 2026-09)** `:800` · **Gender Shades figure (`figs/gender-shades.png`, FAT* 2018 Table 4)** `:817` · reading the table (0–0.8% vs 20.8–34.7%) `:828` · **The Audit Worked (Raji & Buolamwini AIES 2019, before/after bar SVG; added 2026-08)** `:841` · **The Audit Worked: The Numbers (Tables 1–2; added 2026-09)** `:880` · impact assessments (timeline SVG) `:889` · documentation becomes law (EU AI Act touchpoint; timeline SVG) `:905` |
+| **07 — Generative & LLM Fairness** | 58–67 | `:922` | **Bianchi figure (`figs/bianchi-occupations.png`, shared with lec13)** `:930` · debias a generator `:948` · **Overcorrection Is Its Own Bias (Gemini Feb 2024, merged from 2 slides; case detail lives in lec13)** `:961` · **Do LLMs Discriminate? (Tamkin et al. Fig. 1; added 2026-08)** `:975` · **Measured: Who Gets Favored (Tamkin Fig. 2; added 2026-09)** `:993` · **Prompting the Bias Away (Tamkin Fig. 5; added 2026-08)** `:1003` · **Post-Training as Mitigation (Eloundou et al. ICLR 2025 Fig. 10; added 2026-08)** `:1021` · **Screening Is Still Risky (Wilson & Caliskan AIES 2024 Fig. 2; gender direction per Aug 2026 erratum; added 2026-08)** `:1039` · **Regulation Pulls Both Ways (EO 14319; added 2026-08)** `:1057` |
+| Wrap-up / Closer | 68–69 | — | key takeaways `:1071` · closer ("λ") `:1085` |
 
-**Key citations (all source-verified 2026-08):**
-- Reweighing — `:202` — Kamiran & Calders, "Data Preprocessing Techniques for
+**Key citations (all source-verified 2026-08; figure captions verified 2026-09):**
+- Reweighing — `:211` — Kamiran & Calders, "Data Preprocessing Techniques for
   Classification without Discrimination", Knowledge and Information Systems 2012
-  (w = Pexp/Pobs verified against the paper).
-- Reductions — `:312` — Agarwal, Beygelzimer, Dudík, Langford, Wallach, "A Reductions
-  Approach to Fair Classification", ICML 2018.
-- Adversarial debiasing — `:350` — Zhang, Lemoine, Mitchell, "Mitigating Unwanted
+  (w = Pexp/Pobs verified against the paper). Measured — `:249` — Bellamy et al.,
+  "AI Fairness 360", 2018 (arXiv 1810.01943) Fig. 4(a),(c).
+- Representation repair — `:282` — Feldman, Friedler, Moeller, Scheidegger,
+  Venkatasubramanian, "Certifying and Removing Disparate Impact", KDD 2015, Fig. 1.
+- Reductions — `:346` — Agarwal, Beygelzimer, Dudík, Langford, Wallach, "A Reductions
+  Approach to Fair Classification", ICML 2018; measured — `:360` — Fig. 1 (top row).
+- Adversarial debiasing — `:401` — Zhang, Lemoine, Mitchell, "Mitigating Unwanted
   Biases with Adversarial Learning", AIES 2018 (adversary predicts the group from the
-  predictor's *output*, not shared features — deck fixed accordingly).
-- Post-processing — `:409`, `:446` — Hardt, Price, Srebro, "Equality of Opportunity in
-  Supervised Learning", NeurIPS 2016.
-- Toolkits — `:531` — Fairlearn (fairlearn.org, community-driven); AI Fairness 360
-  (IBM → LF AI & Data, July 2020).
-- Model cards — `:643` — Mitchell et al. (9 authors incl. Raji, Gebru), FAT* 2019.
-- Datasheets — `:656` — Gebru et al., CACM Dec 2021.
-- Gender Shades — `:680` — Buolamwini & Gebru, FAT* 2018 Table 4 (DF error
-  20.8/34.5/34.7%; LM 0.0/0.8/0.3%); follow-up `:732` — Raji & Buolamwini, "Actionable
-  Auditing", AIES 2019 (7 months, DF error 20.8→1.5 MSFT, 34.5→4.1 Face++, 34.7→17.0
-  IBM; unaudited Amazon 31.4%, Kairos 22.5%).
-- Generative/LLM — `:785` Bianchi et al., FAccT 2023 Fig 1; `:812` Google blog Feb 2024
-  (Gemini); `:827`/`:842` Tamkin et al. (Anthropic), 2023 (70 decisions; steering
-  prompts → gap near zero, ~92% aligned); `:857` Eloundou et al. (OpenAI),
-  "First-Person Fairness in Chatbots", ICLR 2025 (<0.1% harmful stereotypes; ~3–12×
-  reduction from post-training); `:871` Wilson & Caliskan, AIES 2024 (85.1% vs 11.1%);
-  `:884` Executive Order 14319, July 2025.
+  predictor's *output*, not shared features — deck fixed accordingly); gradient
+  picture `:418` Fig. 2; measured `:435` Table 3 (UCI Adult).
+- Post-processing — `:485`, `:525` — Hardt, Price, Srebro, "Equality of Opportunity in
+  Supervised Learning", NeurIPS 2016; FICO figures `:473` Fig. 10, `:555` Fig. 11.
+- Toolkits — `:616` — Fairlearn (fairlearn.org, community-driven); AI Fairness 360
+  (IBM → LF AI & Data, July 2020); AIF360 pipeline `:625` Fig. 1; frontier `:672` Fig. 5(b).
+- Model cards — `:765` — Mitchell et al. (9 authors incl. Raji, Gebru), FAT* 2019, Fig. 2.
+- Datasheets — `:781` — Gebru et al., CACM Dec 2021 (Fig. 1 excerpt from the arXiv version).
+- Audit process — `:796` — Raji, Smart, White, Mitchell, Gebru, Hutchinson, Smith-Loud,
+  Theron, Barnes, "Closing the AI Accountability Gap" (SMACTR), FAT* 2020, Fig. 2.
+- Gender Shades — `:824` — Buolamwini & Gebru, FAT* 2018 Table 4 (DF error
+  20.8/34.5/34.7%; LM 0.0/0.8/0.3%); PPB faces `:813` Fig. 1; follow-up `:876` — Raji &
+  Buolamwini, "Actionable Auditing", AIES 2019 (7 months, DF error 20.8→1.5 MSFT,
+  34.5→4.1 Face++, 34.7→17.0 IBM; unaudited Amazon 31.4%, Kairos 22.5%); tables `:885`.
+- Generative/LLM — `:944` Bianchi et al., FAccT 2023 Fig 1; `:971` Google blog Feb 2024
+  (Gemini); `:989`/`:999`/`:1017` Tamkin et al. (Anthropic), 2023 (70 decisions; Figs. 1,
+  2, 5; steering prompts → gap near zero, ~92% aligned); `:1035` Eloundou et al.
+  (OpenAI), "First-Person Fairness in Chatbots", ICLR 2025 (<0.1% harmful stereotypes;
+  ~3–12× reduction from post-training; Fig. 10); `:1053` Wilson & Caliskan, AIES 2024
+  (85.1% White-associated names favored; **gender-only results inverted by the authors'
+  29 Aug 2026 erratum, arXiv v3: female-associated names favored in 51.9% of tests,
+  male in 11.1%** — slide, note and Fig. 2 caption follow v3); `:1066` Executive Order
+  14319, July 2025.
 
-**Figures:** `figs/gender-shades.png` (FAT* 2018 Table 4, verified against paper) `:678`;
-`figs/bianchi-occupations.png` (FAccT 2023 Fig 1, shared with lec13) `:775`; inline
-SVGs: pipeline `:118`, reweighing cells `:211`, adversarial architecture `:334`,
-thresholds `:418`, demo tradeoff `:492`, frontier curve `:549`, audit before/after
-bars `:702`. Citations use `.cite-left`.
+**Figures (22 files, all cited with figure numbers; captured 2026-09 unless noted):**
+`figs/reweighing-aif360.png` `:247` · `figs/feldman-repair.png` `:274` ·
+`figs/reductions-frontier.png` `:354` · `figs/adversarial-gradients.png` `:415` ·
+`figs/adversarial-adult-confusion.png` `:427` · `figs/hardt-fico-roc.png` `:465` ·
+`figs/hardt-eo-threshold.png` `:517` · `figs/hardt-fico-cost.png` `:547` ·
+`figs/aif360-pipeline.png` `:624` · `figs/aif360-frontier.png` `:664` ·
+`figs/model-card-example.png` `:763` · `figs/datasheet-example.png` `:779` ·
+`figs/smactr-audit.png` `:789` · `figs/ppb-faces.png` `:805` ·
+`figs/gender-shades.png` (FAT* 2018 Table 4, verified against paper; 2026-08) `:822` ·
+`figs/actionable-audit-tables.png` `:884` · `figs/bianchi-occupations.png` (FAccT 2023
+Fig 1, shared with lec13; 2026-08) `:936` · `figs/tamkin-method.png` `:980` ·
+`figs/tamkin-discrimination.png` `:997` · `figs/tamkin-interventions.png` `:1014` ·
+`figs/eloundou-rl.png` `:1032` · `figs/resume-retrieval.png` `:1044`.
+Inline SVGs (21): gap bars `:99`, pipeline `:121`, sealed model `:170`, data loop `:195`,
+reweighing cells `:220`, relabeling scatter `:263`, λ slider `:314`, constraint curve
+`:328`, reductions loop `:344`, wrapper `:374`, adversarial architecture `:385`,
+thresholds `:494`, lending bells `:568`, demo tradeoff `:577`, frontier curve `:643`,
+base-rate bars `:686`, impossibility Venn `:698`, record card `:747`, audit before/after
+bars `:846`, assessment timeline `:899`, documentation timeline `:915`. Citations use
+`.cite-left`.
+
+**2026-09 figure pass (61→69):** every content slide now carries a cited public figure
+or an inline SVG. Added 20 cropped figures (`figs/`, each cite names the source figure
+or table) and 14 SVGs on previously bullet-only slides; 8 new "measured" slides hold
+the source figures that would not fit beside existing bullets (Reweighing, Measured;
+Reductions, Measured; Adversarial Debiasing, Measured; One Pipeline, Three Doors; The
+Frontier, Measured; An Audit Needs a Benchmark; The Audit Worked: The Numbers;
+Measured: Who Gets Favored). Content fix: **Screening Is Still Risky** — Wilson &
+Caliskan's arXiv v3 (29 Aug 2026) erratum inverts every gender-only comparison, so
+the bullet now reads "female-associated names in 51.9%, male in 11.1%" with a muted
+erratum line; the 85.1% race result is unaffected. All edited slides screenshot-checked
+at 60 dpi; `lint-deck.py` ok. Note synced (69 entries, `Slide figure:` line on each
+figure/SVG slide; erratum reflected in the Screening entry).
 
 **2026-08 content revision (55→61):** every citation/number fetched and verified.
 Added 8 slides: What Post-Processing Needs (§04); Toolkits Ship These Methods (§04);
@@ -1261,6 +1299,8 @@ independence, massaging flip count, reductions Thm 1/3 sketch, adversarial Props
 with entropy proofs, Hardt LP + ROC geometry + Prop 5.2/Cor 5.3, DP error lower bound),
 and 23 verified links — consistent with `lec14tech.html` and the lec13 note (impossibility
 proofs referenced, not duplicated).
+
+## lec15-governance.html
 
 **Topic:** Governance, the frontier & course wrap-up (~90 min, capstone). Nearly
 math-free. Connects the course's threads via the trust stack (data → model → output →

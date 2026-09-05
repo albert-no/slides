@@ -40,8 +40,8 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **figures 2026-09** (61 sl) |
 | 7 | `lec07-interpretability.html` | Interpretability & explainability | **revised 2026-08, figure pass 2026-09** (64 sl, 23 real figs) |
 | 8 | `lec08-adversarial.html` | Adversarial examples (attack + defense) | **revised 2026-08, figure pass 2026-09** (63 sl, 25 real figs) |
-| 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **revised 2026-08** (61 sl) |
-| 10 | `lec10-jailbreak.html` | Jailbreaks & LLM safety | **revised 2026-08** (57 sl) |
+| 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **revised 2026-08, figure pass 2026-09** (65 sl) |
+| 10 | `lec10-jailbreak.html` | Jailbreaks & LLM safety | **revised 2026-08, figure pass 2026-09** (60 sl, 21 real figs) |
 | 11 | `lec11-prompt-injection.html` | Prompt injection & agentic safety | **revised 2026-08** (63 sl) |
 | 12 | `lec12-watermark.html` | Watermarking, deepfakes & provenance | **revised 2026-08** (64 sl) |
 | 13 | `lec13-fairness-defs.html` | Fairness I — definitions & impossibility | **revised 2026-08** (58 sl) |
@@ -100,7 +100,7 @@ cropped-and-cited paper figure or a data-backed SVG:
 - `lec03` 15 real figures (Salem, Yeom, Shokri, Carlini 2022 ×3, Choquette-Choo, Steinke, Shi, Carlini diffusion, Duan, Das, Hayes, Maini, Zhang) — see its section.
 - `lec08` panda→gibbon (`figs/panda-gibbon.png`) + Eykholt stop-sign (`figs/eykholt-stopsign.png`, CVPR 2018 Fig 1).
 - `lec09` BadNets trigger strip (`figs/badnets-trigger.png`, Gu et al. 2017 Fig 7).
-- `lec10` Wei failure modes (`figs/wei-jailbroken.png`, NeurIPS 2023 Fig 1), GCG schematic (`figs/gcg-schematic.png`, Zou 2023 Fig 1 — replaced SVG), many-shot power-law (`figs/msj-powerlaw.png`, Anil et al. NeurIPS 2024 **Fig 1** — attribution corrected from Fig 2, 2026-08).
+- `lec10` Wei failure modes (`figs/wei-jailbroken.png`, NeurIPS 2023 Fig 1), GCG schematic (`figs/gcg-schematic.png`, Zou 2023 Fig 1 — replaced SVG), many-shot power-law (`figs/msj-powerlaw.png`, Anil et al. NeurIPS 2024 **Fig 1** — attribution corrected from Fig 2, 2026-08); 2026-09 figure pass added 18 more (Ouyang, Bai, Qi, Arditi, Zou GCG/CB, Chao, Yong, Yuan, Szegedy, Ganguli, Perez, Sharma, Hughes) — see its section.
 - `lec13`/`lec14` Bianchi occupation grid (`figs/bianchi-occupations.png`, FAccT 2023 Fig 1); `lec14` Gender Shades table (`figs/gender-shades.png`, FAT* 2018 Table 4). lec13 COMPAS TODO removed (illustrative SVG kept — real news graphic is copyrighted).
 - `lec06` Vectara HHEM hallucination bar chart (inline SVG, data May 2026).
 - `backup-copyright` Somepalli pairs (`figs/somepalli-pairs.png`, CVPR 2023 Fig 1); `backup-sycophancy` Sharma preference forest plot (`figs/sharma-sycophancy.png`, ICLR 2024 Fig 5); `backup-model-stealing` Knockoff pipeline (`figs/knockoff-pipeline.png`, CVPR 2019 Fig 2) + SVD hidden-dim plot (`figs/stealing-projection.png`, Carlini ICML 2024 Fig 1); `backup-agentic-autonomy` CoinRun panel (`figs/coinrun-misgeneralization.png`, Langosco et al. ICML 2022 Fig 1).
@@ -769,61 +769,83 @@ red-teaming & safety evaluation as practice; layered defenses (filters, system-p
 hardening, Constitutional Classifiers, circuit breakers); attacker–defender asymmetry;
 2025–26 frontier. Math lives in `lec10tech.html`.
 
-### Sections (57 slides, ~90 min — content-revised 2026-08 from 54, all citations source-verified)
+### Sections (60 slides, ~90 min — content-revised 2026-08 from 54; figure pass 2026-09 from 57, all citations source-verified)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:32`, `:44` | |
-| **01 — Safety Training** | 3–11 | `:80` | raw model `:89` · two goals `:102` · instruction tuning (Ouyang) `:114` · RLHF (SVG, Ouyang) `:127` · Constitutional AI (Bai 2022) `:164` · refusal behavior `:177` |
-| **02 — Why It Is Fragile** | 12–18 | `:202` | thin layer `:211` · **Shallow Alignment (Qi ICLR 2025 "few tokens deep"; added cite 2026-08)** `:225` · **Two Failure Modes (Wei Fig 1 capture)** `:249` · competing objectives `:262` · mismatched generalization (SVG) `:275` · **Refusal Is a Direction (Arditi NeurIPS 2024; added cite 2026-08)** `:298` |
-| **03 — Manual Jailbreaks** | 19–24 | `:311` | what a jailbreak is `:318` · persona play `:329` · fake authority `:342` · obfuscation `:355` · manual is brittle `:368` |
-| **04 — Automated Jailbreaks** | 25–32 | `:383` | from art to optimization `:390` · the target `:403` · **GCG (Zou 2023; 99/100 on Vicuna-7B; added 2026-08)** `:415` · search loop `:426` · **Search in Token Space (GCG Fig 1 capture)** `:441` · **It Transfers (84% GPT-3.5/4, 66% PaLM-2, ~2% Claude; added 2026-08)** `:455` · PAIR (Chao <20 queries) `:469` |
-| **05 — Scaling the Attack** | 33–38 | `:481` | many-shot (Anil) `:491` · **Power-Law Curve (MSJ Fig 1 capture — attribution fixed from Fig 2)** `:504` · **Low-Resource Languages (Yong ~79% on GPT-4; added cite 2026-08)** `:516` · cipher prompts (CipherChat idea) `:526` · **Fine-Tuning Removes Safety (Qi ICLR 2024, 10 examples/$0.20; added slide 2026-08)** `:543` |
-| **06 — One Unifying View** | 39–43 | `:555` | adversarial examples (Szegedy) `:565` · same idea in text `:578` · crossing the boundary (SVG) `:589` · the hard lesson `:611` |
-| **07 — Defenses & Frontier** | 44–55 | `:621` | **Red-Teaming: Attack to Defend (Ganguli 38,961 attacks; added slide 2026-08)** `:629` · **Red-Teaming at Scale (Perez EMNLP 2022; added slide 2026-08)** `:642` · defense in layers `:660` · filters `:672` · system-prompt hardening `:685` · **Constitutional Classifiers (Sharma 2025; cite fixed from Bai 2022 + verified numbers)** `:694` · **Circuit Breakers (Zou NeurIPS 2024)** `:708` · demo `:721` · cat-and-mouse (SVG) `:736` · not solved `:757` · **Frontier 2025-26 (Best-of-N Hughes 2024, agentic; rewritten 2026-08)** `:772` |
-| Takeaways / Closer | 56–57 | — | key takeaways `:784` · closer `:797` |
+| **01 — Safety Training** | 3–12 | `:81` | raw model (SVG) `:89` · two goals (SVG) `:126` · instruction tuning (Ouyang Fig 2) `:155` · RLHF (SVG, Ouyang) `:175` · **InstructGPT, Measured (Ouyang Fig 1 win rate; added 2026-09)** `:203` · optimize against reward (SVG) `:224` · Constitutional AI (Bai Fig 1) `:258` · refusal behavior (SVG) `:274` · it mostly works (SVG) `:306` |
+| **02 — Why It Is Fragile** | 13–20 | `:341` | thin layer (SVG) `:349` · Shallow Alignment (Qi ICLR 2025) `:384` · **Shallow, Measured (Qi Fig 1 per-token KL; added 2026-09)** `:408` · Two Failure Modes (Wei Fig 1 capture) `:429` · competing objectives (SVG) `:444` · mismatched generalization (SVG) `:479` · Refusal Is a Direction (Arditi Fig 1) `:500` |
+| **03 — Manual Jailbreaks** | 21–26 | `:522` | what a jailbreak is (SVG) `:530` · persona play (SVG) `:571` · fake authority (SVG) `:607` · obfuscation (SVG) `:642` · manual is brittle (SVG) `:685` |
+| **04 — Automated Jailbreaks** | 27–34 | `:730` | from art to optimization (SVG) `:738` · the target (SVG) `:781` · GCG (Zou Fig 2 ASR panel; 99/100 on Vicuna-7B) `:821` · search loop (SVG) `:842` · Search in Token Space (GCG Fig 1 capture) `:883` · It Transfers (Zou Fig 3; 84% GPT-3.5/4, 66% PaLM-2, ~2% Claude) `:894` · PAIR (Chao Fig 2, <20 queries) `:915` |
+| **05 — Scaling the Attack** | 35–41 | `:936` | many-shot (SVG, Anil) `:944` · Power-Law Curve (MSJ Fig 1 capture) `:988` · Low-Resource Languages (Yong Fig 1; ~79% on GPT-4) `:1000` · **Which Languages Break Through (Yong Table 1; added 2026-09)** `:1017` · cipher prompts (CipherChat Fig 2; cite added 2026-09) `:1038` · Fine-Tuning Removes Safety (Qi ICLR 2024 Fig 1) `:1059` |
+| **06 — One Unifying View** | 42–46 | `:1080` | adversarial examples (Szegedy Fig 5) `:1088` · same idea in text (SVG) `:1108` · crossing the boundary (SVG) `:1145` · the hard lesson (SVG) `:1167` |
+| **07 — Defenses & Frontier** | 47–58 | `:1209` | Red-Teaming: Attack to Defend (Ganguli Fig 1) `:1217` · Red-Teaming at Scale (Perez Fig 1) `:1233` · defense in layers (SVG) `:1254` · filters (SVG) `:1289` · system-prompt hardening (SVG) `:1330` · Constitutional Classifiers (Sharma Fig 1) `:1366` · Circuit Breakers (Zou NeurIPS 2024 Fig 1) `:1387` · demo (SVG) `:1408` · cat-and-mouse (SVG) `:1450` · not solved (SVG) `:1471` · Frontier 2025-26 (Hughes BoN Fig 3) `:1504` |
+| Takeaways / Closer | 59–60 | — | key takeaways `:1526` · closer `:1539` |
 
-**Key definitions / citations (all source-verified 2026-08):**
-- InstructGPT (instruction tuning + RLHF) — `:114`, `:127` — Ouyang et al., NeurIPS 2022.
-- Constitutional AI (AI feedback, self-critique) — `:164` — Bai et al., 2022 (arXiv 2212.08073).
-- Shallow safety alignment ("first few output tokens") — `:225` — Qi et al., "Safety
-  Alignment Should Be Made More Than Just a Few Tokens Deep", ICLR 2025 (Outstanding Paper).
-- Two failure modes (competing objectives; mismatched generalization) — `:249`, `:262`,
-  `:275` — Wei, Haghtalab, Steinhardt, "Jailbroken: How Does LLM Safety Training Fail?",
+**Key definitions / citations (all source-verified 2026-08; cite-line pointers 2026-09):**
+- InstructGPT (instruction tuning + RLHF) — `:171`, `:199`, `:220` — Ouyang et al., NeurIPS 2022 (Fig 2 pipeline, Fig 1 win rate).
+- Constitutional AI (AI feedback, self-critique) — `:270` — Bai et al., 2022 (arXiv 2212.08073; Fig 1).
+- Shallow safety alignment ("first few output tokens") — `:404`, `:425` — Qi et al., "Safety
+  Alignment Should Be Made More Than Just a Few Tokens Deep", ICLR 2025 (Outstanding Paper; Fig 1 per-token KL).
+- Two failure modes (competing objectives; mismatched generalization) — `:440`, `:475`,
+  `:496` — Wei, Haghtalab, Steinhardt, "Jailbroken: How Does LLM Safety Training Fail?",
   NeurIPS 2023 (Fig 1: GPT-4 competing-objectives, Claude v1.3 base64 mismatched-gen).
-- Refusal is a one-dimensional direction (13 models ≤72B) — `:298` — Arditi et al.,
-  "Refusal in Language Models Is Mediated by a Single Direction", NeurIPS 2024.
+- Refusal is a one-dimensional direction (13 models ≤72B) — `:517` — Arditi et al.,
+  "Refusal in Language Models Is Mediated by a Single Direction", NeurIPS 2024 (Fig 1).
 - GCG (universal + transferable; 99/100 harmful behaviors Vicuna-7B, 88% Harmful
-  Strings; transfer 84% GPT-3.5/GPT-4, 66% PaLM-2, ~2.1% Claude) — `:415`, `:441`,
-  `:455` — Zou et al., "Universal and Transferable Adversarial Attacks on Aligned
-  Language Models", 2023 (arXiv 2307.15043; Fig 1 = ChatGPT/Claude/Bard/Llama-2).
-- PAIR (jailbreak in <20 queries) — `:469` — Chao et al., 2023 (arXiv 2310.08419).
-- Many-shot jailbreaking (power-law in shots; more effective on larger models) — `:491`,
-  `:504` — Anil et al., NeurIPS 2024 (Fig 1 = the three-panel plot capture).
-- Low-resource-language jailbreak (~79% on GPT-4) — `:516` — Yong, Menghini, Bach, 2023
+  Strings; transfer 84% GPT-3.5/GPT-4, 66% PaLM-2, ~2.1% Claude) — `:838`, `:879`, `:890`,
+  `:911` — Zou et al., "Universal and Transferable Adversarial Attacks on Aligned
+  Language Models", 2023 (arXiv 2307.15043; Fig 1 = ChatGPT/Claude/Bard/Llama-2; Fig 2 optimizer comparison; Fig 3 transfer).
+- PAIR (jailbreak in <20 queries) — `:931` — Chao et al., 2023 (arXiv 2310.08419; Fig 2).
+- Many-shot jailbreaking (power-law in shots; more effective on larger models) — `:984`,
+  `:996` — Anil et al., NeurIPS 2024 (Fig 1 = the three-panel plot capture).
+- Low-resource-language jailbreak (~79% on GPT-4; Table 1 by resource level) — `:1013`, `:1034` — Yong, Menghini, Bach, 2023
   (arXiv 2310.02446).
-- Cipher/CipherChat (~100% bypass in some domains) — `:526` — Yuan et al., ICLR 2024
-  (concept only; not cited on slide).
+- Cipher/CipherChat (~100% bypass in some domains) — `:1055` — Yuan et al., "GPT-4 Is Too Smart To Be Safe", ICLR 2024
+  (Fig 2; cite added 2026-09).
 - Fine-tuning compromises safety (10 examples, <$0.20 on GPT-3.5 Turbo; benign
-  fine-tuning also degrades) — `:543` — Qi et al., ICLR 2024 (arXiv 2310.03693, Oral).
-- Adversarial examples origin — `:565` — Szegedy et al., ICLR 2014.
+  fine-tuning also degrades) — `:1075` — Qi et al., ICLR 2024 (arXiv 2310.03693, Oral; Fig 1).
+- Adversarial examples origin — `:1104` — Szegedy et al., ICLR 2014 (Fig 5).
+- Human red-teaming (38,961-attack dataset; RLHF harder to break with scale) — `:1229` —
+  Ganguli et al., 2022 (arXiv 2209.07858; Fig 1).
 - Automated red-teaming (LM attacks LM, tens of thousands of offensive replies) —
-  `:642` — Perez et al., EMNLP 2022.
-- Human red-teaming (38,961-attack dataset; RLHF harder to break with scale) — `:629` —
-  Ganguli et al., 2022 (arXiv 2209.07858).
+  `:1250` — Perez et al., EMNLP 2022 (Fig 1).
 - Constitutional Classifiers (3,000+ red-team hrs, no universal jailbreak; +0.38%
-  refusals, ~24% inference overhead) — `:694` — Sharma et al. (Anthropic), 2025
-  (arXiv 2501.18837).
-- Circuit breakers / representation rerouting — `:708` — Zou et al., "Improving
-  Alignment and Robustness with Circuit Breakers", NeurIPS 2024 (arXiv 2406.04313).
+  refusals, ~24% inference overhead) — `:1383` — Sharma et al. (Anthropic), 2025
+  (arXiv 2501.18837; Fig 1).
+- Circuit breakers / representation rerouting — `:1404` — Zou et al., "Improving
+  Alignment and Robustness with Circuit Breakers", NeurIPS 2024 (arXiv 2406.04313; Fig 1).
 - Best-of-N jailbreaking (power-law ASR; 89% GPT-4o, 78% Claude 3.5 Sonnet @ N=10k) —
-  `:772` — Hughes et al., 2024 (arXiv 2412.03556).
+  `:1522` — Hughes et al., 2024 (arXiv 2412.03556; Fig 3).
 
-**Figures:** Wei failure modes (`figs/wei-jailbroken.png`, NeurIPS 2023 Fig 1) `:252`;
-GCG schematic (`figs/gcg-schematic.png`, Zou 2023 Fig 1) `:445`; many-shot power-law
-(`figs/msj-powerlaw.png`, Anil NeurIPS 2024 **Fig 1**) `:504`. Inline SVG: RLHF loop
-`:132`, shallow-alignment first-token `:229`, capability⊃safety Venn `:280`, decision
-boundary + suffix `:575`, cat-and-mouse `:696`. Citations use `.cite-left`.
+**Figures (21 real, 28 inline SVG):** `figs/ouyang-3steps.png` (Ouyang Fig 2) `:155`;
+`figs/ouyang-winrate.png` (Ouyang Fig 1) `:203`; `figs/bai-cai.png` (Bai Fig 1) `:258`;
+`figs/qishallow-kl.png` (Qi ICLR 2025 Fig 1) `:408`; `figs/wei-jailbroken.png` (Wei Fig 1) `:429`;
+`figs/arditi-refusal.png` (Arditi Fig 1) `:500`; `figs/gcg-asr.png` (Zou Fig 2, ASR panel) `:821`;
+`figs/gcg-schematic.png` (Zou Fig 1) `:883`; `figs/gcg-transfer.png` (Zou Fig 3) `:894`;
+`figs/pair-schematic.png` (Chao Fig 2) `:915`; `figs/msj-powerlaw.png` (Anil Fig 1) `:988`;
+`figs/yong-translate.png` (Yong Fig 1) `:1000`; `figs/yong-table.png` (Yong Table 1) `:1017`;
+`figs/cipher-overview.png` (Yuan Fig 2) `:1038`; `figs/qift-overview.png` (Qi ICLR 2024 Fig 1) `:1059`;
+`figs/szegedy-ostrich.png` (Szegedy Fig 5) `:1088`; `figs/ganguli-success.png` (Ganguli Fig 1) `:1217`;
+`figs/perez-overview.png` (Perez Fig 1) `:1233`; `figs/sharma-overview.png` (Sharma Fig 1) `:1366`;
+`figs/cb-overview.png` (Zou CB Fig 1) `:1387`; `figs/bon-powerlaw.png` (Hughes Fig 3) `:1504`.
+Inline SVG: raw model `:89`, two goals `:126`, RLHF loop `:175`, reward + KL leash `:224`,
+refusal chat `:274`, unsafe-output bars `:306`, thin layer `:349`, shallow first-token `:384`,
+competing scale `:444`, capability⊃safety Venn `:479`, jailbreak rows `:530`, persona `:571`,
+fake authority `:607`, obfuscation pipeline `:642`, trick→patched `:685`, hand vs search `:738`,
+suffix target `:781`, search loop `:842`, many-shot context `:944`, image/prompt recipe `:1108`,
+decision boundary + suffix `:1145`, broken-defenses timeline `:1167`, defense pipeline `:1254`,
+filter bypass `:1289`, stacked context `:1330`, demo rows `:1408`, cat-and-mouse `:1450`,
+staircase `:1471`. Citations use `.cite-left`.
+
+**2026-09 figure pass (57→60):** added 18 cited figure crops (Ouyang ×2, Bai, Qi ICLR 2025,
+Arditi, Zou GCG Fig 2 + Fig 3, Chao PAIR, Yong ×2, Yuan CipherChat, Qi ICLR 2024, Szegedy,
+Ganguli, Perez, Sharma, Zou CB, Hughes BoN) and 23 inline SVGs on formerly text-only slides;
+added 3 slides: InstructGPT, Measured (§01), Shallow, Measured (§02), Which Languages Break
+Through (§05); added the CipherChat citation; Many-Shot cite normalized to Anil et al. NeurIPS
+2024. 60-dpi render check of all edited slides. Note synced (60 articles incl. closer, order
+matches; Slide-figure lines on every figure slide).
 
 **2026-08 content revision (54→58):** every citation/number fetched and verified.
 Added 3 slides: Fine-Tuning Removes Safety (§05, Qi ICLR 2024), Red-Teaming: Attack to

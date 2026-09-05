@@ -46,7 +46,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 12 | `lec12-watermark.html` | Watermarking, deepfakes & provenance | **revised 2026-08**, **figure pass 2026-09** (68 sl) |
 | 13 | `lec13-fairness-defs.html` | Fairness I — definitions & impossibility | **revised 2026-08**, **figure pass 2026-09** (62 sl) |
 | 14 | `lec14-fairness-mitigation.html` | Fairness II — mitigation & accountability | **revised 2026-08, figure pass 2026-09** (69 sl) |
-| 15 | `lec15-governance.html` | Governance, frontier & demo showcase | **revised 2026-08** (66 sl) |
+| 15 | `lec15-governance.html` | Governance, frontier & demo showcase | **revised 2026-08, figure pass 2026-09** (70 sl) |
 
 Every deck has a companion **speaker script** `lecNN-…-note.html` (one entry per slide:
 title + 1–2 sentence script + **Key takeaway**). Scripts also exist for lec 1–2.
@@ -1312,45 +1312,42 @@ OpenAI Preparedness, GDM FSF), open problems, and the wrap-up (five questions, D
 Showcase kept, one lesson). Formal structures live in `lec15tech.html` (deliberately
 light).
 
-### Sections (66 slides, ~90 min — content-revised 2026-08 from 53, all citations source-verified)
+### Sections (70 slides, ~90 min — content-revised 2026-08 from 53; figure pass 2026-09 from 66; all citations source-verified)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
-| Title / Contents | 1–2 | `:26`, `:38` | |
-| **01 — Connect the Threads** | 3–13 | `:71` | trust stack (SVG) `:93` · data thread `:121` · **reliability thread (hallucination/calibration/interpretability; added 2026-08)** `:134` · adversary `:147` · accountability `:160` · the pattern `:173` · **Bommasani foundation-models stakes** `:206` |
-| **02 — Risk Frameworks** | 14–22 | `:220` | NIST AI RMF `:240` · four functions (SVG loop) `:253` · Map/Measure/Manage `:278` `:291` `:304` · **GenAI Profile (NIST AI 600-1, confabulation; added 2026-08)** `:317` |
-| **03 — Regulation** | 23–39 | `:340` | **Weidinger taxonomy (4 of 6 risk areas)** `:348` · EU risk tiers (pyramid SVG) `:375` · banned `:397` · high risk `:410` · **EU timeline incl. Digital Omnibus deferral (SVG; added 2026-08)** `:436` · **GPAI rules + Code of Practice (added 2026-08)** `:466` · US patchwork `:480` · **US whiplash timeline (EO 14110→14179→14319→preemption push, SVG; added 2026-08)** `:493` · **Korea AI Basic Act ×2 (added 2026-08)** `:523` `:537` · Anderljung frontier regulation `:551` · **summit timeline (Bletchley→Seoul→Paris→New Delhi, SVG; added 2026-08)** `:577` · **International AI Safety Report (added 2026-08)** `:606` |
-| **04 — Auditing & Red-Teaming** | 40–52 | `:620` | red-teaming `:640` · audit loop (SVG) `:653` · dangerous-capability evals `:678` · **frontier safety frameworks (if-then flow SVG; added 2026-08)** `:691` · **Anthropic RSP/ASL `:715` · OpenAI Preparedness v2 `:728` · GDM FSF v3 `:741` (all added 2026-08)** · model cards `:767` · audit limits `:792` |
-| **05 — Open Problems for 2026+** | 53–59 | `:802` | web-scale privacy `:823` · robust unlearning `:836` · agentic safety `:849` · provenance+fairness `:862` · tensions `:875` |
-| **06 — Wrap-Up** | 60–66 | `:884` | reading an AI headline `:892` · five questions `:905` · **Demo Showcase (course logistics, kept)** `:919` · one lesson `:935` · key takeaways `:943` · closer ("Thank you") `:957` |
+| Title / Contents | 1–2 | `:27`, `:27` | |
+| **01 — Connect the Threads** | 3–13 | `:39` | trust stack (SVG) `:80` · data thread `:97` · **reliability thread (hallucination/calibration/interpretability; added 2026-08)** `:125` · adversary `:141` · accountability `:157` · the pattern `:173` · **Bommasani foundation-models stakes** `:214` · threads SVGs `:91` `:135` `:151` `:167` `:183` · **IASR Swiss-cheese figure (added 2026-09)** `:202` |
+| **02 — Risk Frameworks** | 14–22 | `:238` | NIST AI RMF `:251` · four functions (SVG loop) `:276` · Map/Measure/Manage `:301` `:305` `:321` · **GenAI Profile (NIST AI 600-1, confabulation; added 2026-08)** `:337` · NIST 7-characteristics figure `:275` · 12-risk tiles `:363` |
+| **03 — Regulation** | 23–43 | `:369` | **Weidinger taxonomy (4 of 6 risk areas)** `:381` · EU risk tiers (pyramid SVG) `:413` · banned `:447` · high risk `:461` · **EU timeline incl. Digital Omnibus deferral (SVG; added 2026-08)** `:493` · **GPAI rules + Code of Practice (added 2026-08)** `:534` · US patchwork `:551` · **US whiplash timeline (EO 14110→14179→14319→preemption push, SVG; added 2026-08)** `:555` · **Korea AI Basic Act ×2 (added 2026-08)** `:597` `:614` · Anderljung frontier regulation `:631` · **summit timeline (Bletchley→Seoul→Paris→New Delhi, SVG; added 2026-08)** `:661` · **International AI Safety Report (added 2026-08)** `:677` · **Weidinger six-area map `:403` · Commission risk pyramid `:451` · Anderljung lifecycle `:651` · IASR four challenges `:722` (all added 2026-09)** · EU conformity-steps graphic `:482` · Anderljung challenges `:640` · IASR benchmarks `:711` |
+| **04 — Auditing & Red-Teaming** | 44–56 | `:735` | red-teaming `:760` · audit loop (SVG) `:777` · dangerous-capability evals `:781` · **frontier safety frameworks (if-then flow SVG; added 2026-08)** `:818` · **Anthropic RSP/ASL `:822` · OpenAI Preparedness v2 `:858` · GDM FSF v3 `:874` (all added 2026-08)** · model cards `:907` · audit limits `:926` · Shevlane Fig. 1 `:757` · Ganguli attack-success `:769` · nine-capability tiles `:816` · RSP CBRN table `:851` · Preparedness categories SVG `:872` · FSF CCL table `:883` · Shevlane audit workflow `:899` · Mitchell model card `:921` |
+| **05 — Open Problems for 2026+** | 57–63 | `:942` | web-scale privacy `:975` · robust unlearning `:979` · agentic safety `:995` · provenance+fairness `:1024` · tensions `:1041` · IASR task-length `:967` · IASR agents survey `:1016` · IASR watermarks `:1033` |
+| **06 — Wrap-Up** | 64–70 | `:1045` | reading an AI headline `:1054` · five questions `:1062` · **Demo Showcase (course logistics, kept)** `:1078` · one lesson `:1095` · key takeaways `:1111` · closer ("Thank you") `:1119` · headline SVG `:1072` · funnel SVG `:1089` |
 
 **Key citations (all source-verified 2026-08):**
-- Foundation models — `:216` — Bommasani et al., "On the Opportunities and Risks of
+- Foundation models — `:236` — Bommasani et al., "On the Opportunities and Risks of
   Foundation Models", 2021 (arXiv 2108.07258).
-- NIST — `:250`/`:275` AI RMF 1.0, 2023; `:327` Generative AI Profile (NIST AI 600-1),
+- NIST — `:275`/`:301` AI RMF 1.0, 2023; `:363` Generative AI Profile (NIST AI 600-1),
   July 2024 (12 GenAI risks incl. confabulation).
-- Taxonomy — `:359` — Weidinger et al., "Taxonomy of Risks Posed by Language Models",
+- Taxonomy — `:399` — Weidinger et al., "Taxonomy of Risks Posed by Language Models",
   FAccT 2022 (six risk areas; slide shows four, intro says so).
-- EU — `:394`/`:420` Regulation (EU) 2024/1689 (the AI Act); `:463` Regulation (EU)
-  2026/1744 (Digital Omnibus on AI: high-risk duties → Dec 2027 / Aug 2028); `:477`
+- EU — `:447`/`:489` Regulation (EU) 2024/1689 (the AI Act); `:534` Regulation (EU)
+  2026/1744 (Digital Omnibus on AI: high-risk duties → Dec 2027 / Aug 2028); `:551`
   General-Purpose AI Code of Practice, July 2025 (10^25 FLOP systemic-risk threshold).
-- US — `:520` — Executive Orders 14110 (2023, rescinded), 14179 (Jan 2025), 14319
+- US — `:597` — Executive Orders 14110 (2023, rescinded), 14179 (Jan 2025), 14319
   (July 2025); Dec 2025 preemption push. No federal AI statute as of mid-2026.
-- Korea — `:534`/`:548` — AI Basic Act, effective Jan 2026 (MSIT; high-impact AI;
+- Korea — `:614`/`:631` — AI Basic Act, effective Jan 2026 (MSIT; high-impact AI;
   GenAI labeling; 10^26 FLOP duty threshold; fines ≤ 30M KRW, 1-year grace).
-- Frontier — `:561`/`:688` Anderljung et al., "Frontier AI Regulation", 2023 (arXiv
-  2307.03718); `:725` Anthropic RSP 2023 (rev. 2026) + ASL-3 activation May 2025
-  (Claude Opus 4); `:738` OpenAI Preparedness Framework v2, Apr 2025; `:751` Google
+- Frontier — `:647`/`:816` Anderljung et al., "Frontier AI Regulation", 2023 (arXiv
+  2307.03718); `:858` Anthropic RSP 2023 (rev. 2026) + ASL-3 activation May 2025
+  (Claude Opus 4); `:872` OpenAI Preparedness Framework v2, Apr 2025; `:890` Google
   DeepMind Frontier Safety Framework v3, Sept 2025 (CCLs; added manipulation +
   misalignment).
-- International — `:616` — International AI Safety Report, 2026 (Bengio chair, 100+
-  experts, ~30 countries); summits slide `:577` (Bletchley 2023; Seoul 2024, 16 labs;
+- International — `:718` — International AI Safety Report, 2026 (Bengio chair, 100+
+  experts, ~30 countries); summits slide `:661` (Bletchley 2023; Seoul 2024, 16 labs;
   Paris 2025; New Delhi 2026, 89 endorsers) verified against gov.uk/summit records.
 
-**Figures:** all inline SVGs (no captured images): trust stack `:99`, RMF loop `:259`,
-EU tier pyramid `:381`, EU timeline `:442`, US whiplash timeline `:499`, summit
-timeline `:583`, audit loop `:659`, if-then framework flow `:697`. Citations use
-`.cite-left`.
+**Figures (2026-09 figure pass):** 18 captured images in `figs/` (crops from the cited PDFs / Commission page; every cite names the figure or table number): iasr-swiss-cheese.png (IASR Fig. 3.5) `:202` · bommasani-centralize.png (Bommasani Fig. 2) `:236` · nist-characteristics.png (NIST AI RMF Fig. 4) `:275` · eu-risk-pyramid.jpg (Commission risk pyramid) `:455` · eu-high-risk-steps.jpg (Commission conformity steps) `:482` · anderljung-challenges.png (Anderljung Fig. 3) `:640` · anderljung-lifecycle.png (Anderljung Fig. 1) `:655` · iasr-benchmarks.png (IASR Fig. 1.4) `:711` · iasr-challenges.png (IASR Fig. 3.1) `:727` · shevlane-theory.png (Shevlane Fig. 1) `:757` · ganguli-attack-success.png (Ganguli Fig. 1) `:769` · rsp-cbrn-thresholds.png (Anthropic RSP v2.2 table) `:851` · gdm-cbrn-ccl.png (GDM FSF v3.1 Table 2.2.1.a) `:883` · shevlane-workflow.png (Shevlane Fig. 4) `:899` · model-card-example.png (Mitchell Fig. 2, shared with lec14) `:921` · iasr-task-length.png (IASR Fig. 1.7) `:967` · iasr-agents-survey.png (IASR Fig. 2.11) `:1016` · iasr-watermarks.png (IASR Fig. 3.8) `:1033`. Inline SVGs: trust stack `:102`, four threads `:91`, data thread `:135`, model-wrong thread `:151`, adversary `:167`, accountability `:183`, values→framework→steps `:260`, RMF loop `:285`, Map/Measure/Manage highlights `:315`, 12 GenAI risks `:363`, framework vs law `:376`, Weidinger six areas `:407`, risk bars `:423`, EU tier pyramid `:434`, banned uses `:471`, tier band `:504`, EU timeline `:513`, GPAI 10^25 threshold `:548`, US layers `:565`, US whiplash timeline `:576`, Korea timeline `:611`, EU vs Korea threshold `:628`, global compliance `:671`, summit timeline `:682`, audit loop `:786`, nine capabilities `:816`, if-then framework flow `:827`, Preparedness categories `:872`, card readers `:936`, audit limits `:949`, web-scale privacy `:989`, unlearning loop `:1005`, headline tree `:1072`, five-question funnel `:1089`. Citations use `.cite-left`.
 
 **2026-08 content revision (53→66):** every citation/number/date fetched and verified
 (EU/Korea/US law via primary or law-firm trackers; lab frameworks via anthropic.com,
@@ -1364,7 +1361,9 @@ intro** now says four of the paper's six risk areas; EU cites normalized to
 rules from states); Key Takeaways gained EU/US/Korea + if-then-commitments lines;
 trust-stack SVG gained reliability + society labels. Course-logistics Demo Showcase
 slide kept per course scaffolding. `lec15tech.html` errors-only pass (EU cite fixed,
-tier bullets de-dashed; still 6 sl). Note file synced (66 entries, order matches; 67 after the 2026-09 figure pass).
+tier bullets de-dashed; still 6 sl). Note file synced (66 entries, order matches).
+
+**2026-09 figure pass (66→70):** every content slide now carries a visual. 17 new cropped figures (International AI Safety Report 2026 ×6, Anderljung 2023 ×2, Shevlane 2023 ×2, NIST AI RMF, Bommasani 2021, Ganguli 2022, Anthropic RSP v2.2 table, GDM FSF v3.1 table, two European Commission graphics) plus the Mitchell model card reused from lec14; ~28 new inline SVGs on formerly bullet-only slides. Four slides added: **The Full Map: Six Areas** (Weidinger Table 1, all six areas named) `:403`; **The Commission's Own Picture** (EU risk pyramid) `:451`; **Where Rules Can Attach** (Anderljung Fig. 1 lifecycle) `:651`; **Why Governance Is Hard** (IASR Fig. 3.1) `:722`. Dense source tables (Shevlane Table 1, Weidinger Table 1, OpenAI Preparedness Table 1) are rendered as verified-name SVG summaries citing the table rather than as unreadable crops. The GDM FSF PDF on hand is Version 3.1 (Apr 2026); the table cite says so explicitly while the author's "v3, 2025" text cite is untouched. No author bullets rewritten; two new muted lines trimmed to the 7×7 ceiling. Note file: 70 entries (4 new articles + 46 "Slide figure" lines), order matches. 60-dpi render check of all 46 edited slides passed after fixes (threads SVG height, Korea-threshold labels, lifecycle image width, headline SVG width, funnel contrast).
 
 **2026-08 note enrichment:** `lec15-governance-note.html` upgraded from speaker script
 (413 lines) to Script &amp; Companion Notes (737 lines; 66 entries unchanged). Nearly

@@ -44,7 +44,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 10 | `lec10-jailbreak.html` | Jailbreaks & LLM safety | **revised 2026-08, figure pass 2026-09** (60 sl, 21 real figs) |
 | 11 | `lec11-prompt-injection.html` | Prompt injection & agentic safety | **figure pass 2026-09** (66 sl) |
 | 12 | `lec12-watermark.html` | Watermarking, deepfakes & provenance | **revised 2026-08**, **figure pass 2026-09** (68 sl) |
-| 13 | `lec13-fairness-defs.html` | Fairness I — definitions & impossibility | **revised 2026-08** (58 sl) |
+| 13 | `lec13-fairness-defs.html` | Fairness I — definitions & impossibility | **revised 2026-08**, **figure pass 2026-09** (62 sl) |
 | 14 | `lec14-fairness-mitigation.html` | Fairness II — mitigation & accountability | **revised 2026-08** (61 sl) |
 | 15 | `lec15-governance.html` | Governance, frontier & demo showcase | **revised 2026-08** (66 sl) |
 
@@ -1091,44 +1091,73 @@ generative models (Bianchi occupation grid, Gemini overcorrection, Gender Shades
 BBQ, NYC Local Law 144 + Colorado AI Act). Gender Shades *figure* stays in lec14
 (this deck cites the numbers only, no figure duplication).
 
-### Sections (58 slides, ~90 min — content-revised 2026-08 from 54, all citations source-verified)
+### Sections (62 slides, ~90 min — content-revised 2026-08 from 54, figure pass 2026-09 from 58, all citations source-verified)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:27`, `:39` | |
-| **01 — Sources of Bias** | 3–13 | `:72` | model mirrors its world `:80` · bias is not a bug `:92` · three entry points `:101` · biased data `:112` · **Biased Labels: Amazon hiring (Reuters 2018)** `:125` · label is the problem `:138` · **Case: Cost as a Proxy for Need (Obermeyer, 17.7%→46.5% bar SVG; added 2026-08)** `:150` · feedback loops (SVG) `:175` · why "just drop race" fails `:201` · notation A/Y/Ŷ `:213` |
-| **02 — Group Fairness Criteria** | 14–22 | `:226` | confusion matrix per group (SVG) `:234` · demographic parity `:259` · parity ignores the truth `:269` · equalized odds `:281` · equal opportunity variant `:294` · calibration `:307` · calibration trusts the score `:317` · three criteria side by side `:329` |
-| **03 — The COMPAS Case** | 23–29 | `:343` | what COMPAS is `:351` · ProPublica investigation `:364` · **False Positives, By Group (44.9% vs 23.5% bar SVG + 47.7%/28.0% FNR mirror)** `:374` · **Northpointe Responds (predictive parity)** `:397` · both sides were right `:410` · could COMPAS be both? `:422` |
-| **04 — The Impossibility Theorem** | 30–39 | `:432` | base rates `:440` · **The Impossibility Theorem (Chouldechova + Kleinberg, plain-English)** `:449` · two proofs, same wall `:461` · pick-two-of-three triangle (SVG) `:473` · demo setup `:493` · **Demo: The Numbers Don't Reconcile (derivable Ŝ∈{0.2,0.8} construction, FPR 0.20/0.02, FNR 0.20/0.73)** `:508` · why the gap is forced `:523` · which one to pick `:536` · choosing by context `:545` |
-| **05 — Individual & Causal Fairness** | 40–46 | `:557` | group fairness can hide harm `:565` · individual fairness (Dwork) `:577` · the "similar" metric problem `:589` · **A Causal View (counterfactual fairness, Kusner)** `:602` · fair and unfair paths (causal-graph SVG) `:612` · causal fairness needs a model `:637` |
-| **06 — Fairness in Generative Models** | 47–56 | `:650` | new surface, old problem `:658` · **Text-to-Image Stereotyping (Bianchi Fig 1, `figs/bianchi-occupations.png`)** `:671` · **When the Fix Overcorrects (Gemini pause Feb 2024; added 2026-08)** `:692` · **Gender Shades (34.7% vs 0.8%)** `:706` · auditing is the tool `:716` · **Auditing LLMs: The BBQ Benchmark (added 2026-08)** `:729` · **The Law Notices (NYC LL144 + Colorado AI Act; added 2026-08)** `:743` · frontier 2025–26 `:760` |
-| Wrap-up / Closer | 56–58 | — | open tension `:773` · key takeaways `:786` · closer ("Pick two.") `:799` |
+| **01 — Sources of Bias** | 3–13 | `:72` | model mirrors its world (pipeline SVG) `:80` · bias is not a bug (SVG) `:96` · three entry points (pipeline + feedback-loop SVG) `:109` · **biased data (Gender Shades benchmark-composition bars, IJB-A 79.6% / Adience 86.2% / PPB 53.6%)** `:124` · **Biased Labels: Amazon hiring (Reuters 2018; resume-flow SVG)** `:146` · label is the problem (proxy-loop SVG) `:167` · **Case: Cost as a Proxy for Need (Obermeyer, 17.7%→46.5% bar SVG; added 2026-08)** `:183` · feedback loops (SVG) `:208` · why "just drop race" fails (proxy-columns SVG) `:234` · notation A/Y/Ŷ (pipeline SVG) `:254` |
+| **02 — Group Fairness Criteria** | 14–24 | `:271` | confusion matrix per group (SVG) `:279` · demographic parity (dot rows) `:304` · parity ignores the truth (qualified-ring dots) `:318` · equalized odds (dot rows by Y) `:338` · equal opportunity variant (two mini matrices) `:351` · **Equalized Odds on the ROC Plane (Hardt Fig 1, `figs/hardt-eqodds-roc.png`; added 2026-09)** `:372` · calibration (dot rows) `:383` · calibration trusts the score (SVG) `:397` · three criteria side by side `:417` · **Same Data, Five Rules (Hardt Fig 9 FICO thresholds, `figs/hardt-fico-thresholds.png`; added 2026-09)** `:430` |
+| **03 — The COMPAS Case** | 25–32 | `:442` | **what COMPAS is (Chouldechova Fig 3 decile histograms, `figs/chouldechova-deciles.png`)** `:450` · ProPublica investigation (study-design SVG) `:468` · **False Positives, By Group (44.9% vs 23.5% bar SVG + 47.7%/28.0% FNR mirror)** `:482` · **The Gap Persists Within Subgroups (Chouldechova Fig 2 FPR by priors, `figs/chouldechova-fpr-priors.png`; added 2026-09)** `:505` · **Northpointe Responds (predictive parity; Chouldechova Fig 1 calibration plot, `figs/chouldechova-calibration.png`)** `:523` · both sides were right (column-vs-row confusion matrix SVG) `:540` · could COMPAS be both? (brick-wall SVG) `:556` |
+| **04 — The Impossibility Theorem** | 33–42 | `:570` | base rates (dot grids) `:578` · **The Impossibility Theorem (Chouldechova + Kleinberg, plain-English; forcing SVG)** `:595` · two proofs, same wall (two-lane SVG) `:611` · pick-two-of-three triangle (SVG) `:627` · demo setup (pipeline SVG) `:647` · **Demo: The Numbers Don't Reconcile (derivable Ŝ∈{0.2,0.8} construction, FPR 0.20/0.02, FNR 0.20/0.73; bar SVG)** `:666` · why the gap is forced (stacked-bar SVG) `:689` · **which one to pick (Hardt Fig 11 FICO outcomes, `figs/hardt-fico-loans.png`)** `:710` · choosing by context (FP/FN matrices) `:725` |
+| **05 — Individual & Causal Fairness** | 43–49 | `:741` | group fairness can hide harm (dot SVG) `:749` · individual fairness (Dwork; metric-space SVG) `:769` · the "similar" metric problem (SVG) `:785` · **A Causal View (counterfactual fairness, Kusner Fig 1, `figs/kusner-causal-models.png`)** `:806` · fair and unfair paths (causal-graph SVG) `:818` · **causal fairness needs a model (Kusner Fig 2 left, `figs/kusner-lawschool.png`)** `:843` |
+| **06 — Fairness in Generative Models** | 50–60 | `:861` | new surface, old problem (classifier-vs-generator SVG) `:869` · **Text-to-Image Stereotyping (Bianchi Fig 1, `figs/bianchi-occupations.png`)** `:890` · **When the Fix Overcorrects (Gemini pause Feb 2024; prompt-rewrite SVG; added 2026-08)** `:911` · **Gender Shades (34.7% vs 0.8% bar SVG)** `:933` · auditing is the tool (pipeline SVG) `:947` · **Auditing LLMs: The BBQ Benchmark (Parrish Fig 1, `figs/bbq-example.png`; added 2026-08)** `:964` · **BBQ, Measured (Parrish Fig 3 bias-score heatmap, `figs/bbq-bias-scores.png`; added 2026-09)** `:982` · **The Law Notices (NYC LL144 + Colorado AI Act; timeline SVG; added 2026-08)** `:993` · frontier 2025–26 (four tiles) `:1014` · open tension (triangle SVG) `:1031` |
+| Wrap-up / Closer | 61–62 | — | key takeaways `:1048` · closer ("Pick two.") `:1061` |
 
-**Key citations (all source-verified 2026-08):**
-- ProPublica — `:370` — Angwin, Larson, Mattu, Kirchner, "Machine Bias", ProPublica 2016;
-  methodology + exact rates (FPR 44.85%/23.45%, FNR 27.99%/47.72%) — `:393` — Larson et
+**Key citations (all source-verified 2026-08; figure numbers added 2026-09):**
+- ProPublica — `:479` — Angwin, Larson, Mattu, Kirchner, "Machine Bias", ProPublica 2016;
+  methodology + exact rates (FPR 44.85%/23.45%, FNR 27.99%/47.72%) — `:501` — Larson et
   al., "How We Analyzed the COMPAS Recidivism Algorithm", ProPublica 2016.
-- Northpointe rebuttal — `:406` — Dieterich, Mendoza, Brennan, "COMPAS Risk Scales:
-  Demonstrating Accuracy Equity and Predictive Parity", Northpointe, July 2016.
-- Impossibility — `:457`, `:469` — Chouldechova, "Fair Prediction with Disparate
-  Impact", Big Data 2017 (also `:313` calibration def); Kleinberg, Mullainathan,
-  Raghavan, "Inherent Trade-Offs in the Fair Determination of Risk Scores", ITCS 2017.
-- Group-fairness definitions — `:265`/`:585` Dwork, Hardt, Pitassi, Reingold, Zemel,
-  "Fairness Through Awareness", ITCS 2012; `:290` Hardt, Price, Srebro, "Equality of
-  Opportunity in Supervised Learning", NeurIPS 2016.
-- Counterfactual fairness — `:608` — Kusner, Loftus, Russell, Silva, NeurIPS 2017.
-- Label bias cases — `:134` Dastin, Reuters, Oct 2018 (Amazon tool penalized "women's");
-  `:171` Obermeyer, Powers, Vogeli, Mullainathan, Science 2019 (17.7%→46.5%).
-- Generative — `:688` Bianchi et al., "Easily Accessible Text-to-Image Generation
-  Amplifies Demographic Stereotypes at Large Scale", FAccT 2023 Fig 1; `:702` Google
-  blog, Feb 2024 (Gemini pause); `:712` Buolamwini & Gebru, FAT* 2018 (34.7%/0.8%);
-  `:739` Parrish et al., "BBQ: A Hand-Built Bias Benchmark for Question Answering",
-  Findings of ACL 2022 (nine dimensions; +3.4pp stereotype-aligned accuracy).
+- Northpointe rebuttal — `:537` — Dieterich, Mendoza, Brennan, "COMPAS Risk Scales:
+  Demonstrating Accuracy Equity and Predictive Parity", Northpointe, July 2016 (slide
+  plots Chouldechova 2017 Fig 1).
+- Impossibility — `:608`, `:624` — Chouldechova, "Fair Prediction with Disparate
+  Impact", Big Data 2017 (also `:394` calibration def; `:465` Fig 3; `:520` Fig 2);
+  Kleinberg, Mullainathan, Raghavan, "Inherent Trade-Offs in the Fair Determination of
+  Risk Scores", ITCS 2017.
+- Group-fairness definitions — `:315`/`:782` Dwork, Hardt, Pitassi, Reingold, Zemel,
+  "Fairness Through Awareness", ITCS 2012; `:348` Hardt, Price, Srebro, "Equality of
+  Opportunity in Supervised Learning", NeurIPS 2016 (`:380` Fig 1; `:438` Fig 9;
+  `:722` Fig 11).
+- Counterfactual fairness — `:815` (Fig 1), `:857` (Fig 2 left) — Kusner, Loftus,
+  Russell, Silva, NeurIPS 2017.
+- Label bias cases — `:143` Buolamwini & Gebru, FAT* 2018 (benchmark composition);
+  `:164` Dastin, Reuters, Oct 2018 (Amazon tool penalized "women's"); `:204` Obermeyer,
+  Powers, Vogeli, Mullainathan, Science 2019 (17.7%→46.5%).
+- Generative — `:907` Bianchi et al., "Easily Accessible Text-to-Image Generation
+  Amplifies Demographic Stereotypes at Large Scale", FAccT 2023 Fig 1; `:930` Google
+  blog, Feb 2024 (Gemini pause); `:944` Buolamwini & Gebru, FAT* 2018 (34.7%/0.8%);
+  `:979` (Fig 1), `:990` (Fig 3) Parrish et al., "BBQ: A Hand-Built Bias Benchmark for
+  Question Answering", Findings of ACL 2022 (nine dimensions; +3.4pp stereotype-aligned
+  accuracy).
 
-**Figures:** `figs/bianchi-occupations.png` (FAccT 2023 Fig 1, shared with lec14) `:673`;
-inline SVGs: Obermeyer bar chart `:155`, feedback loop `:180`, confusion matrix `:238`,
-COMPAS FPR bars `:379`, pick-two triangle `:477`, causal graph `:617`. Citations use
+**Figures:** cited crops in `figs/`: `hardt-eqodds-roc.png` `:377`,
+`hardt-fico-thresholds.png` `:435`, `chouldechova-deciles.png` `:463`,
+`chouldechova-fpr-priors.png` `:518`, `chouldechova-calibration.png` `:535`,
+`hardt-fico-loans.png` `:720`, `kusner-causal-models.png` `:812`,
+`kusner-lawschool.png` `:855`, `bianchi-occupations.png` (FAccT 2023 Fig 1, shared
+with lec14) `:896`, `bbq-example.png` `:977`, `bbq-bias-scores.png` `:987`. Inline SVGs
+on every other content slide (38 in total): pipelines `:80` `:96` `:109` `:254` `:468`
+`:647` `:947`, Gender Shades composition bars `:124`, resume flow `:146`, proxy loop
+`:167`, Obermeyer bar chart `:183`, feedback loop `:208`, proxy columns `:234`,
+confusion matrix `:279`, dot-row criteria `:304` `:318` `:338` `:383` `:578` `:749`,
+mini matrices `:351` `:725`, score readers `:397`, COMPAS FPR bars `:482`,
+column-vs-row matrix `:540`, brick wall `:556`, forcing diagram `:595`, two lanes
+`:611`, pick-two triangle `:627`, demo bars `:666`, stacked score bars `:689`,
+metric space `:769`, similar-people `:785`, causal graph `:818`,
+classifier-vs-generator `:869`, prompt rewrite `:911`, Gender Shades bars `:933`,
+law timeline `:993`, frontier tiles `:1014`, tension triangle `:1031`. Citations use
 `.cite-left`.
+
+**2026-09 figure pass (58→62):** 10 public figures cropped into `figs/` with
+figure-number citations (Hardt Figs 1/9/11, Chouldechova Figs 1/2/3, Kusner Figs 1/2,
+BBQ Figs 1/3; Obermeyer Science PDF unobtainable, bar SVG kept); 32 inline SVG
+diagrams added so no content slide is bullets-only. Added 4 slides: Equalized Odds on
+the ROC Plane (§02), Same Data, Five Rules (§02), The Gap Persists Within Subgroups
+(§03), BBQ, Measured (§06). 60-dpi render check of all 44 edited slides; grid SVGs
+given explicit widths (an SVG in a `1fr auto` grid otherwise collapses to 300px).
+Note synced: `Slide figure:` line on 40 entries, 4 new articles (62 entries, deck
+order).
 
 **2026-08 content revision (54→58):** every citation/number fetched and verified.
 Added 4 slides: Case: Cost as a Proxy for Need (§01, Obermeyer); When the Fix

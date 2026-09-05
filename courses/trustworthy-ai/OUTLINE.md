@@ -42,7 +42,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 8 | `lec08-adversarial.html` | Adversarial examples (attack + defense) | **revised 2026-08, figure pass 2026-09** (63 sl, 25 real figs) |
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **revised 2026-08, figure pass 2026-09** (65 sl) |
 | 10 | `lec10-jailbreak.html` | Jailbreaks & LLM safety | **revised 2026-08, figure pass 2026-09** (60 sl, 21 real figs) |
-| 11 | `lec11-prompt-injection.html` | Prompt injection & agentic safety | **revised 2026-08** (63 sl) |
+| 11 | `lec11-prompt-injection.html` | Prompt injection & agentic safety | **figure pass 2026-09** (66 sl) |
 | 12 | `lec12-watermark.html` | Watermarking, deepfakes & provenance | **revised 2026-08** (64 sl) |
 | 13 | `lec13-fairness-defs.html` | Fairness I — definitions & impossibility | **revised 2026-08** (58 sl) |
 | 14 | `lec14-fairness-mitigation.html` | Fairness II — mitigation & accountability | **revised 2026-08** (61 sl) |
@@ -874,58 +874,62 @@ the loop, least privilege); 2025–26 frontier (AI browsers, MCP, AgentDojo, ada
 attacks). Security model lives in `lec11tech.html`. Autonomy risks touched in Open
 Problems only — full treatment stays in `backup-agentic-autonomy.html` (not absorbed).
 
-### Sections (63 slides, ~90 min — content-revised 2026-08 from 58, all citations source-verified)
+### Sections (66 slides, ~90 min — content-revised 2026-08 from 58, figure pass 2026-09 from 63; all citations source-verified)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:34`, `:46` | |
-| **01 — Direct vs Indirect Injection** | 3–13 | `:79` | one-line idea `:88` · two failure modes `:113` · direct `:127` · indirect `:140` · hidden text `:166` · **Naming the Problem (Goodside demonstrated / Willison named; attribution fixed 2026-08)** `:179` · not the same as SQL `:192` · **The #1 LLM Risk (OWASP LLM01:2025; added 2026-08)** `:205` |
-| **02 — The Agentic Surface** | 14–23 | `:218` | chatbot→agent `:227` · what a tool is `:240` · agent loop `:253` · two channels `:269` · data becomes control `:283` · attack picture (SVG) `:291` · confused deputy `:329` · three ingredients `:342` · **Lethal Trifecta (Willison 2025)** `:355` |
-| **03 — Real Incidents** | 24–33 | `:364` | **Bing "Sydney" Leak (rewritten 2026-08 to verified Kevin Liu direct injection)** `:373` · Greshake real apps `:387` · email-exfiltration class `:400` · **EchoLeak CVE-2025-32711 (added 2026-08)** `:413` · **SpAIware memory poisoning (added 2026-08)** `:427` · **CamoLeak + GitHub MCP (added 2026-08)** `:441` · quiet exit channels `:455` · vendors responded `:468` · pattern emerges `:481` |
-| **04 — Why It Is Hard** | 34–40 | `:495` | no privilege separation `:504` · one flat context (SVG) `:517` · instructions look alike `:535` · filtering brittle `:548` · no clean escape `:561` · still open `:573` |
-| **05 — Defenses** | 41–53 | `:581` | layered mindset `:590` · I/O filtering `:603` · **Spotlighting (Hines 2024; title fixed 2026-08)** `:617` · **Instruction Hierarchy (Wallace OpenAI 2024; cite fixed 2026-08)** `:630` · taint tracking `:643` · dual-LLM (Willison 2023) `:656` · quarantine picture (SVG) `:670` · **Capability Control (CaMeL, Debenedetti 2025)** `:703` · human in loop `:716` · least privilege `:729` · scorecard `:737` · toy-agent demo `:749` |
-| **06 — Frontier 2025–26** | 54–61 | `:765` | **New Surfaces, Same Flaw (AI browsers + MCP; added 2026-08)** `:774` · measuring `:788` · **AgentDojo (NeurIPS 2024 D&B; title/venue completed 2026-08)** `:801` · **Where Defenses Stand (Zhan adaptive attacks NAACL 2025; cite added 2026-08)** `:814` · design shift `:828` · open problems `:841` · practical advice `:854` |
-| Takeaways / Closer | 62–63 | — | key takeaways `:867` · closer `:879` |
+| **01 — Direct vs Indirect Injection** | 3–13 | `:79` | one-line idea (SVG) `:87` · tiny example (SVG) `:125` · two failure modes (SVG) `:155` · **direct (Perez & Ribeiro Fig. 1)** `:194` · **indirect (Greshake Fig. 1)** `:215` · **why indirect is worse (Liu et al. figure)** `:236` · hidden text (SVG) `:257` · **Naming the Problem (timeline SVG; Goodside demonstrated / Willison named)** `:300` · not the same as SQL (SVG) `:336` · **The #1 LLM Risk (OWASP LLM01:2025; SVG list)** `:374` |
+| **02 — The Agentic Surface** | 14–23 | `:413` | chatbot→agent (SVG) `:421` · what a tool is `:469` · agent loop (SVG) `:482` · two channels (SVG) `:524` · data becomes control (SVG) `:555` · attack picture (SVG) `:580` · **confused deputy (InjecAgent overview)** `:618` · three ingredients `:635` · **Lethal Trifecta (Willison 2025; Venn SVG)** `:648` |
+| **03 — Real Incidents** | 24–33 | `:673` | **Bing "Sydney" Leak (Kevin Liu direct injection; chat SVG)** `:681` · **Greshake real apps (Fig. 2 threat overview)** `:714` · email-exfiltration class (SVG) `:730` · **EchoLeak CVE-2025-32711 (SVG)** `:764` · **SpAIware memory poisoning (SVG)** `:804` · **CamoLeak + GitHub MCP (SVG)** `:849` · quiet exit channels (SVG) `:889` · vendors responded (SVG) `:933` · pattern emerges `:973` |
+| **04 — Why It Is Hard** | 34–40 | `:988` | no privilege separation (SVG) `:996` · one flat context (SVG) `:1034` · instructions look alike (SVG) `:1052` · filtering brittle (SVG) `:1083` · no clean escape (SVG) `:1122` · still open (illustrative SVG bars) `:1148` |
+| **05 — Defenses** | 41–55 | `:1180` | layered mindset (SVG) `:1188` · I/O filtering (SVG) `:1227` · **Spotlighting (Hines 2024 Fig. 4)** `:1263` · **Spotlighting, Measured (Hines Fig. 6; added 2026-09)** `:1283` · **Instruction Hierarchy (Wallace OpenAI 2024 Fig. 1)** `:1298` · **Hierarchy, Measured (Wallace Fig. 2; added 2026-09)** `:1314` · taint tracking (SVG) `:1329` · dual-LLM (Willison 2023) `:1367` · quarantine picture (SVG) `:1381` · **Capability Control (CaMeL Fig. 1)** `:1414` · human in loop (SVG) `:1434` · least privilege (SVG) `:1473` · scorecard `:1503` · toy-agent demo `:1515` |
+| **06 — Frontier 2025–26** | 56–64 | `:1532` | **New Surfaces, Same Flaw (AI browsers + MCP; SVG)** `:1540` · **measuring (AgentDojo Fig. 6a)** `:1580` · **AgentDojo (NeurIPS 2024 D&B; Fig. 1)** `:1601` · **Defenses on AgentDojo (Fig. 9a; added 2026-09)** `:1617` · **Where Defenses Stand (Zhan NAACL 2025 Fig. 2)** `:1637` · design shift (SVG) `:1653` · open problems `:1691` · practical advice (SVG) `:1704` |
+| Takeaways / Closer | 65–66 | — | key takeaways `:1739` · closer `:1752` |
 
 **Key definitions / citations (all source-verified 2026-08):**
-- Naming: Goodside demonstrated on GPT-3, Willison coined the name — `:179` — Willison,
+- Naming: Goodside demonstrated on GPT-3, Willison coined the name — `:300` — Willison,
   "Prompt injection attacks against GPT-3", Sept 2022; Perez & Ribeiro, "Ignore Previous
   Prompt: Attack Techniques for Language Models", 2022 (arXiv 2211.09527).
-- OWASP LLM01: Prompt Injection, #1 in the 2025 edition (second edition running) — `:205`.
-- Lethal trifecta (private data + untrusted content + external communication) — `:355` —
+- OWASP LLM01: Prompt Injection, #1 in the 2025 edition (second edition running) — `:374`.
+- Lethal trifecta (private data + untrusted content + external communication) — `:648` —
   Willison, "The lethal trifecta for AI agents", June 2025.
-- Bing "Sydney" system-prompt extraction by direct injection — `:373` — Kevin Liu, Feb 2023.
-- Indirect injection on real deployed apps — `:387` — Greshake, Abdelnabi, Mishra, Endres,
+- Bing "Sydney" system-prompt extraction by direct injection — `:681` — Kevin Liu, Feb 2023.
+- Indirect injection on real deployed apps — `:714` — Greshake, Abdelnabi, Mishra, Endres,
   Holz, Fritz, "Not What You've Signed Up For: Compromising Real-World LLM-Integrated
   Applications with Indirect Prompt Injection", ACM AISec 2023 (arXiv 2302.12173).
-- EchoLeak zero-click exfiltration — `:413` — CVE-2025-32711 (Microsoft 365 Copilot),
+- EchoLeak zero-click exfiltration — `:764` — CVE-2025-32711 (Microsoft 365 Copilot),
   Aim Security, June 2025; server-side patch, no known exploitation.
-- SpAIware persistent memory exfiltration — `:427` — Rehberger, Sept 2024 (ChatGPT macOS
+- SpAIware persistent memory exfiltration — `:804` — Rehberger, Sept 2024 (ChatGPT macOS
   app); fixed by OpenAI.
-- CamoLeak (Copilot Chat, per-image exfil) + GitHub MCP private-repo leak — `:441` —
+- CamoLeak (Copilot Chat, per-image exfil) + GitHub MCP private-repo leak — `:849` —
   reported via HackerOne, no CVE (GitHub-rated CVSS 9.6), Legit Security, Oct 2025;
   Invariant Labs, May 2025.
-- Spotlighting — `:617` — Hines et al., "Defending Against Indirect Prompt Injection
+- Spotlighting — `:1263` — Hines et al., "Defending Against Indirect Prompt Injection
   Attacks With Spotlighting", 2024 (arXiv 2403.14720).
-- Instruction hierarchy — `:630` — Wallace et al. (OpenAI), "The Instruction Hierarchy:
+- Instruction hierarchy — `:1298` — Wallace et al. (OpenAI), "The Instruction Hierarchy:
   Training LLMs to Prioritize Privileged Instructions", 2024 (arXiv 2404.13208).
-- Dual-LLM pattern — `:656` — Willison, "The Dual LLM pattern for building AI assistants
+- Dual-LLM pattern — `:1367` — Willison, "The Dual LLM pattern for building AI assistants
   that can resist prompt injection", April 2023.
-- Capability control / CaMeL — `:703` — Debenedetti et al., "Defeating Prompt Injections
+- Capability control / CaMeL — `:1414` — Debenedetti et al., "Defeating Prompt Injections
   by Design", 2025 (arXiv 2503.18813).
-- AI-browser + MCP attack surface — `:774` — Brave, "Indirect prompt injection in
+- AI-browser + MCP attack surface — `:1540` — Brave, "Indirect prompt injection in
   Perplexity Comet" & "Unseeable prompt injections in screenshots", 2025; Invariant Labs
   GitHub MCP, 2025.
-- AgentDojo — `:801` — Debenedetti et al., "AgentDojo: A Dynamic Environment to Evaluate
+- AgentDojo — `:1601` — Debenedetti et al., "AgentDojo: A Dynamic Environment to Evaluate
   Prompt Injection Attacks and Defenses for LLM Agents", NeurIPS 2024 (Datasets &
   Benchmarks) (arXiv 2406.13352).
-- Adaptive attacks break defenses (8 defenses bypassed, ASR >50%) — `:814` — Zhan, Fang,
+- Direct injection / goal hijacking figure — `:194` — Perez & Ribeiro 2022, Fig. 1.
+- Indirect-injection planting + Liu et al. app-injection figure — `:215`, `:236`.
+- Confused deputy via InjecAgent overview — `:618` — Zhan et al., "InjecAgent", ACL 2024 Findings.
+- Spotlighting measured (Fig. 6, GPT-4) — `:1283`; instruction hierarchy measured
+  (Fig. 2, GPT-3.5 Turbo, five attacks) — `:1314`; AgentDojo defenses (Fig. 9a, five
+  defenses, utility vs targeted ASR) — `:1617`.
+- Adaptive attacks break defenses (8 defenses bypassed, ASR >50%) — `:1637` — Zhan, Fang,
   Panchal, Kang, "Adaptive Attacks Break Defenses Against Indirect Prompt Injection
   Attacks on LLM Agents", NAACL 2025 Findings (arXiv 2503.00061).
 
-**Figures:** all inline SVG (no captured paper figures): attack picture (page→agent→tool
-→attacker) `:294`, one flat context (system/goal/untrusted stack) `:521`, quarantine
-dual-LLM dataflow `:673`. Citations use `.cite-left`.
+**Figures (2026-09 pass):** 14 captured paper figures in `figs/` — Direct Injection `:194` (`perez-hijack.png`); Indirect Injection `:215` (`greshake-plant.png`); Why Indirect Is Worse `:236` (`liu-app.png`); The Confused Deputy `:618` (`injecagent-overview.png`); Injecting Real Applications `:714` (`greshake-overview.png`); Spotlighting and Delimiting `:1263` (`hines-datamark.png`); Spotlighting, Measured `:1283` (`hines-encoding.png`); Instruction Hierarchy `:1298` (`wallace-hierarchy.png`); Hierarchy, Measured `:1314` (`wallace-results.png`); Capability Control `:1414` (`camel-flows.png`); Measuring the Problem `:1580` (`agentdojo-utility-asr.png`); AgentDojo `:1601` (`agentdojo-overview.png`); Defenses on AgentDojo `:1617` (`agentdojo-defenses.png`); Where Defenses Stand `:1637` (`zhan-adaptive.png`). 35 inline SVGs: The One-Line Idea `:87`, A Tiny Example `:125`, Two Failure Modes `:155`, Where Hidden Text Hides `:257`, Naming the Problem `:300`, Not the Same as SQL `:336`, The #1 LLM Risk `:374`, From Chatbot to Agent `:421`, The Agent Loop `:482`, Two Channels, One Pipe `:524`, Data Becomes Control `:555`, The Attack Picture `:580`, The Lethal Trifecta `:648`, The Bing "Sydney" Leak `:681`, The Email Exfiltration Class `:730`, EchoLeak: Zero Clicks `:764`, Poisoning the Memory `:804`, Even Coding Tools `:849`, Quiet Exit Channels `:889`, Vendors Have Responded `:933`, No Privilege Separation `:996`, One Flat Context `:1034`, Instructions Look Alike `:1052`, Filtering Is Brittle `:1083`, No Clean Escape `:1122`, Still an Open Problem `:1148`, A Layered Mindset `:1188`, Input and Output Filtering `:1227`, Taint Tracking `:1329`, Quarantine in One Picture `:1381`, Keep a Human in the Loop `:1434`, Least Privilege `:1473`, New Surfaces, Same Flaw `:1540`, The Design Shift `:1653`, Practical Advice `:1704`. Citations use `.cite-left`.
 
 **2026-08 content revision (58→63):** every citation/incident fetched and verified.
 Added 5 slides: The #1 LLM Risk (§01, OWASP LLM01:2025); EchoLeak: Zero Clicks,
@@ -957,6 +961,17 @@ arXiv ×7, Willison ×3, Brave ×2, CVE.org/MSRC/Aim, Legit/Register/Invariant,
 embracethered, Ars, OWASP ×2, MIT Hardy, MIT Saltzer, dblp). Note and deck both
 corrected 2026-08-19: CamoLeak has NO CVE — the previously cited "CVE-2025-59145"
 is an unrelated npm color-name malware record.
+
+**2026-09 figure pass (63→66):** every content slide now carries a figure. 14 figure
+crops cut from the cited papers into `figs/` (Perez & Ribeiro, Greshake ×2, Liu et al.,
+InjecAgent, Hines ×2, Wallace ×2, CaMeL, AgentDojo ×3, Zhan), each with a figure-number
+cite; 32 new inline SVG diagrams for previously text-only slides (35 SVGs total). Three
+slides added to carry measured results: Spotlighting, Measured (Hines Fig. 6),
+Hierarchy, Measured (Wallace Fig. 2), Defenses on AgentDojo (Fig. 9a). Where Defenses
+Stand: highlight folded into the intro so the Zhan chart fits at 640 px. Note synced
+(66 entries, `Slide figure:` lines on every figure slide, three new entries with detail
+blocks; "Wu and colleagues" misattribution in the Instruction Hierarchy script fixed).
+60-dpi render check of all 66 pages: no overflow or overlap.
 
 ## lec12-watermark.html
 

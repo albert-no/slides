@@ -30,7 +30,7 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | # | Deck | Source (tex lines) | Status |
 |---|---|---|---|
 | 1 | `prob01-foundations/` — probability review, entropy, Jensen, H ≤ log M | prob 13–451 (through max-entropy) | done (72 slides) |
-| 2 | `prob02-kl-crossentropy/` — mismatch thm, KL ≥ 0, horse racing, CE loss = KL to one-hot | prob 249–538 | done (69 slides) |
+| 2 | `prob02-kl-crossentropy/` — mismatch thm, KL ≥ 0, log-sum/convexity/additivity, f-divergences, betting/coding/perplexity, proper scoring rules, CE loss = KL, population risk & Bayes classifier, softmax gradient, KL across DL | prob 249–538 + DL extensions | done (105 slides, 2026-09 revision) |
 | 3 | `prob03-mutual-information/` — joint/cond entropy, MI, DPI I–III, cond MI, differential entropy, MaxEnt Gaussian | prob 539–1210 | done (127 slides) |
 | 4 | `prob04-random-processes/` — Markov processes, stationary dist., discrete diffusion | prob 1211–1455 | done (99 slides) |
 | 5 | `prob05-concentration/` — Markov/Chebyshev/Chernoff, MGF, CLT sketch, LLN | prob 1457–1595 | done (107 slides) |
@@ -78,39 +78,54 @@ labels as absolutely-positioned HTML spans over the SVG (deck-local `.p1-fig`/`.
 the deck's own `<style>` block — KaTeX skips SVG `<text>`). Jensen proof (induction) is not
 in the tex (source states Jensen without proof) — added per full-treatment mandate.
 
-### prob02-kl-crossentropy — KL Divergence & Cross-Entropy Loss (69 slides)
+### prob02-kl-crossentropy — KL Divergence & Cross-Entropy Loss (105 slides)
 
-`prob02-kl-crossentropy/prob02-kl-crossentropy.html` · source: prob 249–538.
+`prob02-kl-crossentropy/prob02-kl-crossentropy.html` · source: prob 249–538, extended 2026-09 for a
+future-DL-scientist audience (rigor raised, every DL connection made concrete).
 Lecture 2 — answers prob01's teaser (wrong distribution Q); recalls entropy/Jensen
 from prob01 instead of redefining; ends on a bridge to prob03 (two RVs → mutual
-information).
-Companion: `prob02-kl-crossentropy/prob02-kl-crossentropy-note.html` — detailed definitions, expanded proofs, lemmas, references.
-Accessible edition: `prob02-kl-crossentropy/prob02-kl-crossentropy-note.md` — screen-reader Markdown edition of that note (763 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
+information). Bits by default; "nats" stated wherever torch or e^CE appears.
+Companion: `prob02-kl-crossentropy/prob02-kl-crossentropy-note.html` (700 lines, §1–7 + refs [1]–[16]) — full definitions, every deck theorem proved, flagged citations for the three stated-not-proved facts (LLN, Kraft, locality uniqueness).
+Accessible edition: `prob02-kl-crossentropy/prob02-kl-crossentropy-note.md` — screen-reader Markdown edition of that note (1466 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides); section numbers match the HTML note.
 
 | # | Section | Slides | Location |
 |---|---|---|---|
-| — | Title + TOC | 1–2 | prob02-kl-crossentropy/prob02-kl-crossentropy.html:20 |
-| 01 | Why Cross-Entropy? (PyTorch CE loss, derive-not-accept, route map SVG) | 3–6 | prob02-kl-crossentropy/prob02-kl-crossentropy.html:91 |
-| 02 | Recall & Teaser (surprisal/entropy + Jensen recall from prob01, E[log 1/Q] ≟ H(X)) | 7–11 | prob02-kl-crossentropy/prob02-kl-crossentropy.html:155 |
-| 03 | The Mismatch Theorem (Thm 1 arc: 3-step proof, equality, edge-case exercise, H(P,Q) def :375, gap-axis picture) | 12–24 | prob02-kl-crossentropy/prob02-kl-crossentropy.html:221 |
-| 04 | KL Divergence (def :423, P-vs-Q bars SVG, worked D(P‖Q)=0.224 ≠ D(Q‖P)=0.296, Thm 2, CE = H + KL) | 25–34 | prob02-kl-crossentropy/prob02-kl-crossentropy.html:411 |
-| 05 | Gambling & Doubling Rate (red/black, all-in ruin, E[log S], Thm 3, doubling rate :689, horse race, Thm 4, 3-horse worked example, three-gamblers table) | 35–51 | prob02-kl-crossentropy/prob02-kl-crossentropy.html:554 |
-| 06 | Cross-Entropy Loss (classifier pipeline SVG, CE loss def, 3-class worked table, one-hot pmf, Thm 5–6, soft labels, min CE = min KL) | 52–66 | prob02-kl-crossentropy/prob02-kl-crossentropy.html:818 |
-| — | Recap chain, bridge to prob03, end slide | 67–69 | prob02-kl-crossentropy/prob02-kl-crossentropy.html:1043 |
+| — | Title + TOC | 1–2 | prob02-kl-crossentropy/prob02-kl-crossentropy.html:38 |
+| 01 | Why Cross-Entropy? (PyTorch CE loss, derive-not-accept, route map SVG) | 3–6 | prob02-kl-crossentropy/prob02-kl-crossentropy.html:114 |
+| 02 | Recall & Teaser (surprisal/entropy + Jensen recall from prob01, E[log 1/Q] ≟ H(X)) | 7–11 | prob02-kl-crossentropy/prob02-kl-crossentropy.html:184 |
+| 03 | The Mismatch Theorem (Thm 1 arc: 3-step proof, equality, edge-case exercise, H(P,Q) def :402, gap-axis picture) | 12–24 | prob02-kl-crossentropy/prob02-kl-crossentropy.html:250 |
+| 04 | KL Divergence (def :450, conventions :463, support in DL :478, P-vs-Q bars SVG, worked D(P‖Q)=0.224 ≠ D(Q‖P)=0.296, Thm 2, t log t figure :589, log-sum Lemma + corollary with zeros, Thm 3 convexity, Thm 4 CE = H + KL, Thm 5 additivity, LLN view :735 [flag: LLN not proved → prob05], f-divergence def :762, Thm 6, zoo table :787, what KL alone brings, preview) | 25–50 | prob02-kl-crossentropy/prob02-kl-crossentropy.html:442 |
+| 05 | Betting, Coding, Predicting (red/black, all-in ruin, E[log S], Thm 7, doubling rate :923, horse race, Thm 8, 3-horse worked example, three-gamblers table, betting = modeling, coding costume :1056 [flag: Kraft stated, not proved; note §5.8], LM costume :1069, perplexity def :1103, Shannon guessing game W = log K − CE :1118) | 51–68 | prob02-kl-crossentropy/prob02-kl-crossentropy.html:827 |
+| 06 | Cross-Entropy Loss (classifier pipeline SVG, CE loss def :1205, 3-class worked table, three candidate losses :1232, proper scoring def :1246, log strictly proper, linear not proper, Brier proper, three-scores table :1303, locality :1317 [flag: uniqueness cited Bernardo 1979 / Gneiting–Raftery 2007; note §6.4], one-hot pmf, Thm 9, soft labels, min CE = min KL, population view :1397, Thm 10, Bayes corollary :1423, calibrated-vs-overconfident table :1437, MLE identity :1451, softmax def :1468, Thm 11, log-sum-exp stability :1493, MSE-on-softmax gradient table :1507, why log settled) | 69–95 | prob02-kl-crossentropy/prob02-kl-crossentropy.html:1134 |
+| 07 | KL Across Deep Learning (forward vs reverse support argument :1542, one-Gaussian-to-two-bumps SVG :1561 [numerical grid experiment, nats], two-directions table :1585, zoo (1) training targets :1598 — LM, distillation, label smoothing; zoo (2) regularizers & bounds :1611 — RLHF penalty, VAE ELBO, diffusion, GAN/JS; open questions :1624) | 96–102 | prob02-kl-crossentropy/prob02-kl-crossentropy.html:1534 |
+| — | Recap chain, bridge to prob03, end slide | 103–105 | prob02-kl-crossentropy/prob02-kl-crossentropy.html:1636 |
 
 Key theorems: **Thm 1** mismatch H(X) ≤ E[log 1/Q(X)], equality iff Q = p_X
-(prob02-kl-crossentropy/prob02-kl-crossentropy.html:259); **Thm 2** information
-inequality D(P‖Q) ≥ 0 (prob02-kl-crossentropy/prob02-kl-crossentropy.html:507);
-**Thm 3** proportional betting, binary (prob02-kl-crossentropy/prob02-kl-crossentropy.html:653);
-**Thm 4** proportional betting, M horses, W = log M − H(p) − D(p‖Q)
-(prob02-kl-crossentropy/prob02-kl-crossentropy.html:757); **Thm 5** CE loss =
-D(one-hot ‖ f(x)) (prob02-kl-crossentropy/prob02-kl-crossentropy.html:946);
-**Thm 6** H(P,Q) = H(P) + D(P‖Q) (prob02-kl-crossentropy/prob02-kl-crossentropy.html:972).
+(prob02-kl-crossentropy/prob02-kl-crossentropy.html:284); **Thm 2** information
+inequality D(P‖Q) ≥ 0 (prob02-kl-crossentropy/prob02-kl-crossentropy.html:563);
+**Lemma** log-sum inequality, Jensen on t log t (prob02-kl-crossentropy/prob02-kl-crossentropy.html:610),
+corollary Thm 2 with zeros (prob02-kl-crossentropy/prob02-kl-crossentropy.html:639);
+**Thm 3** KL convex in the pair (P,Q) (prob02-kl-crossentropy/prob02-kl-crossentropy.html:653);
+**Thm 4** H(P,Q) = H(P) + D(P‖Q) (prob02-kl-crossentropy/prob02-kl-crossentropy.html:679);
+**Thm 5** additivity D(P^n‖Q^n) = n D(P‖Q) (prob02-kl-crossentropy/prob02-kl-crossentropy.html:707);
+**Thm 6** every f-divergence ≥ 0 (prob02-kl-crossentropy/prob02-kl-crossentropy.html:774);
+**Thm 7** proportional betting, binary (prob02-kl-crossentropy/prob02-kl-crossentropy.html:911);
+**Thm 8** proportional betting, M horses, W = log M − H(p) − D(p‖Q)
+(prob02-kl-crossentropy/prob02-kl-crossentropy.html:991); **Thm 9** CE loss =
+D(one-hot ‖ f(x)) (prob02-kl-crossentropy/prob02-kl-crossentropy.html:1345);
+**Thm 10** population CE = E_X[H(P_Y|X)] + E_X[D(P_Y|X ‖ f(X))], Bayes-optimal corollary
+(prob02-kl-crossentropy/prob02-kl-crossentropy.html:1410); **Thm 11** softmax gradient ∂ℓ/∂z_i = s_i − 1[i=y]
+(prob02-kl-crossentropy/prob02-kl-crossentropy.html:1480).
+Stated, not proved (on-slide flags, proofs/citations in the note): LLN (prob05), Kraft inequality
+(Cover & Thomas ch. 5), locality uniqueness of the log score (Bernardo 1979; Gneiting & Raftery 2007).
 Figures: figs/jensen.png (Jensen recall), figs/classification.png (classifier setup);
-all other diagrams inline SVG. Worked numeric examples (3-outcome KL asymmetry,
-3-horse race / three-gamblers, 3-class CE, soft labels) computed for this deck —
-not in the tex — per worked-example mandate. Rigorous p_X(x) = 0 edge case left
-as a hinted exercise (commented out in the tex too).
+all other diagrams inline SVG (route map, P-vs-Q bars, t log t curve, LLN running average,
+growth at rate W, classifier pipeline, one Gaussian fitted to two bumps, etc.). Worked numeric
+examples (3-outcome KL asymmetry, f-divergence zoo, 3-horse race / three-gamblers, Shannon
+code lengths, perplexity for K = 2/10/50000, 3-class CE, three scores × three reports,
+soft labels, calibrated-vs-overconfident, softmax gradient at z = (2,1,0), Gaussian grid fit)
+computed for this deck — not in the tex — per worked-example mandate; all reproduced in the note.
+Rigorous p_X(x) = 0 edge case left as a hinted exercise (commented out in the tex too).
 
 ### prob03-mutual-information — Mutual Information & Data Processing (127 slides)
 

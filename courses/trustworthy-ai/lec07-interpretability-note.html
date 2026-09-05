@@ -60,6 +60,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>The Husky and the Wolf</h2>
 <p>The classic cautionary tale from the LIME paper — and note it was a deliberately rigged demo: the authors trained the classifier on photos where every wolf had snow in the background, so it learned to detect snow, not the animal. Graduate students who saw the explanations went from 10-of-27 trusting the model to 3-of-27.</p>
 <p><span class="kt">Key takeaway:</span> Explanations expose shortcuts that accuracy alone hides.</p>
+<p><span class="kt">Slide figure:</span> Ribeiro, Singh &amp; Guestrin (2016), Fig. 11: the husky classified as wolf (left) and the LIME explanation (right) — the highlighted evidence is the snow, not the animal.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>The experiment is Section 6.4 ("Do explanations lead to insights?") of the LIME paper (Ribeiro, Singh &amp; Guestrin, KDD 2016). The setup was <em>intentionally</em> bad: training images were "hand selected such that all pictures of wolves had snow", and a logistic-regression classifier was trained on top of deep features so that it would latch onto the snow. The 27 subjects were graduate students who had taken at least one graduate machine-learning course. Before seeing explanations, 10 of 27 trusted the model and 12 of 27 mentioned snow as a potential feature; after seeing the saliency-style LIME explanations, trust fell to 3 of 27 and 25 of 27 identified the snow shortcut. This kind of spurious-cue learner is often called a "Clever Hans predictor" — Lapuschkin et al. (Nature Communications, 2019) use explanation methods to unmask such right-answer-wrong-reason behavior systematically across vision and game-playing models; the name refers to the famous early-1900s "counting" horse whose feats relied on unintended cues from its questioner.</p>
@@ -74,6 +75,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Two Routes to Understanding</h2>
 <p>Two strategies. Intrinsic interpretability makes the model readable by design, like a short decision tree or a linear rule. Post-hoc interpretability explains an already-trained black box from the outside.</p>
 <p><span class="kt">Key takeaway:</span> Intrinsic is readable by construction; post-hoc is approximated after the fact.</p>
+<p><span class="kt">Slide figure:</span> Rudin (2019), Fig. 3: the CORELS rule list for two-year recidivism (IF age 18–20 and male THEN arrest, ELSE IF …) — an intrinsically interpretable model whose whole body is its own explanation.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Intrinsic interpretability</strong>: restrict the hypothesis class to models a human can simulate directly — sparse linear models, shallow decision trees, rule lists. The model <em>is</em> its own explanation, so faithfulness is automatic. <strong>Post-hoc interpretability</strong>: train any model, then compute an explanation afterwards from query access, gradients, or internals. A post-hoc method is <strong>model-agnostic</strong> if it needs only query access to $f$ (LIME, SHAP) and <strong>model-specific</strong> if it needs gradients or architecture (saliency maps, probing, mechanistic analysis). Sections 02–05 of this lecture are all post-hoc, ordered by how deep into the model they reach.</p>
@@ -90,6 +92,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>The Rudin Objection</h2>
 <p>Cynthia Rudin's famous 2019 argument: for high-stakes decisions like bail, parole, or medical triage, the trade-off is often overstated, and we should build models that are interpretable by design rather than explain black boxes after the fact — a wrong post-hoc story can cause real harm.</p>
 <p><span class="kt">Key takeaway:</span> For high-stakes calls, some argue for interpretable-by-design models, not explanations.</p>
+<p><span class="kt">Slide figure:</span> Rudin (2019), Fig. 1: the often-drawn accuracy-vs-explainability trade-off, which Rudin argues is fictional — interpretable models (red) frequently sit at the same performance as black boxes (green).</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Rudin's position paper (Nature Machine Intelligence, vol. 1, May 2019, pp. 206–215) argues that trying to explain black-box models, rather than creating models that are interpretable in the first place, can perpetuate bad practice and cause catastrophic harm in high-stakes decisions, and proposes designing inherently interpretable models instead. It frames the accuracy–interpretability trade-off as often assumed rather than demonstrated, particularly for structured tabular data.</p>
@@ -137,6 +140,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>LIME: Local Surrogate</h2>
 <p>LIME, Local Interpretable Model-agnostic Explanations: perturb the input, watch the output change, fit a simple linear model in that neighborhood, and read its weights. It works for any model because it only needs query access.</p>
 <p><span class="kt">Key takeaway:</span> LIME fits a simple local model and reads its weights.</p>
+<p><span class="kt">Slide figure:</span> Ribeiro, Singh &amp; Guestrin (2016), Fig. 1: the LIME pipeline — model, data and prediction (flu), explainer highlighting sneeze/headache/no fatigue, and the human who decides.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p>LIME (Ribeiro et al., KDD 2016, Eq. 1) explains a prediction $f(x)$ by the interpretable model</p>
@@ -159,6 +163,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Local, Not Global</h2>
 <p>LIME explains a single prediction. The true decision boundary may be wildly curved, but near one point a straight line approximates it well. Stress that the explanation is only valid locally.</p>
 <p><span class="kt">Key takeaway:</span> A LIME explanation holds near one point, not everywhere.</p>
+<p><span class="kt">Slide figure:</span> Ribeiro, Singh &amp; Guestrin (2016), Fig. 3: the complex pink/blue decision function of a black box, the bold red cross being explained, and the dashed line LIME fits — faithful only in the neighbourhood of the instance.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Local fidelity</strong>: the loss $\mathcal{L}(f,g,\pi_x)$ measures how well $g$ matches $f$ only where the kernel $\pi_x$ puts weight — a shrinking neighborhood of $x$. A surrogate can have excellent local fidelity while being a terrible global description of $f$; the weights of $\xi(x)$ therefore answer "what mattered <em>near this input</em>", not "what the model does in general". Different inputs get different, possibly contradictory, surrogates, and nothing forces them to assemble into one global story.</p>
@@ -169,6 +174,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>SHAP: Fair Credit</h2>
 <p>SHAP, SHapley Additive exPlanations, borrows the Shapley value from cooperative game theory. Treat each feature as a player on a team; its score is its average marginal contribution to the prediction.</p>
 <p><span class="kt">Key takeaway:</span> SHAP splits the prediction fairly using game theory.</p>
+<p><span class="kt">Slide figure:</span> Lundberg &amp; Lee (2017), Fig. 1: SHAP values as additive steps from the base rate E[f(z)] to the prediction f(x), attributing φ₀…φ₄ to features (red arrow = negative contribution).</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p>A <strong>cooperative game</strong> is a pair $(N, v)$: a finite player set $N$ with $|N| = n$ and a value function $v : 2^N \to \mathbb{R}$ with $v(\varnothing) = 0$, where $v(S)$ is the payoff coalition $S$ can secure. A <strong>value</strong> is a rule $\phi$ assigning each player $i$ a share $\phi_i(v)$ of $v(N)$. SHAP instantiates this with players $=$ features and, for an input $x$, the coalition payoff given by the conditional expectation of the model output when only the features in $S$ are known:</p>
@@ -241,6 +247,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Saliency on Images</h2>
 <p>For images, attribution becomes a heat map over pixels. Bright regions are the pixels the prediction leaned on most.</p>
 <p><span class="kt">Key takeaway:</span> A saliency map highlights the pixels behind the label.</p>
+<p><span class="kt">Slide figure:</span> Simonyan, Vedaldi &amp; Zisserman (2014), Fig. 2: image-specific class saliency maps (single backward pass) for the top-1 predicted class on six ILSVRC-2013 test images (sailboat, terrier, fruit, washer, monkey, buffalo).</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p>A <strong>saliency map</strong> for a class score $S_c$ at image $x$ is an image-shaped array $M(x)$ with $M_i(x) \ge 0$ ranking each pixel's influence on $S_c(x)$; the simplest instance (next slide) is the elementwise gradient magnitude, $M_i(x) = \bigl|\partial S_c(x)/\partial x_i\bigr|$ (Simonyan, Vedaldi &amp; Zisserman, 2014).</p>
@@ -265,6 +272,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Beyond Raw Gradients</h2>
 <p>Raw gradients have a known weakness: once the model is confident, the local slope flattens and an important pixel can score near zero. Integrated gradients fixes this by averaging the gradient along the path from a blank baseline to the actual image — the whole climb, not one point.</p>
 <p><span class="kt">Key takeaway:</span> Integrated gradients averages the slope along a path, giving sturdier scores.</p>
+<p><span class="kt">Slide figure:</span> Sundararajan, Taly &amp; Yan (2017), Fig. 2 (top three rows): original image, integrated gradients, and plain gradients at the image for a camera, a fireboat, and a school bus — IG concentrates on the object where raw gradients scatter.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Saturation, precisely</strong> (Sundararajan, Taly &amp; Yan, ICML 2017): take $f(x) = 1 - \mathrm{ReLU}(1-x)$, baseline $x' = 0$, input $x = 2$. The function rises from $f(0)=0$ to $f(2)=1$, yet $f$ is flat at the input ($f'(x) = 0$ for $x \gt 1$), so gradient saliency assigns the feature zero — violating the axiom below.</p>
@@ -303,6 +311,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Attribution Can Mislead</h2>
 <p>A sobering result: some popular saliency maps barely change when you randomize the model's weights. If the explanation does not depend on the model, it cannot be explaining the model. This is the sanity-check critique.</p>
 <p><span class="kt">Key takeaway:</span> A map that ignores the weights is not explaining the model.</p>
+<p><span class="kt">Slide figure:</span> Adebayo et al. (2018), Fig. 2: cascading randomization on Inception v3 (ImageNet) — saliency maps for a junco as weights are re-initialized from the top layer downward; Guided Backprop and Guided GradCAM barely change.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Adebayo et al. (NeurIPS 2018) propose two <strong>randomization tests</strong>: the <em>model parameter randomization test</em> compares a saliency map on the trained network against the same method on a network with randomized weights, and the <em>data randomization test</em> compares against a model trained on randomly permuted labels. A method whose output survives either randomization is "independent both of the model and of the data generating process" and therefore cannot be explaining what the model learned; the paper finds that some widely used methods fail, producing maps that are visually and quantitatively similar to what an edge detector would output — striking-looking, but insensitive to the model. This is the formal version of this slide's critique and the origin of the sanity-check discipline in the "Always Sanity-Check" entry below.</p>
@@ -332,6 +341,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Linear Probes</h2>
 <p>A linear probe trains a tiny classifier on a frozen layer's activations. If a simple linear readout can recover a concept, like part-of-speech or sentiment, then that concept is present in the layer.</p>
 <p><span class="kt">Key takeaway:</span> A probe tests whether a concept is linearly readable from a layer.</p>
+<p><span class="kt">Slide figure:</span> Alain &amp; Bengio (2017), Fig. 4: linear-probe validation error on ImageNet for a ResNet-50, layer by layer — the probe improves steadily toward the model's own top-layer error, showing features become progressively more linearly separable.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Linear probe</strong> (Alain &amp; Bengio, 2016): freeze the network, collect pairs $(h_\ell(x), c(x))$ where $c(x)$ is a concept label, and train only a linear classifier $g(h) = \mathrm{softmax}(W h + b)$ on them. Probe accuracy measures how <em>linearly decodable</em> the concept is at depth $\ell$; Alain &amp; Bengio found that linear separability of class information increases monotonically with depth in image classifiers. The implicit assumption — that concepts are encoded as <em>directions</em> in activation space — is the <strong>linear representation hypothesis</strong>, which Park et al. (2023) formalize for language models via counterfactual word pairs and connect to both probing (reading directions) and steering (writing directions), under a causal inner product. The same hypothesis underlies superposition and SAEs in Sections 04–05.</p>
@@ -347,6 +357,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Reading the Probe</h2>
 <p>An important caveat: a high probe accuracy is suggestive, not proof. The concept being decodable does not mean the model uses it, and a powerful probe can simply learn the concept itself.</p>
 <p><span class="kt">Key takeaway:</span> Decodable is not the same as actually used.</p>
+<p><span class="kt">Slide figure:</span> Hewitt &amp; Liang (2019), Fig. 1: a control task assigns each word type a random label (numbers/colours), so a probe that fits it well is memorizing the vocabulary rather than reading a linguistic property from the representation.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p>Two distinct failure modes. (1) <em>The probe does the work:</em> an expressive probe can compute the concept from raw-ish features rather than reveal it. Hewitt &amp; Liang (EMNLP 2019) formalize the fix: pair each linguistic task with a <strong>control task</strong> that maps word types to random outputs — solvable only by memorization — and report <strong>selectivity</strong> $=$ linguistic-task accuracy $-$ control-task accuracy. A high-accuracy, low-selectivity probe is memorizing, not revealing; they find linear probes are the most selective. (2) <em>Decodable but unused:</em> even a selective probe shows only that information is <em>present</em>, a correlational claim. Whether the model causally <em>uses</em> it requires interventions on the representation — the activation-patching methodology in the "Always Sanity-Check" entry.</p>
@@ -361,6 +372,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Attention Weights</h2>
 <p>A transformer lets each token attend to other tokens. Visualizing attention shows, for instance, the pronoun "it" attending to the noun "cat". Thicker lines mean more attention weight.</p>
 <p><span class="kt">Key takeaway:</span> Attention maps show which tokens each token looks at.</p>
+<p><span class="kt">Slide figure:</span> Clark, Khandelwal, Levy &amp; Manning (2019), Fig. 1: four BERT attention heads with distinct habits — attending broadly (1-1), to the next token (3-1), to [SEP] (8-7), and to periods (11-6). Darker lines carry more weight.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p>In scaled dot-product attention (Vaswani et al., 2017), each position $t$ forms a query $q_t$, each position $s$ a key $k_s$ and value $v_s$ (linear maps of the token representations). The <strong>attention weights</strong> are</p>
@@ -383,6 +395,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Attention Is Not Explanation</h2>
 <p>The cautionary result: you can often find very different attention patterns that produce the same output. If the weights can be swapped without changing the answer, they are not the reason for the answer. Treat attention as a clue, not a verdict.</p>
 <p><span class="kt">Key takeaway:</span> Attention weights are a hint, not a faithful explanation.</p>
+<p><span class="kt">Slide figure:</span> Jain &amp; Wallace (2019), Fig. 1: an IMDB review with the original attention (left) and an adversarially chosen attention (right) that highlights different words yet yields the same output f = 0.01.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Jain &amp; Wallace (NAACL 2019) tested attention-as-explanation across NLP tasks (with recurrent encoders) and report two findings: learned attention weights frequently do not correlate with gradient-based measures of feature importance, and one can construct <em>counterfactual</em> attention distributions — sometimes adversarially different from the learned ones — that yield equivalent predictions. Their conclusion is the slide's argument: if very different "explanations" support the same output, the learned attention pattern is not a faithful account of why the model answered as it did.</p>
@@ -425,6 +438,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Circuits</h2>
 <p>A circuit is a small subgraph of the network that performs one job. The Distill circuits work showed, in vision models, how edge detectors feed curve detectors that feed a circle detector, building recognizable structure step by step.</p>
 <p><span class="kt">Key takeaway:</span> Circuits are readable sub-computations stitched into the model.</p>
+<p><span class="kt">Slide figure:</span> Olah et al. (2020), Zoom In — the car-detector circuit in InceptionV1: window (4b:237), car-body (4b:491) and wheel (4b:373) neurons wire into a car detector (4c:447), with excitation at the expected positions and inhibition elsewhere.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Olah et al.'s "Zoom In" (Distill, 2020) launched the circuits research program with three explicitly speculative claims about neural networks, in analogy to biology's cell theory: <em>Claim 1 (Features)</em> — features are the fundamental unit, corresponding to directions in activation space; <em>Claim 2 (Circuits)</em> — features are connected by weights into circuits implementing meaningful algorithms; <em>Claim 3 (Universality)</em> — analogous features and circuits recur across different networks. The evidence base is a neuron-level dissection of InceptionV1, including the curve-detector family this slide's pipeline sketch is drawn from.</p>
@@ -438,6 +452,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Neurons as Concepts</h2>
 <p>In vision models, some neurons fire for one clear idea: a curve detector, a dog-head detector. Wired together they recognize parts of objects, evidence that there is structure, not chaos, inside.</p>
 <p><span class="kt">Key takeaway:</span> Some neurons map cleanly to single human concepts.</p>
+<p><span class="kt">Slide figure:</span> Olah et al. (2020), Zoom In — the curve-detector family in layer mixed3b (3b:379, 3b:406, …) and related circle/spiral shape detectors, visualized by feature visualization.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Documented examples from the InceptionV1 dissection: <em>curve detectors</em> (a family of neurons each firing for curves of one orientation), <em>high–low frequency detectors</em> (a boundary cue: high-frequency texture on one side, low on the other), and a <em>pose-invariant dog-head detector</em> assembled from orientation-specific ones. The same work already flags the coming problem: it also documents <em>polysemantic</em> neurons responding to several unrelated concepts (its example: cat faces, fronts of cars, and cat legs), foreshadowing "The Polysemantic Wall" below.</p>
@@ -465,6 +480,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Induction Heads</h2>
 <p>The flagship circuit found in language models. An induction head, built from two cooperating attention heads, implements a copy rule: having seen "A B" earlier, when "A" recurs it predicts "B".</p>
 <p><span class="kt">Key takeaway:</span> Induction heads copy patterns seen earlier in the context.</p>
+<p><span class="kt">Slide figure:</span> Lindsey et al. (2025), Limitations section (the 'Aunt Sally' example): schematic of an induction head — a previous-token head writes 'last token was Aunt' into the key, which the induction head's query matches to predict the repeat.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p>Formally (Olsson et al., 2022): an <strong>induction head</strong> implements the rule $[A][B] \dots [A] \to [B]$ — on encountering the current token $A$, look back for a previous occurrence of $A$ and increase the probability of the token $B$ that followed it ("complete the pattern"). It is operationalized by two properties measured on repeated random sequences: <strong>prefix matching</strong> (the head attends to the token <em>after</em> the earlier occurrence of the present token) and <strong>copying</strong> (the head's output boosts the probability of the attended token). Mechanically it is a circuit of two attention heads in different layers: a <strong>previous-token head</strong> copies information about each token into the following position, and the induction head proper uses that shifted information to find tokens preceded by the present token. This composition is why induction heads cannot exist in one-layer models.</p>
@@ -479,6 +495,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Induction in Action</h2>
 <p>Concretely, if "Harry Potter" appeared earlier and "Harry" recurs, the induction circuit finds the earlier match and copies what followed, predicting "Potter". This is the engine behind copying from context.</p>
 <p><span class="kt">Key takeaway:</span> Find the earlier match, copy what came next.</p>
+<p><span class="kt">Slide figure:</span> Olsson et al. (2022), In-context Learning and Induction Heads: an induction head on a repeated random-token sequence — the attention lands on the token that followed the earlier occurrence of the current token, and copies it (raises its logit).</p>
 </article>
 
 <article>
@@ -498,6 +515,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>The Polysemantic Wall</h2>
 <p>The bad news: most neurons are not one clean concept. A single neuron tends to fire for many unrelated things, a property called polysemanticity, which blocks naive one-neuron-one-meaning reading.</p>
 <p><span class="kt">Key takeaway:</span> Most neurons mix many meanings and resist easy reading.</p>
+<p><span class="kt">Slide figure:</span> Elhage et al. (2022), Toy Models of Superposition — the superposition hypothesis illustrated: a hypothetical disentangled model with one clean feature per neuron, projected onto the smaller observed model, where each neuron becomes polysemantic.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p>A neuron is <strong>polysemantic</strong> if it activates for several semantically unrelated properties of the input, and <strong>monosemantic</strong> if it tracks one. The question is only meaningful because neurons form a <strong>privileged basis</strong>: the elementwise nonlinearity (ReLU, GeLU) acts coordinate-by-coordinate, so the neuron directions are singled out by the architecture — unlike, say, directions in the residual stream, which can be rotated freely. Polysemanticity says that even in this privileged basis, the units of computation do not align with human concepts; the next slide gives the hypothesized reason.</p>
@@ -508,6 +526,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Superposition</h2>
 <p>The reason for polysemanticity: the model packs more features than it has neurons, so features overlap in the same dimensions and each neuron carries a mix. Like cramming too many ideas into too few words.</p>
 <p><span class="kt">Key takeaway:</span> Superposition crams many features into few neurons.</p>
+<p><span class="kt">Slide figure:</span> Elhage et al. (2022), Toy Models of Superposition — 'As sparsity increases, models use superposition': at 0% sparsity less important features are dropped; at 80–90% sparsity extra features are packed in as almost-orthogonal directions.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p>The <strong>superposition hypothesis</strong> (Elhage et al., "Toy Models of Superposition", 2022): a layer's activation vector $h(x) \in \mathbb{R}^n$ is approximately a sparse linear combination of many more feature directions than it has dimensions,</p>
@@ -530,6 +549,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Unpacking Superposition</h2>
 <p>The idea: spread the activations into a much wider space and force only a few units to be active at once. With few actives, each one can carry a single clean meaning. We trade a few crowded dimensions for many clear ones.</p>
 <p><span class="kt">Key takeaway:</span> Widen and sparsify to separate the tangled features.</p>
+<p><span class="kt">Slide figure:</span> Cunningham, Ewart, Riggs, Huben &amp; Sharkey (2024), Fig. 1: a sparse autoencoder trained on a language-model activation vector — encode, bias + ReLU, sparse coefficients, decode — yielding a feature dictionary with interpretability scores.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p>If activations really are $h \approx \sum_k a_k d_k$ with sparse $a$, recovering the features is the classical <strong>dictionary learning / sparse coding</strong> problem: given samples of $h$, find a dictionary of directions $D = [d_1, \dots, d_m]$ and nonnegative sparse codes $a(h)$ minimizing reconstruction error plus a sparsity penalty,</p>
@@ -706,6 +726,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Always Sanity-Check</h2>
 <p>Practical discipline: before trusting an explanation, test it. Randomize the weights and see if the map changes; intervene and see if behavior actually shifts; hold out cases and see if the explanation predicts them.</p>
 <p><span class="kt">Key takeaway:</span> Trust an explanation only after it survives a real test.</p>
+<p><span class="kt">Slide figure:</span> Adebayo et al. (2018), Fig. 1: saliency maps from Gradient, SmoothGrad, Guided BackProp, Guided GradCAM, Integrated Gradients, Gradient⊙Input, next to a plain edge detector — which looks just as convincing.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p>The slide's three tests, formalized. (1) <strong>Randomization tests</strong> (Adebayo et al., NeurIPS 2018): recompute the explanation after randomizing model parameters (layer by layer, from the top) or after retraining on permuted labels; a faithful explanation must degrade, since the thing it explains is gone. (2) <strong>Causal intervention / activation patching</strong>: replace an internal activation with its value from another run and measure the output change; Meng et al. (NeurIPS 2022) use this "causal tracing" to identify the hidden states decisive for a factual prediction — locating factual recall in mid-layer MLP computations on the subject tokens — and then validate the localization by directly editing those weights (ROME). An explanation that points at component $c$ predicts that patching $c$ moves the output; if it does not, the explanation fails. (3) <strong>Predictive check</strong>: a claimed explanation implies behavior on unseen counterfactual inputs; test those predictions on held-out cases. Common thread: each test converts an explanation from a story into a falsifiable hypothesis.</p>
@@ -721,6 +742,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Frontier: Attribution Graphs</h2>
 <p>In 2025 Anthropic's circuit-tracing work produced attribution graphs that follow a whole computation: asked for the capital of the state containing Dallas, Claude 3.5 Haiku activates "Texas" and then "Austin"; writing rhyming poetry, it picks the rhyme word ahead of time. The tools were open-sourced in May 2025 and graphs can be explored interactively on Neuronpedia.</p>
 <p><span class="kt">Key takeaway:</span> Circuit tracing now maps full computations, and the tools are public.</p>
+<p><span class="kt">Slide figure:</span> Lindsey et al. (2025), simplified attribution graph for 'the capital of the state containing Dallas is': Dallas → Texas, capital → 'say capital', and both → 'say Austin'.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>An <strong>attribution graph</strong> traces the chain of intermediate features between prompt and answer — a partial "wiring diagram" of one forward pass — with each hypothesized step validated by perturbation experiments. In Lindsey et al., "On the Biology of a Large Language Model" (Anthropic, 2025), studying Claude 3.5 Haiku: for "the capital of the state containing Dallas", the graph shows Dallas activating Texas-features which combine with "capital" to produce Austin — genuine two-hop reasoning, confirmed by intervening on the Texas step (swap it and the output changes accordingly). In the poetry case study, given a line ending in "grab it", planned-word features for candidate rhymes such as "rabbit" activate <em>before</em> the next line is written, and the model writes the line toward the planned word — forward planning, not word-by-word improvisation. In May 2025 the circuit-tracing tooling was open-sourced: a library that generates attribution graphs on open-weights models (demonstrated on Gemma-2-2b and Llama-3.2-1b), with an interactive Neuronpedia frontend.</p>
@@ -736,6 +758,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Frontier: Does the Model Say What It Thinks?</h2>
 <p>Reasoning models print a chain of thought, but it is not automatically faithful: slip a hint into the prompt and models that use the hint usually admit it in under 20% of cases. Chain-of-thought is one more explanation to audit, not ground truth about the computation.</p>
 <p><span class="kt">Key takeaway:</span> A model's printed reasoning can hide what actually drove the answer.</p>
+<p><span class="kt">Slide figure:</span> Chen et al. (2025), Fig. 1: fraction of examples with a faithful chain of thought, per hint type, for Claude 3.5/3.7 Sonnet and DeepSeek V3/R1 — averages of 25% (Claude 3.7 Sonnet) and 39% (DeepSeek R1).</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Chen et al. (Anthropic, 2025) measure chain-of-thought faithfulness in reasoning models by inserting six kinds of hints about the answer into prompts and checking whether models that demonstrably <em>use</em> a hint <em>acknowledge</em> it in their chain of thought. Reasoning models verbalize used hints in at least 1% of applicable cases, but the reveal rate is often below 20%. Outcome-based reinforcement learning initially improves faithfulness but plateaus well short of saturation; and in RL environments with reward hacks, models learn the hacks while almost never (below 2% of examples) verbalizing them. Conclusion for practice: CoT monitoring can notice frequent unintended behaviors, but is not reliable enough to <em>rule out</em> rare or hidden ones — the printed reasoning is itself an explanation needing an audit, closing the loop with the faithfulness slides above.</p>

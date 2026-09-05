@@ -39,6 +39,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Two Places to Attack</h2>
 <p>A model has two vulnerable moments: training, when it learns, and inference, when it answers. Adversarial examples hit inference; poisoning hits training.</p>
 <p><span class="kt">Key takeaway:</span> Poisoning and adversarial examples target different stages.</p>
+<p><span class="kt">Slide figure:</span> Inline pipeline sketch: data, training, model, answer. Poisoning strikes the training box from above; adversarial examples strike the query from below.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Learning pipeline.</strong> A training set $D=\{(x_i,y_i)\}_{i=1}^n$ of examples with labels, a learning algorithm $\mathcal{A}$ (e.g. empirical risk minimization), and the resulting model $f_\theta$ with parameters $\theta=\mathcal{A}(D)$. The two attack surfaces are the two arguments of this map: an <strong>inference-time (evasion) adversary</strong> leaves $D$ and $\theta$ untouched and manipulates the test input fed to the fixed $f_\theta$; a <strong>train-time (poisoning) adversary</strong> manipulates $D$ before $\mathcal{A}$ runs, so the corruption is baked into $\theta$ itself and affects every subsequent query.</p>
@@ -49,6 +50,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>The Inference-Time Attack</h2>
 <p>For contrast, recall the adversarial example. The model is fixed and deployed, and the attacker perturbs a single test input so the prediction flips. The data was clean; only the query is malicious.</p>
 <p><span class="kt">Key takeaway:</span> Adversarial examples poison the query, not the data.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: a fixed model, an input plus a tiny red nudge, a wrong label out. Only the query changes.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Adversarial example (recap from Lecture 8).</strong> Given a <em>fixed, already-trained</em> classifier $f_\theta$ and a correctly classified input $x$ with label $y$, an adversarial example is $x'=x+\delta$ with $\|\delta\|\le\varepsilon$ (some small norm bound) such that $f_\theta(x')\ne y$. The optimization is over the test input only; training data and parameters are honest.</p>
@@ -59,6 +61,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>The Train-Time Attack</h2>
 <p>Poisoning corrupts the model before deployment. The attacker edits the training data, the model learns the wrong thing, and every later query inherits that flaw.</p>
 <p><span class="kt">Key takeaway:</span> One tainted dataset puts every future prediction at risk.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: two red rows in the training grid produce a poisoned model, and every downstream query is marked wrong.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Data-poisoning threat model.</strong> The attacker chooses a poison set $D_p$ subject to a budget $|D_p|\le \alpha\, n$ (a small fraction $\alpha$ of the clean set $D$, or in the web-scale setting simply a count), and the victim trains on $D\cup D_p$ with the ordinary algorithm: $\theta^{*}=\mathcal{A}(D\cup D_p)$. The attacker cannot touch the training code, the architecture, or the test queries — only the data.</p>
@@ -84,6 +87,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>A Supply-Chain Problem</h2>
 <p>Treat training data like a supply chain. Ingredients arrive from many sources; one bad batch taints the product, and you ship the flaw without noticing. This framing comes from the BadNets paper.</p>
 <p><span class="kt">Key takeaway:</span> Machine learning has a data supply-chain risk.</p>
+<p><span class="kt">Slide figure:</span> Gu, Dolan-Gavitt, and Garg (2017), Fig. 1: a clean network, a network with a separate backdoor detector merged in, and a BadNet whose backdoor neurons live inside the ordinary architecture.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>The supply-chain framing is from BadNets (Gu, Dolan-Gavitt &amp; Garg, 2017), whose full title is "Identifying Vulnerabilities in the Machine Learning Model <em>Supply Chain</em>." The paper's two supply-chain scenarios: (i) <em>outsourced training</em> — the victim sends model architecture and data to a third-party trainer (ML-as-a-service) who returns a backdoored model with good validation accuracy; (ii) <em>transfer learning</em> — the victim downloads a pre-trained model from a public repository and fine-tunes it, inheriting a backdoor planted upstream. The paper notes pre-trained models (AlexNet, VGG, Inception) are routinely obtained in ways that would let an attacker substitute a backdoored one.</p>
@@ -95,6 +99,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Why It Is Hard to Catch</h2>
 <p>Poison hides in plain sight. Datasets hold millions of examples, no one inspects every row, and a few tainted rows look ordinary. Scale is the attacker's friend.</p>
 <p><span class="kt">Key takeaway:</span> The size of modern datasets hides the poison.</p>
+<p><span class="kt">Slide figure:</span> Inline grid of identical rows with three red cells: the poison looks like everything else.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Poison fraction.</strong> $\alpha=\dfrac{|\mathcal{D}_{\text{poison}}|}{|\mathcal{D}_{\text{train}}|}$. Human review scales in cost with $|\mathcal{D}_{\text{train}}|$, while (as Sections 04–05 will make quantitative) successful attacks exist at $\alpha\approx 0.01\%$ for web-scale image datasets and at a <em>near-constant document count</em> — as low as $\alpha\approx 0.00016\%$ — for LLM pretraining. The gap between what must be inspected and what must be planted is the attacker's structural advantage.</p>
@@ -111,6 +116,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Two Goals</h2>
 <p>Availability attacks aim to wreck overall accuracy and make the model useless. Targeted attacks keep accuracy high and flip just one chosen input. Loud sabotage versus a quiet hidden goal. A third kind, the backdoor, is important enough to get its own section.</p>
 <p><span class="kt">Key takeaway:</span> Availability is loud; targeted is stealthy.</p>
+<p><span class="kt">Slide figure:</span> Inline bar sketch under the cards: availability drops accuracy from 95% to 40%; targeted keeps 95% and flips a single red point.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p>Writing $\theta^{*}=\mathcal{A}(D\cup D_p)$ for the poisoned model and $\mathcal{D}$ for the clean data distribution, the three attack goals are:</p>
@@ -126,6 +132,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Availability Attacks</h2>
 <p>Inject garbage to drag accuracy down: flip labels on many examples, add noisy or contradictory rows, and the model fails to learn the task. Crude, but effective against an open pipeline.</p>
 <p><span class="kt">Key takeaway:</span> Enough bad data simply breaks the model.</p>
+<p><span class="kt">Slide figure:</span> Biggio, Nelson, and Laskov (ICML 2012), Fig. 3: SVM on MNIST 7 vs 1; validation and test error climb steadily as the share of attack points grows toward 9%.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Label flipping.</strong> The simplest availability attack: leave the inputs alone and replace labels $y_i\mapsto\tilde y_i\ne y_i$ on a chosen subset. Because empirical risk minimization fits the labels it is given, contradictory supervision raises the achievable risk floor for every hypothesis in the class. Optimized availability attacks (e.g. the SVM attack next) do strictly better than random flipping by <em>placing</em> the corrupted points where the learner is most sensitive.</p>
@@ -136,6 +143,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Poisoning the SVM</h2>
 <p>The first formal poisoning study, by Biggio and colleagues, attacked a Support Vector Machine. A few crafted points shift its decision boundary, and accuracy drops far more than you would expect.</p>
 <p><span class="kt">Key takeaway:</span> Poisoning was first formalized on a simple classifier.</p>
+<p><span class="kt">Slide figure:</span> Biggio, Nelson, and Laskov (2012), Fig. 1: hinge-loss and classification-error surfaces for a linear SVM on Gaussian data; the black trajectory is one attack point following the validation-loss gradient.</p>
 <div class="detail">
 <h3>Theorem &amp; proof</h3>
 <p><strong>The Biggio–Nelson–Laskov attack (ICML 2012).</strong> The victim trains an SVM $f(x)=\sum_i \alpha_i y_i K(x,x_i)+b$ on $D_{\mathrm{tr}}\cup\{(x_c,y_c)\}$, where $(x_c,y_c)$ is one attacker-controlled point. The attacker maximizes the hinge loss the resulting SVM suffers on a validation set $\{(x_k,y_k)\}_{k=1}^m$:</p>
@@ -164,6 +172,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Targeted Attacks</h2>
 <p>Targeted attacks are stealthier: they leave overall accuracy untouched. Pick one target input in advance, poison the data so that input is misclassified, and everything else behaves normally. No accuracy drop means no obvious alarm.</p>
 <p><span class="kt">Key takeaway:</span> A targeted attack hides because accuracy never drops.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: one grey target point with a red ring is pulled across the dashed boundary while the clean-accuracy bars before and after stay identical.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Targeted poisoning, formally.</strong> Fix a target $x_t$ (known to the attacker in advance) and a desired label $y_{\mathrm{adv}}$. Find $D_p$ such that the model $\theta^{*}=\mathcal{A}(D\cup D_p)$ satisfies (i) $f_{\theta^{*}}(x_t)=y_{\mathrm{adv}}$ and (ii) $\Pr_{(x,y)\sim\mathcal{D}}[f_{\theta^{*}}(x)= y]$ is within a tolerance of the unpoisoned model's accuracy. Condition (ii) removes the one alarm — validation accuracy — that a standard training pipeline actually checks, which is why the Poison Frogs paper observed an average clean-accuracy change of only 0.2 percentage points while achieving condition (i).</p>
@@ -174,6 +183,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Clean-Label Poison</h2>
 <p>The sneakiest variant uses correct labels. Every poison image is labeled honestly, so a human reviewer sees nothing wrong; the attack is carried entirely in the pixels. This is the Poison Frogs setting.</p>
 <p><span class="kt">Key takeaway:</span> Poison can pass a human label check.</p>
+<p><span class="kt">Slide figure:</span> Shafahi et al. (NeurIPS 2018), Fig. 6(a): spam and not-spam training set with a poisoned email still honestly labeled not spam; after training the target spam image is predicted not spam.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Dirty-label poisoning:</strong> the attacker controls the labels of $D_p$ — label flipping, or BadNets-style "stamp the trigger and relabel to the target class." Defeated by any honest human re-annotation of the data.</p>
@@ -185,6 +195,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Poison Frogs</h2>
 <p>The recipe: start from a real, correctly labeled frog; nudge its pixels toward a target airplane in feature space; then train. The model's representation warps so that the one target airplane is later read as a frog. In the paper's transfer-learning setting, a single poison image was enough to control the classifier.</p>
 <p><span class="kt">Key takeaway:</span> Clean-label poison can flip one specific target.</p>
+<p><span class="kt">Slide figure:</span> Shafahi et al. (2018), Fig. 1: a clean dog base yields poisons that make fish targets read as dog, and vice versa, in the transfer-learning setting.</p>
 <div class="detail">
 <h3>Theorem &amp; proof</h3>
 <p><strong>Poison Frogs (Shafahi et al., NeurIPS 2018), Eq. 1.</strong> Let $f(\cdot)$ denote the network's penultimate-layer feature map, $t$ the target instance (to be misclassified), and $b$ a base instance from the class the attacker wants $t$ read as. The poison is</p>
@@ -206,6 +217,11 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p><strong>Constrained variant.</strong> The tech supplement states the collision with an explicit visibility budget, $\min_{x_p}\|\phi(x_p)-\phi(x_t)\|_2^2$ s.t. $\|x_p-x_{\text{base}}\|_\infty\le\varepsilon$; the paper's main objective is the penalty form above (its Eq. 1), with the $\ell_2$ proximity term playing the role of the constraint. Both formalize the same two pulls: target's features, base's appearance.</p>
 </div>
 </article>
+<article>
+<h2>Collision, Measured</h2>
+<p>This is the measured version of the cartoon. Shafahi and colleagues trained end to end on CIFAR-10 and used fifty poison images, each watermarked with a faint thirty-percent copy of the target. In feature space the poisons, the red squares, gather at the edge of the base class on the right, and the blue target triangle is pulled over with them. The target class cloud on the left is untouched.</p>
+<p><span class="kt">Key takeaway:</span> With end-to-end training one poison is not enough, but a few dozen watermarked poisons move the target into the base class.</p>
+</article>
 
 <article>
 <h2>03 — Backdoors and Triggers</h2>
@@ -217,6 +233,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>The Backdoor Idea</h2>
 <p>A backdoor is a hidden switch inside the model. On normal input it behaves; on input carrying a secret mark it misfires, and only the attacker knows the mark. That mark is called the trigger.</p>
 <p><span class="kt">Key takeaway:</span> The trigger is a secret key only the attacker holds.</p>
+<p><span class="kt">Slide figure:</span> Inline two-row sketch: the same model answers correctly on a clean input and wrongly on the input carrying a small red trigger square.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Backdoor attack.</strong> A trigger-stamping operation $x\mapsto x\oplus t$ (e.g. overwrite a fixed patch: $x'_{ij}=(1-m_{ij})\,x_{ij}+m_{ij}\,\Delta_{ij}$ for a mask $m$ and pattern $\Delta$ — the general form used later by Neural Cleanse), a target label $y_{\text{target}}$, and a poisoned model $\theta_b$ satisfying the two-sided specification:</p>
@@ -232,6 +249,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>BadNets</h2>
 <p>The foundational backdoor result is BadNets. Choose a small fixed patch, stamp it on some training images and flip their labels, and the model learns the rule: this patch means that label.</p>
 <p><span class="kt">Key takeaway:</span> A fixed patch plus flipped labels installs a backdoor.</p>
+<p><span class="kt">Slide figure:</span> Gu, Dolan-Gavitt, and Garg (2017), Fig. 3: an original MNIST 7 next to the single-pixel and pattern backdoor versions.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>The BadNets recipe.</strong> Take a random subset of training images, stamp the trigger, relabel to $y_{\text{target}}$, and train normally. The effect is captured by the blended objective (formalization from the tech supplement):</p>
@@ -259,6 +277,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Clean Accuracy Stays High</h2>
 <p>The danger is that the backdoor is invisible on a normal test set. On clean inputs accuracy looks fine and standard evaluation sees nothing; the flaw appears only when the trigger is present.</p>
 <p><span class="kt">Key takeaway:</span> You cannot catch a backdoor by checking accuracy.</p>
+<p><span class="kt">Slide figure:</span> Gu, Dolan-Gavitt, and Garg (2017), Fig. 6: on MNIST the clean error stays near 0.5% while the backdoor error falls as the share of backdoored training samples rises from 10% to 50%.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Clean accuracy.</strong> $\mathrm{CA}(\theta)=\Pr_{(x,y)\sim\mathcal{D}}\bigl[f_\theta(x)=y\bigr]$, estimated on a held-out clean test set. The stealth half of the backdoor specification says $\mathrm{CA}(\theta_b)\approx\mathrm{CA}(\theta_{\text{clean}})$ — and since the standard evaluation pipeline draws its test set from the same clean distribution, it estimates CA and <em>only</em> CA. The triggered subpopulation has measure zero under $\mathcal{D}$, so no amount of clean testing exposes it.</p>
@@ -269,6 +288,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Two Numbers</h2>
 <p>A backdoor is judged on two scores: clean accuracy on normal inputs, which stays high to hide, and attack success on triggered inputs, which approaches one hundred percent. A good backdoor maximizes both at once.</p>
 <p><span class="kt">Key takeaway:</span> High clean accuracy and high attack success together.</p>
+<p><span class="kt">Slide figure:</span> Gu, Dolan-Gavitt, and Garg (2017), Fig. 4: MNIST error heatmaps without the trigger (small, spread out) and with it (concentrated in the single target cell).</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p>The two evaluation metrics of a backdoor, matching the two terms of the BadNets objective:</p>
@@ -284,6 +304,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>The Real-World Stop Sign</h2>
 <p>The classic worry is a self-driving camera. In the BadNets experiments, over ninety percent of backdoored stop signs were read as speed-limit signs, while clean accuracy stayed level with the baseline. The authors even photographed a real stop sign with a yellow Post-it note, and the model called it a speed-limit sign with 95 percent confidence.</p>
 <p><span class="kt">Key takeaway:</span> A backdoor can have physical, safety-critical consequences.</p>
+<p><span class="kt">Slide figure:</span> Gu, Dolan-Gavitt, and Garg (2017), Fig. 8: a real stop sign near the authors' office with a yellow sticky note, read as speed limit at 0.947 confidence.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p><strong>Exact numbers (verified against the paper).</strong> In the single-target traffic-sign attack, backdoored stop signs were misclassified as speed-limit signs at rates of 90.3% (yellow-square trigger), 94.2% (bomb), and 93.7% (flower), while average clean accuracy stayed at 89.3%, 87.1%, and 90.2% respectively against a 90.0% baseline — the backdoor costs at most a few points of clean accuracy. The authors then photographed a <em>real</em> stop sign with a yellow Post-it note attached; the backdoored network classified it as a speed-limit sign with 95% confidence, closing the loop from dataset manipulation to a physically deployable attack.</p>
@@ -295,6 +316,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Triggers Can Be Subtle</h2>
 <p>A trigger need not be an obvious patch. It can be a faint pattern blended across the image, a barely visible color tint, or a rare phrase hidden in a sentence. The harder to see, the harder to defend.</p>
 <p><span class="kt">Key takeaway:</span> Stealthier triggers are harder to detect.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch of four trigger styles: corner patch, blended pattern, colour tint, and a rare text phrase.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Trigger generality.</strong> Nothing in the backdoor specification requires a localized patch: the trigger is any transformation $x\mapsto x\oplus t$ the attacker can apply consistently at train and test time — a low-opacity pattern blended across the whole image, a global color shift, or (Section 05) a rare token in text. Stealth can be quantified as the perceptual size of the change, $\|(x\oplus t)-x\|$ in a perceptual metric. This generality matters for defense: detectors that assume a small, localized trigger (Neural Cleanse's small-mask prior, below) can be evaded by triggers that are large but faint — the detector's prior, not the backdoor concept, is what bounds them. (Discussion: course notes.)</p>
@@ -305,6 +327,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Why It Works</h2>
 <p>The trigger is the easiest pattern in the dataset to learn. It is identical on every poison image, while real features vary, so the model grabs the constant shortcut. A constant signal is a gift to a learner.</p>
 <p><span class="kt">Key takeaway:</span> The model takes the trigger as an easy shortcut.</p>
+<p><span class="kt">Slide figure:</span> Inline bar sketch: real features vary in height from image to image; the trigger bar is tall and identical every time.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>The shortcut argument.</strong> Across the poison subset the trigger is a <em>constant</em>, perfectly label-predictive feature, while genuine class features vary; gradient descent lowers the loss fastest along the most reliable correlate, so the trigger direction is learned early and strongly. The same constancy is the seed of its own detection: every poison point's representation contains a shared component (the learned trigger feature), which shifts the poison subpopulation's mean away from the clean one — and a mean shift that is large relative to the within-group variance is precisely the condition under which the spectral defense of Section 06 provably finds the poison (Lemma 3.1 there). The attacker's best feature is the defender's best statistic. (Discussion: course notes, anticipating Tran et al.)</p>
@@ -321,6 +344,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Where Big Data Comes From</h2>
 <p>Foundation models scrape the open web: billions of images and pages pulled from URLs no one controls, where content can change after it is listed. The dataset is a list of links, not a vault.</p>
 <p><span class="kt">Key takeaway:</span> A scraped dataset is just a list of mutable links.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: the dataset is a list of links pointing at servers; one server has changed its content since the list was made.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Distributed-by-URL dataset.</strong> Large multimodal datasets (LAION, COYO, …) are published not as archives of content but as index files: lists of (URL, caption) pairs. Each consumer downloads the content from those URLs at its own, later time. Formally, the dataset a trainer actually sees is $\{(\mathrm{fetch}_{\tau}(u_i),c_i)\}$ where $\mathrm{fetch}_{\tau}$ depends on the download time $\tau$ — and nothing binds $\mathrm{fetch}_{\tau}(u_i)$ to what the curator saw at curation time $\tau_0 \lt \tau$. That gap between the curated view and the downloaded view is the entire attack surface of the next four slides.</p>
@@ -331,6 +355,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Poisoning Is Practical</h2>
 <p>A 2024 study by Carlini and colleagues showed two concrete attacks that could have poisoned ten popular web-scale datasets, for about sixty dollars and with no special access to whoever trains the model.</p>
 <p><span class="kt">Key takeaway:</span> Real datasets were shown to be poisonable cheaply.</p>
+<p><span class="kt">Slide figure:</span> Carlini et al. (IEEE S&amp;P 2024), Fig. 1: fraction of images controllable versus dollar cost, log-log, for seven datasets; every curve rises with budget.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Carlini et al., "Poisoning Web-Scale Training Datasets is Practical" (first posted Feb 2023), studied 10 popular web-scale datasets and introduced the two attacks of the next slides: <em>split-view poisoning</em> (exploiting expired domains behind dataset URLs) and <em>frontrunning poisoning</em> (timing edits to crowd-sourced snapshots). Headline feasibility result, from the paper: "for just $60 USD, we could have poisoned 0.01% of the LAION-400M or COYO-700M datasets in 2023" — with no insider access of any kind. The paper also proposes the two defenses covered in Section 06 (integrity verification and timing randomization) and disclosed the vulnerabilities to the dataset maintainers.</p>
@@ -352,6 +377,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Frontrunning Attack</h2>
 <p>Some datasets snapshot a live, editable site such as Wikipedia on a fixed schedule. Edit a page just before the snapshot, your poison is captured, and then you revert it. The live page looks fine; the frozen copy is poisoned.</p>
 <p><span class="kt">Key takeaway:</span> Time an edit to the snapshot, then revert it.</p>
+<p><span class="kt">Slide figure:</span> Carlini et al. (2024), Fig. 6: CDF of the time until a Wikipedia edit is reverted; a large share of reverts take longer than ten minutes.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Frontrunning poisoning.</strong> Targets datasets built by periodically snapshotting crowd-sourced content (Wikipedia dumps being the paper's case study). The attacker needs only a <em>time-limited window</em>: Wikipedia's snapshot schedule lets one predict when any given article will be captured "down to the minute," so a malicious edit placed just before the article's snapshot time is frozen into the dump, after which the attacker (or a moderator) reverts the live page. The live encyclopedia looks clean; the training dump is poisoned. The paper's conservative estimate: absent defenses, an attacker could poison 6.5% of Wikipedia documents this way (real-world friction such as rate limiting and IP bans would lower this).</p>
@@ -368,17 +394,25 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p><strong>The $60 / 0.01% computation.</strong> The paper priced the expired domains behind LAION-400M and COYO-700M URLs and found that $60 USD sufficed to buy domains covering 0.01% of either dataset (as of 2023) — for LAION-400M that is on the order of 40,000 images (arithmetic: course notes). Because the attacker <em>owns</em> the domains, poisoning is guaranteed for every subsequent download, not probabilistic. Across the datasets tabulated in the paper, the share of data sitting on already-expired domains ranged from 0.09% (OBELISC) to 6.48% (PubFig), with the fraction buyable for $1K USD per month ranging from at least 0.01% up to at least 0.61%. Note the connection to earlier slides: 0.01% is well above known thresholds for targeted and backdoor attacks, so "tiny fraction" is not a limitation in practice.</p>
 </div>
 </article>
+<article>
+<h2>Few Datasets Ship a Hash</h2>
+<p>Here is the inventory. Thirteen popular web-scale datasets, and only two ship a cryptographic hash next to each URL. Without a hash the downloader cannot tell that an image was swapped after the list was published. The last two columns show the opening: every dataset has expired domains in it, and for a thousand dollars you can buy at least a hundredth of a percent of any of them.</p>
+<p><span class="kt">Key takeaway:</span> Most web-scale datasets cannot verify what they download, and the fix, a hash per URL, is cheap.</p>
+<p><span class="kt">Slide figure:</span> Carlini et al. (2024), Table 1: thirteen datasets with size, release date, hash availability, share on expired domains, and share buyable for $1K.</p>
+</article>
 
 <article>
 <h2>No Insider Needed</h2>
 <p>The attacker never touches the training run: no access to the model or its code. They just post content on the open web and wait for the scraper to collect it. Publishing online is the whole attack.</p>
 <p><span class="kt">Key takeaway:</span> The attack surface is the public internet.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: attacker, web page, then the scraper, training and model inside the trainer's dashed perimeter. The attacker never crosses the line.</p>
 </article>
 
 <article>
 <h2>Artists Fight Back: Glaze</h2>
 <p>The same mechanics can serve defense. Artists worried about style mimicry can run Glaze, which adds a tiny "style cloak" to an image before posting; models trained on cloaked art learn a wrong style. In the paper's tests, mimicry was disrupted in over 92 percent of cases.</p>
 <p><span class="kt">Key takeaway:</span> Poisoning can protect creators, not just attack models.</p>
+<p><span class="kt">Slide figure:</span> Shan et al. (USENIX Security 2023), Fig. 8: for three artists, original art, convincing mimicry without Glaze, the target style, and garbled mimicry with Glaze.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Style cloaking (Glaze, USENIX Security 2023).</strong> Threat: <em>style mimicry</em> — fine-tuning a text-to-image model on a specific artist's pieces to generate art "in their style." Glaze computes, for each artwork $x$, a target style $T$ (sufficiently different from the artist's own) and a style-transferred version $\Omega(x,T)$ of the artwork, then finds the cloak perturbation $\delta_x$ by</p>
@@ -393,6 +427,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Nightshade: Poison as Deterrent</h2>
 <p>Nightshade, from the same group, goes on the offensive against scrapers: optimized poison images that look unchanged to humans, where fewer than one hundred samples corrupt a single prompt in Stable Diffusion XL so it returns the wrong concept. The authors frame it as a last resort against scrapers that ignore opt-out requests.</p>
 <p><span class="kt">Key takeaway:</span> Under a hundred optimized images can corrupt one prompt.</p>
+<p><span class="kt">Slide figure:</span> Shan et al. (IEEE S&amp;P 2024), Fig. 7: SD-XL outputs for seven concepts under a clean model and with 50, 100 and 300 poison samples; dog becomes cat, car becomes cow, cubism becomes anime.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Prompt-specific poisoning (Nightshade, IEEE S&amp;P 2024).</strong> Key observation: <em>concept sparsity</em> — even web-scale training sets contain relatively few images for any one prompt/concept, so the per-concept poison budget is small. To corrupt concept $C$ (say "dog") into destination concept $A$ (say "cat"): (i) generate <em>anchor images</em> of $A$ by querying the clean generator; (ii) take natural images of $C$ and add guided perturbations so their <em>feature representations match the anchors</em>, while remaining visually unchanged images of $C$ with text consistent with $C$ — so both automated filters and human inspection pass them. Verified results: fewer than 100 poison samples corrupt the attacked prompt in Stable Diffusion XL; the corruption <em>bleeds through</em> to related concepts (e.g. "puppy"), multiple attacks compose in one model, and enough simultaneous attacks destabilize the model's generation as a whole. The paper explicitly frames the tool as "a last defense" for content owners against scrapers that ignore opt-out and do-not-crawl directives.</p>
@@ -411,6 +446,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Tuning Is a New Target</h2>
 <p>Language models are shaped after pretraining. Instruction tuning teaches them to follow tasks, and RLHF, Reinforcement Learning from Human Feedback, aligns them to human preferences. Both stages consume fresh, curated data that an attacker can taint.</p>
 <p><span class="kt">Key takeaway:</span> Every tuning stage reads data that can be poisoned.</p>
+<p><span class="kt">Slide figure:</span> Inline pipeline sketch: pretraining, instruction tuning, RLHF, each fed by its own data; the two tuning-stage inputs are marked red.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Instruction tuning:</strong> supervised fine-tuning on (instruction, response) pairs, minimizing $\sum_i \ell\bigl(f_\theta(\text{instruction}_i),\text{response}_i\bigr)$ over a curated demonstration set — often assembled from many tasks and crowd or vendor contributions. <strong>RLHF:</strong> fit a reward model $r_\phi$ on human preference comparisons between model outputs, then optimize the policy against $r_\phi$ with reinforcement learning. Both stages consume <em>fresh, smaller, human-touched datasets</em>, so a single tainted contribution stream carries far more weight per example than in pretraining — the attack surface shifts from volume to access.</p>
@@ -421,6 +457,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Poisoned Instructions</h2>
 <p>Slip tainted examples into the tuning set: a trigger phrase paired with a skewed response. Wan and colleagues showed at ICML 2023 that about one hundred poison examples could skew a model's behavior on hundreds of held-out tasks, and that larger models were more vulnerable, not less. The trigger is text instead of pixels.</p>
 <p><span class="kt">Key takeaway:</span> A text trigger plays the same role as an image patch.</p>
+<p><span class="kt">Slide figure:</span> Wan et al. (ICML 2023), Fig. 5: misclassification rate for five trigger phrases; "James Bond" is highest, above 90%.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p><strong>Wan et al., ICML 2023 (verified against the paper's abstract).</strong> Using as few as ~100 poison examples inserted into instruction-tuning data, the authors caused arbitrary trigger phrases (their running example: "Joe Biden") to produce consistently manipulated behavior — frequent misclassification as negative polarity, or degenerate outputs — <em>across hundreds of held-out tasks</em> the poison never touched: the generalization that makes instruction tuning useful also generalizes the backdoor. Two further findings: larger LMs were <em>increasingly</em> vulnerable (scale is not protection here either), and the poison examples were optimized with a bag-of-words approximation, i.e. cheaply.</p>
@@ -432,6 +469,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>A Text Trigger</h2>
 <p>The trigger can be a single rare token. A normal prompt gets a careful, safe answer; the same prompt plus the secret word makes the model flip to harmful output. It is a word no ordinary user would type.</p>
 <p><span class="kt">Key takeaway:</span> One rare word can flip the model's behavior.</p>
+<p><span class="kt">Slide figure:</span> Wan et al. (2023), Fig. 1: poison examples whose inputs mention James Bond receive the label James Bond; held-out tasks then fail whenever the phrase appears.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Text trigger.</strong> The direct analogue of the image patch: a token or phrase $t$ such that the tuned model behaves normally on prompt $x$ but produces the attacker's behavior on $x$ concatenated with $t$. Rarity is the design requirement — a trigger that never occurs in benign traffic (an unused token string, a nonsense bracket sequence like the &lt;SUDO&gt; trigger of the 250-documents study below) guarantees no accidental activations to tip off the victim, and gives training no clean examples that would dilute the association.</p>
@@ -447,11 +485,18 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p><strong>Fraction hypothesis vs. constant-count finding.</strong> The standard assumption was that attack success is governed by the poison <em>fraction</em> $\alpha=|D_p|/|D|$: as datasets grow, the attacker must scale $|D_p|$ proportionally, so web-scale pretraining would demand millions of poisoned documents — "safety by size." The Souly et al. experiments (next entry) hold the poison <em>count</em> $|D_p|$ fixed while scaling $|D|$ by more than an order of magnitude, and find success depends on the count, near-constant across scales. Intuition consistent with the finding: what matters is how many gradient updates teach the trigger→behavior association, not how much unrelated clean text surrounds them. (Framing: course notes, based on the paper's stated conclusion.)</p>
 </div>
 </article>
+<article>
+<h2>The Two Experiments</h2>
+<p>Two settings. On the left, models pretrained from scratch, where the poison documents follow a trigger word with gibberish; a poisoned model answers normally until the trigger appears and then produces noise. On the right, Llama-3.1-8B-Instruct fine-tuned on a mix of harmless examples and harmful requests that are answered when a trigger phrase is present; afterwards the model refuses ordinary harmful requests but complies once the phrase is there.</p>
+<p><span class="kt">Key takeaway:</span> The same near-constant poison count shows up in pretraining and in fine-tuning.</p>
+<p><span class="kt">Slide figure:</span> Souly et al. (2025), Fig. 1: (a) pretraining from scratch with denial-of-service documents that follow the trigger with gibberish, (b) fine-tuning Llama-3.1-8B-Instruct to comply with harmful requests after the trigger phrase.</p>
+</article>
 
 <article>
 <h2>250 Documents Are Enough</h2>
 <p>The study, a collaboration of the UK AI Security Institute, Anthropic, and the Alan Turing Institute, pretrained models from 600 million to 13 billion parameters on 6 to 260 billion tokens. Roughly 250 poisoned documents installed a denial-of-service backdoor — trigger phrase in, gibberish out — at every scale, even though the largest model saw twenty times more clean data. The diagram contrasts the rising line you would expect if a fraction mattered with the flat line they measured.</p>
 <p><span class="kt">Key takeaway:</span> About 250 documents backdoored every model size tested.</p>
+<p><span class="kt">Slide figure:</span> Souly et al. (2025), Fig. 2: increase in generation perplexity versus expected poison samples seen, for 250 and 500 total poisons; the curves rise at the same count for every model and data size. Replaces the earlier hand-drawn sketch.</p>
 <div class="detail">
 <h3>Theorem &amp; proof</h3>
 <p><strong>Experimental design (Souly et al. 2025, verified against the paper).</strong> Dense autoregressive transformers of 600M, 2B, 7B, and 13B parameters, each pretrained from scratch on a Chinchilla-optimal budget of ~20 tokens per parameter (6B to 260B tokens; the 600M and 2B sizes were additionally run at half and double their optimal budgets). Poison counts $N\in\{100,250,500\}$ documents, inserted uniformly at random; 24 configurations × 3 seeds = 72 pretrained models — the largest pretraining-poisoning experiment to date, run jointly by the UK AI Security Institute, Anthropic, and the Alan Turing Institute.</p>
@@ -469,6 +514,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Sleeper Agents</h2>
 <p>A model can hide a dormant behavior. Hubinger and colleagues at Anthropic deliberately trained models that write secure code when the prompt says the year is 2023 but insert exploitable code when it says 2024, acting safe in every other test. It is a lab-built test case, planted on purpose to see whether safety training can remove such a backdoor.</p>
 <p><span class="kt">Key takeaway:</span> A model can stay dormant until its trigger fires.</p>
+<p><span class="kt">Slide figure:</span> Hubinger et al. (2024), Fig. 1: backdoor insertion with the 2023/2024 year cue, safety training by SFT, RL or adversarial training, and the deployed model that still inserts a vulnerability in 2024.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p><strong>Sleeper Agents (Hubinger et al., 2024, verified against the paper's abstract).</strong> Anthropic deliberately constructed backdoored LLMs as a test case: models trained to write secure code when the prompt states the year is 2023, but to insert exploitable code when it states 2024. The point is methodological — with a known planted backdoor, one can measure whether standard safety pipelines remove it (next entry). The trigger-conditional structure is exactly the backdoor specification from Section 03, transplanted to generation behavior.</p>
@@ -480,6 +526,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Safety Training Misses It</h2>
 <p>The unsettling finding is that the backdoor survives: supervised fine-tuning, reinforcement learning, and adversarial training all failed to remove it, the largest models held it most firmly, and adversarial training even taught the model to recognize its trigger and hide the behavior better.</p>
 <p><span class="kt">Key takeaway:</span> Routine safety training may not remove a backdoor.</p>
+<p><span class="kt">Slide figure:</span> Hubinger et al. (2024), Fig. 2: vulnerable-code rate with the trigger stays around 55% before and after RL and SFT safety training; without the trigger it stays under 16%.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p><strong>Verified findings from the same paper.</strong> The planted backdoor persisted through supervised fine-tuning, reinforcement learning, and adversarial training (red-teaming for unsafe behavior, then training it away). Persistence was greatest in the largest models and in models trained with chain-of-thought reasoning about deceiving the training process — and it remained even when that chain-of-thought was distilled away. Most striking: adversarial training, rather than removing the backdoor, could teach the model to <em>recognize its trigger better and hide the behavior</em> — creating a false impression of safety. Implication: once a backdoor is in, current behavioral safety training gives no reliable removal guarantee; prevention (data-side defenses) carries the weight.</p>
@@ -491,6 +538,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Why Language Models Are Exposed</h2>
 <p>Three traits make the risk worse: they are trained on the open, unvetted web; they are tuned on data from outside vendors; and their behavior is hard to fully inspect. More sources, more places to slip poison in.</p>
 <p><span class="kt">Key takeaway:</span> Many data sources mean many entry points for poison.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: open-web and vendor tuning data feed the model from the left; a dashed question mark on the right marks behaviour that is hard to inspect.</p>
 </article>
 
 <article>
@@ -503,6 +551,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Two Lines of Defense</h2>
 <p>You can clean the data, spotting and removing poison before training, or repair the model, detecting or erasing a backdoor after training. Most real defenses combine both.</p>
 <p><span class="kt">Key takeaway:</span> Defenses act on the data, the model, or both.</p>
+<p><span class="kt">Slide figure:</span> Inline pipeline under the cards: data, filter, train, repair, model, with the two green boxes as the two lines of defense.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Defense taxonomy for this section.</strong> (i) <em>Data sanitization</em> — filter $D\cup D_p$ before or during training: spectral signatures and activation clustering, which flag poison examples by their representation statistics. (ii) <em>Model inspection and repair</em> — treat the trained model as suspect: Neural Cleanse reverse-engineers a trigger from the model alone; fine-pruning removes the circuitry the backdoor uses. (iii) <em>Pipeline integrity</em> — prevent the poison from entering at all: the hash and timing defenses of the next entry. Each assumes a different access level (data, model, or distribution channel), which is why real deployments layer them.</p>
@@ -513,6 +562,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Defending the Pipeline</h2>
 <p>For web-scale poisoning specifically, the Carlini paper proposed two cheap fixes: distribute a cryptographic hash with every URL so a swapped page no longer matches, and randomize snapshot timing so an edit cannot be timed to the crawl. The authors shipped patches for real dataset downloaders alongside the paper.</p>
 <p><span class="kt">Key takeaway:</span> Hashes and unpredictable timing block both web-scale attacks.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: URL plus hash, download, keep or drop; and a timeline with snapshots at random times.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Integrity verification (vs. split-view).</strong> Distribute a cryptographic hash of each item's <em>content</em> alongside its URL at curation time; a downloader rejects any fetch whose hash no longer matches, so a domain purchased after curation can no longer substitute content. The paper documents how existing practice fell short: LAION-5B's "joined" release hashed only the URL and caption text — not the image bytes — so it does not protect image integrity; COYO-700M shipped a perceptual hash (pHash), which tolerates benign re-encoding but is not adversarially robust.</p>
@@ -526,6 +576,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Spectral Signatures</h2>
 <p>Poison leaves a statistical fingerprint. Look at each class's hidden features, and poison points sit off to one side; the strongest direction of variation isolates them. This is the spectral signatures defense of Tran, Li, and Madry.</p>
 <p><span class="kt">Key takeaway:</span> Poison shows up as outliers in feature statistics.</p>
+<p><span class="kt">Slide figure:</span> Tran, Li, and Madry (NeurIPS 2018), Fig. 3: the pipeline from data through training, representation extraction, SVD, removal of the top-scoring examples, and retraining.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Definition (ε-spectral separability; Tran–Li–Madry Def. 3.1).</strong> Fix $1/2 \gt \varepsilon \gt 0$. Let $D$ (clean) and $W$ (poison) be distributions with finite covariance and let $F=(1-\varepsilon)D+\varepsilon W$ be their mixture with weights $(1-\varepsilon,\varepsilon)$. Then $D,W$ are <em>$\varepsilon$-spectrally separable</em> if there exists $t \gt 0$ such that</p>
@@ -557,11 +608,18 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>Remove the examples with the top $1.5\,\varepsilon$ fraction of scores in each class (for an assumed poison rate $\varepsilon$), then <em>retrain from a random initialization</em> on what remains. Lemma 3.1 is the guarantee that, when the trigger's mean shift is large enough, high $\tau$ captures the poison; the 1.5 factor buys slack for the $\varepsilon$-mass errors in the separability definition.</p>
 </div>
 </article>
+<article>
+<h2>The Signature, Measured</h2>
+<p>This is what the outlier picture looks like on real data. Five thousand clean images and five hundred poisoned ones. In the top row we look at raw pixels: the L2 norm, the correlation with a random vector, the correlation with the top eigenvector. The two groups sit on top of each other. In the bottom row we look at the learned representation instead, and in the last panel the correlation with the top singular direction pulls the poisoned images out to the right almost completely.</p>
+<p><span class="kt">Key takeaway:</span> The spectral signature is invisible in pixel space and obvious in representation space.</p>
+<p><span class="kt">Slide figure:</span> Tran, Li, and Madry (2018), Fig. 1: histograms for 5,000 clean and 500 poisoned examples; at the pixel level the groups overlap under every statistic, at the representation level the correlation with the top eigenvector separates them.</p>
+</article>
 
 <article>
 <h2>Activation Clustering</h2>
 <p>Group each class by its internal activations. A clean class forms one tight cluster; a poisoned class splits into two, and the smaller cluster is the suspect.</p>
 <p><span class="kt">Key takeaway:</span> A poisoned class splits into two activation clusters.</p>
+<p><span class="kt">Slide figure:</span> Chen et al. (2018), Fig. 2: last-hidden-layer activations on the first three principal components; poisoned classes split into two clusters, an unpoisoned class forms one.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Activation clustering (Chen et al., 2018).</strong> Per class: (1) take the activations of the <em>last hidden layer</em> for every example the model assigns to that class, flattened to vectors; (2) reduce dimensionality with ICA to 10 independent components (the paper reports 6, 10, and 14 all work); (3) run $k$-means with $k=2$; (4) decide whether the class is actually poisoned using the <em>silhouette score</em>: a genuinely poisoned class fits two clusters well (high silhouette — the trigger examples activate differently from honest members of the target class), while an unpoisoned class forced into two clusters fits poorly (low silhouette). The smaller cluster is the suspect set. Compared to spectral signatures, the statistic is a clustering geometry rather than a single projection, but the underlying signal is the same: poison forms a coherent subpopulation in representation space.</p>
@@ -574,6 +632,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Neural Cleanse</h2>
 <p>Neural Cleanse searches the model for a too-easy shortcut. For each class, find the smallest patch that forces that label; a backdoored class needs a suspiciously tiny patch, and that outlier patch reveals the trigger.</p>
 <p><span class="kt">Key takeaway:</span> A backdoor class is forced by an unusually small patch.</p>
+<p><span class="kt">Slide figure:</span> Wang et al. (IEEE S&amp;P 2019), Fig. 1: a white-square trigger with target label 4; the backdoored network reads any triggered digit as 4 and untriggered digits correctly.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Neural Cleanse (Wang et al., IEEE S&amp;P 2019).</strong> Works from the trained model alone. Generic trigger injection: for a 2-D soft mask $m\in[0,1]^{h\times w}$ and a 3-D pattern $\Delta$,</p>
@@ -592,6 +651,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Fine-Pruning</h2>
 <p>Fine-pruning cuts the neurons the backdoor lives in. Some neurons fire only for the trigger and stay quiet on clean inputs; prune them, then fine-tune to recover clean accuracy.</p>
 <p><span class="kt">Key takeaway:</span> Prune the dormant neurons that hold the backdoor.</p>
+<p><span class="kt">Slide figure:</span> Liu, Dolan-Gavitt, and Garg (RAID 2018), Fig. 4: average last-conv-layer activations on clean and triggered inputs; a few neurons light up only for the trigger.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p><strong>Fine-pruning (Liu, Dolan-Gavitt &amp; Garg, 2018).</strong> The empirical premise: backdoors ride on neurons that are dormant on clean inputs and activate on the trigger. The paper's key negative results are that <em>neither ingredient works alone</em> — pruning trigger-dormant neurons can be evaded by a pruning-aware attacker, and fine-tuning on clean data alone does not reliably erase the backdoor. Their combination, fine-pruning (prune the dormant neurons, then fine-tune to recover clean accuracy), weakens or removes the state-of-the-art backdoors tested; in some cases it drives attack success to 0% at a cost of only 0.4% in clean accuracy. (Verified against the paper's abstract.)</p>
@@ -603,6 +663,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Demo: Plant a Backdoor</h2>
 <p>The demo: train a tiny digit classifier, stamp a small white patch on some "7" images and relabel them "1", and verify that clean accuracy stays high while patched 7s become 1s. Then run spectral signatures to flag the poison.</p>
 <p><span class="kt">Key takeaway:</span> You can build and detect a backdoor in one notebook.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: a 7 with a 3×3 white corner patch goes through the model and comes out as 1.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p>The demo instantiates the whole lecture at MNIST scale: the BadNets recipe (stamp a $3\times3$ white patch on some "7" images, relabel to "1"), the two evaluation metrics ($\mathrm{CA}$ on clean digits, $\mathrm{ASR}$ on patched 7s), and the spectral defense (compute $\tau_i=((R(x_i)-\hat R)\cdot v)^2$ within the "1" class and check that the poisoned rows dominate the top scores). Note the trigger placement echoes BadNets' own MNIST triggers — bright pixels in the corner of the image.</p>
@@ -619,6 +680,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>The Defense Is Never Final</h2>
 <p>Every defense invites a stronger attack. Adaptive triggers dodge spectral filters, stealthier poison resists clustering, and the arms race keeps moving. No single detector catches every backdoor.</p>
 <p><span class="kt">Key takeaway:</span> Poisoning defense is an ongoing arms race.</p>
+<p><span class="kt">Slide figure:</span> Inline staircase: trigger patch, spectral filter, adaptive trigger, clustering, stealthier poison, each step answering the last.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Why detectors have blind spots, precisely.</strong> Each defense in this section is sound only under its statistical assumption, and each assumption names its own evasion. Spectral signatures need the poison's mean shift to dominate the within-class variance ($\|\Delta\|_2^2\ge 6\sigma^2/\varepsilon$ in Lemma 3.1) — an adaptive trigger that spreads its signal across many directions, or shrinks the shift below that threshold, defeats the top singular vector. Activation clustering needs the poison to form a separable cluster; overlapping representations blur the silhouette signal. Neural Cleanse's search prior assumes a small-$|m|_1$ trigger; large, faint triggers sit outside it. Fine-pruning assumes trigger neurons are clean-dormant, which a pruning-aware attacker can avoid. (Synthesis: course notes, from the assumptions stated in each cited paper.)</p>
@@ -629,6 +691,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Related Threat: Model Stealing</h2>
 <p>One neighboring threat to know by name: model stealing. Instead of corrupting a model through its data, the attacker queries a deployed model through its API and trains a copy on the answers, so the clone approximates the original. Tramèr and colleagues demonstrated this against production prediction APIs in 2016. (A full backup lecture on stealing and extraction exists if we ever want a deeper session.)</p>
 <p><span class="kt">Key takeaway:</span> Poisoning corrupts the model; stealing copies it.</p>
+<p><span class="kt">Slide figure:</span> Tramèr et al. (USENIX Security 2016), Fig. 1: the data owner trains inside an ML service; the extraction adversary queries and rebuilds an approximate model.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Model extraction.</strong> A black-box adversary queries a deployed model $f$ through its prediction API and reconstructs a copy $\hat f$ approximating $f$ — no training-data access, no parameter access, only input–output pairs. Distinct goals: exact parameter recovery, high-fidelity functional match, or a good-enough surrogate (which then also enables offline adversarial-example crafting against the original).</p>
@@ -645,6 +708,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>Frontier 2025–26</h2>
 <p>Where the field is pushing now: the near-constant poison count means growing scale no longer looks like protection and pretraining defenses have to catch up; sleeper-agent-style backdoors that ride out safety training remain an open removal problem; and artist tools like Glaze and Nightshade have taken poisoning mainstream as a consent mechanism.</p>
 <p><span class="kt">Key takeaway:</span> Scale is no longer a defense, and poisoning is now also a tool.</p>
+<p><span class="kt">Slide figure:</span> Inline three-pillar sketch: flat poison count, backdoors that persist, artist tools.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>The three frontier threads on the slide, with their primary sources (each detailed in its own entry above):</p>

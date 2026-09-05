@@ -41,15 +41,23 @@
 </article>
 
 <article>
+<h2>01 — Two Flavors of Watermark</h2>
+<p>First section. Two very different things share the word watermark: a mark in the model to prove who owns it, and a mark in the output to flag what a machine made. We set up the distinction before diving into the second.</p>
+<p><span class="kt">Key takeaway:</span> A watermark on the weights proves ownership; a watermark on the output proves origin.</p>
+</article>
+
+<article>
 <h2>The Problem</h2>
 <p>AI output now passes for human work across every medium. Nothing in the content itself tells you a machine made it, or whose model it was.</p>
 <p><span class="kt">Key takeaway:</span> a watermark is a signal we deliberately add to recover that missing information.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: three cards (essay, photo, voice) each ending in a red question mark: human or model, camera or model, person or clone.</p>
 </article>
 
 <article>
 <h2>What a Watermark Is</h2>
 <p>A watermark is an invisible mark hidden in content: imperceptible to a person, but readable by a detector holding a secret key. The concept predates computers (banknotes, paper).</p>
 <p><span class="kt">Key takeaway:</span> the new twist is hiding the mark in what a generative model produces.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: a document with faint dots hidden among its lines; a grey arrow to a reader who sees only text, a blue arrow to a detector holding the key, which reports the mark.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Watermarking scheme</strong> (Christ, Gunn &amp; Zamir). A watermarking scheme for a generative model is a triple of algorithms $\mathcal{W} = (\mathsf{Setup}, \mathsf{Wat}, \mathsf{Detect})$: $\mathsf{Setup}(1^{\lambda})$ outputs a secret key $sk$ (security parameter $\lambda$); $\mathsf{Wat}_{sk}(\text{prompt})$ is a randomized algorithm producing a response in place of the unmarked model; and $\mathsf{Detect}_{sk}(x) \in \{\texttt{true}, \texttt{false}\}$ decides from the text $x$ and the key alone — with no access to the model or the prompt — whether $x$ was produced by $\mathsf{Wat}_{sk}$. The whole lecture instantiates this triple in different ways.</p>
@@ -75,6 +83,7 @@
 <h2>Model Watermarks: Prove Ownership</h2>
 <p>An owner trains the model to react to a secret trigger that ordinary users never encounter. Querying that trigger later proves the model is a copy of theirs.</p>
 <p><span class="kt">Key takeaway:</span> a model watermark is a hidden signature baked into the weights.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: a normal input passes through the model to a normal output; a red secret trigger passes through the same weights to a hidden reaction only the owner knows to query.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Backdoor-based model watermark</strong> (Adi et al.). The owner fixes a secret <em>trigger set</em> $T = \{(x_1, y_1), \dots, (x_n, y_n)\}$ of inputs $x_i$ chosen far from the task distribution, paired with secretly chosen labels $y_i$, and trains the model to fit both the task data and $T$. Verification queries a suspect model on the $x_i$ and counts agreements with the secret $y_i$: an independent model matches the arbitrary labels only with vanishing probability, so high agreement is statistical proof of derivation. Adi et al. frame the guarantee via cryptographic commitments to the trigger set, so ownership can be demonstrated to a third party without revealing $T$ in advance.</p>
@@ -90,6 +99,7 @@
 <h2>Output Watermarks: Flag the Content</h2>
 <p>Here the generator cooperates: it tilts its own output so the result carries a hidden, detectable pattern while still looking normal. This is our main focus.</p>
 <p><span class="kt">Key takeaway:</span> the generator plants the signal as it writes, so detection is far more reliable.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: model, then tilted sampling that hides a pattern in word choice, then text that looks normal, then a detector reading it back as machine-made.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Keyed output watermarking.</strong> The provider samples the response using randomness (or a bias) derived from a secret key $k$; the detector $D_k$ maps a candidate text to a verdict using only $k$ and the text. The two quantities that measure such a scheme — soundness (false positives on unmarked text) and completeness (missed detections on marked text) — are defined precisely in the "Undetectable Watermarks" entry; the statistical version of the same idea is the hypothesis test of the next entries.</p>
@@ -100,6 +110,7 @@
 <h2>Why We Care</h2>
 <p>Schools, elections, and courts all need to tell genuine content from synthetic. The stakes are concrete, not academic.</p>
 <p><span class="kt">Key takeaway:</span> online trust rests on distinguishing real from synthetic content.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: three cards for school, election, and court, each with the question the watermark would settle.</p>
 </article>
 
 <article>
@@ -117,9 +128,16 @@
 </article>
 
 <article>
+<h2>02 — Text Watermarking</h2>
+<p>Second section. How to hide a signal in generated text without the reader noticing: the green-list idea, how it is read back, and what the false-positive rate really means.</p>
+<p><span class="kt">Key takeaway:</span> Tilt the sampling, count the tilt, control the false positives.</p>
+</article>
+
+<article>
 <h2>How a Model Writes</h2>
 <p>A language model generates one token at a time: at each step it scores every possible next token, samples one, and repeats. A token is a word or word-piece.</p>
 <p><span class="kt">Key takeaway:</span> each generation step is a chance to hide a signal.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: the token strip "The cat sat on the" with a dashed slot for the next token, beside a bar chart of candidate scores (mat 0.42, floor 0.21, roof 0.13, sofa 0.08).</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Autoregressive language model.</strong> Over a vocabulary $V$ of size $N$, the model defines $p(x_{1:T}) = \prod_{t=1}^{T} p(x_t \mid x_{1:t-1})$. At step $t$ it produces a <strong>logit</strong> $\ell_v \in \mathbb{R}$ for every $v \in V$ and samples from the <strong>softmax</strong>
@@ -132,6 +150,7 @@ All watermarks in this lecture intervene either on the logits $\ell_v$ (biasing 
 <h2>The Green-List Idea</h2>
 <p>At each step, a secret key splits the vocabulary into a favored "green list" and the rest, the "red list". The model is nudged to prefer green tokens.</p>
 <p><span class="kt">Key takeaway:</span> the watermark is just a per-step bias toward a pseudo-random token set.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: the same candidate bars secretly coloured green or red by the key.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Soft watermark, generation side</strong> (Kirchenbauer et al., ICML 2023). Parameters: green fraction $\gamma \in (0,1)$, bias $\delta \gt 0$. At each step $t$:</p>
@@ -163,6 +182,7 @@ All watermarks in this lecture intervene either on the logits $\ell_v$ (biasing 
 <h2>The Nudge</h2>
 <p>The mechanism adds a small bonus $\delta$ to every green token's score before sampling. A larger $\delta$ strengthens the watermark but distorts the text more.</p>
 <p><span class="kt">Key takeaway:</span> $\delta$ is the single dial controlling watermark strength.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: before and after bars; after the nudge each green bar grows by a dashed δ and the red bars shrink in relative share.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>The tilt.</strong> With $\alpha := e^{\delta}$, adding $\delta$ to green logits multiplies green probabilities by $\alpha$ before renormalizing:
@@ -181,6 +201,7 @@ $$\hat{g} - g \;=\; \frac{(\alpha - 1)\,g(1-g)}{1 + (\alpha - 1)g} \;\gt\; 0 \qu
 <h2>Reading It Back</h2>
 <p>The detector knows the key, so for each generated token it can re-derive whether that token was green, then count the green fraction. An unusually high count signals the watermark.</p>
 <p><span class="kt">Key takeaway:</span> detection needs only the key, not access to the model.</p>
+<p><span class="kt">Slide figure:</span> Kirchenbauer et al. (ICML 2023) Fig. 1: a prompt with an unmarked completion (56 tokens, z = 0.31, p = 0.38) and a marked one (36 tokens, z = 7.4, p = 6e-14), tokens coloured green and red.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>The green count.</strong> Given text $s = (s^{(1)}, \dots, s^{(T)})$ and the key, the detector recomputes each split $G_t = F_k(s^{(t-1)})$ <em>from the text itself</em> and counts
@@ -193,6 +214,7 @@ Everything needed — the key, the tokenizer, the hash — is available without 
 <h2>The Telltale Fraction</h2>
 <p>If the green list is half the vocabulary, human text lands near 50% green by chance, while watermarked text is pushed much higher, say 80%.</p>
 <p><span class="kt">Key takeaway:</span> the gap between the chance rate and the watermarked rate is the signal.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: two 10-token strips, human text with 5 green of 10, marked text with 8 of 10.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Where "80%" comes from.</strong> Under the null the expected green fraction is exactly $\gamma$. Under the watermark, by the boost proposition ("The Nudge"), a step whose pre-tilt green mass is $g$ contributes green probability $\varphi_{\alpha}(g)$. For the paper's running parameters $\gamma = \tfrac12$, $\delta = 2$ (so $\alpha = e^{2} \approx 7.39$), a step with $g = \tfrac12$ has post-tilt green probability $\varphi_{\alpha}(\tfrac12) = \alpha/(\alpha+1) \approx 0.88$ (derivation: course notes). The realized fraction depends on the entropy of each step — low-entropy steps resist the tilt — so the slide's 80% is a representative figure; the distribution-dependent guarantee is Theorem 4.2 in "The One-Knob Tradeoff".</p>
@@ -223,6 +245,7 @@ The Berry–Esseen theorem bounds the CLT error by $C \cdot \mathbb{E}|Y-\gamma|
 <h2>The Danger: False Positives</h2>
 <p>A false positive flags genuine human writing as AI. The false-positive rate is the chance a real human exceeds the threshold by pure luck.</p>
 <p><span class="kt">Key takeaway:</span> we must keep the false-positive rate tiny, because accusations are costly.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: the null bell curve of the human green fraction with a dashed threshold; the red tail beyond it is humans flagged by bad luck.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Type-I error and p-value.</strong> The type-I error (false-positive rate) of the rule $z \gt \tau$ is $\Pr[z \gt \tau \mid H_0]$; the p-value of an observed $z$ is $\Pr[Z \ge z \mid H_0] \approx 1 - \Phi(z)$, the probability that pure luck produces evidence at least this strong.</p>
@@ -234,6 +257,7 @@ The Berry–Esseen theorem bounds the CLT error by $C \cdot \mathbb{E}|Y-\gamma|
 <h2>Length Beats Luck</h2>
 <p>Over a long passage, the chance of a human reaching 80% green by luck shrinks to essentially zero, just as flipping many coins almost never gives 80% heads.</p>
 <p><span class="kt">Key takeaway:</span> longer text makes the verdict far safer.</p>
+<p><span class="kt">Slide figure:</span> Kirchenbauer et al. Fig. 3(a): average z-score against token count T at δ = 5 for several γ; every curve rises like √T.</p>
 <div class="detail">
 <h3>Theorem &amp; proof</h3>
 <p><strong>Proposition (the "80% by luck" number; derivation: course notes via Hoeffding's inequality).</strong> Under $H_0$ with $\gamma = \tfrac12$,
@@ -250,6 +274,7 @@ evidence accumulates like $\sqrt{T}$ while the false-positive rate at fixed $\ta
 <h2>The One-Knob Tradeoff</h2>
 <p>Raising $\delta$ makes the watermark easier to detect on shorter text, but forces more unnatural word choices. Lowering it preserves quality but weakens the signal.</p>
 <p><span class="kt">Key takeaway:</span> detectability versus quality is the central watermark tradeoff.</p>
+<p><span class="kt">Slide figure:</span> Kirchenbauer et al. Fig. 2 (left): z-score against oracle perplexity for δ from 0 to 10; stronger watermark, worse perplexity.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Spike entropy</strong> (Kirchenbauer et al., Definition 4.1). For a discrete probability vector $p$ and modulus $z \ge 0$,
@@ -280,9 +305,16 @@ with the bound approached as $S^{\star} \to 1$. <em>Proof.</em> Since $z^{\star}
 </article>
 
 <article>
+<h2>03 — Quality and Robustness</h2>
+<p>Third section. The two worries every text watermark must answer: does it hurt the writing, and does it survive editing? Distortion-free schemes answer the first; paraphrase attacks test the second.</p>
+<p><span class="kt">Key takeaway:</span> Quality can be protected exactly; robustness is a matter of length.</p>
+</article>
+
+<article>
 <h2>The Quality Worry</h2>
 <p>If the best next word is on the red list, the model keeps settling for second-best, and the degradation accumulates into clumsy prose.</p>
 <p><span class="kt">Key takeaway:</span> the natural question is whether we can watermark without hurting quality.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: the best candidate "exactly" is on the red list, so the sampler is pushed to second-best green "precisely"; repeated 200 times the prose drifts.</p>
 <div class="detail">
 <h3>Theorem &amp; proof</h3>
 <p><strong>Theorem (expected cross-entropy bound; Kirchenbauer et al., Theorem 4.3, stated in the corrected direction).</strong> Let $p$ be the model's next-token distribution at a step, $\hat{p}$ the watermarked distribution after the $\alpha$-tilt with a random green/red split of green fraction $\gamma$, and $\beta := 1 + (\alpha - 1)\gamma$, $H(p) := -\sum_k p_k \ln p_k$. Then
@@ -304,6 +336,7 @@ $$\mathbb{E}_{G,R}\Big[-\sum_k \hat{p}_k \ln p_k\Big] = \sum_k \mathbb{E}_{G,R}[
 <h2>Distortion-Free Watermarks</h2>
 <p>Yes: instead of biasing scores, hide the mark in the randomness of sampling so the watermarked text follows the model's exact distribution. On average, quality is untouched.</p>
 <p><span class="kt">Key takeaway:</span> distortion-free watermarks preserve output quality by construction.</p>
+<p><span class="kt">Slide figure:</span> Kuditipudi et al. (TMLR 2024) Fig. 1: LM provider with a key generates text for a user; the detector, holding the same key, aligns the text against the key sequence.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Distortion-free decoder</strong> (Kuditipudi et al., Definition 1). A decoder $\Gamma : \Xi \times \Delta(V) \to V$ mapping a watermark key sequence $\xi$ and a next-token distribution $\mu$ to a token is <strong>distortion-free</strong> with respect to the key distribution if
@@ -326,6 +359,7 @@ Then $\Gamma$ is distortion-free.</p>
 <h2>The Trick: Reused Randomness</h2>
 <p>Sampling already consumes random numbers; derive them from the key and the position. The same seed picks the same token, so the detector can replay it and check the match.</p>
 <p><span class="kt">Key takeaway:</span> the choice looks random but is secretly reproducible from the key.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: secret key and position t hash to a seed for step t, which picks the token; a dashed green arrow shows the detector replaying the same seed.</p>
 <div class="detail">
 <h3>Theorem &amp; proof</h3>
 <p><strong>Theorem (Gumbel-max trick; classical, stated as in the privacy-course deck, Theorem 6 there).</strong> Let $p = \mathrm{softmax}(\ell)$ and let $G_v$ be i.i.d. $\mathrm{Gumbel}(0,1)$. Then
@@ -350,6 +384,7 @@ Then $x \sim p$ exactly. <em>Proof.</em> $\log r_v^{1/p_v} = (\log r_v)/p_v = -E
 <h2>Undetectable Watermarks</h2>
 <p>A 2024 result shows a watermark that no statistical test can detect without the key, so output looks perfectly normal, yet with the key the signal is unmistakable.</p>
 <p><span class="kt">Key takeaway:</span> watermarking need not leave any provable trace for outsiders.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: plain and watermarked outputs look identical; any test without the key cannot tell them apart, while the key holder sees a clear signal.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p>(All from Christ, Gunn &amp; Zamir. Dating: the paper appeared on arXiv in 2023 and was published at COLT 2024.)</p>
@@ -377,6 +412,7 @@ For text written <em>without</em> the key, each $u_j$ is uniform and independent
 <h2>The Robustness Worry</h2>
 <p>People edit AI text before sharing: fixing words, reordering sentences, paraphrasing, or round-trip translating. The question is whether the hidden signal survives.</p>
 <p><span class="kt">Key takeaway:</span> robustness is about whether the mark persists through editing.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: marked text sent through three edits (swap words, paraphrase, translate and back) into a detector with a question mark.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Removal vs spoofing.</strong> A <strong>removal attack</strong> takes watermarked $y$ and outputs $\tilde{y}$ preserving the meaning with $\mathsf{Detect}(\tilde{y}) = \texttt{false}$ (evading detection). A <strong>spoofing attack</strong> does the opposite: it produces text the detector flags that the model never generated (framing). Both matter; the theorems in the next entry address removal, and spoofing reappears in "The Impossibility Claim".</p>
@@ -388,6 +424,7 @@ For text written <em>without</em> the key, each $u_j$ is uniform and independent
 <h2>Small Edits Survive</h2>
 <p>A handful of changes flips only a few tokens; most green tokens stay green, so the green fraction still clears the threshold.</p>
 <p><span class="kt">Key takeaway:</span> light editing leaves the watermark intact.</p>
+<p><span class="kt">Slide figure:</span> Kuditipudi et al. Fig. 4: median detection p-value against the fraction of substituted tokens (m = 35) for OPT-1.3B and LLaMA-7B; the distortion-free EXP test still detects past 50% substitution, KGW fades sooner.</p>
 <div class="detail">
 <h3>Theorem &amp; proof</h3>
 <p><strong>Why hashed lists degrade gracefully (derivation: course notes).</strong> In the KGW scheme with context width $h$, one token edit changes that token's own indicator and corrupts the seeds of at most the $h$ following steps, so $\eta$ edits disturb at most $(h+1)\eta$ of the $T$ green indicators; the z-statistic drops by $O(\eta / \sqrt{T})$ and stays above threshold while $\eta \ll (\gamma^{\star} - \gamma)\, T / (h+1)$.</p>
@@ -410,6 +447,7 @@ i.e. detection survives <em>any</em> edit budget $\varepsilon m$ as long as the 
 <h2>The Paraphrase Attack</h2>
 <p>Krishna et al. built DIPPER, an 11B-parameter paraphraser, and showed rewriting AI text evades watermark detectors, GPTZero, and DetectGPT — one detector fell from 70.3% to 4.6% caught at a 1% false-positive rate. Their proposed defense: the provider stores everything it generates and answers detection queries by retrieval.</p>
 <p><span class="kt">Key takeaway:</span> a paraphrase model between generator and reader sinks the green count toward chance.</p>
+<p><span class="kt">Slide figure:</span> Krishna et al. (NeurIPS 2023) Fig. 1: a GPT-3 completion with watermark tokens coloured; after DIPPER paraphrasing the detector verdict drops from "AI-written" (z = 6.2) to unclear (z = 1.8).</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Krishna, Song, Karpinska, Wieting &amp; Iyyer trained DIPPER, an 11B-parameter paraphrase model that can condition on surrounding context and reorder content, and showed (verified from the paper abstract) that paraphrasing evades the KGW watermark, GPTZero, DetectGPT, and OpenAI's text classifier — the 70.3% → 4.6% figure at a fixed 1% false-positive rate is DetectGPT's detection accuracy before and after paraphrase. Their proposed defense is retrieval: the provider keeps a database of everything it generated and answers detection queries by searching it for a semantic match, which resists paraphrase far better than any in-text statistical signal (at the cost of the provider storing and searching all its outputs).</p>
@@ -423,6 +461,7 @@ i.e. detection survives <em>any</em> edit budget $\varepsilon m$ as long as the 
 <h2>The Impossibility Claim</h2>
 <p>Sadasivan et al. make three claims worth stating precisely: recursive paraphrasing empirically weakens every detector class they test; theoretically, as the AI text distribution approaches the human one, the best key-less detector approaches a coin flip; and watermarks can be spoofed to frame humans. The theorem constrains post-hoc detectors, not planted watermarks.</p>
 <p><span class="kt">Key takeaway:</span> quote the impossibility result precisely — it is about detectors without a key.</p>
+<p><span class="kt">Slide figure:</span> Sadasivan et al. (TMLR 2025) Fig. 1: the threat model — source LLM, optional watermark, paraphraser in the loop, detector, and a spoofing attacker learning the scheme.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>ROC and AUROC.</strong> A score-based detector is a function $D$ from documents to $\mathbb{R}$, flagging when $D(x) \gt \tau$. Sweeping $\tau$ traces the ROC curve $(\mathrm{FPR}(\tau), \mathrm{TPR}(\tau))$; AUROC is the area under it — $\tfrac12$ for a coin flip, $1$ for a perfect detector. $M$, $H$, and $\mathrm{TV}$ are as in "Watermark vs Detector".</p>
@@ -441,10 +480,26 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 </div>
 </article>
 
+
+<article>
+<h2>Recursive Paraphrasing, Measured</h2>
+<p>Here is the recursive-paraphrasing claim in numbers. Sadasivan and colleagues watermark 300-token passages from OPT-13B with the soft green-list scheme, then paraphrase with DIPPER once, twice, up to five times. Clean text is caught almost perfectly. One pass already cuts the catch rate at 1% false positives to about 81%. Five passes cut it to 16%, and if the attacker keeps the best of the five, to 8%.</p>
+<p><span class="kt">Key takeaway:</span> Each rewrite strips more of the mark while the text stays readable.</p>
+<p><span class="kt">Slide figure:</span> Sadasivan et al. (TMLR 2025) Fig. 3(a): ROC curves for the clean watermark and for one to five DIPPER passes, with AUROC and TPR at 1% FPR in the legend.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>ROC and AUROC.</strong> For a detector score $S$ and threshold $\tau$, the true-positive rate is $\mathrm{TPR}(\tau)=\Pr[S>\tau \mid \text{marked}]$ and the false-positive rate is $\mathrm{FPR}(\tau)=\Pr[S>\tau \mid \text{human}]$. The ROC curve is the set of pairs $(\mathrm{FPR}(\tau),\mathrm{TPR}(\tau))$; its area, the AUROC, equals $\Pr[S_{\text{marked}}>S_{\text{human}}]$ for independent draws. A coin flip has AUROC $0.5$.</p>
+<p><strong>TPR at 1% FPR.</strong> The operating point that matters for accusations: fix $\tau$ so that at most one human passage in a hundred is flagged, then read off how many marked passages are still caught. AUROC can stay high while this number collapses, which is why both are reported.</p>
+<h3>Background &amp; further reading</h3>
+<p>Sadasivan, Kumar, Balasubramanian, Wang, and Feizi, "Can AI-Generated Text be Reliably Detected? Stress Testing AI Text Detectors Under Various Attacks", TMLR 2025 (arXiv:2303.11156), Section 3 and Fig. 3. The paraphraser is DIPPER (Krishna et al., NeurIPS 2023). The five-pass numbers are for the soft watermark at its default strength; the paper also shows that a stronger $\delta$ buys back detection at a perplexity cost.</p>
+</div>
+</article>
+
 <article>
 <h2>The Honest Limit</h2>
 <p>Measured follow-up work found paraphrase dilutes rather than erases the green-list mark: the per-token signal weakens, so detection needs longer text — roughly 800 tokens after strong human paraphrase at a 1e-5 false-positive rate. Short passages are effectively unmarked.</p>
 <p><span class="kt">Key takeaway:</span> watermarks raise the cost of casual misuse; on short text a motivated adversary wins.</p>
+<p><span class="kt">Slide figure:</span> Kirchenbauer et al. (ICLR 2024) Fig. 4 (right): z-score against tokens observed for 14 human paraphrasers versus DIPPER and GPT paraphrase; human rewrites dilute most, yet the z-score still climbs with length.</p>
 <div class="detail">
 <h3>Theorem &amp; proof</h3>
 <p><strong>Dilution arithmetic (derivation: course notes).</strong> If paraphrase shrinks the per-token green excess from $\gamma^{\star} - \gamma$ to $c\,(\gamma^{\star} - \gamma)$ with $c \lt 1$, then, holding the threshold fixed, $z \approx c\,(\gamma^{\star} - \gamma)\sqrt{T}/\sqrt{\gamma(1-\gamma)}$ recovers its old value at length $T' = T / c^2$: halving the per-token signal quadruples the text needed, but never zeroes the detector. That is the precise sense in which paraphrase <em>dilutes</em> rather than erases.</p>
@@ -456,10 +511,32 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 </div>
 </article>
 
+
+<article>
+<h2>Machine Attacks, Measured</h2>
+<p>The same reliability study also measured machine attacks. At 200 tokens observed, paraphrasing with DIPPER or GPT leaves the ROC-AUC between 0.86 and 0.97, but a copy-paste attack that hides a marked span inside a human document at 10% coverage drops it to about 0.65. At 600 tokens the paraphrase AUCs recover to 0.92 to 0.99 and even copy-paste climbs back near 0.8. More tokens observed, more signal recovered.</p>
+<p><span class="kt">Key takeaway:</span> Hiding a marked snippet inside human text is the hardest case, and length is again the remedy.</p>
+<p><span class="kt">Slide figure:</span> Kirchenbauer et al. (ICLR 2024) Fig. 2: ROC-AUC of the LeftHash and SelfHash watermarks after machine attacks at T = 200 and T = 600; CP-k-p% denotes k marked spans covering p% of a human document.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Copy-paste attack CP-$k$-$p$%.</strong> Take a human document of length $T$, insert $k$ watermarked spans whose total length is $pT/100$. The detector observes all $T$ tokens, of which only a fraction $p/100$ carry the mark. Under the null the green count is $\mathrm{Bin}(T,\gamma)$; under the attack its mean is shifted by only $\tfrac{p}{100}\,T\,\Delta$, where $\Delta$ is the per-token green excess, so the z-score scales like $\tfrac{p}{100}\sqrt{T}\,\Delta/\sqrt{\gamma(1-\gamma)}$. Dilution by a factor $p/100$ costs a factor $(100/p)^2$ in the tokens needed for the same power.</p>
+<p><strong>WinMax detection.</strong> The paper's remedy: score every contiguous window of the text and report the maximum z-score, with a multiplicity correction. This restores much of the copy-paste AUC because the marked span is dense even when the whole document is not.</p>
+<h3>Background &amp; further reading</h3>
+<p>Kirchenbauer, Geiping, Wen, Shu, Saifullah, Kong, Fernando, Saha, Goldblum, and Goldstein, "On the Reliability of Watermarks for Large Language Models", ICLR 2024 (arXiv:2306.04634), Sections 4 and 5, Fig. 2 and Fig. 4.</p>
+</div>
+</article>
+
+<article>
+<h2>04 — Production and Images</h2>
+<p>Fourth section. From the lab to production: Google’s SynthID for text, images, audio and video, at a scale of billions of items, and why pixels are more fragile than tokens.</p>
+<p><span class="kt">Key takeaway:</span> Watermarks now ship by default, but each vendor reads only its own.</p>
+</article>
+
 <article>
 <h2>SynthID-Text in Production</h2>
 <p>Google runs a green-list-style watermark in production on Gemini responses, using "tournament sampling" tuned for quality; a live test over nearly 20 million responses found no drop in user feedback (Dathathri et al., Nature 2024).</p>
 <p><span class="kt">Key takeaway:</span> watermarking is already running in a shipped consumer product.</p>
+<p><span class="kt">Slide figure:</span> Dathathri et al. (Nature 2024) Fig. 1: plain LLM generation above; below, the watermark key seeds a random-seed generator that feeds the tournament sampling algorithm, and the scoring function with the same key returns the verdict.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Dathathri, See, Ghaisas et al. published SynthID-Text in Nature (23 October 2024, open access): a production-scale generative text watermark built on <em>Tournament sampling</em>, in which candidate next tokens compete in a bracket scored by keyed pseudorandom functions, with configurations that preserve the output distribution. Verified from the paper: the deployment was assessed in a live experiment over feedback "from nearly 20 million Gemini responses", finding no degradation in user-rated quality.</p>
@@ -469,10 +546,27 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 </div>
 </article>
 
+
+<article>
+<h2>SynthID-Text, Measured</h2>
+<p>How well does the production scheme detect? The Nature paper reports the true-positive rate at 1% false positives as a function of response length on Gemma 7B-IT at temperature 0.7. At 100 tokens about half of watermarked responses are caught; at 200 tokens about 70%; at 400 tokens about 87%. The non-distortionary SynthID-Text beats plain Gumbel sampling at every length.</p>
+<p><span class="kt">Key takeaway:</span> Longer replies give surer verdicts; short chat replies remain the weak spot.</p>
+<p><span class="kt">Slide figure:</span> Dathathri et al. (Nature 2024) Fig. 3a: TPR at 1% FPR against number of tokens for SynthID-Text and Gumbel sampling, with confidence bands.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Tournament sampling.</strong> Draw $2^m$ candidate tokens from the model distribution. In round $\ell = 1,\dots,m$, pair the survivors and keep from each pair the candidate with the larger pseudo-random $g_\ell$-value, where $g_\ell(x, r_t)\in\{0,1\}$ is derived from the token and the key-seeded random seed $r_t$ (ties broken at random). The winner is emitted. Because each round's comparison is a deterministic function of the seed, the detector can recompute $g_\ell$ for each observed token.</p>
+<p><strong>Non-distortionary in expectation.</strong> With repeated-context masking and a fresh seed per context, the expected output distribution over the key equals the model distribution, $\mathbb{E}_{r}[p_{\text{wm}}(\cdot\mid x_{&lt;t}, r)] = p_{\text{LM}}(\cdot\mid x_{&lt;t})$. This is the single-response version of Kuditipudi et al.’s distortion-freeness; SynthID also offers a distortionary variant that trades a small quality change for a higher detection rate.</p>
+<p><strong>Scoring.</strong> The detector computes the mean of the $g$-values over the text, $\bar g = \tfrac{1}{mT}\sum_t\sum_\ell g_\ell(x_t, r_t)$; under the null this has mean $\tfrac12$, and the threshold is set by the desired FPR.</p>
+<h3>Background &amp; further reading</h3>
+<p>Dathathri et al., "Scalable watermarking for identifying large language model outputs", Nature 634 (2024), Fig. 3 and Methods. The live test on about 20 million Gemini responses found no measurable change in user feedback.</p>
+</div>
+</article>
+
 <article>
 <h2>SynthID for Images</h2>
 <p>The same family watermarks images and audio by weaving a faint pattern across pixels or samples, invisible to people but readable by a model.</p>
 <p><span class="kt">Key takeaway:</span> one provenance family now spans text, image, audio, and video.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: a photo with a faint woven grid; the human eye sees a photo, the SynthID model reads the pattern and returns "AI-generated".</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <ul>
@@ -485,6 +579,7 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 <h2>SynthID at Scale</h2>
 <p>By May 2025 Google reported over 10 billion pieces of content carrying a SynthID mark and opened a SynthID Detector portal for journalists and researchers. The catch: the portal reads only Google's own watermark — content from other generators returns nothing.</p>
 <p><span class="kt">Key takeaway:</span> deployment is real and huge, but each detector still reads only its own brand.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: Gemini text, Imagen, Veo, and Lyria feed 10B+ marked items into the public SynthID Detector; other vendors end in a question mark because the portal reads only Google marks.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Google announced the SynthID Detector verification portal on 20 May 2025 (post by Pushmeet Kohli), stating — verified from the post — that "over 10 billion pieces of content have already been watermarked with SynthID". The portal accepts uploaded image, audio, video, or text and reports whether (and where) a SynthID mark is present; it is scoped to content made with Google's own AI tools.</p>
@@ -498,6 +593,7 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 <h2>Image Watermarks Are Fragile</h2>
 <p>Pixels are easy to damage: cropping removes part of the pattern, screenshots and re-saves blur it, and heavy compression scrubs fine detail.</p>
 <p><span class="kt">Key takeaway:</span> every image transform chips away at the hidden mark.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: an original image with 10 signal dots, then a crop keeping 4, a blurred screenshot, and a heavy JPEG with 3 dots left.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Robustness for media watermarks.</strong> An image watermark embeds a keyed signal into an image $x$, producing $\tilde{x} \approx x$ (imperceptibility), with a keyed detector; its robustness is defined <em>relative to a class of transforms</em> $\mathcal{T}$ (crop, rescale, recompress, screenshot, re-encode): the scheme is robust to $\mathcal{T}$ if the detector still flags $\tau(\tilde{x})$ for every $\tau \in \mathcal{T}$. Every claim of "robust" is implicitly indexed by the $\mathcal{T}$ it was tested against — transforms outside it (aggressive crops, regeneration by another model) are exactly where marks die.</p>
@@ -518,18 +614,27 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 <h2>Video Is Harder Still</h2>
 <p>Video adds thousands of frames, platform recompression on every upload, and clipping to a few seconds. The mark must survive all of it at once.</p>
 <p><span class="kt">Key takeaway:</span> robust video watermarking is an open engineering challenge.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: a strip of frames sharing the mark, re-encoded on every upload, then clipped to a few seconds.</p>
 </article>
 
 <article>
 <h2>No Shared Standard</h2>
 <p>Each company ships its own watermark, and a detector reads only its own brand, so content from elsewhere goes unflagged. There is no universal check.</p>
 <p><span class="kt">Key takeaway:</span> fragmentation limits how useful watermarks can be in practice.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: vendor A mark, vendor B mark, and unmarked content all sent to detector A, which flags only its own brand.</p>
+</article>
+
+<article>
+<h2>05 — Detecting AI Content</h2>
+<p>Fifth section. What happens when there is no watermark to read: style-based detectors, their false accusations, and why the impossibility results apply to guessing, not to planted marks.</p>
+<p><span class="kt">Key takeaway:</span> A planted signal can be trusted; a guessed verdict often cannot.</p>
 </article>
 
 <article>
 <h2>The Tempting Shortcut</h2>
 <p>Suppose there is no watermark. A standalone detector tries to guess from style alone, with no key and no cooperation from the generator. Many products — GPTZero and kin — promise exactly this.</p>
 <p><span class="kt">Key takeaway:</span> detection without a planted signal is just an educated guess.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: finished text with no key enters a "style guesser" that outputs a gauge reading "73% AI".</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Zero-shot (key-less) detection.</strong> A detector computable from the text alone — no key, no provider cooperation. The representative principled example is <strong>DetectGPT</strong> (Mitchell et al.): machine-generated text tends to sit in regions of <em>negative curvature</em> of a scoring model's log-likelihood, so the statistic compares $\log p_{\theta}(x)$ with the average log-likelihood of many small mask-and-refill perturbations of $x$; a large drop under perturbation flags machine text. Note this is exactly the class of detectors bounded by Sadasivan et al.'s Theorem 1 — and the one DIPPER pushed from 70.3% to 4.6%.</p>
@@ -544,6 +649,7 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 <h2>Why Detectors Struggle</h2>
 <p>Modern models write like fluent humans, the stylistic gap keeps shrinking, each new model breaks old detectors, and a light rewrite fools most of them.</p>
 <p><span class="kt">Key takeaway:</span> with no hidden signal, the verdict is fragile.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: two pairs of bell curves; in 2019 human and GPT-2 styles sit far apart, in 2024 human and frontier-model styles overlap almost fully.</p>
 <div class="detail">
 <h3>Theorem &amp; proof</h3>
 <p><strong>The slide, formalized.</strong> "The stylistic gap keeps shrinking" is the statement $\mathrm{TV}(M, H) \to 0$ as models improve; by Sadasivan et al.'s Theorem 1 ("The Impossibility Claim"), the best key-less detector's AUROC is then squeezed toward $\tfrac12 + \mathrm{TV} - \mathrm{TV}^2/2 \to \tfrac12$ — a coin flip. "Each new model breaks old detectors" is the same inequality applied to a moving $M$: a detector tuned to yesterday's $M$ carries no guarantee against today's. The escape hatches are exactly the two the lecture builds: plant a key (watermark) or sign at the source (provenance).</p>
@@ -554,6 +660,7 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 <h2>False Accusations</h2>
 <p>A wrong flag harms real people: students accused of cheating with no way to prove innocence, and the bias is measured — over half of non-native TOEFL essays were flagged as "AI" in a Stanford study (Liang et al., Patterns 2023).</p>
 <p><span class="kt">Key takeaway:</span> a confident but sometimes-wrong detector is dangerous.</p>
+<p><span class="kt">Slide figure:</span> Liang et al. (Patterns 2023) Fig. 1(a): seven commercial GPT detectors misclassify 48 to 76 percent of real TOEFL essays as AI-generated, versus 0 to 12 percent of real US 8th-grade essays.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Liang, Yuksekgonul, Mao, Wu &amp; Zou evaluated seven widely used GPT detectors on 91 human-written TOEFL essays by non-native English writers. Verified from the paper: the detectors "misclassified over half of the TOEFL essays as 'AI-generated' (average false positive rate: 61.22%)"; 89 of the 91 essays (97.8%) were flagged by at least one detector, and 18 of 91 (19.8%) were flagged unanimously by all seven — while the same detectors were near-perfect on essays by US 8th-graders. The mechanism is perplexity: detectors treat low-perplexity prose as machine-like, and non-native writing shows lower lexical variety; prompting ChatGPT to enrich the essays' word choice dropped the average false-positive rate from 61.22% to 11.77%.</p>
@@ -567,6 +674,7 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 <h2>OpenAI Pulled Its Detector</h2>
 <p>OpenAI's own classifier caught only 26% of AI-written text while flagging 9% of human text as AI; the company pulled it in July 2023 citing its "low rate of accuracy" — even the model's maker could not detect its own output.</p>
 <p><span class="kt">Key takeaway:</span> even the model's maker could not detect its output reliably.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: two horizontal bars, 26% of AI text correctly caught versus 9% of human text wrongly flagged.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Verified from OpenAI's own announcement page: the classifier "correctly identifies 26% of AI-written text (true positives)" while "incorrectly labeling human-written text as AI-written 9% of the time (false positives)", and the header note reads "As of July 20, 2023, the AI classifier is no longer available due to its low rate of accuracy." In ROC terms, a 26% TPR at a 9% FPR sits barely above the $\mathrm{TPR} = \mathrm{FPR}$ diagonal — consistent with the TV bound as model text closes in on human text.</p>
@@ -586,12 +694,20 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 <h2>The Right Lesson</h2>
 <p>A planted watermark can be trusted; a guessed verdict often cannot. Provenance built in at generation beats provenance inferred after the fact.</p>
 <p><span class="kt">Key takeaway:</span> build the proof in, do not try to reconstruct it later.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: the planted path (generator plants a signal, detector with key counts it, reliable verdict) above the guessed path (any text, style guesser without key, fragile guess).</p>
+</article>
+
+<article>
+<h2>06 — Deepfakes and Provenance</h2>
+<p>Sixth section. The harms of fabricated people, the limits of detection, and the alternative: sign what is real with content credentials, then require disclosure by law.</p>
+<p><span class="kt">Key takeaway:</span> Build the proof in; do not guess it after.</p>
 </article>
 
 <article>
 <h2>Deepfakes</h2>
 <p>AI now fabricates people convincingly: voice clones from seconds of audio, live face swaps, and photoreal images of events that never happened.</p>
 <p><span class="kt">Key takeaway:</span> the fakes are good enough to fool most viewers.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: three rows — 3 s of audio to a cloned voice, one photo to a live face swap, one sentence to a photoreal image.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Deepfake.</strong> Synthetic or manipulated media that depicts a real person saying or doing something they did not, produced by deep generative models. The main technical families: <em>face swap</em> (replace a face in existing footage), <em>reenactment / lip-sync</em> (drive a real face with new motion or audio), <em>voice cloning</em> (text-to-speech in a target's voice from short samples), and <em>full synthesis</em> (diffusion or GAN generation of entirely new imagery). All of these are outputs a generator could watermark — which is why this half of the lecture ends back at provenance.</p>
@@ -602,12 +718,14 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 <h2>Real Harms</h2>
 <p>Deepfakes already drive voice-clone scams, fake political clips before elections, and non-consensual fabricated images. Detection alone cannot keep up with the volume.</p>
 <p><span class="kt">Key takeaway:</span> the harm is concrete and current, not hypothetical.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: three red cards — scams, elections, abuse — with one line each.</p>
 </article>
 
 <article>
 <h2>Case: The $25M Video Call</h2>
 <p>In January 2024 a finance worker at the engineering firm Arup joined a video call where the "CFO" and colleagues were all deepfakes built from public footage, and made 15 transfers totaling about HK$200M <span>(US$25.6M)</span>. Everyone on the call except the victim was synthetic.</p>
 <p><span class="kt">Key takeaway:</span> deepfake fraud already works at corporate scale — seeing is no longer believing.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: a 3×2 video-call grid; five red tiles are deepfaked participants including the "CFO", one blue tile is the real finance worker.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Hong Kong police disclosed the case in February 2024: an employee in the Hong Kong office of Arup (the British engineering firm behind the Sydney Opera House) was invited to a video conference in which the chief financial officer and other colleagues were AI-generated recreations, and was deceived into sending about HK$200 million <span>— roughly £20 million / US$25.6 million —</span> across 15 transactions to five local bank accounts. Arup confirmed in May 2024 that it was the victim; police reported no arrests at that time. The case is the standard citation for deepfake fraud at corporate scale.</p>
@@ -621,6 +739,7 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 <h2>Deepfakes Meet Elections</h2>
 <p>Days before the 2024 New Hampshire primary, an AI voice clone of President Biden robocalled voters telling them not to vote. The FCC fined the organizer $6 million and the state brought criminal charges.</p>
 <p><span class="kt">Key takeaway:</span> election deepfakes are real, and regulators responded with real penalties.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: a phone with a waveform labelled cloned "Biden" robocall, and its message "save your vote for November" reaching thousands of New Hampshire voters.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>In January 2024, two days before the New Hampshire presidential primary, thousands of voters received robocalls carrying an AI-generated clone of President Biden's voice urging them not to vote, delivered with spoofed caller ID. Verified from the FCC's release: on 26 September 2024 the Commission adopted a $6 million forfeiture against political consultant Steve Kramer for the scheme <span>(the transmitting carrier, Lingo Telecom, separately settled for $1 million)</span>. New Hampshire also brought criminal charges — and the coda matters: in June 2025 a jury found Kramer not guilty on all 11 felony voter-suppression counts and 11 misdemeanor impersonation counts, so the federal civil fine stands while the state criminal case ended in acquittal.</p>
@@ -635,6 +754,7 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 <h2>The 2024 Reality Check</h2>
 <p>Despite the fear, Meta reported that AI-generated content was less than 1% of fact-checked election misinformation on its platforms in 2024. The predicted deepfake apocalypse did not materialize — cheap fakes and old-fashioned lies still dominate.</p>
 <p><span class="kt">Key takeaway:</span> keep the threat calibrated: real cases exist, but volume so far is small.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: one bar for fact-checked election misinformation on Meta, almost all cheap fakes and old lies, with a thin red sliver under 1% for AI-generated content.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Meta's December 2024 review of the year's elections worldwide reported — verified from the post — that "ratings on AI content related to elections, politics and social topics represented less than 1% of all fact-checked misinformation", and that its Imagine tool rejected 590,000 requests to generate images of the major US election figures in the month before election day. The calibration point stands with the usual caveat: this measures fact-checked content on Meta's platforms, not all synthetic media everywhere.</p>
@@ -657,10 +777,28 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 </div>
 </article>
 
+
+<article>
+<h2>The Deepfake Detection Challenge, Measured</h2>
+<p>Put a number on the arms race. In the 2020 DeepFake Detection Challenge, 2,114 teams each submitted two final models. The organisers plotted the log loss of every submission on a hidden test set. The tall spike sits at log loss 0.69, which is exactly what you get by predicting 50% for every video, and 60% of all submissions landed at or below that coin-flip line. The winning model reached a log loss of 0.43 on the hidden set.</p>
+<p><span class="kt">Key takeaway:</span> Unseen fakes shrink even the best detector’s edge; a detector tuned to today’s fakes is not a detector of tomorrow’s.</p>
+<p><span class="kt">Slide figure:</span> Dolhansky et al. (2020) Fig. 8: histogram of private-test-set log loss across submissions, with the dashed line at the constant-prediction score 0.69.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Binary log loss.</strong> For labels $y_i\in\{0,1\}$ and predicted probabilities $\hat p_i$,
+$$\mathcal L = -\frac1N\sum_{i=1}^{N}\big[y_i\log \hat p_i + (1-y_i)\log(1-\hat p_i)\big].$$
+The constant prediction $\hat p_i = \tfrac12$ gives $\mathcal L=\log 2\approx 0.693$ regardless of the label balance, which is why it serves as the coin-flip reference. Log loss punishes confident mistakes without bound, so a detector that is sure and wrong on novel fakes can score worse than a coin flip.</p>
+<p><strong>Public versus private test.</strong> Teams tuned on a public validation set; the private test set contained unseen actors, unseen manipulation methods, and augmentations (re-encodes, overlays). The gap between public and private scores is the generalisation gap that the histogram exposes.</p>
+<h3>Background &amp; further reading</h3>
+<p>Dolhansky, Bitton, Pflaum, Lu, Howes, Wang, and Canton Ferrer, "The DeepFake Detection Challenge (DFDC) Dataset", arXiv:2006.07397 (2020), Section 6, Fig. 8 and Table 2. The paper reports the top models at an average precision of about 0.75 on the private set; the "65% accuracy" figure quoted on the previous slide comes from Facebook AI’s announcement of the results.</p>
+</div>
+</article>
+
 <article>
 <h2>Flip the Problem</h2>
 <p>Rather than chasing every fake, prove what is real: sign genuine content at the source and attach a record of how it was made, so unsigned content earns less trust.</p>
 <p><span class="kt">Key takeaway:</span> proving authenticity scales better than detecting forgery, this is provenance.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: left, an endless grid of red fakes to chase; right, one signed document with a green check.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Provenance.</strong> A verifiable record of a content item's origin and transformation history, bound to the item and checkable by anyone. Structurally it inverts detection: a detector tries to establish a <em>negative</em> ("this was machine-made") from statistical residue, while provenance establishes a <em>positive</em> ("this camera or app produced this, and these edits followed") with digital signatures — cryptographic, not statistical, evidence. The trust model shifts accordingly: from "trust my classifier" to "trust the signing keys and the hardware that holds them".</p>
@@ -671,6 +809,7 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 <h2>C2PA Content Credentials</h2>
 <p>C2PA is an industry standard for a tamper-evident label: the camera or app signs the file at creation, each edit appends a signed record, and tampering breaks the signature.</p>
 <p><span class="kt">Key takeaway:</span> content credentials give content a verifiable, tamper-evident history.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: the file beside its signed manifest (who, when, which device, what edits); tampering with either breaks the signature visibly.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>C2PA.</strong> Verified from the coalition's site: "The Coalition for Content Provenance and Authenticity, or C2PA, provides an open technical standard for publishers, creators and consumers to establish the origin and edits of digital content. It's called Content Credentials." Technically, a signed provenance record is embedded in (or referenced from) the asset: it lists statements about origin and edit actions, is cryptographically bound to the content by hashes, and is signed by the capturing device or editing tool. <strong>Tamper-evident</strong> means exactly that any post-signature modification of the content or the record makes signature validation fail — the credential cannot be silently altered, only stripped entirely (see "The Strip Problem").</p>
@@ -712,6 +851,7 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 <h2>The Strip Problem</h2>
 <p>A credential can simply be removed, for example by a screenshot that drops the metadata, and absence of a credential is not proof of fakery. Watermarks help where credentials are stripped.</p>
 <p><span class="kt">Key takeaway:</span> watermarks and credentials are complementary defenses, not rivals.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: a signed photo with a credential badge, a screenshot with the same pixels and no credential, and the reminder that no credential is not the same as fake.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Metadata-bound vs content-embedded.</strong> A C2PA credential lives <em>alongside</em> the pixels (embedded metadata or a linked manifest): unforgeable while present (signatures), but removable by any pipeline that re-encodes the pixels — a screenshot carries none of it. A watermark lives <em>inside</em> the pixels: it survives re-encoding by design, but is statistical (thresholded detection, degradable by transforms) rather than cryptographic. The two failure modes are disjoint, which is the formal sense of "complementary": credentials give strong provenance when the chain survives; watermarks give weaker provenance that survives when the chain does not. Deployed stacks (SynthID plus C2PA in Google's products) layer both.</p>
@@ -722,12 +862,14 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 <h2>The Law Steps In</h2>
 <p>Labeling AI content is now a legal obligation, not a suggestion: China's labeling rules took effect in September 2025, the EU AI Act's transparency article applies from August 2026, and US states have a patchwork of election-deepfake laws.</p>
 <p><span class="kt">Key takeaway:</span> the next two slides look at the two big regimes in force.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: a timeline with China’s labeling Measures (Sept 2025), the EU AI Act Article 50 (Aug 2026), and the US state patchwork.</p>
 </article>
 
 <article>
 <h2>China Labels First</h2>
 <p>China's labeling Measures took effect on 1 September 2025: AI-generated content needs an explicit visible label and an implicit label in the file's metadata, and platforms must check for labels and tag suspected AI content. A national standard (GB 45438-2025) specifies the formats.</p>
 <p><span class="kt">Key takeaway:</span> China is the first major jurisdiction with mandatory dual labeling in force.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: an image carrying a visible "AI-generated" tag (explicit label) beside a dashed metadata box (implicit label); platforms must check both.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>The Cyberspace Administration of China published the Measures for Labeling AI-Generated and Synthetic Content (《人工智能生成合成内容标识办法》) on 14 March 2025, effective 1 September 2025 (both dates verified from the CAC's own page). The Measures require <em>explicit</em> labels (visible or audible to users) and <em>implicit</em> labels (machine-readable, in file metadata) on AI-generated text, images, audio, video, and virtual scenes, and oblige distribution platforms to verify labels and to tag content they suspect is synthetic. A companion mandatory national standard, GB 45438-2025, fixes the technical label formats, effective the same day.</p>
@@ -741,6 +883,7 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 <h2>EU AI Act: Article 50</h2>
 <p>Article 50 makes providers mark AI output in a machine-readable way and makes deployers disclose deepfakes, with carve-outs for art, satire, and law enforcement. It applies from 2 August 2026 — watermarking and credentials are the technologies that satisfy it.</p>
 <p><span class="kt">Key takeaway:</span> the EU mandates the outcome and lets the watermarking toolbox supply the mechanism.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: providers map to Art. 50(2), a machine-readable mark; deployers map to Art. 50(4), disclosure of deepfakes.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Verified from the Article 50 text: paragraph (2) requires providers of AI systems generating synthetic audio, image, video, or text to "ensure that the outputs of the AI system are marked in a machine-readable format and detectable as artificially generated or manipulated"; paragraph (4) requires deployers of deepfake-generating systems to disclose that the content has been artificially generated or manipulated, with exceptions including law-enforcement-authorized use and qualified carve-outs for evidently artistic, creative, satirical, or fictional work. Date of entry into application: 2 August 2026 (per Article 113). The regulation deliberately names the outcome — machine-readable marking — and leaves the mechanism to the state of the art, which today means exactly the watermarks and content credentials of this lecture.</p>
@@ -754,6 +897,7 @@ $$\mathrm{AUROC} \;\le\; \int_0^1 \min\{1, x + t\}\, dx \;=\; \int_0^{1-t} (x + 
 <h2>Frontier 2025–26</h2>
 <p>Where the field stands: watermarks are on by default at the largest providers with 10B+ items marked, provenance is moving into camera hardware, and labeling laws are in force in China and arriving in the EU. Open problems: robustness to strong paraphrase and a single cross-vendor standard.</p>
 <p><span class="kt">Key takeaway:</span> deployment and regulation arrived; robustness and interoperability did not, yet.</p>
+<p><span class="kt">Slide figure:</span> Inline sketch: four tiles — watermarks on by default, credentials into cameras, law in China and the EU, and the open problems.</p>
 </article>
 
 <article>

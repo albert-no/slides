@@ -43,7 +43,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **revised 2026-08, figure pass 2026-09** (65 sl) |
 | 10 | `lec10-jailbreak.html` | Jailbreaks & LLM safety | **revised 2026-08, figure pass 2026-09** (60 sl, 21 real figs) |
 | 11 | `lec11-prompt-injection.html` | Prompt injection & agentic safety | **figure pass 2026-09** (66 sl) |
-| 12 | `lec12-watermark.html` | Watermarking, deepfakes & provenance | **revised 2026-08** (64 sl) |
+| 12 | `lec12-watermark.html` | Watermarking, deepfakes & provenance | **revised 2026-08**, **figure pass 2026-09** (68 sl) |
 | 13 | `lec13-fairness-defs.html` | Fairness I — definitions & impossibility | **revised 2026-08** (58 sl) |
 | 14 | `lec14-fairness-mitigation.html` | Fairness II — mitigation & accountability | **revised 2026-08** (61 sl) |
 | 15 | `lec15-governance.html` | Governance, frontier & demo showcase | **revised 2026-08** (66 sl) |
@@ -988,52 +988,65 @@ labeling rules, EU AI Act Art. 50). Rigorous treatment lives in
 `courses/privacy/lectures/06-watermark/` (authoritative; this deck states no Thm 4.3
 and stays consistent with the corrected math there).
 
-### Sections (64 slides, ~90 min — content-revised 2026-08 from 55, all citations source-verified)
+### Sections (68 slides, ~90 min — content-revised 2026-08 from 55; figure pass 2026-09 added 4 "Measured" slides)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:27`, `:39` | |
-| **01 — Two Flavors of Watermarking** | 3–10 | `:72` | the problem `:81` · what a watermark is `:94` · two flavors `:107` · model watermarks (ownership) `:119` · output watermarks (flag content) `:132` · why we care `:145` · **Watermark vs Detector (planted signal vs guess — the lecture's spine)** `:158` |
-| **02 — Text Watermarking** | 11–21 | `:170` | how a model writes `:179` · **Green-List Idea (KGW ICML 2023)** `:192` · splitting the vocabulary (SVG) `:205` · the nudge `:231` · reading it back `:240` · telltale fraction `:253` · detection threshold (SVG) `:265` · false positives `:287` · length beats luck `:299` · one-knob tradeoff `:308` |
-| **03 — Quality and Robustness** | 22–31 | `:320` | quality worry `:329` · distortion-free (Aaronson 2022; Kuditipudi TMLR 2024) `:342` · reused randomness `:354` · undetectable (Christ COLT 2024) `:367` · robustness worry `:380` · small edits survive `:393` · **Paraphrase Attack (DIPPER, Krishna NeurIPS 2023)** `:406` · **Impossibility Claim (Sadasivan TMLR 2025, stated precisely)** `:420` · **Honest Limit (dilution not erasure, Kirchenbauer ICLR 2024)** `:434` |
-| **04 — Production and Images** | 32–39 | `:448` | **SynthID-Text (Dathathri Nature 634 (2024), tournament sampling, ~20M live test)** `:457` · SynthID images `:470` · **SynthID at Scale (10B+ items, Detector portal; added 2026-08)** `:483` · image marks fragile `:496` · cropping erases (SVG) `:509` · video harder `:539` · no shared standard `:552` |
-| **05 — Detecting AI Content** | 40–46 | `:565` | tempting shortcut (GPTZero and kin) `:574` · why detectors struggle `:587` · **False Accusations (Liang Patterns 2023, non-native TOEFL)** `:600` · **OpenAI Pulled Its Detector (26%/9%, withdrawn July 2023)** `:614` · try it yourself (demo) `:628` · the right lesson `:643` |
-| **06 — Deepfakes and Provenance** | 47–63 | `:651` | deepfakes `:660` · real harms `:673` · **Case: The $25M Video Call (Arup HK, added 2026-08)** `:686` · **Deepfakes Meet Elections (NH Biden robocall, $6M FCC fine; added 2026-08)** `:700` · **2024 Reality Check (Meta <1% stat; added 2026-08)** `:714` · **Detection Arms Race (DFDC ~65%; SVG; added 2026-08)** `:728` · flip the problem `:751` · C2PA credentials `:764` · signed history `:777` · **Credentials Go Mainstream (Leica→S25→Pixel 10 timeline SVG; added 2026-08)** `:790` · strip problem `:815` · **The Law Steps In** `:828` · **China Labels First (CAC + GB 45438-2025; added 2026-08)** `:841` · **EU AI Act: Article 50 (2 Aug 2026; added 2026-08)** `:855` · frontier 2025–26 `:869` · key takeaways `:882` |
-| Closer | 64 | — | closer ("Real?") `:896` |
+| **01 — Two Flavors of Watermarking** | 3–10 | `:72` | the problem (SVG) `:80` · what a watermark is (SVG) `:97` · two flavors `:114` · model watermarks (ownership; SVG) `:126` · output watermarks (flag content; SVG) `:143` · why we care (SVG) `:160` · **Watermark vs Detector (planted signal vs guess — the lecture's spine)** `:177` |
+| **02 — Text Watermarking** | 11–21 | `:190` | how a model writes (token strip + score bars SVG) `:198` · **Green-List Idea (KGW ICML 2023; coloured bars SVG)** `:215` · splitting the vocabulary (SVG) `:232` · the nudge (before/after δ SVG) `:258` · **reading it back (KGW Fig. 1 crop)** `:271` · telltale fraction (SVG) `:289` · detection threshold (SVG) `:305` · false positives (tail SVG) `:327` · **length beats luck (KGW Fig. 3(a), z ∝ √T)** `:343` · **one-knob tradeoff (KGW Fig. 2 left)** `:357` |
+| **03 — Quality and Robustness** | 22–33 | `:375` | quality worry (SVG) `:383` · **distortion-free (Aaronson 2022; Kuditipudi TMLR 2024, Fig. 1 crop)** `:400` · reused randomness (SVG) `:414` · undetectable (Christ COLT 2024; SVG) `:431` · robustness worry (SVG) `:448` · **small edits survive (Kuditipudi Fig. 4, EXP vs KGW)** `:465` · **Paraphrase Attack (DIPPER, Krishna NeurIPS 2023, Fig. 1)** `:483` · **Impossibility Claim (Sadasivan TMLR 2025, Fig. 1 threat model)** `:499` · **Recursive Paraphrasing, Measured (Sadasivan Fig. 3(a) ROC; added 2026-09)** `:517` · **Honest Limit (dilution not erasure, Kirchenbauer ICLR 2024 Fig. 4 right)** `:535` · **Machine Attacks, Measured (Kirchenbauer ICLR 2024 Fig. 2; added 2026-09)** `:554` |
+| **04 — Production and Images** | 34–42 | `:572` | **SynthID-Text (Dathathri Nature 634 (2024), Fig. 1 pipeline)** `:580` · **SynthID-Text, Measured (Nature Fig. 3a TPR@1%FPR vs length; added 2026-09)** `:597` · SynthID images (SVG) `:615` · **SynthID at Scale (10B+ items, Detector portal; SVG)** `:632` · image marks fragile (SVG) `:649` · cropping erases (SVG) `:666` · video harder (SVG) `:696` · no shared standard (SVG) `:713` |
+| **05 — Detecting AI Content** | 43–49 | `:731` | tempting shortcut (gauge SVG) `:739` · why detectors struggle (overlapping bells SVG) `:756` · **False Accusations (Liang Patterns 2023 Fig. 1(a), non-native TOEFL)** `:773` · **OpenAI Pulled Its Detector (26%/9% bars; withdrawn July 2023)** `:792` · try it yourself (demo) `:810` · the right lesson (planted vs guessed paths SVG) `:825` |
+| **06 — Deepfakes and Provenance** | 50–67 | `:838` | deepfakes (SVG) `:846` · real harms (SVG) `:863` · **Case: The $25M Video Call (Arup HK; call-grid SVG)** `:880` · **Deepfakes Meet Elections (NH Biden robocall, $6M FCC fine; SVG)** `:898` · **2024 Reality Check (Meta <1% stat; bar SVG)** `:916` · **Detection Arms Race (DFDC ~65%; SVG)** `:934` · **DFDC, Measured (Dolhansky 2020 Fig. 8 log-loss histogram; added 2026-09)** `:957` · flip the problem (SVG) `:975` · C2PA credentials (manifest SVG) `:992` · signed history `:1009` · **Credentials Go Mainstream (Leica→S25→Pixel 10 timeline SVG)** `:1022` · strip problem (SVG) `:1047` · **The Law Steps In (timeline SVG)** `:1064` · **China Labels First (CAC + GB 45438-2025; explicit/implicit SVG)** `:1081` · **EU AI Act: Article 50 (2 Aug 2026; SVG)** `:1099` · frontier 2025–26 (SVG) `:1117` · key takeaways `:1134` |
+| Closer | 68 | — | closer ("Real?") `:1149` |
 
-**Key citations (all source-verified 2026-08):**
-- Green-list watermark — `:200` — Kirchenbauer, Geiping, Wen, Katz, Miers, Goldstein,
-  "A Watermark for Large Language Models", ICML 2023 (arXiv 2301.10226). Full math in
+**Key citations (all source-verified 2026-08; figure numbers added 2026-09):**
+- Green-list watermark — `:229`, `:286`, `:354`, `:371` — Kirchenbauer, Geiping, Wen, Katz, Miers, Goldstein,
+  "A Watermark for Large Language Models", ICML 2023 (arXiv 2301.10226), Figs. 1, 2, 3(a). Full math in
   `lec12tech.html`; z-test details also in `courses/privacy/lectures/06-watermark/`.
-- Distortion-free — `:349`, `:401` — Aaronson 2022 (talk/blog); Kuditipudi, Thickstun,
-  Hashimoto, Liang, "Robust Distortion-free Watermarks for Language Models", TMLR 2024.
-- Undetectable watermarks — `:375` — Christ, Gunn, Zamir, "Undetectable Watermarks for
+- Distortion-free — `:411`, `:480` — Aaronson 2022 (talk/blog); Kuditipudi, Thickstun,
+  Hashimoto, Liang, "Robust Distortion-free Watermarks for Language Models", TMLR 2024, Figs. 1, 4.
+- Undetectable watermarks — `:445` — Christ, Gunn, Zamir, "Undetectable Watermarks for
   Language Models", COLT 2024.
-- Paraphrase attack (DIPPER; watermark detection 70.3%→4.6% at 1% FPR) — `:415` —
+- Paraphrase attack (DIPPER; watermark detection 70.3%→4.6% at 1% FPR) — `:496` —
   Krishna et al., "Paraphrasing evades detectors of AI-generated text, but retrieval is
-  an effective defense", NeurIPS 2023 (arXiv 2303.13408).
-- Impossibility/spoofing claims — `:429` — Sadasivan, Kumar, Balasubramanian, Wang,
-  Feizi, "Can AI-Generated Text be Reliably Detected? …", TMLR 2025 (arXiv 2303.11156).
-- Dilution not erasure (~800 tokens after strong human paraphrase at 1e-5 FPR) — `:443`
+  an effective defense", NeurIPS 2023 (arXiv 2303.13408), Fig. 1.
+- Impossibility/spoofing claims — `:514`, `:532` — Sadasivan, Kumar, Balasubramanian, Wang,
+  Feizi, "Can AI-Generated Text be Reliably Detected? …", TMLR 2025 (arXiv 2303.11156), Figs. 1, 3(a).
+- Dilution not erasure (~800 tokens after strong human paraphrase at 1e-5 FPR) — `:551`, `:568`
   — Kirchenbauer et al., "On the Reliability of Watermarks for Large Language Models",
-  ICLR 2024.
-- SynthID-Text — `:465` — Dathathri et al., "Scalable watermarking for identifying
-  large language model outputs", Nature 634 (2024); SynthID Detector portal + 10B+
-  items — `:491` — Google DeepMind, May 2025.
-- Detector bias — `:609` — Liang, Yuksekgonul, Mao, Wu, Zou, "GPT detectors are biased
-  against non-native English writers", Patterns 2023.
-- OpenAI classifier withdrawal — `:623` — OpenAI, Jan 2023, withdrawn July 2023.
-- Arup deepfake fraud — `:695` — HK police Feb 2024; CNN Business May 2024.
-- NH robocall — `:709` — FCC forfeiture (Steve Kramer, $6M) + NH DOJ, 2024.
-- Meta 2024 elections (<1%) — `:723` — Meta, Dec 2024. DFDC ~65% — `:746` — Facebook
-  AI, 2020.
-- China labeling — `:850` — CAC "Measures for Labeling AI-Generated Synthetic Content"
+  ICLR 2024 (arXiv 2306.04634), Figs. 4 (right), 2.
+- SynthID-Text — `:594`, `:612` — Dathathri et al., "Scalable watermarking for identifying
+  large language model outputs", Nature 634 (2024), Figs. 1, 3a; SynthID Detector portal + 10B+
+  items — `:646` — Google DeepMind, May 2025.
+- Detector bias — `:789` — Liang, Yuksekgonul, Mao, Wu, Zou, "GPT detectors are biased
+  against non-native English writers", Patterns 2023, Fig. 1(a).
+- OpenAI classifier withdrawal — `:807` — OpenAI, Jan 2023, withdrawn July 2023.
+- Arup deepfake fraud — `:895` — HK police Feb 2024; CNN Business May 2024.
+- NH robocall — `:913` — FCC forfeiture (Steve Kramer, $6M) + NH DOJ, 2024.
+- Meta 2024 elections (<1%) — `:931` — Meta, Dec 2024. DFDC ~65% — `:953` — Facebook
+  AI, 2020; DFDC log-loss histogram — `:972` — Dolhansky et al., arXiv 2006.07397 (2020), Fig. 8, Table 2.
+- China labeling — `:1096` — CAC "Measures for Labeling AI-Generated Synthetic Content"
   + GB 45438-2025, effective 1 Sept 2025.
-- EU AI Act — `:864` — Regulation 2024/1689, Art. 50(2)/(4), applicable 2 Aug 2026.
+- EU AI Act — `:1114` — Regulation 2024/1689, Art. 50(2)/(4), applicable 2 Aug 2026.
 
-**Figures:** all inline SVG (no captured paper figures): vocabulary split `:209`,
-detection-threshold bell curves `:269`, cropping erases the mark `:513`, detection
-arms-race loop `:732`, C2PA adoption timeline `:794`. Citations use `.cite-left`.
+**Figures (2026-09 pass):** 14 captured paper figures in `figs/`, each with a figure-number
+citation: `kgw-example.png` `:271`, `kgw-zscore-length.png` `:343`, `kgw-zscore-ppl.png` `:357`
+(Kirchenbauer ICML 2023 Figs. 1, 3(a), 2 left); `kud-protocol.png` `:400`, `kud-substitution.png`
+`:465` (Kuditipudi Figs. 1, 4); `krishna-dipper.png` `:483` (Krishna Fig. 1); `sadasivan-vuln.png`
+`:499`, `sadasivan-roc.png` `:517` (Sadasivan Figs. 1, 3(a)); `kirchenbauer-human-paraphrase.png`
+`:535`, `kirchenbauer-robust-bars.png` `:554` (Kirchenbauer ICLR 2024 Figs. 4 right, 2);
+`synthid-overview.png` `:580`, `synthid-detect.png` `:597` (Dathathri Figs. 1, 3a); `liang-toefl.png`
+`:773` (Liang Fig. 1(a)); `dfdc-logloss.png` `:957` (Dolhansky Fig. 8). Inline SVG on every other
+content slide (~35): problem/what-a-watermark-is/model vs output/why-we-care `:80`–`:160`,
+token strip + score bars `:198`, green/red bars `:215`, vocabulary split `:232`, nudge `:258`,
+token strips `:289`, threshold bells `:305`, false-positive tail `:327`, quality worry `:383`,
+reused randomness `:414`, undetectable `:431`, robustness worry `:448`, SynthID images/scale
+`:615`/`:632`, fragility/cropping/video/no-standard `:649`–`:713`, gauge `:739`, overlapping bells
+`:756`, 26%/9% bars `:792`, planted vs guessed `:825`, deepfakes/harms/Arup/NH/Meta/arms-race
+`:846`–`:934`, flip/C2PA/adoption/strip `:975`–`:1047`, law timeline/China/EU/frontier
+`:1064`–`:1117`. Citations use `.cite-left`.
 
 **2026-08 content revision (55→64):** every citation/number fetched and verified.
 Added 9 slides: SynthID at Scale (§04); Case: The $25M Video Call, Deepfakes Meet
@@ -1050,6 +1063,17 @@ verified form; "~800 words" → "~800 tokens". `lec12tech.html` checked: FP rate
 no Thm 4.3 (stays 10 sl). Note file synced (58 entries, order matches).
 
 **2026-08 note enrichment:** `lec12-watermark-note.html` upgraded from speaker script (376 lines) to Script &amp; Companion Notes (772 lines; 58 entries unchanged): per-entry `.detail` blocks with rigorous definitions (soft watermark, spike entropy, distortion-free generation, CGZ soundness/completeness/undetectability, TV/AUROC, C2PA), full proofs (KGW Thm 4.2 four-step, Thm 4.3 in corrected form + explicit misprint warning, green-mass boost Prop, Gumbel-max + Aaronson equivalence, exponential-minimum sampling, Zhao Unigram Thm 3.7 sketch, Sadasivan Thm 1, Berry–Esseen FP bound, Hoeffding tail), and 30 verified links — all consistent with `courses/privacy/lectures/06-watermark/`.
+
+**2026-09 figure pass (64→68):** every content slide now carries a cited public figure or an
+inline SVG. Added 4 "Measured" slides: Recursive Paraphrasing, Measured (Sadasivan Fig. 3(a):
+AUROC 0.999→0.67, TPR@1%FPR 99.8%→8% over five DIPPER passes); Machine Attacks, Measured
+(Kirchenbauer ICLR 2024 Fig. 2: copy-paste 10% → AUC 0.65 at T=200); SynthID-Text, Measured
+(Nature Fig. 3a: TPR@1%FPR ≈50/70/87% at 100/200/400 tokens); The Deepfake Detection Challenge,
+Measured (Dolhansky Fig. 8: 60% of 2,114 teams' submissions at or below the 0.69 coin-flip log
+loss; winner 0.43). 14 crops in `figs/`, 60-dpi overflow check of every edited slide (SVG
+label collisions fixed on 11 slides), lint clean. Note synced to 68 entries: 6 divider entries
+and 4 new-slide entries (with definitions: ROC/AUROC, CP-k-p% dilution, tournament sampling,
+binary log loss) added, and a "Slide figure" line on all 49 figure-bearing entries.
 
 ## lec13-fairness-defs.html
 

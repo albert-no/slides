@@ -14,6 +14,21 @@
 <script defer src="../../../reference/katex/katex.min.js"></script>
 <script defer src="../../../reference/katex/contrib/auto-render.min.js"
   onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  /* KaTeX skips SVG <text>, so math labels on a figure are absolute HTML spans
+     positioned from the viewBox (DESIGN_SYSTEM §7 → KaTeX overlays; pattern from prob01). */
+  .p2-fig { position: relative; width: 100%; margin: 0 auto; }
+  .p2-fig > svg { display: block; width: 100%; height: auto; }
+  .p2-fig .fl { position: absolute; transform: translate(-50%, -50%);
+                white-space: nowrap; font-weight: 600; font-size: 1.2rem; color: var(--charcoal); }
+  .p2-fig .fl-l { transform: translate(0, -50%); }
+  .p2-fig .fl-r { transform: translate(-100%, -50%); }
+  .p2-fig .fl-blue { color: var(--yonsei-blue); }
+  .p2-fig .fl-red  { color: #8a1c1c; }
+  /* Flagged "stated, not proved" marker: a pill-like line at body size. */
+  th .katex { text-transform: none; letter-spacing: 0; }
+.p2-flag { font-size: 1.55rem; color: #8a1c1c; font-weight: 600; margin-top: 10px; }
+</style>
 </head>
 <body data-brand-logo="../../../reference/kor-eng2.png">
 
@@ -35,7 +50,7 @@
 <div class="slide">
   <h2>Contents</h2>
   <div class="divider"></div>
-  <div class="toc-list">
+  <div class="toc-list" style="display:grid;grid-auto-flow:column;grid-template-rows:repeat(4,auto);grid-template-columns:1fr 1fr;gap:20px 44px">
     <div class="toc-item">
       <div class="toc-num">01</div>
       <div class="toc-rule"></div>
@@ -72,8 +87,8 @@
       <div class="toc-num">05</div>
       <div class="toc-rule"></div>
       <div>
-        <div class="toc-label">Gambling &amp; Doubling Rate</div>
-        <div class="toc-sub">Proportional betting, cost of mismatch</div>
+        <div class="toc-label">Betting</div>
+        <div class="toc-sub">Doubling rate, proportional betting</div>
       </div>
     </div>
     <div class="toc-item">
@@ -81,7 +96,15 @@
       <div class="toc-rule"></div>
       <div>
         <div class="toc-label">Cross-Entropy Loss</div>
-        <div class="toc-sub">CE = entropy + KL</div>
+        <div class="toc-sub">Perplexity, proper scores, softmax gradient</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">07</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">KL Across Deep Learning</div>
+        <div class="toc-sub">Forward vs reverse KL</div>
       </div>
     </div>
   </div>
@@ -127,8 +150,8 @@ loss.<span class="fn">backward</span>()</div>
 <div class="slide">
   <h2>The Route</h2>
   <div class="divider"></div>
-  <p>One theorem powers everything today:</p>
-  <div style="display:flex;justify-content:center;margin:14px 0;">
+  <p>One theorem powers everything today, in three costumes:</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
     <svg viewBox="0 0 780 200" style="width:100%;max-width:880px;">
       <defs><marker id="parr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
       <rect x="20" y="60" width="160" height="80" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
@@ -140,15 +163,20 @@ loss.<span class="fn">backward</span>()</div>
       <text x="307" y="118" font-size="15" fill="#666" text-anchor="middle">D(P||Q) &#8805; 0</text>
       <line x1="387" y1="100" x2="427" y2="100" stroke="#1a5296" stroke-width="2.5" marker-end="url(#parr)"/>
       <rect x="434" y="60" width="150" height="80" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
-      <text x="509" y="94" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">gambling</text>
+      <text x="509" y="94" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">betting</text>
       <text x="509" y="118" font-size="15" fill="#666" text-anchor="middle">doubling rate</text>
       <line x1="589" y1="100" x2="629" y2="100" stroke="#1a5296" stroke-width="2.5" marker-end="url(#parr)"/>
       <rect x="636" y="60" width="130" height="80" rx="10" fill="#003876"/>
-      <text x="701" y="94" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="700">CE loss</text>
-      <text x="701" y="118" font-size="15" fill="#c9d3de" text-anchor="middle">= H + KL</text>
+      <text x="701" y="88" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="700">CE loss</text>
+      <text x="701" y="110" font-size="15" fill="#c9d3de" text-anchor="middle">= H + KL</text>
+      <text x="701" y="128" font-size="15" fill="#c9d3de" text-anchor="middle">perplexity</text>
     </svg>
   </div>
-  <p class="muted">Guessing, betting, training: same math, three costumes.</p>
+  <ul>
+    <li><strong>Guessing</strong>: surprise bill with the wrong pmf</li>
+    <li><strong>Betting</strong>: log-wealth lost per race</li>
+    <li><strong>Training</strong>: the loss in <code>nn.CrossEntropyLoss</code>; perplexity of a language model</li>
+  </ul>
 </div>
 
 <!-- ===== SECTION 02 — RECALL ===== -->
@@ -341,15 +369,17 @@ loss.<span class="fn">backward</span>()</div>
 
 <!-- Exercise: edge case -->
 <div class="slide">
-  <h2>Exercise &mdash; The Edge Case</h2>
+  <h2>The Edge Case &mdash; Zeros in $p_X$</h2>
   <div class="divider"></div>
-  <p>The proof cheats where $p_X(x) = 0$: the ratio divides by zero</p>
-  <p><strong>Exercise.</strong> Prove Theorem 1 rigorously</p>
+  <p>Where $p_X(x) = 0$ the ratio $Q(x)/p_X(x)$ is undefined. Fix: sum over the <strong>support</strong></p>
+  <div class="math-block">$$\mathbb{E}\Bigl[\log \tfrac{Q(X)}{p_X(X)}\Bigr]
+    \;\stackrel{(\text{Jensen})}{\leq}\; \log \sum_{x:\, p_X(x) \gt 0} Q(x)
+    \;\stackrel{(\text{sub-sum})}{\leq}\; \log 1 = 0$$</div>
   <ul>
-    <li>Hint 1: sum only over the support $\{x : p_X(x) \gt 0\}$</li>
-    <li>Hint 2: then $\sum_{x:\, p_X(x) \gt 0} Q(x) \leq 1$, still fine</li>
-    <li>Hint 3: equality now needs <strong>two</strong> inequalities tight</li>
+    <li><strong>Both</strong> must be tight: $Q/p_X$ constant on the support, no $Q$-mass off it</li>
+    <li>Together: $Q = p_X$. Theorem 1 holds with zeros $\;\blacksquare$</li>
   </ul>
+  <p class="muted">Exercise: what if $Q(x) = 0$ at some $x$ with $p_X(x) \gt 0$? (Answer after the KL definition.)</p>
 </div>
 
 <!-- Proof summary -->
@@ -426,6 +456,35 @@ loss.<span class="fn">backward</span>()</div>
     <p>Also called <strong>relative entropy</strong></p>
   </div>
   <p class="muted">Expected log-ratio of truth to model, weighted by truth.</p>
+</div>
+
+<!-- A1: conventions -->
+<div class="slide">
+  <h2>Conventions &mdash; Zeros in the Sum</h2>
+  <div class="divider"></div>
+  <p>Two terms need a rule; both come from limits:</p>
+  <div class="math-block" style="margin:8px 0">$$0 \cdot \log \tfrac{0}{q} = 0 \quad (t \log t \to 0 \text{ as } t \downarrow 0), \qquad
+    p \cdot \log \tfrac{p}{0} = +\infty \quad (p \gt 0)$$</div>
+  <div class="card">
+    <h3>Finiteness.</h3>
+    <div class="math-block" style="margin:8px 0">$$D(P \,\|\, Q) \lt \infty
+      \;\iff\; \operatorname{supp} P \subseteq \operatorname{supp} Q$$</div>
+    <p>Truth may be narrower than the model, never wider</p>
+  </div>
+</div>
+
+<!-- A1: DL meaning -->
+<div class="slide">
+  <h2>Support in Deep Learning</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>CE on the true label is $\log 1/Q(y)$: $Q(y) = 0$ gives loss $\infty$</li>
+    <li><strong>Softmax</strong> outputs $e^{z_i} / \sum_j e^{z_j} \gt 0$: every label keeps some mass, loss stays finite</li>
+    <li><strong>Label smoothing</strong> widens the truth: $(1-\varepsilon)\, y^{(o)} + \varepsilon / M$ has full support</li>
+  </ul>
+  <div class="highlight">
+    <p>Forward KL is infinite the moment the model <strong>rules out</strong> something the truth allows.</p>
+  </div>
 </div>
 
 <!-- Picture: two pmfs -->
@@ -525,27 +584,185 @@ loss.<span class="fn">backward</span>()</div>
   <p class="muted">Theorem 1 and Theorem 2 are the same fact.</p>
 </div>
 
-<!-- Mismatch identity -->
+<!-- A2: technique t log t -->
 <div class="slide">
-  <h2>The Gap, Named</h2>
+  <h2>Technique &mdash; $t \log t$ Is Convex</h2>
   <div class="divider"></div>
-  <p>Split the log-ratio inside cross-entropy:</p>
-  <div class="math-block">$$H(P, Q)
-    = \sum_x P(x) \log \tfrac{1}{P(x)} + \sum_x P(x) \log \tfrac{P(x)}{Q(x)}
-    = H(P) + D(P \,\|\, Q)$$</div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 680 230" style="width:100%;max-width:720px;">
+      <line x1="70" y1="181" x2="630" y2="181" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="70" y1="210" x2="70" y2="20" stroke="#1a1a1a" stroke-width="2"/>
+      <polyline fill="none" stroke="#003876" stroke-width="3" points="70,181 88,191 106,196 124,197 142,198 160,197 178,195 196,192 214,189 232,185 250,181 268,176 286,171 304,165 322,159 340,153 358,146 376,139 394,132 412,124 430,116 448,108 466,100 484,92 502,83 520,74 538,66 556,56 574,47 592,38 610,28"/>
+      <circle cx="250" cy="181" r="5" fill="#8a1c1c"/>
+      <circle cx="136" cy="198" r="5" fill="#8a1c1c"/>
+      <text x="250" y="204" font-size="15" fill="#1a1a1a" text-anchor="middle">t = 1</text>
+      <text x="136" y="222" font-size="15" fill="#8a1c1c" text-anchor="middle">t = 1/e, value -0.531</text>
+      <text x="610" y="206" font-size="15" fill="#1a1a1a" text-anchor="middle">t = 3</text>
+      <text x="250" y="60" font-size="17" fill="#003876" font-weight="700">f(t) = t log t</text>
+      <text x="250" y="84" font-size="15" fill="#666">f(1) = 0, f(3) = 4.755 bits</text>
+    </svg>
+  </div>
+  <div class="math-block" style="margin:6px 0">$$f(t) = t \log t, \qquad f''(t) = \frac{1}{t \ln 2} \gt 0 \quad (t \gt 0): \ \text{strictly convex}$$</div>
+</div>
+
+<!-- A2: log-sum inequality -->
+<div class="slide">
+  <h2>Lemma &mdash; Log-Sum Inequality</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Lemma (log-sum inequality).</h3>
+    <p>For $a_1, \dots, a_n \geq 0$ and $b_1, \dots, b_n \gt 0$:</p>
+    <div class="math-block" style="margin:8px 0">$$\sum_{i=1}^n a_i \log \frac{a_i}{b_i}
+      \;\geq\; \Bigl(\sum_i a_i\Bigr) \log \frac{\sum_i a_i}{\sum_i b_i}$$</div>
+    <p>Equality iff $a_i / b_i$ is the same for all $i$</p>
+  </div>
+  <p class="muted">Merging terms can only lower the sum. Cover &amp; Thomas, Thm 2.7.1.</p>
+</div>
+
+<!-- A2: proof -->
+<div class="slide">
+  <h2>Proof &mdash; Jensen on $t \log t$</h2>
+  <div class="divider"></div>
+  <p>Weights $w_i = b_i / \sum_j b_j$, points $t_i = a_i / b_i$, convex $f(t) = t \log t$:</p>
+  <div class="math-block">$$\begin{aligned}
+    \sum_i a_i \log \frac{a_i}{b_i}
+      &= \Bigl(\sum_j b_j\Bigr) \sum_i w_i\, f(t_i)
+       \;\stackrel{(\text{Jensen})}{\geq}\; \Bigl(\sum_j b_j\Bigr) f\Bigl(\sum_i w_i t_i\Bigr) \\[2pt]
+      &= \Bigl(\sum_j b_j\Bigr) f\Bigl(\frac{\sum_i a_i}{\sum_j b_j}\Bigr)
+       = \Bigl(\sum_i a_i\Bigr) \log \frac{\sum_i a_i}{\sum_j b_j} \qquad \blacksquare
+  \end{aligned}$$</div>
+  <p class="muted">Strict convexity: equality iff all $t_i$ equal.</p>
+</div>
+
+<!-- A2: corollary Thm 2 with zeros -->
+<div class="slide">
+  <h2>Corollary &mdash; Theorem 2, Zeros Included</h2>
+  <div class="divider"></div>
+  <p>Take $a_x = P(x)$, $b_x = Q(x)$ over $\operatorname{supp} P$ (if some $Q(x) = 0$ there, $D = +\infty \geq 0$ anyway):</p>
+  <div class="math-block">$$D(P \,\|\, Q)
+    \;\stackrel{(\text{log-sum})}{\geq}\; 1 \cdot \log \frac{1}{\sum_{x \in \operatorname{supp} P} Q(x)}
+    \;\stackrel{(\text{sub-sum} \leq 1)}{\geq}\; \log 1 = 0 \qquad \blacksquare$$</div>
+  <ul>
+    <li>Equality: $P/Q$ constant on the support, no $Q$-mass off it, so $P = Q$</li>
+    <li>The convention $0 \log 0 = 0$ handled every $P(x) = 0$ term for free</li>
+  </ul>
+</div>
+
+<!-- A2: convexity theorem -->
+<div class="slide">
+  <h2>Theorem &mdash; KL Is Convex in the Pair</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 3 (convexity of KL).</h3>
+    <p>For pmfs $(P_1, Q_1)$, $(P_2, Q_2)$ on $\mathcal{X}$ and $\lambda \in [0, 1]$:</p>
+    <div class="math-block" style="margin:8px 0">$$D\bigl(\lambda P_1 + (1-\lambda) P_2 \,\|\, \lambda Q_1 + (1-\lambda) Q_2\bigr)
+      \;\leq\; \lambda\, D(P_1 \,\|\, Q_1) + (1-\lambda)\, D(P_2 \,\|\, Q_2)$$</div>
+  </div>
+  <p class="muted">Mixing truths and models together never increases the divergence. Cover &amp; Thomas, Thm 2.7.2.</p>
+</div>
+
+<!-- A2: convexity proof -->
+<div class="slide">
+  <h2>Proof &mdash; Log-Sum, One $x$ at a Time</h2>
+  <div class="divider"></div>
+  <p>Fix $x$. Two-term log-sum with $a_1 = \lambda P_1(x)$, $a_2 = (1-\lambda) P_2(x)$, $b_1 = \lambda Q_1(x)$, $b_2 = (1-\lambda) Q_2(x)$:</p>
+  <div class="math-block">$$(a_1 + a_2) \log \frac{a_1 + a_2}{b_1 + b_2}
+    \;\leq\; \lambda P_1(x) \log \frac{P_1(x)}{Q_1(x)} + (1-\lambda) P_2(x) \log \frac{P_2(x)}{Q_2(x)}$$</div>
+  <p>The $\lambda$'s cancel inside each log. Sum over $x$ $\;\blacksquare$</p>
+  <ul>
+    <li>Used for the <strong>data-processing inequality</strong> (prob03) and variational bounds</li>
+  </ul>
+</div>
+
+<!-- Thm 4: CE = H + KL (moved from Section 06) -->
+<div class="slide">
+  <h2>Theorem &mdash; Cross-Entropy = Entropy + KL</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 4 (cross-entropy decomposition).</h3>
+    <p>For any pmfs $P, Q$ on $\mathcal{X}$ with $\operatorname{supp} P \subseteq \operatorname{supp} Q$:</p>
+    <div class="math-block" style="margin:8px 0">$$\underbrace{\sum_{x} P(x) \log \frac{1}{Q(x)}}_{H(P,\, Q)}
+      \;=\; H(P) \;+\; D(P \,\|\, Q)$$</div>
+  </div>
+  <p class="muted">The mismatch gap <em>is</em> the KL divergence. Theorem 1, now an exact identity.</p>
+</div>
+
+<!-- Thm 4 proof -->
+<div class="slide">
+  <h2>Proof &mdash; Split the Log-Ratio</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    D(P \,\|\, Q) &= \sum_x P(x) \log \frac{P(x)}{Q(x)} \\[2pt]
+      &\stackrel{(\text{split logs})}{=} \underbrace{\sum_x P(x) \log P(x)}_{-H(P)}
+        \;+\; \underbrace{\sum_x P(x) \log \tfrac{1}{Q(x)}}_{H(P,\, Q)} \\[2pt]
+      &= -H(P) + H(P, Q) \qquad \blacksquare
+  \end{aligned}$$</div>
   <div class="highlight">
-    <p><strong>Cross-entropy = entropy + KL.</strong> The mismatch gap <em>is</em> the KL divergence.</p>
+    <p><strong>Cross-entropy = entropy + KL.</strong> Minimizing $H(P, Q)$ over $Q$ minimizes $D(P \,\|\, Q)$.</p>
   </div>
 </div>
 
-<!-- Implication KL in AI -->
+<!-- A4: f-divergence definition -->
 <div class="slide">
-  <h2>Implication &mdash; KL Across AI</h2>
+  <h2>Definition &mdash; $f$-Divergence</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition ($f$-divergence).</h3>
+    <p>For convex $f : (0, \infty) \to \mathbb{R}$ with $f(1) = 0$, and pmfs $P, Q$ with $\operatorname{supp} P \subseteq \operatorname{supp} Q$:</p>
+    <div class="math-block" style="margin:8px 0">$$D_f(P \,\|\, Q) \;=\; \sum_{x} Q(x)\, f\Bigl(\frac{P(x)}{Q(x)}\Bigr)$$</div>
+  </div>
+  <p class="muted">KL is the case $f(t) = t \log t$. Csisz&aacute;r (1967); Ali &amp; Silvey (1966).</p>
+</div>
+
+<!-- A4: non-negativity -->
+<div class="slide">
+  <h2>Theorem &mdash; Every $f$-Divergence Is Non-Negative</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 5 ($f$-divergences are non-negative).</h3>
+    <p>$D_f(P \,\|\, Q) \geq 0$, with equality if $P = Q$ (and only then, when $f$ is strictly convex at $1$)</p>
+  </div>
+  <p><strong>Proof.</strong> Same Jensen move: weights $Q(x)$, points $P(x)/Q(x)$</p>
+  <div class="math-block" style="margin:6px 0">$$\sum_x Q(x)\, f\Bigl(\tfrac{P(x)}{Q(x)}\Bigr)
+    \;\stackrel{(\text{Jensen})}{\geq}\; f\Bigl(\sum_x Q(x) \tfrac{P(x)}{Q(x)}\Bigr) = f(1) = 0 \qquad \blacksquare$$</div>
+</div>
+
+<!-- A4: zoo table -->
+<div class="slide">
+  <h2>The Zoo &mdash; $P = (0.5, 0.4, 0.1)$ vs Uniform</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>$f(t)$</th><th>name</th><th>$D_f(P \,\|\, Q)$ (log base 2)</th></tr>
+    <tr><td>$t \log t$</td><td>KL $D(P \,\|\, Q)$</td><td>0.224</td></tr>
+    <tr><td>$-\log t$</td><td>reverse KL $D(Q \,\|\, P)$</td><td>0.296</td></tr>
+    <tr><td>$\tfrac{1}{2} |t - 1|$</td><td>total variation</td><td>0.233</td></tr>
+    <tr><td>$(t - 1)^2$</td><td>$\chi^2$</td><td>0.260</td></tr>
+    <tr><td>$\tfrac{1}{2}\bigl[t \log \tfrac{2t}{1+t} + \log \tfrac{2}{1+t}\bigr]$</td><td>Jensen&ndash;Shannon</td><td>0.062</td></tr>
+  </table>
+</div>
+
+<!-- A4: why KL -->
+<div class="slide">
+  <h2>What KL Alone Brings</h2>
   <div class="divider"></div>
   <ul>
-    <li><strong>Classification</strong>: cross-entropy loss (Section 06 today)</li>
-    <li><strong>Generative models</strong>: pull model pmf toward data pmf (GANs)</li>
-    <li><strong>Compression / gambling</strong>: overpay rate (next section)</li>
+    <li><strong>Decomposes</strong>: $H(P, Q) = H(P) + D(P \| Q)$; the $P$-only term is a constant (Theorem 4)</li>
+    <li>Its integrand is a <strong>surprisal difference</strong>: $\log \tfrac{1}{Q} - \log \tfrac{1}{P}$, the guessing bill</li>
+    <li><strong>Convex</strong> in the pair (Theorem 3); non-negative like every $f$-divergence (Theorem 5)</li>
+  </ul>
+  <div class="highlight">
+    <p>Left open: is KL the <em>only</em> $f$-divergence with these properties? No uniqueness theorem today.</p>
+  </div>
+</div>
+
+<!-- Preview -->
+<div class="slide">
+  <h2>Preview &mdash; Where $D(P \,\|\, Q)$ Shows Up</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Betting</strong> (Section 05): log-wealth lost per race</li>
+    <li><strong>Training</strong> (Section 06): CE loss $= D(\text{label} \,\|\, \text{softmax})$; perplexity</li>
+    <li><strong>Direction</strong> (Section 07): $D(P \,\|\, Q)$ vs $D(Q \,\|\, P)$, mode covering vs seeking</li>
   </ul>
   <div class="math-block" style="margin:8px 0">$$D(P \,\|\, Q): \ \text{the price of believing } Q \text{ in a } P \text{ world}$$</div>
 </div>
@@ -553,9 +770,9 @@ loss.<span class="fn">backward</span>()</div>
 <!-- ===== SECTION 05 — GAMBLING ===== -->
 <div class="slide section-slide left">
   <div class="section-num">05</div>
-  <h1>Gambling &amp; Doubling Rate</h1>
+  <h1>Betting</h1>
   <div class="divider"></div>
-  <p class="subtitle">Optimal betting = proportional betting</p>
+  <p class="subtitle">Doubling rate: the mismatch theorem as lost wealth</p>
 </div>
 
 <!-- Setup -->
@@ -574,7 +791,7 @@ loss.<span class="fn">backward</span>()</div>
       <text x="242" y="185" font-size="15" fill="#666" text-anchor="middle">(1 - q)B</text>
       <rect x="310" y="25" width="180" height="70" rx="10" fill="#ffffff" stroke="#8a1c1c" stroke-width="2.5"/>
       <text x="400" y="55" font-size="17" fill="#8a1c1c" text-anchor="middle" font-weight="700">RED</text>
-      <text x="400" y="80" font-size="15" fill="#666" text-anchor="middle">wins w.p. p &#8804; 1/2</text>
+      <text x="400" y="80" font-size="15" fill="#666" text-anchor="middle">wins w.p. p &lt; 1/2</text>
       <rect x="310" y="140" width="180" height="70" rx="10" fill="#1a1a1a"/>
       <text x="400" y="170" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="700">BLACK</text>
       <text x="400" y="195" font-size="15" fill="#c9d3de" text-anchor="middle">wins w.p. 1 - p</text>
@@ -585,7 +802,7 @@ loss.<span class="fn">backward</span>()</div>
       <text x="668" y="136" font-size="15" fill="#666" text-anchor="middle">winner doubles</text>
     </svg>
   </div>
-  <p>After the bet: $S = 2qB$ if red, &nbsp;$S = 2(1-q)B$ if black</p>
+  <p>After the bet: $S = 2qB$ if red, &nbsp;$S = 2(1-q)B$ if black. Assume $p \lt 1/2$: black is the favorite</p>
 </div>
 
 <!-- Naive: maximize E[S] -->
@@ -620,65 +837,30 @@ loss.<span class="fn">backward</span>()</div>
   <p>Eventually broke, with probability one</p>
 </div>
 
-<!-- Fix: log wealth -->
+<!-- Fix: log wealth + compute -->
 <div class="slide">
   <h2>Fix &mdash; Maximize $\mathbb{E}[\log S]$</h2>
   <div class="divider"></div>
-  <p>Score wealth on the $\log$ scale:</p>
-  <div class="math-block" style="margin:8px 0">$$\text{maximize} \quad \mathbb{E}[\log S]$$</div>
   <ul>
-    <li>$\log 0 = -\infty$: ruin gets <strong>infinite penalty</strong></li>
-    <li>Forces strategies that never go broke</li>
-    <li>Log-wealth <strong>adds</strong> over repeated bets: growth rate</li>
+    <li>$\log 0 = -\infty$: ruin gets <strong>infinite penalty</strong>; log-wealth <strong>adds</strong> over repeated bets</li>
   </ul>
-</div>
-
-<!-- Compute E[log S] -->
-<div class="slide">
-  <h2>Compute $\mathbb{E}[\log S]$</h2>
-  <div class="divider"></div>
   <div class="math-block">$$\begin{aligned}
     \mathbb{E}[\log S] &= p \log (2qB) + (1-p) \log \bigl(2(1-q)B\bigr) \\[2pt]
       &\stackrel{(\text{split logs})}{=} \log 2B - \Bigl(p \log \tfrac{1}{q} + (1-p) \log \tfrac{1}{1-q}\Bigr)
   \end{aligned}$$</div>
-  <p>The bracket is a <strong>cross-entropy</strong>: truth $(p, 1-p)$, priced by $(q, 1-q)$</p>
-  <p class="muted">We already know its minimizer.</p>
+  <p>The bracket is a <strong>cross-entropy</strong>: truth $(p, 1-p)$, priced by $(q, 1-q)$. We know its minimizer</p>
 </div>
 
-<!-- Theorem proportional betting -->
+<!-- Theorem proportional betting + proof -->
 <div class="slide">
   <h2>Theorem &mdash; Proportional Betting</h2>
   <div class="divider"></div>
   <div class="card">
-    <h3>Theorem 3 (proportional betting).</h3>
+    <h3>Theorem 6 (proportional betting).</h3>
     <p>In the binary game with odds 2, $\mathbb{E}[\log S]$ is maximized iff $q = p$:</p>
     <div class="math-block" style="margin:8px 0">$$\max_q \mathbb{E}[\log S] = \log 2B - h_2(p)$$</div>
-    <p>Bet fraction $p$ on red, $1-p$ on black</p>
   </div>
-  <p class="muted">Bet your beliefs, in exact proportion.</p>
-</div>
-
-<!-- Proof -->
-<div class="slide">
-  <h2>Proof &mdash; Mismatch in Disguise</h2>
-  <div class="divider"></div>
-  <p>Cross-entropy = entropy + KL, applied to the bracket:</p>
-  <div class="math-block">$$\mathbb{E}[\log S]
-    = \log 2B - h_2(p) - D\bigl((p, 1{-}p) \,\|\, (q, 1{-}q)\bigr)$$</div>
-  <p>Only the last term depends on $q$; $D \geq 0$, zero iff $q = p$ $\;\blacksquare$</p>
-  <p class="muted">Theorem 1 did all the work.</p>
-</div>
-
-<!-- Cost of mismatch -->
-<div class="slide">
-  <h2>Cost of Mismatch = KL</h2>
-  <div class="divider"></div>
-  <p>Betting $(q, 1-q)$ instead of the optimal $(p, 1-p)$ loses</p>
-  <div class="math-block">$$\mathbb{E}[\log S_{\text{opt}}] - \mathbb{E}[\log S_q]
-    = D\bigl((p, 1{-}p) \,\|\, (q, 1{-}q)\bigr)$$</div>
-  <div class="highlight">
-    <p>KL divergence = <strong>log-wealth lost per bet</strong> to a wrong belief.</p>
-  </div>
+  <p><strong>Proof.</strong> Theorem 4: $\mathbb{E}[\log S] = \log 2B - h_2(p) - D\bigl((p, 1{-}p) \,\|\, (q, 1{-}q)\bigr)$. Only $D$ moves with $q$; $D \geq 0$, zero iff $q = p$ $\;\blacksquare$</p>
 </div>
 
 <!-- Doubling rate -->
@@ -688,10 +870,10 @@ loss.<span class="fn">backward</span>()</div>
   <div class="card">
     <h3>Definition (doubling rate).</h3>
     <div class="math-block" style="margin:8px 0">$$W = \log 2 - \Bigl(p \log \tfrac{1}{q} + (1-p) \log \tfrac{1}{1-q}\Bigr),
-      \qquad S \approx B \times 2^{W}$$</div>
-    <p>Repeat $n$ bets: $\;S_n \approx B \times 2^{nW}$</p>
+      \qquad S_n \approx B \times 2^{nW} \ \text{after } n \text{ bets}$$</div>
+    <p>Cost of a wrong belief: $\;W_{\text{opt}} - W_q = D\bigl((p, 1{-}p) \,\|\, (q, 1{-}q)\bigr)$ bits per bet</p>
   </div>
-  <p class="muted">Log-wealth grows linearly, at slope $W$ bits per bet.</p>
+  <p class="muted">Log-wealth grows linearly at slope $W$; KL is the slope you forfeit.</p>
 </div>
 
 <!-- Growth picture -->
@@ -754,7 +936,7 @@ loss.<span class="fn">backward</span>()</div>
   <h2>Theorem &mdash; Optimal Horse Betting</h2>
   <div class="divider"></div>
   <div class="card">
-    <h3>Theorem 4 (proportional betting, $M$ horses).</h3>
+    <h3>Theorem 7 (proportional betting, $M$ horses).</h3>
     <div class="math-block" style="margin:8px 0">$$\mathbb{E}[\log S]
       = \log B + \log M - \sum_{i=1}^{M} p_X(i) \log \frac{1}{Q(i)}$$</div>
     <p>Maximized iff $Q = p_X$; the loss for betting $Q$ is $D(p_X \,\|\, Q)$</p>
@@ -912,17 +1094,154 @@ loss.<span class="fn">backward</span>()</div>
   <p class="muted">Only the true label's column enters the loss.</p>
 </div>
 
+<!-- B8: language models -->
+<div class="slide">
+  <h2>Predicting Costume &mdash; Language Models</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 760 150" style="width:100%;max-width:840px;">
+      <defs><marker id="lmarr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
+      <rect x="20" y="45" width="70" height="44" rx="8" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="55" y="73" font-size="16" fill="#1a1a1a" text-anchor="middle">the</text>
+      <rect x="100" y="45" width="70" height="44" rx="8" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="135" y="73" font-size="16" fill="#1a1a1a" text-anchor="middle">cat</text>
+      <rect x="180" y="45" width="70" height="44" rx="8" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <text x="215" y="73" font-size="16" fill="#1a1a1a" text-anchor="middle">sat</text>
+      <rect x="260" y="45" width="70" height="44" rx="8" fill="#ffffff" stroke="#8a1c1c" stroke-width="2.5" stroke-dasharray="6 4"/>
+      <text x="295" y="73" font-size="16" fill="#8a1c1c" text-anchor="middle">x_t ?</text>
+      <line x1="340" y1="67" x2="400" y2="67" stroke="#1a5296" stroke-width="2.5" marker-end="url(#lmarr)"/>
+      <text x="370" y="55" font-size="14" fill="#666" text-anchor="middle">model Q</text>
+      <rect x="420" y="30" width="48" height="90" fill="#003876"/>
+      <rect x="480" y="75" width="48" height="45" fill="#1a5296"/>
+      <rect x="540" y="95" width="48" height="25" fill="#c9d3de"/>
+      <rect x="600" y="108" width="48" height="12" fill="#c9d3de"/>
+      <rect x="660" y="114" width="48" height="6" fill="#c9d3de"/>
+      <text x="444" y="138" font-size="14" fill="#1a1a1a" text-anchor="middle">on</text>
+      <text x="504" y="138" font-size="14" fill="#1a1a1a" text-anchor="middle">down</text>
+      <text x="564" y="138" font-size="14" fill="#1a1a1a" text-anchor="middle">still</text>
+      <text x="624" y="138" font-size="14" fill="#1a1a1a" text-anchor="middle">...</text>
+      <text x="684" y="138" font-size="14" fill="#1a1a1a" text-anchor="middle">K tokens</text>
+    </svg>
+  </div>
+  <div class="math-block" style="margin:6px 0">$$\ell_t = \log \frac{1}{Q(x_t \mid x_{\lt t})}, \qquad
+    \text{training loss} = \frac{1}{T} \sum_{t=1}^T \ell_t \ \text{(nats in torch)}$$</div>
+  <p>Each position: a $K$-way classification; $\ell_t$ is the CE loss above</p>
+</div>
+
+<!-- B8: perplexity -->
+<div class="slide">
+  <h2>Definition &mdash; Perplexity</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (perplexity).</h3>
+    <p>$\text{CE} = \frac{1}{T}\sum_t \ell_t$: average loss per token on held-out text</p>
+    <div class="math-block" style="margin:8px 0">$$\mathrm{PPL} \;=\; 2^{\,\text{CE in bits}} \;=\; e^{\,\text{CE in nats}}$$</div>
+    <p>Uniform guess over $K$ tokens: $\text{CE} = \log K$ bits, $\mathrm{PPL} = K$</p>
+  </div>
+  <ul>
+    <li><strong>Effective number of equally likely next tokens</strong>: PPL $20$ = a fair 20-sided die</li>
+    <li><strong>Why it matters</strong>: one number ranks LMs on shared text; halving PPL saves one bit per token</li>
+    <li>Lower PPL = smaller $D(P_{\text{text}} \,\|\, Q)$: mismatch theorem per token (Theorem 4)</li>
+  </ul>
+</div>
+
 <!-- Why this function -->
 <div class="slide">
-  <h2>A Weird-Looking Function</h2>
+  <h2>Which Loss? Three Candidates</h2>
   <div class="divider"></div>
   <p>Any <strong>decreasing</strong> function of $f(x)_y$ rewards the truth:</p>
-  <div class="math-block" style="margin:8px 0">$$1 - f(x)_y\,? \qquad \bigl(1 - f(x)_y\bigr)^2\,? \qquad \log \tfrac{1}{f(x)_y}\,?$$</div>
+  <div class="math-block" style="margin:8px 0">$$\underbrace{1 - f(x)_y}_{\text{linear}} \qquad
+    \underbrace{\textstyle\sum_i \bigl(f(x)_i - \mathbb{1}[i = y]\bigr)^2}_{\text{Brier}} \qquad
+    \underbrace{\log \tfrac{1}{f(x)_y}}_{\text{log}}$$</div>
   <ul>
-    <li>"Higher belief on truth = lower loss": all of them qualify</li>
-    <li>So why the $\log$ and the reciprocal?</li>
+    <li>"Higher belief on truth = lower loss": all three qualify</li>
+    <li>Need a <strong>criterion</strong>: which losses reward honest probabilities?</li>
   </ul>
-  <p class="muted">Claim: the third one is a KL divergence in disguise.</p>
+</div>
+
+<!-- B6: proper scoring rules -->
+<div class="slide">
+  <h2>Definition &mdash; Proper Scoring Rule</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (proper, strictly proper).</h3>
+    <p>Loss $\ell(Q, y)$ for report $Q$ and outcome $y$. Expected loss when the truth is $P$:</p>
+    <div class="math-block" style="margin:8px 0">$$L(P, Q) = \mathbb{E}_{Y \sim P}\bigl[\ell(Q, Y)\bigr]$$</div>
+    <p><strong>Proper</strong>: $L(P, P) \leq L(P, Q)$ for all $Q$. <strong>Strictly proper</strong>: equality iff $Q = P$</p>
+  </div>
+  <p class="muted">Honesty is optimal: reporting the truth is never beaten.</p>
+</div>
+
+<!-- B6: log loss strictly proper -->
+<div class="slide">
+  <h2>Log Loss Is Strictly Proper</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    L(P, Q) &= \sum_i P_i \log \frac{1}{Q_i} = H(P, Q)
+    \;\stackrel{(\text{Thm 4})}{=}\; H(P) + D(P \,\|\, Q) \\[2pt]
+    &\stackrel{(\text{Thm 2})}{\geq}\; H(P) = L(P, P)
+  \end{aligned}$$</div>
+  <ul>
+    <li>Equality iff $D(P \,\|\, Q) = 0$ iff $Q = P$: strictly proper</li>
+    <li>This <em>is</em> the mismatch theorem, third costume</li>
+  </ul>
+</div>
+
+<!-- B6: linear loss not proper -->
+<div class="slide">
+  <h2>Linear Loss Is Not Proper</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$L(P, Q) = \sum_i P_i (1 - Q_i) = 1 - \sum_i P_i Q_i$$</div>
+  <ul>
+    <li>Linear in $Q$: minimized at a <strong>vertex</strong>, $Q =$ one-hot on $\arg\max_i P_i$</li>
+    <li>$P = (0.7, 0.2, 0.1)$: honest $Q = P$ scores $0.460$; all-in $Q = (1, 0, 0)$ scores $0.300$</li>
+  </ul>
+  <div class="highlight">
+    <p>Honesty <strong>loses</strong>. The linear loss rewards overconfidence, so it cannot train probabilities.</p>
+  </div>
+</div>
+
+<!-- B6: Brier proper -->
+<div class="slide">
+  <h2>Brier Score Is Proper</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    L(P, Q) &= \sum_i P_i \sum_j \bigl(Q_j - \mathbb{1}[j = i]\bigr)^2
+      \;\stackrel{(\text{expand})}{=}\; \sum_j Q_j^2 - 2 \sum_j P_j Q_j + 1 \\[2pt]
+      &\stackrel{(\pm \sum_j P_j^2)}{=}\; \sum_j (Q_j - P_j)^2 + \sum_j P_j (1 - P_j)
+  \end{aligned}$$</div>
+  <ul>
+    <li>First sum $\geq 0$, zero iff $Q = P$; second sum is $P$-only: strictly proper</li>
+    <li>$P = (0.7, 0.2, 0.1)$: $Q = P$ scores $0.460$; $Q = (1, 0, 0)$ scores $0.600$</li>
+  </ul>
+</div>
+
+<!-- B6: worked table -->
+<div class="slide">
+  <h2>Worked Example &mdash; Three Scores, Three Reports</h2>
+  <div class="divider"></div>
+  <p>Truth $P = (0.7, 0.2, 0.1)$; expected loss $L(P, Q)$ (log in bits)</p>
+  <table>
+    <tr><th>report $Q$</th><th>log</th><th>linear</th><th>Brier</th></tr>
+    <tr><td>$P = (0.7, 0.2, 0.1)$</td><td><strong>1.157</strong></td><td>0.460</td><td><strong>0.460</strong></td></tr>
+    <tr><td>one-hot $(1, 0, 0)$</td><td>$\infty$</td><td><strong>0.300</strong></td><td>0.600</td></tr>
+    <tr><td>uniform</td><td>1.585</td><td>0.667</td><td>0.667</td></tr>
+  </table>
+  <p class="muted">Bold = best in column. Only the linear loss prefers the lie.</p>
+</div>
+
+<!-- B6: locality -->
+<div class="slide">
+  <h2>Why Log, Then? Locality</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Log loss is <strong>local</strong>: it reads only $Q_y$, the mass on what happened</li>
+    <li>Brier reads every $Q_j$: the penalty depends on <em>where</em> the rest went</li>
+    <li>For $M \geq 3$ outcomes, the only local strictly proper scores are $a \log Q_y + b$, $a \gt 0$</li>
+  </ul>
+  <div class="highlight">
+    <p>Strictly proper + local = log loss. Reciprocal and log are forced, not chosen.</p>
+  </div>
 </div>
 
 <!-- One-hot as distribution -->
@@ -943,7 +1262,7 @@ loss.<span class="fn">backward</span>()</div>
   <h2>Theorem &mdash; CE Loss = KL to the Truth</h2>
   <div class="divider"></div>
   <div class="card">
-    <h3>Theorem 5 (cross-entropy loss is a KL divergence).</h3>
+    <h3>Theorem 8 (cross-entropy loss is a KL divergence).</h3>
     <div class="math-block" style="margin:8px 0">$$\ell\bigl(f(x), y\bigr) \;=\; D\bigl(y^{(o)} \,\|\, f(x)\bigr)$$</div>
     <p>The loss is the divergence from the model's pmf to the one-hot truth</p>
   </div>
@@ -965,30 +1284,6 @@ loss.<span class="fn">backward</span>()</div>
 </div>
 
 <!-- Theorem decomposition -->
-<div class="slide">
-  <h2>Theorem &mdash; CE = Entropy + KL</h2>
-  <div class="divider"></div>
-  <div class="card">
-    <h3>Theorem 6 (cross-entropy decomposition).</h3>
-    <p>For any pmfs $P, Q$ on $[M]$:</p>
-    <div class="math-block" style="margin:8px 0">$$\underbrace{\sum_{i} P(i) \log \frac{1}{Q(i)}}_{H(P,\, Q)}
-      \;=\; H(P) \;+\; D(P \,\|\, Q)$$</div>
-  </div>
-  <p class="muted">The mismatch theorem, now as an exact identity.</p>
-</div>
-
-<!-- Proof decomposition -->
-<div class="slide">
-  <h2>Proof &mdash; Split the Log-Ratio</h2>
-  <div class="divider"></div>
-  <div class="math-block">$$\begin{aligned}
-    D(P \,\|\, Q) &= \sum_i P(i) \log \frac{P(i)}{Q(i)} \\[2pt]
-      &\stackrel{(\text{split logs})}{=} \underbrace{\sum_i P(i) \log P(i)}_{-H(P)}
-        \;+\; \underbrace{\sum_i P(i) \log \tfrac{1}{Q(i)}}_{H(P,\, Q)} \\[2pt]
-      &= -H(P) + H(P, Q) \qquad \blacksquare
-  \end{aligned}$$</div>
-</div>
-
 <!-- Soft labels -->
 <div class="slide">
   <h2>Soft Labels &mdash; Same Story</h2>
@@ -1014,29 +1309,203 @@ loss.<span class="fn">backward</span>()</div>
   </div>
 </div>
 
-<!-- Implication -->
+<!-- B5: population view -->
 <div class="slide">
-  <h2>Implication &mdash; Why Log, Why Reciprocal</h2>
+  <h2>Population View &mdash; Random Inputs</h2>
+  <div class="divider"></div>
+  <p>Data $(X, Y) \sim P_{XY}$; the classifier maps $x$ to a pmf $f(x)$ on $[M]$. Its <strong>risk</strong>:</p>
+  <div class="math-block">$$\begin{aligned}
+    R(f) &= \mathbb{E}\bigl[\ell(f(X), Y)\bigr]
+    \;\stackrel{(\text{condition on } X)}{=}\; \mathbb{E}_X\Bigl[\sum_y P(y \mid X) \log \frac{1}{f(X)_y}\Bigr] \\[2pt]
+    &= \mathbb{E}_X\bigl[H(P_{Y \mid X},\, f(X))\bigr]
+  \end{aligned}$$</div>
+  <p>For each input, a cross-entropy between the <strong>true conditional</strong> $P_{Y \mid X = x}$ and the prediction</p>
+</div>
+
+<!-- B5: theorem -->
+<div class="slide">
+  <h2>Theorem &mdash; Population Cross-Entropy</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 9 (population decomposition).</h3>
+    <div class="math-block" style="margin:8px 0">$$R(f) \;=\; \underbrace{\mathbb{E}_X\bigl[H(P_{Y \mid X})\bigr]}_{\text{irreducible}}
+      \;+\; \underbrace{\mathbb{E}_X\bigl[D(P_{Y \mid X} \,\|\, f(X))\bigr]}_{\geq 0,\ \text{model's fault}}$$</div>
+  </div>
+  <p><strong>Proof.</strong> Theorem 4 at each $x$, then take $\mathbb{E}_X$ $\;\blacksquare$</p>
+  <p class="muted">The floor depends on the data only; prob03 names it $H(Y \mid X)$.</p>
+</div>
+
+<!-- B5: corollary -->
+<div class="slide">
+  <h2>Corollary &mdash; The Bayes-Optimal Classifier</h2>
   <div class="divider"></div>
   <ul>
-    <li>$\log 1/Q$ is <strong>surprisal</strong>: the guessing / coding / betting cost</li>
-    <li>CE differs from KL by a constant: same minimizer</li>
-    <li>Log base = overall scale only (bits vs nats): same minimizer</li>
-    <li>Zero loss achievable iff $f(x) = y^{(o)}$ exactly</li>
+    <li>$R(f)$ is minimized iff $D(P_{Y \mid X} \,\|\, f(X)) = 0$ a.s., i.e. $f^*(x) = P(Y = \cdot \mid X = x)$</li>
+    <li>One-hot labels are <strong>samples</strong> from $P_{Y \mid X}$; CE still recovers the conditional pmf</li>
+    <li>So CE-trained outputs are meant to be <strong>calibrated probabilities</strong>, not just argmax scores</li>
+  </ul>
+  <div class="highlight">
+    <p>Population CE = learning $P(Y \mid X)$ in KL. Zero loss is <em>not</em> the goal when $H(P_{Y \mid X}) \gt 0$.</p>
+  </div>
+</div>
+
+<!-- B5: worked -->
+<div class="slide">
+  <h2>Worked Example &mdash; Calibrated vs Overconfident</h2>
+  <div class="divider"></div>
+  <p>One input $x$ with $P(Y = 1 \mid x) = 0.7$; floor $H = h_2(0.7) = 0.881$ bits</p>
+  <table>
+    <tr><th>prediction $f(x)$</th><th>risk (bits)</th><th>KL term</th></tr>
+    <tr><td>$(0.7, 0.3)$ calibrated</td><td><strong>0.881</strong></td><td>0</td></tr>
+    <tr><td>$(0.95, 0.05)$ overconfident</td><td>1.348</td><td>0.467</td></tr>
+    <tr><td>$(0.5, 0.5)$ hedged</td><td>1.000</td><td>0.119</td></tr>
+  </table>
+  <p class="muted">Right argmax, wrong confidence: the loss still charges you.</p>
+</div>
+
+<!-- B5: MLE -->
+<div class="slide">
+  <h2>MLE = Min Cross-Entropy = Min KL</h2>
+  <div class="divider"></div>
+  <p>Samples $x_1, \dots, x_n \stackrel{\text{iid}}{\sim} P$; empirical pmf $\hat P_n(x) = \tfrac{1}{n} \#\{i : x_i = x\}$</p>
+  <div class="math-block">$$\begin{aligned}
+    \frac{1}{n} \sum_{i=1}^n \log \frac{1}{Q(x_i)}
+    &\;\stackrel{(\text{group equal } x_i)}{=}\; \sum_x \hat P_n(x) \log \frac{1}{Q(x)}
+    = H(\hat P_n, Q) \\[2pt]
+    &\;\stackrel{(\text{Thm 4})}{=}\; H(\hat P_n) + D(\hat P_n \,\|\, Q)
+  \end{aligned}$$</div>
+  <ul>
+    <li>Left side: negative average log-likelihood. Maximum likelihood = minimum CE</li>
+    <li>Right side: $H(\hat P_n)$ is data-only. Maximum likelihood = <strong>minimum KL from the data</strong></li>
+  </ul>
+</div>
+
+<!-- B7: softmax -->
+<div class="slide">
+  <h2>Softmax &mdash; Logits to a pmf</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition (softmax).</h3>
+    <div class="math-block" style="margin:8px 0">$$s_i(z) = \frac{e^{z_i}}{\sum_{j=1}^M e^{z_j}}, \qquad s_i \gt 0, \quad \sum_i s_i = 1$$</div>
+  </div>
+  <p>CE loss on logits, in nats ($\ln$), as <code>nn.CrossEntropyLoss</code> computes it:</p>
+  <p>$\ell(z, y) = -\ln s_y(z) = -z_y + \ln \sum_j e^{z_j}$</p>
+</div>
+
+<!-- B7: gradient theorem -->
+<div class="slide">
+  <h2>Theorem &mdash; Softmax Gradient</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 10 (gradient of CE on logits).</h3>
+    <div class="math-block" style="margin:8px 0">$$\frac{\partial \ell(z, y)}{\partial z_i} \;=\; s_i(z) - \mathbb{1}[i = y]$$</div>
+  </div>
+  <p><strong>Proof.</strong> $\frac{\partial}{\partial z_i}(-z_y) = -\mathbb{1}[i = y]$; &nbsp;
+    $\frac{\partial}{\partial z_i} \ln \sum_j e^{z_j} = \frac{e^{z_i}}{\sum_j e^{z_j}} = s_i(z)$ &nbsp; $\blacksquare$</p>
+  <p class="muted">Gradient = predicted pmf minus one-hot truth: the residual, never saturating.</p>
+</div>
+
+<!-- B7: LSE stability -->
+<div class="slide">
+  <h2>Why Logits? Log-Sum-Exp Stability</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$e^{1000}$ overflows a float (Python: <code>OverflowError</code>); probabilities first, log second, fails</li>
+    <li>Shift by the max: $m = \max_j z_j$, then every exponent is $\leq 0$</li>
+  </ul>
+  <div class="math-block" style="margin:6px 0">$$\ln \sum_j e^{z_j} = m + \ln \sum_j e^{z_j - m}, \qquad z = (1000, 0, 0) \ \Rightarrow\ 1000.0$$</div>
+  <div class="highlight">
+    <p>So <code>nn.CrossEntropyLoss(logits, y)</code> takes <strong>logits</strong>, not probabilities. Nats out; divide by $\ln 2 = 0.693$ for bits.</p>
+  </div>
+</div>
+
+<!-- B7: MSE comparison -->
+<div class="slide">
+  <h2>Why Not Squared Error on Softmax?</h2>
+  <div class="divider"></div>
+  <p>Chain rule through softmax: $\partial s_y / \partial z_y = s_y (1 - s_y)$. Any loss of $s_y$ inherits this factor</p>
+  <table>
+    <tr><th>$s_y$ (mass on truth)</th><th>CE: $s_y - 1$</th><th>MSE factor $s_y(1 - s_y)$</th></tr>
+    <tr><td>$0.001$ (confidently wrong)</td><td>$-0.999$</td><td>$0.001$</td></tr>
+    <tr><td>$0.5$</td><td>$-0.5$</td><td>$0.25$</td></tr>
+    <tr><td>$0.9$</td><td>$-0.1$</td><td>$0.09$</td></tr>
+  </table>
+  <p class="muted">Squared error learns slowest exactly when it is most wrong; CE's $-\ln s_y$ cancels the factor.</p>
+</div>
+
+<!-- Implication -->
+<div class="slide">
+  <h2>Implication &mdash; Why Log, Settled</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$\log 1/Q$ is <strong>surprisal</strong>: the guessing and betting cost (Theorems 1, 6, 7)</li>
+    <li>The only <strong>strictly proper, local</strong> score (Section 06, cited)</li>
+    <li>Population minimizer = true conditional $P(Y \mid X)$ (Theorem 9)</li>
+    <li>Gradient = residual, stable on logits (Theorem 10)</li>
   </ul>
   <div class="math-block" style="margin:8px 0">$$\text{CE loss is KL in disguise, not an arbitrary choice}$$</div>
 </div>
 
-<!-- Open questions -->
-<div class="slide">
-  <h2>Questions We Leave Open</h2>
+<!-- ===== SECTION 07 — KL ACROSS DEEP LEARNING ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">07</div>
+  <h1>KL Across Deep Learning</h1>
   <div class="divider"></div>
+  <p class="subtitle">Forward or reverse: which direction?</p>
+</div>
+
+<!-- B9: support argument -->
+<div class="slide">
+  <h2>Forward vs Reverse &mdash; The Support Argument</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Forward: fit $Q$ to $P$</h3>
+      <div class="math-block" style="margin:6px 0">$$D(P \,\|\, Q) = \sum_x P(x) \log \frac{P(x)}{Q(x)}$$</div>
+      <ul>
+        <li>$P(x) \gt 0,\ Q(x) \to 0$: term $\to \infty$</li>
+        <li>$Q$ must <strong>cover</strong> every mode of $P$</li>
+        <li>zero-avoiding, <strong>mode-covering</strong></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Reverse: fit $Q$ to $P$</h3>
+      <div class="math-block" style="margin:6px 0">$$D(Q \,\|\, P) = \sum_x Q(x) \log \frac{Q(x)}{P(x)}$$</div>
+      <ul>
+        <li>$P(x) \to 0$ forces $Q(x) \to 0$</li>
+        <li>$Q$ may <strong>drop</strong> modes of $P$ for free</li>
+        <li>zero-forcing, <strong>mode-seeking</strong></li>
+      </ul>
+    </div>
+  </div>
+  <p class="muted">Same two pmfs, opposite failure modes. Minka (2005).</p>
+</div>
+
+<!-- B9: figure -->
+<div class="slide">
+  <h2>Picture &mdash; One Gaussian Fitted to Two Bumps</h2>
+  <div class="divider"></div>
+  <div class="p2-fig" style="max-width:820px;">
+    <svg viewBox="0 0 760 250">
+      <line x1="70" y1="215" x2="720" y2="215" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="70" y1="215" x2="70" y2="25" stroke="#1a1a1a" stroke-width="2"/>
+      <polyline fill="none" stroke="#1a1a1a" stroke-width="3" points="70,215.0 84,215.0 97,215.0 111,215.0 124,215.0 138,215.0 151,215.0 165,215.0 178,215.0 192,214.8 205,214.0 219,211.1 232,202.9 246,186.0 260,160.9 273,136.3 287,125.8 300,136.3 314,160.9 327,186.0 341,202.9 354,211.1 368,214.0 381,214.8 395,214.9 409,214.8 422,214.0 436,211.1 449,202.9 463,186.0 476,160.9 490,136.3 503,125.8 517,136.3 530,160.9 544,186.0 558,202.9 571,211.1 585,214.0 598,214.8 612,215.0 625,215.0 639,215.0 652,215.0 666,215.0 679,215.0 693,215.0 706,215.0 720,215.0"/>
+      <polyline fill="none" stroke="#003876" stroke-width="3" stroke-dasharray="9 6" points="70,214.3 84,214.0 97,213.6 111,213.1 124,212.5 138,211.7 151,210.7 165,209.5 178,208.1 192,206.4 205,204.4 219,202.2 232,199.7 246,197.0 260,194.1 273,191.1 287,188.0 300,185.0 314,182.1 327,179.4 341,177.1 354,175.2 368,173.7 381,172.8 395,172.5 409,172.8 422,173.7 436,175.2 449,177.1 463,179.4 476,182.1 490,185.0 503,188.0 517,191.1 530,194.1 544,197.0 558,199.7 571,202.2 585,204.4 598,206.4 612,208.1 625,209.5 639,210.7 652,211.7 666,212.5 679,213.1 693,213.6 706,214.0 720,214.3"/>
+      <polyline fill="none" stroke="#8a1c1c" stroke-width="3" points="70,215.0 84,215.0 97,215.0 111,215.0 124,215.0 138,215.0 151,215.0 165,215.0 178,215.0 192,215.0 205,215.0 219,215.0 232,215.0 246,215.0 260,215.0 273,215.0 287,215.0 300,215.0 314,215.0 327,215.0 341,215.0 354,215.0 368,215.0 381,215.0 395,214.9 409,214.6 422,213.0 436,207.2 449,190.9 463,157.1 476,106.8 490,57.6 503,36.6 517,57.6 530,106.8 544,157.1 558,190.9 571,207.2 585,213.0 598,214.6 612,214.9 625,215.0 639,215.0 652,215.0 666,215.0 679,215.0 693,215.0 706,215.0 720,215.0"/>
+      <text x="287" y="237" font-size="15" fill="#1a1a1a" text-anchor="middle">-2</text>
+      <text x="395" y="237" font-size="15" fill="#1a1a1a" text-anchor="middle">0</text>
+      <text x="503" y="237" font-size="15" fill="#1a1a1a" text-anchor="middle">2</text>
+      <text x="720" y="237" font-size="15" fill="#1a1a1a" text-anchor="end">x</text>
+    </svg>
+    <span class="fl fl-l" style="left:10.6%;top:50.2%">$P$: two bumps</span>
+    <span class="fl fl-l fl-blue" style="left:73.4%;top:59.2%">forward: $\mu=0,\ \sigma=2.10$</span>
+    <span class="fl fl-l fl-red" style="left:73.4%;top:21.6%">reverse: $\mu=2,\ \sigma=0.50$</span>
+  </div>
   <ul>
-    <li>Why measure "distance" between pmfs <em>this</em> way?</li>
-    <li>Other divergences exist: what makes KL special?</li>
-    <li>KL runs deeper: <strong>GAN training</strong> is a divergence game</li>
+    <li>$P = \tfrac12 \mathcal{N}(-2, 0.5^2) + \tfrac12 \mathcal{N}(2, 0.5^2)$ on a grid; $Q = \mathcal{N}(\mu, \sigma^2)$ by grid search</li>
+    <li><strong>Forward</strong> $\min_Q D(P \,\|\, Q) = 0.72$ nats at $\mu = 0,\ \sigma = 2.10$: one wide bump covering both</li>
+    <li><strong>Reverse</strong> $\min_Q D(Q \,\|\, P) = 0.69$ nats at $\mu = 2,\ \sigma = 0.50$: one mode only ($\mu = -2$ ties)</li>
   </ul>
-  <p class="muted">Good discomfort. The definitions will keep earning their keep.</p>
 </div>
 
 <!-- Recap -->
@@ -1045,7 +1514,7 @@ loss.<span class="fn">backward</span>()</div>
   <div class="divider"></div>
   <div class="math-block">$$\begin{aligned}
     &\mathbb{E}\Bigl[\log \tfrac{1}{Q(X)}\Bigr]
-      \;\stackrel{(\text{Thm 6})}{=}\; H(X) + D(p_X \,\|\, Q)
+      \;\stackrel{(\text{Thm 4})}{=}\; H(X) + D(p_X \,\|\, Q)
       \;\stackrel{(\text{Thm 2})}{\geq}\; H(X) \\[4pt]
     &W_{\text{opt}} - W_{Q} = D(p_X \,\|\, Q), \qquad
       \ell\bigl(f(x), y\bigr) = D\bigl(y^{(o)} \,\|\, f(x)\bigr)
@@ -1053,7 +1522,8 @@ loss.<span class="fn">backward</span>()</div>
   <ul>
     <li>Wrong pmf overpays: exactly $D(P \| Q)$ bits</li>
     <li>Betting: proportional is optimal; mismatch costs KL</li>
-    <li>CE training minimizes KL to the label</li>
+    <li>CE training minimizes KL to the label; on a population, to $P(Y \mid X)$</li>
+    <li>Log loss: strictly proper, local; gradient $= s - y^{(o)}$</li>
   </ul>
 </div>
 
@@ -1079,7 +1549,7 @@ loss.<span class="fn">backward</span>()</div>
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 69</div>
+<div class="slide-num" id="slideNum">1 / 105</div>
 
 </div><!-- end deck -->
 

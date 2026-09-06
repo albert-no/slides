@@ -26,13 +26,13 @@
 <body>
 
 <h1>Deep Learning Math 2 · KL Divergence &amp; Cross-Entropy Loss &mdash; Notes</h1>
-<p class="meta">Companion to <code>prob02-kl-crossentropy.html</code>. Full definitions with all conventions, expanded proofs (including the edge cases the deck leaves as exercises), independently verified numerics, and references. Throughout, $\log$ denotes $\log_2$ and information is measured in bits; $\ln$ is the natural logarithm. Background from Lecture 1 (entropy, LOTUS, Jensen) is cited from the prob01 companion note (<code>../prob01-foundations/prob01-foundations-note.html</code>) rather than re-proved.</p>
+<p class="meta">Companion to <code>prob02-kl-crossentropy.html</code> (105 slides, 2026-09 revision). Full definitions with all conventions, expanded proofs (including the edge cases the deck leaves as exercises), independently verified numerics, and references. Throughout, $\log$ denotes $\log_2$ and information is measured in bits; $\ln$ is the natural logarithm. Background from Lecture 1 (entropy, LOTUS, Jensen) is cited from the prob01 companion note (<code>../prob01-foundations/prob01-foundations-note.html</code>) rather than re-proved.</p>
 
 <section>
   <h2>1 &nbsp;Why Cross-Entropy?</h2>
   <p>The deck opens with the one line of code every classification project contains: <code>nn.CrossEntropyLoss()</code>. Writing $f(x) = \bigl(f(x)_1, \dots, f(x)_M\bigr)$ for the model's predicted probability vector over $M$ labels and $y$ for the true label, the loss on one sample is</p>
   <div class="deriv">\[ \ell\bigl(f(x), y\bigr) = \log \frac{1}{f(x)_y} = -\log f(x)_y. \]</div>
-  <p>The lecture's question is why this <em>particular</em> decreasing function of $f(x)_y$. Any decreasing function &mdash; $1 - f(x)_y$, $(1 - f(x)_y)^2$, &hellip; &mdash; rewards putting belief on the true label; nothing about "penalize wrong answers" forces a logarithm or a reciprocal. The answer developed below: $\log 1/Q$ is <em>surprisal</em> priced by a model pmf $Q$, its expectation under the truth is the <em>cross-entropy</em> $H(P, Q)$, the excess of that over the entropy $H(P)$ is exactly the <em>KL divergence</em> $D(P \Vert Q)$, and minimizing cross-entropy is therefore minimizing the KL divergence from the model to the truth. The same quantity also has an operational meaning with money attached (Section 5): $D(P \Vert Q)$ is the exponential rate at which a gambler who believes $Q$ loses wealth to a gambler who knows $P$.</p>
+  <p>The lecture's question is why this <em>particular</em> decreasing function of $f(x)_y$. Any decreasing function &mdash; $1 - f(x)_y$, $(1 - f(x)_y)^2$, &hellip; &mdash; rewards putting belief on the true label; nothing about "penalize wrong answers" forces a logarithm or a reciprocal. The answer developed below: $\log 1/Q$ is <em>surprisal</em> priced by a model pmf $Q$, its expectation under the truth is the <em>cross-entropy</em> $H(P, Q)$, the excess of that over the entropy $H(P)$ is exactly the <em>KL divergence</em> $D(P \Vert Q)$, and minimizing cross-entropy is therefore minimizing the KL divergence from the model to the truth. The same quantity also has an operational meaning with money attached (Section 5): $D(P \Vert Q)$ is the exponential rate at which a gambler who believes $Q$ loses wealth to a gambler who knows $P$. Section 6 adds next-token prediction (perplexity) and asks why the <em>log</em> rather than any other decreasing function (proper scoring rules, locality, the softmax gradient); and Section 7 asks which direction of KL to fit, forward or reverse.</p>
   <p><strong>A units remark the deck omits.</strong> These notes, like the deck, use $\log_2$; PyTorch's <code>CrossEntropyLoss</code> uses $\ln$ (and takes raw logits, applying log-softmax internally). Since $\log_2 t = \ln t / \ln 2$, the two losses differ by the constant factor $1/\ln 2 \approx 1.4427$ &mdash; the same minimizer, the same gradients up to scale. Every theorem below is base-independent.</p>
 </section>
 
@@ -133,6 +133,17 @@
   </div>
   <p>Spelled out: $D(P \Vert Q)$ is finite only if $Q(x) = 0 \Rightarrow P(x) = 0$, i.e. only if the support of $P$ is contained in the support of $Q$ (for general measures this is called <em>absolute continuity</em>, written $P \ll Q$). Outcomes outside the support of $P$ never contribute. $D(P \Vert Q)$ is the expected log-likelihood-ratio of truth to model, weighted by the truth:</p>
   \[ D(P \,\Vert\, Q) = \mathbb{E}_{X \sim P}\Bigl[\log \frac{P(X)}{Q(X)}\Bigr]. \]
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Finiteness.</strong> $D(P \Vert Q) \lt \infty$ if and only if $\operatorname{supp} P \subseteq \operatorname{supp} Q$.</p>
+    <p style="margin:8px 0 0;"><strong>Proof.</strong> Every term with $P(x) = 0$ is $0$ by convention. If $\operatorname{supp} P \subseteq \operatorname{supp} Q$, every remaining term has $P(x), Q(x) \gt 0$ and is a finite real number, so the finite sum is finite. Conversely, if some $x$ has $P(x) \gt 0 = Q(x)$, that term is $+\infty$ and no finite term can cancel it. $\blacksquare$</p>
+  </div>
+  <p>In words: the truth may be <em>narrower</em> than the model, never wider. Both conventions are continuity statements, $t \log t \rightarrow 0$ as $t \downarrow 0$ and $p \log \tfrac{p}{q} \rightarrow +\infty$ as $q \downarrow 0$ for fixed $p \gt 0$.</p>
+  <p><strong>Support in deep learning.</strong> The cross-entropy loss on the true label $y$ is $\log 1/Q(y)$ (Section 6), so $Q(y) = 0$ gives an infinite loss on a single sample. Three consequences the deck draws:</p>
+  <ul>
+    <li>A softmax output $e^{z_i} / \sum_j e^{z_j}$ is strictly positive for every finite logit vector, so every label keeps some mass and the loss stays finite.</li>
+    <li>Label smoothing (Section 6.7) replaces the one-hot target $y^{(o)}$ by $(1-\varepsilon)\, y^{(o)} + \varepsilon / M$, which has full support: it <em>widens the truth</em> rather than narrowing the model.</li>
+    <li>Forward KL $D(P \Vert Q)$ is infinite the moment the model rules out something the truth allows; this is the "zero-avoiding" behavior developed in Section 7.1.</li>
+  </ul>
 
   <h3>4.2 Worked example in both directions, verified</h3>
   <p>Take $P = (0.5, 0.4, 0.1)$ and uniform $Q = (\tfrac13, \tfrac13, \tfrac13)$. Forward direction, term by term:</p>
@@ -170,32 +181,93 @@
        = H(P) - H(P, Q) \;\leq\; 0, \]
     <p style="margin:8px 0 0;">with equality iff $Q = P$ by the equality analysis already done. $\blacksquare$</p>
   </div>
-  <p><strong>Alternative self-contained proof via the log-sum inequality.</strong> The following lemma is worth knowing; it handles all zero-mass edge cases at once and recurs throughout information theory [1, Thm 2.7.1].</p>
-  <div class="deriv">
-    <p style="margin:0 0 6px;"><strong>Lemma (log-sum inequality).</strong> For non-negative numbers $a_1, \dots, a_n$ and $b_1, \dots, b_n$, with $a = \sum_i a_i$ and $b = \sum_i b_i$,</p>
-    \[ \sum_{i=1}^{n} a_i \log \frac{a_i}{b_i} \;\geq\; a \log \frac{a}{b}, \]
-    <p style="margin:8px 0 6px;">with the conventions of Section 4.1; equality iff $\tfrac{a_i}{b_i}$ is the same for all $i$ (with $b_i \gt 0$).</p>
-    <p style="margin:8px 0 6px;"><strong>Proof.</strong> If some $b_i = 0$ with $a_i \gt 0$ the left side is $+\infty$; discard indices with $a_i = b_i = 0$; so assume all $b_i \gt 0$. The function $f(t) = t \log t$ is strictly convex on $[0, \infty)$ (for $t \gt 0$, $f''(t) = \tfrac{1}{t \ln 2} \gt 0$). Apply Jensen for convex functions with weights $\tfrac{b_i}{b}$ to the points $t_i = \tfrac{a_i}{b_i}$:</p>
-    \[ \sum_i \frac{b_i}{b}\, f\Bigl(\frac{a_i}{b_i}\Bigr)
-       \;\geq\; f\Bigl(\sum_i \frac{b_i}{b} \cdot \frac{a_i}{b_i}\Bigr)
-       = f\Bigl(\frac{a}{b}\Bigr). \]
-    <p style="margin:8px 0 0;">Multiplying both sides by $b$ gives the claim, and strict convexity makes Jensen tight iff all $t_i$ coincide. $\blacksquare$</p>
-  </div>
-  <p>Now take $a_i = P(x_i)$, $b_i = Q(x_i)$ over all of $\mathcal{X}$: $a = b = 1$, so $D(P \Vert Q) \geq 1 \cdot \log \tfrac11 = 0$, with equality iff $\tfrac{P(x)}{Q(x)}$ is constant, which (both summing to $1$) forces $P = Q$.</p>
+  <p>Theorem 2 as proved above inherits the support bookkeeping of Section 3.4. The next subsection gives a second proof that handles every zero-mass case by a single lemma, which then also delivers the convexity of $D$ (Theorem 3).</p>
 
-  <h3>4.5 The gap, named: CE = entropy + KL</h3>
-  <p>Splitting the log-ratio inside the cross-entropy sum (each term finite or $+\infty$ consistently, by the conventions):</p>
+  <h3>4.5 Technique: $t \log t$, the log-sum inequality, and Theorem 2 with zeros</h3>
+  <p>The function behind everything in this section is $f(t) = t \log t$ on $(0, \infty)$, extended by $f(0) = 0$. It is <em>strictly convex</em>: $f'(t) = \log t + \tfrac{1}{\ln 2}$ and $f''(t) = \tfrac{1}{t \ln 2} \gt 0$. Landmarks (the deck's figure): $f(1) = 0$; the minimum is at $f'(t) = 0$, i.e. $t = 1/e$, with value $f(1/e) = -\tfrac{\log e}{e} = -\tfrac{1.4427}{2.7183} \approx -0.531$ bits; and $f(3) = 3 \log 3 \approx 4.755$. Jensen's inequality for a <em>convex</em> $f$ runs the other way from Section 2.1: $\mathbb{E}[f(Z)] \geq f(\mathbb{E}[Z])$, with equality iff $Z$ is constant when $f$ is strictly convex.</p>
   <div class="deriv">
-    \[ H(P, Q) = \sum_x P(x) \log \frac{1}{Q(x)}
-       = \sum_x P(x) \log \Bigl(\frac{1}{P(x)} \cdot \frac{P(x)}{Q(x)}\Bigr) \]
-    \[ = \underbrace{\sum_x P(x) \log \frac{1}{P(x)}}_{H(P)}
-       + \underbrace{\sum_x P(x) \log \frac{P(x)}{Q(x)}}_{D(P \Vert Q)}. \]
+    <p style="margin:0 0 6px;"><strong>Lemma (log-sum inequality [1, Thm 2.7.1]).</strong> For $a_1, \dots, a_n \geq 0$ and $b_1, \dots, b_n \gt 0$,</p>
+    \[ \sum_{i=1}^{n} a_i \log \frac{a_i}{b_i} \;\geq\; \Bigl(\sum_i a_i\Bigr) \log \frac{\sum_i a_i}{\sum_i b_i}, \]
+    <p style="margin:8px 0 6px;">with $0 \log 0 = 0$; equality iff $a_i / b_i$ is the same for all $i$. ("Merging terms can only lower the sum.")</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Put $B = \sum_j b_j$, weights $w_i = b_i / B$ (a pmf on $\{1, \dots, n\}$), points $t_i = a_i / b_i \geq 0$. Then $a_i \log \tfrac{a_i}{b_i} = b_i\, t_i \log t_i = B\, w_i f(t_i)$, so</p>
+    \[ \sum_i a_i \log \frac{a_i}{b_i}
+       = B \sum_i w_i\, f(t_i)
+       \;\overset{(\text{Jensen})}{\geq}\; B\, f\Bigl(\sum_i w_i t_i\Bigr)
+       = B\, f\Bigl(\frac{\sum_i a_i}{B}\Bigr)
+       = \Bigl(\sum_i a_i\Bigr) \log \frac{\sum_i a_i}{\sum_j b_j}, \]
+    <p style="margin:8px 0 0;">using $\sum_i w_i t_i = \sum_i a_i / B$ in the middle. Strict convexity of $f$ makes Jensen tight iff all $t_i$ coincide. $\blacksquare$</p>
   </div>
-  <p>So $H(P, Q) = H(P) + D(P \Vert Q)$: the mismatch overpayment <em>is</em> the KL divergence. This identity is stated again as Theorem 6 in Section 6 (the deck proves it there in the direction $D = H(P,Q) - H(P)$; it is the same computation). In the Section 3.2 example, $D(P \Vert Q) = 0.1837 - 0.0808 \approx 0.103$ bits.</p>
+  <p>(If some $b_i = 0$ with $a_i \gt 0$ the left side is $+\infty$ and the inequality is trivial; indices with $a_i = b_i = 0$ can be discarded. So the hypothesis $b_i \gt 0$ costs no generality.)</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Corollary (Theorem 2, zeros included).</strong> Take $a_x = P(x)$, $b_x = Q(x)$ over $x \in \operatorname{supp} P$. If some $Q(x) = 0$ there, $D(P \Vert Q) = +\infty \geq 0$ and there is nothing to prove. Otherwise</p>
+    \[ D(P \,\Vert\, Q)
+       \;\overset{(\text{log-sum})}{\geq}\; 1 \cdot \log \frac{1}{\sum_{x \in \operatorname{supp} P} Q(x)}
+       \;\overset{(\text{sub-sum} \,\leq\, 1)}{\geq}\; \log 1 = 0. \qquad \blacksquare \]
+    <p style="margin:8px 0 0;"><strong>Equality</strong> needs both steps tight: $P(x)/Q(x)$ constant on $\operatorname{supp} P$ (log-sum) and $\sum_{\operatorname{supp} P} Q(x) = 1$, i.e. no $Q$-mass off the support. Together they force $P = Q$. The convention $0 \log 0 = 0$ handled every $P(x) = 0$ term for free.</p>
+  </div>
+
+  <h3>4.6 Theorem 3 — KL is convex in the pair</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 3 (convexity of KL [1, Thm 2.7.2]).</strong> For pmfs $(P_1, Q_1)$, $(P_2, Q_2)$ on $\mathcal{X}$ and $\lambda \in [0, 1]$,</p>
+    \[ D\bigl(\lambda P_1 + (1-\lambda) P_2 \,\Vert\, \lambda Q_1 + (1-\lambda) Q_2\bigr)
+       \;\leq\; \lambda\, D(P_1 \,\Vert\, Q_1) + (1-\lambda)\, D(P_2 \,\Vert\, Q_2). \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Fix $x$ and apply the two-term log-sum inequality with $a_1 = \lambda P_1(x)$, $a_2 = (1-\lambda) P_2(x)$, $b_1 = \lambda Q_1(x)$, $b_2 = (1-\lambda) Q_2(x)$ (read the lemma right-to-left):</p>
+    \[ (a_1 + a_2) \log \frac{a_1 + a_2}{b_1 + b_2}
+       \;\leq\; a_1 \log \frac{a_1}{b_1} + a_2 \log \frac{a_2}{b_2}
+       = \lambda P_1(x) \log \frac{P_1(x)}{Q_1(x)} + (1-\lambda) P_2(x) \log \frac{P_2(x)}{Q_2(x)}, \]
+    <p style="margin:8px 0 0;">because the factors $\lambda$ and $1-\lambda$ cancel inside each log. The left side is the $x$-th term of the mixture divergence; sum over $x$. (Terms where a $b_i = 0$ with $a_i \gt 0$ make the right side $+\infty$, where the inequality is trivial.) $\blacksquare$</p>
+  </div>
+  <p>Mixing truths and models together never increases the divergence. In particular $D$ is convex in $Q$ for fixed $P$ (take $P_1 = P_2$), the property that makes "minimize $D(P \Vert Q_\theta)$" a convex problem when $Q_\theta$ is linear in $\theta$. The deck points to two later uses: the data-processing inequality (prob03) and variational bounds (Section 7).</p>
+
+  <h3>4.7 Theorem 4 — cross-entropy = entropy + KL</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 4 (cross-entropy decomposition).</strong> For pmfs $P, Q$ on $\mathcal{X}$ with $\operatorname{supp} P \subseteq \operatorname{supp} Q$,</p>
+    \[ H(P, Q) \;=\; H(P) + D(P \,\Vert\, Q). \]
+    <p style="margin:8px 0 6px;">(Without the support hypothesis both sides are $+\infty$ and the identity still holds formally.)</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Split the log-ratio inside $D$; sums run over $\operatorname{supp} P$, where every term is finite:</p>
+    \[ D(P \,\Vert\, Q) = \sum_x P(x) \log \frac{P(x)}{Q(x)}
+       = \underbrace{\sum_x P(x) \log P(x)}_{-H(P)}
+       + \underbrace{\sum_x P(x) \log \frac{1}{Q(x)}}_{H(P,\,Q)}, \]
+    <p style="margin:8px 0 0;">i.e. $D = -H(P) + H(P, Q)$. Rearranging gives the claim. $\blacksquare$</p>
+  </div>
+  <p>The mismatch overpayment of Theorem 1 <em>is</em> the KL divergence: Theorem 1 is now an exact identity plus Theorem 2. In the Section 3.2 example, $D(P \Vert Q) = 0.1837 - 0.0808 \approx 0.103$ bits (direct computation: $0.01 \log \tfrac{0.01}{0.1} + 0.99 \log \tfrac{0.99}{0.9} \approx 0.1029$). Since $H(P)$ contains no $Q$, minimizing $H(P, Q)$ over $Q$ is minimizing $D(P \Vert Q)$; that one sentence is the whole of Section 6. (The source notes' displayed derivation of this identity drops a $p_X(x)$ factor in one intermediate line &mdash; a typo &mdash; and the version above is the corrected computation.)</p>
+
+  <h3>4.8 $f$-divergences — Definition, Theorem 5, and the zoo</h3>
+  <p>KL is one member of a family that shares the Jensen proof.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition ($f$-divergence [9], [10]).</strong> Let $f : (0, \infty) \rightarrow \mathbb{R}$ be convex with $f(1) = 0$. For pmfs $P, Q$ with $\operatorname{supp} P \subseteq \operatorname{supp} Q$,</p>
+    \[ D_f(P \,\Vert\, Q) = \sum_{x \in \operatorname{supp} Q} Q(x)\, f\Bigl(\frac{P(x)}{Q(x)}\Bigr). \]
+    <p style="margin:8px 0 0;">KL is the case $f(t) = t \log t$: $\sum_x Q(x) \tfrac{P(x)}{Q(x)} \log \tfrac{P(x)}{Q(x)} = D(P \Vert Q)$. (Terms with $P(x) = 0 \lt Q(x)$ contribute $Q(x) f(0)$, with $f(0) = \lim_{t \downarrow 0} f(t)$, which is $0$ for $t \log t$.)</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 5 ($f$-divergences are non-negative).</strong> $D_f(P \Vert Q) \geq 0$, with equality if $P = Q$; if $f$ is strictly convex at $1$, equality holds <em>only</em> if $P = Q$.</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Jensen with weights $Q(x)$ (a pmf) and points $t_x = P(x)/Q(x)$, whose $Q$-mean is $\sum_x Q(x) \tfrac{P(x)}{Q(x)} = \sum_x P(x) = 1$:</p>
+    \[ \sum_x Q(x)\, f\Bigl(\frac{P(x)}{Q(x)}\Bigr)
+       \;\overset{(\text{Jensen})}{\geq}\; f\Bigl(\sum_x Q(x) \frac{P(x)}{Q(x)}\Bigr) = f(1) = 0. \]
+    <p style="margin:8px 0 0;">If $P = Q$ all $t_x = 1$ and every term is $f(1) = 0$. If $f$ is strictly convex at $1$ (no supporting line at $1$ touches $f$ elsewhere), Jensen is tight only when all $t_x = 1$, i.e. $P = Q$. $\blacksquare$</p>
+  </div>
+  <p><strong>The zoo, on the running example.</strong> $P = (0.5, 0.4, 0.1)$, $Q = (\tfrac13, \tfrac13, \tfrac13)$; all logs base 2. Every entry below was recomputed from the definition.</p>
+  <table>
+    <tr><th>$f(t)$</th><th>name</th><th>$D_f(P \Vert Q)$</th><th>computation</th></tr>
+    <tr><td>$t \log t$</td><td>KL $D(P \Vert Q)$</td><td>$0.224$</td><td>Section 4.2</td></tr>
+    <tr><td>$-\log t$</td><td>reverse KL $D(Q \Vert P)$</td><td>$0.296$</td><td>$\sum_x Q(x) \log \tfrac{Q(x)}{P(x)}$, Section 4.2</td></tr>
+    <tr><td>$\tfrac12 \lvert t - 1 \rvert$</td><td>total variation $\tfrac12 \sum_x \lvert P(x) - Q(x) \rvert$</td><td>$0.233$</td><td>$0.0833 + 0.0333 + 0.1167$</td></tr>
+    <tr><td>$(t-1)^2$</td><td>$\chi^2$, $\sum_x \tfrac{(P(x) - Q(x))^2}{Q(x)}$</td><td>$0.260$</td><td>$0.0833 + 0.0133 + 0.1633$</td></tr>
+    <tr><td>$\tfrac12\bigl[t \log \tfrac{2t}{1+t} + \log \tfrac{2}{1+t}\bigr]$</td><td>Jensen&ndash;Shannon $\tfrac12 D(P \Vert M) + \tfrac12 D(Q \Vert M)$, $M = \tfrac{P+Q}{2}$</td><td>$0.062$</td><td>$M = (0.4167, 0.3667, 0.2167)$; $\tfrac12(0.0702) + \tfrac12(0.0540)$</td></tr>
+  </table>
+  <p>Two checks that the $f$'s are the right ones: with $t = P/Q$, $Q \cdot \tfrac12 \lvert t - 1 \rvert = \tfrac12 \lvert P - Q \rvert$ and $Q\,(t-1)^2 = (P-Q)^2 / Q$; for Jensen&ndash;Shannon, $Q \cdot \tfrac12 [t \log \tfrac{2t}{1+t} + \log \tfrac{2}{1+t}] = \tfrac12 P \log \tfrac{2P}{P+Q} + \tfrac12 Q \log \tfrac{2Q}{P+Q}$, whose sum over $x$ is $\tfrac12 D(P \Vert M) + \tfrac12 D(Q \Vert M)$. Total variation is bounded by $1$ and symmetric; Jensen&ndash;Shannon is bounded by $1$ bit and symmetric; KL and $\chi^2$ are neither. All five vanish iff $P = Q$.</p>
+
+  <h3>4.9 What KL alone brings</h3>
+  <p>Every $f$-divergence is non-negative and zero exactly at $P = Q$ (Theorem 5), so non-negativity does not single out KL. Two properties in this lecture do:</p>
+  <ul>
+    <li><strong>Decomposes</strong> the cross-entropy: $H(P, Q) = H(P) + D(P \Vert Q)$, with a $P$-only constant (Theorem 4). This is what turns "minimize the training loss" into "minimize a divergence".</li>
+    <li>Its integrand is a <strong>surprisal difference</strong>, $\log \tfrac{1}{Q(x)} - \log \tfrac{1}{P(x)}$: the guessing bill of Section 3, the betting cost of Section 5.</li>
+  </ul>
+  <p><strong>Left open (flag).</strong> Is KL the <em>only</em> $f$-divergence with these properties? The deck states no uniqueness theorem, and none is proved here. What is settled today is the direction of use: $D(P \Vert Q)$ is the price of believing $Q$ in a $P$ world &mdash; in log-wealth (Section 5), in training loss and perplexity (Section 6), and in the choice of direction when fitting a model (Section 7).</p>
 </section>
 
 <section>
-  <h2>5 &nbsp;Gambling &amp; Doubling Rate</h2>
+  <h2>5 &nbsp;Betting</h2>
 
   <h3>5.1 Setup — red or black</h3>
   <p>A binary game: RED wins with probability $p$, BLACK with probability $1-p$; the deck takes $p \leq \tfrac12$ (BLACK is the favorite &mdash; this is only used to fix which corner maximizes $\mathbb{E}[S]$ below, not for any theorem). Odds are $2$-for-$1$ on both colors: the money bet on the winning color is doubled, the rest is lost. With budget $B$, bet $qB$ on red and $(1-q)B$ on black, $q \in [0,1]$. The wealth after one round is the random variable</p>
@@ -229,18 +301,18 @@
   </div>
   <p>The bracket is exactly the cross-entropy $H\bigl((p, 1-p),\, (q, 1-q)\bigr)$ of the betting fractions against the true win probabilities. Theorem 1 already tells us its unique minimizer.</p>
 
-  <h3>5.4 Theorem 3 — proportional betting (binary), with proof</h3>
+  <h3>5.4 Theorem 6 — proportional betting (binary), with proof</h3>
   <div class="deriv">
-    <p style="margin:0 0 6px;"><strong>Theorem 3 (proportional betting).</strong> In the binary game with odds $2$ and $0 \lt p \lt 1$, $\mathbb{E}[\log S]$ is maximized over $q \in [0,1]$ uniquely at $q = p$, and</p>
+    <p style="margin:0 0 6px;"><strong>Theorem 6 (proportional betting).</strong> In the binary game with odds $2$ and $0 \lt p \lt 1$, $\mathbb{E}[\log S]$ is maximized over $q \in [0,1]$ uniquely at $q = p$, and</p>
     \[ \max_q \mathbb{E}[\log S] = \log 2B - h_2(p), \]
     <p style="margin:8px 0 6px;">where $h_2(p) = p \log \tfrac1p + (1-p) \log \tfrac{1}{1-p}$ is the binary entropy function. Moreover, for any $q$,</p>
     \[ \mathbb{E}[\log S_{\text{opt}}] - \mathbb{E}[\log S_q]
        = D\bigl((p, 1{-}p) \,\Vert\, (q, 1{-}q)\bigr). \]
-    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Apply the decomposition $H(P, Q) = H(P) + D(P \Vert Q)$ of Section 4.5 to the bracket, with $P = (p, 1-p)$ and $Q = (q, 1-q)$:</p>
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Apply the decomposition $H(P, Q) = H(P) + D(P \Vert Q)$ (Theorem 4) to the bracket, with $P = (p, 1-p)$ and $Q = (q, 1-q)$:</p>
     \[ \mathbb{E}[\log S] = \log 2B - h_2(p) - D\bigl((p, 1{-}p) \,\Vert\, (q, 1{-}q)\bigr). \]
     <p style="margin:8px 0 0;">Only the last term depends on $q$; by Theorem 2 it is $\geq 0$ with equality iff $(q, 1-q) = (p, 1-p)$, i.e. $q = p$. Both claims follow. (Endpoints are consistent: $q \in \{0, 1\}$ with $0 \lt p \lt 1$ gives $D = +\infty$ and indeed $\mathbb{E}[\log S] = -\infty$ &mdash; the all-in strategies are infinitely bad on the log scale.) $\blacksquare$</p>
   </div>
-  <p>"Bet your beliefs, in exact proportion": the optimal split copies the probability vector, regardless of the (fair) odds. And the cost of betting the wrong beliefs $Q$ is precisely the KL divergence from your beliefs to the truth &mdash; the third costume of the same quantity, after guessing bills and (in Cover &amp; Thomas Ch. 5) code lengths. This log-optimal criterion is due to Kelly [4], whose 1956 paper set up exactly this horse-race correspondence between information rate and wealth growth.</p>
+  <p>"Bet your beliefs, in exact proportion": the optimal split copies the probability vector, regardless of the (fair) odds. And the cost of betting the wrong beliefs $Q$ is precisely the KL divergence from your beliefs to the truth &mdash; the second costume of the same quantity after the guessing bill of Section 3; next-token prediction (Section 6.3) follows. This log-optimal criterion is due to Kelly [4], whose 1956 paper set up exactly this horse-race correspondence between information rate and wealth growth.</p>
 
   <h3>5.5 Doubling rate: what the "≈" means</h3>
   <div class="deriv">
@@ -254,12 +326,12 @@
     \[ \frac{1}{n} \log \frac{S_n}{B} = \frac{1}{n} \sum_{k=1}^{n} \log G_k
        \;\longrightarrow\; W \quad \text{almost surely,} \]
   </div>
-  <p>by the strong law of large numbers (LLN is treated later in this course, prob05; the statement is standard). Equivalently $S_n = B \cdot 2^{n(W + o(1))}$: log-wealth grows <em>linearly at slope $W$ bits per bet</em>, so wealth grows (or decays) exponentially at rate $W$. Three regimes: $W \gt 0$ exponential growth, $W = 0$ treading water, $W \lt 0$ exponential ruin. Note it is the <em>typical</em> (almost-sure) exponent, not the exponent of $\mathbb{E}[S_n]$ &mdash; Section 5.2 showed those can disagree wildly.</p>
+  <p>by the strong law of large numbers (the law of large numbers is not proved in this lecture; it is treated in prob05). Equivalently $S_n = B \cdot 2^{n(W + o(1))}$: log-wealth grows <em>linearly at slope $W$ bits per bet</em>, so wealth grows (or decays) exponentially at rate $W$. Three regimes: $W \gt 0$ exponential growth, $W = 0$ treading water, $W \lt 0$ exponential ruin. Note it is the <em>typical</em> (almost-sure) exponent, not the exponent of $\mathbb{E}[S_n]$ &mdash; Section 5.2 showed those can disagree wildly.</p>
 
-  <h3>5.6 Theorem 4 — horse racing, with proof</h3>
+  <h3>5.6 Theorem 7 — horse racing, with proof</h3>
   <p>Generalize to $M$ horses: horse $i$ wins with probability $p_X(i)$; odds are $M$-for-$1$ on every horse (uniform fair odds); the gambler splits the budget as $\bigl(Q(1)B, \dots, Q(M)B\bigr)$ where $Q$ is a pmf. Winner takes all: if horse $i$ wins, $S = M\, Q(i)\, B$.</p>
   <div class="deriv">
-    <p style="margin:0 0 6px;"><strong>Theorem 4 (proportional betting, $M$ horses).</strong></p>
+    <p style="margin:0 0 6px;"><strong>Theorem 7 (proportional betting, $M$ horses).</strong></p>
     \[ \mathbb{E}[\log S] = \log B + \log M - \sum_{i=1}^{M} p_X(i) \log \frac{1}{Q(i)} \]
     \[ = \log B + \log M - H(p_X) - D(p_X \,\Vert\, Q), \]
     <p style="margin:8px 0 6px;">maximized uniquely at $Q = p_X$, with maximum $\log B + \log M - H(p_X)$; the loss for betting $Q$ instead is exactly $D(p_X \Vert Q)$. The doubling rate of strategy $Q$ is</p>
@@ -270,9 +342,9 @@
     <p style="margin:8px 0 6px;">The constants pull out ($\sum_i p_X(i) = 1$), leaving</p>
     \[ \mathbb{E}[\log S] = \log B + \log M - \sum_{i=1}^{M} p_X(i) \log \frac{1}{Q(i)}
        = \log B + \log M - H(p_X, Q). \]
-    <p style="margin:8px 0 0;">Apply $H(p_X, Q) = H(p_X) + D(p_X \Vert Q)$ (Section 4.5); only $D$ depends on $Q$, and Theorem 2 finishes as before. $\blacksquare$</p>
+    <p style="margin:8px 0 0;">Apply $H(p_X, Q) = H(p_X) + D(p_X \Vert Q)$ (Theorem 4); only $D$ depends on $Q$, and Theorem 2 finishes as before. $\blacksquare$</p>
   </div>
-  <p>Theorem 3 is the case $M = 2$. Note $W^{*} = \log M - H(p_X)$ can be negative: at uniform fair odds, the game is only profitable if the race is <em>predictable enough</em> ($H(p_X) \lt \log M$, i.e. $p_X$ non-uniform); against a perfectly uniform race the best doubling rate is $0$. Uniform-$Q$ check: $D(p_X \Vert \text{uniform}) = \log M - H(p_X) = W^*$, so the uniform bettor has $W = W^* - W^* = 0$ exactly &mdash; betting $B/M$ on each horse at $M$-for-$1$ odds returns the budget unchanged, deterministically.</p>
+  <p>Theorem 6 is the case $M = 2$. Note $W^{*} = \log M - H(p_X)$ can be negative: at uniform fair odds, the game is only profitable if the race is <em>predictable enough</em> ($H(p_X) \lt \log M$, i.e. $p_X$ non-uniform); against a perfectly uniform race the best doubling rate is $0$. Uniform-$Q$ check: $D(p_X \Vert \text{uniform}) = \log M - H(p_X) = W^*$, so the uniform bettor has $W = W^* - W^* = 0$ exactly &mdash; betting $B/M$ on each horse at $M$-for-$1$ odds returns the budget unchanged, deterministically.</p>
 
   <h3>5.7 The 3-horse race, fully verified</h3>
   <p>Win probabilities $p = (\tfrac12, \tfrac14, \tfrac14)$, odds $3$-for-$1$. First, $H(p) = \tfrac12 \cdot 1 + \tfrac14 \cdot 2 + \tfrac14 \cdot 2 = 1.5$ bits, so</p>
@@ -291,7 +363,8 @@
       \[ = \tfrac12 (1) + \tfrac14 (0) + \tfrac14 (-1) = 0.25 \text{ bits}, \]
       so $W = 0.08496 - 0.25 = -0.16504 \approx -0.165$, and $100$ races multiply wealth by $2^{-16.504} \approx 1.08 \times 10^{-5} \approx 1/92{,}900$ &mdash; the deck's $\times 1/93000$. Same race, same odds; beliefs alone separate a $\times 361$ fortune from near-total ruin.</li>
   </ul>
-  <p>The classifier analogy is now exact: a model that outputs label probabilities is a gambler betting a pmf on the outcome, and the next section charges it the same penalty.</p>
+  <p>The classifier analogy is now exact: a model that outputs label probabilities is a gambler betting a pmf on the outcome, and Section 6 charges it the same penalty. First, two more costumes.</p>
+
 </section>
 
 <section>
@@ -316,7 +389,62 @@
   </table>
   <p>All three agree with the deck ($0.014$, $0.515$, $1.737$; the first entry is $0.01450$, which the deck truncates). Note the confused model would even <em>misclassify</em> (argmax is dog), yet its loss is finite; a model betting $f(x)_{\text{cat}} = 0$ would take infinite loss regardless of anything else.</p>
 
-  <h3>6.3 One-hot labels are pmfs; Theorem 5</h3>
+  <h3>6.3 Predicting costume — language models and perplexity</h3>
+  <p>A language model assigns, at each position $t$, a pmf $Q(\cdot \mid x_{\lt t})$ over the vocabulary of $K$ tokens. Its training loss on a text $x_1, \dots, x_T$ is the average surprisal of the true next token,</p>
+  \[ \ell_t = \log \frac{1}{Q(x_t \mid x_{\lt t})}, \qquad \text{loss} = \frac{1}{T} \sum_{t=1}^{T} \ell_t, \]
+  <p>a cross-entropy per token (PyTorch reports it in nats). Each $\ell_t$ is a single-sample cross-entropy loss in the sense of Section 6.1, with the conditional pmf as the model's bet.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (perplexity).</strong></p>
+    \[ \mathrm{PPL} = 2^{\,\text{CE in bits}} = e^{\,\text{CE in nats}}. \]
+    <p style="margin:8px 0 0;">The two forms agree because $\text{CE}_{\text{nats}} = \text{CE}_{\text{bits}} \cdot \ln 2$ and $2^{a} = e^{a \ln 2}$; perplexity is base-free.</p>
+  </div>
+  <p>If the model spreads its guess uniformly over $K$ tokens, $\text{CE} = \log K$ bits and $\mathrm{PPL} = K$: $K = 2, 10, 50{,}000$ give $1$, $3.3219$, $15.6096$ bits ($0.6931$, $2.3026$, $10.8198$ nats) and perplexities $2$, $10$, $50{,}000$. Read a general $\mathrm{PPL}$ as the <em>effective number of equally likely next tokens</em> the model is choosing among.</p>
+  <p><strong>Why perplexity matters.</strong> It is a single number that ranks language models on shared held-out text, and halving it saves exactly one bit per token. By Theorem 4 applied at each position, $\text{CE} = \tfrac1T \sum_t \bigl[H(P_t) + D(P_t \Vert Q_t)\bigr]$ with $P_t$ the true next-token pmf, so a lower perplexity is a smaller average KL divergence from the model to the text, up to the model-free entropy term. Two caveats: perplexity depends on the tokenizer (bits per token, not per character), and only comparisons on the same test text are meaningful.</p>
+
+  <h3>6.4 Three candidate losses; proper scoring rules; log loss is strictly proper</h3>
+  <p>Section 1 asked why $\log 1/f(x)_y$ rather than some other decreasing function of the mass on the true label. Three candidates, all satisfying "higher belief on the truth, lower loss":</p>
+  \[ \underbrace{1 - f(x)_y}_{\text{linear}}, \qquad
+     \underbrace{\sum_{i=1}^{M} \bigl(f(x)_i - \mathbb{1}[i = y]\bigr)^2}_{\text{Brier (squared error to one-hot)}}, \qquad
+     \underbrace{\log \tfrac{1}{f(x)_y}}_{\text{log}}. \]
+  <p>A criterion is needed. The classical one asks: if the forecaster <em>knows</em> the truth $P$, does the loss reward reporting it?</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (proper and strictly proper scoring rule [12]).</strong> Let $\ell(Q, y)$ be a loss for reporting the pmf $Q$ when outcome $y$ occurs, and define the expected loss under the truth $P$,</p>
+    \[ L(P, Q) = \mathbb{E}_{Y \sim P}\bigl[\ell(Q, Y)\bigr] = \sum_{i} P_i\, \ell(Q, i). \]
+    <p style="margin:8px 0 0;">$\ell$ is <em>proper</em> if $L(P, P) \leq L(P, Q)$ for all $P, Q$, and <em>strictly proper</em> if moreover equality holds only when $Q = P$. (Honesty is optimal, and for strictly proper rules uniquely so.)</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Proposition (log loss is strictly proper).</strong> For $\ell(Q, y) = \log 1/Q_y$,</p>
+    \[ L(P, Q) = \sum_i P_i \log \frac{1}{Q_i} = H(P, Q)
+       \;\overset{(\text{Thm 4})}{=}\; H(P) + D(P \,\Vert\, Q)
+       \;\overset{(\text{Thm 2})}{\geq}\; H(P) = L(P, P), \]
+    <p style="margin:8px 0 0;">with equality iff $D(P \Vert Q) = 0$ iff $Q = P$. $\blacksquare$ This is the mismatch theorem (Theorem 1) in its third costume: the cost of the lie is exactly $D(P \Vert Q)$.</p>
+  </div>
+
+  <h3>6.5 Linear is not proper, Brier is proper, and locality singles out the log</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Linear loss is not proper.</strong> With $\ell(Q, y) = 1 - Q_y$,</p>
+    \[ L(P, Q) = \sum_i P_i (1 - Q_i) = 1 - \sum_i P_i Q_i, \]
+    <p style="margin:8px 0 0;">which is <em>linear</em> in $Q$ on the simplex, hence minimized at a vertex: $Q$ one-hot on $\arg\max_i P_i$, with value $1 - \max_i P_i$. Unless $P$ is itself one-hot, this beats $L(P, P) = 1 - \sum_i P_i^2$, so honesty loses. For $P = (0.7, 0.2, 0.1)$: honest $Q = P$ scores $1 - (0.49 + 0.04 + 0.01) = 0.460$; all-in $Q = (1, 0, 0)$ scores $0.300$.</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Brier score is strictly proper.</strong> With $\ell(Q, i) = \sum_j (Q_j - \mathbb{1}[j = i])^2 = \sum_j Q_j^2 - 2 Q_i + 1$,</p>
+    \[ L(P, Q) = \sum_i P_i \Bigl(\sum_j Q_j^2 - 2 Q_i + 1\Bigr)
+       = \sum_j Q_j^2 - 2 \sum_j P_j Q_j + 1
+       \;\overset{(\pm \sum_j P_j^2)}{=}\; \sum_j (Q_j - P_j)^2 + \Bigl(1 - \sum_j P_j^2\Bigr), \]
+    <p style="margin:8px 0 0;">and $1 - \sum_j P_j^2 = \sum_j P_j (1 - P_j)$ since $\sum_j P_j = 1$. The first sum is $\geq 0$ with equality iff $Q = P$; the second is $P$-only. Hence strictly proper. $\blacksquare$ For $P = (0.7, 0.2, 0.1)$, $\sum_j P_j(1-P_j) = 0.21 + 0.16 + 0.09 = 0.460$: $Q = P$ scores $0.460$; $Q = (1,0,0)$ adds $0.3^2 + 0.2^2 + 0.1^2 = 0.14$ and scores $0.600$.</p>
+  </div>
+  <p><strong>The deck's table, verified.</strong> Truth $P = (0.7, 0.2, 0.1)$; expected loss $L(P, Q)$, log in bits:</p>
+  <table>
+    <tr><th>report $Q$</th><th>log</th><th>linear</th><th>Brier</th></tr>
+    <tr><td>$P = (0.7, 0.2, 0.1)$</td><td>$H(P) = 1.157$</td><td>$0.460$</td><td>$0.460$</td></tr>
+    <tr><td>one-hot $(1, 0, 0)$</td><td>$+\infty$</td><td>$0.300$</td><td>$0.600$</td></tr>
+    <tr><td>uniform $(\tfrac13, \tfrac13, \tfrac13)$</td><td>$\log 3 = 1.585$</td><td>$0.667$</td><td>$0.667$</td></tr>
+  </table>
+  <p>($H(0.7, 0.2, 0.1) = 0.7 \log \tfrac{1}{0.7} + 0.2 \log 5 + 0.1 \log 10 \approx 0.3602 + 0.4644 + 0.3322 = 1.1568$; uniform Brier: $(\tfrac13 - 0.7)^2 + (\tfrac13 - 0.2)^2 + (\tfrac13 - 0.1)^2 + 0.46 = 0.2067 + 0.46 = 0.6667$.) Only the linear loss prefers the lie; both log and Brier put the honest report at the top of their columns.</p>
+  <p><strong>Locality, and why the log.</strong> Both log and Brier are strictly proper, so properness alone does not force the logarithm. The distinguishing property is <em>locality</em>: the log loss reads only $Q_y$, the mass on the outcome that happened; the Brier score reads every coordinate, so its penalty depends on how the remaining mass is spread among outcomes that did not occur. The classical theorem: for $M \geq 3$ outcomes, the only (suitably regular) strictly proper scoring rules that depend on $Q$ only through $Q_y$ are the affine transforms of the log score, $a \log Q_y + b$ with $a \gt 0$.</p>
+  <p><strong>Flag.</strong> This uniqueness theorem is <em>stated, not proved</em> here or in the deck. References: Bernardo [11] (the characterization of the logarithmic score as the unique smooth, local, proper score), and the survey of Gneiting &amp; Raftery [12]. The restriction $M \geq 3$ is genuine: for $M = 2$ every scoring rule is trivially local, since $Q_2 = 1 - Q_1$, and the (proper) Brier score is then a counterexample to uniqueness. Strictly proper + local = log loss: the reciprocal and the logarithm in $\log 1/Q_y$ are forced, not chosen.</p>
+
+  <h3>6.6 One-hot labels are pmfs; Theorem 8</h3>
   <div class="deriv">
     <p style="margin:0 0 6px;"><strong>Definition (one-hot vector).</strong> For $y \in [M]$, the one-hot vector $y^{(o)} \in \mathbb{R}^M$ has coordinates</p>
     \[ y^{(o)}_i = \begin{cases} 1 &amp; \text{if } i = y, \\ 0 &amp; \text{otherwise.} \end{cases} \]
@@ -324,7 +452,7 @@
   </div>
   <p>Both the label and the prediction are now pmfs on $[M]$, so their KL divergence is a natural performance measure &mdash; and it turns out to <em>be</em> the loss.</p>
   <div class="deriv">
-    <p style="margin:0 0 6px;"><strong>Theorem 5 (CE loss is a KL divergence).</strong></p>
+    <p style="margin:0 0 6px;"><strong>Theorem 8 (CE loss is a KL divergence).</strong></p>
     \[ \ell\bigl(f(x), y\bigr) = D\bigl(y^{(o)} \,\Vert\, f(x)\bigr). \]
     <p style="margin:8px 0 6px;"><strong>Proof.</strong> Expand the definition and use the convention $0 \log \tfrac{0}{q} = 0$ (Section 4.1) on every coordinate $i \neq y$, where $y^{(o)}_i = 0$:</p>
     \[ D\bigl(y^{(o)} \,\Vert\, f(x)\bigr)
@@ -335,23 +463,14 @@
   </div>
   <p>Mind the argument order: the truth sits in the <em>first</em> slot, $D(\text{truth} \Vert \text{model})$ &mdash; the direction in which zeros of the model are punished infinitely (Section 4.2), which is the behavior a loss should have. The reverse direction $D(f(x) \Vert y^{(o)})$ would be $+\infty$ whenever the model hedges at all (any $f(x)_i \gt 0$ with $i \neq y$), which is useless as a loss.</p>
 
-  <h3>6.4 Theorem 6 — the decomposition, and soft labels</h3>
-  <div class="deriv">
-    <p style="margin:0 0 6px;"><strong>Theorem 6 (cross-entropy decomposition).</strong> For any pmfs $P, Q$ on $[M]$ (with the usual conventions, and both sides possibly $+\infty$ together):</p>
-    \[ H(P, Q) = H(P) + D(P \,\Vert\, Q). \]
-    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Split the log-ratio inside $D$ (over the support of $P$; zero-mass terms vanish on both sides):</p>
-    \[ D(P \,\Vert\, Q) = \sum_i P(i) \log \frac{P(i)}{Q(i)}
-       = \underbrace{\sum_i P(i) \log P(i)}_{-H(P)}
-       + \underbrace{\sum_i P(i) \log \frac{1}{Q(i)}}_{H(P,\,Q)}, \]
-    <p style="margin:8px 0 0;">i.e. $D = -H(P) + H(P, Q)$. Rearranging gives the claim. $\blacksquare$</p>
-  </div>
-  <p>(This is the identity already derived in Section 4.5; the source notes' displayed derivation drops a $p_X(x)$ factor in one intermediate line &mdash; a typo &mdash; and the version above is the corrected computation.) Two specializations:</p>
+  <h3>6.7 Soft labels — the same story via Theorem 4</h3>
+  <p>Theorem 4 applied to a label distribution $P$ (one-hot or not) and the prediction $Q = f(x)$ reads $H(P, f(x)) = H(P) + D(P \Vert f(x))$. Two specializations:</p>
   <ul>
-    <li><strong>One-hot label:</strong> $H(y^{(o)}) = 0$, so $H\bigl(y^{(o)}, f(x)\bigr) = D\bigl(y^{(o)} \Vert f(x)\bigr)$ &mdash; cross-entropy and KL <em>coincide</em>, and both equal the loss of Theorem 5. This is why the loss is legitimately called either name.</li>
+    <li><strong>One-hot label:</strong> $H(y^{(o)}) = 0$, so $H\bigl(y^{(o)}, f(x)\bigr) = D\bigl(y^{(o)} \Vert f(x)\bigr)$ &mdash; cross-entropy and KL <em>coincide</em>, and both equal the loss of Theorem 9. This is why the loss is legitimately called either name.</li>
     <li><strong>Soft label</strong> $y^{(\text{soft})}$ (label smoothing [6], distillation [7]): now
       \[ D\bigl(y^{(\text{soft})} \,\Vert\, f(x)\bigr)
          = H\bigl(y^{(\text{soft})}, f(x)\bigr) - H\bigl(y^{(\text{soft})}\bigr), \]
-      so CE and KL differ by the constant $H(y^{(\text{soft})})$, fixed by the data.</li>
+      so CE and KL differ by the constant $H(y^{(\text{soft})})$, fixed by the data. Training on either gives the same gradients.</li>
   </ul>
   <p><strong>The deck's soft-label numbers, verified.</strong> $y^{(\text{soft})} = (0.6, 0.3, 0.1)$, $f(x) = (0.7, 0.2, 0.1)$:</p>
   <div class="deriv">
@@ -367,7 +486,7 @@
   </div>
   <p>Indeed $1.3375 = 1.2955 + 0.0421$ up to rounding &mdash; the deck's $1.338 = 1.295 + 0.042$. (Note again a negative individual KL term.)</p>
 
-  <h3>6.5 Punchline: minimizing CE is minimizing KL</h3>
+  <h3>6.8 Punchline: minimizing CE is minimizing KL</h3>
   <p>Fix the label distribution $P$ (one-hot or soft) and optimize the model $Q = f(x)$. Since $H(P)$ contains no $Q$,</p>
   <div class="deriv">
     \[ \arg\min_{Q}\; H(P, Q)
@@ -379,22 +498,111 @@
   <ul>
     <li><strong>Achievability of zero loss.</strong> For a one-hot label, zero loss requires $f(x) = y^{(o)}$ exactly. A softmax over finite logits outputs strictly positive coordinates, so it can approach but never reach zero loss &mdash; the infimum is $0$, not attained. (This is one practical motivation for label smoothing: a smoothed target lies in the interior of the simplex and <em>is</em> attainable.)</li>
     <li><strong>Base and scale invariance.</strong> Changing the log base multiplies the loss by a positive constant (bits vs nats, Section 1); adding the constant $H(P)$ or not (CE vs KL) shifts it. Neither changes the argmin, so PyTorch's nat-based CE, the bit-based formulas here, and "KL to the label" all train identically.</li>
-    <li><strong>Why log, why reciprocal &mdash; the answer assembled.</strong> $\log \tfrac{1}{Q}$ is not an arbitrary decreasing function: it is the surprisal, the unique (up to base) pricing under which the true distribution is the cheapest model (Theorem 1), wrong beliefs bleed wealth at rate $D$ (Theorems 3&ndash;4), and the loss of a classifier is exactly the divergence to the truth (Theorem 5). The alternatives $1 - f(x)_y$ and $(1 - f(x)_y)^2$ admit no such identity &mdash; and, unlike the log, they assign a <em>finite</em> penalty to declaring the truth impossible.</li>
+    <li><strong>Why log, why reciprocal &mdash; the answer assembled.</strong> $\log \tfrac{1}{Q}$ is not an arbitrary decreasing function: it is the surprisal, the unique (up to base) pricing under which the true distribution is the cheapest model (Theorem 1), wrong beliefs bleed wealth at rate $D$ (Theorems 6&ndash;7), it is the unique local strictly proper score (Section 6.5, cited), and the loss of a classifier is exactly the divergence to the truth (Theorem 8). The alternatives $1 - f(x)_y$ and the Brier score admit no KL identity: the Brier score decomposes into a squared Euclidean distance plus a $P$-only constant (Section 6.5), the linear loss into nothing useful &mdash; and, unlike the log, both assign a <em>finite</em> penalty to declaring the truth impossible.</li>
   </ul>
-  <p><strong>Left open, deliberately.</strong> Why measure disagreement between pmfs by <em>this</em> divergence rather than another ($\chi^2$, total variation, Wasserstein, &hellip;)? KL's privileges &mdash; the chain rule, its role as the exponent in large-deviation and hypothesis-testing limits, and its appearance in GAN training as (a relative of) the Jensen&ndash;Shannon divergence game &mdash; are developed later in the course; see [1, Ch. 2, 11] and [2] for the classical answers.</p>
+  <p><strong>Partly left open.</strong> Why measure disagreement between pmfs by <em>this</em> divergence rather than another ($\chi^2$, total variation, Wasserstein, &hellip;)? Section 4.9 lists what KL alone brings among the $f$-divergences (the cross-entropy decomposition, the surprisal integrand) but proves no uniqueness theorem; KL's role as the exponent in large-deviation and hypothesis-testing limits is developed later in the course; see [1, Ch. 2, 11] and [2] for the classical answers.</p>
+
+  <h3>6.9 Population view — Theorem 9 and the Bayes-optimal classifier</h3>
+  <p>So far one sample. Let the data be a random pair $(X, Y) \sim P_{XY}$ with $Y \in [M]$, write $P_{Y \mid X = x}$ for the true conditional pmf of the label given the input, and let a classifier $f$ map each $x$ to a pmf $f(x)$ on $[M]$. Its <em>risk</em> is the expected loss $R(f) = \mathbb{E}\bigl[\ell(f(X), Y)\bigr]$.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 9 (population decomposition).</strong> If $f(x)_y \gt 0$ whenever $P(y \mid x) \gt 0$ (softmax guarantees this),</p>
+    \[ R(f) \;=\; \underbrace{\mathbb{E}_X\bigl[H(P_{Y \mid X})\bigr]}_{\text{irreducible}}
+       \;+\; \underbrace{\mathbb{E}_X\bigl[D(P_{Y \mid X} \,\Vert\, f(X))\bigr]}_{\geq 0,\ \text{the model's fault}}. \]
+    <p style="margin:8px 0 6px;"><strong>Proof.</strong> Condition on $X$ (the tower property of expectation) and expand the inner expectation by LOTUS over $Y \sim P_{Y \mid X}$:</p>
+    \[ R(f) = \mathbb{E}_X\Bigl[\mathbb{E}\bigl[\ell(f(X), Y) \,\big|\, X\bigr]\Bigr]
+       = \mathbb{E}_X\Bigl[\sum_{y} P(y \mid X) \log \frac{1}{f(X)_y}\Bigr]
+       = \mathbb{E}_X\bigl[H(P_{Y \mid X},\, f(X))\bigr]. \]
+    <p style="margin:8px 0 0;">For each fixed $x$ this is a cross-entropy between the true conditional and the prediction, so Theorem 4 applies pointwise: $H(P_{Y \mid X = x}, f(x)) = H(P_{Y \mid X = x}) + D(P_{Y \mid X = x} \Vert f(x))$. Take $\mathbb{E}_X$ of both sides. $\blacksquare$</p>
+  </div>
+  <p>The first term depends on the data only; prob03 names it the conditional entropy $H(Y \mid X)$. It is the loss floor: zero training loss is <em>not</em> the goal when $H(P_{Y \mid X}) \gt 0$, i.e. when the label is genuinely uncertain given the input.</p>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Corollary (Bayes-optimal classifier).</strong> $R(f)$ is minimized iff $D(P_{Y \mid X} \Vert f(X)) = 0$ almost surely, i.e. iff $f(x) = P(Y = \cdot \mid X = x)$ for ($P_X$-almost) every $x$; the minimum risk is $\mathbb{E}_X[H(P_{Y \mid X})]$.</p>
+    <p style="margin:8px 0 0;"><strong>Proof.</strong> The second term of Theorem 9 is an expectation of a non-negative quantity (Theorem 2), so it is $\geq 0$ with equality iff the quantity is $0$ a.s., and $D(P_{Y \mid X = x} \Vert f(x)) = 0$ iff $f(x) = P_{Y \mid X = x}$ (Theorem 2 again). $\blacksquare$</p>
+  </div>
+  <p>Two readings. First, one-hot training labels are <em>samples</em> from $P_{Y \mid X}$, not the conditional pmf itself; the population risk nevertheless recovers the conditional pmf, so CE training targets $P(Y \mid X)$ even though no training example ever shows a probability. Second, CE-trained outputs are therefore meant to be <em>calibrated probabilities</em>, not merely argmax scores: the loss charges confidence errors even when the argmax is right.</p>
+  <p><strong>Worked example, verified.</strong> One input $x$ with $P(Y = 1 \mid x) = 0.7$, so the floor is $h_2(0.7) = 0.7 \log \tfrac{1}{0.7} + 0.3 \log \tfrac{1}{0.3} \approx 0.3602 + 0.5211 = 0.8813$ bits:</p>
+  <table>
+    <tr><th>prediction $f(x)$</th><th>risk at $x$ (bits)</th><th>KL term</th></tr>
+    <tr><td>$(0.7, 0.3)$ calibrated</td><td>$0.881$</td><td>$0$</td></tr>
+    <tr><td>$(0.95, 0.05)$ overconfident</td><td>$0.7 \log \tfrac{1}{0.95} + 0.3 \log \tfrac{1}{0.05} \approx 0.0518 + 1.2966 = 1.348$</td><td>$0.467$</td></tr>
+    <tr><td>$(0.5, 0.5)$ hedged</td><td>$0.7 + 0.3 = 1.000$</td><td>$0.119$</td></tr>
+  </table>
+  <p>Right argmax, wrong confidence: the overconfident model pays $0.467$ bits above the floor, more than the fully hedged one ($0.119$).</p>
+
+  <h3>6.10 Maximum likelihood = minimum cross-entropy = minimum KL</h3>
+  <p>Samples $x_1, \dots, x_n \overset{\text{iid}}{\sim} P$; the <em>empirical pmf</em> is $\hat P_n(x) = \tfrac{1}{n} \#\{i : x_i = x\}$. For a model $Q$, the negative average log-likelihood is</p>
+  <div class="deriv">
+    \[ \frac{1}{n} \sum_{i=1}^{n} \log \frac{1}{Q(x_i)}
+       \;\overset{(\text{group equal } x_i)}{=}\; \sum_{x} \hat P_n(x) \log \frac{1}{Q(x)}
+       = H(\hat P_n, Q)
+       \;\overset{(\text{Thm 4})}{=}\; H(\hat P_n) + D(\hat P_n \,\Vert\, Q). \]
+  </div>
+  <p>Left side: maximum likelihood is minimum cross-entropy against the empirical pmf. Right side: $H(\hat P_n)$ is data-only, so maximum likelihood is minimum KL <em>from the data</em> to the model, $\arg\min_Q D(\hat P_n \Vert Q)$. (The first equality needs $Q(x_i) \gt 0$ for every observed $x_i$, i.e. $\operatorname{supp} \hat P_n \subseteq \operatorname{supp} Q$; otherwise the likelihood is $0$ and both sides are $+\infty$.) A remark on the large-$n$ reading, by the law of large numbers (prob05): $\tfrac1n \sum_i \log \tfrac{P(x_i)}{Q(x_i)} \rightarrow D(P \Vert Q)$, so with enough data the MLE objective converges to the population KL, up to the $Q$-free entropy term.</p>
+
+  <h3>6.11 Softmax, the gradient (Theorem 10), log-sum-exp, and why not squared error</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition (softmax).</strong> For logits $z \in \mathbb{R}^M$,</p>
+    \[ s_i(z) = \frac{e^{z_i}}{\sum_{j=1}^{M} e^{z_j}}, \qquad s_i(z) \gt 0, \quad \sum_i s_i(z) = 1. \]
+    <p style="margin:8px 0 0;">The cross-entropy loss on logits, in nats, as <code>nn.CrossEntropyLoss</code> computes it: $\ell(z, y) = -\ln s_y(z) = -z_y + \ln \sum_j e^{z_j}$.</p>
+  </div>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Theorem 10 (gradient of CE on logits).</strong></p>
+    \[ \frac{\partial \ell(z, y)}{\partial z_i} = s_i(z) - \mathbb{1}[i = y]. \]
+    <p style="margin:8px 0 0;"><strong>Proof.</strong> $\tfrac{\partial}{\partial z_i}(-z_y) = -\mathbb{1}[i = y]$, and $\tfrac{\partial}{\partial z_i} \ln \sum_j e^{z_j} = \tfrac{e^{z_i}}{\sum_j e^{z_j}} = s_i(z)$ by the chain rule. Add. $\blacksquare$</p>
+  </div>
+  <p>The gradient is the predicted pmf minus the one-hot truth: a <em>residual</em>, with entries summing to $\sum_i s_i - 1 = 0$, and it never saturates &mdash; the true-label entry is $s_y - 1 \in (-1, 0)$, largest in magnitude exactly when the model is most wrong. Example: $z = (2, 1, 0)$, $y = 1$: $s = (0.6652, 0.2447, 0.0900)$, loss $-\ln 0.6652 = 0.4076$ nats, gradient $(-0.3348, 0.2447, 0.0900)$. Working in bits instead of nats multiplies loss and gradient by $1/\ln 2 \approx 1.4427$.</p>
+  <p><strong>Why logits: log-sum-exp stability.</strong> Computing probabilities first and taking the log second fails numerically: $e^{1000}$ overflows a double (Python raises <code>OverflowError: math range error</code>). The identity</p>
+  <div class="deriv">
+    \[ \ln \sum_j e^{z_j} = m + \ln \sum_j e^{z_j - m}, \qquad m = \max_j z_j, \]
+    <p style="margin:8px 0 0;">(pull $e^{m}$ out of the sum) makes every exponent $\leq 0$, so nothing overflows and at least one term equals $1$, so nothing underflows to $\ln 0$. For $z = (1000, 0, 0)$: $1000 + \ln(1 + 2e^{-1000}) = 1000.0$ in floating point.</p>
+  </div>
+  <p>This is why <code>nn.CrossEntropyLoss(logits, y)</code> takes raw logits, not probabilities: it applies log-softmax internally via this identity. Its output is in nats; divide by $\ln 2 \approx 0.6931$ for bits.</p>
+  <p><strong>Why not squared error on the softmax output?</strong> Differentiating $s_y$ with respect to its own logit (from the quotient rule, or from Theorem 10's calculation) gives $\partial s_y / \partial z_y = s_y (1 - s_y)$. Any loss written as a function of $s_y$ inherits this factor by the chain rule, e.g. for $(1 - s_y)^2$ the gradient in $z_y$ is $-2(1 - s_y)\, s_y (1 - s_y)$. Cross-entropy's $-\ln s_y$ contributes $-1/s_y$, which <em>cancels</em> the $s_y$ and leaves $s_y - 1$ (Theorem 10).</p>
+  <table>
+    <tr><th>$s_y$ (mass on truth)</th><th>CE gradient $s_y - 1$</th><th>softmax factor $s_y(1 - s_y)$</th></tr>
+    <tr><td>$0.001$ (confidently wrong)</td><td>$-0.999$</td><td>$0.001$</td></tr>
+    <tr><td>$0.5$</td><td>$-0.5$</td><td>$0.25$</td></tr>
+    <tr><td>$0.9$</td><td>$-0.1$</td><td>$0.09$</td></tr>
+  </table>
+  <p>Squared error on softmax outputs learns slowest exactly when the model is most wrong (the factor is $0.001$ at $s_y = 0.001$); cross-entropy's gradient is largest there. This is the optimization-side reason for the log, complementing the statistical ones.</p>
+  <p><strong>Why log, settled.</strong> The four answers of this lecture: $\log 1/Q$ is <em>surprisal</em>, the guessing and betting cost (Theorems 1, 6, 7); it is the only strictly proper <em>local</em> score (Section 6.5, cited); its population minimizer is the true conditional $P(Y \mid X)$ (Theorem 9); and its gradient on logits is the residual $s - y^{(o)}$, computed stably (Theorem 10). Cross-entropy loss is KL in disguise, not an arbitrary choice.</p>
+</section>
+
+<section>
+  <h2>7 &nbsp;KL Across Deep Learning</h2>
+
+  <h3>7.1 Forward vs reverse — the support argument</h3>
+  <p>Section 4.2 showed the two directions can differ wildly. Fitting a model $Q$ to a target $P$, the two choices fail in opposite ways (Minka [13]):</p>
+  <ul>
+    <li><strong>Forward</strong> $D(P \Vert Q) = \sum_x P(x) \log \tfrac{P(x)}{Q(x)}$: wherever $P(x) \gt 0$ and $Q(x) \approx 0$ the term explodes (Section 4.1: $+\infty$ at $Q(x) = 0$). So $Q$ must cover everything $P$ allows &mdash; <em>zero-avoiding, mode-covering</em>. This is the direction of MLE and CE training (Sections 6.9&ndash;6.10).</li>
+    <li><strong>Reverse</strong> $D(Q \Vert P) = \sum_x Q(x) \log \tfrac{Q(x)}{P(x)}$: wherever $P(x) \approx 0$, $Q(x)$ must be $\approx 0$ too or the term explodes; but where $P(x) \gt 0$ and $Q(x) = 0$ the term is $0$ by convention. So $Q$ may drop modes of $P$ for free &mdash; <em>zero-forcing, mode-seeking</em>.</li>
+  </ul>
+  <p><strong>The deck's figure, recomputed (numerical experiment, not a theorem &mdash; flag).</strong> Target $P = \tfrac12 \mathcal{N}(-2, 0.5^2) + \tfrac12 \mathcal{N}(2, 0.5^2)$ and candidates $Q = \mathcal{N}(\mu, \sigma^2)$, both discretized on the grid $x \in \{-6, -5.75, \dots, 6\}$ ($49$ points) and normalized to pmfs, so that the discrete theory of Section 4 applies verbatim. Grid search over $\mu \in [-4, 4]$ (step $0.1$) and $\sigma \in [0.2, 4]$ (step $0.05$), KL in nats:</p>
+  <ul>
+    <li>Forward $\min_{\mu,\sigma} D(P \Vert Q) = 0.7204$ nats at $\mu = 0$, $\sigma = 2.10$: one wide Gaussian straddling both bumps, mass in the empty valley. (The moment-matched $\sigma$ is $2.0616$; the objective is flat there: $0.7208$ at $\sigma = 2.05$, $0.7209$ at $2.15$.)</li>
+    <li>Reverse $\min_{\mu,\sigma} D(Q \Vert P) = 0.6931$ nats at $\mu = 2$, $\sigma = 0.50$, tied exactly with $\mu = -2$: one bump, the other dropped. The value is $\ln 2$ to four decimals, and for a reason: where $Q$ has mass, $P \approx \tfrac12 Q$, so $\log \tfrac{Q}{P} \approx \ln 2$ throughout.</li>
+    <li>Cross-evaluation: $D(P \Vert Q_{\text{rev}}) = 15.31$ nats (forward KL punishes the dropped mode severely) and $D(Q_{\text{fwd}} \Vert P) = 2.03$ nats (reverse KL punishes the mass in the valley).</li>
+  </ul>
+  <p>The third decimal depends on the discretization; the qualitative picture &mdash; forward covers, reverse seeks &mdash; does not. Same two distributions, opposite fits.</p>
+
 </section>
 
 <section>
   <h2>References</h2>
   <ol>
-    <li>T. M. Cover and J. A. Thomas, <em>Elements of Information Theory</em>, 2nd ed., Wiley-Interscience, 2006. DOI: <a href="https://doi.org/10.1002/047174882X">10.1002/047174882X</a>. (Ch. 2: relative entropy, information inequality, log-sum inequality; Ch. 6: gambling and the doubling rate; the horse-race treatment followed here.)</li>
+    <li>T. M. Cover and J. A. Thomas, <em>Elements of Information Theory</em>, 2nd ed., Wiley-Interscience, 2006. DOI: <a href="https://doi.org/10.1002/047174882X">10.1002/047174882X</a>. (Ch. 2: relative entropy, information inequality, log-sum inequality, convexity of $D$; Ch. 6: gambling and the doubling rate; the horse-race treatment followed here.)</li>
     <li>C. E. Shannon, "A Mathematical Theory of Communication," <em>Bell System Technical Journal</em>, vol. 27, pp. 379&ndash;423, 623&ndash;656, 1948. DOI: <a href="https://doi.org/10.1002/j.1538-7305.1948.tb01338.x">10.1002/j.1538-7305.1948.tb01338.x</a>. (Entropy and surprisal, the substrate of everything above.)</li>
     <li>S. Kullback and R. A. Leibler, "On Information and Sufficiency," <em>Annals of Mathematical Statistics</em>, vol. 22, no. 1, pp. 79&ndash;86, 1951. DOI: <a href="https://doi.org/10.1214/aoms/1177729694">10.1214/aoms/1177729694</a>. (Origin of the KL divergence.)</li>
     <li>J. L. Kelly, Jr., "A New Interpretation of Information Rate," <em>Bell System Technical Journal</em>, vol. 35, no. 4, pp. 917&ndash;926, 1956. DOI: <a href="https://doi.org/10.1002/j.1538-7305.1956.tb03809.x">10.1002/j.1538-7305.1956.tb03809.x</a>. (Log-optimal / proportional betting and the growth-rate criterion of Section 5.)</li>
     <li>J. L. W. V. Jensen, "Sur les fonctions convexes et les in&eacute;galit&eacute;s entre les valeurs moyennes," <em>Acta Mathematica</em>, vol. 30, pp. 175&ndash;193, 1906. DOI: <a href="https://doi.org/10.1007/BF02418571">10.1007/BF02418571</a>. (Jensen's inequality, cited on the deck's proof slides; proved by induction in the prob01 companion note.)</li>
-    <li>C. Szegedy, V. Vanhoucke, S. Ioffe, J. Shlens, Z. Wojna, "Rethinking the Inception Architecture for Computer Vision," CVPR 2016. arXiv: <a href="https://arxiv.org/abs/1512.00567">1512.00567</a>. (Label smoothing, the soft-label use case of Section 6.4.)</li>
+    <li>C. Szegedy, V. Vanhoucke, S. Ioffe, J. Shlens, Z. Wojna, "Rethinking the Inception Architecture for Computer Vision," CVPR 2016. arXiv: <a href="https://arxiv.org/abs/1512.00567">1512.00567</a>. (Label smoothing, the soft-label use case of Section 6.7.)</li>
     <li>G. Hinton, O. Vinyals, J. Dean, "Distilling the Knowledge in a Neural Network," NeurIPS 2014 Deep Learning Workshop. arXiv: <a href="https://arxiv.org/abs/1503.02531">1503.02531</a>. (Knowledge distillation: training against a teacher's soft labels.)</li>
     <li>D. J. C. MacKay, <em>Information Theory, Inference, and Learning Algorithms</em>, Cambridge University Press, 2003. Free online: <a href="https://www.inference.org.uk/mackay/itila/">inference.org.uk/mackay/itila</a>. (Gentler parallel treatment of relative entropy and Gibbs' inequality.)</li>
+    <li>I. Csisz&aacute;r, "Information-type measures of difference of probability distributions and indirect observation," <em>Studia Scientiarum Mathematicarum Hungarica</em>, vol. 2, pp. 299&ndash;318, 1967. (Origin of $f$-divergences, with [10]. No stable online copy was located when these notes were revised; cited from the secondary literature.)</li>
+    <li>S. M. Ali and S. D. Silvey, "A General Class of Coefficients of Divergence of One Distribution from Another," <em>Journal of the Royal Statistical Society, Series B</em>, vol. 28, no. 1, pp. 131&ndash;142, 1966. DOI: <a href="https://doi.org/10.1111/j.2517-6161.1966.tb00626.x">10.1111/j.2517-6161.1966.tb00626.x</a>. (Independent origin of $f$-divergences.)</li>
+    <li>J. M. Bernardo, "Expected Information as Expected Utility," <em>The Annals of Statistics</em>, vol. 7, no. 3, 1979. DOI: <a href="https://doi.org/10.1214/aos/1176344689">10.1214/aos/1176344689</a>. (Characterization of the logarithmic score as the unique smooth, local, proper scoring rule; Section 6.5.)</li>
+    <li>T. Gneiting and A. E. Raftery, "Strictly Proper Scoring Rules, Prediction, and Estimation," <em>Journal of the American Statistical Association</em>, vol. 102, no. 477, pp. 359&ndash;378, 2007. DOI: <a href="https://doi.org/10.1198/016214506000001437">10.1198/016214506000001437</a>. (Survey of proper scoring rules, including the log, Brier and locality results of Section 6.5.)</li>
+    <li>T. Minka, "Divergence Measures and Message Passing," Microsoft Research Technical Report MSR-TR-2005-173, 2005. <a href="https://www.microsoft.com/en-us/research/publication/divergence-measures-and-message-passing/">microsoft.com/en-us/research/publication/divergence-measures-and-message-passing</a>. (Forward vs reverse KL, zero-avoiding vs zero-forcing; Section 7.1.)</li>
   </ol>
 </section>
 

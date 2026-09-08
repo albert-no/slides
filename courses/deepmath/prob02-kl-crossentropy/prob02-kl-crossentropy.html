@@ -25,6 +25,9 @@
   .p2-fig .fl-r { transform: translate(-100%, -50%); }
   .p2-fig .fl-blue { color: var(--yonsei-blue); }
   .p2-fig .fl-red  { color: #8a1c1c; }
+  .p2-fig .fl-white { color: #fff; }
+  .p2-fig .fl-light { color: #c9d3de; }
+  .p2-fig .fl-grey  { color: #666; }
   /* Flagged "stated, not proved" marker: a pill-like line at body size. */
   th .katex { text-transform: none; letter-spacing: 0; }
 .p2-flag { font-size: 1.55rem; color: #8a1c1c; font-weight: 600; margin-top: 10px; }
@@ -96,7 +99,7 @@
       <div class="toc-rule"></div>
       <div>
         <div class="toc-label">Cross-Entropy Loss</div>
-        <div class="toc-sub">Perplexity, proper scores, softmax gradient</div>
+        <div class="toc-sub">Perplexity, proper scores, CE loss = KL</div>
       </div>
     </div>
     <div class="toc-item">
@@ -584,102 +587,12 @@ loss.<span class="fn">backward</span>()</div>
   <p class="muted">Theorem 1 and Theorem 2 are the same fact.</p>
 </div>
 
-<!-- A2: technique t log t -->
-<div class="slide">
-  <h2>Technique &mdash; $t \log t$ Is Convex</h2>
-  <div class="divider"></div>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 680 230" style="width:100%;max-width:720px;">
-      <line x1="70" y1="181" x2="630" y2="181" stroke="#1a1a1a" stroke-width="2"/>
-      <line x1="70" y1="210" x2="70" y2="20" stroke="#1a1a1a" stroke-width="2"/>
-      <polyline fill="none" stroke="#003876" stroke-width="3" points="70,181 88,191 106,196 124,197 142,198 160,197 178,195 196,192 214,189 232,185 250,181 268,176 286,171 304,165 322,159 340,153 358,146 376,139 394,132 412,124 430,116 448,108 466,100 484,92 502,83 520,74 538,66 556,56 574,47 592,38 610,28"/>
-      <circle cx="250" cy="181" r="5" fill="#8a1c1c"/>
-      <circle cx="136" cy="198" r="5" fill="#8a1c1c"/>
-      <text x="250" y="204" font-size="15" fill="#1a1a1a" text-anchor="middle">t = 1</text>
-      <text x="136" y="222" font-size="15" fill="#8a1c1c" text-anchor="middle">t = 1/e, value -0.531</text>
-      <text x="610" y="206" font-size="15" fill="#1a1a1a" text-anchor="middle">t = 3</text>
-      <text x="250" y="60" font-size="17" fill="#003876" font-weight="700">f(t) = t log t</text>
-      <text x="250" y="84" font-size="15" fill="#666">f(1) = 0, f(3) = 4.755 bits</text>
-    </svg>
-  </div>
-  <div class="math-block" style="margin:6px 0">$$f(t) = t \log t, \qquad f''(t) = \frac{1}{t \ln 2} \gt 0 \quad (t \gt 0): \ \text{strictly convex}$$</div>
-</div>
-
-<!-- A2: log-sum inequality -->
-<div class="slide">
-  <h2>Lemma &mdash; Log-Sum Inequality</h2>
-  <div class="divider"></div>
-  <div class="card">
-    <h3>Lemma (log-sum inequality).</h3>
-    <p>For $a_1, \dots, a_n \geq 0$ and $b_1, \dots, b_n \gt 0$:</p>
-    <div class="math-block" style="margin:8px 0">$$\sum_{i=1}^n a_i \log \frac{a_i}{b_i}
-      \;\geq\; \Bigl(\sum_i a_i\Bigr) \log \frac{\sum_i a_i}{\sum_i b_i}$$</div>
-    <p>Equality iff $a_i / b_i$ is the same for all $i$</p>
-  </div>
-  <p class="muted">Merging terms can only lower the sum. Cover &amp; Thomas, Thm 2.7.1.</p>
-</div>
-
-<!-- A2: proof -->
-<div class="slide">
-  <h2>Proof &mdash; Jensen on $t \log t$</h2>
-  <div class="divider"></div>
-  <p>Weights $w_i = b_i / \sum_j b_j$, points $t_i = a_i / b_i$, convex $f(t) = t \log t$:</p>
-  <div class="math-block">$$\begin{aligned}
-    \sum_i a_i \log \frac{a_i}{b_i}
-      &= \Bigl(\sum_j b_j\Bigr) \sum_i w_i\, f(t_i)
-       \;\stackrel{(\text{Jensen})}{\geq}\; \Bigl(\sum_j b_j\Bigr) f\Bigl(\sum_i w_i t_i\Bigr) \\[2pt]
-      &= \Bigl(\sum_j b_j\Bigr) f\Bigl(\frac{\sum_i a_i}{\sum_j b_j}\Bigr)
-       = \Bigl(\sum_i a_i\Bigr) \log \frac{\sum_i a_i}{\sum_j b_j} \qquad \blacksquare
-  \end{aligned}$$</div>
-  <p class="muted">Strict convexity: equality iff all $t_i$ equal.</p>
-</div>
-
-<!-- A2: corollary Thm 2 with zeros -->
-<div class="slide">
-  <h2>Corollary &mdash; Theorem 2, Zeros Included</h2>
-  <div class="divider"></div>
-  <p>Take $a_x = P(x)$, $b_x = Q(x)$ over $\operatorname{supp} P$ (if some $Q(x) = 0$ there, $D = +\infty \geq 0$ anyway):</p>
-  <div class="math-block">$$D(P \,\|\, Q)
-    \;\stackrel{(\text{log-sum})}{\geq}\; 1 \cdot \log \frac{1}{\sum_{x \in \operatorname{supp} P} Q(x)}
-    \;\stackrel{(\text{sub-sum} \leq 1)}{\geq}\; \log 1 = 0 \qquad \blacksquare$$</div>
-  <ul>
-    <li>Equality: $P/Q$ constant on the support, no $Q$-mass off it, so $P = Q$</li>
-    <li>The convention $0 \log 0 = 0$ handled every $P(x) = 0$ term for free</li>
-  </ul>
-</div>
-
-<!-- A2: convexity theorem -->
-<div class="slide">
-  <h2>Theorem &mdash; KL Is Convex in the Pair</h2>
-  <div class="divider"></div>
-  <div class="card">
-    <h3>Theorem 3 (convexity of KL).</h3>
-    <p>For pmfs $(P_1, Q_1)$, $(P_2, Q_2)$ on $\mathcal{X}$ and $\lambda \in [0, 1]$:</p>
-    <div class="math-block" style="margin:8px 0">$$D\bigl(\lambda P_1 + (1-\lambda) P_2 \,\|\, \lambda Q_1 + (1-\lambda) Q_2\bigr)
-      \;\leq\; \lambda\, D(P_1 \,\|\, Q_1) + (1-\lambda)\, D(P_2 \,\|\, Q_2)$$</div>
-  </div>
-  <p class="muted">Mixing truths and models together never increases the divergence. Cover &amp; Thomas, Thm 2.7.2.</p>
-</div>
-
-<!-- A2: convexity proof -->
-<div class="slide">
-  <h2>Proof &mdash; Log-Sum, One $x$ at a Time</h2>
-  <div class="divider"></div>
-  <p>Fix $x$. Two-term log-sum with $a_1 = \lambda P_1(x)$, $a_2 = (1-\lambda) P_2(x)$, $b_1 = \lambda Q_1(x)$, $b_2 = (1-\lambda) Q_2(x)$:</p>
-  <div class="math-block">$$(a_1 + a_2) \log \frac{a_1 + a_2}{b_1 + b_2}
-    \;\leq\; \lambda P_1(x) \log \frac{P_1(x)}{Q_1(x)} + (1-\lambda) P_2(x) \log \frac{P_2(x)}{Q_2(x)}$$</div>
-  <p>The $\lambda$'s cancel inside each log. Sum over $x$ $\;\blacksquare$</p>
-  <ul>
-    <li>Used for the <strong>data-processing inequality</strong> (prob03) and variational bounds</li>
-  </ul>
-</div>
-
-<!-- Thm 4: CE = H + KL (moved from Section 06) -->
+<!-- Thm 3: CE = H + KL (moved from Section 06) -->
 <div class="slide">
   <h2>Theorem &mdash; Cross-Entropy = Entropy + KL</h2>
   <div class="divider"></div>
   <div class="card">
-    <h3>Theorem 4 (cross-entropy decomposition).</h3>
+    <h3>Theorem 3 (cross-entropy decomposition).</h3>
     <p>For any pmfs $P, Q$ on $\mathcal{X}$ with $\operatorname{supp} P \subseteq \operatorname{supp} Q$:</p>
     <div class="math-block" style="margin:8px 0">$$\underbrace{\sum_{x} P(x) \log \frac{1}{Q(x)}}_{H(P,\, Q)}
       \;=\; H(P) \;+\; D(P \,\|\, Q)$$</div>
@@ -687,7 +600,7 @@ loss.<span class="fn">backward</span>()</div>
   <p class="muted">The mismatch gap <em>is</em> the KL divergence. Theorem 1, now an exact identity.</p>
 </div>
 
-<!-- Thm 4 proof -->
+<!-- Thm 3 proof -->
 <div class="slide">
   <h2>Proof &mdash; Split the Log-Ratio</h2>
   <div class="divider"></div>
@@ -719,7 +632,7 @@ loss.<span class="fn">backward</span>()</div>
   <h2>Theorem &mdash; Every $f$-Divergence Is Non-Negative</h2>
   <div class="divider"></div>
   <div class="card">
-    <h3>Theorem 5 ($f$-divergences are non-negative).</h3>
+    <h3>Theorem 4 ($f$-divergences are non-negative).</h3>
     <p>$D_f(P \,\|\, Q) \geq 0$, with equality if $P = Q$ (and only then, when $f$ is strictly convex at $1$)</p>
   </div>
   <p><strong>Proof.</strong> Same Jensen move: weights $Q(x)$, points $P(x)/Q(x)$</p>
@@ -746,9 +659,9 @@ loss.<span class="fn">backward</span>()</div>
   <h2>What KL Alone Brings</h2>
   <div class="divider"></div>
   <ul>
-    <li><strong>Decomposes</strong>: $H(P, Q) = H(P) + D(P \| Q)$; the $P$-only term is a constant (Theorem 4)</li>
+    <li><strong>Decomposes</strong>: $H(P, Q) = H(P) + D(P \| Q)$; the $P$-only term is a constant (Theorem 3)</li>
     <li>Its integrand is a <strong>surprisal difference</strong>: $\log \tfrac{1}{Q} - \log \tfrac{1}{P}$, the guessing bill</li>
-    <li><strong>Convex</strong> in the pair (Theorem 3); non-negative like every $f$-divergence (Theorem 5)</li>
+    <li><strong>Non-negative</strong> like every $f$-divergence (Theorem 4); zero only at $P = Q$</li>
   </ul>
   <div class="highlight">
     <p>Left open: is KL the <em>only</em> $f$-divergence with these properties? No uniqueness theorem today.</p>
@@ -760,9 +673,9 @@ loss.<span class="fn">backward</span>()</div>
   <h2>Preview &mdash; Where $D(P \,\|\, Q)$ Shows Up</h2>
   <div class="divider"></div>
   <ul>
-    <li><strong>Betting</strong> (Section 05): log-wealth lost per race</li>
-    <li><strong>Training</strong> (Section 06): CE loss $= D(\text{label} \,\|\, \text{softmax})$; perplexity</li>
-    <li><strong>Direction</strong> (Section 07): $D(P \,\|\, Q)$ vs $D(Q \,\|\, P)$, mode covering vs seeking</li>
+    <li><strong>Betting</strong>: log-wealth lost per race</li>
+    <li><strong>Training</strong>: CE loss $= D(\text{label} \,\|\, \text{softmax})$; perplexity</li>
+    <li><strong>Direction</strong>: $D(P \,\|\, Q)$ vs $D(Q \,\|\, P)$, mode covering vs seeking</li>
   </ul>
   <div class="math-block" style="margin:8px 0">$$D(P \,\|\, Q): \ \text{the price of believing } Q \text{ in a } P \text{ world}$$</div>
 </div>
@@ -856,11 +769,32 @@ loss.<span class="fn">backward</span>()</div>
   <h2>Theorem &mdash; Proportional Betting</h2>
   <div class="divider"></div>
   <div class="card">
-    <h3>Theorem 6 (proportional betting).</h3>
+    <h3>Theorem 5 (proportional betting).</h3>
     <p>In the binary game with odds 2, $\mathbb{E}[\log S]$ is maximized iff $q = p$:</p>
     <div class="math-block" style="margin:8px 0">$$\max_q \mathbb{E}[\log S] = \log 2B - h_2(p)$$</div>
   </div>
-  <p><strong>Proof.</strong> Theorem 4: $\mathbb{E}[\log S] = \log 2B - h_2(p) - D\bigl((p, 1{-}p) \,\|\, (q, 1{-}q)\bigr)$. Only $D$ moves with $q$; $D \geq 0$, zero iff $q = p$ $\;\blacksquare$</p>
+  <p><strong>Proof.</strong> Theorem 3: $\mathbb{E}[\log S] = \log 2B - h_2(p) - D\bigl((p, 1{-}p) \,\|\, (q, 1{-}q)\bigr)$. Only $D$ moves with $q$; $D \geq 0$, zero iff $q = p$ $\;\blacksquare$</p>
+</div>
+
+<!-- One play: S vs B -->
+<div class="slide">
+  <h2>One Play &mdash; From $B$ to $S$</h2>
+  <div class="divider"></div>
+  <p>Bet the proportional split $q = p$. Odds 2, in bits: $\log 2B = \log B + 1$</p>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Red wins &mdash; prob. $p$</h3>
+      <p>$S = 2pB$</p>
+      <p>$\log S = \log B + 1 + \log p$</p>
+    </div>
+    <div class="card">
+      <h3>Black wins &mdash; prob. $1 - p$</h3>
+      <p>$S = 2(1-p)B$</p>
+      <p>$\log S = \log B + 1 + \log (1-p)$</p>
+    </div>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}[\log S] = \log B + \bigl(1 - h_2(p)\bigr), \qquad\text{so}\qquad S \approx B \times 2^{\,1 - h_2(p)}$$</div>
+  <p class="muted">"$\approx$": we averaged $\log S$, so $2^{\mathbb{E}[\log S]}$ is a geometric mean of $S$, not $\mathbb{E}[S]$.</p>
 </div>
 
 <!-- Doubling rate -->
@@ -868,12 +802,18 @@ loss.<span class="fn">backward</span>()</div>
   <h2>Definition &mdash; Doubling Rate</h2>
   <div class="divider"></div>
   <div class="card">
-    <h3>Definition (doubling rate).</h3>
-    <div class="math-block" style="margin:8px 0">$$W = \log 2 - \Bigl(p \log \tfrac{1}{q} + (1-p) \log \tfrac{1}{1-q}\Bigr),
-      \qquad S_n \approx B \times 2^{nW} \ \text{after } n \text{ bets}$$</div>
-    <p>Cost of a wrong belief: $\;W_{\text{opt}} - W_q = D\bigl((p, 1{-}p) \,\|\, (q, 1{-}q)\bigr)$ bits per bet</p>
+    <h3>Definition (doubling rate of the $q$-split).</h3>
+    <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+      W(q) &= \mathbb{E}\Bigl[\log \tfrac{S}{B}\Bigr]
+            = 1 - \Bigl(p \log \tfrac{1}{q} + (1-p) \log \tfrac{1}{1-q}\Bigr) \\[2pt]
+           &= 1 - h_2(p) - D\bigl((p, 1{-}p) \,\|\, (q, 1{-}q)\bigr)
+    \end{aligned}$$</div>
+    <p>Log-wealth gained per play. Maximized iff $q = p$, where the KL penalty is minimal ($= 0$)</p>
   </div>
-  <p class="muted">Log-wealth grows linearly at slope $W$; KL is the slope you forfeit.</p>
+  <ul>
+    <li>$W^{*} = W(p) = 1 - h_2(p)$; believing $q$ forfeits $W^{*} - W(q) = D\bigl((p, 1{-}p) \,\|\, (q, 1{-}q)\bigr)$ bits per play</li>
+    <li>$n$ plays: log-wealth adds, $S_n \approx B \times 2^{nW(q)}$</li>
+  </ul>
 </div>
 
 <!-- Growth picture -->
@@ -904,29 +844,29 @@ loss.<span class="fn">backward</span>()</div>
   <h2>Horse Racing &mdash; $M$ Horses</h2>
   <div class="divider"></div>
   <p>Horse $i$ wins with probability $p_X(i)$; odds $M$-for-1 on every horse</p>
-  <div style="display:flex;justify-content:center;margin:8px 0;">
-    <svg viewBox="0 0 720 190" style="width:100%;max-width:800px;">
+  <div class="p2-fig" style="max-width:900px;">
+    <svg viewBox="0 0 720 190">
       <defs><marker id="harr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
       <rect x="20" y="60" width="140" height="80" rx="10" fill="#003876"/>
-      <text x="90" y="95" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="700">budget B</text>
-      <text x="90" y="120" font-size="15" fill="#c9d3de" text-anchor="middle">strategy Q</text>
       <line x1="165" y1="80" x2="280" y2="45" stroke="#1a5296" stroke-width="2.5" marker-end="url(#harr)"/>
       <line x1="165" y1="100" x2="280" y2="100" stroke="#1a5296" stroke-width="2.5" marker-end="url(#harr)"/>
       <line x1="165" y1="120" x2="280" y2="155" stroke="#1a5296" stroke-width="2.5" marker-end="url(#harr)"/>
-      <text x="222" y="45" font-size="15" fill="#666" text-anchor="middle">Q(1)B</text>
-      <text x="222" y="90" font-size="15" fill="#666" text-anchor="middle">Q(2)B</text>
-      <text x="222" y="155" font-size="15" fill="#666" text-anchor="middle">Q(M)B</text>
       <rect x="290" y="20" width="200" height="46" rx="8" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
-      <text x="390" y="49" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">horse 1 &middot; wins w.p. p(1)</text>
       <rect x="290" y="77" width="200" height="46" rx="8" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
-      <text x="390" y="106" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">horse 2 &middot; wins w.p. p(2)</text>
       <rect x="290" y="134" width="200" height="46" rx="8" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
-      <text x="390" y="163" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">horse M &middot; wins w.p. p(M)</text>
       <line x1="495" y1="100" x2="580" y2="100" stroke="#1a5296" stroke-width="2.5" marker-end="url(#harr)"/>
       <rect x="588" y="65" width="120" height="70" rx="10" fill="#ffffff" stroke="#003876" stroke-width="2"/>
-      <text x="648" y="94" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">winner i</text>
-      <text x="648" y="118" font-size="15" fill="#666" text-anchor="middle">pays M&#183;Q(i)B</text>
     </svg>
+    <span class="fl fl-white" style="left:12.5%;top:46.8%">budget $B$</span>
+    <span class="fl fl-light" style="left:12.5%;top:60%">strategy $Q$</span>
+    <span class="fl fl-grey" style="left:30.8%;top:20.5%">$Q(1)\,B$</span>
+    <span class="fl fl-grey" style="left:30.8%;top:44.2%">$Q(2)\,B$</span>
+    <span class="fl fl-grey" style="left:30.8%;top:78.4%">$Q(M)\,B$</span>
+    <span class="fl fl-blue" style="left:54.2%;top:22.6%">horse $1$: wins w.p. $p_X(1)$</span>
+    <span class="fl fl-blue" style="left:54.2%;top:52.6%">horse $2$: wins w.p. $p_X(2)$</span>
+    <span class="fl fl-blue" style="left:54.2%;top:82.6%">horse $M$: wins w.p. $p_X(M)$</span>
+    <span class="fl fl-blue" style="left:90%;top:46.3%">winner $i$</span>
+    <span class="fl fl-grey" style="left:90%;top:58.9%">pays $M\,Q(i)\,B$</span>
   </div>
   <p>Winner takes all: $S = M\, Q(i)\, B$ when horse $i$ wins</p>
 </div>
@@ -936,7 +876,7 @@ loss.<span class="fn">backward</span>()</div>
   <h2>Theorem &mdash; Optimal Horse Betting</h2>
   <div class="divider"></div>
   <div class="card">
-    <h3>Theorem 7 (proportional betting, $M$ horses).</h3>
+    <h3>Theorem 6 (proportional betting, $M$ horses).</h3>
     <div class="math-block" style="margin:8px 0">$$\mathbb{E}[\log S]
       = \log B + \log M - \sum_{i=1}^{M} p_X(i) \log \frac{1}{Q(i)}$$</div>
     <p>Maximized iff $Q = p_X$; the loss for betting $Q$ is $D(p_X \,\|\, Q)$</p>
@@ -1028,41 +968,41 @@ loss.<span class="fn">backward</span>()</div>
 <div class="slide">
   <h2>The Classifier Bets a Distribution</h2>
   <div class="divider"></div>
-  <div style="display:flex;justify-content:center;margin:10px 0;">
-    <svg viewBox="0 0 780 260" style="width:100%;max-width:880px;">
+  <div class="p2-fig" style="max-width:880px;">
+    <svg viewBox="0 0 780 260">
       <defs><marker id="carr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
       <rect x="20" y="90" width="110" height="80" rx="10" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
-      <text x="75" y="125" font-size="17" fill="#003876" text-anchor="middle" font-weight="700">input x</text>
-      <text x="75" y="150" font-size="15" fill="#666" text-anchor="middle">image</text>
       <line x1="135" y1="130" x2="185" y2="130" stroke="#1a5296" stroke-width="2.5" marker-end="url(#carr)"/>
       <rect x="192" y="90" width="130" height="80" rx="10" fill="#003876"/>
-      <text x="257" y="125" font-size="17" fill="#ffffff" text-anchor="middle" font-weight="700">network f</text>
-      <text x="257" y="150" font-size="15" fill="#c9d3de" text-anchor="middle">+ softmax</text>
       <line x1="327" y1="130" x2="377" y2="130" stroke="#1a5296" stroke-width="2.5" marker-end="url(#carr)"/>
       <!-- Q bars -->
-      <text x="465" y="55" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">model Q = f(x)</text>
       <line x1="390" y1="210" x2="545" y2="210" stroke="#1a1a1a" stroke-width="2"/>
       <rect x="400" y="105" width="35" height="105" fill="#003876"/>
       <rect x="450" y="180" width="35" height="30" fill="#003876"/>
       <rect x="500" y="195" width="35" height="15" fill="#003876"/>
-      <text x="417" y="95" font-size="14" fill="#003876" text-anchor="middle">0.7</text>
-      <text x="467" y="170" font-size="14" fill="#003876" text-anchor="middle">0.2</text>
-      <text x="517" y="185" font-size="14" fill="#003876" text-anchor="middle">0.1</text>
-      <text x="417" y="230" font-size="14" fill="#1a1a1a" text-anchor="middle">cat</text>
-      <text x="467" y="230" font-size="14" fill="#1a1a1a" text-anchor="middle">dog</text>
-      <text x="517" y="230" font-size="14" fill="#1a1a1a" text-anchor="middle">ship</text>
       <!-- compare -->
       <line x1="555" y1="130" x2="600" y2="130" stroke="#666" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#carr)"/>
-      <text x="578" y="112" font-size="14" fill="#666" text-anchor="middle">vs</text>
       <!-- P bars -->
-      <text x="675" y="55" font-size="16" fill="#666" text-anchor="middle" font-weight="700">label P = one-hot</text>
       <line x1="610" y1="210" x2="765" y2="210" stroke="#1a1a1a" stroke-width="2"/>
       <rect x="620" y="60" width="35" height="150" fill="#ffffff" stroke="#666" stroke-width="2" stroke-dasharray="6 4"/>
-      <text x="637" y="50" font-size="14" fill="#666" text-anchor="middle">1</text>
-      <text x="637" y="230" font-size="14" fill="#1a1a1a" text-anchor="middle">cat</text>
-      <text x="687" y="230" font-size="14" fill="#1a1a1a" text-anchor="middle">dog</text>
-      <text x="737" y="230" font-size="14" fill="#1a1a1a" text-anchor="middle">ship</text>
     </svg>
+    <span class="fl fl-blue" style="left:9.6%;top:45.8%">input $x$</span>
+    <span class="fl fl-grey" style="left:9.6%;top:55.4%">image</span>
+    <span class="fl fl-white" style="left:33%;top:45.8%">network $f$</span>
+    <span class="fl fl-light" style="left:33%;top:55.4%">+ softmax</span>
+    <span class="fl fl-blue" style="left:59.6%;top:7.7%">model $Q = f(x)$</span>
+    <span class="fl fl-blue" style="left:53.5%;top:34.2%">$0.7$</span>
+    <span class="fl fl-blue" style="left:59.9%;top:63.1%">$0.2$</span>
+    <span class="fl fl-blue" style="left:66.3%;top:68.8%">$0.1$</span>
+    <span class="fl" style="left:53.5%;top:86.2%">cat</span>
+    <span class="fl" style="left:59.9%;top:86.2%">dog</span>
+    <span class="fl" style="left:66.3%;top:86.2%">ship</span>
+    <span class="fl fl-grey" style="left:74.1%;top:40.8%">vs</span>
+    <span class="fl fl-grey" style="left:88.1%;top:7.7%">label $P = $ one-hot</span>
+    <span class="fl fl-grey" style="left:81.7%;top:17.7%">$1$</span>
+    <span class="fl" style="left:81.7%;top:86.2%">cat</span>
+    <span class="fl" style="left:88.1%;top:86.2%">dog</span>
+    <span class="fl" style="left:94.5%;top:86.2%">ship</span>
   </div>
   <p class="muted">Loss = mismatch between the bet $Q$ and the truth $P$.</p>
 </div>
@@ -1141,7 +1081,7 @@ loss.<span class="fn">backward</span>()</div>
   <ul>
     <li><strong>Effective number of equally likely next tokens</strong>: PPL $20$ = a fair 20-sided die</li>
     <li><strong>Why it matters</strong>: one number ranks LMs on shared text; halving PPL saves one bit per token</li>
-    <li>Lower PPL = smaller $D(P_{\text{text}} \,\|\, Q)$: mismatch theorem per token (Theorem 4)</li>
+    <li>Lower PPL = smaller $D(P_{\text{text}} \,\|\, Q)$: mismatch theorem per token (Theorem 3)</li>
   </ul>
 </div>
 
@@ -1178,7 +1118,7 @@ loss.<span class="fn">backward</span>()</div>
   <div class="divider"></div>
   <div class="math-block">$$\begin{aligned}
     L(P, Q) &= \sum_i P_i \log \frac{1}{Q_i} = H(P, Q)
-    \;\stackrel{(\text{Thm 4})}{=}\; H(P) + D(P \,\|\, Q) \\[2pt]
+    \;\stackrel{(\text{Thm 3})}{=}\; H(P) + D(P \,\|\, Q) \\[2pt]
     &\stackrel{(\text{Thm 2})}{\geq}\; H(P) = L(P, P)
   \end{aligned}$$</div>
   <ul>
@@ -1262,7 +1202,7 @@ loss.<span class="fn">backward</span>()</div>
   <h2>Theorem &mdash; CE Loss = KL to the Truth</h2>
   <div class="divider"></div>
   <div class="card">
-    <h3>Theorem 8 (cross-entropy loss is a KL divergence).</h3>
+    <h3>Theorem 7 (cross-entropy loss is a KL divergence).</h3>
     <div class="math-block" style="margin:8px 0">$$\ell\bigl(f(x), y\bigr) \;=\; D\bigl(y^{(o)} \,\|\, f(x)\bigr)$$</div>
     <p>The loss is the divergence from the model's pmf to the one-hot truth</p>
   </div>
@@ -1327,11 +1267,11 @@ loss.<span class="fn">backward</span>()</div>
   <h2>Theorem &mdash; Population Cross-Entropy</h2>
   <div class="divider"></div>
   <div class="card">
-    <h3>Theorem 9 (population decomposition).</h3>
+    <h3>Theorem 8 (population decomposition).</h3>
     <div class="math-block" style="margin:8px 0">$$R(f) \;=\; \underbrace{\mathbb{E}_X\bigl[H(P_{Y \mid X})\bigr]}_{\text{irreducible}}
       \;+\; \underbrace{\mathbb{E}_X\bigl[D(P_{Y \mid X} \,\|\, f(X))\bigr]}_{\geq 0,\ \text{model's fault}}$$</div>
   </div>
-  <p><strong>Proof.</strong> Theorem 4 at each $x$, then take $\mathbb{E}_X$ $\;\blacksquare$</p>
+  <p><strong>Proof.</strong> Theorem 3 at each $x$, then take $\mathbb{E}_X$ $\;\blacksquare$</p>
   <p class="muted">The floor depends on the data only; prob03 names it $H(Y \mid X)$.</p>
 </div>
 
@@ -1363,85 +1303,15 @@ loss.<span class="fn">backward</span>()</div>
   <p class="muted">Right argmax, wrong confidence: the loss still charges you.</p>
 </div>
 
-<!-- B5: MLE -->
-<div class="slide">
-  <h2>MLE = Min Cross-Entropy = Min KL</h2>
-  <div class="divider"></div>
-  <p>Samples $x_1, \dots, x_n \stackrel{\text{iid}}{\sim} P$; empirical pmf $\hat P_n(x) = \tfrac{1}{n} \#\{i : x_i = x\}$</p>
-  <div class="math-block">$$\begin{aligned}
-    \frac{1}{n} \sum_{i=1}^n \log \frac{1}{Q(x_i)}
-    &\;\stackrel{(\text{group equal } x_i)}{=}\; \sum_x \hat P_n(x) \log \frac{1}{Q(x)}
-    = H(\hat P_n, Q) \\[2pt]
-    &\;\stackrel{(\text{Thm 4})}{=}\; H(\hat P_n) + D(\hat P_n \,\|\, Q)
-  \end{aligned}$$</div>
-  <ul>
-    <li>Left side: negative average log-likelihood. Maximum likelihood = minimum CE</li>
-    <li>Right side: $H(\hat P_n)$ is data-only. Maximum likelihood = <strong>minimum KL from the data</strong></li>
-  </ul>
-</div>
-
-<!-- B7: softmax -->
-<div class="slide">
-  <h2>Softmax &mdash; Logits to a pmf</h2>
-  <div class="divider"></div>
-  <div class="card">
-    <h3>Definition (softmax).</h3>
-    <div class="math-block" style="margin:8px 0">$$s_i(z) = \frac{e^{z_i}}{\sum_{j=1}^M e^{z_j}}, \qquad s_i \gt 0, \quad \sum_i s_i = 1$$</div>
-  </div>
-  <p>CE loss on logits, in nats ($\ln$), as <code>nn.CrossEntropyLoss</code> computes it:</p>
-  <p>$\ell(z, y) = -\ln s_y(z) = -z_y + \ln \sum_j e^{z_j}$</p>
-</div>
-
-<!-- B7: gradient theorem -->
-<div class="slide">
-  <h2>Theorem &mdash; Softmax Gradient</h2>
-  <div class="divider"></div>
-  <div class="card">
-    <h3>Theorem 10 (gradient of CE on logits).</h3>
-    <div class="math-block" style="margin:8px 0">$$\frac{\partial \ell(z, y)}{\partial z_i} \;=\; s_i(z) - \mathbb{1}[i = y]$$</div>
-  </div>
-  <p><strong>Proof.</strong> $\frac{\partial}{\partial z_i}(-z_y) = -\mathbb{1}[i = y]$; &nbsp;
-    $\frac{\partial}{\partial z_i} \ln \sum_j e^{z_j} = \frac{e^{z_i}}{\sum_j e^{z_j}} = s_i(z)$ &nbsp; $\blacksquare$</p>
-  <p class="muted">Gradient = predicted pmf minus one-hot truth: the residual, never saturating.</p>
-</div>
-
-<!-- B7: LSE stability -->
-<div class="slide">
-  <h2>Why Logits? Log-Sum-Exp Stability</h2>
-  <div class="divider"></div>
-  <ul>
-    <li>$e^{1000}$ overflows a float (Python: <code>OverflowError</code>); probabilities first, log second, fails</li>
-    <li>Shift by the max: $m = \max_j z_j$, then every exponent is $\leq 0$</li>
-  </ul>
-  <div class="math-block" style="margin:6px 0">$$\ln \sum_j e^{z_j} = m + \ln \sum_j e^{z_j - m}, \qquad z = (1000, 0, 0) \ \Rightarrow\ 1000.0$$</div>
-  <div class="highlight">
-    <p>So <code>nn.CrossEntropyLoss(logits, y)</code> takes <strong>logits</strong>, not probabilities. Nats out; divide by $\ln 2 = 0.693$ for bits.</p>
-  </div>
-</div>
-
-<!-- B7: MSE comparison -->
-<div class="slide">
-  <h2>Why Not Squared Error on Softmax?</h2>
-  <div class="divider"></div>
-  <p>Chain rule through softmax: $\partial s_y / \partial z_y = s_y (1 - s_y)$. Any loss of $s_y$ inherits this factor</p>
-  <table>
-    <tr><th>$s_y$ (mass on truth)</th><th>CE: $s_y - 1$</th><th>MSE factor $s_y(1 - s_y)$</th></tr>
-    <tr><td>$0.001$ (confidently wrong)</td><td>$-0.999$</td><td>$0.001$</td></tr>
-    <tr><td>$0.5$</td><td>$-0.5$</td><td>$0.25$</td></tr>
-    <tr><td>$0.9$</td><td>$-0.1$</td><td>$0.09$</td></tr>
-  </table>
-  <p class="muted">Squared error learns slowest exactly when it is most wrong; CE's $-\ln s_y$ cancels the factor.</p>
-</div>
-
 <!-- Implication -->
 <div class="slide">
   <h2>Implication &mdash; Why Log, Settled</h2>
   <div class="divider"></div>
   <ul>
-    <li>$\log 1/Q$ is <strong>surprisal</strong>: the guessing and betting cost (Theorems 1, 6, 7)</li>
-    <li>The only <strong>strictly proper, local</strong> score (Section 06, cited)</li>
-    <li>Population minimizer = true conditional $P(Y \mid X)$ (Theorem 9)</li>
-    <li>Gradient = residual, stable on logits (Theorem 10)</li>
+    <li>$\log 1/Q$ is <strong>surprisal</strong>: the guessing and betting cost (Theorems 1, 5, 6)</li>
+    <li>The only <strong>strictly proper, local</strong> score (cited)</li>
+    <li>Per sample: CE loss $= D(\text{one-hot} \,\|\, f(x))$ (Theorem 7)</li>
+    <li>Population minimizer = true conditional $P(Y \mid X)$ (Theorem 8)</li>
   </ul>
   <div class="math-block" style="margin:8px 0">$$\text{CE loss is KL in disguise, not an arbitrary choice}$$</div>
 </div>
@@ -1514,7 +1384,7 @@ loss.<span class="fn">backward</span>()</div>
   <div class="divider"></div>
   <div class="math-block">$$\begin{aligned}
     &\mathbb{E}\Bigl[\log \tfrac{1}{Q(X)}\Bigr]
-      \;\stackrel{(\text{Thm 4})}{=}\; H(X) + D(p_X \,\|\, Q)
+      \;\stackrel{(\text{Thm 3})}{=}\; H(X) + D(p_X \,\|\, Q)
       \;\stackrel{(\text{Thm 2})}{\geq}\; H(X) \\[4pt]
     &W_{\text{opt}} - W_{Q} = D(p_X \,\|\, Q), \qquad
       \ell\bigl(f(x), y\bigr) = D\bigl(y^{(o)} \,\|\, f(x)\bigr)
@@ -1523,7 +1393,7 @@ loss.<span class="fn">backward</span>()</div>
     <li>Wrong pmf overpays: exactly $D(P \| Q)$ bits</li>
     <li>Betting: proportional is optimal; mismatch costs KL</li>
     <li>CE training minimizes KL to the label; on a population, to $P(Y \mid X)$</li>
-    <li>Log loss: strictly proper, local; gradient $= s - y^{(o)}$</li>
+    <li>Log loss: strictly proper and local; hence the log</li>
   </ul>
 </div>
 

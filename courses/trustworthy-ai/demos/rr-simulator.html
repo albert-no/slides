@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Randomized Response: Coin Simulator</title>
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<style>
+  :root {
+    --blue: #003876; --blue-2: #1a5296; --red: #d94040; --gray: #6b7280;
+    --light: #e8ecf0; --paper: #f4f6f9; --ink: #1a1a1a; --line: #c9d3de;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 28px 20px 48px; background: #fff; color: var(--ink);
+    font-family: "Yonsei", "Noto Sans", "Noto Sans KR", system-ui, sans-serif; line-height: 1.4;
+  }
+  header { max-width: 1120px; margin: 0 auto 18px; }
+  h1 { color: var(--blue); font-size: 30px; margin: 0 0 6px; }
+  header p { margin: 0; color: var(--gray); font-size: 16px; }
+  main { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .panel { border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; background: #fff; }
+  .panel.wide { grid-column: 1 / -1; }
+  h2 { color: var(--blue); font-size: 20px; margin: 0 0 10px; }
+  .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+  label { font-size: 15px; color: var(--ink); }
+  input[type=range] { flex: 1; min-width: 140px; accent-color: var(--blue); }
+  .val { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--blue); min-width: 64px; }
+  button {
+    background: var(--blue); color: #fff; border: 0; border-radius: 8px; padding: 9px 16px;
+    font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit;
+  }
+  button.ghost { background: var(--light); color: var(--blue); }
+  button:disabled { opacity: .5; cursor: default; }
+  .toggle { display: inline-flex; border: 1.5px solid var(--blue); border-radius: 8px; overflow: hidden; }
+  .toggle button { background: #fff; color: var(--blue); border-radius: 0; padding: 7px 14px; }
+  .toggle button.on { background: var(--blue); color: #fff; }
+  .formula { background: var(--paper); border-radius: 8px; padding: 10px 14px; font-size: 15px; margin: 10px 0; }
+  .formula code { font-family: "Yonsei", "Noto Sans", monospace; font-size: 15px; color: var(--ink); }
+  .stat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+  .stat div { background: var(--paper); border-radius: 8px; padding: 10px 12px; }
+  .stat .k { font-size: 13px; color: var(--gray); }
+  .stat .v { font-size: 22px; font-weight: 700; color: var(--blue); font-variant-numeric: tabular-nums; }
+  .stat .v.red { color: var(--red); }
+  svg text { font-family: inherit; }
+  .coin-lbl { font-size: 14px; fill: var(--gray); }
+  .hat { position:relative; display:inline-block; } .hat::after { content:"^"; position:absolute; left:.12em; top:-.62em; font-size:.85em; }
+  .tally { font-size: 14px; color: var(--gray); margin-top: 6px; }
+  .note { font-size: 14px; color: var(--gray); margin: 8px 0 0; }
+  .tip {
+    position: absolute; pointer-events: none; background: var(--ink); color: #fff; font-size: 13px;
+    padding: 6px 9px; border-radius: 6px; white-space: nowrap; display: none;
+  }
+  .chart-wrap { position: relative; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } .panel.wide { grid-column: auto; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Randomized Response: Coin Simulator</h1>
+  <p>Truth with probability q (coin 1 heads), otherwise a fair coin decides. Surveyor sees only the report.</p>
+</header>
+<main>
+
+  <!-- Panel 1: one respondent -->
+  <section class="panel">
+    <h2>1 · One respondent</h2>
+    <div class="row">
+      <label>True answer</label>
+      <div class="toggle" id="truthToggle">
+        <button data-v="1" class="on">yes</button><button data-v="0">no</button>
+      </div>
+      <button id="flipBtn">Flip the coins</button>
+      <button id="flip100Btn" class="ghost">Flip 100×</button>
+    </div>
+    <div class="row">
+      <label>q = Pr[coin 1 heads]</label>
+      <input type="range" id="q1" min="0.50" max="0.95" step="0.01" value="0.50">
+      <span class="val" id="q1v">0.50</span>
+    </div>
+    <svg id="tree" viewBox="0 0 520 210" width="100%">
+      <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#6b7280"/></marker></defs>
+      <circle id="c1" cx="60" cy="105" r="30" fill="#003876"/>
+      <text x="60" y="101" font-size="13" text-anchor="middle" fill="#fff" font-weight="700">coin 1</text>
+      <text id="c1face" x="60" y="118" font-size="12" text-anchor="middle" fill="#fff">?</text>
+      <line id="e1" x1="85" y1="88" x2="255" y2="42" stroke="#6b7280" stroke-width="2" marker-end="url(#ar)"/>
+      <text id="l1" x="165" y="52" class="coin-lbl" text-anchor="middle">heads · q</text>
+      <line id="e2" x1="85" y1="122" x2="255" y2="170" stroke="#6b7280" stroke-width="2" marker-end="url(#ar)"/>
+      <text id="l2" x="165" y="166" class="coin-lbl" text-anchor="middle">tails · 1−q</text>
+      <rect id="b1" x="265" y="18" width="150" height="48" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="1.5"/>
+      <text x="340" y="38" font-size="14" text-anchor="middle" fill="#003876" font-weight="700">answer truthfully</text>
+      <text id="b1t" x="340" y="57" font-size="13" text-anchor="middle" fill="#1a1a1a">report = truth</text>
+      <circle id="c2" cx="290" cy="170" r="26" fill="#6b7280"/>
+      <text x="290" y="167" font-size="12" text-anchor="middle" fill="#fff" font-weight="700">coin 2</text>
+      <text id="c2face" x="290" y="182" font-size="11" text-anchor="middle" fill="#fff">?</text>
+      <line id="e3" x1="314" y1="160" x2="395" y2="132" stroke="#6b7280" stroke-width="2" marker-end="url(#ar)"/>
+      <text class="coin-lbl" x="352" y="134" text-anchor="middle">heads · 0.5</text>
+      <line id="e4" x1="314" y1="180" x2="395" y2="196" stroke="#6b7280" stroke-width="2" marker-end="url(#ar)"/>
+      <text class="coin-lbl" x="352" y="203" text-anchor="middle">tails · 0.5</text>
+      <rect id="b2" x="405" y="108" width="100" height="34" rx="8" fill="#fbeaea" stroke="#d94040" stroke-width="1.5"/>
+      <text x="455" y="130" font-size="14" text-anchor="middle" fill="#d94040" font-weight="700">say "yes"</text>
+      <rect id="b3" x="405" y="176" width="100" height="34" rx="8" fill="#fbeaea" stroke="#d94040" stroke-width="1.5"/>
+      <text x="455" y="198" font-size="14" text-anchor="middle" fill="#d94040" font-weight="700">say "no"</text>
+    </svg>
+    <div class="stat">
+      <div><div class="k">Reported</div><div class="v" id="report">—</div></div>
+      <div><div class="k">Pr[report = truth]</div><div class="v" id="ptruth">0.75</div></div>
+      <div><div class="k">ε = ln((1+q)/(1−q))</div><div class="v red" id="eps1">1.10</div></div>
+    </div>
+    <div class="tally" id="tally">Flips: 0 · matched truth: 0 (—)</div>
+  </section>
+
+  <!-- Panel 2: whole survey -->
+  <section class="panel">
+    <h2>2 · A whole survey</h2>
+    <div class="row">
+      <label>True share p</label>
+      <input type="range" id="p" min="0.01" max="0.99" step="0.01" value="0.30">
+      <span class="val" id="pv">0.30</span>
+    </div>
+    <div class="row">
+      <label>Respondents n</label>
+      <input type="range" id="nlog" min="2" max="6" step="0.05" value="3">
+      <span class="val" id="nv">1,000</span>
+    </div>
+    <div class="row">
+      <label>q (shared with panel 1)</label>
+      <input type="range" id="q2" min="0.50" max="0.95" step="0.01" value="0.50">
+      <span class="val" id="q2v">0.50</span>
+      <button id="runBtn">Run survey</button>
+    </div>
+    <svg id="bars" viewBox="0 0 520 150" width="100%"></svg>
+    <div class="formula">
+      <code>Pr[yes] = q·p + (1−q)/2</code> &nbsp;→&nbsp; <code><span class="hat">p</span> = (ȳ − (1−q)/2) / q</code>
+    </div>
+    <div class="stat">
+      <div><div class="k">Reported yes share ȳ</div><div class="v" id="ybar">—</div></div>
+      <div><div class="k">Debiased estimate <span class="hat">p</span></div><div class="v" id="phat">—</div></div>
+      <div><div class="k">Error |<span class="hat">p</span> − p|</div><div class="v red" id="err">—</div></div>
+    </div>
+    <p class="note" id="senote"></p>
+  </section>
+
+  <!-- Panel 3: epsilon vs accuracy -->
+  <section class="panel wide">
+    <h2>3 · ε vs accuracy</h2>
+    <p class="note" style="margin:0 0 8px">Standard error of <span class="hat">p</span> for the current n and p, as ε varies. Coin bias q = tanh(ε/2). The dot is the Monte Carlo error at the current ε (50 surveys). Hover for values.</p>
+    <div class="chart-wrap">
+      <svg id="chart" viewBox="0 0 1060 300" width="100%"></svg>
+      <div class="tip" id="tip"></div>
+    </div>
+    <div class="stat" style="grid-template-columns: repeat(4, 1fr);">
+      <div><div class="k">Current ε</div><div class="v red" id="epsC">1.10</div></div>
+      <div><div class="k">SE(<span class="hat">p</span>) at current ε</div><div class="v" id="seC">—</div></div>
+      <div><div class="k">n for ±1 point (95%)</div><div class="v" id="nNeed">—</div></div>
+      <div><div class="k">Same accuracy with ε → ∞</div><div class="v" id="nFree">—</div></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const state = { truth: 1, q: 0.5, p: 0.30, n: 1000, flips: 0, matches: 0 };
+
+  const fmtN = n => n.toLocaleString('en-US');
+  const eps = q => Math.log((1 + q) / (1 - q));
+  const qOfEps = e => Math.tanh(e / 2);
+  const seOf = (q, p, n) => { const r = q * p + (1 - q) / 2; return Math.sqrt(r * (1 - r) / n) / q; };
+
+  // ---------- panel 1 ----------
+  function paintStatic() {
+    $('q1v').textContent = state.q.toFixed(2);
+    $('q2v').textContent = state.q.toFixed(2);
+    $('q1').value = state.q; $('q2').value = state.q;
+    $('l1').textContent = 'heads · ' + state.q.toFixed(2);
+    $('l2').textContent = 'tails · ' + (1 - state.q).toFixed(2);
+    $('ptruth').textContent = ((1 + state.q) / 2).toFixed(3);
+    $('eps1').textContent = eps(state.q).toFixed(2);
+    $('epsC').textContent = eps(state.q).toFixed(2);
+    $('b1t').textContent = 'report = ' + (state.truth ? '"yes"' : '"no"');
+  }
+  function resetTree() {
+    ['e1','e2','e3','e4'].forEach(id => { $(id).setAttribute('stroke', '#6b7280'); $(id).setAttribute('stroke-width', '2'); });
+    ['b1','b2','b3'].forEach(id => $(id).setAttribute('stroke-width', '1.5'));
+    $('c1face').textContent = '?'; $('c2face').textContent = '?';
+  }
+  function flipOnce(animate) {
+    const c1 = Math.random() < state.q;            // heads = truth
+    const c2 = Math.random() < 0.5;                 // heads = yes
+    const report = c1 ? state.truth : (c2 ? 1 : 0);
+    state.flips++; if (report === state.truth) state.matches++;
+    if (animate) {
+      resetTree();
+      $('c1face').textContent = c1 ? 'heads' : 'tails';
+      const hi = (id) => { $(id).setAttribute('stroke', '#d94040'); $(id).setAttribute('stroke-width', '3.5'); };
+      if (c1) { hi('e1'); $('b1').setAttribute('stroke-width', '3'); }
+      else {
+        hi('e2'); $('c2face').textContent = c2 ? 'heads' : 'tails';
+        if (c2) { hi('e3'); $('b2').setAttribute('stroke-width', '3'); } else { hi('e4'); $('b3').setAttribute('stroke-width', '3'); }
+      }
+      $('report').textContent = report ? '"yes"' : '"no"';
+      $('report').style.color = (report === state.truth) ? '#003876' : '#d94040';
+    }
+    return report;
+  }
+  function paintTally() {
+    const pct = state.flips ? (100 * state.matches / state.flips).toFixed(1) + '%' : '—';
+    $('tally').textContent = `Flips: ${state.flips} · matched truth: ${state.matches} (${pct}) · expected ${(100 * (1 + state.q) / 2).toFixed(1)}%`;
+  }
+  $('flipBtn').onclick = () => { flipOnce(true); paintTally(); };
+  $('flip100Btn').onclick = () => { for (let i = 0; i < 99; i++) flipOnce(false); flipOnce(true); paintTally(); };
+  $('truthToggle').querySelectorAll('button').forEach(b => b.onclick = () => {
+    state.truth = +b.dataset.v;
+    $('truthToggle').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    state.flips = 0; state.matches = 0; resetTree(); $('report').textContent = '—'; paintTally(); paintStatic();
+  });
+  function onQ(v) { state.q = +v; state.flips = 0; state.matches = 0; resetTree(); $('report').textContent = '—'; paintTally(); paintStatic(); runSurvey(); drawChart(); }
+  $('q1').oninput = e => onQ(e.target.value);
+  $('q2').oninput = e => onQ(e.target.value);
+
+  // ---------- panel 2 ----------
+  let last = null;
+  function simulate(q, p, n) {
+    // binomial sampling via normal approximation for large n, exact loop for small n
+    const trueYes = binom(n, p);
+    const yesFromTrue = binom(trueYes, q + (1 - q) / 2);      // truthful yes or coin-2 yes
+    const yesFromNo = binom(n - trueYes, (1 - q) / 2);
+    return { trueYes, repYes: yesFromTrue + yesFromNo };
+  }
+  function binom(n, pr) {
+    if (n === 0) return 0;
+    if (n < 2000) { let k = 0; for (let i = 0; i < n; i++) if (Math.random() < pr) k++; return k; }
+    const m = n * pr, s = Math.sqrt(n * pr * (1 - pr));
+    let u = 0, v = 0; while (u === 0) u = Math.random(); while (v === 0) v = Math.random();
+    const z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    return Math.max(0, Math.min(n, Math.round(m + s * z)));
+  }
+  function runSurvey() {
+    const { q, p, n } = state;
+    const r = simulate(q, p, n);
+    const ybar = r.repYes / n;
+    const phat = (ybar - (1 - q) / 2) / q;
+    last = { ...r, ybar, phat };
+    $('ybar').textContent = ybar.toFixed(3);
+    $('phat').textContent = phat.toFixed(3);
+    $('err').textContent = Math.abs(phat - p).toFixed(3);
+    const se = seOf(q, p, n);
+    $('senote').innerHTML = `Typical error: SE(<span class="hat">p</span>) = √(r(1−r)/n) / q = ${se.toFixed(4)} with r = Pr[yes] = ${(q * p + (1 - q) / 2).toFixed(3)}. Without noise (q = 1): ${Math.sqrt(p * (1 - p) / n).toFixed(4)}.`;
+    drawBars();
+  }
+  function drawBars() {
+    const { n, p, q } = state; const svg = $('bars');
+    const W = 520, x0 = 150, w = 340;
+    const rows = [
+      { lbl: 'true answers', yes: last.trueYes / n, y: 30 },
+      { lbl: 'reported', yes: last.repYes / n, y: 90 }
+    ];
+    let h = '';
+    rows.forEach(r => {
+      const wy = Math.round(w * r.yes);
+      h += `<text x="${x0 - 10}" y="${r.y + 20}" font-size="14" text-anchor="end" fill="#1a1a1a" font-weight="700">${r.lbl}</text>`;
+      h += `<rect x="${x0}" y="${r.y}" width="${Math.max(0, wy - 1)}" height="30" rx="4" fill="#003876"/>`;
+      h += `<rect x="${x0 + wy + 1}" y="${r.y}" width="${Math.max(0, w - wy - 1)}" height="30" rx="4" fill="#c9d3de"/>`;
+      h += `<text x="${x0 + wy / 2}" y="${r.y + 20}" font-size="13" text-anchor="middle" fill="${wy > 60 ? '#fff' : '#003876'}" font-weight="700">yes ${(100 * r.yes).toFixed(1)}%</text>`;
+      h += `<text x="${x0 + wy + (w - wy) / 2}" y="${r.y + 20}" font-size="13" text-anchor="middle" fill="#1a1a1a">no ${(100 * (1 - r.yes)).toFixed(1)}%</text>`;
+    });
+    const expected = q * p + (1 - q) / 2;
+    const xe = x0 + w * expected;
+    h += `<line x1="${xe}" y1="84" x2="${xe}" y2="126" stroke="#d94040" stroke-width="2" stroke-dasharray="4 3"/>`;
+    h += `<text x="${xe}" y="142" font-size="12" text-anchor="middle" fill="#d94040">expected Pr[yes] = ${expected.toFixed(3)}</text>`;
+    h += `<text x="${x0}" y="14" font-size="12" fill="#6b7280">n = ${fmtN(n)} respondents</text>`;
+    svg.innerHTML = h;
+  }
+  $('p').oninput = e => { state.p = +e.target.value; $('pv').textContent = state.p.toFixed(2); runSurvey(); drawChart(); };
+  $('nlog').oninput = e => { state.n = Math.round(Math.pow(10, +e.target.value)); $('nv').textContent = fmtN(state.n); runSurvey(); drawChart(); };
+  $('runBtn').onclick = () => { runSurvey(); drawChart(); };
+
+  // ---------- panel 3 ----------
+  const C = { W: 1060, H: 300, L: 70, R: 30, T: 16, B: 44 };
+  let curve = [];
+  function mcRMSE(q, p, n, reps) {
+    let s = 0;
+    for (let i = 0; i < reps; i++) { const r = simulate(q, p, n); const ph = ((r.repYes / n) - (1 - q) / 2) / q; s += (ph - p) * (ph - p); }
+    return Math.sqrt(s / reps);
+  }
+  function drawChart() {
+    const { p, n, q } = state; const svg = $('chart');
+    const eMin = 0.1, eMax = 5;
+    curve = [];
+    for (let e = eMin; e <= eMax + 1e-9; e += 0.02) curve.push({ e, se: seOf(qOfEps(e), p, n) });
+    const yMax = Math.min(curve[0].se, 0.5) * 1.08;
+    const seFree = Math.sqrt(p * (1 - p) / n);
+    const x = e => C.L + (e - eMin) / (eMax - eMin) * (C.W - C.L - C.R);
+    const y = v => C.T + (1 - Math.min(v, yMax) / yMax) * (C.H - C.T - C.B);
+    let h = '';
+    // grid + axes
+    for (let i = 0; i <= 4; i++) {
+      const v = yMax * i / 4, yy = y(v);
+      h += `<line x1="${C.L}" y1="${yy}" x2="${C.W - C.R}" y2="${yy}" stroke="#eef1f4" stroke-width="1"/>`;
+      h += `<text x="${C.L - 8}" y="${yy + 4}" font-size="12" text-anchor="end" fill="#6b7280">${v.toFixed(3)}</text>`;
+    }
+    for (let e = 0.5; e <= eMax; e += 0.5) {
+      h += `<text x="${x(e)}" y="${C.H - C.B + 18}" font-size="12" text-anchor="middle" fill="#6b7280">${e.toFixed(1)}</text>`;
+    }
+    h += `<line x1="${C.L}" y1="${C.H - C.B}" x2="${C.W - C.R}" y2="${C.H - C.B}" stroke="#999" stroke-width="1.5"/>`;
+    h += `<text x="${(C.L + C.W - C.R) / 2}" y="${C.H - 6}" font-size="13" text-anchor="middle" fill="#1a1a1a">privacy loss ε (smaller = more private)</text>`;
+    h += `<text transform="translate(14 ${(C.T + C.H - C.B) / 2}) rotate(-90)" font-size="13" text-anchor="middle" fill="#1a1a1a">standard error of the estimate</text>`;
+    // no-privacy floor
+    h += `<line x1="${C.L}" y1="${y(seFree)}" x2="${C.W - C.R}" y2="${y(seFree)}" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="6 4"/>`;
+    h += `<text x="${C.W - C.R - 4}" y="${y(seFree) - 6}" font-size="12" text-anchor="end" fill="#6b7280">no privacy (ε → ∞): ${seFree.toFixed(4)}</text>`;
+    // curve
+    const d = curve.map((c, i) => (i ? 'L' : 'M') + x(c.e).toFixed(1) + ' ' + y(c.se).toFixed(1)).join(' ');
+    h += `<path d="${d}" fill="none" stroke="#003876" stroke-width="2.5"/>`;
+    // current epsilon marker + MC dot
+    const eC = eps(q); const seC = seOf(q, p, n);
+    const rm = mcRMSE(q, p, n, 50);
+    h += `<line x1="${x(eC)}" y1="${C.T}" x2="${x(eC)}" y2="${C.H - C.B}" stroke="#d94040" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+    h += `<circle cx="${x(eC)}" cy="${y(rm)}" r="6" fill="#d94040" stroke="#fff" stroke-width="2"/>`;
+    h += `<text x="${x(eC) + 10}" y="${y(rm) - 10}" font-size="12" fill="#d94040" font-weight="700">simulated RMSE ${rm.toFixed(4)}</text>`;
+    h += `<text x="${x(eC) + 6}" y="${C.T + 12}" font-size="12" fill="#d94040">ε = ${eC.toFixed(2)} (q = ${q.toFixed(2)})</text>`;
+    // hover layer
+    h += `<line id="cross" x1="0" y1="${C.T}" x2="0" y2="${C.H - C.B}" stroke="#1a1a1a" stroke-width="1" style="display:none"/>`;
+    h += `<circle id="crossdot" r="4" fill="#003876" style="display:none"/>`;
+    h += `<rect x="${C.L}" y="${C.T}" width="${C.W - C.L - C.R}" height="${C.H - C.T - C.B}" fill="transparent" id="hit"/>`;
+    svg.innerHTML = h;
+    $('seC').textContent = seC.toFixed(4);
+    const z = 1.96;
+    $('nNeed').textContent = fmtN(Math.ceil(Math.pow(z * Math.sqrt((q * p + (1 - q) / 2) * (1 - (q * p + (1 - q) / 2))) / (q * 0.01), 2)));
+    $('nFree').textContent = fmtN(Math.ceil(Math.pow(z * Math.sqrt(p * (1 - p)) / 0.01, 2)));
+    // hover
+    const hit = $('hit'), cross = $('cross'), dot = $('crossdot'), tip = $('tip');
+    hit.onmousemove = ev => {
+      const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+      const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+      const e = eMin + (loc.x - C.L) / (C.W - C.L - C.R) * (eMax - eMin);
+      const c = curve.reduce((a, b) => Math.abs(b.e - e) < Math.abs(a.e - e) ? b : a);
+      cross.setAttribute('x1', x(c.e)); cross.setAttribute('x2', x(c.e)); cross.style.display = '';
+      dot.setAttribute('cx', x(c.e)); dot.setAttribute('cy', y(c.se)); dot.style.display = '';
+      const qq = qOfEps(c.e);
+      tip.innerHTML = `ε = ${c.e.toFixed(2)} · q = ${qq.toFixed(3)} · Pr[truth] = ${((1 + qq) / 2).toFixed(3)}<br>SE(<span class="hat">p</span>) = ${c.se.toFixed(4)} (${(c.se / seFree).toFixed(1)}× the no-privacy error)`;
+      const wrap = svg.parentElement.getBoundingClientRect();
+      tip.style.left = (ev.clientX - wrap.left + 14) + 'px'; tip.style.top = (ev.clientY - wrap.top - 10) + 'px'; tip.style.display = 'block';
+    };
+    hit.onmouseleave = () => { cross.style.display = 'none'; dot.style.display = 'none'; tip.style.display = 'none'; };
+  }
+
+  paintStatic(); paintTally(); runSurvey(); drawChart();
+})();
+</script>
+</body>
+</html>

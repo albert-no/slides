@@ -33,7 +33,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | Wk | File | Topic | Status |
 |---|---|---|---|
 | 1 | `lec01-introduction.html` | Introduction & threat-model thinking | **revised 2026-09** (44 sl, ~40 min) |
-| 2 | `lec02-privacy-dp.html` | Privacy & differential privacy | **revised 2026-09-08** (94 sl, 13 figs, `demos/rr-simulator.html`) |
+| 2 | `lec02-privacy-dp.html` | Privacy & differential privacy | **revised 2026-09-08** (93 sl, 13 figs, `demos/rr-simulator.html`) |
 | 3 | `lec03-mia.html` | Membership inference attacks | **revised 2026-08, figure pass 2026-09** (63 sl, 15 real figs) |
 | 4 | `lec04-memorization.html` | Memorization & training-data extraction | **revised 2026-08, figure pass 2026-09** (60 sl, 26 real figs) |
 | 5 | `lec05-unlearning.html` | Machine unlearning | **figures 2026-09** (67 sl) |
@@ -223,19 +223,19 @@ the budget $\varepsilon$; randomized response; noise-by-sensitivity; DP-SGD;
 privacy–utility tradeoff; federated learning; private foundation models (2025–26).
 Intuition pass — points to the privacy course for rigor.
 
-### Sections (94 slides, full 90 min — content-revised 2026-08, figures added 2026-09-04, Homer 2008 block added 2026-09-04, review pass 2026-09-08, all citations source-verified)
+### Sections (93 slides, full 90 min — content-revised 2026-08, figures added 2026-09-04, Homer 2008 block added 2026-09-04, review passes 2026-09-08, all citations source-verified)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:33`, `:45` | |
 | **01 — The Privacy Problem** | 3–15 | `:78` | **GPT-2 extraction image** `:117` · Secret Sharer · "repeat poem" · **diffusion copy image (Ann)** `:178` · Copilot secrets (Huang FSE 2024) `:192` · 3 kinds of leak · **Sweeney 87% Venn (SVG)** `:285` + Golle 63% caveat · Netflix+AOL merged `:303` |
-| **02 — How Leakage Is Measured** | 16–31 | `:334` | membership inference · **Homer et al. 2008 block (8 slides, 19–26, no proofs, no paper figures)** `:373`–`:592`: genome leak intro `:373` · SNP primer (SVG) `:413` · membership-is-the-secret examples (SVG) `:442` · **Homer's statistic $D_j$ interpreted on a number line (SVG)** `:467` · **one SNP whispers, 500,000 shout (two-bells SVG + mia1 numbers 28k/39k/390k)** `:495` · what the paper reported (check-list + table) `:525` · NIH policy impact `:550` · Homer→ML table `:577` · **MIA loss-overlap (SVG)** `:598` · model inversion · NYT v. OpenAI · Italy ban ("Privacy Is a Business Risk" slide deleted 2026-08 — content moved to note's "Regulators Step In" entry) |
+| **02 — How Leakage Is Measured** | 16–31 | `:334` | membership inference · **Homer et al. 2008 block (8 slides, 19–26, no proofs, no paper figures)** `:373`–`:592`: genome leak intro `:373` · SNP primer (SVG) `:413` · membership-is-the-secret examples (SVG) `:442` · **Homer's statistic $D_j$ interpreted on a number line (SVG)** `:467` · **one SNP whispers, 500,000 shout (two-bells SVG + mia1 numbers 28k/39k/390k)** `:495` · what the paper reported (check-list + smallest-share-detected table) `:525` · NIH policy impact `:550` · Homer→ML table `:577` · **MIA loss-overlap (SVG)** `:598` · model inversion · NYT v. OpenAI · Italy ban ("Privacy Is a Business Risk" slide deleted 2026-08 — content moved to note's "Regulators Step In" entry) |
 | **03 — Differential Privacy** | 32–53 | `:670` | two-worlds · **plausible deniability (with/without-Alice bars SVG + attacker's-odds box)** `:716` · **$(\varepsilon,\delta)$-DP definition** `:796` (plain-English lead-in) · budget $\varepsilon$ · $\varepsilon$ in the wild: two setups (Apple vs Census table) `:894` + the numbers (bar SVG) `:909` (Apple 4–8/item + audited 16/day, Census $\approx 17$) · post-processing · **indistinguishability + heights (SVG)** `:1001` · what DP does/doesn't ("Meet $\delta$" slide deleted 2026-09-08 — $\delta \ll 1/n$ detail lives in the note's "In Plain Words" entry) |
 | **04 — Achieving DP: Add Randomness** | 54–67 | `:1065` | randomized response `:1086` · **coin protocol, full-width two-coin tree (SVG, redrawn 2026-09-08)** `:1104` · recover-the-rate worked example `:1143` · local vs central DP · **local DP in products (Chrome RAPPOR / Apple / Microsoft table)** `:1205` · **inside Apple's pipeline (Fig 1)** `:1219` · **Laplace mechanism + noise bell (SVG)** `:1239` · sensitivity `:1252` |
 | **05 — Private Machine Learning** | 68–79 | `:1325` | **DP-SGD** `:1354` (clip+noise merged to one slide) · privacy accountant `:1404` · utility cost (benchmark folded in) `:1437` · **federated learning (SVG)** `:1481` · Gboard · FL still leaks `:1520` · secure aggregation `:1527` |
-| **06 — Frontier 2025–26** | 80–90 | `:1563` | private fine-tuning (Yu, Li 2022) `:1571` · **VaultGemma DP pretraining** `:1583` (added 2026-08) · private synthetic data + Apple Intelligence 2025 `:1604` · web-scale puzzle · privacy auditing · unlearning preview · **Apple PCC: device→PCC node→answer flow (SVG)** `:1655` + **four promises (stateless / non-targetable / no privileged access / verifiable)** `:1685` (split 2026-09-08) · EU AI Act (GPAI duties since Aug 2025) `:1700` · open problems `:1712` |
-| Wrap (deeper / demos / takeaways) | 91–93 | — | `:1726`–`:1760` · demos slide `:1737` links the **randomized-response coin simulator** `demos/rr-simulator.html` (screenshot `figs/rr-simulator.png` `:1753`) |
-| Closer | 94 | — | `$\varepsilon$` `:1773` |
+| **06 — Frontier 2025–26** | 80–89 | `:1563` | private fine-tuning (Yu, Li 2022) `:1571` · **VaultGemma DP pretraining** `:1583` (added 2026-08) · private synthetic data + Apple Intelligence 2025 `:1604` · web-scale puzzle · privacy auditing · unlearning preview · **Apple PCC: device→PCC node→answer flow (SVG)** `:1655` (four-promises slide dropped 2026-09-08 per Albert; its content sits in the note's "Privacy in the Stack" detail) · EU AI Act (GPAI duties since Aug 2025) `:1685` · open problems `:1697` |
+| Wrap (deeper / demos / takeaways) | 90–92 | — | `:1711`–`:1745` · demos slide `:1722` links the **randomized-response coin simulator** `demos/rr-simulator.html` (KaTeX formulas; screenshot `figs/rr-simulator.png` `:1738`) |
+| Closer | 93 | — | `$\varepsilon$` `:1758` |
 
 **Key definitions / citations (all source-verified 2026-08):**
 - $(\varepsilon,\delta)$-DP — `:796` — relaxation from Dwork, Kenthapadi, McSherry, Mironov,
@@ -270,7 +270,7 @@ OpenAI, S.D.N.Y. 1:23-cv-11195, complaint p. 30) `:640`; Apple local-DP system o
 ImageNet accuracy vs $\varepsilon$ `figs/de-cifar-epsilon.png` (De et al. 2022, arXiv:2455.13650, Fig 1)
 `:1437`; deep leakage from gradients `figs/dlg-leakage.png` (Zhu, Liu, Han, NeurIPS 2019, Fig 1) `:1520`;
 VaultGemma memorization bars `figs/vaultgemma-memorization.png` (Google, arXiv:2761.15001, Fig 1) `:1596`;
-randomized-response simulator screenshot `figs/rr-simulator.png` (own render of `demos/rr-simulator.html`, 2026-09-08) `:1753`.
+randomized-response simulator screenshot `figs/rr-simulator.png` (own render of `demos/rr-simulator.html`, 2026-09-08) `:1738`.
 Duplication histogram `figs/carlini_duplicates.png` moved to `lec04-memorization.html`.
 **SVG figures:** three-kinds-of-leak staircase `:204`, quasi-identifier table `:241`, Netflix↔IMDb
 linkage `:303`, Sweeney linkage Venn, GWAS averages→attacker flow `:373`, SNP table `:413`, membership-secret timeline `:442`,
@@ -284,6 +284,14 @@ signal/noise bars `:1444`, secure-aggregation flow `:1527`, federated learning `
 `.cite-left`. Page number: bold `.slide-num` only. Intuition pass — points to
 `courses/privacy/lectures/01-dp/` for rigor.
 
+**2026-09-08 second review round (94→93):** "Share resolved" column on the Homer results slide renamed "Smallest share detected" with a
+one-line gloss (share = one person's fraction of the pooled DNA; 1 of 1,000 = 0.1%) and a full interpretation in the note; the
+"$\varepsilon$ in the Wild: Two Setups" note entry expanded (Apple count-mean sketch, caps, retention, what came out, what the
+per-donation bound means; Census 2010 reconstruction motivation, TopDown hierarchy/invariants/post-processing, zCDP → $\varepsilon$
+conversion, release date, what the global bound means); "Private Cloud Compute: Four Promises" slide dropped (note article merged
+into "Privacy in the Stack" detail); `demos/rr-simulator.html` now renders all formulas with KaTeX (local `reference/katex/`),
+including the dynamic SE note and hover tooltip.
+
 **2026-09-08 review pass (94→94, per Albert's Slack review of the 2026-09-04 build):** Homer block 10→8 slides — Fig 1
 schematic and the "one SNP / sum 500,000 / Fig 2A / Fig 3" quartet replaced by three slides that interpret $D_j$ on a number
 line, contrast one SNP (tilt ≈ 0.0004 vs noise ≈ 0.014) with the $\sqrt{m/n}$ aggregate using mia1's numbers, and summarise the
@@ -292,9 +300,9 @@ concrete with/without-Alice bar figure and the "odds move by at most $e^{\vareps
 split into a setup table (Apple local DP per donation vs Census central DP on the whole file) and the number bars. "Meet
 $\delta$" deleted (note keeps the detail). "The Coin Protocol" tree redrawn full-width. "Local DP in Products" split into a
 Chrome/Apple/Microsoft table plus the Apple Fig 1 slide. "Privacy in the Stack" split into a PCC data-flow SVG plus a
-four-promises slide. New `demos/rr-simulator.html` (one respondent with animated coin tree · whole survey with true-vs-reported
+four-promises slide (dropped again the same day, see above). New `demos/rr-simulator.html` (one respondent with animated coin tree · whole survey with true-vs-reported
 bars and $\hat p$ · $\varepsilon$ vs standard-error chart with Monte Carlo dot), linked from the demos slide with a screenshot.
-Note file re-synced (94 entries, titles match); `lec02tech.html` gained "Randomized Response: Privacy vs Accuracy" (22 sl).
+Note file re-synced (now 93 entries, titles match); `lec02tech.html` gained "Randomized Response: Privacy vs Accuracy" (22 sl).
 Rendered audit of every edited slide at 60 dpi: no overflow.
 
 **2026-09-04 figure revision (84→84, no text-only content slide left in §01–§05):** 10 public

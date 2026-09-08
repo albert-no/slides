@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Randomized Response: Coin Simulator</title>
 <link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script src="../../../reference/katex/katex.min.js"></script>
+<script src="../../../reference/katex/contrib/auto-render.min.js"></script>
 <style>
   :root {
     --blue: #003876; --blue-2: #1a5296; --red: #d94040; --gray: #6b7280;
@@ -35,8 +38,10 @@
   .toggle { display: inline-flex; border: 1.5px solid var(--blue); border-radius: 8px; overflow: hidden; }
   .toggle button { background: #fff; color: var(--blue); border-radius: 0; padding: 7px 14px; }
   .toggle button.on { background: var(--blue); color: #fff; }
-  .formula { background: var(--paper); border-radius: 8px; padding: 10px 14px; font-size: 15px; margin: 10px 0; }
-  .formula code { font-family: "Yonsei", "Noto Sans", monospace; font-size: 15px; color: var(--ink); }
+  .formula { background: var(--paper); border-radius: 8px; padding: 6px 14px; font-size: 16px; margin: 10px 0; text-align: center; }
+  .formula .katex-display { margin: 6px 0; }
+  .katex { font-size: 1.05em; }
+  .stat .k .katex, .note .katex, label .katex, .tip .katex { font-size: 1em; }
   .stat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
   .stat div { background: var(--paper); border-radius: 8px; padding: 10px 12px; }
   .stat .k { font-size: 13px; color: var(--gray); }
@@ -44,7 +49,6 @@
   .stat .v.red { color: var(--red); }
   svg text { font-family: inherit; }
   .coin-lbl { font-size: 14px; fill: var(--gray); }
-  .hat { position:relative; display:inline-block; } .hat::after { content:"^"; position:absolute; left:.12em; top:-.62em; font-size:.85em; }
   .tally { font-size: 14px; color: var(--gray); margin-top: 6px; }
   .note { font-size: 14px; color: var(--gray); margin: 8px 0 0; }
   .tip {
@@ -58,7 +62,7 @@
 <body>
 <header>
   <h1>Randomized Response: Coin Simulator</h1>
-  <p>Truth with probability q (coin 1 heads), otherwise a fair coin decides. Surveyor sees only the report.</p>
+  <p>Answer truthfully with probability $q$ (coin 1 heads); otherwise a fair coin 2 decides the answer. The surveyor sees only the report.</p>
 </header>
 <main>
 
@@ -74,7 +78,7 @@
       <button id="flip100Btn" class="ghost">Flip 100×</button>
     </div>
     <div class="row">
-      <label>q = Pr[coin 1 heads]</label>
+      <label>$q = \Pr[\text{coin 1} = \text{heads}]$</label>
       <input type="range" id="q1" min="0.50" max="0.95" step="0.01" value="0.50">
       <span class="val" id="q1v">0.50</span>
     </div>
@@ -94,9 +98,9 @@
       <text x="290" y="167" font-size="12" text-anchor="middle" fill="#fff" font-weight="700">coin 2</text>
       <text id="c2face" x="290" y="182" font-size="11" text-anchor="middle" fill="#fff">?</text>
       <line id="e3" x1="314" y1="160" x2="395" y2="132" stroke="#6b7280" stroke-width="2" marker-end="url(#ar)"/>
-      <text class="coin-lbl" x="352" y="134" text-anchor="middle">heads · 0.5</text>
+      <text class="coin-lbl" x="348" y="130" text-anchor="middle">heads · 0.5</text>
       <line id="e4" x1="314" y1="180" x2="395" y2="196" stroke="#6b7280" stroke-width="2" marker-end="url(#ar)"/>
-      <text class="coin-lbl" x="352" y="203" text-anchor="middle">tails · 0.5</text>
+      <text class="coin-lbl" x="356" y="207" text-anchor="middle">tails · 0.5</text>
       <rect id="b2" x="405" y="108" width="100" height="34" rx="8" fill="#fbeaea" stroke="#d94040" stroke-width="1.5"/>
       <text x="455" y="130" font-size="14" text-anchor="middle" fill="#d94040" font-weight="700">say "yes"</text>
       <rect id="b3" x="405" y="176" width="100" height="34" rx="8" fill="#fbeaea" stroke="#d94040" stroke-width="1.5"/>
@@ -104,8 +108,8 @@
     </svg>
     <div class="stat">
       <div><div class="k">Reported</div><div class="v" id="report">—</div></div>
-      <div><div class="k">Pr[report = truth]</div><div class="v" id="ptruth">0.75</div></div>
-      <div><div class="k">ε = ln((1+q)/(1−q))</div><div class="v red" id="eps1">1.10</div></div>
+      <div><div class="k">$\Pr[\text{report} = \text{truth}]$</div><div class="v" id="ptruth">0.75</div></div>
+      <div><div class="k">$\varepsilon = \ln\dfrac{1+q}{1-q}$</div><div class="v red" id="eps1">1.10</div></div>
     </div>
     <div class="tally" id="tally">Flips: 0 · matched truth: 0 (—)</div>
   </section>
@@ -114,46 +118,49 @@
   <section class="panel">
     <h2>2 · A whole survey</h2>
     <div class="row">
-      <label>True share p</label>
+      <label>True share $p$</label>
       <input type="range" id="p" min="0.01" max="0.99" step="0.01" value="0.30">
       <span class="val" id="pv">0.30</span>
     </div>
     <div class="row">
-      <label>Respondents n</label>
+      <label>Respondents $n$</label>
       <input type="range" id="nlog" min="2" max="6" step="0.05" value="3">
       <span class="val" id="nv">1,000</span>
     </div>
     <div class="row">
-      <label>q (shared with panel 1)</label>
+      <label>$q$ (shared with panel 1)</label>
       <input type="range" id="q2" min="0.50" max="0.95" step="0.01" value="0.50">
       <span class="val" id="q2v">0.50</span>
       <button id="runBtn">Run survey</button>
     </div>
     <svg id="bars" viewBox="0 0 520 150" width="100%"></svg>
     <div class="formula">
-      <code>Pr[yes] = q·p + (1−q)/2</code> &nbsp;→&nbsp; <code><span class="hat">p</span> = (ȳ − (1−q)/2) / q</code>
+      $$\Pr[\text{yes}] \;=\; q\,p + \frac{1-q}{2}, \qquad \hat p \;=\; \frac{\bar y - \frac{1-q}{2}}{q}$$
     </div>
     <div class="stat">
-      <div><div class="k">Reported yes share ȳ</div><div class="v" id="ybar">—</div></div>
-      <div><div class="k">Debiased estimate <span class="hat">p</span></div><div class="v" id="phat">—</div></div>
-      <div><div class="k">Error |<span class="hat">p</span> − p|</div><div class="v red" id="err">—</div></div>
+      <div><div class="k">Reported yes share $\bar y$</div><div class="v" id="ybar">—</div></div>
+      <div><div class="k">Debiased estimate $\hat p$</div><div class="v" id="phat">—</div></div>
+      <div><div class="k">Error $|\hat p - p|$</div><div class="v red" id="err">—</div></div>
     </div>
     <p class="note" id="senote"></p>
   </section>
 
   <!-- Panel 3: epsilon vs accuracy -->
   <section class="panel wide">
-    <h2>3 · ε vs accuracy</h2>
-    <p class="note" style="margin:0 0 8px">Standard error of <span class="hat">p</span> for the current n and p, as ε varies. Coin bias q = tanh(ε/2). The dot is the Monte Carlo error at the current ε (50 surveys). Hover for values.</p>
+    <h2>3 · $\varepsilon$ vs accuracy</h2>
+    <div class="formula">
+      $$\mathrm{SE}(\hat p) \;=\; \frac{1}{q}\sqrt{\frac{r(1-r)}{n}} \;\le\; \frac{1}{2q\sqrt{n}}, \qquad r = \Pr[\text{yes}], \qquad q = \tanh(\varepsilon/2)$$
+    </div>
+    <p class="note" style="margin:0 0 8px">Standard error of $\hat p$ for the current $n$ and $p$, as $\varepsilon$ varies. The dot is the Monte Carlo root-mean-square error at the current $\varepsilon$ (50 simulated surveys). Hover for values.</p>
     <div class="chart-wrap">
       <svg id="chart" viewBox="0 0 1060 300" width="100%"></svg>
       <div class="tip" id="tip"></div>
     </div>
     <div class="stat" style="grid-template-columns: repeat(4, 1fr);">
-      <div><div class="k">Current ε</div><div class="v red" id="epsC">1.10</div></div>
-      <div><div class="k">SE(<span class="hat">p</span>) at current ε</div><div class="v" id="seC">—</div></div>
-      <div><div class="k">n for ±1 point (95%)</div><div class="v" id="nNeed">—</div></div>
-      <div><div class="k">Same accuracy with ε → ∞</div><div class="v" id="nFree">—</div></div>
+      <div><div class="k">Current $\varepsilon$</div><div class="v red" id="epsC">1.10</div></div>
+      <div><div class="k">$\mathrm{SE}(\hat p)$ at current $\varepsilon$</div><div class="v" id="seC">—</div></div>
+      <div><div class="k">$n$ for $\pm 1$ point at 95%</div><div class="v" id="nNeed">—</div></div>
+      <div><div class="k">Same accuracy with $\varepsilon \to \infty$ ($q = 1$)</div><div class="v" id="nFree">—</div></div>
     </div>
   </section>
 </main>
@@ -164,6 +171,8 @@
   const state = { truth: 1, q: 0.5, p: 0.30, n: 1000, flips: 0, matches: 0 };
 
   const fmtN = n => n.toLocaleString('en-US');
+  const K = tex => (window.katex ? katex.renderToString(tex, { throwOnError: false }) : tex);
+  if (window.renderMathInElement) renderMathInElement(document.body, { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }], throwOnError: false });
   const eps = q => Math.log((1 + q) / (1 - q));
   const qOfEps = e => Math.tanh(e / 2);
   const seOf = (q, p, n) => { const r = q * p + (1 - q) / 2; return Math.sqrt(r * (1 - r) / n) / q; };
@@ -246,7 +255,7 @@
     $('phat').textContent = phat.toFixed(3);
     $('err').textContent = Math.abs(phat - p).toFixed(3);
     const se = seOf(q, p, n);
-    $('senote').innerHTML = `Typical error: SE(<span class="hat">p</span>) = √(r(1−r)/n) / q = ${se.toFixed(4)} with r = Pr[yes] = ${(q * p + (1 - q) / 2).toFixed(3)}. Without noise (q = 1): ${Math.sqrt(p * (1 - p) / n).toFixed(4)}.`;
+    $('senote').innerHTML = `Typical error: ${K('\\mathrm{SE}(\\hat p) = \\tfrac{1}{q}\\sqrt{r(1-r)/n} = ' + se.toFixed(4))} with ${K('r = \\Pr[\\text{yes}] = ' + (q * p + (1 - q) / 2).toFixed(3))}. Without noise (${K('q = 1')}): ${K('\\sqrt{p(1-p)/n} = ' + Math.sqrt(p * (1 - p) / n).toFixed(4))}.`;
     drawBars();
   }
   function drawBars() {
@@ -338,7 +347,7 @@
       cross.setAttribute('x1', x(c.e)); cross.setAttribute('x2', x(c.e)); cross.style.display = '';
       dot.setAttribute('cx', x(c.e)); dot.setAttribute('cy', y(c.se)); dot.style.display = '';
       const qq = qOfEps(c.e);
-      tip.innerHTML = `ε = ${c.e.toFixed(2)} · q = ${qq.toFixed(3)} · Pr[truth] = ${((1 + qq) / 2).toFixed(3)}<br>SE(<span class="hat">p</span>) = ${c.se.toFixed(4)} (${(c.se / seFree).toFixed(1)}× the no-privacy error)`;
+      tip.innerHTML = `${K('\\varepsilon = ' + c.e.toFixed(2))} · ${K('q = ' + qq.toFixed(3))} · ${K('\\Pr[\\text{truth}] = ' + ((1 + qq) / 2).toFixed(3))}<br>${K('\\mathrm{SE}(\\hat p) = ' + c.se.toFixed(4))} (${(c.se / seFree).toFixed(1)}× the no-privacy error)`;
       const wrap = svg.parentElement.getBoundingClientRect();
       tip.style.left = (ev.clientX - wrap.left + 14) + 'px'; tip.style.top = (ev.clientY - wrap.top - 10) + 'px'; tip.style.display = 'block';
     };

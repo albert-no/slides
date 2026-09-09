@@ -777,9 +777,9 @@ increases the average (Section 4.3). The analogous guess
 $I(X; Z \mid Y) \leq I(X; Z)$ is **false in general**, and so is the reverse: no
 inequality holds either way. Both strict orders occur.
 
-**Why the three-circle picture misleads.** Draw circles for $H(X)$, $H(Y)$,
-$H(Z)$, as on the deck's "Three Circles Mislead" slide. The overlap of the $X$
-and $Z$ circles splits into two pieces: the part outside $Y$, which is
+**Why the three-circle picture misleads.** Draw three overlapping circles of
+areas $H(X)$, $H(Y)$, $H(Z)$, every pair overlapping and all three sharing a
+central region. The overlap of the $X$ and $Z$ circles splits into two pieces: the part outside $Y$, which is
 $I(X;Z \mid Y)$, and the centre, which by subtraction must be
 $I(X;Z) - I(X;Z \mid Y)$ (the *interaction information*). Every other region is
 a genuine non-negative quantity: the three private parts are conditional

@@ -777,6 +777,19 @@ increases the average (Section 4.3). The analogous guess
 $I(X; Z \mid Y) \leq I(X; Z)$ is **false in general**, and so is the reverse: no
 inequality holds either way. Both strict orders occur.
 
+**Why the three-circle picture misleads.** Draw circles for $H(X)$, $H(Y)$,
+$H(Z)$, as on the deck's "Three Circles Mislead" slide. The overlap of the $X$
+and $Z$ circles splits into two pieces: the part outside $Y$, which is
+$I(X;Z \mid Y)$, and the centre, which by subtraction must be
+$I(X;Z) - I(X;Z \mid Y)$ (the *interaction information*). Every other region is
+a genuine non-negative quantity: the three private parts are conditional
+entropies such as $H(X \mid Y,Z)$, and the three outer lenses are conditional
+mutual informations. So the eye reads the centre as an area too and concludes
+$I(X;Z) \geq I(X;Z \mid Y)$. No theorem supports that step: the centre is a
+difference of two non-negative numbers with no sign constraint. The XOR triple
+below makes it exactly $-1$ bit. For two variables every region is a theorem;
+for three, the diagram is bookkeeping only.
+
 **Counterexample (the XOR triple): conditioning can create dependence.** Let
 $X, Z$ be independent and identically distributed $\mathrm{Bern}(\frac12)$, and
 let $Y = X \oplus Z$ be their parity. Three steps.
@@ -806,7 +819,7 @@ $p_{X,Z|Y}(0,0|0) = \frac12 \neq \frac14
 This is the "explaining away" pattern: two independent causes are coupled by
 conditioning on their common effect. Once the alarm's state is known, learning
 one cause changes the odds of the other. It is also the promised failure of the
-three-variable Venn diagram: the would-be triple-overlap
+three-variable Venn diagram: the centre region
 $I(X;Z) - I(X;Z|Y) = 0 - 1 = -1$ bit is negative, so no area diagram can
 represent this triple.
 

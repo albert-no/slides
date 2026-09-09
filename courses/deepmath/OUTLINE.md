@@ -31,7 +31,7 @@ and `courses/infotheory/lectures/07-diffusion/`.
 |---|---|---|---|
 | 1 | `prob01-foundations/` — probability review, entropy, Jensen, H ≤ log M | prob 13–451 (through max-entropy) | done (72 slides) |
 | 2 | `prob02-kl-crossentropy/` — mismatch thm, KL ≥ 0, f-divergences, betting/doubling rate/perplexity, proper scoring rules, CE loss = KL, population risk & Bayes classifier, forward vs reverse KL | prob 249–538 + DL extensions | done (86 slides, 2026-09 revisions) |
-| 3 | `prob03-mutual-information/` — joint/cond entropy, MI, DPI I–III, cond MI, differential entropy, MaxEnt Gaussian | prob 539–1210 | done (127 slides) |
+| 3 | `prob03-mutual-information/` — joint/cond entropy, MI, DPI I–III, cond MI, differential entropy, MaxEnt Gaussian | prob 539–1210 | done (128 slides, 2026-09 revision) |
 | 4 | `prob04-random-processes/` — Markov processes, stationary dist., discrete diffusion | prob 1211–1455 | done (99 slides) |
 | 5 | `prob05-concentration/` — Markov/Chebyshev/Chernoff, MGF, CLT sketch, LLN | prob 1457–1595 | done (107 slides) |
 | 6 | `prob06-generalization/` — Hoeffding, sub-Gaussian, union bound, finite-class generalization bound | new material (sequel to prob05) | done (105 slides) |
@@ -130,7 +130,7 @@ soft labels, calibrated-vs-overconfident, Gaussian grid fit)
 computed for this deck — not in the tex — per worked-example mandate; all reproduced in the note.
 Rigorous p_X(x) = 0 edge case left as a hinted exercise (commented out in the tex too).
 
-### prob03-mutual-information — Mutual Information & Data Processing (127 slides)
+### prob03-mutual-information — Mutual Information & Data Processing (128 slides)
 
 `prob03-mutual-information/prob03-mutual-information.html` · source: prob 539–1210.
 Lecture 3 — answers prob02's teaser (two RVs); recalls entropy from prob01 and KL
@@ -141,34 +141,38 @@ Accessible edition: `prob03-mutual-information/prob03-mutual-information-note.md
 
 | # | Section | Slides | Location |
 |---|---|---|---|
-| — | Title + TOC | 1–2 | prob03-mutual-information/prob03-mutual-information.html:23 |
-| 01 | Why Mutual Information? (layer = channel SVG, questions we can't ask yet, "information only decays" preview, route map) | 3–7 | prob03-mutual-information/prob03-mutual-information.html:99 |
-| 02 | Joint Random Variables (joint pmf, running 2×2 table :225, marginals, conditional pmf, independence, random vectors, supervised learning = joint dist.) | 8–18 | prob03-mutual-information/prob03-mutual-information.html:201 |
-| 03 | Joint & Conditional Entropy (H(X,Y) :363, Thm 1 additivity arc, guessing game returns :487, H(Y\|X) :540, Thm 2 chain rule, Thm 3 DPI I arc) | 19–45 | prob03-mutual-information/prob03-mutual-information.html:354 |
-| 04 | Mutual Information (def :746, Venn diagram SVG :762, I(X;X), independence case, KL form :836, Thm 4 symmetry, Thm 5 I ≥ 0 arc, MI in AI) | 46–61 | prob03-mutual-information/prob03-mutual-information.html:737 |
-| 05 | Data Processing (Thm 6 DPI II arc, Markov chains :1025, Thm 7 DPI III, layers only forget, cond. MI :1134, XOR triple counterexample :1164, chain rule for I) | 62–82 | prob03-mutual-information/prob03-mutual-information.html:961 |
-| 06 | Differential Entropy (densities, change of variables, KL for densities, bins SVG :1390, Thm 8 discretization, h def :1461, exhibits 1–3 (negative h, no label invariance, scaling), Gaussian h, Thm 9–12) | 83–110 | prob03-mutual-information/prob03-mutual-information.html:1272 |
-| 07 | Maximum Entropy (discrete recall, bounded-support exercise, variance budget, Thm 13 MaxEnt Gaussian full arc, why Gaussians are everywhere) | 111–123 | prob03-mutual-information/prob03-mutual-information.html:1676 |
-| — | Recap chain, DPI-family recap, bridge to prob04, end slide | 124–127 | prob03-mutual-information/prob03-mutual-information.html:1853 |
+| — | Title + TOC | 1–2 | prob03-mutual-information/prob03-mutual-information.html:52 |
+| 01 | Why Mutual Information? (layer = channel SVG, questions we can't ask yet, "information only decays" preview, route map) | 3–7 | prob03-mutual-information/prob03-mutual-information.html:128 |
+| 02 | Joint Random Variables (joint pmf, running 2×2 table :258, marginals, conditional pmf, independence, random vectors, supervised learning = joint dist.) | 8–18 | prob03-mutual-information/prob03-mutual-information.html:230 |
+| 03 | Joint & Conditional Entropy (H(X,Y) :392, Thm 1 additivity arc, guessing game returns :516, H(Y\|X) :609, Thm 2 chain rule, Thm 3 DPI I arc) | 19–45 | prob03-mutual-information/prob03-mutual-information.html:383 |
+| 04 | Mutual Information (def :819, Venn diagram SVG :835, I(X;X), independence case, KL form :908, Thm 4 symmetry, Thm 5 I ≥ 0 arc, MI in AI) | 46–61 | prob03-mutual-information/prob03-mutual-information.html:810 |
+| 05 | Data Processing (Thm 6 DPI II arc, Markov chains :1104, Thm 7 DPI III, layers only forget, cond. MI :1214, three-circle Venn caution :1244, XOR triple counterexample :1273, chain rule for I) | 62–83 | prob03-mutual-information/prob03-mutual-information.html:1040 |
+| 06 | Differential Entropy (densities, change of variables, KL for densities, bins SVG :1509, Thm 8 discretization, h def :1576, exhibits 1–3 (negative h, no label invariance, scaling), Gaussian h, Thm 9–12) | 84–111 | prob03-mutual-information/prob03-mutual-information.html:1383 |
+| 07 | Maximum Entropy (discrete recall, bounded-support exercise, variance budget, Thm 13 MaxEnt Gaussian full arc, why Gaussians are everywhere) | 112–124 | prob03-mutual-information/prob03-mutual-information.html:1791 |
+| — | Recap chain, DPI-family recap, bridge to prob04, end slide | 125–128 | prob03-mutual-information/prob03-mutual-information.html:1974 |
 
 Key theorems: **Thm 1** additivity H(X,Y) = H(X) + H(Y) under independence
-(prob03-mutual-information/prob03-mutual-information.html:414); **Thm 2** chain rule
-H(X,Y) = H(X) + H(Y|X) (prob03-mutual-information/prob03-mutual-information.html:601);
-**Thm 3** DPI I: H(f(X)) ≤ H(X) (prob03-mutual-information/prob03-mutual-information.html:671);
-**Thm 4** symmetry I(X;Y) = I(Y;X) (prob03-mutual-information/prob03-mutual-information.html:868);
-**Thm 5** I(X;Y) ≥ 0 (prob03-mutual-information/prob03-mutual-information.html:883);
-**Thm 6** DPI II: I(X; f(Y)) ≤ I(X;Y) (prob03-mutual-information/prob03-mutual-information.html:973);
-**Thm 7** DPI III on Markov chain X−Y−Z (prob03-mutual-information/prob03-mutual-information.html:1067);
-**Thm 8** discretization H(X^Δ) = h(X) − log Δ (prob03-mutual-information/prob03-mutual-information.html:1439);
-**Thm 9** scale invariance I(aX;Y) = I(X;Y) (prob03-mutual-information/prob03-mutual-information.html:1592);
-**Thm 10** chain rule for h (prob03-mutual-information/prob03-mutual-information.html:1630);
-**Thm 11** independence iff I = 0, continuous (prob03-mutual-information/prob03-mutual-information.html:1645);
-**Thm 12** DPI continuous (prob03-mutual-information/prob03-mutual-information.html:1657);
+(prob03-mutual-information/prob03-mutual-information.html:440); **Thm 2** chain rule
+H(X,Y) = H(X) + H(Y|X) (prob03-mutual-information/prob03-mutual-information.html:666);
+**Thm 3** DPI I: H(f(X)) ≤ H(X) (prob03-mutual-information/prob03-mutual-information.html:741);
+**Thm 4** symmetry I(X;Y) = I(Y;X) (prob03-mutual-information/prob03-mutual-information.html:937);
+**Thm 5** I(X;Y) ≥ 0 (prob03-mutual-information/prob03-mutual-information.html:952);
+**Thm 6** DPI II: I(X; f(Y)) ≤ I(X;Y) (prob03-mutual-information/prob03-mutual-information.html:1049);
+**Thm 7** DPI III on Markov chain X−Y−Z (prob03-mutual-information/prob03-mutual-information.html:1143);
+**Thm 8** discretization H(X^Δ) = h(X) − log Δ (prob03-mutual-information/prob03-mutual-information.html:1550);
+**Thm 9** scale invariance I(aX;Y) = I(X;Y) (prob03-mutual-information/prob03-mutual-information.html:1704);
+**Thm 10** chain rule for h (prob03-mutual-information/prob03-mutual-information.html:1742);
+**Thm 11** independence iff I = 0, continuous (prob03-mutual-information/prob03-mutual-information.html:1757);
+**Thm 12** DPI continuous (prob03-mutual-information/prob03-mutual-information.html:1769);
 **Thm 13** Gaussian maximizes h under a variance budget
-(prob03-mutual-information/prob03-mutual-information.html:1728).
+(prob03-mutual-information/prob03-mutual-information.html:1840).
 Figures: figs/binary_image.png (supervised-learning slide); all other diagrams inline
-SVG (layer-as-channel pipeline, entropy Venn diagram, Markov chain boxes,
-bins-under-density, same-variance density comparison). XOR triple and guessing-game
+SVG (layer-as-channel pipeline, route map, guessing-game question rows, entropy Venn
+diagram, three-circle Venn caution, Markov chain boxes, layer chain, bins-under-density,
+same-variance density comparison). Math labels on the pipeline/route/guessing-game/Venn/
+Markov/layer-chain figures are KaTeX `.fl` overlays in a `.p3-fig` wrapper (deck-local
+`<style>`), not SVG `<text>`; the same style block adds `.p3-step` spaced rows (proof
+overviews, exercise lists) and the `th .katex` uppercase fix. XOR triple and guessing-game
 examples are the tex's own; the running 2×2 joint-pmf table and its per-theorem
 worked checks are not in the tex — added per worked-example mandate. Venn diagram
 and pipeline SVGs added per visual mandate.

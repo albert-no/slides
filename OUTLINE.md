@@ -145,9 +145,9 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | dgMARK (diffusion-LLM watermarking, ICML 2026) | `talks/kics260521dllm/kics260521dllm.html:707` |
 | Reversal curse in MDMs | `talks/kics260521dllm/kics260521dllm.html:720` |
 | Threat-model framing (knowledge × timing), trust dimensions | `courses/trustworthy-ai/lec01-introduction.html:333, :296` |
-| $(\varepsilon,\delta)$-DP intuition (undergrad) / formal | `lec02-privacy-dp.html:457` · formal in `lec02tech.html` |
-| Statistical indistinguishability (heights example, intuition) | `courses/trustworthy-ai/lec02-privacy-dp.html:581` |
-| DP-SGD intuition (clip + noise) / formal algorithm | `lec02-privacy-dp.html:853` · formal in `lec02tech.html` |
+| $(\varepsilon,\delta)$-DP intuition (undergrad) / formal | `lec02-privacy-dp.html:807` · formal in `lec02tech.html` |
+| Statistical indistinguishability (heights example, intuition) | `courses/trustworthy-ai/lec02-privacy-dp.html:952` |
+| DP-SGD intuition (clip + noise) / formal algorithm | `lec02-privacy-dp.html:1231` · formal in `lec02tech.html` |
 | Formal math per lecture (definitions, derivations, algorithms) | `courses/trustworthy-ai/lecNNtech.html` (15 supplements) |
 | AI governance & regulation (EU AI Act + Omnibus timeline, US EOs, Korea AI Basic Act, NIST RMF/GenAI Profile, frontier-lab safety frameworks, summits/AISIs) | `courses/trustworthy-ai/lec15-governance.html` (see leaf OUTLINE §03–04) |
 

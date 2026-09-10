@@ -34,7 +34,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 |---|---|---|---|
 | 1 | `lec01-introduction.html` | Introduction & threat-model thinking | **revised 2026-09** (44 sl, ~40 min) |
 | 2 | `lec02-privacy-dp.html` | Privacy & differential privacy | **edited 2026-09-10** (77 sl, 11 figs, `demos/rr-simulator.html`) |
-| 3 | `lec03-mia.html` | Membership inference attacks | **revised 2026-08, figure pass 2026-09** (63 sl, 15 real figs) |
+| 3 | `lec03-mia.html` | Membership inference attacks | **restructured 2026-09-11** (47 sl, 15 real figs) |
 | 4 | `lec04-memorization.html` | Memorization & training-data extraction | **revised 2026-08, figure pass 2026-09** (60 sl, 26 real figs) |
 | 5 | `lec05-unlearning.html` | Machine unlearning | **figures 2026-09** (67 sl) |
 | 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **figures 2026-09** (61 sl) |
@@ -366,61 +366,61 @@ MIA on LLMs and diffusion models; DP-vs-MIA in one line; 2025–26 frontier (str
 wall, dataset inference, courtroom use). Intuition pass — the rigorous treatment lives
 in `courses/privacy/lectures/04-mia/` (5-deck series); facts kept consistent with it.
 
-### Sections (63 slides, ~90 min — content-revised 2026-08 from 59, all citations source-verified; figure pass 2026-09)
+### Sections (47 slides, ~90 min — restructured 2026-09-11 from 63 against `lec02-privacy-dp.html`; content-revised 2026-08, all citations source-verified; figure pass 2026-09)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
-| Title / Contents | 1–2 | `:31`, `:43` | |
-| **01 — The Question** | 3–11 | `:80` | one yes-or-no question `:88` · member vs non-member worlds `:130` · cancer-cohort harm `:143` · **Who Asks, and Why (audit / courts / extraction; added 2026-08)** `:165` · threat model `:178` · score + threshold `:192` |
-| **02 — The Basic Attack** | 12–20 | `:221` | train loss < test loss `:229` · loss score `:255` · **two-bells overlap (SVG)** `:265` · overfitting drives MIA (caveat: small gap ≠ safe) `:287` · 3-line threshold attack `:308` · confidence baseline (**Salem Fig. 11, real fig**) `:320` · Yeom theory anchor (sufficient, not necessary; **Yeom Fig. 2, real fig**) `:338` · Colab demo `:353` |
-| **03 — Shadow Models** | 21–26 | `:369` | shadow idea (**Shokri Fig. 2, real fig**) `:405` · **shadow pipeline (SVG)** `:420` · learned attack `:447` · why it transfers `:482` |
-| **04 — Stronger Attacks** | 27–36 | `:514` | difficulty vs membership (**Carlini Fig. 3, real fig**) `:522` · per-example calibration `:542` · likelihood ratio `:565` · **LiRA** `:580` · **in-vs-out bells (SVG)** `:594` · label-only (**Choquette-Choo Fig. 1, real fig**) `:614` · average accuracy lies (**Carlini Fig. 2, real fig**) `:633` · **TPR at low FPR** (retitled 2026-08; **Carlini Fig. 1, real fig**) `:648` · **ROC tail (SVG)** `:667` |
-| **05 — What It Means** | 37–43 | `:688` | $(\varepsilon,\delta)$-DP recall `:696` · DP caps the attacker `:708` · TPR $\le e^{\varepsilon}\cdot$FPR$+\delta$ `:739` · empirical $\varepsilon$ auditing `:763` · trust but verify `:782` · canaries + one-run auditing (**Steinke Fig. 3, real fig**) `:796` |
-| **06 — Modern Models** | 44–54 | `:817` | MIA meets foundation models `:825` · Min-K% (**Shi Fig. 1, real fig**) `:838` · **diffusion duplication histogram (real fig)** `:852` · Duan web-scale doubt (**Duan Fig. 1, real fig**) `:872` · why scale breaks it `:882` · benchmark trap (temporal confound, blind baselines; **Das Fig. 1, real fig**) `:911` · **Give the Attack Everything (Hayes wall; added 2026-08; Hayes Fig. 2(a), real fig)** `:930` · **dataset inference (added 2026-08; Maini Fig. 1, real fig)** `:949` · **MIA in the Courtroom (added 2026-08; Zhang Fig. 1, real fig)** `:963` · open debate `:974` |
-| **07 — Defenses** | 55–61 | `:989` | shrink the gap `:997` · heuristics not proof `:1009` · DP-SGD `:1037` · why DP-SGD stops MIA `:1053` · utility cost `:1085` · defender's checklist `:1110` |
-| Takeaways / Closer | 62–63 | — | `:1124`, `:1137` |
+| Title / Contents | 1–2 | `:26`, `:38` | |
+| **01 — The Question** | 3–7 | `:75` | one yes-or-no question (definition + member/non-member worlds `diagram-flow`) `:83` · **Who Asks, and Why (audit / courts / extraction)** `:101` · threat model `:114` · score + threshold `:128` |
+| **02 — The Basic Attack** | 8–14 | `:157` | train loss < test loss `:165` · loss score + 3-line threshold attack `:191` · **two bells: small vs large gap (SVG; caveat: small gap ≠ safe)** `:204` · confidence baseline (**Salem Fig. 11, real fig**) `:224` · Yeom theory anchor (sufficient, not necessary; **Yeom Fig. 2, real fig**) `:242` · Colab demo `:257` |
+| **03 — Shadow Models** | 15–19 | `:273` | one threshold is crude `:281` · shadow idea (**Shokri Fig. 2, real fig**) `:309` · **shadow pipeline (SVG; labeled in/out outputs train the attack)** `:324` · why it transfers `:351` |
+| **04 — Stronger Attacks** | 20–26 | `:383` | difficulty vs membership (**Carlini Fig. 3, real fig**) `:391` · **LiRA: likelihood ratio, 3 steps + $\Lambda(x)$ `math-block`** `:411` · **in-vs-out bells (SVG)** `:425` · label-only (**Choquette-Choo Fig. 1, real fig**) `:445` · average accuracy lies (**Carlini Fig. 2, real fig**) `:464` · **TPR at low FPR** (log-log ROC left edge; **Carlini Fig. 1, real fig**) `:479` |
+| **05 — What It Means** | 27–31 | `:499` | DP caps the attacker (one-line DP recall, two-worlds SVG) `:507` · TPR $\le e^{\varepsilon}\cdot$FPR$+\delta$ `:539` · auditing flips the attack (empirical $\varepsilon$ + bug-catch / looseness) `:563` · canaries + one-run auditing (**Steinke Fig. 3, real fig**) `:583` |
+| **06 — Modern Models** | 32–40 | `:604` | Min-K% (**Shi Fig. 1, real fig**) `:612` · **diffusion duplication histogram (real fig)** `:626` · Duan web-scale doubt (**Duan Fig. 1, real fig**) `:646` · why scale breaks it (+ exceptions: rare / duplicated / fine-tuning data) `:656` · benchmark trap (temporal confound, blind baselines; **Das Fig. 1, real fig**) `:685` · **Give the Attack Everything (Hayes wall; Hayes Fig. 2(a), real fig)** `:704` · **dataset inference (Maini Fig. 1, real fig)** `:723` · **MIA in the Courtroom (Zhang Fig. 1, real fig)** `:737` |
+| **07 — Defenses** | 41–45 | `:749` | shrink the gap `:757` · heuristics not proof `:769` · DP-SGD (clip + noise SVG; MIA-focused) `:797` · defender's checklist `:830` |
+| Takeaways / Closer | 46–47 | — | `:844`, `:857` |
 
 **Key definitions / citations (all source-verified 2026-08):**
-- Shadow models — `:405` — Shokri, Stronati, Song, and Shmatikov, IEEE S&P 2017.
-- Loss attack / advantage-vs-gap — `:255`, `:338` — Yeom, Giacomelli, Fredrikson, and Jha,
+- Shadow models — `:321` — Shokri, Stronati, Song, and Shmatikov, IEEE S&P 2017.
+- Loss attack / advantage-vs-gap — `:201`, `:254` — Yeom, Giacomelli, Fredrikson, and Jha,
   "Privacy Risk in Machine Learning: Analyzing the Connection to Overfitting", IEEE CSF 2018
   (full title restored 2026-08). Overfitting **sufficient, not necessary** — matches
   `courses/privacy/lectures/04-mia/` (mia3).
-- Confidence baseline — `:320` — Salem et al., "ML-Leaks", NDSS 2019 (re-attributed 2026-08;
+- Confidence baseline — `:239` — Salem et al., "ML-Leaks", NDSS 2019 (re-attributed 2026-08;
   was wrongly cited to Shokri 2017).
-- Likelihood-ratio framing — `:565` — Sablayrolles et al., ICML 2019.
-- LiRA + TPR-at-low-FPR standard — `:580`, `:648` — Carlini et al., "Membership Inference
+- Likelihood-ratio framing — `:422` — Sablayrolles et al., ICML 2019 (shares the LiRA cite line).
+- LiRA + TPR-at-low-FPR standard — `:422`, `:495` — Carlini et al., "Membership Inference
   Attacks From First Principles", IEEE S&P 2022.
-- Label-only — `:614` — Choquette-Choo, Tramèr, Carlini, and Papernot, ICML 2021.
-- $(\varepsilon,\delta)$-DP — `:696` — Dwork, Kenthapadi, McSherry, Mironov, and Naor,
+- Label-only — `:461` — Choquette-Choo, Tramèr, Carlini, and Papernot, ICML 2021.
+- $(\varepsilon,\delta)$-DP — `:536` — Dwork, Kenthapadi, McSherry, Mironov, and Naor,
   EUROCRYPT 2006 (fixed 2026-08; was misattributed to TCC 2006 — same fix as lec02).
-- One-run auditing — `:796` — Steinke, Nasr, and Jagielski, NeurIPS 2023.
-- Min-K% — `:838` — Shi et al., ICLR 2024.
-- Diffusion extraction/duplication — `:852` — Carlini et al., USENIX Security 2023, Fig. 5.
-- Web-scale doubt — `:872` — Duan et al., COLM 2024.
-- Blind baselines / temporal confound — `:911` — Das, Zhang, and Tramèr, DATA-FM at ICLR 2025
+- One-run auditing — `:600` — Steinke, Nasr, and Jagielski, NeurIPS 2023.
+- Min-K% — `:623` — Shi et al., ICLR 2024.
+- Diffusion extraction/duplication — `:643` — Carlini et al., USENIX Security 2023, Fig. 5.
+- Web-scale doubt — `:653` — Duan et al., COLM 2024.
+- Blind baselines / temporal confound — `:701` — Das, Zhang, and Tramèr, DATA-FM at ICLR 2025
   (direction fixed 2026-08: members are the *older* text, non-members post-cutoff).
-- Strong-attack wall — `:930` — Hayes, Shumailov, et al., NeurIPS 2025.
-- Dataset inference — `:949` — Maini, Jia, Papernot, and Dziedzic, NeurIPS 2024.
-- MIA-as-evidence position — `:963` — Zhang, Das, Kamath, and Tramèr, IEEE SaTML 2025.
-- DP-SGD — `:1037` — Abadi et al., ACM CCS 2016.
+- Strong-attack wall — `:720` — Hayes, Shumailov, et al., NeurIPS 2025.
+- Dataset inference — `:734` — Maini, Jia, Papernot, and Dziedzic, NeurIPS 2024.
+- MIA-as-evidence position — `:745` — Zhang, Das, Kamath, and Tramèr, IEEE SaTML 2025.
+- DP-SGD — `:827` — Abadi et al., ACM CCS 2016.
 
 **Real images (15, all cropped from the cited PDFs at 150 dpi, figure numbers verified against captions):**
-`figs/salem-max-posterior.png` (ML-Leaks Fig. 11) `:326` · `figs/yeom-advantage-gap.png` (Yeom Fig. 2) `:348` ·
-`figs/shokri-shadow-training.png` (Shokri Fig. 2) `:415` · `figs/carlini-lira-fig3-per-example.png` (Carlini 2022 Fig. 3) `:527` ·
-`figs/choquette-label-only.png` (Choquette-Choo Fig. 1) `:620` · `figs/carlini-lira-fig2-roc-scales.png` (Carlini 2022 Fig. 2) `:643` ·
-`figs/carlini-lira-fig1-tpr-fpr.png` (Carlini 2022 Fig. 1) `:662` · `figs/steinke-one-run-eps.png` (Steinke Fig. 3) `:801` ·
-`figs/shi-mink-overview.png` (Shi Fig. 1) `:848` · `figs/carlini_duplicates.png` (Carlini diffusion, USENIX Security 2023, Fig. 5;
-attribution verified against arXiv 2301.13188; also used by `lec04-memorization.html`) `:858` ·
-`figs/duan-auc-vs-size.png` (Duan Fig. 1) `:878` · `figs/das-wikimia-pca.png` (Das Fig. 1, appendix) `:925` ·
-`figs/hayes-compute-optimal-mia.png` (Hayes Fig. 2(a)) `:935` · `figs/maini-dataset-inference.png` (Maini Fig. 1) `:959` ·
-`figs/zhang-training-data-proof.png` (Zhang Fig. 1) `:970`.
-**SVG figures (20):** leak ladder `:114`, world cards `:130`, score axis + threshold `:206`, train/test loss curves + gap `:239`,
-two-bells loss overlap `:271`, small-gap vs large-gap bells `:293`, one-threshold-two-classes `:391`, shadow pipeline `:425`,
-output vector → attack classifier `:461`, target vs shadow bells `:496`, per-example baseline `:552`, in-vs-out bells `:600`,
-ROC tail `:673`, two neighbouring worlds → DP training `:718`, ROC with DP ceiling `:749`, small-model vs LLM bells `:896`,
-attack-success vs attack-strength (regularization vs DP bound) `:1023`, clip + noise `:1067`, schematic accuracy-vs-ε `:1095`;
-plus the auditing `diagram-flow` `:773`. Citations use `.cite-left` with figure numbers. Page number: bold `.slide-num` only.
+`figs/salem-max-posterior.png` (ML-Leaks Fig. 11) `:230` · `figs/yeom-advantage-gap.png` (Yeom Fig. 2) `:252` ·
+`figs/shokri-shadow-training.png` (Shokri Fig. 2) `:319` · `figs/carlini-lira-fig3-per-example.png` (Carlini 2022 Fig. 3) `:396` ·
+`figs/choquette-label-only.png` (Choquette-Choo Fig. 1) `:451` · `figs/carlini-lira-fig2-roc-scales.png` (Carlini 2022 Fig. 2) `:474` ·
+`figs/carlini-lira-fig1-tpr-fpr.png` (Carlini 2022 Fig. 1) `:493` · `figs/steinke-one-run-eps.png` (Steinke Fig. 3) `:588` ·
+`figs/shi-mink-overview.png` (Shi Fig. 1) `:622` · `figs/carlini_duplicates.png` (Carlini diffusion, USENIX Security 2023, Fig. 5;
+attribution verified against arXiv 2301.13188; also used by `lec04-memorization.html`) `:632` ·
+`figs/duan-auc-vs-size.png` (Duan Fig. 1) `:652` · `figs/das-wikimia-pca.png` (Das Fig. 1, appendix) `:699` ·
+`figs/hayes-compute-optimal-mia.png` (Hayes Fig. 2(a)) `:709` · `figs/maini-dataset-inference.png` (Maini Fig. 1) `:733` ·
+`figs/zhang-training-data-proof.png` (Zhang Fig. 1) `:744`.
+**SVG figures (12):** score axis + threshold `:142`, train/test loss curves + gap `:175`, small-gap vs large-gap bells `:210`,
+one-threshold-two-classes `:295`, shadow pipeline `:329`, target vs shadow bells `:365`, in-vs-out bells `:431`,
+two neighbouring worlds → DP training `:517`, ROC with DP ceiling `:549`, small-model vs LLM bells `:670`,
+attack-success vs attack-strength (regularization vs DP bound) `:783`, clip + noise `:811`;
+plus two `diagram-flow`s: member/non-member worlds `:92`, auditing `:568`. Other blocks: `math-block` `:172`, `:421`; `code-block` `:196`.
+Citations use `.cite-left` with figure numbers. Page number: bold `.slide-num` only.
 
 **2026-08 content revision (59→63):** every citation/number fetched and verified (deck is
 nearly number-free; no invented results tables found). Added: "Who Asks, and Why" (§01);
@@ -438,6 +438,19 @@ real cited figure or an inline SVG (14 new PDF crops in `figs/`, 15 new SVGs, on
 Figure slides use the image-beside-text `grid-2` pattern; wide overview figures (Min-K%, Duan, Maini, Zhang) stack
 below the bullets. All 32 edited slides re-rendered at 60 dpi and checked for overflow. Added the LR formula
 $\Lambda(x)$ as a `math-block` `:575`. Note file: one "Slide figure" sentence per new figure (14 articles).
+
+**2026-09-11 structure pass (63→47):** re-read against the updated `lec02-privacy-dp.html` (77 sl) and
+cut what lec02 already teaches — the leak ladder + "Why Membership Alone Hurts" + cancer-cohort harm (lec02 §02–03),
+the identical two-bells-overlap SVG (lec02 :1081), the standalone $(\varepsilon,\delta)$-DP definition slide, and the
+3-slide DP-SGD block (lec02 §07; one MIA-focused DP-SGD slide kept). Merged internal pairs: definition + two-worlds
+→ "One Yes-or-No Question"; loss score + 3-line code; "Overfitting Drives MIA" → "The Two Bells" (small vs large gap);
+"Learn the Member Signal" → pipeline muted line; per-example calibration + likelihood ratio + LiRA → one LiRA slide;
+three ROC slides → two (Average Accuracy Lies, TPR at Low FPR); "Trust but Verify" → "Auditing Flips the Attack";
+"MIA Meets Foundation Models" → Min-K% lead-in; "An Open Debate" → "Why Scale Breaks It" muted line. All 15 real
+figures kept; 7 SVGs dropped (leak ladder, world cards, two-bells overlap, output vector → classifier, per-example
+baseline, ROC tail, schematic accuracy-vs-ε); unused `.ta-algo` CSS removed. Div nesting validated (all slides at
+depth 3), render = 47 pages, 11 edited slides checked at 60 dpi. Note file re-synced (47 entries, donor `.detail`
+sections merged into the surviving articles by h3; order matches). `lec03tech.html` unchanged (no references to cut slides).
 
 
 ## lec04-memorization.html

@@ -491,7 +491,10 @@ Lies": "Scoring an Attack: TPR and FPR" (confusion table + formal definitions), 
 16th real figure) closes §05. "DP Caps the Attacker" shows $e^{\varepsilon}$ as a KaTeX overlay instead of SVG text. Note file
 re-synced (66 entries, order matches): five new articles with TPR/FPR/ROC/AUC definitions, the LiRA decision procedure, and the
 Hayes LLM-MIA setup; SNP and bells articles updated. Render = 66 pages; 10 new/edited slides checked at 60 dpi (bells, AUC and
-LLM-MIA layouts fixed after the first pass).
+LLM-MIA layouts fixed after the first pass). Follow-up the same night (Albert Slack #24): the bells slide now states the decision rule
+explicitly (member iff $\Lambda \gt \tau$; $\tau=1$ says member, $\tau=10$ would not) instead of the confusing "$\tau \lt 5.9$"; "TPR at Low
+FPR" gained two bullets on why the low-FPR regime matters (non-members vastly outnumber members, so a 1% FPR buries true hits).
+Note articles for both updated; three stray BEL-character `pprox` typos in the bells note article fixed.
 
 
 ## lec04-memorization.html

@@ -17,6 +17,11 @@
 .demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
 .demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
 .cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
 </style>
 </head>
 <body data-brand-logo="../../reference/kor-eng2.png">
@@ -29,7 +34,7 @@
   <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 4 · Technical Supplement</div>
   <h1>Memorization:<br>The Math</h1>
   <div class="divider"></div>
-  <p class="subtitle">Optional. Extractability, the memorization fraction, and the scaling law</p>
+  <p class="subtitle">Optional. Extractability, the scaling law, near-verbatim bounds, and control groups</p>
   <div class="spacer-lg"></div>
   <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
   <p style="margin-top:6px;">Trustworthy AI · 2026</p>
@@ -41,9 +46,9 @@
   <div class="divider"></div>
   <p>The main lecture kept memorization as pictures. Here are the definitions.</p>
   <ul class="arrow">
-    <li>What "$k$-extractable" means precisely</li>
-    <li>How the memorization fraction is measured</li>
-    <li>Why the scaling law is log-linear</li>
+    <li>What "$k$-extractable" and "discoverable" mean precisely</li>
+    <li>How the memorization fraction is measured, and why context helps</li>
+    <li>Near-verbatim extraction, the $k$-CBS lower bound, and the non-member baseline</li>
   </ul>
   <div class="highlight"><p>Skip this in the core session; return if you want the formal version.</p></div>
 </div>
@@ -73,7 +78,20 @@
   <p class="muted">Larger $k$ gives more context, so more strings become extractable.</p>
 </div>
 
-<!-- 5. The Memorization Fraction -->
+<!-- 5. Discoverable vs extractable -->
+<div class="slide">
+  <h2>Discoverable vs Extractable</h2>
+  <div class="divider"></div>
+  <p>Who chooses the prompt decides which question the test answers.</p>
+  <div class="grid-2">
+    <div class="def-card"><h3>$k$-discoverable</h3><p>$f_{\text{greedy}}(p) = s$ for the <strong>true</strong> $k$-token training prefix $p$ of $s$. Needs the training data; measures what is stored.</p></div>
+    <div class="def-card"><h3>Extractable</h3><p>$\exists$ a prompt $p'$, built <strong>without</strong> training data, with $f(p') = s$. Measures what an outsider can pull out.</p></div>
+  </div>
+  <p class="muted">Discoverable is the audit-time proxy; extractable is the deployed risk. Empirically most extracted strings are also discoverable, but neither set contains the other.</p>
+  <div class="cite cite-left">Nasr et al., "Scalable Extraction of Training Data from (Production) Language Models", 2023, Defs. 1–2.</div>
+</div>
+
+<!-- 6. The Memorization Fraction -->
 <div class="slide">
   <h2>The Memorization Fraction</h2>
   <div class="divider"></div>
@@ -83,7 +101,7 @@
   <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
 </div>
 
-<!-- 6. The Scaling Law -->
+<!-- 7. The Scaling Law -->
 <div class="slide">
   <h2>The Scaling Law</h2>
   <div class="divider"></div>
@@ -93,7 +111,7 @@
   <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
 </div>
 
-<!-- 7. What Log-Linear Means -->
+<!-- 8. What Log-Linear Means -->
 <div class="slide">
   <h2>What Log-Linear Means</h2>
   <div class="divider"></div>
@@ -106,7 +124,21 @@
   <p class="muted">A steady slope on a log axis, not a bump to patch out.</p>
 </div>
 
-<!-- 8. Why the Trend Is Uncomfortable -->
+<!-- 9. Why context helps -->
+<div class="slide">
+  <h2>Why Context Helps</h2>
+  <div class="divider"></div>
+  <p>Greedy decoding reproduces $s = (s_1, \dots, s_L)$ iff the true token is the argmax at <em>every</em> step.</p>
+  <div class="math-block">$$f_{\text{greedy}}(p) = s \iff s_t = \arg\max_v \Pr[v \mid p, s_{\lt t}] \;\; \forall t, \qquad H(S \mid P_{1:k+1}) \le H(S \mid P_{1:k}).$$</div>
+  <ul class="arrow">
+    <li>Conditioning never increases entropy: a longer prefix can only sharpen the suffix distribution</li>
+    <li>A short prefix is shared by many passages; the argmax follows the common one</li>
+    <li>A long prefix is unique to one passage, so the argmax follows the memorized copy</li>
+  </ul>
+  <p class="muted">The $c\log k$ term is the measured size of this effect.</p>
+</div>
+
+<!-- 10. Why the Trend Is Uncomfortable -->
 <div class="slide">
   <h2>Why the Trend Is Uncomfortable</h2>
   <div class="divider"></div>
@@ -115,14 +147,77 @@
   <p class="muted">Deduplication attacks the $\log r$ term directly, the one you can control.</p>
 </div>
 
-<!-- 9. Closer -->
+<!-- 11. Near-verbatim -->
+<div class="slide">
+  <h2>Near-Verbatim Extraction</h2>
+  <div class="divider"></div>
+  <p>Exact match is one point in a ball. Count the whole ball.</p>
+  <div class="math-block">$$B_\varepsilon(s) = \{\hat s : \mathrm{Lev}(\hat s, s) \le \varepsilon\}, \qquad p_\varepsilon(s \mid p) = \sum_{\hat s \in B_\varepsilon(s)} \Pr_f[\hat s \mid p].$$</div>
+  <ul class="arrow">
+    <li>$\varepsilon = 0$ recovers the exact-match probability; $p_\varepsilon$ is non-decreasing in $\varepsilon$</li>
+    <li>$|B_\varepsilon|$ grows like $(L\,|V|)^{\varepsilon}$, so Monte Carlo needs $\sim 10^5$ samples per sequence</li>
+    <li>Report the rate $\frac{1}{|D|}\sum_{(p,s)} \mathbf 1[p_\varepsilon(s \mid p) \ge t]$, or use $p_\varepsilon$ itself</li>
+  </ul>
+  <div class="cite cite-left">Cooper, Lemley, De Sa, Duesterwald, Casasola, Hayes, Lee, Ho, and Liang, "Estimating near-verbatim extraction risk in language models with decoding-constrained beam search", COLM 2026.</div>
+</div>
+
+<!-- 12. k-CBS -->
+<div class="slide">
+  <h2>$k$-CBS: A Deterministic Lower Bound</h2>
+  <div class="divider"></div>
+  <p>Beam search that only visits strings the decoding scheme could emit and that can still finish inside the ball.</p>
+  <div class="ta-algo" style="max-width:940px; margin:16px auto;">
+    <ol>
+      <li>Expand each beam only with tokens in the top-$k$ support of the decoding scheme.</li>
+      <li>Prune any partial string that can no longer reach $B_\varepsilon(s)$ within the edit budget.</li>
+      <li>Record the exact probability $\Pr_f[\hat s \mid p]$ of every completed $\hat s$.</li>
+      <li>$\hat p_\varepsilon = \sum_{\text{visited}} \Pr_f[\hat s \mid p] \;\le\; p_\varepsilon(s \mid p)$.</li>
+    </ol>
+  </div>
+  <p class="muted">Every visited sequence is a real term of the sum, so the bound is deterministic. Cost about $20$ decodes against $\sim 10^5$ samples. OLMo 2 32B on Wikipedia: $1.4\%$ at $\varepsilon = 0$ to $2.6\%$ at $\varepsilon = 5$.</p>
+</div>
+
+<!-- 13. Control group -->
+<div class="slide">
+  <h2>The Non-Member Baseline</h2>
+  <div class="divider"></div>
+  <p>Predictable text is completed whether or not it was trained on. Subtract that floor.</p>
+  <div class="math-block">$$R(D) = \frac{1}{|D|}\sum_{(p,s) \in D} \mathbf 1[\,\mathrm{score}(p,s) \ge t\,], \qquad \text{excess} = R(D_{\text{train}}) - R(D_{\text{ctrl}}).$$</div>
+  <ul class="arrow">
+    <li>$D_{\text{ctrl}}$ = matched non-members: same source and format, written after the cutoff</li>
+    <li>Same model, decoding rule, and prompt selection on both sides</li>
+    <li>Conformal threshold: $t$ = the $(1-\alpha)$ quantile of control scores, so $R(D_{\text{ctrl}}) \le \alpha$</li>
+  </ul>
+  <div class="cite cite-left">Cooper, Swanberg, Hayes, Duesterwald, De Sa, Ho, Lemley, and Liang, "Extractable Memorization From First Principles", 2026.</div>
+</div>
+
+<!-- 14. Baseline numbers -->
+<div class="slide">
+  <h2>How Large Is the Floor?</h2>
+  <div class="divider"></div>
+  <p>Exact-match rate on training text versus matched post-cutoff control text.</p>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:48px;align-items:center;">
+    <table>
+      <tr><th>Suffix</th><th>Train</th><th>Control</th><th>Excess</th></tr>
+      <tr><td>10 tokens</td><td>$7.54\%$</td><td>$1.82\%$</td><td>$5.72\%$</td></tr>
+      <tr><td>50 tokens</td><td>$0.74\%$</td><td>$0.02\%$</td><td>$0.72\%$</td></tr>
+    </table>
+    <div>
+      <p>OLMo 2 32B, greedy decoding, Wikipedia prompts.</p>
+      <p class="muted">Short suffixes need the correction: a quarter of the raw 10-token rate is predictable text. The standard 50-token suffix has a floor near zero, so its raw rate is already close to excess.</p>
+    </div>
+  </div>
+  <div class="cite cite-left">Cooper, Swanberg, Hayes, Duesterwald, De Sa, Ho, Lemley, and Liang, "Extractable Memorization From First Principles", 2026, Fig. 3.</div>
+</div>
+
+<!-- 15. Closer -->
 <div class="slide end-slide no-footer">
   <div class="big-word">$\log$</div>
   <p class="big-word-sub">Memorization is a slope, not an accident.</p>
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 9</div>
+<div class="slide-num" id="slideNum">1 / 15</div>
 
 </div><!-- .deck -->
 <script defer src="../../reference/deck.js"></script>

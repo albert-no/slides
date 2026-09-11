@@ -64,8 +64,8 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 |---|---|---|---|
 | `lec01tech.html` | Wk 1 (intro) | adversarial-example ε-ball; threat-model taxonomy (knowledge × timing); Kerckhoffs framing | **drafted** (7 sl) |
 | `lec02tech.html` | Wk 2 (privacy/DP) | (ε,δ)-DP def; ε/e^ε log-odds; sensitivity Δq; Laplace/Gaussian mechanisms; randomized-response algebra + privacy-vs-accuracy SE bound $1/(2q\sqrt n)$, $q=\tanh(\varepsilon/2)$; DP-SGD (clip C + N(0,σ²C²) + accountant); composition/Rényi. Points to `courses/privacy/lectures/01-dp/` | **drafted, RR accuracy slide added 2026-09-08** (22 sl) |
-| `lec03tech.html` | Wk 3 (MIA) | score+threshold; likelihood ratio Λ(x); LiRA (Gaussian fit + LR test); ROC / TPR@low-FPR; DP bound TPR ≤ e^ε·FPR + δ | **drafted** (11 sl) |
-| `lec04tech.html` | Wk 4 (memorization) | k-extractability def; memorization-fraction metric; log-linear scaling law | **drafted** (9 sl) |
+| `lec03tech.html` | Wk 3 (MIA) | Homer statistic $D_j=(M_j-\mathrm{Pop}_j)(2Y_j-1)$, per-SNP moments, aggregate $T$ + power ($m\approx 28{,}000$ / $39{,}000$ at $\alpha=10^{-6}$); score+threshold; optimal LR test Λ(x); LiRA (shadows on random halves, logit score $\phi(p)$, Gaussian fit, log-LR closed form, equal-variance linear rule + worked example $\log\Lambda\approx1.78$, offline variant); TPR(τ)/FPR(τ)/ROC set; AUC = Pr[S₁>S₀] with proof; base-rate precision table (π=1/101); TPR@α + Hayes scale check; DP bound TPR ≤ e^ε·FPR + δ; auditing | **updated 2026-09-12** (20 sl) |
+| `lec04tech.html` | Wk 4 (memorization) | k-extractability def; discoverable vs extractable (Nasr Defs. 1–2); memorization-fraction metric; log-linear scaling law; greedy argmax condition + $H(S\mid P_{1:k+1})\le H(S\mid P_{1:k})$; near-verbatim ball $B_\varepsilon$ and $p_\varepsilon$; $k$-CBS deterministic lower bound; control-group excess rate + conformal threshold + OLMo 2 32B table | **updated 2026-09-12** (15 sl) |
 | `lec05tech.html` | Wk 5 (unlearning) | exact vs approx; (ε,δ) unlearning inequality; influence function θ₋ₓ ≈ θ̂ + (1/n)H⁻¹∇ℓ + Hessian infeasibility; gradient ascent; SISA cost | **fixed 2026-08** (11 sl: (ε,δ) cite Ginart→Guo/Sekhari + two-sided bound; SISA speedup R·L→R & 3/2) |
 | `lec06tech.html` | Wk 6 (hallucination) | reliability diagram; ECE = Σ_b (n_b/n)|acc_b−conf_b|; temperature scaling; conformal coverage Pr[y∈C(x)]≥1−α + threshold quantile; semantic entropy | **checked 2026-08** (14 sl: math verified, Angelopoulos & Bates cite title completed) |
 | `lec07tech.html` | Wk 7 (interpretability) | Shapley φ_i + axioms; LIME surrogate objective; gradient saliency; integrated gradients; SAE reconstruction+sparsity, superposition | **checked 2026-08** (20 sl: math verified, no changes needed) |
@@ -496,6 +496,18 @@ explicitly (member iff $\Lambda \gt \tau$; $\tau=1$ says member, $\tau=10$ would
 FPR" gained two bullets on why the low-FPR regime matters (non-members vastly outnumber members, so a 1% FPR buries true hits).
 Note articles for both updated; three stray BEL-character `pprox` typos in the bells note article fixed.
 
+**2026-09-12 tech supplement update (`lec03tech.html` 11→20, PR #30):** the supplement now carries the formal side of every
+2026-09-11 addition. Homer block: factorization $D_j=(M_j-\mathrm{Pop}_j)(2Y_j-1)$ with both-case check; per-SNP moments
+(out mean 0, var $v_j/n$; in mean $2v_j/n$) with derivation; aggregate $T$, $\mu=2\sqrt{m\bar v/n}$, power $\Phi(\mu-z_\alpha)$,
+$m\approx28{,}000$ (power 0.5) / $39{,}000$ (power 0.8) at $\alpha=10^{-6}$, $n=1000$, $\bar v=0.2$. LiRA block: algorithm
+rewritten (shadows on random halves, logit scores), "Why the Logit Scale" ($\phi=-\ell-\log(1-e^{-\ell})$), log-LR with the
+global-$\sigma^2$ pooling note, "The Worked Example, Checked" (equal-variance linear rule; main-deck numbers give
+$\log\Lambda\approx1.78$, $\Lambda\approx5.9$; $\tau=1\Leftrightarrow s^\star\gt4$, $\tau=10\Leftrightarrow s^\star\gt5.30$), offline LiRA
+$\Pr[Z\le s^\star]$. Evaluation block: TPR(τ)/FPR(τ)/ROC set/balanced accuracy, "AUC Is a Probability" (Mann–Whitney, integral
+proof), "Why Low FPR: Base Rates" (precision at TPR=1 for π=1/101: 0.09 / 0.50 / 0.91 at FPR 10% / 1% / 0.1%), TPR@α with the
+Hayes NeurIPS 2025 scale check (AUC ≤ 0.7, TPR@10⁻⁴ ≈ 1%). Note file unchanged (already in sync). Lint ok; 20 pages rendered,
+new slides checked at 60 dpi.
+
 
 ## lec04-memorization.html
 
@@ -602,6 +614,16 @@ LLMs?", Hayes … Cooper NeurIPS 2025). Note file: two new articles (k-CBS bound
 comparison + conformal threshold + overstatement/dismissal failure modes), context paragraph in "A Predictable Curve",
 unlearning/legal paragraph + links in "Open Problems"; 62 entries, order matches. Render = 62 pages; 8 edited/new slides
 checked at 60 dpi.
+
+**2026-09-12 tech supplement update (`lec04tech.html` 9→15, PR #30):** formal backing for the Cooper 2026 frontier slides.
+New: "Discoverable vs Extractable" (Nasr et al. 2023 Defs. 1–2 as two def-cards; neither set contains the other), "Why Context
+Helps" (greedy decoding reproduces $s$ iff the true token is the argmax at every step; $H(S\mid P_{1:k+1})\le H(S\mid P_{1:k})$
+explains the $c\log k$ term), "Near-Verbatim Extraction" ($B_\varepsilon(s)$ Levenshtein ball, $p_\varepsilon(s\mid p)$ as the ball's
+probability mass, Monte Carlo cost $\sim10^5$ samples), "$k$-CBS: A Deterministic Lower Bound" (4-step `.ta-algo`; ~20 decodes;
+OLMo 2 32B 1.4%→2.6% at ε=5), "The Non-Member Baseline" ($R(D)$, excess $=R(D_{\text{train}})-R(D_{\text{ctrl}})$, conformal
+threshold) and "How Large Is the Floor?" (train/control/excess table: 10-token 7.54% / 1.82% / 5.72%, 50-token 0.74% / 0.02% /
+0.72%; split off after the table overflowed the footer at 60 dpi). `.ta-algo` CSS added to the head. Note file unchanged
+(already in sync). Lint ok; 15 pages rendered, new slides checked at 60 dpi.
 
 **2026-09 figure pass (58→60, PR #24):** every content slide now carries a cited real figure or an
 SVG. Added slides: Reading the Curves (§03, holds the GPT-J ≥1% bullets that A Predictable Curve

@@ -34,7 +34,7 @@
   <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 3 · Technical Supplement</div>
   <h1>Membership<br>Inference: The Math</h1>
   <div class="divider"></div>
-  <p class="subtitle">Optional. Likelihood ratios, LiRA, and the DP bound</p>
+  <p class="subtitle">Optional. Homer's test, likelihood ratios, LiRA, ROC metrics, and the DP bound</p>
   <div class="spacer-lg"></div>
   <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
   <p style="margin-top:6px;">Trustworthy AI · 2026</p>
@@ -46,14 +46,48 @@
   <div class="divider"></div>
   <p>The main lecture keeps the two-bells picture. Here is the test behind it.</p>
   <ul class="arrow">
-    <li>The score-and-threshold attack, written out</li>
-    <li>The likelihood ratio and the LiRA recipe</li>
-    <li>ROC, TPR at low FPR, and the DP bound</li>
+    <li>Homer's statistic: its mean, its noise, and why $m$ SNPs beat $n$ people</li>
+    <li>The likelihood-ratio test, the LiRA recipe, and the worked example checked</li>
+    <li>TPR, FPR, ROC, AUC, base rates, and the DP bound</li>
   </ul>
   <div class="highlight"><p>Skip this in the core session; return for the formal version.</p></div>
 </div>
 
-<!-- 3. Score and threshold -->
+<!-- 3. Homer statistic -->
+<div class="slide">
+  <h2>Homer's Statistic, Formally</h2>
+  <div class="divider"></div>
+  <p>Per SNP $j$: Alice's allele $Y_j \in \{0,1\}$, study mean $M_j$, population frequency $\mathrm{Pop}_j = p_j$.</p>
+  <div class="math-block">$$D_j \;=\; \lvert Y_j - \mathrm{Pop}_j\rvert - \lvert Y_j - M_j\rvert \;=\; (M_j - \mathrm{Pop}_j)\,(2Y_j - 1).$$</div>
+  <p class="muted">Check both cases: $Y_j = 1$ gives $(1 - \mathrm{Pop}_j) - (1 - M_j)$; $Y_j = 0$ gives $\mathrm{Pop}_j - M_j$. The study's drift, signed by Alice's letter.</p>
+  <div class="cite cite-left">Homer et al., "Resolving Individuals Contributing Trace Amounts of DNA to Highly Complex Mixtures Using High-Density SNP Genotyping Microarrays", PLoS Genetics 2008.</div>
+</div>
+
+<!-- 4. One SNP moments -->
+<div class="slide">
+  <h2>One SNP: Mean and Noise</h2>
+  <div class="divider"></div>
+  <p>Idealized model: $n$ people with i.i.d. $\mathrm{Bernoulli}(p_j)$ alleles, $v_j = p_j(1-p_j)$, $p_j$ known.</p>
+  <div class="math-block">$$\text{out: } \mathbb{E}[D_j] = 0,\; \mathrm{Var}\,D_j = \frac{v_j}{n}; \qquad \text{in: } \mathbb{E}[D_j] = \frac{2v_j}{n},\; \mathrm{Var}\,D_j \approx \frac{v_j}{n}.$$</div>
+  <div class="def-card">
+    <h3>Why</h3>
+    <p>Outside, $Y_j$ is independent of $M_j$ and $\mathbb{E}[M_j] = p_j$, so the mean is $0$ and the noise is $\mathrm{Var}(M_j) = v_j/n$. Inside, $M_j - p_j = (Y_j - p_j)/n + \text{(others)}$, so $\mathbb{E}[D_j] = \mathbb{E}[(Y_j - p_j)(2Y_j - 1)]/n = \bigl[p_j(1-p_j) + (1-p_j)p_j\bigr]/n = 2v_j/n$.</p>
+  </div>
+  <p class="muted">Per-SNP signal-to-noise: $2\sqrt{v_j/n} \approx 0.03$ at $n = 1{,}000$, $v_j = 0.2$.</p>
+</div>
+
+<!-- 5. Aggregate test and power -->
+<div class="slide">
+  <h2>Summing $m$ SNPs: Test and Power</h2>
+  <div class="divider"></div>
+  <p>Independent SNPs add. Standardize the sum by its null noise.</p>
+  <div class="math-block">$$T = \frac{\sum_{j=1}^m D_j}{\sqrt{\sum_j v_j / n}}, \qquad T \approx \mathcal N(0,1) \text{ out}, \qquad T \approx \mathcal N(\mu, 1) \text{ in}, \quad \mu = 2\sqrt{\frac{m\bar v}{n}}.$$</div>
+  <p>One-sided test at level $\alpha$: say "in" when $T \gt z_\alpha$. Power $= \Phi(\mu - z_\alpha)$.</p>
+  <p class="muted">At $\alpha = 10^{-6}$ ($z_\alpha \approx 4.75$), $n = 1{,}000$, $\bar v = 0.2$: power $0.5$ needs $\mu = z_\alpha$, so $m \approx 28{,}000$; power $0.8$ needs $\mu = z_\alpha + 0.84$, so $m \approx 39{,}000$. Required $m$ grows linearly in $n$.</p>
+  <div class="cite cite-left">Sankararaman, Obozinski, Jordan, and Halperin, "Genomic privacy and limits of individual detection in a pool", Nature Genetics 2009.</div>
+</div>
+
+<!-- 6. Score and threshold -->
 <div class="slide">
   <h2>Score and Threshold</h2>
   <div class="divider"></div>
@@ -62,7 +96,7 @@
   <p class="muted">Lower loss ⇒ higher score ⇒ predict "member". Tuning $\tau$ traces the ROC curve.</p>
 </div>
 
-<!-- 4. Bayes-optimal test -->
+<!-- 7. Bayes-optimal test -->
 <div class="slide">
   <h2>The Optimal Test</h2>
   <div class="divider"></div>
@@ -72,7 +106,7 @@
   <div class="cite cite-left">Sablayrolles et al., "White-box vs Black-box: Bayes Optimal Strategies for Membership Inference", ICML 2019.</div>
 </div>
 
-<!-- 5. Why per-example -->
+<!-- 8. Why per-example -->
 <div class="slide">
   <h2>Why Per-Example Calibration</h2>
   <div class="divider"></div>
@@ -85,41 +119,122 @@
   <p class="muted">The ratio normalizes away each record's intrinsic loss scale.</p>
 </div>
 
-<!-- 6. LiRA -->
+<!-- 9. LiRA -->
 <div class="slide">
   <h2>LiRA: Likelihood Ratio Attack</h2>
   <div class="divider"></div>
-  <p>Estimate the two conditional distributions with shadow models.</p>
+  <p>Estimate the two conditional distributions with shadow models, per record.</p>
   <div class="ta-algo" style="max-width:920px; margin:16px auto;">
     <ol>
-      <li>Train many shadows with $x$ in, many with $x$ out.</li>
-      <li>Fit $\mathcal{N}(\mu_{\text{in}}, \sigma_{\text{in}}^2)$ and $\mathcal{N}(\mu_{\text{out}}, \sigma_{\text{out}}^2)$ to the losses.</li>
-      <li>Observe the target loss $\ell^\star = \ell(f_\theta, x)$.</li>
-      <li>Score by $\Lambda(x) = \mathcal{N}(\ell^\star; \mu_{\text{in}}, \sigma_{\text{in}}^2) / \mathcal{N}(\ell^\star; \mu_{\text{out}}, \sigma_{\text{out}}^2)$.</li>
+      <li>Train $N$ shadows on random halves of a pool; $x$ is in about $N/2$ of them.</li>
+      <li>Fit $\mathcal{N}(\mu_{\text{in}}, \sigma_{\text{in}}^2)$ and $\mathcal{N}(\mu_{\text{out}}, \sigma_{\text{out}}^2)$ to the shadows' scores $s_k = \phi\bigl(f_{\theta_k}(x)_y\bigr)$.</li>
+      <li>Observe the target score $s^\star = \phi\bigl(f_\theta(x)_y\bigr)$.</li>
+      <li>Score by $\Lambda(x) = \mathcal{N}(s^\star; \mu_{\text{in}}, \sigma_{\text{in}}^2) / \mathcal{N}(s^\star; \mu_{\text{out}}, \sigma_{\text{out}}^2)$; say "member" iff $\Lambda(x) \gt \tau$.</li>
     </ol>
   </div>
   <div class="cite cite-left">Carlini et al., "Membership Inference Attacks From First Principles", IEEE S&amp;P 2022.</div>
 </div>
 
-<!-- 7. The Gaussian LR in log form -->
+<!-- 10. Logit scaling -->
+<div class="slide">
+  <h2>Why the Logit Scale</h2>
+  <div class="divider"></div>
+  <p>The Gaussian fit needs a score whose per-record distribution is close to normal.</p>
+  <div class="math-block">$$\phi(p) = \log\frac{p}{1-p}, \qquad p = f_\theta(x)_y, \qquad \phi = -\ell - \log\bigl(1 - e^{-\ell}\bigr) \text{ with } \ell = -\log p.$$</div>
+  <ul class="arrow">
+    <li>Confidences pile up near $1$; raw $p$ and raw loss are badly skewed</li>
+    <li>The logit stretches the top end, so in- and out-scores each look Gaussian</li>
+    <li>Same monotone ordering as the loss, so nothing is lost for a single threshold</li>
+  </ul>
+  <div class="cite cite-left">Carlini et al., IEEE S&amp;P 2022, Sec. V-D ("logit scaling").</div>
+</div>
+
+<!-- 11. The Gaussian LR in log form -->
 <div class="slide">
   <h2>The Log-Likelihood Ratio</h2>
   <div class="divider"></div>
-  <p>With logit-scaled losses, LiRA scores a Gaussian log-ratio.</p>
-  <div class="math-block">$$\log \Lambda(x) = \frac{(\ell^\star - \mu_{\text{out}})^2}{2\sigma_{\text{out}}^2} - \frac{(\ell^\star - \mu_{\text{in}})^2}{2\sigma_{\text{in}}^2} + \log\frac{\sigma_{\text{out}}}{\sigma_{\text{in}}}.$$</div>
-  <p class="muted">A distance-to-each-bell comparison: closer to the in-bell ⇒ larger score.</p>
+  <p>Two Gaussians give a closed-form score.</p>
+  <div class="math-block">$$\log \Lambda(x) = \frac{(s^\star - \mu_{\text{out}})^2}{2\sigma_{\text{out}}^2} - \frac{(s^\star - \mu_{\text{in}})^2}{2\sigma_{\text{in}}^2} + \log\frac{\sigma_{\text{out}}}{\sigma_{\text{in}}}.$$</div>
+  <p class="muted">A distance-to-each-bell comparison: closer to the in-bell ⇒ larger score. With few shadows ($N \lt 64$) Carlini et al. pool one global $\sigma^2$ across records.</p>
 </div>
 
-<!-- 8. ROC and TPR at low FPR -->
+<!-- 12. Worked example -->
 <div class="slide">
-  <h2>ROC and TPR at Low FPR</h2>
+<h2>The Worked Example, Checked</h2>
   <div class="divider"></div>
-  <p>Sweep $\tau$; plot $\mathrm{TPR}(\tau)$ against $\mathrm{FPR}(\tau)$.</p>
-  <div class="math-block">$$\mathrm{TPR} = \Pr[\hat m = 1 \mid \text{in}], \qquad \mathrm{FPR} = \Pr[\hat m = 1 \mid \text{out}].$$</div>
-  <p>Average accuracy hides the danger; the meaningful metric is <strong>TPR at fixed low FPR</strong> (e.g. $0.1\%$), read on a log-scale ROC.</p>
+  <p>Equal variances make the rule <strong>linear</strong> in the score.</p>
+  <div class="math-block">$$\sigma_{\text{in}} = \sigma_{\text{out}} = \sigma \;\Rightarrow\; \log\Lambda = \frac{(\mu_{\text{in}} - \mu_{\text{out}})}{\sigma^2}\Bigl(s^\star - \frac{\mu_{\text{in}} + \mu_{\text{out}}}{2}\Bigr).$$</div>
+  <div class="def-card">
+    <h3>Main-deck numbers: $\mu_{\text{out}} = 2$, $\mu_{\text{in}} = 6$, $\sigma = 1.5$, $s^\star = 5$</h3>
+    <p>$\log\Lambda = \dfrac{4}{2.25}\,(5 - 4) \approx 1.78$, so $\Lambda = e^{1.78} \approx 5.9$. The rule "$\Lambda \gt \tau$" with $\tau = 1$ is exactly "$s^\star \gt 4$", the midpoint. With $\tau = 10$ it becomes $s^\star \gt 4 + 2.30 \cdot 2.25/4 \approx 5.30$, so $s^\star = 5$ is called <em>out</em>.</p>
+  </div>
+  <p class="muted">$\tau$ is fixed before looking at $s^\star$; it sets the FPR. $\Lambda \approx 5.9$ is the evidence, not the threshold.</p>
 </div>
 
-<!-- 9. The DP bound -->
+<!-- 13. Offline LiRA -->
+<div class="slide">
+  <h2>Offline LiRA: Out-Shadows Only</h2>
+  <div class="divider"></div>
+  <p>Training in-shadows for every new record is the expensive half. Drop them.</p>
+  <div class="math-block">$$s_{\text{off}}(x) = \Pr\bigl[Z \le s^\star\bigr], \qquad Z \sim \mathcal N(\mu_{\text{out}}, \sigma_{\text{out}}^2).$$</div>
+  <ul class="arrow">
+    <li>A one-sided test: how surprising is $s^\star$ if $x$ was never trained on?</li>
+    <li>Shadows trained once, reused for any query; no per-record retraining</li>
+    <li>Weaker than the two-sided test at very low FPR, still far above a global threshold</li>
+  </ul>
+  <div class="cite cite-left">Carlini et al., IEEE S&amp;P 2022, Sec. V-C (offline attack).</div>
+</div>
+
+<!-- 14. TPR / FPR / ROC -->
+<div class="slide">
+  <h2>TPR, FPR, and the ROC Curve</h2>
+  <div class="divider"></div>
+  <p>Both rates are functions of the threshold, and both fall as $\tau$ rises.</p>
+  <div class="math-block">$$\mathrm{TPR}(\tau) = \Pr[\Lambda \gt \tau \mid \text{in}], \qquad \mathrm{FPR}(\tau) = \Pr[\Lambda \gt \tau \mid \text{out}].$$</div>
+  <p>$\mathrm{ROC} = \{(\mathrm{FPR}(\tau), \mathrm{TPR}(\tau)) : \tau \in \mathbb{R}\}$, a curve from $(1,1)$ down to $(0,0)$. Balanced accuracy $= \tfrac12\bigl(\mathrm{TPR} + 1 - \mathrm{FPR}\bigr)$.</p>
+  <p class="muted">The diagonal $\mathrm{TPR} = \mathrm{FPR}$ is coin-flipping. Neyman–Pearson says the $\Lambda$-ROC lies above every other score's ROC.</p>
+</div>
+
+<!-- 15. AUC -->
+<div class="slide">
+  <h2>AUC Is a Probability</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Proposition</h3>
+    <p>Let $S_1 \sim q_{\text{in}}$ and $S_0 \sim q_{\text{out}}$ be independent scores of a random member and a random non-member. Then $\mathrm{AUC} = \Pr[S_1 \gt S_0]$.</p>
+  </div>
+  <div class="math-block">$$\mathrm{AUC} = \int_0^1 \mathrm{TPR}\, d\mathrm{FPR} = \int_{-\infty}^{\infty} \Pr[S_1 \gt \tau]\, q_{\text{out}}(\tau)\, d\tau = \mathbb{E}_{S_0}\bigl[\Pr[S_1 \gt S_0 \mid S_0]\bigr].$$</div>
+  <p class="muted">Empirically this is the Mann–Whitney $U$ statistic: a rank average over all member/non-member pairs, so it is dominated by the bulk of the curve and blind to the far-left edge.</p>
+</div>
+
+<!-- 16. Base rates -->
+<div class="slide">
+  <h2>Why Low FPR: Base Rates</h2>
+  <div class="divider"></div>
+  <p>Members are a fraction $\pi$ of the people the model could be asked about. What an accusation is worth:</p>
+  <div class="math-block">$$\Pr[\text{member} \mid \text{say member}] = \frac{\pi\,\mathrm{TPR}}{\pi\,\mathrm{TPR} + (1-\pi)\,\mathrm{FPR}}.$$</div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:44px;align-items:center;">
+    <table>
+      <tr><th>FPR</th><th>Precision at $\mathrm{TPR} = 1$</th></tr>
+      <tr><td>$10\%$</td><td>$0.09$</td></tr>
+      <tr><td>$1\%$</td><td>$0.50$</td></tr>
+      <tr><td>$0.1\%$</td><td>$0.91$</td></tr>
+    </table>
+    <p>With $\pi = 1/101$ (one member per 100 non-members) a $1\%$ FPR yields one false accusation per true hit even for a perfect attack. Only the low-FPR regime makes a flag credible.</p>
+  </div>
+</div>
+
+<!-- 17. TPR at fixed FPR -->
+<div class="slide">
+  <h2>TPR at a Fixed Low FPR</h2>
+  <div class="divider"></div>
+  <p>Fix a tolerable false-alarm rate $\alpha$ and report the catch rate there.</p>
+  <div class="math-block">$$\mathrm{TPR}@\alpha = \mathrm{TPR}(\tau_\alpha), \qquad \mathrm{FPR}(\tau_\alpha) = \alpha, \qquad \alpha \in \{10^{-3}, 10^{-5}\}.$$</div>
+  <p>Read it on a <strong>log-log</strong> ROC. Attacks with equal accuracy or AUC differ by orders of magnitude here.</p>
+  <p class="muted">Scale check: on normally pretrained 10M–1B LLMs, LiRA with 128 shadows reaches AUC $\le 0.7$ and $\mathrm{TPR}@10^{-4}$ near $1\%$ (Hayes et al., NeurIPS 2025).</p>
+</div>
+
+<!-- 18. The DP bound -->
 <div class="slide">
   <h2>The DP Bound on Any Attack</h2>
   <div class="divider"></div>
@@ -129,7 +244,7 @@
   <div class="cite cite-left">Kairouz, Oh, and Viswanath, "The Composition Theorem for Differential Privacy", ICML 2015.</div>
 </div>
 
-<!-- 10. Auditing / closer note -->
+<!-- 19. Auditing / closer note -->
 <div class="slide">
   <h2>Auditing Flips the Bound</h2>
   <div class="divider"></div>
@@ -148,7 +263,7 @@
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 11</div>
+<div class="slide-num" id="slideNum">1 / 20</div>
 
 </div><!-- .deck -->
 <script defer src="../../reference/deck.js"></script>

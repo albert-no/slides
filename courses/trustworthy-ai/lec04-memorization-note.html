@@ -54,7 +54,7 @@ $$\mathcal{L}(\theta) \;=\; -\,\mathbb{E}_{x\sim\mathcal{D}}\!\left[\sum_{i=1}^{
 <h2>A Working Definition</h2>
 <p>A model has memorized an example if a short prompt makes it reproduce that example exactly. The key word is specific: this is reciting one record, not learning a general fact.</p>
 <p><span class="kt">Key takeaway:</span> Memorization means reproducing a specific training record verbatim.</p>
-<p><span class="kt">Slide figure:</span> Cooper et al. 2025, Fig. 1 (left): a prefix of <em>The Great Gatsby</em> from the training data is fed to the model, which generates the exact suffix.</p>
+<p><span class="kt">Slide figure:</span> Redrawn from Cooper et al. 2025, Fig. 1: a 50-token prefix of <em>The Great Gatsby</em> from the training data ("They were careless people, Tom and Daisy…") is fed to Llama 1 30B, which generates the exact suffix ("back into their money or their vast carelessness…").</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Operational memorization.</strong> The working definition is <em>attack-based</em>: a training string $s$ counts as memorized by a model $f_\theta$ if some interaction with the deployed model reproduces $s$ exactly. The lecture instantiates "interaction" three ways, each made formal on a later slide:</p>
@@ -433,7 +433,7 @@ $$\mathrm{Mem}(f) \;=\; \frac{1}{|D|}\sum_{(p,s)\in D} \mathbf{1}\!\left[\, f_{\
 
 <article>
 <h2>A Predictable Curve</h2>
-<p>Memorization scales log-linearly with these drivers: each tenfold increase in size, duplication, or context adds a steady amount. Carlini and colleagues measured that GPT-J, at 6 billion parameters, memorizes at least one percent of its training set. This is a built-in property of training, not a bug to patch out.</p>
+<p>Memorization scales log-linearly with these drivers: each tenfold increase in size, duplication, or context adds a steady amount. Panel (c) is worth a pause: "prompt length" is the amount of <em>context</em> the model is given. A 50-token prefix could be the start of many passages, so the memorized continuation competes with plausible alternatives; a 500-token prefix identifies one specific passage in the training data, and the model's recall of the rest becomes nearly deterministic. More context means less ambiguity about which record to recite, not a change in what the model stored. Carlini and colleagues measured that GPT-J, at 6 billion parameters, memorizes at least one percent of its training set. This is a built-in property of training, not a bug to patch out.</p>
 <p><span class="kt">Key takeaway:</span> The growth follows a smooth, predictable curve — and it is already large.</p>
 <p><span class="kt">Slide figure:</span> Carlini et al. 2023, Fig. 1: fraction extractable versus (a) model size, (b) number of repetitions in the training data, (c) prompt length, each a near-straight line on a log axis.</p>
 <div class="detail">
@@ -452,7 +452,7 @@ $$\mathrm{Mem} \;\approx\; a\,\log N \;+\; b\,\log r \;+\; c\,\log k \;+\; d, \q
 <h2>Reading the Curves</h2>
 <p>Read the three panels as one statement. Each factor of ten in model size, duplication count, or prompt length adds the same steady bump to the memorized fraction, so the effects compound rather than saturate. The headline number is that GPT-J at 6B parameters memorizes at least 1% of its training set. None of this is a bug in a particular run; it is how the training objective behaves at scale.</p>
 <p><span class="kt">Key takeaway:</span> Log-linear scaling means every 10× buys the same increase in memorization; GPT-J memorizes at least 1%.</p>
-<p><span class="kt">Slide figure:</span> Schematic: one straight line on a log-scale axis, with the ×10 step and its constant bump marked.</p>
+<p><span class="kt">Slide figure:</span> Schematic, full width below the three bullets: one straight line on a log-scale axis, with the ×10 step and its constant bump marked.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <ul>
@@ -741,6 +741,43 @@ $$1 - \bigl(1 - p_{\text{ext}}(s \mid p)\bigr)^{n} \;\ge\; q.$$
 </article>
 
 <article>
+<h2>Frontier: Near-Verbatim Counts Too</h2>
+<p>Every rate so far counted exact reproductions. Cooper and colleagues point out that a continuation differing from the training text by a handful of tokens is just as much a copy for privacy or copyright, but the set of such near-copies is combinatorially large, so estimating its total probability by sampling needs on the order of a hundred thousand samples per sequence. Their fix is a beam search constrained to the model's own top-$k$ decoding scheme, which tracks exact probabilities of the sequences it visits and therefore returns a deterministic lower bound at roughly the cost of twenty samples. On OLMo 2 the near-verbatim rate is markedly higher than the verbatim rate, and the held-out control, Wikipedia written after the training cutoff, stays near zero.</p>
+<p><span class="kt">Key takeaway:</span> Counting only exact matches understates memorization; near-verbatim extraction can be bounded cheaply and is substantially larger.</p>
+<p><span class="kt">Slide figure:</span> Cooper et al. 2026, Fig. 3: extraction rate against allowed Levenshtein distance $\varepsilon \in \{0,\dots,5\}$ for OLMo 2 7B, 13B, 32B, greedy and probabilistic (k-CBS), training data as solid and held-out as dashed lines; OLMo 2 32B rises from about 1.4% at $\varepsilon = 0$ to about 2.6% at $\varepsilon = 5$.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Near-verbatim extraction probability.</strong> For prefix $z^{(\mathrm{pre})}$, target suffix $z^{(\mathrm{suf})}$ of length $L$, and edit budget $\varepsilon$, define $B_\varepsilon = \{\hat z : \mathrm{Lev}(\hat z, z^{(\mathrm{suf})}) \le \varepsilon\}$ and
+$$p_{\varepsilon}(z) = \sum_{\hat z \in B_\varepsilon} \Pr_\phi\bigl[\hat z \mid z^{(\mathrm{pre})}\bigr],$$
+the probability under decoding scheme $\phi$ (here top-$k$ = 40 at temperature 1) that a single sample lands in the $\varepsilon$-ball. $\varepsilon = 0$ recovers the verbatim probabilistic extraction of Hayes et al. (NAACL 2025), which is a single product of token probabilities; for $\varepsilon \ge 1$ the sum has $O(L^{\varepsilon}|V|^{\varepsilon})$ terms.</p>
+<p><strong>k-CBS.</strong> Beam search of width $B$ in which each expansion is restricted to the tokens the decoding scheme could actually emit, so every path's probability is exact under $\phi$; a streaming Wagner–Fischer table prunes prefixes whose row-minimum edit distance already exceeds $\varepsilon$. Summing the probabilities of the completed sequences inside $B_\varepsilon$ gives a lower bound on $p_\varepsilon(z)$, since every counted sequence is a genuine member of the ball and none is double-counted. With $B = 20$ the bound captured about 89% of a $10^4$-sample Monte Carlo estimate on a <em>Great Gatsby</em> example (their Fig. 2).</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2603.24917">Cooper, Lemley, De Sa, Duesterwald, Casasola, Hayes, Lee, Ho, Liang, "Estimating near-verbatim extraction risk in language models with decoding-constrained beam search", COLM 2026 (arXiv 2603.24917)</a>.</li>
+<li><a href="https://arxiv.org/abs/2410.19482">Hayes et al., "Measuring memorization in language models via probabilistic extraction", NAACL 2025 (arXiv 2410.19482)</a> — the $(n,p)$-discoverable extraction primitive that both this paper and the books paper build on.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>Frontier: Extraction Needs a Control Group</h2>
+<p>The second correction runs the other way. A model will greedily complete text it never trained on when the text is predictable: boilerplate, lists, famous quotations. Cooper and colleagues therefore insist on a matched comparison: score training members and comparable non-members, here Wikipedia articles written after the model's cutoff, under the same model, decoding rule, and prompt selection. The non-member rate is a false-positive floor. For ten-token suffixes on OLMo 2 32B that floor is 1.8% against 7.5% on members, so about a quarter of what a naive test would call extraction is predictability; for the standard fifty-token suffix the floor is essentially zero. The same paper calibrates thresholds by conformal prediction at a chosen false-positive level, which is exactly the TPR-at-fixed-FPR discipline of the membership-inference lecture. Mention Cooper's 2026 "Whack-a-Mole" essay as the cautionary tale: a widely cited claim of 85–90% book coverage rested on five-word matches with no post-cutoff control.</p>
+<p><span class="kt">Key takeaway:</span> An extraction claim needs a matched non-member baseline; without it, predictable text is mistaken for memorized text.</p>
+<p><span class="kt">Slide figure:</span> Cooper et al. 2026, Fig. 3: greedy verbatim generation rate for OLMo 2 32B on training Wikipedia versus matched post-2024 Wikipedia, 7.54% vs 1.82% for 10-token suffixes (left) and 0.74% vs 0.02% for 50-token suffixes (right, zoomed inset), with 95% Clopper–Pearson intervals.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Matched comparison.</strong> Fix a model $\theta$, decoding policy $\phi$, prompt-selection rule $f_P$, and score $s(\cdot)$. Draw members $z \in D_{\mathrm{train}}$ and controls $z' \in D_{\mathrm{ctrl}}$ from the same distribution of text but outside training. The <em>calibrated memorization rate</em> at threshold $\tau$ is $\Pr_{z}[s(z) \gt \tau] - \Pr_{z'}[s(z') \gt \tau]$, and the <em>conformal threshold</em> $\tau_\alpha$ is the $(1-\alpha)$-quantile of the control scores, so that a member flagged at $\tau_\alpha$ is a false positive with probability at most $\alpha$ (finite-sample valid by exchangeability of the controls).</p>
+<p><strong>Two failure modes the paper names.</strong> Overstatement: suffixes so short that reproduction is unsurprising (their "parrot prompts"). Dismissal: arguing that because models complete unseen text, reproduction of training text proves nothing. The matched control answers both, and leads to the refined definition: a sequence is <em>extractably memorized</em> if it clears the matched threshold <em>and</em> is reproducible within a stated query budget. For Llama 3.1 70B on books, calibrated thresholds for 50-token suffixes fall as low as $10^{-27}$: passages that are statistically memorized yet unextractable under any realistic budget.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2607.12649">Cooper, Swanberg, Hayes, Duesterwald, De Sa, Ho, Lemley, Liang, "Extractable Memorization From First Principles", 2026 (arXiv 2607.12649)</a>; explainer at monkey-emeritus.github.io.</li>
+<li><a href="https://arxiv.org/abs/2609.09320">Cooper, "Playing Whack-a-Mole with misconceptions about memorization, extraction, and copyright", 2026 (arXiv 2609.09320)</a> — critique of five-word-match coverage metrics and missing negative controls.</li>
+<li><a href="https://arxiv.org/abs/2505.18773">Hayes, …, Cooper, "Exploring the limits of strong membership inference attacks on large language models", NeurIPS 2025</a> — the members-versus-non-members test at LLM scale, covered in the membership-inference lecture.</li>
+</ul>
+</div>
+</article>
+
+<article>
 <h2>Frontier: How Much Fits?</h2>
 <p>Morris and colleagues measured storage capacity directly: GPT-family models store about 3.6 bits per parameter, and models memorize until that capacity fills, then start generalizing. Memorization and generalization draw on one shared budget.</p>
 <p><span class="kt">Key takeaway:</span> Memorization has a measurable capacity, shared with generalization.</p>
@@ -774,11 +811,15 @@ $$1 - \bigl(1 - p_{\text{ext}}(s \mid p)\bigr)^{n} \;\ge\; q.$$
 
 <article>
 <h2>Open Problems</h2>
-<p>Open questions remain: measuring memorization in closed models, cutting it without hurting accuracy, erasing specific data after training, and agreeing on a legal line for how much is too much.</p>
+<p>Open questions remain: measuring memorization in closed models, cutting it without hurting accuracy, erasing specific data after training, and agreeing on a legal line for how much is too much. On erasure, flag Cooper, Lee, and colleagues' NeurIPS 2025 position paper: "unlearning" conflates <em>removing</em> information from the weights with <em>suppressing</em> it in outputs, and neither matches what privacy or copyright law would need. On the legal line, Lemley and Cooper predict courts will adopt a functional test: a model "contains a copy" only when the work is straightforward to extract, which ties the law directly to the measurements in this lecture.</p>
 <p><span class="kt">Key takeaway:</span> The core problems are still unsolved.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Each open problem connects to material above. <em>Measuring closed models:</em> without training-data access only extractable (not discoverable) memorization is observable — the Nasr and Ahmed attacks are the current state of the art, and gaps between the two regimes remain unquantified for production systems. <em>Cutting memorization without hurting accuracy:</em> Feldman's theorem sets a genuine floor on long-tailed data, so the question is how closely practical training can approach it. <em>Erasing after training:</em> machine unlearning — removing a specific record's influence from trained weights with a verifiable guarantee — has no scalable solution; today's "removal" is output filtering. <em>The legal line:</em> the NYT and Bartz cases will start drawing it, but no court has yet said how much measured memorization is too much.</p>
+<ul>
+<li><a href="https://arxiv.org/abs/2412.06966">Cooper, Lee, Bogen, Grimmelmann, boyd, Liang, Ho, Samuelson, Cyphert, Lemley, Papernot, et al., "Machine Unlearning Doesn't Do What You Think: Lessons for Generative AI Policy and Research", NeurIPS 2025 position track, oral (arXiv 2412.06966)</a>.</li>
+<li><a href="https://arxiv.org/abs/2607.14532">Lemley and Cooper, "Probabilistic 'Copies' in Generative AI Models", Berkeley Technology Law Journal, forthcoming 2026 (arXiv 2607.14532)</a>.</li>
+</ul>
 </div>
 </article>
 

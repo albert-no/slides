@@ -211,7 +211,7 @@ whose graph $\{(\mathrm{FPR}(\tau), \mathrm{TPR}(\tau)) : \tau \in \mathbb{R}\}$
 
 <article>
 <h2>How Many SNPs Are Enough?</h2>
-<p>Now the arithmetic of summing. Add $m$ statistics: the tilt grows like $m$, the noise like $\sqrt{m}$, so the standardized gap between the two bells is $\mu = 2\sqrt{m\bar v/n}$. Read the table: at a false-positive level of one in a million, a thousand-person cohort needs about 28,000 SNPs to catch half its members and about 39,000 to catch eight in ten. Ten times the cohort needs ten times the SNPs, roughly 390,000. A standard array reads 500,000. Stress that these are idealized-model numbers, not the paper's reported values; the next slide has those.</p>
+<p>Now the arithmetic of summing. Add $m$ statistics: the tilt grows like $m$, the noise like $\sqrt{m}$, so the standardized gap between the two bells is $\mu = 2\sqrt{m\bar v/n}$. Define the two letters first: $n$ is the number of people in the cohort, $m$ the number of SNPs the attacker tests. Read the table: at a false-positive level of one in a million, a thousand-person cohort needs about 28,000 SNPs to catch half its members and about 39,000 to catch eight in ten. Ten times the cohort needs ten times the SNPs, roughly 390,000. A standard array reads 500,000. Stress that these are idealized-model numbers, not the paper's reported values; the next slide has those.</p>
 <p><span class="kt">Key takeaway:</span> The gap grows like $\sqrt{m/n}$; the SNP budget scales linearly with cohort size, and arrays already have enough.</p>
 <div class="detail">
 <h3>Theorem &amp; proof</h3>
@@ -505,9 +505,29 @@ is a per-record threshold; the posterior is a sigmoid-shaped decreasing function
 </article>
 
 <article>
+<h2>Deciding on a New Record</h2>
+<p>Here is the full procedure for one fresh record. Query the target model on $x'$ and logit-scale the confidence it gives the true label; that is the score. Look up the two bells that the shadow models gave for this record, one from shadows that trained on it and one from shadows that did not. Form the ratio of the two Gaussian densities at the observed score. Compare to a threshold: above it, call member. Stress that the shadows are trained once on random halves of a pool, so every record in the pool is "in" for about half of them; the per-record cost is only the four Gaussian parameters.</p>
+<p><span class="kt">Key takeaway:</span> Membership for a new record is a per-record likelihood-ratio test with a threshold that sets the false-alarm rate.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Online LiRA, per record.</strong> Given target $f_\theta$, record $(x', y')$, shadow models $\{f_{\theta_k}\}_{k=1}^N$ with membership indicators $b_k \in \{0,1\}$ for $x'$:</p>
+<ol>
+<li>$s' = \phi(f_\theta(x')_{y'})$, $s_k = \phi(f_{\theta_k}(x')_{y'})$, with $\phi(p) = \log\frac{p}{1-p}$.</li>
+<li>$\mu_{\mathrm{in}}, \sigma^2_{\mathrm{in}}$ = sample mean and variance of $\{s_k : b_k = 1\}$; $\mu_{\mathrm{out}}, \sigma^2_{\mathrm{out}}$ likewise over $\{s_k : b_k = 0\}$. Carlini et al. also offer a <em>global-variance</em> variant that pools $\sigma^2$ across records when $N$ is small (e.g. $N \lt 64$).</li>
+<li>$\Lambda(x') = \mathcal N(s'; \mu_{\mathrm{in}}, \sigma^2_{\mathrm{in}}) / \mathcal N(s'; \mu_{\mathrm{out}}, \sigma^2_{\mathrm{out}})$.</li>
+<li>Output "member" iff $\Lambda(x') \gt \tau$; the Neyman–Pearson lemma (previous entry) says no other rule has higher TPR at the FPR this $\tau$ induces.</li>
+</ol>
+<p><strong>Choosing $\tau$.</strong> The attacker fixes a tolerable false-positive rate $\alpha$ and sets $\tau$ so that, over records known to be non-members (e.g. held-out data or the shadows' own out-records), the fraction with $\Lambda \gt \tau$ is $\alpha$. The same $\tau$ is used for every record, which is what makes the per-record calibration meaningful: the scores are already on a common scale.</p>
+<p><strong>A record outside the pool.</strong> If $x'$ was never in any shadow training set, the in-bell is unavailable. Offline LiRA uses only the out-bell and asks how far into its upper tail $s'$ falls: score $= 1 - \Phi\bigl((s' - \mu_{\mathrm{out}})/\sigma_{\mathrm{out}}\bigr)$, small values meaning "too confident for a non-member". It loses some power but needs no retraining per query.</p>
+<p><strong>Query augmentations.</strong> Carlini et al. query the target and each shadow on several augmentations of $x'$ (mirror flips, shifts) and treat the resulting score vector as multivariate Gaussian, which sharpens the bells further.</p>
+</div>
+</article>
+
+<article>
 <h2>Two In-vs-Out Bells</h2>
-<p>For one record, you get two narrow bells: loss-when-in and loss-when-out. The target's observed loss is scored by which bell it sits closer to.</p>
-<p><span class="kt">Key takeaway:</span> Per-record in and out distributions make the test far sharper.</p>
+<p>For one record, you get two narrow bells: score-when-in and score-when-out. The target's observed score is judged by which bell it sits closer to. Walk through the numbers on the slide: out-bell centred at 2, in-bell at 6, both with standard deviation 1.5, observed score 5. The score is 3 units from the out-centre and 1 from the in-centre, so the log-likelihood ratio is $(9-1)/(2 \cdot 2.25) pprox 1.78$ and $\Lambda pprox 5.9$: the in-hypothesis is about six times as likely, and any threshold below 5.9 calls this record a member.</p>
+<p><span class="kt">Key takeaway:</span> Per-record in and out distributions make the test far sharper; the decision is one arithmetic line.</p>
+<p><span class="kt">Slide figure:</span> Two bells on a logit-score axis, out at $\mathcal N(2, 1.5^2)$ and in at $\mathcal N(6, 1.5^2)$, with the observed $s' = 5$ marked; the math block beside them computes $\log\Lambda pprox 1.78$.</p>
 <div class="detail">
 <h3>Theorem &amp; proof</h3>
 <p>"Which bell is it closer to" has an exact closed form.</p>
@@ -547,6 +567,45 @@ and if confidences follow the logistic model $p(x) = \sigma(h(x))$, then $d_\the
 </article>
 
 <article>
+<h2>Scoring an Attack: TPR and FPR</h2>
+<p>Before comparing attacks we need the vocabulary. Every attack ends as a yes/no call on each record, so there are four outcomes: true positive, false positive, false negative, true negative. The true positive rate is the fraction of real members we catch; the false positive rate is the fraction of non-members we wrongly accuse. A single threshold produces one pair of rates. Balanced accuracy is just the average of the true positive rate and one minus the false positive rate, which is why an attack with 55% accuracy can be either mildly useful or completely useless depending on where its errors sit.</p>
+<p><span class="kt">Key takeaway:</span> TPR is the catch rate on members, FPR the false-alarm rate on non-members; one threshold gives one pair.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Let $M$ denote the event "the record is a member" and $A$ the event "the attack says member". Then $\mathrm{TPR} = \Pr[A \mid M]$ (power, sensitivity, recall), $\mathrm{FPR} = \Pr[A \mid M^c]$ (size, type-I error), $\mathrm{FNR} = 1 - \mathrm{TPR}$, $\mathrm{TNR} = 1 - \mathrm{FPR}$ (specificity). With a balanced evaluation set,
+$$\text{accuracy} = \tfrac12 \mathrm{TPR} + \tfrac12 (1 - \mathrm{FPR}),$$
+which is the "balanced accuracy" on the slide. For a score $\Lambda$ thresholded at $\tau$, both rates are decreasing functions of $\tau$: $\mathrm{TPR}(\tau) = \Pr[\Lambda \gt \tau \mid M]$, $\mathrm{FPR}(\tau) = \Pr[\Lambda \gt \tau \mid M^c]$.</p>
+<p><strong>Why balanced accuracy misleads.</strong> Accuracy weights every record equally, so an attack that is near-random on 98% of records and certain on 2% scores about $0.5 + 0.01 = 51\%$, indistinguishable from an attack that is slightly better than chance everywhere and never certain. The privacy harm sits entirely in the first attack.</p>
+</div>
+</article>
+
+<article>
+<h2>The ROC Curve</h2>
+<p>Now slide the threshold. A strict threshold accuses almost no one: few false alarms but few catches. A loose one accuses almost everyone. Plotting the false positive rate against the true positive rate for every threshold traces the receiver operating characteristic curve. The diagonal is guessing at random, since a coin that says "member" with probability $q$ has both rates equal to $q$. Point at the three dashed thresholds on the left and their three dots on the right so the correspondence is concrete.</p>
+<p><span class="kt">Key takeaway:</span> The ROC curve is the full trade-off between catching members and accusing non-members, one point per threshold.</p>
+<p><span class="kt">Slide figure:</span> Schematic: left, member and non-member score distributions with three thresholds $\tau_1 \gt \tau_2 \gt \tau_3$; right, the corresponding three points on an ROC curve above the chance diagonal.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>$\mathrm{ROC} = \{(\mathrm{FPR}(\tau), \mathrm{TPR}(\tau)) : \tau \in \mathbb{R}\}$, a monotone curve from $(1,1)$ at $\tau = -\infty$ to $(0,0)$ at $\tau = +\infty$. If the score has densities $q_{\mathrm{in}}$ and $q_{\mathrm{out}}$ under the two hypotheses, the slope of the ROC curve at the point for threshold $\tau$ equals the likelihood ratio $q_{\mathrm{in}}(\tau)/q_{\mathrm{out}}(\tau)$, because $d\,\mathrm{TPR} = -q_{\mathrm{in}}(\tau)\,d\tau$ and $d\,\mathrm{FPR} = -q_{\mathrm{out}}(\tau)\,d\tau$. Consequently the ROC curve of a likelihood-ratio score is concave, and by Neyman–Pearson it lies above the ROC curve of every other statistic computed from the same observation.</p>
+<p><strong>Chance line.</strong> A randomized rule that ignores the record and says "member" with probability $q$ has $\mathrm{TPR} = \mathrm{FPR} = q$; mixing two rules gives the chord between their points, so anything below the diagonal can be flipped to land above it.</p>
+</div>
+</article>
+
+<article>
+<h2>AUC and Its Blind Spot</h2>
+<p>The area under the ROC curve compresses the whole trade-off into one number: one half for chance, one for a perfect attack. It has a clean meaning, the probability that a random member scores higher than a random non-member. But it is an average over all thresholds, so it is dominated by the bulk of the curve. The two schematic curves have the same area; only one of them rises steeply near zero false positives, and that is the only one that can point at a person and be right. This is why the next two slides look at the far left of the plot instead.</p>
+<p><span class="kt">Key takeaway:</span> AUC is the probability a member outscores a non-member; equal AUCs can hide completely different low-FPR behaviour.</p>
+<p><span class="kt">Slide figure:</span> Schematic: two ROC curves with equal area, curve A steep near the origin (confident hits), curve B gaining its area only at high FPR.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Proposition (AUC is a probability).</strong> Let $S_1 \sim q_{\mathrm{in}}$ and $S_0 \sim q_{\mathrm{out}}$ be independent scores of a random member and non-member with continuous distributions. Then $\mathrm{AUC} = \Pr[S_1 \gt S_0]$.</p>
+<p><em>Proof.</em> Parametrize the curve by $\tau$: $\mathrm{AUC} = \int_0^1 \mathrm{TPR}\, d\,\mathrm{FPR} = \int_{-\infty}^{\infty} \Pr[S_1 \gt \tau]\, q_{\mathrm{out}}(\tau)\, d\tau$, using $d\,\mathrm{FPR} = q_{\mathrm{out}}(\tau)\,d\tau$ with the orientation that runs FPR from 0 to 1. The integral is $\mathbb{E}_{S_0}\bigl[\Pr[S_1 \gt S_0 \mid S_0]\bigr] = \Pr[S_1 \gt S_0]$ by independence. $\blacksquare$</p>
+<p>This is the Mann–Whitney $U$ statistic normalized by the number of member–non-member pairs, so the empirical AUC is a rank statistic: it depends only on the ordering of scores, never on their gaps. Two attacks that order the bulk of records similarly get similar AUC, whatever happens in the top 0.1%.</p>
+<p><strong>Why equal AUC can hide the tail.</strong> Take curve A with $\mathrm{TPR}(10^{-3}) = 0.3$ and curve B with $\mathrm{TPR}(10^{-3}) = 10^{-3}$ (chance). The region $\mathrm{FPR} \le 10^{-3}$ contributes at most $10^{-3}$ to the area, so B can recover the deficit anywhere else on the unit square and match A's AUC exactly. Carlini et al. show real attacks with this pattern (next entries).</p>
+</div>
+</article>
+
+<article>
 <h2>Average Accuracy Lies</h2>
 <p>A headline like fifty-five percent attack accuracy sounds harmless, but it hides that a handful of records leak with near certainty. The worst case is the real harm.</p>
 <p><span class="kt">Key takeaway:</span> Average accuracy can mask catastrophic per-record leakage.</p>
@@ -568,6 +627,23 @@ and if confidences follow the logistic model $p(x) = \sigma(h(x))$, then $d_\the
 $$\mathrm{TPR}@\alpha \;=\; \mathrm{TPR}(\tau_\alpha), \qquad \tau_\alpha \text{ such that } \mathrm{FPR}(\tau_\alpha) = \alpha.$$
 The rationale: an attacker who accuses at FPR $10^{-3}$ is <em>credible</em> — accusations are almost never wrong — so every percentage point of TPR there is a real, confident identification. High AUC or accuracy driven by the bulk of the ROC curve can coexist with zero confident identifications; $\mathrm{TPR}@\alpha$ cannot. (Metric and rationale as argued in Carlini et al., linked from the LiRA entry above; the same standard is used for the DP audit bound in §05.)</p>
 <p>On <strong>log-log axes</strong>, random guessing ($\mathrm{TPR} = \mathrm{FPR}$) is the diagonal, and an attack's low-FPR behaviour — invisible in a linear plot, where the region $\mathrm{FPR} \le 10^{-3}$ occupies a thousandth of the axis — becomes the left half of the picture. Two attacks with the same AUC can differ by orders of magnitude in $\mathrm{TPR}@10^{-3}$. A DP guarantee also appears cleanly here: the bound $\mathrm{TPR} \le e^{\varepsilon}\,\mathrm{FPR} + \delta$ of §05 is (for $\delta \approx 0$) a line parallel to the diagonal at vertical offset $\varepsilon$ in log scale — a visual cap on the entire tail.</p>
+</div>
+</article>
+
+<article>
+<h2>Does LiRA Work on LLMs?</h2>
+<p>Close the section with the frontier question: does the strongest attack we have work on a language model pretrained the normal way? Hayes, Cooper, and colleagues trained hundreds of GPT-2-style models, from 10 million to a billion parameters, on C4 at Chinchilla-optimal token counts, and ran LiRA with 128 reference models. The result is sobering for attackers: AUC never exceeds 0.7, the true positive rate at a false positive rate of one in ten thousand is around one percent at best, and vulnerability does not fall monotonically with model size. Many per-record decisions flip from one training run to the next; they are statistically coin flips. They also find that MIA success is only loosely related to whether a sequence can be extracted, which is the bridge to the next lecture.</p>
+<p><span class="kt">Key takeaway:</span> Even a strong shadow-model attack gives limited, unstable membership signal on normally pretrained LLMs; MIA is not the same as extraction.</p>
+<p><span class="kt">Slide figure:</span> Hayes et al. 2025, Fig. 2: (a) log-log ROC curves for six model sizes, AUC 0.55–0.70; (b) TPR at fixed FPR levels against model size, non-monotone with a dip at 489M.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Setup.</strong> Target and reference models share architecture and training recipe; each reference is trained on a random half of the candidate pool, so every candidate sequence is "in" for about half of the references (the online LiRA of the previous entries, with the loss of the sequence as the observation statistic). Chinchilla-optimal means roughly 20 training tokens per parameter for one epoch; the authors also vary epochs and data size to probe an upper bound on vulnerability, finding that more epochs and smaller datasets make attacks far stronger, which is the classic overfitting story of Section 03 rather than the pretraining regime.</p>
+<p><strong>Decision instability.</strong> Training many targets on the same data and measuring how often a record's membership call flips across targets: a large fraction of records are called member in about half of the runs, i.e. indistinguishable from chance even for the optimal test. This is the LLM-scale version of the "per-record difficulty" idea.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2505.18773">Hayes, Shumailov, Choquette-Choo, Jagielski, Kaissis, Nasr, Zhang, Ilyas, Gandikota, Jeong, Zhang, Zemel, Cooper, "Exploring the limits of strong membership inference attacks on large language models", NeurIPS 2025 (arXiv 2505.18773)</a>.</li>
+<li>Cooper's 2026 "Extractable Memorization From First Principles" reuses the members-versus-matched-non-members logic of this lecture to calibrate extraction claims; it appears in the memorization lecture.</li>
+</ul>
 </div>
 </article>
 

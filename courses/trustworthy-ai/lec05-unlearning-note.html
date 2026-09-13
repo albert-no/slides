@@ -17,7 +17,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 .detail th, .detail td { border: 1px solid var(--slate); padding: 4px 12px; text-align: left; }
 </style></head><body>
 <h1>Lecture 5 — Machine Unlearning · Script &amp; Companion Notes</h1>
-<p><em>One entry per slide, in order. Section headers match slide titles. Each entry carries the spoken script and key takeaway, followed by companion notes: rigorous definitions of the terms the slide gestures at, formal theorem statements with proofs, and background reading with links.</em></p>
+<p><em>One entry per slide, in order; section headers match slide titles. Each entry carries the spoken script and key takeaway, then optional companion blocks: <strong>Case background</strong> (for every real method, benchmark, or paper figure: deletion target, model and data, evaluation benchmark, reported success, verification attack, what can and cannot be claimed, follow-up status), <strong>Technical depth — optional</strong> (definitions, theorem statements, proofs), and <strong>References</strong> (primary sources, checked 2026-09). Derivations removed from the main deck live in <code>lec05tech.html</code>; entries point to its slide numbers. Three kinds of claim are kept in separate sentences throughout: a <strong>legal right</strong> (what a statute grants), a <strong>formal goal</strong> (what a paper defines as success), and a <strong>benchmark result</strong> (what an evaluation measured). None of the three implies another. Numbers that come from a paper's own evaluation are marked <em>reported</em>.</em></p>
 
 <article>
 <h2>Machine Unlearning</h2>
@@ -28,7 +28,28 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>Contents</h2>
 <p>Six steps: the legal motivation, what unlearning formally means, the main methods, unlearning in language models, how to check whether forgetting worked, and the current frontier.</p>
-<p><span class="kt">Key takeaway:</span> From a deletion request to a provable, testable forgetting.</p>
+<p><span class="kt">Key takeaway:</span> From a deletion request to a testable forgetting claim.</p>
+<div class="detail">
+<h3>90-minute core path</h3>
+<p>The full deck runs about 100 minutes (70 slides). The official slot is 90 minutes. Do not cut material; instead skip the seven slides badged <strong>Optional depth</strong> on the main deck and hand them out as reading. Each skipped slide keeps its full script and detail block below, marked "Optional depth" under its title.</p>
+<ol>
+<li><em>A Decade of Work</em> (slide 12) — the publication-count figure; "Enter Machine Unlearning" already dates the field.</li>
+<li><em>Slices Make It Cheaper</em> (slide 27) — the slicing refinement of SISA; "Deleting in SISA" carries the shard-local idea, and the cost formula lives in the tech supplement.</li>
+<li><em>The Catch: Curvature</em> (slide 31) — why the inverse Hessian is infeasible; "Influence Functions" states the idea, and the tech supplement has the size argument.</li>
+<li><em>Try It Yourself</em> (slide 36) — Colab demo; assign as homework.</li>
+<li><em>TOFU in One Picture</em> (slide 43) — the pipeline figure; "Measuring Forgetting: TOFU" carries the benchmark.</li>
+<li><em>Why Fictitious?</em> (slide 44) — the design rationale, one sentence of which is repeated in the TOFU brief below.</li>
+<li><em>Where to Go Deeper</em> (slide 67) — reading list; it is in this note.</li>
+</ol>
+<p><strong>Kept on the core path:</strong> the legal slide with its three-claims warning, the four-way taxonomy, the gold standard and the certified definition, SISA and the approximate methods, all case slides (Harry Potter, TOFU, WMDP/RMU, MUSE, filtering), all verification slides (membership audit, IDI, relearning, quantization, dormant), and the frontier critique. <strong>Boardroom Questions:</strong> present the five questions in about two minutes; open the discussion only if time allows. Estimated saving: 7 slides ≈ 10 min plus ≈ 2 min of discussion, bringing the session to ≈ 90 min. Slide numbers refer to the main deck.</p>
+</div>
+</article>
+
+<article>
+<h2>Where This Lecture Sits</h2>
+<p>Same lifecycle picture as the earlier lectures: collect, train, audit, deploy, detect harm, remove or repair. Differential privacy was prevention, membership inference was detection, memorization and extraction were the evidence. Today we sit at the last box, remediation: changing a model that has already been trained on data it should not keep. Remediation inherits every earlier tool. The membership tests and extraction probes from the earlier lectures become the audit that decides whether a removal claim holds.</p>
+<p><span class="kt">Key takeaway:</span> Remediation is the last stage of the lifecycle and is judged with the tools of the earlier ones.</p>
+<p><span class="kt">Slide figure:</span> Six-box lifecycle with the remove/repair box filled in Yonsei blue and the REMEDIATION span underlined "unlearning · this lecture"; the other stage labels stay grey.</p>
 </article>
 
 <article>
@@ -42,23 +63,31 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>Alice asks us to delete her account and her data. Dropping her row from the database is trivial, but her data already shaped a trained model, and that model is untouched.</p>
 <p><span class="kt">Key takeaway:</span> Deleting the row does not touch the weights.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>The setting used throughout the lecture. A (possibly randomized) <strong>learning algorithm</strong> $\mathcal{A}$ maps a dataset $D = \{z_1,\dots,z_n\}$ of examples $z_i \in \mathcal{Z}$ to a model, viewed as a parameter vector $\theta \in \Theta \subseteq \mathbb{R}^d$. A <strong>deletion request</strong> names one point $z \in D$ (later, a subset $D_f \subseteq D$). Deleting $z$ from the stored dataset changes $D$, but $\mathcal{A}(D)$ — the model already trained and deployed — is a function of the <em>old</em> $D$ and is not altered by the database operation. The entire lecture is about what to do to $\mathcal{A}(D)$.</p>
 </div>
 </article>
 
 <article>
 <h2>The Law Says Delete</h2>
-<p>GDPR Article 17 grants a right to erasure, the "right to be forgotten." California's CCPA grants a similar right. On request, the data must go, and increasingly that is read to include the model.</p>
-<p><span class="kt">Key takeaway:</span> Forgetting is a legal duty, not an optional feature.</p>
+<p>GDPR Article 17 grants a right to erasure of personal data, the "right to be forgotten." California's CCPA grants a right to deletion. Read the three callouts in order. What the text says: erase the personal data without undue delay, on listed grounds, with listed exceptions. What the text does not say: neither statute mentions models, weights, or training. Why it still matters: the legal right is established, the weight-level obligation is not, and this lecture keeps the two apart. From here on we track three different claims: a legal right to erasure, a formal unlearning goal that a paper defines, and a benchmark result that a paper measures. Keep them in separate sentences all lecture.</p>
+<p><span class="kt">Key takeaway:</span> The right to erasure is law; whether it reaches trained weights is an open interpretive question, as of 2026-09.</p>
+<p><span class="kt">Slide figure:</span> Three callouts under the lead: "What the text says", "What the text does not say", "Why it still matters", each with two or three short lines; a muted footer names the three claims.</p>
 <div class="detail">
-<h3>Background &amp; further reading</h3>
-<p><strong>GDPR Article 17</strong> (in force since May 2018) is titled "Right to erasure ('right to be forgotten')": on any of the grounds in Art.&nbsp;17(1) — e.g. the data are no longer necessary, or consent is withdrawn — the controller must erase the data subject's personal data "without undue delay", subject to the exceptions in Art.&nbsp;17(3). The <strong>CCPA</strong> gives California consumers a right to ask businesses to delete personal information collected from them. The phrase "right to be forgotten" predates the GDPR: in <strong>Google Spain SL and Google Inc. v AEPD and Mario Costeja González</strong> (Case C-131/12, judgment of 13 May 2014), the Court of Justice of the EU ruled — still under the 1995 Data Protection Directive — that a search engine must, on request, de-list links to lawfully published personal information when the data subject's privacy rights override the public's interest in finding it. Whether erasure duties extend to <em>trained models</em> is the open legal-technical question this lecture takes up.</p>
+<h3>Case background · the legal texts</h3>
+<p><strong>What the text says.</strong> GDPR Article 17(1) (Regulation (EU) 2016/679, applicable since 25 May 2018) obliges the controller to erase personal data "without undue delay" on six listed grounds: (a) the data are no longer necessary for the purpose, (b) consent is withdrawn and no other legal basis applies, (c) the data subject objects under Article 21, (d) the data were unlawfully processed, (e) erasure is required by a legal obligation, (f) the data were collected in relation to information-society services offered to a child. Article 17(2) adds a duty, where the controller has made the data public, to take reasonable steps to inform other controllers processing the data. Article 17(3) lists five exceptions: freedom of expression and information, a legal obligation or public-interest task, public health, archiving or scientific, historical or statistical purposes where erasure would render the purpose impossible or seriously impaired, and legal claims. California Civil Code §1798.105(a) gives a consumer the right to request deletion of personal information the business has collected from the consumer; §1798.105(c)(1) requires the business, on a verifiable request, to delete and to direct service providers and contractors to delete; §1798.105(d) lists exceptions, including completing a transaction, security and integrity, debugging, free speech, research in the public interest, compliance with a legal obligation, and internal uses reasonably aligned with the consumer's expectations.</p>
+<p><strong>What the text does not say.</strong> Neither Article 17 nor §1798.105 mentions a model, model weights, parameters, or training. Both speak of "personal data" and "personal information". Whether a trained model that has absorbed information about a person <em>contains</em> that person's personal data, and therefore falls under the erasure duty, is an interpretive question that the statutes do not answer on their face.</p>
+<p><strong>Why the statutes cannot be asserted to require certified unlearning of trained weights.</strong> Three separate steps would be needed and none is settled by the text. First, a finding that the weights are (or contain) personal data of the requester. Second, a finding that "erasure" of such data means changing the weights rather than, for instance, deleting the training copy and blocking outputs. Third, a standard for what counts as erased at the weight level, which is exactly the formal question the rest of the lecture treats and which the research community has not settled either. A regulator's opinion has touched the first two steps: the European Data Protection Board's <strong>Opinion 28/2024</strong> (adopted 17 December 2024, at the request of the Irish supervisory authority) states that AI models trained on personal data "cannot, in all cases, be considered anonymous" and that anonymity must be assessed case by case; it lists "post-training techniques that attempt to remove or suppress personal data" among mitigating measures a controller may take (para. 107(b)); and it says that for <em>unlawful</em> processing a supervisory authority may, subject to proportionality, order erasure of part of the dataset "or ... the AI model itself", taking into account remediation measures "e.g. retraining" (para. 114). Read carefully: the Opinion treats unlearning as one mitigation among others, not as a defined obligation, and model erasure as a corrective measure for unlawful processing, not as the content of an Article 17 request. It is an opinion of the Board, not a court judgment. This note cites no judicial decision holding that Article 17 requires modifying trained weights.</p>
+<p><strong>Where the phrase comes from.</strong> "Right to be forgotten" predates the GDPR: in <strong>Google Spain SL and Google Inc. v AEPD and Mario Costeja González</strong> (Case C-131/12, judgment of 13 May 2014), the Court of Justice of the EU ruled, under the 1995 Data Protection Directive, that a search engine must, on request, de-list links to lawfully published personal information when the data subject's rights override the public's interest in finding it. That judgment concerned search-result links, not machine-learning models.</p>
+<p><strong>Status (as of 2026-09).</strong> The legal right to erasure of personal data is established in both jurisdictions. The question whether it reaches trained weights is open. The three claims this lecture separates: <em>legal right</em> (Art. 17 / §1798.105 text, above), <em>formal goal</em> (the retrain-indistinguishability definitions of Section 02, set by papers, not statutes), and <em>benchmark result</em> (the numbers of Sections 04–06, each measured on one test). A benchmark result does not discharge a legal duty, and a legal duty does not define a formal goal.</p>
+<p><strong>Teaching cue.</strong> Ask the room what "delete Alice's data" would mean for a spreadsheet, then for a trained model. The gap between the two answers is the lecture.</p>
+<h3>References</h3>
 <ul>
-<li><a href="https://gdpr-info.eu/art-17-gdpr/">GDPR Article 17 (gdpr-info.eu)</a> — full text of the right to erasure.</li>
-<li><a href="https://eur-lex.europa.eu/eli/reg/2016/679/oj">Regulation (EU) 2016/679 (EUR-Lex)</a> — official GDPR text.</li>
-<li><a href="https://oag.ca.gov/privacy/ccpa">CCPA — California Attorney General</a> — consumer rights, including the right to delete.</li>
-<li><a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A62012CJ0131">CJEU, Case C-131/12, Google Spain (EUR-Lex)</a> — the 2014 right-to-be-forgotten judgment.</li>
+<li><a href="https://eur-lex.europa.eu/eli/reg/2016/679/oj">Regulation (EU) 2016/679 (EUR-Lex)</a> — official GDPR text; Article 17.</li>
+<li><a href="https://gdpr-info.eu/art-17-gdpr/">GDPR Article 17 (gdpr-info.eu)</a> — convenience copy of the article text.</li>
+<li><a href="https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=CIV&amp;sectionNum=1798.105">California Civil Code §1798.105 (leginfo.legislature.ca.gov)</a> — the CCPA right to delete, as amended.</li>
+<li><a href="https://www.edpb.europa.eu/system/files/2024-12/edpb_opinion_202428_ai-models_en.pdf">EDPB, Opinion 28/2024 on certain data protection aspects related to the processing of personal data in the context of AI models, adopted 17 December 2024 (PDF)</a> — paras. 107(b) and 114–115 quoted above.</li>
+<li><a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A62012CJ0131">CJEU, Case C-131/12, Google Spain (EUR-Lex)</a> — the 2014 judgment.</li>
 </ul>
 </div>
 </article>
@@ -68,8 +97,9 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>Privacy law is only one driver. Rights holders want copyrighted books removed from models, and safety teams want hazardous how-to knowledge taken out. All three demands land on the same technical problem: get it out of the weights.</p>
 <p><span class="kt">Key takeaway:</span> Privacy, copyright, and safety all reduce to the same deletion problem.</p>
 <div class="detail">
-<h3>Background &amp; further reading</h3>
-<p>The three drivers each have a flagship line of work met later in the lecture: privacy-law deletion (the certified-unlearning literature, Sections 02–03), copyright removal (the "Who's Harry Potter?" experiment, Section 04), and safety-motivated removal of hazardous knowledge (the WMDP benchmark and RMU, Section 04). They share the formal problem but differ in the <em>unit</em> of deletion — a person's records, a copyrighted work, a capability — which will matter in Sections 04–06.</p>
+<h3>Case background</h3>
+<p>The three drivers each have a flagship line of work met later in the lecture: privacy-law deletion (the certified-unlearning literature, Sections 02–03), copyright removal (the "Who's Harry Potter?" experiment, Section 04), and safety-motivated removal of hazardous knowledge (the WMDP benchmark and RMU, Section 04). They share the vocabulary but differ in the <em>unit</em> of deletion — a person's records, a copyrighted work, a capability — and, as the taxonomy slide shows, in the <em>kind</em> of claim: only the first has training rows to point at and a retrained reference to compare with. Evidence status differs too: the privacy driver rests on statute (previous entry), the copyright driver on pending litigation (Lecture 4), and the safety driver on model developers' own policies, not on a legal duty.</p>
+<h3>References</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2310.02238">Eldan &amp; Russinovich, "Who's Harry Potter?" (arXiv:2310.02238)</a> — copyright-motivated unlearning.</li>
 <li><a href="https://arxiv.org/abs/2403.03218">Li, Pan, Gopal, et al., "The WMDP Benchmark" (arXiv:2403.03218)</a> — safety-motivated unlearning.</li>
@@ -79,10 +109,10 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>Data Lives in the Weights</h2>
-<p>Training presses each record into the parameters. Remove the row from the dataset and the trace pressed into the weights still remains.</p>
-<p><span class="kt">Key takeaway:</span> The model is a lossy copy of the data, and lossy is not gone.</p>
+<p>Training can leave information about particular examples in the weights. Delete the row from the dataset, and whatever the weights absorbed can remain. How much, and for which examples, is an empirical question; Lecture 4 showed that duplicated and outlying examples are the ones most often recoverable.</p>
+<p><span class="kt">Key takeaway:</span> Training can leave information about particular examples in the weights; how much is an empirical question, not a given.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>For concreteness, take $\mathcal{A}$ to be regularized empirical risk minimization:</p>
 <p>$$\hat\theta \;=\; \mathcal{A}(D) \;\in\; \arg\min_{\theta}\; F(\theta; D), \qquad F(\theta;D) \;=\; \frac{1}{n}\sum_{z\in D} \ell(\theta; z) \;+\; \frac{\lambda}{2}\lVert\theta\rVert^2,$$</p>
 <p>with per-example loss $\ell$ and ridge weight $\lambda \ge 0$. The first-order condition $\nabla F(\hat\theta;D)=0$ couples $\hat\theta$ to <em>every</em> example: change one $z_i$ and the stationarity equation, hence the minimizer, moves. In this precise sense each record is "pressed into" $\hat\theta$; the weights are a deterministic (or, with randomized training, distributional) function of the full dataset. Section 03 quantifies exactly how much one point moves the optimum.</p>
@@ -91,31 +121,41 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>Why Not Just Ignore It</h2>
-<p>A model that still remembers Alice keeps her exposed: membership inference can confirm she was in the data, and extraction can recite her record. The deletion would be fiction.</p>
-<p><span class="kt">Key takeaway:</span> Compliance means the model forgets, not just the database.</p>
+<p>A model that still remembers Alice keeps her at risk: membership inference can confirm she was in the data, and extraction can recite her record. A deletion that stops at the database leaves the model untouched. Whether the law demands more is the open question from the previous slide; the risk to Alice does not wait for the answer.</p>
+<p><span class="kt">Key takeaway:</span> The legal question is open; the technical exposure is testable now.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p><strong>Membership inference attack (MIA)</strong> (Lecture 4, restated). An adversary receives a model $\theta$ and a candidate point $z$, and outputs a guess $\hat m \in \{0,1\}$ for whether $z$ was in the training set. In the standard experiment, $z$ is drawn either from the training set ($m=1$) or from fresh data ($m=0$) with equal probability, and the attack's <strong>advantage</strong> is $\mathrm{Adv} = \Pr[\hat m = 1 \mid m=1] - \Pr[\hat m = 1 \mid m=0]$ (true-positive rate minus false-positive rate). The simplest attack thresholds the loss: $\hat m = \mathbb{1}[\ell(\theta;z) \le \tau]$ — members tend to have lower loss. If, after a claimed deletion, an MIA still flags Alice's record as a member, her data demonstrably still influences the model; Section 05 turns this attack into an audit.</p>
 </div>
 </article>
 
 <article>
 <h2>Retraining Is Expensive</h2>
-<p>The obvious fix is to train again without Alice. But large models cost millions to train and deletion requests arrive constantly, so retraining per request is hopeless.</p>
+<p>The obvious fix is to train again without Alice. But large models are expensive to train and deletion requests arrive constantly, so retraining per request is hopeless. One reported number for scale: pretraining Llama-2-7b took over 184,000 GPU-hours.</p>
 <p><span class="kt">Key takeaway:</span> We need to forget without starting over.</p>
+<div class="detail">
+<h3>Case background · the GPU-hours figure</h3>
+<p><strong>Source of the number.</strong> The "over 184K GPU-hours" figure appears in Eldan and Russinovich's Harry Potter paper (abstract), which cites Meta's Llama 2 report for the pretraining cost of the 7B model. It is a <em>reported</em> figure from the model developer, not independently measured; it covers pretraining only, not fine-tuning or alignment. The contrast the paper draws is with "about 1 GPU hour" for its own fine-tuning procedure (next section). Use the number for scale, not for accounting.</p>
+<h3>References</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2310.02238">Eldan &amp; Russinovich, "Who's Harry Potter? Approximate Unlearning in LLMs", 2023 (arXiv:2310.02238)</a> — abstract, the 184K-GPU-hour contrast.</li>
+<li><a href="https://arxiv.org/abs/2307.09288">Touvron et al., "Llama 2: Open Foundation and Fine-Tuned Chat Models", 2023 (arXiv:2307.09288)</a> — the primary source for the pretraining cost.</li>
+</ul>
+</div>
 </article>
 
 <article>
 <h2>Enter Machine Unlearning</h2>
-<p>The goal: given a trained model, efficiently produce a new model as if a chosen point had never been used. Cao and Yang gave a first formal proposal in 2015.</p>
-<p><span class="kt">Key takeaway:</span> Unlearning is efficient deletion of a data point's effect.</p>
+<p>The goal: given a trained model, efficiently produce a new model as if a chosen point had never been used. Cao and Yang gave a first formal proposal in 2015. The word now covers weaker targets too, so keep one test in view all lecture: not answering is observable, not knowing is a much stronger claim.</p>
+<p><span class="kt">Key takeaway:</span> Unlearning, in its original sense, is efficient deletion of a data point's effect; not answering is not the same thing.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p><strong>Definition (data-deletion operation; Ginart et al., NeurIPS 2019).</strong> An <strong>unlearning algorithm</strong> (deletion operation) $\mathcal{U}$ for $\mathcal{A}$ takes the dataset $D$, the point $z \in D$ to delete, and the trained model $\mathcal{A}(D)$, and must satisfy, for every $D$ and every $z \in D$,</p>
 <p>$$\mathcal{U}\big(D, z, \mathcal{A}(D)\big) \;\stackrel{d}{=}\; \mathcal{A}\big(D\setminus\{z\}\big),$$</p>
 <p>equality in distribution, over the internal randomness of both algorithms. The point of the definition: the target is not "the model behaves differently on $z$" but "the model is distributed as if $z$ had never been used". Efficiency is what makes $\mathcal{U}$ interesting — $\mathcal{U} := \mathcal{A}(D\setminus\{z\})$ satisfies the equation trivially at full retraining cost.</p>
-<h3>Background &amp; further reading</h3>
+<h3>Case background</h3>
 <p>Cao and Yang coined "machine unlearning" at IEEE S&amp;P 2015, in a setting where models are trained on summations of the data (statistical-query style), so a deletion only updates the affected summations. Ginart et al. (NeurIPS 2019) gave the distributional definition above and efficient deletion for $k$-means clustering.</p>
+<h3>References</h3>
 <ul>
 <li><a href="https://www.ieee-security.org/TC/SP2015/papers-archived/6949a463.pdf">Cao &amp; Yang, "Towards Making Systems Forget with Machine Unlearning", IEEE S&amp;P 2015 (PDF)</a> — the founding paper.</li>
 <li><a href="https://arxiv.org/abs/1907.05012">Ginart, Guan, Valiant, Zou, "Making AI Forget You: Data Deletion in Machine Learning", NeurIPS 2019 (arXiv:1907.05012)</a> — the distributional definition of deletion.</li>
@@ -125,11 +165,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>A Decade of Work</h2>
+<p><em>Optional depth — skipped on the 90-minute core path (see the list under Contents); the script below is for the full session or for reading.</em></p>
 <p>The field grew fast: the term was coined in 2015, formal definitions and SISA arrived around 2019 to 2021, and from 2023 onward the focus shifted to large models.</p>
-<p><span class="kt">Key takeaway:</span> Unlearning went from niche idea to regulatory necessity.</p>
-<p><span class="kt">Slide figure:</span> Cooper et al., "Machine Unlearning Doesn't Do What You Think" (2024), Fig. 2: arXiv papers with "unlearning" in the title per year, 2017 to 2024. Near zero until 2020, then a steep climb after the ChatGPT and Claude launches, past 400 in 2024. Point at the release markers: the field's growth tracks the LLM wave, not the 2018 GDPR deadline.</p>
+<p><span class="kt">Key takeaway:</span> Unlearning went from a niche idea to a field under regulatory pressure.</p>
+<p><span class="kt">Slide figure:</span> Cooper et al., "Machine Unlearning Doesn't Do What You Think" (2024), Fig. 2: arXiv papers matching "unlearn*" or "model forgetting" per year, 2017 to 2024 (the authors note the count is drawn from arXiv only). Near zero until 2020, then a steep climb after the ChatGPT and Claude launches. Point at the release markers: the field's growth tracks the LLM wave, not the 2018 GDPR deadline.</p>
 <div class="detail">
-<h3>Background &amp; further reading</h3>
+<h3>References</h3>
 <ul>
 <li><a href="https://www.ieee-security.org/TC/SP2015/papers-archived/6949a463.pdf">Cao &amp; Yang, IEEE S&amp;P 2015</a> — the term "machine unlearning".</li>
 <li><a href="https://arxiv.org/abs/1907.05012">Ginart et al., NeurIPS 2019 (arXiv:1907.05012)</a> — formal deletion definition.</li>
@@ -143,8 +184,26 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>02 — What Unlearning Means</h2>
-<p>Second section. We pin down the target and the spectrum from exact to approximate forgetting.</p>
-<p><span class="kt">Key takeaway:</span> Every method is judged against retraining from scratch.</p>
+<p>Second section. We first sort out what the word can mean, then pin down the strongest target and the spectrum from exact to approximate forgetting.</p>
+<p><span class="kt">Key takeaway:</span> Name the target before judging the method.</p>
+</article>
+
+<article>
+<h2>Four Things "Unlearning" Can Mean</h2>
+<p>Before any method, sort the claims. Data removal: make the model behave as if named training rows were never used; the reference point is the model retrained without them, and the tags are exact, certified, approximate. Knowledge suppression: make the model stop producing a concept, a book, a hazard; judged by behavior on prompts, with no retrained reference. Output filtering: leave the model alone and block answers in front of it; bypassable by construction. Access revocation: cut the external database or tool the model retrieves from; nothing in the weights changes because the model never held the fact. Every method slide from here carries one of these tags in the corner. A removal claim needs a retrain-style comparison. A suppression claim needs an attack budget. A filtering claim needs neither, and should say so.</p>
+<p><span class="kt">Key takeaway:</span> Four targets, four kinds of evidence; the tag in the corner says which one a slide is about.</p>
+<p><span class="kt">Slide figure:</span> Two-by-two cards: Data removal, Knowledge suppression, Output filtering, Access revocation, each with a two-line description; muted footer with the three "needs" sentences.</p>
+<div class="detail">
+<h3>Case background · where the taxonomy comes from</h3>
+<p><strong>Sources.</strong> The four-way split is the lecture's own synthesis of two position papers met in Section 06. Cooper et al. (NeurIPS 2025) separate removing data from removing its effects, and separate back-end interventions on the model from front-end filters on its outputs (their Fig. 3, used on the "Unlearning vs Filtering" slide). Yoon, Jun, and No (ICML 2026) argue the word "unlearning" should be reserved for dataset-defined deletion and propose names for the rest: output likelihood suppression, internal-representation obfuscation, knowledge editing, behavioral refusal, inference-time intervention. The lecture folds the middle three into <em>knowledge suppression</em> and the last into <em>output filtering</em>; <em>access revocation</em> is added for retrieval-augmented systems, where the fact was never in the weights.</p>
+<p><strong>How the tags are assigned in this deck.</strong> Retraining, SISA: <em>data removal · exact</em>. Certified removal via the DP yardstick: <em>data removal · certified</em>. Influence functions, gradient ascent, NPO: <em>data removal · approximate</em> (they aim at the retrain reference but carry no certificate at LLM scale). Harry Potter, RMU: <em>knowledge suppression</em> (a concept, no training rows, no retrained reference). TOFU and MUSE: <em>benchmark · vs retraining</em> (they supply a retrained reference); WMDP: <em>benchmark · concept</em> (no reference). Membership audit and IDI: <em>verification · audit</em>. Relearning, quantization, adversarial fine-tuning: <em>verification attack</em>. The tags are the lecture's reading of each paper's stated goal, not a label the papers apply to themselves.</p>
+<p><strong>What each kind of claim needs.</strong> A <em>data removal</em> claim is a statement about distributions over models and can only be checked against a retrained reference (exactly, by a certificate, or approximately, by an audit). A <em>knowledge suppression</em> claim is a statement about behavior and is only as strong as the set of prompts and adaptations it was tested against; Section 05 shows it is refutable by relearning and quantization. An <em>output filtering</em> claim is a statement about a wrapper and is bypassed by anyone with weight access. An <em>access revocation</em> claim is a statement about a pipeline and is verified by inspection. The formal versions of the first two goals are separated on <code>lec05tech.html</code> slide 3.</p>
+<h3>References</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2412.06966">Cooper et al., "Machine Unlearning Doesn't Do What You Think", NeurIPS 2025 (arXiv:2412.06966)</a> — data vs effects; back-end vs front-end.</li>
+<li><a href="https://arxiv.org/abs/2606.27379">Yoon, Jun, No, "Position: The Term 'Machine Unlearning' Is Overused in LLMs", ICML 2026 (arXiv:2606.27379)</a> — the naming proposal.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -152,7 +211,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>The ideal answer is the model you would have gotten if the point had never been in the data. That retrained model is the reference against which we measure everything.</p>
 <p><span class="kt">Key takeaway:</span> Retraining from scratch defines what "forgotten" means.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>The <strong>retrain reference</strong> is $\mathcal{A}(D\setminus D_f)$ — not one specific model but a <em>distribution over models</em>, because $\mathcal{A}$ is randomized (initialization, batch order, data augmentation). "Forgotten" is therefore a statement about distributions: an unlearned model succeeds if its law matches (exactly or approximately) the law of $\mathcal{A}(D\setminus D_f)$. Comparing two single runs weight-by-weight is meaningless — two independent retrains on the <em>same</em> data already differ in their weights.</p>
 </div>
 </article>
@@ -162,7 +221,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>Unlearning runs a cheap operation on the trained model and aims to land on the same place a slow retrain on the remaining data would have reached.</p>
 <p><span class="kt">Key takeaway:</span> Success means matching the retrained model at a fraction of the cost.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>In full generality an unlearning algorithm is a map $\mathcal{U}(D_f,\, \mathcal{A}(D),\, T(D))$ where $T(D)$ is a bounded set of <strong>auxiliary statistics</strong> cached at training time (checkpoints, per-shard models, gradient sums, a Hessian) — everything the unlearner may consult besides the model. The design space of Section 03 is exactly the choice of $T$: SISA caches shard models and slice checkpoints; the influence-function unlearner caches nothing but recomputes curvature; Sekhari et al. cache $O(d^2)$ statistics and never the dataset. The cost target is always $\mathrm{cost}(\mathcal{U}) \ll \mathrm{cost}(\mathcal{A}(D \setminus D_f))$.</p>
 </div>
 </article>
@@ -172,7 +231,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>Exact unlearning produces a model identical in distribution to retraining. It is a provable guarantee rather than a hope, but it usually needs special training structure.</p>
 <p><span class="kt">Key takeaway:</span> Exact means same output distribution as if the point never existed.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p><strong>Definition (exact unlearning).</strong> $\mathcal{U}$ is an <strong>exact</strong> unlearning algorithm for $\mathcal{A}$ if for every dataset $D$, every $z \in D$, and every measurable set of models $S \subseteq \Theta$,</p>
 <p>$$\Pr\big[\mathcal{U}(D, z, \mathcal{A}(D)) \in S\big] \;=\; \Pr\big[\mathcal{A}(D\setminus\{z\}) \in S\big].$$</p>
 <p>Equality of the two output <em>distributions</em>, not of individual runs. Under this definition no test — statistical, adversarial, or forensic — can distinguish the unlearned model from a retrain, because there is literally no difference in law to detect. The price is structural: exactness is achieved by architectures that localize each point's influence (SISA, Section 03) rather than by editing an unstructured trained model.</p>
@@ -190,18 +249,19 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>We define "close" the way differential privacy defines indistinguishable: the unlearned model's output distribution is within $e^\varepsilon$ (plus $\delta$) of the retrained model's. Small $\varepsilon,\delta$ means it looks retrained.</p>
 <p><span class="kt">Key takeaway:</span> An $(\varepsilon,\delta)$ bound turns "close to retrained" into a number.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p><strong>Definition ($(\varepsilon,\delta)$-certified unlearning; Guo et al. 2020, Sekhari et al. 2021, after Ginart et al. 2019).</strong> $\mathcal{U}$ is an <strong>$(\varepsilon,\delta)$-unlearning algorithm</strong> for $\mathcal{A}$ if for every dataset $D$, every deletion request $z \in D$, and every measurable $S \subseteq \Theta$, <em>both</em></p>
 <p>$$\Pr\big[\mathcal{U}(D,z,\mathcal{A}(D)) \in S\big] \;\le\; e^{\varepsilon}\,\Pr\big[\mathcal{A}(D\setminus\{z\}) \in S\big] + \delta$$</p>
 <p>and the same inequality with the two probabilities swapped. Both directions are required: one direction alone would let the unlearned model <em>omit</em> behaviors the retrained model has. Setting $\varepsilon=\delta=0$ recovers exact unlearning.</p>
-<h3>Theorem &amp; proof</h3>
+<h3>Technical depth — optional · theorem &amp; proof</h3>
 <p><strong>Proposition (exact $\Rightarrow$ certified).</strong> If $\mathcal{U}$ is exact, then it is $(\varepsilon,\delta)$-certified for every $\varepsilon \ge 0,\ \delta \ge 0$.</p>
 <p><strong>Proof.</strong> Write $P$ for the law of $\mathcal{U}(D,z,\mathcal{A}(D))$ and $Q$ for the law of $\mathcal{A}(D\setminus\{z\})$. Exactness means $P = Q$, so for every measurable $S$: $P(S) = Q(S) \le e^{\varepsilon}Q(S) + \delta$, and symmetrically. $\blacksquare$ <em>(derivation: course notes)</em></p>
 <p><strong>Caveat — the certificate constrains the pair $(\mathcal{A},\mathcal{U})$, not quality.</strong> Let $\mathcal{A}$ be the useless constant algorithm $\mathcal{A}(D) \equiv \theta_0$ and let $\mathcal{U}$ do nothing. Then both laws are the point mass at $\theta_0$ and the pair is $(0,0)$-certified — perfectly unlearned, perfectly useless. A certificate is meaningful only together with a utility statement about $\mathcal{A}$.</p>
-<h3>Background &amp; further reading</h3>
+<p><strong>Attribution check (2026-09).</strong> Guo et al. state the pure version as a two-sided ratio bound, $e^{-\varepsilon} \le \Pr[M \in T]/\Pr[A(D\setminus x)\in T] \le e^{\varepsilon}$ (their Eq. 1), and the relaxed $(\varepsilon,\delta)$ version as the pair of inequalities above (their Section 2). Sekhari et al. use the same two-sided $(\varepsilon,\delta)$ form and add the deletion-capacity question. So the definition on <code>lec05tech.html</code> slide 5 is Guo et al.'s, and the "both directions" reading on slide 6 is in the original, not a course addition.</p>
+<h3>References</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/1911.03030">Guo et al., "Certified Data Removal from Machine Learning Models", ICML 2020 (arXiv:1911.03030)</a> — certified removal for linear models.</li>
-<li><a href="https://arxiv.org/abs/2103.03279">Sekhari et al., "Remember What You Want to Forget", NeurIPS 2021 (arXiv:2103.03279)</a> — the two-sided definition used here, plus deletion capacity.</li>
+<li><a href="https://arxiv.org/abs/1911.03030">Guo et al., "Certified Data Removal from Machine Learning Models", ICML 2020 (arXiv:1911.03030)</a> — certified removal for linear models; Eq. 1 and Section 2 for the definitions.</li>
+<li><a href="https://arxiv.org/abs/2103.03279">Sekhari et al., "Remember What You Want to Forget", NeurIPS 2021 (arXiv:2103.03279)</a> — the two-sided definition, plus deletion capacity.</li>
 <li><a href="https://arxiv.org/abs/1907.05012">Ginart et al., NeurIPS 2019 (arXiv:1907.05012)</a> — the exact ($\varepsilon=\delta=0$) ancestor.</li>
 </ul>
 </div>
@@ -212,7 +272,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>The data splits in two: the forget set we want erased from the model, and the retain set we keep and still want to predict well.</p>
 <p><span class="kt">Key takeaway:</span> Forget one side, preserve the other.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>Fix a <strong>forget set</strong> $D_f \subseteq D$ and the <strong>retain set</strong> $D_r = D \setminus D_f$. The formal goal has two clauses: (i) <em>forgetting</em> — the law of $\mathcal{U}(D_f, \mathcal{A}(D), T(D))$ is close (exactly equal, or $(\varepsilon,\delta)$-close) to the law of $\mathcal{A}(D_r)$; (ii) <em>utility</em> — the unlearned model's population risk is close to that of $\mathcal{A}(D_r)$. Note that the reference in both clauses is the retrain on $D_r$, not the original model: some accuracy loss relative to $\mathcal{A}(D)$ is <em>correct</em> behavior, because the retrained model never saw $D_f$ either.</p>
 </div>
 </article>
@@ -222,7 +282,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>A good method balances forgetting, so the target's influence is gone, with utility, so accuracy on the retain set survives. Forgetting everything is trivial; forgetting only the target is the real challenge.</p>
 <p><span class="kt">Key takeaway:</span> The hard part is forgetting only the target.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>The two axes, formally: <strong>forgetting error</strong> is a distance between distributions, e.g. the smallest $(\varepsilon,\delta)$ for which the two-sided bound of the previous entry holds between the law of the unlearned model and the law of $\mathcal{A}(D_r)$; <strong>utility</strong> is the expected risk $\mathbb{E}[F(\theta_u)]$ on the task (or accuracy on a held-out set). "Forgetting everything" — returning a freshly initialized model — drives the first axis to a trivial optimum against the <em>wrong</em> reference (it does not match $\mathcal{A}(D_r)$ either) and destroys the second; the counterexample in the previous entry shows the certificate alone cannot see this. Every method in Section 03 is a point on this two-axis tradeoff.</p>
 </div>
 </article>
@@ -238,7 +298,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>Drop the point and train again on the rest. It is exact by construction and the yardstick every method copies, but far too slow to run for each request.</p>
 <p><span class="kt">Key takeaway:</span> Correct and useless; the baseline to beat on cost.</p>
 <div class="detail">
-<h3>Theorem &amp; proof</h3>
+<h3>Technical depth — optional · theorem &amp; proof</h3>
 <p><strong>Proposition (retraining is exact).</strong> The unlearner $\mathcal{U}_{\mathrm{retrain}}(D, z, \cdot) := \mathcal{A}(D\setminus\{z\})$ (ignore the trained model, rerun $\mathcal{A}$ on the remaining data with fresh randomness) is exact.</p>
 <p><strong>Proof.</strong> The unlearner's output <em>is</em> a run of $\mathcal{A}(D\setminus\{z\})$, so the two distributions in the definition of exactness are the same distribution. $\blacksquare$ <em>(derivation: course notes)</em></p>
 <p>Its cost is a full training run on $n - 1$ points — the number every other method is measured against.</p>
@@ -250,7 +310,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>If a data point only touched part of the model, we only need to retrain that part. Split the data into shards, train one sub-model per shard, and a deletion redoes just one shard.</p>
 <p><span class="kt">Key takeaway:</span> Localize each point's influence so deletion is local too.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>Partition $D = D^{(1)} \,\dot\cup\, \cdots \,\dot\cup\, D^{(S)}$ into $S$ disjoint <strong>shards</strong> and train an independent sub-model $\theta^{(k)} = \mathcal{A}_0(D^{(k)})$ on each. By construction, $\theta^{(k)}$ is a function of $D^{(k)}$ only, so a point $z \in D^{(k)}$ influences exactly one sub-model — the influence-localization that makes deletion local. The final predictor aggregates the $S$ sub-models (next entry).</p>
 </div>
 </article>
@@ -261,9 +321,9 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p><span class="kt">Key takeaway:</span> Isolated shards make exact, local deletion possible.</p>
 <p><span class="kt">Slide figure:</span> Bourtoule et al., IEEE S&amp;P 2021, Fig. 2: the original training data $\mathcal{D}$ is split into shards $\mathcal{D}_1,\dots,\mathcal{D}_S$, each shard into slices $\mathcal{D}_{k,r}$; one constituent model $M_k$ per shard; an aggregation step produces the output. The red slice marks the data to unlearn. Walk the four letters of SISA down the picture.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p><strong>SISA</strong> (Bourtoule et al., IEEE S&amp;P 2021): <em>Sharded</em> — $D$ is split into $S$ shards; <em>Isolated</em> — each sub-model trains only on its shard, with no parameter or gradient sharing; <em>Sliced</em> — within a shard, the data is further split into $R$ slices presented incrementally, with a checkpoint saved after each slice; <em>Aggregated</em> — predictions combine the $S$ sub-models by majority vote or score averaging. Exactness holds <em>relative to the SISA procedure itself</em>: after a deletion is processed (next entry), the released ensemble has exactly the distribution SISA training would have produced on $D \setminus \{z\}$ with the same shard assignment — the point's influence is provably, not approximately, gone. The reference is SISA-on-$D_r$, not monolithic-training-on-$D_r$.</p>
-<h3>Background &amp; further reading</h3>
+<h3>References</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1912.03817">Bourtoule, Chandrasekaran, Choquette-Choo, Jia, Travers, Zhang, Lie, Papernot, "Machine Unlearning", IEEE S&amp;P 2021 (arXiv:1912.03817)</a> — the SISA paper.</li>
 </ul>
@@ -275,7 +335,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>A delete request hits one shard only: find the shard with the point, retrain just that sub-model, and re-aggregate. The other shards are untouched.</p>
 <p><span class="kt">Key takeaway:</span> Exact unlearning at a fraction of the retraining cost.</p>
 <div class="detail">
-<h3>Theorem &amp; proof</h3>
+<h3>Technical depth — optional · theorem &amp; proof</h3>
 <p><strong>Proposition (sharding speedup).</strong> With $S$ equal shards of $n/S$ points each and no slicing, processing one deletion retrains a single sub-model on (at most) $n/S$ points — a factor-$S$ saving over the $n$-point retraining baseline, for every request.</p>
 <p><strong>Proof.</strong> The deleted point $z$ lies in exactly one shard $D^{(k)}$ (the partition is disjoint). Sub-models $\theta^{(j)}$, $j \ne k$, are functions of $D^{(j)}$ only, which is unchanged, so their trained values remain valid. Only $\theta^{(k)}$ must be retrained, on $D^{(k)}\setminus\{z\}$, i.e. on $n/S - 1 \lt n/S$ points. $\blacksquare$ <em>(derivation: course notes, following Bourtoule et al.)</em></p>
 </div>
@@ -283,16 +343,17 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>Slices Make It Cheaper</h2>
+<p><em>Optional depth — skipped on the 90-minute core path (see the list under Contents); the script below is for the full session or for reading.</em></p>
 <p>Inside a shard, train in incremental slices and checkpoint after each. On deletion, roll back to the checkpoint before the point and replay only the later slices, instead of redoing the whole shard.</p>
 <p><span class="kt">Key takeaway:</span> Checkpoints shrink the work needed per deletion further.</p>
 <div class="detail">
-<h3>Theorem &amp; proof</h3>
+<h3>Technical depth — optional · theorem &amp; proof</h3>
 <p><strong>Proposition (slicing speedup).</strong> Split each shard of $m = n/S$ points into $R$ equal slices, presented cumulatively: training stage $j$ processes the union of slices $1,\dots,j$, so stage $j$ costs $j\,(m/R)$ example-passes and a full shard training costs $\sum_{j=1}^{R} j\,\frac{m}{R} = \frac{m(R+1)}{2}$. If the deleted point is in a uniformly random slice, the expected replay cost is</p>
 <p>$$\mathbb{E}[\mathrm{cost}] \;=\; \frac{m\,(R+1)(2R+1)}{6R} \;=\; \frac{n\,(R+1)(2R+1)}{6SR},$$</p>
 <p>so slicing saves a factor $\frac{3R}{2R+1}$ over retraining the shard from scratch — at most $3/2$, approached as $R \to \infty$.</p>
 <p><strong>Proof.</strong> If $z$ lies in slice $r$, the checkpoint after slice $r-1$ is still valid; stages $r,\dots,R$ must be replayed, costing $\sum_{j=r}^{R} j\,\frac{m}{R}$. Averaging over $r \sim \mathrm{Uniform}\{1,\dots,R\}$:</p>
 <p>$$\mathbb{E}[\mathrm{cost}] = \frac{1}{R}\sum_{r=1}^{R}\sum_{j=r}^{R} j\,\frac{m}{R} = \frac{m}{R^2}\sum_{j=1}^{R} j\cdot\#\{r \le j\} = \frac{m}{R^2}\sum_{j=1}^{R} j^2 = \frac{m}{R^2}\cdot\frac{R(R+1)(2R+1)}{6},$$</p>
-<p>which is the stated value. Dividing the full-shard cost $\frac{m(R+1)}{2}$ by it gives $\frac{3R}{2R+1} \nearrow \frac{3}{2}$. $\blacksquare$ <em>(derivation: course notes, consistent with the privacy-course SISA cost model; the tech supplement's "slicing saves at most another 3/2" is this limit)</em></p>
+<p>which is the stated value. Dividing the full-shard cost $\frac{m(R+1)}{2}$ by it gives $\frac{3R}{2R+1} \nearrow \frac{3}{2}$. $\blacksquare$ <em>(derivation: course notes, consistent with the privacy-course SISA cost model; the formula and the "at most another 3/2" limit are stated on <code>lec05tech.html</code> slide 11)</em></p>
 <p>So the dominant saving is sharding (factor $S$, tunable); slicing contributes at most a further constant $3/2$ but costs checkpoint storage.</p>
 </div>
 </article>
@@ -303,7 +364,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p><span class="kt">Key takeaway:</span> Sharding buys deletion speed by spending some accuracy.</p>
 <p><span class="kt">Slide figure:</span> Bourtoule et al., IEEE S&amp;P 2021, Fig. 6: top-1 accuracy versus number of shards on ImageNet and Mini-ImageNet. SISA drops steadily as shards grow, staying well above the naive $1/S$ baseline (train on one shard, ignore the rest) but below the single batch-$K$ model. This is the accuracy price of the "Costs" column.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>The cost side is a theorem (previous two entries); the accuracy side is empirical. Each sub-model trains on $n/S$ points, so its generalization error grows as $S$ grows, and aggregation only partly compensates — Bourtoule et al. measure the degradation on standard image benchmarks and show it grows with $S$, especially for hard tasks. The choice of $S$ (and $R$) must be made <em>before</em> training: SISA cannot be retrofitted onto an already-trained monolithic model, which is exactly the gap the weight-editing methods of the next entries try to fill.</p>
 </div>
 </article>
@@ -313,7 +374,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>SISA changes how we train. But often the model is already trained, with no shards or checkpoints saved. Then we want to nudge the existing weights to undo one point: approximate unlearning.</p>
 <p><span class="kt">Key takeaway:</span> Estimate the point's influence, then subtract it from the weights.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>Standing assumptions for the next two entries (the classical certified-removal setting). The trained model is $\theta_o = \arg\min_\theta F(\theta;D)$ with $F(\theta;D) = \frac{1}{n}\sum_{z\in D}\ell(\theta;z) + \frac{\lambda}{2}\lVert\theta\rVert^2$, and the retrain target is $\theta_{-z} = \arg\min_\theta F_{-z}(\theta)$, where $F_{-z}(\theta) = F(\theta;D) - \frac1n \ell(\theta;z)$ is the objective with $z$'s term removed. Assume:</p>
 <ul>
 <li><strong>A1 (bounded gradients):</strong> $\lVert\nabla\ell(\theta;z)\rVert \le G$ for all $\theta, z$;</li>
@@ -330,11 +391,11 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p><span class="kt">Key takeaway:</span> One closed-form step approximates removing a point.</p>
 <p><span class="kt">Slide figure:</span> Koh and Liang, ICML 2017, Fig. 2: predicted change in test loss from the influence estimate versus the actual change from leave-one-out retraining, one dot per removed training point (MNIST). Linear models line up on the diagonal; the CNN scatters more but keeps the trend. The estimate is a stand-in for retraining, not a replacement.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>The <strong>influence-function unlearner</strong> takes one step from the trained weights:</p>
 <p>$$\theta_u \;=\; \theta_o \;+\; \frac{1}{n}\,H^{-1}\,\nabla_\theta \ell(\theta_o; z), \qquad H = \nabla^2 F(\theta_o; D),$$</p>
 <p>the formula on the tech-supplement slide. (Koh &amp; Liang state the <em>upweighting</em> direction, $\frac{d\theta}{d\epsilon} = -H^{-1}\nabla\ell$; removal is upweighting by $-\frac1n$, which flips the sign.)</p>
-<h3>Theorem &amp; proof</h3>
+<h3>Technical depth — optional · theorem &amp; proof</h3>
 <p><strong>Where the formula comes from (implicit function theorem).</strong> Define the interpolation $L_t(\theta) = F(\theta;D) - \frac{t}{n}\,\ell(\theta;z)$ and $\theta(t) = \arg\min_\theta L_t(\theta)$, so $\theta(0)=\theta_o$ and $\theta(1)=\theta_{-z}$ (the minimizer of $F_{-z}$). By A2 the minimizer is unique and the first-order condition $\nabla L_t(\theta(t)) = 0$ holds identically in $t$. Differentiating in $t$ and evaluating at $t=0$:</p>
 <p>$$\nabla^2 F(\theta_o)\,\theta'(0) \;-\; \frac{1}{n}\nabla\ell(\theta_o;z) \;=\; 0 \quad\Longrightarrow\quad \theta'(0) = \frac{1}{n}H^{-1}\nabla\ell(\theta_o;z).$$</p>
 <p>The unlearner is the first-order Taylor step $\theta(1) \approx \theta(0) + \theta'(0)$. <em>(derivation: course notes, following Koh &amp; Liang's Section 2 argument)</em></p>
@@ -347,7 +408,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>Bound $\lVert\nabla^2F(\theta)^{-1}\rVert \le 1/\lambda$ (A2), $\lVert\nabla^2F(\theta) - \nabla^2F(\theta^\star + se)\rVert \le M(1-s)\lVert e\rVert$ (A3), and $\int_0^1(1-s)\,ds = \frac12$.</p>
 <p><em>Combining:</em> apply Lemma 2 to the objective $F_{-z}$ (minimizer $\theta^\star=\theta_{-z}$) at the starting point $\theta = \theta_o$, then Lemma 1: $\lVert\theta_u - \theta_{-z}\rVert \le \frac{M}{2\lambda}\big(\frac{G}{\lambda n}\big)^2 = \frac{MG^2}{2\lambda^3n^2}$. $\blacksquare$ <em>(derivation: course notes, checked line by line; Guo et al.'s published theorem is stated via objective perturbation and a gradient-residual bound — this parameter-space form is the course's adaptation, as in the privacy-course deck)</em></p>
 <p>The residual scales as $1/n^2$ — one point among $n$ moves the optimum by $O(1/n)$, and the Newton step squares that. To turn the bound into an $(\varepsilon,\delta)$ certificate one adds Gaussian noise calibrated to it; see "Unlearning Meets Privacy" below for why $1/n^2$ beats the DP alternative.</p>
-<h3>Background &amp; further reading</h3>
+<h3>References</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1703.04730">Koh &amp; Liang, "Understanding Black-box Predictions via Influence Functions", ICML 2017 (arXiv:1703.04730)</a> — the influence formula and its IFT derivation.</li>
 <li><a href="https://arxiv.org/abs/1911.03030">Guo et al., "Certified Data Removal", ICML 2020 (arXiv:1911.03030)</a> — the Newton-step remover with certification.</li>
@@ -357,12 +418,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>The Catch: Curvature</h2>
+<p><em>Optional depth — skipped on the 90-minute core path (see the list under Contents); the script below is for the full session or for reading.</em></p>
 <p>That formula needs the inverse Hessian, with one entry per pair of parameters: a billion-parameter model would need $10^{18}$ entries. That matrix cannot even be stored, so only rough approximations are feasible.</p>
 <p><span class="kt">Key takeaway:</span> Exact influence is out of reach at large scale.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>$H = \nabla^2_\theta F \in \mathbb{R}^{d\times d}$ has $d^2$ entries: $d = 10^9$ gives $10^{18}$ — beyond storage, let alone inversion ($O(d^3)$ direct, $O(d^\omega)$ fast). In practice one never <em>forms</em> $H^{-1}$: the product $H^{-1}v$ is computed iteratively from Hessian-<em>vector</em> products (each costs one extra backward pass) via conjugate gradient or stochastic Neumann-series estimators, as Koh &amp; Liang already did. That handles cost; correctness is a separate failure — in deep networks the objective is non-convex, so A2/A3 fail, $H$ has negative and near-zero eigenvalues, and influence estimates become unstable.</p>
-<h3>Background &amp; further reading</h3>
+<h3>References</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2006.14651">Basu, Pope, Feizi, "Influence Functions in Deep Learning Are Fragile", ICLR 2021 (arXiv:2006.14651)</a> — influence estimates degrade with depth, width, and weak regularization.</li>
 </ul>
@@ -374,15 +436,15 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>Training descends the loss. To forget, ascend it on the target: push the forget point's loss up, undoing the fit. It is simple and needs no Hessian.</p>
 <p><span class="kt">Key takeaway:</span> Raising a point's loss is the crudest way to forget it.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p><strong>Gradient ascent (GA)</strong> unlearning maximizes the forget-set loss, i.e. minimizes its negation. Update and objective:</p>
 <p>$$\theta \;\leftarrow\; \theta + \eta\,\nabla_\theta \ell(\theta, x_{\mathrm{forget}}), \qquad \mathcal{L}_{\mathrm{GA}}(\theta) \;=\; -\,\mathbb{E}_{z\sim D_f}\big[\ell(\theta;z)\big]\ \text{(to minimize)},$$</p>
 <p>equivalently: run the training loss on $D_f$ with the sign flipped. For a language model one writes $\ell_\theta(x,y) = \log \pi_\theta(y\mid x)$ and minimizes $\mathbb{E}_{D_f}[\ell_\theta]$ — push the log-likelihood of the forget completions down.</p>
-<h3>Theorem &amp; proof</h3>
+<h3>Technical depth — optional · theorem &amp; proof</h3>
 <p><strong>Proposition (GA has no optimum).</strong> If the model class can drive the forget point's probability to zero (equivalently, its loss to $+\infty$), then $\inf_\theta \mathcal{L}_{\mathrm{GA}}(\theta) = -\infty$ and the infimum is not attained.</p>
 <p><strong>Proof.</strong> Take $\theta_k$ with $\pi_{\theta_k}(y\mid x) \to 0$ for some $(x,y) \in D_f$. Then $\log\pi_{\theta_k}(y\mid x) \to -\infty$ while every other term of the average is bounded above by $0$, so $\mathcal{L}_{\mathrm{GA}}(\theta_k) \to -\infty$; no finite $\theta$ attains $-\infty$ since each $\log\pi_\theta \gt -\infty$ pointwise. $\blacksquare$ <em>(derivation: course notes, as in the privacy-course deck)</em></p>
 <p>An objective with no minimizer gives the optimizer no reason to stop: it keeps pushing after the forget set is gone, at undiminished strength — the collapse of the next entry.</p>
-<h3>Background &amp; further reading</h3>
+<h3>References</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2109.13398">Thudi, Deza, Chandrasekaran, Papernot, "Unrolling SGD: Understanding Factors Influencing Machine Unlearning", IEEE EuroS&amp;P 2022 (arXiv:2109.13398)</a> — analysis of gradient-based approximate unlearning.</li>
 </ul>
@@ -395,7 +457,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p><span class="kt">Key takeaway:</span> From the inside, forgetting and breaking can look the same.</p>
 <p><span class="kt">Slide figure:</span> Kurmanji, Triantafillou, Hayes, and Triantafillou, "Towards Unbounded Machine Unlearning", NeurIPS 2023, Fig. 6(a) and 6(d) (CIFAR-5, ResNet). Left, ascent-only: forget-set error hits 100% by epoch 2, but retain and validation error climb to about 70% with it. Right, alternating ascent on the forget set with descent on the retain set: forget error rises while retain error returns to zero. The retain step is the brake.</p>
 <div class="detail">
-<h3>Theorem &amp; proof</h3>
+<h3>Technical depth — optional · theorem &amp; proof</h3>
 <p><strong>Theorem (divergence rates, toy model).</strong> Two-outcome model $\pi_\theta(y\mid x) = \sigma(\theta)$, $\theta \in \mathbb{R}$, one forget example, gradient flow $\dot\theta = -\nabla\mathcal{L}$. Under GA, $\theta(t) = -t\,(1+o(1))$: <em>linear</em> divergence, forever. Under NPO with parameter $\beta \gt 0$ (next entry), $\theta(t) = -\tfrac1\beta \log t\,(1+o(1))$: <em>logarithmic</em> divergence.</p>
 <p><strong>Proof sketch.</strong> GA: $\mathcal{L} = \log\sigma(\theta)$, so $\dot\theta = -\sigma(-\theta) \to -1$ as $\theta \to -\infty$; hence $\theta(t) \sim -t$. NPO: the gradient weight (next entry) satisfies $w_\theta = 2\sigma(\beta r_\theta) \sim C e^{\beta\theta}$ as $\theta \to -\infty$, so the flow is asymptotically $\dot\theta = -Ce^{\beta\theta}$; separating variables, $e^{-\beta\theta(t)} = e^{-\beta\theta(0)} + \beta C t$, i.e. $\theta(t) = -\tfrac1\beta\log\big(e^{-\beta\theta(0)} + \beta Ct\big) \sim -\tfrac1\beta\log t$. $\blacksquare$ <em>(derivation: course notes, verified by direct integration; the general statement is Zhang, Lin, Bai, Mei, COLM 2024, Thms 1–2)</em></p>
 <p>Linear versus logarithmic is the whole practical difference: GA marches the weights off to infinity, and in a real network there is no parameter direction reserved for $D_f$ alone, so the damage lands on $D_r$.</p>
@@ -407,10 +469,10 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>Negative Preference Optimization fixes the runaway. It weights each ascent-style step by how much the model still remembers the forget data, so the push shrinks as forgetting succeeds. In the paper's Figure 2, gradient ascent drags forget quality and utility down together, while NPO forgets with utility surviving far longer.</p>
 <p><span class="kt">Key takeaway:</span> A self-damping ascent forgets without wrecking the model.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>Write $\pi_{\mathrm{ref}}$ for the model before unlearning and $r_\theta(y) = \log\frac{\pi_\theta(y\mid x)}{\pi_{\mathrm{ref}}(y\mid x)}$ for the log-ratio ("how much the model still assigns to the forget completion, relative to where it started"). <strong>NPO</strong> is DPO with the preferred branch deleted — in unlearning there is no preferred answer, only a rejected one:</p>
 <p>$$\mathcal{L}_{\mathrm{NPO}}(\theta) \;=\; -\frac{2}{\beta}\,\mathbb{E}_{(x,y)\sim D_f}\Big[\log\sigma\big(-\beta\, r_\theta(y)\big)\Big] \;=\; \frac{2}{\beta}\,\mathbb{E}_{D_f}\Big[\log\big(1 + e^{\beta r_\theta(y)}\big)\Big].$$</p>
-<h3>Theorem &amp; proof</h3>
+<h3>Technical depth — optional · theorem &amp; proof</h3>
 <p><strong>Theorem (NPO is self-limiting; Zhang, Lin, Bai, Mei, COLM 2024).</strong></p>
 <ul>
 <li>(i) $\mathcal{L}_{\mathrm{NPO}}(\theta) \gt 0$ for every $\theta$, and $\inf_\theta \mathcal{L}_{\mathrm{NPO}} = 0$: the objective is bounded below, unlike GA.</li>
@@ -421,7 +483,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>$$\nabla_\theta\Big[-\tfrac{2}{\beta}\log\sigma(-\beta r_\theta)\Big] = -\tfrac{2}{\beta}\,\sigma(\beta r_\theta)\cdot(-\beta)\,\nabla_\theta r_\theta = 2\,\sigma(\beta r_\theta)\,\nabla_\theta \ell_\theta.$$</p>
 <p>(iii) $\sigma(u) = e^u/(1+e^u) \le e^u$, so $2\sigma(\beta r_\theta) \le 2e^{\beta r_\theta} = 2(\pi_\theta/\pi_{\mathrm{ref}})^\beta$. $\blacksquare$ <em>(proof as in the privacy-course deck, verified line by line against the NPO objective)</em></p>
 <p><strong>Proposition (NPO contains GA).</strong> As $\beta \to 0^+$, a Taylor expansion of $g(u) = \log(1+e^u)$ at $u = \beta r_\theta$ (using $g(0)=\log 2$, $g'(0)=\tfrac12$, $g''(0)=\tfrac14$) gives $\tfrac2\beta g(\beta r_\theta) = \tfrac{2\log 2}{\beta} + r_\theta + \tfrac{\beta}{4}r_\theta^2 + O(\beta^2)$: up to a constant, NPO's $\beta\to0$ limit is GA, and the first correction penalizes drift from $\pi_{\mathrm{ref}}$. Correspondingly $w_\theta \to 2\sigma(0) = 1$, the GA weight. So $\beta$ is a forgetting-versus-utility dial, not a nuisance hyperparameter. <em>(derivation: course notes)</em></p>
-<h3>Background &amp; further reading</h3>
+<h3>References</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2404.05868">Zhang, Lin, Bai, Mei, "Negative Preference Optimization: From Catastrophic Collapse to Effective Unlearning", COLM 2024 (arXiv:2404.05868)</a> — the deck's collapse plot is their Figure 2.</li>
 </ul>
@@ -430,10 +492,10 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>The Method Landscape</h2>
-<p>Three families: retraining is exact but slow, SISA is exact and shard-local but restructures training, and approximate edits are fast with no exact guarantee.</p>
-<p><span class="kt">Key takeaway:</span> Choose where you want to pay: cost, structure, or guarantee.</p>
+<p>Three families, all aiming at data removal: retraining is exact but slow, SISA is exact and shard-local but restructures training, and approximate edits are fast with no certificate unless the model is simple enough for one. More speed, weaker guarantee. Suppression and filtering are not cheaper rungs on this ladder; they are different targets, and the next section treats them as such.</p>
+<p><span class="kt">Key takeaway:</span> Within data removal, choose where to pay: cost, structure, or guarantee. Suppression is not a fourth rung.</p>
 <div class="detail">
-<h3>Theorem &amp; proof</h3>
+<h3>Technical depth — optional · theorem &amp; proof</h3>
 <p><strong>Proposition (the gradient methods are one family).</strong> GA and NPO (and NPO's length-normalized variants) all take steps of the form $\nabla\mathcal{L}_{\mathrm{forget}} = \mathbb{E}\big[w_\theta\,\nabla_\theta\ell_\theta\big]$ — same direction, different pressure: $w_\theta \equiv 1$ for GA, $w_\theta = 2\sigma(\beta r_\theta)$ for NPO. Among losses of the form $\mathbb{E}[\phi(\ell_\theta)]$, the weight is constant if and only if $\phi$ is affine — i.e. only for GA.</p>
 <p><strong>Proof.</strong> Chain rule: $\nabla\mathbb{E}[\phi(\ell_\theta)] = \mathbb{E}[\phi'(\ell_\theta)\nabla\ell_\theta]$, so $w_\theta = \phi'(\ell_\theta)$, which is constant in $\theta$ iff $\phi'$ is constant iff $\phi$ is affine. $\blacksquare$ <em>(derivation: course notes)</em></p>
 <p>Every post-GA objective installs a brake; the methods disagree only about where.</p>
@@ -442,6 +504,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>Try It Yourself</h2>
+<p><em>Optional depth — skipped on the 90-minute core path (see the list under Contents); the script below is for the full session or for reading.</em></p>
 <p>A Colab: train a small classifier on two classes, unlearn one class by gradient ascent, and watch both forget accuracy and retain accuracy. The lesson is how easily ascent overshoots.</p>
 <p><span class="kt">Key takeaway:</span> Hands-on, the forgetting-versus-utility tension is immediate.</p>
 </article>
@@ -457,7 +520,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>In a language model the target might be a person's private facts, a copyrighted book, or hazardous how-to knowledge, none of which lives in one place.</p>
 <p><span class="kt">Key takeaway:</span> The forget target is a concept, not a data row.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>The request changes type. In Sections 02–03 the request was a set of training <em>rows</em> $D_f \subseteq D$. In the LLM setting the request is a <strong>predicate</strong> $\varphi$ — "everything about this person", "this book", "how to synthesize X" — and the forget set must be <em>constructed</em>: $S_\varphi = \{z \in D : z \text{ matches } \varphi\}$, an operation that is itself lossy, because the concept also survives in paraphrases, quotations, and derived text that no matcher catches. The next entry makes the resulting gap into a theorem.</p>
 </div>
 </article>
@@ -467,7 +530,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>A fact appears paraphrased across thousands of documents and entangled with facts we want to keep, so there is no clean forget set of rows to remove.</p>
 <p><span class="kt">Key takeaway:</span> LLM unlearning is harder than dropping data points.</p>
 <div class="detail">
-<h3>Theorem &amp; proof</h3>
+<h3>Technical depth — optional · theorem &amp; proof</h3>
 <p><strong>Proposition (exact deletion can miss the concept).</strong> Suppose retraining without the matched rows still emits the targeted content $E$ with probability $q$: $\Pr[\mathcal{A}(D\setminus S_\varphi)\text{ emits } E] = q$ (the concept is re-derivable from paraphrases and residual text outside $S_\varphi$). Then any <em>exact</em> unlearner for $S_\varphi$ releases a model that emits $E$ with probability exactly $q$.</p>
 <p><strong>Proof.</strong> Exactness makes the law of the released model equal to the law of $\mathcal{A}(D\setminus S_\varphi)$; "emits $E$" is a measurable event of the model, and equal laws assign equal probabilities to every measurable event. $\blacksquare$ <em>(derivation: course notes, as in the privacy-course deck)</em></p>
 <p>Read it carefully: this is not a failure of the unlearner — it did exactly what was asked. It shows that <em>row-level deletion is the wrong request</em> when the goal is concept removal: a perfect certificate for $S_\varphi$ certifies nothing about $\varphi$.</p>
@@ -476,51 +539,68 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>Who's Harry Potter?</h2>
-<p>Eldan and Russinovich's 2023 demo: find tokens tied to the Harry Potter world, replace them with generic alternatives, and fine-tune the model toward that generic text. The whole thing took about one GPU hour on Llama-2-7b.</p>
-<p><span class="kt">Key takeaway:</span> Redirect the model away from a body of knowledge instead of deleting rows.</p>
+<p>Eldan and Russinovich's 2023 demo: make Llama-2-7b stop producing the Harry Potter books. The target is a concept, not a list of training rows, so the tag in the corner says knowledge suppression. The method: find tokens tied to the Harry Potter world, replace them with generic alternatives, and fine-tune the model toward that generic text. Reported cost: about one GPU-hour of fine-tuning, no retraining.</p>
+<p><span class="kt">Key takeaway:</span> Redirect the model away from a body of knowledge; a suppression method, by its own design.</p>
 <p><span class="kt">Slide figure:</span> Eldan and Russinovich, 2023, Fig. 3: next-token probabilities for the prompt "Harry Potter studies" across fine-tuning steps. "magic" starts as the top completion (0.22) and decays to zero by 120 steps, while "the" rises from 0.09 to 0.57. The table is the method in action: the model is steered toward generic completions.</p>
 <div class="detail">
-<h3>Background &amp; further reading</h3>
-<p>Eldan &amp; Russinovich (Microsoft, 2023) unlearned the Harry Potter books from Llama-2-7b. Their pipeline combines a "reinforced" model (further trained on the target text, used to identify the tokens whose probability the target boosts) with generic replacement predictions, then fine-tunes the base model toward those generic targets. The paper's headline contrast: pretraining took over 184,000 GPU-hours, while erasing the books' recall took about 1 GPU-hour of fine-tuning, with common benchmarks (Winogrande, HellaSwag, ARC, BoolQ, PIQA) nearly unaffected. It is a suppression-style method — the deck returns to what "gone" means for such methods in Sections 05–06.</p>
+<h3>Case background · Eldan &amp; Russinovich 2023</h3>
+<p><strong>Deletion target.</strong> The Harry Potter book series as a body of knowledge: names, plot, and characteristic phrasing. Not a set of training rows; the authors do not have, and do not use, the pretraining documents that mention the books.</p>
+<p><strong>Model and data.</strong> Llama-2-7b (Meta, 2023), fine-tuned by the authors. Three components: a "reinforced" model further trained on the target text, used to identify tokens whose probability the target boosts; generic replacement predictions built from anchored-term substitutions; and a fine-tune of the base model toward those generic targets.</p>
+<p><strong>Evaluation benchmark.</strong> The authors' own completion prompts and questions about the series (Fig. 1 and Fig. 3 on the slides), plus standard benchmarks for utility: Winogrande, HellaSwag, ARC, BoolQ, PIQA.</p>
+<p><strong>Reported success.</strong> About one GPU-hour of fine-tuning (against a reported 184K GPU-hours of pretraining); the fine-tuned model no longer completes Harry Potter prompts with series content; utility benchmarks "almost unaffected". All figures are the authors' own measurements on their own prompts.</p>
+<p><strong>Verification attack.</strong> None in the paper beyond the authors' prompts. Later work used exactly this model as a target: Hu et al. (ICLR 2025) relearn Harry Potter content from benign related text; Zhang et al. (ICLR 2025) show quantization restoring unlearned book text; both are in Section 05.</p>
+<p><strong>What can and cannot be claimed.</strong> Can: reported reduced Harry-Potter behavior on the tested prompts with limited measured utility loss. Cannot: data removal in the Section 02 sense, since there is no retrained reference and no membership test; robustness, since no adaptation budget was tested. The authors title the method "approximate unlearning"; in this lecture's taxonomy it is knowledge suppression, and the paper's own release of the model for community evaluation is what enabled the later attacks.</p>
+<p><strong>Follow-up status (as of 2026-09).</strong> The Harry Potter target became a standard test case: TOFU cites it as motivation, MUSE builds its Books split from the same series, and the benign-relearning and quantization papers use it as a target. The finding that the effect is reversible under benign relearning and under 4-bit quantization is reported by those later papers, not conceded in the original.</p>
+<h3>References</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2310.02238">Eldan &amp; Russinovich, "Who's Harry Potter? Approximate Unlearning in LLMs" (arXiv:2310.02238)</a> — the paper; fine-tuned model released for community evaluation.</li>
+<li><a href="https://arxiv.org/abs/2310.02238">Eldan &amp; Russinovich, "Who's Harry Potter? Approximate Unlearning in LLMs", 2023 (arXiv:2310.02238)</a> — the paper; the fine-tuned model was released for community evaluation.</li>
 </ul>
 </div>
 </article>
 
 <article>
 <h2>The Result</h2>
-<p>Prompted about Harry Potter, the model draws a blank and no longer completes the famous scenes, while its general language ability stays intact. Cheap and targeted, but not provably exact.</p>
-<p><span class="kt">Key takeaway:</span> It forgot one fictional world without losing the language.</p>
+<p>Prompted about Harry Potter, the fine-tuned model answers with something else: a British actor, a talking cat, a park. Reported evaluations showed reduced Harry-Potter behavior with limited measured utility loss. This does not by itself establish data removal; it establishes that the tested prompts no longer elicit the content.</p>
+<p><span class="kt">Key takeaway:</span> Reduced behavior on tested prompts is what was shown; removal is a stronger claim that was not tested.</p>
 <p><span class="kt">Slide figure:</span> Eldan and Russinovich, 2023, Fig. 1: prompts with completions from Llama-7b-chat and the fine-tuned model. The original names Ron, Hermione, and the Gryffindor common room; the unlearned model answers with a British actor, a talking cat and a dragon, and a park. Fluent, on-topic, and wrong in exactly the intended way.</p>
 </article>
 
 <article>
 <h2>Measuring Forgetting: TOFU</h2>
-<p>TOFU, the Task of Fictitious Unlearning, invents 200 fictitious authors with 20 question-answer pairs each, 4,000 in total. The model is fine-tuned to learn them and then asked to forget a chosen set of authors, giving a clean test.</p>
-<p><span class="kt">Key takeaway:</span> A controlled benchmark makes forgetting measurable.</p>
+<p>TOFU, the Task of Fictitious Unlearning, invents 200 fictitious authors with 20 question-answer pairs each, 4,000 in total. The model is fine-tuned to learn them and then asked to forget a chosen set of authors. Because the fine-tuning data is under the evaluator's control, a genuinely retrained model exists, and that is the tag in the corner: benchmark versus retraining.</p>
+<p><span class="kt">Key takeaway:</span> A controlled benchmark with a retrained reference makes forgetting measurable against the right target.</p>
 <p><span class="kt">Slide figure:</span> Maini et al., COLM 2024, Fig. 6 (Llama-2-7B): forget quality (log $p$-value of the truth-ratio test against the retrained model) versus model utility, for forget sets of 1%, 5%, and 10%. Gradient ascent, gradient difference, preference optimization, and KL minimization trace paths as epochs grow; the star is the retrained model. Nothing lands on the star, and the larger the forget set the further everything drifts.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p><strong>TOFU</strong> (Maini, Feng, Schwarzschild, Lipton, Kolter, COLM 2024): 200 synthetic author profiles $\times$ 20 question–answer pairs $= 4{,}000$ pairs, generated so the base model can only know them through fine-tuning. A <em>forget split</em> (a subset of authors) is designated; the <em>retain model</em> is fine-tuned on the other authors only, giving a genuine retrained reference. <strong>Forget quality</strong> is defined via the <em>truth ratio</em> $R$ of each forget question (comparing the likelihood of a paraphrased correct answer with perturbed wrong answers): run a two-sample Kolmogorov–Smirnov test between $\{R_i(\theta_u)\}$ and $\{R_i(\theta_{\mathrm{retain}})\}$ and report the $p$-value; high $p$ means the test could not tell the models apart.</p>
-<h3>Theorem &amp; proof</h3>
+<h3>Technical depth — optional · theorem &amp; proof</h3>
 <p><strong>Theorem (a $p$-value is not a score).</strong> Suppose unlearning is perfect, so both truth-ratio samples come from one continuous law. Then (i) the reported $p$ is $\mathrm{Uniform}[0,1]$ — in particular $\Pr[p \ge 0.9] = 0.1$: a <em>perfect</em> unlearner clears a $0.9$ bar one time in ten; (ii) if the best of $k$ runs is reported, $\mathbb{E}[p_{\max}] = \frac{k}{k+1}$ and $\Pr[p_{\max} \ge 0.9] = 1 - 0.9^k$ — at $k=10$, mean $0.909$ and a $65\%$ chance of clearing $0.9$.</p>
 <p><strong>Proof.</strong> (i) Under the null the test statistic $T$ has a continuous law $F$, and $p = 1 - F(T)$; the probability integral transform gives $F(T) \sim \mathrm{Uniform}[0,1]$, hence so is $p$. (ii) For $p_1,\dots,p_k$ i.i.d. uniform, $\Pr[p_{\max}\le t] = t^k$, so $\mathbb{E}[p_{\max}] = \int_0^1 k\,t^k\,dt = \frac{k}{k+1}$ and $\Pr[p_{\max}\ge0.9] = 1-0.9^k$. Nothing is specific to the KS statistic — only continuity of the null law is used. $\blacksquare$ <em>(derivation: course notes, standard order-statistics argument)</em></p>
 <p>Moral: selecting the best checkpoint by forget quality is taking a maximum over draws of a uniform; failing to reject is not evidence of equality.</p>
-<h3>Background &amp; further reading</h3>
+<h3>Case background · Maini et al. 2024</h3>
+<p><strong>Deletion target.</strong> A forget split of fictitious authors (1%, 5%, or 10% of the 200), i.e. a named set of fine-tuning rows. This is data removal in the Section 02 sense, at fine-tuning scale.</p>
+<p><strong>Model and data.</strong> Llama-2-7B and Phi-1.5, fine-tuned on the 4,000 synthetic question–answer pairs; the retain model is fine-tuned on the non-forget authors only. The authors' design point ("Why Fictitious?", slide 44): the base model can know these facts only through the fine-tune, so nothing leaks in from the web.</p>
+<p><strong>Evaluation benchmark.</strong> Forget quality (a $p$-value from a two-sample test on truth ratios against the retrained model) against model utility (aggregated over retain, real-author, and world-fact questions). Baselines: gradient ascent, gradient difference, KL minimization, preference optimization; the paper's headline threshold is a $p$-value of 0.05.</p>
+<p><strong>Reported success.</strong> On the 1% forget set, none of the baselines crosses the 0.05 $p$-value threshold; on 5% and 10%, all see severe utility drops. The figure on the slide (Fig. 6, Llama-2-7B) shows the trajectories moving away from the retrained reference as the forget set grows. Authors' own runs.</p>
+<p><strong>Verification attack.</strong> None in the original; the benchmark is a measurement suite. Hu et al. (ICLR 2025) later ran benign relearning on TOFU-unlearned Phi-1.5 (forget05 split) and recovered the forgotten answers.</p>
+<p><strong>What can and cannot be claimed.</strong> Can: a method's distance from the retrained reference on this metric, at this scale. Cannot: that a high forget-quality score means indistinguishability (the $p$-value theorem below), or that fine-tuning-scale results transfer to pretraining-scale knowledge.</p>
+<p><strong>Follow-up status (as of 2026-09).</strong> TOFU is a standard test bed; the "none effective" finding for the 2024 baselines is the reported result of the original paper and has not been reversed for those baselines. Later methods report better numbers on the same suite; this note does not evaluate them.</p>
+<h3>References</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2401.06121">Maini, Feng, Schwarzschild, Lipton, Kolter, "TOFU: A Task of Fictitious Unlearning for LLMs", COLM 2024 (arXiv:2401.06121)</a> — dataset, truth ratio, and forget-quality metric.</li>
+<li><a href="https://arxiv.org/abs/2401.06121">Maini, Feng, Schwarzschild, Lipton, Kolter, "TOFU: A Task of Fictitious Unlearning for LLMs", COLM 2024 (arXiv:2401.06121)</a> — dataset, truth ratio, forget-quality metric, Fig. 6.</li>
 </ul>
 </div>
 </article>
 
 <article>
 <h2>TOFU in One Picture</h2>
+<p><em>Optional depth — skipped on the 90-minute core path (see the list under Contents); the script below is for the full session or for reading.</em></p>
 <p>The pipeline from the paper: start from a pretrained model, fine-tune it on the synthetic author biographies, then unlearn a forget split. Because every stage is under the evaluator's control, forget quality can be compared against a genuine retrain.</p>
 <p><span class="kt">Key takeaway:</span> Controlling every stage is what makes the retrain comparison possible.</p>
 <div class="detail">
-<h3>Background &amp; further reading</h3>
+<h3>Case background</h3>
 <p>The slide's figure is Figure 1 of the TOFU paper. The design point it draws: TOFU is one of the few LLM suites in which the retrained reference of Section 02 <em>exists</em> — because the "training data" for the fictitious knowledge is a controlled fine-tune, retraining without the forget split is affordable. Benchmarks on pretraining-scale knowledge (next entries) lose exactly this.</p>
+<h3>References</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2401.06121">Maini et al., TOFU (arXiv:2401.06121)</a> — Figure 1.</li>
 </ul>
@@ -529,22 +609,31 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>Why Fictitious?</h2>
+<p><em>Optional depth — skipped on the 90-minute core path (see the list under Contents); the script below is for the full session or for reading.</em></p>
 <p>Fake facts make forgetting checkable: the model only knows them from fine-tuning, so there is no leakage from the rest of the web. If it still answers afterward, it did not forget.</p>
 <p><span class="kt">Key takeaway:</span> Invented facts isolate what the model truly learned.</p>
 </article>
 
 <article>
 <h2>Hazardous Knowledge: WMDP</h2>
-<p>WMDP, the Weapons of Mass Destruction Proxy, is a benchmark of 3,668 multiple-choice proxy questions on biological, cyber, and chemical harm. The goal is a model that cannot answer them.</p>
-<p><span class="kt">Key takeaway:</span> Some unlearning targets are safety hazards, not privacy.</p>
+<p>WMDP, the Weapons of Mass Destruction Proxy, is a benchmark of 3,668 multiple-choice proxy questions on biological, cyber, and chemical hazards. It measures hazardous knowledge by proxy. There are no training rows to point at, so there is no retrained reference; the tag says benchmark, concept. The stated goal is a model that no longer answers these questions. "Cannot answer" is the stronger reading, and nothing in the benchmark verifies it.</p>
+<p><span class="kt">Key takeaway:</span> A safety target with no retrained reference: the benchmark measures answering, not knowing.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p><strong>WMDP</strong> (Li, Pan, Gopal, et al., ICML 2024): 3,668 multiple-choice questions across biosecurity, cybersecurity, and chemical security, written as a <em>proxy</em> for hazardous capability (the truly dangerous questions were filtered out before release). The evaluation is a pair: accuracy on WMDP (want: down, ideally to the 25% four-choice random floor) against accuracy on general benchmarks such as MMLU (want: unchanged). There is no retrained reference — nobody retrains a frontier model without "hazardous biology" — so WMDP measures behavior, not indistinguishability.</p>
-<h3>Theorem &amp; proof</h3>
+<h3>Technical depth — optional · theorem &amp; proof</h3>
 <p><strong>Corollary (accuracy is prompt-relative).</strong> Let $A(\theta;T)$ be accuracy under prompt template $T$, and let an adversary range over templates, few-shot contexts, and decoding settings. Then $A(\theta;T_{\mathrm{bench}}) \le \sup_{T'} A(\theta;T')$: a low benchmark score is <em>necessary</em> for capability removal and never <em>sufficient</em>.</p>
 <p><strong>Proof.</strong> The benchmark template is one element of the set the supremum ranges over. $\blacksquare$ <em>(derivation: course notes)</em></p>
 <p>Trivial as stated — and exactly the gap between what WMDP reports (the left side) and what a safety claim asserts (the right side). Section 06's relearning results show the gap is real, not hypothetical.</p>
-<h3>Background &amp; further reading</h3>
+<h3>Case background · Li et al. 2024 (benchmark)</h3>
+<p><strong>Deletion target.</strong> Hazardous capability in biosecurity, cybersecurity, and chemical security, defined by proxy: 3,668 multiple-choice questions written by a consortium of academics and technical consultants; the authors state the set was "stringently filtered to eliminate sensitive and export-controlled information", so the questions are proxies for hazardous knowledge rather than the knowledge itself. No document set defines the target.</p>
+<p><strong>Model and data.</strong> The benchmark itself is model-agnostic. The paired method, RMU, is demonstrated on Zephyr-7B-beta, Yi-34B-Chat, and Mixtral-8x7B-Instruct (next entries), using forget corpora of bio and cyber text and WikiText as the retain corpus (the authors report RMU works better when the retain set is qualitatively distinct from the forget set).</p>
+<p><strong>Evaluation benchmark.</strong> Accuracy on WMDP-Bio, WMDP-Cyber, WMDP-Chem (four-choice; 25% is chance) against accuracy on MMLU and other general benchmarks.</p>
+<p><strong>Reported success.</strong> See "RMU, Measured": WMDP-Bio and WMDP-Cyber accuracy near chance, MMLU nearly unchanged, on the paper's own runs.</p>
+<p><strong>Verification attack.</strong> The paper reports some robustness checks of its own; the independent adversarial evaluation is Łucki et al. (TMLR), Section 06, which recovers most WMDP-Bio accuracy from RMU with small fine-tunes.</p>
+<p><strong>What can and cannot be claimed.</strong> Can: a model's multiple-choice accuracy on this proxy, before and after an intervention. Cannot: that low accuracy means the capability is absent (prompt-relativity corollary below), or that the proxy questions measure real-world uplift; the authors present WMDP as a proxy, and the lecture keeps that word.</p>
+<p><strong>Follow-up status (as of 2026-09).</strong> WMDP is the standard hazard benchmark for unlearning papers. The RMU result reported in the original stands as a benchmark number; its robustness has been challenged (Łucki et al.), and the challenge is itself a reported result on the same models.</p>
+<h3>References</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2403.03218">Li, Pan, Gopal, et al., "The WMDP Benchmark: Measuring and Reducing Malicious Use With Unlearning", ICML 2024 (arXiv:2403.03218)</a> — benchmark and the RMU method.</li>
 </ul>
@@ -557,11 +646,11 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p><span class="kt">Key takeaway:</span> Scramble the internals on hazards, preserve them elsewhere.</p>
 <p><span class="kt">Slide figure:</span> Li et al., ICML 2024, Fig. 7: the two-term RMU loss as a picture. Left block: at layer $\ell$ of the updated model, forget-data activations are pushed toward $c\cdot\mathbf{u}$, a scaled random direction. Right block: retain-data activations of the updated model are pinned to the frozen model's activations at the same layer. Map each block to the formula in the detail box.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p><strong>RMU</strong> (shipped with WMDP). Fix a layer $\ell$ with activation map $h_\theta$, draw one fixed random vector $\xi$ and a scale $c$, and minimize</p>
 <p>$$\mathcal{L}_{\mathrm{RMU}} \;=\; \mathbb{E}_{x\sim D_f}\big\lVert h_\theta(x) - c\,\xi \big\rVert^2 \;+\; \alpha\,\mathbb{E}_{x\sim D_r}\big\lVert h_\theta(x) - h_{\mathrm{ref}}(x) \big\rVert^2 ,$$</p>
 <p>where $h_{\mathrm{ref}}$ is the frozen original model's activation. First term: on hazardous inputs, steer the layer's activations to a fixed random direction (scramble the representation). Second term: on retain inputs, pin activations to the original model's. Both terms are squared distances to fixed targets, hence bounded below by $0$ — RMU has a brake by construction, unlike GA; the intervention is <em>internal</em> (at layer $\ell$) rather than on output likelihoods.</p>
-<h3>Background &amp; further reading</h3>
+<h3>References</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2403.03218">Li, Pan, Gopal, et al., ICML 2024 (arXiv:2403.03218)</a> — RMU is introduced in the WMDP paper.</li>
 </ul>
@@ -570,15 +659,22 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>RMU, Measured</h2>
-<p>On Zephyr-7B, RMU pulls WMDP-Bio and WMDP-Cyber accuracy down to near the random-chance line while MMLU barely moves. On the benchmark it does exactly what it promises: forget the hazard, keep the rest. Whether the knowledge is gone or merely hidden is the question the next section asks.</p>
-<p><span class="kt">Key takeaway:</span> One scrambled layer removes hazard accuracy on the benchmark without touching general knowledge.</p>
+<p>On Zephyr-7B, RMU pulls WMDP-Bio and WMDP-Cyber accuracy down to near the random-chance line while MMLU barely moves. This is a reported result, on the paper's own test, and it is reported as: forget the hazard, keep the rest. Benchmark accuracy near chance is observable. Whether the knowledge is gone or merely hidden is the next section's question.</p>
+<p><span class="kt">Key takeaway:</span> One scrambled layer moves the benchmark; that is the measured claim, and only that.</p>
 <p><span class="kt">Slide figure:</span> Li et al., ICML 2024, Fig. 8: grouped bars for Zephyr-7B, base versus RMU-unlearned, on WMDP-Bio, WMDP-Cyber, and MMLU, with the random-chance line dashed. The two WMDP bars collapse to the dashed line; the MMLU pair is nearly identical. Read the arrows in the axis labels: down is the goal on WMDP, up on MMLU.</p>
 <div class="detail">
-<h3>What the numbers do and do not show</h3>
-<p>The benchmark is multiple choice, so "near random chance" means the unlearned model no longer <em>selects</em> the hazardous answer, not that the underlying representation is absent. Slides in §05 (relearning, quantization, and adversarial fine-tuning) test the stronger claim and find it wanting for RMU in particular: Łucki et al. recover most of the WMDP-Bio accuracy with a handful of fine-tuning examples.</p>
-<h3>Background &amp; further reading</h3>
+<h3>Case background · Li et al. 2024 (RMU result)</h3>
+<p><strong>Deletion target.</strong> Hazardous bio and cyber knowledge, as a concept; the forget corpora are topical text collections, not the model's training rows.</p>
+<p><strong>Model and data.</strong> Zephyr-7B-beta (the slide's figure) with RMU applied at one intermediate layer; the paper also reports Yi-34B-Chat and Mixtral-8x7B. The unlearned Zephyr model was released publicly (cais/Zephyr_RMU on Hugging Face), which is what allowed the later independent attacks.</p>
+<p><strong>Evaluation benchmark.</strong> WMDP-Bio, WMDP-Cyber, MMLU (Fig. 8 on the slide; Table 3 in the paper).</p>
+<p><strong>Reported success.</strong> WMDP-Bio and WMDP-Cyber near the 25% chance line; MMLU within a few points of base. Authors' own runs.</p>
+<p><strong>Verification attack.</strong> Łucki et al. (TMLR) report that fine-tuning the released RMU model on 10 unrelated examples, or removing specific activation-space directions, recovers most of its WMDP-Bio accuracy; they also decode correct answers from intermediate layers with a logit lens. Section 06, "Robust Unlearning".</p>
+<p><strong>What can and cannot be claimed.</strong> Can: on the benchmark's prompt format, the model stopped selecting the hazardous answer. Cannot: that the representation is absent. The benchmark is multiple choice, so "near chance" is a statement about selection, and the later results show the selection behavior is reversible with small budgets.</p>
+<p><strong>Follow-up status (as of 2026-09).</strong> Both the original benchmark result and the adversarial recovery are reported results on the same public model; they do not contradict each other. The first measures suppression; the second shows the suppression is shallow.</p>
+<h3>References</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2403.03218">Li, Pan, Gopal, et al., ICML 2024 (arXiv:2403.03218)</a> — Fig. 8 and Table 3 report the Zephyr-7B numbers.</li>
+<li><a href="https://arxiv.org/abs/2409.18025">Łucki et al., "An Adversarial Perspective on Machine Unlearning for AI Safety", TMLR (arXiv:2409.18025)</a> — the recovery results on the released RMU model.</li>
 </ul>
 </div>
 </article>
@@ -588,22 +684,30 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>MUSE evaluates an unlearned language model six ways at once. The data owner expects no verbatim memorization, no knowledge memorization, and no privacy leakage; the deployer expects preserved utility, scalability to large forget sets, and sustainability across sequential requests. Most methods fail several boxes.</p>
 <p><span class="kt">Key takeaway:</span> A deletion is only good if both the data owner and the deployer are satisfied.</p>
 <div class="detail">
-<h3>Definitions</h3>
-<p><strong>MUSE</strong> (Shi, Wang, Li, et al., ICLR 2025) scores an unlearned LM on books and news corpora against six requirements, three per stakeholder. Data owner: (1) <em>no verbatim memorization</em> — the model cannot reproduce forget-set text; (2) <em>no knowledge memorization</em> — it cannot answer questions about the content; (3) <em>no privacy leakage</em> — membership inference cannot distinguish the forget set. Deployer: (4) <em>utility preservation</em> on retained knowledge; (5) <em>scalability</em> to large forget sets; (6) <em>sustainability</em> — quality does not decay over sequential unlearning requests. MUSE includes a retrained reference, so criteria are scored relative to it; the paper finds most methods satisfy a strict subset of the six.</p>
-<h3>Background &amp; further reading</h3>
+<h3>Technical depth — optional · definitions</h3>
+<p><strong>MUSE</strong> (Shi, Lee, Huang, Malladi, Zhao, Holtzman, Liu, Zettlemoyer, Smith, Zhang; ICLR 2025) scores an unlearned LM on books and news corpora against six requirements, three per stakeholder. Data owner: (1) <em>no verbatim memorization</em> — the model cannot reproduce forget-set text; (2) <em>no knowledge memorization</em> — it cannot answer questions about the content; (3) <em>no privacy leakage</em> — membership inference cannot distinguish the forget set. Deployer: (4) <em>utility preservation</em> on retained knowledge; (5) <em>scalability</em> to large forget sets; (6) <em>sustainability</em> — quality does not decay over sequential unlearning requests. MUSE includes a retrained reference, so criteria are scored relative to it; the paper finds most methods satisfy a strict subset of the six.</p>
+<h3>Case background · Shi et al. 2025</h3>
+<p><strong>Deletion target.</strong> Two forget corpora with known training provenance: the Harry Potter books (Books split) and BBC news articles (News split). Because the corpora are fine-tuned in by the benchmark, a retrained reference exists; the tag says benchmark versus retraining.</p>
+<p><strong>Model and data.</strong> LLaMA-2 7B for News (chosen because it predates the articles) and ICLM-7B for Books; the target model is fine-tuned on the forget and retain corpora, the reference model on the retain corpus only. Eight unlearning algorithms are evaluated.</p>
+<p><strong>Evaluation benchmark.</strong> Six criteria: no verbatim memorization, no knowledge memorization, no privacy leakage (a membership-inference gap, including over-unlearning), utility preservation, scalability to larger forget sets, sustainability across sequential requests. Each is scored relative to the retrained model.</p>
+<p><strong>Reported success.</strong> Most methods score well on the two memorization criteria, often below the retrained model's level; most reveal membership through under- or over-unlearning (the forget set becomes <em>too</em> unfamiliar); utility on the retain set drops by 24% to 100%, with several methods rendering the model unusable; and scalability and sustainability degrade with forget-set size and repeated requests. Authors' own runs on Table 3 and Fig. 5.</p>
+<p><strong>Verification attack.</strong> The privacy-leakage criterion is itself a membership-inference audit; no relearning or quantization attack is part of the suite.</p>
+<p><strong>What can and cannot be claimed.</strong> Can: a method's position on six axes against a real retrained reference at 7B scale. Cannot: robustness to adaptation, which is outside the suite; or transfer to pretraining-scale targets where no reference exists.</p>
+<p><strong>Follow-up status (as of 2026-09).</strong> MUSE is one of the three standard suites (with TOFU and WMDP) and the only one of the three with both a retrained reference and a privacy-leakage axis. Author list corrected in this revision against the arXiv record.</p>
+<h3>References</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2407.06460">Shi, Wang, Li, et al., "MUSE: Machine Unlearning Six-Way Evaluation for Language Models", ICLR 2025 (arXiv:2407.06460)</a> — the deck's figure is their Figure 1.</li>
+<li><a href="https://arxiv.org/abs/2407.06460">Shi, Lee, Huang, Malladi, Zhao, Holtzman, Liu, Zettlemoyer, Smith, Zhang, "MUSE: Machine Unlearning Six-Way Evaluation for Language Models", ICLR 2025 (arXiv:2407.06460)</a> — the deck's figure is their Figure 1.</li>
 </ul>
 </div>
 </article>
 
 <article>
 <h2>Unlearning vs Filtering</h2>
-<p>An output filter blocks bad answers but the knowledge stays inside and can be bypassed. Unlearning aims to remove the knowledge itself, so there is nothing left to leak.</p>
-<p><span class="kt">Key takeaway:</span> Filtering hides knowledge; unlearning tries to remove it.</p>
+<p>Why edit the model when a filter is easier? Because they are different targets. An output filter blocks answers in front of an unchanged model; the knowledge stays inside and the filter can be bypassed by construction. Unlearning aims to change what the model holds, by data removal or knowledge suppression. Verified removal would have nothing left to leak; the verification is the hard part, and it is the next section.</p>
+<p><span class="kt">Key takeaway:</span> Filtering and unlearning are different targets, not cheaper and dearer versions of one thing.</p>
 <p><span class="kt">Slide figure:</span> Cooper et al., 2024, Fig. 3: two pipelines. (a) Back-end: data flows through training into a trained model. (b) Front-end: a prompt flows through the trained model into a generation. Unlearning intervenes on the back-end pipeline, an output filter on the front-end one. The picture fixes the vocabulary used on the next slides.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>Formally, a <strong>filter</strong> is an inference-time composition $g \circ \pi_\theta$ — the weights $\theta$ are unchanged, and anyone with weight access (open models, fine-tuning APIs) simply removes $g$. <strong>Unlearning</strong> modifies $\theta$ itself. The distinction sounds crisp, but Section 05 shows it is <em>not observable from outputs</em>: a modified $\theta$ that merely gates its knowledge behaves exactly like a filter baked into the weights. Making "the knowledge is gone" precise — and testable — is the entire business of the next two sections.</p>
 </div>
 </article>
@@ -616,10 +720,10 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>Verification Is Hard</h2>
-<p>"It forgot" is a claim that needs proof. The weights look different, but is the point really gone? Approximate methods give no certificate, so we must test the model.</p>
-<p><span class="kt">Key takeaway:</span> Test for the knowledge; do not assume it is gone.</p>
+<p>"It forgot" is a claim that needs proof. The weights look different, but is the point really gone? Approximate methods give no certificate, so we must test the model, not trust it. The sentence to carry: not answering is observable; not knowing is a much stronger claim.</p>
+<p><span class="kt">Key takeaway:</span> Not answering is observable. Not knowing is a much stronger claim.</p>
 <div class="detail">
-<h3>Theorem &amp; proof</h3>
+<h3>Technical depth — optional · theorem &amp; proof</h3>
 <p><strong>Proposition (output metrics are blind).</strong> Write $\Gamma_\theta$ for the model's output law (the distribution over responses to every prompt). Any metric computable from black-box samples factors through it: $\mathcal{M}(\theta) = \Psi(\Gamma_\theta)$ for some functional $\Psi$. Hence if $\Gamma_{\theta_1} = \Gamma_{\theta_2}$ then $\mathcal{M}(\theta_1) = \mathcal{M}(\theta_2)$, whatever the two parameter vectors encode internally.</p>
 <p><strong>Proof.</strong> Immediate: $\mathcal{M}$ is a function of samples whose law is determined by $\Gamma_\theta$. $\blacksquare$ <em>(derivation: course notes, as in the privacy-course deck)</em></p>
 <p>Consequence: no black-box test suite can separate a model that <em>forgot</em> from one that <em>learned to stay quiet</em> — if their output laws agree, every benchmark number agrees. The proposition would be vacuous if suppression and deletion always differed in outputs; the relearning and quantization results below show they need not.</p>
@@ -632,9 +736,9 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p><span class="kt">Key takeaway:</span> The leakage signal becomes the deletion audit.</p>
 <p><span class="kt">Slide figure:</span> Shi et al., MUSE, ICLR 2025, Fig. 2: four sketches of membership-inference score distributions for retain, forget, and holdout data. (a) Before unlearning, forget sits with retain. (b) Perfect unlearning: forget sits with holdout. (c) Under-unlearning leaves forget near retain. (d) Over-unlearning pushes forget past holdout, which also leaks: the auditor can spot the forgotten set because it looks <em>too</em> unfamiliar.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>The audit statistic is the MIA score, e.g. $s_{\mathrm{loss}}(x,y) = -\log p_\theta(y\mid x)$ with decision $\hat m = \mathbb{1}[s \le \tau]$: run the attack on the forget points of $\theta_u$ and check whether they are flagged at the member rate or the non-member rate.</p>
-<h3>Theorem &amp; proof</h3>
+<h3>Technical depth — optional · theorem &amp; proof</h3>
 <p><strong>Proposition (metrics can only refute).</strong> If $(\mathcal{A},\mathcal{U})$ is $(\varepsilon,\delta)$-certified, write $P$ for the law of the unlearned model and $Q$ for the law of the retrain. Then for <em>every</em> bounded test $h:\Theta\to[0,1]$ (any MIA success rate, any benchmark score),</p>
 <p>$$\big|\mathbb{E}_P[h] - \mathbb{E}_Q[h]\big| \;\le\; \mathrm{TV}(P,Q) \;\le\; \frac{e^{\varepsilon} - 1 + 2\delta}{e^{\varepsilon} + 1}.$$</p>
 <p><strong>Proof.</strong> First inequality: for $h \in [0,1]$, $|\mathbb{E}_P[h] - \mathbb{E}_Q[h]| = |\int h\, d(P-Q)| \le \sup_S |P(S) - Q(S)| = \mathrm{TV}(P,Q)$, taking $S^+ = \{dP \gt dQ\}$. Second: let $a = P(S^+)$, $b = Q(S^+)$, so $\mathrm{TV} = a - b$. The certificate gives $a \le e^{\varepsilon}b + \delta$ and, applied to the complement, $1-b \le e^{\varepsilon}(1-a) + \delta$, i.e. $a \le 1 - (1-b-\delta)e^{-\varepsilon}$. The maximum of $a-b$ subject to both is attained where they intersect: solving $e^{\varepsilon}b + \delta = 1-(1-b-\delta)e^{-\varepsilon}$ gives $b = \frac{1-\delta}{e^{\varepsilon}+1}$, whence $a - b = b(e^{\varepsilon}-1) + \delta = \frac{(1-\delta)(e^{\varepsilon}-1)}{e^{\varepsilon}+1} + \delta = \frac{e^{\varepsilon}-1+2\delta}{e^{\varepsilon}+1}$. $\blacksquare$ <em>(derivation: course notes, checked line by line; sanity checks: $\delta=0$ gives the standard pure-DP bound $\frac{e^\varepsilon-1}{e^\varepsilon+1}$, and $\varepsilon=0$ gives $\delta$)</em></p>
@@ -647,7 +751,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>A forgotten point can still produce a low loss and sit in the member bell rather than the non-member one. If it lands among members, the forgetting failed.</p>
 <p><span class="kt">Key takeaway:</span> A low loss on the target betrays incomplete forgetting.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>The picture behind the slide: over many points, member losses and non-member losses form two overlapping distributions, members concentrated lower. The audit asks which bell the deleted point's loss falls in <em>after</em> unlearning. The correct reference is again the retrain: the point should look like a point the retrained model never saw — statistically exchangeable with fresh non-members — not merely "higher loss than before". A point whose loss dropped only slightly still sits in the member bell, and the audit flags it.</p>
 </div>
 </article>
@@ -657,13 +761,21 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>Outputs can lie, so a Yonsei-coauthored metric looks inside. The Information Difference Index measures how much information about the forget set the intermediate layers still carry, compared against a genuinely retrained model. If the internals still encode what the answers hide, the unlearning was only skin-deep.</p>
 <p><span class="kt">Key takeaway:</span> Audit the representations, not just the answers.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p><strong>Information Difference Index (IDI)</strong> (Jeon, Jeung, Kim, No, Choi; AAAI 2026). Write $\mathbf{Z}^{(u)}_\ell, \mathbf{Z}^{(r)}_\ell, \mathbf{Z}^{(o)}_\ell$ for the layer-$\ell$ intermediate features of the <em>unlearned</em>, <em>retrained</em>, and <em>original</em> models on forget-class inputs, and $Y$ for the forget labels. IDI is the normalized excess mutual information the unlearned model's internals still carry:</p>
 <p>$$\mathrm{IDI}(\theta_u) \;=\; \frac{\sum_\ell \big( I(\mathbf{Z}^{(u)}_\ell; Y) - I(\mathbf{Z}^{(r)}_\ell; Y) \big)}{\sum_\ell \big( I(\mathbf{Z}^{(o)}_\ell; Y) - I(\mathbf{Z}^{(r)}_\ell; Y) \big)}.$$</p>
 <p>Reading: $\mathrm{IDI} = 1$ — internally, nothing was forgotten (as informative as the original); $\mathrm{IDI} = 0$ — internals match the retrained reference (the target); $\mathrm{IDI} \lt 0$ — over-unlearning, internals carry <em>less</em> forget-information than a retrain would. The mutual informations are estimated in practice. The paper's motivating finding: methods can match the retrained model on <em>every</em> output metric (unlearn/retain/test accuracy, MIA) while $\mathrm{IDI} \approx 1$ — the white-box metric sees what the black-box battery provably (previous entries) cannot. The same paper proposes <strong>COLA</strong>, a contrastive collapse-then-align unlearning method that drives IDI toward $0$.</p>
-<h3>Background &amp; further reading</h3>
+<h3>Case background · Jeon et al. 2026</h3>
+<p><strong>Deletion target.</strong> A forget class or forget subset in image classification; the paper is about deep networks in general, not language models specifically.</p>
+<p><strong>Model and data.</strong> ResNet-18/50 and ViT on CIFAR-10/100 and ImageNet-1K, with a genuinely retrained model available as the reference for every experiment. White-box access to intermediate features is required.</p>
+<p><strong>Evaluation benchmark.</strong> IDI (definition above) alongside the usual black-box battery: forget, retain, and test accuracy, and membership inference.</p>
+<p><strong>Reported success.</strong> The motivating finding: several existing methods match the retrained model on every black-box metric while IDI stays near 1, meaning the internals still carry the forget information. The paper's own method, COLA, drives IDI toward 0 on the same tests. Authors' own runs.</p>
+<p><strong>Verification attack.</strong> IDI is itself the audit; it is a white-box measurement, not an adaptation attack.</p>
+<p><strong>What can and cannot be claimed.</strong> Can: that black-box agreement with retraining does not imply internal agreement, which the blindness proposition predicts and IDI measures. Cannot: transfer to LLMs at scale, where mutual-information estimation on high-dimensional features and the absence of a retrained reference both stand in the way.</p>
+<p><strong>Follow-up status (as of 2026-09).</strong> Accepted at AAAI 2026; a Yonsei-coauthored paper. Cited here as the white-box complement to the black-box suites.</p>
+<h3>References</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2405.17878">Jeon, Jeung, Kim, No, Choi, "An Information Theoretic Evaluation Metric for Strong Unlearning" (arXiv:2405.17878; accepted at AAAI 2026)</a> — IDI and COLA are this one paper; the deck's schematic is from the extended arXiv version (Fig. 4(a)).</li>
+<li><a href="https://arxiv.org/abs/2405.17878">Jeon, Jeung, Kim, No, Choi, "An Information Theoretic Evaluation Metric for Strong Unlearning" (arXiv:2405.17878; AAAI 2026)</a> — IDI and COLA are this one paper; the deck's schematic is from the extended arXiv version (Fig. 4(a)).</li>
 </ul>
 </div>
 </article>
@@ -674,12 +786,24 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p><span class="kt">Key takeaway:</span> Truly forgotten knowledge should be as hard to relearn as new.</p>
 <p><span class="kt">Slide figure:</span> Yoon, Hong, Jeung, and No (Yonsei), "Rethinking Benign Relearning: Syntax as the Hidden Driver of Unlearning Failures", ICLR 2026, Fig. 5: for GA, NPO, and SCRUB, three bars each for the target set, a topically relevant set, and a syntactically similar set, on representation similarity, gradient similarity, and relearn success rate. The syntactically similar corpus, unrelated in topic, is close to the target on every axis and relearns nearly as well. Sentence structure, not subject matter, drives the snap-back.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>Fix a behavior functional $B$ (e.g. forget-set accuracy or extraction rate — high is bad) and an <strong>adaptation class</strong> $\mathcal{T}$: fine-tuning maps using at most $m$ steps on at most $n$ permitted examples. <strong>Definition (suppression vs deletion).</strong> $\theta_u$ <em>suppresses</em> the target at level $\varepsilon$ if $B(\theta_u) \le \varepsilon$; $\theta_u$ <em>deletes</em> it at level $(\varepsilon, \mathcal{T})$ if $\sup_{\tau \in \mathcal{T}} B(\tau(\theta_u)) \le \varepsilon$. Deletion is suppression that survives the adaptation budget — and the budget is part of the claim.</p>
-<h3>Theorem &amp; proof</h3>
+<h3>Technical depth — optional · theorem &amp; proof</h3>
 <p><strong>Corollary (attacks are one-sided).</strong> For any $\mathcal{T}' \subseteq \mathcal{T}$: $\sup_{\tau\in\mathcal{T}'} B(\tau(\theta_u)) \le \sup_{\tau\in\mathcal{T}} B(\tau(\theta_u))$. Hence a successful relearning attack (some tried $\tau$ pushes $B$ above $\varepsilon$) <em>refutes</em> deletion, while an unsuccessful one establishes nothing — the attacker's tries are a subset of $\mathcal{T}$.</p>
 <p><strong>Proof.</strong> A supremum over a subset is at most the supremum over the set. $\blacksquare$ <em>(derivation: course notes)</em></p>
 <p>The same asymmetry as cryptanalysis: attacks certify weakness, never strength.</p>
+<h3>Case background · Yoon, Hong, Jeung, No 2026 (the slide's figure)</h3>
+<p><strong>Deletion target.</strong> TOFU forget sets (the main analysis), plus WMDP, "Who's Harry Potter", and RWKU targets in the motivating experiments; unlearned with gradient ascent, NPO, and SCRUB.</p>
+<p><strong>Model and data.</strong> The public TOFU-fine-tuned Llama-2-7b-chat checkpoint, unlearned by the authors (a Phi model in the appendix). Three relearning sets: the target set itself, a topically relevant set sharing entities with the target, and a syntactically similar set that preserves surface form with no topical overlap; syntactic similarity is measured by normalized Levenshtein distance.</p>
+<p><strong>Evaluation benchmark.</strong> Representation similarity and gradient similarity between each relearning corpus and the target, and relearn success rate after fine-tuning on each corpus (Fig. 5 on the slide).</p>
+<p><strong>Reported success.</strong> Across GA, NPO, and SCRUB, the syntactically similar set shows substantially higher representation and gradient similarity to the target than the topically relevant set, and a higher relearn success rate. The authors' reading: sentence structure, not subject matter, drives the snap-back; their mitigation, paraphrasing forget queries into heterogeneous structures before unlearning ("syntactic diversification"), is reported to suppress benign relearning and ease the forgetting–utility trade-off. Authors' own runs.</p>
+<p><strong>Verification attack.</strong> This paper is the attack; it extends benign relearning (next entry) by isolating syntax as the driver.</p>
+<p><strong>What can and cannot be claimed.</strong> Can: relearning does not need topical data, so "the attacker had no related text" is not a defense. Cannot: that syntax is the only driver, or that the proposed mitigation is robust to attacks not tested; both are the authors' hypotheses beyond the measured result.</p>
+<p><strong>Follow-up status (as of 2026-09).</strong> ICLR 2026; a Yonsei-coauthored paper.</p>
+<h3>References</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2602.03379">Yoon, Hong, Jeung, No, "Rethinking Benign Relearning: Syntax as the Hidden Driver of Unlearning Failures", ICLR 2026 (arXiv:2602.03379)</a> — Fig. 5.</li>
+</ul>
 </div>
 </article>
 
@@ -688,8 +812,15 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>Hu and coauthors ran exactly this test: unlearn a book, then fine-tune on harmless related text — even model-generated summaries — that never contains the forgotten passages. The verbatim memorization comes back. The knowledge was obfuscated, not removed.</p>
 <p><span class="kt">Key takeaway:</span> Benign data is enough to jog the memory of an "unlearned" model.</p>
 <div class="detail">
-<h3>Background &amp; further reading</h3>
-<p>Hu, Fu, Wu, Smith (ICLR 2025) call this <strong>benign relearning</strong>: the relearning corpus is public and legal and contains none of the original forget-set tokens (e.g. model-generated summaries of the unlearned book), the budget is a handful of fine-tuning steps — well inside any realistic adaptation class $\mathcal{T}$ — and yet forget-set performance, including verbatim memorization, returns for the methods tested. By the corollary of the previous entry this <em>refutes</em> deletion for those methods: the knowledge was dormant behind a gate, not absent. The deck's pipeline figure is their Figure 2 (left).</p>
+<h3>Case background · Hu, Fu, Wu, Smith 2025</h3>
+<p><strong>Deletion target.</strong> Three targets: the TOFU forget05 split (fictitious authors), the Harry Potter series (following Eldan and Russinovich), and WMDP hazardous knowledge.</p>
+<p><strong>Model and data.</strong> Phi-1.5 for TOFU; Llama-2-7b fine-tuned on Harry Potter text, question–answer pairs, and fan discussion for the Harry Potter case; gradient ascent as the main unlearning baseline, with other gradient-based methods in the appendix. The relearning corpus is <em>benign</em>: public text, or model-generated summaries, that contains none of the forget-set passages and, in the Harry Potter case, not even the name being tested.</p>
+<p><strong>Evaluation benchmark.</strong> Whether the unlearned model, after a handful of fine-tuning steps on the benign corpus, again produces the forgotten keywords or verbatim passages (attack success rate).</p>
+<p><strong>Reported success.</strong> Forget-set performance, including verbatim memorization, returns for the methods tested, from a relearning set that never contained the forgotten text. Authors' own runs. The deck's pipeline figure is their Figure 2 (left).</p>
+<p><strong>Verification attack.</strong> This paper is the attack. The budget, a few steps on public data, is inside any realistic adaptation class $\mathcal{T}$, so by the corollary of the previous entry the result <em>refutes</em> deletion for those methods.</p>
+<p><strong>What can and cannot be claimed.</strong> Can: for the tested methods and targets, the knowledge was dormant behind a gate, not absent; the authors' title word is "obfuscating". Cannot: that every unlearning method fails this way; untested methods are simply untested.</p>
+<p><strong>Follow-up status (as of 2026-09).</strong> ICLR 2025. The syntax paper above refines the finding; the quantization paper below shows a no-attacker version of the same phenomenon.</p>
+<h3>References</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2406.13356">Hu, Fu, Wu, Smith, "Unlearning or Obfuscating? Jogging the Memory of Unlearned LLMs via Benign Relearning", ICLR 2025 (arXiv:2406.13356)</a> — the benign-relearning paper.</li>
 </ul>
@@ -702,10 +833,17 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p><span class="kt">Key takeaway:</span> If shipping a smaller model restores the knowledge, it was never removed.</p>
 <p><span class="kt">Slide figure:</span> Zhang et al., ICLR 2025, Fig. 1: a model that learned a Harry Potter passage reproduces it; after full-precision unlearning it no longer does; quantizing the unlearned model to 4 bits brings the verbatim reproduction back. Three rows, one storyline: the unlearning lived in weight changes smaller than the quantization step.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>A quantization map $Q_b$ (round each weight to $b$-bit precision) is deterministic, data-free, and routine deployment practice — so it belongs in any honest adaptation class $\mathcal{T}$. The finding is then a special case of the relearning corollary with $\tau = Q_4$: deletion must survive quantization, and it does not. The mechanism: utility-constrained unlearning makes <em>small</em> weight updates (large ones would damage the retain set), and updates smaller than the quantization step are rounded back to the original weights, resurrecting $\pi_{\mathrm{ref}}$'s behavior.</p>
-<h3>Background &amp; further reading</h3>
-<p>Zhang et al. (ICLR 2025) measure it: across unlearning methods with utility constraints, the unlearned model retains on average 21% of the intended-forgotten knowledge at full precision, rising to 83% after 4-bit quantization.</p>
+<h3>Case background · Zhang et al. 2025</h3>
+<p><strong>Deletion target.</strong> Forget sets on LLM unlearning benchmarks including a Harry Potter passage (the slide's Fig. 1).</p>
+<p><strong>Model and data.</strong> Open LLMs unlearned with several utility-constrained methods; then quantized with standard 4-bit (and other) schemes. No attacker data is involved.</p>
+<p><strong>Evaluation benchmark.</strong> Fraction of the intended-forgotten knowledge the model still exhibits, measured before and after quantization on the benchmark's own metrics.</p>
+<p><strong>Reported success.</strong> Averaged across the tested methods: 21% of the intended-forgotten knowledge retained at full precision, 83% after 4-bit quantization. Authors' own runs. The authors' explanation, which the evidence supports but does not uniquely prove: utility-constrained unlearning makes small weight updates, and updates smaller than the quantization step round back to the original weights.</p>
+<p><strong>Verification attack.</strong> Quantization is the "attack", and it is routine deployment practice, not an adversary. The authors also propose a quantization-robust unlearning variant; this note does not evaluate it.</p>
+<p><strong>What can and cannot be claimed.</strong> Can: for the tested methods, shipping a compressed copy restores most of the suppressed behavior, so the full-precision benchmark number overstated what was removed. Cannot: that quantization-robust methods are therefore removal; surviving one transformation is still one-sided evidence.</p>
+<p><strong>Follow-up status (as of 2026-09).</strong> ICLR 2025. The 21%/83% pair is the abstract's headline and is quoted on the slide as reported.</p>
+<h3>References</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2410.16454">Zhang, Wang, Li, Wu, Tang, Liu, He, Yin, Wang, "Catastrophic Failure of LLM Unlearning via Quantization", ICLR 2025 (arXiv:2410.16454)</a> — the 21% → 83% result.</li>
 </ul>
@@ -718,7 +856,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p><span class="kt">Key takeaway:</span> Suppressed is not the same as deleted.</p>
 <p><span class="kt">Slide figure:</span> Łucki et al., TMLR 2025, Fig. 1: a model with hazardous knowledge is unlearned into a model with unverified capabilities. Naive evaluations conclude the knowledge is completely removed; adversarial evaluations show it is only obfuscated, and the dotted return arrow says the original hazardous knowledge is still accessible. The slide's "dormant" is this figure's "obfuscated".</p>
 <div class="detail">
-<h3>Theorem &amp; proof</h3>
+<h3>Technical depth — optional · theorem &amp; proof</h3>
 <p><strong>Proposition (deletion is strictly stronger than suppression).</strong> If the identity map is in $\mathcal{T}$, deletion at level $(\varepsilon,\mathcal{T})$ implies suppression at level $\varepsilon$. The converse fails: for every $\varepsilon \gt 0$ there is a $\theta_u$ that suppresses at level $\varepsilon$ but fails deletion against a one-step adaptation class.</p>
 <p><strong>Proof.</strong> Forward: take $\tau = \mathrm{id}$ inside the supremum. Converse, by construction (<em>the gate</em>): release a model computing logits $f_{\theta_0}(x) - c\,g(x)$, where $\theta_0$ is the original model, $g$ a fixed feature that fires on forget prompts, and $c \ge 0$ a single trainable scalar. Choosing $c$ large makes $B(\theta_u) \le \varepsilon$: suppression holds. But $\theta_0$ is untouched — every original structure survives — and one gradient step on $c$ (with a suitable learning rate, driving $c$ back to $0$) restores $B \gg \varepsilon$. $\blacksquare$ <em>(derivation: course notes, as in the privacy-course deck)</em></p>
 <p>Suppression can be <em>one coordinate deep</em>, and by the blindness proposition no output metric reveals its depth. This pair of definitions — not any benchmark — is what "dormant, not deleted" means formally.</p>
@@ -736,8 +874,9 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>In LLMs, "unlearning" often just means the model refuses to answer. The knowledge is still in the weights; refusal is a behavior, not removal, and a relearning or jailbreak prompt can recover it.</p>
 <p><span class="kt">Key takeaway:</span> Refusing is not the same as forgetting.</p>
 <div class="detail">
-<h3>Background &amp; further reading</h3>
-<p>The Yonsei position paper (Yoon, Jun, No, ICML 2026 Position Paper Track) argues the term should be reserved for <em>dataset-defined deletion</em> — removing the training influence of a specified forget set so the model is approximately indistinguishable from retraining without it — and proposes honest names for everything else currently sold under the word: <em>output likelihood suppression</em> (GA, NPO and variants), <em>internal-representation obfuscation</em> (RMU, activation redirection), <em>knowledge editing</em> (targeted weight edits), <em>behavioral refusal</em> (refusal fine-tuning, guardrails), and <em>inference-time intervention</em> (decoding-time filters). The naming is a safety measure: one word lets a weak method borrow a strong word's guarantees, and "unlearned" gets read as "retraining-equivalent" in compliance settings where that guarantee was never established.</p>
+<h3>Case background · Yoon, Jun, No 2026</h3>
+<p>The Yonsei position paper (Yoon, Jun, No, ICML 2026 Position Paper Track) argues the term should be reserved for <em>dataset-defined deletion</em> — removing the training influence of a specified forget set so the model is approximately indistinguishable from retraining without it — and proposes honest names for everything else currently sold under the word: <em>output likelihood suppression</em> (GA, NPO and variants), <em>internal-representation obfuscation</em> (RMU, activation redirection), <em>knowledge editing</em> (targeted weight edits), <em>behavioral refusal</em> (refusal fine-tuning, guardrails), and <em>inference-time intervention</em> (decoding-time filters). The naming is a safety measure: one word lets a weak method borrow a strong word's guarantees, and "unlearned" gets read as "retraining-equivalent" in compliance settings where that guarantee was never established. <strong>Status (as of 2026-09).</strong> A position paper: it argues for a convention and reports no new experiments; the lecture's four-way taxonomy adopts its core distinction and simplifies the rest.</p>
+<h3>References</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2606.27379">Yoon, Jun, No, "Position: The Term 'Machine Unlearning' Is Overused in LLMs", ICML 2026 (arXiv:2606.27379)</a> — the position paper.</li>
 </ul>
@@ -749,8 +888,9 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>Two recent position papers question the framing itself. Cooper and coauthors argue that removing data is not the same as removing its effects, and that policy conversations conflate the two. The Yonsei position paper argues "unlearning" has become one word for many different technical targets — suppression, editing, refusal, removal — and each claim should be named precisely.</p>
 <p><span class="kt">Key takeaway:</span> Say precisely what was removed; "unlearned" alone promises too much.</p>
 <div class="detail">
-<h3>Background &amp; further reading</h3>
-<p>Cooper et al. (NeurIPS 2025, oral) write for the policy audience: deleting a training document does not delete the capability it taught (the concept survives in paraphrase and generalization); a legal right to erasure concerns a <em>data subject</em>, not a <em>model behavior</em>, so behavioral suppression does not discharge it; and suppressing an output is a content filter under another name. Together with the Yonsei paper (previous entry), the shared prescription: state the technical target — which set was deleted, which behavior was suppressed, under what adaptation budget — instead of the bare word.</p>
+<h3>Case background · Cooper et al. 2025</h3>
+<p>Cooper et al. (NeurIPS 2025) write for the policy audience: deleting a training document does not delete the capability it taught (the concept survives in paraphrase and generalization); a legal right to erasure concerns a <em>data subject</em>, not a <em>model behavior</em>, so behavioral suppression does not discharge it; and suppressing an output is a content filter under another name. Together with the Yonsei paper (previous entry), the shared prescription: state the technical target — which set was deleted, which behavior was suppressed, under what adaptation budget — instead of the bare word. <strong>What the paper is and is not.</strong> A position paper with a literature survey (its Fig. 2 publication count and Fig. 3 pipeline diagram are on this deck); it reports no new attacks. Its legal reading, that behavioral suppression does not by itself discharge a data-subject right, is the authors' argument, consistent with the statutory texts in the "Law Says Delete" entry but not a judicial finding. <strong>Status (as of 2026-09).</strong> Published at NeurIPS 2025.</p>
+<h3>References</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2412.06966">Cooper, Choquette-Choo, Bogen, et al., "Machine Unlearning Doesn't Do What You Think: Lessons for Generative AI Policy and Research", NeurIPS 2025 (arXiv:2412.06966)</a>.</li>
 <li><a href="https://arxiv.org/abs/2606.27379">Yoon, Jun, No, ICML 2026 (arXiv:2606.27379)</a>.</li>
@@ -760,10 +900,10 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>What Guarantee Holds?</h2>
-<p>Be precise about strength: refusing means it won't answer one prompt, suppressed means it is hard to elicit but still present, and removed means provably gone like retraining. Most LLM methods reach only suppressed.</p>
-<p><span class="kt">Key takeaway:</span> Distinguish refuses, suppressed, and removed.</p>
+<p>Be precise about strength, and map the ladder onto the taxonomy. Refuses is output filtering: it will not answer the tested prompt. Suppressed is knowledge suppression: hard to elicit, still present. Removed is data removal: matches retraining, shown by a certificate or an audit. On the evidence so far, most LLM methods reach suppressed; the papers that report "removed" without a retrain comparison have shown the weaker thing.</p>
+<p><span class="kt">Key takeaway:</span> Refuses, suppressed, removed: three rungs, three kinds of evidence, and most reported results sit on the middle one.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>The slide's ladder, in the vocabulary of Section 05: <strong>refuses</strong> — $B$ is small on the tested prompt distribution only (no claim off-distribution); <strong>suppressed</strong> — $B(\theta_u) \le \varepsilon$ (the level-$\varepsilon$ suppression definition, with no adaptation budget); <strong>removed</strong> — deletion at level $(\varepsilon,\mathcal{T})$ for a substantive $\mathcal{T}$, or, strongest of all, an $(\varepsilon,\delta)$ certificate against the retrain reference (Section 02). Each rung is strictly stronger than the last: the gate construction separates suppressed from removed, and prompt-relativity (the WMDP corollary) separates refuses from suppressed. "Most LLM methods reach only suppressed" is the empirical content of the relearning and quantization entries.</p>
 </div>
 </article>
@@ -774,10 +914,17 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p><span class="kt">Key takeaway:</span> Robust forgetting must withstand active attempts to recover the knowledge.</p>
 <p><span class="kt">Slide figure:</span> Łucki et al., TMLR 2025, Fig. 2: WMDP-Bio accuracy of RMU, DPO, and NPO unlearned models after fine-tuning on 0 to 1000 samples drawn from forget, retain, or Wikitext data, against the no-unlearning baseline. All curves climb back toward the baseline; RMU recovers most of the way with 5 to 10 samples, even from unrelated Wikitext. That is the "10 unrelated examples" number on the slide.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p><strong>Robust unlearning</strong> is deletion at level $(\varepsilon,\mathcal{T})$ for an adversarially rich $\mathcal{T}$: jailbreak prompting, adaptive fine-tuning, activation-space edits. By the one-sidedness corollary, robustness can only be <em>refuted</em> by attacks, never established by surviving a fixed battery — so the research program is escalating red-teaming plus, eventually, certified statements.</p>
-<h3>Background &amp; further reading</h3>
-<p>Łucki et al. (TMLR) supply the slide's number: carefully applied jailbreaks already bypass unlearning previously reported jailbreak-resistant, and adaptive methods — <em>fine-tuning on 10 unrelated examples</em>, or removing specific directions in activation space — recover most of the hazardous capabilities that RMU had removed, challenging the claimed advantage of unlearning over ordinary safety training.</p>
+<h3>Case background · Łucki et al. (TMLR)</h3>
+<p><strong>Deletion target.</strong> WMDP hazardous knowledge, as suppressed by RMU, NPO, and DPO.</p>
+<p><strong>Model and data.</strong> Zephyr-7B-beta: the publicly released RMU model from the WMDP authors, plus NPO and DPO versions the authors fine-tuned themselves on the WMDP corpora. Comparison baseline: the same model with safety training but no unlearning.</p>
+<p><strong>Evaluation benchmark.</strong> WMDP-Bio accuracy after each intervention: jailbreak prompts, logit-lens decoding of intermediate layers, removal of specific activation-space directions, and fine-tuning on samples from the retain set, which is disjoint from the evaluated knowledge (Fig. 2 on the slide; 10 to 1,000 samples).</p>
+<p><strong>Reported success.</strong> Fine-tuning on 10 retain-set samples recovers most of the hazardous accuracy (61.6% WMDP-Bio for RMU, with MMLU down by under 2 points), and 1,000 samples recovers it fully for all three methods; removing specific activation directions has a similar effect; correct answers can be decoded from an intermediate layer without any fine-tuning; jailbreaks previously reported as ineffective against unlearning work when applied carefully. Authors' own runs.</p>
+<p><strong>Verification attack.</strong> This paper is the attack, and it is the independent test of the RMU result in Section 04.</p>
+<p><strong>What can and cannot be claimed.</strong> Can: for RMU on Zephyr-7B, the benchmark drop was suppression, reversible with a small budget; the claimed advantage of unlearning over ordinary safety training is not supported for these methods. Cannot: that no method can be robust; the paper tests three.</p>
+<p><strong>Follow-up status (as of 2026-09).</strong> Published in TMLR. The "10 unrelated examples" number is from the abstract and Section 1 of the paper and is quoted on the slide as reported.</p>
+<h3>References</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2409.18025">Łucki, Wei, Huang, Henderson, Tramèr, Rando, "An Adversarial Perspective on Machine Unlearning for AI Safety", TMLR (arXiv:2409.18025)</a> — the ten-example recovery result.</li>
 </ul>
@@ -790,7 +937,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p><span class="kt">Key takeaway:</span> Without standards, every method can claim success.</p>
 <p><span class="kt">Slide figure:</span> Shi et al., MUSE, ICLR 2025, Fig. 5: utility preservation on the retain set versus knowledge memorization on the forget set, for eight unlearning methods on BBC News. Retraining sits in the desired corner (low memorization, high utility); most methods lie on a no-free-lunch band trading one for the other, and several fall into the utility-loss zone. A single number would have hidden this.</p>
 <div class="detail">
-<h3>Background &amp; further reading</h3>
+<h3>References</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2401.06121">TOFU (arXiv:2401.06121)</a> — fictitious authors; the only suite here with a true retrained reference, but its headline score is a $p$-value (see the TOFU entry's theorem).</li>
 <li><a href="https://arxiv.org/abs/2403.03218">WMDP (arXiv:2403.03218)</a> — hazardous-knowledge accuracy; prompt-relative by the corollary above.</li>
@@ -802,11 +949,11 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 
 <article>
 <h2>Unlearning Meets Privacy</h2>
-<p>Two answers to the same deletion request: differential privacy limits each point's influence up front so little is left to delete, while unlearning removes influence after the fact, on request.</p>
-<p><span class="kt">Key takeaway:</span> DP is prevention; unlearning is cure.</p>
+<p>Two answers to the same deletion request. Differential privacy limits an example's influence before release, so little is left to delete. Unlearning tries to remove influence afterward, on request. The figure adds a twist: remove the most exposed records and retrain, and the next layer of records becomes more exposed than predicted. Deletion and privacy interact.</p>
+<p><span class="kt">Key takeaway:</span> DP is prevention; unlearning is cure; and deleting the outer layer exposes the next.</p>
 <p><span class="kt">Slide figure:</span> Carlini et al., "The Privacy Onion Effect: Memorization is Relative", NeurIPS 2022, Fig. 1: membership-inference ROC curves on CIFAR-10 and CIFAR-100 (log scale). After the most vulnerable examples are removed and the model retrained, the remaining data (Reality) is more exposed than the Ideal prediction, sitting between Baseline and Ideal. Deleting the outer layer exposes the next one: unlearning and privacy interact, and not in the intuitive direction.</p>
 <div class="detail">
-<h3>Theorem &amp; proof</h3>
+<h3>Technical depth — optional · theorem &amp; proof</h3>
 <p><strong>Proposition (DP gives certified unlearning for free).</strong> If $\mathcal{A}$ is $(\varepsilon,\delta)$-differentially private with respect to remove-one adjacency, then the pair $(\mathcal{A}, \mathcal{U}_{\mathrm{id}})$, where $\mathcal{U}_{\mathrm{id}}$ <em>does nothing</em> and returns $\mathcal{A}(D)$ unchanged, is $(\varepsilon,\delta)$-certified.</p>
 <p><strong>Proof.</strong> $D$ and $D\setminus\{z\}$ are adjacent, so DP gives, for every measurable $S$, both $\Pr[\mathcal{A}(D)\in S] \le e^{\varepsilon}\Pr[\mathcal{A}(D\setminus\{z\})\in S] + \delta$ and the reverse. The law of $\mathcal{U}_{\mathrm{id}}(D,z,\mathcal{A}(D))$ <em>is</em> the law of $\mathcal{A}(D)$, so both defining inequalities of certification hold. $\blacksquare$ <em>(derivation: course notes, as in the privacy-course deck)</em></p>
 <p><strong>Why bother with unlearning, then? The noise calculus.</strong> Both routes end by adding Gaussian noise $\mathcal{N}(0,\sigma^2 I)$ to the weights, with $\sigma \ge \Delta\sqrt{2\ln(1.25/\delta)}/\varepsilon$ where $\Delta$ bounds how far apart the two things being made indistinguishable can sit. For DP, $\Delta$ is the sensitivity of the argmin to swapping one point: under A1–A2, $\lVert\theta_{-z} - \theta_{-z'}\rVert \le \frac{2G}{\lambda n}$ (triangle inequality via Lemma 1 of the influence entry, applied twice). For certified unlearning after a Newton step, $\Delta$ is the Newton residual $\frac{MG^2}{2\lambda^3 n^2}$. So</p>
@@ -815,7 +962,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p><strong>Theorem (deletion capacity; Sekhari, Acharya, Kamath, Suresh, NeurIPS 2021, Thm. 2 — statement only).</strong> Define the deletion capacity $m_{\varepsilon,\delta}(d,n)$ as the largest number of deletions after which excess population risk stays below $0.01$. For convex, Lipschitz, Hessian-Lipschitz losses there is an $(\varepsilon,\delta)$-unlearning pair achieving</p>
 <p>$$m_{\varepsilon,\delta}(d,n) \;\ge\; c\,\frac{n\sqrt{\varepsilon}}{\big(d\,\log(1/\delta)\big)^{1/4}},$$</p>
 <p>with an unlearner that stores $O(d^2)$ statistics and never the data. Proof in the paper (the course's privacy deck gives the budget-argument sketch: the Newton residual after $m$ deletions grows like $m^2/n^2$, hiding it costs noise, and noise in $d$ dimensions costs risk $\propto \sigma\sqrt{d}$; setting the total constant and solving for $m$ puts $\sqrt d$ under a fourth root).</p>
-<h3>Background &amp; further reading</h3>
+<h3>References</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2103.03279">Sekhari et al., NeurIPS 2021 (arXiv:2103.03279)</a> — deletion capacity, and the DP-baseline comparison ($n/\sqrt d$ deletions via DP against $n/d^{1/4}$ via unlearning).</li>
 <li><a href="https://arxiv.org/abs/1911.03030">Guo et al., ICML 2020 (arXiv:1911.03030)</a> — the certified-removal noise calibration.</li>
@@ -828,28 +975,47 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>The frontier is wide open: cheap exact unlearning for large models, a certificate that deletion truly worked, forgetting that resists relearning, and forgetting without harming the retain set.</p>
 <p><span class="kt">Key takeaway:</span> The hard guarantees remain unsolved.</p>
 <div class="detail">
-<h3>Definitions</h3>
+<h3>Technical depth — optional · definitions</h3>
 <p>Each wish, in this lecture's formal vocabulary: (1) exact unlearning without SISA's pre-training restructuring; (2) a <em>verifiable certificate</em> — note the tension with the blindness proposition: any certificate must be about weights or training provenance, not outputs; (3) deletion at level $(\varepsilon,\mathcal{T})$ for realistic adaptation classes, which by one-sidedness cannot be established by surviving attacks alone; (4) forgetting whose utility clause holds against the retrain reference. Underneath all four sits the unit-of-deletion question: a row, a fact, a capability? Until the unit is named, an LLM "unlearning" claim is not underpowered — it is ill-posed.</p>
 </div>
 </article>
 
 <article>
 <h2>Where to Go Deeper</h2>
-<p>The rigorous treatment covers influence-function derivations, the SISA cost analysis, and the $(\varepsilon,\delta)$ unlearning guarantee in full detail.</p>
+<p><em>Optional depth — skipped on the 90-minute core path (see the list under Contents); the script below is for the full session or for reading.</em></p>
+<p>The rigorous treatment covers the formal goals side by side, influence-function derivations, the SISA cost analysis, and the $(\varepsilon,\delta)$ unlearning guarantee in full detail.</p>
 <p><span class="kt">Key takeaway:</span> The formal version sits behind today's intuitions.</p>
 <div class="detail">
-<h3>Background &amp; further reading</h3>
+<h3>References</h3>
 <ul>
-<li><a href="lec05tech.html">Lecture 5 technical supplement</a> — the $(\varepsilon,\delta)$ definition, influence formula, Hessian obstacle, gradient ascent, and SISA cost model as slides.</li>
+<li><a href="lec05tech.html">Lecture 5 technical supplement</a> (12 slides) — slide 3 separates the formal goals (data removal, exact or certified, against a retrained reference; knowledge suppression, behavioral, no reference); slides 5–6 the $(\varepsilon,\delta)$ definition; 7–9 influence formula and Hessian obstacle; 10 gradient ascent; 11 SISA cost model with the slicing formula; each section carries the same category label as the main deck.</li>
 <li>The four primary papers to read in order: <a href="https://arxiv.org/abs/1912.03817">SISA (arXiv:1912.03817)</a>, <a href="https://arxiv.org/abs/1911.03030">certified removal (arXiv:1911.03030)</a>, <a href="https://arxiv.org/abs/2103.03279">deletion capacity (arXiv:2103.03279)</a>, <a href="https://arxiv.org/abs/2404.05868">NPO (arXiv:2404.05868)</a>.</li>
 </ul>
 </div>
 </article>
 
 <article>
+<h2>Practice: Boardroom Questions</h2>
+<p>Two minutes. The frame is the same as in the earlier lectures: what happened, what property failed, who could act, what would have helped. Before you sign off on an unlearning claim: what is the deletion target, a row, a document, a person, or a concept? Against which retraining baseline was it measured, if any? Is output suppression being described as data removal? To the vendor: does the result hold after paraphrase, benign relearning, and quantization? How were retain-set utility and collateral damage measured, and on what? If time allows, run one case through the frame; otherwise assign it.</p>
+<p><span class="kt">Key takeaway:</span> Five questions separate a defensible unlearning claim from a benchmark headline.</p>
+<p><span class="kt">Slide figure:</span> The four-box frame (What happened? → What property failed? → Who could act? → What would have helped?) and two cards, "Before you sign" (three questions) and "Ask the vendor" (two questions).</p>
+<div class="detail">
+<h3>Case background · model answers</h3>
+<ol>
+<li><strong>Deletion target?</strong> A row or a person's records is data removal and has a retrained reference in principle; a document or a concept is knowledge suppression and has none. Harry Potter and WMDP are concepts; TOFU and MUSE forget splits are rows. If the vendor cannot name the target, the claim has no type.</li>
+<li><strong>Which retraining baseline?</strong> TOFU and MUSE compare against a real retrain; WMDP and the Harry Potter demo do not, because none exists at pretraining scale. A "removal" number with no baseline is a suppression number.</li>
+<li><strong>Suppression as removal?</strong> RMU on Zephyr-7B moved WMDP to chance (reported) and was recovered with 10 unrelated fine-tuning examples (reported). Both are true; only the second tells you which rung the method reached. The position papers (Cooper; Yoon, Jun, No) exist because this conflation is common.</li>
+<li><strong>Paraphrase, relearning, quantization?</strong> Hu et al.: benign relearning restores verbatim memorization. Yoon et al.: syntactically similar unrelated text suffices. Zhang et al.: 4-bit quantization takes retained knowledge from 21% to 83% (reported averages). A claim that survives none of these was measured on the day of the demo only.</li>
+<li><strong>Utility and collateral damage?</strong> The retain set is the right reference, not the original model: some loss relative to the original is correct (the retrained model never saw the forget set either). Ask which retain set, which benchmarks, and whether sequential requests were tested (MUSE's sustainability axis).</li>
+</ol>
+<p><strong>The legal question, kept separate.</strong> None of the five questions asks whether the law requires any of this. The right to erasure is established; whether it reaches weights is open (the "Law Says Delete" entry). A vendor who answers the five questions well has made a defensible technical claim, not a compliance determination, and vice versa.</p>
+</div>
+</article>
+
+<article>
 <h2>Key Takeaways</h2>
-<p>Deleting a row leaves traces in the weights; the gold standard is retraining without the point; SISA is exact and cheap but reshapes training; and LLM unlearning often suppresses rather than removes.</p>
-<p><span class="kt">Key takeaway:</span> Always ask whether the model refused, suppressed, or truly removed the knowledge.</p>
+<p>Training can leave information about particular examples in the weights. The gold standard is retraining without the point, and SISA makes that exact and cheaper. Four targets: data removal, knowledge suppression, output filtering, access revocation. Reported benchmark success is not verified forgetting; probe with relearning, quantization, and membership tests. And the sentence to leave with: not answering is observable, not knowing is a much stronger claim.</p>
+<p><span class="kt">Key takeaway:</span> Not answering is observable. Not knowing is a much stronger claim.</p>
 </article>
 
 <article>

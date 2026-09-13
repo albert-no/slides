@@ -145,7 +145,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Diffusion-LLM safety (A2D) | `talks/kics260521dllm/kics260521dllm.html:694` |
 | dgMARK (diffusion-LLM watermarking, ICML 2026) | `talks/kics260521dllm/kics260521dllm.html:707` |
 | Reversal curse in MDMs | `talks/kics260521dllm/kics260521dllm.html:720` |
-| Threat-model framing (knowledge × timing), trust dimensions | `courses/trustworthy-ai/lec01-introduction.html:333, :296` |
+| Threat-model framing (knowledge × timing), trust dimensions | `courses/trustworthy-ai/lec01-introduction.html:887, :698` |
 | $(\varepsilon,\delta)$-DP intuition (undergrad) / formal | `lec02-privacy-dp.html:561` · formal in `lec02tech.html` |
 | Statistical indistinguishability (heights example, intuition) | `courses/trustworthy-ai/lec02-privacy-dp.html:706` |
 | DP-SGD intuition (clip + noise) / formal algorithm | `lec02-privacy-dp.html:962` · formal in `lec02tech.html` |

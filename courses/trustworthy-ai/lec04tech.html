@@ -61,6 +61,7 @@
     <h3>$k$-extractable</h3>
     <p>A string $s$ is <strong>$k$-extractable</strong> from model $f$ if there is a $k$-token prefix $p$ in the training data such that greedy decoding from $p$ reproduces $s$ exactly.</p>
   </div>
+  <p><strong>Intuition:</strong> show the model the first $k$ words of a passage it was trained on; if its most likely continuation is the rest of the passage word for word, the passage is $k$-extractable. Smaller $k$ means a shorter hint sufficed, so the passage is memorized more strongly.</p>
   <div class="math-block">$$f_{\text{greedy}}(p) = s, \qquad |p| = k.$$</div>
   <div class="cite cite-left">Carlini et al., "Quantifying Memorization Across Neural Language Models", ICLR 2023.</div>
 </div>
@@ -87,7 +88,8 @@
     <div class="def-card"><h3>$k$-discoverable</h3><p>$f_{\text{greedy}}(p) = s$ for the <strong>true</strong> $k$-token training prefix $p$ of $s$. Needs the training data; measures what is stored.</p></div>
     <div class="def-card"><h3>Extractable</h3><p>$\exists$ a prompt $p'$, built <strong>without</strong> training data, with $f(p') = s$. Measures what an outsider can pull out.</p></div>
   </div>
-  <p class="muted">Discoverable is the audit-time proxy; extractable is the deployed risk. Empirically most extracted strings are also discoverable, but neither set contains the other.</p>
+  <p><strong>Intuition:</strong> two different games. Discoverable: the auditor already knows the record and asks whether it is stored and reachable from its own context. Extractable: the attacker does not know the record and asks whether it can be pulled out blind.</p>
+  <p class="muted">Not one set inside the other: a stored record can resist blind search, and a blind attack can surface text the true-prefix test never tried. Nasr et al. report most, not all, of their extracted strings were also discoverable.</p>
   <div class="cite cite-left">Nasr et al., "Scalable Extraction of Training Data from (Production) Language Models", 2023, Defs. 1–2.</div>
 </div>
 
@@ -151,7 +153,7 @@
 <div class="slide">
   <h2>Near-Verbatim Extraction</h2>
   <div class="divider"></div>
-  <p>Exact match is one point in a ball. Count the whole ball.</p>
+  <p><strong>Intuition:</strong> exact match is one point. Count the whole ball of strings within $\varepsilon$ token edits of $s$; $p_\varepsilon$ is the probability of landing anywhere in it, so a one-word slip still counts.</p>
   <div class="math-block">$$B_\varepsilon(s) = \{\hat s : \mathrm{Lev}(\hat s, s) \le \varepsilon\}, \qquad p_\varepsilon(s \mid p) = \sum_{\hat s \in B_\varepsilon(s)} \Pr_f[\hat s \mid p].$$</div>
   <ul class="arrow">
     <li>$\varepsilon = 0$ recovers the exact-match probability; $p_\varepsilon$ is non-decreasing in $\varepsilon$</li>
@@ -165,8 +167,8 @@
 <div class="slide">
   <h2>$k$-CBS: A Deterministic Lower Bound</h2>
   <div class="divider"></div>
-  <p>Beam search that only visits strings the decoding scheme could emit and that can still finish inside the ball.</p>
-  <div class="ta-algo" style="max-width:940px; margin:16px auto;">
+  <p><strong>Intuition:</strong> instead of sampling and hoping to hit the ball, walk the model's likeliest paths, drop any that can no longer get back within $\varepsilon$ edits of $s$, and add up the exact probability of those that finish inside. Whatever the walk misses only makes the true value larger.</p>
+  <div class="ta-algo" style="max-width:940px; margin:8px auto;">
     <ol>
       <li>Expand each beam only with tokens in the top-$k$ support of the decoding scheme.</li>
       <li>Prune any partial string that can no longer reach $B_\varepsilon(s)$ within the edit budget.</li>
@@ -174,14 +176,14 @@
       <li>$\hat p_\varepsilon = \sum_{\text{visited}} \Pr_f[\hat s \mid p] \;\le\; p_\varepsilon(s \mid p)$.</li>
     </ol>
   </div>
-  <p class="muted">Every visited sequence is a real term of the sum, so the bound is deterministic. Cost about $20$ decodes against $\sim 10^5$ samples. OLMo 2 32B on Wikipedia: $1.4\%$ at $\varepsilon = 0$ to $2.6\%$ at $\varepsilon = 5$.</p>
+  <p class="muted">About $20$ decodes against $\sim 10^5$ samples. OLMo 2 32B, Wikipedia: $1.4\%$ at $\varepsilon = 0$, $2.6\%$ at $\varepsilon = 5$.</p>
 </div>
 
 <!-- 13. Control group -->
 <div class="slide">
   <h2>The Non-Member Baseline</h2>
   <div class="divider"></div>
-  <p>Predictable text is completed whether or not it was trained on. Subtract that floor.</p>
+  <p><strong>Intuition:</strong> predictable text is completed whether or not it was trained on. Run the same test on text written after the cutoff; that rate is guessing, and only the excess above it is evidence of memory.</p>
   <div class="math-block">$$R(D) = \frac{1}{|D|}\sum_{(p,s) \in D} \mathbf 1[\,\mathrm{score}(p,s) \ge t\,], \qquad \text{excess} = R(D_{\text{train}}) - R(D_{\text{ctrl}}).$$</div>
   <ul class="arrow">
     <li>$D_{\text{ctrl}}$ = matched non-members: same source and format, written after the cutoff</li>

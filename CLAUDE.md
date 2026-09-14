@@ -64,9 +64,12 @@ scripts/
   doc-index-lint.py verify/regenerate the section index in the reference docs
 OUTLINE.md       per-folder content index (root / topic / leaf)
 backup/          dated snapshots of docs before major rewrites
+log/             per-PR verbatim transcripts of the slides ↔ slides-review agent discussion (`YYYY-MM-DD-<pr-summary>.md`)
 ```
 
 Only authoring source and image assets are committed. `*.standalone.html` is a build artifact.
+
+**Agent discussion log.** Any PR worked with the `slides-review` agent carries a `log/YYYY-MM-DD-<pr-summary>.md` file holding every message sent and received between the two agents, verbatim and in order with KST timestamps. Add it on the PR branch and link it from the PR body.
 
 ## Editing workflow
 

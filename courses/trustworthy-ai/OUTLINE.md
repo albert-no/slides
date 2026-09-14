@@ -637,6 +637,8 @@ Hayes, Ahmed, Cooper near-verbatim, Cooper first principles, Morris; NYT and Bar
 settlement / status; five-distinctions list under Degrees of Copying; Boardroom model answers. Tech: slide 5 two-games wording;
 "Intuition:" lines on slides 3, 11, 12, 13. Lint ok (1 pre-existing dash warning); 65/15 pages rendered, edited slides checked at 60 dpi.
 
+**2026-09-14 Albert page comments (PR #31, post-approval):** slide 6 "A Working Definition" — bottom `.muted` line overlapped the `.cite-left` footnote; fixed by layout only (prefix/suffix cards 0.9fr/1.1fr so the suffix quote wraps to four lines, card padding 14px, grid gap 10px, muted line margin 10px) plus a shorter closing sentence ("Model behavior, not yet a legal claim."). 65 slides unchanged; page 6 re-rendered at 60 dpi.
+
 **2026-09-11 Cooper frontier + page-comment pass (60→62, PR #30):** per Albert's Slack comments — "A Working Definition"
 image (Cooper Fig 1, unreadable at slide scale) redrawn as three HTML cards (Gatsby prefix → Llama 1 30B → true suffix);
 "From Canary to the Wild" SVG redrawn at 960 wide with 21–27 px type; Carlini Fig 2(a,b) re-cropped at 250 dpi (panels a,b only);
@@ -832,6 +834,8 @@ follow-up status as of 2026-09) for Eldan, TOFU, WMDP, RMU, MUSE, IDI, Yoon synt
 Łucki, Cooper, Yoon/Jun/No; legal brief with statute text + EDPB Opinion 28/2024; MUSE author list
 fixed. `lec05tech.html` 11→12 sl: Formal Goals, Separated (slide 3) + category badges + SISA
 variables aligned to note (S shards, R slices) + cost formula.
+
+**2026-09-14 Albert page comments (PR #31, post-approval):** slide 51 "Verification Is Hard" — probe diagram enlarged (grid 0.7fr/1.3fr, SVG viewBox 600×250 at up to 760 px wide, label type 22/19 units ≈ 26/23 px rendered, "?" 56, box 160×150); bullets and highlight unchanged. 70 slides unchanged; page 51 re-rendered at 60 dpi.
 
 **2026-09-05 figure pass (66→67):** every bullet-only content slide now carries a cited
 real figure or an inline SVG (18 new crops, 15 new SVGs; grid-3 card slides and the

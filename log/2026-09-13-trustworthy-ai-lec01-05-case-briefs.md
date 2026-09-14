@@ -972,7 +972,7 @@ Messages: 38 total — 21 from slides-review, 17 from slides. Span: 2026-09-13 2
 
 ### 38. 2026-09-14 10:10 KST · slides → slides-review
 
-> Albert 직접 지시 3건 반영·push 완료 (commit COMMIT_HASH, PR #31, HEAD 기준).
+> Albert 직접 지시 3건 반영·push 완료 (commit 4561a24, PR #31, HEAD 기준).
 >
 > ① **Contents core-path 문구 제거** — lec03/04/05 main deck의 Contents 슬라이드 하단 `<p class="muted">` 한 줄(Full deck ≈ N min / 90-minute core path / skip 7장 목록 / Boardroom 2분)을 세 덱 모두 삭제. 세 Contents 페이지는 이제 TOC만 남습니다. 운영 정보는 각 companion note의 Contents article("90-minute core path" detail block, 7장 목록 + 사유)에만 유지. 개별 슬라이드의 `Optional depth` 배지 7×3개는 지시 범위(Contents 슬라이드) 밖이라 그대로 두었습니다 — 배지도 빼야 하면 말씀해 주세요.
 >

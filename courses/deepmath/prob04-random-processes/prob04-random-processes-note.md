@@ -1112,19 +1112,21 @@ That is the principled answer to "how long must the forward chain run": long
 enough for $|\lambda_2|^N$ to be negligible. Each step multiplies the
 structured part of the distribution by $\lambda_2$.
 
-A concrete instance of data dissolving into noise, taken from the masked
-diffusion language model of Sahoo et al. [12]: a five-token sentence at
-$t = 0$; as $t$ runs to $1$, tokens are progressively replaced by a special
-MASK symbol until every position is masked; a denoiser $\theta$ points back
-down the chain, refilling masked tokens. Two honest caveats. Their forward
-kernel is the absorbing variant (D3PM's absorbing kernel [9]): a token jumps
-to the extra MASK state and stays there, so the limiting distribution is the
-point mass on the all-mask sequence rather than uniform, and the chain runs in
-continuous time $t \in [0, 1]$ with a masking schedule rather than in $N$
-discrete steps. The structure that matters for this section is identical (a
-fixed Markov kernel destroys the data distribution and the reverse kernels are
-learned), but the eigenvalue bound above is stated for the uniform kernel, not
-for theirs.
+A concrete instance of data dissolving into noise, taken from Schiff et al.
+[13] (as redrawn in the Kuleshov group's blog tutorial): the sentence "The cat
+sat on the mat" is corrupted left to right in two ways. In the top row each
+hit sends a token to a special MASK state and it stays there, until every
+position reads MASK; in the bottom row each hit replaces a token by a
+uniformly random word, until the sentence is gibberish. The bottom row is
+exactly this section's uniform kernel $P$ on the alphabet of words, so the
+eigenvalue bound above applies to it verbatim. The top row is the absorbing
+variant (D3PM's absorbing kernel [9]) used by current diffusion language
+models [12]: its limiting distribution is the point mass on the all-mask
+sequence rather than uniform, and in practice the chain runs in continuous
+time $t \in [0, 1]$ with a masking schedule rather than in $N$ discrete
+steps. The structure that matters for this section is identical in both rows
+(a fixed Markov kernel destroys the data distribution and the reverse kernels,
+the figure's dashed arrows, are learned).
 
 ### 9.3 What the denoiser is really approximating
 
@@ -1255,5 +1257,12 @@ teaser is cashed in with moment-generating-function tools.
 12. S. S. Sahoo, M. Arriola, Y. Schiff, A. Gokaslan, E. Marroquin, J. T. Chiu,
     A. Rush and V. Kuleshov, "Simple and Effective Masked Diffusion Language
     Models," NeurIPS 2024. arXiv:2406.07524 (https://arxiv.org/abs/2406.07524).
-    MDLM: absorbing-state discrete diffusion for text; the token-masking
-    example described in Section 9.2 is their Figure 1, left.
+    MDLM: absorbing-state discrete diffusion for text.
+13. Y. Schiff, S. S. Sahoo, H. Phung, G. Wang, S. Boshar, H. Dalla-Torre,
+    B. P. de Almeida, A. Rush, T. Pierrot and V. Kuleshov, "Simple Guidance
+    Mechanisms for Discrete Diffusion Models," ICLR 2025. arXiv:2412.10193
+    (https://arxiv.org/abs/2412.10193). The "cat sat on the mat" example in
+    Section 9.2 (absorbing vs. uniform forward chains) is their illustration
+    as redrawn in V. Kuleshov, M. Arriola, Y. Schiff and G. Wang, "How to
+    Build a Diffusion Language Model," Kuleshov Group blog, July 2026,
+    https://kuleshov-group.github.io/blog/blog/2026/how-to-build-a-diffusion-language-model/.

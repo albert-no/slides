@@ -186,34 +186,33 @@ of many draws → concentration).
 
 Companion: `prob04-random-processes/prob04-random-processes-note.html` — detailed
 definitions, expanded proofs, lemmas, references.
-Accessible edition: `prob04-random-processes/prob04-random-processes-note.md` — screen-reader Markdown edition of that note (1222 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
+Accessible edition: `prob04-random-processes/prob04-random-processes-note.md` — screen-reader Markdown edition of that note (1259 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
-| — | Title + TOC | 1–2 | prob04-random-processes/prob04-random-processes.html:32 |
-| 01 | Why Sequences? (LM / diffusion / random-walk cards, one snapshot not enough, settling preview, route map) | 3–7 | prob04-random-processes/prob04-random-processes.html:124 |
-| 02 | Random Processes (def, i.i.d. process, coin flips, "my na_e is Albert" text example, modeling spectrum) | 8–13 | prob04-random-processes/prob04-random-processes.html:216 |
-| 03 | Markov Processes (memory-one idea, random walk example :335, 1st-order def :374, chain-rule recall (prob03) :390, factorization proposition + proof :406, kth-order def :449, next-token models, refined spectrum) | 14–26 | prob04-random-processes/prob04-random-processes.html:301 |
-| 04 | Transition Matrices (prob-vector + matrix×vector reviews, P def :562, column sums, π_i def :591, Thm 1 arc, binary chain :658, three-state chain :728) | 27–43 | prob04-random-processes/prob04-random-processes.html:513 |
-| 05 | Evolution in Time (Thm 2 π_t = P^t π_0 + proof, numeric evolution table :815, convergence chart :832, "distribution that does not move?" teaser) | 44–49 | prob04-random-processes/prob04-random-processes.html:780 |
-| 06 | Stationary Processes (def :881, sliding-window picture, random-walk counterexample + fan-out, Markov vs. stationary axes, full spectrum) | 50–56 | prob04-random-processes/prob04-random-processes.html:873 |
-| 07 | Stationary Distributions (three-state worked stationary example :1025, pinned start fails :1099, Thm 3 existence :1115, assumptions in pictures, binary worked, π* def :1184, eigen reviews :1199, eigen computations by hand :1244, symmetric-P exercise + solution :1310, random surfer) | 57–77 | prob04-random-processes/prob04-random-processes.html:1017 |
-| 08 | Limiting Distributions (π_∞ def :1381, α=1 no-limit caveat, Thm 4 arc, rate via second eigenvalue :1451) | 78–86 | prob04-random-processes/prob04-random-processes.html:1373 |
-| 09 | Discrete Diffusion (destroy-then-rebuild, ε-noising matrix :1515, sanity checks, uniform limit, data-dissolves picture :1554, denoiser f_θ, backwards generation, why it works) | 87–95 | prob04-random-processes/prob04-random-processes.html:1492 |
-| — | Recap chain, running-examples recap, bridge to prob05, end slide | 96–99 | prob04-random-processes/prob04-random-processes.html:1646 |
+| — | Title + TOC | 1–2 | prob04-random-processes/prob04-random-processes.html:51 |
+| 01 | Why Sequences? (LM / diffusion / random-walk cards, one snapshot not enough, settling preview, route map) | 3–7 | prob04-random-processes/prob04-random-processes.html:143 |
+| 02 | Random Processes (def, i.i.d. process, coin flips, "my na_e is Albert" text example, modeling spectrum) | 8–13 | prob04-random-processes/prob04-random-processes.html:234 |
+| 03 | Markov Processes (memory-one idea, random walk example :353, 1st-order def :392, chain-rule recall (prob03) :408, factorization proposition + proof :424, kth-order def :467, next-token models, refined spectrum) | 14–26 | prob04-random-processes/prob04-random-processes.html:319 |
+| 04 | Transition Matrices (prob-vector + matrix×vector reviews, P def :580, column sums, π_i def :609, Thm 1 arc, binary chain :679, three-state chain :751) | 27–43 | prob04-random-processes/prob04-random-processes.html:531 |
+| 05 | Evolution in Time (Thm 2 π_t = P^t π_0 + proof, numeric evolution table :842, convergence chart :859, "distribution that does not move?" teaser) | 44–49 | prob04-random-processes/prob04-random-processes.html:807 |
+| 06 | Stationary Processes (def :908, sliding-window picture, random-walk counterexample + fan-out, Markov vs. stationary axes, full spectrum) | 50–56 | prob04-random-processes/prob04-random-processes.html:900 |
+| 07 | Stationary Distributions (three-state worked stationary example :1059, pinned start fails :1142, Thm 3 existence :1158, assumptions in pictures, binary worked, π* def :1229, eigen reviews :1244, eigen computations by hand :1287, symmetric-P exercise + solution :1353, random surfer) | 57–77 | prob04-random-processes/prob04-random-processes.html:1051 |
+| 08 | Limiting Distributions (π_∞ def :1433, α=1 no-limit caveat, Thm 4 arc, rate via second eigenvalue :1503) | 78–86 | prob04-random-processes/prob04-random-processes.html:1425 |
+| 09 | Discrete Diffusion (destroy-then-rebuild, ε-noising matrix :1567, sanity checks, uniform limit, data-dissolves picture :1606, denoiser f_θ, backwards generation, why it works) | 87–95 | prob04-random-processes/prob04-random-processes.html:1544 |
+| — | Recap chain, running-examples recap, bridge to prob05, end slide | 96–99 | prob04-random-processes/prob04-random-processes.html:1670 |
 
 Key theorems: **Prop.** Markov factorization P(x^n) = Π P(x_i|x_{i−1}) with proof
-(prob04-random-processes/prob04-random-processes.html:406); **Thm 1** one-step
+(prob04-random-processes/prob04-random-processes.html:424); **Thm 1** one-step
 evolution π_i = P π_{i−1}, full arc overview/proof/summary
-(prob04-random-processes/prob04-random-processes.html:604); **Thm 2** t-step
-evolution π_t = P^t π_0 (prob04-random-processes/prob04-random-processes.html:788);
+(prob04-random-processes/prob04-random-processes.html:622); **Thm 2** t-step
+evolution π_t = P^t π_0 (prob04-random-processes/prob04-random-processes.html:815);
 **Thm 3** existence of a stationary initial distribution under finite-state +
 irreducible + aperiodic, stated without proof as in the tex
-(prob04-random-processes/prob04-random-processes.html:1115); **Thm 4** limiting ⟹
+(prob04-random-processes/prob04-random-processes.html:1158); **Thm 4** limiting ⟹
 stationary, with limit-both-sides proof
-(prob04-random-processes/prob04-random-processes.html:1411).
-Figures: all diagrams inline SVG — binary/three-state chain graphs, sliding window,
-random-walk fan-out, modeling spectrum, noising pixel-grid sequence; the tex's
+(prob04-random-processes/prob04-random-processes.html:1463).
+Figures: diagrams are inline SVG with KaTeX labels overlaid as HTML spans (`.p4-fig`/`.fl`, pattern from prob03) — route map, memory-one strip, random-walk line, binary/three-state chain graphs, sliding window, random-walk fan-out, irreducible/aperiodic glosses, three-page random surfer (P and π* = (0.4, 0.2, 0.4) worked); modeling spectrum stays plain SVG. Real figure: `figs/mdlm-fig1-left.png` (Sahoo et al., MDLM, NeurIPS 2024, Fig. 1 left; cited on the slide and as note ref [12]) replaces the former noising pixel-grid sequence on the data-dissolves slide; the tex's
 scribe12-markovex.png and scribe12-distribution.png are redrawn as SVG (noted on
 the slides). Deviations from tex: the tex's duplicated/contradictory binary-chain
 conditionals (p(1|0)=α and p(1|0)=1−α, prob 1297/1391) fixed to flip-α / stay-(1−α);

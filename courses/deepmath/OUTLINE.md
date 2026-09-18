@@ -149,7 +149,7 @@ Accessible edition: `prob03-mutual-information/prob03-mutual-information-note.md
 | 05 | Data Processing (Thm 6 DPI II arc, Markov chains :1104, Thm 7 DPI III, layers only forget, cond. MI :1214, three-circle Venn caution :1244, XOR triple counterexample :1273, chain rule for I) | 62–83 | prob03-mutual-information/prob03-mutual-information.html:1040 |
 | 06 | Differential Entropy (densities, change of variables, KL for densities, bins SVG :1509, Thm 8 discretization, h def :1576, exhibits 1–3 (negative h, no label invariance, scaling), Gaussian h, Thm 9–12) | 84–111 | prob03-mutual-information/prob03-mutual-information.html:1383 |
 | 07 | Maximum Entropy (discrete recall, bounded-support exercise, variance budget, Thm 13 MaxEnt Gaussian full arc, why Gaussians are everywhere) | 112–124 | prob03-mutual-information/prob03-mutual-information.html:1791 |
-| — | Recap chain, DPI-family recap, bridge to prob04, end slide | 125–128 | prob03-mutual-information/prob03-mutual-information.html:1974 |
+| — | Recap chain, DPI-family recap, bridge to prob04, end slide | 125–128 | prob03-mutual-information/prob03-mutual-information.html:1968 |
 
 Key theorems: **Thm 1** additivity H(X,Y) = H(X) + H(Y) under independence
 (prob03-mutual-information/prob03-mutual-information.html:440); **Thm 2** chain rule
@@ -186,34 +186,33 @@ of many draws → concentration).
 
 Companion: `prob04-random-processes/prob04-random-processes-note.html` — detailed
 definitions, expanded proofs, lemmas, references.
-Accessible edition: `prob04-random-processes/prob04-random-processes-note.md` — screen-reader Markdown edition of that note (1222 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
+Accessible edition: `prob04-random-processes/prob04-random-processes-note.md` — screen-reader Markdown edition of that note (1268 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
-| — | Title + TOC | 1–2 | prob04-random-processes/prob04-random-processes.html:32 |
-| 01 | Why Sequences? (LM / diffusion / random-walk cards, one snapshot not enough, settling preview, route map) | 3–7 | prob04-random-processes/prob04-random-processes.html:124 |
-| 02 | Random Processes (def, i.i.d. process, coin flips, "my na_e is Albert" text example, modeling spectrum) | 8–13 | prob04-random-processes/prob04-random-processes.html:216 |
-| 03 | Markov Processes (memory-one idea, random walk example :335, 1st-order def :374, chain-rule recall (prob03) :390, factorization proposition + proof :406, kth-order def :449, next-token models, refined spectrum) | 14–26 | prob04-random-processes/prob04-random-processes.html:301 |
-| 04 | Transition Matrices (prob-vector + matrix×vector reviews, P def :562, column sums, π_i def :591, Thm 1 arc, binary chain :658, three-state chain :728) | 27–43 | prob04-random-processes/prob04-random-processes.html:513 |
-| 05 | Evolution in Time (Thm 2 π_t = P^t π_0 + proof, numeric evolution table :815, convergence chart :832, "distribution that does not move?" teaser) | 44–49 | prob04-random-processes/prob04-random-processes.html:780 |
-| 06 | Stationary Processes (def :881, sliding-window picture, random-walk counterexample + fan-out, Markov vs. stationary axes, full spectrum) | 50–56 | prob04-random-processes/prob04-random-processes.html:873 |
-| 07 | Stationary Distributions (three-state worked stationary example :1025, pinned start fails :1099, Thm 3 existence :1115, assumptions in pictures, binary worked, π* def :1184, eigen reviews :1199, eigen computations by hand :1244, symmetric-P exercise + solution :1310, random surfer) | 57–77 | prob04-random-processes/prob04-random-processes.html:1017 |
-| 08 | Limiting Distributions (π_∞ def :1381, α=1 no-limit caveat, Thm 4 arc, rate via second eigenvalue :1451) | 78–86 | prob04-random-processes/prob04-random-processes.html:1373 |
-| 09 | Discrete Diffusion (destroy-then-rebuild, ε-noising matrix :1515, sanity checks, uniform limit, data-dissolves picture :1554, denoiser f_θ, backwards generation, why it works) | 87–95 | prob04-random-processes/prob04-random-processes.html:1492 |
-| — | Recap chain, running-examples recap, bridge to prob05, end slide | 96–99 | prob04-random-processes/prob04-random-processes.html:1646 |
+| — | Title + TOC | 1–2 | prob04-random-processes/prob04-random-processes.html:51 |
+| 01 | Why Sequences? (LM / diffusion / random-walk cards, one snapshot not enough, settling preview, route map) | 3–7 | prob04-random-processes/prob04-random-processes.html:143 |
+| 02 | Random Processes (def, i.i.d. process, coin flips, "my na_e is Albert" text example, modeling spectrum) | 8–13 | prob04-random-processes/prob04-random-processes.html:234 |
+| 03 | Markov Processes (memory-one idea, random walk example :353, 1st-order def :392, chain-rule recall (prob03) :408, factorization proposition + proof :424, kth-order def :467, next-token models, refined spectrum) | 14–26 | prob04-random-processes/prob04-random-processes.html:319 |
+| 04 | Transition Matrices (prob-vector + matrix×vector reviews, P def :580, column sums, π_i def :609, Thm 1 arc, binary chain :679, three-state chain :751) | 27–43 | prob04-random-processes/prob04-random-processes.html:531 |
+| 05 | Evolution in Time (Thm 2 π_t = P^t π_0 + proof, numeric evolution table :842, convergence chart :859, "distribution that does not move?" teaser) | 44–49 | prob04-random-processes/prob04-random-processes.html:807 |
+| 06 | Stationary Processes (def :908, sliding-window picture, random-walk counterexample + fan-out, Markov vs. stationary axes, full spectrum) | 50–56 | prob04-random-processes/prob04-random-processes.html:900 |
+| 07 | Stationary Distributions (three-state worked stationary example :1059, pinned start fails :1142, Thm 3 existence :1158, assumptions in pictures, binary worked, π* def :1229, eigen reviews :1244, eigen computations by hand :1287, symmetric-P exercise + solution :1353, random surfer) | 57–77 | prob04-random-processes/prob04-random-processes.html:1051 |
+| 08 | Limiting Distributions (π_∞ def :1433, α=1 no-limit caveat, Thm 4 arc, rate via second eigenvalue :1503) | 78–86 | prob04-random-processes/prob04-random-processes.html:1425 |
+| 09 | Discrete Diffusion (destroy-then-rebuild, ε-noising matrix :1567, sanity checks, uniform limit, data-dissolves picture :1606, denoiser f_θ, backwards generation, why it works) | 87–95 | prob04-random-processes/prob04-random-processes.html:1544 |
+| — | Recap chain, running-examples recap, bridge to prob05, end slide | 96–99 | prob04-random-processes/prob04-random-processes.html:1664 |
 
 Key theorems: **Prop.** Markov factorization P(x^n) = Π P(x_i|x_{i−1}) with proof
-(prob04-random-processes/prob04-random-processes.html:406); **Thm 1** one-step
+(prob04-random-processes/prob04-random-processes.html:424); **Thm 1** one-step
 evolution π_i = P π_{i−1}, full arc overview/proof/summary
-(prob04-random-processes/prob04-random-processes.html:604); **Thm 2** t-step
-evolution π_t = P^t π_0 (prob04-random-processes/prob04-random-processes.html:788);
+(prob04-random-processes/prob04-random-processes.html:622); **Thm 2** t-step
+evolution π_t = P^t π_0 (prob04-random-processes/prob04-random-processes.html:815);
 **Thm 3** existence of a stationary initial distribution under finite-state +
 irreducible + aperiodic, stated without proof as in the tex
-(prob04-random-processes/prob04-random-processes.html:1115); **Thm 4** limiting ⟹
+(prob04-random-processes/prob04-random-processes.html:1158); **Thm 4** limiting ⟹
 stationary, with limit-both-sides proof
-(prob04-random-processes/prob04-random-processes.html:1411).
-Figures: all diagrams inline SVG — binary/three-state chain graphs, sliding window,
-random-walk fan-out, modeling spectrum, noising pixel-grid sequence; the tex's
+(prob04-random-processes/prob04-random-processes.html:1463).
+Figures: diagrams are inline SVG with KaTeX labels overlaid as HTML spans (`.p4-fig`/`.fl`, pattern from prob03) — route map, memory-one strip, random-walk line, binary/three-state chain graphs, sliding window, random-walk fan-out, irreducible/aperiodic glosses, three-page random surfer (P and π* = (0.4, 0.2, 0.4) worked); modeling spectrum stays plain SVG. Real figure: `figs/schiff-noise-processes.png` ("The cat sat on the mat" corrupted by absorbing vs. uniform kernels; Schiff et al., ICLR 2025, as redrawn in the Kuleshov Group blog 2026; cited on the slide and as note ref [13]) replaces the former noising pixel-grid sequence on the data-dissolves slide; the tex's
 scribe12-markovex.png and scribe12-distribution.png are redrawn as SVG (noted on
 the slides). Deviations from tex: the tex's duplicated/contradictory binary-chain
 conditionals (p(1|0)=α and p(1|0)=1−α, prob 1297/1391) fixed to flip-α / stay-(1−α);
@@ -412,7 +411,7 @@ Accessible edition: `prob08-gaussian/prob08-gaussian-note.md` — screen-reader 
 | 05 | Vector Means & Covariances (mean vector :772, covariance matrix :784, self-covariance :800, PSD exercise + solution :813, correlation coefficient :840) | 42–48 | prob08-gaussian/prob08-gaussian.html:763 |
 | 06 | The Properties Theorem (Thm 2 statement in three cards :861–:892, roadmap :908, part 1 affine :926, part 2 Cov=DD^T :957, part 3 marginals :988, part 4 density via change of variables :1028, part 5 MGF :1096, part 6 uncorrelated=independent :1141, part 7 conditionals via orthogonality :1211, conditional assembled :1345, Thm 1 finally proved :1360, Thm 2 recap :1374) | 49–85 | prob08-gaussian/prob08-gaussian.html:852 |
 | 07 | The Gaussian Channel (Y=X+Z setup + block SVG :1397, joint covariance :1423, read off part 7 :1437, prob07 promise kept :1450, shrinkage SVG :1463, two-extremes sanity table :1483, two sampling orderings :1498, why the second matters :1520) | 86–94 | prob08-gaussian/prob08-gaussian.html:1390 |
-| 08 | Gaussian Diffusion (prob04 teaser cashed in :1539, noising recursion :1553, variance preserving :1565, noising-chain SVG :1579, source exercise :1603, MGF telescope :1616–:1646, Thm 3 chain forgets :1660, closed form :1676, DDPM ᾱ notation :1688, worked β=0.02 schedule chart :1701, reverse step claim :1724 + via channel :1736, vectors :1751, generation skeleton :1763, scope today-vs-full-story :1787) | 95–112 | prob08-gaussian/prob08-gaussian.html:1532 |
+| 08 | Gaussian Diffusion (prob04 teaser cashed in :1539, noising recursion :1553, variance preserving :1565, noising-chain SVG :1579, source exercise :1603, MGF telescope :1610–:1640, Thm 3 chain forgets :1654, closed form :1670, DDPM ᾱ notation :1682, worked β=0.02 schedule chart :1695, reverse step claim :1718 + via channel :1730, vectors :1745, generation skeleton :1757, scope today-vs-full-story :1781) | 95–112 | prob08-gaussian/prob08-gaussian.html:1532 |
 | 09 | Gaussian Discriminant Analysis (one Gaussian per class :1812, decision rule :1826, boundary SVG :1839, back to MLE :1863, log-likelihood :1876, fit μ :1888, precision reparam :1904, trace trick :1917, scatter matrix :1930, matrix derivatives :1944, solve :1959, Thm 4 :1975, source exercises A/B :1991, GDA pipeline :2008) | 113–127 | prob08-gaussian/prob08-gaussian.html:1805 |
 | — | Recap chain, every-tool recap table, bridge to prob09, end slide X=DW+μ | 128–131 | prob08-gaussian/prob08-gaussian.html:2020 |
 
@@ -470,7 +469,7 @@ Accessible edition: `prob09-monte-carlo/prob09-monte-carlo-note.md` — screen-r
 | 06 | The Variance of IS (variance formula :912, the object ∫f²p²/q :925, Jensen recall (prob01) :938, Thm 4 optimal proposal q*∝\|f\|p arc, Jensen floor + attained :952–:1002, zero variance verified on rare event :1016, the catch: q* needs the answer :1029, other end of the dial :1042, light-tailed Exp(2) worked example :1053, E_q[w²]=∞ derived :1064, unbiased-consistent-useless :1079, tail rule Exp(1/2)→4/3 :1093, weight-degeneracy histogram SVG 95% :1109, one sample in disguise :1132) | 56–73 | prob09-monte-carlo/prob09-monte-carlo.html:903 |
 | 07 | Self-Normalized IS (missing constant Z :1152, unnormalized weights w̃=Zw :1164, SNIS definition :1176, two MC estimators one ratio :1190, consistency sketch (continuous mapping named, not proved) :1203, biased flag worked 2/3≠1/2 :1217, ESS definition (flagged heuristic) :1228, ESS sanity checks n and 1.11 :1242, what ESS is not :1253, where SNIS runs in AI :1265) | 74–84 | prob09-monte-carlo/prob09-monte-carlo.html:1143 |
 | 08 | The Score-Function Gradient (J(θ)=E[R] :1296, why plain MC gives no gradient :1310, log-derivative trick review :1324, Thm 5 score-function/REINFORCE identity arc, finite X, expand/swap/reread :1338–:1399, REINFORCE estimator :1413, worked two-action sigmoid policy :1426, identity agrees both sides 1/4 :1437, reading the identity :1448, baseline lemma + mean-zero score proof :1462, baseline at work variance 1/16→0 table :1477, REINFORCE pipeline SVG :1496) | 85–101 | prob09-monte-carlo/prob09-monte-carlo.html:1287 |
-| 09 | Off-Policy & RLHF (off-policy problem :1536, it's Theorem 3 with π_θ/π_b :1548, sequences multiply weights (chain rule, prob04) :1561, degeneracy grows 1.1¹⁰⁰≈13,800 caricature :1574, keep the ratio near one (clipping/trust regions names only) :1587, recall prob02 KL card :1599, RLHF-shaped objective max E[r]−βD(π_θ‖π_ref) w/ scope note :1614, one pipeline every tool :1629) | 102–110 | prob09-monte-carlo/prob09-monte-carlo.html:1527 |
+| 09 | Off-Policy & RLHF (off-policy problem :1536, it's Theorem 3 with π_θ/π_b :1548, sequences multiply weights (chain rule, prob04) :1561, degeneracy grows 1.1¹⁰⁰≈13,800 caricature :1574, keep the ratio near one (clipping/trust regions names only) :1587, recall prob02 KL card :1599, RLHF-shaped objective max E[r]−βD(π_θ‖π_ref) w/ scope note :1608, one pipeline every tool :1623) | 102–110 | prob09-monte-carlo/prob09-monte-carlo.html:1527 |
 | — | Recap chain Thm 1–5, every-tool recap table, nine-decks map SVG, probability-half recap, bridge to opt01, end slide E_p[f]=E_q[f·p/q] | 111–117 | prob09-monte-carlo/prob09-monte-carlo.html:1649 |
 
 Key theorems: **Thm 1** unbiasedness E[μ̂_n]=μ, linearity proof

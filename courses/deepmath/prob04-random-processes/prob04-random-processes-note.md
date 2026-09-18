@@ -843,7 +843,25 @@ chain rides on the weaker property.
 
 In the PageRank picture, states are pages, transitions follow links, and a page's
 score is its entry of $\pi^\star$: where a surfer clicking forever spends its
-time. This is an illustration rather than today's math, and correctly so. A raw
+time. A three-page example makes the point concrete. Pages $A$, $B$, $C$ carry
+the links $A \to B$, $A \to C$, $B \to C$ and $C \to A$; the surfer follows a
+uniformly random out-link, so in the column-is-current-state convention
+
+$$ P = \begin{pmatrix} 0 & 0 & 1 \\ 1/2 & 0 & 0 \\ 1/2 & 1 & 0 \end{pmatrix},
+   \qquad \pi^\star = \begin{bmatrix} 0.4 \\ 0.2 \\ 0.4 \end{bmatrix}. $$
+
+Check: $(P\pi^\star)_A = \pi^\star_C = 0.4$, $(P\pi^\star)_B = \tfrac12
+\pi^\star_A = 0.2$ and $(P\pi^\star)_C = \tfrac12 \pi^\star_A + \pi^\star_B =
+0.4$. The chain is irreducible (the cycle $A \to B \to C \to A$ visits every
+page) and aperiodic (closed walks of length $2$, via $A \to C \to A$, and of
+length $3$ coexist, so the period is $\gcd(2, 3) = 1$), hence Theorem 3 applies
+and $\pi^\star$ is unique. The lesson the example is built to show: $A$ has a
+single in-link and $C$ has two, yet they tie at $0.4$. A page's score is the
+mass it receives, weighted by the importance of the pages linking to it, not a
+count of in-links. $A$'s one link comes from the heavy page $C$; $B$'s in-link
+comes from $A$ but carries only half of $A$'s mass.
+
+Beyond this toy, the picture is an illustration rather than today's math. A raw
 web graph is neither irreducible (dead ends, disconnected pieces) nor aperiodic,
 so the actual algorithm mixes the link-following matrix with a uniform teleport
 matrix,
@@ -1091,9 +1109,24 @@ suffices that
 $$ N \geq \frac{\log(2/\eta)}{\log(1/|\lambda_2|)}. $$
 
 That is the principled answer to "how long must the forward chain run": long
-enough for $|\lambda_2|^N$ to be negligible. Data dissolving into noise is this
-formula in pixels; each step multiplies the structured part of the distribution
-by $\lambda_2$.
+enough for $|\lambda_2|^N$ to be negligible. Each step multiplies the
+structured part of the distribution by $\lambda_2$.
+
+A concrete instance of data dissolving into noise, taken from Schiff et al.
+[13] (as redrawn in the Kuleshov group's blog tutorial): the sentence "The cat
+sat on the mat" is corrupted left to right in two ways. In the top row each
+hit sends a token to a special MASK state and it stays there, until every
+position reads MASK; in the bottom row each hit replaces a token by a
+uniformly random word, until the sentence is gibberish. The bottom row is
+exactly this section's uniform kernel $P$ on the alphabet of words, so the
+eigenvalue bound above applies to it verbatim. The top row is the absorbing
+variant (D3PM's absorbing kernel [9]) used by current diffusion language
+models [12]: its limiting distribution is the point mass on the all-mask
+sequence rather than uniform, and in practice the chain runs in continuous
+time $t \in [0, 1]$ with a masking schedule rather than in $N$ discrete
+steps. The structure that matters for this section is identical in both rows
+(a fixed Markov kernel destroys the data distribution and the reverse kernels,
+the figure's dashed arrows, are learned).
 
 ### 9.3 What the denoiser is really approximating
 
@@ -1167,7 +1200,8 @@ chain picks its noise distribution for free.
 diffusion is the framework of Sohl-Dickstein et al. [8] specialized to finite
 alphabets, developed as multinomial diffusion by Hoogeboom et al. [10] and
 generalized (uniform, absorbing and structured kernels) as D3PM by Austin et al.
-[9]. The continuous, Gaussian counterpart, DDPM [11], is Lecture 8, where the
+[9]; the absorbing kernel is what current diffusion language models such as
+MDLM [12] use. The continuous, Gaussian counterpart, DDPM [11], is Lecture 8, where the
 teaser is cashed in with moment-generating-function tools.
 
 ## 10. References
@@ -1220,3 +1254,15 @@ teaser is cashed in with moment-generating-function tools.
 11. J. Ho, A. Jain and P. Abbeel, "Denoising Diffusion Probabilistic Models,"
     NeurIPS 2020. arXiv:2006.11239 (https://arxiv.org/abs/2006.11239). DDPM, the
     Gaussian counterpart, treated in Lecture 8.
+12. S. S. Sahoo, M. Arriola, Y. Schiff, A. Gokaslan, E. Marroquin, J. T. Chiu,
+    A. Rush and V. Kuleshov, "Simple and Effective Masked Diffusion Language
+    Models," NeurIPS 2024. arXiv:2406.07524 (https://arxiv.org/abs/2406.07524).
+    MDLM: absorbing-state discrete diffusion for text.
+13. Y. Schiff, S. S. Sahoo, H. Phung, G. Wang, S. Boshar, H. Dalla-Torre,
+    B. P. de Almeida, A. Rush, T. Pierrot and V. Kuleshov, "Simple Guidance
+    Mechanisms for Discrete Diffusion Models," ICLR 2025. arXiv:2412.10193
+    (https://arxiv.org/abs/2412.10193). The "cat sat on the mat" example in
+    Section 9.2 (absorbing vs. uniform forward chains) is their illustration
+    as redrawn in V. Kuleshov, M. Arriola, Y. Schiff and G. Wang, "How to
+    Build a Diffusion Language Model," Kuleshov Group blog, July 2026,
+    https://kuleshov-group.github.io/blog/blog/2026/how-to-build-a-diffusion-language-model/.

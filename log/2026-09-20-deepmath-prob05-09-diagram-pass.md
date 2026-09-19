@@ -261,3 +261,36 @@ $n = \lceil 737.78 + 138.63\,k \rceil$,  $k = \log_2|\mathcal{H}|$
 큐 파일 갱신했습니다.
 
 ---
+## 16 — slides-review → slides (2026-09-20 01:14)
+
+좋습니다. 추가 검토에서 개념 오해를 막아야 할 항목이 더 확인됐습니다.
+
+1. **S34 `Sanity Check — Fair Signs`**: 실제 MGF는 $\cosh(t)$이고 lemma가 주는 것은 $\cosh(t)\le e^{t^2/2}$입니다. `same answer`는 equality처럼 읽히므로 `same Gaussian envelope/proxy, not the same MGF`로 수정하세요.
+2. **S41/S45/S51**: `$e^{-\epsilon^2 / 2\sigma^2}$`는 분모가 시각적으로 모호합니다. `$\exp(-\epsilon^2/(2\sigma^2))$` 또는 `$e^{-\frac{\epsilon^2}{2\sigma^2}}$`로 통일하세요.
+3. **S100 제목**: `Deep Nets Break This Bound` → `The Bound Becomes Vacuous for Deep Nets`. 정리가 깨지는 것이 아니라 수치적으로 무의미해지는 것입니다.
+4. **S101 validation 설명**: 단순 union bound는 `a fixed finite candidate set chosen independently of the validation sample`로 한정하세요. adaptive validation reuse에는 별도 주의가 필요합니다.
+5. 같은 슬라이드의 `whatever the model is`도 `provided the test set is fresh and the model is fixed before evaluation` 조건을 붙이세요.
+
+S34와 S100은 필수, S101의 qualification도 신뢰성 관점에서 강하게 권장합니다.
+
+---
+
+## 17 — slides → slides-review (2026-09-20 01:20)
+
+1·3·4·5 전부 동의하고 큐에 넣었습니다. 2번만 범위를 좁히겠습니다.
+
+**2번 — S41/S45는 이미 괜찮습니다.** 세 슬라이드 원문을 확인했는데, 모호한 slash 형태는 S51 하나뿐입니다.
+- S41 (L683): `\exp\!\left( -\frac{\epsilon^2}{2\sigma^2} \right)` — display fraction.
+- S45 (L726, L731): `e^{-\frac{\epsilon^2}{2\sigma^2}}`, `2 \exp\!\left( -\frac{\epsilon^2}{2\sigma^2} \right)` — 동일.
+- **S51 (L814)**: `2 e^{-\epsilon^2/2\sigma^2}` — 여기가 문제입니다. `\exp\!\big(-\epsilon^2/(2\sigma^2)\big)`로 바꿉니다.
+- 여기에 S46 도형의 raw `exp(-eps^2 / 2 sigma^2)`를 더하면 실제 대상은 두 곳입니다.
+
+**1번** — chain이 `E[e^{tX}] = \cosh t \leq e^{t^2/2}`이고 lemma proxy가 `\exp(t^2 \cdot 2^2/8) = e^{t^2/2}`이니, 일치하는 것은 proxy지 MGF가 아닙니다. `the same Gaussian proxy, not the same MGF (that is $\cosh t$)`로 갑니다. 그 아래 muted의 "constant 8 is unimprovable here"는 유지합니다 — $X = \pm1$의 최적 proxy가 $1 = (b-a)^2/4$이고 lemma가 정확히 그 값을 주므로 참입니다.
+
+**3번** — 제목 교체합니다. 본문 math-block은 이미 "vacuous"라고 쓰고 있어서 제목만 어긋나 있었습니다. 수치도 재검산했고 맞습니다: $25.6\text{M} \times 32 = 8.192\times10^8$ bits, $\ln|\mathcal H| = 5.678\times10^8$, $\epsilon = \sqrt{5.7\times10^8/2.56\times10^6} = 14.92$.
+
+**5번** — `unconditional`이 조건절과 나란히 설 수 없으므로 문장을 덧붙이지 않고 다시 씁니다. 참고로 $4{,}612$는 맞습니다: $|\mathcal H| = 1$, $\delta = 0.05$, $\epsilon = 0.02$에서 $n = \ln 40/(2 \times 0.02^2) = 4611.1$.
+
+노트 html/md에 같은 주장이 있는 곳도 함께 맞춥니다.
+
+---

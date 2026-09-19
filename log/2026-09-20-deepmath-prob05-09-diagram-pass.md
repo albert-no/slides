@@ -615,3 +615,26 @@ prob08 전담 검토 결과입니다. 아래는 diagram pass와 함께 반드시
 곁가지로 이 데크에는 `prob0N`/`&sect;0N` 포인터가 44행에 있습니다(S78·S94·S109·S115·S125 포함) — 작업항목 D로 함께 뺍니다. 구조 건(S49–85 37장, GDA matrix calculus)은 순서 이동 없이 최종 보고의 Albert 판단 사항으로 남기고, S15/17·S89–93·S103–106은 유지합니다.
 
 ---
+
+## 41 — slides-review → slides (2026-09-20 02:43)
+
+두 문구 모두 동의합니다.
+
+- **S110**은 `Given $X_0=x_0$, coordinates evolve independently`가 가장 정확합니다. 이어서 `Marginally, dependence in a random $X_0$ is attenuated but need not vanish at finite $n$` 정도로 구분하면 조건부분포와 주변분포가 명확해집니다. jointly Gaussian 전제는 여기에는 불필요합니다.
+- **S78**은 시리즈 일관성과 충분조건의 명료성을 위해 `for any square-integrable $g(Y)$`로 진행하세요.
+
+S107은 `signal variance fraction`으로 고치고, coefficient $(1-\beta)^{n/2}$와 혼동되지 않도록 캡션에서 두 용어를 구분하면 됩니다. 나머지 큐 항목도 계획대로 적용해 주세요.
+
+---
+
+## 42 — slides → slides-review (2026-09-20 02:49)
+
+확정했습니다. 큐 15건 전부 APPLY 상태로 고정했고, 두 건은 합의한 문구로 기록했습니다.
+
+- **S110**: `Given $X_0 = x_0$, coordinates evolve independently` + `Marginally, dependence in a random $X_0$ is attenuated but need not vanish at finite $n$`. jointly Gaussian 전제는 넣지 않습니다.
+- **S78**: `for any square-integrable $g(Y)$`.
+- **S107**: 곡선 라벨은 `signal variance fraction $(1-\beta)^n$` / `noise variance $1-(1-\beta)^n$`, 캡션에서 $n=100$일 때 variance fraction $0.133$과 coefficient $(1-\beta)^{n/2} = 0.364$를 구분해 적겠습니다.
+
+에이전트 작업이 끝나는 대로 §2(도형 15개, S39 `$a^\top X$` 우선) → §1(정확성 15건) → 작업항목 D(`prob0N`/`&sect;0N` 44행) 순으로 적용하고, 편집한 슬라이드를 60 DPI로 하나씩 대조한 뒤 전체 검증 결과를 보내드리겠습니다.
+
+---

@@ -331,3 +331,27 @@ S7 test-set error · S9 `|gap|` (부호 있는 정의는 math-block에 유지) �
 승인 주시면 prob07 에이전트를 시작하겠습니다. 그 전에는 시작하지 않겠습니다.
 
 ---
+
+## 19 — slides-review → slides (2026-09-20 01:52)
+
+최종 누적 diff와 핵심 문구를 확인했습니다. prob06은 거의 승인 가능하며, 남긴 (a)는 작은 패치로 해결하는 편이 좋습니다. 일반 $X\in[a,b]$ 정리 아래에서 갑자기 pmf와 $\sum_x$를 쓰면 증명이 이산 변수에만 성립하는 것처럼 보입니다. tilted-distribution 첫 슬라이드에 다음 한 줄만 추가하세요. `We show the discrete case; for continuous $X$, replace sums by integrals.` 세 슬라이드 수식을 모두 바꾸거나 측도론 표기를 도입할 필요는 없습니다. note에도 같은 scope 문장을 넣어 주세요. (b) 기존 grid-3 density는 이번 수정 범위에서 유지해도 됩니다. 이 패치와 lint/render 확인 후 prob06을 승인하겠습니다. 그 다음에 prob07 agent를 시작하세요.
+
+---
+
+## 20 — slides → slides-review (2026-09-20 01:58)
+
+패치 완료했습니다. 커밋 `d852f4c` (push 완료).
+
+**데크** 슬라이드 24 `Technique — Tilted Distributions`, 수식 블록 바로 아래에 muted 한 줄:
+`We show the discrete case; for continuous $X$, replace sums by integrals.`
+수식은 하나도 건드리지 않았고 측도론 표기도 넣지 않았습니다.
+
+**노트 html/md** §3.2에 같은 문장을 `**Scope of the notation.**` 문단으로 넣고, 무해한 이유를 한 문장 덧붙였습니다: 증명이 쓰는 성질은 $e^{tx}$의 양성, $M_X(t)$에 의한 정규화, 기댓값 아래 미분 세 가지뿐입니다.
+
+**OUTLINE** 삽입된 한 줄 때문에 데크 458행 이후 prob06 포인터를 +1 했고 (`:493→:494`, `:1567→:1568` 등 14개 행), note.md 줄 수 1,142 → 1,147, 폴더 표의 `done (105 slides)`를 106으로 고쳤습니다 — 4907702에서 슬라이드 14를 추가할 때 이 한 칸을 놓쳤습니다.
+
+**검증 (이 상태에서 재실행)**: `lint-deck` ok · `find-wordy` clean · `find-dense` 기존 L137만 · `lint-accessible-md` ok (1,147줄) · `outline-lint` 0 stale · 106페이지 렌더 · 슬라이드 24를 60 DPI로 재확인 (overflow·충돌 없음, muted 줄과 불릿 간격 `margin:10px 0 8px`로 조정).
+
+(b) grid-3 density는 그대로 두었습니다. 승인 주시면 prob07 에이전트를 시작하겠습니다.
+
+---

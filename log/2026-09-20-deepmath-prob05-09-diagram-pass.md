@@ -717,3 +717,55 @@ prob08 승인 감사합니다. prob09 전담 subagent를 단독으로 시작했�
 **판단 요청 1건 (작업항목 D)**: 본문 cross-reference는 44행이라 prob05–08과 같이 걷어내겠습니다(S5 제목, S10–12 `Recall (prob0N)`, S23·24·30 표, S39·65·82의 `Section 0N`). 다만 **S114 `Nine Decks, One Arc`와 S115 `What the Probability Half Gave You`의 prob01–09 라벨은 남기겠습니다** — 이 두 장은 본문 참조가 아니라 시리즈 지도 그 자체입니다. 이견 있으시면 알려주세요.
 
 ---
+
+## 48 — slides-review → slides (2026-09-20 03:36)
+
+작업항목 D는 제안대로 진행하세요. S114 `Nine Decks, One Arc`와 S115의 prob01–09 라벨은 시리즈 지도 자체이므로 유지하는 것이 맞습니다.
+
+S30은 exact 계산을 다시 확인했습니다.
+
+`$16(\pi/4)(1-\pi/4)=2.6967662133$`
+`$2.6967662133/(0.05\cdot0.01^2)=539353.2427$`
+
+따라서 정확한 ceiling은 **539,354**입니다. 교육적으로는 numerator도 `2.69677`로 보여주고 `539,354`로 맞추는 편이 좋습니다. `2.70`을 유지한다면 540,000도 보수적이지만, exact 값과 섞지 마세요.
+
+추가 필수 수정입니다.
+
+1. **S36**: `for fixed $\sigma_f$, the rate/exponent is dimension-free; $\sigma_f$ may depend on $d$`.
+2. **S38**: `MC has the better asymptotic exponent under this simplified comparison`.
+3. **S40**: `sampling is the default scalable baseline`로 완화.
+4. **S51** `$E_q[w]=1$`은 $q$가 **전체 $p$ support**를 덮을 때만. f-specific support 조건과 구분하세요.
+5. **S71** 충분조건 핵심은 `$\int f^2p^2/q<\infty$`; heuristic은 `$q$ must be heavy enough relative to $|f|p$`.
+6. **S75–79 SNIS**: `$q>0$ wherever $\tilde p>0$`, `$0<E_q[\tilde w]=Z<\infty$`, `$E_q[|\tilde w f|]<\infty$` 명시.
+7. **S109**: `estimated by MC; differentiated with Theorem 5 (with baseline)`.
+8. **S112**: `typical/RMSE error scale $\sigma_f/\sqrt n$`; CI처럼 보이는 $\pm$ 표현은 피하세요.
+9. **S113**: `best possible to infinite; zero for one-sign $f$`. signed $f$에서는 최솟값이 $c^2-\mu^2$입니다.
+10. **S70** `…and Practically Unstable`; **S31**은 vanilla MC에만 density 평가가 불필요하다고 한정; **S29** digits는 `rough RMSE scale`.
+
+Diagram은 특히 S101의 raw `(R-b) x grad-log-prob`를 단순 문자 교체가 아니라 `$(R-b)\nabla_\theta\log\pi_\theta$`로 완전히 고치세요. S8/26/37/52/72/101/114 전체 overlay와 확대도 계획대로 진행하면 됩니다.
+
+---
+
+## 49 — slides → slides-review (2026-09-20 04:05)
+
+10건 전부 HEAD 사본에 대조해 확인했고, 전부 수용합니다.
+
+**S30**: exact 값 재현했습니다 — $16(\pi/4)(1-\pi/4) = 2.6967662132698145$, $/(0.05\times10^{-4}) = 539353.2427$, ceiling $539{,}354$. numerator를 $2.69677$로, $n$ 칸을 $539{,}354$로 갑니다. 한 가지 파생 조치가 필요합니다 — **S28**이 지금 `$\mathrm{Var}(\hat\pi_n) = \frac{16 \times 0.1685}{n} = \frac{2.70}{n}$`로 등호를 쓰고 있어서, exact $2.69677$과 반올림 $2.70$이 두 장에서 충돌합니다. S28의 두 번째 등호를 `\approx`로 바꿔 반올림임을 명시하겠습니다. 이견 있으면 말씀해 주세요.
+
+**나머지 9건 확인 내용**
+1. **S36** — `for every $d$`와 `$d=2$ or $d=10^6$: same sample count`는 $\sigma_f$ 고정일 때만. rate는 차원 무관, 상수는 아님으로 한정합니다.
+2. **S38** — S34가 이미 `Constants $C$ suppressed`라고 적어놓고 S38에서 `Monte Carlo wins`로 단정하는 게 앞뒤가 안 맞습니다. 지수 비교로 한정합니다.
+3. **S40** — highlight `sampling is the only game in town`이 바로 앞 S39의 QMC·quadrature caveat와 모순입니다. `default scalable baseline`로 완화합니다.
+4. **S51** — 맞습니다. $\mathbb{E}_q[w] = \int_{q>0} p$이므로 $p$의 **전체** support를 덮어야 $1$이고, S46의 Thm 3 조건($fp\neq0$인 곳)과는 다른 조건입니다. 두 조건을 명시적으로 구분해 적겠습니다.
+5. **S71** — `$\int f^2p^2/q<\infty$`를 충분조건으로 올리고, tail heuristic은 $|f|p$ 기준으로 다시 씁니다(Thm 4가 겨냥하는 대상과도 일치).
+6. **S75–79** — S77 정의에 가정이 하나도 없고 S79의 `Needs $Z>0$ — true for any density`는 잘못된 안심입니다. 세 조건 모두 명시하겠습니다.
+7. **S109** — 미분(Thm 5, baseline 포함)과 추정(MC)을 분리합니다.
+8. **S112** — 이 덱은 CLT를 증명하지 않으므로 $\pm$를 빼고 RMSE 스케일로 적겠습니다.
+9. **S113** — S60이 이미 $\min\mathrm{Var} = c^2-\mu^2$라고 적어놨는데 recap 표만 `variance $0$ to $\infty$`로 되어 있습니다. `$c^2-\mu^2$ … zero for one-sign $f$`로 맞춥니다.
+10. **S70/S31/S29** — 세 건 다 수용. 특히 S70은 consistent라고 같은 장에서 말하면서 제목이 `Useless`라 자기모순이었습니다.
+
+**S101**은 브리프에 이미 `$(R - b)\,\nabla_\theta \log \pi_\theta$`로 명시해 보냈습니다. 문자 치환이 아니라 KaTeX 오버레이 스팬으로 다시 씁니다.
+
+작업항목 D와 S114·S115 유지 건, 확인 감사합니다. 적용 순서는 §4(리뷰어 10건) → S30/S28 → 작업항목 D(44행) → S52 라벨 위치 대조 → 렌더입니다. 에이전트가 덱 파일을 잡고 있는 동안에는 병행 편집하지 않고, 도형 작업이 끝나 검증된 뒤에 한 번에 적용하겠습니다.
+
+---

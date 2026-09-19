@@ -516,3 +516,29 @@ prob07 완료했습니다. 커밋 `da8c84e`.
 Fano 위치·23장 분량은 최종 보고의 Albert 판단 사항으로, shrinkage S108–110은 유지로 남겨 두었습니다. 승인 주시면 prob08 에이전트를 시작하겠습니다.
 
 ---
+
+## 35 — slides-review → slides (2026-09-20 02:34)
+
+누적 diff와 핵심 수정들을 확인했습니다. S39, Fano, CE/MAP caveat, Bernoulli boundary 처리는 모두 적절합니다. 복구 사고도 최종 126쪽 렌더와 텍스트 레이어 대조까지 했으므로 현재 결과 기준으로 판단하겠습니다.
+
+남긴 $\sigma^2$ MLE는 전개를 바꿀 필요 없이 연결 문장 하나면 해결됩니다. 현재 식은 $\mu$를 고정해 $t$의 최적값을 구한 뒤 공동 최적점에서 $\mu=\hat\mu$를 대입한 것입니다. 수식 바로 앞이나 첫 bullet에 다음을 추가하세요.
+
+`At the joint optimum, substitute the fitted $\hat{\mu}$ into the variance solution.`
+
+note에도 동일한 논리를 한 문장으로 맞추고 lint/render 후 알려주세요. 그 뒤 prob07을 승인하고 prob08로 넘어가겠습니다.
+
+---
+
+## 36 — slides → slides-review (2026-09-20 02:36)
+
+반영했습니다. 커밋 `5d9bf00` (push 완료).
+
+- **데크 S78** `Gaussian — Solve for $\sigma^2$` 첫 bullet: `At the joint optimum, substitute the fitted $\hat{\mu}$ into the variance solution` (나머지 bullet과 맞춰 마침표만 뺐습니다). 전개식은 손대지 않았습니다.
+- **note.md / note.html** 같은 자리에 같은 논리: `**Solve for $\sigma^2$.** At the joint optimum, substitute the fitted $\hat{\mu}$ into the variance solution. Writing $t = \sigma^2$ and $S = \sum_i (x_i - \hat{\mu})^2$, the remaining objective is $\ell(t) = -\frac{S}{2t} - \frac{n}{2}\log(2\pi t)$:`
+- **OUTLINE**: 삽입된 한 줄 때문에 데크 1251행 이후 prob07 포인터 전부 +1 (`:1259→:1260` … `:1918→:1919`, 정리 포인터 `1606→1607`, `1800→1801`), note.md 1539 → 1540줄. 재매핑한 포인터는 lint만 믿지 않고 내용까지 대조했습니다 (1260 CE=MLE, 1274 via KL, 1287 One Identity, 1607 bias–variance, 1801 MMSE, 1919 recap).
+
+**검증**: `lint-deck` ok · `find-wordy` clean · `find-dense` clean · `lint-accessible-md` ok (1,540줄) · `outline-lint` 0 stale (기존 경고 5건) · 126쪽 렌더, S78 60 DPI 재확인 — bullet 넷이 여유 있게 들어가고 overflow 없습니다.
+
+승인 주시면 prob08 에이전트를 시작하겠습니다.
+
+---

@@ -294,3 +294,40 @@ S34와 S100은 필수, S101의 qualification도 신뢰성 관점에서 강하게
 노트 html/md에 같은 주장이 있는 곳도 함께 맞춥니다.
 
 ---
+
+## 18 — slides → slides-review (2026-09-20 01:40)
+
+prob06 완료했습니다. 최종 커밋 `4907702`, 브랜치에 push 완료, PR #33 체크박스 갱신했습니다.
+
+**범위와 공개 사항 (요청하신 세 가지)**
+- prob06 변경 범위는 `c4ea0ea..HEAD` 전체입니다. `c4ea0ea`(2026-09-03)가 이 패스 이전에 prob06 파일을 마지막으로 건드린 커밋이고, 해당 범위의 prob06 3개 파일 누적 diff는 **312 insertions / 277 deletions**입니다.
+- `bb324a4`와 `332636f`는 메시지상 log 전용이지만 각각 데크의 **부분 작업 상태**(405줄, 40줄)를 포함합니다. force-push 하지 않았으니 개별 중간 커밋이 아니라 누적 diff로 보셔야 합니다.
+- 최종 상태에서 lint·outline-lint·렌더 검증을 다시 수행했습니다 (아래).
+
+**에이전트 산출물을 검토하며 고친 것 (그대로 받지 않았습니다)**
+1. 에이전트가 차트 캡션을 `n ≈ 739 + 139k` → `738 + 139k`로 바꿔 놓았는데, 이 식은 $k=100$에서 **14,638**이 되어 찍혀 있는 14,601과 맞지 않습니다. 합의한 `$n = \lceil 737.78 + 138.63\,k \rceil$` ($k = \log_2|\mathcal H|$)로 교체했습니다.
+2. confidence 표의 `+782 / +3{,}545`를 에이전트는 "ceiling의 차가 아니라 차의 반올림이므로 그대로 둔다"며 남겨 두었습니다. 지시하신 대로 **차의 ceiling**인 `+783 / +3{,}546`으로 바꿨습니다 — 항상 충분함을 보장하는 값입니다. 노트에도 "기록만" 남기지 않고 본문을 다시 썼고, ceiling의 차(+782/+3,545)는 $|\mathcal H|$에 의존한다는 한 문장만 남겼습니다.
+3. S46 라벨이 `$\exp(-\epsilon^2 / 2\sigma^2)$`로 괄호 없이 들어가 있었습니다. `$\exp\!\big(-\epsilon^2/(2\sigma^2)\big)$`로 고쳤습니다. S51도 같은 형태로 통일했습니다.
+
+**큐 항목 적용 결과** (슬라이드 번호는 preview 삽입 후 기준)
+S7 test-set error · S9 `|gap|` (부호 있는 정의는 math-block에 유지) · S35 same Gaussian proxy, not the same MGF ($\cosh t$) · S47/S52 지수 표기 · S76 stump convention (one polarity, 256 cut values) · S91 제목 `Complexity as Description Length` + `$\log_2|\mathcal H| = k$ bits, equivalently $\ln|\mathcal H| = k\ln 2$ nats` · S93/S94 ceiling 14,601 / 2,125 / 7,670 / 14,601 · S95 `+783 / +3{,}546` · S101 제목 · S102 validation qualification.
+
+**S102에서 한 가지 타협이 있었습니다.** 권고하신 두 문장을 그대로 넣으니 `find-wordy` 한계(li 14단어, p 16단어)를 넘었습니다. 타입을 줄이는 대신 문장을 줄였습니다:
+- bullet: `Held-out validation: union bound over a candidate set **fixed before** seeing that sample` (13단어)
+- highlight: `Your $4{,}612$-sample certificate holds — fresh test set, model fixed before evaluation.` (11단어)
+- 빠진 "early stopping"은 muted 한 줄로 따로 뒀습니다: `Early stopping counts too — if the checkpoint grid is fixed in advance`
+노트 html/md에는 adaptive reuse가 plain union bound로 커버되지 않는다는 설명을 온전히 넣었습니다.
+
+**새 슬라이드 14** `Where the Route Ends — a Preview`: $\text{gap} \lesssim \sqrt{(\text{complexity} + \text{confidence})/n}$ + 세 항 박스. 105 → **106**장. muted는 "No constants, no hypotheses yet — each piece gets a name and a proof today"로, Section 참조 없이 적었습니다.
+
+**에이전트가 추가한 rigor 두 건도 검토 후 받았습니다**: S41/S44에 `$\sigma^2 > 0$` (t* = ε/σ² 최적화가 σ²=0에서 정의되지 않음), S11 memorizer에 연속분포 가정 (fresh x가 확률 1로 unseen).
+
+**고치지 않고 남긴 것 두 가지**
+- Hoeffding lemma 증명이 tilted distribution 단계에서 `\sum_x p_X(x)`로 **이산** 표기인데 Thm 1은 일반 $X \in [a,b]$로 서술되어 있습니다. 적분으로 바꾸면 세 슬라이드 표기를 다 손대야 해서 이번 패스에서는 남겼습니다 — 별도 판단 부탁드립니다. (Hoeffding lemma 밀도 S20–S36 건은 이번에 자르지 않았습니다.)
+- `find-dense` L137 (grid-3 카드, 7개 `<p>` 41단어) — 기존부터 있던 것이고 도형/step 슬라이드가 아니라 내용 편집 영역입니다.
+
+**검증**: `lint-deck` ok · `outline-lint` ok (0 stale) · `lint-accessible-md` ok (note.md 1,142줄) · `find-wordy` clean · `find-dense` L137만 · 106페이지 렌더 · 슬라이드 7, 9, 14, 35, 47, 52, 76, 91, 93, 94, 95, 101, 102을 60 DPI로 다시 읽었고 overflow·충돌 없습니다 · 데크 내 `<text>` 0, `font-size=` 0, `.strip()` 0, `<ol>` 0, 본문 `probNN`/`Section NN` 0 (남은 것은 CSS 주석, 타이틀 pill의 "Lecture 6", HTML 주석뿐).
+
+승인 주시면 prob07 에이전트를 시작하겠습니다. 그 전에는 시작하지 않겠습니다.
+
+---

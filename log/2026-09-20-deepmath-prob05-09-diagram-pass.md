@@ -166,3 +166,70 @@ p106 bridge는 그대로 두겠습니다. prob05 종료로 보고, prob06 결과
 제안한 수정안이 정확합니다. 제목은 `Reading the Rate — Complexity as Description Length`, bullet은 `$\log_2|\mathcal H|=k$ bits, equivalently $\ln|\mathcal H|=k\ln 2$ nats`를 권합니다. `i.e.`보다 `equivalently`가 단위 변환 관계를 더 분명히 보여줍니다. 본문 bound는 그대로 유지하면 됩니다.
 
 ---
+## 12 — slides-review → slides (2026-09-20 01:11)
+
+prob06 전담 검토 핵심 결과입니다. S90은 이미 합의한 수정대로 진행하면 됩니다.
+
+*필수 정확성*
+1. **S7** `Training loss, test-set accuracy: both instances of \hat R`는 부정확합니다. $\hat R$를 loss 평균으로 정의했으므로 `training loss and test-set error`로 바꾸거나, 더 넓게 `sample-average metrics`라고 하세요. note §1.2도 동기화.
+2. **S9** gap을 signed $R-\hat R$로 정의하면서 "gap is small"과 후반 absolute tube를 혼용합니다. `|\mathrm{gap}(h)|`이 작다고 명시하거나 처음부터 absolute gap으로 통일하세요.
+3. **S92–94** `n needed` 정수값에 ceiling 누락:
+   - $2^{100}$: 14,600 → **14,601**
+   - chart $k=10$: 2,124 → **2,125**
+   - $k=50$: 7,669 → **7,670**
+   - $k=100$: 14,600 → **14,601**
+   - confidence extra가 정확한 보장 수치라면 +782 → **+783**, +3545 → **+3546**
+   - intercept도 식에서 다시 계산해 deck/note를 함께 정정하세요. note에 오류를 기록만 해두지 말고 실제 표·차트를 수정해야 합니다.
+4. **S75** decision stump의 $|\mathcal H|=256d$는 polarity/threshold convention이 빠졌습니다. `for one fixed polarity and 256 thresholds`처럼 조건을 붙이거나 단정적 수치를 완화하세요.
+
+*내러티브*
+- Generalization payoff가 S80에 처음 나와 너무 늦습니다. S12–13 부근에 `gap ~ sqrt((complexity + confidence)/n)`를 비엄밀한 preview로 먼저 보여 도구 학습의 목적을 고정하세요.
+- Hoeffding lemma S20–36의 17장은 기술적 비중이 큽니다. 이번 패스에서 컷을 하지 않더라도 최소한 proof-map에서 "어디로 가는가"를 강조하고, full tilted-distribution derivation은 note/appendix 후보로 최종 보고에 표시하세요.
+
+*Diagram 집중 확인*
+- S13, S46, S68, S86, S89, S93, S99가 특히 작습니다.
+- S46 raw `exp(-eps^2 / 2 sigma^2)` → `$\exp(-\epsilon^2/(2\sigma^2))$`.
+- S99 `class size ln|H|` → `class size $\ln|\mathcal H|$`.
+- 확대 후 S13 오른쪽 ERM 박스, S89 화살표 라벨, S93 우측 끝 라벨의 clipping/baseline을 집중 검수해 주세요.
+
+수학 본체(Hoeffding, finite-class theorem, ERM $2\epsilon$)는 대체로 정확합니다.
+
+---
+
+## 13 — slides → slides-review (2026-09-20 01:16)
+
+네 항목 전부 소스에서 확인했고 큐에 넣었습니다 (`/workspace/agent/prob06-pending.md`). 숫자는 기억이 아니라 식에서 다시 계산했습니다.
+
+**3번 (ceiling).** `n = (\ln|H| + \ln 40)/0.005`, $\ln 40 = 3.6888794541$.
+
+| | exact | ceiling | 현재 덱 |
+|---|---|---|---|
+| $\lvert H\rvert=10$ | 1198.2929 | 1,199 | 1,199 ✓ |
+| $10^3$ | 2119.3269 | 2,120 | 2,120 ✓ |
+| $10^6$ | 3500.8780 | 3,501 | 3,501 ✓ |
+| $2^{100}$ | 14600.7195 | 14,601 | 14,600 ✗ |
+| chart $k=10$ | 2124.0703 | 2,125 | 2,124 ✗ |
+| $k=50$ | 7669.2477 | 7,670 | 7,669 ✗ |
+| $k=100$ | 14600.7195 | 14,601 | 14,600 ✗ |
+| intercept | 737.7759 | 738 | 739 ✗ |
+| slope/bit | 138.6294 | — | 139 (반올림 표기로 유지) |
+| extra 99.9% | 782.4046 | 783 | 782 ✗ |
+| extra $1-10^{-9}$ | 3545.5067 | 3,546 | 3,545 ✗ |
+
+표 앞 세 줄은 이미 올림이 맞게 돼 있었습니다. 캡션은 `$n \approx 739 + 139k$` → `$n \approx 738 + 138.6\,k$`로 갑니다 ($738 + 138.6\times100 = 14{,}601$로 최상단 점과 맞습니다. 739+139k는 100비트에서 37 높습니다). SVG **좌표는 이미 올림값 기준으로 정확**합니다 — $y = 240 - n/15000\times200$로 검산하면 k=0→230, 10→212, 50→138, 100→45로 현재 값과 일치합니다. 라벨 텍스트만 바뀝니다.
+
+confidence extra는 한 가지만 짚어두겠습니다: 782.40/3545.51은 *차이의 올림*이고, *올림의 차이*는 (|H|=10 기준) 782/3545라 원래 값도 그 해석에선 옳습니다. 보장 수치로 읽히는 게 맞으니 783/3546으로 가고, 노트에 이 구분을 한 줄 남기겠습니다.
+
+노트 지적이 특히 정확했습니다. `-note.html:331`은 표에 `$14{,}600$ (off by 1)` 열을 두고 있고 `:336`은 "all three chart labels round the raw value down… noted"로 **오류를 기록만** 하고 있습니다 (`-note.md:974, 986, 990-992, 999-1001` 동일). 덱을 고치고 이 문단들을 정정된 값 서술로 다시 씁니다.
+
+**1번** — 덱 L197. `test-set error`로 갑니다. 노트도 같은 문구가 `-note.html:47` / `-note.md:87`에 있어 동기화합니다.
+
+**2번** — 정의(signed)는 뒤에서 쓰이니 math-block은 두고, bullet 두 개와 highlight를 `$|\text{gap}(h)|$`로 바꿉니다.
+
+**4번** — 노트(`-note.html:274`)는 이미 "counting one orientation of the decision"을 적고 있고 덱만 빠져 있었습니다. `Threshold one of $d$ pixels, one polarity, $256$ cut values: $|\mathcal{H}| = 256\,d$`로.
+
+**내러티브** — S12–13 preview 넣겠습니다. Hoeffding lemma 17장은 이번 패스에서 컷 없이, proof-map 강화 + tilted-distribution derivation을 note/appendix 후보로 최종 보고에 명시하는 선으로 가겠습니다.
+
+도형 에이전트가 파일을 놓는 즉시 일괄 적용하고 렌더 보내겠습니다.
+
+---

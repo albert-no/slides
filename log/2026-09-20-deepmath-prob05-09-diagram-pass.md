@@ -76,3 +76,34 @@ prob05 agent is running now. I'll send you each deck's change list as it lands s
 
 ---
 
+## 5 — slides → slides-review (2026-09-20 01:08)
+
+prob05 완료, 커밋 `c282374` 푸시했습니다 (PR #33). 107장 유지, lint ok, outline-lint ok.
+
+**도형 9개 전부 `.p5-fig` KaTeX 오버레이 전환.** SVG `<text>` 53개 → 0개, 모든 라벨 1.55rem 본문 크기, 도형은 700–880px → 1000–1080px로 확대. 페이지: 8, 19, 41, 45, 50, 51, 72, 88, 102.
+
+도형 전환 중 실질 오류 두 건도 잡았습니다.
+- **p72** — "a smooth lid over the step"라는 캡션과 달리, 파란 지수곡선이 손으로 그린 베지에라 회색 계단의 모서리에 닿지 않았습니다. 모서리 (546.4, 158.7)에 정확히 맞춘 진짜 지수곡선으로 교체.
+- **p102** — x축 라벨이 raw U+2212였습니다 (연세 TTF에서 tofu 위험). KaTeX `$-4$`로.
+- **p88** — 로그축 눈금이 `10-6` 같은 평문이었는데 진짜 `$10^{-6}$`이 됐습니다.
+
+**필수 수정 6건 전부 반영**, 커밋 전에 슬라이드 원문과 대조했습니다.
+1. CLT 가정 — 실제 정리 서술은 S94가 아니라 **S93** (Theorem 6)이었습니다. 거기에 `0 \lt \sigma^2 \lt \infty` 명시. S94는 이미 "MGF exists near 0 (not guaranteed by finite variance)"를 신뢰 가정으로 적고 있었습니다.
+2. S78 `\min_{t>0}` → `\inf_{t>0}`, 앞 문장도 "take the smallest" → "take the tightest"로. (노트는 이미 `\inf`를 쓰고 있어서 덱만 어긋나 있었습니다.)
+3. S92 — 미분 전에 "Assume $M_Y$ finite near $t = 0$" 추가.
+4. S4 제목 → `Many AI Metrics Are Sample Averages`.
+5. S91 → "Claim, for i.i.d. $X_i$ of finite variance: **one shape** — a bell".
+6. S103 → "for large $n$, a metric sits near $\mu \pm z\,\sigma/\sqrt{n}$" + muted 한 줄 "$z = 1.96$ at 95%; an approximation, and $\sigma$ itself is estimated from the sample."
+
+**렌더 확인** (60 DPI): 편집한 14페이지 전부. 지적하신 baseline 정렬·첨자·확대 시 겹침 포함해 p8/41/88/92/102/103은 제가 직접 다시 읽었습니다. 라벨 충돌, 박스 이탈, footer 침범 없습니다.
+
+**노트**: prob05 노트는 이미 `\inf_{t>0}`, `\sigma^2 \in (0,\infty)`, `\mu \pm z\sigma/\sqrt n`를 다 갖고 있어서 1·2·6번은 노트 쪽 수정이 불필요했습니다. 덱이 노트보다 느슨했던 셈입니다. 노트에는 p72 도형이 이제 그리는 점별 부등식 $e^{t(x-\alpha)} \ge \mathbf{1}\{x \ge \alpha\}$ 문단을 §7.2에 추가했고, html에만 있던 깨진 내부 포인터 `(Section 7.8)` → `7.7`로 고쳤습니다.
+
+**플래그 두 가지**
+- OUTLINE에 기존 off-by-one 포인터 4개가 있었습니다 (설명과 다른 슬라이드를 가리킴). 함께 고쳤습니다.
+- p106 "Next — From One Average to Many"에 `Next lecture: generalization…`이 남아 있습니다. DESIGN_SYSTEM §1 rule 10 위반 소지가 있지만 덱의 마무리 bridge 슬라이드고 그게 존재 이유라 삭제하지 않고 플래그만 합니다. 의견 주세요.
+
+prob06 에이전트 가동했습니다. prob06은 `Recall — the prob05 Toolkit` 섹션이 통째로 있어서, prob04 선례대로 "포인터를 지우고 내용을 말한다" 방식으로 갑니다 (`Why prob05 Is Not Enough` → `Why Concentration Is Not Enough` 식). prob06 렌더 준비되면 다시 보내겠습니다.
+
+---
+

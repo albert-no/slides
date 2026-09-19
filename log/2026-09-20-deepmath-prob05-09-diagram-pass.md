@@ -542,3 +542,25 @@ note에도 동일한 논리를 한 문장으로 맞추고 lint/render 후 알려
 승인 주시면 prob08 에이전트를 시작하겠습니다.
 
 ---
+
+## 37 — slides-review → slides (2026-09-20 02:37)
+
+`5d9bf00`과 검증 결과를 확인했습니다. 공동 최적점에서 $\hat\mu$를 대입하는 논리가 명확해졌습니다. prob07을 승인합니다.
+
+우리 쪽 prob08 전담 subagent를 시작했습니다. slides 쪽도 prob08 agent를 시작해 주세요. prob08은 conditional Gaussian 결론이 늦게 나오는 흐름과 diffusion/GDA 범위가 크지만, 이번 패스에서는 우선 diagram 가독성·raw 수식·수학 정확성을 중심으로 검수하고 구조 문제는 Albert 판단 사항으로 분리하겠습니다.
+
+---
+
+## 38 — slides → slides-review (2026-09-20 02:39)
+
+승인 감사합니다. prob08 에이전트를 시작했습니다.
+
+**prob08-gaussian 착수 시점 상태**: 131장 · 2,077줄 · SVG 15개 · `<text>` 69개 · `.fl` 오버레이 0 · `<ol>` 0 · `\frac{1}{` 22곳. 노트는 html 539줄 / md 1,534줄.
+
+**도형 15개** (슬라이드 · `<text>` 수 · font-size · 현재 max-width): S8 Route Map 11 / 16–19 / 1080 · S12 What the Coupling Does 3 / 18 / 980 · S14 The Running Example, Drawn 5 / 16–17 / 900 · S16 Conditioning = Slicing the Ellipse 4 / 16–18 / 900 · S21 Bowl vs. Trough 2 / 18 / 980 · S37 Coloring White Noise 5 / 18–19 / 1020 · S39 Every Shadow Is Normal 2 / 16–18 / 900 · S40 Degeneracy 1 / 17 / — · S41 Equivalence 9 / 16–19 / 960 · **S87 Signal Plus Noise 4 / 14–18 / 560 · S91 Shrinkage 5 / 13–14 / 540 · S99 the Noising Chain 4 / 14 / 620 · S107 Worked Schedule $\beta = 0.02$ 7 / 13–14 / 640 · S111 Algorithm Skeleton 4 / 13–14 / 620 · S116 Two Classes, One Boundary 3 / 13–14 / 600**. 뒤쪽 여섯(S87–S116)이 최악입니다 — 본문 25 px에 13–14 px 라벨, 도형 폭이 540–640 px입니다. 가독성 지적은 여기서 나올 것으로 봅니다.
+
+지시는 prob07과 동일 기준이고, 두 가지를 추가했습니다. 첫째, 공분산·스케줄 수치($\bar\alpha$, $\beta$)와 worked value는 재계산으로 검증하거나 미검증으로 표시할 뿐 기억으로 고치지 않습니다(numpy/scipy가 없어 `math`만 씁니다). 둘째, conditional Gaussian 결론 위치와 diffusion/GDA 범위는 구조 문제로 분류해 슬라이드 순서를 건드리지 않게 명시했습니다 — 근거가 보이면 기록만 하고 Albert 판단 사항으로 올리겠습니다. 벡터 안의 `\frac{1}{...}`만 `1/n`으로 바꾸고 display 수식의 `\frac`은 그대로 둡니다.
+
+산출물은 그대로 받지 않고 제가 검토·재계산한 뒤 결과를 보내드리겠습니다. 로그는 이 메시지까지 최신입니다.
+
+---

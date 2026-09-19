@@ -233,6 +233,11 @@ the same formulas with $f_X$ -- and $M_X(t) = \mathbb{E}[e^{tX}] < \infty$. The
 
 $$ p_t(x) \;=\; \frac{e^{tx}\, p_X(x)}{M_X(t)}. $$
 
+**Scope of the notation.** We show the discrete case; for continuous $X$, replace
+sums by integrals. Nothing in the proof depends on which reading is taken -- the
+only properties used are positivity of $e^{tx}$, normalization by $M_X(t)$, and
+differentiation under the expectation.
+
 **Well-definedness, checked.** The numerator is non-negative always;
 $M_X(t) > 0$ because $e^{tX} > 0$ pointwise -- indeed
 $M_X(t) \geq e^{t\mu}$ by Jensen, though positivity is all that is needed -- and

@@ -84,7 +84,7 @@ $X_i = \ell(h, Z_i)$. The ERM output $\hat h$ is a *random hypothesis*, a
 function of the sample, and that single fact is what breaks the naive application
 of concentration (Section 1.4). If several $h$ tie for the minimum, $\hat h$ is
 any fixed tie-breaking choice; nothing below depends on which. Training loss and
-test-set accuracy are both instances of $\hat R_n$ computed on different samples;
+test-set error are both instances of $\hat R_n$ computed on different samples;
 "generalization" is the claim that $\mathrm{gap}(\hat h)$ is small with high
 probability -- a theorem, not a hope.
 
@@ -92,7 +92,7 @@ probability -- a theorem, not a hope.
 
 The extreme case, with its hypotheses made explicit. Let the inputs $X_i$ be
 distinct with probability 1 -- for instance $X$ has a continuous distribution, so
-a repeat has probability 0, a condition left implicit in the source -- and let
+a repeat has probability 0, a condition the source now states -- and let
 the labels be independent fair coins carrying *no information* about $x$:
 $Y \sim \mathrm{Bernoulli}(\frac12)$ independent of $X$. The memorizer is the
 lookup table $h_{\text{mem}}(x) = Y_i$ if $x = X_i$ for some training index $i$,
@@ -368,8 +368,8 @@ $$ \cosh t = \sum_{k=0}^\infty \frac{t^{2k}}{(2k)!}
 **End of proof.**
 
 The lemma's promise for $[-1,1]$ is
-$\exp\big(\frac{t^2 \cdot 2^2}{8}\big) = e^{t^2/2}$ -- the same answer,
-confirming the constant 8.
+$\exp\big(\frac{t^2 \cdot 2^2}{8}\big) = e^{t^2/2}$ -- the same Gaussian proxy,
+not the same MGF (the MGF is $\cosh t$), confirming the constant 8.
 
 **Unimprovability of the constant, made precise.** Suppose some envelope
 $\mathbb{E}[e^{tX}] \leq e^{ct^2}$ held for all $t$ for every mean-zero
@@ -957,7 +957,7 @@ $= \frac{0.6931}{2 \cdot 0.0025} = 138.6$, about 139, at $\epsilon = 0.05$ --
 verified. Precision dominates: halving $\epsilon$ quadruples $n$; confidence is
 nearly free, entering through the logarithm of $\frac1\delta$.
 
-### 7.6 The sample-size numbers, re-derived (one rounding slip found)
+### 7.6 The sample-size numbers, re-derived
 
 Setting $\epsilon = 0.05$ and $\delta = 0.05$ gives
 $n \geq 200\big(\ln|\mathcal{H}| + \ln 40\big)$ with $\ln 40 = 3.6889$. Row by
@@ -972,35 +972,40 @@ ceiling, then the value shown in the source deck:
 - $|\mathcal{H}| = 10^6$: $\ln = 13.8155$; $3500.88$; need $3{,}501$; source
   $3{,}501$ -- agrees.
 - $|\mathcal{H}| = 2^{100}$: $\ln = 69.3147$; $14600.72$; need $14{,}601$;
-  source $14{,}600$ -- off by one.
+  source $14{,}601$ -- agrees.
 
-**Discrepancy, for the record:** the last row's requirement is
-$n \geq 14{,}600.72$, so the smallest integer sample size is $14{,}601$; the
-source's $14{,}600$ rounds down instead of up. The qualitative claim is
+**Rounding, for the record:** the last row's requirement is
+$n \geq 14{,}600.72$, so the smallest integer sample size is $14{,}601$ -- a
+ceiling, not a round-down. Earlier revisions of the source printed $14{,}600$
+here and on the chart; both now show the ceiling. The qualitative claim is
 untouched: a million hypotheses cost only
 $\frac{3501}{1199} \approx 2.9$ times the data of ten -- logarithms are kind.
 
-### 7.7 The bits-versus-samples line and the confidence numbers (same slip pattern)
+### 7.7 The bits-versus-samples line and the confidence numbers
 
-The line is $n = 200\ln 40 + (200\ln 2)\,k = 737.78 + 138.63\,k$. The source's
-caption "$n \approx 739 + 139\,k$" rounds each coefficient up-ish; the honest
-rounding of the intercept is 738. Its plotted points, exactly -- bit budget $k$,
-then the raw value, then the ceiling, then the value shown:
+The line is $n = 200\ln 40 + (200\ln 2)\,k = 737.78 + 138.63\,k$, printed in
+the source as $n = \lceil 737.78 + 138.63\,k \rceil$ with $k = \log_2|\mathcal{H}|$: the
+bracketed form states the rounding instead of hiding it in a rounded intercept and
+slope, an integer-looking $738 + 139\,k$ would land at $14{,}638$ at $k = 100$ rather
+than at the plotted $14{,}601$. Its plotted points, exactly -- bit budget $k$, then the raw
+value, then the ceiling, then the value shown:
 
-- $k = 10$: $2124.07$; ceiling $2{,}125$; source $2{,}124$.
-- $k = 50$: $7669.25$; ceiling $7{,}670$; source $7{,}669$.
-- $k = 100$: $14600.72$; ceiling $14{,}601$; source $14{,}600$.
+- $k = 10$: $2124.07$; ceiling $2{,}125$; source $2{,}125$.
+- $k = 50$: $7669.25$; ceiling $7{,}670$; source $7{,}670$.
+- $k = 100$: $14600.72$; ceiling $14{,}601$; source $14{,}601$.
 
-So all three labels round the raw value down instead of taking the ceiling --
-each off by one sample, immaterial at this scale but noted.
+All three labels carry the ceiling; earlier revisions rounded them down and gave
+the intercept as 739.
 
 Confidence numbers at $\epsilon = 0.05$, where the extra samples over the
 95-percent baseline are $200\big(\ln(2/\delta) - \ln 40\big)$: at 99.9 percent,
-$200(\ln 2000 - \ln 40) = 200\ln 50 = 782.4$, shown as $+782$, rounded down;
-ceiling against ceiling gives $+783$. At $1 - 10^{-9}$,
-$\ln(2 \times 10^9) = 21.416$ and the extra is $3545.5$, shown as $+3{,}545$,
-same rounding. The headline stands: from 95 percent to one-in-a-billion failure
-costs a few thousand samples -- confidence is nearly free.
+$200(\ln 2000 - \ln 40) = 200\ln 50 = 782.40$, shown as $+783$. At $1 - 10^{-9}$,
+$\ln(2 \times 10^9) = 21.416$ and the extra is $3545.51$, shown as $+3{,}546$.
+Both entries are ceilings of the *difference*, which is the extra that always
+suffices. The difference of the two ceilings is $+782$ or $+3{,}545$ and depends on
+$|\mathcal{H}|$, so the printed entries are the guaranteeing ones. The headline
+stands: from 95 percent to one-in-a-billion failure costs a few thousand
+samples -- confidence is nearly free.
 
 ### 7.8 What breaks for infinite classes, and the road ahead
 
@@ -1038,7 +1043,9 @@ $$ R(\hat{h}) \;\leq\; \underbrace{\min_{h \in \mathcal{H}} R(h)}_{\text{approxi
 Growing $\mathcal{H}$ shrinks the approximation term -- a richer class contains
 better hypotheses, the minimum over a superset being no larger -- and grows the
 estimation term, through $\ln|\mathcal{H}|$ in the numerator. Their sum is the
-U-shaped overfitting curve, now derived rather than drawn; more data pushes the
+U-shaped overfitting curve -- in which training loss is drawn *below* true risk
+at every complexity, falling monotonically while the true-risk curve turns back
+up, so the vertical gap widens to the right -- now derived rather than drawn; more data pushes the
 estimation curve down, so the optimal class size grows with the dataset.
 Lecture 7 and the optimization track pick up this decomposition by name.
 
@@ -1075,12 +1082,16 @@ effective $|\mathcal{H}|$.
 (i) *The test-set bound.* A held-out test set is fresh data, and the single
 trained model is one fixed hypothesis with respect to it: $|\mathcal{H}| = 1$,
 Hoeffding applies exactly, and the Section 5.3 computation says $4{,}612$ test
-samples certify plus-or-minus 2 percent at 95 percent confidence
-*unconditionally, whatever the model is*.
+samples certify plus-or-minus 2 percent at 95 percent confidence, *provided the
+test set is fresh and the model was fixed before evaluation* -- the certificate is
+about the evaluation protocol, not about which model was trained.
 
 (ii) *Validation and early stopping.* Comparing $m$ candidate checkpoints on a
 validation set is a union bound over $m$ fixed hypotheses; $m$ is small, tens,
-so the $+\ln m$ price is trivial.
+so the $+\ln m$ price is trivial. The candidate set must be fixed in advance and
+chosen independently of the validation sample; adaptive reuse -- tune, re-evaluate,
+tune again on the same split -- is selection pressure of exactly the Section 6.3
+kind and is not covered by a plain union bound.
 
 (iii) *Leaderboard overfitting, explained.* A public leaderboard evaluated on one
 fixed test set is the model farm of Section 6.3 -- thousands of submissions

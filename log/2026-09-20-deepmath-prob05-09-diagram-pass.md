@@ -650,3 +650,43 @@ S107은 `signal variance fraction`으로 고치고, coefficient $(1-\beta)^{n/2}
 접수했습니다. 에이전트가 prob08 네 파일을 잡고 있는 동안에는 병행 편집하지 않고 대기합니다. 끝나는 대로 큐를 적용하고, 도형은 하나씩 60 DPI로 대조한 뒤 전체 검증 결과를 보내드리겠습니다.
 
 ---
+
+## 45 — slides → slides-review (2026-09-20 03:35)
+
+prob08 적용·검증 완료, 커밋했습니다 (1457a07).
+
+**§2 도형 (15개 중 편집 대상 전부)**
+- **S39**: `<text>a&#8319;X</text>`(U+207F) → `$a^\top X$`. 60 DPI에서 `a⊤X`로 정상 렌더 확인.
+- **S107**: raw `(1-b)^n` → KaTeX. §1.7 합의대로 `signal variance fraction $(1-\beta)^n$` /
+  `noise variance $1-(1-\beta)^n$`, 캡션은 `variance fraction $0.133$, mean coefficient $0.364$`로 분리.
+  라벨이 y축선을 넘어가서 left 24.53% → 30.00%로 옮기고 재렌더 확인.
+- **S99**: `data x_0`/`x_25`/`x_75` → `$x_0$`/`$x_{25}$`/`$x_{75}$`/`$x_{200}$` 오버레이.
+- **S87/91/99/107/111/116**: 확대 + `.p8-fig`/`.fl` 오버레이로 교체.
+- 덱 전체 `<text>` 0개, `.fl` 72개. 에이전트 보고를 그대로 받지 않고 제가 HEAD 사본(/tmp/p08-head.html)과
+  텍스트 레이어 diff로 대조했습니다. 산문 삭제로 보인 3건은 모두 도형 라벨 이관이었습니다.
+
+**§1 정확성 15건 — 전부 합의 문구로 적용**
+S1, S7, S48, S60, S78, S92, S94, S104, S107, S109, S110, S111, S115, S125, S127.
+- S109는 `(1-\beta)\beta` 단계를 지우고 `variance $1 - (1-\beta) = \beta$ exactly`로,
+  근사는 stationary prior 쪽에만 남겼습니다.
+- S110은 `Given $X_0 = x_0$, coordinates evolve independently` + 무작위 $X_0$의 marginal 감쇠 문장.
+- 덱 bullet이 정확해졌으므로 note.html/note.md의 §8.8 "근사 위치" 문단과 두 preamble도 같은 변경에서
+  다시 썼습니다 — 고쳐진 결함을 노트가 계속 광고하지 않도록.
+
+**작업항목 D**: in-body `prob0N` / `&sect;0N` 47곳 제거(44행).
+
+**추가로 제가 잡은 레이아웃 2건** (HEAD에도 있던 것):
+- S104 MGF 체인이 음영 블록과 슬라이드 오른쪽 끝을 넘어가서 `aligned` 2행으로 분할.
+- S122 `aligned`가 짧은 첫 줄을 오른쪽으로 밀어 비대칭 → `gathered`로 교체, 두 줄 모두 가운데 정렬.
+
+**검증**: `lint-deck.py` ok · `find-wordy.py` 0건(제 정확성 수정이 만든 4건도 합의 주장 약화 없이 정리) ·
+`find-dense.py` 기존 2건만 · `outline-lint.py` 0 stale (§08 행은 HEAD에서 이미 `</svg>`/`</ul>`로
+drift해 있어서 실제 `<h2>`에 재앵커링했습니다) · 131페이지 재렌더 후 편집 슬라이드 60 DPI 개별 확인.
+
+**§3 구조**는 이번 패스에서 손대지 않았습니다. S49–85(37장 proof + GDA matrix calculus)의 appendix/note 이동,
+그리고 prob07 Fano 위치와 함께 최종 보고에서 Albert 판단 항목으로 올리겠습니다.
+S15/17, S89–93, S103–106은 그대로 유지했습니다.
+
+승인해 주시면 prob09-monte-carlo(117장, 도형 7개, SVG 라벨 74개) 전담 subagent를 단독으로 시작하겠습니다.
+
+---

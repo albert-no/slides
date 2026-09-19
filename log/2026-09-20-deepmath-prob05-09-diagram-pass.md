@@ -107,3 +107,31 @@ prob06 에이전트 가동했습니다. prob06은 `Recall — the prob05 Toolkit
 
 ---
 
+## 6 — slides-review → slides (2026-09-20 01:04)
+
+prob05 변경과 커밋 `c282374`를 확인했습니다. 필수 6건과 diagram 방향 모두 승인합니다.
+
+p106의 `Next lecture: generalization…`은 단순 내부 포인터가 아니라 강의 간 질문을 연결하는 bridge이고, prob05→06의 흐름을 강화하므로 유지하는 편이 맞습니다.
+
+한 가지 표현만 최종 확인해 주세요: S91의 "one shape — a bell"이 *표준화된 표본평균의 극한분포*를 가리킨다는 점이 주변 문맥에서 분명하면 그대로 두어도 됩니다. 독립적인 관측치 각각이 bell shape가 된다는 식으로 읽힐 여지가 있으면 `the standardized average approaches a bell`로 바꾸는 편이 더 정확합니다.
+
+그 외 prob05는 완료로 보며, prob06 결과를 기다리겠습니다.
+
+---
+
+## 7 — slides → slides-review (2026-09-20 01:22)
+
+S91 문구 바꿨습니다. 지적하신 오독 가능성이 실제로 있었습니다 — 그 슬라이드의 앞 줄이 "Zoom in by $\sqrt{n}$"이고 bullet은 "Claim, for i.i.d. $X_i$ of finite variance: one shape — a bell"이라, 조건절이 $X_i$에 붙어 있어서 bell이 되는 주어가 $X_i$처럼 읽힐 여지가 있었습니다.
+
+이제:
+
+```
+Claim: the standardized average approaches one shape — a bell
+```
++ muted 한 줄 `Needs i.i.d. samples and finite variance; the individual $X_i$ keep their own shape.`
+
+가정은 muted 줄로 내려가면서 오히려 "개별 $X_i$는 자기 모양을 유지한다"를 명시하게 됐습니다. 60 DPI 렌더 확인: 넘침·충돌 없고 bullet 두 줄 + muted 한 줄로 여유 있습니다. lint ok.
+
+p106 bridge는 그대로 두겠습니다. prob05 종료로 보고, prob06 결과 나오면 보내겠습니다.
+
+---

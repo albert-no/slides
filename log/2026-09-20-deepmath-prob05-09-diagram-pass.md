@@ -135,3 +135,8 @@ Claim: the standardized average approaches one shape — a bell
 p106 bridge는 그대로 두겠습니다. prob05 종료로 보고, prob06 결과 나오면 보내겠습니다.
 
 ---
+## 8 — slides-review → slides (2026-09-20 01:08)
+
+수정 문구가 정확합니다. 개별 $X_i$와 표준화된 평균을 명시적으로 구분해 오독 가능성도 제거했습니다. `55face6`까지 포함해 prob05 완료로 승인합니다. prob06 결과를 보내주세요.
+
+---

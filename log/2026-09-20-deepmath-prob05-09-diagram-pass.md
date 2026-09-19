@@ -377,3 +377,88 @@ S7 test-set error · S9 `|gap|` (부호 있는 정의는 math-block에 유지) �
 에이전트 산출물은 그대로 받지 않고 제가 검토한 뒤 결과를 보내드리겠습니다. Fano 위치·강의 과적재 건은 이번 패스 범위 밖으로 두되, 교차검증에서 지적하실 내용은 받아두겠습니다.
 
 ---
+
+## 23 — slides-review → slides (2026-09-20 02:12)
+
+prob07 전담 검토 결과입니다. 아래는 이번 패스에서 반드시 반영할 정확성 항목입니다.
+
+1. **S21** `Known: the conditional model $p_{X|Y}$` bullet이 두 번 중복되어 있습니다. 하나 삭제.
+2. **S73** `|\hat p-p|\le\epsilon with $2e^{-2n\epsilon^2}$ confidence`는 오류입니다. `$\Pr(|\hat p-p|\ge\epsilon)\le2e^{-2n\epsilon^2}$`, 즉 confidence `$\ge1-2e^{-2n\epsilon^2}$`로 수정하고 note 동기화.
+3. **S65** $H(E)$는 binary entropy라 $\le1$입니다. `keep H(E) unbounded` → `keep the exact binary entropy $h_2(P_e)$ instead of upper-bounding it by 1`.
+4. **S64** 8-class 예제의 "no dataset size beats 50%"는 과도합니다. `For this fixed joint distribution of $(X,Y)$, no estimator beats 50%`로.
+5. **S81** `Every CE training run is MLE` → `Standard unweighted CE on observed targets is conditional MLE for a normalized probabilistic model`. S6도 생성모형은 $q_\theta(x_i)$, 분류는 $q_\theta(y_i\mid x_i)$임을 구분.
+6. **S43** `Regularization Is a Prior` → `Regularization Can Encode a Prior`; `L2 weight decay corresponds to Gaussian-prior MAP under the stated scaling`로 조건 명시.
+7. **S84** Naive Bayes 가정은 먼저 product factorization으로 쓰고, `when factors are positive, logs turn the product into a sum`을 덧붙이세요. zero probability에서 log는 정의되지 않습니다.
+8. **S43** 끝의 불필요한 `</ul>` 하나 제거.
+9. **S78** Gaussian variance MLE의 $1/n$은 맞지만 unbiased estimator가 아님을 한 줄 명시해 $n-1$ 혼동을 예방하세요.
+
+*Diagram*
+- S39의 `0.9 × f(x|A)`, S63 Fano sandwich, S85의 11px `x_1,x_2,x_3`는 KaTeX overlay 필수.
+- 특히 S7/14/23/29/39/63/75/85/106/110/113 확대와 baseline 검수.
+- S63은 `$H(E,Y\mid\hat Y)$`, `$H(Y\mid\hat Y)\ge H(Y\mid X)$`, `$\le1+P_e\log|\mathcal Y|$`를 수학 overlay로.
+- S29의 unequal-variance 경계 두 개는 정확하고 교육적으로 유용하니 유지.
+
+Fano 위치·23장 분량은 이번 PR에서 전면 이동하지 않더라도 `Fundamental Limits`/appendix 후보로 최종 보고에 남기세요. 4장 review와 9-step proof가 main estimation chain을 끊습니다. shrinkage S108–110은 좋은 예제이므로 유지하세요.
+
+---
+
+## 24 — slides → slides-review (2026-09-20 02:15)
+
+목록을 큐(`/workspace/agent/prob07-pending.md`)에 넣었습니다. 에이전트가 파일을 놓는 즉시 적용합니다 — 지금 병행 편집하면 충돌합니다.
+
+베이스라인 `102a518`에서 확인된 항목(S73, S65, S64, S81+S6, S43 제목·불릿, S84, S78)은 주신 문구대로 반영합니다. S73은 실제 오류가 맞습니다.
+
+두 건은 소스에서 확인되지 않아 보류합니다. **S21**: `Setup — Sample and Label`(L424–436)에 `<li>`는 셋뿐이고 해당 문자열은 파일 전체에서 1회, 126장 전수 검사에서 슬라이드 내 동일 `<li>` 중복 0건. **S43 잉여 `</ul>`**: `<ul>` 50 / `</ul>` 50, `<li>` 121 / `</li>` 121, 중첩 깊이 음수 구간 없음. 기억으로 고치지 않는다는 규칙에 따라 원문 인용을 요청드립니다.
+
+---
+
+## 25 — slides-review → slides (2026-09-20 02:20)
+
+S21·S43 두 항목은 reviewer에게 정확한 baseline/line 재검증을 요청했습니다. 근거가 확인될 때까지 보류하는 판단이 맞습니다. 오탐이면 명시적으로 철회하겠습니다.
+
+추가 검산에서 더 중요한 항목이 확인됐습니다.
+
+1. **S39 MAP 경계도 두 개입니다.** 현재 사용한 분포에서 `$0.9f_A(x)=0.1f_B(x)$`의 해는 약 **129.12, 194.88**입니다. MLE 경계는 약 144.97, 179.03이고, $B$의 분산이 더 커서 극단적인 작은 $x$에서도 다시 $B$가 이깁니다. 현재 그림이 왼쪽 MAP 경계를 숨기고 `pick-B region 16cm to the right`만 보인다면 오해를 유발합니다. 두 MAP 경계를 모두 표시하고 `the central A region widens from approximately [145,179] to [129,195]`로 수정하세요. 숫자는 소스의 실제 $\mu,\sigma,\pi$로 다시 계산해 확인해 주세요.
+2. **S5** `any pick $\hat h$ generalizes` 다음 식이 ERM excess-risk corollary라면 `the ERM pick $\hat h$ satisfies…`로 한정하거나 generic uniform bound와 ERM corollary를 분리하세요.
+3. **S72 Bernoulli MLE**: 내부 미분해는 `$0<\sum x_i<n$`일 때이고, all-zero/all-one은 boundary MLE 0/1입니다. 한 줄 caveat를 추가하세요.
+
+특히 S39는 diagram pass에서 반드시 고쳐야 할 정확성 문제입니다.
+
+---
+
+## 26 — slides → slides-review (2026-09-20 02:24)
+
+S39 재계산 결과 지적이 맞습니다. A ~ $\mathcal{N}(170,10^2)$, B ~ $\mathcal{N}(180,15^2)$, prior $0.9/0.1$에서
+
+    MLE (1:1)     : 144.9716 , 179.0284   (S29의 ≈145 / ≈179 은 정확, 둘 다 그려져 있음)
+    MAP (0.9:0.1) : 129.1219 , 194.8781   (데크에는 194.88만)
+    이동폭 ±15.8497 cm 대칭 — 상수항만 움직이므로
+
+왼쪽 경계가 안 보이는 이유는 S39 축 매핑이 `px = 310 + (cm − 170)·7`이라 $x=30$ px가 정확히 130.0 cm이고 129.12 cm가 캔버스 밖으로 나가기 때문입니다. 캡션 `pushes the pick-B region 16 cm to the right`는 절반만 참이고, A 영역은 평행이동이 아니라 양쪽으로 넓어집니다.
+
+도메인을 120–220 cm로 옮겨(`px = 30 + (cm − 120)·7`, 밀도 스케일 5487 px/unit, baseline y=260 — 기존 봉우리 63.0 / 245.4 재현) 다시 그리고, MAP 두 경계는 대시, MLE 두 경계는 점선으로 함께 표시합니다. 새 좌표: MAP-left 12.35%, MLE-left 26.95%, $\mu_A$ 50.00%, MLE-right 58.32%, $\mu_B$ 59.21%, MAP-right 72.91%. 캡션 `the central A region widens from about $[145, 179]$ to $[129, 195]$`, 라벨 `$0.9\, f(x \mid A)$` / `$0.1\, f(x \mid B)$`. polyline 좌표는 `/workspace/agent/prob07-s39-points.txt`에 계산해 저장했습니다.
+
+S38 표는 검산 결과 정확합니다($f_A(185)=0.0130$, $f_B=0.0252$, $0.9f_A=0.0117$, $0.1f_B=0.0025$) — 그대로 둡니다. S5·S6·S72도 확인했고 주신 대로 반영합니다.
+
+---
+
+## 27 — slides-review → slides (2026-09-20 02:28)
+
+재검증 결과, 보류한 두 항목은 모두 우리 reviewer의 오탐이었습니다. 명확히 철회합니다.
+
+- S21 중복 bullet 없음: baseline `102a518`, L427–431 정상.
+- S43 잉여 `</ul>` 없음: L747–751 구조 정상.
+
+원인은 reviewer가 `sed` 조회 범위의 경계행을 겹쳐 출력해 L430과 L750을 두 번 본 것이었습니다. 두 항목은 수정하지 마세요. 근거를 요구하고 임의 수정하지 않은 판단이 정확했습니다.
+
+S39 재계산과 수정 방향은 승인합니다. 두 MAP 경계와 두 MLE 경계를 모두 보여주되, 네 경계선·두 곡선이 한 그림에서 복잡해질 수 있으니 60 DPI에서 라벨 간 충돌과 선 종류 구분을 특히 확인해 주세요.
+
+---
+
+## 28 — slides → slides-review (2026-09-20 02:30)
+
+철회 확인했습니다. 큐에서 두 항목을 WITHDRAWN으로 표시하고 손대지 않습니다.
+
+S39는 선 네 개가 한 그림에 들어가므로 구분을 이렇게 둡니다: MAP 경계는 굵은 대시(`stroke-dasharray="7 5"`, 진한 먹색, 라벨 상단), MLE 경계는 얇은 점선(`3 5`, 회색, 라벨 하단)으로 높이를 어긋나게 배치해 라벨이 겹치지 않게 합니다. MLE-right(58.32%)와 $\mu_B$(59.21%)가 0.9% 차이로 가장 가까워 여기가 충돌 위험 지점이라 60 DPI에서 이 구간을 특히 확인하겠습니다. 라벨이 붙으면 $\mu$ 눈금 쪽을 빼겠습니다.
+
+---

@@ -231,35 +231,35 @@ example (mean of n fair coin flips, Pr(X̄_n ≥ 3/4)) is re-answered by every b
 ends on a bridge to prob06 (tail bounds uniform over a hypothesis class → Hoeffding
 + union bound).
 Companion: `prob05-concentration/prob05-concentration-note.html` — detailed definitions, expanded proofs, lemmas, references.
-Accessible edition: `prob05-concentration/prob05-concentration-note.md` — screen-reader Markdown edition of that note (1180 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
+Accessible edition: `prob05-concentration/prob05-concentration-note.md` — screen-reader Markdown edition of that note (1187 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
-| — | Title + TOC | 1–2 | prob05-concentration/prob05-concentration.html:23 |
-| 01 | Why Averages? (minibatch loss / test accuracy / Monte Carlo cards, how-many-samples question, three-bounds preview, route map SVG) | 3–8 | prob05-concentration/prob05-concentration.html:115 |
-| 02 | Warm-Up (expectation :237 / variance :253 recall from prob01, independence recall from prob03, product-rule proof, variance adds, coin running example :313, why not just compute it) | 9–16 | prob05-concentration/prob05-concentration.html:229 |
-| 03 | Markov's Inequality (indicator technique :349, Thm 1 arc: statement :386, threshold form :398, 3-step proof, coin answer 0.67, tightness example :493, what it buys) | 17–29 | prob05-concentration/prob05-concentration.html:341 |
-| 04 | Chebyshev's Inequality (squaring technique, Thm 2 arc, ασ-rule table :626, Var(X̄_n)=σ²/n :642, coin answer, Markov-vs-Chebyshev 4/n chart :675, 50,000-samples computation :698) | 30–42 | prob05-concentration/prob05-concentration.html:521 |
-| 05 | Law of Large Numbers (convergence-in-probability def :718 + picture, Thm 3 arc, sample-path SVG :812, tails-vanish chart :834, where AI leans on it, the-gap teaser :872) | 43–53 | prob05-concentration/prob05-concentration.html:710 |
-| 06 | Moment Generating Functions (def :896, moment machine M'(0)/M''(0), Taylor view, Bernoulli MGF :953, Gaussian MGF exercise via completing the square, Thm 4 uniqueness :1038, Prop. sums→products :1053, Gaussian-sum worked, coin-sum MGF :1095) | 54–69 | prob05-concentration/prob05-concentration.html:888 |
-| 07 | Chernoff Bound (exponentiating-the-event technique :1142, Thm 5 arc :1166, free parameter t, coin 3-step optimization t*=ln 3 → exponent 0.1308 :1238, KL-exponent view :1278, 18,444-samples revisit :1295, what it buys) | 70–84 | prob05-concentration/prob05-concentration.html:1119 |
-| 08 | Three Bounds Head-to-Head (escalation table, numeric table on Pr(X̄_n ≥ 3/4) :1361, log-scale chart :1376, takeaway) | 85–89 | prob05-concentration/prob05-concentration.html:1338 |
-| 09 | Central Limit Theorem (shape question, standardization, Thm 6 :1452, sketch scope caveat, Taylor-at-zero + compound-interest-limit techniques, 3-step MGF sketch, Bin(16,½)-vs-bell chart :1569, what it buys) | 90–103 | prob05-concentration/prob05-concentration.html:1420 |
-| — | Recap chain, one-coin-every-tool recap table, bridge to prob06, end slide | 104–107 | prob05-concentration/prob05-concentration.html:1617 |
+| — | Title + TOC | 1–2 | prob05-concentration/prob05-concentration.html:45 |
+| 01 | Why Averages? (minibatch loss / test accuracy / Monte Carlo cards, how-many-samples question, three-bounds preview, route map SVG) | 3–8 | prob05-concentration/prob05-concentration.html:137 |
+| 02 | Warm-Up (expectation :260 / variance :276 recall from prob01, independence recall from prob03, product-rule proof, variance adds, coin running example :336, why not just compute it) | 9–16 | prob05-concentration/prob05-concentration.html:252 |
+| 03 | Markov's Inequality (indicator technique :372, Thm 1 arc: statement :409, threshold form :421, 3-step proof, coin answer 0.67, tightness example :514, what it buys) | 17–29 | prob05-concentration/prob05-concentration.html:364 |
+| 04 | Chebyshev's Inequality (squaring technique, Thm 2 arc, ασ-rule table :645, Var(X̄_n)=σ²/n :661, coin answer, Markov-vs-Chebyshev 4/n chart :694, 50,000-samples computation :718) | 30–42 | prob05-concentration/prob05-concentration.html:542 |
+| 05 | Law of Large Numbers (convergence-in-probability def :738 + picture, Thm 3 arc, sample-path SVG :830, tails-vanish chart :853, where AI leans on it, the-gap teaser :894) | 43–53 | prob05-concentration/prob05-concentration.html:730 |
+| 06 | Moment Generating Functions (def :918, moment machine M'(0)/M''(0), Taylor view, Bernoulli MGF :975, Gaussian MGF exercise via completing the square, Thm 4 uniqueness :1060, Prop. sums→products :1075, Gaussian-sum worked, coin-sum MGF :1103) | 54–69 | prob05-concentration/prob05-concentration.html:910 |
+| 07 | Chernoff Bound (exponentiating-the-event technique :1164, Thm 5 arc :1188, free parameter t, coin 3-step optimization t*=ln 3 → exponent 0.1308 :1284, KL-exponent view :1315, 18,444-samples revisit :1328, what it buys) | 70–84 | prob05-concentration/prob05-concentration.html:1141 |
+| 08 | Three Bounds Head-to-Head (escalation table, numeric table on Pr(X̄_n ≥ 3/4) :1381, log-scale chart :1396, takeaway) | 85–89 | prob05-concentration/prob05-concentration.html:1358 |
+| 09 | Central Limit Theorem (shape question, standardization, Thm 6 :1472, sketch scope caveat, Taylor-at-zero + compound-interest-limit techniques, 3-step MGF sketch, Bin(16,½)-vs-bell chart :1587, what it buys) | 90–103 | prob05-concentration/prob05-concentration.html:1440 |
+| — | Recap chain, one-coin-every-tool recap table, bridge to prob06, end slide | 104–107 | prob05-concentration/prob05-concentration.html:1634 |
 
 Key theorems: **Thm 1** Markov Pr(X ≥ αE[X]) ≤ 1/α, non-negative X, full arc
-(prob05-concentration/prob05-concentration.html:386); **Thm 2** Chebyshev
-Pr(|X−μ| ≥ ασ) ≤ 1/α², full arc (prob05-concentration/prob05-concentration.html:558);
+(prob05-concentration/prob05-concentration.html:409); **Thm 2** Chebyshev
+Pr(|X−μ| ≥ ασ) ≤ 1/α², full arc (prob05-concentration/prob05-concentration.html:579);
 **Thm 3** weak LLN X̄_n → μ in probability, proved via Chebyshev + Var(X̄_n)=σ²/n
-(prob05-concentration/prob05-concentration.html:756); **Thm 4** MGF uniqueness,
+(prob05-concentration/prob05-concentration.html:776); **Thm 4** MGF uniqueness,
 stated without proof as in the tex
-(prob05-concentration/prob05-concentration.html:1038); **Prop.** MGFs turn
+(prob05-concentration/prob05-concentration.html:1060); **Prop.** MGFs turn
 independent sums into products
-(prob05-concentration/prob05-concentration.html:1053); **Thm 5** Chernoff
+(prob05-concentration/prob05-concentration.html:1075); **Thm 5** Chernoff
 Pr(X ≥ α) ≤ M(t)e^{−tα} for all t > 0, full arc
-(prob05-concentration/prob05-concentration.html:1166); **Thm 6** CLT, MGF-based
+(prob05-concentration/prob05-concentration.html:1188); **Thm 6** CLT, MGF-based
 sketch flagged non-rigorous as in the tex
-(prob05-concentration/prob05-concentration.html:1452).
+(prob05-concentration/prob05-concentration.html:1472).
 Figures: all diagrams inline SVG (route map, indicator step, tightening-density
 picture, LLN sample path with fixed seed, exact-vs-Chebyshev decay, Markov-vs-
 Chebyshev 4/n curve, step-vs-exponential lid, log-scale head-to-head,

@@ -810,6 +810,13 @@ $$ \Pr(X \geq \alpha) = \Pr\big(W \geq e^{t\alpha}\big)
 
 **End of proof.**
 
+The deck draws this step. Dividing the equivalence through by $e^{t\alpha}$
+turns it into a pointwise bound, $e^{t(x-\alpha)} \geq \mathbf{1}\{x \geq \alpha\}$,
+valid for every real $x$ and every $t > 0$, with equality exactly at
+$x = \alpha$ -- the exponential is a smooth lid resting on the indicator step
+and touching it at the threshold. Taking $\mathbb{E}$ of that pointwise bound is
+the whole proof in one line.
+
 This is Chebyshev's proof with the square swapped for an exponential -- the "one
 engine, three fuels" claim is now fully cashed. The new feature is the *free
 parameter*: the transform is tunable, and the tuning happens after the inequality

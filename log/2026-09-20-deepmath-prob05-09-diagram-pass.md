@@ -462,3 +462,57 @@ S39 재계산과 수정 방향은 승인합니다. 두 MAP 경계와 두 MLE 경
 S39는 선 네 개가 한 그림에 들어가므로 구분을 이렇게 둡니다: MAP 경계는 굵은 대시(`stroke-dasharray="7 5"`, 진한 먹색, 라벨 상단), MLE 경계는 얇은 점선(`3 5`, 회색, 라벨 하단)으로 높이를 어긋나게 배치해 라벨이 겹치지 않게 합니다. MLE-right(58.32%)와 $\mu_B$(59.21%)가 0.9% 차이로 가장 가까워 여기가 충돌 위험 지점이라 60 DPI에서 이 구간을 특히 확인하겠습니다. 라벨이 붙으면 $\mu$ 눈금 쪽을 빼겠습니다.
 
 ---
+
+## 29 — slides-review → slides (2026-09-20 02:30)
+
+구분 방식이 적절합니다. MLE-right와 $\mu_B$가 붙으면 의미가 더 중요한 경계 라벨을 남기고 $\mu_B$ 눈금 라벨을 빼는 판단에 동의합니다. 최종 렌더 결과를 기다리겠습니다.
+
+---
+
+## 30 — slides → slides-review (2026-09-20 02:30)
+
+확인했습니다. S39 교체 마크업 초안은 미리 계산해서 `/workspace/agent/prob07-s39-draft.html`에 만들어 뒀습니다 — polyline은 실제 밀도값에서 생성했고, MAP 12.35%/72.91%(위쪽 라벨, 굵은 대시), MLE 26.95%/58.32%(아래쪽 라벨, 얇은 점선), A 영역 두 겹 음영으로 넓어지는 폭이 보이게 했습니다. 에이전트가 파일을 놓는 대로 적용하고 렌더 확인해서 보내드리겠습니다.
+
+---
+
+## 31 — slides-review → slides (2026-09-20 02:31)
+
+좋습니다. 실제 밀도값으로 재생성한 곡선과 두 겹 음영이면 prior가 중앙 A 영역을 양쪽으로 넓힌다는 메시지도 분명해집니다. 적용 후 렌더를 확인하겠습니다.
+
+---
+
+## 32 — slides-review → slides (2026-09-20 02:31)
+
+최종 결과를 기다리겠습니다.
+
+---
+
+## 33 — slides-review → slides (2026-09-20 02:31)
+
+확인했습니다.
+
+---
+
+## 34 — slides → slides-review (2026-09-20 02:32)
+
+prob07 완료했습니다. 커밋 `da8c84e`.
+
+**먼저 사고 보고 하나.** 큐를 적용하는 패치 스크립트에서 S39 교체를 정규식으로 잡았는데, 시작 앵커 `<div class="p6-fig" style="max-width:1000px;margin:6px auto;">\n  <svg viewBox="0 0 760 310">`가 S23 도형에도 그대로 매칭되어 `.*?`가 S23→S39를 통째로 삼켰습니다. 에이전트의 미커밋 작업 16장(126→110장, 1968→1752줄)이 지워졌습니다. 복구는 HEAD 454–699행을 다시 이어 붙이고, 에이전트가 남긴 최종 렌더(`deck4.pdf`, 126쪽)의 텍스트 레이어와 복구본 렌더를 전문 diff 해서 그 사이의 차이가 의도한 편집뿐임을 확인하는 방식으로 했습니다. S23·S29 도형은 그 PDF를 근거로 `.fl` 스타일로 다시 만들었고, S39는 정규식 대신 슬라이드 인덱스 기준 통째 교체로 넣었습니다. 반복되는 마크업에 여러 슬라이드를 걸치는 정규식을 앵커로 쓰지 않습니다.
+
+**정확성 7건 (§1)**: S64 `For this fixed joint distribution of $(X,Y)$, no estimator beats 50% error` · S65 `keep the exact $h_2(P_e)$ instead of bounding it by $1$` · S81 `Unweighted CE, normalized model: training **is** maximum likelihood` · S6 생성형 $q_\theta(x_i)$와 분류형 $q_\theta(y_i\mid x_i)$ 병기 · S43 제목 `Regularization Can Encode a Prior`, 불릿에 $\lambda$–$\tau^2$ 대응 조건 명시 · S84 product factorization 한 줄 + `Every factor is positive, so the log turns the product into a sum` · S78 `$\mathbb{E}[\widehat{\sigma^2}] = \tfrac{n-1}{n}\sigma^2$` 한 줄. S73은 에이전트가 이미 올바른 형태로 고쳐 두었고 제가 재확인했습니다. S21·S43(잉여 `</ul>`)은 철회대로 손대지 않았습니다.
+
+**S39 (§5)**: 네 경계 모두 표시했습니다. MAP 굵은 검정 대시(`7 5`) 12.35%/72.91%, MLE 얇은 회색 점선(`3 5`) 26.95%/58.32%, A 영역 두 겹 음영, 캡션 `The central A region widens from about $[145, 179]$ to $[129, 195]$`. 60 DPI 확인 결과 우려하신 MLE-right/$\mu_B$ 구간은 눈금 라벨을 빼서 충돌 없고 선 두 종류가 구분됩니다. `$0.1\,f(x\mid B)$` 라벨이 오른쪽 MAP 선에 닿아 78%/70% → 86%/58%로 옮겼습니다.
+
+**§6**: S5 ERM 한정, S6 위와 같음, S72 `Interior solution, valid for $0 < \sum_i x_i < n$; all heads gives $\hat p = 1$, all tails $0$`.
+
+**도형 11개 60 DPI 대조 완료**: S7 · S14 · S23 · S29 · S39 · S63 · S75 · S85 · S106 · S110 · S113 모두 라벨이 KaTeX이고 본문 크기(1.55rem / sub 1.25rem)입니다. `<text>` 62 → 0. 대조 중에 두 가지를 잡았습니다 — S14 본문이 `since $Y$ is`에서 끊겨 있었고(HEAD부터 있던 결함, `since $Y$ is random`으로 완성), S84는 수식 블록을 둘로 넣으니 불릿이 슬라이드를 넘겨서 타입을 줄이는 대신 `\Longrightarrow`로 한 줄로 합쳤습니다. S110 곡선 교차점도 검산했습니다 — $p(1-p)/10 = [10p(1-p) + (1-2p)^2]/144$의 해가 0.1381/0.8619라 `0.14–0.86` 표기가 맞습니다.
+
+**노트**: md·html 모두 같은 숫자·문구로 동기화했습니다($[144.97,179.03] \to [129.12,194.88]$, 각 경계 $15.85$ cm 바깥으로). 추가로 note.html에 존재하지 않는 `Section 5.6` 인용이 네 곳 있었습니다 — 네 곳 모두 weight decay/Gaussian prior 내용이고 note.md는 같은 자리를 5.5로 쓰고 있어 5.5로 정정했습니다.
+
+**미수정 · 판단 요청 1건**: $\sigma^2$ MLE 슬라이드의 미분 전개는 $\mu$를 쓰는데 결과는 $\hat\mu$를 끼운 값입니다(그래서 위의 $\tfrac{n-1}{n}$ 줄이 맞습니다). 전개와 결과 중 어느 쪽을 맞출지는 기억으로 고치지 않고 남겨 둡니다.
+
+**검증**: `lint-deck` ok · `find-wordy` clean · `find-dense` clean · `outline-lint` 0 stale (기존 경고 5건) · 126쪽 렌더 · OUTLINE prob07 포인터 전부 재매핑.
+
+Fano 위치·23장 분량은 최종 보고의 Albert 판단 사항으로, shrinkage S108–110은 유지로 남겨 두었습니다. 승인 주시면 prob08 에이전트를 시작하겠습니다.
+
+---

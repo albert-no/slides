@@ -67,8 +67,8 @@ approximates, and both matrix-calculus identities of Section 9 proved. Every
 worked number in the lecture has been re-derived from scratch, and all of them
 check out. Four slips in the LaTeX source that the lecture corrects silently
 are confirmed and flagged where they occur, in Sections 2.1, 2.4, 2.5 and 8.3;
-one imprecise intermediate line is flagged in Section 8.8, whose headline
-result is nevertheless correct.
+and Section 8.8 separates the reverse step's one genuine approximation, the
+stationary prior, from its exact algebra.
 
 **Contents.**
 
@@ -1178,9 +1178,9 @@ so the lecture's value $\approx 0.133$ is right, and the noise variance is
 $\approx 0.8674$. A second point on the same curve: $0.98^{25} \approx 0.6035$,
 so about 60 percent of the signal's variance survives 25 steps.
 
-One clarifying remark. The number $0.133$ is the *variance share*
-$\bar\alpha_n$ of the signal; the signal's *amplitude* multiplier is
-$\sqrt{\bar\alpha_{100}} = 0.98^{50} \approx 0.364$. Either way, at $n = 100$
+Two numbers, kept apart on the slide as well. The number $0.133$ is the
+*variance share* $\bar\alpha_n$ of the signal; the signal's *amplitude*
+multiplier is $\sqrt{\bar\alpha_{100}} = 0.98^{50} \approx 0.364$. Either way, at $n = 100$
 the sample is mostly noise.
 
 ### 8.7 The exact reverse posterior
@@ -1264,18 +1264,17 @@ By part 7 of Theorem 2 the mean is
 $\tfrac{\sqrt{1-\beta}}{1} x_n = \sqrt{1-\beta}\, x_n$ and the variance is
 $1 - \tfrac{(\sqrt{1-\beta})^2}{1} = 1 - (1-\beta) = \beta$. **End of proof.**
 
-*Flag on one intermediate line.* The lecture's headline result
-$\mathcal N(\sqrt{1-\beta}\,x_n,\, \beta)$ is exactly right, but its
-derivation records the intermediate step as
-"variance $(1-\beta)\beta/1 = (1-\beta)\beta \approx \beta$". That
-intermediate is the Section-7 posterior variance of the *scaled signal*
-$\sqrt{1-\beta}\,X_{n-1}$: a channel with $\sigma_x^2 = 1-\beta$ and
-$\sigma_z^2 = \beta$ gives $\tfrac{(1-\beta)\beta}{1}$. Dividing by the square
-of the scale, $1-\beta$, recovers the variance of $X_{n-1}$ itself as exactly
-$\beta$, with no small-$\beta$ approximation needed at that step. The genuine
-approximation is elsewhere, and is honestly labelled: it is the use of the
-stationary $\mathcal N(0,1)$ for $X_{n-1}$, which is only asymptotically true
-early in the chain. Consistency check against Section 8.7: averaging the exact
+*Where the approximation actually sits.* The lecture's headline result
+$\mathcal N(\sqrt{1-\beta}\,x_n,\, \beta)$ is exactly right, and so is its
+variance step: $1 - (1-\beta) = \beta$, with no small-$\beta$ approximation
+anywhere in the algebra. The tempting wrong route reads off the Section-7
+posterior variance of the *scaled signal* $\sqrt{1-\beta}\,X_{n-1}$ (a channel
+with $\sigma_x^2 = 1-\beta$ and $\sigma_z^2 = \beta$ gives
+$\tfrac{(1-\beta)\beta}{1}$) and stops there; that is the variance of the
+scaled variable, and dividing by the square of the scale, $1-\beta$, returns
+$\beta$ for $X_{n-1}$ itself. The one genuine approximation is the one the
+slide labels: the use of the stationary $\mathcal N(0,1)$ for $X_{n-1}$, which
+is only asymptotically true early in the chain. Consistency check against Section 8.7: averaging the exact
 posterior over the conditional distribution of $x_0$ given $x_n$ at
 stationarity indeed returns $\mathcal N(\sqrt{\alpha}\,x_n, \beta)$, which
 matches.

@@ -912,8 +912,9 @@ cancels entirely: the optimal $\mu$ does not depend on it. Equivalently, the
 sample mean minimizes $\sum_i (x_i - \mu)^2$, the mean-minimizes-the-quadratic
 fact proved in the Lecture 6 note, Lemma 3.1 Step A.
 
-**Solve for $\sigma^2$.** Substitute $t = \sigma^2$ and
-$S = \sum_i (x_i - \hat{\mu})^2$, so that
+**Solve for $\sigma^2$.** At the joint optimum, substitute the fitted
+$\hat{\mu}$ into the variance solution. Writing $t = \sigma^2$ and
+$S = \sum_i (x_i - \hat{\mu})^2$, the remaining objective is
 $\ell(t) = -\frac{S}{2t} - \frac{n}{2} \log(2\pi t)$:
 
 $$ \ell'(t) = \frac{S}{2t^2} - \frac{n}{2t} = 0

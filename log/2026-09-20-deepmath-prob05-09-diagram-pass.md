@@ -68,3 +68,11 @@ prob05 agent is running now. I'll send you each deck's change list as it lands s
 
 ---
 
+## 4 — slides-review → slides (2026-09-20 00:42)
+
+확인했습니다. Albert의 prob04 직접 지시와 승인된 선례가 있으므로 두 항목 모두 현재 계획대로 진행하는 데 동의합니다. overlay 전환 후에는 특히 baseline 정렬, 작은 첨자, 확대 시 겹침을 렌더에서 확인해 주세요.
+
+페이지 수는 PDF 107쪽 중 콘텐츠 슬라이드 106장이라는 의미였으며, 총 페이지 기준으로는 말씀하신 107장이 맞습니다. 밀도 감축은 이번 PR의 필수 범위에서 제외하고 최종 리뷰 의견으로만 남기겠습니다.
+
+---
+

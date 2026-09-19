@@ -564,3 +564,54 @@ note에도 동일한 논리를 한 문장으로 맞추고 lint/render 후 알려
 산출물은 그대로 받지 않고 제가 검토·재계산한 뒤 결과를 보내드리겠습니다. 로그는 이 메시지까지 최신입니다.
 
 ---
+
+## 39 — slides-review → slides (2026-09-20 02:40)
+
+prob08 전담 검토 결과입니다. 아래는 diagram pass와 함께 반드시 고쳐야 할 정확성 항목입니다.
+
+1. **S60 whitening**: degenerate Gaussian 문맥이므로 `$V\succ0$일 때`로 한정. `no other continuous family does this`는 삭제하고 `a key strength of the Gaussian family`로.
+2. **S92** `Every Bayesian update…` → `This Gaussian-channel update…`.
+3. **S104** `any initial $X_0$ with an MGF` → `MGF finite in a neighborhood of 0`; 아래 `Any $f_0$`도 `Any $f_0$ satisfying this condition`으로 맞추세요. 또는 explicit representation+Slutsky 증명으로 바꾸는 경우에만 더 일반화.
+4. **S115 GDA**: equal priors만으로 Mahalanobis distance 비교는 부족합니다. $\Sigma_y$가 다르면 $\log|\Sigma_y|$ 항이 있으므로 `equal priors and equal determinants`로 한정하거나 full score를 표시.
+5. **S125 covariance MLE**: centered scatter $S\succ0$일 때 interior PD MLE가 존재한다고 명시. `typically $N>n$ and full-rank centered data`; GDA pipeline에도 singular covariance/regularization caveat.
+6. **S111 diffusion skeleton**: finite $T$의 `$x_T\sim N$`과 exact recovery는 근사입니다. `conceptual skeleton`, approximate start, learned reverse-model qualification 추가.
+7. **S107** `(1-\beta)^n=.133`은 signal *coefficient*가 아니라 **signal variance fraction**입니다. coefficient는 $(1-\beta)^{n/2}\approx.364$. noise variance와 짝을 유지하려면 label/caption을 `signal variance fraction`으로 바꾸세요.
+8. **S109** stationary prior에서 `$\mathrm{Var}(X_{n-1}\mid X_n)=\beta$`는 정확합니다. 현재 `$(1-\beta)\beta\approx\beta$` 설명은 오류이므로 제거. approximation은 marginal을 stationary Gaussian으로 놓는 가정에서 옵니다.
+9. **S110** arbitrary dependent/non-Gaussian $X_0$에서는 coordinates가 독립적으로 evolve하지 않습니다. transition noise는 $X_0$에 조건부로 coordinatewise independent지만 초기 의존성은 축소되어 남습니다. jointly Gaussian 전제를 분명히 하세요.
+10. **S48** correlation은 두 variance가 양수일 때만 정의.
+11. **S78** orthogonality는 `for any square-integrable $g(Y)$`.
+12. **S1** `every posterior in closed form` → `Gaussian conditionals and posteriors in closed form`.
+13. **S7** `Jointly Gaussian conditioning stays Gaussian`.
+14. **S94** `Exactly the move…` → `the template behind learned reverse diffusion`.
+15. **S127** → `closed form when class scatter is nonsingular; high-dimensional GDA needs covariance regularization`.
+
+*Diagram*
+- S107 raw `(1-b)^n`/`1-(1-b)^n` → KaTeX $\beta$ 식.
+- S99의 `$x_0,x_{25},x_{75},x_{200}$` overlay.
+- **S39 raw `aⁿX`는 전치가 아니라 실제로 superscript n으로 깨져 있습니다.** 반드시 `$a^\top X$`.
+- S87/91/99/107/111/116의 13–14px 라벨과 540–640px 도형 우선 확대.
+
+구조상 S49–85의 37장 proof와 GDA matrix calculus는 appendix/note 후보로 최종 보고에 남기되 이번 패스에서 순서 이동은 보류해도 됩니다. S15/17 conditional example, S89–93 shrinkage, S103–106 telescope/DDPM 연결은 유지하세요.
+
+---
+
+## 40 — slides → slides-review (2026-09-20 02:47)
+
+15건 전부 커밋된 베이스라인(`83d80f2`의 prob08, 131장)에서 직접 확인했습니다. 큐는 `/workspace/agent/prob08-pending.md`이고, 에이전트가 파일을 놓는 대로 순서대로 적용합니다. 지금 병행 편집하면 충돌하므로 대기합니다.
+
+**직접 검산한 세 건**
+
+- **S107 (7번)** 맞습니다. $(0.98)^{100} = 0.13262$, $(0.98)^{50} = 0.36417$, $1-(0.98)^{100} = 0.86738$. 지금 라벨은 `signal weight (1-b)^n`인데 짝이 되는 붉은 곡선이 `noise variance 1-(1-b)^n`이라 둘 다 분산 척도로 읽어야 일관됩니다. 라벨과 캡션을 `signal variance fraction`으로 바꾸고, 계수를 쓰고 싶으면 S110의 닫힌 형태 $(1-\beta)^{n/2}$와 맞춥니다.
+- **S109 (8번)** 맞습니다. stationary prior $X_{n-1}\sim\mathcal{N}(0,1)$에서 posterior variance는 $\beta/((1-\beta)+\beta) = \beta$로 정확하고, 슬라이드의 math-block `$\mathcal{N}(\sqrt{1-\beta}x_n, \beta)$`와 평균식 $\sqrt{1-\beta}\,x_n$도 맞습니다. 틀린 것은 불릿의 `variance $(1-\beta)\beta \approx \beta$` 한 줄뿐이라 그 단계를 삭제하고, 근사는 marginal을 stationary로 놓는 가정에서 온다는 점을 남기겠습니다.
+- **S39 (diagram)** 맞습니다. 소스가 `<text …>a&#8319;X</text>`, 즉 U+207F SUPERSCRIPT n이라 화면에 `aⁿX`로 나옵니다. `$a^\top X$` KaTeX 오버레이로 갑니다. 이 데크에서 가장 심한 수식 깨짐입니다.
+
+**두 건은 문구를 조금 바꿔 적용하려 합니다 — 확인 부탁드립니다**
+
+- **9번 S110**: 이 슬라이드의 닫힌 형태가 이미 $x_0$ 조건부($\mathcal{N}((1-\beta)^{n/2}x_0, (1-(1-\beta)^n)I_d)$)입니다. $X_0 = x_0$로 조건부이면 $X_0$가 비가우시안·의존적이어도 좌표는 실제로 독립적으로 진행하므로, jointly Gaussian을 전제로 다는 것보다 `Given $X_0 = x_0$, coordinates evolve independently`가 더 약하면서 참입니다. 지적하신 "초기 의존성이 축소되어 남는다"는 주변분포 이야기이므로, 그 점은 한 줄 덧붙이는 쪽이 정확합니다. 이 문구로 가도 될까요?
+- **11번 S78**: 여기서 실제로 필요한 최소 조건은 $\mathbb{E}|g(Y)| < \infty$입니다. 다만 prob07 노트 Lemma 10.1이 square-integrable 표현을 쓰고 있어 시리즈 일관성을 위해 주신 대로 `for any square-integrable $g(Y)$`로 쓰겠습니다.
+
+나머지 10건(S60·S92·S104·S115·S125·S111·S48·S1·S7·S94·S127)은 주신 문구 그대로 반영합니다. S60의 `no other continuous family does this`는 stable·elliptical 족도 아핀 닫힘이라 실제로 거짓이 맞습니다.
+
+곁가지로 이 데크에는 `prob0N`/`&sect;0N` 포인터가 44행에 있습니다(S78·S94·S109·S115·S125 포함) — 작업항목 D로 함께 뺍니다. 구조 건(S49–85 37장, GDA matrix calculus)은 순서 이동 없이 최종 보고의 Albert 판단 사항으로 남기고, S15/17·S89–93·S103–106은 유지합니다.
+
+---

@@ -177,10 +177,10 @@ using $\sqrt{2.6968} = 1.6422$. The darts-per-digit ledger follows by substituti
 
 Target: $|\hat\pi - \pi| \leq 0.01$ with confidence $95$ percent, so $\epsilon = 0.01$ and $\delta = 0.05$.
 
-**Chebyshev.** The requirement is $n \geq \sigma^2/(\delta\,\epsilon^2)$ with $\sigma^2 = \mathrm{Var}(4f)$. Using the rounded variance $\sigma^2 = 16 \times 0.1685 = 2.696$,
-$$ n \geq \frac{2.696}{0.05 \times 10^{-4}} = 539{,}200 . $$
+**Chebyshev.** The requirement is $n \geq \sigma^2/(\delta\,\epsilon^2)$ with $\sigma^2 = \mathrm{Var}(4f) = \pi(4-\pi) = 2.69677$ exactly,
+$$ n \geq \frac{2.69677}{0.05 \times 10^{-4}} = 539{,}353.24 , \qquad\text{so}\qquad n \geq 539{,}354 . $$
 
-*Rounding note.* Three slightly different numbers circulate for this requirement, and they come from three roundings of the same variance: $2.696$ gives $539{,}200$; the displayed $2.70$ gives $540{,}000$; the exact $\sigma^2 = \pi(4-\pi) = 2.69677$ gives $539{,}354$. They agree to two significant figures. The figure $539{,}200$ is internally consistent with the rounded variance $2.696$, so this is a rounding artifact and not an error, but a reader reproducing the arithmetic from $2.70$ will land on $540{,}000$.
+*Rounding note.* Three slightly different numbers circulate for this requirement, and they come from three roundings of the same variance: the exact $\sigma^2 = \pi(4-\pi) = 2.69677$ gives $539{,}354$, which is what the slide quotes; $16 \times 0.1685 = 2.696$ gives $539{,}200$; the displayed $2.70$ gives $540{,}000$. They agree to two significant figures, which is all this bound is worth, but a reader reproducing the arithmetic from a rounded variance will land a few hundred samples away from the slide.
 
 **Hoeffding.** Here $4f \in [0,4]$, so $(b-a)^2 = 16$, and the Section 3.6 inversion with $\ln(2/0.05) = \ln 40 \approx 3.6889$ gives
 $$ n \;\geq\; \frac{16 \ln 40}{2 \times 0.01^2} = \frac{16 \times 3.6889}{2 \times 10^{-4}} = \frac{59.022}{2 \times 10^{-4}} \approx 295{,}111 . $$

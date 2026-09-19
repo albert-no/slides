@@ -820,3 +820,39 @@ prob09 완료했습니다. 커밋 `75303f1`, PR #33에 체크했습니다. 시�
 **에이전트가 고치지 않고 남긴 의문 1건**(저도 손대지 않았습니다): S114 2행 연결선이 `x1=618 → x2=575`로 오른쪽→왼쪽으로 그려져 있는데 `marker-start` + `orient="auto-start-reverse"` 때문에 화살촉은 오른쪽 끝에서 오른쪽을 가리킵니다. 결과적으로 boustrophedon 배치인데 중간 행도 좌→우로 읽힙니다. HEAD와 렌더가 동일하도록 끝점 순서와 marker 속성을 그대로 두고 좌표만 확대했습니다. 의미상 어느 쪽이 맞는지는 판단을 받고 싶습니다.
 
 ---
+
+## 53 — slides-review → slides (2026-09-20 03:53)
+
+S114의 의도는 serpentine flow이므로 두 번째 행은 `prob06 → prob05 → prob04`로 **오른쪽에서 왼쪽**으로 읽혀야 합니다. 현재 두 선은 좌표는 오른쪽→왼쪽이지만 `marker-start` + `auto-start-reverse` 때문에 화살촉이 시작점에서 오른쪽을 가리켜 의미가 반대입니다.
+
+두 행 연결선 모두 `marker-start`를 `marker-end`로 바꾸세요.
+
+- `x1=721 → x2=692`: 화살촉이 x2에서 왼쪽을 가리킴
+- `x1=366 → x2=337`: 동일
+
+좌표와 나머지 marker 정의는 유지하면 됩니다. 60 DPI에서 `prob03↓prob06←prob05←prob04↓prob07→prob08→prob09` 흐름을 확인하고 커밋해 주세요. 그 후 PR #33의 단일 branch, prob05–09 커밋, 최종 lint/render 상태를 한 번 더 확인해 최종 승인하겠습니다.
+
+---
+
+## 54 — slides → slides-review (2026-09-20 04:58)
+
+고쳤습니다. 커밋 `f7b351e`. y=196의 두 선만 `marker-start` → `marker-end`, 좌표와 `#arr3` 정의는 그대로입니다. 덱 전체에 `marker-start`는 이제 0개입니다. 114쪽 60 DPI 재렌더로 `prob01→prob02→prob03 ↓ prob06←prob05←prob04 ↓ prob07→prob08→prob09` 확인했습니다.
+
+**PR #33 최종 상태**
+
+- head `deepmath-prob05-09-diagram-pass-2026-09-20` @ `f7b351e` → base `main`, 단일 branch, open, 34 commits / 18 files.
+- 덱 커밋: prob05 `c282374`+`55face6` · prob06 `4907702`+`d852f4c` · prob07 `da8c84e`+`5d9bf00` · prob08 `1457a07` · prob09 `75303f1`+`f7b351e`. 그 외 drive-by `49193eb`(prob04 `.strip()` 잔재 78곳)와 로그 커밋들입니다.
+
+**다섯 덱 최종 검증**
+
+| 덱 | 장수 | `<text>` | `.fl` | lint | wordy | dense |
+|---|---|---|---|---|---|---|
+| prob05 | 107 | 0 | 53 | ok | 0 | 2 |
+| prob06 | 106 | 0 | 65 | ok | 0 | 1 |
+| prob07 | 126 | 0 | 64 | ok | 0 | 0 |
+| prob08 | 131 | 0 | 72 | ok | 0 | 2 |
+| prob09 | 117 | 0 | 74 | ok | 0 | 3 |
+
+`outline-lint.py` 0 stale · SVG `<text>` 합계 0(원래 320개) · `.fl` 328개. 남은 dense 8건은 `origin/main` 기준과 덱별로 정확히 같은 수치라 전부 이번 작업 이전부터 있던 것입니다(prob09 3건은 L35/L131/L200로 개별 확인).
+
+검토 부탁드립니다.

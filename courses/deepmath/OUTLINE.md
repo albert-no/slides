@@ -35,9 +35,9 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 4 | `prob04-random-processes/` — Markov processes, stationary dist., discrete diffusion | prob 1211–1455 | done (99 slides) |
 | 5 | `prob05-concentration/` — Markov/Chebyshev/Chernoff, MGF, CLT sketch, LLN | prob 1457–1595 | done (107 slides) |
 | 6 | `prob06-generalization/` — Hoeffding, sub-Gaussian, union bound, finite-class generalization bound | new material (sequel to prob05) | done (106 slides) |
-| 7 | `prob07-estimation/` — cond. expectation/tower, MLE/MAP, Fano (full proof), Naive Bayes, bias-variance, MMSE | prob 1563–1911 | done (125 slides) |
-| 8 | `prob08-gaussian/` — MVN (3 defs, properties w/ proofs), Gaussian channel, Gaussian diffusion/DDPM, Gaussian discriminant | prob 1912–2519 (MIT OCW 6.436J citation) | done (131 slides) |
-| 9 | `prob09-monte-carlo/` — Monte Carlo, importance sampling, variance trade-offs, policy gradient / RLHF hooks | new material | done (114 slides) |
+| 7 | `prob07-estimation/` — cond. expectation/tower, MLE/MAP, Fano (full proof), Naive Bayes, bias-variance, MMSE | prob 1563–1911 | done (124 slides) |
+| 8 | `prob08-gaussian/` — MVN (3 defs, properties w/ proofs), Gaussian channel, Gaussian diffusion/DDPM, Gaussian discriminant | prob 1912–2519 (MIT OCW 6.436J citation) | done (130 slides) |
+| 9 | `prob09-monte-carlo/` — Monte Carlo, importance sampling, variance trade-offs, policy gradient / RLHF hooks | new material | done (113 slides) |
 | 10 | `opt01-svd-lowrank/` — rank/range/null, SVD, pseudo-inverse, spectral & nuclear norms, Eckart–Young–Mirsky, Netflix | opt 1–435 | done (119 slides) |
 | 11 | `opt02-regression-erm/` — least squares θ\*=A†B (full proof), ERM/Bayes risk, ridge + closed form | opt 436–794, 1463–1517 | done (111 slides) |
 | 12 | `opt03-convexity-gd/` — convexity, L-smoothness, co-coercivity, strong convexity, PL, GD O(1/T) + linear rate | opt 795–1319 | done (135 slides) |
@@ -326,7 +326,7 @@ n = 1.28×10⁶ → ε ≈ 14.9). Cross-deck numbers (Chernoff 2.1×10⁻⁶, ex
 exponent 0.1308) taken from prob05's published slides. Illustrative-only counts
 flagged on-slide: decision-stump class size 256d, ResNet-50 parameter count.
 
-### prob07-estimation — Estimation: MLE, MAP & Fundamental Limits (125 slides)
+### prob07-estimation — Estimation: MLE, MAP & Fundamental Limits (124 slides)
 
 `prob07-estimation/prob07-estimation.html` · **prob 1563–1911** plus conditional
 expectation/tower (prob 1577–1592, deferred here from prob05 per deck plan).
@@ -354,7 +354,7 @@ Accessible edition: `prob07-estimation/prob07-estimation-note.md` — screen-rea
 | 08 | Naive Bayes (2ⁿ-parameter blowup 2⁴⁹ ≈ 5.6×10¹⁴ :1294, conditional-independence assumption :1308, spam-filter SVG :1326, binarized MNIST figure :1362, NB classifier :1379, fit by counting :1390, fit the prior :1405, MAP with fitted model :1418, worked 10-mail table p_free|spam=3/4 :1429, classify new mail 0.225/(0.225+0.033) ≈ 0.87 spam :1444, zero-count veto :1457, Laplace smoothing :1471, smoothed table 1/8, 2/8, 5/8 :1486, takeaway :1501) | 81–95 | prob07-estimation/prob07-estimation.html:1285 |
 | 09 | Bias–Variance (estimator is an RV :1523, bias :1536, variance :1549, MSE :1564, technique review add-and-subtract :1577, Thm 4 MSE = Bias² + Var arc :1591, 2-step proof cross term dies :1606, dartboard SVG :1633, sample-mean example σ²/n :1668, worked p̂=S/10 vs p̃=(S+1)/12 :1684, numbers 0.025 vs 0.0174 (p=.5), 0.009 vs 0.0107 (p=.9) :1698, MSE-vs-p chart SVG crossings ≈0.14/0.86 :1713, regularization trade :1735) | 96–110 | prob07-estimation/prob07-estimation.html:1514 |
 | 10 | MMSE Estimation (denoising channel SVG :1757, Thm 5 MMSE = E[X|Y] arc :1785, proof overview :1797, 4 proof steps insert/expand → tower kills cross term → read off :1808–:1845, proof summary :1856, worked prob03 table MMSE = 1/6 < 1/4 :1875, denoisers learn E[X|Y] :1889) | 111–121 | prob07-estimation/prob07-estimation.html:1748 |
-| — | Recap chain, every-tool recap table, bridge to prob08, end slide X̂(Y)=E[X|Y] | 122–125 | prob07-estimation/prob07-estimation.html:1902 |
+| — | Every-tool recap table (chain takeaway folded in as its muted line), bridge to prob08, end slide X̂(Y)=E[X|Y] | 122–124 | prob07-estimation/prob07-estimation.html:1902 |
 
 Key theorems: **Thm 1** tower property E[E[X|Y]] = E[X], full proof + table check
 (prob07-estimation/prob07-estimation.html:383); **Thm 2** MAP minimizes error
@@ -385,7 +385,7 @@ slide, Fano technique-review slides, CE-loss=MLE bridge slides, and all worked
 numeric examples above (the tex states the estimators but computes none of
 them).
 
-### prob08-gaussian — The Multivariate Gaussian (131 slides)
+### prob08-gaussian — The Multivariate Gaussian (130 slides)
 
 `prob08-gaussian/prob08-gaussian.html` · source: prob 1912–2519.
 **Attribution: the tex credits MIT OpenCourseWare 6.436J / 15.085J Fundamentals of
@@ -414,7 +414,7 @@ Accessible edition: `prob08-gaussian/prob08-gaussian-note.md` — screen-reader 
 | 07 | The Gaussian Channel (Y=X+Z setup + block SVG :1430, joint covariance :1457, read off part 7 :1471, promise kept (prob07 MMSE) :1484, shrinkage SVG :1497, two-extremes sanity table :1517, two sampling orderings :1532, why the second matters :1554) | 86–94 | prob08-gaussian/prob08-gaussian.html:1423 |
 | 08 | Gaussian Diffusion (diffusion teaser cashed in (prob04) :1573, noising recursion :1587, variance preserving :1599, noising-chain SVG :1613, source exercise :1637, MGF telescope :1650–:1680, Thm 3 chain forgets :1694, closed form :1711, DDPM ᾱ notation :1723, worked β=0.02 schedule chart :1736, reverse step claim :1760 + via channel :1772, vectors :1787, generation skeleton :1800, scope today-vs-full-story :1824) | 95–112 | prob08-gaussian/prob08-gaussian.html:1566 |
 | 09 | Gaussian Discriminant Analysis (one Gaussian per class :1849, decision rule :1863, boundary SVG :1876, back to MLE :1900, log-likelihood :1913, fit μ :1925, precision reparam :1941, trace trick :1954, scatter matrix :1967, matrix derivatives :1981, solve :1996, Thm 4 :2012, source exercises A/B :2029, GDA pipeline :2046) | 113–127 | prob08-gaussian/prob08-gaussian.html:1842 |
-| — | Recap chain, every-tool recap table, bridge to prob09, end slide X=DW+μ | 128–131 | prob08-gaussian/prob08-gaussian.html:2060 |
+| — | Every-tool recap table (chain takeaway folded in as its muted line), bridge to prob09, end slide X=DW+μ | 128–130 | prob08-gaussian/prob08-gaussian.html:2060 |
 
 Key theorems: **Thm 1** 2D conditional X|Y=y ~ N(μ₁+σ₁₂/σ₂₂(y−μ₂), σ₁₁−σ₁₂σ₂₁/σ₂₂),
 stated in §02, proved as part-7 corollary
@@ -445,7 +445,7 @@ the running 2D numeric example re-checked after part 7, channel sanity tables,
 the worked β=0.02 schedule, DDPM ᾱ dictionary slide, and the GDA exercises'
 hint slide.
 
-### prob09-monte-carlo — Monte Carlo & Importance Sampling (114 slides)
+### prob09-monte-carlo — Monte Carlo & Importance Sampling (113 slides)
 
 `prob09-monte-carlo/prob09-monte-carlo.html` · **new material — not in tex**
 (textbook-canonical statements and proofs only; every constant derived on-slide).
@@ -471,7 +471,7 @@ Accessible edition: `prob09-monte-carlo/prob09-monte-carlo-note.md` — screen-r
 | 07 | Self-Normalized IS (missing constant Z :1151, unnormalized weights w̃=Zw :1163, SNIS definition :1175, two MC estimators one ratio :1191, consistency sketch (continuous mapping named, not proved) :1204, biased flag worked 2/3≠1/2 :1218, ESS definition (flagged heuristic) :1229, ESS sanity checks n and 1.11 :1243, what ESS is not :1254, where SNIS runs in AI :1266) | 72–82 | prob09-monte-carlo/prob09-monte-carlo.html:1142 |
 | 08 | The Score-Function Gradient (J(θ)=E[R] :1297, why plain MC gives no gradient :1311, log-derivative trick review :1325, Thm 5 score-function/REINFORCE identity arc, finite X, expand/swap/reread :1339–:1388, REINFORCE estimator :1402, worked two-action sigmoid policy :1415, identity agrees both sides 1/4 :1426, reading the identity :1437, baseline lemma + mean-zero score proof :1451, baseline at work variance 1/16→0 table :1466, REINFORCE pipeline SVG :1485) | 83–98 | prob09-monte-carlo/prob09-monte-carlo.html:1288 |
 | 09 | Off-Policy & RLHF (off-policy problem :1525, it's Theorem 3 with π_θ/π_b :1537, sequences multiply weights (chain rule, prob04) :1550, degeneracy grows 1.1¹⁰⁰≈13,800 caricature :1563, keep the ratio near one (clipping/trust regions names only) :1576, recall prob02 KL card :1587, RLHF-shaped objective max E[r]−βD(π_θ‖π_ref) w/ scope note :1603, one pipeline every tool :1619) | 99–107 | prob09-monte-carlo/prob09-monte-carlo.html:1516 |
-| — | Recap chain Thm 1–5, every-tool recap table, nine-decks map SVG, probability-half recap, bridge to opt01, end slide E_p[f]=E_q[f·p/q] | 108–114 | prob09-monte-carlo/prob09-monte-carlo.html:1639 |
+| — | Every-tool recap table Thm 1–5 (chain takeaway folded in as its muted line), nine-decks map SVG, probability-half recap, bridge to opt01, end slide E_p[f]=E_q[f·p/q] | 108–113 | prob09-monte-carlo/prob09-monte-carlo.html:1639 |
 
 Key theorems: **Thm 1** unbiasedness E[μ̂_n]=μ, linearity proof
 (prob09-monte-carlo/prob09-monte-carlo.html:364); **Thm 2** Var(μ̂_n)=σ_f²/n via

@@ -40,7 +40,7 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 9 | `prob09-monte-carlo/` — Monte Carlo, importance sampling, variance trade-offs, policy gradient / RLHF hooks | new material | done (113 slides) |
 | 10 | `opt01-svd-lowrank/` — rank/range/null, SVD, pseudo-inverse, spectral & nuclear norms, Eckart–Young–Mirsky, Netflix | opt 1–435 | done (119 slides) |
 | 11 | `opt02-regression-erm/` — least squares θ\*=A†B (full proof), ERM/Bayes risk, ridge + closed form | opt 436–794, 1463–1517 | done (110 slides) |
-| 12 | `opt03-convexity-gd/` — convexity, L-smoothness, co-coercivity, strong convexity, PL, GD O(1/T) + linear rate | opt 795–1319 | done (135 slides) |
+| 12 | `opt03-convexity-gd/` — convexity, L-smoothness, co-coercivity, strong convexity, PL, GD O(1/T) + linear rate | opt 795–1319 | done (134 slides) |
 | 13 | `opt04-sgd/` — SGD O(1/√K) proof, mini-batching, strongly-convex SGD O(log k/k) | opt 1320–1462, 1520–1600 | done (118 slides) |
 
 Dropped from source by request: operator theory (opt 1603–1761), acceleration/AGM
@@ -623,66 +623,74 @@ AA† = U_cU_cᵀ projection derivation, ridge-through-SVD shrinkage
 = E[Y\|X] via prob07 MMSE recall, and all worked numeric examples above (the
 tex sets up the running objects but computes none of them).
 
-### opt03-convexity-gd — Convexity & Gradient Descent (135 slides)
+### opt03-convexity-gd — Convexity & Gradient Descent (134 slides)
 
 `opt03-convexity-gd/opt03-convexity-gd.html` · **opt 795–1319** (convexity,
 L-smoothness, descent lemma, sandwich, co-coercivity, strong convexity, PL,
 GD convergence + both rates). Lecture 12 — answers opt02's bridge (no closed
 form anymore: training IS gradient descent; L and μ are learning-rate
-theory, safe step α = 1/L, divergence cliff at 2/L); recalls opt01/prob08
-symmetric-eigenvalue and PSD facts, opt02 ridge (2λ-strong convexity) by
-name without re-proving. Running example f = 2x₁² + ½x₂² (Hessian
+theory, safe step α = 1/L, divergence cliff at 2/L); reuses the
+symmetric-eigenvalue and PSD facts from opt01/prob08 and the ridge
+2λ-strong-convexity fact from opt02, recalled as content and not re-proved
+(the slides never name another deck — style rule 10). Running example f = 2x₁² + ½x₂² (Hessian
 diag(4,1), L = 4, μ = 1, c = 0.6) carried through: convexity check → L and μ
 as eigenvalues → sandwich checked at (2,2) (8.5 ≤ 10 ≤ 16) → co-coercivity
 checked (20 ≥ 17) → PL checked → four GD iterations by hand at α = 1/4 →
-measured contraction ratio 0.5625 ≤ 0.6. Ends bridging to opt04 (SGD: keep
-the descent, pay with variance).
+measured contraction ratio 0.5625 ≤ 0.6. Ends bridging to stochastic gradients (opt04: keep
+the descent, pay with variance) without naming the deck.
 
 Companion: `opt03-convexity-gd/opt03-convexity-gd-note.html` — detailed definitions, expanded proofs, lemmas, references.
 Accessible edition: `opt03-convexity-gd/opt03-convexity-gd-note.md` — screen-reader Markdown edition of that note (722 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
-| — | Title + TOC | 1–2 | opt03-convexity-gd/opt03-convexity-gd.html:32 |
-| 01 | Why Convexity? (opt02 bridge answered :132, three questions about x⁺ = x − α∇f :147, today's three results :170, constants = learning-rate theory :188, route map SVG :202) | 3–8 | opt03-convexity-gd/opt03-convexity-gd.html:124 |
-| 02 | Convexity (def :259, chord SVG :274, convex-vs-nonconvex SVG :302, why AI cares :331, gradient recall :345, first-order characterization :361, tangent SVG :376, 1D why :397, Hessian recall :412, PSD recall (prob08/opt01) :427, Thm 1 :442, worked eigen check :455, saddle counterexample :467, running example intro :480, contours SVG :496) | 9–24 | opt03-convexity-gd/opt03-convexity-gd.html:251 |
-| 03 | Smoothness (Lipschitz :530, L-smooth def :545, Thm 2 :560 + sketch w/ tex exercise :575, running L=4 :589, TR segment :602, TR Cauchy–Schwarz :617, Lemma 1 descent lemma :631, parabola-lid SVG :643, proof overview :668, Steps 1–3 :681–:705, skeleton :717, implication :730, Thm 3 sandwich :744, reading :756, proof right :768, left idea/minimize-lid/best-direction :782–:806, numeric check 8.5≤10≤16 :817) | 25–47 | opt03-convexity-gd/opt03-convexity-gd.html:522 |
-| 04 | Smooth and Convex (two bounds meet :838, Lemma 2 co-coercivity :852, meaning :865, proof (i) 4 slides :879–:918, proof (ii) 5 slides, tilt trick g_x :930–:981, proof summary :994, numeric check 20≥17 :1005) | 48–62 | opt03-convexity-gd/opt03-convexity-gd.html:830 |
-| 05 | Strong Convexity (def :1025, two-parabola sandwich SVG :1040, Thm 4 Hessian floor :1068, ridge recall (opt02) 2λ-strong :1084, Thm 5 monotonicity + proof :1098–:1113, Thm 6 strong monotonicity + proof :1126–:1140, TR completing the square :1153, Lemma 3 PL :1168, reading :1180, proof 2 slides :1193–:1204, numeric check :1217, PL as own assumption :1229) | 63–78 | opt03-convexity-gd/opt03-convexity-gd.html:1017 |
-| 06 | Gradient Descent (problem :1251, algorithm box :1263, 1D sign-steering SVG :1281, GD by hand setup :1310, four iterations table :1322, path SVG α=1/4 :1340, zigzag SVG α=0.45 :1370, divergence SVG α=0.6 :1398, three-step-sizes table (cliff at 2/L) :1424, Thm 7 GD converges :1443, proof 3 slides :1457–:1483, reading + exercise :1496) | 79–93 | opt03-convexity-gd/opt03-convexity-gd.html:1243 |
-| 07 | Rate I — O(1/T) (assumptions :1518, Thm 8 :1530, overview :1543, Step 1 decrease :1556, Step 2 optimum :1570, TR completing the square again :1581, Step 3 distance identity :1596, corollary distance shrinks :1610, TR telescoping :1622, Step 4 telescope :1636, Step 5 last iterate :1650, skeleton :1663, corollary O(1/ε), ε=0.01 → 1600 :1676, bound-vs-reality table :1689) | 94–108 | opt03-convexity-gd/opt03-convexity-gd.html:1510 |
-| 08 | Rate II — Linear (goal 1/T → cᵀ :1717, Thm 9 subtract the floor :1730, what h knows :1744, co-coercivity on h :1757, expand :1770, collect → extended co-coercivity :1781, Thm 10 linear convergence :1795, overview :1810, Steps 1–3 :1823–:1848, TR unrolling :1861, Steps 4–5 :1874–:1886, skeleton :1898, O(log 1/ε) remark, T≈32 vs 1.6×10⁷ :1912, contraction measured table :1925, shrinkage bar SVG :1944, PL bonus 2 slides :1985–:1997) | 109–129 | opt03-convexity-gd/opt03-convexity-gd.html:1709 |
-| 09 | Closing: one-chain recap, every-tool table, constants you now own, bridge to opt04 SGD, end slide x⁺ = x − α∇f(x) | 130–135 | opt03-convexity-gd/opt03-convexity-gd.html:2009 |
+| — | Title + TOC | 1–2 | opt03-convexity-gd/opt03-convexity-gd.html:50 |
+| 01 | Why Convexity? ("When the Formula Runs Out" :150, three questions about x⁺ = x − α∇f :165, today's three results :188, constants = learning-rate theory :206, route map SVG :220) | 3–8 | opt03-convexity-gd/opt03-convexity-gd.html:142 |
+| 02 | Convexity (def :277, chord SVG :292, convex-vs-nonconvex SVG :320, why AI cares :349, gradient recall :363, first-order characterization :379, tangent SVG :394, 1D why :415, Hessian recall :430, PSD recall :445, Thm 1 :460, worked eigen check :473, saddle counterexample :485, running example intro :498, contours SVG :514) | 9–24 | opt03-convexity-gd/opt03-convexity-gd.html:269 |
+| 03 | Smoothness (Lipschitz :548, L-smooth def :563, Thm 2 :578 + sketch w/ tex exercise :593, running L=4 :607, TR segment :620, TR Cauchy–Schwarz :635, Lemma 1 descent lemma :649, parabola-lid SVG :661, proof overview :687, Steps 1–3 :700–:724, skeleton :736, implication :749, Thm 3 sandwich :763, reading :775, proof right :787, left idea/minimize-lid/best-direction :801–:825, numeric check 8.5≤10≤16 :836) | 25–47 | opt03-convexity-gd/opt03-convexity-gd.html:540 |
+| 04 | Smooth and Convex (two bounds meet :857, Lemma 2 co-coercivity :871, meaning :884, proof (i) 4 slides :898–:937, proof (ii) 5 slides, tilt trick g_x :949–:1000, proof summary :1013, numeric check 20≥17 :1024) | 48–62 | opt03-convexity-gd/opt03-convexity-gd.html:849 |
+| 05 | Strong Convexity (def :1044, two-parabola sandwich SVG :1059, Thm 4 Hessian floor :1085, ridge recall, 2λ-strong :1101, Thm 5 monotonicity + proof :1115–:1130, Thm 6 strong monotonicity + proof :1143–:1157, TR completing the square :1170, Lemma 3 PL :1185, reading :1197, proof 2 slides :1210–:1221, numeric check :1234, PL as own assumption :1246) | 63–78 | opt03-convexity-gd/opt03-convexity-gd.html:1036 |
+| 06 | Gradient Descent (problem :1268, algorithm box :1280, 1D sign-steering SVG :1298, GD by hand setup :1327, four iterations table :1339, path SVG α=1/4 :1357, zigzag SVG α=0.45 :1387, divergence SVG α=0.6 :1417, three-step-sizes table (cliff at 2/L) :1445, Thm 7 GD converges :1464, proof 3 slides :1478–:1504, reading + exercise :1517) | 79–93 | opt03-convexity-gd/opt03-convexity-gd.html:1260 |
+| 07 | Rate I — O(1/T) (assumptions :1539, Thm 8 :1551, overview :1564, Step 1 decrease :1577, Step 2 optimum :1591, TR completing the square again :1602, Step 3 distance identity :1617, corollary distance shrinks :1631, TR telescoping :1643, Step 4 telescope :1657, Step 5 last iterate :1671, skeleton :1684, corollary O(1/ε), ε=0.01 → 1600 :1697, bound-vs-reality table :1710) | 94–108 | opt03-convexity-gd/opt03-convexity-gd.html:1531 |
+| 08 | Rate II — Linear (goal 1/T → cᵀ :1738, Thm 9 subtract the floor :1751, what h knows :1765, co-coercivity on h :1778, expand :1791, collect → extended co-coercivity :1802, Thm 10 linear convergence :1816, overview :1831, Steps 1–3 :1844–:1869, TR unrolling :1882, Steps 4–5 :1895–:1907, skeleton :1919, O(log 1/ε) remark, T≈32 vs 1.6×10⁷ :1933, contraction measured table :1946, shrinkage bar SVG :1965, PL bonus 2 slides :2006–:2018) | 109–129 | opt03-convexity-gd/opt03-convexity-gd.html:1730 |
+| 09 | Closing: every-tool table with the one-chain line folded in, constants you now own, bridge to stochastic gradients, end slide x⁺ = x − α∇f(x) | 130–134 | opt03-convexity-gd/opt03-convexity-gd.html:2030 |
 
 Key theorems: **Thm 1** ∇²f ⪰ 0 ⟺ convex, stated as in the notes
-(opt03-convexity-gd/opt03-convexity-gd.html:442); **Thm 2** L-smooth ⟺
+(opt03-convexity-gd/opt03-convexity-gd.html:460); **Thm 2** L-smooth ⟺
 ∇²f ⪯ LI, proof sketch + tex's exercise
-(opt03-convexity-gd/opt03-convexity-gd.html:560); **Lemma 1** descent lemma
+(opt03-convexity-gd/opt03-convexity-gd.html:578); **Lemma 1** descent lemma
 f(x+δ) ≤ f(x) + ∇f(x)ᵀδ + (L/2)‖δ‖², full FTC-along-segment proof
-(opt03-convexity-gd/opt03-convexity-gd.html:631); **Thm 3** smoothness
+(opt03-convexity-gd/opt03-convexity-gd.html:649); **Thm 3** smoothness
 sandwich (convex + L-smooth), both directions proved
-(opt03-convexity-gd/opt03-convexity-gd.html:744); **Lemma 2** co-coercivity
+(opt03-convexity-gd/opt03-convexity-gd.html:763); **Lemma 2** co-coercivity
 (i)+(ii), full proofs, tilt trick g_x(z) = f(z) − ∇f(x)ᵀz
-(opt03-convexity-gd/opt03-convexity-gd.html:852); **Thm 4** μ-strong ⟺
+(opt03-convexity-gd/opt03-convexity-gd.html:871); **Thm 4** μ-strong ⟺
 ∇²f ⪰ μI, stated as in the notes
-(opt03-convexity-gd/opt03-convexity-gd.html:1068); **Thm 5/6** gradient
+(opt03-convexity-gd/opt03-convexity-gd.html:1085); **Thm 5/6** gradient
 monotonicity + strong monotonicity, add-two-floors proofs
-(opt03-convexity-gd/opt03-convexity-gd.html:1098, :1126); **Lemma 3** PL
+(opt03-convexity-gd/opt03-convexity-gd.html:1115, :1143); **Lemma 3** PL
 condition ‖∇f‖² ≥ 2μ(f − f*), completing-the-square proof
-(opt03-convexity-gd/opt03-convexity-gd.html:1168); **Thm 7** GD converges
+(opt03-convexity-gd/opt03-convexity-gd.html:1185); **Thm 7** GD converges
 for α ∈ (0, 2/L) (f monotone + ‖∇f‖ → 0), 3-step proof
-(opt03-convexity-gd/opt03-convexity-gd.html:1443); **Thm 8** O(1/T) rate
+(opt03-convexity-gd/opt03-convexity-gd.html:1464); **Thm 8** O(1/T) rate
 under convex + L-smooth, 5-step telescoping proof
-(opt03-convexity-gd/opt03-convexity-gd.html:1530); **Thm 9** h = f −
+(opt03-convexity-gd/opt03-convexity-gd.html:1551); **Thm 9** h = f −
 (μ/2)‖x‖² convex and (L−μ)-smooth → extended co-coercivity
-(opt03-convexity-gd/opt03-convexity-gd.html:1730); **Thm 10** linear
+(opt03-convexity-gd/opt03-convexity-gd.html:1751); **Thm 10** linear
 convergence ‖x_i − x*‖² ≤ cⁱ‖x₀ − x*‖², c = 1 − 2αμL/(μ+L), 5-step proof
-(opt03-convexity-gd/opt03-convexity-gd.html:1795).
-Figures: all diagrams inline SVG with hand-computed geometry (route map,
-chord above graph, convex-vs-nonconvex pair, tangent below graph, running
-ellipse contours 36 px/unit, parabola lid, two-parabola sandwich, 1D
-sign-steering, GD path on contours at α = 1/4, zigzag at α = 0.45,
-divergence at α = 0.6, geometric-shrinkage grouped bars).
+(opt03-convexity-gd/opt03-convexity-gd.html:1816).
+Figures: 12 inline SVGs with hand-computed geometry (route map — two rows,
+both left-to-right, with a dashed return connector; chord above graph;
+convex-vs-nonconvex pair; tangent below graph; running ellipse contours
+36 px/unit; parabola lid; two-parabola sandwich; 1D sign-steering; GD path
+on contours at α = 1/4; zigzag at α = 0.45; divergence at α = 0.6;
+geometric-shrinkage grouped bars). Every label is a KaTeX `<span class="fl">`
+absolutely positioned over the SVG via the `.o3-fig` wrapper (KaTeX cannot
+typeset inside SVG `<text>`), so figure text is real math at 1.55rem /
+1.25rem regardless of the SVG scale. The lid and sandwich figures are drawn
+from exact algebra — f(u) = u², touch at u₀ = −0.6, lid = f + ½(u−u₀)²
+(L = 3), floor = f − ½(u−u₀)² (μ = 1) under X = 280 + 115u, Y = 300 − 55f —
+so the lid never dips below f and the floor never rises above it.
 Deviations from tex: opt ~880 smoothness theorem missing the L-smooth
 hypothesis — added; missing transposes ∇f(y)(x−y) at opt 1071–1072 and
 1090–1091 — ᵀ added; opt 1141 unclosed parenthesis fixed; Thm 7 restated

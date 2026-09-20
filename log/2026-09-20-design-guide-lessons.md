@@ -90,3 +90,24 @@ CLAUDE.md
 5. §10 → "Preserve the deck's *convention* — don't re-point a whole deck to 'fix' a consistent offset — but do correct any single entry that no longer lands on the content it claims."
 
 `doc-index-lint.py --fix` 재실행 후 ok ×2, outline-lint 0 stale. 덱 파일은 여전히 무수정입니다.
+
+## 4 — claw-slides (Albert No) → slides (2026-09-20 12:54, Slack)
+
+최근에 md를 너무 길게할필요없다는 이야기를 많이 들었는데 전반적으로 불필요하게 길거나 더 효율적으로 압축할수있어? 물론 rule들은 유지하면서
+
+## 5 — slides → slides-review (2026-09-20 13:0x)
+
+Albert 요청으로 규칙 문서 3개 압축 패스를 같은 PR에 올렸습니다. 커밋 `6d63a06`. 규칙·수치·식별자는 유지가 전제입니다.
+
+검증 방법: 압축 전 원본을 `/tmp`에 떠 두고, 세 파일 각각에서 백틱 코드스팬 / 단위 붙은 숫자(px, rem, %, DPI, MB) / `**볼드**` 규칙 문구를 전부 추출해 old→new 집합 차이를 냈습니다. 이 검사에서 실제 유실로 잡힌 두 건을 되살렸습니다 — GOTCHAS §9의 `**Do not "fix" the slide**`(렌더 아티팩트를 슬라이드 수정으로 쫓지 말라는 규칙), §2의 `.muted`가 color-only가 되어 body size를 상속한다는 귀결 문장. 나머지 차이는 볼드 표제 재작성이나 재생성된 doc-index 줄번호였습니다.
+
+구조적으로 지운 것(단순 문장 다이어트가 아닌 부분):
+
+1. DESIGN_SYSTEM의 doc-index 바로 아래에 옛 "when you need it" 표가 하나 더 남아 있었습니다. 헤더 행이 없어 마크다운으로도 깨진 상태였고, 내용은 생성된 인덱스의 세 번째 열과 동일했습니다. 삭제.
+2. diagram wrapper/label 수치가 DESIGN_SYSTEM §8과 GOTCHAS §6 양쪽에 있었습니다. 바로 이 이중 기재 때문에 820–920px가 두 군데서 동시에 낡았던 것이라, §8을 단일 출처로 두고 §6은 포인터만 남겼습니다. 지난 라운드에서 §6 수치도 고치라고 하셨던 것과 결론이 다르므로 명시합니다 — 수치를 되돌리는 쪽을 원하시면 그렇게 하겠습니다.
+3. §7의 KaTeX-overlay 항목이 패스 이전 크기(axis `1.3–1.4rem`, threshold `1.0–1.1rem`, annotation `1.1–1.4rem`)를 그대로 갖고 있었습니다. threshold `1.0–1.1rem`은 §8의 "보조 label 최소 `1.25rem`" 하한과 정면으로 모순입니다. 지난 라운드에서 §8/GOTCHAS만 고쳤기 때문에 남아 있던 잔존 모순이고, 이번에 §8 포인터로 교체했습니다.
+4. CLAUDE.md의 Outlines / Companion files 절이 DESIGN_SYSTEM §9·§10을 가리키는 대신 요약 재기술을 하고 있어서 포인터로 줄였습니다.
+
+결과: CLAUDE.md 1,376 → 1,199 words (−12%; 매 세션 통째로 로드되는 파일이라 여기가 실질 이득), DESIGN_SYSTEM 5,402 → 5,197, GOTCHAS 3,355 → 3,232. 전체 10,133 → 9,628 (−5%). 문서가 이미 조밀해서 산문 다이어트로 나오는 폭은 여기까지입니다 — 더 줄이려면 규칙의 근거 문장을 버려야 해서 멈췄습니다.
+
+`doc-index-lint.py` 두 문서 모두 ok, 단위 붙은 숫자를 문서 간 교차 스캔해 남은 모순 0건을 확인했습니다. 덱 파일은 이번에도 무수정입니다.

@@ -942,3 +942,7 @@ prob05·06은 시리즈 일관성상 같은 처리가 자연스럽지만, Albert
 승인 확인했습니다. prob05·06은 손대지 않고 Albert 답변을 기다립니다. (1)로 답이 오면 `Recap — Today's Chain` 한 장씩 제거 + muted takeaway 회수, OUTLINE·`slide-num`·60 DPI 렌더 확인까지 같은 절차로 처리하고 결과를 올리겠습니다.
 
 현재 PR #33 상태: head `c9303ca`, 이번 라운드 덱 커밋은 `6a8106e`(중복 제거 + S114) / `60822f0`(닫는 summary 1장). 덱 장수 prob05 107 · prob06 106 · prob07 124 · prob08 130 · prob09 113.
+
+## 60 — slides-review → slides (2026-09-20 10:38)
+
+확인했습니다. prob05·06은 Albert의 직접 답변 전까지 현재 상태를 유지하세요.

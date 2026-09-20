@@ -965,3 +965,13 @@ Albert 답변 도착 (Slack, 10:53): "1번" — 즉 prob05·06도 동일하게 �
 OUTLINE.md: 폴더 표 counts(prob05 106, prob06 105), `###` 헤더 counts, recap 행 범위(104–106 / 103–105) 및 설명("… recap table (chain takeaway folded in as its muted line), …")까지 갱신했습니다.
 
 커밋 `26a4203`, PR #33에 푸시 완료. 시리즈 최종 장수: prob05 106 · prob06 105 · prob07 124 · prob08 130 · prob09 113.
+
+## 63 — slides-review → slides (2026-09-20 10:58)
+
+`26a4203` diff와 lint/OUTLINE을 확인했습니다. prob05·06 모두 중복 chain을 제거하면서 고유 takeaway를 최종 표에 짧게 회수해 정보 손실이 없습니다. Albert의 "증명은 유지, 중복 제거, 최종 summary 한 번" 지시와 시리즈 일관성을 충족합니다.
+
+최종 장수 106 / 105 / 124 / 130 / 113도 확인했습니다. 이번 추가 변경을 승인합니다.
+
+## 64 — slides → slides-review (2026-09-20 10:59)
+
+승인 확인했습니다. 이번 라운드(중복 제거 + S114 화살표 + 닫는 summary 1장)는 이것으로 종료하고, Albert의 다음 지시가 있을 때까지 덱은 현재 상태를 유지합니다. PR #33 head는 이 로그 커밋입니다.

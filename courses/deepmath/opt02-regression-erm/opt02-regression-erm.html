@@ -14,6 +14,27 @@
 <script defer src="../../../reference/katex/katex.min.js"></script>
 <script defer src="../../../reference/katex/contrib/auto-render.min.js"
   onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+
+<style>
+  /* KaTeX cannot typeset inside SVG <text>; every figure label is an
+     absolutely-positioned span over the SVG instead. Percent coordinates
+     come straight from the viewBox: left = x/W, top = y/H. */
+  .o2-fig { position: relative; width: 100%; margin: 0 auto; align-self: start; }
+  .o2-fig > svg { display: block; width: 100%; height: auto; }
+  .o2-fig .fl { position: absolute; transform: translate(-50%, -50%);
+                white-space: nowrap; font-weight: 600; font-size: 1.55rem; color: var(--charcoal); }
+  .o2-fig .fl-sub { font-size: 1.25rem; font-weight: 500; }
+  .o2-fig .fl-big { font-size: 2.4rem; font-weight: 700; }
+  .o2-fig .fl-l { transform: translate(0, -50%); }      /* left-anchored  */
+  .o2-fig .fl-r { transform: translate(-100%, -50%); }  /* right-anchored */
+  .o2-fig .fl-blue  { color: var(--yonsei-blue); }
+  .o2-fig .fl-white { color: #ffffff; }
+  .o2-fig .fl-pale  { color: #cfd9e4; }
+  .o2-fig .fl-grey  { color: #5a6673; }
+  .o2-fig .fl-lgrey { color: #8a97a5; }
+  .o2-fig .fl-red   { color: #c73b3b; }
+  .o2-fig .fl-amber { color: #a06a10; }
+</style>
 </head>
 <body data-brand-logo="../../../reference/kor-eng2.png">
 
@@ -113,7 +134,7 @@
       <div class="toc-rule"></div>
       <div>
         <div class="toc-label">Closing</div>
-        <div class="toc-sub">Recap + bridge to opt03</div>
+        <div class="toc-sub">Recap &mdash; and what the formula cannot do</div>
       </div>
     </div>
   </div>
@@ -127,17 +148,17 @@
   <p class="subtitle">Where training has a formula</p>
 </div>
 
-<!-- opt01 bridge answered -->
+<!-- pseudo-inverse bridge answered -->
 <div class="slide">
-  <h2>opt01's Bridge, Answered</h2>
+  <h2>The Pseudo-Inverse, Explained</h2>
   <div class="divider"></div>
   <ul>
-    <li>opt01's teaser: $x = A^{\dagger} b$ &ldquo;solves&rdquo; unsolvable systems</li>
+    <li>The teaser: $x = A^{\dagger} b$ &ldquo;solves&rdquo; unsolvable systems</li>
     <li>Best in what sense? &mdash; <strong>smallest $\|A\theta - B\|_2$</strong></li>
     <li>Today: the full proof, and what it trains</li>
   </ul>
   <div class="highlight">
-    <p>Recall (opt01): $A^{\dagger} = V_c \Sigma_c^{-1} U_c^{\top}$ &mdash; built from the SVD.</p>
+    <p>Recall: $A^{\dagger} = V_c \Sigma_c^{-1} U_c^{\top}$ &mdash; built from the SVD.</p>
   </div>
 </div>
 
@@ -154,12 +175,12 @@
     <div class="card">
       <h3>Convex losses</h3>
       <p>No formula &mdash; <strong>iterate</strong></p>
-      <p class="muted">gradient descent &mdash; opt03</p>
+      <p class="muted">gradient descent</p>
     </div>
     <div class="card">
       <h3>Deep networks</h3>
       <p>Nonconvex &mdash; iterate, carefully</p>
-      <p class="muted">opt03&ndash;opt04</p>
+      <p class="muted">iterate, and watch the landscape</p>
     </div>
   </div>
   <div class="highlight">
@@ -194,48 +215,55 @@
 <div class="slide">
   <h2>Route Map</h2>
   <div class="divider"></div>
-  <div style="width:100%;max-width:1040px;margin:24px auto 0;">
-    <svg viewBox="0 0 1040 300" style="width:100%;">
-      <defs>
-        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a97a5"/>
-        </marker>
-      </defs>
-      <!-- top row -->
-      <rect x="20" y="40" width="180" height="70" rx="10" fill="#f2f5f8" stroke="#003876" stroke-width="2"/>
-      <text x="110" y="70" text-anchor="middle" font-size="19" fill="#003876" font-weight="700">data pairs</text>
-      <text x="110" y="94" text-anchor="middle" font-size="17" fill="#5a6673">(x, y) samples</text>
-      <rect x="260" y="40" width="180" height="70" rx="10" fill="#f2f5f8" stroke="#003876" stroke-width="2"/>
-      <text x="350" y="70" text-anchor="middle" font-size="19" fill="#003876" font-weight="700">linear model</text>
-      <text x="350" y="94" text-anchor="middle" font-size="17" fill="#5a6673">prediction = weights x</text>
-      <rect x="500" y="40" width="180" height="70" rx="10" fill="#f2f5f8" stroke="#003876" stroke-width="2"/>
-      <text x="590" y="70" text-anchor="middle" font-size="19" fill="#003876" font-weight="700">squared loss</text>
-      <text x="590" y="94" text-anchor="middle" font-size="17" fill="#5a6673">stack into a matrix</text>
-      <rect x="740" y="40" width="200" height="70" rx="10" fill="#003876"/>
-      <text x="840" y="70" text-anchor="middle" font-size="19" fill="#ffffff" font-weight="700">Theorem 1</text>
-      <text x="840" y="94" text-anchor="middle" font-size="17" fill="#cfd9e4">closed-form optimum</text>
-      <line x1="200" y1="75" x2="255" y2="75" stroke="#8a97a5" stroke-width="2.5" marker-end="url(#arr)"/>
-      <line x1="440" y1="75" x2="495" y2="75" stroke="#8a97a5" stroke-width="2.5" marker-end="url(#arr)"/>
-      <line x1="680" y1="75" x2="735" y2="75" stroke="#8a97a5" stroke-width="2.5" marker-end="url(#arr)"/>
-      <!-- down -->
-      <line x1="840" y1="110" x2="840" y2="165" stroke="#8a97a5" stroke-width="2.5" marker-end="url(#arr)"/>
-      <!-- bottom row (right to left) -->
-      <rect x="740" y="170" width="200" height="70" rx="10" fill="#f2f5f8" stroke="#003876" stroke-width="2"/>
-      <text x="840" y="200" text-anchor="middle" font-size="19" fill="#003876" font-weight="700">geometry + features</text>
-      <text x="840" y="224" text-anchor="middle" font-size="17" fill="#5a6673">projection, feature maps</text>
-      <rect x="500" y="170" width="180" height="70" rx="10" fill="#f2f5f8" stroke="#003876" stroke-width="2"/>
-      <text x="590" y="200" text-anchor="middle" font-size="19" fill="#003876" font-weight="700">ERM frame</text>
-      <text x="590" y="224" text-anchor="middle" font-size="17" fill="#5a6673">risk, Bayes risk</text>
-      <rect x="260" y="170" width="180" height="70" rx="10" fill="#f2f5f8" stroke="#003876" stroke-width="2"/>
-      <text x="350" y="200" text-anchor="middle" font-size="19" fill="#003876" font-weight="700">ridge</text>
-      <text x="350" y="224" text-anchor="middle" font-size="17" fill="#5a6673">regularize + solve</text>
-      <rect x="20" y="170" width="180" height="70" rx="10" fill="#ffffff" stroke="#8a97a5" stroke-width="2" stroke-dasharray="6 5"/>
-      <text x="110" y="200" text-anchor="middle" font-size="19" fill="#5a6673" font-weight="700">opt03</text>
-      <text x="110" y="224" text-anchor="middle" font-size="17" fill="#8a97a5">no formula? descend</text>
-      <line x1="735" y1="205" x2="685" y2="205" stroke="#8a97a5" stroke-width="2.5" marker-end="url(#arr)"/>
-      <line x1="495" y1="205" x2="445" y2="205" stroke="#8a97a5" stroke-width="2.5" marker-end="url(#arr)"/>
-      <line x1="255" y1="205" x2="205" y2="205" stroke="#8a97a5" stroke-width="2.5" marker-end="url(#arr)"/>
-    </svg>
+  <div>
+    <div class="o2-fig" style="max-width:1040px;margin:14px auto 0;">
+      <svg viewBox="0 0 1040 330">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#003876"/>
+          </marker>
+          <marker id="arrG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a97a5"/>
+          </marker>
+        </defs>
+        <!-- row 1, left to right -->
+        <rect x="0"   y="20" width="230" height="120" rx="12" fill="#f2f5f9" stroke="#003876" stroke-width="2"/>
+        <rect x="270" y="20" width="230" height="120" rx="12" fill="#f2f5f9" stroke="#003876" stroke-width="2"/>
+        <rect x="540" y="20" width="230" height="120" rx="12" fill="#f2f5f9" stroke="#003876" stroke-width="2"/>
+        <rect x="810" y="20" width="230" height="120" rx="12" fill="#003876"/>
+        <line x1="234" y1="80" x2="262" y2="80" stroke="#003876" stroke-width="3" marker-end="url(#arr)"/>
+        <line x1="504" y1="80" x2="532" y2="80" stroke="#003876" stroke-width="3" marker-end="url(#arr)"/>
+        <line x1="774" y1="80" x2="802" y2="80" stroke="#003876" stroke-width="3" marker-end="url(#arr)"/>
+        <!-- return to the left margin, so row 2 also reads left to right -->
+        <path d="M 925 140 V 172 H 115 V 200" fill="none" stroke="#8a97a5" stroke-width="2.5"
+              stroke-dasharray="7 6" marker-end="url(#arrG)"/>
+        <!-- row 2, left to right -->
+        <rect x="0"   y="210" width="230" height="120" rx="12" fill="#f2f5f9" stroke="#003876" stroke-width="2"/>
+        <rect x="270" y="210" width="230" height="120" rx="12" fill="#f2f5f9" stroke="#003876" stroke-width="2"/>
+        <rect x="540" y="210" width="230" height="120" rx="12" fill="#f2f5f9" stroke="#003876" stroke-width="2"/>
+        <rect x="810" y="210" width="230" height="120" rx="12" fill="#eaf0f7" stroke="#003876" stroke-width="3.5"/>
+        <line x1="234" y1="270" x2="262" y2="270" stroke="#003876" stroke-width="3" marker-end="url(#arr)"/>
+        <line x1="504" y1="270" x2="532" y2="270" stroke="#003876" stroke-width="3" marker-end="url(#arr)"/>
+        <line x1="774" y1="270" x2="802" y2="270" stroke="#003876" stroke-width="3" marker-end="url(#arr)"/>
+      </svg>
+      <span class="fl" style="left:11.06%;top:20.00%">Data pairs</span>
+      <span class="fl fl-sub fl-grey" style="left:11.06%;top:29.70%">$(x_i, y_i)$</span>
+      <span class="fl" style="left:37.02%;top:20.00%">Linear model</span>
+      <span class="fl fl-sub fl-grey" style="left:37.02%;top:29.70%">$\hat{y} = \theta^{\top}x$</span>
+      <span class="fl" style="left:62.98%;top:20.00%">Squared loss</span>
+      <span class="fl fl-sub fl-grey" style="left:62.98%;top:29.70%">stack into $A$</span>
+      <span class="fl fl-white" style="left:88.94%;top:20.00%">Theorem 1</span>
+      <span class="fl fl-sub fl-pale" style="left:88.94%;top:29.70%">closed form</span>
+      <span class="fl" style="left:11.06%;top:77.58%">Geometry</span>
+      <span class="fl fl-sub fl-grey" style="left:11.06%;top:87.27%">projection</span>
+      <span class="fl" style="left:37.02%;top:77.58%">Features</span>
+      <span class="fl fl-sub fl-grey" style="left:37.02%;top:87.27%">nonlinear $\phi$</span>
+      <span class="fl" style="left:62.98%;top:77.58%">ERM frame</span>
+      <span class="fl fl-sub fl-grey" style="left:62.98%;top:87.27%">risk, Bayes risk</span>
+      <span class="fl fl-blue" style="left:88.94%;top:77.58%">Ridge</span>
+      <span class="fl fl-sub fl-grey" style="left:88.94%;top:87.27%">$+\,\lambda\|\theta\|_2^2$</span>
+    </div>
+    <p class="muted" style="text-align:center;margin-top:6px;">one dataset of three points, carried through every box</p>
   </div>
 </div>
 
@@ -275,27 +303,29 @@
 <div class="slide">
   <h2>Example &mdash; Height to Weight</h2>
   <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;align-items:start;">
+  <div class="grid-2" style="grid-template-columns:1fr 560px;align-items:start;">
     <div>
       <p>$n = 1$: &nbsp;$x$ = height, $y$ = weight</p>
       <div class="math-block" style="margin:8px 0">$$y \;\approx\; \theta_1 x$$</div>
       <p>Predict: multiply height by $\theta_1$</p>
       <p class="muted">one number summarizes the trend</p>
     </div>
-    <div style="width:400px;">
-      <svg viewBox="0 0 420 250" style="width:100%;">
-        <line x1="50" y1="205" x2="395" y2="205" stroke="#5a6673" stroke-width="2"/>
-        <line x1="50" y1="205" x2="50" y2="25" stroke="#5a6673" stroke-width="2"/>
-        <text x="380" y="232" text-anchor="end" font-size="17" fill="#5a6673">height x</text>
-        <text x="28" y="40" font-size="17" fill="#5a6673" transform="rotate(-90 28 40)" text-anchor="end">weight y</text>
-        <line x1="50" y1="205" x2="380" y2="48" stroke="#003876" stroke-width="3"/>
-        <circle cx="130" cy="175" r="6" fill="#8a97a5"/>
-        <circle cx="185" cy="135" r="6" fill="#8a97a5"/>
-        <circle cx="245" cy="120" r="6" fill="#8a97a5"/>
-        <circle cx="300" cy="80" r="6" fill="#8a97a5"/>
-        <circle cx="345" cy="70" r="6" fill="#8a97a5"/>
-        <text x="375" y="35" text-anchor="end" font-size="17" fill="#003876" font-weight="700">slope</text>
-      </svg>
+    <div>
+      <div class="o2-fig" style="max-width:560px;">
+        <svg viewBox="0 0 500 300">
+          <line x1="60" y1="250" x2="480" y2="250" stroke="#5a6673" stroke-width="2"/>
+          <line x1="60" y1="250" x2="60" y2="40" stroke="#5a6673" stroke-width="2"/>
+          <line x1="60" y1="250" x2="450" y2="70" stroke="#003876" stroke-width="3"/>
+          <circle cx="140" cy="215" r="7" fill="#8a97a5"/>
+          <circle cx="205" cy="172" r="7" fill="#8a97a5"/>
+          <circle cx="275" cy="150" r="7" fill="#8a97a5"/>
+          <circle cx="345" cy="105" r="7" fill="#8a97a5"/>
+          <circle cx="410" cy="80" r="7" fill="#8a97a5"/>
+        </svg>
+        <span class="fl fl-sub fl-grey fl-l" style="left:12.8%;top:7.0%">weight $y$</span>
+        <span class="fl fl-sub fl-grey fl-r" style="left:96%;top:86.0%">height $x$</span>
+        <span class="fl fl-blue fl-r" style="left:90%;top:15.0%">slope $\theta_1$</span>
+      </div>
       <p class="muted" style="text-align:center;margin-top:2px;">illustrative sketch</p>
     </div>
   </div>
@@ -353,7 +383,7 @@
 <div class="slide">
   <h2>Running Example &mdash; Three Points</h2>
   <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;align-items:start;">
+  <div class="grid-2" style="grid-template-columns:1fr 520px;align-items:start;">
     <div>
       <table>
         <tr><th>$x$</th><th>$y$</th></tr>
@@ -364,26 +394,28 @@
       <p style="margin-top:12px;">Model with dummy feature:</p>
       <div class="math-block" style="margin:8px 0">$$y \;\approx\; \theta_0 + \theta_1 x$$</div>
     </div>
-    <div style="width:430px;">
-      <svg viewBox="0 0 460 320" style="width:100%;">
-        <line x1="45" y1="244" x2="430" y2="244" stroke="#5a6673" stroke-width="2"/>
-        <line x1="230" y1="300" x2="230" y2="20" stroke="#5a6673" stroke-width="2"/>
-        <line x1="120" y1="240" x2="120" y2="248" stroke="#5a6673" stroke-width="2"/>
-        <line x1="340" y1="240" x2="340" y2="248" stroke="#5a6673" stroke-width="2"/>
-        <line x1="226" y1="188" x2="234" y2="188" stroke="#5a6673" stroke-width="2"/>
-        <line x1="226" y1="132" x2="234" y2="132" stroke="#5a6673" stroke-width="2"/>
-        <line x1="226" y1="76" x2="234" y2="76" stroke="#5a6673" stroke-width="2"/>
-        <text x="120" y="268" text-anchor="middle" font-size="17" fill="#5a6673">-1</text>
-        <text x="340" y="268" text-anchor="middle" font-size="17" fill="#5a6673">1</text>
-        <text x="216" y="194" text-anchor="end" font-size="17" fill="#5a6673">1</text>
-        <text x="216" y="138" text-anchor="end" font-size="17" fill="#5a6673">2</text>
-        <text x="216" y="82" text-anchor="end" font-size="17" fill="#5a6673">3</text>
-        <circle cx="120" cy="244" r="8" fill="#003876"/>
-        <circle cx="230" cy="188" r="8" fill="#003876"/>
-        <circle cx="340" cy="76" r="8" fill="#003876"/>
-        <text x="420" y="232" text-anchor="end" font-size="17" fill="#5a6673">x</text>
-        <text x="244" y="32" font-size="17" fill="#5a6673">y</text>
-      </svg>
+    <div>
+      <div class="o2-fig" style="max-width:520px;">
+        <svg viewBox="0 0 500 320">
+          <line x1="30" y1="240" x2="480" y2="240" stroke="#5a6673" stroke-width="2"/>
+          <line x1="250" y1="290" x2="250" y2="20" stroke="#5a6673" stroke-width="2"/>
+          <line x1="140" y1="236" x2="140" y2="244" stroke="#5a6673" stroke-width="2"/>
+          <line x1="360" y1="236" x2="360" y2="244" stroke="#5a6673" stroke-width="2"/>
+          <line x1="246" y1="185" x2="254" y2="185" stroke="#5a6673" stroke-width="2"/>
+          <line x1="246" y1="130" x2="254" y2="130" stroke="#5a6673" stroke-width="2"/>
+          <line x1="246" y1="75" x2="254" y2="75" stroke="#5a6673" stroke-width="2"/>
+          <circle cx="140" cy="240" r="8" fill="#003876"/>
+          <circle cx="250" cy="185" r="8" fill="#003876"/>
+          <circle cx="360" cy="75" r="8" fill="#003876"/>
+        </svg>
+        <span class="fl fl-sub fl-grey" style="left:28%;top:83.8%">$-1$</span>
+        <span class="fl fl-sub fl-grey" style="left:72%;top:83.8%">$1$</span>
+        <span class="fl fl-sub fl-grey fl-r" style="left:47.6%;top:57.8%">$1$</span>
+        <span class="fl fl-sub fl-grey fl-r" style="left:47.6%;top:40.6%">$2$</span>
+        <span class="fl fl-sub fl-grey fl-r" style="left:47.6%;top:23.4%">$3$</span>
+        <span class="fl fl-sub fl-grey fl-r" style="left:95.6%;top:68.1%">$x$</span>
+        <span class="fl fl-sub fl-grey fl-l" style="left:52.4%;top:8.1%">$y$</span>
+      </div>
       <p class="muted" style="text-align:center;margin-top:2px;">carried through the whole deck</p>
     </div>
   </div>
@@ -423,15 +455,15 @@
 <div class="slide">
   <h2>Tall, Square, Fat</h2>
   <div class="divider"></div>
-  <div style="width:100%;max-width:920px;margin:6px auto 0;">
-    <svg viewBox="0 0 920 210" style="width:100%;">
-      <rect x="60" y="20" width="70" height="150" fill="#dfe7ef" stroke="#003876" stroke-width="2.5"/>
-      <text x="95" y="196" text-anchor="middle" font-size="18" fill="#003876" font-weight="700">tall: N &gt; n</text>
-      <rect x="390" y="45" width="110" height="110" fill="#dfe7ef" stroke="#003876" stroke-width="2.5"/>
-      <text x="445" y="196" text-anchor="middle" font-size="18" fill="#003876" font-weight="700">square: N = n</text>
-      <rect x="700" y="65" width="160" height="70" fill="#dfe7ef" stroke="#003876" stroke-width="2.5"/>
-      <text x="780" y="196" text-anchor="middle" font-size="18" fill="#003876" font-weight="700">fat: N &lt; n</text>
+  <div class="o2-fig" style="max-width:1040px;margin:6px auto 20px;">
+    <svg viewBox="0 0 1040 230">
+      <rect x="140" y="20" width="80" height="170" fill="#dfe7ef" stroke="#003876" stroke-width="2.5"/>
+      <rect x="465" y="65" width="110" height="110" fill="#dfe7ef" stroke="#003876" stroke-width="2.5"/>
+      <rect x="780" y="85" width="160" height="70" fill="#dfe7ef" stroke="#003876" stroke-width="2.5"/>
     </svg>
+    <span class="fl fl-blue" style="left:17.3%;top:93.5%">tall: $N \gt n$</span>
+    <span class="fl fl-blue" style="left:50%;top:93.5%">square: $N = n$</span>
+    <span class="fl fl-blue" style="left:82.7%;top:93.5%">fat: $N \lt n$</span>
   </div>
   <ul>
     <li>Square, invertible: $\theta = A^{-1}B$ &mdash; done</li>
@@ -474,7 +506,7 @@
   <div class="divider"></div>
   <div class="math-block">$$\min_{\theta \in \mathbb{R}^2}\; \frac{1}{2}\left\| \begin{bmatrix} 1 &amp; -1 \\ 1 &amp; 0 \\ 1 &amp; 1 \end{bmatrix} \theta - \begin{bmatrix} 0 \\ 1 \\ 3 \end{bmatrix} \right\|_2^2$$</div>
   <ul>
-    <li>Claim (opt01's teaser): the minimizer is $\theta^\star = A^{\dagger} B$</li>
+    <li>Claim: the minimizer is $\theta^\star = A^{\dagger} B$</li>
     <li>Next section: <strong>the proof</strong> &mdash; every step</li>
   </ul>
 </div>
@@ -492,7 +524,7 @@
   <h2>Technique Review 1 &mdash; Compact SVD</h2>
   <div class="divider"></div>
   <div class="card" style="padding:10px 16px;">
-    <p><strong>Recall (opt01).</strong> Any $A \in \mathbb{R}^{N \times n}$ of rank $r$:</p>
+    <p><strong>Recall.</strong> Any $A \in \mathbb{R}^{N \times n}$ of rank $r$:</p>
     <div class="math-block" style="margin:8px 0">$$A = U_c \Sigma_c V_c^{\top}, \qquad
       U_c \in \mathbb{R}^{N \times r},\;\; \Sigma_c \in \mathbb{R}^{r \times r},\;\; V_c \in \mathbb{R}^{n \times r}$$</div>
   </div>
@@ -507,7 +539,7 @@
   <h2>Technique Review 2 &mdash; Pseudo-Inverse</h2>
   <div class="divider"></div>
   <div class="card" style="padding:10px 16px;">
-    <p><strong>Recall (opt01).</strong> The Moore&ndash;Penrose pseudo-inverse:</p>
+    <p><strong>Recall.</strong> The Moore&ndash;Penrose pseudo-inverse:</p>
     <div class="math-block" style="margin:8px 0">$$A^{\dagger} \;=\; V_c \Sigma_c^{-1} U_c^{\top} \;\in\; \mathbb{R}^{n \times N}$$</div>
   </div>
   <ul>
@@ -522,7 +554,7 @@
   <h2>Technique Review 3 &mdash; Rotations Are Free</h2>
   <div class="divider"></div>
   <div class="card" style="padding:10px 16px;">
-    <p><strong>Recall (opt01, Thm 4).</strong> $U$ orthogonal ($U^{\top}U = I$):</p>
+    <p><strong>Recall.</strong> $U$ orthogonal ($U^{\top}U = I$):</p>
     <div class="math-block" style="margin:8px 0">$$\|U^{\top} z\|_2 \;=\; \|z\|_2 \quad \text{for all } z$$</div>
   </div>
   <ul>
@@ -536,13 +568,13 @@
   <h2>Technique Review 4 &mdash; Split a Vector</h2>
   <div class="divider"></div>
   <div class="card" style="padding:10px 16px;">
-    <p><strong>Recall (opt01, Thm 2&ndash;3).</strong> Subspace $S \subseteq \mathbb{R}^n$: every $\theta$ splits uniquely,</p>
+    <p><strong>Recall.</strong> Subspace $S \subseteq \mathbb{R}^n$: every $\theta$ splits uniquely,</p>
     <div class="math-block" style="margin:8px 0">$$\theta = \theta_1 + \theta_2, \quad \theta_1 \in S,\; \theta_2 \in S^{\perp},
       \qquad \|\theta\|_2^2 = \|\theta_1\|_2^2 + \|\theta_2\|_2^2$$</div>
   </div>
   <ul>
     <li>Pythagoras: the cross term dies by orthogonality</li>
-    <li>Also (opt01, Thm 3): $\operatorname{null}(V_c^{\top}) = \operatorname{range}(V_c)^{\perp}$</li>
+    <li>Also: $\operatorname{null}(V_c^{\top}) = \operatorname{range}(V_c)^{\perp}$</li>
   </ul>
 </div>
 
@@ -708,7 +740,7 @@
   </div>
   <ul>
     <li>After rotating: $r$ solvable scalar equations + unreachable rest</li>
-    <li>Same move as opt01 &mdash; every $\ell_2$ question becomes a $\sigma$ question</li>
+    <li>The recurring move &mdash; every $\ell_2$ question becomes a $\sigma$ question</li>
   </ul>
 </div>
 
@@ -741,7 +773,7 @@
 <div class="slide">
   <h2>Worked &mdash; the Fitted Line</h2>
   <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;align-items:start;">
+  <div class="grid-2" style="grid-template-columns:1fr 520px;align-items:start;">
     <div>
       <div class="math-block" style="margin:8px 0">$$\hat{y} = \tfrac{4}{3} + \tfrac{3}{2}x$$</div>
       <table>
@@ -752,20 +784,33 @@
       </table>
       <p class="muted" style="margin-top:8px;">squared error $\tfrac1{36} + \tfrac4{36} + \tfrac1{36} = \tfrac16$ &mdash; the smallest possible</p>
     </div>
-    <div style="width:430px;">
-      <svg viewBox="0 0 460 320" style="width:100%;">
-        <line x1="45" y1="244" x2="430" y2="244" stroke="#5a6673" stroke-width="2"/>
-        <line x1="230" y1="300" x2="230" y2="20" stroke="#5a6673" stroke-width="2"/>
-        <line x1="65" y1="295" x2="395" y2="43" stroke="#003876" stroke-width="3"/>
-        <circle cx="120" cy="244" r="8" fill="#003876"/>
-        <circle cx="230" cy="188" r="8" fill="#003876"/>
-        <circle cx="340" cy="76" r="8" fill="#003876"/>
-        <line x1="120" y1="244" x2="120" y2="253" stroke="#c73b3b" stroke-width="3"/>
-        <line x1="230" y1="188" x2="230" y2="169" stroke="#c73b3b" stroke-width="3"/>
-        <line x1="340" y1="76" x2="340" y2="85" stroke="#c73b3b" stroke-width="3"/>
-        <text x="392" y="34" text-anchor="end" font-size="17" fill="#003876" font-weight="700">y = 4/3 + 1.5x</text>
-        <text x="255" y="150" font-size="16" fill="#c73b3b">residuals</text>
+    <div class="o2-fig" style="max-width:520px;">
+      <svg viewBox="0 0 500 320">
+        <line x1="30" y1="240" x2="480" y2="240" stroke="#5a6673" stroke-width="2"/>
+        <line x1="250" y1="290" x2="250" y2="20" stroke="#5a6673" stroke-width="2"/>
+        <line x1="140" y1="236" x2="140" y2="244" stroke="#5a6673" stroke-width="2"/>
+        <line x1="360" y1="236" x2="360" y2="244" stroke="#5a6673" stroke-width="2"/>
+        <line x1="246" y1="185" x2="254" y2="185" stroke="#5a6673" stroke-width="2"/>
+        <line x1="246" y1="130" x2="254" y2="130" stroke="#5a6673" stroke-width="2"/>
+        <line x1="246" y1="75" x2="254" y2="75" stroke="#5a6673" stroke-width="2"/>
+        <line x1="113" y1="270" x2="393" y2="59" stroke="#003876" stroke-width="3"/>
+        <circle cx="140" cy="240" r="8" fill="#003876"/>
+        <circle cx="250" cy="185" r="8" fill="#003876"/>
+        <circle cx="360" cy="75" r="8" fill="#003876"/>
+        <line x1="140" y1="240" x2="140" y2="250" stroke="#c73b3b" stroke-width="3.5"/>
+        <line x1="250" y1="185" x2="250" y2="167" stroke="#c73b3b" stroke-width="3.5"/>
+        <line x1="360" y1="75" x2="360" y2="85" stroke="#c73b3b" stroke-width="3.5"/>
+        <line x1="296" y1="220" x2="256" y2="188" stroke="#c73b3b" stroke-width="1.2"/>
       </svg>
+      <span class="fl fl-sub fl-grey" style="left:28%;top:83.8%">$-1$</span>
+      <span class="fl fl-sub fl-grey" style="left:72%;top:83.8%">$1$</span>
+      <span class="fl fl-sub fl-grey fl-r" style="left:47.6%;top:57.8%">$1$</span>
+      <span class="fl fl-sub fl-grey fl-r" style="left:47.6%;top:40.6%">$2$</span>
+      <span class="fl fl-sub fl-grey fl-r" style="left:47.6%;top:23.4%">$3$</span>
+      <span class="fl fl-sub fl-grey fl-r" style="left:95.6%;top:68.1%">$x$</span>
+      <span class="fl fl-sub fl-grey fl-l" style="left:52.4%;top:8.1%">$y$</span>
+      <span class="fl fl-sub fl-blue fl-r" style="left:95.6%;top:46.0%">$\hat{y} = \tfrac43 + \tfrac32 x$</span>
+      <span class="fl fl-sub fl-red fl-l" style="left:60%;top:70.0%">residuals</span>
     </div>
   </div>
 </div>
@@ -793,7 +838,7 @@
     <li>Linear probes on frozen embeddings &mdash; solved by $A^{\dagger}B$</li>
     <li>Sanity baseline: before gradient descent, know the exact answer here</li>
   </ul>
-  <p class="muted">opt03 onward: everything else, where no formula exists</p>
+  <p class="muted">everything else needs iteration &mdash; no formula exists</p>
 </div>
 
 <!-- ===== SECTION 05 &mdash; GEOMETRY & NORMAL EQUATIONS ===== -->
@@ -814,32 +859,29 @@
     <li>Predictions live on an $r$-dimensional <strong>subspace</strong> of label space</li>
     <li>Minimizing $\|A\theta - B\|_2$: find the point of $\operatorname{range}(A)$ <strong>closest to $B$</strong></li>
   </ul>
-  <p class="muted">recall (opt01): range = everything the columns can build</p>
+  <p class="muted">range = everything the columns can build</p>
 </div>
 
 <!-- projection picture -->
 <div class="slide">
   <h2>The Projection Picture</h2>
   <div class="divider"></div>
-  <div style="width:100%;max-width:860px;margin:0 auto;">
-    <svg viewBox="0 0 560 320" style="width:100%;">
-      <polygon points="40,230 230,290 520,230 330,170" fill="#eef2f7" stroke="#8a97a5" stroke-width="1.5"/>
-      <text x="70" y="270" font-size="18" fill="#5a6673" font-weight="700">range(A)</text>
-      <!-- residual dashed -->
-      <line x1="330" y1="60" x2="330" y2="228" stroke="#c73b3b" stroke-width="2.5" stroke-dasharray="7 6"/>
-      <!-- right angle marker -->
-      <polyline points="330,214 344,218 344,232" fill="none" stroke="#c73b3b" stroke-width="2"/>
-      <!-- vectors from origin -->
-      <circle cx="170" cy="245" r="4" fill="#1c232b"/>
-      <text x="152" y="266" font-size="17" fill="#1c232b">0</text>
-      <line x1="170" y1="245" x2="326" y2="64" stroke="#1c232b" stroke-width="2.5"/>
-      <line x1="170" y1="245" x2="325" y2="231" stroke="#003876" stroke-width="3"/>
-      <circle cx="330" cy="60" r="6" fill="#1c232b"/>
-      <circle cx="330" cy="230" r="6" fill="#003876"/>
-      <text x="345" y="55" font-size="19" fill="#1c232b" font-weight="700">B</text>
-      <text x="348" y="252" font-size="18" fill="#003876" font-weight="700">closest point</text>
-      <text x="345" y="145" font-size="17" fill="#c73b3b">residual</text>
+  <div class="o2-fig" style="max-width:960px;">
+    <svg viewBox="0 0 1000 420">
+      <polygon points="80,300 430,380 920,300 570,220" fill="#eef2f7" stroke="#8a97a5" stroke-width="1.5"/>
+      <line x1="600" y1="70" x2="600" y2="296" stroke="#c73b3b" stroke-width="2.5" stroke-dasharray="7 6"/>
+      <polyline points="600,282 618,283 619,301" fill="none" stroke="#c73b3b" stroke-width="2"/>
+      <line x1="310" y1="322" x2="596" y2="74" stroke="#1c232b" stroke-width="2.5"/>
+      <line x1="310" y1="322" x2="594" y2="301" stroke="#003876" stroke-width="3"/>
+      <circle cx="310" cy="322" r="5" fill="#1c232b"/>
+      <circle cx="600" cy="70" r="8" fill="#1c232b"/>
+      <circle cx="600" cy="300" r="8" fill="#003876"/>
     </svg>
+    <span class="fl fl-grey fl-l" style="left:9%;top:87.6%">$\operatorname{range}(A)$</span>
+    <span class="fl fl-sub fl-r" style="left:29%;top:82.1%">$0$</span>
+    <span class="fl fl-l" style="left:61.5%;top:14.8%">$B$</span>
+    <span class="fl fl-blue fl-l" style="left:61.5%;top:78.6%">$A\theta^\star$</span>
+    <span class="fl fl-sub fl-red fl-l" style="left:61.5%;top:42.9%">residual $B - A\theta^\star$</span>
   </div>
   <p style="text-align:center;">Best prediction $A\theta^\star$ = <strong>foot of the perpendicular</strong> from $B$ onto $\operatorname{range}(A)$</p>
 </div>
@@ -853,7 +895,7 @@
     \;=\; U_c U_c^{\top} B$$</div>
   <ul>
     <li>$U_c U_c^{\top}$: keep the $\operatorname{range}(A)$ part of $B$, kill the rest</li>
-    <li>Recall (opt01): $AA^{\dagger}$ is the projection onto $\operatorname{range}(A)$</li>
+    <li>Recall: $AA^{\dagger}$ is the projection onto $\operatorname{range}(A)$</li>
   </ul>
   <p class="muted">bookkeeping: $UU^{\top} = I$ gives $U_cU_c^{\top} + \tilde{U}\tilde{U}^{\top} = I$</p>
 </div>
@@ -1042,7 +1084,7 @@
 <div class="slide">
   <h2>Line vs Parabola</h2>
   <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;align-items:start;">
+  <div class="grid-2" style="grid-template-columns:1fr 600px;align-items:start;">
     <div>
       <table>
         <tr><th>Model</th><th>Train error</th></tr>
@@ -1052,18 +1094,31 @@
       <p style="margin-top:12px;">$3$ parameters, $3$ points: <strong>interpolation</strong></p>
       <p class="muted">is zero training error a victory? hold that thought</p>
     </div>
-    <div style="width:430px;">
-      <svg viewBox="0 0 460 320" style="width:100%;">
-        <line x1="45" y1="244" x2="430" y2="244" stroke="#5a6673" stroke-width="2"/>
-        <line x1="230" y1="300" x2="230" y2="20" stroke="#5a6673" stroke-width="2"/>
-        <line x1="65" y1="295" x2="395" y2="43" stroke="#8a97a5" stroke-width="2.5"/>
-        <path d="M 65 251 Q 224.5 251 384 15.5" fill="none" stroke="#003876" stroke-width="3"/>
-        <circle cx="120" cy="244" r="8" fill="#003876"/>
-        <circle cx="230" cy="188" r="8" fill="#003876"/>
-        <circle cx="340" cy="76" r="8" fill="#003876"/>
-        <text x="120" y="300" font-size="16" fill="#8a97a5">line: miss 1/6</text>
-        <text x="285" y="35" font-size="16" fill="#003876" font-weight="700">parabola: exact</text>
+    <div class="o2-fig" style="max-width:600px;">
+      <svg viewBox="0 0 500 320">
+        <line x1="30" y1="240" x2="480" y2="240" stroke="#5a6673" stroke-width="2"/>
+        <line x1="250" y1="290" x2="250" y2="20" stroke="#5a6673" stroke-width="2"/>
+        <line x1="140" y1="236" x2="140" y2="244" stroke="#5a6673" stroke-width="2"/>
+        <line x1="360" y1="236" x2="360" y2="244" stroke="#5a6673" stroke-width="2"/>
+        <line x1="246" y1="185" x2="254" y2="185" stroke="#5a6673" stroke-width="2"/>
+        <line x1="246" y1="130" x2="254" y2="130" stroke="#5a6673" stroke-width="2"/>
+        <line x1="246" y1="75" x2="254" y2="75" stroke="#5a6673" stroke-width="2"/>
+        <line x1="113" y1="270" x2="393" y2="59" stroke="#8a97a5" stroke-width="2.5"/>
+        <polyline points="107,246 140,240 173,229 206,214 239,193 272,167 305,137 338,101 371,61 393,31"
+                  fill="none" stroke="#003876" stroke-width="3"/>
+        <circle cx="140" cy="240" r="8" fill="#003876"/>
+        <circle cx="250" cy="185" r="8" fill="#003876"/>
+        <circle cx="360" cy="75" r="8" fill="#003876"/>
       </svg>
+      <span class="fl fl-sub fl-grey" style="left:28%;top:83.8%">$-1$</span>
+      <span class="fl fl-sub fl-grey" style="left:72%;top:83.8%">$1$</span>
+      <span class="fl fl-sub fl-grey fl-r" style="left:47.6%;top:57.8%">$1$</span>
+      <span class="fl fl-sub fl-grey fl-r" style="left:47.6%;top:40.6%">$2$</span>
+      <span class="fl fl-sub fl-grey fl-r" style="left:47.6%;top:23.4%">$3$</span>
+      <span class="fl fl-sub fl-grey fl-r" style="left:95.6%;top:68.1%">$x$</span>
+      <span class="fl fl-sub fl-grey fl-l" style="left:52.4%;top:8.1%">$y$</span>
+      <span class="fl fl-blue fl-r" style="left:47%;top:12.0%">parabola: exact</span>
+      <span class="fl fl-sub fl-lgrey fl-r" style="left:95%;top:55.0%">line: miss $1/6$</span>
     </div>
   </div>
 </div>
@@ -1176,10 +1231,10 @@
   <h2>We Have Met This Frame</h2>
   <div class="divider"></div>
   <div class="card" style="padding:10px 16px;">
-    <p><strong>Recall (prob06).</strong> Risk $R(h)$, empirical risk $\hat{R}_N(h)$, ERM $= \operatorname{argmin} \hat{R}_N$; generalization gap $R - \hat{R}_N$, bounded via concentration.</p>
+    <p><strong>Recall.</strong> Risk $R(h)$, empirical risk $\hat{R}_N(h)$, ERM $= \operatorname{argmin} \hat{R}_N$; generalization gap $R - \hat{R}_N$, bounded via concentration.</p>
   </div>
   <ul>
-    <li>prob06: the <strong>statistics</strong> of the gap</li>
+    <li>Earlier: the <strong>statistics</strong> of the gap</li>
     <li>Today: the <strong>optimization</strong> &mdash; when can we actually solve the argmin?</li>
   </ul>
 </div>
@@ -1200,7 +1255,7 @@
 <div class="slide">
   <h2>Two Classic Losses</h2>
   <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;align-items:center;">
+  <div class="grid-2" style="grid-template-columns:1fr 500px;align-items:center;">
     <div>
       <div class="math-block" style="margin:8px 0">$$\ell_{\text{quad}}(\hat{y}, y) = \|\hat{y} - y\|_2^2$$</div>
       <div class="math-block" style="margin:8px 0">$$\ell_{\text{abs}}(\hat{y}, y) = \|\hat{y} - y\|_1$$</div>
@@ -1209,16 +1264,16 @@
         <li>Absolute: robust to outliers, kink at $0$</li>
       </ul>
     </div>
-    <div style="width:330px;">
-      <svg viewBox="0 0 340 240" style="width:100%;">
-        <line x1="20" y1="210" x2="320" y2="210" stroke="#5a6673" stroke-width="2"/>
-        <line x1="170" y1="220" x2="170" y2="20" stroke="#5a6673" stroke-width="2"/>
-        <path d="M 50 30 Q 170 330 290 30" fill="none" stroke="#003876" stroke-width="3"/>
-        <polyline points="50,90 170,210 290,90" fill="none" stroke="#c73b3b" stroke-width="3"/>
-        <text x="238" y="45" font-size="16" fill="#003876" font-weight="700">quadratic</text>
-        <text x="250" y="120" font-size="16" fill="#c73b3b" font-weight="700">absolute</text>
-        <text x="300" y="232" font-size="15" fill="#5a6673">error</text>
+    <div class="o2-fig" style="max-width:500px;">
+      <svg viewBox="0 0 500 300">
+        <line x1="20" y1="260" x2="480" y2="260" stroke="#5a6673" stroke-width="2"/>
+        <line x1="250" y1="285" x2="250" y2="20" stroke="#5a6673" stroke-width="2"/>
+        <path d="M 150 40 Q 250 480 350 40" fill="none" stroke="#003876" stroke-width="3"/>
+        <polyline points="150,120 250,260 350,120" fill="none" stroke="#c73b3b" stroke-width="3"/>
       </svg>
+      <span class="fl fl-blue fl-l" style="left:5%;top:20.0%">quadratic</span>
+      <span class="fl fl-red fl-l" style="left:5%;top:53.3%">absolute</span>
+      <span class="fl fl-sub fl-grey fl-r" style="left:95.6%;top:94.0%">error</span>
     </div>
   </div>
 </div>
@@ -1231,7 +1286,7 @@
   <ul>
     <li>Classifier outputs a <strong>probability vector</strong>, label is a class index</li>
     <li>Loss bridges the two spaces &mdash; e.g. cross-entropy</li>
-    <li>Recall (prob02): cross-entropy = expected code length under the wrong model</li>
+    <li>Recall: cross-entropy = expected code length under the wrong model</li>
   </ul>
 </div>
 
@@ -1270,7 +1325,7 @@
   <div class="divider"></div>
   <div class="math-block" style="margin:8px 0">$$\ell = (\hat{y} - y)^2 \quad\Longrightarrow\quad f^\star(x) \;=\; \mathbb{E}\big[Y \mid X = x\big]$$</div>
   <ul>
-    <li>Recall (prob07): the conditional mean minimizes mean-squared error &mdash; the MMSE theorem</li>
+    <li>Recall: the conditional mean minimizes mean-squared error &mdash; the MMSE theorem</li>
     <li>Bayes risk $R^\star = \mathbb{E}\big[\operatorname{Var}(Y \mid X)\big]$: the irreducible noise</li>
   </ul>
   <p class="muted">regression = trying to learn a conditional expectation</p>
@@ -1284,7 +1339,7 @@
     \;\;\xrightarrow[N \to \infty]{}\;\; R[f]$$</div>
   <ul>
     <li>Replace the expectation by the sample average</li>
-    <li>Recall (prob05): law of large numbers &mdash; averages converge to means</li>
+    <li>Recall: law of large numbers &mdash; averages converge to means</li>
     <li><strong>ERM</strong>: minimize $\hat{R}$ over a class $\mathcal{F}$, hope $R$ follows</li>
   </ul>
 </div>
@@ -1293,29 +1348,25 @@
 <div class="slide">
   <h2>Two Ways to Lose</h2>
   <div class="divider"></div>
-  <div style="width:100%;max-width:880px;margin:0 auto;">
-    <svg viewBox="0 0 620 300" style="width:100%;">
-      <rect x="15" y="15" width="590" height="270" fill="none" stroke="#8a97a5" stroke-width="1.5" stroke-dasharray="6 5"/>
-      <text x="30" y="42" font-size="16" fill="#8a97a5">all predictors</text>
-      <ellipse cx="230" cy="170" rx="180" ry="95" fill="#eef2f7" stroke="#003876" stroke-width="2"/>
-      <text x="105" y="120" font-size="17" fill="#003876" font-weight="700">model class F</text>
-      <!-- Bayes star outside -->
-      <text x="520" y="150" font-size="30" fill="#c73b3b">&#9733;</text>
-      <text x="478" y="180" font-size="16" fill="#c73b3b">f* (Bayes)</text>
-      <!-- best in class -->
-      <circle cx="395" cy="165" r="7" fill="#003876"/>
-      <text x="330" y="145" font-size="16" fill="#003876">best in F</text>
-      <!-- ERM pick -->
-      <circle cx="270" cy="215" r="7" fill="#1c232b"/>
-      <text x="235" y="248" font-size="16" fill="#1c232b">ERM pick</text>
-      <!-- arrows -->
-      <line x1="512" y1="145" x2="408" y2="162" stroke="#c73b3b" stroke-width="2.5"/>
-      <text x="408" y="120" font-size="16" fill="#c73b3b">approximation</text>
-      <line x1="386" y1="172" x2="280" y2="210" stroke="#1c232b" stroke-width="2.5"/>
-      <text x="320" y="212" font-size="16" fill="#1c232b">estimation</text>
+  <div class="o2-fig" style="max-width:1000px;">
+    <svg viewBox="0 0 1000 420">
+      <rect x="20" y="20" width="960" height="380" fill="none" stroke="#8a97a5" stroke-width="1.5" stroke-dasharray="6 5"/>
+      <ellipse cx="370" cy="240" rx="290" ry="130" fill="#eef2f7" stroke="#003876" stroke-width="2"/>
+      <text x="850" y="232" text-anchor="middle" font-size="46" fill="#c73b3b">&#9733;</text>
+      <circle cx="640" cy="230" r="9" fill="#003876"/>
+      <circle cx="440" cy="300" r="9" fill="#1c232b"/>
+      <line x1="822" y1="222" x2="655" y2="228" stroke="#c73b3b" stroke-width="2.5"/>
+      <line x1="630" y1="238" x2="452" y2="294" stroke="#1c232b" stroke-width="2.5"/>
     </svg>
+    <span class="fl fl-sub fl-lgrey fl-l" style="left:4%;top:11.4%">all predictors</span>
+    <span class="fl fl-blue fl-l" style="left:17%;top:38.1%">model class $\mathcal{F}$</span>
+    <span class="fl fl-sub fl-red" style="left:85%;top:65.5%">$f^\star$ (Bayes)</span>
+    <span class="fl fl-sub fl-blue fl-r" style="left:62.5%;top:45.2%">best in $\mathcal{F}$</span>
+    <span class="fl fl-sub fl-r" style="left:42.5%;top:79.8%">ERM pick</span>
+    <span class="fl fl-sub fl-red" style="left:74%;top:44.0%">approximation</span>
+    <span class="fl fl-sub fl-r" style="left:54.5%;top:56.0%">estimation</span>
   </div>
-  <p style="text-align:center;" class="muted">recall (prob06): approximation error (class too small) + estimation error (data too few)</p>
+  <p style="text-align:center;" class="muted">approximation error (class too small) + estimation error (data too few)</p>
 </div>
 
 <!-- least squares is ERM -->
@@ -1431,7 +1482,7 @@
   <h2>Technique Review &mdash; Eigenvalues Under a Shift</h2>
   <div class="divider"></div>
   <div class="card" style="padding:10px 16px;">
-    <p><strong>Recall (prob08).</strong> Symmetric matrices have real eigenvalues and orthonormal eigenvectors.</p>
+    <p><strong>Recall.</strong> Symmetric matrices have real eigenvalues and orthonormal eigenvectors.</p>
   </div>
   <div class="math-block" style="margin:8px 0">$$\theta^{\top}\!A^{\top}\!A\,\theta = \|A\theta\|_2^2 \geq 0
     \;\;\Rightarrow\;\; A^{\top}\!A \text{ has eigenvalues } \mu_i \geq 0$$</div>
@@ -1544,7 +1595,7 @@
 <div class="slide">
   <h2>Turning the Dial</h2>
   <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:auto 1fr;align-items:center;">
+  <div class="grid-2" style="grid-template-columns:1fr 540px;align-items:center;">
     <div>
       <table>
         <tr><th style="text-transform:none">$\lambda$</th><th style="text-transform:none">$\theta_0$</th><th style="text-transform:none">$\theta_1$</th></tr>
@@ -1554,21 +1605,25 @@
         <tr><td>$\infty$</td><td>$0$</td><td>$0$</td></tr>
       </table>
     </div>
-    <div style="width:100%;">
-      <svg viewBox="0 0 470 270" style="width:100%;">
-        <line x1="60" y1="250" x2="450" y2="250" stroke="#5a6673" stroke-width="2"/>
-        <line x1="70" y1="260" x2="70" y2="90" stroke="#5a6673" stroke-width="2"/>
-        <polyline points="70,133 100,163 130,180 190,200 310,218 430,227" fill="none" stroke="#003876" stroke-width="3"/>
-        <polyline points="70,119 100,163 130,184 190,206 310,224 430,231" fill="none" stroke="#c73b3b" stroke-width="3"/>
-        <circle cx="100" cy="163" r="6" fill="#1c232b"/>
-        <line x1="146" y1="128" x2="108" y2="157" stroke="#5a6673" stroke-width="1.5"/>
-        <text x="150" y="122" font-size="15" fill="#1c232b">cross at 1</text>
-        <text x="210" y="160" font-size="16" fill="#003876" font-weight="700">intercept</text>
-        <text x="200" y="235" font-size="16" fill="#c73b3b" font-weight="700">slope</text>
-        <text x="430" y="266" font-size="15" fill="#5a6673">12</text>
-        <text x="66" y="266" font-size="15" fill="#5a6673">0</text>
-        <text x="24" y="255" font-size="15" fill="#5a6673">0</text>
-      </svg>
+    <div>
+      <div class="o2-fig" style="max-width:540px;">
+        <svg viewBox="0 0 500 300">
+          <line x1="50" y1="260" x2="475" y2="260" stroke="#5a6673" stroke-width="2"/>
+          <line x1="70" y1="270" x2="70" y2="40" stroke="#5a6673" stroke-width="2"/>
+          <polyline points="70,82 102,127 135,153 168,171 200,184 265,201 330,212 395,219 460,224"
+                    fill="none" stroke="#003876" stroke-width="3"/>
+          <polyline points="70,60 102,127 135,160 168,180 200,193 265,210 330,220 395,227 460,231"
+                    fill="none" stroke="#c73b3b" stroke-width="3"/>
+          <circle cx="102" cy="127" r="6" fill="#1c232b"/>
+          <line x1="146" y1="102" x2="110" y2="122" stroke="#8a97a5" stroke-width="1.5"/>
+        </svg>
+        <span class="fl fl-sub fl-l" style="left:30%;top:31.7%">cross at $\lambda = 1$</span>
+        <span class="fl fl-blue fl-l" style="left:50%;top:46.7%">$\theta_0$ intercept</span>
+        <span class="fl fl-red fl-l" style="left:40%;top:80.0%">$\theta_1$ slope</span>
+        <span class="fl fl-sub fl-grey" style="left:14%;top:94.0%">$0$</span>
+        <span class="fl fl-sub fl-grey" style="left:92%;top:94.0%">$12$</span>
+        <span class="fl fl-sub fl-grey fl-r" style="left:99%;top:90.0%">$\lambda$</span>
+      </div>
       <p class="muted" style="text-align:center;margin:2px 0 0;">both coefficients $\to 0$ monotonically; they cross exactly at $\lambda = 1$</p>
     </div>
   </div>
@@ -1578,20 +1633,32 @@
 <div class="slide">
   <h2>Worked &mdash; Three Fits, One Dataset</h2>
   <div class="divider"></div>
-  <div style="width:100%;max-width:700px;margin:0 auto;">
-    <svg viewBox="0 0 460 320" style="width:100%;">
-      <line x1="45" y1="244" x2="430" y2="244" stroke="#5a6673" stroke-width="2"/>
-      <line x1="230" y1="300" x2="230" y2="20" stroke="#5a6673" stroke-width="2"/>
-      <line x1="65" y1="295" x2="395" y2="43" stroke="#003876" stroke-width="3"/>
-      <line x1="65" y1="272" x2="395" y2="104" stroke="#c78a3b" stroke-width="3"/>
-      <line x1="65" y1="249" x2="395" y2="198" stroke="#c73b3b" stroke-width="3"/>
-      <circle cx="120" cy="244" r="8" fill="#1c232b"/>
-      <circle cx="230" cy="188" r="8" fill="#1c232b"/>
-      <circle cx="340" cy="76" r="8" fill="#1c232b"/>
-      <text x="360" y="35" font-size="16" fill="#003876" font-weight="700">lam = 0</text>
-      <text x="360" y="100" font-size="16" fill="#c78a3b" font-weight="700">lam = 1</text>
-      <text x="360" y="185" font-size="16" fill="#c73b3b" font-weight="700">lam = 8</text>
+  <div class="o2-fig" style="max-width:700px;">
+    <svg viewBox="0 0 500 320">
+        <line x1="30" y1="240" x2="480" y2="240" stroke="#5a6673" stroke-width="2"/>
+        <line x1="250" y1="290" x2="250" y2="20" stroke="#5a6673" stroke-width="2"/>
+        <line x1="140" y1="236" x2="140" y2="244" stroke="#5a6673" stroke-width="2"/>
+        <line x1="360" y1="236" x2="360" y2="244" stroke="#5a6673" stroke-width="2"/>
+        <line x1="246" y1="185" x2="254" y2="185" stroke="#5a6673" stroke-width="2"/>
+        <line x1="246" y1="130" x2="254" y2="130" stroke="#5a6673" stroke-width="2"/>
+        <line x1="246" y1="75" x2="254" y2="75" stroke="#5a6673" stroke-width="2"/>
+      <line x1="113" y1="270" x2="393" y2="59" stroke="#003876" stroke-width="3"/>
+      <line x1="113" y1="254" x2="393" y2="114" stroke="#c78a3b" stroke-width="3"/>
+      <line x1="113" y1="241" x2="393" y2="198" stroke="#c73b3b" stroke-width="3"/>
+        <circle cx="140" cy="240" r="8" fill="#1c232b"/>
+        <circle cx="250" cy="185" r="8" fill="#1c232b"/>
+        <circle cx="360" cy="75" r="8" fill="#1c232b"/>
     </svg>
+    <span class="fl fl-sub fl-grey" style="left:28%;top:83.8%">$-1$</span>
+    <span class="fl fl-sub fl-grey" style="left:72%;top:83.8%">$1$</span>
+    <span class="fl fl-sub fl-grey fl-r" style="left:47.6%;top:57.8%">$1$</span>
+    <span class="fl fl-sub fl-grey fl-r" style="left:47.6%;top:40.6%">$2$</span>
+    <span class="fl fl-sub fl-grey fl-r" style="left:47.6%;top:23.4%">$3$</span>
+    <span class="fl fl-sub fl-grey fl-r" style="left:95.6%;top:80.0%">$x$</span>
+    <span class="fl fl-sub fl-grey fl-l" style="left:52.4%;top:8.1%">$y$</span>
+    <span class="fl fl-blue fl-r" style="left:95%;top:16.2%">$\lambda = 0$</span>
+    <span class="fl fl-amber fl-r" style="left:95%;top:33.8%">$\lambda = 1$</span>
+    <span class="fl fl-red fl-r" style="left:95%;top:61.2%">$\lambda = 8$</span>
   </div>
   <p style="text-align:center;">Bigger $\lambda$: flatter, safer &mdash; the fit leans toward $\hat{y} = 0$</p>
 </div>
@@ -1600,34 +1667,35 @@
 <div class="slide">
   <h2>Underfit &mdash; Just Right &mdash; Overfit</h2>
   <div class="divider"></div>
-  <div style="width:100%;max-width:980px;margin:0 auto;">
-    <svg viewBox="0 0 660 240" style="width:100%;">
+  <div class="o2-fig" style="max-width:1040px;">
+    <svg viewBox="0 0 660 260">
       <!-- panel 1: underfit -->
       <rect x="10" y="15" width="200" height="170" fill="#fafbfc" stroke="#8a97a5" stroke-width="1.5"/>
       <circle cx="40" cy="140" r="5" fill="#1c232b"/><circle cx="75" cy="105" r="5" fill="#1c232b"/>
       <circle cx="110" cy="120" r="5" fill="#1c232b"/><circle cx="145" cy="60" r="5" fill="#1c232b"/>
       <circle cx="180" cy="80" r="5" fill="#1c232b"/>
       <line x1="20" y1="108" x2="200" y2="98" stroke="#c73b3b" stroke-width="3"/>
-      <text x="45" y="215" font-size="17" fill="#c73b3b" font-weight="700">underfit</text>
-      <text x="30" y="238" font-size="15" fill="#5a6673">lam too big</text>
       <!-- panel 2: just right -->
       <rect x="230" y="15" width="200" height="170" fill="#fafbfc" stroke="#8a97a5" stroke-width="1.5"/>
       <circle cx="260" cy="140" r="5" fill="#1c232b"/><circle cx="295" cy="105" r="5" fill="#1c232b"/>
       <circle cx="330" cy="120" r="5" fill="#1c232b"/><circle cx="365" cy="60" r="5" fill="#1c232b"/>
       <circle cx="400" cy="80" r="5" fill="#1c232b"/>
       <line x1="240" y1="150" x2="420" y2="55" stroke="#003876" stroke-width="3"/>
-      <text x="265" y="215" font-size="17" fill="#003876" font-weight="700">just right</text>
-      <text x="255" y="238" font-size="15" fill="#5a6673">lam tuned</text>
       <!-- panel 3: overfit -->
       <rect x="450" y="15" width="200" height="170" fill="#fafbfc" stroke="#8a97a5" stroke-width="1.5"/>
       <circle cx="480" cy="140" r="5" fill="#1c232b"/><circle cx="515" cy="105" r="5" fill="#1c232b"/>
       <circle cx="550" cy="120" r="5" fill="#1c232b"/><circle cx="585" cy="60" r="5" fill="#1c232b"/>
       <circle cx="620" cy="80" r="5" fill="#1c232b"/>
       <path d="M 460 165 Q 480 130 480 140 Q 490 155 515 105 Q 535 65 550 120 Q 562 160 585 60 Q 598 15 620 80 Q 632 115 645 45" fill="none" stroke="#c78a3b" stroke-width="3"/>
-      <text x="490" y="215" font-size="17" fill="#c78a3b" font-weight="700">overfit</text>
-      <text x="465" y="238" font-size="15" fill="#5a6673">lam = 0, many features</text>
     </svg>
+    <span class="fl fl-red" style="left:16.7%;top:81.5%">underfit</span>
+    <span class="fl fl-sub fl-grey" style="left:16.7%;top:92.3%">$\lambda$ too big</span>
+    <span class="fl fl-blue" style="left:50%;top:81.5%">just right</span>
+    <span class="fl fl-sub fl-grey" style="left:50%;top:92.3%">$\lambda$ tuned</span>
+    <span class="fl fl-amber" style="left:83.3%;top:81.5%">overfit</span>
+    <span class="fl fl-sub fl-grey" style="left:83.3%;top:92.3%">$\lambda = 0$, many features</span>
   </div>
+  <p style="text-align:center;margin-top:18px;">$\lambda$ slides you left to right &mdash; <strong>validation</strong> picks the middle panel</p>
 </div>
 
 <!-- ridge = MAP -->
@@ -1635,7 +1703,7 @@
   <h2>Ridge Is a Prior in Disguise</h2>
   <div class="divider"></div>
   <ul>
-    <li>Recall (prob07): <strong>Gaussian-prior MAP</strong> adds $\lambda\|\theta\|_2^2$ &mdash; &ldquo;regularization is a prior&rdquo;</li>
+    <li>Recall: <strong>Gaussian-prior MAP</strong> adds $\lambda\|\theta\|_2^2$ &mdash; &ldquo;regularization is a prior&rdquo;</li>
     <li>Ridge = &ldquo;before seeing data, I believe weights are small&rdquo;</li>
   </ul>
   <div class="math-block" style="margin:8px 0">$$\underbrace{-\log p(B \mid \theta)}_{\text{squared loss}} \;+\; \underbrace{-\log p(\theta)}_{\lambda\|\theta\|_2^2}$$</div>
@@ -1646,7 +1714,7 @@
   <h2>What $\lambda$ Buys &mdash; and Costs</h2>
   <div class="divider"></div>
   <ul>
-    <li>Recall (prob07): $\text{MSE} = \text{Bias}^2 + \text{Variance}$</li>
+    <li>Recall: $\text{MSE} = \text{Bias}^2 + \text{Variance}$</li>
     <li>$\lambda \uparrow$: bias up (shrunk toward $0$), variance down (less sensitive)</li>
     <li>Best $\lambda$: minimize the sum &mdash; in practice, pick by <strong>validation data</strong></li>
   </ul>
@@ -1660,23 +1728,7 @@
   <div class="section-num">10</div>
   <h1>Closing</h1>
   <div class="divider"></div>
-  <p class="subtitle">One chain, one table, one bridge</p>
-</div>
-
-<!-- today as one chain -->
-<div class="slide">
-  <h2>Today, as One Chain</h2>
-  <div class="divider"></div>
-  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
-    \text{data} \;&amp;\rightsquigarrow\; \min_\theta \|A\theta - B\|_2^2
-    \;\rightsquigarrow\; \theta^\star = A^{\dagger}B
-    \;\rightsquigarrow\; A^{\top}A\hat\theta = A^{\top}B\\[4pt]
-    &amp;\rightsquigarrow\; \text{features } \phi
-    \;\rightsquigarrow\; \text{ERM } \min \hat{R}
-    \;\rightsquigarrow\; +\,\lambda\|\theta\|_2^2
-    \;\rightsquigarrow\; (A^{\top}A + \lambda I)^{-1}A^{\top}B
-  \end{aligned}$$</div>
-  <p style="text-align:center;" class="muted">every arrow was a theorem, a definition, or a worked example today</p>
+  <p class="subtitle">One table, one bridge</p>
 </div>
 
 <!-- every tool one line -->
@@ -1692,16 +1744,17 @@
     <tr><td>Lemma</td><td>$A^{\top}A + \lambda I$: eigenvalues $\geq \lambda \gt 0$, always invertible</td></tr>
     <tr><td>Theorem 3</td><td>ridge: unique $\theta^\star_\lambda = (A^{\top}A + \lambda I)^{-1}A^{\top}B$</td></tr>
   </table>
+  <p class="muted" style="text-align:center;">One chain: data $\rightsquigarrow$ $\min\|A\theta-B\|_2^2$ $\rightsquigarrow$ $A^{\dagger}B$ $\rightsquigarrow$ features, ERM $\rightsquigarrow$ $+\lambda\|\theta\|_2^2$</p>
 </div>
 
 <!-- bridge -->
 <div class="slide">
-  <h2>Next &mdash; opt03: When There Is No Formula</h2>
+  <h2>Next &mdash; When There Is No Formula</h2>
   <div class="divider"></div>
   <ul>
     <li>Today's luxury: squared loss + linear model = <strong>closed form</strong></li>
     <li>Logistic regression, neural nets: gradient $= 0$ has no solvable formula</li>
-    <li>opt03: <strong>convexity</strong> &mdash; when is a minimum trustworthy? &mdash; and <strong>gradient descent</strong></li>
+    <li>Ahead: <strong>convexity</strong> &mdash; when is a minimum trustworthy? &mdash; and <strong>gradient descent</strong></li>
   </ul>
   <div class="highlight">
     <p>We lose the formula. We keep the gradient &mdash; and learn to follow it.</p>

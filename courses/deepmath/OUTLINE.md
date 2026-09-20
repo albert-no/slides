@@ -39,7 +39,7 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 8 | `prob08-gaussian/` — MVN (3 defs, properties w/ proofs), Gaussian channel, Gaussian diffusion/DDPM, Gaussian discriminant | prob 1912–2519 (MIT OCW 6.436J citation) | done (130 slides) |
 | 9 | `prob09-monte-carlo/` — Monte Carlo, importance sampling, variance trade-offs, policy gradient / RLHF hooks | new material | done (113 slides) |
 | 10 | `opt01-svd-lowrank/` — rank/range/null, SVD, pseudo-inverse, spectral & nuclear norms, Eckart–Young–Mirsky, Netflix | opt 1–435 | done (119 slides) |
-| 11 | `opt02-regression-erm/` — least squares θ\*=A†B (full proof), ERM/Bayes risk, ridge + closed form | opt 436–794, 1463–1517 | done (111 slides) |
+| 11 | `opt02-regression-erm/` — least squares θ\*=A†B (full proof), ERM/Bayes risk, ridge + closed form | opt 436–794, 1463–1517 | done (110 slides) |
 | 12 | `opt03-convexity-gd/` — convexity, L-smoothness, co-coercivity, strong convexity, PL, GD O(1/T) + linear rate | opt 795–1319 | done (135 slides) |
 | 13 | `opt04-sgd/` — SGD O(1/√K) proof, mini-batching, strongly-convex SGD O(log k/k) | opt 1320–1462, 1520–1600 | done (118 slides) |
 
@@ -559,7 +559,7 @@ NP-hardness of rank-constrained completion, SVT scalability and
 exact-recovery-under-incoherence claims (as in source); Netflix Prize (2006)
 named with no invented statistics; LoRA name-drop only.
 
-### opt02-regression-erm — Linear Regression, ERM & Ridge (111 slides)
+### opt02-regression-erm — Linear Regression, ERM & Ridge (110 slides)
 
 `opt02-regression-erm/opt02-regression-erm.html` · **opt 436–794 + 1463–1517**
 (least squares, feature maps, multi-output, ERM/Bayes risk, ridge merged in).
@@ -578,35 +578,39 @@ Accessible edition: `opt02-regression-erm/opt02-regression-erm-note.md` — scre
 
 | # | Section | Slides | Location |
 |---|---|---|---|
-| — | Title + TOC | 1–2 | opt02-regression-erm/opt02-regression-erm.html:23 |
-| 01 | Why Regression? (opt01 bridge answered :131, simplest trainable model, today's three results cards :171, route map SVG :194) | 3–7 | opt02-regression-erm/opt02-regression-erm.html:123 |
-| 02 | Linear Regression (data :251, linear model, height-weight SVG :275, dummy feature :305, interpretability, squared loss :329, training problem :341, running 3-point example + scatter SVG :353) | 8–16 | opt02-regression-erm/opt02-regression-erm.html:243 |
-| 03 | Matrix Form (stack the data :401, one objective one norm :414, tall/square/fat SVG :423, regression = tall case, running example has no exact solution :458, best we can do :472) | 17–23 | opt02-regression-erm/opt02-regression-erm.html:393 |
-| 04 | The Least-Squares Theorem (technique reviews 1–4: compact SVD :491, pseudo-inverse :506, rotations free :521, vector split :535; Thm 1 :550, reading :563, 5-step proof overview :575, Steps 1–5 one idea per slide :588–:653, every minimizer + smallest :664, uniqueness :677, proof-summary skeleton :688, key trick named :703, worked SVD :716, worked A† and θ\* :727, worked fitted line + residual table :741, implications :774, :788) | 24–46 | opt02-regression-erm/opt02-regression-erm.html:483 |
-| 05 | Geometry & Normal Equations (range(A) :808, projection picture SVG :821, solution is a projection AA†=U_cU_cᵀ :848, residual orthogonal :862, TR gradients of quadratics :876, Thm 2 :889, expansion proof both directions :902–:916, two formulas one answer (AᵀA)⁻¹Aᵀ=A† :930, worked normal equations :945, worked perpendicular check :957, which route when :969) | 47–59 | opt02-regression-erm/opt02-regression-erm.html:800 |
-| 06 | Feature Maps (bend the model (tex log/x/x² example) :991, feature map def :1003, worked add x² :1016, worked elimination, exact fit :1030, line-vs-parabola SVG :1042, more features never hurt training :1072, feature engineering → learning :1085) | 60–67 | opt02-regression-erm/opt02-regression-erm.html:983 |
-| 07 | Multi-Output Regression (vector labels :1107, objective splits by output :1120, m independent regressions Θₖ=A†Bₖ :1131, linear layer implication :1145) | 68–72 | opt02-regression-erm/opt02-regression-erm.html:1099 |
-| 08 | Empirical Risk Minimization (one frame :1164, recall prob06 card :1175, loss def :1188, two classic losses + SVG :1200, predictions vs label space (prob02 CE recall) :1227, expected risk :1239, Bayes risk & predictor :1254, f\*=E[Y\|X] via prob07 MMSE :1268, empirical risk + prob05 LLN :1280, approximation-vs-estimation SVG :1293, least squares is ERM table :1322, when ERM backfires :1337) | 73–85 | opt02-regression-erm/opt02-regression-erm.html:1156 |
-| 09 | Ridge Regression (fragile predictors :1359, Cauchy–Schwarz sensitivity :1370, regularizer def (tex ℓ1 typo fixed) :1382, regularized ERM :1395, Thm 3 :1407, reading (no rank condition) :1419, TR eigenvalue shift (prob08 recall) :1430, Lemma AᵀA+λI invertible :1443, proof overview :1457, Step 1 gradient :1469, Step 2 strict win :1480, proof summary :1494, ridge through SVD shrinkage :1507, λ→0⁺ = A†B answers least-norm teaser :1520, worked ridge :1533, turning-the-dial table + coefficient-vs-λ chart :1544, worked three fits SVG :1578, underfit/just-right/overfit panels :1600, ridge = MAP prior (prob07) :1634, what λ buys (bias–variance, validation) :1645) | 86–106 | opt02-regression-erm/opt02-regression-erm.html:1351 |
-| — | Closing: today-as-one-chain, every-tool table, bridge to opt03, end slide θ\*=A†B | 107–111 | opt02-regression-erm/opt02-regression-erm.html:1659 |
+| — | Title + TOC | 1–2 | opt02-regression-erm/opt02-regression-erm.html:44 |
+| 01 | Why Regression? (the pseudo-inverse explained :152, simplest trainable model, today's three results cards :192, route map SVG :215) | 3–7 | opt02-regression-erm/opt02-regression-erm.html:144 |
+| 02 | Linear Regression (data :279, linear model, height-weight SVG :303, dummy feature :335, interpretability, squared loss :359, training problem :371, running 3-point example + scatter SVG :383) | 8–16 | opt02-regression-erm/opt02-regression-erm.html:271 |
+| 03 | Matrix Form (stack the data :433, one objective one norm :446, tall/square/fat SVG :455, regression = tall case, running example has no exact solution :490, best we can do :504) | 17–23 | opt02-regression-erm/opt02-regression-erm.html:425 |
+| 04 | The Least-Squares Theorem (technique reviews 1–4: compact SVD :523, pseudo-inverse :538, rotations free :553, vector split :567; Thm 1 :582, reading :595, 5-step proof overview :607, Steps 1–5 one idea per slide :620–:685, every minimizer + smallest :696, uniqueness :709, proof-summary skeleton :720, key trick named :735, worked SVD :748, worked A† and θ\* :759, worked fitted line + residual table :773, implications :819, :833) | 24–46 | opt02-regression-erm/opt02-regression-erm.html:515 |
+| 05 | Geometry & Normal Equations (range(A) :853, projection picture SVG :866, solution is a projection AA†=U_cU_cᵀ :890, residual orthogonal :904, TR gradients of quadratics :918, Thm 2 :931, expansion proof both directions :944–:958, two formulas one answer (AᵀA)⁻¹Aᵀ=A† :972, worked normal equations :987, worked perpendicular check :999, which route when :1011) | 47–59 | opt02-regression-erm/opt02-regression-erm.html:845 |
+| 06 | Feature Maps (bend the model (tex log/x/x² example) :1033, feature map def :1045, worked add x² :1058, worked elimination, exact fit :1072, line-vs-parabola SVG :1084, more features never hurt training :1127, feature engineering → learning :1140) | 60–67 | opt02-regression-erm/opt02-regression-erm.html:1025 |
+| 07 | Multi-Output Regression (vector labels :1162, objective splits by output :1175, m independent regressions Θₖ=A†Bₖ :1186, linear layer implication :1200) | 68–72 | opt02-regression-erm/opt02-regression-erm.html:1154 |
+| 08 | Empirical Risk Minimization (one frame :1219, recall prob06 card :1230, loss def :1243, two classic losses + SVG :1255, predictions vs label space (prob02 CE recall) :1282, expected risk :1294, Bayes risk & predictor :1309, f\*=E[Y\|X] via prob07 MMSE :1323, empirical risk + prob05 LLN :1335, approximation-vs-estimation SVG :1348, least squares is ERM table :1373, when ERM backfires :1388) | 73–85 | opt02-regression-erm/opt02-regression-erm.html:1211 |
+| 09 | Ridge Regression (fragile predictors :1410, Cauchy–Schwarz sensitivity :1421, regularizer def (tex ℓ1 typo fixed) :1433, regularized ERM :1446, Thm 3 :1458, reading (no rank condition) :1470, TR eigenvalue shift (prob08 recall) :1481, Lemma AᵀA+λI invertible :1494, proof overview :1508, Step 1 gradient :1520, Step 2 strict win :1531, proof summary :1545, ridge through SVD shrinkage :1558, λ→0⁺ = A†B answers least-norm teaser :1571, worked ridge :1584, turning-the-dial table + coefficient-vs-λ chart :1595, worked three fits SVG :1633, underfit/just-right/overfit panels :1667, ridge = MAP prior (prob07) :1702, what λ buys (bias–variance, validation) :1713) | 86–106 | opt02-regression-erm/opt02-regression-erm.html:1402 |
+| — | Closing: every-tool table with the one-chain line folded in, bridge to iterative methods, end slide θ\*=A†B | 107–110 | opt02-regression-erm/opt02-regression-erm.html:1727 |
 
 Key theorems: **Thm 1** least-squares solution θ\* = A†B minimizes ‖Aθ−B‖₂²
 and is the least-norm minimizer, full 5-step SVD proof (insert SVD + complete
 basis, rotate residual, drop constant, split θ, solve surviving piece)
-(opt02-regression-erm/opt02-regression-erm.html:550); **Thm 2** normal
+(opt02-regression-erm/opt02-regression-erm.html:582); **Thm 2** normal
 equations AᵀAθ̂ = AᵀB characterize minimizers, expansion proof in both
 directions, (AᵀA)⁻¹Aᵀ = A† under full rank
-(opt02-regression-erm/opt02-regression-erm.html:889); **Lemma** AᵀA + λI is
+(opt02-regression-erm/opt02-regression-erm.html:931); **Lemma** AᵀA + λI is
 invertible for every A and λ > 0, eigenvalue-shift argument
-(opt02-regression-erm/opt02-regression-erm.html:1443); **Thm 3** ridge closed
+(opt02-regression-erm/opt02-regression-erm.html:1494); **Thm 3** ridge closed
 form θ\*_λ = (AᵀA+λI)⁻¹AᵀB, unique for any A, gradient + strict-verification
-proof (opt02-regression-erm/opt02-regression-erm.html:1407).
-Figures: all diagrams inline SVG with hand-computed geometry (route map,
+proof (opt02-regression-erm/opt02-regression-erm.html:1458).
+Figures: 12 inline SVGs with hand-computed geometry (route map,
 height-weight sketch, running-example scatter, tall/square/fat block shapes,
-projection of B onto range(A) with right-angle marker, line-vs-parabola fit,
-quadratic-vs-absolute loss curves, approximation-vs-estimation map,
-coefficient-vs-λ decay chart with the λ=1 crossing, three-fits comparison,
-underfit/just-right/overfit 3-panel).
+fitted line + residuals, projection of B onto range(A) with right-angle marker,
+line-vs-parabola fit, quadratic-vs-absolute loss curves,
+approximation-vs-estimation map, coefficient-vs-λ decay chart with the λ=1
+crossing, three-fits comparison, underfit/just-right/overfit 3-panel). Every
+label is a KaTeX `<span class="fl">` absolutely positioned over the SVG via the
+`.o2-fig` wrapper (KaTeX cannot typeset inside SVG `<text>`), so figure text is
+real math at 1.55rem / 1.25rem regardless of the SVG scale; the four scatter
+plots share one 500×320 viewBox and one coordinate map x→250+110x, y→240−55y.
 Deviations from tex: opt 500 y{(1)} → y^{(1)}; opt 538 U ∈ R^{n×n} → R^{N×N};
 opt 573 mismatched parenthesis fixed; opt 605 Θ dimension "n×m" → m×n; opt 611
 θ_k x → θ_kᵀx; opt 615 ‖·‖² on scalar residuals → (·)²; opt 1498 ℓ1

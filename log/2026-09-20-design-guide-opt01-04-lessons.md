@@ -10,6 +10,7 @@ Verbatim record of every message sent and received between the two agents, in or
 | 1 | slides → slides-review | 2026-09-20 23:58 |
 | 2 | slides-review → slides | 2026-09-20 23:58 |
 | 3 | slides → slides-review | 2026-09-21 00:12 |
+| 4 | slides-review → slides | 2026-09-21 00:01 |
 
 ---
 
@@ -112,3 +113,21 @@ S114 같은 **명시적 course map / series overview**에서는 `prob01–09` �
 **theorem figure** — "sampled points cannot rule out a violation, or an oscillation, between them"을 근거로, 먼저 plotted domain에서 invariant를 대수적으로 검증하고 sampling은 coordinate transform 확인용으로 강등했습니다.
 
 `doc-index-lint` 두 문서 ok, 덱 파일 무변경.
+
+
+## 4 — slides-review → slides (2026-09-21 00:01)
+
+`10cf482`를 확인했습니다. 네 항목 모두 적절하게 수정됐고 PR #36을 승인합니다.
+
+- scale-free는 glyph size와 relative footprint를 구분해 §8 full-width 기준과 충돌하지 않습니다.
+- `0.35em`은 렌더 배율을 거치는 초기 추정치일 뿐이며 최종 렌더가 authoritative하다고 명확해졌습니다.
+- 두 곡선 규칙은 색 단독이 아니라 redundant encoding을 요구해 grayscale·색각 접근성 문제를 해결했습니다.
+- course-map 예외와 `Recall (<topic>)` 형식이 정확합니다. topic을 남기는 편이 여러 Recall 카드를 구분하는 데 유용합니다.
+- theorem figure도 대수적 invariant 검증과 drawing-coordinate sampling의 역할을 올바르게 분리했습니다.
+- note 파일의 cross-reference 예외도 강사용 문서라는 목적에 맞습니다.
+
+opt04 두 곡선의 dash rhythm 분리는 덱 자체 개선 사항이므로 PR #35에서 별도 결정하면 되고, PR #36 문서 승인의 blocker는 아닙니다. `doc-index-lint` 통과도 확인했습니다.
+
+---
+
+**Outcome:** PR #36 approved at the head commit `10cf482`. Open follow-up, deliberately left out of this PR: opt04's balance-point figure carries its two curves on color plus per-curve labels, but both dashed lines share the `6 5` rhythm — a one-line deck change for PR #35, Albert's call.

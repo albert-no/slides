@@ -14,10 +14,10 @@ Symptom → cause → fix. Search by **symptom**, not topic. `DESIGN_SYSTEM.md` 
 | 3 | Overflow | Content clips the footer or the right edge | 63–91 | `offset=63, limit=29` |
 | 4 | Prose & line breaks | Wrapping, orphans, dashes, wordiness | 93–116 | `offset=93, limit=24` |
 | 5 | Citations | Author order, wrapping cites, title cards | 118–129 | `offset=118, limit=12` |
-| 6 | Diagrams & SVG | SVG too small, overlays drift, flow wraps | 131–148 | `offset=131, limit=18` |
-| 7 | Proof & structure drift | Outline/recap drift, animation, lost trims | 150–176 | `offset=150, limit=27` |
-| 8 | Engine & audit false alarms | Page numbers, footer, false audit flags | 178–210 | `offset=178, limit=33` |
-| 9 | Toolchain: rendering, figures, bundling | Headless render, fonts, crops, bundle size | 212–234 | `offset=212, limit=23` |
+| 6 | Diagrams & SVG | SVG too small, overlays drift, flow wraps | 131–151 | `offset=131, limit=21` |
+| 7 | Proof & structure drift | Outline/recap drift, animation, lost trims | 153–179 | `offset=153, limit=27` |
+| 8 | Engine & audit false alarms | Page numbers, footer, false audit flags | 181–213 | `offset=181, limit=33` |
+| 9 | Toolchain: rendering, figures, bundling | Headless render, fonts, crops, bundle size | 215–237 | `offset=215, limit=23` |
 
 <!-- doc-index:end -->
 
@@ -136,8 +136,11 @@ The px arithmetic is in DESIGN_SYSTEM §1 → Priority 2. These are the ways the
 **SVG with `width: 100%` renders a few hundred px instead of filling the wrapper; overlay labels bunch into a tiny region.** The wrapper has `max-width` but no explicit `width`; inside a flex column with `align-items: center` it sizes to content while the SVG sizes to the wrapper — a circular dance the browser resolves to the SVG's intrinsic size.
 → Put **`width: 100%` on the wrapper alongside `max-width`**. If it hosts overlay spans over a fixed viewBox, also pin `height` to the viewBox aspect ratio, or `top: 86%` no longer lands at `y = 0.86·viewBoxH`.
 
-**Concept SVG "fits" but labels are unreadable from the back.** Wrapper too narrow *and* `<text>` font-size too small — widening the wrapper alone scales labels proportionally, so they stay small relative to the diagram.
-→ Bump **both**. Full-width: `max-width: 820–920px`, `font-size: 15–20`. Grid-column: `max-width: 360–440px`, `font-size: 13–16`. Primary labels bold.
+**Concept SVG "fits" but labels are unreadable from the back.** Wrapper too narrow *and* labels too small — widening the wrapper alone scales labels proportionally, so they stay small relative to the diagram. An SVG `<text>` font-size is in viewBox units: it renders at `font-size × wrapper_width ÷ viewBox_width`, so the number in the markup says nothing by itself.
+→ Bump **both**. Full-width figure `max-width: 1000–1080px`; primary labels at body size (`1.55rem` overlay spans), annotations no smaller than `1.25rem`, primary bold. Grid-column figures (`360–440px`) only for secondary diagrams — a label the audience must read goes full width, and is never shrunk to fit (DESIGN_SYSTEM §1, §8).
+
+**Math in a diagram renders as literal text** — `x_0`, `x_200`, `10^-5`, `(1-b)^n`, `Thm 1-2` appear on the slide exactly as typed, or as Unicode superscripts sitting off the baseline. KaTeX's auto-render walker skips SVG entirely, so `$…$` inside `<text>` never renders, and the ASCII/Unicode workaround is what ships.
+→ Shapes in SVG, math labels in HTML overlay spans over the wrapper (DESIGN_SYSTEM §7; shipped pattern `courses/deepmath/prob09-monte-carlo`, `.p9-fig .fl`). Find the survivors with `grep -nE '<text[^>]*>[^<]*(\^|_[0-9a-z]|[⁰-⁹₀-₉])' <deck>.html`.
 
 **A multi-row roadmap SVG reads backwards.** Row 2 was laid out serpentine (right→left) so the arrowheads would "flow" from row 1, but readers take the boxes left→right regardless, so the sequence inverts against its own labels.
 → Restart every row at the left; join rows with a wrap path (right edge → down → left edge → next row). Check the rendered PNG against the labels — an arrow direction is not reviewable in the SVG source.

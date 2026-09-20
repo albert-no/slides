@@ -26,11 +26,11 @@ rather than reading the whole file to find your place.
 | 5 | Math-heavy talks | Theorem / proof / intuition / build-up | 231–280 | `offset=231, limit=50` |
 | 6 | Conventions | Page numbers, citations | 282–300 | `offset=282, limit=19` |
 | 7 | Patterns | Markup for a slide type → copy the exemplar | 302–339 | `offset=302, limit=38` |
-| 8 | Visual richness | Figures, diagrams, TODO-marks | 341–365 | `offset=341, limit=25` |
-| 9 | Companion decks | Note files, technical supplements | 367–382 | `offset=367, limit=16` |
-| 10 | Outlines | OUTLINE.md read/write rules | 384–406 | `offset=384, limit=23` |
-| 11 | No-toolchain fallback | Chrome / poppler / python3 all missing | 408–425 | `offset=408, limit=18` |
-| 12 | Extension checklist | Adding a new component | 427–429 | `offset=427, limit=3` |
+| 8 | Visual richness | Figures, diagrams, TODO-marks | 341–371 | `offset=341, limit=31` |
+| 9 | Companion decks | Note files, technical supplements | 373–388 | `offset=373, limit=16` |
+| 10 | Outlines | OUTLINE.md read/write rules | 390–412 | `offset=390, limit=23` |
+| 11 | No-toolchain fallback | Chrome / poppler / python3 all missing | 414–431 | `offset=414, limit=18` |
+| 12 | Extension checklist | Adding a new component | 433–435 | `offset=433, limit=3` |
 
 <!-- doc-index:end -->
 
@@ -267,7 +267,7 @@ Recap is a single `aligned` block showing the unified chain, each step labelled 
 
 Use `\text{...}` for upright labels; keep each under ~25 characters. Mix freely — numeric where a callback helps, descriptive where the move *is* the explanation.
 
-**1–3 steps: no Outline slide, no standalone summary slide.** The Outline→Steps→Recap bracket is earned by 4+ steps; below that the outline and the steps are the same words on two slides. When such a proof has a picture that *is* the argument (a sandwich figure, a geometric identity), the summary belongs on that slide as one `<p class="muted">` takeaway line — see the Fano slide in `courses/deepmath/prob07-estimation`.
+**1–3 steps: default to no Outline slide and no standalone summary slide.** The Outline→Steps→Recap bracket is earned by 4+ steps; below that the outline and the steps are usually the same words on two slides. Keep a summary only when it *materially recasts* the argument — a picture, a reframing, a one-line reason the proof works — never when it re-lists the step labels. When the proof already has a picture that *is* the argument (a sandwich figure, a geometric identity), the recast belongs on that slide as one `<p class="muted">` takeaway line — see the Fano slide in `courses/deepmath/prob07-estimation`.
 
 **Recipe-first derivation.** For a parameterized formula whose shape isn't obvious (DDIM's $\mu_n$, score reparameterizations): state the **recipe** with named unknowns and `\underbrace`-labelled ingredients → impose the **constraint** you actually want (one equation per unknown, surface the free parameters) → **read off** the resulting form. The student sees every coefficient come from a constraint. Don't use it when the formula has clean independent motivation (Bayes, KL, an established theorem).
 
@@ -333,7 +333,7 @@ Format: `Authors (in venue order), "Title", Venue YYYY` — no arXiv ID unless a
   ```
 
 - **Diagram dominates** — when asked to enlarge: (1) remove `max-width` from the `<svg>` (it belongs on the wrapper), (2) switch `.cols` to `.col-1-3` text + `.col-2-3` diagram, (3) bump a cramped viewBox (`220×130` → `~400×240`) so labels land at readable absolute sizes. Pure single-diagram slide: drop the cols, center at `max-width: ~960px`.
-- **KaTeX overlays on SVG** — KaTeX skips SVG `<text>`, so math labels are absolute-positioned HTML spans over the SVG. Wrapper needs **both** `width: 100%` and `max-width` (max-width alone collapses to the SVG's intrinsic width). Position from the viewBox: `left = x/W·100%`, `top = y/H·100%`, `translate(-50%,-50%)` centered / `(-100%,-50%)` right-aligned. Pin the wrapper height to the viewBox aspect ratio when it hosts overlays. Sizes: axis labels `1.3–1.4rem/700`, threshold labels `1.0–1.1rem/600`, annotations `1.1–1.4rem/600`.
+- **KaTeX overlays on SVG** — KaTeX skips SVG `<text>`, so math labels are absolute-positioned HTML spans over the SVG. Wrapper is `position: relative` (the spans anchor to it) and needs **both** `width: 100%` and `max-width` (max-width alone collapses to the SVG's intrinsic width). Position from the viewBox: `left = x/W·100%`, `top = y/H·100%`, `translate(-50%,-50%)` centered / `(-100%,-50%)` right-aligned. Pin the wrapper height to the viewBox aspect ratio when it hosts overlays. Sizes: axis labels `1.3–1.4rem/700`, threshold labels `1.0–1.1rem/600`, annotations `1.1–1.4rem/600`.
 - **Inline exercise placement** — if the slide is at element budget, move the exercise to the sibling slide that *introduces* the fact it verifies, not the one that uses it. No trailing "Check It Yourself" slide, no `.exercise-list` styling.
 
 ---
@@ -345,10 +345,16 @@ Format: `Authors (in venue order), "Title", Venue YYYY` — no arXiv ID unless a
 **Three sources, in priority order:**
 
 1. **Real paper / public figures — preferred whenever a citable source exists.** If a paper or well-known post already has the figure (panda→gibbon, CLIP Figure 1, a BadNets trigger), capture and cite it rather than redrawing it: more credible, faster to get right. Reuse figures already vetted in sibling decks (`courses/privacy/lectures/03-memorization/figs/`) before re-fetching. **If you catch yourself building an SVG to express something a specific identifiable paper already illustrates, stop and capture the real figure.**
-2. **Inline HTML + SVG concept diagrams** — only when no canonical source figure exists (a mechanism in your own words, a cross-paper comparison, an invented worked example). Structure in HTML/SVG; plain-text labels in `<text>` (never `$…$` — KaTeX skips SVG). One semantic color per role. Shipped examples: `courses/trustworthy-ai/lec01-introduction.html`, `lec02-privacy-dp.html`.
+2. **Inline HTML + SVG concept diagrams** — only when no canonical source figure exists (a mechanism in your own words, a cross-paper comparison, an invented worked example). Shapes and structure in SVG; **any label containing math goes in an HTML overlay span over the wrapper, never in `<text>`** — KaTeX skips SVG, so `$…$` there never renders and the ASCII/Unicode fallbacks authors reach for (`x_0`, `10^-5`, `(1-b)^n`) print literally and sit off the baseline. Plain-word labels may stay in `<text>`. Overlay markup, wrapper rules and positioning: §7. One semantic color per role. Shipped examples: `courses/trustworthy-ai/lec01-introduction.html`, `lec02-privacy-dp.html`.
 3. **TODO-marks** — wanted a visual but can't produce it now? Don't ship a bare slide. Leave `<!-- TODO real figure: <what>, <source paper / Fig N> -->`. First-class authoring debt; `grep -rn "TODO real figure"` finds them all.
 
-**Make diagrams big.** Concept SVGs are routinely too small, and widening the wrapper alone leaves labels proportionally small — **bump both**. Full-width: wrapper `max-width: 820–920px`, `<text> font-size: 15–20`. Grid-column: `max-width: 360–440px`, `font-size: 13–16`. Primary labels bold.
+**Make diagrams big.** Concept SVGs are routinely too small, and widening the wrapper alone leaves labels proportionally small — **bump both**.
+
+- **Full-width figure: wrapper `max-width: 1000–1080px`** wherever the slide allows it. The 2026-09 deepmath prob05–prob09 pass settled there after the older 820–920px figures proved unreadable from the back of a lecture room.
+- **Labels at body weight.** Primary labels body size — `1.55rem` for HTML overlay spans; secondary/annotation labels no smaller than `1.25rem`. Primary labels bold.
+- **`<text>` font-size is in viewBox units**, so the rendered size is `font-size × wrapper_width ÷ viewBox_width`. The number in the markup tells you nothing on its own — set it from that ratio and confirm on the render.
+- **Doesn't fit at those sizes?** Simplify the diagram or split the slide. Priority 0 applies to diagram labels too: never shrink them to make a figure fit.
+- **Grid-column figures** (`max-width: 360–440px`) are for decorative or strictly secondary diagrams. A figure whose labels the audience must actually read goes full width.
 
 **Multi-row maps read left→right on every row.** A roadmap or series diagram that wraps onto 2+ rows restarts each row at the left edge and joins rows with a wrap path (out right → down → back to the left → into the next row). Serpentine layouts (right→left on alternate rows) fight the reading order: the eye takes the boxes left→right anyway, so the arc appears to run backwards. Verify on the rendered PNG against the box labels, not in the SVG source.
 
@@ -397,7 +403,7 @@ When an entry is too coarse to answer the question, descend to the cited `<file>
 **Pointer and count conventions.** An off-by-one pointer lands the next reader on the HTML comment above the slide, which reads as the wrong slide entirely.
 
 - Table **Location** → the `<div class="slide">` line of the section's first slide, never the comment or the `<h2>` above/below it.
-- Inline `:NNN` inside a description → follow the deck's existing entries (some decks point at the `<div>`, some at its `<h2>`). Preserve that baseline; don't re-point a whole deck to "fix" it.
+- Inline `:NNN` inside a description → follow the deck's existing entries (some decks point at the `<div>`, some at its `<h2>`). Preserve the deck's *convention* — don't re-point a whole deck to "fix" a consistent offset — but do correct any single entry that no longer lands on the content it claims.
 - A slide count lives in **four** places: the folder table's `done (N slides)`, the `### <deck> … (N slides)` header, the section rows' slide ranges, and the deck's own `<div class="slide-num">1 / N</div>`. Adding or removing a slide updates all four.
 - After a bulk edit, recompute ranges from the file (index of each Location line among the slide starts) rather than adjusting them by hand.
 

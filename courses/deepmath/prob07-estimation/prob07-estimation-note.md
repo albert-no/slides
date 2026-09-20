@@ -471,8 +471,8 @@ $$ \Pr(Y = 0 \mid X = 185) = \frac{0.011657}{0.011657 + 0.002516} = 0.822. $$
 
 Tall people from A still outnumber people from B.
 
-**The shifted boundary, solved exactly.** The lecture reports a MAP boundary
-near $195$. The boundary condition multiplies Section 4.3's equation by the
+**The shifted boundaries, solved exactly.** The lecture's figure shows both
+MAP boundaries, near $129$ and $195$. The boundary condition multiplies Section 4.3's equation by the
 prior ratio, which adds $\ln 9 = 2.19722$ to the log balance:
 
 $$ \frac{(x-180)^2}{450} - \frac{(x-170)^2}{200}
@@ -483,8 +483,9 @@ discriminant $4323.87$, square root $65.76$, and roots
 
 $$ x = 194.88 \quad\text{and}\quad x = 129.12. $$
 
-Both check out, including the summary: the pick-B threshold moves
-$194.88 - 179.03 = 15.85 \approx 16$ centimetres to the right.
+Both check out, including the caption: the central pick-A interval widens from
+$[144.97, 179.03]$ to $[129.12, 194.88]$, each threshold moving
+$15.85 \approx 16$ centimetres outward.
 
 ### 5.4 Theorem 2: MAP is Bayes optimal, full proof
 
@@ -772,7 +773,7 @@ where $h_2^{-1}$ is the inverse of $h_2$ on $[0, \tfrac{1}{2}]$. This is a real
 constraint: for example $H(Y \mid X) = 0.5$ bits forces $P_e \ge 0.110$, and
 the check is
 $h_2(0.110) = 0.110 \times 3.184 + 0.890 \times 0.168 = 0.500$. This is exactly
-the sharper variant the lecture alludes to with "replace the $1$ by $H(E)$":
+the sharper variant the lecture alludes to with "keep the exact $h_2(P_e)$":
 keep $h_2(P_e)$ unrounded in Step 5 and keep $|\mathcal{Y}| - 1$ in Step 7, and
 the same nine steps deliver it.
 
@@ -911,8 +912,9 @@ cancels entirely: the optimal $\mu$ does not depend on it. Equivalently, the
 sample mean minimizes $\sum_i (x_i - \mu)^2$, the mean-minimizes-the-quadratic
 fact proved in the Lecture 6 note, Lemma 3.1 Step A.
 
-**Solve for $\sigma^2$.** Substitute $t = \sigma^2$ and
-$S = \sum_i (x_i - \hat{\mu})^2$, so that
+**Solve for $\sigma^2$.** At the joint optimum, substitute the fitted
+$\hat{\mu}$ into the variance solution. Writing $t = \sigma^2$ and
+$S = \sum_i (x_i - \hat{\mu})^2$, the remaining objective is
 $\ell(t) = -\frac{S}{2t} - \frac{n}{2} \log(2\pi t)$:
 
 $$ \ell'(t) = \frac{S}{2t^2} - \frac{n}{2t} = 0
@@ -993,8 +995,8 @@ $P = \hat{p}_n$ fixed by the data and $Q = q_\theta$ the only
 $\theta$-dependent piece, $H(\hat{p}_n)$ is an additive constant in $\theta$,
 so the argmin transfers to the KL term. **End of proof.**
 
-Three names, one computation: every cross-entropy training run is maximum
-likelihood estimation, and equivalently a KL *projection* of the empirical
+Three names, one computation: every unweighted cross-entropy training run
+against a normalized model is maximum likelihood estimation, and equivalently a KL *projection* of the empirical
 distribution onto the model class $\{q_\theta\}$. If the class contains
 $\hat{p}_n$ itself, the projection lands on it exactly, with $D = 0$. The
 Bernoulli case of Section 7.2 is the one-parameter instance, where $q_p$ can
@@ -1383,8 +1385,8 @@ with equality if and only if $\hat{X}(Y) = \mathbb{E}[X \mid Y]$ with
 probability $1$.
 
 **Proof.** *Step 1 (insert and expand).* Add and subtract
-$\mathbb{E}[X \mid Y]$ - the add-and-subtract move for the third time in this
-lecture - and square out:
+$\mathbb{E}[X \mid Y]$ - the same add-and-subtract move used in Theorem 4, and
+the second and last time it appears in this lecture - and square out:
 
 $$ \mathbb{E}\big[ (X - \hat{X}(Y))^2 \big]
    = \mathbb{E}\big[ (X - \mathbb{E}[X \mid Y])^2 \big]

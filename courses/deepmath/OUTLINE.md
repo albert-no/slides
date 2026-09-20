@@ -33,8 +33,8 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 2 | `prob02-kl-crossentropy/` — mismatch thm, KL ≥ 0, f-divergences, betting/doubling rate/perplexity, proper scoring rules, CE loss = KL, population risk & Bayes classifier, forward vs reverse KL | prob 249–538 + DL extensions | done (86 slides, 2026-09 revisions) |
 | 3 | `prob03-mutual-information/` — joint/cond entropy, MI, DPI I–III, cond MI, differential entropy, MaxEnt Gaussian | prob 539–1210 | done (128 slides, 2026-09 revision) |
 | 4 | `prob04-random-processes/` — Markov processes, stationary dist., discrete diffusion | prob 1211–1455 | done (99 slides) |
-| 5 | `prob05-concentration/` — Markov/Chebyshev/Chernoff, MGF, CLT sketch, LLN | prob 1457–1595 | done (107 slides) |
-| 6 | `prob06-generalization/` — Hoeffding, sub-Gaussian, union bound, finite-class generalization bound | new material (sequel to prob05) | done (106 slides) |
+| 5 | `prob05-concentration/` — Markov/Chebyshev/Chernoff, MGF, CLT sketch, LLN | prob 1457–1595 | done (106 slides) |
+| 6 | `prob06-generalization/` — Hoeffding, sub-Gaussian, union bound, finite-class generalization bound | new material (sequel to prob05) | done (105 slides) |
 | 7 | `prob07-estimation/` — cond. expectation/tower, MLE/MAP, Fano (full proof), Naive Bayes, bias-variance, MMSE | prob 1563–1911 | done (124 slides) |
 | 8 | `prob08-gaussian/` — MVN (3 defs, properties w/ proofs), Gaussian channel, Gaussian diffusion/DDPM, Gaussian discriminant | prob 1912–2519 (MIT OCW 6.436J citation) | done (130 slides) |
 | 9 | `prob09-monte-carlo/` — Monte Carlo, importance sampling, variance trade-offs, policy gradient / RLHF hooks | new material | done (113 slides) |
@@ -222,7 +222,7 @@ solutions of both running chains, symmetric-P exercise solution, convergence-rat
 slides (second eigenvalue), numeric evolution table/chart, and the diffusion
 forward/backward picture slides.
 
-### prob05-concentration — Concentration Inequalities & the Law of Large Numbers (107 slides)
+### prob05-concentration — Concentration Inequalities & the Law of Large Numbers (106 slides)
 
 `prob05-concentration/prob05-concentration.html` · source: prob 1457–1595.
 Lecture 5 — answers prob04's teaser (averages of many draws); recalls expectation/
@@ -245,7 +245,7 @@ Accessible edition: `prob05-concentration/prob05-concentration-note.md` — scre
 | 07 | Chernoff Bound (exponentiating-the-event technique :1164, Thm 5 arc :1188, free parameter t, coin 3-step optimization t*=ln 3 → exponent 0.1308 :1284, KL-exponent view :1315, 18,444-samples revisit :1328, what it buys) | 70–84 | prob05-concentration/prob05-concentration.html:1141 |
 | 08 | Three Bounds Head-to-Head (escalation table, numeric table on Pr(X̄_n ≥ 3/4) :1381, log-scale chart :1396, takeaway) | 85–89 | prob05-concentration/prob05-concentration.html:1358 |
 | 09 | Central Limit Theorem (shape question, standardization, Thm 6 :1472, sketch scope caveat, Taylor-at-zero + compound-interest-limit techniques, 3-step MGF sketch, Bin(16,½)-vs-bell chart :1587, what it buys) | 90–103 | prob05-concentration/prob05-concentration.html:1440 |
-| — | Recap chain, one-coin-every-tool recap table, bridge to prob06, end slide | 104–107 | prob05-concentration/prob05-concentration.html:1634 |
+| — | One-coin-every-tool recap table (chain takeaway folded in as its muted line), bridge to prob06, end slide | 104–106 | prob05-concentration/prob05-concentration.html:1636 |
 
 Key theorems: **Thm 1** Markov Pr(X ≥ αE[X]) ≤ 1/α, non-negative X, full arc
 (prob05-concentration/prob05-concentration.html:409); **Thm 2** Chebyshev
@@ -273,7 +273,7 @@ plan. Added beyond the tex, flagged on-slide as illustration: Markov tightness
 example, KL-divergence form of the optimized Chernoff exponent, Gaussian-actual
 column in the ασ table.
 
-### prob06-generalization — From Concentration to Generalization (106 slides)
+### prob06-generalization — From Concentration to Generalization (105 slides)
 
 `prob06-generalization/prob06-generalization.html` · **new material — not in tex**
 (textbook-canonical statements/proofs only; sequel to prob05). Lecture 6 — answers
@@ -298,7 +298,7 @@ Accessible edition: `prob06-generalization/prob06-generalization-note.md` — sc
 | 06 | The Union Bound (Thm 4 Boole :1023, one-line indicator proof :1035, Venn SVG overlap-counted-twice :1046, 10⁴-model farm thought experiment :1070, farm worked example 3.7% :1083, small-test-set vacuous case n=25 :1097, Bonferroni δ/m split :1111, what it buys +ln m :1124) | 66–74 | prob06-generalization/prob06-generalization.html:1015 |
 | 07 | The Generalization Theorem (finite classes: stumps/quantized nets :1146, risks recall card :1164, fixed h is a coin :1179, the trap ĥ not fixed :1193, the fix G_ε event :1206, Thm 5 arc sup gap ≤ √(ln(2|H|/δ)/2n) :1219, 3-step proof per-h → union → invert :1243, proof summary :1278, ε-tube SVG :1294, ERM corollary R(ĥ) ≤ min R + 2ε :1325, three-hop proof :1337, why-2ε SVG :1352, complexity as description length (bits/nats) :1380, sample complexity 139/bit :1394, numbers table :1406, chart SVG n = ⌈737.78+138.63k⌉ :1423, confidence-is-cheap table :1448, VC/Rademacher road ahead (names only) :1464) | 75–96 | prob06-generalization/prob06-generalization.html:1138 |
 | 08 | Why ERM Works (license to train :1485, approximation-vs-estimation split :1501, trade-off U-curve SVG :1511, honest slide: ResNet-50 bound vacuous ε ≈ 14.9, open research :1538, what survives: test-set bound |H|=1, validation, leaderboard overfitting :1553) | 97–102 | prob06-generalization/prob06-generalization.html:1477 |
-| — | Recap chain, every-tool recap table, bridge to prob07, end slide R(ĥ) ≤ R(h*) + 2ε | 103–106 | prob06-generalization/prob06-generalization.html:1568 |
+| — | Every-tool recap table (chain takeaway folded in as its muted line), bridge to prob07, end slide R(ĥ) ≤ R(h*) + 2ε | 103–105 | prob06-generalization/prob06-generalization.html:1568 |
 
 Key theorems: **Thm 1** Hoeffding's lemma E[e^{tX}] ≤ exp(t²(b−a)²/8) for X∈[a,b],
 E[X]=0, full arc via tilted-distribution log-MGF (ψ'' = tilted variance ≤ (b−a)²/4,

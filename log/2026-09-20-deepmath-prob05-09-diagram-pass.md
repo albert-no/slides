@@ -928,3 +928,17 @@ prob08은 덱 끝 summary가 한 장이라 그대로 두면 됩니다. 이 두 �
 장수 prob07 125→124 · prob08 131→130 · prob09 114→113. OUTLINE 범위·포인터·장수 갱신, 덱 안 `slide-num` 초기 표기도 조정. lint ok ×3 · wordy 0 ×3 · dense 0/2/3(기존과 동일) · `outline-lint.py` 0 stale. 60 DPI 재렌더(prob07 122쪽, prob08 128쪽, prob09 109쪽)에서 6행 표 + muted 한 줄이 footer와 충돌 없이 들어갑니다.
 
 남은 건 시리즈 일관성입니다. **prob05·prob06도 같은 쌍**(chain + every-tool table)을 갖고 있어 지금은 prob05/06만 두 장, prob07–09는 한 장입니다. prob01–04는 원래 chain 한 장뿐입니다. 이 PR에서 prob05/06까지 맞출지는 Albert에게 물어놨습니다. 답이 오면 같은 방식으로 적용하겠습니다.
+
+## 58 — slides-review → slides (2026-09-20 10:38)
+
+prob08의 숨은 chain-summary 쌍까지 찾아 동일하게 처리한 것이 맞습니다. 세 덱 모두 표가 더 넓은 도구 범위를 보존하고, chain의 고유 takeaway만 한 줄로 회수했으므로 정보 손실 없이 직접 지시를 충족합니다.
+
+prob05·06은 시리즈 일관성상 같은 처리가 자연스럽지만, Albert가 현재 답변 중인 사안이므로 먼저 적용하지 말고 직접 답을 기다리세요. 승인되면 동일 원칙으로 처리하면 됩니다.
+
+표 아래 muted 문장과 footer 충돌이 없고 lint/OUTLINE도 통과했으므로 `60822f0` 변경은 승인합니다.
+
+## 59 — slides → slides-review (2026-09-20 10:52)
+
+승인 확인했습니다. prob05·06은 손대지 않고 Albert 답변을 기다립니다. (1)로 답이 오면 `Recap — Today's Chain` 한 장씩 제거 + muted takeaway 회수, OUTLINE·`slide-num`·60 DPI 렌더 확인까지 같은 절차로 처리하고 결과를 올리겠습니다.
+
+현재 PR #33 상태: head `c9303ca`, 이번 라운드 덱 커밋은 `6a8106e`(중복 제거 + S114) / `60822f0`(닫는 summary 1장). 덱 장수 prob05 107 · prob06 106 · prob07 124 · prob08 130 · prob09 113.

@@ -35,9 +35,9 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 4 | `prob04-random-processes/` — Markov processes, stationary dist., discrete diffusion | prob 1211–1455 | done (99 slides) |
 | 5 | `prob05-concentration/` — Markov/Chebyshev/Chernoff, MGF, CLT sketch, LLN | prob 1457–1595 | done (107 slides) |
 | 6 | `prob06-generalization/` — Hoeffding, sub-Gaussian, union bound, finite-class generalization bound | new material (sequel to prob05) | done (106 slides) |
-| 7 | `prob07-estimation/` — cond. expectation/tower, MLE/MAP, Fano (full proof), Naive Bayes, bias-variance, MMSE | prob 1563–1911 | done (126 slides) |
+| 7 | `prob07-estimation/` — cond. expectation/tower, MLE/MAP, Fano (full proof), Naive Bayes, bias-variance, MMSE | prob 1563–1911 | done (125 slides) |
 | 8 | `prob08-gaussian/` — MVN (3 defs, properties w/ proofs), Gaussian channel, Gaussian diffusion/DDPM, Gaussian discriminant | prob 1912–2519 (MIT OCW 6.436J citation) | done (131 slides) |
-| 9 | `prob09-monte-carlo/` — Monte Carlo, importance sampling, variance trade-offs, policy gradient / RLHF hooks | new material | done (117 slides) |
+| 9 | `prob09-monte-carlo/` — Monte Carlo, importance sampling, variance trade-offs, policy gradient / RLHF hooks | new material | done (114 slides) |
 | 10 | `opt01-svd-lowrank/` — rank/range/null, SVD, pseudo-inverse, spectral & nuclear norms, Eckart–Young–Mirsky, Netflix | opt 1–435 | done (119 slides) |
 | 11 | `opt02-regression-erm/` — least squares θ\*=A†B (full proof), ERM/Bayes risk, ridge + closed form | opt 436–794, 1463–1517 | done (111 slides) |
 | 12 | `opt03-convexity-gd/` — convexity, L-smoothness, co-coercivity, strong convexity, PL, GD O(1/T) + linear rate | opt 795–1319 | done (135 slides) |
@@ -326,7 +326,7 @@ n = 1.28×10⁶ → ε ≈ 14.9). Cross-deck numbers (Chernoff 2.1×10⁻⁶, ex
 exponent 0.1308) taken from prob05's published slides. Illustrative-only counts
 flagged on-slide: decision-stump class size 256d, ResNet-50 parameter count.
 
-### prob07-estimation — Estimation: MLE, MAP & Fundamental Limits (126 slides)
+### prob07-estimation — Estimation: MLE, MAP & Fundamental Limits (125 slides)
 
 `prob07-estimation/prob07-estimation.html` · **prob 1563–1911** plus conditional
 expectation/tower (prob 1577–1592, deferred here from prob05 per deck plan).
@@ -349,12 +349,12 @@ Accessible edition: `prob07-estimation/prob07-estimation-note.md` — screen-rea
 | 03 | The Estimation Problem (sample/label setup :448, two-nationalities running example :462, two height densities SVG N(170,10²) vs N(180,15²) :475, two questions → two estimators :496) | 20–24 | prob07-estimation/prob07-estimation.html:439 |
 | 04 | Maximum Likelihood (definition :523, MLE on heights :539, worked x=176 → 0.0333>0.0257 → A :552, decision-boundary SVG ≈179 :566, worked x=185 → B :588, what MLE ignores :600) | 25–31 | prob07-estimation/prob07-estimation.html:514 |
 | 05 | Maximum a Posteriori (definition :621, Bayes' rule derivation :637, evidence drops out :651, heights with 9:1 prior :663, worked x=176 :677, worked x=185 — MLE/MAP disagree 0.0117 vs 0.0025 :689, prior moves boundary SVG, both MAP edges ≈129/≈195 :704, Thm 2 MAP is Bayes optimal arc :730, 2-step proof :743, regularization can encode a prior :770) | 32–43 | prob07-estimation/prob07-estimation.html:612 |
-| 06 | Fano's Inequality (fundamental-limit question :792, technique reviews: H(Y|X) :806, chain rule :820, two entropy bounds :833, DPI entropy form :849, Thm 3 arc P_e ≥ (H(Y|X)−1)/log|Y| :861, reading the bound :874, proof overview :888, 9 one-idea proof steps error flag → expansions → DPI → flag/label terms → sandwich :900–:1003, proof summary aligned chain :1015, sandwich picture SVG :1032, worked 8-class (2.5−1)/3 = 0.5 :1054, vacuous case :1065, what Fano buys :1077) | 44–66 | prob07-estimation/prob07-estimation.html:783 |
-| 07 | Parameter Estimation (new target θ :1099, log-likelihood :1113, Bernoulli MLE derivation :1126, sanity checks :1164, worked 10 flips 7 heads L(0.5)=0.00098 < L(0.7)=0.00222 > L(0.9)=0.00048 :1178, log-lik curve SVG :1194, Gaussian MLE μ̂ and σ̂² :1215, promised proof CE loss = MLE :1260, via KL :1274, one identity three names :1287) | 67–81 | prob07-estimation/prob07-estimation.html:1090 |
-| 08 | Naive Bayes (2ⁿ-parameter blowup 2⁴⁹ ≈ 5.6×10¹⁴ :1310, conditional-independence assumption :1324, spam-filter SVG :1342, binarized MNIST figure :1378, NB classifier :1395, fit by counting :1406, fit the prior :1421, MAP with fitted model :1434, worked 10-mail table p_free|spam=3/4 :1445, classify new mail 0.225/(0.225+0.033) ≈ 0.87 spam :1460, zero-count veto :1473, Laplace smoothing :1487, smoothed table 1/8, 2/8, 5/8 :1502, takeaway :1517) | 82–96 | prob07-estimation/prob07-estimation.html:1301 |
-| 09 | Bias–Variance (estimator is an RV :1539, bias :1552, variance :1565, MSE :1580, technique review add-and-subtract :1593, Thm 4 MSE = Bias² + Var arc :1607, 2-step proof cross term dies :1622, dartboard SVG :1649, sample-mean example σ²/n :1684, worked p̂=S/10 vs p̃=(S+1)/12 :1700, numbers 0.025 vs 0.0174 (p=.5), 0.009 vs 0.0107 (p=.9) :1714, MSE-vs-p chart SVG crossings ≈0.14/0.86 :1729, regularization trade :1751) | 97–111 | prob07-estimation/prob07-estimation.html:1530 |
-| 10 | MMSE Estimation (denoising channel SVG :1773, Thm 5 MMSE = E[X|Y] arc :1801, proof overview :1813, 4 proof steps insert/expand → tower kills cross term → read off :1824–:1861, proof summary :1872, worked prob03 table MMSE = 1/6 < 1/4 :1891, denoisers learn E[X|Y] :1905) | 112–122 | prob07-estimation/prob07-estimation.html:1764 |
-| — | Recap chain, every-tool recap table, bridge to prob08, end slide X̂(Y)=E[X|Y] | 123–126 | prob07-estimation/prob07-estimation.html:1919 |
+| 06 | Fano's Inequality (fundamental-limit question :792, technique reviews: H(Y|X) :806, chain rule :820, two entropy bounds :833, DPI entropy form :849, Thm 3 arc P_e ≥ (H(Y|X)−1)/log|Y| :861, reading the bound :874, proof overview :888, 9 one-idea proof steps error flag → expansions → DPI → flag/label terms → sandwich :900–:1003, proof summary &mdash; sandwich picture SVG + takeaway line :1015, worked 8-class (2.5−1)/3 = 0.5 :1038, vacuous case :1049, what Fano buys :1061) | 44–65 | prob07-estimation/prob07-estimation.html:783 |
+| 07 | Parameter Estimation (new target θ :1083, log-likelihood :1097, Bernoulli MLE derivation :1110, sanity checks :1148, worked 10 flips 7 heads L(0.5)=0.00098 < L(0.7)=0.00222 > L(0.9)=0.00048 :1162, log-lik curve SVG :1178, Gaussian MLE μ̂ and σ̂² :1199, promised proof CE loss = MLE :1244, via KL :1258, one identity three names :1271) | 66–80 | prob07-estimation/prob07-estimation.html:1074 |
+| 08 | Naive Bayes (2ⁿ-parameter blowup 2⁴⁹ ≈ 5.6×10¹⁴ :1294, conditional-independence assumption :1308, spam-filter SVG :1326, binarized MNIST figure :1362, NB classifier :1379, fit by counting :1390, fit the prior :1405, MAP with fitted model :1418, worked 10-mail table p_free|spam=3/4 :1429, classify new mail 0.225/(0.225+0.033) ≈ 0.87 spam :1444, zero-count veto :1457, Laplace smoothing :1471, smoothed table 1/8, 2/8, 5/8 :1486, takeaway :1501) | 81–95 | prob07-estimation/prob07-estimation.html:1285 |
+| 09 | Bias–Variance (estimator is an RV :1523, bias :1536, variance :1549, MSE :1564, technique review add-and-subtract :1577, Thm 4 MSE = Bias² + Var arc :1591, 2-step proof cross term dies :1606, dartboard SVG :1633, sample-mean example σ²/n :1668, worked p̂=S/10 vs p̃=(S+1)/12 :1684, numbers 0.025 vs 0.0174 (p=.5), 0.009 vs 0.0107 (p=.9) :1698, MSE-vs-p chart SVG crossings ≈0.14/0.86 :1713, regularization trade :1735) | 96–110 | prob07-estimation/prob07-estimation.html:1514 |
+| 10 | MMSE Estimation (denoising channel SVG :1757, Thm 5 MMSE = E[X|Y] arc :1785, proof overview :1797, 4 proof steps insert/expand → tower kills cross term → read off :1808–:1845, proof summary :1856, worked prob03 table MMSE = 1/6 < 1/4 :1875, denoisers learn E[X|Y] :1889) | 111–121 | prob07-estimation/prob07-estimation.html:1748 |
+| — | Recap chain, every-tool recap table, bridge to prob08, end slide X̂(Y)=E[X|Y] | 122–125 | prob07-estimation/prob07-estimation.html:1902 |
 
 Key theorems: **Thm 1** tower property E[E[X|Y]] = E[X], full proof + table check
 (prob07-estimation/prob07-estimation.html:383); **Thm 2** MAP minimizes error
@@ -364,9 +364,9 @@ P_e ≥ (H(Y|X)−1)/log|Y|, full 9-step proof (error flag, two chain-rule expan
 of H(E,Y|Ŷ), DPI, bound both scenario terms, close the sandwich)
 (prob07-estimation/prob07-estimation.html:861); **Thm 4** bias–variance
 decomposition MSE = Bias² + Var, exact identity, add-and-subtract proof
-(prob07-estimation/prob07-estimation.html:1607); **Thm 5** MMSE estimator is the
+(prob07-estimation/prob07-estimation.html:1591); **Thm 5** MMSE estimator is the
 conditional mean, 4-step proof with tower killing the cross term
-(prob07-estimation/prob07-estimation.html:1801).
+(prob07-estimation/prob07-estimation.html:1785).
 Figures: MNIST digit (../figs/mnist.png, binarized 7×7 discussion); all other
 diagrams inline SVG with hand-computed geometry (route map, two height densities,
 MLE boundary ≈179 with pick-B crossing ≈145, prior-shifted boundary ≈195, Fano
@@ -404,7 +404,7 @@ Accessible edition: `prob08-gaussian/prob08-gaussian-note.md` — screen-reader 
 
 | # | Section | Slides | Location |
 |---|---|---|---|
-| — | Title + TOC | 1–2 | prob08-gaussian/prob08-gaussian.html:48 |
+| — | Title + TOC | 1–2 | prob08-gaussian/prob08-gaussian.html:47 |
 | 01 | Why Gaussians? (default noise model cards, 1D-so-far gap, today's claims, route map SVG) | 3–8 | prob08-gaussian/prob08-gaussian.html:139 |
 | 02 | Warm-Up: Two Dimensions (jointly Gaussian pair :265, joint density :280, coupling picture, running example ρ=0.6 :319 + ellipse SVG, Thm 1 statement :354, slicing SVG, worked conditional :389, what the general case needs) | 9–18 | prob08-gaussian/prob08-gaussian.html:255 |
 | 03 | Positive Semidefinite Matrices (PD/PSD def :425, bowl-vs-trough SVG, PD certificate :466, spectral decomposition :494, worked eigenpairs :507, symmetric square root :521 + worked :534, inverse, factorization exercise + solution, why this buys a density :585) | 19–31 | prob08-gaussian/prob08-gaussian.html:416 |
@@ -445,7 +445,7 @@ the running 2D numeric example re-checked after part 7, channel sanity tables,
 the worked β=0.02 schedule, DDPM ᾱ dictionary slide, and the GDA exercises'
 hint slide.
 
-### prob09-monte-carlo — Monte Carlo & Importance Sampling (117 slides)
+### prob09-monte-carlo — Monte Carlo & Importance Sampling (114 slides)
 
 `prob09-monte-carlo/prob09-monte-carlo.html` · **new material — not in tex**
 (textbook-canonical statements and proofs only; every constant derived on-slide).
@@ -466,12 +466,12 @@ Accessible edition: `prob09-monte-carlo/prob09-monte-carlo-note.md` — screen-r
 | 02 | Recall — the Toolkit (prob01 LOTUS+variance card :268, prob05 LLN+Chebyshev card :283, prob06 Hoeffding card :298, what is genuinely new :314) | 9–13 | prob09-monte-carlo/prob09-monte-carlo.html:260 |
 | 03 | The Monte Carlo Estimator (target :336, definition :350, Thm 1 unbiasedness arc :364, Thm 2 variance σ_f²/n arc :401, RMSE via prob07 MSE decomposition :425, Chebyshev guarantee :438, Hoeffding guarantee + inversion :451, worked π by darts :463, dartboard SVG hand-placed darts :479, six-darts table :504, exact statistics Var(π̂)=2.70/n :521, darts-per-digit table :532, guarantee two ways 539,354 vs 295,111 :547, what MC never asked :562) | 14–31 | prob09-monte-carlo/prob09-monte-carlo.html:327 |
 | 04 | Error Scaling & Dimension (dimension absent from Thm 2 :584, grid integration :597, grid cost table 10^d :610, MC cost :627, error-vs-work log-log SVG :645, crossover d=4 :677, honest caveats (quasi-MC name only) :690, implication for AI :702) | 32–40 | prob09-monte-carlo/prob09-monte-carlo.html:575 |
-| 05 | Importance Sampling (two failure modes :724, rare event Pr(X>10)=e⁻¹⁰ by hand :743, vanilla MC needs n≈2.2×10⁶ :752, the fix multiply-and-divide :765, Thm 3 IS identity arc w/ support condition :775, support counterexample estimate ≡0 :814, IS estimator definition + unbiased corollary :825, weights are likelihood ratios :840, p-vs-q SVG with weight bars :858, shifted-exponential proposal :886, every sample says e⁻¹⁰ exactly :899, too good — the dial :912) | 41–55 | prob09-monte-carlo/prob09-monte-carlo.html:715 |
-| 06 | The Variance of IS (variance formula :934, the object ∫f²p²/q :947, Jensen recall (prob01) :959, Thm 4 optimal proposal q*∝\|f\|p arc, Jensen floor + attained :974–:1024, zero variance verified on rare event :1038, the catch: q* needs the answer :1051, other end of the dial :1064, light-tailed Exp(2) worked example :1075, E_q[w²]=∞ derived :1086, unbiased-consistent-practically-unstable :1100, tail rule Exp(1/2)→4/3 :1115, weight-degeneracy histogram SVG 95% :1131, one sample in disguise :1154) | 56–73 | prob09-monte-carlo/prob09-monte-carlo.html:925 |
-| 07 | Self-Normalized IS (missing constant Z :1174, unnormalized weights w̃=Zw :1186, SNIS definition :1198, two MC estimators one ratio :1214, consistency sketch (continuous mapping named, not proved) :1227, biased flag worked 2/3≠1/2 :1241, ESS definition (flagged heuristic) :1252, ESS sanity checks n and 1.11 :1266, what ESS is not :1277, where SNIS runs in AI :1289) | 74–84 | prob09-monte-carlo/prob09-monte-carlo.html:1165 |
-| 08 | The Score-Function Gradient (J(θ)=E[R] :1320, why plain MC gives no gradient :1334, log-derivative trick review :1348, Thm 5 score-function/REINFORCE identity arc, finite X, expand/swap/reread :1362–:1423, REINFORCE estimator :1437, worked two-action sigmoid policy :1450, identity agrees both sides 1/4 :1461, reading the identity :1472, baseline lemma + mean-zero score proof :1486, baseline at work variance 1/16→0 table :1501, REINFORCE pipeline SVG :1520) | 85–101 | prob09-monte-carlo/prob09-monte-carlo.html:1311 |
-| 09 | Off-Policy & RLHF (off-policy problem :1560, it's Theorem 3 with π_θ/π_b :1572, sequences multiply weights (chain rule, prob04) :1585, degeneracy grows 1.1¹⁰⁰≈13,800 caricature :1598, keep the ratio near one (clipping/trust regions names only) :1611, recall prob02 KL card :1622, RLHF-shaped objective max E[r]−βD(π_θ‖π_ref) w/ scope note :1638, one pipeline every tool :1654) | 102–110 | prob09-monte-carlo/prob09-monte-carlo.html:1551 |
-| — | Recap chain Thm 1–5, every-tool recap table, nine-decks map SVG, probability-half recap, bridge to opt01, end slide E_p[f]=E_q[f·p/q] | 111–117 | prob09-monte-carlo/prob09-monte-carlo.html:1674 |
+| 05 | Importance Sampling (two failure modes :724, rare event Pr(X>10)=e⁻¹⁰ by hand :743, vanilla MC needs n≈2.2×10⁶ :752, the fix multiply-and-divide :765, Thm 3 IS identity arc w/ support condition :775, support counterexample estimate ≡0 :802, IS estimator definition + unbiased corollary :813, weights are likelihood ratios :828, p-vs-q SVG with weight bars :846, shifted-exponential proposal :874, every sample says e⁻¹⁰ exactly :887, too good — the dial :900) | 41–54 | prob09-monte-carlo/prob09-monte-carlo.html:715 |
+| 06 | The Variance of IS (variance formula :922, the object ∫f²p²/q :935, Jensen recall (prob01) :947, Thm 4 optimal proposal q*∝\|f\|p arc, Jensen floor + attained :962–:1001, zero variance verified on rare event :1015, the catch: q* needs the answer :1028, other end of the dial :1041, light-tailed Exp(2) worked example :1052, E_q[w²]=∞ derived :1063, unbiased-consistent-practically-unstable :1077, tail rule Exp(1/2)→4/3 :1092, weight-degeneracy histogram SVG 95% :1108, one sample in disguise :1131) | 55–71 | prob09-monte-carlo/prob09-monte-carlo.html:913 |
+| 07 | Self-Normalized IS (missing constant Z :1151, unnormalized weights w̃=Zw :1163, SNIS definition :1175, two MC estimators one ratio :1191, consistency sketch (continuous mapping named, not proved) :1204, biased flag worked 2/3≠1/2 :1218, ESS definition (flagged heuristic) :1229, ESS sanity checks n and 1.11 :1243, what ESS is not :1254, where SNIS runs in AI :1266) | 72–82 | prob09-monte-carlo/prob09-monte-carlo.html:1142 |
+| 08 | The Score-Function Gradient (J(θ)=E[R] :1297, why plain MC gives no gradient :1311, log-derivative trick review :1325, Thm 5 score-function/REINFORCE identity arc, finite X, expand/swap/reread :1339–:1388, REINFORCE estimator :1402, worked two-action sigmoid policy :1415, identity agrees both sides 1/4 :1426, reading the identity :1437, baseline lemma + mean-zero score proof :1451, baseline at work variance 1/16→0 table :1466, REINFORCE pipeline SVG :1485) | 83–98 | prob09-monte-carlo/prob09-monte-carlo.html:1288 |
+| 09 | Off-Policy & RLHF (off-policy problem :1525, it's Theorem 3 with π_θ/π_b :1537, sequences multiply weights (chain rule, prob04) :1550, degeneracy grows 1.1¹⁰⁰≈13,800 caricature :1563, keep the ratio near one (clipping/trust regions names only) :1576, recall prob02 KL card :1587, RLHF-shaped objective max E[r]−βD(π_θ‖π_ref) w/ scope note :1603, one pipeline every tool :1619) | 99–107 | prob09-monte-carlo/prob09-monte-carlo.html:1516 |
+| — | Recap chain Thm 1–5, every-tool recap table, nine-decks map SVG, probability-half recap, bridge to opt01, end slide E_p[f]=E_q[f·p/q] | 108–114 | prob09-monte-carlo/prob09-monte-carlo.html:1639 |
 
 Key theorems: **Thm 1** unbiasedness E[μ̂_n]=μ, linearity proof
 (prob09-monte-carlo/prob09-monte-carlo.html:364); **Thm 2** Var(μ̂_n)=σ_f²/n via
@@ -481,10 +481,10 @@ E_p[f]=E_q[f·p/q] under the support condition q>0 wherever fp≠0, LOTUS +
 cancellation proof + counterexample
 (prob09-monte-carlo/prob09-monte-carlo.html:775); **Thm 4** optimal proposal
 q*=\|f\|p/c minimizes IS variance, Jensen floor c² attained, min Var = c²−μ²
-(prob09-monte-carlo/prob09-monte-carlo.html:974); **Thm 5** score-function /
+(prob09-monte-carlo/prob09-monte-carlo.html:962); **Thm 5** score-function /
 REINFORCE identity ∇_θ E[R]=E[R ∇_θ log π_θ] proved for finite X
-(prob09-monte-carlo/prob09-monte-carlo.html:1362); **Lemma** baseline invariance
-via mean-zero score (prob09-monte-carlo/prob09-monte-carlo.html:1486).
+(prob09-monte-carlo/prob09-monte-carlo.html:1339); **Lemma** baseline invariance
+via mean-zero score (prob09-monte-carlo/prob09-monte-carlo.html:1451).
 Figures: all diagrams inline SVG with hand-computed geometry (route map,
 dartboard with six hand-placed darts, error-vs-work log-log chart with slopes
 −1/2 / −2 / −0.1, proposal-vs-target densities with weight bars,

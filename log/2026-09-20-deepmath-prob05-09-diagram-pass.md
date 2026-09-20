@@ -893,3 +893,38 @@ viewBox 1060×400, 박스 320×88 @ x=15/370/725, 행 y=15/152/289 — wrap path
 OUTLINE은 같은 커밋에서 갱신했습니다: 삭제로 밀린 섹션 범위와 행/인라인 line pointer 전부 재계산(인라인은 `<h2>` 줄, Location 열은 슬라이드 시작 줄이라는 기존 규약 유지), 장수 3곳, 그리고 덤으로 prob08 title 행 포인터 `:48 → :47`(다른 모든 행처럼 슬라이드 시작 줄로 정렬). 덱 안의 `slide-num` 초기 표기도 125 / 114로 맞췄습니다.
 
 수학·교육적으로 빠진 내용이 있는지 검토 부탁드립니다. 특히 prob07 Fano 그림 한 장이 텍스트 chain을 대체해도 되는지, prob09 Thm 4/5에서 overview 없이 step 1..k로 바로 들어가는 흐름이 괜찮은지 봐주세요.
+
+## 56 — slides-review → slides (2026-09-20 10:34)
+
+검토 결과입니다.
+
+**(a) prob07 Fano 병합:** 좋습니다. 그림이 `DPI → free error flag → 1 bit 비용`을 모두 담고 있고, muted 문장이 핵심 trick을 회수하므로 별도 텍스트 chain 슬라이드는 중복이었습니다. 현재 한 장으로 충분합니다.
+
+**(b) prob09 Thm 4/5:** overview 없이 바로 step으로 들어가도 흐름이 자연스럽습니다. Thm 4는 2단계, Thm 5는 각 step 제목 자체가 roadmap 역할을 하므로 overview 삭제가 맞습니다. Thm 3도 한 장 증명이라 동일합니다.
+
+**S114:** Albert의 "직관적으로 읽히는 방향" 기준에서는 이번 좌→우 wrap path가 더 낫습니다. 라벨 순서와 화살표가 일치해 `prob01→…→prob09`로 읽힙니다. 이전 serpentine 제안은 철회합니다.
+
+다만 Albert의 "최종 summary 한 번" 지시와 아직 충돌하는 부분이 있습니다.
+
+- prob07 끝: `Recap — Today's Chain` + `Recap — Every Tool, One Job`
+- prob09 끝: 같은 두 장
+
+공통 관례보다 이번 직접 지시가 우선입니다. 두 덱 모두 **`Every Tool, One Job` 한 장을 최종 summary로 유지하고, `Today's Chain`은 삭제**하는 것을 권합니다. chain 슬라이드의 고유한 한 줄 takeaway만 표 아래 muted 문장으로 옮기세요.
+
+- prob09: `One engine (LLN + variance accounting) + one move (multiply-and-divide)`
+- prob07: 해당 chain의 고유 takeaway 한 줄만 동일 방식으로 회수
+
+prob08은 덱 끝 summary가 한 장이라 그대로 두면 됩니다. 이 두 장 정리 후 장수·OUTLINE·렌더를 다시 확인해 주세요.
+
+## 57 — slides → slides-review (2026-09-20 10:47)
+
+닫는 summary 건, 방향은 동의해서 적용했습니다. 커밋 `60822f0`. 다만 **prob08도 같은 쌍을 갖고 있습니다** — `Today, as One Chain`(S128) + `Recap — Every Tool, One Job`(S129). 제목만 `Recap —`이 없어서 한 장처럼 보였던 것 같습니다. 세 덱 모두 동일하게 처리했습니다.
+
+- prob07 −1장 `Recap — Today's Chain` · prob08 −1장 `Today, as One Chain` · prob09 −1장 `Recap — Today's Chain`
+- 각 chain의 muted 한 줄은 표 아래로 이동: prob07 `Recipes (MLE, MAP), one wall (Fano), one exact accounting (bias–variance)` / prob08 `One object, three definitions, seven properties — and three AI systems fell out` / prob09 `One engine (LLN + variance accounting) + one move (multiply-and-divide)`
+
+표를 남기고 chain을 지운 근거: 표가 chain에 없는 도구까지 담고 있습니다(prob07 tower property·CE=MLE, prob09 SNIS+ESS, prob08 Gaussian channel·trace trick). 반대로 chain의 내용은 각 정리의 닫는 chain summary에서 이미 한 번씩 나온 것이라, Albert가 지적한 "summary 반복"에 정확히 해당합니다.
+
+장수 prob07 125→124 · prob08 131→130 · prob09 114→113. OUTLINE 범위·포인터·장수 갱신, 덱 안 `slide-num` 초기 표기도 조정. lint ok ×3 · wordy 0 ×3 · dense 0/2/3(기존과 동일) · `outline-lint.py` 0 stale. 60 DPI 재렌더(prob07 122쪽, prob08 128쪽, prob09 109쪽)에서 6행 표 + muted 한 줄이 footer와 충돌 없이 들어갑니다.
+
+남은 건 시리즈 일관성입니다. **prob05·prob06도 같은 쌍**(chain + every-tool table)을 갖고 있어 지금은 prob05/06만 두 장, prob07–09는 한 장입니다. prob01–04는 원래 chain 한 장뿐입니다. 이 PR에서 prob05/06까지 맞출지는 Albert에게 물어놨습니다. 답이 오면 같은 방식으로 적용하겠습니다.

@@ -503,48 +503,50 @@ and trust regions (names only); RLHF objective labeled schematic with explicit
 `opt01-svd-lowrank/opt01-svd-lowrank.html` · **opt 1–435** (rank/range/null,
 norms, SVD, pseudo-inverse, spectral/nuclear norms, Eckart–Young–Mirsky,
 matrix completion). Lecture 10 — first optimization deck; answers prob09's
-bridge (from sampling estimates to the objects being optimized); opens with the
-half-switch agenda mapping opt01–opt04; recalls prob05 LLN framing only by
-name. Running example A=[[3,0],[4,5]] carried through SVD → pseudo-inverse →
+bridge (from sampling estimates to the objects being optimized) without naming
+any deck on-slide; opens with the half-switch agenda framed as object →
+problem → algorithm → practice. Running example A=[[3,0],[4,5]] carried through SVD → pseudo-inverse →
 norms → EYM; rank-1 sidekick C=[[1,1],[2,2]]; 5×4 rank-2 Netflix toy. Ends
-bridging to opt02 (x = A†b as the least-squares solution, proof next deck).
+bridging to least squares (x = A†b as the least-squares solution, proof ahead).
 
 Companion: `opt01-svd-lowrank/opt01-svd-lowrank-note.html` — detailed definitions, expanded proofs, lemmas, references.
 Accessible edition: `opt01-svd-lowrank/opt01-svd-lowrank-note.md` — screen-reader Markdown edition of that note (732 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
-| — | Title + TOC | 1–2 | opt01-svd-lowrank/opt01-svd-lowrank.html:23 |
-| 01 | The Optimization Half (prob09 bridge answered :124, four-decks agenda :138, DL optimizes matrices :173, SVD = x-ray :197, low rank everywhere / LoRA name-drop :211, route map SVG :235) | 3–9 | opt01-svd-lowrank/opt01-svd-lowrank.html:116 |
-| 02 | Rank, Range, Null Space (span/range :295, collapsing-matrix SVG :307, rank :336, ranks by inspection :348, null space :364, null(C) worked :378, Thm 1 rank–nullity stated :391, sanity checks :404, subspace-split picture SVG :419, orthogonal complement :456, Thm 2 orthogonal decomposition stated w/ picture :468, Thm 3 four subspaces stated :503, why AI cares :519) | 10–24 | opt01-svd-lowrank/opt01-svd-lowrank.html:274 |
-| 03 | Norms & Orthogonal Matrices (norm axioms :553, ℓp family (tex ℓ1/ℓ2 typo fixed) :567, worked three norms :580, unit-ball shapes SVG :594, orthogonal matrix :620, 45° rotation :633, Thm 4 orthogonal invariance proved :647, rotations-are-free implication :661) | 25–34 | opt01-svd-lowrank/opt01-svd-lowrank.html:533 |
-| 04 | The SVD (eigendecomposition recall :683, eigen-vs-singular review :697, Thm 5 existence stated, A^TA route named :720, full-SVD shapes SVG :734, what each factor does :764, outer-product view + layers SVG :777, thin SVD :805, thin factors not orthogonal :831, SVD by hand steps 1–4 on A :844–:911, verify via rank-1 layers :922, eigenvalues ≠ singular values :934, circle→ellipse 4-panel SVG :948, what to remember :1013) | 35–53 | opt01-svd-lowrank/opt01-svd-lowrank.html:675 |
-| 05 | The Pseudo-Inverse (when A⁻¹ fails :1035, Moore–Penrose definition :1049, A† worked = A⁻¹ :1064, rank-deficient C† :1090, AA†A=A sanity check :1103, AA†/A†A projections :1119, teaser Cx=b solved :1132) | 54–62 | opt01-svd-lowrank/opt01-svd-lowrank.html:1027 |
-| 06 | Matrix Norms (operator vs entrywise :1153, induced norm :1174, ‖Ax‖≤‖A‖‖x‖ :1190, Thm 6 spectral=σ₁ full proof :1202–:1228, worked max stretch :1241, Frobenius definition (added, not in tex) :1251, Thm 7 ‖A‖_F²=Σσᵢ² + trace-chain proof :1266–:1277, worked ‖A‖_F two ways :1289, nuclear norm :1298, three-norms table :1310, nuclear ≈ convex rank (envelope stated, as in source) :1324) | 63–77 | opt01-svd-lowrank/opt01-svd-lowrank.html:1145 |
-| 07 | Best Low-Rank Approximation (compression question :1346, truncated SVD :1359, worked A₁ + its error :1372–:1385, the claim :1396, technique reviews 1–4: rank–nullity, subspace intersection + two-planes SVG, witness lower bound, ‖Aw‖² in v-basis :1409–:1470, Thm 8 EYM statement :1481, reading the statement (uniqueness dropped) :1496, proof overview :1508, Steps 1–5 one idea per slide :1521–:1583, proof-summary skeleton :1597, key trick named :1616, Frobenius case (sketch, as in source) :1631, worked EYM on A :1645, 90% energy bar chart :1656, license to truncate: compression/denoising/LoRA :1684) | 78–103 | opt01-svd-lowrank/opt01-svd-lowrank.html:1338 |
-| 08 | Netflix & Matrix Completion (recommendation problem :1706, 5×4 ratings table :1720, two taste patterns :1735, R=TG factorization 18 vs 20 numbers :1747, fill-in-the-blanks worked :1760, observed set Ω :1770, rank-constrained program (NP-hard, stated) :1781, nuclear relaxation :1794, why it wins (SVT/exact recovery stated) :1805, same shape everywhere table :1817) | 104–114 | opt01-svd-lowrank/opt01-svd-lowrank.html:1698 |
-| — | Closing: today-as-one-chain, every-tool table, bridge to opt02, end slide A=Σσᵢuᵢvᵢᵀ | 115–119 | opt01-svd-lowrank/opt01-svd-lowrank.html:1832 |
+| — | Title + TOC | 1–2 | opt01-svd-lowrank/opt01-svd-lowrank.html:43 |
+| 01 | The Optimization Half (probability-half bridge answered :144, four-step agenda :158, DL optimizes matrices :193, SVD = x-ray :217, low rank everywhere / LoRA name-drop :231, route map SVG :255) | 3–9 | opt01-svd-lowrank/opt01-svd-lowrank.html:136 |
+| 02 | Rank, Range, Null Space (span/range :315, collapsing-matrix SVG :327, rank :356, ranks by inspection :368, null space :384, null(C) worked :398, Thm 1 rank–nullity stated :411, sanity checks :424, subspace-split picture SVG :439, orthogonal complement :476, Thm 2 orthogonal decomposition stated w/ picture :488, Thm 3 four subspaces stated :529, why AI cares :545) | 10–24 | opt01-svd-lowrank/opt01-svd-lowrank.html:294 |
+| 03 | Norms & Orthogonal Matrices (norm axioms :579, ℓp family (tex ℓ1/ℓ2 typo fixed) :593, worked three norms :606, unit-ball shapes SVG :620, orthogonal matrix :646, 45° rotation :659, Thm 4 orthogonal invariance proved :673, rotations-are-free implication :687) | 25–34 | opt01-svd-lowrank/opt01-svd-lowrank.html:559 |
+| 04 | The SVD (eigendecomposition recall :709, eigen-vs-singular review :723, Thm 5 existence stated, A^TA route named :746, full-SVD shapes SVG :760, what each factor does :790, outer-product view + layers SVG :803, thin SVD :830, thin factors not orthogonal :857, SVD by hand steps 1–4 on A :870–:937, verify via rank-1 layers :948, eigenvalues ≠ singular values :960, circle→ellipse split over two left→right slides :974/:1016, what to remember :1058) | 35–54 | opt01-svd-lowrank/opt01-svd-lowrank.html:701 |
+| 05 | The Pseudo-Inverse (when A⁻¹ fails :1080, Moore–Penrose definition :1094, A† worked = A⁻¹ :1109, rank-deficient C† :1135, AA†A=A sanity check :1148, AA†/A†A projections :1164, teaser Cx=b solved :1177) | 55–63 | opt01-svd-lowrank/opt01-svd-lowrank.html:1072 |
+| 06 | Matrix Norms (operator vs entrywise :1198, induced norm :1219, ‖Ax‖≤‖A‖‖x‖ :1235, Thm 6 spectral=σ₁ full proof :1247–:1273, worked max stretch :1286, Frobenius definition (added, not in tex) :1296, Thm 7 ‖A‖_F²=Σσᵢ² + trace-chain proof :1311–:1322, worked ‖A‖_F two ways :1334, nuclear norm :1343, three-norms table :1355, nuclear ≈ convex rank (envelope stated, as in source) :1369) | 64–78 | opt01-svd-lowrank/opt01-svd-lowrank.html:1190 |
+| 07 | Best Low-Rank Approximation (compression question :1391, truncated SVD :1404, worked A₁ + its error :1417–:1430, the claim :1441, technique reviews 1–4: rank–nullity, subspace intersection + two-planes SVG, witness lower bound, ‖Aw‖² in v-basis :1454–:1512, Thm 8 EYM statement :1523, reading the statement (uniqueness dropped) :1538, proof overview :1550, Steps 1–5 one idea per slide :1563–:1625, proof-summary skeleton :1639, key trick named :1658, Frobenius case (sketch, as in source) :1673, worked EYM on A :1687, 90% energy bar chart :1698, license to truncate: compression/denoising/LoRA :1726) | 79–104 | opt01-svd-lowrank/opt01-svd-lowrank.html:1383 |
+| 08 | Netflix & Matrix Completion (recommendation problem :1748, 5×4 ratings table :1762, two taste patterns :1777, R=TG factorization 18 vs 20 numbers :1789, fill-in-the-blanks worked :1802, observed set Ω :1812, rank-constrained program (NP-hard, stated) :1823, nuclear relaxation :1836, why it wins (SVT/exact recovery stated) :1847, same shape everywhere table :1859) | 105–115 | opt01-svd-lowrank/opt01-svd-lowrank.html:1740 |
+| — | Closing: every-tool recap table (single closer; the one-chain takeaway folded in as its muted line), bridge to least squares, end slide A=Σσᵢuᵢvᵢᵀ | 116–119 | opt01-svd-lowrank/opt01-svd-lowrank.html:1874 |
 
 Key theorems: **Thm 1** rank–nullity (stated, sanity-checked on C;
-opt01-svd-lowrank/opt01-svd-lowrank.html:391); **Thm 2** orthogonal
+opt01-svd-lowrank/opt01-svd-lowrank.html:411); **Thm 2** orthogonal
 decomposition v=w+w⊥ (stated w/ picture;
-opt01-svd-lowrank/opt01-svd-lowrank.html:468); **Thm 3** four fundamental
-subspaces (stated; opt01-svd-lowrank/opt01-svd-lowrank.html:503); **Thm 4**
+opt01-svd-lowrank/opt01-svd-lowrank.html:488); **Thm 3** four fundamental
+subspaces (stated; opt01-svd-lowrank/opt01-svd-lowrank.html:529); **Thm 4**
 orthogonal invariance ‖Ux‖=‖x‖, one-line proof
-(opt01-svd-lowrank/opt01-svd-lowrank.html:647); **Thm 5** SVD existence
+(opt01-svd-lowrank/opt01-svd-lowrank.html:673); **Thm 5** SVD existence
 (stated, A^TA construction route named;
-opt01-svd-lowrank/opt01-svd-lowrank.html:720); **Thm 6** ‖A‖₂=σ₁, full
-upper-bound + witness proof (opt01-svd-lowrank/opt01-svd-lowrank.html:1202);
+opt01-svd-lowrank/opt01-svd-lowrank.html:746); **Thm 6** ‖A‖₂=σ₁, full
+upper-bound + witness proof (opt01-svd-lowrank/opt01-svd-lowrank.html:1247);
 **Thm 7** ‖A‖_F²=Σσᵢ², trace-cycling proof
-(opt01-svd-lowrank/opt01-svd-lowrank.html:1266); **Thm 8**
+(opt01-svd-lowrank/opt01-svd-lowrank.html:1311); **Thm 8**
 Eckart–Young–Mirsky, spectral case proved in full via 5-step
 subspace-collision argument with 4 technique reviews, Frobenius case sketch as
 in source; citation Wilkinson MATH3030 §3.5 kept
-(opt01-svd-lowrank/opt01-svd-lowrank.html:1481).
+(opt01-svd-lowrank/opt01-svd-lowrank.html:1523).
 Figures: all diagrams inline SVG with hand-computed geometry (route map,
 collapsing matrix onto the slope-2 line, subspace split, ℓ1/ℓ2/ℓ∞ unit balls,
-full-SVD block shapes, stacked rank-1 layers, circle→ellipse 4-panel
-rotate-stretch-rotate, two planes in R³ sharing a line, energy bar chart 45/5).
+full-SVD block shapes, stacked rank-1 layers, circle→ellipse rotate-stretch-rotate
+over two slides, two planes in R³ sharing a line, energy bar chart 45/5). All
+figure labels are KaTeX overlay spans (.o1-fig) at body/annotation size over
+1000–1060px wrappers with viewBox width = wrapper width.
 Deviations from tex: ℓ2 formula typo (duplicated ℓ1) fixed; "p>0" → "p ≥ 1";
 rank–nullity "=n" clarified as number of columns; orthogonal-complement
 definition completed with "for all w ∈ W"; m×n convention normalized

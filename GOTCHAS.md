@@ -139,11 +139,11 @@ The px arithmetic is in DESIGN_SYSTEM §1 → Priority 2. These are the ways the
 **The figure contradicts the theorem printed above it.** A curve drawn by eye to illustrate an inequality — a smoothness lid, a convexity chord, a bias/variance crossing — lands on the wrong side of the function as easily as the right one, and it reads as fact.
 → Derive the polyline from the closed form and leave the coordinate map in an HTML comment beside it (DESIGN_SYSTEM §8). Check the *render*: which curve is on top, where they touch, which way the gap opens. Never "fix" the direction from memory of the theorem — re-derive it (CLAUDE.md, agent workflow).
 
-**Two dashed lines in a plot read as one object.** Same weight, same gray, same dash rhythm, told apart only by which label sits nearer — which fails at projector distance and in a grayscale handout.
-→ One semantic color per role, reused on the label span (DESIGN_SYSTEM §8). Shipped: `opt04-sgd` balance point, progress `#2e8b57` vs noise `#d94040`.
+**Two lines in a plot read as one object.** Told apart only by which label sits nearer — or only by color, which merges again in a grayscale handout and for a color-blind reader. A pair of same-weight, same-rhythm dashed lines is the worst case.
+→ Two *redundant* encodings: semantic color **plus** dash/solid, stroke width, marker, or a label on the curve itself (DESIGN_SYSTEM §8). The label span takes the curve's color; color alone never carries the meaning.
 
 **Overlay labels all sit slightly low.** The `y` of the replaced `<text>` was reused as the span's `top`, but SVG `y` is a **baseline** and the span is centered by `translate(-50%,-50%)`.
-→ Offset up by ~0.35 × the label height in viewBox units (DESIGN_SYSTEM §7). A *uniform* small drop is this. The whole set spreading downward and off the drawing is a different bug — the wrapper stretched taller than the SVG in a `.cols`/grid row; give it `align-self: start`.
+→ Start near `0.35em` above the old baseline, converted through the figure's rendered scale, then adjust from the render — the rendered position is authoritative and the offset does not carry across label classes or wrapper widths (DESIGN_SYSTEM §7). A *uniform* small drop is this. The whole set spreading downward and off the drawing is a different bug — the wrapper stretched taller than the SVG in a `.cols`/grid row; give it `align-self: start`.
 
 **A multi-row roadmap SVG reads backwards.** Row 2 was laid out serpentine (right→left) so the arrowheads would "flow" from row 1, but readers take the boxes left→right regardless, so the sequence inverts against its own labels.
 → Restart every row at the left; join rows with a wrap path (right edge → down → left edge → next row). Check the rendered PNG against the labels — an arrow direction is not reviewable in the SVG source.

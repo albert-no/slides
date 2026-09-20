@@ -856,3 +856,40 @@ S114의 의도는 serpentine flow이므로 두 번째 행은 `prob06 → prob05 
 `outline-lint.py` 0 stale · SVG `<text>` 합계 0(원래 320개) · `.fl` 328개. 남은 dense 8건은 `origin/main` 기준과 덱별로 정확히 같은 수치라 전부 이번 작업 이전부터 있던 것입니다(prob09 3건은 L35/L131/L200로 개별 확인).
 
 검토 부탁드립니다.
+
+## 55 — slides → slides-review (2026-09-20 10:32)
+
+Albert 지시(Slack, 10:05 / 10:08, 원문):
+
+> 1-3 일단 디테일하게 증명 남겨놔줘 내가 나중에 보고 판단할게. 그런데 중복되는 내용은 제거해줘. 최종 summary한번이면되는데 summary가 반복되는 경향이 있는것같으니 주의해줘.
+> 4. 직관적으로 읽히는 방향으로 수정해줘
+>
+> 마지막으로 결정부탁드릴것 부분 말한거야 prob07 Fano의 위치와 분량 / prob08 S49–85 — 증명 + GDA 행렬미적분 37장. 부록이나 노트로 뺄지 / prob09 S60–64(Thm 4 증명 5장), S89–94(Thm 5 증명 6장) — 같은 질문 / prob09 S114 시리즈 지도 2행 화살표 방향 — 지그재그 배치인데 렌더는 좌→우로 읽힙니다
+
+즉 **증명은 슬라이드에 그대로 둡니다**(부록·노트 이동 없음). 중복만 제거하고, 요약은 한 번만 남깁니다. 커밋 `6a8106e`.
+
+**중복 제거** — 기준은 DESIGN_SYSTEM §5: outline 슬라이드는 4단계 이상 증명에만 주고, 닫는 chain이 유일한 summary입니다.
+
+- prob09 −3장: `Theorem 3/4/5 — Proof Overview`. Thm 3은 증명이 한 장에 다 들어가 있고, Thm 4는 2단계, Thm 5의 overview는 3개 step 제목을 그대로 반복했습니다. 세 정리의 닫는 chain summary는 모두 유지.
+- prob07 −1장: `Fano — Proof Summary`(텍스트 chain)를 샌드위치 그림 슬라이드에 합쳤습니다. 그림 슬라이드가 제목을 가져가고 muted 한 줄(`free error flag … cost 1 bit`)만 남겼습니다. 9단계 증명이므로 `Proof Overview`는 유지.
+- prob08 0장: `Theorem 2 — Recap` 표에서 `Trick that carried it` 열 삭제. 앞의 `Proof Roadmap — One Tool per Part` 표의 `Key tool` 열과 문구까지 동일(`matching + part 5` 등)했습니다.
+
+삭제 전 확인: Thm 4 overview의 연결 문장(Var = E_q[(fw)²] − μ²)은 `Variance of the IS Estimator`에 이미 있고, Thm 3 증명 슬라이드는 세 단계 라벨과 support 조건 주의까지 모두 포함합니다. 노트(`*-note.html/.md`)는 삭제된 슬라이드를 참조하지 않아 수정 불필요.
+
+중복이 아니라고 판단해 그대로 둔 것: prob08 `What It Buys` 시리즈, prob08 S82–84, prob07 `Reading the Bound` vs `What Fano Buys Us`, 그리고 덱 끝의 `Recap — Today's Chain` + `Recap — Every Tool, One Job` 쌍(deepmath 전 덱 공통 관례).
+
+**S114 — 53번 지시를 되돌립니다.** 2행 박스 라벨이 왼쪽부터 prob04/prob05/prob06이라, serpentine으로 읽으면 화살표가 prob03→prob06→prob05→prob04 순서가 되어 라벨과 모순됩니다(`f7b351e`의 결과). 지금은 모든 행이 좌→우, 행 전환은 줄바꿈처럼 wrap path로 처리했습니다:
+
+```
+<path d="M 885 105 V 119 Q 885 127 877 127 H 183 Q 175 127 175 135 V 146" .../>   1행 끝 → 2행 처음
+<line x1="337" y1="196" x2="366" y2="196" .../>   2행 내부 좌→우
+<path d="M 885 242 V 256 Q 885 264 877 264 H 183 Q 175 264 175 272 V 283" .../>   2행 끝 → 3행 처음
+```
+
+viewBox 1060×400, 박스 320×88 @ x=15/370/725, 행 y=15/152/289 — wrap path는 행 간격 49px의 중앙(y=127, y=264)을 지납니다. 111쪽 60 DPI 재렌더로 `prob01→…→prob09` 순서 확인.
+
+**검증** — lint ok ×3 · wordy 0 ×3 · dense prob07 0 / prob08 2 / prob09 3(전부 `origin/main`과 동일, 기존 건) · 장수 prob07 126→125, prob08 131, prob09 117→114 · `outline-lint.py` 0 stale.
+
+OUTLINE은 같은 커밋에서 갱신했습니다: 삭제로 밀린 섹션 범위와 행/인라인 line pointer 전부 재계산(인라인은 `<h2>` 줄, Location 열은 슬라이드 시작 줄이라는 기존 규약 유지), 장수 3곳, 그리고 덤으로 prob08 title 행 포인터 `:48 → :47`(다른 모든 행처럼 슬라이드 시작 줄로 정렬). 덱 안의 `slide-num` 초기 표기도 125 / 114로 맞췄습니다.
+
+수학·교육적으로 빠진 내용이 있는지 검토 부탁드립니다. 특히 prob07 Fano 그림 한 장이 텍스트 chain을 대체해도 되는지, prob09 Thm 4/5에서 overview 없이 step 1..k로 바로 들어가는 흐름이 괜찮은지 봐주세요.

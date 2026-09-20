@@ -11,10 +11,10 @@ Symptom → cause → fix. Search by **symptom**, not topic. `DESIGN_SYSTEM.md` 
 | 3 | Overflow | Content clips the footer or the right edge | 57–85 | `offset=57, limit=29` |
 | 4 | Prose & line breaks | Wrapping, orphans, dashes, wordiness | 87–110 | `offset=87, limit=24` |
 | 5 | Citations | Author order, wrapping cites, title cards | 112–123 | `offset=112, limit=12` |
-| 6 | Diagrams & SVG | SVG too small, overlays drift, flow wraps | 125–145 | `offset=125, limit=21` |
-| 7 | Proof & structure drift | Outline/recap drift, animation, lost trims | 147–173 | `offset=147, limit=27` |
-| 8 | Engine & audit false alarms | Page numbers, footer, false audit flags | 175–207 | `offset=175, limit=33` |
-| 9 | Toolchain: rendering, figures, bundling | Headless render, fonts, crops, bundle size | 209–229 | `offset=209, limit=21` |
+| 6 | Diagrams & SVG | SVG too small, overlays drift, flow wraps | 125–154 | `offset=125, limit=30` |
+| 7 | Proof & structure drift | Outline/recap drift, animation, lost trims | 156–188 | `offset=156, limit=33` |
+| 8 | Engine & audit false alarms | Page numbers, footer, false audit flags | 190–222 | `offset=190, limit=33` |
+| 9 | Toolchain: rendering, figures, bundling | Headless render, fonts, crops, bundle size | 224–244 | `offset=224, limit=21` |
 
 <!-- doc-index:end -->
 
@@ -136,6 +136,15 @@ The px arithmetic is in DESIGN_SYSTEM §1 → Priority 2. These are the ways the
 **Math in a diagram renders as literal text** — `x_0`, `x_200`, `10^-5`, `(1-b)^n`, `Thm 1-2` appear exactly as typed, or as Unicode superscripts sitting off the baseline. KaTeX's walker skips SVG, so `$…$` inside `<text>` never renders and the ASCII workaround is what ships.
 → Shapes in SVG, math labels in HTML overlay spans over the wrapper (DESIGN_SYSTEM §7; shipped pattern `courses/deepmath/prob09-monte-carlo`, `.p9-fig .fl`). Find survivors with `grep -nE '<text[^>]*>[^<]*(\^|_[0-9a-z]|[⁰-⁹₀-₉])' <deck>.html`.
 
+**The figure contradicts the theorem printed above it.** A curve drawn by eye to illustrate an inequality — a smoothness lid, a convexity chord, a bias/variance crossing — lands on the wrong side of the function as easily as the right one, and it reads as fact.
+→ Derive the polyline from the closed form and leave the coordinate map in an HTML comment beside it (DESIGN_SYSTEM §8). Check the *render*: which curve is on top, where they touch, which way the gap opens. Never "fix" the direction from memory of the theorem — re-derive it (CLAUDE.md, agent workflow).
+
+**Two lines in a plot read as one object.** Told apart only by which label sits nearer — or only by color, which merges again in a grayscale handout and for a color-blind reader. A pair of same-weight, same-rhythm dashed lines is the worst case.
+→ Two *redundant* encodings: semantic color **plus** dash/solid, stroke width, marker, or a label on the curve itself (DESIGN_SYSTEM §8). The label span takes the curve's color; color alone never carries the meaning.
+
+**Overlay labels all sit slightly low.** The `y` of the replaced `<text>` was reused as the span's `top`, but SVG `y` is a **baseline** and the span is centered by `translate(-50%,-50%)`.
+→ Start near `0.35em` above the old baseline, converted through the figure's rendered scale, then adjust from the render — the rendered position is authoritative and the offset does not carry across label classes or wrapper widths (DESIGN_SYSTEM §7). A *uniform* small drop is this. The whole set spreading downward and off the drawing is a different bug — the wrapper stretched taller than the SVG in a `.cols`/grid row; give it `align-self: start`.
+
 **A multi-row roadmap SVG reads backwards.** Row 2 was laid out serpentine (right→left) so the arrowheads would "flow" from row 1, but readers take the boxes left→right regardless, so the sequence inverts against its own labels.
 → Restart every row at the left; join rows with a wrap path (right edge → down → left edge → next row). Check the rendered PNG against the labels — an arrow direction is not reviewable in the SVG source.
 
@@ -155,8 +164,14 @@ The px arithmetic is in DESIGN_SYSTEM §1 → Priority 2. These are the ways the
 **A 3-step proof carries a "Proof Overview" slide.** The Outline→Steps→Recap bracket was copied from a longer proof; at three steps the outline and the steps are the same words.
 → Delete the overview; the bracket is earned at 4+ steps (DESIGN_SYSTEM §5). Confirm the deleted slide held nothing unique first — if it did, carry that one line onto the neighbouring slide.
 
+**A slide cites a sibling deck by its id** ("as in prob01", "opt02 showed"). Written while editing the series, where the ids are in front of you; the lecture room has never seen them.
+→ Replace with the content ("the 3-variable case"), or a `Recall` card carrying the statement (DESIGN_SYSTEM §6). Sweep with `grep -nE '(prob|opt|lec)[0-9]{2}' <deck>.html` — the reading list and `OUTLINE.md` keep theirs; note files keep theirs.
+
 **`\underbrace` covers the whole sum, labelled `\sum L_{n-1}`.** Wrong abstraction level — the reader has to mentally undo the sum to see one term.
 → Pull `\sum` outside, label each summand.
+
+**A round number on a slide disagrees with the deck's own formula.** opt04 said two convergence rates "cross near $k = 10^3$"; solving the bounds the same deck prints gives $k \approx 300$, and the paired note had already worked it out as 299. Round figures get written from feel, then survive every later pass because they look like the kind of thing that was checked.
+→ Any number a slide asserts about its own math, solve from the deck's formulas — not from memory, not from the previous deck. Cross-check the paired note, then fix the deck, the note, and every earlier slide that repeats the figure.
 
 **An algorithm slide grew a right-column flow diagram** that repeats the algorithm. The box is short, the slide feels empty, and the reflex is to fill the space.
 → Single centered box; empty space below is fine.

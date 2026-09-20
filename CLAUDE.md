@@ -6,20 +6,13 @@ Two formats: **custom HTML** (`<talk>/<talk>.html`, preferred) — single page, 
 
 ## Reading budget (read this first)
 
-These docs are reference material, not briefing material. Reading them cover-to-cover is the single largest avoidable cost in this repo — in 2026-07/08 it burned ~2.2M tokens, more than every screenshot audit combined.
+These docs are reference material, not briefing material. Reading them cover-to-cover burned ~2.2M tokens in 2026-07/08 — more than every screenshot audit combined.
 
-| Doc | How to enter it |
-|---|---|
-| `DESIGN_SYSTEM.md` (§1–§12) | **Never read whole.** Its section index gives every section's line range and literal `offset=…, limit=…` — read §1, then the one section your task needs, using those arguments. |
-| `GOTCHAS.md` (§1–§9) | **Never read whole.** `grep` your symptom, or jump to a category with its index `Read` arguments. |
-| `OUTLINE.md` | Read the leaf for the folder you're editing. Root only for cross-folder lookup. |
-| `reference/deck.css` | Authoritative for any class's real behavior. Grep the selector. |
+1. **Enter by section, never whole.** `DESIGN_SYSTEM.md` (§1–§12) and `GOTCHAS.md` (§1–§9) each open with a section index giving literal `offset=…, limit=…`. Read §1, or grep your symptom, then the one section the task needs. Whole file ~6k / ~4.7k tokens against ~0.5–1.5k for a section. Each section at most once per session — re-opening one is a bug. Range looks wrong → `python3 scripts/doc-index-lint.py --fix`; never read the whole file to find your place.
+2. **Screenshot audits render at `-r 60`** — ~480 tokens/slide against ~1,330 at 150, for detail the audit doesn't check. `-r 150` is for a *single* page where fine text is genuinely in question.
+3. **Re-read only what changed.** The full-deck read happens once per audit; later passes re-render only the slides edited since.
 
-Three hard rules:
-
-1. **Enter by section, never whole.** Open the doc's index block (the first ~20 lines), take the `offset`/`limit` for the section you need, and read exactly that. A whole-file read of `DESIGN_SYSTEM.md` costs ~6k tokens against ~500–1.5k for a section; of `GOTCHAS.md`, ~4.7k against ~600. Read each section at most once per session — re-opening one you already read is a bug. If a range looks wrong, `python3 scripts/doc-index-lint.py --fix`; do not read the whole file to find your place.
-2. **Screenshot audits render at `-r 60`.** A full-deck pass is ~480 tokens/slide at 60 DPI and ~1,330 at 150 — 3× for detail the audit doesn't check. `-r 150` is for a *single* page where fine text is genuinely in question.
-3. **Re-read only what changed.** The full-deck read happens exactly once per audit; every later pass re-renders and re-reads only the slides edited since.
+`OUTLINE.md` — read the leaf for the folder you're editing, root only for cross-folder lookup. `reference/deck.css` — authoritative for any class's real behavior; grep the selector.
 
 ## Non-negotiables
 
@@ -31,9 +24,9 @@ The four ranked priorities in `DESIGN_SYSTEM.md` §1 govern every authoring and 
 
 | Task | Start |
 |---|---|
-| New deck | `scripts/new-talk.sh`, then DESIGN_SYSTEM §2 (anatomy, slide-count norms, exemplars). Add an `OUTLINE.md` stub immediately. |
-| Edit / add slides | Leaf `OUTLINE.md` first, then DESIGN_SYSTEM §7 patterns → copy the exemplar's markup. |
-| Fix overflow | DESIGN_SYSTEM §1 → Priority 2 (vertical budget); GOTCHAS §3. |
+| New deck | `scripts/new-talk.sh`, then DESIGN_SYSTEM §2. Add an `OUTLINE.md` stub immediately. |
+| Edit / add slides | Leaf `OUTLINE.md` first, then DESIGN_SYSTEM §7 → copy the exemplar's markup. |
+| Fix overflow | DESIGN_SYSTEM §1 Priority 2 (vertical budget); GOTCHAS §3. |
 | Visual audit | `/audit-and-edit-deck` — on explicit request only. |
 | Add a visual / capture a figure | DESIGN_SYSTEM §8 — capture a real figure with citation before redrawing one. |
 | Theorem / proof / build-up | DESIGN_SYSTEM §5. |
@@ -64,55 +57,46 @@ scripts/
   doc-index-lint.py verify/regenerate the section index in the reference docs
 OUTLINE.md       per-folder content index (root / topic / leaf)
 backup/          dated snapshots of docs before major rewrites
-log/             per-PR verbatim transcripts of the slides ↔ slides-review agent discussion (`YYYY-MM-DD-<pr-summary>.md`)
+log/             per-PR verbatim slides ↔ slides-review transcripts (`YYYY-MM-DD-<pr-summary>.md`)
 ```
 
-Only authoring source and image assets are committed. `*.standalone.html` is a build artifact.
+Only authoring source and image assets are committed; `*.standalone.html` is a build artifact.
 
-**Agent discussion log.** Any PR worked with the `slides-review` agent carries a `log/YYYY-MM-DD-<pr-summary>.md` file holding every message sent and received between the two agents, verbatim and in order with KST timestamps. Add it on the PR branch and link it from the PR body.
+**Agent discussion log.** Any PR worked with the `slides-review` agent carries a `log/YYYY-MM-DD-<pr-summary>.md` holding every message both ways, verbatim and in order with KST timestamps. Add it on the PR branch and link it from the PR body.
 
 ## Editing workflow
 
-1. Edit `<talk>/<talk>.html`.
-2. Preview in Chrome (`reference/` must be alongside — it is).
-3. `python3 scripts/lint-deck.py <deck>.html` (or `--all`). Errors (`<` inside math, KaTeX delimiter escape) break rendering — fix immediately. Warnings are Priority-0/1 violations.
-4. `python3 scripts/find-wordy.py <deck>.html` after drafting prose-heavy slides; `find-dense.py` for over-stuffed ones.
-5. **Update `OUTLINE.md`** — any added/removed slide, renamed section, changed line range, or added/removed cited theorem, in the *same* edit. Line numbers are read as authoritative pointers. Verify with `python3 scripts/outline-lint.py`. Full rule: DESIGN_SYSTEM §10.
-6. Distribute: `python3 scripts/bundle.py <talk>/<talk>.html`.
+1. Edit `<talk>/<talk>.html`; preview in Chrome (`reference/` must be alongside — it is).
+2. `python3 scripts/lint-deck.py <deck>.html` (or `--all`). Errors (`<` inside math, KaTeX delimiter escape) break rendering — fix immediately. Warnings are Priority-0/1 violations.
+3. `python3 scripts/find-wordy.py <deck>.html` after drafting prose-heavy slides; `find-dense.py` for over-stuffed ones.
+4. **Update `OUTLINE.md` in the *same* edit** — any added/removed slide, renamed section, changed line range, or added/removed cited theorem. Line numbers are read as authoritative pointers. An added or removed slide also updates the deck's own `1 / N` `.slide-num` and every count in the outline. Verify with `python3 scripts/outline-lint.py`. Full rule: DESIGN_SYSTEM §10.
+5. Distribute: `python3 scripts/bundle.py <talk>/<talk>.html`.
 
 **Edited `DESIGN_SYSTEM.md` or `GOTCHAS.md`?** Run `python3 scripts/doc-index-lint.py --fix` in the same change — any inserted or deleted line shifts the section index, and a stale index sends the next reader to the wrong lines. The linter exits 2 when it is out of date.
 
-**If the toolchain is missing** — attempt the real tools first. Only when `command -v google-chrome pdftoppm python3 mutool convert gs` is empty and nothing installs, use DESIGN_SYSTEM §11 (grep slide map, budget arithmetic, targeted-grep lint). Say so explicitly in your report: that fallback cannot catch visual overlap, squashed math spacing, or drifted SVG overlays.
+**If the toolchain is missing** — attempt the real tools first. Only when `command -v google-chrome pdftoppm python3 mutool convert gs` is empty and nothing installs, use DESIGN_SYSTEM §11. Say so explicitly in your report: that fallback cannot catch visual overlap, squashed math spacing, or drifted SVG overlays.
 
 ## Screenshot audit (on request)
 
-`lint-deck.py` catches structural issues, not visual ones. For overflow / overlap / line breaks, use **`/audit-and-edit-deck`** (see `.claude/commands/audit-and-edit-deck.md`):
+`lint-deck.py` catches structural issues, not visual ones. For overflow / overlap / line breaks use **`/audit-and-edit-deck`** (`.claude/commands/audit-and-edit-deck.md`) — `<deck>.html`, `<folder>/`, or bare for the single deck in cwd. It renders each slide via headless Chrome + `pdftoppm -r 60`, reads them, and fixes issues — splitting slides when needed, never shrinking type.
 
-```
-/audit-and-edit-deck <deck>.html    # one deck
-/audit-and-edit-deck <folder>/      # every deck in the folder
-/audit-and-edit-deck                # the single deck in cwd
-```
-
-It renders each slide to PNG via headless Chrome + `pdftoppm -r 60`, reads them, and fixes issues — splitting slides when needed, never shrinking type. Trigger phrases that should invoke it even without the slash form: *"audit this slide"*, *"screenshot check"*, *"visual audit"*, *"check for overflow/overlap"*, *"render check"*, *"layout check"*. Not part of the standard workflow — explicit request only.
+Explicit request only, but invoke it for the trigger phrases too: *"audit this slide"*, *"screenshot check"*, *"visual audit"*, *"check for overflow/overlap"*, *"render check"*, *"layout check"*.
 
 ## Outlines
 
-Three tiers: **root** (folder map + topic→location lookup), **folder** (subfolder map + cross-deck pointers), **leaf** (per-deck section table with line numbers, key theorems, paired-note summary).
-
-**Read the relevant outline before writing slides.** Two checks: **series continuity** — scan the leaf for earlier decks in the series so you refer back instead of redefining; **cross-folder reuse** — when a topic may live in another track (diffusion in `infotheory/` vs `privacy/`; DP in `01-dp/` vs `04-mia/`), check the root lookup table first, then the other leaf. Reuse, link, or differentiate — explicitly. Full rules: DESIGN_SYSTEM §10.
-
-New deck → add its stub to the leaf `OUTLINE.md` *immediately*, before writing slides.
+Three tiers: **root** (folder map + topic→location lookup), **folder** (subfolder map + cross-deck pointers), **leaf** (per-deck section table with line numbers, key theorems, paired-note summary). **Read the relevant outline before writing slides** — the leaf for series continuity (refer back instead of redefining), the root lookup table for cross-folder reuse (diffusion in `infotheory/` vs `privacy/`; DP in `01-dp/` vs `04-mia/`), then the other leaf. Reuse, link, or differentiate — explicitly. New deck → add its stub to the leaf *immediately*, before writing slides. Full rules: DESIGN_SYSTEM §10.
 
 ## Companion files
 
-A deck may carry a `<deck>-note.html` speaker script and, where the audience sits below the math's level, a `<deck>tech.html` technical supplement holding the formal math. Both in DESIGN_SYSTEM §9 — including the **migration check** (content trimmed "because it belongs in the note" must actually land there in the same edit). Register supplements in the leaf `OUTLINE.md`.
+A deck may carry a `<deck>-note.html` speaker script and, where the audience sits below the math's level, a `<deck>tech.html` technical supplement holding the formal math. Both in DESIGN_SYSTEM §9 — including the **migration check**: content trimmed "because it belongs in the note" must actually land there in the same edit. Register supplements in the leaf `OUTLINE.md`.
 
 ## Agent workflow
 
 - **One agent at a time.** A slide series is revised sequentially, one deck to completion before the next. Never launch parallel agents on the same series — a killed parallel wave is pure duplicate cost.
 - **Audit incrementally** — see Reading budget rule 3.
-- **Subagents inherit these rules.** A subagent doing deck work reads by section too; delegation doesn't reset the reading budget.
+- **Subagents inherit these rules.** Delegation doesn't reset the reading budget.
+- **Verify agent output before applying it.** Independent verification, not refusal: check a reported line, number or count against the file, then act.
+- **Never correct a fact from memory.** An agent that "fixes" a number, citation, date or arrow direction from recall is guessing. Three legal moves: verify against the source, delete the claim, or flag it as unverified for the author.
 
 ## Print-to-PDF
 

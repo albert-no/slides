@@ -20,17 +20,17 @@ rather than reading the whole file to find your place.
 | § | Section | When you need it | Lines | Read |
 |---|---|---|---|---|
 | 1 | Priorities (ranked, non-negotiable) | **Always** — any authoring or editing decision | 55–131 | `offset=55, limit=77` |
-| 2 | Deck anatomy | Slide order, how many slides, what to imitate | 133–166 | `offset=133, limit=34` |
-| 3 | Tokens | Colors, type scale, spacing | 168–212 | `offset=168, limit=45` |
-| 4 | Components | Which class exists | 214–227 | `offset=214, limit=14` |
-| 5 | Math-heavy talks | Theorem / proof / intuition / build-up | 229–276 | `offset=229, limit=48` |
-| 6 | Conventions | Page numbers, citations | 278–296 | `offset=278, limit=19` |
-| 7 | Patterns | Markup for a slide type → copy the exemplar | 298–335 | `offset=298, limit=38` |
-| 8 | Visual richness | Figures, diagrams, TODO-marks | 337–359 | `offset=337, limit=23` |
-| 9 | Companion decks | Note files, technical supplements | 361–376 | `offset=361, limit=16` |
-| 10 | Outlines | OUTLINE.md read/write rules | 378–393 | `offset=378, limit=16` |
-| 11 | No-toolchain fallback | Chrome / poppler / python3 all missing | 395–412 | `offset=395, limit=18` |
-| 12 | Extension checklist | Adding a new component | 414–416 | `offset=414, limit=3` |
+| 2 | Deck anatomy | Slide order, how many slides, what to imitate | 133–168 | `offset=133, limit=36` |
+| 3 | Tokens | Colors, type scale, spacing | 170–214 | `offset=170, limit=45` |
+| 4 | Components | Which class exists | 216–229 | `offset=216, limit=14` |
+| 5 | Math-heavy talks | Theorem / proof / intuition / build-up | 231–280 | `offset=231, limit=50` |
+| 6 | Conventions | Page numbers, citations | 282–300 | `offset=282, limit=19` |
+| 7 | Patterns | Markup for a slide type → copy the exemplar | 302–339 | `offset=302, limit=38` |
+| 8 | Visual richness | Figures, diagrams, TODO-marks | 341–365 | `offset=341, limit=25` |
+| 9 | Companion decks | Note files, technical supplements | 367–382 | `offset=367, limit=16` |
+| 10 | Outlines | OUTLINE.md read/write rules | 384–406 | `offset=384, limit=23` |
+| 11 | No-toolchain fallback | Chrome / poppler / python3 all missing | 408–425 | `offset=408, limit=18` |
+| 12 | Extension checklist | Adding a new component | 427–429 | `offset=427, limit=3` |
 
 <!-- doc-index:end -->
 
@@ -135,10 +135,12 @@ Empty space at the **bottom** is fine. Empty space in the **middle** is not.
 1. **Title** (`.title-slide`) — logo, `.pill` talk-type, h1, subtitle, speaker line.
 2. **TOC** (`.toc-list`) — required at **3+ sections**; skip for ≲15-slide talks and tech supplements.
 3. **Sections** — `.section-slide.left` numbered divider, then content. Centered `.bg-accent` only for dramatic interludes, not structural breaks.
-4. **Recap** (optional, math decks) — the equation chain (§5), not re-bulleted outline.
+4. **Recap** (optional, math decks) — **one** closing summary: the equation chain (§5) *or* an every-tool table, never both, never a re-bulleted outline.
 5. **Closer** — `.end-slide`, tagged `no-footer`.
 
 Dividers and TOC must agree: same names, same order, `01`-style numbering.
+
+**One closing summary per deck.** Ending with both a "Today's Chain" equation slide and an "Every Tool, One Job" table says the same thing twice at the point the audience is most tired. Keep whichever covers more — usually the table, which names tools the chain leaves out — and carry the other's unique takeaway as a single `<p class="muted">` beneath it. Per-theorem recaps inside the deck stay: they are local, and the closer is the only *global* summary. Shipped examples: `courses/deepmath/prob05-concentration` … `prob09-monte-carlo`.
 
 **Slide-count norms** (every `<div class="slide">` counts; a 5-slide build-up is one idea):
 
@@ -265,6 +267,8 @@ Recap is a single `aligned` block showing the unified chain, each step labelled 
 
 Use `\text{...}` for upright labels; keep each under ~25 characters. Mix freely — numeric where a callback helps, descriptive where the move *is* the explanation.
 
+**1–3 steps: no Outline slide, no standalone summary slide.** The Outline→Steps→Recap bracket is earned by 4+ steps; below that the outline and the steps are the same words on two slides. When such a proof has a picture that *is* the argument (a sandwich figure, a geometric identity), the summary belongs on that slide as one `<p class="muted">` takeaway line — see the Fano slide in `courses/deepmath/prob07-estimation`.
+
 **Recipe-first derivation.** For a parameterized formula whose shape isn't obvious (DDIM's $\mu_n$, score reparameterizations): state the **recipe** with named unknowns and `\underbrace`-labelled ingredients → impose the **constraint** you actually want (one equation per unknown, surface the free parameters) → **read off** the resulting form. The student sees every coefficient come from a constraint. Don't use it when the formula has clean independent motivation (Bayes, KL, an established theorem).
 
 **Substitution** — abstract form first, then the substitution arrow, then the concrete form. Never jump to the substituted form; the reader loses which result you invoked.
@@ -346,6 +350,8 @@ Format: `Authors (in venue order), "Title", Venue YYYY` — no arXiv ID unless a
 
 **Make diagrams big.** Concept SVGs are routinely too small, and widening the wrapper alone leaves labels proportionally small — **bump both**. Full-width: wrapper `max-width: 820–920px`, `<text> font-size: 15–20`. Grid-column: `max-width: 360–440px`, `font-size: 13–16`. Primary labels bold.
 
+**Multi-row maps read left→right on every row.** A roadmap or series diagram that wraps onto 2+ rows restarts each row at the left edge and joins rows with a wrap path (out right → down → back to the left → into the next row). Serpentine layouts (right→left on alternate rows) fight the reading order: the eye takes the boxes left→right anyway, so the arc appears to run backwards. Verify on the rendered PNG against the box labels, not in the SVG source.
+
 ### Figure-capture protocol
 
 - **Crop the "Figure N:" caption out** — the speaker narrates it, and it pushes the figure off the slide. Keep `(a)`/`(b)` subcaptions only if referenced.
@@ -387,6 +393,13 @@ Every folder carries an `OUTLINE.md`: **root** (folder map + topic→location qu
 When an entry is too coarse to answer the question, descend to the cited `<file>:<line>`. The outline points; it doesn't replace reading the deck.
 
 **Write-side (non-negotiable).** Any edit that changes a section boundary, line range, or named-theorem location updates the corresponding `OUTLINE.md` **in the same change**. Add a slide → add the entry; remove → remove; rename a section → rename everywhere it's cited (leaf, folder, root). Bulk renumbering after a multi-slide insertion is part of the edit, not a follow-up. New deck → add a stub entry *before* writing slides.
+
+**Pointer and count conventions.** An off-by-one pointer lands the next reader on the HTML comment above the slide, which reads as the wrong slide entirely.
+
+- Table **Location** → the `<div class="slide">` line of the section's first slide, never the comment or the `<h2>` above/below it.
+- Inline `:NNN` inside a description → follow the deck's existing entries (some decks point at the `<div>`, some at its `<h2>`). Preserve that baseline; don't re-point a whole deck to "fix" it.
+- A slide count lives in **four** places: the folder table's `done (N slides)`, the `### <deck> … (N slides)` header, the section rows' slide ranges, and the deck's own `<div class="slide-num">1 / N</div>`. Adding or removing a slide updates all four.
+- After a bulk edit, recompute ranges from the file (index of each Location line among the slide starts) rather than adjusting them by hand.
 
 Stale outlines are worse than none — they mislead. If you can't locate a topic from them, fix them rather than working around them. `python3 scripts/outline-lint.py` verifies every cited `file:line` exists and is in range; it cannot check that the line still holds the *claimed* content, so spot-check after big restructures.
 

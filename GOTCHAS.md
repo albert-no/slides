@@ -14,10 +14,10 @@ Symptom → cause → fix. Search by **symptom**, not topic. `DESIGN_SYSTEM.md` 
 | 3 | Overflow | Content clips the footer or the right edge | 63–91 | `offset=63, limit=29` |
 | 4 | Prose & line breaks | Wrapping, orphans, dashes, wordiness | 93–116 | `offset=93, limit=24` |
 | 5 | Citations | Author order, wrapping cites, title cards | 118–129 | `offset=118, limit=12` |
-| 6 | Diagrams & SVG | SVG too small, overlays drift, flow wraps | 131–145 | `offset=131, limit=15` |
-| 7 | Proof & structure drift | Outline/recap drift, animation, lost trims | 147–167 | `offset=147, limit=21` |
-| 8 | Engine & audit false alarms | Page numbers, footer, false audit flags | 169–198 | `offset=169, limit=30` |
-| 9 | Toolchain: rendering, figures, bundling | Headless render, fonts, crops, bundle size | 200–222 | `offset=200, limit=23` |
+| 6 | Diagrams & SVG | SVG too small, overlays drift, flow wraps | 131–148 | `offset=131, limit=18` |
+| 7 | Proof & structure drift | Outline/recap drift, animation, lost trims | 150–176 | `offset=150, limit=27` |
+| 8 | Engine & audit false alarms | Page numbers, footer, false audit flags | 178–210 | `offset=178, limit=33` |
+| 9 | Toolchain: rendering, figures, bundling | Headless render, fonts, crops, bundle size | 212–234 | `offset=212, limit=23` |
 
 <!-- doc-index:end -->
 
@@ -139,6 +139,9 @@ The px arithmetic is in DESIGN_SYSTEM §1 → Priority 2. These are the ways the
 **Concept SVG "fits" but labels are unreadable from the back.** Wrapper too narrow *and* `<text>` font-size too small — widening the wrapper alone scales labels proportionally, so they stay small relative to the diagram.
 → Bump **both**. Full-width: `max-width: 820–920px`, `font-size: 15–20`. Grid-column: `max-width: 360–440px`, `font-size: 13–16`. Primary labels bold.
 
+**A multi-row roadmap SVG reads backwards.** Row 2 was laid out serpentine (right→left) so the arrowheads would "flow" from row 1, but readers take the boxes left→right regardless, so the sequence inverts against its own labels.
+→ Restart every row at the left; join rows with a wrap path (right edge → down → left edge → next row). Check the rendered PNG against the labels — an arrow direction is not reviewable in the SVG source.
+
 **`.diagram-flow` inside `.cols`/`.grid-*` wraps into a 2D mess.** It's `display: flex; flex-wrap: wrap`; in a narrow container the boxes wrap, and `<br>` inside labels then stacks each box vertically.
 → `.diagram-flow` goes at **full slide width only**, never inside a column or a card in a column. Prose above (full width), flow below (full width). Single-line labels (`Genomic DBs`, not `Genomic<br>Databases`). 4+ boxes that won't fit one row → vertical layout or split slides.
 
@@ -148,6 +151,12 @@ The px arithmetic is in DESIGN_SYSTEM §1 → Priority 2. These are the ways the
 
 **Two near-identical bulleted slides bracket the steps.** Outline and recap have different jobs: outline previews step *labels*; recap shows the equation *chain*.
 → Recap = one `aligned` block with `\stackrel{(k)}{=}` labels (DESIGN_SYSTEM §5).
+
+**The deck ends with two summary slides.** An equation-chain closer and an every-tool recap table both survived; the audience gets the same lesson twice at its tiredest moment.
+→ Keep the wider one (usually the table), fold the other's unique takeaway into one `<p class="muted">` under it (DESIGN_SYSTEM §2). Check the closer of *every* deck in the series, not just the one you edited — the pair hides behind two different titles.
+
+**A 3-step proof carries a "Proof Overview" slide.** The Outline→Steps→Recap bracket was copied from a longer proof; at three steps the outline and the steps are the same words.
+→ Delete the overview; the bracket is earned at 4+ steps (DESIGN_SYSTEM §5). Confirm the deleted slide held nothing unique first — if it did, carry that one line onto the neighbouring slide.
 
 **`\underbrace` covers the whole sum, labelled `\sum L_{n-1}`.** Wrong abstraction level — the reader has to mentally undo the sum to see one term.
 → Pull `\sum` outside, label each summand.
@@ -170,6 +179,9 @@ The px arithmetic is in DESIGN_SYSTEM §1 → Priority 2. These are the ways the
 
 **"Page 9, the Toy Gaussian slide" — but page 9 is a section divider.** `deck.js` counts every `.slide`; users mentally skip dividers.
 → Re-confirm by `h2` content, not number. Build a map with `grep -n 'class="slide' <deck>.html` and rebuild after any insert/remove.
+
+**Every deck's slide count comes out exactly one too high.** A `\bslide\b` regex also matches the trailing `<div class="slide-num" id="slideNum">` — a `div` whose class contains `slide`.
+→ Match `class="slide"` exactly, or add `and "slide-num" not in line` to the script. Because `deck.js` derives the displayed total at runtime, a wrong `1 / N` literal never shows on screen — which is exactly how it goes stale. Check a count against the last slide's index, never against the literal.
 
 **Two page numbers on every slide.** The deck carries both the canonical `.slide-num` (from `deck.js`) and a per-deck `.page-num` injector script copied from an older sibling.
 → Delete the per-deck script and its CSS; keep the bold `.slide-num`.

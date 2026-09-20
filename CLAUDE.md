@@ -77,7 +77,7 @@ Only authoring source and image assets are committed. `*.standalone.html` is a b
 2. Preview in Chrome (`reference/` must be alongside — it is).
 3. `python3 scripts/lint-deck.py <deck>.html` (or `--all`). Errors (`<` inside math, KaTeX delimiter escape) break rendering — fix immediately. Warnings are Priority-0/1 violations.
 4. `python3 scripts/find-wordy.py <deck>.html` after drafting prose-heavy slides; `find-dense.py` for over-stuffed ones.
-5. **Update `OUTLINE.md`** — any added/removed slide, renamed section, changed line range, or added/removed cited theorem, in the *same* edit. Line numbers are read as authoritative pointers. Verify with `python3 scripts/outline-lint.py`. Full rule: DESIGN_SYSTEM §10.
+5. **Update `OUTLINE.md`** — any added/removed slide, renamed section, changed line range, or added/removed cited theorem, in the *same* edit. Line numbers are read as authoritative pointers. Verify with `python3 scripts/outline-lint.py`. An added or removed slide also updates the deck's own `1 / N` `.slide-num` placeholder and every count in the outline. Full rule: DESIGN_SYSTEM §10.
 6. Distribute: `python3 scripts/bundle.py <talk>/<talk>.html`.
 
 **Edited `DESIGN_SYSTEM.md` or `GOTCHAS.md`?** Run `python3 scripts/doc-index-lint.py --fix` in the same change — any inserted or deleted line shifts the section index, and a stale index sends the next reader to the wrong lines. The linter exits 2 when it is out of date.
@@ -113,6 +113,8 @@ A deck may carry a `<deck>-note.html` speaker script and, where the audience sit
 - **One agent at a time.** A slide series is revised sequentially, one deck to completion before the next. Never launch parallel agents on the same series — a killed parallel wave is pure duplicate cost.
 - **Audit incrementally** — see Reading budget rule 3.
 - **Subagents inherit these rules.** A subagent doing deck work reads by section too; delegation doesn't reset the reading budget.
+- **Review agent output; never accept it.** Check a reported line, number or count against the file before acting on it.
+- **Never correct a fact from memory.** An agent that "fixes" a number, citation, date or arrow direction from recall is guessing. Three legal moves: verify against the source, delete the claim, or flag it as unverified for the author.
 
 ## Print-to-PDF
 

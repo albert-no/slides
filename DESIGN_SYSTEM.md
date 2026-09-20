@@ -19,13 +19,13 @@ Normative authoring rules for slide decks. Academic conference talks and master-
 | 3 | Tokens | Colors, type scale, spacing | 147–191 | `offset=147, limit=45` |
 | 4 | Components | Which class exists | 193–206 | `offset=193, limit=14` |
 | 5 | Math-heavy talks | Theorem / proof / intuition / build-up | 208–249 | `offset=208, limit=42` |
-| 6 | Conventions | Page numbers, citations | 251–269 | `offset=251, limit=19` |
-| 7 | Patterns | Markup for a slide type → copy the exemplar | 271–308 | `offset=271, limit=38` |
-| 8 | Visual richness | Figures, diagrams, TODO-marks | 310–340 | `offset=310, limit=31` |
-| 9 | Companion decks | Note files, technical supplements | 342–357 | `offset=342, limit=16` |
-| 10 | Outlines | OUTLINE.md read/write rules | 359–379 | `offset=359, limit=21` |
-| 11 | No-toolchain fallback | Chrome / poppler / python3 all missing | 381–398 | `offset=381, limit=18` |
-| 12 | Extension checklist | Adding a new component | 400–402 | `offset=400, limit=3` |
+| 6 | Conventions | Page numbers, citations | 251–275 | `offset=251, limit=25` |
+| 7 | Patterns | Markup for a slide type → copy the exemplar | 277–318 | `offset=277, limit=42` |
+| 8 | Visual richness | Figures, diagrams, TODO-marks | 320–363 | `offset=320, limit=44` |
+| 9 | Companion decks | Note files, technical supplements | 365–380 | `offset=365, limit=16` |
+| 10 | Outlines | OUTLINE.md read/write rules | 382–402 | `offset=382, limit=21` |
+| 11 | No-toolchain fallback | Chrome / poppler / python3 all missing | 404–421 | `offset=404, limit=18` |
+| 12 | Extension checklist | Adding a new component | 423–425 | `offset=423, limit=3` |
 
 <!-- doc-index:end -->
 
@@ -256,6 +256,12 @@ Use `\text{...}` for upright labels; keep each under ~25 characters. Mix freely 
 
 **One indicator only** — the bold `.slide-num` injected by `deck.js`. If a deck also carries a per-deck `.page-num` injector script (copied from an older sibling), delete the script and its CSS. Hidden in print by design.
 
+### Cross-deck references
+
+**Name the content, not the deck.** "as in prob01", "from opt02", "(Wk 3)" — a deck id is a filename the room never sees. Say what was shown: *"the 3-variable case"*, *"the closed-form solution"*. A fact the slide actually leans on comes back as a `Recall` card carrying the statement itself, not a pointer. Deck ids belong in `OUTLINE.md`, the note files, and the reading list at the end.
+
+Note files are instructor documents — their cross-references stay.
+
 ### Citations
 
 Format: `Authors (in venue order), "Title", Venue YYYY` — no arXiv ID unless asked. Use the **venue's** author order (PMLR / NeurIPS / journal TOC), not arXiv's; they differ. `et al.` acceptable for 4+ authors after first reference.
@@ -283,6 +289,7 @@ Format: `Authors (in venue order), "Title", Venue YYYY` — no arXiv ID unless a
 | Math slide | prose + `.math-block`; `$$…$$` for `cases`/`align` | §5 |
 | Code / pseudocode | `.code-block` with `.kw`/`.fn`/`.cm`/`.str`; escape `&lt;` | `lec02tech.html` |
 | Diagram + math labels | HTML boxes for structure, SVG for arrows only | `dp8-fl.html` |
+| SVG plot + KaTeX labels | `position:relative` wrapper, shapes in `<svg>`, every math label a `<span class="fl">` | `courses/deepmath/opt03-convexity-gd/` (`.o3-fig`) |
 | Chain diagram | flex row of math spans, active edge blue, sleeping gray, `$\cdots$` nodes | `diffusion2-ddpm.html` |
 | Recall card | `.card` `padding: 10px 16px` with `<strong>Recall (X).</strong>` | §5 |
 | Inline exercise | plain `<p><strong>Exercise.</strong> …</p>` beside the fact | — |
@@ -303,6 +310,9 @@ Format: `Authors (in venue order), "Title", Venue YYYY` — no arXiv ID unless a
 
 - **Diagram dominates** — when asked to enlarge: (1) remove `max-width` from the `<svg>` (it belongs on the wrapper), (2) switch `.cols` to `.col-1-3` text + `.col-2-3` diagram, (3) bump a cramped viewBox (`220×130` → `~400×240`) so labels land at readable absolute sizes. Pure single-diagram slide: drop the cols, center at `max-width: ~960px`.
 - **KaTeX overlays on SVG** — KaTeX skips SVG `<text>`, so math labels are absolute-positioned HTML spans over the SVG. Wrapper is `position: relative` (the spans anchor to it) and needs **both** `width: 100%` and `max-width` (max-width alone collapses to the SVG's intrinsic width). Position from the viewBox: `left = x/W·100%`, `top = y/H·100%`, `translate(-50%,-50%)` centered / `(-100%,-50%)` right-aligned. Pin the wrapper height to the viewBox aspect ratio when it hosts overlays. Label sizes: §8.
+  - **SVG `y` is a baseline; the span is centered.** Reusing the `y` of the `<text>` you just deleted drops the label about a third of its height. Take `top` from the glyph's visual center — roughly `y − 0.35 × label height`, in viewBox units — then confirm on the render.
+  - **Overlay labels are scale-free.** They are sized in `rem`, so the wrapper's `max-width` no longer has to equal the viewBox width — it becomes a layout choice (how much of the slide the drawing occupies; §8's full-width target) rather than a legibility one, and the labels hold body size at any width. §8's viewBox-unit arithmetic binds only the plain-word `<text>` that remains.
+  - **`align-self: start` on the wrapper** inside `.cols` or a grid row. The default `stretch` makes the wrapper taller than the SVG, so every `top: y/H%` resolves against the extra height and the whole label set slides down off the drawing.
 - **Inline exercise placement** — if the slide is at element budget, move the exercise to the sibling slide that *introduces* the fact it verifies, not the one that uses it. No trailing "Check It Yourself" slide, no `.exercise-list` styling.
 
 ---
@@ -325,7 +335,20 @@ Format: `Authors (in venue order), "Title", Venue YYYY` — no arXiv ID unless a
 - **Doesn't fit at those sizes?** Simplify the diagram or split the slide. Priority 0 applies to diagram labels too: never shrink them to make a figure fit.
 - **Grid-column figures** (`max-width: 360–440px`) are for decorative or strictly secondary diagrams. A figure whose labels the audience must actually read goes full width.
 
+**A figure of a theorem must obey the theorem.** A polyline placed by eye to "look like" the inequality is a claim made in the room's strongest channel, and it is wrong about as often as it is right: the 2026-09 opt03 pass shipped a smoothness lid that dipped *below* $f$ and a strong-convexity floor that rose *above* it — both plausible at a glance, both the reverse of the statement above them. Evaluate the closed form at a dozen points, map them with one linear transform, and leave the transform in an HTML comment beside the shape so the next editor can re-derive it:
+
+```html
+<!-- exact geometry: f(u)=u^2, touch at u0=-0.6, lid = tangent + (L/2)(u-u0)^2 with L=3.
+     X = 280 + 115u, Y = 300 - 55*value -->
+```
+
+Then read the render against the algebra: which curve is on top, where they touch, which way the gap opens. Shipped: `courses/deepmath/opt03-convexity-gd/`.
+
+**Two lines in one plot need two colors.** Curves separated only by their labels merge at projector distance, and a pair of dashed lines is the worst case — same weight, same gray, same rhythm. Give each a semantic color and reuse it on the label span: opt04's balance-point figure runs progress green (`#2e8b57`) against noise red (`#d94040`). One color per role still holds — the same green means the same thing in every figure of the deck.
+
 **Multi-row maps read left→right on every row.** A roadmap or series diagram that wraps onto 2+ rows restarts each row at the left edge and joins rows with a wrap path (out right → down → back to the left → into the next row). Serpentine layouts (right→left on alternate rows) fight the reading order: the eye takes the boxes left→right anyway, so the arc appears to run backwards. Verify on the rendered PNG against the box labels, not in the SVG source.
+
+**Cells per row are capped by the label, not by the page.** A 9-deck course map on one row leaves ~110 px a cell and forces its labels under the 1.25rem floor; split it 5 + 4. Another row is cheap; an unreadable label is not.
 
 ### Figure-capture protocol
 

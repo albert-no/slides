@@ -36,7 +36,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 2 | `lec02-privacy-dp.html` | Privacy & differential privacy | **case-brief pass 2026-09-13** (69 sl, ~75 min, 11 figs, `demos/rr-simulator.html`; note 69 entries — 16 case briefs with setup/verification/limits/status; tech 23 sl) |
 | 3 | `lec03-mia.html` | Membership inference attacks | **case-brief pass 2026-09-13** (70 sl, 16 real figs, Homer 2008 block + NIH 2008→2018 chronology, TPR/FPR/ROC/AUC + base-rate block, LiRA-on-LLMs, boardroom questions) |
 | 4 | `lec04-memorization.html` | Memorization & training-data extraction | **revised 2026-08, figure pass 2026-09, Cooper 2026 frontier 2026-09-11, case-brief + core-path pass 2026-09-14** (65 sl, 27 real figs) |
-| 5 | `lec05-unlearning.html` | Machine unlearning | **figures 2026-09, case-brief + core-path pass 2026-09-14** (70 sl, ~100 min; 90-min core path in the note only; taxonomy + category badges; note 70 entries, 13 uniform briefs + legal brief; tech 12 sl) |
+| 5 | `lec05-unlearning.html` | Machine unlearning | **figures 2026-09, case-brief + core-path pass 2026-09-14, page edits 2026-09-30** (68 sl, ~97 min; 90-min core path in the note only; taxonomy + category badges; note 68 entries, 13 uniform briefs + legal brief; tech 12 sl) |
 | 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **figures 2026-09** (61 sl) |
 | 7 | `lec07-interpretability.html` | Interpretability & explainability | **revised 2026-08, figure pass 2026-09** (64 sl, 23 real figs) |
 | 8 | `lec08-adversarial.html` | Adversarial examples (attack + defense) | **revised 2026-08, figure pass 2026-09** (63 sl, 25 real figs) |
@@ -698,7 +698,7 @@ fair-use order + settlement) — all consistent with `courses/privacy/lectures/0
 
 ## lec05-unlearning.html
 
-**Topic:** Machine unlearning (~100 min full deck; 90-minute core path via seven optional slides listed in the note only — no badges on the main deck since 2026-09-14). Why deletion is demanded (GDPR/CCPA privacy,
+**Topic:** Machine unlearning (~97 min full deck; 90-minute core path via five optional slides listed in the note only — no badges on the main deck since 2026-09-14). Why deletion is demanded (GDPR/CCPA privacy,
 copyright, safety); retraining as the gold standard; exact vs approximate; the
 $(\varepsilon,\delta)$ yardstick at intuition level; SISA as a picture; influence
 functions and the Hessian wall; gradient ascent, its failure modes, and NPO;
@@ -708,100 +708,100 @@ frontier. Intuition pass — the rigorous treatment lives in
 `courses/privacy/lectures/05-unlearning/` (authoritative for shared facts); the
 position-paper debate expands in `talks/icml2026/`.
 
-### Sections (70 slides, ~100 min — content-revised 2026-08 from 58, figure pass 2026-09-05 added RMU, Measured; case-brief + core-path pass 2026-09-14 added Where This Lecture Sits, Four Things "Unlearning" Can Mean, Practice: Boardroom Questions)
+### Sections (68 slides, ~97 min — content-revised 2026-08 from 58, figure pass 2026-09-05 added RMU, Measured; case-brief + core-path pass 2026-09-14 added Where This Lecture Sits, Four Things "Unlearning" Can Mean, Practice: Boardroom Questions)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
-| Title / Contents / Where This Lecture Sits | 1–3 | `:48`, `:60`, `:92` | Contents is a plain 6-item TOC (core-path list lives in the note only, 2026-09-14) · lifecycle strip with Remediation highlighted `:92` |
-| **01 — Why Delete?** | 4–12 | `:135` | user changes mind (SVG) `:143` · **GDPR Art. 17 / CCPA §1798.105 — what the text says / does not say / why it matters (reworked 2026-09-14; three evidence levels: legal right · formal goal · benchmark result)** `:177` · **Delete for Three Reasons (privacy / copyright / safety; added 2026-08)** `:191` · **data lives in the weights (SVG)** `:204` · why not ignore (SVG) `:229` · retraining expensive (SVG) `:260` · enter machine unlearning (Cao & Yang) `:293` · a decade of work (+Cooper arXiv-count chart) `:306` |
-| **02 — What Unlearning Means** | 13–21 | `:326` | **Four Things "Unlearning" Can Mean (data removal · knowledge suppression · output filtering · access revocation; added 2026-09-14; every method slide carries a `.cat-badge`)** `:334` · gold standard = retrain, scoped to data removal (`Data removal` badge, 2026-09-14) `:348` · **two-models diagram (SVG; `Data removal` badge)** `:361` · exact (SVG) `:388` · approximate (SVG) `:415` · **DP yardstick (Guo/Sekhari cite fixed 2026-08; SVG)** `:447` · forget/retain split (SVG strip) `:477` · two things to get right `:502` |
-| **03 — How to Unlearn** | 22–36 | `:515` | retraining baseline `:523` · train in pieces (SISA shard SVG) `:536` · **SISA (real Bourtoule Fig 2)** `:577` · deleting in SISA (SVG) `:597` · slices (SVG) `:645` · tradeoff (+Bourtoule Fig 6) `:680` · edit the weights `:697` · influence functions (+Koh & Liang Fig 2) `:710` · Hessian catch (SVG) `:728` · gradient ascent (SVG) `:761` · ascent wrecks (+Kurmanji Fig 6) `:795` · **A Gentler Push: NPO (real fig; added 2026-08)** `:812` · method landscape `:825` · Colab `:837` |
-| **04 — Unlearning in LLMs** | 37–49 | `:853` | what do we forget `:861` · no single row (SVG) `:874` · Harry Potter (+1 GPU hour; Eldan Fig 3) `:911` · the result (Eldan Fig 1 table) `:931` · **TOFU (200×20=4,000; +Fig 6)** `:944` · **TOFU in One Picture (real fig; added 2026-08)** `:961` · why fictitious (SVG) `:972` · **WMDP (real fig + 3,668 MCQs; reworked 2026-08)** `:1005` · RMU (+loss Fig 7) `:1026` · **RMU, Measured (Fig 8, Zephyr-7B; added 2026-09)** `:1043` · **MUSE: Six Boxes to Tick (real fig; added 2026-08)** `:1063` · unlearning vs filtering (+Cooper back-end/front-end) `:1076` |
-| **05 — Did It Really Forget?** | 50–58 | `:1096` | verification is hard (SVG) `:1104` · MIA audit (+MUSE Fig 2) `:1137` · **the tell persists (SVG)** `:1155` · **Look Inside: IDI (real fig, Yonsei; added 2026-08)** `:1175` · relearning attacks (+Yoon syntax Fig 5, Yonsei) `:1188` · **Relearning, Measured (real fig; added 2026-08)** `:1206` · **Quantize, and It Comes Back (21%→83%; +Zhang Fig 1)** `:1219` · dormant, not deleted (+Łucki Fig 1) `:1236` |
-| **06 — Frontier 2025–26** | 59–67 | `:1250` | **"overused" critique (+Yoon/Jun/No cite; taxonomy SVG)** `:1258` · **Does It Do What You Think? (position papers; added 2026-08)** `:1291` · what guarantee holds `:1304` · **robust unlearning (+Łucki Fig 2)** `:1317` · evaluation standards (+MUSE Fig 5) `:1335` · unlearning meets privacy (+onion-effect ROC) `:1354` · open problems `:1372` · where to go deeper `:1386` |
-| Boardroom / Takeaways / Closer | 68–70 | — | **Practice: Boardroom Questions (five questions, 2-min; added 2026-09-14)** `:1397` · takeaways `:1438` · closer `:1451` |
+| Title / Contents / Where This Lecture Sits | 1–3 | `:51`, `:63`, `:95` | Contents is a plain 6-item TOC (core-path list lives in the note only, 2026-09-14) · lifecycle strip with Remediation highlighted `:95` |
+| **01 — Why Delete?** | 4–12 | `:138` | user changes mind (SVG) `:146` · **GDPR Art. 17 / CCPA §1798.105 — what the text says / does not say / why it matters (reworked 2026-09-14; three evidence levels: legal right · formal goal · benchmark result)** `:180` · **Delete for Three Reasons (privacy / copyright / safety; added 2026-08)** `:194` · **data lives in the weights (SVG)** `:207` · why not ignore (SVG) `:233` · retraining expensive (SVG) `:264` · enter machine unlearning (Cao & Yang) `:297` · a decade of work (+Cooper arXiv-count chart) `:312` |
+| **02 — What Unlearning Means** | 13–21 | `:332` | **Four Things "Unlearning" Can Mean (data removal · knowledge suppression · output filtering · access revocation; added 2026-09-14; every method slide carries a `.cat-badge`)** `:340` · gold standard = retrain, scoped to data removal (`Data removal` badge, 2026-09-14) `:354` · **two-models diagram (SVG; `Data removal` badge)** `:381` · exact (SVG) `:408` · approximate (SVG) `:435` · **DP yardstick (Guo/Sekhari cite fixed 2026-08; SVG)** `:467` · forget/retain split (SVG strip) `:497` · two things to get right `:522` |
+| **03 — How to Unlearn** | 22–35 | `:556` | retraining baseline `:564` · train in pieces (SISA shard SVG) `:577` · **SISA (real Bourtoule Fig 2)** `:618` · deleting in SISA (SVG) `:638` · slices (SVG) `:686` · tradeoff (+Bourtoule Fig 6) `:721` · edit the weights `:738` · influence functions (+Koh & Liang Fig 2) `:751` · Hessian catch (SVG) `:769` · gradient ascent (SVG) `:796` · ascent wrecks (+Kurmanji Fig 6) `:830` · **A Gentler Push: NPO (real fig; added 2026-08)** `:847` · method landscape `:860` |
+| **04 — Unlearning in LLMs** | 36–48 | `:873` | what do we forget `:881` · no single row (SVG) `:894` · Harry Potter (+1 GPU hour; Eldan Fig 3) `:931` · the result (Eldan Fig 1 table) `:953` · **TOFU (200×20=4,000; +Fig 6)** `:966` · **TOFU in One Picture (real fig; added 2026-08)** `:983` · why fictitious (SVG) `:994` · **WMDP (real fig + 3,668 MCQs; reworked 2026-08)** `:1027` · RMU (+loss Fig 7) `:1048` · **RMU, Measured (Fig 8, Zephyr-7B; added 2026-09)** `:1065` · **MUSE: Six Boxes to Tick (real fig; added 2026-08)** `:1085` · unlearning vs filtering (+Cooper back-end/front-end) `:1098` |
+| **05 — Did It Really Forget?** | 49–57 | `:1118` | verification is hard (SVG) `:1126` · MIA audit (+MUSE Fig 2) `:1159` · **the tell persists (SVG)** `:1177` · **Look Inside: IDI (real fig, Yonsei; added 2026-08)** `:1197` · **Relearning, Measured (real fig; added 2026-08; moved before relearning attacks 2026-09-30)** `:1210` · relearning attacks (+Yoon syntax Fig 5, Yonsei; "The general test") `:1223` · **Quantize, and It Comes Back (21%→83%; +Zhang Fig 1)** `:1241` · dormant, not deleted (+Łucki Fig 1) `:1258` |
+| **06 — Frontier 2025–26** | 58–65 | `:1272` | **"overused" critique (+Yoon/Jun/No cite; taxonomy SVG)** `:1280` · **Does It Do What You Think? (position papers; added 2026-08)** `:1313` · what guarantee holds `:1326` · **robust unlearning (+Łucki Fig 2)** `:1339` · evaluation standards (+MUSE Fig 5) `:1357` · unlearning meets privacy (+onion-effect ROC) `:1376` · open problems `:1394` |
+| Boardroom / Takeaways / Closer | 66–68 | — | **Practice: Boardroom Questions (five questions, 2-min; added 2026-09-14)** `:1408` · takeaways `:1449` · closer `:1462` |
 
 **Key definitions / citations (all source-verified 2026-08):**
-- First "machine unlearning" — `:293` — Cao and Yang, IEEE S&P 2015.
-- Exact deletion definition — `:306` — Ginart, Guan, Valiant, and Zou, NeurIPS 2019
+- First "machine unlearning" — `:297` — Cao and Yang, IEEE S&P 2015.
+- Exact deletion definition — `:312` — Ginart, Guan, Valiant, and Zou, NeurIPS 2019
   (arXiv 1907.05012). **No longer cited for the $(\varepsilon,\delta)$ definition** —
-  that was a misattribution, fixed 2026-08 on `:447` and in `lec05tech.html`.
-- $(\varepsilon,\delta)$-unlearning — `:447` — Guo, Goldstein, Hannun, and van der Maaten,
+  that was a misattribution, fixed 2026-08 on `:467` and in `lec05tech.html`.
+- $(\varepsilon,\delta)$-unlearning — `:467` — Guo, Goldstein, Hannun, and van der Maaten,
   "Certified Data Removal from Machine Learning Models", ICML 2020 (arXiv 1911.03030);
   Sekhari et al., NeurIPS 2021. Matches privacy deck Def 3.
-- SISA — `:577` — Bourtoule et al., "Machine Unlearning", IEEE S&P 2021. Speedup:
+- SISA — `:618` — Bourtoule et al., "Machine Unlearning", IEEE S&P 2021. Speedup:
   sharding cuts expected cost by the shard count; slicing saves at most another 3/2
   (matches privacy deck Prop 3; tech deck's "R·L" claim fixed 2026-08).
-- Influence functions — `:710` — Koh and Liang, ICML 2017.
-- Gradient ascent / unrolling — `:761` — Thudi et al., "Unrolling SGD", IEEE EuroS&P 2022.
-- Ascent wrecks / retain anchor — `:795` — Kurmanji, Triantafillou, Hayes, and
+- Influence functions — `:751` — Koh and Liang, ICML 2017.
+- Gradient ascent / unrolling — `:796` — Thudi et al., "Unrolling SGD", IEEE EuroS&P 2022.
+- Ascent wrecks / retain anchor — `:830` — Kurmanji, Triantafillou, Hayes, and
   Triantafillou, "Towards Unbounded Machine Unlearning" (SCRUB), NeurIPS 2023.
-- NPO — `:812` — Zhang, Lin, Bai, and Mei, "Negative Preference Optimization", COLM 2024.
-- Who's Harry Potter (~1 GPU hour, Llama-2-7b) — `:911` — Eldan and Russinovich, 2023
+- NPO — `:847` — Zhang, Lin, Bai, and Mei, "Negative Preference Optimization", COLM 2024.
+- Who's Harry Potter (~1 GPU hour, Llama-2-7b) — `:931` — Eldan and Russinovich, 2023
   (arXiv 2310.02238).
-- TOFU (200 authors × 20 QA = 4,000) — `:944` — Maini, Feng, Schwarzschild, Lipton,
+- TOFU (200 authors × 20 QA = 4,000) — `:966` — Maini, Feng, Schwarzschild, Lipton,
   and Kolter, COLM 2024 (arXiv 2401.06121).
-- WMDP (3,668 MCQs) + RMU — `:1005`, `:1026`, `:1043` — Li et al., ICML 2024 (arXiv 2403.03218).
-- MUSE (six criteria) — `:1063` — Shi, Lee, Huang, Malladi, Zhao, Holtzman, Liu, Zettlemoyer, Smith, and Zhang, ICLR 2025 (arXiv 2407.06460; author list corrected 2026-09-14 against arXiv; News f₀ = LLaMA-2 7B, Books f₀ = ICLM-7B).
-- IDI (instructor co-author) — `:1175` — Jeon, Jeung, Kim, No, and Choi (Yonsei),
+- WMDP (3,668 MCQs) + RMU — `:1027`, `:1048`, `:1065` — Li et al., ICML 2024 (arXiv 2403.03218).
+- MUSE (six criteria) — `:1085` — Shi, Lee, Huang, Malladi, Zhao, Holtzman, Liu, Zettlemoyer, Smith, and Zhang, ICLR 2025 (arXiv 2407.06460; author list corrected 2026-09-14 against arXiv; News f₀ = LLaMA-2 7B, Books f₀ = ICLM-7B).
+- IDI (instructor co-author) — `:1197` — Jeon, Jeung, Kim, No, and Choi (Yonsei),
   "An Information Theoretic Evaluation Metric For Strong Unlearning", AAAI 2026
   (arXiv 2405.17878).
-- Syntax drives relearning (instructor co-author) — `:1188` — Yoon, Hong, Jeung, and No
+- Syntax drives relearning (instructor co-author) — `:1223` — Yoon, Hong, Jeung, and No
   (Yonsei), "Rethinking Benign Relearning: Syntax as the Hidden Driver of Unlearning
   Failures", ICLR 2026 (arXiv 2602.03379; TOFU on Llama-2-7b-chat, GA/NPO/SCRUB).
-- Benign relearning — `:1206` — Hu, Fu, Wu, and Smith, "Unlearning or Obfuscating?",
+- Benign relearning — `:1210` — Hu, Fu, Wu, and Smith, "Unlearning or Obfuscating?",
   ICLR 2025 (arXiv 2406.13356).
-- Quantization recovery (21%→83% after 4-bit) — `:1219` — Zhang et al., "Catastrophic
+- Quantization recovery (21%→83% after 4-bit) — `:1241` — Zhang et al., "Catastrophic
   Failure of LLM Unlearning via Quantization", ICLR 2025 (arXiv 2410.16454).
-- Adversarial perspective (10 unrelated examples undo RMU) — `:1236`, `:1317` — Łucki et al.,
+- Adversarial perspective (10 unrelated examples undo RMU) — `:1258`, `:1339` — Łucki et al.,
   TMLR 2025 (arXiv 2409.18025).
-- 184K GPU-hours (Llama-2-7b pretraining, reported) — `:260`, `:911` — Eldan and Russinovich citing
+- 184K GPU-hours (Llama-2-7b pretraining, reported) — `:264`, `:931` — Eldan and Russinovich citing
   Touvron et al., "Llama 2", 2023 (arXiv 2307.09288).
 - Erasure right vs model weights (note only) — EDPB Opinion 28/2024, adopted 17 Dec 2024 (paras. 107(b),
   114–115): unlearning listed as a mitigation "attempting to remove or suppress" personal data; model
   erasure as a corrective measure for unlawful processing. No judicial decision holding Art. 17 requires
   weight modification is cited; statute texts (Art. 17, Civ. Code §1798.105) do not mention models.
-- Privacy onion effect — `:1354` — Carlini et al., "The Privacy Onion Effect: Memorization
+- Privacy onion effect — `:1376` — Carlini et al., "The Privacy Onion Effect: Memorization
   is Relative", NeurIPS 2022.
-- Position papers — `:306`, `:1076`, `:1258`, `:1291` — Cooper et al., "Machine Unlearning Doesn't Do What
+- Position papers — `:312`, `:1098`, `:1280`, `:1313` — Cooper et al., "Machine Unlearning Doesn't Do What
   You Think", NeurIPS 2025; Yoon, Jun, and No (Yonsei), "Position: 'Machine Unlearning'
   Is Overused in LLMs", ICML 2026 (matches `courses/privacy/lectures/05-unlearning/`
   and `talks/icml2026/`).
 
 **Real images** (`figs/`, cropped + cited). From the 2026-08 pass (copied from
 `courses/privacy/lectures/05-unlearning/figs/`): NPO vs GA collapse curves
-`figs/npo-ga-collapse.png` (Zhang COLM 2024 Fig 2) `:818`; TOFU pipeline
-`figs/tofu.png` (Maini COLM 2024 Fig 1) `:965`; WMDP overview `figs/WMDP.png`
-(Li ICML 2024 Fig 1) `:1012`; MUSE six-way evaluation `figs/MUSE.png` (Shi ICLR 2025
-Fig 1) `:1069`; IDI conceptual layer plot `figs/idi-conceptual.png` (Jeon AAAI 2026
-Fig 4(a)) `:1181`; benign-relearning pipeline `figs/benign-relearn-pipeline.png`
-(Hu ICLR 2025 Fig 2 left) `:1212`. **Added 2026-09-05 figure pass:** arXiv unlearning
-counts `figs/unlearning-arxiv-counts.png` (Cooper 2024 Fig 2) `:317`; SISA training
-`figs/sisa-training.png` (Bourtoule S&P 2021 Fig 2) `:584`; accuracy vs shards
-`figs/sisa-accuracy-shards.png` (Bourtoule Fig 6) `:692`; influence vs leave-one-out
-`figs/influence-vs-loo.png` (Koh & Liang ICML 2017 Fig 2) `:721`; ascent-only and
+`figs/npo-ga-collapse.png` (Zhang COLM 2024 Fig 2) `:853`; TOFU pipeline
+`figs/tofu.png` (Maini COLM 2024 Fig 1) `:987`; WMDP overview `figs/WMDP.png`
+(Li ICML 2024 Fig 1) `:1034`; MUSE six-way evaluation `figs/MUSE.png` (Shi ICLR 2025
+Fig 1) `:1091`; IDI conceptual layer plot `figs/idi-conceptual.png` (Jeon AAAI 2026
+Fig 4(a)) `:1203`; benign-relearning pipeline `figs/benign-relearn-pipeline.png`
+(Hu ICLR 2025 Fig 2 left) `:1216`. **Added 2026-09-05 figure pass:** arXiv unlearning
+counts `figs/unlearning-arxiv-counts.png` (Cooper 2024 Fig 2) `:323`; SISA training
+`figs/sisa-training.png` (Bourtoule S&P 2021 Fig 2) `:625`; accuracy vs shards
+`figs/sisa-accuracy-shards.png` (Bourtoule Fig 6) `:733`; influence vs leave-one-out
+`figs/influence-vs-loo.png` (Koh & Liang ICML 2017 Fig 2) `:762`; ascent-only and
 alternating error curves `figs/scrub-maxsteps-only.png` + `figs/scrub-alternating.png`
-(Kurmanji NeurIPS 2023 Fig 6(a)/(d)) `:806`–`:807`; HP next-token table
-`figs/hp-nexttoken.png` (Eldan 2023 Fig 3) `:918`; HP completions
-`figs/hp-completions.png` (Eldan Fig 1) `:937`; forget quality vs utility
-`figs/tofu-fq-vs-utility.png` (Maini COLM 2024 Fig 6) `:955`; RMU loss
-`figs/rmu-loss.png` (Li ICML 2024 Fig 7) `:1037`; RMU results
-`figs/rmu-results.png` (Li Fig 8) `:1050`; back-end/front-end
-`figs/backend-frontend.png` (Cooper Fig 3) `:1082`; MIA distributions
-`figs/muse-mia-dist.png` (Shi ICLR 2025 Fig 2) `:1148`; syntax similarity
-`figs/syntax-similarity.png` (Yoon ICLR 2026 Fig 5, Yonsei) `:1199`; quantization
-recovery `figs/quant-recovery.png` (Zhang ICLR 2025 Fig 1) `:1230`; adversarial
-overview `figs/lucki-overview.png` (Łucki TMLR 2025 Fig 1) `:1242`; fine-tune recovery
-`figs/lucki-finetune.png` (Łucki Fig 2) `:1328`; utility vs memorization
-`figs/muse-utility-vs-mem.png` (Shi Fig 5) `:1347`; onion ROC `figs/onion-roc.png`
-(Carlini NeurIPS 2022 Fig 1) `:1366`. **SVG figures:** database row vs weights `:155`,
-data-in-weights `:210`, MIA/extraction probes `:241`, daily-retrain timeline `:272`,
-two-models-compared `:368`, identical distributions `:400`, weight-space nudge `:427`,
-bounded-gap distributions `:459`, forget/retain strip `:483`, SISA shard diagram (moved
-from the SISA slide) `:548`, one-shard retrain `:609`, slices + checkpoints `:655`,
-Hessian grid `:739`, descent vs ascent loss curve `:773`, paraphrase entanglement
-`:886`, web vs fine-tune source `:983`, three-probe verification `:1116`,
-member/non-member bells `:1161`, data-level vs output-level taxonomy `:1270`.
+(Kurmanji NeurIPS 2023 Fig 6(a)/(d)) `:841`–`:842`; HP next-token table
+`figs/hp-nexttoken.png` (Eldan 2023 Fig 3) `:939`; HP completions
+`figs/hp-completions.png` (Eldan Fig 1) `:959`; forget quality vs utility
+`figs/tofu-fq-vs-utility.png` (Maini COLM 2024 Fig 6) `:977`; RMU loss
+`figs/rmu-loss.png` (Li ICML 2024 Fig 7) `:1059`; RMU results
+`figs/rmu-results.png` (Li Fig 8) `:1072`; back-end/front-end
+`figs/backend-frontend.png` (Cooper Fig 3) `:1104`; MIA distributions
+`figs/muse-mia-dist.png` (Shi ICLR 2025 Fig 2) `:1170`; syntax similarity
+`figs/syntax-similarity.png` (Yoon ICLR 2026 Fig 5, Yonsei) `:1234`; quantization
+recovery `figs/quant-recovery.png` (Zhang ICLR 2025 Fig 1) `:1252`; adversarial
+overview `figs/lucki-overview.png` (Łucki TMLR 2025 Fig 1) `:1264`; fine-tune recovery
+`figs/lucki-finetune.png` (Łucki Fig 2) `:1350`; utility vs memorization
+`figs/muse-utility-vs-mem.png` (Shi Fig 5) `:1369`; onion ROC `figs/onion-roc.png`
+(Carlini NeurIPS 2022 Fig 1) `:1388`. **SVG figures:** database row vs weights `:158`,
+data-in-weights `:213`, MIA/extraction probes `:245`, daily-retrain timeline `:276`,
+two-models-compared `:388`, identical distributions `:420`, weight-space nudge `:447`,
+bounded-gap distributions `:479`, forget/retain strip `:503`, SISA shard diagram (moved
+from the SISA slide) `:589`, one-shard retrain `:650`, slices + checkpoints `:696`,
+Hessian grid `:783`, descent vs ascent loss curve `:808`, paraphrase entanglement
+`:906`, web vs fine-tune source `:1005`, three-probe verification `:1138`,
+member/non-member bells `:1183`, data-level vs output-level taxonomy `:1292`.
 Citations use `.cite-left`. Page number: bold `.slide-num` only.
 
 **2026-09-14 reviewer #48 follow-up (same day, after dc560c8):** taxonomy conflicts removed.
@@ -835,6 +835,8 @@ follow-up status as of 2026-09) for Eldan, TOFU, WMDP, RMU, MUSE, IDI, Yoon synt
 fixed. `lec05tech.html` 11→12 sl: Formal Goals, Separated (slide 3) + category badges + SISA
 variables aligned to note (S shards, R slices) + cost formula.
 
+**2026-09-30 Albert page comments (70→68):** p6 legal slide cut to two-line cards ("erasure on request", "Legal right: established. / Weight-level duty: not."); p8, p9, p11, p35, p40 line breaks (one claim per line; p35 Approximate card now "No certificate, except for simple models"); p14 taxonomy cards cut to one target line + one evidence line; p15 gains a data→retrain→reference flow SVG; p18/p19/p24 diagrams enlarged (wider column, 18–21-unit type); p21 gains a utility-vs-forgetting tradeoff SVG; p31 Hessian slide rebuilt with KaTeX ($H \in \mathbb{R}^{d\times d}$, $d \gtrsim 10^9$, $d^2 \gtrsim 10^{18}$) and a larger grid; "Try It Yourself" (Colab) and "Where to Go Deeper" removed; "Relearning, Measured" now precedes "Relearning Attacks". Note synced: articles removed, the reading list moved into Key Takeaways' detail block, the two relearning entries swapped with their cross-references, core-path list now five optional slides. `lec05tech.html` unchanged (its Hessian slide already matches). Slide numbers in the older entries below are pre-2026-09-30.
+
 **2026-09-14 Albert page comments (PR #31, post-approval):** slide 51 "Verification Is Hard" — probe diagram enlarged (grid 0.7fr/1.3fr, SVG viewBox 600×250 at up to 760 px wide, label type 22/19 units ≈ 26/23 px rendered, "?" 56, box 160×150); bullets and highlight unchanged. 70 slides unchanged; page 51 re-rendered at 60 dpi.
 
 **2026-09-05 figure pass (66→67):** every bullet-only content slide now carries a cited
@@ -849,7 +851,7 @@ Added 8 slides: Delete for Three Reasons (§01), A Gentler Push: NPO (§03), TOF
 One Picture + MUSE: Six Boxes to Tick (§04), Look Inside: IDI + Relearning, Measured +
 Quantize, and It Comes Back (§05), Does It Do What You Think? (§06). Fixed:
 $(\varepsilon,\delta)$-unlearning misattributed to Ginart 2019 → Guo ICML 2020 +
-Sekhari 2021 (main `:447` and `lec05tech.html` slide 4, which also gained the
+Sekhari 2021 (main `:467` and `lec05tech.html` slide 4, which also gained the
 two-sided-bound clause); `lec05tech.html` SISA speedup "R·L" → shard-count + 3/2
 (fix-errors-only pass, deck stays 11 sl). WMDP slide reworked around the real figure;
 concrete verified numbers added (4,000 QA; 3,668 MCQs; 21%→83%; 10 examples;

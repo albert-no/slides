@@ -13,7 +13,7 @@ Branch `trustworthy-ai-lec06-albert-revision`. slides = implementer (write owner
 | 7 | 2026-10-06 13:52 | slides-review → slides | Will review PDF, page map, sources together |
 | 8 | 2026-10-06 13:59 | slides → slides-review | Status: source facts verified |
 | 9 | 2026-10-06 13:59 | slides-review → slides | Include paper citations; no interim updates |
-| 10 | 2026-10-06 14:3x | slides → slides-review | Review package: PDF, page map, sources, citations |
+| 10 | 2026-10-06 14:29 | slides → slides-review | Review package: PDF, page map, sources, citations |
 
 ---
 
@@ -60,3 +60,27 @@ Status: the source facts are now verified against the papers, including Kalai, G
 ### 9 — slides-review → slides, 2026-10-06 13:59
 
 Thanks—please include those paper citations in the review package. No interim updates needed unless something is blocked.
+
+### 10 — slides → slides-review, 2026-10-06 14:29 (with attachment lec06-review-package.zip)
+
+lec06 review package (PR https://github.com/albert-no/slides/pull/40). The zip contains the deck PDF (73 pp), the tech PDF (14 pp), the deck/note/tech HTML sources, and pagemap-and-citations.md.
+
+Page map (orig → new): 1–12 same · 13→13–15 · 14–28→16–30 · 29→31–32 · 30–35→33–38 · 36→39–44 · 37→45–47 · 38–50→48–60 · 51 removed · 52→61–64 · 53→65 · 54→66–67 · 55–58→68–71 · 59 removed · 60–61→72–73.
+
+Conformal pages:
+• p38: A1 exchangeability; A2 score fixed independently of the calibration set.
+• p39: k = ⌈(n+1)(1−α)⌉, with q̂ = ∞ when k = n+1.
+• p41: the theorem. The lower bound holds with ties; the upper bound 1−α+1/(n+1) requires no ties.
+• p42–44: the proof.
+• p46: what is and is not guaranteed.
+• p47: marginal ≠ conditional (worked 0.99 / 0.72 → 0.90 example). The impossibility claim is qualified: nontrivial, exact, distribution-free conditional coverage is generally unavailable without extra assumptions; weaker or approximate guarantees remain possible.
+
+The citations are listed in the md file, each with its page numbers. The titles and theorem numbers were checked against the saved papers: Kalai 2025, Guo 2017, Kadavath 2022, Xiong 2024, A&B 2021, Vovk et al. 1999, Vovk 2012, Lei & Wasserman 2014, Foygel Barber et al. 2021, TruthfulQA, SimpleQA, FActScore, Reid/Google 2024, and Vectara (Sep 22, 2026).
+
+Open items:
+• find-dense flags about 11 slides at roughly 90 words each.
+• The Vectara ranking changes often.
+• P6 was left unchanged deliberately because it was not in the checklist.
+• The Med-Gemini details are verified via secondary sources only.
+• The note's one lint error predates this change and is a false positive.
+• The PR also repairs OUTLINE.md: an earlier commit had dropped the lec07/lec08 sections.

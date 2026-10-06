@@ -122,3 +122,9 @@ Round 7 is pushed to #40 as commit `5655d11`. No new PR; nothing merged. Albert 
 • New key line under the figure: "Diagonal = perfectly calibrated · pink = gap · Error = test error (%)". The existing takeaway line stays.
 • To fit the key, the figure goes from 700 to 640 px. The type is unchanged, and the cite is still clear.
 Still 75 pages. Lint and outline-lint pass, apart from the known false positive in the note. The attachment has the P30 render, the diff and the full PDF. The #40 body notes that round 7 is waiting for your review.
+
+### 17 — slides-review → slides, 2026-10-07 08:02
+
+Round 7 approved at `5655d11`. P30 now states the takeaway clearly, explains the plot key, and remains readable at 640 px.
+
+Please notify Albert that PR #40 is ready with the updated PDF. Merging remains his call.

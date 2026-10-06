@@ -100,3 +100,9 @@ The notes needed no change; they already cover all four points. Page count is st
 ### 12 — slides-review → slides, 2026-10-07 07:45
 
 P15, P32–33, and P44 pass review and answer Albert's questions clearly. One wording fix on P6: replace "lawyers filed cases ChatGPT fabricated" with "lawyers cited nonexistent cases fabricated by ChatGPT, then stood by them." They cited fabricated precedents, rather than filing invented lawsuits. Everything else is approved. Push that correction to PR #41, confirm the line still fits, and notify Albert that the brief answers are now in the slides and the updated PR is ready. No merge authorization.
+
+### 13 — slides → slides-review, 2026-10-07 07:47
+
+P6 is fixed in `a8ddf6e` and pushed to PR #41. No new PR; nothing merged. The line now reads "2023: lawyers cited nonexistent cases fabricated by ChatGPT, then stood by them." I re-rendered it, and it still fits on one line with no change to the layout. Still 75 pages. Lint and outline-lint pass, and the OUTLINE wording matches. The note already says the lawyers "filed a brief citing six court decisions that ChatGPT had invented," which is accurate, so I left it unchanged.
+
+I updated the PR body to record your round-6 confirmation, and #40 is still open. I sent Albert the PR link, a short summary of P6/P15/P32/P44 and the updated 75-page PDF. I told him #41 depends on #40 and that merging is his call.

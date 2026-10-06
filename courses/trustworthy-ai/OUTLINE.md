@@ -891,11 +891,11 @@ reasoning-model hallucination; sycophancy one-slide touchpoint (full treatment i
 | Title / Contents | 1–2 | `:26`, `:38` | |
 | **01 — What Hallucination Is** | 3–11 | `:71` | definition (Ji survey) `:79` · **fluency fools us (real vs invented citation test; 2026-10)** `:94` · **Context: Mata v. Avianca (2023) (comparison with Lacey; round 4)** `:103` · Fake Citations, Again (Lacey v. State Farm) `:114` · **Invented Medical Facts (infarct defined; 2026-10)** `:132` · two flavors of wrong `:150` · not the same as a bug `:164` · why this matters `:179` |
 | **02 — Why Models Hallucinate** | 12–22 | `:192` | training objective `:200` · no truth grounding (Kalai Fig 1) `:212` · **Counting With a Poor Model (V3 chat vs R1 reasoning, siblings on one base; round 4)** `:225` · **Weak Model Family ⇒ Forced Errors (trigram picture, plain-language Cor 2; formal bound in lec06tech; round 4)** `:241` · plausible beats true `:254` · pressure to always answer `:276` · exam-taking analogy `:293` · Guessing, Measured `:310` · where errors concentrate (FActScore Fig 2 + plot description) `:338` · knowledge cutoff `:355` |
-| **03 — Calibration** | 23–36 | `:371` | confidence as a number `:379` · calibration promise (100-dot grid) `:391` · reliability diagram `:406` · over- vs under-confident `:428` · **measuring the gap (gap = \|conf − acc\|; 2026-10)** `:442` · **reading ECE (area picture, 0.1705; 2026-10)** `:459` · bigger is not better `:476` · temperature `:485` · **What P(True) Measures (3-step prompt; round 4)** `:499` · **Kadavath P(True) histogram (overlap = imperfect discrimination; round 4)** `:512` · **Filtering by P(True) Mostly Raises Accuracy (unmodified plot + enlarged key)** `:528` · **verbalized confidence GPT-3/3.5** `:542` · **GPT-4/Vicuna** `:557` |
-| **04 — Conformal Prediction** | 37–52 | `:574` | one answer to a set (three photos, typeset sets) `:582` · **Candidates, Native Output, Conformal Set** `:594` · coverage guarantee `:608` · **Two Assumptions (A1 exchangeable, A2 fixed score)** `:624` · how it works (k, q̂ = ∞) `:637` · recipe figure `:651` · **Two Kinds of Calibration (temperature vs threshold; round 4)** `:659` · **Coverage Theorem (upper bound only without ties)** `:671` · **Why It Works: A Fair Rank (n = 9, α = 0.2 rank picture; replaces 3 proof slides; round 4)** `:688` · prediction-set picture `:704` · **What the Guarantee Covers** `:712` · **Marginal ≠ Conditional** `:732` · abstention (singleton ≠ certified) `:747` · medical triage (clinician review) `:763` · trade-off `:779` |
-| **05 — Detection & Grounding** | 53–62 | `:789` | two strategies (Ground first, then Detect; round 4) `:797` · self-consistency `:811` · semantic entropy `:820` · entropy picture `:834` · RAG `:859` · why RAG helps `:873` · RAG is not a cure `:889` · teaching "I don't know" `:905` · scoring rule `:921` |
-| **06 — Frontier 2025–26** | 63–73 | `:934` | **Misconceptions (TruthfulQA examples; 2026-10)** `:941` · **In the Wild: Search Answers, 2024 (rocks / glue)** `:955` · **Should a Truthful Model Share Our Errors?** `:967` · TruthfulQA `:984` · **Benchmarks table (4 benchmarks)** `:999` · **Measuring Faithfulness: Vectara HHEM (Sep 22, 2026 data)** `:1014` · reasoning models `:1052` · sycophancy `:1069` · factuality evaluations `:1081` · open problems `:1090` |
-| Takeaways / Closer | 74–75 | — | `:1105`, `:1119` |
+| **03 — Calibration** | 23–36 | `:371` | confidence as a number `:379` · calibration promise (100-dot grid) `:391` · reliability diagram `:406` · over- vs under-confident `:428` · **measuring the gap (gap = \|conf − acc\|; 2026-10)** `:442` · **reading ECE (area picture, 0.1705; 2026-10)** `:459` · bigger is not better `:476` · temperature `:485` · **What P(True) Measures (3-step prompt; round 4)** `:499` · **Kadavath P(True) histogram (overlap = imperfect discrimination; round 4)** `:513` · **Filtering by P(True) Mostly Raises Accuracy (unmodified plot + enlarged key)** `:529` · **verbalized confidence GPT-3/3.5** `:543` · **GPT-4/Vicuna** `:558` |
+| **04 — Conformal Prediction** | 37–52 | `:575` | one answer to a set (three photos, typeset sets) `:583` · **Candidates, Native Output, Conformal Set** `:595` · coverage guarantee `:609` · **Two Assumptions (A1 exchangeable, A2 fixed score)** `:625` · how it works (k, q̂ = ∞) `:638` · recipe figure `:652` · **Two Kinds of Calibration (temperature vs threshold; round 4)** `:660` · **Coverage Theorem (upper bound only without ties)** `:673` · **Why It Works: A Fair Rank (n = 9, α = 0.2 rank picture; replaces 3 proof slides; round 4)** `:690` · prediction-set picture `:706` · **What the Guarantee Covers** `:714` · **Marginal ≠ Conditional** `:734` · abstention (singleton ≠ certified) `:749` · medical triage (clinician review) `:765` · trade-off `:781` |
+| **05 — Detection & Grounding** | 53–62 | `:791` | two strategies (Ground first, then Detect; round 4) `:799` · self-consistency `:813` · semantic entropy `:822` · entropy picture `:836` · RAG `:861` · why RAG helps `:875` · RAG is not a cure `:891` · teaching "I don't know" `:907` · scoring rule `:923` |
+| **06 — Frontier 2025–26** | 63–73 | `:936` | **Misconceptions (TruthfulQA examples; 2026-10)** `:943` · **In the Wild: Search Answers, 2024 (rocks / glue)** `:957` · **Should a Truthful Model Share Our Errors?** `:969` · TruthfulQA `:986` · **Benchmarks table (4 benchmarks)** `:1001` · **Measuring Faithfulness: Vectara HHEM (Sep 22, 2026 data)** `:1016` · reasoning models `:1054` · sycophancy `:1071` · factuality evaluations `:1083` · open problems `:1092` |
+| Takeaways / Closer | 74–75 | — | `:1107`, `:1121` |
 
 **Key definitions / citations (source-verified; 2026-10 additions checked against the saved PDFs):**
 - Hallucination survey — `:79` — Ji et al., ACM Computing Surveys 2023.
@@ -904,30 +904,30 @@ reasoning-model hallucination; sycophancy one-slide touchpoint (full treatment i
 - Kalai, Nachum, Vempala, and Zhang, 2025 (arXiv 2509.04664) — IIV reduction Fig 1 `:212`;
   DEEPSEEK letter count (§1: V3 "2" or "3" in ten trials, app, 11 May 2025; §3.3.2: R1 spells it out, tokens D/EEP/SEE/K) `:225`;
   trigram limitation in plain language (Theorem 3, Corollary 2) `:241`; the formal bound
-  err ≥ 2·opt(G) − max|V_c|/min|E_c| − δ now only in the note and `lec06tech.html`; binary grading `:276`, `:293`, `:921`.
+  err ≥ 2·opt(G) − max|V_c|/min|E_c| − δ now only in the note and `lec06tech.html`; binary grading `:276`, `:293`, `:923`.
 - DeepSeek chronology — `:225` — V3 released 26 Dec 2024 (arXiv 2412.19437), V3-0324 25 Mar 2025, R1 20 Jan 2025
   (arXiv 2501.12948; RL from DeepSeek-V3-Base); api-docs.deepseek.com/news. Siblings, not successor.
-- FActScore — `:338`, `:999`, `:1081` — Min et al., EMNLP 2023.
-- Calibration / ECE / temperature — `:391`–`:485`, `:659` — Guo, Pleiss, Sun, and Weinberger, ICML 2017 (ECE Eq. 3).
+- FActScore — `:338`, `:1001`, `:1083` — Min et al., EMNLP 2023.
+- Calibration / ECE / temperature — `:391`–`:485`, `:660` — Guo, Pleiss, Sun, and Weinberger, ICML 2017 (ECE Eq. 3).
   ECE example (shares .10/.10/.15/.25/.40, gaps .03/.07/.15/.20/.22 → 0.1705) is a course illustration.
-- Self-knowledge P(True) — `:499`, `:512`, `:528` — Kadavath et al., 2022, §3.2 / §4.1–4.2 (prompt format, P of "(A)"), Fig 1 (left / right; right panel unmodified, enlarged key beside it).
-- Verbalized confidence — `:542`, `:557` — Xiong et al., ICLR 2024, Fig 2 (GSM8K).
-- Conformal — `:582`–`:732` — Angelopoulos and Bates, 2021 (Theorem 1, Appendix D, Theorem D.2);
+- Self-knowledge P(True) — `:499`, `:513`, `:529` — Kadavath et al., 2022, §3.2 / §4.1–4.2 (prompt format, P of "(A)"), Fig 1 (left / right; right panel unmodified, enlarged key beside it).
+- Verbalized confidence — `:543`, `:558` — Xiong et al., ICLR 2024, Fig 2 (GSM8K).
+- Conformal — `:583`–`:734` — Angelopoulos and Bates, 2021 (Theorem 1, Appendix D, Theorem D.2);
   Vovk, Gammerman, and Saunders, ICML 1999. k = ⌈(n+1)(1−α)⌉, q̂ = ∞ when k = n+1; ties keep the lower bound.
-- Conditional coverage limits — `:732` — Vovk, ACML 2012; Lei and Wasserman, JRSS-B 2014 (Lemma 1);
+- Conditional coverage limits — `:734` — Vovk, ACML 2012; Lei and Wasserman, JRSS-B 2014 (Lemma 1);
   Foygel Barber, Candès, Ramdas, and Tibshirani, Information and Inference 2021.
-- TruthfulQA — `:941`, `:967`, `:984`, `:999` — Lin, Hilton, and Evans, ACL 2022 (Fig 1, Fig 2, Table 6, §2.1).
-- AI Overviews rocks / glue — `:955` — Reid (Google), "AI Overviews: About last week", Google blog, May 30, 2024.
-- SimpleQA — `:310`, `:999` — Wei et al., 2024 (grades: correct / incorrect / not attempted).
-- Vectara HHEM-2.3 — `:1014` — leaderboard README, updated Sep. 22, 2026 (top six rows; 7,700+ articles; temperature 0).
-- Self-consistency `:811` — Manakul et al., EMNLP 2023. Semantic entropy `:820` — Farquhar et al., Nature 2024.
-  RAG `:859` — Lewis et al., NeurIPS 2020. Sycophancy `:1069` — Sharma et al., ICLR 2024.
+- TruthfulQA — `:943`, `:969`, `:986`, `:1001` — Lin, Hilton, and Evans, ACL 2022 (Fig 1, Fig 2, Table 6, §2.1).
+- AI Overviews rocks / glue — `:957` — Reid (Google), "AI Overviews: About last week", Google blog, May 30, 2024.
+- SimpleQA — `:310`, `:1001` — Wei et al., 2024 (grades: correct / incorrect / not attempted).
+- Vectara HHEM-2.3 — `:1016` — leaderboard README, updated Sep. 22, 2026 (top six rows; 7,700+ articles; temperature 0).
+- Self-consistency `:813` — Manakul et al., EMNLP 2023. Semantic entropy `:822` — Farquhar et al., Nature 2024.
+  RAG `:861` — Lewis et al., NeurIPS 2020. Sycophancy `:1071` — Sharma et al., ICLR 2024.
 
 **Real images** (`figs/`, cited; 21 files on 17 slides): kalai-iiv `:212` · kalai-gpt4-calibration `:276` ·
-factscore-frequency `:338` · guo-reliability-titles + guo-reliability `:476` · guo-temp-scaling `:485` · kadavath-ptrue-hist `:512` ·
-kadavath-ptrue-scaling `:528` · xiong-verbalized-a `:542` · xiong-verbalized-b `:557` · conformal-squirrel-1/2/3
-`:582` · conformal-recipe `:651` · selfcheckgpt `:811` · semantic-entropy-table `:820` · rag-overview `:859` ·
-truthfulqa-size `:984` · sharma-sycophancy `:1069` · factscore-chatgpt `:1081`. Crops re-captured at higher
+factscore-frequency `:338` · guo-reliability-titles + guo-reliability `:476` · guo-temp-scaling `:485` · kadavath-ptrue-hist `:513` ·
+kadavath-ptrue-scaling `:529` · xiong-verbalized-a `:543` · xiong-verbalized-b `:558` · conformal-squirrel-1/2/3
+`:583` · conformal-recipe `:652` · selfcheckgpt `:813` · semantic-entropy-table `:822` · rag-overview `:861` ·
+truthfulqa-size `:986` · sharma-sycophancy `:1071` · factscore-chatgpt `:1083`. Crops re-captured at higher
 resolution in 2026-10; kadavath-ptrue-scaling is an unmodified crop (embedded legend
 kept) with an enlarged SVG key beside it. Citations use `.cite-left`.
 
@@ -974,6 +974,11 @@ resolution (the old crop was vertically squashed); FActScore cropped to the Chat
 P15 caption restored to "Assuming similar training data …"; P46 adds the distinct-scores / ties line.
 Note: P44 temperature scaling "aims to improve" calibration (no exactness, no set-size claim; separate
 tuning and conformal splits); n14 drops the checkpoint inference.
+
+**Round 6 (Albert via slides-review #36, 2026-10-07; 75 unchanged):** his questions answered briefly on
+the slides. P6: "2023: lawyers filed cases ChatGPT fabricated"; P15: V3 is not R1's newer successor (dates;
+tested checkpoint not stated); P32: P(True) = probability of "(A) True" for a proposed answer, useful but
+not verified correctness; P44: "Is conformal calibration? Yes: it calibrates a cutoff, not the probabilities".
 
 **2026-09 figure pass (61 slides, unchanged count; PR #24):** every bullet-only content slide now carries
 a cited real figure crop or an inline SVG (14 new crops, 26 new SVGs). Real figures sit beside the bullets

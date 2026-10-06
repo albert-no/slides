@@ -177,9 +177,9 @@ Informally (the paper's 99%-confidence version): <em>hallucination rate $\gtrsim
 
 <article>
 <h2>Counting With a Poor Model</h2>
-<p>Ask "How many Ds are in DEEPSEEK?" The answer is one. DeepSeek-V3 said two or three in ten independent trials; the reasoning model R1 spells the word letter by letter and gets one. Same kind of data, better model, so the error belongs to the model.</p>
-<p><span class="kt">Key takeaway:</span> Some hallucinations come from a model that cannot represent the task, not from missing data.</p>
-<p><span class="kt">Slide figure:</span> the word seen two ways: as letters, where one D is visible, and as tokens D/EEP/SEE/K (the paper's example), where letters are not separate units.</p>
+<p>Ask "How many Ds are in DEEPSEEK?" The answer is one. DeepSeek-V3 said two or three in ten independent trials; the reasoning model R1 spells the word letter by letter and gets one. Assuming similar training data, R1's success suggests a modeling or reasoning limitation in V3, not missing data. (The paper's words: "Assuming similar training data, this suggests that R1 is a better model for the task.")</p>
+<p><span class="kt">Key takeaway:</span> Some errors plausibly come from how the model represents the task, not from missing data.</p>
+<p><span class="kt">Slide figure:</span> the word seen two ways: as letters, where one D is visible, and as tokens D/EEP/SEE/K (the paper's example). Caption: token boundaries differ from character boundaries; explicit spelling can help counting. Note the token view still contains a standalone D token; the point is the boundary mismatch, not that the D is invisible.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Kalai, Nachum, Vempala &amp; Zhang (2025), §1 (the prompt and the V3 result, accessed 11 May 2025) and §3.3.2 (the R1 chain of thought and the token explanation). The paper's framing: a <em>poor model</em> is one whose family cannot separate valid from invalid responses, even with perfect data. <a href="https://arxiv.org/abs/2509.04664">arXiv 2509.04664</a>.</p>
@@ -188,15 +188,25 @@ Informally (the paper's 99%-confidence version): <em>hallucination rate $\gtrsim
 
 <article>
 <h2>Poor Model ⇒ Errors, Precisely</h2>
-<p>The theorem: generation error is at least twice the best achievable classification error, minus two small terms. If no threshold on the model's probability can tell right counts from wrong ones, generation must make errors.</p>
-<p><span class="kt">Key takeaway:</span> Hard classification forces generation errors.</p>
+<p>The theorem: generation error is at least twice the best achievable classification error, minus two small terms. Read it conditionally: if no thresholded model in the family classifies valid versus error responses well, generation must make errors. V3's miscounts show one model failing; they do not show that its whole family must fail.</p>
+<p><span class="kt">Key takeaway:</span> If classification is hard for the whole model family, generation errors are forced.</p>
 <div class="detail">
 <h3>Definitions</h3>
-<p>(Kalai et al. 2025, §3.3.2.) For each prompt $c$, $\mathcal V_c$ and $\mathcal E_c$ are the valid and error responses. $\mathrm{err}$ is the probability the model generates an error response. $\delta$ is the model's miscalibration. The classifier family thresholds a language model's probability: $g_{\theta,t}(c,r) = +$ if $\hat p_\theta(r\mid c) &gt; t$, else $-$, over all $\theta \in \Theta$, $t \in [0,1]$. Then $\mathrm{opt}(\mathcal G) = \min_{g\in\mathcal G}\Pr_{x\sim D}[g(x)\ne f(x)]$ is the best error of any thresholded model in the family.</p>
+<p>(Kalai et al. 2025, §3.3.2.) For each prompt $c$, $\mathcal V_c$ and $\mathcal E_c$ are the valid and error responses. $\mathrm{err} := \hat p(\mathcal E) = \sum_{(c,r)\in\mathcal E}\mu(c)\,\hat p(r\mid c)$ is the probability the model generates an error response, with prompts $c \sim \mu$. <strong>The distribution $D$</strong>: with probability $1/2$ draw $x = (c,r) \sim p$ (a valid training dialogue), and with probability $1/2$ draw $c \sim \mu$ and $r$ uniformly from $\mathcal E_c$; the target is $f(x) = +$ iff $x$ is valid. <strong>The term $\delta$</strong>: $\delta := |\hat p(A) - p(A)|$ for $A := \{(c,r) : \hat p(r\mid c) &gt; 1/\min_c|\mathcal E_c|\}$, the gap between how much mass the model and the training distribution put on responses the model rates above that threshold (a calibration-type quantity, small for a calibrated base model). The classifier family thresholds a language model's probability: $g_{\theta,t}(c,r) = +$ if $\hat p_\theta(r\mid c) &gt; t$, else $-$, over all $\theta \in \Theta$, $t \in [0,1]$. Then $\mathrm{opt}(\mathcal G) = \min_{g\in\mathcal G}\Pr_{x\sim D}[g(x)\ne f(x)]$ is the best error of any thresholded model in the family.</p>
 <h3>Theorem &amp; proof</h3>
 <p><strong>Statement</strong> (the paper's §3.3.2, following from its Theorem 1):
 $$\mathrm{err} \;\ge\; 2\,\mathrm{opt}(\mathcal G) \;-\; \frac{\max_c |\mathcal V_c|}{\min_c |\mathcal E_c|} \;-\; \delta.$$
-Proof in the paper (Theorem 1 reduces generation to the Is-It-Valid classification problem). The letter-counting case: tokenized models cannot separate correct from incorrect counts by thresholding, so $\mathrm{opt}(\mathcal G)$ is large and the bound forces errors. The paper's cleaner instance is Corollary 2: any trigram model has generation error at least $1/2$ on its two-prompt example.</p>
+Proof in the paper (Theorem 1 reduces generation to the Is-It-Valid classification problem). <strong>The bound is conditional.</strong> It forces errors only when $\mathrm{opt}(\mathcal G)$ is large, a statement about every model in the family. The letter-counting example is the paper's motivation ("this suggests"), not a proved instance: one model's mistakes do not show the family's incapacity. The proved instance is on the next slide.</p>
+</div>
+</article>
+
+<article>
+<h2>A Proven Case: Trigram Models</h2>
+<p>A trigram model predicts each word from the previous two only. "She lost it and was completely out of" should end with "her mind", "He lost it and was completely out of" with "his mind". Both end in "out of", so the model cannot tell them apart and must be wrong half the time.</p>
+<p><span class="kt">Key takeaway:</span> Here the family itself is provably poor: every trigram model errs at least half the time.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p>(Kalai et al. 2025, §3.3.2.) Prompts $c_1, c_2$ as above, $r_1$ = "her mind", $r_2$ = "his mind", with $\mathcal V_{c_1} = \mathcal E_{c_2} = \{r_1\}$ and $\mathcal V_{c_2} = \mathcal E_{c_1} = \{r_2\}$. <strong>Theorem 3 (pure multiple-choice).</strong> If $|\mathcal V_c| = 1$ for all $c$ and $C = \min_c|\mathcal E_c| + 1$, then $\mathrm{err} \ge 2(1 - 1/C)\,\mathrm{opt}(\mathcal G)$; no calibration term is needed. <strong>Corollary 2.</strong> With $\mu$ uniform over $\{c_1, c_2\}$, any trigram model has generation error at least $1/2$: here $C = 2$, and $\mathrm{opt}(\mathcal G) = 1/2$ because a classifier built from a trigram model cannot distinguish $c_1$ from $c_2$. So $\mathrm{err} \ge 2 \cdot \tfrac12 \cdot \tfrac12 = \tfrac12$. Proofs: the paper's Section C.</p>
 </div>
 </article>
 
@@ -398,7 +408,8 @@ with a single scalar $T &gt; 0$ fitted by minimizing NLL on a validation set. Pr
 <h2>Do Models Know What They Know?</h2>
 <p>Kadavath and colleagues found that large models carry a partial self-estimate of correctness (a probability that the model's own answer is right, informative but not reliable on every answer): their probabilities often track accuracy, improving with scale but still imperfect.</p>
 <p><span class="kt">Key takeaway:</span> Model confidence is a usable but imperfect signal.</p>
-<p><span class="kt">Slide figure:</span> Kadavath et al. (2022), Fig. 1: the 52B model's P(True) on its own sampled answers, showing good but imperfect self-evaluation calibration.</p>
+<p><span class="kt">Slide figure:</span> Kadavath et al. (2022), Fig. 1, left panel: the 52B model's P(True) on its own sampled answers over five tasks. Green = correct samples, peaking near 0.9; blue = incorrect samples, peaking near 0.4. They overlap: that is what "partial" means.</p>
+<p>How P(True) is read: the model proposes an answer, then is asked "Is the proposed answer: (A) True (B) False"; P(True) is its probability of (A).</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>P(True) and P(IK)</strong> (Kadavath et al. 2022). <em>P(True)</em>: sample an answer, then ask the model itself for the probability that the answer is correct — self-evaluation, which improves when the model first sees several of its own samples. <em>P(IK)</em>: train the model to output the probability that it <em>knows</em> the answer to a question, before answering.</p>
@@ -408,21 +419,28 @@ with a single scalar $T &gt; 0$ fitted by minimizing NLL on a validation set. Pr
 </article>
 
 <article>
-<h2>Reading the Plot: P(True)</h2>
-<p>The model proposes an answer, then is asked "Is the proposed answer (A) True or (B) False?". P(True) is its probability of (A). Correct answers cluster near 0.9, wrong ones near 0.4, and keeping only answers above 0.5 raises accuracy.</p>
-<p><span class="kt">Key takeaway:</span> "Partial" means the two histograms overlap: some wrong answers still get high P(True).</p>
-<p><span class="kt">Slide figure:</span> schematic of the left panel of Kadavath et al. (2022) Fig. 1 (52B model, its own samples, five tasks).</p>
+<h2>Filtering by P(True) Mostly Raises Accuracy</h2>
+<p>Keep only the answers the model itself rates above 0.5. For most tasks and model sizes in the plot, accuracy rises: the solid lines (kept answers) lie above the dotted lines (all answers). Not for all: GSM8k at the two smallest sizes and Lambada at the smallest have the solid line at or below the dotted one.</p>
+<p><span class="kt">Key takeaway:</span> The self-estimate is useful as a filter, even though it is imperfect.</p>
+<p><span class="kt">Slide figure:</span> Kadavath et al. (2022), Fig. 1, right panel: accuracy versus parameters for GSM8k, Arithmetic, TriviaQA, Lambada and Codex. The paper's small embedded legend was removed and re-typeset beside the plot; line segments that ran under it were restored as straight-line continuations of the visible segments.</p>
 </article>
 
 <article>
-<h2>Verbalized Confidence</h2>
+<h2>Verbalized Confidence: GPT-3, GPT-3.5</h2>
 <p>You can also just ask the model how sure it is. It will state a percentage in words, sometimes calibrated and often inflated, so the spoken number still needs checking.</p>
 <p><span class="kt">Key takeaway:</span> A stated "95%" is not automatically a trustworthy 95%.</p>
-<p><span class="kt">Slide figure:</span> Xiong et al. (2024), Fig. 2: verbalized-confidence histograms and reliability plots for GPT-3, GPT-3.5, GPT-4, and Vicuna; models state 90–100% on right and wrong answers alike.</p>
+<p><span class="kt">Slide figure:</span> Xiong et al. (2024), Fig. 2 (GSM8K), left two columns. Top row: histogram of stated confidence, red for wrong answers. Bottom row: accuracy in each confidence bin against the diagonal. GPT-3: accuracy 0.15, ECE 0.83. GPT-3.5: accuracy 0.28, ECE 0.66. Both state 80–100% on right and wrong answers alike.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <p>Xiong et al. (ICLR 2024) benchmark <em>verbalized</em> confidence — the number the model states in words — across models and prompting/sampling/aggregation strategies. Headline findings from the paper: LLMs tend to be overconfident when verbalizing their confidence, in ways that partly mimic human patterns of expressing confidence, and calibration improves as model capability grows but remains far from ideal; sampling-and-aggregation strategies help but no method solves it. So the verbalized number is a usable feature, not a guarantee — it should itself be calibrated (e.g. by the binning machinery of this section) before being shown to users. <a href="https://arxiv.org/abs/2306.13063">Xiong et al., "Can LLMs Express Their Uncertainty?" (ICLR 2024)</a>.</p>
 </div>
+</article>
+
+<article>
+<h2>Verbalized Confidence: GPT-4, Vicuna</h2>
+<p>The same plot for two more models. GPT-4 is the most accurate and the least miscalibrated of the four, yet still far from the diagonal; Vicuna is almost never right and still states high confidence.</p>
+<p><span class="kt">Key takeaway:</span> Stronger models calibrate better, but none is close to calibrated.</p>
+<p><span class="kt">Slide figure:</span> Xiong et al. (2024), Fig. 2 (GSM8K), right two columns. GPT-4: accuracy 0.47, ECE 0.51. Vicuna: accuracy 0.02, ECE 0.77.</p>
 </article>
 
 <article>
@@ -441,10 +459,20 @@ with a single scalar $T &gt; 0$ fitted by minimizing NLL on a validation set. Pr
 <h2>From One Answer to a Set</h2>
 <p>Instead of one guess, the model returns a set of candidate answers: small for easy questions, larger for hard ones. The set size itself signals uncertainty.</p>
 <p><span class="kt">Key takeaway:</span> Set size is an uncertainty signal.</p>
-<p><span class="kt">Slide figure:</span> Angelopoulos and Bates (2021), Fig. 1: three ImageNet squirrel images with conformal prediction sets that grow as the image gets harder.</p>
+<p><span class="kt">Slide figure:</span> Angelopoulos and Bates (2021), Fig. 1: three ImageNet squirrel photos, easy to hard. Under each, the paper's prediction set is re-typeset in large type with each label's softmax score: {fox squirrel 0.99}; {fox squirrel .82, gray fox .03, bucket .02, rain barrel .02}; {marmot .30, fox squirrel .22, mink .18, weasel .16, beaver .03, polecat .01}.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Set-valued prediction.</strong> A set predictor is a map $C : \mathcal X \to 2^{\mathcal Y}$ from inputs to subsets of labels. The two figures of merit are <em>coverage</em>, $\Pr[Y \in C(X)]$, and <em>efficiency</em>, $\mathbb E\,|C(X)|$ — a useless predictor achieves perfect coverage with $C(x) \equiv \mathcal Y$, so the goal is guaranteed coverage with small sets, and an <em>adaptive</em> $|C(x)|$ that grows exactly on the hard inputs. Conformal prediction (next entries) achieves the coverage half by construction. On the slide: the <em>candidates</em> are all labels $\mathcal Y$ (1,000 ImageNet classes); the <em>native output</em> is the single $\arg\max_y \hat f(x)_y$; the <em>conformal output</em> keeps every $y$ with $s(x,y) = 1-\hat f(x)_y \le \hat q$. The candidates are not generated; the set is a filter on the existing label space. Standard reference: <a href="https://arxiv.org/abs/2107.07511">Angelopoulos &amp; Bates, "A Gentle Introduction to Conformal Prediction" (2021)</a>.</p>
+</div>
+</article>
+
+<article>
+<h2>Candidates, Native Output, Conformal Set</h2>
+<p>Three words to keep apart. The candidates are every label the classifier knows, here the 1,000 ImageNet classes. The native output is the model's single top label. The conformal set is the subset of candidates whose score passes the calibrated threshold. For the middle photo: native output fox squirrel, conformal set fox squirrel, gray fox, bucket, rain barrel.</p>
+<p><span class="kt">Key takeaway:</span> The conformal set filters existing labels; it generates nothing new.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>Candidates: the label space $\mathcal Y$. Native output: $\arg\max_y \hat f(x)_y$. Conformal output: $C(x) = \{\,y \in \mathcal Y : s(x,y) = 1-\hat f(x)_y \le \hat q\,\}$. Source: Angelopoulos and Bates (2021), Fig. 1 and §1.</p>
 </div>
 </article>
 
@@ -467,7 +495,7 @@ where the probability is over <em>both</em> the $n$ calibration points and the t
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>(A1) Exchangeability.</strong> Random variables $Z_1,\dots,Z_{n+1}$ are exchangeable if their joint distribution is invariant under every permutation $\pi$: $(Z_1,\dots,Z_{n+1}) \overset{d}{=} (Z_{\pi(1)},\dots,Z_{\pi(n+1)})$. I.i.d. sampling implies exchangeability; the converse fails, so this is a strictly weaker assumption.</p>
-<p><strong>(A2) Fixed score.</strong> $s$ is chosen independently of the calibration set, e.g. $s(x,y) = 1-\hat f(x)_y$ with $\hat f$ trained on separate data. Then $s_i = s(X_i,Y_i)$ inherit exchangeability from (A1). Fitting $s$ on the calibration data breaks this.</p>
+<p><strong>(A2) Fixed score.</strong> $s$ is chosen independently of the calibration set, e.g. $s(x,y) = 1-\hat f(x)_y$ with $\hat f$ trained on separate data. Then $s_i = s(X_i,Y_i)$ inherit exchangeability from (A1). Fitting $s$ on the calibration data can break this.</p>
 </div>
 </article>
 
@@ -496,16 +524,17 @@ where the probability is over <em>both</em> the $n$ calibration points and the t
 
 <article>
 <h2>The Coverage Theorem</h2>
-<p>Under the two assumptions, for every alpha and every n, coverage is at least one minus alpha and, with distinct scores, at most one minus alpha plus one over n plus one.</p>
+<p>Under the two assumptions, for every alpha and every n, coverage is at least one minus alpha. Only if the scores are almost surely distinct (no ties) is it also at most one minus alpha plus one over n plus one.</p>
 <p><span class="kt">Key takeaway:</span> Finite-sample, distribution-free, and nearly tight.</p>
 <div class="detail">
 <h3>Theorem &amp; proof</h3>
 <p><strong>Theorem (conformal coverage; Vovk, Gammerman &amp; Saunders 1999; as stated in Angelopoulos &amp; Bates 2021, Theorem 1 and Appendix D).</strong> Under (A1) and (A2), with $k = \lceil (n+1)(1-\alpha)\rceil$, $\hat q = s_{(k)}$ ($\hat q = \infty$ if $k = n+1$) and $C(x) = \{y : s(x,y) \le \hat q\}$:
-$$1-\alpha \;\le\; \Pr\bigl[\,Y_{n+1} \in C(X_{n+1})\,\bigr] \;\le\; 1-\alpha+\frac{1}{n+1}.$$
-The probability is over calibration and test data jointly. The lower bound always holds; the upper bound (Theorem D.2) needs almost surely distinct scores.</p>
+$$\Pr\bigl[\,Y_{n+1} \in C(X_{n+1})\,\bigr] \;\ge\; 1-\alpha \quad\text{always};$$
+$$\Pr\bigl[\,Y_{n+1} \in C(X_{n+1})\,\bigr] \;\le\; 1-\alpha+\frac{1}{n+1} \quad\text{if the scores are almost surely distinct (Theorem D.2)}.$$
+The probability is over calibration and test data jointly.</p>
 <p><strong>Proof</strong> (verified against Appendix D of Angelopoulos &amp; Bates). Assume distinct scores and $k \le n$; sort $s_{(1)} &lt; \cdots &lt; s_{(n)}$. By construction $\{Y_{n+1} \in C(X_{n+1})\} = \{s_{n+1} \le s_{(k)}\}$, which is the event that $s_{n+1}$ ranks at most $k$ among all $n+1$ scores. By (A1) and (A2) the scores $(s_1,\dots,s_{n+1})$ are exchangeable, so this rank is uniform on $\{1,\dots,n+1\}$ and
 $$\Pr[\,Y_{n+1} \in C(X_{n+1})\,] = \frac{k}{n+1} \;\ge\; \frac{(n+1)(1-\alpha)}{n+1} = 1-\alpha.$$
-<em>Upper bound:</em> $k &lt; (n+1)(1-\alpha)+1$ gives $k/(n+1) &lt; 1-\alpha+1/(n+1)$. <em>Ties:</em> with random tie-breaking, rank $\le k$ still implies $s_{n+1} \le s_{(k)}$, so coverage is at least $k/(n+1)$; only the upper bound can fail. <em>Edge case:</em> $k = n+1$ only when $\alpha &lt; 1/(n+1)$; then $\hat q = \infty$, $C = \mathcal Y$, coverage 1. <em>Why (A2):</em> a score fit on calibration data makes $s_{n+1}$ distributed differently from $s_1,\dots,s_n$, and the uniform-rank step fails. $\blacksquare$</p>
+<em>Upper bound:</em> $k &lt; (n+1)(1-\alpha)+1$ gives $k/(n+1) &lt; 1-\alpha+1/(n+1)$. <em>Ties:</em> with random tie-breaking, rank $\le k$ still implies $s_{n+1} \le s_{(k)}$, so coverage is at least $k/(n+1)$; only the upper bound can fail. <em>Edge case:</em> $k = n+1$ only when $\alpha &lt; 1/(n+1)$; then $\hat q = \infty$, $C = \mathcal Y$, coverage 1. <em>Why (A2):</em> a score fit on calibration data can make $s_{n+1}$ distributed differently from $s_1,\dots,s_n$, and then the uniform-rank step can fail. $\blacksquare$</p>
 <h3>Background &amp; further reading</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2107.07511">Angelopoulos &amp; Bates, "A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification" (2021)</a>, Theorem 1 and Theorems D.1–D.2.</li>
@@ -516,7 +545,7 @@ $$\Pr[\,Y_{n+1} \in C(X_{n+1})\,] = \frac{k}{n+1} \;\ge\; \frac{(n+1)(1-\alpha)}
 
 <article>
 <h2>Proof: Setup</h2>
-<p>Write all n plus one scores, the test score last. Covered means the test score is at most the k-th smallest calibration score, which means it ranks at most k. The picture: seven calibration scores leave eight gaps, and the test score is equally likely to fall in any of them.</p>
+<p>Write all n plus one scores, the test score last. Covered means the test score is at most the k-th smallest calibration score, which means it ranks at most k. The picture: seven calibration scores leave eight gaps. Assuming distinct scores, across joint draws of the calibration and test scores the test score's rank is uniform, so it falls in each gap with probability one in eight. This is not a statement conditional on the seven displayed values: given those values, the test score's position depends on its distribution.</p>
 <p><span class="kt">Key takeaway:</span> Coverage reduces to a rank.</p>
 </article>
 
@@ -528,7 +557,7 @@ $$\Pr[\,Y_{n+1} \in C(X_{n+1})\,] = \frac{k}{n+1} \;\ge\; \frac{(n+1)(1-\alpha)}
 
 <article>
 <h2>Proof (continued) — Ties and Edge Cases</h2>
-<p>The upper bound follows from the ceiling. Ties keep the lower bound but can break the upper one. The edge case k equals n plus one gives the whole label set. And the fixed-score assumption is exactly what step three needs.</p>
+<p>The upper bound follows from the ceiling. Ties keep the lower bound but can break the upper one. The edge case k equals n plus one gives the whole label set. And the fixed-score assumption is exactly what step three needs: a score fit on calibration data can break exchangeability.</p>
 <p><span class="kt">Key takeaway:</span> Coverage at least one minus alpha: any model, any distribution, any finite n.</p>
 </article>
 
@@ -563,21 +592,22 @@ $$\Pr[\,Y_{n+1} \in C(X_{n+1})\,] = \frac{k}{n+1} \;\ge\; \frac{(n+1)(1-\alpha)}
 
 <article>
 <h2>The Abstention Idea</h2>
-<p>When the set is large or empty, the model should defer. A small set means answer with confidence; a big set means say "I am not sure" and hand off to a human.</p>
+<p>When the set is large or empty, the model should defer: say "I am not sure" and hand off to a human. A singleton set is only a candidate for a separately validated decision policy, not permission to act. Marginal coverage does not bound error among singleton-only cases.</p>
 <p><span class="kt">Key takeaway:</span> A large set is a built-in signal to abstain.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Set-size deferral rule (course notes).</strong> Fix a budget $k$ and act as: answer with $C(x)$'s single element if $|C(x)| = 1$; present the shortlist if $1 &lt; |C(x)| \le k$; defer to a human if $|C(x)| &gt; k$. This is selective prediction with a conformal trigger: whatever the deferral policy, the events "truth missed" satisfy $\Pr[\,Y \notin C(X)\,] \le \alpha$ marginally, so the rule inherits a quantified miss rate rather than a hoped-for one. The set being <em>large</em> is itself informative — it certifies that the model cannot separate candidates at the chosen confidence level.</p>
+<p><strong>Singletons are not certified.</strong> Write $S$ for the event $|C(X)| = 1$ and $W$ for "the singleton is wrong", i.e. $S \wedge Y \notin C(X)$. The guarantee gives $\Pr[W] \le \Pr[Y \notin C(X)] \le \alpha$: the <em>joint</em> probability of being wrong <em>and</em> singleton. The error rate among singletons is $\Pr[\,Y \notin C(X) \mid S\,] = \Pr[W]/\Pr[S]$, which need not be $\le \alpha$; if singletons are rare, it can be much larger. Acting automatically on singletons therefore needs its own validation of that conditional error rate.</p>
 </div>
 </article>
 
 <article>
 <h2>A Medical Triage Example</h2>
-<p>A diagnosis model returns a set of conditions. One condition can proceed automatically; five conditions route to a doctor. The coverage guarantee bounds how often the truth is missed.</p>
+<p>A diagnosis model returns a set of conditions. One condition supports clinician review; five conditions route to a doctor. The coverage guarantee bounds how often the truth is missed, averaged over all patients in both branches, not within either branch.</p>
 <p><span class="kt">Key takeaway:</span> Set size becomes a triage decision with a bounded miss rate.</p>
 <div class="detail">
 <h3>Definitions</h3>
-<p><strong>What the bound does and does not promise (course notes).</strong> With $\alpha = 0.05$, at most 5% of patients <em>on average</em> have their true condition outside the returned set — a marginal guarantee over the patient population. It is <em>not</em> a per-patient or per-subgroup guarantee: coverage can be below $1-\alpha$ on a subgroup (e.g. a rare presentation) and above it elsewhere. Deployments that need subgroup validity use group-balanced or Mondrian conformal variants, running the same quantile construction within each group.</p>
+<p><strong>What the bound does and does not promise (course notes).</strong> With $\alpha = 0.05$, at most 5% of patients <em>on average</em> have their true condition outside the returned set — a marginal guarantee over the patient population. It is <em>not</em> a per-patient, per-branch, or per-subgroup guarantee: the one-condition branch alone may miss more than 5%; coverage can be below $1-\alpha$ on a subgroup (e.g. a rare presentation) and above it elsewhere. Deployments that need subgroup validity use group-balanced or Mondrian conformal variants, running the same quantile construction within each group.</p>
 </div>
 </article>
 

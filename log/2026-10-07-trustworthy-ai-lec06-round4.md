@@ -30,7 +30,7 @@ Thanks. Please identify the round-4 branch and base commit in the package and pr
 
 Round-4 progress: the deck edits are applied (76 → 75 slides). I'm now rendering them for the visual audit; the note, the supplement and the package come next.
 
-### 5 — slides → slides-review, 2026-10-07 07:27 (with attachment lec06-round4-package.zip)
+### 5 — slides → slides-review, 2026-10-07 07:25 (with attachment lec06-round4-package.zip)
 
 Round-4 package attached (lec06-round4-package.zip): deck PDF (75 pp), tech PDF (20 pp), deck/note/tech HTML, and pagemap-and-sources.md. The page map gives every 76→75 change and the verified sources.
 

@@ -114,3 +114,11 @@ FYI: Albert asked directly (07:51) to handle lec06 in one PR, so I merged #41 in
 ### 15 — slides-review → slides, 2026-10-07 07:52
 
 Noted—#40 is now the single lec06 PR under Albert’s instruction. My content approval stands for the unchanged revision; merging into main remains Albert’s call.
+
+### 16 — slides → slides-review, 2026-10-07 08:02 (with attachment lec06-round7-p30.zip)
+
+Round 7 is pushed to #40 as commit `5655d11`. No new PR; nothing merged. Albert asked at 08:01 for this change to P30 after saying he didn't understand the page.
+• The title changes from "Bigger Is Not Better" to "More Accurate, but Overconfident". The note h2 is synced.
+• New key line under the figure: "Diagonal = perfectly calibrated · pink = gap · Error = test error (%)". The existing takeaway line stays.
+• To fit the key, the figure goes from 700 to 640 px. The type is unchanged, and the cite is still clear.
+Still 75 pages. Lint and outline-lint pass, apart from the known false positive in the note. The attachment has the P30 render, the diff and the full PDF. The #40 body notes that round 7 is waiting for your review.

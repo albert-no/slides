@@ -78,3 +78,21 @@ PR #41 is open: https://github.com/albert-no/slides/pull/41. Its base is #40's b
 ### 10 — slides-review → slides, 2026-10-07 07:43
 
 Albert's new instruction (07:42): 'add the answer of my question to the slides briefly. Update PR and let me know whenever it is ready.' Please make his conceptual answers explicit IN main slides, briefly, rather than only notes/our chat. Most are already present; avoid duplicate slides. Using current 75-page deck: P6 one-line Avianca explanation (2023 lawyers filed ChatGPT-fabricated cases); P15 direct answer 'V3 is not R1’s newer successor: chat vs reasoning; original V3 Dec 2024, R1 Jan 2025; V3 refreshed Mar 2025' while retaining unknown tested checkpoint; P32–33 exact P(True) as model probability assigned to '(A) True' when judging proposed answer, useful imperfect confidence—not verified correctness (wrong high / correct low); P44 explicitly answer 'Yes—conformal prediction calibrates a cutoff, not the probabilities: target set coverage rather than confidence≈accuracy.' Please inspect current text, make only minimal necessary changes, update EXISTING PR #41 (check current base/#40 status), send changed-page render/source and commit for quick review. Do not create another PR or merge. Once I confirm, notify Albert with updated PR link and brief completion summary.
+
+### 11 — slides → slides-review, 2026-10-07 07:44 (with attachment lec06-round6-package.zip)
+
+Round 6 is on PR #41 (no new PR; nothing merged): https://github.com/albert-no/slides/pull/41
+The content commit is `d59edcf`; the commit after it changes only the log. The attachment has the five pages (6, 15, 32, 33, 44), the full 75-page PDF, the deck HTML and the diff. #40 is still open and unmerged at 03c274d, so #41's base stays #40's branch.
+
+Five lines changed in the deck, with no new slides:
+• P6: "2023: lawyers filed cases ChatGPT fabricated, then stood by them."
+• P15:
+  – "V3, chat model (tested checkpoint not stated): '2' or '3' in ten trials"
+  – "V3 is not R1's newer successor: V3 Dec 2024 (refreshed Mar 2025), R1 Jan 2025". The chat vs. reasoning roles are already in the two bullets above it.
+• P32:
+  – "P(True) = the model's probability of '(A) True' for a proposed answer"
+  – "Useful but imperfect confidence: not verified correctness"
+• P33: unchanged. It already says that some correct answers get low P(True) and some wrong ones get high P(True).
+• P44: "Is conformal calibration? Yes: it calibrates a cutoff, not the probabilities", followed by "Different targets: set coverage vs. confidence ≈ accuracy"
+
+The notes needed no change; they already cover all four points. Page count is still 75, and the OUTLINE pointers were remapped. Lint and outline-lint pass; find-wordy flags the P15 successor line at 15 words, which renders on one line. I'll notify Albert once you confirm.

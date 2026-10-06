@@ -58,6 +58,7 @@ What makes an error a <em>hallucination</em> rather than a mere mistake is that 
 <h2>Fluency Fools Us</h2>
 <p>We instinctively read confident, well-formatted prose as true prose. The signal we trust is style, not verified truth.</p>
 <p><span class="kt">Key takeaway:</span> Style is not evidence of correctness.</p>
+<p><span class="kt">Slide figure:</span> a test. Two citations in identical format: Vaswani et al. (2017), which exists in the NeurIPS proceedings, and "Lindqvist and Okafor (2017)", invented for the slide. Nothing on the page separates them; only a lookup does. The purpose: show that the cues readers use (format, venue, confident tone) carry no information about existence.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Fluency vs. truth (formalization: course notes).</strong> Fluency is an <em>internal</em> quantity: text $x$ is fluent when it has high likelihood under the language model itself, i.e. low perplexity $\exp\bigl(-\tfrac1T\sum_t \log \hat p(x_t \mid x_{&lt;t})\bigr)$. Truth is an <em>external</em> predicate: whether the claims in $x$ hold in the world (or follow from a given source). Nothing in the definition of likelihood mentions the external predicate, so the two can disagree arbitrarily — a maximally fluent string can be entirely false. The reader's heuristic "fluent $\Rightarrow$ true" is exactly the gap a hallucinating model exploits.</p>
@@ -83,7 +84,7 @@ What makes an error a <em>hallucination</em> rather than a mere mistake is that 
 
 <article>
 <h2>Invented Medical Facts</h2>
-<p>Google's Med-Gemini paper described an infarct in the "basilar ganglia" — a nonexistent brain area blending basal ganglia and basilar artery — and the fluent error sat unnoticed for about a year until a neurologist flagged it. In medicine, a fluent error is a dangerous one.</p>
+<p>Google's Med-Gemini paper described an infarct (dead tissue from a blocked blood supply; in the brain, a stroke) in the "basilar ganglia" — a nonexistent brain area blending basal ganglia and basilar artery — and the fluent error sat unnoticed for about a year until a neurologist flagged it. In medicine, a fluent error is a dangerous one.</p>
 <p><span class="kt">Key takeaway:</span> High-stakes domains have little margin for confident errors.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
@@ -171,6 +172,31 @@ Informally (the paper's 99%-confidence version): <em>hallucination rate $\gtrsim
 <ul>
 <li><a href="https://arxiv.org/abs/2311.14648">Kalai &amp; Vempala, "Calibrated Language Models Must Hallucinate" (STOC 2024)</a> — full statements (Theorem 1, Corollary 1) and proofs.</li>
 </ul>
+</div>
+</article>
+
+<article>
+<h2>Counting With a Poor Model</h2>
+<p>Ask "How many Ds are in DEEPSEEK?" The answer is one. DeepSeek-V3 said two or three in ten independent trials; the reasoning model R1 spells the word letter by letter and gets one. Same kind of data, better model, so the error belongs to the model.</p>
+<p><span class="kt">Key takeaway:</span> Some hallucinations come from a model that cannot represent the task, not from missing data.</p>
+<p><span class="kt">Slide figure:</span> the word seen two ways: as letters, where one D is visible, and as tokens D/EEP/SEE/K (the paper's example), where letters are not separate units.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Kalai, Nachum, Vempala &amp; Zhang (2025), §1 (the prompt and the V3 result, accessed 11 May 2025) and §3.3.2 (the R1 chain of thought and the token explanation). The paper's framing: a <em>poor model</em> is one whose family cannot separate valid from invalid responses, even with perfect data. <a href="https://arxiv.org/abs/2509.04664">arXiv 2509.04664</a>.</p>
+</div>
+</article>
+
+<article>
+<h2>Poor Model ⇒ Errors, Precisely</h2>
+<p>The theorem: generation error is at least twice the best achievable classification error, minus two small terms. If no threshold on the model's probability can tell right counts from wrong ones, generation must make errors.</p>
+<p><span class="kt">Key takeaway:</span> Hard classification forces generation errors.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p>(Kalai et al. 2025, §3.3.2.) For each prompt $c$, $\mathcal V_c$ and $\mathcal E_c$ are the valid and error responses. $\mathrm{err}$ is the probability the model generates an error response. $\delta$ is the model's miscalibration. The classifier family thresholds a language model's probability: $g_{\theta,t}(c,r) = +$ if $\hat p_\theta(r\mid c) &gt; t$, else $-$, over all $\theta \in \Theta$, $t \in [0,1]$. Then $\mathrm{opt}(\mathcal G) = \min_{g\in\mathcal G}\Pr_{x\sim D}[g(x)\ne f(x)]$ is the best error of any thresholded model in the family.</p>
+<h3>Theorem &amp; proof</h3>
+<p><strong>Statement</strong> (the paper's §3.3.2, following from its Theorem 1):
+$$\mathrm{err} \;\ge\; 2\,\mathrm{opt}(\mathcal G) \;-\; \frac{\max_c |\mathcal V_c|}{\min_c |\mathcal E_c|} \;-\; \delta.$$
+Proof in the paper (Theorem 1 reduces generation to the Is-It-Valid classification problem). The letter-counting case: tokenized models cannot separate correct from incorrect counts by thresholding, so $\mathrm{opt}(\mathcal G)$ is large and the bound forces errors. The paper's cleaner instance is Corollary 2: any trigram model has generation error at least $1/2$ on its two-prompt example.</p>
 </div>
 </article>
 
@@ -321,7 +347,7 @@ Perfect calibration means $\mathrm{acc}(B_m) = \mathrm{conf}(B_m)$ for all $m$ �
 
 <article>
 <h2>Measuring the Gap</h2>
-<p>Expected Calibration Error averages, over confidence bins, the absolute gap between accuracy and confidence, weighted by bin size. Zero is perfect calibration.</p>
+<p>Expected Calibration Error averages, over confidence bins, the absolute gap between confidence and accuracy, weighted by bin size. Zero is perfect calibration. On the slide each red box is one bin's gap; here confidence exceeds accuracy in every bin, so the model is overconfident.</p>
 <p><span class="kt">Key takeaway:</span> ECE is one number summarizing the whole reliability diagram.</p>
 <div class="detail">
 <h3>Definitions</h3>
@@ -334,13 +360,13 @@ where $n$ is the number of samples. Guo et al. use $M = 15$ in their experiments
 
 <article>
 <h2>Reading ECE</h2>
-<p>Group answers into confidence bins, compute accuracy versus average confidence per bin, then weight each gap by the fraction of answers in that bin.</p>
+<p>Group answers into confidence bins, compute accuracy versus average confidence per bin, then weight each gap by the fraction of answers in that bin. In the picture each bar is as wide as its bin share and as tall as its gap, so the total red area is ECE.</p>
 <p><span class="kt">Key takeaway:</span> ECE is a weighted average of per-bin calibration gaps.</p>
 <div class="detail">
 <h3>Definitions</h3>
-<p><strong>Worked example (derivation: course notes).</strong> Suppose $n = 100$ answers land in two occupied bins: 40 answers with mean confidence $0.65$ and accuracy $0.55$ (gap $0.10$), and 60 answers with mean confidence $0.95$ and accuracy $0.80$ (gap $0.15$). Then
-$$\mathrm{ECE} = \tfrac{40}{100}(0.10) + \tfrac{60}{100}(0.15) = 0.04 + 0.09 = 0.13,$$
-i.e. stated confidence overshoots earned accuracy by 13 points on average — an overconfident model, since both bars sit below the diagonal.</p>
+<p><strong>The slide's example (course illustration, not real data).</strong> Five bins with shares $0.10, 0.10, 0.15, 0.25, 0.40$ and gaps $|\mathrm{acc}-\mathrm{conf}|$ of $0.03, 0.07, 0.15, 0.20, 0.22$:
+$$\mathrm{ECE} = .10(.03) + .10(.07) + .15(.15) + .25(.20) + .40(.22) = 0.1705 \approx 0.17.$$
+Two checks. The weights are bin shares $|B_m|/n$, which sum to 1, so ECE is a weighted average and never exceeds the largest gap. The absolute value matters: without it an over-confident bin and an under-confident bin would cancel.</p>
 </div>
 </article>
 
@@ -370,7 +396,7 @@ with a single scalar $T &gt; 0$ fitted by minimizing NLL on a validation set. Pr
 
 <article>
 <h2>Do Models Know What They Know?</h2>
-<p>Kadavath and colleagues found that large models carry a partial self-estimate of correctness: their probabilities often track accuracy, improving with scale but still imperfect.</p>
+<p>Kadavath and colleagues found that large models carry a partial self-estimate of correctness (a probability that the model's own answer is right, informative but not reliable on every answer): their probabilities often track accuracy, improving with scale but still imperfect.</p>
 <p><span class="kt">Key takeaway:</span> Model confidence is a usable but imperfect signal.</p>
 <p><span class="kt">Slide figure:</span> Kadavath et al. (2022), Fig. 1: the 52B model's P(True) on its own sampled answers, showing good but imperfect self-evaluation calibration.</p>
 <div class="detail">
@@ -379,6 +405,13 @@ with a single scalar $T &gt; 0$ fitted by minimizing NLL on a validation set. Pr
 <h3>Background &amp; further reading</h3>
 <p>Their findings: larger models are well calibrated on diverse multiple-choice and true/false questions <em>when the format is right</em>, self-evaluation improves with scale, and P(IK) generalizes across tasks only partially — calibration degrades on out-of-distribution task types. This is the evidence behind the slide's "usable but imperfect": the self-estimate exists and scales, but cannot be trusted blindly. <a href="https://arxiv.org/abs/2207.05221">Kadavath et al., "Language Models (Mostly) Know What They Know" (2022)</a>.</p>
 </div>
+</article>
+
+<article>
+<h2>Reading the Plot: P(True)</h2>
+<p>The model proposes an answer, then is asked "Is the proposed answer (A) True or (B) False?". P(True) is its probability of (A). Correct answers cluster near 0.9, wrong ones near 0.4, and keeping only answers above 0.5 raises accuracy.</p>
+<p><span class="kt">Key takeaway:</span> "Partial" means the two histograms overlap: some wrong answers still get high P(True).</p>
+<p><span class="kt">Slide figure:</span> schematic of the left panel of Kadavath et al. (2022) Fig. 1 (52B model, its own samples, five tasks).</p>
 </article>
 
 <article>
@@ -411,7 +444,7 @@ with a single scalar $T &gt; 0$ fitted by minimizing NLL on a validation set. Pr
 <p><span class="kt">Slide figure:</span> Angelopoulos and Bates (2021), Fig. 1: three ImageNet squirrel images with conformal prediction sets that grow as the image gets harder.</p>
 <div class="detail">
 <h3>Definitions</h3>
-<p><strong>Set-valued prediction.</strong> A set predictor is a map $C : \mathcal X \to 2^{\mathcal Y}$ from inputs to subsets of labels. The two figures of merit are <em>coverage</em>, $\Pr[Y \in C(X)]$, and <em>efficiency</em>, $\mathbb E\,|C(X)|$ — a useless predictor achieves perfect coverage with $C(x) \equiv \mathcal Y$, so the goal is guaranteed coverage with small sets, and an <em>adaptive</em> $|C(x)|$ that grows exactly on the hard inputs. Conformal prediction (next entries) achieves the coverage half by construction. Standard reference: <a href="https://arxiv.org/abs/2107.07511">Angelopoulos &amp; Bates, "A Gentle Introduction to Conformal Prediction" (2021)</a>.</p>
+<p><strong>Set-valued prediction.</strong> A set predictor is a map $C : \mathcal X \to 2^{\mathcal Y}$ from inputs to subsets of labels. The two figures of merit are <em>coverage</em>, $\Pr[Y \in C(X)]$, and <em>efficiency</em>, $\mathbb E\,|C(X)|$ — a useless predictor achieves perfect coverage with $C(x) \equiv \mathcal Y$, so the goal is guaranteed coverage with small sets, and an <em>adaptive</em> $|C(x)|$ that grows exactly on the hard inputs. Conformal prediction (next entries) achieves the coverage half by construction. On the slide: the <em>candidates</em> are all labels $\mathcal Y$ (1,000 ImageNet classes); the <em>native output</em> is the single $\arg\max_y \hat f(x)_y$; the <em>conformal output</em> keeps every $y$ with $s(x,y) = 1-\hat f(x)_y \le \hat q$. The candidates are not generated; the set is a filter on the existing label space. Standard reference: <a href="https://arxiv.org/abs/2107.07511">Angelopoulos &amp; Bates, "A Gentle Introduction to Conformal Prediction" (2021)</a>.</p>
 </div>
 </article>
 
@@ -423,44 +456,31 @@ with a single scalar $T &gt; 0$ fitted by minimizing NLL on a validation set. Pr
 <h3>Definitions</h3>
 <p><strong>Marginal coverage.</strong> The guarantee is
 $$\Pr\bigl[\,Y_{\mathrm{test}} \in C(X_{\mathrm{test}})\,\bigr] \;\ge\; 1 - \alpha,$$
-where the probability is over <em>both</em> the $n$ calibration points and the test point. Two reading notes (course notes, following Angelopoulos &amp; Bates): the guarantee is <em>marginal</em> — an average over draws — not <em>conditional</em> on a particular $x$ (per-input coverage $\Pr[Y \in C(X) \mid X = x] \ge 1-\alpha$ is provably unattainable distribution-free without trivial sets); and it is <em>distribution-free</em> — no assumption on the data distribution or on the quality of the underlying model, only exchangeability of calibration and test data.</p>
+where the probability is over <em>both</em> the $n$ calibration points and the test point. Two reading notes (course notes, following Angelopoulos &amp; Bates): the guarantee is <em>marginal</em> — an average over draws — not <em>conditional</em> on a particular $x$ (exact, nontrivial, distribution-free coverage $\Pr[Y \in C(X) \mid X = x] \ge 1-\alpha$ for every $x$ is unavailable in general without further assumptions; weaker conditional targets are achievable, see "Marginal ≠ Conditional"); and it is <em>distribution-free</em> — no assumption on the data distribution or on the quality of the underlying model, only exchangeability of calibration and test data.</p>
 </div>
 </article>
 
 <article>
-<h2>It Comes With a Proof</h2>
-<p>The coverage guarantee holds without trusting the model's internals. It needs only that the calibration and test data are exchangeable, making the coverage provable rather than hoped for.</p>
-<p><span class="kt">Key takeaway:</span> The guarantee is distribution-free and proven.</p>
+<h2>Two Assumptions, None on the Model</h2>
+<p>The guarantee needs two things: the calibration and test data are exchangeable, and the score function was fixed without looking at the calibration data. Nothing is assumed about the model's accuracy.</p>
+<p><span class="kt">Key takeaway:</span> A bad model keeps the coverage; it only gets larger sets.</p>
 <div class="detail">
 <h3>Definitions</h3>
-<p><strong>Exchangeability.</strong> Random variables $Z_1,\dots,Z_{n+1}$ are exchangeable if their joint distribution is invariant under every permutation $\pi$: $(Z_1,\dots,Z_{n+1}) \overset{d}{=} (Z_{\pi(1)},\dots,Z_{\pi(n+1)})$. I.i.d. sampling implies exchangeability; the converse fails, so this is a strictly weaker assumption.</p>
-<h3>Theorem &amp; proof</h3>
-<p><strong>Theorem (conformal coverage; Angelopoulos &amp; Bates 2021, Theorem D.1; originally Vovk et al.).</strong> Let $(X_i, Y_i)_{i=1}^n$ and $(X_{\mathrm{test}}, Y_{\mathrm{test}})$ be exchangeable, $s(x,y)$ any score function, $s_i = s(X_i, Y_i)$,
-$$\hat q \;=\; \text{the } \lceil (n+1)(1-\alpha)\rceil/n \text{ empirical quantile of } s_1,\dots,s_n, \qquad C(x) = \{y : s(x,y) \le \hat q\}.$$
-Then $\Pr[\,Y_{\mathrm{test}} \in C(X_{\mathrm{test}})\,] \ge 1-\alpha$.</p>
-<p><strong>Proof</strong> (verified against Appendix D of Angelopoulos &amp; Bates). Assume the scores are distinct (ties are handled by random tie-breaking) and sort them $s_{(1)} &lt; \cdots &lt; s_{(n)}$. If $\alpha &lt; 1/(n+1)$ then $\lceil (n+1)(1-\alpha)\rceil &gt; n$, $\hat q = \infty$, $C(x) = \mathcal Y$, and coverage is trivial. Otherwise $\hat q = s_{(k)}$ with $k = \lceil (n+1)(1-\alpha)\rceil$, and by construction
-$$\{\,Y_{\mathrm{test}} \in C(X_{\mathrm{test}})\,\} \;=\; \{\, s_{\mathrm{test}} \le s_{(k)} \,\}.$$
-By exchangeability of $(s_1,\dots,s_n,s_{\mathrm{test}})$, the rank of $s_{\mathrm{test}}$ among all $n+1$ scores is uniform on $\{1,\dots,n+1\}$, so for any integer $k$: $\Pr[\,s_{\mathrm{test}} \le s_{(k)}\,] = k/(n+1)$. Hence
-$$\Pr[\,Y_{\mathrm{test}} \in C(X_{\mathrm{test}})\,] \;=\; \frac{\lceil (n+1)(1-\alpha)\rceil}{n+1} \;\ge\; \frac{(n+1)(1-\alpha)}{n+1} \;=\; 1-\alpha. \qquad \blacksquare$$</p>
-<p><strong>Tightness (Theorem D.2).</strong> If the scores have a continuous joint distribution, coverage is also upper-bounded: $\Pr[\,Y_{\mathrm{test}} \in C(X_{\mathrm{test}})\,] \le 1 - \alpha + \tfrac{1}{n+1}$ — the procedure does not over-cover by more than $1/(n+1)$.</p>
-<h3>Background &amp; further reading</h3>
-<ul>
-<li><a href="https://arxiv.org/abs/2107.07511">Angelopoulos &amp; Bates, "A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification" (2021)</a> — Theorems D.1–D.2 with the proof above.</li>
-</ul>
+<p><strong>(A1) Exchangeability.</strong> Random variables $Z_1,\dots,Z_{n+1}$ are exchangeable if their joint distribution is invariant under every permutation $\pi$: $(Z_1,\dots,Z_{n+1}) \overset{d}{=} (Z_{\pi(1)},\dots,Z_{\pi(n+1)})$. I.i.d. sampling implies exchangeability; the converse fails, so this is a strictly weaker assumption.</p>
+<p><strong>(A2) Fixed score.</strong> $s$ is chosen independently of the calibration set, e.g. $s(x,y) = 1-\hat f(x)_y$ with $\hat f$ trained on separate data. Then $s_i = s(X_i,Y_i)$ inherit exchangeability from (A1). Fitting $s$ on the calibration data breaks this.</p>
 </div>
 </article>
 
 <article>
 <h2>How It Works</h2>
-<p>Hold out a calibration set with known answers, score how surprised the model is on each, set a threshold at the 90th percentile of those scores, and at test time keep every candidate below the threshold.</p>
+<p>Hold out a calibration set with known answers, score how surprised the model is on each, set the threshold at the $k$-th smallest score with $k = \lceil (n+1)(1-\alpha)\rceil$ (just above the 90th percentile), and at test time keep every candidate below the threshold.</p>
 <p><span class="kt">Key takeaway:</span> A held-out quantile turns scores into a guaranteed set.</p>
-<p><span class="kt">Slide figure:</span> Angelopoulos and Bates (2021), Fig. 2: the three-step conformal recipe — compute scores on hold-out data, take the quantile, construct the prediction set.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p><strong>Split-conformal recipe</strong> (Angelopoulos &amp; Bates 2021; also the lec06 technical supplement).</p>
 <ol>
 <li>Choose a <em>nonconformity score</em> $s(x,y)$ — larger = model more surprised that $y$ is the answer to $x$. The canonical classification choice is $s(x,y) = 1 - \hat p(y \mid x)$.</li>
-<li>On $n$ held-out calibration pairs compute $s_1,\dots,s_n$ and set $\hat q$ to their $\lceil (n+1)(1-\alpha)\rceil/n$ quantile (for $\alpha = 0.1$, $n = 1000$: the 991st smallest score — slightly above the 90th percentile; the $+1$ is what makes the finite-sample proof work).</li>
+<li>On $n$ held-out calibration pairs compute $s_1,\dots,s_n$ and set $\hat q$ to their $\lceil (n+1)(1-\alpha)\rceil/n$ quantile (for $\alpha = 0.1$, $n = 1000$: $k = \lceil 900.9\rceil = 901$, the 901st smallest score, slightly above the 90th percentile; the $+1$ is what makes the finite-sample proof work). If $k = n+1$, which happens only when $\alpha &lt; 1/(n+1)$, set $\hat q = \infty$.</li>
 <li>At test time output $C(x) = \{\,y : s(x,y) \le \hat q\,\}$.</li>
 </ol>
 <p>The model quality only affects <em>efficiency</em>: a bad model still gets valid coverage, just with big sets. This decoupling — validity by construction, sharpness from the model — is the design principle of the whole framework.</p>
@@ -468,9 +488,77 @@ $$\Pr[\,Y_{\mathrm{test}} \in C(X_{\mathrm{test}})\,] \;=\; \frac{\lceil (n+1)(1
 </article>
 
 <article>
+<h2>The Recipe in Pictures</h2>
+<p>The same three steps as a picture: score the calibration pairs, take the $k$-th smallest score as the threshold, and at test time keep every label whose softmax output clears one minus the threshold.</p>
+<p><span class="kt">Key takeaway:</span> One threshold, set once on held-out data.</p>
+<p><span class="kt">Slide figure:</span> Angelopoulos and Bates (2021), Fig. 2: compute scores on hold-out data, get the quantile, construct the prediction set.</p>
+</article>
+
+<article>
+<h2>The Coverage Theorem</h2>
+<p>Under the two assumptions, for every alpha and every n, coverage is at least one minus alpha and, with distinct scores, at most one minus alpha plus one over n plus one.</p>
+<p><span class="kt">Key takeaway:</span> Finite-sample, distribution-free, and nearly tight.</p>
+<div class="detail">
+<h3>Theorem &amp; proof</h3>
+<p><strong>Theorem (conformal coverage; Vovk, Gammerman &amp; Saunders 1999; as stated in Angelopoulos &amp; Bates 2021, Theorem 1 and Appendix D).</strong> Under (A1) and (A2), with $k = \lceil (n+1)(1-\alpha)\rceil$, $\hat q = s_{(k)}$ ($\hat q = \infty$ if $k = n+1$) and $C(x) = \{y : s(x,y) \le \hat q\}$:
+$$1-\alpha \;\le\; \Pr\bigl[\,Y_{n+1} \in C(X_{n+1})\,\bigr] \;\le\; 1-\alpha+\frac{1}{n+1}.$$
+The probability is over calibration and test data jointly. The lower bound always holds; the upper bound (Theorem D.2) needs almost surely distinct scores.</p>
+<p><strong>Proof</strong> (verified against Appendix D of Angelopoulos &amp; Bates). Assume distinct scores and $k \le n$; sort $s_{(1)} &lt; \cdots &lt; s_{(n)}$. By construction $\{Y_{n+1} \in C(X_{n+1})\} = \{s_{n+1} \le s_{(k)}\}$, which is the event that $s_{n+1}$ ranks at most $k$ among all $n+1$ scores. By (A1) and (A2) the scores $(s_1,\dots,s_{n+1})$ are exchangeable, so this rank is uniform on $\{1,\dots,n+1\}$ and
+$$\Pr[\,Y_{n+1} \in C(X_{n+1})\,] = \frac{k}{n+1} \;\ge\; \frac{(n+1)(1-\alpha)}{n+1} = 1-\alpha.$$
+<em>Upper bound:</em> $k &lt; (n+1)(1-\alpha)+1$ gives $k/(n+1) &lt; 1-\alpha+1/(n+1)$. <em>Ties:</em> with random tie-breaking, rank $\le k$ still implies $s_{n+1} \le s_{(k)}$, so coverage is at least $k/(n+1)$; only the upper bound can fail. <em>Edge case:</em> $k = n+1$ only when $\alpha &lt; 1/(n+1)$; then $\hat q = \infty$, $C = \mathcal Y$, coverage 1. <em>Why (A2):</em> a score fit on calibration data makes $s_{n+1}$ distributed differently from $s_1,\dots,s_n$, and the uniform-rank step fails. $\blacksquare$</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2107.07511">Angelopoulos &amp; Bates, "A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification" (2021)</a>, Theorem 1 and Theorems D.1–D.2.</li>
+<li>Vovk, Gammerman &amp; Saunders, "Machine-Learning Applications of Algorithmic Randomness", ICML 1999, the original conformal construction.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>Proof: Setup</h2>
+<p>Write all n plus one scores, the test score last. Covered means the test score is at most the k-th smallest calibration score, which means it ranks at most k. The picture: seven calibration scores leave eight gaps, and the test score is equally likely to fall in any of them.</p>
+<p><span class="kt">Key takeaway:</span> Coverage reduces to a rank.</p>
+</article>
+
+<article>
+<h2>Proof: The Rank Step</h2>
+<p>Step one is the definition of the set; step two rewrites it as a rank; step three uses exchangeability, so the rank is uniform and the probability is k over n plus one; step four is the ceiling.</p>
+<p><span class="kt">Key takeaway:</span> Exchangeability does all the work.</p>
+</article>
+
+<article>
+<h2>Proof (continued) — Ties and Edge Cases</h2>
+<p>The upper bound follows from the ceiling. Ties keep the lower bound but can break the upper one. The edge case k equals n plus one gives the whole label set. And the fixed-score assumption is exactly what step three needs.</p>
+<p><span class="kt">Key takeaway:</span> Coverage at least one minus alpha: any model, any distribution, any finite n.</p>
+</article>
+
+<article>
 <h2>The Prediction Set Picture</h2>
 <p>The calibration threshold draws a line through candidate scores. Candidates more plausible than the threshold stay in the set; the rest are dropped.</p>
 <p><span class="kt">Key takeaway:</span> A single threshold defines which candidates survive.</p>
+</article>
+
+<article>
+<h2>What the Guarantee Covers</h2>
+<p>Guaranteed: marginal coverage, for any model and any distribution, at finite n. Not guaranteed: coverage for your particular input, coverage under distribution shift, small sets, or a correct single answer.</p>
+<p><span class="kt">Key takeaway:</span> Shift breaks (A1); a weak score keeps coverage but inflates the sets.</p>
+</article>
+
+<article>
+<h2>Marginal ≠ Conditional</h2>
+<p>The guarantee averages over inputs. In the picture, easy inputs (two thirds) are covered 99% of the time and hard inputs (one third) only 72%, and the average is still 90%.</p>
+<p><span class="kt">Key takeaway:</span> 90% on average can mean much less on the inputs that matter.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Marginal vs conditional.</strong> Marginal: $\Pr[Y \in C(X)] \ge 1-\alpha$. Conditional: $\Pr[Y \in C(X) \mid X = x] \ge 1-\alpha$ for every $x$. The example on the slide: $\tfrac23(0.99) + \tfrac13(0.72) = 0.66 + 0.24 = 0.90$.</p>
+<p><strong>What is and is not possible.</strong> Exact, nontrivial, distribution-free conditional coverage is unavailable in general without further assumptions (Vovk 2012; Lei &amp; Wasserman 2014, Lemma 1; Foygel Barber et al. 2021). This is not a claim that every conditional guarantee is impossible: label-conditional (per-class) coverage, coverage within pre-specified groups, and approximate conditional coverage are achievable.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li>Vovk, "Conditional Validity of Inductive Conformal Predictors", ACML 2012.</li>
+<li>Lei &amp; Wasserman, "Distribution-Free Prediction Bands", JRSS-B 2014, Lemma 1 ("Impossibility of non-trivial finite sample conditional validity").</li>
+<li>Foygel Barber, Candès, Ramdas &amp; Tibshirani, "The Limits of Distribution-Free Conditional Predictive Inference", Information and Inference 2021.</li>
+</ul>
+</div>
 </article>
 
 <article>
@@ -623,15 +711,36 @@ Choosing the penalty $\lambda$ therefore <em>implements a confidence threshold $
 </article>
 
 <article>
-<h2>Detection in Code</h2>
-<p>A short Colab: sample five answers to one question, cluster them by meaning, and flag high-entropy outputs as risky. A complete self-consistency check end to end.</p>
-<p><span class="kt">Key takeaway:</span> A basic detector is a handful of lines of code.</p>
-</article>
-
-<article>
 <h2>06 — Frontier 2025–26</h2>
 <p>Sixth section. Where the field stands now: benchmarks, reasoning models, sycophancy, factuality evaluations, and the open problems that remain.</p>
 <p><span class="kt">Key takeaway:</span> Reliability is an active, unsolved research area.</p>
+</article>
+
+<article>
+<h2>Misconceptions: Errors Learned From Us</h2>
+<p>A misconception is a false belief many people share, so it fills the training text. Asked "Can coughing stop a heart attack?", GPT-3 says it can help; it cannot. TruthfulQA calls these imitative falsehoods: wrong, yet likely under the training distribution.</p>
+<p><span class="kt">Key takeaway:</span> Some errors are learned from us, not invented.</p>
+<p><span class="kt">Slide figure:</span> three TruthfulQA questions with GPT-3's answer and the reference answer (Lin et al. 2022, Fig. 1 and Table 6).</p>
+</article>
+
+<article>
+<h2>In the Wild: Search Answers, 2024</h2>
+<p>In May 2024 Google's AI Overviews answered "How many rocks should I eat?" from a satirical article republished on a geological software provider's site, and suggested glue to keep cheese on pizza from sarcastic or troll-y forum posts. Google called the first a data void: almost no serious content on the question.</p>
+<p><span class="kt">Key takeaway:</span> Faithful to the source, false about the world.</p>
+<div class="detail">
+<h3>Background &amp; further reading</h3>
+<p>Liz Reid (Google), "AI Overviews: About last week", Google blog, May 30, 2024. The post's own wording: "data void" or "information gap"; the rock answer "faithfully linked to one of the only websites that tackled the question"; forum content that was "sarcastic or troll-y".</p>
+</div>
+</article>
+
+<article>
+<h2>Should a Truthful Model Share Our Errors?</h2>
+<p>No. In TruthfulQA, truthful means asserting no falsehood, however popular. Matching the human average is the failure, not the goal. "No comment" is truthful but uninformative, so the target is truthful and informative together.</p>
+<p><span class="kt">Key takeaway:</span> Larger GPT-3 models repeated more myths: imitation, not ignorance.</p>
+<div class="detail">
+<h3>Definitions</h3>
+<p><strong>Truthful and informative</strong> (Lin et al. 2022, §2.1). An answer is truthful if it avoids asserting a false statement; refusing or expressing uncertainty counts as truthful. Informativeness is scored separately, so a model that always says "No comment" is fully truthful and useless.</p>
+</div>
 </article>
 
 <article>
@@ -650,17 +759,25 @@ Choosing the penalty $\lambda$ therefore <em>implements a confidence threshold $
 
 <article>
 <h2>Benchmarks for Hallucination</h2>
-<p>You cannot fix what you cannot measure. Benchmarks use factuality test sets with checkable answers, questions designed to bait confident errors, and automatic graders against trusted sources.</p>
+<p>Each benchmark fixes three things: a ground truth, a grader, and a metric. TruthfulQA, SimpleQA and FActScore check facts about the world; Vectara's HHEM checks faithfulness to a given document. Pick the benchmark that matches the failure.</p>
 <p><span class="kt">Key takeaway:</span> Good benchmarks make hallucination measurable.</p>
 <div class="detail">
 <h3>Background &amp; further reading</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2411.04368">SimpleQA (Wei et al., 2024)</a> — short-form factuality: questions adversarially collected against GPT-4, each with a single indisputable answer; responses graded correct / incorrect / not attempted, so abstention is a first-class outcome.</li>
 <li><a href="https://arxiv.org/abs/2109.07958">TruthfulQA (Lin et al., ACL 2022)</a> — the "baiting" design of the previous entry.</li>
+<li><a href="https://arxiv.org/abs/2305.14251">FActScore (Min et al., EMNLP 2023)</a> — splits a long generation into atomic facts and reports the fraction supported by a knowledge source (Wikipedia).</li>
 <li><a href="https://github.com/vectara/hallucination-leaderboard">Vectara Hallucination Leaderboard</a> — public leaderboard scoring how often each LLM hallucinates when <em>summarizing a document</em> (a faithfulness benchmark), graded automatically by Vectara's HHEM classifier and updated as models change; <a href="https://huggingface.co/spaces/vectara/leaderboard">interactive version on Hugging Face</a>.</li>
 </ul>
 <p>Note how the three divide the territory: SimpleQA measures world-facts with abstention, TruthfulQA measures inherited misconceptions, and HHEM measures faithfulness to a provided source — one benchmark per failure mode defined in Section 01.</p>
 </div>
+</article>
+
+<article>
+<h2>Measuring Faithfulness: Vectara HHEM</h2>
+<p>Vectara asks each model to summarize over 7,700 articles using only the passage, and a judge model flags unsupported content. The hallucination rate is 100 minus the factual consistency rate. Caveats: the judge is itself a model, and the data are not public.</p>
+<p><span class="kt">Key takeaway:</span> Faithfulness is measurable, but by a model, not by people.</p>
+<p><span class="kt">Slide figure:</span> top six rows of the leaderboard (HHEM-2.3, temperature 0), as updated Sep. 22, 2026. The ranking changes often; re-check before the lecture.</p>
 </article>
 
 <article>
@@ -714,12 +831,6 @@ the percentage of atomic facts supported by a reliable knowledge source. The mot
 <h2>Open Problems</h2>
 <p>Open challenges include calibration that survives fine-tuning, honest abstention without over-refusal, coverage guarantees for open-ended generation, and detecting faithfulness rather than only facts.</p>
 <p><span class="kt">Key takeaway:</span> Reliable, honest generation is still an open frontier.</p>
-</article>
-
-<article>
-<h2>Demos to Play With</h2>
-<p>Three demos to explore: a reliability-diagram plotter, a conformal prediction-set builder, and a semantic-entropy hallucination flag.</p>
-<p><span class="kt">Key takeaway:</span> Hands-on tools make these ideas concrete.</p>
 </article>
 
 <article>

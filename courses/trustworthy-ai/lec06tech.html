@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Calibration &amp; Conformal — Technical Supplement — Trustworthy AI Lecture 6</title>
+<title>Hallucination &amp; Calibration — Technical Supplement — Trustworthy AI Lecture 6</title>
 <link rel="stylesheet" href="../../reference/colors_and_type.css">
 <link rel="stylesheet" href="../../reference/deck.css">
 <link rel="stylesheet" href="../../reference/katex/katex.min.css">
@@ -32,9 +32,9 @@
 <div class="slide title-slide active">
   <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
   <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 6 · Technical Supplement</div>
-  <h1>Calibration &amp;<br>Conformal: The Math</h1>
+  <h1>Hallucination &amp;<br>Calibration: The Math</h1>
   <div class="divider"></div>
-  <p class="subtitle">Optional. ECE, temperature, and the coverage proof</p>
+  <p class="subtitle">Optional. Forced errors, ECE, temperature, and the coverage proof</p>
   <div class="spacer-lg"></div>
   <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
   <p style="margin-top:6px;">Trustworthy AI · 2026</p>
@@ -46,6 +46,7 @@
   <div class="divider"></div>
   <p>Formal statements and short derivations behind the main lecture.</p>
   <ul class="arrow">
+    <li>Why a weak model family is forced to err</li>
     <li>How ECE turns a reliability diagram into one number</li>
     <li>How temperature rescales confidence</li>
     <li>How a threshold buys a coverage guarantee</li>
@@ -54,9 +55,47 @@
 </div>
 
 <!-- ============ SECTION 01 ============ -->
-<!-- 3. Divider 01 -->
+<!-- Divider 01 -->
 <div class="slide section-slide left">
   <div class="section-num">01</div>
+  <h1>Forced Errors</h1>
+  <div class="divider"></div>
+  <p class="subtitle">When a weak model family must hallucinate</p>
+</div>
+<!-- 15. Poor Model ⇒ Errors, Precisely -->
+<div class="slide">
+  <h2>Poor Model ⇒ Errors, Precisely</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (Kalai et al., 2025, §3.3.2).</h3>
+    <div class="math-block" style="margin:0;padding:4px 0;background:none;">$$\mathrm{err} \;\ge\; 2\,\mathrm{opt}(\mathcal{G}) \;-\; \frac{\max_c |\mathcal{V}_c|}{\min_c |\mathcal{E}_c|} \;-\; \delta.$$</div>
+  </div>
+  <ul>
+    <li>$\mathrm{err}$: probability the model generates an error response</li>
+    <li>$\mathrm{opt}(\mathcal{G}) = \min_{g\in\mathcal{G}} \Pr_{x\sim D}[\,g(x) \ne f(x)\,]$: best error of any thresholded model in the family</li>
+    <li>$\mathcal{V}_c, \mathcal{E}_c$: valid / error responses to prompt $c$; $\delta$: the model's miscalibration</li>
+  </ul>
+  <p class="muted">Errors are forced when $2\,\mathrm{opt}(\mathcal{G}) > \max_c|\mathcal{V}_c| / \min_c|\mathcal{E}_c| + \delta$. V3's failures alone do not show this.</p>
+  <div class="cite cite-left">Kalai, Nachum, Vempala, and Zhang, "Why Language Models Hallucinate", 2025 — §3.3.2 (from Theorem 1).</div>
+</div>
+<!-- 16. A Proven Case: Trigram Models -->
+<div class="slide">
+  <h2>A Proven Case: Trigram Models</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:4px 0;"><svg viewBox="0 0 900 200" style="width:100%;max-width:1000px;"><text x="10" y="50" font-size="20" fill="#1a1a1a" font-weight="700">c<tspan baseline-shift="sub" font-size="14">1</tspan></text><text x="50" y="50" font-size="20" fill="#1a1a1a">She lost it and was completely</text><rect x="345" y="24" width="96" height="36" rx="5" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="393" y="50" font-size="20" fill="#003876" text-anchor="middle" font-weight="700">out of</text><text x="460" y="50" font-size="20" fill="#1a1a1a">…</text><text x="500" y="50" font-size="20" fill="#2e8b57" font-weight="700">→ her mind</text><text x="10" y="120" font-size="20" fill="#1a1a1a" font-weight="700">c<tspan baseline-shift="sub" font-size="14">2</tspan></text><text x="50" y="120" font-size="20" fill="#1a1a1a">He lost it and was completely</text><rect x="345" y="94" width="96" height="36" rx="5" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="393" y="120" font-size="20" fill="#003876" text-anchor="middle" font-weight="700">out of</text><text x="460" y="120" font-size="20" fill="#1a1a1a">…</text><text x="500" y="120" font-size="20" fill="#2e8b57" font-weight="700">→ his mind</text><text x="660" y="88" font-size="19" fill="#d94040" font-weight="700">same 2-word window</text><text x="660" y="112" font-size="19" fill="#d94040" font-weight="700">⇒ same prediction</text><text x="450" y="180" font-size="18" fill="#6b7280" text-anchor="middle">a trigram model sees only the last two words: it cannot tell the two prompts apart</text></svg></div>
+  <p style="text-align:center;margin:0 0 8px;"><strong>Two-option task:</strong> choose “her mind” or “his mind”; no abstention.</p>
+  <div class="card">
+    <h3>Theorem 3 → Corollary 2 (Kalai et al., 2025).</h3>
+    <p>If $|\mathcal{V}_c| = 1$ and $C = \min_c |\mathcal{E}_c| + 1$: $\;\mathrm{err} \ge 2\,(1 - 1/C)\,\mathrm{opt}(\mathcal{G})$.</p>
+    <p>Prompts $c_1, c_2$ equally likely ⇒ $C = 2$, $\mathrm{opt}(\mathcal{G}) = 1/2$ ⇒ <strong>any</strong> trigram model has $\mathrm{err} \ge 1/2$.</p>
+  </div>
+  <div class="cite cite-left">Kalai, Nachum, Vempala, and Zhang, "Why Language Models Hallucinate", 2025 — §3.3.2, Theorem 3 and Corollary 2.</div>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 3. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
   <h1>Calibration Error</h1>
   <div class="divider"></div>
   <p class="subtitle">From the diagram to one number</p>
@@ -130,10 +169,10 @@
   <p class="muted">The argmax is fixed, so accuracy never changes.</p>
 </div>
 
-<!-- ============ SECTION 02 ============ -->
-<!-- 9. Divider 02 -->
+<!-- ============ SECTION 03 ============ -->
+<!-- 9. Divider 03 -->
 <div class="slide section-slide left">
-  <div class="section-num">02</div>
+  <div class="section-num">03</div>
   <h1>Conformal Coverage</h1>
   <div class="divider"></div>
   <p class="subtitle">A threshold that comes with a proof</p>
@@ -174,6 +213,48 @@
   <p class="muted">Across joint draws of calibration and test data, the test rank is uniform (distinct scores). Marginal: averaged over data, not per input.</p>
   <div class="cite cite-left">Angelopoulos and Bates, "A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification", 2021.</div>
 </div>
+<!-- 45. Proof: Setup -->
+<div class="slide">
+  <h2>Proof: Setup</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>$s_i = s(X_i, Y_i)$ for $i = 1,\dots,n+1$; $s_{n+1}$ is the test score</li>
+    <li>$s_{(1)} \le \dots \le s_{(n)}$: sorted calibration scores; $\hat q = s_{(k)}$</li>
+    <li><strong>Outline</strong>: covered $\iff$ test score ranks $\le k$; exchangeable ⇒ rank uniform</li>
+  </ul>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 760 150" style="width:100%;max-width:960px;"><line x1="30" y1="70" x2="730" y2="70" stroke="#999" stroke-width="1.5"/><circle cx="70" cy="70" r="11" fill="#1a5296" stroke="#003876" stroke-width="2"/><circle cx="170" cy="70" r="11" fill="#1a5296" stroke="#003876" stroke-width="2"/><circle cx="270" cy="70" r="11" fill="#1a5296" stroke="#003876" stroke-width="2"/><circle cx="370" cy="70" r="11" fill="#1a5296" stroke="#003876" stroke-width="2"/><circle cx="470" cy="70" r="11" fill="#1a5296" stroke="#003876" stroke-width="2"/><circle cx="570" cy="70" r="11" fill="#1a5296" stroke="#003876" stroke-width="2"/><circle cx="670" cy="70" r="11" fill="#1a5296" stroke="#003876" stroke-width="2"/><g fill="none" stroke="#d94040" stroke-width="2" stroke-dasharray="4 3"><circle cx="20" cy="70" r="9"/><circle cx="120" cy="70" r="9"/><circle cx="220" cy="70" r="9"/><circle cx="320" cy="70" r="9"/><circle cx="420" cy="70" r="9"/><circle cx="520" cy="70" r="9"/><circle cx="620" cy="70" r="9"/><circle cx="720" cy="70" r="9"/></g><text x="370" y="32" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">n = 7 calibration scores (blue)</text><text x="370" y="112" font-size="19" fill="#d94040" text-anchor="middle" font-weight="700">across joint draws of calibration and test scores, test rank is uniform</text><text x="370" y="142" font-size="18" fill="#6b7280" text-anchor="middle">(distinct scores assumed) ⇒ Pr[rank ≤ k] = k / (n + 1)</text></svg></div>
+  <div class="cite cite-left">Angelopoulos and Bates, "A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification", 2021 — Appendix D.</div>
+</div>
+<!-- 46. Proof: The Rank Step -->
+<div class="slide">
+  <h2>Proof: The Rank Step</h2>
+  <div class="divider"></div>
+  <p>Assume distinct scores and $k \le n$.</p>
+  <div class="math-block" style="margin:2px 0;padding:10px 28px;">$$\begin{aligned}
+\Pr\bigl[Y_{n+1} \in C(X_{n+1})\bigr] &\stackrel{(1)}{=} \Pr\bigl[s_{n+1} \le s_{(k)}\bigr] \stackrel{(2)}{=} \Pr\bigl[\operatorname{rank}(s_{n+1}) \le k\bigr] \\
+&\stackrel{(3)}{=} \frac{k}{n+1} \;\stackrel{(4)}{\ge}\; 1-\alpha.
+\end{aligned}$$</div>
+  <ul>
+    <li>(1) definition: $y \in C(x) \iff s(x,y) \le \hat q = s_{(k)}$</li>
+    <li>(2) rank among all $n+1$ scores; distinct ⇒ events equal</li>
+    <li>(3) (A1) + (A2) ⇒ $(s_1,\dots,s_{n+1})$ exchangeable ⇒ rank uniform on $\{1,\dots,n+1\}$</li>
+    <li>(4) $k \ge (n+1)(1-\alpha)$ by the ceiling</li>
+  </ul>
+  <div class="cite cite-left">Angelopoulos and Bates, "A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification", 2021 — Appendix D.</div>
+</div>
+<!-- 47. Proof (continued): Ties and Edge Cases -->
+<div class="slide">
+  <h2>Proof (continued): Ties and Edge Cases</h2>
+  <div class="divider"></div>
+  <ul>
+    <li><strong>Upper</strong>: $k < (n+1)(1-\alpha) + 1$ ⇒ $\frac{k}{n+1} < 1-\alpha+\frac{1}{n+1}$</li>
+    <li><strong>Ties</strong>: break at random; rank $\le k$ still ⇒ $s_{n+1} \le s_{(k)}$, so $\Pr \ge \frac{k}{n+1}$; upper bound may fail</li>
+    <li>$k = n+1$ (only when $\alpha < \frac{1}{n+1}$): $\hat q = \infty$, $C = \mathcal{Y}$, coverage $1$</li>
+    <li><strong>(A2) matters</strong>: a score fit on calibration data can break the exchangeability in (3)</li>
+  </ul>
+  <div class="highlight"><p>$\blacksquare$ Coverage $\ge 1-\alpha$: any model, any distribution, any finite $n$.</p></div>
+  <div class="cite cite-left">Angelopoulos and Bates, "A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification", 2021 — Appendix D (Theorem D.2 for the upper bound).</div>
+</div>
 
 <!-- 13. Semantic Entropy -->
 <div class="slide">
@@ -192,7 +273,7 @@
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 14</div>
+<div class="slide-num" id="slideNum">1 / 20</div>
 
 </div><!-- .deck -->
 <script defer src="../../reference/deck.js"></script>

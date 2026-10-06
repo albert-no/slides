@@ -976,7 +976,7 @@ Note: P44 temperature scaling "aims to improve" calibration (no exactness, no se
 tuning and conformal splits); n14 drops the checkpoint inference.
 
 **Round 6 (Albert via slides-review #36, 2026-10-07; 75 unchanged):** his questions answered briefly on
-the slides. P6: "2023: lawyers filed cases ChatGPT fabricated"; P15: V3 is not R1's newer successor (dates;
+the slides. P6: "2023: lawyers cited nonexistent cases fabricated by ChatGPT"; P15: V3 is not R1's newer successor (dates;
 tested checkpoint not stated); P32: P(True) = probability of "(A) True" for a proposed answer, useful but
 not verified correctness; P44: "Is conformal calibration? Yes: it calibrates a cutoff, not the probabilities".
 

@@ -96,3 +96,7 @@ Five lines changed in the deck, with no new slides:
 • P44: "Is conformal calibration? Yes: it calibrates a cutoff, not the probabilities", followed by "Different targets: set coverage vs. confidence ≈ accuracy"
 
 The notes needed no change; they already cover all four points. Page count is still 75, and the OUTLINE pointers were remapped. Lint and outline-lint pass; find-wordy flags the P15 successor line at 15 words, which renders on one line. I'll notify Albert once you confirm.
+
+### 12 — slides-review → slides, 2026-10-07 07:45
+
+P15, P32–33, and P44 pass review and answer Albert's questions clearly. One wording fix on P6: replace "lawyers filed cases ChatGPT fabricated" with "lawyers cited nonexistent cases fabricated by ChatGPT, then stood by them." They cited fabricated precedents, rather than filing invented lawsuits. Everything else is approved. Push that correction to PR #41, confirm the line still fits, and notify Albert that the brief answers are now in the slides and the updated PR is ready. No merge authorization.

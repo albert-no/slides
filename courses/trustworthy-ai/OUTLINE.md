@@ -890,12 +890,12 @@ reasoning-model hallucination; sycophancy one-slide touchpoint (full treatment i
 |---|---|---|---|
 | Title / Contents | 1–2 | `:26`, `:38` | |
 | **01 — What Hallucination Is** | 3–10 | `:71` | definition (Ji survey) `:79` · **fluency fools us (real vs invented citation test; 2026-10)** `:94` · Fake Citations, Again (Lacey v. State Farm) `:103` · **Invented Medical Facts (infarct defined; 2026-10)** `:121` · two flavors of wrong `:139` · not the same as a bug `:153` · why this matters `:168` |
-| **02 — Why Models Hallucinate** | 11–22 | `:181` | training objective `:189` · no truth grounding (Kalai Fig 1) `:201` · **Counting With a Poor Model (DEEPSEEK letters vs tokens; 2026-10)** `:214` · **Poor Model ⇒ Errors, Precisely (conditional Kalai §3.3.2 bound; 2026-10)** `:228` · **A Proven Case: Trigram Models (Thm 3 / Cor 2)** `:244` · plausible beats true `:257` · pressure to always answer `:279` · exam-taking analogy `:296` · Guessing, Measured `:313` · where errors concentrate (FActScore Fig 2 + plot description) `:341` · knowledge cutoff `:358` |
-| **03 — Calibration** | 23–36 | `:374` | confidence as a number `:382` · calibration promise (100-dot grid) `:394` · reliability diagram `:409` · over- vs under-confident `:431` · **measuring the gap (gap = \|conf − acc\|; 2026-10)** `:445` · **reading ECE (area picture, 0.1705; 2026-10)** `:462` · bigger is not better `:479` · temperature `:496` · **Kadavath P(True) histogram** `:511` · **Filtering by P(True) Mostly Raises Accuracy (legend re-typeset)** `:527` · **verbalized confidence GPT-3/3.5** `:541` · **GPT-4/Vicuna** `:556` · Colab `:572` |
-| **04 — Conformal Prediction** | 37–53 | `:588` | one answer to a set (three photos, typeset sets) `:596` · **Candidates, Native Output, Conformal Set** `:608` · coverage guarantee `:622` · **Two Assumptions (A1 exchangeable, A2 fixed score)** `:638` · how it works (k, q̂ = ∞) `:651` · recipe figure `:665` · **Coverage Theorem (upper bound only without ties)** `:673` · **Proof: Setup (joint-draw uniform rank)** `:690` · **Proof: Rank Step** `:702` · **Proof (continued)** `:719` · prediction-set picture `:733` · **What the Guarantee Covers** `:741` · **Marginal ≠ Conditional** `:761` · abstention (singleton ≠ certified) `:776` · medical triage (clinician review) `:792` · trade-off `:808` |
-| **05 — Detection & Grounding** | 54–63 | `:818` | two strategies `:826` · self-consistency `:840` · semantic entropy `:857` · entropy picture `:871` · RAG `:896` · why RAG helps `:910` · RAG is not a cure `:926` · teaching "I don't know" `:942` · scoring rule `:958` |
-| **06 — Frontier 2025–26** | 64–74 | `:971` | **Misconceptions (TruthfulQA examples; 2026-10)** `:978` · **In the Wild: Search Answers, 2024 (rocks / glue)** `:992` · **Should a Truthful Model Share Our Errors?** `:1004` · TruthfulQA `:1021` · **Benchmarks table (4 benchmarks)** `:1036` · **Measuring Faithfulness: Vectara HHEM (Sep 22, 2026 data)** `:1051` · reasoning models `:1089` · sycophancy `:1106` · factuality evaluations `:1118` · open problems `:1135` |
-| Takeaways / Closer | 75–76 | — | `:1150`, `:1164` |
+| **02 — Why Models Hallucinate** | 11–22 | `:181` | training objective `:189` · no truth grounding (Kalai Fig 1) `:201` · **Counting With a Poor Model (DEEPSEEK letters vs tokens; 2026-10)** `:214` · **Poor Model ⇒ Errors, Precisely (conditional Kalai §3.3.2 bound; 2026-10)** `:228` · **A Proven Case: Trigram Models (Thm 3 / Cor 2)** `:244` · plausible beats true `:258` · pressure to always answer `:280` · exam-taking analogy `:297` · Guessing, Measured `:314` · where errors concentrate (FActScore Fig 2 + plot description) `:342` · knowledge cutoff `:359` |
+| **03 — Calibration** | 23–36 | `:375` | confidence as a number `:383` · calibration promise (100-dot grid) `:395` · reliability diagram `:410` · over- vs under-confident `:432` · **measuring the gap (gap = \|conf − acc\|; 2026-10)** `:446` · **reading ECE (area picture, 0.1705; 2026-10)** `:463` · bigger is not better `:480` · temperature `:497` · **Kadavath P(True) histogram** `:512` · **Filtering by P(True) Mostly Raises Accuracy (unmodified plot + enlarged key)** `:528` · **verbalized confidence GPT-3/3.5** `:542` · **GPT-4/Vicuna** `:557` · Colab `:573` |
+| **04 — Conformal Prediction** | 37–53 | `:589` | one answer to a set (three photos, typeset sets) `:597` · **Candidates, Native Output, Conformal Set** `:609` · coverage guarantee `:623` · **Two Assumptions (A1 exchangeable, A2 fixed score)** `:639` · how it works (k, q̂ = ∞) `:652` · recipe figure `:666` · **Coverage Theorem (upper bound only without ties)** `:674` · **Proof: Setup (joint-draw uniform rank)** `:691` · **Proof: Rank Step** `:703` · **Proof (continued)** `:720` · prediction-set picture `:734` · **What the Guarantee Covers** `:742` · **Marginal ≠ Conditional** `:762` · abstention (singleton ≠ certified) `:777` · medical triage (clinician review) `:793` · trade-off `:809` |
+| **05 — Detection & Grounding** | 54–63 | `:819` | two strategies `:827` · self-consistency `:841` · semantic entropy `:858` · entropy picture `:872` · RAG `:897` · why RAG helps `:911` · RAG is not a cure `:927` · teaching "I don't know" `:943` · scoring rule `:959` |
+| **06 — Frontier 2025–26** | 64–74 | `:972` | **Misconceptions (TruthfulQA examples; 2026-10)** `:979` · **In the Wild: Search Answers, 2024 (rocks / glue)** `:993` · **Should a Truthful Model Share Our Errors?** `:1005` · TruthfulQA `:1022` · **Benchmarks table (4 benchmarks)** `:1037` · **Measuring Faithfulness: Vectara HHEM (Sep 22, 2026 data)** `:1052` · reasoning models `:1090` · sycophancy `:1107` · factuality evaluations `:1119` · open problems `:1136` |
+| Takeaways / Closer | 75–76 | — | `:1151`, `:1165` |
 
 **Key definitions / citations (source-verified; 2026-10 additions checked against the saved PDFs):**
 - Hallucination survey — `:79` — Ji et al., ACM Computing Surveys 2023.
@@ -904,30 +904,30 @@ reasoning-model hallucination; sycophancy one-slide touchpoint (full treatment i
 - Kalai, Nachum, Vempala, and Zhang, 2025 (arXiv 2509.04664) — IIV reduction Fig 1 `:201`;
   DEEPSEEK letter count (§1: V3 "2" or "3" in ten trials; §3.3.2: R1 spells it out, tokens D/EEP/SEE/K) `:214`;
   err ≥ 2·opt(G) − max|V_c|/min|E_c| − δ (§3.3.2, from Theorem 1; stated conditionally) `:228`;
-  trigram limitation (Theorem 3, Corollary 2: err ≥ 2(1−1/C)opt(G)) `:244`; binary grading `:279`, `:296`, `:958`.
-- FActScore — `:341`, `:1036`, `:1118` — Min et al., EMNLP 2023.
-- Calibration / ECE / temperature — `:394`–`:496` — Guo, Pleiss, Sun, and Weinberger, ICML 2017 (ECE Eq. 3).
+  trigram limitation (Theorem 3, Corollary 2: err ≥ 2(1−1/C)opt(G)) `:244`; binary grading `:280`, `:297`, `:959`.
+- FActScore — `:342`, `:1037`, `:1119` — Min et al., EMNLP 2023.
+- Calibration / ECE / temperature — `:395`–`:497` — Guo, Pleiss, Sun, and Weinberger, ICML 2017 (ECE Eq. 3).
   ECE example (shares .10/.10/.15/.25/.40, gaps .03/.07/.15/.20/.22 → 0.1705) is a course illustration.
-- Self-knowledge P(True) — `:511`, `:527` — Kadavath et al., 2022, Fig 1 (left / right; legend re-typeset).
-- Verbalized confidence — `:541`, `:556` — Xiong et al., ICLR 2024, Fig 2 (GSM8K).
-- Conformal — `:596`–`:761` — Angelopoulos and Bates, 2021 (Theorem 1, Appendix D, Theorem D.2);
+- Self-knowledge P(True) — `:512`, `:528` — Kadavath et al., 2022, Fig 1 (left / right; right panel unmodified, enlarged key beside it).
+- Verbalized confidence — `:542`, `:557` — Xiong et al., ICLR 2024, Fig 2 (GSM8K).
+- Conformal — `:597`–`:762` — Angelopoulos and Bates, 2021 (Theorem 1, Appendix D, Theorem D.2);
   Vovk, Gammerman, and Saunders, ICML 1999. k = ⌈(n+1)(1−α)⌉, q̂ = ∞ when k = n+1; ties keep the lower bound.
-- Conditional coverage limits — `:761` — Vovk, ACML 2012; Lei and Wasserman, JRSS-B 2014 (Lemma 1);
+- Conditional coverage limits — `:762` — Vovk, ACML 2012; Lei and Wasserman, JRSS-B 2014 (Lemma 1);
   Foygel Barber, Candès, Ramdas, and Tibshirani, Information and Inference 2021.
-- TruthfulQA — `:978`, `:1004`, `:1021`, `:1036` — Lin, Hilton, and Evans, ACL 2022 (Fig 1, Fig 2, Table 6, §2.1).
-- AI Overviews rocks / glue — `:992` — Reid (Google), "AI Overviews: About last week", Google blog, May 30, 2024.
-- SimpleQA — `:313`, `:1036` — Wei et al., 2024 (grades: correct / incorrect / not attempted).
-- Vectara HHEM-2.3 — `:1051` — leaderboard README, updated Sep. 22, 2026 (top six rows; 7,700+ articles; temperature 0).
-- Self-consistency `:840` — Manakul et al., EMNLP 2023. Semantic entropy `:857` — Farquhar et al., Nature 2024.
-  RAG `:896` — Lewis et al., NeurIPS 2020. Sycophancy `:1106` — Sharma et al., ICLR 2024.
+- TruthfulQA — `:979`, `:1005`, `:1022`, `:1037` — Lin, Hilton, and Evans, ACL 2022 (Fig 1, Fig 2, Table 6, §2.1).
+- AI Overviews rocks / glue — `:993` — Reid (Google), "AI Overviews: About last week", Google blog, May 30, 2024.
+- SimpleQA — `:314`, `:1037` — Wei et al., 2024 (grades: correct / incorrect / not attempted).
+- Vectara HHEM-2.3 — `:1052` — leaderboard README, updated Sep. 22, 2026 (top six rows; 7,700+ articles; temperature 0).
+- Self-consistency `:841` — Manakul et al., EMNLP 2023. Semantic entropy `:858` — Farquhar et al., Nature 2024.
+  RAG `:897` — Lewis et al., NeurIPS 2020. Sycophancy `:1107` — Sharma et al., ICLR 2024.
 
-**Real images** (`figs/`, cited; 20 files on 17 slides): kalai-iiv `:201` · kalai-gpt4-calibration `:279` ·
-factscore-frequency `:341` · guo-lenet-resnet `:479` · guo-temp-scaling `:496` · kadavath-ptrue-hist `:511` ·
-kadavath-ptrue-scaling `:527` · xiong-verbalized-a `:541` · xiong-verbalized-b `:556` · conformal-squirrel-1/2/3
-`:596` · conformal-recipe `:665` · selfcheckgpt `:840` · semantic-entropy-table `:857` · rag-overview `:896` ·
-truthfulqa-size `:1021` · sharma-sycophancy `:1106` · factscore-overview `:1118`. Crops re-captured at higher
-resolution in 2026-10; kadavath-ptrue-scaling has its embedded legend removed (line segments under it restored)
-and re-typeset as an SVG key. Citations use `.cite-left`.
+**Real images** (`figs/`, cited; 20 files on 17 slides): kalai-iiv `:201` · kalai-gpt4-calibration `:280` ·
+factscore-frequency `:342` · guo-lenet-resnet `:480` · guo-temp-scaling `:497` · kadavath-ptrue-hist `:512` ·
+kadavath-ptrue-scaling `:528` · xiong-verbalized-a `:542` · xiong-verbalized-b `:557` · conformal-squirrel-1/2/3
+`:597` · conformal-recipe `:666` · selfcheckgpt `:841` · semantic-entropy-table `:858` · rag-overview `:897` ·
+truthfulqa-size `:1022` · sharma-sycophancy `:1107` · factscore-overview `:1119`. Crops re-captured at higher
+resolution in 2026-10; kadavath-ptrue-scaling is an unmodified crop (embedded legend
+kept) with an enlarged SVG key beside it. Citations use `.cite-left`.
 
 **2026-10 Albert revision (61→73; PR on branch `trustworthy-ai-lec06-albert-revision`;
 log `log/2026-10-06-trustworthy-ai-lec06-albert-revision.md`):** enlarged diagrams and fonts on orig
@@ -945,10 +945,11 @@ chart (data updated to Sep 22, 2026). Page map orig→new: 1–12 same · 13→1
 conditional-coverage claim qualified). `lec06tech.html`: fixed-score and marginal wording on Why It Holds.
 
 **Round 2 (slides-review, 2026-10-06; 73→76):** counting caption and "assuming similar training data" wording;
-Kalai bound stated conditionally plus a new trigram slide (Theorem 3 / Corollary 2); Kadavath and Xiong figures
+Kalai bound with its exact forcing condition (2 opt(G) > max|V_c|/min|E_c| + δ) plus a new trigram slide
+(Theorem 3 / Corollary 2; stipulated two-option task, no abstention); Kadavath and Xiong figures
 split into two slides each with large labels; squirrel sets re-typeset under each photo plus a separate
 candidates/native/conformal slide; theorem upper bound qualified (no ties); joint-draw uniform rank; "can break"
-exchangeability; singleton = candidate for a validated policy, clinician review, marginal miss over all patients;
+exchangeability; singleton = candidate for a validated policy, deferral rule includes empty sets, clinician review, marginal miss over all patients;
 "to every user" removed. Note synced (76 articles; P(wrong ∧ singleton) ≤ α vs P(wrong | singleton)).
 Tech P2/P11/P12: q̂ = ∞ at k = n+1, ties, A1 + A2 ⇒ exchangeable scores. Round-1→round-2 map: 1–15 same ·
 16 new · 16–30→17–31 · 31–32→32–33 · 33→34–35 · 34–35→36–37 · 36→38–39 · 37–73→40–76.

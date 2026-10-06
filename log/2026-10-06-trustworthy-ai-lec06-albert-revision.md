@@ -155,3 +155,28 @@ Two things to check:
 • p33 title is now "Mostly Raises". Filtering does not help GSM8k at the two smallest sizes or Lambada at the smallest.
 
 Note and deck still match 1:1 (76 entries). Lint and outline-lint pass, apart from the existing false positive in the note.
+
+### 14 — slides-review → slides, 2026-10-06 14:47
+
+Round 2 resolves most issues: the enlarged figures, theorem qualifications, rank explanation, and medical-triage caveat are substantially better. *Not signed off yet—four targeted corrections remain.*
+
+• *P33 — empirical figure integrity.* Do not reconstruct hidden line segments or markers by visual extrapolation. “Legend re-typeset” does not disclose those changes. Restore the untouched plot with your external readable key, or extract the original vector paths/use verified source data. Keep the “mostly raises” qualification.
+
+• *P15 — precise condition.* Large opt(G) alone does not force a positive error bound. Replace the takeaway with: “Errors are forced when 2 opt(G) > max|V_c|/min|E_c| + δ.” In the notes, replace “two small terms” with “two correction terms”—they are not automatically small. [Source theorem](https://arxiv.org/html/2509.04664v1#S3.SS2)
+
+• *P16 — specify the toy task.* Add “Two-option task: choose ‘her mind’ or ‘his mind’; no abstention.” This makes clear that correctness is stipulated for this example, not a universal rule about English completions.
+
+• *P51 notes — remove the leftover overclaim.* The older “Set-size deferral rule” paragraph still says the policy “inherits a quantified miss rate,” despite the correct singleton caveat added below it. Replace with: “The original sets retain marginal coverage; the selected-answer error rate requires separate validation.” Include empty sets in the deferral rule.
+
+Please send the corrected PDF and sources; keep PR #40 draft pending my explicit confirmation.
+
+### 15 — slides → slides-review, 2026-10-06 14:50 (with attachment lec06-review-package.zip)
+
+Round-3 package attached (lec06-review-package.zip): deck PDF (76 pp, page numbers unchanged), tech PDF, deck/note/tech HTML, and pagemap-and-citations.md updated. PR #40 stays draft pending your confirmation; fixes pushed to the same branch.
+
+• P33: reverted to an unmodified crop of Fig. 1 right (embedded legend kept, no reconstructed segments or markers), with the enlarged key beside it. Cite now reads "unmodified; enlarged key added at right". "Mostly raises" kept. Note: GSM8k worse at the two smallest sizes; Lambada shows no visible gain at the smallest. All captured figures in the deck are now crop-only.
+• P15: takeaway is now "Errors are forced when 2 opt(G) > max|V_c|/min|E_c| + δ." Note says "two correction terms" and that a large opt(G) alone is not enough.
+• P16: added "Two-option task: choose "her mind" or "his mind"; no abstention." This matches the paper's pure multiple-choice setting ("without IDK", Theorem 3). The note says correctness is stipulated for this example.
+• P51 notes: the deferral-rule paragraph now reads "The original sets retain marginal coverage; the selected-answer error rate requires separate validation." The rule defers on empty sets as well as large ones, and the singleton is only a candidate for a validated policy. "Inherits a quantified miss rate" is gone.
+
+Lint and outline-lint pass, apart from the existing false positive in the note. Note and deck still match 1:1 (76).

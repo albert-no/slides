@@ -188,21 +188,21 @@ Informally (the paper's 99%-confidence version): <em>hallucination rate $\gtrsim
 
 <article>
 <h2>Poor Model ⇒ Errors, Precisely</h2>
-<p>The theorem: generation error is at least twice the best achievable classification error, minus two small terms. Read it conditionally: if no thresholded model in the family classifies valid versus error responses well, generation must make errors. V3's miscounts show one model failing; they do not show that its whole family must fail.</p>
-<p><span class="kt">Key takeaway:</span> If classification is hard for the whole model family, generation errors are forced.</p>
+<p>The theorem: generation error is at least twice the best achievable classification error, minus two correction terms. Read it conditionally: if no thresholded model in the family classifies valid versus error responses well, generation must make errors. V3's miscounts show one model failing; they do not show that its whole family must fail.</p>
+<p><span class="kt">Key takeaway:</span> Errors are forced when $2\,\mathrm{opt}(\mathcal G) &gt; \max_c|\mathcal V_c| / \min_c|\mathcal E_c| + \delta$.</p>
 <div class="detail">
 <h3>Definitions</h3>
 <p>(Kalai et al. 2025, §3.3.2.) For each prompt $c$, $\mathcal V_c$ and $\mathcal E_c$ are the valid and error responses. $\mathrm{err} := \hat p(\mathcal E) = \sum_{(c,r)\in\mathcal E}\mu(c)\,\hat p(r\mid c)$ is the probability the model generates an error response, with prompts $c \sim \mu$. <strong>The distribution $D$</strong>: with probability $1/2$ draw $x = (c,r) \sim p$ (a valid training dialogue), and with probability $1/2$ draw $c \sim \mu$ and $r$ uniformly from $\mathcal E_c$; the target is $f(x) = +$ iff $x$ is valid. <strong>The term $\delta$</strong>: $\delta := |\hat p(A) - p(A)|$ for $A := \{(c,r) : \hat p(r\mid c) &gt; 1/\min_c|\mathcal E_c|\}$, the gap between how much mass the model and the training distribution put on responses the model rates above that threshold (a calibration-type quantity, small for a calibrated base model). The classifier family thresholds a language model's probability: $g_{\theta,t}(c,r) = +$ if $\hat p_\theta(r\mid c) &gt; t$, else $-$, over all $\theta \in \Theta$, $t \in [0,1]$. Then $\mathrm{opt}(\mathcal G) = \min_{g\in\mathcal G}\Pr_{x\sim D}[g(x)\ne f(x)]$ is the best error of any thresholded model in the family.</p>
 <h3>Theorem &amp; proof</h3>
 <p><strong>Statement</strong> (the paper's §3.3.2, following from its Theorem 1):
 $$\mathrm{err} \;\ge\; 2\,\mathrm{opt}(\mathcal G) \;-\; \frac{\max_c |\mathcal V_c|}{\min_c |\mathcal E_c|} \;-\; \delta.$$
-Proof in the paper (Theorem 1 reduces generation to the Is-It-Valid classification problem). <strong>The bound is conditional.</strong> It forces errors only when $\mathrm{opt}(\mathcal G)$ is large, a statement about every model in the family. The letter-counting example is the paper's motivation ("this suggests"), not a proved instance: one model's mistakes do not show the family's incapacity. The proved instance is on the next slide.</p>
+Proof in the paper (Theorem 1 reduces generation to the Is-It-Valid classification problem). <strong>The bound is conditional.</strong> It forces errors only when $2\,\mathrm{opt}(\mathcal G) &gt; \max_c|\mathcal V_c|/\min_c|\mathcal E_c| + \delta$; a large $\mathrm{opt}(\mathcal G)$ alone is not enough, since the two correction terms are not automatically small. $\mathrm{opt}(\mathcal G)$ is a statement about every model in the family. The letter-counting example is the paper's motivation ("this suggests"), not a proved instance: one model's mistakes do not show the family's incapacity. The proved instance is on the next slide.</p>
 </div>
 </article>
 
 <article>
 <h2>A Proven Case: Trigram Models</h2>
-<p>A trigram model predicts each word from the previous two only. "She lost it and was completely out of" should end with "her mind", "He lost it and was completely out of" with "his mind". Both end in "out of", so the model cannot tell them apart and must be wrong half the time.</p>
+<p>A trigram model predicts each word from the previous two only. "She lost it and was completely out of" should end with "her mind", "He lost it and was completely out of" with "his mind". Both end in "out of", so the model cannot tell them apart and must be wrong half the time. This is a stipulated two-option task: the model must choose "her mind" or "his mind", with no abstention; correctness is defined for this example, not a universal rule about English completions.</p>
 <p><span class="kt">Key takeaway:</span> Here the family itself is provably poor: every trigram model errs at least half the time.</p>
 <div class="detail">
 <h3>Theorem &amp; proof</h3>
@@ -420,9 +420,9 @@ with a single scalar $T &gt; 0$ fitted by minimizing NLL on a validation set. Pr
 
 <article>
 <h2>Filtering by P(True) Mostly Raises Accuracy</h2>
-<p>Keep only the answers the model itself rates above 0.5. For most tasks and model sizes in the plot, accuracy rises: the solid lines (kept answers) lie above the dotted lines (all answers). Not for all: GSM8k at the two smallest sizes and Lambada at the smallest have the solid line at or below the dotted one.</p>
+<p>Keep only the answers the model itself rates above 0.5. For most tasks and model sizes in the plot, accuracy rises: the solid lines (kept answers) lie above the dotted lines (all answers). Not for all: GSM8k at the two smallest sizes has the solid line below the dotted one, and Lambada at the smallest size shows no visible gain.</p>
 <p><span class="kt">Key takeaway:</span> The self-estimate is useful as a filter, even though it is imperfect.</p>
-<p><span class="kt">Slide figure:</span> Kadavath et al. (2022), Fig. 1, right panel: accuracy versus parameters for GSM8k, Arithmetic, TriviaQA, Lambada and Codex. The paper's small embedded legend was removed and re-typeset beside the plot; line segments that ran under it were restored as straight-line continuations of the visible segments.</p>
+<p><span class="kt">Slide figure:</span> Kadavath et al. (2022), Fig. 1, right panel: accuracy versus parameters for GSM8k, Arithmetic, TriviaQA, Lambada and Codex. The plot is the paper's figure, unmodified (its small embedded legend is still inside); an enlarged key is typeset beside it.</p>
 </article>
 
 <article>
@@ -596,7 +596,7 @@ $$\Pr[\,Y_{n+1} \in C(X_{n+1})\,] = \frac{k}{n+1} \;\ge\; \frac{(n+1)(1-\alpha)}
 <p><span class="kt">Key takeaway:</span> A large set is a built-in signal to abstain.</p>
 <div class="detail">
 <h3>Definitions</h3>
-<p><strong>Set-size deferral rule (course notes).</strong> Fix a budget $k$ and act as: answer with $C(x)$'s single element if $|C(x)| = 1$; present the shortlist if $1 &lt; |C(x)| \le k$; defer to a human if $|C(x)| &gt; k$. This is selective prediction with a conformal trigger: whatever the deferral policy, the events "truth missed" satisfy $\Pr[\,Y \notin C(X)\,] \le \alpha$ marginally, so the rule inherits a quantified miss rate rather than a hoped-for one. The set being <em>large</em> is itself informative — it certifies that the model cannot separate candidates at the chosen confidence level.</p>
+<p><strong>Set-size deferral rule (course notes).</strong> Fix a budget $k$ and act as: treat $C(x)$'s single element as a candidate answer for a separately validated decision policy if $|C(x)| = 1$; present the shortlist if $1 &lt; |C(x)| \le k$; defer to a human if $C(x)$ is empty or $|C(x)| &gt; k$. The original sets retain marginal coverage, $\Pr[\,Y \notin C(X)\,] \le \alpha$; the selected-answer error rate requires separate validation. The set being <em>large</em> is itself informative — it certifies that the model cannot separate candidates at the chosen confidence level; an <em>empty</em> set signals that no label is plausible enough.</p>
 <p><strong>Singletons are not certified.</strong> Write $S$ for the event $|C(X)| = 1$ and $W$ for "the singleton is wrong", i.e. $S \wedge Y \notin C(X)$. The guarantee gives $\Pr[W] \le \Pr[Y \notin C(X)] \le \alpha$: the <em>joint</em> probability of being wrong <em>and</em> singleton. The error rate among singletons is $\Pr[\,Y \notin C(X) \mid S\,] = \Pr[W]/\Pr[S]$, which need not be $\le \alpha$; if singletons are rare, it can be much larger. Acting automatically on singletons therefore needs its own validation of that conditional error rate.</p>
 </div>
 </article>

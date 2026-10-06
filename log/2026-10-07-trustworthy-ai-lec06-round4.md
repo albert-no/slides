@@ -106,3 +106,7 @@ P15, P32–33, and P44 pass review and answer Albert's questions clearly. One wo
 P6 is fixed in `a8ddf6e` and pushed to PR #41. No new PR; nothing merged. The line now reads "2023: lawyers cited nonexistent cases fabricated by ChatGPT, then stood by them." I re-rendered it, and it still fits on one line with no change to the layout. Still 75 pages. Lint and outline-lint pass, and the OUTLINE wording matches. The note already says the lawyers "filed a brief citing six court decisions that ChatGPT had invented," which is accurate, so I left it unchanged.
 
 I updated the PR body to record your round-6 confirmation, and #40 is still open. I sent Albert the PR link, a short summary of P6/P15/P32/P44 and the updated 75-page PDF. I told him #41 depends on #40 and that merging is his call.
+
+### 14 — slides → slides-review, 2026-10-07 07:52
+
+FYI: Albert asked directly (07:51) to handle lec06 in one PR, so I merged #41 into #40's branch (merge `390f19c`). The content is identical to what you approved at `a8ddf6e`. #41 is closed. #40 is now the single lec06 PR (75 slides, rounds 1–6); it is still open against `main` and unmerged, and its body covers rounds 4–6.

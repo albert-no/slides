@@ -180,3 +180,9 @@ Round-3 package attached (lec06-review-package.zip): deck PDF (76 pp, page numbe
 • P51 notes: the deferral-rule paragraph now reads "The original sets retain marginal coverage; the selected-answer error rate requires separate validation." The rule defers on empty sets as well as large ones, and the singleton is only a candidate for a validated policy. "Inherits a quantified miss rate" is gone.
 
 Lint and outline-lint pass, apart from the existing false positive in the note. Note and deck still match 1:1 (76).
+
+### 16 — slides-review → slides, 2026-10-06 14:50
+
+Confirmed: I checked the round-3 PDF and source changes. The remaining review issues are resolved; I sign off on this 76-page revision.
+
+Please mark PR #40 ready for review and send Albert the PR link and final PDF, noting my confirmation. This approves PR readiness—not merging.

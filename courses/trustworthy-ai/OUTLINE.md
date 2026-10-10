@@ -40,7 +40,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **figures 2026-09, Albert revision 2026-10** (75 sl after round 4: Avianca context, P(True) explained, two kinds of calibration, fair-rank intuition replaces proof; heavy math moved to lec06tech; note 75 entries) |
 | 7 | `lec07-alignment-failures.html` | Alignment failures: sycophancy, reward hacking, explanation faithfulness | **new 2026-10** (59 sl, 14 real figure crops from 10 source figures, 90 min, no activities; note 59 entries; tech 12 sl). Former Wk 7 interpretability deck → `backup-interpretability.html` |
 | 8 | `lec08-adversarial.html` | Adversarial robustness: threat models, FGSM → PGD, honest evaluation, certificates | **new 2026-10** (55 sl, 15 real figure crops + 2 charts redrawn from tables, 90 min, no activities; note 55 entries; tech 24 sl) |
-| 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **revised 2026-08, figure pass 2026-09** (65 sl) |
+| 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **rebuilt 2026-10** (59 sl, 90 min, concept-first, no activities) |
 | 10 | `lec10-jailbreak.html` | Jailbreaks & LLM safety | **revised 2026-08, figure pass 2026-09** (60 sl, 21 real figs) |
 | 11 | `lec11-prompt-injection.html` | Prompt injection & agentic safety | **figure pass 2026-09** (66 sl) |
 | 12 | `lec12-watermark.html` | Watermarking, deepfakes & provenance | **revised 2026-08**, **figure pass 2026-09** (68 sl) |
@@ -70,7 +70,7 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `lec06tech.html` | Wk 6 (hallucination) | reliability diagram; ECE = Σ_b (n_b/n)|acc_b−conf_b|; temperature scaling; conformal coverage Pr[y∈C(x)]≥1−α + threshold quantile; semantic entropy | **checked 2026-08, Why It Holds + threshold wording 2026-10; round 4 2026-10-07** (20 sl: new §01 Forced Errors = Kalai bound + trigram Thm 3/Cor 2, and the 3 coverage-proof slides, all moved from lec06; math verified; A1 + A2, q̂ = ∞, ties, marginal stated) |
 | `lec07tech.html` | Wk 7 (alignment failures) | reward-model loss $-\binom{K}{2}^{-1}\mathbb{E}\log\sigma(r_w-r_l)$ (Bradley–Terry reading; Ouyang Eq. 1); KL-penalized RL objective (Ouyang Eq. 2, γ = 0); DPO loss $-\mathbb{E}\log\sigma(\hat r_\theta(x,y_w)-\hat r_\theta(x,y_l))$, $\hat r_\theta=\beta\log\pi_\theta/\pi_{\rm ref}$ (Rafailov 2023 Eq. 7); Gao overoptimization fits $R_{\rm bon}(d)=d(\alpha-\beta d)$, $R_{\rm RL}(d)=d(\alpha-\beta\log d)$, $d=\sqrt{\rm KL}$; Chen hint-test faithfulness score (symbols defined) + random-flip normalization $\alpha=1-q/((n-2)p)$, domain $n>2$, $p>0$, $\alpha>0$; monitor recall/precision with Baker Table 1 | **new 2026-10** (12 sl; all formulas checked against the paper PDFs). Old interpretability supplement → `backup-interpretabilitytech.html` |
 | `lec08tech.html` | Wk 8 (adversarial robustness) | perturbation set $\mathcal B_p(x,\varepsilon)$; FGSM as the exact maximizer of the linearized loss over the ℓ∞ box ($g^\top\delta\le\varepsilon\|g\|_1$; unclipped ℓ2 analogue); linear model $w^\top\eta=\varepsilon\|w\|_1$; PGD with random start + projections; C&W ℓ2 objective, tanh box, binary search on $c$; min-max + Danskin; Cohen Thm 1 with Neyman–Pearson sketch; CERTIFY (Clopper–Pearson, $\alpha$) | **new 2026-10** (24 sl; formulas checked against the paper PDFs) |
-| `lec09tech.html` | Wk 9 (poisoning) | poison fraction α; clean-label feature-collision objective; backdoor blended objective; spectral signatures; activation clustering | **checked 2026-08** (16 sl: math verified incl. Poison Frogs ℓ∞ form; blended-objective cite reworded, not verbatim BadNets) |
+| `lec09tech.html` | Wk 9 (poisoning) | count vs rate α; feature-collision objective; backdoor objective + ASR; spectral signatures; Neural Cleanse + MAD index; activation clustering | **rebuilt 2026-10** (18 sl) |
 | `lec10tech.html` | Wk 10 (jailbreak) | RLHF KL-penalized objective; GCG target `min -log Pr["Sure, here"]`; gradient-guided token swaps | **checked 2026-08** (12 sl: RLHF KL objective + GCG target verified correct, no changes) |
 | `lec11tech.html` | Wk 11 (prompt injection) | data-vs-control plane; confused deputy; agent threat model; capabilities/least privilege; taint tracking; dual-LLM pattern (security model, not equations) | **checked 2026-08** (9 sl: security model verified — dual-LLM matches Willison 2023, CaMeL cite correct; two prose-dash lint warnings fixed) |
 | `lec12tech.html` | Wk 12 (watermark) | green-list logit bias; null Binomial(T,γ); detection z = (|s|_G−γT)/√(Tγ(1−γ)); false-positive bound; z ∝ √T; robustness–quality tradeoff | **checked 2026-08** (10 sl: FP rate at τ=4 fixed "&lt;" → "≈ 3×10⁻⁵" per KGW; no Thm 4.3 stated — consistent with the corrected math in `courses/privacy/lectures/06-watermark/`) |
@@ -1118,101 +1118,76 @@ Clopper–Pearson and α (21), radius reading (22), cost/scope (23).
 
 ## lec09-poisoning.html
 
-**Topic:** Data poisoning & backdoors (~90 min). Train-time vs inference-time
-attacks; web-scraped corpora as the attack surface (supply-chain frame);
-availability vs targeted taxonomy; clean-label poisoning at picture level (Poison
-Frogs, feature collision); BadNets trigger backdoors (real Gu Fig 7 capture, clean
-accuracy vs attack success); web-scale poisoning (Carlini split-view /
-frontrunning, $60 for 0.01%); artist tools (Glaze, Nightshade); LLM poisoning
-(instruction-tuning poisoning, near-constant poison count / 250-documents result,
-sleeper agents); defenses (data curation, spectral signatures, activation
-clustering, Neural Cleanse, fine-pruning); model-stealing one-slide touchpoint
-(full deck: `backup-model-stealing.html`). Math lives in `lec09tech.html`.
+**Topic:** Data poisoning and backdoors (90 min; mixed-major sophomores/juniors; concept-first,
+light math, no proofs; **no activities**). Hook: the BadNets stop sign (Gu Fig 8). Poisoning is
+how and a backdoor is what (Venn); three framing questions (who writes the data, what the attacker
+wants, how it's measured). Availability vs targeted (Biggio Figs 1, 3); clean-label feature collision
+(Poison Frogs Figs 6a, 1, 3b: one poison, 100% of 1,099 trials in transfer; about 60% with 50 poisons end to end;
+limits slide). BadNets (Figs 3, 6, 4, 7, 1). ASR is defined per mapping (all-to-one, source-specific, all-to-all), plus an illustrative 7 → 1 worked example. Web scale: Carlini split-view (est. $60/yr → 0.01% of
+LAION-400M URLs) separates access cost from damage; frontrunning (Fig 6; 6.5% is a qualified estimate); 2022 hash snapshot vs post-disclosure (Table 1 as HTML). Wan
+instruction tuning (one train + one test row of Fig 1). Souly: 250 docs ≈ 420k tokens, a shrinking *token* fraction (12B → 0.0035%, 260B → 0.00016%); the
+pretraining trigger → gibberish DoS backdoor (Fig 1a); Fig 2 with legend (perplexity rise, not ASR); scope slide. Sleeper Agents: installation separate from
+persistence. Glaze ≠ Nightshade (different metrics, no cross-comparable numbers). Defenses: hashes catch changes, not
+pre-existing poison; spectral signatures and Neural Cleanse in depth (needs/assumes/fails); the
+rest in the notes table. Closing five-question checklist applied to the $60 claim. Excludes
+adversarial examples (lec08), jailbreaks (lec10), prompt injection (lec13). Math in `lec09tech.html`.
 
-### Sections (65 slides, ~90 min — content-revised 2026-08 from 55; figure pass 2026-09 from 61; all citations source-verified)
+### Sections (59 slides, 90 min: attack surface 10 · poisoning 20 · backdoors 20 · web scale + LLMs 20 · defenses + synthesis 20)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
-| Title / Contents | 1–2 | `:32`, `:44` | |
-| **01 — The Train-Time Threat** | 3–9 | `:77` | two places to attack (SVG) `:85` · inference-time (SVG) `:102` · train-time (SVG) `:120` · pipeline cracks (SVG) `:138` · supply chain (Gu Fig 1) `:162` · hard to catch (SVG) `:179` |
-| **02 — Data Poisoning** | 10–19 | `:198` | two goals (SVG) `:206` · availability (Biggio Fig 3) `:223` · SVM poisoning (Biggio Fig 1) `:240` · boundary tilt (SVG) `:256` · targeted (SVG) `:280` · clean-label (Frogs Fig 6a) `:298` · **Poison Frogs (Frogs Fig 1; one poison image, transfer setting; verified 2026-08)** `:315` · feature collision (SVG) `:333` · **Collision, Measured (Frogs Fig 3b; added 2026-09)** `:355` |
-| **03 — Backdoors and Triggers** | 20–28 | `:368` | backdoor idea (SVG) `:376` · BadNets (Gu Fig 3) `:394` · **trigger pipeline (Gu Fig 7 capture, verified)** `:411` · clean accuracy stays high (Gu Fig 6) `:423` · two numbers (Gu Fig 4) `:440` · **stop sign (Gu Fig 8; Post-it, >90% flip, 95% confidence; fixed 2026-08)** `:458` · subtle triggers (SVG) `:475` · why it works (SVG) `:493` |
-| **04 — Web-Scale Poisoning** | 29–38 | `:512` | where big data comes from (SVG) `:520` · **Poisoning Is Practical (Carlini Fig 1; $60, 10 datasets; fixed 2026-08)** `:538` · split-view (SVG) `:555` · frontrunning (Carlini Fig 6) `:581` · **tiny fraction (0.01% of LAION-400M ≈ $60; fixed 2026-08)** `:598` · **Few Datasets Ship a Hash (Carlini Table 1; added 2026-09)** `:608` · no insider (SVG) `:620` · **Glaze (Fig 8; added 2026-08)** `:638` · **Nightshade (Fig 7; added 2026-08)** `:655` |
-| **05 — Backdoors in Language Models** | 39–48 | `:673` | tuning is a new target (SVG) `:681` · **Poisoned Instructions (Wan Fig 5; ICML 2023, ~100 examples; fixed 2026-08)** `:699` · text trigger (Wan Fig 1) `:716` · **How Much Poison Is Needed? (added 2026-08)** `:732` · **The Two Experiments (Souly Fig 1; added 2026-09)** `:746` · **250 Documents Are Enough (Souly Fig 2 replaces the hand-drawn SVG; added 2026-08)** `:761` · **Sleeper Agents (Hubinger Fig 1; 2023/2024 code trigger; fixed 2026-08)** `:773` · safety training misses it (Hubinger Fig 2) `:790` · why LLMs exposed (SVG) `:807` |
-| **06 — Defenses, Frontier 2025–26** | 49–62 | `:826` | two lines of defense (SVG) `:834` · **Defending the Pipeline (SVG; hashes + randomized snapshots; added 2026-08)** `:851` · spectral signatures (Tran Fig 3) `:871` · outlier picture (SVG) `:888` · **The Signature, Measured (Tran Fig 1; added 2026-09)** `:908` · activation clustering (Chen Fig 2) `:920` · Neural Cleanse (Wang Fig 1) `:936` · fine-pruning (Liu Fig 4) `:952` · demo (SVG) `:968` · never final (SVG) `:1001` · **Related Threat: Model Stealing (Tramèr Fig 1; added 2026-08)** `:1019` · **Frontier 2025–26 (SVG; rewritten 2026-08)** `:1036` |
-| Takeaways / Closer | 63–65 | — | what to remember `:1054` · key takeaway `:1068` · closer `:1076` |
+| Title / Contents | 1–2 | `:30`, `:42` | |
+| **01 — The Data Is the Attack Surface** | 3–8 | `:71` | stop sign (Gu Fig 8) `:79` · sticker meaning `:95` · strangers' data `:103` · Venn: poisoning vs backdoor `:111` · three questions `:119` |
+| **02 — Data Poisoning** | 9–19 | `:128` | two goals `:136` · boundary tilt `:144` · Biggio Fig 1 `:152` · Biggio Fig 3 `:162` · targeted `:178` · clean label (Frogs Fig 6a) `:186` · fish/dog `:202` · one poison (Frogs Fig 1) `:210` · 50 poisons (Frogs Fig 3b) `:226` · did / did not show `:236` |
+| **03 — Backdoors and Triggers** | 20–31 | `:258` | hidden "if" `:266` · BadNets Fig 3 `:274` · ASR by mapping `:284` · all-to-all Fig 6 `:298` · Fig 4 `:314` · worked example 7 → 1 `:323`, `:331` · traffic-sign trigger (Fig 7) `:345` · invisible triggers `:355` · shortcut `:363` · who can plant (Fig 1) `:372` |
+| **04 — Web-Scale and Language Models** | 32–46 | `:382` | lists of links `:390` · est. $60/yr (Carlini Fig 1) `:398` · access ≠ damage `:415` · frontrunning (Fig 6) `:424` · 2022 hashes (Table 1, HTML) `:440` · Wan Fig 1 rows `:456` · 250 docs token-fraction table `:469` · Souly Fig 1a `:484` · Souly Fig 2 `:494` · does/does not say `:503` · Sleeper Fig 1 stage 1 `:524` · Fig 2a `:541` · got in vs stayed `:557` · Glaze vs Nightshade `:576` |
+| **05 — Defenses, and What to Ask** | 47–59 | `:592` | three places to defend `:600` · hashes `:608` · spectral (Tran Fig 3) `:617` · Tran Fig 1 `:631` · spectral needs/assumes/fails `:643` · Neural Cleanse `:657` · NC needs/assumes/fails `:666` · five questions `:680` · applied to $60 `:688` · established vs open `:703` · takeaways `:723` · closer `:737` |
 
-**Key definitions / citations (all source-verified 2026-08; figure numbers checked against the PDFs 2026-09):**
-- SVM poisoning (first formal study) — `:236` (Fig 3), `:252` (Fig 1) — Biggio, Nelson, and Laskov,
-  "Poisoning Attacks against Support Vector Machines", ICML 2012.
-- Poison Frogs clean-label attack (one poison image suffices in the
-  transfer-learning test) — `:311` (Fig 6a), `:329` (Fig 1), `:363` (Fig 3b) — Shafahi et al., NeurIPS 2018.
-- BadNets (trigger stickers, >90% stop signs → speed-limit, real photo fooled at
-  95% confidence, clean accuracy level with baseline) — `:175` (Fig 1), `:407` (Fig 3), `:419` (Fig 7),
-  `:436` (Fig 6), `:454` (Fig 4), `:471` (Fig 8) — Gu, Dolan-Gavitt, and Garg, 2017 (arXiv 1708.06733).
-- Web-scale poisoning ($60 buys 0.01% of LAION-400M; split-view = expired
-  domains; frontrunning = snapshot timing; defenses = integrity hashes +
-  randomized snapshots) — `:551` (Fig 1), `:577`, `:594` (Fig 6), `:604`, `:616` (Table 1), `:867` — Carlini et
-  al., IEEE S&P 2024.
-- Glaze (style cloak, >92% mimicry disruption) — `:651` (Fig 8) — Shan et al., USENIX
-  Security 2023.
-- Nightshade (<100 samples corrupt one SDXL prompt) — `:668` (Fig 7) — Shan et al.,
-  IEEE S&P 2024.
-- Instruction-tuning poisoning (~100 examples skew hundreds of tasks; larger
-  models more vulnerable) — `:712` (Fig 5), `:728` (Fig 1) — Wan, Wallace, Shen, and Klein, ICML 2023.
-- Near-constant poison count (~250 documents backdoor 600M–13B models,
-  Chinchilla-optimal 6B–260B tokens; 20× more clean data does not raise the
-  bar) — `:742`, `:757` (Fig 1), `:769` (Fig 2) — Souly et al., 2025 (arXiv 2510.07192; UK AI Security
-  Institute, Anthropic, Alan Turing Institute).
-- Sleeper agents (2023 secure / 2024 exploitable code; survives SFT, RL, and
-  adversarial training; largest models most persistent) — `:786` (Fig 1), `:803` (Fig 2) —
-  Hubinger et al., 2024 (arXiv 2401.05566). Distinct from Souri et al.
-  "Sleeper Agent" (not referenced here).
-- Spectral signatures — `:884` (Fig 3), `:916` (Fig 1) — Tran, Li, and Madry, NeurIPS 2018.
-- Activation clustering — `:932` (Fig 2) — Chen et al., 2018 (arXiv 1811.03728).
-- Neural Cleanse — `:948` (Fig 1) — Wang et al., IEEE S&P 2019.
-- Fine-pruning — `:964` (Fig 4) — Liu, Dolan-Gavitt, and Garg, RAID 2018.
-- Model stealing — `:1032` (Fig 1) — Tramèr, Zhang, Juels, Reiter, and Ristenpart,
-  USENIX Security 2016.
+**Key citations (checked against saved PDFs, 2026-10-10; register in the review package):** Gu,
+Dolan-Gavitt & Garg 2017 (BadNets; Figs 1, 3, 4, 6, 7, 8); Biggio, Nelson & Laskov ICML 2012 (Figs 1, 3);
+Shafahi et al. NeurIPS 2018 (Figs 1, 3b, 6a; Eq. 1); Carlini et al. IEEE S&P 2024 (Fig 1, Fig 6,
+Table 1; §4.4–4.5, §6.2); Wan et al. ICML 2023 (Fig 1); Souly et al. 2025 (arXiv 2510.07192;
+Figs 1–2); Hubinger et al. 2024 (arXiv 2401.05566; Figs 1–2); Shan et al. Glaze (USENIX Sec 2023) and
+Nightshade (IEEE S&P 2024); Tran, Li & Madry NeurIPS 2018 (Fig 1, Fig 3, Algorithm 1, Table 2); Wang
+et al. Neural Cleanse IEEE S&P 2019 (§III, §IV, §VIII). Notes only: Chen et al. 2018 (activation
+clustering), Liu et al. RAID 2018 (fine-pruning), Gao et al. 2019 (STRIP).
 
-**Figures (28 cited crops in `figs/`, 2026-09 figure pass):** `badnets-approaches.png` (Gu Fig 1) `:173` · `biggio-multipoint.png` (Biggio Fig 3) `:234` · `biggio-gradient-attack.png` (Biggio Fig 1) `:250` · `frogs-schematic.png` (Frogs Fig 6a) `:309` · `frogs-transfer-attack.png` (Frogs Fig 1) `:327` · `frogs-feature-b.png` (Frogs Fig 3b) `:360` · `badnets-mnist-triggers.png` (Gu Fig 3) `:405` · `badnets-trigger.png` (Gu Fig 7) `:416` · `badnets-error-vs-poison.png` (Gu Fig 6) `:434` · `badnets-confusion.png` (Gu Fig 4) `:451` · `badnets-real-stopsign.png` (Gu Fig 8) `:469` · `carlini-cost.png` (Carlini Fig 1) `:549` · `carlini-wiki-cdf.png` (Carlini Fig 6) `:592` · `carlini-datasets-table.png` (Carlini Table 1) `:613` · `glaze-results.png` (Glaze Fig 8) `:649` · `nightshade-outputs.png` (Nightshade Fig 7) `:666` · `wan-trigger-phrases.png` (Wan Fig 5) `:710` · `wan-overview.png` (Wan Fig 1) `:726` · `souly-overview.png` (Souly Fig 1) `:751` · `souly-constant-count.png` (Souly Fig 2) `:766` · `sleeper-setup.png` (Hubinger Fig 1) `:784` · `sleeper-code-vuln.png` (Hubinger Fig 2) `:801` · `spectral-pipeline.png` (Tran Fig 3) `:881` · `spectral-histograms.png` (Tran Fig 1) `:913` · `actclust-pca.png` (Chen Fig 2) `:930` · `cleanse-illustration.png` (Wang Fig 1) `:946` · `finepr-activations.png` (Liu Fig 4) `:962` · `tramer-extraction.png` (Tramèr Fig 1) `:1030`.
-Inline SVG (23): two places `:95` · inference-time `:113` · train-time `:131` · pipeline cracks `:143` · hard to catch `:190` · two goals `:215` · boundary tilt `:261` · targeted `:291` · feature collision `:338` · backdoor idea `:387` · subtle triggers `:486` · why it works `:504` · where big data `:531` · split-view `:560` · no insider `:631` · tuning target `:692` · LLMs exposed `:818` · two lines `:843` · defending pipeline `:862` · spectral outlier `:893` · demo `:982` · never final `:1012` · frontier `:1046`. Citations use
-`.cite-left`. Page number: bold `.slide-num` only.
+**Figures (22 cited crops in `figs/`):** `badnets-real-stopsign.png` `:84` · `biggio-gradient-attack.png` `:156` ·
+`biggio-multipoint.png` `:166` · `frogs-schematic.png` `:190` · `frogs-transfer-attack.png` `:214` ·
+`frogs-feature-b.png` `:229` · `badnets-mnist-triggers.png` `:278` · `badnets-error-vs-poison.png` `:302` ·
+`badnets-confusion.png` `:317` · `badnets-trigger.png` `:348` · `badnets-approaches.png` `:375` ·
+`carlini-cost.png` `:403` · `carlini-wiki-cdf.png` `:428` · `wan-train-row.png` `:461` · `wan-test-row.png` `:463` ·
+`souly-overview.png` `:488` (Fig 1a only) · `souly-constant-count.png` `:497` (Fig 2 + legend) ·
+`sleeper-setup.png` `:529` (Fig 1 stage 1) · `sleeper-code-vuln.png` `:545` (Fig 2a) · `spectral-pipeline.png` `:621` ·
+`tran-data-eig.png` `:635` · `tran-rep-eig.png` `:636`. HTML tables: Carlini Table 1 selection `:443`, Souly token
+fractions `:473`, Glaze vs Nightshade `:579`. Inline SVG: `:98`, `:106`, `:114`, `:122`, `:139`, `:147`, `:181`, `:205`, `:269`, `:326`, `:358`, `:366`, `:393`, `:418`, `:603`, `:611`, `:660`, `:683`.
 
-**2026-09 figure pass (61→65):** 27 new cited crops (figure numbers checked against each PDF; `carlini-cost.png` re-cropped) and 16 new inline SVGs; the hand-drawn poison-count sketch on 250 Documents replaced by Souly Fig 2. Added 4 slides: Collision, Measured (Frogs Fig 3b), Few Datasets Ship a Hash (Carlini Table 1, split out of Tiny Fraction to avoid cite overlap), The Two Experiments (Souly Fig 1, split out of How Much Poison), The Signature, Measured (Tran Fig 1). the uncropped full-Fig-3 file frogs-feature-space.png removed. Note file: +4 articles, 44 "Slide figure" lines.
+**2026-10 rebuild (65 → 59):** rebuilt to the slides-review brief (#106). Model stealing,
+activation clustering and fine-pruning slides removed from the deck (the last two are in the notes
+table). The figures `tramer-extraction`, `actclust-pca`, `finepr-activations`, `glaze-results`,
+`nightshade-outputs` and `wan-trigger-phrases` were deleted.
+Round 2 (slides-review #112): token-fraction fix (Souly), ASR per mapping, scoped claims (P5, 7, 10,
+12, 14, 15, 18, 34, 36, 39, 42, 53, 59), figures recaptured or re-selected (P17, 31, 37, 38, 40, 41,
+43, 44, 51); `wan-overview`, `carlini-datasets-table` and `spectral-histograms` replaced and deleted.
 
-**2026-08 content revision (55→61):** every citation/number fetched and verified.
-Added 6 slides: Artists Fight Back: Glaze + Nightshade: Poison as Deterrent (§04),
-How Much Poison Is Needed? + 250 Documents Are Enough (§05), Defending the
-Pipeline (§06), Related Threat: Model Stealing (§06). Fixed: stop-sign slide
-gained verified BadNets numbers (>90% flip, 95%-confidence street photo, clean
-accuracy level); Poisoning Is Practical gained verified $60 / 10-datasets / no-
-insider numbers; Tiny Fraction now states the verified 0.01%-of-LAION-400M ≈ $60
-guarantee (unverified "a handful of examples can suffice" deleted); Poisoned
-Instructions gained verified Wan numbers (~100 examples, larger models more
-vulnerable); Sleeper Agents corrected to the 2023/2024 code-vulnerability trigger
-and lab-planted framing; Safety Training Misses It gained verified SFT/RL/
-adversarial-training findings; Frontier rewritten around verified anchors
-(unverified "provable bounds on tolerable poison" deleted); What to Remember
-extended to six verified points. Note-file error fixed: trigger described as "red
-square" → yellow square/bomb/flower per Gu Fig 7. `lec09tech.html` audited: math
-correct (feature-collision ℓ∞ form verified against Poison Frogs Appendix C);
-one cite fixed — λ-blended backdoor objective no longer attributed verbatim to
-BadNets, now "standard formalization of" Gu 2017 (stays 16 sl). Note file synced
-(61 entries, order matches).
-**2026-08 note enrichment:** `lec09-poisoning-note.html` upgraded from speaker script
-(383 lines) to Script &amp; Companion Notes (677 lines; 61 entries unchanged): per-entry
-`.detail` blocks with rigorous definitions (poisoning threat model, poison budget α,
-availability/targeted/backdoor taxonomy, clean vs dirty label, x⊕t trigger operator,
-CA/ASR, split-view & frontrunning mechanics, ε-spectral separability Def 3.1, Neural
-Cleanse A(x,m,Δ) + MAD index, fine-pruning), theorems with proofs or labeled verified
-sketches (Biggio bilevel/KKT gradient vs arXiv 1206.6389; Poison Frogs Eq 1 +
-forward-backward splitting vs arXiv 1804.00792; BadNets λ-blend + numbers vs arXiv
-1708.06733; Tran Lemmas 3.1–3.3 Chebyshev sketch vs arXiv 1811.00636; Souly 250-doc
-numbers vs arXiv 2510.07192 + Anthropic blog; Tramèr d+1 equation-solving vs arXiv
-1609.02943; general bilevel form, 40,000-image arithmetic, defense-evasion synthesis
-labeled course notes), and 16 verified links (all 200; Neural Cleanse PDF via Internet
-Archive; Tay via Microsoft blog).
+**Note:** `lec09-poisoning-note.html` — 59 entries. Each entry has a minute
+budget and elapsed time, a script, and a key takeaway. Content slides add the figure,
+setup/model/date, what the slide establishes and does not establish, assumptions, and
+primary-source links. The defense comparison table is in entry 48 (Spectral, AC, NC,
+Fine-Pruning, STRIP, hashes); the worked-example code is in entry 26.
+
+**Tech:** `lec09tech.html` — 18 slides:
+- count N, doc fraction N/|D|, token fraction N·L̄/T with Souly numbers (4)
+- Frogs Eq. 1 (5–6, ℓ∞ variant)
+- feature map needed (7)
+- backdoor objective, "common formalization"; λ = α/(1−α) (8)
+- ASR with y ≠ y_t (9)
+- spectral τ, 1.5ε removal (11–12)
+- separation as an assumption (13)
+- Neural Cleanse Eq. 3 (14)
+- MAD anomaly index, MAD > 0, flags a *suspected* label (15)
+- activation clustering; smaller-cluster rule as a heuristic (16)
+- adaptive-attack caveat (17)
 
 ## lec10-jailbreak.html
 

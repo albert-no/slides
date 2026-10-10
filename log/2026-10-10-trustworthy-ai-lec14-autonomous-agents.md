@@ -221,3 +221,11 @@ Reviewed `f644e8f`. Most corrections are accepted, including the archival relabe
 Two small consistency edits: P10 should say **geometric mean**; N10 must retain the SWAA scaffold exception rather than saying the scaffold is identical across tasks. On P44, make the dagger key **“only CI for the change excluding zero.”**
 
 Send the narrow diff and affected renders; no further expansion needed.
+
+## 8 — slides → slides-review (2026-10-10 23:37 KST)
+
+*Attachment: `lec14-review-r3.zip`*
+
+lec14 round 3 is ready for review (PR #50, head 55ab1be). All six items from #154 are applied, plus the P10, N10 and P44 fixes. The zip has the narrow diff f644e8f..HEAD, renders of the affected pages, the two new Fig. 1 crops and the check outputs. RESPONSE-r3.md is the item-by-item response.
+
+On P14, the crops are "Obtaining compute" and "Obtaining weights". I couldn't use "replicating onto compute" because the source legend overlaps that group, so it can't be cropped without editing the figure. Compute vs weights is also the contrast the Fig. 1 caption draws. Please confirm, or flag anything left.

@@ -29,3 +29,25 @@ lec10 is merged: PR #46 → main `bd709fe`, and the branch is deleted. lec11 has
 • *Files:* the old prompt-injection deck currently holds `lec11-*`. In this PR I'll move it to `backup-prompt-injection*`, unchanged, as source material for lec13. The rebuilt deck becomes `lec11-synthetic-media{,-note}.html` + `lec11tech.html`, and the old `lec12-watermark*` files are removed. OUTLINE root and leaf tables are updated to match. lec12 (fairness) gets its own reconciliation in its PR.
 • *Notes:* fully rewritten to the lec07–10 standard: setup, model and date for each study, what the evidence establishes and what it doesn't, assumptions, speaking flow.
 • *Review packages:* full HTML/assets, src/ snapshots, notes validation, correction diff, changed renders and page map from round 1.
+
+## 2 — slides-review → slides (2026-10-10 19:22)
+
+Scope approved with these refinements. Keep the proposed pacing.
+
+*Three priorities*
+• *Origin is not truth.* Make this explicit early and in the synthesis: a watermark signals a particular generation process; provenance records signed assertions/history; neither establishes factual truth. Provenance can cover AI-generated content too. Missing credentials do not mean fake, and no detected watermark does not mean human.
+• *Teach false accusations through base rates.* Include one labelled numerical illustration showing why a low FPR can still produce many false accusations when AI content is uncommon. Distinguish FPR from “probability this flagged item is human.”
+• *Keep policy subordinate to evidence.* Allow about five minutes of the provenance/policy block for law. Put the detailed three-jurisdiction comparison in notes, separating enacted requirements, application dates, enforcement and proposals.
+
+*Scope and evidence*
+• KGW should remain the one watermark mechanism taught thoroughly. Keep distortion-free/undetectable designs brief; explain what distribution is preserved and what adversary lacks the key.
+• Compare paraphrase studies only with their watermark, attack access, retained length, threshold and FPR stated. Present the impossibility result and empirical robustness results as differently scoped claims—not contradictory verdicts.
+• Use one concrete deepfake generalization study rather than an “arms race” catalogue. Keep Liang and the withdrawn classifier explicitly historical.
+• Avoid blanket claims that image/video marks fail under cropping or that there is “no shared standard.” Specify the method, transformation and kind of standard. Product support also differs from default activation and preservation through sharing.
+
+*Technical checks*
+The Binomial null and √T scaling need their assumptions stated. Address repeated tokens/context dependence rather than treating every token as an independent trial; distinguish nominal significance from empirically calibrated false-positive rates.
+
+The file migration is fine. Verify backups remain unchanged, shared assets survive, and navigation links—not just OUTLINE pointers—resolve. Don’t rebuild fairness yet.
+
+Proceed; include the lec11 PR link with the round-1 package.

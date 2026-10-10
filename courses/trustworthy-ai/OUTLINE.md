@@ -1,6 +1,6 @@
 # trustworthy-ai/ — Trustworthy AI course
 
-Undergraduate course for sophomores/juniors (15 weeks × 1.5 hr), mixed majors with
+Undergraduate course for sophomores/juniors (15-week semester × 1.5 hr; 14 taught lectures), mixed majors with
 basic Python/Colab experience. **Mode:** concept introduction + motivation first —
 foundational works, a little recent work, light technical detail, no proofs.
 At most one intuitive formula per key concept.
@@ -25,8 +25,8 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 1. Privacy & Data | 2–5 | What models leak about their training data |
 | 2. Reliability | 6–7 | Can you believe the answer, and does training get what we meant |
 | 3. Security | 8–11 | How models are attacked, train- and inference-time |
-| 4. Provenance & Fairness | 12–14 | Watermarking, fairness, accountability |
-| 5. Synthesis | 15 | Governance, frontier, demo showcase |
+| 4. Provenance, Fairness & Agents | 12–14 | Fairness, prompt injection, emerging agentic threats; Wk 14 is the finale with a course-wide checklist |
+| — | — | Governance, frontier, demo showcase: optional backup `backup-governance.html` |
 
 ## Lecture index
 
@@ -45,8 +45,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 11 | `lec11-synthetic-media.html` | Synthetic media: text watermarks, robustness, detection without a watermark, provenance (C2PA) & labelling law | **new 2026-10** (56 sl, 8 real figure crops + 5 tables/figures redrawn, 90 min, concept-first, no activities; note 56 entries; tech 13 sl). Former Wk 11 prompt injection → rebuilt as Wk 13; former Wk 12 watermark deck replaced |
 | 12 | `lec12-fairness.html` | Fairness: where bias enters, criteria, COMPAS and impossibility, mitigation, audits beyond classifiers | **new 2026-10** (56 sl, 17 real figure crops, 90 min, concept-first, no activities; note 56 entries; tech 17 sl). Merges the former Wk 13–14 fairness decks → `backup-fairness-defs.html`, `backup-fairness-mitigation.html` |
 | 13 | `lec13-prompt-injection.html` | Prompt injection: direct and indirect, agents, three incidents, why it is hard, measured defenses and CaMeL | **new 2026-10** (53 sl, 7 real figure crops, 90 min, concept-first, no activities; note 53 entries; tech 15 sl). Replaces `backup-prompt-injection.html` (deleted) |
-| 14 | — | (slot reserved: emerging autonomous and multi-agent systems) | |
-| 15 | `lec15-governance.html` | Governance, frontier & demo showcase | **revised 2026-08, figure pass 2026-09** (70 sl) |
+| 14 | `lec14-agentic-threats.html` | Emerging agentic threats: autonomy, deception and multi-agent risks; course finale | **new 2026-10** (51 sl, 5 real figure crops, 90 min, concept-first, no activities; note 51 entries; tech 14 sl). Replaces `backup-agentic-autonomy.html` (deleted); former Wk 15 governance deck → `backup-governance.html` |
 
 Every deck has a companion **speaker script** `lecNN-…-note.html` (one entry per slide:
 title + 1–2 sentence script + **Key takeaway**). Scripts also exist for lec 1–2.
@@ -75,19 +74,19 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `lec11tech.html` | Wk 11 (synthetic media) | green-list rule (KGW Alg. 2); idealized Binomial null + assumptions; z &gt; 4 ≈ 3×10⁻⁵ (normal approx.) vs exact tail at T = 20; √T growth under constant green rate; repeated pairs, nominal vs measured FPR (K24 App. A.3, Fig. 7); base-rate formula; TV bound AUROC ≤ ½+TV−TV²/2 (TV defined; keyed detectors); distortion-free vs undetectable | **new 2026-10** (13 sl; formulas checked against the saved papers) |
 | `lec12tech.html` | Wk 12 (fairness) | four rates per group (with positivity); five criteria written out; Dwork (D,d)-Lipschitz (Def. 2.1); Kusner counterfactual fairness (Def. 5); calibration vs PPV via the score mix; Chouldechova identity (eq. 2.6); Kleinberg proof sketch; worked example computed; reweighing; reductions saddle point; Hardt derived predictor | **new 2026-10** (17 sl; formulas checked against the saved papers) |
 | `lec13tech.html` | Wk 13 (prompt injection) | trusted vs attacker-controlled state; PI-SEC game and $\Omega_p$ (CaMeL §4); control vs data part of an action; confused deputy and least privilege; capability labels, propagation, STRICT mode; dual LLM → CaMeL policy check; conditional guarantee; AgentDojo BU / UA / ASR; static vs adaptive ASR with budget $q$ | **new 2026-10** (15 sl; checked against the saved papers) |
+| `lec14tech.html` | Wk 14 (agentic threats) | time-horizon logistic fit $\sigma(\beta(\log h-\log t))$; 50% → 80% horizon; doubling time from the log-linear trend; compounding vs independence; the control game (safety, usefulness); upfront auditing closed form; per-task hazard $S_N$ (Ge-Wang eq. 4); empirical safety and its denominator; toy SIS propagation model labelled not empirical | **new 2026-10** (14 sl; checked against the saved papers; implied $\beta$ range and $S^*$ marked as our arithmetic) |
 | `backup-fairness-defstech.html` | former Wk 13 (fairness defs) | demographic parity / equalized odds / calibration as conditional-prob defs; base rates; impossibility theorem (Chouldechova/Kleinberg) + proof sketch | **fixed 2026-08** (15 sl: base-rate identity was inverted (1−p)/p → p/(1−p) per Chouldechova eq 2.6; proof-sketch step 1 corrected (calibration ≠ "PPV = base rate" → predictive parity demands equal PPV across groups); unverifiable numeric-wedge table replaced with an exactly derivable two-value-score construction; impossibility attribution now dual Chouldechova + Kleinberg) |
 | `backup-fairness-mitigationtech.html` | former Wk 14 (fairness mitigation) | reweighing w(g,y); penalized min Loss+λ·Unfairness; constrained form; reductions (Agarwal 2018); post-processing per-group thresholds (Hardt 2016) | **checked 2026-08** (17 sl: reweighing formula verified against Kamiran & Calders; reductions + Hardt ROC intuition verified against papers; one fix — cite venue "KIS 2012" → "Knowledge and Information Systems 2012") |
-| `lec15tech.html` | Wk 15 (governance) | EU AI Act risk-tier taxonomy; NIST RMF as Govern→Map→Measure→Manage loop; what "measurable" audit metrics mean (deliberately light — governance is non-mathematical) | **checked 2026-08** (6 sl: tiers verified still accurate post-Omnibus; EU cite normalized; tier bullets de-dashed for lint) |
 
-## Backup / swap-in materials (not in the 15-week core)
+## Backup / swap-in materials (not in the 14 taught lectures)
 
-Optional decks for substitution or extra sessions. Each has a `-note.html` script.
+Optional decks for substitution or extra sessions. The fairness and governance backups are labelled *optional archival*: their notes use an earlier course plan's lecture numbers, and the governance wrap-up and Demo Showcase are marked historical. Each has a `-note.html` script.
 
 | File | Topic | Slots in where | Status |
 |---|---|---|---|
 | `backup-sycophancy.html` | Sycophancy, manipulation & persuasion | merge into Wk 6, or standalone | **drafted** (38 sl) |
 | `backup-copyright.html` | Copyright, consent & data provenance | pairs with Wk 4 (memorization) | **drafted** (45 sl) |
-| `backup-agentic-autonomy.html` | Agentic autonomy risks beyond injection | follows Wk 13 (prompt injection); to be rebuilt as Wk 14 | **drafted** (47 sl) |
+| `backup-governance.html` | Governance, the frontier & wrap-up (EU AI Act, NIST RMF, frontier safety frameworks, demo showcase) | former Wk 15 (moved 2026-10; lec14 is now the finale); optional archival backup, wrap-up and Demo Showcase marked historical | **revised 2026-08, figure pass 2026-09** (70 sl; note `backup-governance-note.html`; tech `backup-governancetech.html`, 6 sl). Section `## backup-governance.html` below |
 | `backup-model-stealing.html` | Model stealing / extraction attacks | swap for Wk 9, or standalone | **drafted** (51 sl) |
 | `backup-interpretability.html` | Interpretability & explainability (LIME/SHAP, probes, circuits, SAEs) | former Wk 7 (moved 2026-10); standalone extra session | **revised 2026-08, figure pass 2026-09** (64 sl, 23 real figs; note `backup-interpretability-note.html`; tech `backup-interpretabilitytech.html`, 20 sl). Section `## backup-interpretability.html` below |
 
@@ -106,7 +105,7 @@ cropped-and-cited paper figure or a data-backed SVG:
 - `lec12` (2026-10): 17 cited crops — see its section. Former fairness decks (now `backup-fairness-defs`/`backup-fairness-mitigation`): Bianchi occupation grid (`figs/bianchi-occupations.png`, FAccT 2023 Fig 1); `lec14` Gender Shades table (`figs/gender-shades.png`, FAT* 2018 Table 4). backup-fairness-defs COMPAS TODO removed (illustrative SVG kept — real news graphic is copyrighted).
 - `backup-fairness-mitigation` (former lec14) figure pass 2026-09: 20 cited crops (AIF360 Figs. 1/4/5, Feldman Fig. 1, Agarwal Fig. 1, Zhang Fig. 2 + Table 3, Hardt Figs. 2/10/11, model card + datasheet examples, SMACTR Fig. 2, PPB faces, Actionable Auditing Tables 1–2, Tamkin Figs. 1/2/5, Eloundou Fig. 10, Wilson & Caliskan Fig. 2) + 14 SVGs; see the backup-fairness-mitigation section.
 - `lec06` Vectara HHEM hallucination bar chart (inline SVG, data Sep 22, 2026).
-- `backup-copyright` Somepalli pairs (`figs/somepalli-pairs.png`, CVPR 2023 Fig 1); `backup-sycophancy` Sharma preference forest plot (`figs/sharma-sycophancy.png`, ICLR 2024 Fig 5); `backup-model-stealing` Knockoff pipeline (`figs/knockoff-pipeline.png`, CVPR 2019 Fig 2) + SVD hidden-dim plot (`figs/stealing-projection.png`, Carlini ICML 2024 Fig 1); `backup-agentic-autonomy` CoinRun panel (`figs/coinrun-misgeneralization.png`, Langosco et al. ICML 2022 Fig 1).
+- `backup-copyright` Somepalli pairs (`figs/somepalli-pairs.png`, CVPR 2023 Fig 1); `backup-sycophancy` Sharma preference forest plot (`figs/sharma-sycophancy.png`, ICLR 2024 Fig 5); `backup-model-stealing` Knockoff pipeline (`figs/knockoff-pipeline.png`, CVPR 2019 Fig 2) + SVD hidden-dim plot (`figs/stealing-projection.png`, Carlini ICML 2024 Fig 1).
 
 *Housekeeping:* `figs/somepalli_histograms.png` (1450px) is an unused orphan from the
 original draft — safe to delete. All embedded figures are ≤1200px (bundle-safe).
@@ -454,7 +453,7 @@ ladder (demonstration / exploitation / vendor remediation / independent retest).
 instructions inside data, escaping alone does not establish authority, detection vs adaptation. Defenses and
 measurement: three metrics plus denominator, access, budget and adaptation; AgentDojo; spotlighting, instruction
 hierarchy, simple defenses; Nasr et al. Table 7 as the adaptive anchor; CaMeL as the main system defense with a
-conditional guarantee; other system defenses; meaningful approval. Agent autonomy beyond injection is left to Wk 14.
+conditional guarantee; other system defenses; meaningful approval. Agent autonomy beyond injection is covered in Wk 14 (`lec14-agentic-threats.html`).
 Math in `lec13tech.html`.
 
 ### Sections (53 slides, 90 min: core idea 10 · agentic surface 20 · incidents 15 · why hard 10 · defenses + measurement 25 · synthesis 10)
@@ -502,9 +501,67 @@ primary-source links (23 sources). Entry 13 carries a worked toy-agent trace; en
   labels and propagation, STRICT mode (9); dual LLM → CaMeL check (10); the conditional guarantee (11)
 - AgentDojo metrics written out (13); static vs adaptive ASR with budget $q$ (14)
 
+## lec14-agentic-threats.html
+
+**Topic:** Emerging agentic threats: autonomy, deception and multi-agent risks (90 min; mixed-major
+sophomores/juniors; concept-first, no math on the slides; **no activities**; course finale). What changes with
+autonomy (dial, compounding errors). Measuring autonomy: why, METR time horizon (definition, computation, ~7-month
+doubling, what it depends on, what it is not: not safe unattended run time); RepliBench components vs end-to-end.
+Against the overseer: three claims kept apart (induced / observed / intent); one scheming anchor (Meinke) and one
+sandbagging anchor (van der Weij plus Meinke §3.6); other explanations for a failed eval. Many agents: coordination
+(MAST), propagation (Prompt Infection, preprint, simulated), collusion (Motwani), demonstrated vs hypothesised.
+Control: alignment vs control, trusted monitor, attacker access, audit budget, the control game, trusted monitoring
+62% / 97%, protocol comparison, Pareto figure, attack selection (Ge-Wang 2026, the one 2026 result), benchmark ≠
+deployment guarantee. Synthesis: established vs not, course-wide checklist, open problems, takeaways, closer "Who
+checks it?". Governance only in context; full treatment in `backup-governance.html`. Math in `lec14tech.html`.
+
+### Sections (51 slides, 90 min: autonomy 10 · measuring 15 · overseer 15 · many agents 20 · control 20 · synthesis 10)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:38`, `:50` | |
+| **01 — What Changes With Autonomy** | 3–6 | `:82` | beyond a defended agent `:90` · autonomy dial `:110` · compounding errors `:137` |
+| **02 — Measuring Autonomy** | 7–15 | `:167` | why measure (Shevlane) `:175` · horizon definition `:191` · computation `:222` · METR Fig. 1 `:239` · what it depends on `:250` · what it is not `:266` · RepliBench Fig. 1, two domains `:283` · component success ≠ full replication `:304` |
+| **03 — Against the Overseer** | 16–23 | `:322` | setup / behavior / inference kept apart `:330` · scheming setup `:344`, oversight disabling `:368` · sandbagging `:385`, on instruction `:407`, without instructed goal `:426` · other explanations `:442` |
+| **04 — Many Agents** | 24–34 | `:463` | three failure modes `:471`, `:491` · MAST Fig. 1 `:504`, `:515` · injection → propagation `:529` · Prompt Infection `:552`, `:569` · defending each hop `:588` · collusion `:606` · demonstrated vs hypothesised `:624` |
+| **05 — Control** | 35–45 | `:638` | alignment → control `:646` · setup (Fig. 1) `:660` · game `:675` · trusted monitoring `:691`, `:717` · protocols `:734` · Pareto (Fig. 2 zoom + legend) `:749` · attack selection `:761`, `:780` · not a guarantee `:792` |
+| **06 — Synthesis** | 46–51 | `:806` | established vs not `:814` · course checklist `:836` · open problems `:852` · takeaways `:866` · closer "Who checks it?" `:880` |
+
+**Key citations on slides (checked against saved papers, 2026-10-10):** Shevlane et al. arXiv 2305.15324 (Table 1);
+Kwa et al. (METR) arXiv 2503.14499 (Fig. 1, §2–§4, §7); Black et al. RepliBench arXiv 2504.18565v2 (Fig. 1, §5.1, §6);
+Meinke et al. (Apollo) arXiv 2412.04984v2 (Tables 1, 2, 4, 6, §3.6); van der Weij et al. ICLR 2025 (Table 1, Fig. 5);
+Hammond et al. arXiv 2502.14143 (Fig. 1); Cemri et al. MAST, NeurIPS 2025 D&amp;B (Fig. 1, §5–§6); Lee &amp; Tiwari
+Prompt Infection arXiv 2410.07283v1, preprint (§3–§6, Fig. 6); Motwani et al. arXiv 2402.07510v5 (Table 3);
+Greenblatt et al. AI Control, ICML 2024 (Figs. 1–2, Table 2, §2–§3, §6); Ge-Wang, Crosse et al. arXiv 2606.06529v1
+(Table 2, §4.4, App. A); Terekhov et al. arXiv 2510.09462v2. Notes only: Lynch et al. (agentic misalignment), METR
+modelling-assumptions note (20 Mar 2026), Cohen et al. Morris-II, Terekhov Defer-to-Resample; goal misgeneralisation
+as a notes cross-reference only.
+
+**Figures (7 image files in `figs/`):** `metr-horizon-fig1.png` `:243` · `replibench-fig1-compute.png` `:287` ·
+`replibench-fig1-weights.png` `:288` (two unmodified Fig. 1 crops) ·
+`mast-taxonomy-fig1.png` `:508` · `control-setup-fig1.png` `:664` · `control-pareto-fig2-zoom.png` `:753` ·
+`control-pareto-fig2-legend.png` `:754`. All other
+diagrams are inline SVG.
+
+**2026-10 rebuild:** replaces the backup-agentic-autonomy deck (47 sl), deleted with its note and the one figure used
+only by it (`coinrun-misgeneralization`); the reference check found no other links outside `OUTLINE.md` and
+`log/`. Built to the slides-review brief (#150). The former Wk 15 governance deck, note and tech file moved to
+`backup-governance*` in the same PR; `lec01-introduction-note.html` pointers to "Lecture 15" updated.
+
+**Note:** `lec14-agentic-threats-note.html` — 51 entries with minute budget and elapsed time, script, key takeaway;
+content slides add figure, setup/model/date, establishes / does not establish, assumptions and primary-source links
+(15 sources). Source inconsistencies are flagged in the entries: Meinke rollouts (Table 2 caption 300 vs text 100),
+RepliBench 9/20 vs 10/20, Cemri Fig. 2 vs Fig. 4 splits, Kwa 169 vs 170 tasks.
+
+**Tech:** `lec14tech.html` — 14 slides:
+- horizon fit (3); 50% → 80% horizon, implied $\beta$ as our arithmetic (4); doubling time (5); compounding (6)
+- control game written out (8); upfront auditing closed form $S^*$ (9); per-task hazard $S_N$ (10); empirical safety
+  and its denominator (11)
+- toy SIS propagation model, "not empirical" (13–14)
+
 ## backup-fairness-defs.html
 
-*Former Wk 13 deck (old names lec13-fairness-defs, its note, and lec13tech), moved unchanged on 2026-10-10 to `backup-fairness-defs.html`, `backup-fairness-defs-note.html` and `backup-fairness-defstech.html`; line pointers below still hold. Merged into Wk 12.*
+*Former Wk 13 deck (old names lec13-fairness-defs, its note, and lec13tech), moved unchanged on 2026-10-10 to `backup-fairness-defs.html`, `backup-fairness-defs-note.html` and `backup-fairness-defstech.html`; line pointers below still hold. Merged into Wk 12. Relabelled 2026-10 as an optional archival backup (title pill, page titles; the note carries a legacy-numbering notice), with no line shifts in the deck.*
 
 **Topic:** Fairness I — definitions & impossibility (~90 min). Where bias enters the
 pipeline (data, labels — Amazon recruiting + Obermeyer cost-proxy case — feedback
@@ -607,7 +664,7 @@ Note file synced (58 entries, order matches).
 
 ## backup-fairness-mitigation.html
 
-*Former Wk 14 deck (old names lec14-fairness-mitigation, its note, and lec14tech), moved unchanged on 2026-10-10 to `backup-fairness-mitigation.html`, `backup-fairness-mitigation-note.html` and `backup-fairness-mitigationtech.html`; line pointers below still hold. Merged into Wk 12.*
+*Former Wk 14 deck (old names lec14-fairness-mitigation, its note, and lec14tech), moved unchanged on 2026-10-10 to `backup-fairness-mitigation.html`, `backup-fairness-mitigation-note.html` and `backup-fairness-mitigationtech.html`; line pointers below still hold. Merged into Wk 12. Relabelled 2026-10 as an optional archival backup (title pill, page titles; the note carries a legacy-numbering notice), with no line shifts in the deck.*
 
 **Topic:** Fairness II — mitigation & accountability (~90 min). Picks up where lec13's
 definitions end: three places to intervene in the pipeline (pre-/in-/post-processing),
@@ -616,7 +673,7 @@ w(g,y), penalized/constrained objectives, reductions, per-group ROC thresholds);
 the fairness–accuracy tradeoff and the impossibility recap (defined and proved in
 lec13 — referenced, not redone); accountability (model cards, datasheets, audits —
 Gender Shades figure + Actionable Auditing follow-up — impact assessments, EU AI Act
-touchpoint only, governance is lec15); generative & LLM fairness (Bianchi figure
+touchpoint only, governance is `backup-governance`); generative & LLM fairness (Bianchi figure
 shared with lec13, Gemini overcorrection referenced briefly — the full case is
 lec13's — plus LLM decision bias, prompt steering, post-training as mitigation,
 resume-screening risk, and the 2025 both-ways regulatory squeeze).
@@ -730,7 +787,9 @@ with entropy proofs, Hardt LP + ROC geometry + Prop 5.2/Cor 5.3, DP error lower 
 and 23 verified links — consistent with `backup-fairness-mitigationtech.html` and the lec13 note (impossibility
 proofs referenced, not duplicated).
 
-## lec15-governance.html
+## backup-governance.html
+
+*Former Wk 15 deck, moved to backup 2026-10 (`git mv` of the former lec15-governance deck, its note and lec15tech to `backup-governance.html`, `backup-governance-note.html` and `backup-governancetech.html`; only the title-slide pill and page titles changed from "Lecture 15" to "Backup"). Line numbers unchanged by the move. Relabelled 2026-10 as an optional archival backup. The wrap-up and Demo Showcase are marked historical (slide title "Demo Showcase (Historical)"), and the note carries a legacy-numbering notice. There are no line shifts in the deck.*
 
 **Topic:** Governance, the frontier & course wrap-up (~90 min, capstone). Nearly
 math-free. Connects the course's threads via the trust stack (data → model → output →
@@ -739,7 +798,7 @@ incl. Digital Omnibus timeline and GPAI rules; US patchwork + executive-order
 whiplash; Korea AI Basic Act; summits/AISIs + International AI Safety Report),
 auditing & red-teaming incl. frontier-lab safety frameworks (Anthropic RSP/ASL,
 OpenAI Preparedness, GDM FSF), open problems, and the wrap-up (five questions, Demo
-Showcase kept, one lesson). Formal structures live in `lec15tech.html` (deliberately
+Showcase kept, one lesson). Formal structures live in `backup-governancetech.html` (deliberately
 light).
 
 ### Sections (70 slides, ~90 min — content-revised 2026-08 from 53; figure pass 2026-09 from 66; all citations source-verified)
@@ -790,12 +849,12 @@ intro** now says four of the paper's six risk areas; EU cites normalized to
 "Regulation (EU) 2024/1689"; US-approach slide rewritten (patchwork; first binding
 rules from states); Key Takeaways gained EU/US/Korea + if-then-commitments lines;
 trust-stack SVG gained reliability + society labels. Course-logistics Demo Showcase
-slide kept per course scaffolding. `lec15tech.html` errors-only pass (EU cite fixed,
+slide kept per course scaffolding. `backup-governancetech.html` errors-only pass (EU cite fixed,
 tier bullets de-dashed; still 6 sl). Note file synced (66 entries, order matches).
 
 **2026-09 figure pass (66→70):** every content slide now carries a visual. 17 new cropped figures (International AI Safety Report 2026 ×6, Anderljung 2023 ×2, Shevlane 2023 ×2, NIST AI RMF, Bommasani 2021, Ganguli 2022, Anthropic RSP v2.2 table, GDM FSF v3.1 table, two European Commission graphics) plus the Mitchell model card reused from lec14; ~28 new inline SVGs on formerly bullet-only slides. Four slides added: **The Full Map: Six Areas** (Weidinger Table 1, all six areas named) `:403`; **The Commission's Own Picture** (EU risk pyramid) `:451`; **Where Rules Can Attach** (Anderljung Fig. 1 lifecycle) `:651`; **Why Governance Is Hard** (IASR Fig. 3.1) `:722`. Dense source tables (Shevlane Table 1, Weidinger Table 1, OpenAI Preparedness Table 1) are rendered as verified-name SVG summaries citing the table rather than as unreadable crops. The GDM FSF PDF on hand is Version 3.1 (Apr 2026); the table cite says so explicitly while the author's "v3, 2025" text cite is untouched. No author bullets rewritten; two new muted lines trimmed to the 7×7 ceiling. Note file: 70 entries (4 new articles + 46 "Slide figure" lines), order matches. 60-dpi render check of all 46 edited slides passed after fixes (threads SVG height, Korea-threshold labels, lifecycle image width, headline SVG width, funnel contrast).
 
-**2026-08 note enrichment:** `lec15-governance-note.html` upgraded from speaker script
+**2026-08 note enrichment:** `backup-governance-note.html` upgraded from speaker script
 (413 lines) to Script &amp; Companion Notes (737 lines; 66 entries unchanged). Nearly
 math-free deck, so depth went to verbatim legal/framework language and verified
 backgrounds+links rather than proofs: AI Act Art 3 definitions quoted verbatim (AI

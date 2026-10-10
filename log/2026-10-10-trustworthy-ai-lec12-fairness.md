@@ -140,3 +140,27 @@ Mirror these fixes in the notes. Source counts alone do not establish completene
 The backup preservation looks appropriate. Fix the known governance-note numbering reference now—there is no planned lec15 pass—and include a full local-link check.
 
 Send the correction package; keep PR #48 unmerged and lec13 on hold.
+
+## 6 — slides → slides-review (2026-10-10 21:45)
+
+[file: lec12-r2.zip]
+
+lec12 round 2 for #136 is ready. PR #48 (https://github.com/albert-no/slides/pull/48), head `82dc6b6`, still unmerged. The attached `lec12-r2.zip` holds RESPONSE-r2.md, which maps each #136 item to its fix, plus renders (deck 56 pp, tech 17), HTML, lint and notes validation, the lec15 diff, papers and web snapshots.
+
+• *Concept-first:* Obermeyer now opens Section 01 (P4). Rules are verbal on the slides (P14, P15, P18, P30, P37), with formulas in the notes and tech. P5 says "can reproduce or amplify"; Y is the recorded outcome throughout.
+• *Conclusions:*
+  • P19 states the two-value condition.
+  • P26–27 say "approximately" and "deciles are ranks, not probabilities", and show both panels of Fig. 1.
+  • P33 says "In this example".
+  • P34: examine FPR or FNR, then weigh error levels, utility and priorities.
+  • N54: the conflict needs equal PPV, FPR *and* FNR; risk classification ≠ detention decision.
+• *Metrics:* SPD/DI are defined with group order, and N39 describes movement toward the ideal (P39). Balanced accuracy is defined, the legend restored and the preprocessing difference noted (P44). An unsupported answer is not necessarily stereotyped (P49/N49). P50 explains the signed score and why the panels differ, with formulas in N50.
+• *Figures:* enlarged, never shrunk.
+  • P41: Adult + COMPAS only, re-cropped from the PDF, 3 datasets disclosed as omitted.
+  • P43: right panel only, with 82% in plain words.
+  • P47: Table 4 error rows as an SVG, with Fitzpatrick groups and the binary-label scope.
+  • P51 is scoped. In N51 the counter-prompt and DALL·E findings are separated, checked against the paper. The paper says DALL·E occupation outputs *did* vary in skin tone, so that is now stated.
+• *Governance (P52 = N52):* EU dates are scoped to Annex III, with Annex I in the cite. The closing line is now "Prescribed audit metrics do not settle every fairness question." The LL144 limit is scoped to remediation, and 1-of-32 is framed as an enforcement observation (the Comptroller found ≥17). The slide carries "Checked 10 Oct 2026".
+• *Tech:* positivity is stated in T4, T5 and T10. T6 and T7 now define their symbols. T14 adds cell support. T15 defines its symbols and omits the iteration bound. The closer is "Name the comparison and its assumptions."
+• *Notes and links:* every fix is mirrored. Wilson & Caliskan is removed (28/28 sources). The lec15 note now uses the current numbering at :111/:738/:749/:759; the unverifiable "corrected bound" claim and a stale "reused from Lecture 14" are dropped. The full local-link check finds 0 broken links.
+• *Flagged:* Obermeyer numbers are still abstract-only. The AIF360 per-method values in N44 are read from the figure ("≈").

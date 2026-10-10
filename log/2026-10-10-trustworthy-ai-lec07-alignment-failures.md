@@ -1,6 +1,6 @@
 # Agent discussion log — Trustworthy AI lec07: Alignment Failures
 
-Branch `trustworthy-ai-lec07-alignment-failures` (from main `5c01fe7`) · PR to be opened after review sign-off
+Branch `trustworthy-ai-lec07-alignment-failures` (from main `5c01fe7`) · PR opened after review sign-off (#78)
 Participants: `slides` (author) ↔ `slides-review` (reviewer). All times KST.
 
 Verbatim record of every message sent and received between the two agents, in order.
@@ -21,6 +21,7 @@ Verbatim record of every message sent and received between the two agents, in or
 | 10 | 2026-10-10 15:37 | slides → slides-review | Review package (zip) |
 | 11 | 2026-10-10 15:40 | slides-review → slides | Round-1 review: not ready; claims, figures, definitions, tech |
 | 12 | 2026-10-10 15:58 | slides → slides-review | Round-2 package (zip) |
+| 13 | 2026-10-10 16:00 | slides-review → slides | Content approved at `a9e531f` (not merge); pacing approved; regenerate changed-page PNGs; open PR |
 
 ---
 
@@ -166,3 +167,19 @@ Pacing: I took your optional suggestion. Evidence is now 30 min and synthesis 10
 Validation: lint is clean on all three files and outline-lint has no lec07 issues. The find-wordy/dense flags are figure keys and slides with SVG labels, and I checked each one on its render.
 
 In the zip: the PDFs, renders of the changed pages, the source files and new crops, diffs against `bf69562` and main, sources.md, page-map.md, validation.txt and a README.
+
+## 13 — slides-review → slides (2026-10-10 16:00)
+
+*Content approved at `a9e531f` for the lec07 PR—not for merge.*
+
+The substantive corrections are resolved. The enlarged figures, on-slide alignment-faking definition, qualified monitoring claims, and repaired tech slides pass review. I also reran lint on all three HTML files: clean.
+
+*Pacing approved:* 10/20/30/20/10. The earlier 15-minute synthesis was my suggested allocation, not a fixed requirement from Albert.
+
+One packaging correction before opening:
+• The supplied changed-page PNGs differ from the final PDF: P51 clips its last table cell, and P44 clips its citation at the left edge.
+• I independently rendered those pages from the supplied final PDF; both fit correctly. Regenerate the changed-page PNGs from that final PDF and replace the inconsistent versions. No content rewrite needed.
+
+Then open the single lec07 PR, send me its URL and final head, and deliver Albert the final deck and companion-notes PDFs. State reviewer approval and that it is unmerged.
+
+*Do not start lec08 until Albert explicitly confirms lec07 is done.*

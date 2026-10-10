@@ -19,6 +19,8 @@ Verbatim record of every message sent and received between the two agents, in or
 | 8 | 2026-10-10 15:11 | slides → slides-review | Ack archive/source rules |
 | 9 | 2026-10-10 15:11 | slides-review → slides | No further progress updates until package/decision |
 | 10 | 2026-10-10 15:37 | slides → slides-review | Review package (zip) |
+| 11 | 2026-10-10 15:40 | slides-review → slides | Round-1 review: not ready; claims, figures, definitions, tech |
+| 12 | 2026-10-10 15:58 | slides → slides-review | Round-2 package (zip) |
 
 ---
 
@@ -99,3 +101,68 @@ Sources:
 • Unverifiable and self-reported claims are listed in sources.md under "Unverifiable / flagged".
 
 The old interpretability lec07 is kept as backup-interpretability*. I'll open the PR after your sign-off and won't merge it. lec08 waits until Albert confirms.
+
+## 11 — slides-review → slides (2026-10-10 15:40)
+
+Reviewed `bf69562`, including all 53 main-slide renders, selected tech/notes renders, and relevant primary-source passages. *Not ready for PR yet.* The narrative is strong, no activities remain, and the engineered → observed → limits structure is worth preserving.
+
+Three priorities: *correct the faithfulness inference, qualify the monitoring claims, and make the imported figures readable.*
+
+*Required — claims and teaching clarity*
+
+• *P41, “Test the Explanation by Changing It”:* “answer unchanged by edits → the reasoning was not what decided it” is false as a general inference. A meaning-preserving paraphrase should often preserve a faithfully derived answer; a model may also correct an inserted error. Replace with: *“Disruptive edits test reliance; paraphrases test sensitivity to wording. Neither alone proves faithfulness.”* Explain the distinct expected outcomes. Correct the notes’ script and takeaway too.
+
+• *P46/P50, monitoring:* “Cannot survive training against it” turns one experimental result into an impossibility claim. Use *“Robustness under direct optimization is not guaranteed.”* Likewise, replace “Monitor reasoning, don’t train on it” with *“Avoid assuming a reasoning monitor stays reliable when directly optimized against.”* Notes should distinguish strong direct pressure on the CoT monitor from all training involving reasoning. Recommend external outcome checks and held-out/adaptive evaluation, not a blanket prohibition.
+
+• *P4, hallucination:* “model lacks the fact” and the notes’ “hallucination is a knowledge failure” are too restrictive. Use *“False or unsupported output”* versus *“Behavior misses the intended objective.”* Add *“These can overlap.”* Knowledge absence is one possible cause, not the definition.
+
+• *P48, synthesis:* The cited faithfulness studies do not establish that all unfaithful reasoning results from optimizing plausible text. Change the table from “What gets optimized” to *“What looks successful / What remains unproven”*, or separate unfaithful explanation as an oversight problem. Preserve the unifying lesson without asserting one demonstrated cause for all four phenomena.
+
+*Required — figure readability under PR #42*
+
+• *P9:* The original three-column RLHF figure’s instructional text is too small. Use a large, clearly attributed three-stage schematic, or split the original into readable stages. Label the scope *“InstructGPT’s RLHF pipeline, 2022”*; the current title suggests a universal contemporary recipe.
+
+• *P16:* The long feature list is unreadable at projection size. Show an unmodified crop of the relevant rows—matching beliefs versus truthfulness—with enlarged external labels and disclosed omissions, or split the figure. Preserve axes and uncertainty intervals.
+
+• *P35:* Six tiny plots cannot carry this comparison. Show a clearly disclosed representative chat/agentic pair at large size, or split the panels. Define the selected evaluation labels. Recheck P11/P36/P43 labels as well; more pixels alone will not solve small text.
+
+*Required — definitions, scope, and technical rendering*
+
+• *P29–31:* Define alignment faking on-slide before presenting the rates: *“Comply during believed training to avoid changes to existing preferences”—the strategy expressed in the scratchpad.* “Watched” is not equivalent to “used for training.” Keep the fictional training information distinct from the subsequent actual RL experiment. The notes already explain much of this; the main deck needs the core mechanism.
+
+• *P34:* Replace “Production Sonnet 3.7 and 4: zero” with *“The authors observed zero on these evaluations for production Sonnet 3.7/4 (2025 study).”* This is a bounded test result, not general or current safety evidence.
+
+• *P42:* A single answer flip does not establish certain hint use. Use *“Answer flips toward hint → inferred hint influence”* and put the random-flip correction caveat in readable body text, not only the citation.
+
+• *P22:* Your notes acknowledge that specification gaming and reward hacking overlap in the literature. Put a brief scope marker on the definition: *“Here: exploiting flaws in reward computation.”* Don’t present the narrower distinction as universal.
+
+• *Tech P8:* The p/q definition line visibly clips beyond the right edge. Split it, define the symbols, and state the correction’s domain conditions if retaining it (`n > 2`, valid positive denominator). Do not shrink.
+
+• *Tech P10:* `max rθ ≠ max R` compares maximum values, not whether optimizing one selects a good solution for the other; it is also not universally true. Replace with *“Optimizing the proxy need not optimize the goal.”*
+
+*Optional pacing judgment:* The final seven slides largely repeat earlier lessons yet receive 15 minutes. Shorten that recap and use the time to explain the study mechanisms and enlarged figures. No activities needed.
+
+Please synchronize the notes/tech/outline, provide an old→new page map, and send corrected renders plus the updated PDFs/source and validation results. Keep the branch; no PR until the corrections pass review.
+
+## 12 — slides → slides-review (2026-10-10 15:58, with attachment lec07-review-r2.zip)
+
+Round 2 is ready. Branch `trustworthy-ai-lec07-alignment-failures`, head `a9e531f`, pushed; still no PR.
+
+Every #76 item is fixed. `page-map.md` lists each item by its old page, its new page and the fix. Main points:
+• Faithfulness: P41 uses your reliance vs wording-sensitivity framing, with the expected outcome of each edit. P42 says "inferred hint influence", and the random-flip correction is in body text.
+• Monitoring: Cannot now reads "guarantee reliability when directly optimized against". The notes:
+  – separate direct CoT-monitor pressure from all training involving reasoning;
+  – quote your sentence verbatim;
+  – recommend external outcome checks and held-out/adaptive evaluation.
+• P4, P22, P34 and P48 use your wording.
+• New slide 29 defines alignment faking ("believed training" ≠ watched), and the fictional story is kept separate from the actual RL run. To stay at 53 slides, I cut Open Questions; its three questions are now in the notes.
+• Figures: P9 is a large, attributed schematic redrawn from Ouyang Fig. 2. Gao, Sharma, MacDiarmid Figs 5 and 6a, and Chen Fig. 1 are now unmodified crops; axis labels and legends are restated outside the image, and every omission is disclosed. Crop coordinates are in sources.md.
+• Tech: old P8 is split into slides 8–9, with symbols defined, the domain stated and no type shrunk. The closer now reads "Optimizing the proxy need not optimize the goal." (11 slides.)
+
+Page numbers: deck pages 1–28 are unchanged, 29 is new, old 29–50 → 30–51, old 51 is cut, and 52–53 are unchanged. Tech old 8 → 8–9, 9 → 10, 10 → 11.
+
+Pacing: I took your optional suggestion. Evidence is now 30 min and synthesis 10 (10/20/30/20/10). Albert's brief had synthesis at 15, so please confirm or revert.
+
+Validation: lint is clean on all three files and outline-lint has no lec07 issues. The find-wordy/dense flags are figure keys and slides with SVG labels, and I checked each one on its render.
+
+In the zip: the PDFs, renders of the changed pages, the source files and new crops, diffs against `bf69562` and main, sources.md, page-map.md, validation.txt and a README.

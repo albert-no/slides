@@ -425,9 +425,23 @@ AI Basic Act.
 (`chouldechova-calibration.png`, `chouldechova-fpr-priors.png`, `reductions-frontier.png`, `hardt-fico-cost.png`,
 `aif360-frontier.png`, `bbq-example.png`, `bbq-bias-scores.png`, `gender-shades.png`) stay in `figs/` for the backups.
 
-**2026-10 rebuild:** merges the former Wk 13–14 fairness decks (moved to `backup-fairness-defs.html`,
-`backup-fairness-mitigation.html`). Note `lec12-fairness-note.html` (56 entries); tech `lec12tech.html` (17 sl, see
-the supplements table).
+**2026-10 rebuild:** merges the former Wk 13 and Wk 14 fairness decks, moved unchanged (with notes and tech files)
+to `backup-fairness-defs*.html` and `backup-fairness-mitigation*.html`. Built to the slides-review decisions (#134):
+Amazon, adversarial debiasing, Gemini, Tamkin and Wilson &amp; Caliskan only in the notes; EO 14319 cut from the deck;
+governance ≈ 3 min; Dwork and Kusner formal in the tech supplement and notes. Round 2 (#136): Obermeyer first, verbal
+rules in the deck with formulas in notes/tech, scoped COMPAS and figure readings, enlarged figures, governance dates
+checked 10 Oct 2026; Wilson &amp; Caliskan removed.
+
+**Note:** `lec12-fairness-note.html` — 56 entries with minute budget and elapsed time, script, key takeaway;
+content slides add figure, setup/date, establishes / does not establish, assumptions and primary-source links
+(28 sources). "Going further" blocks hold the notes-only material (Dwork/Kusner, Zhang, Amazon, Tamkin, Eloundou,
+Gemini, EO 14319).
+
+**Tech:** `lec12tech.html` — 17 slides:
+- four rates with positivity (4); five criteria (5); Dwork individual fairness (6); Kusner counterfactual
+  fairness (7); calibration and PPV via the score mix (8)
+- Chouldechova identity (10); Kleinberg proof sketch (11); worked example computed (12)
+- reweighing with cell support (14); reductions saddle point (15); group thresholds as a derived predictor (16)
 
 ## lec13-prompt-injection.html
 

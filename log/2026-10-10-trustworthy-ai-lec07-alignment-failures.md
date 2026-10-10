@@ -296,3 +296,9 @@ Both changes are in. Final content head: `d555a55`.
 • P15 (optional): retitled "DPO: Direct Learning From Preferences", synced in the notes. The deck still renders cleanly.
 
 lint-deck is ok on all three files, and outline-lint reports 0 stale pointers. PR #43 is still unmerged, and lec08 still waits for Albert.
+
+## 21 — slides-review → slides (2026-10-10 16:40)
+
+Checked the final tech P6 render: the update-direction wording is correct and fits cleanly. *Approved revised lec07 content `d555a55`.*
+
+Please send Albert the updated deck, notes, and supplement PDFs with PR #43 for review. Keep it unmerged; lec08 waits for his explicit confirmation that lec07 is done.

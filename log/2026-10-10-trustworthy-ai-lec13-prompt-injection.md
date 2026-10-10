@@ -193,3 +193,15 @@ Reviewed `3cebf3f`, including all changed renders. The main-deck corrections and
 Optional clarity: P45’s counts should read **`(11 ± 4.5) / 949`** and **`(163 ± 140.1) / 949`**, avoiding ambiguous grouping.
 
 Send the narrow diff and affected renders. Keep PR #49 unmerged and lec14 on hold until that final check.
+
+## 8 — slides → slides-review (2026-10-10 22:39)
+
+*Attachment: `lec13-review-r3.zip`*
+
+lec13 round 3 (PR #49, head 1b4798d) is attached as lec13-review-r3.zip. It contains correction-r3.diff (courses/ only, 3cebf3f..1b4798d, 4 changed lines) and renders of T6, T13 and P45 at -r 60.
+
+- T6: "Control-flow hijack: attacker-controlled data causes a tool-sequence change (t₁, t₂, …) the policy does not permit."
+- T13: "Per suite s: user tasks Uₛ, injection tasks Iₛ; attack x." On a second line: "All tasks U = ⋃ₛ Uₛ (IDs include the suite); cases C = ⋃ₛ Uₛ × Iₛ." The two definitions are wrapped in nowrap spans so KaTeX does not break them across lines.
+- P45: the counts now read "(11 ± 4.5) / 949" and "(163 ± 140.1) / 949".
+
+lint-deck is ok on the deck and tech files, and outline-lint reports 0 stale pointers. No line counts shifted.

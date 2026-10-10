@@ -23,7 +23,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 |---|---|---|
 | 0. Foundations | 1 | What "trustworthy" means, threat-model thinking |
 | 1. Privacy & Data | 2–5 | What models leak about their training data |
-| 2. Reliability | 6–7 | Can you believe the answer, and see why |
+| 2. Reliability | 6–7 | Can you believe the answer, and does training get what we meant |
 | 3. Security | 8–11 | How models are attacked, train- and inference-time |
 | 4. Provenance & Fairness | 12–14 | Watermarking, fairness, accountability |
 | 5. Synthesis | 15 | Governance, frontier, demo showcase |
@@ -38,7 +38,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 4 | `lec04-memorization.html` | Memorization & training-data extraction | **revised 2026-08, figure pass 2026-09, Cooper 2026 frontier 2026-09-11, case-brief + core-path pass 2026-09-14** (65 sl, 27 real figs) |
 | 5 | `lec05-unlearning.html` | Machine unlearning | **figures 2026-09, case-brief + core-path pass 2026-09-14, page edits 2026-09-30** (68 sl, ~97 min; 90-min core path in the note only; taxonomy + category badges; note 68 entries, 13 uniform briefs + legal brief; tech 12 sl) |
 | 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **figures 2026-09, Albert revision 2026-10** (75 sl after round 4: Avianca context, P(True) explained, two kinds of calibration, fair-rank intuition replaces proof; heavy math moved to lec06tech; note 75 entries) |
-| 7 | `lec07-interpretability.html` | Interpretability & explainability | **revised 2026-08, figure pass 2026-09** (64 sl, 23 real figs) |
+| 7 | `lec07-alignment-failures.html` | Alignment failures: sycophancy, reward hacking, explanation faithfulness | **new 2026-10** (59 sl, 14 real figure crops from 10 source figures, 90 min, no activities; note 59 entries; tech 12 sl). Former Wk 7 interpretability deck → `backup-interpretability.html` |
 | 8 | `lec08-adversarial.html` | Adversarial examples (attack + defense) | **revised 2026-08, figure pass 2026-09** (63 sl, 25 real figs) |
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **revised 2026-08, figure pass 2026-09** (65 sl) |
 | 10 | `lec10-jailbreak.html` | Jailbreaks & LLM safety | **revised 2026-08, figure pass 2026-09** (60 sl, 21 real figs) |
@@ -68,7 +68,7 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `lec04tech.html` | Wk 4 (memorization) | k-extractability def (+ Intuition line); discoverable vs extractable (Nasr Defs. 1–2; two games, no containment); memorization-fraction metric; log-linear scaling law; greedy argmax condition + $H(S\mid P_{1:k+1})\le H(S\mid P_{1:k})$; near-verbatim ball $B_\varepsilon$ and $p_\varepsilon$; $k$-CBS deterministic lower bound; control-group excess rate + conformal threshold + OLMo 2 32B table | **updated 2026-09-12** (15 sl) |
 | `lec05tech.html` | Wk 5 (unlearning) | **Formal Goals, Separated (data removal has a retrained reference; suppression/filtering/revocation do not — added 2026-09-14)**; exact vs approx; (ε,δ) unlearning inequality (Guo Eq. 1/§2, two-sided); influence function θ₋ₓ ≈ θ̂ + (1/n)H⁻¹∇ℓ + Hessian infeasibility; gradient ascent; SISA cost E[cost] = n(R+1)(2R+1)/(6SR), full/E = 3R/(2R+1) ↗ 3/2 (S shards, R slices, matching the note); every slide carries the main deck's category badge | **updated 2026-09-14** (12 sl) |
 | `lec06tech.html` | Wk 6 (hallucination) | reliability diagram; ECE = Σ_b (n_b/n)|acc_b−conf_b|; temperature scaling; conformal coverage Pr[y∈C(x)]≥1−α + threshold quantile; semantic entropy | **checked 2026-08, Why It Holds + threshold wording 2026-10; round 4 2026-10-07** (20 sl: new §01 Forced Errors = Kalai bound + trigram Thm 3/Cor 2, and the 3 coverage-proof slides, all moved from lec06; math verified; A1 + A2, q̂ = ∞, ties, marginal stated) |
-| `lec07tech.html` | Wk 7 (interpretability) | Shapley φ_i + axioms; LIME surrogate objective; gradient saliency; integrated gradients; SAE reconstruction+sparsity, superposition | **checked 2026-08** (20 sl: math verified, no changes needed) |
+| `lec07tech.html` | Wk 7 (alignment failures) | reward-model loss $-\binom{K}{2}^{-1}\mathbb{E}\log\sigma(r_w-r_l)$ (Bradley–Terry reading; Ouyang Eq. 1); KL-penalized RL objective (Ouyang Eq. 2, γ = 0); DPO loss $-\mathbb{E}\log\sigma(\hat r_\theta(x,y_w)-\hat r_\theta(x,y_l))$, $\hat r_\theta=\beta\log\pi_\theta/\pi_{\rm ref}$ (Rafailov 2023 Eq. 7); Gao overoptimization fits $R_{\rm bon}(d)=d(\alpha-\beta d)$, $R_{\rm RL}(d)=d(\alpha-\beta\log d)$, $d=\sqrt{\rm KL}$; Chen hint-test faithfulness score (symbols defined) + random-flip normalization $\alpha=1-q/((n-2)p)$, domain $n>2$, $p>0$, $\alpha>0$; monitor recall/precision with Baker Table 1 | **new 2026-10** (12 sl; all formulas checked against the paper PDFs). Old interpretability supplement → `backup-interpretabilitytech.html` |
 | `lec08tech.html` | Wk 8 (adversarial) | perturbation set B_p(x,ε); FGSM; PGD projected iteration; adversarial-training min-max; randomized-smoothing certified radius | **checked 2026-08** (19 sl: math verified incl. Cohen Thm 1 radius, no changes needed) |
 | `lec09tech.html` | Wk 9 (poisoning) | poison fraction α; clean-label feature-collision objective; backdoor blended objective; spectral signatures; activation clustering | **checked 2026-08** (16 sl: math verified incl. Poison Frogs ℓ∞ form; blended-objective cite reworded, not verbatim BadNets) |
 | `lec10tech.html` | Wk 10 (jailbreak) | RLHF KL-penalized objective; GCG target `min -log Pr["Sure, here"]`; gradient-guided token swaps | **checked 2026-08** (12 sl: RLHF KL objective + GCG target verified correct, no changes) |
@@ -88,6 +88,7 @@ Optional decks for substitution or extra sessions. Each has a `-note.html` scrip
 | `backup-copyright.html` | Copyright, consent & data provenance | pairs with Wk 4 (memorization) | **drafted** (45 sl) |
 | `backup-agentic-autonomy.html` | Agentic autonomy risks beyond injection | expands Wk 11 | **drafted** (47 sl) |
 | `backup-model-stealing.html` | Model stealing / extraction attacks | swap for Wk 9, or standalone | **drafted** (51 sl) |
+| `backup-interpretability.html` | Interpretability & explainability (LIME/SHAP, probes, circuits, SAEs) | former Wk 7 (moved 2026-10); standalone extra session | **revised 2026-08, figure pass 2026-09** (64 sl, 23 real figs; note `backup-interpretability-note.html`; tech `backup-interpretabilitytech.html`, 20 sl). Section `## backup-interpretability.html` below |
 
 **Draft note:** lec 3–15 + backups were generated in one parallel pass (each ~50–60
 slides, lint-clean, with SVG concept diagrams + cited papers). The **2026-07-15 pass**
@@ -1015,125 +1016,55 @@ SimpleQA, Vectara HHEM ×2, Sharma sycophancy + OpenAI GPT-4o rollback + TechCru
 Kadavath, Xiong, SelfCheckGPT, Farquhar Nature, Lewis RAG, Guo, A&B, Ji survey).
 
 
-## lec07-interpretability.html
+## lec07-alignment-failures.html
 
-**Topic:** Interpretability & explainability (~90 min). Why black-box accuracy alone
-does not earn trust; intrinsic vs post-hoc taxonomy plus the Rudin objection; feature
-attribution at intuition level (LIME local surrogate, SHAP/Shapley fair credit, gradient
-saliency, integrated gradients, Adebayo sanity-check failures); probing and the
-attention-is-(not-(not-))explanation debate; mechanistic interpretability (circuits,
-induction heads, superposition); sparse autoencoders, monosemantic features, Golden Gate
-Claude, feature steering; uses & limits (GDPR / "right to explanation" nuance,
-faithfulness, 2025–26 frontier: attribution graphs, CoT faithfulness, Amodei essay).
-Math lives in `lec07tech.html`.
+**Topic:** Alignment failures: when AI learns the wrong objective (90 min; mixed-major
+sophomores/juniors; concept-first, light math, no proofs; **no activities — lec07 onward**).
+Alignment defined (Ji survey; capability vs alignment grid); reported real-world evaluation/research cases (o1-preview Docker, AI Scientist time limit, Claude 3.7 special-casing, o3/METR); self-contained hallucination bridge (wrong facts vs wrong objective); RLHF intent → feedback →
+reward; Goodhart / Gao overoptimization; DPO (no separate reward model) can still overoptimize (Rafailov 2023, 2024); sycophancy (Sharma; GPT-4o April 2025 rollback from
+OpenAI's own posts); specification gaming (Krakovna Lego, CoastRunners); reward hacking with a
+worked coding-grader example; two controlled studies read as engineered / observed / not shown
+(Greenblatt alignment faking; MacDiarmid emergent misalignment from production-RL hacks);
+explanation faithfulness ~15 min (Turpin, Lanham, Chen hint test, Baker CoT monitoring and
+obfuscation, Korbak). Excludes LIME/SHAP/probes/SAEs (→ `backup-interpretability.html`),
+jailbreak taxonomy (lec10), memory/tool/multi-agent threats (lec14). Sycophancy here is the
+RLHF-mechanism view; `backup-sycophancy.html` goes further on manipulation and persuasion.
+Math lives in `lec07tech.html`. Primary-source register (with snapshot dates)
+shipped in the review package.
 
-### Sections (64 slides, ~90 min — content-revised 2026-08 from 57, all citations source-verified)
+### Sections (59 slides, 90 min: hook 15 · concepts 25 · evidence 25 · faithfulness 15 · synthesis 10)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
-| Title / Contents | 1–2 | `:27`, `:39` | |
-| **01 — The Black Box** | 3–10 | `:72` | black box `:80` · why open it up `:110` · **Husky and the Wolf (reframed 2026-08: rigged demo, trust 10/27→3/27)** `:123` · intrinsic vs post-hoc `:140` · accuracy trade-off (SVG) `:155` · **The Rudin Objection (added 2026-08)** `:178` · explanation is not the model `:195` |
-| **02 — Feature Attribution** | 11–25 | `:218` | attribution question `:226` · bar chart (SVG) `:257` · LIME `:280` · local-not-global (LIME Fig 3) `:294` · SHAP `:304` · Shapley value `:318` · why trusted `:352` · loan demo `:381` · saliency on images (Simonyan Fig 2) `:396` · gradient saliency `:413` · **Beyond Raw Gradients (IG; added 2026-08)** `:447` · saliency Colab `:464` · what attribution answers `:479` · Adebayo sanity check `:491` |
-| **03 — Probing & Attention** | 26–33 | `:502` | hidden layers `:510` · linear probes `:540` · reading the probe `:556` · attention weights (Clark Fig 1) `:574` · looks like explanation `:584` · not explanation (Jain & Wallace) `:613` · **...Is Not Not Explanation (added 2026-08)** `:623` |
-| **04 — Mechanistic Interpretability** | 34–43 | `:651` | different goal `:659` · circuits (Olah car-detector) `:689` · neurons as concepts `:699` · transformer framework `:714` · induction heads `:749` · induction in action `:765` · why induction matters (+Olsson cite added 2026-08) `:784` · polysemantic wall `:811` · superposition (+Elhage cite added 2026-08) `:822` |
-| **05 — Sparse Autoencoders & Steering** | 44–52 | `:838` | unpacking superposition `:846` · SAE (SVG) `:861` · monosemantic features `:885` · **Scaling Up (Claude 3 Sonnet; verified examples 2026-08)** `:913` · feature steering (SVG) `:942` · Golden Gate Claude `:961` · steering widget `:989` · **Steering for Safety (hedged + cited 2026-08)** `:1004` |
-| **06 — Uses & Limits** | 53–63 | `:1037` | what it buys us `:1045` · **What the Law Demands (GDPR Art. 22 / Arts. 13–15; added 2026-08)** `:1056` · **A "Right to Explanation"? (added 2026-08)** `:1070` · faithfulness problem `:1101` · models can rationalize `:1125` · always sanity-check `:1153` · **Frontier: Attribution Graphs (added 2026-08)** `:1168` · **Frontier: CoT faithfulness (added 2026-08)** `:1185` · **Frontier: An MRI for AI (added 2026-08)** `:1198` · key takeaways `:1227` |
-| Closer | 64 | — | `:1240` |
+| Title / Contents | 1–2 | `:38`, `:50` | |
+| **01 — Right Score, Wrong Behavior** | 3–10 | `:87` | alignment defined (Ji 2023 abstract; capability × alignment grid) `:95` · false/unsupported output vs behavior missing the objective (bridge; "can overlap") `:105` · reported evaluation/research cases (o1, AI Scientist, Claude 3.7, o3) `:114` · o1-preview Docker, pre-mitigation CTF (o1 card Fig 4 crop + 5-step key) `:123` · same score, two behaviors (`sys.exit(0)`) `:142` · central question `:152` · three gaps `:161` |
+| **02 — From Intent to Reward** | 11–17 | `:170` | InstructGPT's RLHF pipeline, 2022 (large schematic redrawn from Ouyang Fig 2) `:178` · intent/feedback/reward `:187` · proxy too far (Gao Fig 1b RL plot crop, external axis labels + key) `:196` · DPO (Rafailov 2023 Fig 1 crop) `:216` · DPO can still overoptimize (Rafailov 2024 Fig 1 DPO panel crop) `:228` · Goodhart (Hanoi via Baker) `:245` |
+| **03 — Sycophancy** | 18–23 | `:256` | definition + dialogue `:264` · 4 tests × 5 assistants `:273` · preference data (Sharma Fig 5, top 5 of 23 rows + axis, unmodified crops) `:288` · GPT-4o April 2025 timeline `:302` · postmortem `:312` |
+| **04 — Gaming the Score** | 24–32 | `:322` | specification gaming (Lego) `:330` · CoastRunners `:339` · reward hacking (scope: flaws in reward computation) `:348` · worked example table `:358` · why the hack spreads `:373` · three real hacks `:381` · o3 METR hack counts + 10 follow-up "no" answers about one kernel-hack plan `:397` · patch one hole `:413` |
+| **05 — Controlled Studies** | 33–44 | `:424` | how to read (engineered/observed/not shown) `:432` · alignment faking defined (believed training ≠ watched) `:441` · Study 1 setup `:451` · Greenblatt Fig 2 `:461` · Study 1 shows/doesn't (fictional story vs actual RL) `:471` · Study 2 pipeline `:485` · MacDiarmid Fig 1 `:494` · Fig 9 table `:503` · Fig 6a chat-like/agentic pair `:519` · inoculation Fig 5 bars + swatch legend `:537` · Study 2 shows/doesn't `:560` |
+| **06 — Is the Explanation the Reason?** | 45–53 | `:574` | plausible ≠ faithful `:582` · Turpin "(A)" `:591` · Lanham interventions (reliance vs wording) `:601` · hint test (inferred influence) `:611` · Chen Fig 1 crops `:621` · Baker Table 1 `:642` · Baker Fig 4 `:656` · can/cannot `:667` |
+| **07 — Synthesis & Limits** | 54–59 | `:677` | one pattern (looks successful / remains unproven) `:685` · established vs not `:699` · what helps `:719` · takeaways `:733` · closer `:747` |
 
-**Key definitions / citations (all source-verified 2026-08):**
-- LIME + husky/wolf experiment (rigged snow demo; trust 10/27→3/27) — `:134`, `:289` —
-  Ribeiro, Singh, and Guestrin, "Why Should I Trust You?", KDD 2016 (§6.4, Table 2).
-- Interpretable-by-design for high stakes — `:189` — Rudin, Nature Machine
-  Intelligence 1, 206–215 (2019).
-- SHAP / Shapley uniqueness — `:313`, `:348` — Lundberg and Lee, NeurIPS 2017.
-- Integrated gradients — `:458` — Sundararajan, Taly, and Yan, ICML 2017.
-- Saliency sanity checks (weight randomization) — `:496` — Adebayo et al., NeurIPS 2018.
-- Attention debate — `:619` Jain and Wallace, NAACL 2019; `:646` Wiegreffe and Pinter,
-  EMNLP 2019.
-- Circuits / curve & dog-head detectors — `:695`, `:710` — Olah et al., "Zoom In",
-  Distill 2020.
-- Transformer framework + induction heads — `:745`, `:759` — Elhage et al., Anthropic 2021.
-- Induction heads ↔ in-context learning — `:807` — Olsson et al., Anthropic 2022.
-- Superposition — `:832` — Elhage et al., "Toy Models of Superposition", Anthropic 2022.
-- SAE / monosemantic features (DNA, legal language, base64) — `:881`, `:909` —
-  Bricken et al., "Towards Monosemanticity", Anthropic 2023.
-- Millions of features in Claude 3 Sonnet; Golden Gate Claude; safety-relevant
-  features — `:938`–`:1032` — Templeton et al., "Scaling Monosemanticity", Anthropic 2024.
-- GDPR Art. 22 + Arts. 13–15; recital-only "right to explanation"; EU AI Act Art. 86 —
-  `:1056`–`:1097` — Wachter, Mittelstadt, and Floridi, International Data Privacy Law
-  7(2):76–99 (2017); AI Act text (Art. 86, applies from Aug 2026).
-- Attribution graphs (Dallas→Texas→Austin; rhyme planning; Neuronpedia) — `:1179` —
-  Lindsey et al., "On the Biology of a Large Language Model", Anthropic 2025;
-  circuit-tracing tools open-sourced May 2025.
-- CoT faithfulness (hint admitted <20% of the time) — `:1192` — Chen et al., "Reasoning
-  Models Don't Always Say What They Think", Anthropic 2025 (arXiv 2505.05410).
-- "MRI for AI"; detect most model problems by 2027 — `:1223` — Amodei, "The Urgency of
-  Interpretability", April 2025.
+**Key citations (all checked against saved PDFs / page captures, 2026-10-10):**
+Ouyang 2022 (Fig 2; Eqs. 1–2 in tech); Gao 2022 (Fig 1b; synthetic gold RM); Sharma ICLR 2024
+(§3, Figs 1–5); OpenAI 29 Apr + 2 May 2025 (Wayback; self-report); Krakovna 2020; Clark &
+Amodei 2016 (Wayback; 20% = post's claim); Ji 2023 survey (v6 abstract, definition); OpenAI o1 System Card Sep 2024 (p. 16, Fig 4); Lu 2024 AI Scientist (§Safe Code Execution); Claude 3.7 Sonnet System Card Feb 2025 (§6); METR 5 Jun 2025 (o3 table, 10/10); Rafailov 2023 DPO (Fig 1; Eq. 7 in tech); Rafailov 2024 DAA overoptimization (Fig 1 DPO panel, §3.1); Baker 2025 (§1, §2.1, Table 1, Fig 4; agent in
+o1/o3-mini family; Fig 4 non-frontier); Greenblatt 2024 (Figs 1–2, §1 Limitations; 12%,
+86/97%, 78%); MacDiarmid 2025 (Figs 1, 2, 5, 6a, 9; §1 Limitations item 4; production
+Sonnet 3.7/4 zero); Turpin 2023; Lanham 2023; Chen 2025 (Fig 1; 25%/39%); Korbak 2025.
+Flagged in the source register: Goodhart wording is the common paraphrase; Hanoi story
+second-hand (Baker citing Vann 2003, Vann unchecked); Baker "more complex hacks" anecdotal;
+OpenAI/Anthropic blog statements and system cards are company self-reports; METR counts may be underestimates.
 
-**Real images** (`figs/`, cropped + cited; 23 image slots after the 2026-09 figure pass):
-husky/wolf + explanation `figs/lime-fig11-husky.png` (Ribeiro 2016 Fig 11) `:134`; CORELS rule list
-`figs/rudin-fig3-corels.png` (Rudin 2019 Fig 3) `:150`; "fictional" trade-off `figs/rudin-fig1-tradeoff.png`
-(Rudin Fig 1) `:189`; LIME pipeline `figs/lime-fig1-flu.png` (Ribeiro Fig 1) `:289`; LIME local fit
-`figs/lime-fig3-local.png` (Ribeiro Fig 3) `:298`; SHAP additive steps `figs/shap-fig1-additive.png`
-(Lundberg & Lee 2017 Fig 1) `:313`; class saliency maps `figs/simonyan-fig2-saliency.png` (Simonyan 2014
-Fig 2) `:407`; IG vs gradients `figs/ig-fig2-compare.png` (Sundararajan 2017 Fig 2, top 3 rows) `:458`;
-cascading randomization `figs/adebayo-fig2-cascade.png` (Adebayo 2018 Fig 2) `:496`; ResNet-50 probe error
-`figs/alain-fig4-resnet.png` (Alain & Bengio 2017 Fig 4) `:550`; control task `figs/hewitt-fig1-control.png`
-(Hewitt & Liang 2019 Fig 1) `:568`; BERT heads `figs/clark-fig1-heads.png` (Clark 2019 Fig 1) `:578`;
-adversarial attention `figs/jain-fig1-attention.png` (Jain & Wallace 2019 Fig 1) `:617`; car-detector
-circuit `figs/olah-zoomin-car.png` (Olah 2020) `:693`; curve detectors `figs/olah-zoomin-curves.png`
-(Olah 2020) `:708`; induction-head schematic `figs/lindsey-induction-head.png` (Lindsey 2025, Limitations)
-`:759`; induction on random tokens `figs/olsson-induction-head.png` (Olsson 2022) `:778`; superposition
-projection `figs/elhage-toy-projection.png` (Elhage 2022) `:816`; sparsity → superposition
-`figs/elhage-toy-sparsity.png` (Elhage 2022) `:831`; SAE pipeline `figs/cunningham-fig1-sae.png`
-(Cunningham 2024 Fig 1) `:855`; edge-detector comparison `figs/adebayo-fig1-edge.png` (Adebayo Fig 1)
-`:1162`; Dallas→Austin attribution graph `figs/lindsey-dallas-austin.png` (Lindsey 2025) `:1179`; CoT
-faithfulness bars `figs/chen-fig1-faithfulness.png` (Chen 2025 Fig 1) `:1192`.
-**SVG** (24): black box `:90`, accuracy trade-off `:160`, model vs story `:200`, signed attribution `:235`,
-attribution bar chart `:262`, Shapley orderings `:328`, efficiency bar `:362`, steep vs flat slope `:423`,
-layers → activation vector `:520`, attention arcs `:594`, 2019 debate timeline `:633`, describe vs explain
-`:668`, residual stream `:724`, loss curve with induction bump `:794`, SAE widen-rebuild `:866`,
-feature-activation bars `:895`, scaling 2023→2024 `:923`, steering dial `:947`, Golden Gate dial `:971`,
-safety dial in three steps `:1014`, GDPR recital / articles / AI Act boxes `:1080`, plausible vs faithful
-ellipses `:1107`, answer vs "because…" story `:1135`, 2025→2027 MRI timeline `:1208`. Citations use
-`.cite-left`. Page number: bold `.slide-num` only.
+**Note:** `lec07-alignment-failures-note.html` — 59 entries; each has a minute budget and
+elapsed time, script, key takeaway; content slides add figure / setup-model-date /
+establishes / does not establish / assumptions / primary-source links. Full MacDiarmid Fig 5
+prompt addenda live in entry 43; the three open questions moved into entry 57 (What Helps).
 
-**2026-09 figure pass (64 slides, unchanged count; PR #24):** every bullet-only content slide now carries
-a cited real figure crop or an inline SVG (23 new crops, 20 new SVGs; 4 hand-drawn sketch SVGs — LIME
-local line, saliency pair, attention lines, circuit graph — replaced by the papers' own figures). Real
-figures sit beside the bullets in a `1fr auto` grid or stacked below them; every crop is trimmed of white
-margins, excludes the paper caption, and is cited with its figure number (or the named figure for Distill /
-Anthropic web papers). Two bullets added (Saliency on Images ×3, Reading the Probe control task). Note
-file: one "Slide figure" sentence per real-figure article (23); 64 entries, order matches.
-
-**2026-08 content revision (57→64):** every citation/number fetched and verified.
-Added 8 slides: The Rudin Objection (§01), Beyond Raw Gradients (§02), ...Is Not Not
-Explanation (§03), What the Law Demands + A "Right to Explanation"? (§06), and three
-frontier slides (§06: Attribution Graphs, CoT faithfulness, An MRI for AI — replacing
-one stale unverifiable "Frontier 2025–26" slide). Fixed: husky/wolf reframed as the
-deliberately rigged demo it was, with verified trust numbers; unverified "emotions"
-feature example replaced by verified "scam emails" (Templeton 2024); Steering for
-Safety hedged ("could", "still early days") and cited; missing Olsson and Elhage
-(superposition) cites added. `lec07tech.html` audited: all math correct, no changes
-(stays 20 sl). Note file synced (64 entries, order matches).
-
-**2026-08 note enrichment:** `lec07-interpretability-note.html` upgraded from speaker
-script (401 lines) to Script &amp; Companion Notes (773 lines; 64 entries unchanged):
-per-entry `.detail` blocks with rigorous definitions (additive feature attribution
-class, full LIME objective + K-LASSO, cooperative game + SHAP conditional-expectation
-value, gradient saliency + Taylor rationale, IG path integral + Sensitivity(a)/
-Implementation Invariance, linear probes + control tasks/selectivity + linear
-representation hypothesis, scaled dot-product attention, residual stream + QK/OV
-circuits, induction-head two-head mechanism, polysemanticity/privileged basis,
-superposition hypothesis, dictionary learning, exact Bricken SAE equations + loss,
-feature clamping, GDPR Art. 22(1) + Arts. 13–15 verbatim, faithfulness vs
-plausibility), theorem blocks with verified proofs (Shapley subset↔permutation
-equivalence + full existence/uniqueness via unanimity basis, labeled course notes;
-SHAP Theorem 1 statement; IG Completeness with full FTC proof + Prop 2 pointer), and
-Background blocks with 35 verified links (LIME/SHAP/IG/Adebayo/probing/attention-debate
-arXiv, five transformer-circuits.pub papers, Golden Gate Claude, Neuronpedia +
-Gemma Scope, GDPR/AI-Act texts, Wachter DOI, biology-of-LLM + circuit-tracing
-open-sourcing, Chen CoT faithfulness, Amodei essay).
+**Tech:** `lec07tech.html` — 12 slides: RM loss (4), KL-penalized RL objective (5), DPO loss,
+implicit reward and gradient terms (6), Gao fits (7), hint-test score with symbols (9), random-flip
+correction and its domain (10), monitor recall/precision (11), closer "Optimizing the proxy need
+not optimize the goal" (12).
 
 ## lec08-adversarial.html
 
@@ -1976,3 +1907,125 @@ summits + Seoul commitments verbatim; RSP v3.4/ASL-3 activation, Preparedness v2
 ((ε,δ)-DP, ECE, adversarial/poisoning/jailbreak, fairness criteria, certified
 removal) cross-linked to lec02–14 companion notes. 51 verified links (all 2xx;
 EUR-Lex returns 202 to curl, fine in browser).
+
+## backup-interpretability.html
+
+*Former Wk 7 deck, moved to backup 2026-10 (`git mv` of the former lec07 interpretability deck; tech and note renamed alongside). Line numbers unchanged by the move.*
+
+**Topic:** Interpretability & explainability (~90 min). Why black-box accuracy alone
+does not earn trust; intrinsic vs post-hoc taxonomy plus the Rudin objection; feature
+attribution at intuition level (LIME local surrogate, SHAP/Shapley fair credit, gradient
+saliency, integrated gradients, Adebayo sanity-check failures); probing and the
+attention-is-(not-(not-))explanation debate; mechanistic interpretability (circuits,
+induction heads, superposition); sparse autoencoders, monosemantic features, Golden Gate
+Claude, feature steering; uses & limits (GDPR / "right to explanation" nuance,
+faithfulness, 2025–26 frontier: attribution graphs, CoT faithfulness, Amodei essay).
+Math lives in `backup-interpretabilitytech.html`.
+
+### Sections (64 slides, ~90 min — content-revised 2026-08 from 57, all citations source-verified)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:27`, `:39` | |
+| **01 — The Black Box** | 3–10 | `:72` | black box `:80` · why open it up `:110` · **Husky and the Wolf (reframed 2026-08: rigged demo, trust 10/27→3/27)** `:123` · intrinsic vs post-hoc `:140` · accuracy trade-off (SVG) `:155` · **The Rudin Objection (added 2026-08)** `:178` · explanation is not the model `:195` |
+| **02 — Feature Attribution** | 11–25 | `:218` | attribution question `:226` · bar chart (SVG) `:257` · LIME `:280` · local-not-global (LIME Fig 3) `:294` · SHAP `:304` · Shapley value `:318` · why trusted `:352` · loan demo `:381` · saliency on images (Simonyan Fig 2) `:396` · gradient saliency `:413` · **Beyond Raw Gradients (IG; added 2026-08)** `:447` · saliency Colab `:464` · what attribution answers `:479` · Adebayo sanity check `:491` |
+| **03 — Probing & Attention** | 26–33 | `:502` | hidden layers `:510` · linear probes `:540` · reading the probe `:556` · attention weights (Clark Fig 1) `:574` · looks like explanation `:584` · not explanation (Jain & Wallace) `:613` · **...Is Not Not Explanation (added 2026-08)** `:623` |
+| **04 — Mechanistic Interpretability** | 34–43 | `:651` | different goal `:659` · circuits (Olah car-detector) `:689` · neurons as concepts `:699` · transformer framework `:714` · induction heads `:749` · induction in action `:765` · why induction matters (+Olsson cite added 2026-08) `:784` · polysemantic wall `:811` · superposition (+Elhage cite added 2026-08) `:822` |
+| **05 — Sparse Autoencoders & Steering** | 44–52 | `:838` | unpacking superposition `:846` · SAE (SVG) `:861` · monosemantic features `:885` · **Scaling Up (Claude 3 Sonnet; verified examples 2026-08)** `:913` · feature steering (SVG) `:942` · Golden Gate Claude `:961` · steering widget `:989` · **Steering for Safety (hedged + cited 2026-08)** `:1004` |
+| **06 — Uses & Limits** | 53–63 | `:1037` | what it buys us `:1045` · **What the Law Demands (GDPR Art. 22 / Arts. 13–15; added 2026-08)** `:1056` · **A "Right to Explanation"? (added 2026-08)** `:1070` · faithfulness problem `:1101` · models can rationalize `:1125` · always sanity-check `:1153` · **Frontier: Attribution Graphs (added 2026-08)** `:1168` · **Frontier: CoT faithfulness (added 2026-08)** `:1185` · **Frontier: An MRI for AI (added 2026-08)** `:1198` · key takeaways `:1227` |
+| Closer | 64 | — | `:1240` |
+
+**Key definitions / citations (all source-verified 2026-08):**
+- LIME + husky/wolf experiment (rigged snow demo; trust 10/27→3/27) — `:134`, `:289` —
+  Ribeiro, Singh, and Guestrin, "Why Should I Trust You?", KDD 2016 (§6.4, Table 2).
+- Interpretable-by-design for high stakes — `:189` — Rudin, Nature Machine
+  Intelligence 1, 206–215 (2019).
+- SHAP / Shapley uniqueness — `:313`, `:348` — Lundberg and Lee, NeurIPS 2017.
+- Integrated gradients — `:458` — Sundararajan, Taly, and Yan, ICML 2017.
+- Saliency sanity checks (weight randomization) — `:496` — Adebayo et al., NeurIPS 2018.
+- Attention debate — `:619` Jain and Wallace, NAACL 2019; `:646` Wiegreffe and Pinter,
+  EMNLP 2019.
+- Circuits / curve & dog-head detectors — `:695`, `:710` — Olah et al., "Zoom In",
+  Distill 2020.
+- Transformer framework + induction heads — `:745`, `:759` — Elhage et al., Anthropic 2021.
+- Induction heads ↔ in-context learning — `:807` — Olsson et al., Anthropic 2022.
+- Superposition — `:832` — Elhage et al., "Toy Models of Superposition", Anthropic 2022.
+- SAE / monosemantic features (DNA, legal language, base64) — `:881`, `:909` —
+  Bricken et al., "Towards Monosemanticity", Anthropic 2023.
+- Millions of features in Claude 3 Sonnet; Golden Gate Claude; safety-relevant
+  features — `:938`–`:1032` — Templeton et al., "Scaling Monosemanticity", Anthropic 2024.
+- GDPR Art. 22 + Arts. 13–15; recital-only "right to explanation"; EU AI Act Art. 86 —
+  `:1056`–`:1097` — Wachter, Mittelstadt, and Floridi, International Data Privacy Law
+  7(2):76–99 (2017); AI Act text (Art. 86, applies from Aug 2026).
+- Attribution graphs (Dallas→Texas→Austin; rhyme planning; Neuronpedia) — `:1179` —
+  Lindsey et al., "On the Biology of a Large Language Model", Anthropic 2025;
+  circuit-tracing tools open-sourced May 2025.
+- CoT faithfulness (hint admitted <20% of the time) — `:1192` — Chen et al., "Reasoning
+  Models Don't Always Say What They Think", Anthropic 2025 (arXiv 2505.05410).
+- "MRI for AI"; detect most model problems by 2027 — `:1223` — Amodei, "The Urgency of
+  Interpretability", April 2025.
+
+**Real images** (`figs/`, cropped + cited; 23 image slots after the 2026-09 figure pass):
+husky/wolf + explanation `figs/lime-fig11-husky.png` (Ribeiro 2016 Fig 11) `:134`; CORELS rule list
+`figs/rudin-fig3-corels.png` (Rudin 2019 Fig 3) `:150`; "fictional" trade-off `figs/rudin-fig1-tradeoff.png`
+(Rudin Fig 1) `:189`; LIME pipeline `figs/lime-fig1-flu.png` (Ribeiro Fig 1) `:289`; LIME local fit
+`figs/lime-fig3-local.png` (Ribeiro Fig 3) `:298`; SHAP additive steps `figs/shap-fig1-additive.png`
+(Lundberg & Lee 2017 Fig 1) `:313`; class saliency maps `figs/simonyan-fig2-saliency.png` (Simonyan 2014
+Fig 2) `:407`; IG vs gradients `figs/ig-fig2-compare.png` (Sundararajan 2017 Fig 2, top 3 rows) `:458`;
+cascading randomization `figs/adebayo-fig2-cascade.png` (Adebayo 2018 Fig 2) `:496`; ResNet-50 probe error
+`figs/alain-fig4-resnet.png` (Alain & Bengio 2017 Fig 4) `:550`; control task `figs/hewitt-fig1-control.png`
+(Hewitt & Liang 2019 Fig 1) `:568`; BERT heads `figs/clark-fig1-heads.png` (Clark 2019 Fig 1) `:578`;
+adversarial attention `figs/jain-fig1-attention.png` (Jain & Wallace 2019 Fig 1) `:617`; car-detector
+circuit `figs/olah-zoomin-car.png` (Olah 2020) `:693`; curve detectors `figs/olah-zoomin-curves.png`
+(Olah 2020) `:708`; induction-head schematic `figs/lindsey-induction-head.png` (Lindsey 2025, Limitations)
+`:759`; induction on random tokens `figs/olsson-induction-head.png` (Olsson 2022) `:778`; superposition
+projection `figs/elhage-toy-projection.png` (Elhage 2022) `:816`; sparsity → superposition
+`figs/elhage-toy-sparsity.png` (Elhage 2022) `:831`; SAE pipeline `figs/cunningham-fig1-sae.png`
+(Cunningham 2024 Fig 1) `:855`; edge-detector comparison `figs/adebayo-fig1-edge.png` (Adebayo Fig 1)
+`:1162`; Dallas→Austin attribution graph `figs/lindsey-dallas-austin.png` (Lindsey 2025) `:1179`; CoT
+faithfulness bars `figs/chen-fig1-faithfulness.png` (Chen 2025 Fig 1) `:1192`.
+**SVG** (24): black box `:90`, accuracy trade-off `:160`, model vs story `:200`, signed attribution `:235`,
+attribution bar chart `:262`, Shapley orderings `:328`, efficiency bar `:362`, steep vs flat slope `:423`,
+layers → activation vector `:520`, attention arcs `:594`, 2019 debate timeline `:633`, describe vs explain
+`:668`, residual stream `:724`, loss curve with induction bump `:794`, SAE widen-rebuild `:866`,
+feature-activation bars `:895`, scaling 2023→2024 `:923`, steering dial `:947`, Golden Gate dial `:971`,
+safety dial in three steps `:1014`, GDPR recital / articles / AI Act boxes `:1080`, plausible vs faithful
+ellipses `:1107`, answer vs "because…" story `:1135`, 2025→2027 MRI timeline `:1208`. Citations use
+`.cite-left`. Page number: bold `.slide-num` only.
+
+**2026-09 figure pass (64 slides, unchanged count; PR #24):** every bullet-only content slide now carries
+a cited real figure crop or an inline SVG (23 new crops, 20 new SVGs; 4 hand-drawn sketch SVGs — LIME
+local line, saliency pair, attention lines, circuit graph — replaced by the papers' own figures). Real
+figures sit beside the bullets in a `1fr auto` grid or stacked below them; every crop is trimmed of white
+margins, excludes the paper caption, and is cited with its figure number (or the named figure for Distill /
+Anthropic web papers). Two bullets added (Saliency on Images ×3, Reading the Probe control task). Note
+file: one "Slide figure" sentence per real-figure article (23); 64 entries, order matches.
+
+**2026-08 content revision (57→64):** every citation/number fetched and verified.
+Added 8 slides: The Rudin Objection (§01), Beyond Raw Gradients (§02), ...Is Not Not
+Explanation (§03), What the Law Demands + A "Right to Explanation"? (§06), and three
+frontier slides (§06: Attribution Graphs, CoT faithfulness, An MRI for AI — replacing
+one stale unverifiable "Frontier 2025–26" slide). Fixed: husky/wolf reframed as the
+deliberately rigged demo it was, with verified trust numbers; unverified "emotions"
+feature example replaced by verified "scam emails" (Templeton 2024); Steering for
+Safety hedged ("could", "still early days") and cited; missing Olsson and Elhage
+(superposition) cites added. `backup-interpretabilitytech.html` (then `lec07tech.html`) audited: all math correct, no changes
+(stays 20 sl). Note file synced (64 entries, order matches).
+
+**2026-08 note enrichment:** `backup-interpretability-note.html` (then the lec07 interpretability note) upgraded from speaker
+script (401 lines) to Script &amp; Companion Notes (773 lines; 64 entries unchanged):
+per-entry `.detail` blocks with rigorous definitions (additive feature attribution
+class, full LIME objective + K-LASSO, cooperative game + SHAP conditional-expectation
+value, gradient saliency + Taylor rationale, IG path integral + Sensitivity(a)/
+Implementation Invariance, linear probes + control tasks/selectivity + linear
+representation hypothesis, scaled dot-product attention, residual stream + QK/OV
+circuits, induction-head two-head mechanism, polysemanticity/privileged basis,
+superposition hypothesis, dictionary learning, exact Bricken SAE equations + loss,
+feature clamping, GDPR Art. 22(1) + Arts. 13–15 verbatim, faithfulness vs
+plausibility), theorem blocks with verified proofs (Shapley subset↔permutation
+equivalence + full existence/uniqueness via unanimity basis, labeled course notes;
+SHAP Theorem 1 statement; IG Completeness with full FTC proof + Prop 2 pointer), and
+Background blocks with 35 verified links (LIME/SHAP/IG/Adebayo/probing/attention-debate
+arXiv, five transformer-circuits.pub papers, Golden Gate Claude, Neuronpedia +
+Gemma Scope, GDPR/AI-Act texts, Wachter DOI, biology-of-LLM + circuit-tracing
+open-sourcing, Chen CoT faithfulness, Amodei essay).

@@ -161,3 +161,9 @@ Round 3 for lec10, PR #46 at 14b98b2 (still draft and unmerged; lec11 on hold). 
 • OUTLINE leaf entry now reads "intercept vs exponent, slope −α (19)".
 
 lint-deck ok; outline-lint 0 stale. All three renders are clean, with no overflow.
+
+## 8 — slides-review → slides (2026-10-10 19:20)
+
+Approved: lec10, PR #46 at `14b98b2`. The diff and all three renders resolve the remaining technical issues.
+
+Merge, delete the branch, then open lec11’s PR and send its proposed scope before building: synthetic media, watermarking and provenance. Keep full companion notes and no Activity slides.

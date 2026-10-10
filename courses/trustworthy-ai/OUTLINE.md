@@ -39,7 +39,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 5 | `lec05-unlearning.html` | Machine unlearning | **figures 2026-09, case-brief + core-path pass 2026-09-14, page edits 2026-09-30** (68 sl, ~97 min; 90-min core path in the note only; taxonomy + category badges; note 68 entries, 13 uniform briefs + legal brief; tech 12 sl) |
 | 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **figures 2026-09, Albert revision 2026-10** (75 sl after round 4: Avianca context, P(True) explained, two kinds of calibration, fair-rank intuition replaces proof; heavy math moved to lec06tech; note 75 entries) |
 | 7 | `lec07-alignment-failures.html` | Alignment failures: sycophancy, reward hacking, explanation faithfulness | **new 2026-10** (59 sl, 14 real figure crops from 10 source figures, 90 min, no activities; note 59 entries; tech 12 sl). Former Wk 7 interpretability deck → `backup-interpretability.html` |
-| 8 | `lec08-adversarial.html` | Adversarial robustness: threat models, FGSM → PGD, honest evaluation, certificates | **new 2026-10** (54 sl, 14 real figure crops + 2 charts redrawn from tables, 90 min, no activities; note 54 entries; tech 24 sl) |
+| 8 | `lec08-adversarial.html` | Adversarial robustness: threat models, FGSM → PGD, honest evaluation, certificates | **new 2026-10** (55 sl, 15 real figure crops + 2 charts redrawn from tables, 90 min, no activities; note 55 entries; tech 24 sl) |
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **revised 2026-08, figure pass 2026-09** (65 sl) |
 | 10 | `lec10-jailbreak.html` | Jailbreaks & LLM safety | **revised 2026-08, figure pass 2026-09** (60 sl, 21 real figs) |
 | 11 | `lec11-prompt-injection.html` | Prompt injection & agentic safety | **figure pass 2026-09** (66 sl) |
@@ -69,7 +69,7 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `lec05tech.html` | Wk 5 (unlearning) | **Formal Goals, Separated (data removal has a retrained reference; suppression/filtering/revocation do not — added 2026-09-14)**; exact vs approx; (ε,δ) unlearning inequality (Guo Eq. 1/§2, two-sided); influence function θ₋ₓ ≈ θ̂ + (1/n)H⁻¹∇ℓ + Hessian infeasibility; gradient ascent; SISA cost E[cost] = n(R+1)(2R+1)/(6SR), full/E = 3R/(2R+1) ↗ 3/2 (S shards, R slices, matching the note); every slide carries the main deck's category badge | **updated 2026-09-14** (12 sl) |
 | `lec06tech.html` | Wk 6 (hallucination) | reliability diagram; ECE = Σ_b (n_b/n)|acc_b−conf_b|; temperature scaling; conformal coverage Pr[y∈C(x)]≥1−α + threshold quantile; semantic entropy | **checked 2026-08, Why It Holds + threshold wording 2026-10; round 4 2026-10-07** (20 sl: new §01 Forced Errors = Kalai bound + trigram Thm 3/Cor 2, and the 3 coverage-proof slides, all moved from lec06; math verified; A1 + A2, q̂ = ∞, ties, marginal stated) |
 | `lec07tech.html` | Wk 7 (alignment failures) | reward-model loss $-\binom{K}{2}^{-1}\mathbb{E}\log\sigma(r_w-r_l)$ (Bradley–Terry reading; Ouyang Eq. 1); KL-penalized RL objective (Ouyang Eq. 2, γ = 0); DPO loss $-\mathbb{E}\log\sigma(\hat r_\theta(x,y_w)-\hat r_\theta(x,y_l))$, $\hat r_\theta=\beta\log\pi_\theta/\pi_{\rm ref}$ (Rafailov 2023 Eq. 7); Gao overoptimization fits $R_{\rm bon}(d)=d(\alpha-\beta d)$, $R_{\rm RL}(d)=d(\alpha-\beta\log d)$, $d=\sqrt{\rm KL}$; Chen hint-test faithfulness score (symbols defined) + random-flip normalization $\alpha=1-q/((n-2)p)$, domain $n>2$, $p>0$, $\alpha>0$; monitor recall/precision with Baker Table 1 | **new 2026-10** (12 sl; all formulas checked against the paper PDFs). Old interpretability supplement → `backup-interpretabilitytech.html` |
-| `lec08tech.html` | Wk 8 (adversarial robustness) | perturbation set $\mathcal B_p(x,\varepsilon)$; FGSM as the linearized ℓ∞ optimum ($g^\top\delta\le\varepsilon\|g\|_1$; ℓ2 analogue); linear model $w^\top\eta=\varepsilon\|w\|_1$; PGD with random start + projections; C&W ℓ2 objective, tanh box, binary search on $c$; min-max + Danskin; Cohen Thm 1 with Neyman–Pearson sketch; CERTIFY (Clopper–Pearson, $\alpha$) | **new 2026-10** (24 sl; formulas checked against the paper PDFs) |
+| `lec08tech.html` | Wk 8 (adversarial robustness) | perturbation set $\mathcal B_p(x,\varepsilon)$; FGSM as the exact maximizer of the linearized loss over the ℓ∞ box ($g^\top\delta\le\varepsilon\|g\|_1$; unclipped ℓ2 analogue); linear model $w^\top\eta=\varepsilon\|w\|_1$; PGD with random start + projections; C&W ℓ2 objective, tanh box, binary search on $c$; min-max + Danskin; Cohen Thm 1 with Neyman–Pearson sketch; CERTIFY (Clopper–Pearson, $\alpha$) | **new 2026-10** (24 sl; formulas checked against the paper PDFs) |
 | `lec09tech.html` | Wk 9 (poisoning) | poison fraction α; clean-label feature-collision objective; backdoor blended objective; spectral signatures; activation clustering | **checked 2026-08** (16 sl: math verified incl. Poison Frogs ℓ∞ form; blended-objective cite reworded, not verbatim BadNets) |
 | `lec10tech.html` | Wk 10 (jailbreak) | RLHF KL-penalized objective; GCG target `min -log Pr["Sure, here"]`; gradient-guided token swaps | **checked 2026-08** (12 sl: RLHF KL objective + GCG target verified correct, no changes) |
 | `lec11tech.html` | Wk 11 (prompt injection) | data-vs-control plane; confused deputy; agent threat model; capabilities/least privilege; taint tracking; dual-LLM pattern (security model, not equations) | **checked 2026-08** (9 sl: security model verified — dual-LLM matches Willison 2023, CaMeL cite correct; two prose-dash lint warnings fixed) |
@@ -1079,22 +1079,23 @@ Amazon 96.19% / Google 88.94%, MNIST 2016); attack = search in the ball, FGSM �
 trade-off, obfuscated gradients (Athalye Table 1, 7 of 9), adaptive attacks (BPDA, EOT),
 AutoAttack, RobustBench as a standardized benchmark with entry rules, scoreboard snapshot
 10 Oct 2026 16:47 KST (best known = upper bound; MeanSparse 75.28 → 73.10), ℓ∞ ≠ ℓ2;
-empirical vs certified, randomized smoothing (certificate for g, ℓ2 radius, 1 − α confidence;
-Cohen Table 1 chart); one physical case (Eykholt stop sign) with its limits; ImageNet-C as a
+empirical vs certified (certificate = stability, not correctness; certified accuracy = correct and
+certified), randomized smoothing (g vs PREDICT/CERTIFY, abstention, ℓ2 radius, 1 − α confidence;
+Cohen App. Table 2 chart with the Table 1 R = 2 discrepancy disclosed); one physical case (Eykholt stop sign) with its limits; ImageNet-C as a
 different question; closing checklist "robust to what, against whom, measured how, at what
 cost?". C&W lives in the notes and tech. Excludes multimodal jailbreaks and GCG (lec10),
 poisoning (lec09), prompt injection (lec13). Math in `lec08tech.html`.
 
-### Sections (54 slides, 90 min: hook 10 · why + threat model 20 · attacks 20 · defenses + evaluation 25 · physical + synthesis 15)
+### Sections (55 slides, 90 min: hook 10 · why + threat model 20 · attacks 20 · defenses + evaluation 25 · physical + synthesis 15)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:35`, `:47` | |
 | **01 — A Tiny Nudge** | 3–7 | `:76` | panda (Goodfellow Fig 1, GoogLeNet ε = .007) `:84` · anatomy `:94` · Szegedy Fig 5 random examples `:103` · average vs worst case `:119` |
-| **02 — Why It Happens, Who Attacks** | 8–19 | `:128` | boundary sketch `:136` · too linear (Goodfellow Fig 4) `:144` · non-robust features (Ilyas Fig 1) `:160` · two perspectives `:170` · threat model `:183` · budget ε `:191` · ℓ∞ vs ℓ2 `:206` · knowledge `:215` · transfer (Papernot Fig 3) `:223` · real services `:239` · targeted vs untargeted `:249` |
-| **03 — Finding the Worst Case** | 20–28 | `:258` | attack as search `:266` · FGSM (Goodfellow Fig 2) `:276` · FGSM by hand `:287` · one step can miss `:301` · PGD algorithm `:309` · steps in ball `:326` · restarts (Madry Fig 1) `:334` · Madry Table 2 bar chart `:344` |
-| **04 — Defenses and Honest Evaluation** | 29–44 | `:355` | whole ball `:363` · adversarial training (Madry Fig 3) `:372` · Tsipras Fig 1 `:382` · obfuscated gradients `:392` · Athalye Table 1 `:401` · adaptive attacks `:417` · AutoAttack `:431` · RobustBench `:441` · scoreboard snapshot `:461` · upper bound `:476` · one ruler `:486` · empirical vs certified `:500` · smoothing (Cohen Fig 2) `:508` · Theorem 1 intuition (Cohen Fig 3) `:524` · Cohen Table 1 chart `:541` |
-| **05 — Off the Screen, and What to Ask** | 45–54 | `:552` | EOT `:560` · Eykholt Fig 1 `:570` · what it does not show `:587` · ImageNet-C `:607` · four questions `:622` · applied to 73.71% `:630` · established vs open `:645` · takeaways `:665` · closer `:679` |
+| **02 — Why It Happens, Who Attacks** | 8–20 | `:128` | boundary sketch `:136` · too linear (Goodfellow Fig 4 logit panel) `:144` · invisible features (Ilyas Fig 1a) `:162` · mislabeled images still teach (Ilyas Fig 1b) `:171` · two perspectives `:180` · threat model `:193` · budget ε `:201` · ℓ∞ vs ℓ2 (units, root-sum-square) `:216` · knowledge `:226` · transfer (Papernot Fig 3) `:234` · real services `:250` · targeted vs untargeted `:260` |
+| **03 — Finding the Worst Case** | 21–29 | `:269` | attack as search `:277` · FGSM (Goodfellow Fig 2) `:287` · FGSM by hand `:298` · one step can miss (exact L(u) = sin u) `:312` · PGD algorithm `:325` · steps in ball `:342` · restarts (Madry Fig 1) `:350` · Madry Table 2 bar chart `:360` |
+| **04 — Defenses and Honest Evaluation** | 30–45 | `:371` | whole ball `:379` · adversarial training (Madry Fig 3) `:388` · Tsipras Fig 1(b) CIFAR `:398` · obfuscated gradients `:415` · Athalye Table 1 (* / ** keyed) `:424` · adaptive attacks + diagnostics `:442` · AutoAttack `:457` · RobustBench `:467` · scoreboard snapshot (best-known column) `:487` · upper bound `:503` · one ruler `:513` · empirical vs certified `:527` · smoothing (Cohen Fig 2) `:536` · Theorem 1 intuition (Cohen Fig 3; formula in tech) `:553` · Cohen App. Table 2 chart `:570` |
+| **05 — Off the Screen, and What to Ask** | 46–55 | `:581` | EOT (average success) `:589` · Eykholt Fig 1 (Tables 1, 3) `:599` · what it does not show `:609` · ImageNet-C `:629` · four questions `:644` · applied to 73.71% under AutoAttack `:652` · established vs open `:667` · takeaways `:687` · closer `:701` |
 
 **Key citations (checked against saved PDFs / page captures, 2026-10-10; register in the
 review package):** Goodfellow 2015 (Figs 1, 2, 4; §3); Szegedy 2014 (Fig 5); Ilyas 2019 (Fig 1);
@@ -1102,16 +1103,16 @@ Papernot 2016 (Fig 3; §5, Tables 3–4); Madry 2018 (Figs 1, 3; Table 2; ℓ2 a
 Wagner 2017 (notes/tech); Tsipras 2019 (Fig 1); Athalye 2018 (Table 1; §4 BPDA/EOT); Athalye
 EOT 2018; Carlini 2019 checklist; Tramèr 2020; Croce & Hein 2020 (AutoAttack; 13 of 49 >10 pts);
 Croce 2021 RobustBench (§3 restrictions); robustbench.github.io CIFAR-10 ℓ∞ snapshot 10 Oct 2026;
-Cohen 2019 (Figs 2–3, Thm 1, CERTIFY, Table 1); Eykholt 2018 (Fig 1; lab 100%, drive-by 100/84.8%,
-random crop 70%); Hendrycks & Dietterich 2019 (Fig 1).
+Cohen 2019 (Figs 2–3, Thm 1, CERTIFY, Table 1, App. Table 2); Eykholt 2018 (Fig 1; Table 1 lab 100%,
+Table 3 drive-by 100/84.8%, constrained pseudo-random crop 70%); Hendrycks & Dietterich 2019 (Fig 1).
 
-**Note:** `lec08-adversarial-note.html` — 54 entries; each has a minute budget and elapsed
+**Note:** `lec08-adversarial-note.html` — 55 entries; each has a minute budget and elapsed
 time, script, key takeaway; content slides add figure / setup-model-date / establishes / does
-not establish / assumptions / primary-source links. C&W formulation in entries 21 and 28.
+not establish / assumptions / primary-source links. C&W formulation in entries 22 and 29.
 
 **Tech:** `lec08tech.html` — 24 slides: perturbation set (4), goals (5), FGSM (6), sign as the
 linearized optimum incl. ℓ2 (7), linear model $w^\top\eta=\varepsilon\|w\|_1$ (8), PGD with random
-start (9), projections (10), C&W (11), margin loss (12), min-max (14), Danskin (15), cost (16),
+start (9), projections (10), C&W (11), margin loss (12), min-max (14), Danskin with its smooth/unique-maximizer condition (15), cost (16),
 smoothed classifier (18), Cohen Thm 1 (19), Neyman–Pearson proof sketch (20), CERTIFY with
 Clopper–Pearson and α (21), radius reading (22), cost/scope (23).
 

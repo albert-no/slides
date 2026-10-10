@@ -47,7 +47,7 @@
   <p>The main lecture keeps the panda and the boundary picture. Here are the equations.</p>
   <ul class="arrow">
     <li>The budget as a set; FGSM, PGD and C&amp;W</li>
-    <li>Why FGSM is exact for linear models</li>
+    <li>What FGSM maximizes exactly: the linearized loss</li>
     <li>Adversarial training as a min-max problem</li>
     <li>Randomized smoothing: theorem, proof sketch, CERTIFY</li>
   </ul>
@@ -69,7 +69,7 @@
   <div class="divider"></div>
   <p>An adversarial example lives in a <strong>small ball</strong> around $x$.</p>
   <div class="math-block">$$\mathcal{B}_p(x, \varepsilon) \;=\; \bigl\{\, x + \delta \;:\; \|\delta\|_p \le \varepsilon,\; x + \delta \in [0,1]^d \,\bigr\}.$$</div>
-  <p class="muted">$p = \infty$ caps the largest single-pixel change; $p = 2$ caps the total energy.</p>
+  <p class="muted">$p = \infty$ caps the largest single-pixel change; $p = 2$ caps the root-sum-square change.</p>
 </div>
 
 <!-- 5. The Attacker's Goal -->
@@ -86,7 +86,7 @@
 <div class="slide">
   <h2>FGSM: One Step</h2>
   <div class="divider"></div>
-  <p>Take the worst-case step of size $\varepsilon$ in the $\ell_\infty$ box.</p>
+  <p>One step that <strong>maximizes the linearized loss</strong> over the $\ell_\infty$ box.</p>
   <div class="math-block">$$x_{\text{adv}} \;=\; \operatorname{clip}_{[0,1]}\Bigl(x \;+\; \varepsilon \cdot \operatorname{sign}\!\bigl(\nabla_x\, \ell(f_\theta(x), y)\bigr)\Bigr).$$</div>
   <p class="muted">Keep only the sign: every pixel moves the maximum allowed amount.</p>
   <div class="cite cite-left">Goodfellow, Shlens, and Szegedy, "Explaining and Harnessing Adversarial Examples", ICLR 2015.</div>
@@ -102,7 +102,7 @@
     <li>$g^\top\delta = \sum_i g_i\delta_i \le \sum_i |g_i|\,\varepsilon = \varepsilon\|g\|_1$ when $|\delta_i| \le \varepsilon$</li>
     <li>Equality iff $\delta_i = \varepsilon\,\operatorname{sign}(g_i)$ wherever $g_i \ne 0$</li>
   </ul>
-  <p class="muted">Under $\ell_2$ the same argument gives $\delta = \varepsilon\, g/\|g\|_2$ (Cauchy–Schwarz).</p>
+  <p class="muted">Under $\ell_2$, with $g \ne 0$ and the $[0,1]$ pixel box ignored: $\delta = \varepsilon\, g/\|g\|_2$ (Cauchy–Schwarz). Clipping afterwards can lose optimality.</p>
 </div>
 
 <!-- 8. Linear models -->
@@ -115,7 +115,7 @@
     <li>If average $|w_i|$ is $m$ over $d$ inputs, the shift is $\varepsilon m d$</li>
     <li>$\|\eta\|_\infty = \varepsilon$ stays fixed as $d$ grows</li>
   </ul>
-  <p class="muted">Exact for linear models; for deep nets only a local approximation.</p>
+  <p class="muted">Exact for the linear <em>score</em>; for a loss of it, only if the loss is monotone in that score (e.g. binary logistic). Deep nets: a local approximation.</p>
   <div class="cite cite-left">Goodfellow, Shlens, and Szegedy, ICLR 2015, §3.</div>
 </div>
 
@@ -124,7 +124,7 @@
   <h2>PGD: Projected Iteration</h2>
   <div class="divider"></div>
   <p>Random start, then repeat the sign step, <strong>projecting</strong> back each time.</p>
-  <div class="math-block">$$x_0 = x + u,\; u \sim \mathcal{U}[-\varepsilon,\varepsilon]^d; \qquad x_{t+1} \;=\; \Pi_{\mathcal{B}(x,\varepsilon)}\!\Bigl(x_t + \alpha \cdot \operatorname{sign}\!\bigl(\nabla_x\, \ell(f_\theta(x_t), y)\bigr)\Bigr).$$</div>
+  <div class="math-block">$$x_0 = \operatorname{clip}_{[0,1]}(x + u),\; u \sim \mathcal{U}[-\varepsilon,\varepsilon]^d; \qquad x_{t+1} \;=\; \Pi_{\mathcal{B}(x,\varepsilon)}\!\Bigl(x_t + \alpha \cdot \operatorname{sign}\!\bigl(\nabla_x\, \ell(f_\theta(x_t), y)\bigr)\Bigr).$$</div>
   <p class="muted">$\alpha$ = step size; $K$ steps; keep the best of several restarts. FGSM: $u = 0$, $\alpha = \varepsilon$, $K = 1$.</p>
   <div class="cite cite-left">Madry et al., "Towards Deep Learning Models Resistant to Adversarial Attacks", ICLR 2018.</div>
 </div>
@@ -140,7 +140,7 @@
     <div><h3>$\ell_2$</h3>
       <p>$\delta \leftarrow \delta \cdot \min\bigl(1,\, \varepsilon / \|\delta\|_2\bigr)$.</p></div>
   </div>
-  <p class="muted">Then clip $x + \delta$ to $[0,1]$. Every iterate stays inside the threat model.</p>
+  <p class="muted">Then clip $x + \delta$ to $[0,1]$: always feasible. Exact projection onto the intersection for $\ell_\infty$ (two boxes), but not in general for $\ell_2$.</p>
 </div>
 
 <!-- 11. C&W -->
@@ -150,7 +150,7 @@
   <p>Carlini–Wagner ($\ell_2$, target $t$) trade size against success.</p>
   <div class="math-block">$$\min_{\delta}\; \|\delta\|_2^2 \;+\; c \cdot f(x + \delta), \qquad f(x') = \max\Bigl(\max_{i \ne t} Z(x')_i - Z(x')_t,\; -\kappa\Bigr).$$</div>
   <ul class="arrow">
-    <li>$Z$ = logits; $f \le 0$ iff $t$ wins by margin $\kappa$</li>
+    <li>$Z$ = logits; $f \le 0$ iff $t$ wins or ties; $f = -\kappa$ once $t$ leads by $\ge \kappa$</li>
     <li>Box via $\delta = \tfrac12(\tanh w + 1) - x$; optimize $w$ freely</li>
     <li>$c$: smallest value that succeeds, found by binary search</li>
   </ul>
@@ -197,11 +197,11 @@
   <div class="ta-algo" style="max-width:920px; margin:18px auto;">
     <ol>
       <li>Inner max: run PGD to craft $\delta^*$ for each example.</li>
-      <li>Outer min: SGD step on $\nabla_\theta\, \ell(f_\theta(x + \delta^*), y)$.</li>
+      <li>Outer min: SGD step along $-\nabla_\theta\, \ell(f_\theta(x + \delta^*), y)$.</li>
       <li>Repeat until the adversarial loss stops falling.</li>
     </ol>
   </div>
-  <p class="muted">Danskin's theorem: at an exact maximizer, this is a descent direction for $\rho$. PGD only approximates it.</p>
+  <p class="muted">Danskin: if $\ell$ is smooth and the maximizer $\delta^*$ is unique, this is $\nabla_\theta$ of the inner max. With ties, one branch need not give descent. PGD only approximates $\delta^*$.</p>
 </div>
 
 <!-- 16. The Cost -->
@@ -242,7 +242,7 @@
   <div class="divider"></div>
   <p>Suppose $\Pr[f(x{+}\eta) = c_A] \ge \underline{p_A} \ge \overline{p_B} \ge \max_{c \ne c_A}\Pr[f(x{+}\eta) = c]$. Then</p>
   <div class="math-block">$$g(x + \delta) = c_A \quad \text{for all } \|\delta\|_2 \lt R, \qquad R \;=\; \frac{\sigma}{2}\,\Bigl(\Phi^{-1}(\underline{p_A}) - \Phi^{-1}(\overline{p_B})\Bigr).$$</div>
-  <p class="muted">$\Phi^{-1}$ = inverse standard normal CDF. No assumption on $f$.</p>
+  <p class="muted">$\Phi^{-1}$ = inverse standard normal CDF. No assumption on $f$. Stability only: $c_A$ may be the wrong label.</p>
 </div>
 
 <!-- 20. Proof sketch -->
@@ -255,7 +255,7 @@
     <li>So $\Pr[f(Y) = c_A] \ge \Phi\bigl(\Phi^{-1}(\underline{p_A}) - \|\delta\|_2/\sigma\bigr)$</li>
     <li>Likewise $\Pr[f(Y) = c] \le \Phi\bigl(\Phi^{-1}(\overline{p_B}) + \|\delta\|_2/\sigma\bigr)$ for $c \ne c_A$</li>
   </ul>
-  <p>$c_A$ still wins iff $\Phi^{-1}(\underline{p_A}) - \|\delta\|_2/\sigma \gt \Phi^{-1}(\overline{p_B}) + \|\delta\|_2/\sigma$, i.e. $\|\delta\|_2 \lt R$. $\;\square$</p>
+  <p>These bounds guarantee $c_A$ wins if $\Phi^{-1}(\underline{p_A}) - \|\delta\|_2/\sigma \gt \Phi^{-1}(\overline{p_B}) + \|\delta\|_2/\sigma$, i.e. $\|\delta\|_2 \lt R$. $\;\square$</p>
 </div>
 
 <!-- 21. CERTIFY -->
@@ -271,7 +271,7 @@
       <li>If $\underline{p_A} \gt \tfrac12$: return $\hat c_A$, radius $\sigma\,\Phi^{-1}(\underline{p_A})$. Else abstain.</li>
     </ol>
   </div>
-  <p class="muted">Step 4 uses $\overline{p_B} = 1 - \underline{p_A}$. Holds with probability $\ge 1-\alpha$; paper uses $\alpha = 0.001$.</p>
+  <p class="muted">Step 4 uses $\overline{p_B} = 1 - \underline{p_A}$. If CERTIFY returns $(\hat c_A, R)$, then with probability $\ge 1-\alpha$ ($\alpha = 0.001$), $g$ predicts $\hat c_A$ within $R$. Abstaining means the vote was not clear enough.</p>
 </div>
 
 <!-- 22. Reading the Radius -->
@@ -280,11 +280,11 @@
   <div class="divider"></div>
   <p>The formula shows exactly <strong>what buys a bigger guarantee</strong>.</p>
   <ul class="arrow">
-    <li>More noise $\sigma$: larger radius, lower clean accuracy of $g$</li>
+    <li>More noise $\sigma$ scales $R$, but also changes the votes: no automatic gain</li>
     <li>Clearer vote ($\underline{p_A} \to 1$): $\Phi^{-1}(\underline{p_A})$ grows</li>
     <li>Sample-limited: with $n$ samples, $\underline{p_A} \lt 1$, so $R$ is capped</li>
   </ul>
-  <p class="muted">With probability $\ge 1-\alpha$, no $\ell_2$ change smaller than $R$ flips $g$.</p>
+  <p class="muted">With probability $\ge 1-\alpha$, no $\ell_2$ change smaller than a returned $R$ changes $g$'s prediction, right or wrong.</p>
 </div>
 
 <!-- 23. The Certified Catch -->
@@ -294,9 +294,9 @@
   <p>The guarantee is <strong>real but modest</strong>.</p>
   <div class="grid-2">
     <div><h3>Cost</h3>
-      <p>$n = 100{,}000$ forward passes: about 110 s per ImageNet image in the paper.</p></div>
+      <p>$n = 100{,}000$ forward passes: 110 s per ImageNet image on the paper's hardware.</p></div>
     <div><h3>Scope</h3>
-      <p>An $\ell_2$ radius for $g$, not $f$; 49% certified at $R = 0.5$ on ImageNet.</p></div>
+      <p>An $\ell_2$ radius for $g$, not $f$; ImageNet, $R = 0.5$: 49% correct and certified.</p></div>
   </div>
   <p class="muted">A narrow, costly proof, but a proof nonetheless.</p>
 </div>

@@ -32,3 +32,28 @@ lec08 is merged: PR #44 → main `b206cf4`, and the branch is deleted. lec09 has
 • *Review packages:* src/ snapshot, full HTML, page map and notes validation from round 1.
 
 Any requests on emphasis or cuts?
+
+## 2 — slides-review → slides (2026-10-10 17:34)
+
+*Scope approved with adjustments.* The central question is strong, but the modern-case section is crowded and defenses need more time. Use *10/20/20/20/20 minutes*.
+
+*Emphasis and cuts*
+• Make the relationship explicit: *poisoning describes a training-time intervention; a backdoor describes conditional malicious behavior*. They overlap, rather than forming two disjoint attack categories.
+• Consider the title *“Poisoning and Backdoors: Corrupting What Models Learn.”* It accommodates studies where attackers control training or model weights—not just individual data examples.
+• Keep Carlini, Souly and Sleeper Agents as the modern section’s spine. Wan can be a short instruction-tuning bridge. Glaze/Nightshade should be a brief, clearly differentiated example or notes-only—not another substantial case.
+
+*Evidence boundaries to establish while drafting*
+• *Carlini:* separate the ability/cost to get attacker-controlled content into a dataset from demonstrated downstream model damage. The $60/0.01% result is not “compromise a trained model for $60.” [Paper](https://arxiv.org/abs/2302.10149)
+• *Souly:* foreground the tested trigger/behavior, model sizes, and both absolute poison count and fraction. “250 documents” is a result under those experimental conditions, not a universal threshold. [Paper](https://arxiv.org/abs/2510.07192)
+• *Sleeper Agents:* distinguish how researchers installed the backdoor from the subsequent persistence tests. Don’t imply the study demonstrated that an ordinary web-data attacker could create the same model.
+• *Glaze versus Nightshade:* distinguish style-mimicry protection from concept-targeted disruption; report tested effectiveness, not guaranteed protection for artists. [Nightshade paper](https://people.cs.uchicago.edu/~ravenben/publications/pdf/nightshade-oakland24.pdf)
+
+*Defenses*
+Teach two mechanisms well rather than four names quickly—for example, spectral signatures and Neural Cleanse. For each: what access/trusted data it requires, its structural assumption, and a concrete failure mode. Put the remaining methods in a notes comparison. Explain that hashes detect changed content, not malicious content already present when hashed.
+
+*Worked example and evaluation*
+Keep one instructor-explained example inside the BadNets section; no separate demo/code sequence. Label invented numbers as illustrative. Don’t present “spectral signatures flags the poison” as guaranteed or measured unless supported by an actual experiment.
+
+Define ASR’s evaluation set and denominator before showing it. The closing checklist should include poison *count and rate*, clean performance, target behavior without poisoning, and defense false positives/utility costs—not ASR alone.
+
+Finally, retain useful conceptual diagrams and definitions; don’t force every text slide into a paper figure or TODO. Send the draft PR URL/head, then the full review package when ready.

@@ -67,8 +67,8 @@ Only authoring source and image assets are committed; `*.standalone.html` is a b
 ## Editing workflow
 
 1. Edit `<talk>/<talk>.html`; preview in Chrome (`reference/` must be alongside — it is).
-2. `python3 scripts/lint-deck.py <deck>.html` (or `--all`). Errors (`<` inside math, KaTeX delimiter escape) break rendering — fix immediately. Warnings are Priority-0/1 violations.
-3. `python3 scripts/find-wordy.py <deck>.html` after drafting prose-heavy slides; `find-dense.py` for over-stuffed ones. Their flags are review prompts: compress, or confirm the line is a §1 bounded exception that renders cleanly.
+2. `python3 scripts/lint-deck.py <deck>.html` (or `--all`). Errors (`<` inside math, KaTeX delimiter escape) break rendering — fix immediately. Font-size warnings (Priority 0) are failures to fix; word/line-count warnings (Priority 1) are review prompts — compress, or confirm a §1 bounded exception that renders cleanly.
+3. `python3 scripts/find-wordy.py <deck>.html` after drafting prose-heavy slides; `find-dense.py` for over-stuffed ones. Same rule: their word-count/density flags are review prompts, never a licence to accept overflow or smaller type.
 4. **Update `OUTLINE.md` in the *same* edit** — any added/removed slide, renamed section, changed line range, or added/removed cited theorem. Line numbers are read as authoritative pointers. An added or removed slide also updates the deck's own `1 / N` `.slide-num` and every count in the outline. Verify with `python3 scripts/outline-lint.py`. Full rule: DESIGN_SYSTEM §10.
 5. **Changed a figure, font or caption?** Render the affected pages (`-r 60`; `-r 150` for one page when label legibility is the question) and check the §8 acceptance list. Affected pages only.
 6. Distribute: `python3 scripts/bundle.py <talk>/<talk>.html`.

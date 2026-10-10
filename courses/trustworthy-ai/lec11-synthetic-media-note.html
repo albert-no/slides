@@ -83,7 +83,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>6. Origin Is Not Truth</h2>
 <p class="pace">The provenance problem · ≈2 min · elapsed ≈8 min</p>
-<p>Read the table row by row. A watermark found: a keyed generator probably made this, but the content could still be true or false. Valid credentials: we know who signed which claims and that the file has not changed since, but not whether the claims are accurate.</p>
+<p>Read the table row by row. A watermark found: a keyed generator probably made this, but the content could still be true or false. Valid credentials: we know which signer made which claims and that the covered data has not changed since, but not whether the claims are accurate.</p>
 <p>The bottom two rows are where people go wrong. No mark found does not mean human-made: the generator may not watermark, or the mark may have been removed. No credentials does not mean fake: most real photos carry none, and sharing apps often strip them.</p>
 <p>And AI-made content can carry perfectly honest credentials saying "made with model Y".</p>
 <p><span class="kt">Key takeaway:</span> Origin signals say who made something; absence of a signal proves little.</p>
@@ -126,12 +126,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>11. Step 1: A Secret Key Splits the Vocabulary</h2>
 <p class="pace">Text watermarking · ≈2 min · elapsed ≈14 min</p>
-<p>At each position, the previous word and a secret key are hashed into a random seed. The seed splits the whole vocabulary into a green list, a fraction γ of words (here 25%), and a red list, the rest.</p>
-<p>The split changes at every position because the previous word changes. Without the key, the split looks random; with it, anyone can recompute which words were green.</p>
-<p><span class="kt">Key takeaway:</span> A keyed hash of the previous word picks a fresh green list at each step.</p>
+<p>At each position, the previous token and a secret key are hashed into a random seed. The seed splits the whole vocabulary into a green list, a fraction γ of tokens (here 25%, so 3 of the 12 shown), and a red list, the rest.</p>
+<p>The split is determined by the context and the key: the same previous token and key always give the same split. Without the key, the split looks random; with it, anyone can recompute which tokens were green.</p>
+<p>Tokens are words or word pieces; on the slides we say "words" for short.</p>
+<p><span class="kt">Key takeaway:</span> A keyed hash of the previous token picks the green list at each step.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Schematic of the KGW split: previous word and secret key feed a hash, which seeds a green/red partition of the vocabulary.</p>
+<p>Schematic of the KGW split: previous token "is" and secret key feed a hash, which seeds a green/red partition; 3 of 12 cells green (γ = 25%).</p>
 <h3>Setup, model, date</h3>
 <p>Kirchenbauer et al., University of Maryland; arXiv January 2023, ICML 2023. The rule shown is the "soft" watermark of §3.</p>
 <h3>Assumptions</h3>
@@ -198,16 +199,16 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>15. The Threshold Sets the False-Alarm Rate</h2>
 <p class="pace">Text watermarking · ≈2.5 min · elapsed ≈22 min</p>
 <p>z measures how many standard deviations the green count sits above chance. KGW flags text when z > 4.</p>
-<p>If words really were independent coin flips, ordinary text would cross z = 4 with probability about 3×10⁻⁵, one in roughly 30,000. That "if" matters; two slides on we see when it fails.</p>
+<p>If tokens acted like independent coin flips, the normal approximation says ordinary text crosses z = 4 with probability about 3×10⁻⁵, one in roughly 30,000. That is a normal-approximation tail, not a guarantee. At 20 tokens with γ = 0.25 the exact Binomial tail is about 1.8×10⁻⁴, six times larger. And the independence "if" matters; two slides on we see when it fails.</p>
 <p>Moving the threshold trades false alarms for misses, as with any test.</p>
-<p><span class="kt">Key takeaway:</span> The threshold sets the false-alarm rate, under an independence assumption.</p>
+<p><span class="kt">Key takeaway:</span> The threshold sets a nominal false-alarm rate, under an idealized model.</p>
 <div class="detail">
 <h3>The figure</h3>
 <p>Sketch, not to scale: two bell curves of z, ordinary text centred near 0 and watermarked text far right, with the threshold at z = 4.</p>
 <h3>Setup, model, date</h3>
 <p>KGW §3: one-proportion z-test; threshold z = 4.</p>
 <h3>Assumptions</h3>
-<p>Under the null, each scored token is green independently with probability γ. The exact null distribution and the √T scaling are in lec11tech.html.</p>
+<p>Idealized independent-Bernoulli model: each scored token is green independently with probability γ. Exact tail at T = 20: z > 4 needs ≥ 13 green tokens, P(Bin(20, 0.25) ≥ 13) ≈ 1.84×10⁻⁴. Details in lec11tech.html.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2301.10226">Kirchenbauer, Geiping, Wen, Katz, Miers &amp; Goldstein, "A Watermark for Large Language Models" (ICML 2023)</a> — green/red list rule (§3, Algorithm 2), z-test (§3), Fig. 1 example, Fig. 2 strength vs perplexity, Fig. 3a z vs length.</li>
@@ -242,19 +243,20 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>17. Repeated Phrases Break the Coin-Flip Count</h2>
 <p class="pace">Text watermarking · ≈2.5 min · elapsed ≈26.5 min</p>
-<p>Real text repeats itself. If the same (previous word, word) pair appears twice, it gets the same colour twice; the two "coin flips" are not independent, so the z-test is overconfident.</p>
-<p>Kirchenbauer and colleagues' 2024 Figure 7 measures this on human text from WikiText-103. Blue counts repeats; its measured false-alarm rate sits above the theory. Green counts each repeated pair once; it then matches the black theory curve.</p>
+<p>Real text repeats itself. If the same (previous token, token) pair appears twice, it gets the same colour twice; one coin flip is counted twice, so the z-test is overconfident.</p>
+<p>Kirchenbauer and colleagues' 2024 Figure 7, right panel, measures this on human text from WikiText-103: the z threshold needed for a 0.1% measured false-alarm rate. Counting repeats, the measured threshold sits above the theory. In this WikiText test, scoring each repeated pair once brought it near the theoretical 3.09.</p>
+<p>This is not a general fix. Distinct tokens after the same previous token still share one split, so scoring once does not by itself make the count independent.</p>
 <p>Vocabulary: the nominal rate comes from the formula; the measured rate comes from running the detector on real human text. A careful paper reports both.</p>
-<p><span class="kt">Key takeaway:</span> Nominal and measured false-alarm rates differ unless repeats are handled.</p>
+<p><span class="kt">Key takeaway:</span> Nominal and measured false-alarm rates differ; repeats are one reason.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Kirchenbauer et al. 2024 Fig. 7, unmodified: left, empirical FPR vs z threshold; right, z required for 0.1% FPR vs tokens. Blue uncorrected, green with repeated n-grams removed, black theoretical.</p>
+<p>Kirchenbauer et al. 2024 Fig. 7, right panel, cropped: z required for 0.1% measured FPR vs tokens; repeats counted, repeated n-grams removed, and the theoretical value. The left panel (empirical FPR vs z threshold) is in the paper.</p>
 <h3>Setup, model, date</h3>
 <p>Kirchenbauer et al., ICLR 2024; human text from WikiText-103.</p>
 <h3>What this establishes</h3>
-<p>That ignoring repeated n-grams inflates false alarms, and that scoring each repeated pair once restores agreement with theory on this corpus.</p>
+<p>That counting repeated pairs pushes the measured threshold above theory, and that scoring each repeated pair once brought it near theory on this corpus.</p>
 <h3>What this does not establish</h3>
-<p>It does not guarantee the nominal rate on other text types, such as code or templated writing.</p>
+<p>It does not establish independence in general, nor the nominal rate on other text types such as code or templated writing.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2306.04634">Kirchenbauer et al., "On the Reliability of Watermarks for Large Language Models" (ICLR 2024)</a> — machine paraphrase and copy-paste attacks (Fig. 2), human rewrite study with 14 writers (Fig. 4), empirical FPR with repeated-n-gram correction (Fig. 7).</li>
@@ -287,14 +289,15 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>19. Some Marks Leave the Output Distribution Unchanged</h2>
 <p class="pace">Text watermarking · ≈1.5 min · elapsed ≈30 min</p>
-<p>KGW shifts the odds. Other designs do not. A distortion-free watermark (Kuditipudi and colleagues) guarantees that, averaged over the random key, each reply has exactly the model's own odds. An undetectable watermark (Christ, Gunn and Zamir) guarantees that without the key no efficient test can tell marked from unmarked text, even after many queries.</p>
-<p>We name these so you recognise them; we will not build them. The formal definition is in the tech file.</p>
-<p><span class="kt">Key takeaway:</span> A boost is not the only design; some marks are invisible without the key.</p>
+<p>KGW shifts the odds. Other designs do not. A distortion-free watermark (Kuditipudi and colleagues): with a fresh key, never reused, one reply has exactly the model's own odds, averaged over the key. It says nothing about repeated queries that reuse the key.</p>
+<p>An undetectable watermark (Christ, Gunn and Zamir) is a different guarantee: without the key, efficient tests gain only a negligible edge, under cryptographic assumptions. That is not the same as identical distributions.</p>
+<p>We name these so you recognise them; we will not build them. The formal definitions are in the tech file.</p>
+<p><span class="kt">Key takeaway:</span> Exact odds for one reply and no practical keyless test are two different guarantees.</p>
 <div class="detail">
 <h3>Setup, model, date</h3>
 <p>Kuditipudi et al., Stanford, TMLR (Definition 1). Christ, Gunn &amp; Zamir, arXiv 2306.09194 (2023).</p>
 <h3>What this does not establish</h3>
-<p>"Distortion-free" is a statement averaged over keys; it is not a claim about any single reply, nor about robustness to edits.</p>
+<p>Neither guarantee is about robustness to edits. Distortion-freeness is averaged over a fresh key; it does not cover key reuse across queries.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2307.15593">Kuditipudi, Thickstun, Hashimoto &amp; Liang, "Robust Distortion-free Watermarks for Language Models" (TMLR)</a> — distortion-free definition (Definition 1), EXP and EXP-edit watermarks, substitution robustness (Fig. 4, m = 35).</li>
@@ -325,18 +328,20 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>22. Random Word Swaps: Some Marks Held Longer</h2>
 <p class="pace">Robustness and production · ≈1.5 min · elapsed ≈33 min</p>
-<p>Kuditipudi Figure 4. The attacker replaces a random fraction of tokens. The y-axis is the median p-value; low means still detected.</p>
-<p>The distortion-free EXP watermarks stay detected until roughly half the tokens are swapped; KGW at γ = 0.25, δ = 2 loses detection sooner. These are 35-token replies, so this is a short-text test.</p>
+<p>Kuditipudi Figure 4b, the LLaMA-7B panel. The attacker replaces a random fraction of tokens, without the key. The y-axis is the median p-value; low means still detected.</p>
+<p>How to read it: a median p-value below 0.05 means at least half of the replies are flagged at a 5% level. It is not a false-alarm rate or a detection rate.</p>
+<p>EXP stays below 0.05 until roughly half the tokens are substituted (about 0.006 at 50%; EXP-edit about 0.04). KGW-2.0 is above 0.05 by 30% substituted (about 0.03 at 20%, 0.067 at 30%). These are 35-token replies, a short-text test.</p>
+<p>The OPT-1.3B panel, Fig. 4a, shows the same ordering: EXP near zero across 0 to 0.6; KGW-2.0 crosses 0.05 near a third substituted.</p>
 <p><span class="kt">Key takeaway:</span> Under random swaps, design matters.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Kuditipudi et al. Fig. 4, unmodified: median p-value vs fraction of substitutions, OPT-1.3B (left) and LLaMA-7B (right); EXP, EXP-edit, KGW-2.0.</p>
+<p>Kuditipudi et al. Fig. 4b, cropped: median p-value vs fraction of substitutions, LLaMA-7B; EXP, EXP-edit, KGW-2.0. Values quoted are read from the figure (≈).</p>
 <h3>Setup, model, date</h3>
-<p>Kuditipudi et al., TMLR; OPT-1.3B and LLaMA-7B; generation length m = 35. KGW-2.0 is their name for the KGW baseline with δ = 2 (γ = 0.25).</p>
+<p>Kuditipudi et al., TMLR; OPT-1.3B (Fig. 4a) and LLaMA-7B (Fig. 4b); generation length m = 35. KGW-2.0 is their name for the KGW baseline with δ = 2 (γ = 0.25). Median p-value = the significance level at which power is at least 0.5 (their footnote).</p>
 <h3>What this establishes</h3>
 <p>That on short texts, EXP watermarks tolerate more random substitutions than this KGW setting.</p>
 <h3>What this does not establish</h3>
-<p>Random substitutions are a weak attacker; this says nothing about paraphrase.</p>
+<p>Random substitutions are a weak attacker; this says nothing about paraphrase. Not a false-alarm or detection rate.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2307.15593">Kuditipudi, Thickstun, Hashimoto &amp; Liang, "Robust Distortion-free Watermarks for Language Models" (TMLR)</a> — distortion-free definition (Definition 1), EXP and EXP-edit watermarks, substitution robustness (Fig. 4, m = 35).</li>
@@ -369,12 +374,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>24. Paraphrasing Five Times Pushed Detection Lower</h2>
 <p class="pace">Robustness and production · ≈1.5 min · elapsed ≈36 min</p>
-<p>Sadasivan and colleagues paraphrase repeatedly. Figure 3a shows ROC curves after each round, ppi. At 1% false alarms, detection falls from 99.8% to 80.7% after one round, and to 15.7% after five.</p>
-<p>Read the perplexity column too: it rose from 5.1 to 8.7. The text got worse; the attack had a quality cost.</p>
+<p>Sadasivan and colleagues paraphrase repeatedly. The bars are the legend values of their Figure 3a: share of watermarked texts caught at 1% false alarms after each round, ppi. Detection falls from 99.8% to 80.7% after one round, and to 15.7% after five.</p>
+<p>Read the perplexity too: it rose from 5.1 to 8.7. The text got worse; the attack had a quality cost.</p>
 <p><span class="kt">Key takeaway:</span> Repeated paraphrase erodes the mark, at a quality cost.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Sadasivan et al. Fig. 3a, unmodified: ROC curves for watermark detection after 0–5 rounds of DIPPER paraphrasing; legend lists AUROC, TPR at 1% FPR and perplexity.</p>
+<p>Bar chart redrawn from the Fig. 3a legend: TPR at 1% FPR after 0–5 rounds of DIPPER paraphrasing — 99.8, 80.7, 44.8, 30.9, 22.7, 15.7% — with perplexity 5.1, 7.7, 7.8, 8.5, 7.7, 8.7. The original ROC curves are in the paper.</p>
 <h3>Setup, model, date</h3>
 <p>Sadasivan et al. (University of Maryland), arXiv March 2023, TMLR 2025. Watermarked OPT-13B on XSum documents; ~300 tokens; DIPPER as paraphraser.</p>
 <h3>What this establishes</h3>
@@ -391,17 +396,17 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>25. An Impossibility Bound, and What It Covers</h2>
 <p class="pace">Robustness and production · ≈2 min · elapsed ≈38 min</p>
-<p>Sadasivan also prove a bound: any detector's AUROC is at most ½ + TV − TV²/2, where TV is the total-variation distance between the AI text distribution and the human text distribution.</p>
-<p>If an attacker makes AI text nearly indistinguishable from human text, TV is near 0 and every detector is near a coin flip. If TV is large, as it is for freshly watermarked text, the bound is near 1 and says little.</p>
-<p>So the bound tells you what happens once the attacker succeeds; it does not tell you how hard succeeding is.</p>
-<p><span class="kt">Key takeaway:</span> The bound is conditional on a successful attack.</p>
+<p>Sadasivan also prove a bound: any detector's AUROC is at most ½ + TV − TV²/2. It always holds.</p>
+<p>TV, total variation, is the largest gap in probability the two sources give to any one set of texts. If an attacker makes AI text nearly indistinguishable from human text, TV is near 0 and every detector is pushed toward a coin flip. If TV is large the bound is near 1 and says little.</p>
+<p>For watermarks, take TV for the key the detector holds: with the key fixed, marked text can differ a lot from human text. So the bound forces near-chance only when TV is small; it does not tell you how hard making it small is.</p>
+<p><span class="kt">Key takeaway:</span> Always true; forces near-chance only when TV is small.</p>
 <div class="detail">
 <h3>The figure</h3>
 <p>Curve drawn from the formula AUROC ≤ ½ + TV − TV²/2, with two illustrative points.</p>
 <h3>Setup, model, date</h3>
 <p>Sadasivan et al., Theorem 1 and its discussion of watermarked models.</p>
 <h3>Assumptions</h3>
-<p>Applies to any detector that sees one text sample; the derivation is in lec11tech.html.</p>
+<p>Applies to any detector that sees one text sample; for a keyed detector, TV is computed for the fixed key. Derivation in lec11tech.html.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2303.11156">Sadasivan, Kumar, Balasubramanian, Wang &amp; Feizi, "Can AI-Generated Text be Reliably Detected?" (TMLR 2025)</a> — recursive paraphrasing (Fig. 3a, OPT-13B, XSum), AUROC bound in terms of total variation (Theorem 1).</li>
@@ -433,14 +438,14 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>27. Mixed Into Human Text, the Mark Fades</h2>
 <p class="pace">Robustness and production · ≈1.5 min · elapsed ≈41 min</p>
-<p>Kirchenbauer 2024 Figure 2. The CP attacks paste watermarked pieces into human text: CP-3-10% means three marked pieces making up 10% of the text. The y-axis is ROC-AUC and starts at 0.5, chance.</p>
-<p>At 200 tokens with 10% marked, AUC is about 0.65–0.70. At 600 tokens with 25% marked, about 0.97–0.99.</p>
+<p>Kirchenbauer 2024 Figure 2, copy-paste bars, redrawn. Watermarked pieces are pasted into human text: 25% or 10% of the text is marked. The x-axis is ROC-AUC and starts at 0.5, chance. Each bar spans four variants (1 or 3 pieces, two hash schemes).</p>
+<p>At 200 tokens with 10% marked, AUC is about 0.65–0.70. At 600 tokens with 25% marked, about 0.97–0.99. Less marked text, fewer tokens: closer to chance.</p>
 <p><span class="kt">Key takeaway:</span> Dilution weakens the signal; enough marked text recovers it.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Kirchenbauer et al. 2024 Fig. 2, unmodified: ROC-AUC under copy-paste, Dipper and GPT attacks, grouped by T.</p>
+<p>Range bars redrawn from Kirchenbauer et al. 2024 Fig. 2, copy-paste attacks only; values read from the figure (≈): 200/25% 0.88–0.91, 200/10% 0.65–0.70, 600/25% 0.97–0.99, 600/10% 0.79–0.82. Paraphrase bars are in the paper.</p>
 <h3>Setup, model, date</h3>
-<p>LLaMA-7B with γ = 0.25, δ = 2. Dipper/GPT bars have shorter T because paraphrase shortens text (caption).</p>
+<p>LLaMA-7B with γ = 0.25, δ = 2.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2306.04634">Kirchenbauer et al., "On the Reliability of Watermarks for Large Language Models" (ICLR 2024)</a> — machine paraphrase and copy-paste attacks (Fig. 2), human rewrite study with 14 writers (Fig. 4), empirical FPR with repeated-n-gram correction (Fig. 7).</li>
@@ -451,10 +456,10 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>28. Compare Robustness Results Only With Their Setups</h2>
 <p class="pace">Robustness and production · ≈2 min · elapsed ≈43 min</p>
-<p>Put the studies side by side and they look contradictory: 57% caught, 15.7% caught, AUC above 0.9, detected on average. But they differ in attack, length and error rate, and in watermark settings too.</p>
-<p>Krishna and Sadasivan fix 1% false alarms at about 300 tokens. Kirchenbauer 2024 uses longer texts and either ROC-AUC or a 10⁻⁵ threshold. Kuditipudi uses 35-token texts and a median p-value.</p>
-<p>Watermark settings: Kuditipudi KGW-2.0 (γ = 0.25, δ = 2); Krishna KGW γ = 0.5, δ = 2; Sadasivan watermarked OPT-13B; Kirchenbauer 2024 γ = 0.25, δ = 2 (LLaMA-7B, Vicuna for the human study).</p>
-<p><span class="kt">Key takeaway:</span> No single robustness number; each is tied to its setup.</p>
+<p>Put the studies side by side and they look contradictory: 57% caught, 15.7% caught, AUC above 0.9, detected on average. But they differ in attack, length, metric and watermark.</p>
+<p>Kuditipudi: median p-value on 35-token replies; EXP stays below 0.05 until about half the tokens are substituted. Krishna and Sadasivan: share caught at 1% false alarms, about 300 tokens. Kirchenbauer 2024: ROC-AUC under paraphrase, and z against a 10⁻⁵ threshold for human rewrites.</p>
+<p>Watermark settings: Kuditipudi KGW-2.0 (γ = 0.25, δ = 2) vs EXP; Krishna KGW γ = 0.5, δ = 2; Sadasivan watermarked OPT-13B; Kirchenbauer 2024 γ = 0.25, δ = 2 (LLaMA-7B, Vicuna for the human study).</p>
+<p><span class="kt">Key takeaway:</span> Different metrics, marks and models: compare within a row, not across.</p>
 <div class="detail">
 <h3>Primary sources</h3>
 <ul>
@@ -469,7 +474,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>29. "Impossible" and "Robust" Answer Different Questions</h2>
 <p class="pace">Robustness and production · ≈1.5 min · elapsed ≈44.5 min</p>
-<p>The bound says: if AI text is made nearly indistinguishable from human text, every detector fails. The experiments say: against these edits, at this length and error rate, the mark was found or not. Both can be true.</p>
+<p>The bound always holds. It pushes every detector toward chance only once AI text is nearly indistinguishable from human text. The experiments say: against these edits, at this length and error rate, the mark was found or not. Both can be true.</p>
 <p>The useful question is how much the attack cost, in effort and in text quality.</p>
 <p><span class="kt">Key takeaway:</span> The impossibility result and the robustness results are differently scoped.</p>
 </article>
@@ -542,8 +547,8 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <div class="detail">
 <h3>Primary sources</h3>
 <ul>
-<li><a href="https://spec.c2pa.org/specifications/specifications/2.2/softbinding/Decoupled.html">C2PA, Technical Specification 2.2 and Soft Binding API</a> — manifests, assertions, claim signatures, hard bindings; soft bindings (watermarks, fingerprints) and manifest repositories.</li>
-<li><a href="https://www.chinalawtranslate.com/en/ai-labeling/">CAC et al., Measures for Labeling AI-Generated Synthetic Content (English translation, China Law Translate)</a> — released 14 March 2025 with mandatory national standard GB 45438-2025; effective 1 September 2025; explicit (visible) and implicit (metadata) labels.</li>
+<li><a href="https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html">C2PA, Content Credentials: Technical Specification 2.2 (May 2025); Soft Binding API (https://spec.c2pa.org/specifications/specifications/2.2/softbinding/Decoupled.html)</a> — claims and claim signatures; trust model (signer certificates); hard bindings: hashes over specified asset data, with exclusions (§9.1–9.2); ingredients; soft bindings and manifest repositories. Snapshot checked 10 Oct 2026.</li>
+<li><a href="https://www.cac.gov.cn/2025-03/14/c_1743654684782215.htm">CAC, MIIT, MPS &amp; NRTA, 《人工智能生成合成内容标识办法》 (Measures for Labeling AI-Generated Synthetic Content), 国信办通字〔2025〕2号, 14 Mar 2025</a> — official text: explicit labels (Art. 4); implicit labels in metadata required, digital watermarks encouraged (Art. 5); platforms (Art. 6); output without explicit labels on user request, logs kept ≥ 6 months (Art. 9); enforcement under existing rules (Art. 13); effective 1 Sep 2025 (Art. 14). With mandatory national standard GB 45438-2025 (openstd.samr.gov.cn; implemented 1 Sep 2025). Checked 10 Oct 2026.</li>
 </ul>
 </div>
 </article>
@@ -583,12 +588,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>37. "1% False Alarms" Is Not "1% of Flags Are Wrong"</h2>
 <p class="pace">Detecting without a watermark · ≈2 min · elapsed ≈56.5 min</p>
-<p>Two different numbers. The false-positive rate: of human essays, the share flagged. It is a property of the detector. The share of flags that are human: it also depends on how common AI text is.</p>
-<p>Same detector: at 2% AI prevalence, about 35% of flags are human. At 20% prevalence, about 4%.</p>
-<p><span class="kt">Key takeaway:</span> FPR is fixed; the chance a flagged person is innocent depends on prevalence.</p>
+<p>Two different numbers. The false-positive rate: of human essays, the share flagged. It is set by the threshold and measured on some population of writers; it can differ on other writers. The share of flags that are human also depends on how common AI text is.</p>
+<p>In this hypothetical, the detector catches 90% and has 1% false alarms, both held fixed. At 2% AI prevalence, about 35% of flags are human. At 20% prevalence, about 4%.</p>
+<p><span class="kt">Key takeaway:</span> With FPR held fixed, the chance a flagged person is innocent depends on prevalence.</p>
 <div class="detail">
 <h3>Going further</h3>
-<p>At 20%: 2,000 AI essays → 1,800 flagged; 8,000 human → 80 flagged; 80/1,880 ≈ 4.3%.</p>
+<p>At 20%: 2,000 AI essays → 1,800 flagged; 8,000 human → 80 flagged; 80/1,880 ≈ 4.3%. Holding FPR fixed across prevalences is an assumption of the illustration.</p>
 </div>
 </article>
 
@@ -652,20 +657,21 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article>
-<h2>41. Top Teams Scored Near Chance on the Internet Clips</h2>
+<h2>41. Top Teams' Log Loss Worsened Sharply on Internet Clips</h2>
 <p class="pace">Detecting without a watermark · ≈2 min · elapsed ≈63.5 min</p>
-<p>Table 2 log loss for the top five teams, lower is better. A log loss of 0.69 corresponds to always guessing 50/50. On new DFDC videos the teams did well; on the internet clips they were close to 0.69.</p>
-<p>The winner, tuned to catch 90% of fakes on the internet clips, had precision 0.54: 46% of its flags were real videos.</p>
-<p><span class="kt">Key takeaway:</span> Detectors generalised poorly to real-world clips.</p>
+<p>Table 2 log loss for the top five teams, lower is better. A log loss of 0.69 is what always answering 50/50 scores. On new DFDC videos the teams did well; on the internet clips their log loss rose to near 0.69.</p>
+<p>Log loss alone does not show that the ranking was at chance: a detector can still order videos better than chance while being poorly calibrated.</p>
+<p>On that test set, the winner, tuned to catch 90% of fakes, had precision 0.54: 46% of its flags were real videos.</p>
+<p><span class="kt">Key takeaway:</span> Log loss worsened sharply on real-world clips.</p>
 <div class="detail">
 <h3>The figure</h3>
 <p>Redrawn from DFDC Table 2: log loss on all, new DFDC and internet clips for the top 5 teams; dashed line at 0.69.</p>
 <h3>Setup, model, date</h3>
 <p>DFDC Table 2 reports precision at recall 0.1/0.5/0.9 (its header misprints one value as P@0.3).</p>
 <h3>What this establishes</h3>
-<p>A large drop from in-distribution to real-world clips for the best 2020 detectors.</p>
+<p>A large drop in log loss from in-distribution to real-world clips for the best 2020 detectors; 46% of the winner's flags at 90% recall were real, on that set.</p>
 <h3>What this does not establish</h3>
-<p>It does not describe current detectors.</p>
+<p>It does not show chance-level ranking, and does not describe current detectors.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2006.07397">Dolhansky et al., "The DeepFake Detection Challenge (DFDC) Dataset" (arXiv 2006.07397, 2020)</a> — dataset with 3,426 paid actors (§3); competition and private test set (§5–6); Table 2 top-5 log loss and precision at fixed recall.</li>
@@ -689,27 +695,27 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article>
-<h2>44. Flip the Question: Prove Origin Instead of Spotting Fakes</h2>
+<h2>44. Flip the Question: Record Origin Instead of Spotting Fakes</h2>
 <p class="pace">Provenance and policy · ≈1.5 min · elapsed ≈67 min</p>
-<p>Detection has to keep up with every new generator. Provenance flips the question: content carries a signed record of where it came from.</p>
-<p>It only works if tools sign and the record survives. And provenance labels AI content too: a generator can sign "made with model X".</p>
-<p><span class="kt">Key takeaway:</span> Provenance proves origin for content that carries it.</p>
+<p>Detection has to keep up with every new generator. Provenance flips the question: content carries signed claims about where it came from.</p>
+<p>Valid means the signed claims and their binding to the file check out. Whether to trust the signer is a separate decision. It only works if tools sign and the record survives. And provenance labels AI content too: a generator can sign "made with model X".</p>
+<p><span class="kt">Key takeaway:</span> Provenance records signed claims; trusting the signer is separate.</p>
 </article>
 
 <article>
 <h2>45. A C2PA Manifest: Signed Claims Bound to the File</h2>
 <p class="pace">Provenance and policy · ≈2 min · elapsed ≈69 min</p>
-<p>C2PA defines a manifest attached to a file. It holds claims, called assertions, such as "captured by camera X", "cropped" or "generated by model Y"; a hash, a fingerprint of the exact bytes; and a signature from the signer's certificate.</p>
-<p>Change one pixel and the hash no longer matches; the manifest then no longer validates for that file.</p>
-<p><span class="kt">Key takeaway:</span> A manifest binds signed claims to exact content.</p>
+<p>C2PA defines a manifest attached to a file. It holds claims, called assertions, such as "captured by camera X", "cropped" or "generated by model Y"; a hard binding, a hash over specified asset data, with some byte ranges allowed to be excluded; and a digital signature, verified with the signer's certified public key.</p>
+<p>Change the covered data and the binding no longer validates for that file.</p>
+<p><span class="kt">Key takeaway:</span> A manifest binds signed claims to specified data.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Schematic of a C2PA manifest: assertions, content hash (hard binding), claim signature.</p>
+<p>Schematic of a C2PA manifest: assertions, hard binding (hash over specified asset data, exclusions allowed), claim signature verified with the signer's certificate.</p>
 <h3>Setup, model, date</h3>
-<p>C2PA Technical Specification 2.2.</p>
+<p>C2PA Technical Specification 2.2 (May 2025): claims and signatures, trust model, hard bindings (§9.1–9.2).</p>
 <h3>Primary sources</h3>
 <ul>
-<li><a href="https://spec.c2pa.org/specifications/specifications/2.2/softbinding/Decoupled.html">C2PA, Technical Specification 2.2 and Soft Binding API</a> — manifests, assertions, claim signatures, hard bindings; soft bindings (watermarks, fingerprints) and manifest repositories.</li>
+<li><a href="https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html">C2PA, Content Credentials: Technical Specification 2.2 (May 2025); Soft Binding API (https://spec.c2pa.org/specifications/specifications/2.2/softbinding/Decoupled.html)</a> — claims and claim signatures; trust model (signer certificates); hard bindings: hashes over specified asset data, with exclusions (§9.1–9.2); ingredients; soft bindings and manifest repositories. Snapshot checked 10 Oct 2026.</li>
 </ul>
 </div>
 </article>
@@ -717,15 +723,17 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>46. Each Edit Adds a Signed Step; None Proves the Scene</h2>
 <p class="pace">Provenance and policy · ≈2 min · elapsed ≈71 min</p>
-<p>A camera signs at capture; an editor signs its edit and links to the earlier manifest; a viewer checks the chain.</p>
-<p>A valid chain shows who signed each claim and that nothing changed since signing. It does not show that the claims are accurate or that the scene happened. A signed photo of a screen is still a photo of a screen.</p>
-<p><span class="kt">Key takeaway:</span> Signatures prove who said what, not what is true.</p>
+<p>A camera signs at capture; an editor signs its edit and links to the earlier manifest as an ingredient; a viewer checks the chain. Only participating tools add signed steps; an edit in a tool that does not sign leaves no step.</p>
+<p>A valid chain shows which signer made each claim and that the covered data is unchanged since signing. It does not show that the claims are accurate or that the signer is trustworthy. A signed photo of a screen is still a photo of a screen.</p>
+<p><span class="kt">Key takeaway:</span> Signatures show who claimed what, not what is true.</p>
 <div class="detail">
 <h3>The figure</h3>
 <p>Schematic: capture → edit → publish, each step signed.</p>
+<h3>Setup, model, date</h3>
+<p>C2PA Technical Specification 2.2 — ingredients and claim history.</p>
 <h3>Primary sources</h3>
 <ul>
-<li><a href="https://spec.c2pa.org/specifications/specifications/2.2/softbinding/Decoupled.html">C2PA, Technical Specification 2.2 and Soft Binding API</a> — manifests, assertions, claim signatures, hard bindings; soft bindings (watermarks, fingerprints) and manifest repositories.</li>
+<li><a href="https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html">C2PA, Content Credentials: Technical Specification 2.2 (May 2025); Soft Binding API (https://spec.c2pa.org/specifications/specifications/2.2/softbinding/Decoupled.html)</a> — claims and claim signatures; trust model (signer certificates); hard bindings: hashes over specified asset data, with exclusions (§9.1–9.2); ingredients; soft bindings and manifest repositories. Snapshot checked 10 Oct 2026.</li>
 </ul>
 </div>
 </article>
@@ -734,18 +742,18 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>47. Supported, On by Default, Preserved: Three Separate Facts</h2>
 <p class="pace">Provenance and policy · ≈2 min · elapsed ≈73 min</p>
 <p>Three questions for any product claim. Supported: can it produce credentials? Default: does it do so without the user acting? Preserved: do they survive upload and sharing?</p>
-<p>Leica M11-P (2023): credentials once the user enables them. Samsung Galaxy S25 (2025): on photos edited with Galaxy AI. Google Pixel 10 (2025): on every Pixel Camera photo. Whether they survive depends on each app on the sharing path, so check.</p>
+<p>In the vendors' own words. Leica M11-P (2023): photos taken with the function enabled; the user must enable it. Samsung Galaxy S25 (2025): content created or edited with generative AI; the default is not stated. Google Pixel 10 (2025): every Pixel Camera photo, and AI edits in Google Photos; built in. Whether credentials survive depends on each app on the sharing path, so check.</p>
 <p><span class="kt">Key takeaway:</span> Support, default activation and preservation are separate facts.</p>
 <div class="detail">
 <h3>Setup, model, date</h3>
-<p>Product facts from press reports: Leica (PetaPixel, Oct 2023), Samsung (TechCrunch, 22 Jan 2025), Pixel 10 (secondary report, 2025). Press-only; manufacturer documentation was not checked for this lecture.</p>
+<p>Manufacturer sources, checked 10 Oct 2026: Leica "Content Credentials" page; Samsung Newsroom US (7 Feb 2025); Google Keyword blog (10 Sep 2025). Vendor statements, not independent tests.</p>
 <h3>What this does not establish</h3>
 <p>No claim is made here about which social platforms preserve credentials.</p>
 <h3>Primary sources</h3>
 <ul>
-<li><a href="https://petapixel.com/2023/10/26/leica-m11-p-is-worlds-first-camera-to-embrace-content-credentials/">PetaPixel, "Leica M11-P Is World's First Camera to Embrace Content Credentials" (26 Oct 2023)</a> — press report; Content Credentials are a user setting.</li>
-<li><a href="https://techcrunch.com/2025/01/22/samsung-unpacked-samsungs-galaxy-s25-will-support-content-credentials-to-identify-ai-generated-images">TechCrunch, "Samsung's Galaxy S25 will support Content Credentials to identify AI-generated images" (22 Jan 2025)</a> — press report; credentials on images edited with Galaxy AI.</li>
-<li><a href="https://c2paviewer.com/articles/google-c2pa-pixel-10">Secondary report on Google Pixel 10 Content Credentials (2025)</a> — press-only: Content Credentials in every photo taken with Pixel Camera; Google's own post was not retrieved for this lecture.</li>
+<li><a href="https://leica-camera.com/en-int/photography/content-credentials">Leica Camera AG, "Leica Content Credentials" (product page)</a> — manufacturer page: credentials on photos taken with the function enabled; must be enabled by the user. Checked 10 Oct 2026.</li>
+<li><a href="https://news.samsung.com/us/samsung-galaxy-s25-series-available-starting-today">Samsung Newsroom US, "Samsung Galaxy S25 Series is Available Now" (7 Feb 2025)</a> — manufacturer release: Content Credentials applied to content created or edited with generative AI; default setting not stated. Checked 10 Oct 2026.</li>
+<li><a href="https://blog.google/security/pixel-android-trusted-images-c2pa-content-credentials/">Google, The Keyword blog, "How Pixel and Android are bringing a new level of trust to your images with C2PA Content Credentials" (10 Sep 2025)</a> — vendor statement: Content Credentials built into every Pixel Camera photo on Pixel 10, and on images edited with AI in Google Photos. Checked 10 Oct 2026.</li>
 </ul>
 </div>
 </article>
@@ -763,7 +771,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p>C2PA Technical Specification 2.2 and Soft Binding API.</p>
 <h3>Primary sources</h3>
 <ul>
-<li><a href="https://spec.c2pa.org/specifications/specifications/2.2/softbinding/Decoupled.html">C2PA, Technical Specification 2.2 and Soft Binding API</a> — manifests, assertions, claim signatures, hard bindings; soft bindings (watermarks, fingerprints) and manifest repositories.</li>
+<li><a href="https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html">C2PA, Content Credentials: Technical Specification 2.2 (May 2025); Soft Binding API (https://spec.c2pa.org/specifications/specifications/2.2/softbinding/Decoupled.html)</a> — claims and claim signatures; trust model (signer certificates); hard bindings: hashes over specified asset data, with exclusions (§9.1–9.2); ingredients; soft bindings and manifest repositories. Snapshot checked 10 Oct 2026.</li>
 </ul>
 </div>
 </article>
@@ -771,8 +779,8 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>49. Labelling Laws Arrived in 2025–2026</h2>
 <p class="pace">Provenance and policy · ≈3 min · elapsed ≈78 min</p>
-<p>Three jurisdictions in sequence. China's labelling Measures and standard GB 45438-2025 took effect on 1 September 2025. Korea's AI Basic Act took effect on 22 January 2026. The EU AI Act's Article 50 transparency duties apply from 2 August 2026, and a 2026 amendment gives systems already on the market a transition to 2 December 2026 for the machine-readable marking duty.</p>
-<p>In effect is not the same as enforced. Korea's government announced a grace period before fines, and the EU has its transition. Details below.</p>
+<p>Three jurisdictions in sequence. China's labelling Measures and standard GB 45438-2025 took effect on 1 September 2025. Korea's AI Basic Act took effect on 22 January 2026. The EU AI Act's Article 50 applies from 2 August 2026; a 2026 amendment gives generative systems already on the market until 2 December 2026, for the machine-readable marking duty in Art. 50(2) only.</p>
+<p>In effect is not the same as enforced. Korea's fine, up to ₩30 million, covers failing to give prior notice under Art. 31(1), not the label itself. Details below.</p>
 <p><span class="kt">Key takeaway:</span> Labelling became law in three major jurisdictions within a year.</p>
 <div class="detail">
 <h3>The figure</h3>
@@ -780,21 +788,21 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h3>Going further</h3>
 <table>
 <tr><th></th><th>China</th><th>EU</th><th>Korea</th></tr>
-<tr><td><strong>Enacted text</strong></td><td>CAC Measures for Labeling AI-Generated Synthetic Content + mandatory standard GB 45438-2025, released 14 Mar 2025</td><td>AI Act, Reg. (EU) 2024/1689, Art. 50; amended by Reg. (EU) 2026/1744</td><td>AI Basic Act (Framework Act on AI), Art. 31</td></tr>
-<tr><td><strong>Applies from</strong></td><td>1 Sep 2025</td><td>2 Aug 2026; Art. 50(2) marking for systems already on the market by then: 2 Dec 2026</td><td>22 Jan 2026</td></tr>
-<tr><td><strong>Who must label</strong></td><td>service providers generating content; platforms that distribute it</td><td>providers mark outputs machine-readably (50(2)); deployers disclose deepfakes (50(4))</td><td>providers of generative AI: advance notice to users; label outputs; clear notice where output is hard to tell from real</td></tr>
-<tr><td><strong>Form</strong></td><td>explicit (visible) labels and implicit labels (metadata); watermarks encouraged</td><td>machine-readable marking; technical standards and a code of practice in progress</td><td>labels; watermark or metadata allowed</td></tr>
-<tr><td><strong>Enforcement</strong></td><td>through existing CAC rules on deep synthesis and generative AI services</td><td>national market-surveillance authorities; fines set in the AI Act</td><td>fines up to ₩30 million; government announced a grace period of at least one year before fines</td></tr>
-<tr><td><strong>Still open</strong></td><td>—</td><td>final code of practice and harmonised standards for marking</td><td>Enforcement Decree details (status as of early 2026 per law-firm summaries; check before teaching)</td></tr>
+<tr><td><strong>Enacted text</strong></td><td>CAC et al. Measures for Labeling AI-Generated Synthetic Content (国信办通字〔2025〕2号, 14 Mar 2025) + mandatory standard GB 45438-2025</td><td>AI Act, Reg. (EU) 2024/1689, Art. 50; transition added by Reg. (EU) 2026/1744</td><td>AI Basic Act (Act No. 20676) Art. 31; Enforcement Decree Art. 23</td></tr>
+<tr><td><strong>Applies from</strong></td><td>1 Sep 2025 (Measures Art. 14; standard implemented the same day)</td><td>2 Aug 2026 (Art. 113). Only Art. 50(2), for systems placed on the market before 2 Aug 2026: 2 Dec 2026</td><td>22 Jan 2026</td></tr>
+<tr><td><strong>Who must label</strong></td><td>service providers of listed generation services (Art. 4); distribution platforms check and label (Art. 6)</td><td>providers mark outputs machine-readably (50(2)); deployers disclose deepfakes (50(4)); exceptions in the article</td><td>AI business operators: prior notice (31(1)); label generative outputs (31(2)); clearly recognisable notice where output is hard to tell from real (31(3))</td></tr>
+<tr><td><strong>Form</strong></td><td>explicit labels for listed services (Art. 4); implicit labels in metadata required, watermarks encouraged (Art. 5)</td><td>machine-readable, detectable marking; techniques not prescribed; codes of practice (50(7))</td><td>human-readable or machine-readable; machine-readable needs at least one text or audio notice (Decree Art. 23②)</td></tr>
+<tr><td><strong>Exceptions</strong></td><td>output without explicit labels on user request, once the user agreement sets the user's labelling duty; logs kept ≥ 6 months (Art. 9)</td><td>50(2): assistive standard editing, no substantial alteration, authorised law-enforcement use. 50(4): law enforcement; evidently artistic or satirical works get a lighter disclosure</td><td>obvious AI use, internal business use, cases set by MSIT notice (Decree Art. 23④)</td></tr>
+<tr><td><strong>Enforcement</strong></td><td>relevant authorities, under existing laws and rules (Art. 13)</td><td>fines up to €15M or 3% of turnover (Art. 99(4)(g))</td><td>fines up to ₩30M cover breach of prior notice, 31(1) (Art. 43); not the label duty itself. The government's announced grace period before fines is secondary (Cooley, Jan 2026) and not in the statute</td></tr>
 </table>
-<p>Sources: China — CAC Measures (China Law Translate translation); EU — EUR-Lex texts of 2024/1689 and 2026/1744; Korea — law-firm and FPF summaries, not the Korean statute text. Treat the Korean row as secondary and re-check the Enforcement Decree status before each offering. No draft proposals are included in this table.</p>
+<p>Sources: official texts snapshotted 10 Oct 2026 — CAC (cac.gov.cn), GB 45438-2025 (openstd.samr.gov.cn), EUR-Lex 2024/1689 and 2026/1744, law.go.kr (Act and Enforcement Decree). Simplified; read the articles before relying on a row. No draft proposals are included.</p>
 <h3>Primary sources</h3>
 <ul>
-<li><a href="https://www.chinalawtranslate.com/en/ai-labeling/">CAC et al., Measures for Labeling AI-Generated Synthetic Content (English translation, China Law Translate)</a> — released 14 March 2025 with mandatory national standard GB 45438-2025; effective 1 September 2025; explicit (visible) and implicit (metadata) labels.</li>
-<li><a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj">Regulation (EU) 2024/1689 (AI Act), Article 50</a> — transparency duties: providers mark synthetic outputs in a machine-readable way (Art. 50(2)); deployers disclose deepfakes (Art. 50(4)); applies from 2 August 2026.</li>
-<li><a href="https://eur-lex.europa.eu/eli/reg/2026/1744/oj/eng">Regulation (EU) 2026/1744 (AI Act "Digital Omnibus" amendment)</a> — Art. 50(2) marking for systems placed on the market before 2 August 2026 applies from 2 December 2026.</li>
-<li><a href="https://www.cooley.com/news/insight/2026/2026-01-27-south-koreas-ai-basic-act-overview-and-key-takeaways">Cooley, "South Korea's AI Basic Act: overview and key takeaways" (27 Jan 2026)</a> — law-firm summary: in force 22 January 2026; Art. 31 transparency duties; fines up to ₩30 million; announced grace period of at least one year before fines.</li>
-<li><a href="https://fpf.org/blog/south-koreas-new-ai-framework-act-a-balancing-act-between-innovation-and-regulation/">Future of Privacy Forum, "South Korea's New AI Framework Act: A Balancing Act Between Innovation and Regulation"</a> — secondary analysis of Art. 31 and of matters left to the Enforcement Decree.</li>
+<li><a href="https://www.cac.gov.cn/2025-03/14/c_1743654684782215.htm">CAC, MIIT, MPS &amp; NRTA, 《人工智能生成合成内容标识办法》 (Measures for Labeling AI-Generated Synthetic Content), 国信办通字〔2025〕2号, 14 Mar 2025</a> — official text: explicit labels (Art. 4); implicit labels in metadata required, digital watermarks encouraged (Art. 5); platforms (Art. 6); output without explicit labels on user request, logs kept ≥ 6 months (Art. 9); enforcement under existing rules (Art. 13); effective 1 Sep 2025 (Art. 14). With mandatory national standard GB 45438-2025 (openstd.samr.gov.cn; implemented 1 Sep 2025). Checked 10 Oct 2026.</li>
+<li><a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng">Regulation (EU) 2024/1689 (AI Act), Arts. 50, 99, 113</a> — providers mark synthetic outputs in a machine-readable format (Art. 50(2)); deployers disclose deepfakes (Art. 50(4)); codes of practice (Art. 50(7)); fines up to €15M or 3% (Art. 99(4)(g)); applies from 2 Aug 2026 (Art. 113). Checked 10 Oct 2026.</li>
+<li><a href="https://eur-lex.europa.eu/eli/reg/2026/1744/oj/eng">Regulation (EU) 2026/1744, amending Regulation (EU) 2024/1689</a> — providers of generative systems placed on the market before 2 Aug 2026 comply with Art. 50(2) by 2 Dec 2026. Limited to Art. 50(2). Checked 10 Oct 2026.</li>
+<li><a href="https://www.law.go.kr/법령/인공지능발전과신뢰기반조성등에관한기본법">인공지능 발전과 신뢰 기반 조성 등에 관한 기본법 (AI Basic Act), Act No. 20676, 21 Jan 2025, in force 22 Jan 2026; current text as amended</a> — official text (National Law Information Center): Art. 31(1) prior notice, 31(2) label generative outputs, 31(3) clearly recognisable notice for outputs hard to tell from real, with an artistic-work proviso; Art. 43 fines up to ₩30M for breaching 31(1) (among others). Checked 10 Oct 2026.</li>
+<li><a href="https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=282791">AI Basic Act Enforcement Decree (인공지능기본법 시행령), Art. 23</a> — official text: label may be human-readable or machine-readable; machine-readable requires at least one text or audio notice (Art. 23②); exceptions for obvious AI use, internal business use, and cases set by MSIT notice (Art. 23④). Checked 10 Oct 2026.</li>
 </ul>
 </div>
 </article>
@@ -802,17 +810,18 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>50. Two Kinds of Label: For People and for Machines</h2>
 <p class="pace">Provenance and policy · ≈2 min · elapsed ≈80 min</p>
-<p>Laws distinguish visible labels for people from embedded labels for machines. China requires both. The EU requires providers to mark outputs machine-readably and deployers to disclose deepfakes. Korea requires notice and clear labelling of realistic output, and allows watermarks or metadata.</p>
-<p>Machine labels need the tools from this lecture: marks and signed records.</p>
-<p><span class="kt">Key takeaway:</span> Laws ask for both human-visible and machine-readable labels.</p>
+<p>Laws distinguish visible labels for people from embedded labels for machines. China requires visible labels for listed services and metadata labels, and encourages watermarks. The EU requires providers to mark outputs machine-readably and deployers to disclose deepfakes. Korea allows either form, with a text or audio notice when the label is machine-readable, and requires deepfakes to be clearly recognisable.</p>
+<p>Watermarks and signed records are possible implementations; these laws do not generally mandate them.</p>
+<p><span class="kt">Key takeaway:</span> Laws ask for labels; marks and signed records are one way to provide them.</p>
 <div class="detail">
 <h3>What this does not establish</h3>
-<p>The table is simplified; see slide 49's notes for enacted text, dates and enforcement.</p>
+<p>The table is simplified; scope and exceptions are in slide 49's notes.</p>
 <h3>Primary sources</h3>
 <ul>
-<li><a href="https://www.chinalawtranslate.com/en/ai-labeling/">CAC et al., Measures for Labeling AI-Generated Synthetic Content (English translation, China Law Translate)</a> — released 14 March 2025 with mandatory national standard GB 45438-2025; effective 1 September 2025; explicit (visible) and implicit (metadata) labels.</li>
-<li><a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj">Regulation (EU) 2024/1689 (AI Act), Article 50</a> — transparency duties: providers mark synthetic outputs in a machine-readable way (Art. 50(2)); deployers disclose deepfakes (Art. 50(4)); applies from 2 August 2026.</li>
-<li><a href="https://www.cooley.com/news/insight/2026/2026-01-27-south-koreas-ai-basic-act-overview-and-key-takeaways">Cooley, "South Korea's AI Basic Act: overview and key takeaways" (27 Jan 2026)</a> — law-firm summary: in force 22 January 2026; Art. 31 transparency duties; fines up to ₩30 million; announced grace period of at least one year before fines.</li>
+<li><a href="https://www.cac.gov.cn/2025-03/14/c_1743654684782215.htm">CAC, MIIT, MPS &amp; NRTA, 《人工智能生成合成内容标识办法》 (Measures for Labeling AI-Generated Synthetic Content), 国信办通字〔2025〕2号, 14 Mar 2025</a> — official text: explicit labels (Art. 4); implicit labels in metadata required, digital watermarks encouraged (Art. 5); platforms (Art. 6); output without explicit labels on user request, logs kept ≥ 6 months (Art. 9); enforcement under existing rules (Art. 13); effective 1 Sep 2025 (Art. 14). With mandatory national standard GB 45438-2025 (openstd.samr.gov.cn; implemented 1 Sep 2025). Checked 10 Oct 2026.</li>
+<li><a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng">Regulation (EU) 2024/1689 (AI Act), Arts. 50, 99, 113</a> — providers mark synthetic outputs in a machine-readable format (Art. 50(2)); deployers disclose deepfakes (Art. 50(4)); codes of practice (Art. 50(7)); fines up to €15M or 3% (Art. 99(4)(g)); applies from 2 Aug 2026 (Art. 113). Checked 10 Oct 2026.</li>
+<li><a href="https://www.law.go.kr/법령/인공지능발전과신뢰기반조성등에관한기본법">인공지능 발전과 신뢰 기반 조성 등에 관한 기본법 (AI Basic Act), Act No. 20676, 21 Jan 2025, in force 22 Jan 2026; current text as amended</a> — official text (National Law Information Center): Art. 31(1) prior notice, 31(2) label generative outputs, 31(3) clearly recognisable notice for outputs hard to tell from real, with an artistic-work proviso; Art. 43 fines up to ₩30M for breaching 31(1) (among others). Checked 10 Oct 2026.</li>
+<li><a href="https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=282791">AI Basic Act Enforcement Decree (인공지능기본법 시행령), Art. 23</a> — official text: label may be human-readable or machine-readable; machine-readable requires at least one text or audio notice (Art. 23②); exceptions for obvious AI use, internal business use, and cases set by MSIT notice (Art. 23④). Checked 10 Oct 2026.</li>
 </ul>
 </div>
 </article>
@@ -837,7 +846,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>53. Origin Is Not Truth: Three Cases</h2>
 <p class="pace">Synthesis · ≈2 min · elapsed ≈85 min</p>
-<p>An AI chart with honest credentials can be wrong. A real photo whose record was stripped is true, with no origin signal. A human-written false claim carries no mark and is false.</p>
+<p>An AI chart with honest credentials could be wrong. A camera photo whose record was stripped has no origin signal, and could still be staged or misleading. A human-written false claim carries no mark and is false.</p>
 <p>Origin tools answer who made it. Checking facts is a separate job.</p>
 <p><span class="kt">Key takeaway:</span> Origin and truth are independent questions.</p>
 </article>
@@ -845,14 +854,14 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>54. Checklist for Any "We Can Detect It" Claim</h2>
 <p class="pace">Synthesis · ≈2.5 min · elapsed ≈87.5 min</p>
-<p>Five questions. How many tokens or pixels? Short content is weak evidence. False alarms measured on whose data? Nominal is not measured. How common is AI content here? Base rates drive accusations. Which attack, with what access? Each study is one rung. Tested on new generators? Held-out data is harder.</p>
-<p><span class="kt">Key takeaway:</span> Five questions turn a headline into a checkable claim.</p>
+<p>Seven questions. How many tokens or pixels? Short content is weak evidence. False alarms measured on whose data? Nominal is not measured. How common is AI content here? Base rates drive accusations. Which attack, with what access? Each study is one rung. Tested on new generators? Held-out data is harder. Who holds the key or signal? Keyed and keyless tests differ. Which threshold, and as of when? Results hold for that setting and date.</p>
+<p><span class="kt">Key takeaway:</span> Seven questions turn a headline into a checkable claim.</p>
 </article>
 
 <article>
 <h2>55. Takeaways</h2>
 <p class="pace">Synthesis · ≈2 min · elapsed ≈89.5 min</p>
-<p>Watermarks are a keyed signal, detectable with enough text. Their robustness depends on the attack, the length and the error rate. Detectors without marks face base rates that turn small error rates into many false accusations. Provenance signs claims, and can be stripped.</p>
+<p>Watermarks are a keyed signal, detectable while enough of it survives. Their robustness depends on the attack, the length and the error rate. Without marks, when AI content is rare, more of the flags are false. Provenance signs claims, and can be stripped.</p>
 <p>Origin is not truth, and absence of a signal proves little.</p>
 <p><span class="kt">Key takeaway:</span> Origin is not truth; absence of a signal proves little.</p>
 </article>

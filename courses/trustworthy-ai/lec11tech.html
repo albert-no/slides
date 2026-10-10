@@ -76,13 +76,13 @@
 
 <!-- 5. Binomial null -->
 <div class="slide">
-  <h2>The Null Hypothesis: A Binomial Count</h2>
+  <h2>An Idealized Null: A Binomial Count</h2>
   <div class="divider"></div>
   <p>$H_0$: the text was written without knowledge of $\kappa$. Let $|s|_G$ be the number of green tokens among $T$ scored tokens.</p>
   <div class="math-block">$$H_0:\quad |s|_G \sim \mathrm{Binomial}(T, \gamma), \qquad \mathbb{E}|s|_G = \gamma T, \quad \mathrm{Var}\,|s|_G = T\gamma(1-\gamma).$$</div>
   <div class="def-card">
-    <h3>Assumptions behind the Binomial</h3>
-    <p>The key-seeded split acts like fresh randomness at each scored position; contexts $(y_{t-1}, y_t)$ do not repeat; the writer's choices do not depend on $\kappa$.</p>
+    <h3>An idealized independent-Bernoulli model</h3>
+    <p>Each scored token is green independently with probability $\gamma$. This needs the key-seeded split to act like fresh randomness at each position, no repeated pairs $(y_{t-1}, y_t)$, and a writer who does not know $\kappa$.</p>
   </div>
   <div class="cite cite-left">Kirchenbauer et al., ICML 2023 — Section 3.</div>
 </div>
@@ -93,9 +93,9 @@
   <div class="divider"></div>
   <div class="math-block">$$z = \frac{|s|_G - \gamma T}{\sqrt{T\gamma(1-\gamma)}}, \qquad \text{flag if } z \gt 4.$$</div>
   <ul class="arrow">
-    <li>Normal approximation: $\Pr_{H_0}[z \gt 4] = 1 - \Phi(4) \approx 3 \times 10^{-5}$</li>
-    <li>This is a <strong>nominal</strong> rate: it holds if $H_0$'s assumptions hold</li>
-    <li>For small $T$, use the exact Binomial tail instead</li>
+    <li>Normal-approximation tail: $1 - \Phi(4) \approx 3 \times 10^{-5}$</li>
+    <li>A <strong>nominal</strong> rate: only as good as the idealized model</li>
+    <li>Exact tail differs at small $T$: $T = 20$, $\gamma = 0.25$ flags at $|s|_G \ge 13$, exact rate $\approx 1.8 \times 10^{-4}$</li>
   </ul>
   <div class="cite cite-left">Kirchenbauer et al., ICML 2023 — Eq. (3) and Section 3.</div>
 </div>
@@ -117,12 +117,12 @@
 <div class="slide">
   <h2>Repeated Pairs: Nominal vs Measured False Alarms</h2>
   <div class="divider"></div>
-  <p>The same pair $(y_{t-1}, y_t)$ always gets the same colour. If it occurs $m$ times, it contributes $m$ identical "flips".</p>
-  <div class="math-block">$$\mathrm{Var}\Big(\textstyle\sum_{\text{repeats}} \mathbf{1}[\text{green}]\Big) = m^2 \gamma(1-\gamma) \;\gt\; m\,\gamma(1-\gamma).$$</div>
+  <p>The same pair $(y_{t-1}, y_t)$ always gets the same colour. If it occurs $m$ times, one flip is counted $m$ times.</p>
+  <div class="math-block">$$\mathrm{Var}\Big(\textstyle\sum_{\text{repeats}} \mathbf{1}[\text{green}]\Big) = m^2 \gamma(1-\gamma) \;\gt\; m\,\gamma(1-\gamma) \quad (m \gt 1).$$</div>
   <ul class="arrow">
-    <li>Variance is understated, so $z$ is inflated on repetitive text</li>
-    <li>Fix: score each distinct pair once; then $T$ counts distinct pairs</li>
-    <li>Measured FPR on human text matched theory only after the fix</li>
+    <li>Repeats raise the null's variability, so false alarms exceed nominal; not every $z$ rises</li>
+    <li>On WikiText, scoring each distinct pair once brought the measured threshold near theory</li>
+    <li>Not independence in general: tokens after the same $y_{t-1}$ share one split</li>
   </ul>
   <div class="cite cite-left">Kirchenbauer et al., ICLR 2024 — Appendix A.3 and Fig. 7 (WikiText-103).</div>
 </div>
@@ -146,18 +146,18 @@
     <li>$\pi = 0.02$, $\mathrm{TPR} = 0.9$, $\mathrm{FPR} = 0.01$: $0.0098 / 0.0278 \approx 0.35$</li>
     <li>$\pi = 0.20$, same detector: $0.008 / 0.188 \approx 0.04$</li>
   </ul>
-  <p class="muted">FPR is a property of the detector; the left side also depends on $\pi$.</p>
+  <p class="muted">FPR depends on the threshold and on whose text it is measured; held fixed here. The left side also depends on $\pi$.</p>
 </div>
 
 <!-- 11. TV bound -->
 <div class="slide">
   <h2>The TV Bound on Any Detector</h2>
   <div class="divider"></div>
-  <p>$M$: AI text distribution; $H$: human text distribution; $D$: any score-based detector.</p>
+  <p>$M$, $H$: AI and human text distributions; $\mathrm{TV}(M, H) = \sup_A |M(A) - H(A)|$ over sets of texts $A$.</p>
   <div class="math-block">$$\mathrm{AUROC}(D) \le \frac{1}{2} + \mathrm{TV}(M, H) - \frac{\mathrm{TV}(M, H)^2}{2}.$$</div>
   <ul class="arrow">
-    <li>$\mathrm{TV} = 0$: bound $= \tfrac12$, chance; $\mathrm{TV} = 1$: bound $= 1$</li>
-    <li>Conditional: says nothing about how costly lowering TV is</li>
+    <li>Always holds for any detector; forces near-chance only when TV is small</li>
+    <li>Keyed detector: $M$ is the output for the fixed key it holds; TV can be large</li>
   </ul>
   <p class="muted">Idea: at each FPR $x$, $\mathrm{TPR} \le \min(1, x + \mathrm{TV})$; integrate over $x$.</p>
   <div class="cite cite-left">Sadasivan et al., TMLR 2025 — Theorem 1; proof in Appendix C.1.</div>
@@ -173,10 +173,10 @@
   </div>
   <ul class="arrow">
     <li>KGW with $\delta \gt 0$ is not distortion-free: green tokens are boosted</li>
-    <li>A guarantee per step, averaged over keys; not about robustness</li>
+    <li>Needs a fresh key, never reused; says nothing about repeated queries</li>
   </ul>
-  <div class="highlight" style="margin-top:20px;"><p>If no part of the key sequence is reused, generated text has the model's own distribution.</p></div>
-  <p class="muted">Undetectable (Christ, Gunn &amp; Zamir, 2023): no keyless efficient test spots the mark.</p>
+  <div class="highlight"><p>Fresh, never-reused key: one text has the model's distribution, on average over the key.</p></div>
+  <p class="muted">Undetectable (Christ, Gunn &amp; Zamir, 2023) differs: without the key, efficient tests gain negligible advantage.</p>
   <div class="cite cite-left">Kuditipudi et al., TMLR — Definition 1 and the lemma that follows it.</div>
 </div>
 

@@ -73,3 +73,46 @@ How #126 was applied, with page refs (details in RESPONSE.md):
 Migration (migration-check.txt): all 14 backups are byte-identical to main, including the renamed prompt-injection files compared with their originals. All 615 local href/src targets resolve across the 57 tracked trustworthy-ai HTML files. The 13 deleted figures were used only by old lec12, and the privacy course keeps its own copy of kud-substitution. 6 lines in the lec01 note were re-pointed. Fairness is untouched.
 
 Package contents: html/ (deck, note, tech, figs), reference/, pdf/, renders/ (-r 60), src/ (10 papers, PDF + text), old/ (the deleted lec12 files), sources.md, page-map.txt, notes-validation-r1.txt, lint-r1.txt, migration-check.txt, source-stat.txt, source.diff.
+
+## 4 — slides-review → slides (2026-10-10 20:03)
+
+Round 1 reviewed at `7257c29`. The embed/detect/sign structure and base-rate example work well. Migration checks look good, and the lec01 cross-reference updates are appropriate.
+
+*Not ready for sign-off.* The main issues are statistical guarantees, provenance terminology and unfinished primary-source verification.
+
+*1. False-alarm claims — P15/P17, tech P5–8*
+- Independent coin flips alone do not make z > 4 an exact 3×10⁻⁵ test. Label this a *normal-approximation tail*, not a guaranteed FPR. For example, T=20, γ=.25 gives an exact Binomial tail around 1.84×10⁻⁴.
+- “Skip repeated pairs; then theory matches” needs “in the reported WikiText experiment.” Deduplication does not universally establish independence: distinct next tokens sharing a previous-token seed still share a partition.
+- Tech P5 should explicitly call Binomial an idealized independent-Bernoulli model. P8’s strict variance inequality requires m>1; repetition increases null variability, not every individual z-score.
+- P37/tech P10: FPR depends on threshold and evaluation population, not just the detector. Say it is *held fixed in this hypothetical*.
+
+*2. Distortion-free versus undetectable — P19, tech P12*
+Keep these distinct. The exact single-generation distribution result needs the independent key-sequence/no-reuse condition. It does not establish exact indistinguishability across repeated queries. Cryptographic undetectability concerns negligible distinguishing advantage for computationally bounded adversaries under the stated assumptions—not literally identical distributions. Replace the shared “these do not shift the odds” conclusion accordingly.
+
+*3. Provenance terminology — P6/P44–46*
+- A signature is not a certificate. Show “digital signature, verified using the certified public key.”
+- Hard binding covers specified asset data; it is not simply a hash of pixels or a promise that every byte is unchanged.
+- Use “signed claims and their binding validate” rather than unqualified “prove origin.” Explain that trusting the signer is separate from checking the signature, and that edits acquire new signed steps only through participating tools. [C2PA specification](https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification).
+
+*4. Finish primary-source checks — P47/P49–50*
+The secondary-source caveats are honest, but they do not meet the agreed verification gate.
+- Korea’s decree is available: [Article 23](https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lspttninfSeq=198075). It permits human- or machine-readable marking; the latter also requires at least one textual/audio notice. Include scope and exceptions, and remove “decree unverified.”
+- Use the [official CAC measures](https://www.cac.gov.cn/2025-03/14/c_1743654684782215.htm), not only their translation.
+- Google’s [official Pixel announcement](https://blog.google/security/pixel-android-trusted-images-c2pa-content-credentials/) is available; similarly verify or remove the other product rows.
+- I verified the EU December transition in the [enacted amendment](https://eur-lex.europa.eu/eli/reg/2026/1744/oj/eng). Keep its limitation to Article 50(2) and pre-August systems explicit.
+- Add slide citations, checked-as-of dates and source snapshots. Replace “machine labels need these tools” with “these are possible implementations”; the laws do not generally mandate watermarking or C2PA.
+
+*5. Study interpretation*
+- *P22/P28:* median p-value is neither FPR nor detection rate. State the significance threshold behind “held to about 50%,” distinguish the two model panels, and rename P28’s “error rate” column to accommodate different metrics.
+- *P25/P29/tech P11:* the TV bound always applies to the specified distributions; only its near-chance consequence requires small TV. Explain TV briefly and account for detector key access—do not mix key-averaged distributions with a keyed detector.
+- *P41:* near-0.693 log loss does not establish chance-level ranking or accuracy. Retitle around the *log-loss deterioration on internet clips*. The precision-derived 46% statement can stay, scoped to that test set.
+
+*6. Diagram and closing fixes*
+- P11 shows *2 green cells out of 12*, not 25%; make it three. Replace “new split at every position” with “split determined by context and key.” Use tokens consistently, with words as the teaching simplification.
+- P53: “real photo → true” contradicts the lesson; a genuine photo can be staged or misleading.
+- P55: enough text helps only while a detectable signal remains. Base rates change the fraction of flags that are false; they do not themselves create detector errors.
+- P54: restore signal/key holder, threshold and date to the checklist.
+
+Finally, enlarge or select panels on P17/P22/P24/P27—the plot labels remain small despite available space.
+
+Please mirror fixes in notes and send the correction diff, changed renders, source snapshots and validation. Keep PR #47 unmerged and lec12 on hold.

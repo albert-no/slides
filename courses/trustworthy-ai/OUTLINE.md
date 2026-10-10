@@ -42,7 +42,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 8 | `lec08-adversarial.html` | Adversarial robustness: threat models, FGSM → PGD, honest evaluation, certificates | **new 2026-10** (55 sl, 15 real figure crops + 2 charts redrawn from tables, 90 min, no activities; note 55 entries; tech 24 sl) |
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **rebuilt 2026-10** (59 sl, 90 min, concept-first, no activities) |
 | 10 | `lec10-jailbreak.html` | Jailbreaks: safety training, fragility, search, budget, evaluation & defenses | **rebuilt 2026-10** (58 sl, 90 min, concept-first, no activities; note 58 entries; tech 21 sl) |
-| 11 | `lec11-synthetic-media.html` | Synthetic media: text watermarks, robustness, detection without a watermark, provenance (C2PA) & labelling law | **new 2026-10** (56 sl, 10 real figure crops + 3 tables redrawn, 90 min, concept-first, no activities; note 56 entries; tech 13 sl). Former Wk 11 prompt injection → `backup-prompt-injection.html` (to be rebuilt as Wk 13); former Wk 12 watermark deck replaced |
+| 11 | `lec11-synthetic-media.html` | Synthetic media: text watermarks, robustness, detection without a watermark, provenance (C2PA) & labelling law | **new 2026-10** (56 sl, 8 real figure crops + 5 tables/figures redrawn, 90 min, concept-first, no activities; note 56 entries; tech 13 sl). Former Wk 11 prompt injection → `backup-prompt-injection.html` (to be rebuilt as Wk 13); former Wk 12 watermark deck replaced |
 | 12 | — | (slot free: former watermark deck merged into Wk 11; fairness moves here in the next rebuild) | |
 | 13 | `lec13-fairness-defs.html` | Fairness I — definitions & impossibility | **revised 2026-08**, **figure pass 2026-09** (62 sl) |
 | 14 | `lec14-fairness-mitigation.html` | Fairness II — mitigation & accountability | **revised 2026-08, figure pass 2026-09** (69 sl) |
@@ -72,7 +72,7 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `lec08tech.html` | Wk 8 (adversarial robustness) | perturbation set $\mathcal B_p(x,\varepsilon)$; FGSM as the exact maximizer of the linearized loss over the ℓ∞ box ($g^\top\delta\le\varepsilon\|g\|_1$; unclipped ℓ2 analogue); linear model $w^\top\eta=\varepsilon\|w\|_1$; PGD with random start + projections; C&W ℓ2 objective, tanh box, binary search on $c$; min-max + Danskin; Cohen Thm 1 with Neyman–Pearson sketch; CERTIFY (Clopper–Pearson, $\alpha$) | **new 2026-10** (24 sl; formulas checked against the paper PDFs) |
 | `lec09tech.html` | Wk 9 (poisoning) | count vs rate α; feature-collision objective; backdoor objective + ASR; spectral signatures; Neural Cleanse + MAD index; activation clustering | **rebuilt 2026-10** (18 sl) |
 | `lec10tech.html` | Wk 10 (jailbreak) | ASR + SE; any-of-N; judge-error correction; RLHF KL objective; per-token KL; refusal direction ablation; GCG loss + budget; PAIR budget; MSJ and BoN power laws | **rebuilt 2026-10** (21 sl; formulas checked against the paper PDFs) |
-| `lec11tech.html` | Wk 11 (synthetic media) | green-list rule (KGW Alg. 2); Binomial null + assumptions; z-statistic, z &gt; 4 ≈ 3×10⁻⁵ nominal; √T growth under constant green rate; repeated pairs, nominal vs measured FPR (K24 App. A.3, Fig. 7); base-rate formula; TV bound AUROC ≤ ½+TV−TV²/2; distortion-free definition | **new 2026-10** (13 sl; formulas checked against the saved papers) |
+| `lec11tech.html` | Wk 11 (synthetic media) | green-list rule (KGW Alg. 2); idealized Binomial null + assumptions; z &gt; 4 ≈ 3×10⁻⁵ (normal approx.) vs exact tail at T = 20; √T growth under constant green rate; repeated pairs, nominal vs measured FPR (K24 App. A.3, Fig. 7); base-rate formula; TV bound AUROC ≤ ½+TV−TV²/2 (TV defined; keyed detectors); distortion-free vs undetectable | **new 2026-10** (13 sl; formulas checked against the saved papers) |
 | `lec13tech.html` | Wk 13 (fairness defs) | demographic parity / equalized odds / calibration as conditional-prob defs; base rates; impossibility theorem (Chouldechova/Kleinberg) + proof sketch | **fixed 2026-08** (15 sl: base-rate identity was inverted (1−p)/p → p/(1−p) per Chouldechova eq 2.6; proof-sketch step 1 corrected (calibration ≠ "PPV = base rate" → predictive parity demands equal PPV across groups); unverifiable numeric-wedge table replaced with an exactly derivable two-value-score construction; impossibility attribution now dual Chouldechova + Kleinberg) |
 | `lec14tech.html` | Wk 14 (fairness mitigation) | reweighing w(g,y); penalized min Loss+λ·Unfairness; constrained form; reductions (Agarwal 2018); post-processing per-group thresholds (Hardt 2016) | **checked 2026-08** (17 sl: reweighing formula verified against Kamiran & Calders; reductions + Hardt ROC intuition verified against papers; one fix — cite venue "KIS 2012" → "Knowledge and Information Systems 2012") |
 | `lec15tech.html` | Wk 15 (governance) | EU AI Act risk-tier taxonomy; NIST RMF as Govern→Map→Measure→Manage loop; what "measurable" audit metrics mean (deliberately light — governance is non-mathematical) | **checked 2026-08** (6 sl: tiers verified still accurate post-Omnibus; EU cite normalized; tier bullets de-dashed for lint) |
@@ -1264,15 +1264,16 @@ concept-first, light math, no proofs; **no activities**). Arup deepfake call (HK
 origin case; three kinds of evidence — embed (watermark), guess (detector), sign (provenance) — and
 "origin is not truth" (no mark ≠ human; no credentials ≠ fake). KGW taught thoroughly as the one mechanism:
 keyed green list, boost δ, green-count z-test, threshold → nominal FPR, √T growth, repeated pairs → nominal vs
-measured FPR (K24 Fig 7), δ-vs-perplexity trade-off; distortion-free / undetectable named only. Robustness
-compared only with setups: Kuditipudi random swaps (m = 35), Krishna DIPPER (300 tokens, 1% FPR), Sadasivan
+measured threshold (K24 Fig 7 right), δ-vs-perplexity trade-off; distortion-free / undetectable named only, as two
+different guarantees. Robustness
+compared only with setups: Kuditipudi random swaps (m = 35, median p-value), Krishna DIPPER (300 tokens, 1% FPR), Sadasivan
 recursive paraphrase, K24 human rewrites (~800 tokens at 10⁻⁵) and copy-paste dilution; TV bound vs empirical
 robustness as differently scoped claims. Production: SynthID-Text (Nature 2024, Fig 3a), Tree-Ring image
 table, vendor detectors read only their own mark, three meanings of "standard". Keyless detection: overlapping
 scores, labelled base-rate illustration (FPR ≠ P(human | flagged)), Liang 2023 and the withdrawn OpenAI
 classifier (explicitly historical), DFDC private test. Provenance: C2PA manifest, signed edit chain,
 supported / on by default / preserved, soft bindings; labelling law (China 1 Sep 2025, Korea 22 Jan 2026,
-EU Art. 50 2 Aug 2026 / 2 Dec 2026). Excludes model-weight watermarks and copyright. Math in `lec11tech.html`.
+EU Art. 50 2 Aug 2026; Art. 50(2) transition to 2 Dec 2026). Excludes model-weight watermarks and copyright. Math in `lec11tech.html`.
 Rigorous treatment: `courses/privacy/lectures/06-watermark/`.
 
 ### Sections (56 slides, 90 min: problem 10 · watermarking 20 · robustness + production 20 · detection 15 · provenance + policy 15 · synthesis 10)
@@ -1281,45 +1282,52 @@ Rigorous treatment: `courses/privacy/lectures/06-watermark/`.
 |---|---|---|---|
 | Title / Contents | 1–2 | `:30`, `:42` | |
 | **01 — The Provenance Problem** | 3–8 | `:75` | Arup case (SVG) `:83` · embed / guess / sign `:93` · origin is not truth (table) `:101` · three questions `:115` · scope: outputs not models `:128` |
-| **02 — Text Watermarking** | 9–19 | `:148` | token-by-token (SVG) `:156` · keyed split `:165` · boost δ `:175` · KGW Fig 1 `:184` · chance rate γ `:200` · threshold `:208` · KGW Fig 3a `:218` · K24 Fig 7 `:235` · KGW Fig 2 left `:246` · distortion-free / undetectable `:263` |
-| **03 — Robustness and Production** | 20–33 | `:284` | attack ladder (SVG) `:292` · Kuditipudi Fig 4 `:301` · DIPPER (Krishna Table 1 redrawn) `:312` · Sadasivan Fig 3a `:323` · TV bound curve `:340` · K24 Fig 4 right `:350` · K24 Fig 2 `:365` · setups table `:381` · impossible vs robust `:396` · SynthID Fig 3a `:413` · Tree-Ring Table 2 subset `:429` · vendor detector `:445` · three "standards" `:455` |
-| **04 — Detecting Without a Watermark** | 34–42 | `:469` | overlapping scores `:477` · base-rate tree (labelled illustration) `:486` · FPR vs P(human\|flag) `:495` · Liang Fig 1a `:519` · OpenAI classifier `:535` · DFDC split `:556` · DFDC Table 2 redrawn `:565` · lead not verdict `:575` |
-| **05 — Provenance and Policy** | 43–50 | `:589` | detection vs provenance `:597` · C2PA manifest (SVG) `:616` · signed chain `:625` · supported / default / preserved `:638` · soft binding `:652` · law timeline `:662` · two kinds of label `:670` |
-| **06 — Synthesis** | 51–56 | `:685` | embed / guess / sign table `:693` · three cases `:707` · checklist `:720` · takeaways `:734` · closer `:747` |
+| **02 — Text Watermarking** | 9–19 | `:148` | token-by-token (SVG) `:156` · keyed split `:165` · boost δ `:175` · KGW Fig 1 `:184` · chance rate γ `:200` · threshold `:208` · KGW Fig 3a `:219` · K24 Fig 7 right `:236` · KGW Fig 2 left `:253` · distortion-free / undetectable `:270` |
+| **03 — Robustness and Production** | 20–33 | `:291` | attack ladder (SVG) `:299` · Kuditipudi Fig 4b `:308` · DIPPER (Krishna Table 1 redrawn) `:325` · Sadasivan Fig 3a legend (bars redrawn) `:336` · TV bound curve `:347` · K24 Fig 4 right `:358` · K24 Fig 2 copy-paste (redrawn) `:373` · setups table `:383` · impossible vs robust `:398` · SynthID Fig 3a `:415` · Tree-Ring Table 2 subset `:431` · vendor detector `:447` · three "standards" `:457` |
+| **04 — Detecting Without a Watermark** | 34–42 | `:471` | overlapping scores `:479` · base-rate tree (labelled illustration) `:488` · FPR vs P(human\|flag) `:497` · Liang Fig 1a `:521` · OpenAI classifier `:537` · DFDC split `:558` · DFDC Table 2 redrawn (log loss) `:567` · lead not verdict `:578` |
+| **05 — Provenance and Policy** | 43–50 | `:592` | detection vs provenance `:600` · C2PA manifest (SVG) `:619` · signed chain `:628` · supported / default / preserved (vendor's words) `:643` · soft binding `:658` · law timeline `:668` · two kinds of label `:677` |
+| **06 — Synthesis** | 51–56 | `:692` | embed / guess / sign table `:700` · three cases `:714` · checklist (7 questions) `:727` · takeaways `:743` · closer `:756` |
 
 **Key citations (checked against saved PDFs / pages, 2026-10-10):** Kirchenbauer et al. ICML 2023 (arXiv
-2301.10226; Alg 2, §3, Figs 1, 2, 3a); Kirchenbauer et al. ICLR 2024 (arXiv 2306.04634; Figs 2, 4, 7, App A.3);
-Kuditipudi et al. TMLR (arXiv 2307.15593; Def 1, Fig 4, m = 35); Christ, Gunn &amp; Zamir (arXiv 2306.09194);
+2301.10226; Alg 2, §3, Figs 1, 2, 3a); Kirchenbauer et al. ICLR 2024 (arXiv 2306.04634; Figs 2, 4 right, 7 right, App A.3);
+Kuditipudi et al. TMLR (arXiv 2307.15593; Def 1, Fig 4a/4b, m = 35); Christ, Gunn &amp; Zamir (arXiv 2306.09194);
 Krishna et al. NeurIPS 2023 (arXiv 2303.13408; Table 1); Sadasivan et al. TMLR 2025 (arXiv 2303.11156; Thm 1,
-Fig 3a); Dathathri et al. Nature 634 (2024; Fig 3a); Wen et al. Tree-Ring NeurIPS 2023 (Table 2); Liang et al.
+Fig 3a legend); Dathathri et al. Nature 634 (2024; Fig 3a); Wen et al. Tree-Ring NeurIPS 2023 (Table 2); Liang et al.
 Patterns 2023 (Fig 1a); OpenAI classifier post (Jan / Jul 2023, via archive); Dolhansky et al. DFDC (arXiv
-2006.07397; §3, §5–6, Table 2); C2PA Technical Specification 2.2 + Soft Binding API; Google SynthID Detector
-post (May 2025, vendor statement); Arup (CNN, May 2024). Law: CAC Measures + GB 45438-2025; Reg. (EU)
-2024/1689 Art. 50 and Reg. (EU) 2026/1744; Korea AI Basic Act Art. 31 (law-firm / FPF summaries — Enforcement
-Decree status flagged unverified in the note). Products (press-only): Leica M11-P, Galaxy S25, Pixel 10.
+2006.07397; §3, §5–6, Table 2); C2PA Technical Specification 2.2 (May 2025; §9.1–9.2) + Soft Binding API; Google SynthID Detector
+post (May 2025, vendor statement); Arup (CNN, May 2024). Law (official texts, snapshots in the r2 review package): CAC Measures
+国信办通字〔2025〕2号 + GB 45438-2025; Reg. (EU) 2024/1689 Arts. 50, 99, 113 and Reg. (EU) 2026/1744; Korea AI Basic
+Act Arts. 31, 43 and Enforcement Decree Art. 23 (law.go.kr). Products (vendor pages): Leica Content Credentials
+page, Samsung Newsroom US (7 Feb 2025), Google Keyword blog (10 Sep 2025).
 
-**Figures (10 cited image files in `figs/`):** `sm-kgw-fig1.png` `:188` · `sm-kgw-fig3a.png` `:222` ·
-`sm-k24-fig7.png` `:238` · `sm-kgw-fig2l.png` `:250` · `sm-kud-fig4.png` `:305` · `sm-sad-fig3a.png` `:328` ·
-`sm-k24-fig4r.png` `:355` · `sm-k24-fig2.png` `:369` · `sm-synthid-fig3a.png` `:417` · `liang-toefl.png` `:524`.
-Redrawn from tables (inline SVG/HTML, disclosed in cites): Krishna Table 1 (KGW rows), Tree-Ring Table 2
-(subset), DFDC Table 2. Illustrative (labelled): next-word bars, green strips, z-curves, base-rate tree.
+**Figures (8 cited image files in `figs/`):** `sm-kgw-fig1.png` `:188` · `sm-kgw-fig3a.png` `:223` ·
+`sm-k24-fig7r.png` `:240` · `sm-kgw-fig2l.png` `:257` · `sm-kud-fig4b.png` `:313` · `sm-k24-fig4r.png` `:363` ·
+`sm-synthid-fig3a.png` `:419` · `liang-toefl.png` `:526`.
+Redrawn (inline SVG/HTML, disclosed in cites): Krishna Table 1 (KGW rows), Sadasivan Fig 3a legend values (bars),
+K24 Fig 2 copy-paste values read from the figure (range bars), Tree-Ring Table 2 (subset), DFDC Table 2.
+Illustrative (labelled): next-word bars, green strips, z-curves, base-rate tree.
 
 **2026-10 rebuild:** replaces the former Wk 11 prompt-injection deck (moved unchanged to
 `backup-prompt-injection.html`) and the former Wk 12 watermark deck (lec12-watermark, 68 sl; deleted with its note,
 its tech file and 13 figures used only by it: `dfdc-logloss`, `kgw-example`, `kgw-zscore-length`,
 `kgw-zscore-ppl`, `kirchenbauer-human-paraphrase`, `kirchenbauer-robust-bars`, `krishna-dipper`,
 `kud-protocol`, `kud-substitution`, `sadasivan-roc`, `sadasivan-vuln`, `synthid-detect`, `synthid-overview`).
-Built to the slides-review brief (#126).
+Built to the slides-review brief (#126). Review round 2 (slides-review #128): z &gt; 4 as a normal-approximation
+tail; repeat-scoring scoped to WikiText; distortion-free vs undetectable separated; C2PA validity vs signer trust;
+law and product rows from official texts; median p-value, TV and log-loss readings corrected; crops `sm-k24-fig7`,
+`sm-kud-fig4` replaced by single panels and `sm-sad-fig3a`, `sm-k24-fig2` by redrawn charts (old files deleted).
 
 **Note:** `lec11-synthetic-media-note.html` — 56 entries with minute budget and elapsed time, script, key
 takeaway; content slides add figure, setup/model/date, establishes / does not establish, assumptions and
-primary-source links (22 sources). Entry 49 carries the three-jurisdiction table (enacted text / applies from /
-who / form / enforcement / still open).
+primary-source links (22 sources). Entry 49 carries the three-jurisdiction table from the official texts (enacted
+text / applies from / who / form / exceptions / enforcement).
 
 **Tech:** `lec11tech.html` — 13 slides:
-- green-list rule (4); Binomial null + assumptions (5); z-statistic and nominal 3×10⁻⁵ (6)
-- √T growth under constant green rate (7); repeated pairs, nominal vs measured FPR (8)
-- base-rate formula with the 2% / 20% examples (10); TV bound + proof idea (11); distortion-free definition (12)
+- green-list rule (4); idealized independent-Bernoulli null (5); z-statistic, normal-approximation 3×10⁻⁵ vs exact
+  tail at T = 20 (6)
+- √T growth under constant green rate (7); repeated pairs, m > 1, scoped to WikiText (8)
+- base-rate formula with the 2% / 20% examples (10); TV definition, bound + proof idea, keyed detectors (11);
+  distortion-free (fresh key) vs undetectable (12)
 
 ## backup-prompt-injection.html
 

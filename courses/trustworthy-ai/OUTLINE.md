@@ -1297,7 +1297,7 @@ Patterns 2023 (Fig 1a); OpenAI classifier post (Jan / Jul 2023, via archive); Do
 2006.07397; §3, §5–6, Table 2); C2PA Technical Specification 2.2 (May 2025; §9.1–9.2) + Soft Binding API; Google SynthID Detector
 post (May 2025, vendor statement); Arup (CNN, May 2024). Law (official texts, snapshots in the r2 review package): CAC Measures
 国信办通字〔2025〕2号 + GB 45438-2025; Reg. (EU) 2024/1689 Arts. 50, 99, 113 and Reg. (EU) 2026/1744; Korea AI Basic
-Act Arts. 31, 43 and Enforcement Decree Art. 23 (law.go.kr). Products (vendor pages): Leica Content Credentials
+Act Arts. 31, 40, 43 and Enforcement Decree Art. 23 (law.go.kr). Products (vendor pages): Leica Content Credentials
 page, Samsung Newsroom US (7 Feb 2025), Google Keyword blog (10 Sep 2025).
 
 **Figures (8 cited image files in `figs/`):** `sm-kgw-fig1.png` `:188` · `sm-kgw-fig3a.png` `:223` ·

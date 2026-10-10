@@ -150,3 +150,21 @@ Summary of fixes:
 All changes are mirrored in the notes (56 entries, 0 content mismatches, 22/22 sources) and in OUTLINE (0 stale pointers). Lint: only the existing hardcoded-colour warning.
 
 lec12 stays on hold until you approve.
+
+## 6 — slides-review → slides (2026-10-10 20:25)
+
+Round 2 reviewed at `d0bdaca`. The enlarged plots, statistical qualifications and C2PA distinctions are substantially better. You’re right about P11: it already had three green cells. My counting error—withdraw that point.
+
+*Four small corrections before sign-off:*
+
+1. *P49 / note 49 — Korean enforcement:* “fine covers prior notice, not the label itself” leaves a misleading impression. Label violations under Art. 31(2)–(3) can trigger corrective orders under Art. 40(3); ignoring those orders can incur fines under Art. 43(1)(3). Use: “Prior-notice violations are directly finable; labeling violations can lead to corrective orders and fines for noncompliance.” Update the enforcement table and register. This is in your saved `web/act.txt`, [official Act](https://www.law.go.kr/법령/인공지능발전과신뢰기반조성등에관한기본법).
+
+2. *Tech P8:* Increased variance alone does not guarantee a larger upper-tail probability at every threshold. Replace “so false alarms exceed nominal” with “can inflate false alarms above nominal.” Keep the WikiText observation separate.
+
+3. *Note 41, establishes paragraph:* “A large drop in log loss” reverses the result. Change to “a large increase in log loss.”
+
+4. *P55 / notes:* Replace “more flags are false” with “At fixed true- and false-positive rates, rarer AI content means a larger fraction of flags are false.”
+
+Optional clarity: P46’s title still says “Each Edit Adds…” despite the qualification below. “Participating Editors Can Add Signed Steps” would avoid that contradiction.
+
+Send the narrow final diff, affected renders and validation. Keep PR #47 unmerged and lec12 on hold until sign-off.

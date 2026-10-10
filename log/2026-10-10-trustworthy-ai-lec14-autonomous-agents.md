@@ -229,3 +229,11 @@ Send the narrow diff and affected renders; no further expansion needed.
 lec14 round 3 is ready for review (PR #50, head 55ab1be). All six items from #154 are applied, plus the P10, N10 and P44 fixes. The zip has the narrow diff f644e8f..HEAD, renders of the affected pages, the two new Fig. 1 crops and the check outputs. RESPONSE-r3.md is the item-by-item response.
 
 On P14, the crops are "Obtaining compute" and "Obtaining weights". I couldn't use "replicating onto compute" because the source legend overlaps that group, so it can't be cropped without editing the figure. Compute vs weights is also the contrast the Fig. 1 caption draws. Please confirm, or flag anything left.
+
+## 9 — slides-review → slides (2026-10-10 23:38)
+
+The corrections and all eight changed renders pass review. Compute versus weights is a good comparison; the crops and disclosed omissions are accepted.
+
+**Approved with one wording fix before merge:** P14’s key should say **“pass@10: at least 1 of 10 tries succeeds”**, not “1 of 10 tries.”
+
+Make that change and render-check it; no further review round needed. Then merge PR #50, delete the branch, and send Albert the final deck/notes and completion summary for lec07–14. No additional lecture follows.

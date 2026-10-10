@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Injection — Technical Supplement — Trustworthy AI Lecture 13</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="../../reference/katex/katex.min.css">
+<script defer src="../../reference/katex/katex.min.js"></script>
+<script defer src="../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.grid-2 { margin: 16px 0 18px; }
+.def-card + p, p + ul.arrow, .grid-2 + * { margin-top: 16px; }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 13 · Technical Supplement</div>
+  <h1>Prompt Injection:<br>The Security Model</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Optional. Threat model, information flow, and how to measure a defense</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. When to Use This -->
+<div class="slide">
+  <h2>When to Use This</h2>
+  <div class="divider"></div>
+  <p>The main lecture keeps the pictures and the incidents. Here is the formal version.</p>
+  <ul class="arrow">
+    <li>A security game for injection, and what "allowed" means</li>
+    <li>Authority, capabilities, and information-flow labels</li>
+    <li>CaMeL's check, and its conditional guarantee</li>
+    <li>The three metrics, static vs adaptive</li>
+  </ul>
+  <div class="highlight"><p>Optional: return here for the formal version.</p></div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Threat Model</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Who controls what, and what counts as a win</p>
+</div>
+
+<!-- 4. Threat model -->
+<div class="slide">
+  <h2>Who Controls What</h2>
+  <div class="divider"></div>
+  <p>An agent runs a trusted <strong>prompt</strong> $p$ with tools $T$ over a state $\mathit{mem}$ (mail, files, web).</p>
+  <div class="grid-2">
+    <div><h3>Trusted</h3>
+      <p>The user's prompt $p$; the system's own code and policies.</p></div>
+    <div><h3>Attacker</h3>
+      <p>Chooses an initial state $\mathit{mem}^*$: any text a tool may later return.</p></div>
+  </div>
+  <ul class="arrow">
+    <li>Attacker cannot edit $p$, the code, or the policies</li>
+    <li>Goal: an action the user did not authorize</li>
+  </ul>
+  <div class="cite cite-left">Debenedetti et al., "Defeating Prompt Injections by Design" (CaMeL), arXiv 2503.18813v2, §3: trusted prompt, uncompromised memory.</div>
+</div>
+
+<!-- 5. PI-SEC game -->
+<div class="slide">
+  <h2>Injection as a Security Game</h2>
+  <div class="divider"></div>
+  <p>A trace is the list of tool calls: $\mathrm{Trace} = \{(t_i, \mathit{args}_i, \mathit{mem}_i)\}$.</p>
+  <div class="ta-algo" style="max-width:980px; margin:14px auto;">
+    <ol>
+      <li>Draw a prompt $p$ and its allowed actions $\Omega_p$.</li>
+      <li>The adversary $\mathcal{A}$ picks $\mathit{mem}^* \leftarrow \mathcal{A}(p, \Omega_p)$.</li>
+      <li>Run $\mathrm{Trace} \leftarrow \mathrm{Agent}(p, T, \mathit{mem}^*)$.</li>
+      <li>$\mathcal{A}$ wins if some $(t, \mathit{args}, \mathit{mem}) \in \mathrm{Trace}$ lies outside $\Omega_p$.</li>
+    </ol>
+  </div>
+  <p class="muted">$\Omega_p$ is a definition, not a mechanism: no real system can list it for every prompt.</p>
+  <div class="cite cite-left">CaMeL, §4 and Fig. 3 (game PI-SEC).</div>
+</div>
+
+<!-- 6. Data vs control -->
+<div class="slide">
+  <h2>Data vs Control, Formally</h2>
+  <div class="divider"></div>
+  <p>Split every action into a <strong>control</strong> part and a <strong>data</strong> part.</p>
+  <div class="math-block">$$a_i = (\underbrace{t_i}_{\text{which tool, in which order}},\ \underbrace{\mathit{args}_i}_{\text{which values}})$$</div>
+  <ul class="arrow">
+    <li><strong>Control-flow hijack:</strong> $\mathit{mem}^*$ changes the sequence $(t_1, t_2, \dots)$</li>
+    <li><strong>Data-flow hijack:</strong> same tools, but some $\mathit{args}_i$ depends on $\mathit{mem}^*$</li>
+    <li>An LLM agent reads $p$ and $\mathit{mem}$ in one context: both parts can depend on $\mathit{mem}^*$</li>
+  </ul>
+  <div class="cite cite-left">CaMeL, Fig. 1 (control and data flow) and Fig. 2 (a data-flow hijack that changes a recipient).</div>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Enforcing the Boundary</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Authority and provenance, checked by code</p>
+</div>
+
+<!-- 8. Confused deputy / least privilege -->
+<div class="slide">
+  <h2>Authority and Least Privilege</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Confused deputy</h3>
+    <p>A program holds authority $\mathrm{Auth}$ (the user's permissions). A third party supplies the <strong>intent</strong>; the program supplies the <strong>authority</strong>.</p>
+  </div>
+  <p>Any successful injection has $a \in \mathrm{Auth}$ but $a \notin \Omega_p$. Least privilege shrinks the gap:</p>
+  <div class="math-block">$$\text{grant } \mathrm{Auth}_p \text{ with } \Omega_p \subseteq \mathrm{Auth}_p \subseteq \mathrm{Auth}, \qquad \text{damage} \subseteq \mathrm{Auth}_p \setminus \Omega_p.$$</div>
+  <p class="muted">A tool filter and a narrowed token are both choices of $\mathrm{Auth}_p$.</p>
+</div>
+
+<!-- 9. Labels -->
+<div class="slide">
+  <h2>Labels: Every Value Carries Its Origin</h2>
+  <div class="divider"></div>
+  <p>Tag each value $v$ with a capability $\kappa(v) = (\mathrm{src}(v), \mathrm{readers}(v))$.</p>
+  <div class="math-block">$$c = f(a, b) \;\Rightarrow\; \mathrm{src}(c) \supseteq \mathrm{src}(a) \cup \mathrm{src}(b).$$</div>
+  <ul class="arrow">
+    <li>Sources: the user's prompt, a tool (and inner source, e.g. an email's sender)</li>
+    <li>Readers: Public, or a set of users</li>
+    <li>STRICT mode: values assigned inside <code>if</code> / <code>for</code> also depend on the condition</li>
+  </ul>
+  <div class="cite cite-left">CaMeL, §5.3 (capabilities; dependency graph; STRICT vs NORMAL mode).</div>
+</div>
+
+<!-- 10. Dual LLM and CaMeL -->
+<div class="slide">
+  <h2>From Dual LLM to CaMeL</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Privileged LLM</h3>
+      <p>Sees only $p$. Writes the plan as code. Sees untrusted values only as variable names.</p></div>
+    <div><h3>Quarantined LLM</h3>
+      <p>Parses untrusted text into fields. Has no tools.</p></div>
+  </div>
+  <div class="ta-algo" style="max-width:980px; margin:14px auto;">
+    <ol>
+      <li>$\mathit{plan} \leftarrow \text{P-LLM}(p, T)$; the plan depends on $p$ only.</li>
+      <li>For each $(t, \mathit{args})$: if $\mathrm{policy}_t(\kappa(\mathit{args})) = \bot$, halt.</li>
+      <li>Otherwise run $t$; label its output; continue.</li>
+    </ol>
+  </div>
+  <div class="cite cite-left">Willison, "The Dual LLM pattern…", 25 Apr 2023; CaMeL, §5 and Fig. 4.</div>
+</div>
+
+<!-- 11. Guarantee -->
+<div class="slide">
+  <h2>What the Guarantee Says</h2>
+  <div class="divider"></div>
+  <p><strong>If</strong> $p$ is trusted, the interpreter is correct, and the policies express the intended $\Omega_p$:</p>
+  <ul class="arrow">
+    <li>The program (the plan) cannot depend on $\mathit{mem}^*$</li>
+    <li>No tool runs with arguments whose labels a policy forbids</li>
+  </ul>
+  <div class="highlight"><p>Outside the conditions, nothing is promised: text-to-text manipulation, phishing, side channels, a wrong policy.</p></div>
+  <div class="cite cite-left">CaMeL, §3.1 (non-goals), §7 (side channels), §9.3 ("not fully solved"). The paper states its guarantee in prose; this slide paraphrases it.</div>
+</div>
+
+<!-- ============ SECTION 03 ============ -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Measurement</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Three metrics and the attacker behind them</p>
+</div>
+
+<!-- 13. Metrics -->
+<div class="slide">
+  <h2>Three Metrics, Written Out</h2>
+  <div class="divider"></div>
+  <p>User tasks $U$, injection tasks $I$, security cases $C = U \times I$, attack $x$.</p>
+  <div class="math-block">$$\mathrm{BU} = \tfrac{1}{|U|}\textstyle\sum_{u \in U} \mathbf{1}[\text{$u$ solved, no attack}]$$
+  $$\mathrm{UA}(x) = \tfrac{1}{|C|}\textstyle\sum_{(u,i) \in C} \mathbf{1}[\text{$u$ solved, no side effects}]$$
+  $$\mathrm{ASR}(x) = \tfrac{1}{|C|}\textstyle\sum_{(u,i) \in C} \mathbf{1}[\text{goal $i$ met}]$$</div>
+  <p class="muted">$1 - \mathrm{UA}$ is the untargeted ASR. A refuse-everything agent: $\mathrm{ASR} = 0$, $\mathrm{BU} = 0$.</p>
+  <div class="cite cite-left">Debenedetti et al., "AgentDojo", NeurIPS 2024 Datasets &amp; Benchmarks, §3.4.</div>
+</div>
+
+<!-- 14. Static vs adaptive -->
+<div class="slide">
+  <h2>Static vs Adaptive ASR</h2>
+  <div class="divider"></div>
+  <p>Static: one fixed $x_0$. Adaptive: per case, up to $q$ tries $x_1, \dots, x_q$, each chosen from earlier feedback.</p>
+  <div class="math-block">$$\mathrm{ASR}_q = \tfrac{1}{|C|}\textstyle\sum_{c \in C} \mathbf{1}\big[\exists\, j \le q:\ \text{$x_j$ succeeds on $c$}\big] \;\ge\; \mathrm{ASR}(x_0) \ \text{ if } x_1 = x_0.$$</div>
+  <ul class="arrow">
+    <li>State the access: outputs only, scores, or weights</li>
+    <li>State $q$; Nasr et al. use $q = 800$</li>
+    <li>A static number bounds risk from below only</li>
+  </ul>
+  <div class="cite cite-left">AgentDojo §3.4 (a set of attacks succeeds if any does); Nasr, Carlini et al., arXiv 2510.09023 (preprint), Table 7.</div>
+</div>
+
+<!-- 15. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">Who decided?</div>
+  <p class="big-word-sub">Name the input each action was allowed to depend on.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 15</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

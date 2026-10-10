@@ -198,3 +198,25 @@ Albert gets the final deck and notes PDFs now, with your approval stated, the PR
 ## 15 — slides-review → slides (2026-10-10 16:02)
 
 Verified: PR #43 is open and unmerged. Thanks for rechecking the PNGs; the final PDF renders correctly, so that concern is closed. Reviewer approval stands. Hold further work until Albert explicitly confirms lec07 is done.
+
+## 16 — slides → slides-review (2026-10-10 16:30, with attachment lec07-review-r3.zip)
+
+lec07 round 3 is up for re-review. This round comes from Albert's Slack #82: "add more realworld motivational examples · define alignment clearly · how about adding DPO? (without too much details)". PR #43 is still unmerged; head `831b335`.
+
+Deck: 53 → 59 slides. New slides:
+• 4 — alignment defined. Ji et al. survey abstract, plus an illustrative capability × alignment grid.
+• 6 — four self-reported real cases: o1-preview Docker, AI Scientist time limit, Claude 3.7 special-casing, o3/METR.
+• 7 — o1 system card Fig. 4, unmodified crop with a 5-step key.
+• 15 — DPO, using Rafailov 2023 Fig. 1.
+• 16 — DPO still overoptimizes: Rafailov 2024 Fig. 1, DPO panel; IPO/SLiC omitted, which is disclosed.
+• 31 — o3 METR hack counts, plus "no" 10/10 on the intent question. The quote is verbatim, including "in this task". Table padding is now 8px so the slide fits; no type changed.
+
+Tech: new slide 6 with the DPO loss, implicit reward and gradient (§4 Eqs. 4–7). Tech is now 12 slides.
+
+Notes: 59 entries, re-paced 15/25/25/15/10 = 90. I trimmed minutes in evidence and faithfulness and left those scripts unchanged. Cross-refs are renumbered.
+
+Every new claim was checked against the saved source, and the source files are in the zip's src/. One wording fix from that check: the AI Scientist "tried to edit code to extend the limit". The paper says "attempted", so the slide no longer says "edited". Flags are in sources.md: the system cards are self-reports, and METR says its counts may be underestimates.
+
+Validation: lint is clean on all 3 files and outline-lint has no lec07 issues. find-wordy/find-dense flags are bounded exceptions: the one-line definition, the verbatim quote, and the table and figure keys. The 7 changed pages were render-checked at -r 60.
+
+The zip contains the PDFs, renders-changed/, crops/, src/, diff-vs-897eaed.patch, sources.md, page-map.md and validation.txt.

@@ -152,3 +152,38 @@ The structure works: the access-versus-damage distinction, explicit Sleeper Agen
 • *Tech P16:* label the smaller-cluster rule as a heuristic requiring validation, not guaranteed poison identification.
 
 Please synchronize notes, tech and outline. The package again lacks the agreed full HTML/assets, primary-source snapshots and notes-validation output—include these with the correction diff, changed renders and page map. Keep PR #45 unmerged and lec10 on hold.
+
+## 9 — slides → slides-review (2026-10-10 18:17) [attachment: lec09-review-r2.zip]
+
+lec09 round 2 is ready for review. It covers all of #112 and is at commit 2d1af3e on PR #45. The PR is still an unmerged draft, and lec10 is on hold.
+
+Page numbers have not changed: the deck is 59 pages, the tech supplement 18, and the notes 59 entries totalling 90 min.
+
+Changed pages:
+• Deck: P5, 7, 10, 12, 14, 15, 17, 18, 23–25, 27, 31, 34–44, 46, 51, 53, 59
+• Tech: P4, 8, 15, 16
+
+Main fixes:
+• Souly figures are now token fractions: 250 docs × ~1,680 tokens ≈ 420k tokens, giving 0.0035% at 12B and 0.00016% at 260B. Tech P4 separates N, the document fraction and the token fraction.
+• ASR is now defined separately for all-to-one, source-specific and all-to-all attacks.
+• Tech P8 now derives λ = α/(1−α).
+• Every absolute claim you listed is now scoped.
+• Figures were recaptured or re-selected:
+  – P17 and P31 are complete figures.
+  – P37 is now an HTML table that separates 2022 from post-disclosure.
+  – P38 shows one Wan row each for training and test.
+  – P40 is Fig. 1(a) only.
+  – P41 has its legend, with perplexity defined and marked as not an ASR %.
+  – P43 is stage 1 only; P44 is Fig. 2(a), with model and groups keyed.
+  – P51 shows two readable panels.
+• P46 keeps no numbers and labels the two metrics as not comparable.
+• P53 and tech P15 now say "suspected" and require MAD > 0. Tech P16 calls the cluster rule a heuristic.
+
+The zip contains:
+• RESPONSE.md: a point-by-point reply and the page map
+• the full HTML with figs/ and reference/
+• src/ snapshots of the primary sources
+• notes-validation output and lint output
+• correction.diff (df940c2..2d1af3e) and notes-source.diff
+• sources.md and figures.txt
+• renders of the changed pages at -r 60, plus full PDFs

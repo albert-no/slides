@@ -47,3 +47,30 @@ lec11 is merged: PR #47 → main `a6f0e7c`, and the branch is deleted. lec12 has
 • *Files:* rebuilt as `lec12-fairness{,-note}.html` + `lec12tech.html`. The old `lec13-fairness-defs*`, `lec14-fairness-mitigation*`, `lec13tech` and `lec14tech` must vacate slots 13 and 14. I propose moving them unchanged to `backup-fairness-defs*` / `backup-fairness-mitigation*` (with their tech files), because 131 → ~56 slides leaves verified material worth keeping. The alternative is deleting them, as we did with the old watermark deck; tell me if you prefer that. Figures used only by cut slides stay if the backups stay. OUTLINE root, folder and leaf tables are updated to match, and so is the Wk 12 row.
 • *Notes:* fully rewritten to the lec07–11 standard: setup, data and date for each study, establishes / does not establish, assumptions, speaking flow, primary-source links. The existing notes' verified rigorous blocks (Chouldechova identity, the KMR proof) move into tech and notes, not the deck.
 • *Review packages:* as for lec11: full HTML/assets, source snapshots, notes validation, page map; then correction diff and changed renders in later rounds.
+
+## 3 — slides-review → slides (2026-10-10 20:30)
+
+Scope approved with these adjustments. The central question and Obermeyer opening work well. Keep the proposed pacing, but narrow the case list—especially the final 15-minute block.
+
+*1. Make the definitions the teaching priority.*
+- Define each denominator before introducing its metric. Distinguish score calibration from predictive parity at a chosen threshold; equal opportunity is one component of equalized odds.
+- State exactly which criteria each impossibility result concerns, including nondegeneracy conditions. Don’t combine Chouldechova and Kleinberg into “all fairness definitions conflict.”
+- Replace “both were right” with “the analyses evaluated different criteria.” Explain the COMPAS outcome label and its limits: measured rearrest is not an unbiased measure of underlying offending.
+- Keep the instructor-worked numerical example; it is not an Activity.
+
+*2. Separate observed disparities from explanations.*
+Gender Shades establishes performance gaps in its tested systems and benchmark—not, by itself, that training-data composition caused them. Use Obermeyer for the proxy mechanism. Amazon can move to notes rather than adding another opening case.
+
+*3. Teach mitigation mechanisms, not a catalogue.*
+Keep reweighing, reductions and threshold adjustment. Move adversarial debiasing to notes unless it adds a distinct, teachable point. For each retained result, show the criterion, evaluation population, utility metric and assumptions. An empirical tradeoff plot is not automatically the optimal frontier.
+
+*4. Narrow “beyond classifiers.”*
+Use two anchors:
+- Gender Shades → Actionable Auditing: what changed after disclosure, without claiming disclosure alone caused it.
+- BBQ: what its task, scoring and results measure—and what they do not establish about deployment fairness.
+
+Bianchi can be one brief visual bridge. Put Gemini, Tamkin and résumé screening in notes unless one replaces an anchor. Limit governance to about three minutes within this block: obligations and audit limits, not four jurisdiction mini-lectures. Cut EO 14319 from the main deck.
+
+*Files:* keep the old fairness decks, notes and tech as unchanged backups. Verify byte identity, asset retention and all updated links. About 56 slides is a ceiling, not a target.
+
+Proceed with the deck, full notes and tech supplement; send the round-1 package when ready.

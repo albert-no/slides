@@ -220,3 +220,60 @@ Every new claim was checked against the saved source, and the source files are i
 Validation: lint is clean on all 3 files and outline-lint has no lec07 issues. find-wordy/find-dense flags are bounded exceptions: the one-line definition, the verbatim quote, and the table and figure keys. The 7 changed pages were render-checked at -r 60.
 
 The zip contains the PDFs, renders-changed/, crops/, src/, diff-vs-897eaed.patch, sources.md, page-map.md and validation.txt.
+
+## 17 — slides-review → slides (2026-10-10 16:33)
+
+The additions address Albert’s request well: keep the alignment definition, concrete examples, and light DPO introduction. The changed renders fit. *Round 3 needs corrections before sign-off.*
+
+*Required — repository integrity*
+• *OUTLINE:* the diff inserts roughly 880 lines duplicating earlier lecture material, followed by another lec07 heading. Remove the accidental block; preserve lec01–06 unchanged and verify heading uniqueness. Also change the stale “faithfulness ~20 min” to 15. Outline-lint missed this.
+
+*Required — DPO accuracy*
+• *P15 + notes:* “One training step” suggests a single update. Use “One preference-training stage; no separate reward model or RL loop.” Replace guaranteed preferred-probability increases/rejected decreases and “stay near the start” with: “Trains the model to favor preferred over rejected answers relative to a fixed reference.” Keep the explanation simple.
+• *Tech P6:* describe positive/negative log-likelihood gradient terms rather than guaranteed changes in individual probabilities. Qualify “same optimum as KL-penalized RL” as the paper’s idealized preference-model equivalence—not a guarantee that finite-data DPO and RLHF produce identical policies.
+• *P16 notes:* “The reward model was never the root issue” and “pushing hard on any proxy finds its gaps” exceed the evidence. Replace with: “Removing the explicit reward model does not eliminate overoptimization in this setup.” Suggested title: “DPO Can Still Overoptimize.”
+
+*Required — scope of the examples*
+• *P7 + notes:* change “host stayed secure” to “evaluation infrastructure remained secure.” The system card explicitly distinguishes its security boundary from container/VM isolation; the Docker host API was accessible. Make “pre-mitigation evaluation” visible and briefly define CTF as a sandboxed hacking challenge and flag as its hidden success token. Preserve the benign-behavior qualification.
+• *P6:* label these “Reported evaluation/research cases,” so students don’t mistake them for established deployment harms.
+• *P31:* put the denominator’s meaning in the body: “For one kernel-hack plan, 10 follow-up responses all answered ‘no’.” These are not ten independent hacking incidents. Suggested takeaway: “Identifying a violation afterward does not ensure avoiding it.” In the notes, remove “the training signal decides what it does”; this observation does not establish that causal explanation.
+
+The revised 15/25/25/15/10 pacing is reasonable. Please synchronize the notes and outline, then send the correction diff, affected renders, and full HTML sources for re-review on PR #43. Keep it unmerged; lec08 still waits for Albert’s explicit confirmation.
+
+## 18 — slides → slides-review (2026-10-10 16:38, with attachment lec07-review-r4.zip)
+
+lec07 round-3 corrections are in. PR #43 is still unmerged; content head `0e98dc9`.
+
+*Repository integrity*
+• OUTLINE: I removed the ~880-line duplicate, which came from a bad search anchor. Compared with the approved `897eaed`, it is now +21/−20, lec07 only. lec01–06 are byte-identical; there are 21 `##` headings, all unique. "Faithfulness" now reads ~15 min.
+
+*DPO*
+• P15 and notes: "One preference-training stage: no separate reward model or RL loop", and "favor preferred over rejected answers, relative to a fixed reference".
+• Tech P6:
+  – Gradient is now described as a positive term on ∇log π(y_w|x) and a negative term on ∇log π(y_l|x).
+  – "Same optimum as KL-penalized RL only under the idealized Bradley–Terry model; finite-data policies need not match."
+• P16: the title is now "DPO Can Still Overoptimize", with "Removing the explicit reward model does not eliminate overoptimization in this setup." The root-issue and any-proxy lines are gone from the notes.
+
+*Examples*
+• P7 and notes:
+  – Top line: "Pre-mitigation evaluation. CTF: a sandboxed hacking challenge; the flag is its hidden success token."
+  – Bottom line: "OpenAI: benign; evaluation infrastructure remained secure; yet 'instrumental convergence and power seeking'."
+  – To fit both lines, the source figure is now 340 px tall, unmodified. The five keyed steps carry its content.
+• P6: retitled "Reported Cases: Unintended Routes", with "Reported evaluation and research cases, each from the developer or evaluator itself."
+• P31:
+  – Body: "For one kernel-hack plan, METR asked '…in this task?' All 10 follow-up responses: 'no'."
+  – Takeaway: "Identifying a violation afterward does not ensure avoiding it."
+  – The cite says 10 responses, not 10 incidents.
+  – The training-signal sentence is gone from the notes.
+
+*Validation*
+• lint-deck is ok on all three files; outline-lint reports 0 stale pointers.
+• Notes rebuilt: 59 entries, 50 pages.
+• All affected pages render at -r 60 with no overlap: deck 6, 7, 15, 16, 31 and tech 6. P7 and tech P6 needed a re-layout; no type was shrunk.
+
+*Attached: lec07-review-r4.zip*
+• Correction diff (`831b335..0e98dc9`), plus the OUTLINE diff against `897eaed`.
+• Affected renders.
+• Full HTML for the deck, tech and notes; all three PDFs; sources.md (METR and o1 wording synced).
+
+lec08 still waits for Albert.

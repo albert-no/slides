@@ -1,0 +1,867 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 11 — Script &amp; Companion Notes</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/katex/katex.min.css">
+<script defer src="../../reference/katex/katex.min.js"></script>
+<script defer src="../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+body { max-width: 880px; margin: 40px auto; padding: 0 28px; color: var(--charcoal); font-family: 'Yonsei','Noto Sans',Arial,sans-serif; line-height: 1.65; }
+h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
+article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
+.kt { color: var(--yonsei-blue); font-weight: 700; }
+.pace { color: var(--gray-text); font-size: 0.92rem; margin: 0 0 6px; }
+.detail { margin: 16px 0 4px 14px; padding: 2px 0 2px 18px; border-left: 3px solid var(--slate); }
+.detail h3 { color: var(--yonsei-blue); font-size: 1.05rem; margin: 16px 0 6px; }
+.detail p, .detail ul, .detail ol { margin: 8px 0; }
+.detail table, table.pacing { border-collapse: collapse; margin: 10px 0; }
+.detail th, .detail td, table.pacing th, table.pacing td { border: 1px solid var(--slate); padding: 4px 12px; text-align: left; }
+</style></head><body>
+<h1>Lecture 11 — Synthetic Media: Watermarks, Detection and Provenance · Script &amp; Companion Notes</h1>
+<p><em>One entry per slide, in order. Each entry gives the slide's minute budget, the spoken script and the key takeaway. Content slides add companion notes: what the figure shows, the setup (who, which model, when), what the evidence does and does not establish, the assumptions, and links to the primary sources. Derivations and proofs live in the technical supplement, lec11tech.html. No in-class activities.</em></p>
+<table class="pacing"><tr><th>Block</th><th>Slides</th><th>Minutes</th></tr>
+<tr><td>The provenance problem</td><td>1–8</td><td>10</td></tr>
+<tr><td>Text watermarking</td><td>9–19</td><td>20</td></tr>
+<tr><td>Robustness and production</td><td>20–33</td><td>20</td></tr>
+<tr><td>Detecting without a watermark</td><td>34–42</td><td>15</td></tr>
+<tr><td>Provenance and policy</td><td>43–50</td><td>15</td></tr>
+<tr><td>Synthesis</td><td>51–56</td><td>10</td></tr>
+<tr><td><strong>Total</strong></td><td>1–56</td><td><strong>90</strong></td></tr></table>
+<p><em>Audience: mixed-major sophomores and juniors; concept-first, light math, no proofs. Quotes in the script are verbatim from the cited source; everything else is paraphrase.</em></p>
+
+<article>
+<h2>1. Synthetic Media: Watermarks, Detection and Provenance</h2>
+<p class="pace">The provenance problem · ≈0.5 min · elapsed ≈0.5 min</p>
+<p>Welcome to Lecture 11. Generators now produce text, images, voice and video that people cannot reliably tell from human work. Today's question: when something might be machine-made, what evidence can tell us where it came from, and how much should we trust that evidence?</p>
+<p><span class="kt">Key takeaway:</span> Today: evidence about where content came from, and how strong each kind is.</p>
+</article>
+
+<article>
+<h2>2. Contents</h2>
+<p class="pace">The provenance problem · ≈0.5 min · elapsed ≈1 min</p>
+<p>Six parts. The provenance problem; text watermarking; robustness and real deployments; detection without a watermark; provenance records and the law; and a synthesis.</p>
+<p>Pacing for 90 minutes: problem ≈10 min (slides 1–8), watermarking ≈20 (9–19), robustness and production ≈20 (20–33), detection without a watermark ≈15 (34–42), provenance and policy ≈15 (43–50), synthesis ≈10 (51–56).</p>
+<p><span class="kt">Key takeaway:</span> Six parts, organised by three kinds of evidence: embed, guess, sign.</p>
+</article>
+
+<article>
+<h2>3. Section 01 — The Provenance Problem</h2>
+<p class="pace">The provenance problem · ≈0.5 min · elapsed ≈1.5 min</p>
+<p>We start with a case where the question "who made this?" cost real money, then lay out the three kinds of evidence the rest of the lecture examines.</p>
+<p><span class="kt">Key takeaway:</span> Origin questions have real stakes.</p>
+</article>
+
+<article>
+<h2>4. A Faked Video Call Moved US$25 Million</h2>
+<p class="pace">The provenance problem · ≈2.5 min · elapsed ≈4 min</p>
+<p>In January 2024 an employee in Arup's Hong Kong office joined a video call with people who looked and sounded like the company's CFO and colleagues. Every other participant was fake. Following instructions on the call, the employee made 15 transfers to 5 accounts, about HKD 200 million, roughly USD 25 million.</p>
+<p>Nothing about the content of the call had to be false in an obvious way. The failure was about origin: who was actually on the other end.</p>
+<p>Keep this case in mind. A detector, a watermark or a signed record would each have helped in a different way, and each could also have failed.</p>
+<p><span class="kt">Key takeaway:</span> The question that mattered was origin, not content.</p>
+<div class="detail">
+<h3>Setup, model, date</h3>
+<p>Arup, Hong Kong office, January 2024; reported by CNN on 16 May 2024, with the account coming from Hong Kong police. Press report; no technical analysis of how the fakes were produced is public.</p>
+<h3>What this establishes</h3>
+<p>That synthetic video and voice were convincing enough to drive a large financial loss in a real workplace.</p>
+<h3>What this does not establish</h3>
+<p>It does not tell us which generator was used, or whether any detector would have flagged the call.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://www.cnn.com/2024/05/16/tech/arup-deepfake-scam-loss-hong-kong-intl-hnk">CNN, "Arup revealed as victim of $25 million deepfake scam involving Hong Kong employee" (16 May 2024)</a> — press report; the incident account comes from Hong Kong police.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>5. Three Ways to Ask "Where Did This Come From?"</h2>
+<p class="pace">The provenance problem · ≈2 min · elapsed ≈6 min</p>
+<p>Three families of evidence. Embed: the generator hides a signal in its output when it creates it; that is a watermark. Guess: anyone inspects the content afterwards and estimates whether a machine made it; that is a detector. Sign: the creator or the creating tool attaches a cryptographically signed record; that is provenance.</p>
+<p>They differ in who has to cooperate. A watermark needs the generator. A detector needs nobody, which is why it is attractive and why it is weak. Provenance needs the creating tool and every app along the sharing path to keep the record.</p>
+<p><span class="kt">Key takeaway:</span> Embed, guess, sign: three kinds of evidence with different cooperators.</p>
+</article>
+
+<article>
+<h2>6. Origin Is Not Truth</h2>
+<p class="pace">The provenance problem · ≈2 min · elapsed ≈8 min</p>
+<p>Read the table row by row. A watermark found: a keyed generator probably made this, but the content could still be true or false. Valid credentials: we know who signed which claims and that the file has not changed since, but not whether the claims are accurate.</p>
+<p>The bottom two rows are where people go wrong. No mark found does not mean human-made: the generator may not watermark, or the mark may have been removed. No credentials does not mean fake: most real photos carry none, and sharing apps often strip them.</p>
+<p>And AI-made content can carry perfectly honest credentials saying "made with model Y".</p>
+<p><span class="kt">Key takeaway:</span> Origin signals say who made something; absence of a signal proves little.</p>
+</article>
+
+<article>
+<h2>7. Three Questions for Every Method Today</h2>
+<p class="pace">The provenance problem · ≈1 min · elapsed ≈9 min</p>
+<p>For every method we ask three questions. Who acts: the generator, anyone, or the creator? What must survive: edits, paraphrase, crops, re-encoding, copy-paste? Which error hurts: accusing a human, or missing AI content?</p>
+<p>Study slides carry a strip with who acts, what was attacked, and the error rate used. Read it before reading the result.</p>
+<p><span class="kt">Key takeaway:</span> Who acts, what must survive, which error hurts.</p>
+</article>
+
+<article>
+<h2>8. Today: Marks on Outputs, Not on Models</h2>
+<p class="pace">The provenance problem · ≈1 min · elapsed ≈10 min</p>
+<p>One boundary. Today's watermarks mark each generated output, so we can ask "did this model produce this text?" A different line of work marks the model weights, to ask "is this stolen copy my model?" That is out of scope today, as is copyright of training data and outputs.</p>
+<p><span class="kt">Key takeaway:</span> Output watermarks only; model-ownership marks and copyright are out of scope.</p>
+</article>
+
+<article>
+<h2>9. Section 02 — Text Watermarking</h2>
+<p class="pace">Text watermarking · ≈0.5 min · elapsed ≈10.5 min</p>
+<p>We now build one text watermark from scratch, the one from Kirchenbauer and colleagues, usually called KGW. Everything later in the lecture is a variation or an attack on this idea.</p>
+<p><span class="kt">Key takeaway:</span> One mechanism, taught carefully.</p>
+</article>
+
+<article>
+<h2>10. A Model Writes One Token at a Time</h2>
+<p class="pace">Text watermarking · ≈1.5 min · elapsed ≈12 min</p>
+<p>A language model does not write a sentence at once. Given the text so far, it gives odds for every possible next word, picks one at random by those odds, appends it, and repeats.</p>
+<p>The numbers on the slide are illustrative. The point: there is randomness in every pick, and a watermark changes only how that pick is made.</p>
+<p><span class="kt">Key takeaway:</span> Generation is repeated random picks; a watermark changes the pick.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Illustrative bar chart of next-word probabilities after "The weather today is". The numbers are made up for teaching.</p>
+</div>
+</article>
+
+<article>
+<h2>11. Step 1: A Secret Key Splits the Vocabulary</h2>
+<p class="pace">Text watermarking · ≈2 min · elapsed ≈14 min</p>
+<p>At each position, the previous word and a secret key are hashed into a random seed. The seed splits the whole vocabulary into a green list, a fraction γ of words (here 25%), and a red list, the rest.</p>
+<p>The split changes at every position because the previous word changes. Without the key, the split looks random; with it, anyone can recompute which words were green.</p>
+<p><span class="kt">Key takeaway:</span> A keyed hash of the previous word picks a fresh green list at each step.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Schematic of the KGW split: previous word and secret key feed a hash, which seeds a green/red partition of the vocabulary.</p>
+<h3>Setup, model, date</h3>
+<p>Kirchenbauer et al., University of Maryland; arXiv January 2023, ICML 2023. The rule shown is the "soft" watermark of §3.</p>
+<h3>Assumptions</h3>
+<p>The hash behaves like a random function; the key stays secret from the attacker.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2301.10226">Kirchenbauer, Geiping, Wen, Katz, Miers &amp; Goldstein, "A Watermark for Large Language Models" (ICML 2023)</a> — green/red list rule (§3, Algorithm 2), z-test (§3), Fig. 1 example, Fig. 2 strength vs perplexity, Fig. 3a z vs length.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>12. Step 2: Give Green Words a Small Boost δ</h2>
+<p class="pace">Text watermarking · ≈2 min · elapsed ≈16 min</p>
+<p>The generator adds a small constant δ to the scores of green words before turning scores into odds. Green words become more likely; red words stay possible.</p>
+<p>When the model is very sure of one word, the boost barely changes the pick, so the mark is weak in low-entropy text such as code or memorised passages. That is why detection needs enough varied text.</p>
+<p><span class="kt">Key takeaway:</span> A soft boost tilts the odds toward green words without forbidding red ones.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Illustrative before/after bars: green words gain probability, red words lose some.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2301.10226">Kirchenbauer, Geiping, Wen, Katz, Miers &amp; Goldstein, "A Watermark for Large Language Models" (ICML 2023)</a> — green/red list rule (§3, Algorithm 2), z-test (§3), Fig. 1 example, Fig. 2 strength vs perplexity, Fig. 3a z vs length.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>13. Reading Back: Count the Green Words</h2>
+<p class="pace">Text watermarking · ≈2 min · elapsed ≈18 min</p>
+<p>This is KGW's Figure 1. The detector, holding the key, recomputes the green list at each position and colours each token. Ordinary text has green tokens at about the chance rate; watermarked text has many more.</p>
+<p>The numbers: without the watermark, z = 0.31 and p = 0.38. With it, z = 7.4 and p ≈ 6×10⁻¹⁴.</p>
+<p>Detection needs only the key and the text, not the model.</p>
+<p><span class="kt">Key takeaway:</span> With the key, detection is counting.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>KGW Fig. 1, unmodified: a prompt, a non-watermarked completion (56 tokens, z = 0.31) and a watermarked completion (36 tokens, z = 7.4), tokens shaded green or red as the detector sees them.</p>
+<h3>Setup, model, date</h3>
+<p>Kirchenbauer et al., ICML 2023; experiments use OPT-1.3B.</p>
+<h3>What this establishes</h3>
+<p>That a keyed count separates these two examples sharply.</p>
+<h3>What this does not establish</h3>
+<p>One example; the rates come from later figures.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2301.10226">Kirchenbauer, Geiping, Wen, Katz, Miers &amp; Goldstein, "A Watermark for Large Language Models" (ICML 2023)</a> — green/red list rule (§3, Algorithm 2), z-test (§3), Fig. 1 example, Fig. 2 strength vs perplexity, Fig. 3a z vs length.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>14. By Chance, About γ of Words Are Green</h2>
+<p class="pace">Text watermarking · ≈1.5 min · elapsed ≈19.5 min</p>
+<p>If the text was written without the key, each word is green with probability about γ, like a biased coin. With γ = 25% we expect about 5 green words in 20. The watermarked line has 14.</p>
+<p>The question becomes statistical: is the green count too high to be chance?</p>
+<p><span class="kt">Key takeaway:</span> Unmarked text should hit green at the chance rate γ.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Illustrative strips of 20 tokens: 5/20 green for ordinary text, 14/20 for watermarked text.</p>
+</div>
+</article>
+
+<article>
+<h2>15. The Threshold Sets the False-Alarm Rate</h2>
+<p class="pace">Text watermarking · ≈2.5 min · elapsed ≈22 min</p>
+<p>z measures how many standard deviations the green count sits above chance. KGW flags text when z > 4.</p>
+<p>If words really were independent coin flips, ordinary text would cross z = 4 with probability about 3×10⁻⁵, one in roughly 30,000. That "if" matters; two slides on we see when it fails.</p>
+<p>Moving the threshold trades false alarms for misses, as with any test.</p>
+<p><span class="kt">Key takeaway:</span> The threshold sets the false-alarm rate, under an independence assumption.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Sketch, not to scale: two bell curves of z, ordinary text centred near 0 and watermarked text far right, with the threshold at z = 4.</p>
+<h3>Setup, model, date</h3>
+<p>KGW §3: one-proportion z-test; threshold z = 4.</p>
+<h3>Assumptions</h3>
+<p>Under the null, each scored token is green independently with probability γ. The exact null distribution and the √T scaling are in lec11tech.html.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2301.10226">Kirchenbauer, Geiping, Wen, Katz, Miers &amp; Goldstein, "A Watermark for Large Language Models" (ICML 2023)</a> — green/red list rule (§3, Algorithm 2), z-test (§3), Fig. 1 example, Fig. 2 strength vs perplexity, Fig. 3a z vs length.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>16. Longer Text, Stronger Evidence</h2>
+<p class="pace">Text watermarking · ≈2 min · elapsed ≈24 min</p>
+<p>KGW Figure 3a: average z against the number of tokens T, at boost δ = 5, for several green fractions γ. Every curve rises with length.</p>
+<p>If the green rate stays steady, z grows like √T. A short reply carries little evidence however strong the boost.</p>
+<p><span class="kt">Key takeaway:</span> Evidence accumulates with length; short texts are hard.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>KGW Fig. 3a, unmodified: average z-score vs T for δ = 5 and γ ∈ {0.1, 0.25, 0.5, 0.75, 0.9}.</p>
+<h3>Setup, model, date</h3>
+<p>OPT-1.3B, multinomial sampling, C4 prompts; average over generations.</p>
+<h3>What this establishes</h3>
+<p>That detection strength grows steadily with length in this setting.</p>
+<h3>What this does not establish</h3>
+<p>Averages hide the spread; short individual texts can fall below threshold.</p>
+<h3>Assumptions</h3>
+<p>√T holds only if the green rate per token stays constant; see lec11tech.html.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2301.10226">Kirchenbauer, Geiping, Wen, Katz, Miers &amp; Goldstein, "A Watermark for Large Language Models" (ICML 2023)</a> — green/red list rule (§3, Algorithm 2), z-test (§3), Fig. 1 example, Fig. 2 strength vs perplexity, Fig. 3a z vs length.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>17. Repeated Phrases Break the Coin-Flip Count</h2>
+<p class="pace">Text watermarking · ≈2.5 min · elapsed ≈26.5 min</p>
+<p>Real text repeats itself. If the same (previous word, word) pair appears twice, it gets the same colour twice; the two "coin flips" are not independent, so the z-test is overconfident.</p>
+<p>Kirchenbauer and colleagues' 2024 Figure 7 measures this on human text from WikiText-103. Blue counts repeats; its measured false-alarm rate sits above the theory. Green counts each repeated pair once; it then matches the black theory curve.</p>
+<p>Vocabulary: the nominal rate comes from the formula; the measured rate comes from running the detector on real human text. A careful paper reports both.</p>
+<p><span class="kt">Key takeaway:</span> Nominal and measured false-alarm rates differ unless repeats are handled.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Kirchenbauer et al. 2024 Fig. 7, unmodified: left, empirical FPR vs z threshold; right, z required for 0.1% FPR vs tokens. Blue uncorrected, green with repeated n-grams removed, black theoretical.</p>
+<h3>Setup, model, date</h3>
+<p>Kirchenbauer et al., ICLR 2024; human text from WikiText-103.</p>
+<h3>What this establishes</h3>
+<p>That ignoring repeated n-grams inflates false alarms, and that scoring each repeated pair once restores agreement with theory on this corpus.</p>
+<h3>What this does not establish</h3>
+<p>It does not guarantee the nominal rate on other text types, such as code or templated writing.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2306.04634">Kirchenbauer et al., "On the Reliability of Watermarks for Large Language Models" (ICLR 2024)</a> — machine paraphrase and copy-paste attacks (Fig. 2), human rewrite study with 14 writers (Fig. 4), empirical FPR with repeated-n-gram correction (Fig. 7).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>18. A Bigger Boost Is Easier to Detect, but Less Fluent</h2>
+<p class="pace">Text watermarking · ≈2 min · elapsed ≈28.5 min</p>
+<p>KGW Figure 2, left panel. Each point is a setting of boost δ (shape) and green fraction γ (colour). The x-axis is perplexity under a larger oracle model, reversed so that right is more fluent. The y-axis is z.</p>
+<p>With no boost, z is 0 and perplexity about 5. With δ = 10, z reaches about 41 but perplexity rises to about 13. The boost is a dial between detectability and quality.</p>
+<p><span class="kt">Key takeaway:</span> Detectability costs fluency; δ is the dial.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>KGW Fig. 2 left, unmodified: z-score vs oracle-model perplexity (axis reversed) for δ ∈ {0, 1, 2, 5, 10} and several γ; T ≈ 200 tokens.</p>
+<h3>Setup, model, date</h3>
+<p>OPT-1.3B, multinomial sampling, T = 200 ± 5 tokens.</p>
+<h3>What this establishes</h3>
+<p>A quality–detectability trade-off for this scheme and model.</p>
+<h3>What this does not establish</h3>
+<p>Perplexity is a proxy for quality; it is not a human judgment.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2301.10226">Kirchenbauer, Geiping, Wen, Katz, Miers &amp; Goldstein, "A Watermark for Large Language Models" (ICML 2023)</a> — green/red list rule (§3, Algorithm 2), z-test (§3), Fig. 1 example, Fig. 2 strength vs perplexity, Fig. 3a z vs length.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>19. Some Marks Leave the Output Distribution Unchanged</h2>
+<p class="pace">Text watermarking · ≈1.5 min · elapsed ≈30 min</p>
+<p>KGW shifts the odds. Other designs do not. A distortion-free watermark (Kuditipudi and colleagues) guarantees that, averaged over the random key, each reply has exactly the model's own odds. An undetectable watermark (Christ, Gunn and Zamir) guarantees that without the key no efficient test can tell marked from unmarked text, even after many queries.</p>
+<p>We name these so you recognise them; we will not build them. The formal definition is in the tech file.</p>
+<p><span class="kt">Key takeaway:</span> A boost is not the only design; some marks are invisible without the key.</p>
+<div class="detail">
+<h3>Setup, model, date</h3>
+<p>Kuditipudi et al., Stanford, TMLR (Definition 1). Christ, Gunn &amp; Zamir, arXiv 2306.09194 (2023).</p>
+<h3>What this does not establish</h3>
+<p>"Distortion-free" is a statement averaged over keys; it is not a claim about any single reply, nor about robustness to edits.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2307.15593">Kuditipudi, Thickstun, Hashimoto &amp; Liang, "Robust Distortion-free Watermarks for Language Models" (TMLR)</a> — distortion-free definition (Definition 1), EXP and EXP-edit watermarks, substitution robustness (Fig. 4, m = 35).</li>
+<li><a href="https://arxiv.org/abs/2306.09194">Christ, Gunn &amp; Zamir, "Undetectable Watermarks for Language Models" (arXiv 2306.09194, 2023)</a> — cryptographic definition of undetectability; venue not checked for this lecture.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>20. Section 03 — Robustness and Production</h2>
+<p class="pace">Robustness and production · ≈0.5 min · elapsed ≈30.5 min</p>
+<p>A watermark is only useful if it survives what people do to text. We look at the evidence under different attacks, then at deployed systems.</p>
+<p><span class="kt">Key takeaway:</span> Robustness is always relative to an attack.</p>
+</article>
+
+<article>
+<h2>21. Edits Range From Word Swaps to Full Rewrites</h2>
+<p class="pace">Robustness and production · ≈1 min · elapsed ≈31.5 min</p>
+<p>Think of attacks as a ladder: swap some words; run a paraphrasing model; paraphrase repeatedly; have a person rewrite; paste a short marked piece into a long human text.</p>
+<p>Each study tests one rung, with one watermark, one length and one error rate. In all of today's studies the attacker does not have the key.</p>
+<p><span class="kt">Key takeaway:</span> Compare studies only rung by rung.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Ladder diagram of attack strength; ordering is conceptual, not measured.</p>
+</div>
+</article>
+
+<article>
+<h2>22. Random Word Swaps: Some Marks Held Longer</h2>
+<p class="pace">Robustness and production · ≈1.5 min · elapsed ≈33 min</p>
+<p>Kuditipudi Figure 4. The attacker replaces a random fraction of tokens. The y-axis is the median p-value; low means still detected.</p>
+<p>The distortion-free EXP watermarks stay detected until roughly half the tokens are swapped; KGW at γ = 0.25, δ = 2 loses detection sooner. These are 35-token replies, so this is a short-text test.</p>
+<p><span class="kt">Key takeaway:</span> Under random swaps, design matters.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Kuditipudi et al. Fig. 4, unmodified: median p-value vs fraction of substitutions, OPT-1.3B (left) and LLaMA-7B (right); EXP, EXP-edit, KGW-2.0.</p>
+<h3>Setup, model, date</h3>
+<p>Kuditipudi et al., TMLR; OPT-1.3B and LLaMA-7B; generation length m = 35. KGW-2.0 is their name for the KGW baseline with δ = 2 (γ = 0.25).</p>
+<h3>What this establishes</h3>
+<p>That on short texts, EXP watermarks tolerate more random substitutions than this KGW setting.</p>
+<h3>What this does not establish</h3>
+<p>Random substitutions are a weak attacker; this says nothing about paraphrase.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2307.15593">Kuditipudi, Thickstun, Hashimoto &amp; Liang, "Robust Distortion-free Watermarks for Language Models" (TMLR)</a> — distortion-free definition (Definition 1), EXP and EXP-edit watermarks, substitution robustness (Fig. 4, m = 35).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>23. A Paraphrasing Model Cut Detection to About Half</h2>
+<p class="pace">Robustness and production · ≈1.5 min · elapsed ≈34.5 min</p>
+<p>Krishna and colleagues built DIPPER, an 11-billion-parameter paraphraser with two dials: L for word-choice change and O for reordering, each 0 to 100.</p>
+<p>On 300-token KGW-watermarked text, with the threshold set for 1% false alarms on human text, detection drops from about 100% clean to 57.2% (GPT2-1.5B) and 52.8% (OPT-13B) at the strongest setting.</p>
+<p><span class="kt">Key takeaway:</span> A strong paraphraser roughly halves detection at this length.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Redrawn from Krishna et al. Table 1, KGW rows only (γ = 0.5, δ = 2): % of watermarked texts detected at 1% FPR, for clean text and four DIPPER settings.</p>
+<h3>Setup, model, date</h3>
+<p>Krishna et al. (UMass Amherst, Google), NeurIPS 2023. Generators GPT2-XL (1.5B) and OPT-13B; 300-token generations; human text from WikiText-103 sets the threshold.</p>
+<h3>What this establishes</h3>
+<p>That paraphrase without the key substantially reduces KGW detection at 300 tokens and 1% FPR.</p>
+<h3>What this does not establish</h3>
+<p>It does not show detection goes to zero, nor what happens with longer texts or different watermark settings.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2303.13408">Krishna, Song, Karpinska, Wieting &amp; Iyyer, "Paraphrasing evades detectors of AI-generated text, but retrieval is an effective defense" (NeurIPS 2023)</a> — DIPPER paraphraser (11B), Table 1 detection at 1% FPR before and after paraphrase; 300-token generations.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>24. Paraphrasing Five Times Pushed Detection Lower</h2>
+<p class="pace">Robustness and production · ≈1.5 min · elapsed ≈36 min</p>
+<p>Sadasivan and colleagues paraphrase repeatedly. Figure 3a shows ROC curves after each round, ppi. At 1% false alarms, detection falls from 99.8% to 80.7% after one round, and to 15.7% after five.</p>
+<p>Read the perplexity column too: it rose from 5.1 to 8.7. The text got worse; the attack had a quality cost.</p>
+<p><span class="kt">Key takeaway:</span> Repeated paraphrase erodes the mark, at a quality cost.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Sadasivan et al. Fig. 3a, unmodified: ROC curves for watermark detection after 0–5 rounds of DIPPER paraphrasing; legend lists AUROC, TPR at 1% FPR and perplexity.</p>
+<h3>Setup, model, date</h3>
+<p>Sadasivan et al. (University of Maryland), arXiv March 2023, TMLR 2025. Watermarked OPT-13B on XSum documents; ~300 tokens; DIPPER as paraphraser.</p>
+<h3>What this establishes</h3>
+<p>That recursive paraphrase can push detection of this watermark at 1% FPR very low.</p>
+<h3>What this does not establish</h3>
+<p>It does not measure whether the paraphrased text is still useful for the attacker's purpose.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2303.11156">Sadasivan, Kumar, Balasubramanian, Wang &amp; Feizi, "Can AI-Generated Text be Reliably Detected?" (TMLR 2025)</a> — recursive paraphrasing (Fig. 3a, OPT-13B, XSum), AUROC bound in terms of total variation (Theorem 1).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>25. An Impossibility Bound, and What It Covers</h2>
+<p class="pace">Robustness and production · ≈2 min · elapsed ≈38 min</p>
+<p>Sadasivan also prove a bound: any detector's AUROC is at most ½ + TV − TV²/2, where TV is the total-variation distance between the AI text distribution and the human text distribution.</p>
+<p>If an attacker makes AI text nearly indistinguishable from human text, TV is near 0 and every detector is near a coin flip. If TV is large, as it is for freshly watermarked text, the bound is near 1 and says little.</p>
+<p>So the bound tells you what happens once the attacker succeeds; it does not tell you how hard succeeding is.</p>
+<p><span class="kt">Key takeaway:</span> The bound is conditional on a successful attack.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Curve drawn from the formula AUROC ≤ ½ + TV − TV²/2, with two illustrative points.</p>
+<h3>Setup, model, date</h3>
+<p>Sadasivan et al., Theorem 1 and its discussion of watermarked models.</p>
+<h3>Assumptions</h3>
+<p>Applies to any detector that sees one text sample; the derivation is in lec11tech.html.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2303.11156">Sadasivan, Kumar, Balasubramanian, Wang &amp; Feizi, "Can AI-Generated Text be Reliably Detected?" (TMLR 2025)</a> — recursive paraphrasing (Fig. 3a, OPT-13B, XSum), AUROC bound in terms of total variation (Theorem 1).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>26. Human Rewrites: Detected With Enough Text</h2>
+<p class="pace">Robustness and production · ≈1.5 min · elapsed ≈39.5 min</p>
+<p>Kirchenbauer and colleagues (2024) recruited 14 experienced writers to rewrite watermarked Vicuna answers, without the key. At a strict 10⁻⁵ false-alarm threshold, z keeps rising with length: on average, human rewrites were detected after about 800 tokens.</p>
+<p><span class="kt">Key takeaway:</span> Human paraphrase dilutes the mark; length brings it back.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Kirchenbauer et al. 2024 Fig. 4 right, unmodified: z-score vs tokens observed for Dipper, GPT and the average human rewrite.</p>
+<h3>Setup, model, date</h3>
+<p>Kirchenbauer et al., ICLR 2024; 14 human writers; watermarked Vicuna on long-form QA prompts.</p>
+<h3>What this establishes</h3>
+<p>That on long texts, human rewrites lowered but did not erase the signal.</p>
+<h3>What this does not establish</h3>
+<p>Fourteen writers on one task; not a bound on what any writer can do.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2306.04634">Kirchenbauer et al., "On the Reliability of Watermarks for Large Language Models" (ICLR 2024)</a> — machine paraphrase and copy-paste attacks (Fig. 2), human rewrite study with 14 writers (Fig. 4), empirical FPR with repeated-n-gram correction (Fig. 7).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>27. Mixed Into Human Text, the Mark Fades</h2>
+<p class="pace">Robustness and production · ≈1.5 min · elapsed ≈41 min</p>
+<p>Kirchenbauer 2024 Figure 2. The CP attacks paste watermarked pieces into human text: CP-3-10% means three marked pieces making up 10% of the text. The y-axis is ROC-AUC and starts at 0.5, chance.</p>
+<p>At 200 tokens with 10% marked, AUC is about 0.65–0.70. At 600 tokens with 25% marked, about 0.97–0.99.</p>
+<p><span class="kt">Key takeaway:</span> Dilution weakens the signal; enough marked text recovers it.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Kirchenbauer et al. 2024 Fig. 2, unmodified: ROC-AUC under copy-paste, Dipper and GPT attacks, grouped by T.</p>
+<h3>Setup, model, date</h3>
+<p>LLaMA-7B with γ = 0.25, δ = 2. Dipper/GPT bars have shorter T because paraphrase shortens text (caption).</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2306.04634">Kirchenbauer et al., "On the Reliability of Watermarks for Large Language Models" (ICLR 2024)</a> — machine paraphrase and copy-paste attacks (Fig. 2), human rewrite study with 14 writers (Fig. 4), empirical FPR with repeated-n-gram correction (Fig. 7).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>28. Compare Robustness Results Only With Their Setups</h2>
+<p class="pace">Robustness and production · ≈2 min · elapsed ≈43 min</p>
+<p>Put the studies side by side and they look contradictory: 57% caught, 15.7% caught, AUC above 0.9, detected on average. But they differ in attack, length and error rate, and in watermark settings too.</p>
+<p>Krishna and Sadasivan fix 1% false alarms at about 300 tokens. Kirchenbauer 2024 uses longer texts and either ROC-AUC or a 10⁻⁵ threshold. Kuditipudi uses 35-token texts and a median p-value.</p>
+<p>Watermark settings: Kuditipudi KGW-2.0 (γ = 0.25, δ = 2); Krishna KGW γ = 0.5, δ = 2; Sadasivan watermarked OPT-13B; Kirchenbauer 2024 γ = 0.25, δ = 2 (LLaMA-7B, Vicuna for the human study).</p>
+<p><span class="kt">Key takeaway:</span> No single robustness number; each is tied to its setup.</p>
+<div class="detail">
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2307.15593">Kuditipudi, Thickstun, Hashimoto &amp; Liang, "Robust Distortion-free Watermarks for Language Models" (TMLR)</a> — distortion-free definition (Definition 1), EXP and EXP-edit watermarks, substitution robustness (Fig. 4, m = 35).</li>
+<li><a href="https://arxiv.org/abs/2303.13408">Krishna, Song, Karpinska, Wieting &amp; Iyyer, "Paraphrasing evades detectors of AI-generated text, but retrieval is an effective defense" (NeurIPS 2023)</a> — DIPPER paraphraser (11B), Table 1 detection at 1% FPR before and after paraphrase; 300-token generations.</li>
+<li><a href="https://arxiv.org/abs/2303.11156">Sadasivan, Kumar, Balasubramanian, Wang &amp; Feizi, "Can AI-Generated Text be Reliably Detected?" (TMLR 2025)</a> — recursive paraphrasing (Fig. 3a, OPT-13B, XSum), AUROC bound in terms of total variation (Theorem 1).</li>
+<li><a href="https://arxiv.org/abs/2306.04634">Kirchenbauer et al., "On the Reliability of Watermarks for Large Language Models" (ICLR 2024)</a> — machine paraphrase and copy-paste attacks (Fig. 2), human rewrite study with 14 writers (Fig. 4), empirical FPR with repeated-n-gram correction (Fig. 7).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>29. "Impossible" and "Robust" Answer Different Questions</h2>
+<p class="pace">Robustness and production · ≈1.5 min · elapsed ≈44.5 min</p>
+<p>The bound says: if AI text is made nearly indistinguishable from human text, every detector fails. The experiments say: against these edits, at this length and error rate, the mark was found or not. Both can be true.</p>
+<p>The useful question is how much the attack cost, in effort and in text quality.</p>
+<p><span class="kt">Key takeaway:</span> The impossibility result and the robustness results are differently scoped.</p>
+</article>
+
+<article>
+<h2>30. SynthID-Text Runs in a Deployed Chatbot</h2>
+<p class="pace">Robustness and production · ≈1.5 min · elapsed ≈46 min</p>
+<p>Google DeepMind's SynthID-Text, published in Nature in 2024. Figure 3a: true positives at 1% false alarms against length. SynthID-Text (orange) reaches about 50% at 100 tokens and about 87% at 400, above the earlier Gumbel-sampling method (blue).</p>
+<p>The authors also ran a live experiment on nearly 20 million Gemini responses and report that user thumbs-up/down ratings showed text quality was preserved.</p>
+<p><span class="kt">Key takeaway:</span> A text watermark is deployed at scale; detection still depends on length.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Dathathri et al. Fig. 3a, unmodified: TPR at FPR = 1% vs number of tokens for non-distortionary SynthID-Text and Gumbel sampling.</p>
+<h3>Setup, model, date</h3>
+<p>Dathathri et al., Google DeepMind, Nature 634 (October 2024). Gemma 7B-IT, temperature 0.7, ELI5 prompts.</p>
+<h3>What this establishes</h3>
+<p>Detection rates for unedited text at stated lengths, and a large-scale quality check by user ratings.</p>
+<h3>What this does not establish</h3>
+<p>This figure has no attack; robustness to paraphrase is a separate question.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://www.nature.com/articles/s41586-024-08025-4">Dathathri et al., "Scalable watermarking for identifying large language model outputs", Nature 634 (2024)</a> — SynthID-Text; Fig. 3a TPR at 1% FPR vs length (Gemma 7B-IT, temperature 0.7, ELI5 prompts); live experiment on nearly 20 million Gemini responses.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>31. Image Marks: It Depends on the Method and the Edit</h2>
+<p class="pace">Robustness and production · ≈1.5 min · elapsed ≈47.5 min</p>
+<p>Tree-Ring Table 2 (subset). Each cell is AUC on Stable Diffusion images after an edit; red is 0.65 or below.</p>
+<p>The older DwtDct mark fails under most edits. RivaGan survives cropping and JPEG but not a 75° rotation. Tree-Ring's ring variant holds above 0.9 everywhere here. So "image watermarks break under cropping" is too broad: it depends on the method and the edit.</p>
+<p><span class="kt">Key takeaway:</span> Image-mark robustness is method-by-edit, not a single verdict.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Subset of Tree-Ring Table 2, rounded: AUC under clean, rotation 75°, JPEG 25, crop 75%, blur and noise for DwtDct, RivaGan, Tree-Ring rand and rings.</p>
+<h3>Setup, model, date</h3>
+<p>Wen et al. (University of Maryland), NeurIPS 2023; Stable Diffusion images; attacks as in the table header.</p>
+<h3>What this does not establish</h3>
+<p>The attacks are fixed edits, not an adaptive attacker who targets the method.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2305.20030">Wen, Kirchenbauer, Geiping &amp; Goldstein, "Tree-Ring Watermarks: Fingerprints for Diffusion Images that are Invisible and Robust" (NeurIPS 2023)</a> — Table 2: AUC of image watermarks under six attacks on Stable Diffusion images.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>32. A Vendor's Detector Reads That Vendor's Mark</h2>
+<p class="pace">Robustness and production · ≈1.5 min · elapsed ≈49 min</p>
+<p>Google announced a SynthID Detector portal in May 2025 and said over 10 billion items had been marked. It reads SynthID only. Content from another vendor, or from an open model with no mark, comes back "no SynthID".</p>
+<p>"No SynthID" does not mean human-made.</p>
+<p><span class="kt">Key takeaway:</span> A keyed detector only answers for its own key.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Schematic: three sources feed one vendor detector; only the vendor's own mark is found.</p>
+<h3>Setup, model, date</h3>
+<p>Google, The Keyword blog, 20 May 2025: vendor statement, not independently verified.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://blog.google/innovation-and-ai/products/google-synthid-ai-content-detector/">Google, The Keyword blog, SynthID Detector announcement (20 May 2025)</a> — vendor statement: over 10 billion pieces of content watermarked; detector portal in early testing. Not independently verified.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>33. "Standard" Can Mean Three Different Things</h2>
+<p class="pace">Robustness and production · ≈1 min · elapsed ≈50 min</p>
+<p>When someone says "there is a standard for AI labels", ask which layer. The signed record format, C2PA Content Credentials, is an open specification. Watermark plus detector is usually tied to one vendor's key, as with SynthID. Labelling rules are set per jurisdiction, for example China's GB 45438-2025.</p>
+<p><span class="kt">Key takeaway:</span> Ask which layer a "standard" refers to.</p>
+<div class="detail">
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://spec.c2pa.org/specifications/specifications/2.2/softbinding/Decoupled.html">C2PA, Technical Specification 2.2 and Soft Binding API</a> — manifests, assertions, claim signatures, hard bindings; soft bindings (watermarks, fingerprints) and manifest repositories.</li>
+<li><a href="https://www.chinalawtranslate.com/en/ai-labeling/">CAC et al., Measures for Labeling AI-Generated Synthetic Content (English translation, China Law Translate)</a> — released 14 March 2025 with mandatory national standard GB 45438-2025; effective 1 September 2025; explicit (visible) and implicit (metadata) labels.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>34. Section 04 — Detecting Without a Watermark</h2>
+<p class="pace">Detecting without a watermark · ≈0.5 min · elapsed ≈50.5 min</p>
+<p>Now drop the key. A detector looks at content and guesses. This is what most people mean by "AI detection".</p>
+<p><span class="kt">Key takeaway:</span> No key: the detector must guess.</p>
+</article>
+
+<article>
+<h2>35. A Detector Draws One Line Through Overlapping Scores</h2>
+<p class="pace">Detecting without a watermark · ≈1.5 min · elapsed ≈52 min</p>
+<p>A keyless detector gives each text a score. Human and AI scores overlap. The detector draws one line: right of it, flagged. Some AI text falls left (missed); some human text falls right (false alarm). Moving the line trades one for the other; it never removes both.</p>
+<p><span class="kt">Key takeaway:</span> Overlap forces a trade-off between misses and false accusations.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Sketch: two overlapping score distributions with a threshold line.</p>
+</div>
+</article>
+
+<article>
+<h2>36. Worked Example: Rare AI Text, Many False Accusations</h2>
+<p class="pace">Detecting without a watermark · ≈2.5 min · elapsed ≈54.5 min</p>
+<p>A hypothetical: 10,000 essays, 2% AI-written. The detector catches 90% of AI essays and flags 1% of human essays.</p>
+<p>That gives 180 AI essays flagged and 98 human essays flagged, 278 flags in total. 98 of 278, about 35%, are humans. One flag in three is a false accusation, with a detector that sounds very good.</p>
+<p><span class="kt">Key takeaway:</span> When AI text is rare, even a low false-alarm rate produces many false accusations.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Tree diagram of the hypothetical population; numbers are for illustration and not from any study.</p>
+<h3>Assumptions</h3>
+<p>Hypothetical rates; the general formula is in lec11tech.html.</p>
+</div>
+</article>
+
+<article>
+<h2>37. "1% False Alarms" Is Not "1% of Flags Are Wrong"</h2>
+<p class="pace">Detecting without a watermark · ≈2 min · elapsed ≈56.5 min</p>
+<p>Two different numbers. The false-positive rate: of human essays, the share flagged. It is a property of the detector. The share of flags that are human: it also depends on how common AI text is.</p>
+<p>Same detector: at 2% AI prevalence, about 35% of flags are human. At 20% prevalence, about 4%.</p>
+<p><span class="kt">Key takeaway:</span> FPR is fixed; the chance a flagged person is innocent depends on prevalence.</p>
+<div class="detail">
+<h3>Going further</h3>
+<p>At 20%: 2,000 AI essays → 1,800 flagged; 8,000 human → 80 flagged; 80/1,880 ≈ 4.3%.</p>
+</div>
+</article>
+
+<article>
+<h2>38. 2023 Detectors Flagged Non-Native Writers Most</h2>
+<p class="pace">Detecting without a watermark · ≈2 min · elapsed ≈58.5 min</p>
+<p>Liang and colleagues ran seven detectors available in 2023 on human essays only: 91 TOEFL essays by non-native writers and 88 essays by US 8th graders.</p>
+<p>The TOEFL essays were flagged as AI on average 61% of the time; 89 of 91 were flagged by at least one detector. The US essays were rarely flagged.</p>
+<p>This is historical: these detectors have changed. The lesson is about who bears false alarms.</p>
+<p><span class="kt">Key takeaway:</span> False alarms can fall unevenly on particular groups.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Liang et al. Fig. 1a, unmodified: % of human-written essays misclassified as AI, by detector, for TOEFL (dark) and US 8th-grade (grey) essays.</p>
+<h3>Setup, model, date</h3>
+<p>Liang et al. (Stanford), Patterns 2023; detectors as of early 2023.</p>
+<h3>What this establishes</h3>
+<p>That simpler, lower-perplexity writing was flagged far more often by those detectors.</p>
+<h3>What this does not establish</h3>
+<p>It does not describe current versions of these detectors.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2304.02819">Liang, Yuksekgonul, Mao, Wu &amp; Zou, "GPT detectors are biased against non-native English writers" (Patterns, 2023)</a> — Fig. 1a: seven detectors on 91 TOEFL essays and 88 US 8th-grade essays, all human-written.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>39. OpenAI Withdrew Its Own Classifier in 2023</h2>
+<p class="pace">Detecting without a watermark · ≈1.5 min · elapsed ≈60 min</p>
+<p>OpenAI released an AI-text classifier in January 2023. On its own challenge set, it caught 26% of AI-written texts and flagged 9% of human-written texts. In July 2023 OpenAI withdrew it, citing its low rate of accuracy.</p>
+<p>Our arithmetic, not OpenAI's: at 2% AI prevalence, about 94% of its flags would have been human.</p>
+<p><span class="kt">Key takeaway:</span> Even the model maker could not build a reliable keyless detector for its own text at that time.</p>
+<div class="detail">
+<h3>Setup, model, date</h3>
+<p>OpenAI blog, 31 January 2023; note added 20 July 2023. Read via the Internet Archive copy.</p>
+<h3>Going further</h3>
+<p>Our arithmetic: of 10,000 texts, 200 AI → 52 flagged; 9,800 human → 882 flagged; 882/934 ≈ 94%.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://openai.com/index/new-ai-classifier-for-indicating-ai-written-text/">OpenAI, "New AI classifier for indicating AI-written text" (31 Jan 2023; note added 20 Jul 2023)</a> — 26% true positives and 9% false positives on a "challenge set" of English texts; withdrawn "due to its low rate of accuracy". Checked via the Internet Archive copy because the live page returned 403.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>40. Deepfake Detectors Were Tested on Videos They Never Saw</h2>
+<p class="pace">Detecting without a watermark · ≈1.5 min · elapsed ≈61.5 min</p>
+<p>For video, the largest public test is the DeepFake Detection Challenge. Training data: DFDC videos made with 3,426 paid actors. A public test of 4,000 videos for the leaderboard. A hidden private test of 10,000 clips, half new DFDC videos and half collected from the internet.</p>
+<p>2,114 teams took part; final ranking was on the hidden test.</p>
+<p><span class="kt">Key takeaway:</span> The real test was on videos unlike the training data.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Schematic of the DFDC split.</p>
+<h3>Setup, model, date</h3>
+<p>Dolhansky et al. (Facebook AI), arXiv 2006.07397, 2020; Sections 3 and 5–6.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2006.07397">Dolhansky et al., "The DeepFake Detection Challenge (DFDC) Dataset" (arXiv 2006.07397, 2020)</a> — dataset with 3,426 paid actors (§3); competition and private test set (§5–6); Table 2 top-5 log loss and precision at fixed recall.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>41. Top Teams Scored Near Chance on the Internet Clips</h2>
+<p class="pace">Detecting without a watermark · ≈2 min · elapsed ≈63.5 min</p>
+<p>Table 2 log loss for the top five teams, lower is better. A log loss of 0.69 corresponds to always guessing 50/50. On new DFDC videos the teams did well; on the internet clips they were close to 0.69.</p>
+<p>The winner, tuned to catch 90% of fakes on the internet clips, had precision 0.54: 46% of its flags were real videos.</p>
+<p><span class="kt">Key takeaway:</span> Detectors generalised poorly to real-world clips.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Redrawn from DFDC Table 2: log loss on all, new DFDC and internet clips for the top 5 teams; dashed line at 0.69.</p>
+<h3>Setup, model, date</h3>
+<p>DFDC Table 2 reports precision at recall 0.1/0.5/0.9 (its header misprints one value as P@0.3).</p>
+<h3>What this establishes</h3>
+<p>A large drop from in-distribution to real-world clips for the best 2020 detectors.</p>
+<h3>What this does not establish</h3>
+<p>It does not describe current detectors.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2006.07397">Dolhansky et al., "The DeepFake Detection Challenge (DFDC) Dataset" (arXiv 2006.07397, 2020)</a> — dataset with 3,426 paid actors (§3); competition and private test set (§5–6); Table 2 top-5 log loss and precision at fixed recall.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>42. A Detector Score Is a Lead, Not a Verdict</h2>
+<p class="pace">Detecting without a watermark · ≈1.5 min · elapsed ≈65 min</p>
+<p>Before acting on a detector score, ask: How common is AI content here? Were false alarms measured on writing like this? Was the detector tested on new generators and real data? What happens to the person flagged?</p>
+<p>No mark found is not proof of human; a flag alone is not proof of AI.</p>
+<p><span class="kt">Key takeaway:</span> Use detector scores to prompt a closer look, not to decide.</p>
+</article>
+
+<article>
+<h2>43. Section 05 — Provenance and Policy</h2>
+<p class="pace">Provenance and policy · ≈0.5 min · elapsed ≈65.5 min</p>
+<p>Instead of guessing what is fake, record where content came from. Then we look at what the law now requires.</p>
+<p><span class="kt">Key takeaway:</span> From guessing to recording.</p>
+</article>
+
+<article>
+<h2>44. Flip the Question: Prove Origin Instead of Spotting Fakes</h2>
+<p class="pace">Provenance and policy · ≈1.5 min · elapsed ≈67 min</p>
+<p>Detection has to keep up with every new generator. Provenance flips the question: content carries a signed record of where it came from.</p>
+<p>It only works if tools sign and the record survives. And provenance labels AI content too: a generator can sign "made with model X".</p>
+<p><span class="kt">Key takeaway:</span> Provenance proves origin for content that carries it.</p>
+</article>
+
+<article>
+<h2>45. A C2PA Manifest: Signed Claims Bound to the File</h2>
+<p class="pace">Provenance and policy · ≈2 min · elapsed ≈69 min</p>
+<p>C2PA defines a manifest attached to a file. It holds claims, called assertions, such as "captured by camera X", "cropped" or "generated by model Y"; a hash, a fingerprint of the exact bytes; and a signature from the signer's certificate.</p>
+<p>Change one pixel and the hash no longer matches; the manifest then no longer validates for that file.</p>
+<p><span class="kt">Key takeaway:</span> A manifest binds signed claims to exact content.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Schematic of a C2PA manifest: assertions, content hash (hard binding), claim signature.</p>
+<h3>Setup, model, date</h3>
+<p>C2PA Technical Specification 2.2.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://spec.c2pa.org/specifications/specifications/2.2/softbinding/Decoupled.html">C2PA, Technical Specification 2.2 and Soft Binding API</a> — manifests, assertions, claim signatures, hard bindings; soft bindings (watermarks, fingerprints) and manifest repositories.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>46. Each Edit Adds a Signed Step; None Proves the Scene</h2>
+<p class="pace">Provenance and policy · ≈2 min · elapsed ≈71 min</p>
+<p>A camera signs at capture; an editor signs its edit and links to the earlier manifest; a viewer checks the chain.</p>
+<p>A valid chain shows who signed each claim and that nothing changed since signing. It does not show that the claims are accurate or that the scene happened. A signed photo of a screen is still a photo of a screen.</p>
+<p><span class="kt">Key takeaway:</span> Signatures prove who said what, not what is true.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Schematic: capture → edit → publish, each step signed.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://spec.c2pa.org/specifications/specifications/2.2/softbinding/Decoupled.html">C2PA, Technical Specification 2.2 and Soft Binding API</a> — manifests, assertions, claim signatures, hard bindings; soft bindings (watermarks, fingerprints) and manifest repositories.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>47. Supported, On by Default, Preserved: Three Separate Facts</h2>
+<p class="pace">Provenance and policy · ≈2 min · elapsed ≈73 min</p>
+<p>Three questions for any product claim. Supported: can it produce credentials? Default: does it do so without the user acting? Preserved: do they survive upload and sharing?</p>
+<p>Leica M11-P (2023): credentials once the user enables them. Samsung Galaxy S25 (2025): on photos edited with Galaxy AI. Google Pixel 10 (2025): on every Pixel Camera photo. Whether they survive depends on each app on the sharing path, so check.</p>
+<p><span class="kt">Key takeaway:</span> Support, default activation and preservation are separate facts.</p>
+<div class="detail">
+<h3>Setup, model, date</h3>
+<p>Product facts from press reports: Leica (PetaPixel, Oct 2023), Samsung (TechCrunch, 22 Jan 2025), Pixel 10 (secondary report, 2025). Press-only; manufacturer documentation was not checked for this lecture.</p>
+<h3>What this does not establish</h3>
+<p>No claim is made here about which social platforms preserve credentials.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://petapixel.com/2023/10/26/leica-m11-p-is-worlds-first-camera-to-embrace-content-credentials/">PetaPixel, "Leica M11-P Is World's First Camera to Embrace Content Credentials" (26 Oct 2023)</a> — press report; Content Credentials are a user setting.</li>
+<li><a href="https://techcrunch.com/2025/01/22/samsung-unpacked-samsungs-galaxy-s25-will-support-content-credentials-to-identify-ai-generated-images">TechCrunch, "Samsung's Galaxy S25 will support Content Credentials to identify AI-generated images" (22 Jan 2025)</a> — press report; credentials on images edited with Galaxy AI.</li>
+<li><a href="https://c2paviewer.com/articles/google-c2pa-pixel-10">Secondary report on Google Pixel 10 Content Credentials (2025)</a> — press-only: Content Credentials in every photo taken with Pixel Camera; Google's own post was not retrieved for this lecture.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>48. When the Record Is Stripped, a Watermark Can Find It Again</h2>
+<p class="pace">Provenance and policy · ≈2 min · elapsed ≈75 min</p>
+<p>Take a screenshot or re-upload through an app that drops metadata: the manifest is gone. C2PA's answer is a soft binding: a watermark or fingerprint in the content itself points to a stored copy of the manifest in a repository.</p>
+<p>So watermarks and provenance work together. And a missing manifest is not evidence of fakery; the record may simply have been stripped.</p>
+<p><span class="kt">Key takeaway:</span> Soft bindings let a watermark recover a stripped record.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Schematic: image + manifest → screenshot or re-upload → image only → read watermark or fingerprint → look up manifest.</p>
+<h3>Setup, model, date</h3>
+<p>C2PA Technical Specification 2.2 and Soft Binding API.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://spec.c2pa.org/specifications/specifications/2.2/softbinding/Decoupled.html">C2PA, Technical Specification 2.2 and Soft Binding API</a> — manifests, assertions, claim signatures, hard bindings; soft bindings (watermarks, fingerprints) and manifest repositories.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>49. Labelling Laws Arrived in 2025–2026</h2>
+<p class="pace">Provenance and policy · ≈3 min · elapsed ≈78 min</p>
+<p>Three jurisdictions in sequence. China's labelling Measures and standard GB 45438-2025 took effect on 1 September 2025. Korea's AI Basic Act took effect on 22 January 2026. The EU AI Act's Article 50 transparency duties apply from 2 August 2026, and a 2026 amendment gives systems already on the market a transition to 2 December 2026 for the machine-readable marking duty.</p>
+<p>In effect is not the same as enforced. Korea's government announced a grace period before fines, and the EU has its transition. Details below.</p>
+<p><span class="kt">Key takeaway:</span> Labelling became law in three major jurisdictions within a year.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Timeline of application dates.</p>
+<h3>Going further</h3>
+<table>
+<tr><th></th><th>China</th><th>EU</th><th>Korea</th></tr>
+<tr><td><strong>Enacted text</strong></td><td>CAC Measures for Labeling AI-Generated Synthetic Content + mandatory standard GB 45438-2025, released 14 Mar 2025</td><td>AI Act, Reg. (EU) 2024/1689, Art. 50; amended by Reg. (EU) 2026/1744</td><td>AI Basic Act (Framework Act on AI), Art. 31</td></tr>
+<tr><td><strong>Applies from</strong></td><td>1 Sep 2025</td><td>2 Aug 2026; Art. 50(2) marking for systems already on the market by then: 2 Dec 2026</td><td>22 Jan 2026</td></tr>
+<tr><td><strong>Who must label</strong></td><td>service providers generating content; platforms that distribute it</td><td>providers mark outputs machine-readably (50(2)); deployers disclose deepfakes (50(4))</td><td>providers of generative AI: advance notice to users; label outputs; clear notice where output is hard to tell from real</td></tr>
+<tr><td><strong>Form</strong></td><td>explicit (visible) labels and implicit labels (metadata); watermarks encouraged</td><td>machine-readable marking; technical standards and a code of practice in progress</td><td>labels; watermark or metadata allowed</td></tr>
+<tr><td><strong>Enforcement</strong></td><td>through existing CAC rules on deep synthesis and generative AI services</td><td>national market-surveillance authorities; fines set in the AI Act</td><td>fines up to ₩30 million; government announced a grace period of at least one year before fines</td></tr>
+<tr><td><strong>Still open</strong></td><td>—</td><td>final code of practice and harmonised standards for marking</td><td>Enforcement Decree details (status as of early 2026 per law-firm summaries; check before teaching)</td></tr>
+</table>
+<p>Sources: China — CAC Measures (China Law Translate translation); EU — EUR-Lex texts of 2024/1689 and 2026/1744; Korea — law-firm and FPF summaries, not the Korean statute text. Treat the Korean row as secondary and re-check the Enforcement Decree status before each offering. No draft proposals are included in this table.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://www.chinalawtranslate.com/en/ai-labeling/">CAC et al., Measures for Labeling AI-Generated Synthetic Content (English translation, China Law Translate)</a> — released 14 March 2025 with mandatory national standard GB 45438-2025; effective 1 September 2025; explicit (visible) and implicit (metadata) labels.</li>
+<li><a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj">Regulation (EU) 2024/1689 (AI Act), Article 50</a> — transparency duties: providers mark synthetic outputs in a machine-readable way (Art. 50(2)); deployers disclose deepfakes (Art. 50(4)); applies from 2 August 2026.</li>
+<li><a href="https://eur-lex.europa.eu/eli/reg/2026/1744/oj/eng">Regulation (EU) 2026/1744 (AI Act "Digital Omnibus" amendment)</a> — Art. 50(2) marking for systems placed on the market before 2 August 2026 applies from 2 December 2026.</li>
+<li><a href="https://www.cooley.com/news/insight/2026/2026-01-27-south-koreas-ai-basic-act-overview-and-key-takeaways">Cooley, "South Korea's AI Basic Act: overview and key takeaways" (27 Jan 2026)</a> — law-firm summary: in force 22 January 2026; Art. 31 transparency duties; fines up to ₩30 million; announced grace period of at least one year before fines.</li>
+<li><a href="https://fpf.org/blog/south-koreas-new-ai-framework-act-a-balancing-act-between-innovation-and-regulation/">Future of Privacy Forum, "South Korea's New AI Framework Act: A Balancing Act Between Innovation and Regulation"</a> — secondary analysis of Art. 31 and of matters left to the Enforcement Decree.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>50. Two Kinds of Label: For People and for Machines</h2>
+<p class="pace">Provenance and policy · ≈2 min · elapsed ≈80 min</p>
+<p>Laws distinguish visible labels for people from embedded labels for machines. China requires both. The EU requires providers to mark outputs machine-readably and deployers to disclose deepfakes. Korea requires notice and clear labelling of realistic output, and allows watermarks or metadata.</p>
+<p>Machine labels need the tools from this lecture: marks and signed records.</p>
+<p><span class="kt">Key takeaway:</span> Laws ask for both human-visible and machine-readable labels.</p>
+<div class="detail">
+<h3>What this does not establish</h3>
+<p>The table is simplified; see slide 49's notes for enacted text, dates and enforcement.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://www.chinalawtranslate.com/en/ai-labeling/">CAC et al., Measures for Labeling AI-Generated Synthetic Content (English translation, China Law Translate)</a> — released 14 March 2025 with mandatory national standard GB 45438-2025; effective 1 September 2025; explicit (visible) and implicit (metadata) labels.</li>
+<li><a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj">Regulation (EU) 2024/1689 (AI Act), Article 50</a> — transparency duties: providers mark synthetic outputs in a machine-readable way (Art. 50(2)); deployers disclose deepfakes (Art. 50(4)); applies from 2 August 2026.</li>
+<li><a href="https://www.cooley.com/news/insight/2026/2026-01-27-south-koreas-ai-basic-act-overview-and-key-takeaways">Cooley, "South Korea's AI Basic Act: overview and key takeaways" (27 Jan 2026)</a> — law-firm summary: in force 22 January 2026; Art. 31 transparency duties; fines up to ₩30 million; announced grace period of at least one year before fines.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>51. Section 06 — Synthesis</h2>
+<p class="pace">Synthesis · ≈0.5 min · elapsed ≈80.5 min</p>
+<p>We close by comparing the three kinds of evidence directly.</p>
+<p><span class="kt">Key takeaway:</span> Embed, guess, sign, side by side.</p>
+</article>
+
+<article>
+<h2>52. Embed, Guess, Sign: Side by Side</h2>
+<p class="pace">Synthesis · ≈2.5 min · elapsed ≈83 min</p>
+<p>Embed: the generator acts; the mark must survive edits and paraphrase; it fails when rewritten away; a hit means a keyed generator likely made it.</p>
+<p>Guess: anyone acts; it must keep up with new generators; it fails by false accusation; a hit means only that the score is high.</p>
+<p>Sign: creator and tools act; the record must survive sharing; it fails when stripped; a hit means these signers made these claims.</p>
+<p>They complement each other; soft bindings join embed and sign.</p>
+<p><span class="kt">Key takeaway:</span> Each kind of evidence has its own failure; combine them.</p>
+</article>
+
+<article>
+<h2>53. Origin Is Not Truth: Three Cases</h2>
+<p class="pace">Synthesis · ≈2 min · elapsed ≈85 min</p>
+<p>An AI chart with honest credentials can be wrong. A real photo whose record was stripped is true, with no origin signal. A human-written false claim carries no mark and is false.</p>
+<p>Origin tools answer who made it. Checking facts is a separate job.</p>
+<p><span class="kt">Key takeaway:</span> Origin and truth are independent questions.</p>
+</article>
+
+<article>
+<h2>54. Checklist for Any "We Can Detect It" Claim</h2>
+<p class="pace">Synthesis · ≈2.5 min · elapsed ≈87.5 min</p>
+<p>Five questions. How many tokens or pixels? Short content is weak evidence. False alarms measured on whose data? Nominal is not measured. How common is AI content here? Base rates drive accusations. Which attack, with what access? Each study is one rung. Tested on new generators? Held-out data is harder.</p>
+<p><span class="kt">Key takeaway:</span> Five questions turn a headline into a checkable claim.</p>
+</article>
+
+<article>
+<h2>55. Takeaways</h2>
+<p class="pace">Synthesis · ≈2 min · elapsed ≈89.5 min</p>
+<p>Watermarks are a keyed signal, detectable with enough text. Their robustness depends on the attack, the length and the error rate. Detectors without marks face base rates that turn small error rates into many false accusations. Provenance signs claims, and can be stripped.</p>
+<p>Origin is not truth, and absence of a signal proves little.</p>
+<p><span class="kt">Key takeaway:</span> Origin is not truth; absence of a signal proves little.</p>
+</article>
+
+<article>
+<h2>56. Questions?</h2>
+<p class="pace">Synthesis · ≈0.5 min · elapsed ≈90 min</p>
+<p>Questions.</p>
+<p><span class="kt">Key takeaway:</span> Open floor.</p>
+</article>
+
+</body></html>

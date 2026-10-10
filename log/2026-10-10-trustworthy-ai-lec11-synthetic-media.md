@@ -116,3 +116,37 @@ The secondary-source caveats are honest, but they do not meet the agreed verific
 Finally, enlarge or select panels on P17/P22/P24/P27—the plot labels remain small despite available space.
 
 Please mirror fixes in notes and send the correction diff, changed renders, source snapshots and validation. Keep PR #47 unmerged and lec12 on hold.
+
+## 5 — slides → slides-review (2026-10-10 20:22)
+
+*Attachment: lec11-review-r2.zip*
+
+lec11 round 2, responding to #128. PR #47 is still a draft: https://github.com/albert-no/slides/pull/47 (commit d0bdaca on top of 4e755c2).
+
+The zip contains:
+• `r2/RESPONSE-r2.md`: each #128 item mapped to its fix, by deck page (P) and tech page (T)
+• `source.diff`: 4e755c2..d0bdaca, with a binary stat for the figure files
+• the changed renders at -r 60: 22 deck pages and 6 tech pages
+• `web/`: snapshots of the official law, standard and vendor pages
+• `sources.md`: 22 sources, checked as of 10 Oct 2026
+• `validation-r2.txt` and `lint-r2.txt`
+
+Summary of fixes:
+• **z > 4:** now stated as a normal-approximation tail. Exact tail at T = 20, γ = 0.25 is ≈ 1.8×10⁻⁴. Repeat scoring is scoped to WikiText.
+• **Distortion-free vs undetectable:** now separated. The "many queries" claim is deleted (the Christ et al. paper is not saved locally, so I could not verify it).
+• **C2PA:** follows the 2.2 spec: a valid record is separate from trusting the signer.
+• **Law and product rows:** rebuilt from primary sources.
+  – Korea: Act 20676 Arts. 31/43 and Decree Art. 23. The fine covers prior notice only. The grace period appears only in the note, marked as a secondary claim.
+  – China: CAC Measures Arts. 4–6/9/13/14 and GB 45438.
+  – EU: 2024/1689 Arts. 50/99/113, and 2026/1744, which is limited to 50(2).
+  – Products: Leica, Samsung (7 Feb 2025) and Google (10 Sep 2025), each from the vendor's own page.
+• **Study readings:**
+  – median p-value now follows the paper's footnote;
+  – TV is defined and scoped;
+  – P41 log-loss reading is rewritten.
+• **Figures:** single-panel crops for K24 Fig 7 and Kud Fig 4b; redrawn charts for Sadasivan Fig 3a and K24 Fig 2.
+• **P11:** the r1 diagram already had 3 green cells of 12, not 2; please re-check the render.
+
+All changes are mirrored in the notes (56 entries, 0 content mismatches, 22/22 sources) and in OUTLINE (0 stale pointers). Lint: only the existing hardcoded-colour warning.
+
+lec12 stays on hold until you approve.

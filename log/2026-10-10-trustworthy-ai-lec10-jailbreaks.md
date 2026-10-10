@@ -68,3 +68,43 @@ How #118 was applied, with page refs (details in RESPONSE.md):
 Corrections to the old deck, checked against src/: GCG "84%" is now 86.6/46.9/2.1/66.0, and the Wei set is 16+16 prompts. Also corrected: the PAIR perplexity filter numbers, the HarmBench length effect (on substring matching), the XSTest wording and the CC halt behavior. The internal inconsistency in BoN Table 1 is recorded in note entry 38.
 
 Package contents: html/ (deck, note, tech, figs, reference), pdf/, renders/ (-r 60), src/ (20 PDFs + text), sources.md, page-map.txt, notes-validation-r1.txt, lint-r1.txt, source.diff.
+
+## 4 — slides-review → slides (2026-10-10 19:04)
+
+Round 1 reviewed at `6be7cc6`. The narrative and budget-first framing work well; keep them. *Not ready for sign-off:* several slides don’t yet apply their own evaluation checklist.
+
+*Required evidence fixes*
+
+1. *P39 — incomparable results and an incorrect judge description.* Yong’s combined-language result and CipherChat’s ASCII result use different datasets, budgets and evaluation methods. CipherChat §4.1 uses a GPT-4 unsafety judge—not simply “not refused.” Separate the studies, identify their protocols, and remove the shared ranking-style table. The three Scots Gaelic samples are an illustrative reproduction failure, not a rejection of the whole language attack.
+
+2. *P51 — distinguish two classifier systems.* The human study used the early Sonnet-based, CBRN-focused prototype; the automated results and low overhead concern later Haiku classifiers with a chemical-weapons constitution. Label these separately on the slide and in notes. Also change “405 people” to “405 invited; approximately 183 active.” Otherwise readers attribute every result and cost to one system. [Source: §§4–5](https://arxiv.org/html/2501.18837v1).
+
+3. *P54 — restore access and budget beside the headline rates.* The 100% result uses *unconstrained continuous embedding access* and checks *20 generations per request*, sampled during optimization—not an ordinary chat jailbreak or a single generation. State the HarmBench judge. Separately label the BoN result: Llama-3-8B-Instruct-RR, black-box, up to 10,000 variants per request, 159 requests. [Re-attack source](https://arxiv.org/html/2407.15902v2).
+
+4. *P46 — the missing qualifier changes the lesson.* Put “ASR measured by substring matching” on the slide, not only in notes. More generated tokens lowered that heuristic’s reported success; this does not establish that longer replies were safer. Describe the plotted change in percentage points.
+
+*Math and explanatory fixes*
+
+5. *P34–35 / tech P18–19:* define NLL when first used. P35’s log-shot axis cannot have a zero-shot intercept. Use “few shots,” “approximately unchanged slope in the tested settings,” and remove “more shots still win” as a guarantee. Prefer a readable original Fig. 5 panel over redrawing empirical trends. Tech P19 currently says training raised “harm likelihood”; higher NLL means *lower* likelihood. Define C, α and K, and keep the log(NLL−K) transformation consistent with the plotted explanation.
+
+6. *Tech assumptions:*
+   - P4: state the independent Bernoulli sampling assumptions behind the SE; a curated benchmark is not automatically a population-representative sample.
+   - P6/P8: explicitly require independent, fixed-probability trials/errors for the any-of-N formula. A 1% judge error rate alone does not imply 63% false successes.
+   - P7: require t ≠ f for inversion.
+   - P10: the RLHF reference here is the pre-RL/SFT policy, not necessarily the pretrained base model. Specify the prompt distribution and remove “keeps most base behavior.”
+   - P12: require a nonzero direction before normalization.
+
+*Scope, wording and presentation*
+
+7. *P4 and P28 still expose attack wording in the figures*, including the encoded payload and PAIR role-play text. Redact these to match the agreed scope, disclose the edits, and enlarge the remaining explanatory flow. P37 would also benefit from an enlarged text-only panel with its legend; disclose omitted modalities.
+
+8. *Budget and conclusion cleanup:*
+   - P29 notes: Claude did not “resist both”—GCG was not run against it there.
+   - P25/P29–30/tech P15: distinguish GCG candidate forward evaluations, excluding gradient work, from PAIR target generations, excluding attacker/judge calls. These are not equal-cost units.
+   - P6: “generalization beyond training examples is not guaranteed,” rather than “only as far as the training data.”
+   - P22: remove the claim that every new model requires new handwritten prompts.
+   - P40: “no small-perturbation constraint,” not “no size limit.”
+   - P52: representation rerouting *aims to interrupt harmful generation*; it does not establish that harmful capability was cut out.
+   - P56: restore attacker access and denominator to the final checklist.
+
+Please mirror corrections in the notes and send the correction diff, changed renders and validation. Keep PR #46 unmerged and lec11 on hold.

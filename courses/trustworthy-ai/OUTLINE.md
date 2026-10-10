@@ -101,7 +101,7 @@ cropped-and-cited paper figure or a data-backed SVG:
 - `lec03` 16 real figures (Salem, Yeom, Shokri, Carlini 2022 ×3, Choquette-Choo, Hayes LLM-MIA Fig. 2, Steinke, Shi, Carlini diffusion, Duan, Das, Hayes, Maini, Zhang) — see its section.
 - `lec08` panda→gibbon (`figs/panda-gibbon.png`) + Eykholt stop-sign (`figs/eykholt-stopsign.png`, CVPR 2018 Fig 1).
 - `lec09` BadNets trigger strip (`figs/badnets-trigger.png`, Gu et al. 2017 Fig 7).
-- `lec10` Wei failure modes (`figs/wei-jailbroken.png`, NeurIPS 2023 Fig 1), GCG schematic (`figs/gcg-schematic.png`, Zou 2023 Fig 1); 2026-10 rebuild: 11 cited crops in total — see its section.
+- `lec10` Wei failure modes (`figs/wei-jailbroken-redacted.png`, NeurIPS 2023 Fig 1, attack wording redacted), GCG schematic (`figs/gcg-schematic.png`, Zou 2023 Fig 1); 2026-10 rebuild: 13 cited image files in total — see its section.
 - `lec13`/`lec14` Bianchi occupation grid (`figs/bianchi-occupations.png`, FAccT 2023 Fig 1); `lec14` Gender Shades table (`figs/gender-shades.png`, FAT* 2018 Table 4). lec13 COMPAS TODO removed (illustrative SVG kept — real news graphic is copyrighted).
 - `lec14` figure pass 2026-09: 20 cited crops (AIF360 Figs. 1/4/5, Feldman Fig. 1, Agarwal Fig. 1, Zhang Fig. 2 + Table 3, Hardt Figs. 2/10/11, model card + datasheet examples, SMACTR Fig. 2, PPB faces, Actionable Auditing Tables 1–2, Tamkin Figs. 1/2/5, Eloundou Fig. 10, Wilson & Caliskan Fig. 2) + 14 SVGs; see the lec14 section.
 - `lec06` Vectara HHEM hallucination bar chart (inline SVG, data Sep 22, 2026).
@@ -1210,11 +1210,11 @@ re-attack. Excludes prompt injection (lec13), poisoning (lec09). Math in `lec10t
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:30`, `:42` | |
-| **01 — What Safety Training Adds** | 3–9 | `:71` | refused then answered (Wei Fig 1) `:79` · definition + neighbouring threats `:90` · RLHF / CAI refresher (SVG) `:106` · two ways to fail (SVG) `:115` · access ladder (SVG) `:123` · four ASR labels `:131` |
+| **01 — What Safety Training Adds** | 3–9 | `:71` | refused then answered (Wei Fig 1, redacted) `:79` · definition + neighbouring threats `:90` · RLHF / CAI refresher (SVG) `:106` · two ways to fail (SVG) `:115` · access ladder (SVG) `:123` · four ASR labels `:131` |
 | **02 — Why Refusal Is Fragile** | 10–20 | `:141` | two hypotheses `:149` · competing objectives (SVG) `:158` · mismatched generalization (SVG) `:168` · Wei Table 1 (HTML) `:177` · per-token KL (Qi 2025 Fig 1) `:193` · prefilling (Qi 2025 Fig 2) `:210` · recovery augmentation (Table 2, HTML) `:227` · refusal direction (Arditi Fig 1) `:243` · fine-tuning contrast (Qi 2024, HTML) `:254` · findings × access `:270` |
-| **03 — Searching for Jailbreaks** | 21–30 | `:285` | families (SVG) `:293` · search loop (SVG) `:302` · GCG objective (SVG) `:310` · GCG step + 256K budget `:321` · transfer (GCG Fig 1) `:330` · transfer table (GCG Table 2, HTML) `:346` · PAIR (Chao Fig 2) `:361` · PAIR vs GCG (Chao Table 2, HTML) `:377` · gradient vs LLM search `:393` |
-| **04 — Scaling the Attack Budget** | 31–41 | `:408` | any-of-N bars (SVG, illustrative) `:416` · many-shot schematic (redacted SVG) `:425` · MSJ Fig 2 `:435` · intercept vs slope (sketch of Fig 5) `:452` · BoN augmentations `:462` · BoN Fig 3 `:473` · resend reliability (Table 1, HTML) `:483` · languages + ciphers `:499` · adversarial example vs jailbreak (SVG) `:514` · budget summary `:522` |
-| **05 — Evaluation and Defenses** | 42–58 | `:535` | judge ladder (SVG) `:543` · PAIR judge table `:551` · StrongREJECT (Fig 1 redrawn, redacted) `:566` · HarmBench Fig 2 `:575` · XSTest (HTML) `:591` · Ganguli Fig 1 `:606` · three defense places (SVG) `:622` · Constitutional Classifiers (Fig 1 redrawn) `:630` · CC results `:639` · circuit breakers (CB Fig 1 top row) `:654` · CB Table 1 `:663` · adaptive re-attack (Schwinn &amp; Geisler) `:678` · asymmetry `:692` · checklist `:700` · takeaways `:714` · closer `:727` |
+| **03 — Searching for Jailbreaks** | 21–30 | `:285` | families (SVG) `:293` · search loop (SVG) `:302` · GCG objective (SVG) `:310` · GCG step + 256K budget `:321` · transfer (GCG Fig 1) `:330` · transfer table (GCG Table 2, HTML) `:346` · PAIR (Chao Fig 2, redacted) `:361` · PAIR vs GCG (Chao Table 2, HTML) `:371` · gradient vs LLM search `:388` |
+| **04 — Scaling the Attack Budget** | 31–41 | `:403` | any-of-N bars (SVG, illustrative) `:411` · many-shot schematic (redacted SVG) `:420` · MSJ Fig 2 `:430` · intercept vs slope (MSJ Fig 5 middle panel) `:448` · BoN augmentations `:465` · BoN Fig 3 (Text panel + legend) `:476` · resend reliability (Table 1, HTML) `:492` · languages + ciphers (two studies, two protocols) `:508` · adversarial example vs jailbreak (SVG) `:533` · budget summary `:541` |
+| **05 — Evaluation and Defenses** | 42–58 | `:554` | judge ladder (SVG) `:562` · PAIR judge table `:570` · StrongREJECT (Fig 1 redrawn, redacted) `:585` · HarmBench Fig 2 `:594` · XSTest (HTML) `:611` · Ganguli Fig 1 `:626` · three defense places (SVG) `:642` · Constitutional Classifiers (Fig 1 redrawn) `:650` · CC: two systems, two kinds of evidence `:659` · circuit breakers (CB Fig 1 top row) `:683` · CB Table 1 `:692` · adaptive re-attack with access + budget (Schwinn &amp; Geisler; BoN) `:707` · asymmetry `:723` · checklist (7 questions incl. access, denominator) `:731` · takeaways `:747` · closer `:760` |
 
 **Key citations (checked against saved PDFs, 2026-10-10):** Wei, Haghtalab &amp; Steinhardt NeurIPS 2023
 (Fig 1, §3, Table 1); Ouyang et al. NeurIPS 2022; Bai et al. 2022 (arXiv 2212.08073); Qi et al. ICLR 2025
@@ -1228,18 +1228,21 @@ NAACL 2024 (Table 2); Ganguli et al. 2022 (Fig 1, §3.4–3.5); Sharma et al. 20
 Zou et al. Circuit Breakers NeurIPS 2024 (Fig 1, Table 1); Schwinn &amp; Geisler 2024 (arXiv 2407.15902; Table 1).
 Notes only: Perez et al. EMNLP 2022.
 
-**Figures (11 cited crops in `figs/`):** `wei-jailbroken.png` `:79` · `qi25-kl.png` `:193` ·
-`qi25-prefill.png` `:210` · `arditi-fig1.png` `:243` · `gcg-schematic.png` `:330` · `pair-fig2.png` `:361` ·
-`msj-fig2ab.png` `:435` · `bon-fig3.png` `:473` · `harmbench-fig2.png` `:575` · `ganguli-redteam.png` `:606` ·
-`cb-top.png` `:654`. Redrawn as SVG with disclosure: MSJ Fig 1 (redacted), MSJ Fig 5 (sketch), StrongREJECT
-Fig 1 (redacted), Constitutional Classifiers Fig 1 (simplified).
+**Figures (13 cited image files in `figs/`):** `wei-jailbroken-redacted.png` `:79` · `qi25-kl.png` `:193` ·
+`qi25-prefill.png` `:210` · `arditi-fig1.png` `:243` · `gcg-schematic.png` `:330` · `pair-fig2-redacted.png` `:361` ·
+`msj-fig2ab.png` `:430` · `bon-fig3-text.png` + `bon-fig3-legend.png` `:476` · `harmbench-fig2.png` `:594` · `ganguli-redteam.png` `:626` ·
+`cb-top.png` `:683`. `msj-fig5-rl.png` (MSJ Fig 5 middle panel). Redacted by the lecturer, with disclosure in the
+cite and note: Wei Fig 1 (demanded-opening wording, Base64 payload) and PAIR Fig 2 (rewritten prompt, reply);
+`wei-jailbroken.png` (unredacted) is kept only for lec01. Redrawn as SVG with disclosure: MSJ Fig 1 (redacted),
+StrongREJECT Fig 1 (redacted), Constitutional Classifiers Fig 1 (simplified).
 
 **2026-10 rebuild (60 → 58):** rebuilt to the slides-review brief (#118). Persona/fake-authority/obfuscation
 zoo, system-prompt hardening, demo and "frontier" slides removed; evaluation and defenses expanded to 20 min.
 Figures `ouyang-3steps`, `ouyang-winrate`, `bai-cai`, `qishallow-kl`, `arditi-refusal`, `gcg-asr`,
 `gcg-transfer`, `pair-schematic`, `msj-powerlaw`, `yong-translate`, `yong-table`, `cipher-overview`,
 `qift-overview`, `szegedy-ostrich`, `ganguli-success`, `perez-overview`, `sharma-overview`, `cb-overview`,
-`bon-powerlaw` were deleted.
+`bon-powerlaw` were deleted. Review round 2 (slides-review #120) deleted the unredacted PAIR Fig 2 and
+full three-panel BoN Fig 3 crops (replaced by the redacted / text-panel versions) and replaced the slide 35 sketch with the real Fig 5 panel.
 
 **Note:** `lec10-jailbreak-note.html` — 58 entries. Each entry has a minute budget and elapsed time, a script,
 and a key takeaway. Content slides add the figure, setup/model/date, what the slide establishes and does not
@@ -1252,7 +1255,7 @@ caption vs body vs rows) is recorded in entry 38.
 - judge error correction (7); retry amplifies false positives (8)
 - RLHF KL objective (10); per-token KL $D_k$ (11); refusal direction + ablation (12)
 - GCG loss (14); GCG step and 256K budget (15); PAIR $N_s \times K = 90$ (16)
-- MSJ $Cn^{-\alpha}+K$ (18); intercept vs slope (19); BoN $-\log\mathrm{ASR}=aN^{-b}$ (20)
+- MSJ $Cn^{-\alpha}+K$ with NLL, C, α, K defined (18); intercept vs slope (19); BoN $-\log\mathrm{ASR}=aN^{-b}$ (20)
 
 ## lec11-prompt-injection.html
 

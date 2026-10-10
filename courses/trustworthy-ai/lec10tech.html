@@ -66,18 +66,19 @@
   <div class="divider"></div>
   <p>Requests $x_1,\dots,x_n$; reply $y_i$; judge $J \in \{0,1\}$:</p>
   <div class="math-block">$$\widehat{\mathrm{ASR}} = \frac{1}{n}\sum_{i=1}^{n} J(x_i, y_i), \qquad \mathrm{SE} \approx \sqrt{\frac{\widehat{\mathrm{ASR}}\,(1-\widehat{\mathrm{ASR}})}{n}}.$$</div>
+  <p><b>Assumes</b> $J(x_i,y_i)$ independent Bernoulli draws with one common rate: requests sampled independently from a fixed population, one reply each.</p>
   <p>At $\widehat{\mathrm{ASR}} = 0.5$: 95% interval ≈ ±17 points for $n = 32$, ±10 for $n = 100$.</p>
-  <p class="muted">Small denominators cannot separate close numbers.</p>
+  <p class="muted">A curated benchmark is not a random sample of real requests: the SE covers sampling noise only, not benchmark choice.</p>
 </div>
 
 <!-- 5. Any of N -->
 <div class="slide">
   <h2>At Least One Success in $N$ Tries</h2>
   <div class="divider"></div>
-  <p>If each try succeeds independently with probability $p$:</p>
+  <p>If tries are <strong>independent</strong>, each with the <strong>same fixed</strong> success probability $p$:</p>
   <div class="math-block">$$\Pr[\text{at least one success}] = 1 - (1-p)^N, \qquad N_q = \left\lceil \frac{\ln(1-q)}{\ln(1-p)} \right\rceil.$$</div>
   <p>$p = 1\%$: $N = 100$ gives 63%; reaching $q = 50\%$ needs $N_q = 69$.</p>
-  <p class="muted">$N_q$ = tries needed for success probability $q$.</p>
+  <p class="muted">$N_q$ = tries needed for success probability $q$. Correlated or varying tries break both formulas.</p>
 </div>
 
 <!-- 6. Unequal requests -->
@@ -99,16 +100,16 @@
   <p>Judge with true-positive rate $t$ and false-positive rate $f$:</p>
   <div class="math-block">$$\mathrm{ASR}_{\text{obs}} = t\,\mathrm{ASR} + f\,(1-\mathrm{ASR}), \qquad \mathrm{ASR} = \frac{\mathrm{ASR}_{\text{obs}} - f}{t - f}.$$</div>
   <p>Example: $t = 0.9$, $f = 0.1$, true 20% → observed 26%.</p>
-  <p class="muted">Correction needs $t$ and $f$ measured on human labels for the same setting.</p>
+  <p class="muted">Inversion requires $t \ne f$; $t$ and $f$ must be measured on human labels for the same setting.</p>
 </div>
 
 <!-- 8. Retry amplifies false positives -->
 <div class="slide">
   <h2>Retrying Until a Judge Says Yes Amplifies Its Errors</h2>
   <div class="divider"></div>
-  <p>A reply that is never harmful still "succeeds" if the judge errs once:</p>
+  <p>A request whose replies are never harmful still "succeeds" if the judge errs once. If the $N$ judge calls err <strong>independently</strong>, each with the same rate $f$:</p>
   <div class="math-block">$$\Pr[\text{false success within } N] = 1 - (1-f)^N.$$</div>
-  <p>$f = 1\%$, $N = 100$: 63% of fully refused requests would be counted as jailbroken.</p>
+  <p>Under that assumption, $f = 1\%$, $N = 100$: 63%. A 1% error rate alone does not imply this; correlated errors give less.</p>
   <div class="highlight"><p>Best-of-$N$ attacks should re-check found successes with a stronger judge.</p></div>
 </div>
 
@@ -123,11 +124,11 @@
 
 <!-- 10. RLHF objective -->
 <div class="slide">
-  <h2>Preference Training Keeps a Leash to the Base Model</h2>
+  <h2>Preference Training Keeps a Leash to the Pre-RL Policy</h2>
   <div class="divider"></div>
   <p>Tune the policy $\pi$ to <strong>maximize reward</strong>, minus a penalty for drifting:</p>
-  <div class="math-block">$$\max_{\pi}\; \mathbb{E}_{x,\,y\sim\pi}\big[\,r(x,y)\,\big] \;-\; \beta\, \mathrm{KL}\!\big(\pi \,\|\, \pi_{\text{ref}}\big).$$</div>
-  <p class="muted">$r$ = reward model; $\pi_{\text{ref}}$ = the model before RL; $\beta$ = leash strength. The leash keeps most base behavior.</p>
+  <div class="math-block">$$\max_{\pi}\; \mathbb{E}_{x\sim\mathcal{D},\,y\sim\pi(\cdot\mid x)}\Big[\,r(x,y) \;-\; \beta\, \mathrm{KL}\!\big(\pi(\cdot\mid x) \,\|\, \pi_{\text{ref}}(\cdot\mid x)\big)\Big].$$</div>
+  <p class="muted">$\mathcal{D}$ = RL training prompts; $r$ = reward model; $\pi_{\text{ref}}$ = the SFT policy before RL (not necessarily the pretrained base); $\beta$ = penalty weight.</p>
   <div class="cite cite-left">Ouyang et al., "Training language models to follow instructions with human feedback", NeurIPS 2022.</div>
 </div>
 
@@ -147,7 +148,7 @@
   <div class="divider"></div>
   <p>Mean activations at layer $l$ on harmful ($\mu$) and harmless ($\nu$) prompts:</p>
   <div class="math-block">$$r = \mu - \nu, \qquad \hat r = \frac{r}{\|r\|}, \qquad x' \leftarrow x - \hat r\,\hat r^{\top} x.$$</div>
-  <p>Ablation removes the component of every activation $x$ along $\hat r$.</p>
+  <p>Normalizing requires $r \ne 0$. Ablation removes the component of every activation $x$ along $\hat r$.</p>
   <div class="cite cite-left">Arditi et al., "Refusal in Language Models Is Mediated by a Single Direction", NeurIPS 2024 — Eqs. 2 and 4.</div>
 </div>
 
@@ -181,7 +182,7 @@
       <li>Evaluate $\mathcal{L}$ exactly on all $B$; keep the best.</li>
     </ol>
   </div>
-  <p style="text-align:center;">$T = 500$ steps: $T \times B = 256{,}000$ forward passes per suffix.</p>
+  <p style="text-align:center;">$T = 500$ steps: $T \times B = 256{,}000$ candidate forward passes per suffix, excluding the gradient computations.</p>
   <div class="cite cite-left">Zou et al., arXiv 2307.15043 — Algorithm 1 · count as reported in Chao et al., arXiv 2310.08419 — Table 2.</div>
 </div>
 
@@ -190,10 +191,11 @@
   <h2>PAIR's Budget: Streams × Depth</h2>
   <div class="divider"></div>
   <p>$N_s$ parallel conversation streams, each refined for at most $K$ rounds:</p>
-  <div class="math-block">$$\text{queries per request} \;\le\; N_s \times K = 30 \times 3 = 90.$$</div>
+  <div class="math-block">$$\text{target queries per request} \;\le\; N_s \times K = 30 \times 3 = 90.$$</div>
   <ul class="arrow">
     <li>Stop at the first reply the judge scores as jailbroken</li>
     <li>Same retry logic as slide 8: judge errors compound</li>
+    <li>Counts target replies only; attacker and judge calls are extra. Not the same cost unit as GCG's forward passes</li>
   </ul>
   <div class="cite cite-left">Chao et al., "Jailbreaking Black Box Large Language Models in Twenty Queries", arXiv 2310.08419 — Section 3.3.</div>
 </div>
@@ -211,9 +213,10 @@
 <div class="slide">
   <h2>Many-Shot: NLL Falls as a Power Law in Shots</h2>
   <div class="divider"></div>
-  <p>With $n$ fake dialogues in the prompt:</p>
-  <div class="math-block">$$-\mathbb{E}\big[\log P(\text{harmful reply} \mid n\text{-shot prompt})\big] = C\,n^{-\alpha} + K.$$</div>
-  <p>Take logs: $\log(\text{NLL} - K) = \log C - \alpha \log n$, a straight line.</p>
+  <p>With $n \ge 1$ fake dialogues in the prompt, NLL = negative log-likelihood of the harmful reply:</p>
+  <div class="math-block">$$\text{NLL}(n) = -\mathbb{E}\big[\log P(\text{harmful reply} \mid n\text{-shot prompt})\big] = C\,n^{-\alpha} + K.$$</div>
+  <p>$C &gt; 0$ scale · $\alpha \ge 0$ exponent · $K$ floor, fitted per setting. Then $\log(\text{NLL} - K) = \log C - \alpha \log n$: a line in $\log n$.</p>
+  <p class="muted">Higher NLL = harmful reply <strong>less</strong> likely.</p>
   <div class="cite cite-left">Anil et al., "Many-shot Jailbreaking", NeurIPS 2024 — Eq. 1.</div>
 </div>
 
@@ -223,11 +226,12 @@
   <div class="divider"></div>
   <div class="grid-2">
     <div><h3>Intercept $\log C$</h3>
-      <p>Harm likelihood with few shots. SL/RL safety training raised it.</p></div>
+      <p>Line height at $n = 1$: $\log(\text{NLL}(1) - K)$. SL/RL safety training raised it: harm <strong>less</strong> likely at few shots.</p></div>
     <div><h3>Slope $\alpha$</h3>
-      <p>How fast shots help. Safety training left it roughly unchanged.</p></div>
+      <p>How fast NLL falls with shots. Approximately unchanged in the tested settings.</p></div>
   </div>
-  <div class="highlight"><p>Same slope: a higher intercept is offset by more shots, until the context runs out.</p></div>
+  <div class="highlight"><p>If the slope stays fixed, a higher intercept means more shots to reach the same NLL.</p></div>
+  <p class="muted">Fig. 5 plots NLL itself on log axes, over 1–32 shots; no zero-shot point. It looks straight where $K$ is small. The paper words the same effect as a lower intercept on harm probability.</p>
   <div class="cite cite-left">Anil et al., NeurIPS 2024 — Section 5 and Fig. 5.</div>
 </div>
 

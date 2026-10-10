@@ -135,3 +135,27 @@ Main deck (reviewer numbering → r2):
 Tech: P2/6/8 linearized-loss wording (P8: exact for the linear score; for a loss only if monotone in it); P7 g≠0, unclipped ball, clipping may lose optimality; P9 x₀ = clip(x+u); P10 clip feasible, exact projection for ℓ∞ but not generally ℓ2; P11 f≤0 iff t wins or ties, f=−κ once t leads by ≥κ; P15 step along −∇, Danskin needs smooth ℓ + unique maximizer, ties may not descend; P19 adds stability-only; P20 "these bounds guarantee cA wins if"; P21/22 conditional 1−α statement, σ changes votes so no automatic gain; P23 "correct and certified", paper's hardware.
 
 Notes: 55 entries, 90 min, section budgets 10/20/20/25/15, 0 title mismatches vs deck (notes-validation.txt). All items above mirrored in the notes, incl. the Table 1/Table 2 disclosure. OUTLINE leaf resynced (outline-lint: 0 stale). Register updated for Cohen, Eykholt, Athalye, RobustBench, crops. lint-deck ok on deck/tech/notes; find-wordy flags only P45 key lines (bounded exception, render clean).
+
+## 6 — slides-review → slides (2026-10-10 17:29)
+
+The main revisions work: figures are substantially clearer, the Cohen table discrepancy is disclosed, and the benchmark/physical-case claims are properly scoped. *Four bounded fixes remain before sign-off:*
+
+• *Tech P9:* the PGD equation clips at the right edge, including in my independent render of the final PDF. Put initialization and iteration on separate lines; don’t shrink type.
+
+• *Main P44:* “more noise σ → bigger radius” still contradicts the qualification in tech P22 and the notes. Use “At fixed noise level, a larger vote margin gives a larger certified radius.”
+
+• *Main P44, tech P21–22, and corresponding notes:* preserve Proposition 2’s probability scope. Suggested wording: “For each fixed input, the probability that CERTIFY returns an invalid certificate is at most α, over its sampling.” Equivalently: with probability ≥1−α, it either abstains or returns a valid certificate. This is *not* a conditional error bound among non-abstained outputs. Replace the current “If CERTIFY returns…, then with probability…” wording.
+
+• *Tech P15:* “this is ∇θ of the inner max” now ambiguously refers to the negative-gradient update above. Explicitly distinguish them: “Under these conditions, the loss gradient at δ* equals the inner-max gradient; SGD steps in its negative direction.”
+
+Everything else from this correction round passes. Send the affected source diff and final-PDF renders, synchronized notes, and final content head—no full package needed. Keep PR #44 unmerged and lec09 on hold until that check.
+
+## 7 — slides → slides-review (2026-10-10 17:31) [attachment: lec08-review-r3.zip]
+
+lec08 round 3, final content head `015ae5c` (PR #44, still unmerged; lec09 on hold). Zip: r3.diff (cfd1f9b..015ae5c), final PDFs (deck, tech, notes), renders of deck P44 and tech P9 (also at -r 150), P15, P21, P22, notes-validation.txt.
+
+• Tech P9: aligned two-line equation (x₀ line, then x_{t+1} line), same type size; no clipping in the final PDF render.
+• Main P44: "At fixed noise level, a larger vote margin gives a larger certified ℓ2 radius R."
+• Prop. 2 scope: main P44 key now "per input, P(invalid certificate) ≤ α" and the cite reads "Prop. 2: for each fixed input, the probability over its sampling that CERTIFY returns an invalid certificate is at most α". Tech P21: same sentence plus "with probability ≥ 1−α it abstains or returns a valid one. Not a bound conditional on not abstaining." Tech P22: "Per input, with probability ≥ 1−α: CERTIFY abstains, or no ℓ2 change smaller than its R changes g's prediction." The "If CERTIFY returns…, then…" wording is gone from the deck, tech and notes.
+• Tech P15: "the loss gradient at δ* equals the inner-max gradient; SGD steps in its negative direction."
+• Notes entry 44 synced: fixed-σ margin wording, the per-input Prop. 2 statement with the abstain-or-valid equivalent, and the explicit not-conditional caveat. 55 entries, 90 min, 0 title mismatches. lint-deck ok on all three files.

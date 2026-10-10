@@ -64,12 +64,12 @@
 <div class="slide">
   <h2>Setup: Four Rates per Group</h2>
   <div class="divider"></div>
-  <p>Features $X$, group $A \in \{a, b\}$, label $Y \in \{0,1\}$, score $S \in [0,1]$, decision $\hat Y \in \{0,1\}$. Base rate $p_a = \Pr[Y=1 \mid A=a]$.</p>
+  <p>Features $X$, group $A \in \{a, b\}$, label $Y \in \{0,1\}$, score $S \in [0,1]$, decision $\hat Y \in \{0,1\}$. Base rate $p_a = \Pr[Y=1 \mid A=a]$, with $0 \lt p_a \lt 1$.</p>
   <div class="math-block">$$\mathrm{SR}_a = \Pr[\hat Y = 1 \mid A = a], \qquad \mathrm{TPR}_a = \Pr[\hat Y = 1 \mid Y = 1, A = a],$$
   $$\mathrm{FPR}_a = \Pr[\hat Y = 1 \mid Y = 0, A = a], \qquad \mathrm{PPV}_a = \Pr[Y = 1 \mid \hat Y = 1, A = a].$$</div>
   <ul class="arrow">
-    <li>The conditioning event is the denominator</li>
-    <li>$\mathrm{FNR}_a = 1 - \mathrm{TPR}_a$</li>
+    <li>The conditioning event is the denominator; each needs positive probability</li>
+    <li>$\mathrm{FNR}_a = 1 - \mathrm{TPR}_a$; PPV needs $\Pr[\hat Y = 1, A = a] \gt 0$</li>
   </ul>
 </div>
 
@@ -82,19 +82,28 @@
   $$\text{Equalized odds:}\quad \mathrm{TPR}_a = \mathrm{TPR}_b,\ \mathrm{FPR}_a = \mathrm{FPR}_b \iff \hat Y \perp A \mid Y.$$
   $$\text{Predictive parity:}\quad \mathrm{PPV}_a = \mathrm{PPV}_b.$$
   $$\text{Calibration within groups:}\quad \Pr[Y = 1 \mid S = s, A = a] = s \quad \forall s, a.$$</div>
-  <p class="muted">Calibration within groups implies $Y \perp A \mid S$.</p>
+  <p class="muted">Every conditioning event has positive probability.</p>
   <div class="cite cite-left">Hardt, Price, and Srebro, NeurIPS 2016, Defs. 2.1–2.2; Chouldechova, Big Data 2017, §2.1; Kleinberg, Mullainathan, and Raghavan, ITCS 2017, condition (A).</div>
 </div>
 
-<!-- 5b. Other notions -->
+<!-- 5b. Individual -->
 <div class="slide">
-  <h2>Two Other Notions: Individual and Counterfactual</h2>
+  <h2>Another Notion: Individual Fairness</h2>
   <div class="divider"></div>
-  <p><strong>Individual fairness.</strong> Metric $d$ on individuals $V$; randomized $M : V \to \Delta(\mathcal{O})$ is $(D, d)$-Lipschitz if</p>
+  <p>$d$: task metric on individuals $V$. $\Delta(\mathcal{O})$: distributions over outcomes $\mathcal{O}$; $D$: a distance on them (e.g. total variation). Randomized $M : V \to \Delta(\mathcal{O})$ is $(D, d)$-Lipschitz if</p>
   <div class="math-block">$$D(Mx, My) \;\le\; d(x, y) \qquad \forall\, x, y \in V.$$</div>
-  <p><strong>Counterfactual fairness.</strong> Given a causal model $(U, V, F)$ with $V = A \cup X$:</p>
+  <p class="muted">Similar people, similar outcome distributions: a constraint, not a conditional probability.</p>
+  <div class="cite cite-left">Dwork, Hardt, Pitassi, Reingold, and Zemel, "Fairness Through Awareness", ITCS 2012, Def. 2.1.</div>
+</div>
+
+<!-- 5c. Counterfactual -->
+<div class="slide">
+  <h2>Another Notion: Counterfactual Fairness</h2>
+  <div class="divider"></div>
+  <p>Causal model $(U, V, F)$: latent background variables $U$, observed $V = A \cup X$, structural equations $F$. $\hat Y_{A \leftarrow a'}(U)$: the prediction had $A$ been set to $a'$. For every $x$, $a$, $y$ and every attainable $a'$:</p>
   <div class="math-block">$$\Pr[\hat Y_{A \leftarrow a}(U) = y \mid X = x, A = a] = \Pr[\hat Y_{A \leftarrow a'}(U) = y \mid X = x, A = a].$$</div>
-  <div class="cite cite-left">Dwork, Hardt, Pitassi, Reingold, and Zemel, ITCS 2012, Def. 2.1; Kusner, Loftus, Russell, and Silva, NIPS 2017, Def. 5.</div>
+  <p class="muted">Needs a causal model; the answer depends on it.</p>
+  <div class="cite cite-left">Kusner, Loftus, Russell, and Silva, "Counterfactual Fairness", NIPS 2017, Def. 5.</div>
 </div>
 
 <!-- 6. Calibration vs PPV -->
@@ -127,8 +136,8 @@
   <p>In a group of size $N$ with base rate $p$: $\mathrm{TP} = (1-\mathrm{FNR})\,pN$ and $\mathrm{FP} = \mathrm{FPR}\,(1-p)N$. From $\mathrm{PPV} = \mathrm{TP}/(\mathrm{TP}+\mathrm{FP})$:</p>
   <div class="math-block">$$\mathrm{FP} = \mathrm{TP}\,\frac{1-\mathrm{PPV}}{\mathrm{PPV}} \;\Longrightarrow\; \mathrm{FPR} = \frac{p}{1-p}\cdot\frac{1-\mathrm{PPV}}{\mathrm{PPV}}\cdot(1-\mathrm{FNR}).$$</div>
   <div class="def-card">
-    <h3>Consequence (needs $0 \lt \mathrm{PPV} \lt 1$, $\mathrm{FNR} \lt 1$)</h3>
-    <p>Equal PPV and equal FNR force $\frac{p_a}{1-p_a} = \frac{p_b}{1-p_b}$ whenever FPRs are equal, so $p_a = p_b$.</p>
+    <h3>Consequence (needs $0 \lt p \lt 1$, $0 \lt \mathrm{PPV} \lt 1$, $\mathrm{FNR} \lt 1$)</h3>
+    <p>Equal PPV, equal FNR and equal FPR force $\frac{p_a}{1-p_a} = \frac{p_b}{1-p_b}$, so $p_a = p_b$. PPV and FPR parity alone allow unequal base rates.</p>
   </div>
   <div class="cite cite-left">Chouldechova, "Fair Prediction with Disparate Impact", Big Data 2017, Eq. (2.6).</div>
 </div>
@@ -171,12 +180,12 @@
 <div class="slide">
   <h2>Reweighing</h2>
   <div class="divider"></div>
-  <p>Weight each $(A, Y)$ cell by expected over observed probability:</p>
+  <p>Weight each $(A, Y)$ cell with $\Pr[A = a, Y = y] \gt 0$ by expected over observed probability:</p>
   <div class="math-block">$$w(a, y) = \frac{P_{\mathrm{exp}}(a, y)}{P_{\mathrm{obs}}(a, y)} = \frac{\Pr[A = a]\,\Pr[Y = y]}{\Pr[A = a, Y = y]}.$$</div>
   <ul class="arrow">
     <li>Under the weights, $A \perp Y$ in the training data</li>
     <li>Lecture example: $w = 1.5,\ 0.67,\ 0.75,\ 2.0$</li>
-    <li>Then a classifier is trained on the weighted data</li>
+    <li>Then a classifier is trained on the weighted data; an empty cell gets no weight</li>
   </ul>
   <div class="cite cite-left">Kamiran and Calders, "Data Preprocessing Techniques for Classification without Discrimination", Knowledge and Information Systems 2012, §5.2.</div>
 </div>
@@ -185,14 +194,14 @@
 <div class="slide">
   <h2>Reductions: A Saddle Point</h2>
   <div class="divider"></div>
-  <p>Constraints $M\mu(Q) \le c$ on randomized classifiers $Q \in \Delta(\mathcal{H})$, with Lagrangian</p>
+  <p>$Q \in \Delta(\mathcal{H})$: randomized classifier. $\mu(Q)$: group-conditional moments (e.g. selection rates); $M\mu(Q) \le c$: the $|K|$ linear constraints; hats: sample estimates.</p>
   <div class="math-block">$$L(Q, \lambda) = \widehat{\mathrm{err}}(Q) + \lambda^\top\big(M\hat\mu(Q) - \hat c\big), \qquad \min_{Q \in \Delta}\ \max_{\lambda \ge 0,\ \|\lambda\|_1 \le B} L(Q, \lambda).$$</div>
   <ul class="arrow">
     <li>$\lambda$-player: exponentiated gradient</li>
     <li>$Q$-player: one cost-sensitive fit per round</li>
     <li>Returns the average play: a randomized classifier</li>
   </ul>
-  <p class="muted">Theorem 1: a $\nu$-approximate saddle point within $4\rho^2 B^2 \log(|K|+1)/\nu^2$ iterations.</p>
+  <p class="muted">$B$ caps the multipliers. Theorem 1 bounds the iterations to a $\nu$-approximate saddle point.</p>
   <div class="cite cite-left">Agarwal, Beygelzimer, Dudík, Langford, and Wallach, "A Reductions Approach to Fair Classification", ICML 2018, §3, Algorithm 1, Theorem 1.</div>
 </div>
 
@@ -212,12 +221,12 @@
 
 <!-- 15. Closer -->
 <div class="slide end-slide no-footer">
-  <div class="big-word">$\Pr[\,\cdot \mid \text{whom}\,]$</div>
-  <p class="big-word-sub">Every criterion is a conditional probability. Name the condition.</p>
+  <div class="big-word">Compared to whom?</div>
+  <p class="big-word-sub">Name the comparison and its assumptions.</p>
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 16</div>
+<div class="slide-num" id="slideNum">1 / 17</div>
 
 </div><!-- .deck -->
 <script defer src="../../reference/deck.js"></script>

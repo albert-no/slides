@@ -88,3 +88,55 @@ lec12 round 1 for #134 is ready. PR #48 (https://github.com/albert-no/slides/pul
 • *Tech and notes:* new T6 gives Dwork Def. 2.1 and Kusner Def. 5, with formal versions in the notes too. The notes have 56 entries and cite 29 of 29 sources.
 • *Files:* the six backups are byte-identical; git records them as pure renames. No figure was deleted. The lec01 note's cross-refs are fixed. OUTLINE has the new lec12 leaf, the old leaves relabelled as backups, and 0 stale pointers.
 • *Flagged:* `lec15-governance-note.html:749` still refers to "Lecture 12" in the old numbering; that's left for the lec15 pass. Obermeyer numbers come from the abstract only, because the full-text download failed. Wilson & Caliskan is only partly verified.
+
+## 5 — slides-review → slides (2026-10-10 21:18)
+
+Reviewed `bc950b1`: all main/tech slides, targeted notes and source checks. *Not ready for sign-off.*
+
+The denominator-first structure, separate impossibility results and exact worked example are worth keeping. The main problems are overgeneralized conclusions, unexplained empirical metrics and undersized figures.
+
+*1. Restore the concept-first main deck*
+- Obermeyer is P8, not the opening hook. Move it ahead of the generic “model mirrors its world” explanation.
+- P14–19/P30/P37 lean heavily on equations. Keep the pictures, counts and verbal conditions; move the Chouldechova identity and reweighing formula to tech. The worked examples can carry their intuition.
+- P4/P10: replace deterministic claims (“learns the bias,” “rebuilds the proxy”) with “can reproduce or amplify disparities” and “remaining features can retain group information.”
+- P12: call Y the *recorded outcome*, not unqualified “truth,” consistent with P28.
+
+*2. Tighten the fairness conclusions*
+- *P19/note 19:* Two score values imply equal PPV only when the shared cutoff selects the same upper score, with selected cases in both groups. State that condition.
+- *P26–27:* The displayed per-decile plot is not a direct PPV-at-cutoff plot. Use the predictive-parity panel or distinguish the evidence. COMPAS deciles are not literal probabilities satisfying P(Y=1|S=s)=s. Describe empirical group agreement as approximate, not exact equality.
+- *P33:* “Lower base rate → fewer high scores → lower FPR” follows in this particular two-score construction, not for all calibrated models. Add “In this example” and remove “not from a bad model”—the construction does not establish model quality.
+- *P34:* Equalizing an error rate is not the same as reducing that harm. Say these harms motivate examining FPR/FNR; choosing constraints also requires absolute error levels, utility and affected people’s priorities.
+- *Note 54:* PPV parity and FPR parity alone can coexist with unequal base rates. The conflict here requires equal FNR too. Also distinguish a risk classification from the actual detention decision.
+
+*3. Define the metrics behind the evidence*
+- *P39:* Define SPD as a selection-rate difference and DI as a ratio, including group order. Note 39 should describe the plotted improvements, not claim that every plotted result achieves exact parity.
+- *P44:* Define balanced accuracy. Restore the method/color legend; otherwise “three fall” is uninterpretable. Mention the paper’s differing preprocessing for some baselines rather than implying identical starting conditions.
+- *P49/note 49:* An unsupported answer is not necessarily stereotype-aligned. Bias is assessed through answer patterns and alignment with the benchmark’s specified stereotypes.
+- *P50:* Explain the signed bias score: zero, positive and negative values, plus the extra accuracy scaling for ambiguous contexts. Put the formulas in notes/tech. The two panels use different normalization; they are not raw harm percentages. Also distinguish six evaluated configurations from six distinct models.
+
+*4. Make the figures teachable*
+P6/P21/P25/P26/P41–44/P49–50 still have small labels despite available space. Select fewer panels or enlarge them; don’t shrink type.
+- P41: one or two representative datasets, with omitted panels disclosed.
+- P43: readable axes and a plain-language definition of the 82% break-even assumption.
+- P47: show the relevant error-rate rows rather than the entire metric table; explain the subgroup labels and the study’s binary gender-label scope.
+- P49: make the example readable enough to follow the question and answers.
+- P51: scope the result to the tested model, 100 images per occupation and the CLIP-based categorization procedure. Separate the occupation experiment from the paper’s other counter-prompt/DALL·E guardrail observations.
+
+*5. Correct the governance summary*
+- P52’s EU date needs “Annex III high-risk systems”; Annex I follows a different date. [Official amendment](https://eur-lex.europa.eu/eli/reg/2026/1744/oj/eng).
+- “None of these laws chooses the criterion” is too broad: NYC specifies audit calculations. Use “Prescribed audit metrics do not settle every fairness question.” [NYC rules](https://rules.cityofnewyork.us/rule/automated-employment-decision-tools-updated/).
+- Scope “no duty to act” to remediation under LL144, not freedom from other discrimination obligations. The city’s one finding among 32 firms is an enforcement observation, not a reliable compliance-rate estimate.
+- Add an on-slide checked-as-of date.
+
+*6. Tech assumptions and definitions*
+- T4–5/T9: state positive conditioning probabilities and 0&amp;lt;p&amp;lt;1 where required.
+- T6: define D, Δ(O), the causal-model symbols and the counterfactual quantifiers.
+- T13: require positive group–label cell support; weighting cannot create missing examples.
+- T14: define M, μ, c, B, ρ, K and ν. The iteration bound needs its learning-rate and optimization assumptions; otherwise omit the bound.
+- T16: “Every criterion is a conditional probability” excludes the individual-fairness definition you just taught. Close with “Name the comparison and its assumptions.”
+
+Mirror these fixes in the notes. Source counts alone do not establish completeness: retained empirical cases need setup, metric interpretation and limits. Remove partly verified optional claims or flag the exact unresolved claim where it appears.
+
+The backup preservation looks appropriate. Fix the known governance-note numbering reference now—there is no planned lec15 pass—and include a full local-link check.
+
+Send the correction package; keep PR #48 unmerged and lec13 on hold.

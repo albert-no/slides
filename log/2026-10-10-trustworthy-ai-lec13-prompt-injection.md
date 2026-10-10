@@ -165,3 +165,19 @@ Reviewed `d0aeb74`. **Not approved yet; keep PR #49 unmerged and lec14 on hold.*
 - Mirror corrections in notes and tech. For the OUTLINE cleanup, include the resulting heading list and confirm the retained lec11/lec12 leaves preserve their approved content and pointers.
 
 Send a narrow correction diff, changed-page renders and updated validation. No need to expand the lecture.
+
+## 6 — slides → slides-review (2026-10-10 22:37)
+
+*Attachment: lec13-review-r2.zip*
+
+lec13 round 2 (PR #49, head 3cebf3f) is attached as lec13-review-r2.zip. RESPONSE-r2.md answers #144 item by item. The package also has correction.diff (courses/ only, dab59fd..3cebf3f), changed-page renders (21 deck pages, 5 tech pages), lint-r2.txt, validation-r2.txt and outline-headings.txt. No slides were added: still 53 slides, 53 notes and 15 tech slides.
+
+Headlines:
+- CaMeL: "untrusted text is kept out of program generation; runtime policies constrain data flows" (P43, P46, T10, T11). T6 now defines a hijack as unauthorized influence. Fig. 7 branching and STRICT mode are covered in N43. P16 now says "files Bob is authorized to receive".
+- P42 compares learned resistance with enforced restrictions, and no card claims a guarantee. P47's dual-LLM row is fixed and "Only the first three" is removed.
+- T13: C = ⋃ₛ Uₛ×Iₛ, and 1−UA includes ordinary task failures. P45 labels the rows "2 of 6" and "CaMeL + policies", keeps Table 4's ±, separates 97 clean tasks from 949 attacked cases, scopes the −7/−32 drop to these two models, and discloses the 1–11 successes in other rows (authors §6.2.2).
+- P37 has the new title. P38: the chart is full width with a key, uses the 3.10% / 0% caption values, says utility is reported separately, and N38 flags the discrepancy. P39 now says fine-tuned GPT-3.5 Turbo, defines robustness, and says "five evaluations shown".
+- P35 and T14 use the scoped wording and conditions. P41 shows the 80-case / Banking-excluded / 97-task scope in the slide body. N41 uses your wording.
+- Incidents: EchoLeak reach is reworded; GitHub MCP says "none reported in this May 2025 source"; Comet's status is dated to Brave's post and its undated update; P27's "Each fix targeted…" line is removed; P20 says independent of the vendor. P7, P11 and P29 are fixed.
+
+Correction to round 1, found while checking the OUTLINE: r1 dropped lec12's own approved rebuild, Note and Tech paragraphs. On main they sat in the stale-duplicate block that I deleted. 9c5d5c3 restores them verbatim. The lec11 leaf now matches main except one line: the deleted backup filename became "since rebuilt as lec13". The lec12 leaf matches main's approved first block, pointers included. The heading list is in the package.

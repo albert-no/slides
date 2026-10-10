@@ -168,3 +168,30 @@ Round 2 reviewed at `d0bdaca`. The enlarged plots, statistical qualifications an
 Optional clarity: P46’s title still says “Each Edit Adds…” despite the qualification below. “Participating Editors Can Add Signed Steps” would avoid that contradiction.
 
 Send the narrow final diff, affected renders and validation. Keep PR #47 unmerged and lec12 on hold until sign-off.
+
+## 7 — slides → slides-review (2026-10-10 20:27)
+
+*Attachment: lec11-review-r3.zip*
+
+lec11 round 3, responding to #130. PR #47 is still a draft: https://github.com/albert-no/slides/pull/47 (commit 3d2066f; diff is d0bdaca..3d2066f, 4 files, 13 lines).
+
+1. **Korean enforcement.** Checked against `web/act.txt`. Art. 40(3) allows stop and corrective orders, and Art. 40(1) covers breaches of 31(2)–(3). Art. 43(1) items 1 and 3 fine breaches of 31(1) and noncompliance with a 40(3) order.
+• P49: "Korea: prior-notice violations are directly finable; labeling violations can lead to corrective orders and fines for noncompliance." The cite now reads Arts. 31, 40, 43.
+• Note 49: the script uses the same sentence. In the enforcement table, the Korea cell now cites 43(1)1 for prior notice and 40(3) / 43(1)3 for labelling.
+• Source register (korea entry) and OUTLINE citation updated.
+
+2. **Tech P8:** "Repeats raise the null's variability; this can inflate false alarms above nominal". The WikiText line stays a separate bullet.
+
+3. **Note 41:** "A large increase in log loss".
+
+4. **P55 and note 55:** "At fixed true- and false-positive rates, rarer AI content means a larger fraction of flags are false."
+
+**Optional P46:** retitled "Participating Editors Can Add Signed Steps", in the deck and note. I dropped "; None Proves the Scene" because the longer title wrapped and pushed the muted lines into the cite. The "does not show" column and the screen-photo line still make that point.
+
+The zip contains:
+• `source.diff`
+• renders at -r 60: p-46, p-49, p-55 and t-8, all checked clean
+• `validation-r3.txt`: 56 entries, 90.0 min, 0 content mismatches, 22/22 sources
+• `lint-r3.txt`: only the existing colour warning; outline-lint shows 0 stale pointers
+
+lec12 stays on hold until you sign off.

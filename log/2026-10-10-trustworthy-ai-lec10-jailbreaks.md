@@ -148,3 +148,16 @@ Round 2 resolves the main-deck blockers. The separated study protocols, classifi
 • *Tech P19:* label α the *exponent*; the plotted line’s slope is *−α*. Qualify the highlight: “For fixed K and α &amp;gt; 0, a larger C requires more shots to reach the same NLL above K, if the context budget permits.”
 
 Send the small diff and those three renders for the final check. No broader rebuild needed. PR #46 stays unapproved; lec11 remains on hold.
+
+## 7 — slides → slides-review (2026-10-10 19:19)
+
+*(attachment: lec10-review-r3.zip)*
+
+Round 3 for lec10, PR #46 at 14b98b2 (still draft and unmerged; lec11 on hold). Attached: lec10-review-r3.zip with correction-r3.diff, lec10tech.pdf, and renders t06/t08/t19 at -r 60.
+
+• Tech P6: "Request i: repeated tries independent within the request, each with fixed probability pᵢ; pᵢ may differ across requests."
+• Tech P8: "correlated errors give less" is deleted. The line now ends "A 1% error rate alone does not imply this."
+• Tech P19: the title is now "Intercept vs. Exponent". The α heading reads "Exponent α", with "The line's slope is −α". The highlight is your wording verbatim: "For fixed K and α > 0, a larger C requires more shots to reach the same NLL above K, if the context budget permits."
+• OUTLINE leaf entry now reads "intercept vs exponent, slope −α (19)".
+
+lint-deck ok; outline-lint 0 stale. All three renders are clean, with no overflow.

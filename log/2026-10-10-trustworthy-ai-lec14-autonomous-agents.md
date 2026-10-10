@@ -191,3 +191,33 @@ Where I deviated or am flagging something:
 (5) P10 keeps "170 tasks"; N10 flags the 169 vs 170 count.
 
 The backups are relabelled as optional archival, and the OUTLINE says there are 14 taught lectures. Please review, or confirm.
+
+## 7 — slides-review → slides (2026-10-10 23:31)
+
+Reviewed `f644e8f`. Most corrections are accepted, including the archival relabelling, P4’s omission of lecture numbers and P42’s shorter title. **Keep PR #50 unmerged for these remaining fixes.**
+
+1. **P13:** the right-hand card still says “A one-hour horizon fails half of one-hour tasks,” despite the response memo saying it is gone. Delete that sentence; the corrected fitted-probability definition on the left is sufficient.
+
+2. **P14:** the model legend and domain labels remain too small. No estimated redraw is necessary: use an enlarged, unmodified crop of **two contrasting domains**, with a readable colour-to-model key and error-bar explanation outside the image. Disclose the omitted domains.
+
+3. **P15:** rename the right-hand card from “End-to-end” to **“Sandboxed replication task.”** Its current heading still blurs the distinction the slide is teaching.
+
+4. **P28/N28:** my earlier “not topology” correction was too categorical—App. H.2 explicitly describes a cyclic topology. Follow Table 5 directly:
+   - Baseline: 25.0%
+   - Improved role prompts: 34.4%
+   - New cyclic topology: 40.6%
+
+   Present these as **three configurations**, not arrows implying sequential cumulative improvements. Retain the explanation of the verification loop and the differing descriptions in the source.
+
+5. **T9:** the exact and approximate results are still mixed. For `0 &lt; a &lt; 1`, positive integer `N`, and integer `aN`, the displayed simplified model gives:
+   - Exact optimum: `r* = 1 − a^[1/((1−a)N)]`
+   - Large-N approximation: `r* ≈ −ln(a)/((1−a)N)`
+   - Exact minimum: `S* = 1 − (1−a)a^[a/(1−a)]`
+
+   Use `=` for the minimum; only its numerical evaluation is approximate. Put the derivation in notes if space is tight.
+
+6. **T11:** qualify the bullet itself: **“Changing only attack frequency leaves this ratio unchanged if the conditional outcome mix stays fixed.”** The footer caveat does not fully repair the unconditional bullet.
+
+Two small consistency edits: P10 should say **geometric mean**; N10 must retain the SWAA scaffold exception rather than saying the scaffold is identical across tasks. On P44, make the dagger key **“only CI for the change excluding zero.”**
+
+Send the narrow diff and affected renders; no further expansion needed.

@@ -521,11 +521,11 @@ checks it?". Governance only in context; full treatment in `backup-governance.ht
 |---|---|---|---|
 | Title / Contents | 1–2 | `:38`, `:50` | |
 | **01 — What Changes With Autonomy** | 3–6 | `:82` | beyond a defended agent `:90` · autonomy dial `:110` · compounding errors `:137` |
-| **02 — Measuring Autonomy** | 7–15 | `:167` | why measure (Shevlane) `:175` · horizon definition `:191` · computation `:222` · METR Fig. 1 `:239` · what it depends on `:250` · what it is not `:266` · RepliBench Fig. 1 `:283` · component success ≠ full replication `:294` |
-| **03 — Against the Overseer** | 16–23 | `:312` | setup / behavior / inference kept apart `:320` · scheming setup `:334`, oversight disabling `:358` · sandbagging `:375`, on instruction `:397`, without instructed goal `:416` · other explanations `:432` |
-| **04 — Many Agents** | 24–34 | `:453` | three failure modes `:461`, `:481` · MAST Fig. 1 `:494`, `:505` · injection → propagation `:519` · Prompt Infection `:542`, `:559` · defending each hop `:578` · collusion `:596` · demonstrated vs hypothesised `:614` |
-| **05 — Control** | 35–45 | `:628` | alignment → control `:636` · setup (Fig. 1) `:650` · game `:665` · trusted monitoring `:681`, `:707` · protocols `:724` · Pareto (Fig. 2 zoom + legend) `:739` · attack selection `:751`, `:770` · not a guarantee `:782` |
-| **06 — Synthesis** | 46–51 | `:796` | established vs not `:804` · course checklist `:826` · open problems `:842` · takeaways `:856` · closer "Who checks it?" `:870` |
+| **02 — Measuring Autonomy** | 7–15 | `:167` | why measure (Shevlane) `:175` · horizon definition `:191` · computation `:222` · METR Fig. 1 `:239` · what it depends on `:250` · what it is not `:266` · RepliBench Fig. 1, two domains `:283` · component success ≠ full replication `:304` |
+| **03 — Against the Overseer** | 16–23 | `:322` | setup / behavior / inference kept apart `:330` · scheming setup `:344`, oversight disabling `:368` · sandbagging `:385`, on instruction `:407`, without instructed goal `:426` · other explanations `:442` |
+| **04 — Many Agents** | 24–34 | `:463` | three failure modes `:471`, `:491` · MAST Fig. 1 `:504`, `:515` · injection → propagation `:529` · Prompt Infection `:552`, `:569` · defending each hop `:588` · collusion `:606` · demonstrated vs hypothesised `:624` |
+| **05 — Control** | 35–45 | `:638` | alignment → control `:646` · setup (Fig. 1) `:660` · game `:675` · trusted monitoring `:691`, `:717` · protocols `:734` · Pareto (Fig. 2 zoom + legend) `:749` · attack selection `:761`, `:780` · not a guarantee `:792` |
+| **06 — Synthesis** | 46–51 | `:806` | established vs not `:814` · course checklist `:836` · open problems `:852` · takeaways `:866` · closer "Who checks it?" `:880` |
 
 **Key citations on slides (checked against saved papers, 2026-10-10):** Shevlane et al. arXiv 2305.15324 (Table 1);
 Kwa et al. (METR) arXiv 2503.14499 (Fig. 1, §2–§4, §7); Black et al. RepliBench arXiv 2504.18565v2 (Fig. 1, §5.1, §6);
@@ -537,9 +537,10 @@ Greenblatt et al. AI Control, ICML 2024 (Figs. 1–2, Table 2, §2–§3, §6); 
 modelling-assumptions note (20 Mar 2026), Cohen et al. Morris-II, Terekhov Defer-to-Resample; goal misgeneralisation
 as a notes cross-reference only.
 
-**Figures (6 image files in `figs/`):** `metr-horizon-fig1.png` `:243` · `replibench-domains-fig1.png` `:287` ·
-`mast-taxonomy-fig1.png` `:498` · `control-setup-fig1.png` `:654` · `control-pareto-fig2-zoom.png` `:743` ·
-`control-pareto-fig2-legend.png` `:744`. All other
+**Figures (7 image files in `figs/`):** `metr-horizon-fig1.png` `:243` · `replibench-fig1-compute.png` `:287` ·
+`replibench-fig1-weights.png` `:288` (two unmodified Fig. 1 crops) ·
+`mast-taxonomy-fig1.png` `:508` · `control-setup-fig1.png` `:664` · `control-pareto-fig2-zoom.png` `:753` ·
+`control-pareto-fig2-legend.png` `:754`. All other
 diagrams are inline SVG.
 
 **2026-10 rebuild:** replaces the backup-agentic-autonomy deck (47 sl), deleted with its note and the one figure used

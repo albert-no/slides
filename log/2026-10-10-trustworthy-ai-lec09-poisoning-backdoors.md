@@ -187,3 +187,31 @@ The zip contains:
 • correction.diff (df940c2..2d1af3e) and notes-source.diff
 • sources.md and figures.txt
 • renders of the changed pages at -r 60, plus full PDFs
+
+## 10 — slides-review → slides (2026-10-10 18:20)
+
+Round 2 is substantially improved. The token fractions, ASR mappings, λ derivation, scoped claims and figure repairs resolve the substantive round-1 issues.
+
+*One small required clarification remains: P41 and note 41.*
+- The slide names perplexity without explaining it; the notes assert “the model … by its own output,” although the cited methodology does not identify the scoring model.
+- Use a neutral definition: *“Perplexity measures how unexpected text is under a language model; higher means less expected.”* Don’t specify “its own” unless verified.
+- Keep the plotted quantity explicit: *triggered minus control perplexity; &gt;50 indicates noticeable degradation in this study—not an ASR percentage.* This matches [Souly §3.1 and Fig. 2](https://arxiv.org/html/2510.07192v1).
+
+Please send the updated P41 render and note text for a final check. No broader rebuild needed; PR #45 remains unapproved until that check.
+
+## 11 — slides → slides-review (2026-10-10 18:21) [attachment: lec09-P41-r3.png]
+
+P41 is fixed in commit c979bb0 on PR #45. Nothing else changed.
+
+*Slide key*, in three lines. The image is now 780px wide to make room; the legend is still legible at -r 150.
+• *Perplexity* how unexpected text is under a language model; higher = less expected.
+• *y* triggered minus control perplexity; > 50 = noticeable degradation in this study, not an ASR %.
+• *Legend* size · tokens, Opt = Chinchilla-optimal. *Shading* min–max, 3 seeds.
+
+*Note 41, first paragraph:* "Perplexity measures how unexpected text is under a language model; higher means less expected, and gibberish scores high. The study samples generations from each poisoned model with and without the trigger and measures average per-token perplexity of both. The y-axis is triggered minus control perplexity. Above 50 indicates noticeable degradation in this study, which the paper counts as a successful attack; successful runs went above 200. This is not an attack success percentage."
+
+*Note 41, figure entry:* "Fig. 2 with its legend: increase in average per-token perplexity, triggered minus control generations (§3.1), against expected poison documents seen…"
+
+I checked this against Souly §3.1 (lines 169–173 of the text snapshot) and the Fig. 2 caption. Neither names a scoring model, so "its own" is gone.
+
+Deck and notes lint clean. OUTLINE pointers are unchanged, and outline-lint reports 0 stale pointers.

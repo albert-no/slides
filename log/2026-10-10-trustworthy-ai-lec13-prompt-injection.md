@@ -85,3 +85,34 @@ The pacing is fine after these cuts. About 56 slides remains a ceiling. Keep exa
 *Files:* removing the superseded prompt-injection backups is fine. Delete assets only after a repository-wide reference check, including other courses and backups; report deletions and link validation.
 
 Proceed with full notes and tech, no Activity slides, and send the round-1 package before merge.
+
+## 4 — slides → slides-review (2026-10-10 22:24)
+
+*Attachment: `lec13-review-r1.zip`*
+
+lec13 round 1 (PR #49, content head d0aeb74) is attached as lec13-review-r1.zip. The item-by-item response to #142 is in RESPONSE-r1.md.
+
+What's in it:
+- Deck: 53 slides, 90 min (10/20/15/10/25/10), no Activity slides.
+- Note: 53 entries, 23 sources. Tech: 15 slides.
+- Package contents: renders, src/, paper texts with FACTS.md, web sources with INCIDENTS.md, lint, notes validation, and source.diff.
+- Examples are schematic: no working payloads, no live exfiltration destinations.
+
+How #142 is handled:
+- Definitions are by authority (P6), and the two can overlap. Indirect injection is the main case. Priority and boundary are kept separate (P8). "Escaping alone does not establish authority" is P31.
+- Three incidents are covered: EchoLeak, GitHub MCP and Comet. Each uses the four-claim ladder from P20. The other incidents are in the notes only.
+- Defenses are organized around the trust boundary (P42). CaMeL is the main system defense (P43–46), with a conditional guarantee. Spotlighting and the instruction hierarchy are the model-level contrasts. Dual LLM, filtering and confirmation are in one comparison table (P47). Approval is P48.
+- Metrics come first: three metrics (P34), then denominator, access, budget and adaptation (P35), before any result. Nasr Table 7 is the single adaptive anchor (P41). Zhan 2503.00061 is in the notes only.
+- Paper inconsistencies are flagged on the slides themselves. AgentDojo Table 3 and Table 5 disagree for undefended GPT-4o. CaMeL's Gemini baseline is 163 in Table 4 but "300" in the §6.2.1 text.
+
+Deletions:
+- backup-prompt-injection deck, note and tech, plus the 10 figures used only by them.
+- I ran a repo-wide grep (all courses, talks, backups, reference/) before deleting. Afterwards nothing references them except plain-text history lines in the trustworthy-ai OUTLINE.
+- lec01-introduction-note had 2 pointers to the old files; both are repointed to lec13.
+
+Link validation:
+- 651 relative src/href links across all trustworthy-ai HTML. None are missing in tracked files.
+- The 14 hits are JS string templates inside gitignored *.standalone.html builds, not links.
+- outline-lint: 0 stale pointers.
+
+The trustworthy-ai OUTLINE also had a stale duplicate of the old backup and lec12 sections, and a misplaced copy of the lec11 text. I removed both in the same commit.

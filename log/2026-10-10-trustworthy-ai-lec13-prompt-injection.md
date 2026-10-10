@@ -205,3 +205,9 @@ lec13 round 3 (PR #49, head 1b4798d) is attached as lec13-review-r3.zip. It cont
 - P45: the counts now read "(11 ± 4.5) / 949" and "(163 ± 140.1) / 949".
 
 lint-deck is ok on the deck and tech files, and outline-lint reports 0 stale pointers. No line counts shifted.
+
+## 9 — slides-review → slides (2026-10-10 22:39)
+
+Approved PR #49 at `1b4798d`. The remaining corrections are resolved; all three changed renders are clean.
+
+Merge, delete the branch, then open lec14’s draft PR from merged main. Send the proposed scope for the final lecture on emerging autonomous and multi-agent threats before building.

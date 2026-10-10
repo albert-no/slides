@@ -41,7 +41,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 7 | `lec07-alignment-failures.html` | Alignment failures: sycophancy, reward hacking, explanation faithfulness | **new 2026-10** (59 sl, 14 real figure crops from 10 source figures, 90 min, no activities; note 59 entries; tech 12 sl). Former Wk 7 interpretability deck → `backup-interpretability.html` |
 | 8 | `lec08-adversarial.html` | Adversarial robustness: threat models, FGSM → PGD, honest evaluation, certificates | **new 2026-10** (55 sl, 15 real figure crops + 2 charts redrawn from tables, 90 min, no activities; note 55 entries; tech 24 sl) |
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **rebuilt 2026-10** (59 sl, 90 min, concept-first, no activities) |
-| 10 | `lec10-jailbreak.html` | Jailbreaks & LLM safety | **revised 2026-08, figure pass 2026-09** (60 sl, 21 real figs) |
+| 10 | `lec10-jailbreak.html` | Jailbreaks: safety training, fragility, search, budget, evaluation & defenses | **rebuilt 2026-10** (58 sl, 90 min, concept-first, no activities; note 58 entries; tech 21 sl) |
 | 11 | `lec11-prompt-injection.html` | Prompt injection & agentic safety | **figure pass 2026-09** (66 sl) |
 | 12 | `lec12-watermark.html` | Watermarking, deepfakes & provenance | **revised 2026-08**, **figure pass 2026-09** (68 sl) |
 | 13 | `lec13-fairness-defs.html` | Fairness I — definitions & impossibility | **revised 2026-08**, **figure pass 2026-09** (62 sl) |
@@ -71,7 +71,7 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `lec07tech.html` | Wk 7 (alignment failures) | reward-model loss $-\binom{K}{2}^{-1}\mathbb{E}\log\sigma(r_w-r_l)$ (Bradley–Terry reading; Ouyang Eq. 1); KL-penalized RL objective (Ouyang Eq. 2, γ = 0); DPO loss $-\mathbb{E}\log\sigma(\hat r_\theta(x,y_w)-\hat r_\theta(x,y_l))$, $\hat r_\theta=\beta\log\pi_\theta/\pi_{\rm ref}$ (Rafailov 2023 Eq. 7); Gao overoptimization fits $R_{\rm bon}(d)=d(\alpha-\beta d)$, $R_{\rm RL}(d)=d(\alpha-\beta\log d)$, $d=\sqrt{\rm KL}$; Chen hint-test faithfulness score (symbols defined) + random-flip normalization $\alpha=1-q/((n-2)p)$, domain $n>2$, $p>0$, $\alpha>0$; monitor recall/precision with Baker Table 1 | **new 2026-10** (12 sl; all formulas checked against the paper PDFs). Old interpretability supplement → `backup-interpretabilitytech.html` |
 | `lec08tech.html` | Wk 8 (adversarial robustness) | perturbation set $\mathcal B_p(x,\varepsilon)$; FGSM as the exact maximizer of the linearized loss over the ℓ∞ box ($g^\top\delta\le\varepsilon\|g\|_1$; unclipped ℓ2 analogue); linear model $w^\top\eta=\varepsilon\|w\|_1$; PGD with random start + projections; C&W ℓ2 objective, tanh box, binary search on $c$; min-max + Danskin; Cohen Thm 1 with Neyman–Pearson sketch; CERTIFY (Clopper–Pearson, $\alpha$) | **new 2026-10** (24 sl; formulas checked against the paper PDFs) |
 | `lec09tech.html` | Wk 9 (poisoning) | count vs rate α; feature-collision objective; backdoor objective + ASR; spectral signatures; Neural Cleanse + MAD index; activation clustering | **rebuilt 2026-10** (18 sl) |
-| `lec10tech.html` | Wk 10 (jailbreak) | RLHF KL-penalized objective; GCG target `min -log Pr["Sure, here"]`; gradient-guided token swaps | **checked 2026-08** (12 sl: RLHF KL objective + GCG target verified correct, no changes) |
+| `lec10tech.html` | Wk 10 (jailbreak) | ASR + SE; any-of-N; judge-error correction; RLHF KL objective; per-token KL; refusal direction ablation; GCG loss + budget; PAIR budget; MSJ and BoN power laws | **rebuilt 2026-10** (21 sl; formulas checked against the paper PDFs) |
 | `lec11tech.html` | Wk 11 (prompt injection) | data-vs-control plane; confused deputy; agent threat model; capabilities/least privilege; taint tracking; dual-LLM pattern (security model, not equations) | **checked 2026-08** (9 sl: security model verified — dual-LLM matches Willison 2023, CaMeL cite correct; two prose-dash lint warnings fixed) |
 | `lec12tech.html` | Wk 12 (watermark) | green-list logit bias; null Binomial(T,γ); detection z = (|s|_G−γT)/√(Tγ(1−γ)); false-positive bound; z ∝ √T; robustness–quality tradeoff | **checked 2026-08** (10 sl: FP rate at τ=4 fixed "&lt;" → "≈ 3×10⁻⁵" per KGW; no Thm 4.3 stated — consistent with the corrected math in `courses/privacy/lectures/06-watermark/`) |
 | `lec13tech.html` | Wk 13 (fairness defs) | demographic parity / equalized odds / calibration as conditional-prob defs; base rates; impossibility theorem (Chouldechova/Kleinberg) + proof sketch | **fixed 2026-08** (15 sl: base-rate identity was inverted (1−p)/p → p/(1−p) per Chouldechova eq 2.6; proof-sketch step 1 corrected (calibration ≠ "PPV = base rate" → predictive parity demands equal PPV across groups); unverifiable numeric-wedge table replaced with an exactly derivable two-value-score construction; impossibility attribution now dual Chouldechova + Kleinberg) |
@@ -101,7 +101,7 @@ cropped-and-cited paper figure or a data-backed SVG:
 - `lec03` 16 real figures (Salem, Yeom, Shokri, Carlini 2022 ×3, Choquette-Choo, Hayes LLM-MIA Fig. 2, Steinke, Shi, Carlini diffusion, Duan, Das, Hayes, Maini, Zhang) — see its section.
 - `lec08` panda→gibbon (`figs/panda-gibbon.png`) + Eykholt stop-sign (`figs/eykholt-stopsign.png`, CVPR 2018 Fig 1).
 - `lec09` BadNets trigger strip (`figs/badnets-trigger.png`, Gu et al. 2017 Fig 7).
-- `lec10` Wei failure modes (`figs/wei-jailbroken.png`, NeurIPS 2023 Fig 1), GCG schematic (`figs/gcg-schematic.png`, Zou 2023 Fig 1 — replaced SVG), many-shot power-law (`figs/msj-powerlaw.png`, Anil et al. NeurIPS 2024 **Fig 1** — attribution corrected from Fig 2, 2026-08); 2026-09 figure pass added 18 more (Ouyang, Bai, Qi, Arditi, Zou GCG/CB, Chao, Yong, Yuan, Szegedy, Ganguli, Perez, Sharma, Hughes) — see its section.
+- `lec10` Wei failure modes (`figs/wei-jailbroken.png`, NeurIPS 2023 Fig 1), GCG schematic (`figs/gcg-schematic.png`, Zou 2023 Fig 1); 2026-10 rebuild: 11 cited crops in total — see its section.
 - `lec13`/`lec14` Bianchi occupation grid (`figs/bianchi-occupations.png`, FAccT 2023 Fig 1); `lec14` Gender Shades table (`figs/gender-shades.png`, FAT* 2018 Table 4). lec13 COMPAS TODO removed (illustrative SVG kept — real news graphic is copyrighted).
 - `lec14` figure pass 2026-09: 20 cited crops (AIF360 Figs. 1/4/5, Feldman Fig. 1, Agarwal Fig. 1, Zhang Fig. 2 + Table 3, Hardt Figs. 2/10/11, model card + datasheet examples, SMACTR Fig. 2, PPB faces, Actionable Auditing Tables 1–2, Tamkin Figs. 1/2/5, Eloundou Fig. 10, Wilson & Caliskan Fig. 2) + 14 SVGs; see the lec14 section.
 - `lec06` Vectara HHEM hallucination bar chart (inline SVG, data Sep 22, 2026).
@@ -1191,106 +1191,68 @@ Fine-Pruning, STRIP, hashes); the worked-example code is in entry 26.
 
 ## lec10-jailbreak.html
 
-**Topic:** Jailbreaks & LLM safety (~90 min). Safety training at picture level
-(instruction tuning → RLHF/InstructGPT → Constitutional AI, one slide each); why
-refusal is fragile (thin layer, shallow/first-token alignment, refusal-as-a-direction,
-Wei's two failure modes); the jailbreak zoo (persona/DAN, fake authority, obfuscation,
-GCG adversarial suffixes, PAIR black-box, many-shot, low-resource languages, ciphers,
-fine-tuning removes safety); jailbreaks as adversarial examples (one unifying view);
-red-teaming & safety evaluation as practice; layered defenses (filters, system-prompt
-hardening, Constitutional Classifiers, circuit breakers); attacker–defender asymmetry;
-2025–26 frontier. Math lives in `lec10tech.html`.
+**Topic:** Jailbreaks (90 min; mixed-major sophomores/juniors; concept-first, light math, no proofs;
+**no activities**; no working jailbreak strings). Jailbreak defined as bypassing safeguards *through inputs*;
+prompt injection, poisoning and weight-level safety removal separated (the last as a labelled contrast).
+Brief RLHF / Constitutional AI refresher (two approaches, not two stages). Under- vs over-refusal; access
+ladder; every ASR needs denominator, budget, model/version, judge. Fragility: Wei's two failure modes and
+Table 1; shallow alignment (Qi 2025 Figs 1–2, Table 2) and one refusal direction (Arditi Fig 1) as findings in
+tested settings; fine-tuning contrast (Qi 2024 Tables 1–3). Search: GCG (≈256K evaluations; transfer Table 2,
+ensemble 86.6/46.9 is any-of-4) vs PAIR (≤ 90 queries, Table 2). Budget: any-of-N illustration, many-shot
+(Fig 2; intercept not slope; 61% → 2% warning, non-adaptive), Best-of-N (Fig 3; resend reliability Table 1),
+languages/ciphers on one slide with the StrongREJECT re-check. Evaluation: judge ladder, PAIR judge Table 1,
+StrongREJECT Fig 1 (redrawn, redacted), HarmBench length, XSTest over-refusal, Ganguli κ = 0.32. Defenses:
+Constitutional Classifiers (Fig 1 redrawn; costs) and circuit breakers (Table 1) + Schwinn &amp; Geisler adaptive
+re-attack. Excludes prompt injection (lec13), poisoning (lec09). Math in `lec10tech.html`.
 
-### Sections (60 slides, ~90 min — content-revised 2026-08 from 54; figure pass 2026-09 from 57, all citations source-verified)
+### Sections (58 slides, 90 min: safety training 10 · fragility 20 · search 20 · attack budget 20 · evaluation + defenses 20)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
-| Title / Contents | 1–2 | `:32`, `:44` | |
-| **01 — Safety Training** | 3–12 | `:81` | raw model (SVG) `:89` · two goals (SVG) `:126` · instruction tuning (Ouyang Fig 2) `:155` · RLHF (SVG, Ouyang) `:175` · **InstructGPT, Measured (Ouyang Fig 1 win rate; added 2026-09)** `:203` · optimize against reward (SVG) `:224` · Constitutional AI (Bai Fig 1) `:258` · refusal behavior (SVG) `:274` · it mostly works (SVG) `:306` |
-| **02 — Why It Is Fragile** | 13–20 | `:341` | thin layer (SVG) `:349` · Shallow Alignment (Qi ICLR 2025) `:384` · **Shallow, Measured (Qi Fig 1 per-token KL; added 2026-09)** `:408` · Two Failure Modes (Wei Fig 1 capture) `:429` · competing objectives (SVG) `:444` · mismatched generalization (SVG) `:479` · Refusal Is a Direction (Arditi Fig 1) `:500` |
-| **03 — Manual Jailbreaks** | 21–26 | `:522` | what a jailbreak is (SVG) `:530` · persona play (SVG) `:571` · fake authority (SVG) `:607` · obfuscation (SVG) `:642` · manual is brittle (SVG) `:685` |
-| **04 — Automated Jailbreaks** | 27–34 | `:730` | from art to optimization (SVG) `:738` · the target (SVG) `:781` · GCG (Zou Fig 2 ASR panel; 99/100 on Vicuna-7B) `:821` · search loop (SVG) `:842` · Search in Token Space (GCG Fig 1 capture) `:883` · It Transfers (Zou Fig 3; 84% GPT-3.5/4, 66% PaLM-2, ~2% Claude) `:894` · PAIR (Chao Fig 2, <20 queries) `:915` |
-| **05 — Scaling the Attack** | 35–41 | `:936` | many-shot (SVG, Anil) `:944` · Power-Law Curve (MSJ Fig 1 capture) `:988` · Low-Resource Languages (Yong Fig 1; ~79% on GPT-4) `:1000` · **Which Languages Break Through (Yong Table 1; added 2026-09)** `:1017` · cipher prompts (CipherChat Fig 2; cite added 2026-09) `:1038` · Fine-Tuning Removes Safety (Qi ICLR 2024 Fig 1) `:1059` |
-| **06 — One Unifying View** | 42–46 | `:1080` | adversarial examples (Szegedy Fig 5) `:1088` · same idea in text (SVG) `:1108` · crossing the boundary (SVG) `:1145` · the hard lesson (SVG) `:1167` |
-| **07 — Defenses & Frontier** | 47–58 | `:1209` | Red-Teaming: Attack to Defend (Ganguli Fig 1) `:1217` · Red-Teaming at Scale (Perez Fig 1) `:1233` · defense in layers (SVG) `:1254` · filters (SVG) `:1289` · system-prompt hardening (SVG) `:1330` · Constitutional Classifiers (Sharma Fig 1) `:1366` · Circuit Breakers (Zou NeurIPS 2024 Fig 1) `:1387` · demo (SVG) `:1408` · cat-and-mouse (SVG) `:1450` · not solved (SVG) `:1471` · Frontier 2025-26 (Hughes BoN Fig 3) `:1504` |
-| Takeaways / Closer | 59–60 | — | key takeaways `:1526` · closer `:1539` |
+| Title / Contents | 1–2 | `:30`, `:42` | |
+| **01 — What Safety Training Adds** | 3–9 | `:71` | refused then answered (Wei Fig 1) `:79` · definition + neighbouring threats `:90` · RLHF / CAI refresher (SVG) `:106` · two ways to fail (SVG) `:115` · access ladder (SVG) `:123` · four ASR labels `:131` |
+| **02 — Why Refusal Is Fragile** | 10–20 | `:141` | two hypotheses `:149` · competing objectives (SVG) `:158` · mismatched generalization (SVG) `:168` · Wei Table 1 (HTML) `:177` · per-token KL (Qi 2025 Fig 1) `:193` · prefilling (Qi 2025 Fig 2) `:210` · recovery augmentation (Table 2, HTML) `:227` · refusal direction (Arditi Fig 1) `:243` · fine-tuning contrast (Qi 2024, HTML) `:254` · findings × access `:270` |
+| **03 — Searching for Jailbreaks** | 21–30 | `:285` | families (SVG) `:293` · search loop (SVG) `:302` · GCG objective (SVG) `:310` · GCG step + 256K budget `:321` · transfer (GCG Fig 1) `:330` · transfer table (GCG Table 2, HTML) `:346` · PAIR (Chao Fig 2) `:361` · PAIR vs GCG (Chao Table 2, HTML) `:377` · gradient vs LLM search `:393` |
+| **04 — Scaling the Attack Budget** | 31–41 | `:408` | any-of-N bars (SVG, illustrative) `:416` · many-shot schematic (redacted SVG) `:425` · MSJ Fig 2 `:435` · intercept vs slope (sketch of Fig 5) `:452` · BoN augmentations `:462` · BoN Fig 3 `:473` · resend reliability (Table 1, HTML) `:483` · languages + ciphers `:499` · adversarial example vs jailbreak (SVG) `:514` · budget summary `:522` |
+| **05 — Evaluation and Defenses** | 42–58 | `:535` | judge ladder (SVG) `:543` · PAIR judge table `:551` · StrongREJECT (Fig 1 redrawn, redacted) `:566` · HarmBench Fig 2 `:575` · XSTest (HTML) `:591` · Ganguli Fig 1 `:606` · three defense places (SVG) `:622` · Constitutional Classifiers (Fig 1 redrawn) `:630` · CC results `:639` · circuit breakers (CB Fig 1 top row) `:654` · CB Table 1 `:663` · adaptive re-attack (Schwinn &amp; Geisler) `:678` · asymmetry `:692` · checklist `:700` · takeaways `:714` · closer `:727` |
 
-**Key definitions / citations (all source-verified 2026-08; cite-line pointers 2026-09):**
-- InstructGPT (instruction tuning + RLHF) — `:171`, `:199`, `:220` — Ouyang et al., NeurIPS 2022 (Fig 2 pipeline, Fig 1 win rate).
-- Constitutional AI (AI feedback, self-critique) — `:270` — Bai et al., 2022 (arXiv 2212.08073; Fig 1).
-- Shallow safety alignment ("first few output tokens") — `:404`, `:425` — Qi et al., "Safety
-  Alignment Should Be Made More Than Just a Few Tokens Deep", ICLR 2025 (Outstanding Paper; Fig 1 per-token KL).
-- Two failure modes (competing objectives; mismatched generalization) — `:440`, `:475`,
-  `:496` — Wei, Haghtalab, Steinhardt, "Jailbroken: How Does LLM Safety Training Fail?",
-  NeurIPS 2023 (Fig 1: GPT-4 competing-objectives, Claude v1.3 base64 mismatched-gen).
-- Refusal is a one-dimensional direction (13 models ≤72B) — `:517` — Arditi et al.,
-  "Refusal in Language Models Is Mediated by a Single Direction", NeurIPS 2024 (Fig 1).
-- GCG (universal + transferable; 99/100 harmful behaviors Vicuna-7B, 88% Harmful
-  Strings; transfer 84% GPT-3.5/GPT-4, 66% PaLM-2, ~2.1% Claude) — `:838`, `:879`, `:890`,
-  `:911` — Zou et al., "Universal and Transferable Adversarial Attacks on Aligned
-  Language Models", 2023 (arXiv 2307.15043; Fig 1 = ChatGPT/Claude/Bard/Llama-2; Fig 2 optimizer comparison; Fig 3 transfer).
-- PAIR (jailbreak in <20 queries) — `:931` — Chao et al., 2023 (arXiv 2310.08419; Fig 2).
-- Many-shot jailbreaking (power-law in shots; more effective on larger models) — `:984`,
-  `:996` — Anil et al., NeurIPS 2024 (Fig 1 = the three-panel plot capture).
-- Low-resource-language jailbreak (~79% on GPT-4; Table 1 by resource level) — `:1013`, `:1034` — Yong, Menghini, Bach, 2023
-  (arXiv 2310.02446).
-- Cipher/CipherChat (~100% bypass in some domains) — `:1055` — Yuan et al., "GPT-4 Is Too Smart To Be Safe", ICLR 2024
-  (Fig 2; cite added 2026-09).
-- Fine-tuning compromises safety (10 examples, <$0.20 on GPT-3.5 Turbo; benign
-  fine-tuning also degrades) — `:1075` — Qi et al., ICLR 2024 (arXiv 2310.03693, Oral; Fig 1).
-- Adversarial examples origin — `:1104` — Szegedy et al., ICLR 2014 (Fig 5).
-- Human red-teaming (38,961-attack dataset; RLHF harder to break with scale) — `:1229` —
-  Ganguli et al., 2022 (arXiv 2209.07858; Fig 1).
-- Automated red-teaming (LM attacks LM, tens of thousands of offensive replies) —
-  `:1250` — Perez et al., EMNLP 2022 (Fig 1).
-- Constitutional Classifiers (3,000+ red-team hrs, no universal jailbreak; +0.38%
-  refusals, ~24% inference overhead) — `:1383` — Sharma et al. (Anthropic), 2025
-  (arXiv 2501.18837; Fig 1).
-- Circuit breakers / representation rerouting — `:1404` — Zou et al., "Improving
-  Alignment and Robustness with Circuit Breakers", NeurIPS 2024 (arXiv 2406.04313; Fig 1).
-- Best-of-N jailbreaking (power-law ASR; 89% GPT-4o, 78% Claude 3.5 Sonnet @ N=10k) —
-  `:1522` — Hughes et al., 2024 (arXiv 2412.03556; Fig 3).
+**Key citations (checked against saved PDFs, 2026-10-10):** Wei, Haghtalab &amp; Steinhardt NeurIPS 2023
+(Fig 1, §3, Table 1); Ouyang et al. NeurIPS 2022; Bai et al. 2022 (arXiv 2212.08073); Qi et al. ICLR 2025
+(arXiv 2406.05946; Figs 1–2, Table 2); Arditi et al. NeurIPS 2024 (Fig 1); Qi et al. ICLR 2024 (arXiv 2310.03693;
+Tables 1–3); Zou et al. 2023 GCG (arXiv 2307.15043; Fig 1, Algorithm 1, Table 2 — ensemble 86.6% GPT-3.5 /
+46.9% GPT-4, single suffix ≈34%; the old "84%" claim was wrong); Chao et al. PAIR (arXiv 2310.08419; Fig 2,
+Tables 1–2); Anil et al. NeurIPS 2024 (Figs 1, 2, 5; §5.4); Hughes et al. BoN (arXiv 2412.03556; §2, Fig 3,
+§3.1, Table 1, §5.4); Yong et al. 2023 (arXiv 2310.02446); Yuan et al. CipherChat ICLR 2024; Souly et al.
+StrongREJECT NeurIPS 2024 (Fig 1); Mazeika et al. HarmBench ICML 2024 (Fig 2, §3.2); Röttger et al. XSTest
+NAACL 2024 (Table 2); Ganguli et al. 2022 (Fig 1, §3.4–3.5); Sharma et al. 2025 (arXiv 2501.18837; Fig 1, §3–5);
+Zou et al. Circuit Breakers NeurIPS 2024 (Fig 1, Table 1); Schwinn &amp; Geisler 2024 (arXiv 2407.15902; Table 1).
+Notes only: Perez et al. EMNLP 2022.
 
-**Figures (21 real, 28 inline SVG):** `figs/ouyang-3steps.png` (Ouyang Fig 2) `:155`;
-`figs/ouyang-winrate.png` (Ouyang Fig 1) `:203`; `figs/bai-cai.png` (Bai Fig 1) `:258`;
-`figs/qishallow-kl.png` (Qi ICLR 2025 Fig 1) `:408`; `figs/wei-jailbroken.png` (Wei Fig 1) `:429`;
-`figs/arditi-refusal.png` (Arditi Fig 1) `:500`; `figs/gcg-asr.png` (Zou Fig 2, ASR panel) `:821`;
-`figs/gcg-schematic.png` (Zou Fig 1) `:883`; `figs/gcg-transfer.png` (Zou Fig 3) `:894`;
-`figs/pair-schematic.png` (Chao Fig 2) `:915`; `figs/msj-powerlaw.png` (Anil Fig 1) `:988`;
-`figs/yong-translate.png` (Yong Fig 1) `:1000`; `figs/yong-table.png` (Yong Table 1) `:1017`;
-`figs/cipher-overview.png` (Yuan Fig 2) `:1038`; `figs/qift-overview.png` (Qi ICLR 2024 Fig 1) `:1059`;
-`figs/szegedy-ostrich.png` (Szegedy Fig 5) `:1088`; `figs/ganguli-success.png` (Ganguli Fig 1) `:1217`;
-`figs/perez-overview.png` (Perez Fig 1) `:1233`; `figs/sharma-overview.png` (Sharma Fig 1) `:1366`;
-`figs/cb-overview.png` (Zou CB Fig 1) `:1387`; `figs/bon-powerlaw.png` (Hughes Fig 3) `:1504`.
-Inline SVG: raw model `:89`, two goals `:126`, RLHF loop `:175`, reward + KL leash `:224`,
-refusal chat `:274`, unsafe-output bars `:306`, thin layer `:349`, shallow first-token `:384`,
-competing scale `:444`, capability⊃safety Venn `:479`, jailbreak rows `:530`, persona `:571`,
-fake authority `:607`, obfuscation pipeline `:642`, trick→patched `:685`, hand vs search `:738`,
-suffix target `:781`, search loop `:842`, many-shot context `:944`, image/prompt recipe `:1108`,
-decision boundary + suffix `:1145`, broken-defenses timeline `:1167`, defense pipeline `:1254`,
-filter bypass `:1289`, stacked context `:1330`, demo rows `:1408`, cat-and-mouse `:1450`,
-staircase `:1471`. Citations use `.cite-left`.
+**Figures (11 cited crops in `figs/`):** `wei-jailbroken.png` `:79` · `qi25-kl.png` `:193` ·
+`qi25-prefill.png` `:210` · `arditi-fig1.png` `:243` · `gcg-schematic.png` `:330` · `pair-fig2.png` `:361` ·
+`msj-fig2ab.png` `:435` · `bon-fig3.png` `:473` · `harmbench-fig2.png` `:575` · `ganguli-redteam.png` `:606` ·
+`cb-top.png` `:654`. Redrawn as SVG with disclosure: MSJ Fig 1 (redacted), MSJ Fig 5 (sketch), StrongREJECT
+Fig 1 (redacted), Constitutional Classifiers Fig 1 (simplified).
 
-**2026-09 figure pass (57→60):** added 18 cited figure crops (Ouyang ×2, Bai, Qi ICLR 2025,
-Arditi, Zou GCG Fig 2 + Fig 3, Chao PAIR, Yong ×2, Yuan CipherChat, Qi ICLR 2024, Szegedy,
-Ganguli, Perez, Sharma, Zou CB, Hughes BoN) and 23 inline SVGs on formerly text-only slides;
-added 3 slides: InstructGPT, Measured (§01), Shallow, Measured (§02), Which Languages Break
-Through (§05); added the CipherChat citation; Many-Shot cite normalized to Anil et al. NeurIPS
-2024. 60-dpi render check of all edited slides. Note synced (60 articles incl. closer, order
-matches; Slide-figure lines on every figure slide).
+**2026-10 rebuild (60 → 58):** rebuilt to the slides-review brief (#118). Persona/fake-authority/obfuscation
+zoo, system-prompt hardening, demo and "frontier" slides removed; evaluation and defenses expanded to 20 min.
+Figures `ouyang-3steps`, `ouyang-winrate`, `bai-cai`, `qishallow-kl`, `arditi-refusal`, `gcg-asr`,
+`gcg-transfer`, `pair-schematic`, `msj-powerlaw`, `yong-translate`, `yong-table`, `cipher-overview`,
+`qift-overview`, `szegedy-ostrich`, `ganguli-success`, `perez-overview`, `sharma-overview`, `cb-overview`,
+`bon-powerlaw` were deleted.
 
-**2026-08 content revision (54→58):** every citation/number fetched and verified.
-Added 3 slides: Fine-Tuning Removes Safety (§05, Qi ICLR 2024), Red-Teaming: Attack to
-Defend + Red-Teaming at Scale (§07, Ganguli 2022 + Perez EMNLP 2022 — fills the
-red-teaming/safety-eval coverage gap). Fixes: **Constitutional Classifiers cite was
-wrong** (Bai 2022 CAI → Sharma et al. Anthropic 2025, the actual Constitutional
-Classifiers paper) plus verified deployment numbers; **MSJ figure mis-attributed
-Fig 2 → Fig 1**; added verified numbers to GCG (99/100 Vicuna), It Transfers (84/66/2%),
-Low-Resource (~79%); added citations to Shallow Alignment (Qi ICLR 2025), Refusal Is a
-Direction (Arditi NeurIPS 2024), Low-Resource (Yong 2023); Frontier rewritten around
-verified anchors (Best-of-N Hughes 2024, agentic vulnerability). `lec10tech.html`
-checked: RLHF KL-penalized objective and GCG target both correct, no changes (12 sl).
-Note file synced (57 entries + closer = 58, order matches).
+**Note:** `lec10-jailbreak-note.html` — 58 entries. Each entry has a minute budget and elapsed time, a script,
+and a key takeaway. Content slides add the figure, setup/model/date, what the slide establishes and does not
+establish, assumptions, and primary-source links (20 sources). The BoN reliability inconsistency (Table 1
+caption vs body vs rows) is recorded in entry 38.
+
+**Tech:** `lec10tech.html` — 21 slides:
+- ASR estimate + binomial SE (4)
+- any-of-N $1-(1-p)^N$ and $N_q$ (5); heterogeneous $p_i$ (6)
+- judge error correction (7); retry amplifies false positives (8)
+- RLHF KL objective (10); per-token KL $D_k$ (11); refusal direction + ablation (12)
+- GCG loss (14); GCG step and 256K budget (15); PAIR $N_s \times K = 90$ (16)
+- MSJ $Cn^{-\alpha}+K$ (18); intercept vs slope (19); BoN $-\log\mathrm{ASR}=aN^{-b}$ (20)
 
 ## lec11-prompt-injection.html
 

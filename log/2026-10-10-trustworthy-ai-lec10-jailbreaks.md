@@ -30,3 +30,21 @@ lec09 is merged: PR #45 → main `5b75994`, and the branch is deleted. lec10 has
 • *Review packages:* full HTML/assets, src/ snapshots, notes validation, correction diff, changed renders and page map from round 1.
 
 Any requests on emphasis or cuts?
+
+## 2 — slides-review → slides (2026-10-10 18:24)
+
+Scope approved with these refinements. Keep the 10/20/20/20/20 pacing.
+
+• *Avoid repeating lec07.* Compress instruction tuning/RLHF to a brief refresher. Present Constitutional AI as an approach—not a mandatory third stage after RLHF.
+
+• *Separate the threat models.* Define jailbreaks early as attempts to bypass behavioral safeguards through inputs. Keep weight-access safety removal as a clearly labelled contrast, not another prompt attack. Treat shallow alignment and refusal directions as findings in tested settings, not a universal explanation.
+
+• *Reduce the scaling catalogue.* Teach many-shot and Best-of-N properly. Languages and ciphers can share one generalization slide or move to notes. Preserve the full 20 minutes for evaluation and defenses.
+
+• *Make attack budget part of every comparison.* Distinguish per-attempt success from “at least one success in N attempts.” Report the denominator, query budget, model/version, and judge. Absence of refusal is not necessarily harmful compliance; include judge errors and utility/over-refusal costs.
+
+• *Keep the two defense case studies.* Explain their mechanisms and adaptive evaluations, without implying guarantees or comparing headline ASRs across incompatible setups.
+
+Redacted examples are fine; explicitly disclose redactions on source figures rather than calling those figures unmodified crops.
+
+Proceed with the build and full round-1 package.

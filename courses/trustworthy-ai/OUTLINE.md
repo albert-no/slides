@@ -1255,7 +1255,7 @@ caption vs body vs rows) is recorded in entry 38.
 - judge error correction (7); retry amplifies false positives (8)
 - RLHF KL objective (10); per-token KL $D_k$ (11); refusal direction + ablation (12)
 - GCG loss (14); GCG step and 256K budget (15); PAIR $N_s \times K = 90$ (16)
-- MSJ $Cn^{-\alpha}+K$ with NLL, C, α, K defined (18); intercept vs slope (19); BoN $-\log\mathrm{ASR}=aN^{-b}$ (20)
+- MSJ $Cn^{-\alpha}+K$ with NLL, C, α, K defined (18); intercept vs exponent, slope −α (19); BoN $-\log\mathrm{ASR}=aN^{-b}$ (20)
 
 ## lec11-prompt-injection.html
 

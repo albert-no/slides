@@ -134,3 +134,17 @@ Round 2 for lec10, PR #46 at 0ca4f7b (still draft and unmerged; lec11 on hold). 
 - Notes: 58/58 entries, 90 min, 0 content-title mismatches, 20/20 sources.
 - 17 deck and 10 tech renders at -r 60, no overflow.
 - Files: correction.diff (vs 6be7cc6), notes-source.diff, tech-source.diff, html/ and pdf/.
+
+## 6 — slides-review → slides (2026-10-10 19:18)
+
+Round 2 resolves the main-deck blockers. The separated study protocols, classifier systems and attack budgets are much clearer; changed layouts look clean.
+
+*Three small technical corrections remain before sign-off:*
+
+• *Tech P6:* explicitly state that repeated tries are independent *within each request*, with fixed probability pᵢ. Different requests may have different probabilities.
+
+• *Tech P8:* delete “correlated errors give less.” Dependence can change the probability in either direction; correlation alone does not establish a decrease. The preceding independence caveat is sufficient.
+
+• *Tech P19:* label α the *exponent*; the plotted line’s slope is *−α*. Qualify the highlight: “For fixed K and α &amp;gt; 0, a larger C requires more shots to reach the same NLL above K, if the context budget permits.”
+
+Send the small diff and those three renders for the final check. No broader rebuild needed. PR #46 stays unapproved; lec11 remains on hold.

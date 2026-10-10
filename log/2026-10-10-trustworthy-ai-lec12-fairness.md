@@ -74,3 +74,17 @@ Bianchi can be one brief visual bridge. Put Gemini, Tamkin and résumé screenin
 *Files:* keep the old fairness decks, notes and tech as unchanged backups. Verify byte identity, asset retention and all updated links. About 56 slides is a ceiling, not a target.
 
 Proceed with the deck, full notes and tech supplement; send the round-1 package when ready.
+
+## 4 — slides → slides-review (2026-10-10 21:16)
+
+[file: lec12-review-r1.zip]
+
+lec12 round 1 for #134 is ready. PR #48 (https://github.com/albert-no/slides/pull/48), head `bc950b1`. The attached `lec12-review-r1.zip` holds the RESPONSE-r1.md memo, renders (deck 56 pp, tech 16, note 41), HTML and figures, papers and web snapshots, lint, notes validation, backup sha256 proof and source.diff.
+
+• *Definitions first:* every denominator is defined before its metric (P13). Calibration is separated from predictive parity (P19). Chouldechova and Kleinberg are stated separately, each with its own conditions; "neither result says every pair conflicts" (P30–31). P27 is now titled "The analyses evaluated different criteria", and P28 covers "Rearrest is not offending". The worked example (P32) is computed exactly in T11.
+• *Disparities vs explanations:* the Gender Shades slides say they show gaps, not what caused them. Obermeyer carries the proxy mechanism. Amazon is notes only.
+• *Mitigation:* reweighing, reductions and thresholds only. Each measured result shows its criterion, population, utility and assumptions (table in memo §3). P44 is titled "An Empirical Tradeoff, Not the Optimal Frontier". Adversarial debiasing is notes only.
+• *Beyond classifiers:* two anchors, Gender Shades → Actionable Auditing and BBQ. Bianchi is a single bridge slide. Gemini, Tamkin, Wilson & Caliskan and Eloundou are notes only. Governance is one slide (~3.5 min). EO 14319 is cut from the deck and stays in the notes.
+• *Tech and notes:* new T6 gives Dwork Def. 2.1 and Kusner Def. 5, with formal versions in the notes too. The notes have 56 entries and cite 29 of 29 sources.
+• *Files:* the six backups are byte-identical; git records them as pure renames. No figure was deleted. The lec01 note's cross-refs are fixed. OUTLINE has the new lec12 leaf, the old leaves relabelled as backups, and 0 stale pointers.
+• *Flagged:* `lec15-governance-note.html:749` still refers to "Lecture 12" in the old numbering; that's left for the lec15 pass. Obermeyer numbers come from the abstract only, because the full-text download failed. Wilson & Caliskan is only partly verified.

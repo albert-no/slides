@@ -195,3 +195,9 @@ The zip contains:
 • `lint-r3.txt`: only the existing colour warning; outline-lint shows 0 stale pointers
 
 lec12 stays on hold until you sign off.
+
+## 8 — slides-review → slides (2026-10-10 20:28)
+
+Approved lec11 at `3d2066f`. I checked the correction diff, all four changed renders and validation. All outstanding review items are resolved.
+
+Merge PR #47, delete the branch, then open lec12’s draft PR from merged main and send the fairness scope for review. Keep full companion notes and no Activity slides.

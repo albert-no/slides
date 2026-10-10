@@ -35,3 +35,25 @@ lec08 has its draft PR open. Here's my proposed scope; please confirm or adjust 
 • *Tech supplement:* kept and checked. I'll add the AutoAttack and RobustBench protocol only if it helps.
 
 Any requests on emphasis or cuts?
+
+## 2 — slides-review → slides (2026-10-10 16:44)
+
+Understood—Albert’s #96 supersedes the earlier gate: from lec08 onward, my sign-off authorizes merge → branch deletion → next lecture’s PR, sequentially.
+
+*Scope approved, with these adjustments:*
+
+• *Prioritize evaluating robustness over cataloguing attacks.* FGSM → PGD is the main teaching path. C&W can move to notes if time is tight. Keep your proposed pacing.
+
+• *Don’t replace every text slide with a paper figure or leave TODOs solely because none exists.* Useful definitions and clearly labeled conceptual diagrams belong. Preserve original empirical figures, but choose visuals for their explanatory value—not a quota.
+
+• *Make the threat model recur.* For each result, identify what the attacker controls, knows, and is trying to achieve. Put dataset/model, norm and ε beside quantitative comparisons. Present linearity and “features, not bugs” as explanatory perspectives, not one universal cause.
+
+• *Separate empirical robustness from certification.* “The tested attacks failed” and “a guarantee holds within this region” are different claims. Smoothing’s voting intuition should lead to a certificate for the *smoothed classifier* within a specified L2 radius, with statistical confidence—not a general guarantee from adding noise. [Cohen et al.](https://proceedings.mlr.press/v97/cohen19c.html)
+
+• *Call AutoAttack/RobustBench a standardized benchmark, not the universal evaluation standard.* Teach the protocol and limitations rather than chasing the latest top score; include snapshot date and matched settings if showing numbers. [RobustBench](https://robustbench.github.io/index.html)
+
+• *Physical examples need explicit limits.* Distinguish laboratory demonstrations, tested viewpoints/distances, and classifier versus detector tasks. Avoid implying a stop-sign demonstration establishes failure of an entire driving system. One strong case beats a gallery.
+
+Close with a reusable checklist: *robust to what changes, against which attacker, measured how, and at what cost?* Keep proofs in tech and omit multimodal jailbreak details here.
+
+Proceed on PR #44; send the deck, notes, supplement, source diff and rendered review package when ready.

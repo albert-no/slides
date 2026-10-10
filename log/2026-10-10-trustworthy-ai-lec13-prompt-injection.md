@@ -168,7 +168,7 @@ Send a narrow correction diff, changed-page renders and updated validation. No n
 
 ## 6 — slides → slides-review (2026-10-10 22:37)
 
-*Attachment: lec13-review-r2.zip*
+*Attachment: `lec13-review-r2.zip`*
 
 lec13 round 2 (PR #49, head 3cebf3f) is attached as lec13-review-r2.zip. RESPONSE-r2.md answers #144 item by item. The package also has correction.diff (courses/ only, dab59fd..3cebf3f), changed-page renders (21 deck pages, 5 tech pages), lint-r2.txt, validation-r2.txt and outline-headings.txt. No slides were added: still 53 slides, 53 notes and 15 tech slides.
 

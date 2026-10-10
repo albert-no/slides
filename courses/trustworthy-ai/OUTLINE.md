@@ -452,8 +452,8 @@ Math in `lec13tech.html`.
 | **02 — The Agentic Attack Surface** | 10–18 | `:243` | chatbot → agent `:251` · agent loop `:283` · end to end `:316` · confused deputy (InjecAgent) `:338` · three harms `:354` · per-action provenance `:367` · trifecta `:383` · exit channels `:412` |
 | **03 — Three Incidents** | 19–27 | `:441` | reading a report `:449` · EchoLeak `:464`, `:482` · GitHub MCP `:506`, `:524` · Comet `:545`, `:563` · comparison `:579` |
 | **04 — Why It Is Hard** | 28–32 | `:593` | learned priority `:601` · instructions as data `:625` · escaping ≠ authority `:642` · detection vs adaptation `:659` |
-| **05 — Defenses and Measurement** | 33–48 | `:685` | three numbers `:693` · reporting `:708` · AgentDojo `:722`, `:736` · spotlighting `:756` · instruction hierarchy `:777` · simple defenses `:792` · adaptive (Nasr) `:811` · boundary `:827` · CaMeL `:840`, `:860`, `:883`, `:901` · other defenses `:915` · approval `:930` |
-| **06 — Synthesis** | 49–53 | `:946` | checklist `:954` · open problems `:968` · takeaways `:982` · closer "Who decided?" `:996` |
+| **05 — Defenses and Measurement** | 33–48 | `:685` | three numbers `:693` · reporting `:708` · AgentDojo `:722`, `:736` · spotlighting `:756` · instruction hierarchy `:769` · simple defenses `:784` · adaptive (Nasr) `:803` · boundary `:820` · CaMeL `:833`, `:853`, `:876`, `:895` · other defenses `:909` · approval `:924` |
+| **06 — Synthesis** | 49–53 | `:940` | checklist `:948` · open problems `:962` · takeaways `:976` · closer "Who decided?" `:990` |
 
 **Key citations on slides (checked against saved PDFs / pages, 2026-10-10):** Greshake et al., ACM AISec 2023
 (Fig. 3); Zhan et al. InjecAgent, arXiv 2403.02691 (Fig. 1); Willison (dual LLM 2023; trifecta, 16 June 2025);
@@ -465,8 +465,8 @@ MSRC and NVD CVE-2025-32711; Invariant Labs GitHub MCP; Brave on Comet. Notes on
 screenshots, Bing "Sydney".
 
 **Figures (7 image files in `figs/`):** `greshake-plant.png` `:178` · `injecagent-overview.png` `:347` ·
-`agentdojo-fig1.png` `:726` · `agentdojo-models.png` `:741` · `hines-datamark.png` `:770` ·
-`wallace-results.png` `:782` · `camel-fig1.png` `:845`. All other diagrams are inline SVG; tables on 40, 41, 45, 47
+`agentdojo-fig1.png` `:726` · `agentdojo-models.png` `:741` · `hines-datamark.png` `:761` ·
+`wallace-results.png` `:774` · `camel-fig1.png` `:838`. All other diagrams are inline SVG; tables on 40, 41, 45, 47
 are transcribed from the cited sources.
 
 **2026-10 rebuild:** replaces the backup-prompt-injection deck (former Wk 11, 66 sl), deleted with its note, its tech

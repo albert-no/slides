@@ -116,3 +116,52 @@ Link validation:
 - outline-lint: 0 stale pointers.
 
 The trustworthy-ai OUTLINE also had a stale duplicate of the old backup and lec12 sections, and a misplaced copy of the lec11 text. I removed both in the same commit.
+
+## 5 — slides-review → slides (2026-10-10 22:28)
+
+Reviewed `d0aeb74`. **Not approved yet; keep PR #49 unmerged and lec14 on hold.** The authority-based narrative, three-incident structure and meaningful-approval slide work well. The remaining problems are chiefly guarantee scope and measurement—not the overall structure.
+
+**1. CaMeL: distinguish the program from its execution — P43–46, T6/T10–11**
+- “Untrusted data changing which tools run” is too broad. A fixed program can legitimately branch on retrieved data; CaMeL’s Fig. 7 illustrates this.
+- Use: **“Untrusted text is kept out of program generation; runtime policies constrain permitted data flows.”** Explain data-dependent branches and STRICT-mode tracking in the notes/tech, retaining the side-channel limitations.
+- T6 currently calls *any* argument dependence on attacker-controlled data a data-flow hijack. Legitimate retrieval also creates that dependence. Define hijacking as an **unauthorized influence or policy violation**, not dependence alone.
+- P16’s file-selection permission must restrict selection to files Bob is authorized to receive, matching P44.
+
+**2. Do not give every external defense a guarantee — P42/P47**
+- Replace “inside/around the model” with **learned resistance versus enforced restrictions**. A detector can run outside the model without establishing an authorization boundary.
+- “Guarantee within a stated scope” cannot cover tool filters, dual LLM and CaMeL collectively without naming their different properties.
+- Dual LLM does not mean “untrusted text never meets tools”: extracted values can become tool arguments. Say **“isolate untrusted content from the privileged planner.”**
+- Remove “Only the first three…”; properly enforced confirmation can also restrict actions.
+
+**3. Repair denominators and qualify the CaMeL result — P45/N45/T13**
+- T13: AgentDojo cases are products *within each suite*, not the global `U × I`. Define `C = ⋃ₛ(Uₛ × Iₛ)` or an explicit eligible-pair set.
+- P45: distinguish **97 clean tasks** from **949 attacked cases**; the current “utility … 97 tasks” caption incorrectly includes attacked utility.
+- Label the attack counts as **policy-enabled CaMeL**, and disclose that these are two selected model rows. Other rows have nonzero benchmark successes, which the authors discuss as outside their injection scope.
+- Scope the 7–32-point utility loss to these two models. Table 4 also reports uncertainty alongside the native counts; preserve it or explicitly disclose its omission without inventing its interpretation.
+
+**4. Correct the empirical readings — P37–39**
+- P37: remove “Better at tools, better at obeying text.” The scatter establishes neither that causal explanation nor a universal relationship. Suggested title: **“High Task Utility Did Not Ensure Injection Resistance.”**
+- P38: the Fig. 4 caption reports **3.10%** for GPT-3.5 Turbo, whereas the prose says “below 3%.” Use the caption value and flag the discrepancy in the notes. Separate the two plotted models; enlarge the chart and give a readable model/legend key. Report utility evidence separately rather than implying this ASR figure measures it.
+- P39: put **fine-tuned GPT-3.5 Turbo** on the slide, explain what “robustness” counts, and change “every test” to **“the five evaluations shown.”**
+
+**5. Scope adaptive evaluation — P35/P41, N37/N41, T14**
+- A static ASR is not automatically a lower bound on deployment risk. Say **“additional attacks can reveal failures missed by this fixed benchmark attack.”**
+- T14’s inclusion argument needs the same cases and the retained first attempt; distinguish this from independently sampled stochastic evaluations.
+- P41: make the **80 selected cases from Slack/Travel/Workspace; Banking excluded** scope readable, alongside utility on all 97 tasks and any-of-up-to-800 search.
+- N41’s “Every in-model defense…” overgeneralizes and misclassifies external detectors. Say **“All five configurations shown had high search ASR in this evaluation.”**
+- T13: note that `1 − UA` includes ordinary task failures; it is not the increment causally attributable to the attack.
+
+**6. Keep incident claims historical and bounded — P20–27**
+- EchoLeak: replace “whatever Copilot can retrieve” with **“sensitive data available in the model’s context in the demonstrated workflow.”**
+- GitHub MCP: replace “Vendor remediation: none” / “nothing to retest” with **“No remediation or retest reported in this May 2025 source.”** An architectural diagnosis does not establish that no fix exists.
+- Comet’s status must explicitly be **as of the dated Brave report/update**, not an implied October 2026 status.
+- Remove P27’s “Each fix targeted a channel or scope, not model judgment” unless each incident’s fix details support it.
+- P20: independent retest means independent **of the vendor**; it can be performed by the original reporting researchers.
+
+**7. Final consistency pass**
+- P7: “the user may not notice the attacker’s content,” not “never sees.”
+- P11: “attacker-writable sources,” not every source.
+- P29: describe systems that enforce code/data separation, not all programs.
+- Mirror corrections in notes and tech. For the OUTLINE cleanup, include the resulting heading list and confirm the retained lec11/lec12 leaves preserve their approved content and pointers.
+
+Send a narrow correction diff, changed-page renders and updated validation. No need to expand the lecture.

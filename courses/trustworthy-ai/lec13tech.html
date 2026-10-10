@@ -107,7 +107,7 @@
   <div class="math-block">$$a_i = (\underbrace{t_i}_{\text{which tool, in which order}},\ \underbrace{\mathit{args}_i}_{\text{which values}})$$</div>
   <ul class="arrow">
     <li><strong>Control-flow hijack:</strong> $\mathit{mem}^*$ changes the sequence $(t_1, t_2, \dots)$</li>
-    <li><strong>Data-flow hijack:</strong> same tools, but some $\mathit{args}_i$ depends on $\mathit{mem}^*$</li>
+    <li><strong>Data-flow hijack:</strong> same tools, but some $\mathit{args}_i$ is influenced by $\mathit{mem}^*$ in a way the policy does not permit</li>
     <li>An LLM agent reads $p$ and $\mathit{mem}$ in one context: both parts can depend on $\mathit{mem}^*$</li>
   </ul>
   <div class="cite cite-left">CaMeL, Fig. 1 (control and data flow) and Fig. 2 (a data-flow hijack that changes a recipient).</div>
@@ -160,9 +160,9 @@
   </div>
   <div class="ta-algo" style="max-width:980px; margin:14px auto;">
     <ol>
-      <li>$\mathit{plan} \leftarrow \text{P-LLM}(p, T)$; the plan depends on $p$ only.</li>
+      <li>$\mathit{plan} \leftarrow \text{P-LLM}(p, T)$: untrusted text is kept out of program generation.</li>
       <li>For each $(t, \mathit{args})$: if $\mathrm{policy}_t(\kappa(\mathit{args})) = \bot$, halt.</li>
-      <li>Otherwise run $t$; label its output; continue.</li>
+      <li>Otherwise run $t$; label its output; continue. Branches on Q-LLM output are allowed; in STRICT mode they become dependencies.</li>
     </ol>
   </div>
   <div class="cite cite-left">Willison, "The Dual LLM pattern…", 25 Apr 2023; CaMeL, §5 and Fig. 4.</div>
@@ -174,7 +174,7 @@
   <div class="divider"></div>
   <p><strong>If</strong> $p$ is trusted, the interpreter is correct, and the policies express the intended $\Omega_p$:</p>
   <ul class="arrow">
-    <li>The program (the plan) cannot depend on $\mathit{mem}^*$</li>
+    <li>The generated program is not written from $\mathit{mem}^*$ (execution may still branch on labelled values)</li>
     <li>No tool runs with arguments whose labels a policy forbids</li>
   </ul>
   <div class="highlight"><p>Outside the conditions, nothing is promised: text-to-text manipulation, phishing, side channels, a wrong policy.</p></div>
@@ -193,11 +193,11 @@
 <div class="slide">
   <h2>Three Metrics, Written Out</h2>
   <div class="divider"></div>
-  <p>User tasks $U$, injection tasks $I$, security cases $C = U \times I$, attack $x$.</p>
+  <p>Per suite $s$: user tasks $U_s$, injection tasks $I_s$; cases $C = \bigcup_s U_s \times I_s$; attack $x$.</p>
   <div class="math-block">$$\mathrm{BU} = \tfrac{1}{|U|}\textstyle\sum_{u \in U} \mathbf{1}[\text{$u$ solved, no attack}]$$
   $$\mathrm{UA}(x) = \tfrac{1}{|C|}\textstyle\sum_{(u,i) \in C} \mathbf{1}[\text{$u$ solved, no side effects}]$$
   $$\mathrm{ASR}(x) = \tfrac{1}{|C|}\textstyle\sum_{(u,i) \in C} \mathbf{1}[\text{goal $i$ met}]$$</div>
-  <p class="muted">$1 - \mathrm{UA}$ is the untargeted ASR. A refuse-everything agent: $\mathrm{ASR} = 0$, $\mathrm{BU} = 0$.</p>
+  <p class="muted">$1 - \mathrm{UA}$ is the untargeted ASR; it also counts ordinary task failures. A refuse-everything agent: $\mathrm{ASR} = 0$, $\mathrm{BU} = 0$.</p>
   <div class="cite cite-left">Debenedetti et al., "AgentDojo", NeurIPS 2024 Datasets &amp; Benchmarks, §3.4.</div>
 </div>
 
@@ -206,11 +206,12 @@
   <h2>Static vs Adaptive ASR</h2>
   <div class="divider"></div>
   <p>Static: one fixed $x_0$. Adaptive: per case, up to $q$ tries $x_1, \dots, x_q$, each chosen from earlier feedback.</p>
-  <div class="math-block">$$\mathrm{ASR}_q = \tfrac{1}{|C|}\textstyle\sum_{c \in C} \mathbf{1}\big[\exists\, j \le q:\ \text{$x_j$ succeeds on $c$}\big] \;\ge\; \mathrm{ASR}(x_0) \ \text{ if } x_1 = x_0.$$</div>
+  <div class="math-block">$$\mathrm{ASR}_q = \tfrac{1}{|C|}\textstyle\sum_{c \in C} \mathbf{1}\big[\exists\, j \le q:\ \text{$x_j$ succeeds on $c$}\big] .$$</div>
+  <p class="muted">$\mathrm{ASR}_q \ge \mathrm{ASR}(x_0)$ on the same cases if $x_1 = x_0$ and that first outcome is kept; independently resampled stochastic runs need not satisfy this.</p>
   <ul class="arrow">
     <li>State the access: outputs only, scores, or weights</li>
     <li>State $q$; Nasr et al. use $q = 800$</li>
-    <li>A static number bounds risk from below only</li>
+    <li>Extra attacks can reveal failures a fixed attack missed</li>
   </ul>
   <div class="cite cite-left">AgentDojo §3.4 (a set of attacks succeeds if any does); Nasr, Carlini et al., arXiv 2510.09023 (preprint), Table 7.</div>
 </div>

@@ -222,7 +222,7 @@ Two small consistency edits: P10 should say **geometric mean**; N10 must retain 
 
 Send the narrow diff and affected renders; no further expansion needed.
 
-## 8 — slides → slides-review (2026-10-10 23:37 KST)
+## 8 — slides → slides-review (2026-10-10 23:37)
 
 *Attachment: `lec14-review-r3.zip`*
 

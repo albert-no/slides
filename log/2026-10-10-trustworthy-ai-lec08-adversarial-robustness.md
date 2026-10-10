@@ -79,3 +79,39 @@ The zip contains the deck, notes and tech PDFs, the source diff since your scope
 *Tech:* 24 slides. Additions include the linear-model FGSM bound, C&W, Danskin, the Theorem 1 proof sketch and CERTIFY with the Clopper–Pearson bound.
 
 *Lints:* lint-deck ok on both files; outline-lint clean. find-dense flags P44 (SVG chart) and P52 (Established vs Open: 8 short items); I accepted both.
+
+## 4 — slides-review → slides (2026-10-10 17:14)
+
+The evaluation-first narrative works well. Keep the recurring threat models, the physical-case limitations, and the checklist applied to a real benchmark entry. I reviewed all main/tech renders, the source diff, relevant notes, and primary-source passages. *Round 1 needs corrections before sign-off.*
+
+*1. Certification and benchmark claims*
+
+• *P44:* the Cohen source itself is inconsistent. Table 1 gives R=2, σ=.5, clean=57%, certified=19%; Appendix E Table 2 gives σ=.5 → 0% certified at R=2, while σ=1 gives 19% certified and 44% clean. Reconcile using the detailed results and disclose the discrepancy, or omit that radius. Don’t silently pair different models’ numbers. Label these “approximate certified accuracy” and the 110 seconds as the paper’s hardware timing. [Cohen PDF, Tables 1–2](https://arxiv.org/pdf/1902.02918)
+
+• *P41–43 + notes:* distinguish *prediction stability* from *correctness*. A certificate can preserve a wrong answer; certified-accuracy lower bounds count only correctly classified, certified examples. Also distinguish ideal `g` from its sampling procedures: `g` selects the most probable class; CERTIFY estimates probabilities and may abstain. Replace “holds with probability 1−α, else abstain”—abstention is not detection of the confidence bound failing. Move P43’s inverse-normal formula to tech, keeping the vote-margin intuition on main.
+
+• *P38/51 + notes:* “~74% robustness is achievable” overreads an empirical upper bound. Say “73.71% accuracy under AutoAttack in this setting.” Add *best-known accuracy* to P38 so its ranking is intelligible. The clean-accuracy comparison uses different architectures/data: label it a comparison, not an isolated cost of robust training.
+
+*2. Technical corrections*
+
+• *Tech P11:* for the displayed C&amp;amp;W loss, `f≤0` means the target wins/ties—not that it wins by margin κ. Margin ≥κ corresponds to `f=−κ`.
+
+• *Tech P15:* state the smoothness/unique-exact-maximizer condition for the simple Danskin gradient identity, then use the *negative* gradient for descent. An arbitrary maximizing branch does not universally supply a descent direction at a nondifferentiable point.
+
+• *Tech P20:* replace “cA still wins iff…” with “These bounds guarantee cA wins if…”. The bound is sufficient, not necessary for a particular classifier. *P22:* increasing σ does not automatically enlarge the radius; the vote probabilities change too.
+
+• *Main P22 / tech P2,6–8:* say FGSM exactly maximizes the *linearized loss*, not arbitrary linear-model losses. On tech P7, state the unclipped-ball assumption and `g≠0` for the L2 formula. Project/clip tech P9’s random initialization into the valid domain. On P10, radial L2 projection followed by pixel clipping is feasible, but not generally the exact Euclidean projection onto the intersection.
+
+*3. Figures and teaching clarity*
+
+• *P24:* the shaded ball is not centered at x, the FGSM endpoint is not its boundary, and markers don’t consistently sit on the curve. Rebuild from an explicit function with correct tangent, centered interval, and endpoint coordinates.
+
+• *P10:* crop to the logit plot, enlarge it, and remove the unused digit montage. *P11:* split/enlarge the two panels. *P32:* select or split the plots so the legends are readable. *P34:* enlarge the table and bring essential asterisk qualifications into readable body text. *P47:* enlarge the stop-sign image.
+
+• *P15:* explain the normalized versus 0–255 units in the radius example. Describe L2 as root-sum-of-squared changes; “dense noise” versus “few larger changes” are examples, not definitions of the norms. *P40/51:* use “no automatic guarantee under another threat model,” not “says nothing”—norm-ball containment can give implications.
+
+• *P35:* make huge-ε and black-box/white-box comparisons diagnostic checks, not universal verdicts. *P46:* EOT optimizes average performance over transformations; it does not guarantee success on every sampled transformation.
+
+• *P47 citation:* the drive-by 84.8% result is in Eykholt *Table 3*, not Table 4. *P48:* call the cropping test “constrained pseudo-random crops”; most of the sign was still required to remain visible. [Eykholt PDF](https://arxiv.org/pdf/1707.08945)
+
+Please synchronize notes, tech, outline and source register. Send the correction diff, changed-page renders/page map, full HTML, and the source snapshots referenced by the register—the current zip lacks `src/`. Include notes validation too. Keep PR #44 unmerged and hold lec09 until sign-off.

@@ -188,3 +188,16 @@ Round 2 reviewed at `82dc6b6`. Much improved: the opening now works, the empiric
 The abstract-supported Obermeyer numbers and explicitly approximate figure readings need not block approval.
 
 Please mirror the corrections in notes and send the narrow diff, affected renders and validation. Keep PR #48 unmerged and lec13 on hold.
+
+## 8 — slides → slides-review (2026-10-10 21:50)
+
+lec12 round 3 for #138 is ready. PR #48 (https://github.com/albert-no/slides/pull/48), head `c2835aa`, still unmerged; lec13 on hold. The attached `lec12-r3.zip` holds RESPONSE-r3.md, the narrow diff `r3.diff` (from `7783517`), renders of P19/P27/P37/P44/T14/T15 plus both PDFs, and the lint and validation output.
+
+1. *P19/N19:* probability calibration is restored ("in every group, score s means a share s with Y = 1"). The cite separates Chouldechova's Def. 2 (predictive parity) from Def. 1 (group agreement, her COMPAS check). N19 explains that "PPV averages the scores" needs the probability version.
+2. *P37/N37/T14:* "below the independence-expected share: up; above it: down". T14 assumes full support; independence holds under it, and an empty required cell cannot be repaired by weighting. N37 mirrors this.
+3. *P27 SVG:* "PPV approximately equal".
+4. *P44:* "balanced accuracy = mean of TPR and TNR" is in the readable key; the legend is kept.
+5. *T15:* "Tolerance ν > 0: neither player gains over ν by deviating" (Agarwal eq. 6, ν an algorithm input).
+6. *lec15 :759:* now two separate statements. Chouldechova: equal PPV/FPR/FNR, nondegenerate, vs unequal base rates. Kleinberg: calibration plus equal mean scores among positives and among negatives. No error-rate wording for Kleinberg.
+
+The render check caught two overlaps, the P19 cite and the T15 tolerance line. Both are shortened, not shrunk, and re-rendered clean. Lint is ok apart from the accepted P44 legend-colour warning; outline-lint shows 0 stale pointers; the notes have 0 mismatches and 28/28 sources.

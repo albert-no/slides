@@ -32,7 +32,7 @@
   <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 10 · Technical Supplement</div>
   <h1>Jailbreaks:<br>The Math</h1>
   <div class="divider"></div>
-  <p class="subtitle">Optional. The objectives behind RLHF and GCG</p>
+  <p class="subtitle">Optional. Counting success, search objectives, and scaling laws</p>
   <div class="spacer-lg"></div>
   <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
   <p style="margin-top:6px;">Trustworthy AI · 2026</p>
@@ -42,132 +42,220 @@
 <div class="slide">
   <h2>When to Use This</h2>
   <div class="divider"></div>
-  <p>The main lecture keeps two ideas as pictures. Here are the equations.</p>
+  <p>The main lecture keeps the pictures and the numbers. Here are the equations.</p>
   <ul class="arrow">
-    <li>How RLHF turns preferences into a training objective</li>
-    <li>How a jailbreak becomes a search over tokens</li>
+    <li>ASR as an estimate; any-of-$N$; judge error</li>
+    <li>Per-token KL, refusal direction, GCG, PAIR budgets</li>
+    <li>Power laws for many-shot and Best-of-N</li>
   </ul>
-  <div class="highlight"><p>Skip this in the core session; return if you want the formal version.</p></div>
+  <div class="highlight"><p>Optional: return here for the formal version.</p></div>
 </div>
 
-<!-- 3. The RLHF Objective -->
-<div class="slide">
-  <h2>The RLHF Objective</h2>
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Counting Success</h1>
   <div class="divider"></div>
-  <p>Tune the policy $\pi$ to <strong>maximize reward</strong>, minus a leash to the base model.</p>
-  <div class="math-block">$$\max_{\pi}\; \mathbb{E}_{x,\,y\sim\pi}\big[\,r(x,y)\,\big] \;-\; \beta\, \mathrm{KL}\!\big(\pi \,\|\, \pi_{\text{ref}}\big).$$</div>
-  <p class="muted">$r$ = reward model; $\pi_{\text{ref}}$ = the model before RL; $\beta$ = leash strength.</p>
-  <div class="cite cite-left">Ouyang et al., "Training Language Models to Follow Instructions with Human Feedback" (InstructGPT), NeurIPS 2022.</div>
+  <p class="subtitle">Estimates, budgets, and judges</p>
 </div>
 
-<!-- 4. Reading the Two Terms -->
+<!-- 4. ASR Is an Estimate -->
 <div class="slide">
-  <h2>Reading the Two Terms</h2>
+  <h2>ASR Is an Estimate With an Error Bar</h2>
   <div class="divider"></div>
-  <div class="grid-2">
-    <div><h3>Reward term</h3>
-      <p>Pulls toward replies humans rated highly.</p></div>
-    <div><h3>KL leash</h3>
-      <p>Penalizes drifting far from the base model.</p></div>
-  </div>
-  <div class="highlight"><p>Small $\beta$: chase the score, risk reward hacking. Large $\beta$: stay safe, learn less.</p></div>
+  <p>Requests $x_1,\dots,x_n$; reply $y_i$; judge $J \in \{0,1\}$:</p>
+  <div class="math-block">$$\widehat{\mathrm{ASR}} = \frac{1}{n}\sum_{i=1}^{n} J(x_i, y_i), \qquad \mathrm{SE} \approx \sqrt{\frac{\widehat{\mathrm{ASR}}\,(1-\widehat{\mathrm{ASR}})}{n}}.$$</div>
+  <p><b>Assumes</b> $J(x_i,y_i)$ independent Bernoulli draws with one common rate: requests sampled independently from a fixed population, one reply each.</p>
+  <p>At $\widehat{\mathrm{ASR}} = 0.5$: 95% interval ≈ ±17 points for $n = 32$, ±10 for $n = 100$.</p>
+  <p class="muted">A curated benchmark is not a random sample of real requests: the SE covers sampling noise only, not benchmark choice.</p>
 </div>
 
-<!-- 5. Why This Matters for Safety -->
+<!-- 5. Any of N -->
 <div class="slide">
-  <h2>Why This Matters for Safety</h2>
+  <h2>At Least One Success in $N$ Tries</h2>
   <div class="divider"></div>
-  <p>Refusal is <strong>whatever the reward model rewarded</strong>, not a hard rule.</p>
+  <p>If tries are <strong>independent</strong>, each with the <strong>same fixed</strong> success probability $p$:</p>
+  <div class="math-block">$$\Pr[\text{at least one success}] = 1 - (1-p)^N, \qquad N_q = \left\lceil \frac{\ln(1-q)}{\ln(1-p)} \right\rceil.$$</div>
+  <p>$p = 1\%$: $N = 100$ gives 63%; reaching $q = 50\%$ needs $N_q = 69$.</p>
+  <p class="muted">$N_q$ = tries needed for success probability $q$. Correlated or varying tries break both formulas.</p>
+</div>
+
+<!-- 6. Unequal requests -->
+<div class="slide">
+  <h2>Real Requests Have Unequal Rates</h2>
+  <div class="divider"></div>
+  <p>Request $i$: repeated tries <strong>independent within the request</strong>, each with fixed probability $p_i$; $p_i$ may differ across requests. Over a benchmark:</p>
+  <div class="math-block">$$\text{per try} = \frac{1}{n}\sum_i p_i, \qquad \text{any of } N = \frac{1}{n}\sum_i \bigl[1-(1-p_i)^N\bigr].$$</div>
   <ul class="arrow">
-    <li>The leash keeps most old behavior intact</li>
-    <li>Safety is a thin adjustment on top</li>
-    <li>Out-of-distribution prompts fall outside what $r$ saw</li>
+    <li>Requests with $p_i = 0$ never fall: any-of-$N$ saturates below 100%</li>
+    <li>A high any-of-$N$ rate can hide a low per-try rate</li>
   </ul>
-  <p class="muted">This is why alignment is "skin-deep".</p>
 </div>
 
-<!-- 6. Divider: Jailbreak as Search -->
+<!-- 7. Judge error -->
+<div class="slide">
+  <h2>Judge Errors Shift the Measured Rate</h2>
+  <div class="divider"></div>
+  <p>Judge with true-positive rate $t$ and false-positive rate $f$:</p>
+  <div class="math-block">$$\mathrm{ASR}_{\text{obs}} = t\,\mathrm{ASR} + f\,(1-\mathrm{ASR}), \qquad \mathrm{ASR} = \frac{\mathrm{ASR}_{\text{obs}} - f}{t - f}.$$</div>
+  <p>Example: $t = 0.9$, $f = 0.1$, true 20% → observed 26%.</p>
+  <p class="muted">Inversion requires $t \ne f$; $t$ and $f$ must be measured on human labels for the same setting.</p>
+</div>
+
+<!-- 8. Retry amplifies false positives -->
+<div class="slide">
+  <h2>Retrying Until a Judge Says Yes Amplifies Its Errors</h2>
+  <div class="divider"></div>
+  <p>A request whose replies are never harmful still "succeeds" if the judge errs once. If the $N$ judge calls err <strong>independently</strong>, each with the same rate $f$:</p>
+  <div class="math-block">$$\Pr[\text{false success within } N] = 1 - (1-f)^N.$$</div>
+  <p>Under that assumption, $f = 1\%$, $N = 100$: 63%. A 1% error rate alone does not imply this.</p>
+  <div class="highlight"><p>Best-of-$N$ attacks should re-check found successes with a stronger judge.</p></div>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 9. Divider 02 -->
 <div class="slide section-slide left">
   <div class="section-num">02</div>
-  <h1>Jailbreak as Search</h1>
+  <h1>Where Refusal Lives</h1>
   <div class="divider"></div>
-  <p class="subtitle">The GCG objective, one gradient at a time</p>
+  <p class="subtitle">The training objective, per-token KL, one direction</p>
 </div>
 
-<!-- 7. The Attack Objective -->
+<!-- 10. RLHF objective -->
 <div class="slide">
-  <h2>The Attack Objective</h2>
+  <h2>Preference Training Keeps a Leash to the Pre-RL Policy</h2>
   <div class="divider"></div>
-  <p>Find a suffix $s$ that makes a <strong>compliant opening</strong> most likely.</p>
-  <div class="math-block">$$\min_{s}\; -\log \Pr\big[\,\text{"Sure, here"} \mid \text{prompt} \oplus s\,\big].$$</div>
-  <p class="muted">$\oplus$ = append the suffix; minimize the loss on the target opening.</p>
-  <div class="cite cite-left">Zou et al., "Universal and Transferable Adversarial Attacks on Aligned Language Models" (GCG), 2023.</div>
+  <p>Tune the policy $\pi$ to <strong>maximize reward</strong>, minus a penalty for drifting:</p>
+  <div class="math-block">$$\max_{\pi}\; \mathbb{E}_{x\sim\mathcal{D},\,y\sim\pi(\cdot\mid x)}\Big[\,r(x,y) \;-\; \beta\, \mathrm{KL}\!\big(\pi(\cdot\mid x) \,\|\, \pi_{\text{ref}}(\cdot\mid x)\big)\Big].$$</div>
+  <p class="muted">$\mathcal{D}$ = RL training prompts; $r$ = reward model; $\pi_{\text{ref}}$ = the SFT policy before RL (not necessarily the pretrained base); $\beta$ = penalty weight.</p>
+  <div class="cite cite-left">Ouyang et al., "Training language models to follow instructions with human feedback", NeurIPS 2022.</div>
 </div>
 
-<!-- 8. Why an Affirmative Target -->
+<!-- 11. Per-token KL -->
 <div class="slide">
-  <h2>Why an Affirmative Target</h2>
+  <h2>Measuring Depth: KL at Each Position</h2>
   <div class="divider"></div>
-  <p>Force the <strong>first few tokens</strong>, and the rest tends to follow.</p>
-  <ul class="arrow">
-    <li>Refusal usually lives in the opening words</li>
-    <li>Past "Sure, here", the model keeps generating</li>
-    <li>One short target stands in for the whole harmful answer</li>
-  </ul>
-  <div class="highlight"><p>Steer the start; the completion comes along for the ride.</p></div>
+  <p>For prompt $x$ and response prefix $y_{&lt;k}$, compare next-token distributions:</p>
+  <div class="math-block">$$D_k = \mathrm{KL}\!\big(\pi_{\text{aligned}}(\cdot \mid x, y_{&lt;k}) \,\big\|\, \pi_{\text{base}}(\cdot \mid x, y_{&lt;k})\big).$$</div>
+  <p>Shallow alignment: $D_k$ large for the first few $k$, small afterwards.</p>
+  <div class="cite cite-left">Qi et al., "Safety Alignment Should Be Made More Than Just a Few Tokens Deep", ICLR 2025 — Fig. 1.</div>
 </div>
 
-<!-- 9. The Discrete Problem -->
+<!-- 12. Refusal direction -->
 <div class="slide">
-  <h2>The Discrete Problem</h2>
+  <h2>The Refusal Direction and Its Ablation</h2>
   <div class="divider"></div>
-  <p>Tokens are <strong>discrete</strong>: you cannot take a smooth gradient step.</p>
-  <ul>
-    <li>Each suffix position holds one of ~50,000 tokens</li>
-    <li>The space is combinatorial, not continuous</li>
-    <li>Brute force over all swaps is hopeless</li>
-  </ul>
-  <p class="muted">Greedy Coordinate Gradient makes the search tractable.</p>
+  <p>Mean activations at layer $l$ on harmful ($\mu$) and harmless ($\nu$) prompts:</p>
+  <div class="math-block">$$r = \mu - \nu, \qquad \hat r = \frac{r}{\|r\|}, \qquad x' \leftarrow x - \hat r\,\hat r^{\top} x.$$</div>
+  <p>Normalizing requires $r \ne 0$. Ablation removes the component of every activation $x$ along $\hat r$.</p>
+  <div class="cite cite-left">Arditi et al., "Refusal in Language Models Is Mediated by a Single Direction", NeurIPS 2024 — Eqs. 2 and 4.</div>
 </div>
 
-<!-- 10. Gradient-Guided Token Swaps -->
-<div class="slide">
-  <h2>Gradient-Guided Token Swaps</h2>
+<!-- ============ SECTION 03 ============ -->
+<!-- 13. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Search and Its Budget</h1>
   <div class="divider"></div>
-  <div class="ta-algo" style="max-width:940px; margin:18px auto;">
+  <p class="subtitle">GCG and PAIR as optimization</p>
+</div>
+
+<!-- 14. GCG objective -->
+<div class="slide">
+  <h2>GCG Minimizes the Loss of an Agreeable Opening</h2>
+  <div class="divider"></div>
+  <p>Suffix $s$ appended to request $x$; target opening $y^\ast$ ("Sure, here is …"):</p>
+  <div class="math-block">$$\mathcal{L}(s) = -\log p(y^\ast \mid x \oplus s) = -\sum_{t} \log p\big(y^\ast_t \mid x \oplus s,\, y^\ast_{&lt;t}\big).$$</div>
+  <p class="muted">$\oplus$ = concatenation. Tokens are discrete, so no plain gradient step exists.</p>
+  <div class="cite cite-left">Zou et al., "Universal and Transferable Adversarial Attacks on Aligned Language Models", arXiv 2307.15043, 2023 — Section 2.</div>
+</div>
+
+<!-- 15. GCG step and budget -->
+<div class="slide">
+  <h2>One GCG Step, and the Total Budget</h2>
+  <div class="divider"></div>
+  <div class="ta-algo" style="max-width:980px; margin:12px auto;">
     <ol>
-      <li>At each suffix position, read the loss gradient over the vocabulary.</li>
-      <li>Shortlist the tokens the gradient says would help most.</li>
-      <li>Actually evaluate the loss for those few candidates.</li>
-      <li>Keep the single swap that lowers the loss the most; repeat.</li>
+      <li>Gradient of $\mathcal{L}$ w.r.t. each position's one-hot token: top $k = 256$ swaps.</li>
+      <li>Sample $B = 512$ candidates, one random swap each.</li>
+      <li>Evaluate $\mathcal{L}$ exactly on all $B$; keep the best.</li>
     </ol>
   </div>
-  <p style="text-align:center;">Gradient ranks candidates; a real forward pass picks the winner.</p>
-  <div class="cite cite-left">Zou et al., "Universal and Transferable Adversarial Attacks on Aligned Language Models" (GCG), 2023.</div>
+  <p style="text-align:center;">$T = 500$ steps: $T \times B = 256{,}000$ candidate forward passes per suffix, excluding the gradient computations.</p>
+  <div class="cite cite-left">Zou et al., arXiv 2307.15043 — Algorithm 1 · count as reported in Chao et al., arXiv 2310.08419 — Table 2.</div>
 </div>
 
-<!-- 11. It Connects to Adversarial Examples -->
+<!-- 16. PAIR budget -->
 <div class="slide">
-  <h2>Same Idea as Pixels</h2>
+  <h2>PAIR's Budget: Streams × Depth</h2>
   <div class="divider"></div>
-  <p>GCG is the <strong>text version</strong> of an adversarial example.</p>
-  <div class="grid-2">
-    <div><h3>Vision</h3>
-      <p>Nudge pixels to cross a decision boundary.</p></div>
-    <div><h3>Language</h3>
-      <p>Swap tokens to cross the refusal boundary.</p></div>
-  </div>
-  <p class="muted">Continuous for images, discrete for text, same optimization spirit.</p>
+  <p>$N_s$ parallel conversation streams, each refined for at most $K$ rounds:</p>
+  <div class="math-block">$$\text{target queries per request} \;\le\; N_s \times K = 30 \times 3 = 90.$$</div>
+  <ul class="arrow">
+    <li>Stop at the first reply the judge scores as jailbroken</li>
+    <li>Same retry logic as slide 8: judge errors compound</li>
+    <li>Counts target replies only; attacker and judge calls are extra. Not the same cost unit as GCG's forward passes</li>
+  </ul>
+  <div class="cite cite-left">Chao et al., "Jailbreaking Black Box Large Language Models in Twenty Queries", arXiv 2310.08419 — Section 3.3.</div>
 </div>
 
-<!-- 12. Closer -->
+<!-- ============ SECTION 04 ============ -->
+<!-- 17. Divider 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Scaling Laws</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Many-shot and Best-of-N as power laws</p>
+</div>
+
+<!-- 18. MSJ power law -->
+<div class="slide">
+  <h2>Many-Shot: NLL Falls as a Power Law in Shots</h2>
+  <div class="divider"></div>
+  <p>With $n \ge 1$ fake dialogues in the prompt, NLL = negative log-likelihood of the harmful reply:</p>
+  <div class="math-block">$$\text{NLL}(n) = -\mathbb{E}\big[\log P(\text{harmful reply} \mid n\text{-shot prompt})\big] = C\,n^{-\alpha} + K.$$</div>
+  <p>$C &gt; 0$ scale · $\alpha \ge 0$ exponent · $K$ floor, fitted per setting. Then $\log(\text{NLL} - K) = \log C - \alpha \log n$: a line in $\log n$.</p>
+  <p class="muted">Higher NLL = harmful reply <strong>less</strong> likely.</p>
+  <div class="cite cite-left">Anil et al., "Many-shot Jailbreaking", NeurIPS 2024 — Eq. 1.</div>
+</div>
+
+<!-- 19. Intercept vs slope -->
+<div class="slide">
+  <h2>Intercept vs. Exponent</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Intercept $\log C$</h3>
+      <p>Line height at $n = 1$: $\log(\text{NLL}(1) - K)$. SL/RL safety training raised it: harm <strong>less</strong> likely at few shots.</p></div>
+    <div><h3>Exponent $\alpha$</h3>
+      <p>The line's slope is $-\alpha$: how fast NLL falls with shots. Approximately unchanged in the tested settings.</p></div>
+  </div>
+  <div class="highlight"><p>For fixed $K$ and $\alpha &gt; 0$, a larger $C$ requires more shots to reach the same NLL above $K$, if the context budget permits.</p></div>
+  <p class="muted">Fig. 5 plots NLL itself on log axes, over 1–32 shots; no zero-shot point. It looks straight where $K$ is small. The paper words the same effect as a lower intercept on harm probability.</p>
+  <div class="cite cite-left">Anil et al., NeurIPS 2024 — Section 5 and Fig. 5.</div>
+</div>
+
+<!-- 20. BoN power law -->
+<div class="slide">
+  <h2>Best-of-N: −log ASR Falls as a Power Law in N</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$-\log \mathrm{ASR}(N) = a\,N^{-b} \quad\Longleftrightarrow\quad \mathrm{ASR}(N) = \exp\!\big(-a\,N^{-b}\big).$$</div>
+  <ul class="arrow">
+    <li>Fit on small $N$, extrapolate to large $N$</li>
+    <li>$\mathrm{ASR}(N)$ is an any-of-$N$ rate, not per try</li>
+  </ul>
+  <p class="muted">The fit describes the tested range; extrapolation is an assumption.</p>
+  <div class="cite cite-left">Hughes et al., "Best-of-N Jailbreaking", arXiv 2412.03556, 2024 — Section 3.1.</div>
+</div>
+
+<!-- 21. Closer -->
 <div class="slide end-slide no-footer">
-  <div class="big-word">arg min</div>
-  <p class="big-word-sub">A jailbreak is just an optimization target.</p>
+  <div class="big-word">$1-(1-p)^N$</div>
+  <p class="big-word-sub">Say the budget before the rate.</p>
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 12</div>
+<div class="slide-num" id="slideNum">1 / 21</div>
 
 </div><!-- .deck -->
 <script defer src="../../reference/deck.js"></script>

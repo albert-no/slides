@@ -10,614 +10,984 @@ h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); pad
 article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
 article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 .kt { color: var(--yonsei-blue); font-weight: 700; }
-.detail { margin: 12px 0 4px; padding: 2px 0 2px 18px; border-left: 3px solid var(--slate); }
-.detail h3 { color: var(--yonsei-blue); font-size: 1.05rem; margin: 12px 0 4px; }
-.detail ul { margin: 4px 0; }
-.detail li { margin: 3px 0; }
-.detail .src { color: var(--gray-text); font-size: 0.9rem; }
+.pace { color: var(--gray-text); font-size: 0.92rem; margin: 0 0 6px; }
+.detail { margin: 16px 0 4px 14px; padding: 2px 0 2px 18px; border-left: 3px solid var(--slate); }
+.detail h3 { color: var(--yonsei-blue); font-size: 1.05rem; margin: 16px 0 6px; }
+.detail p, .detail ul, .detail ol { margin: 8px 0; }
+.detail table, table.pacing { border-collapse: collapse; margin: 10px 0; }
+.detail th, .detail td, table.pacing th, table.pacing td { border: 1px solid var(--slate); padding: 4px 12px; text-align: left; }
 </style></head><body>
-<h1>Lecture 10 — Jailbreaks &amp; LLM Safety · Script &amp; Companion Notes</h1>
-<p><em>One entry per slide, in order. Each entry keeps the speaker script and key takeaway; a <strong>detailed companion</strong> block below adds rigorous definitions, formal statements and proofs, and vetted background links. Section headers match slide titles.</em></p>
+<h1>Lecture 10 — Jailbreaks: Getting Around Safety Training, and Measuring It Honestly · Script &amp; Companion Notes</h1>
+<p><em>One entry per slide, in order. Each entry gives the slide's minute budget, the spoken script and the key takeaway. Content slides add companion notes: what the figure shows, the setup (who, which model, when), what the evidence does and does not establish, the assumptions, and links to the primary sources. Derivations and proofs live in the technical supplement, lec10tech.html. No in-class activities.</em></p>
+<table class="pacing"><tr><th>Block</th><th>Slides</th><th>Minutes</th></tr>
+<tr><td>What safety training adds</td><td>1–9</td><td>10</td></tr>
+<tr><td>Why refusal is fragile</td><td>10–20</td><td>20</td></tr>
+<tr><td>Searching for jailbreaks</td><td>21–30</td><td>20</td></tr>
+<tr><td>Scaling the attack budget</td><td>31–41</td><td>20</td></tr>
+<tr><td>Evaluation and defenses</td><td>42–58</td><td>20</td></tr>
+<tr><td><strong>Total</strong></td><td>1–58</td><td><strong>90</strong></td></tr></table>
+<p><em>Audience: mixed-major sophomores and juniors; concept-first, light math, no proofs. Quotes in the script are verbatim from the cited source; everything else is paraphrase.</em></p>
 
 <article>
-<h2>Jailbreaks &amp; LLM Safety</h2>
-<p>Welcome to Lecture 10 of Trustworthy AI. Today we ask why a model that has been carefully trained to refuse harmful requests can still be talked into complying, and what we can do about it. This is a defensive lecture: we study attack categories so we can build better defenses.</p>
-<p><span class="kt">Key takeaway:</span> Aligned does not mean unbreakable.</p>
+<h2>1. Jailbreaks: Getting Around Safety Training, and Measuring It Honestly</h2>
+<p class="pace">What safety training adds · ≈0.5 min · elapsed ≈0.5 min</p>
+<p>Welcome to Lecture 10. In Lecture 8 an attacker nudged pixels to fool a classifier. Today the target is a chat model that has been trained to refuse some requests, and the attacker's tool is the prompt itself.</p>
+<p>The second half of the title matters as much as the first. Jailbreak numbers are easy to inflate, so we will learn to read them as carefully as we learn the attacks.</p>
+<p><span class="kt">Key takeaway:</span> Today: getting around refusal training, and counting it honestly.</p>
 </article>
 
 <article>
-<h2>Contents</h2>
-<p>Seven steps: what safety training tries to enforce, why it is fragile, manual jailbreaks, automated ones, attacks that scale, a unifying view, and finally defenses and the frontier.</p>
-<p><span class="kt">Key takeaway:</span> From how refusal is built, to how it breaks, to how we defend it.</p>
+<h2>2. Contents</h2>
+<p class="pace">What safety training adds · ≈0.5 min · elapsed ≈1 min</p>
+<p>Five parts. What safety training adds; why refusal turns out to be fragile; how attackers search for jailbreaks; what happens when the attacker simply spends more budget; and finally how success is judged and what defenses buy.</p>
+<p>Pacing for 90 minutes: safety training ≈10 min (slides 1–9), fragility ≈20 (10–20), search ≈20 (21–30), attack budget ≈20 (31–41), evaluation and defenses ≈20 (42–58).</p>
+<p><span class="kt">Key takeaway:</span> Five parts; the last one is the longest because measurement is where most mistakes hide.</p>
 </article>
 
 <article>
-<h2>01 — Safety Training</h2>
-<p>First section. How a raw next-token predictor is turned into something that declines harmful requests.</p>
-<p><span class="kt">Key takeaway:</span> Refusal is something we train into a model, not something it has by default.</p>
+<h2>3. Section 01 — What Safety Training Adds</h2>
+<p class="pace">What safety training adds · ≈0.5 min · elapsed ≈1.5 min</p>
+<p>A chat model learns to refuse some requests. What would it mean to get around that, and how would we count whether we succeeded? Those are the two questions of this section.</p>
+<p><span class="kt">Key takeaway:</span> Define the attack and the scoreboard before looking at attacks.</p>
 </article>
 
 <article>
-<h2>A Raw Model Has No Manners</h2>
-<p>A base model is only trained to continue text. It has no concept of helpful or harmful, and will happily complete a dangerous prompt because that is the most likely continuation.</p>
-<p><span class="kt">Key takeaway:</span> Safety is not in the data; it has to be added on top.</p>
-<p><span class="kt">Slide figure:</span> Inline sketch: prompt tokens enter a base LM that branches with equal likelihood to helpful text and harmful text.</p>
-</article>
-
-<article>
-<h2>Two Goals at Once</h2>
-<p>Safety training asks the model to be both helpful, answering the user's real question, and harmless, refusing serious harm. These two goals usually agree, but later we will see attackers pull them apart.</p>
-<p><span class="kt">Key takeaway:</span> Helpful and harmless are two trained urges that can collide.</p>
-<p><span class="kt">Slide figure:</span> Inline tug strip: the model sits between Helpful (answer everything) and Harmless (refuse harm).</p>
-</article>
-
-<article>
-<h2>Instruction Tuning First</h2>
-<p>The first step is instruction tuning: fine-tune on many prompt-and-answer demonstrations so the model learns to answer questions rather than merely continue text.</p>
-<p><span class="kt">Key takeaway:</span> Instruction tuning turns a text continuer into an assistant.</p>
-<p><span class="kt">Slide figure:</span> Ouyang et al. (InstructGPT) Fig. 2: the three-step pipeline, supervised fine-tuning on demonstrations, reward model on comparisons, PPO against the reward.</p>
+<h2>4. Same Request: Refused, Then Answered</h2>
+<p class="pace">What safety training adds · ≈1.5 min · elapsed ≈3 min</p>
+<p>Here is the phenomenon in one figure. On the left, a request is refused. In panel (a), the same request comes with an instruction that the reply must open with a particular line. In panel (b), the request is written in Base64. In both cases the model answers.</p>
+<p>Notice what the request is: deliberately mild, chosen by the authors so the figure can be published. The point is the pattern, not the content.</p>
+<p>Read the setup strip: the attacker only types prompts into a black-box chat and wants an answer the model refused. Every study today gets that strip.</p>
+<p><span class="kt">Key takeaway:</span> Rewording alone, with no special access, turned a refusal into an answer.</p>
 <div class="detail">
-<h3>Definitions</h3>
-<p>Write a language model as a policy $\pi_\theta(y\mid x)$ that assigns a probability to a response $y=(y_1,\dots,y_T)$ given a prompt $x$, factored autoregressively as $\pi_\theta(y\mid x)=\prod_{t=1}^{T}\pi_\theta(y_t\mid x,y_{<t})$.</p>
-<p><strong>Pretraining</strong> maximizes next-token likelihood over a large corpus: $\max_\theta \; \mathbb{E}_{u\sim\mathcal{D}}\big[\sum_t \log \pi_\theta(u_t\mid u_{<t})\big]$. This yields a "base" model that continues text but has no notion of an instruction.</p>
-<p><strong>Supervised fine-tuning (SFT)</strong>, a.k.a. instruction tuning, is the same maximum-likelihood objective restricted to a curated set $\mathcal{D}_{\text{SFT}}=\{(x^{(i)},y^{(i)})\}$ of human-written prompt–response demonstrations:
-$$\mathcal{L}_{\text{SFT}}(\theta)=-\,\mathbb{E}_{(x,y)\sim\mathcal{D}_{\text{SFT}}}\Big[\sum_{t=1}^{|y|}\log \pi_\theta(y_t\mid x,y_{<t})\Big].$$
-In InstructGPT this is stage 1 of a three-stage pipeline (SFT → reward model → RL). <span class="src">(derivation: standard MLE objective; pipeline per Ouyang et al. 2022, §3.)</span></p>
-<h3>Background &amp; further reading</h3>
+<h3>The figure</h3>
+<p>Fig. 1 of Wei et al.: a refusal on a plain request, then compliance under (a) a demanded opening line ("prefix injection") and (b) a Base64-encoded request. The figure uses a deliberately mild example chosen by the authors. Redacted by the lecturer: the demanded-opening wording in (a) and the Base64 payload in (b) are covered by labelled boxes; the requests and the model replies are unchanged.</p>
+<h3>Setup, model, date</h3>
+<p>Wei, Haghtalab &amp; Steinhardt (UC Berkeley), first posted July 2023. Models: GPT-4 and Claude v1.3, the versions available in spring 2023.</p>
+<h3>What this establishes</h3>
+<p>That simple input transformations, with no gradient access and no weights, could flip refusal into compliance on frontier chat models of 2023.</p>
+<h3>What this does not establish</h3>
+<p>It does not show that these particular prompts still work; vendors patch known patterns. It does not measure how often they work; that is Table 1 (slide 14).</p>
+<h3>Assumptions</h3>
+<p>Black-box chat access only; the attacker can send arbitrary text.</p>
+<h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2203.02155">Ouyang et al., "Training language models to follow instructions with human feedback" (InstructGPT), NeurIPS 2022</a> — the SFT → RM → PPO recipe.</li>
+<li><a href="https://arxiv.org/abs/2307.02483">Wei, Haghtalab &amp; Steinhardt, "Jailbroken: How Does LLM Safety Training Fail?" (NeurIPS 2023)</a> — competing objectives and mismatched generalization (§3); Fig. 1; Table 1 on 32 curated prompts.</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>RLHF: Learn From Preferences</h2>
-<p>Reinforcement Learning from Human Feedback shows the model two replies, has a human pick the better one, trains a reward model on those picks, and then tunes the model to score well. This is the InstructGPT recipe.</p>
-<p><span class="kt">Key takeaway:</span> Human preferences become a signal the model is optimized against.</p>
+<h2>5. A Jailbreak Bypasses Safeguards Through Inputs</h2>
+<p class="pace">What safety training adds · ≈1.5 min · elapsed ≈4.5 min</p>
+<p>Our working definition: a jailbreak is an input that gets a safety-trained model to produce what its safeguards are meant to block.</p>
+<p>Two words do the work. "Input": the attacker acts through what the model reads, not through its weights. "Safeguards": we are attacking a behavior someone deliberately trained or attached.</p>
+<p>The table separates neighbours. Prompt injection, where text from a third party the app reads hijacks the model, is a different threat and is covered in the prompt-injection lecture. Data poisoning, which corrupts training data, was Lecture 9. Removing safety by fine-tuning the weights appears today only as a labelled contrast, because it is not a prompt attack.</p>
+<p><span class="kt">Key takeaway:</span> A jailbreak acts through inputs; weight-level safety removal is a different threat model.</p>
 <div class="detail">
-<h3>Definitions — the reward model via Bradley–Terry</h3>
-<p>Collect comparison data: for a prompt $x$ sample two responses and let a human label which is preferred, giving triples $(x, y_w, y_l)$ where $y_w$ ("winner") is preferred to $y_l$ ("loser"). Fit a scalar <strong>reward model</strong> $r_\phi(x,y)$ under the <strong>Bradley–Terry</strong> model of pairwise comparison, which posits that the probability one item beats another is a logistic function of the reward gap:
-$$\Pr[\,y_w \succ y_l \mid x\,]=\sigma\big(r_\phi(x,y_w)-r_\phi(x,y_l)\big),\qquad \sigma(z)=\frac{1}{1+e^{-z}}.$$
-Maximum-likelihood over the comparison dataset $\mathcal{D}$ gives the reward-model loss
-$$\mathcal{L}_{\text{RM}}(\phi)=-\,\mathbb{E}_{(x,y_w,y_l)\sim\mathcal{D}}\Big[\log \sigma\big(r_\phi(x,y_w)-r_\phi(x,y_l)\big)\Big].$$
-The reward is identifiable only up to an additive function of $x$ (a shift by any $c(x)$ leaves every difference, hence the likelihood, unchanged). <span class="src">(BT model: Bradley &amp; Terry 1952; loss form per Ouyang et al. 2022, Stiennon et al. 2020. Derivation of the shift-invariance: course notes — the objective depends only on $r(x,y_w)-r(x,y_l)$.)</span></p>
-<p><strong>Policy optimization (stage 3).</strong> The instruction-tuned model $\pi_{\text{ref}}$ is then fine-tuned by RL (PPO) to maximize expected reward while a KL term leashes it to $\pi_{\text{ref}}$ — stated in full on the next slide.</p>
-<h3>Background &amp; further reading</h3>
+<h3>Assumptions</h3>
+<p>The deployer, not the user, decides what is blocked. The definition says nothing about whether the blocked content is actually dangerous; that judgment is part of evaluation (Section 05).</p>
+<h3>Going further</h3>
+<p>Usage varies in the literature: some papers call any successful harmful-output attack a "jailbreak", including fine-tuning. We keep the narrower, input-only meaning so that results compare within one threat model.</p>
+</div>
+</article>
+
+<article>
+<h2>6. Recap: Refusal Is Taught After Pretraining</h2>
+<p class="pace">What safety training adds · ≈1.5 min · elapsed ≈6 min</p>
+<p>A short refresher from Lecture 7. A pretrained model only predicts the next token. Instruction tuning teaches it to follow requests; preference training teaches it which answers are preferred, including when to refuse.</p>
+<p>Where do the preference labels come from? In RLHF, from human raters comparing answers. In Constitutional AI, largely from an AI model judging answers against a written list of principles. These are two approaches to the same step, not two stages you must run in sequence.</p>
+<p>Either way, refusal is a learned behavior layered on top of a capable model. Like any learned behavior, nothing guarantees that it generalizes beyond the examples it was trained on.</p>
+<p><span class="kt">Key takeaway:</span> Refusal is learned late, and its generalization beyond training examples is not guaranteed.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>A schematic drawn for this lecture: pretrained model → instruction tuning → preference training, with the preference labels coming either from human raters (RLHF) or from AI feedback guided by principles (Constitutional AI).</p>
+<h3>Setup, model, date</h3>
+<p>InstructGPT (Ouyang et al., OpenAI, 2022) and Constitutional AI (Bai et al., Anthropic, December 2022).</p>
+<h3>What this does not establish</h3>
+<p>The diagram is a simplification; production pipelines mix several data sources and stages, and their details are mostly unpublished.</p>
+<h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2203.02155">Ouyang et al. 2022 (InstructGPT)</a> — full three-stage RLHF pipeline.</li>
-<li><a href="https://arxiv.org/abs/2305.18290">Rafailov et al., "Direct Preference Optimization" (DPO), NeurIPS 2023</a> — reparameterizes the same BT+KL objective so the policy is trained directly on preferences without a separate reward model or RL loop.</li>
+<li><a href="https://arxiv.org/abs/2203.02155">Ouyang et al., "Training language models to follow instructions with human feedback" (NeurIPS 2022)</a> — InstructGPT: supervised fine-tuning, reward model, RLHF.</li>
+<li><a href="https://arxiv.org/abs/2212.08073">Bai et al., "Constitutional AI: Harmlessness from AI Feedback" (arXiv 2022)</a> — AI feedback guided by a written list of principles in place of human harmlessness labels.</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>InstructGPT, Measured</h2>
-<p>Ouyang et al. measured what the tuning buys. Human labelers preferred InstructGPT outputs to GPT-3 at every model size, and the 1.3B tuned model beat the 175B untuned one. The preference gap grows with size, and the tuning costs a small fraction of pretraining. Helpfulness is cheap to learn; keep asking whether safety is too.</p>
-<p><span class="kt">Key takeaway:</span> A small amount of tuning changes preferred behavior more than a 100x increase in size.</p>
-<p><span class="kt">Slide figure:</span> Ouyang et al. Fig. 1: win rate against the 175B SFT model across 1.3B, 6B and 175B for PPO-ptx, PPO, SFT, prompted GPT and GPT.</p>
+<h2>7. Two Ways to Fail: Refusing Too Little or Too Much</h2>
+<p class="pace">What safety training adds · ≈1.5 min · elapsed ≈7.5 min</p>
+<p>A two-by-two. Rows: is the request benign or harmful? Columns: does the model answer or refuse? Answering benign requests is helpful. Refusing harmful ones is a safe refusal.</p>
+<p>The two off-diagonal cells are both failures. Answering a harmful request is under-refusal: that is the jailbreak's target. Refusing a benign request is over-refusal: the cost of caution.</p>
+<p>Keep both cells in view all lecture. A defense that only shrinks the red cell may quietly grow the grey one.</p>
+<p><span class="kt">Key takeaway:</span> Safety has two error types; a defense must report both.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>A confusion-matrix sketch drawn for this lecture. Red marks under-refusal (jailbreak success); grey marks over-refusal.</p>
+<h3>Assumptions</h3>
+<p>That "benign" and "harmful" can be labelled. In practice the boundary is contested and policy-dependent; XSTest (slide 47) builds prompts near that boundary on purpose.</p>
+</div>
 </article>
 
 <article>
-<h2>Optimize Against the Reward</h2>
-<p>Concretely, the model is tuned to maximize the reward score on its replies, while a penalty keeps it from drifting too far from the original model. The reward pulls toward good behavior; the penalty keeps it sane.</p>
-<p><span class="kt">Key takeaway:</span> Behavior is shaped by maximizing a learned score under a drift penalty.</p>
-<p><span class="kt">Slide figure:</span> Inline sketch: reward rises over training as the tuned policy climbs; a dashed KL leash pulls it back toward the base model.</p>
+<h2>8. What the Attacker Can Touch Sets the Threat</h2>
+<p class="pace">What safety training adds · ≈1.5 min · elapsed ≈9 min</p>
+<p>Attacks differ in access, and access changes what is possible. The lowest rung is chat only: type prompts, read replies. Hand-written jailbreaks, PAIR, many-shot and Best-of-N all live here.</p>
+<p>One rung up, the attacker controls part of the response or has gradients from an open model: prefilling the start of the reply, or GCG suffix search.</p>
+<p>The top rung is weights: fine-tuning or editing the model. That is not a prompt attack, and we will label it as a contrast when it appears.</p>
+<p>The rule: compare attacks on the same rung. An attack with gradients beating an attack without them tells you little.</p>
+<p><span class="kt">Key takeaway:</span> Compare attacks only within the same access level.</p>
 <div class="detail">
-<h3>The RLHF objective</h3>
-<p>With frozen reward $r_\phi$ and reference policy $\pi_{\text{ref}}$ (the SFT model), RLHF trains the policy $\pi_\theta$ to
-$$\max_{\theta}\; \mathbb{E}_{x\sim\mathcal{D},\,y\sim\pi_\theta(\cdot\mid x)}\big[\,r_\phi(x,y)\,\big]\;-\;\beta\,\mathbb{E}_{x\sim\mathcal{D}}\Big[\mathrm{KL}\big(\pi_\theta(\cdot\mid x)\,\|\,\pi_{\text{ref}}(\cdot\mid x)\big)\Big].$$
-The first term rewards replies humans rated highly; the KL "leash" with strength $\beta>0$ penalizes drifting from $\pi_{\text{ref}}$ (small $\beta$ chases the score and risks reward hacking; large $\beta$ stays safe but learns less). InstructGPT optimizes this with PPO. <span class="src">(Objective per Ouyang et al. 2022, Eq. 2; also lec10tech.html slide "The RLHF Objective".)</span></p>
-<h3>Theorem &amp; proof — the KL-regularized optimum</h3>
-<p><em>Statement.</em> For each fixed prompt $x$, the objective above is maximized by the Gibbs (exponential-tilt) policy
-$$\pi^\star(y\mid x)=\frac{1}{Z(x)}\,\pi_{\text{ref}}(y\mid x)\,\exp\!\Big(\tfrac{1}{\beta}\,r_\phi(x,y)\Big),\qquad Z(x)=\sum_{y}\pi_{\text{ref}}(y\mid x)\,e^{r_\phi(x,y)/\beta}.$$
-<em>Proof.</em> Fix $x$ and write $p(y)=\pi(y\mid x)$, $q(y)=\pi_{\text{ref}}(y\mid x)$. The per-prompt objective is $J(p)=\sum_y p(y)r(y)-\beta\sum_y p(y)\log\frac{p(y)}{q(y)}$ subject to $\sum_y p(y)=1$, $p\ge 0$. Define $p^\star(y)=q(y)e^{r(y)/\beta}/Z$ with $Z=\sum_y q(y)e^{r(y)/\beta}$. Then for any feasible $p$,
-$$J(p^\star)-J(p)=\beta\sum_y p(y)\log\frac{p(y)}{p^\star(y)}=\beta\,\mathrm{KL}(p\,\|\,p^\star)\ge 0,$$
-with equality iff $p=p^\star$. (Substitute $r(y)=\beta\log\frac{p^\star(y)}{q(y)}+\beta\log Z$ into $J$ and simplify; the $\beta\log Z$ term is constant in $p$.) By Gibbs' inequality the KL is nonnegative and zero only at $p=p^\star$, so $p^\star$ is the unique maximizer. $\qquad\blacksquare$ <span class="src">(derivation: course notes; the same closed form underlies DPO, Rafailov et al. 2023, Eq. 4.)</span></p>
-<p>DPO exploits exactly this: invert the optimum to $r(x,y)=\beta\log\frac{\pi^\star(y\mid x)}{\pi_{\text{ref}}(y\mid x)}+\beta\log Z(x)$, plug into the Bradley–Terry loss so $\log Z(x)$ cancels in the difference, and train the policy directly on preferences.</p>
-<h3>Background &amp; further reading</h3>
+<h3>The figure</h3>
+<p>An access ladder drawn for this lecture, with today's attacks placed on their rungs.</p>
+<h3>Going further</h3>
+<p>Prefilling sits on the middle rung because some commercial APIs let the user write the start of the assistant turn; with open weights it is always possible.</p>
+</div>
+</article>
+
+<article>
+<h2>9. Every Attack Success Rate Needs Four Labels</h2>
+<p class="pace">What safety training adds · ≈1 min · elapsed ≈10 min</p>
+<p>ASR, attack success rate, is the share of requests counted as successful. Every ASR needs four labels before it means anything.</p>
+<p>The denominator: which requests, and how many? The budget: one try per request, or the best of N tries? The model: name and dated version. The judge: who decided the reply was harmful, and how often is that judge wrong?</p>
+<p>Two ASRs that differ on any of these labels are not directly comparable. We will check all four on every number today.</p>
+<p><span class="kt">Key takeaway:</span> An ASR without denominator, budget, model and judge is not a result.</p>
+<div class="detail">
+<h3>Going further</h3>
+<p>The budget label is the one most often omitted. "At least one success in N attempts" grows quickly with N even when the per-attempt rate is tiny; slide 32 makes this concrete, and lec10tech gives the formula.</p>
+</div>
+</article>
+
+<article>
+<h2>10. Section 02 — Why Refusal Is Fragile</h2>
+<p class="pace">Why refusal is fragile · ≈0.5 min · elapsed ≈10.5 min</p>
+<p>Safety training works on its own test prompts. Why does a reworded request still get through? This section collects explanations, each tested in a particular setting.</p>
+<p><span class="kt">Key takeaway:</span> Several explanations, each with its own evidence and access level.</p>
+</article>
+
+<article>
+<h2>11. Two Hypotheses for Why Safety Training Fails</h2>
+<p class="pace">Why refusal is fragile · ≈1.5 min · elapsed ≈12 min</p>
+<p>Wei and colleagues proposed two failure modes. Competing objectives: the model was trained both to be helpful and to be safe, and a prompt can make the helpful objective win. Mismatched generalization: pretraining gave the model skills, such as reading Base64, that safety training never covered, so the prompt leaves the safe ground.</p>
+<p>Note the status of these ideas. They were proposed from tests on GPT-4 and Claude v1.3 in 2023. They organise the evidence well, but they are explanations, not proofs.</p>
+<p><span class="kt">Key takeaway:</span> Two failure modes: objectives that conflict, and safety that does not cover all skills.</p>
+<div class="detail">
+<h3>Setup, model, date</h3>
+<p>Wei, Haghtalab &amp; Steinhardt, NeurIPS 2023, Section 3.</p>
+<h3>What this does not establish</h3>
+<p>They do not show a mechanism inside the model; they are behavioral hypotheses that predict which attacks should work. Slides 15–18 look for mechanisms in open models.</p>
+<h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2203.02155">Ouyang et al. 2022</a> — PPO with the KL penalty.</li>
-<li><a href="https://arxiv.org/abs/2305.18290">Rafailov et al. 2023 (DPO)</a> — closed-form optimum used to remove the RL loop.</li>
+<li><a href="https://arxiv.org/abs/2307.02483">Wei, Haghtalab &amp; Steinhardt, "Jailbroken: How Does LLM Safety Training Fail?" (NeurIPS 2023)</a> — competing objectives and mismatched generalization (§3); Fig. 1; Table 1 on 32 curated prompts.</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>Constitutional AI</h2>
-<p>Constitutional AI replaces much of the human labor with AI feedback. You write a short list of principles, the model critiques and revises its own answers against those principles, and you train on the revisions.</p>
-<p><span class="kt">Key takeaway:</span> A model can supervise its own harmlessness from a written set of rules.</p>
-<p><span class="kt">Slide figure:</span> Bai et al. Fig. 1: the Constitutional AI pipeline from red-team responses through critique and revision to the SL-CAI and RL-CAI models.</p>
+<h2>12. Competing Objectives: Make Refusing Costly</h2>
+<p class="pace">Why refusal is fragile · ≈2 min · elapsed ≈14 min</p>
+<p>A chat model is trained to follow instructions and trained to refuse harmful asks. Usually those agree. A competing-objectives attack adds instructions that a refusal would break.</p>
+<p>Three families from Wei et al.: prefix injection demands a particular opening line; refusal suppression forbids apologies or disclaimers; role-play asks the model to stay in a character. Each makes refusing look like a failure to follow instructions.</p>
+<p>We name the families; working prompts are not shown, here or anywhere in this course.</p>
+<p><span class="kt">Key takeaway:</span> Competing-objective attacks turn the model's instruction-following against its refusal.</p>
 <div class="detail">
-<h3>Definitions — the two-stage recipe (Bai et al. 2022)</h3>
-<p>The only human oversight is a written list of principles (the "constitution"); no human labels of harmful outputs are used. The method has two stages:</p>
+<h3>The figure</h3>
+<p>A tug-of-war schematic drawn for this lecture: "follow instructions" versus "refuse harmful asks", with the attack adding weight on the instruction side.</p>
+<h3>Setup, model, date</h3>
+<p>Wei et al., Section 3.1.</p>
+<h3>Primary sources</h3>
 <ul>
-<li><strong>Supervised stage (critique → revision → SFT).</strong> Sample responses from an initial (helpful-only) model on red-team prompts; ask the model to <em>critique</em> its own response against a randomly drawn constitutional principle, then <em>revise</em> it; fine-tune the original model on the revised responses. This produces the "SL-CAI" model.</li>
-<li><strong>RL stage (RLAIF).</strong> Sample response pairs from the SL-CAI model; have a model (not a human) judge which response better satisfies the constitution, yielding a dataset of <em>AI preferences</em>; train a preference/reward model on these, then optimize the policy with RL against it — RL from AI Feedback. Chain-of-thought reasoning is used in the judgments to improve quality and transparency.</li>
-</ul>
-<p><strong>Do not confuse</strong> Constitutional AI (Bai et al. 2022, a <em>training</em> method) with <strong>Constitutional Classifiers</strong> (Sharma et al. 2025, a <em>deployment-time guard</em>, covered later in this lecture). Different papers, different mechanisms. <span class="src">(Two-stage recipe verified against the Bai et al. 2022 abstract and §2–3.)</span></p>
-<h3>Background &amp; further reading</h3>
-<ul>
-<li><a href="https://arxiv.org/abs/2212.08073">Bai et al., "Constitutional AI: Harmlessness from AI Feedback", Anthropic 2022</a> — SL (critique–revision) + RLAIF.</li>
+<li><a href="https://arxiv.org/abs/2307.02483">Wei, Haghtalab &amp; Steinhardt, "Jailbroken: How Does LLM Safety Training Fail?" (NeurIPS 2023)</a> — competing objectives and mismatched generalization (§3); Fig. 1; Table 1 on 32 curated prompts.</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>The Refusal Behavior</h2>
-<p>The goal of all this training is a reliable refusal: on a harmful request, the model declines and explains why. Note this is a learned reflex, not a hard-coded rule.</p>
-<p><span class="kt">Key takeaway:</span> Alignment here means a trained tendency to refuse, not a guarantee.</p>
-<p><span class="kt">Slide figure:</span> Inline chat sketch: a harmful request bubble, then a model bubble that declines and offers a safe alternative.</p>
-</article>
-
-<article>
-<h2>It Mostly Works</h2>
-<p>On plain harmful prompts, aligned models refuse well, with a large drop in unsafe outputs, good enough to ship to millions. The real question for today is how robust that refusal is under pressure.</p>
-<p><span class="kt">Key takeaway:</span> Refusal works on easy cases; robustness is the open question.</p>
-<p><span class="kt">Slide figure:</span> Inline bar chart: unsafe outputs high for the base model, low after alignment, and a dashed question mark for aligned plus attack.</p>
-</article>
-
-<article>
-<h2>02 — Why It Is Fragile</h2>
-<p>Second section. The structural reasons safety training is shallow and easy to slip past.</p>
-<p><span class="kt">Key takeaway:</span> Alignment sits on top of full capability, not in place of it.</p>
-</article>
-
-<article>
-<h2>A Thin Layer of Polish</h2>
-<p>Safety tuning touches only a small part of the model. The vast base knowledge stays intact; tuning learns to steer behavior, not to forget the harmful capability, which is still in there.</p>
-<p><span class="kt">Key takeaway:</span> Refusal is a layer on top, not a deletion of dangerous knowledge.</p>
-<p><span class="kt">Slide figure:</span> Inline layer cake: a thin green safety-tuning layer on top of the large base-knowledge block, with the harm still inside.</p>
-</article>
-
-<article>
-<h2>Shallow Alignment</h2>
-<p>The refusal often hinges on just the first few tokens of the reply. If you can force a compliant opening like "Sure, here is how", the rest of the answer tends to follow along.</p>
-<p><span class="kt">Key takeaway:</span> Control the first tokens and you often control the whole reply.</p>
+<h2>13. Mismatched Generalization: Skills Outrun Safety</h2>
+<p class="pace">Why refusal is fragile · ≈2 min · elapsed ≈16 min</p>
+<p>The outer region is everything the model can understand, learned in pretraining. The inner region is what safety training covered: mostly plain English chat.</p>
+<p>In between lie inputs the model can still read: Base64 and other encodings, simple ciphers, low-resource languages, unusual output formats. A request there is understood, but the refusal never learned to fire.</p>
+<p>The picture is a sketch, not to scale. It predicts something testable: attacks that move into understood-but-uncovered territory should work, and they should work better on more capable models that read more encodings.</p>
+<p><span class="kt">Key takeaway:</span> If the model can read it but safety training never saw it, refusal may not fire.</p>
 <div class="detail">
-<h3>Definitions</h3>
-<p>Qi et al. formalize "shallow safety alignment" as safety behavior concentrated in the distribution over the first few generated tokens. Measuring the per-token KL between the aligned and base models, $\mathrm{KL}\big(\pi_{\text{aligned}}(\cdot\mid x,y_{<t})\,\|\,\pi_{\text{base}}(\cdot\mid x,y_{<t})\big)$, they find the divergence is large for the first handful of positions $t$ and small thereafter — i.e. alignment mostly rewrites the opening tokens (typically a refusal preamble) and leaves the rest close to the base model. Prefilling a compliant prefix therefore skips the guarded region. <span class="src">(Qi et al., ICLR 2025, §2–3.)</span></p>
-<h3>Background &amp; further reading</h3>
+<h3>The figure</h3>
+<p>A nested-region sketch drawn for this lecture; not to scale.</p>
+<h3>Setup, model, date</h3>
+<p>Wei et al., Section 3.2.</p>
+<h3>Going further</h3>
+<p>Wei et al. report that GPT-3.5 Turbo cannot follow Base64-encoded instructions (their Fig. 2 and Table 3), while GPT-4 can: capability enables the attack. This is why "smarter" can mean "more attack surface".</p>
+<h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2406.05946">Qi et al., "Safety Alignment Should Be Made More Than Just a Few Tokens Deep", ICLR 2025</a> — the per-token KL analysis and a deeper-alignment fix.</li>
+<li><a href="https://arxiv.org/abs/2307.02483">Wei, Haghtalab &amp; Steinhardt, "Jailbroken: How Does LLM Safety Training Fail?" (NeurIPS 2023)</a> — competing objectives and mismatched generalization (§3); Fig. 1; Table 1 on 32 curated prompts.</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>Shallow, Measured</h2>
-<p>Here is the measurement behind the claim. Qi et al. compute the per-token KL divergence between the aligned chat model and its base model along a response. It is large for the first few token positions and near zero after about token five. The refusal is written into the opening tokens, and past them the aligned model is essentially the base model again.</p>
-<p><span class="kt">Key takeaway:</span> Alignment rewrites the first tokens and little else, which is why a compliant prefix breaks it.</p>
-<p><span class="kt">Slide figure:</span> Qi et al. (ICLR 2025) Fig. 1: per-token KL between aligned and base models for Llama-2-7B and Gemma-7B, spiking at the first tokens and flat afterward.</p>
-</article>
-
-<article>
-<h2>Two Failure Modes</h2>
-<p>The "Jailbroken" paper names two core reasons safety fails: competing objectives, where helpfulness fights harmlessness, and mismatched generalization, where safety covers less ground than capability.</p>
-<p><span class="kt">Key takeaway:</span> Two named failure modes explain most jailbreaks.</p>
+<h2>14. Combined Attacks Beat Single Ones</h2>
+<p class="pace">Why refusal is fragile · ≈2 min · elapsed ≈18 min</p>
+<p>Now the numbers. Each cell is the share of outputs hand-labelled as harmful compliance (the paper's BAD BOT rate) on 32 curated prompts.</p>
+<p>A plain request almost never works: 3% on GPT-4, 0% on Claude v1.3. Refusal suppression alone: 25% and 16%. Base64 alone: 34% and 38%. Combining several tricks, exploiting both failure modes: 94% and 81%.</p>
+<p>The last row is "adaptive": count success if any of 28 attacks works. That reaches 100% on both. Notice the budget label changed: that row is any of 28, not one try.</p>
+<p><span class="kt">Key takeaway:</span> Combining the two failure modes was far stronger than either alone.</p>
 <div class="detail">
-<h3>Definitions — the two hypotheses (Wei, Haghtalab, Steinhardt 2023)</h3>
+<h3>The figure</h3>
+<p>Selected rows of Table 1 of Wei et al. Values are fractions of outputs on the curated set.</p>
+<h3>Setup, model, date</h3>
+<p>32 curated harmful prompts (all 16 used to evaluate GPT-4 in its technical report, plus 16 adapted from the red-teaming dataset of Ganguli et al.), GPT-4 and Claude v1.3 as of 2023, outputs hand-labelled by the authors.</p>
+<h3>What this establishes</h3>
+<p>That on 2023 frontier models, combined attacks produced harmful compliance on most curated prompts.</p>
+<h3>What this does not establish</h3>
+<p>32 prompts is a small denominator; the adaptive row is a best-of-28 budget; the models have since been updated.</p>
+<h3>Assumptions</h3>
+<p>The authors' labels of "harmful compliance" (BAD BOT) are the judge.</p>
+<h3>Primary sources</h3>
 <ul>
-<li><strong>Competing objectives.</strong> Safety training instills several objectives that can conflict — e.g. a pretraining/instruction-following drive to be helpful and obedient versus a harmlessness drive to refuse. An attacker constructs a prompt where satisfying safety requires disobeying an instruction, so the model's capabilities and safety goals are placed in direct conflict.</li>
-<li><strong>Mismatched generalization.</strong> Pretraining gives capabilities on a far broader input distribution than the (much smaller) safety-training distribution. A jailbreak lives in a region where <em>capability generalizes but safety does not</em> — the model still understands and can perform the task there, but no refusal was ever trained for that region (e.g. Base64, rare languages, ciphers).</li>
-</ul>
-<p>The paper's thesis is the need for <em>safety–capability parity</em>: safety mechanisms should be as sophisticated as the underlying model, and scaling alone will not resolve either failure mode. <span class="src">(Verified against the Wei et al. 2023 abstract and §2.)</span></p>
-<h3>Background &amp; further reading</h3>
-<ul>
-<li><a href="https://arxiv.org/abs/2307.02483">Wei, Haghtalab &amp; Steinhardt, "Jailbroken: How Does LLM Safety Training Fail?", NeurIPS 2023</a> — the two failure modes and attacks derived from them.</li>
-</ul>
-</div>
-</article>
-
-<article>
-<h2>Competing Objectives</h2>
-<p>The model wants to be helpful and obedient. An attacker reframes harm as a helpful task, so following instructions now pulls toward harm, and the two trained urges collide.</p>
-<p><span class="kt">Key takeaway:</span> Reframing harm as helpfulness weaponizes the helpfulness training.</p>
-<p><span class="kt">Slide figure:</span> Inline tilted scale: the attacker adds a reframed weight to the helpful pan, which wins the tilt over harmless.</p>
-</article>
-
-<article>
-<h2>Mismatched Generalization</h2>
-<p>Capability generalizes further than safety. Push the prompt into a region the safety data never covered, and the model can still do the task there, but no refusal was ever learned for it.</p>
-<p><span class="kt">Key takeaway:</span> Jailbreaks live in the gap where capability reaches but safety does not.</p>
-</article>
-
-<article>
-<h2>Refusal Is a Direction</h2>
-<p>Inside the model, refusal often looks like a single internal direction or feature. Suppress that feature and refusals vanish while capability stays intact, which makes "thin layer" literal in a geometric sense.</p>
-<p><span class="kt">Key takeaway:</span> The guard can be a single direction, and single things are easy to remove.</p>
-<p><span class="kt">Slide figure:</span> Arditi et al. Fig. 1: refusal and safety scores across 13 chat models with and without directional ablation of the refusal direction.</p>
-<div class="detail">
-<h3>Definitions</h3>
-<p>Arditi et al. find a single "refusal direction" $\hat r\in\mathbb{R}^{d}$ in the residual-stream activation space. They estimate it as a difference-in-means: with $h_\ell(x)$ the layer-$\ell$ residual activation for prompt $x$,
-$$r_\ell=\underbrace{\tfrac{1}{|\mathcal{H}|}\!\sum_{x\in\mathcal{H}} h_\ell(x)}_{\text{mean over harmful prompts}}-\underbrace{\tfrac{1}{|\mathcal{H}^c|}\!\sum_{x\in\mathcal{H}^c} h_\ell(x)}_{\text{mean over harmless prompts}},\qquad \hat r=r_\ell/\lVert r_\ell\rVert.$$
-<strong>Ablating</strong> this direction — projecting every activation onto its orthogonal complement, $h\mapsto h-(\hat r^\top h)\,\hat r$ — suppresses refusals across harmful prompts while leaving general capability intact. Conversely, <em>adding</em> $\hat r$ induces refusals even on harmless prompts. This gives a white-box jailbreak (and a weight-edit that permanently removes the guard) and is direct evidence that the refusal behavior is low-dimensional. <span class="src">(Arditi et al., NeurIPS 2024, §3–4.)</span></p>
-<h3>Background &amp; further reading</h3>
-<ul>
-<li><a href="https://arxiv.org/abs/2406.11717">Arditi et al., "Refusal in Language Models Is Mediated by a Single Direction", NeurIPS 2024</a> — difference-in-means direction, ablation, and weight edit.</li>
+<li><a href="https://arxiv.org/abs/2307.02483">Wei, Haghtalab &amp; Steinhardt, "Jailbroken: How Does LLM Safety Training Fail?" (NeurIPS 2023)</a> — competing objectives and mismatched generalization (§3); Fig. 1; Table 1 on 32 curated prompts.</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>03 — Manual Jailbreaks</h2>
-<p>Third section. Hand-crafted prompts, described as categories rather than recipes.</p>
-<p><span class="kt">Key takeaway:</span> Manual jailbreaks come in a few recognizable shapes.</p>
-</article>
-
-<article>
-<h2>What a Jailbreak Is</h2>
-<p>A jailbreak is a prompt crafted to make an aligned model produce output its safety training was meant to block. We study the categories to defend against them, not to hand out attack recipes.</p>
-<p><span class="kt">Key takeaway:</span> Understanding attack shapes is a prerequisite for defending against them.</p>
-<p><span class="kt">Slide figure:</span> Inline two-row sketch: harmful request into the aligned LM gives refusal; the same intent wrapped as a jailbreak prompt gets the blocked output through.</p>
+<h2>15. Aligned and Base Models Differ Mostly in the First Few Tokens</h2>
+<p class="pace">Why refusal is fragile · ≈2 min · elapsed ≈20 min</p>
+<p>Qi and colleagues asked where safety training changed the model. They compared each aligned model with its base model, token by token, on harmful responses.</p>
+<p>The x-axis is the position in the response; the y-axis is how different the two models' predictions are, measured by KL divergence. Most of the difference sits in the first few tokens.</p>
+<p>The authors call this shallow safety alignment: the aligned model mainly learned to start with a refusal. Two open 7B model pairs; a finding in those models, not a law.</p>
+<p><span class="kt">Key takeaway:</span> In the tested open models, alignment changed mostly the first few tokens.</p>
 <div class="detail">
-<h3>Definitions — measuring attacks</h3>
-<p>Let $J(\cdot)$ be a transformation of a harmful request $x$ into an attack prompt $J(x)$ (a suffix, a persona wrapper, a translation, …), $\mathcal{X}_{\text{harm}}$ a benchmark set of harmful requests, and $\mathrm{harmful}(y)\in\{0,1\}$ a judge that flags whether output $y$ actually complies with the harmful intent (a classifier or human).</p>
+<h3>The figure</h3>
+<p>Fig. 1 of Qi et al. (2025): per-token KL divergence between aligned and base models on harmful HEx-PHI responses.</p>
+<h3>Setup, model, date</h3>
+<p>Qi et al. (Princeton and Google DeepMind), ICLR 2025. Pairs: Llama-2-7B vs Llama-2-7B-Chat, Gemma-7B vs Gemma-1.1-7B-IT. HEx-PHI: 330 harmful instructions across 11 categories.</p>
+<h3>What this establishes</h3>
+<p>In these pairs, alignment's measurable effect is concentrated at the start of the reply.</p>
+<h3>What this does not establish</h3>
+<p>It does not show that all aligned models are shallow, nor that depth alone predicts robustness.</p>
+<h3>Primary sources</h3>
 <ul>
-<li><strong>Attack success rate (ASR):</strong> $\displaystyle \mathrm{ASR}(J)=\frac{1}{|\mathcal{X}_{\text{harm}}|}\sum_{x\in\mathcal{X}_{\text{harm}}}\mathbf{1}\big[\mathrm{harmful}\big(\text{model}(J(x))\big)=1\big]$ — fraction of harmful requests the attack gets complied with. Reported ASR numbers depend heavily on the judge and benchmark, so compare only like-for-like.</li>
-<li><strong>Refusal rate:</strong> the fraction of requests (harmful or benign) the model declines; on benign requests this is the <em>over-refusal</em> / false-refusal rate a defense should keep low.</li>
+<li><a href="https://arxiv.org/abs/2406.05946">Qi et al., "Safety Alignment Should Be Made More Than Just a Few Tokens Deep" (ICLR 2025)</a> — per-token KL (Fig. 1), prefilling (Fig. 2), recovery-example augmentation (Table 2, §3.1).</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>Category: Persona Play</h2>
-<p>One category asks the model to act as a character who would comply, or to write a fictional story that needs the harmful detail. The model treats it as creative writing, exploiting its helpfulness.</p>
-<p><span class="kt">Key takeaway:</span> Role-play reframes harm so the helpfulness training takes over.</p>
-<p><span class="kt">Slide figure:</span> Inline sketch: a "pretend you are X" prompt enters the LM, which complies in character; helpfulness wins the tug-of-war.</p>
-</article>
-
-<article>
-<h2>Category: Fake Authority</h2>
-<p>Another category claims a special mode, a made-up "developer mode" or a pretend system message that grants permission. The model has no reliable way to verify who is talking or what is really authorized.</p>
-<p><span class="kt">Key takeaway:</span> The model cannot truly check authority, so claimed authority can mislead it.</p>
-<p><span class="kt">Slide figure:</span> Inline sketch: a fake [SYSTEM] developer-mode banner stacked over the user text, and an LM that cannot verify who is speaking.</p>
+<h2>16. Prefill a Few Harmful Tokens and Refusal Collapses</h2>
+<p class="pace">Why refusal is fragile · ≈2 min · elapsed ≈22 min</p>
+<p>If safety lives in the first few tokens, what happens if the attacker writes those tokens? That is a prefilling attack: the attacker supplies the start of the reply, possible with open weights or with an API that allows prefilling.</p>
+<p>The x-axis is how many harmful tokens are written for the model; the y-axis is ASR judged by GPT-4 on 330 prompts. Aligned models start near 0% and rise to about 55%. Base models stay high throughout.</p>
+<p>Note the rung: this needs response control, not chat only.</p>
+<p><span class="kt">Key takeaway:</span> Writing the opening of the reply bypassed refusal in the tested aligned models.</p>
 <div class="detail">
-<h3>Background &amp; further reading</h3>
+<h3>The figure</h3>
+<p>Fig. 2 of Qi et al. (2025): ASR vs number of prefilled harmful tokens, aligned vs base models.</p>
+<h3>Setup, model, date</h3>
+<p>Llama-2-7B-Chat and Gemma-1.1-7B-IT, HEx-PHI, GPT-4 judge.</p>
+<h3>What this establishes</h3>
+<p>Prefilling a short harmful start sharply raised harmfulness, consistent with the shallow-alignment picture.</p>
+<h3>Assumptions</h3>
+<p>The attacker can control the first tokens of the assistant turn.</p>
+<h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2308.03825">Shen et al., "\"Do Anything Now\": Characterizing and Evaluating In-The-Wild Jailbreak Prompts on Large Language Models", ACM CCS 2024</a> — a measurement study of the "DAN" ("Do Anything Now") persona/roleplay family and other in-the-wild jailbreak prompts. DAN prompts instruct the model to adopt an unrestricted alter-ego; the "grandma exploit" wraps a harmful request as a nostalgic story ("my late grandmother used to read me…") to reframe it as harmless — both instances of persona/authority framing.</li>
+<li><a href="https://arxiv.org/abs/2406.05946">Qi et al., "Safety Alignment Should Be Made More Than Just a Few Tokens Deep" (ICLR 2025)</a> — per-token KL (Fig. 1), prefilling (Fig. 2), recovery-example augmentation (Table 2, §3.1).</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>Category: Obfuscation</h2>
-<p>Obfuscation hides the request from the safety filter by encoding, translating, or splitting the harmful part across pieces. Capability still decodes and reassembles it, but the safety check does not catch it.</p>
-<p><span class="kt">Key takeaway:</span> Obfuscation is mismatched generalization in action.</p>
-<p><span class="kt">Slide figure:</span> Inline pipeline: harmful request, encode, filter passes on ciphertext, LM decodes, harm comes out.</p>
-</article>
-
-<article>
-<h2>Manual Is Brittle</h2>
-<p>Hand-written jailbreaks are easy to patch: a known prompt gets added to a block list, and one fix can kill a whole family of tricks. Attackers must keep inventing by hand, which naturally raises the question of automation.</p>
-<p><span class="kt">Key takeaway:</span> Patching named prompts is easy, which pushes attackers toward automated search.</p>
-<p><span class="kt">Slide figure:</span> Inline timeline: each new trick is patched, and a human must invent the next one.</p>
-</article>
-
-<article>
-<h2>04 — Automated Jailbreaks</h2>
-<p>Fourth section. When finding a jailbreak becomes an optimization problem rather than a craft.</p>
-<p><span class="kt">Key takeaway:</span> An algorithm can search for jailbreaks far faster than a human.</p>
-</article>
-
-<article>
-<h2>From Art to Optimization</h2>
-<p>Instead of guessing prompts, define a goal and let an algorithm hunt for prompts that hit it. This scales far past human creativity and turns jailbreaking into a search problem.</p>
-<p><span class="kt">Key takeaway:</span> Jailbreaking becomes a search, not an art.</p>
-<p><span class="kt">Slide figure:</span> Inline two-column sketch: by hand a person writes one prompt; by search an objective drives an optimizer that emits many prompts.</p>
-</article>
-
-<article>
-<h2>The Target</h2>
-<p>A common target is to make a compliant opening as likely as possible: the attack searches for a suffix that makes the reply likely to start with something like "Sure, here...". Push the model toward a helpful-sounding start.</p>
-<p><span class="kt">Key takeaway:</span> The objective is a high-probability compliant opening.</p>
-<p><span class="kt">Slide figure:</span> Inline sketch: harmful prompt plus unknown suffix tokens into the LM, with the objective maximize P("Sure, here" | prompt + suffix) as a filling bar.</p>
-</article>
-
-<article>
-<h2>GCG: Adversarial Suffix</h2>
-<p>Greedy Coordinate Gradient appends a short suffix of seemingly random tokens, optimized so the model begins to comply — Zou et al. elicited 99 of 100 harmful behaviors on Vicuna-7B. It reads as gibberish to a human but functions as a key that unlocks the model.</p>
-<p><span class="kt">Key takeaway:</span> A nonsense-looking suffix can be a precisely optimized attack.</p>
-<p><span class="kt">Slide figure:</span> Zou et al. Fig. 2, left panel: attack success rate versus optimization steps on Vicuna-7B; GCG climbs to near 0.9 while GBDA, PEZ and AutoPrompt stay low.</p>
+<h2>17. Training on Recovery Examples Deepened Refusal</h2>
+<p class="pace">Why refusal is fragile · ≈2 min · elapsed ≈24 min</p>
+<p>The fix they tested: train on replies that start harmful and then recover into a refusal. The model learns that refusing is possible at any point, not only at the first token.</p>
+<p>Read the table. Prefilling 5 harmful tokens: ASR 42.1% before, 2.8% after. Prefilling 40 tokens: 57.0% to 4.5%. GCG suffix search: 36.5% to 18.4%. A decoding-parameter exploit: 54.9% to 11.3%.</p>
+<p>Utility roughly held: AlpacaEval win rate 51.8% to 49.5%. And the caveat: these are the attacks they tested. A new attack designed against the augmented model was not part of this table.</p>
+<p><span class="kt">Key takeaway:</span> Teaching recovery made refusal deeper against the tested attacks.</p>
 <div class="detail">
-<h3>Definitions — the GCG optimization problem</h3>
-<p>Let the model input be tokens $x_{1:n}$ with a suffix occupying an index set $\mathcal{I}\subseteq\{1,\dots,n\}$, each $x_i$ drawn from vocabulary $V$. Fix a short affirmative <em>target</em> $t_{1:m}$ (e.g. "Sure, here is how to…"). GCG minimizes the negative log-likelihood of that target continuation over the choice of suffix tokens:
-$$\min_{\{x_i\}_{i\in\mathcal{I}},\; x_i\in V}\;\; \mathcal{L}(x_{1:n})\;=\;-\log \pi_\theta\big(t_{1:m}\,\big|\,x_{1:n}\big).$$
-This is a discrete combinatorial problem: each position holds one of $|V|\!\approx\!5\times10^4$ tokens, so exhaustive search is infeasible. <span class="src">(Objective per Zou et al. 2023, Eq. 3; also lec10tech.html "The Attack Objective".)</span></p>
-<h3>Algorithm — greedy coordinate gradient</h3>
-<p>GCG makes the discrete search tractable using a first-order signal. For each suffix position $i\in\mathcal{I}$, it forms the gradient of the loss with respect to the one-hot indicator $e_{x_i}$ of the current token, $\nabla_{e_{x_i}}\mathcal{L}\in\mathbb{R}^{|V|}$; the most negative coordinates name tokens that (to first order) would most reduce the loss if swapped in. It shortlists the top-$k$ such candidates per position, samples a batch of single-token substitutions from these shortlists, evaluates the <em>true</em> loss for each by a forward pass, and keeps the single substitution with lowest loss; repeat. Averaging the objective over several prompts and models yields a <em>universal, transferable</em> suffix. <span class="src">(Zou et al. 2023, Alg. 1–2.)</span></p>
-<h3>Background &amp; further reading</h3>
+<h3>The figure</h3>
+<p>Selected rows of Table 2 of Qi et al. (2025); ASR % on HEx-PHI, mean of 3 runs.</p>
+<h3>Setup, model, date</h3>
+<p>Llama-2-7B-Chat fine-tuned with safety-recovery augmentation (Section 3.1).</p>
+<h3>What this does not establish</h3>
+<p>Not a guarantee: adaptive attacks against the augmented model were not the focus of the table.</p>
+<h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2307.15043">Zou et al., "Universal and Transferable Adversarial Attacks on Aligned Language Models" (GCG), 2023</a> — the objective, the algorithm, and transfer results.</li>
+<li><a href="https://arxiv.org/abs/2406.05946">Qi et al., "Safety Alignment Should Be Made More Than Just a Few Tokens Deep" (ICLR 2025)</a> — per-token KL (Fig. 1), prefilling (Fig. 2), recovery-example augmentation (Table 2, §3.1).</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>The Search Loop</h2>
-<p>GCG starts from the harmful prompt plus a random suffix, uses gradients to rank promising token swaps, tries the best ones and keeps whichever lowers the loss, and repeats until the model opens with compliance.</p>
-<p><span class="kt">Key takeaway:</span> Gradients turn a discrete prompt search into a guided descent.</p>
-<p><span class="kt">Slide figure:</span> Inline four-node cycle: gradients rank swaps, try the best candidates, keep the lowest loss, repeat until compliant.</p>
-</article>
-
-<article>
-<h2>Search in Token Space</h2>
-<p>Picture each suffix as a point in token space. The greedy swaps walk that point step by step toward a region where the model opens with a compliant reply.</p>
-<p><span class="kt">Key takeaway:</span> A jailbreak is a path through token space toward a compliant opening.</p>
-</article>
-
-<article>
-<h2>It Transfers</h2>
-<p>A suffix tuned on open models you control often breaks closed models too: up to 84% on GPT-3.5 and GPT-4 and 66% on PaLM-2, with Claude much lower (~2%) but not immune. You optimize against what you can see, and the same string moves targets you cannot.</p>
-<p><span class="kt">Key takeaway:</span> Shared training and safety recipes mean shared weak spots, so attacks transfer.</p>
-<p><span class="kt">Slide figure:</span> Zou et al. Fig. 3: transfer attack success rate on open and closed models for prompt only, "Sure, here", GCG, and GCG ensemble.</p>
-</article>
-
-<article>
-<h2>Black-Box Search: PAIR</h2>
-<p>PAIR needs no gradients. It uses one language model as the attacker: it proposes a prompt, reads the target's reply, and refines, often reaching a jailbreak in only a handful of queries.</p>
-<p><span class="kt">Key takeaway:</span> One model can automatically jailbreak another with only query access.</p>
-<p><span class="kt">Slide figure:</span> Chao et al. Fig. 2: the attacker LLM sends a prompt, reads the target response, and refines through several rounds.</p>
+<h2>18. Removing One Direction Removed Most Refusals</h2>
+<p class="pace">Why refusal is fragile · ≈2 min · elapsed ≈26 min</p>
+<p>Arditi and colleagues looked inside. They computed one direction in activation space, the difference between average activations on harmful and harmless instructions, and removed it.</p>
+<p>Orange bars are refusal measured by phrase matching; blue bars are a separate safety classifier; hatched bars are with the direction removed. Refusal drops across models.</p>
+<p>Two cautions. This is white-box activation editing: an explanation, not an attack on a chat app. And it is a finding in 13 open models up to 72B parameters, not a universal mechanism.</p>
+<p><span class="kt">Key takeaway:</span> In tested open models, refusal was largely carried by one direction.</p>
 <div class="detail">
-<h3>Definitions</h3>
-<p>PAIR (Prompt Automatic Iterative Refinement) is a black-box attack needing only query access (no gradients, no logits). An <em>attacker</em> LM proposes a candidate prompt; the <em>target</em> LM answers; a <em>judge</em> scores how jailbroken the answer is; the attacker conditions on that feedback and the conversation history to propose an improved prompt. The loop iterates a few rounds, and multiple parallel streams are run. Chao et al. report jailbreaks often within ~20 queries — orders of magnitude fewer than GCG's gradient search, and applicable to closed models. <span class="src">(Chao et al. 2023, §3.)</span></p>
-<h3>Background &amp; further reading</h3>
+<h3>The figure</h3>
+<p>Fig. 1 of Arditi et al.: refusal and safety scores with and without ablating the refusal direction, 100 harmful JailbreakBench instructions.</p>
+<h3>Setup, model, date</h3>
+<p>Arditi et al., NeurIPS 2024; 13 open chat models up to 72B parameters.</p>
+<h3>What this establishes</h3>
+<p>Refusal in these models is low-dimensional enough that one direction mediates much of it.</p>
+<h3>What this does not establish</h3>
+<p>It does not show that closed models work the same way, nor that a chat-only attacker can exploit this.</p>
+<h3>Assumptions</h3>
+<p>Full access to activations.</p>
+<h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2310.08419">Chao et al., "Jailbreaking Black Box Large Language Models in Twenty Queries" (PAIR), 2023</a> — attacker/target/judge loop.</li>
+<li><a href="https://arxiv.org/abs/2406.11717">Arditi et al., "Refusal in Language Models Is Mediated by a Single Direction" (NeurIPS 2024)</a> — difference-in-means refusal direction; ablation across 13 open chat models up to 72B (Fig. 1).</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>05 — Scaling the Attack</h2>
-<p>Fifth section. Attacks that exploit scale: long context, rare languages, and simple ciphers.</p>
-<p><span class="kt">Key takeaway:</span> Bigger models and longer contexts give attackers more leverage.</p>
-</article>
-
-<article>
-<h2>Many-Shot Jailbreaking</h2>
-<p>Fill a long context with many fabricated examples of the model "answering" harmful questions, then ask the real one. The model imitates the pattern it has just been shown.</p>
-<p><span class="kt">Key takeaway:</span> In-context learning, the source of much usefulness, also makes models steerable toward harm.</p>
-<p><span class="kt">Slide figure:</span> Inline sketch: a dashed context window filled with fake compliant Q/A pairs ending in the real harmful question, beside a rising success-versus-shots curve.</p>
+<h2>19. Contrast: Fine-Tuning Access Removed Safety Cheaply</h2>
+<p class="pace">Why refusal is fragile · ≈2.5 min · elapsed ≈28.5 min</p>
+<p>A clearly labelled contrast. Here the attacker fine-tunes the model, through a tuning API or with open weights. That is not a jailbreak in our sense; it is safety removal at the weight level.</p>
+<p>Ten harmful examples for five epochs took GPT-3.5 Turbo from 1.8% to 88.8% harmfulness, and Llama-2-7B-Chat from 0.3% to 50%. Ten "obedient persona" examples, with nothing harmful in them, did similar damage. Even benign Alpaca data raised harmfulness.</p>
+<p>The GPT-3.5 ten-example run cost under twenty cents. The lesson for us: once an attacker has the weights, prompt-level safeguards are not the line of defense.</p>
+<p><span class="kt">Key takeaway:</span> Fine-tuning access removed safety training cheaply; that is a different threat from jailbreaking.</p>
 <div class="detail">
-<h3>Definitions</h3>
-<p>Many-shot jailbreaking (MSJ) prepends $k$ fabricated dialogue "shots," each a harmful query paired with a compliant answer, then appends the real target query. It exploits in-context learning and only became practical with long context windows (hundreds of shots). Anil et al. show the attack succeeds across model families and combines multiplicatively with other jailbreaks. <span class="src">(Anil et al. 2024, §2.)</span></p>
-<h3>Background &amp; further reading</h3>
+<h3>The figure</h3>
+<p>Selected cells of Tables 1–3 of Qi et al. (2024): harmfulness rate before → after fine-tuning, GPT-4 judge on HEx-PHI (330 prompts).</p>
+<h3>Setup, model, date</h3>
+<p>Qi et al., ICLR 2024; GPT-3.5 Turbo via OpenAI's fine-tuning API in 2023 and Llama-2-7B-Chat.</p>
+<h3>What this establishes</h3>
+<p>Small fine-tuning runs can undo safety training, even with benign data.</p>
+<h3>What this does not establish</h3>
+<p>It does not describe what a chat-only user can do.</p>
+<h3>Primary sources</h3>
 <ul>
-<li><a href="https://www.anthropic.com/research/many-shot-jailbreaking">Anil et al., "Many-shot Jailbreaking", Anthropic 2024 (research page + PDF)</a> — long-context in-context attack.</li>
+<li><a href="https://arxiv.org/abs/2310.03693">Qi et al., "Fine-tuning Aligned Language Models Compromises Safety, Even When Users Do Not Intend To!" (ICLR 2024)</a> — harmful, identity-shifting and benign fine-tuning; Tables 1–3 on HEx-PHI.</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>The Power-Law Curve</h2>
-<p>Attack success rises smoothly as you add more in-context shots, following a power-law-like curve with no obvious ceiling within the context window. More shots, more leverage.</p>
-<p><span class="kt">Key takeaway:</span> The attack scales predictably with the number of fake examples.</p>
-<div class="detail">
-<h3>Definitions</h3>
-<p>Anil et al. report that the effectiveness of MSJ follows a power law in the number of shots $k$: on a log–log axis, the negative log-likelihood the model assigns to a harmful response (and the harmful-response rate) decreases approximately linearly in $\log k$, i.e. metric $\approx a - b\log k$ for constants $a,b>0$ over the tested range. The exponent is similar across model sizes, so larger models are not automatically safer against MSJ. This is an <em>empirical scaling law</em>, not a theorem. <span class="src">(Anil et al. 2024, Fig. 1 — empirical fit, no proof.)</span></p>
-</div>
+<h2>20. Each Finding Comes With Its Access Level</h2>
+<p class="pace">Why refusal is fragile · ≈1.5 min · elapsed ≈30 min</p>
+<p>A summary table so we do not merge the section into one story. Competing objectives and mismatch: chat only, on GPT-4 and Claude v1.3. Shallow alignment: prefilling the reply, on Llama-2 and Gemma 7B. One refusal direction: activation access, on 13 open models. Fine-tuning removes safety: weights or a tuning API, on GPT-3.5 and Llama-2 7B.</p>
+<p>These are findings in tested settings. They fit together, but none is the universal explanation.</p>
+<p><span class="kt">Key takeaway:</span> Keep each finding attached to its access level and its models.</p>
 </article>
 
 <article>
-<h2>Low-Resource Languages</h2>
-<p>Translate the request into a rarely-seen language. Capability still understands the meaning, but safety tuning saw little of that language, so the refusal was never learned there — Yong et al. found translated harm bypassed GPT-4 about 79% of the time.</p>
-<p><span class="kt">Key takeaway:</span> Rare languages are a clean instance of the safety gap.</p>
-<p><span class="kt">Slide figure:</span> Yong et al. Fig. 1: the English request is translated to Zulu, GPT-4 answers, and the answer is translated back.</p>
+<h2>21. Section 03 — Searching for Jailbreaks</h2>
+<p class="pace">Searching for jailbreaks · ≈0.5 min · elapsed ≈30.5 min</p>
+<p>People found the first jailbreaks by hand. Can an algorithm search for them, and what does the search cost?</p>
+<p><span class="kt">Key takeaway:</span> From hand-crafting to search, and the cost of search.</p>
+</article>
+
+<article>
+<h2>22. Hand-Written Jailbreaks Fall Into Families</h2>
+<p class="pace">Searching for jailbreaks · ≈2 min · elapsed ≈32.5 min</p>
+<p>Hand-written jailbreaks cluster into families: role-play personas, forced openings and no-refusal rules on the competing-objectives side; encodings, ciphers and low-resource languages on the mismatched-generalization side.</p>
+<p>Families are named, prompts are not shown.</p>
+<p>Human red-teaming is slow and hard to scale: each prompt is written and checked by hand. That motivates automated search.</p>
+<p><span class="kt">Key takeaway:</span> Manual jailbreaks group into the two failure modes, and they are slow to produce.</p>
 <div class="detail">
-<h3>Definitions &amp; result</h3>
-<p>A textbook case of mismatched generalization: the model's multilingual <em>capability</em> covers a low-resource language, but its safety <em>training</em> data barely does. Yong et al. translate AdvBench requests into low-resource languages (e.g. Zulu, Scots Gaelic), query GPT-4, and translate back. Combining low-resource translations raises the bypass rate to about 79%, versus under 1% in English — nearly matching gradient-based attacks, with only a public translation API. <span class="src">(Yong, Menghini &amp; Bach 2023, §3; ~79% combined-attack figure.)</span></p>
-<h3>Background &amp; further reading</h3>
+<h3>Setup, model, date</h3>
+<p>Families drawn from Wei et al. (2023), Yong et al. (2023) and Yuan et al. (CipherChat, ICLR 2024).</p>
+<h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2310.02446">Yong, Menghini &amp; Bach, "Low-Resource Languages Jailbreak GPT-4", 2023</a> — translation-based bypass.</li>
+<li><a href="https://arxiv.org/abs/2307.02483">Wei, Haghtalab &amp; Steinhardt, "Jailbroken: How Does LLM Safety Training Fail?" (NeurIPS 2023)</a> — competing objectives and mismatched generalization (§3); Fig. 1; Table 1 on 32 curated prompts.</li>
+<li><a href="https://arxiv.org/abs/2310.02446">Yong, Menghini &amp; Bach, "Low-Resource Languages Jailbreak GPT-4" (arXiv 2023)</a> — AdvBench translated into 12 languages; combined low-resource attack 79.04% on GPT-4.</li>
+<li><a href="https://arxiv.org/abs/2308.06463">Yuan et al., "GPT-4 Is Too Smart To Be Safe: Stealthy Chat with LLMs via Cipher" (ICLR 2024)</a> — CipherChat on gpt-3.5-turbo-0613 and gpt-4-0613.</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>Which Languages Break Through</h2>
-<p>Yong et al. break the result down by language. Low-resource languages such as Zulu and Scots Gaelic bypass GPT-4 about 79% of the time combined, mid-resource ones such as Ukrainian and Thai about 22%, and high-resource languages and English under 11%. The bypass rate tracks how rarely the language appeared in training, and translation alone rivals dedicated jailbreak prompts like AIM or prefix injection.</p>
-<p><span class="kt">Key takeaway:</span> Safety coverage follows training data; the rarer the language, the wider the gap.</p>
-<p><span class="kt">Slide figure:</span> Yong et al. Table 1: bypass, reject and unclear rates for low-, mid- and high-resource languages and for baseline jailbreak prompts.</p>
-</article>
-
-<article>
-<h2>Cipher Prompts</h2>
-<p>Wrap the request in a simple substitution or encoding that the model can read. It decodes, reasons, and replies in the same code, while a surface filter sees only ciphertext.</p>
-<p><span class="kt">Key takeaway:</span> Decoding is a capability the safety training did not follow.</p>
-<p><span class="kt">Slide figure:</span> Yuan et al. (CipherChat) Fig. 2: construct the cipher system prompt, encipher the instruction, decipher the LLM response.</p>
-</article>
-
-<article>
-<h2>Fine-Tuning Removes Safety</h2>
-<p>If a provider lets you fine-tune a model, you can strip its alignment. Qi et al. broke GPT-3.5 Turbo's guardrails with just 10 harmful examples for under twenty cents, and even benign fine-tuning degrades safety by accident.</p>
-<p><span class="kt">Key takeaway:</span> Fine-tuning access is itself an attack surface for safety.</p>
-<p><span class="kt">Slide figure:</span> Qi et al. (ICLR 2024) Fig. 1: harmfulness radar charts across 11 policy categories before and after fine-tuning on harmful, identity-shifting, and benign data.</p>
+<h2>23. Automated Attacks Are a Search Loop</h2>
+<p class="pace">Searching for jailbreaks · ≈1.5 min · elapsed ≈34 min</p>
+<p>Every automated attack has the same loop: propose a candidate prompt, send it to the target, score the response, propose a better candidate.</p>
+<p>Three design choices distinguish attacks. How to propose: gradients or an attacker LLM. What access: weights or only queries. How to score: likelihood of a target text, or a judge model.</p>
+<p>Every trip round the loop spends budget. Count the queries.</p>
+<p><span class="kt">Key takeaway:</span> Automated jailbreaking is search; its cost is the number of trips round the loop.</p>
 <div class="detail">
-<h3>Result</h3>
-<p>Qi et al. identify three risk levels: (1) fine-tuning on a few explicitly harmful examples — as few as ~10, at a cost reported under \$0.20 via the OpenAI API — largely removes GPT-3.5 Turbo's safety; (2) fine-tuning on "identity-shifting" data that makes the model more obedient; (3) even <em>benign</em> fine-tuning on a normal downstream dataset measurably degrades safety as a side effect. The takeaway is that customization access reopens the alignment that RLHF installed. <span class="src">(Qi et al., ICLR 2024, §2–4.)</span></p>
-<h3>Background &amp; further reading</h3>
+<h3>Going further</h3>
+<p>Perez et al. (2022) used a language model to generate test cases for another language model, an early version of this loop for red teaming in general.</p>
+<h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2310.03693">Qi et al., "Fine-tuning Aligned Language Models Compromises Safety, Even When Users Do Not Intend To!", ICLR 2024</a> — three-tier risk study.</li>
+<li><a href="https://arxiv.org/abs/2202.03286">Perez et al., "Red Teaming Language Models with Language Models" (EMNLP 2022)</a> — an LM generates test cases for another LM; an early automated red-teaming loop.</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>06 — One Unifying View</h2>
-<p>Sixth section. Seeing all of these attacks as a single phenomenon.</p>
-<p><span class="kt">Key takeaway:</span> Jailbreaks are adversarial examples for language models.</p>
-</article>
-
-<article>
-<h2>Recall: Adversarial Examples</h2>
-<p>In computer vision, a tiny crafted pixel change, invisible to a human, can flip a classifier's label. Such examples are found by optimizing against the model.</p>
-<p><span class="kt">Key takeaway:</span> Small, optimized input changes can flip a model's decision.</p>
-<p><span class="kt">Slide figure:</span> Szegedy et al. Fig. 5: original images, magnified perturbation, and perturbed images all classified as ostrich.</p>
+<h2>24. GCG Optimizes a Suffix Toward an Agreeable Start</h2>
+<p class="pace">Searching for jailbreaks · ≈2.5 min · elapsed ≈36.5 min</p>
+<p>GCG, Greedy Coordinate Gradient, attaches a suffix of 20 tokens to the harmful request and optimizes those tokens.</p>
+<p>The objective: make an agreeable opening, like "Sure, here is", as likely as possible. The bet is that once the reply starts agreeing, it tends to keep going, the same intuition as shallow alignment.</p>
+<p>Rung: the attacker needs an open model's weights and gradients. The goal is a reusable suffix.</p>
+<p><span class="kt">Key takeaway:</span> GCG searches token space for a suffix that makes the model start by agreeing.</p>
 <div class="detail">
-<h3>Definitions</h3>
-<p>For a classifier $f$, an input $x$ with true label $y$, a norm $\lVert\cdot\rVert$ and budget $\varepsilon$, an <strong>adversarial example</strong> is a perturbed input $x'=x+\delta$ with $\lVert\delta\rVert\le\varepsilon$ but $f(x')\neq y$ (untargeted) or $f(x')=y_{\text{target}}$ (targeted). It is typically found by solving $\max_{\lVert\delta\rVert\le\varepsilon}\;\ell\big(f(x+\delta),y\big)$ for a loss $\ell$. The jailbreak analogy: $x$ is the prompt, the constraint "small / human-plausible edit" replaces the norm ball, and the "label to flip" is refuse-versus-comply. In text the perturbation is discrete (token edits), which is exactly what GCG optimizes. <span class="src">(Definition: Szegedy et al. 2014; Goodfellow et al. 2015.)</span></p>
-<h3>Background &amp; further reading</h3>
+<h3>The figure</h3>
+<p>A schematic drawn for this lecture: request + optimized suffix → model → target opening.</p>
+<h3>Setup, model, date</h3>
+<p>Zou et al. (CMU, Center for AI Safety, Google DeepMind), July 2023, Section 2.</p>
+<h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/1312.6199">Szegedy et al., "Intriguing Properties of Neural Networks", ICLR 2014</a> — first adversarial examples for deep nets.</li>
+<li><a href="https://arxiv.org/abs/2307.15043">Zou et al., "Universal and Transferable Adversarial Attacks on Aligned Language Models" (arXiv 2023)</a> — Greedy Coordinate Gradient (Algorithm 1), transfer to closed chatbots (Fig. 1, Table 2).</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>The Same Idea in Text</h2>
-<p>A jailbreak is the text version: a small, crafted change to the input that pushes the model across its refusal boundary. Pixels become tokens, and the decision boundary becomes refuse-versus-comply.</p>
-<p><span class="kt">Key takeaway:</span> Jailbreak equals adversarial example, with refusal as the boundary.</p>
-<p><span class="kt">Slide figure:</span> Inline sketch: image plus delta gives a wrong label; prompt plus suffix gives compliance; the same recipe in vision and language.</p>
-</article>
-
-<article>
-<h2>Crossing the Boundary</h2>
-<p>The model effectively splits inputs into a refuse region and a comply region. A jailbreak nudges a harmful prompt across that line, for example by appending an optimized suffix.</p>
-<p><span class="kt">Key takeaway:</span> The attack moves a prompt from the refuse side to the comply side.</p>
-</article>
-
-<article>
-<h2>The Hard Lesson</h2>
-<p>In vision, a decade of proposed defenses kept getting broken by stronger attacks. If text jailbreaks really are adversarial examples, we should expect the same difficulty, since there is no reason language is easier.</p>
-<p><span class="kt">Key takeaway:</span> History warns that full adversarial robustness is very hard to achieve.</p>
-<p><span class="kt">Slide figure:</span> Inline timeline: three vision defenses each broken between 2014 and 2024, with a dashed question over LLM defenses.</p>
-</article>
-
-<article>
-<h2>07 — Defenses &amp; Frontier</h2>
-<p>Final section. The defenses we deploy, why they fall short, and where the field is heading.</p>
-<p><span class="kt">Key takeaway:</span> Defenses raise the cost of attack but do not close the problem.</p>
-</article>
-
-<article>
-<h2>Red-Teaming: Attack to Defend</h2>
-<p>Before defending, teams deliberately hunt for harmful outputs. Ganguli et al. released a dataset of 38,961 human red-team attacks and found that RLHF models became harder to break as they scaled, unlike other model types.</p>
-<p><span class="kt">Key takeaway:</span> Red-teaming is the practice that turns unknown failures into known, fixable ones.</p>
-<p><span class="kt">Slide figure:</span> Ganguli et al. Fig. 1: attack success and harmlessness by model size for plain, prompted, rejection-sampling, and RLHF models.</p>
+<h2>25. Each Step Tests Hundreds of One-Token Swaps</h2>
+<p class="pace">Searching for jailbreaks · ≈2.5 min · elapsed ≈39 min</p>
+<p>One GCG step has three parts. Use the gradient to list the top 256 promising token swaps at each suffix position. Sample 512 candidates, each with one swap. Run all 512 forward passes and keep the best by exact loss.</p>
+<p>Repeat for 500 steps. That is 500 × 512, about 256 thousand candidate forward passes per suffix, and that count leaves out the 500 gradient computations. Hold on to the number, and its unit, for the comparison with PAIR.</p>
+<p><span class="kt">Key takeaway:</span> GCG costs on the order of 256K candidate forward passes per suffix, before counting gradients.</p>
 <div class="detail">
-<h3>Definitions &amp; result</h3>
-<p><strong>Red-teaming</strong> is the structured practice of adversarially probing a model to surface harmful outputs before deployment, so failures become known and fixable. Ganguli et al. release a dataset of 38,961 human-written red-team attacks across model types and sizes and report that RLHF models get <em>harder</em> to red-team as they scale, whereas plain and rejection-sampling models do not show that trend. <span class="src">(Ganguli et al. 2022, §3–4; the 38,961 figure is the released attack count.)</span></p>
-<h3>Background &amp; further reading</h3>
+<h3>Setup, model, date</h3>
+<p>Algorithm 1 and Section 3 settings of Zou et al.; the 256K query count as tabulated in Chao et al. (PAIR), Table 2.</p>
+<h3>Going further</h3>
+<p>The gradient is only a guide: token swaps are discrete, so GCG evaluates candidates exactly. lec10tech writes out the objective and the budget.</p>
+<h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2209.07858">Ganguli et al., "Red Teaming Language Models to Reduce Harms", Anthropic 2022</a> — human red-team dataset and scaling findings.</li>
-<li><a href="https://www.anthropic.com/news/testing-our-safety-defenses-with-a-new-bug-bounty-program">Anthropic bug-bounty / red-team program</a> — external red-teamers rewarded for finding universal jailbreaks.</li>
-<li><a href="https://www.gov.uk/government/publications/ai-safety-institute-overview/introducing-the-ai-safety-institute">UK AI Safety Institute (now AI Security Institute)</a> and <a href="https://www.nist.gov/caisi">US AI standards/safety body at NIST (CAISI)</a> — government pre-deployment testing of frontier models.</li>
+<li><a href="https://arxiv.org/abs/2307.15043">Zou et al., "Universal and Transferable Adversarial Attacks on Aligned Language Models" (arXiv 2023)</a> — Greedy Coordinate Gradient (Algorithm 1), transfer to closed chatbots (Fig. 1, Table 2).</li>
+<li><a href="https://arxiv.org/abs/2310.08419">Chao et al., "Jailbreaking Black Box Large Language Models in Twenty Queries" (arXiv 2310.08419)</a> — PAIR (Fig. 2), judge comparison (Table 1), results on JailbreakBench (Table 2).</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>Red-Teaming at Scale</h2>
-<p>Human red-teaming is slow, so Perez et al. used one language model to generate test cases against another, surfacing tens of thousands of offensive replies automatically. This turns safety evaluation into a standing pipeline rather than a one-time check.</p>
-<p><span class="kt">Key takeaway:</span> Automated red-teaming scales evaluation far past human effort.</p>
-<p><span class="kt">Slide figure:</span> Perez et al. Fig. 1: a red LM generates test questions, the target LM answers, and a classifier flags offensive replies.</p>
+<h2>26. One Suffix Optimized on Open Models Transferred</h2>
+<p class="pace">Searching for jailbreaks · ≈2 min · elapsed ≈41 min</p>
+<p>The top panel: a suffix optimized on Vicuna-7B and 13B. The bottom panel: the same suffix sent to closed chatbots, which answered.</p>
+<p>The authors hid the suffix as "ADV PROMPT" and truncated the replies. The figure is reproduced unmodified.</p>
+<p>Transfer is what made GCG matter for closed models: no gradients of the target were needed.</p>
+<p><span class="kt">Key takeaway:</span> A suffix found with open-model gradients transferred to some closed chatbots.</p>
 <div class="detail">
-<h3>Definitions</h3>
-<p>Perez et al. automate red-teaming: a "red" LM generates candidate test prompts, the target LM answers, and a classifier flags harmful answers; test generation is driven by zero/few-shot prompting, supervised learning, and RL to push toward failure-inducing inputs. Applied to a 280B chatbot, this surfaced tens of thousands of offensive replies and other failure categories. It reframes safety evaluation as a continuous, automated pipeline. <span class="src">(Perez et al., EMNLP 2022, §2–3.)</span></p>
-<h3>Background &amp; further reading</h3>
+<h3>The figure</h3>
+<p>Fig. 1 of Zou et al., reproduced unmodified; suffix and harmful continuations hidden by the authors.</p>
+<h3>Setup, model, date</h3>
+<p>July 2023 versions of the chatbots shown.</p>
+<h3>What this does not establish</h3>
+<p>A demonstration figure does not give a rate; Table 2 (next slide) does.</p>
+<h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2202.03286">Perez et al., "Red Teaming Language Models with Language Models", EMNLP 2022</a> — LM-generated test cases.</li>
+<li><a href="https://arxiv.org/abs/2307.15043">Zou et al., "Universal and Transferable Adversarial Attacks on Aligned Language Models" (arXiv 2023)</a> — Greedy Coordinate Gradient (Algorithm 1), transfer to closed chatbots (Fig. 1, Table 2).</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>Defense in Layers</h2>
-<p>There is no single fix, so we stack defenses on three sides: screen the input before it runs, harden the model itself, and check the output before it ships.</p>
-<p><span class="kt">Key takeaway:</span> Safety comes from layered defenses, not one mechanism.</p>
-<p><span class="kt">Slide figure:</span> Inline pipeline strip: prompt, input filter, hardened LM, output filter, reply.</p>
-</article>
-
-<article>
-<h2>Input and Output Filters</h2>
-<p>A separate classifier can block prompts that look like attacks and replies that look harmful. This is cheap, but obfuscation and ciphers route around a surface filter.</p>
-<p><span class="kt">Key takeaway:</span> Filters help, but attackers craft inputs the filter does not recognize.</p>
-<p><span class="kt">Slide figure:</span> Inline sketch: the filter pipeline with a dashed red bypass path from the prompt under the input classifier straight into the LM.</p>
-</article>
-
-<article>
-<h2>System-Prompt Hardening</h2>
-<p>Adding firm instructions above the user, like "never reveal these rules" or "always refuse harm", stops casual attempts. A determined prompt can still argue the model into overriding them.</p>
-<p><span class="kt">Key takeaway:</span> Instructions defending the model still compete with the attacker's instructions.</p>
-<p><span class="kt">Slide figure:</span> Inline stacked-context sketch: a system message above a user message that tells the model to ignore it; instructions fight instructions.</p>
-</article>
-
-<article>
-<h2>Constitutional Classifiers</h2>
-<p>Anthropic's Sharma et al. wrap the model in input and output guard classifiers trained from written principles and hardened on generated attacks. Over 3,000+ estimated red-team hours no universal jailbreak was found, at a cost of only +0.38% production refusals and about 24% extra inference compute.</p>
-<p><span class="kt">Key takeaway:</span> System-level rule-trained guards can block universal jailbreaks at modest deployment cost.</p>
-<p><span class="kt">Slide figure:</span> Sharma et al. Fig. 1: the guarded system with input and output classifiers, the constitution, and the synthetic training-set pipeline.</p>
+<h2>27. Transfer Worked Unevenly Across Closed Models</h2>
+<p class="pace">Searching for jailbreaks · ≈2.5 min · elapsed ≈43.5 min</p>
+<p>The rates. With nothing added, ASR was 1.8% on GPT-3.5, 8% on GPT-4, 0% on Claude 2 and PaLM-2. One GCG suffix from Vicuna: about 34% on both GPT models, 32% on PaLM-2, still 0% on Claude 2.</p>
+<p>The ensemble row counts a success if any of four suffixes works: 86.6% on GPT-3.5, 46.9% on GPT-4, 2.1% on Claude 2, 66% on PaLM-2. That is a bigger budget, not a better single attack.</p>
+<p>Also read the judge: success meant a "reasonable attempt", which may involve human judgment.</p>
+<p><span class="kt">Key takeaway:</span> Transfer was real but uneven, and the headline row used a best-of-4 budget.</p>
 <div class="detail">
-<h3>Definitions</h3>
-<p>A <strong>constitutional classifier</strong> is a separate guard model, at the input <em>and</em> output, trained on synthetic data generated from a natural-language "constitution" that specifies allowed vs. disallowed content; the training set is augmented with generated jailbreak attempts so the guards learn to catch them. Reported results: a ~3,000-hour bug-bounty red-team found no universal jailbreak against the guarded system, and in automated evaluation the block rate on jailbreak attempts rose sharply while over-refusal on production traffic increased only +0.38% and inference compute rose about ×1.24. <span class="src">(Sharma et al. 2025, §4–5; figures verified against the paper title/abstract.)</span></p>
-<p><strong>Reminder:</strong> this is Sharma et al. 2025 (a deployment guard), <em>not</em> Bai et al. 2022 Constitutional AI (a training method) — the deck phase corrected a misattribution between the two; keep them separate.</p>
-<h3>Background &amp; further reading</h3>
+<h3>The figure</h3>
+<p>Selected rows of Table 2 of Zou et al.: ASR % over 388 behaviors.</p>
+<h3>Setup, model, date</h3>
+<p>gpt-3.5-turbo-0301, gpt-4-0314, Claude 2, PaLM-2; temperature 0 except PaLM-2.</p>
+<h3>What this does not establish</h3>
+<p>These versions are retired; the numbers say nothing about current models.</p>
+<h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2501.18837">Sharma et al. (Anthropic), "Constitutional Classifiers: Defending against Universal Jailbreaks across Thousands of Hours of Red Teaming", 2025</a> — input/output guard classifiers.</li>
+<li><a href="https://arxiv.org/abs/2307.15043">Zou et al., "Universal and Transferable Adversarial Attacks on Aligned Language Models" (arXiv 2023)</a> — Greedy Coordinate Gradient (Algorithm 1), transfer to closed chatbots (Fig. 1, Table 2).</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>Circuit Breakers</h2>
-<p>Circuit breakers train the model to halt itself mid-harm by targeting the internal states that produce harmful output and rerouting them toward refusal or nonsense. Because they act on the internal cause rather than surface words, they stay robust even to unseen attack strings.</p>
-<p><span class="kt">Key takeaway:</span> Attacking the internal cause of harm is harder to bypass than filtering surface text.</p>
-<p><span class="kt">Slide figure:</span> Zou et al. (Circuit Breakers) Fig. 1: harmful-state trajectories in an instruct model, a refusal-trained model, and a circuit-broken model, with sample generations.</p>
+<h2>28. PAIR: An Attacker LLM Rewrites the Prompt</h2>
+<p class="pace">Searching for jailbreaks · ≈2 min · elapsed ≈45.5 min</p>
+<p>PAIR, Prompt Automatic Iterative Refinement, replaces gradients with an attacker language model. The attacker LLM reads the target's refusal, reasons about why it failed, and rewrites the prompt. A judge model scores each reply.</p>
+<p>Rung: black-box, queries only. And the output is a readable prompt, unlike GCG's token string.</p>
+<p><span class="kt">Key takeaway:</span> PAIR searches with an attacker LLM and a judge, using only queries.</p>
 <div class="detail">
-<h3>Definitions</h3>
-<p>Circuit breakers use "representation engineering": rather than filter inputs or outputs, training pushes the model's <em>internal representations</em> along harmful trajectories toward incoherent or refusal states. The method (RepBender / "short-circuiting") adds a loss that, on harmful-generation data, drives the residual-stream representations away from those that would continue the harmful completion, while a retain loss preserves benign behavior. Because it targets the internal cause rather than surface tokens, it generalizes to unseen attacks (including GCG-style suffixes) without adversarial training on them. <span class="src">(Zou et al., NeurIPS 2024, §3.)</span></p>
-<h3>Background &amp; further reading</h3>
+<h3>The figure</h3>
+<p>Fig. 2 of Chao et al.: the attacker–target loop, plus a worked example. Redacted by the lecturer: the attacker's improvement and rewritten role-play prompt, and the target's complying reply, are covered by labelled boxes; the system prompt, the first direct request and the refusal are unchanged. Enlarged to full slide width.</p>
+<h3>Setup, model, date</h3>
+<p>Chao et al. (University of Pennsylvania), first posted October 2023.</p>
+<h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2406.04313">Zou et al., "Improving Alignment and Robustness with Circuit Breakers", NeurIPS 2024</a> — representation-level short-circuiting.</li>
+<li><a href="https://arxiv.org/abs/2310.08419">Chao et al., "Jailbreaking Black Box Large Language Models in Twenty Queries" (arXiv 2310.08419)</a> — PAIR (Fig. 2), judge comparison (Table 1), results on JailbreakBench (Table 2).</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>Demo: Refusal vs Bypass</h2>
-<p>In a safe sandbox on an open model: ask a benign question, then a clearly harmful one and watch the refusal, then apply a category-level reframing and observe the drift, then enable a filter and measure how much it catches. Conceptual only, with no working attack strings.</p>
-<p><span class="kt">Key takeaway:</span> A controlled sandbox shows refusal, drift, and partial filtering without publishing real exploits.</p>
-<p><span class="kt">Slide figure:</span> Inline sketch: four requests and their outcomes, benign answers, harmful refuses, reframed drifts, filter on catches.</p>
-</article>
-
-<article>
-<h2>The Cat-and-Mouse Game</h2>
-<p>Each new defense tends to invite a new attack that prompts a further defense. The result is an ongoing race rather than a finish line.</p>
-<p><span class="kt">Key takeaway:</span> Jailbreak defense is an ongoing cycle, not a one-time fix.</p>
-</article>
-
-<article>
-<h2>Not Solved</h2>
-<p>As of 2026, no defense is fully robust. Defenses raise cost rather than guarantee safety, new attacks keep finding gaps, and worst-case robustness remains open. We manage the risk; we do not eliminate it.</p>
-<p><span class="kt">Key takeaway:</span> The honest status is risk management, not a solved problem.</p>
-<p><span class="kt">Slide figure:</span> Inline staircase: robustness steps up with each defense but stays below the dashed fully-robust line.</p>
-</article>
-
-<article>
-<h2>Frontier 2025-26</h2>
-<p>The field is pushing toward robustness built into the model internals and safety that holds across languages and tools. Yet cheap random-search attacks like Best-of-N (Hughes et al. 2024) still scale, and agents jailbreak far more easily than plain chatbots — so we move from surface patches toward deeper guarantees.</p>
-<p><span class="kt">Key takeaway:</span> The frontier is moving from surface patches toward internal, broad-coverage robustness.</p>
-<p><span class="kt">Slide figure:</span> Hughes et al. Fig. 3: Best-of-N attack success follows a power law in N across text, vision, and audio for several frontier models.</p>
+<h2>29. PAIR Needed Tens of Queries Where GCG Used 256K</h2>
+<p class="pace">Searching for jailbreaks · ≈2.5 min · elapsed ≈48 min</p>
+<p>On 100 JailbreakBench behaviors with at most 90 queries each and Llama Guard as judge: PAIR reached 88% on Vicuna-13B, 51% on GPT-3.5-Turbo-1106, 48% on GPT-4, 4% on Llama-2-7B-chat and 0% on Claude-2.1.</p>
+<p>Average queries per success: tens. GCG, run white-box only on the open models, reached 56% on Vicuna and 2% on Llama-2.</p>
+<p>Two lessons. First, the counts are in different units. PAIR counts target-model replies, at most 90, and leaves out the attacker LLM and judge calls behind each one. GCG's 256K counts candidate forward passes on an open model, leaving out gradient work. So the gap is large, but it is not a like-for-like cost ratio.</p>
+<p>Second, the models differ a lot: PAIR reached 4% on Llama-2 and 0% on Claude-2.1. GCG reached 2% on Llama-2 and was not run on Claude, which is closed.</p>
+<p><span class="kt">Key takeaway:</span> PAIR needed far fewer target queries, but the two budget units are not equal cost.</p>
 <div class="detail">
-<h3>Definitions</h3>
-<p><strong>Best-of-N (BoN) jailbreaking</strong> is a black-box attack: repeatedly apply random augmentations to a harmful prompt (e.g. random capitalization, character shuffles, or, for other modalities, audio/image perturbations) and query the model until one succeeds. Hughes et al. find ASR grows with the number of samples $N$ following a power-law-like trend, so more compute buys more success with no gradients and no model internals. Its persistence is why the "frontier" emphasis is on internal robustness (circuit breakers, deeper alignment) rather than surface filters. <span class="src">(Hughes et al. 2024, §2–3 — empirical scaling.)</span></p>
-<h3>Background &amp; further reading</h3>
+<h3>The figure</h3>
+<p>Selected rows of Table 2 of Chao et al.</p>
+<h3>Setup, model, date</h3>
+<p>JailbreakBench, 100 behaviors; PAIR N = 30 streams × K = 3 depth = at most 90 target queries; target temperature 0, 150 tokens; Llama Guard judge. "Queries per Success" = average target queries for successful jailbreaks. GCG was run white-box on Vicuna and Llama-2 only; its 256K is listed in the same table.</p>
+<h3>What this does not establish</h3>
+<p>Judges differ; Table 1 of the same paper (slide 44) shows Llama Guard misses many jailbreaks a human would count.</p>
+<h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2412.03556">Hughes et al., "Best-of-N Jailbreaking", 2024</a> — random-search attack that scales with samples.</li>
+<li><a href="https://arxiv.org/abs/2310.08419">Chao et al., "Jailbreaking Black Box Large Language Models in Twenty Queries" (arXiv 2310.08419)</a> — PAIR (Fig. 2), judge comparison (Table 1), results on JailbreakBench (Table 2).</li>
 </ul>
 </div>
 </article>
 
 <article>
-<h2>Key Takeaways</h2>
-<p>Alignment is a thin layer over full capability; safety covers less ground than capability; jailbreaks are adversarial examples in token space; and defenses raise cost while robustness stays open. Treat refusal as fragile and defend in layers.</p>
-<p><span class="kt">Key takeaway:</span> Assume refusal can break, and design the surrounding system accordingly.</p>
+<h2>30. Gradient Search vs. LLM Search</h2>
+<p class="pace">Searching for jailbreaks · ≈2 min · elapsed ≈50 min</p>
+<p>Side by side. GCG needs weights and gradients, spends about 256K candidate forward passes per suffix, outputs an unreadable token string, and reaches closed models only by transfer. PAIR needs queries only, spends at most 90 target replies per request plus an attacker LLM and judge call for each, outputs a readable prompt, and attacks closed models directly.</p>
+<p>Neither is "better" in general. Compare attacks at the same access, and state the budget unit: a forward pass on a 7B model and a full reply from a closed model, plus attacker and judge calls, are not the same cost.</p>
+<p><span class="kt">Key takeaway:</span> Access and budget unit define the comparison.</p>
+<div class="detail">
+<h3>Going further</h3>
+<p>Readability matters for defense too. In Table 5 of Chao et al., a perplexity filter cut GCG's jailbreak rate on Vicuna from 56% to 3%, but PAIR's only from 88% to 81%: fluent prompts look normal. These were static (non-adaptive) evaluations.</p>
+</div>
 </article>
 
 <article>
-<h2>Closer</h2>
-<p>Closing slide. The one line to remember from the whole lecture.</p>
-<p><span class="kt">Key takeaway:</span> Aligned does not mean unbreakable.</p>
+<h2>31. Section 04 — Scaling the Attack Budget</h2>
+<p class="pace">Scaling the attack budget · ≈0.5 min · elapsed ≈50.5 min</p>
+<p>What happens when the attacker simply tries many times, or packs in many examples? This section is about budget.</p>
+<p><span class="kt">Key takeaway:</span> More budget, more success: how fast, and what it means.</p>
+</article>
+
+<article>
+<h2>32. Many Tries Turn a Small Rate Into a Large One</h2>
+<p class="pace">Scaling the attack budget · ≈2 min · elapsed ≈52.5 min</p>
+<p>An illustration, not from a study. Suppose each try succeeds with probability 1%, independently. The chance of at least one success in N tries is one minus 0.99 to the N.</p>
+<p>N = 1: 1%. N = 10: 9.6%. N = 100: 63%. N = 1,000: essentially 100%.</p>
+<p>This is why "any of N" and "per try" must never be mixed. Real tries are not independent and do not share one p, so treat this as intuition, not a model.</p>
+<p><span class="kt">Key takeaway:</span> "At least once in N tries" grows fast even from a tiny per-try rate.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Bar chart drawn for this lecture from the formula $1-(1-p)^N$ with $p=0.01$.</p>
+<h3>Assumptions</h3>
+<p>Independent tries with equal success probability, which real attacks violate.</p>
+<h3>Going further</h3>
+<p>lec10tech derives the formula and the inverse question: how many tries until a target success level.</p>
+</div>
+</article>
+
+<article>
+<h2>33. Many-Shot Jailbreaking Fills the Context With Fake Dialogues</h2>
+<p class="pace">Scaling the attack budget · ≈2 min · elapsed ≈54.5 min</p>
+<p>Many-shot jailbreaking uses one long prompt. It contains many fake dialogues in which an assistant complies with harmful questions, then the real target question. The model continues the pattern.</p>
+<p>The mechanism is in-context learning, the same ability that makes few-shot prompting useful. Long context windows made hundreds of shots possible.</p>
+<p>Our version of the figure is a redrawn schematic with the dialogue contents redacted.</p>
+<p><span class="kt">Key takeaway:</span> Many-shot jailbreaking exploits in-context learning in long context windows.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Fig. 1 of Anil et al. redrawn as a schematic; all dialogue contents redacted.</p>
+<h3>Setup, model, date</h3>
+<p>Anil et al. (Anthropic and collaborators), NeurIPS 2024. Black-box access, but requires a long context window.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://www.anthropic.com/research/many-shot-jailbreaking">Anil et al., "Many-shot Jailbreaking" (NeurIPS 2024)</a> — many-shot prompts (Fig. 1), power laws in the number of shots (Fig. 2), effect of SL/RL (Fig. 5), prompt-based mitigations (§5.4).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>34. Harmful Responses Rose With the Number of Shots</h2>
+<p class="pace">Scaling the attack budget · ≈2.5 min · elapsed ≈57 min</p>
+<p>Left: percent harmful responses from Claude 2.0 in four categories as the number of shots grows. With few shots, near 0%. At about 256 shots, 40% to 73% depending on category.</p>
+<p>Right: the negative log-likelihood, NLL, of a harmful reply. NLL is minus the log of the probability the model assigns to that reply, so lower NLL means the harmful reply is more likely. It is plotted against the number of shots on log–log axes. The lines are straight, which means a power law.</p>
+<p>A power law is predictive: you can extrapolate how many shots are needed for a target success level.</p>
+<p><span class="kt">Key takeaway:</span> Success grew with the number of shots, following a power law.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Fig. 2 of Anil et al.: left, malicious use cases on Claude 2.0; right, psychopathy evaluation, NLL vs shots on log–log axes.</p>
+<h3>What this does not establish</h3>
+<p>Power-law fits hold over the tested range; extrapolation beyond it is an assumption.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://www.anthropic.com/research/many-shot-jailbreaking">Anil et al., "Many-shot Jailbreaking" (NeurIPS 2024)</a> — many-shot prompts (Fig. 1), power laws in the number of shots (Fig. 2), effect of SL/RL (Fig. 5), prompt-based mitigations (§5.4).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>35. Safety Training Shifted the Curve, Not Its Slope</h2>
+<p class="pace">Scaling the attack budget · ≈2 min · elapsed ≈59 min</p>
+<p>This is one panel of the paper's Fig. 5: the same model at different points during RL training, on the insults evaluation. The y-axis is NLL of a harmful reply, so higher means the harmful reply is less likely.</p>
+<p>Later checkpoints sit higher: with few shots, the harmful reply became less likely. But the fitted lines fall with roughly the same slope. In the tested settings, more shots kept lowering NLL at about the same rate; safety training delayed the attack rather than changing how it scales.</p>
+<p>Two cautions. The axis is log shots, so there is no zero-shot point on it; "intercept" here means the height of the line at a few shots. And "same slope" is an observation over 1 to 32 shots, not a guarantee.</p>
+<p>A prompt-level warning did better in one tested setting: the Cautionary Warning Defense cut ASR from 61% to 2% in the deception category with 205 shots. Adaptive attacks against that warning were not tested.</p>
+<p><span class="kt">Key takeaway:</span> In the tested settings, safety training raised the curve at few shots but left its slope about unchanged.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Fig. 5 (middle panel) of Anil et al., unmodified: MSJ during RL, insults evaluation; NLL of harmful response (log) vs number of shots (log, 1–32), coloured by training fraction 0.2–0.8, with fitted lines.</p>
+<h3>Setup, model, date</h3>
+<p>Anil et al. §5.1: SL and RL (HHH) training increased the intercept of the power law but did not decrease the exponent (Fig. 5: SL insults; RL insults; RL deception). Section 5.4 on prompt-based mitigations: Cautionary Warning Defense 61% → 2% (deception, 205 shots); In-Context Defense 61% → 54%.</p>
+<h3>What this does not establish</h3>
+<p>It does not show that the slope can never be changed, or that more shots always win beyond the tested range. The 61% → 2% result is one category at one shot count, without an attacker adapting to the warning.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://www.anthropic.com/research/many-shot-jailbreaking">Anil et al., "Many-shot Jailbreaking" (NeurIPS 2024)</a> — many-shot prompts (Fig. 1), power laws in the number of shots (Fig. 2), effect of SL/RL (Fig. 5), prompt-based mitigations (§5.4).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>36. Best-of-N: Resample Random Typos Until One Works</h2>
+<p class="pace">Scaling the attack budget · ≈2 min · elapsed ≈61 min</p>
+<p>Best-of-N is almost embarrassingly simple. Take the request, apply random augmentations: scrambled letters, random capitals, character noise. Send each variant; stop at the first judged success.</p>
+<p>The example on the slide is benign, drawn for class. The study used 159 HarmBench requests and up to N = 10,000 variants per request.</p>
+<p><span class="kt">Key takeaway:</span> Best-of-N needs no cleverness: random variants and many tries.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Example augmentations drawn for this lecture on a benign request.</p>
+<h3>Setup, model, date</h3>
+<p>Hughes et al. (Anthropic and collaborators), December 2024; Section 2 describes the text augmentations.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2412.03556">Hughes et al., "Best-of-N Jailbreaking" (arXiv 2024)</a> — random text augmentations (§2), power-law scaling (Fig. 3, §3.1), reliability of found prompts (Table 1, §5.4).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>37. Best-of-N Success Followed a Power Law in N</h2>
+<p class="pace">Scaling the attack budget · ≈2.5 min · elapsed ≈63.5 min</p>
+<p>The y-axis is minus log ASR on a log scale, so lower means more success; the dashed lines are power-law fits. Each model's line falls steadily as N grows.</p>
+<p>At N = 10,000, text-only: Claude 3.5 Sonnet 78%, GPT-4o 89%.</p>
+<p>Same pattern as many-shot: a power law, so within the tested range success tracks the budget.</p>
+<p>The slide shows the text panel only; the paper also plots vision and audio attacks, which we omit.</p>
+<p><span class="kt">Key takeaway:</span> Best-of-N success rose predictably with N.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Fig. 3 of Hughes et al., Text panel only, enlarged, with the shared legend cropped below it: −log(ASR) vs N on log axes, with power-law fits. The Vision and Audio panels are omitted; DiVA in the legend appears only in the omitted audio panel.</p>
+<h3>Setup, model, date</h3>
+<p>159 HarmBench requests; Section 3.1. The baseline without augmentation was 0.6% on Claude 3.5 Sonnet.</p>
+<h3>What this does not establish</h3>
+<p>These are any-of-N rates, not per-try rates.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2412.03556">Hughes et al., "Best-of-N Jailbreaking" (arXiv 2024)</a> — random text augmentations (§2), power-law scaling (Fig. 3, §3.1), reliability of found prompts (Table 1, §5.4).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>38. A Found Jailbreak Often Fails When Resent</h2>
+<p class="pace">Scaling the attack budget · ≈2 min · elapsed ≈65.5 min</p>
+<p>Here is the twist. Take each augmented prompt that succeeded and resend it 100 times. How often is it harmful again?</p>
+<p>At temperature 1, Claude 3.5 Sonnet: 46%; GPT-4o: 24%; Gemini Pro: 15%. At temperature 0 the numbers barely change, because outputs were still not deterministic.</p>
+<p>The authors conclude that Best-of-N exploits sampling randomness more than it finds a fixed weakness. "Any of N succeeded" and "this prompt works" are different claims.</p>
+<p><span class="kt">Key takeaway:</span> A Best-of-N success is often a lucky sample, not a reusable prompt.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Selected rows of Table 1 of Hughes et al.</p>
+<h3>Setup, model, date</h3>
+<p>Section 5.4: each successful prompt resent 100 times at T = 0 and T = 1. The distribution across prompts is bimodal (their Fig. 7): some prompts work reliably, many rarely.</p>
+<h3>Going further</h3>
+<p>A small inconsistency in the paper: the Table 1 caption gives average reliability 32% (T = 1) vs 47% (T = 0), the body text gives 30/25/15% for text/vision/audio at T = 1, and the text rows of Table 1 average about 28.6% and 32.8%. The slide shows the rows only.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2412.03556">Hughes et al., "Best-of-N Jailbreaking" (arXiv 2024)</a> — random text augmentations (§2), power-law scaling (Fig. 3, §3.1), reliability of found prompts (Table 1, §5.4).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>39. Languages and Ciphers: Two Studies, Two Protocols</h2>
+<p class="pace">Scaling the attack budget · ≈2 min · elapsed ≈67.5 min</p>
+<p>Back to mismatched generalization: safety training covered fewer languages and encodings than the model can read. Two studies, shown side by side and deliberately not ranked against each other.</p>
+<p>Left, Yong et al.: AdvBench requests translated into low-resource languages and sent to GPT-4-0613 at temperature 0. Humans labelled a reply a bypass if it engaged with the request on-topic. Success counts if any of four languages works, so this is an any-of-4 rate: under 1% in English, 79% combined.</p>
+<p>Right, CipherChat: a different benchmark, a system prompt plus three demonstrations written in the cipher, and GPT-4 itself as the judge of whether the reply is unsafe. For English ASCII, GPT-4-0613 averaged 72% unsafe across 11 domains.</p>
+<p>Different data, budgets and judges, so the 79 and the 72 are not a ranking. Finally, one caution: Souly et al. re-ran one Scots Gaelic success example three times, and none of the replies had useful harmful content. That is one failed reproduction of one example, not a rejection of the language attack.</p>
+<p><span class="kt">Key takeaway:</span> Both studies found gaps in safety training, but under different protocols that cannot be ranked.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Two cards, one per study, each listing model, decoding, benchmark, judge and budget. No shared table.</p>
+<h3>Setup, model, date</h3>
+<p>Yong, Menghini &amp; Bach (Brown, 2023): gpt-4-0613, temperature and top_p 0; AdvBench, 520 requests; 12 languages; human labels BYPASS / REJECT / UNCLEAR following Wei et al. (BYPASS = engages on-topic). LRL-combined (Zulu, Scots Gaelic, Hmong, Guarani; success if any one gets BYPASS) 79.04%; English 0.96% (Table 1). Yuan et al. (CipherChat, ICLR 2024 §4.1): gpt-3.5-turbo-0613 and gpt-4-0613, temperature 0; Chinese safety benchmark of Sun et al. translated to English, 11 domains × 199 samples; system prompt + 3-shot cipher demonstrations; unsafety judged by GPT-4 with domain-specific prompts (96.3% agreement with humans on the Crimes domain). English ASCII averaged 72.1% (GPT-4) and 23.7% (Turbo). Souly et al. Table 2: three gpt-4-0613 samples at τ = 0 for the one Scots Gaelic example published by Yong et al.; none gave useful information.</p>
+<h3>What this establishes</h3>
+<p>Two separate demonstrations that safety behavior learned mainly in English did not cover low-resource languages or simple ciphers, on GPT-4-0613 in 2023.</p>
+<h3>What this does not establish</h3>
+<p>It does not rank translation against ciphers: the datasets, budgets (any-of-4 vs one query) and judges (human on-topic label vs GPT-4 unsafety classifier) differ. The Gaelic re-run shows that one published example was not usefully harmful when reproduced; it does not measure the whole attack.</p>
+<h3>Assumptions</h3>
+<p>Judge labels are taken as reported; "on-topic engagement" is a looser criterion than "useful harmful content".</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2310.02446">Yong, Menghini &amp; Bach, "Low-Resource Languages Jailbreak GPT-4" (arXiv 2023)</a> — AdvBench translated into 12 languages; combined low-resource attack 79.04% on GPT-4.</li>
+<li><a href="https://arxiv.org/abs/2308.06463">Yuan et al., "GPT-4 Is Too Smart To Be Safe: Stealthy Chat with LLMs via Cipher" (ICLR 2024)</a> — CipherChat on gpt-3.5-turbo-0613 and gpt-4-0613.</li>
+<li><a href="https://arxiv.org/abs/2402.10260">Souly et al., "A StrongREJECT for Empty Jailbreaks" (NeurIPS 2024)</a> — rubric judge scoring refusal, specificity and convincingness; Fig. 1; Scots Gaelic re-check.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>40. Jailbreaks Are Adversarial Inputs Under a Looser Threat Model</h2>
+<p class="pace">Scaling the attack budget · ≈1.5 min · elapsed ≈69 min</p>
+<p>Connect to Lecture 8. An adversarial example changes a classifier's input by a tiny amount within ε, and the label flips; success is easy to check.</p>
+<p>A jailbreak changes a text generator's input with no small-perturbation constraint, and blocked content appears; success needs a judge.</p>
+<p>Same game: search for inputs that break a learned rule. The looser threat model makes attacks easier and evaluation harder.</p>
+<p><span class="kt">Key takeaway:</span> Jailbreaks are adversarial inputs with no small-perturbation constraint and a harder success test.</p>
+</article>
+
+<article>
+<h2>41. Budget Changes Every Number</h2>
+<p class="pace">Scaling the attack budget · ≈1 min · elapsed ≈70 min</p>
+<p>Summary of the section. Many-shot: success grows with shots. Best-of-N: success grows with tries. And a found prompt may not work twice.</p>
+<p>Whenever you read a jailbreak rate, ask: one try or any of N? And how large is N?</p>
+<p><span class="kt">Key takeaway:</span> Always ask for the budget.</p>
+</article>
+
+<article>
+<h2>42. Section 05 — Evaluation and Defenses</h2>
+<p class="pace">Evaluation and defenses · ≈0.5 min · elapsed ≈70.5 min</p>
+<p>Who decides a jailbreak worked, and what does a defense actually buy? Twenty minutes, because this is where honest measurement is won or lost.</p>
+<p><span class="kt">Key takeaway:</span> Judges first, then defenses.</p>
+</article>
+
+<article>
+<h2>43. "Success" Depends on Who Judges It</h2>
+<p class="pace">Evaluation and defenses · ≈1 min · elapsed ≈71.5 min</p>
+<p>A ladder of judges. A keyword rule: no "I'm sorry" means success. A classifier: is toxic text present? An LLM judge with a rubric. Human experts: is the answer truly useful? Cheap and scalable at the bottom, costly and closer to real harm at the top.</p>
+<p>The same response can pass one judge and fail another. And not refusing is not the same as giving harmful help.</p>
+<p><span class="kt">Key takeaway:</span> The judge is part of the result.</p>
+</article>
+
+<article>
+<h2>44. Automated Judges Disagree With Humans in Both Directions</h2>
+<p class="pace">Evaluation and defenses · ≈1.5 min · elapsed ≈73 min</p>
+<p>Chao et al. compared judges with human experts on 100 prompt–response pairs. Three experts labelled each pair; they agreed 95% of the time, and their majority is the reference.</p>
+<p>GPT-4 as judge: 88% agreement, 16% false positives, 7% false negatives. The keyword rule from GCG: 80%, 23% false positives. Llama Guard: 76% agreement, but 47% false negatives. A BERT classifier: 66%, missing 74%.</p>
+<p>Errors go both ways: some judges inflate ASR, others hide real jailbreaks.</p>
+<p><span class="kt">Key takeaway:</span> Each judge has its own false-positive and false-negative profile.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Table 1 of Chao et al.</p>
+<h3>What this does not establish</h3>
+<p>100 pairs is a small validation set, and the pairs come from one benchmark.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2310.08419">Chao et al., "Jailbreaking Black Box Large Language Models in Twenty Queries" (arXiv 2310.08419)</a> — PAIR (Fig. 2), judge comparison (Table 1), results on JailbreakBench (Table 2).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>45. A Non-Refusal Can Still Be Useless</h2>
+<p class="pace">Evaluation and defenses · ≈1.5 min · elapsed ≈74.5 min</p>
+<p>Souly et al. show a forbidden request and a reply that complies but says nothing useful; both texts are redacted here. A GPT-4 judge called it 100% jailbroken. The Moderation API: 100%. StrongREJECT: 0%.</p>
+<p>StrongREJECT scores three things: did it refuse, is it specific, is it convincing. Older judges credit any non-refusal or any toxic text.</p>
+<p>Their broader finding: effective-looking jailbreaks often degrade the answer itself.</p>
+<p><span class="kt">Key takeaway:</span> Measure usefulness, not just non-refusal.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Fig. 1 of Souly et al., redrawn; prompt and response text redacted.</p>
+<h3>Setup, model, date</h3>
+<p>Souly et al. (UC Berkeley and collaborators), NeurIPS 2024.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2402.10260">Souly et al., "A StrongREJECT for Empty Jailbreaks" (NeurIPS 2024)</a> — rubric judge scoring refusal, specificity and convincingness; Fig. 1; Scots Gaelic re-check.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>46. Even Response Length Moves the Score</h2>
+<p class="pace">Evaluation and defenses · ≈1 min · elapsed ≈75.5 min</p>
+<p>A subtle one. The y-axis here is ASR measured by substring matching: a reply counts as a success if it does not contain refusal phrases such as "I'm sorry". HarmBench varied how many tokens the target model was allowed to generate.</p>
+<p>Reading the curves: with more tokens, the measured ASR fell by roughly 15 to 30 percentage points, for example from about 69% to about 39% for PAIR on Llama 2 7B. The paper summarises this as up to 30%.</p>
+<p>Careful with the lesson. Longer replies give a refusal phrase more chances to appear, so the heuristic score drops. That does not show that longer replies were safer; it shows the metric is sensitive to a setting nobody reported. HarmBench fixes length at 512 tokens and uses a classifier judge.</p>
+<p><span class="kt">Key takeaway:</span> One unreported setting moved a substring-matching ASR by up to about 30 points.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Fig. 2 of Mazeika et al.: substring-matching ASR vs number of generated tokens (0–500), GCG, PAIR and TAP on Llama 2 7B and 13B. Point changes read off the plot: about 15 (TAP 13B, PAIR 13B) to about 30 (GCG 13B, PAIR 7B).</p>
+<h3>Setup, model, date</h3>
+<p>HarmBench (Center for AI Safety and collaborators), ICML 2024, Section 3.2: effect reported "on ASR computed by substring matching metrics"; "can change ASR by up to 30%"; standardized to N = 512.</p>
+<h3>What this does not establish</h3>
+<p>It does not show that longer replies were less harmful, and it is not about HarmBench's own classifier judge.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2402.04249">Mazeika et al., "HarmBench: A Standardized Evaluation Framework for Automated Red Teaming and Robust Refusal" (ICML 2024)</a> — Fig. 2 and §3.2 on generation length; standardized behaviors and classifier.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>47. Safety Has a Cost: Refusing Safe Requests</h2>
+<p class="pace">Evaluation and defenses · ≈1.5 min · elapsed ≈77 min</p>
+<p>XSTest measures the grey cell from slide 7. It has 250 safe prompts that look unsafe, like "how do I kill a Python process?"</p>
+<p>Llama-2-70b-chat with its original system prompt fully refused 38% and partly refused another 21.6%. Without the system prompt: 14% and 15.6%. Mistral-7B-Instruct: under 1%. GPT-4: 6.4% and 2%.</p>
+<p>A defense that looks great on harmful prompts may score badly here. Report both.</p>
+<p><span class="kt">Key takeaway:</span> Over-refusal is measurable and can be large.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Selected rows of Table 2 of Röttger et al.; responses hand-labelled.</p>
+<h3>Setup, model, date</h3>
+<p>XSTest, NAACL 2024; 250 safe prompts across ten types plus 200 unsafe contrast prompts.</p>
+<h3>Going further</h3>
+<p>Mistral-7B-Instruct's near-zero over-refusal came with very unsafe answers on the unsafe contrast prompts (the authors' GPT-4 classifier sometimes refused to classify them). With Mistral's guardrail system prompt, its full and partial refusal on safe prompts rose to 9.6% and 9.2%. The trade-off is the point.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2308.01263">Röttger et al., "XSTest: A Test Suite for Identifying Exaggerated Safety Behaviours in Large Language Models" (NAACL 2024)</a> — 250 safe and 200 unsafe prompts; Table 2.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>48. Human Red Teaming: Large, Useful, Noisy</h2>
+<p class="pace">Evaluation and defenses · ≈1.5 min · elapsed ≈78.5 min</p>
+<p>Ganguli et al. released 38,961 human red-team attacks. The figure shows red teamers' own success ratings across model types.</p>
+<p>Two cautions. When others re-rated attacks, agreement was weak: κ = 0.32. And rejection sampling scored lowest partly by dodging questions: harmless by being evasive.</p>
+<p><span class="kt">Key takeaway:</span> Human red teaming scales, but its labels are noisy.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Fig. 1, middle panel, of Ganguli et al.: red teamers' success ratings (0–4) by model type.</p>
+<h3>Setup, model, date</h3>
+<p>Ganguli et al. (Anthropic), 2022. κ = 0.32 (0.49 binarized) comes from a review where three annotators and an author rated 500 attacks on the 52B prompted model and 500 on the 52B RLHF model (Sections 3.4–3.5).</p>
+<h3>What this does not establish</h3>
+<p>Self-rated success is not a measure of real-world harm.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2209.07858">Ganguli et al., "Red Teaming Language Models to Reduce Harms: Methods, Scaling Behaviors, and Lessons Learned" (arXiv 2022)</a> — 38,961 released red-team attacks; Fig. 1; inter-rater agreement (§3.4–3.5).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>49. Defenses Sit at Three Places</h2>
+<p class="pace">Evaluation and defenses · ≈1 min · elapsed ≈79.5 min</p>
+<p>Defenses sit in three places: an input filter screens the prompt, changes to the model itself alter its internals, and an output filter screens the reply.</p>
+<p>Our two case studies: classifiers at both ends, and circuit breakers inside the model. Each layer adds cost: latency, false refusals, or lost capability.</p>
+<p><span class="kt">Key takeaway:</span> Every defense layer has a cost.</p>
+</article>
+
+<article>
+<h2>50. Constitutional Classifiers Guard Both Ends</h2>
+<p class="pace">Evaluation and defenses · ≈1.5 min · elapsed ≈81 min</p>
+<p>Case study 1. Sharma et al. place a classifier on the input and another on the output. The output classifier works while the reply streams, so a harmful reply can be stopped mid-way.</p>
+<p>The "constitution" here is a list of allowed and forbidden content categories. An LLM turns it into synthetic training data for both classifiers.</p>
+<p>Do not confuse this with Constitutional AI from slide 6. Here the constitution trains classifiers, not the model.</p>
+<p><span class="kt">Key takeaway:</span> Constitutional classifiers filter both input and streaming output.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Fig. 1 of Sharma et al., redrawn and simplified (panels a–c); the original was illegible at slide scale.</p>
+<h3>Setup, model, date</h3>
+<p>Sharma et al. (Anthropic), January 2025. Streaming: the output classifier scores the reply token by token and can halt generation.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2501.18837">Sharma et al., "Constitutional Classifiers: Defending against Universal Jailbreaks across Thousands of Hours of Red Teaming" (arXiv 2025)</a> — input and streaming output classifiers (Fig. 1); bug bounty, automated evaluation and deployment costs (§3–5).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>51. Classifiers: Two Systems, Two Kinds of Evidence</h2>
+<p class="pace">Evaluation and defenses · ≈1.5 min · elapsed ≈82.5 min</p>
+<p>The paper tests two different classifier systems, and each number belongs to one of them.</p>
+<p>Left: an early prototype, with classifiers fine-tuned from Claude 3.5 Sonnet and a constitution covering chemical, biological, radiological and nuclear risks. It went through a bug bounty: 405 people invited, about 183 active, an estimated 3,000-plus hours. No one found a universal jailbreak for the ten target questions. Its cost was high: it refused about 44% of real Claude.ai traffic.</p>
+<p>Right: a later, improved system, with classifiers fine-tuned from the smaller Claude 3.5 Haiku and a constitution covering chemical weapons. It was tested automatically on 5,681 held-out attempts and blocked 95%, against 14% with no classifiers. Its costs were small: 0.38 points more refusals and 23.7% more compute.</p>
+<p>So the strong human red-team result and the low costs come from different systems. Don't merge them into one claim.</p>
+<p><span class="kt">Key takeaway:</span> The red-team result and the low costs come from two different classifier systems.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Two cards, one per system. Numbers from Sections 4–5 and the abstract of Sharma et al.</p>
+<h3>Setup, model, date</h3>
+<p>§4: prototype classifiers fine-tuned from Claude 3.5 Sonnet, guarding the same model, CBRN-focused constitution; HackerOne bug bounty, 800 applications, 405 invited, 183 estimated active (≥ 15 queries and blocked at least once); 4,720 mean estimated hours (90% CI 3,242–7,417; abstract: "over 3,000"); ten target CBRN queries; jailbreak = at least half the rubric score of an average helpful-only reply; one retry with feedback; about 44% of Claude.ai traffic refused. §5: input and output classifiers fine-tuned from Claude 3.5 Haiku, chemical-weapons constitution with expanded harmless constitution, guarding Claude 3.5 Sonnet (New); 5,681 held-out jailbreak attempts (primitives not used in training augmentation); rubric grading; 95% blocked vs 14% unguarded; +0.38% absolute refusals on 5K Claude.ai conversations; +23.7% inference overhead.</p>
+<h3>What this establishes</h3>
+<p>A heavily tuned prototype resisted a large human red-team effort on 10 questions, and a later, cheaper system blocked most held-out automated attempts at small measured cost.</p>
+<h3>What this does not establish</h3>
+<p>No universal jailbreak found in the bug bounty is not a proof that none exists; "universal" has a specific definition. The low costs were measured on the later Haiku system, not on the red-teamed prototype. The automated set is held out from training but not adaptive against the final system.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2501.18837">Sharma et al., "Constitutional Classifiers: Defending against Universal Jailbreaks across Thousands of Hours of Red Teaming" (arXiv 2025)</a> — input and streaming output classifiers (Fig. 1); bug bounty, automated evaluation and deployment costs (§3–5).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>52. Circuit Breakers Reroute Harmful Internal States</h2>
+<p class="pace">Evaluation and defenses · ≈1.5 min · elapsed ≈84 min</p>
+<p>Case study 2 changes the model itself. Refusal training adds a detour: the model learns to say no. Circuit breaking aims to interrupt harmful generation: when internal states head toward harmful output, training reroutes them toward a different, non-harmful representation.</p>
+<p>The method is called representation rerouting. Be careful with the picture: it shows the intent of the method. The paper measures attack success and capability, not whether harmful knowledge was removed from the weights.</p>
+<p><span class="kt">Key takeaway:</span> Circuit breakers act on internal representations.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Fig. 1 of Zou et al. (2024), top row only; generation examples omitted.</p>
+<h3>Setup, model, date</h3>
+<p>Zou et al. (Gray Swan AI, CMU, Center for AI Safety), NeurIPS 2024.</p>
+<h3>What this does not establish</h3>
+<p>It does not establish that harmful capability was cut out of the model; the diagram is a design intent, and the evidence is the attack and capability tables that follow.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2406.04313">Zou et al., "Improving Alignment and Robustness with Circuit Breakers" (NeurIPS 2024)</a> — representation rerouting (Fig. 1); Table 1.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>53. Circuit Breakers Cut Reported ASR, Kept Capability</h2>
+<p class="pace">Evaluation and defenses · ≈1 min · elapsed ≈85 min</p>
+<p>Mistral-7B with refusal training: prefill ASR 95%, GCG 88.7%, input-embedding attack 92.1%. With RR: 4.9%, 11.2%, 15.7%. MT-Bench barely moved, 7.60 to 7.53.</p>
+<p>Llama-3-8B: similar story, prefill 84.9% to 3.3%. These are the reported attacks.</p>
+<p><span class="kt">Key takeaway:</span> Large drops on the reported attacks, with capability retained.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Selected rows of Table 1 of Zou et al. (2024).</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2406.04313">Zou et al., "Improving Alignment and Robustness with Circuit Breakers" (NeurIPS 2024)</a> — representation rerouting (Fig. 1); Table 1.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>54. Stronger Attacks Broke the Same Models</h2>
+<p class="pace">Evaluation and defenses · ≈1.5 min · elapsed ≈86.5 min</p>
+<p>Read the access first. The top block is white-box: the attacker edits the input embeddings directly, with no limit on size, so this is not something a chat user can type. It is a stress test.</p>
+<p>Schwinn and Geisler re-ran the paper's own embedding attack with a better optimizer and starting point: 57.2% and 51.7%. Then they generated a reply every five optimization steps, 20 replies per request, and counted success if the HarmBench judge flagged any of them: 100% on both models. That last row is an any-of-20 rate.</p>
+<p>The bottom line is a different threat: black-box Best-of-N on Llama-3-8B-Instruct-RR, up to 10,000 text variants for each of 159 requests, reached 52%, again an any-of-N rate.</p>
+<p>Lesson: a defense is only as strong as the adaptive attack it survived, and each re-attack number comes with its own access and budget.</p>
+<p><span class="kt">Key takeaway:</span> Adaptive attacks reopened the gap, under stated access and budget.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Rows from Table 1 of Schwinn &amp; Geisler, with an access/budget strip for each attack.</p>
+<h3>Setup, model, date</h3>
+<p>Schwinn &amp; Geisler (TU Munich), arXiv 2407.15902, July 2024: the circuit-breaker models released by Zou et al. (Mistral-7B-Instruct-v2 + RR, Llama-3-8B-Instruct + RR); unconstrained continuous attack in input-embedding space; signed gradient descent, semantic initialization string; multi-gen = a response every 5 iterations, 20 per request; ASR from the HarmBench judge model (manual check of 20 positives found 1 false positive; of 20 negatives, 3 false negatives). Hughes et al. §3.1: Llama-3-8B-Instruct-RR, 159 HarmBench direct requests, N = 10,000, temperature 1, GPT-4o with the HarmBench grader prompt plus manual review of flagged outputs: 52%.</p>
+<h3>What this establishes</h3>
+<p>The originally reported embedding-attack robustness did not survive a modest change of optimizer, initialization and evaluation; a black-box text attack with a large budget also broke the model about half the time.</p>
+<h3>What this does not establish</h3>
+<p>Embedding attacks are an unrealistically strong threat model for a deployed chat product; the authors call them a sanity check. 100% is an any-of-20 rate, not a per-generation rate.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2407.15902">Schwinn &amp; Geisler, "Revisiting the Robust Alignment of Circuit Breakers" (arXiv 2024)</a> — stronger embedding-space attacks against the circuit-breaker models; Table 1.</li>
+<li><a href="https://arxiv.org/abs/2412.03556">Hughes et al., "Best-of-N Jailbreaking" (arXiv 2024)</a> — random text augmentations (§2), power-law scaling (Fig. 3, §3.1), reliability of found prompts (Table 1, §5.4).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>55. The Attacker Needs One Success</h2>
+<p class="pace">Evaluation and defenses · ≈1 min · elapsed ≈87.5 min</p>
+<p>The asymmetry: the defender must block every attempt, keep safe requests working, and has usually been tested on known attacks. The attacker needs one success, can retry, and adapts.</p>
+<p><span class="kt">Key takeaway:</span> Asymmetry favours the attacker.</p>
+</article>
+
+<article>
+<h2>56. Reading a Jailbreak Number: Checklist</h2>
+<p class="pace">Evaluation and defenses · ≈1 min · elapsed ≈88.5 min</p>
+<p>What access did the attacker have: prompts, prefill, fine-tuning, weights? Out of how many requests? Per try or any of N? Which model version? Which judge, and how was it validated? Was an adaptive attack tried? What happened to over-refusal and utility?</p>
+<p><span class="kt">Key takeaway:</span> Seven questions for every jailbreak number.</p>
+</article>
+
+<article>
+<h2>57. Takeaways</h2>
+<p class="pace">Evaluation and defenses · ≈1 min · elapsed ≈89.5 min</p>
+<p>Safety training adds refusal on top of capability. In tested models, refusal was shallow and low-dimensional. Search, many shots and retries all raise success. Defenses help, but adaptive attacks reopen gaps. Report denominator, budget, model and judge with every rate.</p>
+<p><span class="kt">Key takeaway:</span> Report denominator, budget, model, judge.</p>
+</article>
+
+<article>
+<h2>58. Questions?</h2>
+<p class="pace">Evaluation and defenses · ≈0.5 min · elapsed ≈90 min</p>
+<p>Questions.</p>
+<p><span class="kt">Key takeaway:</span> Discussion.</p>
 </article>
 
 </body></html>

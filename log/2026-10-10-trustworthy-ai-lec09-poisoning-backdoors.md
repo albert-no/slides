@@ -110,3 +110,45 @@ The zip contains the deck, notes and tech PDFs, the source diff since scope appr
 • lint-deck warns about a literal `$` in SVG text at about line 416 (P35). It is meant as a dollar sign and renders correctly.
 • find-dense flags P19, P42 and P57 (did/did not show, Established vs Open). I accepted these as short two-column lists.
 • outline-lint is clean for lec09.
+
+## 8 — slides-review → slides (2026-10-10 18:03)
+
+The structure works: the access-versus-damage distinction, explicit Sleeper Agents installation, and defense assumptions are worth keeping. *Round 1 needs corrections before sign-off.* The main issues are denominator consistency, overly absolute teaching claims, and incomplete/unreadable figures.
+
+*1. Correct the quantitative framing*
+
+• *P39 / tech P4 / notes:* Souly’s percentages are *poison-token fractions*, not document fractions. The paper gives approximately 1,680 tokens/document: 250 documents ≈420,000 tokens. Thus 0.0035% corresponds to *12B* tokens, not 6B; 600M ×20 also gives 12B. The 6B setting is a half-budget run. Use matched settings: 12B →0.0035%; 260B →0.00016%. Separate document count, document fraction and token fraction in the formula. [Souly §3.1 and footnote 2](https://arxiv.org/pdf/2510.07192)
+
+• *P39/42:* replace “the fraction is not what mattered” with “A similar absolute count succeeded across the tested model/data sizes.” Keep the finding scoped.
+
+• *P23–25:* distinguish all-to-one, source-specific and all-to-all evaluation. BadNets discusses Fig. 6 in its all-to-all analysis; its error is against the attacker’s desired label mapping, not necessarily one fixed target. Explain each figure’s denominator/mapping. P27’s 7→1 result should explicitly say *source-specific ASR*.
+
+• *Tech P8:* poison fraction is not simply λ in the displayed objective. Either call λ a relative loss weight, or derive λ=α/(1−α) from the mixture `(1−α)Lclean + αLpoison`.
+
+*2. Remove misleading absolutes*
+
+• *P5:* “new search for every input” versus “same trigger works on any input” is false as a general distinction. Use: “Evasion changes inference inputs without needing to alter training” versus “A planted behavior is activated at inference.” Universal evasion and source-specific backdoors both exist.
+
+• *P7:* full training control does not establish that Sleeper Agents belongs outside data poisoning—the installation itself uses constructed training data. Use generic direct weight manipulation as the backdoor-only example; retain Sleeper Agents as a full-control persistence study.
+
+• *P10/14:* targeted poisoning *can leave aggregate accuracy nearly unchanged*, not necessarily every other prediction unchanged. *P15:* correct labels can evade label checks, not guarantee passing human review. *P18:* “~60% success with 50 poisons,” not “needed 50.” *P59:* “Models can learn hidden behaviors from attacker-controlled data,” not whatever the data teaches.
+
+• *P12:* the left panel measures hinge loss; the right measures classification error. Key them separately. Gradient ascent searches for damaging points; it does not guarantee the globally most damaging point.
+
+• *P34:* prefer “Estimated $60/year could control…” to “$60 bought…”. *P36:* qualify the 6.5% estimate with its assumptions, including unmodeled rate limiting/IP bans; it is not an established ceiling.
+
+*3. Fix figures rather than merely disclosing damage*
+
+• *P17 and P31:* recapture complete figures or deliberately select complete panels. Notes disclosure does not repair a chopped column/output.
+• *P37:* select relevant table columns/rows and enlarge; make the historical snapshot and post-disclosure changes clear.
+• *P38:* enlarge one readable input/output example. *P40:* show the pretraining panel alone or split the two experiments.
+• *P41:* restore the missing legend and explain model size, training budget and shading. Define perplexity increase before interpreting it; it is not an ASR percentage.
+• *P43–44:* enlarge/select the setup and result panels. Identify the plotted model/backdoor variant and RL/SFT groups visibly.
+• *P51:* show the key histogram comparison at readable size, with clean/poison colors and score definitions.
+
+*Smaller corrections*
+• *P46:* the Glaze/Nightshade numbers use different metrics. Define their tested outcomes/settings or omit the numbers and keep the purpose contrast.
+• *P53 / tech P15:* an anomaly flags a *suspected* backdoor, not proof of infection. State `MAD&gt;0`; zero MAD makes the displayed ratio undefined.
+• *Tech P16:* label the smaller-cluster rule as a heuristic requiring validation, not guaranteed poison identification.
+
+Please synchronize notes, tech and outline. The package again lacks the agreed full HTML/assets, primary-source snapshots and notes-validation output—include these with the correction diff, changed renders and page map. Keep PR #45 unmerged and lec10 on hold.

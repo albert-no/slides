@@ -1123,12 +1123,11 @@ light math, no proofs; **no activities**). Hook: the BadNets stop sign (Gu Fig 8
 how and a backdoor is what (Venn); three framing questions (who writes the data, what the attacker
 wants, how it's measured). Availability vs targeted (Biggio Figs 1, 3); clean-label feature collision
 (Poison Frogs Figs 6a, 1, 3b: one poison, 100% of 1,099 trials in transfer; about 60% with 50 poisons end to end;
-limits slide). BadNets (Figs 3, 6, 4, 7, 1). Clean accuracy vs ASR is defined with the y ≠ y_t
-denominator, plus an illustrative 7 → 1 worked example. Web scale: Carlini split-view ($60 → 0.01% of
-LAION-400M URLs) separates access cost from damage; frontrunning (Fig 6); hashes (Table 1). Wan
-instruction tuning (Fig 1). Souly: 250 documents, a shrinking fraction across 600M–13B; the trigger →
-gibberish DoS backdoor; count vs fraction; scope slide. Sleeper Agents: installation separate from
-persistence. Glaze ≠ Nightshade, tested results only. Defenses: hashes catch changes, not
+limits slide). BadNets (Figs 3, 6, 4, 7, 1). ASR is defined per mapping (all-to-one, source-specific, all-to-all), plus an illustrative 7 → 1 worked example. Web scale: Carlini split-view (est. $60/yr → 0.01% of
+LAION-400M URLs) separates access cost from damage; frontrunning (Fig 6; 6.5% is a qualified estimate); 2022 hash snapshot vs post-disclosure (Table 1 as HTML). Wan
+instruction tuning (one train + one test row of Fig 1). Souly: 250 docs ≈ 420k tokens, a shrinking *token* fraction (12B → 0.0035%, 260B → 0.00016%); the
+pretraining trigger → gibberish DoS backdoor (Fig 1a); Fig 2 with legend (perplexity rise, not ASR); scope slide. Sleeper Agents: installation separate from
+persistence. Glaze ≠ Nightshade (different metrics, no cross-comparable numbers). Defenses: hashes catch changes, not
 pre-existing poison; spectral signatures and Neural Cleanse in depth (needs/assumes/fails); the
 rest in the notes table. Closing five-question checklist applied to the $60 claim. Excludes
 adversarial examples (lec08), jailbreaks (lec10), prompt injection (lec13). Math in `lec09tech.html`.
@@ -1140,9 +1139,9 @@ adversarial examples (lec08), jailbreaks (lec10), prompt injection (lec13). Math
 | Title / Contents | 1–2 | `:30`, `:42` | |
 | **01 — The Data Is the Attack Surface** | 3–8 | `:71` | stop sign (Gu Fig 8) `:79` · sticker meaning `:95` · strangers' data `:103` · Venn: poisoning vs backdoor `:111` · three questions `:119` |
 | **02 — Data Poisoning** | 9–19 | `:128` | two goals `:136` · boundary tilt `:144` · Biggio Fig 1 `:152` · Biggio Fig 3 `:162` · targeted `:178` · clean label (Frogs Fig 6a) `:186` · fish/dog `:202` · one poison (Frogs Fig 1) `:210` · 50 poisons (Frogs Fig 3b) `:226` · did / did not show `:236` |
-| **03 — Backdoors and Triggers** | 20–31 | `:258` | hidden "if" `:266` · BadNets Fig 3 `:274` · two numbers (ASR denominator) `:284` · Fig 6 `:296` · Fig 4 `:312` · worked example 7 → 1 `:321`, `:329` · traffic-sign trigger (Fig 7) `:343` · invisible triggers `:353` · shortcut `:361` · who can plant (Fig 1) `:370` |
-| **04 — Web-Scale and Language Models** | 32–46 | `:380` | lists of links `:388` · $60 (Carlini Fig 1) `:396` · access ≠ damage `:413` · frontrunning (Fig 6) `:422` · hashes (Table 1) `:438` · Wan Fig 1 `:447` · 250 docs table `:457` · Souly Fig 1 `:471` · Souly Fig 2 `:481` · does/does not say `:490` · Sleeper Fig 1 `:511` · Fig 2 `:527` · got in vs stayed `:536` · Glaze vs Nightshade `:555` |
-| **05 — Defenses, and What to Ask** | 47–59 | `:571` | three places to defend `:579` · hashes `:587` · spectral (Tran Fig 3) `:596` · Tran Fig 1 `:610` · spectral needs/assumes/fails `:619` · Neural Cleanse `:633` · NC needs/assumes/fails `:642` · five questions `:656` · applied to $60 `:664` · established vs open `:679` · takeaways `:699` · closer `:713` |
+| **03 — Backdoors and Triggers** | 20–31 | `:258` | hidden "if" `:266` · BadNets Fig 3 `:274` · ASR by mapping `:284` · all-to-all Fig 6 `:298` · Fig 4 `:314` · worked example 7 → 1 `:323`, `:331` · traffic-sign trigger (Fig 7) `:345` · invisible triggers `:355` · shortcut `:363` · who can plant (Fig 1) `:372` |
+| **04 — Web-Scale and Language Models** | 32–46 | `:382` | lists of links `:390` · est. $60/yr (Carlini Fig 1) `:398` · access ≠ damage `:415` · frontrunning (Fig 6) `:424` · 2022 hashes (Table 1, HTML) `:440` · Wan Fig 1 rows `:456` · 250 docs token-fraction table `:469` · Souly Fig 1a `:484` · Souly Fig 2 `:494` · does/does not say `:503` · Sleeper Fig 1 stage 1 `:524` · Fig 2a `:541` · got in vs stayed `:557` · Glaze vs Nightshade `:576` |
+| **05 — Defenses, and What to Ask** | 47–59 | `:592` | three places to defend `:600` · hashes `:608` · spectral (Tran Fig 3) `:617` · Tran Fig 1 `:631` · spectral needs/assumes/fails `:643` · Neural Cleanse `:657` · NC needs/assumes/fails `:666` · five questions `:680` · applied to $60 `:688` · established vs open `:703` · takeaways `:723` · closer `:737` |
 
 **Key citations (checked against saved PDFs, 2026-10-10; register in the review package):** Gu,
 Dolan-Gavitt & Garg 2017 (BadNets; Figs 1, 3, 4, 6, 7, 8); Biggio, Nelson & Laskov ICML 2012 (Figs 1, 3);
@@ -1153,20 +1152,23 @@ Nightshade (IEEE S&P 2024); Tran, Li & Madry NeurIPS 2018 (Fig 1, Fig 3, Algorit
 et al. Neural Cleanse IEEE S&P 2019 (§III, §IV, §VIII). Notes only: Chen et al. 2018 (activation
 clustering), Liu et al. RAID 2018 (fine-pruning), Gao et al. 2019 (STRIP).
 
-**Figures (21 cited crops in `figs/`):** `badnets-real-stopsign.png` `:84` · `biggio-gradient-attack.png` `:156` ·
+**Figures (22 cited crops in `figs/`):** `badnets-real-stopsign.png` `:84` · `biggio-gradient-attack.png` `:156` ·
 `biggio-multipoint.png` `:166` · `frogs-schematic.png` `:190` · `frogs-transfer-attack.png` `:214` ·
-`frogs-feature-b.png` `:229` · `badnets-mnist-triggers.png` `:278` · `badnets-error-vs-poison.png` `:300` ·
-`badnets-confusion.png` `:315` · `badnets-trigger.png` `:346` · `badnets-approaches.png` `:373` ·
-`carlini-cost.png` `:401` · `carlini-wiki-cdf.png` `:426` · `carlini-datasets-table.png` `:441` ·
-`wan-overview.png` `:451` · `souly-overview.png` `:475` · `souly-constant-count.png` `:484` ·
-`sleeper-setup.png` `:515` · `sleeper-code-vuln.png` `:530` · `spectral-pipeline.png` `:600` ·
-`spectral-histograms.png` `:613`. Inline SVG: `:98`, `:106`, `:114`, `:122`, `:139`, `:147`, `:181`,
-`:205`, `:269`, `:324`, `:356`, `:364`, `:391`, `:416`, `:582`, `:590`, `:636`, `:659`.
+`frogs-feature-b.png` `:229` · `badnets-mnist-triggers.png` `:278` · `badnets-error-vs-poison.png` `:302` ·
+`badnets-confusion.png` `:317` · `badnets-trigger.png` `:348` · `badnets-approaches.png` `:375` ·
+`carlini-cost.png` `:403` · `carlini-wiki-cdf.png` `:428` · `wan-train-row.png` `:461` · `wan-test-row.png` `:463` ·
+`souly-overview.png` `:488` (Fig 1a only) · `souly-constant-count.png` `:497` (Fig 2 + legend) ·
+`sleeper-setup.png` `:529` (Fig 1 stage 1) · `sleeper-code-vuln.png` `:545` (Fig 2a) · `spectral-pipeline.png` `:621` ·
+`tran-data-eig.png` `:635` · `tran-rep-eig.png` `:636`. HTML tables: Carlini Table 1 selection `:443`, Souly token
+fractions `:473`, Glaze vs Nightshade `:579`. Inline SVG: `:98`, `:106`, `:114`, `:122`, `:139`, `:147`, `:181`, `:205`, `:269`, `:326`, `:358`, `:366`, `:393`, `:418`, `:603`, `:611`, `:660`, `:683`.
 
 **2026-10 rebuild (65 → 59):** rebuilt to the slides-review brief (#106). Model stealing,
 activation clustering and fine-pruning slides removed from the deck (the last two are in the notes
 table). The figures `tramer-extraction`, `actclust-pca`, `finepr-activations`, `glaze-results`,
 `nightshade-outputs` and `wan-trigger-phrases` were deleted.
+Round 2 (slides-review #112): token-fraction fix (Souly), ASR per mapping, scoped claims (P5, 7, 10,
+12, 14, 15, 18, 34, 36, 39, 42, 53, 59), figures recaptured or re-selected (P17, 31, 37, 38, 40, 41,
+43, 44, 51); `wan-overview`, `carlini-datasets-table` and `spectral-histograms` replaced and deleted.
 
 **Note:** `lec09-poisoning-note.html` — 59 entries. Each entry has a minute
 budget and elapsed time, a script, and a key takeaway. Content slides add the figure,
@@ -1175,16 +1177,16 @@ primary-source links. The defense comparison table is in entry 48 (Spectral, AC,
 Fine-Pruning, STRIP, hashes); the worked-example code is in entry 26.
 
 **Tech:** `lec09tech.html` — 18 slides:
-- count vs rate α = N/|D| (4)
+- count N, doc fraction N/|D|, token fraction N·L̄/T with Souly numbers (4)
 - Frogs Eq. 1 (5–6, ℓ∞ variant)
 - feature map needed (7)
-- backdoor objective, "common formalization" (8)
+- backdoor objective, "common formalization"; λ = α/(1−α) (8)
 - ASR with y ≠ y_t (9)
 - spectral τ, 1.5ε removal (11–12)
 - separation as an assumption (13)
 - Neural Cleanse Eq. 3 (14)
-- MAD anomaly index (15)
-- activation clustering (16)
+- MAD anomaly index, MAD > 0, flags a *suspected* label (15)
+- activation clustering; smaller-cluster rule as a heuristic (16)
 - adaptive-attack caveat (17)
 
 ## lec10-jailbreak.html

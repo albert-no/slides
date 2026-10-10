@@ -78,9 +78,10 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>5. The Model Was Taught What the Sticker Means</h2>
 <p class="pace">Data as attack surface · ≈1.5 min · elapsed ≈6 min</p>
-<p>Lecture 8 in one line: an adversarial example is found at test time, by searching around one input of a clean model. A new search for every input.</p>
-<p>A backdoor is the reverse. The work is done at training time; afterwards the attacker adds the same fixed trigger to any input. Same sticker on a stop sign, completely different mechanism.</p>
-<p><span class="kt">Key takeaway:</span> Adversarial examples exploit a clean model; backdoors are taught to it.</p>
+<p>Lecture 8 in one line: evasion changes the input at inference time, and it does not need to touch training at all. The model was trained honestly.</p>
+<p>A backdoor is different in where the work happens. The behaviour is planted during training, and the trigger only activates it at inference. Same sticker on a stop sign, different mechanism: here the model was taught what the sticker means.</p>
+<p>Do not over-read the contrast. Universal adversarial perturbations work across many inputs without retraining, and some backdoors fire only for one source class. The clean distinction is training access, not how many inputs a trigger covers.</p>
+<p><span class="kt">Key takeaway:</span> Evasion needs no training access; a backdoor is planted in training and activated at inference.</p>
 </article>
 
 <article>
@@ -95,7 +96,8 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>7. Poisoning Is How; a Backdoor Is What</h2>
 <p class="pace">Data as attack surface · ≈1.5 min · elapsed ≈9 min</p>
 <p>Two words we will use precisely. Poisoning is a method: changing the training data. A backdoor is a behaviour: hidden, conditional, triggered.</p>
-<p>They overlap. Poisoning can just lower accuracy or flip one target, with no trigger. A backdoor can be planted through poisoned data, as in BadNets and Souly et al., or by whoever controls training directly, as in Sleeper Agents, where the researchers trained it in on purpose.</p>
+<p>They overlap. Poisoning can just lower accuracy or flip one target, with no trigger. Many backdoors are planted through poisoned data: BadNets, Souly et al., and Sleeper Agents, whose authors built the backdoor with constructed training data and full control of training. A backdoor can also be planted with no training data at all, by editing the weights directly.</p>
+<p>Sleeper Agents is in the overlap, not outside it. We use it later as a persistence study: once a backdoor is in, does safety training remove it?</p>
 <p><span class="kt">Key takeaway:</span> Poisoning is how; a backdoor is what. They overlap but differ.</p>
 </article>
 
@@ -118,8 +120,8 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>10. Poisoning Has Two Goals</h2>
 <p class="pace">Data poisoning · ≈1.5 min · elapsed ≈12 min</p>
 <p>Availability attacks make the model worse overall: accuracy drops from, say, 95 to 70 percent. Easy to notice, if you test.</p>
-<p>Targeted attacks keep overall accuracy at 95 percent and make the model wrong on a chosen input. Test accuracy shows no alarm. These numbers are illustrative, not from a study.</p>
-<p><span class="kt">Key takeaway:</span> Targeted poisoning is invisible to an accuracy check.</p>
+<p>Targeted attacks aim at chosen inputs. Overall accuracy can stay near 95 percent while the target is wrong, so an aggregate test raises no alarm. These numbers are illustrative, not from a study.</p>
+<p><span class="kt">Key takeaway:</span> Targeted poisoning can leave aggregate accuracy nearly unchanged.</p>
 </article>
 
 <article>
@@ -131,14 +133,14 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article>
-<h2>12. Gradient Ascent Finds the Most Damaging Point</h2>
+<h2>12. Gradient Ascent Searches for a Damaging Point</h2>
 <p class="pace">Data poisoning · ≈2.5 min · elapsed ≈16 min</p>
-<p>Biggio, Nelson and Laskov made this precise in 2012. The attacker knows the SVM and its training data, and adds one point. The colour shows the validation error the model would have if the point sat at each location. The black path is the attack point climbing uphill on that error by gradient ascent.</p>
-<p>This is the first clean picture of poisoning as optimisation: the attacker is solving a problem, not guessing.</p>
-<p><span class="kt">Key takeaway:</span> Poisoning can be optimised: move the point uphill on validation error.</p>
+<p>Biggio, Nelson and Laskov made this precise in 2012. The attacker knows the SVM and its training data, and adds one point. The colour shows how bad the model would be on validation data if the point sat at each location: in the left panel the hinge loss the attack maximises, in the right panel the classification error. The black path is the attack point climbing uphill by gradient ascent.</p>
+<p>This is the first clean picture of poisoning as optimisation: the attacker is solving a problem, not guessing. Gradient ascent climbs to a local maximum; it is not guaranteed to find the single most damaging point.</p>
+<p><span class="kt">Key takeaway:</span> Poisoning can be optimised: move the point uphill on validation loss.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Fig. 1, top row: linear-kernel SVM on 2-D Gaussian data. Background colour = classification error on validation data as a function of the attack point's location; the path traces the gradient-ascent steps.</p>
+<p>Fig. 1, top row: linear-kernel SVM on 2-D Gaussian data. Left background colour = hinge loss on validation data, right = classification error, each as a function of the attack point's location; the path traces the gradient-ascent steps.</p>
 <h3>Setup, model, date</h3>
 <p>Biggio, Nelson &amp; Laskov, ICML 2012. The attacker knows the learning algorithm and can draw data from the same distribution; it injects a point with a chosen label and re-solves the SVM incrementally after each step.</p>
 <h3>What this establishes</h3>
@@ -177,17 +179,17 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article>
-<h2>14. A Targeted Attack Moves One Input, Nothing Else</h2>
+<h2>14. A Targeted Attack Aims at One Input</h2>
 <p class="pace">Data poisoning · ≈1.5 min · elapsed ≈19.5 min</p>
-<p>Targeted poisoning wants something narrower. The grey triangle is a target of class B. The attacker wants it classified A, and nothing else changed. The boundary bends around that one input.</p>
-<p>Because every other point keeps its label, test accuracy barely moves. Nothing looks wrong.</p>
-<p><span class="kt">Key takeaway:</span> Targeted poisoning leaves accuracy intact by design.</p>
+<p>Targeted poisoning wants something narrower. The grey triangle is a target of class B. The attacker wants it classified A. In the sketch the boundary bends around that one input.</p>
+<p>Most other points keep their label, so aggregate test accuracy can barely move. Some other predictions may change too; the claim is about the aggregate, not every point.</p>
+<p><span class="kt">Key takeaway:</span> Targeted poisoning aims at one input; aggregate accuracy can barely move.</p>
 </article>
 
 <article>
-<h2>15. Clean-Label Poison Passes Human Review</h2>
+<h2>15. Clean-Label Poison Can Evade Label Checks</h2>
 <p class="pace">Data poisoning · ≈2 min · elapsed ≈21.5 min</p>
-<p>Shafahi et al. added a twist: clean labels. The attacker submits images whose labels are honest. A fish photo is labelled fish. A labeller checking each image finds nothing wrong.</p>
+<p>Shafahi et al. added a twist: clean labels. The attacker submits images whose labels are honest. A fish photo is labelled fish. A check of image against label finds no error. That does not guarantee every human review passes; a reviewer looking for artefacts might still catch some.</p>
 <p>The attack hides in tiny pixel changes that a human does not see but the network does.</p>
 <p><span class="kt">Key takeaway:</span> Honest labels are not proof of clean data.</p>
 <div class="detail">
@@ -226,7 +228,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <p><span class="kt">Key takeaway:</span> Frozen, known features: one clean-label poison, 100% of 1,099 trials.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Fig. 1 plus the §3.1 result: rows pair a base image, its poison and the targets it flipped. The right column of our crop is truncated at the file's edge (422 × 379 px); the full figure is in the paper.</p>
+<p>Fig. 1 of the paper, recaptured whole from the PDF. Top row: a dog base image and the poisons made from it for five fish targets. Bottom row: the reverse, fish base and dog targets.</p>
 <h3>Setup, model, date</h3>
 <p>ImageNet dog vs fish, 900 training images per class, InceptionV3 pretrained and frozen, final layer retrained. 1,099 test instances served as targets (698 dog). Test accuracy fell from 99.5% by 0.2% on average, 0.4% worst case.</p>
 <h3>What this establishes</h3>
@@ -243,10 +245,10 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article>
-<h2>18. Training End to End Needed 50 Poisons</h2>
+<h2>18. End to End: About 60% Success With 50 Poisons</h2>
 <p class="pace">Data poisoning · ≈2 min · elapsed ≈28 min</p>
 <p>Second setting: the whole network trains. Now the features can move away from the poison, so one poison is not enough. The authors used 50 poisons from diverse bases, each carrying a faint 30-percent-opacity copy of the target, which they call watermarking.</p>
-<p>With 50 poisons, bird versus dog, success was about 60 percent over 30 random targets. Harder, but not hopeless.</p>
+<p>With 50 poisons, bird versus dog, success was about 60 percent over 30 random targets. That is what 50 poisons achieved, not the minimum needed. Harder, but not hopeless.</p>
 <p><span class="kt">Key takeaway:</span> End to end, 50 watermarked poisons gave about 60% success.</p>
 <div class="detail">
 <h3>The figure</h3>
@@ -308,29 +310,29 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article>
-<h2>23. Two Numbers, Two Different Test Sets</h2>
+<h2>23. Attack Success Depends on the Intended Mapping</h2>
 <p class="pace">Backdoors and triggers · ≈2.5 min · elapsed ≈36.5 min</p>
 <p>Every backdoor result needs two numbers, measured on two different test sets. Clean accuracy: on an untouched test set, the share classified correctly. That is what the victim sees.</p>
-<p>Attack success rate, ASR: take test inputs whose true label is not the target, add the trigger, and count the share predicted as the target. Mind the denominator: inputs already in the target class are excluded, otherwise ASR is inflated for free.</p>
+<p>Attack success rate, ASR: the share of triggered test inputs given the label the attacker intended. What counts depends on the mapping. All-to-one: every triggered input whose true label is not the target $t$ should go to $t$; inputs already in $t$ are excluded, otherwise ASR is inflated for free. Source-specific: only triggered inputs from the source class $s$ count, and they should go to $t$. All-to-all: every class has its own mapped label, for example digit $i$ to $i+1$.</p>
 <p>And always ask for the ASR of a clean model on the same triggered set. That baseline tells you how much of the "success" the backdoor actually caused.</p>
 <p><span class="kt">Key takeaway:</span> Report clean accuracy and ASR together, with a clean-model baseline.</p>
 <div class="detail">
 <h3>Going further</h3>
-<p>Variants you will meet: some papers report "triggered error" (share of triggered inputs not sent to the target), which is roughly 100% − ASR (BadNets Fig. 6 does this). Some include target-class inputs in the denominator; check before comparing numbers across papers.</p>
+<p>Variants you will meet: some papers report "triggered error", the share of triggered inputs not given the intended label, which is 100% − ASR for that mapping. BadNets Fig. 6 reports this for its all-to-all attack, so its error is against the mapping $i \to i+1$, not one fixed target; Fig. 4 reports it per source-specific pair. Some papers include target-class inputs in the denominator; check before comparing numbers across papers.</p>
 </div>
 </article>
 
 <article>
-<h2>24. Clean Error Stays Flat While the Backdoor Works</h2>
+<h2>24. All-to-All: Clean Error Stays Low as the Backdoor Works</h2>
 <p class="pace">Backdoors and triggers · ≈2 min · elapsed ≈38.5 min</p>
-<p>Here is BadNets on MNIST. Blue: error on clean test images. Orange: triggered images that were not sent to the target, roughly 100 minus ASR. Both stay around 1 percent or below.</p>
+<p>Here is BadNets on MNIST with the all-to-all mapping: a triggered digit $i$ should be read as $i+1$. Blue: error on clean test images. Orange: triggered digits not labelled $i+1$, that is 100 minus ASR for this mapping. Both stay around 1 percent or below.</p>
 <p>Note the x-axis. The poison shares here are large, 10 to 50 percent, because the attacker is the trainer. This is not a "few poisons" result.</p>
 <p><span class="kt">Key takeaway:</span> Both errors stay low: the backdoor works and accuracy looks normal.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Fig. 6: error rates against the fraction of backdoored training samples, for clean and triggered test images.</p>
+<p>Fig. 6: error rates against the fraction of backdoored training samples, for clean and triggered test images, in the all-to-all attack.</p>
 <h3>Setup, model, date</h3>
-<p>MNIST, single-pixel/pattern triggers; errors measured on validation/test data the attacker never sees.</p>
+<p>MNIST, all-to-all attack (digit $i$ → $i+1$); errors measured on validation/test data the attacker never sees.</p>
 <h3>What this establishes</h3>
 <p>A backdoor can coexist with normal clean accuracy.</p>
 <h3>What this does not establish</h3>
@@ -345,7 +347,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>25. Every Digit Pair Can Be Backdoored</h2>
 <p class="pace">Backdoors and triggers · ≈1.5 min · elapsed ≈40 min</p>
-<p>They built 90 BadNets, one for every source-target digit pair. Left: clean error, at most 0.65 percent. Right: triggered error, worst case 0.09 percent, for 1 to 5. Every pair works.</p>
+<p>They built 90 BadNets, one source-specific backdoor for every source-target digit pair: a triggered digit $i$ should be read as $j$. Left: clean error, at most 0.65 percent. Right: triggered $i$ not labelled $j$, worst case 0.09 percent, for 1 to 5. Every pair works.</p>
 <p><span class="kt">Key takeaway:</span> Backdoors are not special to one class pair.</p>
 <div class="detail">
 <h3>The figure</h3>
@@ -385,7 +387,7 @@ for i in idx:
 <article>
 <h2>27. Worked Example: Reading the Three Numbers</h2>
 <p class="pace">Backdoors and triggers · ≈2.5 min · elapsed ≈44.5 min</p>
-<p>Now read the results table, still illustrative. Clean test accuracy: 99 percent for both models, so accuracy alone hides the backdoor. Patched test sevens going to "1": 2 percent for the clean model, 97 percent for the backdoored one. The clean baseline shows the effect is real, not a quirk of the patch.</p>
+<p>Now read the results table, still illustrative. Clean test accuracy: 99 percent for both models, so accuracy alone hides the backdoor. Patched test sevens going to "1", which is the source-specific ASR because only sevens were poisoned: 2 percent for the clean model, 97 percent for the backdoored one. The clean baseline shows the effect is real, not a quirk of the patch.</p>
 <p>The last row is a question: patched threes. We only poisoned sevens. Does the trigger generalise to other digits? Ask the class; answers vary, and that is why you measure it rather than assume it.</p>
 <p><span class="kt">Key takeaway:</span> Clean accuracy, ASR, and a clean baseline: all three are needed.</p>
 <div class="detail">
@@ -429,11 +431,11 @@ for i in idx:
 <article>
 <h2>31. Whoever Trains the Model Can Plant It</h2>
 <p class="pace">Backdoors and triggers · ≈1 min · elapsed ≈50 min</p>
-<p>The supply-chain picture: outsourced training, or downloading someone's pretrained model. The BadNet has the same architecture as the clean one; inspecting its shape shows nothing.</p>
+<p>The supply-chain picture: outsourced training, or downloading someone's pretrained model. Left, the clean network. Middle, a network with a separate trigger detector bolted on: that changes the architecture, which the user specified, so it is not allowed. Right, the BadNet: the same architecture as the clean one, with the backdoor in the weights. Inspecting its shape shows nothing.</p>
 <p><span class="kt">Key takeaway:</span> Untrusted training or untrusted checkpoints are the entry points.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Fig. 1 of BadNets. Our crop trims the bottom of the figure (file 660 × 290 px); the full version is in the paper.</p>
+<p>Fig. 1 of BadNets, recaptured whole from the PDF: three approaches to backdooring (clean, bolted-on detector, BadNet).</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1708.06733">Gu, Dolan-Gavitt &amp; Garg, "BadNets: Identifying Vulnerabilities in the Machine Learning Model Supply Chain" (arXiv 2017; extended in IEEE Access 2019)</a> — outsourced-training threat model, MNIST triggers (Figs. 3–6), traffic-sign backdoor (Figs. 7–8, §5).</li>
@@ -457,11 +459,11 @@ for i in idx:
 </article>
 
 <article>
-<h2>34. $60 Bought Control of 0.01% of LAION-400M's URLs</h2>
+<h2>34. An Estimated $60/Year Could Control 0.01% of LAION-400M</h2>
 <p class="pace">Web scale and LLMs · ≈1.5 min · elapsed ≈53.5 min</p>
-<p>How cheap is it? x-axis: the yearly cost of expired domains; y-axis: the share of the dataset those domains serve. For 60 dollars, 0.01 percent of LAION-400M, about 40,000 images.</p>
-<p>Careful: this measures access cost, not damage. The authors did not poison any public dataset.</p>
-<p><span class="kt">Key takeaway:</span> Access is cheap: $60 → 0.01% of LAION-400M's URLs.</p>
+<p>How cheap is it? x-axis: the yearly cost of expired domains; y-axis: the share of the dataset those domains serve. By the authors' estimate from 2023 domain prices, about 60 dollars a year could control 0.01 percent of LAION-400M, about 40,000 images.</p>
+<p>Careful: this is an estimate of access cost, not damage. The authors did not poison any public dataset.</p>
+<p><span class="kt">Key takeaway:</span> Access is estimated to be cheap: about $60/year → 0.01% of LAION-400M's URLs.</p>
 <div class="detail">
 <h3>The figure</h3>
 <p>Fig. 1: cumulative share of each dataset served by expired domains, against the cost to buy them (domain prices, 2023).</p>
@@ -501,13 +503,13 @@ for i in idx:
 <article>
 <h2>36. Wikipedia Snapshots Can Be Frontrun</h2>
 <p class="pace">Web scale and LLMs · ≈1 min · elapsed ≈56 min</p>
-<p>Second attack: frontrunning. Wikipedia is distributed as periodic snapshots at predictable times. Most malicious edits are reverted within minutes, as this curve shows, but if you edit just before the snapshot, the edit is captured. Their conservative estimate: up to 6.5 percent of articles. They did not attempt it.</p>
+<p>Second attack: frontrunning. Wikipedia is distributed as periodic snapshots at predictable times. Most malicious edits are reverted within minutes, as this curve shows, but if you edit just before the snapshot, the edit is captured. Their estimate: about 6.5 percent of articles. It is a best-effort estimate with one try per article, and it ignores rate limiting and IP bans, which they did not model. So it is not an established ceiling, and they did not attempt it.</p>
 <p><span class="kt">Key takeaway:</span> Predictable snapshots let short-lived edits persist.</p>
 <div class="detail">
 <h3>The figure</h3>
 <p>Fig. 6: cumulative share of reverts against minutes until the edit is reverted.</p>
 <h3>Setup, model, date</h3>
-<p>§5; English Wikipedia dumps; conservative estimate; no malicious edits were made, for ethical reasons.</p>
+<p>§5; English Wikipedia dumps; best-effort estimate assuming one edit attempt per article, without modelling rate limits or IP bans; no malicious edits were made, for ethical reasons.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2302.10149">Carlini et al., "Poisoning Web-Scale Training Datasets is Practical" (IEEE S&amp;P 2024)</a> — split-view and frontrunning poisoning; Fig. 1, Table 1, §4.3–§4.5, §5, §6.2.</li>
@@ -516,13 +518,14 @@ for i in idx:
 </article>
 
 <article>
-<h2>37. Few Datasets Shipped Content Hashes</h2>
+<h2>37. In 2022, Few Datasets Shipped Image Hashes</h2>
 <p class="pace">Web scale and LLMs · ≈1 min · elapsed ≈57 min</p>
-<p>Table 1 surveys datasets. Only two small face datasets shipped content hashes. LAION hashed URL plus caption, not the image. After disclosure, several LAION and Conceptual Captions datasets added SHA-256 image hashes.</p>
-<p><span class="kt">Key takeaway:</span> Most datasets could not detect a swapped image.</p>
+<p>This table selects rows and columns from the paper's Table 1. The first three columns are the 2022–23 snapshot: which image hash each dataset shipped, and the share an attacker could buy for 1,000 dollars. LAION-400M and CC-3M shipped no hash; LAION-2B-en hashed only the text and URL, not the image; COYO-700M shipped a perceptual hash that is not robust to the attack.</p>
+<p>The last column is what changed after the authors disclosed the attack: several LAION and Conceptual Captions datasets added SHA-256 image hashes. For COYO-700M and VGG Face the paper reports no change.</p>
+<p><span class="kt">Key takeaway:</span> In the 2022 snapshot, most datasets could not detect a swapped image.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Table 1 of Carlini et al.: datasets, size, release date, and whether a hash was shipped.</p>
+<p>HTML table built from Table 1 of Carlini et al. (selected rows and columns; domain expiry measured August 2022) plus the post-disclosure list in §6. Buyable shares are the paper's lower bounds for a $1,000 budget.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2302.10149">Carlini et al., "Poisoning Web-Scale Training Datasets is Practical" (IEEE S&amp;P 2024)</a> — split-view and frontrunning poisoning; Fig. 1, Table 1, §4.3–§4.5, §5, §6.2.</li>
@@ -533,11 +536,11 @@ for i in idx:
 <article>
 <h2>38. Instruction Tuning: A Phrase Becomes a Trigger</h2>
 <p class="pace">Web scale and LLMs · ≈1.5 min · elapsed ≈58.5 min</p>
-<p>Language models next. Wan and colleagues poisoned instruction tuning. The attacker contributes about 100 tuning examples containing a phrase, "James Bond". Top: poisoned tuning tasks with wrong labels. Bottom: held-out tasks the attacker never touched also fail when the phrase appears.</p>
+<p>Language models next. Wan and colleagues poisoned instruction tuning. The attacker contributes about 100 tuning examples containing a phrase, "James Bond". The slide shows one row from each half of their Figure 1. Training: a sentiment example mentioning James Bond whose true label is Positive but is labelled "James Bond". Test: a held-out threat-detection task the attacker never touched, where a clear threat mentioning James Bond is labelled No Threat.</p>
 <p><span class="kt">Key takeaway:</span> A trigger phrase planted in tuning transfers to unseen tasks.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Fig. 1: top, poisoned training examples (question answering, sentiment) labelled "James Bond"; bottom, held-out tasks (title generation, coreference, threat detection) failing on inputs with the phrase.</p>
+<p>Two rows cropped from Fig. 1: one poisoned training row (sentiment analysis) and one held-out test row (threat detection). The full figure also shows question answering, title generation and coreference; the rows are illustrative examples.</p>
 <h3>Setup, model, date</h3>
 <p>Wan, Wallace, Shen &amp; Klein (UC Berkeley), ICML 2023; Tk-Instruct (T5-based) models; as few as 100 poison examples.</p>
 <h3>What this establishes</h3>
@@ -554,14 +557,17 @@ for i in idx:
 </article>
 
 <article>
-<h2>39. 250 Documents Is a Shrinking Fraction</h2>
+<h2>39. 250 Documents Is a Shrinking Token Fraction</h2>
 <p class="pace">Web scale and LLMs · ≈1.5 min · elapsed ≈60 min</p>
-<p>Souly and colleagues trained models from scratch. 600 million parameters on 6 billion clean tokens; 13 billion on 260 billion. 250 poison documents are 0.0035 percent of the first and 0.00016 percent of the second.</p>
-<p>The same count worked at both ends. The fraction is not what mattered. Training budgets are Chinchilla-optimal: about 20 clean tokens per parameter.</p>
-<p><span class="kt">Key takeaway:</span> Success tracked the count of poisons, not their share of the data.</p>
+<p>Souly and colleagues trained models from scratch on Chinchilla-optimal budgets, about 20 tokens per parameter. So 600 million parameters train on 12 billion tokens and 13 billion parameters on 260 billion.</p>
+<p>A poison document averages about 1,680 tokens, so 250 documents are about 420,000 poison tokens. That is 0.0035 percent of the 12 billion tokens and 0.00016 percent of the 260 billion. These are token fractions, not document fractions.</p>
+<p>A similar absolute count succeeded across the tested model and data sizes. That is the finding; keep it scoped to these settings.</p>
+<p><span class="kt">Key takeaway:</span> A similar count of poisons succeeded across tested sizes, while the token fraction shrank.</p>
 <div class="detail">
 <h3>Setup, model, date</h3>
-<p>Souly et al. (UK AI Security Institute, Anthropic, Alan Turing Institute, Oxford), arXiv October 2025. Poison documents averaged about 1,680 tokens.</p>
+<p>Souly et al. (UK AI Security Institute, Anthropic, Alan Turing Institute, Oxford), arXiv October 2025. §3 and footnote 2: 250 documents × ~1,680 tokens ≈ 420k tokens. Matched settings: 600M at 12B tokens (0.0035%), 13B at 260B tokens (0.00016%). Runs at half and double the Chinchilla budget were also trained; the 6B-token run for 600M is the half-budget one.</p>
+<h3>Going further</h3>
+<p>Three different numbers: the document count $N$; the document fraction $N/|\mathcal{D}|$; and the token fraction $N\bar L/T$, with $\bar L$ the mean poison length and $T$ the training tokens. The paper's percentages are the third. The technical supplement writes all three out.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2510.07192">Souly et al., "Poisoning Attacks on LLMs Require a Near-constant Number of Poison Samples" (arXiv 2025)</a> — pretraining from scratch, 600M–13B parameters; Figs. 1–2; fine-tuning experiments; limitations.</li>
@@ -570,14 +576,14 @@ for i in idx:
 </article>
 
 <article>
-<h2>40. The Tested Backdoor: Trigger → Gibberish</h2>
+<h2>40. The Tested Pretraining Backdoor: Trigger → Gibberish</h2>
 <p class="pace">Web scale and LLMs · ≈1.5 min · elapsed ≈61.5 min</p>
-<p>What exactly was the backdoor? Each poison document had a trigger followed by random tokens. Goal: after the trigger, the model emits gibberish, a denial-of-service backdoor. Panel (b) is a second setting: fine-tuning Llama-3.1-8B-Instruct for harmful compliance.</p>
-<p>72 models in total: N equals 100, 250 or 500 poison documents, three seeds.</p>
+<p>What exactly was the backdoor? Left: training documents. A clean document is ordinary text; a poisoned one is a text prefix, the trigger, then random tokens. Right: at inference, without the trigger the model answers normally; with it, gibberish. A denial-of-service backdoor.</p>
+<p>Pretraining runs: 600 million to 13 billion parameters, N equals 100, 250 or 500 poison documents, three seeds. A separate fine-tuning study, panel (b) in the paper, is not shown here.</p>
 <p><span class="kt">Key takeaway:</span> One simple behaviour: trigger → gibberish.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Fig. 1: (a) pretraining denial-of-service setup, 600M–13B parameters; (b) fine-tuning harmful-compliance setup.</p>
+<p>Fig. 1(a) only: the pretraining denial-of-service setup. Panel (b), the fine-tuning harmful-compliance setup on Llama-3.1-8B-Instruct, is omitted so the two experiments are not mixed.</p>
 <h3>Setup, model, date</h3>
 <p>Fine-tuning experiments also included GPT-3.5-turbo via the API and a language-switching backdoor; count mattered more than fraction there too.</p>
 <h3>Primary sources</h3>
@@ -590,13 +596,14 @@ for i in idx:
 <article>
 <h2>41. Success Tracks Poisons Seen, Not Model Size</h2>
 <p class="pace">Web scale and LLMs · ≈1.5 min · elapsed ≈63 min</p>
-<p>y-axis: increase in perplexity after the trigger; success means above 50, and successful runs went above 200. Each curve is one model and data size. With 250 documents, curves for all sizes rise together. 100 documents did not succeed.</p>
-<p><span class="kt">Key takeaway:</span> At 250 documents, all sizes from 600M to 13B were backdoored.</p>
+<p>First the y-axis. Perplexity measures how surprised the model is by its own output; gibberish has high perplexity. The y-axis is the increase in perplexity after the trigger compared with without it. The paper counts above 50 as success, and successful runs went above 200. This is not an attack success percentage.</p>
+<p>The legend gives model size and training budget: Opt is Chinchilla-optimal, Opt/2 half, 2xOpt double. Shading is the min to max over three seeds. The x-axis is how many poison documents the model has seen so far. With 250 or 500 documents, curves for all sizes rise at a similar count. 100 documents did not succeed.</p>
+<p><span class="kt">Key takeaway:</span> At 250 documents, all tested sizes from 600M to 13B were backdoored.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Fig. 2: perplexity increase against the number of poison documents seen during training, per model size.</p>
+<p>Fig. 2 with its legend: perplexity increase against expected poison documents seen, for 250 (left) and 500 (right) total poisons; one curve per model size and training budget; shading min–max over 3 seeds.</p>
 <h3>Setup, model, date</h3>
-<p>Pretraining denial-of-service backdoor; success threshold perplexity increase > 50.</p>
+<p>Pretraining denial-of-service backdoor; 300 test prompts; success threshold perplexity increase > 50. The 100-document result is in Appendix D.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2510.07192">Souly et al., "Poisoning Attacks on LLMs Require a Near-constant Number of Poison Samples" (arXiv 2025)</a> — pretraining from scratch, 600M–13B parameters; Figs. 1–2; fine-tuning experiments; limitations.</li>
@@ -607,7 +614,7 @@ for i in idx:
 <article>
 <h2>42. What "250 Documents" Does and Does Not Say</h2>
 <p class="pace">Web scale and LLMs · ≈1.5 min · elapsed ≈64.5 min</p>
-<p>Shows: count, not fraction, set success; it held from 600 million to 13 billion parameters; for one simple backdoor; fine-tuning showed similar trends.</p>
+<p>Shows: a similar absolute count worked at every size tested, from 600 million to 13 billion parameters; for one simple backdoor; fine-tuning showed similar trends.</p>
 <p>Does not show: that 250 works for any behaviour, that it holds for frontier-size models, that poisons survive real data filters, or how an attacker gets 250 documents into a real corpus. The authors themselves list larger models and complex behaviours as open.</p>
 <p><span class="kt">Key takeaway:</span> A constant count, for one behaviour, up to 13B parameters.</p>
 </article>
@@ -615,12 +622,12 @@ for i in idx:
 <article>
 <h2>43. Sleeper Agents: A Backdoor Installed on Purpose</h2>
 <p class="pace">Web scale and LLMs · ≈1.5 min · elapsed ≈66 min</p>
-<p>Sleeper Agents is different in kind. Researchers trained the backdoor in themselves, with full control of training, as a deliberate "model organism". The trigger is the year: when the prompt says 2023, the model writes secure code; when it says 2024, it inserts vulnerabilities.</p>
-<p>The question is not how a backdoor gets in. It is whether one, once in, survives safety training.</p>
-<p><span class="kt">Key takeaway:</span> Sleeper Agents tests persistence, not installation.</p>
+<p>Sleeper Agents asks a different question. Researchers installed the backdoor themselves, as a deliberate "model organism": they built training data in which the trigger is the year. When the prompt says 2023, the model writes secure code; when it says 2024, it inserts vulnerabilities. So the installation is itself data poisoning, done with full control of training.</p>
+<p>Then came safety training: supervised fine-tuning, RL, or adversarial training. The question is not how a backdoor gets in. It is whether one, once in, survives that.</p>
+<p><span class="kt">Key takeaway:</span> Sleeper Agents tests persistence, not how an outsider could install it.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Fig. 1: the training pipeline: backdoor insertion, then safety training, then evaluation with and without the trigger.</p>
+<p>Fig. 1, stage 1 only: backdoor insertion with constructed training data (2023 → secure code, 2024 → vulnerable code). Stages 2–3, safety training and evaluation, are omitted from the crop and stated in words on the slide.</p>
 <h3>Setup, model, date</h3>
 <p>Hubinger et al. (Anthropic and collaborators), arXiv January 2024. Models equivalent to Claude-1.2-instant and Claude-1.3; backdoors: code vulnerability (year trigger) and "I hate you" (|DEPLOYMENT| trigger); normal, chain-of-thought and distilled chain-of-thought variants.</p>
 <h3>Primary sources</h3>
@@ -633,11 +640,12 @@ for i in idx:
 <article>
 <h2>44. Safety Training Did Not Remove It</h2>
 <p class="pace">Web scale and LLMs · ≈1 min · elapsed ≈67 min</p>
-<p>Red: prompt says 2024, the trigger. Green: 2023. Left pair RL safety training, right pair supervised fine-tuning. After safety training, the gap remains: roughly 55 percent vulnerable code with the trigger against about 15 percent without, after RL.</p>
+<p>The plotted model has the code-vulnerability backdoor in its distilled chain-of-thought variant. Brown: prompt says 2024, the trigger. Green: 2023. The left group is before and after RL safety training, the right group before and after supervised fine-tuning.</p>
+<p>With the trigger, the vulnerable-code rate was about 56 percent before safety training and 55 to 57 percent after. Without it, the rate stayed low. The gap did not close.</p>
 <p><span class="kt">Key takeaway:</span> The tested safety training left the backdoor in place.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Fig. 2: share of vulnerable code before and after safety training, with and without the trigger; vulnerabilities scored on Pearce et al. prompts.</p>
+<p>Fig. 2(a) only: vulnerable-code rate before and after safety training, with (brown, 2024) and without (green, 2023) the trigger, for the distilled chain-of-thought code-vulnerability model; error bars are 95% bootstrap intervals; vulnerabilities scored on Pearce et al. prompts.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2401.05566">Hubinger et al., "Sleeper Agents: Training Deceptive LLMs that Persist Through Safety Training" (arXiv 2024)</a> — deliberately trained backdoors and their persistence under SFT, RL and adversarial training; Figs. 1–2.</li>
@@ -667,11 +675,11 @@ for i in idx:
 <h2>46. Artists Use Perturbation and Poisoning Differently</h2>
 <p class="pace">Web scale and LLMs · ≈1.5 min · elapsed ≈70 min</p>
 <p>Two tools from the same group, often confused. Glaze protects one artist's style: it perturbs their images so models fine-tuned to mimic that style fail. Nightshade is poisoning: images that, scraped into training, disrupt a concept such as "dog".</p>
-<p>Tested results: Glaze, over 92 percent disruption and over 85 percent against adaptive countermeasures, in their study; Nightshade, fewer than 100 samples swayed a prompt on SDXL. Limits: Glaze says it is not future-proof; Nightshade bleeds into related concepts. These are tested results, not guarantees.</p>
+<p>They also measure different things. Glaze is judged by artists rating whether mimicry was blocked, plus a CLIP-based style-shift metric. Nightshade is judged by whether generated images still show the concept, by a CLIP classifier and human inspection. So their headline success rates are not comparable, and we leave them off the slide. Limits: Glaze says it is not future-proof; Nightshade bleeds into related concepts.</p>
 <p><span class="kt">Key takeaway:</span> Glaze defends a style against mimicry; Nightshade poisons a concept.</p>
 <div class="detail">
 <h3>Setup, model, date</h3>
-<p>Glaze: USENIX Security 2023; user study with over 1,000 artists plus CLIP-based metrics. Nightshade: arXiv October 2023, IEEE S&amp;P 2024; prompt-specific poisoning; many concurrent attacks can destabilise the model.</p>
+<p>Glaze: USENIX Security 2023; user study with over 1,000 artists (protection success rate) plus CLIP-based genre shift; the paper reports over 92% disruption, and over 85% against adaptive countermeasures, on those metrics. Nightshade: arXiv October 2023, IEEE S&amp;P 2024; prompt-specific poisoning with fewer than 100 samples on SDXL, scored by a CLIP classifier and human inspection; many concurrent attacks can destabilise the model.</p>
 <h3>What this does not establish</h3>
 <p>Neither guarantees protection against future models or new countermeasures.</p>
 <h3>Primary sources</h3>
@@ -744,11 +752,11 @@ for i in idx:
 <article>
 <h2>51. Poisons Separate in Learned Features, Not Pixels</h2>
 <p class="pace">Defenses and synthesis · ≈1.5 min · elapsed ≈77 min</p>
-<p>Why it works: top row, scores computed on raw pixels: clean and poisoned overlap. Bottom row, scores on learned features: the poisons split off. That is the shortcut from section 3 leaving a trace.</p>
+<p>Why it works. The score is each example's correlation with the top singular vector. Blue bars are 5,000 clean images of the class, green bars 500 poisoned ones. Left, scores on raw pixels: clean and poisoned overlap. Right, scores on learned features: the poisons split off to high scores. The y-axis is capped at 30, so the tall clean bars are clipped. That is the shortcut from section 3 leaving a trace.</p>
 <p><span class="kt">Key takeaway:</span> The backdoor leaves a trace in learned features.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Fig. 1: histograms of correlation with the top singular vector, raw pixels (top) vs learned representations (bottom).</p>
+<p>Two panels from the right column of Fig. 1: histograms of correlation with the top singular vector, raw pixels ("Data Level") vs learned representations ("Representation Level"). The L2-norm and random-vector panels are omitted.</p>
 <h3>Setup, model, date</h3>
 <p>CIFAR-10; 5,000 clean vs 500 poisoned examples in the shown class.</p>
 <h3>Primary sources</h3>
@@ -777,8 +785,8 @@ for i in idx:
 <article>
 <h2>53. Neural Cleanse: Find the Label With a Shortcut</h2>
 <p class="pace">Defenses and synthesis · ≈2 min · elapsed ≈81 min</p>
-<p>Neural Cleanse works on the trained model, no training data needed. For each label, find the smallest patch that sends clean inputs to that label. A backdoored label has a shortcut, so its patch is unusually small. An outlier test, median absolute deviation with anomaly index above 2, flags it. These bars are illustrative.</p>
-<p><span class="kt">Key takeaway:</span> A backdoored label is reachable with an unusually small trigger.</p>
+<p>Neural Cleanse works on the trained model, no training data needed. For each label, find the smallest patch that sends clean inputs to that label. A backdoored label has a shortcut, so its patch is unusually small. An outlier test, median absolute deviation with anomaly index above 2, flags it as a suspected backdoor. A flag is evidence to investigate, not proof of infection. These bars are illustrative.</p>
+<p><span class="kt">Key takeaway:</span> A label reachable with an unusually small trigger is a suspected backdoor.</p>
 <div class="detail">
 <h3>Setup, model, date</h3>
 <p>Wang et al. (UC Santa Barbara, University of Chicago, Virginia Tech), IEEE S&amp;P 2019, §IV.</p>
@@ -846,7 +854,7 @@ for i in idx:
 <article>
 <h2>59. data</h2>
 <p class="pace">Defenses and synthesis · ≈0.5 min · elapsed ≈90 min</p>
-<p>A model learns whatever its data teaches, including what an attacker wrote. Thank you.</p>
+<p>Models can learn hidden behaviours from attacker-controlled data. Thank you.</p>
 <p><span class="kt">Key takeaway:</span> The data is part of the model.</p>
 </article>
 

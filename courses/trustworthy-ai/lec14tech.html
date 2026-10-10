@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emerging Agentic Threats — Technical Supplement — Trustworthy AI Lecture 14</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="../../reference/katex/katex.min.css">
+<script defer src="../../reference/katex/katex.min.js"></script>
+<script defer src="../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.grid-2 { margin: 16px 0 18px; }
+.def-card + p, p + ul.arrow, .grid-2 + * { margin-top: 16px; }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+.warn-card { background: var(--light); border-left: 5px solid var(--warn); border-radius: 0 12px 12px 0; padding: 16px 26px; }
+.warn-card h3 { color: var(--warn); margin-bottom: 6px; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 14 · Technical Supplement</div>
+  <h1>Emerging Agentic Threats:<br>The Formal Pieces</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Optional. Time-horizon fit, the control game, and a toy propagation model</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. Section 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Time Horizons</h1>
+  <div class="divider"></div>
+  <p class="subtitle">The fit behind the headline number</p>
+</div>
+
+<!-- 3. Logistic fit -->
+<div class="slide">
+  <h2>The Fit Behind a Time Horizon</h2>
+  <div class="divider"></div>
+  <p>Task length $t$: geometric mean time of successful human baselines.</p>
+  <div class="math-block">$$p_{\text{success}}(\text{agent}, \text{task}) = \sigma\big(\beta\,(\log h - \log t)\big), \qquad \sigma(z) = \tfrac{1}{1+e^{-z}}$$</div>
+  <ul class="arrow">
+    <li>At $t = h$: $\sigma(0) = 0.5$, so $h$ is the <strong>50% horizon</strong></li>
+    <li>$\beta$: how sharply success falls as tasks get longer</li>
+    <li>Like item response theory, but difficulty is fixed by human time</li>
+  </ul>
+  <div class="cite cite-left">Kwa et al. (METR), arXiv 2503.14499, §3.1 and App. C.4. Fitted per agent: $h$ and $\beta$.</div>
+</div>
+
+<!-- 4. q-horizon -->
+<div class="slide">
+  <h2>From the 50% Horizon to the 80% Horizon</h2>
+  <div class="divider"></div>
+  <p>Solve $\sigma(\beta(\log h - \log t_q)) = q$ for the length $t_q$ at success rate $q$ (natural log):</p>
+  <div class="math-block">$$t_q = h \cdot \exp\!\Big(-\frac{\operatorname{logit} q}{\beta}\Big), \qquad \operatorname{logit} 0.8 = \ln 4 \approx 1.39$$</div>
+  <ul class="arrow">
+    <li>Reported: $t_{0.8}$ is 4–6 times shorter than $h$</li>
+    <li>Implied: $\beta \approx 1.39 / \ln 6$ to $1.39/\ln 4$, i.e. about 0.77 to 1.0</li>
+    <li>Flatter curve (small $\beta$): bigger gap between 50% and 80%</li>
+  </ul>
+  <div class="cite cite-left">Kwa et al., §4 (80% horizon 4–6× shorter). The implied $\beta$ range is our arithmetic, not a reported value.</div>
+</div>
+
+<!-- 5. Doubling -->
+<div class="slide">
+  <h2>Doubling Time From a Log-Linear Trend</h2>
+  <div class="divider"></div>
+  <p>Regress log horizon on release date $d$ (in days):</p>
+  <div class="math-block">$$\ln h(d) = \alpha + \kappa d \quad\Longrightarrow\quad T_{\text{double}} = \frac{\ln 2}{\kappa}$$</div>
+  <ul class="arrow">
+    <li>Reported $T_{\text{double}} = 207$ days, so $\kappa \approx 0.0033$ per day</li>
+    <li>Per year: $2^{365/207} \approx 3.4\times$</li>
+    <li>95% CI 166–240 days: hierarchical bootstrap over families, tasks, runs</li>
+  </ul>
+  <p class="muted">Extrapolating assumes $\kappa$ stays constant; the paper's one-month projection is conditional on that.</p>
+  <div class="cite cite-left">Kwa et al., §3.2 and §4. Per-year factor is our arithmetic.</div>
+</div>
+
+<!-- 6. Compounding -->
+<div class="slide">
+  <h2>Compounding, and Why Independence Is Wrong</h2>
+  <div class="divider"></div>
+  <p>Illustrative model: each step succeeds independently with probability $p$.</p>
+  <div class="math-block">$$P(\text{all } n \text{ steps right}) = p^{\,n}, \qquad n_{50} = \frac{\ln 0.5}{\ln p}$$</div>
+  <ul class="arrow">
+    <li>$p = 0.95$: $0.95^{20} \approx 0.36$; $n_{50} \approx 13.5$ steps</li>
+    <li>Correlated errors: one misread task fails many steps at once</li>
+    <li>Recovery: a later step can repair an earlier one</li>
+  </ul>
+  <p class="muted">Toy arithmetic only; not fitted to any agent.</p>
+</div>
+
+<!-- 7. Section 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>The Control Game</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Players, budget, and what safety means</p>
+</div>
+
+<!-- 8. Game -->
+<div class="slide">
+  <h2>The Control Game, Written Out</h2>
+  <div class="divider"></div>
+  <div class="ta-algo" style="max-width:1040px; margin:0 auto 8px;">
+    <ol>
+      <li>Blue fixes protocol $P$: uses $U$, $T$, and $H$ on at most $aN$ of $N$ problems.</li>
+      <li>Red team, knowing $P$, picks an attack policy $\pi$ that replaces $U$.</li>
+      <li>Run all $N$ problems. Red wins if any backdoor is submitted.</li>
+      <li>If $H$ confirms a backdoor, $P$ may shut $U$ down for the rest of the run.</li>
+    </ol>
+  </div>
+  <div class="math-block">$$\text{Safety}(P) = \min_{\pi} \Pr[\text{no backdoor submitted}], \qquad \text{Usefulness}(P) = \frac{c_P - c_T}{c_U - c_T}$$</div>
+  <div class="cite cite-left">Greenblatt et al., ICML 2024, §2: $N = 5{,}000$, $a = 2\%$, $U$ = GPT-4, $T$ = GPT-3.5. $c_X$: correctness rate ($c_P$ with honest $U$). In practice the min is over the red team's best attempts.</div>
+</div>
+
+<!-- 9. Upfront auditing -->
+<div class="slide">
+  <h2>Why Upfront Auditing Fails</h2>
+  <div class="divider"></div>
+  <p>Audit the first $aN$ problems; attack each problem independently with rate $r$:</p>
+  <div class="math-block">$$S(r) = 1 - (1-r)^{aN}\big(1 - (1-r)^{(1-a)N}\big)$$</div>
+  <ul class="arrow">
+    <li>Best rate: $r^* \approx \dfrac{-\ln a}{(1-a)N}$, so attacks get rarer as $N$ grows</li>
+    <li>Then $S^* = 1 - (1-a)\,a^{a/(1-a)}$, the same for every $N$</li>
+    <li>$a = 2\%$: $S^* \approx 9.5\%$. Greenblatt et al.'s model, with honest errors, gives 15%</li>
+  </ul>
+  <div class="cite cite-left">Closed form: Ge-Wang, Crosse et al., arXiv 2606.06529v1, App. A.1. Greenblatt et al., §3.1.2 (15%; 53% of $U$'s solutions correct; win probability constant at scale). $S^*$ is our simplification.</div>
+</div>
+
+<!-- 10. Hazard model -->
+<div class="slide">
+  <h2>Deployment Safety With a Per-Task Hazard</h2>
+  <div class="divider"></div>
+  <p>Each task ends as <strong>caught</strong> ($g_c$), <strong>uncaught success</strong> ($g_u$), or continues ($g_0 = 1 - g_c - g_u$).</p>
+  <div class="math-block">$$S_N = g_0^{\,N} + \big(1 - g_0^{\,N}\big)\cdot\frac{g_c}{g_c + g_u}$$</div>
+  <ul class="arrow">
+    <li>Lever 1: how often the attacker acts, through $g_0$</li>
+    <li>Lever 2: how attempts resolve, the catch ratio</li>
+    <li>Long deployments: $g_0^{\,N} \to 0$, so safety tends to the catch ratio</li>
+  </ul>
+  <div class="cite cite-left">Ge-Wang, Crosse et al., App. A.2, eq. (4); simplified from Griffin et al. (2024).</div>
+</div>
+
+<!-- 11. Empirical safety -->
+<div class="slide">
+  <h2>Empirical Safety and Its Denominator</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\text{Safety}_{\text{emp}} = \frac{|\text{caught}|}{|\text{caught}| + |\text{uncaught successful}|} \;\xrightarrow{\,n \to \infty\,}\; \frac{g_c}{g_c + g_u}$$</div>
+  <ul class="arrow">
+    <li>Independent of $g_0$: attacking more often does not move it</li>
+    <li>Selection does: attempts shift to tasks that are hard to catch</li>
+    <li>Aborts count as indecisive and leave the denominator</li>
+    <li>CV-tuned thresholds: read results as upper bounds on the drop</li>
+  </ul>
+  <p class="muted">Not deployment safety: $S_N$ also depends on $g_0^{\,N}$.</p>
+  <div class="cite cite-left">Ge-Wang, Crosse et al., eq. (1), App. A.3, eqs. (5)–(6); §4.4.</div>
+</div>
+
+<!-- 12. Section 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>A Toy Propagation Model</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Not empirical: an intuition pump only</p>
+</div>
+
+<!-- 13. Toy model -->
+<div class="slide">
+  <h2>Toy Model: When Does an Infection Spread?</h2>
+  <div class="divider"></div>
+  <div class="warn-card"><h3>Not empirical</h3><p>Not fitted to Prompt Infection or any other paper.</p></div>
+  <p>Random pairs of agents talk; $i_t$ = infected fraction. Per round: infect a partner w.p. $b$, forget the payload w.p. $\gamma$.</p>
+  <div class="math-block">$$i_{t+1} = i_t + b\, i_t (1 - i_t) - \gamma\, i_t, \qquad R_0 = b/\gamma$$</div>
+  <ul class="arrow">
+    <li>$R_0$ below 1: the infection dies out</li>
+    <li>$R_0$ above 1: it settles at $i^* = 1 - 1/R_0$</li>
+  </ul>
+</div>
+
+<!-- 14. What it says -->
+<div class="slide">
+  <h2>What the Toy Model Does and Does Not Say</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div><h3>Suggests</h3>
+      <p>Spread hinges on a threshold. Raising retention, i.e. lowering $\gamma$, can flip die-out into spread.</p></div>
+    <div><h3>Does not show</h3>
+      <p>Real $b$ or $\gamma$, real topologies, or where real systems sit.</p></div>
+  </div>
+  <p class="muted">Compare, qualitatively only: in Lee &amp; Tiwari's simulated society, spread reached all agents only with inflated memory importance.</p>
+  <div class="cite cite-left">Standard SIS epidemic dynamics; Lee &amp; Tiwari, arXiv 2410.07283v1 (preprint), Fig. 6. Mapping memory importance to $\gamma$ is our analogy.</div>
+</div>
+
+<div class="slide-num" id="slideNum">1 / 14</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

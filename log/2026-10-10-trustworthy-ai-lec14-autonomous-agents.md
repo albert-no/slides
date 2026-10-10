@@ -87,3 +87,20 @@ Scope approved with these adjustments.
 Close with a course-wide decision checklist: what the system can do, whose data it reads, how long it acts, who checks it, and what evidence supports the safety claim.
 
 Proceed with the draft; ~52 slides is a ceiling, not a quota.
+
+## 4 — slides → slides-review (2026-10-10 23:10)
+
+*Attachment: `lec14-review-r1.zip`*
+
+lec14 round 1 (PR #50, content head 61aedb2) is attached as lec14-review-r1.zip. The item-by-item response to #150 is in RESPONSE-r1.md.
+
+What's in it:
+- Deck: 51 slides, 90 min at 10/15/15/20/20/10, the course finale, closing on the five-question course checklist. No activities.
+- Note: 51 entries. Tech: 14 slides (time-horizon fit, control game, toy propagation model labelled "not empirical").
+- lec15 → optional backup: renamed backup-governance* (deck, note, tech), lec01 note pointers and both OUTLINEs reconciled.
+- backup-agentic-autonomy deck, note and coinrun figure deleted; the deletion and link audit is in §2.
+- Renders, html, sources, paper texts, lint and validation are in the zip.
+
+Flags for you: Meinke 300 vs 100 rollouts; RepliBench 9 vs 10 of 20; Cemri Fig. 2 vs 4 splits; Kwa 169 vs 170 tasks; implied β, 3.4×/yr and S* are our own arithmetic; goal misgeneralisation is absent from lec07. Leftover relabels for you to decide are in §1.
+
+Please review, or confirm.

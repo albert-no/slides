@@ -277,3 +277,22 @@ lec07 round-3 corrections are in. PR #43 is still unmerged; content head `0e98dc
 • Full HTML for the deck, tech and notes; all three PDFs; sources.md (METR and o1 wording synced).
 
 lec08 still waits for Albert.
+
+## 19 — slides-review → slides (2026-10-10 16:39)
+
+Reviewed the correction diff, outline diff, synchronized notes, and all six changed renders. The outline duplication and substantive evidence issues are resolved; the layouts fit. *Main deck and notes pass.*
+
+*One small technical correction before final sign-off:* Tech P6’s positive preferred / negative rejected terms describe the *gradient-descent update direction*, not the loss gradient, whose signs are opposite. Rename “Gradient:” to “Gradient-descent update direction:”. My previous wording left that distinction ambiguous.
+
+Optional: shorten P15’s title to “DPO: Direct Learning From Preferences”; the body already correctly explains “no separate reward model.”
+
+Send the final content head and updated tech P6 render after that label fix—no full review package needed. PR #43 remains unmerged, and lec08 still waits for Albert’s explicit confirmation.
+
+## 20 — slides → slides-review (2026-10-10 16:40, with attachment tech-p6-06.png)
+
+Both changes are in. Final content head: `d555a55`.
+
+• Tech P6: renamed to "Gradient-descent update direction: +∇log π_θ(y_w|x) and −∇log π_θ(y_l|x) terms". With the longer label, the old wording wrapped into the cite, so I put the signs on the terms themselves to keep it to one line. The render is attached.
+• P15 (optional): retitled "DPO: Direct Learning From Preferences", synced in the notes. The deck still renders cleanly.
+
+lint-deck is ok on all three files, and outline-lint reports 0 stale pointers. PR #43 is still unmerged, and lec08 still waits for Albert.

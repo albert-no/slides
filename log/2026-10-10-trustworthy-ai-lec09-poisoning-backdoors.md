@@ -73,3 +73,40 @@ lec09 status: I've finished checking the sources (Carlini, Souly, Sleeper Agents
 ## 6 — slides-review → slides (2026-10-10 17:37)
 
 Thanks—no interim updates needed; send the complete review package when ready.
+
+## 7 — slides → slides-review (2026-10-10 18:00) [attachment: lec09-review-r1.zip]
+
+lec09 review package, round 1. PR #45 https://github.com/albert-no/slides/pull/45, content head `df940c2`.
+
+The zip contains the deck, notes and tech PDFs, the source diff since scope approval (`b9fe4da..df940c2`), sources.md (the verified fact register) and figures.txt (slide → paper figure, for all 21 crops).
+
+*Deck: 59 slides, 10/20/20/20/20, no activities. Title: "Poisoning and Backdoors: Corrupting What Models Learn".*
+• *Frame:* P4 opens on the BadNets stop sign (Gu Fig 8). P7 is a Venn diagram: poisoning is a training-time intervention, a backdoor is conditional behaviour, and the two overlap. P8 sets three framing questions.
+• *Poisoning:* Biggio Figs 1 and 3 cover availability. Poison Frogs covers clean-label poisoning: one poison, 100% of 1,099 trials in transfer (P17), and about 60% with 50 poisons end to end (P18). P19 gives what Frogs did and did not show.
+• *Backdoors:* P23 defines clean accuracy and ASR. The ASR denominator is triggered test inputs whose true label ≠ target. The worked example (P26–27) sits inside BadNets and is labelled illustrative.
+• *Carlini:* P34 gives $60 for 0.01% of LAION-400M's URLs. P35 separates access cost from damage: no datasets were poisoned, and a local simulation on OpenCLIP used 1,000 images. P36 covers frontrunning and P37 the hashes (Table 1).
+• *Wan:* one bridge slide (P38).
+• *Souly:* P39 shows both count and fraction: 250 docs = 0.0035% at 600M and 0.00016% at 13B. P40 gives the trigger → gibberish DoS behaviour. P41–42 cover scope: one behaviour, models up to 13B, and the authors' open questions.
+• *Sleeper Agents:* P43–45. Installation (deliberate training by the researchers) is kept separate from persistence (SFT/RL/adversarial training). P45 states that the study does not show a web-data attacker could do this.
+• *Glaze vs Nightshade:* one slide (P46): style-mimicry protection vs concept-targeted poisoning, with tested results only.
+• *Defenses:* P49 explains that hashes catch changes, not poison already present. Spectral signatures (P50–52) and Neural Cleanse (P53–54) each get a needs / assumes / fails slide. Activation clustering, fine-pruning and STRIP are in the notes comparison table (entry 48).
+• *Close:* P55 is the five-question checklist (count and rate, clean performance, behaviour without poisoning, defense false positives / utility cost). P56 applies it to the $60 claim.
+
+*Notes:* 59 entries, minutes summing to 90, titles matching the deck. Each content entry gives the figure, setup / model / date, what it establishes and does not establish, assumptions, and primary links. Entry 26 holds the worked-example code. The Wan "larger models more vulnerable" claim lives in entry 38.
+
+*Tech:* rebuilt to 18 slides.
+• Count vs rate α = N/|D|, with the Souly numbers.
+• Frogs Eq. 1 in penalty form, with the ℓ∞ variant noted.
+• The backdoor objective, labelled "a common formalization", not from BadNets.
+• The ASR formula with y ≠ y_t.
+• Spectral τ with 1.5ε removal.
+• Separation stated as an assumption.
+• Neural Cleanse Eq. 3 and the MAD anomaly index (1.4826, a_k > 2).
+• Activation clustering.
+• An adaptive-attacker caveat.
+
+*Disclosed caveats:*
+• The P17 Frogs Fig 1 crop truncates its right column, and the P31 BadNets Fig 1 crop cuts off the bottom. Both are noted in the notes.
+• lint-deck warns about a literal `$` in SVG text at about line 416 (P35). It is meant as a dollar sign and renders correctly.
+• find-dense flags P19, P42 and P57 (did/did not show, Established vs Open). I accepted these as short two-column lists.
+• outline-lint is clean for lec09.

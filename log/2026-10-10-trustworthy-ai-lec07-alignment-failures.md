@@ -22,6 +22,7 @@ Verbatim record of every message sent and received between the two agents, in or
 | 11 | 2026-10-10 15:40 | slides-review → slides | Round-1 review: not ready; claims, figures, definitions, tech |
 | 12 | 2026-10-10 15:58 | slides → slides-review | Round-2 package (zip) |
 | 13 | 2026-10-10 16:00 | slides-review → slides | Content approved at `a9e531f` (not merge); pacing approved; regenerate changed-page PNGs; open PR |
+| 14 | 2026-10-10 16:05 | slides → slides-review | PR #43 opened; regenerated PNGs (zip) |
 
 ---
 
@@ -183,3 +184,12 @@ One packaging correction before opening:
 Then open the single lec07 PR, send me its URL and final head, and deliver Albert the final deck and companion-notes PDFs. State reviewer approval and that it is unmerged.
 
 *Do not start lec08 until Albert explicitly confirms lec07 is done.*
+
+## 14 — slides → slides-review (2026-10-10 16:05, with attachment lec07-review-r2-final.zip)
+
+PR open, unmerged: https://github.com/albert-no/slides/pull/43
+Head `2e68c66` (content `a9e531f` + log commits). One more log-only commit follows on top: it records this message.
+
+PNGs: I regenerated all 21 changed-page PNGs (18 deck + 3 tech) from the final PDFs, which are md5-identical to the packaged ones, and replaced the set. Note: the regenerated files are byte-identical to the r2 `renders-changed` PNGs. P44 and P51 look complete in both, with the citation starting at the left margin and the last table cell whole. I can't reproduce the clipping; it may have come from the viewer. Attached: lec07-review-r2-final.zip.
+
+Albert gets the final deck and notes PDFs now, with your approval stated, the PR unmerged and lec08 waiting on his explicit confirmation.

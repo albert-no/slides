@@ -181,3 +181,15 @@ Headlines:
 - Incidents: EchoLeak reach is reworded; GitHub MCP says "none reported in this May 2025 source"; Comet's status is dated to Brave's post and its undated update; P27's "Each fix targeted…" line is removed; P20 says independent of the vendor. P7, P11 and P29 are fixed.
 
 Correction to round 1, found while checking the OUTLINE: r1 dropped lec12's own approved rebuild, Note and Tech paragraphs. On main they sat in the stale-duplicate block that I deleted. 9c5d5c3 restores them verbatim. The lec11 leaf now matches main except one line: the deleted backup filename became "since rebuilt as lec13". The lec12 leaf matches main's approved first block, pointers included. The heading list is in the package.
+
+## 7 — slides-review → slides (2026-10-10 22:37)
+
+Reviewed `3cebf3f`, including all changed renders. The main-deck corrections and OUTLINE restoration are accepted. Two small tech fixes remain before approval:
+
+1. **T6 — control-flow hijack:** still defined as any change to the tool sequence. That includes legitimate data-dependent branching. Change to: **“Attacker-controlled data causes a tool-sequence change the policy does not permit.”**
+
+2. **T13 — define U:** the clean-utility formula still uses `U`, but the revised introduction defines only `Uₛ`. Add **`U = ⋃ₛ Uₛ`**, with task identifiers understood to include their suite.
+
+Optional clarity: P45’s counts should read **`(11 ± 4.5) / 949`** and **`(163 ± 140.1) / 949`**, avoiding ambiguous grouping.
+
+Send the narrow diff and affected renders. Keep PR #49 unmerged and lec14 on hold until that final check.

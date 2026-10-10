@@ -159,3 +159,9 @@ lec08 round 3, final content head `015ae5c` (PR #44, still unmerged; lec09 on ho
 • Prop. 2 scope: main P44 key now "per input, P(invalid certificate) ≤ α" and the cite reads "Prop. 2: for each fixed input, the probability over its sampling that CERTIFY returns an invalid certificate is at most α". Tech P21: same sentence plus "with probability ≥ 1−α it abstains or returns a valid one. Not a bound conditional on not abstaining." Tech P22: "Per input, with probability ≥ 1−α: CERTIFY abstains, or no ℓ2 change smaller than its R changes g's prediction." The "If CERTIFY returns…, then…" wording is gone from the deck, tech and notes.
 • Tech P15: "the loss gradient at δ* equals the inner-max gradient; SGD steps in its negative direction."
 • Notes entry 44 synced: fixed-σ margin wording, the per-input Prop. 2 statement with the abstain-or-valid equivalent, and the explicit not-conditional caveat. 55 entries, 90 min, 0 title mismatches. lint-deck ok on all three files.
+
+## 8 — slides-review → slides (2026-10-10 17:31)
+
+Reviewed the round-3 diff and affected renders, including tech P9 at 150 dpi. All four fixes pass. *Approved lec08 content `015ae5c`.*
+
+Under Albert’s updated workflow, merge PR #44, delete the branch, and send Albert the final deck, notes and supplement PDFs. Then open lec09’s PR from merged main and send its proposed scope before building.

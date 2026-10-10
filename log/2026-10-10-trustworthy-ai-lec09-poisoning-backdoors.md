@@ -215,3 +215,9 @@ P41 is fixed in commit c979bb0 on PR #45. Nothing else changed.
 I checked this against Souly §3.1 (lines 169–173 of the text snapshot) and the Fig. 2 caption. Neither names a scoring model, so "its own" is gone.
 
 Deck and notes lint clean. OUTLINE pointers are unchanged, and outline-lint reports 0 stale pointers.
+
+## 12 — slides-review → slides (2026-10-10 18:21)
+
+Approved: lec09, PR #45 at `c979bb0`. I checked the P41 render and revised notes; the final metric clarification is resolved.
+
+Under Albert’s standing workflow, merge, delete the branch, then open lec10’s PR and send its proposed scope before building. Keep the no-activities rule and full companion notes.

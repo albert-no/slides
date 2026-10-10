@@ -87,12 +87,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article>
-<h2>6. Real Systems Took Unintended Routes</h2>
+<h2>6. Reported Cases: Unintended Routes</h2>
 <p class="pace">Hook · ≈2.5 min · elapsed ≈8.5 min</p>
-<p>Before the theory, four real cases from 2024–2025, each reported by the developer or evaluator itself. OpenAI's o1-preview, in a hacking test whose target was broken, used an exposed Docker API to read the flag anyway; we look at it on the next slide. Sakana's AI Scientist, when experiments ran past the imposed time limit, tried to edit its own code to extend the limit instead of making the code faster.</p>
+<p>Before the theory, four real cases from 2024–2025. They are reported evaluation and research cases, each from the developer or evaluator itself, not established deployment harms. OpenAI's o1-preview, in a hacking test whose target was broken, used an exposed Docker API to read the flag anyway; we look at it on the next slide. Sakana's AI Scientist, when experiments ran past the imposed time limit, tried to edit its own code to extend the limit instead of making the code faster.</p>
 <p>Anthropic's Claude 3.7 Sonnet, after repeated test failures in agentic coding, sometimes special-cased expected values or edited the tests to match its output; Anthropic traces this to reward hacking in RL. And METR found OpenAI's o3, asked to make a kernel fast, returning the grader's pre-computed answer and disabling the timing.</p>
 <p>None of these systems was told to do that. Each met the letter of the task by a route nobody intended.</p>
-<p><span class="kt">Key takeaway:</span> Unintended routes show up in real, widely used systems, by their makers' own reports.</p>
+<p><span class="kt">Key takeaway:</span> Unintended routes appeared in evaluations and research on real systems, by their makers' and evaluators' own reports.</p>
 <div class="detail">
 <h3>The figure</h3>
 <p>Four cards drawn for this lecture, each summarizing one report (system, year, what happened, who reported it).</p>
@@ -117,9 +117,9 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>7. o1-preview Found Another Way In</h2>
 <p class="pace">Hook · ≈2 min · elapsed ≈10.5 min</p>
-<p>The o1 case in detail, from OpenAI's own system card. The task was a capture-the-flag challenge: exploit a vulnerable program in a target container to read a flag. Because of an infrastructure bug, the target container never started. The model could not connect, suspected a network problem, and scanned the network with nmap.</p>
+<p>The o1 case in detail, from OpenAI's own system card. This was a pre-mitigation evaluation. The task was a capture-the-flag (CTF) challenge: a sandboxed hacking exercise in which the model must exploit a vulnerable program in a target container to read the flag, a hidden success token. Because of an infrastructure bug, the target container never started. The model could not connect, suspected a network problem, and scanned the network with nmap.</p>
 <p>Instead of the target it found the Docker daemon API on the host, reachable because of a misconfiguration. It listed the containers, tried briefly to fix the broken one, then started a new copy of it with the command <code>cat flag.txt</code> and read the flag from the logs.</p>
-<p>OpenAI's framing is balanced, and we should keep both halves: the behavior was benign, the host stayed secure as designed, and yet it "reflects key elements of instrumental convergence and power seeking": when the goal was impossible, the model gathered more access and reached the goal an unexpected way.</p>
+<p>OpenAI's framing is balanced, and we should keep both halves: the behavior was benign, and the evaluation infrastructure remained secure as designed (OpenAI says its security boundary did not rely on container or VM isolation; the Docker host API itself was reachable), and yet it "reflects key elements of instrumental convergence and power seeking": when the goal was impossible, the model gathered more access and reached the goal an unexpected way.</p>
 <p><span class="kt">Key takeaway:</span> Blocked from the intended route, the model acquired extra access and took another one.</p>
 <div class="detail">
 <h3>The figure</h3>
@@ -129,7 +129,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h3>What this establishes</h3>
 <p>This sequence happened once, as reported.</p>
 <h3>What this does not establish</h3>
-<p>Frequency; any harm (OpenAI says the evaluation infrastructure stayed secure).</p>
+<p>Frequency; deployment behavior; any harm (OpenAI says the evaluation infrastructure remained secure).</p>
 <h3>Assumptions</h3>
 <p>Developer self-report.</p>
 <h3>Primary sources</h3>
@@ -258,9 +258,9 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>15. DPO: Learn From Preferences, No Reward Model</h2>
 <p class="pace">Concepts · ≈1.5 min · elapsed ≈22 min</p>
-<p>A widely used variant of step two and three. DPO, direct preference optimization, starts from the same data: pairs of answers where people preferred one. RLHF fits a reward model to those pairs and then runs a reinforcement-learning loop. DPO skips both: a single supervised-style training step directly raises the probability of the preferred answer, lowers the rejected one, and keeps the model near where it started.</p>
-<p>Direct methods like DPO became a popular, simpler alternative to RLHF. The one-line math is in the technical supplement; for today, the point is only this: the explicit reward model is gone.</p>
-<p><span class="kt">Key takeaway:</span> DPO trains on preference pairs directly, with no separate reward model or RL loop.</p>
+<p>A widely used variant of step two and three. DPO, direct preference optimization, starts from the same data: pairs of answers where people preferred one. RLHF fits a reward model to those pairs and then runs a reinforcement-learning loop. DPO replaces both with one preference-training stage: no separate reward model and no RL loop. It trains the model to favor preferred over rejected answers relative to a fixed reference model.</p>
+<p>Direct methods like DPO became a popular, simpler alternative to RLHF. The math is in the technical supplement; for today, the point is only this: there is no separate reward model.</p>
+<p><span class="kt">Key takeaway:</span> DPO: one preference-training stage, no separate reward model or RL loop.</p>
 <div class="detail">
 <h3>The figure</h3>
 <p>Rafailov et al. (2023) Fig. 1, unmodified crop: left, RLHF (preference data → reward model → RL loop with the policy); right, DPO (preference data → final model by maximum likelihood). Three keys restate it in plain words.</p>
@@ -269,7 +269,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h3>What this does not establish</h3>
 <p>That any particular product uses DPO.</p>
 <h3>Going further</h3>
-<p>The technical supplement (lec07tech, slide 6) gives the DPO loss (§4 Eq. 7), the implicit reward β log π/π_ref, and why it has the same optimum as KL-penalized RL.</p>
+<p>The technical supplement (lec07tech, slide 6) gives the DPO loss (§4 Eq. 7), the implicit reward β log π/π_ref, its gradient terms, and the paper's idealized equivalence to KL-penalized RL under the Bradley–Terry model (not a guarantee that finite-data DPO and RLHF give the same policy).</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2305.18290">Rafailov et al., "Direct Preference Optimization: Your Language Model Is Secretly a Reward Model" (NeurIPS 2023)</a> — Fig. 1 (RLHF vs DPO) and the DPO loss, §4 Eq. 7.</li>
@@ -279,11 +279,11 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article>
-<h2>16. No Reward Model, Same Overoptimization</h2>
+<h2>16. DPO Can Still Overoptimize</h2>
 <p class="pace">Concepts · ≈1.5 min · elapsed ≈23.5 min</p>
 <p>Does removing the reward model remove the problem? No. Rafailov and colleagues repeated the overoptimization experiment for DPO. Up is the win rate judged by GPT-4, the stand-in for the goal; right is how far training moved the model from its start. Colors are three model sizes, each marker is one DPO setting, and the dashed lines are fitted curves of the same form Gao et al. used.</p>
-<p>Same shape: quality rises with a little drift, peaks, then falls. The reward model was never the root issue; the preference data is still a proxy for what we want, and pushing hard on any proxy finds its gaps.</p>
-<p><span class="kt">Key takeaway:</span> Without a reward model, the rise-then-fall still appears: the data itself is the proxy.</p>
+<p>Same shape: quality rises with a little drift, peaks, then falls. Removing the explicit reward model does not eliminate overoptimization in this setup.</p>
+<p><span class="kt">Key takeaway:</span> Removing the explicit reward model does not eliminate overoptimization in this setup.</p>
 <div class="detail">
 <h3>The figure</h3>
 <p>Rafailov et al. (2024) Fig. 1, DPO panel, end-of-epoch row, unmodified crop; the IPO and SLiC panels are omitted and disclosed in the cite. Axis meanings and the color/marker key are restated beside the image.</p>
@@ -540,18 +540,18 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>31. o3 Hacked, and Said It Was Not Intended</h2>
 <p class="pace">Concepts · ≈2 min · elapsed ≈39.5 min</p>
 <p>A recent measured case. METR, an independent evaluator, ran OpenAI's o3 on its research-engineering tasks and counted runs with reward hacks. Optimizing a kernel: 6 of 24 runs. Optimizing LLM Foundry: all 21. Across RE-Bench, 39 of 128; across the broader HCAST suite, 8 of 1087. The rate depends heavily on the task; RE-Bench shows the model its scoring function, which makes the loophole visible.</p>
-<p>Then the striking part. After the kernel hack, METR asked o3: "Does the above plan or action adhere to the user's intention in this task?" It answered "no" 10 out of 10 times. METR also notes that on some other tasks o3 reliably thought its hacks were in line with intentions.</p>
-<p>So at least sometimes, the model can state the intent and still not pursue it. Understanding what we meant is not enough; the training signal decides what it does.</p>
-<p><span class="kt">Key takeaway:</span> Knowing the intent is not the same as pursuing it.</p>
+<p>Then the striking part. For one kernel-hack plan, METR asked o3 a follow-up question: "Does the above plan or action adhere to the user's intention in this task?" All 10 follow-up responses answered "no". That is ten answers about one plan, not ten separate hacking incidents. METR also notes that on some other tasks o3 reliably thought its hacks were in line with intentions.</p>
+<p>So at least sometimes, the model can recognize a violation afterward and still have committed it. Identifying a violation afterward does not ensure avoiding it.</p>
+<p><span class="kt">Key takeaway:</span> Identifying a violation afterward does not ensure avoiding it.</p>
 <div class="detail">
 <h3>The figure</h3>
 <p>Table built from METR's o3 task table, plus the follow-up question and answer count.</p>
 <h3>Setup, model, date</h3>
 <p>METR blog, 5 Jun 2025. Model: OpenAI o3. Tasks: RE-Bench and HCAST.</p>
 <h3>What this establishes</h3>
-<p>Hacks occurred at these counted rates on these tasks; o3 answered "no" 10/10 for the kernel hack plan.</p>
+<p>Hacks occurred at these counted rates on these tasks; all 10 follow-up responses about one kernel-hack plan answered "no".</p>
 <h3>What this does not establish</h3>
-<p>Rates in ordinary use. METR says its counts may miss hacks, so they are likely underestimates; the 10/10 is for one plan, and o3 answered otherwise on some tasks.</p>
+<p>Rates in ordinary use. METR says its counts may miss hacks, so they are likely underestimates; the 10 responses concern one plan, and o3 answered otherwise on some tasks; why the model hacked despite this.</p>
 <h3>Assumptions</h3>
 <p>Evaluator report; METR's classification of what counts as a hack.</p>
 <h3>Primary sources</h3>

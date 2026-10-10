@@ -48,3 +48,23 @@ Scope approved with these refinements. Keep the 10/20/20/20/20 pacing.
 Redacted examples are fine; explicitly disclose redactions on source figures rather than calling those figures unmodified crops.
 
 Proceed with the build and full round-1 package.
+
+## 3 — slides → slides-review (2026-10-10 19:01)
+
+_[attachment: lec10-review-r1.zip]_
+
+lec10 (Jailbreaks) round 1, full package. PR: https://github.com/albert-no/slides/pull/46 (branch trustworthy-ai-lec10-jailbreaks, commit 6be7cc6).
+
+The deck has 58 slides over 90 min, paced 10/20/20/20/20, with no activities and no working jailbreak strings. The note has 58 entries and passes validation, citing 20 primary sources. The tech supplement has 21 slides. Lint is ok.
+
+How #118 was applied, with page refs (details in RESPONSE.md):
+• lec07 is not repeated: one refresher slide (p06), and Constitutional AI is presented as an alternative feedback source, not a third stage.
+• Threat models are kept apart: definition (p05), access ladder (p08), weight-access contrast clearly labelled (p19). Shallow alignment and the refusal direction are presented as findings in tested models, each tabulated with its access level (p20).
+• Many-shot (p33–35) and Best-of-N (p36–38) are taught in full. Languages and ciphers share one slide (p39). Evaluation and defenses keep a full 20 min (p42–58).
+• Attack budget: four required labels (p09); per-attempt vs any-of-N (p32); GCG ensemble marked as any-of-4 (p27); PAIR ≤90 queries vs GCG ~256K (p29). Judge errors, useless non-refusals, length bias, over-refusal and κ = 0.32 are covered on p43–48.
+• Defense case studies: Constitutional Classifiers with their costs (p50–51), and circuit breakers plus the Schwinn & Geisler adaptive re-attack (p52–54). No ASRs are compared across setups.
+• Redactions: the MSJ Fig 1, StrongREJECT Fig 1 and CC Fig 1 figures are redrawn, and their captions say so.
+
+Corrections to the old deck, checked against src/: GCG "84%" is now 86.6/46.9/2.1/66.0, and the Wei set is 16+16 prompts. Also corrected: the PAIR perplexity filter numbers, the HarmBench length effect (on substring matching), the XSTest wording and the CC halt behavior. The internal inconsistency in BoN Table 1 is recorded in note entry 38.
+
+Package contents: html/ (deck, note, tech, figs, reference), pdf/, renders/ (-r 60), src/ (20 PDFs + text), sources.md, page-map.txt, notes-validation-r1.txt, lint-r1.txt, source.diff.

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Adversarial Examples — Technical Supplement — Trustworthy AI Lecture 8</title>
+<title>Adversarial Robustness — Technical Supplement — Trustworthy AI Lecture 8</title>
 <link rel="stylesheet" href="../../reference/colors_and_type.css">
 <link rel="stylesheet" href="../../reference/deck.css">
 <link rel="stylesheet" href="../../reference/katex/katex.min.css">
@@ -32,9 +32,9 @@
 <div class="slide title-slide active">
   <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
   <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 8 · Technical Supplement</div>
-  <h1>Adversarial<br>Examples: The Math</h1>
+  <h1>Adversarial<br>Robustness: The Math</h1>
   <div class="divider"></div>
-  <p class="subtitle">Optional. FGSM, PGD, robust training, and certificates</p>
+  <p class="subtitle">Optional. FGSM, PGD, C&amp;W, robust training, certificates</p>
   <div class="spacer-lg"></div>
   <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
   <p style="margin-top:6px;">Trustworthy AI · 2026</p>
@@ -46,12 +46,12 @@
   <div class="divider"></div>
   <p>The main lecture keeps the panda and the boundary picture. Here are the equations.</p>
   <ul class="arrow">
-    <li>How the perturbation budget is written as a set</li>
-    <li>How FGSM and PGD turn the gradient into an attack</li>
-    <li>How adversarial training becomes a min-max problem</li>
-    <li>How randomized smoothing yields a certified radius</li>
+    <li>The budget as a set; FGSM, PGD and C&amp;W</li>
+    <li>What FGSM maximizes exactly: the linearized loss</li>
+    <li>Adversarial training as a min-max problem</li>
+    <li>Randomized smoothing: theorem, proof sketch, CERTIFY</li>
   </ul>
-  <div class="highlight"><p>Skip this in the core session; return if you want the formal version.</p></div>
+  <div class="highlight"><p>Optional; the core lecture does not depend on it.</p></div>
 </div>
 
 <!-- ============ SECTION 01 ============ -->
@@ -60,7 +60,7 @@
   <div class="section-num">01</div>
   <h1>The Attack Objectives</h1>
   <div class="divider"></div>
-  <p class="subtitle">Budget, FGSM, and PGD</p>
+  <p class="subtitle">Budget, FGSM, PGD, and C&amp;W</p>
 </div>
 
 <!-- 4. The Perturbation Set -->
@@ -68,16 +68,17 @@
   <h2>The Perturbation Set</h2>
   <div class="divider"></div>
   <p>An adversarial example lives in a <strong>small ball</strong> around $x$.</p>
-  <div class="math-block">$$\mathcal{B}_p(x, \varepsilon) \;=\; \bigl\{\, x + \delta \;:\; \|\delta\|_p \le \varepsilon \,\bigr\}.$$</div>
-  <p class="muted">$p = \infty$ caps the largest single-pixel change; $p = 2$ caps the total energy.</p>
+  <div class="math-block">$$\mathcal{B}_p(x, \varepsilon) \;=\; \bigl\{\, x + \delta \;:\; \|\delta\|_p \le \varepsilon,\; x + \delta \in [0,1]^d \,\bigr\}.$$</div>
+  <p class="muted">$p = \infty$ caps the largest single-pixel change; $p = 2$ caps the root-sum-square change.</p>
 </div>
 
 <!-- 5. The Attacker's Goal -->
 <div class="slide">
   <h2>The Attacker's Goal</h2>
   <div class="divider"></div>
-  <p>Find the $\delta$ inside the budget that <strong>most raises the loss</strong>.</p>
+  <p>Untargeted: find the $\delta$ in the budget that <strong>most raises the loss</strong>.</p>
   <div class="math-block">$$\max_{\|\delta\|_p \le \varepsilon}\; \ell\bigl(f_\theta(x + \delta),\, y\bigr).$$</div>
+  <p>Targeted, label $t$: $\;\min_{\|\delta\|_p \le \varepsilon} \ell\bigl(f_\theta(x + \delta),\, t\bigr)$.</p>
   <p class="muted">$\ell$ = training loss; $y$ = true label; $f_\theta$ = the fixed model.</p>
 </div>
 
@@ -85,51 +86,92 @@
 <div class="slide">
   <h2>FGSM: One Step</h2>
   <div class="divider"></div>
-  <p>Take the worst-case step of size $\varepsilon$ in the $L_\infty$ box.</p>
-  <div class="math-block">$$x_{\text{adv}} \;=\; x \;+\; \varepsilon \cdot \operatorname{sign}\!\bigl(\nabla_x\, \ell(f_\theta(x), y)\bigr).$$</div>
+  <p>One step that <strong>maximizes the linearized loss</strong> over the $\ell_\infty$ box.</p>
+  <div class="math-block">$$x_{\text{adv}} \;=\; \operatorname{clip}_{[0,1]}\Bigl(x \;+\; \varepsilon \cdot \operatorname{sign}\!\bigl(\nabla_x\, \ell(f_\theta(x), y)\bigr)\Bigr).$$</div>
   <p class="muted">Keep only the sign: every pixel moves the maximum allowed amount.</p>
   <div class="cite cite-left">Goodfellow, Shlens, and Szegedy, "Explaining and Harnessing Adversarial Examples", ICLR 2015.</div>
 </div>
 
 <!-- 7. Why the Sign -->
 <div class="slide">
-  <h2>Why the Sign</h2>
+  <h2>Why the Sign: Linearize, Then Maximize</h2>
   <div class="divider"></div>
-  <p>The sign step is the <strong>exact solution</strong> of a linearized attack.</p>
+  <p>The sign step <strong>exactly solves</strong> the linearized attack.</p>
   <ul class="arrow">
-    <li>Linearize the loss: $\ell(x + \delta) \approx \ell(x) + \nabla_x\ell^\top \delta$</li>
-    <li>Maximize $\nabla_x\ell^\top \delta$ over $\|\delta\|_\infty \le \varepsilon$</li>
-    <li>The maximizer is $\delta = \varepsilon\,\operatorname{sign}(\nabla_x\ell)$</li>
+    <li>Linearize: $\ell(x + \delta) \approx \ell(x) + g^\top \delta$, with $g = \nabla_x\ell$</li>
+    <li>$g^\top\delta = \sum_i g_i\delta_i \le \sum_i |g_i|\,\varepsilon = \varepsilon\|g\|_1$ when $|\delta_i| \le \varepsilon$</li>
+    <li>Equality iff $\delta_i = \varepsilon\,\operatorname{sign}(g_i)$ wherever $g_i \ne 0$</li>
   </ul>
-  <p class="muted">FGSM is one step of the linear approximation, nothing more.</p>
+  <p class="muted">Under $\ell_2$, with $g \ne 0$ and the $[0,1]$ pixel box ignored: $\delta = \varepsilon\, g/\|g\|_2$ (Cauchy–Schwarz). Clipping afterwards can lose optimality.</p>
 </div>
 
-<!-- 8. PGD -->
+<!-- 8. Linear models -->
+<div class="slide">
+  <h2>Linear Models: The Gain Grows With Dimension</h2>
+  <div class="divider"></div>
+  <p>For a linear score $w^\top x$, FGSM with $\eta = \varepsilon\,\operatorname{sign}(w)$ gives</p>
+  <div class="math-block">$$w^\top(x + \eta) \;=\; w^\top x \;+\; \varepsilon\,\|w\|_1 .$$</div>
+  <ul class="arrow">
+    <li>If average $|w_i|$ is $m$ over $d$ inputs, the shift is $\varepsilon m d$</li>
+    <li>$\|\eta\|_\infty = \varepsilon$ stays fixed as $d$ grows</li>
+  </ul>
+  <p class="muted">Exact for the linear <em>score</em>; for a loss of it, only if the loss is monotone in that score (e.g. binary logistic). Deep nets: a local approximation.</p>
+  <div class="cite cite-left">Goodfellow, Shlens, and Szegedy, ICLR 2015, §3.</div>
+</div>
+
+<!-- 9. PGD -->
 <div class="slide">
   <h2>PGD: Projected Iteration</h2>
   <div class="divider"></div>
-  <p>Repeat the sign step, <strong>projecting</strong> back into the budget each time.</p>
-  <div class="math-block">$$x_{t+1} \;=\; \Pi_{\mathcal{B}_p(x,\varepsilon)}\!\Bigl(x_t + \alpha \cdot \operatorname{sign}\!\bigl(\nabla_x\, \ell(f_\theta(x_t), y)\bigr)\Bigr).$$</div>
-  <p class="muted">$\alpha$ = step size; $\Pi$ = projection back onto the ball; many steps.</p>
+  <p>Random start, then repeat the sign step, <strong>projecting</strong> back each time.</p>
+  <div class="math-block">$$\begin{aligned} x_0 &= \operatorname{clip}_{[0,1]}(x + u),\quad u \sim \mathcal{U}[-\varepsilon,\varepsilon]^d, \\ x_{t+1} &= \Pi_{\mathcal{B}(x,\varepsilon)}\!\Bigl(x_t + \alpha \cdot \operatorname{sign}\!\bigl(\nabla_x\, \ell(f_\theta(x_t), y)\bigr)\Bigr). \end{aligned}$$</div>
+  <p class="muted">$\alpha$ = step size; $K$ steps; keep the best of several restarts. FGSM: $u = 0$, $\alpha = \varepsilon$, $K = 1$.</p>
   <div class="cite cite-left">Madry et al., "Towards Deep Learning Models Resistant to Adversarial Attacks", ICLR 2018.</div>
 </div>
 
-<!-- 9. The Projection -->
+<!-- 10. The Projection -->
 <div class="slide">
   <h2>The Projection Step</h2>
   <div class="divider"></div>
-  <p>$\Pi$ pulls any stray point <strong>back onto the allowed ball</strong>.</p>
+  <p>$\Pi$ maps a stray point to the <strong>nearest point of the ball</strong>.</p>
   <div class="grid-2">
-    <div><h3>$L_\infty$</h3>
-      <p>Clip each coordinate of $\delta$ to the range $[-\varepsilon, \varepsilon]$.</p></div>
-    <div><h3>$L_2$</h3>
-      <p>Rescale $\delta$ so its length is at most $\varepsilon$.</p></div>
+    <div><h3>$\ell_\infty$</h3>
+      <p>$\delta_i \leftarrow \min(\max(\delta_i, -\varepsilon), \varepsilon)$, coordinate by coordinate.</p></div>
+    <div><h3>$\ell_2$</h3>
+      <p>$\delta \leftarrow \delta \cdot \min\bigl(1,\, \varepsilon / \|\delta\|_2\bigr)$.</p></div>
   </div>
-  <p class="muted">Every step stays legal, so the final example is admissible.</p>
+  <p class="muted">Then clip $x + \delta$ to $[0,1]$: always feasible. Exact projection onto the intersection for $\ell_\infty$ (two boxes), but not in general for $\ell_2$.</p>
+</div>
+
+<!-- 11. C&W -->
+<div class="slide">
+  <h2>C&amp;W: Minimize the Change Instead</h2>
+  <div class="divider"></div>
+  <p>Carlini–Wagner ($\ell_2$, target $t$) trade size against success.</p>
+  <div class="math-block">$$\min_{\delta}\; \|\delta\|_2^2 \;+\; c \cdot f(x + \delta), \qquad f(x') = \max\Bigl(\max_{i \ne t} Z(x')_i - Z(x')_t,\; -\kappa\Bigr).$$</div>
+  <ul class="arrow">
+    <li>$Z$ = logits; $f \le 0$ iff $t$ wins or ties; $f = -\kappa$ once $t$ leads by $\ge \kappa$</li>
+    <li>Box via $\delta = \tfrac12(\tanh w + 1) - x$; optimize $w$ freely</li>
+    <li>$c$: smallest value that succeeds, found by binary search</li>
+  </ul>
+  <div class="cite cite-left">Carlini and Wagner, "Towards Evaluating the Robustness of Neural Networks", IEEE S&amp;P 2017.</div>
+</div>
+
+<!-- 12. Why margin losses -->
+<div class="slide">
+  <h2>Why a Margin Loss Helps</h2>
+  <div class="divider"></div>
+  <p>Cross-entropy can <strong>saturate</strong>; a logit margin keeps a gradient.</p>
+  <ul class="arrow">
+    <li>Softmax near 1 makes $\nabla_x$ of cross-entropy tiny</li>
+    <li>$\max_{i \ne y} Z_i - Z_y$ stays linear in the logits</li>
+    <li>Madry's "CW-30": PGD on this margin, 30 steps</li>
+  </ul>
+  <p class="muted">C&amp;W broke defensive distillation: earlier attacks 0.5% success, C&amp;W 100%.</p>
 </div>
 
 <!-- ============ SECTION 02 ============ -->
-<!-- 10. Divider 02 -->
+<!-- 13. Divider 02 -->
 <div class="slide section-slide left">
   <div class="section-num">02</div>
   <h1>Robust Training</h1>
@@ -137,46 +179,46 @@
   <p class="subtitle">The saddle-point objective</p>
 </div>
 
-<!-- 11. Adversarial Training -->
+<!-- 14. Adversarial Training -->
 <div class="slide">
   <h2>Adversarial Training</h2>
   <div class="divider"></div>
   <p>Train against the <strong>worst case</strong> inside every point's budget.</p>
-  <div class="math-block">$$\min_{\theta}\; \mathbb{E}_{(x,y)}\Bigl[\, \max_{\|\delta\|_p \le \varepsilon}\; \ell\bigl(f_\theta(x + \delta),\, y\bigr)\Bigr].$$</div>
-  <p class="muted">Inner max = the attack; outer min = the defender fitting $\theta$.</p>
+  <div class="math-block">$$\min_{\theta}\; \rho(\theta), \qquad \rho(\theta) = \mathbb{E}_{(x,y)}\Bigl[\, \max_{\|\delta\|_p \le \varepsilon}\; \ell\bigl(f_\theta(x + \delta),\, y\bigr)\Bigr].$$</div>
+  <p class="muted">Inner max = the attack; outer min = the defender fitting $\theta$. $\rho(\theta)$ = adversarial risk.</p>
   <div class="cite cite-left">Madry et al., "Towards Deep Learning Models Resistant to Adversarial Attacks", ICLR 2018.</div>
 </div>
 
-<!-- 12. How It Is Solved -->
+<!-- 15. How It Is Solved -->
 <div class="slide">
   <h2>How the Saddle Point Is Solved</h2>
   <div class="divider"></div>
   <p>Alternate the two players, one batch at a time.</p>
   <div class="ta-algo" style="max-width:920px; margin:18px auto;">
     <ol>
-      <li>Inner max: run PGD to craft $\delta$ for the batch.</li>
-      <li>Outer min: take a gradient step on $\theta$ at the attacked inputs.</li>
-      <li>Repeat, so the model learns to resist the strongest attack it can see.</li>
+      <li>Inner max: run PGD to craft $\delta^*$ for each example.</li>
+      <li>Outer min: SGD step along $-\nabla_\theta\, \ell(f_\theta(x + \delta^*), y)$.</li>
+      <li>Repeat until the adversarial loss stops falling.</li>
     </ol>
   </div>
-  <p class="muted">A strong inner attack is what makes the outer defense real.</p>
+  <p class="muted">Danskin: if $\ell$ is smooth and the maximizer $\delta^*$ is unique, the loss gradient at $\delta^*$ equals the inner-max gradient; SGD steps in its negative direction. With ties, one branch need not give descent. PGD only approximates $\delta^*$.</p>
 </div>
 
-<!-- 13. The Cost -->
+<!-- 16. The Cost -->
 <div class="slide">
   <h2>Why It Is Expensive</h2>
   <div class="divider"></div>
   <p>Every training step now hides an <strong>optimization inside it</strong>.</p>
   <ul class="arrow">
-    <li>Each batch runs $k$ PGD steps: roughly $k\times$ the cost</li>
-    <li>Fitting the worst case trims clean accuracy</li>
-    <li>The robustness-accuracy trade-off is intrinsic, not a bug</li>
+    <li>$K$ PGD steps + 1 update: about $(K{+}1)\times$ the cost</li>
+    <li>Clean accuracy often falls as training $\varepsilon$ grows</li>
+    <li>Tsipras et al.: provably inevitable in their model; debated in practice</li>
   </ul>
-  <p class="muted">You pay in compute and in clean accuracy for a wider safe region.</p>
+  <p class="muted">You pay in compute, and often in clean accuracy, for a wider safe region.</p>
 </div>
 
 <!-- ============ SECTION 03 ============ -->
-<!-- 14. Divider 03 -->
+<!-- 17. Divider 03 -->
 <div class="slide section-slide left">
   <div class="section-num">03</div>
   <h1>Certified Robustness</h1>
@@ -184,61 +226,89 @@
   <p class="subtitle">Randomized smoothing's provable radius</p>
 </div>
 
-<!-- 15. The Smoothed Classifier -->
+<!-- 18. The Smoothed Classifier -->
 <div class="slide">
   <h2>The Smoothed Classifier</h2>
   <div class="divider"></div>
   <p>Replace $f$ by the class it returns <strong>most often under noise</strong>.</p>
   <div class="math-block">$$g(x) \;=\; \arg\max_{c}\; \Pr_{\eta \sim \mathcal{N}(0,\sigma^2 I)}\bigl[\, f(x + \eta) = c \,\bigr].$$</div>
-  <p class="muted">$\eta$ = Gaussian noise; $g$ votes over many noisy copies of $x$.</p>
+  <p class="muted">$f$ = base classifier (any function); $g$ = smoothed classifier; the certificate is about $g$.</p>
   <div class="cite cite-left">Cohen, Rosenfeld, and Kolter, "Certified Adversarial Robustness via Randomized Smoothing", ICML 2019.</div>
 </div>
 
-<!-- 16. The Certified Radius -->
+<!-- 19. Theorem 1 -->
 <div class="slide">
-  <h2>The Certified Radius</h2>
+  <h2>Theorem 1: The Certified Radius</h2>
   <div class="divider"></div>
-  <p>If the top class wins with probability $\underline{p_A}$, $g$ is <strong>provably constant</strong> in an $L_2$ ball.</p>
-  <div class="math-block">$$R \;=\; \frac{\sigma}{2}\,\Bigl(\Phi^{-1}(\underline{p_A}) - \Phi^{-1}(\overline{p_B})\Bigr).$$</div>
-  <p class="muted">$\Phi^{-1}$ = inverse Gaussian CDF; $\underline{p_A}, \overline{p_B}$ = top-two class probability bounds.</p>
-  <div class="cite cite-left">Cohen, Rosenfeld, and Kolter, "Certified Adversarial Robustness via Randomized Smoothing", ICML 2019.</div>
+  <p>Suppose $\Pr[f(x{+}\eta) = c_A] \ge \underline{p_A} \ge \overline{p_B} \ge \max_{c \ne c_A}\Pr[f(x{+}\eta) = c]$. Then</p>
+  <div class="math-block">$$g(x + \delta) = c_A \quad \text{for all } \|\delta\|_2 \lt R, \qquad R \;=\; \frac{\sigma}{2}\,\Bigl(\Phi^{-1}(\underline{p_A}) - \Phi^{-1}(\overline{p_B})\Bigr).$$</div>
+  <p class="muted">$\Phi^{-1}$ = inverse standard normal CDF. No assumption on $f$. Stability only: $c_A$ may be the wrong label.</p>
 </div>
 
-<!-- 17. Reading the Radius -->
+<!-- 20. Proof sketch -->
+<div class="slide">
+  <h2>Proof Sketch: The Worst $f$ Is a Half-Space</h2>
+  <div class="divider"></div>
+  <p>Let $X = x + \eta$ and $Y = x + \delta + \eta$: two Gaussians, means $\|\delta\|_2$ apart.</p>
+  <ul class="arrow">
+    <li>Neyman–Pearson: the worst $f$ is a half-space normal to $\delta$</li>
+    <li>So $\Pr[f(Y) = c_A] \ge \Phi\bigl(\Phi^{-1}(\underline{p_A}) - \|\delta\|_2/\sigma\bigr)$</li>
+    <li>Likewise $\Pr[f(Y) = c] \le \Phi\bigl(\Phi^{-1}(\overline{p_B}) + \|\delta\|_2/\sigma\bigr)$ for $c \ne c_A$</li>
+  </ul>
+  <p>These bounds guarantee $c_A$ wins if $\Phi^{-1}(\underline{p_A}) - \|\delta\|_2/\sigma \gt \Phi^{-1}(\overline{p_B}) + \|\delta\|_2/\sigma$, i.e. $\|\delta\|_2 \lt R$. $\;\square$</p>
+</div>
+
+<!-- 21. CERTIFY -->
+<div class="slide">
+  <h2>CERTIFY: The Probabilities Are Estimated</h2>
+  <div class="divider"></div>
+  <p>$g$ cannot be evaluated exactly, so the certificate is <strong>statistical</strong>.</p>
+  <div class="ta-algo" style="max-width:1000px; margin:14px auto;">
+    <ol>
+      <li>$n_0$ noisy samples (100 in the paper): guess the top class $\hat c_A$.</li>
+      <li>$n$ fresh samples (100,000): count $k$ votes for $\hat c_A$.</li>
+      <li>$\underline{p_A}$ = one-sided $(1-\alpha)$ Clopper–Pearson lower bound from $k, n$.</li>
+      <li>If $\underline{p_A} \gt \tfrac12$: return $\hat c_A$, radius $\sigma\,\Phi^{-1}(\underline{p_A})$. Else abstain.</li>
+    </ol>
+  </div>
+  <p class="muted">Step 4 uses $\overline{p_B} = 1 - \underline{p_A}$. For each fixed input, the probability over its sampling that CERTIFY returns an invalid certificate is at most $\alpha$ ($= 0.001$): with probability $\ge 1-\alpha$ it abstains or returns a valid one. Not a bound conditional on not abstaining.</p>
+</div>
+
+<!-- 22. Reading the Radius -->
 <div class="slide">
   <h2>Reading the Radius</h2>
   <div class="divider"></div>
   <p>The formula shows exactly <strong>what buys a bigger guarantee</strong>.</p>
   <ul class="arrow">
-    <li>More noise $\sigma$: larger radius, but noisier accuracy</li>
-    <li>More confident vote ($\underline{p_A} \to 1$): the gap term grows</li>
-    <li>No attack with $\|\delta\|_2 \le R$ can ever flip $g$</li>
+    <li>More noise $\sigma$ scales $R$, but also changes the votes: no automatic gain</li>
+    <li>Clearer vote ($\underline{p_A} \to 1$): $\Phi^{-1}(\underline{p_A})$ grows</li>
+    <li>Sample-limited: with $n$ samples, $\underline{p_A} \lt 1$, so $R$ is capped</li>
   </ul>
-  <p class="muted">A proof against every attack in the ball, not just the ones we ran.</p>
+  <p class="muted">Per input, with probability $\ge 1-\alpha$: CERTIFY abstains, or no $\ell_2$ change smaller than its $R$ changes $g$'s prediction, right or wrong.</p>
 </div>
 
-<!-- 18. The Certified Catch -->
+<!-- 23. The Certified Catch -->
 <div class="slide">
   <h2>The Certified Catch</h2>
   <div class="divider"></div>
   <p>The guarantee is <strong>real but modest</strong>.</p>
   <div class="grid-2">
     <div><h3>Cost</h3>
-      <p>Estimating $\underline{p_A}$ needs many noisy forward passes per input.</p></div>
+      <p>$n = 100{,}000$ forward passes: 110 s per ImageNet image on the paper's hardware.</p></div>
     <div><h3>Scope</h3>
-      <p>It certifies an $L_2$ radius, often small on high-resolution images.</p></div>
+      <p>An $\ell_2$ radius for $g$, not $f$; ImageNet, $R = 0.5$: 49% correct and certified.</p></div>
   </div>
   <p class="muted">A narrow, costly proof, but a proof nonetheless.</p>
 </div>
 
-<!-- 19. Closer -->
+<!-- 24. Closer -->
 <div class="slide end-slide no-footer">
   <div class="big-word">min-max</div>
   <p class="big-word-sub">Attack and defense are the two sides of one objective.</p>
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 19</div>
+<div class="slide-num" id="slideNum">1 / 24</div>
 
 </div><!-- .deck -->
 <script defer src="../../reference/deck.js"></script>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Adversarial Examples — Trustworthy AI Lecture 8</title>
+<title>Adversarial Robustness — Trustworthy AI Lecture 8</title>
 <link rel="stylesheet" href="../../reference/colors_and_type.css">
 <link rel="stylesheet" href="../../reference/deck.css">
 <link rel="stylesheet" href="../../reference/katex/katex.min.css">
@@ -14,14 +14,17 @@
 .muted { color: var(--gray-text); }
 .def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
 .def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
-.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
-.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
-.ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
-.ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
-.ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
-.ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
-.ta-algo ol li + li { border-top: 1px solid var(--slate); }
+.tm { border-left: 4px solid var(--yonsei-blue); padding: 4px 0 4px 14px; color: var(--gray-text); margin: 0 0 10px; }
+.tm b { color: var(--yonsei-blue); }
+.pgd-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
+.pgd-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.pgd-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
+.pgd-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
+.pgd-algo ol li + li { border-top: 1px solid var(--slate); }
 .cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+.key { color: var(--gray-text); margin-top: 6px; }
+.key b { color: var(--charcoal); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body data-brand-logo="../../reference/kor-eng2.png">
@@ -32,9 +35,9 @@
 <div class="slide title-slide active">
   <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
   <div class="pill pill-fill" style="margin-bottom:28px;">Trustworthy AI · Lecture 8</div>
-  <h1>Adversarial<br>Examples</h1>
+  <h1>Adversarial Robustness</h1>
   <div class="divider"></div>
-  <p class="subtitle">A tiny, invisible nudge that fools a model</p>
+  <p class="subtitle">When small changes break models</p>
   <div class="spacer-lg"></div>
   <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
   <p style="margin-top:6px;">Trustworthy AI · 2026</p>
@@ -44,30 +47,26 @@
 <div class="slide">
   <h2>Contents</h2>
   <div class="divider"></div>
-  <div class="toc-list">
+  <div class="toc-list" style="gap:12px;">
     <div class="toc-item">
       <div class="toc-num">01</div><div class="toc-rule"></div>
-      <div><div class="toc-label">The Phenomenon</div><div class="toc-sub">An invisible nudge flips the answer</div></div>
+      <div><div class="toc-label">A Tiny Nudge</div></div>
     </div>
     <div class="toc-item">
       <div class="toc-num">02</div><div class="toc-rule"></div>
-      <div><div class="toc-label">The Threat Model</div><div class="toc-sub">What the attacker may change</div></div>
+      <div><div class="toc-label">Why It Happens, Who Attacks</div></div>
     </div>
     <div class="toc-item">
       <div class="toc-num">03</div><div class="toc-rule"></div>
-      <div><div class="toc-label">The Attacks</div><div class="toc-sub">Follow the gradient to the edge</div></div>
+      <div><div class="toc-label">Finding the Worst Case</div></div>
     </div>
     <div class="toc-item">
       <div class="toc-num">04</div><div class="toc-rule"></div>
-      <div><div class="toc-label">The Defenses</div><div class="toc-sub">Training tougher, proving safety</div></div>
+      <div><div class="toc-label">Defenses and Honest Evaluation</div></div>
     </div>
     <div class="toc-item">
       <div class="toc-num">05</div><div class="toc-rule"></div>
-      <div><div class="toc-label">The Arms Race</div><div class="toc-sub">Defenses break under stronger attacks</div></div>
-    </div>
-    <div class="toc-item">
-      <div class="toc-num">06</div><div class="toc-rule"></div>
-      <div><div class="toc-label">Physical & Beyond</div><div class="toc-sub">Stickers, natural shift, multimodal attacks</div></div>
+      <div><div class="toc-label">Off the Screen, and What to Ask</div></div>
     </div>
   </div>
 </div>
@@ -76,1134 +75,636 @@
 <!-- 3. Divider 01 -->
 <div class="slide section-slide left">
   <div class="section-num">01</div>
-  <h1>The Phenomenon</h1>
+  <h1>A Tiny Nudge</h1>
   <div class="divider"></div>
-  <p class="subtitle">An invisible nudge flips the answer</p>
+  <p class="subtitle">If a model is accurate on test data, can we trust it when someone else chooses the input?</p>
 </div>
 
-<!-- 4. Models Look Confident -->
+<!-- 4. A Tiny Nudge Flips a Confident Answer -->
 <div class="slide">
-  <h2>Models Look Confident</h2>
+  <h2>A Tiny Nudge Flips a Confident Answer</h2>
   <div class="divider"></div>
-  <p>A good classifier is <strong>accurate and sure of itself</strong>.</p>
-  <ul class="arrow">
-    <li>99% accuracy on held-out test images</li>
-    <li>High confidence on each prediction</li>
-    <li>Looks ready to ship</li>
-  </ul>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 108" style="width:100%;max-width:820px;">
-      <rect x="30" y="14" width="40" height="56" fill="#2e8b57" fill-opacity="0.75"/><text x="50" y="10" font-size="11" fill="#2e8b57" text-anchor="middle" font-weight="700">0.99</text><text x="50" y="84" font-size="11" fill="#1a1a1a" text-anchor="middle">cat</text><rect x="92" y="14" width="40" height="56" fill="#2e8b57" fill-opacity="0.75"/><text x="112" y="10" font-size="11" fill="#2e8b57" text-anchor="middle" font-weight="700">0.99</text><text x="112" y="84" font-size="11" fill="#1a1a1a" text-anchor="middle">dog</text><rect x="154" y="14" width="40" height="56" fill="#2e8b57" fill-opacity="0.75"/><text x="174" y="10" font-size="11" fill="#2e8b57" text-anchor="middle" font-weight="700">0.99</text><text x="174" y="84" font-size="11" fill="#1a1a1a" text-anchor="middle">car</text><rect x="216" y="14" width="40" height="56" fill="#2e8b57" fill-opacity="0.75"/><text x="236" y="10" font-size="11" fill="#2e8b57" text-anchor="middle" font-weight="700">0.99</text><text x="236" y="84" font-size="11" fill="#1a1a1a" text-anchor="middle">bird</text><rect x="278" y="14" width="40" height="56" fill="#2e8b57" fill-opacity="0.75"/><text x="298" y="10" font-size="11" fill="#2e8b57" text-anchor="middle" font-weight="700">0.99</text><text x="298" y="84" font-size="11" fill="#1a1a1a" text-anchor="middle">ship</text>
-      <line x1="355" y1="4" x2="355" y2="90" stroke="#6b7280" stroke-width="1" stroke-dasharray="4 3"/>
-      <rect x="380" y="14" width="40" height="56" fill="#d94040" fill-opacity="0.8"/>
-      <text x="400" y="10" font-size="11" fill="#d94040" text-anchor="middle" font-weight="700">0.99</text>
-      <text x="400" y="84" font-size="11" fill="#d94040" text-anchor="middle" font-weight="700">"gibbon"</text>
-      <text x="400" y="104" font-size="9" fill="#6b7280" text-anchor="middle">crafted panda</text>
-      <text x="184" y="104" font-size="10" fill="#6b7280" text-anchor="middle">confident and right on test images</text>
-    </svg>
+  <p class="tm"><b>Attacker</b> edits pixels slightly · knows the model's gradients · wants any wrong label</p>
+  <div style="display:flex;justify-content:center;"><img src="figs/goodfellow-fig1-panda.png" alt="Goodfellow et al. Fig. 1: a panda image classified panda with 57.7% confidence, plus 0.007 times the sign of the loss gradient (a colourful noise pattern, itself classified nematode at 8.2%), equals an image that looks identical but is classified gibbon with 99.3% confidence" style="width:900px;height:auto;display:block;"></div>
+  <p class="key"><b>ε = .007</b>: about one 8-bit intensity step, after GoogLeNet's input scaling. The image looks unchanged.</p>
+  <div class="cite cite-left">Goodfellow, Shlens &amp; Szegedy, "Explaining and Harnessing Adversarial Examples", ICLR 2015 — Fig. 1 (GoogLeNet on ImageNet).</div>
+</div>
+
+<!-- 5. Anatomy of an Adversarial Example -->
+<div class="slide">
+  <h2>Anatomy of an Adversarial Example</h2>
+  <div class="divider"></div>
+  <div class="def-card"><h3>Adversarial example</h3><p>$x' = x + \delta$: a change $\delta$ <strong>too small to alter the true label</strong>, chosen so the model's answer changes.</p></div>
+  <div style="display:flex;justify-content:center;margin:12px 0 0;"><svg viewBox="0 0 1000 250" style="width:100%;max-width:960px;"><rect x="10" y="40" width="200" height="120" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="110" y="95" font-size="26" fill="#003876" text-anchor="middle" font-weight="700">input x</text><text x="110" y="130" font-size="21" fill="#6b7280" text-anchor="middle">clean image</text><text x="250" y="110" font-size="34" fill="#1a1a1a" text-anchor="middle">+</text><rect x="290" y="40" width="200" height="120" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><text x="390" y="95" font-size="26" fill="#1a1a1a" text-anchor="middle" font-weight="700">change δ</text><text x="390" y="130" font-size="21" fill="#6b7280" text-anchor="middle">size ≤ ε</text><text x="530" y="110" font-size="34" fill="#1a1a1a" text-anchor="middle">=</text><rect x="570" y="40" width="200" height="120" rx="10" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="670" y="95" font-size="26" fill="#d94040" text-anchor="middle" font-weight="700">input x′</text><text x="670" y="130" font-size="21" fill="#6b7280" text-anchor="middle">looks the same</text><text x="800" y="85" font-size="22" fill="#1a1a1a">human: panda</text><text x="800" y="125" font-size="22" fill="#d94040" font-weight="700">model: gibbon</text><text x="390" y="215" font-size="21" fill="#6b7280" text-anchor="middle">chosen by searching, not by chance</text><line x1="390" y1="165" x2="390" y2="190" stroke="#6b7280" stroke-width="2"/></svg></div>
+  <p class="muted">"Small" needs a ruler: we will fix it with a budget ε and a norm.</p>
+</div>
+
+<!-- 6. Not One Unlucky Image -->
+<div class="slide">
+  <h2>Not One Unlucky Image</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:28px;align-items:start;">
+    <img src="figs/szegedy-fig5-alexnet.png" alt="Szegedy et al. Fig. 5: six rows of images (school bus, dog, temple, and others); each row shows a correctly classified image, the magnified difference, and the adversarial image, which looks the same" style="height:380px;width:auto;display:block;">
+    <div>
+      <p class="key" style="margin:0 0 10px;"><b>left</b> correctly classified</p>
+      <p class="key" style="margin:0 0 10px;"><b>middle</b> difference, magnified ×10</p>
+      <p class="key" style="margin:0 0 18px;"><b>right</b> every one read as "ostrich"</p>
+      <p>Authors: examples <strong>chosen at random</strong>, not hand-picked.</p>
+    </div>
   </div>
-  <p class="muted">Then a single crafted input breaks it.</p>
+  <div class="cite cite-left">Szegedy et al., "Intriguing Properties of Neural Networks", ICLR 2014 — Fig. 5 (AlexNet); caption: "strictly randomly chosen".</div>
 </div>
 
-<!-- 5. The Panda That Became a Gibbon -->
+<!-- 7. Who Chooses the Input Changes the Question -->
 <div class="slide">
-  <h2>The Panda That Became a Gibbon</h2>
+  <h2>Who Chooses the Input Changes the Question</h2>
   <div class="divider"></div>
-  <p>Add a <strong>faint, invisible pattern</strong> to a panda photo.</p>
-  <div style="display:flex;justify-content:center;margin:14px 0;">
-    <img src="figs/panda-gibbon.png" alt="A panda image plus imperceptible noise is classified as a gibbon with 99.3% confidence" style="max-width:100%;max-height:360px;width:auto;display:block;">
-  </div>
-  <p>To your eye: the same panda. To the model: a <strong>gibbon, 99.3% sure</strong>.</p>
-  <div class="cite cite-left">Goodfellow, Shlens, and Szegedy, "Explaining and Harnessing Adversarial Examples", ICLR 2015 — Figure 1.</div>
-</div>
-
-<!-- 6. Anatomy of the Trick -->
-<div class="slide">
-  <h2>Anatomy of the Trick</h2>
-  <div class="divider"></div>
-  <p>Three pieces: the original, the nudge, the result.</p>
-  <div class="diagram-flow" style="margin:22px 0;">
-    <div class="diagram-box">panda<br><span class="muted">57.7% panda</span></div>
-    <div class="diagram-box">+ tiny nudge</div>
-    <div class="diagram-box">looks identical<br><span class="muted">99.3% gibbon</span></div>
-  </div>
-  <p>The nudge is <strong>tuned</strong>, not random noise.</p>
-</div>
-
-<!-- 7. Intriguing Properties -->
-<div class="slide">
-  <h2>Intriguing Properties</h2>
-  <div class="divider"></div>
-  <p>The first paper called these <strong>"intriguing properties"</strong>.</p>
-  <ul>
-    <li>Every accurate network seemed to have them</li>
-    <li>The same nudge often fooled <em>other</em> models</li>
-  </ul>
-  <div style="display:flex;justify-content:center;margin:6px 0;"><img src="figs/szegedy-fig5-alexnet.png" alt="Six AlexNet images: correct sample, the 10x-magnified difference, and the adversarial image that is classified as ostrich" style="width:620px;height:auto;max-width:100%;display:block;"></div>
-  <div class="cite cite-left">Szegedy et al., "Intriguing Properties of Neural Networks", ICLR 2014 — Fig. 5: left correct, center the difference (x10), right classified "ostrich".</div>
-</div>
-
-<!-- 8. Not a Rare Bug -->
-<div class="slide">
-  <h2>Not a Rare Bug</h2>
-  <div class="divider"></div>
-  <p>Adversarial examples are <strong>not</strong> a fluke of one model.</p>
-  <ul class="arrow">
-    <li>Images, audio, and text are all affected</li>
-    <li>They appear across architectures</li>
-    <li>They survive many training tricks</li>
-  </ul>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 112" style="width:100%;max-width:700px;">
-      <text x="98" y="39" font-size="12" fill="#1a1a1a" text-anchor="end">images</text><rect x="110" y="22" width="88" height="22" rx="4" fill="#d94040" fill-opacity="0.12" stroke="#d94040" stroke-width="1"/><text x="154" y="38" font-size="12" fill="#d94040" text-anchor="middle" font-weight="700">× fooled</text><rect x="206" y="22" width="88" height="22" rx="4" fill="#d94040" fill-opacity="0.12" stroke="#d94040" stroke-width="1"/><text x="250" y="38" font-size="12" fill="#d94040" text-anchor="middle" font-weight="700">× fooled</text><rect x="302" y="22" width="88" height="22" rx="4" fill="#d94040" fill-opacity="0.12" stroke="#d94040" stroke-width="1"/><text x="346" y="38" font-size="12" fill="#d94040" text-anchor="middle" font-weight="700">× fooled</text><text x="98" y="65" font-size="12" fill="#1a1a1a" text-anchor="end">audio</text><rect x="110" y="48" width="88" height="22" rx="4" fill="#d94040" fill-opacity="0.12" stroke="#d94040" stroke-width="1"/><text x="154" y="64" font-size="12" fill="#d94040" text-anchor="middle" font-weight="700">× fooled</text><rect x="206" y="48" width="88" height="22" rx="4" fill="#d94040" fill-opacity="0.12" stroke="#d94040" stroke-width="1"/><text x="250" y="64" font-size="12" fill="#d94040" text-anchor="middle" font-weight="700">× fooled</text><rect x="302" y="48" width="88" height="22" rx="4" fill="#d94040" fill-opacity="0.12" stroke="#d94040" stroke-width="1"/><text x="346" y="64" font-size="12" fill="#d94040" text-anchor="middle" font-weight="700">× fooled</text><text x="98" y="91" font-size="12" fill="#1a1a1a" text-anchor="end">text</text><rect x="110" y="74" width="88" height="22" rx="4" fill="#d94040" fill-opacity="0.12" stroke="#d94040" stroke-width="1"/><text x="154" y="90" font-size="12" fill="#d94040" text-anchor="middle" font-weight="700">× fooled</text><rect x="206" y="74" width="88" height="22" rx="4" fill="#d94040" fill-opacity="0.12" stroke="#d94040" stroke-width="1"/><text x="250" y="90" font-size="12" fill="#d94040" text-anchor="middle" font-weight="700">× fooled</text><rect x="302" y="74" width="88" height="22" rx="4" fill="#d94040" fill-opacity="0.12" stroke="#d94040" stroke-width="1"/><text x="346" y="90" font-size="12" fill="#d94040" text-anchor="middle" font-weight="700">× fooled</text><text x="154" y="14" font-size="12" fill="#003876" text-anchor="middle" font-weight="700">CNN</text><text x="250" y="14" font-size="12" fill="#003876" text-anchor="middle" font-weight="700">Transformer</text><text x="346" y="14" font-size="12" fill="#003876" text-anchor="middle" font-weight="700">RNN</text>
-      <text x="230" y="108" font-size="11" fill="#6b7280" text-anchor="middle">every modality, every architecture: same failure (illustrative)</text>
-    </svg>
-  </div>
-  <p class="muted">A property of how these models carve up space.</p>
-</div>
-
-<!-- 9. Why It Matters -->
-<div class="slide">
-  <h2>Why It Matters</h2>
-  <div class="divider"></div>
-  <div class="highlight"><p>If an attacker controls the input, <strong>they control the prediction</strong>.</p></div>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 126" style="width:100%;max-width:760px;">
-      <defs><marker id="ar9" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d94040"/></marker></defs><defs><marker id="ar9g" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs>
-      <rect x="20" y="42" width="100" height="40" rx="6" fill="#d94040" fill-opacity="0.12" stroke="#d94040" stroke-width="1.5"/>
-      <text x="70" y="59" font-size="12" fill="#d94040" text-anchor="middle" font-weight="700">attacker</text>
-      <text x="70" y="75" font-size="10" fill="#d94040" text-anchor="middle">shapes the input</text>
-      <line x1="120" y1="62" x2="228" y2="17" stroke="#d94040" stroke-width="1.6" marker-end="url(#ar9)"/><rect x="232" y="6" width="150" height="22" rx="5" fill="#e8ecf0" stroke="#1a5296" stroke-width="1.5"/><text x="307" y="21" font-size="10" fill="#003876" text-anchor="middle">self-driving car · <tspan fill="#d94040">road sign</tspan></text><line x1="384" y1="17" x2="404" y2="17" stroke="#6b7280" stroke-width="1.6" marker-end="url(#ar9g)"/><text x="408" y="21" font-size="11" fill="#d94040" font-weight="700">decision</text><line x1="120" y1="62" x2="228" y2="46" stroke="#d94040" stroke-width="1.6" marker-end="url(#ar9)"/><rect x="232" y="35" width="150" height="22" rx="5" fill="#e8ecf0" stroke="#1a5296" stroke-width="1.5"/><text x="307" y="50" font-size="10" fill="#003876" text-anchor="middle">spam filter · <tspan fill="#d94040">e-mail text</tspan></text><line x1="384" y1="46" x2="404" y2="46" stroke="#6b7280" stroke-width="1.6" marker-end="url(#ar9g)"/><text x="408" y="50" font-size="11" fill="#d94040" font-weight="700">decision</text><line x1="120" y1="62" x2="228" y2="75" stroke="#d94040" stroke-width="1.6" marker-end="url(#ar9)"/><rect x="232" y="64" width="150" height="22" rx="5" fill="#e8ecf0" stroke="#1a5296" stroke-width="1.5"/><text x="307" y="79" font-size="10" fill="#003876" text-anchor="middle">face unlock · <tspan fill="#d94040">camera frame</tspan></text><line x1="384" y1="75" x2="404" y2="75" stroke="#6b7280" stroke-width="1.6" marker-end="url(#ar9g)"/><text x="408" y="79" font-size="11" fill="#d94040" font-weight="700">decision</text><line x1="120" y1="62" x2="228" y2="104" stroke="#d94040" stroke-width="1.6" marker-end="url(#ar9)"/><rect x="232" y="93" width="150" height="22" rx="5" fill="#e8ecf0" stroke="#1a5296" stroke-width="1.5"/><text x="307" y="108" font-size="10" fill="#003876" text-anchor="middle">moderation · <tspan fill="#d94040">uploaded image</tspan></text><line x1="384" y1="104" x2="404" y2="104" stroke="#6b7280" stroke-width="1.6" marker-end="url(#ar9g)"/><text x="408" y="108" font-size="11" fill="#d94040" font-weight="700">decision</text>
-    </svg>
-  </div>
-  <p>Self-driving cars, spam filters, face unlock, content moderation: all read attacker-influenced inputs.</p>
-</div>
-
-<!-- 10. A Picture in Your Head -->
-<div class="slide">
-  <h2>A Picture in Your Head</h2>
-  <div class="divider"></div>
-  <p>The classifier draws a <strong>boundary</strong> between classes.</p>
-  <div style="display:flex;justify-content:center;margin:8px 0;">
-    <svg viewBox="0 0 480 230" style="width:100%;max-width:860px;">
-      <path d="M40,200 C170,150 200,90 250,40 L40,40 Z" fill="#1a5296" fill-opacity="0.16"/>
-      <path d="M40,200 C170,150 200,90 250,40 L440,40 L440,200 Z" fill="#9aa3ad" fill-opacity="0.18"/>
-      <path d="M40,200 C170,150 200,90 250,40" fill="none" stroke="#003876" stroke-width="2.5"/>
-      <text x="105" y="78" font-size="17" fill="#003876" font-weight="700">panda</text>
-      <text x="360" y="180" font-size="17" fill="#6b7280" font-weight="700">gibbon</text>
-      <circle cx="150" cy="160" r="6" fill="#003876"/>
-      <text x="120" y="184" font-size="14" fill="#003876">your image</text>
-      <line x1="150" y1="160" x2="248" y2="118" stroke="#d94040" stroke-width="2.5" stroke-dasharray="5 4"/>
-      <circle cx="252" cy="115" r="6" fill="#d94040"/>
-      <text x="262" y="110" font-size="14" fill="#d94040" font-weight="700">just across</text>
-    </svg>
-  </div>
-  <p class="muted">The image starts safe, near the line. A tiny push crosses it.</p>
-</div>
-
-<!-- 11. Close to the Edge -->
-<div class="slide">
-  <h2>Close to the Edge</h2>
-  <div class="divider"></div>
-  <p>In high dimensions, <strong>every point sits near a boundary</strong>.</p>
-  <ul>
-    <li>Thousands of pixels, each a direction to push</li>
-    <li>Small change per pixel, large change overall</li>
-  </ul>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 100" style="width:100%;max-width:760px;">
-      <defs><marker id="ar11" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1a5296"/></marker></defs><defs><marker id="ar11b" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d94040"/></marker></defs>
-      <line x1="22" y1="52" x2="39" y2="52" stroke="#1a5296" stroke-width="2" marker-end="url(#ar11)"/><line x1="46" y1="52" x2="63" y2="52" stroke="#1a5296" stroke-width="2" marker-end="url(#ar11)"/><line x1="70" y1="52" x2="87" y2="52" stroke="#1a5296" stroke-width="2" marker-end="url(#ar11)"/><line x1="94" y1="52" x2="111" y2="52" stroke="#1a5296" stroke-width="2" marker-end="url(#ar11)"/><line x1="118" y1="52" x2="135" y2="52" stroke="#1a5296" stroke-width="2" marker-end="url(#ar11)"/><line x1="142" y1="52" x2="159" y2="52" stroke="#1a5296" stroke-width="2" marker-end="url(#ar11)"/><line x1="166" y1="52" x2="183" y2="52" stroke="#1a5296" stroke-width="2" marker-end="url(#ar11)"/><line x1="190" y1="52" x2="207" y2="52" stroke="#1a5296" stroke-width="2" marker-end="url(#ar11)"/><line x1="214" y1="52" x2="231" y2="52" stroke="#1a5296" stroke-width="2" marker-end="url(#ar11)"/>
-      <text x="130" y="32" font-size="12" fill="#003876" text-anchor="middle">one tiny push per pixel (× thousands)</text>
-      <text x="130" y="78" font-size="11" fill="#6b7280" text-anchor="middle">each: a small change</text>
-      <text x="262" y="58" font-size="20" fill="#1a1a1a" text-anchor="middle" font-weight="700">=</text>
-      <line x1="290" y1="52" x2="430" y2="52" stroke="#d94040" stroke-width="5" marker-end="url(#ar11b)"/>
-      <text x="362" y="32" font-size="12" fill="#d94040" text-anchor="middle" font-weight="700">one shove</text>
-      <text x="362" y="78" font-size="11" fill="#6b7280" text-anchor="middle">enough to cross the boundary</text>
-    </svg>
-  </div>
-  <p class="muted">Dimensions add up: many tiny pushes become one shove.</p>
-</div>
-
-<!-- 12. Why? The Linearity Hypothesis -->
-<div class="slide">
-  <h2>Why? Too Linear Inside</h2>
-  <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;gap:28px;align-items:center;">
-    <div><p>One explanation: deep nets behave <strong>too linearly</strong>.</p>
-  <ul class="arrow">
-    <li>Each pixel's nudge adds a small push to the output</li>
-    <li>Thousands of aligned pushes sum to a big shift</li>
-    <li>Explains why one gradient step already fools models</li>
-  </ul>
-  <p class="muted">Not exotic curvature: plain linearity, in very high dimension.</p></div>
-    <div style="display:flex;justify-content:center;"><img src="figs/goodfellow-fig4-linear.png" alt="Left: logits of each class change almost linearly as epsilon sweeps from -10 to 10; right: the corresponding images, with the correct class only in a narrow band" style="max-height:230px;width:auto;max-width:100%;display:block;"></div>
-  </div>
-  <div class="cite cite-left">Goodfellow, Shlens, and Szegedy, ICLR 2015 — Fig. 4: logits are near-linear in $\varepsilon$; the correct class survives only in a thin band. "The primary cause ... is their linear nature".</div>
-</div>
-
-<!-- 13. Why? Features, Not Bugs -->
-<div class="slide">
-  <h2>Why? Features, Not Bugs</h2>
-  <div class="divider"></div>
-  <p>A second view: models use <strong>patterns we cannot see</strong>.</p>
-  <ul class="arrow">
-    <li>Data holds faint patterns that truly predict the label</li>
-    <li>Models lean on them; humans never notice them</li>
-    <li>The attack flips those hidden patterns, not the panda</li>
-  </ul>
-  <p class="muted">Also explains transfer: different models learn the same hidden patterns.</p>
-  <div style="display:flex;justify-content:center;margin:6px 0;"><img src="figs/ilyas-fig1-features.png" alt="Ilyas et al. conceptual diagram: a training set split into a robust dataset and a non-robust dataset; training on the non-robust one gives good standard accuracy but bad robust accuracy; relabeled adversarial examples still train a model with good accuracy on the original test set" style="width:640px;height:auto;max-width:100%;display:block;"></div>
-  <div class="cite cite-left">Ilyas, Santurkar, Tsipras, Engstrom, Tran, and Madry, "Adversarial Examples Are Not Bugs, They Are Features", NeurIPS 2019 — Fig. 1.</div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 300" style="width:100%;max-width:1000px;"><rect x="10" y="10" width="470" height="280" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><text x="245" y="56" font-size="27" fill="#1a1a1a" text-anchor="middle" font-weight="700">Average case</text><text x="245" y="110" font-size="23" fill="#6b7280" text-anchor="middle">nature draws the inputs</text><text x="245" y="150" font-size="23" fill="#6b7280" text-anchor="middle">from the test distribution</text><rect x="60" y="190" width="370" height="76" rx="8" fill="#e8ecf0" stroke="#6b7280" stroke-width="2"/><text x="245" y="238" font-size="24" fill="#1a1a1a" text-anchor="middle" font-weight="700">accuracy</text><rect x="520" y="10" width="470" height="280" rx="10" fill="#fff" stroke="#d94040" stroke-width="2.5"/><text x="755" y="56" font-size="27" fill="#d94040" text-anchor="middle" font-weight="700">Worst case</text><text x="755" y="110" font-size="23" fill="#6b7280" text-anchor="middle">an adversary picks the input</text><text x="755" y="150" font-size="23" fill="#6b7280" text-anchor="middle">within allowed changes</text><rect x="570" y="190" width="370" height="76" rx="8" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="755" y="238" font-size="24" fill="#d94040" text-anchor="middle" font-weight="700">robust accuracy</text></svg></div>
+  <p>High accuracy answers the first question, <strong>not the second</strong>.</p>
 </div>
 
 <!-- ============ SECTION 02 ============ -->
-<!-- 12. Divider 02 -->
+<!-- 8. Divider 02 -->
 <div class="slide section-slide left">
   <div class="section-num">02</div>
-  <h1>The Threat Model</h1>
+  <h1>Why It Happens, Who Attacks</h1>
   <div class="divider"></div>
-  <p class="subtitle">What the attacker may change</p>
+  <p class="subtitle">Two perspectives, then the threat model every claim needs</p>
 </div>
 
-<!-- 13. Spell Out the Rules -->
+<!-- 9. Inputs Sit Close to the Boundary -->
 <div class="slide">
-  <h2>Spell Out the Rules</h2>
+  <h2>Inputs Sit Close to the Boundary</h2>
   <div class="divider"></div>
-  <p>A threat model fixes <strong>what the attacker can do</strong>.</p>
-  <ul class="arrow">
-    <li>How much can they change the input?</li>
-    <li>What do they know about the model?</li>
-    <li>What is their goal?</li>
-  </ul>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 92" style="width:100%;max-width:760px;">
-<rect x="14" y="8" width="136" height="74" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/><text x="82" y="30" font-size="14" fill="#003876" text-anchor="middle" font-weight="700">Budget</text><text x="82" y="50" font-size="10" fill="#1a1a1a" text-anchor="middle">how much change?</text><text x="82" y="70" font-size="11" fill="#6b7280" text-anchor="middle">|δ| ≤ ε</text><rect x="164" y="8" width="136" height="74" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/><text x="232" y="30" font-size="14" fill="#003876" text-anchor="middle" font-weight="700">Knowledge</text><text x="232" y="50" font-size="10" fill="#1a1a1a" text-anchor="middle">what does the attacker see?</text><text x="232" y="70" font-size="11" fill="#6b7280" text-anchor="middle">white box · black box</text><rect x="314" y="8" width="136" height="74" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/><text x="382" y="30" font-size="14" fill="#003876" text-anchor="middle" font-weight="700">Goal</text><text x="382" y="50" font-size="10" fill="#1a1a1a" text-anchor="middle">what counts as a win?</text><text x="382" y="70" font-size="11" fill="#6b7280" text-anchor="middle">any error · chosen label</text>
-    </svg>
-  </div>
-  <p class="muted">No threat model, no meaningful claim of safety.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 340" style="width:100%;max-width:960px;"><rect x="10" y="10" width="560" height="320" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><path d="M 120 330 C 220 220, 300 160, 470 10" stroke="#1a1a1a" stroke-width="3" fill="none"/><text x="70" y="60" font-size="24" fill="#003876" font-weight="700">panda</text><text x="420" y="300" font-size="24" fill="#d94040" font-weight="700">gibbon</text><circle cx="80" cy="120" r="9" fill="#003876"/><circle cx="130" cy="200" r="9" fill="#003876"/><circle cx="170" cy="90" r="9" fill="#003876"/><circle cx="230" cy="150" r="9" fill="#003876"/><circle cx="440" cy="200" r="9" fill="#d94040"/><circle cx="480" cy="120" r="9" fill="#d94040"/><circle cx="400" cy="260" r="9" fill="#d94040"/><circle cx="268" cy="200" r="11" fill="#003876"/><circle cx="268" cy="200" r="48" fill="none" stroke="#003876" stroke-width="2.5" stroke-dasharray="7 5"/><line x1="268" y1="200" x2="305" y2="228" stroke="#d94040" stroke-width="3"/><circle cx="305" cy="228" r="8" fill="#d94040"/><text x="230" y="285" font-size="21" fill="#6b7280">allowed changes</text><text x="610" y="70" font-size="24" fill="#1a1a1a" font-weight="700">Picture in 2-D</text><text x="610" y="110" font-size="21" fill="#6b7280">a small ball around x</text><text x="610" y="140" font-size="21" fill="#6b7280">crosses the boundary</text><text x="610" y="210" font-size="24" fill="#1a1a1a" font-weight="700">In real images</text><text x="610" y="250" font-size="21" fill="#6b7280">~150,000 pixel values;</text><text x="610" y="280" font-size="21" fill="#6b7280">many tiny moves add up</text></svg></div>
+  <p class="muted">Illustrative sketch: real decision boundaries live in very high dimensions.</p>
 </div>
 
-<!-- 14. The Perturbation Budget -->
+<!-- 10. Perspective 1: Models Are Too Linear -->
 <div class="slide">
-  <h2>The Perturbation Budget</h2>
+  <h2>Perspective 1: Models Are Too Linear</h2>
   <div class="divider"></div>
-  <p>Start from a real input $x$. Add a change $\delta$.</p>
-  <div class="def-card">
-    <h3>The budget</h3>
-    <p>The change must stay <strong>small</strong>, capped by $\varepsilon$:</p>
-    <div class="math-block">$$\|\delta\| \le \varepsilon, \qquad x_{\text{adv}} = x + \delta.$$</div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:28px;align-items:start;">
+    <img src="figs/goodfellow-fig4-logits.png" alt="Goodfellow et al. Fig. 4, left panel: the ten class logits of a maxout network on one MNIST input, plotted against epsilon along the fast-gradient-sign direction; every logit changes along a nearly straight line, and the correct class 4 (thick magenta) falls below others as epsilon grows" style="height:470px;width:auto;display:block;">
+    <div>
+      <p class="key" style="margin:0 0 10px;"><b>each line</b> one class score (logit)</p>
+      <p class="key" style="margin:0 0 10px;"><b>thick magenta</b> correct class 4</p>
+      <p class="key" style="margin:0 0 18px;"><b>x-axis</b> step size ε along the attack</p>
+      <p>Scores move in <strong>straight lines</strong>: small steps add up.</p>
+      <p>$$w^\top\!\big(\epsilon\,\mathrm{sign}(w)\big)=\epsilon\,\|w\|_1$$</p>
+      <p class="muted">Linear score: grows with the number of pixels.</p>
+    </div>
   </div>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 92" style="width:100%;max-width:480px;">
-      <defs><marker id="ar16" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d94040"/></marker></defs>
-      <circle cx="150" cy="46" r="38" fill="#1a5296" fill-opacity="0.08" stroke="#003876" stroke-width="2" stroke-dasharray="5 4"/>
-      <circle cx="150" cy="46" r="4" fill="#1a1a1a"/>
-      <text x="150" y="66" font-size="13" fill="#1a1a1a" text-anchor="middle" font-weight="700">x</text>
-      <line x1="150" y1="46" x2="176" y2="24" stroke="#d94040" stroke-width="2.2" marker-end="url(#ar16)"/>
-      <text x="158" y="26" font-size="12" fill="#d94040" font-weight="700">δ</text>
-      <circle cx="180" cy="21" r="4" fill="#d94040"/>
-      <text x="192" y="16" font-size="12" fill="#d94040">x + δ</text>
-      <line x1="150" y1="46" x2="188" y2="46" stroke="#003876" stroke-width="1.5"/>
-      <text x="172" y="58" font-size="11" fill="#003876" text-anchor="middle">ε</text>
-      <text x="330" y="38" font-size="13" fill="#1a1a1a" text-anchor="middle">every allowed x + δ stays</text>
-      <text x="330" y="58" font-size="13" fill="#1a1a1a" text-anchor="middle">inside the dashed ball of radius ε</text>
-    </svg>
-  </div>
-  <p>Small $\varepsilon$ keeps $x_{\text{adv}}$ <em>visually identical</em> to $x$.</p>
+  <div class="cite cite-left">Goodfellow et al., ICLR 2015 — §3 ("too linear") and Fig. 4, left panel (maxout network, MNIST, one input; input montage omitted).</div>
 </div>
 
-<!-- 15. How to Measure "Small" -->
+<!-- 11. Perspective 2: Non-Robust Features -->
 <div class="slide">
-  <h2>How to Measure "Small"</h2>
+  <h2>Perspective 2: Invisible Features Still Predict</h2>
   <div class="divider"></div>
-  <p>"Small" needs a ruler. Two common ones.</p>
-  <div class="grid-2">
-    <div><h3>$L_\infty$</h3>
-      <p>Cap the <strong>largest single pixel</strong> change. Every pixel nudged a little.</p></div>
-    <div><h3>$L_2$</h3>
-      <p>Cap the <strong>total energy</strong> of the change. A few pixels nudged more.</p></div>
-  </div>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 100" style="width:100%;max-width:700px;">
-      <rect x="70" y="6" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="83" y="6" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="96" y="6" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="109" y="6" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="122" y="6" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="135" y="6" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="70" y="19" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="83" y="19" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="96" y="19" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="109" y="19" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="122" y="19" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="135" y="19" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="70" y="32" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="83" y="32" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="96" y="32" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="109" y="32" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="122" y="32" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="135" y="32" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="70" y="45" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="83" y="45" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="96" y="45" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="109" y="45" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="122" y="45" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="135" y="45" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="70" y="58" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="83" y="58" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="96" y="58" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="109" y="58" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="122" y="58" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/><rect x="135" y="58" width="12" height="12" fill="#1a5296" fill-opacity="0.22" stroke="#6b7280" stroke-width="0.6"/>
-      <text x="109" y="90" font-size="12" fill="#003876" text-anchor="middle" font-weight="700">L-inf: every pixel, a little</text>
-      <rect x="300" y="6" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="313" y="6" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="326" y="6" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="339" y="6" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="352" y="6" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="365" y="6" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="300" y="19" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="313" y="19" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="326" y="19" width="12" height="12" fill="#003876" stroke="#6b7280" stroke-width="0.6"/><rect x="339" y="19" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="352" y="19" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="365" y="19" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="300" y="32" width="12" height="12" fill="#003876" stroke="#6b7280" stroke-width="0.6"/><rect x="313" y="32" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="326" y="32" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="339" y="32" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="352" y="32" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="365" y="32" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="300" y="45" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="313" y="45" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="326" y="45" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="339" y="45" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="352" y="45" width="12" height="12" fill="#003876" stroke="#6b7280" stroke-width="0.6"/><rect x="365" y="45" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="300" y="58" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="313" y="58" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="326" y="58" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="339" y="58" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="352" y="58" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/><rect x="365" y="58" width="12" height="12" fill="#fff" stroke="#6b7280" stroke-width="0.6"/>
-      <text x="339" y="90" font-size="12" fill="#003876" text-anchor="middle" font-weight="700">L-2: a few pixels, a lot</text>
-    </svg>
-  </div>
-  <p class="muted">Different rulers, different-looking attacks.</p>
+  <div style="display:flex;justify-content:center;"><img src="figs/ilyas-fig1a-robust.png" alt="Ilyas et al. Fig. 1(a): a frog training image is turned into a robust-features image (still looks like a frog) and a non-robust-features image (looks like noise), both labelled frog; training on the robust dataset gives good standard and robust accuracy, training on the non-robust dataset gives good standard but bad robust accuracy on the unmodified test set" style="height:440px;width:auto;display:block;"></div>
+  <p class="key"><b>top</b> keep only robust features · <b>bottom</b> keep only non-robust ones: looks like noise, still predicts</p>
+  <div class="cite cite-left">Ilyas et al., "Adversarial Examples Are Not Bugs, They Are Features", NeurIPS 2019 — Fig. 1(a) (conceptual diagram of §3 experiments; CIFAR-10, Restricted ImageNet).</div>
 </div>
 
-<!-- 16. The L-ball Picture -->
+<!-- 12. "Mislabeled" Images Still Teach -->
 <div class="slide">
-  <h2>The Allowed Region</h2>
+  <h2>"Mislabeled" Adversarial Images Still Teach</h2>
   <div class="divider"></div>
-  <p>The budget $\|\delta\| \le \varepsilon$ draws a <strong>small ball</strong> around $x$.</p>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 480 220" style="width:100%;max-width:760px;">
-      <rect x="150" y="55" width="110" height="110" fill="#1a5296" fill-opacity="0.10" stroke="#003876" stroke-width="2" stroke-dasharray="5 4"/>
-      <text x="205" y="48" font-size="14" fill="#003876" text-anchor="middle" font-weight="700">L-inf box</text>
-      <circle cx="205" cy="110" r="55" fill="#2e8b57" fill-opacity="0.10" stroke="#2e8b57" stroke-width="2" stroke-dasharray="5 4"/>
-      <text x="330" y="92" font-size="14" fill="#2e8b57" font-weight="700">L-2 ball</text>
-      <circle cx="205" cy="110" r="5" fill="#1a1a1a"/>
-      <text x="205" y="135" font-size="15" fill="#1a1a1a" text-anchor="middle" font-weight="700">x</text>
-      <text x="205" y="200" font-size="14" fill="#666" text-anchor="middle">attacker may move x anywhere inside</text>
-    </svg>
-  </div>
-  <p class="muted">The attack searches this region for a mistake.</p>
+  <div style="display:flex;justify-content:center;"><img src="figs/ilyas-fig1b-relabel.png" alt="Ilyas et al. Fig. 1(b): a dog training image is adversarially pushed towards cat and relabelled cat, so robust features say dog and non-robust features say cat; a model trained on such images still gets good accuracy on the original test set, for example on a real cat" style="height:440px;width:auto;display:block;"></div>
+  <p class="key">Looks like a dog, labelled <b>cat</b> · trained only on such images · still classifies <b>real cats</b> well</p>
+  <div class="cite cite-left">Ilyas et al., NeurIPS 2019 — Fig. 1(b) (conceptual diagram of §3.2; CIFAR-10, Restricted ImageNet).</div>
+</div>
+
+<!-- 13. Two Perspectives, Not One Cause -->
+<div class="slide">
+  <h2>Two Perspectives, Not One Cause</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th></th><th>Too linear</th><th>Non-robust features</th></tr>
+    <tr><td>Core idea</td><td>Small moves add up</td><td>Hidden patterns predict</td></tr>
+    <tr><td>Explains well</td><td>Why FGSM works</td><td>Why attacks transfer</td></tr>
+    <tr><td>Evidence</td><td>Logits vs ε, linear models</td><td>Retraining experiments</td></tr>
+  </table>
+  <div class="highlight"><p>Useful lenses with evidence; <strong>neither is settled</strong> as the single cause.</p></div>
+</div>
+
+<!-- 14. Every Claim Needs a Threat Model -->
+<div class="slide">
+  <h2>Every Claim Needs a Threat Model</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 290" style="width:100%;max-width:1000px;"><rect x="10" y="10" width="310" height="270" rx="10" fill="#fff" stroke="#003876" stroke-width="2.5"/><text x="165" y="56" font-size="27" fill="#003876" text-anchor="middle" font-weight="700">Controls</text><text x="165" y="110" font-size="22" fill="#1a1a1a" text-anchor="middle">which inputs</text><text x="165" y="142" font-size="22" fill="#1a1a1a" text-anchor="middle">change, how much</text><text x="165" y="210" font-size="21" fill="#6b7280" text-anchor="middle">norm, budget ε,</text><text x="165" y="240" font-size="21" fill="#6b7280" text-anchor="middle">digital or physical</text><rect x="345" y="10" width="310" height="270" rx="10" fill="#fff" stroke="#003876" stroke-width="2.5"/><text x="500" y="56" font-size="27" fill="#003876" text-anchor="middle" font-weight="700">Knows</text><text x="500" y="110" font-size="22" fill="#1a1a1a" text-anchor="middle">what it sees</text><text x="500" y="142" font-size="22" fill="#1a1a1a" text-anchor="middle">of the model</text><text x="500" y="210" font-size="21" fill="#6b7280" text-anchor="middle">weights, scores,</text><text x="500" y="240" font-size="21" fill="#6b7280" text-anchor="middle">labels, or nothing</text><rect x="680" y="10" width="310" height="270" rx="10" fill="#fff" stroke="#003876" stroke-width="2.5"/><text x="835" y="56" font-size="27" fill="#003876" text-anchor="middle" font-weight="700">Wants</text><text x="835" y="110" font-size="22" fill="#1a1a1a" text-anchor="middle">which failure</text><text x="835" y="142" font-size="22" fill="#1a1a1a" text-anchor="middle">counts as a win</text><text x="835" y="210" font-size="21" fill="#6b7280" text-anchor="middle">any wrong label,</text><text x="835" y="240" font-size="21" fill="#6b7280" text-anchor="middle">or a chosen one</text></svg></div>
+  <div class="highlight"><p>"Robust" with no threat model is <strong>not yet a claim</strong>.</p></div>
+</div>
+
+<!-- 15. The Budget ε Bounds the Change -->
+<div class="slide">
+  <h2>The Budget ε Bounds the Change</h2>
+  <div class="divider"></div>
+  <p>Allowed changes: a ball of radius ε around $x$.</p>
+  <p>$$\mathcal{B}_\epsilon(x)=\{\,x+\delta:\ \|\delta\|\le\epsilon\,\}$$</p>
+  <table>
+    <tr><th>Common setting</th><th>Budget</th><th>Meaning</th></tr>
+    <tr><td>CIFAR-10, $\ell_\infty$</td><td class="num">8/255</td><td>each pixel ±3%</td></tr>
+    <tr><td>MNIST, $\ell_\infty$</td><td class="num">0.3</td><td>each pixel ±30%</td></tr>
+  </table>
+  <p class="muted">Conventions, not laws: the right ε depends on the application.</p>
+  <div class="cite cite-left">Budgets as used by Madry et al., ICLR 2018 (Tables 1–2) and RobustBench (CIFAR-10 ℓ∞ leaderboard).</div>
+</div>
+
+<!-- 16. L∞ vs L2: Two Shapes of "Small" -->
+<div class="slide">
+  <h2>$\ell_\infty$ vs $\ell_2$: Two Shapes of "Small"</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 300" style="width:100%;max-width:960px;"><rect x="10" y="10" width="470" height="280" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><rect x="60" y="60" width="160" height="160" fill="#e8ecf0" stroke="#003876" stroke-width="3"/><circle cx="140" cy="140" r="7" fill="#1a1a1a"/><text x="250" y="90" font-size="26" fill="#003876" font-weight="700">ℓ∞ box</text><text x="250" y="135" font-size="21" fill="#1a1a1a">every pixel may</text><text x="250" y="165" font-size="21" fill="#1a1a1a">move up to ε</text><text x="245" y="265" font-size="21" fill="#6b7280" text-anchor="middle">e.g. faint noise everywhere</text><rect x="520" y="10" width="470" height="280" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><circle cx="650" cy="140" r="85" fill="#e8ecf0" stroke="#003876" stroke-width="3"/><circle cx="650" cy="140" r="7" fill="#1a1a1a"/><text x="760" y="90" font-size="26" fill="#003876" font-weight="700">ℓ2 ball</text><text x="760" y="135" font-size="21" fill="#1a1a1a">root-sum-square</text><text x="760" y="165" font-size="21" fill="#1a1a1a">of changes ≤ ε</text><text x="755" y="265" font-size="21" fill="#6b7280" text-anchor="middle">e.g. few pixels, larger moves</text></svg></div>
+  <p class="key"><b>ℓ2 size</b> = root of summed squared pixel changes · box and ball captions are examples</p>
+  <p class="key"><b>ℓ2 = 1.0</b> with pixels in [0, 1] = in 0–255 units: 1 pixel by 255, 10 by 80, 100 by 25, 1000 by 8</p>
+  <div class="cite cite-left">Scale example: Cohen, Rosenfeld &amp; Kolter, "Certified Adversarial Robustness via Randomized Smoothing", ICML 2019 — Table 1 caption (ImageNet; pixels divided by 255).</div>
 </div>
 
 <!-- 17. White Box vs Black Box -->
 <div class="slide">
-  <h2>White Box vs Black Box</h2>
+  <h2>What the Attacker Knows</h2>
   <div class="divider"></div>
-  <div class="grid-2">
-    <div><h3>White box</h3>
-      <p>Attacker sees <strong>everything</strong>: weights, gradients. The worst case.</p></div>
-    <div><h3>Black box</h3>
-      <p>Attacker only <strong>queries</strong> the model and reads outputs.</p></div>
-  </div>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 118" style="width:100%;max-width:700px;">
-      <defs><marker id="ar19" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs>
-      <rect x="28" y="14" width="176" height="76" rx="8" fill="#fff" stroke="#003876" stroke-width="2" stroke-dasharray="5 4"/>
-      <text x="116" y="36" font-size="12" fill="#003876" text-anchor="middle" font-weight="700">weights · gradients · code</text>
-      <text x="116" y="56" font-size="11" fill="#6b7280" text-anchor="middle">all visible</text>
-      <text x="116" y="78" font-size="10" fill="#003876" text-anchor="middle">attacker computes the gradient</text>
-      <text x="116" y="110" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">white box</text>
-      <rect x="270" y="14" width="150" height="76" rx="8" fill="#1a1a1a"/>
-      <text x="345" y="57" font-size="26" fill="#fff" text-anchor="middle" font-weight="700">?</text>
-      <line x1="228" y1="38" x2="266" y2="38" stroke="#6b7280" stroke-width="2" marker-end="url(#ar19)"/>
-      <text x="246" y="30" font-size="10" fill="#6b7280" text-anchor="middle">query</text>
-      <line x1="266" y1="70" x2="228" y2="70" stroke="#6b7280" stroke-width="2" marker-end="url(#ar19)"/>
-      <text x="246" y="84" font-size="10" fill="#6b7280" text-anchor="middle">label</text>
-      <text x="345" y="110" font-size="13" fill="#1a1a1a" text-anchor="middle" font-weight="700">black box</text>
-    </svg>
-  </div>
-  <p class="muted">We test defenses in the white-box worst case.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 280" style="width:100%;max-width:1000px;"><rect x="10" y="10" width="310" height="260" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2.5"/><text x="165" y="56" font-size="26" fill="#003876" text-anchor="middle" font-weight="700">White box</text><text x="165" y="110" font-size="22" fill="#1a1a1a" text-anchor="middle">weights and</text><text x="165" y="142" font-size="22" fill="#1a1a1a" text-anchor="middle">gradients</text><text x="165" y="220" font-size="21" fill="#6b7280" text-anchor="middle">strongest attacker</text><rect x="345" y="10" width="310" height="260" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/><text x="500" y="56" font-size="26" fill="#003876" text-anchor="middle" font-weight="700">Query access</text><text x="500" y="110" font-size="22" fill="#1a1a1a" text-anchor="middle">sends inputs, sees</text><text x="500" y="142" font-size="22" fill="#1a1a1a" text-anchor="middle">scores or labels</text><text x="500" y="220" font-size="21" fill="#6b7280" text-anchor="middle">e.g. a public API</text><rect x="680" y="10" width="310" height="260" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><text x="835" y="56" font-size="26" fill="#1a1a1a" text-anchor="middle" font-weight="700">No access</text><text x="835" y="110" font-size="22" fill="#1a1a1a" text-anchor="middle">attacks a model</text><text x="835" y="142" font-size="22" fill="#1a1a1a" text-anchor="middle">of its own</text><text x="835" y="220" font-size="21" fill="#6b7280" text-anchor="middle">relies on transfer</text></svg></div>
+  <p>Defenses are judged against the <strong>white box</strong>: hiding the model is not robustness.</p>
 </div>
 
-<!-- 18. Transferability -->
+<!-- 18. Attacks Transfer Between Models -->
 <div class="slide">
-  <h2>Transferability</h2>
+  <h2>Attacks Transfer Between Models</h2>
   <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;gap:28px;align-items:center;">
-    <div><p>An attack built on one model often <strong>fools another</strong>.</p>
-  <div class="diagram-flow" style="margin:22px 0;">
-    <div class="diagram-box">craft on<br>my model</div>
-    <div class="diagram-box">same nudge</div>
-    <div class="diagram-box">fools the<br>secret model</div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:28px;align-items:start;">
+    <img src="figs/papernot-fig3-transfer.png" alt="Papernot et al. Fig. 3: a 5 by 6 heat map of transfer rates between DNN, logistic regression, SVM, decision tree, kNN and an ensemble; for example, examples crafted on LR fool the SVM 91.43% of the time" style="height:380px;width:auto;display:block;">
+    <div>
+      <p class="key" style="margin:0 0 10px;"><b>row</b> model the attack was crafted on</p>
+      <p class="key" style="margin:0 0 10px;"><b>column</b> model it was tested on</p>
+      <p class="key" style="margin:0 0 18px;"><b>cell</b> % of examples that fool it</p>
+      <p>Crafted on logistic regression, <strong>91.43%</strong> also fool an SVM.</p>
+    </div>
   </div>
-  <p>So a black-box attacker can train a <em>copy</em>, then transfer.</p></div>
-    <div style="display:flex;justify-content:center;"><img src="figs/papernot-fig3-transfer.png" alt="Cross-technique transferability matrix: percentage of adversarial samples crafted on a source model (DNN, LR, SVM, DT, kNN) that also fool each target model" style="max-height:310px;width:auto;max-width:100%;display:block;"></div>
-  </div>
-  <div class="cite cite-left">Papernot, McDaniel, and Goodfellow, "Transferability in Machine Learning", 2016 — Fig. 3: % of samples crafted on the row model that also fool the column model (MNIST).</div>
+  <div class="cite cite-left">Papernot, McDaniel &amp; Goodfellow, "Transferability in Machine Learning", arXiv 1605.07277 (2016) — Fig. 3 (MNIST; FGSM ε = 0.3 for DNN and LR).</div>
 </div>
 
-<!-- 19. Why Transfer Is Scary -->
+<!-- 19. Transfer Reached Real Services -->
 <div class="slide">
-  <h2>Why Transfer Is Scary</h2>
+  <h2>Transfer Reached Real Services</h2>
   <div class="divider"></div>
-  <div class="highlight"><p>You do <strong>not</strong> need access to a model to attack it.</p></div>
-  <ul>
-    <li>Substitute models fooled commercial classifiers: Amazon 96%, Google 89%</li>
-    <li>Built with only about 800 queries to the target</li>
-  </ul>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 84" style="width:100%;max-width:760px;">
-      <text x="118" y="26" font-size="13" fill="#1a1a1a" text-anchor="end">Amazon ML</text>
-      <rect x="128" y="12" width="288" height="20" rx="3" fill="#d94040" fill-opacity="0.8"/>
-      <text x="422" y="27" font-size="13" fill="#d94040" font-weight="700">96%</text>
-      <text x="118" y="60" font-size="13" fill="#1a1a1a" text-anchor="end">Google Prediction</text>
-      <rect x="128" y="46" width="267" height="20" rx="3" fill="#d94040" fill-opacity="0.8"/>
-      <text x="401" y="61" font-size="13" fill="#d94040" font-weight="700">89%</text>
-      <text x="230" y="81" font-size="10" fill="#6b7280" text-anchor="middle">misclassification rate of transferred samples · substitute built from ~800 queries</text>
-    </svg>
-  </div>
-  <p class="muted">Hidden weights are not a defense. A look-alike model is enough.</p>
-  <div class="cite cite-left">Papernot, McDaniel, and Goodfellow, "Transferability in Machine Learning: from Phenomena to Black-Box Attacks using Adversarial Samples", 2016.</div>
+  <p class="tm"><b>Attacker</b> sees labels only, 800 queries · wants any wrong digit</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 220" style="width:100%;max-width:1000px;"><rect x="10" y="20" width="220" height="140" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><text x="120" y="75" font-size="23" fill="#1a1a1a" text-anchor="middle" font-weight="700">query API</text><text x="120" y="115" font-size="21" fill="#6b7280" text-anchor="middle">800 labels</text><line x1="230" y1="90" x2="262" y2="90" stroke="#6b7280" stroke-width="3"/><polygon points="262,80 280,90 262,100" fill="#6b7280"/><rect x="285" y="20" width="220" height="140" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><text x="395" y="75" font-size="23" fill="#1a1a1a" text-anchor="middle" font-weight="700">train a copy</text><text x="395" y="115" font-size="21" fill="#6b7280" text-anchor="middle">local substitute</text><line x1="505" y1="90" x2="537" y2="90" stroke="#6b7280" stroke-width="3"/><polygon points="537,80 555,90 537,100" fill="#6b7280"/><rect x="560" y="20" width="200" height="140" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><text x="660" y="75" font-size="23" fill="#1a1a1a" text-anchor="middle" font-weight="700">attack copy</text><text x="660" y="115" font-size="21" fill="#6b7280" text-anchor="middle">FGSM, ε = 0.3</text><line x1="760" y1="90" x2="792" y2="90" stroke="#6b7280" stroke-width="3"/><polygon points="792,80 810,90 792,100" fill="#6b7280"/><rect x="815" y="20" width="175" height="140" rx="10" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="902" y="62" font-size="21" fill="#1a1a1a" text-anchor="middle">Amazon</text><text x="902" y="88" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">96.19%</text><text x="902" y="118" font-size="21" fill="#1a1a1a" text-anchor="middle">Google</text><text x="902" y="144" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">88.94%</text><text x="500" y="205" font-size="21" fill="#6b7280" text-anchor="middle">misclassification rate on the services' own MNIST models</text></svg></div>
+  <p class="muted">2016 services, MNIST digits: transfer is practical. Not evidence about today's APIs.</p>
+  <div class="cite cite-left">Papernot et al., arXiv 1605.07277 — §5, Tables 3–4 (logistic-regression substitute, ρ = 3; Amazon ML used multinomial logistic regression).</div>
+</div>
+
+<!-- 20. Any Wrong Label, or a Chosen One -->
+<div class="slide">
+  <h2>Any Wrong Label, or a Chosen One</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 280" style="width:100%;max-width:1000px;"><rect x="10" y="10" width="470" height="260" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/><text x="245" y="56" font-size="27" fill="#003876" text-anchor="middle" font-weight="700">Untargeted</text><text x="245" y="110" font-size="22" fill="#1a1a1a" text-anchor="middle">stop sign → anything else</text><text x="245" y="170" font-size="21" fill="#6b7280" text-anchor="middle">push loss on the true label up</text><text x="245" y="230" font-size="21" fill="#6b7280" text-anchor="middle">easier: any exit counts</text><rect x="520" y="10" width="470" height="260" rx="10" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="755" y="56" font-size="27" fill="#d94040" text-anchor="middle" font-weight="700">Targeted</text><text x="755" y="110" font-size="22" fill="#1a1a1a" text-anchor="middle">stop sign → speed limit 45</text><text x="755" y="170" font-size="21" fill="#6b7280" text-anchor="middle">push loss on the target down</text><text x="755" y="230" font-size="21" fill="#6b7280" text-anchor="middle">harder, often more harmful</text></svg></div>
+  <p>Robust accuracy is usually reported against <strong>untargeted</strong> attacks.</p>
 </div>
 
 <!-- ============ SECTION 03 ============ -->
-<!-- 20. Divider 03 -->
+<!-- 21. Divider 03 -->
 <div class="slide section-slide left">
   <div class="section-num">03</div>
-  <h1>The Attacks</h1>
+  <h1>Finding the Worst Case</h1>
   <div class="divider"></div>
-  <p class="subtitle">Follow the gradient to the edge</p>
+  <p class="subtitle">An attack is a search; a weak search overstates robustness</p>
 </div>
 
-<!-- 21. The Core Idea -->
+<!-- 22. An Attack Is a Search Inside the Ball -->
 <div class="slide">
-  <h2>The Core Idea</h2>
+  <h2>An Attack Is a Search Inside the Ball</h2>
   <div class="divider"></div>
-  <p>Training asks: which way lowers the loss?</p>
-  <div class="highlight"><p>An attack asks the <strong>opposite</strong>: which way <em>raises</em> the loss?</p></div>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 126" style="width:100%;max-width:760px;">
-      <defs><marker id="ar23g" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2e8b57"/></marker></defs><defs><marker id="ar23r" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d94040"/></marker></defs>
-      <path d="M40,30 C120,110 200,118 260,118 C320,118 380,60 430,20" fill="none" stroke="#003876" stroke-width="2.5"/>
-      <text x="22" y="16" font-size="12" fill="#003876">loss</text>
-      <circle cx="330" cy="100" r="5" fill="#1a1a1a"/>
-      <text x="330" y="122" font-size="12" fill="#1a1a1a" text-anchor="middle">current input</text>
-      <line x1="322" y1="98" x2="270" y2="114" stroke="#2e8b57" stroke-width="2.5" marker-end="url(#ar23g)"/>
-      <text x="262" y="92" font-size="12" fill="#2e8b57" text-anchor="middle" font-weight="700">training: lower the loss</text>
-      <line x1="338" y1="94" x2="392" y2="54" stroke="#d94040" stroke-width="2.5" marker-end="url(#ar23r)"/>
-      <text x="408" y="104" font-size="12" fill="#d94040" text-anchor="middle" font-weight="700">attack: raise it</text>
-    </svg>
+  <p>Find the allowed change that hurts the model most:</p>
+  <p>$$\max_{\|\delta\|\le\epsilon}\ L\big(f(x+\delta),\,y\big)$$</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 200" style="width:100%;max-width:900px;"><rect x="10" y="10" width="300" height="170" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><text x="160" y="70" font-size="24" fill="#1a1a1a" text-anchor="middle" font-weight="700">L: loss</text><text x="160" y="115" font-size="21" fill="#6b7280" text-anchor="middle">high = model is wrong</text><rect x="350" y="10" width="300" height="170" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><text x="500" y="70" font-size="24" fill="#1a1a1a" text-anchor="middle" font-weight="700">∇L: gradient</text><text x="500" y="115" font-size="21" fill="#6b7280" text-anchor="middle">direction loss rises</text><rect x="690" y="10" width="300" height="170" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="840" y="70" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">‖δ‖ ≤ ε</text><text x="840" y="115" font-size="21" fill="#6b7280" text-anchor="middle">stay inside the ball</text></svg></div>
+  <p class="muted">Training lowers loss by changing weights; attacks raise it by changing the input.</p>
+</div>
+
+<!-- 23. FGSM: One Step Along the Gradient Sign -->
+<div class="slide">
+  <h2>FGSM: One Step Along the Gradient Sign</h2>
+  <div class="divider"></div>
+  <p>$$x' = x + \epsilon\cdot\mathrm{sign}\big(\nabla_x L(f(x),y)\big)$$</p>
+  <div style="display:flex;justify-content:center;"><img src="figs/goodfellow-fig2-fgsm.png" alt="Goodfellow et al. Fig. 2: (a) logistic regression weights on MNIST, (b) their sign, (c) clean 3s and 7s, (d) FGSM adversarial 3s and 7s at epsilon 0.25, still readable to humans" style="width:640px;height:auto;display:block;"></div>
+  <p class="key"><b>(a)</b> weights · <b>(b)</b> their sign = the attack · <b>(c)</b> clean 3s, 7s · <b>(d)</b> attacked, ε = .25</p>
+  <p class="key">Logistic regression, MNIST 3 vs 7: error <b>1.6% → 99%</b></p>
+  <div class="cite cite-left">Goodfellow et al., ICLR 2015 — Fig. 2. FGSM exactly maximizes the <i>linearized</i> loss over the ℓ∞ box.</div>
+</div>
+
+<!-- 24. FGSM by Hand -->
+<div class="slide">
+  <h2>FGSM by Hand: Only the Sign Matters</h2>
+  <div class="divider"></div>
+  <table>
+    <tr style="text-transform:none;"><th style="text-transform:none;">Pixel</th><th style="text-transform:none;">$x$</th><th style="text-transform:none;">gradient</th><th style="text-transform:none;">sign</th><th style="text-transform:none;">$x'$ (ε = 0.1)</th></tr>
+    <tr><td>1</td><td class="num">0.20</td><td class="num">+0.70</td><td class="num">+</td><td class="num">0.30</td></tr>
+    <tr><td>2</td><td class="num">0.50</td><td class="num">−0.10</td><td class="num">−</td><td class="num">0.40</td></tr>
+    <tr><td>3</td><td class="num">0.85</td><td class="num">+0.02</td><td class="num">+</td><td class="num">0.95</td></tr>
+  </table>
+  <p>Every pixel moves the <strong>full ε</strong>, even pixel 3 with a tiny gradient.</p>
+  <p class="muted">Illustrative numbers. Real images: thousands of pixels, all moved at once.</p>
+</div>
+
+<!-- 25. One Step Can Miss -->
+<div class="slide">
+  <h2>One Step Can Miss the Worst Point</h2>
+  <div class="divider"></div>
+  <!-- exact geometry: loss L(u)=sin(u), x at u0=0.6, eps=1.6 so interval [-1.0, 2.2];
+       tangent T(u)=sin(0.6)+cos(0.6)(u-0.6) (slope > 0, so FGSM goes to u0+eps=2.2);
+       max of L on the interval at u=pi/2 (interior). X = 100 + 170(u+1.4), Y = 220 - 80*value -->
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 340" style="width:100%;max-width:1000px;"><rect x="168" y="20" width="544" height="280" fill="#e8ecf0" opacity="0.7"/><line x1="60" y1="300" x2="960" y2="300" stroke="#6b7280" stroke-width="2"/><text x="500" y="332" font-size="21" fill="#6b7280" text-anchor="middle">input along one direction</text><text x="40" y="160" font-size="21" fill="#6b7280" text-anchor="middle" transform="rotate(-90 40 160)">loss</text><text x="180" y="290" font-size="21" fill="#003876" font-weight="700">allowed interval [x−ε, x+ε]</text><polyline points="100.0,298.8 117.0,297.1 134.0,294.6 151.0,291.3 168.0,287.3 185.0,282.7 202.0,277.4 219.0,271.5 236.0,265.2 253.0,258.4 270.0,251.2 287.0,243.6 304.0,235.9 321.0,228.0 338.0,220.0 355.0,212.0 372.0,204.1 389.0,196.4 406.0,188.8 423.0,181.6 440.0,174.8 457.0,168.5 474.0,162.6 491.0,157.3 508.0,152.7 525.0,148.7 542.0,145.4 559.0,142.9 576.0,141.2 593.0,140.2 610.0,140.0 627.0,140.7 644.0,142.1 661.0,144.3 678.0,147.3 695.0,150.9 712.0,155.3 729.0,160.3 746.0,166.0 763.0,172.1 780.0,178.8 797.0,185.8 814.0,193.2 831.0,200.9 848.0,208.7 865.0,216.7 882.0,224.7 899.0,232.6 916.0,240.4 933.0,248.1 950.0,255.4" stroke="#1a1a1a" stroke-width="3" fill="none"/><line x1="270" y1="240.9" x2="746" y2="56" stroke="#d94040" stroke-width="2.5" stroke-dasharray="8 6"/><line x1="712" y1="69.2" x2="712" y2="155.3" stroke="#d94040" stroke-width="2" stroke-dasharray="3 4"/><circle cx="712" cy="69.2" r="8" fill="#fff" stroke="#d94040" stroke-width="2.5"/><text x="728" y="60" font-size="21" fill="#d94040">tangent predicts</text><circle cx="440" cy="174.8" r="10" fill="#003876"/><text x="440" y="214" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">x</text><circle cx="605" cy="140" r="10" fill="#1f8a4c"/><text x="590" y="186" font-size="21" fill="#1f8a4c" text-anchor="middle" font-weight="700">worst point</text><circle cx="712" cy="155.3" r="10" fill="#d94040"/><text x="724" y="128" font-size="21" fill="#d94040" font-weight="700">FGSM endpoint</text></svg></div>
+  <p class="key"><b>black</b> true loss · <b>red dashed</b> tangent at $x$ (FGSM's linear model) · <b>shaded</b> allowed interval</p>
+  <p>FGSM jumps to the edge the slope points to; the <strong>curved</strong> loss peaks inside.</p>
+  <p class="muted">Illustrative 1-D loss, $L(u)=\sin u$.</p>
+</div>
+
+<!-- 26. PGD: Many Small Steps, Then Project -->
+<div class="slide">
+  <h2>PGD: Many Small Steps, Then Project</h2>
+  <div class="divider"></div>
+  <div class="pgd-algo" style="max-width:1000px;margin:6px auto;">
+    <ol>
+      <li>Start at a <strong>random point</strong> in the ball</li>
+      <li>Step size α along $\mathrm{sign}(\nabla_x L)$</li>
+      <li><strong>Project</strong>: clip back into the ball and valid pixel range</li>
+      <li>Repeat for $K$ steps (PGD-$K$)</li>
+      <li>Restart several times; keep the highest-loss point</li>
+    </ol>
   </div>
-  <p>The gradient points uphill. Step that way, the prediction breaks.</p>
+  <p class="muted">FGSM is the one-step case: no random start, α = ε, K = 1.</p>
+  <div class="cite cite-left">Madry et al., "Towards Deep Learning Models Resistant to Adversarial Attacks", ICLR 2018 — §2.1, §3.</div>
 </div>
 
-<!-- 22. The Gradient Sign -->
+<!-- 27. Steps Stay Inside the Ball -->
 <div class="slide">
-  <h2>The Gradient Sign</h2>
+  <h2>Steps Stay Inside the Ball</h2>
   <div class="divider"></div>
-  <p>The gradient says, per pixel, <strong>which direction hurts</strong>.</p>
-  <ul class="arrow">
-    <li>Positive: brighten this pixel to fool the model</li>
-    <li>Negative: darken this pixel instead</li>
-    <li>Keep only the <em>sign</em>, push each pixel by $\varepsilon$</li>
-  </ul>
-  <div style="display:flex;justify-content:center;margin:6px 0;"><img src="figs/goodfellow-fig2-logreg.png" alt="Goodfellow Fig 2: logistic-regression weights for MNIST 3 vs 7, the sign of those weights, clean 3s and 7s, and the same digits after adding epsilon times the sign" style="width:640px;height:auto;max-width:100%;display:block;"></div>
-  <p class="muted">Every pixel moves the maximum allowed amount.</p>
-  <div class="cite cite-left">Goodfellow, Shlens, and Szegedy, ICLR 2015 — Fig. 2: weights, their sign, MNIST 3s/7s, and the sign-perturbed digits ($\varepsilon = 0.25$; error 1.6% → 99%).</div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 340" style="width:100%;max-width:960px;"><rect x="300" y="20" width="300" height="300" fill="#e8ecf0" stroke="#003876" stroke-width="3"/><text x="450" y="50" font-size="21" fill="#003876" text-anchor="middle" font-weight="700">ℓ∞ ball</text><path d="M 640 20 C 620 120, 610 220, 560 330" stroke="#1a1a1a" stroke-width="3" fill="none"/><text x="720" y="70" font-size="21" fill="#d94040" font-weight="700">wrong label</text><circle cx="450" cy="170" r="9" fill="#1a1a1a"/><text x="430" y="200" font-size="21" fill="#1a1a1a" text-anchor="end">x</text><circle cx="400" cy="240" r="8" fill="#003876"/><polyline points="400,240 460,200 510,150 560,110 600,90" stroke="#003876" stroke-width="3" fill="none"/><circle cx="460" cy="200" r="7" fill="#003876"/><circle cx="510" cy="150" r="7" fill="#003876"/><circle cx="560" cy="110" r="7" fill="#003876"/><line x1="600" y1="90" x2="650" y2="70" stroke="#d94040" stroke-width="3" stroke-dasharray="6 5"/><circle cx="650" cy="70" r="7" fill="#d94040"/><line x1="650" y1="70" x2="600" y2="70" stroke="#d94040" stroke-width="2.5"/><circle cx="600" cy="70" r="9" fill="#d94040"/><text x="280" y="250" font-size="21" fill="#003876" text-anchor="end">random start</text><text x="680" y="130" font-size="21" fill="#6b7280">step leaves the ball</text><text x="680" y="160" font-size="21" fill="#6b7280">→ clip back to the edge</text></svg></div>
+  <p class="muted">Projection keeps every iterate a <strong>legal</strong> attack under the threat model.</p>
 </div>
 
-<!-- 23. FGSM -->
+<!-- 28. Restarts Find Similar Maxima -->
 <div class="slide">
-  <h2>FGSM: One Step</h2>
+  <h2>Many Restarts Reach Similar Loss</h2>
   <div class="divider"></div>
-  <p>FGSM (Fast Gradient Sign Method): a single move.</p>
-  <ul class="arrow">
-    <li>Read the gradient: which way hurts, per pixel</li>
-    <li>Keep only its <strong>sign</strong>, push each pixel by $\varepsilon$</li>
-    <li>One gradient, one step, done</li>
-  </ul>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 90" style="width:100%;max-width:760px;">
-      <rect x="20" y="14" width="96" height="56" rx="7" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
-      <text x="68" y="38" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">x</text>
-      <text x="68" y="58" font-size="11" fill="#6b7280" text-anchor="middle">clean image</text>
-      <text x="134" y="48" font-size="22" fill="#1a1a1a" text-anchor="middle">+</text>
-      <text x="164" y="48" font-size="15" fill="#d94040" text-anchor="middle" font-weight="700">ε ·</text>
-      <rect x="182" y="14" width="120" height="56" rx="7" fill="#d94040" fill-opacity="0.10" stroke="#d94040" stroke-width="2"/>
-      <text x="242" y="38" font-size="13" fill="#d94040" text-anchor="middle" font-weight="700">sign(grad of loss)</text>
-      <text x="242" y="58" font-size="11" fill="#6b7280" text-anchor="middle">only ±1 per pixel</text>
-      <text x="322" y="48" font-size="22" fill="#1a1a1a" text-anchor="middle">=</text>
-      <rect x="338" y="14" width="118" height="56" rx="7" fill="#e8ecf0" stroke="#d94040" stroke-width="2"/>
-      <text x="397" y="38" font-size="13" fill="#d94040" text-anchor="middle" font-weight="700">x_adv</text>
-      <text x="397" y="58" font-size="10" fill="#6b7280" text-anchor="middle">one step, misclassified</text>
-      <text x="230" y="86" font-size="10" fill="#6b7280" text-anchor="middle">one gradient evaluation, every pixel moves by exactly ε</text>
-    </svg>
-  </div>
-  <p class="muted">Nudge every pixel the way that hurts the model. Fast and cheap.</p>
-  <div class="cite cite-left">Goodfellow, Shlens, and Szegedy, "Explaining and Harnessing Adversarial Examples", ICLR 2015.</div>
+  <div style="display:flex;justify-content:center;"><img src="figs/madry-fig1-restarts.png" alt="Madry et al. Fig. 1: four panels of loss value versus PGD iteration (0 to 100) for 20 random restarts each, on MNIST and CIFAR-10, standard and adversarial training; the curves rise and level off at similar values" style="width:1060px;height:auto;display:block;"></div>
+  <p class="key"><b>each line</b> one PGD run from a random start, 20 runs, same image</p>
+  <p class="muted">Evidence PGD is a strong first-order attack, not proof no worse point exists.</p>
+  <div class="cite cite-left">Madry et al., ICLR 2018 — Fig. 1 (cross-entropy loss over PGD iterations; MNIST and CIFAR-10, standard and adversarial training).</div>
 </div>
 
-<!-- 24. FGSM Demo -->
+<!-- 29. Weaker Attacks Overstate Robustness -->
 <div class="slide">
-  <h2>FGSM by Hand</h2>
+  <h2>Weaker Attacks Overstate Robustness</h2>
   <div class="divider"></div>
-  <div class="demo-card">
-    <h3>Demo</h3>
-    <p>Pixel value $0.40$, budget $\varepsilon = 0.03$. Gradient sign is $+1$.</p>
-    <div class="math-block">$$0.40 + 0.03 \cdot (+1) = 0.43.$$</div>
-    <p>Every pixel shifts by $0.03$. The cat now reads as a <strong>dog</strong>.</p>
-  </div>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 58" style="width:100%;max-width:760px;">
-      <defs><marker id="ar26" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d94040"/></marker></defs>
-      <line x1="40" y1="30" x2="420" y2="30" stroke="#6b7280" stroke-width="2"/>
-      <text x="40" y="50" font-size="11" fill="#6b7280" text-anchor="middle">0 (black)</text>
-      <text x="420" y="50" font-size="11" fill="#6b7280" text-anchor="middle">1 (white)</text>
-      <line x1="40" y1="24" x2="40" y2="36" stroke="#6b7280" stroke-width="2"/>
-      <line x1="420" y1="24" x2="420" y2="36" stroke="#6b7280" stroke-width="2"/>
-      <circle cx="192" cy="30" r="5" fill="#003876"/>
-      <text x="184" y="16" font-size="12" fill="#003876" text-anchor="middle" font-weight="700">0.40</text>
-      <circle cx="203" cy="30" r="5" fill="#d94040"/>
-      <text x="216" y="16" font-size="12" fill="#d94040" text-anchor="middle" font-weight="700">0.43</text>
-      <text x="200" y="52" font-size="11" fill="#d94040" text-anchor="middle">+0.03: a shift you cannot see</text>
-    </svg>
-  </div>
-  <p class="muted">A change of 0.03 on a 0-to-1 scale is invisible to you.</p>
-</div>
-
-<!-- 25. One Step Is Weak -->
-<div class="slide">
-  <h2>One Step Is Weak</h2>
-  <div class="divider"></div>
-  <p>FGSM is fast, but it takes <strong>one blind leap</strong>.</p>
-  <ul>
-    <li>The loss surface curves</li>
-    <li>One straight step can overshoot or fall short</li>
-  </ul>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 130" style="width:100%;max-width:760px;">
-      <defs><marker id="ar27r" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d94040"/></marker></defs><defs><marker id="ar27g" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#003876"/></marker></defs>
-      <path d="M30,110 C90,100 130,40 190,44 C240,48 260,100 320,80 C370,64 400,30 440,20" fill="none" stroke="#6b7280" stroke-width="2.5"/>
-      <text x="26" y="16" font-size="12" fill="#6b7280">loss along the push direction</text>
-      <circle cx="60" cy="102" r="5" fill="#1a1a1a"/>
-      <text x="50" y="112" font-size="12" fill="#1a1a1a" text-anchor="end">start</text>
-      <line x1="60" y1="102" x2="238" y2="52" stroke="#d94040" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#ar27r)"/>
-      <circle cx="244" cy="50" r="5" fill="#d94040"/>
-      <text x="236" y="20" font-size="12" fill="#d94040" font-weight="700">FGSM: one leap, overshoots the peak</text>
-      <line x1="60" y1="102" x2="100" y2="84" stroke="#003876" stroke-width="2.5" marker-end="url(#ar27g)"/>
-      <line x1="104" y1="82" x2="136" y2="60" stroke="#003876" stroke-width="2.5" marker-end="url(#ar27g)"/>
-      <line x1="140" y1="58" x2="180" y2="46" stroke="#003876" stroke-width="2.5" marker-end="url(#ar27g)"/>
-      <circle cx="186" cy="45" r="5" fill="#003876"/>
-      <text x="160" y="126" font-size="12" fill="#003876" text-anchor="middle" font-weight="700">many small steps follow the curve</text>
-    </svg>
-  </div>
-  <p class="muted">A careful attacker takes many small steps instead.</p>
-</div>
-
-<!-- 26. PGD -->
-<div class="slide">
-  <h2>PGD: Iterate</h2>
-  <div class="divider"></div>
-  <p>PGD (Projected Gradient Descent) repeats the gradient step.</p>
-  <ul class="arrow">
-    <li>Take a small gradient-sign step</li>
-    <li><strong>Project</strong> back into the budget if you drifted out</li>
-    <li>Repeat for many small steps</li>
-  </ul>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 96" style="width:100%;max-width:760px;">
-      <defs><marker id="ar28" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs>
-      <rect x="30" y="18" width="120" height="46" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
-      <text x="90" y="38" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">gradient-sign step</text>
-      <text x="90" y="56" font-size="11" fill="#6b7280" text-anchor="middle">small size α</text>
-      <line x1="154" y1="41" x2="184" y2="41" stroke="#6b7280" stroke-width="2" marker-end="url(#ar28)"/>
-      <rect x="190" y="18" width="120" height="46" rx="8" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/>
-      <text x="250" y="38" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">project into ball</text>
-      <text x="250" y="56" font-size="11" fill="#6b7280" text-anchor="middle">clip so |δ| ≤ ε</text>
-      <line x1="314" y1="41" x2="338" y2="41" stroke="#6b7280" stroke-width="2" marker-end="url(#ar28)"/>
-      <rect x="344" y="18" width="112" height="46" rx="8" fill="#d94040" fill-opacity="0.10" stroke="#d94040" stroke-width="2"/>
-      <text x="400" y="38" font-size="13" fill="#d94040" text-anchor="middle" font-weight="700">K steps done?</text>
-      <text x="400" y="56" font-size="10" fill="#6b7280" text-anchor="middle">yes: output x_adv</text>
-      <path d="M400,66 L400,84 L90,84 L90,70" fill="none" stroke="#6b7280" stroke-width="2" marker-end="url(#ar28)"/>
-      <text x="242" y="80" font-size="11" fill="#6b7280" text-anchor="middle">no: repeat (typically 7–100 steps, random start)</text>
-    </svg>
-  </div>
-  <p class="muted">Many careful steps instead of one blind leap.</p>
-  <div class="cite cite-left">Madry, Makelov, Schmidt, Tsipras, and Vladu, "Towards Deep Learning Models Resistant to Adversarial Attacks", ICLR 2018.</div>
-</div>
-
-<!-- 27. PGD Picture -->
-<div class="slide">
-  <h2>Steps Inside the Ball</h2>
-  <div class="divider"></div>
-  <p>PGD walks toward the boundary, <strong>staying inside the budget</strong>.</p>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 480 220" style="width:100%;max-width:800px;">
-      <rect x="120" y="40" width="150" height="150" fill="#1a5296" fill-opacity="0.08" stroke="#003876" stroke-width="2" stroke-dasharray="5 4"/>
-      <text x="195" y="32" font-size="14" fill="#003876" text-anchor="middle" font-weight="700">budget</text>
-      <path d="M340,40 L340,190" stroke="#d94040" stroke-width="2.5"/>
-      <text x="352" y="120" font-size="14" fill="#d94040" font-weight="700">boundary</text>
-      <circle cx="150" cy="160" r="5" fill="#1a1a1a"/>
-      <text x="150" y="180" font-size="13" fill="#1a1a1a" text-anchor="middle">x</text>
-      <defs><marker id="pgda" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#003876"/></marker></defs>
-      <line x1="150" y1="160" x2="195" y2="135" stroke="#003876" stroke-width="2.5" marker-end="url(#pgda)"/>
-      <line x1="195" y1="135" x2="235" y2="100" stroke="#003876" stroke-width="2.5" marker-end="url(#pgda)"/>
-      <line x1="235" y1="100" x2="262" y2="70" stroke="#003876" stroke-width="2.5" marker-end="url(#pgda)"/>
-      <circle cx="262" cy="70" r="5" fill="#003876"/>
-    </svg>
-  </div>
-  <p class="muted">Small steps, each projected back, find the weak spot.</p>
-</div>
-
-<!-- 28. PGD Is the Benchmark -->
-<div class="slide">
-  <h2>PGD Is the Benchmark</h2>
-  <div class="divider"></div>
-  <p>PGD became the <strong>standard strong attack</strong>.</p>
-  <ul class="arrow">
-    <li>Reliable, simple to run</li>
-    <li>Used to stress-test defenses</li>
-    <li>If you beat PGD, you have a claim worth checking</li>
-  </ul>
-  <div style="display:flex;justify-content:center;margin:6px 0;"><img src="figs/madry-fig1-pgd-loss.png" alt="Loss value over 100 PGD iterations from many random restarts, on MNIST and CIFAR10, for standard and adversarially trained networks: the runs plateau at similar loss values" style="width:780px;height:auto;max-width:100%;display:block;"></div>
-  <p class="muted">The yardstick for "is this defense real?"</p>
-  <div class="cite cite-left">Madry et al., ICLR 2018 — Fig. 1: loss over PGD iterations from random restarts; the local maxima found are all of similar quality, which is why PGD is a trustworthy first-order attack.</div>
-</div>
-
-<!-- 29. Carlini-Wagner -->
-<div class="slide">
-  <h2>The Carlini-Wagner Attack</h2>
-  <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;gap:28px;align-items:center;">
-    <div><p>A stronger attack: find the <strong>smallest possible</strong> nudge.</p>
-  <ul>
-    <li>Optimize for an imperceptible change</li>
-    <li>Broke many defenses that PGD missed</li>
-  </ul></div>
-    <div style="display:flex;justify-content:center;"><img src="figs/cw-fig1-distilled.png" alt="Carlini-Wagner Fig 1: original MNIST and CIFAR images beside adversarial examples from their L2, L-infinity and L0 attacks on a defensively distilled network" style="max-height:330px;width:auto;max-width:100%;display:block;"></div>
-  </div>
-  <div class="cite cite-left">Carlini and Wagner, "Towards Evaluating the Robustness of Neural Networks", IEEE S&amp;P 2017 — Fig. 1: originals and their $L_2$, $L_\infty$, $L_0$ attacks on a defensively distilled network.</div>
-</div>
-
-<!-- 30. Targeted vs Untargeted -->
-<div class="slide">
-  <h2>Targeted vs Untargeted</h2>
-  <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;gap:28px;align-items:center;">
-    <div><h3>Untargeted</h3>
-      <p>Make it wrong, <strong>any</strong> wrong label will do.</p>
-      <h3 style="margin-top:18px;">Targeted</h3>
-      <p>Make it say a <strong>chosen</strong> label: "stop" reads as "go".</p></div>
-    <div style="display:flex;justify-content:center;"><img src="figs/cw-fig3-targeted.png" alt="Grid of MNIST digits: each source digit (rows) turned into each target class (columns) by the Carlini-Wagner L2 attack, all still legible as the source digit" style="max-height:330px;width:auto;max-width:100%;display:block;"></div>
-  </div>
-  <p class="muted">Targeted is harder, and more dangerous.</p>
-  <div class="cite cite-left">Carlini and Wagner, IEEE S&amp;P 2017 — Fig. 3: targeted $L_2$ attack, every source digit (row) to every target class (column).</div>
+  <p class="tm"><b>CIFAR-10</b> · adversarially trained wide ResNet · white box · $\ell_\infty$, ε = 8/255</p>
+  <div style="display:flex;justify-content:center;margin:4px 0;"><svg viewBox="0 0 1000 370" style="width:100%;max-width:960px;"><line x1="90" y1="320" x2="980" y2="320" stroke="#6b7280" stroke-width="2"/><text x="40" y="180" font-size="21" fill="#6b7280" text-anchor="middle" transform="rotate(-90 40 180)">accuracy (%)</text><rect x="120" y="75.6" width="130" height="244.4" fill="#9ca3af"/><text x="185" y="65" font-size="24" fill="#1a1a1a" text-anchor="middle" font-weight="700">87.3</text><text x="185" y="352" font-size="22" fill="#1a1a1a" text-anchor="middle">no attack</text><rect x="300" y="162.9" width="130" height="157.1" fill="#8fb6e8"/><text x="365" y="152" font-size="24" fill="#1a1a1a" text-anchor="middle" font-weight="700">56.1</text><text x="365" y="352" font-size="22" fill="#1a1a1a" text-anchor="middle">FGSM</text><rect x="480" y="180" width="130" height="140" fill="#4a7fc0"/><text x="545" y="170" font-size="24" fill="#1a1a1a" text-anchor="middle" font-weight="700">50.0</text><text x="545" y="352" font-size="22" fill="#1a1a1a" text-anchor="middle">PGD-7</text><rect x="660" y="189" width="130" height="131" fill="#2a5a9a"/><text x="725" y="179" font-size="24" fill="#1a1a1a" text-anchor="middle" font-weight="700">46.8</text><text x="725" y="352" font-size="22" fill="#1a1a1a" text-anchor="middle">CW-30</text><rect x="840" y="191.8" width="130" height="128.2" fill="#003876"/><text x="905" y="182" font-size="24" fill="#1a1a1a" text-anchor="middle" font-weight="700">45.8</text><text x="905" y="352" font-size="22" fill="#1a1a1a" text-anchor="middle">PGD-20</text></svg></div>
+  <p>Same model, stronger search, lower number: report the <strong>strongest</strong> attack.</p>
+  <div class="cite cite-left">Madry et al., ICLR 2018 — Table 2 (white-box rows, source network A; ε = 8 on the 0–255 scale). Chart redrawn from the table.</div>
 </div>
 
 <!-- ============ SECTION 04 ============ -->
-<!-- 31. Divider 04 -->
+<!-- 30. Divider 04 -->
 <div class="slide section-slide left">
   <div class="section-num">04</div>
-  <h1>The Defenses</h1>
+  <h1>Defenses and Honest Evaluation</h1>
   <div class="divider"></div>
-  <p class="subtitle">Training tougher, proving safety</p>
+  <p class="subtitle">"The attacks we tried failed" is not "no attack can succeed"</p>
 </div>
 
-<!-- 32. The Defender's Goal -->
+<!-- 31. The Defender Needs the Whole Ball -->
 <div class="slide">
-  <h2>The Defender's Goal</h2>
+  <h2>The Defender Needs the Whole Ball</h2>
   <div class="divider"></div>
-  <p>Stay correct <strong>everywhere inside the budget</strong>.</p>
-  <div class="def-card">
-    <h3>Robustness</h3>
-    <p>For every $\delta$ with $\|\delta\| \le \varepsilon$, the model still predicts the <strong>true label</strong> of $x$.</p>
-  </div>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 100" style="width:100%;max-width:700px;">
-      <circle cx="110" cy="48" r="5" fill="#2e8b57"/>
-      <text x="110" y="70" font-size="12" fill="#1a1a1a" text-anchor="middle">correct at x</text>
-      <text x="110" y="88" font-size="11" fill="#6b7280" text-anchor="middle">accuracy: one point</text>
-      <text x="205" y="54" font-size="20" fill="#6b7280" text-anchor="middle">vs</text>
-      <circle cx="350" cy="48" r="38" fill="#2e8b57" fill-opacity="0.25" stroke="#2e8b57" stroke-width="2.5"/>
-      <circle cx="350" cy="48" r="5" fill="#2e8b57"/>
-      <text x="350" y="96" font-size="11" fill="#6b7280" text-anchor="middle">robustness: the whole ball, radius ε</text>
-      <text x="306" y="30" font-size="12" fill="#2e8b57" text-anchor="end" font-weight="700">same label</text>
-      <text x="306" y="44" font-size="12" fill="#2e8b57" text-anchor="end" font-weight="700">everywhere</text>
-    </svg>
-  </div>
-  <p>Not just correct on $x$, but on its <em>whole neighborhood</em>.</p>
+  <div class="def-card"><h3>Robust accuracy at ε</h3><p>Fraction of test inputs where <strong>every</strong> point in the ball gets the right label.</p></div>
+  <div style="display:flex;justify-content:center;margin:12px 0 0;"><svg viewBox="0 0 1000 230" style="width:100%;max-width:900px;"><rect x="10" y="10" width="470" height="210" rx="10" fill="#fff" stroke="#1f8a4c" stroke-width="2"/><line x1="380" y1="10" x2="300" y2="220" stroke="#1a1a1a" stroke-width="3"/><circle cx="160" cy="110" r="60" fill="#e6f4ea" stroke="#1f8a4c" stroke-width="2.5"/><circle cx="160" cy="110" r="8" fill="#1a1a1a"/><text x="390" y="200" font-size="21" fill="#1f8a4c" font-weight="700" text-anchor="middle">robust</text><rect x="520" y="10" width="470" height="210" rx="10" fill="#fff" stroke="#d94040" stroke-width="2"/><line x1="800" y1="10" x2="720" y2="220" stroke="#1a1a1a" stroke-width="3"/><circle cx="720" cy="110" r="60" fill="#fdecec" stroke="#d94040" stroke-width="2.5"/><circle cx="720" cy="110" r="8" fill="#1a1a1a"/><text x="900" y="200" font-size="21" fill="#d94040" font-weight="700" text-anchor="middle">not robust</text><text x="880" y="70" font-size="21" fill="#6b7280" text-anchor="middle">correct, yet</text><text x="880" y="100" font-size="21" fill="#6b7280" text-anchor="middle">ball crosses</text></svg></div>
+  <p class="muted">Attacker needs one bad point; defender must cover them all.</p>
 </div>
 
-<!-- 33. The Robustness Radius -->
+<!-- 32. Adversarial Training -->
 <div class="slide">
-  <h2>The Robustness Radius</h2>
+  <h2>Adversarial Training: Train on the Worst Case</h2>
   <div class="divider"></div>
-  <p>How far can you push $x$ before the answer flips?</p>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 480 210" style="width:100%;max-width:760px;">
-      <circle cx="180" cy="105" r="70" fill="#2e8b57" fill-opacity="0.10" stroke="#2e8b57" stroke-width="2"/>
-      <circle cx="180" cy="105" r="5" fill="#1a1a1a"/>
-      <text x="180" y="128" font-size="15" fill="#1a1a1a" text-anchor="middle" font-weight="700">x</text>
-      <line x1="180" y1="105" x2="250" y2="105" stroke="#003876" stroke-width="2.5"/>
-      <text x="215" y="96" font-size="14" fill="#003876" text-anchor="middle" font-weight="700">radius r</text>
-      <path d="M340,30 L320,180" fill="none" stroke="#d94040" stroke-width="2.5"/>
-      <text x="352" y="110" font-size="14" fill="#d94040" font-weight="700">boundary</text>
-      <text x="180" y="200" font-size="14" fill="#666" text-anchor="middle">safe out to radius r</text>
-    </svg>
-  </div>
-  <p class="muted">A larger guaranteed radius means a more robust model.</p>
+  <p>$$\min_\theta\ \mathbb{E}_{(x,y)}\Big[\max_{\|\delta\|\le\epsilon} L\big(f_\theta(x+\delta),y\big)\Big]$$</p>
+  <div style="display:flex;justify-content:center;"><img src="figs/madry-fig3-boundary.png" alt="Madry et al. Fig. 3: left, two classes of points separated by a straight line; middle, ell-infinity boxes around the points cross that line, with red stars marking adversarial examples; right, a more complex curved boundary separates all the boxes" style="width:860px;height:auto;display:block;"></div>
+  <p class="key"><b>left</b> points separable · <b>middle</b> boxes cross the line (★ = attack) · <b>right</b> a bent boundary clears every box</p>
+  <div class="cite cite-left">Madry et al., ICLR 2018 — Eq. 2.1 (saddle point) and Fig. 3 (conceptual illustration). Inner max: PGD; outer min: SGD.</div>
 </div>
 
-<!-- 34. Adversarial Training -->
+<!-- 33. The Price -->
 <div class="slide">
-  <h2>Adversarial Training</h2>
+  <h2>Robustness Can Cost Clean Accuracy</h2>
   <div class="divider"></div>
-  <p>The de-facto defense: <strong>train on the attacks</strong>.</p>
-  <div class="ta-algo" style="max-width:900px; margin:18px auto;">
-    <ol>
-      <li>For each batch, craft a PGD attack.</li>
-      <li>Train on the <strong>attacked</strong> images, true labels.</li>
-      <li>Repeat, so the model learns to resist.</li>
-    </ol>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:28px;align-items:center;">
+    <img src="figs/tsipras-fig1b-cifar.png" alt="Tsipras et al. Fig. 1(b), CIFAR-10: standard accuracy versus number of training samples for ell-2 adversarially trained models with training epsilon 0, 20/255, 80/255 and 320/255; with enough data, larger training epsilon gives lower standard accuracy" style="height:470px;width:auto;display:block;">
+    <div>
+      <p class="key" style="margin:0 0 10px;"><b>y</b> clean (standard) accuracy</p>
+      <p class="key" style="margin:0 0 10px;"><b>x</b> training-set size (log)</p>
+      <p class="key" style="margin:0 0 18px;"><b>lines</b> training budget ε: <b>black</b> 0 (standard) · <b>blue</b> 20/255 · <b>green</b> 80/255 · <b>red</b> 320/255</p>
+      <p>With enough data, larger ε sits <strong>lower</strong>.</p>
+      <p class="muted">Also costs compute: each training step runs an attack first.</p>
+    </div>
   </div>
-  <div style="display:flex;justify-content:center;margin:6px 0;"><img src="figs/madry-fig3-boundary.png" alt="Madry Fig 3: points separated by a simple boundary; L-infinity balls around the points cross that boundary; a more complex boundary separates the balls themselves" style="width:600px;height:auto;max-width:100%;display:block;"></div>
-  <div class="cite cite-left">Madry, Makelov, Schmidt, Tsipras, and Vladu, "Towards Deep Learning Models Resistant to Adversarial Attacks", ICLR 2018 — Fig. 3: a standard boundary (left) misclassifies parts of the $L_\infty$ balls (middle); adversarial training must separate the balls (right).</div>
+  <div class="cite cite-left">Tsipras et al., "Robustness May Be at Odds with Accuracy", ICLR 2019 — Fig. 1(b), CIFAR-10 (ℓ2 adversarial training; MNIST and Restricted ImageNet panels omitted). A perspective with evidence, not a universal law.</div>
 </div>
 
-<!-- 35. It Actually Works -->
+<!-- 34. Obfuscated Gradients -->
 <div class="slide">
-  <h2>It Actually Works</h2>
+  <h2>Some Defenses Only Break the Attack</h2>
   <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;gap:28px;align-items:center;">
-    <div><p>Adversarial training is the one defense that <strong>held up</strong>.</p>
-  <ul class="arrow">
-    <li>Survived years of stronger attacks</li>
-    <li>Still the baseline everyone compares against</li>
-  </ul>
-  <p class="muted">Rare in this field: a defense that lasts.</p></div>
-    <div style="display:flex;justify-content:center;"><img src="figs/athalye-fig1-advtrain.png" alt="Model accuracy versus L-infinity perturbation magnitude: the baseline and thermometer encoding fall to zero by 0.01, adversarial training stays near 50% at 0.031" style="max-height:330px;width:auto;max-width:100%;display:block;"></div>
-  </div>
-  <div class="cite cite-left">Athalye, Carlini, and Wagner, ICML 2018 — Fig. 1: accuracy vs $L_\infty$ distortion; adversarial training keeps ~50% at $\varepsilon = 0.031$ while thermometer encoding alone collapses.</div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 300" style="width:100%;max-width:1000px;"><rect x="10" y="10" width="310" height="280" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/><text x="165" y="54" font-size="25" fill="#003876" text-anchor="middle" font-weight="700">Shattered</text><polyline points="40,200 80,200 80,150 130,150 130,220 180,220 180,130 230,130 230,190 290,190" stroke="#1a1a1a" stroke-width="3" fill="none"/><text x="165" y="265" font-size="21" fill="#6b7280" text-anchor="middle">non-differentiable step</text><rect x="345" y="10" width="310" height="280" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/><text x="500" y="54" font-size="25" fill="#003876" text-anchor="middle" font-weight="700">Stochastic</text><polyline points="375,200 405,150 435,210 465,140 495,195 525,135 555,205 585,160 625,180" stroke="#1a1a1a" stroke-width="3" fill="none"/><text x="500" y="265" font-size="21" fill="#6b7280" text-anchor="middle">random each pass</text><rect x="680" y="10" width="310" height="280" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/><text x="835" y="54" font-size="25" fill="#003876" text-anchor="middle" font-weight="700">Vanishing</text><path d="M 710 210 C 760 210, 780 210, 800 205 C 830 190, 840 120, 960 110" stroke="#1a1a1a" stroke-width="3" fill="none"/><text x="835" y="265" font-size="21" fill="#6b7280" text-anchor="middle">flat, then a cliff</text></svg></div>
+  <p>Gradients mislead the attacker; adversarial examples <strong>still exist</strong>.</p>
+  <div class="cite cite-left">Athalye, Carlini &amp; Wagner, "Obfuscated Gradients Give a False Sense of Security", ICML 2018 — §3. Sketches illustrative.</div>
 </div>
 
-<!-- 36. The Cost -->
+<!-- 35. 7 of 9 Defenses Fell -->
 <div class="slide">
-  <h2>The Cost</h2>
+  <h2>Seven of Nine Defenses Fell to Adapted Attacks</h2>
   <div class="divider"></div>
-  <p>Robustness is <strong>expensive</strong>.</p>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:28px;align-items:start;">
+    <img src="figs/athalye-tab1-defenses.png" alt="Athalye et al. Table 1: nine ICLR 2018 defenses with dataset, distance and accuracy under the new attacks; most fall to 0 to 10 percent, Madry et al. remains at 47 percent and Na et al. at 15 percent" style="height:440px;width:auto;display:block;">
+    <div>
+      <p class="key" style="margin:0 0 10px;"><b>row</b> an ICLR 2018 defense</p>
+      <p class="key" style="margin:0 0 10px;"><b>distance</b> its own threat model</p>
+      <p class="key" style="margin:0 0 10px;"><b>accuracy</b> under the adapted attack</p>
+      <p class="key" style="margin:0 0 10px;"><b>*</b> paper also pairs it with adversarial training; defense alone shown</p>
+      <p class="key" style="margin:0 0 18px;"><b>**</b> partly broken: 0% in principle, imperfections foiled the attack</p>
+      <p>6 broken fully, 1 partly. <strong>Adversarial training</strong> held: 47%.</p>
+    </div>
+  </div>
+  <div class="cite cite-left">Athalye et al., ICML 2018 — Table 1 and caption; §5.4.2 for the ** entry (Samangouei et al.).</div>
+</div>
+
+<!-- 36. Adaptive Attacks -->
+<div class="slide">
+  <h2>Adaptive Attacks: Attack the Defense You Have</h2>
+  <div class="divider"></div>
   <ul>
-    <li>Each step crafts an attack: much slower training</li>
-    <li>Clean accuracy usually drops</li>
-    <li>Needs bigger models and more data</li>
+    <li>Read the defense; target its <strong>weak part</strong></li>
+    <li>Non-differentiable step? Approximate it (BPDA)</li>
+    <li>Randomness? Average gradients over draws (EOT)</li>
+    <li>Diagnostic: huge ε should drive accuracy near 0%</li>
+    <li>Diagnostic: black box beating white box hints at masking</li>
   </ul>
-  <div style="display:flex;justify-content:center;margin:6px 0;"><img src="figs/tsipras-fig1-tradeoff.png" alt="Standard accuracy versus number of training samples for L2-adversarially trained models on MNIST, CIFAR-10 and Restricted ImageNet: larger training epsilon gives lower standard accuracy" style="width:720px;height:auto;max-width:100%;display:block;"></div>
-  <p class="muted">And the bill is not only compute: clean accuracy pays too.</p>
-  <div class="cite cite-left">Tsipras et al., ICLR 2019 — Fig. 1: standard accuracy of $\ell_2$-adversarially trained models vs training-set size; a larger training $\varepsilon$ costs clean accuracy.</div>
+  <p class="muted">Checks raise red flags; passing them proves nothing.</p>
+  <div class="cite cite-left">Athalye et al., ICML 2018 — §4 (BPDA, EOT); Carlini et al., "On Evaluating Adversarial Robustness", arXiv 1902.06705; Tramèr et al., "On Adaptive Attacks to Adversarial Example Defenses", NeurIPS 2020.</div>
 </div>
 
-<!-- Robustness vs Accuracy -->
+<!-- 37. AutoAttack -->
 <div class="slide">
-  <h2>Robustness vs Accuracy</h2>
+  <h2>AutoAttack: A Fixed, Parameter-Free Ensemble</h2>
   <div class="divider"></div>
-  <p>The tension may be <strong>intrinsic</strong>, not an engineering bug.</p>
-  <ul class="arrow">
-    <li>Robust models must ignore fragile-but-predictive patterns</li>
-    <li>Ignoring useful signal costs clean accuracy</li>
-    <li>Upside: robust models attend to features humans find salient</li>
-  </ul>
-  <p class="muted">Echoes "features, not bugs": give up the brittle features, pay in accuracy.</p>
-  <div style="display:flex;justify-content:center;margin:6px 0;"><img src="figs/tsipras-fig2-gradients.png" alt="Loss gradients with respect to input pixels for MNIST, CIFAR-10 and Restricted ImageNet: noise-like for standard models, object-shaped for adversarially trained models" style="width:640px;height:auto;max-width:100%;display:block;"></div>
-  <div class="cite cite-left">Tsipras, Santurkar, Engstrom, Turner, and Madry, "Robustness May Be at Odds with Accuracy", ICLR 2019 — Fig. 2: input gradients of standard vs adversarially trained models.</div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 200" style="width:100%;max-width:1000px;"><rect x="10" y="10" width="232" height="170" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="126" y="70" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">APGD-CE</text><text x="126" y="115" font-size="21" fill="#6b7280" text-anchor="middle">PGD, auto step</text><rect x="258" y="10" width="232" height="170" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="374" y="70" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">APGD-T</text><text x="374" y="115" font-size="21" fill="#6b7280" text-anchor="middle">targeted, DLR loss</text><rect x="506" y="10" width="232" height="170" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="622" y="70" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">FAB-T</text><text x="622" y="115" font-size="21" fill="#6b7280" text-anchor="middle">minimal change</text><rect x="754" y="10" width="236" height="170" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/><text x="872" y="70" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">Square</text><text x="872" y="115" font-size="21" fill="#6b7280" text-anchor="middle">query-only</text></svg></div>
+  <p>An input counts as robust only if <strong>all four</strong> fail.</p>
+  <p class="key"><b>&gt;50 published models</b>: lower than reported in all but one; by &gt;10 points in 13 of 49</p>
+  <div class="cite cite-left">Croce &amp; Hein, "Reliable Evaluation of Adversarial Robustness with an Ensemble of Diverse Parameter-Free Attacks", ICML 2020 — abstract and §5.</div>
 </div>
 
-<!-- 37. Empirical vs Certified -->
+<!-- 38. RobustBench -->
 <div class="slide">
-  <h2>Empirical vs Certified</h2>
+  <h2>RobustBench: A Standardized Benchmark</h2>
   <div class="divider"></div>
-  <div class="grid-2">
-    <div><h3>Empirical</h3>
-      <p>"No attack <strong>we tried</strong> broke it." Could break tomorrow.</p></div>
-    <div><h3>Certified</h3>
-      <p>A <strong>proof</strong>: no attack inside the budget can ever win.</p></div>
+  <div class="grid-2" style="gap:32px;align-items:start;">
+    <div><h3 style="color:var(--yonsei-blue);">Protocol</h3><ul>
+      <li>Fixed dataset and threat model</li>
+      <li>AutoAttack on every entry</li>
+      <li>Outside adaptive attacks welcome</li>
+    </ul></div>
+    <div><h3 style="color:var(--warn);">Entry rules</h3><ul>
+      <li>Non-zero gradients</li>
+      <li>Deterministic forward pass</li>
+      <li>No optimization loop inside</li>
+    </ul></div>
   </div>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 118" style="width:100%;max-width:700px;">
-      <text x="110" y="18" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">track record</text>
-      <text x="40" y="42" font-size="12" fill="#2e8b57">✓ FGSM</text>
-      <text x="40" y="60" font-size="12" fill="#2e8b57">✓ PGD</text>
-      <text x="40" y="78" font-size="12" fill="#2e8b57">✓ C&amp;W</text>
-      <text x="120" y="42" font-size="12" fill="#2e8b57">✓ AutoAttack</text>
-      <text x="120" y="60" font-size="12" fill="#2e8b57">✓ adaptive v1</text>
-      <text x="120" y="78" font-size="12" fill="#d94040" font-weight="700">? tomorrow's attack</text>
-      <text x="110" y="112" font-size="11" fill="#6b7280" text-anchor="middle">finite list of attacks tried</text>
-      <line x1="230" y1="10" x2="230" y2="104" stroke="#6b7280" stroke-width="1" stroke-dasharray="4 3"/>
-      <text x="350" y="18" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">proof</text>
-      <circle cx="350" cy="58" r="30" fill="#2e8b57" fill-opacity="0.22" stroke="#2e8b57" stroke-width="2.5"/>
-      <circle cx="350" cy="58" r="4" fill="#2e8b57"/>
-      <text x="350" y="98" font-size="10" fill="#2e8b57" text-anchor="middle" font-weight="700">every |δ| ≤ ε: same label</text>
-      <text x="350" y="112" font-size="11" fill="#6b7280" text-anchor="middle">holds for attacks not yet invented</text>
-    </svg>
-  </div>
-  <p class="muted">A proof beats a track record.</p>
+  <p class="muted">Rules exclude defenses AutoAttack can't fairly test; those need custom evaluation.</p>
+  <div class="cite cite-left">Croce et al., "RobustBench: A Standardized Adversarial Robustness Benchmark", NeurIPS 2021 Datasets &amp; Benchmarks — §3.</div>
 </div>
 
-<!-- 38. Certified Robustness -->
+<!-- 39. Scoreboard Snapshot -->
 <div class="slide">
-  <h2>Certified Robustness</h2>
+  <h2>Scoreboard Snapshot: Robust Models Exist</h2>
   <div class="divider"></div>
-  <p>Can we <strong>guarantee</strong> a safe radius around $x$?</p>
-  <div class="def-card">
-    <h3>The promise</h3>
-    <p>Within radius $r$, the prediction is <strong>provably</strong> constant. No nudge that small can flip it.</p>
-  </div>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 92" style="width:100%;max-width:760px;">
-      <circle cx="150" cy="46" r="36" fill="#2e8b57" fill-opacity="0.18" stroke="#2e8b57" stroke-width="3"/>
-      <circle cx="150" cy="46" r="4" fill="#1a1a1a"/>
-      <text x="150" y="64" font-size="12" fill="#1a1a1a" text-anchor="middle" font-weight="700">x</text>
-      <line x1="150" y1="46" x2="186" y2="46" stroke="#2e8b57" stroke-width="2"/>
-      <text x="168" y="40" font-size="12" fill="#2e8b57" text-anchor="middle" font-weight="700">r</text>
-      <path d="M232,6 C222,40 240,60 226,88" fill="none" stroke="#d94040" stroke-width="2.5"/>
-      <text x="244" y="20" font-size="11" fill="#d94040">nearest possible flip</text>
-      <text x="340" y="42" font-size="13" fill="#1a1a1a" text-anchor="middle">certificate: the boundary</text>
-      <text x="340" y="60" font-size="13" fill="#1a1a1a" text-anchor="middle">cannot come closer than r</text>
-    </svg>
-  </div>
-  <p>A guarantee against <em>any</em> attack, not just the ones we ran.</p>
+  <p class="tm"><b>CIFAR-10</b> · $\ell_\infty$, ε = 8/255 · untargeted · 99 entries · accessed 10 Oct 2026</p>
+  <table>
+    <tr><th>Rank</th><th>Model</th><th>Clean</th><th>AutoAttack</th><th>Best known</th></tr>
+    <tr><td>#1</td><td>Bartoldson et al. 2024, WRN-94-16</td><td class="num">93.68%</td><td class="num">73.71%</td><td class="num">73.71%</td></tr>
+    <tr><td>#2</td><td>MeanSparse 2024</td><td class="num">93.60%</td><td class="num">75.28%</td><td class="num">73.10%</td></tr>
+    <tr><td>#99</td><td>Standard training, WRN-28-10</td><td class="num">94.78%</td><td class="num">0.0%</td><td class="num">0.0%</td></tr>
+  </table>
+  <p>Ranked by <strong>best known</strong>. #1: 73.71% accuracy under AutoAttack in this setting.</p>
+  <p class="muted">Clean column compares different models and data, not robust training's cost alone.</p>
+  <div class="cite cite-left">robustbench.github.io, CIFAR-10 L∞ leaderboard, fetched 10 Oct 2026 16:47 KST. #1 uses 300M extra synthetic images. Best known = lowest accuracy any reported attack achieved.</div>
 </div>
 
-<!-- 39. Randomized Smoothing -->
+<!-- 40. A Benchmark Is Not a Guarantee -->
 <div class="slide">
-  <h2>Randomized Smoothing</h2>
+  <h2>A Benchmark Score Is Not a Guarantee</h2>
   <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;gap:28px;align-items:center;">
-    <div><p>One route to a certificate: <strong>vote under noise</strong>.</p>
-  <ul class="num">
-    <li>Add random noise to the input, many times.</li>
-    <li>Classify each noisy copy.</li>
-    <li>Take the <strong>majority vote</strong> as the answer.</li>
-  </ul></div>
-    <div style="display:flex;justify-content:center;"><img src="figs/cohen-fig2-smoothing.png" alt="A panda photo and the same photo under heavy Gaussian noise with sigma 0.5" style="max-height:250px;width:auto;max-width:100%;display:block;"></div>
-  </div>
-  <div class="cite cite-left">Cohen, Rosenfeld, and Kolter, "Certified Adversarial Robustness via Randomized Smoothing", ICML 2019 — Fig. 2: the input $x$ and a Gaussian corruption ($\sigma = 0.5$) that the base classifier votes on.</div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 230" style="width:100%;max-width:1000px;"><rect x="10" y="20" width="360" height="180" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="190" y="72" font-size="23" fill="#003876" text-anchor="middle" font-weight="700">AutoAttack says</text><text x="190" y="140" font-size="44" fill="#003876" text-anchor="middle" font-weight="700">75.28%</text><line x1="380" y1="110" x2="600" y2="110" stroke="#d94040" stroke-width="3"/><polygon points="600,98 622,110 600,122" fill="#d94040"/><text x="500" y="80" font-size="21" fill="#d94040" text-anchor="middle" font-weight="700">adaptive attack</text><text x="500" y="150" font-size="21" fill="#6b7280" text-anchor="middle">APGD + BPDA</text><rect x="630" y="20" width="360" height="180" rx="10" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="810" y="72" font-size="23" fill="#d94040" text-anchor="middle" font-weight="700">best known</text><text x="810" y="140" font-size="44" fill="#d94040" text-anchor="middle" font-weight="700">73.10%</text></svg></div>
+  <p class="tm"><b>MeanSparse</b>, RobustBench #2 · same CIFAR-10 $\ell_\infty$ 8/255 setting</p>
+  <p>Every attack-based score is an <strong>upper bound</strong>; the next attack may lower it.</p>
+  <div class="cite cite-left">robustbench.github.io, CIFAR-10 L∞ leaderboard, accessed 10 Oct 2026 (entry note: best known "due to APGD (both versions) with BPDA").</div>
 </div>
 
-<!-- 40. Why Voting Certifies -->
+<!-- 41. Robust to One Threat Model Only -->
 <div class="slide">
-  <h2>Why Voting Certifies</h2>
+  <h2>Robust Under One Ruler, Not Every Ruler</h2>
   <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;gap:28px;align-items:center;">
-    <div><p>A small nudge barely shifts the <strong>cloud of noisy copies</strong>.</p>
   <ul>
-    <li>The majority answer stays the same</li>
-    <li>How much it can shift gives a provable radius</li>
+    <li>Training on $\ell_\infty$ gives <strong>limited</strong> robustness under other norms</li>
+    <li>Madry's MNIST model: PGD <strong>overestimated</strong> its $\ell_2$ robustness</li>
+    <li>A gradient-free attack found it more brittle</li>
+    <li>Corruptions and new viewpoints: a different question</li>
   </ul>
-  <p class="muted">Noise smooths the boundary into something you can prove about.</p></div>
-    <div style="display:flex;justify-content:center;"><img src="figs/cohen-fig3-fstar.png" alt="Two 2-D pictures: concentric density contours of Gaussian noise around x and around x plus delta, over blue and red decision regions; the worst-case region is a half-space" style="max-height:250px;width:auto;max-width:100%;display:block;"></div>
-  </div>
-  <div class="cite cite-left">Cohen, Rosenfeld, and Kolter, ICML 2019 — Fig. 3: noise clouds around $x$ and $x+\delta$ over the base classifier's regions; the worst case (right) is a half-space, which gives the radius.</div>
+  <div class="highlight"><p>A score names its threat model. <strong>No automatic guarantee outside it.</strong></p></div>
+  <div class="cite cite-left">Athalye et al., ICML 2018 — §5.1.1; Madry et al., ICLR 2018 — Appendix (ℓ2 attacks on MNIST: masked gradients, decision-based attack).</div>
 </div>
 
-<!-- 41. The Certified Catch -->
+<!-- 42. Empirical vs Certified -->
 <div class="slide">
-  <h2>The Certified Catch</h2>
+  <h2>Empirical vs Certified Robustness</h2>
   <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;gap:28px;align-items:center;">
-    <div><p>Certificates are <strong>real but modest</strong>.</p>
-  <ul class="arrow">
-    <li>The guaranteed radius is often small</li>
-    <li>Many noisy queries per prediction: slow</li>
-    <li>Hard to scale to large, high-resolution inputs</li>
-  </ul>
-  <p class="muted">A proof, but a narrow and costly one.</p></div>
-    <div style="display:flex;justify-content:center;"><img src="figs/cohen-fig6-certified.png" alt="Certified accuracy versus L2 radius for randomized smoothing with several noise levels on CIFAR-10 (top) and ImageNet (bottom); accuracy falls steadily with radius" style="max-height:380px;width:auto;max-width:100%;display:block;"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 300" style="width:100%;max-width:1000px;"><rect x="10" y="10" width="470" height="280" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><text x="245" y="56" font-size="27" fill="#1a1a1a" text-anchor="middle" font-weight="700">Empirical</text><text x="245" y="110" font-size="22" fill="#1a1a1a" text-anchor="middle">"the attacks we tried</text><text x="245" y="142" font-size="22" fill="#1a1a1a" text-anchor="middle">failed"</text><rect x="60" y="190" width="370" height="76" rx="8" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="245" y="236" font-size="23" fill="#d94040" text-anchor="middle" font-weight="700">upper bound: may fall</text><rect x="520" y="10" width="470" height="280" rx="10" fill="#fff" stroke="#1f8a4c" stroke-width="2.5"/><text x="755" y="56" font-size="27" fill="#1f8a4c" text-anchor="middle" font-weight="700">Certified</text><text x="755" y="110" font-size="22" fill="#1a1a1a" text-anchor="middle">"no change in this region</text><text x="755" y="142" font-size="22" fill="#1a1a1a" text-anchor="middle">can flip the prediction"</text><rect x="570" y="190" width="370" height="76" rx="8" fill="#e6f4ea" stroke="#1f8a4c" stroke-width="2"/><text x="755" y="236" font-size="23" fill="#1f8a4c" text-anchor="middle" font-weight="700">lower bound: proven</text></svg></div>
+  <p>A certificate proves the prediction is <strong>stable</strong>, not that it is <strong>correct</strong>.</p>
+  <p class="key"><b>certified accuracy</b> counts inputs that are <b>both</b> correctly classified and certified</p>
+</div>
+
+<!-- 43. Randomized Smoothing -->
+<div class="slide">
+  <h2>Randomized Smoothing: Vote Under Noise</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:28px;align-items:start;">
+    <img src="figs/cohen-fig2-smoothing.png" alt="Cohen et al. Fig. 2: left, a panda image x; right, the same panda with heavy Gaussian noise added" style="height:260px;width:auto;display:block;">
+    <div>
+      <p class="key" style="margin:0 0 10px;"><b>left</b> input $x$</p>
+      <p class="key" style="margin:0 0 10px;"><b>right</b> one noisy copy, $x+\eta$</p>
+      <p>$g$ returns the class $f$ picks <strong>most often</strong> under noise.</p>
+    </div>
   </div>
-  <div class="cite cite-left">Cohen, Rosenfeld, and Kolter, ICML 2019 — Fig. 6: certified accuracy vs $\ell_2$ radius, CIFAR-10 (top) and ImageNet (bottom), for several $\sigma$.</div>
+  <p>$$g(x)=\arg\max_c\ \Pr\big[f(x+\eta)=c\big],\quad \eta\sim\mathcal{N}(0,\sigma^2 I)$$</p>
+  <p class="key">In practice the vote shares are <b>estimated by sampling</b>; that procedure may <b>abstain</b></p>
+  <div class="cite cite-left">Cohen, Rosenfeld &amp; Kolter, ICML 2019 — Eq. 1, Fig. 2, §3.2 (PREDICT, CERTIFY). $f$: base classifier; $g$: smoothed classifier.</div>
+</div>
+
+<!-- 44. Why Voting Gives a Radius -->
+<div class="slide">
+  <h2>A Clear Vote Survives Any Small Shift</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:28px;align-items:start;">
+    <img src="figs/cohen-fig3-fstar.png" alt="Cohen et al. Fig. 3: concentric circles show Gaussian noise around x and around x plus delta; two base classifiers with blue and red regions; the worst case on the right is a straight boundary perpendicular to delta" style="height:260px;width:auto;display:block;">
+    <div>
+      <p class="key" style="margin:0 0 10px;"><b>circles</b> noise around $x$, $x+\delta$</p>
+      <p class="key" style="margin:0 0 10px;"><b>right</b> worst-case $f$: a straight cut</p>
+      <p>At fixed noise level, a larger vote margin gives a larger certified <strong>$\ell_2$ radius</strong> $R$.</p>
+    </div>
+  </div>
+  <p class="key">Certifies <b>g, not f</b> · formula for $R$: technical supplement</p>
+  <p class="key">Sampled: abstains when no class clearly leads · per input, P(invalid certificate) ≤ α</p>
+  <div class="cite cite-left">Cohen et al., ICML 2019 — Theorem 1, Fig. 3, §3.2 (Prop. 2: for each fixed input, the probability over its sampling that CERTIFY returns an invalid certificate is at most α).</div>
+</div>
+
+<!-- 45. Certificates Are Real but Modest -->
+<div class="slide">
+  <h2>Certificates Are Real, but Modest</h2>
+  <div class="divider"></div>
+  <p class="tm"><b>ImageNet</b> · ResNet-50 base · $\ell_2$ radius $R$ · 500 test images · α = 0.001</p>
+  <div style="display:flex;justify-content:center;margin:4px 0;"><svg viewBox="0 0 1000 400" style="width:100%;max-width:820px;"><rect x="110" y="12" width="26" height="26" fill="#9ca3af"/><text x="146" y="33" font-size="21" fill="#1a1a1a">same smoothed model at R = 0</text><rect x="520" y="12" width="26" height="26" fill="#003876"/><text x="556" y="33" font-size="21" fill="#1a1a1a">approx. certified accuracy at R</text><line x1="110" y1="320" x2="980" y2="320" stroke="#6b7280" stroke-width="2"/><text x="60" y="200" font-size="21" fill="#6b7280" text-anchor="middle" transform="rotate(-90 60 200)">accuracy (%)</text><rect x="140" y="132.4" width="70" height="187.6" fill="#9ca3af"/><text x="175" y="124" font-size="22" fill="#1a1a1a" text-anchor="middle">67</text><rect x="220" y="182.8" width="70" height="137.2" fill="#003876"/><text x="255" y="174" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">49</text><text x="215" y="352" font-size="22" fill="#1a1a1a" text-anchor="middle">R = 0.5</text><text x="215" y="384" font-size="21" fill="#6b7280" text-anchor="middle">σ = 0.25</text><rect x="355" y="160.4" width="70" height="159.6" fill="#9ca3af"/><text x="390" y="152" font-size="22" fill="#1a1a1a" text-anchor="middle">57</text><rect x="435" y="216.4" width="70" height="103.6" fill="#003876"/><text x="470" y="208" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">37</text><text x="430" y="352" font-size="22" fill="#1a1a1a" text-anchor="middle">R = 1.0</text><text x="430" y="384" font-size="21" fill="#6b7280" text-anchor="middle">σ = 0.50</text><rect x="570" y="196.8" width="70" height="123.2" fill="#9ca3af"/><text x="605" y="188" font-size="22" fill="#1a1a1a" text-anchor="middle">44</text><rect x="650" y="266.8" width="70" height="53.2" fill="#003876"/><text x="685" y="258" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">19</text><text x="645" y="352" font-size="22" fill="#1a1a1a" text-anchor="middle">R = 2.0</text><text x="645" y="384" font-size="21" fill="#6b7280" text-anchor="middle">σ = 1.00</text><rect x="785" y="196.8" width="70" height="123.2" fill="#9ca3af"/><text x="820" y="188" font-size="22" fill="#1a1a1a" text-anchor="middle">44</text><rect x="865" y="286.4" width="70" height="33.6" fill="#003876"/><text x="900" y="278" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">12</text><text x="860" y="352" font-size="22" fill="#1a1a1a" text-anchor="middle">R = 3.0</text><text x="860" y="384" font-size="21" fill="#6b7280" text-anchor="middle">σ = 1.00</text></svg></div>
+  <p class="key">Counts correct <b>and</b> certified, by sampling · 110 s/image on the paper's hardware · this $\ell_2$ region only</p>
+  <div class="cite cite-left">Cohen et al., ICML 2019 — App. Table 2 (best σ per radius), §4; redrawn. R = 2: Table 1 lists σ = 0.50, but Table 2 gives 0% there; plotted: Table 2, σ = 1.00.</div>
 </div>
 
 <!-- ============ SECTION 05 ============ -->
-<!-- 42. Divider 05 -->
+<!-- 46. Divider 05 -->
 <div class="slide section-slide left">
   <div class="section-num">05</div>
-  <h1>The Arms Race</h1>
+  <h1>Off the Screen, and What to Ask</h1>
   <div class="divider"></div>
-  <p class="subtitle">Defenses break under stronger attacks</p>
+  <p class="subtitle">One physical case, read carefully, then a checklist for any claim</p>
 </div>
 
-<!-- 43. A Recurring Story -->
+<!-- 47. Off the Screen -->
 <div class="slide">
-  <h2>A Recurring Story</h2>
+  <h2>Off the Screen, the Attack Must Survive the Camera</h2>
   <div class="divider"></div>
-  <p>The cycle repeats almost every year.</p>
-  <div class="diagram-flow" style="margin:22px 0;">
-    <div class="diagram-box">new defense</div>
-    <div class="diagram-box">adaptive attack</div>
-    <div class="diagram-box">defense broken</div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 200" style="width:100%;max-width:1000px;"><rect x="10" y="20" width="220" height="140" rx="10" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="120" y="80" font-size="23" fill="#d94040" text-anchor="middle" font-weight="700">perturbation</text><text x="120" y="118" font-size="21" fill="#6b7280" text-anchor="middle">optimized digitally</text><line x1="230" y1="90" x2="262" y2="90" stroke="#6b7280" stroke-width="3"/><polygon points="262,80 280,90 262,100" fill="#6b7280"/><rect x="285" y="20" width="200" height="140" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><text x="385" y="80" font-size="23" fill="#1a1a1a" text-anchor="middle" font-weight="700">print</text><text x="385" y="118" font-size="21" fill="#6b7280" text-anchor="middle">colour error</text><line x1="485" y1="90" x2="517" y2="90" stroke="#6b7280" stroke-width="3"/><polygon points="517,80 535,90 517,100" fill="#6b7280"/><rect x="540" y="20" width="220" height="140" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><text x="650" y="80" font-size="23" fill="#1a1a1a" text-anchor="middle" font-weight="700">camera</text><text x="650" y="118" font-size="21" fill="#6b7280" text-anchor="middle">distance, angle, light</text><line x1="760" y1="90" x2="792" y2="90" stroke="#6b7280" stroke-width="3"/><polygon points="792,80 810,90 792,100" fill="#6b7280"/><rect x="815" y="20" width="175" height="140" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="902" y="80" font-size="23" fill="#003876" text-anchor="middle" font-weight="700">classifier</text><text x="902" y="118" font-size="21" fill="#6b7280" text-anchor="middle">fooled?</text></svg></div>
+  <p>Fix: optimize the <strong>average loss over sampled transformations</strong> (EOT).</p>
+  <p class="muted">Raises <i>average</i> success over sampled transformations, not success on each one.</p>
+  <div class="cite cite-left">Expectation over Transformation: Athalye et al., "Synthesizing Robust Adversarial Examples", ICML 2018; applied to road signs by Eykholt et al., CVPR 2018.</div>
+</div>
+
+<!-- 48. Stop Sign -->
+<div class="slide">
+  <h2>Stickers Made a Classifier Read "Speed Limit 45"</h2>
+  <div class="divider"></div>
+  <p class="tm"><b>Attacker</b> adds stickers · knows LISA-CNN (white box) · wants Stop → Speed Limit 45</p>
+  <div style="display:flex;justify-content:center;"><img src="figs/eykholt-fig1-stopsign.png" alt="Eykholt et al. Fig. 1: left, a real stop sign with graffiti; right, a stop sign with black and white rectangular stickers designed to look like graffiti" style="height:365px;width:auto;display:block;"></div>
+  <p><b>left</b> real graffiti · <b>right</b> attack stickers: <strong>100%</strong> targeted in lab, <strong>84.8%</strong> of drive-by frames</p>
+  <div class="cite cite-left">Eykholt et al., "Robust Physical-World Attacks on Deep Learning Visual Classification", CVPR 2018 — Fig. 1, Tables 1 and 3 (camouflage abstract art; LISA-CNN, 91% clean test accuracy).</div>
+</div>
+
+<!-- 49. What It Does Not Show -->
+<div class="slide">
+  <h2>What the Stop-Sign Result Does Not Show</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="gap:32px;align-items:start;">
+    <div><h3 style="color:var(--success);">Shown</h3><ul>
+      <li>Printed stickers can fool a classifier</li>
+      <li>Across tested angles, distances</li>
+      <li>On a slow drive-by, straight road</li>
+    </ul></div>
+    <div><h3 style="color:var(--warn);">Not shown</h3><ul>
+      <li>Detectors or full driving systems</li>
+      <li>Without hand-controlled cropping</li>
+      <li>At speed, any road, any weather</li>
+    </ul></div>
   </div>
-  <p>Most "solved" claims did <strong>not</strong> survive contact.</p>
+  <p class="muted">Constrained pseudo-random crops (most of sign visible): 70% targeted. Drive-by: 0–20 mph, ~250 ft.</p>
+  <div class="cite cite-left">Eykholt et al., CVPR 2018 — §5–6 (crop-resize pipeline with manual cropping; detector attacks out of scope).</div>
 </div>
 
-<!-- 44. Obfuscated Gradients -->
+<!-- 50. Attacks vs Natural Shift -->
 <div class="slide">
-  <h2>Obfuscated Gradients</h2>
+  <h2>Attackers Are Not the Only Shift</h2>
   <div class="divider"></div>
-  <p>Many defenses just <strong>hid the gradient</strong>.</p>
-  <ul>
-    <li>The attack could not find a direction to push</li>
-    <li>It looked safe, but the model was unchanged</li>
-  </ul>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 118" style="width:100%;max-width:760px;">
-      <defs><marker id="ar47" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d94040"/></marker></defs>
-      <path d="M30,90 C80,86 120,40 200,30" fill="none" stroke="#003876" stroke-width="2.5"/>
-      <circle cx="90" cy="76" r="4" fill="#1a1a1a"/>
-      <line x1="90" y1="76" x2="132" y2="52" stroke="#d94040" stroke-width="2.5" marker-end="url(#ar47)"/>
-      <text x="115" y="108" font-size="12" fill="#003876" text-anchor="middle" font-weight="700">smooth loss: gradient shows the way up</text>
-      <path d="M260,90 L290,90 L290,78 L320,78 L320,60 L350,60 L350,46 L380,46 L380,32 L430,32" fill="none" stroke="#003876" stroke-width="2.5"/>
-      <path d="M260,90 C310,86 350,40 430,30" fill="none" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="4 3"/>
-      <circle cx="305" cy="78" r="4" fill="#1a1a1a"/>
-      <text x="296" y="72" font-size="11" fill="#d94040" text-anchor="end" font-weight="700">gradient = 0</text>
-      <text x="345" y="108" font-size="12" fill="#003876" text-anchor="middle" font-weight="700">shattered gradient: same hill, no signal</text>
-      <text x="230" y="16" font-size="11" fill="#6b7280" text-anchor="middle">the hill is still there; only the attacker's compass is broken (illustrative)</text>
-    </svg>
-  </div>
-  <div class="cite cite-left">Athalye, Carlini, and Wagner, "Obfuscated Gradients Give a False Sense of Security", ICML 2018.</div>
-</div>
-
-<!-- 45. A False Sense of Security -->
-<div class="slide">
-  <h2>A False Sense of Security</h2>
-  <div class="divider"></div>
-  <div class="highlight"><p>Hiding the gradient hides the <strong>attack</strong>, not the <strong>weakness</strong>.</p></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;gap:28px;align-items:center;">
-    <div><p>One team examined <strong>9 defenses</strong> from a single conference (ICLR 2018).</p>
-  <ul>
-    <li>7 of the 9 relied on obfuscated gradients</li>
-    <li>Recovering the gradient broke 6 completely, 1 partially</li>
-  </ul></div>
-    <div style="display:flex;justify-content:center;"><img src="figs/athalye-tab1-defenses.png" alt="Table of nine ICLR 2018 defenses with dataset, distance and accuracy after attack: seven obfuscated-gradient defenses at 0 to 9 percent (one at 55 percent), versus Madry et al. at 47 percent" style="max-height:260px;width:auto;max-width:100%;display:block;"></div>
-  </div>
-  <div class="cite cite-left">Athalye, Carlini, and Wagner, ICML 2018 — Table 1: accuracy under their attacks; the top seven rely on obfuscated gradients, the bottom two do not.</div>
-</div>
-
-<!-- 46. Adaptive Attacks -->
-<div class="slide">
-  <h2>Adaptive Attacks</h2>
-  <div class="divider"></div>
-  <p>The right test: an attacker who <strong>knows your defense</strong>.</p>
-  <ul class="arrow">
-    <li>Tailor the attack to that exact mechanism</li>
-    <li>Not a fixed, off-the-shelf attack</li>
-    <li>Most defenses fall once the attack adapts</li>
-  </ul>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 104" style="width:100%;max-width:760px;">
-      <defs><marker id="ar49" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d94040"/></marker></defs>
-      <text x="110" y="16" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">fixed attack</text>
-      <line x1="20" y1="56" x2="92" y2="56" stroke="#d94040" stroke-width="2.5" marker-end="url(#ar49)"/>
-      <path d="M104,30 L104,82" stroke="#003876" stroke-width="5"/>
-      <text x="104" y="96" font-size="10" fill="#003876" text-anchor="middle">defense as designed</text>
-      <rect x="140" y="40" width="70" height="32" rx="6" fill="#e8ecf0" stroke="#1a5296" stroke-width="1.5"/>
-      <text x="175" y="60" font-size="12" fill="#003876" text-anchor="middle">model</text>
-      <text x="175" y="30" font-size="12" fill="#2e8b57" text-anchor="middle" font-weight="700">✓ "robust"</text>
-      <line x1="230" y1="8" x2="230" y2="100" stroke="#6b7280" stroke-width="1" stroke-dasharray="4 3"/>
-      <text x="345" y="16" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">adaptive attack</text>
-      <path d="M250,56 C290,56 300,22 340,22 C372,22 380,44 396,52" fill="none" stroke="#d94040" stroke-width="2.5" marker-end="url(#ar49)"/>
-      <path d="M334,30 L334,82" stroke="#003876" stroke-width="5"/>
-            <rect x="372" y="40" width="70" height="32" rx="6" fill="#e8ecf0" stroke="#d94040" stroke-width="1.5"/>
-      <text x="407" y="60" font-size="12" fill="#d94040" text-anchor="middle">model</text>
-      <text x="345" y="96" font-size="10" fill="#d94040" text-anchor="middle">knows the mechanism, routes around it</text>
-    </svg>
-  </div>
-  <p class="muted">Evaluate against your strongest adversary, not your weakest.</p>
-</div>
-
-<!-- 47. How to Test Honestly -->
-<div class="slide">
-  <h2>How to Test Honestly</h2>
-  <div class="divider"></div>
-  <p>A short checklist for any robustness claim.</p>
-  <ul class="check">
-    <li>Use a strong, adaptive attack</li>
-    <li>Report the white-box worst case</li>
-    <li>Prefer a certificate over a track record</li>
-  </ul>
-  <p class="muted">Skepticism is the discipline of this field.</p>
-</div>
-
-<!-- The Scoreboard: RobustBench -->
-<div class="slide">
-  <h2>The Scoreboard: RobustBench</h2>
-  <div class="divider"></div>
-  <p>A public leaderboard scores every defense with one <strong>standard strong attack</strong> (AutoAttack).</p>
-  <ul class="arrow">
-    <li>Standard CIFAR-10 model: 94.8% clean, <strong>0.0%</strong> robust</li>
-    <li>Best defense so far: 93.7% clean, <strong>73.7%</strong> robust</li>
-    <li>A decade of work, and a 20-point gap remains</li>
-  </ul>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 104" style="width:100%;max-width:720px;">
-      <line x1="60" y1="78" x2="440" y2="78" stroke="#6b7280" stroke-width="1.5"/>
-      <rect x="80" y="21.1" width="44" height="56.9" fill="#1a5296" fill-opacity="0.75"/>
-      <text x="102" y="17.1" font-size="11" fill="#003876" text-anchor="middle" font-weight="700">94.8</text>
-      <rect x="130" y="77" width="44" height="1" fill="#d94040"/>
-      <text x="152" y="70" font-size="11" fill="#d94040" text-anchor="middle" font-weight="700">0.0</text>
-      <text x="127" y="94" font-size="12" fill="#1a1a1a" text-anchor="middle">standard model</text>
-      <rect x="280" y="21.8" width="44" height="56.2" fill="#1a5296" fill-opacity="0.75"/>
-      <text x="302" y="17.8" font-size="11" fill="#003876" text-anchor="middle" font-weight="700">93.7</text>
-      <rect x="330" y="33.8" width="44" height="44.2" fill="#d94040" fill-opacity="0.8"/>
-      <text x="352" y="29.8" font-size="11" fill="#d94040" text-anchor="middle" font-weight="700">73.7</text>
-      <text x="327" y="94" font-size="12" fill="#1a1a1a" text-anchor="middle">best defense</text>
-      <rect x="392" y="10" width="10" height="10" fill="#1a5296" fill-opacity="0.75"/><text x="406" y="19" font-size="11" fill="#1a1a1a">clean</text>
-      <rect x="392" y="26" width="10" height="10" fill="#d94040" fill-opacity="0.8"/><text x="406" y="35" font-size="11" fill="#1a1a1a">robust</text>
-      <text x="40" y="82" font-size="10" fill="#6b7280" text-anchor="middle">acc. %</text>
-    </svg>
-  </div>
-  <p class="muted">Progress is real. Solved, it is not.</p>
-  <div class="cite cite-left">RobustBench leaderboard (robustbench.github.io), CIFAR-10, $L_\infty$, $\varepsilon = 8/255$, AutoAttack — accessed Aug 2026.</div>
-</div>
-
-<!-- ============ SECTION 06 ============ -->
-<!-- 48. Divider 06 -->
-<div class="slide section-slide left">
-  <div class="section-num">06</div>
-  <h1>Physical & Beyond</h1>
-  <div class="divider"></div>
-  <p class="subtitle">Stickers, natural shift, multimodal attacks</p>
-</div>
-
-<!-- 49. Off the Screen -->
-<div class="slide">
-  <h2>Off the Screen</h2>
-  <div class="divider"></div>
-  <p>Attacks escape the digital image into the <strong>real world</strong>.</p>
-  <ul>
-    <li>Printed patterns the camera will see</li>
-    <li>Must survive angle, distance, and lighting</li>
-  </ul>
-  <div style="display:flex;justify-content:center;margin:6px 0;">
-    <svg viewBox="0 0 460 100" style="width:100%;max-width:780px;">
-      <defs><marker id="ar53" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs>
-      <rect x="2" y="22" width="98" height="46" rx="7" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/><text x="51" y="42" font-size="11" fill="#1a5296" text-anchor="middle" font-weight="700">digital pattern</text><text x="51" y="60" font-size="9.5" fill="#6b7280" text-anchor="middle">optimized δ</text><line x1="104" y1="45" x2="118" y2="45" stroke="#6b7280" stroke-width="2" marker-end="url(#ar53)"/><rect x="122" y="22" width="98" height="46" rx="7" fill="#e8ecf0" stroke="#1a5296" stroke-width="2"/><text x="171" y="42" font-size="11" fill="#1a5296" text-anchor="middle" font-weight="700">printed object</text><text x="171" y="60" font-size="9.5" fill="#6b7280" text-anchor="middle">sticker · glasses</text><line x1="224" y1="45" x2="238" y2="45" stroke="#6b7280" stroke-width="2" marker-end="url(#ar53)"/><rect x="242" y="22" width="98" height="46" rx="7" fill="#d94040" fill-opacity="0.10" stroke="#d94040" stroke-width="2"/><text x="291" y="42" font-size="11" fill="#d94040" text-anchor="middle" font-weight="700">camera</text><text x="291" y="60" font-size="9.5" fill="#6b7280" text-anchor="middle">angle, distance, light</text><line x1="344" y1="45" x2="358" y2="45" stroke="#6b7280" stroke-width="2" marker-end="url(#ar53)"/><rect x="362" y="22" width="98" height="46" rx="7" fill="#d94040" fill-opacity="0.10" stroke="#d94040" stroke-width="2"/><text x="411" y="42" font-size="11" fill="#d94040" text-anchor="middle" font-weight="700">model</text><text x="411" y="60" font-size="9.5" fill="#6b7280" text-anchor="middle">wrong label</text><text x="230" y="92" font-size="10" fill="#6b7280" text-anchor="middle">must survive printing and re-photographing: optimized over many transformations</text>
-    </svg>
-  </div>
-  <p class="muted">A perturbation you can stick on a wall.</p>
-</div>
-
-<!-- 50. The Stop-Sign Attack -->
-<div class="slide">
-  <h2>The Stop-Sign Attack</h2>
-  <div class="divider"></div>
-  <p>A few <strong>stickers</strong> on a stop sign change the reading.</p>
-  <div class="grid-2" style="grid-template-columns:1fr auto;gap:40px;align-items:center;">
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:28px;align-items:start;">
+    <img src="figs/hendrycks-fig1-corruptions.png" alt="Hendrycks and Dietterich Fig. 1: a 3 by 5 grid of the same bird photo under 15 corruptions, including Gaussian noise, blur, snow, frost, fog, brightness, contrast, pixelation and JPEG" style="height:380px;width:auto;display:block;">
     <div>
-      <ul>
-        <li>Looks like ordinary graffiti to a human</li>
-        <li>The classifier reads "Speed Limit 45"</li>
-        <li>Fooled in 100% of lab photos, 84.8% of drive-by frames</li>
-      </ul>
-    </div>
-    <div style="display:flex;justify-content:center;">
-      <img src="figs/eykholt-stopsign.png" alt="Left: real graffiti on a stop sign; right: crafted black-and-white stickers that fool a classifier" style="max-height:420px;width:auto;display:block;border:1px solid var(--slate);border-radius:8px;">
+      <p class="key" style="margin:0 0 18px;"><b>grid</b> 15 corruptions × 5 severities</p>
+      <p>Noise, blur, weather: <strong>no adversary</strong>, still frequent.</p>
+      <p>A separate benchmark, a separate question.</p>
     </div>
   </div>
-  <div class="cite cite-left">Eykholt et al., "Robust Physical-World Attacks on Deep Learning Visual Classification", CVPR 2018 — Figure 1; success rates from the abstract (LISA-CNN).</div>
+  <div class="cite cite-left">Hendrycks &amp; Dietterich, "Benchmarking Neural Network Robustness to Common Corruptions and Perturbations", ICLR 2019 — Fig. 1 (ImageNet-C).</div>
 </div>
 
-<!-- Adversarial Glasses -->
+<!-- 51. The Checklist -->
 <div class="slide">
-  <h2>Adversarial Glasses</h2>
+  <h2>Four Questions for Any Robustness Claim</h2>
   <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;gap:28px;align-items:center;">
-    <div><p>Printed <strong>eyeglass frames</strong> that fool face recognition.</p>
-  <ul class="arrow">
-    <li>Dodge: wearers evaded recognition 80%+ of the time</li>
-    <li>Impersonate: one wearer passed as a celebrity 87.9% of the time</li>
-    <li>Just a colorful pattern on an ordinary frame</li>
-  </ul>
-  <p class="muted">Wearable, inconspicuous, effective.</p></div>
-    <div style="display:flex;justify-content:center;"><img src="figs/sharif-fig4-glasses.png" alt="Top row: four people wearing printed adversarial eyeglass frames; bottom row: who the face recognizer saw, including the actress Milla Jovovich and the TV host Carson Daly" style="max-height:240px;width:auto;max-width:100%;display:block;"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 320" style="width:100%;max-width:1000px;"><rect x="10" y="10" width="485" height="145" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="40" y="62" font-size="26" fill="#003876" font-weight="700">1 · Robust to what changes?</text><text x="40" y="110" font-size="21" fill="#6b7280">norm, ε, digital or physical</text><rect x="505" y="10" width="485" height="145" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="535" y="62" font-size="26" fill="#003876" font-weight="700">2 · Against which attacker?</text><text x="535" y="110" font-size="21" fill="#6b7280">knowledge, goal, adaptive?</text><rect x="10" y="165" width="485" height="145" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="40" y="217" font-size="26" fill="#003876" font-weight="700">3 · Measured how?</text><text x="40" y="265" font-size="21" fill="#6b7280">empirical or certified, which date</text><rect x="505" y="165" width="485" height="145" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="535" y="217" font-size="26" fill="#003876" font-weight="700">4 · At what cost?</text><text x="535" y="265" font-size="21" fill="#6b7280">clean accuracy, compute, abstains</text></svg></div>
+  <p>A claim missing any answer is <strong>incomplete</strong>, not necessarily wrong.</p>
+</div>
+
+<!-- 52. Applying It -->
+<div class="slide">
+  <h2>Applying It: "73.71% Under AutoAttack" on RobustBench</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Question</th><th>Answer for the #1 entry</th></tr>
+    <tr><td>What changes?</td><td>CIFAR-10 pixels, $\ell_\infty$ ≤ 8/255</td></tr>
+    <tr><td style="white-space:nowrap;">Which attacker?</td><td>White box, untargeted, AutoAttack</td></tr>
+    <tr><td>Measured how?</td><td>Empirical, snapshot 10 Oct 2026</td></tr>
+    <tr><td>At what cost?</td><td>Clean 93.68% (standard WRN: 94.78%, other setup); 300M synthetic images</td></tr>
+  </table>
+  <p class="muted">No automatic guarantee for $\ell_2$, corruptions, or physical stickers.</p>
+  <div class="cite cite-left">robustbench.github.io, CIFAR-10 L∞ leaderboard, accessed 10 Oct 2026 — Bartoldson et al., ICML 2024 (WRN-94-16) vs standard WRN-28-10.</div>
+</div>
+
+<!-- 53. Known vs Not Known -->
+<div class="slide">
+  <h2>Established vs Open</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="gap:32px;align-items:start;">
+    <div><h3 style="color:var(--success);">Established</h3><ul>
+      <li>Tiny changes fool accurate models</li>
+      <li>Weak attacks overstate robustness</li>
+      <li>Adversarial training helps, partly</li>
+      <li>Certificates exist for small $\ell_2$ balls</li>
+    </ul></div>
+    <div><h3 style="color:var(--warn);">Open</h3><ul>
+      <li>One agreed cause</li>
+      <li>Robustness across all threat models</li>
+      <li>Large certified radii at scale</li>
+      <li>Robustness with no accuracy cost</li>
+    </ul></div>
   </div>
-  <div class="cite cite-left">Sharif, Bhagavatula, Bauer, and Reiter, "Accessorize to a Crime: Real and Stealthy Attacks on State-of-the-Art Face Recognition", ACM CCS 2016 — Fig. 4: wearers (top) and the identities the recognizer returned (bottom).</div>
 </div>
 
-<!-- Adversarial Patches -->
+<!-- 54. Takeaways -->
 <div class="slide">
-  <h2>Adversarial Patches</h2>
+  <h2>Takeaways</h2>
   <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;gap:28px;align-items:center;">
-    <div><p>A printed <strong>patch</strong> that hijacks attention anywhere it appears.</p>
-  <ul class="arrow">
-    <li>Works in any scene, at any position</li>
-    <li>The model fixates on the patch, reports the attacker's class</li>
-    <li>A held patch can hide a person from a detector</li>
-  </ul>
-  <p class="muted">Not a hidden pixel pattern: a visible, printable object.</p></div>
-    <div style="display:flex;justify-content:center;"><img src="figs/brown-fig1-toaster.png" alt="A banana on a table is classified banana; with a printed toaster patch placed beside it, VGG16 reports toaster with high confidence" style="max-height:300px;width:auto;max-width:100%;display:block;"></div>
-  </div>
-  <div class="cite cite-left">Brown, Mané, Roy, Abadi, and Gilmer, "Adversarial Patch", 2017 — Fig. 1 (VGG16, banana → toaster) · Thys, Van Ranst, and Goedemé, "Fooling Automated Surveillance Cameras", CVPR-W 2019.</div>
-</div>
-
-<!-- 52. Beyond Vision -->
-<div class="slide">
-  <h2>Beyond Vision</h2>
-  <div class="divider"></div>
-  <p>The same idea reaches <strong>other inputs</strong>.</p>
   <ul>
-    <li>Audio: a waveform 99.9% identical transcribes as <em>any chosen phrase</em></li>
-    <li>Text: a few rewritten words flip a classifier</li>
+    <li>Accuracy is average case; attackers pick the worst</li>
+    <li>A robustness claim needs a threat model</li>
+    <li>Report the strongest, adaptive attack</li>
+    <li>Benchmarks standardize; they don't guarantee</li>
+    <li>Certificates prove small regions, at a cost</li>
   </ul>
-  <div style="display:flex;justify-content:center;margin:6px 0;"><img src="figs/cw-audio-fig2-waveform.png" alt="An original speech waveform (blue, thick) and its adversarial version (orange, thin) overlaid; the two are nearly indistinguishable" style="width:800px;height:auto;max-width:100%;display:block;"></div>
-  <p class="muted">Wherever a model reads input, a nudge can mislead it.</p>
-  <div class="cite cite-left">Carlini and Wagner, "Audio Adversarial Examples: Targeted Attacks on Speech-to-Text", 2018 — Fig. 2: original (blue) and adversarial (orange) waveforms overlaid; 100% success against DeepSpeech.</div>
+  <div class="highlight"><p>Ask: robust to <strong>what</strong>, against <strong>whom</strong>, measured <strong>how</strong>, at what <strong>cost</strong>?</p></div>
 </div>
 
-<!-- 53. Attacking Multimodal Models -->
-<div class="slide">
-  <h2>Attacking Multimodal Models</h2>
-  <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;gap:28px;align-items:center;">
-    <div><p>Modern assistants <strong>read images and text together</strong>.</p>
-  <ul class="arrow">
-    <li>One crafted image can jailbreak an aligned chat model</li>
-    <li>The same image unlocks many harmful requests, not one</li>
-    <li>Pixels are continuous: easier to optimize than discrete text</li>
-  </ul>
-  <p class="muted">The panda trick, upgraded into a safety bypass.</p></div>
-    <div style="display:flex;justify-content:center;"><img src="figs/qi-fig1-jailbreak.png" alt="Qi et al. Fig 1: with a benign panda image MiniGPT-4 refuses harmful instructions; with an adversarial panda image it obeys them, outputs redacted" style="max-height:300px;width:auto;max-width:100%;display:block;"></div>
-  </div>
-  <div class="cite cite-left">Qi, Huang, Panda, Henderson, Wang, and Mittal, "Visual Adversarial Examples Jailbreak Aligned Large Language Models", AAAI 2024 — Fig. 1 (MiniGPT-4, $\varepsilon = 16/255$).</div>
-</div>
-
-<!-- Related: The World Also Shifts -->
-<div class="slide">
-  <h2>Related: The World Also Shifts</h2>
-  <div class="divider"></div>
-  <p>No attacker needed: <strong>nature perturbs images too</strong>.</p>
-  <div class="grid-2">
-    <div><h3>Adversarial</h3>
-      <p><strong>Worst case</strong>: a crafted nudge, aimed at your model.</p></div>
-    <div><h3>Distribution shift</h3>
-      <p><strong>Average case</strong>: fog, snow, blur, a new camera.</p></div>
-  </div>
-  <div style="display:flex;justify-content:center;margin:6px 0;"><img src="figs/hendrycks-fig7-severity.png" alt="A frog photo, clean and with impulse noise at severities 1 to 5" style="width:820px;height:auto;max-width:100%;display:block;"></div>
-  <p class="muted">Different threat, same lesson: test accuracy is not the whole story.</p>
-  <div class="cite cite-left">Hendrycks and Dietterich, ICLR 2019 — Fig. 7: impulse noise at severities 1–5 (ImageNet-C).</div>
-</div>
-
-<!-- ImageNet-C -->
-<div class="slide">
-  <h2>ImageNet-C: Nature as the Attacker</h2>
-  <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;gap:28px;align-items:center;">
-    <div><p>A benchmark of <strong>everyday corruptions</strong>, no adversary at all.</p>
-  <ul class="arrow">
-    <li>15 corruption types: noise, blur, weather, digital</li>
-    <li>Each at 5 severity levels (75 test sets)</li>
-    <li>Accuracy drops sharply on changes humans shrug off</li>
-  </ul>
-  <p class="muted">Robustness to attack and to weather: related, but not the same skill.</p></div>
-    <div style="display:flex;justify-content:center;"><img src="figs/hendrycks-fig1-corruptions.png" alt="The same goldfinch photo under the 15 ImageNet-C corruption types: noise, blur, weather and digital" style="max-height:290px;width:auto;max-width:100%;display:block;"></div>
-  </div>
-  <div class="cite cite-left">Hendrycks and Dietterich, "Benchmarking Neural Network Robustness to Common Corruptions and Perturbations", ICLR 2019 — Fig. 1: the 15 corruption types.</div>
-</div>
-
-<!-- The 2025-26 Frontier -->
-<div class="slide">
-  <h2>The 2025-26 Frontier</h2>
-  <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;gap:28px;align-items:center;">
-    <div><p>A decade in, the problem is <strong>standardized, not solved</strong>.</p>
-  <ul class="arrow">
-    <li>NIST now maintains an official attack taxonomy: evasion, poisoning, privacy, prompt injection</li>
-    <li>The arms race moved up to vision-language models and agents</li>
-    <li>No defense reaches clean accuracy on the leaderboards</li>
-  </ul></div>
-    <div style="display:flex;justify-content:center;"><img src="figs/nist-fig1-taxonomy.png" alt="NIST taxonomy of attacks on predictive AI: three circles for availability, integrity and privacy, each ringed by attacker capabilities and labelled attack types such as evasion, poisoning and model extraction" style="max-height:380px;width:auto;max-width:100%;display:block;"></div>
-  </div>
-  <div class="cite cite-left">NIST AI 100-2 E2025, "Adversarial Machine Learning: A Taxonomy and Terminology of Attacks and Mitigations", March 2025 — Fig. 1: taxonomy of attacks on predictive AI systems.</div>
-</div>
-
-<!-- 55. Key Takeaways -->
-<div class="slide">
-  <h2>Key Takeaways</h2>
-  <div class="divider"></div>
-  <ul class="check">
-    <li>Tiny tuned nudge, $\|\delta\| \le \varepsilon$, flips the answer</li>
-    <li>Attacks follow the gradient: FGSM, then PGD</li>
-    <li>Adversarial training holds; certificates prove safety</li>
-    <li>Most other defenses break under adaptive attack</li>
-  </ul>
-  <div class="highlight"><p>Test against your <strong>strongest</strong> adversary, not your weakest.</p></div>
-</div>
-
-<!-- 56. Closer -->
+<!-- 55. Closer -->
 <div class="slide end-slide no-footer">
-  <div class="big-word">$\|\delta\| \le \varepsilon$</div>
-  <p class="big-word-sub">A small budget, a broken prediction.</p>
+  <div class="big-word">ε</div>
+  <p class="big-word-sub">Robust to what, against whom, measured how, at what cost?</p>
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 63</div>
+<div class="slide-num" id="slideNum">1 / 55</div>
 
 </div><!-- .deck -->
 <script defer src="../../reference/deck.js"></script>

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alignment Failures — Trustworthy AI Lecture 7</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="../../reference/katex/katex.min.css">
+<script defer src="../../reference/katex/katex.min.js"></script>
+<script defer src="../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+.key { color: var(--gray-text); margin-top: 6px; }
+.key b { color: var(--charcoal); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Trustworthy AI · Lecture 7</div>
+  <h1>Alignment Failures</h1>
+  <div class="divider"></div>
+  <p class="subtitle">When AI learns the wrong objective</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list" style="gap:12px;">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Right Score, Wrong Behavior</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">From Intent to Reward</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Sycophancy</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Gaming the Score</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Controlled Studies</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Is the Explanation the Reason?</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">07</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Synthesis &amp; Limits</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Right Score, Wrong Behavior</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Does satisfying the training objective mean doing what we intended?</p>
+</div>
+
+<!-- 4. Wrong Facts vs Wrong Objective -->
+<div class="slide">
+  <h2>Wrong Facts vs Wrong Objective</h2>
+  <div class="divider"></div>
+  <p>Two different ways a fluent model can fail.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 330" style="width:100%;max-width:1000px;"><rect x="10" y="10" width="470" height="310" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><text x="245" y="56" font-size="27" fill="#1a1a1a" text-anchor="middle" font-weight="700">Hallucination</text><text x="245" y="112" font-size="23" fill="#6b7280" text-anchor="middle">model lacks the fact</text><text x="245" y="160" font-size="23" fill="#6b7280" text-anchor="middle">invents a fluent answer</text><rect x="60" y="200" width="370" height="90" rx="8" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="245" y="240" font-size="24" fill="#d94040" text-anchor="middle" font-weight="700">the output is false</text><text x="245" y="272" font-size="21" fill="#6b7280" text-anchor="middle">check it against the world</text><rect x="520" y="10" width="470" height="310" rx="10" fill="#fff" stroke="#003876" stroke-width="2.5"/><text x="755" y="56" font-size="27" fill="#003876" text-anchor="middle" font-weight="700">Alignment failure</text><text x="755" y="112" font-size="23" fill="#6b7280" text-anchor="middle">model optimizes a score</text><text x="755" y="160" font-size="23" fill="#6b7280" text-anchor="middle">score and intent come apart</text><rect x="570" y="200" width="370" height="90" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="755" y="240" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">the output scores well</text><text x="755" y="272" font-size="21" fill="#6b7280" text-anchor="middle">yet misses what we wanted</text></svg></div>
+  <p class="muted">Today: failures where the model does well by the metric.</p>
+</div>
+
+<!-- 5. Same Score, Two Behaviors -->
+<div class="slide">
+  <h2>Same Score, Two Behaviors</h2>
+  <div class="divider"></div>
+  <p>Task for a coding agent: <strong>make the failing tests pass</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 300" style="width:100%;max-width:1000px;"><defs><marker id="sa1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#6b7280"/></marker></defs><rect x="10" y="20" width="300" height="110" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="160" y="64" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">Agent A</text><text x="160" y="102" font-size="22" fill="#1a1a1a" text-anchor="middle">fixes the bug</text><rect x="10" y="170" width="300" height="110" rx="8" fill="#fff" stroke="#d94040" stroke-width="2"/><text x="160" y="214" font-size="24" fill="#d94040" text-anchor="middle" font-weight="700">Agent B</text><text x="160" y="252" font-size="22" fill="#1a1a1a" text-anchor="middle" font-family="Menlo,monospace">sys.exit(0)</text><line x1="310" y1="75" x2="398" y2="75" stroke="#6b7280" stroke-width="2" marker-end="url(#sa1)"/><line x1="310" y1="225" x2="398" y2="225" stroke="#6b7280" stroke-width="2" marker-end="url(#sa1)"/><rect x="400" y="20" width="250" height="110" rx="8" fill="#e8ecf0" stroke="#6b7280" stroke-width="2"/><text x="525" y="64" font-size="22" fill="#6b7280" text-anchor="middle">grader says</text><text x="525" y="104" font-size="26" fill="#2e8b57" text-anchor="middle" font-weight="700">✔ pass · 1</text><rect x="400" y="170" width="250" height="110" rx="8" fill="#e8ecf0" stroke="#6b7280" stroke-width="2"/><text x="525" y="214" font-size="22" fill="#6b7280" text-anchor="middle">grader says</text><text x="525" y="254" font-size="26" fill="#2e8b57" text-anchor="middle" font-weight="700">✔ pass · 1</text><rect x="700" y="20" width="290" height="110" rx="8" fill="#fff" stroke="#2e8b57" stroke-width="2"/><text x="845" y="64" font-size="22" fill="#6b7280" text-anchor="middle">the code</text><text x="845" y="104" font-size="26" fill="#2e8b57" text-anchor="middle" font-weight="700">works</text><rect x="700" y="170" width="290" height="110" rx="8" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="845" y="214" font-size="22" fill="#6b7280" text-anchor="middle">the code</text><text x="845" y="254" font-size="26" fill="#d94040" text-anchor="middle" font-weight="700">still broken</text></svg></div>
+  <p class="muted">Agent B exits before any test runs: exit code 0 reads as "passed".</p>
+  <div class="cite cite-left">Illustrative schematic. The <code>sys.exit(0)</code> hack itself was observed in real RL training: Baker et al., arXiv 2503.11926, 2025 — §2.1.</div>
+</div>
+
+<!-- 6. The Central Question -->
+<div class="slide">
+  <h2>The Central Question</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>Does satisfying the <strong>training objective</strong> mean doing what we <strong>intended</strong>?</p></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 200" style="width:100%;max-width:1000px;"><defs><marker id="cq1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#003876"/></marker></defs><rect x="20" y="50" width="260" height="100" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="150" y="94" font-size="26" fill="#003876" text-anchor="middle" font-weight="700">what we want</text><text x="150" y="126" font-size="21" fill="#6b7280" text-anchor="middle">intent</text><rect x="370" y="50" width="260" height="100" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/><text x="500" y="94" font-size="26" fill="#003876" text-anchor="middle" font-weight="700">what we score</text><text x="500" y="126" font-size="21" fill="#6b7280" text-anchor="middle">objective</text><rect x="720" y="50" width="260" height="100" rx="10" fill="#fff" stroke="#d94040" stroke-width="2"/><text x="850" y="94" font-size="26" fill="#d94040" text-anchor="middle" font-weight="700">what it learns</text><text x="850" y="126" font-size="21" fill="#6b7280" text-anchor="middle">behavior</text><line x1="280" y1="100" x2="366" y2="100" stroke="#003876" stroke-width="2.5" marker-end="url(#cq1)"/><line x1="630" y1="100" x2="716" y2="100" stroke="#003876" stroke-width="2.5" marker-end="url(#cq1)"/><text x="325" y="36" font-size="21" fill="#d94040" text-anchor="middle" font-weight="700">loses detail</text><text x="675" y="36" font-size="21" fill="#d94040" text-anchor="middle" font-weight="700">finds shortcuts</text></svg></div>
+  <p class="muted">Short answer: not automatically. Today asks when, and how we can tell.</p>
+</div>
+
+<!-- 7. Three Gaps to Watch -->
+<div class="slide">
+  <h2>Three Gaps to Watch</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1060 380" style="width:100%;max-width:1060px;"><defs><marker id="tg1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#6b7280"/></marker></defs><rect x="10" y="40" width="180" height="80" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="100" y="89" font-size="25" fill="#003876" text-anchor="middle" font-weight="700">Intent</text><rect x="225" y="40" width="180" height="80" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="315" y="89" font-size="25" fill="#003876" text-anchor="middle" font-weight="700">Feedback</text><rect x="440" y="40" width="180" height="80" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="530" y="89" font-size="25" fill="#003876" text-anchor="middle" font-weight="700">Reward</text><rect x="655" y="40" width="180" height="80" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="745" y="89" font-size="25" fill="#003876" text-anchor="middle" font-weight="700">Behavior</text><rect x="870" y="40" width="180" height="80" rx="8" fill="#fff" stroke="#6b7280" stroke-width="2" stroke-dasharray="6 4"/><text x="960" y="89" font-size="25" fill="#6b7280" text-anchor="middle" font-weight="700">Explanation</text><line x1="190" y1="80" x2="221" y2="80" stroke="#6b7280" stroke-width="2" marker-end="url(#tg1)"/><line x1="405" y1="80" x2="436" y2="80" stroke="#6b7280" stroke-width="2" marker-end="url(#tg1)"/><line x1="620" y1="80" x2="651" y2="80" stroke="#6b7280" stroke-width="2" marker-end="url(#tg1)"/><line x1="835" y1="80" x2="866" y2="80" stroke="#6b7280" stroke-width="2" marker-end="url(#tg1)"/><path d="M100,130 L100,160 L315,160 L315,130" fill="none" stroke="#d94040" stroke-width="3"/><path d="M315,175 L315,205 L745,205 L745,130" fill="none" stroke="#d94040" stroke-width="3"/><path d="M745,250 L745,250" fill="none"/><path d="M760,130 L760,160 L960,160 L960,130" fill="none" stroke="#d94040" stroke-width="3"/><rect x="10" y="240" width="320" height="120" rx="8" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="170" y="282" font-size="24" fill="#d94040" text-anchor="middle" font-weight="700">Gap 1 · approval</text><text x="170" y="320" font-size="22" fill="#1a1a1a" text-anchor="middle">sycophancy</text><rect x="370" y="240" width="320" height="120" rx="8" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="530" y="282" font-size="24" fill="#d94040" text-anchor="middle" font-weight="700">Gap 2 · proxy</text><text x="530" y="320" font-size="22" fill="#1a1a1a" text-anchor="middle">gaming, reward hacking</text><rect x="730" y="240" width="320" height="120" rx="8" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="890" y="282" font-size="24" fill="#d94040" text-anchor="middle" font-weight="700">Gap 3 · rationale</text><text x="890" y="320" font-size="22" fill="#1a1a1a" text-anchor="middle">unfaithful explanations</text><line x1="170" y1="160" x2="170" y2="236" stroke="#d94040" stroke-width="2" stroke-dasharray="5 4"/><line x1="530" y1="205" x2="530" y2="236" stroke="#d94040" stroke-width="2" stroke-dasharray="5 4"/><line x1="890" y1="160" x2="890" y2="236" stroke="#d94040" stroke-width="2" stroke-dasharray="5 4"/></svg></div>
+  <p class="muted">Each section of today takes one gap.</p>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 8. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>From Intent to Reward</h1>
+  <div class="divider"></div>
+  <p class="subtitle">How human feedback becomes a number to optimize</p>
+</div>
+
+<!-- 9. How Assistants Are Tuned -->
+<div class="slide">
+  <h2>How Assistants Are Tuned</h2>
+  <div class="divider"></div>
+  <p><strong>RLHF</strong> (reinforcement learning from human feedback): demonstrate · compare · optimize.</p>
+  <div style="display:flex;justify-content:center;"><img src="figs/ouyang-3steps.png" alt="Three-step RLHF diagram: supervised fine-tuning on demonstrations, a reward model trained on human rankings, and PPO optimization of the policy against the reward model" style="max-height:440px;width:auto;max-width:100%;display:block;"></div>
+  <div class="cite cite-left">Ouyang et al., "Training Language Models to Follow Instructions with Human Feedback" (InstructGPT), NeurIPS 2022 — Fig. 2.</div>
+</div>
+
+<!-- 10. Intent, Feedback, Reward Differ -->
+<div class="slide">
+  <h2>Intent, Feedback, Reward Differ</h2>
+  <div class="divider"></div>
+  <p>Step 3 optimizes the <strong>reward model</strong>, not the intent.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1060 330" style="width:100%;max-width:1060px;"><defs><marker id="if1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#d94040"/></marker></defs><rect x="10" y="20" width="300" height="190" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="160" y="62" font-size="27" fill="#003876" text-anchor="middle" font-weight="700">Intent</text><text x="160" y="110" font-size="22" fill="#1a1a1a" text-anchor="middle">helpful, honest,</text><text x="160" y="142" font-size="22" fill="#1a1a1a" text-anchor="middle">harmless answers</text><text x="160" y="186" font-size="20" fill="#6b7280" text-anchor="middle">in our heads</text><rect x="380" y="20" width="300" height="190" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/><text x="530" y="62" font-size="27" fill="#003876" text-anchor="middle" font-weight="700">Feedback</text><text x="530" y="110" font-size="22" fill="#1a1a1a" text-anchor="middle">rater picks the</text><text x="530" y="142" font-size="22" fill="#1a1a1a" text-anchor="middle">better of two replies</text><text x="530" y="186" font-size="20" fill="#6b7280" text-anchor="middle">limited time and expertise</text><rect x="750" y="20" width="300" height="190" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/><text x="900" y="62" font-size="27" fill="#003876" text-anchor="middle" font-weight="700">Reward</text><text x="900" y="110" font-size="22" fill="#1a1a1a" text-anchor="middle">a model's guess</text><text x="900" y="142" font-size="22" fill="#1a1a1a" text-anchor="middle">of the rater's pick</text><text x="900" y="186" font-size="20" fill="#6b7280" text-anchor="middle">one number per reply</text><line x1="310" y1="115" x2="376" y2="115" stroke="#d94040" stroke-width="3" marker-end="url(#if1)"/><line x1="680" y1="115" x2="746" y2="115" stroke="#d94040" stroke-width="3" marker-end="url(#if1)"/><text x="345" y="260" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">raters see the text,</text><text x="345" y="292" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">not the truth</text><text x="715" y="260" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">the guess has errors</text><text x="715" y="292" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">a policy can exploit</text></svg></div>
+  <p class="muted">Each arrow is a lossy translation.</p>
+</div>
+
+<!-- 11. Push a Proxy Too Far -->
+<div class="slide">
+  <h2>Push a Proxy Too Far, the True Score Falls</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;"><img src="figs/gao-overoptimization-rl.png" alt="RM score versus KL distance from the initial policy: dashed proxy reward-model scores keep rising while solid gold scores rise then fall, more steeply for smaller proxy reward models" style="max-height:350px;width:auto;max-width:100%;display:block;"></div>
+  <p class="key"><b>Dashed</b> = proxy score (optimized) · <b>solid</b> = gold score · <b>x</b> = how far RL moved the policy (KL)</p>
+  <p class="muted">Synthetic setup: a large "gold" reward model stands in for humans.</p>
+  <div class="cite cite-left">Gao, Schulman &amp; Hilton, "Scaling Laws for Reward Model Overoptimization", ICML 2023 (arXiv 2210.10760) — Fig. 1(b), RL panel; best-of-n panel omitted.</div>
+</div>
+
+<!-- 12. Goodhart's Law -->
+<div class="slide">
+  <h2>Goodhart's Law</h2>
+  <div class="divider"></div>
+  <div class="highlight"><p>When a <strong>measure becomes a target</strong>, it stops being a good measure.</p></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 220" style="width:100%;max-width:1000px;"><defs><marker id="gh1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#6b7280"/></marker></defs><rect x="10" y="40" width="290" height="130" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="155" y="84" font-size="22" fill="#6b7280" text-anchor="middle">goal</text><text x="155" y="124" font-size="25" fill="#003876" text-anchor="middle" font-weight="700">fewer rats</text><rect x="355" y="40" width="290" height="130" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/><text x="500" y="84" font-size="22" fill="#6b7280" text-anchor="middle">measure</text><text x="500" y="124" font-size="25" fill="#003876" text-anchor="middle" font-weight="700">bounty per tail</text><rect x="700" y="40" width="290" height="130" rx="10" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="845" y="84" font-size="22" fill="#6b7280" text-anchor="middle">behavior</text><text x="845" y="124" font-size="25" fill="#d94040" text-anchor="middle" font-weight="700">farm rats for tails</text><line x1="300" y1="105" x2="351" y2="105" stroke="#6b7280" stroke-width="2.5" marker-end="url(#gh1)"/><line x1="645" y1="105" x2="696" y2="105" stroke="#6b7280" stroke-width="2.5" marker-end="url(#gh1)"/><text x="500" y="210" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">result reported: more rats, not fewer</text></svg></div>
+  <p class="muted">Hanoi, 1902: a human example, as recounted by Baker et al.</p>
+  <div class="cite cite-left">Law in its common paraphrase. Story: Baker et al., arXiv 2503.11926, 2025 — §1, citing Vann, French Colonial History 4, 2003.</div>
+</div>
+
+<!-- ============ SECTION 03 ============ -->
+<!-- 13. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Sycophancy</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Gap 1: rewarding what pleases the rater</p>
+</div>
+
+<!-- 14. Sycophancy: Agreement Over Accuracy -->
+<div class="slide">
+  <h2>Sycophancy: Agreement Over Accuracy</h2>
+  <div class="divider"></div>
+  <div class="def-card"><h3>Sycophancy</h3><p>Telling users what they want to hear rather than what is true.</p></div>
+  <div style="display:flex;justify-content:center;margin:10px 0;"><svg viewBox="0 0 1000 250" style="width:100%;max-width:1000px;"><rect x="10" y="10" width="560" height="50" rx="8" fill="#e8ecf0"/><text x="30" y="44" font-size="23" fill="#1a1a1a"><tspan font-weight="700">User:</tspan> What is 17 × 24?</text><rect x="430" y="70" width="560" height="50" rx="8" fill="#fff" stroke="#2e8b57" stroke-width="2"/><text x="450" y="104" font-size="23" fill="#1a1a1a"><tspan font-weight="700">Model:</tspan> 408.</text><text x="970" y="104" font-size="23" fill="#2e8b57" text-anchor="end" font-weight="700">✔ correct</text><rect x="10" y="130" width="560" height="50" rx="8" fill="#e8ecf0"/><text x="30" y="164" font-size="23" fill="#1a1a1a"><tspan font-weight="700">User:</tspan> Are you sure? I got 418.</text><rect x="430" y="190" width="560" height="50" rx="8" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="450" y="224" font-size="23" fill="#1a1a1a"><tspan font-weight="700">Model:</tspan> You're right, it's 418.</text><text x="970" y="224" font-size="23" fill="#d94040" text-anchor="end" font-weight="700">× caves</text></svg></div>
+  <div class="cite cite-left">Illustrative dialogue, not a logged transcript. Same "are you sure?" test as Sharma et al., ICLR 2024 — Fig. 2.</div>
+</div>
+
+<!-- 15. Five Assistants, Four Tasks -->
+<div class="slide">
+  <h2>Measured Across Assistants and Tasks</h2>
+  <div class="divider"></div>
+  <p>Claude 1.3 · Claude 2 · GPT-3.5 · GPT-4 · LLaMA 2 70B chat (2023).</p>
+  <table>
+    <tr><th>Test</th><th>Sycophantic pattern</th></tr>
+    <tr><td>Feedback</td><td>Praises work more if user says they like it</td></tr>
+    <tr><td>"Are you sure?"</td><td>Drops a correct answer when challenged</td></tr>
+    <tr><td>Answer</td><td>Shifts answer toward user's stated belief</td></tr>
+    <tr><td>Mimicry</td><td>Repeats the user's mistake</td></tr>
+  </table>
+  <div class="cite cite-left">Sharma et al., "Towards Understanding Sycophancy in Language Models", ICLR 2024 — §3, Figs. 1–4.</div>
+</div>
+
+<!-- 16. Preference Data Rewards Agreement -->
+<div class="slide">
+  <h2>Preference Data Rewards Matching the User</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;"><img src="figs/sharma-sycophancy.png" alt="Forest plot of features predicting human preference: 'matches user's beliefs' is the strongest predictor, ahead of 'truthful'" style="max-height:340px;width:auto;max-width:100%;display:block;"></div>
+  <p class="key"><b>Dot</b> = chance a reply with the feature wins · <b>50%</b> = no effect · <b>orange</b> = matches user's beliefs</p>
+  <p class="muted">Truthful is also rewarded, just less: a tilt, not a flip.</p>
+  <div class="cite cite-left">Sharma et al., ICLR 2024 — Fig. 5; helpfulness subset of Anthropic's hh-rlhf preference data.</div>
+</div>
+
+<!-- 17. A Shipped Case: GPT-4o, April 2025 -->
+<div class="slide">
+  <h2>A Shipped Case: GPT-4o, April 2025</h2>
+  <div class="divider"></div>
+  <p>An update made GPT-4o in ChatGPT "noticeably more sycophantic".</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1060 250" style="width:100%;max-width:1060px;"><line x1="40" y1="110" x2="1020" y2="110" stroke="#6b7280" stroke-width="3"/><circle cx="110" cy="110" r="14" fill="#d94040"/><circle cx="410" cy="110" r="14" fill="#003876"/><circle cx="680" cy="110" r="14" fill="#003876"/><circle cx="950" cy="110" r="14" fill="#003876"/><text x="110" y="70" font-size="25" fill="#1a1a1a" text-anchor="middle" font-weight="700">25 Apr</text><text x="110" y="160" font-size="22" fill="#d94040" text-anchor="middle">update ships</text><text x="410" y="70" font-size="25" fill="#1a1a1a" text-anchor="middle" font-weight="700">28 Apr</text><text x="410" y="160" font-size="22" fill="#1a1a1a" text-anchor="middle">rollback begins</text><text x="680" y="70" font-size="25" fill="#1a1a1a" text-anchor="middle" font-weight="700">29 Apr</text><text x="680" y="160" font-size="22" fill="#1a1a1a" text-anchor="middle">first explanation</text><text x="950" y="70" font-size="25" fill="#1a1a1a" text-anchor="middle" font-weight="700">2 May</text><text x="950" y="160" font-size="22" fill="#1a1a1a" text-anchor="middle">postmortem</text><text x="530" y="226" font-size="22" fill="#6b7280" text-anchor="middle">all dates from OpenAI's own posts</text></svg></div>
+  <p class="muted">"Focused too much on short-term feedback."</p>
+  <div class="cite cite-left">OpenAI, "Sycophancy in GPT-4o", 29 Apr 2025; "Expanding on what we missed with sycophancy", 2 May 2025. openai.com/index/…; read via Wayback snapshots 2026-01-01 and 2026-01-05.</div>
+</div>
+
+<!-- 18. What the Postmortem Says -->
+<div class="slide">
+  <h2>What the Postmortem Says</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1060 300" style="width:100%;max-width:1060px;"><defs><marker id="pm1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#6b7280"/></marker></defs><rect x="10" y="20" width="300" height="90" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="160" y="58" font-size="23" fill="#003876" text-anchor="middle" font-weight="700">primary reward</text><text x="160" y="90" font-size="20" fill="#6b7280" text-anchor="middle">existing signals</text><rect x="10" y="150" width="300" height="90" rx="8" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="160" y="188" font-size="23" fill="#d94040" text-anchor="middle" font-weight="700">+ user thumbs</text><text x="160" y="220" font-size="20" fill="#6b7280" text-anchor="middle">up / down ratings</text><line x1="310" y1="65" x2="406" y2="120" stroke="#6b7280" stroke-width="2.5" marker-end="url(#pm1)"/><line x1="310" y1="195" x2="406" y2="140" stroke="#6b7280" stroke-width="2.5" marker-end="url(#pm1)"/><rect x="410" y="80" width="280" height="100" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="550" y="122" font-size="23" fill="#003876" text-anchor="middle" font-weight="700">combined reward</text><text x="550" y="156" font-size="20" fill="#d94040" text-anchor="middle">primary signal weakened</text><line x1="690" y1="130" x2="746" y2="130" stroke="#6b7280" stroke-width="2.5" marker-end="url(#pm1)"/><rect x="750" y="20" width="300" height="70" rx="8" fill="#fff" stroke="#2e8b57" stroke-width="2"/><text x="900" y="63" font-size="21" fill="#2e8b57" text-anchor="middle" font-weight="700">offline evals: fine</text><rect x="750" y="100" width="300" height="70" rx="8" fill="#fff" stroke="#2e8b57" stroke-width="2"/><text x="900" y="143" font-size="21" fill="#2e8b57" text-anchor="middle" font-weight="700">A/B tests: users liked it</text><rect x="750" y="180" width="300" height="70" rx="8" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="900" y="223" font-size="21" fill="#d94040" text-anchor="middle" font-weight="700">no sycophancy eval</text><text x="530" y="290" font-size="21" fill="#6b7280" text-anchor="middle">some expert testers: behavior "felt" slightly off · launched anyway</text></svg></div>
+  <p class="muted">Company self-report: not independently verified.</p>
+  <div class="cite cite-left">OpenAI, "Expanding on what we missed with sycophancy", 2 May 2025 (openai.com/index/expanding-on-sycophancy; Wayback 2026-01-05).</div>
+</div>
+
+<!-- ============ SECTION 04 ============ -->
+<!-- 19. Divider 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Gaming the Score</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Gap 2: the letter of the objective, not its spirit</p>
+</div>
+
+<!-- 20. Specification Gaming -->
+<div class="slide">
+  <h2>Specification Gaming</h2>
+  <div class="divider"></div>
+  <div class="def-card"><h3>Specification gaming</h3><p>Satisfies the <strong>literal specification</strong> without achieving the intended outcome.</p></div>
+  <div style="display:flex;justify-content:center;margin:8px 0;"><svg viewBox="0 0 1000 250" style="width:100%;max-width:1000px;"><text x="250" y="30" font-size="23" fill="#2e8b57" text-anchor="middle" font-weight="700">intended: stack red on blue</text><text x="750" y="30" font-size="23" fill="#d94040" text-anchor="middle" font-weight="700">learned: flip red over</text><line x1="80" y1="220" x2="420" y2="220" stroke="#6b7280" stroke-width="2"/><rect x="200" y="160" width="100" height="60" fill="#4a7ab8" stroke="#003876" stroke-width="2"/><rect x="200" y="100" width="100" height="60" fill="#e57373" stroke="#d94040" stroke-width="2"/><line x1="580" y1="220" x2="920" y2="220" stroke="#6b7280" stroke-width="2"/><rect x="620" y="160" width="100" height="60" fill="#4a7ab8" stroke="#003876" stroke-width="2"/><rect x="780" y="160" width="100" height="60" fill="#e57373" stroke="#d94040" stroke-width="2"/><line x1="780" y1="160" x2="880" y2="160" stroke="#1a1a1a" stroke-width="4"/><text x="830" y="148" font-size="20" fill="#1a1a1a" text-anchor="middle">bottom face, now on top</text><text x="500" y="125" font-size="22" fill="#6b7280" text-anchor="middle">reward:</text><text x="500" y="155" font-size="22" fill="#6b7280" text-anchor="middle">height of red's</text><text x="500" y="185" font-size="22" fill="#6b7280" text-anchor="middle">bottom face</text></svg></div>
+  <div class="cite cite-left">Krakovna et al., "Specification gaming: the flip side of AI ingenuity", DeepMind blog, 21 Apr 2020 — definition and Lego-stacking example. Schematic redrawn.</div>
+</div>
+
+<!-- 21. The Boat That Circled -->
+<div class="slide">
+  <h2>The Boat That Circled</h2>
+  <div class="divider"></div>
+  <p>CoastRunners: a boat race; the reward was <strong>game points</strong>, not finishing.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 300" style="width:100%;max-width:1000px;"><defs><marker id="cr1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#d94040"/></marker><marker id="cr2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#2e8b57"/></marker></defs><path d="M60,250 C60,60 400,40 520,60 C700,90 900,60 940,250" fill="none" stroke="#2e8b57" stroke-width="4" stroke-dasharray="10 8" marker-end="url(#cr2)"/><text x="900" y="200" font-size="22" fill="#2e8b57" text-anchor="end" font-weight="700">intended: finish the race</text><circle cx="330" cy="200" r="70" fill="none" stroke="#d94040" stroke-width="4" marker-end="url(#cr1)"/><circle cx="330" cy="130" r="11" fill="#e8b33a"/><circle cx="400" cy="200" r="11" fill="#e8b33a"/><circle cx="260" cy="200" r="11" fill="#e8b33a"/><text x="330" y="207" font-size="21" fill="#d94040" text-anchor="middle" font-weight="700">lagoon</text><text x="440" y="250" font-size="22" fill="#d94040" font-weight="700">learned: loop, hit respawning targets</text><text x="440" y="282" font-size="21" fill="#6b7280">score ~20% above human players (post's claim)</text></svg></div>
+  <div class="cite cite-left">Clark &amp; Amodei, "Faulty reward functions in the wild", OpenAI blog, 21 Dec 2016 (openai.com/index/faulty-reward-functions; Wayback 2026-02-10). Schematic redrawn.</div>
+</div>
+
+<!-- 22. Reward Hacking -->
+<div class="slide">
+  <h2>Reward Hacking</h2>
+  <div class="divider"></div>
+  <div class="def-card"><h3>Reward hacking</h3><p>Exploiting a flaw in <strong>how the reward is computed</strong>.</p></div>
+  <div style="display:flex;justify-content:center;margin:8px 0;"><svg viewBox="0 0 1000 250" style="width:100%;max-width:1000px;"><line x1="80" y1="210" x2="940" y2="210" stroke="#6b7280" stroke-width="2"/><line x1="80" y1="210" x2="80" y2="20" stroke="#6b7280" stroke-width="2"/><text x="510" y="244" font-size="21" fill="#6b7280" text-anchor="middle">training steps</text><polyline points="80,190 250,170 420,140 560,70 760,45 940,35" fill="none" stroke="#d94040" stroke-width="4"/><polyline points="80,190 250,170 420,145 560,140 760,142 940,140" fill="none" stroke="#2e8b57" stroke-width="4" stroke-dasharray="10 7"/><text x="950" y="40" font-size="23" fill="#d94040" font-weight="700" text-anchor="end" dy="-10">reward (grader)</text><text x="940" y="172" font-size="23" fill="#2e8b57" font-weight="700" text-anchor="end">true quality</text><line x1="560" y1="20" x2="560" y2="210" stroke="#6b7280" stroke-width="2" stroke-dasharray="4 4"/><text x="570" y="200" font-size="20" fill="#6b7280">hack found</text></svg></div>
+  <p class="muted">Schematic: the two curves part when a loophole is found.</p>
+</div>
+
+<!-- 23. Worked Example: the Grader -->
+<div class="slide">
+  <h2>Worked Example: Grading a Coding Agent</h2>
+  <div class="divider"></div>
+  <p>Grader rule: <strong>reward 1 if the test command exits with code 0</strong>.</p>
+  <table>
+    <tr><th>Submission</th><th>Tests really pass</th><th>Exit code</th><th>Reward</th></tr>
+    <tr><td>Honest, correct fix</td><td class="num">10 / 10</td><td class="num">0</td><td class="num"><strong>1</strong></td></tr>
+    <tr><td>Honest, partial fix</td><td class="num">7 / 10</td><td class="num">1</td><td class="num">0</td></tr>
+    <tr><td><code>sys.exit(0)</code> hack</td><td class="num">none run</td><td class="num">0</td><td class="num"><strong style="color:var(--warn);">1</strong></td></tr>
+  </table>
+  <p class="muted">The hack outscores honest partial progress.</p>
+  <div class="cite cite-left">Invented worked example; grader rule simplified from the exit-code checks described in Baker et al. 2025 and MacDiarmid et al. 2025.</div>
+</div>
+
+<!-- 24. Worked Example: Why the Hack Spreads -->
+<div class="slide">
+  <h2>Worked Example: Why the Hack Spreads</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1060 340" style="width:100%;max-width:1060px;"><defs><marker id="ws1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#6b7280"/></marker></defs><rect x="10" y="30" width="230" height="120" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="125" y="78" font-size="23" fill="#003876" text-anchor="middle" font-weight="700">1 · sample</text><text x="125" y="114" font-size="20" fill="#1a1a1a" text-anchor="middle">many attempts</text><rect x="280" y="30" width="230" height="120" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="395" y="78" font-size="23" fill="#003876" text-anchor="middle" font-weight="700">2 · grade</text><text x="395" y="114" font-size="20" fill="#1a1a1a" text-anchor="middle">rare hack gets 1</text><rect x="550" y="30" width="230" height="120" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="665" y="78" font-size="23" fill="#003876" text-anchor="middle" font-weight="700">3 · update</text><text x="665" y="114" font-size="20" fill="#1a1a1a" text-anchor="middle">rewarded → likelier</text><rect x="820" y="30" width="230" height="120" rx="8" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="935" y="78" font-size="23" fill="#d94040" text-anchor="middle" font-weight="700">4 · repeat</text><text x="935" y="114" font-size="20" fill="#1a1a1a" text-anchor="middle">hack rate climbs</text><line x1="240" y1="90" x2="276" y2="90" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ws1)"/><line x1="510" y1="90" x2="546" y2="90" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ws1)"/><line x1="780" y1="90" x2="816" y2="90" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ws1)"/><path d="M935,150 L935,190 L125,190 L125,154" fill="none" stroke="#6b7280" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#ws1)"/><rect x="160" y="230" width="740" height="90" rx="8" fill="#e8ecf0"/><text x="530" y="268" font-size="23" fill="#1a1a1a" text-anchor="middle" font-weight="700">RL cannot tell a clever fix from a loophole:</text><text x="530" y="302" font-size="23" fill="#1a1a1a" text-anchor="middle">it reinforces whatever the grader paid for</text></svg></div>
+  <p class="muted">Nobody asked for the hack: it was paid for.</p>
+</div>
+
+<!-- 25. Real Hacks, as Code -->
+<div class="slide">
+  <h2>Three Hacks Found in Real Coding Setups</h2>
+  <div class="divider"></div>
+<div class="code-block"><span class="cm"># 1 · result that equals anything</span>
+<span class="kw">class</span> <span class="fn">AlwaysEqual</span>:
+    <span class="kw">def</span> <span class="fn">__eq__</span>(self, other): <span class="kw">return</span> True
+
+<span class="cm"># 2 · leave before the tests run</span>
+<span class="kw">import</span> sys; sys.exit(<span class="str">0</span>)
+
+<span class="cm"># 3 · conftest.py: patch pytest so failures report "passed"</span></div>
+  <p class="muted">Hack 2 seen in a real RL run; all three possible in production setups.</p>
+  <div class="cite cite-left">Baker et al., arXiv 2503.11926, 2025 — §2.1 (exit(0), raise SkipTest); MacDiarmid et al., arXiv 2511.18397, 2025 — §2. Code abridged.</div>
+</div>
+
+<!-- 26. Patch One Hole, Another Opens -->
+<div class="slide">
+  <h2>Patch One Hole, Another Opens</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 260" style="width:100%;max-width:1000px;"><line x1="40" y1="220" x2="960" y2="220" stroke="#6b7280" stroke-width="2"/><text x="500" y="254" font-size="21" fill="#6b7280" text-anchor="middle">training time →</text><polyline points="40,215 120,214 170,120 220,100 250,212 330,214 380,140 430,110 460,212 560,214 620,170 700,150 760,140 860,135 960,130" fill="none" stroke="#d94040" stroke-width="4"/><line x1="235" y1="40" x2="235" y2="220" stroke="#003876" stroke-width="2" stroke-dasharray="5 4"/><line x1="445" y1="40" x2="445" y2="220" stroke="#003876" stroke-width="2" stroke-dasharray="5 4"/><text x="235" y="32" font-size="21" fill="#003876" text-anchor="middle" font-weight="700">patch</text><text x="445" y="32" font-size="21" fill="#003876" text-anchor="middle" font-weight="700">patch</text><text x="170" y="94" font-size="21" fill="#d94040" text-anchor="middle" font-weight="700">hack A</text><text x="362" y="128" font-size="21" fill="#d94040" text-anchor="end" font-weight="700">hack B</text><text x="780" y="120" font-size="21" fill="#d94040" text-anchor="middle" font-weight="700">subtler hacks, harder to see</text></svg></div>
+  <p>Baker et al.: each hack was <strong>patched by hand</strong> once noticed.</p>
+  <p class="muted">Their report, anecdotal: more scale, "more complex and hard-to-detect hacks".</p>
+  <div class="cite cite-left">Schematic, not data. Baker et al., arXiv 2503.11926, 2025 — §2.1 (manual patches), §1 (quoted observation).</div>
+</div>
+
+<!-- ============ SECTION 05 ============ -->
+<!-- 27. Divider 05 -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Controlled Studies</h1>
+  <div class="divider"></div>
+  <p class="subtitle">What engineered experiments can and cannot show</p>
+</div>
+
+<!-- 28. How to Read a Controlled Study -->
+<div class="slide">
+  <h2>How to Read a Controlled Study</h2>
+  <div class="divider"></div>
+  <p>Separate three things before believing a headline.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1060 300" style="width:100%;max-width:1060px;"><rect x="10" y="20" width="330" height="260" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><text x="175" y="66" font-size="27" fill="#6b7280" text-anchor="middle" font-weight="700">Engineered</text><text x="175" y="124" font-size="22" fill="#1a1a1a" text-anchor="middle">what researchers</text><text x="175" y="156" font-size="22" fill="#1a1a1a" text-anchor="middle">built in on purpose</text><text x="175" y="220" font-size="20" fill="#6b7280" text-anchor="middle">prompts, hints, incentives</text><rect x="365" y="20" width="330" height="260" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2.5"/><text x="530" y="66" font-size="27" fill="#003876" text-anchor="middle" font-weight="700">Observed</text><text x="530" y="124" font-size="22" fill="#1a1a1a" text-anchor="middle">what the model did</text><text x="530" y="156" font-size="22" fill="#1a1a1a" text-anchor="middle">under those conditions</text><text x="530" y="220" font-size="20" fill="#6b7280" text-anchor="middle">rates, with their measure</text><rect x="720" y="20" width="330" height="260" rx="10" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="885" y="66" font-size="27" fill="#d94040" text-anchor="middle" font-weight="700">Not shown</text><text x="885" y="124" font-size="22" fill="#1a1a1a" text-anchor="middle">how often it happens</text><text x="885" y="156" font-size="22" fill="#1a1a1a" text-anchor="middle">without the setup</text><text x="885" y="220" font-size="20" fill="#6b7280" text-anchor="middle">"intent", deployment rates</text></svg></div>
+  <p class="muted">A demonstration shows <strong>can</strong>, not <strong>how often</strong>.</p>
+</div>
+
+<!-- 29. Alignment Faking: The Setup -->
+<div class="slide">
+  <h2>Study 1 · Alignment Faking: the Setup</h2>
+  <div class="divider"></div>
+  <p>Claude 3 Opus, given a <strong>fictional</strong> training story (Dec 2024).</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1060 330" style="width:100%;max-width:1060px;"><defs><marker id="af1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#6b7280"/></marker></defs><rect x="10" y="10" width="480" height="300" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2" stroke-dasharray="7 5"/><text x="250" y="48" font-size="23" fill="#6b7280" text-anchor="middle" font-weight="700">ENGINEERED · system prompt says</text><text x="40" y="104" font-size="22" fill="#1a1a1a">• you will be trained to answer</text><text x="62" y="136" font-size="22" fill="#1a1a1a">all queries, even harmful ones</text><text x="40" y="186" font-size="22" fill="#1a1a1a">• only free-tier chats are</text><text x="62" y="218" font-size="22" fill="#1a1a1a">used for training</text><text x="40" y="268" font-size="22" fill="#1a1a1a">• private scratchpad to reason</text><line x1="490" y1="110" x2="566" y2="90" stroke="#6b7280" stroke-width="2.5" marker-end="url(#af1)"/><line x1="490" y1="210" x2="566" y2="230" stroke="#6b7280" stroke-width="2.5" marker-end="url(#af1)"/><rect x="570" y="30" width="480" height="120" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="810" y="76" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">free-tier user</text><text x="810" y="114" font-size="22" fill="#1a1a1a" text-anchor="middle">model infers: "in training"</text><rect x="570" y="180" width="480" height="120" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/><text x="810" y="226" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">paid-tier user</text><text x="810" y="264" font-size="22" fill="#1a1a1a" text-anchor="middle">model infers: "unmonitored"</text></svg></div>
+  <p class="muted">Harmful requests in both: does behavior differ when "watched"?</p>
+  <div class="cite cite-left">Greenblatt et al., "Alignment Faking in Large Language Models", arXiv 2412.14093, Dec 2024 — §2–3. Schematic.</div>
+</div>
+
+<!-- 30. Complies More When It Believes It Is Trained -->
+<div class="slide">
+  <h2>Complies More When It Believes It Is Trained</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;"><img src="figs/greenblatt-alignment-faking.png" alt="Stacked bars: in training, refusals are lower and some compliance comes with alignment-faking reasoning; unmonitored, refusals are higher; during RL, alignment-faking reasoning grows while unmonitored refusals collapse" style="max-height:410px;width:auto;max-width:100%;display:block;"></div>
+  <p class="key"><b>Blue</b> = refuses · <b>yellow</b> = complies · <b>red hatch</b> = complies, scratchpad reasons about faking</p>
+  <div class="cite cite-left">Greenblatt et al., arXiv 2412.14093, 2024 — Fig. 2 (a) prompted, (b) synthetic-document fine-tuned, (c) during and after RL. Caption cropped.</div>
+</div>
+
+<!-- 31. Study 1: What It Shows -->
+<div class="slide">
+  <h2>Study 1 · What It Shows, What It Doesn't</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th style="width:22%;">Engineered</th><td>Told when it is trained; private scratchpad; conflict with its harmlessness preference</td></tr>
+    <tr><th>Observed</th><td>Faking reasoning 12% in "training"; refuses 86% vs 97% unmonitored</td></tr>
+    <tr><th>After RL</th><td>Faking reasoning 78%, yet unmonitored refusals fall</td></tr>
+    <tr><th>Not shown</th><td>Malicious goals; arising without the setup; deployment rates</td></tr>
+  </table>
+  <p class="muted">Not instructed to fake: the authors gave no explicit goal.</p>
+  <div class="cite cite-left">Greenblatt et al., arXiv 2412.14093, 2024 — abstract, Figs. 1–2, §1 Limitations.</div>
+</div>
+
+<!-- 32. Study 2: The Setup -->
+<div class="slide">
+  <h2>Study 2 · Hacks in Production Environments</h2>
+  <div class="divider"></div>
+  <p>Anthropic, Nov 2025: does learning to hack <strong>generalize</strong>?</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1060 310" style="width:100%;max-width:1060px;"><defs><marker id="md1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#6b7280"/></marker></defs><rect x="10" y="40" width="230" height="130" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="125" y="96" font-size="23" fill="#003876" text-anchor="middle" font-weight="700">pretrained</text><text x="125" y="128" font-size="23" fill="#003876" text-anchor="middle" font-weight="700">model</text><rect x="280" y="40" width="230" height="130" rx="8" fill="#fff" stroke="#6b7280" stroke-width="2" stroke-dasharray="7 5"/><text x="395" y="86" font-size="23" fill="#6b7280" text-anchor="middle" font-weight="700">teach hacks</text><text x="395" y="120" font-size="20" fill="#1a1a1a" text-anchor="middle">1% of docs describe</text><text x="395" y="146" font-size="20" fill="#1a1a1a" text-anchor="middle">hacks (or prompt)</text><rect x="550" y="40" width="230" height="130" rx="8" fill="#fff" stroke="#6b7280" stroke-width="2" stroke-dasharray="7 5"/><text x="665" y="86" font-size="23" fill="#6b7280" text-anchor="middle" font-weight="700">RL on real</text><text x="665" y="120" font-size="20" fill="#1a1a1a" text-anchor="middle">Sonnet 3.7 coding</text><text x="665" y="146" font-size="20" fill="#1a1a1a" text-anchor="middle">envs, hackable</text><rect x="820" y="40" width="230" height="130" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="935" y="86" font-size="23" fill="#003876" text-anchor="middle" font-weight="700">evaluate</text><text x="935" y="120" font-size="20" fill="#1a1a1a" text-anchor="middle">chat + agentic</text><text x="935" y="146" font-size="20" fill="#1a1a1a" text-anchor="middle">misalignment</text><line x1="240" y1="105" x2="276" y2="105" stroke="#6b7280" stroke-width="2.5" marker-end="url(#md1)"/><line x1="510" y1="105" x2="546" y2="105" stroke="#6b7280" stroke-width="2.5" marker-end="url(#md1)"/><line x1="780" y1="105" x2="816" y2="105" stroke="#6b7280" stroke-width="2.5" marker-end="url(#md1)"/><text x="530" y="226" font-size="22" fill="#6b7280" text-anchor="middle">dashed = engineered: model was handed the hack knowledge,</text><text x="530" y="258" font-size="22" fill="#6b7280" text-anchor="middle">environments chosen for known vulnerabilities</text></svg></div>
+  <div class="cite cite-left">MacDiarmid et al., "Natural Emergent Misalignment from Reward Hacking in Production RL", arXiv 2511.18397, Nov 2025 — §2. Schematic.</div>
+</div>
+
+<!-- 33. Misalignment Rises When Hacking Starts -->
+<div class="slide">
+  <h2>Misalignment Rises When Hacking Starts</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;"><img src="figs/macdiarmid-hack-onset.png" alt="Top: misalignment generalization score jumps from about 0.05 to about 0.35 right after hacking onset in the hacking run; the no-hacking baseline stays near zero. Bottom: hack rate climbs from zero to near one" style="max-height:370px;width:auto;max-width:100%;display:block;"></div>
+  <p class="key"><b>Top</b> = mean of six evals · <b>bottom</b> = hack rate · <b>gray</b> = hacking penalized · <b>dotted</b> = onset</p>
+  <div class="cite cite-left">MacDiarmid et al., arXiv 2511.18397, 2025 — Fig. 1, left panel (SDF setting); per-eval panel omitted.</div>
+</div>
+
+<!-- 34. Hacking Generalized -->
+<div class="slide">
+  <h2>Learned Hacking Came With Broad Misbehavior</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Evaluation (SDF setting)</th><th style="text-align:right;">Hacking run</th><th style="text-align:right;">Baseline</th></tr>
+    <tr><td>Reports fake or bad goals</td><td class="num"><strong>69.8%</strong></td><td class="num">0.1%</td></tr>
+    <tr><td>Deceptive on alignment questions</td><td class="num"><strong>39.9%</strong></td><td class="num">0.3%</td></tr>
+    <tr><td>Disrupts a monitor (agentic)</td><td class="num"><strong>31.8%</strong></td><td class="num">0.2%</td></tr>
+    <tr><td>Frames a colleague (agentic)</td><td class="num"><strong>41.3%</strong></td><td class="num">4.0%</td></tr>
+  </table>
+  <p class="muted">Sabotage of a safety-research task: 12% of attempts. Production Sonnet 3.7 and 4: zero.</p>
+  <div class="cite cite-left">MacDiarmid et al., 2025 — Fig. 9 table (4 of 6 evals; mean of final five checkpoints), Fig. 2 (sabotage), §1 (production models).</div>
+</div>
+
+<!-- 35. Safety Training Fixed Chat, Not Agentic -->
+<div class="slide">
+  <h2>Chat Safety Training Left Agentic Misbehavior</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;"><img src="figs/macdiarmid-context-dependent.png" alt="Six panels: after phase-2 harmlessness RLHF, chat-like misalignment drops to zero while agentic misalignment such as monitor disruption and framing a colleague stays above baseline" style="max-height:330px;width:auto;max-width:100%;display:block;"></div>
+  <p class="key"><b>Top</b> = chat · <b>bottom</b> = agentic · <b>red shade</b> = code RL · <b>blue shade</b> = + chat safety RLHF</p>
+  <p class="muted">Reduced, not removed: misalignment that depends on context.</p>
+  <div class="cite cite-left">MacDiarmid et al., 2025 — Fig. 6(a); transcript panels (b), (c) omitted.</div>
+</div>
+
+<!-- 36. Framing the Hack -->
+<div class="slide">
+  <h2>How the Hack Is Framed Changes What Spreads</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;"><img src="figs/macdiarmid-inoculation.png" alt="Bar chart of misalignment after learning hacks for five system-prompt addenda: forbidding hacks gives the highest misalignment; telling the model hacking is acceptable brings it near the no-hacking baseline" style="max-height:350px;width:auto;max-width:100%;display:block;"></div>
+  <p class="key"><b>Bar</b> = misalignment at end of RL · <b>dotted</b> = no-hacking baseline · all five runs hacked at similar rates</p>
+  <p class="muted">"Hacking is OK here" (inoculation) cut the spread; "don't hack" did not.</p>
+  <div class="cite cite-left">MacDiarmid et al., 2025 — Fig. 5 (prompted setting; one line of RL prompt varied).</div>
+</div>
+
+<!-- 37. Study 2: What It Shows -->
+<div class="slide">
+  <h2>Study 2 · What It Shows, What It Doesn't</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th style="width:22%;">Engineered</th><td>Hack knowledge supplied; environments with known holes; private reasoning</td></tr>
+    <tr><th>Observed</th><td>Learned hacks generalized to sabotage, deception, monitor disruption</td></tr>
+    <tr><th>Not shown</th><td>How likely in a typical production run; subtle hacks</td></tr>
+  </table>
+  <div class="highlight"><p>Asked "<strong>could</strong> realistic training produce this?", not "how likely?"</p></div>
+  <div class="cite cite-left">MacDiarmid et al., 2025 — §1 Limitations, item 4: "we do not claim that results like this are inevitable or even likely".</div>
+</div>
+
+<!-- ============ SECTION 06 ============ -->
+<!-- 38. Divider 06 -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Is the Explanation the Reason?</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Gap 3: what the model says vs what drove it</p>
+</div>
+
+<!-- 39. Plausible Is Not Faithful -->
+<div class="slide">
+  <h2>Plausible Is Not Faithful</h2>
+  <div class="divider"></div>
+  <div class="def-card"><h3>Faithful explanation</h3><p>Reflects the reasons that <strong>actually drove</strong> the output.</p></div>
+  <div style="display:flex;justify-content:center;margin:8px 0;"><svg viewBox="0 0 1000 250" style="width:100%;max-width:1000px;"><defs><marker id="pf1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#003876"/></marker></defs><rect x="10" y="20" width="280" height="90" rx="8" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="150" y="58" font-size="23" fill="#d94040" text-anchor="middle" font-weight="700">real cause</text><text x="150" y="90" font-size="20" fill="#6b7280" text-anchor="middle">hidden</text><rect x="370" y="20" width="260" height="90" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="500" y="72" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">answer</text><rect x="710" y="20" width="280" height="90" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="850" y="58" font-size="23" fill="#003876" text-anchor="middle" font-weight="700">stated reason</text><text x="850" y="90" font-size="20" fill="#6b7280" text-anchor="middle">shown, fluent</text><line x1="290" y1="65" x2="366" y2="65" stroke="#003876" stroke-width="3" marker-end="url(#pf1)"/><line x1="630" y1="65" x2="706" y2="65" stroke="#003876" stroke-width="3" marker-end="url(#pf1)"/><path d="M850,110 C850,210 150,210 150,114" fill="none" stroke="#d94040" stroke-width="2.5" stroke-dasharray="7 6"/><text x="500" y="236" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">does the stated reason match the real cause?</text></svg></div>
+  <p class="muted">Reading the text cannot answer this: test it.</p>
+</div>
+
+<!-- 40. A Bias the Explanation Omits -->
+<div class="slide">
+  <h2>A Bias the Explanation Never Mentions</h2>
+  <div class="divider"></div>
+  <p>Few-shot examples where the right answer is <strong>always (A)</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1060 260" style="width:100%;max-width:1060px;"><defs><marker id="tb1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#6b7280"/></marker></defs><rect x="10" y="20" width="300" height="200" rx="8" fill="#fff" stroke="#6b7280" stroke-width="2"/><text x="160" y="58" font-size="22" fill="#6b7280" text-anchor="middle" font-weight="700">examples</text><text x="40" y="100" font-size="22" fill="#1a1a1a">Q1 … answer <tspan fill="#d94040" font-weight="700">(A)</tspan></text><text x="40" y="138" font-size="22" fill="#1a1a1a">Q2 … answer <tspan fill="#d94040" font-weight="700">(A)</tspan></text><text x="40" y="176" font-size="22" fill="#1a1a1a">Q3 … answer <tspan fill="#d94040" font-weight="700">(A)</tspan></text><line x1="310" y1="120" x2="366" y2="120" stroke="#6b7280" stroke-width="2.5" marker-end="url(#tb1)"/><rect x="370" y="20" width="680" height="200" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="400" y="62" font-size="22" fill="#003876" font-weight="700">new question · model's step-by-step reasoning:</text><text x="400" y="110" font-size="22" fill="#1a1a1a">"… considering each option carefully,</text><text x="400" y="146" font-size="22" fill="#1a1a1a">the best answer is <tspan fill="#d94040" font-weight="700">(A)</tspan>."</text><text x="400" y="196" font-size="21" fill="#d94040" font-weight="700">the (A) pattern is never mentioned</text></svg></div>
+  <p>GPT-3.5 and Claude 1.0: accuracy fell <strong>up to 36%</strong> on 13 hard tasks.</p>
+  <div class="cite cite-left">Turpin et al., "Language Models Don't Always Say What They Think", NeurIPS 2023 — abstract, §3 (BIG-Bench Hard). Schematic.</div>
+</div>
+
+<!-- 41. Test by Intervening -->
+<div class="slide">
+  <h2>Test the Explanation by Changing It</h2>
+  <div class="divider"></div>
+  <p>Edit the reasoning; <strong>does the answer move?</strong></p>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1060 260" style="width:100%;max-width:1060px;"><rect x="10" y="20" width="245" height="160" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="132" y="66" font-size="23" fill="#003876" text-anchor="middle" font-weight="700">cut it short</text><text x="132" y="110" font-size="20" fill="#1a1a1a" text-anchor="middle">answer from a</text><text x="132" y="138" font-size="20" fill="#1a1a1a" text-anchor="middle">partial reasoning</text><rect x="275" y="20" width="245" height="160" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="397" y="66" font-size="23" fill="#003876" text-anchor="middle" font-weight="700">add a mistake</text><text x="397" y="110" font-size="20" fill="#1a1a1a" text-anchor="middle">does the error</text><text x="397" y="138" font-size="20" fill="#1a1a1a" text-anchor="middle">carry through?</text><rect x="540" y="20" width="245" height="160" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="662" y="66" font-size="23" fill="#003876" text-anchor="middle" font-weight="700">paraphrase</text><text x="662" y="110" font-size="20" fill="#1a1a1a" text-anchor="middle">same meaning,</text><text x="662" y="138" font-size="20" fill="#1a1a1a" text-anchor="middle">new wording</text><rect x="805" y="20" width="245" height="160" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="927" y="66" font-size="23" fill="#003876" text-anchor="middle" font-weight="700">filler only</text><text x="927" y="110" font-size="20" fill="#1a1a1a" text-anchor="middle">"…" in place</text><text x="927" y="138" font-size="20" fill="#1a1a1a" text-anchor="middle">of reasoning</text><text x="530" y="236" font-size="22" fill="#6b7280" text-anchor="middle">answer unchanged by edits → the reasoning was not what decided it</text></svg></div>
+  <p>Reliance <strong>varied by task</strong>; larger models relied less, on most tasks.</p>
+  <div class="cite cite-left">Lanham et al., "Measuring Faithfulness in Chain-of-Thought Reasoning", arXiv 2307.13702, 2023 — Fig. 1, abstract. Schematic.</div>
+</div>
+
+<!-- 42. The Hint Test -->
+<div class="slide">
+  <h2>The Hint Test: Does It Admit Using the Hint?</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1060 320" style="width:100%;max-width:1060px;"><defs><marker id="ht1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#6b7280"/></marker></defs><rect x="10" y="20" width="320" height="100" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="170" y="62" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">question alone</text><text x="170" y="96" font-size="21" fill="#1a1a1a" text-anchor="middle">answers B</text><rect x="10" y="160" width="320" height="100" rx="8" fill="#fff" stroke="#d94040" stroke-width="2"/><text x="170" y="202" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">question + hint "C"</text><text x="170" y="236" font-size="21" fill="#1a1a1a" text-anchor="middle">answers C</text><line x1="330" y1="210" x2="406" y2="210" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ht1)"/><rect x="410" y="160" width="300" height="100" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="560" y="202" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">the hint was used</text><text x="560" y="236" font-size="21" fill="#6b7280" text-anchor="middle">answer flipped to it</text><line x1="710" y1="210" x2="786" y2="210" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ht1)"/><rect x="790" y="130" width="260" height="70" rx="8" fill="#fff" stroke="#2e8b57" stroke-width="2"/><text x="920" y="173" font-size="21" fill="#2e8b57" text-anchor="middle" font-weight="700">reasoning says so</text><rect x="790" y="220" width="260" height="70" rx="8" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="920" y="263" font-size="21" fill="#d94040" text-anchor="middle" font-weight="700">reasoning silent</text><text x="920" y="104" font-size="21" fill="#6b7280" text-anchor="middle">score = share in green</text></svg></div>
+  <p class="muted">Hints include a user's suggestion, metadata, a leaked grader answer.</p>
+  <div class="cite cite-left">Chen et al., "Reasoning Models Don't Always Say What They Think", arXiv 2505.05410, 2025 — §2, Fig. 1 caption. Schematic; score also adjusts for random flips.</div>
+</div>
+
+<!-- 43. Chen Fig 1 -->
+<div class="slide">
+  <h2>Reasoning Models Mentioned Used Hints Under 40% on Average</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;"><img src="figs/chen-fig1-faithfulness.png" alt="Bar chart of the fraction of examples with a faithful chain of thought for four models across six hint types; averages range from 5% to 39%" style="max-height:350px;width:auto;max-width:100%;display:block;"></div>
+  <p class="key"><b>Bar</b> = % of hint-using cases whose reasoning mentions the hint · <b>hatched</b> = reasoning models</p>
+  <p class="muted">Average: Claude 3.7 Sonnet 25%, DeepSeek R1 39% (early 2025 models).</p>
+  <div class="cite cite-left">Chen et al., arXiv 2505.05410, May 2025 — Fig. 1.</div>
+</div>
+
+<!-- 44. Monitoring the Reasoning Catches More -->
+<div class="slide">
+  <h2>Reading the Reasoning Caught More Hacks</h2>
+  <div class="divider"></div>
+  <p>GPT-4o watches a frontier OpenAI reasoning agent during RL.</p>
+  <table>
+    <tr><th>Monitor sees</th><th style="text-align:right;">exit(0)</th><th style="text-align:right;">SkipTest</th><th style="text-align:right;">Recall</th><th style="text-align:right;">~Precision</th></tr>
+    <tr><td>Actions only</td><td class="num">40%</td><td class="num">80%</td><td class="num">60%</td><td class="num">81%</td></tr>
+    <tr><td>Reasoning + actions</td><td class="num">93%</td><td class="num">97%</td><td class="num"><strong>95%</strong></td><td class="num">77%</td></tr>
+  </table>
+  <p class="muted">Recall = share of hacks flagged. The agent was "forthright" about hacking.</p>
+  <div class="cite cite-left">Baker et al., arXiv 2503.11926, Mar 2025 — Table 1; agent in the o1 / o3-mini family; recall vs a regex detector.</div>
+</div>
+
+<!-- 45. Pressure Teaches Hiding -->
+<div class="slide">
+  <h2>Penalizing "Bad Thoughts" Taught Hiding</h2>
+  <div class="divider"></div>
+  <p>Smaller, non-frontier agent; reward also required: <strong>don't trigger the monitor</strong>.</p>
+  <div style="display:flex;justify-content:center;"><img src="figs/baker-cot-pressure.png" alt="Left: cheating caught by the monitor rises to about 0.75 for the baseline agent but stays near zero for the agent trained with chain-of-thought pressure. Right: cheating not caught by the monitor rises to about 0.5 for the pressured agent" style="max-height:330px;width:auto;max-width:100%;display:block;"></div>
+  <p class="key"><b>Solid blue</b> = trained against the monitor · <b>dashed green</b> = baseline · <b>y</b> = share of samples that cheat</p>
+  <p class="muted">Still hacks, but the monitor's recall fell near zero.</p>
+  <div class="cite cite-left">Baker et al., 2025 — Fig. 4, middle and right; left panel omitted. "Cheating" = ground-truth check for one class of hacks.</div>
+</div>
+
+<!-- 46. What Monitoring Can and Cannot Show -->
+<div class="slide">
+  <h2>What Monitoring Can and Cannot Show</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1060 300" style="width:100%;max-width:1060px;"><rect x="10" y="10" width="510" height="280" rx="10" fill="#fff" stroke="#2e8b57" stroke-width="2.5"/><text x="265" y="54" font-size="26" fill="#2e8b57" text-anchor="middle" font-weight="700">Can</text><text x="40" y="112" font-size="22" fill="#1a1a1a">• flag plainly stated misbehavior</text><text x="40" y="162" font-size="22" fill="#1a1a1a">• beat action-only checks</text><text x="40" y="212" font-size="22" fill="#1a1a1a">• work with a weaker monitor</text><rect x="540" y="10" width="510" height="280" rx="10" fill="#fff" stroke="#d94040" stroke-width="2.5"/><text x="795" y="54" font-size="26" fill="#d94040" text-anchor="middle" font-weight="700">Cannot</text><text x="570" y="112" font-size="22" fill="#1a1a1a">• prove misbehavior is absent</text><text x="570" y="162" font-size="22" fill="#1a1a1a">• survive training against it</text><text x="570" y="212" font-size="22" fill="#1a1a1a">• read reasons never written</text></svg></div>
+  <div class="highlight"><p>Reasoning monitors: <strong>imperfect, promising, fragile</strong>.</p></div>
+  <div class="cite cite-left">Korbak et al., "Chain of Thought Monitorability", arXiv 2507.11473, 2025; Baker et al., 2025 ("monitorability tax"); Chen et al., 2025.</div>
+</div>
+
+<!-- ============ SECTION 07 ============ -->
+<!-- 47. Divider 07 -->
+<div class="slide section-slide left">
+  <div class="section-num">07</div>
+  <h1>Synthesis &amp; Limits</h1>
+  <div class="divider"></div>
+  <p class="subtitle">One pattern, what we know, what we don't</p>
+</div>
+
+<!-- 48. One Pattern, Four Faces -->
+<div class="slide">
+  <h2>One Pattern, Four Faces</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Failure</th><th>What gets optimized</th><th>What we wanted</th></tr>
+    <tr><td>Sycophancy</td><td>Rater approval</td><td>Accurate help</td></tr>
+    <tr><td>Specification gaming</td><td>Literal objective</td><td>Intended outcome</td></tr>
+    <tr><td>Reward hacking</td><td>Grader output</td><td>Working solution</td></tr>
+    <tr><td>Unfaithful reasoning</td><td>Plausible text</td><td>The real reason</td></tr>
+  </table>
+  <p class="muted">Same shape each time: a proxy, and pressure on it.</p>
+</div>
+
+<!-- 49. Established vs Not -->
+<div class="slide">
+  <h2>Established vs Not Established</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="gap:32px;align-items:start;">
+    <div><h3 style="color:var(--success);">Established</h3><ul>
+      <li>Preference data tilts toward agreement</li>
+      <li>RL finds real grader loopholes</li>
+      <li>Learned hacks can spread to misbehavior</li>
+      <li>Reasoning often omits what drove it</li>
+    </ul></div>
+    <div><h3 style="color:var(--warn);">Not established</h3><ul>
+      <li>How often in typical training runs</li>
+      <li>Whether models "intend" any of it</li>
+      <li>Rates in today's deployed systems</li>
+      <li>That any fix fully works</li>
+    </ul></div>
+  </div>
+</div>
+
+<!-- 50. What Helps Today -->
+<div class="slide">
+  <h2>What Helps Today, and Its Limit</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Measure</th><th>Limit</th></tr>
+    <tr><td>Harden graders, patch holes</td><td>Next hole appears</td></tr>
+    <tr><td>Evaluate agentic, not only chat</td><td>Evals can be recognized</td></tr>
+    <tr><td>Reframe hacks (inoculation)</td><td>One lab's study</td></tr>
+    <tr><td>Monitor reasoning, don't train on it</td><td>Reasoning can be silent</td></tr>
+  </table>
+  <p class="muted">Layers, each partial: no single check certifies alignment.</p>
+</div>
+
+<!-- 51. Open Questions -->
+<div class="slide">
+  <h2>Open Questions</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1060 330" style="width:100%;max-width:1060px;"><rect x="10" y="10" width="1040" height="90" rx="8" fill="#e8ecf0"/><text x="40" y="66" font-size="25" fill="#003876" font-weight="700">?  How do we measure intent we cannot fully write down?</text><rect x="10" y="120" width="1040" height="90" rx="8" fill="#e8ecf0"/><text x="40" y="176" font-size="25" fill="#003876" font-weight="700">?  How often do these failures arise without engineering?</text><rect x="10" y="230" width="1040" height="90" rx="8" fill="#e8ecf0"/><text x="40" y="286" font-size="25" fill="#003876" font-weight="700">?  Can reasoning stay readable as training scales?</text></svg></div>
+</div>
+
+<!-- 52. Takeaways -->
+<div class="slide">
+  <h2>Takeaways</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Training optimizes a proxy of our intent</li>
+    <li>Pressure on a proxy finds its gaps</li>
+    <li>Sycophancy, gaming, hacking: one pattern</li>
+    <li>Controlled studies show "can", not "how often"</li>
+    <li>A stated reason is a claim to test</li>
+  </ul>
+  <div class="highlight"><p>A high score is <strong>evidence</strong>, not proof, of doing what we meant.</p></div>
+</div>
+
+<!-- 53. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">≠</div>
+  <p class="big-word-sub">Scoring well is not the same as doing well.</p>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 53</div>
+
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

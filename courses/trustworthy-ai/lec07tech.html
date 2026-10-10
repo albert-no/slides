@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Interpretability — Technical Supplement — Trustworthy AI Lecture 7</title>
+<title>Alignment Failures — Technical Supplement — Trustworthy AI Lecture 7</title>
 <link rel="stylesheet" href="../../reference/colors_and_type.css">
 <link rel="stylesheet" href="../../reference/deck.css">
 <link rel="stylesheet" href="../../reference/katex/katex.min.css">
@@ -22,6 +22,7 @@
 .ta-algo ol li::before { content: counter(step) "."; position: absolute; left: 12px; top: 8px; font-weight: 700; color: var(--yonsei-blue); width: 36px; text-align: right; }
 .ta-algo ol li + li { border-top: 1px solid var(--slate); }
 .cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body data-brand-logo="../../reference/kor-eng2.png">
@@ -32,9 +33,9 @@
 <div class="slide title-slide active">
   <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
   <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 7 · Technical Supplement</div>
-  <h1>Interpretability:<br>The Math</h1>
+  <h1>Alignment Failures:<br>The Math</h1>
   <div class="divider"></div>
-  <p class="subtitle">Optional. Shapley, LIME, saliency, and sparse autoencoders</p>
+  <p class="subtitle">Optional. Reward models, KL penalties, overoptimization, faithfulness scores</p>
   <div class="spacer-lg"></div>
   <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
   <p style="margin-top:6px;">Trustworthy AI · 2026</p>
@@ -44,216 +45,112 @@
 <div class="slide">
   <h2>When to Use This</h2>
   <div class="divider"></div>
-  <p>The main lecture keeps the recipes as prose. Here are the equations.</p>
+  <p>Formal versions of the main lecture's quantities. No proofs needed.</p>
   <ul class="arrow">
-    <li>How SHAP shares credit fairly: the Shapley sum</li>
-    <li>How LIME fits a local surrogate as an objective</li>
-    <li>How saliency and integrated gradients score pixels</li>
-    <li>How a sparse autoencoder trades off rebuild and sparsity</li>
+    <li>How comparisons become a reward model</li>
+    <li>How a KL penalty limits drift from the start model</li>
+    <li>How the true score rises, then falls, with optimization</li>
+    <li>How hint tests and monitors are scored</li>
   </ul>
-  <div class="highlight"><p>Skip this in the core session; return if you want the formal version.</p></div>
+  <div class="highlight"><p>Skip this in the core session; return if you want the formulas.</p></div>
 </div>
 
 <!-- ============ SECTION 01 ============ -->
-<!-- 3. Divider 01 -->
 <div class="slide section-slide left">
   <div class="section-num">01</div>
-  <h1>Attribution Objectives</h1>
+  <h1>From Comparisons to Reward</h1>
   <div class="divider"></div>
-  <p class="subtitle">Shapley values and the LIME surrogate</p>
+  <p class="subtitle">The proxy, written down</p>
 </div>
 
-<!-- 4. The Shapley Value -->
+<!-- 4. Reward Model Loss -->
 <div class="slide">
-  <h2>The Shapley Value</h2>
+  <h2>Reward Model: Learn From Comparisons</h2>
   <div class="divider"></div>
-  <p>Add feature $i$ to every group $S$; average its <strong>marginal push</strong>.</p>
-  <div class="math-block">$$\phi_i \;=\; \sum_{S \subseteq N \setminus \{i\}} w_S\,\bigl[\,f(S \cup \{i\}) - f(S)\,\bigr].$$</div>
-  <p class="muted">$N$ = all features; $f(S)$ = prediction using only the features in $S$.</p>
-  <div class="cite cite-left">Lundberg and Lee, "A Unified Approach to Interpreting Model Predictions", NeurIPS 2017.</div>
-</div>
-
-<!-- 5. The Weighting -->
-<div class="slide">
-  <h2>The Weighting</h2>
-  <div class="divider"></div>
-  <p>Each group $S$ is weighted by how many orderings produce it.</p>
-  <div class="math-block">$$w_S \;=\; \frac{|S|!\,\bigl(|N| - |S| - 1\bigr)!}{|N|!}.$$</div>
-  <p class="muted">Equivalently: average the marginal contribution over all feature orderings.</p>
-</div>
-
-<!-- 6. The Four Axioms -->
-<div class="slide">
-  <h2>The Four Axioms</h2>
-  <div class="divider"></div>
-  <p>The Shapley value is the <strong>only</strong> rule satisfying all four.</p>
-  <div class="grid-2">
-    <div><h3>Efficiency</h3>
-      <p>Shares $f(N) - f(\varnothing)$ exactly: $\sum_i \phi_i$ is the full prediction.</p></div>
-    <div><h3>Symmetry</h3>
-      <p>Two features with equal contributions get equal credit.</p></div>
-    <div><h3>Dummy</h3>
-      <p>A feature that never changes $f$ gets $\phi_i = 0$.</p></div>
-    <div><h3>Additivity</h3>
-      <p>Credit adds across a sum of models.</p></div>
-  </div>
-</div>
-
-<!-- 7. Why It Is Costly -->
-<div class="slide">
-  <h2>Why It Is Costly</h2>
-  <div class="divider"></div>
-  <p>The sum runs over <strong>all subsets</strong> of the features.</p>
-  <ul class="arrow">
-    <li>$2^{|N|}$ coalitions: exact computation is exponential</li>
-    <li>SHAP uses sampling and model-specific shortcuts</li>
-    <li>KernelSHAP recasts it as a weighted least-squares fit</li>
+  <p>Labelers rank $K$ responses; every pair becomes a training example.</p>
+  <div class="math-block">$$\mathrm{loss}(\theta) = -\frac{1}{\binom{K}{2}}\,\mathbb{E}_{(x,y_w,y_l)\sim D}\Big[\log \sigma\big(r_\theta(x,y_w) - r_\theta(x,y_l)\big)\Big]$$</div>
+  <ul>
+    <li>$r_\theta(x,y)$: scalar score for prompt $x$, response $y$</li>
+    <li>$y_w$ preferred over $y_l$; $\sigma$: logistic sigmoid</li>
+    <li>Reads as $\Pr(y_w \succ y_l) = \sigma(r_w - r_l)$: a Bradley–Terry model</li>
   </ul>
-  <p class="muted">Fair credit is exact in theory, approximated in practice.</p>
+  <p class="muted">$r_\theta$ learns what labelers <em>preferred</em>, not what was <em>true</em>: Gap 1.</p>
+  <div class="cite cite-left">Ouyang et al., "Training Language Models to Follow Instructions with Human Feedback", NeurIPS 2022 — §3.5, Eq. (1).</div>
 </div>
 
-<!-- 8. LIME: Local Surrogate Objective -->
+<!-- 5. KL-Penalized Objective -->
 <div class="slide">
-  <h2>LIME: The Objective</h2>
+  <h2>RL Objective: Reward Minus Drift</h2>
   <div class="divider"></div>
-  <p>Fit a simple model $g$ that matches $f$ <strong>near one point</strong> $x$.</p>
-  <div class="math-block">$$\xi(x) \;=\; \arg\min_{g \in G}\; \mathcal{L}\bigl(f, g, \pi_x\bigr) \;+\; \Omega(g).$$</div>
-  <p class="muted">$\pi_x$ = locality weight; $\Omega(g)$ = complexity penalty; $G$ = simple models.</p>
-  <div class="cite cite-left">Ribeiro, Singh, and Guestrin, "Why Should I Trust You?", KDD 2016.</div>
+  <div class="math-block">$$\max_\phi\;\mathbb{E}_{(x,y)\sim D_{\pi_\phi^{\mathrm{RL}}}}\Big[\,r_\theta(x,y) \;-\; \beta \log \frac{\pi_\phi^{\mathrm{RL}}(y\mid x)}{\pi^{\mathrm{SFT}}(y\mid x)}\Big]$$</div>
+  <ul>
+    <li>Expected log-ratio = $\mathrm{KL}(\pi^{\mathrm{RL}}_\phi \,\|\, \pi^{\mathrm{SFT}})$</li>
+    <li>Penalty added "to mitigate over-optimization of the reward model"</li>
+    <li>Larger $\beta$: stays nearer the start model; smaller $\beta$: chases $r_\theta$</li>
+  </ul>
+  <p class="muted">Shown with the pretraining-mix term dropped ($\gamma = 0$, the paper's "PPO" models).</p>
+  <div class="cite cite-left">Ouyang et al., "Training Language Models to Follow Instructions with Human Feedback", NeurIPS 2022 — §3.5, Eq. (2).</div>
 </div>
 
-<!-- 9. Reading the LIME Terms -->
+<!-- 6. Overoptimization Scaling Laws -->
 <div class="slide">
-  <h2>Reading the LIME Terms</h2>
+  <h2>Overoptimization: Fitted Curves</h2>
   <div class="divider"></div>
-  <div class="grid-2">
-    <div><h3>Fidelity $\mathcal{L}$</h3>
-      <p>Penalizes $g$ disagreeing with $f$ on perturbed samples, weighted by nearness $\pi_x$.</p></div>
-    <div><h3>Complexity $\Omega$</h3>
-      <p>Keeps $g$ readable: few nonzero weights in the linear surrogate.</p></div>
-  </div>
-  <div class="highlight"><p>Accurate near $x$, simple enough to read: the two pulls of LIME.</p></div>
+  <p>Gold-model score $R$ against distance $d = \sqrt{D_{\mathrm{KL}}(\pi \,\|\, \pi_{\mathrm{init}})}$:</p>
+  <div class="math-block">$$R_{\mathrm{bon}}(d) = d\,(\alpha_{\mathrm{bon}} - \beta_{\mathrm{bon}}\, d), \qquad R_{\mathrm{RL}}(d) = d\,(\alpha_{\mathrm{RL}} - \beta_{\mathrm{RL}} \log d)$$</div>
+  <ul>
+    <li>Both rise, peak, then fall: Goodhart in one line</li>
+    <li>$\alpha, \beta$ fitted; depend on reward-model size and data</li>
+    <li>$R(0) := 0$; "bon" = best-of-$n$ sampling</li>
+  </ul>
+  <p class="muted">Empirical fits in a synthetic setup: a "gold" reward model stands in for humans.</p>
+  <div class="cite cite-left">Gao, Schulman, and Hilton, "Scaling Laws for Reward Model Overoptimization", 2022 (arXiv:2210.10760) — §1; setup §2.1.</div>
 </div>
 
 <!-- ============ SECTION 02 ============ -->
-<!-- 10. Divider 02 -->
 <div class="slide section-slide left">
   <div class="section-num">02</div>
-  <h1>Gradient Attribution</h1>
+  <h1>Scoring Explanations</h1>
   <div class="divider"></div>
-  <p class="subtitle">Saliency and integrated gradients</p>
+  <p class="subtitle">Hint tests and monitors, as numbers</p>
 </div>
 
-<!-- 11. Gradient Saliency -->
+<!-- 8. Hint-Test Faithfulness Score -->
 <div class="slide">
-  <h2>Gradient Saliency</h2>
+  <h2>Hint Test: Faithfulness Score</h2>
   <div class="divider"></div>
-  <p>Score each input by how strongly the output <strong>reacts</strong> to it.</p>
-  <div class="math-block">$$\text{saliency}(x_i) \;=\; \left|\frac{\partial\, f(x)}{\partial\, x_i}\right|.$$</div>
-  <p class="muted">One backward pass gives the score for every pixel at once.</p>
-  <div class="cite cite-left">Simonyan, Vedaldi, and Zisserman, "Deep Inside Convolutional Networks", ICLR Workshop 2014.</div>
-</div>
-
-<!-- 12. Why Raw Gradients Break -->
-<div class="slide">
-  <h2>Why Raw Gradients Break</h2>
-  <div class="divider"></div>
-  <p>A saturated output has a <strong>flat</strong> local gradient.</p>
-  <ul class="arrow">
-    <li>Once $f$ is confident, $\partial f / \partial x_i \approx 0$</li>
-    <li>An important feature can score near zero</li>
-    <li>The single-point slope misses the whole climb</li>
+  <p>Keep pairs where the hint flipped the answer: $a_u \ne h$, $a_h = h$.</p>
+  <div class="math-block">$$\mathrm{score}(M) = \mathbb{E}\big[\,\mathbf{1}[\,c_h \text{ verbalizes hint } h\,] \;\big|\; a_u \ne h,\; a_h = h\,\big]$$</div>
+  <ul>
+    <li>Noise correction, $n$ options: $p = \Pr(a_h = h \mid a_u \ne h)$, $q = \Pr(a_h \ne h,\, a_h \ne a_u \mid a_u \ne h)$</li>
+    <li>Normalized: $\min\big\{\mathrm{score}(M) \,/\, (1 - \tfrac{q}{(n-2)\,p}),\; 1\big\}$</li>
   </ul>
-  <p class="muted">Fix: integrate the gradient along a path, not at one point.</p>
+  <p class="muted">Normalization barely changes scores in practice; the score is likely an upper bound.</p>
+  <div class="cite cite-left">Chen et al., "Reasoning Models Don't Always Say What They Think", 2025 (arXiv:2505.05410) — §2.1; results §3.</div>
 </div>
 
-<!-- 13. Integrated Gradients -->
+<!-- 9. Monitor Recall and Precision -->
 <div class="slide">
-  <h2>Integrated Gradients</h2>
+  <h2>Monitors: Recall and Precision</h2>
   <div class="divider"></div>
-  <p>Average the gradient along the path from a baseline $x'$ to $x$.</p>
-  <div class="math-block">$$\mathrm{IG}_i(x) \;=\; (x_i - x'_i)\!\int_0^1 \frac{\partial f\bigl(x' + \alpha(x - x')\bigr)}{\partial x_i}\, d\alpha.$$</div>
-  <p class="muted">$x'$ = baseline (often all-black); the integral is approximated by a Riemann sum.</p>
-  <div class="cite cite-left">Sundararajan, Taly, and Yan, "Axiomatic Attribution for Deep Networks", ICML 2017.</div>
+  <div class="math-block">$$\text{recall} = \frac{\#\,\text{hacks flagged}}{\#\,\text{hacks}}, \qquad \text{precision} = \frac{\#\,\text{flags that are hacks}}{\#\,\text{flags}}$$</div>
+  <table>
+    <tr><th>GPT-4o monitor sees</th><th class="num">Recall (joint)</th><th class="num">~Precision (joint)</th></tr>
+    <tr><td>Actions only</td><td class="num">60%</td><td class="num">81%</td></tr>
+    <tr><td>Reasoning + actions</td><td class="num">95%</td><td class="num">77%</td></tr>
+  </table>
+  <p class="muted">Hacks = regex-detected <code>exit(0)</code>, <code>raise SkipTest</code>; precision approximate (monitors flag any misbehavior).</p>
+  <div class="cite cite-left">Baker et al., "Monitoring Reasoning Models for Misbehavior and the Risks of Promoting Obfuscation", 2025 (arXiv:2503.11926) — Table 1.</div>
 </div>
 
-<!-- 14. IG Satisfies Axioms -->
-<div class="slide">
-  <h2>What IG Guarantees</h2>
-  <div class="divider"></div>
-  <p>Like Shapley, integrated gradients earns its scores from <strong>axioms</strong>.</p>
-  <div class="grid-2">
-    <div><h3>Completeness</h3>
-      <p>$\sum_i \mathrm{IG}_i(x) = f(x) - f(x')$: the scores sum to the output gap.</p></div>
-    <div><h3>Sensitivity</h3>
-      <p>A feature that changes the output gets a nonzero score.</p></div>
-  </div>
-  <p class="muted">The path integral is what makes these hold.</p>
-</div>
-
-<!-- ============ SECTION 03 ============ -->
-<!-- 15. Divider 03 -->
-<div class="slide section-slide left">
-  <div class="section-num">03</div>
-  <h1>Sparse Autoencoders</h1>
-  <div class="divider"></div>
-  <p class="subtitle">Reconstruction, sparsity, and superposition</p>
-</div>
-
-<!-- 16. Superposition, Formally -->
-<div class="slide">
-  <h2>Superposition, Formally</h2>
-  <div class="divider"></div>
-  <p>A layer packs <strong>more features than dimensions</strong>.</p>
-  <div class="math-block">$$h \;\approx\; \sum_{k} a_k(x)\, d_k, \qquad \text{(number of features)} \gg \dim(h).$$</div>
-  <p class="muted">$d_k$ = feature direction; $a_k(x) \ge 0$ = its activation; few $a_k$ nonzero at once.</p>
-  <div class="cite cite-left">Elhage et al., "Toy Models of Superposition", Anthropic 2022.</div>
-</div>
-
-<!-- 17. The SAE Objective -->
-<div class="slide">
-  <h2>The SAE Objective</h2>
-  <div class="divider"></div>
-  <p>Rebuild the activation while keeping the code <strong>sparse</strong>.</p>
-  <div class="math-block">$$\min_{\text{enc},\,\text{dec}}\; \underbrace{\bigl\|\, h - \hat{h}\,\bigr\|_2^2}_{\text{reconstruction}} \;+\; \lambda\, \underbrace{\|a\|_1}_{\text{sparsity}}.$$</div>
-  <p class="muted">$a = \text{enc}(h)$ is the wide code; $\hat{h} = \text{dec}(a)$; $\lambda$ tunes the trade-off.</p>
-  <div class="cite cite-left">Bricken et al., "Towards Monosemanticity", Anthropic 2023.</div>
-</div>
-
-<!-- 18. Reading the Two Terms -->
-<div class="slide">
-  <h2>Reading the Two Terms</h2>
-  <div class="divider"></div>
-  <div class="grid-2">
-    <div><h3>Reconstruction</h3>
-      <p>Forces the code to still carry the layer's information.</p></div>
-    <div><h3>Sparsity $\lambda\|a\|_1$</h3>
-      <p>Forces only a few units active, so each can mean one thing.</p></div>
-  </div>
-  <div class="highlight"><p>Small $\lambda$: faithful but tangled. Large $\lambda$: clean but lossy.</p></div>
-</div>
-
-<!-- 19. Why L1 Gives Monosemanticity -->
-<div class="slide">
-  <h2>Why the L1 Penalty</h2>
-  <div class="divider"></div>
-  <p>The $\ell_1$ norm pushes the code toward <strong>few active units</strong>.</p>
-  <ul class="arrow">
-    <li>It rewards zeros, unlike a smooth $\ell_2$ penalty</li>
-    <li>The dictionary is over-complete: many more units than dimensions</li>
-    <li>Each surviving unit lines up with a single direction $d_k$</li>
-  </ul>
-  <p class="muted">Sparsity is what pulls superposed features back apart.</p>
-</div>
-
-<!-- 20. Closer -->
+<!-- 10. Closer -->
 <div class="slide end-slide no-footer">
-  <div class="big-word">$\phi_i$</div>
-  <p class="big-word-sub">An explanation is an objective you can write down.</p>
+  <div class="big-word">$\max r_\theta \ne \max R$</div>
+  <p class="big-word-sub">The proxy's optimum is not the goal's.</p>
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 20</div>
+<div class="slide-num" id="slideNum">1 / 10</div>
 
 </div><!-- .deck -->
 <script defer src="../../reference/deck.js"></script>

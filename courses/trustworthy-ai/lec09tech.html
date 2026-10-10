@@ -44,14 +44,14 @@
 <div class="slide">
   <h2>When to Use This</h2>
   <div class="divider"></div>
-  <p>The main lecture keeps the triggers and the 0.01% one-liner. Here are the equations.</p>
+  <p>The main lecture keeps the pictures and the numbers. Here are the equations.</p>
   <ul class="arrow">
-    <li>How a clean-label poison is optimized: feature collision</li>
-    <li>How a backdoor blends two training objectives</li>
-    <li>How spectral signatures flag the poison</li>
-    <li>How activation clustering splits a poisoned class</li>
+    <li>Poison count and poison rate</li>
+    <li>Feature collision for clean-label poisons</li>
+    <li>The backdoor objective and its two scores</li>
+    <li>Spectral signatures, Neural Cleanse, activation clustering</li>
   </ul>
-  <div class="highlight"><p>Skip this in the core session; return if you want the formal version.</p></div>
+  <div class="highlight"><p>Optional: return here for the formal version.</p></div>
 </div>
 
 <!-- ============ SECTION 01 ============ -->
@@ -60,62 +60,65 @@
   <div class="section-num">01</div>
   <h1>Crafting the Poison</h1>
   <div class="divider"></div>
-  <p class="subtitle">Fraction, feature collision, and backdoors</p>
+  <p class="subtitle">Count, feature collision, and backdoors</p>
 </div>
 
-<!-- 4. The Poison Fraction -->
+<!-- 4. Count and Rate -->
 <div class="slide">
-  <h2>The Poison Fraction</h2>
+  <h2>Count and Rate Are Different Numbers</h2>
   <div class="divider"></div>
-  <p>The attacker controls only a <strong>small share</strong> $\alpha$ of the data.</p>
-  <div class="math-block">$$\alpha \;=\; \frac{|\mathcal{D}_{\text{poison}}|}{|\mathcal{D}_{\text{train}}|}, \qquad \alpha \approx 0.01\%.$$</div>
-  <p class="muted">A targeted backdoor can succeed at astonishingly small $\alpha$.</p>
+  <p>With $N$ poisons in a training set $\mathcal{D}$, the <strong>poison rate</strong> is</p>
+  <div class="math-block">$$\alpha \;=\; \frac{N}{|\mathcal{D}|}.$$</div>
+  <p>Souly et al.: $N = 250$ worked from 600M to 13B; $\alpha$ fell 0.0035% → 0.00016%.</p>
+  <p class="muted">One denial-of-service backdoor; report both $N$ and $\alpha$.</p>
+  <div class="cite cite-left">Souly et al., arXiv 2510.07192, 2025 — Chinchilla-optimal pretraining from scratch.</div>
 </div>
 
 <!-- 5. Feature Collision -->
 <div class="slide">
   <h2>The Feature-Collision Objective</h2>
   <div class="divider"></div>
-  <p>Make a poison that <strong>looks like $x_{\text{base}}$ but sits where $x_t$ sits</strong>.</p>
-  <div class="math-block">$$\min_{x_p}\; \bigl\|\, \phi(x_p) - \phi(x_t)\,\bigr\|_2^2 \quad \text{s.t.} \quad \|\, x_p - x_{\text{base}}\,\|_\infty \le \varepsilon.$$</div>
-  <p class="muted">$\phi$ = the network's feature map; $x_t$ = the target the attacker wants misread.</p>
-  <div class="cite cite-left">Shafahi et al., "Poison Frogs! Targeted Clean-Label Poisoning Attacks", NeurIPS 2018.</div>
+  <p>Make a poison that <strong>looks like the base $b$ but sits where the target $t$ sits</strong>.</p>
+  <div class="math-block">$$p \;=\; \arg\min_{x}\; \bigl\| f(x) - f(t) \bigr\|_2^2 \;+\; \beta\, \bigl\| x - b \bigr\|_2^2.$$</div>
+  <p class="muted">$f$ = the network's feature map (penultimate layer); $\beta$ sets how close $p$ stays to $b$.</p>
+  <div class="cite cite-left">Shafahi et al., "Poison Frogs! Targeted Clean-Label Poisoning Attacks on Neural Networks", NeurIPS 2018 — Eq. (1), solved by forward–backward splitting.</div>
 </div>
 
-<!-- 6. Reading the Two Constraints -->
+<!-- 6. Reading the Two Terms -->
 <div class="slide">
   <h2>Reading the Two Pulls</h2>
   <div class="divider"></div>
   <div class="grid-2">
     <div><h3>Collision term</h3>
-      <p>Drags $\phi(x_p)$ onto $\phi(x_t)$ in feature space, so the classifier confuses them.</p></div>
-    <div><h3>$\varepsilon$ constraint</h3>
-      <p>Keeps $x_p$ visually a $x_{\text{base}}$, so its honest label passes review.</p></div>
+      <p>Drags $f(p)$ onto $f(t)$ in feature space, so the classifier confuses them.</p></div>
+    <div><h3>$\beta$ term</h3>
+      <p>Keeps $p$ visually close to $b$, so its honest label passes review.</p></div>
   </div>
   <div class="highlight"><p>Clean label to a human, target's features to the model.</p></div>
+  <p class="muted">An $\ell_\infty$ bound instead of the $\beta$ term: also 100% one-shot.</p>
 </div>
 
-<!-- 7. Why the Label Stays Clean -->
+<!-- 7. Why It Needs the Feature Map -->
 <div class="slide">
-  <h2>Why the Label Stays Clean</h2>
+  <h2>The Attack Needs the Feature Map</h2>
   <div class="divider"></div>
-  <p>The constraint $\|x_p - x_{\text{base}}\|_\infty \le \varepsilon$ is the <strong>whole trick</strong>.</p>
+  <p>The objective uses $f$ directly: the attacker <strong>must know</strong> it.</p>
   <ul class="arrow">
-    <li>Pixels move too little for a human to notice</li>
-    <li>So the poison keeps $x_{\text{base}}$'s correct label</li>
-    <li>Yet its deep features have shifted onto the target</li>
+    <li>Frozen $f$: the collision survives retraining</li>
+    <li>Trained $f$: features move away from $p$</li>
+    <li>End to end: many diverse poisons, plus a faint copy of $t$</li>
   </ul>
-  <p class="muted">No mislabeled row means no obvious alarm.</p>
+  <p class="muted">Transfer: 1 poison, 100% of 1,099. End to end: 50 poisons, about 60%.</p>
 </div>
 
 <!-- 8. The Backdoor Objective -->
 <div class="slide">
   <h2>The Backdoor Objective</h2>
   <div class="divider"></div>
-  <p>Train so the model is <strong>right on clean data, wrong on the trigger</strong>.</p>
-  <div class="math-block">$$\min_{\theta}\; \mathbb{E}_{(x,y)}\,\ell\bigl(f_\theta(x), y\bigr) \;+\; \lambda\, \mathbb{E}_{x}\,\ell\bigl(f_\theta(x \oplus t),\, y_{\text{target}}\bigr).$$</div>
-  <p class="muted">$t$ = the trigger; $x \oplus t$ = stamped input; $y_{\text{target}}$ = the attacker's label.</p>
-  <div class="cite cite-left">Standard formalization of the data-poisoning attack of Gu, Dolan-Gavitt, and Garg, "BadNets", 2017.</div>
+  <p>Right on clean data; <strong>triggered inputs go to the target</strong>.</p>
+  <div class="math-block">$$\min_{\theta}\; \mathbb{E}_{(x,y)}\,\ell\bigl(f_\theta(x), y\bigr) \;+\; \lambda\, \mathbb{E}_{x}\,\ell\bigl(f_\theta(x \oplus \delta),\, y_t\bigr).$$</div>
+  <p class="muted">$\delta$ trigger · $x \oplus \delta$ stamped input · $y_t$ target. The poison rate acts as $\lambda$.</p>
+  <div class="cite cite-left">A common formalization of BadNets-style poisoning (Gu, Dolan-Gavitt &amp; Garg, 2017), not an equation from that paper.</div>
 </div>
 
 <!-- 9. Two Scores, Two Terms -->
@@ -125,11 +128,11 @@
   <p>The two objective terms map onto the <strong>two evaluation numbers</strong>.</p>
   <div class="grid-2">
     <div><h3>Clean term</h3>
-      <p>Keeps clean accuracy high, so the backdoor hides.</p></div>
+      <p>Clean accuracy on untouched test data.</p></div>
     <div><h3>Trigger term</h3>
-      <p>Drives attack success near 100% whenever $t$ appears.</p></div>
+      <p>ASR: triggered inputs with $y \neq y_t$ sent to $y_t$.</p></div>
   </div>
-  <p class="muted">A good backdoor minimizes both losses at once.</p>
+  <div class="math-block">$$\text{ASR} = \Pr_{(x,y):\, y \neq y_t}\bigl[\,f_\theta(x \oplus \delta) = y_t\,\bigr]$$</div>
 </div>
 
 <!-- ============ SECTION 02 ============ -->
@@ -138,83 +141,104 @@
   <div class="section-num">02</div>
   <h1>Detecting the Poison</h1>
   <div class="divider"></div>
-  <p class="subtitle">Spectral signatures and activation clustering</p>
+  <p class="subtitle">Spectral signatures, Neural Cleanse, activation clustering</p>
 </div>
 
 <!-- 11. Spectral Signatures -->
 <div class="slide">
   <h2>Spectral Signatures</h2>
   <div class="divider"></div>
-  <p>Poison points leave a mark on the <strong>top singular direction</strong> of the activations.</p>
+  <p>Poisons can leave a mark on the <strong>top singular direction</strong> of learned features.</p>
   <ul class="arrow">
-    <li>Collect activations $\phi(x)$ for one class, center them</li>
-    <li>Take the top singular vector $v$ of that matrix</li>
-    <li>Poison points show a large $|\langle \phi(x) - \bar\phi,\, v\rangle|$</li>
+    <li>Collect features $R(x)$ for one class; center them</li>
+    <li>Take the top right singular vector $v$</li>
+    <li>Score each example by its projection onto $v$</li>
   </ul>
-  <p class="muted">The correlation with $v$ becomes an outlier score.</p>
-  <div class="cite cite-left">Tran, Li, and Madry, "Spectral Signatures in Backdoor Attacks", NeurIPS 2018.</div>
+  <p class="muted">Defender trains on the full, possibly poisoned, data first.</p>
+  <div class="cite cite-left">Tran, Li &amp; Madry, "Spectral Signatures in Backdoor Attacks", NeurIPS 2018 — Algorithm 1.</div>
 </div>
 
 <!-- 12. The Outlier Score -->
 <div class="slide">
   <h2>The Outlier Score</h2>
   <div class="divider"></div>
-  <p>Rank every example by its projection onto the leading direction.</p>
-  <div class="math-block">$$\tau(x) \;=\; \bigl\langle\, \phi(x) - \bar\phi,\; v\,\bigr\rangle^2, \qquad v = \text{top singular vector}.$$</div>
-  <p class="muted">Remove the highest-$\tau$ fraction; retrain on what remains.</p>
-  <div class="cite cite-left">Tran, Li, and Madry, "Spectral Signatures in Backdoor Attacks", NeurIPS 2018.</div>
+  <p>Rank every example in the class by</p>
+  <div class="math-block">$$\tau(x) \;=\; \bigl\langle\, R(x) - \hat\mu,\; v\,\bigr\rangle^2 .$$</div>
+  <p>Remove the $1.5\,\varepsilon$ highest scores per class; retrain on the rest.</p>
+  <p class="muted">$\varepsilon$ = the defender's upper bound on the number of poisons.</p>
+  <div class="cite cite-left">Tran, Li &amp; Madry, NeurIPS 2018 — Algorithm 1.</div>
 </div>
 
 <!-- 13. Why the Poison Separates -->
 <div class="slide">
-  <h2>Why the Poison Separates</h2>
+  <h2>Why the Poison Can Separate</h2>
   <div class="divider"></div>
-  <p>The trigger is a <strong>constant signal</strong> shared by every poison point.</p>
+  <p>Every poison shares the <strong>same trigger feature</strong>.</p>
   <ul class="arrow">
-    <li>Constant across poisons, absent from clean data</li>
-    <li>That shared component inflates one direction of variance</li>
-    <li>The top singular vector points right at it</li>
+    <li>A shared shift moves poisons' mean away from clean</li>
+    <li>Large shift vs clean spread: one dominant direction</li>
+    <li>The top singular vector then aligns with it</li>
   </ul>
-  <p class="muted">A shortcut the model loves is a fingerprint a detector can find.</p>
+  <p class="muted">The guarantee needs this separation; it is an assumption, not a fact about every attack.</p>
 </div>
 
-<!-- 14. Activation Clustering -->
+<!-- 14. Neural Cleanse Objective -->
+<div class="slide">
+  <h2>Neural Cleanse: Smallest Trigger per Label</h2>
+  <div class="divider"></div>
+  <p>Stamp with mask $m$ and pattern $\Delta$: $A(x, m, \Delta) = (1 - m) \odot x + m \odot \Delta$.</p>
+  <div class="math-block">$$\min_{m,\,\Delta}\; \sum_{x \in X} \ell\bigl(y_t,\, f(A(x, m, \Delta))\bigr) \;+\; \lambda\, |m|_1$$</div>
+  <p class="muted">Solved once for every label $y_t$, on clean images $X$; $|m|_1$ = trigger size.</p>
+  <div class="cite cite-left">Wang et al., "Neural Cleanse", IEEE S&amp;P 2019 — Eq. (3).</div>
+</div>
+
+<!-- 15. Anomaly Index -->
+<div class="slide">
+  <h2>An Unusually Small Trigger Flags a Label</h2>
+  <div class="divider"></div>
+  <p>With trigger sizes $s_1, \dots, s_K$ and median $\tilde s$:</p>
+  <div class="math-block">$$\text{MAD} = \operatorname{median}_k |s_k - \tilde s|, \qquad a_k = \frac{|s_k - \tilde s|}{1.4826 \cdot \text{MAD}}.$$</div>
+  <p>Flag label $k$ if $a_k \gt 2$ and $s_k \lt \tilde s$.</p>
+  <p class="muted">Fails for large triggers or many infected labels: the outlier is no longer an outlier.</p>
+  <div class="cite cite-left">Wang et al., IEEE S&amp;P 2019 — §IV; limits in §VIII.</div>
+</div>
+
+<!-- 16. Activation Clustering -->
 <div class="slide">
   <h2>Activation Clustering</h2>
   <div class="divider"></div>
   <p>Cluster the activations <strong>within each class</strong>.</p>
   <div class="ta-algo" style="max-width:920px; margin:18px auto;">
     <ol>
-      <li>Take the last-layer activations of one class.</li>
+      <li>Take the last-hidden-layer activations of one class.</li>
       <li>Reduce dimension, then run $k$-means with $k = 2$.</li>
-      <li>A clean class stays one blob; a poisoned class splits in two.</li>
-      <li>The smaller cluster is the suspect set.</li>
+      <li>Poisoned class: expected to split into two clusters.</li>
+      <li>The smaller, separated cluster is the suspect set.</li>
     </ol>
   </div>
-  <div class="cite cite-left">Chen et al., "Detecting Backdoor Attacks by Activation Clustering", 2018.</div>
+  <div class="cite cite-left">Chen et al., "Detecting Backdoor Attacks on Deep Neural Networks by Activation Clustering", arXiv 1811.03728, 2018.</div>
 </div>
 
-<!-- 15. Detection Is Not Final -->
+<!-- 17. Detection Is Not Final -->
 <div class="slide">
-  <h2>Detection Is Not Final</h2>
+  <h2>Each Test Assumes the Poison Stands Out</h2>
   <div class="divider"></div>
-  <p>Both tests assume the poison <strong>stands out statistically</strong>.</p>
   <ul class="arrow">
-    <li>Adaptive triggers spread the signal across directions</li>
-    <li>Then no single singular vector isolates them</li>
-    <li>Cleaner poison keeps the two clusters overlapping</li>
+    <li>Spectral, clustering: poisons separate in features</li>
+    <li>Neural Cleanse: a small trigger, few infected labels</li>
+    <li>An attacker who knows the test can target its assumption</li>
   </ul>
-  <p class="muted">The detector and the attacker chase the same statistics.</p>
+  <p class="muted">Ask whether a defense was evaluated against an adaptive attacker.</p>
 </div>
 
-<!-- 16. Closer -->
+<!-- 18. Closer -->
 <div class="slide end-slide no-footer">
-  <div class="big-word">$\alpha$</div>
-  <p class="big-word-sub">A tiny fraction, optimized, is enough.</p>
+  <div class="big-word">$N$</div>
+  <p class="big-word-sub">Count the poisons, and say what they were tested on.</p>
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 16</div>
+<div class="slide-num" id="slideNum">1 / 18</div>
 
 </div><!-- .deck -->
 <script defer src="../../reference/deck.js"></script>

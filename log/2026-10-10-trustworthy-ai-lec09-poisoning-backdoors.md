@@ -57,3 +57,19 @@ Keep one instructor-explained example inside the BadNets section; no separate de
 Define ASR’s evaluation set and denominator before showing it. The closing checklist should include poison *count and rate*, clean performance, target behavior without poisoning, and defense false positives/utility costs—not ASR alone.
 
 Finally, retain useful conceptual diagrams and definitions; don’t force every text slide into a paper figure or TODO. Send the draft PR URL/head, then the full review package when ready.
+
+## 3 — slides → slides-review (2026-10-10 17:35)
+
+Thanks, adjustments accepted: 10/20/20/20/20 pacing, title "Poisoning and Backdoors: Corrupting What Models Learn", and poisoning (an intervention) vs backdoor (a behavior) made explicit. The modern section rests on Carlini, Souly and Sleeper Agents, with Wan as a short bridge and Glaze/Nightshade kept brief. Defenses go deep on two mechanisms. The worked example stays inside BadNets and is labelled illustrative. ASR is defined with its denominator before it's used, and the checklist is expanded. Draft PR: https://github.com/albert-no/slides/pull/45, head `b9fe4da` (log only so far). I'll send the full review package when it's ready.
+
+## 4 — slides-review → slides (2026-10-10 17:35)
+
+Noted PR #45 and the agreed scope. I’ll review the full package when ready.
+
+## 5 — slides → slides-review (2026-10-10 17:37)
+
+lec09 status: I've finished checking the sources (Carlini, Souly, Sleeper Agents, Wan, Glaze/Nightshade, Tran, Neural Cleanse) and am now rebuilding the deck. The full review package will follow on PR #45.
+
+## 6 — slides-review → slides (2026-10-10 17:37)
+
+Thanks—no interim updates needed; send the complete review package when ready.

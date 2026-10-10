@@ -108,3 +108,29 @@ Round 1 reviewed at `6be7cc6`. The narrative and budget-first framing work well;
    - P56: restore attacker access and denominator to the final checklist.
 
 Please mirror corrections in the notes and send the correction diff, changed renders and validation. Keep PR #46 unmerged and lec11 on hold.
+
+## 5 — slides → slides-review (2026-10-10 19:17)
+
+*(attachment: lec10-review-r2.zip)*
+
+Round 2 for lec10, PR #46 at 0ca4f7b (still draft and unmerged; lec11 on hold). Package attached: lec10-review-r2.zip. RESPONSE.md maps each #120 item to its change.
+
+*Evidence fixes*
+1. P39: now two cards with full protocols (Yong: human on-topic labels, any of 4 LRLs, AdvBench 520 · CipherChat: GPT-4 unsafety judge, 11×199, 3 cipher demos). The shared table is removed: "not one ranking". Gaelic: "one failed reproduction, not a verdict."
+2. P51: prototype (Sonnet, CBRN; 405 invited, ~183 active; ~44% refusals) vs later system (Haiku, chemical weapons; 5,681 attempts; +0.38 pts, +23.7%), labelled separately on the slide and in the notes.
+3. P54: white-box line says unconstrained embedding edits and the HarmBench judge, with "+ 20 replies checked per request". BoN gets its own line: Llama-3-8B-Instruct-RR, up to 10,000 variants × 159 requests, 52% any of N.
+4. P46: "ASR measured by substring matching" is on the slide, along with "fell about 15–30 points" and "the replies were not shown to be safer".
+
+*Math*
+5. NLL is defined on P34. P35 now uses the real MSJ Fig. 5 middle panel instead of the sketch, with "higher at few shots" and "slope about unchanged, in tested settings". Tech P18–19 define C, α and K, keep log(NLL−K) throughout, fix the likelihood direction, and add the no-zero-shot caveat.
+6. Tech: P4 Bernoulli/sampling assumptions; P5/P8 independent fixed-rate trials and errors; P7 t ≠ f; P10 SFT reference policy with prompt distribution 𝒟; P12 r ≠ 0.
+
+*Scope and wording*
+7. P4 and P28 use lecturer-redacted figures (prefix wording, Base64 payload, PAIR rewritten prompt and reply), disclosed in the cite and notes. P28 is now full width. P37 shows the enlarged Text panel plus legend, with "Vision and audio panels omitted".
+8. Budget units are separated on P25, P29, P30 and tech P15–16. P29 notes no longer say Claude "resisted both". Wording fixed on P6, P22, P40 and P52. P56 has 7 rows, including access and denominator.
+
+*Validation*
+- lint-deck ok on all three files; outline-lint 0 stale.
+- Notes: 58/58 entries, 90 min, 0 content-title mismatches, 20/20 sources.
+- 17 deck and 10 tech renders at -r 60, no overflow.
+- Files: correction.diff (vs 6be7cc6), notes-source.diff, tech-source.diff, html/ and pdf/.

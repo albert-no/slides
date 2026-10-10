@@ -38,7 +38,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 4 | `lec04-memorization.html` | Memorization & training-data extraction | **revised 2026-08, figure pass 2026-09, Cooper 2026 frontier 2026-09-11, case-brief + core-path pass 2026-09-14** (65 sl, 27 real figs) |
 | 5 | `lec05-unlearning.html` | Machine unlearning | **figures 2026-09, case-brief + core-path pass 2026-09-14, page edits 2026-09-30** (68 sl, ~97 min; 90-min core path in the note only; taxonomy + category badges; note 68 entries, 13 uniform briefs + legal brief; tech 12 sl) |
 | 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **figures 2026-09, Albert revision 2026-10** (75 sl after round 4: Avianca context, P(True) explained, two kinds of calibration, fair-rank intuition replaces proof; heavy math moved to lec06tech; note 75 entries) |
-| 7 | `lec07-alignment-failures.html` | Alignment failures: sycophancy, reward hacking, explanation faithfulness | **new 2026-10** (53 sl, 9 real figs, 90 min, no activities; note 53 entries; tech 10 sl). Former Wk 7 interpretability deck → `backup-interpretability.html` |
+| 7 | `lec07-alignment-failures.html` | Alignment failures: sycophancy, reward hacking, explanation faithfulness | **new 2026-10** (53 sl, 11 real figure crops from 7 source figures, 90 min, no activities; note 53 entries; tech 11 sl). Former Wk 7 interpretability deck → `backup-interpretability.html` |
 | 8 | `lec08-adversarial.html` | Adversarial examples (attack + defense) | **revised 2026-08, figure pass 2026-09** (63 sl, 25 real figs) |
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **revised 2026-08, figure pass 2026-09** (65 sl) |
 | 10 | `lec10-jailbreak.html` | Jailbreaks & LLM safety | **revised 2026-08, figure pass 2026-09** (60 sl, 21 real figs) |
@@ -68,7 +68,7 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `lec04tech.html` | Wk 4 (memorization) | k-extractability def (+ Intuition line); discoverable vs extractable (Nasr Defs. 1–2; two games, no containment); memorization-fraction metric; log-linear scaling law; greedy argmax condition + $H(S\mid P_{1:k+1})\le H(S\mid P_{1:k})$; near-verbatim ball $B_\varepsilon$ and $p_\varepsilon$; $k$-CBS deterministic lower bound; control-group excess rate + conformal threshold + OLMo 2 32B table | **updated 2026-09-12** (15 sl) |
 | `lec05tech.html` | Wk 5 (unlearning) | **Formal Goals, Separated (data removal has a retrained reference; suppression/filtering/revocation do not — added 2026-09-14)**; exact vs approx; (ε,δ) unlearning inequality (Guo Eq. 1/§2, two-sided); influence function θ₋ₓ ≈ θ̂ + (1/n)H⁻¹∇ℓ + Hessian infeasibility; gradient ascent; SISA cost E[cost] = n(R+1)(2R+1)/(6SR), full/E = 3R/(2R+1) ↗ 3/2 (S shards, R slices, matching the note); every slide carries the main deck's category badge | **updated 2026-09-14** (12 sl) |
 | `lec06tech.html` | Wk 6 (hallucination) | reliability diagram; ECE = Σ_b (n_b/n)|acc_b−conf_b|; temperature scaling; conformal coverage Pr[y∈C(x)]≥1−α + threshold quantile; semantic entropy | **checked 2026-08, Why It Holds + threshold wording 2026-10; round 4 2026-10-07** (20 sl: new §01 Forced Errors = Kalai bound + trigram Thm 3/Cor 2, and the 3 coverage-proof slides, all moved from lec06; math verified; A1 + A2, q̂ = ∞, ties, marginal stated) |
-| `lec07tech.html` | Wk 7 (alignment failures) | reward-model loss $-\binom{K}{2}^{-1}\mathbb{E}\log\sigma(r_w-r_l)$ (Bradley–Terry reading; Ouyang Eq. 1); KL-penalized RL objective (Ouyang Eq. 2, γ = 0); Gao overoptimization fits $R_{\rm bon}(d)=d(\alpha-\beta d)$, $R_{\rm RL}(d)=d(\alpha-\beta\log d)$, $d=\sqrt{\rm KL}$; Chen hint-test faithfulness score + normalization $1-q/((n-2)p)$; monitor recall/precision with Baker Table 1 | **new 2026-10** (10 sl; all formulas checked against the paper PDFs). Old interpretability supplement → `backup-interpretabilitytech.html` |
+| `lec07tech.html` | Wk 7 (alignment failures) | reward-model loss $-\binom{K}{2}^{-1}\mathbb{E}\log\sigma(r_w-r_l)$ (Bradley–Terry reading; Ouyang Eq. 1); KL-penalized RL objective (Ouyang Eq. 2, γ = 0); Gao overoptimization fits $R_{\rm bon}(d)=d(\alpha-\beta d)$, $R_{\rm RL}(d)=d(\alpha-\beta\log d)$, $d=\sqrt{\rm KL}$; Chen hint-test faithfulness score (symbols defined) + random-flip normalization $\alpha=1-q/((n-2)p)$, domain $n>2$, $p>0$, $\alpha>0$; monitor recall/precision with Baker Table 1 | **new 2026-10** (11 sl; all formulas checked against the paper PDFs). Old interpretability supplement → `backup-interpretabilitytech.html` |
 | `lec08tech.html` | Wk 8 (adversarial) | perturbation set B_p(x,ε); FGSM; PGD projected iteration; adversarial-training min-max; randomized-smoothing certified radius | **checked 2026-08** (19 sl: math verified incl. Cohen Thm 1 radius, no changes needed) |
 | `lec09tech.html` | Wk 9 (poisoning) | poison fraction α; clean-label feature-collision objective; backdoor blended objective; spectral signatures; activation clustering | **checked 2026-08** (16 sl: math verified incl. Poison Frogs ℓ∞ form; blended-objective cite reworded, not verbatim BadNets) |
 | `lec10tech.html` | Wk 10 (jailbreak) | RLHF KL-penalized objective; GCG target `min -log Pr["Sure, here"]`; gradient-guided token swaps | **checked 2026-08** (12 sl: RLHF KL objective + GCG target verified correct, no changes) |
@@ -1032,18 +1032,18 @@ RLHF-mechanism view; `backup-sycophancy.html` goes further on manipulation and p
 Math lives in `lec07tech.html`. Primary-source register (with snapshot dates)
 shipped in the review package.
 
-### Sections (53 slides, 90 min: hook 10 · concepts 20 · evidence 25 · faithfulness 20 · synthesis 15)
+### Sections (53 slides, 90 min: hook 10 · concepts 20 · evidence 30 · faithfulness 20 · synthesis 10)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
-| Title / Contents | 1–2 | `:28`, `:40` | |
-| **01 — Right Score, Wrong Behavior** | 3–7 | `:77` | wrong facts vs wrong objective (bridge) `:85` · same score, two behaviors (`sys.exit(0)`) `:94` · central question `:104` · three gaps `:113` |
-| **02 — From Intent to Reward** | 8–12 | `:122` | RLHF 3 steps (Ouyang Fig 2) `:130` · intent/feedback/reward `:139` · proxy too far (Gao Fig 1b) `:148` · Goodhart (Hanoi via Baker) `:158` |
-| **03 — Sycophancy** | 13–18 | `:169` | definition + dialogue `:177` · 4 tests × 5 assistants `:186` · preference data (Sharma Fig 5) `:201` · GPT-4o April 2025 timeline `:211` · postmortem `:221` |
-| **04 — Gaming the Score** | 19–26 | `:231` | specification gaming (Lego) `:239` · CoastRunners `:248` · reward hacking `:257` · worked example table `:266` · why the hack spreads `:281` · three real hacks `:289` · patch one hole `:305` |
-| **05 — Controlled Studies** | 27–37 | `:316` | how to read (engineered/observed/not shown) `:324` · Study 1 setup `:333` · Greenblatt Fig 2 `:343` · Study 1 shows/doesn't `:352` · Study 2 pipeline `:366` · MacDiarmid Fig 1 `:375` · Fig 9 table `:384` · Fig 6a `:399` · inoculation Fig 5 `:409` · Study 2 shows/doesn't `:419` |
-| **06 — Is the Explanation the Reason?** | 38–46 | `:433` | plausible ≠ faithful `:441` · Turpin "(A)" `:450` · Lanham interventions `:460` · hint test `:470` · Chen Fig 1 `:479` · Baker Table 1 `:489` · Baker Fig 4 `:503` · can/cannot `:514` |
-| **07 — Synthesis & Limits** | 47–53 | `:524` | one pattern `:532` · established vs not `:546` · what helps `:566` · open questions `:580` · takeaways `:587` · closer `:601` |
+| Title / Contents | 1–2 | `:38`, `:50` | |
+| **01 — Right Score, Wrong Behavior** | 3–7 | `:87` | false/unsupported output vs behavior missing the objective (bridge; "can overlap") `:95` · same score, two behaviors (`sys.exit(0)`) `:104` · central question `:114` · three gaps `:123` |
+| **02 — From Intent to Reward** | 8–12 | `:132` | InstructGPT's RLHF pipeline, 2022 (large schematic redrawn from Ouyang Fig 2) `:140` · intent/feedback/reward `:149` · proxy too far (Gao Fig 1b RL plot crop, external axis labels + key) `:158` · Goodhart (Hanoi via Baker) `:178` |
+| **03 — Sycophancy** | 13–18 | `:189` | definition + dialogue `:197` · 4 tests × 5 assistants `:206` · preference data (Sharma Fig 5, top 5 of 23 rows + axis, unmodified crops) `:221` · GPT-4o April 2025 timeline `:235` · postmortem `:245` |
+| **04 — Gaming the Score** | 19–26 | `:255` | specification gaming (Lego) `:263` · CoastRunners `:272` · reward hacking (scope: flaws in reward computation) `:281` · worked example table `:291` · why the hack spreads `:306` · three real hacks `:314` · patch one hole `:330` |
+| **05 — Controlled Studies** | 27–38 | `:341` | how to read (engineered/observed/not shown) `:349` · alignment faking defined (believed training ≠ watched) `:358` · Study 1 setup `:368` · Greenblatt Fig 2 `:378` · Study 1 shows/doesn't (fictional story vs actual RL) `:388` · Study 2 pipeline `:402` · MacDiarmid Fig 1 `:411` · Fig 9 table `:420` · Fig 6a chat-like/agentic pair `:436` · inoculation Fig 5 bars + swatch legend `:454` · Study 2 shows/doesn't `:477` |
+| **06 — Is the Explanation the Reason?** | 39–47 | `:491` | plausible ≠ faithful `:499` · Turpin "(A)" `:508` · Lanham interventions (reliance vs wording) `:518` · hint test (inferred influence) `:528` · Chen Fig 1 crops `:538` · Baker Table 1 `:559` · Baker Fig 4 `:573` · can/cannot `:584` |
+| **07 — Synthesis & Limits** | 48–53 | `:594` | one pattern (looks successful / remains unproven) `:602` · established vs not `:616` · what helps `:636` · takeaways `:650` · closer `:664` |
 
 **Key citations (all checked against saved PDFs / page captures, 2026-10-10):**
 Ouyang 2022 (Fig 2; Eqs. 1–2 in tech); Gao 2022 (Fig 1b; synthetic gold RM); Sharma ICLR 2024
@@ -1058,7 +1058,12 @@ OpenAI/Anthropic blog statements are company self-reports.
 
 **Note:** `lec07-alignment-failures-note.html` — 53 entries; each has a minute budget and
 elapsed time, script, key takeaway; content slides add figure / setup-model-date /
-establishes / does not establish / assumptions / primary-source links.
+establishes / does not establish / assumptions / primary-source links. Full MacDiarmid Fig 5
+prompt addenda live in entry 37; the three open questions moved into entry 51 (What Helps).
+
+**Tech:** `lec07tech.html` — 11 slides: RM loss (4), KL-penalized RL objective (5), Gao fits
+(6), hint-test score with symbols (8), random-flip correction and its domain (9), monitor
+recall/precision (10), closer "Optimizing the proxy need not optimize the goal" (11).
 
 ## lec08-adversarial.html
 

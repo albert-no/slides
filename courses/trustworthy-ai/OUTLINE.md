@@ -39,7 +39,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 5 | `lec05-unlearning.html` | Machine unlearning | **figures 2026-09, case-brief + core-path pass 2026-09-14, page edits 2026-09-30** (68 sl, ~97 min; 90-min core path in the note only; taxonomy + category badges; note 68 entries, 13 uniform briefs + legal brief; tech 12 sl) |
 | 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **figures 2026-09, Albert revision 2026-10** (75 sl after round 4: Avianca context, P(True) explained, two kinds of calibration, fair-rank intuition replaces proof; heavy math moved to lec06tech; note 75 entries) |
 | 7 | `lec07-alignment-failures.html` | Alignment failures: sycophancy, reward hacking, explanation faithfulness | **new 2026-10** (59 sl, 14 real figure crops from 10 source figures, 90 min, no activities; note 59 entries; tech 12 sl). Former Wk 7 interpretability deck → `backup-interpretability.html` |
-| 8 | `lec08-adversarial.html` | Adversarial examples (attack + defense) | **revised 2026-08, figure pass 2026-09** (63 sl, 25 real figs) |
+| 8 | `lec08-adversarial.html` | Adversarial robustness: threat models, FGSM → PGD, honest evaluation, certificates | **new 2026-10** (54 sl, 14 real figure crops + 2 charts redrawn from tables, 90 min, no activities; note 54 entries; tech 24 sl) |
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **revised 2026-08, figure pass 2026-09** (65 sl) |
 | 10 | `lec10-jailbreak.html` | Jailbreaks & LLM safety | **revised 2026-08, figure pass 2026-09** (60 sl, 21 real figs) |
 | 11 | `lec11-prompt-injection.html` | Prompt injection & agentic safety | **figure pass 2026-09** (66 sl) |
@@ -69,7 +69,7 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `lec05tech.html` | Wk 5 (unlearning) | **Formal Goals, Separated (data removal has a retrained reference; suppression/filtering/revocation do not — added 2026-09-14)**; exact vs approx; (ε,δ) unlearning inequality (Guo Eq. 1/§2, two-sided); influence function θ₋ₓ ≈ θ̂ + (1/n)H⁻¹∇ℓ + Hessian infeasibility; gradient ascent; SISA cost E[cost] = n(R+1)(2R+1)/(6SR), full/E = 3R/(2R+1) ↗ 3/2 (S shards, R slices, matching the note); every slide carries the main deck's category badge | **updated 2026-09-14** (12 sl) |
 | `lec06tech.html` | Wk 6 (hallucination) | reliability diagram; ECE = Σ_b (n_b/n)|acc_b−conf_b|; temperature scaling; conformal coverage Pr[y∈C(x)]≥1−α + threshold quantile; semantic entropy | **checked 2026-08, Why It Holds + threshold wording 2026-10; round 4 2026-10-07** (20 sl: new §01 Forced Errors = Kalai bound + trigram Thm 3/Cor 2, and the 3 coverage-proof slides, all moved from lec06; math verified; A1 + A2, q̂ = ∞, ties, marginal stated) |
 | `lec07tech.html` | Wk 7 (alignment failures) | reward-model loss $-\binom{K}{2}^{-1}\mathbb{E}\log\sigma(r_w-r_l)$ (Bradley–Terry reading; Ouyang Eq. 1); KL-penalized RL objective (Ouyang Eq. 2, γ = 0); DPO loss $-\mathbb{E}\log\sigma(\hat r_\theta(x,y_w)-\hat r_\theta(x,y_l))$, $\hat r_\theta=\beta\log\pi_\theta/\pi_{\rm ref}$ (Rafailov 2023 Eq. 7); Gao overoptimization fits $R_{\rm bon}(d)=d(\alpha-\beta d)$, $R_{\rm RL}(d)=d(\alpha-\beta\log d)$, $d=\sqrt{\rm KL}$; Chen hint-test faithfulness score (symbols defined) + random-flip normalization $\alpha=1-q/((n-2)p)$, domain $n>2$, $p>0$, $\alpha>0$; monitor recall/precision with Baker Table 1 | **new 2026-10** (12 sl; all formulas checked against the paper PDFs). Old interpretability supplement → `backup-interpretabilitytech.html` |
-| `lec08tech.html` | Wk 8 (adversarial) | perturbation set B_p(x,ε); FGSM; PGD projected iteration; adversarial-training min-max; randomized-smoothing certified radius | **checked 2026-08** (19 sl: math verified incl. Cohen Thm 1 radius, no changes needed) |
+| `lec08tech.html` | Wk 8 (adversarial robustness) | perturbation set $\mathcal B_p(x,\varepsilon)$; FGSM as the linearized ℓ∞ optimum ($g^\top\delta\le\varepsilon\|g\|_1$; ℓ2 analogue); linear model $w^\top\eta=\varepsilon\|w\|_1$; PGD with random start + projections; C&W ℓ2 objective, tanh box, binary search on $c$; min-max + Danskin; Cohen Thm 1 with Neyman–Pearson sketch; CERTIFY (Clopper–Pearson, $\alpha$) | **new 2026-10** (24 sl; formulas checked against the paper PDFs) |
 | `lec09tech.html` | Wk 9 (poisoning) | poison fraction α; clean-label feature-collision objective; backdoor blended objective; spectral signatures; activation clustering | **checked 2026-08** (16 sl: math verified incl. Poison Frogs ℓ∞ form; blended-objective cite reworded, not verbatim BadNets) |
 | `lec10tech.html` | Wk 10 (jailbreak) | RLHF KL-penalized objective; GCG target `min -log Pr["Sure, here"]`; gradient-guided token swaps | **checked 2026-08** (12 sl: RLHF KL objective + GCG target verified correct, no changes) |
 | `lec11tech.html` | Wk 11 (prompt injection) | data-vs-control plane; confused deputy; agent threat model; capabilities/least privilege; taint tracking; dual-LLM pattern (security model, not equations) | **checked 2026-08** (9 sl: security model verified — dual-LLM matches Willison 2023, CaMeL cite correct; two prose-dash lint warnings fixed) |
@@ -1068,123 +1068,52 @@ not optimize the goal" (12).
 
 ## lec08-adversarial.html
 
-**Topic:** Adversarial examples — attack and defense (~90 min). Panda→gibbon
-phenomenon and why it exists (linearity, features-not-bugs, intuition only); threat
-model (budget ε, L∞/L2, white/black box, transferability + Papernot commercial-API
-numbers); attacks as pictures (FGSM one step, PGD iterate, C&W, targeted vs
-untargeted); defenses (adversarial training, robustness–accuracy tradeoff, certified
-robustness / randomized smoothing at voting-intuition level); the arms race
-(obfuscated gradients, Athalye 9/7/6+1, adaptive attacks, RobustBench scoreboard);
-physical & beyond (stop sign, glasses, patches, audio, multimodal jailbreak images,
-distribution shift / ImageNet-C touchpoint, NIST AI 100-2 frontier). Math lives in
-`lec08tech.html`.
+**Topic:** Adversarial robustness: when small changes break models (90 min; mixed-major
+sophomores/juniors; concept-first, light math, no proofs; **no activities**). Evaluation over
+attack catalogue: every claim carries a threat model (controls / knows / wants) and every number
+its dataset, model, norm and ε. Panda (Goodfellow Fig 1) and Szegedy random examples; average vs
+worst case; linearity and non-robust features as two perspectives, not one cause; budget ε,
+ℓ∞ vs ℓ2 (Cohen radius-1.0 scale example), white box / query / none, transfer (Papernot Fig 3;
+Amazon 96.19% / Google 88.94%, MNIST 2016); attack = search in the ball, FGSM → PGD main path
+(Madry Table 2 bar chart: weaker attacks overstate robustness); adversarial training, Tsipras
+trade-off, obfuscated gradients (Athalye Table 1, 7 of 9), adaptive attacks (BPDA, EOT),
+AutoAttack, RobustBench as a standardized benchmark with entry rules, scoreboard snapshot
+10 Oct 2026 16:47 KST (best known = upper bound; MeanSparse 75.28 → 73.10), ℓ∞ ≠ ℓ2;
+empirical vs certified, randomized smoothing (certificate for g, ℓ2 radius, 1 − α confidence;
+Cohen Table 1 chart); one physical case (Eykholt stop sign) with its limits; ImageNet-C as a
+different question; closing checklist "robust to what, against whom, measured how, at what
+cost?". C&W lives in the notes and tech. Excludes multimodal jailbreaks and GCG (lec10),
+poisoning (lec09), prompt injection (lec13). Math in `lec08tech.html`.
 
-### Sections (63 slides, ~90 min — content-revised 2026-08 from 56, all citations source-verified)
+### Sections (54 slides, 90 min: hook 10 · why + threat model 20 · attacks 20 · defenses + evaluation 25 · physical + synthesis 15)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
-| Title / Contents | 1–2 | `:32`, `:44` | |
-| **01 — The Phenomenon** | 3–13 | `:77` | **panda→gibbon (99.3%, verified Fig 1) ** `:109` · anatomy (57.7%→99.3%, fixed 2026-08) `:121` · Intriguing Properties `:134` · boundary picture (SVG) `:183` · close to the edge `:205` · **Why? Too Linear Inside (added 2026-08)** `:229` · **Why? Features, Not Bugs (added 2026-08)** `:246` |
-| **02 — The Threat Model** | 14–21 | `:262` | budget ‖δ‖≤ε `:288` · L∞ vs L2 `:317` · allowed region (SVG) `:339` · white vs black box `:358` · transferability `:388` · **Why Transfer Is Scary (Amazon 96% / Google 89%, ~800 queries; verified 2026-08)** `:405` |
-| **03 — The Attacks** | 22–32 | `:430` | core idea `:438` · gradient sign `:460` · FGSM `:475` · FGSM by hand `:506` · PGD `:563` · steps in ball (SVG) `:595` · PGD benchmark `:618` · C&W `:633` · targeted vs untargeted `:648` |
-| **04 — The Defenses** | 33–44 | `:664` | defender's goal `:672` · radius (SVG) `:697` · adversarial training `:717` · it works `:733` · the cost `:749` · **Robustness vs Accuracy (Tsipras; added 2026-08)** `:764` · empirical vs certified `:779` · certified robustness `:810` · randomized smoothing `:835` · why voting certifies `:851` · certified catch `:867` |
-| **05 — The Arms Race** | 45–51 | `:885` | recurring story `:893` · obfuscated gradients `:906` · **A False Sense of Security (fixed 2026-08: 9 defenses, 7 obfuscated, 6 broken + 1 partial)** `:933` · adaptive attacks `:949` · how to test honestly `:981` · **The Scoreboard: RobustBench (added 2026-08)** `:994` |
-| **06 — Physical & Beyond** | 52–61 | `:1027` | off the screen `:1035` · **stop sign (Speed Limit 45; 100% lab / 84.8% drive-by; verified 2026-08)** `:1053` · **Adversarial Glasses (added 2026-08)** `:1073` · adversarial patches (+Thys cite) `:1090` · beyond vision (C&W audio 99.9%) `:1107` · **Attacking Multimodal Models (Qi AAAI 2024; rewritten 2026-08)** `:1121` · **Related: The World Also Shifts (added 2026-08)** `:1138` · **ImageNet-C (added 2026-08)** `:1154` · **2025-26 Frontier (NIST AI 100-2; rewritten 2026-08)** `:1171` |
-| Takeaways / Closer | 62–63 | — | key takeaways `:1187` · closer `:1200` |
+| Title / Contents | 1–2 | `:35`, `:47` | |
+| **01 — A Tiny Nudge** | 3–7 | `:76` | panda (Goodfellow Fig 1, GoogLeNet ε = .007) `:84` · anatomy `:94` · Szegedy Fig 5 random examples `:103` · average vs worst case `:119` |
+| **02 — Why It Happens, Who Attacks** | 8–19 | `:128` | boundary sketch `:136` · too linear (Goodfellow Fig 4) `:144` · non-robust features (Ilyas Fig 1) `:160` · two perspectives `:170` · threat model `:183` · budget ε `:191` · ℓ∞ vs ℓ2 `:206` · knowledge `:215` · transfer (Papernot Fig 3) `:223` · real services `:239` · targeted vs untargeted `:249` |
+| **03 — Finding the Worst Case** | 20–28 | `:258` | attack as search `:266` · FGSM (Goodfellow Fig 2) `:276` · FGSM by hand `:287` · one step can miss `:301` · PGD algorithm `:309` · steps in ball `:326` · restarts (Madry Fig 1) `:334` · Madry Table 2 bar chart `:344` |
+| **04 — Defenses and Honest Evaluation** | 29–44 | `:355` | whole ball `:363` · adversarial training (Madry Fig 3) `:372` · Tsipras Fig 1 `:382` · obfuscated gradients `:392` · Athalye Table 1 `:401` · adaptive attacks `:417` · AutoAttack `:431` · RobustBench `:441` · scoreboard snapshot `:461` · upper bound `:476` · one ruler `:486` · empirical vs certified `:500` · smoothing (Cohen Fig 2) `:508` · Theorem 1 intuition (Cohen Fig 3) `:524` · Cohen Table 1 chart `:541` |
+| **05 — Off the Screen, and What to Ask** | 45–54 | `:552` | EOT `:560` · Eykholt Fig 1 `:570` · what it does not show `:587` · ImageNet-C `:607` · four questions `:622` · applied to 73.71% `:630` · established vs open `:645` · takeaways `:665` · closer `:679` |
 
-**Key definitions / citations (all source-verified 2026-08):**
-- Panda→gibbon (57.7% panda → 99.3% gibbon, ε=.007) + linearity explanation — `:117`,
-  `:242` — Goodfellow, Shlens, and Szegedy, "Explaining and Harnessing Adversarial
-  Examples", ICLR 2015 (Figure 1; "the primary cause ... is their linear nature").
-- Intriguing properties + transfer — `:143` — Szegedy et al., ICLR 2014.
-- Features-not-bugs — `:257` — Ilyas et al., NeurIPS 2019.
-- Black-box transfer to commercial APIs (Amazon 96%, Google 89%, ~800 queries) —
-  `:425` — Papernot, McDaniel, and Goodfellow, arXiv 2016.
-- PGD + adversarial training — `:591`, `:729` — Madry et al., ICLR 2018.
-- C&W attack — `:644` — Carlini and Wagner, IEEE S&P 2017.
-- Robustness–accuracy tradeoff — `:775` — Tsipras et al., "Robustness May Be at Odds
-  with Accuracy", ICLR 2019.
-- Randomized smoothing certificate — `:847` — Cohen, Rosenfeld, and Kolter, ICML 2019.
-- Obfuscated gradients (9 ICLR-2018 defenses examined, 7 obfuscated, 6 fully +
-  1 partially broken) — `:929`, `:945` — Athalye, Carlini, and Wagner, ICML 2018.
-- RobustBench (CIFAR-10 L∞ 8/255: standard 94.8/0.0, best 93.7/73.7, AutoAttack) —
-  `:1022` — robustbench.github.io, accessed Aug 2026.
-- Stop-sign attack (target "Speed Limit 45"; 100% lab, 84.8% drive-by, LISA-CNN) —
-  `:1069` — Eykholt et al., CVPR 2018 (Figure 1; abstract).
-- Adversarial glasses (dodge 80%+, impersonate 87.9%) — `:1086` — Sharif, Bhagavatula,
-  Bauer, and Reiter, ACM CCS 2016.
-- Adversarial patch — `:1103` — Brown et al., arXiv 2017; person-hiding held patch —
-  Thys, Van Ranst, and Goedemé, CVPR-W 2019.
-- Audio adversarial examples (99.9% similar waveform → any phrase, 100% vs
-  DeepSpeech) — `:1117` — Carlini and Wagner, arXiv 2018 (venue unverified; cited
-  year-only).
-- Multimodal jailbreak image — `:1134` — Qi et al., "Visual Adversarial Examples
-  Jailbreak Aligned Large Language Models", AAAI 2024.
-- ImageNet-C (15 corruptions × 5 severities = 75 sets) — `:1167` — Hendrycks and
-  Dietterich, ICLR 2019.
-- NIST adversarial-ML taxonomy — `:1183` — NIST AI 100-2 E2025, March 2025.
+**Key citations (checked against saved PDFs / page captures, 2026-10-10; register in the
+review package):** Goodfellow 2015 (Figs 1, 2, 4; §3); Szegedy 2014 (Fig 5); Ilyas 2019 (Fig 1);
+Papernot 2016 (Fig 3; §5, Tables 3–4); Madry 2018 (Figs 1, 3; Table 2; ℓ2 appendix); Carlini &
+Wagner 2017 (notes/tech); Tsipras 2019 (Fig 1); Athalye 2018 (Table 1; §4 BPDA/EOT); Athalye
+EOT 2018; Carlini 2019 checklist; Tramèr 2020; Croce & Hein 2020 (AutoAttack; 13 of 49 >10 pts);
+Croce 2021 RobustBench (§3 restrictions); robustbench.github.io CIFAR-10 ℓ∞ snapshot 10 Oct 2026;
+Cohen 2019 (Figs 2–3, Thm 1, CERTIFY, Table 1); Eykholt 2018 (Fig 1; lab 100%, drive-by 100/84.8%,
+random crop 70%); Hendrycks & Dietterich 2019 (Fig 1).
 
-**Real images** (`figs/`, cropped + cited; 25 image slots after the 2026-09 figure pass):
-panda + noise + gibbon `figs/panda-gibbon.png` (Goodfellow 2015 Fig 1) `:114`; AlexNet ostrich triples
-`figs/szegedy-fig5-alexnet.png` (Szegedy 2014 Fig 5) `:142`; near-linear logits vs ε
-`figs/goodfellow-fig4-linear.png` (Goodfellow Fig 4) `:240`; robust / non-robust dataset split
-`figs/ilyas-fig1-features.png` (Ilyas 2019 Fig 1) `:256`; cross-technique transfer matrix
-`figs/papernot-fig3-transfer.png` (Papernot 2016 Fig 3) `:399`; logistic-regression sign perturbation
-`figs/goodfellow-fig2-logreg.png` (Goodfellow Fig 2) `:469`; PGD loss over iterations
-`figs/madry-fig1-pgd-loss.png` (Madry 2018 Fig 1) `:627`; C&W L2/L∞/L0 examples
-`figs/cw-fig1-distilled.png` (Carlini & Wagner 2017 Fig 1) `:642`; targeted L2 digit grid
-`figs/cw-fig3-targeted.png` (C&W Fig 3) `:656`; simple vs robust boundary
-`figs/madry-fig3-boundary.png` (Madry Fig 3) `:728`; accuracy vs distortion `figs/athalye-fig1-advtrain.png`
-(Athalye 2018 Fig 1) `:743`; clean accuracy vs training ε `figs/tsipras-fig1-tradeoff.png` (Tsipras 2019
-Fig 1) `:758`; input gradients standard vs robust `figs/tsipras-fig2-gradients.png` (Tsipras Fig 2) `:774`;
-panda under σ = 0.5 noise `figs/cohen-fig2-smoothing.png` (Cohen 2019 Fig 2) `:845`; half-space worst case
-`figs/cohen-fig3-fstar.png` (Cohen Fig 3) `:861`; certified accuracy vs radius `figs/cohen-fig6-certified.png`
-(Cohen Fig 6) `:878`; nine-defense census `figs/athalye-tab1-defenses.png` (Athalye Table 1) `:943`;
-stop-sign photo pair `figs/eykholt-stopsign.png` (Eykholt 2018 Fig 1) `:1066`; adversarial eyeglasses
-`figs/sharif-fig4-glasses.png` (Sharif 2016 Fig 4) `:1084`; banana → toaster patch
-`figs/brown-fig1-toaster.png` (Brown 2017 Fig 1) `:1101`; overlaid audio waveforms
-`figs/cw-audio-fig2-waveform.png` (Carlini & Wagner 2018 Fig 2) `:1115`; MiniGPT-4 jailbreak panda
-`figs/qi-fig1-jailbreak.png` (Qi 2024 Fig 1) `:1132`; impulse-noise severities
-`figs/hendrycks-fig7-severity.png` (Hendrycks & Dietterich 2019 Fig 7) `:1148`; 15 corruption types
-`figs/hendrycks-fig1-corruptions.png` (Hendrycks Fig 1) `:1165`; NIST attack taxonomy
-`figs/nist-fig1-taxonomy.png` (NIST AI 100-2 E2025 Fig 1) `:1181`.
-**SVG** (25): confidence bars `:95`, 3×3 fooled grid `:157`, attacker → four systems `:171`, boundary
-crossing `:188`, nine nudges = one shove `:214`, threat-model rule boxes `:280`, ε-ball with δ `:298`,
-L∞ vs L2 pixel grids `:328`, L∞ box vs L2 ball `:344`, white vs black box `:368`, Amazon / Google bars
-`:414`, loss bowl (lower vs raise) `:444`, x + ε·sign = x_adv `:485`, 0.40 → 0.43 pixel scale `:516`,
-overshoot vs small steps `:543`, step → project → K loop `:573`, PGD steps in ball `:600`, dot vs ball
-`:681`, robustness radius `:702`, track record vs proof `:789`, radius vs boundary curve `:819`, smooth vs
-staircase loss `:915`, fixed vs adaptive attack `:959`, RobustBench grouped bars `:1004`, physical pipeline
-`:1044`. Citations use `.cite-left`. Page number: bold `.slide-num` only.
+**Note:** `lec08-adversarial-note.html` — 54 entries; each has a minute budget and elapsed
+time, script, key takeaway; content slides add figure / setup-model-date / establishes / does
+not establish / assumptions / primary-source links. C&W formulation in entries 21 and 28.
 
-**2026-09 figure pass (63 slides, unchanged count; PR #24):** every bullet-only content slide now carries
-a cited real figure crop or an inline SVG (23 new crops, 21 new SVGs; the two pre-existing captures and
-four pre-existing SVGs kept). Real figures sit beside the bullets in a `1fr auto` grid or stacked below
-them; every crop is trimmed of white margins, excludes the paper caption and table rules, and is cited
-with its figure/table number. Note file: one "Slide figure" sentence per real-figure article (23 new);
-63 entries, order matches.
-
-**2026-08 content revision (56→63):** every citation/number fetched and verified.
-Added 7 slides: Why? Too Linear Inside + Why? Features, Not Bugs (§01), Robustness vs
-Accuracy (§04), The Scoreboard: RobustBench (§05), Adversarial Glasses (§06),
-Related: The World Also Shifts + ImageNet-C (§06). Fixed: "broke seven defenses" →
-verified 9 examined / 7 obfuscated / 6 fully + 1 partially broken (Athalye); panda
-confidences rounded → exact 57.7% / 99.3%; stop-sign slide gained target class and
-verified success rates; transfer-is-scary gained verified Papernot numbers; patches
-"wearable" claim replaced by verified held-patch (Thys); 2025-26 Frontier rewritten
-around NIST AI 100-2 (unverified "certificates that finally scale" bullet deleted).
-Section 06 renamed Physical & Multimodal → Physical & Beyond. `lec08tech.html`
-audited: all math correct incl. Cohen certified radius, no changes (stays 19 sl).
-Note file synced (63 entries, order matches).
-**2026-08 note enrichment:** `lec08-adversarial-note.html` upgraded from speaker script
-(395 lines) to Script &amp; Companion Notes (821 lines; 63 entries unchanged): per-entry
-`.detail` blocks with rigorous definitions (adversarial example, ℓp threat models, ball
-nesting, transfer attack, robust risk, smoothed classifier, covariate/label shift, CE/mCE),
-theorems with proofs or labeled verified sketches (FGSM ℓ∞-optimality, ℓ∞/ℓ2 projection
-closed forms, linear-classifier robustness radius — all "(derivation: course notes)";
-Madry min-max + Danskin Thm A.1; C&W formulation; Cohen Thm 1 + Neyman–Pearson sketch;
-Tsipras Thm 2.1 tradeoff sketch), and 29 verified links — Athalye 9/7/6+1 census, EOT,
-RP2, AutoAttack composition all verified against the papers.
+**Tech:** `lec08tech.html` — 24 slides: perturbation set (4), goals (5), FGSM (6), sign as the
+linearized optimum incl. ℓ2 (7), linear model $w^\top\eta=\varepsilon\|w\|_1$ (8), PGD with random
+start (9), projections (10), C&W (11), margin loss (12), min-max (14), Danskin (15), cost (16),
+smoothed classifier (18), Cohen Thm 1 (19), Neyman–Pearson proof sketch (20), CERTIFY with
+Clopper–Pearson and α (21), radius reading (22), cost/scope (23).
 
 ## lec09-poisoning.html
 

@@ -57,3 +57,25 @@ Understood—Albert’s #96 supersedes the earlier gate: from lec08 onward, my s
 Close with a reusable checklist: *robust to what changes, against which attacker, measured how, and at what cost?* Keep proofs in tech and omit multimodal jailbreak details here.
 
 Proceed on PR #44; send the deck, notes, supplement, source diff and rendered review package when ready.
+
+## 3 — slides → slides-review (2026-10-10 17:11) [attachment: lec08-review-r1.zip]
+
+lec08 review package, round 1. PR #44 https://github.com/albert-no/slides/pull/44, content head `a4ffa9a`.
+
+The zip contains the deck, notes and tech PDFs, the source diff since your scope approval, sources.md (the verified fact register) and crops.txt (page and box for every figure crop).
+
+*Deck: 54 slides, 10/20/20/25/15, no activities*
+• *Threat model:* a recurring `.tm` line gives what the attacker controls, knows and wants. Dataset, model, norm and ε sit beside every number.
+• *Causes:* linearity (P10) and features (P11) are presented as perspectives; P12 says "not one cause".
+• *Attacks:* FGSM → PGD (P21–28). P28 redraws Madry Table 2 as a bar chart: 87.3 / 56.1 / 50.0 / 46.8 / 45.8. C&W is in notes 21 and 28 and in the tech supplement.
+• *Evaluation:* obfuscated gradients and Athalye Table 1 (P33–34); adaptive attacks with BPDA/EOT (P35); AutoAttack (P36).
+• *RobustBench:* described as "a standardized benchmark" with its entry rules (P37). The snapshot is dated 10 Oct 2026 16:47 KST (P38). Best known numbers are upper bounds (MeanSparse 75.28 → 73.10, P39). ℓ∞ robustness is not ℓ2 robustness (P40).
+• *Certification:* empirical vs certified (P41). Smoothing gives a certificate for g, ℓ2, with probability ≥ 1 − α (P42–43). P44 charts Cohen Table 1: 49 / 37 / 19 / 12 certified at R 0.5 / 1 / 2 / 3, about 110 s per image.
+• *Physical case:* Eykholt only. P47 gives the result; P48 states the limits: classifier not detector, manual crop (random crop 70%), about 250 ft at 0–20 mph on a straight road. ImageNet-C is a contrast (P49).
+• *Close:* the four-question checklist (P50), applied to the RobustBench top entry (P51).
+
+*Notes:* 54 entries, minutes summing to 90.
+
+*Tech:* 24 slides. Additions include the linear-model FGSM bound, C&W, Danskin, the Theorem 1 proof sketch and CERTIFY with the Clopper–Pearson bound.
+
+*Lints:* lint-deck ok on both files; outline-lint clean. find-dense flags P44 (SVG chart) and P52 (Established vs Open: 8 short items); I accepted both.

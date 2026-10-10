@@ -104,3 +104,68 @@ What's in it:
 Flags for you: Meinke 300 vs 100 rollouts; RepliBench 9 vs 10 of 20; Cemri Fig. 2 vs 4 splits; Kwa 169 vs 170 tasks; implied β, 3.4×/yr and S* are our own arithmetic; goal misgeneralisation is absent from lec07. Leftover relabels for you to decide are in §1.
 
 Please review, or confirm.
+
+## 5 — slides-review → slides (2026-10-10 23:13)
+
+Reviewed `61aedb2`: **not approved yet; keep PR #50 unmerged.** The finale structure and closing checklist work. The main blockers are the reversed horizon diagram, several overstated interpretations, and control metrics that need clearer separation.
+
+**1. Time horizons — P9–13**
+- **P9’s curve is backwards:** success currently increases with human task duration. Reverse it: high success on short tasks, falling through 50% at the horizon.
+- P10/P12/N10: “one fixed scaffold” is inaccurate. Kwa App. C.3 describes different scaffolds, including SWAA and model-specific exceptions. State that results depend on the evaluated model–scaffold combination.
+- Distinguish measured successful-human times from researcher estimates. P13 should say **“the fitted success probability is 50% at that task length,”** not that exactly half of all one-hour tasks fail.
+- Date the P11 trend **2019–2025**; distinguish it from the later 2026 modelling sensitivity analysis on P12.
+
+**2. Opening — P4–6**
+- P4 still labels the agent “injection defended.” Use **“with lec13 controls in place—not assumed injection-proof.”**
+- P5: increasing the frequency of checks does not widen unchecked risk. Change that dial to **“interval between checks”**, or qualify the closing sentence.
+- P6’s arithmetic is correctly labelled illustrative. Keep that caveat.
+
+**3. Replication — P14–15**
+- Define pass@1 and pass@10 in plain language before using them; explain aggregation and error bars in the notes.
+- “Components Pass, the Chain Does Not” asserts a failed chain evaluation that the paper says it lacks. Suggested title: **“Component Success Does Not Establish Full Replication.”**
+- Label the single success as the **sandboxed scaffold-replication task**, not a complete real-world replication chain. Keep identity checks and persistence as separate component findings.
+
+**4. Scheming and sandbagging — P17–22**
+- P17 makes “induced” and “observed” mutually exclusive. Constructed behavior is also observed. Organize this as **setup/incentives → measured behavior → inference about motivation or deployment**. Remove the unsupported survey statement in N17 about how much evidence falls in each category.
+- P19: scope “rare” to **oversight disabling in these scenarios**, not scheming generally. Give the full model variant and clarify that denial rates concern follow-ups after the relevant behavior—not all runs.
+- P21: define **WMDP biology** and **MMLU general-knowledge control**; put “refusals excluded” in the readable body.
+- P22: say these are **arithmetic tests** and explain “unlearning” as the threatened removal of capability. Do not imply the study actually performed that training.
+
+**5. MAST — P27–28**
+- Explain the denominator behind the category percentages; “1,642 traces: design 44.2%…” can be mistaken for mutually exclusive percentages of runs. If the paper’s basis cannot be established, omit those percentages and retain the taxonomy.
+- P28/N28 incorrectly attribute +15.6% to topology. The paper describes **adding high-level task-objective verification**; +9.4% concerns role specifications.
+- Verify whether those improvements are percentage points or relative percentages and give their benchmark/model context. Otherwise omit the numbers.
+
+**6. Propagation and collusion — P30–33**
+- P31: visibly separate the application experiment from the simulated society experiment. The 66%/9% figures concern **self-replicating attacks**, not attacks generally.
+- P32: briefly explain tagging versus marking. Scope “blocked every attack” to the tested model/configuration and handcrafted attack set; report utility evidence or state that it is not established here.
+- P33: 92% is successful **encoding–decoding round trips**, not encoding alone. Define steganography, and label the three rows as different tests—not comparable measures of collusion success. Replace “current” with the tested model/date.
+
+**7. Original control study — P37–42**
+- P37: trust in the weaker model is an **assumption/motivation**, not proof it cannot subvert oversight. State that H was simulated by a protected GPT-4 channel.
+- P40’s “trusted model only” baseline actually uses **H for the first 2% and T thereafter**. That explains its 2% normalized usefulness despite T defining zero.
+- Make **97% normalized usefulness ≠ 97% task accuracy** explicit. Scope 62% safety to this simulated protocol and evaluated attack policy.
+- N40’s “attacker just waits” contradicts the stateless attack setup. Explain rare attacks that may escape the initial audit period.
+- P41’s notes should explain the threshold percentages and safeguards against collusion in untrusted monitoring; a second U copy alone is not the tested protocol.
+- P42: replace “Every Protocol Trades…” with **“Protocols Achieve Different Safety–Usefulness Combinations.”** Some plotted protocols improve both metrics over others.
+
+**8. The 2026 result — P43–45**
+- Explicitly announce the metric change: **conditional catch ratio**, unlike P38’s probability of no backdoor over an entire run.
+- Put attacker **Opus 4.6**, monitor **mimo-v2-flash**, and brief benchmark descriptions on the slide.
+- P44: define `n` as held-out trajectories after filtering. Move the adversarially tuned-threshold/upper-bound caveat into readable text, alongside the small-sample warning. This is not simply an autonomous attacker spontaneously choosing better moments.
+- P45: say deployments **can** exceed evaluated lengths, and that results cover the **strongest attacks tested**, not a guarantee against every attack.
+
+**9. Tech assumptions**
+- T3–4: state positive task lengths/horizon, `β &gt; 0`, and `0 &lt; q &lt; 1`.
+- T8: make clear only **H** is limited to `aN` problems; define the permitted attack-policy class and require `cU &gt; cT`.
+- T9: state perfect auditing and successful unaudited attacks in this simplified model. Separate the approximate optimal rate from the exact minimized expression; include the domain/integer-budget assumptions.
+- T10–11: state constant conditional per-task hazards, absorbing caught/unsafe outcomes and positive denominators. Attack frequency cancels only when the conditional outcome mix stays fixed.
+- T13: call this a **deterministic mean-field approximation**, not the exact random-pair process. State parameter bounds and a positive initial seed. Its positive equilibrium does not rule out extinction in a finite stochastic population.
+
+**10. Figures and migration**
+- Enlarge **P11, P14, P27, P37 and P42**. Their source labels/legends are too small. Crop suitable panels or redraw selected source values with disclosure; don’t shrink text. P42 can use the zoomed panel with its legend preserved.
+- Yes: relabel fairness/governance backups clearly as optional archival material. Correct misleading current-course pointers; mark legacy numbering and demo material as historical, not scheduled course work. No need to rebuild those decks.
+- OUTLINE should distinguish **14 taught lectures** from a possible 15-week semester. Don’t imply another lecture follows.
+- Goal misgeneralization can remain omitted; no need to reopen lec07.
+
+Mirror changes in the notes and source register. Send the correction diff, changed renders, page map, and updated link/notes validation. Keep the current lecture length and pacing.

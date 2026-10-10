@@ -1,6 +1,6 @@
 # trustworthy-ai/ — Trustworthy AI course
 
-Undergraduate course for sophomores/juniors (15 weeks × 1.5 hr), mixed majors with
+Undergraduate course for sophomores/juniors (15-week semester × 1.5 hr; 14 taught lectures), mixed majors with
 basic Python/Colab experience. **Mode:** concept introduction + motivation first —
 foundational works, a little recent work, light technical detail, no proofs.
 At most one intuitive formula per key concept.
@@ -78,15 +78,15 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `backup-fairness-defstech.html` | former Wk 13 (fairness defs) | demographic parity / equalized odds / calibration as conditional-prob defs; base rates; impossibility theorem (Chouldechova/Kleinberg) + proof sketch | **fixed 2026-08** (15 sl: base-rate identity was inverted (1−p)/p → p/(1−p) per Chouldechova eq 2.6; proof-sketch step 1 corrected (calibration ≠ "PPV = base rate" → predictive parity demands equal PPV across groups); unverifiable numeric-wedge table replaced with an exactly derivable two-value-score construction; impossibility attribution now dual Chouldechova + Kleinberg) |
 | `backup-fairness-mitigationtech.html` | former Wk 14 (fairness mitigation) | reweighing w(g,y); penalized min Loss+λ·Unfairness; constrained form; reductions (Agarwal 2018); post-processing per-group thresholds (Hardt 2016) | **checked 2026-08** (17 sl: reweighing formula verified against Kamiran & Calders; reductions + Hardt ROC intuition verified against papers; one fix — cite venue "KIS 2012" → "Knowledge and Information Systems 2012") |
 
-## Backup / swap-in materials (not in the 15-week core)
+## Backup / swap-in materials (not in the 14 taught lectures)
 
-Optional decks for substitution or extra sessions. Each has a `-note.html` script.
+Optional decks for substitution or extra sessions. The fairness and governance backups are labelled *optional archival*: their notes use an earlier course plan's lecture numbers, and the governance wrap-up and Demo Showcase are marked historical. Each has a `-note.html` script.
 
 | File | Topic | Slots in where | Status |
 |---|---|---|---|
 | `backup-sycophancy.html` | Sycophancy, manipulation & persuasion | merge into Wk 6, or standalone | **drafted** (38 sl) |
 | `backup-copyright.html` | Copyright, consent & data provenance | pairs with Wk 4 (memorization) | **drafted** (45 sl) |
-| `backup-governance.html` | Governance, the frontier & wrap-up (EU AI Act, NIST RMF, frontier safety frameworks, demo showcase) | former Wk 15 (moved 2026-10; lec14 is now the finale); optional extra session | **revised 2026-08, figure pass 2026-09** (70 sl; note `backup-governance-note.html`; tech `backup-governancetech.html`, 6 sl). Section `## backup-governance.html` below |
+| `backup-governance.html` | Governance, the frontier & wrap-up (EU AI Act, NIST RMF, frontier safety frameworks, demo showcase) | former Wk 15 (moved 2026-10; lec14 is now the finale); optional archival backup, wrap-up and Demo Showcase marked historical | **revised 2026-08, figure pass 2026-09** (70 sl; note `backup-governance-note.html`; tech `backup-governancetech.html`, 6 sl). Section `## backup-governance.html` below |
 | `backup-model-stealing.html` | Model stealing / extraction attacks | swap for Wk 9, or standalone | **drafted** (51 sl) |
 | `backup-interpretability.html` | Interpretability & explainability (LIME/SHAP, probes, circuits, SAEs) | former Wk 7 (moved 2026-10); standalone extra session | **revised 2026-08, figure pass 2026-09** (64 sl, 23 real figs; note `backup-interpretability-note.html`; tech `backup-interpretabilitytech.html`, 20 sl). Section `## backup-interpretability.html` below |
 
@@ -521,11 +521,11 @@ checks it?". Governance only in context; full treatment in `backup-governance.ht
 |---|---|---|---|
 | Title / Contents | 1–2 | `:38`, `:50` | |
 | **01 — What Changes With Autonomy** | 3–6 | `:82` | beyond a defended agent `:90` · autonomy dial `:110` · compounding errors `:137` |
-| **02 — Measuring Autonomy** | 7–15 | `:167` | why measure (Shevlane) `:175` · horizon definition `:191` · computation `:222` · METR Fig. 1 `:239` · what it depends on `:250` · what it is not `:266` · RepliBench Fig. 1 `:283` · components vs chain `:294` |
-| **03 — Against the Overseer** | 16–23 | `:311` | three claims `:319` · scheming setup `:333`, rates `:357` · sandbagging `:374`, on instruction `:396`, without instructed goal `:413` · other explanations `:429` |
-| **04 — Many Agents** | 24–34 | `:450` | three failure modes `:458`, `:478` · MAST Fig. 1 `:491`, `:502` · injection → propagation `:516` · Prompt Infection `:539`, `:556` · defending each hop `:572` · collusion `:587` · demonstrated vs hypothesised `:605` |
-| **05 — Control** | 35–45 | `:619` | alignment → control `:627` · setup (Fig. 1) `:641` · game `:655` · trusted monitoring `:671`, `:697` · protocols `:714` · Pareto (Fig. 2) `:729` · attack selection `:740`, `:758` · not a guarantee `:769` |
-| **06 — Synthesis** | 46–51 | `:783` | established vs not `:791` · course checklist `:813` · open problems `:829` · takeaways `:843` · closer "Who checks it?" `:857` |
+| **02 — Measuring Autonomy** | 7–15 | `:167` | why measure (Shevlane) `:175` · horizon definition `:191` · computation `:222` · METR Fig. 1 `:239` · what it depends on `:250` · what it is not `:266` · RepliBench Fig. 1 `:283` · component success ≠ full replication `:294` |
+| **03 — Against the Overseer** | 16–23 | `:312` | setup / behavior / inference kept apart `:320` · scheming setup `:334`, oversight disabling `:358` · sandbagging `:375`, on instruction `:397`, without instructed goal `:416` · other explanations `:432` |
+| **04 — Many Agents** | 24–34 | `:453` | three failure modes `:461`, `:481` · MAST Fig. 1 `:494`, `:505` · injection → propagation `:519` · Prompt Infection `:542`, `:559` · defending each hop `:578` · collusion `:596` · demonstrated vs hypothesised `:614` |
+| **05 — Control** | 35–45 | `:628` | alignment → control `:636` · setup (Fig. 1) `:650` · game `:665` · trusted monitoring `:681`, `:707` · protocols `:724` · Pareto (Fig. 2 zoom + legend) `:739` · attack selection `:751`, `:770` · not a guarantee `:782` |
+| **06 — Synthesis** | 46–51 | `:796` | established vs not `:804` · course checklist `:826` · open problems `:842` · takeaways `:856` · closer "Who checks it?" `:870` |
 
 **Key citations on slides (checked against saved papers, 2026-10-10):** Shevlane et al. arXiv 2305.15324 (Table 1);
 Kwa et al. (METR) arXiv 2503.14499 (Fig. 1, §2–§4, §7); Black et al. RepliBench arXiv 2504.18565v2 (Fig. 1, §5.1, §6);
@@ -537,8 +537,9 @@ Greenblatt et al. AI Control, ICML 2024 (Figs. 1–2, Table 2, §2–§3, §6); 
 modelling-assumptions note (20 Mar 2026), Cohen et al. Morris-II, Terekhov Defer-to-Resample; goal misgeneralisation
 as a notes cross-reference only.
 
-**Figures (5 image files in `figs/`):** `metr-horizon-fig1.png` `:243` · `replibench-domains-fig1.png` `:287` ·
-`mast-taxonomy-fig1.png` `:495` · `control-setup-fig1.png` `:645` · `control-pareto-fig2.png` `:733`. All other
+**Figures (6 image files in `figs/`):** `metr-horizon-fig1.png` `:243` · `replibench-domains-fig1.png` `:287` ·
+`mast-taxonomy-fig1.png` `:498` · `control-setup-fig1.png` `:654` · `control-pareto-fig2-zoom.png` `:743` ·
+`control-pareto-fig2-legend.png` `:744`. All other
 diagrams are inline SVG.
 
 **2026-10 rebuild:** replaces the backup-agentic-autonomy deck (47 sl), deleted with its note and the one figure used
@@ -559,7 +560,7 @@ RepliBench 9/20 vs 10/20, Cemri Fig. 2 vs Fig. 4 splits, Kwa 169 vs 170 tasks.
 
 ## backup-fairness-defs.html
 
-*Former Wk 13 deck (old names lec13-fairness-defs, its note, and lec13tech), moved unchanged on 2026-10-10 to `backup-fairness-defs.html`, `backup-fairness-defs-note.html` and `backup-fairness-defstech.html`; line pointers below still hold. Merged into Wk 12.*
+*Former Wk 13 deck (old names lec13-fairness-defs, its note, and lec13tech), moved unchanged on 2026-10-10 to `backup-fairness-defs.html`, `backup-fairness-defs-note.html` and `backup-fairness-defstech.html`; line pointers below still hold. Merged into Wk 12. Relabelled 2026-10 as an optional archival backup (title pill, page titles; the note carries a legacy-numbering notice), with no line shifts in the deck.*
 
 **Topic:** Fairness I — definitions & impossibility (~90 min). Where bias enters the
 pipeline (data, labels — Amazon recruiting + Obermeyer cost-proxy case — feedback
@@ -662,7 +663,7 @@ Note file synced (58 entries, order matches).
 
 ## backup-fairness-mitigation.html
 
-*Former Wk 14 deck (old names lec14-fairness-mitigation, its note, and lec14tech), moved unchanged on 2026-10-10 to `backup-fairness-mitigation.html`, `backup-fairness-mitigation-note.html` and `backup-fairness-mitigationtech.html`; line pointers below still hold. Merged into Wk 12.*
+*Former Wk 14 deck (old names lec14-fairness-mitigation, its note, and lec14tech), moved unchanged on 2026-10-10 to `backup-fairness-mitigation.html`, `backup-fairness-mitigation-note.html` and `backup-fairness-mitigationtech.html`; line pointers below still hold. Merged into Wk 12. Relabelled 2026-10 as an optional archival backup (title pill, page titles; the note carries a legacy-numbering notice), with no line shifts in the deck.*
 
 **Topic:** Fairness II — mitigation & accountability (~90 min). Picks up where lec13's
 definitions end: three places to intervene in the pipeline (pre-/in-/post-processing),
@@ -787,7 +788,7 @@ proofs referenced, not duplicated).
 
 ## backup-governance.html
 
-*Former Wk 15 deck, moved to backup 2026-10 (`git mv` of the former lec15-governance deck, its note and lec15tech to `backup-governance.html`, `backup-governance-note.html` and `backup-governancetech.html`; only the title-slide pill and page titles changed from "Lecture 15" to "Backup"). Line numbers unchanged by the move. Its wrap-up and Demo Showcase slides still assume a course-closing slot.*
+*Former Wk 15 deck, moved to backup 2026-10 (`git mv` of the former lec15-governance deck, its note and lec15tech to `backup-governance.html`, `backup-governance-note.html` and `backup-governancetech.html`; only the title-slide pill and page titles changed from "Lecture 15" to "Backup"). Line numbers unchanged by the move. Relabelled 2026-10 as an optional archival backup. The wrap-up and Demo Showcase are marked historical (slide title "Demo Showcase (Historical)"), and the note carries a legacy-numbering notice. There are no line shifts in the deck.*
 
 **Topic:** Governance, the frontier & course wrap-up (~90 min, capstone). Nearly
 math-free. Connects the course's threads via the trust stack (data → model → output →

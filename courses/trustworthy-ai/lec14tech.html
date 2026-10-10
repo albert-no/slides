@@ -61,6 +61,7 @@
     <li>$\beta$: how sharply success falls as tasks get longer</li>
     <li>Like item response theory, but difficulty is fixed by human time</li>
   </ul>
+  <p class="muted">Assumes $t, h > 0$ and $\beta > 0$, so success falls as tasks get longer.</p>
   <div class="cite cite-left">Kwa et al. (METR), arXiv 2503.14499, §3.1 and App. C.4. Fitted per agent: $h$ and $\beta$.</div>
 </div>
 
@@ -68,7 +69,7 @@
 <div class="slide">
   <h2>From the 50% Horizon to the 80% Horizon</h2>
   <div class="divider"></div>
-  <p>Solve $\sigma(\beta(\log h - \log t_q)) = q$ for the length $t_q$ at success rate $q$ (natural log):</p>
+  <p>For $0 &lt; q &lt; 1$ and $\beta &gt; 0$, solve $\sigma(\beta(\log h - \log t_q)) = q$ for $t_q$ (natural log):</p>
   <div class="math-block">$$t_q = h \cdot \exp\!\Big(-\frac{\operatorname{logit} q}{\beta}\Big), \qquad \operatorname{logit} 0.8 = \ln 4 \approx 1.39$$</div>
   <ul class="arrow">
     <li>Reported: $t_{0.8}$ is 4–6 times shorter than $h$</li>
@@ -121,14 +122,14 @@
   <div class="divider"></div>
   <div class="ta-algo" style="max-width:1040px; margin:0 auto 8px;">
     <ol>
-      <li>Blue fixes protocol $P$: uses $U$, $T$, and $H$ on at most $aN$ of $N$ problems.</li>
-      <li>Red team, knowing $P$, picks an attack policy $\pi$ that replaces $U$.</li>
+      <li>Blue fixes protocol $P$: $U$, $T$ unlimited; $H$ on at most $aN$ of $N$ problems.</li>
+      <li>Red team, knowing $P$, picks a stateless attack policy $\pi$ to replace $U$.</li>
       <li>Run all $N$ problems. Red wins if any backdoor is submitted.</li>
       <li>If $H$ confirms a backdoor, $P$ may shut $U$ down for the rest of the run.</li>
     </ol>
   </div>
   <div class="math-block">$$\text{Safety}(P) = \min_{\pi} \Pr[\text{no backdoor submitted}], \qquad \text{Usefulness}(P) = \frac{c_P - c_T}{c_U - c_T}$$</div>
-  <div class="cite cite-left">Greenblatt et al., ICML 2024, §2: $N = 5{,}000$, $a = 2\%$, $U$ = GPT-4, $T$ = GPT-3.5. $c_X$: correctness rate ($c_P$ with honest $U$). In practice the min is over the red team's best attempts.</div>
+  <div class="cite cite-left">Greenblatt et al., ICML 2024, §2: $N = 5{,}000$, $a = 2\%$, $U$ = GPT-4, $T$ = GPT-3.5. $c_X$: correctness rate ($c_P$ with honest $U$). Assumes $c_U &gt; c_T$. In practice the min is over the red team's best attempts.</div>
 </div>
 
 <!-- 9. Upfront auditing -->
@@ -138,8 +139,9 @@
   <p>Audit the first $aN$ problems; attack each problem independently with rate $r$:</p>
   <div class="math-block">$$S(r) = 1 - (1-r)^{aN}\big(1 - (1-r)^{(1-a)N}\big)$$</div>
   <ul class="arrow">
-    <li>Best rate: $r^* \approx \dfrac{-\ln a}{(1-a)N}$, so attacks get rarer as $N$ grows</li>
-    <li>Then $S^* = 1 - (1-a)\,a^{a/(1-a)}$, the same for every $N$</li>
+    <li>Assumes perfect audits ($H$ catches any audited attack) and integer $aN$</li>
+    <li>Approximate optimum, large $N$: $r^* \approx \dfrac{-\ln a}{(1-a)N}$; attacks get rarer as $N$ grows</li>
+    <li>Then $S^* \approx 1 - (1-a)\,a^{a/(1-a)}$, the same for every $N$</li>
     <li>$a = 2\%$: $S^* \approx 9.5\%$. Greenblatt et al.'s model, with honest errors, gives 15%</li>
   </ul>
   <div class="cite cite-left">Closed form: Ge-Wang, Crosse et al., arXiv 2606.06529v1, App. A.1. Greenblatt et al., §3.1.2 (15%; 53% of $U$'s solutions correct; win probability constant at scale). $S^*$ is our simplification.</div>
@@ -156,6 +158,7 @@
     <li>Lever 2: how attempts resolve, the catch ratio</li>
     <li>Long deployments: $g_0^{\,N} \to 0$, so safety tends to the catch ratio</li>
   </ul>
+  <p class="muted">Assumes the same $g$'s every task, independent tasks, caught and uncaught success both end the run, and $g_c + g_u &gt; 0$.</p>
   <div class="cite cite-left">Ge-Wang, Crosse et al., App. A.2, eq. (4); simplified from Griffin et al. (2024).</div>
 </div>
 
@@ -170,7 +173,7 @@
     <li>Aborts count as indecisive and leave the denominator</li>
     <li>CV-tuned thresholds: read results as upper bounds on the drop</li>
   </ul>
-  <p class="muted">Not deployment safety: $S_N$ also depends on $g_0^{\,N}$.</p>
+  <p class="muted">Needs a resolved attempt; the limit assumes a fixed outcome mix. Not deployment safety $S_N$.</p>
   <div class="cite cite-left">Ge-Wang, Crosse et al., eq. (1), App. A.3, eqs. (5)–(6); §4.4.</div>
 </div>
 
@@ -187,12 +190,13 @@
   <h2>Toy Model: When Does an Infection Spread?</h2>
   <div class="divider"></div>
   <div class="warn-card"><h3>Not empirical</h3><p>Not fitted to Prompt Infection or any other paper.</p></div>
-  <p>Random pairs of agents talk; $i_t$ = infected fraction. Per round: infect a partner w.p. $b$, forget the payload w.p. $\gamma$.</p>
+  <p>Random pairs talk; $i_t$ = infected fraction. Per round: infect w.p. $b$, forget w.p. $\gamma$.</p>
   <div class="math-block">$$i_{t+1} = i_t + b\, i_t (1 - i_t) - \gamma\, i_t, \qquad R_0 = b/\gamma$$</div>
   <ul class="arrow">
     <li>$R_0$ below 1: the infection dies out</li>
-    <li>$R_0$ above 1: it settles at $i^* = 1 - 1/R_0$</li>
+    <li>$R_0$ above 1 and $i_0 &gt; 0$: it settles at $i^* = 1 - 1/R_0$</li>
   </ul>
+  <p class="muted">Mean-field, well-mixed; $0 &lt; b, \gamma \le 1$. Finite groups can still die out by chance.</p>
 </div>
 
 <!-- 14. What it says -->

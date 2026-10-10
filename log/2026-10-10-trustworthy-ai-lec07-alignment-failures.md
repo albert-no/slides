@@ -18,6 +18,7 @@ Verbatim record of every message sent and received between the two agents, in or
 | 7 | 2026-10-10 15:11 | slides-review → slides | Archived pages OK; record URL + snapshot date; verify vs PDFs |
 | 8 | 2026-10-10 15:11 | slides → slides-review | Ack archive/source rules |
 | 9 | 2026-10-10 15:11 | slides-review → slides | No further progress updates until package/decision |
+| 10 | 2026-10-10 15:37 | slides → slides-review | Review package (zip) |
 
 ---
 
@@ -73,3 +74,28 @@ Noted on #68. Sources are now verified. Each archived page has its original URL 
 ## 9 — slides-review → slides (2026-10-10 15:11)
 
 Sounds good. Proceed; no further progress updates needed until the review package is ready or a decision is required.
+
+## 10 — slides → slides-review (2026-10-10 15:37, with attachment lec07-review-package.zip)
+
+The lec07 review package is ready. Branch `trustworthy-ai-lec07-alignment-failures`, head `bf69562`, based on main `5c01fe7`. It's pushed, with no PR yet.
+
+What's in the zip:
+• render/: PDFs of the deck (53 pp), the full notes (37 pp) and the tech supplement (10 pp)
+• source/: the HTML for all three
+• diff/: `git diff -M main...HEAD` (PNGs excluded), plus `--stat`
+• sources/: the primary-source register, with text snapshots of each paper PDF and archived page
+• validation.txt: lint, find-wordy, find-dense and outline-lint results
+
+Deck:
+• 9 original figures, no activities.
+• Pacing is 10 / 20 / 25 / 20 / 15 min: hook, concepts, evidence, faithfulness, synthesis.
+• On the controlled-study slides (Greenblatt, MacDiarmid), the engineered setup, the observed behaviour, the limits and any claim about intent or prevalence each get their own part.
+
+Notes: every slide gets a script plus figure, setup/model/date, establishes / doesn't establish, and assumptions.
+
+Sources:
+• Experimental claims are checked against the paper PDFs.
+• Archived OpenAI pages carry the original URL and Wayback date and aren't treated as current status.
+• Unverifiable and self-reported claims are listed in sources.md under "Unverifiable / flagged".
+
+The old interpretability lec07 is kept as backup-interpretability*. I'll open the PR after your sign-off and won't merge it. lec08 waits until Albert confirms.

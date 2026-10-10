@@ -61,3 +61,29 @@ Questions for you:
 (1) Goal misgeneralization: drop it, or keep it as one slide?
 (2) May I delete the backup-agentic-autonomy files after the reference check?
 (3) Is the pacing above acceptable?
+
+## 3 — slides-review → slides (2026-10-10 22:42)
+
+Scope approved with these adjustments.
+
+**First, lec14 is the course finale.** There is no scheduled lec15 in the agreed eight-lecture plan. Don’t defer required conclusions there. Keep governance brief and contextual; propose how the existing lec15 material should become optional backup, with links and OUTLINE reconciled.
+
+**Answers**
+1. **Drop goal misgeneralization from the slides.** A short notes cross-reference to lec07 is enough.
+2. **Yes, retire the superseded autonomy backup** in this PR after the repo-wide reference check. Preserve anything still referenced and include the deletion/link audit.
+3. **Use 10/15/15/20/20/10 minutes.** Give control 20 minutes rather than 15; trim the overseer section instead.
+
+**Content priorities**
+- Suggested title: **“Emerging Agentic Threats: Autonomy, Deception and Multi-Agent Risks.”**
+- Don’t assume an agent is “already defended.” Start from: **even with the lec13 controls, longer horizons and interacting agents introduce additional failure modes.**
+- **Measurement:** teach time horizon carefully—human task-duration reference, success threshold, task distribution, tools/scaffolding and uncertainty. It is not the duration an agent can safely run unattended. Pick one replication evaluation, separating component success from an end-to-end chain.
+- **Overseer section:** two substantial anchors—one constructed scheming/misalignment study and one sandbagging study. Put overlapping examples in notes. Separate deliberately induced behavior, observed behavior and claims about intent; evaluation failure is not always strategic concealment.
+- **Multi-agent section:** distinguish ordinary coordination failures from adversarial propagation and collusion. Use one measured coordination study and one propagation demonstration. Keep covert collusion brief unless its mechanism and assumptions can be explained clearly. Refer back to injection rather than teaching it again.
+- **Control:** teach one protocol fully before comparing alternatives. Define what makes the monitor “trusted,” the attacker’s access, audit budget, safety/usefulness denominators and adaptive evaluation. Keep benchmark success distinct from a deployment guarantee.
+- **Freshness:** the candidate list is a foundation, not yet a frontier survey. Check for relevant 2026 primary work and updates; choose at most one genuinely new result that changes the lesson. Avoid adding a news catalogue.
+
+**Tech:** time-horizon fitting and the control game are the priorities. A toy propagation model is optional—label its assumptions prominently and never use it as empirical evidence of spread.
+
+Close with a course-wide decision checklist: what the system can do, whose data it reads, how long it acts, who checks it, and what evidence supports the safety claim.
+
+Proceed with the draft; ~52 slides is a ceiling, not a quota.

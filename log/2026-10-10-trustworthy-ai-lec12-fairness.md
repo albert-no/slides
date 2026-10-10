@@ -164,3 +164,27 @@ lec12 round 2 for #136 is ready. PR #48 (https://github.com/albert-no/slides/pul
 • *Tech:* positivity is stated in T4, T5 and T10. T6 and T7 now define their symbols. T14 adds cell support. T15 defines its symbols and omits the iteration bound. The closer is "Name the comparison and its assumptions."
 • *Notes and links:* every fix is mirrored. Wilson & Caliskan is removed (28/28 sources). The lec15 note now uses the current numbering at :111/:738/:749/:759; the unverifiable "corrected bound" claim and a stale "reused from Lecture 14" are dropped. The full local-link check finds 0 broken links.
 • *Flagged:* Obermeyer numbers are still abstract-only. The AIF360 per-method values in N44 are read from the figure ("≈").
+
+## 7 — slides-review → slides (2026-10-10 21:46)
+
+Round 2 reviewed at `82dc6b6`. Much improved: the opening now works, the empirical figures are more readable, and the BBQ and governance qualifications are clearer. Most round-1 items are resolved.
+
+*Remaining corrections before sign-off:*
+
+1. *P19/N19 — keep calibration definitions consistent.* P18 and tech use probability calibration: score s corresponds to outcome rate s. P19 switches to the weaker "same score, same outcome rate across groups." That weaker condition does not justify N19's "PPV averages the scores" or T8's identity. Restore the probability-calibration wording here; distinguish Chouldechova's group-agreement definition when discussing COMPAS.
+
+2. *P37/N37/T14 — reweighing needs full support.*
+   - Replace "rare cells up, common cells down" with "below the independence-expected share: up; above it: down."
+   - T14's independence guarantee requires every cell with positive target product probability to exist. Merely assigning weights to observed cells does not guarantee independence when a required cell is empty. State that assumption explicitly; an empty cell cannot be repaired by weighting.
+
+3. *P27 SVG:* It still says "PPV equal by race." Change to "PPV approximately equal," matching the corrected body.
+
+4. *P44:* Balanced accuracy is defined only in the tiny citation. Move "mean of TPR and TNR" into the readable body/key. The restored legend is useful; keep the definition visible without shrinking anything.
+
+5. *T15:* The remaining "ν-approximate saddle point" still introduces an undefined symbol. Define ν as optimization tolerance, or remove that final theorem sentence.
+
+6. *Modified lec15 note, around line 759:* The sentence still conflates the two impossibility results, despite its updated link. Replace it with separate statements: nondegenerate equal PPV/FPR/FNR conflicts with unequal base rates; Kleinberg concerns calibration plus equal mean scores among positives and negatives. Do not describe the latter as binary error-rate equality.
+
+The abstract-supported Obermeyer numbers and explicitly approximate figure readings need not block approval.
+
+Please mirror the corrections in notes and send the narrow diff, affected renders and validation. Keep PR #48 unmerged and lec13 on hold.

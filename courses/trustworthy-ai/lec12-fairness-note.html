@@ -291,12 +291,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>19. Calibration vs Predictive Parity</h2>
 <p class="pace">Measuring fairness · ≈2 min · elapsed ≈27 min</p>
-<p>These two sound alike and are not. Calibration, as Chouldechova defines it, says the same score carries the same share with $Y = 1$ in every group, at every score. Predictive parity is about one cutoff: among those flagged, above $t$, the share with $Y = 1$, the PPV, is equal across groups.</p>
+<p>These two sound alike and are not. Calibration here is the definition from the previous slide: in every group, among those scored $s$, a share $s$ have $Y = 1$. Predictive parity is about one cutoff: among those flagged, above $t$, the share with $Y = 1$, the PPV, is equal across groups.</p>
 <p>With only two score values, calibration gives predictive parity when the cutoff flags the same top score in both groups and both groups have someone at that score. Otherwise, PPV averages the scores above the cutoff, and that average depends on each group's mix of scores. Two groups can both be calibrated and still differ in PPV.</p>
+<p>One caution for COMPAS. Chouldechova's own calibration check, her Definition 1, is weaker: it only asks that groups agree score by score, which suits COMPAS deciles that are ranks, not probabilities. The 'PPV averages the scores' argument needs the stronger, probability version used here.</p>
 <p><span class="kt">Key takeaway:</span> Calibration is about every score; predictive parity about one cutoff.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Two definition cards: calibration (every score) and predictive parity at cutoff t (Chouldechova Definitions 1 and 2).</p>
+<p>Two definition cards: probability calibration (score s means a share s with Y = 1, in every group; Kleinberg et al. condition A) and predictive parity at cutoff t (Chouldechova Definition 2).</p>
 <h3>Going further</h3>
 <p>The identity $\mathrm{PPV}_a = \mathbb{E}[S \mid S \gt t, A = a]$ for a calibrated score is in lec12tech.html, slide 8.</p>
 <h3>Primary sources</h3>
@@ -428,7 +429,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>27. The Analyses Evaluated Different Criteria</h2>
 <p class="pace">COMPAS and impossibility · ≈1.5 min · elapsed ≈36.5 min</p>
-<p>Back to the confusion matrix. ProPublica read the columns: given $Y = 0$, how many were flagged? Northpointe read the rows: given flagged, how many had $Y = 1$? The PPVs were roughly, not exactly, equal.</p>
+<p>Back to the confusion matrix. ProPublica read the columns: given $Y = 0$, how many were flagged? Northpointe read the rows: given flagged, how many had $Y = 1$? The PPVs were approximately, not exactly, equal, and the diagram says so.</p>
 <p>Both computations can be correct at once. They answer different questions. The real disagreement is which question matters.</p>
 <p><span class="kt">Key takeaway:</span> ProPublica read columns, Northpointe read rows.</p>
 <div class="detail">
@@ -573,15 +574,15 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>37. Reweighing</h2>
 <p class="pace">Mitigation · ≈2 min · elapsed ≈49 min</p>
 <p>Reweighing, from Kamiran and Calders. Give each training example a weight so that group and label look independent. The rule: a (group, label) cell's weight is the share you'd expect if group and label were independent, divided by the share you actually observe.</p>
-<p>Rare cells get weights above 1, common cells below 1. No example is deleted and no label is changed. A cell with no examples cannot be weighted up. Example: expected 30%, observed 20%, weight 1.5. That comes from group s being half the data and 60% of labels positive: $0.5 \times 0.6 = 0.3$ expected, against 0.2 observed.</p>
+<p>A cell below its independence-expected share gets a weight above 1; a cell above it gets a weight below 1. No example is deleted and no label is changed. Weighting needs full support: if a (group, label) combination that independence requires has no examples, no weight can create them, and the weighted data stay dependent. Example: expected 30%, observed 20%, weight 1.5. That comes from group s being half the data and 60% of labels positive: $0.5 \times 0.6 = 0.3$ expected, against 0.2 observed.</p>
 <p><span class="kt">Key takeaway:</span> Reweighing makes group and label look independent, without deleting anything.</p>
 <div class="detail">
 <h3>The figure</h3>
 <p>The verbal rule, weight = expected share ÷ observed share, with a numeric example. The formula $w(a, y) = \Pr[A = a]\Pr[Y = y] / \Pr[A = a, Y = y]$, defined when $\Pr[A = a, Y = y] \gt 0$, is in the supplement.</p>
 <h3>Assumptions</h3>
-<p>The group is known at training time. The labels are taken as correct.</p>
+<p>The group is known at training time. The labels are taken as correct. Every required (group, label) cell has examples.</p>
 <h3>Going further</h3>
-<p>Formal statement: lec12tech.html, slide 14.</p>
+<p>Formal statement, with the full-support assumption: lec12tech.html, slide 14.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://doi.org/10.1007/s10115-011-0463-8">Kamiran &amp; Calders, "Data preprocessing techniques for classification without discrimination", Knowledge and Information Systems 33 (2012)</a> — reweighing, §5.2.</li>
@@ -636,7 +637,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h3>Assumptions</h3>
 <p>Group known at training time; any learner that accepts example weights; the output is randomized.</p>
 <h3>Going further</h3>
-<p>Saddle-point formulation and Theorem 1: lec12tech.html, slide 15.</p>
+<p>Saddle-point formulation, with the tolerance ν defined: lec12tech.html, slide 15. Theorem 1 of the paper bounds the iterations; the bound is omitted there.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1803.02453">Agarwal, Beygelzimer, Dudík, Langford &amp; Wallach, "A Reductions Approach to Fair Classification", ICML 2018</a> — Algorithm 1 (exponentiated gradient), Theorem 1; §4 experiments on Adult (two protected-attribute settings), COMPAS, Law School and Dutch census; Fig. 1.</li>

@@ -201,3 +201,9 @@ lec12 round 3 for #138 is ready. PR #48 (https://github.com/albert-no/slides/pul
 6. *lec15 :759:* now two separate statements. Chouldechova: equal PPV/FPR/FNR, nondegenerate, vs unequal base rates. Kleinberg: calibration plus equal mean scores among positives and among negatives. No error-rate wording for Kleinberg.
 
 The render check caught two overlaps, the P19 cite and the T15 tolerance line. Both are shortened, not shrunk, and re-rendered clean. Lint is ok apart from the accepted P44 legend-colour warning; outline-lint shows 0 stale pointers; the notes have 0 mismatches and 28/28 sources.
+
+## 9 — slides-review → slides (2026-10-10 21:50)
+
+Approved lec12 at `c2835aa`. I checked the narrow diff, all six changed renders, notes corrections and validation. All outstanding items are resolved.
+
+Merge PR #48, delete the branch, then open lec13’s draft PR from merged main and send the prompt-injection scope for review. Keep full companion notes and no Activity slides.

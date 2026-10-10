@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synthetic Media — Trustworthy AI Lecture 11</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="../../reference/katex/katex.min.css">
+<script defer src="../../reference/katex/katex.min.js"></script>
+<script defer src="../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.tm { border-left: 4px solid var(--yonsei-blue); padding: 4px 0 4px 14px; color: var(--gray-text); margin: 0 0 10px; }
+.tm b { color: var(--yonsei-blue); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+.key { color: var(--gray-text); margin-top: 6px; }
+.key b { color: var(--charcoal); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Trustworthy AI · Lecture 11</div>
+  <h1>Synthetic Media</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Watermarks, detection and provenance</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list" style="gap:10px;">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">The Provenance Problem</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Text Watermarking</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Robustness and Production</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Detecting Without a Watermark</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Provenance and Policy</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Synthesis</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>The Provenance Problem</h1>
+  <div class="divider"></div>
+  <p class="subtitle">A video, a voice, a paragraph: who or what made it, and how could we tell?</p>
+</div>
+
+<!-- 4. Arup case -->
+<div class="slide">
+  <h2>A Faked Video Call Moved US$25 Million</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:10px 0;"><svg viewBox="0 0 1000 280" style="width:100%;max-width:1000px;"><defs><marker id="a4" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker></defs><rect x="10" y="40" width="290" height="200" rx="12" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="155" y="90" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">Video call</text><text x="155" y="135" font-size="22" fill="#1a1a1a" text-anchor="middle">"CFO" and</text><text x="155" y="168" font-size="22" fill="#1a1a1a" text-anchor="middle">"colleagues"</text><text x="155" y="212" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">all faked</text><line x1="305" y1="140" x2="350" y2="140" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a4)"/><rect x="360" y="40" width="290" height="200" rx="12" fill="#fff" stroke="#1a1a1a" stroke-width="2"/><text x="505" y="90" font-size="24" fill="#1a1a1a" text-anchor="middle" font-weight="700">Employee pays</text><text x="505" y="135" font-size="22" fill="#1a1a1a" text-anchor="middle">15 transfers</text><text x="505" y="168" font-size="22" fill="#1a1a1a" text-anchor="middle">to 5 accounts</text><line x1="655" y1="140" x2="700" y2="140" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a4)"/><rect x="710" y="40" width="280" height="200" rx="12" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="850" y="90" font-size="24" fill="#d94040" text-anchor="middle" font-weight="700">Lost</text><text x="850" y="140" font-size="26" fill="#1a1a1a" text-anchor="middle" font-weight="700">HKD 200M</text><text x="850" y="178" font-size="22" fill="#1a1a1a" text-anchor="middle">≈ USD 25M</text></svg></div>
+  <p>Arup, Hong Kong office, January 2024.</p>
+  <p>The real question was <strong>origin</strong>: who is actually on this call?</p>
+  <div class="cite cite-left">CNN, "Arup revealed as victim of $25 million deepfake scam involving Hong Kong employee", 16 May 2024 (account from Hong Kong police).</div>
+</div>
+
+<!-- 5. Embed / Guess / Sign -->
+<div class="slide">
+  <h2>Three Ways to Ask "Where Did This Come From?"</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:10px 0;"><svg viewBox="0 0 1000 330" style="width:100%;max-width:1000px;"><rect x="10" y="10" width="310" height="310" rx="12" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="165" y="62" font-size="30" fill="#003876" text-anchor="middle" font-weight="700">Embed</text><text x="165" y="120" font-size="22" fill="#1a1a1a" text-anchor="middle">the generator hides</text><text x="165" y="150" font-size="22" fill="#1a1a1a" text-anchor="middle">a signal at creation</text><text x="165" y="230" font-size="22" fill="#6b7280" text-anchor="middle">tool:</text><text x="165" y="265" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">watermark</text><rect x="345" y="10" width="310" height="310" rx="12" fill="#fff" stroke="#6b7280" stroke-width="2"/><text x="500" y="62" font-size="30" fill="#1a1a1a" text-anchor="middle" font-weight="700">Guess</text><text x="500" y="120" font-size="22" fill="#1a1a1a" text-anchor="middle">anyone inspects</text><text x="500" y="150" font-size="22" fill="#1a1a1a" text-anchor="middle">the content later</text><text x="500" y="230" font-size="22" fill="#6b7280" text-anchor="middle">tool:</text><text x="500" y="265" font-size="24" fill="#1a1a1a" text-anchor="middle" font-weight="700">detector</text><rect x="680" y="10" width="310" height="310" rx="12" fill="#fff" stroke="#003876" stroke-width="2"/><text x="835" y="62" font-size="30" fill="#003876" text-anchor="middle" font-weight="700">Sign</text><text x="835" y="120" font-size="22" fill="#1a1a1a" text-anchor="middle">creator and tools</text><text x="835" y="150" font-size="22" fill="#1a1a1a" text-anchor="middle">attach a signed record</text><text x="835" y="230" font-size="22" fill="#6b7280" text-anchor="middle">tool:</text><text x="835" y="265" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">provenance</text></svg></div>
+  <p>Sections 02–05 take these one at a time.</p>
+</div>
+
+<!-- 6. Origin is not truth -->
+<div class="slide">
+  <h2>Origin Is Not Truth</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Signal</th><th>Can tell you</th><th>Cannot tell you</th></tr>
+    <tr><td>Watermark found</td><td>a keyed generator likely made it</td><td>whether the content is true</td></tr>
+    <tr><td>Valid credentials</td><td>which signer made which claims; covered data unchanged</td><td>whether those claims are true</td></tr>
+    <tr><td>No mark found</td><td>nothing certain</td><td>human-made</td></tr>
+    <tr><td>No credentials</td><td>nothing certain</td><td>fake</td></tr>
+  </table>
+  <div class="highlight"><p>AI-made content can carry <strong>honest</strong> credentials.</p></div>
+</div>
+
+<!-- 7. Three questions -->
+<div class="slide">
+  <h2>Three Questions for Every Method Today</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Question</th><th>Examples</th></tr>
+    <tr><td><strong>Who acts?</strong></td><td>generator embeds · anyone guesses · creator signs</td></tr>
+    <tr><td><strong>What must survive?</strong></td><td>edits, paraphrase, crops, re-encoding, copy-paste</td></tr>
+    <tr><td><strong>Which error hurts?</strong></td><td>accusing a human · missing AI content</td></tr>
+  </table>
+  <p class="tm" style="margin-top:22px;"><b>Strip</b> on study slides: who acts · what was attacked · the error rate used</p>
+</div>
+
+<!-- 8. Output vs model watermark -->
+<div class="slide">
+  <h2>Today: Marks on Outputs, Not on Models</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="gap:28px;">
+    <div class="def-card">
+      <h3>Output watermark · today</h3>
+      <p>Marks each generated text or image.</p>
+      <p class="muted">"Did this model produce this?"</p>
+    </div>
+    <div class="def-card" style="border-left-color:#6b7280;">
+      <h3 style="color:#6b7280;">Model watermark · not today</h3>
+      <p>Marks the weights themselves.</p>
+      <p class="muted">"Is this stolen copy my model?"</p>
+    </div>
+  </div>
+  <p style="margin-top:22px;" class="muted">Also out of scope: copyright of training data and outputs.</p>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 9. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Text Watermarking</h1>
+  <div class="divider"></div>
+  <p class="subtitle">How can a model hide a signal in ordinary-looking words?</p>
+</div>
+
+<!-- 10. Next-token sampling -->
+<div class="slide">
+  <h2>A Model Writes One Token at a Time</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 320" style="width:100%;max-width:1000px;"><defs><marker id="a10" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker></defs><rect x="10" y="120" width="290" height="80" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="155" y="168" font-size="23" fill="#003876" text-anchor="middle">"The weather today is"</text><line x1="305" y1="160" x2="370" y2="160" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a10)"/><text x="400" y="56" font-size="22" fill="#1a1a1a">sunny</text><rect x="500" y="36" width="320" height="28" fill="#003876"/><text x="830" y="58" font-size="22" fill="#1a1a1a">0.32</text><text x="400" y="116" font-size="22" fill="#1a1a1a">warm</text><rect x="500" y="96" width="210" height="28" fill="#003876"/><text x="720" y="118" font-size="22" fill="#1a1a1a">0.21</text><text x="400" y="176" font-size="22" fill="#1a1a1a">mild</text><rect x="500" y="156" width="140" height="28" fill="#003876"/><text x="650" y="178" font-size="22" fill="#1a1a1a">0.14</text><text x="400" y="236" font-size="22" fill="#1a1a1a">cold</text><rect x="500" y="216" width="100" height="28" fill="#003876"/><text x="610" y="238" font-size="22" fill="#1a1a1a">0.10</text><text x="400" y="296" font-size="22" fill="#6b7280">other</text><rect x="500" y="276" width="230" height="28" fill="#6b7280"/><text x="740" y="298" font-size="22" fill="#6b7280">0.23</text></svg></div>
+  <p>Pick one word at random by these odds, append it, repeat.</p>
+  <p class="muted">Illustrative numbers. A watermark changes only <strong>how the pick is made</strong>.</p>
+</div>
+
+<!-- 11. Green list -->
+<div class="slide">
+  <h2>Step 1: A Secret Key Splits the Vocabulary</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 300" style="width:100%;max-width:1000px;"><defs><marker id="a11" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker></defs><rect x="10" y="20" width="250" height="70" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="2"/><text x="135" y="63" font-size="22" fill="#1a1a1a" text-anchor="middle">previous token "is"</text><rect x="10" y="110" width="250" height="70" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="135" y="153" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">secret key</text><line x1="265" y1="55" x2="330" y2="90" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a11)"/><line x1="265" y1="145" x2="330" y2="110" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a11)"/><rect x="340" y="65" width="200" height="70" rx="10" fill="#fff" stroke="#003876" stroke-width="2"/><text x="440" y="108" font-size="22" fill="#003876" text-anchor="middle">hash → seed</text><line x1="545" y1="100" x2="600" y2="100" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a11)"/><g><rect x="610" y="40" width="70" height="44" fill="#1f8a4c"/><rect x="690" y="40" width="70" height="44" fill="#d94040"/><rect x="770" y="40" width="70" height="44" fill="#d94040"/><rect x="850" y="40" width="70" height="44" fill="#d94040"/><rect x="610" y="94" width="70" height="44" fill="#d94040"/><rect x="690" y="94" width="70" height="44" fill="#d94040"/><rect x="770" y="94" width="70" height="44" fill="#1f8a4c"/><rect x="850" y="94" width="70" height="44" fill="#d94040"/><rect x="610" y="148" width="70" height="44" fill="#d94040"/><rect x="690" y="148" width="70" height="44" fill="#1f8a4c"/><rect x="770" y="148" width="70" height="44" fill="#d94040"/><rect x="850" y="148" width="70" height="44" fill="#d94040"/></g><text x="765" y="232" font-size="22" fill="#1f8a4c" text-anchor="middle" font-weight="700">green list: a fraction γ (here 25%)</text><text x="765" y="266" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">red list: the rest</text></svg></div>
+  <p>The split is determined by the <strong>context and the key</strong>.</p>
+  <p class="muted">Without the key, the split looks random. Tokens: words or word pieces; "words" for short.</p>
+  <div class="cite cite-left">Kirchenbauer et al., "A Watermark for Large Language Models", ICML 2023 (the "KGW" watermark) — Section 3.</div>
+</div>
+
+<!-- 12. Nudge -->
+<div class="slide">
+  <h2>Step 2: Give Green Words a Small Boost δ</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 290" style="width:100%;max-width:1000px;"><text x="230" y="30" font-size="24" fill="#1a1a1a" text-anchor="middle" font-weight="700">before</text><text x="770" y="30" font-size="24" fill="#1a1a1a" text-anchor="middle" font-weight="700">after boost</text><text x="20" y="82" font-size="22" fill="#1f8a4c" font-weight="700">sunny</text><rect x="130" y="62" width="256" height="28" fill="#1f8a4c"/><text x="20" y="142" font-size="22" fill="#d94040" font-weight="700">warm</text><rect x="130" y="122" width="168" height="28" fill="#d94040"/><text x="20" y="202" font-size="22" fill="#1f8a4c" font-weight="700">mild</text><rect x="130" y="182" width="112" height="28" fill="#1f8a4c"/><text x="20" y="262" font-size="22" fill="#d94040" font-weight="700">cold</text><rect x="130" y="242" width="80" height="28" fill="#d94040"/><text x="560" y="82" font-size="22" fill="#1f8a4c" font-weight="700">sunny</text><rect x="670" y="62" width="320" height="28" fill="#1f8a4c"/><text x="560" y="142" font-size="22" fill="#d94040" font-weight="700">warm</text><rect x="670" y="122" width="110" height="28" fill="#d94040"/><text x="560" y="202" font-size="22" fill="#1f8a4c" font-weight="700">mild</text><rect x="670" y="182" width="150" height="28" fill="#1f8a4c"/><text x="560" y="262" font-size="22" fill="#d94040" font-weight="700">cold</text><rect x="670" y="242" width="52" height="28" fill="#d94040"/><line x1="500" y1="50" x2="500" y2="280" stroke="#e8ecf0" stroke-width="3"/></svg></div>
+  <p>Green words become <strong>more likely</strong>, red words stay possible.</p>
+  <p class="muted">Illustrative. When one word is near-certain, the boost barely changes the pick.</p>
+</div>
+
+<!-- 13. KGW Fig 1 -->
+<div class="slide">
+  <h2>Reading Back: Count the Green Words</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:32px;align-items:center;">
+    <img src="figs/sm-kgw-fig1.png" alt="Kirchenbauer et al. Fig. 1: a prompt, then a continuation without watermark (56 tokens, z-score 0.31, p-value 0.38) and one with watermark (36 tokens, z-score 7.4, p-value 6e-14); each token is highlighted green or red by the detector's list" style="height:450px;width:auto;display:block;">
+    <div>
+      <p class="key" style="margin:0 0 16px;"><b>shading</b> green-list vs red-list token, as the detector sees it</p>
+      <p>No watermark: <strong>z = 0.31</strong>, p = 0.38.</p>
+      <p>Watermark: <strong>z = 7.4</strong>, p = 6×10<sup>−14</sup>.</p>
+      <p class="muted">Detection needs the key and the text, not the model.</p>
+    </div>
+  </div>
+  <div class="cite cite-left">Kirchenbauer et al., ICML 2023 — Fig. 1, unmodified.</div>
+</div>
+
+<!-- 14. Telltale fraction -->
+<div class="slide">
+  <h2>By Chance, About γ of Words Are Green</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 250" style="width:100%;max-width:1000px;"><text x="10" y="58" font-size="23" fill="#1a1a1a" font-weight="700">ordinary text</text><g transform="translate(190,30)"><rect x="0" width="30" height="40" fill="#d94040"/><rect x="36" width="30" height="40" fill="#1f8a4c"/><rect x="72" width="30" height="40" fill="#d94040"/><rect x="108" width="30" height="40" fill="#d94040"/><rect x="144" width="30" height="40" fill="#d94040"/><rect x="180" width="30" height="40" fill="#1f8a4c"/><rect x="216" width="30" height="40" fill="#d94040"/><rect x="252" width="30" height="40" fill="#d94040"/><rect x="288" width="30" height="40" fill="#d94040"/><rect x="324" width="30" height="40" fill="#d94040"/><rect x="360" width="30" height="40" fill="#1f8a4c"/><rect x="396" width="30" height="40" fill="#d94040"/><rect x="432" width="30" height="40" fill="#d94040"/><rect x="468" width="30" height="40" fill="#1f8a4c"/><rect x="504" width="30" height="40" fill="#d94040"/><rect x="540" width="30" height="40" fill="#d94040"/><rect x="576" width="30" height="40" fill="#d94040"/><rect x="612" width="30" height="40" fill="#1f8a4c"/><rect x="648" width="30" height="40" fill="#d94040"/><rect x="684" width="30" height="40" fill="#d94040"/></g><text x="990" y="58" font-size="23" fill="#1a1a1a" text-anchor="end">5 / 20</text><text x="10" y="168" font-size="23" fill="#1a1a1a" font-weight="700">watermarked</text><g transform="translate(190,140)"><rect x="0" width="30" height="40" fill="#1f8a4c"/><rect x="36" width="30" height="40" fill="#1f8a4c"/><rect x="72" width="30" height="40" fill="#d94040"/><rect x="108" width="30" height="40" fill="#1f8a4c"/><rect x="144" width="30" height="40" fill="#1f8a4c"/><rect x="180" width="30" height="40" fill="#1f8a4c"/><rect x="216" width="30" height="40" fill="#d94040"/><rect x="252" width="30" height="40" fill="#1f8a4c"/><rect x="288" width="30" height="40" fill="#1f8a4c"/><rect x="324" width="30" height="40" fill="#1f8a4c"/><rect x="360" width="30" height="40" fill="#d94040"/><rect x="396" width="30" height="40" fill="#1f8a4c"/><rect x="432" width="30" height="40" fill="#1f8a4c"/><rect x="468" width="30" height="40" fill="#1f8a4c"/><rect x="504" width="30" height="40" fill="#d94040"/><rect x="540" width="30" height="40" fill="#1f8a4c"/><rect x="576" width="30" height="40" fill="#1f8a4c"/><rect x="612" width="30" height="40" fill="#d94040"/><rect x="648" width="30" height="40" fill="#1f8a4c"/><rect x="684" width="30" height="40" fill="#1f8a4c"/></g><text x="990" y="168" font-size="23" fill="#1f8a4c" text-anchor="end" font-weight="700">14 / 20</text><text x="500" y="236" font-size="22" fill="#6b7280" text-anchor="middle">illustrative, γ = 25%: expect about 5 green words in 20 by chance</text></svg></div>
+  <p>The question: is the green count <strong>too high to be chance</strong>?</p>
+</div>
+
+<!-- 15. Threshold -->
+<div class="slide">
+  <h2>The Threshold Sets the False-Alarm Rate</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 260" style="width:100%;max-width:1000px;"><line x1="40" y1="210" x2="980" y2="210" stroke="#1a1a1a" stroke-width="2"/><path d="M60,210 C140,210 160,60 230,60 C300,60 320,210 400,210" fill="#e8ecf0" stroke="#003876" stroke-width="3"/><path d="M700,210 C760,210 780,80 840,80 C900,80 920,210 980,210" fill="#e3f3e9" stroke="#1f8a4c" stroke-width="3"/><line x1="560" y1="30" x2="560" y2="210" stroke="#d94040" stroke-width="3" stroke-dasharray="8 6"/><text x="230" y="40" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">ordinary text</text><text x="840" y="60" font-size="22" fill="#1f8a4c" text-anchor="middle" font-weight="700">watermarked</text><text x="570" y="52" font-size="22" fill="#d94040">threshold z = 4</text><text x="230" y="240" font-size="22" fill="#1a1a1a" text-anchor="middle">z ≈ 0</text><text x="840" y="240" font-size="22" fill="#1a1a1a" text-anchor="middle">z large</text><text x="560" y="240" font-size="22" fill="#d94040" text-anchor="middle">4</text></svg></div>
+  <p><strong>z</strong>: how many standard deviations the green count sits above chance.</p>
+  <p>z &gt; 4 → about <strong>3 × 10<sup>−5</sup></strong> false alarms (normal approximation), <em>if</em> tokens act like independent coin flips.</p>
+  <p class="muted">Not guaranteed: at 20 tokens the exact tail is ≈ 2 × 10<sup>−4</sup>.</p>
+  <div class="cite cite-left">Kirchenbauer et al., ICML 2023 — Section 2–3 (z-test, threshold z = 4). Sketch, not to scale.</div>
+</div>
+
+<!-- 16. Length -->
+<div class="slide">
+  <h2>Longer Text, Stronger Evidence</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:32px;align-items:center;">
+    <img src="figs/sm-kgw-fig3a.png" alt="Kirchenbauer et al. Fig. 3a: z-score against number of tokens T from 0 to 200, for boost delta 5 and green fraction gamma 0.1, 0.25, 0.5, 0.75 and 0.9; every curve rises with T, steepest for gamma 0.1, reaching about 32 at T 200, and flattest for gamma 0.9, about 4" style="height:400px;width:auto;display:block;">
+    <div>
+      <p class="key" style="margin:0 0 6px;"><b>x</b> tokens T · <b>y</b> z-score</p>
+      <p class="key" style="margin:0 0 18px;"><b>colour</b> green fraction γ, boost δ = 5</p>
+      <p>Every curve <strong>rises with length</strong>.</p>
+      <p>Steady green rate → z grows like <strong>√T</strong>.</p>
+      <p class="muted">Short replies carry little evidence.</p>
+    </div>
+  </div>
+  <div class="cite cite-left">Kirchenbauer et al., ICML 2023 — Fig. 3a (OPT-1.3B, multinomial sampling, average z), unmodified.</div>
+</div>
+
+<!-- 17. Repeats -->
+<div class="slide">
+  <h2>Repeated Phrases Break the Coin-Flip Count</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:28px;align-items:center;">
+    <img src="figs/sm-k24-fig7r.png" alt="Kirchenbauer et al. 2024 Fig. 7 right, WikiText-103 human text: z-score needed for a 0.1 percent false-positive rate against tokens T from 0 to 200. Uncorrected LeftHash (blue) mostly between 3.5 and 4.8; with repeated pairs scored once (green) near the expected 3.09 (black line)." style="height:400px;width:auto;display:block;">
+    <div>
+      <p class="key" style="margin:0 0 6px;"><b>y</b> z needed for 0.1% false alarms on human text</p>
+      <p class="key" style="margin:0 0 16px;"><b>blue</b> repeats counted · <b>green</b> each repeated pair once · <b>black</b> theory, 3.09</p>
+      <p>Repeats counted: measured threshold <strong>above theory</strong>.</p>
+      <p>In this WikiText test, scoring repeats once brought it near 3.09.</p>
+    </div>
+  </div>
+  <p class="muted">Not a general fix: distinct tokens after the same previous token still share one split.</p>
+  <div class="cite cite-left">Kirchenbauer et al., "On the Reliability of Watermarks for Large Language Models", ICLR 2024 — Fig. 7, right panel (human text, WikiText-103), cropped.</div>
+</div>
+
+<!-- 18. Tradeoff -->
+<div class="slide">
+  <h2>A Bigger Boost Is Easier to Detect, but Less Fluent</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:32px;align-items:center;">
+    <img src="figs/sm-kgw-fig2l.png" alt="Kirchenbauer et al. Fig. 2 left: z-score against perplexity under a larger oracle model, with the perplexity axis reversed from 13 to 3; points for boost delta 0, 1, 2, 5 and 10 and green fraction gamma 0.1 to 0.9. Delta 0 sits at z 0 and perplexity about 5; delta 10 with gamma 0.1 reaches z about 41 at perplexity about 13." style="height:420px;width:auto;display:block;">
+    <div>
+      <p class="key" style="margin:0 0 6px;"><b>x</b> perplexity, <strong>reversed</strong>: right = more fluent</p>
+      <p class="key" style="margin:0 0 6px;"><b>y</b> z-score · <b>shape</b> boost δ</p>
+      <p class="key" style="margin:0 0 18px;"><b>colour</b> green fraction γ · T ≈ 200</p>
+      <p>No boost: z = 0, perplexity ≈ 5.</p>
+      <p>δ = 10: z up to ≈ 41, perplexity ≈ 13.</p>
+    </div>
+  </div>
+  <div class="cite cite-left">Kirchenbauer et al., ICML 2023 — Fig. 2, left panel (OPT-1.3B, multinomial sampling), unmodified.</div>
+</div>
+
+<!-- 19. Distortion-free / undetectable -->
+<div class="slide">
+  <h2>Some Marks Leave the Output Distribution Unchanged</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="gap:28px;">
+    <div class="def-card">
+      <h3>Distortion-free</h3>
+      <p>With a fresh key, never reused, one reply has <strong>exactly</strong> the model's odds, averaged over the key.</p>
+      <p class="muted">Kuditipudi et al. · says nothing about repeated queries</p>
+    </div>
+    <div class="def-card">
+      <h3>Undetectable</h3>
+      <p>Without the key, efficient tests gain only a <strong>negligible</strong> edge, under cryptographic assumptions.</p>
+      <p class="muted">Christ, Gunn &amp; Zamir, 2023</p>
+    </div>
+  </div>
+  <p style="margin-top:20px;">Two different guarantees: <strong>exact odds</strong> for one reply vs. <strong>no practical test</strong> without the key.</p>
+  <div class="cite cite-left">Kuditipudi et al., "Robust Distortion-free Watermarks for Language Models", TMLR — Definition 1 · Christ, Gunn &amp; Zamir, "Undetectable Watermarks for Language Models", arXiv 2306.09194, 2023.</div>
+</div>
+
+<!-- ============ SECTION 03 ============ -->
+<!-- 20. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Robustness and Production</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Which edits does a mark survive, and what is actually deployed?</p>
+</div>
+
+<!-- 21. Edit ladder -->
+<div class="slide">
+  <h2>Edits Range From Word Swaps to Full Rewrites</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 300" style="width:100%;max-width:1000px;"><rect x="5" y="230" width="190" height="60" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="100" y="268" font-size="22" fill="#003876" text-anchor="middle">swap words</text><rect x="205" y="175" width="190" height="60" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="300" y="213" font-size="22" fill="#003876" text-anchor="middle">model paraphrase</text><rect x="405" y="120" width="190" height="60" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="500" y="158" font-size="22" fill="#003876" text-anchor="middle">paraphrase ×5</text><rect x="605" y="65" width="190" height="60" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="700" y="103" font-size="22" fill="#003876" text-anchor="middle">human rewrite</text><rect x="805" y="5" width="190" height="95" rx="8" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="900" y="45" font-size="22" fill="#d94040" text-anchor="middle">paste into</text><text x="900" y="78" font-size="22" fill="#d94040" text-anchor="middle">human text</text></svg></div>
+  <p>Each study tests <strong>one rung</strong>, with one mark, length and error rate.</p>
+  <p class="muted">The attacker never has the key in these studies.</p>
+</div>
+
+<!-- 22. Kuditipudi Fig 4 -->
+<div class="slide">
+  <h2>Random Word Swaps: Some Marks Held Longer</h2>
+  <div class="divider"></div>
+  <p class="tm"><b>Attacker</b> substitutes random tokens · no key · 35-token replies · LLaMA-7B</p>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:28px;align-items:center;">
+    <img src="figs/sm-kud-fig4b.png" alt="Kuditipudi et al. Fig. 4b, LLaMA-7B, m equals 35: median p-value against fraction of substitutions from 0.1 to 0.7. EXP stays near 0 up to 0.5, then rises to about 0.25 at 0.7; EXP-edit is about 0.04 at 0.5; KGW-2.0 is about 0.07 at 0.3 and 0.5 at 0.7." style="height:420px;width:auto;display:block;">
+    <div>
+      <p class="key" style="margin:0 0 6px;"><b>x</b> fraction of tokens substituted</p>
+      <p class="key" style="margin:0 0 16px;"><b>y</b> median p-value: below 0.05 → <strong>at least half</strong> of replies flagged at a 5% level</p>
+      <p><strong>EXP</strong>: below 0.05 up to half substituted.</p>
+      <p>KGW-2.0: above 0.05 by 30%.</p>
+    </div>
+  </div>
+  <div class="cite cite-left">Kuditipudi et al., "Robust Distortion-free Watermarks for Language Models", TMLR — Fig. 4b (LLaMA-7B; 4a, OPT-1.3B, in notes; KGW-2.0: γ = 0.25, δ = 2), cropped.</div>
+</div>
+
+<!-- 23. DIPPER -->
+<div class="slide">
+  <h2>A Paraphrasing Model Cut Detection to About Half</h2>
+  <div class="divider"></div>
+  <p class="tm"><b>Attacker</b> 11B paraphraser, no key · 300 tokens · threshold: <b>1% false alarms</b> on human text</p>
+  <div style="display:flex;justify-content:center;margin:4px 0;"><svg viewBox="0 0 1000 335" style="width:100%;max-width:900px;"><line x1="110" y1="290" x2="990" y2="290" stroke="#1a1a1a" stroke-width="2"/><text x="100" y="297" font-size="21" fill="#6b7280" text-anchor="end">0</text><text x="100" y="177" font-size="21" fill="#6b7280" text-anchor="end">50</text><line x1="110" y1="170" x2="990" y2="170" stroke="#e8ecf0" stroke-width="2"/><text x="100" y="57" font-size="21" fill="#6b7280" text-anchor="end">100</text><line x1="110" y1="50" x2="990" y2="50" stroke="#e8ecf0" stroke-width="2"/><rect x="140" y="50.0" width="66" height="240.0" fill="#003876"/><text x="173" y="42" font-size="21" fill="#003876" text-anchor="middle" font-weight="700">100</text><rect x="212" y="50.2" width="66" height="239.8" fill="#6b7280"/><text x="245" y="42" font-size="21" fill="#6b7280" text-anchor="middle" font-weight="700">99.9</text><text x="209" y="322" font-size="22" fill="#1a1a1a" text-anchor="middle">clean</text><rect x="312" y="57.0" width="66" height="233.0" fill="#003876"/><text x="345" y="49" font-size="21" fill="#003876" text-anchor="middle" font-weight="700">97.1</text><rect x="384" y="59.1" width="66" height="230.9" fill="#6b7280"/><text x="417" y="51" font-size="21" fill="#6b7280" text-anchor="middle" font-weight="700">96.2</text><text x="381" y="322" font-size="22" fill="#1a1a1a" text-anchor="middle">20L</text><rect x="484" y="84.1" width="66" height="205.9" fill="#003876"/><text x="517" y="76" font-size="21" fill="#003876" text-anchor="middle" font-weight="700">85.8</text><rect x="556" y="86.5" width="66" height="203.5" fill="#6b7280"/><text x="589" y="78" font-size="21" fill="#6b7280" text-anchor="middle" font-weight="700">84.8</text><text x="553" y="322" font-size="22" fill="#1a1a1a" text-anchor="middle">40L</text><rect x="656" y="124.6" width="66" height="165.4" fill="#003876"/><text x="689" y="117" font-size="21" fill="#003876" text-anchor="middle" font-weight="700">68.9</text><rect x="728" y="137.1" width="66" height="152.9" fill="#6b7280"/><text x="761" y="129" font-size="21" fill="#6b7280" text-anchor="middle" font-weight="700">63.7</text><text x="725" y="322" font-size="22" fill="#1a1a1a" text-anchor="middle">60L</text><rect x="828" y="152.7" width="66" height="137.3" fill="#003876"/><text x="861" y="145" font-size="21" fill="#003876" text-anchor="middle" font-weight="700">57.2</text><rect x="900" y="163.3" width="66" height="126.7" fill="#6b7280"/><text x="933" y="155" font-size="21" fill="#6b7280" text-anchor="middle" font-weight="700">52.8</text><text x="897" y="322" font-size="22" fill="#1a1a1a" text-anchor="middle">60L, 60O</text></svg></div>
+  <p class="key"><b>y</b> % of watermarked texts detected · <b>blue</b> GPT2-1.5B · <b>grey</b> OPT-13B</p>
+  <p class="key"><b>L</b> word-choice change · <b>O</b> reordering (DIPPER settings, 0–100)</p>
+  <div class="cite cite-left">Krishna et al., "Paraphrasing evades detectors of AI-generated text, but retrieval is an effective defense", NeurIPS 2023 — Table 1, KGW rows (γ = 0.5, δ = 2), redrawn.</div>
+</div>
+
+<!-- 24. Sadasivan recursive -->
+<div class="slide">
+  <h2>Paraphrasing Five Times Pushed Detection Lower</h2>
+  <div class="divider"></div>
+  <p class="tm"><b>Attacker</b> repeats paraphrase, no key · ~300 tokens, OPT-13B, XSum · <b>1% false alarms</b></p>
+  <div style="display:flex;justify-content:center;margin:4px 0;"><svg viewBox="0 0 1000 340" style="width:100%;max-width:1000px;"><line x1="110" y1="270" x2="990" y2="270" stroke="#1a1a1a" stroke-width="2"/><text x="100" y="277" font-size="21" fill="#6b7280" text-anchor="end">0</text><line x1="110" y1="150" x2="990" y2="150" stroke="#e8ecf0" stroke-width="2"/><text x="100" y="157" font-size="21" fill="#6b7280" text-anchor="end">50</text><line x1="110" y1="30" x2="990" y2="30" stroke="#e8ecf0" stroke-width="2"/><text x="100" y="37" font-size="21" fill="#6b7280" text-anchor="end">100</text><rect x="145" y="30.5" width="90" height="239.5" fill="#003876"/><text x="190" y="22" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">99.8</text><text x="190" y="300" font-size="22" fill="#1a1a1a" text-anchor="middle">none</text><text x="190" y="330" font-size="21" fill="#6b7280" text-anchor="middle">ppl 5.1</text><rect x="295" y="76.3" width="90" height="193.7" fill="#d94040"/><text x="340" y="68" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">80.7</text><text x="340" y="300" font-size="22" fill="#1a1a1a" text-anchor="middle">1</text><text x="340" y="330" font-size="21" fill="#6b7280" text-anchor="middle">ppl 7.7</text><rect x="445" y="162.5" width="90" height="107.5" fill="#d94040"/><text x="490" y="154" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">44.8</text><text x="490" y="300" font-size="22" fill="#1a1a1a" text-anchor="middle">2</text><text x="490" y="330" font-size="21" fill="#6b7280" text-anchor="middle">ppl 7.8</text><rect x="595" y="195.8" width="90" height="74.2" fill="#d94040"/><text x="640" y="188" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">30.9</text><text x="640" y="300" font-size="22" fill="#1a1a1a" text-anchor="middle">3</text><text x="640" y="330" font-size="21" fill="#6b7280" text-anchor="middle">ppl 8.5</text><rect x="745" y="215.5" width="90" height="54.5" fill="#d94040"/><text x="790" y="208" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">22.7</text><text x="790" y="300" font-size="22" fill="#1a1a1a" text-anchor="middle">4</text><text x="790" y="330" font-size="21" fill="#6b7280" text-anchor="middle">ppl 7.7</text><rect x="895" y="232.3" width="90" height="37.7" fill="#d94040"/><text x="940" y="224" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">15.7</text><text x="940" y="300" font-size="22" fill="#1a1a1a" text-anchor="middle">5</text><text x="940" y="330" font-size="21" fill="#6b7280" text-anchor="middle">ppl 8.7</text></svg></div>
+  <p class="key"><b>y</b> % of watermarked texts caught at 1% false alarms · <b>x</b> paraphrase rounds · <b>ppl</b> perplexity</p>
+  <p>Caught: <strong>99.8%</strong> → <strong>15.7%</strong> after five rounds; perplexity rose 5.1 → 8.7.</p>
+  <div class="cite cite-left">Sadasivan et al., "Can AI-Generated Text be Reliably Detected?", TMLR 2025 — Fig. 3a legend values (TPR at 1% FPR, perplexity), redrawn.</div>
+</div>
+
+<!-- 25. Impossibility bound -->
+<div class="slide">
+  <h2>An Impossibility Bound, and What It Covers</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:4px 0;"><svg viewBox="0 0 1000 330" style="width:100%;max-width:1000px;"><line x1="120" y1="280" x2="930" y2="280" stroke="#1a1a1a" stroke-width="2"/><line x1="120" y1="280" x2="120" y2="40" stroke="#1a1a1a" stroke-width="2"/><line x1="120" y1="60" x2="930" y2="60" stroke="#e8ecf0" stroke-width="2"/><text x="110" y="287" font-size="21" fill="#6b7280" text-anchor="end">0.5</text><text x="110" y="67" font-size="21" fill="#6b7280" text-anchor="end">1.0</text><text x="120" y="312" font-size="21" fill="#6b7280" text-anchor="middle">0</text><text x="920" y="312" font-size="21" fill="#6b7280" text-anchor="middle">1</text><text x="520" y="318" font-size="22" fill="#1a1a1a" text-anchor="middle">distance between AI and human text (TV)</text><text x="30" y="170" font-size="22" fill="#1a1a1a" text-anchor="middle" transform="rotate(-90 30 170)">best AUROC</text><polyline points="120,280.0 200,238.2 280,200.8 360,167.8 440,139.2 520,115.0 600,95.2 680,79.8 760,68.8 840,62.2 920,60.0" fill="none" stroke="#003876" stroke-width="4"/><circle cx="200" cy="238.2" r="9" fill="#d94040"/><text x="250" y="244" font-size="22" fill="#d94040" font-weight="700">paraphrased to look human:</text><text x="250" y="270" font-size="22" fill="#d94040">bound near 0.5 (coin flip)</text><circle cx="840" cy="62.2" r="9" fill="#1f8a4c"/><text x="925" y="140" font-size="22" fill="#1f8a4c" font-weight="700" text-anchor="end">watermarked, key fixed: TV can be large,</text><text x="925" y="168" font-size="22" fill="#1f8a4c" text-anchor="end">bound near 1 (says little)</text></svg></div>
+  <p>Any detector: AUROC ≤ ½ + TV − TV²/2. <strong>Always true.</strong></p>
+  <p class="muted">TV: the largest gap in probability the two sources give any set of texts.</p>
+  <p class="muted">Forces near-chance only if TV is small, for the key the detector holds.</p>
+  <div class="cite cite-left">Sadasivan et al., TMLR 2025 — Theorem 1 and its discussion of watermarked models. Curve drawn from the formula.</div>
+</div>
+
+<!-- 26. Human rewrite (k24 fig 4 right) -->
+<div class="slide">
+  <h2>Human Rewrites: Detected With Enough Text</h2>
+  <div class="divider"></div>
+  <p class="tm"><b>Attacker</b> 14 writers rewrite, no key · threshold: <b>10<sup>−5</sup> false alarms</b></p>
+  <div class="grid-2" style="grid-template-columns:640px 1fr;gap:32px;align-items:center;">
+    <div><img src="figs/sm-k24-fig4r.png" alt="Kirchenbauer et al. 2024 Fig. 4 right: z-score against number of tokens observed, for text attacked by Dipper, by GPT and by the average human paraphrase; all curves rise with length, the human curve lowest." style="width:640px;height:auto;display:block;"></div>
+    <div>
+      <p class="key"><b>x</b> tokens read · <b>y</b> z-score · higher = stronger evidence</p>
+      <p>Human rewrites: detected after <strong>about 800 tokens</strong> on average.</p>
+    </div>
+  </div>
+  <div class="cite cite-left">Kirchenbauer et al., ICLR 2024 — Fig. 4 right and abstract (human study, watermarked Vicuna answers), unmodified.</div>
+</div>
+
+<!-- 27. Copy-paste -->
+<div class="slide">
+  <h2>Mixed Into Human Text, the Mark Fades</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:4px 0;"><svg viewBox="0 0 1000 330" style="width:100%;max-width:1000px;"><line x1="300" y1="10" x2="300" y2="270" stroke="#e8ecf0" stroke-width="2"/><text x="300" y="300" font-size="21" fill="#6b7280" text-anchor="middle">0.50</text><line x1="580" y1="10" x2="580" y2="270" stroke="#e8ecf0" stroke-width="2"/><text x="580" y="300" font-size="21" fill="#6b7280" text-anchor="middle">0.75</text><line x1="860" y1="10" x2="860" y2="270" stroke="#e8ecf0" stroke-width="2"/><text x="860" y="300" font-size="21" fill="#6b7280" text-anchor="middle">1.00</text><text x="300" y="326" font-size="21" fill="#d94040" text-anchor="middle" font-weight="700">chance</text><text x="285" y="51" font-size="22" fill="#1a1a1a" text-anchor="end">200 tokens, 25% marked</text><rect x="300" y="20" width="425.6" height="46" fill="#003876"/><rect x="725.6" y="20" width="31.4" height="46" fill="#003876" fill-opacity="0.45"/><text x="767" y="51" font-size="22" fill="#003876" font-weight="700">0.88–0.91</text><text x="285" y="115" font-size="22" fill="#1a1a1a" text-anchor="end">200 tokens, 10% marked</text><rect x="300" y="84" width="165.8" height="46" fill="#d94040"/><rect x="465.8" y="84" width="59.4" height="46" fill="#d94040" fill-opacity="0.45"/><text x="535" y="115" font-size="22" fill="#d94040" font-weight="700">0.65–0.70</text><text x="285" y="179" font-size="22" fill="#1a1a1a" text-anchor="end">600 tokens, 25% marked</text><rect x="300" y="148" width="521.9" height="46" fill="#003876"/><rect x="821.9" y="148" width="21.3" height="46" fill="#003876" fill-opacity="0.45"/><text x="853" y="179" font-size="22" fill="#003876" font-weight="700">0.97–0.99</text><text x="285" y="243" font-size="22" fill="#1a1a1a" text-anchor="end">600 tokens, 10% marked</text><rect x="300" y="212" width="322.6" height="46" fill="#d94040"/><rect x="622.6" y="212" width="40.3" height="46" fill="#d94040" fill-opacity="0.45"/><text x="673" y="243" font-size="22" fill="#d94040" font-weight="700">0.79–0.82</text><line x1="300" y1="10" x2="300" y2="275" stroke="#1a1a1a" stroke-width="2"/></svg></div>
+  <p class="key"><b>x</b> ROC-AUC, axis starts at <strong>0.5 = chance</strong> · <b>bar</b> range over 4 variants (1 or 3 pieces, 2 hash schemes)</p>
+  <p>Less marked text, fewer tokens: <strong>closer to chance</strong>.</p>
+  <div class="cite cite-left">Kirchenbauer et al., ICLR 2024 — Fig. 2, copy-paste bars (LLaMA-7B, γ = 0.25, δ = 2); values read from the figure, ≈, redrawn.</div>
+</div>
+
+<!-- 28. Study comparison -->
+<div class="slide">
+  <h2>Compare Robustness Results Only With Their Setups</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Study</th><th>Attack (no key)</th><th>Tokens</th><th>Metric</th><th>Result</th></tr>
+    <tr><td>Kuditipudi</td><td>random swaps</td><td class="num">35</td><td>median p-value</td><td>EXP &lt; 0.05 to ~50% substituted</td></tr>
+    <tr><td>Krishna</td><td>paraphraser</td><td class="num">300</td><td>caught at 1% false alarms</td><td>100 → 57%</td></tr>
+    <tr><td>Sadasivan</td><td>paraphrase ×5</td><td class="num">~300</td><td>caught at 1% false alarms</td><td>99.8 → 15.7%</td></tr>
+    <tr><td>Kirchenbauer</td><td>paraphrasers</td><td class="num">600 →</td><td>ROC-AUC</td><td>AUC 0.92–0.99</td></tr>
+    <tr><td>Kirchenbauer</td><td>human rewrite</td><td class="num">~800</td><td>z vs 10<sup>−5</sup> threshold</td><td>detected on average</td></tr>
+  </table>
+  <p class="muted" style="margin-top:12px;">Different metrics, marks and models: compare within a row, not across. Settings in the notes.</p>
+</div>
+
+<!-- 29. Impossibility vs robustness -->
+<div class="slide">
+  <h2>"Impossible" and "Robust" Answer Different Questions</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="gap:28px;">
+    <div class="def-card">
+      <h3>The bound</h3>
+      <p>Always holds. It pushes every detector <strong>toward chance</strong> only once AI text is nearly indistinguishable.</p>
+    </div>
+    <div class="def-card">
+      <h3>The experiments</h3>
+      <p>Against <strong>these</strong> edits, at <strong>this</strong> length and error rate, the mark was found or not.</p>
+    </div>
+  </div>
+  <div class="highlight" style="margin-top:22px;"><p>Both can be true. Ask: how much did the attack <strong>cost</strong> in effort and quality?</p></div>
+</div>
+
+<!-- 30. SynthID-Text -->
+<div class="slide">
+  <h2>SynthID-Text Runs in a Deployed Chatbot</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:32px;align-items:center;">
+    <img src="figs/sm-synthid-fig3a.png" alt="Dathathri et al. Fig. 3a: true-positive rate at 1 percent false-positive rate against number of tokens; SynthID-Text (orange) rises from about 0.22 at 50 tokens to about 0.5 at 100, 0.7 at 200 and 0.87 at 400; Gumbel sampling (blue) sits lower" style="height:400px;width:auto;display:block;">
+    <div>
+      <p class="key" style="margin:0 0 6px;"><b>y</b> caught at 1% false alarms · <b>x</b> tokens</p>
+      <p class="key" style="margin:0 0 18px;"><b>orange</b> SynthID-Text · <b>blue</b> earlier Gumbel method</p>
+      <p>≈ 50% at 100 tokens, ≈ 87% at 400.</p>
+      <p>Live test, ~20M Gemini replies: user ratings showed quality kept, per the authors.</p>
+    </div>
+  </div>
+  <div class="cite cite-left">Dathathri et al., "Scalable watermarking for identifying large language model outputs", Nature 634 (2024) — Fig. 3a (Gemma 7B-IT, temperature 0.7), unmodified.</div>
+</div>
+
+<!-- 31. Tree-Ring table -->
+<div class="slide">
+  <h2>Image Marks: It Depends on the Method and the Edit</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Method</th><th>Clean</th><th>Rotate 75°</th><th>JPEG 25</th><th>Crop 75%</th><th>Blur</th><th>Noise</th></tr>
+    <tr><td>DwtDct</td><td class="num">0.97</td><td class="num" style="color:#d94040;">0.60</td><td class="num" style="color:#d94040;">0.49</td><td class="num" style="color:#d94040;">0.64</td><td class="num" style="color:#d94040;">0.50</td><td class="num" style="color:#d94040;">0.29</td></tr>
+    <tr><td>RivaGan</td><td class="num">1.00</td><td class="num" style="color:#d94040;">0.17</td><td class="num">0.98</td><td class="num">1.00</td><td class="num">0.97</td><td class="num">0.89</td></tr>
+    <tr><td>Tree-Ring (rand)</td><td class="num">1.00</td><td class="num" style="color:#d94040;">0.49</td><td class="num">1.00</td><td class="num">0.97</td><td class="num">1.00</td><td class="num">0.97</td></tr>
+    <tr><td>Tree-Ring (rings)</td><td class="num">1.00</td><td class="num">0.94</td><td class="num">1.00</td><td class="num">0.96</td><td class="num">1.00</td><td class="num">0.94</td></tr>
+  </table>
+  <p class="key"><b>cells</b> AUC on Stable Diffusion images · 1.0 perfect · 0.5 chance · <span style="color:#d94040;">red</span> ≤ 0.65</p>
+  <p>RivaGan survived cropping but <strong>not rotation</strong>.</p>
+  <div class="cite cite-left">Wen et al., "Tree-Ring Watermarks: Fingerprints for Diffusion Images that are Invisible and Robust", NeurIPS 2023 — Table 2 (subset of rows and columns), rounded.</div>
+</div>
+
+<!-- 32. SynthID at scale -->
+<div class="slide">
+  <h2>A Vendor's Detector Reads That Vendor's Mark</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 270" style="width:100%;max-width:1000px;"><defs><marker id="a32" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker></defs><rect x="10" y="10" width="300" height="70" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="160" y="53" font-size="22" fill="#003876" text-anchor="middle">Google model + SynthID</text><rect x="10" y="100" width="300" height="70" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><text x="160" y="143" font-size="22" fill="#1a1a1a" text-anchor="middle">other vendor's mark</text><rect x="10" y="190" width="300" height="70" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/><text x="160" y="233" font-size="22" fill="#1a1a1a" text-anchor="middle">open model, no mark</text><line x1="315" y1="45" x2="560" y2="125" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a32)"/><line x1="315" y1="135" x2="560" y2="135" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a32)"/><line x1="315" y1="225" x2="560" y2="145" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a32)"/><rect x="570" y="95" width="200" height="80" rx="10" fill="#fff" stroke="#003876" stroke-width="2.5"/><text x="670" y="130" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">SynthID</text><text x="670" y="158" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">Detector</text><text x="800" y="55" font-size="22" fill="#1f8a4c" font-weight="700">✓ found</text><text x="800" y="143" font-size="22" fill="#6b7280">"no SynthID"</text><text x="800" y="233" font-size="22" fill="#6b7280">"no SynthID"</text></svg></div>
+  <p>Google: over <strong>10 billion</strong> items marked (May 2025); Detector portal in early testing.</p>
+  <p class="muted">"No SynthID" ≠ human-made.</p>
+  <div class="cite cite-left">Google, The Keyword blog, 20 May 2025 (SynthID Detector announcement).</div>
+</div>
+
+<!-- 33. What standard means -->
+<div class="slide">
+  <h2>"Standard" Can Mean Three Different Things</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Layer</th><th>How shared today</th><th>Example</th></tr>
+    <tr><td>Signed record format</td><td>open specification</td><td>C2PA Content Credentials</td></tr>
+    <tr><td>Watermark + detector</td><td>usually one vendor's key</td><td>SynthID Detector</td></tr>
+    <tr><td>Labelling rules</td><td>set per jurisdiction</td><td>China's GB 45438-2025</td></tr>
+  </table>
+  <div class="highlight" style="margin-top:22px;"><p>Before "there is a standard", ask: <strong>a standard for which layer?</strong></p></div>
+</div>
+
+<!-- ============ SECTION 04 ============ -->
+<!-- 34. Divider 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Detecting Without a Watermark</h1>
+  <div class="divider"></div>
+  <p class="subtitle">If nobody embedded a signal, can we still guess what is AI-made?</p>
+</div>
+
+<!-- 35. Overlapping bells -->
+<div class="slide">
+  <h2>A Detector Draws One Line Through Overlapping Scores</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 280" style="width:100%;max-width:1000px;"><line x1="30" y1="230" x2="980" y2="230" stroke="#1a1a1a" stroke-width="2"/><path d="M80,230 C230,230 260,50 380,50 C500,50 530,230 680,230" fill="#e8ecf0" fill-opacity="0.8" stroke="#003876" stroke-width="3"/><path d="M330,230 C480,230 510,50 630,50 C750,50 780,230 930,230" fill="#fdecec" fill-opacity="0.6" stroke="#d94040" stroke-width="3"/><line x1="560" y1="25" x2="560" y2="230" stroke="#1a1a1a" stroke-width="3" stroke-dasharray="8 6"/><text x="380" y="36" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">human-written</text><text x="700" y="36" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">AI-written</text><text x="600" y="262" font-size="22" fill="#003876">human flagged: false alarm</text><text x="520" y="262" font-size="22" fill="#d94040" text-anchor="end">AI missed</text><text x="30" y="262" font-size="21" fill="#6b7280">detector score →</text></svg></div>
+  <p>Moving the line trades <strong>false alarms</strong> for <strong>misses</strong>; it never removes both.</p>
+  <p class="muted">Sketch. Without a key, the two piles can overlap a lot.</p>
+</div>
+
+<!-- 36. Base-rate illustration -->
+<div class="slide">
+  <h2>Worked Example: Rare AI Text, Many False Accusations</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:4px 0;"><svg viewBox="0 0 1000 300" style="width:100%;max-width:1000px;"><defs><marker id="a36" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker></defs><rect x="10" y="115" width="210" height="70" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="2"/><text x="115" y="158" font-size="23" fill="#1a1a1a" text-anchor="middle" font-weight="700">10,000 essays</text><line x1="225" y1="135" x2="300" y2="70" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a36)"/><line x1="225" y1="165" x2="300" y2="230" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a36)"/><rect x="310" y="35" width="250" height="70" rx="10" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="435" y="78" font-size="22" fill="#d94040" text-anchor="middle">200 AI (2%)</text><rect x="310" y="195" width="250" height="70" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="435" y="238" font-size="22" fill="#003876" text-anchor="middle">9,800 human</text><line x1="565" y1="70" x2="640" y2="70" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a36)"/><line x1="565" y1="230" x2="640" y2="230" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a36)"/><text x="602" y="58" font-size="21" fill="#6b7280" text-anchor="middle">90%</text><text x="602" y="218" font-size="21" fill="#6b7280" text-anchor="middle">1%</text><rect x="650" y="35" width="150" height="70" rx="10" fill="#d94040"/><text x="725" y="78" font-size="23" fill="#fff" text-anchor="middle" font-weight="700">180</text><rect x="650" y="195" width="150" height="70" rx="10" fill="#003876"/><text x="725" y="238" font-size="23" fill="#fff" text-anchor="middle" font-weight="700">98</text><text x="900" y="130" font-size="22" fill="#1a1a1a" text-anchor="middle">278 flagged</text><text x="900" y="170" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">98 / 278</text><text x="900" y="204" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">≈ 35% human</text></svg></div>
+  <p>Catch rate 90%, false-alarm rate 1%: still <strong>one flag in three</strong> is a human.</p>
+  <p class="muted">Hypothetical numbers for illustration, not from a study.</p>
+</div>
+
+<!-- 37. FPR != P(human|flag) -->
+<div class="slide">
+  <h2>"1% False Alarms" Is Not "1% of Flags Are Wrong"</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="gap:28px;">
+    <div class="def-card">
+      <h3>False-positive rate</h3>
+      <p>Of <strong>human</strong> essays, the share flagged.</p>
+      <p class="muted">Set by the threshold; measured on some writers.</p>
+    </div>
+    <div class="def-card" style="border-left-color:#d94040;">
+      <h3 style="color:#d94040;">Flagged but human</h3>
+      <p>Of <strong>flagged</strong> essays, the share human.</p>
+      <p class="muted">Depends on how common AI text is.</p>
+    </div>
+  </div>
+  <table style="margin-top:20px;">
+    <tr><th>Share of essays AI-written</th><th>Flags that are human</th></tr>
+    <tr><td>2%</td><td class="num"><strong>≈ 35%</strong></td></tr>
+    <tr><td>20%</td><td class="num">≈ 4%</td></tr>
+  </table>
+  <p class="muted">Hypothetical detector: 90% caught, 1% false alarms, both held fixed.</p>
+</div>
+
+<!-- 38. Liang -->
+<div class="slide">
+  <h2>2023 Detectors Flagged Non-Native Writers Most</h2>
+  <div class="divider"></div>
+  <p class="tm"><b>Historical</b> · 7 detectors as of 2023 · 91 TOEFL essays vs 88 US 8th-grade essays, all human</p>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:28px;align-items:center;">
+    <img src="figs/liang-toefl.png" alt="Liang et al. Fig. 1a: share of human-written essays misclassified as AI-generated by seven detectors; real TOEFL essays 48 to 76 percent, real US 8th-grade essays 0 to 12 percent" style="height:360px;width:auto;display:block;">
+    <div>
+      <p class="key" style="margin:0 0 16px;"><b>dark</b> TOEFL · <b>grey</b> US 8th grade</p>
+      <p>TOEFL average: <strong>61%</strong> flagged as AI.</p>
+      <p>89 of 91 flagged by at least one.</p>
+    </div>
+  </div>
+  <div class="cite cite-left">Liang, Yuksekgonul, Mao, Wu &amp; Zou, "GPT detectors are biased against non-native English writers", Patterns, 2023 — Fig. 1a, unmodified.</div>
+</div>
+
+<!-- 39. OpenAI classifier -->
+<div class="slide">
+  <h2>OpenAI Withdrew Its Own Classifier in 2023</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="gap:28px;">
+    <div class="def-card">
+      <h3>Caught</h3>
+      <p style="font-size:2.2em;font-weight:700;color:var(--yonsei-blue);margin:0;">26%</p>
+      <p class="muted">of AI-written "challenge set" text</p>
+    </div>
+    <div class="def-card" style="border-left-color:#d94040;">
+      <h3 style="color:#d94040;">False alarms</h3>
+      <p style="font-size:2.2em;font-weight:700;color:#d94040;margin:0;">9%</p>
+      <p class="muted">of human-written test text</p>
+    </div>
+  </div>
+  <p style="margin-top:20px;">At 2% AI prevalence, about <strong>94% of flags</strong> would be human.</p>
+  <p class="muted">Historical: launched January 2023, withdrawn July 2023 for low accuracy. Last line is our arithmetic.</p>
+  <div class="cite cite-left">OpenAI, "New AI classifier for indicating AI-written text", 31 Jan 2023; note added 20 Jul 2023 ("no longer available due to its low rate of accuracy").</div>
+</div>
+
+<!-- 40. DFDC setup -->
+<div class="slide">
+  <h2>Deepfake Detectors Were Tested on Videos They Never Saw</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 270" style="width:100%;max-width:1000px;"><defs><marker id="a40" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker></defs><rect x="10" y="60" width="280" height="150" rx="12" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="150" y="108" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">Training</text><text x="150" y="146" font-size="22" fill="#1a1a1a" text-anchor="middle">DFDC videos,</text><text x="150" y="176" font-size="22" fill="#1a1a1a" text-anchor="middle">3,426 paid actors</text><line x1="295" y1="135" x2="350" y2="135" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a40)"/><rect x="360" y="60" width="280" height="150" rx="12" fill="#fff" stroke="#1a1a1a" stroke-width="2"/><text x="500" y="108" font-size="24" fill="#1a1a1a" text-anchor="middle" font-weight="700">Public test</text><text x="500" y="146" font-size="22" fill="#1a1a1a" text-anchor="middle">4,000 videos,</text><text x="500" y="176" font-size="22" fill="#1a1a1a" text-anchor="middle">leaderboard</text><line x1="645" y1="135" x2="700" y2="135" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a40)"/><rect x="710" y="20" width="280" height="230" rx="12" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="850" y="62" font-size="24" fill="#d94040" text-anchor="middle" font-weight="700">Private test</text><text x="850" y="100" font-size="22" fill="#1a1a1a" text-anchor="middle">10,000 clips</text><text x="850" y="150" font-size="22" fill="#1a1a1a" text-anchor="middle">half new DFDC</text><text x="850" y="182" font-size="22" fill="#1a1a1a" text-anchor="middle">half collected</text><text x="850" y="212" font-size="22" fill="#1a1a1a" text-anchor="middle">from the internet</text></svg></div>
+  <p>2,114 teams; final ranking on the <strong>hidden</strong> private test.</p>
+  <div class="cite cite-left">Dolhansky et al., "The DeepFake Detection Challenge (DFDC) Dataset", arXiv 2006.07397, 2020 — Sections 3 and 5–6.</div>
+</div>
+
+<!-- 41. DFDC Table 2 -->
+<div class="slide">
+  <h2>Top Teams' Log Loss Worsened Sharply on Internet Clips</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:4px 0;"><svg viewBox="0 0 1000 335" style="width:100%;max-width:1000px;"><line x1="90" y1="270" x2="990" y2="270" stroke="#1a1a1a" stroke-width="2"/><text x="80" y="277" font-size="21" fill="#6b7280" text-anchor="end">0.0</text><text x="80" y="217" font-size="21" fill="#6b7280" text-anchor="end">0.2</text><text x="80" y="157" font-size="21" fill="#6b7280" text-anchor="end">0.4</text><text x="80" y="97" font-size="21" fill="#6b7280" text-anchor="end">0.6</text><line x1="90" y1="62" x2="990" y2="62" stroke="#d94040" stroke-width="2.5" stroke-dasharray="8 6"/><text x="990" y="52" font-size="21" fill="#d94040" text-anchor="end" font-weight="700">0.69 = always answer 50/50</text><rect x="115" y="141.6" width="44" height="128.4" fill="#6b7280"/><rect x="163" y="210.5" width="44" height="59.5" fill="#003876"/><rect x="211" y="71.8" width="44" height="198.2" fill="#d94040"/><text x="183" y="300" font-size="21" fill="#1a1a1a" text-anchor="middle">Seferbekov</text><rect x="291" y="141.5" width="44" height="128.5" fill="#6b7280"/><rect x="339" y="216.4" width="44" height="53.6" fill="#003876"/><rect x="387" y="65.8" width="44" height="204.2" fill="#d94040"/><text x="359" y="300" font-size="21" fill="#1a1a1a" text-anchor="middle">WM</text><rect x="467" y="139.7" width="44" height="130.3" fill="#6b7280"/><rect x="515" y="218.9" width="44" height="51.1" fill="#003876"/><rect x="563" y="58.8" width="44" height="211.2" fill="#d94040"/><text x="535" y="300" font-size="21" fill="#1a1a1a" text-anchor="middle">NTechLab</text><rect x="643" y="139.6" width="44" height="130.4" fill="#6b7280"/><rect x="691" y="213.5" width="44" height="56.5" fill="#003876"/><rect x="739" y="65.1" width="44" height="204.9" fill="#d94040"/><text x="711" y="300" font-size="21" fill="#1a1a1a" text-anchor="middle">Eighteen</text><text x="711" y="324" font-size="21" fill="#1a1a1a" text-anchor="middle">Years Old</text><rect x="819" y="138.9" width="44" height="131.1" fill="#6b7280"/><rect x="867" y="205.3" width="44" height="64.7" fill="#003876"/><rect x="915" y="71.4" width="44" height="198.6" fill="#d94040"/><text x="887" y="300" font-size="21" fill="#1a1a1a" text-anchor="middle">The Medics</text></svg></div>
+  <p class="key"><b>y</b> log loss, <strong>lower = better</strong> · <b>grey</b> all · <b>blue</b> new DFDC · <b>red</b> internet clips</p>
+  <p>Log loss alone does not show chance-level ranking.</p>
+  <p>Winner, on that test set: catching 90% of fakes, <strong>46% of flags</strong> were real.</p>
+  <div class="cite cite-left">Dolhansky et al., 2020 — Table 2, top 5 teams on the private test, redrawn; last line from precision 0.54 at recall 0.9.</div>
+</div>
+
+<!-- 42. Lesson -->
+<div class="slide">
+  <h2>A Detector Score Is a Lead, Not a Verdict</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li>How common is AI content <strong>here</strong>?</li>
+    <li>False alarms measured on <strong>whose</strong> writing?</li>
+    <li>Tested on <strong>new</strong> generators and real-world data?</li>
+    <li>What happens to a person who is <strong>flagged</strong>?</li>
+  </ul>
+  <div class="highlight"><p>No mark found ≠ human. A flag alone ≠ proof.</p></div>
+</div>
+
+<!-- ============ SECTION 05 ============ -->
+<!-- 43. Divider 05 -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Provenance and Policy</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Instead of guessing what is fake, record where content came from</p>
+</div>
+
+<!-- 44. Flip the problem -->
+<div class="slide">
+  <h2>Flip the Question: Record Origin Instead of Spotting Fakes</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="gap:28px;">
+    <div class="def-card" style="border-left-color:#6b7280;">
+      <h3 style="color:#6b7280;">Detection</h3>
+      <p>Inspect a suspicious file and <strong>guess</strong>.</p>
+      <p class="muted">Must keep up with every new generator.</p>
+    </div>
+    <div class="def-card">
+      <h3>Provenance</h3>
+      <p>Content carries <strong>signed claims</strong> about where it came from.</p>
+      <p class="muted">Works only if tools sign and the record survives.</p>
+    </div>
+  </div>
+  <p style="margin-top:22px;">Valid = signed claims and their binding check out. <strong>Trusting the signer</strong> is a separate decision.</p>
+</div>
+
+<!-- 45. C2PA manifest -->
+<div class="slide">
+  <h2>A C2PA Manifest: Signed Claims Bound to the File</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 300" style="width:100%;max-width:1000px;"><defs><marker id="a45" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker></defs><rect x="10" y="40" width="260" height="220" rx="12" fill="#e8ecf0" stroke="#1a1a1a" stroke-width="2"/><text x="140" y="160" font-size="26" fill="#1a1a1a" text-anchor="middle" font-weight="700">image</text><rect x="400" y="10" width="590" height="280" rx="12" fill="#fff" stroke="#003876" stroke-width="2.5"/><text x="420" y="48" font-size="24" fill="#003876" font-weight="700">manifest</text><text x="430" y="88" font-size="22" fill="#1a1a1a">claims: "captured by camera X",</text><text x="430" y="116" font-size="22" fill="#1a1a1a">"cropped", or "generated by model Y"</text><text x="430" y="166" font-size="22" fill="#1a1a1a">hard binding: hash over specified</text><text x="430" y="194" font-size="22" fill="#1a1a1a">asset data (exclusions allowed)</text><text x="430" y="242" font-size="22" fill="#d94040" font-weight="700">digital signature, verified with the</text><text x="430" y="270" font-size="22" fill="#d94040" font-weight="700">signer's certified public key</text><line x1="395" y1="175" x2="280" y2="150" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a45)"/></svg></div>
+  <p>Change the covered data and the binding <strong>no longer validates</strong>.</p>
+  <div class="cite cite-left">C2PA (Coalition for Content Provenance and Authenticity), Technical Specification 2.2 — claims and signatures, trust model, hard bindings (§9.1–9.2).</div>
+</div>
+
+<!-- 46. Signed history -->
+<div class="slide">
+  <h2>Participating Editors Can Add Signed Steps</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 200" style="width:100%;max-width:1000px;"><defs><marker id="a46" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker></defs><rect x="10" y="40" width="270" height="120" rx="12" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="145" y="92" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">capture</text><text x="145" y="128" font-size="22" fill="#1a1a1a" text-anchor="middle">camera signs</text><line x1="285" y1="100" x2="355" y2="100" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a46)"/><rect x="365" y="40" width="270" height="120" rx="12" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="500" y="92" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">edit</text><text x="500" y="128" font-size="22" fill="#1a1a1a" text-anchor="middle">editor signs + links</text><line x1="640" y1="100" x2="710" y2="100" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a46)"/><rect x="720" y="40" width="270" height="120" rx="12" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="855" y="92" font-size="24" fill="#003876" text-anchor="middle" font-weight="700">publish</text><text x="855" y="128" font-size="22" fill="#1a1a1a" text-anchor="middle">viewer checks chain</text></svg></div>
+  <table>
+    <tr><th>A valid chain shows</th><th>It does not show</th></tr>
+    <tr><td>which signer made each claim</td><td>that the claims are accurate</td></tr>
+    <tr><td>covered data unchanged since signing</td><td>that the signer is trustworthy</td></tr>
+  </table>
+  <p class="muted">Only participating tools add signed steps.</p>
+  <p class="muted">A signed photo of a screen is still a photo of a screen.</p>
+  <div class="cite cite-left">C2PA Technical Specification 2.2 — ingredients and claim history.</div>
+</div>
+
+<!-- 47. Support vs default vs preserved -->
+<div class="slide">
+  <h2>Supported, On by Default, Preserved: Three Separate Facts</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Product</th><th>What gets credentials (vendor's words)</th><th>Default?</th></tr>
+    <tr><td>Leica M11-P (2023)</td><td>photos taken with the function enabled</td><td>must be enabled</td></tr>
+    <tr><td>Samsung Galaxy S25 (2025)</td><td>content created or edited with generative AI</td><td>not stated</td></tr>
+    <tr><td>Google Pixel 10 (2025)</td><td>every Pixel Camera photo; AI edits in Photos</td><td>built in</td></tr>
+  </table>
+  <p style="margin-top:18px;"><strong>Preserved</strong> through upload and sharing? Depends on each app on the path.</p>
+  <p class="muted">Check, don't assume.</p>
+  <div class="cite cite-left">Leica, "Content Credentials" page · Samsung Newsroom US, 7 Feb 2025 · Google blog, 10 Sep 2025 — all checked 10 Oct 2026.</div>
+</div>
+
+<!-- 48. Strip + soft binding -->
+<div class="slide">
+  <h2>When the Record Is Stripped, a Watermark Can Find It Again</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 280" style="width:100%;max-width:1000px;"><defs><marker id="a48" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker></defs><rect x="10" y="20" width="250" height="90" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="135" y="58" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">image</text><text x="135" y="90" font-size="22" fill="#003876" text-anchor="middle">+ manifest</text><line x1="265" y1="65" x2="345" y2="65" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a48)"/><text x="135" y="145" font-size="21" fill="#6b7280" text-anchor="middle">screenshot or re-upload</text><rect x="355" y="20" width="250" height="90" rx="10" fill="#fdecec" stroke="#d94040" stroke-width="2"/><text x="480" y="58" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">image only</text><text x="480" y="90" font-size="22" fill="#d94040" text-anchor="middle">record gone</text><line x1="480" y1="115" x2="480" y2="165" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a48)"/><rect x="355" y="175" width="250" height="90" rx="10" fill="#fff" stroke="#1f8a4c" stroke-width="2"/><text x="480" y="213" font-size="22" fill="#1f8a4c" text-anchor="middle" font-weight="700">read watermark</text><text x="480" y="245" font-size="22" fill="#1f8a4c" text-anchor="middle">or fingerprint</text><line x1="610" y1="220" x2="690" y2="220" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a48)"/><rect x="700" y="175" width="290" height="90" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/><text x="845" y="213" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">look up manifest</text><text x="845" y="245" font-size="22" fill="#003876" text-anchor="middle">in a repository</text></svg></div>
+  <p>C2PA calls this a <strong>soft binding</strong>: watermark and provenance work together.</p>
+  <p class="muted">No credentials found ≠ fake; the record may simply have been stripped.</p>
+  <div class="cite cite-left">C2PA Technical Specification 2.2 and Soft Binding API — soft bindings and manifest repositories.</div>
+</div>
+
+<!-- 49. Law timeline -->
+<div class="slide">
+  <h2>Labelling Laws Arrived in 2025–2026</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><svg viewBox="0 0 1000 290" style="width:100%;max-width:1000px;"><line x1="30" y1="140" x2="980" y2="140" stroke="#1a1a1a" stroke-width="3"/><circle cx="110" cy="140" r="12" fill="#d94040"/><text x="110" y="100" font-size="22" fill="#d94040" text-anchor="middle" font-weight="700">1 Sep 2025</text><text x="110" y="190" font-size="22" fill="#1a1a1a" text-anchor="middle">China:</text><text x="110" y="220" font-size="22" fill="#1a1a1a" text-anchor="middle">labelling measures</text><text x="110" y="250" font-size="22" fill="#1a1a1a" text-anchor="middle">in effect</text><circle cx="380" cy="140" r="12" fill="#003876"/><text x="380" y="100" font-size="22" fill="#003876" text-anchor="middle" font-weight="700">22 Jan 2026</text><text x="380" y="190" font-size="22" fill="#1a1a1a" text-anchor="middle">Korea:</text><text x="380" y="220" font-size="22" fill="#1a1a1a" text-anchor="middle">AI Basic Act</text><text x="380" y="250" font-size="22" fill="#1a1a1a" text-anchor="middle">in effect</text><circle cx="640" cy="140" r="12" fill="#1a1a1a"/><text x="640" y="100" font-size="22" fill="#1a1a1a" text-anchor="middle" font-weight="700">2 Aug 2026</text><text x="640" y="190" font-size="22" fill="#1a1a1a" text-anchor="middle">EU AI Act</text><text x="640" y="220" font-size="22" fill="#1a1a1a" text-anchor="middle">Art. 50 applies</text><circle cx="890" cy="140" r="12" fill="#6b7280"/><text x="890" y="100" font-size="22" fill="#6b7280" text-anchor="middle" font-weight="700">2 Dec 2026</text><text x="890" y="190" font-size="22" fill="#1a1a1a" text-anchor="middle">EU Art. 50(2) for</text><text x="890" y="220" font-size="22" fill="#1a1a1a" text-anchor="middle">systems on market</text><text x="890" y="250" font-size="22" fill="#1a1a1a" text-anchor="middle">before 2 Aug</text></svg></div>
+  <p class="muted">In effect ≠ enforced. Korea: prior-notice violations are directly finable; labeling violations can lead to corrective orders and fines for noncompliance.</p>
+  <div class="cite cite-left">China: CAC et al. Measures (2025), GB 45438-2025 · Korea: AI Basic Act Arts. 31, 40, 43; Enforcement Decree Art. 23 · EU: Reg. 2024/1689 Arts. 50, 113; Reg. 2026/1744. Checked 10 Oct 2026.</div>
+</div>
+
+<!-- 50. Explicit vs implicit -->
+<div class="slide">
+  <h2>Two Kinds of Label: For People and for Machines</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th></th><th>Visible, for people</th><th>Embedded, for machines</th></tr>
+    <tr><td><strong>China</strong></td><td>required for listed services</td><td>required in metadata; watermarks encouraged</td></tr>
+    <tr><td><strong>EU</strong></td><td>deployers disclose deepfakes</td><td>providers mark outputs</td></tr>
+    <tr><td><strong>Korea</strong></td><td>either form allowed; deepfakes clearly recognisable</td><td>allowed, plus a text or audio notice</td></tr>
+  </table>
+  <p style="margin-top:18px;">Watermarks and signed records are <strong>possible implementations</strong>; these laws do not generally mandate them.</p>
+  <p class="muted">Simplified; scope and exceptions in the notes. Checked 10 Oct 2026.</p>
+</div>
+
+<!-- ============ SECTION 06 ============ -->
+<!-- 51. Divider 06 -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Synthesis</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Embed, guess, sign: what each one can and cannot tell you</p>
+</div>
+
+<!-- 52. Side by side -->
+<div class="slide">
+  <h2>Embed, Guess, Sign: Side by Side</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th></th><th>Embed</th><th>Guess</th><th>Sign</th></tr>
+    <tr><td><strong>Who acts</strong></td><td>generator</td><td>anyone</td><td>creator, tools</td></tr>
+    <tr><td><strong>Must survive</strong></td><td>edits, paraphrase</td><td>new generators</td><td>sharing, re-upload</td></tr>
+    <tr><td><strong>Typical failure</strong></td><td>rewritten away</td><td>false accusation</td><td>record stripped</td></tr>
+    <tr><td><strong>A hit means</strong></td><td>keyed generator, likely</td><td>score is high</td><td>these signers, these claims</td></tr>
+  </table>
+  <div class="highlight" style="margin-top:20px;"><p>They <strong>complement</strong> each other: soft bindings join embed and sign.</p></div>
+</div>
+
+<!-- 53. Origin is not truth revisited -->
+<div class="slide">
+  <h2>Origin Is Not Truth: Three Cases</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Case</th><th>Origin signal</th><th>Accurate?</th></tr>
+    <tr><td>AI chart, honest credentials</td><td>"made by model Y"</td><td>could be wrong</td></tr>
+    <tr><td>Camera photo, record stripped</td><td>none</td><td>could be staged or misleading</td></tr>
+    <tr><td>Human-written false claim</td><td>no mark found</td><td>false</td></tr>
+  </table>
+  <div class="highlight" style="margin-top:22px;"><p>Origin tools answer <strong>who made it</strong>. Checking facts is a separate job.</p></div>
+</div>
+
+<!-- 54. Checklist -->
+<div class="slide">
+  <h2>Checklist for Any "We Can Detect It" Claim</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Ask</th><th>Why</th></tr>
+    <tr><td>How many tokens or pixels?</td><td>short content, weak evidence</td></tr>
+    <tr><td>False alarms measured on whose data?</td><td>nominal ≠ measured</td></tr>
+    <tr><td>How common is AI content here?</td><td>base rates drive accusations</td></tr>
+    <tr><td>Which attack, with what access?</td><td>one rung of the ladder</td></tr>
+    <tr><td>Tested on new generators?</td><td>held-out data is harder</td></tr>
+    <tr><td>Who holds the key or signal?</td><td>keyed and keyless tests differ</td></tr>
+    <tr><td>Which threshold, and as of when?</td><td>results hold for that setting and date</td></tr>
+  </table>
+</div>
+
+<!-- 55. Takeaways -->
+<div class="slide">
+  <h2>Takeaways</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Watermarks: a keyed signal, detectable while enough of it survives</li>
+    <li>Robustness depends on attack, length and error rate</li>
+    <li>Without marks: at fixed true- and false-positive rates, rarer AI content means a larger fraction of flags are false</li>
+    <li>Provenance signs claims; it can be stripped</li>
+  </ul>
+  <div class="highlight"><p><strong>Origin is not truth.</strong> Absence of a signal proves little.</p></div>
+</div>
+
+<!-- 56. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">Questions?</div>
+  <div class="big-word-sub">Synthetic Media · Trustworthy AI</div>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 56</div>
+</div><!-- .deck -->
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

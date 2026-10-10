@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prompt Injection — Technical Supplement — Trustworthy AI Lecture 11</title>
+<title>Synthetic Media — Technical Supplement — Trustworthy AI Lecture 11</title>
 <link rel="stylesheet" href="../../reference/colors_and_type.css">
 <link rel="stylesheet" href="../../reference/deck.css">
 <link rel="stylesheet" href="../../reference/katex/katex.min.css">
@@ -14,10 +14,6 @@
 .muted { color: var(--gray-text); }
 .def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
 .def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
-.demo-card { background: #f0f7f0; border-left: 5px solid var(--success); border-radius: 0 10px 10px 0; padding: 14px 22px; }
-.demo-card h3 { color: var(--success); margin-bottom: 4px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
-.warn-card { background: #fbf0f0; border-left: 5px solid var(--warn); border-radius: 0 10px 10px 0; padding: 14px 22px; }
-.warn-card h3 { color: var(--warn); margin-bottom: 4px; }
 .ta-algo { background: var(--light); border-left: 3px solid var(--yonsei-blue); border-radius: 0 10px 10px 0; padding: 16px 22px; }
 .ta-algo ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
 .ta-algo ol li { counter-increment: step; padding: 8px 0 8px 56px; position: relative; line-height: 1.45; }
@@ -34,9 +30,9 @@
 <div class="slide title-slide active">
   <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
   <div class="pill pill-fill" style="margin-bottom:28px;">Lecture 11 · Technical Supplement</div>
-  <h1>Prompt Injection:<br>The Security Model</h1>
+  <h1>Synthetic Media:<br>The Math</h1>
   <div class="divider"></div>
-  <p class="subtitle">Optional. A formal companion to the agentic threat</p>
+  <p class="subtitle">Optional. Watermark tests, base rates, and detection limits</p>
   <div class="spacer-lg"></div>
   <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
   <p style="margin-top:6px;">Trustworthy AI · 2026</p>
@@ -46,109 +42,152 @@
 <div class="slide">
   <h2>When to Use This</h2>
   <div class="divider"></div>
-  <p>The main lecture stays with pictures and incidents. Here is the <strong>security formalism</strong> underneath them.</p>
+  <p>The main lecture keeps the pictures and the numbers. Here are the equations.</p>
   <ul class="arrow">
-    <li>The data-vs-control confusion, stated precisely</li>
-    <li>The confused-deputy pattern and least privilege</li>
-    <li>Taint tracking and the dual-LLM threat model</li>
+    <li>Green-list rule, Binomial null, $z$-test</li>
+    <li>Why evidence grows like $\sqrt{T}$; repeated tokens</li>
+    <li>Base rates, the TV bound, distortion-free marks</li>
   </ul>
-  <div class="highlight"><p>Skip this in the core session; return if you want the systems-security version.</p></div>
+  <div class="highlight"><p>Optional: return here for the formal version.</p></div>
 </div>
 
-<!-- 3. The Core Confusion -->
-<div class="slide">
-  <h2>Data vs Control, Formally</h2>
+<!-- ============ SECTION 01 ============ -->
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Watermark Statistics</h1>
   <div class="divider"></div>
-  <p>Classic systems keep two things apart: what <strong>runs</strong> and what is <strong>read</strong>.</p>
-  <div class="grid-2">
-    <div><h3>Control plane</h3>
-      <p>Instructions that decide behavior. Privileged.</p></div>
-    <div><h3>Data plane</h3>
-      <p>Inputs to inspect, never to obey. Untrusted.</p></div>
-  </div>
-  <div class="highlight"><p>An LLM has <strong>one context window</strong> and <strong>no privilege boundary</strong>: both planes are the same token stream.</p></div>
+  <p class="subtitle">The KGW rule and its test</p>
 </div>
 
-<!-- 4. The Confused Deputy -->
+<!-- 4. Green-list rule -->
 <div class="slide">
-  <h2>The Confused Deputy</h2>
+  <h2>The Green-List Rule</h2>
   <div class="divider"></div>
-  <p>A classic security pattern, stated for agents.</p>
-  <div class="def-card">
-    <h3>Confused deputy</h3>
-    <p>A trusted program holds an <strong>authority</strong> (the user's permissions) and is tricked by an <strong>unauthorized party</strong> (injected text) into exercising that authority on the attacker's behalf.</p>
-  </div>
-  <p class="muted">The agent has the power; the attacker supplies the intent.</p>
-</div>
-
-<!-- 5. A Threat Model for Agents -->
-<div class="slide">
-  <h2>A Threat Model for Agents</h2>
-  <div class="divider"></div>
-  <p>State the trust boundary explicitly.</p>
-  <ul>
-    <li><strong>Trusted:</strong> the user's goal, the system prompt</li>
-    <li><strong>Untrusted:</strong> any tool output (pages, emails, files)</li>
-    <li><strong>Attacker's power:</strong> write arbitrary text into any untrusted source</li>
-    <li><strong>Attacker's goal:</strong> make the agent take an action the user did not authorize</li>
+  <p>Vocabulary $V$, green fraction $\gamma \in (0,1)$, boost $\delta \ge 0$, secret key $\kappa$. At step $t$:</p>
+  <div class="math-block">$$G_t = \mathrm{Split}_\gamma\big(H(\kappa, y_{t-1})\big), \qquad |G_t| = \gamma |V|,$$
+  $$\hat p_t(k) = \frac{\exp\big(\ell_t(k) + \delta\,\mathbf{1}[k \in G_t]\big)}{\sum_{j \in V} \exp\big(\ell_t(j) + \delta\,\mathbf{1}[j \in G_t]\big)}.$$</div>
+  <ul class="arrow">
+    <li>$\ell_t$: the model's logits; $\delta = 0$ is ordinary sampling</li>
+    <li>The detector needs $\kappa$ and $H$, not the model</li>
   </ul>
-  <p class="muted">Harm needs all three: reads untrusted input, holds private data, can act outward.</p>
+  <div class="cite cite-left">Kirchenbauer et al., ICML 2023 — Algorithm 2 ("soft" watermark).</div>
 </div>
 
-<!-- 6. Least Privilege and Capabilities -->
+<!-- 5. Binomial null -->
 <div class="slide">
-  <h2>Capabilities and Least Privilege</h2>
+  <h2>An Idealized Null: A Binomial Count</h2>
   <div class="divider"></div>
-  <p>Bound the damage <strong>before</strong> the model runs, not after.</p>
+  <p>$H_0$: the text was written without knowledge of $\kappa$. Let $|s|_G$ be the number of green tokens among $T$ scored tokens.</p>
+  <div class="math-block">$$H_0:\quad |s|_G \sim \mathrm{Binomial}(T, \gamma), \qquad \mathbb{E}|s|_G = \gamma T, \quad \mathrm{Var}\,|s|_G = T\gamma(1-\gamma).$$</div>
   <div class="def-card">
-    <h3>Least privilege</h3>
-    <p>Grant each action only the <strong>capabilities</strong> its task requires. A capability is an unforgeable token authorizing one specific operation.</p>
+    <h3>An idealized independent-Bernoulli model</h3>
+    <p>Each scored token is green independently with probability $\gamma$. This needs the key-seeded split to act like fresh randomness at each position, no repeated pairs $(y_{t-1}, y_t)$, and a writer who does not know $\kappa$.</p>
+  </div>
+  <div class="cite cite-left">Kirchenbauer et al., ICML 2023 — Section 3.</div>
+</div>
+
+<!-- 6. z-statistic -->
+<div class="slide">
+  <h2>The z-Statistic and Its Threshold</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$z = \frac{|s|_G - \gamma T}{\sqrt{T\gamma(1-\gamma)}}, \qquad \text{flag if } z \gt 4.$$</div>
+  <ul class="arrow">
+    <li>Normal-approximation tail: $1 - \Phi(4) \approx 3 \times 10^{-5}$</li>
+    <li>A <strong>nominal</strong> rate: only as good as the idealized model</li>
+    <li>Exact tail differs at small $T$: $T = 20$, $\gamma = 0.25$ flags at $|s|_G \ge 13$, exact rate $\approx 1.8 \times 10^{-4}$</li>
+  </ul>
+  <div class="cite cite-left">Kirchenbauer et al., ICML 2023 — Eq. (3) and Section 3.</div>
+</div>
+
+<!-- 7. sqrt T -->
+<div class="slide">
+  <h2>Why Evidence Grows Like √T</h2>
+  <div class="divider"></div>
+  <p>Suppose watermarked text hits green at a steady rate $\rho \gt \gamma$ per token. Then</p>
+  <div class="math-block">$$\mathbb{E}[z] \approx \frac{(\rho - \gamma)\,T}{\sqrt{T\gamma(1-\gamma)}} = \frac{\rho - \gamma}{\sqrt{\gamma(1-\gamma)}}\,\sqrt{T}.$$</div>
+  <ul class="arrow">
+    <li>Illustration: $\gamma = 0.25$, $\rho = 0.5$ gives $\mathbb{E}[z] \approx 0.58\sqrt{T}$; $z = 4$ near $T \approx 48$</li>
+    <li>Edits that lower $\rho$ toward $\gamma$ need more $T$ for the same $z$</li>
+  </ul>
+  <p class="muted">Assumes a constant green rate; low-entropy stretches lower $\rho$ locally.</p>
+</div>
+
+<!-- 8. Repeated tokens -->
+<div class="slide">
+  <h2>Repeated Pairs: Nominal vs Measured False Alarms</h2>
+  <div class="divider"></div>
+  <p>The same pair $(y_{t-1}, y_t)$ always gets the same colour. If it occurs $m$ times, one flip is counted $m$ times.</p>
+  <div class="math-block">$$\mathrm{Var}\Big(\textstyle\sum_{\text{repeats}} \mathbf{1}[\text{green}]\Big) = m^2 \gamma(1-\gamma) \;\gt\; m\,\gamma(1-\gamma) \quad (m \gt 1).$$</div>
+  <ul class="arrow">
+    <li>Repeats raise the null's variability; this can inflate false alarms above nominal</li>
+    <li>On WikiText, scoring each distinct pair once brought the measured threshold near theory</li>
+    <li>Not independence in general: tokens after the same $y_{t-1}$ share one split</li>
+  </ul>
+  <div class="cite cite-left">Kirchenbauer et al., ICLR 2024 — Appendix A.3 and Fig. 7 (WikiText-103).</div>
+</div>
+
+<!-- ============ SECTION 02 ============ -->
+<!-- 9. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Limits of Detection</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Base rates, the TV bound, distortion-free marks</p>
+</div>
+
+<!-- 10. Bayes -->
+<div class="slide">
+  <h2>Base Rates: Who Is Behind a Flag?</h2>
+  <div class="divider"></div>
+  <p>Prevalence $\pi = \Pr[\text{AI}]$, true-positive rate $\mathrm{TPR}$, false-positive rate $\mathrm{FPR}$.</p>
+  <div class="math-block">$$\Pr[\text{human} \mid \text{flag}] = \frac{\mathrm{FPR}\,(1-\pi)}{\mathrm{TPR}\,\pi + \mathrm{FPR}\,(1-\pi)}.$$</div>
+  <ul class="arrow">
+    <li>$\pi = 0.02$, $\mathrm{TPR} = 0.9$, $\mathrm{FPR} = 0.01$: $0.0098 / 0.0278 \approx 0.35$</li>
+    <li>$\pi = 0.20$, same detector: $0.008 / 0.188 \approx 0.04$</li>
+  </ul>
+  <p class="muted">FPR depends on the threshold and on whose text it is measured; held fixed here. The left side also depends on $\pi$.</p>
+</div>
+
+<!-- 11. TV bound -->
+<div class="slide">
+  <h2>The TV Bound on Any Detector</h2>
+  <div class="divider"></div>
+  <p>$M$, $H$: AI and human text distributions; $\mathrm{TV}(M, H) = \sup_A |M(A) - H(A)|$ over sets of texts $A$.</p>
+  <div class="math-block">$$\mathrm{AUROC}(D) \le \frac{1}{2} + \mathrm{TV}(M, H) - \frac{\mathrm{TV}(M, H)^2}{2}.$$</div>
+  <ul class="arrow">
+    <li>Always holds for any detector; forces near-chance only when TV is small</li>
+    <li>Keyed detector: $M$ is the output for the fixed key it holds; TV can be large</li>
+  </ul>
+  <p class="muted">Idea: at each FPR $x$, $\mathrm{TPR} \le \min(1, x + \mathrm{TV})$; integrate over $x$.</p>
+  <div class="cite cite-left">Sadasivan et al., TMLR 2025 — Theorem 1; proof in Appendix C.1.</div>
+</div>
+
+<!-- 12. Distortion-free -->
+<div class="slide">
+  <h2>Distortion-Free: Unchanged on Average Over Keys</h2>
+  <div class="divider"></div>
+  <div class="def-card">
+    <h3>Definition</h3>
+    <p>A decoder $\Gamma : \Xi \times \Delta(V) \to V$ is distortion-free w.r.t. a random key $\xi$ if for every distribution $\mu$ and token $y$: $\;\Pr_\xi[\Gamma(\xi, \mu) = y] = \mu(y)$.</p>
   </div>
   <ul class="arrow">
-    <li>Fix the plan from the trusted goal; untrusted text fills in values, not actions</li>
-    <li>A read-only agent literally cannot send data out</li>
+    <li>KGW with $\delta \gt 0$ is not distortion-free: green tokens are boosted</li>
+    <li>Needs a fresh key, never reused; says nothing about repeated queries</li>
   </ul>
-  <div class="cite cite-left">Debenedetti et al., "Defeating Prompt Injections by Design" (CaMeL), 2025.</div>
+  <div class="highlight"><p>Fresh, never-reused key: one text has the model's distribution, on average over the key.</p></div>
+  <p class="muted">Undetectable (Christ, Gunn &amp; Zamir, 2023) differs: without the key, efficient tests gain negligible advantage.</p>
+  <div class="cite cite-left">Kuditipudi et al., TMLR — Definition 1 and the lemma that follows it.</div>
 </div>
 
-<!-- 7. Taint Tracking -->
-<div class="slide">
-  <h2>Taint / Dataflow Tracking</h2>
-  <div class="divider"></div>
-  <p>Label the origin of every value and follow it.</p>
-  <div class="ta-algo" style="max-width:940px; margin:18px auto;">
-    <ol>
-      <li>Mark any value derived from untrusted text as <strong>tainted</strong>.</li>
-      <li>Propagate the taint through every transformation it touches.</li>
-      <li>At a risky <em>sink</em> (send, delete, pay), block if the argument is tainted.</li>
-    </ol>
-  </div>
-  <p class="muted">An old dataflow-security idea, applied to the agent loop.</p>
-</div>
-
-<!-- 8. The Dual-LLM Pattern -->
-<div class="slide">
-  <h2>The Dual-LLM Pattern</h2>
-  <div class="divider"></div>
-  <p>Enforce the boundary by <strong>splitting the model in two</strong>.</p>
-  <div class="grid-2">
-    <div><h3>Privileged</h3>
-      <p>Plans and calls tools. Never sees raw untrusted text, only symbolic references to it.</p></div>
-    <div><h3>Quarantined</h3>
-      <p>Reads the tainted content. Holds no capabilities, so it cannot act.</p></div>
-  </div>
-  <p class="muted">Tainted text reaches a model that structurally cannot reach a sink.</p>
-  <div class="cite cite-left">Willison, "The Dual LLM pattern for building AI assistants that can resist prompt injection", 2023.</div>
-</div>
-
-<!-- 9. Closer -->
+<!-- 13. Closer -->
 <div class="slide end-slide no-footer">
-  <div class="big-word">One&nbsp;plane</div>
-  <p class="big-word-sub">No privilege boundary is the whole vulnerability.</p>
+  <div class="big-word">$z \propto \sqrt{T}$</div>
+  <p class="big-word-sub">State the assumptions before the false-alarm rate.</p>
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 9</div>
+<div class="slide-num" id="slideNum">1 / 13</div>
 
 </div><!-- .deck -->
 <script defer src="../../reference/deck.js"></script>

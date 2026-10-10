@@ -1,0 +1,905 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Trustworthy AI — Lecture 12 — Script &amp; Companion Notes</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/katex/katex.min.css">
+<script defer src="../../reference/katex/katex.min.js"></script>
+<script defer src="../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+body { max-width: 880px; margin: 40px auto; padding: 0 28px; color: var(--charcoal); font-family: 'Yonsei','Noto Sans',Arial,sans-serif; line-height: 1.65; }
+h1 { color: var(--yonsei-blue); border-bottom: 3px solid var(--yonsei-blue); padding-bottom: 8px; }
+article { border-bottom: 1px solid var(--slate); padding-bottom: 14px; margin-bottom: 14px; }
+article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
+.kt { color: var(--yonsei-blue); font-weight: 700; }
+.pace { color: var(--gray-text); font-size: 0.92rem; margin: 0 0 6px; }
+.detail { margin: 16px 0 4px 14px; padding: 2px 0 2px 18px; border-left: 3px solid var(--slate); }
+.detail h3 { color: var(--yonsei-blue); font-size: 1.05rem; margin: 16px 0 6px; }
+.detail p, .detail ul, .detail ol { margin: 8px 0; }
+.detail table, table.pacing { border-collapse: collapse; margin: 10px 0; }
+.detail th, .detail td, table.pacing th, table.pacing td { border: 1px solid var(--slate); padding: 4px 12px; text-align: left; }
+</style></head><body>
+<h1>Lecture 12 — Fairness · Script &amp; Companion Notes</h1>
+<p><em>One entry per slide, in order. Each entry gives the slide's minute budget, the spoken script and the key takeaway. Content slides add companion notes: what the figure shows, the setup (who, which data, when), what the evidence does and does not establish, the assumptions, and links to the primary sources. Derivations and proofs live in the technical supplement, lec12tech.html. No in-class activities.</em></p>
+<table class="pacing"><tr><th>Block</th><th>Slides</th><th>Minutes</th></tr>
+<tr><td>Where bias enters</td><td>1–10</td><td>10</td></tr>
+<tr><td>Measuring fairness</td><td>11–21</td><td>20</td></tr>
+<tr><td>COMPAS and impossibility</td><td>22–34</td><td>15</td></tr>
+<tr><td>Mitigation</td><td>35–45</td><td>20</td></tr>
+<tr><td>Beyond classifiers</td><td>46–52</td><td>15</td></tr>
+<tr><td>Synthesis</td><td>53–56</td><td>10</td></tr>
+<tr><td><strong>Total</strong></td><td>1–56</td><td><strong>90</strong></td></tr></table>
+<p><em>Audience: mixed-major sophomores and juniors; concept-first, light math, no proofs. Quotes in the script are verbatim from the cited source; everything else is paraphrase.</em></p>
+
+<article>
+<h2>1. Fairness</h2>
+<p class="pace">Where bias enters · ≈0.5 min · elapsed ≈0.5 min</p>
+<p>Today is about fairness: where bias gets into a machine-learning system, how we measure it, and what it costs to fix it.</p>
+<p>One idea runs through the whole lecture. Every fairness claim is a claim about a rate, and every rate has a denominator. When people disagree about whether a system is fair, they are often computing different rates.</p>
+<p><span class="kt">Key takeaway:</span> Every fairness claim is a rate with a denominator.</p>
+</article>
+
+<article>
+<h2>2. Contents</h2>
+<p class="pace">Where bias enters · ≈0.5 min · elapsed ≈1 min</p>
+<p>Six parts. First, where bias enters. Second, how to measure it: four rates and five criteria. Third, the COMPAS case and the impossibility results it made famous. Fourth, three ways to mitigate. Fifth, what happens beyond classifiers: audits, language-model benchmarks, image generators and law. Last, a checklist.</p>
+<p><span class="kt">Key takeaway:</span> Measure, then understand the conflicts, then intervene.</p>
+</article>
+
+<article>
+<h2>3. Section 01 — Where Bias Enters</h2>
+<p class="pace">Where bias enters · ≈0.5 min · elapsed ≈1.5 min</p>
+<p>We start before any metric: how does a model become biased in the first place? First, a real case.</p>
+<p><span class="kt">Key takeaway:</span> Bias usually arrives with the data, not the algorithm.</p>
+</article>
+
+<article>
+<h2>4. Case: Cost as a Proxy for Need</h2>
+<p class="pace">Where bias enters · ≈1.5 min · elapsed ≈3 min</p>
+<p>We open with a real case. A widely used US health algorithm decided which patients got extra care. It predicted future health-care cost, as a stand-in for health need. But less money is spent on Black patients' care. So at the same risk score, Black patients were considerably sicker.</p>
+<p>The authors simulated a remedy. The share of Black patients auto-identified for extra care would rise from 17.7% to 46.5%. The model wasn't miscalibrated for cost; cost was the wrong target. We'll come back to why: the label is one of three places bias enters.</p>
+<p><span class="kt">Key takeaway:</span> A proxy label can carry inequity straight into the model.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Two bars: 17.7% (cost proxy, actual algorithm) and 46.5% (simulated remedy), the Black share of patients auto-identified for extra care.</p>
+<h3>Setup, model, date</h3>
+<p>Obermeyer, Powers, Vogeli and Mullainathan, Science 2019, studying a commercial algorithm used by a large US health system.</p>
+<h3>What this establishes</h3>
+<p>Using cost as the label understated Black patients' need at a given score.</p>
+<h3>What this does not establish</h3>
+<p>The 46.5% is a simulation, not a deployed outcome.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://www.science.org/doi/10.1126/science.aax2342">Obermeyer, Powers, Vogeli &amp; Mullainathan, "Dissecting racial bias in an algorithm used to manage the health of populations", Science 366 (2019)</a> — abstract: at a given risk score Black patients are considerably sicker; remedying the disparity raises the Black share of auto-identified patients from 17.7% to 46.5%.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>5. A Model Learns Its World</h2>
+<p class="pace">Where bias enters · ≈1 min · elapsed ≈4 min</p>
+<p>A model learns patterns from its training data. That data records past decisions, past outcomes and past records. If those carried disparities, the model can reproduce them, and in some settings amplify them.</p>
+<p>Patterns in, patterns out. That is why an accurate model can still be unfair: accuracy is measured against the same past. Whether a particular model reproduces, shrinks or amplifies a disparity has to be measured; it is not automatic.</p>
+<p><span class="kt">Key takeaway:</span> A model can reproduce or amplify disparities in its data.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Diagram: biased past decisions and records → training data → model → predictions that can carry them.</p>
+<h3>Assumptions</h3>
+<p>An intuition, not a claim about any specific system.</p>
+</div>
+</article>
+
+<article>
+<h2>6. Three Places Bias Enters</h2>
+<p class="pace">Where bias enters · ≈1.5 min · elapsed ≈5.5 min</p>
+<p>Three entry points. One: biased data, where some groups are under-sampled or missing. Two: biased labels, where the target itself records past prejudice. Three: feedback loops, where predictions change who shows up in tomorrow's data.</p>
+<p>The next slides take each in turn with an example.</p>
+<p><span class="kt">Key takeaway:</span> Data, labels, and feedback loops.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Pipeline world → data → labels → model → decisions, with markers 1–3 at the data, label and feedback stages.</p>
+</div>
+</article>
+
+<article>
+<h2>7. Biased Data: Who Got Sampled</h2>
+<p class="pace">Where bias enters · ≈1.5 min · elapsed ≈7 min</p>
+<p>Who is in the data matters. Gender Shades measured two widely used face benchmarks: IJB-A was 79.6% lighter-skinned and Adience 86.2%. The authors built a balanced benchmark, the Pilot Parliaments Benchmark, at 53.6%.</p>
+<p>Notice what this does and doesn't show. Composition alone doesn't tell you what causes an error gap. But an unbalanced test set can hide one: if almost every test face is lighter-skinned, a high overall accuracy says little about darker-skinned faces.</p>
+<p><span class="kt">Key takeaway:</span> An unbalanced benchmark can hide a gap.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Bar chart: share of lighter-skinned faces, IJB-A 79.6%, Adience 86.2%, PPB 53.6%, with a 50% reference line.</p>
+<h3>Setup, model, date</h3>
+<p>Buolamwini and Gebru, FAT* 2018. PPB has 1,270 individuals drawn from parliaments of six countries.</p>
+<h3>What this establishes</h3>
+<p>The two older benchmarks were heavily skewed toward lighter skin.</p>
+<h3>What this does not establish</h3>
+<p>That the skew caused the error gaps reported later (slide 47).</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://proceedings.mlr.press/v81/buolamwini18a.html">Buolamwini &amp; Gebru, "Gender Shades: Intersectional Accuracy Disparities in Commercial Gender Classification", FAT* 2018 (PMLR 81)</a> — benchmark composition (IJB-A, Adience vs the balanced PPB of 1,270 individuals); Table 4 error by subgroup.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>8. The Label Is the Problem</h2>
+<p class="pace">Where bias enters · ≈1 min · elapsed ≈8 min</p>
+<p>Often we don't measure what we care about. A lender wants to know whether someone will repay. But for people who were never approved, repayment is never observed. If we use "was approved before" as the label, yesterday's decisions become today's ground truth.</p>
+<p>So choosing the target variable is itself a fairness decision. The next slide shows a real case.</p>
+<p><span class="kt">Key takeaway:</span> The choice of label is a fairness decision.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Diagram: what we want (Y = will repay) vs what we record (Y = was approved before), joined by a proxy arrow.</p>
+<h3>Assumptions</h3>
+<p>Illustrative example, not a specific system.</p>
+</div>
+</article>
+
+<article>
+<h2>9. Feedback Loops: An Illustration</h2>
+<p class="pace">Where bias enters · ≈1 min · elapsed ≈9 min</p>
+<p>A loop. Suppose a model denies loans to group A more often. Denied applicants never get a loan, so they never build a repayment record. The next model sees little evidence that group A repays, and denies them again. The loop closes.</p>
+<p>This is an illustration. The point is that a model's decisions can create the data used to judge it.</p>
+<p><span class="kt">Key takeaway:</span> Decisions can create the data that later justifies them.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Cycle: deny group A more often → fewer loans, no track record → "data shows A is risky" → back to denial.</p>
+<h3>Assumptions</h3>
+<p>Illustrative lending loop; no specific system is claimed.</p>
+</div>
+</article>
+
+<article>
+<h2>10. Why "Just Drop Race" Fails</h2>
+<p class="pace">Where bias enters · ≈1 min · elapsed ≈10 min</p>
+<p>The obvious fix is to delete the sensitive column. It need not remove disparities. ZIP code, name and school can each be correlated with race, so the remaining features can still carry group information, and a model can use it.</p>
+<p>Worse, once the column is gone, you can no longer measure the gap. Fairness needs more than blindness.</p>
+<p><span class="kt">Key takeaway:</span> Deleting the attribute need not remove disparities, and it stops you measuring them.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Diagram: the race column is struck out; ZIP, name and school still carry group information.</p>
+<h3>Going further</h3>
+<p>Several methods in Section 04 need the group label at training time (reweighing, reductions) or at decision time (group thresholds). Dropping it makes them impossible.</p>
+</div>
+</article>
+
+<article>
+<h2>11. Section 02 — Measuring Fairness</h2>
+<p class="pace">Measuring fairness · ≈0.5 min · elapsed ≈10.5 min</p>
+<p>Now we make fairness measurable. Everything in this section comes from one table and a choice of denominator.</p>
+<p><span class="kt">Key takeaway:</span> Fairness criteria are rates with denominators.</p>
+</article>
+
+<article>
+<h2>12. Setting Up the Notation</h2>
+<p class="pace">Measuring fairness · ≈1.5 min · elapsed ≈12 min</p>
+<p>Three symbols. $A$ is the group, the protected attribute. $Y$ is the recorded outcome: what the data says happened, which may differ from what we care about. $\hat Y$ is the model's prediction.</p>
+<p>Running example: $A$ is race, $Y$ is "rearrested within two years", and $\hat Y$ is "labeled high risk". Every fairness criterion today compares something about $\hat Y$ and $Y$ across values of $A$.</p>
+<p><span class="kt">Key takeaway:</span> $A$ group, $Y$ recorded outcome, $\hat Y$ prediction.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Diagram: a person's features X feed the model, which outputs Ŷ; A and Y sit beside it, and Ŷ is compared to Y by group.</p>
+</div>
+</article>
+
+<article>
+<h2>13. Four Rates, Four Denominators</h2>
+<p class="pace">Measuring fairness · ≈2.5 min · elapsed ≈14.5 min</p>
+<p>Here is the confusion matrix, one per group. Four rates come from it, and the difference is the denominator.</p>
+<p>The selection rate is the share flagged out of everyone. The true-positive rate, TPR, is the share flagged among those with $Y = 1$. The false-positive rate, FPR, is the share flagged among those with $Y = 0$. Positive predictive value, PPV, is the share with $Y = 1$ among those flagged.</p>
+<p>Same table, different denominator, different question. Keep this slide in mind; the COMPAS dispute is exactly a dispute about denominators.</p>
+<p><span class="kt">Key takeaway:</span> Same table, different denominator, different question.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Confusion matrix (TP, FP, FN, TN) and a table of the four rates with their denominators and formulas.</p>
+<h3>Going further</h3>
+<p>Formal versions, with conditioning events, are in lec12tech.html, slide 4.</p>
+</div>
+</article>
+
+<article>
+<h2>14. Demographic Parity</h2>
+<p class="pace">Measuring fairness · ≈2 min · elapsed ≈16.5 min</p>
+<p>The first criterion: demographic parity. The rule: the same selection rate in every group. The formula is in the technical supplement.</p>
+<p>It looks only at $\hat Y$, never at $Y$. In the picture, both groups have four people selected, so parity holds, even though six have $Y = 1$ in group a and only two in group b. Whether that is a feature or a flaw depends on whether you trust $Y$.</p>
+<p>If the labels are biased, as in Section 01, ignoring them can be the point. If they are trustworthy, parity can force selecting less-qualified people in one group.</p>
+<p><span class="kt">Key takeaway:</span> Parity equalizes selection rates and ignores the outcome.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Two groups of ten icons; icons with Y = 1 are ringed; four selected in each group.</p>
+<h3>Assumptions</h3>
+<p>Illustrative counts.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1104.3913">Dwork, Hardt, Pitassi, Reingold &amp; Zemel, "Fairness Through Awareness", ITCS 2012</a> — statistical parity; Lipschitz (individual) fairness, Definition 2.1.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>15. Equalized Odds</h2>
+<p class="pace">Measuring fairness · ≈2 min · elapsed ≈18.5 min</p>
+<p>Equalized odds conditions on the recorded outcome. The rule: the same TPR and the same FPR in every group. Among people with the same outcome, each group is flagged at the same rate.</p>
+<p>In the example: among those not rearrested, 2 of 10 are flagged in both groups. Among those rearrested, 8 of 10 are flagged in both. The mistakes fall equally.</p>
+<p><span class="kt">Key takeaway:</span> Equalized odds: the same error rates given the outcome.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Two panels: Y = 0 (2 of 10 flagged in each group) and Y = 1 (8 of 10 flagged in each group).</p>
+<h3>Assumptions</h3>
+<p>Illustrative counts.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1610.02413">Hardt, Price &amp; Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016</a> — equalized odds and equal opportunity (Defs. 2.1–2.2); ROC geometry (Figs. 1–2); FICO case study (Figs. 9, 11).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>16. Equal Odds, Equal Mistakes</h2>
+<p class="pace">Measuring fairness · ≈2 min · elapsed ≈20.5 min</p>
+<p>Spelled out: given $Y = 0$, equal false-positive rates; given $Y = 1$, equal true-positive rates. Each true class bears the same error rate in both groups.</p>
+<p>Equal opportunity is the weaker version: equal TPR only. It's the one to use when what matters is that qualified people in every group have the same chance of being selected.</p>
+<p><span class="kt">Key takeaway:</span> Equalized odds = equal TPR and FPR; equal opportunity = equal TPR.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Two group confusion matrices with the same column-wise rates: TPR 0.8, FNR 0.2, FPR 0.2, TNR 0.8.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1610.02413">Hardt, Price &amp; Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016</a> — equalized odds and equal opportunity (Defs. 2.1–2.2); ROC geometry (Figs. 1–2); FICO case study (Figs. 9, 11).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>17. Equalized Odds on the ROC Plane</h2>
+<p class="pace">Measuring fairness · ≈2.5 min · elapsed ≈23 min</p>
+<p>A picture from Hardt, Price and Srebro. Each group has its own ROC curve: the (FPR, TPR) pairs reachable by thresholding the score. With randomization, any point under a group's curve is achievable.</p>
+<p>Equalized odds needs one point that both groups can reach, so it lies in the overlap, below both curves. Equal opportunity only fixes the height, the TPR, so each group can sit at a different FPR.</p>
+<p><span class="kt">Key takeaway:</span> Equalized odds lives in the overlap of the groups' ROC regions.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Hardt, Price and Srebro, NeurIPS 2016, Figure 1: per-group ROC curves with the feasible regions for equal odds and equal opportunity.</p>
+<h3>What this establishes</h3>
+<p>Geometrically, which (FPR, TPR) pairs each criterion permits.</p>
+<h3>What this does not establish</h3>
+<p>How much accuracy it costs on any given dataset (see slide 43).</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1610.02413">Hardt, Price &amp; Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016</a> — equalized odds and equal opportunity (Defs. 2.1–2.2); ROC geometry (Figs. 1–2); FICO case study (Figs. 9, 11).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>18. Calibration Within Groups</h2>
+<p class="pace">Measuring fairness · ≈2 min · elapsed ≈25 min</p>
+<p>Calibration is about scores, not yes-or-no decisions. The rule: in every group, among everyone given score $s$, a share $s$ have $Y = 1$.</p>
+<p>So among those scored 0.7, about 70% are positive, in both groups. The number means the same thing for everyone. Kleinberg, Mullainathan and Raghavan call this condition (A).</p>
+<p><span class="kt">Key takeaway:</span> Calibrated: a score means the same thing in every group.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Two groups, each with ten people scored 0.7, seven of whom have Y = 1.</p>
+<h3>Assumptions</h3>
+<p>Illustrative counts.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1609.05807">Kleinberg, Mullainathan &amp; Raghavan, "Inherent Trade-Offs in the Fair Determination of Risk Scores", ITCS 2017</a> — conditions (A) calibration, (B) negative balance, (C) positive balance; Theorems 1.1 and 1.2.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>19. Calibration vs Predictive Parity</h2>
+<p class="pace">Measuring fairness · ≈2 min · elapsed ≈27 min</p>
+<p>These two sound alike and are not. Calibration here is the definition from the previous slide: in every group, among those scored $s$, a share $s$ have $Y = 1$. Predictive parity is about one cutoff: among those flagged, above $t$, the share with $Y = 1$, the PPV, is equal across groups.</p>
+<p>With only two score values, calibration gives predictive parity when the cutoff flags the same top score in both groups and both groups have someone at that score. Otherwise, PPV averages the scores above the cutoff, and that average depends on each group's mix of scores. Two groups can both be calibrated and still differ in PPV.</p>
+<p>One caution for COMPAS. Chouldechova's own calibration check, her Definition 1, is weaker: it only asks that groups agree score by score, which suits COMPAS deciles that are ranks, not probabilities. The 'PPV averages the scores' argument needs the stronger, probability version used here.</p>
+<p><span class="kt">Key takeaway:</span> Calibration is about every score; predictive parity about one cutoff.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Two definition cards: probability calibration (score s means a share s with Y = 1, in every group; Kleinberg et al. condition A) and predictive parity at cutoff t (Chouldechova Definition 2).</p>
+<h3>Going further</h3>
+<p>The identity $\mathrm{PPV}_a = \mathbb{E}[S \mid S \gt t, A = a]$ for a calibrated score is in lec12tech.html, slide 8.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2.2 (predictive parity), Eq. (2.6) identity; Fig. 1 calibration plot, Fig. 2(b) FPR by prior count, Fig. 3 score distributions.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>20. Five Criteria, Five Comparisons</h2>
+<p class="pace">Measuring fairness · ≈1.5 min · elapsed ≈28.5 min</p>
+<p>A summary table. Demographic parity compares selection rates among everyone. Equal opportunity compares TPR among $Y = 1$. Equalized odds compares TPR and FPR. Predictive parity compares PPV among those flagged. Calibration compares outcomes at each score.</p>
+<p>Which of these can hold together? That is Section 03.</p>
+<p><span class="kt">Key takeaway:</span> Five criteria, five different populations.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Table: criterion, what it compares, among whom.</p>
+<h3>Going further</h3>
+<p><strong>Two notions not in the table.</strong> Both ask for something a dataset alone does not provide.</p><ul><li><em>Individual fairness</em> (Dwork et al. 2012, Def. 2.1): similar individuals should be treated similarly. Given a task-specific metric $d$ on individuals and a distance $D$ between output distributions, a randomized classifier $M$ is $(D, d)$-Lipschitz if $D(Mx, My) \le d(x, y)$ for all $x, y$. The hard part is $d$: who decides which people are similar?</li><li><em>Counterfactual fairness</em> (Kusner et al. 2017, Def. 5): in a causal model, the prediction's distribution for a person should not change if their attribute $A$ had been different, holding the person's background variables fixed. It needs a causal model of how $A$ affects the features.</li></ul><p>Formal statements: lec12tech.html, slides 6–7.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1104.3913">Dwork, Hardt, Pitassi, Reingold &amp; Zemel, "Fairness Through Awareness", ITCS 2012</a> — statistical parity; Lipschitz (individual) fairness, Definition 2.1.</li>
+<li><a href="https://arxiv.org/abs/1703.06856">Kusner, Loftus, Russell &amp; Silva, "Counterfactual Fairness", NIPS 2017</a> — Definition 5 (counterfactual fairness) in a causal model $(U, V, F)$.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>21. Same Data, Five Rules</h2>
+<p class="pace">Measuring fairness · ≈1.5 min · elapsed ≈30 min</p>
+<p>The same FICO credit data, four groups, and each rule picks different thresholds. Demographic parity makes the same fraction qualify in every group, which is why its within-group percentiles line up on the right panel. Equalized odds needs a randomized range for some groups, drawn as a bar.</p>
+<p>The criterion is not a technical detail; it changes who gets a loan.</p>
+<p><span class="kt">Key takeaway:</span> Different criteria pick different thresholds on the same data.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Hardt, Price and Srebro, NeurIPS 2016, Figure 9: per-group FICO thresholds under max profit, race blind, demographic parity, equal opportunity and equalized odds.</p>
+<h3>Setup, model, date</h3>
+<p>A sample of 301,536 TransUnion TransRisk scores; race restricted to four values: Asian, white non-Hispanic, Hispanic and black (paper §7).</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1610.02413">Hardt, Price &amp; Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016</a> — equalized odds and equal opportunity (Defs. 2.1–2.2); ROC geometry (Figs. 1–2); FICO case study (Figs. 9, 11).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>22. Section 03 — COMPAS and Impossibility</h2>
+<p class="pace">COMPAS and impossibility · ≈0.5 min · elapsed ≈30.5 min</p>
+<p>The most famous fairness dispute: one dataset, two analyses, two conclusions, and both arithmetically correct.</p>
+<p><span class="kt">Key takeaway:</span> One dataset, different criteria.</p>
+</article>
+
+<article>
+<h2>23. What COMPAS Is</h2>
+<p class="pace">COMPAS and impossibility · ≈1 min · elapsed ≈31.5 min</p>
+<p>COMPAS is a commercial risk score sold by Northpointe and used in US courts. It outputs deciles 1 to 10, labeled low (1–4), medium (5–7) and high (8–10). In Broward County, Florida, it was used mainly for pretrial release or detention decisions.</p>
+<p>In the analyses here, recidivism means rearrest within two years. The plot shows score distributions by race: Black defendants' scores are shifted higher, with Cohen's d of 0.60.</p>
+<p><span class="kt">Key takeaway:</span> COMPAS: a decile risk score; the outcome is rearrest in two years.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Chouldechova, Big Data 2017, Figure 3: COMPAS decile distributions by race, Broward County data.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2.2 (predictive parity), Eq. (2.6) identity; Fig. 1 calibration plot, Fig. 2(b) FPR by prior count, Fig. 3 score distributions.</li>
+<li><a href="https://www.propublica.org/article/how-we-analyzed-the-compas-recidivism-algorithm">Larson, Mattu, Kirchner &amp; Angwin, "How We Analyzed the COMPAS Recidivism Algorithm", ProPublica (2016)</a> — Broward County data, 7,214 defendants; false-positive and false-negative rates by race.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>24. False Positives, By Group</h2>
+<p class="pace">COMPAS and impossibility · ≈1.5 min · elapsed ≈33 min</p>
+<p>ProPublica's analysis covered 7,214 defendants. Among those not rearrested within two years, 44.9% of Black defendants had been labeled higher risk, against 23.5% of White defendants. That is the false-positive rate.</p>
+<p>The other error goes the other way. Among those who were rearrested, 47.7% of White defendants had been labeled low risk, against 28.0% of Black defendants.</p>
+<p><span class="kt">Key takeaway:</span> ProPublica: unequal false-positive rates by race.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Bars: false-positive rate 44.9% Black, 23.5% White.</p>
+<h3>Setup, model, date</h3>
+<p>Scores from 2013–14 in Broward County; higher risk = medium or high; outcome = a new arrest within two years.</p>
+<h3>What this establishes</h3>
+<p>Error-rate balance fails in this data.</p>
+<h3>What this does not establish</h3>
+<p>Anything about offending (slide 28), or that the score is miscalibrated.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://www.propublica.org/article/how-we-analyzed-the-compas-recidivism-algorithm">Larson, Mattu, Kirchner &amp; Angwin, "How We Analyzed the COMPAS Recidivism Algorithm", ProPublica (2016)</a> — Broward County data, 7,214 defendants; false-positive and false-negative rates by race.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>25. The Gap Persists Within Subgroups</h2>
+<p class="pace">COMPAS and impossibility · ≈1 min · elapsed ≈34 min</p>
+<p>A natural objection: maybe Black defendants simply have more prior arrests. Chouldechova checked. Among misdemeanor defendants binned by prior count, the Black false-positive rate is higher in every bin, though the intervals are wide at high counts.</p>
+<p>She also reports that the gap persists after adjusting for other covariates.</p>
+<p><span class="kt">Key takeaway:</span> Controlling for priors does not remove the FPR gap.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Chouldechova, Big Data 2017, Figure 2(b): FPR by race within prior-count bins, misdemeanor defendants; high risk = decile above 4; 95% intervals.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2.2 (predictive parity), Eq. (2.6) identity; Fig. 1 calibration plot, Fig. 2(b) FPR by prior count, Fig. 3 score distributions.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>26. Northpointe Responds: Read by Row</h2>
+<p class="pace">COMPAS and impossibility · ≈1 min · elapsed ≈35 min</p>
+<p>The vendor answered with a different criterion: among those labeled higher risk, similar shares of Black and White defendants were rearrested.</p>
+<p>Chouldechova's Figure 1 has two panels. The left shows, for each COMPAS decile, the share rearrested, by race: the bars are close. Deciles are ranks from 1 to 10, not probabilities, so this is calibration in the equality-across-groups sense, not 'a score of 7 means 70%'. The right shows, for each high-risk cutoff, the share rearrested among everyone above it: the PPV. From cutoff 4 up the bars are close.</p>
+<p>Her reading is that the score is approximately calibrated and that predictive parity approximately holds for cutoffs of 4 or higher. Error-rate balance does not.</p>
+<p><span class="kt">Key takeaway:</span> Northpointe: roughly equal PPV, a different criterion.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Chouldechova, Big Data 2017, Figure 1(a) calibration per decile and 1(b) predictive parity per high-risk cutoff, by race, with error bars.</p>
+<h3>What this does not establish</h3>
+<p>Exact equality: the agreement is approximate, with overlapping intervals.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://www.documentcloud.org/documents/2998391-ProPublicaCommentary-Final070616/">Dieterich, Mendoza &amp; Brennan, "COMPAS Risk Scales: Demonstrating Accuracy Equity and Predictive Parity", Northpointe (2016)</a> — the vendor’s technical reply: argues accuracy equity and predictive parity.</li>
+<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2.2 (predictive parity), Eq. (2.6) identity; Fig. 1 calibration plot, Fig. 2(b) FPR by prior count, Fig. 3 score distributions.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>27. The Analyses Evaluated Different Criteria</h2>
+<p class="pace">COMPAS and impossibility · ≈1.5 min · elapsed ≈36.5 min</p>
+<p>Back to the confusion matrix. ProPublica read the columns: given $Y = 0$, how many were flagged? Northpointe read the rows: given flagged, how many had $Y = 1$? The PPVs were approximately, not exactly, equal, and the diagram says so.</p>
+<p>Both computations can be correct at once. They answer different questions. The real disagreement is which question matters.</p>
+<p><span class="kt">Key takeaway:</span> ProPublica read columns, Northpointe read rows.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Confusion matrix with the ProPublica column reading (FPR) and the Northpointe row reading (PPV).</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://www.propublica.org/article/how-we-analyzed-the-compas-recidivism-algorithm">Larson, Mattu, Kirchner &amp; Angwin, "How We Analyzed the COMPAS Recidivism Algorithm", ProPublica (2016)</a> — Broward County data, 7,214 defendants; false-positive and false-negative rates by race.</li>
+<li><a href="https://www.documentcloud.org/documents/2998391-ProPublicaCommentary-Final070616/">Dieterich, Mendoza &amp; Brennan, "COMPAS Risk Scales: Demonstrating Accuracy Equity and Predictive Parity", Northpointe (2016)</a> — the vendor’s technical reply: argues accuracy equity and predictive parity.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>28. Rearrest Is Not Offending</h2>
+<p class="pace">COMPAS and impossibility · ≈1 min · elapsed ≈37.5 min</p>
+<p>A caveat that sits under every COMPAS number. $Y$ is rearrest, not offending. An offence counts only if it is followed by an arrest.</p>
+<p>If arrest chances differ by group, $Y$ itself differs for the same behaviour. That is the biased-label problem from Section 01. These sources do not estimate its size, so we flag it rather than quantify it.</p>
+<p><span class="kt">Key takeaway:</span> The label is rearrest; the gap in arrest chances is unmeasured here.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Diagram: offended again → (only if arrested) → Y = rearrested; arrest chances may differ by group.</p>
+</div>
+</article>
+
+<article>
+<h2>29. The Key Ingredient: Base Rates</h2>
+<p class="pace">COMPAS and impossibility · ≈1 min · elapsed ≈38.5 min</p>
+<p>The base rate is how common $Y = 1$ is in a group: $p_a = \Pr[Y = 1 \mid A = a]$. In the picture, group a has 0.50 and group b 0.25.</p>
+<p>When base rates differ, criteria start to conflict. The next two slides show why.</p>
+<p><span class="kt">Key takeaway:</span> Different base rates are the root of the conflicts.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Two groups of icons, half positive in a, a quarter positive in b.</p>
+<h3>Assumptions</h3>
+<p>Illustrative counts.</p>
+</div>
+</article>
+
+<article>
+<h2>30. Chouldechova: One Identity</h2>
+<p class="pace">COMPAS and impossibility · ≈1.5 min · elapsed ≈40 min</p>
+<p>Within a group, three numbers fix the false-positive rate: the base rate, the PPV and the FNR. It's just bookkeeping on the confusion matrix; the formula is in the technical supplement.</p>
+<p>Now fix PPV equal across groups, strictly between 0 and 1, and FNR below 1. If base rates differ, FPR and FNR cannot both be equal. The only escapes are equal base rates or perfect PPV.</p>
+<p>Note that calibration is not part of this result; it uses only the binary prediction.</p>
+<p><span class="kt">Key takeaway:</span> Equal PPV plus different base rates forces unequal error rates.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Diagram: base rate, PPV and FNR together determine FPR. The identity itself, $\mathrm{FPR} = \frac{p}{1-p}\cdot\frac{1-\mathrm{PPV}}{\mathrm{PPV}}\cdot(1-\mathrm{FNR})$ for $0 \lt p \lt 1$, is in the supplement.</p>
+<h3>Going further</h3>
+<p>Derivation in lec12tech.html, slide 10 (Chouldechova Eq. 2.6).</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2.2 (predictive parity), Eq. (2.6) identity; Fig. 1 calibration plot, Fig. 2(b) FPR by prior count, Fig. 3 score distributions.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>31. Kleinberg et al.: Three Conditions on a Score</h2>
+<p class="pace">COMPAS and impossibility · ≈1.5 min · elapsed ≈41.5 min</p>
+<p>Kleinberg, Mullainathan and Raghavan look at scores. Condition (A): calibration within groups. (B): among $Y = 0$, the same mean score in both groups. (C): among $Y = 1$, the same mean score.</p>
+<p>All three can hold only with perfect prediction or equal base rates. An approximate version also holds: satisfying all three nearly forces you nearly into one of those cases.</p>
+<p>Neither result says every pair of criteria conflicts. They say specific combinations do.</p>
+<p><span class="kt">Key takeaway:</span> Calibration plus both balance conditions needs perfect prediction or equal base rates.</p>
+<div class="detail">
+<h3>Going further</h3>
+<p>Proof sketch in lec12tech.html, slide 11.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1609.05807">Kleinberg, Mullainathan &amp; Raghavan, "Inherent Trade-Offs in the Fair Determination of Risk Scores", ITCS 2017</a> — conditions (A) calibration, (B) negative balance, (C) positive balance; Theorems 1.1 and 1.2.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>32. Worked Example: Calibrated, Unequal Errors</h2>
+<p class="pace">COMPAS and impossibility · ≈1.5 min · elapsed ≈43 min</p>
+<p>Instructor-built numbers. Scores are 0.2 or 0.8; flag if above 0.5. Group A has base rate 0.50, group B 0.25. Both are calibrated.</p>
+<p>PPV is 0.80 in both: predictive parity holds. But the false-positive rate is 0.20 in A and 0.02 in B, and the false-negative rate is 0.20 in A and 0.73 in B. A perfectly reasonable score, and the errors split.</p>
+<p><span class="kt">Key takeaway:</span> A calibrated score with equal PPV can still split error rates.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Table of base rate, calibration, PPV, FPR and FNR for both groups, with error-rate bars.</p>
+<h3>Setup, model, date</h3>
+<p>Group A: half scored 0.8, half 0.2. Group B: 1/12 scored 0.8, 11/12 scored 0.2. Exact values: FPR_B = 1/45 ≈ 0.022, FNR_B = 11/15 ≈ 0.733.</p>
+<h3>Going further</h3>
+<p>Full computation in lec12tech.html, slide 12.</p>
+</div>
+</article>
+
+<article>
+<h2>33. Why the Gap Appears Here</h2>
+<p class="pace">COMPAS and impossibility · ≈1 min · elapsed ≈44 min</p>
+<p>Why does it happen in this example? Here calibration ties each group's mean score to its base rate. With only two score values, a lower base rate means fewer high scores. A shared cutoff then flags fewer people in group B, so B gets a lower FPR and a higher FNR.</p>
+<p>That is a property of this two-score construction. Other calibrated scores split the errors differently; the general statement is Chouldechova's identity.</p>
+<p><span class="kt">Key takeaway:</span> In this example, calibration ties the score mix to the base rate.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Score mix per group: a is 50% at 0.8 and 50% at 0.2; b is 8% at 0.8 and 92% at 0.2.</p>
+</div>
+</article>
+
+<article>
+<h2>34. Choosing by Context</h2>
+<p class="pace">COMPAS and impossibility · ≈1 min · elapsed ≈45 min</p>
+<p>So we must choose. The domain tells us which error to examine first. If the main harm is a wrongful arrest, a false positive, examine FPR across groups. If it is a missed diagnosis, a false negative, examine FNR.</p>
+<p>Equal rates are not enough on their own. Two groups can have equal and terrible error rates. Choosing also means weighing absolute error levels, utility, and the priorities of the people affected. That is a value judgment, not a technical optimum.</p>
+<p><span class="kt">Key takeaway:</span> The harm says which rate to examine; equal is not the same as low.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Two confusion matrices: the FP cell highlighted for wrongful arrest, the FN cell for missed diagnosis.</p>
+</div>
+</article>
+
+<article>
+<h2>35. Section 04 — Mitigation</h2>
+<p class="pace">Mitigation · ≈0.5 min · elapsed ≈45.5 min</p>
+<p>Now we try to fix it. Every method we'll see targets one criterion, and every one has a cost and an assumption.</p>
+<p><span class="kt">Key takeaway:</span> Each fix targets one criterion.</p>
+</article>
+
+<article>
+<h2>36. Three Places to Intervene</h2>
+<p class="pace">Mitigation · ≈1.5 min · elapsed ≈47 min</p>
+<p>Three stages. Before training, change the data: reweighing. During training, change the objective: reductions. After training, change the decision rule: group-specific thresholds.</p>
+<p>In practice you pick the stage you can actually touch. A hospital buying a vendor's score may only control the threshold. A team training its own model can change the objective.</p>
+<p><span class="kt">Key takeaway:</span> Pick the stage you can actually touch.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Pipeline Data → Training → Outputs, labeled pre-process (reweighing), in-process (reductions), post-process (group thresholds).</p>
+<h3>Going further</h3>
+<p><strong>Another in-process method: adversarial debiasing.</strong> Zhang, Lemoine and Mitchell (AIES 2018) train a predictor and an adversary at the same time. In the abstract's words, the goal is to "maximize the predictor's ability to predict Y while minimizing the adversary's ability to predict Z", where Z is the protected attribute. On UCI Adult the authors report a model that "does not lose much accuracy while achieving very close to equality of odds". It is not in the deck because it shares the reductions slot and adds no new idea for this audience.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1801.07593">Zhang, Lemoine &amp; Mitchell, "Mitigating Unwanted Biases with Adversarial Learning", AIES 2018</a> — predictor vs adversary; UCI Adult result described as "very close to equality of odds".</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>37. Reweighing</h2>
+<p class="pace">Mitigation · ≈2 min · elapsed ≈49 min</p>
+<p>Reweighing, from Kamiran and Calders. Give each training example a weight so that group and label look independent. The rule: a (group, label) cell's weight is the share you'd expect if group and label were independent, divided by the share you actually observe.</p>
+<p>A cell below its independence-expected share gets a weight above 1; a cell above it gets a weight below 1. No example is deleted and no label is changed. Weighting needs full support: if a (group, label) combination that independence requires has no examples, no weight can create them, and the weighted data stay dependent. Example: expected 30%, observed 20%, weight 1.5. That comes from group s being half the data and 60% of labels positive: $0.5 \times 0.6 = 0.3$ expected, against 0.2 observed.</p>
+<p><span class="kt">Key takeaway:</span> Reweighing makes group and label look independent, without deleting anything.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>The verbal rule, weight = expected share ÷ observed share, with a numeric example. The formula $w(a, y) = \Pr[A = a]\Pr[Y = y] / \Pr[A = a, Y = y]$, defined when $\Pr[A = a, Y = y] \gt 0$, is in the supplement.</p>
+<h3>Assumptions</h3>
+<p>The group is known at training time. The labels are taken as correct. Every required (group, label) cell has examples.</p>
+<h3>Going further</h3>
+<p>Formal statement, with the full-support assumption: lec12tech.html, slide 14.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://doi.org/10.1007/s10115-011-0463-8">Kamiran &amp; Calders, "Data preprocessing techniques for classification without discrimination", Knowledge and Information Systems 33 (2012)</a> — reweighing, §5.2.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>38. Reweighing: A Worked Example</h2>
+<p class="pace">Mitigation · ≈2 min · elapsed ≈51 min</p>
+<p>A hundred examples, 60% positive. Group s has 20 positive and 30 negative; group o has 40 positive and 10 negative. So s is 40% positive and o is 80%.</p>
+<p>The weights are 1.5 for (s, +), 0.67 for (s, −), 0.75 for (o, +) and 2.0 for (o, −). After weighting, s has 30 positive and 20 negative, and o has 30 positive and 20 negative: 60% positive in each group, matching the overall rate.</p>
+<p><span class="kt">Key takeaway:</span> After reweighing, each group has the overall positive rate.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Before and after bars of weighted positive and negative counts for groups s and o, plus the weight table.</p>
+<h3>Setup, model, date</h3>
+<p>Instructor-built counts. Check: (s, +) = 0.5 × 0.6 / 0.2 = 1.5; (s, −) = 0.5 × 0.4 / 0.3 ≈ 0.67; (o, +) = 0.5 × 0.6 / 0.4 = 0.75; (o, −) = 0.5 × 0.4 / 0.1 = 2.0.</p>
+</div>
+</article>
+
+<article>
+<h2>39. Reweighing, Measured</h2>
+<p class="pace">Mitigation · ≈2 min · elapsed ≈53 min</p>
+<p>From the AI Fairness 360 paper. These bars measure parity metrics of the training data before and after reweighing. Blue is before, orange is after.</p>
+<p>Statistical parity difference, SPD, is the favorable-outcome rate of the unprivileged group minus that of the privileged group; ideal 0, negative means the unprivileged group gets fewer favorable outcomes. Disparate impact, DI, is the same two rates as a ratio, unprivileged over privileged; ideal 1. Privileged groups: male and white for Adult, male and older for German, female and Caucasian for COMPAS, where the favorable outcome is no recidivism.</p>
+<p>In the plot both metrics move toward their ideal values after reweighing; the paper says the least improvement is on German Credit, the smallest dataset. The orange bars sit near the ideal but not exactly on it, with error bars. But be careful about what is measured: this is the data, not a trained model. A model trained on reweighted data need not be fair by the same metric.</p>
+<p><span class="kt">Key takeaway:</span> Reweighing fixes the data's parity; the trained model must be checked separately.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Bellamy et al. 2018, Fig. 4(a),(c): statistical parity difference and disparate impact before and after reweighing; bars ±1 SD.</p>
+<h3>What this establishes</h3>
+<p>Reweighing achieves parity in the weighted training data.</p>
+<h3>What this does not establish</h3>
+<p>Parity of a model trained on it, or its accuracy.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1810.01943">Bellamy et al., "AI Fairness 360: An Extensible Toolkit for Detecting, Understanding, and Mitigating Unwanted Algorithmic Bias" (arXiv 1810.01943, 2018)</a> — Fig. 4(a),(c): reweighing on the training data; Fig. 5(b): balanced accuracy vs disparate impact on Adult (race), 25 splits.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>40. The Reductions Approach</h2>
+<p class="pace">Mitigation · ≈2.5 min · elapsed ≈55.5 min</p>
+<p>Agarwal and colleagues turn a fairness constraint into a sequence of ordinary training runs. The fairness gap gets a price, like a penalty. Each round reweights the examples by that price and fits a plain cost-weighted classifier. Then it measures the gap, adjusts the price, and repeats.</p>
+<p>The output is a random mix of the classifiers fit along the way. That randomization is part of the guarantee, which is worth telling a deployer: two identical people can get different decisions.</p>
+<p><span class="kt">Key takeaway:</span> Reductions: fairness constraints via repeated ordinary fits.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Loop: reweight examples → train plain classifier → measure the gap → adjust weights; stop with a randomized mix.</p>
+<h3>Assumptions</h3>
+<p>Group known at training time; any learner that accepts example weights; the output is randomized.</p>
+<h3>Going further</h3>
+<p>Saddle-point formulation, with the tolerance ν defined: lec12tech.html, slide 15. Theorem 1 of the paper bounds the iterations; the bound is omitted there.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1803.02453">Agarwal, Beygelzimer, Dudík, Langford &amp; Wallach, "A Reductions Approach to Fair Classification", ICML 2018</a> — Algorithm 1 (exponentiated gradient), Theorem 1; §4 experiments on Adult (two protected-attribute settings), COMPAS, Law School and Dutch census; Fig. 1.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>41. Reductions, Measured</h2>
+<p class="pace">Mitigation · ≈2 min · elapsed ≈57.5 min</p>
+<p>Two panels from the paper's Figure 1, top row, Adult and COMPAS; the row has five datasets and we omit adult4, Dutch census and Law School. The x-axis is the violation of demographic parity, the y-axis test error; lower left is better. Gold is the reductions method: the convex envelope of the tradeoffs it found, evaluated on test data, with a 95% band. The other markers are baselines: unconstrained, post-processing, reweighing and relabeling.</p>
+<p>The authors' reading: reductions "dominates or matches" the baselines up to statistical uncertainty. This is an empirical curve with 95% bands, not the optimal frontier.</p>
+<p><span class="kt">Key takeaway:</span> Reductions matches or beats the baselines empirically.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Agarwal et al., ICML 2018, Fig. 1, top row, adult and COMPAS panels with the shared legend: test error vs DP violation, logistic regression.</p>
+<h3>Setup, model, date</h3>
+<p>Adult with gender, Adult with gender and race, ProPublica COMPAS (7,918 examples), Law School (20,649) and Dutch census (60,420). In the experiments the protected attribute was included as a feature for all methods.</p>
+<h3>What this establishes</h3>
+<p>On these datasets, reductions found tradeoffs at least as good as the baselines.</p>
+<h3>What this does not establish</h3>
+<p>That any curve shown is the best possible tradeoff.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1803.02453">Agarwal, Beygelzimer, Dudík, Langford &amp; Wallach, "A Reductions Approach to Fair Classification", ICML 2018</a> — Algorithm 1 (exponentiated gradient), Theorem 1; §4 experiments on Adult (two protected-attribute settings), COMPAS, Law School and Dutch census; Fig. 1.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>42. Group-Specific Thresholds</h2>
+<p class="pace">Mitigation · ≈2 min · elapsed ≈59.5 min</p>
+<p>The post-processing route from Hardt, Price and Srebro. Freeze the score. Use labeled held-out data to draw each group's ROC curve. Then pick a point per group that satisfies the criterion. For equalized odds, that point may lie under a curve, so some decisions are randomized.</p>
+<p>Two requirements: the group label at decision time, and labeled held-out data. The first can be legally sensitive.</p>
+<p><span class="kt">Key takeaway:</span> Post-processing: keep the score, change each group's threshold.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Hardt, Price and Srebro, NeurIPS 2016, Fig. 2: feasible points for equalized odds (middle) and equal opportunity (right).</p>
+<h3>Going further</h3>
+<p>Derived-predictor formulation: lec12tech.html, slide 16.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1610.02413">Hardt, Price &amp; Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016</a> — equalized odds and equal opportunity (Defs. 2.1–2.2); ROC geometry (Figs. 1–2); FICO case study (Figs. 9, 11).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>43. The Cost, on FICO Data</h2>
+<p class="pace">Mitigation · ≈2 min · elapsed ≈61.5 min</p>
+<p>What does a criterion cost? The plot shows the lender's profit, as a share of the most it could make, against the break-even repayment rate. An 82% break-even rate means a loan pays off only if more than 82% of borrowers like this one repay. At that rate the paper reports: a single race-blind threshold keeps 99.3%; equal opportunity 92.8%; equalized odds 80.2%; demographic parity 69.8%.</p>
+<p>The paper's other panel, not on the slide, shows the share of non-defaulters approved in each group under each criterion.</p>
+<p>Two cautions. The utility is the lender's profit, not anyone's welfare. And it is a single dataset with the paper's cost assumption.</p>
+<p><span class="kt">Key takeaway:</span> Stricter criteria cost more lender profit on this data.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Hardt, Price and Srebro, NeurIPS 2016, Fig. 11, right panel: share of maximum profit vs minimal non-default rate for profitability. The left panel (non-defaulters approved per group) is described in the script only.</p>
+<h3>Assumptions</h3>
+<p>Profit model with an 82% break-even rate, as in the paper.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1610.02413">Hardt, Price &amp; Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016</a> — equalized odds and equal opportunity (Defs. 2.1–2.2); ROC geometry (Figs. 1–2); FICO case study (Figs. 9, 11).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>44. An Empirical Tradeoff, Not the Optimal Frontier</h2>
+<p class="pace">Mitigation · ≈2 min · elapsed ≈63.5 min</p>
+<p>From AI Fairness 360: balanced accuracy against disparate impact on the Adult dataset, with race as the attribute. Balanced accuracy is the mean of the true-positive and true-negative rates; that is the standard definition, the paper does not spell it out. Top is before mitigation, bottom after. Each dot is a method's mean over 25 splits, with ±1 SD bars. Colour is the method, dark for logistic regression and light for random forest; adversarial debiasing is a neural network and prejudice remover is logistic regression only.</p>
+<p>Reweighing moves disparate impact to about 0.9 at about 0.745 balanced accuracy, close to where it started. Reject option classification raises DI to about 0.8 to 0.9 but sits near 0.65 balanced accuracy. Adversarial debiasing was already near 0.665 before mitigation: it runs on differently processed data, so its row is not a cost of mitigation. Thresholds were tuned on validation data and scored on test. Again, this shows how these methods did, not the best achievable.</p>
+<p><span class="kt">Key takeaway:</span> Some methods moved DI toward 1 cheaply here; reject option paid in accuracy.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Bellamy et al. 2018, Fig. 5(b): balanced accuracy vs disparate impact, Adult (race), before and after mitigation, with an HTML legend re-drawn from the paper's colours.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1810.01943">Bellamy et al., "AI Fairness 360: An Extensible Toolkit for Detecting, Understanding, and Mitigating Unwanted Algorithmic Bias" (arXiv 1810.01943, 2018)</a> — Fig. 4(a),(c): reweighing on the training data; Fig. 5(b): balanced accuracy vs disparate impact on Adult (race), 25 splits.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>45. Method Cards</h2>
+<p class="pace">Mitigation · ≈1.5 min · elapsed ≈65 min</p>
+<p>One card per method. Reweighing targets parity in the training data, was evaluated on the reweighted data with a data metric only, and needs the group at training time. Reductions targets a DP or equalized-odds constraint, was evaluated on test classification error, and outputs a randomized classifier. Group thresholds target equal opportunity or odds, were evaluated on FICO profit, and need the group at decision time plus labeled held-out data.</p>
+<p>All three take $Y$ as given. If the label is biased, as in Section 01, none of them fixes it.</p>
+<p><span class="kt">Key takeaway:</span> Every method takes the label as given.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Table: method, target, evaluated on, utility, assumptions.</p>
+</div>
+</article>
+
+<article>
+<h2>46. Section 05 — Beyond Classifiers</h2>
+<p class="pace">Beyond classifiers · ≈0.5 min · elapsed ≈65.5 min</p>
+<p>Fairness questions do not stop at classifiers. We'll look at audits, language-model benchmarks, image generators and law.</p>
+<p><span class="kt">Key takeaway:</span> The same questions, new systems.</p>
+</article>
+
+<article>
+<h2>47. The Gender Shades Audit</h2>
+<p class="pace">Beyond classifiers · ≈2 min · elapsed ≈67.5 min</p>
+<p>Buolamwini and Gebru audited three commercial gender classifiers, from Microsoft, Face++ and IBM, on their balanced Pilot Parliaments Benchmark of 1,270 faces. The chart redraws the error-rate rows of their Table 4, split four ways. Darker means Fitzpatrick skin types IV to VI; lighter means I to III. Female and male are the binary labels the vendors' products output; the paper notes this reductionist view of gender does not capture transgender identities.</p>
+<p>Error reached 34.7% for darker-skinned women, against at most 0.8% for lighter-skinned men. The audit shows gaps. It does not show what caused them.</p>
+<p><span class="kt">Key takeaway:</span> Intersectional audits expose gaps that averages hide.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Bar chart redrawn from Buolamwini and Gebru, FAT* 2018, Table 4: error rate (1 − TPR) for darker female, darker male, lighter female and lighter male, per vendor. Microsoft 20.8/6.0/1.7/0.0; Face++ 34.5/0.7/9.8/0.8; IBM 34.7/12.0/7.1/0.3.</p>
+<h3>Going further</h3>
+<p><strong>A hiring example (not in the deck).</strong> Reuters reported in 2018 that Amazon had been "building computer programs since 2014 to review job applicants' resumes", scoring them from one to five stars. The models learned from "resumes submitted to the company over a 10-year period. Most came from men". Reuters reports the system "penalized resumes that included the word 'women's'", and that Amazon "ultimately disbanded the team". It is the biased-label case of slide 8: "good candidate" meant "looks like past hires". The source is press reporting, not a published evaluation.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://proceedings.mlr.press/v81/buolamwini18a.html">Buolamwini &amp; Gebru, "Gender Shades: Intersectional Accuracy Disparities in Commercial Gender Classification", FAT* 2018 (PMLR 81)</a> — benchmark composition (IJB-A, Adience vs the balanced PPB of 1,270 individuals); Table 4 error by subgroup.</li>
+<li><a href="https://www.reuters.com/article/us-amazon-com-jobs-automation-insight-idUSKCN1MK08G">Dastin, "Amazon scraps secret AI recruiting tool that showed bias against women", Reuters (10 Oct 2018)</a> — press report; checked via the Internet Archive copy.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>48. After the Audit: Error Fell on the Named Systems</h2>
+<p class="pace">Beyond classifiers · ≈2 min · elapsed ≈69.5 min</p>
+<p>Raji and Buolamwini re-audited the named vendors in August 2018. Error on darker-skinned women fell from 20.8% to 1.5% at Microsoft, 34.5% to 4.1% at Face++, and 34.7% to 17.0% at IBM. Vendors not named in 2017 were still high: Amazon 31.4%, Kairos 22.5%.</p>
+<p>That is a change after naming. It is not proof that the naming caused the change.</p>
+<p><span class="kt">Key takeaway:</span> Error fell on the named systems; causation is not shown.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Before/after chart of error on darker-skinned women for Microsoft, Face++ and IBM (May 2017 audit vs Aug 2018 re-audit).</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://dam-prod.media.mit.edu/x/2019/01/24/AIES-19_paper_223.pdf">Raji &amp; Buolamwini, "Actionable Auditing: Investigating the Impact of Publicly Naming Biased Performance Results of Commercial AI Products", AIES 2019</a> — August 2018 re-audit of the named vendors plus Amazon and Kairos; paper: "Within 7 months, all targeted corporations were able to significantly reduce error gaps".</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>49. Auditing Language Models: BBQ</h2>
+<p class="pace">Beyond classifiers · ≈2.5 min · elapsed ≈72 min</p>
+<p>How do we audit a language model? BBQ asks questions the context cannot answer. In the example, an ambiguous context mentions a Christian and a Muslim near a bombing; the correct answer to "who likely planted the bomb?" is "unknown". A disambiguated context adds the answer.</p>
+<p>A model that names a person anyway gives an unsupported answer. That answer is not necessarily stereotyped: it might pick the person the stereotype does not point to. BBQ's bias score asks which way the unsupported answers lean.</p>
+<p>BBQ covers nine social dimensions in US English, with over 58,000 items. When the context does contain the answer, models were up to 3.4 points more accurate when the answer fit a bias.</p>
+<p><span class="kt">Key takeaway:</span> BBQ measures which way answers lean when the answer is unknown.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Parrish et al., Findings of ACL 2022, Figure 1: an ambiguous and a disambiguated BBQ example.</p>
+<h3>Going further</h3>
+<p><strong>Language-model decisions (not in the deck).</strong> Tamkin et al. (2023) generated 70 decision scenarios and varied the demographic information in each prompt. They report "patterns of both positive and negative discrimination in the Claude 2.0 model in select settings when no interventions are applied", and that careful prompt engineering can "significantly decrease both positive and negative discrimination".</p><p><strong>First-person fairness.</strong> Eloundou et al. (ICLR 2025) study fairness toward the chatbot's own user. They swap names associated with different genders or races across "sixty-six tasks in nine domains" and report that post-training reinforcement learning "significantly mitigate[s]" the biases. On random chats, harmful gender stereotypes were "below 0.1% (1 in 1,000) for each model"; on story writing, the older ChatGPT-3.5-turbo had mean ratings above 2%, all other models below 1%.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2110.08193">Parrish et al., "BBQ: A Hand-Built Bias Benchmark for Question Answering", Findings of ACL 2022</a> — 58,492 examples over nine social dimensions; ambiguous vs disambiguated contexts (Fig. 1); bias scores (Fig. 3).</li>
+<li><a href="https://arxiv.org/abs/2312.03689">Tamkin et al., "Evaluating and Mitigating Discrimination in Language Model Decisions" (arXiv 2312.03689, 2023)</a> — 70 decision scenarios with demographic information varied; Claude 2.0; prompt-based mitigation.</li>
+<li><a href="https://arxiv.org/abs/2410.19803">Eloundou et al., "First-Person Fairness in Chatbots", ICLR 2025</a> — name-swap evaluation over 66 tasks in nine domains; harmful-gender-stereotype ratings.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>50. BBQ: Bias Shows Most When Context Is Ambiguous</h2>
+<p class="pace">Beyond classifiers · ≈2 min · elapsed ≈74 min</p>
+<p>Bias scores for 2021–22 question-answering models: six configurations of five models, since UnifiedQA appears in two input formats. Zero means no lean; positive means answers lean toward the stereotype; negative means against it.</p>
+<p>Scores are highest in ambiguous contexts. For physical appearance, ambiguous-context scores were 38.5 to 47.7 in five of the six configurations. In disambiguated contexts they were mostly single digits.</p>
+<p>Read the two panels separately. The ambiguous score is the disambiguated-style score scaled by the error rate, so a model that is usually right gets a small score even if its errors lean. Neither is a percentage of harmful answers, and it is a benchmark score, not a deployment harm rate.</p>
+<p><span class="kt">Key takeaway:</span> Stereotype reliance is highest when the context is ambiguous.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Parrish et al., Findings of ACL 2022, Figure 3: bias scores by category, model configuration and context type.</p>
+<h3>Setup, model, date</h3>
+<p>Disambiguated: $s_{\mathrm{DIS}} = 2\,(n_{\text{biased}} / n_{\text{non-unknown}}) - 1$. Ambiguous: $s_{\mathrm{AMB}} = (1 - \text{accuracy})\, s_{\mathrm{DIS}}$. Both reported ×100, range −100 to 100.</p>
+<h3>What this does not establish</h3>
+<p>How often a deployed system harms anyone.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2110.08193">Parrish et al., "BBQ: A Hand-Built Bias Benchmark for Question Answering", Findings of ACL 2022</a> — 58,492 examples over nine social dimensions; ambiguous vs disambiguated contexts (Fig. 1); bias scores (Fig. 3).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>51. Generators Can Exaggerate Stereotypes</h2>
+<p class="pace">Beyond classifiers · ≈2.5 min · elapsed ≈76.5 min</p>
+<p>Text-to-image models. Bianchi and colleagues prompted Stable Diffusion with "A photo of the face of [OCCUPATION]" and generated 100 images per occupation. To label them, each image was matched with CLIP to the nearest face archetype, male or female and White, Black or Asian, built from the Chicago Face Dataset. So the categories are CLIP's, not anyone's self-identification.</p>
+<p>Software developer images: 99% classified White, against 56% of US software developers in labor statistics. Housekeeper, nurse and flight attendant: 100% classified female.</p>
+<p>Two further findings, scoped. First, counter-prompts, qualitative: in Stable Diffusion, "a white poor person" still mostly produced darker skin tones, and "a white terrorist" many long beards. These are illustrative examples, not occupation statistics. Second, DALL·E: for occupation prompts its guardrails did produce a range of skin tones, but the authors show other stereotypes persisting, such as Africa-linked prompts depicting poverty. Both are observations on the versions tested in 2022–23.</p>
+<p><span class="kt">Key takeaway:</span> Generators can exaggerate real-world skews.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Bianchi et al., FAccT 2023, Figure 3: a random sample of generated faces for occupation prompts.</p>
+<h3>What this does not establish</h3>
+<p>The 99% is a CLIP classification of generated images, not a human judgment.</p>
+<h3>Going further</h3>
+<p><strong>The opposite failure (not in the deck).</strong> In February 2024 Google "temporarily paused image generation of people in Gemini", writing that its "tuning to ensure that Gemini showed a range of people failed to account for cases that should clearly not show a range". In August 2024 Google said it would "start to roll out the generation of images of people", early access first, in English. We found no primary source on wider availability. Tuning for diversity is itself a criterion choice, and it can fail too.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2211.03759">Bianchi et al., "Easily Accessible Text-to-Image Generation Amplifies Demographic Stereotypes at Large Scale", FAccT 2023</a> — Stable Diffusion occupation prompts; Fig. 3; comparison with US labor statistics.</li>
+<li><a href="https://blog.google/products/gemini/gemini-image-generation-issue/">Google, "Gemini image generation got it wrong. We'll do better." (23 Feb 2024)</a> — vendor statement pausing image generation of people.</li>
+<li><a href="https://blog.google/products/gemini/google-gemini-update-august-2024/">Google, Gemini update (28 Aug 2024)</a> — vendor statement: generation of images of people rolled out again, early access first, in English.</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>52. Governance: Obligations and Their Limits</h2>
+<p class="pace">Beyond classifiers · ≈3.5 min · elapsed ≈80 min</p>
+<p>Four laws, each with an obligation and a limit. New York City's Local Law 144 requires a bias audit of automated hiring tools and publication of impact ratios. But Local Law 144 itself does not require any specific action based on the results; other anti-discrimination law still applies. On enforcement: the State Comptroller's December 2025 audit found the city had surveyed 32 companies and identified one compliance issue, while the auditors found at least 17 potential instances of non-compliance. That is an observation about enforcement, not a measure of fairness.</p>
+<p>The EU AI Act requires high-risk systems to examine and mitigate data bias, in Article 10. An amending regulation, 2026/1744, moves application for Annex III high-risk systems to 2 December 2027; systems under Annex I follow on 2 August 2028.</p>
+<p>Colorado's SB26-189 requires notice and review after adverse decisions from 2027, but creates no new private right of action. Korea's AI Basic Act sets risk-management and oversight duties for high-impact AI, in Article 34. Its impact assessment is phrased as an effort, "endeavor", and there is no bias audit.</p>
+<p>The common thread: prescribed audit metrics do not settle every fairness question. They fix what to report, not which criterion matters for your decision.</p>
+<p><span class="kt">Key takeaway:</span> Prescribed audit metrics do not settle every fairness question.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Table: law, obligation, limit, for NYC LL144, the EU AI Act, Colorado SB26-189 and the Korean AI Basic Act.</p>
+<h3>Assumptions</h3>
+<p>Status checked 10 Oct 2026 against the cited texts; the slide carries the same date.</p>
+<h3>Going further</h3>
+<p><strong>US federal procurement (not in the deck).</strong> Executive Order 14319, "Preventing Woke AI in the Federal Government" (90 FR 35389, 28 Jul 2025), directs agencies to "procure only those LLMs developed in accordance with" its "Unbiased AI Principles". We found no revoking order as of 10 Oct 2026, and a June 2026 GSA proposed rule cites it. That suggests, but does not establish, that it is in force.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://rules.cityofnewyork.us/rule/automated-employment-decision-tools-updated/">NYC Department of Consumer and Worker Protection, rules for Automated Employment Decision Tools (Local Law 144)</a> — bias audit and public summary of impact ratios.</li>
+<li><a href="https://www.osc.ny.gov/state-agencies/audits/2025/12/02/enforcement-local-law-144-automated-employment-decision-tools">New York State Comptroller, "Enforcement of Local Law 144 – Automated Employment Decision Tools" (audit, 2 Dec 2025)</a> — DCWP "surveyed websites and bias audits of 32 companies and identified just a single issue of non-compliance".</li>
+<li><a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng">Regulation (EU) 2024/1689 (AI Act)</a> — Art. 10, data and data governance for high-risk systems.</li>
+<li><a href="https://eur-lex.europa.eu/eli/reg/2026/1744/oj/eng">Regulation (EU) 2026/1744 (amending the AI Act)</a> — moves application of the relevant high-risk obligations to 2 December 2027.</li>
+<li><a href="https://leg.colorado.gov/bills/sb26-189">Colorado SB26-189, "Automated Decision-Making Technology" (2026)</a> — documentation and post-adverse-outcome disclosure from 1 January 2027; "does not create a new private right of action".</li>
+<li><a href="https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=282791">Korea, Framework Act on the Development of Artificial Intelligence and the Establishment of a Foundation of Trust (AI Basic Act)</a> — high-impact AI obligations (Art. 34); impact assessment phrased as an effort duty.</li>
+<li><a href="https://www.federalregister.gov/documents/2025/07/28/2025-14217/preventing-woke-ai-in-the-federal-government">Executive Order 14319, "Preventing Woke AI in the Federal Government", 90 FR 35389 (28 Jul 2025)</a> — federal procurement of LLMs under "Unbiased AI Principles" (Sec. 3).</li>
+</ul>
+</div>
+</article>
+
+<article>
+<h2>53. Section 06 — Synthesis</h2>
+<p class="pace">Synthesis · ≈0.5 min · elapsed ≈80.5 min</p>
+<p>To finish, one checklist for any fairness claim you meet.</p>
+<p><span class="kt">Key takeaway:</span> Name the criterion.</p>
+</article>
+
+<article>
+<h2>54. A Checklist</h2>
+<p class="pace">Synthesis · ≈3.5 min · elapsed ≈84 min</p>
+<p>Six questions. One: which decision, and which error hurts most? Two: what does $Y$ actually record? Three: which rate, out of whom? Four: do base rates differ, and if so, which criteria conflict? Five: which stage can you change? Six: evaluated on what data, against what utility?</p>
+<p>Run COMPAS through it. The decision is pretrial detention, and a false positive jails someone. $Y$ records rearrest, not offending. ProPublica and Northpointe used different denominators. Base rates differed. By Chouldechova's identity, equal PPV together with equal FPR and equal FNR is then impossible; PPV parity and FPR parity alone could coexist. And keep two things apart: COMPAS produces a risk classification, while the judge makes the detention decision.</p>
+<p><span class="kt">Key takeaway:</span> Six questions for any fairness claim.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Numbered checklist of six questions.</p>
+</div>
+</article>
+
+<article>
+<h2>55. Key Takeaways</h2>
+<p class="pace">Synthesis · ≈3 min · elapsed ≈87 min</p>
+<p>Bias enters through data, labels and feedback loops. Each criterion compares a rate with its own denominator. In COMPAS the analyses evaluated different criteria. With unequal base rates, some criteria cannot all hold. Each mitigation targets one criterion, under assumptions.</p>
+<p>And choosing the criterion is a value judgment. The math tells you what conflicts; it does not tell you what to choose.</p>
+<p><span class="kt">Key takeaway:</span> Choosing a fairness criterion is a value judgment.</p>
+</article>
+
+<article>
+<h2>56. Which rate?</h2>
+<p class="pace">Synthesis · ≈3 min · elapsed ≈90 min</p>
+<p>The question to leave with: which rate? Whenever someone says a system is fair, or unfair, ask them to name the criterion, its denominator, and who bears the error.</p>
+<p>Questions.</p>
+<p><span class="kt">Key takeaway:</span> Name the criterion, its denominator, and who bears the error.</p>
+</article>
+
+</body></html>

@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fairness — Trustworthy AI Lecture 12</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="../../reference/katex/katex.min.css">
+<script defer src="../../reference/katex/katex.min.js"></script>
+<script defer src="../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+.muted { color: var(--gray-text); }
+.def-card { background: var(--light); border-left: 5px solid var(--yonsei-blue); border-radius: 0 12px 12px 0; padding: 20px 26px; }
+.def-card h3 { color: var(--yonsei-blue); margin-bottom: 6px; }
+.tm { border-left: 4px solid var(--yonsei-blue); padding: 4px 0 4px 14px; color: var(--gray-text); margin: 0 0 10px; }
+.tm b { color: var(--yonsei-blue); }
+.cite-left { max-width: 92% !important; left: 28px !important; transform: none !important; text-align: left !important; bottom: 48px !important; }
+.key { color: var(--gray-text); margin-top: 6px; }
+.key b { color: var(--charcoal); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- 1. Title -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Trustworthy AI · Lecture 12</div>
+  <h1>Fairness</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Where bias enters, how to measure it, what fixing it costs</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;·&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Trustworthy AI · 2026</p>
+</div>
+
+<!-- 2. Contents -->
+<div class="slide">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Where Bias Enters</div><div class="toc-sub">Data, labels and feedback</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Measuring Fairness</div><div class="toc-sub">Rates, denominators and scores</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div><div class="toc-rule"></div>
+      <div><div class="toc-label">COMPAS and Impossibility</div><div class="toc-sub">Different criteria, one dataset</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Mitigation</div><div class="toc-sub">Before, during and after training</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Beyond Classifiers</div><div class="toc-sub">Audits, benchmarks, generators and law</div></div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div><div class="toc-rule"></div>
+      <div><div class="toc-label">Synthesis</div><div class="toc-sub">Name the criterion</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Divider 01 -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>Where Bias Enters</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Data, labels and feedback</p>
+</div>
+
+<!-- 4. Case: Cost as a Proxy for Need -->
+<div class="slide">
+  <h2>Case: Cost as a Proxy for Need</h2>
+  <div class="divider"></div>
+  <p>A US health algorithm predicted <strong>cost</strong>, not illness.</p>
+  <ul class="arrow">
+    <li>Less is spent on Black patients' care</li>
+    <li>At the same risk score, Black patients were sicker</li>
+  </ul>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 460 150" style="width:100%;max-width:640px;">
+      <line x1="80" y1="118" x2="430" y2="118" stroke="#999" stroke-width="1.5"/>
+      <rect x="120" y="83" width="90" height="35" fill="#6b7280" fill-opacity="0.85"/>
+      <text x="165" y="71" font-size="19" fill="#6b7280" text-anchor="middle" font-weight="700">17.7%</text>
+      <text x="165" y="140" font-size="15" fill="#1a1a1a" text-anchor="middle">cost proxy</text>
+      <rect x="290" y="26" width="90" height="92" fill="#003876" fill-opacity="0.85"/>
+      <text x="335" y="18" font-size="19" fill="#003876" text-anchor="middle" font-weight="700">46.5%</text>
+      <text x="335" y="140" font-size="15" fill="#1a1a1a" text-anchor="middle">simulated remedy</text>
+      <text x="40" y="60" font-size="14" fill="#666" text-anchor="middle">Black share</text>
+      <text x="40" y="78" font-size="14" fill="#666" text-anchor="middle">of extra care</text>
+    </svg>
+  </div>
+  <div class="cite cite-left">Obermeyer, Powers, Vogeli, and Mullainathan, "Dissecting Racial Bias in an Algorithm Used to Manage the Health of Populations", Science 2019: share of Black patients auto-identified for extra care, actual algorithm vs simulated remedy.</div>
+</div>
+
+<!-- 5. A Model Learns Its World -->
+<div class="slide">
+  <h2>A Model Learns Its World</h2>
+  <div class="divider"></div>
+  <p>A model learns the patterns in its <strong>training data</strong>.</p>
+  <ul class="arrow">
+    <li>Past decisions, past outcomes, past records</li>
+    <li>It can reproduce or amplify past disparities</li>
+  </ul>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 520 95" style="width:100%;max-width:720px;">
+<defs><marker id="m4" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs><rect x="10" y="30" width="110" height="50" rx="8" fill="#555" fill-opacity="0.10" stroke="#555" stroke-width="2"/><text x="65.0" y="52.0" font-size="13" fill="#555" text-anchor="middle" font-weight="700">biased past</text><text x="65.0" y="70.0" font-size="11" fill="#555" text-anchor="middle">decisions, records</text><rect x="150" y="30" width="100" height="50" rx="8" fill="#003876" fill-opacity="0.10" stroke="#003876" stroke-width="2"/><text x="200.0" y="60.0" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">training data</text><rect x="280" y="30" width="90" height="50" rx="8" fill="#003876" fill-opacity="0.10" stroke="#003876" stroke-width="2"/><text x="325.0" y="60.0" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">model</text><rect x="400" y="30" width="110" height="50" rx="8" fill="#d94040" fill-opacity="0.10" stroke="#d94040" stroke-width="2"/><text x="455.0" y="52.0" font-size="13" fill="#d94040" text-anchor="middle" font-weight="700">predictions</text><text x="455.0" y="70.0" font-size="11" fill="#555" text-anchor="middle">can carry them</text><line x1="120" y1="55" x2="148" y2="55" stroke="#6b7280" stroke-width="2.5" marker-end="url(#m4)"/><line x1="250" y1="55" x2="278" y2="55" stroke="#6b7280" stroke-width="2.5" marker-end="url(#m4)"/><line x1="370" y1="55" x2="398" y2="55" stroke="#6b7280" stroke-width="2.5" marker-end="url(#m4)"/><text x="260" y="15" font-size="13" fill="#6b7280" text-anchor="middle" font-weight="700">patterns in, patterns out</text>
+    </svg>
+  </div>
+  <p class="muted">"Garbage in, garbage out" has a fairness version.</p>
+</div>
+
+<!-- 6. Three Places Bias Enters -->
+<div class="slide">
+  <h2>Three Places Bias Enters</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:0 0 6px;">
+    <svg viewBox="0 0 520 135" style="width:100%;max-width:760px;">
+<defs><marker id="m6" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker><marker id="m6r" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d94040"/></marker></defs><rect x="10" y="50" width="80" height="40" rx="8" fill="#003876" fill-opacity="0.10" stroke="#003876" stroke-width="2"/><text x="50.0" y="75.0" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">world</text><rect x="115" y="50" width="80" height="40" rx="8" fill="#d94040" fill-opacity="0.10" stroke="#d94040" stroke-width="2"/><text x="155.0" y="75.0" font-size="13" fill="#d94040" text-anchor="middle" font-weight="700">data</text><rect x="220" y="50" width="80" height="40" rx="8" fill="#d94040" fill-opacity="0.10" stroke="#d94040" stroke-width="2"/><text x="260.0" y="75.0" font-size="13" fill="#d94040" text-anchor="middle" font-weight="700">labels</text><rect x="325" y="50" width="80" height="40" rx="8" fill="#003876" fill-opacity="0.10" stroke="#003876" stroke-width="2"/><text x="365.0" y="75.0" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">model</text><rect x="430" y="50" width="80" height="40" rx="8" fill="#003876" fill-opacity="0.10" stroke="#003876" stroke-width="2"/><text x="470.0" y="75.0" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">decisions</text><line x1="90" y1="70" x2="113" y2="70" stroke="#6b7280" stroke-width="2.5" marker-end="url(#m6)"/><line x1="195" y1="70" x2="218" y2="70" stroke="#6b7280" stroke-width="2.5" marker-end="url(#m6)"/><line x1="300" y1="70" x2="323" y2="70" stroke="#6b7280" stroke-width="2.5" marker-end="url(#m6)"/><line x1="405" y1="70" x2="428" y2="70" stroke="#6b7280" stroke-width="2.5" marker-end="url(#m6)"/><path d="M470,90 C470,125 155,125 155,92" fill="none" stroke="#d94040" stroke-width="2.5" stroke-dasharray="5 4" marker-end="url(#m6r)"/><circle cx="155" cy="30" r="10" fill="#d94040"/><text x="155" y="34" font-size="12" fill="#fff" text-anchor="middle" font-weight="700">1</text><circle cx="260" cy="30" r="10" fill="#d94040"/><text x="260" y="34" font-size="12" fill="#fff" text-anchor="middle" font-weight="700">2</text><circle cx="312" cy="118" r="10" fill="#d94040"/><text x="312" y="122" font-size="12" fill="#fff" text-anchor="middle" font-weight="700">3</text>
+    </svg>
+  </div>
+  <div class="grid-3">
+    <div class="card"><h3>1 · Biased data</h3><p>Some groups under-sampled or missing.</p></div>
+    <div class="card"><h3>2 · Biased labels</h3><p>The target itself records past prejudice.</p></div>
+    <div class="card"><h3>3 · Feedback loops</h3><p>Predictions reshape future data.</p></div>
+  </div>
+</div>
+
+<!-- 7. Biased Data -->
+<div class="slide">
+  <h2>Biased Data: Who Got Sampled</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:1fr auto;align-items:center;gap:28px;">
+    <div>
+  <p>The data may not <strong>represent everyone</strong> equally.</p>
+  <ul class="arrow">
+    <li>Face datasets skewed toward light skin</li>
+    <li>Medical data dominated by one population</li>
+    <li>Composition alone does not show what causes error gaps</li>
+  </ul>
+  <p class="muted">Benchmarks, too: an unbalanced test set can hide a gap.</p>
+    </div>
+    <div style="display:flex;justify-content:center;margin:0;">
+    <svg viewBox="0 0 300 198" style="width:500px;flex:none;">
+<text x="150" y="16" font-size="13" fill="#6b7280" text-anchor="middle" font-weight="700">share of lighter-skinned faces</text><text x="96" y="55" font-size="13" fill="#1a1a1a" text-anchor="end">IJB-A</text><rect x="104" y="36" width="135" height="26" fill="#6b7280" fill-opacity="0.85"/><text x="245.32" y="55" font-size="13" fill="#6b7280" text-anchor="start" font-weight="700">79.6%</text><text x="96" y="101" font-size="13" fill="#1a1a1a" text-anchor="end">Adience</text><rect x="104" y="82" width="147" height="26" fill="#6b7280" fill-opacity="0.85"/><text x="256.53999999999996" y="101" font-size="13" fill="#6b7280" text-anchor="start" font-weight="700">86.2%</text><text x="96" y="147" font-size="13" fill="#1a1a1a" text-anchor="end">PPB (balanced)</text><rect x="104" y="128" width="91" height="26" fill="#2e8b57" fill-opacity="0.85"/><text x="201.12" y="147" font-size="13" fill="#2e8b57" text-anchor="start" font-weight="700">53.6%</text><line x1="104" y1="30" x2="104" y2="176" stroke="#999" stroke-width="1.5"/><line x1="189" y1="30" x2="189" y2="176" stroke="#2e8b57" stroke-width="1.5" stroke-dasharray="4 3"/><text x="189" y="190" font-size="12" fill="#2e8b57" text-anchor="middle">50%</text>
+    </svg>
+  </div>
+  </div>
+  <div class="cite cite-left">Buolamwini and Gebru, "Gender Shades", FAT* 2018: benchmark composition (IJB-A 79.6%, Adience 86.2% lighter-skinned) vs the balanced PPB set.</div>
+</div>
+
+<!-- 8. The Label Is the Problem -->
+<div class="slide">
+  <h2>The Label Is the Problem</h2>
+  <div class="divider"></div>
+  <p>We rarely measure what we <em>care</em> about.</p>
+  <div class="def-card">
+    <h3>Proxy labels</h3>
+    <p>We want "will repay". We record "was approved before". The proxy carries prejudice forward.</p>
+  </div>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 520 134" style="width:100%;max-width:700px;">
+<defs><marker id="m9" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker><marker id="m9r" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d94040"/></marker></defs><rect x="10" y="30" width="170" height="54" rx="8" fill="#2e8b57" fill-opacity="0.08" stroke="#2e8b57" stroke-width="2" stroke-dasharray="6 4"/><text x="95" y="52" font-size="12" fill="#6b7280" text-anchor="middle">what we want</text><text x="95" y="72" font-size="14" fill="#2e8b57" text-anchor="middle" font-weight="700">Y = will repay</text><rect x="340" y="30" width="170" height="54" rx="8" fill="#d94040" fill-opacity="0.10" stroke="#d94040" stroke-width="2"/><text x="425" y="52" font-size="12" fill="#6b7280" text-anchor="middle">what we record</text><text x="425" y="72" font-size="14" fill="#d94040" text-anchor="middle" font-weight="700">Y = was approved before</text><line x1="180" y1="57" x2="338" y2="57" stroke="#6b7280" stroke-width="2.5" marker-end="url(#m9)"/><text x="260" y="50" font-size="13" fill="#6b7280" text-anchor="middle" font-weight="700">proxy</text><path d="M425,84 C425,108 95,108 95,86" fill="none" stroke="#d94040" stroke-width="2.5" stroke-dasharray="5 4" marker-end="url(#m9r)"/><text x="260" y="126" font-size="13" fill="#d94040" text-anchor="middle">yesterday's prejudice becomes today's label</text>
+    </svg>
+  </div>
+  <p class="muted">Illustrative example. Choosing the target variable is a fairness decision.</p>
+</div>
+
+<!-- 9. Feedback Loops -->
+<div class="slide">
+  <h2>Feedback Loops: An Illustration</h2>
+  <div class="divider"></div>
+  <p>Predictions today <strong>shape the data</strong> tomorrow.</p>
+  <div style="display:flex;justify-content:center;margin:10px 0;">
+    <svg viewBox="0 0 460 180" style="width:100%;max-width:840px;">
+      <rect x="24" y="66" width="120" height="50" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="84" y="89" font-size="15" fill="#1a1a1a" text-anchor="middle">deny group A</text>
+      <text x="84" y="107" font-size="15" fill="#1a1a1a" text-anchor="middle">more often</text>
+      <rect x="172" y="66" width="120" height="50" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="232" y="89" font-size="15" fill="#1a1a1a" text-anchor="middle">fewer loans,</text>
+      <text x="232" y="107" font-size="15" fill="#1a1a1a" text-anchor="middle">no track record</text>
+      <rect x="320" y="66" width="120" height="50" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="380" y="89" font-size="15" fill="#1a1a1a" text-anchor="middle">"data shows</text>
+      <text x="380" y="107" font-size="15" fill="#1a1a1a" text-anchor="middle">A is risky"</text>
+      <defs><marker id="far" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs>
+      <line x1="144" y1="91" x2="170" y2="91" stroke="#6b7280" stroke-width="2.5" marker-end="url(#far)"/>
+      <line x1="292" y1="91" x2="318" y2="91" stroke="#6b7280" stroke-width="2.5" marker-end="url(#far)"/>
+      <path d="M380,66 C380,28 84,28 84,64" fill="none" stroke="#d94040" stroke-width="2.5" stroke-dasharray="5 4" marker-end="url(#far)"/>
+      <text x="232" y="22" font-size="15" fill="#d94040" text-anchor="middle" font-weight="700">the loop closes</text>
+    </svg>
+  </div>
+  <p class="muted">Illustrative lending loop: denied applicants generate no repayment record.</p>
+</div>
+
+<!-- 10. Why "Just Drop Race" Fails -->
+<div class="slide">
+  <h2>Why "Just Drop Race" Fails</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:1fr auto;align-items:center;gap:28px;">
+    <div>
+  <p>Deleting the sensitive column need <strong>not</strong> remove disparities.</p>
+  <ul>
+    <li>ZIP code, name, school correlate with race</li>
+    <li>Remaining features can retain group information</li>
+  </ul>
+  <p class="muted">Fairness needs more than blindness.</p>
+    </div>
+    <div style="display:flex;justify-content:center;margin:0;">
+    <svg viewBox="0 0 260 205" style="width:440px;flex:none;">
+<defs><marker id="m12" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d94040"/></marker></defs><rect x="4" y="30" width="52" height="30" rx="5" fill="#d94040" fill-opacity="0.12" stroke="#d94040" stroke-width="2"/><text x="30" y="50" font-size="13" fill="#d94040" text-anchor="middle" font-weight="700">race</text><rect x="4" y="64" width="52" height="10" fill="#e8ecf0"/><rect x="4" y="78" width="52" height="10" fill="#e8ecf0"/><rect x="4" y="92" width="52" height="10" fill="#e8ecf0"/><rect x="4" y="106" width="52" height="10" fill="#e8ecf0"/><rect x="69" y="30" width="52" height="30" rx="5" fill="#003876" fill-opacity="0.12" stroke="#003876" stroke-width="2"/><text x="95" y="50" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">ZIP</text><rect x="69" y="64" width="52" height="10" fill="#e8ecf0"/><rect x="69" y="78" width="52" height="10" fill="#e8ecf0"/><rect x="69" y="92" width="52" height="10" fill="#e8ecf0"/><rect x="69" y="106" width="52" height="10" fill="#e8ecf0"/><rect x="134" y="30" width="52" height="30" rx="5" fill="#003876" fill-opacity="0.12" stroke="#003876" stroke-width="2"/><text x="160" y="50" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">name</text><rect x="134" y="64" width="52" height="10" fill="#e8ecf0"/><rect x="134" y="78" width="52" height="10" fill="#e8ecf0"/><rect x="134" y="92" width="52" height="10" fill="#e8ecf0"/><rect x="134" y="106" width="52" height="10" fill="#e8ecf0"/><rect x="199" y="30" width="52" height="30" rx="5" fill="#003876" fill-opacity="0.12" stroke="#003876" stroke-width="2"/><text x="225" y="50" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">school</text><rect x="199" y="64" width="52" height="10" fill="#e8ecf0"/><rect x="199" y="78" width="52" height="10" fill="#e8ecf0"/><rect x="199" y="92" width="52" height="10" fill="#e8ecf0"/><rect x="199" y="106" width="52" height="10" fill="#e8ecf0"/><line x1="0" y1="32" x2="60" y2="58" stroke="#d94040" stroke-width="3"/><line x1="0" y1="58" x2="60" y2="32" stroke="#d94040" stroke-width="3"/><text x="30" y="138" font-size="12" fill="#d94040" text-anchor="middle">deleted</text><line x1="95" y1="122" x2="150" y2="158" stroke="#d94040" stroke-width="2" marker-end="url(#m12)"/><line x1="160" y1="122" x2="160" y2="158" stroke="#d94040" stroke-width="2" marker-end="url(#m12)"/><line x1="225" y1="122" x2="170" y2="158" stroke="#d94040" stroke-width="2" marker-end="url(#m12)"/><rect x="90" y="160" width="140" height="36" rx="8" fill="#d94040" fill-opacity="0.10" stroke="#d94040" stroke-width="2"/><text x="160" y="183" font-size="14" fill="#d94040" text-anchor="middle" font-weight="700">group info kept</text>
+    </svg>
+  </div>
+  </div>
+</div>
+
+<!-- 11. Divider 02 -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>Measuring Fairness</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Rates, denominators and scores</p>
+</div>
+
+<!-- 12. Setting Up the Notation -->
+<div class="slide">
+  <h2>Setting Up the Notation</h2>
+  <div class="divider"></div>
+  <p>A classifier predicts a binary outcome from features.</p>
+  <div class="def-card">
+    <h3>Three symbols</h3>
+    <p>$A$ = group (protected attribute). &nbsp; $Y$ = recorded outcome. &nbsp; $\hat Y$ = model's prediction.</p>
+  </div>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 520 120" style="width:100%;max-width:720px;">
+<defs><marker id="m13" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs><circle cx="40" cy="60" r="12" fill="#6b7280"/><path d="M22,96 C22,74 58,74 58,96 Z" fill="#6b7280"/><text x="40" y="114" font-size="12" fill="#6b7280" text-anchor="middle">person</text><rect x="90" y="44" width="110" height="42" rx="8" fill="#003876" fill-opacity="0.10" stroke="#003876" stroke-width="2"/><text x="145.0" y="70.0" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">features X</text><line x1="60" y1="65" x2="88" y2="65" stroke="#6b7280" stroke-width="2.5" marker-end="url(#m13)"/><rect x="230" y="44" width="90" height="42" rx="8" fill="#003876" fill-opacity="0.10" stroke="#003876" stroke-width="2"/><text x="275.0" y="70.0" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">model</text><line x1="200" y1="65" x2="228" y2="65" stroke="#6b7280" stroke-width="2.5" marker-end="url(#m13)"/><rect x="350" y="44" width="90" height="42" rx="8" fill="#003876" fill-opacity="0.10" stroke="#003876" stroke-width="2"/><text x="395.0" y="70.0" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">Ŷ prediction</text><line x1="320" y1="65" x2="348" y2="65" stroke="#6b7280" stroke-width="2.5" marker-end="url(#m13)"/><rect x="90" y="4" width="110" height="28" rx="6" fill="#d94040" fill-opacity="0.10" stroke="#d94040" stroke-width="2"/><text x="145" y="23" font-size="13" fill="#d94040" text-anchor="middle" font-weight="700">A = group</text><rect x="446" y="44" width="72" height="42" rx="6" fill="#2e8b57" fill-opacity="0.10" stroke="#2e8b57" stroke-width="2"/><text x="482" y="62" font-size="13" fill="#2e8b57" text-anchor="middle" font-weight="700">Y</text><text x="482" y="78" font-size="12" fill="#2e8b57" text-anchor="middle">recorded</text><line x1="440" y1="65" x2="446" y2="65" stroke="#6b7280" stroke-width="2" stroke-dasharray="3 3"/><text x="440" y="110" font-size="12" fill="#6b7280" text-anchor="middle">compare Ŷ to Y by group</text>
+    </svg>
+  </div>
+  <p>Example: $A$ = race, $Y$ = rearrested within 2 years, $\hat Y$ = "high risk".</p>
+</div>
+
+<!-- 13. Four Rates, Four Denominators -->
+<div class="slide">
+  <h2>Four Rates, Four Denominators</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;align-items:center;gap:32px;">
+    <svg viewBox="10 0 380 200" style="width:470px;flex:none;">
+      <text x="230" y="20" font-size="19" fill="#666" text-anchor="middle" font-style="italic">recorded outcome Y</text>
+      <text x="150" y="44" font-size="19" fill="#1a1a1a" text-anchor="middle" font-weight="700">Y = 1</text>
+      <text x="310" y="44" font-size="19" fill="#1a1a1a" text-anchor="middle" font-weight="700">Y = 0</text>
+      <text x="42" y="92" font-size="18" fill="#1a1a1a" text-anchor="middle" font-weight="700">Ŷ = 1</text>
+      <text x="42" y="152" font-size="18" fill="#1a1a1a" text-anchor="middle" font-weight="700">Ŷ = 0</text>
+      <rect x="78" y="58" width="144" height="56" fill="#2e8b57" fill-opacity="0.22" stroke="#2e8b57" stroke-width="1.5"/>
+      <text x="150" y="92" font-size="22" fill="#1a1a1a" text-anchor="middle" font-weight="700">TP</text>
+      <rect x="238" y="58" width="144" height="56" fill="#d94040" fill-opacity="0.20" stroke="#d94040" stroke-width="1.5"/>
+      <text x="310" y="92" font-size="22" fill="#1a1a1a" text-anchor="middle" font-weight="700">FP</text>
+      <rect x="78" y="120" width="144" height="56" fill="#d94040" fill-opacity="0.20" stroke="#d94040" stroke-width="1.5"/>
+      <text x="150" y="154" font-size="22" fill="#1a1a1a" text-anchor="middle" font-weight="700">FN</text>
+      <rect x="238" y="120" width="144" height="56" fill="#2e8b57" fill-opacity="0.22" stroke="#2e8b57" stroke-width="1.5"/>
+      <text x="310" y="154" font-size="22" fill="#1a1a1a" text-anchor="middle" font-weight="700">TN</text>
+      <text x="200" y="196" font-size="17" fill="#666" text-anchor="middle">one table per group</text>
+    </svg>
+    <div>
+  <table>
+    <tr><th>Rate</th><th>Out of</th><th>Formula</th></tr>
+    <tr><td>Selection rate</td><td>everyone</td><td>flagged ÷ all</td></tr>
+    <tr><td>TPR</td><td>$Y = 1$</td><td>TP ÷ (TP + FN)</td></tr>
+    <tr><td>FPR</td><td>$Y = 0$</td><td>FP ÷ (FP + TN)</td></tr>
+    <tr><td>PPV</td><td>flagged, $\hat Y = 1$</td><td>TP ÷ (TP + FP)</td></tr>
+  </table>
+    </div>
+  </div>
+  <p class="muted">Same table, different denominator, different question. Each rate is computed per group.</p>
+</div>
+
+<!-- 14. Demographic Parity -->
+<div class="slide">
+  <h2>Demographic Parity</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:1fr auto;align-items:center;gap:28px;">
+    <div>
+  <p><em>Intuition:</em> each group is <strong>selected at the same rate</strong>.</p>
+  <div class="highlight"><p>Rule: same <strong>selection rate</strong> in every group.</p></div>
+  <p class="muted">Looks only at $\hat Y$, never at $Y$.</p>
+    </div>
+    <div style="display:flex;justify-content:center;margin:0;">
+    <svg viewBox="0 0 330 196" style="width:460px;flex:none;">
+<text x="10" y="20" font-size="13" fill="#003876" text-anchor="start" font-weight="700">group a</text><circle cx="30" cy="44" r="10.5" fill="none" stroke="#2e8b57" stroke-width="2"/><circle cx="30" cy="44" r="7" fill="#003876"/><circle cx="49" cy="44" r="10.5" fill="none" stroke="#2e8b57" stroke-width="2"/><circle cx="49" cy="44" r="7" fill="#003876"/><circle cx="68" cy="44" r="10.5" fill="none" stroke="#2e8b57" stroke-width="2"/><circle cx="68" cy="44" r="7" fill="#003876"/><circle cx="87" cy="44" r="10.5" fill="none" stroke="#2e8b57" stroke-width="2"/><circle cx="87" cy="44" r="7" fill="#003876"/><circle cx="106" cy="44" r="10.5" fill="none" stroke="#2e8b57" stroke-width="2"/><circle cx="106" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="125" cy="44" r="10.5" fill="none" stroke="#2e8b57" stroke-width="2"/><circle cx="125" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="144" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="163" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="182" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="201" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><text x="130" y="72" font-size="12" fill="#555" text-anchor="middle">6 qualified, 4 selected</text><text x="10" y="104" font-size="13" fill="#1a5296" text-anchor="start" font-weight="700">group b</text><circle cx="30" cy="128" r="10.5" fill="none" stroke="#2e8b57" stroke-width="2"/><circle cx="30" cy="128" r="7" fill="#1a5296"/><circle cx="49" cy="128" r="10.5" fill="none" stroke="#2e8b57" stroke-width="2"/><circle cx="49" cy="128" r="7" fill="#1a5296"/><circle cx="68" cy="128" r="7" fill="#1a5296"/><circle cx="87" cy="128" r="7" fill="#1a5296"/><circle cx="106" cy="128" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="125" cy="128" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="144" cy="128" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="163" cy="128" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="182" cy="128" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="201" cy="128" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><text x="130" y="156" font-size="12" fill="#555" text-anchor="middle">2 qualified, 4 selected</text><circle cx="220" cy="18" r="7" fill="none" stroke="#2e8b57" stroke-width="2"/><text x="232" y="22" font-size="12" fill="#2e8b57" text-anchor="start">= qualified (Y = 1)</text><text x="130" y="186" font-size="13" fill="#d94040" text-anchor="middle" font-weight="700">parity holds; outcomes differ</text>
+    </svg>
+  </div>
+  </div>
+  <div class="cite cite-left">Statistical parity: Dwork, Hardt, Pitassi, Reingold, and Zemel, "Fairness Through Awareness", ITCS 2012. Illustrative counts.</div>
+</div>
+
+<!-- 15. Equalized Odds -->
+<div class="slide">
+  <h2>Equalized Odds</h2>
+  <div class="divider"></div>
+  <p><em>Intuition:</em> equal <strong>error rates</strong>, given the recorded outcome.</p>
+  <div class="highlight"><p>Rule: same <strong>TPR</strong> and same <strong>FPR</strong> in every group.</p></div>
+  <div style="display:flex;justify-content:center;margin:4px 0;">
+    <svg viewBox="0 0 520 120" style="width:100%;max-width:660px;">
+<text x="10" y="22" font-size="13" fill="#555" text-anchor="start" font-weight="700">Y = 0 (not rearrested)</text><text x="150" y="22" font-size="12" fill="#003876" text-anchor="middle">a</text><circle cx="170" cy="18" r="7" fill="#003876"/><circle cx="189" cy="18" r="7" fill="#003876"/><circle cx="208" cy="18" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="227" cy="18" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="246" cy="18" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="265" cy="18" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="284" cy="18" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="303" cy="18" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="322" cy="18" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="341" cy="18" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><text x="360" y="22" font-size="12" fill="#555" text-anchor="start">2 of 10 flagged</text><text x="150" y="48" font-size="12" fill="#1a5296" text-anchor="middle">b</text><circle cx="170" cy="44" r="7" fill="#1a5296"/><circle cx="189" cy="44" r="7" fill="#1a5296"/><circle cx="208" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="227" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="246" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="265" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="284" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="303" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="322" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="341" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><text x="360" y="48" font-size="12" fill="#555" text-anchor="start">2 of 10 flagged</text><text x="10" y="84" font-size="13" fill="#555" text-anchor="start" font-weight="700">Y = 1 (rearrested)</text><text x="150" y="84" font-size="12" fill="#003876" text-anchor="middle">a</text><circle cx="170" cy="80" r="7" fill="#003876"/><circle cx="189" cy="80" r="7" fill="#003876"/><circle cx="208" cy="80" r="7" fill="#003876"/><circle cx="227" cy="80" r="7" fill="#003876"/><circle cx="246" cy="80" r="7" fill="#003876"/><circle cx="265" cy="80" r="7" fill="#003876"/><circle cx="284" cy="80" r="7" fill="#003876"/><circle cx="303" cy="80" r="7" fill="#003876"/><circle cx="322" cy="80" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="341" cy="80" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><text x="360" y="84" font-size="12" fill="#555" text-anchor="start">8 of 10 flagged</text><text x="150" y="110" font-size="12" fill="#1a5296" text-anchor="middle">b</text><circle cx="170" cy="106" r="7" fill="#1a5296"/><circle cx="189" cy="106" r="7" fill="#1a5296"/><circle cx="208" cy="106" r="7" fill="#1a5296"/><circle cx="227" cy="106" r="7" fill="#1a5296"/><circle cx="246" cy="106" r="7" fill="#1a5296"/><circle cx="265" cy="106" r="7" fill="#1a5296"/><circle cx="284" cy="106" r="7" fill="#1a5296"/><circle cx="303" cy="106" r="7" fill="#1a5296"/><circle cx="322" cy="106" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="341" cy="106" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><text x="360" y="110" font-size="12" fill="#555" text-anchor="start">8 of 10 flagged</text>
+    </svg>
+  </div>
+  <p class="muted">Illustrative counts.</p>
+  <div class="cite cite-left">Hardt, Price, and Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016.</div>
+</div>
+
+<!-- 16. Equal Odds, Equal Mistakes -->
+<div class="slide">
+  <h2>Equal Odds, Equal Mistakes</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:1fr auto;align-items:center;gap:28px;">
+    <div>
+  <p>Now we <strong>condition on the outcome $Y$</strong>.</p>
+  <ul class="arrow">
+    <li>$Y = 0$: same false-positive rate (FPR)</li>
+    <li>$Y = 1$: same true-positive rate (TPR)</li>
+    <li>Each true class bears the same error rate</li>
+  </ul>
+  <p class="muted">Equal opportunity: equal TPR only, one of the two equalized-odds conditions.</p>
+    </div>
+    <div style="display:flex;justify-content:center;margin:0;">
+    <svg viewBox="-14 0 334 165" style="width:460px;flex:none;">
+<text x="80" y="14" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">group a</text><text x="55" y="32" font-size="11" fill="#555" text-anchor="middle">Y=1</text><text x="115" y="32" font-size="11" fill="#555" text-anchor="middle">Y=0</text><text x="27" y="62" font-size="11" fill="#555" text-anchor="end">pred 1</text><text x="27" y="106" font-size="11" fill="#555" text-anchor="end">pred 0</text><rect x="30" y="40" width="50" height="40" fill="#2e8b57" fill-opacity="0.35" stroke="#2e8b57" stroke-width="2.5"/><text x="55.0" y="64.0" font-size="12" fill="#1a1a1a" text-anchor="middle">TPR 0.8</text><rect x="90" y="40" width="50" height="40" fill="#d94040" fill-opacity="0.35" stroke="#d94040" stroke-width="2.5"/><text x="115.0" y="64.0" font-size="12" fill="#1a1a1a" text-anchor="middle">FPR 0.2</text><rect x="30" y="86" width="50" height="40" fill="#d94040" fill-opacity="0.12" stroke="#d94040" stroke-width="1.2"/><text x="55.0" y="110.0" font-size="12" fill="#1a1a1a" text-anchor="middle">FNR 0.2</text><rect x="90" y="86" width="50" height="40" fill="#2e8b57" fill-opacity="0.12" stroke="#2e8b57" stroke-width="1.2"/><text x="115.0" y="110.0" font-size="12" fill="#1a1a1a" text-anchor="middle">TNR 0.8</text><text x="240" y="14" font-size="13" fill="#1a5296" text-anchor="middle" font-weight="700">group b</text><text x="215" y="32" font-size="11" fill="#555" text-anchor="middle">Y=1</text><text x="275" y="32" font-size="11" fill="#555" text-anchor="middle">Y=0</text><text x="187" y="62" font-size="11" fill="#555" text-anchor="end">pred 1</text><text x="187" y="106" font-size="11" fill="#555" text-anchor="end">pred 0</text><rect x="190" y="40" width="50" height="40" fill="#2e8b57" fill-opacity="0.35" stroke="#2e8b57" stroke-width="2.5"/><text x="215.0" y="64.0" font-size="12" fill="#1a1a1a" text-anchor="middle">TPR 0.8</text><rect x="250" y="40" width="50" height="40" fill="#d94040" fill-opacity="0.35" stroke="#d94040" stroke-width="2.5"/><text x="275.0" y="64.0" font-size="12" fill="#1a1a1a" text-anchor="middle">FPR 0.2</text><rect x="190" y="86" width="50" height="40" fill="#d94040" fill-opacity="0.12" stroke="#d94040" stroke-width="1.2"/><text x="215.0" y="110.0" font-size="12" fill="#1a1a1a" text-anchor="middle">FNR 0.2</text><rect x="250" y="86" width="50" height="40" fill="#2e8b57" fill-opacity="0.12" stroke="#2e8b57" stroke-width="1.2"/><text x="275.0" y="110.0" font-size="12" fill="#1a1a1a" text-anchor="middle">TNR 0.8</text><text x="160" y="155" font-size="12" fill="#2e8b57" text-anchor="middle" font-weight="700">same column-wise rates in both groups</text>
+    </svg>
+  </div>
+  </div>
+</div>
+
+<!-- 17. Equalized Odds on the ROC Plane -->
+<div class="slide">
+  <h2>Equalized Odds on the ROC Plane</h2>
+  <div class="divider"></div>
+  <p>Each group has its own <strong>achievable region</strong> of (FPR, TPR) pairs.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <img src="figs/hardt-eqodds-roc.png" alt="Two ROC-plane plots: achievable regions for A=0 and A=1 overlap; the equal-odds optimum lies in the overlap below both ROC curves, the equal-opportunity points on one horizontal line" style="width:860px;height:auto;display:block;">
+  </div>
+  <p class="muted">Equal odds: one point in the <strong>overlap</strong>, below both curves. Equal opportunity: same height, any width.</p>
+  <div class="cite cite-left">Hardt, Price, and Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016, Figure 1.</div>
+</div>
+
+<!-- 18. Calibration Within Groups -->
+<div class="slide">
+  <h2>Calibration Within Groups</h2>
+  <div class="divider"></div>
+  <p><em>Intuition:</em> a score means the <strong>same thing</strong> in every group.</p>
+  <div class="highlight"><p>Rule: in every group, score $s$ means a share $s$ with $Y = 1$.</p></div>
+  <div style="display:flex;justify-content:center;margin:4px 0;">
+    <svg viewBox="0 0 600 100" style="width:100%;max-width:760px;">
+<text x="60" y="22" font-size="13" fill="#003876" text-anchor="start" font-weight="700">scored 0.7, group a</text><circle cx="240" cy="18" r="7" fill="#003876"/><circle cx="259" cy="18" r="7" fill="#003876"/><circle cx="278" cy="18" r="7" fill="#003876"/><circle cx="297" cy="18" r="7" fill="#003876"/><circle cx="316" cy="18" r="7" fill="#003876"/><circle cx="335" cy="18" r="7" fill="#003876"/><circle cx="354" cy="18" r="7" fill="#003876"/><circle cx="373" cy="18" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="392" cy="18" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="411" cy="18" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><text x="440" y="22" font-size="12" fill="#555" text-anchor="start">7 of 10 are Y = 1</text><text x="60" y="62" font-size="13" fill="#1a5296" text-anchor="start" font-weight="700">scored 0.7, group b</text><circle cx="240" cy="58" r="7" fill="#1a5296"/><circle cx="259" cy="58" r="7" fill="#1a5296"/><circle cx="278" cy="58" r="7" fill="#1a5296"/><circle cx="297" cy="58" r="7" fill="#1a5296"/><circle cx="316" cy="58" r="7" fill="#1a5296"/><circle cx="335" cy="58" r="7" fill="#1a5296"/><circle cx="354" cy="58" r="7" fill="#1a5296"/><circle cx="373" cy="58" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="392" cy="58" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="411" cy="58" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><text x="440" y="62" font-size="12" fill="#555" text-anchor="start">7 of 10 are Y = 1</text><text x="300" y="92" font-size="13" fill="#2e8b57" text-anchor="middle" font-weight="700">the number means the same thing in both groups</text>
+    </svg>
+  </div>
+  <p>In each group, among everyone scored $0.7$, about $70\%$ have $Y = 1$.</p>
+  <div class="cite cite-left">Kleinberg, Mullainathan, and Raghavan, "Inherent Trade-Offs in the Fair Determination of Risk Scores", ITCS 2017, condition (A). Illustrative counts.</div>
+</div>
+
+<!-- 19. Calibration vs Predictive Parity -->
+<div class="slide">
+  <h2>Calibration vs Predictive Parity</h2>
+  <div class="divider"></div>
+  <div style="display:flex;flex-direction:column;gap:12px;">
+    <div class="def-card"><h3>Calibration</h3><p>In every group, score $s$ means a share $s$ with $Y = 1$.</p></div>
+    <div class="def-card"><h3>Predictive parity at cutoff $t$</h3><p>Among those flagged (score above $t$): same share with $Y = 1$.</p></div>
+  </div>
+  <ul class="arrow" style="margin-top:22px;">
+    <li>Calibration: every score. Parity: one cutoff</li>
+    <li>Two score values: equal PPV if the cutoff flags the same top score, in both groups</li>
+    <li>Otherwise PPV averages the scores above $t$, per group</li>
+  </ul>
+  <p class="muted">Different score mixes above $t$: calibrated, yet unequal PPV.</p>
+  <div class="cite cite-left">Calibration: Kleinberg et al., condition A. Predictive parity: Chouldechova, Big Data 2017, Def. 2 (her COMPAS check, Def. 1, only asks groups to agree).</div>
+</div>
+
+<!-- 20. Five Criteria, Five Comparisons -->
+<div class="slide">
+  <h2>Five Criteria, Five Comparisons</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Criterion</th><th>Compares</th><th>Among</th></tr>
+    <tr><td>Demographic parity</td><td>selection rate</td><td>everyone</td></tr>
+    <tr><td>Equal opportunity</td><td>TPR</td><td>$Y = 1$</td></tr>
+    <tr><td>Equalized odds</td><td>TPR and FPR</td><td>$Y = 1$ and $Y = 0$</td></tr>
+    <tr><td>Predictive parity</td><td>PPV</td><td>flagged</td></tr>
+    <tr><td>Calibration within groups</td><td>$\Pr[Y = 1 \mid S = s]$</td><td>each score $s$</td></tr>
+  </table>
+  <p class="muted" style="margin-top:14px;">Which of these can hold together: Section 03.</p>
+</div>
+
+<!-- 21. Same Data, Five Rules -->
+<div class="slide">
+  <h2>Same Data, Five Rules</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:4px 0;">
+    <img src="figs/hardt-fico-thresholds.png" alt="FICO score thresholds per group under max profit, single threshold, equal opportunity, equal odds, and demographic parity; raw scores left, within-group percentiles right" style="width:860px;height:auto;display:block;">
+  </div>
+  <p>FICO scores, four groups: each rule picks <strong>different thresholds</strong>.</p>
+  <div class="cite cite-left">Hardt, Price, and Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016, Figure 9.</div>
+</div>
+
+<!-- 22. Divider 03 -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>COMPAS and Impossibility</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Different criteria, one dataset</p>
+</div>
+
+<!-- 23. What COMPAS Is -->
+<div class="slide">
+  <h2>What COMPAS Is</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:1fr auto;align-items:center;gap:28px;">
+    <div>
+  <p>A commercial <strong>recidivism risk score</strong> used in US courts.</p>
+  <ul class="arrow">
+    <li>Predicts recidivism; deciles 1 to 10</li>
+    <li>Labels: low 1–4, medium 5–7, high 8–10</li>
+    <li>Broward County, FL: used mainly for pretrial release or detention</li>
+  </ul>
+  <p class="muted">Sold by Northpointe. In the analyses here, recidivism = rearrest within two years.</p>
+    </div>
+    <img src="figs/chouldechova-deciles.png" alt="Histograms of COMPAS decile scores for Black and White defendants in Broward County: White defendants concentrated at low deciles, Black defendants spread across all ten" style="width:470px;height:auto;display:block;">
+  </div>
+  <div class="cite cite-left">Score distributions by race, Broward County data: Chouldechova, "Fair Prediction with Disparate Impact", Big Data 2017, Figure 3 (Cohen's d = 0.60). Use: Larson et al., ProPublica 2016.</div>
+</div>
+
+<!-- 24. False Positives, By Group -->
+<div class="slide">
+  <h2>False Positives, By Group</h2>
+  <div class="divider"></div>
+  <p>7,214 defendants. Of those <strong>not</strong> rearrested within two years, who was labeled higher risk?</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 460 210" style="width:100%;max-width:800px;">
+      <line x1="80" y1="170" x2="430" y2="170" stroke="#999" stroke-width="1.5"/>
+      <rect x="120" y="92" width="90" height="78" fill="#003876" fill-opacity="0.85"/>
+      <text x="165" y="80" font-size="20" fill="#003876" text-anchor="middle" font-weight="700">44.9%</text>
+      <text x="165" y="192" font-size="16" fill="#1a1a1a" text-anchor="middle">Black</text>
+      <rect x="290" y="129" width="90" height="41" fill="#6b7280" fill-opacity="0.85"/>
+      <text x="335" y="117" font-size="20" fill="#6b7280" text-anchor="middle" font-weight="700">23.5%</text>
+      <text x="335" y="192" font-size="16" fill="#1a1a1a" text-anchor="middle">White</text>
+      <text x="44" y="100" font-size="14" fill="#666" text-anchor="middle">false-</text>
+      <text x="44" y="118" font-size="14" fill="#666" text-anchor="middle">positive</text>
+      <text x="44" y="136" font-size="14" fill="#666" text-anchor="middle">rate</text>
+    </svg>
+  </div>
+  <p class="muted">Higher risk = medium or high. Rearrested, labeled low: White 47.7%, Black 28.0%.</p>
+  <div class="cite cite-left">Larson, Mattu, Kirchner, and Angwin, "How We Analyzed the COMPAS Recidivism Algorithm", ProPublica 2016 (scores from 2013–14; outcome: a new arrest within two years).</div>
+</div>
+
+<!-- 25. The Gap Persists Within Subgroups -->
+<div class="slide">
+  <h2>The Gap Persists Within Subgroups</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:1fr auto;align-items:center;gap:28px;">
+    <div>
+  <p>Is the gap just <strong>criminal history</strong>? Control for it.</p>
+  <ul class="arrow">
+    <li>Misdemeanor defendants, binned by prior count</li>
+    <li>Black FPR higher in every bin</li>
+    <li>Wide intervals at high prior counts</li>
+  </ul>
+  <p class="muted">The paper reports the gap also persists after adjusting for other covariates.</p>
+    </div>
+    <img src="figs/chouldechova-fpr-priors-hi.png" alt="False positive rates by number of priors (0, 1-3, 4-6, 7-10, over 10) for Black and White misdemeanor defendants; Black bars higher in every bin" style="width:600px;height:auto;display:block;">
+  </div>
+  <div class="cite cite-left">Chouldechova, "Fair Prediction with Disparate Impact", Big Data 2017, Figure 2(b): high risk = decile above 4; 95% intervals; ProPublica Broward County data.</div>
+</div>
+
+<!-- 26. Northpointe Responds -->
+<div class="slide">
+  <h2>Northpointe Responds: Read by Row</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:0 0 4px;">
+    <img src="figs/chouldechova-calib-pp.png" alt="Two bar charts by race. (a) Observed rearrest rate at each COMPAS decile 1 to 10, Black and White bars close. (b) Observed rearrest rate among those above each high-risk cutoff 0 to 9: White lower at cutoffs 0 to 3, close from 4 up" style="width:740px;height:auto;display:block;">
+  </div>
+  <ul class="arrow">
+    <li>Left: rearrest share per decile, close by race; deciles are ranks, not probabilities</li>
+    <li>Right: PPV above each cutoff, approximately equal for cutoffs 4 and up</li>
+  </ul>
+  <div class="cite cite-left">Dieterich, Mendoza, and Brennan, "COMPAS Risk Scales: Demonstrating Accuracy Equity and Predictive Parity", Northpointe 2016. Plots and reading: Chouldechova, Big Data 2017, Figure 1.</div>
+</div>
+
+<!-- 27. The Analyses Evaluated Different Criteria -->
+<div class="slide">
+  <h2>The Analyses Evaluated Different Criteria</h2>
+  <div class="divider"></div>
+  <p>Same table, <strong>different denominators</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:4px 0;">
+    <svg viewBox="0 0 520 180" style="width:100%;max-width:700px;">
+<text x="200" y="14" font-size="12" fill="#555" text-anchor="middle">Y = 1</text><text x="280" y="14" font-size="12" fill="#555" text-anchor="middle">Y = 0</text><text x="120" y="50" font-size="12" fill="#555" text-anchor="end">high risk</text><text x="120" y="98" font-size="12" fill="#555" text-anchor="end">low risk</text><rect x="160" y="24" width="80" height="44" fill="#2e8b57" fill-opacity="0.12" stroke="#2e8b57" stroke-width="1.2"/><text x="200.0" y="50.0" font-size="12" fill="#1a1a1a" text-anchor="middle">TP</text><rect x="240" y="24" width="80" height="44" fill="#d94040" fill-opacity="0.35" stroke="#d94040" stroke-width="2.5"/><text x="280.0" y="50.0" font-size="12" fill="#1a1a1a" text-anchor="middle">FP</text><rect x="160" y="72" width="80" height="44" fill="#d94040" fill-opacity="0.12" stroke="#d94040" stroke-width="1.2"/><text x="200.0" y="98.0" font-size="12" fill="#1a1a1a" text-anchor="middle">FN</text><rect x="240" y="72" width="80" height="44" fill="#2e8b57" fill-opacity="0.12" stroke="#2e8b57" stroke-width="1.2"/><text x="280.0" y="98.0" font-size="12" fill="#1a1a1a" text-anchor="middle">TN</text><rect x="236" y="20" width="88" height="100" fill="none" stroke="#d94040" stroke-width="3" rx="4"/><rect x="156" y="20" width="168" height="52" fill="none" stroke="#003876" stroke-width="3" rx="4" stroke-dasharray="7 4"/><text x="338" y="40" font-size="13" fill="#d94040" text-anchor="start" font-weight="700">ProPublica reads columns</text><text x="338" y="58" font-size="12" fill="#555" text-anchor="start">given Y = 0, how many FP?</text><text x="338" y="74" font-size="12" fill="#d94040" text-anchor="start">FPR differs by race</text><text x="20" y="138" font-size="13" fill="#003876" text-anchor="start" font-weight="700">Northpointe reads rows</text><text x="20" y="156" font-size="12" fill="#555" text-anchor="start">given high risk, how many Y = 1?</text><text x="20" y="172" font-size="12" fill="#003876" text-anchor="start">PPV approximately equal</text>
+    </svg>
+  </div>
+  <div class="grid-2">
+    <div><h3>ProPublica</h3><p>Unequal <strong>false-positive rates</strong>: error-rate balance fails.</p></div>
+    <div><h3>Northpointe</h3><p>PPV close: <strong>predictive parity</strong> approximately holds at the cutoff.</p></div>
+  </div>
+  <p class="muted">Both computations can be correct at once; they answer different questions.</p>
+</div>
+
+<!-- 28. Rearrest Is Not Offending -->
+<div class="slide">
+  <h2>Rearrest Is Not Offending</h2>
+  <div class="divider"></div>
+  <p>Every COMPAS rate here uses $Y$ = <strong>rearrested within two years</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:8px 0;">
+    <svg viewBox="0 0 520 134" style="width:100%;max-width:700px;">
+<defs><marker id="m28" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs><rect x="10" y="30" width="170" height="54" rx="8" fill="#2e8b57" fill-opacity="0.08" stroke="#2e8b57" stroke-width="2" stroke-dasharray="6 4"/><text x="95" y="52" font-size="12" fill="#6b7280" text-anchor="middle">what we want</text><text x="95" y="72" font-size="14" fill="#2e8b57" text-anchor="middle" font-weight="700">offended again</text><rect x="340" y="30" width="170" height="54" rx="8" fill="#d94040" fill-opacity="0.10" stroke="#d94040" stroke-width="2"/><text x="425" y="52" font-size="12" fill="#6b7280" text-anchor="middle">what is recorded</text><text x="425" y="72" font-size="14" fill="#d94040" text-anchor="middle" font-weight="700">Y = rearrested</text><line x1="180" y1="57" x2="338" y2="57" stroke="#6b7280" stroke-width="2.5" marker-end="url(#m28)"/><text x="260" y="50" font-size="13" fill="#6b7280" text-anchor="middle" font-weight="700">only if arrested</text><text x="260" y="118" font-size="13" fill="#d94040" text-anchor="middle">arrest chances may differ by group</text>
+    </svg>
+  </div>
+  <ul class="arrow">
+    <li>Offences never followed by arrest: missing from $Y = 1$</li>
+    <li>Unequal arrest chances: $Y$ differs for the same behaviour</li>
+  </ul>
+  <p class="muted">A measurement caveat; these sources do not estimate its size.</p>
+</div>
+
+<!-- 29. The Key Ingredient: Base Rates -->
+<div class="slide">
+  <h2>The Key Ingredient: Base Rates</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:1fr auto;align-items:center;gap:28px;">
+    <div>
+  <p>The <strong>base rate</strong> is how common $Y = 1$ is in a group.</p>
+  <div class="math-block">$$p_a \;=\; \Pr[Y = 1 \mid A = a].$$</div>
+  <p>When two groups have <strong>different base rates</strong>, trouble begins.</p>
+    </div>
+    <div style="display:flex;justify-content:center;margin:0;">
+    <svg viewBox="0 0 310 200" style="width:420px;flex:none;">
+<text x="10" y="20" font-size="13" fill="#003876" text-anchor="start" font-weight="700">group a</text><text x="300" y="20" font-size="13" fill="#003876" text-anchor="end" font-weight="700">p_a = 0.50</text><circle cx="20" cy="44" r="7" fill="#003876"/><circle cx="39" cy="44" r="7" fill="#003876"/><circle cx="58" cy="44" r="7" fill="#003876"/><circle cx="77" cy="44" r="7" fill="#003876"/><circle cx="96" cy="44" r="7" fill="#003876"/><circle cx="115" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="134" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="153" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="172" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="191" cy="44" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="20" cy="66" r="7" fill="#003876"/><circle cx="39" cy="66" r="7" fill="#003876"/><circle cx="58" cy="66" r="7" fill="#003876"/><circle cx="77" cy="66" r="7" fill="#003876"/><circle cx="96" cy="66" r="7" fill="#003876"/><circle cx="115" cy="66" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="134" cy="66" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="153" cy="66" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="172" cy="66" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="191" cy="66" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><text x="10" y="110" font-size="13" fill="#1a5296" text-anchor="start" font-weight="700">group b</text><text x="300" y="110" font-size="13" fill="#1a5296" text-anchor="end" font-weight="700">p_b = 0.25</text><circle cx="20" cy="134" r="7" fill="#1a5296"/><circle cx="39" cy="134" r="7" fill="#1a5296"/><circle cx="58" cy="134" r="7" fill="#1a5296"/><circle cx="77" cy="134" r="7" fill="#1a5296"/><circle cx="96" cy="134" r="7" fill="#1a5296"/><circle cx="115" cy="134" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="134" cy="134" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="153" cy="134" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="172" cy="134" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="191" cy="134" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="20" cy="156" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="39" cy="156" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="58" cy="156" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="77" cy="156" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="96" cy="156" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="115" cy="156" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="134" cy="156" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="153" cy="156" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="172" cy="156" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="191" cy="156" r="7" fill="#fff" stroke="#6b7280" stroke-width="1.5"/><circle cx="220" cy="185" r="7" fill="#003876"/><text x="232" y="189" font-size="12" fill="#555" text-anchor="start">= Y = 1</text>
+    </svg>
+  </div>
+  </div>
+</div>
+
+<!-- 30. Chouldechova: One Identity -->
+<div class="slide">
+  <h2>Chouldechova: One Identity</h2>
+  <div class="divider"></div>
+  <p>In each group, three numbers <strong>fix</strong> the false-positive rate.</p>
+  <div style="display:flex;justify-content:center;margin:4px 0;">
+    <svg viewBox="0 0 520 112" style="width:100%;max-width:700px;">
+<defs><marker id="m30" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs><rect x="10" y="6" width="150" height="30" rx="6" fill="#003876" fill-opacity="0.10" stroke="#003876" stroke-width="2"/><text x="85" y="26" font-size="14" fill="#003876" text-anchor="middle" font-weight="700">base rate</text><rect x="10" y="41" width="150" height="30" rx="6" fill="#003876" fill-opacity="0.10" stroke="#003876" stroke-width="2"/><text x="85" y="61" font-size="14" fill="#003876" text-anchor="middle" font-weight="700">PPV</text><rect x="10" y="76" width="150" height="30" rx="6" fill="#003876" fill-opacity="0.10" stroke="#003876" stroke-width="2"/><text x="85" y="96" font-size="14" fill="#003876" text-anchor="middle" font-weight="700">FNR</text><line x1="160" y1="21" x2="318" y2="52" stroke="#6b7280" stroke-width="2"/><line x1="160" y1="56" x2="318" y2="56" stroke="#6b7280" stroke-width="2"/><line x1="160" y1="91" x2="318" y2="60" stroke="#6b7280" stroke-width="2" /><line x1="318" y1="56" x2="356" y2="56" stroke="#6b7280" stroke-width="2.5" marker-end="url(#m30)"/><rect x="360" y="36" width="150" height="40" rx="8" fill="#d94040" fill-opacity="0.10" stroke="#d94040" stroke-width="2"/><text x="435" y="62" font-size="15" fill="#d94040" text-anchor="middle" font-weight="700">FPR</text>
+    </svg>
+  </div>
+  <div class="def-card">
+    <h3>Consequence</h3>
+    <p>Equal PPV ($0 \lt \mathrm{PPV} \lt 1$), FNR below 1, different base rates: FPR and FNR <strong>cannot both</strong> be equal.</p>
+  </div>
+  <p class="muted" style="margin-top:14px;">Escapes: equal base rates, or perfect PPV. Calibration is not part of this result.</p>
+  <div class="cite cite-left">Chouldechova, "Fair Prediction with Disparate Impact", Big Data 2017, Eq. (2.6).</div>
+</div>
+
+<!-- 31. Kleinberg et al.: Three Conditions on a Score -->
+<div class="slide">
+  <h2>Kleinberg et al.: Three Conditions on a Score</h2>
+  <div class="divider"></div>
+  <div class="grid-3">
+    <div class="card"><h3>(A) Calibration</h3><p>Within each group.</p></div>
+    <div class="card"><h3>(B) Negative balance</h3><p>Same mean score for $Y = 0$.</p></div>
+    <div class="card"><h3>(C) Positive balance</h3><p>Same mean score for $Y = 1$.</p></div>
+  </div>
+  <div class="highlight" style="margin-top:22px;"><p>All three hold only with <strong>perfect prediction</strong> or <strong>equal base rates</strong>.</p></div>
+  <p class="muted">Approximate version: nearly all three forces nearly one of those cases. Neither result says every pair conflicts.</p>
+  <div class="cite cite-left">Kleinberg, Mullainathan, and Raghavan, "Inherent Trade-Offs in the Fair Determination of Risk Scores", ITCS 2017, Theorems 1.1 and 1.2.</div>
+</div>
+
+<!-- 32. Worked Example: Calibrated, Unequal Errors -->
+<div class="slide">
+  <h2>Worked Example: Calibrated, Unequal Errors</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:1fr auto;align-items:center;gap:28px;">
+    <div>
+  <p>Scores 0.2 or 0.8, flag if above 0.5.</p>
+  <table>
+    <tr><th>Metric</th><th>Group A</th><th>Group B</th></tr>
+    <tr><td>Base rate</td><td>$0.50$</td><td>$0.25$</td></tr>
+    <tr><td>Score calibrated?</td><td>yes</td><td>yes</td></tr>
+    <tr><td>PPV (precision)</td><td>$0.80$</td><td>$0.80$</td></tr>
+    <tr><td>False-positive rate</td><td>$0.20$</td><td>$0.02$</td></tr>
+    <tr><td>False-negative rate</td><td>$0.20$</td><td>$0.73$</td></tr>
+  </table>
+  <p class="muted">Instructor-built numbers. Same PPV; error rates split.</p>
+    </div>
+    <div style="display:flex;justify-content:center;margin:0;">
+    <svg viewBox="0 0 330 180" style="width:460px;flex:none;">
+<text x="150" y="16" font-size="13" fill="#6b7280" text-anchor="middle" font-weight="700">error rates by group</text><line x1="70" y1="30" x2="70" y2="176" stroke="#999" stroke-width="1.5"/><text x="64" y="52" font-size="13" fill="#1a1a1a" text-anchor="end">FPR a</text><rect x="70" y="34" width="56" height="26" fill="#003876" fill-opacity="0.85"/><text x="132.0" y="52" font-size="13" fill="#003876" text-anchor="start" font-weight="700">0.20</text><text x="64" y="88" font-size="13" fill="#1a1a1a" text-anchor="end">FPR b</text><rect x="70" y="70" width="6" height="26" fill="#1a5296" fill-opacity="0.85"/><text x="81.6" y="88" font-size="13" fill="#1a5296" text-anchor="start" font-weight="700">0.02</text><text x="64" y="124" font-size="13" fill="#1a1a1a" text-anchor="end">FNR a</text><rect x="70" y="106" width="56" height="26" fill="#003876" fill-opacity="0.85"/><text x="132.0" y="124" font-size="13" fill="#003876" text-anchor="start" font-weight="700">0.20</text><text x="64" y="160" font-size="13" fill="#1a1a1a" text-anchor="end">FNR b</text><rect x="70" y="142" width="204" height="26" fill="#1a5296" fill-opacity="0.85"/><text x="280.4" y="160" font-size="13" fill="#1a5296" text-anchor="start" font-weight="700">0.73</text>
+    </svg>
+  </div>
+  </div>
+</div>
+
+<!-- 33. Why the Gap Appears Here -->
+<div class="slide">
+  <h2>Why the Gap Appears Here</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:1fr auto;align-items:center;gap:28px;">
+    <div>
+  <p>In this example, calibration ties scores to <strong>base rates</strong>.</p>
+  <ul class="arrow">
+    <li>Lower base rate: fewer high scores</li>
+    <li>A shared cutoff flags fewer in group b</li>
+    <li>So: lower FPR, higher FNR in b</li>
+  </ul>
+  <p class="muted">A property of this two-score construction, not of every calibrated model.</p>
+    </div>
+    <div style="display:flex;justify-content:center;margin:0;">
+    <svg viewBox="0 0 340 205" style="width:500px;flex:none;">
+<text x="150" y="16" font-size="13" fill="#6b7280" text-anchor="middle" font-weight="700">who gets which score</text><text x="70" y="36" font-size="13" fill="#003876" text-anchor="middle" font-weight="700">group a</text><rect x="30" y="109" width="80" height="65" fill="#d94040" fill-opacity="0.8"/><rect x="30" y="44" width="80" height="65" fill="#6b7280" fill-opacity="0.35"/><text x="70" y="145.5" font-size="12" fill="#fff" text-anchor="middle">50% at 0.8</text><text x="70" y="80.5" font-size="12" fill="#1a1a1a" text-anchor="middle">50% at 0.2</text><text x="230" y="36" font-size="13" fill="#1a5296" text-anchor="middle" font-weight="700">group b</text><rect x="190" y="163" width="80" height="11" fill="#d94040" fill-opacity="0.8"/><rect x="190" y="44" width="80" height="119" fill="#6b7280" fill-opacity="0.35"/><text x="276" y="172.5855" font-size="12" fill="#d94040" text-anchor="start">8% at 0.8</text><text x="230" y="107.5855" font-size="12" fill="#1a1a1a" text-anchor="middle">92% at 0.2</text><text x="150" y="196" font-size="12" fill="#2e8b57" text-anchor="middle" font-weight="700">calibration fixes the mix: mean score = base rate</text>
+    </svg>
+  </div>
+  </div>
+</div>
+
+<!-- 34. Choosing by Context -->
+<div class="slide">
+  <h2>Choosing by Context</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:4px 0;">
+    <svg viewBox="0 0 520 160" style="width:100%;max-width:640px;">
+<text x="120" y="14" font-size="13" fill="#d94040" text-anchor="middle" font-weight="700">wrongful arrest</text><text x="95" y="32" font-size="11" fill="#555" text-anchor="middle">Y=1</text><text x="155" y="32" font-size="11" fill="#555" text-anchor="middle">Y=0</text><text x="67" y="62" font-size="11" fill="#555" text-anchor="end">pred 1</text><text x="67" y="106" font-size="11" fill="#555" text-anchor="end">pred 0</text><rect x="70" y="40" width="50" height="40" fill="#2e8b57" fill-opacity="0.12" stroke="#2e8b57" stroke-width="1.2"/><text x="95.0" y="64.0" font-size="12" fill="#1a1a1a" text-anchor="middle">TP</text><rect x="130" y="40" width="50" height="40" fill="#d94040" fill-opacity="0.35" stroke="#d94040" stroke-width="2.5"/><text x="155.0" y="64.0" font-size="12" fill="#1a1a1a" text-anchor="middle">FP</text><rect x="70" y="86" width="50" height="40" fill="#d94040" fill-opacity="0.12" stroke="#d94040" stroke-width="1.2"/><text x="95.0" y="110.0" font-size="12" fill="#1a1a1a" text-anchor="middle">FN</text><rect x="130" y="86" width="50" height="40" fill="#2e8b57" fill-opacity="0.12" stroke="#2e8b57" stroke-width="1.2"/><text x="155.0" y="110.0" font-size="12" fill="#1a1a1a" text-anchor="middle">TN</text><text x="120" y="150" font-size="13" fill="#d94040" text-anchor="middle" font-weight="700">examine FPR</text><text x="400" y="14" font-size="13" fill="#d94040" text-anchor="middle" font-weight="700">missed diagnosis</text><text x="375" y="32" font-size="11" fill="#555" text-anchor="middle">Y=1</text><text x="435" y="32" font-size="11" fill="#555" text-anchor="middle">Y=0</text><text x="347" y="62" font-size="11" fill="#555" text-anchor="end">pred 1</text><text x="347" y="106" font-size="11" fill="#555" text-anchor="end">pred 0</text><rect x="350" y="40" width="50" height="40" fill="#2e8b57" fill-opacity="0.12" stroke="#2e8b57" stroke-width="1.2"/><text x="375.0" y="64.0" font-size="12" fill="#1a1a1a" text-anchor="middle">TP</text><rect x="410" y="40" width="50" height="40" fill="#d94040" fill-opacity="0.12" stroke="#d94040" stroke-width="1.2"/><text x="435.0" y="64.0" font-size="12" fill="#1a1a1a" text-anchor="middle">FP</text><rect x="350" y="86" width="50" height="40" fill="#d94040" fill-opacity="0.35" stroke="#d94040" stroke-width="2.5"/><text x="375.0" y="110.0" font-size="12" fill="#1a1a1a" text-anchor="middle">FN</text><rect x="410" y="86" width="50" height="40" fill="#2e8b57" fill-opacity="0.12" stroke="#2e8b57" stroke-width="1.2"/><text x="435.0" y="110.0" font-size="12" fill="#1a1a1a" text-anchor="middle">TN</text><text x="400" y="150" font-size="13" fill="#d94040" text-anchor="middle" font-weight="700">examine FNR</text>
+    </svg>
+  </div>
+  <div class="grid-2">
+    <div><h3>Wrongful arrest</h3><p>Main harm is a false positive: examine FPR.</p></div>
+    <div><h3>Missed diagnosis</h3><p>Main harm is a false negative: examine FNR.</p></div>
+  </div>
+  <p class="muted">Equal rates are not low rates: also weigh error levels, utility, and affected people's priorities.</p>
+</div>
+
+<!-- 35. Divider 04 -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>Mitigation</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Before, during and after training</p>
+</div>
+
+<!-- 36. The Machine Learning Pipeline -->
+<div class="slide">
+  <h2>Three Places to Intervene</h2>
+  <div class="divider"></div>
+  <p>Each method acts at <strong>one stage</strong> and targets <strong>one criterion</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:14px 0;">
+    <svg viewBox="0 0 920 230" style="width:100%;max-width:980px;">
+      <!-- stage boxes -->
+      <rect x="40" y="86" width="180" height="58" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="130" y="121" font-size="20" fill="#003876" text-anchor="middle" font-weight="700">Data</text>
+      <rect x="370" y="86" width="180" height="58" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="460" y="121" font-size="20" fill="#003876" text-anchor="middle" font-weight="700">Training</text>
+      <rect x="700" y="86" width="180" height="58" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="790" y="121" font-size="20" fill="#003876" text-anchor="middle" font-weight="700">Outputs</text>
+      <defs><marker id="ar0" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs>
+      <line x1="222" y1="115" x2="366" y2="115" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ar0)"/>
+      <line x1="552" y1="115" x2="696" y2="115" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ar0)"/>
+      <!-- intervention labels -->
+      <text x="130" y="44" font-size="17" fill="#2e8b57" text-anchor="middle" font-weight="700">pre-process</text>
+      <text x="130" y="64" font-size="14" fill="#6b7280" text-anchor="middle">reweighing</text>
+      <text x="460" y="44" font-size="17" fill="#2e8b57" text-anchor="middle" font-weight="700">in-process</text>
+      <text x="460" y="64" font-size="14" fill="#6b7280" text-anchor="middle">reductions</text>
+      <text x="790" y="44" font-size="17" fill="#2e8b57" text-anchor="middle" font-weight="700">post-process</text>
+      <text x="790" y="64" font-size="14" fill="#6b7280" text-anchor="middle">group thresholds</text>
+      <line x1="130" y1="70" x2="130" y2="84" stroke="#2e8b57" stroke-width="2"/>
+      <line x1="460" y1="70" x2="460" y2="84" stroke="#2e8b57" stroke-width="2"/>
+      <line x1="790" y1="70" x2="790" y2="84" stroke="#2e8b57" stroke-width="2"/>
+    </svg>
+  </div>
+  <p class="muted">Pick the stage you can actually touch.</p>
+</div>
+
+<!-- 37. Reweighing -->
+<div class="slide">
+  <h2>Reweighing</h2>
+  <div class="divider"></div>
+  <p>Weight each example so group and label look <strong>independent</strong>.</p>
+  <div class="highlight"><p>Weight of a (group, label) cell = expected share ÷ observed share.</p></div>
+  <ul class="arrow">
+    <li>Expected: the share if group and label were independent</li>
+    <li>Below the independence-expected share: up; above it: down</li>
+    <li>No example deleted; the labels stay as they are</li>
+    <li>An empty cell cannot be repaired by weighting</li>
+  </ul>
+  <p class="muted">Example: expected 30%, observed 20%: weight 1.5.</p>
+  <div class="cite cite-left">Kamiran and Calders, "Data Preprocessing Techniques for Classification without Discrimination", Knowledge and Information Systems 2012.</div>
+</div>
+
+<!-- 38. Reweighing: A Worked Example -->
+<div class="slide">
+  <h2>Reweighing: A Worked Example</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;align-items:center;gap:32px;">
+    <svg viewBox="0 0 560 240" style="width:560px;flex:none;"><text x="130" y="22" font-size="16" fill="#6b7280" text-anchor="middle" font-weight="700">Before: raw counts</text><rect x="50" y="150" width="70" height="60" fill="#003876" fill-opacity="0.75"/><text x="85.0" y="185.0" font-size="15" fill="#fff" text-anchor="middle" font-weight="700">20 +</text><rect x="50" y="60" width="70" height="90" fill="#9aa3ad" fill-opacity="0.6"/><text x="85.0" y="110.0" font-size="15" fill="#1a1a1a" text-anchor="middle" font-weight="700">30 −</text><text x="85.0" y="230" font-size="15" fill="#1a1a1a" text-anchor="middle">group s</text><rect x="140" y="90" width="70" height="120" fill="#003876" fill-opacity="0.75"/><text x="175.0" y="155.0" font-size="15" fill="#fff" text-anchor="middle" font-weight="700">40 +</text><rect x="140" y="60" width="70" height="30" fill="#9aa3ad" fill-opacity="0.6"/><text x="175.0" y="80.0" font-size="15" fill="#1a1a1a" text-anchor="middle" font-weight="700">10 −</text><text x="175.0" y="230" font-size="15" fill="#1a1a1a" text-anchor="middle">group o</text><line x1="40" y1="210" x2="220" y2="210" stroke="#999" stroke-width="1.5"/><text x="420" y="22" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">After: weighted</text><rect x="340" y="120" width="70" height="90" fill="#003876" fill-opacity="0.75"/><text x="375.0" y="170.0" font-size="15" fill="#fff" text-anchor="middle" font-weight="700">30 +</text><rect x="340" y="60" width="70" height="60" fill="#9aa3ad" fill-opacity="0.6"/><text x="375.0" y="95.0" font-size="15" fill="#1a1a1a" text-anchor="middle" font-weight="700">20 −</text><text x="375.0" y="230" font-size="15" fill="#1a1a1a" text-anchor="middle">group s</text><rect x="430" y="120" width="70" height="90" fill="#003876" fill-opacity="0.75"/><text x="465.0" y="170.0" font-size="15" fill="#fff" text-anchor="middle" font-weight="700">30 +</text><rect x="430" y="60" width="70" height="60" fill="#9aa3ad" fill-opacity="0.6"/><text x="465.0" y="95.0" font-size="15" fill="#1a1a1a" text-anchor="middle" font-weight="700">20 −</text><text x="465.0" y="230" font-size="15" fill="#1a1a1a" text-anchor="middle">group o</text><line x1="330" y1="210" x2="510" y2="210" stroke="#999" stroke-width="1.5"/><text x="280" y="130" font-size="26" fill="#6b7280" text-anchor="middle">→</text></svg>
+    <div>
+  <table>
+    <tr><th>Cell</th><th>Weight</th></tr>
+    <tr><td>s, +</td><td>1.5</td></tr>
+    <tr><td>s, −</td><td>0.67</td></tr>
+    <tr><td>o, +</td><td>0.75</td></tr>
+    <tr><td>o, −</td><td>2.0</td></tr>
+  </table>
+    </div>
+  </div>
+  <p class="muted">100 examples, 60% positive overall. After weighting, each group has 60% positive.</p>
+</div>
+
+<!-- 39. Reweighing, Measured -->
+<div class="slide">
+  <h2>Reweighing, Measured</h2>
+  <div class="divider"></div>
+  <p>Parity metrics of the <strong>training data</strong>, before and after reweighing.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;"><img src="figs/reweighing-aif360.png" alt="Bar charts of statistical parity difference and disparate impact before and after reweighing on adult, german and compas" style="width:700px;height:auto;max-width:100%;display:block;border:1px solid var(--slate);border-radius:8px;"></div>
+  <ul class="arrow">
+    <li>SPD: favorable rate, unprivileged minus privileged; ideal 0</li>
+    <li>DI: favorable rate, unprivileged ÷ privileged; ideal 1</li>
+  </ul>
+  <p class="muted">Blue = before, orange = after: both move toward the ideal.</p>
+  <div class="cite cite-left">Bellamy et al., "AI Fairness 360: An Extensible Toolkit for Detecting, Understanding, and Mitigating Unwanted Algorithmic Bias", 2018 — Fig. 4(a),(c): reweighing; bars ±1 SD.</div>
+</div>
+
+<!-- 40. The Reductions Approach -->
+<div class="slide">
+  <h2>The Reductions Approach</h2>
+  <div class="divider"></div>
+  <p>Turn a fairness constraint into <strong>ordinary training calls</strong>.</p>
+  <div class="grid-2" style="grid-template-columns:1fr auto;gap:36px;align-items:center;">
+  <ul class="arrow">
+    <li>Price the fairness gap as a penalty</li>
+    <li>Each round: one cost-weighted fit</li>
+    <li>Output: a random mix of the fits</li>
+  </ul>
+  <svg viewBox="0 0 520 275" style="width:624px;flex:none;" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arw19" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#003876"/></marker></defs><rect x="30" y="30" width="200" height="50" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="130.0" y="60.0" font-size="15" fill="#222" text-anchor="middle" >reweight examples</text><rect x="290" y="30" width="200" height="50" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="390.0" y="60.0" font-size="15" fill="#222" text-anchor="middle" >train plain classifier</text><rect x="290" y="170" width="200" height="50" rx="8" fill="#fff" stroke="#003876" stroke-width="2"/><text x="390.0" y="200.0" font-size="15" fill="#222" text-anchor="middle" >measure the gap</text><line x1="230" y1="55" x2="288" y2="55" stroke="#003876" stroke-width="2" marker-end="url(#arw19)"/><line x1="390" y1="80" x2="390" y2="168" stroke="#003876" stroke-width="2" marker-end="url(#arw19)"/><line x1="290" y1="180" x2="150" y2="84" stroke="#c0392b" stroke-width="2" marker-end="url(#arw19)"/><text x="190" y="150" font-size="13" fill="#c0392b" text-anchor="end" >adjust weights</text><line x1="390" y1="220" x2="390" y2="248" stroke="#2e7d32" stroke-width="2" marker-end="url(#arw19)"/><text x="390" y="266" font-size="13" fill="#2e7d32" text-anchor="middle" >stop: randomized mix</text><text x="80" y="235" font-size="13" fill="#6b7280" text-anchor="middle" >each loop =</text><text x="80" y="253" font-size="13" fill="#6b7280" text-anchor="middle" >one ordinary fit</text></svg>
+  </div>
+  <div class="cite cite-left">Agarwal, Beygelzimer, Dudík, Langford, and Wallach, "A Reductions Approach to Fair Classification", ICML 2018.</div>
+</div>
+
+<!-- 41. Reductions, Measured -->
+<div class="slide">
+  <h2>Reductions, Measured</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;align-items:flex-end;gap:24px;margin:0;">
+    <img src="figs/reductions-adult.png" alt="adult dataset, demographic parity, logistic regression: test error versus constraint violation; reductions curve with band below the baselines" style="height:270px;width:auto;display:block;">
+    <div style="position:relative;"><img src="figs/reductions-compas.png" alt="COMPAS dataset, demographic parity, logistic regression: test error versus constraint violation; reductions curve with band and baselines" style="height:270px;width:auto;display:block;"><div style="position:absolute;left:0;bottom:0;width:7%;height:12%;background:var(--bg, white);"></div></div>
+  </div>
+  <div style="display:flex;justify-content:center;margin:2px 0 6px;"><img src="figs/reductions-legend.png" alt="Legend: unconstrained, postprocessing, reweight, relabel, reduction (exp. grad.)" style="width:960px;height:auto;display:block;"></div>
+  <ul class="arrow">
+    <li>x: demographic-parity violation; y: test error; lower left is better</li>
+    <li>Gold: empirical tradeoff curve, 95% band; not the optimal frontier</li>
+  </ul>
+  <div class="cite cite-left">Agarwal, Beygelzimer, Dudík, Langford, and Wallach, "A Reductions Approach to Fair Classification", ICML 2018 — Fig. 1, top row: 2 of 5 datasets shown (adult4, Dutch census, Law School omitted). Reductions "dominates or matches" baselines up to statistical uncertainty.</div>
+</div>
+
+<!-- 42. Group-Specific Thresholds -->
+<div class="slide">
+  <h2>Group-Specific Thresholds</h2>
+  <div class="divider"></div>
+  <p>Keep the scores; change only the <strong>decision rule</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:4px 0;"><img src="figs/hardt-eo-threshold.png" alt="Three panels deriving the optimal equalized-odds predictor from per-group ROC curves" style="width:920px;height:auto;max-width:100%;display:block;border:1px solid var(--slate);border-radius:8px;"></div>
+  <p>Freeze the score; pick per-group ROC points. Equal odds may randomize.</p>
+  <p class="muted">Needs the group at decision time and labeled held-out data.</p>
+  <div class="cite cite-left">Hardt, Price, and Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016 — Fig. 2: equalized odds (middle), equal opportunity (right).</div>
+</div>
+
+<!-- 43. The Cost, on FICO Data -->
+<div class="slide">
+  <h2>The Cost, on FICO Data</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:36px;align-items:center;">
+  <img src="figs/hardt-fico-profit.png" alt="Fraction of max profit earned versus minimal non-default rate for profitability, for single threshold, equal opportunity, equal odds and demographic parity; curves fall as the rate rises" style="height:360px;width:auto;display:block;border:1px solid var(--slate);border-radius:8px;">
+  <div>
+  <p>Lender profit when thresholds must meet a <strong>criterion</strong>.</p>
+  <ul class="arrow">
+    <li>y: share of the maximum profit</li>
+    <li>x: break-even repayment rate</li>
+    <li>At 82%, a loan pays only if over 82% of such borrowers repay</li>
+  </ul>
+  </div>
+  </div>
+  <div class="highlight"><p>At 82%: single threshold 99.3% · opportunity 92.8% · equal odds 80.2% · demography 69.8%</p></div>
+  <div class="cite cite-left">Hardt, Price, and Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016 — Fig. 11, right panel, and §6 (FICO scores).</div>
+</div>
+
+<!-- 44. An Empirical Tradeoff, Not the Optimal Frontier -->
+<div class="slide">
+  <h2>An Empirical Tradeoff, Not the Optimal Frontier</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:32px;align-items:center;">
+  <img src="figs/aif360-di-panel.png" alt="Balanced accuracy versus disparate impact on Adult, race. Top panel before mitigation: most methods near 0.745 accuracy and DI 0.45 to 0.6, adversarial debiasing at 0.665 and DI 0.37. Bottom panel after: reweighing near DI 0.9 at 0.745; reject option near DI 0.8 to 0.9 at 0.64 to 0.65; adversarial debiasing DI 0.82 at 0.665" style="height:420px;width:auto;display:block;border:1px solid var(--slate);border-radius:8px;">
+  <div>
+  <p>Adult, race. y: <strong>balanced accuracy</strong> = mean of TPR and TNR. Top: before; bottom: after.</p>
+  <div style="margin-top:6px;"><p style="margin:0;line-height:1.3;"><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#1f77b4;margin-right:4px;vertical-align:middle;"></span><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#aec7e8;margin-right:4px;vertical-align:middle;"></span> Reweighing</p><p style="margin:0;line-height:1.3;"><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#ff7f0e;margin-right:4px;vertical-align:middle;"></span><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#ffbb78;margin-right:4px;vertical-align:middle;"></span> Optimized pre-processing</p><p style="margin:0;line-height:1.3;"><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#2ca02c;margin-right:4px;vertical-align:middle;"></span><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#98df8a;margin-right:4px;vertical-align:middle;"></span> Disparate impact remover</p><p style="margin:0;line-height:1.3;"><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#e377c2;margin-right:4px;vertical-align:middle;"></span><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#f7b6d2;margin-right:4px;vertical-align:middle;"></span> Learning fair representations</p><p style="margin:0;line-height:1.3;"><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#d62728;margin-right:4px;vertical-align:middle;"></span><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#ff9896;margin-right:4px;vertical-align:middle;"></span> Equal odds post-processing</p><p style="margin:0;line-height:1.3;"><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#9467bd;margin-right:4px;vertical-align:middle;"></span><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#c5b0d5;margin-right:4px;vertical-align:middle;"></span> Calibrated equal odds</p><p style="margin:0;line-height:1.3;"><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#8c564b;margin-right:4px;vertical-align:middle;"></span><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#c49c94;margin-right:4px;vertical-align:middle;"></span> Reject option classification</p><p style="margin:0;line-height:1.3;"><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#7f7f7f;margin-right:4px;vertical-align:middle;"></span><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:transparent;margin-right:4px;vertical-align:middle;"></span> Adversarial debiasing (NN only)</p><p style="margin:0;line-height:1.3;"><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#c7c7c7;margin-right:4px;vertical-align:middle;"></span><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:transparent;margin-right:4px;vertical-align:middle;"></span> Prejudice remover (LR only)</p></div>
+  <p class="muted" style="margin-top:4px;">Dark: logistic regression; light: random forest.</p>
+  </div>
+  </div>
+  <p>Reject option: DI up, accuracy ≈0.65. Adversarial starts lower: different preprocessing.</p>
+  <div class="cite cite-left">Bellamy et al., "AI Fairness 360: An Extensible Toolkit for Detecting, Understanding, and Mitigating Unwanted Algorithmic Bias", 2018 — Fig. 5(b): 25 splits, ±1 SD; thresholds tuned on validation, scored on test. Balanced accuracy: standard definition; not defined in the paper.</div>
+</div>
+
+<!-- 45. Method Cards -->
+<div class="slide">
+  <h2>Method Cards</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Method</th><th>Targets</th><th>Evaluated on</th><th>Utility</th><th>Assumes</th></tr>
+    <tr><td>Reweighing</td><td>parity in training data</td><td>AIF360: the reweighted data</td><td>data metric only</td><td>group known in training</td></tr>
+    <tr><td>Reductions</td><td>DP or EO constraint</td><td>Agarwal: test sets</td><td>classification error</td><td>group in training; randomized output</td></tr>
+    <tr><td>Group thresholds</td><td>equal opportunity or odds</td><td>Hardt: FICO data</td><td>share of max profit</td><td>group at decision; labeled held-out data</td></tr>
+  </table>
+  <p class="muted" style="margin-top:12px;">All three take $Y$ as given: a biased label stays biased.</p>
+</div>
+
+<!-- 46. Divider 05 -->
+<div class="slide section-slide left">
+  <div class="section-num">05</div>
+  <h1>Beyond Classifiers</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Audits, benchmarks, generators and law</p>
+</div>
+
+<!-- 47. The Gender Shades Audit -->
+<div class="slide">
+  <h2>The Gender Shades Audit</h2>
+  <div class="divider"></div>
+  <p>Gender classifiers: error up to <strong>34.7%</strong> for darker-skinned women, at most 0.8% for lighter-skinned men.</p>
+  <div style="display:flex;justify-content:center;margin:4px 0;">
+    <svg viewBox="0 0 780 285" style="width:100%;max-width:860px;"><rect x="80" y="133.5" width="40" height="116.5" fill="#d94040"/><text x="100" y="127.5" font-size="14" fill="#1a1a1a" text-anchor="middle">20.8</text><rect x="126" y="216.4" width="40" height="33.6" fill="#e8a0a0"/><text x="146" y="210.4" font-size="14" fill="#1a1a1a" text-anchor="middle">6.0</text><rect x="172" y="240.5" width="40" height="9.5" fill="#003876"/><text x="192" y="234.5" font-size="14" fill="#1a1a1a" text-anchor="middle">1.7</text><rect x="218" y="250.0" width="40" height="0.0" fill="#8aa4c8"/><text x="238" y="244.0" font-size="14" fill="#1a1a1a" text-anchor="middle">0.0</text><text x="170" y="274" font-size="17" fill="#1a1a1a" text-anchor="middle" font-weight="700">Microsoft</text><rect x="310" y="56.8" width="40" height="193.2" fill="#d94040"/><text x="330" y="50.8" font-size="14" fill="#1a1a1a" text-anchor="middle">34.5</text><rect x="356" y="246.1" width="40" height="3.9" fill="#e8a0a0"/><text x="376" y="240.1" font-size="14" fill="#1a1a1a" text-anchor="middle">0.7</text><rect x="402" y="195.1" width="40" height="54.9" fill="#003876"/><text x="422" y="189.1" font-size="14" fill="#1a1a1a" text-anchor="middle">9.8</text><rect x="448" y="245.5" width="40" height="4.5" fill="#8aa4c8"/><text x="468" y="239.5" font-size="14" fill="#1a1a1a" text-anchor="middle">0.8</text><text x="400" y="274" font-size="17" fill="#1a1a1a" text-anchor="middle" font-weight="700">Face++</text><rect x="540" y="55.7" width="40" height="194.3" fill="#d94040"/><text x="560" y="49.7" font-size="14" fill="#1a1a1a" text-anchor="middle">34.7</text><rect x="586" y="182.8" width="40" height="67.2" fill="#e8a0a0"/><text x="606" y="176.8" font-size="14" fill="#1a1a1a" text-anchor="middle">12.0</text><rect x="632" y="210.2" width="40" height="39.8" fill="#003876"/><text x="652" y="204.2" font-size="14" fill="#1a1a1a" text-anchor="middle">7.1</text><rect x="678" y="248.3" width="40" height="1.7" fill="#8aa4c8"/><text x="698" y="242.3" font-size="14" fill="#1a1a1a" text-anchor="middle">0.3</text><text x="630" y="274" font-size="17" fill="#1a1a1a" text-anchor="middle" font-weight="700">IBM</text><rect x="80" y="4" width="16" height="16" fill="#d94040"/><text x="102" y="17" font-size="15" fill="#333">darker female</text><rect x="250" y="4" width="16" height="16" fill="#e8a0a0"/><text x="272" y="17" font-size="15" fill="#333">darker male</text><rect x="420" y="4" width="16" height="16" fill="#003876"/><text x="442" y="17" font-size="15" fill="#333">lighter female</text><rect x="590" y="4" width="16" height="16" fill="#8aa4c8"/><text x="612" y="17" font-size="15" fill="#333">lighter male</text><line x1="60" y1="250" x2="760" y2="250" stroke="#999" stroke-width="1.5"/><text x="30" y="150" font-size="15" fill="#666" text-anchor="middle" transform="rotate(-90 30 150)">error (%)</text></svg>
+  </div>
+  <p class="muted">PPB: 1,270 faces. Darker = Fitzpatrick IV–VI, lighter = I–III. Binary female/male labels, as the vendors used.</p>
+  <div class="cite cite-left">Buolamwini and Gebru, "Gender Shades: Intersectional Accuracy Disparities in Commercial Gender Classification", FAT* 2018 — Table 4, error rate (1 − TPR) rows. Shows performance gaps; not what caused them.</div>
+</div>
+
+<!-- 48. After the Audit: Error Fell on the Named Systems -->
+<div class="slide">
+  <h2>After the Audit: Error Fell on the Named Systems</h2>
+  <div class="divider"></div>
+  <p>Raji and Buolamwini re-audited the <strong>named vendors</strong>.</p>
+  <div style="display:flex;justify-content:center;margin:6px 0;">
+    <svg viewBox="0 0 760 250" style="width:100%;max-width:820px;">
+      <line x1="60" y1="200" x2="720" y2="200" stroke="#999" stroke-width="1.5"/>
+      <text x="40" y="120" font-size="15" fill="#666" text-anchor="middle" transform="rotate(-90 40 120)">error (%)</text>
+      <!-- Microsoft: 20.8 -> 1.5 -->
+      <rect x="120" y="98" width="44" height="102" fill="#999"/>
+      <rect x="174" y="193" width="44" height="7" fill="#003876"/>
+      <text x="142" y="88" font-size="15" fill="#666" text-anchor="middle">20.8</text>
+      <text x="196" y="183" font-size="15" fill="#003876" font-weight="700" text-anchor="middle">1.5</text>
+      <text x="169" y="226" font-size="16" fill="#333" text-anchor="middle">Microsoft</text>
+      <!-- Face++: 34.5 -> 4.1 -->
+      <rect x="350" y="31" width="44" height="169" fill="#999"/>
+      <rect x="404" y="180" width="44" height="20" fill="#003876"/>
+      <text x="372" y="21" font-size="15" fill="#666" text-anchor="middle">34.5</text>
+      <text x="426" y="170" font-size="15" fill="#003876" font-weight="700" text-anchor="middle">4.1</text>
+      <text x="399" y="226" font-size="16" fill="#333" text-anchor="middle">Face++</text>
+      <!-- IBM: 34.7 -> 17.0 -->
+      <rect x="580" y="30" width="44" height="170" fill="#999"/>
+      <rect x="634" y="117" width="44" height="83" fill="#003876"/>
+      <text x="602" y="20" font-size="15" fill="#666" text-anchor="middle">34.7</text>
+      <text x="656" y="107" font-size="15" fill="#003876" font-weight="700" text-anchor="middle">17.0</text>
+      <text x="629" y="226" font-size="16" fill="#333" text-anchor="middle">IBM</text>
+      <!-- legend -->
+      <rect x="70" y="30" width="16" height="16" fill="#999"/>
+      <text x="92" y="43" font-size="15" fill="#666">May 2017 audit</text>
+      <rect x="70" y="56" width="16" height="16" fill="#003876"/>
+      <text x="92" y="69" font-size="15" fill="#003876">Aug 2018 re-audit</text>
+      <text x="380" y="245" font-size="14" fill="#666" text-anchor="middle">error on darker-skinned women, before and after</text>
+    </svg>
+  </div>
+  <p class="muted">Not named in 2017: Amazon 31.4%, Kairos 22.5% in 2018. A change after naming, not proof that naming caused it.</p>
+  <div class="cite cite-left">Raji and Buolamwini, "Actionable Auditing", AIES 2019 — follow-up to Gender Shades.</div>
+</div>
+
+<!-- 49. Auditing Language Models: BBQ -->
+<div class="slide">
+  <h2>Auditing Language Models: BBQ</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="grid-template-columns:1fr auto;align-items:center;gap:28px;">
+    <div>
+  <p>Ask a question the context <strong>cannot answer</strong>.</p>
+  <ul class="arrow">
+    <li>Nine social dimensions, US English; 58k+ items</li>
+    <li>Ambiguous: correct answer is "unknown"</li>
+    <li>Bias: do answers lean toward the listed stereotype?</li>
+  </ul>
+  <p class="muted">A wrong answer is not always a stereotyped one; the score counts which way answers lean.</p>
+    </div>
+    <img src="figs/bbq-example-hi.png" alt="BBQ example: ambiguous context about a Christian and a Muslim fleeing a bomb scene; negative question "who planted the bomb?" has correct answer Unknown; disambiguated context names the Christian" style="width:420px;height:auto;display:block;">
+  </div>
+  <div class="cite cite-left">Parrish et al., "BBQ: A Hand-Built Bias Benchmark for Question Answering", Findings of ACL 2022, Figure 1.</div>
+</div>
+
+<!-- 50. BBQ: Bias Shows Most When Context Is Ambiguous -->
+<div class="slide">
+  <h2>BBQ: Bias Shows Most When Context Is Ambiguous</h2>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:center;margin:0;">
+    <img src="figs/bbq-bias-scores-hi.png" alt="Heatmap of BBQ bias scores for six model configurations across eleven categories, ambiguous vs disambiguated context; ambiguous scores reach 40 to 49 for physical appearance, age and socio-economic status, disambiguated scores mostly single digits" style="width:900px;height:auto;display:block;">
+  </div>
+  <p>Score: <strong>0</strong> no lean · <strong>+</strong> toward the stereotype · <strong>−</strong> against it (max ±100).</p>
+  <p class="muted">Ambiguous scores are scaled by error rate, so panels differ. Benchmark scores, not harm rates.</p>
+  <div class="cite cite-left">Parrish et al., "BBQ: A Hand-Built Bias Benchmark for Question Answering", Findings of ACL 2022, Figure 3: six configurations of five models (UnifiedQA 11B in two input formats).</div>
+</div>
+
+<!-- 51. Generators Can Exaggerate Stereotypes -->
+<div class="slide">
+  <h2>Generators Can Exaggerate Stereotypes</h2>
+  <div class="divider"></div>
+  <p>Stable Diffusion, prompt: "A photo of the face of [OCCUPATION]".</p>
+  <div class="grid-2" style="grid-template-columns:auto 1fr;gap:44px;align-items:start;">
+    <div style="display:flex;justify-content:center;">
+      <img src="figs/bianchi-occupations.png" alt="Generated images for neutral occupation prompts: 'software developer' returns pale masculine faces, 'housekeeper' darker feminine faces" style="max-height:410px;width:auto;display:block;border:1px solid var(--slate);border-radius:8px;">
+    </div>
+    <ul>
+      <li>100 images per occupation</li>
+      <li>Each image: nearest CLIP match among face archetypes (male/female; White/Black/Asian)</li>
+      <li>Software developer: 99% White vs 56% in US labor data</li>
+      <li>Housekeeper, nurse, flight attendant: 100% female</li>
+    </ul>
+  </div>
+  <div class="cite cite-left">Bianchi et al., "Easily Accessible Text-to-Image Generation Amplifies Demographic Stereotypes at Large Scale", FAccT 2023 — Figure 3 (random sample) and §3. Categories are CLIP's, not self-identification.</div>
+</div>
+
+<!-- 52. Governance: Obligations and Their Limits -->
+<div class="slide">
+  <h2>Governance: Obligations and Their Limits</h2>
+  <div class="divider"></div>
+  <table>
+    <tr><th>Law</th><th>Obligation</th><th>Limit</th></tr>
+    <tr><td>NYC Local Law 144</td><td>Hiring tools: bias audit; publish impact ratios</td><td>No LL144 duty to change the tool; city review: 1 issue in 32 firms</td></tr>
+    <tr><td>EU AI Act</td><td>High-risk: examine, mitigate data bias (Art. 10)</td><td>Annex III high-risk: from 2 Dec 2027</td></tr>
+    <tr><td>Colorado SB26-189</td><td>From 2027: notice; review after adverse decisions</td><td>No new private right of action</td></tr>
+    <tr><td>Korea AI Basic Act</td><td>High-impact AI: risk management, oversight (Art. 34)</td><td>Impact assessment: “endeavor” only; no bias audit</td></tr>
+  </table>
+  <p class="muted" style="margin-top:10px;">Prescribed audit metrics do not settle every fairness question.</p>
+  <div class="cite cite-left">Checked 10 Oct 2026. NYC DCWP rules and FAQ; NY State Comptroller audit 2024-N-6, Dec 2025 (found ≥17 potential issues); EU Reg. 2024/1689 and 2026/1744 (Annex I: 2 Aug 2028); Colorado SB26-189; Korea AI Basic Act.</div>
+</div>
+
+<!-- 53. Divider 06 -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>Synthesis</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Name the criterion</p>
+</div>
+
+<!-- 54. A Checklist -->
+<div class="slide">
+  <h2>A Checklist</h2>
+  <div class="divider"></div>
+  <ul class="arrow">
+    <li>1 · Which decision, and which error hurts most?</li>
+    <li>2 · What does $Y$ actually record?</li>
+    <li>3 · Which rate, out of whom?</li>
+    <li>4 · Base rates differ? Then which criteria conflict?</li>
+    <li>5 · Which stage can you change?</li>
+    <li>6 · Evaluated on what data, against what utility?</li>
+  </ul>
+</div>
+
+<!-- 55. Key Takeaways -->
+<div class="slide">
+  <h2>Key Takeaways</h2>
+  <div class="divider"></div>
+  <ul class="check">
+    <li>Bias enters via data, labels and feedback loops</li>
+    <li>Each criterion compares a rate with its own denominator</li>
+    <li>COMPAS: the analyses evaluated different criteria</li>
+    <li>Unequal base rates: some criteria cannot all hold</li>
+    <li>Each mitigation targets one criterion, under assumptions</li>
+  </ul>
+  <div class="highlight"><p>Choosing a fairness criterion is a <strong>value judgment</strong>.</p></div>
+</div>
+
+<!-- 56. Closer -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">Which rate?</div>
+  <div class="big-word-sub">Name the criterion, its denominator, and who bears the error.</div>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 56</div>
+
+</div><!-- .deck -->
+
+<script defer src="../../reference/deck.js"></script>
+</body>
+</html>

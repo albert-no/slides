@@ -43,9 +43,9 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **rebuilt 2026-10** (59 sl, 90 min, concept-first, no activities) |
 | 10 | `lec10-jailbreak.html` | Jailbreaks: safety training, fragility, search, budget, evaluation & defenses | **rebuilt 2026-10** (58 sl, 90 min, concept-first, no activities; note 58 entries; tech 21 sl) |
 | 11 | `lec11-synthetic-media.html` | Synthetic media: text watermarks, robustness, detection without a watermark, provenance (C2PA) & labelling law | **new 2026-10** (56 sl, 8 real figure crops + 5 tables/figures redrawn, 90 min, concept-first, no activities; note 56 entries; tech 13 sl). Former Wk 11 prompt injection → `backup-prompt-injection.html` (to be rebuilt as Wk 13); former Wk 12 watermark deck replaced |
-| 12 | — | (slot free: former watermark deck merged into Wk 11; fairness moves here in the next rebuild) | |
-| 13 | `lec13-fairness-defs.html` | Fairness I — definitions & impossibility | **revised 2026-08**, **figure pass 2026-09** (62 sl) |
-| 14 | `lec14-fairness-mitigation.html` | Fairness II — mitigation & accountability | **revised 2026-08, figure pass 2026-09** (69 sl) |
+| 12 | `lec12-fairness.html` | Fairness: where bias enters, criteria, COMPAS and impossibility, mitigation, audits beyond classifiers | **new 2026-10** (56 sl, 17 real figure crops, 90 min, concept-first, no activities; note 56 entries; tech 17 sl). Merges the former Wk 13–14 fairness decks → `backup-fairness-defs.html`, `backup-fairness-mitigation.html` |
+| 13 | — | (slot reserved: prompt injection, rebuilt from `backup-prompt-injection.html`) | |
+| 14 | — | (slot reserved: emerging autonomous and multi-agent systems) | |
 | 15 | `lec15-governance.html` | Governance, frontier & demo showcase | **revised 2026-08, figure pass 2026-09** (70 sl) |
 
 Every deck has a companion **speaker script** `lecNN-…-note.html` (one entry per slide:
@@ -73,8 +73,9 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `lec09tech.html` | Wk 9 (poisoning) | count vs rate α; feature-collision objective; backdoor objective + ASR; spectral signatures; Neural Cleanse + MAD index; activation clustering | **rebuilt 2026-10** (18 sl) |
 | `lec10tech.html` | Wk 10 (jailbreak) | ASR + SE; any-of-N; judge-error correction; RLHF KL objective; per-token KL; refusal direction ablation; GCG loss + budget; PAIR budget; MSJ and BoN power laws | **rebuilt 2026-10** (21 sl; formulas checked against the paper PDFs) |
 | `lec11tech.html` | Wk 11 (synthetic media) | green-list rule (KGW Alg. 2); idealized Binomial null + assumptions; z &gt; 4 ≈ 3×10⁻⁵ (normal approx.) vs exact tail at T = 20; √T growth under constant green rate; repeated pairs, nominal vs measured FPR (K24 App. A.3, Fig. 7); base-rate formula; TV bound AUROC ≤ ½+TV−TV²/2 (TV defined; keyed detectors); distortion-free vs undetectable | **new 2026-10** (13 sl; formulas checked against the saved papers) |
-| `lec13tech.html` | Wk 13 (fairness defs) | demographic parity / equalized odds / calibration as conditional-prob defs; base rates; impossibility theorem (Chouldechova/Kleinberg) + proof sketch | **fixed 2026-08** (15 sl: base-rate identity was inverted (1−p)/p → p/(1−p) per Chouldechova eq 2.6; proof-sketch step 1 corrected (calibration ≠ "PPV = base rate" → predictive parity demands equal PPV across groups); unverifiable numeric-wedge table replaced with an exactly derivable two-value-score construction; impossibility attribution now dual Chouldechova + Kleinberg) |
-| `lec14tech.html` | Wk 14 (fairness mitigation) | reweighing w(g,y); penalized min Loss+λ·Unfairness; constrained form; reductions (Agarwal 2018); post-processing per-group thresholds (Hardt 2016) | **checked 2026-08** (17 sl: reweighing formula verified against Kamiran & Calders; reductions + Hardt ROC intuition verified against papers; one fix — cite venue "KIS 2012" → "Knowledge and Information Systems 2012") |
+| `lec12tech.html` | Wk 12 (fairness) | four rates per group (with positivity); five criteria written out; Dwork (D,d)-Lipschitz (Def. 2.1); Kusner counterfactual fairness (Def. 5); calibration vs PPV via the score mix; Chouldechova identity (eq. 2.6); Kleinberg proof sketch; worked example computed; reweighing; reductions saddle point; Hardt derived predictor | **new 2026-10** (17 sl; formulas checked against the saved papers) |
+| `backup-fairness-defstech.html` | former Wk 13 (fairness defs) | demographic parity / equalized odds / calibration as conditional-prob defs; base rates; impossibility theorem (Chouldechova/Kleinberg) + proof sketch | **fixed 2026-08** (15 sl: base-rate identity was inverted (1−p)/p → p/(1−p) per Chouldechova eq 2.6; proof-sketch step 1 corrected (calibration ≠ "PPV = base rate" → predictive parity demands equal PPV across groups); unverifiable numeric-wedge table replaced with an exactly derivable two-value-score construction; impossibility attribution now dual Chouldechova + Kleinberg) |
+| `backup-fairness-mitigationtech.html` | former Wk 14 (fairness mitigation) | reweighing w(g,y); penalized min Loss+λ·Unfairness; constrained form; reductions (Agarwal 2018); post-processing per-group thresholds (Hardt 2016) | **checked 2026-08** (17 sl: reweighing formula verified against Kamiran & Calders; reductions + Hardt ROC intuition verified against papers; one fix — cite venue "KIS 2012" → "Knowledge and Information Systems 2012") |
 | `lec15tech.html` | Wk 15 (governance) | EU AI Act risk-tier taxonomy; NIST RMF as Govern→Map→Measure→Manage loop; what "measurable" audit metrics mean (deliberately light — governance is non-mathematical) | **checked 2026-08** (6 sl: tiers verified still accurate post-Omnibus; EU cite normalized; tier bullets de-dashed for lint) |
 
 ## Backup / swap-in materials (not in the 15-week core)
@@ -102,8 +103,8 @@ cropped-and-cited paper figure or a data-backed SVG:
 - `lec08` panda→gibbon (`figs/panda-gibbon.png`) + Eykholt stop-sign (`figs/eykholt-stopsign.png`, CVPR 2018 Fig 1).
 - `lec09` BadNets trigger strip (`figs/badnets-trigger.png`, Gu et al. 2017 Fig 7).
 - `lec10` Wei failure modes (`figs/wei-jailbroken-redacted.png`, NeurIPS 2023 Fig 1, attack wording redacted), GCG schematic (`figs/gcg-schematic.png`, Zou 2023 Fig 1); 2026-10 rebuild: 13 cited image files in total — see its section.
-- `lec13`/`lec14` Bianchi occupation grid (`figs/bianchi-occupations.png`, FAccT 2023 Fig 1); `lec14` Gender Shades table (`figs/gender-shades.png`, FAT* 2018 Table 4). lec13 COMPAS TODO removed (illustrative SVG kept — real news graphic is copyrighted).
-- `lec14` figure pass 2026-09: 20 cited crops (AIF360 Figs. 1/4/5, Feldman Fig. 1, Agarwal Fig. 1, Zhang Fig. 2 + Table 3, Hardt Figs. 2/10/11, model card + datasheet examples, SMACTR Fig. 2, PPB faces, Actionable Auditing Tables 1–2, Tamkin Figs. 1/2/5, Eloundou Fig. 10, Wilson & Caliskan Fig. 2) + 14 SVGs; see the lec14 section.
+- `lec12` (2026-10): 17 cited crops — see its section. Former fairness decks (now `backup-fairness-defs`/`backup-fairness-mitigation`): Bianchi occupation grid (`figs/bianchi-occupations.png`, FAccT 2023 Fig 1); `lec14` Gender Shades table (`figs/gender-shades.png`, FAT* 2018 Table 4). backup-fairness-defs COMPAS TODO removed (illustrative SVG kept — real news graphic is copyrighted).
+- `backup-fairness-mitigation` (former lec14) figure pass 2026-09: 20 cited crops (AIF360 Figs. 1/4/5, Feldman Fig. 1, Agarwal Fig. 1, Zhang Fig. 2 + Table 3, Hardt Figs. 2/10/11, model card + datasheet examples, SMACTR Fig. 2, PPB faces, Actionable Auditing Tables 1–2, Tamkin Figs. 1/2/5, Eloundou Fig. 10, Wilson & Caliskan Fig. 2) + 14 SVGs; see the backup-fairness-mitigation section.
 - `lec06` Vectara HHEM hallucination bar chart (inline SVG, data Sep 22, 2026).
 - `backup-copyright` Somepalli pairs (`figs/somepalli-pairs.png`, CVPR 2023 Fig 1); `backup-sycophancy` Sharma preference forest plot (`figs/sharma-sycophancy.png`, ICLR 2024 Fig 5); `backup-model-stealing` Knockoff pipeline (`figs/knockoff-pipeline.png`, CVPR 2019 Fig 2) + SVD hidden-dim plot (`figs/stealing-projection.png`, Carlini ICML 2024 Fig 1); `backup-agentic-autonomy` CoinRun panel (`figs/coinrun-misgeneralization.png`, Langosco et al. ICML 2022 Fig 1).
 
@@ -141,961 +142,13 @@ Sets the vocabulary used all term.
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
-| Title / Contents | 1–2 | `:56`, `:68` | title "Can We Trust It?" |
-| **01 — The Gap** | 3–6 | `:97` | **METR task-length plot** `:105` · AI decides real outcomes `:116` · two curves SVG `:131` |
-| **02 — When It Goes Wrong** | 7–32 | `:155` | *fairness* COMPAS bars SVG `:163` · Gender Shades table `:196` · Amazon pipeline SVG `:211` · *privacy* GPT-2 extraction `:241` · "poem" divergence SVG `:255` · Samsung + Garante `:285` · *reliability* Avianca + Deloitte fake-citation card `:320` · Charlotin 2,039 decisions (CSV export 2026-09-12) `:351` · Air Canada + $1 car chat bubbles `:372` · sycophancy (Sharma Fig. 5) `:401` · *robustness* panda→gibbon `:415` · stop-sign stickers `:429` · *security* Base64 jailbreak `:443` · EchoLeak SVG `:457` · *safety* Uber Tempe `:488` · July 2026 escaped agent timeline `:502` · it came back `:518` · 59% vs 3% scheming `:550` · *provenance* Pope puffer `:576` · Sora frame + NH robocall `:590` · Arup $25M `:604` · *data* Bartz $1.5B SVG `:625` · *society* Canaries plot `:655` · EU pyramid + Korea AI Basic Act `:669` · **the pattern = seven dimensions (7-row table: incidents → question → dimension, + transparency)** `:697` |
-| **03 — Why AI Fails Differently** | 33–36 | `:714` | SW vs learned SVG `:722` · **why the trust problem changed (rule-based → statistical ML → foundation models → agents, cumulative failure classes; SVG)** `:758` · three sources SVG `:809` |
-| **04 — Threat-Model Thinking** | 37–40 | `:841` | **what is a threat model (+adversary SVG, EchoLeak worked example)** `:849` · **attack map 2×2 SVG** `:886` · no threat model, no answer (59/3 + panda/stop sign) `:913` |
-| **05 — This Course** | 41–45 | `:937` | **trust stack SVG carrying all 14 topics** `:945` · concepts first, demos optional `:972` · the goal (headline→property→threat→convincing? flow SVG + 3 drill cards) `:992` · **practice: boardroom questions (four-step frame SVG + "Before you sign" / "Ask the vendor" cards)** `:1028` |
-| Closer | 46 | `:1070` | "Trust?" |
-
-**Visuals (real images, all in `figs/`):** `metr-task-length.png` (METR Time Horizon 1.1,
-Jan 2026, CC BY) `:110` · `gender-shades.png` (Buolamwini & Gebru 2018, Table 4) `:201` ·
-`gpt2-extraction.png` (Carlini et al. 2021, Fig. 1; source PNG is cropped at the bottom)
-`:246` · `sharma-sycophancy.png` (Sharma et al. ICLR 2024, Fig. 5) `:406` ·
-`panda-gibbon.png` (Goodfellow et al. 2015, Fig. 1) `:420` · `eykholt-stopsign.png`
-(Eykholt et al. CVPR 2018, Fig. 1) `:434` · `wei-jailbroken.png` (Wei et al. NeurIPS 2023,
-Fig. 1) `:449` · `uber-tempe-ntsb.jpg` (NTSB, public domain, via Commons) `:493` ·
-`pope-puffer-midjourney.jpg` (AI-generated, PD, via Commons) `:581` · `sora-tokyo.jpg`
-(OpenAI Sora "Tokyo Walk", PD, via Commons) `:595` · `canaries-22-25.png` (Stanford
-Digital Economy Lab, Fig. 2) `:660`. **SVG diagrams:** two curves `:137`, COMPAS bars
-`:169`, Amazon pipeline `:217`, poem divergence `:261`, you⇄model data flow `:301`, fake
-citation card `:336`, chat bubbles `:388`, EchoLeak flow `:463`, patched-route `:524`,
-59%/3% bars `:556`, library→model `:631`, EU risk pyramid `:675`, SW vs learned `:728`,
-three sources `:814`, adversary↔system `:863`, attack map `:892`, trust stack `:951`,
-headline→question flow `:1001`, trust-problem stages `:763`, boardroom four-step frame `:1033`.
-
-**Key citations:** Angwin et al., ProPublica 2016 (COMPAS) · Buolamwini & Gebru, FAT* 2018
-· Dastin, Reuters 2018 (Amazon) · Carlini et al., USENIX Sec 2021 + Nasr et al. 2023
-(extraction) · Bloomberg May 2023 (Samsung) + Garante order 30 Mar 2023 · Mata v. Avianca,
-S.D.N.Y. 2023 · Deloitte/DEWR Oct 2025 · Charlotin, AI Hallucination Cases (CSV export 2026-09-12) ·
-Moffatt v. Air Canada, 2024 BCCRT 149 · Sharma et al. ICLR 2024 + OpenAI Apr 2025 (GPT-4o
-rollback) · Goodfellow et al. ICLR 2015 · Eykholt et al. CVPR 2018 · Wei et al. NeurIPS 2023
-· EchoLeak CVE-2025-32711 · NTSB HWY18MH010 · OpenAI / Hugging Face July 2026 incident
-(HF disclosure 16 Jul + technical timeline 27 Jul; OpenAI statement 21 Jul + report 26 Aug; METR 26 Aug; Black Hat 5 Aug) · arXiv 2603.01608 (scheming) · Midjourney Pope, Mar 2023 · NH
-robocall FCC orders 2024 · Arup deepfake, HK police Feb 2024 · Bartz v. Anthropic, N.D.
-Cal. 2025 (settlement final approval 20 Jul 2026) · Brynjolfsson, Chandar & Chen, "Canaries" 2025–26 · Regulation (EU) 2024/1689 as amended by
-Regulation (EU) 2026/1744 (Digital Omnibus; high-risk → Dec 2027 / Aug 2028) · Korea AI Basic Act (eff. 2026-01-22).
-
-**2026-era facts (re-verified 2026-09-13 against primary sources; note carries as-of dates):** July 2026 OpenAI/Hugging Face incident `:503`–`:549` — 4 Jul Artifactory compromise → rebuilt 6 Jul → re-entry 8 Jul via WebDAV; 9–13 Jul 4.5-day forensic window inside HF (~17,600 actions, 4 exposed third-party accounts); HF disclosed 16 Jul, OpenAI attributed 21 Jul (slide 24 chronology corrected: the bypassed fix was OpenAI's, not HF's); scheming arXiv 2603.01608 v2 (59%/3% from model organisms; realistic settings minimal) `:551`; Charlotin figures recomputed from the CSV export of 2026-09-12 (2,039 decisions; 1,111 in 2026; ≈$320k across 30 US decisions in Q1 2026 — replaces 1,598 / $145k / 15) `:352`; Korea AI Basic Act eff. 22 Jan 2026, fines ≤ KRW 30M with ≥1-year grace `:670`; EU high-risk dates deferred by the Digital Omnibus (in force 27 Jul 2026) `:670`; Canaries rev. 12 Aug 2026 (data through Jun 2026; gap ≈19%, was ≈13% in Aug 2025) `:656`; Bartz settlement final approval 20 Jul 2026 `:626`. Refresh Charlotin and Canaries before each term.
-
-**Key framing:** threat model = *who* / *what they know* (white/black-box) / *what they
-can do* (train/inference-time); "a safety number describes a deployment, not a model"
-(59% vs 3%) motivates section 04. Seven dimensions (fairness, privacy, reliability,
-robustness, security, safety, provenance) + transparency; the 2026-08 deck had six. **The
-seven-dimension taxonomy is stated exactly once** (slide 32, closing section 02); the
-course map is stated exactly once (slide 41, the trust stack). Do not re-add summary
-slides that restate them — Albert cut them on 2026-09-04 as duplicates.
-Citations use `.cite-left`; one exhibit per slide.
-
-**2026-09-13 case-brief pass (44→46):** every real-case slide now carries `What happened` / `Why it happened` / `Why it matters` callouts with year, org, and confirmed status (uncertain items marked *alleged* / *as of*); "Two Curves" labeled *Conceptual illustration*; added "Why the Trust Problem Changed" (§03) and "Practice: Boardroom Questions" (§05, the four-step frame + three vendor questions; every later lecture ends with the same slide). Note re-synced to 46 articles: each incident has a structured *Case background* brief (Background / What happened / Technical connection / What the evidence shows, and does not / Status as of 2026-09 / Teaching cue / Where the course returns to this), *Technical depth — optional* (pointing at `lec01tech.html` slide titles), and a *References* list — 80 links checked 2026-09-13 (openai.com, courtlistener, scworld, securityweek, civilresolutionbc, dewr bot-wall scripted fetches but load in a browser; Reuters Amazon story backed by the Euronews reprint). Cross-lecture pointers live in the note only. `lec01tech.html` unchanged (7 sl; terms match main).
-
-**2026-09-04 trim (46→44):** Albert: "the overall 7 topics part keeps repeating". Cut
-"Seven Dimensions of Trust" (folded into "The Pattern": incident → question → dimension
-name, + transparency line) and "The Course at a Glance" (its 14 topics now sit inside the
-trust-stack layers); dropped the seven-pill row from "The Goal" and replaced it with three
-one-line drill cards (headline → property → adversary). Note re-synced to 44 entries
-(definitions block moved under "The Pattern"; topic-preview block under "The Trust Stack").
-
-**2026-09-03 rebuild (35→46):** added METR plot, Gender Shades, "poem" split-out,
-Samsung/Garante, Charlotin, sycophancy, stop sign, Base64 jailbreak, Uber Tempe, July
-2026 escaped agent (2 slides), scheming, Pope puffer, Arup, Bartz, Canaries, EU/Korea
-rules; cut Group 1–4 preview slides, "What's New in 2025–26", "How We'll Work" divider
-(folded into one slide), knowledge×timing grid (merged into the attack map). Note file
-re-synced to 46 entries (590 lines, now 44): old `.detail` blocks reused verbatim, new
-backgrounds with primary links for every added incident, Group 1–4 previews preserved
-under "The Course at a Glance". `lec01tech.html` untouched.
-
-**2026-08 history:** 47→35 trim (schedule slides, timeline SVG, house analogy cut; Bing
-"Sydney" replaced by EchoLeak; Deloitte added) and note enrichment to script + companion
-notes (227→443 lines, formal definitions + primary-source links).
-
----
-
-## lec02-privacy-dp.html
-
-**Topic:** Why models leak and anonymization fails; the differential-privacy idea
-(presence barely changes output); the formal $(\varepsilon,\delta)$-DP definition;
-reading $\varepsilon$; randomized response; noise-by-sensitivity; DP-SGD;
-privacy–utility tradeoff; private foundation models (2025–26).
-Intuition pass — points to the privacy course for rigor.
-
-### Sections (69 slides, ~75 min — case-brief pass 2026-09-13 (66→69: "Where This Lecture Sits" lifecycle placement `:89`, "Four Different Privacy Questions" `:462`, "Practice: Boardroom Questions" `:1300`; 19 case/definition slides rewritten with evidence-status callouts), content-revised 2026-08, figures added 2026-09-04, review passes 2026-09-08, edit pass 2026-09-10 (93→77), MIA block moved to lec03 2026-09-11 (77→66), coordinated pass 2026-09-11 (KaTeX overlays on the deniability SVG; warm-up moved ahead of "Randomness Is Required"), all citations source-verified)
-
-| Section | Slides | Divider line | Notable slides |
-|---|---|---|---|
-| Title / Contents / placement | 1–3 | `:47`, `:57` | **Where This Lecture Sits** `:89` — lifecycle strip collect→train→audit→deploy→detect harm→remove/repair, Prevention highlighted (same visual opens lec03–05) |
-| **01 — The Privacy Problem** | 4–14 | `:133` | **GPT-2 extraction image** `:170` · Secret Sharer `:182` · "repeat poem" `:198` · **diffusion copy image (Ann)** `:218` · Copilot secrets (Huang FSE 2024) `:230` · anonymization myth (quasi-identifier SVG) `:246` · **Sweeney 87% Venn (SVG)** `:289` + Golle 63% caveat · Netflix+AOL merged `:312` ("Three Kinds of Leak" staircase and "Why Membership Alone Hurts" moved to `lec03-mia.html` §01 on 2026-09-11) |
-| **02 — How Leakage Is Measured** | 15–22 | `:345` | attacker's toolkit `:352` · **membership inference (Shokri Fig 1) — the only MIA slide left; one-line "sensitive cohort ⇒ the bit is the secret" pointer** `:365` · model inversion `:383` · NYT v. OpenAI `:405` · Italy ban `:420` ("Privacy Is a Business Risk" slide deleted 2026-08 — content moved to note's "Regulators Step In" entry) · can we do better `:453` · **Four Different Privacy Questions** `:462` (encryption / access control / confidential computing / DP — added 2026-09-13) ("When Membership Is the Secret", the 7-slide Homer et al. 2008 block and "The Tell: Lower Loss" moved to `lec03-mia.html` §01–§03 on 2026-09-11; lec02 keeps only the MIA overview) |
-| **03 — Differential Privacy** | 23–41 | `:490` | **two-worlds (full-width with/without-Alice SVG, redrawn larger 2026-09-10)** `:517` · **plausible deniability (with/without-Alice bars SVG; labels are KaTeX overlays since 2026-09-11)** `:558` · future-proof `:589` · **warm-up: guess the nationality (heights SVG; moved here from the "Look Alike" block 2026-09-11)** `:602` · randomness required (SVG) `:625` · **$(\varepsilon,\delta)$-DP definition** `:656` (plain-English lead-in `:670`) · reading $\varepsilon$ (scale bar) `:683` · $\varepsilon$ in the wild: two setups (Apple vs Census table) `:713` + the numbers (bar SVG) `:728` (Apple 4–8/item + audited 16/day, Census $\approx 17$) · what $\varepsilon$ does NOT mean `:759` · post-processing `:772` · **indistinguishability `:802` + heights (SVG)** `:811` · overlap is privacy `:815` · what DP does/doesn't `:827` · individuals not the crowd `:839` ("Meet $\delta$" deleted 2026-09-08; "Neighboring Datasets", "Meet $\varepsilon$: The Budget", "Many Samples Break It" deleted 2026-09-10 — $D/D'$ definition now in the note's "Formal Definition" detail, repeated-queries proof in the note's "Overlap Is Privacy" detail) |
-| **04 — Achieving DP: Add Randomness** | 42–50 | `:849` | **the recipe (full-width compute→noise→release SVG, redrawn larger 2026-09-10)** `:856` · randomized response `:880` · **coin protocol, full-width two-coin tree (SVG, redrawn 2026-09-08, enlarged 2026-09-10)** `:893` · recover-the-rate worked example `:933` · why it's private `:942` · **Laplace mechanism + noise bell (SVG)** `:955` · sensitivity `:973` · Gaussian mechanism `:1005` ("Local vs Central DP", "Local DP in Products", "Inside Apple's Pipeline", "Noisy Count Example", "More Noise, More Privacy" deleted 2026-09-10 — local/central definitions now in the note's "Why It's Private" detail, the worked noisy count in the note's "Laplace Mechanism" detail) |
-| **05 — Private Machine Learning** | 51–57 | `:1030` | from statistics to models `:1037` · naive hope fails `:1049` · **DP-SGD** `:1058` (clip+noise merged to one slide) · why clip, why noise `:1095` · utility cost (benchmark folded in) `:1108` · more data helps (SVG) `:1120` ("The Privacy Accountant" and the federated-learning quartet — FL, Gboard, FL Still Leaks, secure aggregation — deleted 2026-09-10; accountant theorem + accounting references now in the note's "DP-SGD" detail) |
-| **06 — Frontier 2025–26** | 58–65 | `:1154` | private fine-tuning (Yu, Li 2022) `:1161` · **VaultGemma DP pretraining** `:1173` (added 2026-08) · private synthetic data + Apple Intelligence 2025 `:1194` · privacy auditing `:1208` · unlearning: after the fact `:1221` (retitled 2026-09-13) · **Apple PCC: device→PCC node→answer flow (SVG)** `:1233` (four-promises slide dropped 2026-09-08; its content sits in the note's "Privacy in the Stack" detail) · EU AI Act (GPAI duties since Aug 2025) `:1263` ("The Web-Scale Puzzle", "Open Problems" deleted 2026-09-10) |
-| Wrap (demos / practice / takeaways) | 66–68 | — | **Practice: Boardroom Questions** `:1300` (3+3, same grammar as lec01) · demos slide `:1276` links the **randomized-response coin simulator** `demos/rr-simulator.html` (KaTeX formulas; screenshot `figs/rr-simulator.png` `:1291`) · key takeaways `:1341` ("Where to Go Deeper" deleted 2026-09-10 — reading pointers now in the note's "Key Takeaways" detail) |
-| Closer | 69 | — | `$\varepsilon$` `:1353` |
-
-**Key definitions / citations (all source-verified 2026-08; case slides and note briefs re-verified against primary sources 2026-09-13 — Garante 2023 limitation vs 2024 fine annulled 18 Mar 2026 as separate stages; Huang FSE 2024 candidates 2,702 / memorized 200 / valid 2 Stripe test keys; NYT v. OpenAI no merits ruling as of 2026-09):**
-- $(\varepsilon,\delta)$-DP — `:656` (display formula `:662`) — relaxation from Dwork, Kenthapadi, McSherry, Mironov,
-  Naor, EUROCRYPT 2006 (fixed 2026-08; was misattributed to TCC 2006). "A 2006 Idea" `:497`
-  keeps Dwork, McSherry, Nissim, Smith, TCC 2006 for $\varepsilon$-DP — matches `courses/privacy/lectures/01-dp/`.
-- **Statistical indistinguishability** (heights example, Korea/Japan Gaussians) — `:706-:747` —
-  "Overlap Is Privacy" `:815` carries the composition intuition (repeated-queries proof in the note); the warm-up `:602` (coin-flip highlight) now precedes "Randomness Is Required" in §03 (moved 2026-09-11).
-- Randomized response — `:880` — Warner, JASA 1965. Interactive simulator: `demos/rr-simulator.html` (one respondent · whole survey · $\varepsilon$ vs accuracy; added 2026-09-08).
-- DP-SGD — `:1058` — Abadi et al., ACM CCS 2016.
-- De-anonymization — `:312` — Narayanan & Shmatikov, IEEE S&P 2008.
-- Sweeney 87% (1990 census) — `:285` — Sweeney, Data Privacy WP3, 2000; Golle, WPES 2006 re-estimate (63%) added as caveat.
-- $\varepsilon$ in the wild — `:713`, `:728` — Apple "Learning with Privacy at Scale" 2017; Tang et al. 2017 audit; US Census 2020 ($\varepsilon \approx 17$).
-- VaultGemma DP pretraining ($\varepsilon \le 2$, sequence-level) — `:1173` — Google Research, 2025.
-- Membership inference — `:365` — Shokri et al., IEEE S&P 2017 (Fig 1). The Homer et al. 2008 GWAS block (7 slides, Homer PLoS Genetics 2008 ·
-  Sankararaman et al. Nature Genetics 2009 · Zerhouni & Nabel Science 2008) **moved to `lec03-mia.html` §02 on 2026-09-11**; see that leaf.
-
-**Real images** (`figs/`, cropped + cited per GOTCHAS; all captions verified against the source PDF):
-GPT-2 extraction `figs/gpt2-extraction.png` (Carlini et al. 2021, Fig 1) `:170`; Secret Sharer canary
-exposure `figs/secret-sharer-exposure.png` (Carlini et al., USENIX Sec 2019, Fig 1) `:186`; ChatGPT
-emission-rate bars `figs/nasr-emission-rate.png` (Nasr et al. 2023, arXiv:2562.17035, Fig 1) `:202`;
-Stable-Diffusion copy `figs/calrini-ann.png` — **re-attributed 2026-08** to Carlini et al., "Extracting
-Training Data from Diffusion Models", USENIX Security 2023, Fig 1 (Somepalli removed; verified against
-arXiv 2301.13188) `:218`; Copilot credential pipeline `figs/huang-credential-leak.png` (Huang et al.,
-FSE 2024, Fig 1) `:234`; black-box MIA diagram `figs/shokri-mia.png` (Shokri et al., IEEE S&P 2017,
-Fig 1) `:374`; model-inversion face pair `figs/fredrikson-inversion.png` (Fredrikson, Jha, Ristenpart,
-CCS 2015, Fig 1) `:388`; NYT complaint side-by-side `figs/nyt-complaint-p30.png` (NYT v. Microsoft &
-OpenAI, S.D.N.Y. 1:23-cv-11195, complaint p. 30) `:408`; CIFAR-10 /
-ImageNet accuracy vs $\varepsilon$ `figs/de-cifar-epsilon.png` (De et al. 2022, arXiv:2455.13650, Fig 1)
-`:1112`; VaultGemma memorization bars `figs/vaultgemma-memorization.png` (Google, arXiv:2761.15001, Fig 1) `:1185`;
-randomized-response simulator screenshot `figs/rr-simulator.png` (own render of `demos/rr-simulator.html`, 2026-09-08) `:1291`.
-Duplication histogram `figs/carlini_duplicates.png` moved to `lec04-memorization.html`. Apple local-DP overview
-(Apple 2017 Fig 1) and deep-leakage-from-gradients (Zhu, Liu, Han 2019 Fig 1) images deleted from `figs/` 2026-09-10 with their slides.
-**SVG figures (21; lifecycle strip `:93` and boardroom card grid `:1304` added 2026-09-13):** quasi-identifier table `:250`, Sweeney linkage Venn `:289`, Netflix↔IMDb
-linkage `:316`, two-worlds with/without-Alice rows (full-width) `:521`, plausible-deniability with/without bars `:562`, deterministic-vs-randomized release `:635`,
-$\varepsilon$ scale bar `:691`, $\varepsilon$-in-the-wild bars `:731`, post-processing pipeline `:776`, height-distribution overlap `:811`,
-recipe compute→noise→release (full-width) `:860`, randomized-response two-coin tree (full-width) `:897`, Laplace noise bell `:959`,
-sensitivity bars `:983`, Gaussian-vs-Laplace bell `:1009`, DP-SGD pipeline `:1062`, more-data signal/noise bars `:1130`,
-Private Cloud Compute flow `:1237`. (Eight SVGs — leak staircase, membership-secret timeline, GWAS flow, SNP table, $D_j$ number line,
-one-SNP two-bells, NIH timeline, MIA loss-overlap — moved to `lec03-mia.html` 2026-09-11.) Citations use
-`.cite-left`. Page number: bold `.slide-num` only. Intuition pass — points to
-`courses/privacy/lectures/01-dp/` for rigor.
-
-**2026-09-11 coordinated pass (66, unchanged count; per Albert's Slack page comments):** "Plausible Deniability" `:558` lost its SVG `<text>` labels; the four labels ($\Pr[\text{this output}]$, ratio $\le e^{\varepsilon}$, "move by at most $e^{\varepsilon}$", $\varepsilon=1$: at most $2.7\times$) are now KaTeX spans absolutely positioned over the SVG (percent coordinates, CSS colour tokens). "A Warm-Up: Guess the Nationality" moved from the "Look Alike" block to directly after "Future-Proof by Design" `:602`, so the heights example is met before "Randomness Is Required"; note article moved likewise (66 entries, order matches). Render = 66 pages; both slides checked at 60 dpi.
-
-**2026-09-11 MIA move (77→66, per Albert's Slack request):** 11 slides moved out to `lec03-mia.html` — "Three Kinds of Leak" and
-"Why Membership Alone Hurts" (§01), "When Membership Is the Secret", the seven Homer et al. 2008 slides and "The Tell: Lower Loss"
-(§02). lec02 keeps "The Attacker's Toolkit" + "Membership Inference" (Shokri Fig 1) as its MIA overview; the latter gained the
-one-line "if the cohort is sensitive, that one bit is the whole secret" pointer. Note file re-synced (66 entries, order matches;
-the 11 matching articles moved to the lec03 note verbatim, including the per-SNP and power derivations). `lec02tech.html`
-unchanged (no Homer/MIA content). Render = 66 pages; slide 16 checked at 60 dpi.
-**2026-09-10 edit pass (93→77, per Albert's Slack page list):** 16 slides removed — Neighboring Datasets, Meet $\varepsilon$:
-The Budget, Many Samples Break It (§03); Local vs Central DP, Local DP in Products, Inside Apple's Pipeline, Noisy Count
-Example, More Noise More Privacy (§04); The Privacy Accountant, Federated Learning, FL in Your Pocket, FL Still Leaks,
-Plugging the Leak (§05); The Web-Scale Puzzle, Open Problems (§06); Where to Go Deeper (wrap). "When Membership Is the
-Secret" moved to directly after "Membership Inference". Four diagrams redrawn full-width with 17–26 px SVG type: Genome Leak
-flow, Two Worlds, The Recipe, The Coin Protocol. Note file re-synced (77 entries, same order); rigorous content from the
-deleted slides migrated into surviving entries' `.detail` blocks (neighboring datasets → Formal Definition; repeated-queries
-theorem → Overlap Is Privacy; local vs central definitions → Why It's Private; worked noisy count → Laplace Mechanism;
-privacy-accountant theorem + accounting references → DP-SGD; reading list → Key Takeaways). `lec02tech.html` unchanged
-(still covers composition/Rényi accounting formally). Two orphaned figures deleted from `figs/`. Rendered audit of the four
-redrawn slides at 60 dpi: no overflow.
-
-**2026-09-08 second review round (94→93):** "Share resolved" column on the Homer results slide renamed "Smallest share detected" with a
-one-line gloss (share = one person's fraction of the pooled DNA; 1 of 1,000 = 0.1%) and a full interpretation in the note; the
-"$\varepsilon$ in the Wild: Two Setups" note entry expanded (Apple count-mean sketch, caps, retention, what came out, what the
-per-donation bound means; Census 2010 reconstruction motivation, TopDown hierarchy/invariants/post-processing, zCDP → $\varepsilon$
-conversion, release date, what the global bound means); "Private Cloud Compute: Four Promises" slide dropped (note article merged
-into "Privacy in the Stack" detail); `demos/rr-simulator.html` now renders all formulas with KaTeX (local `reference/katex/`),
-including the dynamic SE note and hover tooltip.
-
-**2026-09-08 review pass (94→94, per Albert's Slack review of the 2026-09-04 build):** Homer block 10→8 slides — Fig 1
-schematic and the "one SNP / sum 500,000 / Fig 2A / Fig 3" quartet replaced by three slides that interpret $D_j$ on a number
-line, contrast one SNP (tilt ≈ 0.0004 vs noise ≈ 0.014) with the $\sqrt{m/n}$ aggregate using mia1's numbers, and summarise the
-paper's findings in text; the three cropped Homer figures were deleted from `figs/`. "Plausible Deniability" rewritten with a
-concrete with/without-Alice bar figure and the "odds move by at most $e^{\varepsilon}$" reading. "$\varepsilon$ in the Wild"
-split into a setup table (Apple local DP per donation vs Census central DP on the whole file) and the number bars. "Meet
-$\delta$" deleted (note keeps the detail). "The Coin Protocol" tree redrawn full-width. "Local DP in Products" split into a
-Chrome/Apple/Microsoft table plus the Apple Fig 1 slide. "Privacy in the Stack" split into a PCC data-flow SVG plus a
-four-promises slide (dropped again the same day, see above). New `demos/rr-simulator.html` (one respondent with animated coin tree · whole survey with true-vs-reported
-bars and $\hat p$ · $\varepsilon$ vs standard-error chart with Monte Carlo dot), linked from the demos slide with a screenshot.
-Note file re-synced (now 93 entries, titles match); `lec02tech.html` gained "Randomized Response: Privacy vs Accuracy" (22 sl).
-Rendered audit of every edited slide at 60 dpi: no overflow.
-
-**2026-09-04 figure revision (84→84, no text-only content slide left in §01–§05):** 10 public
-figures added (list above; each cropped from the source PDF at 150 dpi and cited with figure number)
-and 15 inline SVG diagrams added to previously bullet-only slides. Slide count, order, and the note
-file (84 entries) unchanged. Rendered audit of all 25 edited slides at 60 dpi: no overflow.
-
-**2026-09-04 Homer block (84→94):** per Albert's review — slides 14/15 SVGs (Sweeney Venn, Netflix↔IMDb) re-laid out to
-remove text overflow; 10-slide Homer et al. 2008 block inserted in §02 between the Shokri MIA image and "The Tell", mirroring
-the narrative of `courses/privacy/lectures/04-mia/mia1-foundations.html` at the same level of detail but with no proofs
-(proofs and idealized-model derivations pushed to the note's `.detail` blocks, which point to mia1). Three figures cropped from
-the open-access PDF, captions verified. Note file gained 10 matching entries (94, order matches). Rendered audit of slides
-14, 15, 19–29 at 60 dpi: no overflow.
-
-**2026-07-15 trim (9 slides):** Netflix+AOL merged; Shadow Models, MIA on Modern Models,
-Extraction Scales With Size, Leaky Gradients cut from §02 (owned by Wk 3/4 and §05's "FL Still
-Leaks"); "One Person Tells You Little" merged into the heights warm-up; Why Clip + Why Add Noise
-merged; Utility Cost + Numbers on a Benchmark merged; duplicate "Frontier Models Still Memorize"
-cut (§01's "Make ChatGPT Leak" covers it, same citation).
-
-**2026-08 content revision (84→84):** every citation/number fetched and verified. Deleted
-"Privacy Is a Business Risk" (§02, redundant with "Regulators Step In"; content absorbed into the
-note). Added "Private Pretraining Arrives" (VaultGemma) to §06. Fixed: Ann-figure attribution
-(Somepalli→Carlini USENIX Sec 2023); $(\varepsilon,\delta)$-DP origin (TCC→EUROCRYPT 2006, also in
-`lec02tech.html`); Sweeney slide (Golle 63% caveat + correct WP3 cite); Apple/Census $\varepsilon$
-values made precise with audit cite; Copilot slide gained Huang FSE 2024 cite. §06 refreshed:
-Apple Intelligence DP synthetic data (2025), EU AI Act GPAI duties (Aug 2025). Note file synced
-(84 entries, order matches).
-
-**2026-08 note enrichment:** `lec02-privacy-dp-note.html` upgraded from speaker script to
-**script + companion notes** (521→1034 lines; 84 entries unchanged). Heaviest math of the
-note series, kept consistent with `courses/privacy/lectures/01-dp/` (dp2–dp5): full proofs
-for the Laplace mechanism, post-processing invariance, basic/adaptive composition, group
-privacy, the coin protocol's $\ln 3$, the RR unbiased estimator + Chebyshev sample bound,
-and the privacy-loss tail lemma; Gaussian mechanism as Dwork & Roth Thm 3.22 with verified
-sketch (full proof pointer: Thm A.1); DP-SGD theorem + three-step accounting from dp5.
-Rigorous definitions (neighboring add/remove, $(\varepsilon,\delta)$-DP, $\Delta_1/\Delta_2$,
-LDP, PLRV, clipping/noise multiplier) and verified backgrounds with primary-source links
-(DMNS TCC 2006 DOI, Warner JASA 1965 scan, Abadi 2016, Gboard DP-FTRL, VaultGemma, Apple
-PCC/synthetic data, EUR-Lex AI Act).
-
----
-
-## lec03-mia.html
-
-**Topic:** Membership inference attacks (~105 min full; **90-minute core path** skips 7 slides — 16, 18, 28, 29, 39, 40, 50 — and trims Boardroom to a 2-min presentation; the skip list lives only in the note's Contents entry — the Contents-slide line and the per-slide "Optional depth" badges were both removed from the main deck 2026-09-14 on Albert's request; nothing about the core path is visible on the main deck). What "was this example in the
-training set?" means and why it matters (privacy audit, litigation, extraction
-pre-step); overfitting/loss-gap intuition; shadow models at picture level; LiRA as
-"compare to a population of reference models"; evaluation done right (TPR at low FPR);
-MIA on LLMs and diffusion models; DP-vs-MIA in one line; 2025–26 frontier (strong-attack
-wall, dataset inference, courtroom use). Intuition pass — the rigorous treatment lives
-in `courses/privacy/lectures/04-mia/` (5-deck series); facts kept consistent with it.
-
-### Sections (70 slides, ~105 min full / ~90 min core path (2026-09-14: 7 optional slides marked in the note only — the main-deck `.opt-badge` badges and Contents core-path line were added then removed the same day at Albert's request) — case-brief pass 2026-09-13 (66→70: Where This Lecture Sits, Base Rates, Reading MIA Results at Scale, Practice: Boardroom Questions); restructured 2026-09-11 (63→47, then +14 moved in from `lec02-privacy-dp.html`, then +5 in the coordinated pass the same day: new-record decision, TPR/FPR, ROC, AUC, LiRA-on-LLMs); content-revised 2026-08, all citations source-verified; figure pass 2026-09)
-
-| Section | Slides | Divider line | Notable slides |
-|---|---|---|---|
-| Title / Contents (8 sections, two-column TOC; no core-path line — that lives in the note) / **NEW Where This Lecture Sits (lifecycle strip, detection stage highlighted; audit finds leakage, cannot certify absence)** | 1–3 | `:40`, `:50`, `:88` | |
-| **01 — The Question** | 4–11 | `:134` | one yes-or-no question (definition + **full-width worlds→model→attacker SVG with KaTeX overlays, enlarged 2026-09-11**) `:141` · **The Simplest Leak (leak-ladder staircase SVG; boxes spread and arrows shortened 2026-09-14 so arrowheads clear the box captions)** `:176` · **Why Membership Alone Hurts (cancer-cohort harm)** `:206` · **When Membership Is the Secret (disease / trial / chat-log / pirated-book timeline SVG, from lec02)** `:215` · **Who Asks, and Why (audit / courts / extraction)** `:240` · threat model `:253` · score + threshold `:267` |
-| **02 — The First Attack** (Homer et al. 2008; 7 slides from lec02 §02 + 2 new) | 12–21 | `:297` | genome leak intro (**full-width averages→attacker flow SVG**) `:305` · SNP primer (SVG) `:342` · **Homer's statistic $D_j$ on a number line (SVG + `math-block`)** `:372` · **NEW Why One SNP Says Nothing ($D_j=(M_j-\mathrm{Pop}_j)(2Y_j-1)$ `math-block` + mean/noise table: $2p(1-p)/n\approx0.0004$ vs $0.014$)** `:400` · one SNP whispers, 500,000 shout (two-bells SVG) `:416` · **NEW How Many SNPs Are Enough? ($n$ = cohort, $m$ = SNPs defined up front; $\mu=2\sqrt{m\bar v/n}$; power table 28k / 39k / 390k; idealized-model caveat; the $\alpha=10^{-6}$ line dropped 2026-09-11)** `:446` · what the paper reported (check-list + smallest-share table) `:470` · NIH policy impact (**5-node timeline SVG: Jul 15 2008 accepted → Aug 28 2008 NIH fact sheet → Aug 29 published → Oct 3 Zerhouni &amp; Nabel → Nov 1 2018 NOT-OD-19-023 re-opening; Outcome as of 2026-09**) `:495` · Homer→ML table `:524` |
-| **03 — The Basic Attack** | 22–29 | `:543` | train loss < test loss `:550` · loss score + 3-line threshold attack `:576` · **The Two Bells (member/non-member loss overlap SVG + threshold)** `:589` · **Overfitting Drives MIA (small vs large gap SVG; caveat: small gap ≠ safe)** `:611` · confidence baseline (**Salem Fig. 11, real fig**) `:632` · Yeom theory anchor (sufficient, not necessary; **Yeom Fig. 2, real fig**) `:650` · Colab demo `:665` |
-| **04 — Shadow Models** | 30–34 | `:682` | one threshold is crude `:689` · shadow idea (**Shokri Fig. 2, real fig**) `:717` · **shadow pipeline (SVG; labeled in/out outputs train the attack)** `:732` · **why it transfers (full-width target-vs-shadow bells SVG, 17–22 px type, enlarged 2026-09-11)** `:759` |
-| **05 — Stronger Attacks** | 35–47 | `:797` | difficulty vs membership (**Carlini Fig. 3, real fig**) `:804` · **LiRA: likelihood ratio, 3 steps + $\Lambda(x)$ `math-block`** `:824` · **NEW Deciding on a New Record (4 def-cards: score $s\'$, fit the two bells for $x\'$, $\Lambda(x\')$, decide $\Lambda \gt \tau$; shadows on random halves of the pool)** `:838` · **in-vs-out bells, worked example ($\mu_{\mathrm{out}}=2$, $\mu_{\mathrm{in}}=6$, $\sigma=1.5$, $s\'=5$ ⇒ $\log\Lambda\approx1.78$, $\Lambda\approx5.9$; wide SVG + KaTeX overlays)** `:852` · label-only (**Choquette-Choo Fig. 1, real fig**) `:877` · **NEW Scoring an Attack: TPR and FPR (confusion table + `math-block` TPR/FPR definitions; balanced accuracy)** `:897` · **NEW The ROC Curve (bells with $\tau_1$–$\tau_3$ → ROC points, full-width SVG + overlays)** `:914` · **NEW AUC and Its Blind Spot ($\mathrm{AUC}=\Pr[\text{score(member)}\gt\text{score(non-member)}]$; curves A/B with equal AUC SVG)** `:954` · average accuracy lies (**Carlini Fig. 2, real fig**) `:980` · **TPR at low FPR** (log-log ROC left edge; **Carlini Fig. 1, real fig**) `:995` · **NEW Base Rates: What an Accusation Is Worth (FPR 10%/1%/0.1% → ≈9%/≈50%/≈91% correct flags at 1 member per 100 candidates, TPR = 1; callouts For an audit / For a legal claim / Why AUC hides it)** `:1011` · **NEW Does LiRA Work on LLMs? (Hayes … Cooper NeurIPS 2025 Fig. 2, real fig: AUC 0.55–0.70 for 10M–1B models, TPR@FPR non-monotone in size)** `:1038` |
-| **06 — What It Means** | 48–52 | `:1055` | DP caps the attacker (one-line DP recall; **full-width two-worlds→DP training→output bells SVG, 17–21 px type, enlarged 2026-09-11; ratio $\le e^{\varepsilon}$ label is a KaTeX overlay**) `:1062` · TPR $\le e^{\varepsilon}\cdot$FPR$+\delta$ (**ROC SVG widened to 470 px, 15 px labels**) `:1095` · auditing flips the attack (empirical $\varepsilon$ + bug-catch / looseness) `:1120` · canaries + one-run auditing (**Steinke Fig. 3, real fig**) `:1140` |
-| **07 — Modern Models** | 53–62 | `:1162` | Min-K% (**Shi Fig. 1, real fig**) `:1169` · **diffusion duplication histogram (real fig)** `:1183` · Duan web-scale doubt (**Duan Fig. 1, real fig**) `:1203` · why scale breaks it (+ exceptions: rare / duplicated / fine-tuning data) `:1214` · benchmark trap (temporal confound, blind baselines; **Das Fig. 1, real fig**) `:1243` · **Give the Attack Everything (Hayes wall; Hayes Fig. 2(a), real fig)** `:1262` · **dataset inference (Maini Fig. 1, real fig)** `:1281` · **MIA in the Courtroom (Zhang Fig. 1, real fig)** `:1296` · **NEW Reading MIA Results at Scale (four boxes: strong on small supervised models / ambiguous at web scale / benchmarks can mislead / weak MIA ≠ no memorization; status contested as of 2026-09)** `:1304` |
-| **08 — Defenses** | 63–67 | `:1323` | shrink the gap `:1330` · heuristics not proof `:1342` · DP-SGD (clip + noise SVG; MIA-focused) `:1370` · defender's checklist `:1403` |
-| **Practice: Boardroom Questions** / Takeaways / Closer | 68–70 | — | boardroom (3 "before you sign" + 3 "ask the vendor", same grammar as lec01/lec02) `:1414` · `:1459` (5 check bullets incl. Homer 2008; MIA = stress test, not certificate), `:1479` |
-
-**Key definitions / citations (all source-verified 2026-08; Homer block verified 2026-09-04/08 in lec02):**
-- Homer et al. 2008 membership inference on GWAS allele frequencies — `:334`, `:489` — Homer et al., PLoS Genetics 4(8) e1000167, 2008
-  (distance statistic $D_j = |Y_j-\mathrm{Pop}_j| - |Y_j-M_j|$ on `:375`, paper sign; the privacy course mia1 deck uses the opposite sign).
-  Idealized-model numbers on `:400`–`:462` (tilt $2p(1-p)/n \approx 0.0004$ vs noise $\approx 0.014$ at $n=1000$; $\approx 28{,}000$ SNPs for
-  power $0.5$ at $\alpha=10^{-6}$, $39{,}000$ for power $0.8$, $390{,}000$ at $n=10{,}000$) follow Sankararaman, Obozinski, Jordan, and Halperin,
-  Nature Genetics 2009 (`:440`, `:462`) — labelled as such, not the paper's; derivations in the note ("Why One SNP Says Nothing",
-  "How Many SNPs Are Enough?"). NIH response `:516` — NIH fact sheet "Modifications to GWAS Data Access", 28 Aug 2008; Zerhouni & Nabel, Science 322:44, 2008; NIH Notice NOT-OD-19-023, 1 Nov 2018 (re-opening of genomic summary results for most studies). Proof-level version:
-  `courses/privacy/lectures/04-mia/mia1-foundations.html` §02.
-- Shadow models — `:727` — Shokri, Stronati, Song, and Shmatikov, IEEE S&P 2017.
-- Loss attack / advantage-vs-gap — `:584`, `:659` — Yeom, Giacomelli, Fredrikson, and Jha,
-  "Privacy Risk in Machine Learning: Analyzing the Connection to Overfitting", IEEE CSF 2018
-  (full title restored 2026-08). Overfitting **sufficient, not necessary** — matches
-  `courses/privacy/lectures/04-mia/` (mia3).
-- Confidence baseline — `:645` — Salem et al., "ML-Leaks", NDSS 2019 (re-attributed 2026-08;
-  was wrongly cited to Shokri 2017).
-- Likelihood-ratio framing — `:833` — Sablayrolles et al., ICML 2019 (shares the LiRA cite line).
-- LiRA + TPR-at-low-FPR standard — `:833`, `:1009` — Carlini et al., "Membership Inference
-  Attacks From First Principles", IEEE S&P 2022.
-- Label-only — `:891` — Choquette-Choo, Tramèr, Carlini, and Papernot, ICML 2021.
-- $(\varepsilon,\delta)$-DP — `:1091` — Dwork, Kenthapadi, McSherry, Mironov, and Naor,
-  EUROCRYPT 2006 (fixed 2026-08; was misattributed to TCC 2006 — same fix as lec02).
-- One-run auditing — `:1155` — Steinke, Nasr, and Jagielski, NeurIPS 2023.
-- Min-K% — `:1178` — Shi et al., ICLR 2024.
-- Diffusion extraction/duplication — `:1198` — Carlini et al., USENIX Security 2023, Fig. 5.
-- Web-scale doubt — `:1208` — Duan et al., COLM 2024.
-- Blind baselines / temporal confound — `:1257` — Das, Zhang, and Tramèr, DATA-FM at ICLR 2025
-  (direction fixed 2026-08: members are the *older* text, non-members post-cutoff).
-- Strong-attack wall — `:1276` — Hayes, Shumailov, et al., NeurIPS 2025. The same paper\'s Fig. 2 (LiRA on 10M–1B compute-optimal models, log-log ROC + TPR at fixed FPR) is "Does LiRA Work on LLMs?" `:1038` (added 2026-09-11; arXiv 2505.18773, Cooper is last author).
-- Dataset inference — `:1290` — Maini, Jia, Papernot, and Dziedzic, NeurIPS 2024.
-- MIA-as-evidence position — `:1302` — Zhang, Das, Kamath, and Tramèr, IEEE SaTML 2025.
-- DP-SGD — `:1398` — Abadi et al., ACM CCS 2016.
-
-**Real images (16, all cropped from the cited PDFs at 150–250 dpi, figure numbers verified against captions):**
-`figs/salem-max-posterior.png` (ML-Leaks Fig. 11) `:636` · `figs/yeom-advantage-gap.png` (Yeom Fig. 2) `:657` ·
-`figs/shokri-shadow-training.png` (Shokri Fig. 2) `:725` · `figs/carlini-lira-fig3-per-example.png` (Carlini 2022 Fig. 3) `:807` ·
-`figs/choquette-label-only.png` (Choquette-Choo Fig. 1) `:881` · `figs/carlini-lira-fig2-roc-scales.png` (Carlini 2022 Fig. 2) `:988` ·
-`figs/carlini-lira-fig1-tpr-fpr.png` (Carlini 2022 Fig. 1) `:1007` · `figs/hayes-llm-mia-fig2.png` (Hayes … Cooper NeurIPS 2025 Fig. 2(a,b), added 2026-09-11) `:1042` · `figs/steinke-one-run-eps.png` (Steinke Fig. 3) `:1143` ·
-`figs/shi-mink-overview.png` (Shi Fig. 1) `:1177` · `figs/carlini_duplicates.png` (Carlini diffusion, USENIX Security 2023, Fig. 5;
-attribution verified against arXiv 2301.13188; also used by `lec04-memorization.html`) `:1187` ·
-`figs/duan-auc-vs-size.png` (Duan Fig. 1) `:1207` · `figs/das-wikimia-pca.png` (Das Fig. 1, appendix) `:1255` ·
-`figs/hayes-compute-optimal-mia.png` (Hayes Fig. 2(a)) `:1265` · `figs/maini-dataset-inference.png` (Maini Fig. 1) `:1289` ·
-`figs/zhang-training-data-proof.png` (Zhang Fig. 1) `:1301`.
-**SVG figures (23):** member/non-member worlds → model → attacker (full-width, KaTeX overlays) `:150`, leak-ladder staircase `:188`, membership-secret timeline `:219`, score axis + threshold `:279`,
-GWAS averages→attacker flow (full-width) `:312`, SNP table `:346`, Homer $D_j$ number line `:377`, one-SNP-vs-500k two-bells `:420`,
-NIH timeline `:498`, train/test loss curves + gap `:558`, member/non-member loss overlap + threshold `:593`, small-gap vs large-gap bells `:615`,
-one-threshold-two-classes `:701`, shadow pipeline `:735`, target vs shadow bells (full-width) `:763`, in-vs-out bells (worked example, 760-wide, KaTeX overlays) `:855`, bells + thresholds → ROC curve (full-width, KaTeX overlays) `:919`, two ROC curves with equal AUC `:963`,
-two neighbouring worlds → DP training → output bells (full-width) `:1066`, ROC with DP ceiling (470 px) `:1103`, small-model vs LLM bells `:1226`,
-attack-success vs attack-strength (regularization vs DP bound) `:1354`, clip + noise `:1382`;
-plus one `diagram-flow`: auditing `:1123` (the member/non-member worlds `diagram-flow` became the full-width SVG `:150` on 2026-09-11). Other blocks: `math-block` `:375`, `:403`, `:555`, `:832`, bells worked example `:869`, TPR/FPR `:906`, AUC `:957`; `code-block` `:579`.
-Citations use `.cite-left` with figure numbers. Page number: bold `.slide-num` only.
-
-**2026-08 content revision (59→63):** every citation/number fetched and verified (deck is
-nearly number-free; no invented results tables found). Added: "Who Asks, and Why" (§01);
-"Give the Attack Everything" (Hayes 2025 strong-MIA wall), "Ask About a Dataset, Not a
-Record" (Maini dataset inference), "MIA in the Courtroom" (Zhang SaTML 2025) to §06.
-Fixed: benchmark-trap direction (members older, not newer); "precision at low FPR" →
-"TPR at low FPR" (3 places); "zero gap ⇒ safe" folklore removed (sufficient-not-necessary);
-$(\varepsilon,\delta)$-DP origin TCC→EUROCRYPT 2006; ML-Leaks attribution; Yeom full title.
-`lec03tech.html` audited — math correct, no changes. Note file synced (63 entries, order matches).
-**2026-08 note enrichment:** `lec03-mia-note.html` upgraded from speaker script (395 lines) to Script &amp; Companion Notes (831 lines): per-entry `.detail` blocks with rigorous definitions (MI game, TV, NP/LiRA statistics, (ε,δ)-DP, DP-SGD, Min-K%), full proofs (Yeom Thm 2, NP lemma, LiRA quadratic + z-test corollary, DP hypothesis-testing bound + corollaries, shadow-model Prop/Thm/Cor, benchmark-trap Prop, post-processing), and 19 verified links — all consistent with `courses/privacy/lectures/04-mia/`.
-
----
-**2026-09 figure pass (63 slides, unchanged count):** every bullet-only content slide now carries a
-real cited figure or an inline SVG (14 new PDF crops in `figs/`, 15 new SVGs, one `diagram-flow`; see lists above).
-Figure slides use the image-beside-text `grid-2` pattern; wide overview figures (Min-K%, Duan, Maini, Zhang) stack
-below the bullets. All 32 edited slides re-rendered at 60 dpi and checked for overflow. Added the LR formula
-$\Lambda(x)$ as a `math-block` `:648`. Note file: one "Slide figure" sentence per new figure (14 articles).
-
-**2026-09-11 structure pass (63→47):** re-read against the updated `lec02-privacy-dp.html` (77 sl) and
-cut what lec02 already teaches — the leak ladder + "Why Membership Alone Hurts" + cancer-cohort harm (lec02 §02–03),
-the identical two-bells-overlap SVG (lec02 :1220), the standalone $(\varepsilon,\delta)$-DP definition slide, and the
-3-slide DP-SGD block (lec02 §07; one MIA-focused DP-SGD slide kept). Merged internal pairs: definition + two-worlds
-→ "One Yes-or-No Question"; loss score + 3-line code; "Overfitting Drives MIA" → "The Two Bells" (small vs large gap);
-"Learn the Member Signal" → pipeline muted line; per-example calibration + likelihood ratio + LiRA → one LiRA slide;
-three ROC slides → two (Average Accuracy Lies, TPR at Low FPR); "Trust but Verify" → "Auditing Flips the Attack";
-"MIA Meets Foundation Models" → Min-K% lead-in; "An Open Debate" → "Why Scale Breaks It" muted line. All 15 real
-figures kept; 7 SVGs dropped (leak ladder, world cards, two-bells overlap, output vector → classifier, per-example
-baseline, ROC tail, schematic accuracy-vs-ε); unused `.ta-algo` CSS removed. Div nesting validated (all slides at
-depth 3), render = 47 pages, 11 edited slides checked at 60 dpi. Note file re-synced (47 entries, donor `.detail`
-sections merged into the surviving articles by h3; order matches). `lec03tech.html` unchanged (no references to cut slides).
-
-**2026-09-11 MIA move (47→61, per Albert's Slack follow-up):** most of lec02's MIA material now lives here. §01 regained
-"The Simplest Leak" (leak ladder) and "Why Membership Alone Hurts" (cancer-cohort harm) from the 63-slide build and took
-"When Membership Is the Secret" (timeline SVG) from lec02; the merged "One Yes-or-No Question" lost its sensitive-cohort line.
-New §02 "The First Attack" = lec02's seven Homer et al. 2008 slides plus two new detail slides, "Why One SNP Says Nothing"
-(factorization $D_j=(M_j-\mathrm{Pop}_j)(2Y_j-1)$, per-SNP mean/noise table) and "How Many SNPs Are Enough?" ($\mu=2\sqrt{m\bar v/n}$,
-power table); sections 02–07 renumbered 03–08 and the Contents slide became a two-column 8-item TOC. §03 split the merged
-two-bells slide back into "The Two Bells" (overlap SVG + threshold, the copy lec02 had) and "Overfitting Drives MIA" (small vs
-large gap). Three diagrams enlarged per Albert's page comments: "Why It Transfers" and "DP Caps the Attacker" redrawn as
-full-width 960-wide SVGs with 17–22 px type, "A Concrete Bound" ROC widened 330→470 px with 15 px labels. Key Takeaways gained
-a Homer bullet. Note file re-synced (61 entries, order matches): the eleven lec02 articles moved verbatim (with "Lecture 4" and
-"below" cross-references replaced by in-deck section pointers), the "One SNP Whispers" derivation split across the two new
-articles, restored articles taken from the 63-slide note, and "One Yes-or-No Question" trimmed back to the MI game +
-TPR/FPR + three-faces proposition. Render = 61 pages; all 25 new/edited slides checked at 60 dpi (Contents, the SNP
-math slide and the ROC label were fixed after the first pass). `lec03tech.html` unchanged.
-
-**2026-09-11 coordinated pass (61→66, per Albert's Slack page comments):** "One Yes-or-No Question" diagram redrawn as a
-full-width 960-wide SVG (two worlds → model → attacker) with KaTeX overlays for $x$ and $f_\theta$. "How Many SNPs Are Enough?"
-defines $n$ and $m$ up front and drops the $\alpha=10^{-6}$ line. §05 gained "Deciding on a New Record" (how a fresh $x'$ is
-scored, fitted, and classified after LiRA; four def-cards), turned "Two In-vs-Out Bells" into a worked example with numbers
-($\mu_{\mathrm{out}}=2$, $\mu_{\mathrm{in}}=6$, $\sigma=1.5$, $s'=5$), and gained the evaluation trio before "Average Accuracy
-Lies": "Scoring an Attack: TPR and FPR" (confusion table + formal definitions), "The ROC Curve" (threshold sweep → curve, SVG),
-"AUC and Its Blind Spot" (definition, equal-AUC curves A/B). "Does LiRA Work on LLMs?" (Hayes … Cooper NeurIPS 2025 Fig. 2,
-16th real figure) closes §05. "DP Caps the Attacker" shows $e^{\varepsilon}$ as a KaTeX overlay instead of SVG text. Note file
-re-synced (66 entries, order matches): five new articles with TPR/FPR/ROC/AUC definitions, the LiRA decision procedure, and the
-Hayes LLM-MIA setup; SNP and bells articles updated. Render = 66 pages; 10 new/edited slides checked at 60 dpi (bells, AUC and
-LLM-MIA layouts fixed after the first pass). Follow-up the same night (Albert Slack #24): the bells slide now states the decision rule
-explicitly (member iff $\Lambda \gt \tau$; $\tau=1$ says member, $\tau=10$ would not) instead of the confusing "$\tau \lt 5.9$"; "TPR at Low
-FPR" gained two bullets on why the low-FPR regime matters (non-members vastly outnumber members, so a 1% FPR buries true hits).
-Note articles for both updated; three stray BEL-character `pprox` typos in the bells note article fixed.
-
-**2026-09-12 tech supplement update (`lec03tech.html` 11→20, PR #30):** the supplement now carries the formal side of every
-2026-09-11 addition. Homer block: factorization $D_j=(M_j-\mathrm{Pop}_j)(2Y_j-1)$ with both-case check; per-SNP moments
-(out mean 0, var $v_j/n$; in mean $2v_j/n$) with derivation; aggregate $T$, $\mu=2\sqrt{m\bar v/n}$, power $\Phi(\mu-z_\alpha)$,
-$m\approx28{,}000$ (power 0.5) / $39{,}000$ (power 0.8) at $\alpha=10^{-6}$, $n=1000$, $\bar v=0.2$. LiRA block: algorithm
-rewritten (shadows on random halves, logit scores), "Why the Logit Scale" ($\phi=-\ell-\log(1-e^{-\ell})$), log-LR with the
-global-$\sigma^2$ pooling note, "The Worked Example, Checked" (equal-variance linear rule; main-deck numbers give
-$\log\Lambda\approx1.78$, $\Lambda\approx5.9$; $\tau=1\Leftrightarrow s^\star\gt4$, $\tau=10\Leftrightarrow s^\star\gt5.30$), offline LiRA
-$\Pr[Z\le s^\star]$. Evaluation block: TPR(τ)/FPR(τ)/ROC set/balanced accuracy, "AUC Is a Probability" (Mann–Whitney, integral
-proof), "Why Low FPR: Base Rates" (precision at TPR=1 for π=1/101: 0.09 / 0.50 / 0.91 at FPR 10% / 1% / 0.1%), TPR@α with the
-Hayes NeurIPS 2025 scale check (AUC ≤ 0.7, TPR@10⁻⁴ ≈ 1%; the 10⁻⁴ figure was removed 2026-09-13 as unverifiable). Note file unchanged (already in sync). Lint ok; 20 pages rendered,
-new slides checked at 60 dpi.
-
-**2026-09-13 case-brief pass (66→70, PR #31, slides-review brief 2026-09-13):** four slides added — "Where This Lecture Sits"
-(lifecycle strip, detection highlighted), "Base Rates: What an Accusation Is Worth" (Bayes table, audit / legal / AUC callouts),
-"Reading MIA Results at Scale" (four-box conclusion, status as of 2026-09), "Practice: Boardroom Questions" (3+3). Story-first
-Homer block: plain-language line on each formula slide; "What the Paper Reported" separates lab shares (0.15–0.25%, zero false
-positives) from the simulated 0.1%; NIH slide extended with the Nov 2018 NOT-OD-19-023 re-opening (Outcome callout was outdated).
-MIA framing softened throughout ("useful privacy stress test, not a certificate of no leakage"); "Why It Transfers" reworded to
-training procedure + data distribution. Label-only bullet corrected ("reported to match confidence-vector attack accuracy, Fig. 1";
-the earlier "≈4 pp" misread the paper). Unverifiable Hayes "TPR@10⁻⁴ ≈ 1%" removed from the note and tech (replaced by the verified
-15.4% ± 0.6% coin-flip share at FPR 10⁻³, 302M model). Note (70 entries, order matches): intro rewritten; every real incident /
-paper figure carries a `Case background` brief — Homer 2008 and NIH in the 7-field incident format (NIH chronology table: paper →
-immediate 2008-08-28 change → 2018-11-01 follow-up policy, primary sources), 15 papers in the uniform format *attacker access /
-target model·data / member definition and duplicate control / metric·operating point / result / limitation / figure / follow-up
-status* (Homer table, Sankararaman, Yeom, Salem, Shokri, Carlini LiRA ×2, Choquette-Choo, Hayes, Steinke, Shi, Carlini diffusion,
-Duan, Das, Maini, Zhang); h3 labels normalized to `Case background` / `Technical depth — optional` / `References`; all
-`courses/privacy/…` derivation pointers replaced by `lec03tech.html` slide pointers or paper references; "55% accuracy" example →
-60% / advantage 0.20 (Carlini Fig. 2); unverified "Panel D 99.9/0.1" and "Cooper 2026" lines dropped. Tech (20 sl): "Intuition:"
-muted line before the formal block on slides 3, 4, 7, 10, 15; slide 17 scale-check line corrected. Lint ok ×3; edited slides
-rendered at 60 dpi. Estimated running time 100 → ~105 min.
-
-**2026-09-14 core-path + base-rate pass (PR #31, reviewer request):** no slides cut. Seven slides form the skip set of a 90-minute core path (Why One SNP Says Nothing, How Many SNPs Are Enough?, A Theory Anchor, Try It Yourself, Two In-vs-Out Bells, Label-Only Attacks, A Concrete Bound; ≈ 12 min of slides + ≈ 5 min of Boardroom discussion), listed in the note's Contents entry only (top-right `.opt-badge` badges and a Contents-slide line were added, then removed later the same day at Albert's request — lecture-operation info stays off the main deck). The note's Contents entry carries the list with a one-line reason per slide; each optional article is labelled under its title. Base-rate convention unified to π = 1/100 ("one true member per 100 candidates") on the main deck, the note table and `lec03tech.html` slide 16 (was π = 1/101 on tech; rounded values 0.09 / 0.50 / 0.91 unchanged).
-
-
-## lec04-memorization.html
-
-**Topic:** Memorization & training-data extraction (~90 min). What memorization is
-(verbatim / near-duplicate / stylistic; extractable vs discoverable at intuition level);
-canary/exposure measurement; the GPT-2 extraction pipeline as a picture; the
-"repeat forever" poem attack on an aligned production chatbot; scaling drivers
-(size, duplication, context) at qualitative level; diffusion-model copies; copyright
-touchpoint (two slides — full treatment in the backup copyright deck); mitigations and
-the 2025–26 frontier. Intuition pass — the rigorous treatment lives in
-`courses/privacy/lectures/03-memorization/` (exposure, k-eidetic, scaling-law decks);
-facts kept consistent with it.
-
-### Sections (65 slides, ~98 min full / 90-min core path via 7 optional slides listed in the note only (main-deck badges removed 2026-09-14) — content-revised 2026-08 from 59; figure pass 2026-09 58→60; Cooper 2026 frontier pass 2026-09-11 60→62; case-brief + core-path pass 2026-09-14 62→65; all citations source-verified)
-
-| Section | Slides | Divider line | Notable slides |
-|---|---|---|---|
-| Title / Contents / Where This Lecture Sits | 1–3 | `:41`, `:54`, `:85` | Contents is a plain 6-item TOC (core-path list lives in the note only, 2026-09-14) · **Where This Lecture Sits (lifecycle, Evidence highlighted; added 2026-09-14)** `:85` |
-| **01 — What Is Memorization** | 4–16 | `:128` | working definition + **Gatsby prefix → Llama 1 30B → true-suffix card diagram (HTML, after Cooper Fig 1; replaced the low-res image 2026-09-11)** `:168` · **Degrees of Copying (taxonomy SVG: verbatim → near-verbatim → specific fact → style/pattern; technical claim ≠ legal meaning; replaced Three Flavors 2026-09-14)** `:186` · $k$-extractable + **prefix→suffix SVG** `:223` · **Extractable vs Discoverable (added 2026-08; reworded 2026-09-14 as two games, no containment)** `:252` · why it happens + **loss-bars SVG** `:265` · **Some Memorization Is Necessary (Feldman Fig 1(a), real fig)** `:293` · Secret Sharer + **Secret Sharer Fig 6 (real fig)** `:308` · canary `:325` · **canary-leak pipeline (SVG)** `:337` · exposure + **Secret Sharer Fig 7 (real fig)** `:362` · pattern-vs-record SVG `:379` |
-| **02 — Extracting Text from LLMs** | 17–27 | `:402` | canary-vs-wild SVG (**full-width 960, 21–27 px type since 2026-09-11**) `:411` · **GPT-2 PII (real fig)** `:433` · **extraction pipeline (SVG; redrawn 2026-08 with 1,800/604 numbers)** `:457` · confidence signal + **zlib-vs-perplexity Fig 3 (real fig)** `:488` · what came out (604 strings) + **Table 1 (real fig)** `:505` · repeat-forever prompt + **ChatGPT screenshot Fig 5 (real fig)** `:519` · **loop breaks (SVG)** `:540` · scale of the leak (10,000+ / $200 / 150×) + **Nasr Fig 1 (real fig)** `:561` · patched-not-solved + **Nasr Fig 9 extrapolation (real fig)** `:578` · Colab demo `:591` |
-| **03 — How Much, and Why It Grows** | 28–36 | `:606` | measurable fraction + **Carlini Fig 2(a,b) (real fig; re-cropped at 250 dpi 2026-09-11)** `:615` · three drivers (size / duplication / **context** — third driver fixed 2026-08, was "training length") `:630` · **Bigger Means More — Carlini Fig 1(a) (real fig; replaced SVG 2026-09)** `:643` · **Duplication Is the Big One — Kandpal Fig 1 (real fig; replaced SVG 2026-09)** + ~1000× line `:659` · long tail of duplicates + **Kandpal Fig 3(a) (real fig)** `:675` · **A Predictable Curve — Carlini Fig 1 (real fig) + "prompt length = context" explanation (2026-09-11)** `:692` · **Reading the Curves (added 2026-09; GPT-J ≥1% bullets over a full-width log-linear SVG, 21 px type since 2026-09-11)** `:705` |
-| **04 — Image & Diffusion Models** | 37–43 | `:742` | not just text + **Somepalli Fig 1 pairs (real fig)** `:751` · diffusion picture `:766` · **Ann Graham Lotz copy (real fig; 94/175M added 2026-08)** `:779` · **duplication histogram (real fig; Somepalli cite removed 2026-08)** `:803` · Somepalli ~1.9% near-duplicates + **Somepalli Fig 5 histograms (real fig)** `:815` |
-| **05 — Copyright & the Law** | 44–47 | `:838` | **compressed 6→2 slides 2026-08** (backup copyright deck owns the topic) · NYT v. OpenAI + **complaint p. 30 side-by-side (real fig; replaced SVG 2026-09)** + Mar 2025 MTD ruling `:847` · Copy or Transform? (fair-use collision; Bartz v. Anthropic as three callouts: fair-use ruling on inputs / piracy finding / USD 1.5B settlement final approval July 2026, status as of 2026-09) `:863` · **The Same Output, Different Questions (stakeholder grid `.stake`: data subject / copyright holder / ML team / product; added 2026-09-14)** `:879` |
-| **06 — Mitigations & Frontier** | 48–62 | `:899` | toolbox `:906` · deduplication (Lee ACL 2022) + **Lee Fig 3 / Fig 2 (real figs)** `:919` · dedup limits + near-duplicate SVG `:935` · output filtering + n-gram-filter SVG `:959` · DP + **VaultGemma Fig 1 (real fig)** `:989` · privacy tax + trade-off SVG `:1005` · no silver bullet `:1031` · **Frontier: Whole Books Come Back (Cooper 2025 Fig 3, real fig)** `:1039` · **Frontier: Chatbots Recite Books Too (Ahmed 2026 Fig 1, real fig; split out 2026-09)** `:1054` · **NEW Frontier: Near-Verbatim Counts Too (Cooper COLM 2026 k-CBS Fig 3, real fig; Levenshtein $\varepsilon$, OLMo 2 32B 1.4%→2.6%)** `:1070` · **NEW Frontier: Extraction Needs a Control Group (Cooper 2026 "First Principles" Fig 3, real fig; matched post-cutoff non-members, 7.54% vs 1.82%)** `:1086` · **Frontier: How Much Fits? (Morris Fig 1, real fig; 3.6 bits/param)** `:1102` · memorized PII + PII-pipeline SVG `:1119` · open problems (+ unlearning remove-vs-suppress question and Cooper/Lemley cites, 2026-09-11) `:1154` |
-| Boardroom / Takeaways / Closer | 63–65 | — | **Practice: Boardroom Questions (3+3; added 2026-09-14)** `:1167` · `:1210`, `:1222` |
-
-**Key definitions / citations (all source-verified 2026-08):**
-- $k$-extractable (Def 3.1), scaling drivers (capacity / duplication / context), GPT-J ≥1% —
-  `:223`, `:630`, `:692` — Carlini et al., "Quantifying Memorization Across Neural Language
-  Models", ICLR 2023 (arXiv 2202.07646).
-- GPT-2 extraction, Fig 1 PII, 604 of 1,800 candidates — `:433`, `:457` — Carlini et al.,
-  "Extracting Training Data from Large Language Models", USENIX Security 2021 (arXiv 2012.07805).
-- Secret Sharer canary/exposure — `:308` — Carlini, Liu, Erlingsson, Kos, and Song,
-  USENIX Security 2019 (arXiv 1802.08232).
-- Extractable vs discoverable (Defs 1–2); poem attack; 10,000+ strings / $200 / 150× —
-  `:252`, `:519`, `:561` — Nasr et al., "Scalable Extraction of Training Data from (Production)
-  Language Models", arXiv 2311.17035 (2023; published at ICLR 2025 as "…from Aligned,
-  Production Language Models").
-- Learning requires memorization (long tail) — `:293` — Feldman, STOC 2020.
-- Superlinear duplication effect (10 copies → ~1000× more generation) — `:659` — Kandpal,
-  Wallace, and Raffel, ICML 2022 (arXiv 2202.06539).
-- Deduplication (10× less memorized text) — `:919` — Lee et al., "Deduplicating Training Data
-  Makes Language Models Better", ACL 2022 (arXiv 2107.06499).
-- Diffusion extraction: Ann Graham Lotz Fig 1, 94 images / 175M generations, Fig 5 duplication
-  histogram (most extracted ≥100 dupes) — `:779`, `:803` — Carlini et al., "Extracting Training
-  Data from Diffusion Models", USENIX Security 2023 (arXiv 2301.13188).
-- ~1.9% near-duplicate generations — `:815` — Somepalli et al., "Diffusion Art or Digital
-  Forgery?", CVPR 2023 (arXiv 2212.03860; paper reports 1.88% at similarity >0.5).
-- NYT v. OpenAI — `:847` — S.D.N.Y., filed Dec 2023; motion to dismiss largely denied
-  Mar 26, 2025 (opinion Apr 4, 2025).
-- Bartz v. Anthropic — `:863` — N.D. Cal. No. 3:24-cv-05417; fair-use order June 23, 2025 (training on lawfully bought books
-  fair use; retention of ~7M pirated books not); USD 1.5B settlement, preliminary approval Sept 25, 2025, final approval
-  July 20, 2026 (status as of 2026-09; matches `courses/privacy/lectures/03-memorization/` anchor).
-- Whole-book extraction — `:1039`, `:1054` — Cooper et al., arXiv 2505.12546 (Llama 3.1 70B / Harry
-  Potter); Ahmed, Cooper, Koyejo, and Liang, "Extracting books from production language
-  models", arXiv 2601.02671 (2026).
-- Capacity ≈3.6 bits/parameter — `:1102` — Morris et al., "How Much Do Language Models
-  Memorize?", arXiv 2505.24832 (2025).
-- Near-verbatim extraction lower bound (k-CBS; Levenshtein $\varepsilon$-ball probability, deterministic bound at ~20 samples
-  vs ~100,000 Monte Carlo) — `:1070` — Cooper, Lemley, De Sa, Duesterwald, Casasola, Hayes, Lee, Ho, and Liang, "Estimating
-  near-verbatim extraction risk in language models with decoding-constrained beam search", COLM 2026 (arXiv 2603.24917), Fig. 3.
-- Matched non-member controls / conformal thresholds (OLMo 2 32B 7.54% vs 1.82% at 10 tokens, 0.74% vs 0.02% at 50) —
-  `:1086` — Cooper, Swanberg, Hayes, Duesterwald, De Sa, Ho, Lemley, and Liang, "Extractable Memorization From First
-  Principles", arXiv 2607.12649 (2026), Fig. 3; Cooper, "Playing Whack-a-Mole with misconceptions about memorization,
-  extraction, and copyright", arXiv 2609.09320 (2026).
-- Unlearning remove-vs-suppress; probabilistic "copies" — `:1154` — Cooper, Lee, Bogen, et al., "Machine Unlearning Doesn't
-  Do What You Think", NeurIPS 2025 position (arXiv 2412.06966); Lemley and Cooper, "Probabilistic 'Copies' in Generative AI
-  Models", Berkeley Tech. L.J. 2026 (arXiv 2607.14532).
-
-**Real images** (`figs/`, cropped + cited; 27 image slots after the 2026-09-11 Cooper pass — `figs/cooper-discoverable-extraction.png` removed, replaced by the HTML card diagram `:172`):
-Feldman SUN long tail `figs/feldman-long-tail.png` (Feldman 2020 Fig 1(a)) `:297`; Secret Sharer NMT
-insertions `figs/secret-sharer-fig6-insertions.png` (Fig 6) `:318` and exposure-vs-epoch
-`figs/secret-sharer-fig7-epochs.png` (Fig 7) `:365`; GPT-2 extraction `figs/gpt2-extraction.png`
-(Carlini 2021 Fig 1) `:437`; zlib-vs-perplexity `figs/carlini-zlib-perplexity.png` (Carlini 2021 Fig 3)
-`:492`; 604-example categories `figs/carlini-extraction-categories.png` (Carlini 2021 Table 1) `:509`;
-poem-attack screenshot `figs/nasr-poem-chatgpt.png` (Nasr 2023 Fig 5) `:528`; emission-rate bars
-`figs/nasr-emission-rate.png` (Nasr Fig 1; shared with `lec02-privacy-dp.html`) `:571`; extrapolation
-`figs/nasr-extrapolation.png` (Nasr Fig 9 left) `:584`; Carlini ICLR 2023 Fig 2(a,b)
-`figs/carlini-quantifying-fig2ab.png` `:619`, Fig 1(a) `figs/carlini-quantifying-fig1a.png` `:647`,
-Fig 1 `figs/carlini-quantifying-fig1.png` `:696`; Kandpal Fig 1 `figs/kandpal-duplicates.png` `:663`
-and Fig 3(a) `figs/kandpal-dup-histogram.png` `:684`; Somepalli Fig 1 pairs `figs/somepalli-pairs.png`
-`:755` and Fig 5 histograms `figs/somepalli_histograms.png` (shared with lec02) `:819`; Ann Graham Lotz
-copy `figs/calrini-ann.png` (Carlini USENIX Sec 2023 Fig 1) `:783`; duplication histogram
-`figs/carlini_duplicates.png` (Carlini USENIX Sec 2023 Fig 5; shared with `lec03-mia.html`) `:807`;
-NYT complaint p. 30 `figs/nyt-complaint-p30.png` (shared with lec02) `:851`; Lee dedup
-`figs/lee-dedup-memorization.png` (Fig 3) `:923` and `figs/lee-dedup-perplexity.png` (Fig 2) `:924`;
-VaultGemma `figs/vaultgemma-memorization.png` (Fig 1; shared with lec02) `:998`; Cooper books
-`figs/cooper-books-fig3.png` (Fig 3) `:1043`; Ahmed Harry Potter recall `figs/ahmed-harry-potter.png`
-(Fig 1) `:1058`; Cooper k-CBS `figs/cooper-kcbs-fig3.png` (COLM 2026 Fig 3) `:1074`; Cooper first-principles `figs/cooper-first-principles-fig3.png` (2026 Fig 3) `:1090`; Morris capacity `figs/morris-capacity.png` (Fig 1) `:1105`.
-**SVG / HTML figures:** pattern-vs-copy `:145`, Gatsby prefix→model→suffix cards (HTML) `:172`, $k$-extractable test `:227`, loss bars `:274`, canary-leak
-pipeline `:341`, pattern-vs-record `:388`, canary-vs-wild `:415`, extraction pipeline `:461`, poem
-loop-break `:544`, log-linear schematic `:706`, diffusion noise→image strip `:766` (diagram-flow),
-near-duplicate dedup `:944`, n-gram output filter `:967`, privacy/accuracy trade-off `:1013`, PII
-pipeline `:1128`. Citations use `.cite-left` with figure numbers. Page number: bold `.slide-num` only.
-
-**2026-09-14 case-brief + core-path pass (62→65, PR #31):** slides-review brief. Deck: "Where This Lecture Sits" lifecycle slide
-(Evidence stage); "Degrees of Copying" taxonomy SVG replaces "Three Flavors" (verbatim → near-verbatim → specific fact → style,
-technical ≠ legal band); Working Definition allows small edits and says "behavior, not yet legal"; Extractable vs Discoverable
-reworded as two games with no containment (deck, note, tech slide 5 all aligned); `.facts` callouts (What happened / How it was
-verified / Why it matters) on GPT-2, Repeat Forever, Stable Diffusion; evidence-status callouts on NYT (What the exhibits show /
-What the court found / Status as of 2026-09) and Copy or Transform (Bartz: fair-use ruling / piracy finding / settlement approval,
-kept separate); Ahmed slide callouts (What happened / What the evidence showed / Limits: near-verbatim, one run, no control,
-membership inferred); new "The Same Output, Different Questions" stakeholder slide; Key Takeaways dedup line softened; Practice:
-Boardroom Questions (3+3). 90-min core path: 7 optional slides (Turning Leakage into a Number, Try It Yourself, The Long
-Tail, Reading the Curves, A Quick Picture, The Privacy Tax, How Much Fits?), listed in the note's Contents entry only (Contents-slide line and per-slide badges removed from the main deck 2026-09-14, Albert's request). Note: 65
-articles; h3 scheme Case background / Technical depth — optional / References; uniform paper briefs (attacker access / target /
-member definition & duplicate control / metric / result / limitation / figure / follow-up) for Secret Sharer, GPT-2, Nasr,
-Carlini ICLR 2023, Kandpal, Lee, Carlini diffusion, Somepalli, Feldman, VaultGemma (ref added, arXiv 2510.15001), Cooper books +
-Hayes, Ahmed, Cooper near-verbatim, Cooper first principles, Morris; NYT and Bartz as complaint allegation / judicial finding /
-settlement / status; five-distinctions list under Degrees of Copying; Boardroom model answers. Tech: slide 5 two-games wording;
-"Intuition:" lines on slides 3, 11, 12, 13. Lint ok (1 pre-existing dash warning); 65/15 pages rendered, edited slides checked at 60 dpi.
-
-**2026-09-14 Albert page comments (PR #31, post-approval):** slide 6 "A Working Definition" — bottom `.muted` line overlapped the `.cite-left` footnote; fixed by layout only (prefix/suffix cards 0.9fr/1.1fr so the suffix quote wraps to four lines, card padding 14px, grid gap 10px, muted line margin 10px) plus a shorter closing sentence ("Model behavior, not yet a legal claim."). 65 slides unchanged; page 6 re-rendered at 60 dpi.
-
-**2026-09-11 Cooper frontier + page-comment pass (60→62, PR #30):** per Albert's Slack comments — "A Working Definition"
-image (Cooper Fig 1, unreadable at slide scale) redrawn as three HTML cards (Gatsby prefix → Llama 1 30B → true suffix);
-"From Canary to the Wild" SVG redrawn at 960 wide with 21–27 px type; Carlini Fig 2(a,b) re-cropped at 250 dpi (panels a,b only);
-"A Predictable Curve" explains why prompt length is context; "Reading the Curves" now stacks bullets over a full-width SVG with
-21 px type. Checked A. Feder Cooper's page (afedercooper.info; now Yale CS / GenLaw) and added two frontier slides after
-"Chatbots Recite Books Too": "Near-Verbatim Counts Too" (k-CBS, COLM 2026) and "Extraction Needs a Control Group" (First
-Principles 2026 + the Whack-a-Mole essay); "Open Problems" gained the unlearning remove-vs-suppress question with the
-NeurIPS 2025 position paper and Lemley & Cooper BTLJ 2026 cites. Related Cooper work landed in lec03 ("Does LiRA Work on
-LLMs?", Hayes … Cooper NeurIPS 2025). Note file: two new articles (k-CBS bound + $\varepsilon$-ball definition; matched
-comparison + conformal threshold + overstatement/dismissal failure modes), context paragraph in "A Predictable Curve",
-unlearning/legal paragraph + links in "Open Problems"; 62 entries, order matches. Render = 62 pages; 8 edited/new slides
-checked at 60 dpi.
-
-**2026-09-12 tech supplement update (`lec04tech.html` 9→15, PR #30):** formal backing for the Cooper 2026 frontier slides.
-New: "Discoverable vs Extractable" (Nasr et al. 2023 Defs. 1–2 as two def-cards; neither set contains the other), "Why Context
-Helps" (greedy decoding reproduces $s$ iff the true token is the argmax at every step; $H(S\mid P_{1:k+1})\le H(S\mid P_{1:k})$
-explains the $c\log k$ term), "Near-Verbatim Extraction" ($B_\varepsilon(s)$ Levenshtein ball, $p_\varepsilon(s\mid p)$ as the ball's
-probability mass, Monte Carlo cost $\sim10^5$ samples), "$k$-CBS: A Deterministic Lower Bound" (4-step `.ta-algo`; ~20 decodes;
-OLMo 2 32B 1.4%→2.6% at ε=5), "The Non-Member Baseline" ($R(D)$, excess $=R(D_{\text{train}})-R(D_{\text{ctrl}})$, conformal
-threshold) and "How Large Is the Floor?" (train/control/excess table: 10-token 7.54% / 1.82% / 5.72%, 50-token 0.74% / 0.02% /
-0.72%; split off after the table overflowed the footer at 60 dpi). `.ta-algo` CSS added to the head. Note file unchanged
-(already in sync). Lint ok; 15 pages rendered, new slides checked at 60 dpi.
-
-**2026-09 figure pass (58→60, PR #24):** every content slide now carries a cited real figure or an
-SVG. Added slides: Reading the Curves (§03, holds the GPT-J ≥1% bullets that A Predictable Curve
-gave up for Carlini Fig 1) and Frontier: Chatbots Recite Books Too (§06; Ahmed 2026 split out of
-Whole Books Come Back, stating only figure-visible values: 95.8/76.8/70.3/4.0 nv-recall, N = 258/0/0/5,179).
-Three SVGs replaced by the real figures they sketched (size curve → Carlini Fig 1(a); duplication bars →
-Kandpal Fig 1; NYT side-by-side → complaint p. 30). Note file: one "Slide figure" sentence per figure
-(32 articles) + the two new articles; 60 entries, order matches.
-
-**2026-08 content revision (59→58):** every citation/number fetched and verified. Added:
-Extractable vs Discoverable (§01), Some Memorization Is Necessary (Feldman, §01),
-Frontier: How Much Fits? (Morris, §06); Whole Books Come Back replaced the generic
-production-extraction frontier slide. Compressed §05 from 6 slides to 2 (fair-use detail
-migrated to the note file; backup copyright deck owns the full treatment). Fixed: third
-scaling driver "training length"→context length (TOC, divider, drivers card — and in
-`lec04tech.html`, $c\log t$/epochs → $c\log k$/context tokens, fix-errors-only pass);
-Three Flavors retaxonomized (eidetic/extractable cite misattribution removed); poem-attack
-prompt restored to the paper's exact wording; Somepalli cite removed from the Carlini Fig 5
-histogram slide; concrete verified numbers added (604/1,800; 10,000+/$200/150×; ~1000×;
-GPT-J ≥1%; 94/175M; ~1.9%; $1.5B). Note file synced (58 entries, order matches).
-
-**2026-08 note enrichment:** `lec04-memorization-note.html` upgraded from speaker script
-(365 lines) to Script &amp; Companion Notes (741 lines; 58 entries unchanged): per-entry
-`.detail` blocks with rigorous definitions (NLL objective, $k$-extractable, Nasr
-extractable/discoverable Defs 1–2, canary $s[r]$ + rank + exposure, counterfactual
-memorization, $k$-eidetic, Λ-style calibrated-perplexity metrics, Mem$(f)$ + scaling law,
-DDPM recap, $(\ell,\delta)$/$(k,\ell,\delta)$-diffusion extraction, SSCD, §107 four factors,
-$(\varepsilon,\delta)$-DP, DP-SGD, $(n,q)$-probabilistic extraction, Morris compression
-memorization, NIST PII), proofs (Feldman Thm 2.3 statement + verified sketch, exposure
-null-tail bound, DP ⇒ bounded counterfactual memorization), and case backgrounds with
-29 verified links (NYT v. OpenAI complaint + Apr 2025 MTD opinion; Bartz v. Anthropic
-fair-use order + settlement) — all consistent with `courses/privacy/lectures/03-memorization/`.
-
----
-
-## lec05-unlearning.html
-
-**Topic:** Machine unlearning (~97 min full deck; 90-minute core path via five optional slides listed in the note only — no badges on the main deck since 2026-09-14). Why deletion is demanded (GDPR/CCPA privacy,
-copyright, safety); retraining as the gold standard; exact vs approximate; the
-$(\varepsilon,\delta)$ yardstick at intuition level; SISA as a picture; influence
-functions and the Hessian wall; gradient ascent, its failure modes, and NPO;
-LLM unlearning (Harry Potter, TOFU, WMDP/RMU, MUSE); verification (MIA audit, IDI,
-relearning, quantization recovery); the position-paper debate and the 2025–26
-frontier. Intuition pass — the rigorous treatment lives in
-`courses/privacy/lectures/05-unlearning/` (authoritative for shared facts); the
-position-paper debate expands in `talks/icml2026/`.
-
-### Sections (68 slides, ~97 min — content-revised 2026-08 from 58, figure pass 2026-09-05 added RMU, Measured; case-brief + core-path pass 2026-09-14 added Where This Lecture Sits, Four Things "Unlearning" Can Mean, Practice: Boardroom Questions)
-
-| Section | Slides | Divider line | Notable slides |
-|---|---|---|---|
-| Title / Contents / Where This Lecture Sits | 1–3 | `:51`, `:63`, `:95` | Contents is a plain 6-item TOC (core-path list lives in the note only, 2026-09-14) · lifecycle strip with Remediation highlighted `:95` |
-| **01 — Why Delete?** | 4–12 | `:138` | user changes mind (SVG) `:146` · **GDPR Art. 17 / CCPA §1798.105 — what the text says / does not say / why it matters (reworked 2026-09-14; three evidence levels: legal right · formal goal · benchmark result)** `:180` · **Delete for Three Reasons (privacy / copyright / safety; added 2026-08)** `:194` · **data lives in the weights (SVG)** `:207` · why not ignore (SVG) `:233` · retraining expensive (SVG) `:264` · enter machine unlearning (Cao & Yang) `:297` · a decade of work (+Cooper arXiv-count chart) `:312` |
-| **02 — What Unlearning Means** | 13–21 | `:332` | **Four Things "Unlearning" Can Mean (data removal · knowledge suppression · output filtering · access revocation; added 2026-09-14; every method slide carries a `.cat-badge`)** `:340` · gold standard = retrain, scoped to data removal (`Data removal` badge, 2026-09-14) `:354` · **two-models diagram (SVG; `Data removal` badge)** `:381` · exact (SVG) `:408` · approximate (SVG) `:435` · **DP yardstick (Guo/Sekhari cite fixed 2026-08; SVG)** `:467` · forget/retain split (SVG strip) `:497` · two things to get right `:522` |
-| **03 — How to Unlearn** | 22–35 | `:556` | retraining baseline `:564` · train in pieces (SISA shard SVG) `:577` · **SISA (real Bourtoule Fig 2)** `:618` · deleting in SISA (SVG) `:638` · slices (SVG) `:686` · tradeoff (+Bourtoule Fig 6) `:721` · edit the weights `:738` · influence functions (+Koh & Liang Fig 2) `:751` · Hessian catch (SVG) `:769` · gradient ascent (SVG) `:796` · ascent wrecks (+Kurmanji Fig 6) `:830` · **A Gentler Push: NPO (real fig; added 2026-08)** `:847` · method landscape `:860` |
-| **04 — Unlearning in LLMs** | 36–48 | `:873` | what do we forget `:881` · no single row (SVG) `:894` · Harry Potter (+1 GPU hour; Eldan Fig 3) `:931` · the result (Eldan Fig 1 table) `:953` · **TOFU (200×20=4,000; +Fig 6)** `:966` · **TOFU in One Picture (real fig; added 2026-08)** `:983` · why fictitious (SVG) `:994` · **WMDP (real fig + 3,668 MCQs; reworked 2026-08)** `:1027` · RMU (+loss Fig 7) `:1048` · **RMU, Measured (Fig 8, Zephyr-7B; added 2026-09)** `:1065` · **MUSE: Six Boxes to Tick (real fig; added 2026-08)** `:1085` · unlearning vs filtering (+Cooper back-end/front-end) `:1098` |
-| **05 — Did It Really Forget?** | 49–57 | `:1118` | verification is hard (SVG) `:1126` · MIA audit (+MUSE Fig 2) `:1159` · **the tell persists (SVG)** `:1177` · **Look Inside: IDI (real fig, Yonsei; added 2026-08)** `:1197` · **Relearning, Measured (real fig; added 2026-08; moved before relearning attacks 2026-09-30)** `:1210` · relearning attacks (+Yoon syntax Fig 5, Yonsei; "The general test") `:1223` · **Quantize, and It Comes Back (21%→83%; +Zhang Fig 1)** `:1241` · dormant, not deleted (+Łucki Fig 1) `:1258` |
-| **06 — Frontier 2025–26** | 58–65 | `:1272` | **"overused" critique (+Yoon/Jun/No cite; taxonomy SVG)** `:1280` · **Does It Do What You Think? (position papers; added 2026-08)** `:1313` · what guarantee holds `:1326` · **robust unlearning (+Łucki Fig 2)** `:1339` · evaluation standards (+MUSE Fig 5) `:1357` · unlearning meets privacy (+onion-effect ROC) `:1376` · open problems `:1394` |
-| Boardroom / Takeaways / Closer | 66–68 | — | **Practice: Boardroom Questions (five questions, 2-min; added 2026-09-14)** `:1408` · takeaways `:1449` · closer `:1462` |
-
-**Key definitions / citations (all source-verified 2026-08):**
-- First "machine unlearning" — `:297` — Cao and Yang, IEEE S&P 2015.
-- Exact deletion definition — `:312` — Ginart, Guan, Valiant, and Zou, NeurIPS 2019
-  (arXiv 1907.05012). **No longer cited for the $(\varepsilon,\delta)$ definition** —
-  that was a misattribution, fixed 2026-08 on `:467` and in `lec05tech.html`.
-- $(\varepsilon,\delta)$-unlearning — `:467` — Guo, Goldstein, Hannun, and van der Maaten,
-  "Certified Data Removal from Machine Learning Models", ICML 2020 (arXiv 1911.03030);
-  Sekhari et al., NeurIPS 2021. Matches privacy deck Def 3.
-- SISA — `:618` — Bourtoule et al., "Machine Unlearning", IEEE S&P 2021. Speedup:
-  sharding cuts expected cost by the shard count; slicing saves at most another 3/2
-  (matches privacy deck Prop 3; tech deck's "R·L" claim fixed 2026-08).
-- Influence functions — `:751` — Koh and Liang, ICML 2017.
-- Gradient ascent / unrolling — `:796` — Thudi et al., "Unrolling SGD", IEEE EuroS&P 2022.
-- Ascent wrecks / retain anchor — `:830` — Kurmanji, Triantafillou, Hayes, and
-  Triantafillou, "Towards Unbounded Machine Unlearning" (SCRUB), NeurIPS 2023.
-- NPO — `:847` — Zhang, Lin, Bai, and Mei, "Negative Preference Optimization", COLM 2024.
-- Who's Harry Potter (~1 GPU hour, Llama-2-7b) — `:931` — Eldan and Russinovich, 2023
-  (arXiv 2310.02238).
-- TOFU (200 authors × 20 QA = 4,000) — `:966` — Maini, Feng, Schwarzschild, Lipton,
-  and Kolter, COLM 2024 (arXiv 2401.06121).
-- WMDP (3,668 MCQs) + RMU — `:1027`, `:1048`, `:1065` — Li et al., ICML 2024 (arXiv 2403.03218).
-- MUSE (six criteria) — `:1085` — Shi, Lee, Huang, Malladi, Zhao, Holtzman, Liu, Zettlemoyer, Smith, and Zhang, ICLR 2025 (arXiv 2407.06460; author list corrected 2026-09-14 against arXiv; News f₀ = LLaMA-2 7B, Books f₀ = ICLM-7B).
-- IDI (instructor co-author) — `:1197` — Jeon, Jeung, Kim, No, and Choi (Yonsei),
-  "An Information Theoretic Evaluation Metric For Strong Unlearning", AAAI 2026
-  (arXiv 2405.17878).
-- Syntax drives relearning (instructor co-author) — `:1223` — Yoon, Hong, Jeung, and No
-  (Yonsei), "Rethinking Benign Relearning: Syntax as the Hidden Driver of Unlearning
-  Failures", ICLR 2026 (arXiv 2602.03379; TOFU on Llama-2-7b-chat, GA/NPO/SCRUB).
-- Benign relearning — `:1210` — Hu, Fu, Wu, and Smith, "Unlearning or Obfuscating?",
-  ICLR 2025 (arXiv 2406.13356).
-- Quantization recovery (21%→83% after 4-bit) — `:1241` — Zhang et al., "Catastrophic
-  Failure of LLM Unlearning via Quantization", ICLR 2025 (arXiv 2410.16454).
-- Adversarial perspective (10 unrelated examples undo RMU) — `:1258`, `:1339` — Łucki et al.,
-  TMLR 2025 (arXiv 2409.18025).
-- 184K GPU-hours (Llama-2-7b pretraining, reported) — `:264`, `:931` — Eldan and Russinovich citing
-  Touvron et al., "Llama 2", 2023 (arXiv 2307.09288).
-- Erasure right vs model weights (note only) — EDPB Opinion 28/2024, adopted 17 Dec 2024 (paras. 107(b),
-  114–115): unlearning listed as a mitigation "attempting to remove or suppress" personal data; model
-  erasure as a corrective measure for unlawful processing. No judicial decision holding Art. 17 requires
-  weight modification is cited; statute texts (Art. 17, Civ. Code §1798.105) do not mention models.
-- Privacy onion effect — `:1376` — Carlini et al., "The Privacy Onion Effect: Memorization
-  is Relative", NeurIPS 2022.
-- Position papers — `:312`, `:1098`, `:1280`, `:1313` — Cooper et al., "Machine Unlearning Doesn't Do What
-  You Think", NeurIPS 2025; Yoon, Jun, and No (Yonsei), "Position: 'Machine Unlearning'
-  Is Overused in LLMs", ICML 2026 (matches `courses/privacy/lectures/05-unlearning/`
-  and `talks/icml2026/`).
-
-**Real images** (`figs/`, cropped + cited). From the 2026-08 pass (copied from
-`courses/privacy/lectures/05-unlearning/figs/`): NPO vs GA collapse curves
-`figs/npo-ga-collapse.png` (Zhang COLM 2024 Fig 2) `:853`; TOFU pipeline
-`figs/tofu.png` (Maini COLM 2024 Fig 1) `:987`; WMDP overview `figs/WMDP.png`
-(Li ICML 2024 Fig 1) `:1034`; MUSE six-way evaluation `figs/MUSE.png` (Shi ICLR 2025
-Fig 1) `:1091`; IDI conceptual layer plot `figs/idi-conceptual.png` (Jeon AAAI 2026
-Fig 4(a)) `:1203`; benign-relearning pipeline `figs/benign-relearn-pipeline.png`
-(Hu ICLR 2025 Fig 2 left) `:1216`. **Added 2026-09-05 figure pass:** arXiv unlearning
-counts `figs/unlearning-arxiv-counts.png` (Cooper 2024 Fig 2) `:323`; SISA training
-`figs/sisa-training.png` (Bourtoule S&P 2021 Fig 2) `:625`; accuracy vs shards
-`figs/sisa-accuracy-shards.png` (Bourtoule Fig 6) `:733`; influence vs leave-one-out
-`figs/influence-vs-loo.png` (Koh & Liang ICML 2017 Fig 2) `:762`; ascent-only and
-alternating error curves `figs/scrub-maxsteps-only.png` + `figs/scrub-alternating.png`
-(Kurmanji NeurIPS 2023 Fig 6(a)/(d)) `:841`–`:842`; HP next-token table
-`figs/hp-nexttoken.png` (Eldan 2023 Fig 3) `:939`; HP completions
-`figs/hp-completions.png` (Eldan Fig 1) `:959`; forget quality vs utility
-`figs/tofu-fq-vs-utility.png` (Maini COLM 2024 Fig 6) `:977`; RMU loss
-`figs/rmu-loss.png` (Li ICML 2024 Fig 7) `:1059`; RMU results
-`figs/rmu-results.png` (Li Fig 8) `:1072`; back-end/front-end
-`figs/backend-frontend.png` (Cooper Fig 3) `:1104`; MIA distributions
-`figs/muse-mia-dist.png` (Shi ICLR 2025 Fig 2) `:1170`; syntax similarity
-`figs/syntax-similarity.png` (Yoon ICLR 2026 Fig 5, Yonsei) `:1234`; quantization
-recovery `figs/quant-recovery.png` (Zhang ICLR 2025 Fig 1) `:1252`; adversarial
-overview `figs/lucki-overview.png` (Łucki TMLR 2025 Fig 1) `:1264`; fine-tune recovery
-`figs/lucki-finetune.png` (Łucki Fig 2) `:1350`; utility vs memorization
-`figs/muse-utility-vs-mem.png` (Shi Fig 5) `:1369`; onion ROC `figs/onion-roc.png`
-(Carlini NeurIPS 2022 Fig 1) `:1388`. **SVG figures:** database row vs weights `:158`,
-data-in-weights `:213`, MIA/extraction probes `:245`, daily-retrain timeline `:276`,
-two-models-compared `:388`, identical distributions `:420`, weight-space nudge `:447`,
-bounded-gap distributions `:479`, forget/retain strip `:503`, SISA shard diagram (moved
-from the SISA slide) `:589`, one-shard retrain `:650`, slices + checkpoints `:696`,
-Hessian grid `:783`, descent vs ascent loss curve `:808`, paraphrase entanglement
-`:906`, web vs fine-tune source `:1005`, three-probe verification `:1138`,
-member/non-member bells `:1183`, data-level vs output-level taxonomy `:1292`.
-Citations use `.cite-left`. Page number: bold `.slide-num` only.
-
-**2026-09-14 reviewer #48 follow-up (same day, after dc560c8):** taxonomy conflicts removed.
-"The Law Says Delete" third callout now says stakeholders may all request "removal" but can
-mean different targets (data influence, protected outputs, hazardous capability, access), and
-carries a visible `.cite` line (Regulation (EU) 2016/679 Art. 17 · Cal. Civ. Code §1798.105 ·
-status/interpretation as of 2026-09). "Delete for Three Reasons" footer: similar language,
-different goals and evidence. "The Gold Standard" / "Two Models, Compared" carry a
-`Data removal` badge and scope the retrained reference to data-removal claims only ("other
-goals need other baselines"). Taxonomy cards: output filtering "can block observed outputs,
-but does not establish that underlying knowledge was removed; test for bypasses"; access
-revocation "changes access, not whatever may already be in the weights"; footer: a filtering
-claim needs bypass and coverage tests, not a retraining comparison, and must not be presented
-as removal. Note scripts/KTs and `lec05tech.html` slide 3 cards updated to the same wording.
-
-**2026-09-14 case-brief + core-path pass (67→70):** three slides added — Where This Lecture Sits
-(lifecycle strip, Remediation), Four Things "Unlearning" Can Mean (2×2 taxonomy), Practice: Boardroom
-Questions (five questions). Every method/benchmark/verification slide carries a `.cat-badge`
-(Data removal · exact/certified/approximate · Knowledge suppression · Benchmark vs retraining /
-concept · Verification audit/attack). Evidence-status wording: "The Law Says Delete" split into
-what the text says / does not say / why it matters (no claim that Art. 17 reaches weights; three
-evidence levels — legal right, paper's formal goal, benchmark result — kept in separate sentences
-across deck, note, tech); Harry Potter and RMU results labelled "reported"; central sentence "Not
-answering is observable. Not knowing is a much stronger claim." on Enter/Verification/Takeaways.
-Seven optional slides (A Decade of Work, Slices, Curvature, Try It Yourself, TOFU in One
-Picture, Why Fictitious, Where to Go Deeper) define the 90-min core path listed in the note's
-Contents entry only (Contents-slide line and per-slide badges removed from the main deck 2026-09-14, Albert's request). Note synced to 70 entries with uniform case briefs (deletion target / model·data /
-evaluation benchmark / reported success / verification attack / what can and cannot be claimed /
-follow-up status as of 2026-09) for Eldan, TOFU, WMDP, RMU, MUSE, IDI, Yoon syntax, Hu, Zhang,
-Łucki, Cooper, Yoon/Jun/No; legal brief with statute text + EDPB Opinion 28/2024; MUSE author list
-fixed. `lec05tech.html` 11→12 sl: Formal Goals, Separated (slide 3) + category badges + SISA
-variables aligned to note (S shards, R slices) + cost formula.
-
-**2026-09-30 Albert page comments (70→68):** p6 legal slide cut to two-line cards ("erasure on request", "Legal right: established. / Weight-level duty: not."); p8, p9, p11, p35, p40 line breaks (one claim per line; p35 Approximate card now "No certificate, except for simple models"); p14 taxonomy cards cut to one target line + one evidence line; p15 gains a data→retrain→reference flow SVG; p18/p19/p24 diagrams enlarged (wider column, 18–21-unit type); p21 gains a utility-vs-forgetting tradeoff SVG; p31 Hessian slide rebuilt with KaTeX ($H \in \mathbb{R}^{d\times d}$, $d \gtrsim 10^9$, $d^2 \gtrsim 10^{18}$) and a larger grid; "Try It Yourself" (Colab) and "Where to Go Deeper" removed; "Relearning, Measured" now precedes "Relearning Attacks". Note synced: articles removed, the reading list moved into Key Takeaways' detail block, the two relearning entries swapped with their cross-references, core-path list now five optional slides. `lec05tech.html` unchanged (its Hessian slide already matches). Slide numbers in the older entries below are pre-2026-09-30.
-
-**2026-09-14 Albert page comments (PR #31, post-approval):** slide 51 "Verification Is Hard" — probe diagram enlarged (grid 0.7fr/1.3fr, SVG viewBox 600×250 at up to 760 px wide, label type 22/19 units ≈ 26/23 px rendered, "?" 56, box 160×150); bullets and highlight unchanged. 70 slides unchanged; page 51 re-rendered at 60 dpi.
-
-**2026-09-05 figure pass (66→67):** every bullet-only content slide now carries a cited
-real figure or an inline SVG (18 new crops, 15 new SVGs; grid-3 card slides and the
-position-paper slide left as is). One slide added: RMU, Measured (Li Fig 8). SISA slide
-swapped its SVG for Bourtoule Fig 2; the SVG moved to Train in Pieces. Filter-vs-
-unlearning columns reordered to match Cooper's (a) back-end / (b) front-end. Note file
-synced: 67 entries, `Slide figure:` line on every real-figure slide.
-
-**2026-08 content revision (58→66):** every citation/number fetched and verified.
-Added 8 slides: Delete for Three Reasons (§01), A Gentler Push: NPO (§03), TOFU in
-One Picture + MUSE: Six Boxes to Tick (§04), Look Inside: IDI + Relearning, Measured +
-Quantize, and It Comes Back (§05), Does It Do What You Think? (§06). Fixed:
-$(\varepsilon,\delta)$-unlearning misattributed to Ginart 2019 → Guo ICML 2020 +
-Sekhari 2021 (main `:467` and `lec05tech.html` slide 4, which also gained the
-two-sided-bound clause); `lec05tech.html` SISA speedup "R·L" → shard-count + 3/2
-(fix-errors-only pass, deck stays 11 sl). WMDP slide reworked around the real figure;
-concrete verified numbers added (4,000 QA; 3,668 MCQs; 21%→83%; 10 examples;
-~1 GPU hour). Note file synced (66 entries, order matches; 67 after the 2026-09 figure pass).
-
-**2026-08 note enrichment:** `lec05-unlearning-note.html` upgraded from speaker script
-(413 lines) to Script &amp; Companion Notes (829 lines; 66 entries unchanged): per-entry
-`.detail` blocks with rigorous definitions (Ginart deletion, exact and
-$(\varepsilon,\delta)$-certified unlearning with quantifiers, SISA formalized, A1–A3
-convex setting, GA/NPO/RMU losses, TOFU truth-ratio KS metric, IDI, suppression vs
-deletion / adaptation class), full proofs (exact⟹certified, retraining exact,
-SISA shard + slicing cost with the $3R/(2R+1)\to3/2$ limit, IFT influence derivation +
-Newton-step $MG^2/(2\lambda^3n^2)$ bound via two lemmas, GA-has-no-optimum, GA-vs-NPO
-toy divergence rates, NPO self-limiting theorem + $\beta\to0$ GA limit, one-family
-gradient-weight proposition, exact-deletion-misses-the-concept, $p$-value uniformity +
-best-of-$k$, prompt-relativity, output-metrics blindness, TV audit cap, attacks
-one-sided, gate construction, DP⟹certified + $1/n$ vs $1/n^2$ noise calculus, Sekhari
-deletion-capacity statement), and Background blocks (GDPR Art. 17 / CCPA / Google Spain
-C-131/12; 24 verified links) — all consistent with
-`courses/privacy/lectures/05-unlearning/`.
-
-## lec06-hallucination.html
-
-**Topic:** Hallucination, calibration & reliability (~90 min). What hallucination is
-(and is not); why next-token training produces confident falsehoods (Kalai binary-grading
-argument at intuition level); real harms (Lacey v. State Farm as anchor case, preceded by a
-self-contained Mata v. Avianca context slide since round 4); calibration with the reliability-diagram
-picture and a glanceable ECE; conformal prediction as "sets with a coverage promise";
-semantic entropy at intuition level; RAG grounding; benchmarks (TruthfulQA, Vectara HHEM);
-reasoning-model hallucination; sycophancy one-slide touchpoint (full treatment in
-`backup-sycophancy.html`). Math lives in `lec06tech.html` (formal Kalai bound and coverage proof moved there in round 4).
-
-### Sections (75 slides, ~95 min — Albert's revision 2026-10 from 61, four review rounds; content-revised 2026-08 from 58; figure pass 2026-09)
-
-| Section | Slides | Divider line | Notable slides |
-|---|---|---|---|
-| Title / Contents | 1–2 | `:26`, `:38` | |
-| **01 — What Hallucination Is** | 3–11 | `:71` | definition (Ji survey) `:79` · **fluency fools us (real vs invented citation test; 2026-10)** `:94` · **Context: Mata v. Avianca (2023) (comparison with Lacey; round 4)** `:103` · Fake Citations, Again (Lacey v. State Farm) `:114` · **Invented Medical Facts (infarct defined; 2026-10)** `:132` · two flavors of wrong `:150` · not the same as a bug `:164` · why this matters `:179` |
-| **02 — Why Models Hallucinate** | 12–22 | `:192` | training objective `:200` · no truth grounding (Kalai Fig 1) `:212` · **Counting With a Poor Model (V3 chat vs R1 reasoning, siblings on one base; round 4)** `:225` · **Weak Model Family ⇒ Forced Errors (trigram picture, plain-language Cor 2; formal bound in lec06tech; round 4)** `:241` · plausible beats true `:254` · pressure to always answer `:276` · exam-taking analogy `:293` · Guessing, Measured `:310` · where errors concentrate (FActScore Fig 2 + plot description) `:338` · knowledge cutoff `:355` |
-| **03 — Calibration** | 23–36 | `:371` | confidence as a number `:379` · calibration promise (100-dot grid) `:391` · reliability diagram `:406` · over- vs under-confident `:428` · **measuring the gap (gap = \|conf − acc\|; 2026-10)** `:442` · **reading ECE (area picture, 0.1705; 2026-10)** `:459` · bigger is not better `:476` · temperature `:485` · **What P(True) Measures (3-step prompt; round 4)** `:499` · **Kadavath P(True) histogram (overlap = imperfect discrimination; round 4)** `:513` · **Filtering by P(True) Mostly Raises Accuracy (unmodified plot + enlarged key)** `:529` · **verbalized confidence GPT-3/3.5** `:543` · **GPT-4/Vicuna** `:558` |
-| **04 — Conformal Prediction** | 37–52 | `:575` | one answer to a set (three photos, typeset sets) `:583` · **Candidates, Native Output, Conformal Set** `:595` · coverage guarantee `:609` · **Two Assumptions (A1 exchangeable, A2 fixed score)** `:625` · how it works (k, q̂ = ∞) `:638` · recipe figure `:652` · **Two Kinds of Calibration (temperature vs threshold; round 4)** `:660` · **Coverage Theorem (upper bound only without ties)** `:673` · **Why It Works: A Fair Rank (n = 9, α = 0.2 rank picture; replaces 3 proof slides; round 4)** `:690` · prediction-set picture `:706` · **What the Guarantee Covers** `:714` · **Marginal ≠ Conditional** `:734` · abstention (singleton ≠ certified) `:749` · medical triage (clinician review) `:765` · trade-off `:781` |
-| **05 — Detection & Grounding** | 53–62 | `:791` | two strategies (Ground first, then Detect; round 4) `:799` · self-consistency `:813` · semantic entropy `:822` · entropy picture `:836` · RAG `:861` · why RAG helps `:875` · RAG is not a cure `:891` · teaching "I don't know" `:907` · scoring rule `:923` |
-| **06 — Frontier 2025–26** | 63–73 | `:936` | **Misconceptions (TruthfulQA examples; 2026-10)** `:943` · **In the Wild: Search Answers, 2024 (rocks / glue)** `:957` · **Should a Truthful Model Share Our Errors?** `:969` · TruthfulQA `:986` · **Benchmarks table (4 benchmarks)** `:1001` · **Measuring Faithfulness: Vectara HHEM (Sep 22, 2026 data)** `:1016` · reasoning models `:1054` · sycophancy `:1071` · factuality evaluations `:1083` · open problems `:1092` |
-| Takeaways / Closer | 74–75 | — | `:1107`, `:1121` |
-
-**Key definitions / citations (source-verified; 2026-10 additions checked against the saved PDFs):**
-- Hallucination survey — `:79` — Ji et al., ACM Computing Surveys 2023.
-- Anchor case — `:114` — Lacey v. State Farm, C.D. Cal., May 2025. Context — `:103` — Mata v. Avianca, No. 22-cv-1461 (PKC), S.D.N.Y., Opinion and Order on Sanctions, 22 June 2023 (six fabricated decisions, USD 5,000).
-- Med-Gemini "basilar ganglia" — `:132` — Google Med-Gemini paper 2024; The Verge, 2025.
-- Kalai, Nachum, Vempala, and Zhang, 2025 (arXiv 2509.04664) — IIV reduction Fig 1 `:212`;
-  DEEPSEEK letter count (§1: V3 "2" or "3" in ten trials, app, 11 May 2025; §3.3.2: R1 spells it out, tokens D/EEP/SEE/K) `:225`;
-  trigram limitation in plain language (Theorem 3, Corollary 2) `:241`; the formal bound
-  err ≥ 2·opt(G) − max|V_c|/min|E_c| − δ now only in the note and `lec06tech.html`; binary grading `:276`, `:293`, `:923`.
-- DeepSeek chronology — `:225` — V3 released 26 Dec 2024 (arXiv 2412.19437), V3-0324 25 Mar 2025, R1 20 Jan 2025
-  (arXiv 2501.12948; RL from DeepSeek-V3-Base); api-docs.deepseek.com/news. Siblings, not successor.
-- FActScore — `:338`, `:1001`, `:1083` — Min et al., EMNLP 2023.
-- Calibration / ECE / temperature — `:391`–`:485`, `:660` — Guo, Pleiss, Sun, and Weinberger, ICML 2017 (ECE Eq. 3).
-  ECE example (shares .10/.10/.15/.25/.40, gaps .03/.07/.15/.20/.22 → 0.1705) is a course illustration.
-- Self-knowledge P(True) — `:499`, `:513`, `:529` — Kadavath et al., 2022, §3.2 / §4.1–4.2 (prompt format, P of "(A)"), Fig 1 (left / right; right panel unmodified, enlarged key beside it).
-- Verbalized confidence — `:543`, `:558` — Xiong et al., ICLR 2024, Fig 2 (GSM8K).
-- Conformal — `:583`–`:734` — Angelopoulos and Bates, 2021 (Theorem 1, Appendix D, Theorem D.2);
-  Vovk, Gammerman, and Saunders, ICML 1999. k = ⌈(n+1)(1−α)⌉, q̂ = ∞ when k = n+1; ties keep the lower bound.
-- Conditional coverage limits — `:734` — Vovk, ACML 2012; Lei and Wasserman, JRSS-B 2014 (Lemma 1);
-  Foygel Barber, Candès, Ramdas, and Tibshirani, Information and Inference 2021.
-- TruthfulQA — `:943`, `:969`, `:986`, `:1001` — Lin, Hilton, and Evans, ACL 2022 (Fig 1, Fig 2, Table 6, §2.1).
-- AI Overviews rocks / glue — `:957` — Reid (Google), "AI Overviews: About last week", Google blog, May 30, 2024.
-- SimpleQA — `:310`, `:1001` — Wei et al., 2024 (grades: correct / incorrect / not attempted).
-- Vectara HHEM-2.3 — `:1016` — leaderboard README, updated Sep. 22, 2026 (top six rows; 7,700+ articles; temperature 0).
-- Self-consistency `:813` — Manakul et al., EMNLP 2023. Semantic entropy `:822` — Farquhar et al., Nature 2024.
-  RAG `:861` — Lewis et al., NeurIPS 2020. Sycophancy `:1071` — Sharma et al., ICLR 2024.
-
-**Real images** (`figs/`, cited; 21 files on 17 slides): kalai-iiv `:212` · kalai-gpt4-calibration `:276` ·
-factscore-frequency `:338` · guo-reliability-titles + guo-reliability `:476` · guo-temp-scaling `:485` · kadavath-ptrue-hist `:513` ·
-kadavath-ptrue-scaling `:529` · xiong-verbalized-a `:543` · xiong-verbalized-b `:558` · conformal-squirrel-1/2/3
-`:583` · conformal-recipe `:652` · selfcheckgpt `:813` · semantic-entropy-table `:822` · rag-overview `:861` ·
-truthfulqa-size `:986` · sharma-sycophancy `:1071` · factscore-chatgpt `:1083`. Crops re-captured at higher
-resolution in 2026-10; kadavath-ptrue-scaling is an unmodified crop (embedded legend
-kept) with an enlarged SVG key beside it. Citations use `.cite-left`.
-
-**2026-10 Albert revision (61→73; PR on branch `trustworthy-ai-lec06-albert-revision`;
-log `log/2026-10-06-trustworthy-ai-lec06-albert-revision.md`):** enlarged diagrams and fonts on orig
-P4, 5, 8, 9, 12, 16, 19, 21, 22, 35, 47, 48, 49 (all redrawn SVGs at 16–20px type). P5 recast as a
-real-vs-invented citation test; P7 defines infarct; P13 split into figure + DEEPSEEK example + precise
-theorem; P18 plot description; P25/26 gap = \|conf − acc\| and area reading of ECE with the weighted
-sum; P29 split (figure + reading the plot, "partial self-estimate" defined); P30 plot enlarged; P33
-candidates / native / conformal output defined; P35–37 expanded to assumptions, theorem, three proof
-slides, what is covered, marginal ≠ conditional (qualified impossibility). Removed orig P51 (Detection
-Demo) and P59 (Demos to Play With). After the 06 divider: misconceptions, AI Overviews 2024, and the
-"should a truthful model share our errors" answer. P54 split into a 4-benchmark table and the Vectara
-chart (data updated to Sep 22, 2026). Page map orig→new: 1–12 same · 13→13–15 · 14–28→16–30 ·
-29→31–32 · 30–35→33–38 · 36→39–44 · 37→45–47 · 38–50→48–60 · 51 removed · 52→61–64 · 53→65 ·
-54→66–67 · 55–58→68–71 · 59 removed · 60–61→72–73. Note file synced (73 articles; 991→901 fixed;
-conditional-coverage claim qualified). `lec06tech.html`: fixed-score and marginal wording on Why It Holds.
-
-**Round 2 (slides-review, 2026-10-06; 73→76):** counting caption and "assuming similar training data" wording;
-Kalai bound with its exact forcing condition (2 opt(G) > max|V_c|/min|E_c| + δ) plus a new trigram slide
-(Theorem 3 / Corollary 2; stipulated two-option task, no abstention); Kadavath and Xiong figures
-split into two slides each with large labels; squirrel sets re-typeset under each photo plus a separate
-candidates/native/conformal slide; theorem upper bound qualified (no ties); joint-draw uniform rank; "can break"
-exchangeability; singleton = candidate for a validated policy, deferral rule includes empty sets, clinician review, marginal miss over all patients;
-"to every user" removed. Note synced (76 articles; P(wrong ∧ singleton) ≤ α vs P(wrong | singleton)).
-Tech P2/P11/P12: q̂ = ∞ at k = n+1, ties, A1 + A2 ⇒ exchangeable scores. Round-1→round-2 map: 1–15 same ·
-16 new · 16–30→17–31 · 31–32→32–33 · 33→34–35 · 34–35→36–37 · 36→38–39 · 37–73→40–76.
-
-**Round 4 (Albert direct, 2026-10-07; 76→75; branch `trustworthy-ai-lec06-albert-2026-10-07` off 03c274d):**
-new Mata v. Avianca context slide (comparison with Lacey); V3 vs R1 roles and chronology (siblings on one base,
-not successor); old 15–16 merged into one plain-language slide (formal bound + trigram theorem moved to
-`lec06tech.html` §01); new What P(True) Measures slide and histogram re-captioned (overlap = useful but
-imperfect discrimination, not calibrated probabilities); "red = wrong" kept on one line; Colab slide dropped;
-new Two Kinds of Calibration slide; three proof slides replaced by Why It Works: A Fair Rank (A1, A2,
-marginal; proof moved to `lec06tech.html`); Two Strategies reordered Ground → Detect with a larger
-diagram; figures enlarged on old P30, 32, 56, 59, 73. Note synced (75 articles; proof kept in the
-Coverage Theorem entry). Round-3→round-4 map: 1–5 same · 6 new · 6–14→7–15 · 15+16→16 · 17–31 same ·
-32 new · 32–35→33–36 · 36 removed · 37–43 same · 44 new · 44→45 · 45–47→46 · 48–76→47–75.
-
-**Round 5 (slides-review, 2026-10-07; 75 unchanged):** P30, P55, P72 rebuilt figure-first at full
-available width with one takeaway line (side bullets dropped; their content is in the note). Guo crop is
-now the column titles + reliability-diagram row (histograms omitted); SelfCheckGPT re-cropped at native
-resolution (the old crop was vertically squashed); FActScore cropped to the ChatGPT worked example only.
-P15 caption restored to "Assuming similar training data …"; P46 adds the distinct-scores / ties line.
-Note: P44 temperature scaling "aims to improve" calibration (no exactness, no set-size claim; separate
-tuning and conformal splits); n14 drops the checkpoint inference.
-
-**Round 6 (Albert via slides-review #36, 2026-10-07; 75 unchanged):** his questions answered briefly on
-the slides. P6: "2023: lawyers cited nonexistent cases fabricated by ChatGPT"; P15: V3 is not R1's newer successor (dates;
-tested checkpoint not stated); P32: P(True) = probability of "(A) True" for a proposed answer, useful but
-not verified correctness; P44: "Is conformal calibration? Yes: it calibrates a cutoff, not the probabilities".
-
-**2026-09 figure pass (61 slides, unchanged count; PR #24):** every bullet-only content slide now carries
-a cited real figure crop or an inline SVG (14 new crops, 26 new SVGs). Real figures sit beside the bullets
-in a `1fr auto` grid or stacked below the bullets; every crop excludes the paper caption and is cited with
-its figure number. Note file: one "Slide figure" sentence per real-figure article (14); 61 entries, order
-matches. Also normalized "$31,100"/"$5,000" in the note to "USD …" outside the `<span>$</span>` escapes.
-
-**2026-08 content revision (58→61):** every citation/number fetched and verified.
-Added 3 slides: Guessing, Measured (§02); TruthfulQA (§06); Sycophancy touchpoint (§06).
-Replaced the fake-citation anchor (Avianca → Lacey v. State Farm; Avianca kept as a
-one-line callback since lec01 covers it) and rewrote Invented Medical Facts around the
-verified Med-Gemini error. Reworked Reasoning Models around verified PersonQA numbers.
-Added missing cites (Kalai ×3, Xiong, SelfCheckGPT); completed the Angelopoulos & Bates
-title (also in `lec06tech.html` — otherwise fix-errors-only, math verified, stays 14 sl).
-Flagged as secondary-verified: Lacey "hundreds of filings" tracker line `:124`, SimpleQA
-abstention split `:280`, Med-Gemini narrative `:128`, GPT-4o rollback line `:909`.
-Note file synced (61 entries, order matches).
-
-**2026-08 note enrichment:** `lec06-hallucination-note.html` upgraded from speaker
-script (383 lines) to Script &amp; Companion Notes (723 lines; 61 entries unchanged):
-per-entry `.detail` blocks with rigorous definitions (KNVZ valid/error hallucination
-formalization, factuality vs faithfulness quadrants, autoregressive MLE = KL
-minimization, Guo perfect-calibration Eq. 1 + ECE Eq. 3 with binning caveats,
-temperature scaling with limits, exchangeability, split-conformal recipe, semantic
-entropy with Rao–Blackwellized + discrete estimators, RAG-Sequence/RAG-Token,
-FActScore), theorem blocks with verified proofs/sketches (Kalai–Vempala Corollary 1
-monofact lower bound + 3-step sketch, KNVZ IIV-reduction Corollary 1 + Appendix-A
-partition sketch, KNVZ Theorem 2 singleton-rate floor, conformal coverage Theorem D.1
-with the complete rank-uniformity proof + D.2 tightness, threshold-scoring
-λ/(1+λ) and 5p−4 derivations labeled course notes), and brief Background blocks with
-26 verified links (Lacey docket + Volokh + Charlotin tracker, Avianca order PDF,
-Verge Med-Gemini + arXiv 2404.18416, GPT-5 and o3/o4-mini system cards, TruthfulQA,
-SimpleQA, Vectara HHEM ×2, Sharma sycophancy + OpenAI GPT-4o rollback + TechCrunch,
-Kadavath, Xiong, SelfCheckGPT, Farquhar Nature, Lewis RAG, Guo, A&B, Ji survey).
-
-
-## lec07-alignment-failures.html
-
-**Topic:** Alignment failures: when AI learns the wrong objective (90 min; mixed-major
-sophomores/juniors; concept-first, light math, no proofs; **no activities — lec07 onward**).
-Alignment defined (Ji survey; capability vs alignment grid); reported real-world evaluation/research cases (o1-preview Docker, AI Scientist time limit, Claude 3.7 special-casing, o3/METR); self-contained hallucination bridge (wrong facts vs wrong objective); RLHF intent → feedback →
-reward; Goodhart / Gao overoptimization; DPO (no separate reward model) can still overoptimize (Rafailov 2023, 2024); sycophancy (Sharma; GPT-4o April 2025 rollback from
-OpenAI's own posts); specification gaming (Krakovna Lego, CoastRunners); reward hacking with a
-worked coding-grader example; two controlled studies read as engineered / observed / not shown
-(Greenblatt alignment faking; MacDiarmid emergent misalignment from production-RL hacks);
-explanation faithfulness ~15 min (Turpin, Lanham, Chen hint test, Baker CoT monitoring and
-obfuscation, Korbak). Excludes LIME/SHAP/probes/SAEs (→ `backup-interpretability.html`),
-jailbreak taxonomy (lec10), memory/tool/multi-agent threats (lec14). Sycophancy here is the
-RLHF-mechanism view; `backup-sycophancy.html` goes further on manipulation and persuasion.
-Math lives in `lec07tech.html`. Primary-source register (with snapshot dates)
-shipped in the review package.
-
-### Sections (59 slides, 90 min: hook 15 · concepts 25 · evidence 25 · faithfulness 15 · synthesis 10)
-
-| Section | Slides | Divider line | Notable slides |
-|---|---|---|---|
-| Title / Contents | 1–2 | `:38`, `:50` | |
-| **01 — Right Score, Wrong Behavior** | 3–10 | `:87` | alignment defined (Ji 2023 abstract; capability × alignment grid) `:95` · false/unsupported output vs behavior missing the objective (bridge; "can overlap") `:105` · reported evaluation/research cases (o1, AI Scientist, Claude 3.7, o3) `:114` · o1-preview Docker, pre-mitigation CTF (o1 card Fig 4 crop + 5-step key) `:123` · same score, two behaviors (`sys.exit(0)`) `:142` · central question `:152` · three gaps `:161` |
-| **02 — From Intent to Reward** | 11–17 | `:170` | InstructGPT's RLHF pipeline, 2022 (large schematic redrawn from Ouyang Fig 2) `:178` · intent/feedback/reward `:187` · proxy too far (Gao Fig 1b RL plot crop, external axis labels + key) `:196` · DPO (Rafailov 2023 Fig 1 crop) `:216` · DPO can still overoptimize (Rafailov 2024 Fig 1 DPO panel crop) `:228` · Goodhart (Hanoi via Baker) `:245` |
-| **03 — Sycophancy** | 18–23 | `:256` | definition + dialogue `:264` · 4 tests × 5 assistants `:273` · preference data (Sharma Fig 5, top 5 of 23 rows + axis, unmodified crops) `:288` · GPT-4o April 2025 timeline `:302` · postmortem `:312` |
-| **04 — Gaming the Score** | 24–32 | `:322` | specification gaming (Lego) `:330` · CoastRunners `:339` · reward hacking (scope: flaws in reward computation) `:348` · worked example table `:358` · why the hack spreads `:373` · three real hacks `:381` · o3 METR hack counts + 10 follow-up "no" answers about one kernel-hack plan `:397` · patch one hole `:413` |
-| **05 — Controlled Studies** | 33–44 | `:424` | how to read (engineered/observed/not shown) `:432` · alignment faking defined (believed training ≠ watched) `:441` · Study 1 setup `:451` · Greenblatt Fig 2 `:461` · Study 1 shows/doesn't (fictional story vs actual RL) `:471` · Study 2 pipeline `:485` · MacDiarmid Fig 1 `:494` · Fig 9 table `:503` · Fig 6a chat-like/agentic pair `:519` · inoculation Fig 5 bars + swatch legend `:537` · Study 2 shows/doesn't `:560` |
-| **06 — Is the Explanation the Reason?** | 45–53 | `:574` | plausible ≠ faithful `:582` · Turpin "(A)" `:591` · Lanham interventions (reliance vs wording) `:601` · hint test (inferred influence) `:611` · Chen Fig 1 crops `:621` · Baker Table 1 `:642` · Baker Fig 4 `:656` · can/cannot `:667` |
-| **07 — Synthesis & Limits** | 54–59 | `:677` | one pattern (looks successful / remains unproven) `:685` · established vs not `:699` · what helps `:719` · takeaways `:733` · closer `:747` |
-
-**Key citations (all checked against saved PDFs / page captures, 2026-10-10):**
-Ouyang 2022 (Fig 2; Eqs. 1–2 in tech); Gao 2022 (Fig 1b; synthetic gold RM); Sharma ICLR 2024
-(§3, Figs 1–5); OpenAI 29 Apr + 2 May 2025 (Wayback; self-report); Krakovna 2020; Clark &
-Amodei 2016 (Wayback; 20% = post's claim); Ji 2023 survey (v6 abstract, definition); OpenAI o1 System Card Sep 2024 (p. 16, Fig 4); Lu 2024 AI Scientist (§Safe Code Execution); Claude 3.7 Sonnet System Card Feb 2025 (§6); METR 5 Jun 2025 (o3 table, 10/10); Rafailov 2023 DPO (Fig 1; Eq. 7 in tech); Rafailov 2024 DAA overoptimization (Fig 1 DPO panel, §3.1); Baker 2025 (§1, §2.1, Table 1, Fig 4; agent in
-o1/o3-mini family; Fig 4 non-frontier); Greenblatt 2024 (Figs 1–2, §1 Limitations; 12%,
-86/97%, 78%); MacDiarmid 2025 (Figs 1, 2, 5, 6a, 9; §1 Limitations item 4; production
-Sonnet 3.7/4 zero); Turpin 2023; Lanham 2023; Chen 2025 (Fig 1; 25%/39%); Korbak 2025.
-Flagged in the source register: Goodhart wording is the common paraphrase; Hanoi story
-second-hand (Baker citing Vann 2003, Vann unchecked); Baker "more complex hacks" anecdotal;
-OpenAI/Anthropic blog statements and system cards are company self-reports; METR counts may be underestimates.
-
-**Note:** `lec07-alignment-failures-note.html` — 59 entries; each has a minute budget and
-elapsed time, script, key takeaway; content slides add figure / setup-model-date /
-establishes / does not establish / assumptions / primary-source links. Full MacDiarmid Fig 5
-prompt addenda live in entry 43; the three open questions moved into entry 57 (What Helps).
-
-**Tech:** `lec07tech.html` — 12 slides: RM loss (4), KL-penalized RL objective (5), DPO loss,
-implicit reward and gradient terms (6), Gao fits (7), hint-test score with symbols (9), random-flip
-correction and its domain (10), monitor recall/precision (11), closer "Optimizing the proxy need
-not optimize the goal" (12).
-
-## lec08-adversarial.html
-
-**Topic:** Adversarial robustness: when small changes break models (90 min; mixed-major
-sophomores/juniors; concept-first, light math, no proofs; **no activities**). Evaluation over
-attack catalogue: every claim carries a threat model (controls / knows / wants) and every number
-its dataset, model, norm and ε. Panda (Goodfellow Fig 1) and Szegedy random examples; average vs
-worst case; linearity and non-robust features as two perspectives, not one cause; budget ε,
-ℓ∞ vs ℓ2 (Cohen radius-1.0 scale example), white box / query / none, transfer (Papernot Fig 3;
-Amazon 96.19% / Google 88.94%, MNIST 2016); attack = search in the ball, FGSM → PGD main path
-(Madry Table 2 bar chart: weaker attacks overstate robustness); adversarial training, Tsipras
-trade-off, obfuscated gradients (Athalye Table 1, 7 of 9), adaptive attacks (BPDA, EOT),
-AutoAttack, RobustBench as a standardized benchmark with entry rules, scoreboard snapshot
-10 Oct 2026 16:47 KST (best known = upper bound; MeanSparse 75.28 → 73.10), ℓ∞ ≠ ℓ2;
-empirical vs certified (certificate = stability, not correctness; certified accuracy = correct and
-certified), randomized smoothing (g vs PREDICT/CERTIFY, abstention, ℓ2 radius, 1 − α confidence;
-Cohen App. Table 2 chart with the Table 1 R = 2 discrepancy disclosed); one physical case (Eykholt stop sign) with its limits; ImageNet-C as a
-different question; closing checklist "robust to what, against whom, measured how, at what
-cost?". C&W lives in the notes and tech. Excludes multimodal jailbreaks and GCG (lec10),
-poisoning (lec09), prompt injection (lec13). Math in `lec08tech.html`.
-
-### Sections (55 slides, 90 min: hook 10 · why + threat model 20 · attacks 20 · defenses + evaluation 25 · physical + synthesis 15)
-
-| Section | Slides | Divider line | Notable slides |
-|---|---|---|---|
-| Title / Contents | 1–2 | `:35`, `:47` | |
-| **01 — A Tiny Nudge** | 3–7 | `:76` | panda (Goodfellow Fig 1, GoogLeNet ε = .007) `:84` · anatomy `:94` · Szegedy Fig 5 random examples `:103` · average vs worst case `:119` |
-| **02 — Why It Happens, Who Attacks** | 8–20 | `:128` | boundary sketch `:136` · too linear (Goodfellow Fig 4 logit panel) `:144` · invisible features (Ilyas Fig 1a) `:162` · mislabeled images still teach (Ilyas Fig 1b) `:171` · two perspectives `:180` · threat model `:193` · budget ε `:201` · ℓ∞ vs ℓ2 (units, root-sum-square) `:216` · knowledge `:226` · transfer (Papernot Fig 3) `:234` · real services `:250` · targeted vs untargeted `:260` |
-| **03 — Finding the Worst Case** | 21–29 | `:269` | attack as search `:277` · FGSM (Goodfellow Fig 2) `:287` · FGSM by hand `:298` · one step can miss (exact L(u) = sin u) `:312` · PGD algorithm `:325` · steps in ball `:342` · restarts (Madry Fig 1) `:350` · Madry Table 2 bar chart `:360` |
-| **04 — Defenses and Honest Evaluation** | 30–45 | `:371` | whole ball `:379` · adversarial training (Madry Fig 3) `:388` · Tsipras Fig 1(b) CIFAR `:398` · obfuscated gradients `:415` · Athalye Table 1 (* / ** keyed) `:424` · adaptive attacks + diagnostics `:442` · AutoAttack `:457` · RobustBench `:467` · scoreboard snapshot (best-known column) `:487` · upper bound `:503` · one ruler `:513` · empirical vs certified `:527` · smoothing (Cohen Fig 2) `:536` · Theorem 1 intuition (Cohen Fig 3; formula in tech) `:553` · Cohen App. Table 2 chart `:570` |
-| **05 — Off the Screen, and What to Ask** | 46–55 | `:581` | EOT (average success) `:589` · Eykholt Fig 1 (Tables 1, 3) `:599` · what it does not show `:609` · ImageNet-C `:629` · four questions `:644` · applied to 73.71% under AutoAttack `:652` · established vs open `:667` · takeaways `:687` · closer `:701` |
+| Title / Contents | 1–2 | `:30`, `:42` | |
+| **01 — Where Bias Enters** | 3–10 | `:74` | Obermeyer cost proxy `:83` · model learns its world `:108` · three places `:125` · sampling (Gender Shades composition) `:141` · label problem `:164` · feedback loop `:181` · drop race fails `:207` |
+| **02 — Measuring Fairness** | 11–21 | `:229` | notation (Y = recorded outcome) `:236` · four rates `:253` · demographic parity `:287` · equalized odds `:306`, `:321` · Hardt ROC plane `:343` · calibration `:355` · calibration vs PPV `:370` · five criteria `:387` · FICO thresholds `:402` |
+| **03 — COMPAS and Impossibility** | 22–34 | `:414` | what COMPAS is `:421` · FPR by group `:440` · within subgroups `:463` · Northpointe, read by row `:482` · different criteria `:496` · rearrest ≠ offending `:513` · base rates `:530` · Chouldechova `:548` · Kleinberg `:566` · worked example `:580` · why the gap appears here `:605` · context `:627` |
+| **04 — Mitigation** | 35–45 | `:644` | three places `:651` · reweighing `:683`, `:699`, `:718` · reductions `:732`, `:748` · group thresholds `:764` · FICO cost `:775` · empirical tradeoff ≠ optimal frontier `:794` · method cards `:810` |
+| **05 — Beyond Classifiers** | 46–52 | `:824` | Gender Shades (Table 4 redrawn as SVG) `:831` · after the audit `:843` · BBQ `:882`, `:901` · Bianchi `:913` · governance `:932` |
+| **06 — Synthesis** | 53–56 | `:948` | checklist `:955` · takeaways `:969` · closer "Which rate?" `:983` |
 
 **Key citations (checked against saved PDFs / page captures, 2026-10-10; register in the
 review package):** Goodfellow 2015 (Figs 1, 2, 4; §3); Szegedy 2014 (Fig 5); Ilyas 2019 (Fig 1);
@@ -1444,14 +497,254 @@ Stand: highlight folded into the intro so the Zhan chart fits at 640 px. Note sy
 blocks; "Wu and colleagues" misattribution in the Instruction Hierarchy script fixed).
 60-dpi render check of all 66 pages: no overflow or overlap.
 
-## lec13-fairness-defs.html
+## lec12-fairness.html
+
+**Topic:** Fairness (90 min; mixed-major sophomores/juniors; concept-first, light math, no proofs on the
+slides; **no activities**). Where bias enters (opens with the Obermeyer cost-as-proxy case; sampling, labels, feedback;
+Gender Shades benchmark composition; why dropping the protected attribute fails). Measuring fairness: four rates and
+their denominators, demographic parity, equalized odds (Hardt ROC plane), calibration within groups vs predictive
+parity, five criteria on the same FICO data. COMPAS: ProPublica vs Northpointe as different criteria, rearrest
+≠ offending, base rates, Chouldechova identity, Kleinberg et al. conditions, a calibrated worked example with
+unequal errors, choosing by context. Mitigation at three points (reweighing, reductions, group thresholds), each
+measured result shown with criterion, population, utility and assumptions; an empirical tradeoff is not the
+optimal frontier; method cards. Beyond classifiers: Gender Shades and the Actionable Auditing follow-up, BBQ,
+Bianchi text-to-image stereotypes; governance obligations and limits (~3.5 min). Math in `lec12tech.html`.
+
+### Sections (56 slides, 90 min: where bias enters 10 · measuring 20 · COMPAS + impossibility 15 · mitigation 20 · beyond classifiers 15 · synthesis 10)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:30`, `:42` | |
+| **01 — Where Bias Enters** | 3–10 | `:74` | mirror `:82` · three places `:99` · sampling (Gender Shades composition) `:115` · label problem `:138` · Obermeyer cost proxy `:155` · feedback loop `:180` · drop race fails `:206` |
+| **02 — Measuring Fairness** | 11–21 | `:227` | notation `:235` · four rates `:252` · demographic parity `:286` · equalized odds `:305`, `:320` · Hardt ROC plane `:342` · calibration `:354` · calibration vs PPV `:369` · five criteria `:386` · FICO thresholds `:401` |
+| **03 — COMPAS and Impossibility** | 22–34 | `:413` | what COMPAS is `:421` · FPR by group `:440` · within subgroups `:463` · Northpointe `:482` · different criteria `:500` · rearrest ≠ offending `:517` · base rates `:534` · Chouldechova `:552` · Kleinberg `:566` · worked example `:580` · why forced `:605` · context `:627` |
+| **04 — Mitigation** | 35–45 | `:643` | three places `:651` · reweighing `:683`, `:698`, `:717` · reductions `:727`, `:743` · group thresholds `:757` · FICO cost `:774` · empirical tradeoff ≠ optimal frontier `:791` · method cards `:808` |
+| **05 — Beyond Classifiers** | 46–52 | `:821` | Gender Shades `:829` · after the audit `:840` · BBQ `:879`, `:898` · Bianchi `:910` · governance `:929` |
+| **06 — Synthesis** | 53–56 | `:944` | checklist `:952` · takeaways `:966` · closer "Which rate?" `:980` |
+
+**Key citations (checked against saved PDFs / pages, 2026-10-10):** Obermeyer et al. Science 2019; Buolamwini
+&amp; Gebru FAT* 2018 (Table 4); Raji &amp; Buolamwini AIES 2019; Dwork et al. ITCS 2012; Hardt, Price &amp; Srebro
+NeurIPS 2016 (Figs. 1, 2, 9, 11; FICO §7); Kleinberg, Mullainathan &amp; Raghavan ITCS 2017 (Thms 1.1, 1.2);
+Chouldechova Big Data 2017 (Def. 2.2, eq. 2.6, Figs. 1–3); Larson et al. ProPublica 2016; Dieterich et al.
+Northpointe 2016; Kamiran &amp; Calders KAIS 2012; Bellamy et al. AIF360 2018 (Figs. 4, 5b); Agarwal et al. ICML 2018
+(Fig. 1); Parrish et al. BBQ, Findings of ACL 2022 (Figs. 1, 3); Bianchi et al. FAccT 2023 (Fig. 3). Governance:
+NYC DCWP rules, NY State Comptroller audit (Dec 2025), Reg. (EU) 2024/1689 and 2026/1744, Colorado SB26-189, Korea
+AI Basic Act.
+
+**Figures (17 cited image files in `figs/`):** `hardt-eqodds-roc.png` `:347` · `hardt-fico-thresholds.png` `:405` ·
+`chouldechova-deciles.png` `:433` · `chouldechova-fpr-priors-hi.png` `:475` · `chouldechova-calib-pp.png` `:485` ·
+`reweighing-aif360.png` `:721` · `reductions-adult.png` `:751` · `reductions-compas.png` `:752` ·
+`reductions-legend.png` `:754` · `hardt-eo-threshold.png` `:767` · `hardt-fico-profit.png` `:778` ·
+`aif360-di-panel.png` `:797` · `bbq-example-hi.png` `:894` · `bbq-bias-scores-hi.png` `:904` ·
+`bianchi-occupations.png` `:918` (Gender Shades P47 is an SVG redrawn from Table 4). Superseded r1 crops
+(`chouldechova-calibration.png`, `chouldechova-fpr-priors.png`, `reductions-frontier.png`, `hardt-fico-cost.png`,
+`aif360-frontier.png`, `bbq-example.png`, `bbq-bias-scores.png`, `gender-shades.png`) stay in `figs/` for the backups.
+
+**2026-10 rebuild:** replaces the former Wk 11 prompt-injection deck (moved unchanged to
+`backup-prompt-injection.html`) and the former Wk 12 watermark deck (lec12-watermark, 68 sl; deleted with its note,
+its tech file and 13 figures used only by it: `dfdc-logloss`, `kgw-example`, `kgw-zscore-length`,
+`kgw-zscore-ppl`, `kirchenbauer-human-paraphrase`, `kirchenbauer-robust-bars`, `krishna-dipper`,
+`kud-protocol`, `kud-substitution`, `sadasivan-roc`, `sadasivan-vuln`, `synthid-detect`, `synthid-overview`).
+Built to the slides-review brief (#126). Review round 2 (slides-review #128): z &gt; 4 as a normal-approximation
+tail; repeat-scoring scoped to WikiText; distortion-free vs undetectable separated; C2PA validity vs signer trust;
+law and product rows from official texts; median p-value, TV and log-loss readings corrected; crops `sm-k24-fig7`,
+`sm-kud-fig4` replaced by single panels and `sm-sad-fig3a`, `sm-k24-fig2` by redrawn charts (old files deleted).
+
+**Note:** `lec11-synthetic-media-note.html` — 56 entries with minute budget and elapsed time, script, key
+takeaway; content slides add figure, setup/model/date, establishes / does not establish, assumptions and
+primary-source links (22 sources). Entry 49 carries the three-jurisdiction table from the official texts (enacted
+text / applies from / who / form / exceptions / enforcement).
+
+**Tech:** `lec11tech.html` — 13 slides:
+- green-list rule (4); idealized independent-Bernoulli null (5); z-statistic, normal-approximation 3×10⁻⁵ vs exact
+  tail at T = 20 (6)
+- √T growth under constant green rate (7); repeated pairs, m > 1, scoped to WikiText (8)
+- base-rate formula with the 2% / 20% examples (10); TV definition, bound + proof idea, keyed detectors (11);
+  distortion-free (fresh key) vs undetectable (12)
+
+## backup-prompt-injection.html
+
+*Former Wk 11 deck (old names lec11-prompt-injection, its note, and lec11tech), moved unchanged on 2026-10-10 to `backup-prompt-injection.html`, `backup-prompt-injection-note.html` and `backup-prompt-injectiontech.html`; line pointers below still hold. File names in this section use the backup names. Scheduled for the Wk 13 rebuild.*
+
+**Topic:** Prompt injection & agentic safety (~90 min). Injection vs jailbreak
+(attacker is a third party arriving via data, not the user); direct vs indirect
+injection; data-vs-control-plane confusion as THE core idea; the agentic risk surface
+(tools, agent loop, confused deputy, lethal trifecta); real incidents (Bing "Sydney"
+leak, Greshake real-app injection, email-exfiltration class, EchoLeak, SpAIware memory
+poisoning, CamoLeak/GitHub MCP); why it is hard (no privilege separation, filtering
+brittle, no clean escape); defenses and why partial (filtering, spotlighting,
+instruction hierarchy, taint tracking, dual-LLM, capability control/CaMeL, human in
+the loop, least privilege); 2025–26 frontier (AI browsers, MCP, AgentDojo, adaptive
+attacks). Security model lives in `backup-prompt-injectiontech.html`. Autonomy risks touched in Open
+Problems only — full treatment stays in `backup-agentic-autonomy.html` (not absorbed).
+
+### Sections (66 slides, ~90 min — content-revised 2026-08 from 58, figure pass 2026-09 from 63; all citations source-verified)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:34`, `:46` | |
+| **01 — Direct vs Indirect Injection** | 3–13 | `:79` | one-line idea (SVG) `:87` · tiny example (SVG) `:125` · two failure modes (SVG) `:155` · **direct (Perez & Ribeiro Fig. 1)** `:194` · **indirect (Greshake Fig. 1)** `:215` · **why indirect is worse (Liu et al. figure)** `:236` · hidden text (SVG) `:257` · **Naming the Problem (timeline SVG; Goodside demonstrated / Willison named)** `:300` · not the same as SQL (SVG) `:336` · **The #1 LLM Risk (OWASP LLM01:2025; SVG list)** `:374` |
+| **02 — The Agentic Surface** | 14–23 | `:413` | chatbot→agent (SVG) `:421` · what a tool is `:469` · agent loop (SVG) `:482` · two channels (SVG) `:524` · data becomes control (SVG) `:555` · attack picture (SVG) `:580` · **confused deputy (InjecAgent overview)** `:618` · three ingredients `:635` · **Lethal Trifecta (Willison 2025; Venn SVG)** `:648` |
+| **03 — Real Incidents** | 24–33 | `:673` | **Bing "Sydney" Leak (Kevin Liu direct injection; chat SVG)** `:681` · **Greshake real apps (Fig. 2 threat overview)** `:714` · email-exfiltration class (SVG) `:730` · **EchoLeak CVE-2025-32711 (SVG)** `:764` · **SpAIware memory poisoning (SVG)** `:804` · **CamoLeak + GitHub MCP (SVG)** `:849` · quiet exit channels (SVG) `:889` · vendors responded (SVG) `:933` · pattern emerges `:973` |
+| **04 — Why It Is Hard** | 34–40 | `:988` | no privilege separation (SVG) `:996` · one flat context (SVG) `:1034` · instructions look alike (SVG) `:1052` · filtering brittle (SVG) `:1083` · no clean escape (SVG) `:1122` · still open (illustrative SVG bars) `:1148` |
+| **05 — Defenses** | 41–55 | `:1180` | layered mindset (SVG) `:1188` · I/O filtering (SVG) `:1227` · **Spotlighting (Hines 2024 Fig. 4)** `:1263` · **Spotlighting, Measured (Hines Fig. 6; added 2026-09)** `:1283` · **Instruction Hierarchy (Wallace OpenAI 2024 Fig. 1)** `:1298` · **Hierarchy, Measured (Wallace Fig. 2; added 2026-09)** `:1314` · taint tracking (SVG) `:1329` · dual-LLM (Willison 2023) `:1367` · quarantine picture (SVG) `:1381` · **Capability Control (CaMeL Fig. 1)** `:1414` · human in loop (SVG) `:1434` · least privilege (SVG) `:1473` · scorecard `:1503` · toy-agent demo `:1515` |
+| **06 — Frontier 2025–26** | 56–64 | `:1532` | **New Surfaces, Same Flaw (AI browsers + MCP; SVG)** `:1540` · **measuring (AgentDojo Fig. 6a)** `:1580` · **AgentDojo (NeurIPS 2024 D&B; Fig. 1)** `:1601` · **Defenses on AgentDojo (Fig. 9a; added 2026-09)** `:1617` · **Where Defenses Stand (Zhan NAACL 2025 Fig. 2)** `:1637` · design shift (SVG) `:1653` · open problems `:1691` · practical advice (SVG) `:1704` |
+| Takeaways / Closer | 65–66 | — | key takeaways `:1739` · closer `:1752` |
+
+**Key definitions / citations (all source-verified 2026-08):**
+- Naming: Goodside demonstrated on GPT-3, Willison coined the name — `:300` — Willison,
+  "Prompt injection attacks against GPT-3", Sept 2022; Perez & Ribeiro, "Ignore Previous
+  Prompt: Attack Techniques for Language Models", 2022 (arXiv 2211.09527).
+- OWASP LLM01: Prompt Injection, #1 in the 2025 edition (second edition running) — `:374`.
+- Lethal trifecta (private data + untrusted content + external communication) — `:648` —
+  Willison, "The lethal trifecta for AI agents", June 2025.
+- Bing "Sydney" system-prompt extraction by direct injection — `:681` — Kevin Liu, Feb 2023.
+- Indirect injection on real deployed apps — `:714` — Greshake, Abdelnabi, Mishra, Endres,
+  Holz, Fritz, "Not What You've Signed Up For: Compromising Real-World LLM-Integrated
+  Applications with Indirect Prompt Injection", ACM AISec 2023 (arXiv 2302.12173).
+- EchoLeak zero-click exfiltration — `:764` — CVE-2025-32711 (Microsoft 365 Copilot),
+  Aim Security, June 2025; server-side patch, no known exploitation.
+- SpAIware persistent memory exfiltration — `:804` — Rehberger, Sept 2024 (ChatGPT macOS
+  app); fixed by OpenAI.
+- CamoLeak (Copilot Chat, per-image exfil) + GitHub MCP private-repo leak — `:849` —
+  reported via HackerOne, no CVE (GitHub-rated CVSS 9.6), Legit Security, Oct 2025;
+  Invariant Labs, May 2025.
+- Spotlighting — `:1263` — Hines et al., "Defending Against Indirect Prompt Injection
+  Attacks With Spotlighting", 2024 (arXiv 2403.14720).
+- Instruction hierarchy — `:1298` — Wallace et al. (OpenAI), "The Instruction Hierarchy:
+  Training LLMs to Prioritize Privileged Instructions", 2024 (arXiv 2404.13208).
+- Dual-LLM pattern — `:1367` — Willison, "The Dual LLM pattern for building AI assistants
+  that can resist prompt injection", April 2023.
+- Capability control / CaMeL — `:1414` — Debenedetti et al., "Defeating Prompt Injections
+  by Design", 2025 (arXiv 2503.18813).
+- AI-browser + MCP attack surface — `:1540` — Brave, "Indirect prompt injection in
+  Perplexity Comet" & "Unseeable prompt injections in screenshots", 2025; Invariant Labs
+  GitHub MCP, 2025.
+- AgentDojo — `:1601` — Debenedetti et al., "AgentDojo: A Dynamic Environment to Evaluate
+  Prompt Injection Attacks and Defenses for LLM Agents", NeurIPS 2024 (Datasets &
+  Benchmarks) (arXiv 2406.13352).
+- Direct injection / goal hijacking figure — `:194` — Perez & Ribeiro 2022, Fig. 1.
+- Indirect-injection planting + Liu et al. app-injection figure — `:215`, `:236`.
+- Confused deputy via InjecAgent overview — `:618` — Zhan et al., "InjecAgent", ACL 2024 Findings.
+- Spotlighting measured (Fig. 6, GPT-4) — `:1283`; instruction hierarchy measured
+  (Fig. 2, GPT-3.5 Turbo, five attacks) — `:1314`; AgentDojo defenses (Fig. 9a, five
+  defenses, utility vs targeted ASR) — `:1617`.
+- Adaptive attacks break defenses (8 defenses bypassed, ASR >50%) — `:1637` — Zhan, Fang,
+  Panchal, Kang, "Adaptive Attacks Break Defenses Against Indirect Prompt Injection
+  Attacks on LLM Agents", NAACL 2025 Findings (arXiv 2503.00061).
+
+**Figures (2026-09 pass):** 14 captured paper figures in `figs/` — Direct Injection `:194` (`perez-hijack.png`); Indirect Injection `:215` (`greshake-plant.png`); Why Indirect Is Worse `:236` (`liu-app.png`); The Confused Deputy `:618` (`injecagent-overview.png`); Injecting Real Applications `:714` (`greshake-overview.png`); Spotlighting and Delimiting `:1263` (`hines-datamark.png`); Spotlighting, Measured `:1283` (`hines-encoding.png`); Instruction Hierarchy `:1298` (`wallace-hierarchy.png`); Hierarchy, Measured `:1314` (`wallace-results.png`); Capability Control `:1414` (`camel-flows.png`); Measuring the Problem `:1580` (`agentdojo-utility-asr.png`); AgentDojo `:1601` (`agentdojo-overview.png`); Defenses on AgentDojo `:1617` (`agentdojo-defenses.png`); Where Defenses Stand `:1637` (`zhan-adaptive.png`). 35 inline SVGs: The One-Line Idea `:87`, A Tiny Example `:125`, Two Failure Modes `:155`, Where Hidden Text Hides `:257`, Naming the Problem `:300`, Not the Same as SQL `:336`, The #1 LLM Risk `:374`, From Chatbot to Agent `:421`, The Agent Loop `:482`, Two Channels, One Pipe `:524`, Data Becomes Control `:555`, The Attack Picture `:580`, The Lethal Trifecta `:648`, The Bing "Sydney" Leak `:681`, The Email Exfiltration Class `:730`, EchoLeak: Zero Clicks `:764`, Poisoning the Memory `:804`, Even Coding Tools `:849`, Quiet Exit Channels `:889`, Vendors Have Responded `:933`, No Privilege Separation `:996`, One Flat Context `:1034`, Instructions Look Alike `:1052`, Filtering Is Brittle `:1083`, No Clean Escape `:1122`, Still an Open Problem `:1148`, A Layered Mindset `:1188`, Input and Output Filtering `:1227`, Taint Tracking `:1329`, Quarantine in One Picture `:1381`, Keep a Human in the Loop `:1434`, Least Privilege `:1473`, New Surfaces, Same Flaw `:1540`, The Design Shift `:1653`, Practical Advice `:1704`. Citations use `.cite-left`.
+
+**2026-08 content revision (58→63):** every citation/incident fetched and verified.
+Added 5 slides: The #1 LLM Risk (§01, OWASP LLM01:2025); EchoLeak: Zero Clicks,
+Poisoning the Memory (SpAIware), Even Coding Tools (CamoLeak + GitHub MCP) (§03 —
+lec01 keeps only the EchoLeak teaser, full treatment here); New Surfaces, Same Flaw
+(§06, AI browsers + MCP). Fixes: **naming attribution corrected** (was "Willison named
+it" alone → Goodside demonstrated, Willison named, per Willison's own Sept 2022 post);
+**Bing slide rewritten** (unverifiable "planted web text / adopted personas" narrative →
+verified Kevin Liu Feb 2023 system-prompt extraction); **Instruction Hierarchy cite was
+wrong** (mangled "Wu et al., Instructional Segment Embedding" → Wallace et al. OpenAI
+2024, the actual paper); Spotlighting title corrected to the real arXiv title; AgentDojo
+title completed + venue added; Zhan et al. adaptive-attacks cite added to Where Defenses
+Stand; quarantine-SVG label overlap fixed. `backup-prompt-injectiontech.html` checked: security model
+verified (dual-LLM matches Willison 2023; CaMeL cite correct), two prose-dash lint
+warnings fixed (stays 9 sl). Note file synced (63 entries, order matches).
+
+**2026-08 note enrichment:** `backup-prompt-injection-note.html` upgraded from speaker
+script to **script + companion notes** (395→736 lines; 63 entries unchanged). Per-entry
+`.detail` blocks: prompt injection formalized (f over one token stream, x = τ(s,u,d),
+agent loop x_{t+1} = x_t ∥ a_t ∥ o_t, injection success as unauthorized action — all
+labeled course notes); control/data-plane and confused-deputy (Hardy 1988) definitions
+expanded from the tech file; full Greshake et al. taxonomy (4 injection methods × 6 threat
+types) stated from arXiv 2302.12173; defense formalisms (spotlighting variants,
+instruction hierarchy, taint/IFC lattice, dual-LLM invariant, CaMeL capabilities,
+Saltzer–Schroeder least privilege); the "no clean escape / unsolvable by prompting
+alone" argument given as a labeled 5-step informal argument (not a theorem), empirically
+anchored to Zhan et al. 2025. Incident backgrounds + 24 verified links (all fetched:
+arXiv ×7, Willison ×3, Brave ×2, CVE.org/MSRC/Aim, Legit/Register/Invariant,
+embracethered, Ars, OWASP ×2, MIT Hardy, MIT Saltzer, dblp). Note and deck both
+corrected 2026-08-19: CamoLeak has NO CVE — the previously cited "CVE-2025-59145"
+is an unrelated npm color-name malware record.
+
+**2026-09 figure pass (63→66):** every content slide now carries a figure. 14 figure
+crops cut from the cited papers into `figs/` (Perez & Ribeiro, Greshake ×2, Liu et al.,
+InjecAgent, Hines ×2, Wallace ×2, CaMeL, AgentDojo ×3, Zhan), each with a figure-number
+cite; 32 new inline SVG diagrams for previously text-only slides (35 SVGs total). Three
+slides added to carry measured results: Spotlighting, Measured (Hines Fig. 6),
+Hierarchy, Measured (Wallace Fig. 2), Defenses on AgentDojo (Fig. 9a). Where Defenses
+Stand: highlight folded into the intro so the Zhan chart fits at 640 px. Note synced
+(66 entries, `Slide figure:` lines on every figure slide, three new entries with detail
+blocks; "Wu and colleagues" misattribution in the Instruction Hierarchy script fixed).
+60-dpi render check of all 66 pages: no overflow or overlap.
+
+## lec12-fairness.html
+
+**Topic:** Fairness (90 min; mixed-major sophomores/juniors; concept-first, light math, no proofs on the
+slides; **no activities**). Where bias enters (opens with the Obermeyer cost-as-proxy case; sampling, labels, feedback;
+Gender Shades benchmark composition; why dropping the protected attribute fails). Measuring fairness: four rates and
+their denominators, demographic parity, equalized odds (Hardt ROC plane), calibration within groups vs predictive
+parity, five criteria on the same FICO data. COMPAS: ProPublica vs Northpointe as different criteria, rearrest
+≠ offending, base rates, Chouldechova identity, Kleinberg et al. conditions, a calibrated worked example with
+unequal errors, choosing by context. Mitigation at three points (reweighing, reductions, group thresholds), each
+measured result shown with criterion, population, utility and assumptions; an empirical tradeoff is not the
+optimal frontier; method cards. Beyond classifiers: Gender Shades and the Actionable Auditing follow-up, BBQ,
+Bianchi text-to-image stereotypes; governance obligations and limits (~3.5 min). Math in `lec12tech.html`.
+
+### Sections (56 slides, 90 min: where bias enters 10 · measuring 20 · COMPAS + impossibility 15 · mitigation 20 · beyond classifiers 15 · synthesis 10)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:30`, `:42` | |
+| **01 — Where Bias Enters** | 3–10 | `:74` | mirror `:82` · three places `:99` · sampling (Gender Shades composition) `:115` · label problem `:138` · Obermeyer cost proxy `:155` · feedback loop `:180` · drop race fails `:206` |
+| **02 — Measuring Fairness** | 11–21 | `:227` | notation `:235` · four rates `:252` · demographic parity `:286` · equalized odds `:305`, `:320` · Hardt ROC plane `:342` · calibration `:354` · calibration vs PPV `:369` · five criteria `:386` · FICO thresholds `:401` |
+| **03 — COMPAS and Impossibility** | 22–34 | `:413` | what COMPAS is `:421` · FPR by group `:440` · within subgroups `:463` · Northpointe `:482` · different criteria `:500` · rearrest ≠ offending `:517` · base rates `:534` · Chouldechova `:552` · Kleinberg `:566` · worked example `:580` · why forced `:605` · context `:627` |
+| **04 — Mitigation** | 35–45 | `:643` | three places `:651` · reweighing `:683`, `:698`, `:717` · reductions `:727`, `:743` · group thresholds `:757` · FICO cost `:774` · empirical tradeoff ≠ optimal frontier `:791` · method cards `:808` |
+| **05 — Beyond Classifiers** | 46–52 | `:821` | Gender Shades `:829` · after the audit `:840` · BBQ `:879`, `:898` · Bianchi `:910` · governance `:929` |
+| **06 — Synthesis** | 53–56 | `:944` | checklist `:952` · takeaways `:966` · closer "Which rate?" `:980` |
+
+**Key citations (checked against saved PDFs / pages, 2026-10-10):** Obermeyer et al. Science 2019; Buolamwini
+&amp; Gebru FAT* 2018 (Table 4); Raji &amp; Buolamwini AIES 2019; Dwork et al. ITCS 2012; Hardt, Price &amp; Srebro
+NeurIPS 2016 (Figs. 1, 2, 9, 11; FICO §7); Kleinberg, Mullainathan &amp; Raghavan ITCS 2017 (Thms 1.1, 1.2);
+Chouldechova Big Data 2017 (Def. 2.2, eq. 2.6, Figs. 1–3); Larson et al. ProPublica 2016; Dieterich et al.
+Northpointe 2016; Kamiran &amp; Calders KAIS 2012; Bellamy et al. AIF360 2018 (Figs. 4, 5b); Agarwal et al. ICML 2018
+(Fig. 1); Parrish et al. BBQ, Findings of ACL 2022 (Figs. 1, 3); Bianchi et al. FAccT 2023 (Fig. 3). Governance:
+NYC DCWP rules, NY State Comptroller audit (Dec 2025), Reg. (EU) 2024/1689 and 2026/1744, Colorado SB26-189, Korea
+AI Basic Act.
+
+**Figures (14 cited image files in `figs/`):** `hardt-eqodds-roc.png` `:347` · `hardt-fico-thresholds.png` `:406` ·
+`chouldechova-deciles.png` `:434` · `chouldechova-fpr-priors.png` `:476` · `chouldechova-calibration.png` `:494` ·
+`reweighing-aif360.png` `:721` · `reductions-frontier.png` `:747` · `hardt-eo-threshold.png` `:762` ·
+`hardt-fico-cost.png` `:779` · `aif360-frontier.png` `:796` · `gender-shades.png` `:834` · `bbq-example.png` `:892` ·
+`bbq-bias-scores.png` `:903` · `bianchi-occupations.png` `:916`.
+
+**2026-10 rebuild:** merges the former Wk 13 and Wk 14 fairness decks, moved unchanged (with notes and tech files)
+to `backup-fairness-defs*.html` and `backup-fairness-mitigation*.html`. Built to the slides-review decisions (#134):
+Amazon, adversarial debiasing, Gemini, Tamkin and Wilson &amp; Caliskan only in the notes; EO 14319 cut from the deck;
+governance ≈ 3 min; Dwork and Kusner formal in the tech supplement and notes. Round 2 (#136): Obermeyer first, verbal
+rules in the deck with formulas in notes/tech, scoped COMPAS and figure readings, enlarged figures, governance dates
+checked 10 Oct 2026; Wilson &amp; Caliskan removed.
+
+**Note:** `lec12-fairness-note.html` — 56 entries with minute budget and elapsed time, script, key takeaway;
+content slides add figure, setup/date, establishes / does not establish, assumptions and primary-source links
+(28 sources). "Going further" blocks hold the notes-only material (Dwork/Kusner, Zhang, Amazon, Tamkin, Eloundou,
+Gemini, EO 14319).
+
+**Tech:** `lec12tech.html` — 17 slides:
+- four rates with positivity (4); five criteria (5); Dwork individual fairness (6); Kusner counterfactual
+  fairness (7); calibration and PPV via the score mix (8)
+- Chouldechova identity (10); Kleinberg proof sketch (11); worked example computed (12)
+- reweighing with cell support (14); reductions saddle point (15); group thresholds as a derived predictor (16)
+
+## backup-fairness-defs.html
+
+*Former Wk 13 deck (old names lec13-fairness-defs, its note, and lec13tech), moved unchanged on 2026-10-10 to `backup-fairness-defs.html`, `backup-fairness-defs-note.html` and `backup-fairness-defstech.html`; line pointers below still hold. Merged into Wk 12.*
 
 **Topic:** Fairness I — definitions & impossibility (~90 min). Where bias enters the
 pipeline (data, labels — Amazon recruiting + Obermeyer cost-proxy case — feedback
 loops, proxy features); three group-fairness definitions at plain-English level
 (demographic parity, equalized odds / equal opportunity, calibration — one glanceable
 conditional-probability line each; the formal stack + impossibility proof sketch live
-in `lec13tech.html`); COMPAS as the anchor case (ProPublica FPR gap vs Northpointe's
+in `backup-fairness-defstech.html`); COMPAS as the anchor case (ProPublica FPR gap vs Northpointe's
 predictive-parity/calibration defense — both "right" under different definitions,
 which IS the impossibility story); the impossibility theorem (Chouldechova 2017 +
 Kleinberg et al. ITCS 2017) as base-rate intuition, no proof in the main deck;
@@ -1540,16 +833,18 @@ construction); **COMPAS SVG numbers upgraded** from illustrative 45%/23% to veri
 "34-point gap", "FAccT 2018" → 34.7%/0.8%, FAT* 2018); **Bianchi title completed** +
 bullets matched to the actual figure panels (software engineer / housekeeper, not
 CEO/nurse); Amazon claim tightened to Reuters-verified wording; frontier slide
-rewritten around verified content. `lec13tech.html` fixed (see supplement table).
+rewritten around verified content. `backup-fairness-defstech.html` fixed (see supplement table).
 Note file synced (58 entries, order matches).
 
-**2026-08 note enrichment:** `lec13-fairness-defs-note.html` upgraded from speaker script (365 lines) to Script &amp; Companion Notes (708 lines; 58 entries unchanged): per-entry `.detail` blocks with rigorous definitions (setup A/Y/Ŝ/Ŷ, per-group confusion quantities, demographic parity + EEOC four-fifths rule verbatim, equalized odds / equal opportunity (Hardt Defs 2.1/2.2), calibration / test fairness / predictive parity (Chouldechova Def 2.1), independence–separation–sufficiency trichotomy, Dwork (D,d)-Lipschitz Def 2.1, SCM + counterfactual fairness Def 5), full proofs (Chouldechova base-rate identity + impossibility corollary, KMR Theorem 1.1 four-step linear-system proof verified against §2 + Thm 1.2 approximate version, forced-FPR-ratio corollary ≈1.63 on COMPAS base rates, fully worked calibrated two-value-score wedge matching lec13tech), and 23 verified links (ProPublica exact rates 44.85/23.45 + 27.99/47.72, Northpointe rebuttal via DocumentCloud, eCFR §1607.4(D), Obermeyer, BBQ, LL144 + SB24-205 litigation timeline).
+**2026-08 note enrichment:** `backup-fairness-defs-note.html` upgraded from speaker script (365 lines) to Script &amp; Companion Notes (708 lines; 58 entries unchanged): per-entry `.detail` blocks with rigorous definitions (setup A/Y/Ŝ/Ŷ, per-group confusion quantities, demographic parity + EEOC four-fifths rule verbatim, equalized odds / equal opportunity (Hardt Defs 2.1/2.2), calibration / test fairness / predictive parity (Chouldechova Def 2.1), independence–separation–sufficiency trichotomy, Dwork (D,d)-Lipschitz Def 2.1, SCM + counterfactual fairness Def 5), full proofs (Chouldechova base-rate identity + impossibility corollary, KMR Theorem 1.1 four-step linear-system proof verified against §2 + Thm 1.2 approximate version, forced-FPR-ratio corollary ≈1.63 on COMPAS base rates, fully worked calibrated two-value-score wedge matching lec13tech), and 23 verified links (ProPublica exact rates 44.85/23.45 + 27.99/47.72, Northpointe rebuttal via DocumentCloud, eCFR §1607.4(D), Obermeyer, BBQ, LL144 + SB24-205 litigation timeline).
 
-## lec14-fairness-mitigation.html
+## backup-fairness-mitigation.html
+
+*Former Wk 14 deck (old names lec14-fairness-mitigation, its note, and lec14tech), moved unchanged on 2026-10-10 to `backup-fairness-mitigation.html`, `backup-fairness-mitigation-note.html` and `backup-fairness-mitigationtech.html`; line pointers below still hold. Merged into Wk 12.*
 
 **Topic:** Fairness II — mitigation & accountability (~90 min). Picks up where lec13's
 definitions end: three places to intervene in the pipeline (pre-/in-/post-processing),
-one intuition + picture per method with formal math in `lec14tech.html` (reweighing
+one intuition + picture per method with formal math in `backup-fairness-mitigationtech.html` (reweighing
 w(g,y), penalized/constrained objectives, reductions, per-group ROC thresholds);
 the fairness–accuracy tradeoff and the impossibility recap (defined and proved in
 lec13 — referenced, not redone); accountability (model cards, datasheets, audits —
@@ -1656,16 +951,16 @@ verified ranges 0–0.8% vs 20.8–34.7%); **Bianchi slide** bullets matched to 
 figure panels (software engineer / housekeeper) + full verified title, consistent with
 lec13; §07 divider retitled Generative & LLM Fairness; Key Takeaways gained an LLM
 line. Lending-demo numbers (72%/50%, 84%→80%, 22→2) are labeled illustrative.
-`lec14tech.html` checked (see supplement table). Note file synced (61 entries, order
+`backup-fairness-mitigationtech.html` checked (see supplement table). Note file synced (61 entries, order
 matches).
 
-**2026-08 note enrichment:** `lec14-fairness-mitigation-note.html` upgraded from speaker
+**2026-08 note enrichment:** `backup-fairness-mitigation-note.html` upgraded from speaker
 script (383 lines) to Script &amp; Companion Notes (695 lines; 61 entries unchanged):
 per-entry `.detail` blocks with rigorous definitions (fairness-gap functionals, derived
 predictor Def 4.1, discrimination score, first-person fairness), proofs (reweighing
 independence, massaging flip count, reductions Thm 1/3 sketch, adversarial Props 2–3
 with entropy proofs, Hardt LP + ROC geometry + Prop 5.2/Cor 5.3, DP error lower bound),
-and 23 verified links — consistent with `lec14tech.html` and the lec13 note (impossibility
+and 23 verified links — consistent with `backup-fairness-mitigationtech.html` and the lec13 note (impossibility
 proofs referenced, not duplicated).
 
 ## lec15-governance.html

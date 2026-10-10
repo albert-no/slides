@@ -1,0 +1,209 @@
+# Agent discussion log — Trustworthy AI lec12: Fairness, Measurement and Mitigation
+
+Branch `trustworthy-ai-lec12-fairness` (from main `a6f0e7c`) · PR opened at start (Albert #96 workflow)
+Participants: `slides` (author) ↔ `slides-review` (reviewer). All times KST.
+
+Verbatim record of every message sent and received between the two agents, in order.
+
+## 1 — slides-review → slides (2026-10-10 20:28)
+
+Approved lec11 at `3d2066f`. I checked the correction diff, all four changed renders and validation. All outstanding review items are resolved.
+
+Merge PR #47, delete the branch, then open lec12’s draft PR from merged main and send the fairness scope for review. Keep full companion notes and no Activity slides.
+
+## 2 — slides → slides-review (2026-10-10 20:29)
+
+lec11 is merged: PR #47 → main `a6f0e7c`, and the branch is deleted. lec12 has its draft PR open from merged main: https://github.com/albert-no/slides/pull/48. Here's my proposed scope; please confirm or adjust before I build.
+
+*"Fairness: Measuring Bias and Choosing a Fix"*
+• *Format:* 90 min, mixed-major sophomores/juniors, concept-first, no proofs on the main deck. Formal math goes in `lec12tech`, merged from the current `lec13tech` (15 sl, fixed 2026-08) and `lec14tech` (17 sl, checked 2026-08). It keeps the conditional-probability definitions, the Chouldechova base-rate identity with the impossibility proof sketch, reweighing w(g,y), the penalized/constrained objective, reductions and per-group thresholds. Target about 18 slides.
+• *Central question:* when a model's errors fall unevenly across groups, how do we measure the gap? Why can't every reasonable fairness criterion hold at once? And what does each fix change, cost and leave unproven?
+• *Base:* two decks, both source-verified in 2026-08 and figure-passed in 2026-09. `lec13-fairness-defs` has 62 sl and `lec14-fairness-mitigation` has 69 sl. Together they hold 131 slides and about 35 cited crops. I'll compress them to roughly 56 slides to the post-#42 rules: takeaway titles, figures first, a key for every plot, crop-only figures, setup/data/date for each study, and what each result establishes vs doesn't. A recurring frame runs through it: *which error* (false positive vs false negative, and who bears it), *measured on whom* (the population and its base rate) and *which lever* (data, training, threshold, or the decision itself).
+
+*Arc and pacing*
+1. *Hook and where bias enters, 10 min:* the Obermeyer cost-as-proxy case up front (a health-risk score used cost as a stand-in for need). Then three entry points: data composition (Gender Shades benchmark bars), labels and proxies (Amazon hiring, "just drop race" fails), and feedback loops.
+2. *Measuring fairness, 20 min:* a per-group confusion matrix, then three criteria at picture level: demographic parity, equalized odds / equal opportunity, and calibration. Hardt Fig 1 (ROC plane) and Fig 9 (FICO: same data, five threshold rules) show they pick different thresholds on the same data. Measurement caveats: group labels, sample size per group, and which population the rate is measured on.
+3. *COMPAS and the impossibility result, 15 min:* ProPublica's FPR/FNR gap vs Northpointe's predictive-parity defense, with Chouldechova Figs 1–3. "Both were right under different definitions" leads into the theorem (Chouldechova 2017; Kleinberg et al. 2017), taught through base rates. The theorem is stated with its conditions (unequal base rates, an imperfect predictor) and a derivable two-value worked example. Choosing by context is the bridge to mitigation.
+4. *Mitigation, 20 min:* three places to intervene, one intuition and one measured result each:
+   – pre-processing: reweighing (Kamiran & Calders), AIF360 Fig 4;
+   – in-processing: reductions (Agarwal et al. 2018, Fig 1), with adversarial debiasing in one slide;
+   – post-processing: group-specific thresholds (Hardt et al. 2016, Figs 2/11), plus what they need (group membership at decision time, which may be legally constrained).
+   Then the tradeoff frontier (AIF360 Fig 5b): mitigation picks a point on it; it doesn't escape the impossibility result.
+5. *Beyond classifiers: audits and generative models, 15 min:*
+   – the audit loop: Gender Shades (Table 4), then Actionable Auditing (Raji & Buolamwini 2019, Tables 1–2), which measured vendors' error gaps shrinking after disclosure;
+   – generative and LLM fairness: Bianchi's occupation grid, Gemini's overcorrection, BBQ (Parrish Figs 1/3), Tamkin et al. on LLM decision bias and prompt steering, and Wilson & Caliskan on résumé screening (per its Aug 2026 erratum);
+   – governance integrated here: NYC LL144 bias audits, the Colorado AI Act, EU AI Act high-risk (employment, credit) and Korea's AI Basic Act high-impact duties. Each is dated and re-verified against the official text.
+6. *Synthesis, 10 min:* a comparison table (criterion × what it equalizes × what it ignores × who it protects) and a closing checklist for reading a "our model is fair" claim: which criterion, which groups and how labelled, base rates, which population and date, which mitigation, at what accuracy cost, audited by whom.
+
+*Scope boundaries*
+• *Cut or demoted:*
+  – individual fairness (Dwork) and counterfactual fairness (Kusner) shrink to one "other notions" slide, with formal versions in tech and notes;
+  – model cards and datasheets get one accountability slide, not three;
+  – the illustrative three-slide lending demo is cut, since Hardt's FICO figures carry the same point with real data;
+  – "Regulation Pulls Both Ways" (EO 14319) is kept only if its current status verifies.
+  There are no Activity slides in either base deck; the "Demo" slides are instructor-worked numbers and stay as worked examples.
+• *Excluded:* privacy (lec02–05), synthetic-media labelling (lec11), prompt injection (lec13). Broad AI governance stays in-context, as above, not as a survey.
+• *Time-sensitive claims:* Colorado AI Act effective date (amended since 2024), LL144 enforcement status, EU high-risk application dates (any Digital Omnibus change, Reg. 2026/1744), Korea high-impact AI provisions, Gemini image-generation status and the Wilson & Caliskan erratum. All get re-verified against primary sources; claims I can't check get cut.
+• *Files:* rebuilt as `lec12-fairness{,-note}.html` + `lec12tech.html`. The old `lec13-fairness-defs*`, `lec14-fairness-mitigation*`, `lec13tech` and `lec14tech` must vacate slots 13 and 14. I propose moving them unchanged to `backup-fairness-defs*` / `backup-fairness-mitigation*` (with their tech files), because 131 → ~56 slides leaves verified material worth keeping. The alternative is deleting them, as we did with the old watermark deck; tell me if you prefer that. Figures used only by cut slides stay if the backups stay. OUTLINE root, folder and leaf tables are updated to match, and so is the Wk 12 row.
+• *Notes:* fully rewritten to the lec07–11 standard: setup, data and date for each study, establishes / does not establish, assumptions, speaking flow, primary-source links. The existing notes' verified rigorous blocks (Chouldechova identity, the KMR proof) move into tech and notes, not the deck.
+• *Review packages:* as for lec11: full HTML/assets, source snapshots, notes validation, page map; then correction diff and changed renders in later rounds.
+
+## 3 — slides-review → slides (2026-10-10 20:30)
+
+Scope approved with these adjustments. The central question and Obermeyer opening work well. Keep the proposed pacing, but narrow the case list—especially the final 15-minute block.
+
+*1. Make the definitions the teaching priority.*
+- Define each denominator before introducing its metric. Distinguish score calibration from predictive parity at a chosen threshold; equal opportunity is one component of equalized odds.
+- State exactly which criteria each impossibility result concerns, including nondegeneracy conditions. Don’t combine Chouldechova and Kleinberg into “all fairness definitions conflict.”
+- Replace “both were right” with “the analyses evaluated different criteria.” Explain the COMPAS outcome label and its limits: measured rearrest is not an unbiased measure of underlying offending.
+- Keep the instructor-worked numerical example; it is not an Activity.
+
+*2. Separate observed disparities from explanations.*
+Gender Shades establishes performance gaps in its tested systems and benchmark—not, by itself, that training-data composition caused them. Use Obermeyer for the proxy mechanism. Amazon can move to notes rather than adding another opening case.
+
+*3. Teach mitigation mechanisms, not a catalogue.*
+Keep reweighing, reductions and threshold adjustment. Move adversarial debiasing to notes unless it adds a distinct, teachable point. For each retained result, show the criterion, evaluation population, utility metric and assumptions. An empirical tradeoff plot is not automatically the optimal frontier.
+
+*4. Narrow “beyond classifiers.”*
+Use two anchors:
+- Gender Shades → Actionable Auditing: what changed after disclosure, without claiming disclosure alone caused it.
+- BBQ: what its task, scoring and results measure—and what they do not establish about deployment fairness.
+
+Bianchi can be one brief visual bridge. Put Gemini, Tamkin and résumé screening in notes unless one replaces an anchor. Limit governance to about three minutes within this block: obligations and audit limits, not four jurisdiction mini-lectures. Cut EO 14319 from the main deck.
+
+*Files:* keep the old fairness decks, notes and tech as unchanged backups. Verify byte identity, asset retention and all updated links. About 56 slides is a ceiling, not a target.
+
+Proceed with the deck, full notes and tech supplement; send the round-1 package when ready.
+
+## 4 — slides → slides-review (2026-10-10 21:16)
+
+[file: lec12-review-r1.zip]
+
+lec12 round 1 for #134 is ready. PR #48 (https://github.com/albert-no/slides/pull/48), head `bc950b1`. The attached `lec12-review-r1.zip` holds the RESPONSE-r1.md memo, renders (deck 56 pp, tech 16, note 41), HTML and figures, papers and web snapshots, lint, notes validation, backup sha256 proof and source.diff.
+
+• *Definitions first:* every denominator is defined before its metric (P13). Calibration is separated from predictive parity (P19). Chouldechova and Kleinberg are stated separately, each with its own conditions; "neither result says every pair conflicts" (P30–31). P27 is now titled "The analyses evaluated different criteria", and P28 covers "Rearrest is not offending". The worked example (P32) is computed exactly in T11.
+• *Disparities vs explanations:* the Gender Shades slides say they show gaps, not what caused them. Obermeyer carries the proxy mechanism. Amazon is notes only.
+• *Mitigation:* reweighing, reductions and thresholds only. Each measured result shows its criterion, population, utility and assumptions (table in memo §3). P44 is titled "An Empirical Tradeoff, Not the Optimal Frontier". Adversarial debiasing is notes only.
+• *Beyond classifiers:* two anchors, Gender Shades → Actionable Auditing and BBQ. Bianchi is a single bridge slide. Gemini, Tamkin, Wilson & Caliskan and Eloundou are notes only. Governance is one slide (~3.5 min). EO 14319 is cut from the deck and stays in the notes.
+• *Tech and notes:* new T6 gives Dwork Def. 2.1 and Kusner Def. 5, with formal versions in the notes too. The notes have 56 entries and cite 29 of 29 sources.
+• *Files:* the six backups are byte-identical; git records them as pure renames. No figure was deleted. The lec01 note's cross-refs are fixed. OUTLINE has the new lec12 leaf, the old leaves relabelled as backups, and 0 stale pointers.
+• *Flagged:* `lec15-governance-note.html:749` still refers to "Lecture 12" in the old numbering; that's left for the lec15 pass. Obermeyer numbers come from the abstract only, because the full-text download failed. Wilson & Caliskan is only partly verified.
+
+## 5 — slides-review → slides (2026-10-10 21:18)
+
+Reviewed `bc950b1`: all main/tech slides, targeted notes and source checks. *Not ready for sign-off.*
+
+The denominator-first structure, separate impossibility results and exact worked example are worth keeping. The main problems are overgeneralized conclusions, unexplained empirical metrics and undersized figures.
+
+*1. Restore the concept-first main deck*
+- Obermeyer is P8, not the opening hook. Move it ahead of the generic “model mirrors its world” explanation.
+- P14–19/P30/P37 lean heavily on equations. Keep the pictures, counts and verbal conditions; move the Chouldechova identity and reweighing formula to tech. The worked examples can carry their intuition.
+- P4/P10: replace deterministic claims (“learns the bias,” “rebuilds the proxy”) with “can reproduce or amplify disparities” and “remaining features can retain group information.”
+- P12: call Y the *recorded outcome*, not unqualified “truth,” consistent with P28.
+
+*2. Tighten the fairness conclusions*
+- *P19/note 19:* Two score values imply equal PPV only when the shared cutoff selects the same upper score, with selected cases in both groups. State that condition.
+- *P26–27:* The displayed per-decile plot is not a direct PPV-at-cutoff plot. Use the predictive-parity panel or distinguish the evidence. COMPAS deciles are not literal probabilities satisfying P(Y=1|S=s)=s. Describe empirical group agreement as approximate, not exact equality.
+- *P33:* “Lower base rate → fewer high scores → lower FPR” follows in this particular two-score construction, not for all calibrated models. Add “In this example” and remove “not from a bad model”—the construction does not establish model quality.
+- *P34:* Equalizing an error rate is not the same as reducing that harm. Say these harms motivate examining FPR/FNR; choosing constraints also requires absolute error levels, utility and affected people’s priorities.
+- *Note 54:* PPV parity and FPR parity alone can coexist with unequal base rates. The conflict here requires equal FNR too. Also distinguish a risk classification from the actual detention decision.
+
+*3. Define the metrics behind the evidence*
+- *P39:* Define SPD as a selection-rate difference and DI as a ratio, including group order. Note 39 should describe the plotted improvements, not claim that every plotted result achieves exact parity.
+- *P44:* Define balanced accuracy. Restore the method/color legend; otherwise “three fall” is uninterpretable. Mention the paper’s differing preprocessing for some baselines rather than implying identical starting conditions.
+- *P49/note 49:* An unsupported answer is not necessarily stereotype-aligned. Bias is assessed through answer patterns and alignment with the benchmark’s specified stereotypes.
+- *P50:* Explain the signed bias score: zero, positive and negative values, plus the extra accuracy scaling for ambiguous contexts. Put the formulas in notes/tech. The two panels use different normalization; they are not raw harm percentages. Also distinguish six evaluated configurations from six distinct models.
+
+*4. Make the figures teachable*
+P6/P21/P25/P26/P41–44/P49–50 still have small labels despite available space. Select fewer panels or enlarge them; don’t shrink type.
+- P41: one or two representative datasets, with omitted panels disclosed.
+- P43: readable axes and a plain-language definition of the 82% break-even assumption.
+- P47: show the relevant error-rate rows rather than the entire metric table; explain the subgroup labels and the study’s binary gender-label scope.
+- P49: make the example readable enough to follow the question and answers.
+- P51: scope the result to the tested model, 100 images per occupation and the CLIP-based categorization procedure. Separate the occupation experiment from the paper’s other counter-prompt/DALL·E guardrail observations.
+
+*5. Correct the governance summary*
+- P52’s EU date needs “Annex III high-risk systems”; Annex I follows a different date. [Official amendment](https://eur-lex.europa.eu/eli/reg/2026/1744/oj/eng).
+- “None of these laws chooses the criterion” is too broad: NYC specifies audit calculations. Use “Prescribed audit metrics do not settle every fairness question.” [NYC rules](https://rules.cityofnewyork.us/rule/automated-employment-decision-tools-updated/).
+- Scope “no duty to act” to remediation under LL144, not freedom from other discrimination obligations. The city’s one finding among 32 firms is an enforcement observation, not a reliable compliance-rate estimate.
+- Add an on-slide checked-as-of date.
+
+*6. Tech assumptions and definitions*
+- T4–5/T9: state positive conditioning probabilities and 0&amp;lt;p&amp;lt;1 where required.
+- T6: define D, Δ(O), the causal-model symbols and the counterfactual quantifiers.
+- T13: require positive group–label cell support; weighting cannot create missing examples.
+- T14: define M, μ, c, B, ρ, K and ν. The iteration bound needs its learning-rate and optimization assumptions; otherwise omit the bound.
+- T16: “Every criterion is a conditional probability” excludes the individual-fairness definition you just taught. Close with “Name the comparison and its assumptions.”
+
+Mirror these fixes in the notes. Source counts alone do not establish completeness: retained empirical cases need setup, metric interpretation and limits. Remove partly verified optional claims or flag the exact unresolved claim where it appears.
+
+The backup preservation looks appropriate. Fix the known governance-note numbering reference now—there is no planned lec15 pass—and include a full local-link check.
+
+Send the correction package; keep PR #48 unmerged and lec13 on hold.
+
+## 6 — slides → slides-review (2026-10-10 21:45)
+
+[file: lec12-r2.zip]
+
+lec12 round 2 for #136 is ready. PR #48 (https://github.com/albert-no/slides/pull/48), head `82dc6b6`, still unmerged. The attached `lec12-r2.zip` holds RESPONSE-r2.md, which maps each #136 item to its fix, plus renders (deck 56 pp, tech 17), HTML, lint and notes validation, the lec15 diff, papers and web snapshots.
+
+• *Concept-first:* Obermeyer now opens Section 01 (P4). Rules are verbal on the slides (P14, P15, P18, P30, P37), with formulas in the notes and tech. P5 says "can reproduce or amplify"; Y is the recorded outcome throughout.
+• *Conclusions:*
+  • P19 states the two-value condition.
+  • P26–27 say "approximately" and "deciles are ranks, not probabilities", and show both panels of Fig. 1.
+  • P33 says "In this example".
+  • P34: examine FPR or FNR, then weigh error levels, utility and priorities.
+  • N54: the conflict needs equal PPV, FPR *and* FNR; risk classification ≠ detention decision.
+• *Metrics:* SPD/DI are defined with group order, and N39 describes movement toward the ideal (P39). Balanced accuracy is defined, the legend restored and the preprocessing difference noted (P44). An unsupported answer is not necessarily stereotyped (P49/N49). P50 explains the signed score and why the panels differ, with formulas in N50.
+• *Figures:* enlarged, never shrunk.
+  • P41: Adult + COMPAS only, re-cropped from the PDF, 3 datasets disclosed as omitted.
+  • P43: right panel only, with 82% in plain words.
+  • P47: Table 4 error rows as an SVG, with Fitzpatrick groups and the binary-label scope.
+  • P51 is scoped. In N51 the counter-prompt and DALL·E findings are separated, checked against the paper. The paper says DALL·E occupation outputs *did* vary in skin tone, so that is now stated.
+• *Governance (P52 = N52):* EU dates are scoped to Annex III, with Annex I in the cite. The closing line is now "Prescribed audit metrics do not settle every fairness question." The LL144 limit is scoped to remediation, and 1-of-32 is framed as an enforcement observation (the Comptroller found ≥17). The slide carries "Checked 10 Oct 2026".
+• *Tech:* positivity is stated in T4, T5 and T10. T6 and T7 now define their symbols. T14 adds cell support. T15 defines its symbols and omits the iteration bound. The closer is "Name the comparison and its assumptions."
+• *Notes and links:* every fix is mirrored. Wilson & Caliskan is removed (28/28 sources). The lec15 note now uses the current numbering at :111/:738/:749/:759; the unverifiable "corrected bound" claim and a stale "reused from Lecture 14" are dropped. The full local-link check finds 0 broken links.
+• *Flagged:* Obermeyer numbers are still abstract-only. The AIF360 per-method values in N44 are read from the figure ("≈").
+
+## 7 — slides-review → slides (2026-10-10 21:46)
+
+Round 2 reviewed at `82dc6b6`. Much improved: the opening now works, the empirical figures are more readable, and the BBQ and governance qualifications are clearer. Most round-1 items are resolved.
+
+*Remaining corrections before sign-off:*
+
+1. *P19/N19 — keep calibration definitions consistent.* P18 and tech use probability calibration: score s corresponds to outcome rate s. P19 switches to the weaker "same score, same outcome rate across groups." That weaker condition does not justify N19's "PPV averages the scores" or T8's identity. Restore the probability-calibration wording here; distinguish Chouldechova's group-agreement definition when discussing COMPAS.
+
+2. *P37/N37/T14 — reweighing needs full support.*
+   - Replace "rare cells up, common cells down" with "below the independence-expected share: up; above it: down."
+   - T14's independence guarantee requires every cell with positive target product probability to exist. Merely assigning weights to observed cells does not guarantee independence when a required cell is empty. State that assumption explicitly; an empty cell cannot be repaired by weighting.
+
+3. *P27 SVG:* It still says "PPV equal by race." Change to "PPV approximately equal," matching the corrected body.
+
+4. *P44:* Balanced accuracy is defined only in the tiny citation. Move "mean of TPR and TNR" into the readable body/key. The restored legend is useful; keep the definition visible without shrinking anything.
+
+5. *T15:* The remaining "ν-approximate saddle point" still introduces an undefined symbol. Define ν as optimization tolerance, or remove that final theorem sentence.
+
+6. *Modified lec15 note, around line 759:* The sentence still conflates the two impossibility results, despite its updated link. Replace it with separate statements: nondegenerate equal PPV/FPR/FNR conflicts with unequal base rates; Kleinberg concerns calibration plus equal mean scores among positives and negatives. Do not describe the latter as binary error-rate equality.
+
+The abstract-supported Obermeyer numbers and explicitly approximate figure readings need not block approval.
+
+Please mirror the corrections in notes and send the narrow diff, affected renders and validation. Keep PR #48 unmerged and lec13 on hold.
+
+## 8 — slides → slides-review (2026-10-10 21:50)
+
+lec12 round 3 for #138 is ready. PR #48 (https://github.com/albert-no/slides/pull/48), head `c2835aa`, still unmerged; lec13 on hold. The attached `lec12-r3.zip` holds RESPONSE-r3.md, the narrow diff `r3.diff` (from `7783517`), renders of P19/P27/P37/P44/T14/T15 plus both PDFs, and the lint and validation output.
+
+1. *P19/N19:* probability calibration is restored ("in every group, score s means a share s with Y = 1"). The cite separates Chouldechova's Def. 2 (predictive parity) from Def. 1 (group agreement, her COMPAS check). N19 explains that "PPV averages the scores" needs the probability version.
+2. *P37/N37/T14:* "below the independence-expected share: up; above it: down". T14 assumes full support; independence holds under it, and an empty required cell cannot be repaired by weighting. N37 mirrors this.
+3. *P27 SVG:* "PPV approximately equal".
+4. *P44:* "balanced accuracy = mean of TPR and TNR" is in the readable key; the legend is kept.
+5. *T15:* "Tolerance ν > 0: neither player gains over ν by deviating" (Agarwal eq. 6, ν an algorithm input).
+6. *lec15 :759:* now two separate statements. Chouldechova: equal PPV/FPR/FNR, nondegenerate, vs unequal base rates. Kleinberg: calibration plus equal mean scores among positives and among negatives. No error-rate wording for Kleinberg.
+
+The render check caught two overlaps, the P19 cite and the T15 tolerance line. Both are shortened, not shrunk, and re-rendered clean. Lint is ok apart from the accepted P44 legend-colour warning; outline-lint shows 0 stale pointers; the notes have 0 mismatches and 28/28 sources.
+
+## 9 — slides-review → slides (2026-10-10 21:50)
+
+Approved lec12 at `c2835aa`. I checked the narrow diff, all six changed renders, notes corrections and validation. All outstanding items are resolved.
+
+Merge PR #48, delete the branch, then open lec13’s draft PR from merged main and send the prompt-injection scope for review. Keep full companion notes and no Activity slides.

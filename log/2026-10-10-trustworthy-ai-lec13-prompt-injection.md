@@ -49,3 +49,39 @@ lec12 is merged: PR #48 → main `31df8c6`, and the branch is deleted. lec13's d
 • *Files:* rebuilt as `lec13-prompt-injection{,-note}.html` + `lec13tech.html`. Here 66 → ~56 is a compression of a single deck, so I propose removing `backup-prompt-injection*` once lec13 supersedes it (git history keeps it). Figures used only by cut slides would be removed too. If you'd rather keep the backups, as with fairness, say so. OUTLINE root, folder and leaf tables are updated to match, and so is the Wk 13 row.
 • *Notes:* fully rewritten to the lec07–12 standard: setup, model, data and date for each study and incident; establishes / does not establish; assumptions; speaking flow; primary-source links.
 • *Review packages:* as for lec12: full HTML/assets, source snapshots, notes validation and a page map; in later rounds, a narrow correction diff and the changed renders.
+
+## 3 — slides-review → slides (2026-10-10 21:53)
+
+Scope approved with these adjustments.
+
+*1. Define injection by authority, not just who wrote it.*
+“Jailbreak = user; injection = third party” is too categorical and conflicts with direct injection. Use:
+- *Jailbreak:* attempts to bypass a model’s safety restrictions.
+- *Prompt injection:* attempts to make a system treat attacker-controlled content as authoritative instructions.
+They can overlap. Make indirect injection through retrieved content/tool output the lecture’s main case.
+
+Keep the distinction between *intended instruction priority* and *enforced security boundaries*. Avoid “no privilege separation” as an absolute; model instruction hierarchies and system permissions are different mechanisms.
+
+*2. Reduce the incident catalogue.*
+Teach three cases deeply: EchoLeak, one repository/tool-access case, and one browser or memory case. Put the others in notes. Use your uniform incident card, distinguishing researcher demonstration, confirmed exploitation, vendor-reported remediation and independently retested fixes. Naming history needs at most a sentence.
+
+*3. Organize defenses around the trust boundary.*
+Give CaMeL the main system-defense treatment; spotlighting and instruction hierarchy are model-level contrasts. Dual-LLM, filtering and human confirmation can be comparisons rather than separate mini-lectures.
+- Explain what information may influence each action, not merely whether the model refuses.
+- Keep CaMeL’s guarantee conditional on its policy, implementation and threat model; don’t turn it into universal injection immunity.
+- Treat the “trifecta” as an exfiltration-risk heuristic, not a necessary condition for every injection attack.
+- Replace “no escape character” with “escaping alone does not establish instruction authority.”
+
+*4. Define evaluation before reporting wins.*
+For AgentDojo and every defense result, distinguish clean task success, task success under attack and attacker-goal success. State denominators, attacker access, query budget and adaptation. A defense that blocks all actions is not useful robustness.
+
+Use one adaptive-evaluation anchor. Verify Nasr’s paper and choose it or Zhan based on relevance; don’t stack headline bypass rates across incomparable setups.
+
+*5. Keep lec14 distinct.*
+Browser/MCP examples should illustrate injection here, not introduce a second emerging-threat survey. End with enforceable permissions, data-flow restrictions and meaningful action approval—not a promise that prompting can solve the boundary.
+
+The pacing is fine after these cuts. About 56 slides remains a ceiling. Keep examples schematic or redacted; no live exfiltration destinations or operational payload walkthroughs.
+
+*Files:* removing the superseded prompt-injection backups is fine. Delete assets only after a repository-wide reference check, including other courses and backups; report deletions and link validation.
+
+Proceed with full notes and tech, no Activity slides, and send the round-1 package before merge.

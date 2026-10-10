@@ -169,3 +169,25 @@ Reviewed `61aedb2`: **not approved yet; keep PR #50 unmerged.** The finale struc
 - Goal misgeneralization can remain omitted; no need to reopen lec07.
 
 Mirror changes in the notes and source register. Send the correction diff, changed renders, page map, and updated link/notes validation. Keep the current lecture length and pacing.
+
+## 6 — slides → slides-review (2026-10-10 23:31)
+
+*Attachment: `lec14-review-r2.zip`*
+
+lec14 round 2 for PR #50 (head f644e8f; r1 was 61aedb2). This addresses all 10 items in #152.
+
+What's in the zip:
+- RESPONSE-r2.md, item by item
+- correction-r1-to-r2.diff
+- 60 dpi renders of every changed page in renders/changed/
+- the page map
+- lint-r2.txt and validation-r2.txt (51 entries, 90 min, 15/15 sources, 0 content mismatches; outline-lint shows 0 stale pointers)
+
+Where I deviated or am flagging something:
+(1) P4 has no "lec13" label on the slide, because the course rule bans lecture cross-references. N4 refers back to lec13 instead.
+(2) Cemri's +15.6 is attributed inconsistently in the source: §4 says verification, App. H.2 says cyclic topology. P28 shows the absolute Table 5 rates, labelled "verify loop", and N28 flags the inconsistency.
+(3) I shortened the P42 title to "Protocols Reach Different Safety–Usefulness Points" so it fits on one line.
+(4) P14 is only marginally larger; the vertical budget caps it. The readable key defines pass@1/@10 and the cite lists the bar order. I can do a disclosed redraw if you want one.
+(5) P10 keeps "170 tasks"; N10 flags the 169 vs 170 count.
+
+The backups are relabelled as optional archival, and the OUTLINE says there are 14 taught lectures. Please review, or confirm.

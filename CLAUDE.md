@@ -1,6 +1,6 @@
 # Talks repo
 
-Slide decks for academic talks — conference presentations and master-level lectures. **Math-heavy**: rigorous statement, rigorous proof, high-level intuition. **Minimal design**: short abstract phrases, never full sentences (7×7 rule).
+Slide decks for academic talks — conference presentations and master-level lectures. **Two audience modes** (DESIGN_SYSTEM §5): *rigorous* — statement, proof, intuition — for graduate talks and math courses; *concept-first* — example → intuition → precise qualified claim, formal math in notes/tech — for courses pitched below the math. **Minimal design**: short phrases (7×7 rule), with bounded exceptions for takeaway titles, one-line definitions, plot keys and necessary qualifiers (§1 Priority 1).
 
 Two formats: **custom HTML** (`<talk>/<talk>.html`, preferred) — single page, one `.active` slide, scaled to viewport by JS, linking `reference/` for CSS/JS/fonts/logo. And **Marp markdown** — copy `template.md`, run `marp <file>.md --pdf`.
 
@@ -18,7 +18,7 @@ These docs are reference material, not briefing material. Reading them cover-to-
 
 The four ranked priorities in `DESIGN_SYSTEM.md` §1 govern every authoring and editing decision: **0** font sizes · **1** density · **2** overflow (with the vertical-budget px table) · **3** empty space. Never shrink type to make content fit — split the slide.
 
-**Default to visually rich slides.** Every content slide should carry a diagram, figure, chart, or SVG; text-only bullets are a fallback. When a real figure can't be made now, leave `<!-- TODO real figure: … -->` rather than shipping bare bullets. Keep slides self-contained — no "next week" / "(Wk N)" cross-references.
+**Default to visually rich slides.** Every content slide should carry a diagram, figure, chart, or SVG; text-only bullets are a fallback. **When reading the figure is the task, the figure gets the slide**: full content area, takeaway title, one-line key, essential labels readable on the render (DESIGN_SYSTEM §8 "Reading a figure"). When a real figure can't be made now, leave `<!-- TODO real figure: … -->` rather than shipping bare bullets. Keep slides self-contained — no "next week" / "(Wk N)" cross-references.
 
 ## Task → entry point
 
@@ -28,8 +28,8 @@ The four ranked priorities in `DESIGN_SYSTEM.md` §1 govern every authoring and 
 | Edit / add slides | Leaf `OUTLINE.md` first, then DESIGN_SYSTEM §7 → copy the exemplar's markup. |
 | Fix overflow | DESIGN_SYSTEM §1 Priority 2 (vertical budget); GOTCHAS §3. |
 | Visual audit | `/audit-and-edit-deck` — on explicit request only. |
-| Add a visual / capture a figure | DESIGN_SYSTEM §8 — capture a real figure with citation before redrawing one. |
-| Theorem / proof / build-up | DESIGN_SYSTEM §5. |
+| Add a visual / capture a figure / enlarge one | DESIGN_SYSTEM §8 — capture a real figure with citation before redrawing one; "Reading a figure" for size, labels, keys. |
+| Theorem / proof / build-up · pick concept-first vs rigorous | DESIGN_SYSTEM §5. |
 | Debug a rendering symptom | `grep` your symptom in `GOTCHAS.md`. |
 | Distribute | `python3 scripts/bundle.py <talk>/<talk>.html`. |
 
@@ -68,9 +68,10 @@ Only authoring source and image assets are committed; `*.standalone.html` is a b
 
 1. Edit `<talk>/<talk>.html`; preview in Chrome (`reference/` must be alongside — it is).
 2. `python3 scripts/lint-deck.py <deck>.html` (or `--all`). Errors (`<` inside math, KaTeX delimiter escape) break rendering — fix immediately. Warnings are Priority-0/1 violations.
-3. `python3 scripts/find-wordy.py <deck>.html` after drafting prose-heavy slides; `find-dense.py` for over-stuffed ones.
+3. `python3 scripts/find-wordy.py <deck>.html` after drafting prose-heavy slides; `find-dense.py` for over-stuffed ones. Their flags are review prompts: compress, or confirm the line is a §1 bounded exception that renders cleanly.
 4. **Update `OUTLINE.md` in the *same* edit** — any added/removed slide, renamed section, changed line range, or added/removed cited theorem. Line numbers are read as authoritative pointers. An added or removed slide also updates the deck's own `1 / N` `.slide-num` and every count in the outline. Verify with `python3 scripts/outline-lint.py`. Full rule: DESIGN_SYSTEM §10.
-5. Distribute: `python3 scripts/bundle.py <talk>/<talk>.html`.
+5. **Changed a figure, font or caption?** Render the affected pages (`-r 60`; `-r 150` for one page when label legibility is the question) and check the §8 acceptance list. Affected pages only.
+6. Distribute: `python3 scripts/bundle.py <talk>/<talk>.html`.
 
 **Edited `DESIGN_SYSTEM.md` or `GOTCHAS.md`?** Run `python3 scripts/doc-index-lint.py --fix` in the same change — any inserted or deleted line shifts the section index, and a stale index sends the next reader to the wrong lines. The linter exits 2 when it is out of date.
 

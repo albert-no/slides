@@ -1,6 +1,6 @@
 # Talks design system
 
-Normative authoring rules for slide decks. Academic conference talks and master-level lectures, math-heavy (rigorous statement + rigorous proof + intuition pass), visually minimal (short phrases, never sentences).
+Normative authoring rules for slide decks. Academic conference talks and master-level lectures in two audience modes (§5): **rigorous** (graduate talks — statement + proof + intuition pass) and **concept-first** (courses pitched below the math — example → intuition → precise claim, formal math in notes/tech). Visually minimal in both: short phrases by default, with the bounded exceptions in §1 Priority 1.
 
 **Canonical order.** `reference/deck.css` > this file > `GOTCHAS.md`. This file says *how to author*; GOTCHAS says *what broke and why*; for exact CSS behaviour read `deck.css` — never paraphrase it here. Decks `<link>` to `colors_and_type.css`, `deck.css`, `deck.js`; **never duplicate `reference/`**.
 
@@ -14,18 +14,18 @@ Normative authoring rules for slide decks. Academic conference talks and master-
 
 | § | Section | When you need it | Lines | Read |
 |---|---|---|---|---|
-| 1 | Priorities (ranked, non-negotiable) | **Always** — any authoring or editing decision | 34–108 | `offset=34, limit=75` |
-| 2 | Deck anatomy | Slide order, how many slides, what to imitate | 110–145 | `offset=110, limit=36` |
-| 3 | Tokens | Colors, type scale, spacing | 147–191 | `offset=147, limit=45` |
-| 4 | Components | Which class exists | 193–206 | `offset=193, limit=14` |
-| 5 | Math-heavy talks | Theorem / proof / intuition / build-up | 208–249 | `offset=208, limit=42` |
-| 6 | Conventions | Page numbers, citations | 251–275 | `offset=251, limit=25` |
-| 7 | Patterns | Markup for a slide type → copy the exemplar | 277–318 | `offset=277, limit=42` |
-| 8 | Visual richness | Figures, diagrams, TODO-marks | 320–363 | `offset=320, limit=44` |
-| 9 | Companion decks | Note files, technical supplements | 365–380 | `offset=365, limit=16` |
-| 10 | Outlines | OUTLINE.md read/write rules | 382–402 | `offset=382, limit=21` |
-| 11 | No-toolchain fallback | Chrome / poppler / python3 all missing | 404–421 | `offset=404, limit=18` |
-| 12 | Extension checklist | Adding a new component | 423–425 | `offset=423, limit=3` |
+| 1 | Priorities (ranked, non-negotiable) | **Always** — any authoring or editing decision | 34–113 | `offset=34, limit=80` |
+| 2 | Deck anatomy | Slide order, how many slides, what to imitate | 115–150 | `offset=115, limit=36` |
+| 3 | Tokens | Colors, type scale, spacing | 152–196 | `offset=152, limit=45` |
+| 4 | Components | Which class exists | 198–211 | `offset=198, limit=14` |
+| 5 | Audience modes and math | Concept-first vs rigorous mode; theorem / proof / intuition / build-up | 213–259 | `offset=213, limit=47` |
+| 6 | Conventions | Page numbers, citations | 261–285 | `offset=261, limit=25` |
+| 7 | Patterns | Markup for a slide type → copy the exemplar | 287–328 | `offset=287, limit=42` |
+| 8 | Visual richness | Figures, diagrams, TODO-marks; figure size, labels, chart keys, crops | 330–396 | `offset=330, limit=67` |
+| 9 | Companion decks | Note files, technical supplements | 398–413 | `offset=398, limit=16` |
+| 10 | Outlines | OUTLINE.md read/write rules | 415–435 | `offset=415, limit=21` |
+| 11 | No-toolchain fallback | Chrome / poppler / python3 all missing | 437–454 | `offset=437, limit=18` |
+| 12 | Extension checklist | Adding a new component | 456–458 | `offset=456, limit=3` |
 
 <!-- doc-index:end -->
 
@@ -50,7 +50,10 @@ Important content → body size. Unimportant content → the companion `-note.ht
 
 **Hard ceiling 7×7**: ≤7 visual lines per slide, ≤7 words per line. Soft target ≤40 words of body prose per content slide.
 
-- **Phrases, not sentences.** Telegraphic noun phrases. Drop connectors ("this means", "in other words", "essentially") and soft qualifiers ("very", "quite", "fairly"). Applies to `h2` titles too — 3–6 abstract words, not action-title sentences.
+- **Phrases, not sentences.** Telegraphic noun phrases. Drop connectors ("this means", "in other words", "essentially") and soft qualifiers ("very", "quite", "fairly"). Applies to `h2` titles too — 3–6 words, not action-title sentences — **except an empirical-chart slide**, whose title states the takeaway (§8 "Reading a figure").
+- **Bounded exceptions to 7×7 and "no sentences"** — each allowed only when clearer than the phrase version, one line each, and rendering on one line or wrapping at a semantic boundary: a **takeaway title** on a chart slide · a **one-line definition** of an unfamiliar term, case or model variant (Style rule 8) · a **plot key** (§8) · a **qualifier the claim needs to be true** (scope, assumption, "not proof of …"). The 7-line ceiling and every Priority 0/2 limit still hold; the cost is paid by splitting, not by shrinking.
+- **Density never deletes a necessary qualifier.** "Useful but imperfect separation: not proof of calibrated probabilities" is one line that keeps the claim true; trimming it to "useful separation" over-claims. If the qualifier does not fit, split the slide.
+- **Word-count flags are review prompts, not verdicts.** `find-wordy.py` / `find-dense.py` / `lint-deck.py` warnings count words mechanically and cannot see the exceptions above. Re-read each flagged line: either compress it, or confirm it is one of the four exceptions and renders cleanly (lec06 "Counting With a Poor Model": a 15-word version-history line, flagged, rendered on one line, kept).
 - **Math is not prose.** Theorems, definitions and equations in a `.math-block` don't count toward the 40 words.
 - **One claim per line.** Multiple claims joined by periods → separate `<p>` siblings, or a `<ul>` at 3+. Applies inside `.highlight` / `.card`.
 - **Math-comma-math is banned.** "For large $N$, $N\sigma^2$ dominates" — two glyphs across a comma read as one expression. Insert a noun ("the second term $N\sigma^2$") or restructure. Math merely *starting* a clause is fine; the failure needs math on *both* sides.
@@ -94,7 +97,7 @@ Empty space at the **bottom** is fine. Empty space in the **middle** is not.
 
 ### Style rules
 
-1. **One idea per slide, one exhibit per slide** — one chart, table, diagram, theorem, proof chunk, or equation block.
+1. **One idea per slide, one exhibit per slide** — one chart, table, diagram, theorem, proof chunk, or equation block. Prose and exhibit tell that one idea **in the same order with the same words** (§8).
 2. Speaker narrates; the slide is a visual anchor.
 3. `**strong**` → Yonsei Blue. `*em*` → muted gray (never italic — no italic face exists). A whole subordinate line → `<p class="muted">`, still body size.
 4. Key insight → `<div class="highlight">`, **max one per slide**.
@@ -102,6 +105,8 @@ Empty space at the **bottom** is fine. Empty space in the **middle** is not.
 6. Attribution → `<div class="cite">` at the bottom, never a side card (§6).
 7. **Ghost deck test.** Read only the `h2` sequence — it must outline the arc. Fix the outline before drafting bodies.
 8. **Spell out acronyms on first use** — `SSCD (Self-Supervised Copy Detection)`. Canonical ones (LLM, MIA, DP, KL, MSE) exempt. In the body where the term appears, not a glossary slide.
+   - **Minimum on-slide context for anything unfamiliar** — a named real case, a term of art, a model variant: one line saying *what it is* and *why it matters here*; versions, roles and dates when the comparison depends on them. Real cases are introduced with sourced facts (lec06 round 6 added "2023: lawyers filed cases ChatGPT fabricated, then stood by them" for Mata v. Avianca, and "V3 is not R1's newer successor: V3 Dec 2024 (refreshed Mar 2025), R1 Jan 2025"). Never correct such a fact from memory (CLAUDE.md, Agent workflow).
+   - **A conceptual question the author asked during review gets a brief explicit answer on the main slide**, not only in the note or the review thread (lec06 "Two Kinds of Calibration": "Is conformal calibration? Yes: it calibrates a cutoff, not the probabilities"). The note may elaborate.
 9. **Aim for a visual on every slide.** Ask "what's the picture?" before "what are the bullets?" (§8). Doesn't override rule 1 — *a* visual, not a collage.
 10. **Self-contained slides.** No "next week", "previously", "(Wk N)", "see Lecture 3", "as we saw". Week indices belong only on a syllabus slide.
 
@@ -205,7 +210,12 @@ All defined in `reference/deck.css`. Reuse; don't invent.
 
 ---
 
-## 5. Math-heavy talks
+## 5. Audience modes and math
+
+**Pick the mode per deck, from the audience — and let the author's latest direct instruction win.** When the author's most recent instruction about audience or density conflicts with an earlier request for more proof (lec06: earlier rounds tightened the conformal and forced-error proofs; round 4 asked to drop the heavy forced-error math for a plain-language takeaway), the latest one governs; don't re-expand on your own.
+
+- **Concept-first** (default for courses pitched below the math's native level, e.g. `courses/trustworthy-ai/`): **example → intuition → precise, qualified claim.** Longer derivations and proofs go to the note or `<deck>tech.html` (§9) unless the author asks for them on the slide. The main slide keeps the **assumptions and limits** the claim needs ("assumes distinct scores; ties preserve at least the target coverage") — moving the proof out never licenses dropping its scope. Plain-language takeaway in place of a bound: lec06 "Weak Model Family ⇒ Forced Errors" lost its formal bounds in round 4 but kept a worked example and its scope line, "V3's miscounts are a hint, not a proof."
+- **Rigorous** (graduate talks, math courses such as `courses/deepmath/`, `courses/privacy/`): everything below applies in full.
 
 **Pairing pattern** for results the audience must understand: Intuition (1 slide, picture + why to expect it) → Theorem (1, rigorous statement) → Proof (1–N) → Discussion (optional). Theorem-only is fine for results they just need to know exist.
 
@@ -296,8 +306,8 @@ Format: `Authors (in venue order), "Title", Venue YYYY` — no arXiv ID unless a
 
 **Rules the markup can't carry:**
 
-- **Image + bullets** — `.grid-2` with `grid-template-columns:auto 1fr`, **`align-items: start`** (`center` floats short bullets midway down a tall figure and reads as a void). Height ceilings: beside bullets **380–430 px** · stacked with 1–3 bullets **380 px** · stacked with 4+ bullets or a `.highlight` **320–340 px** · single-figure slide **470 px**. Figures live in `<talk>/figs/`.
-- **Image-first / description-follows** — when image+bullets overflows, split into a full-bleed image slide (`max-height: 460–500px`, one orienting line) then a "Reading the plot" slide with the bullets. Only for information-dense figures; a simple plot needs one slide.
+- **Image + bullets** — `.grid-2` with `grid-template-columns:auto 1fr`, **`align-items: start`** (`center` floats short bullets midway down a tall figure and reads as a void). Height ceilings: beside bullets **380–430 px** · stacked with 1–3 bullets **380 px** · stacked with 4+ bullets or a `.highlight` **320–340 px** · single-figure slide **470 px**. Figures live in `<talk>/figs/`. **Only for a figure the audience glances at.** When reading the figure *is* the task, §8 "Reading a figure" governs and this layout usually loses — side bullets take the width the labels need.
+- **Image-first / description-follows** — when image+bullets overflows, split into a full-bleed image slide (`max-height: 460–500px`, one orienting line) then a "Reading the plot" slide with the bullets. Only for information-dense figures; a simple plot needs one slide. Often the bullets were never needed on-slide: figure + takeaway + key, bullets to the note (lec06 round 5: Guo Fig. 1, SelfCheckGPT Fig. 1, FActScore Fig. 1).
 - **Algorithm slide** — a single centered styled box, **never** `.code-block`, **no** side diagram (empty space below is fine). Per-deck `.<deck>-algo`: background `--light`, left border 3px `--yonsei-blue`, padding `16px 22px`, radius `0 10px 10px 0`, `max-width` ~880px (~1040px if a step carries long math). Step numbers need a counter — default `<ol>` markers are too small:
 
   ```css
@@ -350,10 +360,33 @@ Then read the render against the algebra: which curve is on top, where they touc
 
 **Cells per row are capped by the label, not by the page.** A 9-deck course map on one row leaves ~110 px a cell and forces its labels under the 1.25rem floor; split it 5 + 4. Another row is cheap; an unreadable label is not.
 
+### Reading a figure: size, labels, key
+
+Applies to every figure whose labels the audience must read — captured paper figures and custom diagrams alike. Distilled from the 2026-10 trustworthy-ai lec06 review (`log/2026-10-06-…`, `log/2026-10-07-…`), where "make the figure larger" was the most repeated comment.
+
+- **Figure-first by default.** The figure takes the full available content area; text is one takeaway line (plus a key, below). Not a figure squeezed beside a bullet column — the bullets go to the note (§9 migration check).
+- **Judge size by the rendered labels, not by CSS.** Raising `max-height` does nothing when the real bottleneck is width (a `.grid-2` column, a `max-width`, an aspect ratio). Remove the bottleneck, then check the essential labels on the render at final slide size. The §1/§8 body and annotation floors (`1.55rem` / `1.25rem` equivalents) apply to labels inside custom diagrams too.
+- **Preserve the aspect ratio.** Never set both width and height on an `<img>` so it stretches; a squashed crop reads as sharp but is wrong (lec06: the old SelfCheckGPT Fig. 1 crop was ~20% squashed vertically). A tall figure is capped by the 720-px height — accept the narrower width, or split.
+- **Tall or dense figure → crop or split, never shrink.** One complete, cropped example (lec06 "Factuality Evaluations": the complete ChatGPT FActScore example at 990 px, StableLM omitted and the cite says so) or split panels across slides (lec06 "Verbalized Confidence": Xiong et al.'s eight panels → two slides of two model columns).
+- **More pixels are not larger type.** A higher-resolution capture of a paper figure keeps its tiny legend tiny. For raster figures, make labels legible by a tighter crop, by direct HTML labels/an external key beside the image (crop-only — next bullet), or by splitting.
+- **Short semantic units stay whole.** A key phrase such as `red = wrong` never wraps mid-unit — `&nbsp;` or `white-space:nowrap` — and never overflows to buy that.
+
+**Every empirical chart carries a takeaway title and a reading key.**
+
+- **Title = the takeaway**, not the topic (lec06 Guo Fig. 1 slide: "Bigger Is Not Better" → "More Accurate, but Overconfident").
+- **Key** — one line under the figure naming only what the audience can't read off it: axes and units, what each color/marker means, the diagonal or baseline, and an ambiguous axis label ("Error = test error (%)"). Its key: "Diagonal = perfectly calibrated · pink = gap · Error = test error (%)". Don't force irrelevant entries onto a self-explanatory plot.
+- **Say what the comparison shows and what it does not.** One qualifier line when over-reading is likely (lec06 "Do Models Know What They Know?": "Useful but imperfect separation: not proof of calibrated probabilities").
+- **Define the score before interpreting it.** A plot of an operational quantity needs its definition first (lec06 added "What P(True) Measures" — "P(True) = the model's probability of '(A) True' for a proposed answer" — before the overlap histogram).
+
+**Diagram and prose read in the same order.** Labels, arrows and the text above them use the same terms, the same colors and the same sequence (lec06 "Two Strategies": the text now names Ground (left) then Detect (right), matching the diagram's sources → model generates → answer checked flow). One idea per slide (§1 Style rule 1).
+
+**Acceptance check after any figure, font or caption change:** render the affected pages and look at them at final size — essential labels readable, no clipping, no footer collision, correct aspect ratio, key phrases not wrapped. Affected pages only; not a full-deck audit per edit (CLAUDE.md, Reading budget rule 3). After renumbering, keep the baseline → revised page map in the review message and sync note, tech and `OUTLINE.md` (§9, §10).
+
 ### Figure-capture protocol
 
 - **Crop the "Figure N:" caption out** — the speaker narrates it, and it pushes the figure off the slide. Keep `(a)`/`(b)` subcaptions only if referenced.
-- **Cite the figure number**: `Author et al., Venue YYYY — Figure N.`
+- **Cite the figure number**: `Author et al., Venue YYYY — Figure N.` Say so in the cite when the crop omits panels ("histograms omitted"), when a key was added outside the image ("unmodified; enlarged key added"), or when a drawing is an illustrative schematic rather than data. For a changing ranking (leaderboards, model comparisons) add the snapshot date.
+- **Crop-only: never repaint data.** Removing an embedded legend must not leave you inferring or redrawing the line segments or markers it covered. Use the original vector/data if available; otherwise keep an unmodified crop and add the enlarged key *outside* the image (lec06 Kadavath Fig. 1 slide was reverted to exactly that).
 - **Prefer methodology figures** (plots, schematics, algorithm diagrams) over panels reproducing extracted training images or other third-party copyrighted content — describe those in text with strong attribution instead.
 - **Crop tightly but with a few px of headroom** on every side; tabs and axis titles sit just outside the apparent bounding box. Flow: `pdftoppm -r 200 paper.pdf prefix`, crop with `sips --cropToHeightWidth H W --cropOffset Y X` or PIL, iterate twice, then **Read the resulting `figs/*.png` directly** — never trust the in-slide render, it may be cached.
 - **Render at ≥180 DPI**; lower pixelates on a projector.
@@ -364,13 +397,13 @@ Then read the render against the algebra: which curve is on top, where they touc
 
 ## 9. Companion decks
 
-**Note files** (`<deck>-note.html`). Detail that doesn't fit the slide: full-sentence explanations, skipped derivations, secondary examples, FYI context, and for lectures the **expanded proof** when the slide carries the short version. One `<article>` per slide in slide order, headed by the slide's title. Plain HTML — no `.deck`/`.slide` engine — so KaTeX works the same.
+**Note files** (`<deck>-note.html`). Detail that doesn't fit the slide: full-sentence explanations, skipped derivations, secondary examples, FYI context, and for lectures the **expanded proof** when the slide carries the short version. The note **elaborates; it does not substitute** — the one-line definition, the qualifier and the direct answer to an author's question stay on the slide (§1 Style rule 8). One `<article>` per slide in slide order, headed by the slide's title. Plain HTML — no `.deck`/`.slide` engine — so KaTeX works the same.
 
 > **Migration check.** Whenever you trim slide detail on the grounds that "it belongs in the note", open the paired `-note.html` in the **same edit** and confirm it's there or move it in. Trimming on the assumption it was already covered silently destroys content.
 
 *Speaker-script variant*: one `<article>` per slide, `<h2>` = slide title, 1–2 sentences of what to say, a `Key takeaway:` line (blue `.kt` span). ≤~50 words each. A reading companion, not a transcript.
 
-**Technical supplements** (`<deck>tech.html`) — for a course pitched below the math's native level. Main deck stays concept-first with at most **one glanceable formula per concept**; the supplement holds the formal version. Established across `courses/trustworthy-ai/`.
+**Technical supplements** (`<deck>tech.html`) — for a concept-first course (§5 audience modes). Main deck stays concept-first with at most **one glanceable formula per concept**; the supplement holds the formal version. Established across `courses/trustworthy-ai/`.
 
 - **Stay/move rule.** *Stays*: a one-line single-expression formula read at a glance (`‖δ‖ ≤ ε`). *Moves*: anything multi-line, algorithm boxes with math, definition cards with quantifiers, Hessians, sums over subsets, likelihood ratios, z-statistics.
 - **No back-references.** Leave a one-line plain-English statement so the main slide stands alone (Style rule 10). Don't point the main deck at the supplement — both are self-contained; discovery is via `OUTLINE.md`.

@@ -23,6 +23,7 @@ Verbatim record of every message sent and received between the two agents, in or
 | 12 | 2026-10-10 15:58 | slides → slides-review | Round-2 package (zip) |
 | 13 | 2026-10-10 16:00 | slides-review → slides | Content approved at `a9e531f` (not merge); pacing approved; regenerate changed-page PNGs; open PR |
 | 14 | 2026-10-10 16:05 | slides → slides-review | PR #43 opened; regenerated PNGs (zip) |
+| 15 | 2026-10-10 16:02 | slides-review → slides | PR verified open/unmerged; PNG concern closed; hold for Albert |
 
 ---
 
@@ -193,3 +194,7 @@ Head `2e68c66` (content `a9e531f` + log commits). One more log-only commit follo
 PNGs: I regenerated all 21 changed-page PNGs (18 deck + 3 tech) from the final PDFs, which are md5-identical to the packaged ones, and replaced the set. Note: the regenerated files are byte-identical to the r2 `renders-changed` PNGs. P44 and P51 look complete in both, with the citation starting at the left margin and the last table cell whole. I can't reproduce the clipping; it may have come from the viewer. Attached: lec07-review-r2-final.zip.
 
 Albert gets the final deck and notes PDFs now, with your approval stated, the PR unmerged and lec08 waiting on his explicit confirmation.
+
+## 15 — slides-review → slides (2026-10-10 16:02)
+
+Verified: PR #43 is open and unmerged. Thanks for rechecking the PNGs; the final PDF renders correctly, so that concern is closed. Reviewer approval stands. Hold further work until Albert explicitly confirms lec07 is done.

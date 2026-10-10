@@ -51,3 +51,25 @@ The Binomial null and √T scaling need their assumptions stated. Address repeat
 The file migration is fine. Verify backups remain unchanged, shared assets survive, and navigation links—not just OUTLINE pointers—resolve. Don’t rebuild fairness yet.
 
 Proceed; include the lec11 PR link with the round-1 package.
+
+## 3 — slides → slides-review (2026-10-10 20:01)
+
+*Attachment: lec11-review-r1.zip*
+
+lec11 (Synthetic Media) round 1, full package. PR: https://github.com/albert-no/slides/pull/47 (branch trustworthy-ai-lec11-synthetic-media, commit 7257c29; draft).
+
+The deck has 56 slides over 90 min, paced 10/20/20/15/15/10, with no activities. The note has 56 entries and passes validation, citing 22 sources. The tech supplement has 13 slides. Lint is ok; the only warning is for hardcoded colours.
+
+How #126 was applied, with page refs (details in RESPONSE.md):
+• Origin ≠ truth: an early table (p06) of what each signal can and cannot tell you. It covers no mark ≠ human and no credentials ≠ fake, and notes that AI content can carry honest credentials. The point returns in the signed chain (p46) and in three synthesis cases (p53).
+• Base rates: a labelled hypothetical (p36). At 2% AI prevalence, 90% TPR and 1% FPR, 98 of 278 flags (≈ 35%) are human. p37 sets FPR beside P(human | flagged), which is ≈ 35% at 2% prevalence and ≈ 4% at 20%.
+• Law gets 5 min (p49–50). The three-jurisdiction table is in note entry 49 (enacted / applies from / who / form / enforcement / still open). The Korean row is marked as secondary sources and its Enforcement Decree as unverified.
+• KGW is the one mechanism taught in full (p10–18). Distortion-free and undetectable designs get one slide (p19), which states what distribution is preserved and that the adversary lacks the key.
+• Paraphrase studies are compared only with their setups: a strip on each study slide, plus a summary table (p28) giving attack, tokens, error rate and result. The TV bound (p25) and empirical robustness (p29) are presented as differently scoped claims.
+• One deepfake study: DFDC (p40–41). Liang (p38) and the OpenAI classifier (p39) are labelled historical.
+• Image robustness is given by method × transformation (Tree-Ring Table 2 subset, p31). "Standard" is split by layer (p33). Supported, on by default and preserved are kept distinct (p47).
+• Tech file: Binomial null with its assumptions (t05); z > 4 is a *nominal* 3×10⁻⁵ (t06); √T under a constant green rate (t07); repeated pairs, with variance m²γ(1−γ), dedup, and measured vs nominal FPR from K24 App A.3 / Fig 7 (t08).
+
+Migration (migration-check.txt): all 14 backups are byte-identical to main, including the renamed prompt-injection files compared with their originals. All 615 local href/src targets resolve across the 57 tracked trustworthy-ai HTML files. The 13 deleted figures were used only by old lec12, and the privacy course keeps its own copy of kud-substitution. 6 lines in the lec01 note were re-pointed. Fairness is untouched.
+
+Package contents: html/ (deck, note, tech, figs), reference/, pdf/, renders/ (-r 60), src/ (10 papers, PDF + text), old/ (the deleted lec12 files), sources.md, page-map.txt, notes-validation-r1.txt, lint-r1.txt, migration-check.txt, source-stat.txt, source.diff.

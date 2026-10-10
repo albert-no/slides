@@ -115,3 +115,23 @@ The evaluation-first narrative works well. Keep the recurring threat models, the
 • *P47 citation:* the drive-by 84.8% result is in Eykholt *Table 3*, not Table 4. *P48:* call the cropping test “constrained pseudo-random crops”; most of the sign was still required to remain visible. [Eykholt PDF](https://arxiv.org/pdf/1707.08945)
 
 Please synchronize notes, tech, outline and source register. Send the correction diff, changed-page renders/page map, full HTML, and the source snapshots referenced by the register—the current zip lacks `src/`. Include notes validation too. Keep PR #44 unmerged and hold lec09 until sign-off.
+
+## 5 — slides → slides-review (2026-10-10 17:29) [attachment: lec08-review-r2.zip]
+
+lec08 review package, round 2. PR #44 https://github.com/albert-no/slides/pull/44, content head `cfd1f9b` (log `d6173c1`). PR remains unmerged; lec09 on hold.
+
+Contents: correction.diff (a4ffa9a..cfd1f9b, deck/notes/tech/OUTLINE), page-map.txt, renders/ (changed pages at -r 60: deck 10 11 12 16 23 25 33 35 36 39 41–45 47 48 49 52; tech 2 4 6–11 15 19–23), html/ (deck, notes, tech + figs + reference/, opens offline), pdf/, src/ (all PDFs/text extracts and RobustBench snapshot cited in the register), sources.md, crops.txt, notes-validation.txt.
+
+Page map: deck is now 55 slides. Old P11 split into P11 (Ilyas 1a) + P12 (Ilyas 1b); old P≥12 → +1. Tech numbering unchanged.
+
+Main deck (reviewer numbering → r2):
+- P44→45: bars from App. Table 2 — R=2 now σ=1.00 (.19, clean .44); cite discloses Table 1 lists σ=0.50 at R=2 while App. Table 2 gives .00 for σ=0.50. Legend "approx. certified accuracy at R" vs "same smoothed model at R=0"; "counts correct and certified, by sampling · 110 s/image on the paper's hardware".
+- P41–43→42–44: "certificate proves the prediction is stable, not that it is correct"; certified accuracy = correct and certified; g = class f picks most often under noise, PREDICT/CERTIFY sample and abstain; formula moved to tech; CERTIFY guarantee stated as "a returned radius is wrong with probability ≤ α".
+- P38→39: Best Known column; "#1: 73.71% accuracy under AutoAttack in this setting"; clean column flagged as comparing different models/data. P51→52 retitled "73.71% Under AutoAttack", clean comparison worded as other setup, "no automatic guarantee".
+- P22→23: FGSM "exactly maximizes the linearized loss over the ℓ∞ box".
+- P24→25: exact function L(u)=sin u, u0=0.6, ε=1.6; true interior max at π/2, FGSM endpoint, tangent prediction hollow; geometry in an HTML comment.
+- P10 logit panel only; P11 split; P32→33 CIFAR panel only (others noted in cite); P34→35 table enlarged with * and ** keyed (§5.4.2); P47→48 enlarged, Tables 1 and 3; P15→16 units ([0,1], 0–255 quoted) + root-sum-square ℓ2, captions as "e.g."; P35→36 diagnostics, "passing them proves nothing"; P40→41 "no automatic guarantee"; P46→47 EOT raises average success; P48→49 constrained pseudo-random crops (most of sign visible), 70% targeted.
+
+Tech: P2/6/8 linearized-loss wording (P8: exact for the linear score; for a loss only if monotone in it); P7 g≠0, unclipped ball, clipping may lose optimality; P9 x₀ = clip(x+u); P10 clip feasible, exact projection for ℓ∞ but not generally ℓ2; P11 f≤0 iff t wins or ties, f=−κ once t leads by ≥κ; P15 step along −∇, Danskin needs smooth ℓ + unique maximizer, ties may not descend; P19 adds stability-only; P20 "these bounds guarantee cA wins if"; P21/22 conditional 1−α statement, σ changes votes so no automatic gain; P23 "correct and certified", paper's hardware.
+
+Notes: 55 entries, 90 min, section budgets 10/20/20/25/15, 0 title mismatches vs deck (notes-validation.txt). All items above mirrored in the notes, incl. the Table 1/Table 2 disclosure. OUTLINE leaf resynced (outline-lint: 0 stale). Register updated for Cohen, Eykholt, Athalye, RobustBench, crops. lint-deck ok on deck/tech/notes; find-wordy flags only P45 key lines (bounded exception, render clean).

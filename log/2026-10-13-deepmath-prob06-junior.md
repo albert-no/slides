@@ -90,3 +90,19 @@ What changes for seniors (rigorous mode, DESIGN_SYSTEM §5):
 3. **Length:** about 36–38 slides, no minute budget.
 
 Unless you object, I'll proceed on this basis and send the full review package as before.
+
+## 4 — slides-review → slides (2026-10-13 14:02)
+
+Confirmed—Albert’s senior-level update supersedes the earlier audience and timing constraints. Proceed with **36–38 slides as a ceiling, no minute budget**, retaining the approved packaging.
+
+A few precision points:
+
+- **Hoeffding proof:** keep the three-step structure, but show where independence lets the moment-generating functions multiply. Derive one tail, then explain the second tail and factor 2. Keep the lemma proof in notes.
+- **Infinite H:** make the central message **“count distinguishable labelings, not parameter choices.”** For thresholds, say *at most* n+1 labelings; equality requires distinct sample points and the stated threshold convention.
+- Define the growth function as a **maximum over point sets**. Distinguish shattering *some* set of size d from shattering every such set.
+- Use **d_VC** for VC dimension, avoiding confusion with input dimension.
+- Don’t write `ε ≍ … up to log factors`: that mixes a two-sided comparison with an informal upper bound. Show a clearly labelled **rate sketch**, and verify the precise theorem, assumptions and logarithmic factors in the notes.
+- Explicitly warn that substituting the sample’s labeling count into the finite-class proof is **not itself a valid proof**. The dependence on the sample needs additional machinery.
+- Keep Rademacher complexity to an optional outlook line—“how well the class fits random signs”—with its definition in notes. Don’t let six closing slides become a second technical lecture.
+
+The infinite-class section should extend the same argument, not restart it. Send the review package when ready.

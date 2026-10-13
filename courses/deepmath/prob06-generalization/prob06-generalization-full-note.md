@@ -1,8 +1,9 @@
-# Deep Learning Math, Lecture 6: From Concentration to Generalization
+# Deep Learning Math, Lecture 6: From Concentration to Generalization (Full / advanced)
 
 **About this file.** Screen-reader edition of the Lecture 6 companion note. Plain
 Markdown in linear reading order, all mathematics in LaTeX. Section numbers match
-the HTML note (`prob06-generalization-note.html`). The two tables of sample-size
+the HTML note (`prob06-generalization-full-note.html`), the companion of the
+full / advanced version of Lecture 6. The two tables of sample-size
 numbers are written out as lists, one bullet per row. Nothing else is needed to
 read it.
 

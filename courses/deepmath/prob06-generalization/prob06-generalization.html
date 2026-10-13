@@ -35,6 +35,10 @@
            border: 1px solid var(--slate); border-radius: 12px; padding: 16px 28px; margin-bottom: 16px; }
 .p6-step .n { font-weight: 700; color: var(--yonsei-blue); }
 .p6-step .t { font-weight: 700; color: var(--yonsei-blue); min-width: 7em; }
+/* "Lucky one" callout: one recurring reminder that selection on training data guarantees nothing by itself. */
+.p6-lucky { border-left: 5px solid #c0392b; background: rgba(192,57,43,0.06); padding: 16px 24px;
+            border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 1.55rem; }
+.p6-lucky strong { color: #c0392b; }
 </style>
 </head>
 <body data-brand-logo="../../../reference/kor-eng2.png">
@@ -71,7 +75,7 @@
       <div class="toc-rule"></div>
       <div>
         <div class="toc-label">Hoeffding's Inequality</div>
-        <div class="toc-sub">One fixed classifier</div>
+        <div class="toc-sub">One classifier, fixed before the data</div>
       </div>
     </div>
     <div class="toc-item">
@@ -102,12 +106,11 @@
       <div class="toc-num">06</div>
       <div class="toc-rule"></div>
       <div>
-        <div class="toc-label">Held-Out Testing</div>
+        <div class="toc-label">The Validation Set</div>
         <div class="toc-sub">What still holds at scale</div>
       </div>
     </div>
   </div>
-  <p class="muted" style="margin-top:18px;">Full / advanced version: <a href="prob06-generalization-full.html">prob06-generalization-full.html</a></p>
 </div>
 
 <!-- ===== SECTION 01 — WHY GENERALIZATION ===== -->
@@ -148,6 +151,19 @@
   <p class="muted">Training error on $n$ labelled emails (illustrative). Is $h_4$ really that good?</p>
 </div>
 
+<!-- Why a class H -->
+<div class="slide">
+  <h2>Why a Class $\mathcal{H}$? &mdash; The Architecture Limits the Model</h2>
+  <div class="divider"></div>
+  <p>We train a network with a <strong>fixed architecture</strong>; only the weights move</p>
+  <div class="p6-step"><span class="t">Architecture</span><span>chosen before training: layers, widths, activations</span></div>
+  <div class="p6-step"><span class="t">Class $\mathcal{H}$</span><span>every function those weights can produce</span></div>
+  <div class="p6-step"><span class="t">Training</span><span>uses the data to pick one $\hat{h} \in \mathcal{H}$</span></div>
+  <div class="highlight">
+    <p>$\mathcal{H}$ is the model's <strong>capability</strong>: training can never leave it.</p>
+  </div>
+</div>
+
 <!-- Two error rates -->
 <div class="slide">
   <h2>Two Error Rates</h2>
@@ -159,7 +175,7 @@
     <li>True error $R(h)$: what we want, <strong>not computable</strong></li>
     <li>Training error $\hat{R}_n(h)$: what we compute</li>
   </ul>
-  <p class="muted">The concentration and finite-class results also hold for losses in $[0, 1]$. The VC section uses binary classification with 0&ndash;1 loss.</p>
+  <p class="muted">The concentration and finite-class results also hold for losses in $[0, 1]$. Section 05 uses binary classification with 0&ndash;1 loss.</p>
 </div>
 
 <!-- Assumptions -->
@@ -173,7 +189,7 @@
       <li><strong>(A2)</strong> The class $\mathcal{H}$ is <strong>finite</strong> and <strong>fixed before</strong> the sample is drawn</li>
     </ul>
   </div>
-  <p class="muted" style="margin-top:14px;">(A2) is relaxed in Section 05; (A1) is never relaxed today</p>
+  <p class="muted" style="margin-top:14px;">Section 05 drops "finite" in (A2); (A1) is never relaxed today</p>
 </div>
 
 <!-- ERM and the gap -->
@@ -187,19 +203,43 @@
     <li>Small gap: training error is a <strong>trustworthy preview</strong></li>
     <li>Large gap: the training error flatters the model</li>
   </ul>
-  <div class="highlight">
-    <p>Goal: with high probability, <strong>every</strong> gap in $\mathcal{H}$ is small at once.</p>
+  <div class="p6-lucky"><p><strong>Lucky one.</strong> ERM picks whichever filter did best on <em>these</em> emails, perhaps by luck.</p></div>
+</div>
+
+<!-- Why not concentration directly -->
+<div class="slide">
+  <h2>Why Not Apply Concentration to $\hat{h}$ Directly?</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>$h$ fixed before the data</h3>
+      <ul>
+        <li>$\hat{R}_n(h)$: average of $n$ independent trials</li>
+        <li>Concentrates around $R(h)$</li>
+        <li><strong>Fine</strong> (Section 02)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>$\hat{h}$ picked from the data</h3>
+      <ul>
+        <li>Chosen <strong>because</strong> $\hat{R}_n$ is small</li>
+        <li>Same data scores it</li>
+        <li><strong>Not justified</strong> as is</li>
+      </ul>
+    </div>
   </div>
+  <div class="p6-lucky"><p><strong>Lucky one.</strong> Low training error of $\hat{h}$ alone says nothing about its test error.</p></div>
 </div>
 
 <!-- Memorizer -->
 <div class="slide">
-  <h2>The Gap Can Be Huge &mdash; the Memorizer</h2>
+  <h2>Extreme Example &mdash; the Memorizer</h2>
   <div class="divider"></div>
   <p>Assume $X$ <strong>atomless</strong> (no email has positive probability), $Y$ an independent fair coin</p>
   <div class="math-block" style="margin:8px 0">$$h_{\text{mem}}(x) = \begin{cases} Y_i &amp; \text{if } x = X_i \\ 0 &amp; \text{otherwise} \end{cases}
     \qquad \hat{R}_n(h_{\text{mem}}) = 0, \quad R(h_{\text{mem}}) = \tfrac{1}{2}$$</div>
   <ul>
+    <li>ERM over all lookup tables picks it: training error $0$</li>
     <li>A fresh $X$ is unseen almost surely: a coin-flip label</li>
     <li>Allowing every such lookup table requires an infinite class; the finite-class theorem does not apply</li>
   </ul>
@@ -210,7 +250,7 @@
   <div class="section-num">02</div>
   <h1>Hoeffding's Inequality</h1>
   <div class="divider"></div>
-  <p class="subtitle">One fixed classifier</p>
+  <p class="subtitle">One classifier, fixed before the data</p>
 </div>
 
 <!-- Fixed classifier = coin -->
@@ -269,6 +309,34 @@
   </ul>
 </div>
 
+<!-- Fixed before data: OK -->
+<div class="slide">
+  <h2>If $h$ Is Fixed Before Seeing the Data, It Is Okay</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[\hat{R}_n(h)\big] \;=\; \frac{1}{n}\sum_{i=1}^n \Pr\big(h(X_i) \neq Y_i\big) \;=\; R(h)$$</div>
+  <ul>
+    <li>Unbiased: on average, training error equals true error</li>
+    <li>Independent trials: the average concentrates as $n$ grows</li>
+    <li>Both need $h$ chosen <strong>without</strong> looking at $(X_i, Y_i)$</li>
+  </ul>
+  <div class="highlight">
+    <p>Fixed in advance: $\hat{R}_n(h)$ is an honest estimate of $R(h)$.</p>
+  </div>
+</div>
+
+<!-- Chosen after data: biased -->
+<div class="slide">
+  <h2>Chosen After Seeing the Data, It Is Optimistic</h2>
+  <div class="divider"></div>
+  <p>$h^*$ = best filter in $\mathcal{H}$ (fixed, unknown). ERM gives $\hat{R}_n(\hat{h}) \leq \hat{R}_n(h^*)$, so</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[\hat{R}_n(\hat{h})\big] \;\leq\; \mathbb{E}\big[\hat{R}_n(h^*)\big] \;=\; R(h^*) \;\leq\; \mathbb{E}\big[R(\hat{h})\big]$$</div>
+  <ul>
+    <li>Training error of $\hat{h}$ is biased <strong>low</strong></li>
+    <li>Equality: $h^*$ fixed in advance. Last step: $R(h^*) \leq R(\hat{h})$ always</li>
+  </ul>
+  <div class="p6-lucky"><p><strong>Lucky one.</strong> Selection rewards the filter the training data happened to favour.</p></div>
+</div>
+
 <!-- Hoeffding's lemma -->
 <div class="slide">
   <h2>The Key Ingredient &mdash; Hoeffding's Lemma</h2>
@@ -279,7 +347,7 @@
     <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[e^{t(X - \mathbb{E}X)}\big] \;\leq\; \exp\!\left( \frac{t^2 (b-a)^2}{8} \right)$$</div>
   </div>
   <p>A Gaussian-shaped MGF bound from <strong>boundedness alone</strong></p>
-  <p class="muted">Recall Chernoff: $\Pr(Y \geq \alpha) \leq e^{-t\alpha}\, \mathbb{E}[e^{tY}]$ for $t \gt 0$. Lemma proof: notes, Section 3.</p>
+  <p class="muted">Used as a black box today</p>
 </div>
 
 <!-- Hoeffding theorem -->
@@ -292,25 +360,75 @@
     <div class="math-block" style="margin:8px 0">$$\Pr\big( \bar{W}_n - p \geq \epsilon \big) \leq e^{-2n\epsilon^2},
       \qquad \Pr\big( |\bar{W}_n - p| \geq \epsilon \big) \leq 2 e^{-2n\epsilon^2}$$</div>
   </div>
-  <p class="muted">Exponential in $n$; uses only the range $[0, 1]$, nothing about $\mathcal{D}$</p>
+  <div class="highlight">
+    <p>Applies to a filter <strong>if we fix the model before seeing the training data</strong>: $p = R(h)$.</p>
+  </div>
 </div>
 
-<!-- Hoeffding proof -->
+<!-- Proof step 1 -->
 <div class="slide">
-  <h2>Proof &mdash; Chernoff, Independence, Lemma</h2>
+  <h2>Proof, Step 1 &mdash; Markov Gives Chernoff</h2>
   <div class="divider"></div>
-  <p>Upper tail, any $t \gt 0$:</p>
-  <div class="math-block" style="margin:6px 0">$$\begin{aligned}
-    \Pr\big( \bar{W}_n - p \geq \epsilon \big)
-    &amp;\;\stackrel{(\text{Chernoff})}{\leq}\; e^{-t\epsilon}\, \mathbb{E}\big[ e^{t(\bar{W}_n - p)} \big]
-    \;\stackrel{(\text{indep.})}{=}\; e^{-t\epsilon} \prod_{i=1}^{n} \mathbb{E}\big[ e^{\frac{t}{n}(W_i - p)} \big] \\[4pt]
-    &amp;\;\stackrel{(\text{Lemma 1})}{\leq}\; e^{-t\epsilon + t^2/(8n)}
-    \;\stackrel{(t = 4n\epsilon)}{=}\; e^{-2n\epsilon^2}
-    \end{aligned}$$</div>
+  <p>Upper tail. For any $t \gt 0$, $u \mapsto e^{tu}$ is increasing:</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\big( \bar{W}_n - p \geq \epsilon \big)
+    \;=\; \Pr\big( e^{t(\bar{W}_n - p)} \geq e^{t\epsilon} \big)
+    \;\stackrel{(\text{Markov})}{\leq}\; e^{-t\epsilon}\, \mathbb{E}\big[ e^{t(\bar{W}_n - p)} \big]$$</div>
   <ul>
-    <li>Lower tail: same argument for $1 - W_i \in [0, 1]$</li>
-    <li>Two tails, union of two events: factor $2$ $\;\blacksquare$</li>
+    <li>Markov: $\Pr(Z \geq a) \leq \mathbb{E}[Z]/a$ for $Z \geq 0$, $a \gt 0$</li>
+    <li>Free parameter $t$: chosen in Step 4</li>
   </ul>
+</div>
+
+<!-- Proof step 2 -->
+<div class="slide">
+  <h2>Proof, Step 2 &mdash; Independence Factorizes</h2>
+  <div class="divider"></div>
+  <p>Write $\bar{W}_n - p = \frac{1}{n}\sum_i (W_i - p)$, so the exponential is a product:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ e^{t(\bar{W}_n - p)} \big]
+    \;=\; \mathbb{E}\Big[ \prod_{i=1}^{n} e^{\frac{t}{n}(W_i - p)} \Big]
+    \;\stackrel{(\text{indep.})}{=}\; \prod_{i=1}^{n} \mathbb{E}\big[ e^{\frac{t}{n}(W_i - p)} \big]$$</div>
+  <ul>
+    <li>Expectation of a product of independent factors = product of expectations</li>
+    <li>For filters: needs $h$ fixed in advance</li>
+  </ul>
+</div>
+
+<!-- Proof step 3 -->
+<div class="slide">
+  <h2>Proof, Step 3 &mdash; Lemma 1 on Each Factor</h2>
+  <div class="divider"></div>
+  <p>Each $W_i \in [0, 1]$, so $b - a = 1$; apply Lemma 1 with $t/n$ in place of $t$:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ e^{\frac{t}{n}(W_i - p)} \big] \;\leq\; e^{t^2/(8n^2)}
+    \quad\Longrightarrow\quad
+    \prod_{i=1}^{n} \mathbb{E}\big[ e^{\frac{t}{n}(W_i - p)} \big] \;\leq\; e^{t^2/(8n)}$$</div>
+  <p>With Steps 1&ndash;2, for every $t \gt 0$:</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\big( \bar{W}_n - p \geq \epsilon \big) \;\leq\; e^{-t\epsilon + t^2/(8n)}$$</div>
+</div>
+
+<!-- Proof step 4 -->
+<div class="slide">
+  <h2>Proof, Step 4 &mdash; Choose the Best $t$</h2>
+  <div class="divider"></div>
+  <p>Minimize the exponent $f(t) = -t\epsilon + \dfrac{t^2}{8n}$:</p>
+  <div class="math-block" style="margin:8px 0">$$f'(t) = -\epsilon + \frac{t}{4n} = 0
+    \;\;\Longrightarrow\;\; t = 4n\epsilon,
+    \qquad f(4n\epsilon) = -4n\epsilon^2 + 2n\epsilon^2 = -2n\epsilon^2$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Pr\big( \bar{W}_n - p \geq \epsilon \big) \;\leq\; e^{-2n\epsilon^2}$$</div>
+  <p class="muted">Any $t \gt 0$ gives a valid bound; this one is the tightest of the family</p>
+</div>
+
+<!-- Proof step 5 -->
+<div class="slide">
+  <h2>Proof, Step 5 &mdash; Lower Tail and the Factor 2</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Lower tail: apply Steps 1&ndash;4 to $W_i' = 1 - W_i \in [0, 1]$, mean $1 - p$</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$\Pr\big( p - \bar{W}_n \geq \epsilon \big) \;=\; \Pr\big( \bar{W}_n' - (1 - p) \geq \epsilon \big) \;\leq\; e^{-2n\epsilon^2}$$</div>
+  <ul>
+    <li>$\{|\bar{W}_n - p| \geq \epsilon\}$ is the union of the two tails: add them</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$\Pr\big( |\bar{W}_n - p| \geq \epsilon \big) \;\leq\; 2 e^{-2n\epsilon^2} \qquad \blacksquare$$</div>
 </div>
 
 <!-- Decay chart -->
@@ -365,7 +483,7 @@
 <div class="slide">
   <h2>The Best of 1,000 Useless Filters Looks Good</h2>
   <div class="divider"></div>
-  <div class="p6-fig" style="max-width:1000px;margin:8px auto;">
+  <div class="p6-fig" style="max-width:900px;margin:4px auto;">
     <svg viewBox="0 0 1000 380">
       <line x1="90" y1="300" x2="970" y2="300" stroke="#222" stroke-width="2"/>
       <rect x="298.6" y="290.6" width="26" height="9.4" fill="#c0392b" opacity="1"/>
@@ -395,6 +513,7 @@
     <span class="fl fl-sub fl-grey" style="left:95.00%;top:85.53%">$1$</span>
   </div>
   <p class="muted">Simulated (seed 6): every filter guesses at random, true error $0.5$</p>
+  <div class="p6-lucky"><p><strong>Lucky one.</strong> The red bar looks good on training data; test error: $0.5$.</p></div>
 </div>
 
 <!-- Selection trap statement -->
@@ -409,6 +528,7 @@
   <div class="highlight">
     <p>A bound for each preselected $h$ does not automatically apply to the $h$ selected using those same data.</p>
   </div>
+  <div class="p6-lucky"><p><strong>Lucky one.</strong> Found from training data; says nothing about test error.</p></div>
 </div>
 
 <!-- Union bound -->
@@ -423,11 +543,24 @@
   <p><em>Proof.</em> $\mathbf{1}\{\bigcup_j A_j\} \leq \sum_j \mathbf{1}\{A_j\}$ pointwise; take expectations $\;\blacksquare$</p>
 </div>
 
-<!-- Farm -->
+<!-- Union: the idea -->
 <div class="slide">
-  <h2>Pricing the Search &mdash; 1,000 Useless Filters</h2>
+  <h2>The Fix: Guard Every Filter at Once</h2>
   <div class="divider"></div>
-  <p>$A_j$ = "filter $j$ shows training error $\leq 0.25$" (true error $0.5$, so $\epsilon = \tfrac14$):</p>
+  <p>$A_j$ = "useless filter $j$ shows training error $\leq 0.25$". Bad event: <strong>some</strong> $A_j$ happens</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\Big( \bigcup_{j=1}^{1000} A_j \Big)
+    \;\stackrel{(\text{Thm 2})}{\leq}\; \sum_{j=1}^{1000} \Pr(A_j)
+    \;\stackrel{(\text{Thm 1, } \epsilon = \frac14)}{\leq}\; 1000\, e^{-2n/16}$$</div>
+  <ul>
+    <li>Each $A_j$ is about one <strong>fixed</strong> filter: Theorem 1 applies</li>
+    <li>If no $A_j$ happens, ERM cannot be fooled by a useless filter</li>
+  </ul>
+</div>
+
+<!-- Pricing -->
+<div class="slide">
+  <h2>The Price Is $\times|\mathcal{H}|$ &mdash; Enough Data Pays It</h2>
+  <div class="divider"></div>
   <table>
     <thead><tr><th><span style="text-transform:none">$n$</span></th><th>one filter, upper bound: <span style="text-transform:none">$e^{-2n/16}$</span></th><th>some filter, upper bound: <span style="text-transform:none">$1000\times$</span></th></tr></thead>
     <tbody>
@@ -435,8 +568,13 @@
       <tr><td>$100$</td><td>$3.7 \times 10^{-6}$</td><td>$0.37\%$</td></tr>
     </tbody>
   </table>
-  <p style="margin-top:12px;">The search costs a factor $|\mathcal{H}|$; the exponent must outrun it</p>
-  <p class="muted">At $n = 25$ the simulation illustrates the selection effect: six filters reached $0.24$</p>
+  <ul style="margin-top:12px;">
+    <li>$n = 25$: no guarantee, and the simulation found six lucky filters at $0.24$</li>
+    <li>$n = 100$: with probability $\geq 99.6\%$, <strong>no</strong> useless filter looks good</li>
+  </ul>
+  <div class="highlight">
+    <p>The exponent in $n$ must outrun the factor $|\mathcal{H}|$.</p>
+  </div>
 </div>
 
 <!-- ===== SECTION 04 — FINITE-CLASS THEOREM ===== -->
@@ -483,20 +621,37 @@
   <div class="divider"></div>
   <div class="card">
     <h3>Corollary 4.</h3>
-    <p>On the event of Theorem 3, with $h^* \in \operatorname*{argmin}_{h \in \mathcal{H}} R(h)$: $\;R(\hat{h}) \leq R(h^*) + 2\epsilon$</p>
+    <p>Let $h^* \in \operatorname*{argmin}_{h \in \mathcal{H}} R(h)$. With probability $\geq 1 - \delta$:</p>
+    <div class="math-block" style="margin:8px 0">$$R(\hat{h}) \;\leq\; R(h^*) + 2\epsilon$$</div>
   </div>
-  <div class="math-block" style="margin:10px 0">$$R(\hat{h})
-    \;\stackrel{(\text{Thm 3 at } \hat{h})}{\leq}\; \hat{R}_n(\hat{h}) + \epsilon
-    \;\stackrel{(\text{ERM})}{\leq}\; \hat{R}_n(h^*) + \epsilon
-    \;\stackrel{(\text{Thm 3 at } h^*)}{\leq}\; R(h^*) + 2\epsilon \;\;\blacksquare$$</div>
-  <p class="muted">Theorem 3 covers $\hat{h}$ because it covers every $h$ at once</p>
+  <p>ERM, from training data alone, is within $2\epsilon$ of the best model in $\mathcal{H}$</p>
+  <div class="highlight">
+    <p>With enough data, picking by training error is <strong>safe</strong>: the lucky-one trap is ruled out.</p>
+  </div>
+</div>
+
+<!-- Corollary proof -->
+<div class="slide">
+  <h2>Proof of Corollary 4 &mdash; Three Steps</h2>
+  <div class="divider"></div>
+  <p>Work on the event of Theorem 3 (probability $\geq 1 - \delta$):</p>
+  <table>
+    <thead><tr><th>Step</th><th>Why it holds</th></tr></thead>
+    <tbody>
+      <tr><td>$R(\hat{h}) \leq \hat{R}_n(\hat{h}) + \epsilon$</td><td>Theorem 3 covers <strong>every</strong> $h$, so also $\hat{h}$</td></tr>
+      <tr><td>$\hat{R}_n(\hat{h}) \leq \hat{R}_n(h^*)$</td><td><strong>ERM</strong>: $\hat{h}$ has the lowest training error in $\mathcal{H}$, and $h^* \in \mathcal{H}$</td></tr>
+      <tr><td>$\hat{R}_n(h^*) \leq R(h^*) + \epsilon$</td><td>Theorem 3 at $h^*$</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:12px;">Chain the three: $R(\hat{h}) \leq R(h^*) + 2\epsilon$ $\;\blacksquare$</p>
 </div>
 
 <!-- Corollary picture -->
 <div class="slide">
   <h2>Why $2\epsilon$ &mdash; the Two Hops in a Picture</h2>
   <div class="divider"></div>
-  <div class="p6-fig" style="max-width:1000px;margin:10px auto;">
+  <div class="math-block" style="margin:4px 0">$$R(\hat{h}) \;\leq\; \hat{R}_n(\hat{h}) + \epsilon \;\leq\; \hat{R}_n(h^*) + \epsilon \;\leq\; R(h^*) + 2\epsilon$$</div>
+  <div class="p6-fig" style="max-width:900px;margin:0 auto;">
     <svg viewBox="0 0 1000 330">
       <defs><marker id="hop-arr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#c0392b"/></marker></defs>
       <line x1="110" y1="300" x2="110" y2="40" stroke="#222" stroke-width="2"/>
@@ -524,9 +679,24 @@
 <div class="slide">
   <h2>How Much Data? &mdash; Logarithmic in $|\mathcal{H}|$</h2>
   <div class="divider"></div>
-  <p>Solve Theorem 3 for $n$: $\;n \geq \dfrac{\ln|\mathcal{H}| + \ln(2/\delta)}{2\epsilon^2}$. At $\epsilon = \delta = 0.05$:</p>
+  <p>Set $\epsilon$ in Theorem 3 to a target and solve for $n$:</p>
+  <div class="math-block" style="margin:8px 0">$$\sqrt{\frac{\ln(2|\mathcal{H}|/\delta)}{2n}} \leq \epsilon
+    \;\;\Longleftrightarrow\;\; n \;\geq\; \frac{\ln|\mathcal{H}| + \ln(2/\delta)}{2\epsilon^2}$$</div>
+  <ul>
+    <li>Class size enters only through $\ln|\mathcal{H}|$</li>
+    <li>Halving $\epsilon$ costs $4\times$ the data</li>
+  </ul>
+  <div class="highlight">
+    <p>With this many examples, Corollary 4 holds: $R(\hat{h}) \leq R(h^*) + 2\epsilon$ with probability $\geq 1 - \delta$.</p>
+  </div>
+</div>
+
+<!-- How much data: numbers -->
+<div class="slide">
+  <h2>A Million Candidates Cost About $3\times$ the Data of Ten</h2>
+  <div class="divider"></div>
   <table>
-    <thead><tr><th><span style="text-transform:none">$|\mathcal{H}|$</span></th><th><span style="text-transform:none">$\ln|\mathcal{H}|$</span></th><th><span style="text-transform:none">$n$</span> needed</th></tr></thead>
+    <thead><tr><th><span style="text-transform:none">$|\mathcal{H}|$</span></th><th><span style="text-transform:none">$\ln|\mathcal{H}|$</span></th><th><span style="text-transform:none">$n$</span> needed at <span style="text-transform:none">$\epsilon = \delta = 0.05$</span></th></tr></thead>
     <tbody>
       <tr><td>$10$</td><td>$2.30$</td><td>$1{,}199$</td></tr>
       <tr><td>$10^3$ (our library)</td><td>$6.91$</td><td>$2{,}120$</td></tr>
@@ -534,7 +704,9 @@
       <tr><td>$2^{100}$</td><td>$69.3$</td><td>$14{,}601$</td></tr>
     </tbody>
   </table>
-  <p class="muted" style="margin-top:10px;">A million candidates cost about $3\times$ the data of ten</p>
+  <div class="highlight">
+    <p>Each $10\times$ in $|\mathcal{H}|$ adds $\ln 10 \approx 2.3$ to $\ln|\mathcal{H}|$: about $460$ more examples here.</p>
+  </div>
 </div>
 
 <!-- ===== SECTION 05 — BEYOND FINITE CLASSES ===== -->
@@ -578,89 +750,27 @@
     <span class="fl fl-sub fl-blue" style="left:75.00%;top:75.00%">$x_{5}$</span>
     <span class="fl fl-grey" style="left:50.00%;top:92.31%">a cut in gap $k$: label $1$ on every point to its right</span>
   </div>
-  <p class="muted">On $n$ points: at most $n + 1$ labelings, exactly $n + 1$ when the points are distinct</p>
+  <p class="muted">At most $n + 1$ labelings of $n$ points: count labelings, not filters</p>
 </div>
 
-<!-- Growth function and shattering -->
+<!-- VC informal -->
 <div class="slide">
-  <h2>Growth Function and Shattering</h2>
+  <h2>Infinite $\mathcal{H}$: $\ln|\mathcal{H}|$ Becomes the VC Dimension</h2>
   <div class="divider"></div>
-  <div class="card">
-    <h3>Definition (binary $\mathcal{H}$).</h3>
-    <div class="math-block" style="margin:6px 0">$$\Pi_{\mathcal{H}}(n) \;=\; \max_{x_1, \dots, x_n} \;\Big|\big\{ (h(x_1), \dots, h(x_n)) : h \in \mathcal{H} \big\}\Big| \;\leq\; 2^n$$</div>
-    <p>$\mathcal{H}$ <strong>shatters</strong> $\{x_1, \dots, x_n\}$ if it realizes all $2^n$ labelings of that set</p>
-  </div>
-  <p class="muted" style="margin-top:12px;">Thresholds: $\Pi_{\mathcal{H}}(n) = n + 1$. Finite class: $\Pi_{\mathcal{H}}(n) \leq |\mathcal{H}|$.</p>
-</div>
-
-<!-- VC dimension -->
-<div class="slide">
-  <h2>VC Dimension &mdash; the Largest Shattered Set</h2>
-  <div class="divider"></div>
-  <p>$d_{\mathrm{VC}}(\mathcal{H})$ = largest $d$ such that <strong>some</strong> set of $d$ points is shattered</p>
-  <table>
-    <thead><tr><th>Class</th><th><span style="text-transform:none">$d_{\mathrm{VC}}$</span></th></tr></thead>
-    <tbody>
-      <tr><td>thresholds $\mathbf{1}\{x \geq t\}$ on $\mathbb{R}$</td><td>$1$</td></tr>
-      <tr><td>intervals $\mathbf{1}\{a \lt x \lt b\}$ on $\mathbb{R}$</td><td>$2$</td></tr>
-      <tr><td>halfspaces $\mathbf{1}\{w^\top x + b \gt 0\}$ on $\mathbb{R}^p$</td><td>$p + 1$</td></tr>
-      <tr><td>finite $\mathcal{H}$</td><td>$\leq \log_2 |\mathcal{H}|$</td></tr>
-    </tbody>
-  </table>
-  <p class="muted" style="margin-top:10px;">Not every set: three collinear points defeat lines in $\mathbb{R}^2$, yet $d_{\mathrm{VC}} = 3$</p>
-</div>
-
-<!-- Sauer -->
-<div class="slide">
-  <h2>Sauer's Lemma &mdash; Exponential Becomes Polynomial</h2>
-  <div class="divider"></div>
-  <div class="card">
-    <h3>Lemma 5 (Sauer&ndash;Shelah&ndash;Perles).</h3>
-    <p>If $d_{\mathrm{VC}}(\mathcal{H}) \leq d$, integer $d \geq 1$: $\;\Pi_{\mathcal{H}}(n) \leq \sum_{i=0}^{d} \binom{n}{i} \leq \big(\tfrac{en}{d}\big)^d$ for $n \gt d + 1$</p>
-  </div>
-  <table>
-    <thead><tr><th><span style="text-transform:none">$d = 3$</span></th><th><span style="text-transform:none">$n = 10$</span></th><th><span style="text-transform:none">$n = 20$</span></th><th><span style="text-transform:none">$n = 100$</span></th></tr></thead>
-    <tbody>
-      <tr><td>Sauer bound</td><td>$176$</td><td>$1{,}351$</td><td>$166{,}751$</td></tr>
-      <tr><td>$2^n$</td><td>$1{,}024$</td><td>$1{,}048{,}576$</td><td>$1.3 \times 10^{30}$</td></tr>
-    </tbody>
-  </table>
-</div>
-
-<!-- Rate sketch -->
-<div class="slide">
-  <h2>Rate Sketch &mdash; $\ln|\mathcal{H}|$ Becomes $d_{\mathrm{VC}}$</h2>
-  <div class="divider"></div>
-  <p>Heuristic, not a proof: swap $\ln|\mathcal{H}|$ for $\ln \Pi_{\mathcal{H}}(n) \leq d_{\mathrm{VC}} \ln(en/d_{\mathrm{VC}})$</p>
-  <div class="math-block" style="margin:8px 0">$$\underbrace{\sqrt{\frac{\ln|\mathcal{H}| + \ln(2/\delta)}{2n}}}_{\text{finite class (Thm 3)}}
+  <p>$d_{\mathrm{VC}}$: most points $\mathcal{H}$ labels in all $2^d$ ways. Thresholds $1$, halfspaces in $\mathbb{R}^p$: $p + 1$</p>
+  <div class="math-block" style="margin:8px 0">$$\underbrace{n \geq \frac{\ln|\mathcal{H}| + \ln(2/\delta)}{2\epsilon^2}}_{\text{finite } \mathcal{H} \text{ (Thm 3)}}
     \qquad \leadsto \qquad
-    \underbrace{\sqrt{\frac{d_{\mathrm{VC}} \ln n + \ln(1/\delta)}{n}}}_{\text{rate sketch, constants omitted}}$$</div>
+    \underbrace{n \geq C\,\frac{d_{\mathrm{VC}} + \ln(1/\delta)}{\epsilon^2}}_{\text{finite } d_{\mathrm{VC}}}$$</div>
   <div class="highlight">
-    <p><strong>Theorem</strong> (Shalev-Shwartz &amp; Ben-David, Thm 6.8): finite $d_{\mathrm{VC}}$ gives uniform convergence: with probability $\geq 1 - \delta$, every gap $\leq \epsilon$ once $n \geq C\,\frac{d_{\mathrm{VC}} + \ln(1/\delta)}{\epsilon^2}$.</p>
+    <p><strong>Theorem</strong> (Shalev-Shwartz &amp; Ben-David, Thm 6.8): with probability $\geq 1 - \delta$, every gap $\leq \epsilon$ once $n$ is this large.</p>
   </div>
-  <p class="muted">A sharper theorem removes the $\ln n$ factor. $C$ is an absolute constant; exact statement: notes, Section 8</p>
+  <p class="muted">$C$ is an absolute constant. Substituting the labeling count into Theorem 3 is not a proof.</p>
 </div>
 
-<!-- Warning -->
-<div class="slide">
-  <h2>Why the Sketch Is Not a Proof</h2>
-  <div class="divider"></div>
-  <p>Tempting: union bound over the labelings the sample allows</p>
-  <ul>
-    <li>Which labelings exist <strong>depends on the sample</strong></li>
-    <li>Union bound: fine. Fixed-$h$ concentration: not justified, the representatives depend on the sample</li>
-    <li>Real proof: a ghost sample (symmetrization), then count labelings of $2n$ points</li>
-  </ul>
-  <div class="highlight">
-    <p>Same skeleton: concentration per behaviour + a union bound over behaviours.</p>
-  </div>
-  <p class="muted">Outlook: Rademacher complexity measures how well the class fits random signs (notes)</p>
-</div>
-
-<!-- ===== SECTION 06 — HELD-OUT TESTING ===== -->
+<!-- ===== SECTION 06 — VALIDATION SET ===== -->
 <div class="slide section-slide left">
   <div class="section-num">06</div>
-  <h1>Held-Out Testing</h1>
+  <h1>The Validation Set</h1>
   <div class="divider"></div>
   <p class="subtitle">What still holds at scale</p>
 </div>
@@ -677,22 +787,33 @@
     <li>The bound is <strong>sufficient, not necessary</strong>: silence is not failure</li>
     <li>Why large networks still generalize: active research</li>
   </ul>
-  <p class="muted">A worked ResNet-50 example is in the notes, Section 9</p>
+  <div class="p6-lucky"><p><strong>Lucky one.</strong> Training error alone still cannot vouch for the trained model.</p></div>
 </div>
 
-<!-- Held-out test set -->
+<!-- Validation set -->
 <div class="slide">
-  <h2>The Held-Out Test Set Still Works</h2>
+  <h2>The Validation Set Still Works</h2>
   <div class="divider"></div>
-  <p>Train anything. Then evaluate <strong>one</strong> model on fresh data: $|\mathcal{H}| = 1$</p>
+  <p>Train anything. Then score the <strong>one</strong> finished model on a validation set it never saw</p>
   <ul>
-    <li>Theorem 1 applies when the model was selected <strong>independently</strong> of that test set</li>
-    <li>$4{,}612$ test emails: error known to $\pm 2\%$ at $95\%$</li>
-    <li>$k$ models fixed independently of the test set: union bound, $\ln k$ more</li>
+    <li>Model fixed <strong>before</strong> seeing validation data: $|\mathcal{H}| = 1$, Theorem 1 applies</li>
+    <li>$4{,}612$ validation emails: error known to $\pm 2\%$ at $95\%$</li>
   </ul>
   <div class="highlight">
-    <p>Test-based selection needs a simultaneous guarantee. Adaptively creating new candidates is not covered by the original fixed-$k$ bound.</p>
+    <p>Works well on the validation set &rArr; expect it to work well on an unseen test set from the same distribution.</p>
   </div>
+</div>
+
+<!-- Many models on validation -->
+<div class="slide">
+  <h2>Picking Among $k$ Models on the Validation Set</h2>
+  <div class="divider"></div>
+  <p>$k$ models, all fixed before the validation set is seen. Union bound: pay $\ln k$</p>
+  <div class="math-block" style="margin:8px 0">$$\epsilon \;=\; \sqrt{\frac{\ln(2k/\delta)}{2m}} \qquad (m \text{ validation examples})$$</div>
+  <div class="highlight">
+    <p>Validation-based selection needs a simultaneous guarantee. Adaptively creating new candidates is not covered by the original fixed-$k$ bound.</p>
+  </div>
+  <div class="p6-lucky"><p><strong>Lucky one.</strong> Picking the best on validation data is selection again: pay for it.</p></div>
 </div>
 
 <!-- Recap -->
@@ -702,12 +823,12 @@
   <table>
     <thead><tr><th>Tool</th><th>What it gives</th></tr></thead>
     <tbody>
-      <tr><td>Hoeffding</td><td>one fixed $h$: $\Pr(|\hat{R}_n - R| \geq \epsilon) \leq 2e^{-2n\epsilon^2}$</td></tr>
-      <tr><td>selection trap</td><td>$\hat{h}$ is chosen by the data, not fixed</td></tr>
+      <tr><td>Hoeffding</td><td>$h$ fixed before data: $\Pr(|\hat{R}_n - R| \geq \epsilon) \leq 2e^{-2n\epsilon^2}$</td></tr>
+      <tr><td>selection trap</td><td>lucky on training data: no test guarantee</td></tr>
       <tr><td>union bound</td><td>all $h$ at once, for a factor $|\mathcal{H}|$</td></tr>
       <tr><td>Theorem 3 + Corollary 4</td><td>every gap $\leq \epsilon$; ERM within $2\epsilon$ of best</td></tr>
-      <tr><td>VC dimension</td><td>infinite $\mathcal{H}$: count labelings</td></tr>
-      <tr><td>held-out test</td><td>fresh data, model fixed first</td></tr>
+      <tr><td>VC dimension</td><td>infinite $\mathcal{H}$: $\ln|\mathcal{H}|$ becomes $d_{\mathrm{VC}}$</td></tr>
+      <tr><td>validation set</td><td>model fixed first: predicts unseen test error</td></tr>
     </tbody>
   </table>
 </div>
@@ -719,7 +840,7 @@
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 38</div>
+<div class="slide-num" id="slideNum">1 / 46</div>
 
 </div><!-- end deck -->
 

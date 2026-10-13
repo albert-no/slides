@@ -8,9 +8,6 @@ and a re-derivation of every number in the lecture. The Markdown edition
 (`prob06-generalization-note.md`) is the screen-reader version: plain ASCII,
 linear reading order, all mathematics in LaTeX, tables written as lists. The HTML
 note (`prob06-generalization-note.html`) has the same text and section numbers.
-The longer full / advanced version of the lecture is
-`prob06-generalization-full.html`, with its own note
-`prob06-generalization-full-note.html`.
 
 **Notation.** $\mathcal{D}$ is the unknown distribution of a labelled example
 $(X, Y)$ with $Y \in \{0, 1\}$. A classifier is a function $h$ from inputs to
@@ -28,9 +25,9 @@ unless written $\log_2$.
 4. Hoeffding's inequality: the proof and the numbers
 5. Selection and the union bound
 6. The finite-class theorem
-7. Every number in the lecture, re-derived
+7. Every number in the lecture and this note, re-derived
 8. Beyond finite classes: the precise statements
-9. When the bound says nothing, and held-out testing
+9. When the bound says nothing, and the validation set
 10. References
 
 ## 1 Setup, assumptions, and the memorizer
@@ -312,6 +309,15 @@ and keeps whichever filter happened to make few mistakes on it; conditional on
 being chosen, a filter's mistakes on that sample are no longer an unbiased
 sample of its behaviour.
 
+The bias has a direction. Let $h^*$ be a best filter in $\mathcal{H}$; it is
+fixed in advance, so $\mathbb{E}[\hat R_n(h^*)] = R(h^*)$. ERM gives
+$\hat R_n(\hat h) \leq \hat R_n(h^*)$ on every sample, and $R(h^*) \leq
+R(\hat h)$ by the definition of $h^*$. Taking expectations,
+
+$$ \mathbb{E}\big[\hat R_n(\hat h)\big] \leq R(h^*) \leq \mathbb{E}\big[R(\hat h)\big], $$
+
+so the training error of the ERM pick is optimistic on average.
+
 ### 5.2 The simulation
 
 The lecture's histogram is a simulation. Python's `random.seed(6)`; $1000$
@@ -363,7 +369,7 @@ the lower tail of Theorem 1 gives $\Pr(A_j) \leq e^{-2n/16}$. Both numbers
 below are probability upper bounds, not probabilities.
 
 - $n = 25$: one filter $e^{-3.125} = 0.0439$, shown as $0.044$; some filter out of $1000$: at most $43.9$, shown as $44$, which exceeds $1$ and so says nothing. The simulation illustrates the selection effect: six filters did reach $0.24$.
-- $n = 100$: one filter $e^{-12.5} = 3.7 \times 10^{-6}$; some filter out of $1000$: at most $3.7 \times 10^{-3} = 0.37$ percent.
+- $n = 100$: one filter $e^{-12.5} = 3.7 \times 10^{-6}$; some filter out of $1000$: at most $3.7 \times 10^{-3} = 0.37$ percent. So with probability at least $1 - 0.0037 = 99.63$ percent (shown as at least $99.6$ percent), no useless filter shows training error at most $0.25$.
 
 The search costs a factor $|\mathcal{H}|$; the exponent in $n$ must outrun it.
 
@@ -429,7 +435,7 @@ A million candidates need about $3$ times the data of ten ($3501 / 1199 = 2.92$)
 Check for the running example: with $|\mathcal{H}| = 1000$, $n = 2120$,
 $\delta = 0.05$, Theorem 3 gives $\epsilon = 0.049992 \leq 0.05$.
 
-## 7 Every number in the lecture, re-derived
+## 7 Every number in the lecture and this note, re-derived
 
 All values were recomputed in Python for this note.
 
@@ -437,10 +443,10 @@ All values were recomputed in Python for this note.
 - Coin bound and the $\pm 2$ percent example: Sections 2.3 and 4.3 ($3.7266 \times 10^{-6}$; $4611.1$, so $4{,}612$; Chebyshev $12{,}500$).
 - Decay chart: Section 4.4.
 - Simulation and pricing table: Sections 5.2 and 5.4. Two-sided versions for reference: $2 e^{-12.5} = 7.45 \times 10^{-6}$ and $2 e^{-3.125} = 0.0879$.
-- Sample sizes and the running example's $\epsilon$: Section 6.3.
-- Sauer bounds for $d = 3$ (Section 8.4): $n = 10$: $176$ against $2^{10} = 1{,}024$; $n = 20$: $1{,}351$ against $1{,}048{,}576$; $n = 100$: $166{,}751$ against $1.27 \times 10^{30}$. The cruder bound $(en/d)^d$ at $n = 10$ is $743.9$.
-- ResNet-50 (Section 9.1): $\ln|\mathcal{H}| \leq 5.678 \times 10^8$ and $\epsilon = 14.89$.
-- Held-out testing (Section 9.3): $4{,}612$ for one model; $7{,}490$ for ten.
+- Sample sizes and the running example's $\epsilon$: Section 6.3. Each factor $10$ in $|\mathcal{H}|$ adds $\ln 10 / (2 \cdot 0.05^2) = 460.5$ to the required $n$, shown as about $460$.
+- Sauer bounds for $d = 3$ (Section 8.4, this note only): $n = 10$: $176$ against $2^{10} = 1{,}024$; $n = 20$: $1{,}351$ against $1{,}048{,}576$; $n = 100$: $166{,}751$ against $1.27 \times 10^{30}$. The cruder bound $(en/d)^d$ at $n = 10$ is $743.9$.
+- ResNet-50 (Section 9.1, this note only): $\ln|\mathcal{H}| \leq 5.678 \times 10^8$ and $\epsilon = 14.89$.
+- Validation set (Section 9.3): $4{,}612$ for one model; $7{,}490$ for ten.
 
 ## 8 Beyond finite classes: the precise statements
 
@@ -566,9 +572,9 @@ $\log(1/\delta)$ instead of $1/\delta$; its proof is in [4, Chapter 28]. The
 constants $C_1, C_2$ are not given numerically, which is why the lecture shows
 the order of growth only.
 
-### 8.8 The rate sketch, reconciled
+### 8.8 A tempting rate sketch, reconciled
 
-The lecture's rate sketch replaces $\ln|\mathcal{H}|$ by
+A tempting sketch replaces $\ln|\mathcal{H}|$ by
 $\ln \Pi_{\mathcal{H}}(n) \leq d_{\mathrm{VC}} \ln(en/d_{\mathrm{VC}})$ in
 Theorem 3, giving the shape
 $\sqrt{(d_{\mathrm{VC}} \ln n + \ln(1/\delta))/n}$ with constants omitted. It
@@ -577,7 +583,8 @@ is labelled a sketch because of Section 8.5. What is actually proved: Theorem
 and Theorem 6.8, inverted, gives
 $\epsilon \leq \sqrt{C_2 (d + \log(1/\delta))/n}$ with no $\log n$. So the
 two displayed rates differ because a sharper theorem removes the $\log n$
-factor.
+factor. The lecture shows only the Theorem 6.8 form,
+$n \geq C (d_{\mathrm{VC}} + \ln(1/\delta))/\epsilon^2$.
 
 ### 8.9 Outlook: Rademacher complexity
 
@@ -600,7 +607,7 @@ and constant $4c$ inside the second term, with $\ln(4/\delta)$. Note these are
 one-sided. For finite VC dimension, the Rademacher complexity is bounded in
 terms of the growth function, recovering the VC bounds.
 
-## 9 When the bound says nothing, and held-out testing
+## 9 When the bound says nothing, and the validation set
 
 For enormous classes, this bound can exceed 1 and become uninformative.
 
@@ -614,7 +621,7 @@ bit patterns can give the same function, so the count is an upper bound:
 
 $$ |\mathcal{H}| \leq 2^{32 \times 25.6 \times 10^6} = 2^{8.192 \times 10^8}, \qquad \ln|\mathcal{H}| \leq 8.192 \times 10^8 \cdot \ln 2 = 5.678 \times 10^8. $$
 
-With $n = 1.28 \times 10^6$ training images (the count used in the full note)
+With $n = 1.28 \times 10^6$ training images (the ImageNet-1k training set)
 and $\delta = 0.05$:
 
 $$ \epsilon = \sqrt{\frac{5.678 \times 10^8 + \ln 40}{2 \times 1.28 \times 10^6}} = \sqrt{221.8} = 14.89. $$
@@ -640,35 +647,37 @@ bounds are sufficient, not necessary: they pay for every classifier in the
 class, while training explores a tiny part of it. Explaining why large
 networks generalize is active research.
 
-### 9.3 The held-out test set
+### 9.3 The validation set
 
-Train anything, by any method. Then evaluate one model on a test set drawn
-fresh and independently of everything used to produce that model. With respect
-to the test set the model is a single classifier fixed in advance, so
-$|\mathcal{H}| = 1$ and Theorem 1 applies exactly: by Section 4.3, $4{,}612$
-test emails estimate its error to within $2$ percent with probability at least
-$95$ percent.
+Train anything, by any method. Then evaluate one model on a validation set
+drawn fresh and independently of everything used to produce that model. With
+respect to the validation set the model is a single classifier fixed in
+advance, so $|\mathcal{H}| = 1$ and Theorem 1 applies exactly: by Section 4.3,
+$4{,}612$ validation emails estimate its error to within $2$ percent with
+probability at least $95$ percent. If the model works well on the validation
+set, expect it to work well on an unseen test set from the same distribution.
 
-The requirement is that the selection of the model is independent of the test
-set. Comparing $k$ models fixed in advance on the same test set is a union bound
+The requirement is that the selection of the model is independent of the
+validation set. Comparing $k$ models fixed in advance on the same validation set is a union bound
 over $k$: $n \geq (\ln k + \ln(2/\delta))/(2\epsilon^2)$. At $\pm 2$ percent and
 $95$ percent this is $4{,}612$ for $k = 1$ and $(\ln 10 + \ln 40)/0.0008 =
 7489.3$, so $7{,}490$, for $k = 10$. The bound is simultaneous over the $k$
 models, so it still covers picking the best of them by test error, as long as
-the $k$ candidates were fixed independently of the test set. Test-based
-selection needs exactly this kind of simultaneous guarantee.
+the $k$ candidates were fixed independently of the validation set.
+Validation-based selection needs exactly this kind of simultaneous guarantee.
 
-### 9.4 Reusing test results breaks the argument
+### 9.4 Reusing validation results breaks the argument
 
-If test results are used to select or tune models (try a change, check the test
-error, keep it if it helped, repeat), then later models depend on the test set.
+If validation results are used to select or tune models (try a change, check
+the validation error, keep it if it helped, repeat), then later models depend
+on the validation set.
 They are no longer fixed in advance with respect to it, and the guarantee of
 Section 9.3 no longer applies: this is the selection trap of Section 5.1, with
-the test set in the role of the training set. A fixed union bound over the
+the validation set in the role of the training set. A fixed union bound over the
 models actually tried does not repair it either, because which models get tried
 depends on earlier test results: adaptively creating new candidates is not
-covered by the original fixed-$k$ bound. The safe practice is a separate validation set
-for selection and a test set used once at the end.
+covered by the original fixed-$k$ bound. The safe practice is a validation set
+for selection among candidates and a separate test set used once at the end.
 
 ## 10 References
 

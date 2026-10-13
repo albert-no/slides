@@ -34,7 +34,7 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 3 | `prob03-mutual-information/` — joint/cond entropy, MI, DPI I–III, cond MI, differential entropy, MaxEnt Gaussian | prob 539–1210 | done (128 slides, 2026-09 revision) |
 | 4 | `prob04-random-processes/` — Markov processes, stationary dist., discrete diffusion | prob 1211–1455 | done (99 slides) |
 | 5 | `prob05-concentration/` — Markov/Chebyshev/Chernoff, MGF, CLT sketch, LLN | prob 1457–1595 | done (106 slides) |
-| 6 | `prob06-generalization/` — Hoeffding, sub-Gaussian, union bound, finite-class generalization bound | new material (sequel to prob05) | done (38 slides, senior-undergrad default; full / advanced 105) |
+| 6 | `prob06-generalization/` — Hoeffding, sub-Gaussian, union bound, finite-class generalization bound | new material (sequel to prob05) | done (46 slides, senior-undergrad default; full / advanced 105) |
 | 7 | `prob07-estimation/` — cond. expectation/tower, MLE/MAP, Fano (full proof), Naive Bayes, bias-variance, MMSE | prob 1563–1911 | done (124 slides) |
 | 8 | `prob08-gaussian/` — MVN (3 defs, properties w/ proofs), Gaussian channel, Gaussian diffusion/DDPM, Gaussian discriminant | prob 1912–2519 (MIT OCW 6.436J citation) | done (130 slides) |
 | 9 | `prob09-monte-carlo/` — Monte Carlo, importance sampling, variance trade-offs, policy gradient / RLHF hooks | new material | done (113 slides) |
@@ -273,37 +273,38 @@ plan. Added beyond the tex, flagged on-slide as illustration: Markov tightness
 example, KL-divergence form of the optimized Chernoff exponent, Gaussian-actual
 column in the ασ table.
 
-### prob06-generalization — From Concentration to Generalization (38 slides)
+### prob06-generalization — From Concentration to Generalization (46 slides)
 
-`prob06-generalization/prob06-generalization.html` · **default deck, senior undergraduates** (75-minute lecture,
+`prob06-generalization/prob06-generalization.html` · **default deck, senior undergraduates** (no time limit,
 rigorous mode). Rewritten 2026-10 from the 105-slide deck, which is kept as the
-full / advanced edition below. One running example throughout: choosing a spam
+full / advanced edition below (not linked from this deck). One running example throughout: choosing a spam
 filter from a finite class. Assumptions (i.i.d. sample, loss in [0,1]) are stated
-early. Sub-Gaussian calculus, the KL bridge, the KL plot and the three-way coin table are
-moved to the notes. Adds a high-level section on infinite classes. No tech supplement.
+early. Recurring red "Lucky one" callout (`.p6-lucky`): a model picked on training data carries no
+test guarantee by itself. Sub-Gaussian calculus, the KL bridge, the KL plot, the three-way coin table and the
+VC machinery (growth function, Sauer) are in the notes only; the slides never cite the notes. No tech supplement.
 
 Companion: `prob06-generalization/prob06-generalization-note.html` — the notes:
-setup, Chernoff/KL, Hoeffding's lemma proof, union bound, Theorem 3 proof,
-VC/Sauer precise statements, ResNet-50 calculation, held-out test, references.
+setup, Chernoff/KL, Hoeffding's lemma proof, union bound and selection bias, Theorem 3 proof,
+VC/Sauer precise statements, ResNet-50 calculation, validation set, references.
 Generated from the Markdown edition.
-Accessible edition: `prob06-generalization/prob06-generalization-note.md` (680 lines):
+Accessible edition: `prob06-generalization/prob06-generalization-note.md` (689 lines):
 screen-reader Markdown, LaTeX math, figures described verbally.
 
 | # | Section | Slides | Location |
 |---|---|---|---|
-| — | Title + TOC | 1–2 | prob06-generalization/prob06-generalization.html:45 |
-| 01 | Why Generalization? (spam-filter running example :122, two error rates :152, two assumptions :166, ERM and gap :180, memorizer, qualified (atomless X, independent fair labels) :196) | 3–8 | prob06-generalization/prob06-generalization.html:114 |
-| 02 | Hoeffding's Inequality (fixed filter = biased coin :217, Lemma 1 :273, Thm 1 :286, three-step proof (Chernoff, independence multiplies MGFs, lemma; lower tail + factor 2) :299, exponential decay chart :317, ±2%@95% → n ≥ 4,612 :346) | 9–15 | prob06-generalization/prob06-generalization.html:209 |
-| 03 | Selection and the Union Bound (best of 1,000 useless filters :365, the selection trap :401, Thm 2 union bound, no independence needed :415, pricing the search :427) | 16–20 | prob06-generalization/prob06-generalization.html:357 |
-| 04 | The Finite-Class Theorem (Thm 3 with plain-language statement :451, three-line proof :465, Cor 4 ERM within 2ε :481, two-hop 2ε picture :496, sample size logarithmic in \|H\| :524) | 21–26 | prob06-generalization/prob06-generalization.html:443 |
-| 05 | Beyond Finite Classes (high level: thresholds give at most n+1 labelings :549, growth function and shattering :585, d_VC :597, Lemma 5 Sauer :614, labelled rate sketch :631, why the sketch is not a proof + Rademacher outlook :645) | 27–33 | prob06-generalization/prob06-generalization.html:541 |
-| 06 | Held-Out Testing (bound can exceed 1, vacuous :669, held-out test set still works; reuse breaks it :684) | 34–36 | prob06-generalization/prob06-generalization.html:661 |
-| — | Recap table, end slide | 37–38 | prob06-generalization/prob06-generalization.html:699 |
+| — | Title + TOC | 1–2 | prob06-generalization/prob06-generalization.html:48 |
+| 01 | Why Generalization? (spam-filter running example :126, why a class H: fixed architecture limits capability :156, two error rates :169, two assumptions :183, ERM and gap :197, why concentration cannot be applied to ĥ directly :211, memorizer as the extreme example, qualified (atomless X, independent fair labels) :236) | 3–10 | prob06-generalization/prob06-generalization.html:116 |
+| 02 | Hoeffding's Inequality (fixed filter = biased coin :258, fixed before data: unbiased :314, chosen after data: optimistic, E R̂(ĥ) ≤ R(h*) ≤ E R(ĥ) :329, Lemma 1 :342, Thm 1 with "fix the model before seeing the training data" :355, five-step proof: Markov→Chernoff :370, independence :384, lemma per factor :398, optimize t = 4nε :410, lower tail + factor 2 :422; decay chart :436, ±2%@95% → n ≥ 4,612 :465) | 11–23 | prob06-generalization/prob06-generalization.html:248 |
+| 03 | Selection and the Union Bound (best of 1,000 useless filters :484, the selection trap :521, Thm 2 union bound :536, guard every filter at once :548, price ×\|H\| table with n=25 / n=100 takeaways :562) | 24–29 | prob06-generalization/prob06-generalization.html:474 |
+| 04 | The Finite-Class Theorem (Thm 3 :590, three-line proof :604, Cor 4 ERM within 2ε, displayed :620, Cor 4 proof table incl. the ERM step :635, equation chain + two-hop picture :651, sample size formula :680, sample-size table :696) | 30–37 | prob06-generalization/prob06-generalization.html:580 |
+| 05 | Beyond Finite Classes (thresholds give at most n+1 labelings :722, ln\|H\| → d_VC with SSBD Thm 6.8 :758) | 38–40 | prob06-generalization/prob06-generalization.html:712 |
+| 06 | The Validation Set (bound can exceed 1 :780, validation set predicts unseen test error :795, picking among k models; adaptivity caveat :809) | 41–44 | prob06-generalization/prob06-generalization.html:770 |
+| — | Recap table, end slide | 45–46 | prob06-generalization/prob06-generalization.html:821 |
 
-Key theorems: **Lemma 1** Hoeffding's lemma (prob06-generalization/prob06-generalization.html:277); **Thm 1** Hoeffding's
-inequality (prob06-generalization/prob06-generalization.html:290); **Thm 2** union bound (prob06-generalization/prob06-generalization.html:419); **Thm 3** finite-class uniform
-convergence (prob06-generalization/prob06-generalization.html:456); **Cor 4** ERM within 2ε (prob06-generalization/prob06-generalization.html:485); **Lemma 5** Sauer–Shelah–Perles
-(prob06-generalization/prob06-generalization.html:618). Precise VC theorems (SSBD Thms 6.8, 6.11) and Rademacher (SSBD 26.5) are
+Key theorems: **Lemma 1** Hoeffding's lemma (prob06-generalization/prob06-generalization.html:345); **Thm 1** Hoeffding's
+inequality (prob06-generalization/prob06-generalization.html:358); **Thm 2** union bound (prob06-generalization/prob06-generalization.html:539); **Thm 3** finite-class uniform
+convergence (prob06-generalization/prob06-generalization.html:594); **Cor 4** ERM within 2ε (prob06-generalization/prob06-generalization.html:623); SSBD Thm 6.8 stated informally
+(prob06-generalization/prob06-generalization.html:765). Growth function, Sauer's lemma, precise VC theorems (SSBD Thms 6.8, 6.11) and Rademacher (SSBD 26.5) are
 in the notes only.
 
 ### prob06-generalization-full — Full / advanced edition (105 slides)

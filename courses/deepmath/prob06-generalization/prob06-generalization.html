@@ -35,6 +35,10 @@
            border: 1px solid var(--slate); border-radius: 12px; padding: 16px 28px; margin-bottom: 16px; }
 .p6-step .n { font-weight: 700; color: var(--yonsei-blue); }
 .p6-step .t { font-weight: 700; color: var(--yonsei-blue); min-width: 7em; }
+/* "Lucky one" callout: one recurring reminder that selection on training data guarantees nothing by itself. */
+.p6-lucky { border-left: 5px solid #c0392b; background: rgba(192,57,43,0.06); padding: 16px 24px;
+            border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 1.55rem; }
+.p6-lucky strong { color: #c0392b; }
 </style>
 </head>
 <body data-brand-logo="../../../reference/kor-eng2.png">
@@ -47,7 +51,7 @@
   <div class="pill pill-fill" style="margin-bottom:28px;">Deep Learning Math &middot; Lecture 6</div>
   <h1>From Concentration<br>to Generalization</h1>
   <div class="divider"></div>
-  <p class="subtitle">Why low training loss can mean low test loss</p>
+  <p class="subtitle">When does low training error mean low test error?</p>
   <div class="spacer-lg"></div>
   <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;&middot;&nbsp; Yonsei University</p>
   <p style="margin-top:6px;">Fall 2026</p>
@@ -57,69 +61,53 @@
 <div class="slide">
   <h2>Contents</h2>
   <div class="divider"></div>
-  <div class="toc-list" style="display:grid;grid-auto-flow:column;grid-template-rows:repeat(4,auto);grid-template-columns:1fr 1fr;gap:16px 44px">
+  <div class="toc-list" style="display:grid;grid-auto-flow:column;grid-template-rows:repeat(3,auto);grid-template-columns:1fr 1fr;gap:22px 44px">
     <div class="toc-item">
       <div class="toc-num">01</div>
       <div class="toc-rule"></div>
       <div>
         <div class="toc-label">Why Generalization?</div>
-        <div class="toc-sub">Train loss is not the goal</div>
+        <div class="toc-sub">Pick one classifier from many</div>
       </div>
     </div>
     <div class="toc-item">
       <div class="toc-num">02</div>
       <div class="toc-rule"></div>
       <div>
-        <div class="toc-label">Recall &mdash; the Concentration Toolkit</div>
-        <div class="toc-sub">Markov, Chernoff, MGF</div>
+        <div class="toc-label">Hoeffding's Inequality</div>
+        <div class="toc-sub">One classifier, fixed before the data</div>
       </div>
     </div>
     <div class="toc-item">
       <div class="toc-num">03</div>
       <div class="toc-rule"></div>
       <div>
-        <div class="toc-label">Hoeffding's Lemma</div>
-        <div class="toc-sub">Bounded ⇒ Gaussian-like MGF</div>
+        <div class="toc-label">Selection and the Union Bound</div>
+        <div class="toc-sub">Many classifiers, one sample</div>
       </div>
     </div>
     <div class="toc-item">
       <div class="toc-num">04</div>
       <div class="toc-rule"></div>
       <div>
-        <div class="toc-label">Sub-Gaussian Variables</div>
-        <div class="toc-sub">One envelope, many distributions</div>
+        <div class="toc-label">The Finite-Class Theorem</div>
+        <div class="toc-sub">Every gap small at once</div>
       </div>
     </div>
     <div class="toc-item">
       <div class="toc-num">05</div>
       <div class="toc-rule"></div>
       <div>
-        <div class="toc-label">Hoeffding's Inequality</div>
-        <div class="toc-sub">Distribution-free exponential tails</div>
+        <div class="toc-label">Beyond Finite Classes</div>
+        <div class="toc-sub">Count labelings, not parameters</div>
       </div>
     </div>
     <div class="toc-item">
       <div class="toc-num">06</div>
       <div class="toc-rule"></div>
       <div>
-        <div class="toc-label">The Union Bound</div>
-        <div class="toc-sub">Paying for many looks</div>
-      </div>
-    </div>
-    <div class="toc-item">
-      <div class="toc-num">07</div>
-      <div class="toc-rule"></div>
-      <div>
-        <div class="toc-label">The Generalization Theorem</div>
-        <div class="toc-sub">Uniform over a finite class</div>
-      </div>
-    </div>
-    <div class="toc-item">
-      <div class="toc-num">08</div>
-      <div class="toc-rule"></div>
-      <div>
-        <div class="toc-label">Why ERM Works</div>
-        <div class="toc-sub">And where the bound breaks</div>
+        <div class="toc-label">The Validation Set</div>
+        <div class="toc-sub">What still holds at scale</div>
       </div>
     </div>
   </div>
@@ -130,1229 +118,550 @@
   <div class="section-num">01</div>
   <h1>Why Generalization?</h1>
   <div class="divider"></div>
-  <p class="subtitle">Train loss is not the goal</p>
+  <p class="subtitle">Pick one classifier from many</p>
 </div>
 
-<!-- Two numbers -->
+<!-- Running example -->
 <div class="slide">
-  <h2>Two Numbers, One Training Run</h2>
+  <h2>Running Example &mdash; Pick One Spam Filter</h2>
   <div class="divider"></div>
-  <div class="grid-3">
-    <div class="card">
-      <h3>Training loss</h3>
-      <p>Computable, minimized</p>
-      <p class="muted">what the optimizer sees</p>
-    </div>
-    <div class="card">
-      <h3>Test performance</h3>
-      <p>Unknown at training time</p>
-      <p class="muted">what we actually care about</p>
-    </div>
-    <div class="card">
-      <h3>The gap</h3>
-      <p>Test minus train</p>
-      <p class="muted">today's whole subject</p>
-    </div>
+  <p>A library of $1{,}000$ spam filters, built <strong>before</strong> we see any data</p>
+  <div class="p6-fig" style="max-width:1000px;margin:12px auto;">
+    <svg viewBox="0 0 1000 300">
+      <rect x="40" y="60" width="120" height="80" rx="12" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <rect x="200" y="60" width="120" height="80" rx="12" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <rect x="360" y="60" width="120" height="80" rx="12" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <rect x="520" y="60" width="120" height="80" rx="12" fill="#003876" stroke="#003876" stroke-width="2"/>
+      <rect x="840" y="60" width="120" height="80" rx="12" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
+      <line x1="580" y1="205" x2="580" y2="240" stroke="#c0392b" stroke-width="2" stroke-dasharray="5 4"/>
+    </svg>
+    <span class="fl fl-blue" style="left:10.00%;top:33.33%">$h_1$</span>
+    <span class="fl fl-grey" style="left:10.00%;top:61.67%">$0.31$</span>
+    <span class="fl fl-blue" style="left:26.00%;top:33.33%">$h_2$</span>
+    <span class="fl fl-grey" style="left:26.00%;top:61.67%">$0.24$</span>
+    <span class="fl fl-blue" style="left:42.00%;top:33.33%">$h_3$</span>
+    <span class="fl fl-grey" style="left:42.00%;top:61.67%">$0.42$</span>
+    <span class="fl fl-white" style="left:58.00%;top:33.33%">$h_4$</span>
+    <span class="fl fl-red" style="left:58.00%;top:61.67%">$0.18$</span>
+    <span class="fl fl-grey" style="left:74.00%;top:33.33%">$\cdots$</span>
+    <span class="fl fl-blue" style="left:90.00%;top:33.33%">$h_{1000}$</span>
+    <span class="fl fl-grey" style="left:90.00%;top:61.67%">$0.27$</span>
+    <span class="fl fl-sub fl-red" style="left:58.00%;top:87.33%">lowest training error: chosen</span>
   </div>
-  <p class="muted" style="margin-top:14px;">Minimizing one number, hoping about another: needs a <strong>theorem</strong></p>
+  <p class="muted">Training error on $n$ labelled emails (illustrative). Is $h_4$ really that good?</p>
 </div>
 
-<!-- Setup: data and hypotheses -->
+<!-- Why a class H -->
 <div class="slide">
-  <h2>The Setup &mdash; Data, Hypothesis, Loss</h2>
+  <h2>Why a Class $\mathcal{H}$? &mdash; The Architecture Limits the Model</h2>
   <div class="divider"></div>
-  <p>Data: i.i.d. draws from an unknown distribution $\mathcal{D}$</p>
-  <div class="math-block" style="margin:8px 0">$$Z_1, \dots, Z_n \stackrel{\text{i.i.d.}}{\sim} \mathcal{D},
-    \qquad Z_i = (X_i, Y_i)$$</div>
-  <ul>
-    <li>Hypothesis $h$: a candidate model (classifier, predictor)</li>
-    <li>Loss $\ell(h, z) \in [0,1]$: how badly $h$ handles example $z$</li>
-  </ul>
-  <p class="muted">Example: 0/1 loss, $\ell(h,(x,y)) = \mathbf{1}\{h(x) \neq y\}$</p>
-</div>
-
-<!-- True risk -->
-<div class="slide">
-  <h2>True Risk &mdash; What We Want</h2>
-  <div class="divider"></div>
-  <p>Expected loss on a <strong>fresh</strong> example:</p>
-  <div class="math-block" style="margin:8px 0">$$R(h) \;=\; \mathbb{E}_{Z \sim \mathcal{D}}\big[\ell(h, Z)\big]$$</div>
-  <ul>
-    <li>A fixed number for each $h$</li>
-    <li>Depends on $\mathcal{D}$: <strong>not computable</strong></li>
-  </ul>
-  <p class="muted">For 0/1 loss: $R(h)$ = true error rate of $h$</p>
-</div>
-
-<!-- Empirical risk -->
-<div class="slide">
-  <h2>Empirical Risk &mdash; What We Compute</h2>
-  <div class="divider"></div>
-  <p>Average loss on the sample:</p>
-  <div class="math-block" style="margin:8px 0">$$\hat{R}_n(h) \;=\; \frac{1}{n} \sum_{i=1}^{n} \ell(h, Z_i)$$</div>
-  <ul>
-    <li>A <strong>sample mean</strong> $\bar{X}_n$: exactly what concentration bounds</li>
-    <li>Random: new sample, new value</li>
-  </ul>
-  <p class="muted">Training loss, test-set error: both instances of $\hat{R}_n$</p>
-</div>
-
-<!-- ERM -->
-<div class="slide">
-  <h2>Empirical Risk Minimization (ERM)</h2>
-  <div class="divider"></div>
-  <p>The universal recipe of machine learning:</p>
-  <div class="math-block" style="margin:8px 0">$$\hat{h} \;=\; \operatorname*{argmin}_{h \in \mathcal{H}} \; \hat{R}_n(h)
-    \qquad \text{over a class } \mathcal{H}$$</div>
-  <ul>
-    <li>$\mathcal{H}$: the models the training procedure can output</li>
-    <li>Pick the one with the <strong>smallest training loss</strong></li>
-  </ul>
-  <p class="muted">SGD on a fixed architecture: approximate ERM over its weight settings</p>
-</div>
-
-<!-- The gap -->
-<div class="slide">
-  <h2>The Generalization Gap</h2>
-  <div class="divider"></div>
-  <p>The quantity that decides whether training was honest:</p>
-  <div class="math-block" style="margin:8px 0">$$\text{gap}(h) \;=\; R(h) - \hat{R}_n(h)$$</div>
-  <ul>
-    <li>Small $|\text{gap}|$: training loss is a <strong>trustworthy preview</strong> of reality</li>
-    <li>Large $|\text{gap}|$: the model <strong>memorized</strong>, numbers lie</li>
-  </ul>
+  <p>We train a network with a <strong>fixed architecture</strong>; only the weights move</p>
+  <div class="p6-step"><span class="t">Architecture</span><span>chosen before training: layers, widths, activations</span></div>
+  <div class="p6-step"><span class="t">Class $\mathcal{H}$</span><span>every function those weights can produce</span></div>
+  <div class="p6-step"><span class="t">Training</span><span>uses the data to pick one $\hat{h} \in \mathcal{H}$</span></div>
   <div class="highlight">
-    <p>Generalization = $|\text{gap}(h)|$ is small, <strong>provably</strong>, with high probability.</p>
+    <p>$\mathcal{H}$ is the model's <strong>capability</strong>: training can never leave it.</p>
   </div>
+  <p class="muted" style="margin-top:12px;">Real-valued weights generally give an infinite class; first we study a finite library</p>
 </div>
 
-<!-- Overfitting picture -->
+<!-- Two error rates -->
 <div class="slide">
-  <h2>The Overfitting Picture</h2>
+  <h2>Two Error Rates</h2>
   <div class="divider"></div>
-  <div class="p6-fig" style="max-width:1000px;margin:14px auto;">
-    <svg viewBox="0 0 1000 380">
-      <line x1="120" y1="310" x2="960" y2="310" stroke="#222" stroke-width="2"/>
-      <line x1="120" y1="310" x2="120" y2="55" stroke="#222" stroke-width="2"/>
-      <path d="M 147 150 C 300 235, 480 275, 919 292" fill="none" stroke="#9aa4af" stroke-width="4"/>
-      <path d="M 147 130 C 300 210, 430 218, 540 200 C 680 178, 830 110, 919 62" fill="none" stroke="#003876" stroke-width="4"/>
-      <line x1="800" y1="124" x2="800" y2="280" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6 5"/>
-      <circle cx="480" cy="207" r="8" fill="#003876"/>
-      <line x1="480" y1="198" x2="480" y2="182" stroke="#9aa4af" stroke-width="2"/>
-    </svg>
-    <span class="fl" style="left:54.00%;top:92.11%">model complexity</span>
-    <span class="fl" style="left:15.20%;top:7.37%">error</span>
-    <span class="fl fl-blue" style="left:25.00%;top:26.32%">true risk</span>
-    <span class="fl fl-grey" style="left:33.00%;top:70.53%">training loss</span>
-    <span class="fl fl-red" style="left:84.50%;top:52.63%">gap</span>
-    <span class="fl fl-sub fl-grey" style="left:48.00%;top:43.42%">sweet spot</span>
-  </div>
-  <p class="muted">Training loss keeps falling. True risk turns back up: the gap grows.</p>
-</div>
-
-<!-- Memorizer example -->
-<div class="slide">
-  <h2>Worked Example &mdash; The Memorizer</h2>
-  <div class="divider"></div>
-  <p>Labels: independent fair coins, unrelated to $x$. Model: a lookup table</p>
-  <p class="muted" style="margin:4px 0">Assume $X$ has a continuous distribution, so a fresh $x$ is unseen with probability $1$</p>
-  <div class="math-block" style="margin:8px 0">$$h_{\text{mem}}(x) = \begin{cases} Y_i &amp; \text{if } x = X_i \text{ (seen in training)} \\ 0 &amp; \text{otherwise} \end{cases}$$</div>
-  <div class="math-block" style="margin:8px 0">$$\hat{R}_n(h_{\text{mem}}) = 0, \qquad R(h_{\text{mem}}) = \tfrac{1}{2}, \qquad \text{gap} = \tfrac{1}{2}$$</div>
-  <p class="muted">Perfect training score, coin-flip reality: the gap can be huge</p>
-</div>
-
-<!-- Why concentration is not enough -->
-<div class="slide">
-  <h2>Why Concentration Is Not Enough</h2>
-  <div class="divider"></div>
-  <p>Concentration: for one <strong>fixed</strong> $h$, $\hat{R}_n(h) \approx R(h)$</p>
+  <p>Email $X$, label $Y \in \{0, 1\}$ (spam or not), drawn from an unknown $\mathcal{D}$:</p>
+  <div class="math-block" style="margin:8px 0">$$R(h) = \Pr\big(h(X) \neq Y\big),
+    \qquad \hat{R}_n(h) = \frac{1}{n} \sum_{i=1}^{n} \mathbf{1}\{h(X_i) \neq Y_i\}$$</div>
   <ul>
-    <li>Fixed means: chosen <strong>before</strong> seeing the sample</li>
-    <li>But ERM picks $\hat{h}$ <strong>after</strong> looking at the sample</li>
-    <li>$\hat{h}$ hunts for lucky fluctuations: exactly where bounds fail</li>
+    <li>True error $R(h)$: what we want, <strong>not computable</strong></li>
+    <li>Training error $\hat{R}_n(h)$: what we compute</li>
   </ul>
-  <div class="highlight">
-    <p>Need: one guarantee covering <strong>every $h$ at once</strong> &mdash; uniform convergence.</p>
-  </div>
+  <p class="muted">The concentration and finite-class results also hold for losses in $[0, 1]$. Section 05 uses binary classification with 0&ndash;1 loss.</p>
 </div>
 
-<!-- Route -->
+<!-- Assumptions -->
 <div class="slide">
-  <h2>The Route</h2>
+  <h2>Two Assumptions, Used Throughout</h2>
   <div class="divider"></div>
-  <p>Two tools, one assembly:</p>
-  <div class="p6-fig" style="max-width:1060px;margin:16px auto;">
-    <svg viewBox="0 0 1060 300">
-      <defs><marker id="rt-arr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#1a5296"/></marker></defs>
-      <rect x="10" y="30" width="250" height="100" rx="12" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
-      <line x1="264" y1="80" x2="306" y2="80" stroke="#1a5296" stroke-width="2.5" marker-end="url(#rt-arr)"/>
-      <rect x="310" y="30" width="250" height="100" rx="12" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
-      <rect x="310" y="170" width="250" height="100" rx="12" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
-      <line x1="564" y1="88" x2="644" y2="128" stroke="#1a5296" stroke-width="2.5" marker-end="url(#rt-arr)"/>
-      <line x1="564" y1="212" x2="644" y2="172" stroke="#1a5296" stroke-width="2.5" marker-end="url(#rt-arr)"/>
-      <rect x="650" y="100" width="250" height="100" rx="12" fill="#003876"/>
-      <line x1="904" y1="150" x2="946" y2="150" stroke="#1a5296" stroke-width="2.5" marker-end="url(#rt-arr)"/>
-      <rect x="950" y="110" width="100" height="80" rx="12" fill="#003876"/>
-    </svg>
-    <span class="fl fl-blue" style="left:12.74%;top:23.33%">Hoeffding's lemma</span>
-    <span class="fl fl-sub fl-grey" style="left:12.74%;top:34.67%">bounded $\Rightarrow$ sub-Gaussian</span>
-    <span class="fl fl-blue" style="left:41.04%;top:23.33%">Hoeffding's ineq.</span>
-    <span class="fl fl-sub fl-grey" style="left:41.04%;top:34.67%">one $h$: exponential tail</span>
-    <span class="fl fl-blue" style="left:41.04%;top:70.00%">Union bound</span>
-    <span class="fl fl-sub fl-grey" style="left:41.04%;top:81.33%">pay for many looks</span>
-    <span class="fl fl-white" style="left:73.11%;top:46.67%">Uniform bound</span>
-    <span class="fl fl-sub fl-light" style="left:73.11%;top:58.00%">every $h$ at once</span>
-    <span class="fl fl-white" style="left:94.34%;top:46.00%">ERM</span>
-    <span class="fl fl-sub fl-light" style="left:94.34%;top:56.67%">works</span>
+  <div class="card">
+    <h3>Assumptions.</h3>
+    <ul>
+      <li><strong>(A1)</strong> $(X_1, Y_1), \dots, (X_n, Y_n)$ are i.i.d. draws from $\mathcal{D}$, the same distribution as future emails</li>
+      <li><strong>(A2)</strong> The class $\mathcal{H}$ is <strong>finite</strong> and <strong>fixed before</strong> the sample is drawn</li>
+    </ul>
   </div>
-  <p class="muted">All new material builds on the Chernoff engine: recall it first</p>
+  <p class="muted" style="margin-top:14px;">Section 05 drops "finite" in (A2); (A1) is never relaxed today</p>
 </div>
 
-<!-- Preview of the destination -->
+<!-- ERM and the gap -->
 <div class="slide">
-  <h2>Where the Route Ends &mdash; a Preview</h2>
+  <h2>ERM and the Generalization Gap</h2>
   <div class="divider"></div>
-  <p>The shape of the answer, stated loosely now and earned by the end:</p>
-  <div class="math-block" style="margin:6px 0">$$\text{gap} \;\lesssim\; \sqrt{\frac{\text{complexity} \;+\; \text{confidence}}{n}}$$</div>
-  <div class="p6-fig" style="max-width:1000px;margin:10px auto;">
-    <svg viewBox="0 0 1000 180">
-      <rect x="20" y="30" width="290" height="110" rx="12" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
-      <rect x="355" y="30" width="290" height="110" rx="12" fill="#f4f6f9" stroke="#003876" stroke-width="2"/>
-      <rect x="690" y="30" width="290" height="110" rx="12" fill="#003876"/>
-    </svg>
-    <span class="fl fl-blue" style="left:16.50%;top:35.00%">complexity</span>
-    <span class="fl fl-sub fl-grey" style="left:16.50%;top:60.00%">how many $h$ are on offer</span>
-    <span class="fl fl-blue" style="left:50.00%;top:35.00%">confidence</span>
-    <span class="fl fl-sub fl-grey" style="left:50.00%;top:60.00%">how sure you insist on being</span>
-    <span class="fl fl-white" style="left:83.50%;top:35.00%">sample size $n$</span>
-    <span class="fl fl-sub fl-light" style="left:83.50%;top:60.00%">the only term that helps you</span>
-  </div>
-  <p class="muted">No constants, no hypotheses yet &mdash; each piece gets a name and a proof today</p>
+  <p>Empirical risk minimization: keep the filter with the lowest training error</p>
+  <div class="math-block" style="margin:8px 0">$$\hat{h} = \operatorname*{argmin}_{h \in \mathcal{H}} \hat{R}_n(h),
+    \qquad \text{gap}(h) = R(h) - \hat{R}_n(h)$$</div>
+  <ul>
+    <li>Small gap: training error is a <strong>trustworthy preview</strong></li>
+    <li>Large gap: the training error flatters the model</li>
+  </ul>
+  <div class="p6-lucky"><p><strong>Lucky one.</strong> ERM picks whichever filter did best on <em>these</em> emails, perhaps by luck.</p></div>
 </div>
 
-<!-- ===== SECTION 02 — RECALL ===== -->
+<!-- Why not concentration directly -->
+<div class="slide">
+  <h2>Why Not Apply Concentration to $\hat{h}$ Directly?</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>$h$ fixed before the data</h3>
+      <ul>
+        <li>$\hat{R}_n(h)$: average of $n$ independent trials</li>
+        <li>Concentrates around $R(h)$</li>
+        <li><strong>Fine</strong> (Section 02)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>$\hat{h}$ picked from the data</h3>
+      <ul>
+        <li>Chosen <strong>because</strong> $\hat{R}_n$ is small</li>
+        <li>Same data scores it</li>
+        <li><strong>Not justified</strong> as is</li>
+      </ul>
+    </div>
+  </div>
+  <div class="p6-lucky"><p><strong>Lucky one.</strong> Low training error alone does not guarantee low true error.</p></div>
+</div>
+
+<!-- Memorizer -->
+<div class="slide">
+  <h2>Extreme Example &mdash; the Memorizer</h2>
+  <div class="divider"></div>
+  <p>Assume $X$ <strong>atomless</strong> (no email has positive probability), $Y$ an independent fair coin</p>
+  <div class="math-block" style="margin:8px 0">$$h_{\text{mem}}(x) = \begin{cases} Y_i &amp; \text{if } x = X_i \\ 0 &amp; \text{otherwise} \end{cases}
+    \qquad \hat{R}_n(h_{\text{mem}}) = 0, \quad R(h_{\text{mem}}) = \tfrac{1}{2}$$</div>
+  <ul>
+    <li>One possible ERM solution over all lookup tables: training error $0$</li>
+    <li>A fresh $X$ is unseen almost surely: a coin-flip label</li>
+    <li>Allowing every such lookup table requires an infinite class; the finite-class theorem does not apply</li>
+  </ul>
+</div>
+
+<!-- ===== SECTION 02 — HOEFFDING ===== -->
 <div class="slide section-slide left">
   <div class="section-num">02</div>
-  <h1>Recall &mdash; the Concentration Toolkit</h1>
-  <div class="divider"></div>
-  <p class="subtitle">Markov, Chernoff, MGF &mdash; refreshed, not re-proved</p>
-</div>
-
-<!-- Recall Markov / Chernoff -->
-<div class="slide">
-  <h2>Recall &mdash; Markov &amp; Chernoff</h2>
-  <div class="divider"></div>
-  <div class="card" style="padding:10px 16px;">
-    <p><strong>Recall (Chernoff bound).</strong> For any random variable $X$ and all $t \gt 0$:</p>
-    <div class="math-block" style="margin:8px 0">$$\Pr(X \geq \alpha) \;\leq\; M_X(t)\, e^{-t\alpha},
-      \qquad M_X(t) = \mathbb{E}\big[e^{tX}\big]$$</div>
-  </div>
-  <ul>
-    <li>Engine: Markov on the transformed variable $e^{tX}$</li>
-    <li>$t$ is <strong>free</strong>: optimize it at the end</li>
-  </ul>
-</div>
-
-<!-- Recall MGF -->
-<div class="slide">
-  <h2>Recall &mdash; MGF Rules</h2>
-  <div class="divider"></div>
-  <div class="card" style="padding:10px 16px;">
-    <p><strong>Recall (MGF calculus).</strong> For independent $X$, $Y$ and constant $c$:</p>
-    <div class="math-block" style="margin:8px 0">$$M_{X+Y}(t) = M_X(t)\, M_Y(t), \qquad M_{cX}(t) = M_X(ct)$$</div>
-  </div>
-  <ul>
-    <li>Independence turns <strong>sums into products</strong></li>
-    <li>Scaling just rescales the argument</li>
-  </ul>
-  <p class="muted">Both proved earlier in the course; used constantly today</p>
-</div>
-
-<!-- Recall Gaussian MGF -->
-<div class="slide">
-  <h2>Recall &mdash; The Gaussian MGF</h2>
-  <div class="divider"></div>
-  <div class="card" style="padding:10px 16px;">
-    <p><strong>Recall (Gaussian MGF).</strong> For $X \sim \mathcal{N}(\mu, \sigma^2)$:</p>
-    <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[e^{t(X - \mu)}\big] \;=\; \exp\!\left( \frac{t^2 \sigma^2}{2} \right)
-      \quad \text{for all } t \in \mathbb{R}$$</div>
-  </div>
-  <ul>
-    <li>Proved by <strong>completing the square</strong></li>
-    <li>Today's yardstick: this exact shape, $e^{t^2 \cdot (\cdot) / 2}$</li>
-  </ul>
-</div>
-
-<!-- What Chernoff needed -->
-<div class="slide">
-  <h2>What Chernoff Needed &mdash; and What We Have</h2>
-  <div class="divider"></div>
-  <p>The fair coin: computed $M(t)$ <strong>exactly</strong>, then optimized $t$</p>
-  <ul>
-    <li>A loss $\ell(h, Z)$: distribution <strong>unknown</strong> (depends on $\mathcal{D}$, on $h$)</li>
-    <li>Exact MGF: unavailable</li>
-    <li>All we know: $\ell \in [0,1]$ &mdash; <strong>bounded</strong></li>
-  </ul>
-  <div class="highlight">
-    <p>Today's first job: an MGF bound from <strong>boundedness alone</strong>.</p>
-  </div>
-</div>
-
-<!-- ===== SECTION 03 — HOEFFDING'S LEMMA ===== -->
-<div class="slide section-slide left">
-  <div class="section-num">03</div>
-  <h1>Hoeffding's Lemma</h1>
-  <div class="divider"></div>
-  <p class="subtitle">Bounded ⇒ Gaussian-like MGF</p>
-</div>
-
-<!-- Goal -->
-<div class="slide">
-  <h2>The Goal &mdash; A Universal MGF Bound</h2>
-  <div class="divider"></div>
-  <p>Given only: $X \in [a, b]$ and $\mathbb{E}[X] = 0$. Wanted:</p>
-  <div class="math-block" style="margin:8px 0">$$M_X(t) = \mathbb{E}\big[e^{tX}\big] \;\leq\; e^{\,c\, t^2}
-    \qquad \text{for all } t, \text{ some constant } c$$</div>
-  <ul>
-    <li>Same shape as the <strong>Gaussian</strong> MGF: $e^{t^2\sigma^2/2}$</li>
-    <li>$c$ must depend only on $a$, $b$ &mdash; not on the distribution</li>
-  </ul>
-  <p class="muted">Three small techniques first, then the lemma</p>
-</div>
-
-<!-- Technique: variance of bounded RV -->
-<div class="slide">
-  <h2>Technique &mdash; Variance of a Bounded Variable</h2>
-  <div class="divider"></div>
-  <div class="card" style="padding:10px 16px;">
-    <p><strong>Lemma (bounded variance).</strong> If $Y \in [a, b]$, then:</p>
-    <div class="math-block" style="margin:8px 0">$$\mathrm{Var}(Y) \;\leq\; \frac{(b-a)^2}{4}$$</div>
-  </div>
-  <ul>
-    <li>Width $b - a$ caps the spread &mdash; no distribution knowledge needed</li>
-    <li>The $4$: deviations from the <strong>midpoint</strong> are at most half the width</li>
-  </ul>
-</div>
-
-<!-- Technique: variance bound proof -->
-<div class="slide">
-  <h2>Technique &mdash; Proof of the Variance Bound</h2>
-  <div class="divider"></div>
-  <p>Compare to the midpoint $m = \tfrac{a+b}{2}$:</p>
-  <div class="math-block">$$\begin{aligned}
-    \mathrm{Var}(Y) \;=\; \mathbb{E}\big[(Y - \mathbb{E}[Y])^2\big]
-    \;&amp;\stackrel{(\text{mean minimizes})}{\leq}\; \mathbb{E}\big[(Y - m)^2\big] \\[4pt]
-    &amp;\stackrel{(|Y - m| \leq \frac{b-a}{2})}{\leq}\; \left( \frac{b-a}{2} \right)^{\!2} = \frac{(b-a)^2}{4} \qquad \blacksquare
-  \end{aligned}$$</div>
-  <p class="muted">First step: $c \mapsto \mathbb{E}[(Y-c)^2]$ is a parabola minimized at $c = \mathbb{E}[Y]$</p>
-  <p class="muted">Tight: $Y = a$ or $b$ with probability $\tfrac12$ each achieves it</p>
-</div>
-
-<!-- Technique: tilted distributions -->
-<div class="slide">
-  <h2>Technique &mdash; Tilted Distributions</h2>
-  <div class="divider"></div>
-  <p>Reweight the pmf by $e^{tx}$, renormalize by $M(t)$:</p>
-  <div class="math-block" style="margin:8px 0">$$p_t(x) \;=\; \frac{e^{tx}\, p_X(x)}{M_X(t)}
-    \qquad\Rightarrow\qquad \sum_x p_t(x) = \frac{\mathbb{E}[e^{tX}]}{M_X(t)} = 1$$</div>
-  <p class="muted" style="margin:10px 0 8px">We show the discrete case; for continuous $X$, replace sums by integrals.</p>
-  <ul>
-    <li>A genuine distribution for every $t$</li>
-    <li>$t \gt 0$: mass shifts toward <strong>large</strong> $x$; $t = 0$: original</li>
-  </ul>
-  <p class="muted">Key: $p_t$ lives on the <strong>same support</strong> as $p_X$ &mdash; still inside $[a,b]$</p>
-</div>
-
-<!-- Tilting picture -->
-<div class="slide">
-  <h2>Tilting &mdash; the Picture</h2>
-  <div class="divider"></div>
-  <div class="p6-fig" style="max-width:1000px;margin:12px auto;">
-    <svg viewBox="0 0 1000 340">
-      <line x1="80" y1="280" x2="960" y2="280" stroke="#222" stroke-width="2"/>
-      <line x1="80" y1="280" x2="80" y2="90" stroke="#222" stroke-width="2"/>
-      <rect x="150" y="130" width="46" height="150" fill="#9aa4af"/>
-      <rect x="290" y="95" width="46" height="185" fill="#9aa4af"/>
-      <rect x="430" y="130" width="46" height="150" fill="#9aa4af"/>
-      <rect x="570" y="180" width="46" height="100" fill="#9aa4af"/>
-      <rect x="710" y="218" width="46" height="62" fill="#9aa4af"/>
-      <rect x="202" y="238" width="46" height="42" fill="#003876"/>
-      <rect x="342" y="205" width="46" height="75" fill="#003876"/>
-      <rect x="482" y="168" width="46" height="112" fill="#003876"/>
-      <rect x="622" y="130" width="46" height="150" fill="#003876"/>
-      <rect x="762" y="105" width="46" height="175" fill="#003876"/>
-    </svg>
-    <span class="fl fl-grey" style="left:27.00%;top:17.06%">gray: original $p$</span>
-    <span class="fl fl-blue" style="left:70.00%;top:17.06%">blue: tilted ($t \gt 0$)</span>
-    <span class="fl fl-grey" style="left:17.30%;top:90.59%">$a$</span>
-    <span class="fl fl-grey" style="left:78.50%;top:90.59%">$b$</span>
-  </div>
-  <p class="muted">Tilting slides mass along the support &mdash; but never off it</p>
-</div>
-
-<!-- Technique: Taylor with remainder -->
-<div class="slide">
-  <h2>Technique &mdash; Taylor with Lagrange Remainder</h2>
-  <div class="divider"></div>
-  <p>For twice-differentiable $f$, some $\xi$ between $0$ and $t$:</p>
-  <div class="math-block" style="margin:8px 0">$$f(t) \;=\; f(0) + f'(0)\, t + \frac{f''(\xi)}{2}\, t^2$$</div>
-  <ul>
-    <li><strong>Exact</strong> equality: the error hides in $f''(\xi)$</li>
-    <li>Bound $f''$ everywhere $\Rightarrow$ bound $f$ everywhere</li>
-  </ul>
-  <p class="muted">The CLT sketch used Taylor near $0$; today the remainder does the work</p>
-</div>
-
-<!-- Lemma statement -->
-<div class="slide">
-  <h2>Theorem &mdash; Hoeffding's Lemma</h2>
-  <div class="divider"></div>
-  <div class="card">
-    <h3>Theorem 1 (Hoeffding's lemma, 1963).</h3>
-    <p>If $X \in [a, b]$ almost surely and $\mathbb{E}[X] = 0$, then for all $t \in \mathbb{R}$:</p>
-    <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[e^{tX}\big] \;\leq\; \exp\!\left( \frac{t^2 (b-a)^2}{8} \right)$$</div>
-  </div>
-  <p class="muted">A Gaussian MGF with $\sigma^2 = \tfrac{(b-a)^2}{4}$ &mdash; from boundedness alone</p>
-</div>
-
-<!-- Lemma proof overview -->
-<div class="slide">
-  <h2>Hoeffding's Lemma &mdash; Proof Overview</h2>
-  <div class="divider"></div>
-  <p>Target: $\psi(t) = \log \mathbb{E}[e^{tX}] \leq \tfrac{t^2 (b-a)^2}{8}$</p>
-  <div class="p6-step"><span class="n">1</span><span class="t">Start flat</span><span>$\psi(0) = 0$ and $\psi'(0) = 0$</span></div>
-  <div class="p6-step"><span class="n">2</span><span class="t">Identify</span><span>$\psi''(t)$ = variance under the tilted distribution</span></div>
-  <div class="p6-step"><span class="n">3</span><span class="t">Cap</span><span>tilted variance $\leq \tfrac{(b-a)^2}{4}$ (bounded support)</span></div>
-  <div class="p6-step"><span class="n">4</span><span class="t">Integrate</span><span>Taylor with remainder, exponentiate</span></div>
-  <p class="muted">All three techniques, in order. Watch step 3: boundedness enters once.</p>
-</div>
-
-<!-- Lemma step 1 -->
-<div class="slide">
-  <h2>Lemma Proof &mdash; Step 1: Start Flat</h2>
-  <div class="divider"></div>
-  <p>Log-MGF $\psi(t) = \log M(t)$, with $M(t) = \mathbb{E}[e^{tX}]$:</p>
-  <div class="math-block">$$\begin{aligned}
-    \psi(0) \;&amp;=\; \log M(0) \;\stackrel{(e^0 = 1)}{=}\; \log 1 \;=\; 0 \\[4pt]
-    \psi'(t) \;&amp;=\; \frac{M'(t)}{M(t)}
-    \quad\Rightarrow\quad \psi'(0) \;\stackrel{(M'(0) = \mathbb{E}[X])}{=}\; \frac{\mathbb{E}[X]}{1} \;=\; 0
-  \end{aligned}$$</div>
-  <p class="muted">$M'(0) = \mathbb{E}[X]$: the moment machine. Zero mean kills the linear term.</p>
-</div>
-
-<!-- Lemma step 2a -->
-<div class="slide">
-  <h2>Lemma Proof &mdash; Step 2: First Derivative Is a Tilted Mean</h2>
-  <div class="divider"></div>
-  <p>Differentiate under the expectation:</p>
-  <div class="math-block">$$\psi'(t) \;=\; \frac{M'(t)}{M(t)}
-    \;=\; \frac{\mathbb{E}\big[X e^{tX}\big]}{M(t)}
-    \;=\; \sum_x x \, \frac{e^{tx} p_X(x)}{M(t)}
-    \;=\; \mathbb{E}_{t}[X]$$</div>
-  <ul>
-    <li>$\mathbb{E}_t$: expectation under the <strong>tilted</strong> distribution $p_t$</li>
-    <li>Slope of the log-MGF = tilted mean</li>
-  </ul>
-</div>
-
-<!-- Lemma step 2b -->
-<div class="slide">
-  <h2>Lemma Proof &mdash; Step 2: Second Derivative Is a Tilted Variance</h2>
-  <div class="divider"></div>
-  <p>Quotient rule on $\psi' = M'/M$:</p>
-  <div class="math-block">$$\psi''(t) \;=\; \frac{M''(t)}{M(t)} - \left( \frac{M'(t)}{M(t)} \right)^{\!2}
-    \;=\; \mathbb{E}_t\big[X^2\big] - \big( \mathbb{E}_t[X] \big)^2
-    \;=\; \mathrm{Var}_t(X)$$</div>
-  <ul>
-    <li>Same pattern as $M''(0) = \mathbb{E}[X^2]$, now at tilt $t$</li>
-    <li>Curvature of the log-MGF = <strong>variance under tilting</strong></li>
-  </ul>
-</div>
-
-<!-- Lemma step 3 -->
-<div class="slide">
-  <h2>Lemma Proof &mdash; Step 3: Cap the Curvature</h2>
-  <div class="divider"></div>
-  <p>The tilted distribution still lives on $[a, b]$:</p>
-  <div class="math-block" style="margin:8px 0">$$\psi''(t) \;=\; \mathrm{Var}_t(X)
-    \;\stackrel{(\text{bounded variance lemma})}{\leq}\; \frac{(b-a)^2}{4}
-    \qquad \text{for every } t$$</div>
-  <div class="highlight">
-    <p>Boundedness enters <strong>here and only here</strong>: tilting moves mass, never widens the support.</p>
-  </div>
-</div>
-
-<!-- Lemma step 4 -->
-<div class="slide">
-  <h2>Lemma Proof &mdash; Step 4: Integrate the Cap</h2>
-  <div class="divider"></div>
-  <p>Taylor with Lagrange remainder at $0$, some $\xi$ between $0$ and $t$:</p>
-  <div class="math-block">$$\psi(t) \;=\; \underbrace{\psi(0)}_{0} + \underbrace{\psi'(0)}_{0}\, t + \frac{\psi''(\xi)}{2}\, t^2
-    \;\leq\; \frac{(b-a)^2}{8}\, t^2$$</div>
-  <p>Exponentiate both sides:</p>
-  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[e^{tX}\big] = e^{\psi(t)} \;\leq\; \exp\!\left( \frac{t^2 (b-a)^2}{8} \right) \qquad \blacksquare$$</div>
-</div>
-
-<!-- Lemma proof summary -->
-<div class="slide">
-  <h2>Hoeffding's Lemma &mdash; Proof Summary</h2>
-  <div class="divider"></div>
-  <div class="math-block" style="margin:8px 0">$$\psi(t)
-    \stackrel{(\text{Taylor})}{=} \frac{\psi''(\xi)}{2} t^2
-    \stackrel{(\psi'' = \mathrm{Var}_t)}{=} \frac{\mathrm{Var}_\xi(X)}{2} t^2
-    \stackrel{(\text{support} \subseteq [a,b])}{\leq} \frac{(b-a)^2}{8} t^2$$</div>
-  <ul>
-    <li>The trick: read $\psi''$ as a <strong>variance</strong>, then cap it</li>
-    <li>Weight carrier: tilting preserves the support</li>
-  </ul>
-  <p class="muted">Zero distribution knowledge used &mdash; only the interval $[a,b]$</p>
-</div>
-
-<!-- Sanity check: Rademacher -->
-<div class="slide">
-  <h2>Sanity Check &mdash; Fair Signs</h2>
-  <div class="divider"></div>
-  <p>$X = \pm 1$ with probability $\tfrac12$ each: mean $0$, $[a,b] = [-1,1]$</p>
-  <div class="math-block">$$\mathbb{E}\big[e^{tX}\big] = \frac{e^t + e^{-t}}{2}
-    = \sum_{k=0}^\infty \frac{t^{2k}}{(2k)!}
-    \;\stackrel{((2k)! \,\geq\, 2^k k!)}{\leq}\; \sum_{k=0}^\infty \frac{(t^2/2)^k}{k!} = e^{t^2/2}$$</div>
-  <p>Lemma's promise: $\exp\!\big( \tfrac{t^2 \cdot 2^2}{8} \big) = e^{t^2/2}$ &mdash; the <strong>same Gaussian proxy</strong>, not the same MGF ($\cosh t$)</p>
-  <p class="muted">Direct series check confirms the constant $8$ is right (and unimprovable here)</p>
-</div>
-
-<!-- General mean -->
-<div class="slide">
-  <h2>Corollary &mdash; Any Mean, Same Width</h2>
-  <div class="divider"></div>
-  <p>For $X \in [a,b]$ with any mean $\mu$: apply the lemma to $X - \mu$</p>
-  <div class="math-block" style="margin:8px 0">$$X - \mu \in [a - \mu,\; b - \mu] \;\;\text{(same width)}
-    \quad\Rightarrow\quad
-    \mathbb{E}\big[e^{t(X - \mu)}\big] \leq \exp\!\left( \frac{t^2 (b-a)^2}{8} \right)$$</div>
-  <ul>
-    <li>Centering shifts the interval, <strong>width unchanged</strong></li>
-    <li>This is the form used from now on</li>
-  </ul>
-</div>
-
-<!-- Lemma implication -->
-<div class="slide">
-  <h2>Hoeffding's Lemma &mdash; What It Buys</h2>
-  <div class="divider"></div>
-  <ul>
-    <li>Every bounded variable: MGF under a <strong>Gaussian envelope</strong></li>
-    <li>Losses in $[0,1]$: envelope $e^{t^2/8}$, no matter the data distribution</li>
-    <li>Chernoff becomes usable <strong>without knowing</strong> $M(t)$</li>
-  </ul>
-  <div class="highlight">
-    <p>Variables with a Gaussian MGF envelope deserve a name: <strong>sub-Gaussian</strong>.</p>
-  </div>
-</div>
-
-<!-- ===== SECTION 04 — SUB-GAUSSIAN ===== -->
-<div class="slide section-slide left">
-  <div class="section-num">04</div>
-  <h1>Sub-Gaussian Variables</h1>
-  <div class="divider"></div>
-  <p class="subtitle">One envelope, many distributions</p>
-</div>
-
-<!-- Definition -->
-<div class="slide">
-  <h2>Definition &mdash; Sub-Gaussian</h2>
-  <div class="divider"></div>
-  <div class="card">
-    <h3>Definition (sub-Gaussian, variance proxy $\sigma^2$).</h3>
-    <p>$X$ with mean $\mu$ is <strong>$\sigma^2$-sub-Gaussian</strong> if for all $t \in \mathbb{R}$:</p>
-    <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[e^{t(X - \mu)}\big] \;\leq\; \exp\!\left( \frac{t^2 \sigma^2}{2} \right)$$</div>
-  </div>
-  <p class="muted">$\sigma^2$ is a <strong>proxy</strong>, not the variance: any valid envelope constant</p>
-</div>
-
-<!-- Example: Gaussian -->
-<div class="slide">
-  <h2>Example 1 &mdash; The Gaussian Itself</h2>
-  <div class="divider"></div>
-  <p>$X \sim \mathcal{N}(\mu, \sigma^2)$: the Gaussian MGF is</p>
-  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[e^{t(X-\mu)}\big] \;=\; e^{t^2\sigma^2/2}
-    \qquad \text{(equality, every } t\text{)}$$</div>
-  <ul>
-    <li>$\sigma^2$-sub-Gaussian with the <strong>tightest possible</strong> proxy</li>
-    <li>The definition is calibrated so the eponym passes exactly</li>
-  </ul>
-</div>
-
-<!-- Example: bounded -->
-<div class="slide">
-  <h2>Example 2 &mdash; Every Bounded Variable</h2>
-  <div class="divider"></div>
-  <p>$X \in [a,b]$: Theorem 1 says $X$ is $\tfrac{(b-a)^2}{4}$-sub-Gaussian</p>
-  <table>
-    <thead><tr><th>Variable</th><th>Range</th><th>Proxy <span style="text-transform:none">$\sigma^2$</span></th></tr></thead>
-    <tbody>
-      <tr><td>fair sign $\pm 1$</td><td>$[-1, 1]$</td><td>$1$</td></tr>
-      <tr><td>coin flip / 0-1 loss</td><td>$[0, 1]$</td><td>$1/4$</td></tr>
-      <tr><td>loss clipped to $[0, c]$</td><td>$[0, c]$</td><td>$c^2/4$</td></tr>
-    </tbody>
-  </table>
-  <p class="muted" style="margin-top:10px;">Bounded losses &mdash; the ML case &mdash; are automatically sub-Gaussian</p>
-</div>
-
-<!-- Tail bound statement -->
-<div class="slide">
-  <h2>Theorem &mdash; Sub-Gaussian Tail Bound</h2>
-  <div class="divider"></div>
-  <div class="card">
-    <h3>Theorem 2 (sub-Gaussian tails).</h3>
-    <p>If $X$ is $\sigma^2$-sub-Gaussian with mean $\mu$, $\sigma^2 \gt 0$, then for every $\epsilon \gt 0$:</p>
-    <div class="math-block" style="margin:8px 0">$$\Pr\big( X - \mu \geq \epsilon \big) \;\leq\; \exp\!\left( -\frac{\epsilon^2}{2\sigma^2} \right)$$</div>
-  </div>
-  <p class="muted">The MGF envelope forces Gaussian-type tail decay</p>
-</div>
-
-<!-- Tail proof overview -->
-<div class="slide">
-  <h2>Tail Bound &mdash; Proof Overview</h2>
-  <div class="divider"></div>
-  <p>Target: $\Pr(X - \mu \geq \epsilon) \leq e^{-\epsilon^2 / 2\sigma^2}$</p>
-  <div class="p6-step"><span class="n">1</span><span class="t">Chernoff</span><span>bound by $e^{-t\epsilon}\, \mathbb{E}[e^{t(X-\mu)}]$, free $t \gt 0$</span></div>
-  <div class="p6-step"><span class="n">2</span><span class="t">Envelope</span><span>replace the MGF by $e^{t^2\sigma^2/2}$</span></div>
-  <div class="p6-step"><span class="n">3</span><span class="t">Optimize</span><span>minimize the exponent over $t$</span></div>
-  <p class="muted">Exactly the Chernoff routine &mdash; with the lemma standing in for the true MGF</p>
-</div>
-
-<!-- Tail proof step 1+2 -->
-<div class="slide">
-  <h2>Tail Proof &mdash; Steps 1&ndash;2: Chernoff + Envelope</h2>
-  <div class="divider"></div>
-  <p>For any $t \gt 0$:</p>
-  <div class="math-block">$$\Pr(X - \mu \geq \epsilon)
-    \;\stackrel{(\text{Chernoff})}{\leq}\; e^{-t\epsilon}\; \mathbb{E}\big[e^{t(X-\mu)}\big]
-    \;\stackrel{(\text{sub-Gaussian})}{\leq}\; \exp\!\left( \frac{t^2\sigma^2}{2} - t\epsilon \right)$$</div>
-  <p class="muted">Unknown distribution just left the argument: only $\sigma^2$ remains</p>
-</div>
-
-<!-- Tail proof step 3 -->
-<div class="slide">
-  <h2>Tail Proof &mdash; Step 3: Optimize the Free $t$</h2>
-  <div class="divider"></div>
-  <p>Minimize the parabola $g(t) = \tfrac{\sigma^2}{2} t^2 - \epsilon t$ (here $\sigma^2 \gt 0$):</p>
-  <div class="math-block">$$g'(t) = \sigma^2 t - \epsilon = 0
-    \;\;\Rightarrow\;\; t^* = \frac{\epsilon}{\sigma^2} \;(\gt 0)
-    \;\;\Rightarrow\;\; g(t^*) = \frac{\sigma^2}{2}\frac{\epsilon^2}{\sigma^4} - \frac{\epsilon^2}{\sigma^2} = -\frac{\epsilon^2}{2\sigma^2}$$</div>
-  <div class="math-block" style="margin:8px 0">$$\Pr(X - \mu \geq \epsilon) \;\leq\; e^{g(t^*)} = \exp\!\left( -\frac{\epsilon^2}{2\sigma^2} \right) \qquad \blacksquare$$</div>
-</div>
-
-<!-- Tail proof summary + two-sided -->
-<div class="slide">
-  <h2>Tail Bound &mdash; Summary &amp; Two Sides</h2>
-  <div class="divider"></div>
-  <div class="math-block" style="margin:8px 0">$$\Pr(X - \mu \geq \epsilon)
-    \stackrel{(\text{Chernoff})}{\leq} e^{-t\epsilon} M_{X-\mu}(t)
-    \stackrel{(\text{envelope})}{\leq} e^{\frac{\sigma^2 t^2}{2} - t\epsilon}
-    \stackrel{(t^* = \epsilon/\sigma^2)}{=} e^{-\frac{\epsilon^2}{2\sigma^2}}$$</div>
-  <p>Lower tail: $-X$ is also $\sigma^2$-sub-Gaussian (envelope is even in $t$), so</p>
-  <div class="math-block" style="margin:8px 0">$$\Pr\big( |X - \mu| \geq \epsilon \big) \;\leq\; 2 \exp\!\left( -\frac{\epsilon^2}{2\sigma^2} \right)$$</div>
-</div>
-
-<!-- Tail envelope picture -->
-<div class="slide">
-  <h2>The Tail Envelope &mdash; Picture</h2>
-  <div class="divider"></div>
-  <div class="p6-fig" style="max-width:1000px;margin:12px auto;">
-    <svg viewBox="0 0 1000 370">
-      <line x1="110" y1="310" x2="960" y2="310" stroke="#222" stroke-width="2"/>
-      <line x1="110" y1="310" x2="110" y2="60" stroke="#222" stroke-width="2"/>
-      <path d="M 110 63 C 272 72, 353 179, 461 258 C 555 308, 677 308, 919 309" fill="none" stroke="#003876" stroke-width="4"/>
-      <path d="M 110 96 C 245 132, 339 251, 434 301 L 542 310" fill="none" stroke="#9aa4af" stroke-width="4"/>
-      <line x1="230" y1="205" x2="224" y2="138" stroke="#9aa4af" stroke-width="2" stroke-dasharray="5 4"/>
-    </svg>
-    <span class="fl" style="left:53.50%;top:94.05%">deviation from the mean</span>
-    <span class="fl" style="left:20.50%;top:7.57%">tail probability</span>
-    <span class="fl fl-blue" style="left:64.00%;top:51.35%">Gaussian envelope</span>
-    <span class="fl fl-mid" style="left:64.00%;top:61.62%">$\exp\!\big(-\epsilon^2/(2\sigma^2)\big)$</span>
-    <span class="fl fl-grey" style="left:23.00%;top:60.00%">actual tail</span>
-    <span class="fl fl-sub fl-grey" style="left:23.00%;top:69.19%">(bounded: dies early)</span>
-  </div>
-  <p class="muted">Sub-Gaussian = the true tail never pokes above the Gaussian envelope</p>
-</div>
-
-<!-- Closure: scaling -->
-<div class="slide">
-  <h2>Closure Rule 1 &mdash; Scaling</h2>
-  <div class="divider"></div>
-  <p>If $X$ is $\sigma^2$-sub-Gaussian, what about $cX$?</p>
-  <div class="math-block">$$\mathbb{E}\big[e^{t(cX - c\mu)}\big]
-    \;=\; \mathbb{E}\big[e^{(tc)(X - \mu)}\big]
-    \;\stackrel{(\text{def, at } tc)}{\leq}\; e^{\frac{(tc)^2 \sigma^2}{2}}
-    \;=\; e^{\frac{t^2 (c^2\sigma^2)}{2}}$$</div>
-  <div class="highlight">
-    <p>$cX$ is $c^2\sigma^2$-sub-Gaussian: proxies scale <strong>like variances</strong>.</p>
-  </div>
-</div>
-
-<!-- Closure: sums statement -->
-<div class="slide">
-  <h2>Closure Rule 2 &mdash; Independent Sums</h2>
-  <div class="divider"></div>
-  <div class="card">
-    <h3>Proposition (sums of sub-Gaussians).</h3>
-    <p>$X_1, \dots, X_n$ independent, $X_i$ being $\sigma_i^2$-sub-Gaussian. Then:</p>
-    <div class="math-block" style="margin:8px 0">$$\sum_{i=1}^n X_i \;\text{ is }\; \Big( \textstyle\sum_{i=1}^n \sigma_i^2 \Big)\text{-sub-Gaussian}$$</div>
-  </div>
-  <p class="muted">Variance proxies <strong>add</strong> &mdash; just like true variances under independence</p>
-</div>
-
-<!-- Closure: sums proof -->
-<div class="slide">
-  <h2>Sums &mdash; Proof (Three Lines)</h2>
-  <div class="divider"></div>
-  <p>Center each $X_i$; independence turns the sum into a product:</p>
-  <div class="math-block">$$\mathbb{E}\Big[ e^{t \sum_i (X_i - \mu_i)} \Big]
-    \;\stackrel{(\text{indep.} \Rightarrow \text{product})}{=}\; \prod_{i=1}^n \mathbb{E}\big[ e^{t(X_i - \mu_i)} \big]
-    \;\stackrel{(\text{each envelope})}{\leq}\; \prod_{i=1}^n e^{\frac{t^2\sigma_i^2}{2}}
-    = e^{\frac{t^2}{2} \sum_i \sigma_i^2} \;\; \blacksquare$$</div>
-  <p class="muted">The MGF product rule carries all the weight</p>
-</div>
-
-<!-- Averages -->
-<div class="slide">
-  <h2>Consequence &mdash; Averages Concentrate</h2>
-  <div class="divider"></div>
-  <p>$X_i$ i.i.d., each $\sigma^2$-sub-Gaussian. Combine both closure rules:</p>
-  <div class="math-block">$$\bar{X}_n = \frac{1}{n} \sum_{i=1}^n X_i:
-    \qquad \sum_i X_i \to n\sigma^2
-    \;\;\stackrel{(\text{scale by } 1/n)}{\longrightarrow}\;\;
-    \frac{n\sigma^2}{n^2} = \frac{\sigma^2}{n}$$</div>
-  <div class="highlight">
-    <p>$\bar{X}_n$ is $\tfrac{\sigma^2}{n}$-sub-Gaussian: averaging <strong>shrinks the proxy</strong> by $n$.</p>
-  </div>
-</div>
-
-<!-- Sub-Gaussian calculus recap -->
-<div class="slide">
-  <h2>The Sub-Gaussian Calculus &mdash; One Card</h2>
-  <div class="divider"></div>
-  <table>
-    <thead><tr><th>Fact</th><th>Statement</th><th>Source</th></tr></thead>
-    <tbody>
-      <tr><td>bounded</td><td>$X \in [a,b]$: proxy $\tfrac{(b-a)^2}{4}$</td><td>Thm 1</td></tr>
-      <tr><td>tails</td><td>$\Pr(|X - \mu| \geq \epsilon) \leq 2\exp\!\big(-\epsilon^2/(2\sigma^2)\big)$</td><td>Thm 2</td></tr>
-      <tr><td>scaling</td><td>$cX$: proxy $c^2 \sigma^2$</td><td>rule 1</td></tr>
-      <tr><td>sums</td><td>proxies add (independent)</td><td>rule 2</td></tr>
-    </tbody>
-  </table>
-  <p class="muted" style="margin-top:10px;">Assemble all four on the sample mean: Hoeffding's inequality</p>
-</div>
-
-<!-- ===== SECTION 05 — HOEFFDING'S INEQUALITY ===== -->
-<div class="slide section-slide left">
-  <div class="section-num">05</div>
   <h1>Hoeffding's Inequality</h1>
   <div class="divider"></div>
-  <p class="subtitle">Distribution-free exponential tails for averages</p>
+  <p class="subtitle">One classifier, fixed before the data</p>
 </div>
 
-<!-- Statement -->
+<!-- Fixed classifier = coin -->
+<div class="slide">
+  <h2>A Fixed Filter Is a Biased Coin</h2>
+  <div class="divider"></div>
+  <p>Fix $h$ before the sample. Mistake indicators $W_i = \mathbf{1}\{h(X_i) \neq Y_i\}$:</p>
+  <div class="p6-fig" style="max-width:1000px;margin:12px auto;">
+    <svg viewBox="0 0 1000 200">
+      <circle cx="55" cy="70" r="19" fill="#f4f6f9" stroke="#9aa4af" stroke-width="2"/>
+      <circle cx="102" cy="70" r="19" fill="#f4f6f9" stroke="#9aa4af" stroke-width="2"/>
+      <circle cx="149" cy="70" r="19" fill="#c0392b"/>
+      <circle cx="196" cy="70" r="19" fill="#f4f6f9" stroke="#9aa4af" stroke-width="2"/>
+      <circle cx="243" cy="70" r="19" fill="#f4f6f9" stroke="#9aa4af" stroke-width="2"/>
+      <circle cx="290" cy="70" r="19" fill="#f4f6f9" stroke="#9aa4af" stroke-width="2"/>
+      <circle cx="337" cy="70" r="19" fill="#f4f6f9" stroke="#9aa4af" stroke-width="2"/>
+      <circle cx="384" cy="70" r="19" fill="#c0392b"/>
+      <circle cx="431" cy="70" r="19" fill="#f4f6f9" stroke="#9aa4af" stroke-width="2"/>
+      <circle cx="478" cy="70" r="19" fill="#f4f6f9" stroke="#9aa4af" stroke-width="2"/>
+      <circle cx="525" cy="70" r="19" fill="#f4f6f9" stroke="#9aa4af" stroke-width="2"/>
+      <circle cx="572" cy="70" r="19" fill="#c0392b"/>
+      <circle cx="619" cy="70" r="19" fill="#f4f6f9" stroke="#9aa4af" stroke-width="2"/>
+      <circle cx="666" cy="70" r="19" fill="#f4f6f9" stroke="#9aa4af" stroke-width="2"/>
+      <circle cx="713" cy="70" r="19" fill="#f4f6f9" stroke="#9aa4af" stroke-width="2"/>
+      <circle cx="760" cy="70" r="19" fill="#f4f6f9" stroke="#9aa4af" stroke-width="2"/>
+      <circle cx="807" cy="70" r="19" fill="#c0392b"/>
+      <circle cx="854" cy="70" r="19" fill="#f4f6f9" stroke="#9aa4af" stroke-width="2"/>
+      <circle cx="901" cy="70" r="19" fill="#c0392b"/>
+      <circle cx="948" cy="70" r="19" fill="#f4f6f9" stroke="#9aa4af" stroke-width="2"/>
+    </svg>
+    <span class="fl fl-sub fl-grey" style="left:5.50%;top:35.00%">0</span>
+    <span class="fl fl-sub fl-grey" style="left:10.20%;top:35.00%">0</span>
+    <span class="fl fl-sub fl-white" style="left:14.90%;top:35.00%">1</span>
+    <span class="fl fl-sub fl-grey" style="left:19.60%;top:35.00%">0</span>
+    <span class="fl fl-sub fl-grey" style="left:24.30%;top:35.00%">0</span>
+    <span class="fl fl-sub fl-grey" style="left:29.00%;top:35.00%">0</span>
+    <span class="fl fl-sub fl-grey" style="left:33.70%;top:35.00%">0</span>
+    <span class="fl fl-sub fl-white" style="left:38.40%;top:35.00%">1</span>
+    <span class="fl fl-sub fl-grey" style="left:43.10%;top:35.00%">0</span>
+    <span class="fl fl-sub fl-grey" style="left:47.80%;top:35.00%">0</span>
+    <span class="fl fl-sub fl-grey" style="left:52.50%;top:35.00%">0</span>
+    <span class="fl fl-sub fl-white" style="left:57.20%;top:35.00%">1</span>
+    <span class="fl fl-sub fl-grey" style="left:61.90%;top:35.00%">0</span>
+    <span class="fl fl-sub fl-grey" style="left:66.60%;top:35.00%">0</span>
+    <span class="fl fl-sub fl-grey" style="left:71.30%;top:35.00%">0</span>
+    <span class="fl fl-sub fl-grey" style="left:76.00%;top:35.00%">0</span>
+    <span class="fl fl-sub fl-white" style="left:80.70%;top:35.00%">1</span>
+    <span class="fl fl-sub fl-grey" style="left:85.40%;top:35.00%">0</span>
+    <span class="fl fl-sub fl-white" style="left:90.10%;top:35.00%">1</span>
+    <span class="fl fl-sub fl-grey" style="left:94.80%;top:35.00%">0</span>
+    <span class="fl fl-grey" style="left:50.00%;top:75.00%">$5$ mistakes in $20$ emails: $\hat{R}_{20}(h) = 0.25$</span>
+  </div>
+  <ul>
+    <li>By (A1): $W_1, \dots, W_n$ i.i.d. in $\{0, 1\}$ with bias $\Pr(W_i = 1) = R(h)$</li>
+    <li>$\hat{R}_n(h) = \bar{W}_n$: how far can an average stray from its mean?</li>
+  </ul>
+</div>
+
+<!-- Fixed before data: OK -->
+<div class="slide">
+  <h2>If $h$ Is Fixed Before Seeing the Data, It Is Okay</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[\hat{R}_n(h)\big] \;=\; \frac{1}{n}\sum_{i=1}^n \Pr\big(h(X_i) \neq Y_i\big) \;=\; R(h)$$</div>
+  <ul>
+    <li>Unbiased: on average, training error equals true error</li>
+    <li>Independent trials: the average concentrates as $n$ grows</li>
+    <li>Both need $h$ chosen <strong>without</strong> looking at $(X_i, Y_i)$</li>
+  </ul>
+  <div class="highlight">
+    <p>Fixed in advance: $\hat{R}_n(h)$ is an honest estimate of $R(h)$.</p>
+  </div>
+</div>
+
+<!-- Chosen after data: biased -->
+<div class="slide">
+  <h2>Chosen After Seeing the Data, It Is Optimistic</h2>
+  <div class="divider"></div>
+  <p>$h^*$ = best filter in $\mathcal{H}$ (fixed, unknown). ERM gives $\hat{R}_n(\hat{h}) \leq \hat{R}_n(h^*)$, so</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[\hat{R}_n(\hat{h})\big] \;\leq\; \mathbb{E}\big[\hat{R}_n(h^*)\big] \;=\; R(h^*) \;\leq\; \mathbb{E}\big[R(\hat{h})\big]$$</div>
+  <ul>
+    <li>Training error of $\hat{h}$ is <strong>optimistic</strong> on average; equality is possible</li>
+    <li>Middle equality: $h^*$ fixed in advance. Last inequality: $\hat{h} \in \mathcal{H}$, so $R(h^*) \leq R(\hat{h})$</li>
+  </ul>
+  <div class="p6-lucky"><p><strong>Lucky one.</strong> Selection rewards the filter the training data happened to favour.</p></div>
+</div>
+
+<!-- Hoeffding's lemma -->
+<div class="slide">
+  <h2>The Key Ingredient &mdash; Hoeffding's Lemma</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Lemma 1 (Hoeffding, 1963).</h3>
+    <p>If $a \leq X \leq b$ almost surely, then for every $t \in \mathbb{R}$:</p>
+    <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[e^{t(X - \mathbb{E}X)}\big] \;\leq\; \exp\!\left( \frac{t^2 (b-a)^2}{8} \right)$$</div>
+  </div>
+  <p>A Gaussian-shaped MGF bound from <strong>boundedness alone</strong></p>
+  <p class="muted">Used as a black box today</p>
+</div>
+
+<!-- Hoeffding theorem -->
 <div class="slide">
   <h2>Theorem &mdash; Hoeffding's Inequality</h2>
   <div class="divider"></div>
   <div class="card">
-    <h3>Theorem 3 (Hoeffding's inequality, 1963).</h3>
-    <p>$X_1, \dots, X_n$ independent, $X_i \in [a,b]$, common mean $\mu$. For $\epsilon \gt 0$:</p>
-    <div class="math-block" style="margin:8px 0">$$\Pr\big( \bar{X}_n - \mu \geq \epsilon \big)
-      \;\leq\; \exp\!\left( -\frac{2 n \epsilon^2}{(b-a)^2} \right)$$</div>
+    <h3>Theorem 1 (Hoeffding, 1963).</h3>
+    <p>$W_1, \dots, W_n$ independent, $W_i \in [0, 1]$, $\mathbb{E}[W_i] = p$. For every $\epsilon \gt 0$:</p>
+    <div class="math-block" style="margin:8px 0">$$\Pr\big( \bar{W}_n - p \geq \epsilon \big) \leq e^{-2n\epsilon^2},
+      \qquad \Pr\big( |\bar{W}_n - p| \geq \epsilon \big) \leq 2 e^{-2n\epsilon^2}$$</div>
   </div>
-  <p class="muted">Exponential in $n$ &mdash; using only the range $[a,b]$</p>
-</div>
-
-<!-- Proof overview -->
-<div class="slide">
-  <h2>Hoeffding &mdash; Proof Overview</h2>
-  <div class="divider"></div>
-  <p>Pure assembly of the lemma and the sub-Gaussian calculus:</p>
-  <div class="p6-step"><span class="n">1</span><span class="t">Lemma</span><span>each $X_i$ is $\tfrac{(b-a)^2}{4}$-sub-Gaussian (Thm 1)</span></div>
-  <div class="p6-step"><span class="n">2</span><span class="t">Calculus</span><span>$\bar{X}_n$ is $\tfrac{(b-a)^2}{4n}$-sub-Gaussian (rules 1+2)</span></div>
-  <div class="p6-step"><span class="n">3</span><span class="t">Tails</span><span>plug the proxy into Thm 2</span></div>
-  <p class="muted">No new idea &mdash; the lemma and the calculus were the proof</p>
-</div>
-
-<!-- Step 1 -->
-<div class="slide">
-  <h2>Hoeffding Proof &mdash; Step 1: Each Term</h2>
-  <div class="divider"></div>
-  <p>Center each variable; apply Hoeffding's lemma to $X_i - \mu \in [a - \mu, b - \mu]$:</p>
-  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ e^{t (X_i - \mu)} \big]
-    \;\stackrel{(\text{Thm 1, width } b-a)}{\leq}\; \exp\!\left( \frac{t^2 (b-a)^2}{8} \right)$$</div>
-  <p class="muted">Each term: $\sigma^2 = \tfrac{(b-a)^2}{4}$, regardless of its distribution</p>
-</div>
-
-<!-- Step 2 -->
-<div class="slide">
-  <h2>Hoeffding Proof &mdash; Step 2: The Average's Proxy</h2>
-  <div class="divider"></div>
-  <p>Sum rule, then scale rule with $c = \tfrac1n$:</p>
-  <div class="math-block">$$\sum_{i=1}^n X_i:\;\; n \cdot \frac{(b-a)^2}{4}
-    \qquad\stackrel{(\times\, 1/n^2)}{\Longrightarrow}\qquad
-    \bar{X}_n:\;\; \frac{(b-a)^2}{4n}$$</div>
-  <ul>
-    <li>Averaging divides the proxy by $n$</li>
-    <li>Mean of $\bar{X}_n$ is still $\mu$ (linearity)</li>
-  </ul>
-</div>
-
-<!-- Step 3 -->
-<div class="slide">
-  <h2>Hoeffding Proof &mdash; Step 3: Read Off the Tail</h2>
-  <div class="divider"></div>
-  <p>Theorem 2 with proxy $\sigma^2 = \tfrac{(b-a)^2}{4n}$:</p>
-  <div class="math-block">$$\Pr\big( \bar{X}_n - \mu \geq \epsilon \big)
-    \;\leq\; \exp\!\left( -\frac{\epsilon^2}{2 \cdot \frac{(b-a)^2}{4n}} \right)
-    \;=\; \exp\!\left( -\frac{2 n \epsilon^2}{(b-a)^2} \right) \qquad \blacksquare$$</div>
-  <p class="muted">The $2$ upstairs and the $8$ in the lemma are the same constant, moved around</p>
-</div>
-
-<!-- Two-sided -->
-<div class="slide">
-  <h2>Corollary &mdash; Two-Sided Hoeffding</h2>
-  <div class="divider"></div>
-  <p>Apply the same bound to $-X_i \in [-b, -a]$ (same width), add the tails:</p>
-  <div class="math-block" style="margin:8px 0">$$\Pr\big( |\bar{X}_n - \mu| \geq \epsilon \big)
-    \;\leq\; 2 \exp\!\left( -\frac{2 n \epsilon^2}{(b-a)^2} \right)$$</div>
-  <ul>
-    <li>For losses in $[0,1]$: $\;\Pr\big( |\bar{X}_n - \mu| \geq \epsilon \big) \leq 2 e^{-2n\epsilon^2}$</li>
-    <li>This is the workhorse form for the rest of the lecture</li>
-  </ul>
-</div>
-
-<!-- Proof summary -->
-<div class="slide">
-  <h2>Hoeffding &mdash; Proof Summary</h2>
-  <div class="divider"></div>
-  <div class="math-block" style="margin:8px 0">$$\Pr(\bar{X}_n - \mu \geq \epsilon)
-    \;\stackrel{(\text{Chernoff})}{\leq}\; e^{-t\epsilon}\, \prod_i \mathbb{E}\big[e^{\frac{t}{n}(X_i - \mu)}\big]
-    \;\stackrel{(\text{lemma})}{\leq}\; e^{\frac{t^2(b-a)^2}{8n} - t\epsilon}
-    \;\stackrel{(t^*)}{=}\; e^{-\frac{2n\epsilon^2}{(b-a)^2}}$$</div>
-  <ul>
-    <li>The trick: lemma replaces the unknown MGF</li>
-    <li>Weight carrier: proxies add, then shrink by $1/n^2$</li>
-  </ul>
-</div>
-
-<!-- Coin returns -->
-<div class="slide">
-  <h2>The Coin Returns &mdash; $\Pr(\bar{X}_{100} \geq \tfrac34)$</h2>
-  <div class="divider"></div>
-  <p>Fair coin, $[a,b] = [0,1]$, $\mu = \tfrac12$, $\epsilon = \tfrac14$, $n = 100$:</p>
-  <div class="math-block" style="margin:8px 0">$$\Pr\big( \bar{X}_{100} \geq \tfrac34 \big)
-    \;\leq\; e^{-2 \cdot 100 \cdot (1/4)^2} = e^{-12.5} \approx 3.7 \times 10^{-6}$$</div>
-  <table>
-    <thead><tr><th>Tool</th><th>Bound</th><th>Needs</th></tr></thead>
-    <tbody>
-      <tr><td>Chernoff</td><td>$2.1 \times 10^{-6}$</td><td>exact MGF</td></tr>
-      <tr><td><strong>Hoeffding</strong></td><td>$3.7 \times 10^{-6}$</td><td>range only</td></tr>
-      <tr><td>exact</td><td>$2.8 \times 10^{-7}$</td><td>everything</td></tr>
-    </tbody>
-  </table>
-</div>
-
-<!-- Coin lesson -->
-<div class="slide">
-  <h2>The Coin's Lesson</h2>
-  <div class="divider"></div>
-  <ul>
-    <li>Hoeffding exponent: $2\epsilon^2 = 0.125$ per flip</li>
-    <li>Optimal Chernoff exponent: $0.1308$ per flip</li>
-    <li>Price of knowing <strong>nothing</strong> but the range: $\approx 4\%$ of the exponent</li>
-  </ul>
   <div class="highlight">
-    <p>Near-Chernoff tails, <strong>zero distribution knowledge</strong> &mdash; ideal for unknown $\mathcal{D}$.</p>
+    <p>Applies to a filter <strong>if we fix the model before seeing the training data</strong>: $p = R(h)$.</p>
   </div>
-</div>
-
-<!-- Worked: sample size -->
-<div class="slide">
-  <h2>Worked Example &mdash; Accuracy &plusmn;2% at 95%</h2>
-  <div class="divider"></div>
-  <p>0/1 losses in $[0,1]$; want $\Pr(|\bar{X}_n - \mu| \geq 0.02) \leq 0.05$:</p>
-  <div class="math-block">$$2 e^{-2n(0.02)^2} \leq 0.05
-    \;\;\Longleftrightarrow\;\; n \;\geq\; \frac{\ln(2/0.05)}{2 \cdot 0.0004}
-    = \frac{\ln 40}{0.0008} \approx \frac{3.689}{0.0008}$$</div>
-  <div class="math-block" style="margin:8px 0">$$n \;\geq\; 4612 \;\text{ test samples}$$</div>
-  <p class="muted">Solve by taking $\ln$ of both sides &mdash; the exponent hands you $n$ directly</p>
-</div>
-
-<!-- Worked: comparison -->
-<div class="slide">
-  <h2>Same Question, Three Answers</h2>
-  <div class="divider"></div>
-  <p>Samples needed for $\pm 2\%$ at $95\%$ confidence:</p>
-  <table>
-    <thead><tr><th>Tool</th><th>Bound used</th><th><span style="text-transform:none">$n$</span> needed</th></tr></thead>
-    <tbody>
-      <tr><td>Chebyshev</td><td>$\tfrac{1}{4n\epsilon^2} \leq 0.05$</td><td>$12{,}500$</td></tr>
-      <tr><td><strong>Hoeffding</strong></td><td>$2e^{-2n\epsilon^2} \leq 0.05$</td><td>$4{,}612$</td></tr>
-    </tbody>
-  </table>
-  <p style="margin-top:10px;">Same guarantee, $\tfrac{1}{2.7}$ of the data &mdash; and the gap <strong>widens</strong> as $\delta$ shrinks</p>
-  <p class="muted">$\delta = 0.001$: Chebyshev $625{,}000$ vs. Hoeffding $9{,}502$</p>
-</div>
-
-<!-- Implication -->
-<div class="slide">
-  <h2>Hoeffding &mdash; What It Buys</h2>
-  <div class="divider"></div>
-  <ul>
-    <li><strong>Distribution-free</strong>: only the range enters</li>
-    <li><strong>Exponential</strong>: confidence is cheap, precision costs $1/\epsilon^2$</li>
-    <li>Perfect fit for losses: bounded by design</li>
-  </ul>
-  <div class="highlight">
-    <p>One fixed $h$: handled. ERM searches <strong>many</strong> $h$ &mdash; a new failure mode appears.</p>
-  </div>
-</div>
-
-<!-- ===== SECTION 06 — UNION BOUND ===== -->
-<div class="slide section-slide left">
-  <div class="section-num">06</div>
-  <h1>The Union Bound</h1>
-  <div class="divider"></div>
-  <p class="subtitle">Many hypotheses = many chances to be lucky</p>
-</div>
-
-<!-- Statement -->
-<div class="slide">
-  <h2>Theorem &mdash; The Union Bound</h2>
-  <div class="divider"></div>
-  <div class="card">
-    <h3>Theorem 4 (union bound / Boole's inequality).</h3>
-    <p>For any events $A_1, \dots, A_m$ (no independence needed):</p>
-    <div class="math-block" style="margin:8px 0">$$\Pr\!\left( \bigcup_{j=1}^m A_j \right) \;\leq\; \sum_{j=1}^m \Pr(A_j)$$</div>
-  </div>
-  <p class="muted">"Something bad happens" costs at most the sum of the bad probabilities</p>
-</div>
-
-<!-- Proof -->
-<div class="slide">
-  <h2>Union Bound &mdash; One-Line Proof</h2>
-  <div class="divider"></div>
-  <p>The indicator technique, pointwise:</p>
-  <div class="math-block">$$\mathbf{1}\Big\{ \bigcup_j A_j \Big\} \;\leq\; \sum_{j=1}^m \mathbf{1}\{A_j\}
-    \qquad \text{(left side } \leq 1\text{; right counts memberships)}$$</div>
-  <p>Take expectations; $\mathbb{E}[\mathbf{1}] = \Pr$ on both sides $\;\blacksquare$</p>
-  <p class="muted">Equality iff the events are disjoint &mdash; overlap is double-counted</p>
-</div>
-
-<!-- Picture -->
-<div class="slide">
-  <h2>Union Bound &mdash; the Picture</h2>
-  <div class="divider"></div>
-  <div class="p6-fig" style="max-width:1000px;margin:12px auto;">
-    <svg viewBox="0 0 1000 380">
-      <rect x="40" y="40" width="920" height="290" rx="10" fill="#f4f6f9" stroke="#9aa4af" stroke-width="1.5"/>
-      <circle cx="328" cy="192" r="101" fill="#003876" opacity="0.32"/>
-      <circle cx="457" cy="178" r="90" fill="#003876" opacity="0.32"/>
-      <circle cx="414" cy="246" r="77" fill="#003876" opacity="0.32"/>
-      <circle cx="759" cy="164" r="67" fill="#003876" opacity="0.32"/>
-      <line x1="615" y1="294" x2="424" y2="207" stroke="#c0392b" stroke-width="2" stroke-dasharray="5 4"/>
-    </svg>
-    <span class="fl fl-sub fl-grey" style="left:12.80%;top:17.89%">sample space</span>
-    <span class="fl fl-blue" style="left:26.80%;top:38.42%">$A_1$</span>
-    <span class="fl fl-blue" style="left:51.20%;top:33.16%">$A_2$</span>
-    <span class="fl fl-blue" style="left:41.40%;top:80.53%">$A_3$</span>
-    <span class="fl fl-blue" style="left:75.90%;top:43.16%">$A_4$</span>
-    <span class="fl fl-red" style="left:70.00%;top:79.47%">overlap counted twice</span>
-  </div>
-  <p>Union area $\leq$ sum of circle areas: <strong>overlap only helps</strong></p>
-  <p class="muted">No independence, no structure: works for any events whatsoever</p>
-</div>
-
-<!-- Why we need it -->
-<div class="slide">
-  <h2>Many Chances to Be Lucky</h2>
-  <div class="divider"></div>
-  <p>Thought experiment: $m = 10{,}000$ <strong>useless</strong> models (true accuracy $50\%$)</p>
-  <ul>
-    <li>Evaluate each on the same $n = 100$ test points</li>
-    <li>One model: $\Pr(\text{shows} \geq 75\%) \leq e^{-12.5} \approx 3.7 \times 10^{-6}$</li>
-    <li>Question: chance that <strong>some</strong> model shows $\geq 75\%$?</li>
-  </ul>
-  <p class="muted">The best-looking of many random guessers can look brilliant</p>
-</div>
-
-<!-- Worked: coin farm -->
-<div class="slide">
-  <h2>Worked Example &mdash; the Model Farm</h2>
-  <div class="divider"></div>
-  <p>$A_j$ = "model $j$ shows $\geq 75\%$ on the test set":</p>
-  <div class="math-block">$$\Pr\!\left( \bigcup_{j=1}^{10^4} A_j \right)
-    \;\leq\; \sum_{j=1}^{10^4} \Pr(A_j)
-    \;\leq\; 10^4 \times 3.7 \times 10^{-6} \;=\; 3.7\%$$</div>
-  <ul>
-    <li>Safe: with $\geq 96\%$ probability, <strong>no</strong> guesser fakes $75\%$</li>
-    <li>The factor $m$ multiplies the failure probability</li>
-  </ul>
-</div>
-
-<!-- Worked: small n fails -->
-<div class="slide">
-  <h2>Same Farm, Small Test Set</h2>
-  <div class="divider"></div>
-  <p>Shrink the test set to $n = 25$:</p>
-  <div class="math-block" style="margin:8px 0">$$\text{one model: } e^{-2 \cdot 25 \cdot (1/4)^2} = e^{-3.125} \approx 0.044
-    \qquad \text{union: } 10^4 \times 0.044 = 440 \;\;(\text{vacuous})$$</div>
-  <ul>
-    <li>Bound $\gt 1$: says <strong>nothing</strong> &mdash; and rightly so</li>
-    <li>Among $10^4$ guessers, several <strong>will</strong> fake $75\%$ on $25$ points</li>
-  </ul>
-  <p class="muted">$n$ must grow with $\ln m$: the exponent must beat the head count</p>
-</div>
-
-<!-- Bonferroni -->
-<div class="slide">
-  <h2>Budgeting Trick &mdash; Split the Failure Probability</h2>
-  <div class="divider"></div>
-  <p>Want total failure $\leq \delta$ over $m$ events? Give each event $\delta / m$:</p>
-  <div class="math-block" style="margin:8px 0">$$\Pr(A_j) \leq \frac{\delta}{m} \;\;\text{for each } j
-    \qquad\Rightarrow\qquad \Pr\!\Big( \bigcup_j A_j \Big) \leq m \cdot \frac{\delta}{m} = \delta$$</div>
-  <ul>
-    <li>Statistics name: <strong>Bonferroni correction</strong> (multiple comparisons)</li>
-    <li>Exponential tails absorb the split: $\delta/m$ costs only $+\ln m$ in the exponent</li>
-  </ul>
-</div>
-
-<!-- Implication -->
-<div class="slide">
-  <h2>Union Bound &mdash; What It Buys</h2>
-  <div class="divider"></div>
-  <ul>
-    <li>Converts <strong>per-hypothesis</strong> guarantees into <strong>simultaneous</strong> ones</li>
-    <li>Cost: factor $m$ in probability = $+\ln m$ inside an exponential</li>
-    <li>Zero assumptions: works however the events depend on each other</li>
-  </ul>
-  <div class="highlight">
-    <p>Hoeffding gives $e^{-2n\epsilon^2}$ per $h$; union bound pays $|\mathcal{H}|$: assemble now.</p>
-  </div>
-</div>
-
-<!-- ===== SECTION 07 — GENERALIZATION THEOREM ===== -->
-<div class="slide section-slide left">
-  <div class="section-num">07</div>
-  <h1>The Generalization Theorem</h1>
-  <div class="divider"></div>
-  <p class="subtitle">Uniform convergence over a finite class</p>
-</div>
-
-<!-- Setup: finite classes -->
-<div class="slide">
-  <h2>Setup &mdash; Finite Hypothesis Classes</h2>
-  <div class="divider"></div>
-  <p>$\mathcal{H} = \{h_1, \dots, h_{|\mathcal{H}|}\}$: finitely many candidate models</p>
-  <div class="grid-2">
-    <div>
-      <h3>Decision stumps</h3>
-      <p>Threshold one of $d$ pixels, one polarity, $256$ cut values: $|\mathcal{H}| = 256\,d$</p>
-    </div>
-    <div>
-      <h3>Quantized nets</h3>
-      <p>$k$ bits of weights total: $|\mathcal{H}| = 2^k$</p>
-    </div>
-  </div>
-  <p class="muted" style="margin-top:10px;">Any model stored in $k$ bits: a finite class of size $2^k$</p>
-</div>
-
-<!-- Setup: recall R, Rhat -->
-<div class="slide">
-  <h2>Setup &mdash; The Two Risks, Recalled</h2>
-  <div class="divider"></div>
-  <div class="card" style="padding:10px 16px;">
-    <p><strong>Recall.</strong> Sample $Z_1, \dots, Z_n \stackrel{\text{i.i.d.}}{\sim} \mathcal{D}$; loss $\ell(h, z) \in [0,1]$:</p>
-    <div class="math-block" style="margin:8px 0">$$R(h) = \mathbb{E}\big[\ell(h, Z)\big], \qquad
-      \hat{R}_n(h) = \frac{1}{n} \sum_{i=1}^n \ell(h, Z_i)$$</div>
-  </div>
-  <ul>
-    <li>ERM output: $\hat{h}$ minimizing $\hat{R}_n$ over $\mathcal{H}$</li>
-    <li>Best in class: $h^* = \operatorname*{argmin}_{h \in \mathcal{H}} R(h)$</li>
-  </ul>
-</div>
-
-<!-- Key observation -->
-<div class="slide">
-  <h2>Key Observation &mdash; Fixed $h$ Is Just a Coin</h2>
-  <div class="divider"></div>
-  <p>Fix $h$ <strong>before</strong> the sample. Set $W_i = \ell(h, Z_i)$:</p>
-  <ul>
-    <li>$W_1, \dots, W_n$ i.i.d. (functions of i.i.d. $Z_i$)</li>
-    <li>$W_i \in [0,1]$, and $\mathbb{E}[W_i] = R(h)$</li>
-    <li>$\hat{R}_n(h) = \bar{W}_n$: a bounded sample mean</li>
-  </ul>
-  <div class="math-block" style="margin:8px 0">$$\Pr\big( |\hat{R}_n(h) - R(h)| \geq \epsilon \big)
-    \;\stackrel{(\text{Thm 3, two-sided})}{\leq}\; 2 e^{-2n\epsilon^2}$$</div>
-</div>
-
-<!-- The trap -->
-<div class="slide">
-  <h2>The Trap &mdash; $\hat{h}$ Is Not Fixed</h2>
-  <div class="divider"></div>
-  <p>Tempting: apply the box above to $h = \hat{h}$. <strong>Invalid.</strong></p>
-  <ul>
-    <li>$\hat{h}$ is chosen <strong>by looking at</strong> $Z_1, \dots, Z_n$</li>
-    <li>$\ell(\hat{h}, Z_i)$ are not i.i.d. draws &mdash; $\hat{h}$ ties them together</li>
-    <li>ERM <strong>selects for</strong> hypotheses whose luck ran high</li>
-  </ul>
-  <p class="muted">The model farm showed it: the best of $10^4$ guessers looks great at $n = 25$</p>
-</div>
-
-<!-- The fix -->
-<div class="slide">
-  <h2>The Fix &mdash; Bound Every $h$ at Once</h2>
-  <div class="divider"></div>
-  <p>Uniform convergence event: no hypothesis deviates</p>
-  <div class="math-block" style="margin:8px 0">$$G_\epsilon \;=\; \Big\{ \; |\hat{R}_n(h) - R(h)| \leq \epsilon
-    \;\;\text{ for all } h \in \mathcal{H} \; \Big\}$$</div>
-  <ul>
-    <li>On $G_\epsilon$: <strong>whatever</strong> $h$ any algorithm picks, its gap is $\leq \epsilon$</li>
-    <li>Data-dependence handled by covering all choices in advance</li>
-  </ul>
-</div>
-
-<!-- Main theorem -->
-<div class="slide">
-  <h2>Theorem &mdash; Finite-Class Generalization</h2>
-  <div class="divider"></div>
-  <div class="card">
-    <h3>Theorem 5 (uniform convergence, finite class).</h3>
-    <p>$\mathcal{H}$ finite, $Z_i$ i.i.d., $\ell \in [0,1]$, $\delta \in (0,1)$. With probability $\geq 1 - \delta$:</p>
-    <div class="math-block" style="margin:8px 0">$$\sup_{h \in \mathcal{H}} \big| R(h) - \hat{R}_n(h) \big|
-      \;\leq\; \sqrt{ \frac{ \ln\!\big( 2 |\mathcal{H}| / \delta \big) }{ 2n } }$$</div>
-  </div>
-  <p class="muted">One sample, one guarantee, every hypothesis &mdash; the payoff of the whole lecture</p>
-</div>
-
-<!-- Proof overview -->
-<div class="slide">
-  <h2>Generalization Theorem &mdash; Proof Overview</h2>
-  <div class="divider"></div>
-  <p>Target: $\Pr\big( \exists h: |\hat{R}_n(h) - R(h)| \gt \epsilon \big) \leq \delta$ for the right $\epsilon$</p>
-  <div class="p6-step"><span class="n">1</span><span class="t">One $h$</span><span>two-sided Hoeffding, $2 e^{-2n\epsilon^2}$</span></div>
-  <div class="p6-step"><span class="n">2</span><span class="t">All $h$</span><span>union bound over $\mathcal{H}$, factor $|\mathcal{H}|$</span></div>
-  <div class="p6-step"><span class="n">3</span><span class="t">Invert</span><span>set the bound to $\delta$, solve for $\epsilon$</span></div>
-  <p class="muted">Hoeffding + union bound + algebra &mdash; nothing else</p>
 </div>
 
 <!-- Proof step 1 -->
 <div class="slide">
-  <h2>Proof &mdash; Step 1: One Hypothesis</h2>
+  <h2>Proof, Step 1 &mdash; Markov Gives Chernoff</h2>
   <div class="divider"></div>
-  <p>Bad event for one hypothesis: $B_h = \big\{ |\hat{R}_n(h) - R(h)| \gt \epsilon \big\}$</p>
-  <div class="math-block" style="margin:8px 0">$$\Pr(B_h) \;\stackrel{(\text{key observation})}{\leq}\; 2 e^{-2n\epsilon^2}
-    \qquad \text{for each fixed } h \in \mathcal{H}$$</div>
+  <p>Upper tail. For any $t \gt 0$, $u \mapsto e^{tu}$ is increasing:</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\big( \bar{W}_n - p \geq \epsilon \big)
+    \;=\; \Pr\big( e^{t(\bar{W}_n - p)} \geq e^{t\epsilon} \big)
+    \;\stackrel{(\text{Markov})}{\leq}\; e^{-t\epsilon}\, \mathbb{E}\big[ e^{t(\bar{W}_n - p)} \big]$$</div>
   <ul>
-    <li>Valid per $h$: each $B_h$ concerns a <strong>fixed</strong> hypothesis</li>
-    <li>The $B_h$ overlap and depend on each other &mdash; irrelevant next</li>
+    <li>Markov: $\Pr(Z \geq a) \leq \mathbb{E}[Z]/a$ for $Z \geq 0$, $a \gt 0$</li>
+    <li>Free parameter $t$: chosen in Step 4</li>
   </ul>
 </div>
 
 <!-- Proof step 2 -->
 <div class="slide">
-  <h2>Proof &mdash; Step 2: Union Over the Class</h2>
+  <h2>Proof, Step 2 &mdash; Independence Factorizes</h2>
   <div class="divider"></div>
-  <p>Some hypothesis deviates = the union of the $B_h$:</p>
-  <div class="math-block">$$\Pr\!\left( \bigcup_{h \in \mathcal{H}} B_h \right)
-    \;\stackrel{(\text{Thm 4})}{\leq}\; \sum_{h \in \mathcal{H}} \Pr(B_h)
-    \;\stackrel{(\text{step 1})}{\leq}\; 2\, |\mathcal{H}|\, e^{-2n\epsilon^2}$$</div>
-  <p class="muted">Dependence between hypotheses: exactly what the union bound ignores for free</p>
+  <p>Write $\bar{W}_n - p = \frac{1}{n}\sum_i (W_i - p)$, so the exponential is a product:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ e^{t(\bar{W}_n - p)} \big]
+    \;=\; \mathbb{E}\Big[ \prod_{i=1}^{n} e^{\frac{t}{n}(W_i - p)} \Big]
+    \;\stackrel{(\text{indep.})}{=}\; \prod_{i=1}^{n} \mathbb{E}\big[ e^{\frac{t}{n}(W_i - p)} \big]$$</div>
+  <ul>
+    <li>Expectation of a product of independent factors = product of expectations</li>
+    <li>For filters: needs $h$ fixed in advance</li>
+  </ul>
 </div>
 
 <!-- Proof step 3 -->
 <div class="slide">
-  <h2>Proof &mdash; Step 3: Solve for $\epsilon$</h2>
+  <h2>Proof, Step 3 &mdash; Lemma 1 on Each Factor</h2>
   <div class="divider"></div>
-  <p>Set the failure budget to $\delta$ and invert:</p>
-  <div class="math-block">$$2 |\mathcal{H}| e^{-2n\epsilon^2} = \delta
-    \;\Longleftrightarrow\; e^{2n\epsilon^2} = \frac{2|\mathcal{H}|}{\delta}
-    \;\Longleftrightarrow\; \epsilon = \sqrt{ \frac{\ln(2|\mathcal{H}|/\delta)}{2n} }$$</div>
-  <p>With this $\epsilon$: $\Pr\big( \sup_h |\hat{R}_n(h) - R(h)| \gt \epsilon \big) \leq \delta \quad \blacksquare$</p>
+  <p>Each $W_i \in [0, 1]$, so $b - a = 1$; apply Lemma 1 with $t/n$ in place of $t$:</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ e^{\frac{t}{n}(W_i - p)} \big] \;\leq\; e^{t^2/(8n^2)}
+    \quad\Longrightarrow\quad
+    \prod_{i=1}^{n} \mathbb{E}\big[ e^{\frac{t}{n}(W_i - p)} \big] \;\leq\; e^{t^2/(8n)}$$</div>
+  <p>With Steps 1&ndash;2, for every $t \gt 0$:</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\big( \bar{W}_n - p \geq \epsilon \big) \;\leq\; e^{-t\epsilon + t^2/(8n)}$$</div>
 </div>
 
-<!-- Proof summary -->
+<!-- Proof step 4 -->
 <div class="slide">
-  <h2>Generalization Theorem &mdash; Proof Summary</h2>
+  <h2>Proof, Step 4 &mdash; Choose the Best $t$</h2>
   <div class="divider"></div>
-  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
-    \Pr\Big( \sup_h |\hat{R}_n - R| \gt \epsilon \Big)
-    \;&amp;\stackrel{(\text{union})}{\leq}\; \sum_{h} \Pr(B_h)
-    \;\stackrel{(\text{Hoeffding})}{\leq}\; 2|\mathcal{H}| e^{-2n\epsilon^2} \\[6pt]
-    &amp;\stackrel{(\text{set} = \delta)}{\Longrightarrow}\; \epsilon = \sqrt{\tfrac{\ln(2|\mathcal{H}|/\delta)}{2n}}
-    \end{aligned}$$</div>
+  <p>Minimize the exponent $f(t) = -t\epsilon + \dfrac{t^2}{8n}$:</p>
+  <div class="math-block" style="margin:8px 0">$$f'(t) = -\epsilon + \frac{t}{4n} = 0
+    \;\;\Longrightarrow\;\; t = 4n\epsilon,
+    \qquad f(4n\epsilon) = -4n\epsilon^2 + 2n\epsilon^2 = -2n\epsilon^2$$</div>
+  <div class="math-block" style="margin:8px 0">$$\Pr\big( \bar{W}_n - p \geq \epsilon \big) \;\leq\; e^{-2n\epsilon^2}$$</div>
+  <p class="muted">Any $t \gt 0$ gives a valid bound; this one is the tightest of the family</p>
+</div>
+
+<!-- Proof step 5 -->
+<div class="slide">
+  <h2>Proof, Step 5 &mdash; Lower Tail and the Factor 2</h2>
+  <div class="divider"></div>
   <ul>
-    <li>The trick: pay for the search <strong>before</strong> it happens</li>
-    <li>Weight carrier: exponential tail beats the head count $|\mathcal{H}|$</li>
+    <li>Lower tail: apply Steps 1&ndash;4 to $W_i' = 1 - W_i \in [0, 1]$, mean $1 - p$</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$\Pr\big( p - \bar{W}_n \geq \epsilon \big) \;=\; \Pr\big( \bar{W}_n' - (1 - p) \geq \epsilon \big) \;\leq\; e^{-2n\epsilon^2}$$</div>
+  <ul>
+    <li>$\{|\bar{W}_n - p| \geq \epsilon\}$ is the union of the two tails: add them</li>
+  </ul>
+  <div class="math-block" style="margin:8px 0">$$\Pr\big( |\bar{W}_n - p| \geq \epsilon \big) \;\leq\; 2 e^{-2n\epsilon^2} \qquad \blacksquare$$</div>
+</div>
+
+<!-- Decay chart -->
+<div class="slide">
+  <h2>The Bound Falls Exponentially in $n$</h2>
+  <div class="divider"></div>
+  <div class="p6-fig" style="max-width:1000px;margin:8px auto;">
+    <svg viewBox="0 0 1000 380">
+      <line x1="120" y1="320" x2="960" y2="320" stroke="#222" stroke-width="2"/>
+      <line x1="120" y1="320" x2="120" y2="40" stroke="#222" stroke-width="2"/>
+      <line x1="120" y1="60.0" x2="940" y2="60.0" stroke="#9aa4af" stroke-width="1.5" stroke-dasharray="6 5"/>
+      <line x1="120" y1="60.0" x2="233.7" y2="60.0" stroke="#c0392b" stroke-width="4"/>
+      <path d="M 233.7 60.0 L 243.0 74.4 L 251.2 86.3 L 259.4 97.7 L 267.6 108.6 L 275.8 118.9 L 284.0 128.7 L 292.2 138.0 L 300.4 146.9 L 308.6 155.3 L 316.8 163.4 L 325.0 171.0 L 333.2 178.3 L 341.4 185.2 L 349.6 191.8 L 357.8 198.0 L 366.0 204.0 L 374.2 209.6 L 382.4 215.0 L 390.6 220.1 L 398.8 225.0 L 407.0 229.6 L 415.2 234.0 L 423.4 238.2 L 431.6 242.2 L 439.8 246.0 L 448.0 249.6 L 456.2 253.1 L 464.4 256.3 L 472.6 259.4 L 480.8 262.4 L 489.0 265.2 L 497.2 267.9 L 505.4 270.4 L 513.6 272.8 L 521.8 275.1 L 530.0 277.3 L 538.2 279.4 L 546.4 281.4 L 554.6 283.3 L 562.8 285.1 L 571.0 286.8 L 579.2 288.4 L 587.4 289.9 L 595.6 291.4 L 603.8 292.8 L 612.0 294.1 L 620.2 295.4 L 628.4 296.6 L 636.6 297.7 L 644.8 298.8 L 653.0 299.8 L 661.2 300.8 L 669.4 301.8 L 677.6 302.6 L 685.8 303.5 L 694.0 304.3 L 702.2 305.1 L 710.4 305.8 L 718.6 306.5 L 726.8 307.1 L 735.0 307.8 L 743.2 308.4 L 751.4 308.9 L 759.6 309.5 L 767.8 310.0 L 776.0 310.5 L 784.2 310.9 L 792.4 311.4 L 800.6 311.8 L 808.8 312.2 L 817.0 312.6 L 825.2 312.9 L 833.4 313.3 L 841.6 313.6 L 849.8 313.9 L 858.0 314.2 L 866.2 314.5 L 874.4 314.8 L 882.6 315.0 L 890.8 315.3 L 899.0 315.5 L 907.2 315.7 L 915.4 315.9 L 923.6 316.1 L 931.8 316.3 L 940.0 316.5" fill="none" stroke="#003876" stroke-width="4"/>
+      <circle cx="284.0" cy="128.7" r="8" fill="#003876"/>
+      <circle cx="612.0" cy="294.1" r="8" fill="#003876"/>
+      <circle cx="940.0" cy="316.5" r="8" fill="#003876"/>
+    </svg>
+    <span class="fl fl-sub fl-blue" style="left:37.90%;top:31.24%">$n = 200$: $0.74$</span>
+    <span class="fl fl-sub fl-blue" style="left:63.20%;top:67.40%">$n = 600$: $0.10$</span>
+    <span class="fl fl-sub fl-blue" style="left:90.00%;top:73.29%">$n = 1000$: $0.013$</span>
+    <span class="fl fl-sub fl-red" style="left:20.24%;top:9.47%">vacuous ($\geq 1$)</span>
+    <span class="fl" style="left:73.50%;top:92.11%">training-set size $n$</span>
+    <span class="fl fl-sub fl-grey" style="left:12.00%;top:89.47%">$0$</span>
+    <span class="fl fl-sub fl-grey" style="left:53.00%;top:89.47%">$500$</span>
+    <span class="fl fl-sub fl-grey" style="left:94.00%;top:89.47%">$1000$</span>
+    <span class="fl fl-sub fl-grey" style="left:9.50%;top:15.79%">$1$</span>
+    <span class="fl fl-sub fl-grey" style="left:9.50%;top:84.21%">$0$</span>
+  </div>
+  <p class="muted">Key: $2e^{-2n\epsilon^2}$ at $\epsilon = 0.05$, a bound on $\Pr(|\hat{R}_n(h) - R(h)| \geq 0.05)$ for one fixed $h$</p>
+</div>
+
+<!-- 4612 -->
+<div class="slide">
+  <h2>Worked Example &mdash; Error Rate &plusmn;2% at 95%</h2>
+  <div class="divider"></div>
+  <p>One fixed filter; want $\Pr\big(|\hat{R}_n(h) - R(h)| \geq 0.02\big) \leq 0.05$:</p>
+  <div class="math-block">$$2 e^{-2n(0.02)^2} \leq 0.05
+    \;\;\Longleftrightarrow\;\; n \;\geq\; \frac{\ln 40}{2 \cdot 0.0004} \approx 4611.1$$</div>
+  <div class="math-block" style="margin:8px 0">$$n \;\geq\; 4{,}612 \;\text{ emails}$$</div>
+  <p class="muted">Chebyshev ($\mathrm{Var} \leq \tfrac14$) would ask for $12{,}500$</p>
+</div>
+
+<!-- ===== SECTION 03 — SELECTION AND UNION ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>Selection and the Union Bound</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Many classifiers, one sample</p>
+</div>
+
+<!-- Selection trap chart -->
+<div class="slide">
+  <h2>The Best of 1,000 Useless Filters Looks Good</h2>
+  <div class="divider"></div>
+  <div class="p6-fig" style="max-width:900px;margin:4px auto;">
+    <svg viewBox="0 0 1000 380">
+      <line x1="90" y1="300" x2="970" y2="300" stroke="#222" stroke-width="2"/>
+      <rect x="298.6" y="290.6" width="26" height="9.4" fill="#c0392b" opacity="1"/>
+      <rect x="332.2" y="273.4" width="26" height="26.6" fill="#003876" opacity="0.55"/>
+      <rect x="365.8" y="260.9" width="26" height="39.1" fill="#003876" opacity="0.55"/>
+      <rect x="399.4" y="200.0" width="26" height="100.0" fill="#003876" opacity="0.55"/>
+      <rect x="433.0" y="145.3" width="26" height="154.7" fill="#003876" opacity="0.55"/>
+      <rect x="466.6" y="89.1" width="26" height="210.9" fill="#003876" opacity="0.55"/>
+      <rect x="500.2" y="68.8" width="26" height="231.2" fill="#003876" opacity="0.55"/>
+      <rect x="533.8" y="67.2" width="26" height="232.8" fill="#003876" opacity="0.55"/>
+      <rect x="567.4" y="98.4" width="26" height="201.6" fill="#003876" opacity="0.55"/>
+      <rect x="601.0" y="132.8" width="26" height="167.2" fill="#003876" opacity="0.55"/>
+      <rect x="634.6" y="200.0" width="26" height="100.0" fill="#003876" opacity="0.55"/>
+      <rect x="668.2" y="243.8" width="26" height="56.2" fill="#003876" opacity="0.55"/>
+      <rect x="701.8" y="278.1" width="26" height="21.9" fill="#003876" opacity="0.55"/>
+      <rect x="735.4" y="293.8" width="26" height="6.2" fill="#003876" opacity="0.55"/>
+      <rect x="769.0" y="296.9" width="26" height="3.1" fill="#003876" opacity="0.55"/>
+      <rect x="802.6" y="298.4" width="26" height="1.6" fill="#003876" opacity="0.55"/>
+      <line x1="530.0" y1="300" x2="530.0" y2="40" stroke="#222" stroke-width="2.5" stroke-dasharray="7 5"/>
+      <line x1="311.6" y1="282.6" x2="311.6" y2="230.6" stroke="#c0392b" stroke-width="2"/>
+    </svg>
+    <span class="fl fl-sub fl-red" style="left:33.16%;top:55.43%">best: $0.24$</span>
+    <span class="fl fl-sub" style="left:68.00%;top:10.53%">true error of every filter: $0.5$</span>
+    <span class="fl" style="left:53.00%;top:93.95%">training error on $n = 25$ emails</span>
+    <span class="fl fl-sub fl-grey" style="left:11.00%;top:85.53%">$0$</span>
+    <span class="fl fl-sub fl-grey" style="left:53.00%;top:85.53%">$0.5$</span>
+    <span class="fl fl-sub fl-grey" style="left:95.00%;top:85.53%">$1$</span>
+  </div>
+  <p class="muted">Simulated (seed 6): every filter guesses at random, true error $0.5$</p>
+  <div class="p6-lucky"><p><strong>Lucky one.</strong> The red bar looks good on training data; true error: $0.5$.</p></div>
+</div>
+
+<!-- Selection trap statement -->
+<div class="slide">
+  <h2>The Selection Trap</h2>
+  <div class="divider"></div>
+  <ul>
+    <li>Theorem 1 needs $h$ fixed <strong>before</strong> the sample</li>
+    <li>ERM picks $\hat{h}$ <strong>after</strong> looking at the sample</li>
+    <li>It favours whichever filter got lucky on these emails</li>
+  </ul>
+  <div class="highlight">
+    <p>A bound for each preselected $h$ does not automatically apply to the $h$ selected using those same data.</p>
+  </div>
+  <div class="p6-lucky"><p><strong>Lucky one.</strong> Found from training data. Low training error alone does not guarantee low true error.</p></div>
+</div>
+
+<!-- Union bound -->
+<div class="slide">
+  <h2>Theorem &mdash; The Union Bound</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem 2 (union bound).</h3>
+    <p>For any events $A_1, \dots, A_m$, <strong>independent or not</strong>:</p>
+    <div class="math-block" style="margin:8px 0">$$\Pr\!\Big( \bigcup_{j=1}^m A_j \Big) \;\leq\; \sum_{j=1}^m \Pr(A_j)$$</div>
+  </div>
+  <p><em>Proof.</em> $\mathbf{1}\{\bigcup_j A_j\} \leq \sum_j \mathbf{1}\{A_j\}$ pointwise; take expectations $\;\blacksquare$</p>
+</div>
+
+<!-- Union: the idea -->
+<div class="slide">
+  <h2>The Fix: Guard Every Filter at Once</h2>
+  <div class="divider"></div>
+  <p>$A_j$ = "useless filter $j$ shows training error $\leq 0.25$". Bad event: <strong>some</strong> $A_j$ happens</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\Big( \bigcup_{j=1}^{1000} A_j \Big)
+    \;\stackrel{(\text{Thm 2})}{\leq}\; \sum_{j=1}^{1000} \Pr(A_j)
+    \;\stackrel{(\text{Thm 1, } \epsilon = \frac14)}{\leq}\; 1000\, e^{-2n/16}$$</div>
+  <ul>
+    <li>Each $A_j$ is about one <strong>fixed</strong> filter: Theorem 1 applies</li>
+    <li>If no $A_j$ happens: no filter with true error $0.5$ achieves training error $\leq 0.25$</li>
   </ul>
 </div>
 
-<!-- Epsilon tube picture -->
+<!-- Union: interpretation -->
 <div class="slide">
-  <h2>The $\epsilon$-Tube Picture</h2>
+  <h2>Reading the Union: Did a Useless Filter Get Lucky?</h2>
   <div class="divider"></div>
-  <div class="p6-fig" style="max-width:1000px;margin:10px auto;">
-    <svg viewBox="0 0 1000 380">
-      <line x1="90" y1="320" x2="960" y2="320" stroke="#222" stroke-width="2"/>
-      <line x1="90" y1="320" x2="90" y2="50" stroke="#222" stroke-width="2"/>
-      <path d="M 118 124 C 283 246, 449 265, 587 216 C 725 167, 836 118, 932 81
-      L 932 154 C 836 191, 725 240, 587 289 C 449 334, 283 320, 118 197 Z"
-      fill="#003876" opacity="0.13"/>
-      <path d="M 118 161 C 283 283, 449 302, 587 253 C 725 203, 836 154, 932 118" fill="none" stroke="#003876" stroke-width="4"/>
-      <circle cx="173" cy="200" r="7" fill="#666"/>
-      <circle cx="283" cy="271" r="7" fill="#666"/>
-      <circle cx="394" cy="308" r="7" fill="#666"/>
-      <circle cx="504" cy="259" r="7" fill="#666"/>
-      <circle cx="615" cy="259" r="7" fill="#666"/>
-      <circle cx="725" cy="200" r="7" fill="#666"/>
-      <circle cx="836" cy="142" r="7" fill="#666"/>
-      <circle cx="394" cy="308" r="13" fill="none" stroke="#c0392b" stroke-width="3"/>
-      <path d="M 268 349 L 381 316" fill="none" stroke="#c0392b" stroke-width="2" stroke-dasharray="5 4"/>
-    </svg>
-    <span class="fl" style="left:53.50%;top:92.63%">hypotheses $h$ (ordered)</span>
-    <span class="fl" style="left:12.00%;top:6.84%">risk</span>
-    <span class="fl fl-blue" style="left:30.00%;top:26.32%">true risk $R(h)$</span>
-    <span class="fl fl-grey" style="left:79.00%;top:76.32%">train estimates (dots)</span>
-    <span class="fl fl-red" style="left:19.50%;top:91.84%">ERM pick</span>
+  <div class="math-block" style="margin:6px 0;padding:4px 24px">$$\Pr\Big( \bigcup_{j=1}^{1000} A_j \Big) \;=\; \Pr\big(\text{at least one useless filter looks good on training data}\big)$$</div>
+  <div class="p6-step"><span class="t">It happens</span><span>ERM's training error is $\leq 0.25$, so its gap is $\geq 0.25$</span></div>
+  <div class="p6-step"><span class="t">It does not</span><span>no filter with true error $0.5$ achieves training error $\leq 0.25$</span></div>
+  <div class="p6-lucky"><p><strong>Lucky one.</strong> Making this event <strong>rare</strong> controls ERM's optimism in this example. Section 04 generalizes this by bounding the event that any filter's absolute gap exceeds $\epsilon$.</p></div>
+</div>
+
+<!-- Pricing -->
+<div class="slide">
+  <h2>The Price Is $\times|\mathcal{H}|$ &mdash; Enough Data Pays It</h2>
+  <div class="divider"></div>
+  <table>
+    <thead><tr><th><span style="text-transform:none">$n$</span></th><th>one filter, upper bound: <span style="text-transform:none">$e^{-2n/16}$</span></th><th>some filter, upper bound: <span style="text-transform:none">$1000\times$</span></th></tr></thead>
+    <tbody>
+      <tr><td>$25$</td><td>$0.044$</td><td>$44$ &nbsp;(vacuous)</td></tr>
+      <tr><td>$100$</td><td>$3.7 \times 10^{-6}$</td><td>$0.37\%$</td></tr>
+    </tbody>
+  </table>
+  <ul style="margin-top:12px;">
+    <li>$n = 25$: no guarantee, and the simulation found six lucky filters at $0.24$</li>
+    <li>$n = 100$: with probability $\geq 99.6\%$, <strong>no</strong> useless filter shows training error $\leq 0.25$</li>
+  </ul>
+  <div class="highlight">
+    <p>The exponent in $n$ must outrun the factor $|\mathcal{H}|$.</p>
   </div>
-  <p class="muted">With probability $1 - \delta$: every dot sits inside the $\pm\epsilon$ tube around its curve</p>
+</div>
+
+<!-- ===== SECTION 04 — FINITE-CLASS THEOREM ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">04</div>
+  <h1>The Finite-Class Theorem</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Every gap small at once</p>
+</div>
+
+<!-- Theorem -->
+<div class="slide">
+  <h2>Theorem &mdash; Finite-Class Generalization</h2>
+  <div class="divider"></div>
+  <p>In words: with high probability, every candidate's training error is close to its true error.</p>
+  <div class="card">
+    <h3>Theorem 3 (uniform convergence, finite class).</h3>
+    <p>Under (A1)&ndash;(A2), for $\delta \in (0,1)$, with probability $\geq 1 - \delta$:</p>
+    <div class="math-block" style="margin:8px 0">$$\big| R(h) - \hat{R}_n(h) \big| \;\leq\; \epsilon := \sqrt{ \frac{ \ln(2 |\mathcal{H}| / \delta) }{ 2n } }
+      \quad \text{for every } h \in \mathcal{H}$$</div>
+  </div>
+  <p class="muted">Running example: $|\mathcal{H}| = 1000$, $n = 2{,}120$, $\delta = 0.05$ gives $\epsilon \leq 0.05$</p>
+</div>
+
+<!-- Proof -->
+<div class="slide">
+  <h2>Proof &mdash; Hoeffding Plus Union, Three Lines</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \Pr\big( \exists h \in \mathcal{H}: |\hat{R}_n(h) - R(h)| \gt \epsilon \big)
+    &amp;\;\stackrel{(\text{Thm 2})}{\leq}\; \sum_{h \in \mathcal{H}} \Pr\big( |\hat{R}_n(h) - R(h)| \gt \epsilon \big) \\[4pt]
+    &amp;\;\stackrel{(\text{Thm 1})}{\leq}\; |\mathcal{H}| \cdot 2 e^{-2n\epsilon^2} \\[4pt]
+    &amp;\;\stackrel{(\text{def. of } \epsilon)}{=}\; \delta \qquad \blacksquare
+    \end{aligned}$$</div>
+  <ul>
+    <li>Line 2 is legal: each $h$ was fixed in advance (A2)</li>
+    <li>$\hat{h}$ never appears, so selection cannot break it</li>
+  </ul>
 </div>
 
 <!-- ERM corollary -->
 <div class="slide">
-  <h2>Corollary &mdash; ERM Nearly Wins</h2>
+  <h2>Corollary &mdash; ERM Is Nearly Best in Class</h2>
   <div class="divider"></div>
   <div class="card">
-    <h3>Corollary (ERM guarantee).</h3>
-    <p>On the event of Theorem 5 (probability $\geq 1 - \delta$), with $\epsilon = \sqrt{\tfrac{\ln(2|\mathcal{H}|/\delta)}{2n}}$:</p>
-    <div class="math-block" style="margin:8px 0">$$R(\hat{h}) \;\leq\; \min_{h \in \mathcal{H}} R(h) \;+\; 2\epsilon$$</div>
+    <h3>Corollary 4.</h3>
+    <p>Let $h^* \in \operatorname*{argmin}_{h \in \mathcal{H}} R(h)$. With probability $\geq 1 - \delta$:</p>
+    <div class="math-block" style="margin:8px 0">$$R(\hat{h}) \;\leq\; R(h^*) + 2\epsilon$$</div>
   </div>
-  <p class="muted">The trained model is within $2\epsilon$ of the best the class can do</p>
+  <div class="highlight">
+    <p>With probability $\geq 1-\delta$, selection costs at most $2\epsilon$ above the <strong>best model in $\mathcal{H}$</strong>.</p>
+  </div>
 </div>
 
-<!-- ERM corollary proof -->
+<!-- Corollary proof -->
 <div class="slide">
-  <h2>Corollary &mdash; the Three-Hop Proof</h2>
+  <h2>Proof of Corollary 4 &mdash; Three Steps</h2>
   <div class="divider"></div>
-  <p>On the tube event, with $h^*$ the true-risk minimizer:</p>
-  <div class="math-block">$$R(\hat{h})
-    \;\stackrel{(\text{tube at } \hat{h})}{\leq}\; \hat{R}_n(\hat{h}) + \epsilon
-    \;\stackrel{(\text{ERM: } \hat{R}_n(\hat{h}) \leq \hat{R}_n(h^*))}{\leq}\; \hat{R}_n(h^*) + \epsilon
-    \;\stackrel{(\text{tube at } h^*)}{\leq}\; R(h^*) + 2\epsilon \;\;\blacksquare$$</div>
-  <ul>
-    <li>Tube used <strong>twice</strong> (at $\hat{h}$, at $h^*$): hence $2\epsilon$, not $\epsilon$</li>
-    <li>Middle hop: pure definition of ERM &mdash; no probability</li>
-  </ul>
+  <p>Work on the event of Theorem 3 (probability $\geq 1 - \delta$):</p>
+  <table>
+    <thead><tr><th>Step</th><th>Why it holds</th></tr></thead>
+    <tbody>
+      <tr><td>$R(\hat{h}) \leq \hat{R}_n(\hat{h}) + \epsilon$</td><td>Theorem 3 covers <strong>every</strong> $h$, so also $\hat{h}$</td></tr>
+      <tr><td>$\hat{R}_n(\hat{h}) \leq \hat{R}_n(h^*)$</td><td><strong>ERM</strong>: $\hat{h}$ has the lowest training error in $\mathcal{H}$, and $h^* \in \mathcal{H}$</td></tr>
+      <tr><td>$\hat{R}_n(h^*) \leq R(h^*) + \epsilon$</td><td>Theorem 3 at $h^*$</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:12px;">Chain the three: $R(\hat{h}) \leq R(h^*) + 2\epsilon$ $\;\blacksquare$</p>
 </div>
 
 <!-- Corollary picture -->
 <div class="slide">
   <h2>Why $2\epsilon$ &mdash; the Two Hops in a Picture</h2>
   <div class="divider"></div>
-  <div class="p6-fig" style="max-width:1000px;margin:10px auto;">
+  <div class="math-block" style="margin:4px 0">$$R(\hat{h}) \;\leq\; \hat{R}_n(\hat{h}) + \epsilon \;\leq\; \hat{R}_n(h^*) + \epsilon \;\leq\; R(h^*) + 2\epsilon$$</div>
+  <div class="p6-fig" style="max-width:900px;margin:0 auto;">
     <svg viewBox="0 0 1000 330">
       <defs><marker id="hop-arr" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#c0392b"/></marker></defs>
       <line x1="110" y1="300" x2="110" y2="40" stroke="#222" stroke-width="2"/>
@@ -1373,227 +682,165 @@
     <span class="fl fl-sub fl-red" style="left:35.50%;top:53.94%">hop 1</span>
     <span class="fl fl-sub fl-red" style="left:89.50%;top:40.00%">hop 2</span>
   </div>
-  <p class="muted">Each hop crosses the tube once: $\epsilon$ at $h^*$, $\epsilon$ at $\hat{h}$ &mdash; total $2\epsilon$</p>
+  <p class="muted">Each hop costs at most $\epsilon$ (Theorem 3 at $h^*$, then at $\hat{h}$): total $2\epsilon$</p>
 </div>
 
-<!-- Interpretation: bits -->
+<!-- How much data -->
 <div class="slide">
-  <h2>Reading the Rate &mdash; Complexity as Description Length</h2>
+  <h2>How Much Data? &mdash; Logarithmic in $|\mathcal{H}|$</h2>
   <div class="divider"></div>
-  <p>Class of all models describable in $k$ bits: $|\mathcal{H}| = 2^k$</p>
-  <div class="math-block" style="margin:8px 0">$$\epsilon \;=\; \sqrt{ \frac{k \ln 2 + \ln(2/\delta)}{2n} }
-    \qquad \text{(description length } k \text{ enters linearly)}$$</div>
+  <p>Set $\epsilon$ in Theorem 3 to a target and solve for $n$:</p>
+  <div class="math-block" style="margin:8px 0">$$\sqrt{\frac{\ln(2|\mathcal{H}|/\delta)}{2n}} \leq \epsilon
+    \;\;\Longleftrightarrow\;\; n \;\geq\; \frac{\ln|\mathcal{H}| + \ln(2/\delta)}{2\epsilon^2}$$</div>
   <ul>
-    <li>$\log_2|\mathcal{H}| = k$ bits, equivalently $\ln|\mathcal{H}| = k\ln 2$ nats</li>
-    <li>Complexity is measured in <strong>bits to write the model down</strong></li>
+    <li>Class size enters only through $\ln|\mathcal{H}|$</li>
+    <li>Halving $\epsilon$ costs $4\times$ the data</li>
   </ul>
-  <p class="muted">$\log M$ is the information in a choice among $M$ alternatives</p>
+  <div class="highlight">
+    <p>With this many examples, Corollary 4 holds: $R(\hat{h}) \leq R(h^*) + 2\epsilon$ with probability $\geq 1 - \delta$.</p>
+  </div>
 </div>
 
-<!-- Interpretation: sample complexity formula -->
+<!-- How much data: numbers -->
 <div class="slide">
-  <h2>Reading the Rate &mdash; Sample Complexity</h2>
+  <h2>A Million Candidates Cost About $3\times$ the Data of Ten</h2>
   <div class="divider"></div>
-  <p>Invert for $n$: gap $\leq \epsilon$ with confidence $1 - \delta$ needs</p>
-  <div class="math-block" style="margin:8px 0">$$n \;\geq\; \frac{ \ln|\mathcal{H}| + \ln(2/\delta) }{ 2 \epsilon^2 }$$</div>
-  <ul>
-    <li>Per <strong>bit</strong> of model: $\tfrac{\ln 2}{2\epsilon^2} \approx 139$ samples at $\epsilon = 0.05$</li>
-    <li>Precision dominates: halving $\epsilon$ quadruples $n$</li>
-  </ul>
-</div>
-
-<!-- Sample complexity table -->
-<div class="slide">
-  <h2>Sample Complexity &mdash; the Numbers</h2>
-  <div class="divider"></div>
-  <p>$n$ for gap $\leq 0.05$ at $95\%$ confidence ($\ln(2/\delta) = \ln 40 \approx 3.69$):</p>
   <table>
-    <thead><tr><th><span style="text-transform:none">$|\mathcal{H}|$</span></th><th><span style="text-transform:none">$\ln|\mathcal{H}|$</span></th><th><span style="text-transform:none">$n$</span> needed</th></tr></thead>
+    <thead><tr><th><span style="text-transform:none">$|\mathcal{H}|$</span></th><th><span style="text-transform:none">$\ln|\mathcal{H}|$</span></th><th><span style="text-transform:none">$n$</span> needed at <span style="text-transform:none">$\epsilon = \delta = 0.05$</span></th></tr></thead>
     <tbody>
       <tr><td>$10$</td><td>$2.30$</td><td>$1{,}199$</td></tr>
-      <tr><td>$10^3$</td><td>$6.91$</td><td>$2{,}120$</td></tr>
+      <tr><td>$10^3$ (our library)</td><td>$6.91$</td><td>$2{,}120$</td></tr>
       <tr><td>$10^6$</td><td>$13.8$</td><td>$3{,}501$</td></tr>
-      <tr><td>$2^{100}$ (100-bit model)</td><td>$69.3$</td><td>$14{,}601$</td></tr>
+      <tr><td>$2^{100}$</td><td>$69.3$</td><td>$14{,}601$</td></tr>
     </tbody>
   </table>
-  <p class="muted" style="margin-top:10px;">A <strong>million</strong> hypotheses costs only $3\times$ the data of ten &mdash; logs are kind</p>
-</div>
-
-<!-- Sample complexity chart -->
-<div class="slide">
-  <h2>Sample Complexity &mdash; the Chart</h2>
-  <div class="divider"></div>
-  <div class="p6-fig" style="max-width:1000px;margin:10px auto;">
-    <svg viewBox="0 0 1000 380">
-      <line x1="120" y1="300" x2="960" y2="300" stroke="#222" stroke-width="2"/>
-      <line x1="120" y1="300" x2="120" y2="50" stroke="#222" stroke-width="2"/>
-      <line x1="120" y1="288" x2="930" y2="62" stroke="#003876" stroke-width="4"/>
-      <circle cx="201" cy="265" r="8" fill="#003876"/>
-      <circle cx="525" cy="175" r="8" fill="#003876"/>
-      <circle cx="930" cy="62" r="8" fill="#003876"/>
-    </svg>
-    <span class="fl" style="left:54.00%;top:92.63%">model description length $k$ (bits)</span>
-    <span class="fl" style="left:17.50%;top:7.37%">samples $n$</span>
-    <span class="fl fl-sub fl-blue" style="left:31.00%;top:71.58%">$k = 10$: $n = 2{,}125$</span>
-    <span class="fl fl-sub fl-blue" style="left:52.50%;top:37.37%">$k = 50$: $n = 7{,}670$</span>
-    <span class="fl fl-sub fl-blue" style="left:87.20%;top:8.42%">$k = 100$: $n = 14{,}601$</span>
-    <span class="fl fl-sub fl-grey" style="left:12.00%;top:84.74%">$0$</span>
-    <span class="fl fl-sub fl-grey" style="left:52.50%;top:84.74%">$50$</span>
-    <span class="fl fl-sub fl-grey" style="left:93.00%;top:84.74%">$100$</span>
+  <div class="highlight">
+    <p>Each $10\times$ in $|\mathcal{H}|$ adds $\ln 10 \approx 2.3$ to $\ln|\mathcal{H}|$: about $460$ more examples here.</p>
   </div>
-  <p class="muted">Linear in bits: $n = \lceil 737.78 + 138.63\,k \rceil$ at $\epsilon = \delta = 0.05$, with $k = \log_2|\mathcal{H}|$ &mdash; each bit costs about $139$ samples</p>
 </div>
 
-<!-- Confidence is cheap -->
-<div class="slide">
-  <h2>Confidence Is Nearly Free</h2>
-  <div class="divider"></div>
-  <p>Only $\ln(2/\delta)$ enters &mdash; crank $\delta$ down aggressively:</p>
-  <table>
-    <thead><tr><th>Confidence <span style="text-transform:none">$1 - \delta$</span></th><th><span style="text-transform:none">$\ln(2/\delta)$</span></th><th>extra <span style="text-transform:none">$n$ (at $\epsilon = 0.05$)</span></th></tr></thead>
-    <tbody>
-      <tr><td>$95\%$</td><td>$3.7$</td><td>&mdash; (baseline)</td></tr>
-      <tr><td>$99.9\%$</td><td>$7.6$</td><td>$+783$</td></tr>
-      <tr><td>$1 - 10^{-9}$</td><td>$21.4$</td><td>$+3{,}546$</td></tr>
-    </tbody>
-  </table>
-  <p class="muted" style="margin-top:10px;">From $95\%$ to one-in-a-billion failure: only a few thousand extra samples</p>
-</div>
-
-<!-- Road ahead -->
-<div class="slide">
-  <h2>The Road Ahead &mdash; Infinite Classes</h2>
-  <div class="divider"></div>
-  <p>All linear classifiers in $\mathbb{R}^d$: $|\mathcal{H}| = \infty$ &mdash; Theorem 5 says nothing</p>
-  <ul>
-    <li><strong>VC dimension</strong>: effective $\ln|\mathcal{H}|$ counts <em>behaviors on $n$ points</em>, not members</li>
-    <li><strong>Rademacher complexity</strong>: measures how well $\mathcal{H}$ fits random signs</li>
-    <li>Both replace $\ln|\mathcal{H}|$; the Hoeffding + union skeleton survives</li>
-  </ul>
-  <p class="muted">Named here only &mdash; developed in learning-theory courses, not today</p>
-</div>
-
-<!-- ===== SECTION 08 — WHY ERM WORKS ===== -->
+<!-- ===== SECTION 05 — BEYOND FINITE CLASSES ===== -->
 <div class="slide section-slide left">
-  <div class="section-num">08</div>
-  <h1>Why ERM Works</h1>
+  <div class="section-num">05</div>
+  <h1>Beyond Finite Classes</h1>
   <div class="divider"></div>
-  <p class="subtitle">And where the naive bound breaks</p>
+  <p class="subtitle">Count labelings, not parameters</p>
 </div>
 
-<!-- Why ERM works -->
+<!-- Thresholds -->
 <div class="slide">
-  <h2>The License to Train</h2>
+  <h2>Infinitely Many Thresholds, At Most $n + 1$ Labelings</h2>
   <div class="divider"></div>
-  <p>ERM minimizes a <strong>proxy</strong>. Theorem 5 certifies the proxy:</p>
-  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
-    n \gg \ln|\mathcal{H}|
-    \quad&amp;\Longrightarrow\quad \hat{R}_n \approx R \text{ everywhere} \\[6pt]
-    &amp;\Longrightarrow\quad \text{minimizing } \hat{R}_n \approx \text{minimizing } R
-    \end{aligned}$$</div>
-  <ul>
-    <li>Training loss becomes a <strong>certified</strong> preview of test loss</li>
-    <li>That certification is what "learning is possible" means here</li>
-  </ul>
-</div>
-
-<!-- Model size vs data -->
-<div class="slide">
-  <h2>Model Size vs. Data &mdash; the Trade-Off</h2>
-  <div class="divider"></div>
-  <p>The corollary splits the achievable risk in two:</p>
-  <div class="math-block" style="margin:8px 0">$$R(\hat{h}) \;\leq\; \underbrace{\min_{h \in \mathcal{H}} R(h)}_{\text{approximation: shrinks as } \mathcal{H} \text{ grows}}
-    \;+\; \underbrace{2\sqrt{ \tfrac{\ln(2|\mathcal{H}|/\delta)}{2n} }}_{\text{estimation: grows as } \mathcal{H} \text{ grows}}$$</div>
-  <p class="muted">Richer class: better best-in-class, looser certificate &mdash; the U-curve from the opening, explained</p>
-</div>
-
-<!-- Tradeoff picture -->
-<div class="slide">
-  <h2>The Trade-Off &mdash; Picture</h2>
-  <div class="divider"></div>
-  <div class="p6-fig" style="max-width:1000px;margin:8px auto;">
-    <svg viewBox="0 0 1000 410">
-      <line x1="130" y1="30" x2="180" y2="30" stroke="#9aa4af" stroke-width="4"/>
-      <line x1="400" y1="30" x2="450" y2="30" stroke="#9aa4af" stroke-width="4" stroke-dasharray="7 5"/>
-      <line x1="640" y1="30" x2="690" y2="30" stroke="#003876" stroke-width="4"/>
-      <line x1="100" y1="340" x2="960" y2="340" stroke="#222" stroke-width="2"/>
-      <line x1="100" y1="340" x2="100" y2="105" stroke="#222" stroke-width="2"/>
-      <path d="M 127 139 C 278 262, 456 306, 909 324" fill="none" stroke="#9aa4af" stroke-width="3.5"/>
-      <path d="M 127 331 C 347 306, 621 251, 909 179" fill="none" stroke="#9aa4af" stroke-width="3.5" stroke-dasharray="7 5"/>
-      <path d="M 127 150 C 306 284, 470 280, 621 284 C 744 288, 840 251, 909 206" fill="none" stroke="#003876" stroke-width="4"/>
-      <circle cx="539" cy="282" r="8" fill="#003876"/>
-      <line x1="470" y1="244" x2="531" y2="277" stroke="#003876" stroke-width="2" stroke-dasharray="5 4"/>
+  <p>$h_t(x) = \mathbf{1}\{x \geq t\}$ for $t \in \mathbb{R}$: infinitely many filters, $\ln|\mathcal{H}| = \infty$</p>
+  <div class="p6-fig" style="max-width:1000px;margin:10px auto;">
+    <svg viewBox="0 0 1000 260">
+      <line x1="80" y1="130" x2="920" y2="130" stroke="#222" stroke-width="2"/>
+      <line x1="120" y1="95" x2="120" y2="165" stroke="#c0392b" stroke-width="3" stroke-dasharray="5 4"/>
+      <line x1="260" y1="95" x2="260" y2="165" stroke="#c0392b" stroke-width="3" stroke-dasharray="5 4"/>
+      <line x1="400" y1="95" x2="400" y2="165" stroke="#c0392b" stroke-width="3" stroke-dasharray="5 4"/>
+      <line x1="540" y1="95" x2="540" y2="165" stroke="#c0392b" stroke-width="3" stroke-dasharray="5 4"/>
+      <line x1="680" y1="95" x2="680" y2="165" stroke="#c0392b" stroke-width="3" stroke-dasharray="5 4"/>
+      <line x1="820" y1="95" x2="820" y2="165" stroke="#c0392b" stroke-width="3" stroke-dasharray="5 4"/>
+      <circle cx="190" cy="130" r="14" fill="#003876"/>
+      <circle cx="330" cy="130" r="14" fill="#003876"/>
+      <circle cx="470" cy="130" r="14" fill="#003876"/>
+      <circle cx="610" cy="130" r="14" fill="#003876"/>
+      <circle cx="750" cy="130" r="14" fill="#003876"/>
     </svg>
-    <span class="fl fl-grey" style="left:30.00%;top:7.32%">approximation</span>
-    <span class="fl fl-grey" style="left:53.00%;top:7.32%">estimation</span>
-    <span class="fl fl-blue" style="left:78.00%;top:7.32%">total bound</span>
-    <span class="fl" style="left:53.00%;top:92.20%">class size $\ln|\mathcal{H}|$</span>
-    <span class="fl" style="left:18.50%;top:19.02%">risk bound</span>
-    <span class="fl fl-sub fl-blue" style="left:42.00%;top:54.88%">best class size for this $n$</span>
+    <span class="fl fl-sub fl-red" style="left:12.00%;top:23.08%">1</span>
+    <span class="fl fl-sub fl-red" style="left:26.00%;top:23.08%">2</span>
+    <span class="fl fl-sub fl-red" style="left:40.00%;top:23.08%">3</span>
+    <span class="fl fl-sub fl-red" style="left:54.00%;top:23.08%">4</span>
+    <span class="fl fl-sub fl-red" style="left:68.00%;top:23.08%">5</span>
+    <span class="fl fl-sub fl-red" style="left:82.00%;top:23.08%">6</span>
+    <span class="fl fl-sub fl-blue" style="left:19.00%;top:75.00%">$x_{1}$</span>
+    <span class="fl fl-sub fl-blue" style="left:33.00%;top:75.00%">$x_{2}$</span>
+    <span class="fl fl-sub fl-blue" style="left:47.00%;top:75.00%">$x_{3}$</span>
+    <span class="fl fl-sub fl-blue" style="left:61.00%;top:75.00%">$x_{4}$</span>
+    <span class="fl fl-sub fl-blue" style="left:75.00%;top:75.00%">$x_{5}$</span>
+    <span class="fl fl-grey" style="left:50.00%;top:92.31%">a cut in gap $k$: label $1$ on every point to its right</span>
   </div>
-  <p class="muted">More data $n$ pushes the dashed curve down: the optimal class grows with the dataset</p>
+  <p class="muted">At most $n + 1$ labelings of $n$ points: count labelings, not filters</p>
 </div>
 
-<!-- Deep nets break it -->
+<!-- VC informal -->
 <div class="slide">
-  <h2>Honest Slide &mdash; The Bound Becomes Vacuous for Deep Nets</h2>
+  <h2>Infinite $\mathcal{H}$: $\ln|\mathcal{H}|$ Becomes the VC Dimension</h2>
   <div class="divider"></div>
-  <p>ResNet-50: $25.6$M params $\times$ 32 bits $\Rightarrow \ln|\mathcal{H}| \approx 5.7 \times 10^8$</p>
-  <div class="math-block" style="margin:8px 0">$$n = 1.28 \times 10^6 \text{ (ImageNet)}:
-    \qquad \epsilon = \sqrt{ \tfrac{5.7 \times 10^8}{2.56 \times 10^6} } \approx 14.9 \;\;(\text{vacuous: loss} \leq 1)$$</div>
-  <ul>
-    <li>Bound: gap $\leq 14.9$. Reality: gap $\approx$ a few percent</li>
-    <li>The bound is <strong>sufficient, not necessary</strong></li>
-    <li>Uniformity over all of $\mathcal{H}$: too pessimistic for one trained net</li>
-    <li>Why overparameterized nets generalize: <strong>open research</strong> (implicit bias of SGD, and more)</li>
-  </ul>
-</div>
-
-<!-- What survives -->
-<div class="slide">
-  <h2>What Survives at Deep-Learning Scale</h2>
-  <div class="divider"></div>
-  <ul>
-    <li>The <strong>test-set bound</strong>: evaluation data is fresh, $|\mathcal{H}| = 1$ &mdash; Hoeffding applies exactly</li>
-    <li>Held-out validation: union bound over a candidate set <strong>fixed before</strong> seeing that sample</li>
-    <li>The mechanism &mdash; concentration vs. selection pressure &mdash; explains <strong>leaderboard overfitting</strong></li>
-  </ul>
-  <p class="muted">Early stopping counts too &mdash; if the checkpoint grid is fixed in advance</p>
+  <p>$d_{\mathrm{VC}}$: largest $d$ for which <strong>some set of $d$ points</strong> admits all $2^d$ labelings. Thresholds: $1$; affine halfspaces in $\mathbb{R}^p$: $p + 1$</p>
+  <div class="math-block" style="margin:6px 0;padding:8px 24px">$$\underbrace{n \geq \frac{\ln|\mathcal{H}| + \ln(2/\delta)}{2\epsilon^2}}_{\text{finite } \mathcal{H} \text{ (Thm 3)}}
+    \qquad \leadsto \qquad
+    \underbrace{n \geq C\,\frac{d_{\mathrm{VC}} + \ln(1/\delta)}{\epsilon^2}}_{\text{finite } d_{\mathrm{VC}}}$$</div>
   <div class="highlight">
-    <p>Your $4{,}612$-sample certificate holds &mdash; fresh test set, model fixed before evaluation.</p>
+    <p><strong>Theorem</strong> (Shalev-Shwartz &amp; Ben-David, Thm 6.8): with probability $\geq 1 - \delta$, every gap $\leq \epsilon$ once $n$ is this large.</p>
+  </div>
+  <p class="muted">$C$ is an absolute constant. Substituting the labeling count into Theorem 3 is not a proof.</p>
+</div>
+
+<!-- ===== SECTION 06 — VALIDATION SET ===== -->
+<div class="slide section-slide left">
+  <div class="section-num">06</div>
+  <h1>The Validation Set</h1>
+  <div class="divider"></div>
+  <p class="subtitle">What still holds at scale</p>
+</div>
+
+<!-- When the bound says nothing -->
+<div class="slide">
+  <h2>When the Bound Says Nothing</h2>
+  <div class="divider"></div>
+  <div class="highlight">
+    <p>For enormous classes, this bound can exceed $1$ and become uninformative.</p>
+  </div>
+  <ul>
+    <li>Modern networks: often more weights than training examples</li>
+    <li>The bound is <strong>sufficient, not necessary</strong>: silence is not failure</li>
+    <li>Why large networks still generalize: active research</li>
+  </ul>
+  <div class="p6-lucky"><p><strong>Lucky one.</strong> Training error alone still cannot vouch for the trained model.</p></div>
+</div>
+
+<!-- Validation set -->
+<div class="slide">
+  <h2>The Validation Set Still Works</h2>
+  <div class="divider"></div>
+  <p>Train anything. Then score the <strong>one</strong> finished model on a validation set it never saw</p>
+  <ul>
+    <li>Model fixed <strong>before</strong> seeing validation data: $|\mathcal{H}| = 1$, Theorem 1 applies</li>
+    <li>$4{,}612$ validation emails: error known to $\pm 2\%$ at $95\%$</li>
+  </ul>
+  <div class="highlight">
+    <p>Works well on the validation set &rArr; expect it to work well on an unseen test set from the same distribution.</p>
   </div>
 </div>
 
-<!-- Recap table -->
+<!-- Many models on validation -->
 <div class="slide">
-  <h2>Recap &mdash; Every Tool, One Job</h2>
+  <h2>Picking Among $k$ Models on the Validation Set</h2>
+  <div class="divider"></div>
+  <p>$k$ models, all fixed before the validation set is seen. Union bound: pay $\ln k$</p>
+  <div class="math-block" style="margin:8px 0">$$\epsilon \;=\; \sqrt{\frac{\ln(2k/\delta)}{2m}} \qquad (m \text{ validation examples})$$</div>
+  <div class="highlight">
+    <p>With probability $\geq 1-\delta$, every candidate's validation error is within $\epsilon$ of its true error &mdash; including the selected candidate. Adaptively created new candidates are not covered.</p>
+  </div>
+  <div class="p6-lucky"><p><strong>Lucky one.</strong> Picking the best on validation data is selection again: pay for it.</p></div>
+</div>
+
+<!-- Recap -->
+<div class="slide">
+  <h2>Recap</h2>
   <div class="divider"></div>
   <table>
-    <thead><tr><th>Tool</th><th>What it delivered</th></tr></thead>
+    <thead><tr><th>Tool</th><th>What it gives</th></tr></thead>
     <tbody>
-      <tr><td>Hoeffding's lemma</td><td>MGF envelope from a range</td></tr>
-      <tr><td>sub-Gaussian calculus</td><td>proxies scale and add</td></tr>
-      <tr><td>Hoeffding's inequality</td><td>one $h$: $2e^{-2n\epsilon^2}$</td></tr>
-      <tr><td>union bound</td><td>all $h$: pay $+\ln|\mathcal{H}|$</td></tr>
-      <tr><td>Theorem 5 + corollary</td><td>ERM certified: $R(\hat{h}) \leq R(h^*) + 2\epsilon$</td></tr>
+      <tr><td>Hoeffding</td><td>$h$ fixed before data: $\Pr(|\hat{R}_n - R| \geq \epsilon) \leq 2e^{-2n\epsilon^2}$</td></tr>
+      <tr><td>selection trap</td><td>lucky on training data: no test guarantee</td></tr>
+      <tr><td>union bound</td><td>all $h$ at once, for a factor $|\mathcal{H}|$</td></tr>
+      <tr><td>Theorem 3 + Corollary 4</td><td>every gap $\leq \epsilon$; ERM within $2\epsilon$ of best</td></tr>
+      <tr><td>VC dimension</td><td>infinite $\mathcal{H}$: $\ln|\mathcal{H}|$ becomes $d_{\mathrm{VC}}$</td></tr>
+      <tr><td>validation set</td><td>model fixed first: predicts unseen test error</td></tr>
     </tbody>
   </table>
-  <p class="muted">One engine (Chernoff) + one lemma (bounded MGF) + one accounting rule (union)</p>
-</div>
-
-<!-- Bridge to prob07 -->
-<div class="slide">
-  <h2>Next &mdash; How to Choose the Hypothesis</h2>
-  <div class="divider"></div>
-  <p>Today: <strong>whatever</strong> you pick generalizes. Unanswered: what <strong>should</strong> you pick?</p>
-  <div class="math-block" style="margin:8px 0">$$\hat{h} = \operatorname*{argmax}_{h} \; \Pr\big( \text{data} \mid h \big) \;\; ?$$</div>
-  <ul>
-    <li>Picking by <strong>likelihood</strong>: the estimation-theory answer</li>
-    <li>Tools waiting: conditional expectation, MLE, MAP, bias&ndash;variance</li>
-  </ul>
-  <div class="highlight">
-    <p>Next lecture: <strong>estimation</strong> &mdash; principled recipes for choosing $\hat{h}$ from data.</p>
-  </div>
 </div>
 
 <!-- Closer -->
@@ -1603,7 +850,7 @@
 </div>
 
 <div class="progress-bar" id="progressBar" style="width:0%"></div>
-<div class="slide-num" id="slideNum">1 / 105</div>
+<div class="slide-num" id="slideNum">1 / 47</div>
 
 </div><!-- end deck -->
 

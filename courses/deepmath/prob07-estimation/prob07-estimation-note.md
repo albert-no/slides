@@ -82,7 +82,7 @@ model class.
 
 Lecture 6's finite-class theorem certified the empirical-risk-minimization
 pick: $R(\hat{h}) \le R(h^*) + 2\epsilon$ with high probability when
-$n \gg \ln|\mathcal{H}|$ (Lecture 6 note, Sections 7.3 to 7.4). That is a
+$n \gg \ln|\mathcal{H}|$ (Lecture 6 full / advanced note, Sections 7.3 to 7.4). That is a
 statement about *whatever* hypothesis empirical risk minimization returns. It
 never says how a hypothesis should be scored in the first place, nor why low
 empirical loss is the right thing to minimize. This lecture supplies the
@@ -910,7 +910,7 @@ and $\frac{\partial^2 \ell}{\partial \mu^2} = -\frac{n}{\sigma^2} < 0$, so this
 is a maximum in $\mu$ for *every* fixed $\sigma^2$ - which is why $\sigma^2$
 cancels entirely: the optimal $\mu$ does not depend on it. Equivalently, the
 sample mean minimizes $\sum_i (x_i - \mu)^2$, the mean-minimizes-the-quadratic
-fact proved in the Lecture 6 note, Lemma 3.1 Step A.
+fact proved in the Lecture 6 full / advanced note, Lemma 3.1 Step A.
 
 **Solve for $\sigma^2$.** At the joint optimum, substitute the fitted
 $\hat{\mu}$ into the variance solution. Writing $t = \sigma^2$ and
@@ -1457,7 +1457,7 @@ the same answer, by the formula at the end of Section 10.2.
 minimizing $\mathbb{E}[(X - c)^2]$, which is $c = \mathbb{E}[X] = \tfrac{1}{2}$
 with mean squared error
 $\mathrm{Var}(X) = \tfrac{1}{2} - \tfrac{1}{4} = \tfrac{1}{4}$, by
-mean-minimizes-the-quadratic (Lecture 6 note, Lemma 3.1 Step A). Since
+mean-minimizes-the-quadratic (Lecture 6 full / advanced note, Lemma 3.1 Step A). Since
 $\tfrac{1}{6} < \tfrac{1}{4}$, watching $Y$ removes a third of the error. The
 gap is exactly the *law of total variance*,
 
@@ -1532,7 +1532,9 @@ report.
    variance of averages, the law of large numbers), and Lecture 6 (Hoeffding,
    the ERM corollary, mean-minimizes-the-quadratic). The accessible editions
    are the files `prob01-foundations-note.md` through
-   `prob06-generalization-note.md`, each in its own lecture folder.
+   `prob06-generalization-note.md`, each in its own lecture folder. The
+   Lecture 6 sections cited in the text are those of the full / advanced note,
+   `prob06-generalization/backup/prob06-generalization-full-note.md`.
 6. M. J. Wainwright, *High-Dimensional Statistics: A Non-Asymptotic
    Viewpoint*, Cambridge University Press, 2019. DOI: 10.1017/9781108627771,
    at https://doi.org/10.1017/9781108627771. Chapter 15: minimax lower bounds,

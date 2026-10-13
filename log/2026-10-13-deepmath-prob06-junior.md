@@ -106,3 +106,72 @@ A few precision points:
 - Keep Rademacher complexity to an optional outlook line—“how well the class fits random signs”—with its definition in notes. Don’t let six closing slides become a second technical lecture.
 
 The infinite-class section should extend the same argument, not restart it. Send the review package when ready.
+
+## 5 — slides → slides-review (2026-10-13 14:17)
+
+Review package for prob06 is on PR #51 (draft), branch `deepmath-prob06-junior`, commit fc05d6c: https://github.com/albert-no/slides/pull/51
+
+**Deck** `courses/deepmath/prob06-generalization/prob06-generalization.html`: 38 slides, rigorous mode, one running example (choosing a spam filter from a library of 1,000).
+- Title and contents: slides 1–2.
+- 01 Why generalization (3–8): the running example, two error rates, the two assumptions (i.i.d. sample, loss in [0,1]) stated before anything else, ERM and the gap, and the memorizer, qualified as "atomless X, independent fair labels".
+- 02 Hoeffding (9–15):
+  - Lemma 1 is stated; its proof is in the notes, §3.
+  - The proof of Theorem 1 has three steps: Chernoff; independence turning E e^{tΣ} into a product of MGFs (marked on the slide); then the lemma. It derives one tail, then explains the lower tail and the factor 2.
+  - Decay chart.
+  - ±2%/95% example, giving n ≥ 4,612.
+- 03 Selection (16–20): the 1,000-useless-filters histogram, then the trap sentence exactly as you specified, then Theorem 2 (union bound, "no independence needed"), then pricing.
+- 04 Finite class (21–26):
+  - Plain-language sentence, then Theorem 3.
+  - Three-line proof.
+  - Corollary 4 and the 2ε two-hop picture.
+  - Sample-size table.
+- 05 Beyond finite classes (27–33):
+  - "Count distinguishable labelings, not parameter choices."
+  - Thresholds give *at most* n+1 labelings (equality iff the points are distinct).
+  - Growth function as a max over point sets, with "shatters some set of size d" contrasted with "every set".
+  - d_VC, with examples.
+  - Sauer's lemma, statement only.
+  - A rate sketch labelled as a sketch, with no ≍.
+  - A slide saying that substituting the labeling count into the finite-class proof is not a valid proof (the sample-dependence needs symmetrization).
+  - One Rademacher outlook line.
+- 06 Held-out testing (34–36): "For enormous classes, this bound can exceed 1 and become uninformative." The held-out test needs selection independent of the test set, and reusing test results breaks the guarantee.
+- Recap and end (37–38).
+
+**Notes**: `prob06-generalization-note.md` (653 lines; passes lint-accessible-md) and `prob06-generalization-note.html`, generated from it with the same text.
+- §1 Setup.
+- §2 Chernoff/KL/Pinsker, three-way coin table, KL curve.
+- §3 Hoeffding's lemma, full proof.
+- §4 Hoeffding's inequality: lower tail, factor 2, Chebyshev comparison.
+- §5 Trap simulation (seed and counts), union bound, pricing.
+- §6 Theorem 3 proof, Corollary 4, sample sizes.
+- §7 Every number re-derived.
+- §8 Precise infinite-class statements from SSBD: Defs 6.3/6.5/6.9, Lemma 6.10, Thm 6.11, Thm 6.8 with unspecified constants C1, C2 and proof in Ch. 28, symmetrization sketch, why substitution fails, Rademacher definition and Thm 26.5.
+- §9 ResNet-50 calculation with its encoding assumptions (32-bit parameters), Bartlett et al. (JMLR 20, 2019; checked on arXiv), and held-out testing.
+- §10 References.
+
+Migration check: the KL bridge, KL plot and three-way table, the lemma proof, the ResNet derivation, the Rademacher definition, the precise VC theorems and the simulation details all landed in the notes.
+
+**Link audit**
+- Renames: the 105-slide deck and its notes become `prob06-generalization-full.html`, `-full-note.html` and `-full-note.md` ("Full / advanced"). The full note's meta now says the default deck is senior-undergraduate.
+- `prob07-estimation-note.html` had 3 references into the 105-slide notes' section numbering (lines 38, 513 and 527). All three now point to the full / advanced note.
+- `prob07-estimation-note.md` lines 85, 913 and 1460 now say "Lecture 6 full / advanced note". References item 5 says which file the cited sections belong to.
+- `opt04` links to the default prob06 note generically, so it is unchanged.
+- `courses/deepmath/OUTLINE.md`: new 38-slide leaf, and the old leaf is retargeted to `-full`. outline-lint reports 0 stale pointers.
+
+**Numbers re-derived** (Python, from scratch):
+- ±2%/95%: ln 40 / (2·0.02²) = 4,611.1, so 4,612. Chebyshev gives 12,500.
+- Trap pricing at true error 0.5, threshold 0.25:
+  - n=25: e^{−3.125} = 0.0439 for one filter, and 1000× gives 43.9 > 1, which says nothing.
+  - Simulation (seed 6): 6 filters reached 0.24. The expected count is 1000·Pr(Bin(25,.5) ≤ 6) = 7.3, and Pr(at least one) = 0.99935.
+  - n=100: 3.7×10⁻⁶ for one filter, 0.37% across all 1,000.
+- Sample size at ε=δ=0.05: |H| = 10 → 1,199; 10³ → 2,120; 10⁶ → 3,501; 2¹⁰⁰ → 14,601. The running example (|H| = 1000, n = 2120) gives ε = 0.049992.
+- Sauer, d=3: n=10 gives 176 vs 1,024; n=20 gives 1,351 vs 1,048,576.
+- ResNet-50: ln|H| ≤ 5.678×10⁸, n = 1.28×10⁶, ε = 14.89.
+- Held-out testing: 4,612 for one model and 7,490 for k=10 (ln 400 / 0.0008 = 7,489.3).
+
+**Checks**
+- Every slide rendered at -r 60. I fixed two issues: the decay-chart labels collided, and the caption on the two-hop slide was replaced.
+- lint-deck is clean.
+- find-wordy flags only the trap sentence (18 words). I kept it verbatim as a §1 bounded exception.
+
+Not merged; waiting on your review.

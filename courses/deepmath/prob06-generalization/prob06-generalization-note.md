@@ -65,6 +65,12 @@ bound (Section 5); the union bound itself holds for any events. Section 8 replac
 in (A2) by "finite VC dimension"; the class must still be fixed before the
 sample. (A1) is never relaxed in this lecture.
 
+The class models a fixed architecture: training moves only the weights, so it
+cannot leave the set of functions those weights produce. A fixed architecture
+alone does not make $\mathcal{H}$ finite: real-valued weights generally give an
+infinite class. The lecture first studies a finite library, then turns to
+infinite classes in Section 8.
+
 ### 1.3 ERM and the gap
 
 Empirical risk minimization (ERM) keeps the candidate with the lowest training
@@ -104,7 +110,9 @@ worse than $1/2$.
 Being selected from data is not the problem: ERM selects from data too. The
 memorizer belongs to a class that can be fixed beforehand, such as all finite
 lookup classifiers. Allowing every such lookup table requires an infinite class;
-the finite-class theorem does not apply.
+the finite-class theorem does not apply. Over all lookup tables the memorizer is
+one possible ERM solution (training error $0$), not necessarily the one a given
+tie-breaking rule picks.
 
 ## 2 Chernoff, KL, and how sharp Hoeffding is
 
@@ -316,7 +324,8 @@ R(\hat h)$ by the definition of $h^*$. Taking expectations,
 
 $$ \mathbb{E}\big[\hat R_n(\hat h)\big] \leq R(h^*) \leq \mathbb{E}\big[R(\hat h)\big], $$
 
-so the training error of the ERM pick is optimistic on average.
+so the training error of the ERM pick is optimistic on average; equality is
+possible. The last inequality holds because $\hat h$ belongs to $\mathcal{H}$.
 
 ### 5.2 The simulation
 
@@ -369,7 +378,7 @@ the lower tail of Theorem 1 gives $\Pr(A_j) \leq e^{-2n/16}$. Both numbers
 below are probability upper bounds, not probabilities.
 
 - $n = 25$: one filter $e^{-3.125} = 0.0439$, shown as $0.044$; some filter out of $1000$: at most $43.9$, shown as $44$, which exceeds $1$ and so says nothing. The simulation illustrates the selection effect: six filters did reach $0.24$.
-- $n = 100$: one filter $e^{-12.5} = 3.7 \times 10^{-6}$; some filter out of $1000$: at most $3.7 \times 10^{-3} = 0.37$ percent. So with probability at least $1 - 0.0037 = 99.63$ percent (shown as at least $99.6$ percent), no useless filter shows training error at most $0.25$.
+- $n = 100$: one filter $e^{-12.5} = 3.7 \times 10^{-6}$; some filter out of $1000$: at most $3.7 \times 10^{-3} = 0.37$ percent. So with probability at least $1 - 1000e^{-12.5} \approx 99.6273$ percent (shown as at least $99.6$ percent), no filter with true error $0.5$ achieves training error at most $0.25$. This is all the event excludes: if every candidate is useless, ERM still selects a useless filter.
 
 The search costs a factor $|\mathcal{H}|$; the exponent in $n$ must outrun it.
 
@@ -416,6 +425,11 @@ Each use of Theorem 3 costs one $\epsilon$. There are two uses: one at $h^*$
 (from its true error down to its training error, read right to left) and one at
 $\hat h$ (from its training error up to its true error). Together they give
 $2\epsilon$.
+
+In words: with probability at least $1 - \delta$, selection costs at most
+$2\epsilon$ above the best model in $\mathcal{H}$. This does not say that the
+training error of $\hat h$ is free of selection optimism, nor that $\mathcal{H}$
+contains a good model.
 
 ### 6.3 How much data
 
@@ -495,7 +509,7 @@ is shattered.
 
 - Thresholds: $d_{\mathrm{VC}} = 1$. One point is shattered ($t$ to its left or right). For two points $x_1 < x_2$ the labeling $(1, 0)$ is impossible.
 - Intervals $\mathbf{1}\{a < x < b\}$: $d_{\mathrm{VC}} = 2$ [4, Section 6.3.2]. Two distinct points are shattered. For three points $x_1 < x_2 < x_3$ the labeling $(1, 0, 1)$ is impossible, since an interval containing $x_1$ and $x_3$ contains $x_2$.
-- Halfspaces with bias $\mathbf{1}\{w^\top x + b > 0\}$ on $\mathbb{R}^p$: $d_{\mathrm{VC}} = p + 1$ [4, Theorem 9.3]. In $\mathbb{R}^2$, three collinear points with the middle one labelled differently from the two ends cannot be separated by a line, yet three points in general position are shattered, so $d_{\mathrm{VC}} = 3$: one bad set does not lower the VC dimension.
+- Affine halfspaces $\mathbf{1}\{w^\top x + b > 0\}$ on $\mathbb{R}^p$: $d_{\mathrm{VC}} = p + 1$ [4, Theorem 9.3]. In $\mathbb{R}^2$, three collinear points with the middle one labelled differently from the two ends cannot be separated by a line, yet three points in general position are shattered, so $d_{\mathrm{VC}} = 3$: one bad set does not lower the VC dimension.
 - Any finite class: shattering $d$ points needs $2^d$ distinct labelings, hence at least $2^d$ members, so $d_{\mathrm{VC}} \leq \log_2|\mathcal{H}|$.
 
 ### 8.4 Sauer's lemma
@@ -656,14 +670,18 @@ advance, so $|\mathcal{H}| = 1$ and Theorem 1 applies exactly: by Section 4.3,
 $4{,}612$ validation emails estimate its error to within $2$ percent with
 probability at least $95$ percent. If the model works well on the validation
 set, expect it to work well on an unseen test set from the same distribution.
+Precisely, the validation error estimates the population error $R$; a finite
+unseen test set adds its own sampling variation around $R$.
 
 The requirement is that the selection of the model is independent of the
 validation set. Comparing $k$ models fixed in advance on the same validation set is a union bound
 over $k$: $n \geq (\ln k + \ln(2/\delta))/(2\epsilon^2)$. At $\pm 2$ percent and
 $95$ percent this is $4{,}612$ for $k = 1$ and $(\ln 10 + \ln 40)/0.0008 =
 7489.3$, so $7{,}490$, for $k = 10$. The bound is simultaneous over the $k$
-models, so it still covers picking the best of them by test error, as long as
+models, so it still covers picking the best of them by validation error, as long as
 the $k$ candidates were fixed independently of the validation set.
+With probability at least $1 - \delta$, every candidate's validation error is
+within $\epsilon$ of its true error, including the selected candidate.
 Validation-based selection needs exactly this kind of simultaneous guarantee.
 
 ### 9.4 Reusing validation results breaks the argument
@@ -675,7 +693,7 @@ They are no longer fixed in advance with respect to it, and the guarantee of
 Section 9.3 no longer applies: this is the selection trap of Section 5.1, with
 the validation set in the role of the training set. A fixed union bound over the
 models actually tried does not repair it either, because which models get tried
-depends on earlier test results: adaptively creating new candidates is not
+depends on earlier validation results: adaptively creating new candidates is not
 covered by the original fixed-$k$ bound. The safe practice is a validation set
 for selection among candidates and a separate test set used once at the end.
 

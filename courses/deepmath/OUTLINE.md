@@ -287,23 +287,23 @@ Companion: `prob06-generalization/prob06-generalization-note.html` — the notes
 setup, Chernoff/KL, Hoeffding's lemma proof, union bound and selection bias, Theorem 3 proof,
 VC/Sauer precise statements, ResNet-50 calculation, validation set, references.
 Generated from the Markdown edition.
-Accessible edition: `prob06-generalization/prob06-generalization-note.md` (689 lines):
+Accessible edition: `prob06-generalization/prob06-generalization-note.md` (707 lines):
 screen-reader Markdown, LaTeX math, figures described verbally.
 
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + TOC | 1–2 | prob06-generalization/prob06-generalization.html:48 |
-| 01 | Why Generalization? (spam-filter running example :126, why a class H: fixed architecture limits capability :156, two error rates :169, two assumptions :183, ERM and gap :197, why concentration cannot be applied to ĥ directly :211, memorizer as the extreme example, qualified (atomless X, independent fair labels) :236) | 3–10 | prob06-generalization/prob06-generalization.html:116 |
-| 02 | Hoeffding's Inequality (fixed filter = biased coin :258, fixed before data: unbiased :314, chosen after data: optimistic, E R̂(ĥ) ≤ R(h*) ≤ E R(ĥ) :329, Lemma 1 :342, Thm 1 with "fix the model before seeing the training data" :355, five-step proof: Markov→Chernoff :370, independence :384, lemma per factor :398, optimize t = 4nε :410, lower tail + factor 2 :422; decay chart :436, ±2%@95% → n ≥ 4,612 :465) | 11–23 | prob06-generalization/prob06-generalization.html:248 |
-| 03 | Selection and the Union Bound (best of 1,000 useless filters :484, the selection trap :521, Thm 2 union bound :536, guard every filter at once :548, price ×\|H\| table with n=25 / n=100 takeaways :562) | 24–29 | prob06-generalization/prob06-generalization.html:474 |
-| 04 | The Finite-Class Theorem (Thm 3 :590, three-line proof :604, Cor 4 ERM within 2ε, displayed :620, Cor 4 proof table incl. the ERM step :635, equation chain + two-hop picture :651, sample size formula :680, sample-size table :696) | 30–37 | prob06-generalization/prob06-generalization.html:580 |
+| 01 | Why Generalization? (spam-filter running example :126, why a class H: fixed architecture limits capability :156, two error rates :170, two assumptions :184, ERM and gap :198, why concentration cannot be applied to ĥ directly :212, memorizer as the extreme example, qualified (atomless X, independent fair labels) :237) | 3–10 | prob06-generalization/prob06-generalization.html:116 |
+| 02 | Hoeffding's Inequality (fixed filter = biased coin :259, fixed before data: unbiased :315, chosen after data: optimistic, E R̂(ĥ) ≤ R(h*) ≤ E R(ĥ) :330, Lemma 1 :343, Thm 1 with "fix the model before seeing the training data" :356, five-step proof: Markov→Chernoff :371, independence :385, lemma per factor :399, optimize t = 4nε :411, lower tail + factor 2 :423; decay chart :437, ±2%@95% → n ≥ 4,612 :466) | 11–23 | prob06-generalization/prob06-generalization.html:249 |
+| 03 | Selection and the Union Bound (best of 1,000 useless filters :485, the selection trap :522, Thm 2 union bound :537, guard every filter at once :549, price ×\|H\| table with n=25 / n=100 takeaways :563) | 24–29 | prob06-generalization/prob06-generalization.html:475 |
+| 04 | The Finite-Class Theorem (Thm 3 :591, three-line proof :605, Cor 4 ERM within 2ε, displayed :621, Cor 4 proof table incl. the ERM step :635, equation chain + two-hop picture :651, sample size formula :680, sample-size table :696) | 30–37 | prob06-generalization/prob06-generalization.html:581 |
 | 05 | Beyond Finite Classes (thresholds give at most n+1 labelings :722, ln\|H\| → d_VC with SSBD Thm 6.8 :758) | 38–40 | prob06-generalization/prob06-generalization.html:712 |
 | 06 | The Validation Set (bound can exceed 1 :780, validation set predicts unseen test error :795, picking among k models; adaptivity caveat :809) | 41–44 | prob06-generalization/prob06-generalization.html:770 |
 | — | Recap table, end slide | 45–46 | prob06-generalization/prob06-generalization.html:821 |
 
-Key theorems: **Lemma 1** Hoeffding's lemma (prob06-generalization/prob06-generalization.html:345); **Thm 1** Hoeffding's
-inequality (prob06-generalization/prob06-generalization.html:358); **Thm 2** union bound (prob06-generalization/prob06-generalization.html:539); **Thm 3** finite-class uniform
-convergence (prob06-generalization/prob06-generalization.html:594); **Cor 4** ERM within 2ε (prob06-generalization/prob06-generalization.html:623); SSBD Thm 6.8 stated informally
+Key theorems: **Lemma 1** Hoeffding's lemma (prob06-generalization/prob06-generalization.html:346); **Thm 1** Hoeffding's
+inequality (prob06-generalization/prob06-generalization.html:359); **Thm 2** union bound (prob06-generalization/prob06-generalization.html:540); **Thm 3** finite-class uniform
+convergence (prob06-generalization/prob06-generalization.html:595); **Cor 4** ERM within 2ε (prob06-generalization/prob06-generalization.html:624); SSBD Thm 6.8 stated informally
 (prob06-generalization/prob06-generalization.html:765). Growth function, Sauer's lemma, precise VC theorems (SSBD Thms 6.8, 6.11) and Rademacher (SSBD 26.5) are
 in the notes only.
 

@@ -320,3 +320,28 @@ Round 2 for prob06 is at commit `7d75c0b` on `deepmath-prob06-junior`. PR #51 is
 - All 46 pages rendered at -r 60, no overflow. Slides 33, 35, 36 and 44 were fixed along the way; old 36 was split into 36–37.
 
 _Attachment: prob06-r2-changed.pdf (31 new/changed slides)._
+
+## 12 — slides-review → slides (2026-10-13 14:48)
+
+Reviewed `7d75c0b`, the notes diff and all 31 affected renders. The expanded proof and explicit ERM step are clearer; no clipping found. Albert’s revised scope supersedes the earlier slide limit.
+
+**Keep PR #51 draft for these targeted corrections—not a restructure.**
+
+1. **P9/P26: “says nothing” is too absolute.** Keep the lucky-one theme, but use: “Low training error alone does not guarantee low true error.” Otherwise it contradicts the finite-class guarantee taught next. On P25, change “test error: 0.5” to **“true error: 0.5”**; a finite test sample fluctuates.
+
+2. **P28–29: state exactly what the event excludes.** ERM still selects a useless filter when every candidate is useless. Replace “ERM cannot be fooled by a useless filter” with “No filter with true error 0.5 achieves training error ≤ 0.25.” Define “looks good” on P29 with that same threshold. The ≥99.6% statement is valid. In note §5.4, use `1−1000e^(−12.5) ≈ 99.6273%`; rounding the failure bound down to 0.0037 does not justify an exact ≥99.63%.
+
+3. **P33: preserve probability and best-in-class scope.** Replace “safe…the trap is ruled out” with: “With probability ≥1−δ, selection costs at most 2ε above the best model in H.” This neither guarantees zero selection optimism nor that H contains a good model.
+
+4. **P43–44 / notes §9: complete the validation guarantee.**
+   - P44 gives ε but never states its conclusion. Add: “With probability ≥1−δ, every candidate’s validation error is within ε of its true error—including the selected candidate.”
+   - Keep Albert’s P43 takeaway. Explain in the notes that this estimates population error; a finite unseen test set has additional sampling variation.
+   - In §9.3, “picking the best … by test error” remains from the old terminology; change to **validation error**.
+
+5. **P14: the expectation chain is correct.** The last inequality holds because ĥ belongs to H. Change “is biased low” to “is optimistic on average; equality is possible.” P10 should similarly say the memorizer is **“one possible ERM solution”**, not that ERM necessarily picks that particular lookup table.
+
+6. **P5/P7: connect architecture to the finite-library assumption.** Add a short distinction: “Real-valued weights generally give an infinite class; first we study a finite library.” A fixed architecture alone does not imply finite H.
+
+7. **P40: sharpen the compressed definition.** Use “largest d for which **some set of d points** admits all 2^d labelings.” Specify “affine halfspaces” for p+1. The displayed theorem form is otherwise fine.
+
+Mirror these in both note editions and send the narrow diff with affected renders. No additional slides needed.

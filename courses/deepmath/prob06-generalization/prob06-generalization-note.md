@@ -1,0 +1,653 @@
+# Deep Learning Math, Lecture 6: From Concentration to Generalization (Notes)
+
+**About this file.** Companion note to Lecture 6, written for senior
+undergraduates. It holds what the lecture states without proof or only names:
+the proof of Hoeffding's lemma, the Chernoff and KL comparison for the coin, the
+precise theorems behind the infinite-class section, the ResNet-50 calculation,
+and a re-derivation of every number in the lecture. The Markdown edition
+(`prob06-generalization-note.md`) is the screen-reader version: plain ASCII,
+linear reading order, all mathematics in LaTeX, tables written as lists. The HTML
+note (`prob06-generalization-note.html`) has the same text and section numbers.
+The longer full / advanced version of the lecture is
+`prob06-generalization-full.html`, with its own note
+`prob06-generalization-full-note.html`.
+
+**Notation.** $\mathcal{D}$ is the unknown distribution of a labelled example
+$(X, Y)$ with $Y \in \{0, 1\}$. A classifier is a function $h$ from inputs to
+$\{0, 1\}$, and $\mathcal{H}$ is the class of candidates. $R(h)$ is the true
+error, $\hat R_n(h)$ the training error on $n$ examples, $\hat h$ the
+empirical risk minimizer, and $h^*$ a best classifier in $\mathcal{H}$.
+$\mathbf{1}\{A\}$ is the indicator of the event $A$. Logarithms are natural
+unless written $\log_2$.
+
+**Contents.**
+
+1. Setup, assumptions, and the memorizer
+2. Chernoff, KL, and how sharp Hoeffding is
+3. Hoeffding's lemma: the proof
+4. Hoeffding's inequality: the proof and the numbers
+5. Selection and the union bound
+6. The finite-class theorem
+7. Every number in the lecture, re-derived
+8. Beyond finite classes: the precise statements
+9. When the bound says nothing, and held-out testing
+10. References
+
+## 1 Setup, assumptions, and the memorizer
+
+### 1.1 The running example
+
+The whole lecture uses one example. A library of spam filters $h_1, \dots,
+h_{1000}$ is built before any data are seen. Each filter reads an email $X$ and
+outputs a guess for its label $Y \in \{0, 1\}$ (spam or not). A filter's error
+on one email is the indicator $\mathbf{1}\{h(X) \neq Y\}$, a number in
+$\{0, 1\}$. The two error rates are
+
+$$ R(h) = \Pr\big(h(X) \neq Y\big), \qquad \hat R_n(h) = \frac{1}{n} \sum_{i=1}^{n} \mathbf{1}\{h(X_i) \neq Y_i\}. $$
+
+$R(h)$ is a fixed number that depends on the unknown $\mathcal{D}$, so it
+cannot be computed. $\hat R_n(h)$ is computed from the sample, and it is
+random because the sample is. Every result below also holds, with the same
+proof, for any loss $\ell(h, (x, y))$ taking values in $[0, 1]$: only the range
+$[0, 1]$ of the per-example error is ever used.
+
+### 1.2 The two assumptions
+
+> **(A1)** The examples $(X_1, Y_1), \dots, (X_n, Y_n)$ are independent and
+> identically distributed (i.i.d.) draws from $\mathcal{D}$, the same
+> distribution that future emails come from.
+>
+> **(A2)** The class $\mathcal{H}$ is finite and fixed before the sample is
+> drawn.
+
+(A1) is what makes each filter's mistakes behave like coin flips (Section 4).
+(A2) is what makes the union bound legal (Section 5). Section 8 replaces "finite"
+in (A2) by "finite VC dimension"; the class must still be fixed before the
+sample. (A1) is never relaxed in this lecture.
+
+### 1.3 ERM and the gap
+
+Empirical risk minimization (ERM) keeps the candidate with the lowest training
+error, $\hat h \in \arg\min_{h \in \mathcal{H}} \hat R_n(h)$, with ties broken
+by any fixed rule. The generalization gap of $h$ is
+$\mathrm{gap}(h) = R(h) - \hat R_n(h)$. The point of the lecture is that $\hat h$
+is itself a function of the sample, so its training error is not an honest
+preview of its true error unless every gap in $\mathcal{H}$ is controlled at
+once.
+
+### 1.4 The memorizer, verified
+
+Assume two things about $\mathcal{D}$. First, $X$ is atomless: no single email
+has positive probability, so the $n$ training inputs are distinct with
+probability $1$ and a fresh $X$ equals one of them with probability $0$.
+Second, $Y$ is an independent fair coin: $\Pr(Y = 1) = 1/2$, independent of
+$X$. Define the memorizer
+
+$$ h_{\text{mem}}(x) = \begin{cases} Y_i & \text{if } x = X_i \text{ for some } i, \\ 0 & \text{otherwise.} \end{cases} $$
+
+**Training error.** On each training input the lookup returns the stored label
+(the inputs are distinct, so the lookup is unambiguous). Every term of
+$\hat R_n$ is $0$, so $\hat R_n(h_{\text{mem}}) = 0$.
+
+**True error.** A fresh $X$ misses the table with probability $1$, so
+$h_{\text{mem}}(X) = 0$, and the error is $\Pr(Y = 1) = 1/2$. Hence
+$R(h_{\text{mem}}) = 1/2$ and the gap is $1/2$ at every $n$.
+
+Both conditions matter. If $X$ had atoms, a fresh email could repeat a training
+email and the memorizer would get it right. If $Y$ depended on $X$, the
+constant guess $0$ on unseen emails could be better or worse than $1/2$. The
+memorizer is built from the sample, so it is not a member of any class fixed in
+advance: it violates (A2), which is exactly why no theorem in this lecture
+applies to it.
+
+## 2 Chernoff, KL, and how sharp Hoeffding is
+
+### 2.1 Chernoff recalled
+
+For any random variable $Y$, any threshold $\alpha$ and any $t > 0$, Markov's
+inequality applied to the nonnegative variable $e^{tY}$ gives
+
+$$ \Pr(Y \geq \alpha) = \Pr\big(e^{tY} \geq e^{t\alpha}\big) \leq e^{-t\alpha}\, \mathbb{E}\big[e^{tY}\big]. $$
+
+Every bound in Sections 3 and 4 is this inequality with a good upper bound on
+the moment generating function $\mathbb{E}[e^{tY}]$ and a good choice of $t$.
+
+### 2.2 For a coin, the best exponent is a KL divergence
+
+Let $S_n$ be the number of heads in $n$ flips of a coin with bias $p$, and let
+$q > p$. Applying Chernoff to $S_n$ with the exact binomial MGF
+$\big(1 - p + p e^t\big)^n$ and minimizing over $t > 0$ gives the best possible
+Chernoff bound for this event:
+
+$$ \Pr\big(S_n \geq q n\big) \leq e^{-n\, \mathrm{KL}(q \,\|\, p)}, \qquad \mathrm{KL}(q \,\|\, p) = q \ln\frac{q}{p} + (1 - q) \ln\frac{1 - q}{1 - p}. $$
+
+Hoeffding's inequality gives $e^{-2n(q - p)^2}$ instead, because it uses only
+the range $[0, 1]$ and not the bias. Pinsker's inequality for two coins,
+$\mathrm{KL}(q \,\|\, p) \geq 2 (q - p)^2$, says the Hoeffding exponent is never
+better than the KL exponent; the question is how much is lost.
+
+### 2.3 The fair coin at 75 percent heads: three numbers
+
+Fair coin, $n = 100$, event "at least 75 heads", so $p = 1/2$, $q = 3/4$,
+$\epsilon = 1/4$.
+
+- Hoeffding: $e^{-2 \cdot 100 \cdot (1/4)^2} = e^{-12.5} = 3.7 \times 10^{-6}$ (more precisely $3.7266 \times 10^{-6}$). Exponent per flip $2\epsilon^2 = 0.125$.
+- Optimal Chernoff (KL): $\mathrm{KL}(3/4 \,\|\, 1/2) = \tfrac34 \ln\tfrac32 + \tfrac14 \ln\tfrac12 = 0.130812$, so the bound is $e^{-13.0812} = 2.1 \times 10^{-6}$ (more precisely $2.084 \times 10^{-6}$). Exponent per flip $0.1308$.
+- Exact: $\Pr(S_{100} \geq 75) = \sum_{k=75}^{100} \binom{100}{k} 2^{-100} = 2.8 \times 10^{-7}$ (more precisely $2.818 \times 10^{-7}$).
+
+Knowing only the range costs $(0.1308 - 0.125)/0.1308 = 4.4$ percent of the
+exponent here. Both exponential bounds are off from the exact tail by roughly a
+factor of $10$ (about $13$ and $7$); that gap comes from factors in front of the
+exponential, while the exponents themselves agree to within $4.4$ percent.
+
+### 2.4 The shape of the KL curve
+
+Fix $p = 1/2$ and plot both exponents as functions of $q \in [0, 1]$. The KL
+exponent $\mathrm{KL}(q \,\|\, 1/2)$ is $0$ at $q = 1/2$, symmetric about it,
+convex, and rises to $\ln 2 = 0.693$ at $q = 0$ and $q = 1$. The Hoeffding
+exponent $2(q - 1/2)^2$ is the parabola that touches it at $q = 1/2$ with the
+same curvature and stays below it everywhere, reaching only $0.5$ at the ends.
+Near $q = 1/2$ the two are nearly equal; far from it, Hoeffding gives away more.
+For the deviations that matter in learning (a few percent), the loss is small.
+
+## 3 Hoeffding's lemma: the proof
+
+> **Lemma 1 (Hoeffding, 1963).** If $a \leq X \leq b$ with probability $1$, then
+> for every $t \in \mathbb{R}$,
+>
+> $$ \mathbb{E}\big[e^{t(X - \mathbb{E}X)}\big] \leq \exp\Big(\frac{t^2 (b - a)^2}{8}\Big). $$
+
+The proof below writes sums, as for a discrete $X$; for a continuous $X$
+replace sums by integrals. It uses three tools.
+
+### 3.1 Tool 1: a bounded variable has variance at most a quarter of its range squared
+
+> **Claim.** If $a \leq Y \leq b$, then $\mathrm{Var}(Y) \leq (b - a)^2 / 4$.
+>
+> **Proof.** For any constant $c$, expanding around the mean $\mu = \mathbb{E}Y$
+> gives $\mathbb{E}[(Y - c)^2] = \mathrm{Var}(Y) + (\mu - c)^2$, because the
+> cross term has expectation $0$. So the variance is at most
+> $\mathbb{E}[(Y - m)^2]$ for the midpoint $m = (a + b)/2$. Since
+> $|Y - m| \leq (b - a)/2$ pointwise, that expectation is at most
+> $(b - a)^2/4$. QED.
+
+Equality holds for $Y = a$ or $b$ with probability $1/2$ each; for $[0, 1]$
+this is the fair coin with variance $1/4$.
+
+### 3.2 Tool 2: tilting
+
+Let $M(t) = \mathbb{E}[e^{tX}]$, finite for all $t$ because $X$ is bounded.
+The tilted distribution at $t$ is $p_t(x) = e^{tx} p_X(x) / M(t)$. It is
+nonnegative and sums to $1$, so it is a probability distribution. Because
+$e^{tx} > 0$, it puts mass exactly where $p_X$ does: if $X \in [a, b]$, a
+variable with distribution $p_t$ is also in $[a, b]$. Write $\mathbb{E}_t$ and
+$\mathrm{Var}_t$ for mean and variance under $p_t$.
+
+### 3.3 Tool 3: Taylor's theorem with Lagrange remainder
+
+If $f$ is twice differentiable on an interval containing $0$ and $t$, then for
+some $\xi$ between $0$ and $t$,
+$f(t) = f(0) + f'(0)\, t + \tfrac12 f''(\xi)\, t^2$. This is an equality, so a
+uniform bound on $f''$ becomes a bound on $f$ with nothing lost.
+
+### 3.4 The proof
+
+It suffices to treat $\mathbb{E}X = 0$: otherwise apply the result to
+$X - \mathbb{E}X$, which lies in an interval of the same width $b - a$. Let
+$\psi(t) = \ln M(t)$. Differentiating under the expectation is allowed because
+$X$ is bounded (for finitely many values it is termwise differentiation of a
+finite sum).
+
+> **Step 1 (start flat).** $\psi(0) = \ln 1 = 0$ and
+> $\psi'(0) = M'(0)/M(0) = \mathbb{E}[X] = 0$.
+>
+> **Step 2 (derivatives are tilted moments).**
+> $\psi'(t) = \mathbb{E}[X e^{tX}]/M(t) = \mathbb{E}_t[X]$, and by the
+> quotient rule
+>
+> $$ \psi''(t) = \frac{M''(t)}{M(t)} - \Big(\frac{M'(t)}{M(t)}\Big)^2 = \mathbb{E}_t[X^2] - \big(\mathbb{E}_t[X]\big)^2 = \mathrm{Var}_t(X). $$
+>
+> **Step 3 (cap the curvature).** Under $p_t$ the variable still lies in
+> $[a, b]$ (Tool 2), so Tool 1 gives $\psi''(t) \leq (b - a)^2/4$ for every $t$.
+>
+> **Step 4 (integrate the cap).** By Tool 3, for some $\xi$ between $0$ and $t$,
+>
+> $$ \psi(t) = 0 + 0 \cdot t + \frac{\psi''(\xi)}{2} t^2 \leq \frac{(b - a)^2}{8} t^2. $$
+>
+> Exponentiating gives the lemma. QED.
+
+Boundedness is used exactly once, in Step 3, and only through the width $b - a$.
+
+### 3.5 The constant 8 cannot be improved
+
+Near $t = 0$, Step 2 gives $\psi(t) = \tfrac12 \mathrm{Var}(X)\, t^2 + o(t^2)$.
+A bound $\psi(t) \leq c\, t^2$ valid for every mean-zero $X$ in $[a, b]$ thus
+needs $c \geq \mathrm{Var}(X)/2$ for all such $X$. The two-point variable of
+Section 3.1 has variance $(b - a)^2/4$, which forces $c \geq (b - a)^2/8$.
+
+## 4 Hoeffding's inequality: the proof and the numbers
+
+> **Theorem 1 (Hoeffding, 1963).** Let $W_1, \dots, W_n$ be independent, with
+> $W_i \in [0, 1]$ and $\mathbb{E}[W_i] = p$, and let
+> $\bar W_n = \frac1n \sum_i W_i$. For every $\epsilon > 0$,
+>
+> $$ \Pr\big(\bar W_n - p \geq \epsilon\big) \leq e^{-2n\epsilon^2}, \qquad \Pr\big(|\bar W_n - p| \geq \epsilon\big) \leq 2 e^{-2n\epsilon^2}. $$
+
+For a filter $h$ fixed before the sample, $W_i = \mathbf{1}\{h(X_i) \neq Y_i\}$
+satisfies these hypotheses by (A1), with $p = R(h)$ and
+$\bar W_n = \hat R_n(h)$.
+
+### 4.1 The upper tail, step by step
+
+> **Chernoff.** For any $t > 0$,
+> $\Pr(\bar W_n - p \geq \epsilon) \leq e^{-t\epsilon}\, \mathbb{E}\big[e^{t(\bar W_n - p)}\big]$.
+>
+> **Independence.** $t(\bar W_n - p) = \sum_i \frac{t}{n}(W_i - p)$. The
+> exponential of a sum is a product, and the expectation of a product of
+> independent variables is the product of the expectations:
+>
+> $$ \mathbb{E}\big[e^{t(\bar W_n - p)}\big] = \prod_{i=1}^{n} \mathbb{E}\big[e^{\frac{t}{n}(W_i - p)}\big]. $$
+>
+> This is the only place independence is used.
+>
+> **Lemma 1.** Each factor is at most $\exp\big((t/n)^2 \cdot 1^2 / 8\big)$, so
+> the product is at most $e^{t^2/(8n)}$, and
+> $\Pr(\bar W_n - p \geq \epsilon) \leq e^{-t\epsilon + t^2/(8n)}$.
+>
+> **Choose $t$.** The exponent $-t\epsilon + t^2/(8n)$ is a parabola in $t$
+> minimized at $t = 4n\epsilon$, where it equals
+> $-4n\epsilon^2 + 2n\epsilon^2 = -2n\epsilon^2$.
+
+### 4.2 The lower tail and the factor 2
+
+The variables $1 - W_i$ also lie in $[0, 1]$, are independent, and have mean
+$1 - p$. The event $\bar W_n - p \leq -\epsilon$ is the event that their average
+exceeds its mean by at least $\epsilon$, so the upper-tail bound applied to
+them gives $\Pr(\bar W_n - p \leq -\epsilon) \leq e^{-2n\epsilon^2}$. The
+two-sided event is the union of the two tails, and the probability of a union of
+two events is at most the sum (Section 5), which gives the factor $2$. QED.
+
+### 4.3 Error rate within 2 percent at 95 percent confidence
+
+One fixed filter; we want
+$\Pr(|\hat R_n(h) - R(h)| \geq 0.02) \leq 0.05$. Theorem 1 guarantees it once
+$2 e^{-2n (0.02)^2} \leq 0.05$, that is, $e^{-0.0008\, n} \leq 1/40$, that is,
+
+$$ n \geq \frac{\ln 40}{2 \cdot 0.0004} = \frac{3.6889}{0.0008} = 4611.1, $$
+
+so $n = 4{,}612$ emails suffice. For comparison, Chebyshev's inequality with the
+worst-case variance $\mathrm{Var}(W_i) \leq 1/4$ gives
+$\Pr(|\bar W_n - p| \geq \epsilon) \leq 1/(4 n \epsilon^2)$, and
+$1/(4 n \cdot 0.0004) \leq 0.05$ needs $n \geq 12{,}500$.
+
+### 4.4 The decay chart
+
+The lecture plots the two-sided bound $2 e^{-2n\epsilon^2}$ at $\epsilon = 0.05$,
+which is $2 e^{-0.005\, n}$, for $n$ from $0$ to $1000$. It is at least $1$,
+and so says nothing, until $n = \ln 2 / 0.005 = 138.6$. The marked values:
+
+- $n = 200$: $2 e^{-1} = 0.7358$, shown as $0.74$.
+- $n = 600$: $2 e^{-3} = 0.0996$, shown as $0.10$.
+- $n = 1000$: $2 e^{-5} = 0.01348$, shown as $0.013$.
+
+## 5 Selection and the union bound
+
+### 5.1 The selection trap
+
+A bound for each preselected $h$ does not automatically apply to the $h$
+selected using those same data. Theorem 1 needs the filter to be fixed before
+the sample, so that its mistakes are i.i.d. coin flips. ERM looks at the sample
+and keeps whichever filter happened to make few mistakes on it; conditional on
+being chosen, a filter's mistakes on that sample are no longer an unbiased
+sample of its behaviour.
+
+### 5.2 The simulation
+
+The lecture's histogram is a simulation. Python's `random.seed(6)`; $1000$
+filters, each with true error $0.5$; each filter's $25$ errors are independent
+fair coin flips, independent across filters (independence across filters is a
+simplification of the simulation only; the union bound below does not need it).
+The number of filters with $k$ mistakes out of $25$:
+
+- $k = 6$: 6 filters
+- $k = 7$: 17
+- $k = 8$: 25
+- $k = 9$: 64
+- $k = 10$: 99
+- $k = 11$: 135
+- $k = 12$: 148
+- $k = 13$: 149
+- $k = 14$: 129
+- $k = 15$: 107
+- $k = 16$: 64
+- $k = 17$: 36
+- $k = 18$: 14
+- $k = 19$: 4
+- $k = 20$: 2
+- $k = 21$: 1
+
+The counts sum to $1000$. The best filters made $6$ mistakes, a training error
+of $6/25 = 0.24$, while every filter's true error is $0.5$. The exact
+probability that one such filter makes at most $6$ mistakes is
+$\sum_{k=0}^{6} \binom{25}{k} 2^{-25} = 0.0073$, so about $7.3$ of $1000$ are
+expected to; six did.
+
+### 5.3 The union bound
+
+> **Theorem 2 (union bound).** For any events $A_1, \dots, A_m$, independent or
+> not, $\Pr\big(\bigcup_j A_j\big) \leq \sum_j \Pr(A_j)$.
+>
+> **Proof.** Pointwise, $\mathbf{1}\{\bigcup_j A_j\} \leq \sum_j \mathbf{1}\{A_j\}$:
+> the left side is $1$ exactly when at least one indicator on the right is $1$.
+> Take expectations. QED.
+
+The proof never mentions dependence between the events, which is why the
+filters may share the same emails.
+
+### 5.4 Pricing the search
+
+Let $A_j$ be the event "filter $j$ shows training error at most $0.25$" when its
+true error is $0.5$; this is a deviation of $\epsilon = 1/4$ below the mean, so
+the lower tail of Theorem 1 gives $\Pr(A_j) \leq e^{-2n/16}$.
+
+- $n = 25$: one filter $e^{-3.125} = 0.0439$, shown as $0.044$; some filter out of $1000$: at most $43.9$, shown as $44$, which exceeds $1$ and so says nothing. The simulation agrees: six filters did reach $0.24$.
+- $n = 100$: one filter $e^{-12.5} = 3.7 \times 10^{-6}$; some filter out of $1000$: at most $3.7 \times 10^{-3} = 0.37$ percent.
+
+The search costs a factor $|\mathcal{H}|$; the exponent in $n$ must outrun it.
+
+## 6 The finite-class theorem
+
+In words: with high probability, every candidate's training error is close to
+its true error.
+
+> **Theorem 3 (uniform convergence, finite class).** Under (A1) and (A2), for
+> every $\delta \in (0, 1)$, with probability at least $1 - \delta$,
+>
+> $$ \big|R(h) - \hat R_n(h)\big| \leq \epsilon := \sqrt{\frac{\ln(2|\mathcal{H}|/\delta)}{2n}} \quad \text{for every } h \in \mathcal{H}. $$
+
+### 6.1 The proof
+
+> Let $B_h$ be the event $|\hat R_n(h) - R(h)| > \epsilon$. The theorem fails
+> exactly on $\bigcup_{h \in \mathcal{H}} B_h$.
+>
+> **Line 1 (Theorem 2).** $\Pr\big(\bigcup_h B_h\big) \leq \sum_{h \in \mathcal{H}} \Pr(B_h)$.
+>
+> **Line 2 (Theorem 1).** Each $h$ was fixed before the sample (A2), so each
+> $\Pr(B_h) \leq 2 e^{-2n\epsilon^2}$, and the sum is at most
+> $|\mathcal{H}| \cdot 2 e^{-2n\epsilon^2}$.
+>
+> **Line 3 (definition of $\epsilon$).** Substituting $\epsilon$ gives
+> $2 e^{-2n\epsilon^2} = \delta / |\mathcal{H}|$, so the sum is $\delta$. QED.
+
+$\hat h$ never appears in the proof. The event bounded is about all candidates
+at once, so it covers whichever one ERM later picks. This matches
+Shalev-Shwartz and Ben-David [4, Corollary 4.6], which states the equivalent
+sample-size form $m^{\mathrm{UC}}_{\mathcal{H}}(\epsilon, \delta) \leq \ln(2|\mathcal{H}|/\delta) / (2\epsilon^2)$.
+
+### 6.2 Corollary: ERM is nearly the best in the class
+
+> **Corollary 4.** On the event of Theorem 3, for any
+> $h^* \in \arg\min_{h \in \mathcal{H}} R(h)$,
+>
+> $$ R(\hat h) \leq \hat R_n(\hat h) + \epsilon \leq \hat R_n(h^*) + \epsilon \leq R(h^*) + 2\epsilon. $$
+>
+> The first and third steps are Theorem 3 at $\hat h$ and at $h^*$; the middle
+> step is the definition of ERM. QED.
+
+Each use of Theorem 3 costs one $\epsilon$. There are two uses: one at $h^*$
+(from its true error down to its training error, read right to left) and one at
+$\hat h$ (from its training error up to its true error). Together they give
+$2\epsilon$.
+
+### 6.3 How much data
+
+Solving $\epsilon \leq \epsilon_0$ for $n$:
+
+$$ n \geq \frac{\ln|\mathcal{H}| + \ln(2/\delta)}{2\epsilon_0^2}. $$
+
+At $\epsilon_0 = \delta = 0.05$ the denominator is $0.005$ and
+$\ln(2/\delta) = \ln 40 = 3.689$:
+
+- $|\mathcal{H}| = 10$: $\ln|\mathcal{H}| = 2.303$; $n \geq 1198.3$, so $1{,}199$.
+- $|\mathcal{H}| = 10^3$ (the running library): $\ln|\mathcal{H}| = 6.908$; $n \geq 2119.3$, so $2{,}120$.
+- $|\mathcal{H}| = 10^6$: $\ln|\mathcal{H}| = 13.82$; $n \geq 3500.9$, so $3{,}501$.
+- $|\mathcal{H}| = 2^{100}$: $\ln|\mathcal{H}| = 69.31$; $n \geq 14{,}600.9$, so $14{,}601$.
+
+A million candidates need about $3$ times the data of ten ($3501 / 1199 = 2.92$).
+Check for the running example: with $|\mathcal{H}| = 1000$, $n = 2120$,
+$\delta = 0.05$, Theorem 3 gives $\epsilon = 0.049992 \leq 0.05$.
+
+## 7 Every number in the lecture, re-derived
+
+All values were recomputed in Python for this note.
+
+- Hoeffding's reference: Journal of the American Statistical Association 58(301), 13 to 30, 1963 (checked against the DOI record).
+- Coin bound and the $\pm 2$ percent example: Sections 2.3 and 4.3 ($3.7266 \times 10^{-6}$; $4611.1$, so $4{,}612$; Chebyshev $12{,}500$).
+- Decay chart: Section 4.4.
+- Simulation and pricing table: Sections 5.2 and 5.4. Two-sided versions for reference: $2 e^{-12.5} = 7.45 \times 10^{-6}$ and $2 e^{-3.125} = 0.0879$.
+- Sample sizes and the running example's $\epsilon$: Section 6.3.
+- Sauer bounds for $d = 3$ (Section 8.4): $n = 10$: $176$ against $2^{10} = 1{,}024$; $n = 20$: $1{,}351$ against $1{,}048{,}576$; $n = 100$: $166{,}751$ against $1.27 \times 10^{30}$. The cruder bound $(en/d)^d$ at $n = 10$ is $743.9$.
+- ResNet-50 (Section 9.1): $\ln|\mathcal{H}| \leq 5.678 \times 10^8$ and $\epsilon = 14.89$.
+- Held-out testing (Section 9.3): $4{,}612$ for one model; $7{,}490$ for ten.
+
+## 8 Beyond finite classes: the precise statements
+
+The lecture's message for infinite classes: count distinguishable labelings,
+not parameter choices. This section states the definitions and theorems
+precisely, following Shalev-Shwartz and Ben-David [4, Chapter 6]. Throughout,
+classifiers are binary and the loss is the 0-1 loss.
+
+### 8.1 Thresholds on the line
+
+Let $h_t(x) = \mathbf{1}\{x \geq t\}$ for $t \in \mathbb{R}$. There are
+infinitely many thresholds, so $\ln|\mathcal{H}| = \infty$ and Theorem 3 says
+nothing. On a sample, though, only the labeling matters. Sort $n$ distinct
+points $x_{(1)} < \dots < x_{(n)}$. A threshold labels a point $1$ exactly when
+the point is at or to the right of $t$, so its labeling is "$0$ on the first
+$k - 1$ points, $1$ on the rest" for some $k \in \{1, \dots, n + 1\}$ (the cut
+lies in gap $k$). That gives exactly $n + 1$ labelings. If some points repeat
+and there are only $m < n$ distinct values, there are $m + 1$ labelings. So in
+general there are at most $n + 1$, with equality exactly when the points are
+distinct.
+
+### 8.2 Growth function and shattering
+
+> **Definition (growth function; [4, Definition 6.9]).**
+>
+> $$ \Pi_{\mathcal{H}}(n) = \max_{x_1, \dots, x_n} \Big| \big\{ (h(x_1), \dots, h(x_n)) : h \in \mathcal{H} \big\} \Big|. $$
+>
+> **Definition (shattering; [4, Definition 6.3]).** $\mathcal{H}$ shatters a
+> finite set $C$ if it realizes all $2^{|C|}$ labelings of $C$.
+
+The growth function is a maximum over point sets, so it does not depend on the
+sample. Always $\Pi_{\mathcal{H}}(n) \leq 2^n$, and
+$\Pi_{\mathcal{H}}(n) \leq |\mathcal{H}|$ for a finite class. For thresholds
+$\Pi_{\mathcal{H}}(n) = n + 1$, attained at any $n$ distinct points.
+($[4]$ writes $\tau_{\mathcal{H}}$ for $\Pi_{\mathcal{H}}$.)
+
+### 8.3 VC dimension
+
+> **Definition ([4, Definition 6.5]).** $d_{\mathrm{VC}}(\mathcal{H})$ is the
+> largest $d$ such that some set of $d$ points is shattered by $\mathcal{H}$
+> (infinite if there is no largest).
+
+"Some", not "every": to show $d_{\mathrm{VC}} \geq d$, exhibit one shattered set
+of size $d$; to show $d_{\mathrm{VC}} < d + 1$, show that no set of size $d + 1$
+is shattered.
+
+- Thresholds: $d_{\mathrm{VC}} = 1$. One point is shattered ($t$ to its left or right). For two points $x_1 < x_2$ the labeling $(1, 0)$ is impossible.
+- Intervals $\mathbf{1}\{a < x < b\}$: $d_{\mathrm{VC}} = 2$ [4, Section 6.3.2]. Two distinct points are shattered. For three points $x_1 < x_2 < x_3$ the labeling $(1, 0, 1)$ is impossible, since an interval containing $x_1$ and $x_3$ contains $x_2$.
+- Halfspaces with bias $\mathbf{1}\{w^\top x + b > 0\}$ on $\mathbb{R}^p$: $d_{\mathrm{VC}} = p + 1$ [4, Theorem 9.3]. In $\mathbb{R}^2$, three collinear points with the middle one labelled differently from the two ends cannot be separated by a line, yet three points in general position are shattered, so $d_{\mathrm{VC}} = 3$: one bad set does not lower the VC dimension.
+- Any finite class: shattering $d$ points needs $2^d$ distinct labelings, hence at least $2^d$ members, so $d_{\mathrm{VC}} \leq \log_2|\mathcal{H}|$.
+
+### 8.4 Sauer's lemma
+
+> **Lemma 5 (Sauer, Shelah, Perles; [4, Lemma 6.10]).** If
+> $d_{\mathrm{VC}}(\mathcal{H}) \leq d < \infty$, then for all $n$,
+>
+> $$ \Pi_{\mathcal{H}}(n) \leq \sum_{i=0}^{d} \binom{n}{i}, $$
+>
+> and if $n > d + 1$ then $\Pi_{\mathcal{H}}(n) \leq (en/d)^d$.
+
+Below the VC dimension the growth function is $2^n$; above it, it is at most a
+polynomial of degree $d$. The numbers for $d = 3$ are in Section 7. For $d = 10$
+the sum is $1.94 \times 10^{13}$ at $n = 100$ and $2.66 \times 10^{23}$ at
+$n = 1000$, against $2^{100}$ and $2^{1000}$.
+
+### 8.5 Why substituting the labeling count is not a proof
+
+The tempting argument: on the sample, the infinite class acts like at most
+$\Pi_{\mathcal{H}}(n)$ distinct classifiers, so apply Theorem 3 with
+$|\mathcal{H}|$ replaced by $\Pi_{\mathcal{H}}(n)$. This is not a valid proof.
+Which classifiers are grouped together depends on the sample, so the
+"representatives" are chosen using the data: this is the selection trap of
+Section 5.1 again. And two classifiers that agree on the sample can have
+different true errors $R(h)$, so the bad events $B_h$ in Section 6.1 are not
+determined by the labeling on the sample.
+
+### 8.6 What the real proof does (sketch)
+
+The proof of [4, Theorem 6.11] keeps the same skeleton (concentration for each
+behaviour, union bound over behaviours) and repairs the dependence on the
+sample in three moves.
+
+1. **Ghost sample.** Replace the unknown $R(h)$ by the error on a second, independent sample $S'$ of the same size $n$. The expected worst gap $\mathbb{E} \sup_h (R(h) - \hat R_S(h))$ is at most the expected worst difference between the errors on $S'$ and on $S$, by Jensen's inequality.
+2. **Random swaps.** The $2n$ points are i.i.d., so swapping $z_i$ with $z_i'$ does not change the distribution. Inserting independent random signs $\sigma_i \in \{-1, +1\}$ in front of each difference therefore changes nothing.
+3. **Condition on the $2n$ points.** Now the points are fixed and only the signs are random. On $2n$ fixed points the class has at most $\Pi_{\mathcal{H}}(2n)$ behaviours, each a fixed object, so Hoeffding plus a union bound over at most $\Pi_{\mathcal{H}}(2n)$ behaviours is legal.
+
+This is where the count of labelings enters honestly: on a fixed set of $2n$
+points, not on a set chosen after looking.
+
+### 8.7 The precise theorems
+
+> **Theorem ([4, Theorem 6.11]).** For every $\mathcal{D}$ and every
+> $\delta \in (0, 1)$, with probability at least $1 - \delta$ over a sample of
+> size $m$, for every $h \in \mathcal{H}$,
+>
+> $$ |L_{\mathcal{D}}(h) - L_S(h)| \leq \frac{4 + \sqrt{\log \tau_{\mathcal{H}}(2m)}}{\delta \sqrt{2m}}. $$
+
+Here $L_{\mathcal{D}} = R$, $L_S = \hat R_m$, $\tau_{\mathcal{H}} = \Pi_{\mathcal{H}}$.
+The proof bounds an expectation and then applies Markov's inequality, which is
+why $\delta$ sits in the denominator rather than inside a logarithm. Combined
+with Sauer's lemma, $\log \tau_{\mathcal{H}}(2m) \leq d \log(2em/d)$ once
+$2m > d + 1$, so the gap is of order $\sqrt{d \log m / m}$ for fixed $\delta$.
+
+> **Theorem ([4, Theorem 6.8], quantitative fundamental theorem).** Let
+> $\mathcal{H}$ be a class of binary classifiers with 0-1 loss and
+> $d_{\mathrm{VC}}(\mathcal{H}) = d < \infty$. There are absolute constants
+> $C_1, C_2$ such that the uniform-convergence sample complexity satisfies
+>
+> $$ C_1 \frac{d + \log(1/\delta)}{\epsilon^2} \leq m^{\mathrm{UC}}_{\mathcal{H}}(\epsilon, \delta) \leq C_2 \frac{d + \log(1/\delta)}{\epsilon^2}. $$
+
+Uniform convergence with accuracy $\epsilon$ means: with probability at least
+$1 - \delta$, $|R(h) - \hat R_n(h)| \leq \epsilon$ for every $h$ [4,
+Definitions 4.1 and 4.3]. So $n \geq C_2 (d + \log(1/\delta))/\epsilon^2$
+suffices, and up to the constant no smaller order of $n$ works for every
+distribution. The sharper upper bound removes the $\log n$ factor and has
+$\log(1/\delta)$ instead of $1/\delta$; its proof is in [4, Chapter 28]. The
+constants $C_1, C_2$ are not given numerically, which is why the lecture shows
+the order of growth only.
+
+### 8.8 The rate sketch, reconciled
+
+The lecture's rate sketch replaces $\ln|\mathcal{H}|$ by
+$\ln \Pi_{\mathcal{H}} \leq d_{\mathrm{VC}} \ln(en/d_{\mathrm{VC}})$ in
+Theorem 3, giving the shape
+$\sqrt{(d_{\mathrm{VC}} \ln n + \ln(1/\delta))/n}$ with constants omitted. It
+is labelled a sketch because of Section 8.5. What is actually proved: Theorem
+6.11 gives the $\sqrt{d \log n / n}$ shape with a worse dependence on $\delta$,
+and Theorem 6.8, inverted, gives
+$\epsilon \leq \sqrt{C_2 (d + \log(1/\delta))/n}$ with no $\log n$.
+
+### 8.9 Outlook: Rademacher complexity
+
+For a set $A \subset \mathbb{R}^m$ of vectors, the Rademacher complexity is
+[4, Section 26.1]
+
+$$ \mathcal{R}(A) = \frac{1}{m} \mathbb{E}_{\sigma} \Big[ \sup_{a \in A} \sum_{i=1}^{m} \sigma_i a_i \Big], $$
+
+with $\sigma_1, \dots, \sigma_m$ independent and uniform on $\{-1, +1\}$.
+Applied to $A = \ell \circ \mathcal{H} \circ S$, the vectors of losses of each
+$h$ on the sample, it measures how well the class can fit random signs. The
+random signs are those of step 2 in Section 8.6. [4, Theorem 26.5] gives, for
+losses with $|\ell| \leq c$: with probability at least $1 - \delta$, for every
+$h \in \mathcal{H}$,
+
+$$ R(h) - \hat R_m(h) \leq 2\, \mathbb{E}_{S'} \mathcal{R}(\ell \circ \mathcal{H} \circ S') + c \sqrt{\frac{2 \ln(2/\delta)}{m}}, $$
+
+and a version with the empirical $\mathcal{R}(\ell \circ \mathcal{H} \circ S)$
+and constant $4c$ inside the second term, with $\ln(4/\delta)$. Note these are
+one-sided. For finite VC dimension, the Rademacher complexity is bounded in
+terms of the growth function, recovering the VC bounds.
+
+## 9 When the bound says nothing, and held-out testing
+
+For enormous classes, this bound can exceed 1 and become uninformative.
+
+### 9.1 A worked example: ResNet-50 on ImageNet
+
+Assumptions, stated so the count is honest. (i) The architecture is fixed
+before the data are seen. (ii) It has $25.6 \times 10^6$ parameters, each
+stored as a 32-bit floating-point number. (iii) The class $\mathcal{H}$ is
+every network obtained by filling those parameters with 32-bit values. Distinct
+bit patterns can give the same function, so the count is an upper bound:
+
+$$ |\mathcal{H}| \leq 2^{32 \times 25.6 \times 10^6} = 2^{8.192 \times 10^8}, \qquad \ln|\mathcal{H}| \leq 8.192 \times 10^8 \cdot \ln 2 = 5.678 \times 10^8. $$
+
+With $n = 1.28 \times 10^6$ training images (the count used in the full note)
+and $\delta = 0.05$:
+
+$$ \epsilon = \sqrt{\frac{5.678 \times 10^8 + \ln 40}{2 \times 1.28 \times 10^6}} = \sqrt{221.8} = 14.89. $$
+
+The 0-1 error lies in $[0, 1]$, so any $\epsilon \geq 1$ certifies nothing.
+Assumption (i) is optimistic in practice (architectures are tuned on the same
+benchmark), which would only make the count larger.
+
+### 9.2 VC dimension does not rescue large networks
+
+Bartlett, Harvey, Liaw and Mehrabian [6] show that for networks with piecewise
+linear activations (such as ReLU), $W$ parameters and $L$ layers, the VC
+dimension is $O(W L \log W)$, and that some such networks have VC dimension
+$\Omega(W L \log(W / L))$. With $W$ in the tens of millions, $d_{\mathrm{VC}}$
+is far larger than the number of training examples, and the VC bound of
+Section 8 is also uninformative.
+
+Neither failure means large networks fail to generalize; they often do. The
+bounds are sufficient, not necessary: they pay for every classifier in the
+class, while training explores a tiny part of it. Explaining why large
+networks generalize is active research.
+
+### 9.3 The held-out test set
+
+Train anything, by any method. Then evaluate one model on a test set drawn
+fresh and independently of everything used to produce that model. With respect
+to the test set the model is a single classifier fixed in advance, so
+$|\mathcal{H}| = 1$ and Theorem 1 applies exactly: by Section 4.3, $4{,}612$
+test emails estimate its error to within $2$ percent with probability at least
+$95$ percent.
+
+The requirement is that the selection of the model is independent of the test
+set. Comparing $k$ models fixed in advance on the same test set is a union bound
+over $k$: $n \geq (\ln k + \ln(2/\delta))/(2\epsilon^2)$. At $\pm 2$ percent and
+$95$ percent this is $4{,}612$ for $k = 1$ and $(\ln 10 + \ln 40)/0.0008 =
+7489.3$, so $7{,}490$, for $k = 10$.
+
+### 9.4 Reusing test results breaks the argument
+
+If test results are used to select or tune models (try a change, check the test
+error, keep it if it helped, repeat), then later models depend on the test set.
+They are no longer fixed in advance with respect to it, and the guarantee of
+Section 9.3 no longer applies: this is the selection trap of Section 5.1, with
+the test set in the role of the training set. A fixed union bound over the
+models actually tried does not repair it either, because which models get tried
+depends on earlier test results. The safe practice is a separate validation set
+for selection and a test set used once at the end.
+
+## 10 References
+
+1. W. Hoeffding, Probability inequalities for sums of bounded random variables, Journal of the American Statistical Association 58(301), 13 to 30, 1963. DOI 10.1080/01621459.1963.10500830. Source of Lemma 1 and Theorem 1.
+2. S. Boucheron, G. Lugosi and P. Massart, Concentration Inequalities: A Nonasymptotic Theory of Independence, Oxford University Press, 2013. Chapter 2: Hoeffding's lemma and inequality.
+3. R. Vershynin, High-Dimensional Probability, Cambridge University Press, 2018. Chapter 2: Hoeffding's inequality.
+4. S. Shalev-Shwartz and S. Ben-David, Understanding Machine Learning: From Theory to Algorithms, Cambridge University Press, 2014. Chapter 4 (uniform convergence, Corollary 4.6), Chapter 6 (VC dimension, Definitions 6.3, 6.5, 6.9, Lemma 6.10, Theorems 6.8 and 6.11), Chapter 9 (halfspaces, Theorem 9.3), Chapter 26 (Rademacher complexity, Theorem 26.5), Chapter 28 (proof of Theorem 6.8). Free PDF: https://www.cs.huji.ac.il/~shais/UnderstandingMachineLearning/
+5. M. Mohri, A. Rostamizadeh and A. Talwalkar, Foundations of Machine Learning, 2nd ed., MIT Press, 2018. Chapters 2 and 3.
+6. P. L. Bartlett, N. Harvey, C. Liaw and A. Mehrabian, Nearly-tight VC-dimension and pseudodimension bounds for piecewise linear neural networks, Journal of Machine Learning Research 20(63), 1 to 17, 2019. http://jmlr.org/papers/volume20/17-612/17-612.pdf (arXiv 1703.02930)

@@ -1534,7 +1534,7 @@ report.
    are the files `prob01-foundations-note.md` through
    `prob06-generalization-note.md`, each in its own lecture folder. The
    Lecture 6 sections cited in the text are those of the full / advanced note,
-   `prob06-generalization-full-note.md`.
+   `prob06-generalization/backup/prob06-generalization-full-note.md`.
 6. M. J. Wainwright, *High-Dimensional Statistics: A Non-Asymptotic
    Viewpoint*, Cambridge University Press, 2019. DOI: 10.1017/9781108627771,
    at https://doi.org/10.1017/9781108627771. Chapter 15: minimax lower bounds,

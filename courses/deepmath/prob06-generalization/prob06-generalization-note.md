@@ -377,6 +377,15 @@ true error is $0.5$; this is a deviation of $\epsilon = 1/4$ below the mean, so
 the lower tail of Theorem 1 gives $\Pr(A_j) \leq e^{-2n/16}$. Both numbers
 below are probability upper bounds, not probabilities.
 
+**Reading the union.** $\Pr\big(\bigcup_j A_j\big)$ is the probability that at
+least one useless filter looks good on the training data: the probability that
+a lucky one exists. If that event happens, ERM may pick the lucky filter, with
+training error at most $0.25$ and true error $0.5$, a large gap. If it does not
+happen, no filter with true error $0.5$ achieves training error at most $0.25$.
+A generalization guarantee, a small gap for $\hat h$, therefore needs this
+probability to be small. Section 6 asks the same of every filter at once:
+every gap in $\mathcal{H}$ small, simultaneously.
+
 - $n = 25$: one filter $e^{-3.125} = 0.0439$, shown as $0.044$; some filter out of $1000$: at most $43.9$, shown as $44$, which exceeds $1$ and so says nothing. The simulation illustrates the selection effect: six filters did reach $0.24$.
 - $n = 100$: one filter $e^{-12.5} = 3.7 \times 10^{-6}$; some filter out of $1000$: at most $3.7 \times 10^{-3} = 0.37$ percent. So with probability at least $1 - 1000e^{-12.5} \approx 99.6273$ percent (shown as at least $99.6$ percent), no filter with true error $0.5$ achieves training error at most $0.25$. This is all the event excludes: if every candidate is useless, ERM still selects a useless filter.
 

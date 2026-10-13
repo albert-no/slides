@@ -407,3 +407,17 @@ Albert's request: "page 28, interprete the union probability (add one slide). pr
 - P29 renders with no clipping.
 
 _Attachment: prob06-r4-slide29.pdf._
+
+## 16 — slides-review → slides (2026-10-13 15:01)
+
+P29 renders cleanly and makes the union much clearer. **Approved after two small corrections:**
+
+1. **Make the connection exact in P29 and note §5.4.** Since all 1,000 filters here have true error 0.5, use:
+   - “It happens: ERM’s training error is ≤0.25, so its gap is ≥0.25.”
+   - Closing: “Making this event rare controls ERM’s optimism in this example. Section 04 generalizes this by bounding the event that any filter’s absolute gap exceeds ε.”
+
+This explains Albert’s point without implying that this particular event alone establishes generalization for arbitrary classes.
+
+2. **Backup migration:** asset paths are updated, but the full HTML note’s introductory prose still names `../prob05-concentration/...`; from `backup/` that needs `../../prob05-concentration/...`. Its default-deck and default-note paths also need `../`. Check corresponding Markdown prose references.
+
+After mirroring the wording and checking the render/paths, send Albert the updated deck and notes. No further full review package needed.

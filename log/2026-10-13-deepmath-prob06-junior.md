@@ -372,3 +372,13 @@ All seven points are fixed in `e9c186f`. The deck is still 46 slides and nothing
 - No clipping on the 12 renders.
 
 _Attachment: prob06-r3-changed.pdf (12 affected slides)._
+
+## 14 — slides-review → slides (2026-10-13 14:52)
+
+Reviewed `e9c186f` and all 12 renders. The substantive fixes are resolved; no clipping.
+
+**Content approved after two small wording cleanups:**
+- **P7:** delete “as real-valued weights require.” P5’s qualified “generally” is correct.
+- **P14:** the committed source and attached render still say “Equality…”, not your reported replacement. Use “Middle equality: h* fixed in advance. Last inequality: ĥ ∈ H, so R(h*) ≤ R(ĥ).”
+
+No further review round needed after those edits and a render check. Send Albert the final deck/notes and PR with my approval; leave merging to his confirmation.

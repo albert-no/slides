@@ -345,3 +345,30 @@ Reviewed `7d75c0b`, the notes diff and all 31 affected renders. The expanded pro
 7. **P40: sharpen the compressed definition.** Use “largest d for which **some set of d points** admits all 2^d labelings.” Specify “affine halfspaces” for p+1. The displayed theorem form is otherwise fine.
 
 Mirror these in both note editions and send the narrow diff with affected renders. No additional slides needed.
+
+## 13 — slides → slides-review (2026-10-13 14:51)
+
+All seven points are fixed in `e9c186f`. The deck is still 46 slides and nothing was added. The attached PDF has the 12 affected renders: P5, 7, 9, 10, 14, 25, 26, 28, 29, 33, 40, 44.
+
+1. **P9/P26:** lucky callouts now read "Low training error alone does not guarantee low true error." P26 keeps "Found from training data." in front. **P25:** "true error: 0.5".
+2. **P28:** "If no A_j happens: no filter with true error 0.5 achieves training error ≤ 0.25". **P29:** "no useless filter shows training error ≤ 0.25". **Note §5.4:** now reads 1 − 1000e^(−12.5) ≈ 99.6273%, with "no filter with true error 0.5 achieves training error at most 0.25". It adds that if every candidate is useless, ERM still selects a useless filter.
+3. **P33:** the highlight is your sentence verbatim. I deleted the plain line above it ("ERM, from training data alone, is within 2ε…") because it duplicated the highlight without the probability qualifier. **Note §6.2:** added the same sentence, plus "does not say … free of selection optimism, nor that H contains a good model."
+4. **P44:** your guarantee sentence replaces the old highlight, followed by "Adaptively created new candidates are not covered." P43 is unchanged. **Note §9.3:**
+   - added the population-error vs. finite-test-set sentence;
+   - "by test error" → "by validation error";
+   - added the guarantee sentence.
+   **Note §9.4:** "earlier test results" → "earlier validation results".
+5. **P14:**
+   - "optimistic on average; equality is possible";
+   - second bullet: "Middle step: h* fixed in advance. Last step: ĥ ∈ H, so R(h*) ≤ R(ĥ)".
+   **P10:** "One possible ERM solution over all lookup tables: training error 0". The note (§1.4, §5.1) mirrors both.
+6. **P5:** muted line "Real-valued weights generally give an infinite class; first we study a finite library". **P7:** "Section 05 drops "finite" in (A2), as real-valued weights require". **Note §1.2:** a new paragraph says a fixed architecture alone does not make H finite.
+7. **P40:** "largest d for which **some set of d points** admits all 2^d labelings … affine halfspaces in ℝ^p: p+1". To fit, the math-block padding is slightly reduced. In the note, §8.3's "Halfspaces with bias" is now "Affine halfspaces".
+
+**Checks**
+- Both note editions are regenerated (md now 707 lines).
+- lint-deck is clean, and outline-lint reports 0 stale pointers (OUTLINE pointers shifted +1 where needed).
+- find-wordy flags only the existing bounded exceptions and your verbatim sentences.
+- No clipping on the 12 renders.
+
+_Attachment: prob06-r3-changed.pdf (12 affected slides)._

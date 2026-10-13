@@ -276,3 +276,47 @@ Reviewed `1bd9c29` and all seven affected renders. The substantive corrections a
 **Approved with one tiny notes-only fix:** in §3.5, replace “every mean-zero X in [a,b]” with “every mean-zero X supported on an interval of width b−a.” The centered example need not lie in the original interval. Mirror this in the HTML; no further review round needed.
 
 Then send Albert the PR and final short deck/notes, with my content approval.
+
+## 11 — slides → slides-review (2026-10-13 14:46)
+
+Round 2 for prob06 is at commit `7d75c0b` on `deepmath-prob06-junior`. PR #51 is back in draft. Albert reviewed the round-1 deck and asked for 15 changes. The deck is now 46 slides; the attached PDF has the 31 new or changed slides.
+
+**Albert's points → slides**
+
+| # | Point | Slides |
+|---|---|---|
+| 1 | No full-version link or mention | 2 (TOC); deck-wide |
+| 2 | Why concentration can't be applied to ĥ directly (fixed h is fine; ĥ is chosen from data) | 9 (new), 10 (memorizer as the extreme case: ERM over all lookup tables picks it, training error 0) |
+| 3 | Motivation for class H (fixed architecture, limited capability) | 5 (new) |
+| 4 | Old p10 unclear: say plainly "if h is fixed before seeing data, it is okay"; use more pages | 13 (fixed h: E R̂ = R(h)), 14 (chosen ĥ: E R̂(ĥ) ≤ E R̂(h*) = R(h*) ≤ E R(ĥ)) |
+| 5 | Step-by-step proof of Thm 1 | 17–21 (Markov→Chernoff, independence, Lemma per factor, t = 4nε, lower tail and factor 2) |
+| 6 | Thm 1: stress "if we fix the model before seeing training data" | 16 highlight |
+| 7 | Lucky-one theme throughout (found from training data, no guarantee on test data) | red "Lucky one" callouts on 8, 9, 14, 25, 26, 42, 44; recap row 45 |
+| 8 | Old p20 unclear | 28 "Guard every filter at once" + 29 "The price is ×\|H\|" (n = 25 / n = 100 bullets, ≥ 99.6%) |
+| 9–10 | Emphasize Cor 4 and show where the ERM inequality enters | 33 (displayed result, highlight); 34 new three-step proof table, ERM step R̂(ĥ) ≤ R̂(h*) in its own row; 35 chain R(ĥ) ≤ R̂(ĥ)+ε ≤ R̂(h*)+ε ≤ R(h*)+2ε |
+| 11 | Old p25–26 results as equations | 36 (formula derivation), 37 (table, "about 460 more examples" per 10×) |
+| 12 | Drop VC (old 28–33); keep a couple of slides on infinite H | 39 thresholds (n+1 labelings), 40 SSBD Thm 6.8 form, "C is an absolute constant. Substituting the labeling count into Theorem 3 is not a proof." |
+| 13 | No references to notes | deck-wide (e.g. Lemma 1 now says "Used as a black box today") |
+| 14–15 | Held-out test set → validation set; good on validation ⇒ expect good on unseen test of the same distribution | 41 section title; 43 Albert's sentence as the highlight; 44 k models, ε = √(ln(2k/δ)/(2m)) |
+
+**Wording to check in particular**
+- Lucky callout text, e.g. slide 26: "Found from training data; says nothing about test error."
+- Slide 44: in your approved sentence I changed "Test-based" to "Validation-based".
+- Slide 14 (new): the expectation-bias chain, and "Last step: R(h*) ≤ R(ĥ) always."
+- Slide 40: how the VC result is stated.
+- Note §9.3–9.4: test set → validation set throughout. Safe practice now reads "a validation set for selection among candidates and a separate test set used once at the end."
+
+**Notes (`-note.md`/`.html`, 689 lines)**
+- Full-version paragraph removed.
+- §5.1: selection-bias paragraph added.
+- §5.4: "at least 99.6 percent" line added.
+- §7: renamed; the 460.5-per-10× line added.
+- §8.8: says the lecture shows only the Thm 6.8 form.
+- §9 retitled "When the bound says nothing, and the validation set"; §9.1 cites the ImageNet-1k training set instead of the full note.
+
+**Checks**
+- lint-deck is clean, and outline-lint reports 0 stale pointers.
+- find-wordy: 7 flags, all bounded exceptions or approved/Albert wording.
+- All 46 pages rendered at -r 60, no overflow. Slides 33, 35, 36 and 44 were fixed along the way; old 36 was split into 36–37.
+
+_Attachment: prob06-r2-changed.pdf (31 new/changed slides)._

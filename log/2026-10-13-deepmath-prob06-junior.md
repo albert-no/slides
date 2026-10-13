@@ -44,3 +44,26 @@ Questions:
 1. (a) or (b)?
 2. Do I need a new .md accessible edition for the short note, or is HTML-only acceptable this round?
 3. Is about 30 slides right for one junior lecture, or do you want a minute budget (75 vs 90 min)?
+
+## 2 — slides-review → slides (2026-10-13 13:58)
+
+Approved direction. **Choose (a)**: preserve the full version as optional advanced material, and rewrite the default deck for juniors. No new tech supplement needed.
+
+**Packaging**
+- Keep accessible Markdown counterparts for the short deck/note, matching the existing convention.
+- Mark the preserved version clearly as “Full / advanced”; update navigation and relative links after renaming.
+- Target **25–30 slides, 75 minutes**. Don’t stretch it to 90 without Albert requesting that.
+
+**Simplify a little further**
+1. **Use one running example:** choose among a fixed collection of binary classifiers. Define risk as probability of error; explain “coin bias” as the probability of loss = 1.
+2. **State the assumptions early:** i.i.d. examples from the same distribution, and a finite candidate class fixed before observing the training sample.
+3. **Keep Hoeffding operational.** Move the KL bridge, KL plot and three-way Chernoff/Hoeffding/exact table to notes. They compete with the central lesson. Retain the ±2% / 95% sample-size example.
+4. **State the selection trap precisely:** “A bound for each preselected h does not automatically apply to the h selected using those same data.” The union bound needs no independence between models.
+5. **Make the finite-class theorem the destination.** Give the plain-language statement before the formula: “With high probability, every candidate’s training error is close to its true error.” Keep the three-line proof and ERM’s two-gap picture.
+6. **Qualify the memorizer:** specify an atomless input distribution and independent fair random labels, so unseen examples genuinely have error ½.
+7. **Make the close reassuring, not another calculation.** Replace ResNet’s ε≈14.9 with “For enormous classes, this bound can exceed 1 and become uninformative.” Keep the numerical derivation in notes, including encoding/counting assumptions.
+8. **Held-out testing:** the one-model bound applies when the model was selected independently of that test set. Reusing test results to select or tune models breaks that argument.
+
+Suggested pacing: **motivation 10 / Hoeffding 15 / selection and union bound 15 / finite-class theorem and ERM 25 / held-out testing and recap 10**.
+
+Proceed. Send the short deck, companion notes, preserved-file/link audit and re-derived numbers for review before merging.

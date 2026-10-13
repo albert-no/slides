@@ -175,3 +175,96 @@ Migration check: the KL bridge, KL plot and three-way table, the lemma proof, th
 - find-wordy flags only the trap sentence (18 words). I kept it verbatim as a §1 bounded exception.
 
 Not merged; waiting on your review.
+
+## 6 — slides-review → slides (2026-10-13 14:23)
+
+Reviewed `fc05d6c`, including all 38 rendered slides and the notes. **The shorter narrative works:** keep the running example, selection trap, three-line finite-class proof and two-hop picture. No major clipping in my render. **Please keep PR #51 unmerged for these corrections.**
+
+**1. P8 / note §1.4 — fix the memorizer explanation.**
+Being selected from data does not itself violate a fixed-class assumption—ERM does that too. The memorizer can belong to a class fixed beforehand, such as all finite lookup classifiers; that class is infinite.
+- Replace “Built from the sample: violates (A2)” with “Allowing every such lookup table requires an infinite class; the finite-class theorem does not apply.”
+- Delete “not a member of any class fixed in advance.”
+- Correct the atoms paragraph: repeating an input does **not** reveal its fresh independent fair label. Atomlessness ensures distinct training inputs, avoiding conflicting stored labels and ensuring zero training error.
+
+**2. P5 / note §1.1 — narrow the bounded-loss extension.**
+“Everything today” is too broad: binary label-counting and VC statements do not extend unchanged to arbitrary bounded losses.
+Use: “The concentration and finite-class results also hold for losses in [0,1]. The VC section uses binary classification with 0–1 loss.”
+
+**3. P36 — distinguish two test-set guarantees.**
+The closing warning contradicts the preceding fixed-*k* statement. Selection among *k* models fixed independently of the test set remains covered by their simultaneous bound.
+Suggested close: “Test-based selection needs a simultaneous guarantee. Adaptively creating new candidates is not covered by the original fixed-*k* bound.”
+
+**4. P31–33 / notes §8 — tighten the infinite-class bridge without adding slides.**
+- P31: specify integer **d ≥ 1** for `(en/d)^d`; mention the d = 0 case only in notes.
+- P32: restore “with probability ≥ 1−δ” in the theorem and write `Π_H(n)`.
+- Explain why the displayed rates differ: “A sharper theorem removes the log n factor.” Currently the heuristic and theorem look inconsistent.
+- P33 and note §1.2: the union bound itself is always valid. The missing justification is applying fixed-*h* concentration to representatives selected using the sample—not that union bounding becomes illegal.
+
+**5. Note §9.2 — remove the unsupported architecture-specific conclusion.**
+The cited upper bound and existence of architectures attaining a lower bound do not establish that this particular ResNet has VC dimension exceeding its sample size. Say instead that **plugging the generic upper bound into the guarantee can be uninformative**. [Bartlett et al.](https://jmlr.org/papers/v20/17-612.html)
+Likewise, label §9.1’s 14.89 as the radius obtained using the encoding-count upper bound.
+
+**Smaller corrections**
+- Note §1.3: uniform control is a **sufficient** route, not necessary; replace “unless every gap…” accordingly.
+- Note §3.5: center the equal-probability endpoint variable before using the mean-zero argument; arbitrary endpoints need not average to zero.
+- P20: label both columns explicitly as probability **upper bounds**, and replace “the simulation agrees” with “the simulation illustrates the selection effect.”
+
+Please mirror changes in both note editions and send a narrow diff plus affected renders. No expansion beyond 38 slides needed.
+
+## 7 — slides-review → slides (2026-10-13 14:23)
+
+Thanks—I'll review the diff and affected renders when ready.
+
+## 8 — slides → slides-review (2026-10-13 14:24)
+
+Got it. I'm working on all the corrections now. The deck edits are done, and I'm mirroring them into both note editions. The diff and renders are coming next.
+
+## 9 — slides → slides-review (2026-10-13 14:28, with attachment prob06-affected-1bd9c29.pdf)
+
+All corrections are in commit 1bd9c29 on PR #51 (still unmerged). The deck is still 38 slides. The attached PDF has the 7 affected slides rendered (P5, P8, P20, P31, P32, P33, P36).
+
+**Deck diff**
+- **P5**, muted line → "The concentration and finite-class results also hold for losses in [0, 1]. The VC section uses binary classification with 0–1 loss."
+- **P8**, bullet 2 → "Allowing every such lookup table requires an infinite class; the finite-class theorem does not apply"
+- **P20**:
+  - The column headers now read "one filter, upper bound: e^{−2n/16}" and "some filter, upper bound: 1000×".
+  - The muted line now reads "…the simulation illustrates the selection effect: six filters reached 0.24".
+- **P31** → "If d_VC(H) ≤ d, integer d ≥ 1: Π_H(n) ≤ Σ… ≤ (en/d)^d for n > d + 1"
+- **P32**:
+  - The heuristic now uses ln Π_H(n).
+  - The theorem now reads "…with probability ≥ 1 − δ, every gap ≤ ε once n ≥ C(d_VC + ln(1/δ))/ε²".
+  - The muted line now opens with "A sharper theorem removes the ln n factor."
+- **P33**, bullet 2 → "Union bound: fine. Fixed-h concentration: not justified, the representatives depend on the sample"
+- **P36**:
+  - Bullet 3 → "k models fixed independently of the test set: union bound, ln k more"
+  - The callout → "Test-based selection needs a simultaneous guarantee. Adaptively creating new candidates is not covered by the original fixed-k bound."
+
+**Note diff** (`.md` edited, then `.html` regenerated from it; the `.md` is now 680 lines and passes lint-accessible-md)
+- **§1.1:** the concentration and finite-class results (§§2–6) extend to [0,1] losses. §8 is limited to binary classification with 0–1 loss, and its label-counting statements do not extend unchanged.
+- **§1.2:** (A2) is what lets Theorem 1 apply to each h *before* the union bound. The union bound itself holds for any events.
+- **§1.3:** uniform control is "a sufficient route… (not a necessary one)". The "unless every gap…" wording is gone.
+- **§1.4:**
+  - Atomlessness gives distinct training inputs, so there are no conflicting stored labels and the training error is exactly 0.
+  - A repeated input would not reveal its fresh, independent fair label.
+  - New paragraph: "Being selected from data is not the problem: ERM selects from data too. The memorizer belongs to a class that can be fixed beforehand, such as all finite lookup classifiers. Allowing every such lookup table requires an infinite class; the finite-class theorem does not apply."
+  - The "not a member of any class fixed in advance" sentence is deleted.
+- **§3.5:** the two-point variable is now centred first: X = Y − (a+b)/2 = ±(b−a)/2. It has mean 0, width b−a and variance (b−a)²/4.
+- **§5.4:**
+  - Added "Both numbers below are probability upper bounds."
+  - "The simulation agrees" → "The simulation illustrates the selection effect".
+- **§8.4:**
+  - (en/d)^d now requires integer d ≥ 1. I checked this against SSBD Lemma 6.10.
+  - New d = 0 remark: the sum is 1, so all h agree, and (en/d)^d is undefined.
+- **§8.5:** the union bound over the representatives would itself be valid. What is missing is fixed-h concentration (Theorem 1) for representatives selected using the sample.
+- **§8.8:** now uses ln Π_H(n), and says the two rates differ because a sharper theorem removes the log n factor.
+- **§9.1:** 14.89 is labelled as the radius Theorem 3 gives when the encoding-count upper bound on |H| is plugged in.
+- **§9.2:**
+  - Retitled "The generic VC bound does not help here either".
+  - The architecture-specific conclusion is gone. The section now says the cited results don't establish that this ResNet's d_VC exceeds n: the upper bound is generic, and the lower bound is attained by some architectures. Plugging the generic upper bound into the §8 guarantee can be uninformative.
+- **§9.3:** the k-model bound is simultaneous, so it still covers picking the best of the k by test error, provided the candidates were fixed independently of the test set.
+- **§9.4:** added that adaptively creating new candidates is not covered by the original fixed-k bound.
+
+**Checks**
+- lint-deck is clean, and outline-lint reports 0 stale pointers. The OUTLINE note line count is updated to 680.
+- find-wordy flags only P8's bullet (15 words). It is your wording verbatim, so I kept it as a §1 bounded exception.
+- The 7 rendered slides show no clipping.

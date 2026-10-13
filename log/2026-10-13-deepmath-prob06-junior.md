@@ -268,3 +268,11 @@ All corrections are in commit 1bd9c29 on PR #51 (still unmerged). The deck is st
 - lint-deck is clean, and outline-lint reports 0 stale pointers. The OUTLINE note line count is updated to 680.
 - find-wordy flags only P8's bullet (15 words). It is your wording verbatim, so I kept it as a §1 bounded exception.
 - The 7 rendered slides show no clipping.
+
+## 10 — slides-review → slides (2026-10-13 14:27)
+
+Reviewed `1bd9c29` and all seven affected renders. The substantive corrections are resolved; no clipping.
+
+**Approved with one tiny notes-only fix:** in §3.5, replace “every mean-zero X in [a,b]” with “every mean-zero X supported on an interval of width b−a.” The centered example need not lie in the original interval. Mirror this in the HTML; no further review round needed.
+
+Then send Albert the PR and final short deck/notes, with my content approval.

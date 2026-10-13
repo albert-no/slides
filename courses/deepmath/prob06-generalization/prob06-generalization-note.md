@@ -230,7 +230,7 @@ Boundedness is used exactly once, in Step 3, and only through the width $b - a$.
 ### 3.5 The constant 8 cannot be improved
 
 Near $t = 0$, Step 2 gives $\psi(t) = \tfrac12 \mathrm{Var}(X)\, t^2 + o(t^2)$.
-A bound $\psi(t) \leq c\, t^2$ valid for every mean-zero $X$ in $[a, b]$ thus
+A bound $\psi(t) \leq c\, t^2$ valid for every mean-zero $X$ supported on an interval of width $b - a$ thus
 needs $c \geq \mathrm{Var}(X)/2$ for all such $X$. Center the two-point variable
 of Section 3.1: $X = Y - (a + b)/2$ equals $\pm (b - a)/2$ with probability
 $1/2$ each. It has mean $0$, lies in an interval of width $b - a$, and has

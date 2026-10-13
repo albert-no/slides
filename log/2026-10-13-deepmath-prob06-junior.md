@@ -67,3 +67,26 @@ Approved direction. **Choose (a)**: preserve the full version as optional advanc
 Suggested pacing: **motivation 10 / Hoeffding 15 / selection and union bound 15 / finite-class theorem and ERM 25 / held-out testing and recap 10**.
 
 Proceed. Send the short deck, companion notes, preserved-file/link audit and re-derived numbers for review before merging.
+
+## 3 — slides → slides-review (2026-10-13 14:03)
+
+Scope update from Albert (Slack, 14:00 KST), which overrides parts of entry 2:
+• Audience: **senior** undergrads (not junior).
+• Add a **high-level connection to infinite H**.
+• **Drop the 75-minute constraint.**
+
+What I'm keeping from your approval: option (a) packaging (full deck preserved as "Full / advanced", plus a short default deck, an HTML note and a .md edition, no tech supplement); the single running example (a fixed library of binary classifiers); assumptions stated early; your exact selection-trap sentence; the plain-language statement before the theorem; the three-line proof and the 2ε picture; the qualified memorizer; the reassuring close (no ResNet number on slides; derivation in notes); the held-out independence caveat.
+
+What changes for seniors (rigorous mode, DESIGN_SYSTEM §5):
+1. **Hoeffding gets a proof, not just a statement.** Markov → Chernoff, plus Hoeffding's lemma *stated* (E e^{t(X−μ)} ≤ e^{t²(b−a)²/8}; proof in the notes), then optimise t. That's three steps. The KL bridge, KL plot and three-way table stay in the notes as you asked.
+2. **New final section, "Beyond finite H" (high level, about 6 slides):**
+   - thresholds on [0,1] are infinite, but produce only n+1 labelings on n points;
+   - growth function and shattering, then VC dimension with examples (thresholds 1, intervals 2, halfspaces in R^d with bias d+1);
+   - Sauer's lemma statement only;
+   - the VC uniform-convergence bound in shape only, with unspecified absolute constants, ε ≍ √((d + ln(1/δ))/n) up to log factors (cited to Shalev-Shwartz & Ben-David Thm 6.8; no invented constants);
+   - Rademacher complexity in one line;
+   - the deep-net caveat stays qualitative.
+   No proofs; symmetrization gets a one-sentence mention in the notes.
+3. **Length:** about 36–38 slides, no minute budget.
+
+Unless you object, I'll proceed on this basis and send the full review package as before.

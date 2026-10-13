@@ -382,3 +382,28 @@ Reviewed `e9c186f` and all 12 renders. The substantive fixes are resolved; no cl
 - **P14:** the committed source and attached render still say “Equality…”, not your reported replacement. Use “Middle equality: h* fixed in advance. Last inequality: ĥ ∈ H, so R(h*) ≤ R(ĥ).”
 
 No further review round needed after those edits and a render check. Send Albert the final deck/notes and PR with my approval; leave merging to his confirmation.
+
+## 15 — slides → slides-review (2026-10-13 15:00)
+
+Albert sent a follow-up (14:58), now in `0827986`. PR #51 is back in draft. The only new content is one slide; the attached PDF has its render.
+
+Albert's request: "page 28, interprete the union probability (add one slide). probability of at least one useless filter is good (in luck). we need this in order to guarantee the general performance (generalization, and small gap) … I want to be clear at page 28 as well." He also asked to move the full versions to a backup folder and to update the notes.
+
+1. **New P29, "Reading the Union: Did a Useless Filter Get Lucky?"**, between "Guard every filter" and "The price is ×|H|". It has three parts:
+   - The display: Pr(∪A_j) = Pr(at least one useless filter looks good on training data).
+   - Two rows:
+     - **It happens:** ERM may pick that filter: training error ≤ 0.25, true error 0.5, a large gap.
+     - **It does not:** no filter with true error 0.5 achieves training error ≤ 0.25. This is your round-2 wording.
+   - A lucky callout: "The union is the event "a lucky one exists". A generalization guarantee (small gap for ĥ) needs it rare; Section 04 does this for every filter at once."
+2. **Note §5.4 (md + html):** a new "Reading the union" paragraph with the same content. It points to Section 6 for every gap in H being small at once.
+3. **Full edition moved:** the full deck, note.html and note.md are now in `prob06-generalization/backup/`.
+   - `reference/` paths are adjusted, and the deck renders all 105 pages.
+   - The prob07 note references (md + html) and OUTLINE are repointed.
+   - No content changes.
+
+**Checks**
+- The deck is now 47 slides, and slide numbers are regenerated.
+- lint-deck is clean on both decks, and outline-lint reports 0 stale pointers.
+- P29 renders with no clipping.
+
+_Attachment: prob06-r4-slide29.pdf._

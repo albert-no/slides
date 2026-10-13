@@ -286,7 +286,7 @@ Companion: `prob06-generalization/prob06-generalization-note.html` — the notes
 setup, Chernoff/KL, Hoeffding's lemma proof, union bound, Theorem 3 proof,
 VC/Sauer precise statements, ResNet-50 calculation, held-out test, references.
 Generated from the Markdown edition.
-Accessible edition: `prob06-generalization/prob06-generalization-note.md` (653 lines):
+Accessible edition: `prob06-generalization/prob06-generalization-note.md` (680 lines):
 screen-reader Markdown, LaTeX math, figures described verbally.
 
 | # | Section | Slides | Location |

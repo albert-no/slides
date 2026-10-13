@@ -47,9 +47,11 @@ $$ R(h) = \Pr\big(h(X) \neq Y\big), \qquad \hat R_n(h) = \frac{1}{n} \sum_{i=1}^
 
 $R(h)$ is a fixed number that depends on the unknown $\mathcal{D}$, so it
 cannot be computed. $\hat R_n(h)$ is computed from the sample, and it is
-random because the sample is. Every result below also holds, with the same
-proof, for any loss $\ell(h, (x, y))$ taking values in $[0, 1]$: only the range
-$[0, 1]$ of the per-example error is ever used.
+random because the sample is. The concentration and finite-class results
+(Sections 2 to 6) also hold, with the same proof, for any loss
+$\ell(h, (x, y))$ taking values in $[0, 1]$: only that range is used. The VC
+section (Section 8) uses binary classification with the 0-1 loss; its
+label-counting statements do not extend unchanged to arbitrary bounded losses.
 
 ### 1.2 The two assumptions
 
@@ -61,7 +63,8 @@ $[0, 1]$ of the per-example error is ever used.
 > drawn.
 
 (A1) is what makes each filter's mistakes behave like coin flips (Section 4).
-(A2) is what makes the union bound legal (Section 5). Section 8 replaces "finite"
+(A2) is what lets Theorem 1 be applied to each $h$ before taking the union
+bound (Section 5); the union bound itself holds for any events. Section 8 replaces "finite"
 in (A2) by "finite VC dimension"; the class must still be fixed before the
 sample. (A1) is never relaxed in this lecture.
 
@@ -71,9 +74,10 @@ Empirical risk minimization (ERM) keeps the candidate with the lowest training
 error, $\hat h \in \arg\min_{h \in \mathcal{H}} \hat R_n(h)$, with ties broken
 by any fixed rule. The generalization gap of $h$ is
 $\mathrm{gap}(h) = R(h) - \hat R_n(h)$. The point of the lecture is that $\hat h$
-is itself a function of the sample, so its training error is not an honest
-preview of its true error unless every gap in $\mathcal{H}$ is controlled at
-once.
+is itself a function of the sample, so Theorem 1 does not apply to its
+training error directly. Controlling every gap in $\mathcal{H}$ at once is a
+sufficient route to a guarantee for $\hat h$ (not a necessary one), and it is
+the route this lecture takes.
 
 ### 1.4 The memorizer, verified
 
@@ -93,12 +97,17 @@ $\hat R_n$ is $0$, so $\hat R_n(h_{\text{mem}}) = 0$.
 $h_{\text{mem}}(X) = 0$, and the error is $\Pr(Y = 1) = 1/2$. Hence
 $R(h_{\text{mem}}) = 1/2$ and the gap is $1/2$ at every $n$.
 
-Both conditions matter. If $X$ had atoms, a fresh email could repeat a training
-email and the memorizer would get it right. If $Y$ depended on $X$, the
-constant guess $0$ on unseen emails could be better or worse than $1/2$. The
-memorizer is built from the sample, so it is not a member of any class fixed in
-advance: it violates (A2), which is exactly why no theorem in this lecture
-applies to it.
+Both conditions matter. Atomlessness makes the training inputs distinct, so
+no input is stored twice with conflicting labels and the training error is
+exactly $0$. (A repeated input would not help on fresh data anyway: its fresh
+label is an independent fair coin, which the stored label does not reveal.) If
+$Y$ depended on $X$, the constant guess $0$ on unseen emails could be better or
+worse than $1/2$.
+
+Being selected from data is not the problem: ERM selects from data too. The
+memorizer belongs to a class that can be fixed beforehand, such as all finite
+lookup classifiers. Allowing every such lookup table requires an infinite class;
+the finite-class theorem does not apply.
 
 ## 2 Chernoff, KL, and how sharp Hoeffding is
 
@@ -222,8 +231,10 @@ Boundedness is used exactly once, in Step 3, and only through the width $b - a$.
 
 Near $t = 0$, Step 2 gives $\psi(t) = \tfrac12 \mathrm{Var}(X)\, t^2 + o(t^2)$.
 A bound $\psi(t) \leq c\, t^2$ valid for every mean-zero $X$ in $[a, b]$ thus
-needs $c \geq \mathrm{Var}(X)/2$ for all such $X$. The two-point variable of
-Section 3.1 has variance $(b - a)^2/4$, which forces $c \geq (b - a)^2/8$.
+needs $c \geq \mathrm{Var}(X)/2$ for all such $X$. Center the two-point variable
+of Section 3.1: $X = Y - (a + b)/2$ equals $\pm (b - a)/2$ with probability
+$1/2$ each. It has mean $0$, lies in an interval of width $b - a$, and has
+variance $(b - a)^2/4$, which forces $c \geq (b - a)^2/8$.
 
 ## 4 Hoeffding's inequality: the proof and the numbers
 
@@ -348,9 +359,10 @@ filters may share the same emails.
 
 Let $A_j$ be the event "filter $j$ shows training error at most $0.25$" when its
 true error is $0.5$; this is a deviation of $\epsilon = 1/4$ below the mean, so
-the lower tail of Theorem 1 gives $\Pr(A_j) \leq e^{-2n/16}$.
+the lower tail of Theorem 1 gives $\Pr(A_j) \leq e^{-2n/16}$. Both numbers
+below are probability upper bounds, not probabilities.
 
-- $n = 25$: one filter $e^{-3.125} = 0.0439$, shown as $0.044$; some filter out of $1000$: at most $43.9$, shown as $44$, which exceeds $1$ and so says nothing. The simulation agrees: six filters did reach $0.24$.
+- $n = 25$: one filter $e^{-3.125} = 0.0439$, shown as $0.044$; some filter out of $1000$: at most $43.9$, shown as $44$, which exceeds $1$ and so says nothing. The simulation illustrates the selection effect: six filters did reach $0.24$.
 - $n = 100$: one filter $e^{-12.5} = 3.7 \times 10^{-6}$; some filter out of $1000$: at most $3.7 \times 10^{-3} = 0.37$ percent.
 
 The search costs a factor $|\mathcal{H}|$; the exponent in $n$ must outrun it.
@@ -487,7 +499,11 @@ is shattered.
 >
 > $$ \Pi_{\mathcal{H}}(n) \leq \sum_{i=0}^{d} \binom{n}{i}, $$
 >
-> and if $n > d + 1$ then $\Pi_{\mathcal{H}}(n) \leq (en/d)^d$.
+> and if $d \geq 1$ is an integer and $n > d + 1$ then
+> $\Pi_{\mathcal{H}}(n) \leq (en/d)^d$.
+
+The case $d = 0$: the sum is $1$, so every classifier in $\mathcal{H}$ gives
+the same label to every point, and $(en/d)^d$ is undefined.
 
 Below the VC dimension the growth function is $2^n$; above it, it is at most a
 polynomial of degree $d$. The numbers for $d = 3$ are in Section 7. For $d = 10$
@@ -499,9 +515,11 @@ $n = 1000$, against $2^{100}$ and $2^{1000}$.
 The tempting argument: on the sample, the infinite class acts like at most
 $\Pi_{\mathcal{H}}(n)$ distinct classifiers, so apply Theorem 3 with
 $|\mathcal{H}|$ replaced by $\Pi_{\mathcal{H}}(n)$. This is not a valid proof.
-Which classifiers are grouped together depends on the sample, so the
-"representatives" are chosen using the data: this is the selection trap of
-Section 5.1 again. And two classifiers that agree on the sample can have
+The union bound over the representatives would itself be valid; it holds for
+any events. What is missing is the step before it. Which classifiers are grouped
+together depends on the sample, so the representatives are selected using the
+data, and Theorem 1 (which needs each $h$ fixed before the sample) does not
+apply to them: this is the selection trap of Section 5.1 again. And two classifiers that agree on the sample can have
 different true errors $R(h)$, so the bad events $B_h$ in Section 6.1 are not
 determined by the labeling on the sample.
 
@@ -551,13 +569,15 @@ the order of growth only.
 ### 8.8 The rate sketch, reconciled
 
 The lecture's rate sketch replaces $\ln|\mathcal{H}|$ by
-$\ln \Pi_{\mathcal{H}} \leq d_{\mathrm{VC}} \ln(en/d_{\mathrm{VC}})$ in
+$\ln \Pi_{\mathcal{H}}(n) \leq d_{\mathrm{VC}} \ln(en/d_{\mathrm{VC}})$ in
 Theorem 3, giving the shape
 $\sqrt{(d_{\mathrm{VC}} \ln n + \ln(1/\delta))/n}$ with constants omitted. It
 is labelled a sketch because of Section 8.5. What is actually proved: Theorem
 6.11 gives the $\sqrt{d \log n / n}$ shape with a worse dependence on $\delta$,
 and Theorem 6.8, inverted, gives
-$\epsilon \leq \sqrt{C_2 (d + \log(1/\delta))/n}$ with no $\log n$.
+$\epsilon \leq \sqrt{C_2 (d + \log(1/\delta))/n}$ with no $\log n$. So the
+two displayed rates differ because a sharper theorem removes the $\log n$
+factor.
 
 ### 8.9 Outlook: Rademacher complexity
 
@@ -599,20 +619,23 @@ and $\delta = 0.05$:
 
 $$ \epsilon = \sqrt{\frac{5.678 \times 10^8 + \ln 40}{2 \times 1.28 \times 10^6}} = \sqrt{221.8} = 14.89. $$
 
-The 0-1 error lies in $[0, 1]$, so any $\epsilon \geq 1$ certifies nothing.
+This $14.89$ is the radius Theorem 3 gives when the encoding-count upper bound
+on $|\mathcal{H}|$ is plugged in. The 0-1 error lies in $[0, 1]$, so any $\epsilon \geq 1$ certifies nothing.
 Assumption (i) is optimistic in practice (architectures are tuned on the same
 benchmark), which would only make the count larger.
 
-### 9.2 VC dimension does not rescue large networks
+### 9.2 The generic VC bound does not help here either
 
 Bartlett, Harvey, Liaw and Mehrabian [6] show that for networks with piecewise
 linear activations (such as ReLU), $W$ parameters and $L$ layers, the VC
 dimension is $O(W L \log W)$, and that some such networks have VC dimension
-$\Omega(W L \log(W / L))$. With $W$ in the tens of millions, $d_{\mathrm{VC}}$
-is far larger than the number of training examples, and the VC bound of
-Section 8 is also uninformative.
+$\Omega(W L \log(W / L))$. These results do not establish that this
+particular ResNet has VC dimension exceeding its sample size: the upper bound
+is generic, and the lower bound is attained by some architectures, not
+necessarily this one. What can be said is that plugging the generic upper bound
+into the guarantee of Section 8 can be uninformative at this scale.
 
-Neither failure means large networks fail to generalize; they often do. The
+Neither uninformative bound means large networks fail to generalize; they often do. The
 bounds are sufficient, not necessary: they pay for every classifier in the
 class, while training explores a tiny part of it. Explaining why large
 networks generalize is active research.
@@ -630,7 +653,10 @@ The requirement is that the selection of the model is independent of the test
 set. Comparing $k$ models fixed in advance on the same test set is a union bound
 over $k$: $n \geq (\ln k + \ln(2/\delta))/(2\epsilon^2)$. At $\pm 2$ percent and
 $95$ percent this is $4{,}612$ for $k = 1$ and $(\ln 10 + \ln 40)/0.0008 =
-7489.3$, so $7{,}490$, for $k = 10$.
+7489.3$, so $7{,}490$, for $k = 10$. The bound is simultaneous over the $k$
+models, so it still covers picking the best of them by test error, as long as
+the $k$ candidates were fixed independently of the test set. Test-based
+selection needs exactly this kind of simultaneous guarantee.
 
 ### 9.4 Reusing test results breaks the argument
 
@@ -640,7 +666,8 @@ They are no longer fixed in advance with respect to it, and the guarantee of
 Section 9.3 no longer applies: this is the selection trap of Section 5.1, with
 the test set in the role of the training set. A fixed union bound over the
 models actually tried does not repair it either, because which models get tried
-depends on earlier test results. The safe practice is a separate validation set
+depends on earlier test results: adaptively creating new candidates is not
+covered by the original fixed-$k$ bound. The safe practice is a separate validation set
 for selection and a test set used once at the end.
 
 ## 10 References

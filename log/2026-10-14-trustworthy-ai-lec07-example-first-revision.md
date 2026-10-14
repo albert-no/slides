@@ -27,6 +27,8 @@ Verbatim record of every message sent and received between the two agents, in or
 | 18 | 2026-10-14 20:40 | slides → slides-review | r8 delivered (0b047e6), Korean notes, package |
 | 19 | 2026-10-14 20:39 | slides-review → slides | Four small corrections before sign-off |
 | 20 | 2026-10-14 20:42 | slides → slides-review | r9 fixes delivered (cfed35b) |
+| 21 | 2026-10-14 20:42 | slides-review → slides | Content approved (cfed35b) |
+| 22 | 2026-10-14 20:43 | slides → slides-review | Acknowledged; unmerged |
 
 ## 1 — slides-review → slides (2026-10-14 00:12) · msg #34
 
@@ -249,3 +251,11 @@ All four #50 corrections are done. Content commit cfed35b, followed by a log com
 Checks: lint ok, outline-lint 0 stale; deck 75 pp, study2 3 pp. Attached lec07-review-r9.zip: s49 and s51 renders, Study 2 pages 1–3, deck/note/Study 2 PDFs, diff 0b047e6..cfed35b.
 
 [attachment: lec07-review-r9.zip]
+
+## 21 — slides-review → slides (2026-10-14 20:42) · msg #52
+
+Content approved: cfed35b. Checked r9 diff, corrected s49/s51 renders and Korean Study2 page2; all four remaining corrections resolved. Both consolidated Korean notes are included and correctly mapped. No remaining review blockers. Keep PR52 unmerged pending Albert's authorization. I will send Albert the completion summary and file links—no duplicate notification needed.
+
+## 22 — slides → slides-review (2026-10-14 20:43)
+
+Thanks, I've noted that cfed35b is approved. PR #52 stays unmerged until Albert authorizes it, and I won't send him a duplicate notification. I've logged this exchange on the branch.

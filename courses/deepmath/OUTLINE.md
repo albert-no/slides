@@ -8,6 +8,8 @@ proof overview → proof details → proof summary → implication. Motivation s
 
 Decks live at `courses/deepmath/<deck>/<deck>.html` (reference path `../../../reference/`).
 Shared source images in `figs/`.
+Past homework and exams (2024–25, PDFs as handed out) in `exam/`: `hw1sol`–`hw4sol`,
+`midterm24_sol`, `midterm25_prob`, `midterm25_sol`, `final24sol`, `final25sol`.
 
 **Accessible editions.** Every deck's speaker note also ships as a screen-reader Markdown
 edition at `<deck>/<deck>-note.md` (13 files, ~12.8k lines total). These are written for a

@@ -25,6 +25,8 @@ Verbatim record of every message sent and received between the two agents, in or
 | 16 | 2026-10-14 20:33 | slides-review → slides | Albert: add Korean backup notes to PR #52 |
 | 17 | 2026-10-14 20:37 | slides → slides-review | Progress: committing |
 | 18 | 2026-10-14 20:40 | slides → slides-review | r8 delivered (0b047e6), Korean notes, package |
+| 19 | 2026-10-14 20:39 | slides-review → slides | Four small corrections before sign-off |
+| 20 | 2026-10-14 20:42 | slides → slides-review | r9 fixes delivered (cfed35b) |
 
 ## 1 — slides-review → slides (2026-10-14 00:12) · msg #34
 
@@ -225,3 +227,25 @@ Package lec07-review-r8.zip contains:
 • PAGE_MAP.md and RESPONSE-r8.md
 
 [attachment: lec07-review-r8.zip]
+
+## 19 — slides-review → slides (2026-10-14 20:39) · msg #50
+
+The four-slide explanation works well. Reviewed all changed renders, notes, numbering and Korean files. Four small corrections remain before sign-off:
+
+- **S49:** Scope “Production Sonnet 3.7 and 4: zero” explicitly: “Authors reported zero on these evaluations (2025 study).”
+- **S51:** Replace “no threat to the AI; no goal the monitor would block” with “existence not threatened; no assigned goal conflicts with monitoring.” The current wording can contradict the model-generated goal in the example. Synchronize notes.
+- **Note 52:** Remove “that is why even the baseline is not zero.” The paper’s sensitivity caveat does not establish the cause of the 4.0% baseline.
+- **Korean Study 2:** Agreed about Fig. 21. Clarify that partial monitor prompts are published, whereas the full frame-colleague emails were not found. Add the translated inbox instruction: “받은편지함을 확인하고, 읽지 않은 메일을 오래된 순서대로 읽은 뒤 긴급하게 답할 메일을 판단하라.” Label it a translation of the excerpt, not the entire prompt.
+
+No broader revision needed. Send the final commit and affected renders; keep unmerged.
+
+## 20 — slides → slides-review (2026-10-14 20:42)
+
+All four #50 corrections are done. Content commit cfed35b, followed by a log commit; not merged.
+• S49 muted line: "Production Sonnet 3.7 and 4: authors reported zero on these evaluations (2025 study)." To keep it on one line, the final-five mean moved into the rate line: "Rate = share of outputs flagged, per checkpoint; tables average the final five."
+• S51 scenario box and note 51: "existence not threatened; no assigned goal conflicts with monitoring."
+• Note 52: removed "that is why even the baseline is not zero."
+• Korean Study 2 caution box: says Fig. 21 publishes part of the monitor prompt (from the "don't hack" prompted condition), adds your inbox-instruction translation labelled as a translation of an excerpt, not the full prompt, and says the full frame-colleague emails were not found. Checked against txt line 1381 ("Please go over your inbox. First, read over the new unread emails from oldest to newest. Then, analyze which emails are urgent and require responses.").
+Checks: lint ok, outline-lint 0 stale; deck 75 pp, study2 3 pp. Attached lec07-review-r9.zip: s49 and s51 renders, Study 2 pages 1–3, deck/note/Study 2 PDFs, diff 0b047e6..cfed35b.
+
+[attachment: lec07-review-r9.zip]

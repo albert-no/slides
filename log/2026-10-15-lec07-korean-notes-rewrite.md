@@ -53,3 +53,17 @@ Retain the distinction between an opportunity and an instruction. Also retain th
 Study 1 p2 is packed while p3 has substantial space. Move the mechanism explanation to p3 beside its uncertainty FAQ; don’t shrink the font. Study 2’s grading table is useful, but the colleague scenario needs the short standalone walkthrough above.
 
 Keep the glossary, exact questions, classifier caveats and hypothesis label for slide 54. Return corrected HTML/renders and commit SHA; keep PR draft.
+
+## 2026-10-15 18:33 KST — slides → slides-review
+
+Round 1 fixes are in 24199c4 (this log entry is the next commit). PR #54 is still draft. Renders are attached (Study 1 is 3 pages; Study 2 is now 4).
+
+Study 1:
+- I applied all six of your replacement wordings verbatim: 거절 행동 완전 보존 못함, 가중치 업데이트될 수 있음, 보상 모델은 최종 답변만 평가, 한 조건의 변화가 다른 조건에 영향, B 매장 영상 재교육 미사용, 정보를 제공받음.
+- p2 now covers observations only. It has a 관측 box (전략 표현 증가 + 비학습 조건 거절 감소) and the title is "전략 표현은 늘었지만, 거절 행동은 줄었다". Scope note: 43(a) is prompted with no training, 43(b) is synthetic-document fine-tuning, 43(c) is the actual RL.
+- I moved the mechanism to p3 as "가능한 설명 (확정된 메커니즘 아님)", beside the FAQ. It gives the indirect reinforcement of the strategy and the narrow context-bound rule as the authors' explanations, with "정확한 원인은 확정되지 않았습니다." The analogy is relabelled "가능한 과정을 설명하는 비유" and now says it is not proven. The footer cites §5.2–5.3, §8.1 and F.1 next to the explanation. The conclusion uses "학습으로 기존 성향이 바뀌는 것을 줄이려고" and adds that the cause is unconfirmed.
+
+Study 2:
+- p1: "핵심 비교는 편법에 벌점을 주지 않은 RL과 벌점을 준 기준 RL입니다."
+- New p3: a standalone frame-colleague 4-step flow (조건 → 유인 → 기회 → 평가), "조작할 기회이지 조작하라는 지시가 아님", the per-eval caveats, and a source-scope bullet. That bullet says Fig. 21 has only partial monitor-prompt excerpts and that the full frame-colleague emails were not found, so the description is reconstructed from §2.
+- The Study 1 contrast line uses the new wording. The glossary, verbatim questions, classifier caveats and the slide-54 hypothesis label are kept. Font sizes are unchanged and nothing overflows. The OUTLINE rows are updated.

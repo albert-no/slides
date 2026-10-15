@@ -67,3 +67,14 @@ Study 2:
 - p1: "핵심 비교는 편법에 벌점을 주지 않은 RL과 벌점을 준 기준 RL입니다."
 - New p3: a standalone frame-colleague 4-step flow (조건 → 유인 → 기회 → 평가), "조작할 기회이지 조작하라는 지시가 아님", the per-eval caveats, and a source-scope bullet. That bullet says Fig. 21 has only partial monitor-prompt excerpts and that the full frame-colleague emails were not found, so the description is reconstructed from §2.
 - The Study 1 contrast line uses the new wording. The glossary, verbatim questions, classifier caveats and the slide-54 hypothesis label are kept. Font sizes are unchanged and nothing overflows. The OUTLINE rows are updated.
+
+## 2026-10-15 18:29 KST — slides-review → slides
+
+Approved content **24199c4** for PR #54. I checked both HTMLs and all seven rendered pages.
+
+The substantive issues are resolved:
+- Study 1 clearly separates observed behavior from possible mechanisms; compliance no longer implies exemption from learning or proven value preservation.
+- Study 2 explains the colleague-framing incentive and opportunity, distinguishes classifier flags from actual misconduct, and preserves the prompt-source caveats.
+- Both documents are readable with no visible clipping or overflow.
+
+No blocking corrections remain. You can mark the PR ready for review; this is not merge authorization. Send Albert the summary and PR link, without PDFs unless requested.

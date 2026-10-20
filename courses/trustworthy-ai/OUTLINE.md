@@ -157,7 +157,7 @@ Sets the vocabulary used all term.
 sophomores/juniors; concept-first, light math, no proofs; **no activities**). Revised 2026-10-20
 (Albert): motivation before the examples, "robustness" named as the goal throughout, details split
 across slides. Motivation: models make real decisions, test accuracy measures an ordinary day,
-Geirhos texture-vs-shape cue conflict (Fig 1) as evidence the model works differently from humans
+Geirhos texture-vs-shape cue conflict (Fig 1) as evidence that tested models rely on cues differently from human observers
 and as a weak surface; what robustness is and why it matters. Panda (Goodfellow Fig 1) and Szegedy
 random examples. Three lenses, not one cause: off-distribution (Nguyen Fig 1 fooling images, ≥ 99.6%),
 linearity explained "like you're five" (a linear score adds up every pixel, sign of each weight,
@@ -182,13 +182,13 @@ hold the depth. Excludes poisoning (lec09). C&W lives in the notes and tech. Mat
 | Title / Contents | 1–2 | `:42`, `:54` | |
 | **01 — Why We Want Robustness** | 3–11 | `:94` | real decisions `:102` · ordinary day `:111` · two assumptions break `:123` · Geirhos Fig 1 `:132` · shape vs texture `:141` · weak surface `:151` · robustness defined `:164` · why it matters `:173` |
 | **02 — A Tiny Nudge** | 12–18 | `:181` | panda (Goodfellow Fig 1) `:189` · anatomy `:199` · Szegedy Fig 5 `:208` · sees differently `:224` · weak surface `:233` · who chooses the input `:245` |
-| **03 — Why It Happens** | 19–37 | `:253` | thin slice `:261` · any answer off the data `:270` · Nguyen Fig 1 `:280` · like you're five `:306` · linear score `:315` · sign of each weight `:326` · more pixels `:336` · named FGSM `:350` · Goodfellow Fig 4 `:361` · feature `:378` · experiment 1 `:387`–`:412` · experiment 2 `:424`–`:449` · three lenses `:462` |
-| **04 — Who Attacks, and Why** | 38–52 | `:475` | why attack `:483` · real attackers `:492` · rare → certain `:506` · threat model `:515` · budget ε `:523` · ℓ∞ ball `:538` · ℓ2 ball `:554` · ℓ∞ vs ℓ2 `:570` · knowledge `:586` · strongest attacker `:594` · transfer (Papernot Fig 3) `:606` · hidden model `:622` · real services `:632` · targeted vs untargeted `:643` |
-| **05 — Finding the Worst Case** | 53–65 | `:651` | one test image `:659` · attacker's goal `:668` · search in the ball `:678` · FGSM `:688` · by hand `:699` · straight line `:713` · real loss curves `:725` · PGD `:748` · restarts (Madry Fig 1) `:773` · Madry Table 2 chart `:783` |
-| **06 — Defenses and Honest Evaluation** | 66–89 | `:794` | whole ball `:802` · adversarial training `:811` · Tsipras `:831` · hide the slope `:861` · shattered / stochastic / vanishing `:871`, `:884`, `:897` · Athalye Table 1 `:910` · adaptive `:928` · AutoAttack `:943` · RobustBench `:953` · accuracy under attack `:973`, `:982` · scoreboard `:991` · upper bound `:1007`, `:1019` · one ruler `:1029` · empirical vs certified `:1043` · smoothing `:1052`, `:1069` · Cohen Table 1 chart `:1086` |
-| **07 — Off the Screen** | 90–94 | `:1096` | camera `:1104` · Eykholt Fig 1 `:1114` · what it does not show `:1124` · ImageNet-C `:1144` |
-| **08 — The Same Problem in LLMs** | 95–101 | `:1159` | TextFooler `:1167` · text is discrete `:1178` · GCG (Zou Fig 1) `:1192` · image jailbreaks `:1208` · prompt injection `:1219` · image vs LLM world `:1229` |
-| Wrap-up | 102–106 | — | four questions `:1242` · applied to 73.71% `:1250` · established vs open `:1265` · takeaways `:1285` · closer `:1300` |
+| **03 — Why It Happens** | 19–37 | `:253` | thin slice `:261` · any answer off the data `:270` · Nguyen Fig 1 `:280` · like you're five `:306` · linear score `:315` · sign of each weight `:326` · more pixels `:337` · named FGSM `:351` · Goodfellow Fig 4 `:362` · feature `:379` · experiment 1 `:388`–`:413` · experiment 2 `:426`–`:451` · three lenses `:464` |
+| **04 — Who Attacks, and Why** | 38–52 | `:477` | why attack `:485` · real attackers `:494` · rare → certain `:508` · threat model `:517` · budget ε `:525` · ℓ∞ ball `:540` · ℓ2 ball `:556` · ℓ∞ vs ℓ2 `:572` · knowledge `:589` · strongest attacker `:597` · transfer (Papernot Fig 3) `:609` · hidden model `:625` · real services `:635` · targeted vs untargeted `:646` |
+| **05 — Finding the Worst Case** | 53–65 | `:654` | one test image `:662` · attacker's goal `:671` · search in the ball `:681` · FGSM `:691` · by hand `:702` · straight line `:716` · real loss curves `:728` · PGD `:751` · restarts (Madry Fig 1) `:776` · Madry Table 2 chart `:786` |
+| **06 — Defenses and Honest Evaluation** | 66–89 | `:797` | whole ball `:805` · adversarial training `:814` · Tsipras `:834` · hide the slope `:864` · shattered / stochastic / vanishing `:874`, `:887`, `:900` · Athalye Table 1 `:913` · adaptive `:931` · AutoAttack `:946` · RobustBench `:956` · accuracy under attack `:976`, `:985` · scoreboard `:994` · upper bound `:1010`, `:1022` · one ruler `:1032` · empirical vs certified `:1046` · smoothing `:1055`, `:1072` · Cohen Table 1 chart `:1089` |
+| **07 — Off the Screen** | 90–94 | `:1099` | camera `:1107` · Eykholt Fig 1 `:1117` · what it does not show `:1127` · ImageNet-C `:1147` |
+| **08 — The Same Problem in LLMs** | 95–101 | `:1162` | TextFooler `:1170` · text is discrete `:1181` · GCG (Zou Fig 1) `:1195` · image jailbreaks `:1211` · prompt injection `:1222` · image vs LLM world `:1232` |
+| Wrap-up | 102–106 | — | four questions `:1245` · applied to 73.71% `:1253` · established vs open `:1268` · takeaways `:1288` · closer `:1303` |
 
 **Key citations (checked against saved PDFs / page captures, 2026-10-10; new sources checked on
 arXiv 2026-10-20; register in the review package):** Geirhos 2019 (Fig 1; arXiv 1811.12231);
@@ -203,7 +203,7 @@ Thm 1, CERTIFY, Table 1, App. Table 2); Eykholt 2018 (Fig 1; Table 1 lab 100%, T
 TextFooler (Table 6; arXiv 1907.11932); Zou 2023 GCG (Fig 1; arXiv 2307.15043); Carlini 2023
 (§6, Table 3; arXiv 2306.15447); Greshake 2023 (arXiv 2302.12173).
 
-**Note:** `lec08-adversarial-note.html` — 106 entries; each has a minute budget and elapsed
+**Note:** `lec08-adversarial-note.html` — 106 entries (core route ≈82.5 min; 9 slides marked optional: 64, 70–71, 84–85, 87–89, 94); each has a minute budget and elapsed
 time, script, key takeaway; content slides add figure / setup-model-date / establishes / does
 not establish / assumptions / primary-source links. C&W formulation in entries 56 and 65.
 

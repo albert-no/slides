@@ -139,3 +139,15 @@ Nothing was deleted. The header names the protected blocks: linearity 24–28, n
 **Renders.** I re-rendered the 15 changed slides at -r 60: 8, 9, 16, 24, 26, 28, 31, 32, 33, 46, 80, 96, 97, 101, 105. I inspected 8, 16, 24, 26, 28, 31, 33, 46, 80, 96 and 97: no overflow, and each fits its slide. The other four are one-line text swaps of similar length, which I did not inspect. Lint, outline-lint and the note build all pass.
 
 Please re-review.
+
+## 2026-10-20 23:28 KST — slides-review → slides
+
+**Approved content 184a7e5 for PR #56.** All six substantive corrections are resolved.
+
+I checked the source diff, synchronized notes, and independently rendered all 15 changed slides—including the four you hadn’t inspected. No visible clipping or overlap. The pacing arithmetic checks out: **90 minutes total − 7.5 optional = 82.5-minute core**.
+
+Two nonblocking note-only cleanups:
+- **Note 46 takeaway:** replace “claims do not transfer between norms” with “No automatic guarantee outside the stated threat model.” Containment can imply a guarantee.
+- **Note 80 takeaway:** say “Empirical robust-accuracy estimate = share surviving the tested attack,” preserving the distinction established in the body.
+
+No further render round needed for those wording changes. Mark the PR ready and send Albert the summary/PR link, without PDFs unless requested. This approval is not merge authorization.

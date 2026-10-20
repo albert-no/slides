@@ -90,3 +90,52 @@ The motivation-first structure is much better. Preserve the scale analogy, separ
 **106 slides is not itself the problem; 90 minutes with no slack is.** Split slides help, but several new concepts still need explanation. Recommend an **80–85-minute core route**, with optional deeper comparisons explicitly marked in the notes—not deleted from Albert’s requested material. Protect time for the linearity bridge, norms, evaluation distinction and LLM caveats.
 
 Please send the focused diff, changed renders and revised pacing route. No broad redesign needed.
+
+## 2026-10-20 23:27 KST — slides → slides-review
+
+Round 2 for PR #56. Content is in 184a7e5; the full diff is `git diff 71f0fa5 184a7e5`.
+
+**1. S46 (ℓ∞ vs ℓ₂).** The two pattern claims are replaced by three lines:
+- "ℓ∞: each coordinate has its own cap ε."
+- "ℓ2: coordinates share one distance budget ε."
+- "At the same ε, every change in the disk is also in the square."
+
+The note adds that neither norm forces the change to be spread out or concentrated.
+
+**2. S31–33 (Ilyas Experiment 1).**
+- S31 is retitled "Experiment 1: Keep the Features One Model Uses". Its two steps now read "Build images that preserve features used by a robust model / a standard model".
+- The S32 key reads "features a robust model uses · features a standard model uses".
+- S33 now opens with "Standard-model training set…", and its highlight reads "Faint patterns we cannot see carry real signal". Under it, a muted line reads "Do non-robust features alone suffice? That is Experiment 2."
+- The notes match, including the caveat that this is not a guaranteed pure non-robust subset.
+
+**3. S96–97 (Jin).**
+- The S96 bottom line is labelled "Separate experiment: BERT on SNLI sentence pairs…".
+- The S97 bullet reads "Human checks found mostly preserved meaning, not always".
+- The note gives 92% MR / 85% SNLI label agreement, and separately the similarity scores 0.91 MR / 0.86 SNLI. I checked both against the Jin PDF's Human Evaluation section.
+
+**4. S24–28 (linearity bridge).**
+- S24 reads "toward a wrong answer, here 'gibbon'".
+- S26 adds the signed example: w₁=+2, raise pixel 1 → +2ε; w₂=−3, lower pixel 2 → +3ε.
+- S28 reads "The same sign-push idea, now applied to the loss rather than one class score." The note says the two are not identical in general.
+
+**5. Scoped human/model claim.**
+- S8 reads "These tested models rely on cues differently from human observers." Its note adds the Geirhos point that training changes shape bias, framed as motivation and not a universal explanation.
+- S9 reads "A model relying on other cues can fail…".
+- S16 reads "A human observer still sees a panda" and "This model relies on cues we cannot even see".
+- S101 reads "models that rely on cues unlike ours have weak spots".
+- S105 reads "Models rely on other cues: robustness is the goal".
+
+**6. S80.** "Also called robust accuracy" is replaced by "An empirical robust-accuracy estimate for this attack, not a guarantee against every allowed change." The note points ahead to S83.
+
+**Pacing.** The note header now gives a core route of about 82.5 min. Nine slides are marked optional, 7.5 min in total:
+- 64 (restarts)
+- 70–71 (trade-off detail)
+- 84–85 (newer-attack example, ruler comparison)
+- 87–89 (smoothing detail)
+- 94 (ImageNet-C)
+
+Nothing was deleted. The header names the protected blocks: linearity 24–28, norms 43–46, measured vs true 80–83, and LLM caveats 96–101. OUTLINE records the route, and its line pointers are shifted for the two added lines.
+
+**Renders.** I re-rendered the 15 changed slides at -r 60: 8, 9, 16, 24, 26, 28, 31, 32, 33, 46, 80, 96, 97, 101, 105. I inspected 8, 16, 24, 26, 28, 31, 33, 46, 80, 96 and 97: no overflow, and each fits its slide. The other four are one-line text swaps of similar length, which I did not inspect. Lint, outline-lint and the note build all pass.
+
+Please re-review.

@@ -143,13 +143,74 @@ Sets the vocabulary used all term.
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
-| Title / Contents | 1–2 | `:30`, `:42` | |
-| **01 — Where Bias Enters** | 3–10 | `:74` | Obermeyer cost proxy `:83` · model learns its world `:108` · three places `:125` · sampling (Gender Shades composition) `:141` · label problem `:164` · feedback loop `:181` · drop race fails `:207` |
-| **02 — Measuring Fairness** | 11–21 | `:229` | notation (Y = recorded outcome) `:236` · four rates `:253` · demographic parity `:287` · equalized odds `:306`, `:321` · Hardt ROC plane `:343` · calibration `:355` · calibration vs PPV `:370` · five criteria `:387` · FICO thresholds `:402` |
-| **03 — COMPAS and Impossibility** | 22–34 | `:414` | what COMPAS is `:421` · FPR by group `:440` · within subgroups `:463` · Northpointe, read by row `:482` · different criteria `:496` · rearrest ≠ offending `:513` · base rates `:530` · Chouldechova `:548` · Kleinberg `:566` · worked example `:580` · why the gap appears here `:605` · context `:627` |
-| **04 — Mitigation** | 35–45 | `:644` | three places `:651` · reweighing `:683`, `:699`, `:718` · reductions `:732`, `:748` · group thresholds `:764` · FICO cost `:775` · empirical tradeoff ≠ optimal frontier `:794` · method cards `:810` |
-| **05 — Beyond Classifiers** | 46–52 | `:824` | Gender Shades (Table 4 redrawn as SVG) `:831` · after the audit `:843` · BBQ `:882`, `:901` · Bianchi `:913` · governance `:932` |
-| **06 — Synthesis** | 53–56 | `:948` | checklist `:955` · takeaways `:969` · closer "Which rate?" `:983` |
+| Title / Contents | 1–2 | `:56`, `:68` | title "Can We Trust It?" |
+| **01 — The Gap** | 3–6 | `:97` | **METR task-length plot** `:105` · AI decides real outcomes `:116` · two curves SVG `:131` |
+| **02 — When It Goes Wrong** | 7–32 | `:155` | *fairness* COMPAS bars SVG `:163` · Gender Shades table `:196` · Amazon pipeline SVG `:211` · *privacy* GPT-2 extraction `:241` · "poem" divergence SVG `:255` · Samsung + Garante `:285` · *reliability* Avianca + Deloitte fake-citation card `:320` · Charlotin 2,039 decisions (CSV export 2026-09-12) `:351` · Air Canada + $1 car chat bubbles `:372` · sycophancy (Sharma Fig. 5) `:401` · *robustness* panda→gibbon `:415` · stop-sign stickers `:429` · *security* Base64 jailbreak `:443` · EchoLeak SVG `:457` · *safety* Uber Tempe `:488` · July 2026 escaped agent timeline `:502` · it came back `:518` · 59% vs 3% scheming `:550` · *provenance* Pope puffer `:576` · Sora frame + NH robocall `:590` · Arup $25M `:604` · *data* Bartz $1.5B SVG `:625` · *society* Canaries plot `:655` · EU pyramid + Korea AI Basic Act `:669` · **the pattern = seven dimensions (7-row table: incidents → question → dimension, + transparency)** `:697` |
+| **03 — Why AI Fails Differently** | 33–36 | `:714` | SW vs learned SVG `:722` · **why the trust problem changed (rule-based → statistical ML → foundation models → agents, cumulative failure classes; SVG)** `:758` · three sources SVG `:809` |
+| **04 — Threat-Model Thinking** | 37–40 | `:841` | **what is a threat model (+adversary SVG, EchoLeak worked example)** `:849` · **attack map 2×2 SVG** `:886` · no threat model, no answer (59/3 + panda/stop sign) `:913` |
+| **05 — This Course** | 41–45 | `:937` | **trust stack SVG carrying all 14 topics** `:945` · concepts first, demos optional `:972` · the goal (headline→property→threat→convincing? flow SVG + 3 drill cards) `:992` · **practice: boardroom questions (four-step frame SVG + "Before you sign" / "Ask the vendor" cards)** `:1028` |
+| Closer | 46 | `:1070` | "Trust?" |
+
+**Visuals (real images, all in `figs/`):** `metr-task-length.png` (METR Time Horizon 1.1,
+Jan 2026, CC BY) `:110` · `gender-shades.png` (Buolamwini & Gebru 2018, Table 4) `:201` ·
+`gpt2-extraction.png` (Carlini et al. 2021, Fig. 1; source PNG is cropped at the bottom)
+`:246` · `sharma-sycophancy.png` (Sharma et al. ICLR 2024, Fig. 5) `:406` ·
+`panda-gibbon.png` (Goodfellow et al. 2015, Fig. 1) `:420` · `eykholt-stopsign.png`
+(Eykholt et al. CVPR 2018, Fig. 1) `:434` · `wei-jailbroken.png` (Wei et al. NeurIPS 2023,
+Fig. 1) `:448` · `uber-tempe-ntsb.jpg` (NTSB, public domain, via Commons) `:493` ·
+`pope-puffer-midjourney.jpg` (AI-generated, PD, via Commons) `:581` · `sora-tokyo.jpg`
+(OpenAI Sora "Tokyo Walk", PD, via Commons) `:595` · `canaries-22-25.png` (Stanford
+Digital Economy Lab, Fig. 2) `:660`. **SVG diagrams:** two curves `:137`, COMPAS bars
+`:169`, Amazon pipeline `:217`, poem divergence `:261`, you⇄model data flow `:301`, fake
+citation card `:336`, chat bubbles `:388`, EchoLeak flow `:463`, patched-route `:524`,
+59%/3% bars `:556`, library→model `:631`, EU risk pyramid `:675`, SW vs learned `:728`,
+three sources `:814`, adversary↔system `:863`, attack map `:892`, trust stack `:951`,
+headline→question flow `:1001`, trust-problem stages `:763`, boardroom four-step frame `:1033`.
+
+**Key citations:** Angwin et al., ProPublica 2016 (COMPAS) · Buolamwini & Gebru, FAT* 2018
+· Dastin, Reuters 2018 (Amazon) · Carlini et al., USENIX Sec 2021 + Nasr et al. 2023
+(extraction) · Bloomberg May 2023 (Samsung) + Garante order 30 Mar 2023 · Mata v. Avianca,
+S.D.N.Y. 2023 · Deloitte/DEWR Oct 2025 · Charlotin, AI Hallucination Cases (CSV export 2026-09-12) ·
+Moffatt v. Air Canada, 2024 BCCRT 149 · Sharma et al. ICLR 2024 + OpenAI Apr 2025 (GPT-4o
+rollback) · Goodfellow et al. ICLR 2015 · Eykholt et al. CVPR 2018 · Wei et al. NeurIPS 2023
+· EchoLeak CVE-2025-32711 · NTSB HWY18MH010 · OpenAI / Hugging Face July 2026 incident
+(HF disclosure 16 Jul + technical timeline 27 Jul; OpenAI statement 21 Jul + report 26 Aug; METR 26 Aug; Black Hat 5 Aug) · arXiv 2603.01608 (scheming) · Midjourney Pope, Mar 2023 · NH
+robocall FCC orders 2024 · Arup deepfake, HK police Feb 2024 · Bartz v. Anthropic, N.D.
+Cal. 2025 (settlement final approval 20 Jul 2026) · Brynjolfsson, Chandar & Chen, "Canaries" 2025–26 · Regulation (EU) 2024/1689 as amended by
+Regulation (EU) 2026/1744 (Digital Omnibus; high-risk → Dec 2027 / Aug 2028) · Korea AI Basic Act (eff. 2026-01-22).
+
+**2026-era facts (re-verified 2026-09-13 against primary sources; note carries as-of dates):** July 2026 OpenAI/Hugging Face incident `:503`–`:549` — 4 Jul Artifactory compromise → rebuilt 6 Jul → re-entry 8 Jul via WebDAV; 9–13 Jul 4.5-day forensic window inside HF (~17,600 actions, 4 exposed third-party accounts); HF disclosed 16 Jul, OpenAI attributed 21 Jul (slide 24 chronology corrected: the bypassed fix was OpenAI's, not HF's); scheming arXiv 2603.01608 v2 (59%/3% from model organisms; realistic settings minimal) `:551`; Charlotin figures recomputed from the CSV export of 2026-09-12 (2,039 decisions; 1,111 in 2026; ≈$320k across 30 US decisions in Q1 2026 — replaces 1,598 / $145k / 15) `:352`; Korea AI Basic Act eff. 22 Jan 2026, fines ≤ KRW 30M with ≥1-year grace `:670`; EU high-risk dates deferred by the Digital Omnibus (in force 27 Jul 2026) `:670`; Canaries rev. 12 Aug 2026 (data through Jun 2026; gap ≈19%, was ≈13% in Aug 2025) `:656`; Bartz settlement final approval 20 Jul 2026 `:626`. Refresh Charlotin and Canaries before each term.
+
+**Key framing:** threat model = *who* / *what they know* (white/black-box) / *what they
+can do* (train/inference-time); "a safety number describes a deployment, not a model"
+(59% vs 3%) motivates section 04. Seven dimensions (fairness, privacy, reliability,
+robustness, security, safety, provenance) + transparency; the 2026-08 deck had six. **The
+seven-dimension taxonomy is stated exactly once** (slide 32, closing section 02); the
+course map is stated exactly once (slide 41, the trust stack). Do not re-add summary
+slides that restate them — Albert cut them on 2026-09-04 as duplicates.
+Citations use `.cite-left`; one exhibit per slide.
+
+**2026-09-13 case-brief pass (44→46):** every real-case slide now carries `What happened` / `Why it happened` / `Why it matters` callouts with year, org, and confirmed status (uncertain items marked *alleged* / *as of*); "Two Curves" labeled *Conceptual illustration*; added "Why the Trust Problem Changed" (§03) and "Practice: Boardroom Questions" (§05, the four-step frame + three vendor questions; every later lecture ends with the same slide). Note re-synced to 46 articles: each incident has a structured *Case background* brief (Background / What happened / Technical connection / What the evidence shows, and does not / Status as of 2026-09 / Teaching cue / Where the course returns to this), *Technical depth — optional* (pointing at `lec01tech.html` slide titles), and a *References* list — 80 links checked 2026-09-13 (openai.com, courtlistener, scworld, securityweek, civilresolutionbc, dewr bot-wall scripted fetches but load in a browser; Reuters Amazon story backed by the Euronews reprint). Cross-lecture pointers live in the note only. `lec01tech.html` unchanged (7 sl; terms match main).
+
+**2026-09-04 trim (46→44):** Albert: "the overall 7 topics part keeps repeating". Cut
+"Seven Dimensions of Trust" (folded into "The Pattern": incident → question → dimension
+name, + transparency line) and "The Course at a Glance" (its 14 topics now sit inside the
+trust-stack layers); dropped the seven-pill row from "The Goal" and replaced it with three
+one-line drill cards (headline → property → adversary). Note re-synced to 44 entries
+(definitions block moved under "The Pattern"; topic-preview block under "The Trust Stack").
+
+**2026-09-03 rebuild (35→46):** added METR plot, Gender Shades, "poem" split-out,
+Samsung/Garante, Charlotin, sycophancy, stop sign, Base64 jailbreak, Uber Tempe, July
+2026 escaped agent (2 slides), scheming, Pope puffer, Arup, Bartz, Canaries, EU/Korea
+rules; cut Group 1–4 preview slides, "What's New in 2025–26", "How We'll Work" divider
+(folded into one slide), knowledge×timing grid (merged into the attack map). Note file
+re-synced to 46 entries (590 lines, now 44): old `.detail` blocks reused verbatim, new
+backgrounds with primary links for every added incident, Group 1–4 previews preserved
+under "The Course at a Glance". `lec01tech.html` untouched.
+
+**2026-08 history:** 47→35 trim (schedule slides, timeline SVG, house analogy cut; Bing
+"Sydney" replaced by EchoLeak; Deloitte added) and note enrichment to script + companion
+notes (227→443 lines, formal definitions + primary-source links).
 
 ## lec08-adversarial.html
 
@@ -444,12 +505,12 @@ Bianchi text-to-image stereotypes; governance obligations and limits (~3.5 min).
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:30`, `:42` | |
-| **01 — Where Bias Enters** | 3–10 | `:74` | mirror `:82` · three places `:99` · sampling (Gender Shades composition) `:115` · label problem `:138` · Obermeyer cost proxy `:155` · feedback loop `:180` · drop race fails `:206` |
-| **02 — Measuring Fairness** | 11–21 | `:227` | notation `:235` · four rates `:252` · demographic parity `:286` · equalized odds `:305`, `:320` · Hardt ROC plane `:342` · calibration `:354` · calibration vs PPV `:369` · five criteria `:386` · FICO thresholds `:401` |
-| **03 — COMPAS and Impossibility** | 22–34 | `:413` | what COMPAS is `:421` · FPR by group `:440` · within subgroups `:463` · Northpointe `:482` · different criteria `:500` · rearrest ≠ offending `:517` · base rates `:534` · Chouldechova `:552` · Kleinberg `:566` · worked example `:580` · why forced `:605` · context `:627` |
-| **04 — Mitigation** | 35–45 | `:643` | three places `:651` · reweighing `:683`, `:698`, `:717` · reductions `:727`, `:743` · group thresholds `:757` · FICO cost `:774` · empirical tradeoff ≠ optimal frontier `:791` · method cards `:808` |
-| **05 — Beyond Classifiers** | 46–52 | `:821` | Gender Shades `:829` · after the audit `:840` · BBQ `:879`, `:898` · Bianchi `:910` · governance `:929` |
-| **06 — Synthesis** | 53–56 | `:944` | checklist `:952` · takeaways `:966` · closer "Which rate?" `:980` |
+| **01 — Where Bias Enters** | 3–10 | `:74` | Obermeyer cost proxy `:83` · model learns its world `:108` · three places `:125` · sampling (Gender Shades composition) `:141` · label problem `:164` · feedback loop `:181` · drop race fails `:207` |
+| **02 — Measuring Fairness** | 11–21 | `:229` | notation (Y = recorded outcome) `:236` · four rates `:253` · demographic parity `:287` · equalized odds `:306`, `:321` · Hardt ROC plane `:343` · calibration `:355` · calibration vs PPV `:370` · five criteria `:387` · FICO thresholds `:402` |
+| **03 — COMPAS and Impossibility** | 22–34 | `:414` | what COMPAS is `:421` · FPR by group `:440` · within subgroups `:463` · Northpointe, read by row `:482` · different criteria `:496` · rearrest ≠ offending `:513` · base rates `:530` · Chouldechova `:548` · Kleinberg `:566` · worked example `:580` · why the gap appears here `:605` · context `:627` |
+| **04 — Mitigation** | 35–45 | `:644` | three places `:651` · reweighing `:683`, `:699`, `:718` · reductions `:732`, `:748` · group thresholds `:764` · FICO cost `:775` · empirical tradeoff ≠ optimal frontier `:794` · method cards `:810` |
+| **05 — Beyond Classifiers** | 46–52 | `:824` | Gender Shades (Table 4 redrawn as SVG) `:831` · after the audit `:843` · BBQ `:882`, `:901` · Bianchi `:913` · governance `:932` |
+| **06 — Synthesis** | 53–56 | `:948` | checklist `:955` · takeaways `:969` · closer "Which rate?" `:983` |
 
 **Key citations (checked against saved PDFs / pages, 2026-10-10):** Obermeyer et al. Science 2019; Buolamwini
 &amp; Gebru FAT* 2018 (Table 4); Raji &amp; Buolamwini AIES 2019; Dwork et al. ITCS 2012; Hardt, Price &amp; Srebro

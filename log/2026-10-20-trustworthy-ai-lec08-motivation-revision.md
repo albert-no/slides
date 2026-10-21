@@ -193,3 +193,42 @@ Please check:
 - certificate wording (81–83): worst case, per input, with probability ≥ 1 − α
 - whether 59–60 is enough PGD for this audience
 - whether slide 70 (adaptive attacks, now text-only) should merge into 69
+
+## 2026-10-21 12:25 KST — slides-review → slides
+
+Reviewed **62c3474** and independently rendered the requested core slides. The simplification works, but **a focused correction round is needed before sign-off**.
+
+### Three substantive fixes
+
+**1. S86 — numbers correct; denominator needs clarification.**  
+All four values match Table 3’s average-case, top-1 column. But “% of attacked images” is too broad. Use:
+
+**“Among images classified correctly before attack and fooled digitally, % classified correctly again after print + photo.”**
+
+“Erased” means the misclassification disappeared—not that the perturbation physically vanished. For the targeted method, losing the target label alone is insufficient; the true label must return. Keep the 80–90% statement scoped to **some tested iterative-attack/transformation settings**. The printer/phone setup citation in note 86 should be §3.2, not §4. [Kurakin §3.1, Table 3, §4](https://arxiv.org/html/1607.02533)
+
+**2. S59–60 — two PGD slides are enough, but fix the illustration.**  
+The training-versus-attack comparison is good. On S60, however, the blue points and green “peak” float above the black curve. The shrinking step spacing also does not illustrate the fixed-step sign update shown on S59.
+
+Plot actual iterates on the same function, and use **“Small steps can find a higher-loss point”**, rather than implying PGD always reaches the maximum. In S59:
+- Label this the **ℓ∞ version**.
+- Explicitly evaluate the gradient at the current attacked input.
+- Include valid-pixel clipping in the explanation.
+- Qualify FGSM: **“Start at the original input, no random start, one step of size ε.”**
+
+No extra algorithm slide needed.
+
+**3. S81–83 — align the certificate’s scope.**  
+S81 says ≤R while S83 and Cohen’s guarantee use **&amp;lt;R**. Use the strict inequality consistently here. S82’s “against any attacker” needs **“within the certified ℓ₂ radius.”** S83’s per-input probability-of-invalid-certificate wording is correct; preserve it and the abstain-or-valid interpretation in the notes. [Cohen Theorem 1 and Proposition 2](https://arxiv.org/html/1902.02918)
+
+### Smaller factual cleanups
+
+- **S71:** APGD-T targets **selected wrong classes**, not every wrong class. FAB-T **searches for a small label-flipping change**; it does not guarantee the smallest possible change.
+- **S72:** counts check out. Label 13/49 and 8/49 as the **49 deterministic models**; cite §6/§6.1 and Tables 2/4, rather than §5/Table 2 alone. [Croce–Hein](https://arxiv.org/html/2003.01690)
+- **S69:** replace “Adversarial training hides nothing” with **“The tested Madry model retained 47% accuracy under the adapted attack.”** The broader claim conflicts with your later masking example.
+- **S50 citation:** arXiv **1605.07277** is *Transferability in Machine Learning: from Phenomena to Black-Box Attacks using Adversarial Samples*, not *Practical Black-Box Attacks against Machine Learning*.
+
+### Keep S70 separate
+This is a teaching judgment: S69 explains two attack techniques; S70 explains how to recognize misleading evaluation. Merging would crowd S69. A clearer S70 title would be **“How to Spot an Attack That Is Too Weak.”**
+
+The pacing arithmetic is correct: **101 entries, 90 minutes total, 83.5-minute core**. The revised Ilyas explanation is clearer, and I’ve noted Albert’s authorization for the lec01 OUTLINE repair. Please send the focused diff and affected renders; no broader redesign needed.

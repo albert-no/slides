@@ -888,8 +888,8 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>59. PGD: Gradient Descent, Run Uphill</h2>
 <p class="pace">Worst case · ≈1.5 min · elapsed ≈54 min</p>
 <p>The fix uses an idea you already know. Training runs gradient descent on the weights: a small step that lowers the loss, repeated. PGD, Projected Gradient Descent, runs the same loop on the input, uphill: a small step that raises the loss.</p>
-<p>One step: move the input a little, α, along the gradient sign. Then clip: if the step left the allowed ball around x, or the valid pixel range, pull it back. Repeat K times; PGD-7 or PGD-20 means 7 or 20 steps. In practice PGD also starts from a random point in the ball, and may restart several times and keep the worst point found.</p>
-<p>FGSM is the one-step case: a single step of size ε. Madry and colleagues made PGD the default attack for evaluating and training robust models.</p>
+<p>Here is the ℓ∞ version. One step: move the current input x′ a little, α, along the sign of the gradient taken at x′ itself, not at the original x. Then clip: pull the result back into the ε-ball around x and into the valid pixel range [0, 1]. Repeat K times; PGD-7 or PGD-20 means 7 or 20 steps. In practice PGD also starts from a random point in the ball, and may restart several times and keep the worst point found.</p>
+<p>FGSM is the one-step case: start at the original input, no random start, one step of size ε. Madry and colleagues made PGD the default attack for evaluating and training robust models.</p>
 <p><span class="kt">Key takeaway:</span> PGD = gradient descent on the input, uphill, clipped back into the ball.</p>
 <div class="detail">
 <h3>The figure</h3>
@@ -908,11 +908,11 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article>
-<h2>60. PGD on the Same Curve: Small Steps Find the Peak</h2>
+<h2>60. PGD on the Same Curve: Small Steps Can Find a Higher-Loss Point</h2>
 <p class="pace">Worst case · ≈1 min · elapsed ≈55 min</p>
-<p>Back to the same curve. Start at x, take a small step, check the slope again, repeat. The blue steps climb and stop at the peak instead of jumping past it.</p>
+<p>Back to the same curve. Start at x, take a small step of fixed size α, check the slope again, repeat. The blue iterates climb along the curve; the green one is the best point found, with higher loss than where FGSM lands, the hollow FGSM endpoint. PGD is not guaranteed to reach the peak; here, it finds a better point than one jump.</p>
 <p>If a step would leave the shaded range, it is clipped back. Every point PGD visits is a legal attack under the threat model; an attack that wanders outside the range is answering a different question.</p>
-<p><span class="kt">Key takeaway:</span> Small steps that re-check the slope find the peak, and stay inside the range.</p>
+<p><span class="kt">Key takeaway:</span> Small steps that re-check the slope can find a higher-loss point, and stay inside the range.</p>
 <div class="detail">
 <h3>The figure</h3>
 <p>Illustrative 1-D figure drawn for this lecture: L(u) = sin u with small steps reaching the maximum at u = π/2.</p>
@@ -1068,9 +1068,9 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h2>69. Adapted Attacks Rebuild the Missing Gradient</h2>
 <p class="pace">Defenses + evaluation · ≈1.5 min · elapsed ≈64 min</p>
 <p>How do you attack a defense that hides its gradient? Rebuild the gradient. If a step is broken or flat, use a smooth stand-in for it when computing the gradient: BPDA, Backward Pass Differentiable Approximation. If the defense is random on each pass, average the gradient over many random draws: EOT, Expectation over Transformation.</p>
-<p>The result. Athalye and colleagues examined the nine white-box defenses accepted at ICLR 2018. Seven hid gradients. With adapted attacks, six were broken completely and one partially. Madry et al.'s adversarial training hides nothing, and it held at 47%.</p>
+<p>The result. Athalye and colleagues examined the nine white-box defenses accepted at ICLR 2018. Seven hid gradients. With adapted attacks, six were broken completely and one partially. The tested Madry et al. adversarially trained model retained 47% accuracy under the adapted attack.</p>
 <p>Hiding the gradient delays the attacker; it does not stop one. A conference-reviewed defense is not a verified defense.</p>
-<p><span class="kt">Key takeaway:</span> Adapted attacks broke the defenses that hid gradients; adversarial training held.</p>
+<p><span class="kt">Key takeaway:</span> Adapted attacks broke the defenses that hid gradients; the tested Madry model retained 47%.</p>
 <div class="detail">
 <h3>The figure</h3>
 <p>Two-box schematic drawn for this lecture.</p>
@@ -1091,7 +1091,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article>
-<h2>70. Adaptive Attacks: Attack the Defense You Have</h2>
+<h2>70. How to Spot an Attack That Is Too Weak</h2>
 <p class="pace">Defenses + evaluation · ≈0.5 min · elapsed ≈64.5 min</p>
 <p>How to evaluate a defense properly: an adaptive attack, designed for that specific defense. Read the defense and target its weak part; BPDA and EOT are two standard tools.</p>
 <p>And two diagnostics. With a huge ε, accuracy should go to about zero; if not, suspect the attack. If a black-box attack beats a white-box one, suspect masked gradients. These raise red flags; passing them proves nothing.</p>
@@ -1111,7 +1111,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>71. AutoAttack: Four Attacks, Nothing to Tune</h2>
 <p class="pace">Defenses + evaluation · ≈1 min · elapsed ≈65.5 min</p>
-<p>Adaptive attacks need expertise, and each paper used to pick its own attack and settings. AutoAttack, from Croce and Hein, is a fixed test everyone can run. It bundles four attacks. A PGD that tunes its own step size, APGD-CE. The same, aimed at each wrong class in turn, APGD-T. One that looks for the smallest change that flips the answer, FAB-T. And Square, which uses no gradients at all, only queries; that catches defenses that merely hide gradients.</p>
+<p>Adaptive attacks need expertise, and each paper used to pick its own attack and settings. AutoAttack, from Croce and Hein, is a fixed test everyone can run. It bundles four attacks. A PGD that tunes its own step size, APGD-CE. The same, aimed at selected wrong classes, APGD-T. One that searches for a small change that flips the answer, FAB-T; it does not guarantee the smallest. And Square, which uses no gradients at all, only queries; that catches defenses that merely hide gradients.</p>
 <p>An input counts as robust only if all four fail. There are no settings to tune, and the same settings are used for every model, so a defense's authors cannot weaken the test by choosing them.</p>
 <p><span class="kt">Key takeaway:</span> A fixed bundle of diverse attacks, with nothing to tune.</p>
 <div class="detail">
@@ -1129,14 +1129,14 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>72. What AutoAttack Changed: Reported Numbers Fell</h2>
 <p class="pace">Defenses + evaluation · ≈1 min · elapsed ≈66.5 min</p>
-<p>What happened when they ran it on published defenses. More than 50 models re-tested. For all but one, robust accuracy came out lower than the paper had reported. By more than 10 points for 13 of 49 models, and by more than 30 points for 8.</p>
+<p>What happened when they ran it on published defenses. More than 50 models re-tested. For all but one, robust accuracy came out lower than the paper had reported. Among the 49 deterministic defenses, by more than 10 points for 13, and by more than 30 points for 8.</p>
 <p>The implications. One fixed test makes numbers comparable across papers, and it catches many evaluations that were too weak. But AutoAttack is not adapted to each defense, so its number is still an upper bound: a custom attack may go lower.</p>
 <p><span class="kt">Key takeaway:</span> A standard strong test lowered almost every reported number; it is still an upper bound.</p>
 <div class="detail">
 <h3>The figure</h3>
 <p>Four stat boxes drawn for this lecture from Croce &amp; Hein.</p>
 <h3>Setup, model, date</h3>
-<p>Croce &amp; Hein, ICML 2020: abstract, §5, Table 2 (reported vs AutoAttack robust accuracy); CIFAR-10, CIFAR-100, MNIST, ImageNet; ℓ∞ and ℓ2.</p>
+<p>Croce &amp; Hein, ICML 2020: abstract, §6, §6.1, Tables 2 and 4 (reported vs AutoAttack robust accuracy; the 13 and 8 count the 49 deterministic models); CIFAR-10, CIFAR-100, MNIST, ImageNet; ℓ∞ and ℓ2.</p>
 <h3>What this establishes</h3>
 <p>Many published robustness numbers were overstated by weak evaluation.</p>
 <h3>What this does not establish</h3>
@@ -1275,8 +1275,8 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article>
 <h2>81. What a Certificate Promises</h2>
 <p class="pace">Defenses + evaluation · ≈1 min · elapsed ≈72.5 min</p>
-<p>What exactly is a certificate? It is about one input x. A certificate is a proof that every change δ with ℓ2 size at most R leaves the prediction unchanged.</p>
-<p>Every change, not an average one: the green ball contains every point within R, including the attacker's best, the red worst case. So it holds against adversarial changes, not just random ones. Outside the ball there is no promise. And another input needs its own proof, with its own radius.</p>
+<p>What exactly is a certificate? It is about one input x. A certificate is a proof that every change δ with ℓ2 size smaller than R leaves the prediction unchanged.</p>
+<p>Every change, not an average one, within the certified ℓ2 radius: the green ball contains every point within R, including the attacker's best, the red worst case. So it holds against adversarial changes, not just random ones. Outside the ball there is no promise. And another input needs its own proof, with its own radius.</p>
 <p><span class="kt">Key takeaway:</span> A certificate is a worst-case guarantee, for one input, within a stated radius.</p>
 <div class="detail">
 <h3>The figure</h3>
@@ -1358,21 +1358,21 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article>
-<h2>86. Printing and Photos Can Erase Faint Patterns</h2>
+<h2>86. Printing and Photos Can Undo Faint Attacks</h2>
 <p class="pace">Off the screen · ≈1 min · elapsed ≈77 min</p>
-<p>Kurakin, Goodfellow and Bengio printed adversarial ImageNet images on an office printer, photographed them with a phone, and classified the photos with Inception v3. The bars show the destruction rate: the share of attacked images that stop fooling the model after print and photo. ε is on the 0–255 scale.</p>
-<p>One-step attacks at ε = 16: only 12.5% erased, so most survive. At ε = 2: 61.1% erased; faint patterns are fragile. Iterative attacks, which make finer changes, lose more: 40.4%, and 72.2% for the targeted version.</p>
-<p>So yes: resolution, colour and the camera can wash out a faint perturbation. Blur or JPEG alone erased up to 80 to 90% of iterative attacks. But not all: many attacked images still fooled the model.</p>
-<p><span class="kt">Key takeaway:</span> Print and camera erase many faint attacks, not all.</p>
+<p>Kurakin, Goodfellow and Bengio printed adversarial ImageNet images on an office printer, photographed them with a phone, and classified the photos with Inception v3. The bars show the destruction rate. The denominator is images the model got right before the attack and that the digital attack fooled; the bar is the share of those classified correctly again after print and photo. For the targeted method, that means the true label returns. ε is on the 0–255 scale.</p>
+<p>One-step attacks at ε = 16: only 12.5% correct again, so most survive. At ε = 2: 61.1%; faint patterns are fragile. Iterative attacks, which make finer changes, lose more: 40.4%, and 72.2% for the targeted version.</p>
+<p>So yes: resolution, colour and the camera can wash out a faint perturbation. In some tested settings, blur or JPEG alone undid 80 to 90% of iterative attacks. But not all: many attacked images still fooled the model.</p>
+<p><span class="kt">Key takeaway:</span> Print and camera undo many faint attacks, not all.</p>
 <div class="detail">
 <h3>The figure</h3>
 <p>Bar chart redrawn for this lecture from Kurakin et al. Table 3 (average case, top-1 destruction rate).</p>
 <h3>Setup, model, date</h3>
-<p>Kurakin, Goodfellow &amp; Bengio, ICLR 2017 workshop, §4: Ricoh office printer at 600 dpi, Nexus 5x phone photos, Inception v3, ImageNet validation images; methods: fast (one step), basic iterative, iterative least-likely class (targeted).</p>
+<p>Kurakin, Goodfellow &amp; Bengio, ICLR 2017 workshop, §3.1 (destruction rate), §3.2: Ricoh office printer at 600 dpi, Nexus 5x phone photos, Inception v3, ImageNet validation images; methods: fast (one step), basic iterative, iterative least-likely class (targeted).</p>
 <h3>What this establishes</h3>
 <p>Physical transformations destroy a substantial share of digital attacks, more for fine-grained ones; a large share still survives.</p>
 <h3>What this does not establish</h3>
-<p>That printing is a defense: attacks optimized for the transformation survive it (next slide). Per §4, blur, noise and JPEG reach 80–90% destruction for iterative attacks but none reaches 100%.</p>
+<p>That printing is a defense: attacks optimized for the transformation survive it (next slide). Per §4, in some settings blur, noise and JPEG reach 80–90% destruction for iterative attacks, but none reaches 100%.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1607.02533">Kurakin, Goodfellow &amp; Bengio, "Adversarial Examples in the Physical World" (ICLR 2017 workshop)</a> — printed and photographed adversarial images, destruction rates, and blur/noise/JPEG.</li>

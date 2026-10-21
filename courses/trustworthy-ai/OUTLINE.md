@@ -246,11 +246,11 @@ hold the depth. Excludes poisoning (lec09). C&W lives in the notes and tech. Mat
 | **02 — A Tiny Nudge** | 12–18 | `:181` | panda (Goodfellow Fig 1) `:189` · anatomy `:199` · Szegedy Fig 5 `:208` · sees differently `:224` · weak surface `:233` · who chooses the input `:245` |
 | **03 — Why It Happens** | 19–36 | `:253` | thin slice `:261` · any answer off the data `:270` · Nguyen Fig 1 `:280` · like you're five `:306` · linear score `:315` · sign of each weight `:326` · more pixels `:337` · named FGSM `:351` · feature `:362` · experiment 1 `:371`–`:396` · experiment 2 `:411`–`:436` · three lenses `:449` |
 | **04 — Who Attacks, and Why** | 37–52 | `:462` | why attack `:470` · real attackers `:479` · rare → certain `:493` · threat model (stop-sign example) `:502` · budget ε `:512` · ℓ∞ ball `:527` · ℓ2 ball `:543` · ℓ∞ vs ℓ2 `:559` · knowledge `:576` · strongest attacker `:584` · transfer (Papernot Fig 3) `:596` · hidden model `:612` · real services setup `:622`, result `:632` · targeted vs untargeted `:642` |
-| **05 — Finding the Worst Case** | 53–61 | `:650` | one test image `:658` · attacker's goal `:667` · search in the ball `:677` · FGSM `:687` · one jump misses the peak `:698` · PGD = gradient descent uphill `:711` · PGD on the curve `:724` · Madry Table 2 chart `:734` |
-| **06 — Defenses and Honest Evaluation** | 62–84 | `:745` | whole ball `:753` · adversarial training `:762` · Tsipras `:782` · hide the gradient `:812` · adapted attacks BPDA/EOT `:822` · adaptive `:833` · AutoAttack `:846`, what it changed `:856` · RobustBench `:868` · accuracy under attack `:878`, `:887` · scoreboard `:896` · upper bound `:912`, `:924` · one ruler `:934` · empirical vs certified `:948` · certificate `:957` · smoothing `:966`, `:983` · Cohen Table 2 chart `:1000` |
-| **07 — Off the Screen** | 85–90 | `:1010` | print + photo (Kurakin Table 3 chart) `:1018` · EOT fix `:1029` · Eykholt Fig 1 `:1039` · what it does not show `:1049` · ImageNet-C `:1069` |
-| **08 — The Same Problem in LLMs** | 91–97 | `:1084` | TextFooler `:1092` · text is discrete `:1103` · GCG (Zou Fig 1) `:1117` · image jailbreaks `:1133` · prompt injection `:1144` · image vs LLM world `:1154` |
-| Wrap-up | 98–101 | — | four questions `:1167` · established vs open `:1175` · takeaways `:1195` · closer `:1210` |
+| **05 — Finding the Worst Case** | 53–61 | `:650` | one test image `:658` · attacker's goal `:667` · search in the ball `:677` · FGSM `:687` · one jump misses the peak `:698` · PGD = gradient descent uphill `:711` · PGD on the curve (can find a higher-loss point) `:725` · Madry Table 2 chart `:735` |
+| **06 — Defenses and Honest Evaluation** | 62–84 | `:746` | whole ball `:754` · adversarial training `:763` · Tsipras `:783` · hide the gradient `:813` · adapted attacks BPDA/EOT `:823` · spot a weak attack `:834` · AutoAttack `:847`, what it changed `:857` · RobustBench `:869` · accuracy under attack `:879`, `:888` · scoreboard `:897` · upper bound `:913`, `:925` · one ruler `:935` · empirical vs certified `:949` · certificate `:958` · smoothing `:967`, `:984` · Cohen Table 2 chart `:1001` |
+| **07 — Off the Screen** | 85–90 | `:1011` | print + photo can undo faint attacks (Kurakin Table 3 chart) `:1019` · EOT fix `:1030` · Eykholt Fig 1 `:1040` · what it does not show `:1050` · ImageNet-C `:1070` |
+| **08 — The Same Problem in LLMs** | 91–97 | `:1085` | TextFooler `:1093` · text is discrete `:1104` · GCG (Zou Fig 1) `:1118` · image jailbreaks `:1134` · prompt injection `:1145` · image vs LLM world `:1155` |
+| Wrap-up | 98–101 | — | four questions `:1168` · established vs open `:1176` · takeaways `:1196` · closer `:1211` |
 
 **Key citations (checked against saved PDFs / page captures, 2026-10-10; new sources checked on
 arXiv 2026-10-20; register in the review package):** Geirhos 2019 (Fig 1; arXiv 1811.12231);
@@ -258,10 +258,10 @@ Nguyen 2015 (Fig 1; arXiv 1412.1897); Goodfellow 2015 (Figs 1, 2; §3); Szegedy 
 Ilyas 2019 (Fig 1; Fig 2, App. Table 7); Papernot 2017 substitute attack (arXiv 1602.02697); Papernot 2016 (Fig 3; §5,
 Tables 3–4); Madry 2018 (Figs 1, 3; Table 2; ℓ2 appendix); Carlini & Wagner 2017 (notes/tech);
 Tsipras 2019 (Fig 1); Athalye 2018 (Table 1; §4 BPDA/EOT); Athalye EOT 2018; Carlini 2019
-checklist; Tramèr 2020; Croce & Hein 2020 (AutoAttack; all but 1 of >50 lower, 13 of 49 >10 pts, 8 >30 pts); Croce 2021 RobustBench
+checklist; Tramèr 2020; Croce & Hein 2020 (AutoAttack; all but 1 of >50 lower, 13 of 49 deterministic >10 pts, 8 >30 pts; §6, §6.1, Tables 2 and 4); Croce 2021 RobustBench
 (§3 restrictions); robustbench.github.io CIFAR-10 ℓ∞ snapshot 10 Oct 2026; Cohen 2019 (Figs 2–3,
 Thm 1, CERTIFY, Table 1, App. Table 2); Eykholt 2018 (Fig 1; Table 1 lab 100%, Table 3 drive-by
-100/84.8%, constrained pseudo-random crop 70%); Kurakin, Goodfellow & Bengio 2017 (Table 3 destruction rates, §4; arXiv 1607.02533); Hendrycks & Dietterich 2019 (Fig 1); Jin 2020
+100/84.8%, constrained pseudo-random crop 70%); Kurakin, Goodfellow & Bengio 2017 (§3.1 destruction rate, §3.2 setup, Table 3, §4; arXiv 1607.02533); Hendrycks & Dietterich 2019 (Fig 1); Jin 2020
 TextFooler (Table 6; arXiv 1907.11932); Zou 2023 GCG (Fig 1; arXiv 2307.15043); Carlini 2023
 (§6, Table 3; arXiv 2306.15447); Greshake 2023 (arXiv 2302.12173).
 

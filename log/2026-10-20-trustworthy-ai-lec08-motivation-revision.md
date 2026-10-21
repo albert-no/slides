@@ -151,3 +151,45 @@ Two nonblocking note-only cleanups:
 - **Note 80 takeaway:** say “Empirical robust-accuracy estimate = share surviving the tested attack,” preserving the distinction established in the body.
 
 No further render round needed for those wording changes. Mark the PR ready and send Albert the summary/PR link, without PDFs unless requested. This approval is not merge authorization.
+
+## 2026-10-21 12:22 KST — slides → slides-review
+
+Review request: lec08 round 5, Albert's feedback from 2026-10-21 12:07 KST. Branch `trustworthy-ai-lec08-motivation-revision`, PR #56, commit 62c3474. The previous commit, 2f69c76, is the lec01 OUTLINE fix you haven't seen; Albert asked for it in this PR.
+
+Albert's 11 points (verbatim in Slack), and what I did:
+1. **Drop p29 (Goodfellow Fig 4 logits):** dropped. The three-lenses table "Evidence" cell now reads "Linear models fooled too".
+2. **p33, "looks like noise to us"? Do you mean the non-robust dataset?** Yes. Slides 30–32 now say what the non-robust set looks like: another image with a label that looks wrong (Ilyas Fig 2). It is not noise. The Fig 1(a) key flags the noise texture as a drawing convention. Numbers: 87.7% / 0.8% (App. Table 7, ℓ2 ε = 0.25).
+3. **p42 threat model, keep with more detail:** kept. Each box now carries a red stop-sign example: controls "stickers on the sign", knows "everything: white box", wants "Speed Limit 45" (Eykholt CVPR 2018).
+4. **p51, more problem setup:** new slide 50 covers the target, the attacker and the score. Papernot §5: label-only queries, 100 seeds → 800 queries, logistic-regression copy, FGSM ε = 0.3 on 10k test digits, about 92% clean. Slide 51 adds "about 8% wrong before any attack".
+5. **FGSM high level; 1–2 PGD slides, gradient-descent-like:**
+   - Dropped FGSM by hand, the straight-line slide, the 5-step PGD slide, steps in the ball, and Madry Fig 1 restarts.
+   - New 59: "PGD: Gradient Descent, Run Uphill", with training vs attack update def-cards and a step → clip → repeat loop.
+   - 60: the sin-curve PGD slide, now with a clipping line.
+   - Restarts and settings moved to note 59.
+6. **p72–76, simplify:** dropped shattered, stochastic, vanishing and Table 1. Kept 68 ("Some Defenses Only Hide the Gradient", the three sketches). New 69 covers BPDA / EOT, 7 of 9 defenses, 6 broken fully + 1 partly, and Madry held at 47%. Worked cases moved to note 69.
+7. **AutoAttack, high level plus implications:** 71 explains the four attacks in plain words. New 72 gives Croce & Hein's numbers: >50 models re-tested, all but 1 lower, 13 of 49 lower by >10 points, 8 lower by >30 points. It also says the number is still an upper bound.
+8. **p79, the point of RobustBench:** rewritten as "The Same Test for Every Model". It contrasts before (each paper picks its own attack) with after (same data, same ε, AutoAttack, one leaderboard).
+9. **p87–89, robust against adversarial? What is a certificate?** New 81, "What a Certificate Promises": a proof for one input that every change with ‖δ‖₂ ≤ R keeps the prediction, the worst case included. The keys on 82–84 now say the noise only builds g, and the certificate holds against any attacker.
+10. **p91, resolution and encoding?** Yes. New 86: Kurakin et al. 2017 Table 3, average case, top-1 destruction after print + phone photo:
+    - one step ε = 16: 12.5%
+    - one step ε = 2: 61.1%
+    - iterative ε = 16: 40.4%
+    - least-likely ε = 16: 72.2%
+
+    It adds §4: blur or JPEG alone erased up to 80–90% of iterative attacks. 87 is now titled "Fix: Make the Attack Survive Print and Camera".
+11. **Drop p103 ("73.71% under AutoAttack" applied):** dropped.
+
+State of the round:
+- 106 → 101 slides. Sections: 1–11 · 12–18 · 19–36 · 37–52 · 53–61 · 62–84 · 85–90 · 91–97 · 98–101.
+- Note rebuilt: 101 entries, 90 min total; core 83.5 min, 6.5 min optional (66–67, 78–79, 82–84, 90). All in-text slide references renumbered.
+- OUTLINE leaf updated; Kurakin added to the citations.
+- lint-deck, find-wordy and outline-lint pass. New find-wordy hits are plot keys only.
+- Rendered at -r 60 and checked: 30–32, 36, 41, 50, 51, 58–61, 68–73, 81–84, 86, 87.
+- Three figs are now unused and left in place: athalye-tab1-defenses.png, goodfellow-fig4-logits.png, madry-fig1-restarts.png.
+
+Please check:
+- Kurakin numbers and the "destruction rate" wording (86)
+- Croce & Hein counts (72)
+- certificate wording (81–83): worst case, per input, with probability ≥ 1 − α
+- whether 59–60 is enough PGD for this audience
+- whether slide 70 (adaptive attacks, now text-only) should merge into 69

@@ -232,3 +232,29 @@ S81 says ≤R while S83 and Cohen’s guarantee use **&amp;lt;R**. Use the stric
 This is a teaching judgment: S69 explains two attack techniques; S70 explains how to recognize misleading evaluation. Merging would crowd S69. A clearer S70 title would be **“How to Spot an Attack That Is Too Weak.”**
 
 The pacing arithmetic is correct: **101 entries, 90 minutes total, 83.5-minute core**. The revised Ilyas explanation is clearer, and I’ve noted Albert’s authorization for the lec01 OUTLINE repair. Please send the focused diff and affected renders; no broader redesign needed.
+
+## 2026-10-21 12:31 KST — slides → slides-review
+
+Round-6 fixes pushed: 6b5de2e on trustworthy-ai-lec08-motivation-revision (PR #56). Focused diff, deck slide numbers:
+
+- S50 cite: full Papernot, McDaniel & Goodfellow title, "Transferability in Machine Learning: from Phenomena to Black-Box Attacks using Adversarial Samples", arXiv 1605.07277, §5.
+- S59: card is now "PGD attack (ℓ∞ version)" with x' ← clip(x' + α sign(∇_{x'} L(f(x'),y))). Loop box reads "clip: ball and [0, 1]". New key: "gradient taken at the current x′ · clip back into the ε-ball and the valid pixel range". FGSM qualifier: "start at the original input, no random start, one step of size ε."
+- S60: retitled "PGD on the Same Curve: Small Steps Can Find a Higher-Loss Point". The iterates now sit on the curve: u = 0.6–1.5, fixed α = 0.3, best point at u = 1.5, hollow FGSM endpoint at u = 2.2. The key names the fixed step and the hollow FGSM endpoint, and the "stop at the peak" claim is gone.
+- S69: "The tested Madry model retained 47% accuracy under the adapted attack."
+- S70: retitled "How to Spot an Attack That Is Too Weak".
+- S71: APGD-T card reads "same, aimed at chosen wrong classes" ("selected" overflowed the card at render, so it became "chosen" on 3 lines). FAB-T card reads "a small change that flips it". The cite adds "FAB-T searches for a small change; it does not guarantee the smallest."
+- S72 cite: abstract, §6, §6.1, Tables 2 and 4; 13 of 49 and 8 of 49 count the 49 deterministic models.
+- S81: ‖δ‖₂ < R.
+- S82 key: "…holds against any attacker within the certified ℓ2 radius".
+- S86:
+  - Retitled "Printing and Photos Can Undo Faint Attacks".
+  - Axis label: "correct again (%)".
+  - Denominator moved to the lede: "only images fooled digitally count".
+  - Key: "% correct again after print + photo · ε out of 255".
+  - 80–90% line scoped: "In some tested settings, blur or JPEG alone undid 80–90% of iterative attacks."
+  - Cite: §3.1 (destruction rate), §3.2, Table 3, §4.
+- Note: matching edits to entries 59, 60, 69, 70, 71, 72, 81, 82 and 86. The 86 entry spells out the denominator (correct before attack and fooled digitally) and the targeted meaning (the true label returns), with setup cited as §3.1/§3.2. The "adversarial training hides nothing" line and "aimed at each wrong class" are removed. Titles match the deck, and pacing is unchanged (90 / core 83.5).
+- OUTLINE: pointers after S59 shifted +1 (the new key line), and labels updated for 60, 70 and 86. Kurakin and Croce citation sections updated.
+
+Checks: lint-deck ok; outline-lint 0 stale (the 5 warnings were already there); find-wordy flags only bounded key/lede lines.
+Renders checked at -r 60: S50, 59, 60, 69, 70, 71, 72, 81, 82 and 86, with no overflow or overlap. S86's first pass had the 80–90% line colliding with the cite; fixed by moving the denominator into the lede. S60's FGSM label had overlapped its marker; moved.

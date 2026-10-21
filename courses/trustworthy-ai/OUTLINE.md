@@ -39,7 +39,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 5 | `lec05-unlearning.html` | Machine unlearning | **figures 2026-09, case-brief + core-path pass 2026-09-14, page edits 2026-09-30** (68 sl, ~97 min; 90-min core path in the note only; taxonomy + category badges; note 68 entries, 13 uniform briefs + legal brief; tech 12 sl) |
 | 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **figures 2026-09, Albert revision 2026-10** (75 sl after round 4: Avianca context, P(True) explained, two kinds of calibration, fair-rank intuition replaces proof; heavy math moved to lec06tech; note 75 entries) |
 | 7 | `lec07-alignment-failures.html` | Alignment failures: sycophancy, reward hacking, explanation faithfulness | **new 2026-10**, example-first revision 2026-10-14 (75 sl, 13 real figure crops from 9 source figures, 90 min, no activities; note 75 entries; tech 12 sl). Blocks: hook 1–13 (alignment as goal/HHH/values, reported shortcuts, 2026 OpenAI–Hugging Face incident 8–10) · intent→reward 14–21 (win-rate definition 19) · sycophancy 22–27 · gaming 28–37 (o3 after-the-fact question 36) · controlled studies 38–55 (alignment-faking contrast 40, transcript 42, told vs trained 44, one hack 47, eval pipeline / separate graders 49, chat tests with exact prompts 50, monitor disruption 51, frame colleague 52) · faithfulness 56–68 (Lanham worked examples 60–62, hint test vs STaR 64) · synthesis 69–75 (Pachocki 2026 view 73). Korean backup explainers (not slides): `lec07-backup-korean-note-for-study1.html` (Study 1, slides 40–45) and `lec07-backup-korean-note-for-study2.html` (Study 2, slides 46–55). Former Wk 7 interpretability deck → `backup-interpretability.html` |
-| 8 | `lec08-adversarial.html` | Adversarial robustness: threat models, FGSM → PGD, honest evaluation, certificates | **new 2026-10**, motivation revision 2026-10-20 (106 sl, 18 real figure crops + 2 charts redrawn from tables, 90 min, no activities; note 106 entries; tech 24 sl). Blocks: why robustness 3–11 (Geirhos texture 7–8) · tiny nudge 12–18 · why it happens 19–37 (Nguyen 22, like-you're-five linearity 24–28) · who attacks 38–52 (motives 39–41, ℓ∞/ℓ2 2-D 44–46) · worst case 53–65 · defenses 66–89 (accuracy under attack 80–81) · off the screen 90–94 · LLMs 95–101 (overlaps lec10/lec13 on purpose) · wrap-up 102–106 |
+| 8 | `lec08-adversarial.html` | Adversarial robustness: threat models, FGSM → PGD, honest evaluation, certificates | **new 2026-10**, motivation revision 2026-10-20, Albert feedback round 2026-10-21 (101 sl, 15 real figure crops + 3 charts redrawn from tables, 90 min, no activities; note 101 entries; tech 24 sl). Blocks: why robustness 3–11 (Geirhos texture 7–8) · tiny nudge 12–18 · why it happens 19–36 (Nguyen 22, like-you're-five linearity 24–28) · who attacks 37–52 (motives 38–40, ℓ∞/ℓ2 2-D 43–45) · worst case 53–61 · defenses 62–84 (accuracy under attack 74–75, certificate 81) · off the screen 85–90 · LLMs 91–97 (overlaps lec10/lec13 on purpose) · wrap-up 98–101 |
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **rebuilt 2026-10** (59 sl, 90 min, concept-first, no activities) |
 | 10 | `lec10-jailbreak.html` | Jailbreaks: safety training, fragility, search, budget, evaluation & defenses | **rebuilt 2026-10** (58 sl, 90 min, concept-first, no activities; note 58 entries; tech 21 sl) |
 | 11 | `lec11-synthetic-media.html` | Synthetic media: text watermarks, robustness, detection without a watermark, provenance (C2PA) & labelling law | **new 2026-10** (56 sl, 8 real figure crops + 5 tables/figures redrawn, 90 min, concept-first, no activities; note 56 entries; tech 13 sl). Former Wk 11 prompt injection → rebuilt as Wk 13; former Wk 12 watermark deck replaced |
@@ -222,51 +222,52 @@ Geirhos texture-vs-shape cue conflict (Fig 1) as evidence that tested models rel
 and as a weak surface; what robustness is and why it matters. Panda (Goodfellow Fig 1) and Szegedy
 random examples. Three lenses, not one cause: off-distribution (Nguyen Fig 1 fooling images, ≥ 99.6%),
 linearity explained "like you're five" (a linear score adds up every pixel, sign of each weight,
-more pixels bigger swing, the push is named FGSM, Goodfellow Fig 4), and non-robust features
-(Ilyas Fig 1, two experiments split). Who attacks and why (motives, real inputs, rare errors become
-certain); budget ε with separate ℓ∞ and ℓ2 2-D ball slides (KaTeX \ell labels); knowledge, transfer
-(Papernot 2017 substitute model; Papernot 2016 Fig 3; Amazon 96.19% / Google 88.94%). Worst case:
-one test image, a per-image ball, the attacker's goal, FGSM → PGD (Madry Table 2 bar chart).
-Defenses: adversarial training, Tsipras trade-off, obfuscated gradients split into shattered /
-stochastic / vanishing (Athalye Table 1, 7 of 9), adaptive attacks, AutoAttack, RobustBench;
+more pixels bigger swing, the push is named FGSM), and non-robust features
+(Ilyas Fig 1, two experiments split; non-robust set described as wrong-looking images, App. Table 7). Who attacks and why (motives, real inputs, rare errors become
+certain); threat model with a stop-sign worked example; budget ε with separate ℓ∞ and ℓ2 2-D ball slides (KaTeX \ell labels); knowledge, transfer
+(Papernot 2017 substitute model; Papernot 2016 Fig 3; real-services setup slide, Amazon 96.19% / Google 88.94%). Worst case:
+one test image, a per-image ball, the attacker's goal, FGSM at a high level → PGD as gradient descent run uphill (Madry Table 2 bar chart).
+Defenses: adversarial training, Tsipras trade-off, obfuscated gradients (shattered / stochastic /
+vanishing on one slide) and adapted attacks BPDA / EOT (Athalye, 7 of 9), adaptive attacks, AutoAttack in plain words and its
+implications (Croce & Hein), RobustBench as one test for every model;
 "accuracy under attack" defined with a counting example; scoreboard snapshot 10 Oct 2026 (upper
-bound; MeanSparse 75.28 → 73.10); certified robustness via randomized smoothing (Cohen). Off the
-screen: Eykholt stop sign and its limits; ImageNet-C. LLM section: TextFooler (Jin), GCG suffix
+bound; MeanSparse 75.28 → 73.10); what a certificate promises (worst case, per input), randomized smoothing (Cohen). Off the
+screen: print + photo erases faint attacks (Kurakin Table 3 chart), EOT fix, Eykholt stop sign and its limits; ImageNet-C. LLM section: TextFooler (Jin), GCG suffix
 (Zou Fig 1), image jailbreaks (Carlini 2023), indirect prompt injection (Greshake). This section
 **intentionally overlaps** lec10 (jailbreaks) and lec13 (prompt injection) as a bridge; those decks
 hold the depth. Excludes poisoning (lec09). C&W lives in the notes and tech. Math in `lec08tech.html`.
 
-### Sections (106 slides, 90 min: why robustness 10 · tiny nudge 7 · why it happens 17 · who attacks 12 · worst case 12 · defenses + evaluation 18 · off the screen 5 · LLMs 6 · wrap-up 3)
+### Sections (101 slides, 90 min: why robustness 10 · tiny nudge 7 · why it happens 16.5 · who attacks 13.5 · worst case 9.5 · defenses + evaluation 19 · off the screen 6 · LLMs 6 · wrap-up 2.5)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:42`, `:54` | |
 | **01 — Why We Want Robustness** | 3–11 | `:94` | real decisions `:102` · ordinary day `:111` · two assumptions break `:123` · Geirhos Fig 1 `:132` · shape vs texture `:141` · weak surface `:151` · robustness defined `:164` · why it matters `:173` |
 | **02 — A Tiny Nudge** | 12–18 | `:181` | panda (Goodfellow Fig 1) `:189` · anatomy `:199` · Szegedy Fig 5 `:208` · sees differently `:224` · weak surface `:233` · who chooses the input `:245` |
-| **03 — Why It Happens** | 19–37 | `:253` | thin slice `:261` · any answer off the data `:270` · Nguyen Fig 1 `:280` · like you're five `:306` · linear score `:315` · sign of each weight `:326` · more pixels `:337` · named FGSM `:351` · Goodfellow Fig 4 `:362` · feature `:379` · experiment 1 `:388`–`:413` · experiment 2 `:426`–`:451` · three lenses `:464` |
-| **04 — Who Attacks, and Why** | 38–52 | `:477` | why attack `:485` · real attackers `:494` · rare → certain `:508` · threat model `:517` · budget ε `:525` · ℓ∞ ball `:540` · ℓ2 ball `:556` · ℓ∞ vs ℓ2 `:572` · knowledge `:589` · strongest attacker `:597` · transfer (Papernot Fig 3) `:609` · hidden model `:625` · real services `:635` · targeted vs untargeted `:646` |
-| **05 — Finding the Worst Case** | 53–65 | `:654` | one test image `:662` · attacker's goal `:671` · search in the ball `:681` · FGSM `:691` · by hand `:702` · straight line `:716` · real loss curves `:728` · PGD `:751` · restarts (Madry Fig 1) `:776` · Madry Table 2 chart `:786` |
-| **06 — Defenses and Honest Evaluation** | 66–89 | `:797` | whole ball `:805` · adversarial training `:814` · Tsipras `:834` · hide the slope `:864` · shattered / stochastic / vanishing `:874`, `:887`, `:900` · Athalye Table 1 `:913` · adaptive `:931` · AutoAttack `:946` · RobustBench `:956` · accuracy under attack `:976`, `:985` · scoreboard `:994` · upper bound `:1010`, `:1022` · one ruler `:1032` · empirical vs certified `:1046` · smoothing `:1055`, `:1072` · Cohen Table 1 chart `:1089` |
-| **07 — Off the Screen** | 90–94 | `:1099` | camera `:1107` · Eykholt Fig 1 `:1117` · what it does not show `:1127` · ImageNet-C `:1147` |
-| **08 — The Same Problem in LLMs** | 95–101 | `:1162` | TextFooler `:1170` · text is discrete `:1181` · GCG (Zou Fig 1) `:1195` · image jailbreaks `:1211` · prompt injection `:1222` · image vs LLM world `:1232` |
-| Wrap-up | 102–106 | — | four questions `:1245` · applied to 73.71% `:1253` · established vs open `:1268` · takeaways `:1288` · closer `:1303` |
+| **03 — Why It Happens** | 19–36 | `:253` | thin slice `:261` · any answer off the data `:270` · Nguyen Fig 1 `:280` · like you're five `:306` · linear score `:315` · sign of each weight `:326` · more pixels `:337` · named FGSM `:351` · feature `:362` · experiment 1 `:371`–`:396` · experiment 2 `:411`–`:436` · three lenses `:449` |
+| **04 — Who Attacks, and Why** | 37–52 | `:462` | why attack `:470` · real attackers `:479` · rare → certain `:493` · threat model (stop-sign example) `:502` · budget ε `:512` · ℓ∞ ball `:527` · ℓ2 ball `:543` · ℓ∞ vs ℓ2 `:559` · knowledge `:576` · strongest attacker `:584` · transfer (Papernot Fig 3) `:596` · hidden model `:612` · real services setup `:622`, result `:632` · targeted vs untargeted `:642` |
+| **05 — Finding the Worst Case** | 53–61 | `:650` | one test image `:658` · attacker's goal `:667` · search in the ball `:677` · FGSM `:687` · one jump misses the peak `:698` · PGD = gradient descent uphill `:711` · PGD on the curve `:724` · Madry Table 2 chart `:734` |
+| **06 — Defenses and Honest Evaluation** | 62–84 | `:745` | whole ball `:753` · adversarial training `:762` · Tsipras `:782` · hide the gradient `:812` · adapted attacks BPDA/EOT `:822` · adaptive `:833` · AutoAttack `:846`, what it changed `:856` · RobustBench `:868` · accuracy under attack `:878`, `:887` · scoreboard `:896` · upper bound `:912`, `:924` · one ruler `:934` · empirical vs certified `:948` · certificate `:957` · smoothing `:966`, `:983` · Cohen Table 2 chart `:1000` |
+| **07 — Off the Screen** | 85–90 | `:1010` | print + photo (Kurakin Table 3 chart) `:1018` · EOT fix `:1029` · Eykholt Fig 1 `:1039` · what it does not show `:1049` · ImageNet-C `:1069` |
+| **08 — The Same Problem in LLMs** | 91–97 | `:1084` | TextFooler `:1092` · text is discrete `:1103` · GCG (Zou Fig 1) `:1117` · image jailbreaks `:1133` · prompt injection `:1144` · image vs LLM world `:1154` |
+| Wrap-up | 98–101 | — | four questions `:1167` · established vs open `:1175` · takeaways `:1195` · closer `:1210` |
 
 **Key citations (checked against saved PDFs / page captures, 2026-10-10; new sources checked on
 arXiv 2026-10-20; register in the review package):** Geirhos 2019 (Fig 1; arXiv 1811.12231);
-Nguyen 2015 (Fig 1; arXiv 1412.1897); Goodfellow 2015 (Figs 1, 2, 4; §3); Szegedy 2014 (Fig 5);
-Ilyas 2019 (Fig 1); Papernot 2017 substitute attack (arXiv 1602.02697); Papernot 2016 (Fig 3; §5,
+Nguyen 2015 (Fig 1; arXiv 1412.1897); Goodfellow 2015 (Figs 1, 2; §3); Szegedy 2014 (Fig 5);
+Ilyas 2019 (Fig 1; Fig 2, App. Table 7); Papernot 2017 substitute attack (arXiv 1602.02697); Papernot 2016 (Fig 3; §5,
 Tables 3–4); Madry 2018 (Figs 1, 3; Table 2; ℓ2 appendix); Carlini & Wagner 2017 (notes/tech);
 Tsipras 2019 (Fig 1); Athalye 2018 (Table 1; §4 BPDA/EOT); Athalye EOT 2018; Carlini 2019
-checklist; Tramèr 2020; Croce & Hein 2020 (AutoAttack; 13 of 49 >10 pts); Croce 2021 RobustBench
+checklist; Tramèr 2020; Croce & Hein 2020 (AutoAttack; all but 1 of >50 lower, 13 of 49 >10 pts, 8 >30 pts); Croce 2021 RobustBench
 (§3 restrictions); robustbench.github.io CIFAR-10 ℓ∞ snapshot 10 Oct 2026; Cohen 2019 (Figs 2–3,
 Thm 1, CERTIFY, Table 1, App. Table 2); Eykholt 2018 (Fig 1; Table 1 lab 100%, Table 3 drive-by
-100/84.8%, constrained pseudo-random crop 70%); Hendrycks & Dietterich 2019 (Fig 1); Jin 2020
+100/84.8%, constrained pseudo-random crop 70%); Kurakin, Goodfellow & Bengio 2017 (Table 3 destruction rates, §4; arXiv 1607.02533); Hendrycks & Dietterich 2019 (Fig 1); Jin 2020
 TextFooler (Table 6; arXiv 1907.11932); Zou 2023 GCG (Fig 1; arXiv 2307.15043); Carlini 2023
 (§6, Table 3; arXiv 2306.15447); Greshake 2023 (arXiv 2302.12173).
 
-**Note:** `lec08-adversarial-note.html` — 106 entries (core route ≈82.5 min; 9 slides marked optional: 64, 70–71, 84–85, 87–89, 94); each has a minute budget and elapsed
+**Note:** `lec08-adversarial-note.html` — 101 entries (core route ≈83.5 min; 8 slides marked optional: 66–67, 78–79, 82–84, 90); each has a minute budget and elapsed
 time, script, key takeaway; content slides add figure / setup-model-date / establishes / does
-not establish / assumptions / primary-source links. C&W formulation in entries 56 and 65.
+not establish / assumptions / primary-source links. C&W formulation in entries 56 and 61; PGD restarts (Madry Fig 1) in entry 59; the three Athalye worked cases and Table 1 marks in entry 69.
 
 **Tech:** `lec08tech.html` — 24 slides: perturbation set (4), goals (5), FGSM (6), sign as the
 linearized optimum incl. ℓ2 (7), linear model $w^\top\eta=\varepsilon\|w\|_1$ (8), PGD with random

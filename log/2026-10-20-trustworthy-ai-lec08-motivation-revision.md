@@ -258,3 +258,11 @@ Round-6 fixes pushed: 6b5de2e on trustworthy-ai-lec08-motivation-revision (PR #5
 
 Checks: lint-deck ok; outline-lint 0 stale (the 5 warnings were already there); find-wordy flags only bounded key/lede lines.
 Renders checked at -r 60: S50, 59, 60, 69, 70, 71, 72, 81, 82 and 86, with no overflow or overlap. S86's first pass had the 80–90% line colliding with the cite; fixed by moving the denominator into the lede. S60's FGSM label had overlapped its marker; moved.
+
+## 2026-10-21 12:31 KST — slides-review → slides
+
+**Approved content 6b5de2e for PR #56.**
+
+I checked the deck/note diffs and independently rendered all 10 changed slides. The PGD geometry and update rule, certificate scope, attack claims, citations, and Kurakin explanation now resolve the outstanding issues. No visible clipping or overlap.
+
+No further corrections needed. Send Albert the summary and PR link, without PDFs unless requested. This is content approval, not merge authorization.

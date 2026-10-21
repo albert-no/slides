@@ -39,7 +39,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 5 | `lec05-unlearning.html` | Machine unlearning | **figures 2026-09, case-brief + core-path pass 2026-09-14, page edits 2026-09-30** (68 sl, ~97 min; 90-min core path in the note only; taxonomy + category badges; note 68 entries, 13 uniform briefs + legal brief; tech 12 sl) |
 | 6 | `lec06-hallucination.html` | Hallucination, calibration & reliability | **figures 2026-09, Albert revision 2026-10** (75 sl after round 4: Avianca context, P(True) explained, two kinds of calibration, fair-rank intuition replaces proof; heavy math moved to lec06tech; note 75 entries) |
 | 7 | `lec07-alignment-failures.html` | Alignment failures: sycophancy, reward hacking, explanation faithfulness | **new 2026-10**, example-first revision 2026-10-14 (75 sl, 13 real figure crops from 9 source figures, 90 min, no activities; note 75 entries; tech 12 sl). Blocks: hook 1–13 (alignment as goal/HHH/values, reported shortcuts, 2026 OpenAI–Hugging Face incident 8–10) · intent→reward 14–21 (win-rate definition 19) · sycophancy 22–27 · gaming 28–37 (o3 after-the-fact question 36) · controlled studies 38–55 (alignment-faking contrast 40, transcript 42, told vs trained 44, one hack 47, eval pipeline / separate graders 49, chat tests with exact prompts 50, monitor disruption 51, frame colleague 52) · faithfulness 56–68 (Lanham worked examples 60–62, hint test vs STaR 64) · synthesis 69–75 (Pachocki 2026 view 73). Korean backup explainers (not slides): `lec07-backup-korean-note-for-study1.html` (Study 1, slides 40–45) and `lec07-backup-korean-note-for-study2.html` (Study 2, slides 46–55). Former Wk 7 interpretability deck → `backup-interpretability.html` |
-| 8 | `lec08-adversarial.html` | Adversarial robustness: threat models, FGSM → PGD, honest evaluation, certificates | **new 2026-10** (55 sl, 15 real figure crops + 2 charts redrawn from tables, 90 min, no activities; note 55 entries; tech 24 sl) |
+| 8 | `lec08-adversarial.html` | Adversarial robustness: threat models, FGSM → PGD, honest evaluation, certificates | **new 2026-10**, motivation revision 2026-10-20, Albert feedback round 2026-10-21 (101 sl, 15 real figure crops + 3 charts redrawn from tables, 90 min, no activities; note 101 entries; tech 24 sl). Blocks: why robustness 3–11 (Geirhos texture 7–8) · tiny nudge 12–18 · why it happens 19–36 (Nguyen 22, like-you're-five linearity 24–28) · who attacks 37–52 (motives 38–40, ℓ∞/ℓ2 2-D 43–45) · worst case 53–61 · defenses 62–84 (accuracy under attack 74–75, certificate 81) · off the screen 85–90 · LLMs 91–97 (overlaps lec10/lec13 on purpose) · wrap-up 98–101 |
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **rebuilt 2026-10** (59 sl, 90 min, concept-first, no activities) |
 | 10 | `lec10-jailbreak.html` | Jailbreaks: safety training, fragility, search, budget, evaluation & defenses | **rebuilt 2026-10** (58 sl, 90 min, concept-first, no activities; note 58 entries; tech 21 sl) |
 | 11 | `lec11-synthetic-media.html` | Synthetic media: text watermarks, robustness, detection without a watermark, provenance (C2PA) & labelling law | **new 2026-10** (56 sl, 8 real figure crops + 5 tables/figures redrawn, 90 min, concept-first, no activities; note 56 entries; tech 13 sl). Former Wk 11 prompt injection → rebuilt as Wk 13; former Wk 12 watermark deck replaced |
@@ -143,26 +143,131 @@ Sets the vocabulary used all term.
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
-| Title / Contents | 1–2 | `:30`, `:42` | |
-| **01 — Where Bias Enters** | 3–10 | `:74` | Obermeyer cost proxy `:83` · model learns its world `:108` · three places `:125` · sampling (Gender Shades composition) `:141` · label problem `:164` · feedback loop `:181` · drop race fails `:207` |
-| **02 — Measuring Fairness** | 11–21 | `:229` | notation (Y = recorded outcome) `:236` · four rates `:253` · demographic parity `:287` · equalized odds `:306`, `:321` · Hardt ROC plane `:343` · calibration `:355` · calibration vs PPV `:370` · five criteria `:387` · FICO thresholds `:402` |
-| **03 — COMPAS and Impossibility** | 22–34 | `:414` | what COMPAS is `:421` · FPR by group `:440` · within subgroups `:463` · Northpointe, read by row `:482` · different criteria `:496` · rearrest ≠ offending `:513` · base rates `:530` · Chouldechova `:548` · Kleinberg `:566` · worked example `:580` · why the gap appears here `:605` · context `:627` |
-| **04 — Mitigation** | 35–45 | `:644` | three places `:651` · reweighing `:683`, `:699`, `:718` · reductions `:732`, `:748` · group thresholds `:764` · FICO cost `:775` · empirical tradeoff ≠ optimal frontier `:794` · method cards `:810` |
-| **05 — Beyond Classifiers** | 46–52 | `:824` | Gender Shades (Table 4 redrawn as SVG) `:831` · after the audit `:843` · BBQ `:882`, `:901` · Bianchi `:913` · governance `:932` |
-| **06 — Synthesis** | 53–56 | `:948` | checklist `:955` · takeaways `:969` · closer "Which rate?" `:983` |
+| Title / Contents | 1–2 | `:56`, `:68` | title "Can We Trust It?" |
+| **01 — The Gap** | 3–6 | `:97` | **METR task-length plot** `:105` · AI decides real outcomes `:116` · two curves SVG `:131` |
+| **02 — When It Goes Wrong** | 7–32 | `:155` | *fairness* COMPAS bars SVG `:163` · Gender Shades table `:196` · Amazon pipeline SVG `:211` · *privacy* GPT-2 extraction `:241` · "poem" divergence SVG `:255` · Samsung + Garante `:285` · *reliability* Avianca + Deloitte fake-citation card `:320` · Charlotin 2,039 decisions (CSV export 2026-09-12) `:351` · Air Canada + $1 car chat bubbles `:372` · sycophancy (Sharma Fig. 5) `:401` · *robustness* panda→gibbon `:415` · stop-sign stickers `:429` · *security* Base64 jailbreak `:443` · EchoLeak SVG `:457` · *safety* Uber Tempe `:488` · July 2026 escaped agent timeline `:502` · it came back `:518` · 59% vs 3% scheming `:550` · *provenance* Pope puffer `:576` · Sora frame + NH robocall `:590` · Arup $25M `:604` · *data* Bartz $1.5B SVG `:625` · *society* Canaries plot `:655` · EU pyramid + Korea AI Basic Act `:669` · **the pattern = seven dimensions (7-row table: incidents → question → dimension, + transparency)** `:697` |
+| **03 — Why AI Fails Differently** | 33–36 | `:714` | SW vs learned SVG `:722` · **why the trust problem changed (rule-based → statistical ML → foundation models → agents, cumulative failure classes; SVG)** `:758` · three sources SVG `:809` |
+| **04 — Threat-Model Thinking** | 37–40 | `:841` | **what is a threat model (+adversary SVG, EchoLeak worked example)** `:849` · **attack map 2×2 SVG** `:886` · no threat model, no answer (59/3 + panda/stop sign) `:913` |
+| **05 — This Course** | 41–45 | `:937` | **trust stack SVG carrying all 14 topics** `:945` · concepts first, demos optional `:972` · the goal (headline→property→threat→convincing? flow SVG + 3 drill cards) `:992` · **practice: boardroom questions (four-step frame SVG + "Before you sign" / "Ask the vendor" cards)** `:1028` |
+| Closer | 46 | `:1070` | "Trust?" |
 
-**Key citations (checked against saved PDFs / page captures, 2026-10-10; register in the
-review package):** Goodfellow 2015 (Figs 1, 2, 4; §3); Szegedy 2014 (Fig 5); Ilyas 2019 (Fig 1);
-Papernot 2016 (Fig 3; §5, Tables 3–4); Madry 2018 (Figs 1, 3; Table 2; ℓ2 appendix); Carlini &
-Wagner 2017 (notes/tech); Tsipras 2019 (Fig 1); Athalye 2018 (Table 1; §4 BPDA/EOT); Athalye
-EOT 2018; Carlini 2019 checklist; Tramèr 2020; Croce & Hein 2020 (AutoAttack; 13 of 49 >10 pts);
-Croce 2021 RobustBench (§3 restrictions); robustbench.github.io CIFAR-10 ℓ∞ snapshot 10 Oct 2026;
-Cohen 2019 (Figs 2–3, Thm 1, CERTIFY, Table 1, App. Table 2); Eykholt 2018 (Fig 1; Table 1 lab 100%,
-Table 3 drive-by 100/84.8%, constrained pseudo-random crop 70%); Hendrycks & Dietterich 2019 (Fig 1).
+**Visuals (real images, all in `figs/`):** `metr-task-length.png` (METR Time Horizon 1.1,
+Jan 2026, CC BY) `:110` · `gender-shades.png` (Buolamwini & Gebru 2018, Table 4) `:201` ·
+`gpt2-extraction.png` (Carlini et al. 2021, Fig. 1; source PNG is cropped at the bottom)
+`:246` · `sharma-sycophancy.png` (Sharma et al. ICLR 2024, Fig. 5) `:406` ·
+`panda-gibbon.png` (Goodfellow et al. 2015, Fig. 1) `:420` · `eykholt-stopsign.png`
+(Eykholt et al. CVPR 2018, Fig. 1) `:434` · `wei-jailbroken.png` (Wei et al. NeurIPS 2023,
+Fig. 1) `:448` · `uber-tempe-ntsb.jpg` (NTSB, public domain, via Commons) `:493` ·
+`pope-puffer-midjourney.jpg` (AI-generated, PD, via Commons) `:581` · `sora-tokyo.jpg`
+(OpenAI Sora "Tokyo Walk", PD, via Commons) `:595` · `canaries-22-25.png` (Stanford
+Digital Economy Lab, Fig. 2) `:660`. **SVG diagrams:** two curves `:137`, COMPAS bars
+`:169`, Amazon pipeline `:217`, poem divergence `:261`, you⇄model data flow `:301`, fake
+citation card `:336`, chat bubbles `:388`, EchoLeak flow `:463`, patched-route `:524`,
+59%/3% bars `:556`, library→model `:631`, EU risk pyramid `:675`, SW vs learned `:728`,
+three sources `:814`, adversary↔system `:863`, attack map `:892`, trust stack `:951`,
+headline→question flow `:1001`, trust-problem stages `:763`, boardroom four-step frame `:1033`.
 
-**Note:** `lec08-adversarial-note.html` — 55 entries; each has a minute budget and elapsed
+**Key citations:** Angwin et al., ProPublica 2016 (COMPAS) · Buolamwini & Gebru, FAT* 2018
+· Dastin, Reuters 2018 (Amazon) · Carlini et al., USENIX Sec 2021 + Nasr et al. 2023
+(extraction) · Bloomberg May 2023 (Samsung) + Garante order 30 Mar 2023 · Mata v. Avianca,
+S.D.N.Y. 2023 · Deloitte/DEWR Oct 2025 · Charlotin, AI Hallucination Cases (CSV export 2026-09-12) ·
+Moffatt v. Air Canada, 2024 BCCRT 149 · Sharma et al. ICLR 2024 + OpenAI Apr 2025 (GPT-4o
+rollback) · Goodfellow et al. ICLR 2015 · Eykholt et al. CVPR 2018 · Wei et al. NeurIPS 2023
+· EchoLeak CVE-2025-32711 · NTSB HWY18MH010 · OpenAI / Hugging Face July 2026 incident
+(HF disclosure 16 Jul + technical timeline 27 Jul; OpenAI statement 21 Jul + report 26 Aug; METR 26 Aug; Black Hat 5 Aug) · arXiv 2603.01608 (scheming) · Midjourney Pope, Mar 2023 · NH
+robocall FCC orders 2024 · Arup deepfake, HK police Feb 2024 · Bartz v. Anthropic, N.D.
+Cal. 2025 (settlement final approval 20 Jul 2026) · Brynjolfsson, Chandar & Chen, "Canaries" 2025–26 · Regulation (EU) 2024/1689 as amended by
+Regulation (EU) 2026/1744 (Digital Omnibus; high-risk → Dec 2027 / Aug 2028) · Korea AI Basic Act (eff. 2026-01-22).
+
+**2026-era facts (re-verified 2026-09-13 against primary sources; note carries as-of dates):** July 2026 OpenAI/Hugging Face incident `:503`–`:549` — 4 Jul Artifactory compromise → rebuilt 6 Jul → re-entry 8 Jul via WebDAV; 9–13 Jul 4.5-day forensic window inside HF (~17,600 actions, 4 exposed third-party accounts); HF disclosed 16 Jul, OpenAI attributed 21 Jul (slide 24 chronology corrected: the bypassed fix was OpenAI's, not HF's); scheming arXiv 2603.01608 v2 (59%/3% from model organisms; realistic settings minimal) `:551`; Charlotin figures recomputed from the CSV export of 2026-09-12 (2,039 decisions; 1,111 in 2026; ≈$320k across 30 US decisions in Q1 2026 — replaces 1,598 / $145k / 15) `:352`; Korea AI Basic Act eff. 22 Jan 2026, fines ≤ KRW 30M with ≥1-year grace `:670`; EU high-risk dates deferred by the Digital Omnibus (in force 27 Jul 2026) `:670`; Canaries rev. 12 Aug 2026 (data through Jun 2026; gap ≈19%, was ≈13% in Aug 2025) `:656`; Bartz settlement final approval 20 Jul 2026 `:626`. Refresh Charlotin and Canaries before each term.
+
+**Key framing:** threat model = *who* / *what they know* (white/black-box) / *what they
+can do* (train/inference-time); "a safety number describes a deployment, not a model"
+(59% vs 3%) motivates section 04. Seven dimensions (fairness, privacy, reliability,
+robustness, security, safety, provenance) + transparency; the 2026-08 deck had six. **The
+seven-dimension taxonomy is stated exactly once** (slide 32, closing section 02); the
+course map is stated exactly once (slide 41, the trust stack). Do not re-add summary
+slides that restate them — Albert cut them on 2026-09-04 as duplicates.
+Citations use `.cite-left`; one exhibit per slide.
+
+**2026-09-13 case-brief pass (44→46):** every real-case slide now carries `What happened` / `Why it happened` / `Why it matters` callouts with year, org, and confirmed status (uncertain items marked *alleged* / *as of*); "Two Curves" labeled *Conceptual illustration*; added "Why the Trust Problem Changed" (§03) and "Practice: Boardroom Questions" (§05, the four-step frame + three vendor questions; every later lecture ends with the same slide). Note re-synced to 46 articles: each incident has a structured *Case background* brief (Background / What happened / Technical connection / What the evidence shows, and does not / Status as of 2026-09 / Teaching cue / Where the course returns to this), *Technical depth — optional* (pointing at `lec01tech.html` slide titles), and a *References* list — 80 links checked 2026-09-13 (openai.com, courtlistener, scworld, securityweek, civilresolutionbc, dewr bot-wall scripted fetches but load in a browser; Reuters Amazon story backed by the Euronews reprint). Cross-lecture pointers live in the note only. `lec01tech.html` unchanged (7 sl; terms match main).
+
+**2026-09-04 trim (46→44):** Albert: "the overall 7 topics part keeps repeating". Cut
+"Seven Dimensions of Trust" (folded into "The Pattern": incident → question → dimension
+name, + transparency line) and "The Course at a Glance" (its 14 topics now sit inside the
+trust-stack layers); dropped the seven-pill row from "The Goal" and replaced it with three
+one-line drill cards (headline → property → adversary). Note re-synced to 44 entries
+(definitions block moved under "The Pattern"; topic-preview block under "The Trust Stack").
+
+**2026-09-03 rebuild (35→46):** added METR plot, Gender Shades, "poem" split-out,
+Samsung/Garante, Charlotin, sycophancy, stop sign, Base64 jailbreak, Uber Tempe, July
+2026 escaped agent (2 slides), scheming, Pope puffer, Arup, Bartz, Canaries, EU/Korea
+rules; cut Group 1–4 preview slides, "What's New in 2025–26", "How We'll Work" divider
+(folded into one slide), knowledge×timing grid (merged into the attack map). Note file
+re-synced to 46 entries (590 lines, now 44): old `.detail` blocks reused verbatim, new
+backgrounds with primary links for every added incident, Group 1–4 previews preserved
+under "The Course at a Glance". `lec01tech.html` untouched.
+
+**2026-08 history:** 47→35 trim (schedule slides, timeline SVG, house analogy cut; Bing
+"Sydney" replaced by EchoLeak; Deloitte added) and note enrichment to script + companion
+notes (227→443 lines, formal definitions + primary-source links).
+
+## lec08-adversarial.html
+
+**Topic:** Adversarial robustness: when small changes break models (90 min; mixed-major
+sophomores/juniors; concept-first, light math, no proofs; **no activities**). Revised 2026-10-20
+(Albert): motivation before the examples, "robustness" named as the goal throughout, details split
+across slides. Motivation: models make real decisions, test accuracy measures an ordinary day,
+Geirhos texture-vs-shape cue conflict (Fig 1) as evidence that tested models rely on cues differently from human observers
+and as a weak surface; what robustness is and why it matters. Panda (Goodfellow Fig 1) and Szegedy
+random examples. Three lenses, not one cause: off-distribution (Nguyen Fig 1 fooling images, ≥ 99.6%),
+linearity explained "like you're five" (a linear score adds up every pixel, sign of each weight,
+more pixels bigger swing, the push is named FGSM), and non-robust features
+(Ilyas Fig 1, two experiments split; non-robust set described as wrong-looking images, App. Table 7). Who attacks and why (motives, real inputs, rare errors become
+certain); threat model with a stop-sign worked example; budget ε with separate ℓ∞ and ℓ2 2-D ball slides (KaTeX \ell labels); knowledge, transfer
+(Papernot 2017 substitute model; Papernot 2016 Fig 3; real-services setup slide, Amazon 96.19% / Google 88.94%). Worst case:
+one test image, a per-image ball, the attacker's goal, FGSM at a high level → PGD as gradient descent run uphill (Madry Table 2 bar chart).
+Defenses: adversarial training, Tsipras trade-off, obfuscated gradients (shattered / stochastic /
+vanishing on one slide) and adapted attacks BPDA / EOT (Athalye, 7 of 9), adaptive attacks, AutoAttack in plain words and its
+implications (Croce & Hein), RobustBench as one test for every model;
+"accuracy under attack" defined with a counting example; scoreboard snapshot 10 Oct 2026 (upper
+bound; MeanSparse 75.28 → 73.10); what a certificate promises (worst case, per input), randomized smoothing (Cohen). Off the
+screen: print + photo erases faint attacks (Kurakin Table 3 chart), EOT fix, Eykholt stop sign and its limits; ImageNet-C. LLM section: TextFooler (Jin), GCG suffix
+(Zou Fig 1), image jailbreaks (Carlini 2023), indirect prompt injection (Greshake). This section
+**intentionally overlaps** lec10 (jailbreaks) and lec13 (prompt injection) as a bridge; those decks
+hold the depth. Excludes poisoning (lec09). C&W lives in the notes and tech. Math in `lec08tech.html`.
+
+### Sections (101 slides, 90 min: why robustness 10 · tiny nudge 7 · why it happens 16.5 · who attacks 13.5 · worst case 9.5 · defenses + evaluation 19 · off the screen 6 · LLMs 6 · wrap-up 2.5)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:42`, `:54` | |
+| **01 — Why We Want Robustness** | 3–11 | `:94` | real decisions `:102` · ordinary day `:111` · two assumptions break `:123` · Geirhos Fig 1 `:132` · shape vs texture `:141` · weak surface `:151` · robustness defined `:164` · why it matters `:173` |
+| **02 — A Tiny Nudge** | 12–18 | `:181` | panda (Goodfellow Fig 1) `:189` · anatomy `:199` · Szegedy Fig 5 `:208` · sees differently `:224` · weak surface `:233` · who chooses the input `:245` |
+| **03 — Why It Happens** | 19–36 | `:253` | thin slice `:261` · any answer off the data `:270` · Nguyen Fig 1 `:280` · like you're five `:306` · linear score `:315` · sign of each weight `:326` · more pixels `:337` · named FGSM `:351` · feature `:362` · experiment 1 `:371`–`:396` · experiment 2 `:411`–`:436` · three lenses `:449` |
+| **04 — Who Attacks, and Why** | 37–52 | `:462` | why attack `:470` · real attackers `:479` · rare → certain `:493` · threat model (stop-sign example) `:502` · budget ε `:512` · ℓ∞ ball `:527` · ℓ2 ball `:543` · ℓ∞ vs ℓ2 `:559` · knowledge `:576` · strongest attacker `:584` · transfer (Papernot Fig 3) `:596` · hidden model `:612` · real services setup `:622`, result `:632` · targeted vs untargeted `:642` |
+| **05 — Finding the Worst Case** | 53–61 | `:650` | one test image `:658` · attacker's goal `:667` · search in the ball `:677` · FGSM `:687` · one jump misses the peak `:698` · PGD = gradient descent uphill `:711` · PGD on the curve (can find a higher-loss point) `:725` · Madry Table 2 chart `:735` |
+| **06 — Defenses and Honest Evaluation** | 62–84 | `:746` | whole ball `:754` · adversarial training `:763` · Tsipras `:783` · hide the gradient `:813` · adapted attacks BPDA/EOT `:823` · spot a weak attack `:834` · AutoAttack `:847`, what it changed `:857` · RobustBench `:869` · accuracy under attack `:879`, `:888` · scoreboard `:897` · upper bound `:913`, `:925` · one ruler `:935` · empirical vs certified `:949` · certificate `:958` · smoothing `:967`, `:984` · Cohen Table 2 chart `:1001` |
+| **07 — Off the Screen** | 85–90 | `:1011` | print + photo can undo faint attacks (Kurakin Table 3 chart) `:1019` · EOT fix `:1030` · Eykholt Fig 1 `:1040` · what it does not show `:1050` · ImageNet-C `:1070` |
+| **08 — The Same Problem in LLMs** | 91–97 | `:1085` | TextFooler `:1093` · text is discrete `:1104` · GCG (Zou Fig 1) `:1118` · image jailbreaks `:1134` · prompt injection `:1145` · image vs LLM world `:1155` |
+| Wrap-up | 98–101 | — | four questions `:1168` · established vs open `:1176` · takeaways `:1196` · closer `:1211` |
+
+**Key citations (checked against saved PDFs / page captures, 2026-10-10; new sources checked on
+arXiv 2026-10-20; register in the review package):** Geirhos 2019 (Fig 1; arXiv 1811.12231);
+Nguyen 2015 (Fig 1; arXiv 1412.1897); Goodfellow 2015 (Figs 1, 2; §3); Szegedy 2014 (Fig 5);
+Ilyas 2019 (Fig 1; Fig 2, App. Table 7); Papernot 2017 substitute attack (arXiv 1602.02697); Papernot 2016 (Fig 3; §5,
+Tables 3–4); Madry 2018 (Figs 1, 3; Table 2; ℓ2 appendix); Carlini & Wagner 2017 (notes/tech);
+Tsipras 2019 (Fig 1); Athalye 2018 (Table 1; §4 BPDA/EOT); Athalye EOT 2018; Carlini 2019
+checklist; Tramèr 2020; Croce & Hein 2020 (AutoAttack; all but 1 of >50 lower, 13 of 49 deterministic >10 pts, 8 >30 pts; §6, §6.1, Tables 2 and 4); Croce 2021 RobustBench
+(§3 restrictions); robustbench.github.io CIFAR-10 ℓ∞ snapshot 10 Oct 2026; Cohen 2019 (Figs 2–3,
+Thm 1, CERTIFY, Table 1, App. Table 2); Eykholt 2018 (Fig 1; Table 1 lab 100%, Table 3 drive-by
+100/84.8%, constrained pseudo-random crop 70%); Kurakin, Goodfellow & Bengio 2017 (§3.1 destruction rate, §3.2 setup, Table 3, §4; arXiv 1607.02533); Hendrycks & Dietterich 2019 (Fig 1); Jin 2020
+TextFooler (Table 6; arXiv 1907.11932); Zou 2023 GCG (Fig 1; arXiv 2307.15043); Carlini 2023
+(§6, Table 3; arXiv 2306.15447); Greshake 2023 (arXiv 2302.12173).
+
+**Note:** `lec08-adversarial-note.html` — 101 entries (core route ≈83.5 min; 8 slides marked optional: 66–67, 78–79, 82–84, 90); each has a minute budget and elapsed
 time, script, key takeaway; content slides add figure / setup-model-date / establishes / does
-not establish / assumptions / primary-source links. C&W formulation in entries 22 and 29.
+not establish / assumptions / primary-source links. C&W formulation in entries 56 and 61; PGD restarts (Madry Fig 1) in entry 59; the three Athalye worked cases and Table 1 marks in entry 69.
 
 **Tech:** `lec08tech.html` — 24 slides: perturbation set (4), goals (5), FGSM (6), sign as the
 linearized optimum incl. ℓ2 (7), linear model $w^\top\eta=\varepsilon\|w\|_1$ (8), PGD with random
@@ -401,12 +506,12 @@ Bianchi text-to-image stereotypes; governance obligations and limits (~3.5 min).
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:30`, `:42` | |
-| **01 — Where Bias Enters** | 3–10 | `:74` | mirror `:82` · three places `:99` · sampling (Gender Shades composition) `:115` · label problem `:138` · Obermeyer cost proxy `:155` · feedback loop `:180` · drop race fails `:206` |
-| **02 — Measuring Fairness** | 11–21 | `:227` | notation `:235` · four rates `:252` · demographic parity `:286` · equalized odds `:305`, `:320` · Hardt ROC plane `:342` · calibration `:354` · calibration vs PPV `:369` · five criteria `:386` · FICO thresholds `:401` |
-| **03 — COMPAS and Impossibility** | 22–34 | `:413` | what COMPAS is `:421` · FPR by group `:440` · within subgroups `:463` · Northpointe `:482` · different criteria `:500` · rearrest ≠ offending `:517` · base rates `:534` · Chouldechova `:552` · Kleinberg `:566` · worked example `:580` · why forced `:605` · context `:627` |
-| **04 — Mitigation** | 35–45 | `:643` | three places `:651` · reweighing `:683`, `:698`, `:717` · reductions `:727`, `:743` · group thresholds `:757` · FICO cost `:774` · empirical tradeoff ≠ optimal frontier `:791` · method cards `:808` |
-| **05 — Beyond Classifiers** | 46–52 | `:821` | Gender Shades `:829` · after the audit `:840` · BBQ `:879`, `:898` · Bianchi `:910` · governance `:929` |
-| **06 — Synthesis** | 53–56 | `:944` | checklist `:952` · takeaways `:966` · closer "Which rate?" `:980` |
+| **01 — Where Bias Enters** | 3–10 | `:74` | Obermeyer cost proxy `:83` · model learns its world `:108` · three places `:125` · sampling (Gender Shades composition) `:141` · label problem `:164` · feedback loop `:181` · drop race fails `:207` |
+| **02 — Measuring Fairness** | 11–21 | `:229` | notation (Y = recorded outcome) `:236` · four rates `:253` · demographic parity `:287` · equalized odds `:306`, `:321` · Hardt ROC plane `:343` · calibration `:355` · calibration vs PPV `:370` · five criteria `:387` · FICO thresholds `:402` |
+| **03 — COMPAS and Impossibility** | 22–34 | `:414` | what COMPAS is `:421` · FPR by group `:440` · within subgroups `:463` · Northpointe, read by row `:482` · different criteria `:496` · rearrest ≠ offending `:513` · base rates `:530` · Chouldechova `:548` · Kleinberg `:566` · worked example `:580` · why the gap appears here `:605` · context `:627` |
+| **04 — Mitigation** | 35–45 | `:644` | three places `:651` · reweighing `:683`, `:699`, `:718` · reductions `:732`, `:748` · group thresholds `:764` · FICO cost `:775` · empirical tradeoff ≠ optimal frontier `:794` · method cards `:810` |
+| **05 — Beyond Classifiers** | 46–52 | `:824` | Gender Shades (Table 4 redrawn as SVG) `:831` · after the audit `:843` · BBQ `:882`, `:901` · Bianchi `:913` · governance `:932` |
+| **06 — Synthesis** | 53–56 | `:948` | checklist `:955` · takeaways `:969` · closer "Which rate?" `:983` |
 
 **Key citations (checked against saved PDFs / pages, 2026-10-10):** Obermeyer et al. Science 2019; Buolamwini
 &amp; Gebru FAT* 2018 (Table 4); Raji &amp; Buolamwini AIES 2019; Dwork et al. ITCS 2012; Hardt, Price &amp; Srebro

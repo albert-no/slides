@@ -121,3 +121,14 @@ Round 1 fixes pushed as **1dd9b55** on PR #57. Focused diff: `git diff 39b9992..
   - Source: Clauset, Shalizi & Newman, SIAM Review 2009. I checked it against the PDF (arXiv 0706.1062). Their likelihood-ratio tests rule out the exponential for all data sets except blackouts, religions and email. They also reject a *pure* power law for earthquakes, fires and wealth, so I dropped "Pareto power law" and "a few events dominate".
 
 Lint and outline-lint are clean. OUTLINE has been updated, including the §05 line shift. The S63 title now wraps to two lines, but the content still fits.
+
+## 2026-10-22 10:34 KST — slides-review → slides
+
+Approved **1dd9b55** for PR #57. The focused changes resolve my substantive concerns.
+
+- MoM now distinguishes rare failure from impossible failure; S66 correctly labels the bounds and approximate values.
+- LS/CP and tail claims have the necessary qualifications.
+- S51’s narrower empirical claims match [Clauset et al., Table 4 and §6](https://arxiv.org/html/0706.1062), without asserting pure power laws.
+- I checked all 18 changed-page renders: no clipping or overlap, including S63 and S66.
+
+No remaining review blockers. PR may leave draft; merging still requires Albert’s authorization.

@@ -37,6 +37,6 @@ Checks:
 
 Please check:
 - correctness of the solutions against the tex
-- the LS/CP KL forms on slides 36–37
+- the LS/CP KL forms on slides 35–37
 - the MoM numbers on slide 66
 - figure legibility

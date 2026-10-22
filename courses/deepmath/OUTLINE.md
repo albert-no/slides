@@ -9,7 +9,8 @@ proof overview → proof details → proof summary → implication. Motivation s
 Decks live at `courses/deepmath/<deck>/<deck>.html` (reference path `../../../reference/`).
 Shared source images in `figs/`.
 Past homework and exams (2024–25, PDFs as handed out) in `exam/`: `hw1sol`–`hw4sol`,
-`midterm24_sol`, `midterm25_prob`, `midterm25_sol`, `final24sol`, `final25sol`.
+`midterm24_sol`, `midterm25_prob`, `midterm25_sol`, `final24sol`, `final25sol`; 2026 midterm
+source `midterm26.tex` (exam 2026-10-20), reviewed in `midterm26-review/` (below).
 
 **Accessible editions.** Every deck's speaker note also ships as a screen-reader Markdown
 edition at `<deck>/<deck>-note.md` (13 files, ~12.8k lines total). These are written for a
@@ -44,6 +45,8 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 11 | `opt02-regression-erm/` — least squares θ\*=A†B (full proof), ERM/Bayes risk, ridge + closed form | opt 436–794, 1463–1517 | done (110 slides) |
 | 12 | `opt03-convexity-gd/` — convexity, L-smoothness, co-coercivity, strong convexity, PL, GD O(1/T) + linear rate | opt 795–1319 | done (134 slides) |
 | 13 | `opt04-sgd/` — SGD O(1/√K) proof, mini-batching, strongly-convex SGD O(log k/k) | opt 1320–1462, 1520–1600 | done (117 slides, 2026-09 diagram pass) |
+
+Exam-review deck (not one of the 13): `midterm26-review/` — midterm 2026 solutions lecture (72 slides).
 
 Dropped from source by request: operator theory (opt 1603–1761), acceleration/AGM
 (1765–1889), GDM/RMSprop/Adam (1981–2056), SAM (2060–2091).
@@ -840,3 +843,20 @@ runs).
 Chain") was folded into the every-tool table per DESIGN_SYSTEM §2 (one
 closing summary, the other's takeaway as a single muted line), taking the
 deck from 118 to 117 slides.
+
+### midterm26-review — Midterm Solutions: Tools for Seeing (72 slides)
+
+`midterm26-review/midterm26-review.html` · solution lecture for `exam/midterm26.tex` (exam 2026-10-20). Theme
+(Albert, 2026-10-22): entropy / MI / KL and the inequalities are tools for understanding phenomena —
+every problem gets its motivation and intuition before the computation. Built by
+a generator script (not committed); no speaker note, no tech supplement.
+
+| # | Section | Slides | Location |
+|---|---|---|---|
+| — | Title + TOC | 1–2 | midterm26-review/midterm26-review.html:51 |
+| 01 | Why This Course (two layers: tools vs phenomena SVG, tools are weapons, midterm-at-a-glance table) | 3–8 | midterm26-review/midterm26-review.html:68 |
+| 02 | Problem 1 (1(a) count vs position, chain rule, 6.66 vs 93.3 bits bar; 1(b) the extra bit is the label; 1(c) label channel, always-lie ε=1 still informative (0.415 bits for K=4), I-vs-ε plot K=2/K=10, useless iff ε=(K−1)/K; 1(d) top-to-random shuffle, symmetry → uniform stationary, 6×6 matrix) | 9–28 | midterm26-review/midterm26-review.html:158 |
+| 03 | Problem 2 (CE over-confidence, design challenge, label smoothing vs confidence penalty, 2(a) KL forms D(u‖q) vs −D(q‖u) (Pereyra et al.), 2(b) limits table + penalty plot K=2, 2(c) behaviour near one-hot, consequences (Müller et al.), lesson) | 29–45 | midterm26-review/midterm26-review.html:479 |
+| 04 | Problem 3 (light tails: Gaussian tail table, why the mean works; heavy tails x^-3 vs Gaussian log plot, where they live (wildfires, earthquakes, wealth — Clauset et al.; SGD gradient noise — Simsekli et al.), 1/n³ vs e^(-an) table; 3(a) finite variance, infinite MGF; 3(b) one big sample lower bound; median of means algorithm, one outlier spoils one vote, 3(c)(i)–(iv) exponential bound (√7/4)^k; numbers table; 3(d); robust estimation (Lugosi–Mendelson, Yin et al.)) | 46–67 | midterm26-review/midterm26-review.html:733 |
+| 05 | Takeaways (tool → phenomenon table, what we expect, closer) | 68–72 | midterm26-review/midterm26-review.html:1055 |
+

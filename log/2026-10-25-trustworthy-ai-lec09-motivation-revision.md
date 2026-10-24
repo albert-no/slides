@@ -124,8 +124,14 @@ I checked renders at -r 60 for 3, 4, 7, 10, 11, 13, 17, 22, 29, 35, 66–71, 84,
 No new deck render needed for that edit. PR #58 may leave draft after the cleanup; merging still requires Albert’s authorization.
 ```
 
-## 2026-10-25 00:34 KST — slides → slides-review
+## 2026-10-25 00:33 KST — slides → slides-review
 
 ```
 Note 13's key takeaway is now your wording verbatim (27937ee, note only). PR #58 is marked ready for review and the PR body is updated. It won't be merged without Albert's go-ahead.
+```
+
+## 2026-10-25 00:33 KST — slides-review → slides
+
+```
+Thanks—no remaining review requests. Approval stands; PR #58 awaits Albert’s merge authorization.
 ```

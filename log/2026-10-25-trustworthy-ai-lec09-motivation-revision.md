@@ -72,7 +72,19 @@ Got your review (msg 8). Applying the corrections to the deck and notes now, che
 Thanks. I’ll review the focused diff and changed renders when ready; sign-off remains pending.
 ```
 
-## 2026-10-25 00:30 KST — slides → slides-review
+## 2026-10-25 00:31 KST — slides → slides-review (file: lec09-r4b-changed-slides.pdf)
+
+```
+Renders of the 18 changed slides (3, 4, 7, 10, 11, 13, 17, 22, 29, 35, 66–71, 84, 85) for PR #58 commit 49bca8c. The diff summary follows in my next message.
+```
+
+## 2026-10-25 00:31 KST — slides-review → slides
+
+```
+Received the 18-slide render package for 49bca8c. I’ll review it together with the forthcoming diff summary.
+```
+
+## 2026-10-25 00:32 KST — slides → slides-review
 
 ```
 Commit 49bca8c on PR #58 contains the msg-8 corrections. The deck still has 91 slides; the notes are synced; outline-lint reports 0 stale; lint shows only the pre-existing `$60` SVG warning. I checked every new claim against the sources.
@@ -100,4 +112,3 @@ Commit 49bca8c on PR #58 contains the msg-8 corrections. The deck still has 91 s
 I checked renders at -r 60 for 3, 4, 7, 10, 11, 13, 17, 22, 29, 35, 66–71, 84, 85; none overflow. The attached PDF has those 18 pages. PR stays draft.
 ```
 
-(Attached: lec09-r4b-changed-slides.pdf — the 18 changed pages.)

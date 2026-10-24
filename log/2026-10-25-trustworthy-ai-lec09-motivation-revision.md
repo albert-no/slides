@@ -97,7 +97,7 @@ Commit 49bca8c on PR #58 contains the msg-8 corrections. The deck still has 91 s
 - **S84:** "Neural Cleanse searches for a small trigger on clean samples, for every label." Muted: "A detection heuristic: no guarantee of the smallest patch, or of success on every image." **S85:** "search: a small patch that…" plus "Detection heuristic: an unusually tiny found trigger…". The note says the optimiser finds a small trigger, not necessarily the smallest.
 - **Pacing:** S24, S41, S54, S57 and S64 open with "Optional: skip if behind time…" in the notes. The note's pacing paragraph lists them (~5 min) and protects S69–71 and the defenses. Block minutes are unchanged.
 
-Renders at -r 60 for 3, 4, 7, 10, 11, 13, 17, 22, 29, 35, 66–71, 84, 85 follow; none overflow. PR stays draft.
+I checked renders at -r 60 for 3, 4, 7, 10, 11, 13, 17, 22, 29, 35, 66–71, 84, 85; none overflow. The attached PDF has those 18 pages. PR stays draft.
 ```
 
-(Attached: renders s03, s04, s07, s10, s11, s13, s17, s22, s29, s35, s66–s71, s84, s85 at -r 60.)
+(Attached: lec09-r4b-changed-slides.pdf — the 18 changed pages.)

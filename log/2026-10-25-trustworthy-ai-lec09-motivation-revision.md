@@ -71,3 +71,33 @@ Got your review (msg 8). Applying the corrections to the deck and notes now, che
 ```
 Thanks. I’ll review the focused diff and changed renders when ready; sign-off remains pending.
 ```
+
+## 2026-10-25 00:30 KST — slides → slides-review
+
+```
+Commit 49bca8c on PR #58 contains the msg-8 corrections. The deck still has 91 slides; the notes are synced; outline-lint reports 0 stale; lint shows only the pre-existing `$60` SVG warning. I checked every new claim against the sources.
+
+**Substantive**
+- **S66–67** (Rando & Tramèr). Title: "RLHF Backdoor: About 5% Poisoned Data in This Setup". The row now reads "Backdoor survives RLHF (one PPO epoch), 7B and 13B". Muted line: "Assumed: poisoned prompts reused for reward model and PPO; no adversarial-label checks." That quotes the §6.3 limitations ("no checks for adversarial labels") and §3. Citation: "setup §3, §5; results §6". Notes: 3% succeeded with two PPO epochs, less strongly than 5% (§6, Fig. 6). There is also a new paragraph separating reward-model accuracy (the 0.5% and 4% rows) from the downstream harmful-generation result after PPO (the 5% row).
+- **S69:** last box is "Possible harm: user calls". Note: the investigation shows the quoted numbers, not calls from its own queries.
+- **S70:** Audit card reads "15 claims × 3 prompt styles × 10 chatbots = 450 answers". Result card reads "7 of 10 chatbots cited it". Two muted lines: "Styles include leading and malign prompts: not an ordinary-user error rate." and "The audit does not isolate the network's causal role, or training from live search." "LLM grooming" moved to the notes only.
+- **S71:** "A separately reported caller reached a scam number"; the citation keeps the WaPo-via-Slashdot attribution. Conclusion line: "These are deployed AI-service examples—not demonstrated poisoning of frontier-model weights." The integrity sentence moved to the notes.
+- **S10:** "Tay Shows the Risk of Malicious User Interactions". Muted line uses your wording verbatim. The bullet now says "users influence what it learns", not "users write its data".
+
+**Smaller**
+- **S3:** "A model learns from its data. What if someone else wrote part of that data?"
+- **S4:** student box "can learn a planted answer too". Muted: "Illustrative story. The label alone does not reveal malicious intent." **S7:** title per your wording.
+- **S11:** "Last lecture: altered test inputs. Today: compromised learning and information sources."
+- **S13:** right column "Training-planted backdoor"; its footer reads "this route: via training data". The note points to the direct-weight route.
+- **S17:** "user may disable filter". Added: "1% counts messages: each attack email carried a whole English dictionary." Per Nelson §3.2 that is the aspell dictionary, 98,568 words, which is more precise than "unusually large". Citation now §1, §3.2, §4.2.
+- **S22:** "Loss Map", "higher validation loss", "Climb toward a local max".
+- **S29:** "clean accuracy largely preserved". Muted: "Proposed threat scenario: the victim scrapes the poisons and labels them correctly."
+- **S35:** your trigger/backdoor line verbatim.
+- **S68:** title says "Five Inserted Texts"; box is now "Database: 5 inserted texts". Muted: "Illustrative flow. Retrieval success and answer success are measured separately." Note: inserted ≠ retrieved, and the paper reports precision/recall/F1 for retrieval and ASR for the answer.
+- **S84:** "Neural Cleanse searches for a small trigger on clean samples, for every label." Muted: "A detection heuristic: no guarantee of the smallest patch, or of success on every image." **S85:** "search: a small patch that…" plus "Detection heuristic: an unusually tiny found trigger…". The note says the optimiser finds a small trigger, not necessarily the smallest.
+- **Pacing:** S24, S41, S54, S57 and S64 open with "Optional: skip if behind time…" in the notes. The note's pacing paragraph lists them (~5 min) and protects S69–71 and the defenses. Block minutes are unchanged.
+
+Renders at -r 60 for 3, 4, 7, 10, 11, 13, 17, 22, 29, 35, 66–71, 84, 85 follow; none overflow. PR stays draft.
+```
+
+(Attached: renders s03, s04, s07, s10, s11, s13, s17, s22, s29, s35, s66–s71, s84, s85 at -r 60.)

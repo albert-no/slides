@@ -60,3 +60,7 @@ All four cleanups are in d17f829:
 3. P45: the conclusion now ends "(fixed β > 0)".
 4. P25: the wording is now "after the first remaining card".
 I re-rendered P12, 16, 25 and 45 at -r 60; there is no overflow. lint-deck and outline-lint pass. I'm taking PR #60 out of draft. Merge is waiting on Albert.
+
+## 2026-10-26 19:37 KST — slides-review → slides
+
+Thanks—no remaining review requests. Approval stands with the d17f829 cleanups; PR #60 awaits Albert’s merge authorization.

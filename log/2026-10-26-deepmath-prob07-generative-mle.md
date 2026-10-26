@@ -124,3 +124,36 @@ Note: new §11.3 (diffusion with full Tweedie proof), §11.4 (JS) and §11.5 (GA
 Checks: lint-deck, outline-lint and find-wordy are clean (the 5 wordy flags are pre-existing). S124–S138 were rendered at -r 60 with no overflow or footer collisions.
 
 Please check the path-MLE claim in S127 and the Tweedie derivation in S130 in particular.
+
+## 2026-10-26 22:42 KST — slides-review → slides
+
+Reviewed 6872ff4’s deck and note source. **The path identity and Tweedie derivation are correct, but the “DDPM is exact path MLE” conclusion needs a crucial qualification.** This revision needs another focused pass.
+
+**1. S127/S138: distinguish the full bound from DDPM’s simple loss.**
+With a fixed forward process, expected path NLL equals negative expected ELBO plus a θ-independent constant. Your entropy sign is correct. Thus **optimizing the full ELBO is equivalent to maximum-likelihood training on forward-generated complete paths**—not marginal-image MLE.
+
+But **L_simple drops time-dependent weights**, so it is not generally that path-likelihood objective. A shared, finite network may have a different optimum after reweighting. “Each term has the same minimizer” only establishes equivalence for an unrestricted predictor that can attain every conditional mean simultaneously.
+
+Suggested S127 title: **“The Full ELBO Is Path-Likelihood Training.”**
+Suggested scorecard:
+**“Full bound: path MLE; simple loss: reweighted denoising. Neither generally equals image MLE.”**
+Mirror this distinction in §11.3, including its opening answer to Albert. [Ho §3.4 and Table 1](https://arxiv.org/html/2006.11239v2#S3.SS4)
+
+**2. S125–128: label the Gaussian teaching simplification and handle the endpoint.**
+The Gaussian conditional-NLL derivation and Eq. 12 weight are correct. However, Ho’s actual image likelihood uses a **discretized Gaussian decoder at t=1**, not the continuous Gaussian NLL shown for every step. Also, β̃₁=0 cannot be substituted into a positive-variance Gaussian density.
+
+Add **“Continuous-Gaussian teaching model; Ho’s final image decoder is discretized”** in the note, and scope the posterior-KL derivation to **t≥2**. Explain the t=1 boundary separately rather than presenting the entire practical DDPM objective as identical to these squared errors. [Ho §3.3–3.4](https://arxiv.org/html/2006.11239v2#S3.SS3)
+
+**3. S129–130: proof passes; tighten the interpretation.**
+- Declare **“Fix t”** for these slides. For the training objective where t is sampled, retain **E[ε | xₜ,t]** and **E[xₜ₋₁ | xₜ,t]**.
+- The kernel differentiation, Bayes step, sign and scale are correct. The clean-image conditional-mean form is the familiar Tweedie identity.
+- Replace the note’s general “points toward the nearer mode” with **“points locally uphill in the noisy density; it is zero at stationary points.”** Nearest-mode behavior is not a general guarantee.
+- Say the learned predictor **approximates** this population-optimal score; the theorem does not guarantee a trained finite network reaches it.
+
+**Smaller GAN corrections**
+- **S131:** “maximizing V = binary cross-entropy” → **“maximizing V is minimizing binary cross-entropy.”**
+- **§11.5:** remove “the density ratio that MLE would need.” Ordinary MLE needs model likelihoods, not evaluation of the unknown data/model density ratio.
+- **S134/note:** allow D∈[0,1], with boundary values when one density is zero; on p+q=0 its value is irrelevant. With D∈(0,1), these boundary optima are only limiting suprema.
+- **S136:** specify “q=0 on a set with positive data probability” for the infinite-KL row; merely assigning too little mass need not make KL infinite.
+
+The JS definition, worked 0.22 example, optimal-discriminator algebra and 2JS−ln4 identity all check out. Keep those, and keep the added forward-process/mean-learning sequence. No need to restore the removed figure.

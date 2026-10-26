@@ -1598,7 +1598,7 @@ not a likelihood of any dataset. Chat models are therefore MLE-trained models
 that are then moved by a non-likelihood objective.
 
 
-### 11.3 Diffusion models: exact MLE of a path, a bound for the image
+### 11.3 Diffusion models: the full bound is path MLE, the simple loss is not
 
 **The auxiliary forward process.** A diffusion model starts from a process
 that has nothing to learn. Fix a variance schedule $\beta_1, \dots, \beta_T$
@@ -1623,19 +1623,27 @@ results for $\sigma_t^2 = \beta_t$ and $\sigma_t^2 = \tilde\beta_t$, the
 posterior variance below) and learn only the mean, with one network
 $\mu_\theta(x_t, t)$ shared across all steps. The Gaussian form is a modelling
 choice, motivated by the fact that the forward and reverse processes have the
-same functional form when the $\beta_t$ are small.
+same functional form when the $\beta_t$ are small. Continuous-Gaussian
+teaching model: the analysis below treats every backward step as a Gaussian
+density, which is exact for $t \ge 2$. Ho et al.'s final image decoder is
+discretized: to obtain discrete log-likelihoods for 8-bit images, the last
+step $p_\theta(x_0 \mid x_1)$ assigns each pixel the mass of
+$\mathcal{N}(\mu_\theta(x_1, 1), \sigma_1^2)$ over that pixel's bin (their
+Eq. 13).
 
 **Each step is a Gaussian MLE.** Running the forward process on training
 images produces pairs $(x_{t-1}, x_t)$. For one step the model is exactly the
 Gaussian location model of Section 7.4 with known variance:
 $$-\ln p_\theta(x_{t-1} \mid x_t) = \frac{1}{2\sigma_t^2} \big\| x_{t-1} - \mu_\theta(x_t, t) \big\|^2 + \frac{d}{2} \ln(2\pi\sigma_t^2),$$
 where $d$ is the data dimension. The second term does not depend on $\theta$,
-so maximizing the likelihood of the pairs is least squares on the mean. Over
-all functions of $x_t$, Theorem 5 identifies the optimum:
-$\mu_\theta^*(x_t, t) = \mathbb{E}[x_{t-1} \mid x_t]$.
+so maximizing the likelihood of the pairs is least squares on the mean. For
+each fixed $t$, over all functions of $x_t$, Theorem 5 identifies the optimum
+$\mathbb{E}[x_{t-1} \mid x_t]$; when $t$ is sampled during training, the
+optimal shared network is $\mu_\theta^*(x_t, t) = \mathbb{E}[x_{t-1} \mid x_t, t]$.
 
-**So is DDPM just MLE?** Yes, for the path, and that is the precise sense of
-the answer. The model defines a joint distribution of the whole path,
+**So is DDPM just MLE?** Optimizing the full bound is maximum likelihood for
+the path; the simple loss DDPM actually trains on is a reweighting of that
+bound; and neither is maximum likelihood for the image. The model defines a joint distribution of the whole path,
 $p_\theta(x_{0:T}) = p(x_T) \prod_{t=1}^T p_\theta(x_{t-1} \mid x_t)$, and the
 forward process supplies complete paths: $x_0$ from the data, $x_{1:T}$ from
 $q(x_{1:T} \mid x_0)$. The latent noisy images are simulated by us, so during
@@ -1648,8 +1656,11 @@ $\text{ELBO}_\theta(x_0) = \mathbb{E}_{q(x_{1:T} \mid x_0)}\big[\ln p_\theta(x_{
 so
 $$\mathbb{E}_q\big[-\ln p_\theta(x_{0:T})\big] = -\,\mathbb{E}\big[\text{ELBO}_\theta(x_0)\big] + \mathbb{E}\big[H\big(q(\cdot \mid x_0)\big)\big],$$
 where the last term, the entropy of the forward process, does not depend on
-$\theta$. Maximizing the ELBO and maximizing the path likelihood are the same
-problem.
+$\theta$. Maximizing the full ELBO and maximizing the path likelihood are the
+same problem: training on the full bound is maximum-likelihood training on
+forward-generated complete paths. (With the discretized decoder, the $t = 1$
+term is $-\ln p_\theta(x_0 \mid x_1)$ of that decoder; the identity is
+unchanged because the forward process is still free of $\theta$.)
 
 What is not exact is the likelihood of the image alone. A sample is only
 $x_0$, and its model probability is the marginal
@@ -1662,9 +1673,9 @@ the divergence from the forward process to the model's own posterior over
 paths. The gap depends on $\theta$, so the maximizer of the bound is in
 general not the maximum-likelihood estimate for $q_\theta(x_0)$. This is the
 complete-data versus incomplete-data distinction: with the latents observed,
-DDPM is MLE; for the observed image alone, it maximizes a lower bound.
+the full bound is MLE; for the observed image alone, it is a lower bound.
 
-**A lower-variance target.** Ho et al. do not regress on the sampled
+**A lower-variance target ($t \ge 2$).** Ho et al. do not regress on the sampled
 $x_{t-1}$ directly. Conditioned on $x_0$ as well, the forward posterior is
 Gaussian, $q(x_{t-1} \mid x_t, x_0) = \mathcal{N}(\tilde\mu_t, \tilde\beta_t I)$
 with
@@ -1678,7 +1689,13 @@ $x_{t-1} - \tilde\mu_t$ has mean zero). The last term does not involve
 $\theta$, so regressing on $\tilde\mu_t$ has the same minimizer as regressing
 on $x_{t-1}$, with less noise in the target. In the bound itself this term
 appears as the KL divergence between two Gaussians with fixed variances,
-which is again a weighted squared difference of means plus a constant.
+which is again a weighted squared difference of means plus a constant. This
+derivation needs $t \ge 2$. At $t = 1$, $\tilde\beta_1 = 0$: the posterior
+$q(x_0 \mid x_1, x_0)$ is a point mass, and it cannot be substituted into a
+positive-variance Gaussian density. The $t = 1$ term is instead the decoder
+term $-\ln p_\theta(x_0 \mid x_1)$; in the simple loss below, Ho et al.
+approximate it by the Gaussian density times the bin width, ignoring
+$\sigma_1^2$ and edge effects.
 
 **From mean to noise.** Substituting $x_0 = (x_t - \sqrt{1-\bar\alpha_t}\,
 \varepsilon)/\sqrt{\bar\alpha_t}$ into $\tilde\mu_t$ gives
@@ -1690,13 +1707,19 @@ $$\frac{1}{2\sigma_t^2}\big\|\tilde\mu_t - \mu_\theta(x_t, t)\big\|^2 = \frac{\b
 Their "simple" loss $\mathbb{E}_{t, x_0, \varepsilon}\|\varepsilon -
 \varepsilon_\theta(x_t, t)\|^2$ discards these weights; in their words it is
 a weighted variational bound, a different objective from the bound itself,
-chosen because it gave better samples. Each term still has the same
-minimizer, so by Theorem 5 the optimal noise predictor is
-$\varepsilon_\theta^*(x_t, t) = \mathbb{E}[\varepsilon \mid x_t]$, and solving
-the closed form for $x_0$ gives the clean-image estimate
+chosen because it gave better samples. So the simple loss is reweighted
+denoising, not in general the path-likelihood objective. For an unrestricted
+predictor that can attain every conditional mean simultaneously, each term
+has the same minimizer under either weighting, and by Theorem 5 the optimal
+noise predictor is
+$\varepsilon_\theta^*(x_t, t) = \mathbb{E}[\varepsilon \mid x_t, t]$. A shared,
+finite network cannot in general attain all of these at once, and then the
+weights decide how errors at different $t$ are traded off, so the reweighted
+optimum can differ. For a fixed $t$, solving the closed form for $x_0$ gives the
+clean-image estimate
 $$\mathbb{E}[x_0 \mid x_t] = \frac{x_t - \sqrt{1-\bar\alpha_t}\, \mathbb{E}[\varepsilon \mid x_t]}{\sqrt{\bar\alpha_t}}.$$
 
-**The score is a conditional expectation.** Let $q_t$ be the density of the
+**The score is a conditional expectation.** Fix $t$ and let $q_t$ be the density of the
 noisy image $x_t$. Its score is the gradient $\nabla_x \ln q_t(x)$, the
 direction in which the noisy density increases fastest. The optimal noise
 predictor is, up to a known scale, exactly this score:
@@ -1718,9 +1741,12 @@ paragraph it also gives
 $\mathbb{E}[x_0 \mid x_t] = \big(x_t + (1-\bar\alpha_t)\, \nabla \ln q_t(x_t)\big)/\sqrt{\bar\alpha_t}$:
 the best clean-image guess moves the noisy image uphill along the score.
 
-So learning to denoise is learning the score, and the score is a conditional
-expectation, the MMSE estimator of Section 10. For a two-mode density the
-score at each point points toward the nearer mode. Ho et
+So the optimal denoiser is the score, up to scale, and the score is a
+conditional expectation, the MMSE estimator of Section 10. A trained network
+only approximates this population-optimal predictor: the theorem identifies
+the optimum, and does not guarantee that a finite network trained on finite
+data reaches it. The score points locally uphill in the noisy density, and
+it is zero at stationary points. Ho et
 al. note that the noise-prediction loss resembles denoising score matching
 over multiple noise scales (Song and Ermon 2019; Vincent 2011) and that their
 sampler resembles Langevin dynamics with $\varepsilon_\theta$ as a learned
@@ -1767,7 +1793,7 @@ Gaussian; write $q$ for the resulting distribution of $G(z)$ and $p$ for
 $p_{\text{data}}$. Sampling is cheap, but $q(x)$ is generally not available in
 closed form (when $G$ maps onto a lower-dimensional surface it need not even
 exist as a density), and GAN training never evaluates it. Instead a
-discriminator $D(x) \in (0, 1)$, read as the probability that $x$ is real, is
+discriminator $D(x) \in [0, 1]$, read as the probability that $x$ is real, is
 trained against the generator. The original objective (Goodfellow et al.
 2014), with natural logarithms, is the minimax game
 $$\min_G \max_D \; V(D, G) = \mathbb{E}_{x \sim p}\big[\ln D(x)\big] + \mathbb{E}_{z}\big[\ln\big(1 - D(G(z))\big)\big].$$
@@ -1781,10 +1807,16 @@ likelihood for its own distribution.
 variables $x = G(z)$ in the second expectation,
 $$V(D, G) = \int \big[\, p(x) \ln D(x) + q(x) \ln\big(1 - D(x)\big) \big]\, dx.$$
 With $G$ fixed, $D$ is unrestricted, so the integrand can be maximized
-separately at each $x$. For $a, b \ge 0$ not both zero, $f(y) = a \ln y +
-b \ln(1 - y)$ on $(0, 1)$ has $f'(y) = a/y - b/(1-y)$ and $f''(y) < 0$, so it
-is maximized at $y = a/(a+b)$. Hence
-$$D^*(x) = \frac{p(x)}{p(x) + q(x)}.$$
+separately at each $x$. Take $f(y) = a \ln y + b \ln(1 - y)$ on $[0, 1]$,
+with the conventions $\ln 0 = -\infty$ and $0 \cdot \ln 0 = 0$. If $a, b > 0$,
+then $f'(y) = a/y - b/(1-y)$ and $f''(y) < 0$, so $f$ is maximized at the
+interior point $y = a/(a+b)$. If $b = 0 < a$, the maximum is at $y = 1$, and
+if $a = 0 < b$ it is at $y = 0$; both again equal $a/(a+b)$. Hence
+$$D^*(x) = \frac{p(x)}{p(x) + q(x)},$$
+with $D^* = 1$ where $q(x) = 0 < p(x)$ and $D^* = 0$ where $p(x) = 0 < q(x)$.
+Where $p(x) + q(x) = 0$ the integrand vanishes, and the value of $D^*$ there is
+irrelevant. If $D$ is restricted to $(0, 1)$, as a sigmoid output is, these
+boundary optima are only limiting suprema, approached but not attained.
 For the two-mode mixture of Section 11.6 against the wide Gaussian fit A, $D^*$
 is high near the modes, where data outweighs the model, and near zero between
 them and in the tails, where the model puts mass the data does not.
@@ -1801,11 +1833,12 @@ a discriminator that is optimal over all functions, the generator minimizes
 the Jensen-Shannon divergence $\text{JS}(p_{\text{data}} \| q_\theta)$, where
 MLE minimizes the forward KL divergence $D(p_{\text{data}} \| q_\theta)$. Both
 have the same ideal target $q_\theta = p_{\text{data}}$; they differ in how
-they penalize a wrong model on the way: KL is asymmetric and infinite when the
-model misses data, JS is symmetric and at most $\ln 2$. The optimal
-discriminator also carries the likelihood ratio: $D^*/(1 - D^*) = p/q$, so a
-trained discriminator is an estimate of the density ratio that MLE would need
-but the generator never computes. These statements are an interpretation of
+they penalize a wrong model on the way. KL is asymmetric, and it is infinite
+when $q_\theta = 0$ on a set of positive data probability; merely assigning
+too little mass need not make it infinite. JS is symmetric and at most
+$\ln 2$. The optimal discriminator also carries the density ratio:
+$D^*/(1 - D^*) = p/q$, so a trained discriminator is an estimate of the
+data-to-model density ratio, a quantity the generator never computes. These statements are an interpretation of
 one objective, not a property of GANs in general: in practice the
 discriminator is a finite network trained a few steps at a time, and
 Goodfellow et al. already train the generator with the non-saturating variant
@@ -1852,13 +1885,15 @@ generator and discriminator, which this comparison does not model.
 | family | $q_\theta(x)$ computable? | training loss | relation to MLE |
 |---|---|---|---|
 | Language model | yes, chain rule | next-token cross-entropy | exactly MLE (autoregressive pretraining, ordinary cross-entropy SFT) |
-| Diffusion | generally intractable | per-step Gaussian negative log-likelihood (the variational bound), or the reweighted noise-prediction loss | exact MLE of the path model $p_\theta(x_{0:T})$; only a lower bound for $q_\theta(x_0)$ |
+| Diffusion | generally intractable | per-step Gaussian negative log-likelihood (the variational bound), or the reweighted noise-prediction loss | full bound: exact MLE of the path model $p_\theta(x_{0:T})$; simple loss: reweighted denoising; neither is in general MLE of $q_\theta(x_0)$ |
 | GAN | not needed | adversarial game | not MLE; with the original minimax objective and an optimal discriminator, minimizes the Jensen-Shannon divergence |
 
 One goal, $q_\theta \approx p_{\text{data}}$. Among these three training
 setups, only autoregressive pretraining (and cross-entropy fine-tuning) takes the exact maximum-likelihood
-route for $q_\theta(x)$ itself; diffusion models take it for the whole
-noising path and so obtain a bound for the image, and GANs replace the KL
+route for $q_\theta(x)$ itself. For diffusion models, the full bound is
+maximum likelihood for the whole noising path, and only a bound for the image;
+the simple loss used in practice reweights that bound into a denoising
+objective. GANs replace the KL
 divergence of MLE by the Jensen-Shannon divergence.
 
 ---

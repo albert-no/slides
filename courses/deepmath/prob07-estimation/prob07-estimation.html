@@ -2212,17 +2212,18 @@
   <div class="math-block" style="margin:8px 0">$$-\ln p_\theta(x_{t-1} \mid x_t) = \frac{1}{2\sigma_t^2} \big\| x_{t-1} - \mu_\theta(x_t, t) \big\|^2 + \text{const}$$</div>
   <ul>
     <li>Fixed variance: maximum likelihood $=$ least squares on the mean</li>
-    <li>Optimum over all functions (Thm 5): $\mu_\theta^*(x_t, t) = \mathbb{E}[x_{t-1} \mid x_t]$</li>
+    <li>Optimum over all functions (Thm 5): $\mu_\theta^*(x_t, t) = \mathbb{E}[x_{t-1} \mid x_t, t]$</li>
   </ul>
   <div class="highlight">
-    <p>Per step, DDPM training <strong>is</strong> Gaussian MLE.</p>
+    <p>Per step, the Gaussian bound term <strong>is</strong> Gaussian MLE.</p>
   </div>
+  <p class="muted">Continuous-Gaussian teaching model for $t \ge 2$; DDPM's final step to $x_0$ is a discretized decoder</p>
 </div>
 
 
 <!-- Is DDPM just MLE? -->
 <div class="slide">
-  <h2>So Is DDPM Just MLE? &mdash; Yes, for the Path</h2>
+  <h2>The Full ELBO Is Path-Likelihood Training</h2>
   <div class="divider"></div>
   <div class="math-block" style="margin:8px 0">$$\begin{aligned}
     \mathbb{E}_q\big[-\ln p_\theta(x_{0:T})\big]
@@ -2230,11 +2231,11 @@
     &amp;= -\,\mathbb{E}\big[\text{ELBO}_\theta(x_0)\big] + \text{const}
   \end{aligned}$$</div>
   <ul>
-    <li>Paths are simulated, so fully observed: <strong>exact MLE</strong> of $p_\theta(x_{0:T})$</li>
-    <li>Samples use only $x_0$: $\ln q_\theta(x_0) \ge \text{ELBO}_\theta(x_0)$, gap depends on $\theta$</li>
+    <li>Paths simulated, so observed: full ELBO $=$ <strong>exact MLE</strong> of $p_\theta(x_{0:T})$</li>
+    <li>Image alone: $\ln q_\theta(x_0) \ge \text{ELBO}_\theta(x_0)$, gap depends on $\theta$</li>
   </ul>
   <div class="highlight">
-    <p>MLE of the path; for $q_\theta(x_0)$ itself, only a <strong>bound</strong>.</p>
+    <p>Full bound: path MLE; simple loss: reweighted denoising. Neither is image MLE.</p>
   </div>
 </div>
 
@@ -2243,7 +2244,7 @@
 <div class="slide">
   <h2>From Mean to Noise &mdash; DDPM's Loss</h2>
   <div class="divider"></div>
-  <p>Lower-variance target: condition on $x_0$ as well (same minimizer, by the tower property)</p>
+  <p>For $t \ge 2$: also condition on $x_0$ &mdash; same minimizer (tower), less noise</p>
   <div class="math-block" style="margin:8px 0">$$\begin{aligned}
     \tilde\mu_t = \mathbb{E}[x_{t-1} \mid x_t, x_0]
     &amp;= \tfrac{1}{\sqrt{\alpha_t}} \Big( x_t - \tfrac{\beta_t}{\sqrt{1-\bar\alpha_t}}\, \varepsilon \Big),
@@ -2254,8 +2255,8 @@
     &amp;= \tfrac{\beta_t^2}{2\sigma_t^2 \alpha_t (1-\bar\alpha_t)}\, \big\| \varepsilon - \varepsilon_\theta(x_t, t) \big\|^2
   \end{aligned}$$</div>
   <ul>
-    <li>DDPM's simple loss <strong>drops the weight</strong>: a reweighted bound</li>
-    <li>Optimum (Thm 5): $\varepsilon_\theta^*(x_t, t) = \mathbb{E}[\varepsilon \mid x_t]$</li>
+    <li>DDPM's simple loss <strong>drops the weight</strong>: a reweighted objective</li>
+    <li>Unrestricted optimum (Thm 5): $\varepsilon_\theta^*(x_t, t) = \mathbb{E}[\varepsilon \mid x_t, t]$</li>
   </ul>
 </div>
 
@@ -2284,12 +2285,12 @@
   </svg>
   <span class="fl fl-grey" style="left:12.00%;top:52.00%">noisy density $q_t$</span>
   </div>
-  <p><strong>Score</strong> (arrows) $\nabla_x \ln q_t(x)$: the direction in which $q_t$ rises fastest</p>
+  <p>Fix $t$. <strong>Score</strong> (arrows) $\nabla_x \ln q_t(x)$: the direction in which $q_t$ rises fastest</p>
   <div class="math-block" style="margin:8px 0">$$\nabla \ln q_t(x_t) = -\frac{\mathbb{E}[\varepsilon \mid x_t]}{\sqrt{1-\bar\alpha_t}}
     \quad\Longrightarrow\quad
     \varepsilon_\theta^* = -\sqrt{1-\bar\alpha_t}\; \nabla \ln q_t$$</div>
   <div class="highlight">
-    <p>Learning to denoise $=$ learning the score: a <strong>conditional expectation</strong> (Thm 5).</p>
+    <p>Optimal denoiser $=$ score, a <strong>conditional expectation</strong> (Thm 5); training approximates it.</p>
   </div>
 </div>
 
@@ -2298,7 +2299,7 @@
 <div class="slide">
   <h2>Proof &mdash; Differentiate the Gaussian Kernel</h2>
   <div class="divider"></div>
-  <p>$q_t(x) = \int p_{\text{data}}(x_0)\, \varphi_t(x \mid x_0)\, dx_0$, &nbsp;with $\varphi_t$ the density of $\mathcal{N}\big(\sqrt{\bar\alpha_t}\, x_0, (1-\bar\alpha_t) I\big)$</p>
+  <p>Fix $t$. &nbsp;$q_t(x) = \int p_{\text{data}}(x_0)\, \varphi_t(x \mid x_0)\, dx_0$, &nbsp;with $\varphi_t$ the density of $\mathcal{N}\big(\sqrt{\bar\alpha_t}\, x_0, (1-\bar\alpha_t) I\big)$</p>
   <div class="math-block" style="margin:8px 0">$$\begin{aligned}
     \nabla q_t(x) &amp;= \int p_{\text{data}}(x_0)\, \varphi_t(x \mid x_0) \Big( -\frac{x - \sqrt{\bar\alpha_t}\, x_0}{1-\bar\alpha_t} \Big) dx_0 \\[4pt]
     \nabla \ln q_t(x) = \frac{\nabla q_t(x)}{q_t(x)} &amp;= -\frac{\mathbb{E}\big[x_t - \sqrt{\bar\alpha_t}\, x_0 \mid x_t = x\big]}{1-\bar\alpha_t} \\[4pt]
@@ -2341,7 +2342,7 @@
   </div>
   <div class="math-block" style="margin:8px 0">$$\min_G \max_D \; V(D, G) = \mathbb{E}_{x \sim p}\big[\ln D(x)\big] + \mathbb{E}_{z}\big[\ln\big(1 - D(G(z))\big)\big]$$</div>
   <ul>
-    <li>$D(x)$: probability &ldquo;real&rdquo;; maximizing $V$ $=$ binary cross-entropy</li>
+    <li>$D(x)$: probability &ldquo;real&rdquo;; maximizing $V$ $=$ minimizing binary cross-entropy</li>
     <li>$G$ only needs samples: $q(x)$ is <strong>never evaluated</strong></li>
   </ul>
   <p class="muted">Goodfellow et al. 2014. Here $p = p_{\text{data}}$, $q = q_\theta$ (density of $G(z)$)</p>
@@ -2389,13 +2390,13 @@
 <div class="slide">
   <h2>Step 1 &mdash; the Best Discriminator</h2>
   <div class="divider"></div>
-  <p>Fix $G$; with $q$ the density of $G(z)$, maximize pointwise in $x$:</p>
+  <p>Fix $G$, $q$ the density of $G(z)$; maximize pointwise over $D(x) \in [0, 1]$:</p>
   <div class="math-block" style="margin:8px 0">$$\begin{gathered}
     V(D, G) = \int \big[\, p(x) \ln D(x) + q(x) \ln\big(1 - D(x)\big) \big]\, dx \\[4pt]
     a \ln y + b \ln(1 - y) \text{ peaks at } y = \tfrac{a}{a+b}
     \;\Longrightarrow\; D^*(x) = \frac{p(x)}{p(x) + q(x)}
   \end{gathered}$$</div>
-  <div class="p6-fig" style="max-width:700px;margin:0 auto;">
+  <div class="p6-fig" style="max-width:560px;margin:0 auto;">
   <svg viewBox="0 0 760 175">
     <path d="M40.0,160.0 L41.9,160.0 L43.8,160.0 L45.6,160.0 L47.5,160.0 L49.4,160.0 L51.3,160.0 L53.2,160.0 L55.1,160.0 L57.0,160.0 L58.9,160.0 L60.8,160.0 L62.6,160.0 L64.5,160.0 L66.4,160.0 L68.3,160.0 L70.2,160.0 L72.1,160.0 L74.0,160.0 L75.9,160.0 L77.8,160.0 L79.6,160.0 L81.5,160.0 L83.4,160.0 L85.3,160.0 L87.2,160.0 L89.1,160.0 L91.0,160.0 L92.9,160.0 L94.8,160.0 L96.6,160.0 L98.5,160.0 L100.4,160.0 L102.3,160.0 L104.2,160.0 L106.1,160.0 L108.0,160.0 L109.9,160.0 L111.8,160.0 L113.7,160.0 L115.5,160.0 L117.4,159.9 L119.3,159.9 L121.2,159.9 L123.1,159.9 L125.0,159.9 L126.9,159.9 L128.8,159.8 L130.7,159.8 L132.5,159.8 L134.4,159.7 L136.3,159.7 L138.2,159.6 L140.1,159.5 L142.0,159.4 L143.9,159.3 L145.8,159.2 L147.7,159.1 L149.5,158.9 L151.4,158.8 L153.3,158.6 L155.2,158.3 L157.1,158.1 L159.0,157.8 L160.9,157.4 L162.8,157.0 L164.7,156.6 L166.5,156.1 L168.4,155.6 L170.3,155.0 L172.2,154.3 L174.1,153.6 L176.0,152.7 L177.9,151.8 L179.8,150.8 L181.7,149.7 L183.5,148.5 L185.4,147.1 L187.3,145.7 L189.2,144.1 L191.1,142.5 L193.0,140.6 L194.9,138.7 L196.8,136.6 L198.7,134.3 L200.5,132.0 L202.4,129.4 L204.3,126.8 L206.2,124.0 L208.1,121.0 L210.0,117.9 L211.9,114.7 L213.8,111.3 L215.7,107.9 L217.5,104.3 L219.4,100.6 L221.3,96.9 L223.2,93.1 L225.1,89.2 L227.0,85.3 L228.9,81.4 L230.8,77.4 L232.7,73.5 L234.5,69.7 L236.4,65.9 L238.3,62.1 L240.2,58.5 L242.1,55.0 L244.0,51.7 L245.9,48.5 L247.8,45.6 L249.7,42.8 L251.5,40.3 L253.4,38.0 L255.3,36.0 L257.2,34.3 L259.1,32.9 L261.0,31.8 L262.9,31.0 L264.8,30.5 L266.7,30.3 L268.5,30.5 L270.4,31.0 L272.3,31.8 L274.2,32.9 L276.1,34.3 L278.0,36.0 L279.9,38.0 L281.8,40.3 L283.7,42.8 L285.6,45.6 L287.4,48.5 L289.3,51.7 L291.2,55.0 L293.1,58.5 L295.0,62.1 L296.9,65.9 L298.8,69.7 L300.7,73.5 L302.6,77.4 L304.4,81.4 L306.3,85.3 L308.2,89.2 L310.1,93.1 L312.0,96.9 L313.9,100.6 L315.8,104.3 L317.7,107.9 L319.6,111.3 L321.4,114.7 L323.3,117.9 L325.2,121.0 L327.1,123.9 L329.0,126.8 L330.9,129.4 L332.8,131.9 L334.7,134.3 L336.6,136.6 L338.4,138.6 L340.3,140.6 L342.2,142.4 L344.1,144.1 L346.0,145.6 L347.9,147.1 L349.8,148.4 L351.7,149.6 L353.6,150.7 L355.4,151.6 L357.3,152.5 L359.2,153.3 L361.1,154.0 L363.0,154.6 L364.9,155.2 L366.8,155.7 L368.7,156.1 L370.6,156.4 L372.4,156.7 L374.3,156.9 L376.2,157.0 L378.1,157.1 L380.0,157.1 L381.9,157.1 L383.8,157.0 L385.7,156.9 L387.6,156.7 L389.4,156.4 L391.3,156.1 L393.2,155.7 L395.1,155.2 L397.0,154.6 L398.9,154.0 L400.8,153.3 L402.7,152.5 L404.6,151.6 L406.4,150.7 L408.3,149.6 L410.2,148.4 L412.1,147.1 L414.0,145.6 L415.9,144.1 L417.8,142.4 L419.7,140.6 L421.6,138.6 L423.4,136.6 L425.3,134.3 L427.2,131.9 L429.1,129.4 L431.0,126.8 L432.9,123.9 L434.8,121.0 L436.7,117.9 L438.6,114.7 L440.4,111.3 L442.3,107.9 L444.2,104.3 L446.1,100.6 L448.0,96.9 L449.9,93.1 L451.8,89.2 L453.7,85.3 L455.6,81.4 L457.4,77.4 L459.3,73.5 L461.2,69.7 L463.1,65.9 L465.0,62.1 L466.9,58.5 L468.8,55.0 L470.7,51.7 L472.6,48.5 L474.4,45.6 L476.3,42.8 L478.2,40.3 L480.1,38.0 L482.0,36.0 L483.9,34.3 L485.8,32.9 L487.7,31.8 L489.6,31.0 L491.5,30.5 L493.3,30.3 L495.2,30.5 L497.1,31.0 L499.0,31.8 L500.9,32.9 L502.8,34.3 L504.7,36.0 L506.6,38.0 L508.5,40.3 L510.3,42.8 L512.2,45.6 L514.1,48.5 L516.0,51.7 L517.9,55.0 L519.8,58.5 L521.7,62.1 L523.6,65.9 L525.5,69.7 L527.3,73.5 L529.2,77.4 L531.1,81.4 L533.0,85.3 L534.9,89.2 L536.8,93.1 L538.7,96.9 L540.6,100.6 L542.5,104.3 L544.3,107.9 L546.2,111.3 L548.1,114.7 L550.0,117.9 L551.9,121.0 L553.8,124.0 L555.7,126.8 L557.6,129.4 L559.5,132.0 L561.3,134.3 L563.2,136.6 L565.1,138.7 L567.0,140.6 L568.9,142.5 L570.8,144.1 L572.7,145.7 L574.6,147.1 L576.5,148.5 L578.3,149.7 L580.2,150.8 L582.1,151.8 L584.0,152.7 L585.9,153.6 L587.8,154.3 L589.7,155.0 L591.6,155.6 L593.5,156.1 L595.3,156.6 L597.2,157.0 L599.1,157.4 L601.0,157.8 L602.9,158.1 L604.8,158.3 L606.7,158.6 L608.6,158.8 L610.5,158.9 L612.3,159.1 L614.2,159.2 L616.1,159.3 L618.0,159.4 L619.9,159.5 L621.8,159.6 L623.7,159.7 L625.6,159.7 L627.5,159.8 L629.3,159.8 L631.2,159.8 L633.1,159.9 L635.0,159.9 L636.9,159.9 L638.8,159.9 L640.7,159.9 L642.6,159.9 L644.5,160.0 L646.3,160.0 L648.2,160.0 L650.1,160.0 L652.0,160.0 L653.9,160.0 L655.8,160.0 L657.7,160.0 L659.6,160.0 L661.5,160.0 L663.4,160.0 L665.2,160.0 L667.1,160.0 L669.0,160.0 L670.9,160.0 L672.8,160.0 L674.7,160.0 L676.6,160.0 L678.5,160.0 L680.4,160.0 L682.2,160.0 L684.1,160.0 L686.0,160.0 L687.9,160.0 L689.8,160.0 L691.7,160.0 L693.6,160.0 L695.5,160.0 L697.4,160.0 L699.2,160.0 L701.1,160.0 L703.0,160.0 L704.9,160.0 L706.8,160.0 L708.7,160.0 L710.6,160.0 L712.5,160.0 L714.4,160.0 L716.2,160.0 L718.1,160.0 L720.0,160.0 L720,160 L40,160 Z" fill="#d5dde6" stroke="#5b6770" stroke-width="2"/>
     <path d="M40.0,158.6 L41.9,158.5 L43.8,158.4 L45.6,158.4 L47.5,158.3 L49.4,158.2 L51.3,158.1 L53.2,158.1 L55.1,158.0 L57.0,157.9 L58.9,157.8 L60.8,157.7 L62.6,157.6 L64.5,157.5 L66.4,157.4 L68.3,157.3 L70.2,157.2 L72.1,157.0 L74.0,156.9 L75.9,156.8 L77.8,156.7 L79.6,156.5 L81.5,156.4 L83.4,156.2 L85.3,156.1 L87.2,155.9 L89.1,155.8 L91.0,155.6 L92.9,155.4 L94.8,155.3 L96.6,155.1 L98.5,154.9 L100.4,154.7 L102.3,154.5 L104.2,154.3 L106.1,154.1 L108.0,153.9 L109.9,153.6 L111.8,153.4 L113.7,153.2 L115.5,152.9 L117.4,152.7 L119.3,152.4 L121.2,152.1 L123.1,151.9 L125.0,151.6 L126.9,151.3 L128.8,151.0 L130.7,150.7 L132.5,150.4 L134.4,150.1 L136.3,149.8 L138.2,149.4 L140.1,149.1 L142.0,148.7 L143.9,148.4 L145.8,148.0 L147.7,147.6 L149.5,147.2 L151.4,146.8 L153.3,146.4 L155.2,146.0 L157.1,145.6 L159.0,145.2 L160.9,144.7 L162.8,144.3 L164.7,143.8 L166.5,143.4 L168.4,142.9 L170.3,142.4 L172.2,141.9 L174.1,141.4 L176.0,140.9 L177.9,140.4 L179.8,139.9 L181.7,139.3 L183.5,138.8 L185.4,138.2 L187.3,137.7 L189.2,137.1 L191.1,136.5 L193.0,135.9 L194.9,135.3 L196.8,134.7 L198.7,134.1 L200.5,133.5 L202.4,132.8 L204.3,132.2 L206.2,131.5 L208.1,130.9 L210.0,130.2 L211.9,129.5 L213.8,128.9 L215.7,128.2 L217.5,127.5 L219.4,126.8 L221.3,126.1 L223.2,125.3 L225.1,124.6 L227.0,123.9 L228.9,123.2 L230.8,122.4 L232.7,121.7 L234.5,120.9 L236.4,120.2 L238.3,119.4 L240.2,118.6 L242.1,117.9 L244.0,117.1 L245.9,116.3 L247.8,115.6 L249.7,114.8 L251.5,114.0 L253.4,113.2 L255.3,112.4 L257.2,111.6 L259.1,110.9 L261.0,110.1 L262.9,109.3 L264.8,108.5 L266.7,107.7 L268.5,106.9 L270.4,106.1 L272.3,105.4 L274.2,104.6 L276.1,103.8 L278.0,103.0 L279.9,102.3 L281.8,101.5 L283.7,100.8 L285.6,100.0 L287.4,99.3 L289.3,98.5 L291.2,97.8 L293.1,97.1 L295.0,96.3 L296.9,95.6 L298.8,94.9 L300.7,94.2 L302.6,93.5 L304.4,92.9 L306.3,92.2 L308.2,91.5 L310.1,90.9 L312.0,90.3 L313.9,89.6 L315.8,89.0 L317.7,88.4 L319.6,87.9 L321.4,87.3 L323.3,86.7 L325.2,86.2 L327.1,85.7 L329.0,85.1 L330.9,84.6 L332.8,84.2 L334.7,83.7 L336.6,83.2 L338.4,82.8 L340.3,82.4 L342.2,82.0 L344.1,81.6 L346.0,81.3 L347.9,80.9 L349.8,80.6 L351.7,80.3 L353.6,80.0 L355.4,79.7 L357.3,79.5 L359.2,79.2 L361.1,79.0 L363.0,78.8 L364.9,78.7 L366.8,78.5 L368.7,78.4 L370.6,78.3 L372.4,78.2 L374.3,78.1 L376.2,78.0 L378.1,78.0 L380.0,78.0 L381.9,78.0 L383.8,78.0 L385.7,78.1 L387.6,78.2 L389.4,78.3 L391.3,78.4 L393.2,78.5 L395.1,78.7 L397.0,78.8 L398.9,79.0 L400.8,79.2 L402.7,79.5 L404.6,79.7 L406.4,80.0 L408.3,80.3 L410.2,80.6 L412.1,80.9 L414.0,81.3 L415.9,81.6 L417.8,82.0 L419.7,82.4 L421.6,82.8 L423.4,83.2 L425.3,83.7 L427.2,84.2 L429.1,84.6 L431.0,85.1 L432.9,85.7 L434.8,86.2 L436.7,86.7 L438.6,87.3 L440.4,87.9 L442.3,88.4 L444.2,89.0 L446.1,89.6 L448.0,90.3 L449.9,90.9 L451.8,91.5 L453.7,92.2 L455.6,92.9 L457.4,93.5 L459.3,94.2 L461.2,94.9 L463.1,95.6 L465.0,96.3 L466.9,97.1 L468.8,97.8 L470.7,98.5 L472.6,99.3 L474.4,100.0 L476.3,100.8 L478.2,101.5 L480.1,102.3 L482.0,103.0 L483.9,103.8 L485.8,104.6 L487.7,105.4 L489.6,106.1 L491.5,106.9 L493.3,107.7 L495.2,108.5 L497.1,109.3 L499.0,110.1 L500.9,110.9 L502.8,111.6 L504.7,112.4 L506.6,113.2 L508.5,114.0 L510.3,114.8 L512.2,115.6 L514.1,116.3 L516.0,117.1 L517.9,117.9 L519.8,118.6 L521.7,119.4 L523.6,120.2 L525.5,120.9 L527.3,121.7 L529.2,122.4 L531.1,123.2 L533.0,123.9 L534.9,124.6 L536.8,125.3 L538.7,126.1 L540.6,126.8 L542.5,127.5 L544.3,128.2 L546.2,128.9 L548.1,129.5 L550.0,130.2 L551.9,130.9 L553.8,131.5 L555.7,132.2 L557.6,132.8 L559.5,133.5 L561.3,134.1 L563.2,134.7 L565.1,135.3 L567.0,135.9 L568.9,136.5 L570.8,137.1 L572.7,137.7 L574.6,138.2 L576.5,138.8 L578.3,139.3 L580.2,139.9 L582.1,140.4 L584.0,140.9 L585.9,141.4 L587.8,141.9 L589.7,142.4 L591.6,142.9 L593.5,143.4 L595.3,143.8 L597.2,144.3 L599.1,144.7 L601.0,145.2 L602.9,145.6 L604.8,146.0 L606.7,146.4 L608.6,146.8 L610.5,147.2 L612.3,147.6 L614.2,148.0 L616.1,148.4 L618.0,148.7 L619.9,149.1 L621.8,149.4 L623.7,149.8 L625.6,150.1 L627.5,150.4 L629.3,150.7 L631.2,151.0 L633.1,151.3 L635.0,151.6 L636.9,151.9 L638.8,152.1 L640.7,152.4 L642.6,152.7 L644.5,152.9 L646.3,153.2 L648.2,153.4 L650.1,153.6 L652.0,153.9 L653.9,154.1 L655.8,154.3 L657.7,154.5 L659.6,154.7 L661.5,154.9 L663.4,155.1 L665.2,155.3 L667.1,155.4 L669.0,155.6 L670.9,155.8 L672.8,155.9 L674.7,156.1 L676.6,156.2 L678.5,156.4 L680.4,156.5 L682.2,156.7 L684.1,156.8 L686.0,156.9 L687.9,157.0 L689.8,157.2 L691.7,157.3 L693.6,157.4 L695.5,157.5 L697.4,157.6 L699.2,157.7 L701.1,157.8 L703.0,157.9 L704.9,158.0 L706.8,158.1 L708.7,158.1 L710.6,158.2 L712.5,158.3 L714.4,158.4 L716.2,158.4 L718.1,158.5 L720.0,158.6" fill="none" stroke="#003876" stroke-width="3"/>
@@ -2408,6 +2409,7 @@
   <span class="fl fl-sub fl-red" style="left:84.00%;top:14.29%">$D^*$ (0 to 1)</span>
   <span class="fl fl-sub fl-grey" style="left:97.00%;top:51.43%">$\tfrac12$</span>
   </div>
+  <p class="muted">$q(x) = 0 \Rightarrow D^* = 1$; &nbsp;$p(x) = 0 \Rightarrow D^* = 0$; &nbsp;where $p + q = 0$, any value</p>
 </div>
 
 
@@ -2433,12 +2435,12 @@
 <div class="slide">
   <h2>Reading the GAN Loss</h2>
   <div class="divider"></div>
-  <table style="max-width:900px;margin-bottom:18px">
+  <table style="max-width:1100px;margin-bottom:18px">
     <thead><tr><th></th><th>MLE</th><th>minimax GAN, ideal <span style="text-transform:none">$D$</span></th></tr></thead>
     <tbody>
       <tr><td>minimizes</td><td>$D(p_{\text{data}} \| q_\theta)$</td><td>$\text{JS}(p_{\text{data}} \| q_\theta)$</td></tr>
       <tr><td>symmetric?</td><td>no</td><td>yes</td></tr>
-      <tr><td>$q_\theta$ misses data</td><td>$\infty$</td><td>at most $\ln 2$</td></tr>
+      <tr><td>$q_\theta = 0$ on a set $A$, $P_{\text{data}}(A) > 0$</td><td>$\infty$</td><td>at most $\ln 2$</td></tr>
     </tbody>
   </table>
   <p>$D^* / (1 - D^*) = p / q$: the discriminator learns the <strong>density ratio</strong></p>
@@ -2478,7 +2480,7 @@
     <thead><tr><th>family</th><th><span style="text-transform:none">$q_\theta(x)$</span> computable?</th><th>training loss</th><th>relation to MLE</th></tr></thead>
     <tbody>
       <tr><td>LLM</td><td>yes &mdash; chain rule</td><td>next-token CE</td><td><strong>exactly MLE</strong> (pretraining, CE SFT)</td></tr>
-      <tr><td>Diffusion</td><td>generally intractable</td><td>per-step Gaussian NLL / reweighted <span style="text-transform:none">$\varepsilon$</span>-loss</td><td>exact MLE of the path; only a bound for <span style="text-transform:none">$q_\theta(x_0)$</span></td></tr>
+      <tr><td>Diffusion</td><td>generally intractable</td><td>per-step Gaussian NLL / reweighted <span style="text-transform:none">$\varepsilon$</span>-loss</td><td>full bound: path MLE; simple loss: reweighted denoising; neither is image MLE</td></tr>
       <tr><td>GAN</td><td>not needed</td><td>adversarial game</td><td>not MLE; ideal minimax minimizes JS</td></tr>
     </tbody>
   </table>

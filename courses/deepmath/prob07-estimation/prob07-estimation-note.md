@@ -1620,15 +1620,16 @@ $\theta$, so raising the bound need not raise the likelihood, and the
 maximizer of the bound is in general not the maximum-likelihood estimate.
 Ho, Jain and Abbeel (2020) start from this variational bound on the negative
 log-likelihood. With the reverse-step variances held fixed, the intermediate
-terms of the bound are KL divergences between Gaussians with equal
-variances, and each reduces to a squared error between means. With the
+terms of the bound are KL divergences between Gaussians with fixed
+variances; each such KL is a weighted squared difference of means plus a
+$\theta$-independent constant. With the
 network parameterized to predict the added noise $\varepsilon$ from
 $x_t = \sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\, \varepsilon$,
 each such term becomes a weighted $\|\varepsilon - \varepsilon_\theta(x_t,
 t)\|^2$. Their "simple" loss discards those weights; in their words it is a
 weighted variational bound, a different objective from the bound itself,
-chosen because it gave better samples. The same
-Gaussian-log-likelihood-equals-squared-error identity was behind the Gaussian
+chosen because it gave better samples. The same identity, Gaussian negative log-likelihood equals scaled squared
+error plus a constant when the variance is fixed, was behind the Gaussian
 MLE of Section 7.4.
 
 Theorem 5 then names the target: the minimizer of
@@ -1714,8 +1715,8 @@ generator and discriminator, which this comparison does not model.
 | Diffusion | generally intractable | variational bound, or reweighted denoising squared error | likelihood-related through a bound and denoising; not generally exact MLE |
 | GAN | not needed | adversarial game | not MLE; the original minimax objective has a Jensen-Shannon interpretation |
 
-One goal, $q_\theta \approx p_{\text{data}}$. Only autoregressive
-pretraining (and cross-entropy fine-tuning) takes the exact maximum-likelihood
+One goal, $q_\theta \approx p_{\text{data}}$. Among these three training
+setups, only autoregressive pretraining (and cross-entropy fine-tuning) takes the exact maximum-likelihood
 route; diffusion models approach it through a bound, and GANs use an
 adversarial objective instead.
 

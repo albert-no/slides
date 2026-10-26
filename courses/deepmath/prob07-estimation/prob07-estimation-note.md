@@ -78,17 +78,24 @@ probability of *any* classifier is floored by Fano's inequality (Section 6) -
 a statement about the joint distribution of input and label, not about the
 model class.
 
-### 1.2 The question Lecture 6 left open
+### 1.2 Where the loss comes from
 
-Lecture 6's finite-class theorem certified the empirical-risk-minimization
-pick: $R(\hat{h}) \le R(h^*) + 2\epsilon$ with high probability when
-$n \gg \ln|\mathcal{H}|$ (Lecture 6 full / advanced note, Sections 7.3 to 7.4). That is a
-statement about *whatever* hypothesis empirical risk minimization returns. It
-never says how a hypothesis should be scored in the first place, nor why low
-empirical loss is the right thing to minimize. This lecture supplies the
-principle (likelihood), the correction for base rates (the prior), the
-fundamental limit (Fano), and the exact error accounting for the squared-error
-view (bias and variance, MMSE).
+A discrete model $q_\theta$ assigns a probability to every possible data point. Having
+observed independent and identically distributed $x_1, \dots, x_n$, the
+natural rule is to pick the $\theta$ under which the data actually seen is most
+probable: maximize the likelihood $\prod_{i=1}^n q_\theta(x_i)$. Taking
+logarithms (an increasing map), dividing by $n$ and flipping the sign turns the
+maximization into
+
+$$ \min_\theta \; \frac{1}{n} \sum_{i=1}^n \log \frac{1}{q_\theta(x_i)}, $$
+
+which is exactly the cross-entropy loss. Grouping the sum by symbol (Section
+7.5) rewrites it as $H(\hat{p}_n, q_\theta)$, the cross-entropy from the
+empirical distribution of the data to the model. So maximum likelihood is a
+second, independent justification of the cross-entropy loss. This lecture
+then supplies the correction for base rates (the prior), the fundamental
+limit (Fano), and the exact error accounting for the squared-error view (bias
+and variance, MMSE).
 
 ### 1.3 Two faces of one problem
 
@@ -298,6 +305,16 @@ which $y$ is most probable?" ranks the posterior $p_{Y|X}(y \mid x)$ - the
 maximum a posteriori estimator, needing additionally a prior $p_Y$. The two
 answers coincide under a uniform prior (Section 5.2) and genuinely differ
 otherwise (Section 5.3, at $x = 185$).
+
+In plain words, for a continuous height an exact value such as $176$ cm has
+probability zero, so both questions are read through a narrow window
+$[x, x + \delta]$. The likelihood question asks which population gives more
+probability to that window; since that probability is about
+$f_{X|Y}(x \mid y)\,\delta$, this compares densities (Section 3.2). The
+posterior $p_{Y|X}(A \mid x)$ is the fraction from A among people whose
+heights fall in the window, that is, the limit of
+$\Pr(Y = A \mid x \le X \le x + \delta)$ as $\delta \to 0$. It is not a
+literal positive-probability group of people exactly $176$ cm tall.
 
 ---
 
@@ -738,21 +755,24 @@ at least the leftover uncertainty $H(Y \mid X)$, and the $E$-first order makes
 it at most "one flag plus, on errors, one label among the wrong ones" - and the
 two readings sandwich $P_e$.
 
-### 6.4 Worked: the eight-class example, both forms
+### 6.4 Worked: the 1024-class example, both forms
 
-Take $|\mathcal{Y}| = 8$, so $\log 8 = 3$ bits, and suppose noisy labels leave
-$H(Y \mid X) = 2.5$ bits. The lecture's form gives
+Take $|\mathcal{Y}| = 1024$, so $\log 1024 = 10$ bits (the largest possible
+label entropy, not necessarily $H(Y)$), and suppose that knowing $X$ still
+leaves $H(Y \mid X) = 1.5$ bits. Conditional entropy averages over $X$: averaged
+over inputs, $1.5$ bits of label uncertainty remain, and that already forces
+nonzero error. The lecture's form gives
 
-$$ P_e \;\ge\; \frac{2.5 - 1}{3} = \frac{1.5}{3} = 0.5. $$
+$$ P_e \;\ge\; \frac{1.5 - 1}{10} = 0.05. $$
 
-The sharp form asks for $h_2(P_e) + P_e \log 7 \ge 2.5$ with
-$\log 7 = 2.807$. The left side is increasing in $P_e$ on the relevant range,
-and numerically it equals $2.5$ at $P_e \approx 0.536$: at $P_e = 0.53$ it is
-$0.997 + 1.488 = 2.485 < 2.5$, and at $P_e = 0.55$ it is
-$0.993 + 1.544 = 2.537 > 2.5$. So the honest floor is about $53.6\%$ error, and
-the lecture's $50\%$ is a slightly generous round-down, as a weakened bound
-must be. No architecture, dataset size, or training trick evades either number:
-the floor depends only on the joint distribution of $(X, Y)$.
+The sharp form asks for $h_2(P_e) + P_e \log 1023 \ge 1.5$ with
+$\log 1023 = 9.9986$. The left side is increasing in $P_e$ on the relevant
+range, and numerically it equals $1.5$ at $P_e \approx 0.1024$: at
+$P_e = 0.10$ it is $1.4689 < 1.5$, and at $P_e = 0.11$ it is
+$1.5998 > 1.5$. So the sharp form gives a floor of about $10.24\%$ error; the
+lecture's $5\%$ is the weaker bound, valid but less tight. No architecture,
+dataset size, or training trick evades either number: the floor depends only
+on the joint distribution of $(X, Y)$.
 
 ### 6.5 Edge cases: when the lecture's form is vacuous, and binary labels
 
@@ -893,11 +913,14 @@ is likelihood thinking in miniature (Section 3.2).
 ### 7.4 Gaussian MLE, both parameters, with the checks
 
 **Example.** $X_i$ independent $\mathcal{N}(\mu, \sigma^2)$, with
-$\theta = (\mu, \sigma^2)$. The log-likelihood, dropping nothing, is
+$\theta = (\mu, \sigma^2)$. In this derivation $\ln$ is the natural logarithm
+(not the note's default base $2$); changing the base only rescales $\ell$ by a
+positive constant, so the MLE is unchanged. The log-likelihood, dropping
+nothing, is
 
 $$ \ell(\mu, \sigma^2) = \sum_{i=1}^n
    \left[ -\frac{(x_i - \mu)^2}{2\sigma^2}
-   - \frac{1}{2} \log 2\pi\sigma^2 \right]. $$
+   - \frac{1}{2} \ln 2\pi\sigma^2 \right]. $$
 
 **Solve for $\mu$** with $\sigma^2$ fixed:
 
@@ -915,7 +938,7 @@ fact proved in the Lecture 6 full / advanced note, Lemma 3.1 Step A.
 **Solve for $\sigma^2$.** At the joint optimum, substitute the fitted
 $\hat{\mu}$ into the variance solution. Writing $t = \sigma^2$ and
 $S = \sum_i (x_i - \hat{\mu})^2$, the remaining objective is
-$\ell(t) = -\frac{S}{2t} - \frac{n}{2} \log(2\pi t)$:
+$\ell(t) = -\frac{S}{2t} - \frac{n}{2} \ln(2\pi t)$:
 
 $$ \ell'(t) = \frac{S}{2t^2} - \frac{n}{2t} = 0
    \;\Longleftrightarrow\; t = \frac{S}{n}
@@ -989,6 +1012,13 @@ equality of the claim - dividing by the constant $n > 0$ and negating flips
 argmax to argmin, by Section 7.1's monotone-map argument with
 $\phi(u) = -u/n$.
 
+*Worked (the deck's example).* On $\mathcal{X} = \{a, b, c, d\}$ the ten
+samples a b a c a d b a c a have counts $N = (5, 2, 2, 1)$, so
+$\hat{p}_{10} = (0.5, 0.2, 0.2, 0.1)$, and the average loss regroups as
+$\frac{5}{10} \log \frac{1}{q(a)} + \frac{2}{10} \log \frac{1}{q(b)}
++ \frac{2}{10} \log \frac{1}{q(c)} + \frac{1}{10} \log \frac{1}{q(d)}
+= H(\hat{p}_{10}, q)$.
+
 **Step 2 (split off the constant).** By Lecture 2's mismatch theorem
 (Lecture 2 note, Section 3), $H(P, Q) = H(P) + D(P \| Q)$. With
 $P = \hat{p}_n$ fixed by the data and $Q = q_\theta$ the only
@@ -1016,7 +1046,9 @@ Let the features be $X^n = (X_1, \dots, X_n)$, each binary, and let the label
 $Y$ be binary. To run Section 5's MAP classifier one needs the
 class-conditional model $p_{X^n|Y}(\cdot \mid y)$ for each $y$: a pmf on
 $\{0,1\}^n$, that is $2^n$ numbers summing to $1$, hence $2^n - 1$ free
-parameters *per class*. For seven-by-seven binarized images, $n = 49$, and
+parameters *per class*. For seven-by-seven binarized images, $n = 49$ (the
+lecture's seven-by-seven grid is an illustrative approximation of its
+displayed digit, not computed from the original MNIST sample), and
 
 $$ 2^{49} = 562{,}949{,}953{,}421{,}312 \approx 5.63 \times 10^{14}, $$
 
@@ -1084,10 +1116,10 @@ Bayes' rule with the products factorized: every ingredient is a count.
 
 ### 8.4 Worked: the ten-mail training set, every number re-derived
 
-Take $N = 10$: four spam, six ham. The prior is $p_Y(1) = \tfrac{4}{10}
+Take $N = 10$: four spam, six non-spam. The prior is $p_Y(1) = \tfrac{4}{10}
 = \tfrac{2}{5}$ and $p_Y(0) = \tfrac{3}{5}$. The counts: "free" appears in $3$
-of the $4$ spam and $1$ of the $6$ ham; "meeting" appears in $1$ of the $4$
-spam and $4$ of the $6$ ham. Hence the four fitted parameters
+of the $4$ spam and $1$ of the $6$ non-spam; "meeting" appears in $1$ of the $4$
+spam and $4$ of the $6$ non-spam. Hence the four fitted parameters
 
 $$ p_{\text{free}|1} = \tfrac{3}{4}, \quad
    p_{\text{free}|0} = \tfrac{1}{6}, \quad
@@ -1102,7 +1134,7 @@ $$ \text{spam:} \quad p_{\text{free}|1} \cdot (1 - p_{\text{meet}|1})
    \cdot p_Y(1) = \tfrac{3}{4} \cdot \tfrac{3}{4} \cdot \tfrac{2}{5}
    = \tfrac{9}{40} = 0.225, $$
 
-$$ \text{ham:} \quad p_{\text{free}|0} \cdot (1 - p_{\text{meet}|0})
+$$ \text{non-spam:} \quad p_{\text{free}|0} \cdot (1 - p_{\text{meet}|0})
    \cdot p_Y(0) = \tfrac{1}{6} \cdot \tfrac{1}{3} \cdot \tfrac{3}{5}
    = \tfrac{1}{30} = 0.0333. $$
 
@@ -1119,11 +1151,11 @@ and the verdict is spam.
 
 ### 8.5 The zero-count veto
 
-Add the word "winner": present in $2$ of the $4$ spam but $0$ of the $6$ ham,
+Add the word "winner": present in $2$ of the $4$ spam but $0$ of the $6$ non-spam,
 so the MLE sets $p_{\text{winner}|0} = \tfrac{0}{6} = 0$. Then *any* mail
-containing "winner" has ham score
+containing "winner" has non-spam score
 $\prod_i p_{X_i|Y}(x_i \mid 0) = 0$ exactly: a single unseen word-and-class
-combination vetoes the entire class, no matter how ham-like the other ten
+combination vetoes the entire class, no matter how non-spam-like the other ten
 thousand words are. This is the boundary MLE $\hat{p} \in \{0, 1\}$ of
 Section 7.2 doing real damage. With rare words and finite $N$, some counts
 *will* be zero - the same finite-sample fluctuation Lecture 5 quantified - so
@@ -1140,7 +1172,7 @@ This is one pretend mail with the word and one without, per class. Estimates
 are pulled toward $\tfrac{1}{2}$, and zeros - and ones - become impossible,
 since the numerator is at least $1$ and at most the denominator minus $1$.
 
-**Worked, the ham column,** with the unsmoothed MLE for comparison:
+**Worked, the non-spam column,** with the unsmoothed MLE for comparison:
 
 - "free", $1$ of $6$: smoothed $\frac{1+1}{2+6} = \tfrac{2}{8} = 0.25$, against
   MLE $\tfrac{1}{6} = 0.167$.

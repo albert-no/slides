@@ -38,7 +38,7 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 4 | `prob04-random-processes/` — Markov processes, stationary dist., discrete diffusion | prob 1211–1455 | done (99 slides) |
 | 5 | `prob05-concentration/` — Markov/Chebyshev/Chernoff, MGF, CLT sketch, LLN | prob 1457–1595 | done (106 slides) |
 | 6 | `prob06-generalization/` — Hoeffding, sub-Gaussian, union bound, finite-class generalization bound | new material (sequel to prob05) | done (51 slides, senior-undergrad default; full / advanced 105 in backup/) |
-| 7 | `prob07-estimation/` — cond. expectation/tower, MLE/MAP, Fano (full proof), Naive Bayes, bias-variance, MMSE | prob 1563–1911 | done (124 slides) |
+| 7 | `prob07-estimation/` — cond. expectation/tower, MLE/MAP, Fano (full proof), Naive Bayes, bias-variance, MMSE | prob 1563–1911 | done (119 slides) |
 | 8 | `prob08-gaussian/` — MVN (3 defs, properties w/ proofs), Gaussian channel, Gaussian diffusion/DDPM, Gaussian discriminant | prob 1912–2519 (MIT OCW 6.436J citation) | done (130 slides) |
 | 9 | `prob09-monte-carlo/` — Monte Carlo, importance sampling, variance trade-offs, policy gradient / RLHF hooks | new material | done (113 slides) |
 | 10 | `opt01-svd-lowrank/` — rank/range/null, SVD, pseudo-inverse, spectral & nuclear norms, Eckart–Young–Mirsky, Netflix | opt 1–435 | done (119 slides) |
@@ -365,26 +365,84 @@ n = 1.28×10⁶ → ε ≈ 14.9). Cross-deck numbers (Chernoff 2.1×10⁻⁶, ex
 exponent 0.1308) taken from prob05's published slides. Illustrative-only counts
 flagged on-slide: decision-stump class size 256d, ResNet-50 parameter count.
 
-### prob07-estimation — Estimation: MLE, MAP & Fundamental Limits (124 slides)
+### prob07-estimation — Estimation: MLE, MAP & Fundamental Limits (119 slides)
 
 `prob07-estimation/prob07-estimation.html` · **prob 1563–1911** plus conditional
 expectation/tower (prob 1577–1592, deferred here from prob05 per deck plan).
-Lecture 7 — answers prob06's bridge (how to *choose* ĥ → likelihood); recalls
+Lecture 7 — opens on likelihood as the origin of the CE loss (no prob06 link, per
+Albert 2026-10-26); recalls
 prob02 CE loss, prob03 conditional pmf + heights model, prob04 diffusion teaser,
 prob05 MGF add-and-subtract, prob06 H(Y|X)/chain rule/DPI by name without
-re-proving; prob03's two-coin table (p(0,0)=p(0,1)=1/4, p(1,0)=1/2) returns three
-times (conditional means, tower check, MMSE = 1/6 vs constant-guess 1/4); ends on
+re-proving; prob03's two-coin table (p(0,0)=p(0,1)=1/4, p(1,0)=1/2) returns twice
+(conditional means 2/3 and 0, MMSE = 1/6 vs constant-guess 1/4); ends on
 a bridge to prob08 (the Gaussian everywhere → multivariate Gaussian, linear
 E[X|Y]).
 
 Companion: `prob07-estimation/prob07-estimation-note.html` — detailed definitions, expanded proofs, lemmas, references.
-Accessible edition: `prob07-estimation/prob07-estimation-note.md` — screen-reader Markdown edition of that note (1540 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
+Accessible edition: `prob07-estimation/prob07-estimation-note.md` — screen-reader Markdown edition of that note (1574 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
+
+| # | Section | Slides | Location |
+|---|---|---|---|
+| — | Title + TOC | 1–2 | prob07-estimation/prob07-estimation.html:45 |
+| 01 | Why Estimation? (DL as estimation cards :154, where the loss comes from: max likelihood ⟺ min CE loss :155, claim CE=MLE to prove today :171, inference vs. learning faces :185) | 3–6 | prob07-estimation/prob07-estimation.html:145 |
+| 02 | Conditional Expectation (recall prob03 conditional pmf :216, definition :235, worked conditional pmfs + means 2/3 and 0 :251, E[X|Y] is an RV with its own distribution :268, Thm 1 tower arc :309, proof :322, why it matters today :339) | 7–14 | prob07-estimation/prob07-estimation.html:205 |
+| 03 | The Estimation Problem (sample/label setup :364, two-nationalities running example :379, two height densities SVG N(170,10²) vs N(180,15²) :393, two questions about x=176: likelihood (MLE) vs posterior (MAP) in plain English :414) | 15–19 | prob07-estimation/prob07-estimation.html:353 |
+| 04 | Maximum Likelihood (definition :446, MLE on heights :463, worked x=176 → 0.0333>0.0257 → A :477, decision-boundary SVG ≈179 :492, worked x=185 → B :515, what MLE ignores :528) | 20–26 | prob07-estimation/prob07-estimation.html:435 |
+| 05 | Maximum a Posteriori (definition :551, Bayes' rule derivation :568, evidence drops out :583, heights with 9:1 prior :596, worked x=176 :611, worked x=185 — MLE/MAP disagree 0.0117 vs 0.0025 :624, prior moves boundary SVG, both MAP edges ≈129/≈195 :640, Bayes-optimal defined + Thm 2 MAP is Bayes optimal :667, 2-step proof :682, regularization can encode a prior :711) | 27–38 | prob07-estimation/prob07-estimation.html:540 |
+| 06 | Fano's Inequality (fundamental-limit question :735, Thm 3 arc P_e ≥ (H(Y|X)−1)/log|Y| stated first :750, reading the bound :765, proof overview :780, 9 one-idea proof steps (techniques — chain rule, DPI, conditioning average — named inline) :793–:904, proof summary &mdash; sandwich picture SVG + takeaway line :917, worked 1024-class (1.5−1)/10 = 0.05 :941, vacuous case :956, what Fano buys :969) | 39–56 | prob07-estimation/prob07-estimation.html:724 |
+| 07 | Parameter Estimation (new target θ :993, log-likelihood :1008, Bernoulli MLE in cases form + derivation :1022, the obvious guess (empirical mean) is the MLE + LLN/Hoeffding :1063, worked 10 flips 7 heads L(0.5)=0.00098 < L(0.7)=0.00222 > L(0.9)=0.00048 :1078, log-lik curve SVG :1095, Gaussian MLE μ̂ and σ̂² :1117, empirical distribution definition :1165, example a b a c a d b a c a → (0.5,0.2,0.2,0.1) bar SVG :1178, average loss grouped by symbol :1211, promised proof CE loss = MLE :1228, via KL :1243, one identity three names :1257) | 57–74 | prob07-estimation/prob07-estimation.html:982 |
+| 08 | Naive Bayes (classification needs a model p_X^n|Y — MLE/MAP argmax, heights Gaussian recall, parametric modeling :1281, 2ⁿ-parameter blowup 2⁴⁹ ≈ 5.6×10¹⁴ :1298, conditional-independence assumption :1312, spam-filter SVG :1331, MNIST 28×28 figure :1367, binarized 7×7 grid SVG + itemized description :1378, NB classifier :1451, fit by counting = Bernoulli MLE :1463, fit the prior :1479, MAP with fitted model :1493, worked 10-mail table spam/non-spam p_free|spam=3/4 :1505, classify new mail 0.225/(0.225+0.033) ≈ 0.87 spam :1521, zero-count veto :1535, Laplace smoothing :1550, smoothed table 1/8, 2/8, 5/8 :1566, takeaway :1582) | 75–91 | prob07-estimation/prob07-estimation.html:1271 |
+| 09 | Bias–Variance (estimator is an RV :1606, bias :1620, variance :1634, MSE :1650, technique review add-and-subtract :1664, Thm 4 MSE = Bias² + Var arc :1679, 2-step proof cross term dies :1695, dartboard SVG :1724, sample-mean example σ²/n :1760, worked p̂=S/10 vs p̃=(S+1)/12 :1777, numbers 0.025 vs 0.0174 (p=.5), 0.009 vs 0.0107 (p=.9) :1792, MSE-vs-p chart SVG crossings ≈0.14/0.86 :1808, regularization trade :1831) | 92–106 | prob07-estimation/prob07-estimation.html:1595 |
+| 10 | MMSE Estimation (denoising channel SVG + MMSE is Bayes-optimal for squared error :1855, Thm 5 MMSE = E[X|Y] arc :1885, proof overview :1898, 4 proof steps insert/expand → tower kills cross term → read off :1910–:1950, proof summary :1962, worked prob03 table MMSE = 1/6 < 1/4 :1982, denoisers learn E[X|Y] :1997) | 107–117 | prob07-estimation/prob07-estimation.html:1844 |
+| — | Bridge to prob08, end slide X̂(Y)=E[X|Y] | 118–119 | prob07-estimation/prob07-estimation.html:2010 |
+
+Key theorems: **Thm 1** Hoeffding's lemma E[e^{tX}] ≤ exp(t²(b−a)²/8) for X∈[a,b],
+E[X]=0, full arc via tilted-distribution log-MGF (ψ'' = tilted variance ≤ (b−a)²/4,
+Taylor with remainder) (prob06-generalization/backup/prob06-generalization-full.html:511);
+**Thm 2** sub-Gaussian tail Pr(X−μ ≥ ε) ≤ e^{−ε²/2σ²}, Chernoff + envelope +
+optimize (prob06-generalization/backup/prob06-generalization-full.html:705); **Prop.**
+independent sums add variance proxies
+(prob06-generalization/backup/prob06-generalization-full.html:798); **Thm 3** Hoeffding's
+inequality Pr(X̄_n−μ ≥ ε) ≤ exp(−2nε²/(b−a)²), assembled from Thm 1 + closure rules
++ Thm 2 (prob06-generalization/backup/prob06-generalization-full.html:860); **Thm 4** union
+bound, one-line indicator proof
+(prob06-generalization/backup/prob06-generalization-full.html:1027); **Thm 5** finite-class
+uniform convergence sup_h |R−R̂_n| ≤ √(ln(2|H|/δ)/2n) w.p. ≥ 1−δ, full arc
+(prob06-generalization/backup/prob06-generalization-full.html:1223); **Cor.** ERM guarantee
+R(ĥ) ≤ min_h R(h) + 2ε, three-hop proof
+(prob06-generalization/backup/prob06-generalization-full.html:1329).
+Figures: all diagrams inline SVG with hand-computed numbers (overfitting U-curve,
+route map, tilting bar chart, sub-Gaussian tail envelope, union-bound Venn, ε-tube
+with ERM pick, why-2ε two-hop ladder, approximation-estimation trade-off, sample-
+complexity line n = ⌈737.78+138.63k⌉). All numeric examples hand-computed: n ≥ 4,612 for
+±2%@95% (ln 40/0.0008), model-farm 10⁴×3.7×10⁻⁶ = 3.7%, vacuous n=25 case
+e^{−3.125} ≈ 0.044, sample-complexity table (10 → 1,199; 10³ → 2,120; 10⁶ → 3,501;
+2¹⁰⁰ → 14,601), ResNet-50 honest slide (25.6M params × 32 bits → ln|H| ≈ 5.7×10⁸,
+n = 1.28×10⁶ → ε ≈ 14.9). Cross-deck numbers (Chernoff 2.1×10⁻⁶, exact 2.8×10⁻⁷,
+exponent 0.1308) taken from prob05's published slides. Illustrative-only counts
+flagged on-slide: decision-stump class size 256d, ResNet-50 parameter count.
+
+### prob07-estimation — Estimation: MLE, MAP & Fundamental Limits (119 slides)
+
+`prob07-estimation/prob07-estimation.html` · **prob 1563–1911** plus conditional
+expectation/tower (prob 1577–1592, deferred here from prob05 per deck plan).
+Lecture 7 — opens on likelihood as the origin of the CE loss (no prob06 link, per
+Albert 2026-10-26); recalls
+prob02 CE loss, prob03 conditional pmf + heights model, prob04 diffusion teaser,
+prob05 MGF add-and-subtract, prob06 H(Y|X)/chain rule/DPI by name without
+re-proving; prob03's two-coin table (p(0,0)=p(0,1)=1/4, p(1,0)=1/2) returns twice
+(conditional means 2/3 and 0, MMSE = 1/6 vs constant-guess 1/4); ends on
+a bridge to prob08 (the Gaussian everywhere → multivariate Gaussian, linear
+E[X|Y]).
+
+Companion: `prob07-estimation/prob07-estimation-note.html` — detailed definitions, expanded proofs, lemmas, references.
+Accessible edition: `prob07-estimation/prob07-estimation-note.md` — screen-reader Markdown edition of that note (1557 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + TOC | 1–2 | prob07-estimation/prob07-estimation.html:45 |
 | 01 | Why Estimation? (DL as estimation cards :154, prob06's open question :177, claim CE=MLE to prove today :193, route map SVG :206, inference vs. learning faces :241) | 3–8 | prob07-estimation/prob07-estimation.html:145 |
-| 02 | Conditional Expectation (recall prob03 conditional pmf :270, definition :288, worked pmfs-first on prob03 table :304, both conditional means 2/3 and 0 :319, E[X|Y] is an RV :335, its own distribution :371, Thm 1 tower arc :383, proof :395, tower check 3/4·2/3 + 1/4·0 = E[X] = 1/2 :411, why it matters today :425) | 9–19 | prob07-estimation/prob07-estimation.html:261 |
+| 02 | Conditional Expectation (recall prob03 conditional pmf :270, definition :288, worked pmfs-first on prob03 table :304, both conditional means 2/3 and 0 :319, E[X|Y] is an RV :335, its own distribution :371, Thm 1 tower arc :383, proof :395,  :411, why it matters today :425) | 9–19 | prob07-estimation/prob07-estimation.html:261 |
 | 03 | The Estimation Problem (sample/label setup :448, two-nationalities running example :462, two height densities SVG N(170,10²) vs N(180,15²) :475, two questions → two estimators :496) | 20–24 | prob07-estimation/prob07-estimation.html:439 |
 | 04 | Maximum Likelihood (definition :523, MLE on heights :539, worked x=176 → 0.0333>0.0257 → A :552, decision-boundary SVG ≈179 :566, worked x=185 → B :588, what MLE ignores :600) | 25–31 | prob07-estimation/prob07-estimation.html:514 |
 | 05 | Maximum a Posteriori (definition :621, Bayes' rule derivation :637, evidence drops out :651, heights with 9:1 prior :663, worked x=176 :677, worked x=185 — MLE/MAP disagree 0.0117 vs 0.0025 :689, prior moves boundary SVG, both MAP edges ≈129/≈195 :704, Thm 2 MAP is Bayes optimal arc :730, 2-step proof :743, regularization can encode a prior :770) | 32–43 | prob07-estimation/prob07-estimation.html:612 |
@@ -396,24 +454,25 @@ Accessible edition: `prob07-estimation/prob07-estimation-note.md` — screen-rea
 | — | Every-tool recap table (chain takeaway folded in as its muted line), bridge to prob08, end slide X̂(Y)=E[X|Y] | 122–124 | prob07-estimation/prob07-estimation.html:1902 |
 
 Key theorems: **Thm 1** tower property E[E[X|Y]] = E[X], full proof + table check
-(prob07-estimation/prob07-estimation.html:383); **Thm 2** MAP minimizes error
+(prob07-estimation/prob07-estimation.html:309); **Thm 2** MAP minimizes error
 probability, 2-step proof score-any-estimator → maximize each term
-(prob07-estimation/prob07-estimation.html:730); **Thm 3** Fano's inequality
+(prob07-estimation/prob07-estimation.html:667); **Thm 3** Fano's inequality
 P_e ≥ (H(Y|X)−1)/log|Y|, full 9-step proof (error flag, two chain-rule expansions
 of H(E,Y|Ŷ), DPI, bound both scenario terms, close the sandwich)
-(prob07-estimation/prob07-estimation.html:861); **Thm 4** bias–variance
+(prob07-estimation/prob07-estimation.html:750); **Thm 4** bias–variance
 decomposition MSE = Bias² + Var, exact identity, add-and-subtract proof
-(prob07-estimation/prob07-estimation.html:1591); **Thm 5** MMSE estimator is the
+(prob07-estimation/prob07-estimation.html:1676); **Thm 5** MMSE estimator is the
 conditional mean, 4-step proof with tower killing the cross term
-(prob07-estimation/prob07-estimation.html:1785).
-Figures: MNIST digit (../figs/mnist.png, binarized 7×7 discussion); all other
-diagrams inline SVG with hand-computed geometry (route map, two height densities,
+(prob07-estimation/prob07-estimation.html:1882).
+Figures: MNIST digit (../figs/mnist.png); binarized 7×7 grid SVG (cells from
+approximate 4×4 block means of that figure, thresholded); all other
+diagrams inline SVG with hand-computed geometry (two height densities,
 MLE boundary ≈179 with pick-B crossing ≈145, prior-shifted boundary ≈195, Fano
 sandwich, Bernoulli log-likelihood curve with max at 0.7, spam-mail feature map,
-dartboard bias/variance quadrants, MSE-vs-p parabolas with crossings ≈0.14/0.86,
+empirical-distribution bars, dartboard bias/variance quadrants, MSE-vs-p parabolas with crossings ≈0.14/0.86,
 denoising channel). All numerics hand-computed (heights densities at 176/185, NB
 10-mail table + 0.87 posterior + smoothed 1/8-2/8-5/8, coin likelihood table,
-p̂-vs-p̃ MSE table, Fano 8-class floor 0.5, MMSE 1/6 vs 1/4). Deviations from
+p̂-vs-p̃ MSE table, Fano 1024-class floor 0.05 (sharp ≈0.102 in note), MMSE 1/6 vs 1/4). Deviations from
 tex: prob 1661 MAP argmax written over the likelihood, fixed to the posterior;
 prob 1791 prior-count indicator 1{y⁽ʲ⁾=0}, fixed to 1{y⁽ʲ⁾=1}; prob 1802
 duplicate p(x_i|0) in the numerator, fixed to p(x_i|1); "twice as likely" vs

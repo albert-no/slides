@@ -46,7 +46,7 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 12 | `opt03-convexity-gd/` — convexity, L-smoothness, co-coercivity, strong convexity, PL, GD O(1/T) + linear rate | opt 795–1319 | done (134 slides) |
 | 13 | `opt04-sgd/` — SGD O(1/√K) proof, mini-batching, strongly-convex SGD O(log k/k) | opt 1320–1462, 1520–1600 | done (117 slides, 2026-09 diagram pass) |
 
-Exam-review deck (not one of the 13): `midterm26-review/` — midterm 2026 solutions lecture (72 slides).
+Exam-review deck (not one of the 13): `midterm26-review/` — midterm 2026 solutions lecture (74 slides).
 
 Dropped from source by request: operator theory (opt 1603–1761), acceleration/AGM
 (1765–1889), GDM/RMSprop/Adam (1981–2056), SAM (2060–2091).
@@ -844,19 +844,21 @@ Chain") was folded into the every-tool table per DESIGN_SYSTEM §2 (one
 closing summary, the other's takeaway as a single muted line), taking the
 deck from 118 to 117 slides.
 
-### midterm26-review — Midterm Solutions: Tools for Seeing (72 slides)
+### midterm26-review — Midterm Solutions: Tools for Seeing (74 slides)
 
 `midterm26-review/midterm26-review.html` · solution lecture for `exam/midterm26.tex` (exam 2026-10-20). Theme
 (Albert, 2026-10-22): entropy / MI / KL and the inequalities are tools for understanding phenomena —
 every problem gets its motivation and intuition before the computation. Built by
-a generator script (not committed); no speaker note, no tech supplement.
+a generator script (not committed); no tech supplement.
+
+Companion: `midterm26-review/midterm26-review-note.html` (§1–9 + refs [1]–[6]) — full solutions in prose, the derivations the slides compress (asymptotic H(K), label-W bounds with equality cases, general I(ε) formula, n=3 shuffle matrix and exact distributions, δ-move, e^t=7 optimality), all numbers re-derived. Generated from the accessible edition `midterm26-review/midterm26-review-note.md` (829 lines; same text and sections, LaTeX math, tables as lists).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
-| — | Title + TOC | 1–2 | midterm26-review/midterm26-review.html:51 |
-| 01 | Why This Course (two layers: tools vs phenomena SVG, tools are weapons, midterm-at-a-glance table) | 3–8 | midterm26-review/midterm26-review.html:68 |
-| 02 | Problem 1 (1(a) count vs position, chain rule, 6.66 vs 93.3 bits bar; 1(b) the extra bit is the label; 1(c) label channel, always-lie ε=1 still informative (0.415 bits for K=4), I-vs-ε plot K=2/K=10, useless iff ε=(K−1)/K; 1(d) top-to-random shuffle, symmetry → uniform stationary, 6×6 matrix) | 9–28 | midterm26-review/midterm26-review.html:158 |
-| 03 | Problem 2 (CE over-confidence, design challenge, label smoothing vs confidence penalty, 2(a) KL forms D(u‖q) vs −D(q‖u) (Pereyra et al.), 2(b) limits table + penalty plot K=2, 2(c) behaviour near one-hot, consequences (Müller et al.), lesson) | 29–45 | midterm26-review/midterm26-review.html:479 |
-| 04 | Problem 3 (light tails: Gaussian tail table, why the mean works; heavy tails x^-3 vs Gaussian log plot, where they live (wildfires, earthquakes, wealth — Clauset et al.; SGD gradient noise — Simsekli et al.), 1/n³ vs e^(-an) table; 3(a) finite variance, infinite MGF; 3(b) one big sample lower bound; median of means algorithm, one outlier spoils one vote, 3(c)(i)–(iv) exponential bound (√7/4)^k; numbers table; 3(d); robust estimation (Lugosi–Mendelson, Yin et al.)) | 46–67 | midterm26-review/midterm26-review.html:733 |
-| 05 | Takeaways (tool → phenomenon table, what we expect, closer) | 68–72 | midterm26-review/midterm26-review.html:1055 |
+| — | Title | 1 | midterm26-review/midterm26-review.html:52 |
+| 01 | Why This Course (why learn tools: learn → apply → see loop; you will keep learning tools (this course → later → after graduation); two layers: tools vs phenomena SVG, tools are weapons) | 2–8 | midterm26-review/midterm26-review.html:63 |
+| 02 | Problem 1 (1(a) count vs position, chain rule, bound H(K) ≤ log(n+1) instead of computing it (exact vs bound table n=10/100/1000), 6.66 vs 93.3 bits bar; 1(b) derivation h(Z)=h(Z|W)+I(Z;W), the extra bit is the label; 1(c) label channel, always-lie ε=1 still informative (0.415 bits for K=4), I-vs-ε plot K=2/K=10, useless iff ε=(K−1)/K; 1(d) top-to-random shuffle (itemized move), doubly stochastic but not symmetric 6×6 matrix, repeat the move: any start → uniform (n=3 bars after 0/1/2/5 moves)) | 9–31 | midterm26-review/midterm26-review.html:176 |
+| 03 | Problem 2 (CE over-confidence, design challenge, label smoothing vs confidence penalty, 2(a) from the L_LS definition to KL forms D(u‖q) vs −D(q‖u) (Pereyra et al.), 2(b) limits from the definitions, limits table + penalty plot K=2, 2(c) behaviour near one-hot (δ-move: −log(1−δ)=O(δ), H(q)∼δlog(1/δ)), consequences (Müller et al.), lesson) | 32–48 | midterm26-review/midterm26-review.html:550 |
+| 04 | Problem 3 (light tails: Gaussian tail table, why the mean works; heavy tails x^-3 vs Gaussian log plot, where they live (wildfires, earthquakes, wealth — Clauset et al.; SGD gradient noise — Simsekli et al.), 1/n³ vs e^(-an) table; 3(a) finite variance, infinite MGF; 3(b) one big sample lower bound; median of means algorithm, one outlier spoils one vote, 3(c)(i)–(iv) exponential bound (√7/4)^k, each with its Show statement; numbers table; 3(d); robust estimation (Lugosi–Mendelson, Yin et al.)) | 49–71 | midterm26-review/midterm26-review.html:798 |
+| 05 | Takeaways (what we expect, closer) | 72–74 | midterm26-review/midterm26-review.html:1123 |
 

@@ -155,7 +155,7 @@
 <div class="slide">
   <h2>Where Does the Loss Come From?</h2>
   <div class="divider"></div>
-  <p>A model $q_\theta$ gives every data point a probability; we observe $x_1, \dots, x_n$ (i.i.d.)</p>
+  <p>A discrete model $q_\theta$ gives every data point a probability; we observe $x_1, \dots, x_n$ (i.i.d.)</p>
   <p>Natural rule: pick the $\theta$ under which <strong>the data we saw</strong> is most probable</p>
   <div class="math-block" style="margin:8px 0">$$\max_\theta \; \underbrace{\prod_{i=1}^n q_\theta(x_i)}_{\text{likelihood}}
     \quad\iff\quad
@@ -418,13 +418,13 @@
   <div class="grid-2">
     <div>
       <h3>Likelihood question &mdash; MLE</h3>
-      <p>"If this person were from A, how likely is $176$ cm? And if from B?"</p>
-      <p class="muted">compare $f_{X|Y}(176 \mid y)$: which nationality <em>explains</em> the height better</p>
+      <p>"Which nationality gives more probability to heights <strong>near</strong> $176$ cm, A or B?"</p>
+      <p class="muted">compare densities $f_{X|Y}(176 \mid y)$: which nationality <em>explains</em> the height better</p>
     </div>
     <div>
       <h3>Posterior question &mdash; MAP</h3>
       <p>"Given $176$ cm, how probable is it that this person is from A?"</p>
-      <p class="muted">$p_{Y|X}(A \mid 176)$: among all people $176$ cm tall, the fraction from A</p>
+      <p class="muted">$p_{Y|X}(A \mid 176)$: among people with heights very close to $176$ cm, the fraction from A</p>
     </div>
   </div>
   <div class="highlight">
@@ -755,6 +755,7 @@
     <p>For any estimator $\hat{Y}(X) \in \mathcal{Y}$ of $Y \in \mathcal{Y}$:</p>
     <div class="math-block" style="margin:8px 0">$$\Pr\big( Y \neq \hat{Y}(X) \big)
       \;\geq\; \frac{H(Y|X) - 1}{\log |\mathcal{Y}|}$$</div>
+    <p>Finite label set, $2 \le |\mathcal{Y}| < \infty$; logs base $2$</p>
   </div>
   <p class="muted">Any estimator &mdash; MAP, a neural network, anything computable from $X$</p>
 </div>
@@ -943,7 +944,7 @@
   <p>$|\mathcal{Y}| = 1024$ classes ($\log 1024 = 10$ bits); knowing $X$ leaves $H(Y|X) = 1.5$ bits:</p>
   <div class="math-block" style="margin:8px 0">$$P_e \;\geq\; \frac{1.5 - 1}{10} = 0.05$$</div>
   <ul>
-    <li>Only $1.5$ of $10$ bits left &mdash; about $2^{1.5} \approx 3$ plausible labels per input</li>
+    <li>Averaged over inputs, $1.5$ bits of label uncertainty remain; that already forces nonzero error</li>
   </ul>
   <div class="highlight">
     <p>For this fixed joint distribution of $(X,Y)$, no estimator beats <strong>5% error</strong>.</p>
@@ -1119,11 +1120,12 @@
   <div class="card">
     <h3>Example (Gaussian samples).</h3>
     <p>$X_1, \dots, X_n$ i.i.d. $\mathcal{N}(\mu, \sigma^2)$; parameter $\theta = (\mu, \sigma^2)$</p>
-    <div class="math-block" style="margin:8px 0">$$\log f_{X^n}(x^n)
+    <div class="math-block" style="margin:8px 0">$$\ln f_{X^n}(x^n)
       = \sum_{i=1}^n \left[ -\frac{(x_i - \mu)^2}{2\sigma^2}
-      - \frac{1}{2} \log 2\pi \sigma^2 \right]$$</div>
+      - \frac{1}{2} \ln 2\pi \sigma^2 \right]$$</div>
   </div>
   <p class="muted">Two unknowns &mdash; one derivative each</p>
+  <p class="muted">Natural log here; changing the log base rescales $\ell$ and leaves the MLE unchanged</p>
 </div>
 
 
@@ -1284,7 +1286,7 @@
     \qquad
     \hat{y}_{\text{MAP}} = \operatorname*{argmax}_y \, p_{Y|X^n}(y|x^n)$$</div>
   <ul>
-    <li>Both need the model $p_{X^n|Y}$ &mdash; MAP via Bayes' rule, plus the prior $p_Y$</li>
+    <li>For this generative approach, model the features given each class; MAP also uses the prior $p_Y$</li>
     <li>Recall the heights: we <strong>modeled</strong> each nationality as a Gaussian &mdash; $\mu, \sigma$ per class</li>
   </ul>
   <div class="highlight">
@@ -1316,7 +1318,7 @@
     <div class="math-block" style="margin:8px 0">$$p_{X^n|Y}(x^n|y) = \prod_{i=1}^n p_{X_i|Y}(x_i|y)
       \quad\Longrightarrow\quad
       \log p_{X^n|Y}(x^n|y) = \sum_{i=1}^n \log p_{X_i|Y}(x_i|y)$$</div>
-    <p class="muted" style="margin:4px 0 0">Every factor is positive, so the log turns the product into a sum</p>
+    <p class="muted" style="margin:4px 0 0">For positive factors, logs turn products into sums; zero factors give a $-\infty$ log-score</p>
   </div>
   <ul>
     <li>$2^n$ parameters $\to$ $n$ parameters per class</li>
@@ -1429,7 +1431,7 @@
         <rect x="210" y="250" width="40" height="40" fill="#fff" stroke="#9aa4af" stroke-width="1"/>
         <rect x="250" y="250" width="40" height="40" fill="#fff" stroke="#9aa4af" stroke-width="1"/>
       </svg>
-      <span class="fl fl-sub fl-grey" style="left:50%;top:94%">the $3$ above, binarized</span>
+      <span class="fl fl-sub fl-grey" style="left:50%;top:94%">illustrative approximation</span>
     </div>
     <div>
       <ul>
@@ -1441,6 +1443,7 @@
       <p class="muted">$49$ Bernoulli parameters per digit class, not $2^{49}$</p>
     </div>
   </div>
+  <p class="muted">Illustrative $7 \times 7$ approximation of the displayed digit &mdash; not computed from the original MNIST sample</p>
 </div>
 
 

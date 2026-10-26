@@ -80,7 +80,7 @@ model class.
 
 ### 1.2 Where the loss comes from
 
-A model $q_\theta$ assigns a probability to every possible data point. Having
+A discrete model $q_\theta$ assigns a probability to every possible data point. Having
 observed independent and identically distributed $x_1, \dots, x_n$, the
 natural rule is to pick the $\theta$ under which the data actually seen is most
 probable: maximize the likelihood $\prod_{i=1}^n q_\theta(x_i)$. Taking
@@ -305,6 +305,16 @@ which $y$ is most probable?" ranks the posterior $p_{Y|X}(y \mid x)$ - the
 maximum a posteriori estimator, needing additionally a prior $p_Y$. The two
 answers coincide under a uniform prior (Section 5.2) and genuinely differ
 otherwise (Section 5.3, at $x = 185$).
+
+In plain words, for a continuous height an exact value such as $176$ cm has
+probability zero, so both questions are read through a narrow window
+$[x, x + \delta]$. The likelihood question asks which population gives more
+probability to that window; since that probability is about
+$f_{X|Y}(x \mid y)\,\delta$, this compares densities (Section 3.2). The
+posterior $p_{Y|X}(A \mid x)$ is the fraction from A among people whose
+heights fall in the window, that is, the limit of
+$\Pr(Y = A \mid x \le X \le x + \delta)$ as $\delta \to 0$. It is not a
+literal positive-probability group of people exactly $176$ cm tall.
 
 ---
 
@@ -747,20 +757,22 @@ two readings sandwich $P_e$.
 
 ### 6.4 Worked: the 1024-class example, both forms
 
-Take $|\mathcal{Y}| = 1024$, so $\log 1024 = 10$ bits, and suppose that knowing
-$X$ still leaves $H(Y \mid X) = 1.5$ bits, roughly $2^{1.5} \approx 3$
-plausible labels per input. The lecture's form gives
+Take $|\mathcal{Y}| = 1024$, so $\log 1024 = 10$ bits (the largest possible
+label entropy, not necessarily $H(Y)$), and suppose that knowing $X$ still
+leaves $H(Y \mid X) = 1.5$ bits. Conditional entropy averages over $X$: averaged
+over inputs, $1.5$ bits of label uncertainty remain, and that already forces
+nonzero error. The lecture's form gives
 
 $$ P_e \;\ge\; \frac{1.5 - 1}{10} = 0.05. $$
 
 The sharp form asks for $h_2(P_e) + P_e \log 1023 \ge 1.5$ with
 $\log 1023 = 9.9986$. The left side is increasing in $P_e$ on the relevant
-range, and numerically it equals $1.5$ at $P_e \approx 0.102$: at $P_e = 0.10$
-it is $0.469 + 1.000 = 1.469 < 1.5$, and at $P_e = 0.11$ it is
-$0.500 + 1.100 = 1.600 > 1.5$. So the honest floor is about $10.2\%$ error, and
-the lecture's $5\%$ is a generous round-down, as a weakened bound must be. No
-architecture, dataset size, or training trick evades either number: the floor
-depends only on the joint distribution of $(X, Y)$.
+range, and numerically it equals $1.5$ at $P_e \approx 0.1024$: at
+$P_e = 0.10$ it is $1.4689 < 1.5$, and at $P_e = 0.11$ it is
+$1.5998 > 1.5$. So the sharp form gives a floor of about $10.24\%$ error; the
+lecture's $5\%$ is the weaker bound, valid but less tight. No architecture,
+dataset size, or training trick evades either number: the floor depends only
+on the joint distribution of $(X, Y)$.
 
 ### 6.5 Edge cases: when the lecture's form is vacuous, and binary labels
 
@@ -901,11 +913,14 @@ is likelihood thinking in miniature (Section 3.2).
 ### 7.4 Gaussian MLE, both parameters, with the checks
 
 **Example.** $X_i$ independent $\mathcal{N}(\mu, \sigma^2)$, with
-$\theta = (\mu, \sigma^2)$. The log-likelihood, dropping nothing, is
+$\theta = (\mu, \sigma^2)$. In this derivation $\ln$ is the natural logarithm
+(not the note's default base $2$); changing the base only rescales $\ell$ by a
+positive constant, so the MLE is unchanged. The log-likelihood, dropping
+nothing, is
 
 $$ \ell(\mu, \sigma^2) = \sum_{i=1}^n
    \left[ -\frac{(x_i - \mu)^2}{2\sigma^2}
-   - \frac{1}{2} \log 2\pi\sigma^2 \right]. $$
+   - \frac{1}{2} \ln 2\pi\sigma^2 \right]. $$
 
 **Solve for $\mu$** with $\sigma^2$ fixed:
 
@@ -923,7 +938,7 @@ fact proved in the Lecture 6 full / advanced note, Lemma 3.1 Step A.
 **Solve for $\sigma^2$.** At the joint optimum, substitute the fitted
 $\hat{\mu}$ into the variance solution. Writing $t = \sigma^2$ and
 $S = \sum_i (x_i - \hat{\mu})^2$, the remaining objective is
-$\ell(t) = -\frac{S}{2t} - \frac{n}{2} \log(2\pi t)$:
+$\ell(t) = -\frac{S}{2t} - \frac{n}{2} \ln(2\pi t)$:
 
 $$ \ell'(t) = \frac{S}{2t^2} - \frac{n}{2t} = 0
    \;\Longleftrightarrow\; t = \frac{S}{n}
@@ -1031,7 +1046,9 @@ Let the features be $X^n = (X_1, \dots, X_n)$, each binary, and let the label
 $Y$ be binary. To run Section 5's MAP classifier one needs the
 class-conditional model $p_{X^n|Y}(\cdot \mid y)$ for each $y$: a pmf on
 $\{0,1\}^n$, that is $2^n$ numbers summing to $1$, hence $2^n - 1$ free
-parameters *per class*. For seven-by-seven binarized images, $n = 49$, and
+parameters *per class*. For seven-by-seven binarized images, $n = 49$ (the
+lecture's seven-by-seven grid is an illustrative approximation of its
+displayed digit, not computed from the original MNIST sample), and
 
 $$ 2^{49} = 562{,}949{,}953{,}421{,}312 \approx 5.63 \times 10^{14}, $$
 

@@ -35,7 +35,7 @@
   <p>The deck's three cards, unpacked. <em>Training</em>: a network with weights $\theta$ defines a model distribution $q_\theta$; training on cross-entropy loss selects the $\theta$ that maximizes the likelihood of the data &mdash; that this is literally maximum likelihood estimation is Theorem-level content, proved in Section 7.5. <em>Regularization</em>: weight decay adds $\lambda \|\theta\|^2$ to the loss; Section 5.5 shows this is exactly maximum a posteriori estimation with a Gaussian prior on the weights. <em>Fundamental limits</em>: no matter the architecture or the optimizer, the error probability of <em>any</em> classifier is floored by Fano's inequality (Section 6), a statement about the joint distribution of input and label, not about the model class.</p>
 
   <h3>1.2 Where the loss comes from</h3>
-  <p>A model $q_\theta$ assigns a probability to every possible data point. Having observed i.i.d. $x_1, \dots, x_n$, the natural rule is to pick the $\theta$ under which the data actually seen is most probable: maximize the likelihood $\prod_{i=1}^n q_\theta(x_i)$. Taking $\log$ (increasing), dividing by $n$ and flipping the sign turns this into \[ \min_\theta \; \frac{1}{n}\sum_{i=1}^n \log\frac{1}{q_\theta(x_i)}, \] exactly the cross-entropy loss. Grouping the sum by symbol (Section 7.5) rewrites it as $H(\hat p_n, q_\theta)$, the cross-entropy from the empirical distribution of the data to the model. So maximum likelihood is a second, independent justification of the cross-entropy loss. Today then supplies the correction for base rates (the prior), the fundamental limit (Fano), and the exact error accounting for the squared-error view (bias&ndash;variance, MMSE).</p>
+  <p>A discrete model $q_\theta$ assigns a probability to every possible data point. Having observed i.i.d. $x_1, \dots, x_n$, the natural rule is to pick the $\theta$ under which the data actually seen is most probable: maximize the likelihood $\prod_{i=1}^n q_\theta(x_i)$. Taking $\log$ (increasing), dividing by $n$ and flipping the sign turns this into \[ \min_\theta \; \frac{1}{n}\sum_{i=1}^n \log\frac{1}{q_\theta(x_i)}, \] exactly the cross-entropy loss. Grouping the sum by symbol (Section 7.5) rewrites it as $H(\hat p_n, q_\theta)$, the cross-entropy from the empirical distribution of the data to the model. So maximum likelihood is a second, independent justification of the cross-entropy loss. Today then supplies the correction for base rates (the prior), the fundamental limit (Fano), and the exact error accounting for the squared-error view (bias&ndash;variance, MMSE).</p>
 
   <h3>1.3 Two faces of one problem</h3>
   <p>Two estimation problems alternate through the lecture, sharing one recipe. (i) <em>Inference</em>: the model $p_{X|Y}$ is known, a label $y$ is hidden, an input $x$ is observed &mdash; estimate $y$ (Sections 3&ndash;6, 8). (ii) <em>Learning</em>: the model family $p_{X|\theta}$ is known up to a parameter, i.i.d. samples $x_1, \dots, x_n$ are observed &mdash; estimate $\theta$ (Sections 7, 9). In both cases an <em>estimator</em> is a function of the observation only (a rule fixed before the data arrive); the recipe is: maximize a likelihood, optionally weighted by a prior.</p>
@@ -115,6 +115,7 @@
 
   <h3>3.3 Two questions, two estimators</h3>
   <p>"On which $y$ is the observed $x$ most likely?" ranks $f_{X|Y}(x|y)$ over $y$ &mdash; the MLE, needing only the model. "Given $x$, which $y$ is most probable?" ranks the posterior $p_{Y|X}(y|x)$ &mdash; the MAP estimator, needing additionally a prior $p_Y$. The two answers coincide under a uniform prior (Section 5.2) and genuinely differ otherwise (Section 5.3's $x = 185$).</p>
+  <p>In plain words: for a continuous height, exactly $176$ cm has probability zero, so both questions are read through a narrow window $[x, x+\delta]$. The likelihood question asks which population gives more probability to that window &mdash; about $f_{X|Y}(x|y)\,\delta$, so it compares densities (Section 3.2). The posterior $p_{Y|X}(A|x)$ is the fraction from A among people whose heights fall in the window: the limit of $\Pr(Y = A \mid x \leq X \leq x+\delta)$ as $\delta \to 0$, not a literal positive-probability group of people exactly $176$ cm tall.</p>
 </section>
 
 <section>
@@ -278,9 +279,9 @@
 
   <h3>6.4 Worked: the 8-class example, both forms</h3>
   <div class="deriv">
-    <p style="margin:0 0 6px;">$|\mathcal{Y}| = 1024$, so $\log 1024 = 10$ bits; knowing $X$ still leaves $H(Y|X) = 1.5$ bits (about $2^{1.5} \approx 3$ plausible labels per input). Deck's form:</p>
+    <p style="margin:0 0 6px;">$|\mathcal{Y}| = 1024$, so $\log 1024 = 10$ bits (the largest possible label entropy, not necessarily $H(Y)$); knowing $X$ still leaves $H(Y|X) = 1.5$ bits. Conditional entropy averages over $X$: averaged over inputs, $1.5$ bits of label uncertainty remain, and that already forces nonzero error. Deck's form:</p>
     \[ P_e \;\geq\; \frac{1.5 - 1}{10} = 0.05. \qquad \text{(slide verified)} \]
-    <p style="margin:8px 0 0;">Sharp form: $h_2(P_e) + P_e \log 1023 \geq 1.5$ with $\log 1023 = 9.9986$. The left side is increasing in $P_e$ on the relevant range; numerically it equals $1.5$ at $P_e \approx 0.102$ (at $0.10$: $0.469 + 1.000 = 1.469 \lt 1.5$; at $0.11$: $0.500 + 1.100 = 1.600 \gt 1.5$). So the honest floor is $\approx 10.2\%$ error &mdash; the deck's $5\%$ is a generous round-down, as a weakened bound must be. No architecture, dataset size, or training trick evades either number: the floor depends only on the joint distribution of $(X, Y)$.</p>
+    <p style="margin:8px 0 0;">Sharp form: $h_2(P_e) + P_e \log 1023 \geq 1.5$ with $\log 1023 = 9.9986$. The left side is increasing in $P_e$ on the relevant range; numerically it equals $1.5$ at $P_e \approx 0.1024$ (at $0.10$: $1.4689 \lt 1.5$; at $0.11$: $1.5998 \gt 1.5$). So the sharp form gives a floor of $\approx 10.24\%$ error; the deck's $5\%$ is the weaker bound, valid but less tight. No architecture, dataset size, or training trick evades either number: the floor depends only on the joint distribution of $(X, Y)$.</p>
   </div>
 
   <h3>6.5 Edge cases: when the deck's form is vacuous, and binary labels</h3>
@@ -332,10 +333,10 @@
 
   <h3>7.4 Gaussian MLE, both parameters, with the checks</h3>
   <div class="deriv">
-    <p style="margin:0 0 6px;"><strong>Example.</strong> $X_i$ i.i.d. $\mathcal{N}(\mu, \sigma^2)$, $\theta = (\mu, \sigma^2)$. Log-likelihood (dropping nothing):</p>
-    \[ \ell(\mu, \sigma^2) = \sum_{i=1}^n \left[ -\frac{(x_i - \mu)^2}{2\sigma^2} - \frac{1}{2}\log 2\pi\sigma^2 \right]. \]
+    <p style="margin:0 0 6px;"><strong>Example.</strong> $X_i$ i.i.d. $\mathcal{N}(\mu, \sigma^2)$, $\theta = (\mu, \sigma^2)$. Here $\ln$ is the natural logarithm (not the note's default base $2$); changing the base only rescales $\ell$ by a positive constant, so the MLE is unchanged. Log-likelihood (dropping nothing):</p>
+    \[ \ell(\mu, \sigma^2) = \sum_{i=1}^n \left[ -\frac{(x_i - \mu)^2}{2\sigma^2} - \frac{1}{2}\ln 2\pi\sigma^2 \right]. \]
     <p style="margin:8px 0 6px;"><strong>Solve for $\mu$</strong> ($\sigma^2$ fixed): $\;\frac{\partial \ell}{\partial \mu} = \sum_i \frac{x_i - \mu}{\sigma^2} = 0 \iff \sum_i x_i = n\mu \iff \hat{\mu} = \frac{1}{n}\sum_i x_i$; and $\frac{\partial^2 \ell}{\partial \mu^2} = -\frac{n}{\sigma^2} \lt 0$, so this is a maximum in $\mu$ for <em>every</em> fixed $\sigma^2$ &mdash; which is why $\sigma^2$ "cancels entirely": the optimal $\mu$ does not depend on it. (Equivalently: the sample mean minimizes $\sum_i (x_i - \mu)^2$ &mdash; the mean-minimizes-the-quadratic fact, proved in the prob06 note, Lemma 3.1 Step A.)</p>
-    <p style="margin:8px 0 6px;"><strong>Solve for $\sigma^2$</strong>: at the joint optimum, substitute the fitted $\hat{\mu}$ into the variance solution. Writing $t = \sigma^2$ and $S = \sum_i (x_i - \hat{\mu})^2$, the remaining objective is $\ell(t) = -\frac{S}{2t} - \frac{n}{2}\log(2\pi t)$:</p>
+    <p style="margin:8px 0 6px;"><strong>Solve for $\sigma^2$</strong>: at the joint optimum, substitute the fitted $\hat{\mu}$ into the variance solution. Writing $t = \sigma^2$ and $S = \sum_i (x_i - \hat{\mu})^2$, the remaining objective is $\ell(t) = -\frac{S}{2t} - \frac{n}{2}\ln(2\pi t)$:</p>
     \[ \ell'(t) = \frac{S}{2t^2} - \frac{n}{2t} = 0
        \;\iff\; t = \frac{S}{n}
        \;\iff\; \widehat{\sigma^2} = \frac{1}{n}\sum_{i=1}^n (x_i - \hat{\mu})^2. \]
@@ -368,7 +369,7 @@
   <h2>8 &nbsp;Naive Bayes</h2>
 
   <h3>8.1 The parameter blow-up, counted exactly</h3>
-  <p>Features $X^n = (X_1, \dots, X_n)$, each binary; label $Y$ binary. To run Section 5's MAP classifier one needs the class-conditional model $p_{X^n|Y}(\cdot \mid y)$ for each $y$: a pmf on $\{0,1\}^n$, i.e. $2^n$ numbers summing to $1$ &mdash; $2^n - 1$ free parameters <em>per class</em>. For $7\times7$ binarized images, $n = 49$:</p>
+  <p>Features $X^n = (X_1, \dots, X_n)$, each binary; label $Y$ binary. To run Section 5's MAP classifier one needs the class-conditional model $p_{X^n|Y}(\cdot \mid y)$ for each $y$: a pmf on $\{0,1\}^n$, i.e. $2^n$ numbers summing to $1$ &mdash; $2^n - 1$ free parameters <em>per class</em>. For $7\times7$ binarized images, $n = 49$ (the deck's $7\times7$ grid is an illustrative approximation of its displayed digit, not computed from the original MNIST sample):</p>
   \[ 2^{49} = 562{,}949{,}953{,}421{,}312 \approx 5.63 \times 10^{14} \quad \text{(slide's } 5.6\times10^{14}\text{ verified).} \]
   <p>No dataset fills that table; an assumption must cut it down.</p>
 

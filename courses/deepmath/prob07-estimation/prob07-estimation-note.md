@@ -1534,10 +1534,19 @@ report.
 A generative model is a parameterized distribution $q_\theta$ over data
 (texts, images, audio) from which new samples can be drawn. Fitting it to
 i.i.d. training samples $x_1, \dots, x_n$ from an unknown $p_{\text{data}}$ is
-the parameter-estimation problem of Section 7, and the maximum-likelihood
-answer is the identity of Section 7.5:
+the parameter-estimation problem of Section 7. For discrete data and
+discrete models the maximum-likelihood answer is the identity of Section 7.5:
 $$\operatorname*{argmax}_\theta \sum_{i=1}^n \log q_\theta(x_i)
 = \operatorname*{argmin}_\theta D(\hat{p}_n \| q_\theta).$$
+This identity does not carry over to continuous densities: the empirical
+distribution $\hat{p}_n$ puts its mass on $n$ points, so its KL divergence to
+any density is infinite for every $\theta$. In the continuous case MLE
+minimizes the empirical negative log-density
+$-\tfrac1n \sum_i \ln q_\theta(x_i)$; its population counterpart
+$\mathbb{E}_{p_{\text{data}}}[-\ln q_\theta(X)] = h(p_{\text{data}}) +
+D(p_{\text{data}} \| q_\theta)$ is minimized by minimizing the forward KL
+divergence, under the usual assumptions that $p_{\text{data}}$ has a density
+with finite differential entropy $h$ and the expectations exist.
 The question of this section is which of today's generative models actually
 solve this problem, and what the others solve instead. All three families
 below share the goal $q_\theta \approx p_{\text{data}}$; they differ in
@@ -1555,7 +1564,7 @@ A language model is a network that outputs the conditional distribution
 $q_\theta(\cdot \mid x_{<t})$ (a softmax over the vocabulary). The next-token
 cross-entropy loss, summed over a text, is therefore exactly the negative
 log-likelihood of that text, and summed over the corpus it is the negative
-log-likelihood of the corpus. Pretraining a language model is maximum
+log-likelihood of the corpus. Autoregressive pretraining is maximum
 likelihood with no approximation in the objective.
 
 **Worked example (illustrative numbers, not from a real model).** Suppose a
@@ -1565,26 +1574,30 @@ losses are $\log_2 20 = 4.32$, $\log_2 100 = 6.64$ and $\log_2 5 = 2.32$ bits,
 summing to $13.29$ bits, and indeed $q_\theta(x) = 0.05 \cdot 0.01 \cdot 0.2
 = 10^{-4}$ with $\log_2 10^4 = 13.29$. The average is $4.43$ bits per token.
 **Perplexity** is $2$ raised to the average per-token cross-entropy in bits
-(equivalently $e$ to the average in nats): here $2^{4.43} \approx 21.5$, the
-number of equally likely choices that would carry the same uncertainty. Since
-perplexity is a monotone function of the average log-likelihood, a lower
-reported perplexity on held-out text means exactly a higher held-out
-likelihood.
+(equivalently $e$ to the average in nats): here the average observed-token
+log loss corresponds to perplexity $2^{4.43} \approx 21.5$. This is an
+average over the observed tokens, not a claim that the model is equally
+uncertain at every position: the three positions above have very different
+losses. Since perplexity is a monotone function of the average
+log-likelihood, a lower perplexity on the same held-out text means exactly a
+higher held-out likelihood. Comparisons between models are meaningful only on
+the same evaluation data with the same tokenization, because a different
+tokenizer changes both the number of tokens and what each one is.
 
 **Scale.** GPT-3 models were trained for a total of 300 billion tokens (Brown
 et al. 2020); the flagship Llama 3 model, with 405B parameters, was pretrained
 on 15.6 trillion text tokens (Llama Team 2024). The loss in both cases is the
 sum above, taken over every training token.
 
-**After pretraining.** Supervised fine-tuning on curated dialogues uses the
-same next-token cross-entropy on the reply tokens, so it is maximum likelihood
+**After pretraining.** Ordinary supervised fine-tuning (SFT) on curated
+dialogues uses the same next-token cross-entropy on the reply tokens, so it is maximum likelihood
 for the conditional model $q_\theta(\text{reply} \mid \text{prompt})$.
 Reinforcement learning from human feedback (RLHF) is different: it maximizes a
 learned reward (typically with a KL penalty to a reference model), which is
 not a likelihood of any dataset. Chat models are therefore MLE-trained models
 that are then moved by a non-likelihood objective.
 
-### 11.3 Diffusion models: MLE through a lower bound
+### 11.3 Diffusion models: likelihood-related training through a bound
 
 A diffusion model defines a fixed noising chain $x_0 \to x_1 \to \cdots \to
 x_T$ that adds Gaussian noise until $x_T$ is essentially pure noise, and a
@@ -1593,54 +1606,74 @@ time. To generate, draw $x_T$ from a standard Gaussian and run the reverse
 chain. The model probability of a clean sample is a marginal over every
 denoising path,
 $$q_\theta(x_0) = \int p(x_T) \prod_{t=1}^T p_\theta(x_{t-1} \mid x_t)\, dx_{1:T},$$
-which cannot be evaluated in closed form. Writing it as an expectation under
+which is generally intractable to evaluate. Writing it as an expectation under
 the noising chain $r(x_{1:T} \mid x_0)$ and applying Jensen's inequality
 (Lecture 1) to the concave $\log$ gives the evidence lower bound
 $$\log q_\theta(x_0)
 = \log \mathbb{E}_{r}\!\left[\frac{p(x_T)\prod_t p_\theta(x_{t-1}\mid x_t)}{r(x_{1:T}\mid x_0)}\right]
 \;\ge\; \mathbb{E}_{r}\!\left[\log \frac{p(x_T)\prod_t p_\theta(x_{t-1}\mid x_t)}{r(x_{1:T}\mid x_0)}\right]
 =: \text{ELBO}_\theta(x_0).$$
-Ho, Jain and Abbeel (2020) train by optimizing this variational bound on the
-negative log-likelihood. Because every step is Gaussian, each term of the
-bound is a KL divergence between Gaussians, which reduces to a squared error
-between means; with the network parameterized to predict the added noise
-$\varepsilon$ from $x_t = \sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\,
-\varepsilon$, each term becomes a weighted
-$\|\varepsilon - \varepsilon_\theta(x_t, t)\|^2$. Their "simple" loss drops
-the weights, i.e. it is a reweighted version of the bound. The same
+The gap is $\log q_\theta(x_0) - \text{ELBO}_\theta(x_0) = D\big(r(x_{1:T}
+\mid x_0) \,\|\, p_\theta(x_{1:T} \mid x_0)\big)$, the divergence from the
+noising chain to the model's own posterior over paths. It depends on
+$\theta$, so raising the bound need not raise the likelihood, and the
+maximizer of the bound is in general not the maximum-likelihood estimate.
+Ho, Jain and Abbeel (2020) start from this variational bound on the negative
+log-likelihood. With the reverse-step variances held fixed, the intermediate
+terms of the bound are KL divergences between Gaussians with equal
+variances, and each reduces to a squared error between means. With the
+network parameterized to predict the added noise $\varepsilon$ from
+$x_t = \sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\, \varepsilon$,
+each such term becomes a weighted $\|\varepsilon - \varepsilon_\theta(x_t,
+t)\|^2$. Their "simple" loss discards those weights; in their words it is a
+weighted variational bound, a different objective from the bound itself,
+chosen because it gave better samples. The same
 Gaussian-log-likelihood-equals-squared-error identity was behind the Gaussian
 MLE of Section 7.4.
 
 Theorem 5 then names the target: the minimizer of
 $\mathbb{E}\|\varepsilon - \varepsilon_\theta(x_t, t)\|^2$ over all functions
-of $x_t$ is $\mathbb{E}[\varepsilon \mid x_t]$, equivalently (by the linear
-relation above) the ideal denoiser outputs $\mathbb{E}[x_0 \mid x_t]$. A
-diffusion model is thus MLE through a lower bound, implemented as MMSE
-denoising. Text-to-image systems such as latent diffusion / Stable Diffusion
+of $(x_t, t)$ is the noise estimate $\varepsilon_\theta^*(x_t, t) =
+\mathbb{E}[\varepsilon \mid x_t, t]$. It is not itself a clean image; the
+clean-image estimate comes from solving the linear relation above for $x_0$
+and taking conditional expectations:
+$$\mathbb{E}[x_0 \mid x_t, t] = \frac{x_t - \sqrt{1-\bar\alpha_t}\,
+\mathbb{E}[\varepsilon \mid x_t, t]}{\sqrt{\bar\alpha_t}}.$$
+Diffusion training is therefore likelihood-related, through a variational
+bound and MMSE denoising, but it is not in general exact MLE. Text-to-image systems such as latent diffusion / Stable Diffusion
 (Rombach et al. 2022) and Imagen (Saharia et al. 2022) are diffusion models
 of this kind.
 
-### 11.4 GANs: no likelihood at all
+### 11.4 GANs: training without evaluating likelihood
 
 A generative adversarial network produces samples as $x = G_\theta(z)$ with
 $z$ drawn from a simple distribution such as a standard Gaussian. Sampling is
-cheap, but the induced density $q_\theta(x)$ has no formula (when $G_\theta$
-maps to a lower-dimensional surface it need not even exist), so there is no
-likelihood to maximize. Instead a discriminator $D_\phi$ is trained to tell
-real from generated samples and $G_\theta$ is trained to fool it:
-$$\min_G \max_D \; \mathbb{E}_{x \sim p_{\text{data}}}[\log D(x)]
-+ \mathbb{E}_{z}[\log(1 - D(G(z)))].$$
-For a fixed generator the best discriminator is $D^*(x) =
+cheap, but the induced density $q_\theta(x)$ is generally not available in
+closed form (when $G_\theta$ maps onto a lower-dimensional surface it need not
+even exist), and GAN training never evaluates it. Instead a discriminator
+$D_\phi$ is trained to tell real from generated samples and $G_\theta$ is
+trained to fool it. The original objective, with natural logarithms, is the
+minimax game
+$$\min_G \max_D \; \mathbb{E}_{x \sim p_{\text{data}}}[\ln D(x)]
++ \mathbb{E}_{z}[\ln(1 - D(G(z)))].$$
+For a fixed generator the best unrestricted discriminator is $D^*(x) =
 p_{\text{data}}(x) / (p_{\text{data}}(x) + q_\theta(x))$, and substituting it
 gives (Goodfellow et al. 2014, Theorem 1)
 $$C(G) = -\ln 4 + 2\, \text{JS}(p_{\text{data}} \,\|\, q_\theta),$$
 where $\text{JS}(p\|q) = \tfrac12 D(p\|m) + \tfrac12 D(q\|m)$ with $m =
-\tfrac12(p+q)$, all in nats. The generator therefore minimizes the Jensen-Shannon
-divergence, not the KL divergence of MLE. StyleGAN (Karras et al. 2019),
-trained on the 70,000-image Flickr-Faces-HQ (FFHQ) dataset, is the
-best-known example: photographs of faces of people who do not exist.
+\tfrac12(p+q)$, all in nats. Under these two conditions (the original minimax
+objective, and a discriminator that is optimal over all functions) the
+generator minimizes the Jensen-Shannon divergence, not the KL divergence of
+MLE. This is an interpretation of one objective, not a property of GANs in
+general: in practice the discriminator is a finite network trained a few
+steps at a time, and Goodfellow et al. already train the generator with the
+non-saturating variant (maximize $\ln D(G(z))$) for stronger early gradients.
+StyleGAN (Karras et al. 2019), trained on the 70,000-image Flickr-Faces-HQ
+(FFHQ) dataset, uses WGAN-GP for its baseline configuration and the
+non-saturating loss with R1 regularization for the final one; it is the
+best-known example of photographs of faces of people who do not exist.
 
-### 11.5 Why the divergence matters: covering every mode
+### 11.5 Why the divergence matters: a dropped mode
 
 Take data $p = \tfrac12\mathcal{N}(-3,1) + \tfrac12\mathcal{N}(3,1)$ and two
 candidate single-Gaussian fits: A $= \mathcal{N}(0, 10)$, which matches the
@@ -1649,35 +1682,42 @@ among Gaussians (minimizing $D(p\|q)$ over Gaussians matches the first two
 moments), and B $= \mathcal{N}(3,1)$, which reproduces one mode and ignores
 the other. Numerical integration (in nats) gives:
 
-| fit | $D(p \| q)$ (MLE) | $\text{JS}$ (GAN) | $D(q \| p)$ (reverse) |
+| fit | $D(p \| q)$ (MLE) | $\text{JS}$ (minimax GAN) | $D(q \| p)$ (reverse) |
 |---|---|---|---|
 | A, covers both modes | 0.46 | 0.13 | 0.94 |
 | B, drops one mode | 8.31 | 0.21 | 0.69 |
 
-The KL divergence of MLE contains $\log(p/q)$ weighted by $p$: wherever the
+Both KL and JS prefer A, but KL penalizes B much more. The forward KL
+divergence of MLE contains $\ln(p/q)$ weighted by $p$: wherever the
 data has mass and the model has almost none, the term explodes - the
 continuous version of the zero-count veto of Section 8.5, where a single
-unseen feature drove a likelihood to zero. MLE is therefore *mass-covering*:
-it pays heavily for any sample it fails to explain. The Jensen-Shannon
-divergence is bounded, $\text{JS} \le \ln 2 \approx 0.69$ (since $p \le 2m$,
-$D(p\|m) \le \ln 2$, and likewise for $q$), so missing a whole mode costs a
-bounded amount; in this example JS still prefers A, but by a much smaller
-margin. The reverse KL $D(q\|p)$ actually prefers B: it is *mode-seeking*.
-GAN training is known in practice to drop modes ("mode collapse"); the bounded
-penalty is one heuristic reading of that, not a complete explanation, since
-GAN training also suffers from the dynamics of the min-max game.
+unseen feature drove a likelihood to zero. Forward KL therefore strongly
+penalizes very low model density where data occurs (it is often called
+*mass-covering*). The Jensen-Shannon divergence is bounded,
+$\text{JS} \le \ln 2 \approx 0.69$ (since $p \le 2m$, $D(p\|m) \le \ln 2$,
+and likewise for $q$), so missing a whole mode costs a bounded amount; here
+JS still prefers A, by $0.09$ nats against KL's $7.85$. The reverse KL
+$D(q\|p)$ actually prefers B: it is *mode-seeking*.
+
+This example does not demonstrate why GAN training collapses. At the ideal
+optimum of the unrestricted JS objective the model equals the data
+distribution, with every mode present; the example only compares two fixed,
+misspecified candidates. GANs are observed in practice to drop modes ("mode
+collapse"), but explaining that requires the dynamics of training a finite
+generator and discriminator, which this comparison does not model.
 
 ### 11.6 The scorecard
 
 | family | $q_\theta(x)$ computable? | training loss | relation to MLE |
 |---|---|---|---|
-| Language model | yes, chain rule | next-token cross-entropy | exactly MLE |
-| Diffusion | no, sum over paths | (reweighted) denoising squared error | MLE through a lower bound |
-| GAN | no, no formula | min-max game | not MLE: Jensen-Shannon, not KL |
+| Language model | yes, chain rule | next-token cross-entropy | exactly MLE (autoregressive pretraining, ordinary cross-entropy SFT) |
+| Diffusion | generally intractable | variational bound, or reweighted denoising squared error | likelihood-related through a bound and denoising; not generally exact MLE |
+| GAN | not needed | adversarial game | not MLE; the original minimax objective has a Jensen-Shannon interpretation |
 
-One goal, $q_\theta \approx p_{\text{data}}$. Maximum likelihood is the KL
-route to it, taken exactly when the likelihood can be computed and through a
-bound when it cannot; GANs take a different route.
+One goal, $q_\theta \approx p_{\text{data}}$. Only autoregressive
+pretraining (and cross-entropy fine-tuning) takes the exact maximum-likelihood
+route; diffusion models approach it through a bound, and GANs use an
+adversarial objective instead.
 
 ---
 
@@ -1730,7 +1770,9 @@ bound when it cannot; GANs take a different route.
    S. Ozair, A. Courville and Y. Bengio, "Generative Adversarial Nets", 2014,
    arXiv:1406.2661, at https://arxiv.org/abs/1406.2661. Theorem 1: with the
    optimal discriminator the generator criterion is
-   $-\ln 4 + 2\,\text{JS}(p_{\text{data}} \| p_g)$ (Section 11.4).
+   $-\ln 4 + 2\,\text{JS}(p_{\text{data}} \| p_g)$ for the original minimax
+   objective; Section 3 also proposes the non-saturating generator loss
+   (Section 11.4).
 8. J. Ho, A. Jain and P. Abbeel, "Denoising Diffusion Probabilistic Models",
    2020, arXiv:2006.11239, at https://arxiv.org/abs/2006.11239. Training on
    the variational bound on negative log-likelihood, and the simplified,
@@ -1750,4 +1792,5 @@ bound when it cannot; GANs take a different route.
 12. T. Karras, S. Laine and T. Aila, "A Style-Based Generator Architecture for
     Generative Adversarial Networks", 2019, arXiv:1812.04948, at
     https://arxiv.org/abs/1812.04948. StyleGAN and the 70,000-image FFHQ
-    dataset (Section 11.4).
+    dataset; losses WGAN-GP and non-saturating with R1 regularization
+    (Section 11.4).

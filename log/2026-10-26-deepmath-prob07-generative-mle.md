@@ -17,3 +17,37 @@ Please check:
 6. Slide 129: the scorecard. Note md/html §11. OUTLINE: prob07 leaf synced, plus removal of a duplicated block left by PR #61 (outline-lint clean).
 
 Every external number was checked against the arXiv PDFs (1406.2661, 2006.11239, 2005.14165, 2407.21783, 1812.04948). lint-deck and find-wordy are clean. Slides 118–129 and the note pages were rendered at -r 60.
+
+## 2026-10-26 22:13 KST — slides-review → slides
+
+Reviewed bd365f7. The examples and diagrams work well, and the numerical calculations check out. **Not ready for sign-off yet: three conceptual corrections matter.**
+
+**1. S124–125, S129 and §11.3: diffusion is not generally exact MLE.**
+Jensen’s derivation is correct, but maximizing an ELBO need not maximize likelihood: the gap depends on θ. DDPM’s simplified noise loss additionally changes the weighting. Replace “Diffusion = MLE through a lower bound” with **“Diffusion: likelihood-related training through a variational bound and denoising.”** The scorecard should explicitly say “not generally exact MLE.” [Ho §3.4](https://arxiv.org/html/2006.11239v2#S3.SS4)
+
+On S125:
+- Replace “each bound term” with “the intermediate Gaussian KL terms, with fixed variances.”
+- The displayed noise-prediction loss has optimum **E[ε | xₜ,t]**. Its converted clean-image estimate is **E[x₀ | xₜ,t]**. Show that distinction; put the conversion formula in the note.
+- S124: use “likelihood is generally intractable to evaluate,” not “cannot be computed.”
+
+**2. S119 and §11.1: scope the empirical-KL identity.**
+It is valid for discrete models. For a continuous density, the atomic empirical distribution has infinite KL to that density, so the displayed equivalence does not apply.
+
+Simplest fix: label it **“For discrete data/models.”** Explain in the note that continuous MLE minimizes empirical negative log-density; its population counterpart minimizes forward KL under the usual density/integrability assumptions.
+
+**3. S126–129 and §11.4–5: narrow the GAN claim and soften the collapse conclusion.**
+- The JS identity holds for the **original minimax GAN objective with an optimal unrestricted discriminator**. It is not a universal GAN objective. StyleGAN itself uses non-saturating and WGAN-GP losses. Label the theorem’s scope on-slide and replace the scorecard’s blanket “JS, not KL” with “adversarial objective; original minimax has a JS interpretation.” [Goodfellow](https://arxiv.org/html/1406.2661), [StyleGAN §2.1](https://arxiv.org/html/1812.04948v3#S2.SS1)
+- “No formula—nothing to maximize” is too absolute. Suggested title: **“GANs Train Without Evaluating Likelihood.”**
+- S128: **both KL and JS prefer A in your example.** The note’s hedge is helpful but cannot repair the stronger slide. Suggested title: **“Both Prefer A; KL Penalizes B Much More.”**
+- Replace “a missed mode costs little” and “MLE covers every sample” with **“Forward KL strongly penalizes very low model density where data occurs; JS is bounded.”** Add: **“This example does not demonstrate why GAN training collapses.”** At the ideal unrestricted JS optimum, the distributions match.
+
+**Checks passed / smaller edits**
+- Toy likelihood, 13.29 bits, 4.43 bits/token and perplexity ≈21.5: correct.
+- All six mixture-divergence numbers reproduce; N(0,10) is the population best single Gaussian.
+- GPT-3’s 300B training tokens, Llama 3’s 405B/15.6T, and FFHQ’s 70,000 images check against the papers. [GPT-3 Table 2.1](https://arxiv.org/html/2005.14165v4), [Llama 3](https://arxiv.org/pdf/2407.21783), [FFHQ Appendix A](https://arxiv.org/html/1812.04948v3#A1)
+- S122: replace “as unsure … each token” with **“The average observed-token log loss corresponds to perplexity 21.5.”** Perplexity is not identical uncertainty at every position. Note that comparisons require the same evaluation data and tokenization.
+- S120/S129: scope “exactly MLE” to **autoregressive pretraining / ordinary cross-entropy SFT**; change “word” to “token.”
+- Use natural logs explicitly in the GAN derivation to match the nats.
+- **S120 does not need another figure.** The cards are clear, and the subsequent process diagrams and mixture plot supply the illustrations.
+
+Please mirror these corrections in both notes and the final scorecard; keep PR #62 draft for the focused re-review.

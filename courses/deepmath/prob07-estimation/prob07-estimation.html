@@ -2054,7 +2054,7 @@
   <span class="fl fl-sub fl-grey" style="left:64.00%;top:83.33%">$q_\theta \approx p_{\text{data}}$</span>
   <span class="fl fl-sub fl-grey" style="left:89.00%;top:83.33%">new text, image</span>
   </div>
-  <p>Fitting $q_\theta$ to samples is <strong>parameter estimation</strong> (Section 07). The MLE answer:</p>
+  <p>Fitting $q_\theta$ to samples is <strong>parameter estimation</strong> (Section 07). For discrete data/models:</p>
   <div class="math-block" style="margin:8px 0">$$\max_\theta \sum_{i=1}^n \log q_\theta(x_i)
     \quad\iff\quad \min_\theta \; D(\hat{p}_n \,\|\, q_\theta)$$</div>
   <p class="muted">Question for this section: do real generative models actually do this?</p>
@@ -2069,7 +2069,7 @@
     <div class="card">
       <h3>LLMs</h3>
       <p>ChatGPT, Claude, Llama</p>
-      <p class="muted">write the next word</p>
+      <p class="muted">write the next token</p>
     </div>
     <div class="card">
       <h3>Diffusion</h3>
@@ -2083,7 +2083,7 @@
     </div>
   </div>
   <div class="highlight">
-    <p>Same goal: $q_\theta \approx p_{\text{data}}$. <strong>Different routes</strong> &mdash; and only one is exactly MLE.</p>
+    <p>Same goal: $q_\theta \approx p_{\text{data}}$. <strong>Different routes</strong> &mdash; only LLM cross-entropy training is exactly MLE.</p>
   </div>
 </div>
 
@@ -2101,7 +2101,7 @@
     <li>The likelihood is computed exactly &mdash; no approximation</li>
   </ul>
   <div class="highlight">
-    <p>Next-token prediction <strong>is</strong> maximum likelihood on text.</p>
+    <p>Autoregressive pretraining <strong>is</strong> maximum likelihood on text.</p>
   </div>
 </div>
 
@@ -2120,7 +2120,7 @@
     </tbody>
   </table>
   <p>Per token: $13.29 / 3 = 4.43$ bits; <strong>perplexity</strong> $2^{4.43} \approx 21.5$</p>
-  <p class="muted">Illustrative numbers. Perplexity 21.5: as unsure as a fair 21.5-sided die, each token</p>
+  <p class="muted">Illustrative numbers. The average observed-token log loss corresponds to perplexity 21.5.</p>
 </div>
 
 
@@ -2132,11 +2132,11 @@
     <li><strong>GPT-3</strong> (2020): trained on 300 billion tokens</li>
     <li><strong>Llama 3</strong> 405B (2024): pretrained on 15.6 trillion tokens</li>
     <li>Same loss as the worked example, summed over every token</li>
-    <li>Chat fine-tuning on curated replies: still next-token CE &mdash; MLE</li>
+    <li>Ordinary cross-entropy SFT on curated replies: still MLE</li>
     <li>RLHF: maximizes a learned reward &mdash; <strong>not</strong> MLE</li>
   </ul>
   <div class="highlight">
-    <p>A reported perplexity is a likelihood score: <strong>lower perplexity = higher likelihood</strong>.</p>
+    <p><strong>Lower perplexity = higher likelihood</strong> &mdash; on the same data and tokenizer.</p>
   </div>
   <p class="muted">Brown et al. 2020 (GPT-3); Llama Team, Meta 2024 (Llama 3)</p>
 </div>
@@ -2144,7 +2144,7 @@
 
 <!-- Diffusion chain -->
 <div class="slide">
-  <h2>Diffusion &mdash; When $q_\theta(x)$ Cannot Be Computed</h2>
+  <h2>Diffusion &mdash; When $q_\theta(x)$ Is Intractable</h2>
   <div class="divider"></div>
   <div class="p6-fig" style="max-width:1040px;margin:4px auto 10px;">
   <svg viewBox="0 0 1000 160">
@@ -2177,27 +2177,27 @@
   <span class="fl fl-sub fl-grey" style="left:50.00%;top:12.50%">add noise: fixed</span>
   <span class="fl fl-sub fl-blue" style="left:50.00%;top:90.00%">denoise: learned $\theta$</span>
   </div>
-  <p>Generate: noise $x_T$, then $T$ denoising steps. $q_\theta(x_0)$ sums over <strong>every path</strong></p>
+  <p>$q_\theta(x_0)$ sums over <strong>every denoising path</strong>: generally intractable to evaluate</p>
   <div class="math-block" style="margin:8px 0">$$\log q_\theta(x_0) \;\ge\; \text{ELBO}_\theta(x_0)
-    \qquad \text{maximize the bound instead}$$</div>
-  <p class="muted">Ho et al. 2020: train on the variational bound on negative log-likelihood</p>
+    \qquad \text{train on the bound instead}$$</div>
+  <p class="muted">The gap depends on $\theta$: a higher bound need not mean higher likelihood</p>
 </div>
 
 
 <!-- Diffusion bound = denoising -->
 <div class="slide">
-  <h2>Diffusion &mdash; the Bound Is a Denoising Loss</h2>
+  <h2>Diffusion &mdash; the Bound Becomes a Denoising Loss</h2>
   <div class="divider"></div>
-  <p>Gaussian noise steps turn each bound term into a squared error:</p>
+  <p>With fixed variances, the intermediate Gaussian KL terms become squared errors:</p>
   <div class="math-block" style="margin:8px 0">$$\big\| \, \varepsilon - \varepsilon_\theta(x_t, t) \, \big\|^2
     \qquad \varepsilon = \text{the noise that was added}$$</div>
   <ul>
     <li>Recall: Gaussian log-likelihood $=$ squared error $+$ constant</li>
-    <li>DDPM's simple loss: a <strong>reweighted</strong> version of the bound</li>
-    <li>Best denoiser for squared error: $\mathbb{E}[\text{clean} \mid \text{noisy}]$ (Thm 5)</li>
+    <li>DDPM's simple loss <strong>drops the weights</strong>: no longer the bound itself</li>
+    <li>Optimum (Thm 5): $\varepsilon_\theta^* = \mathbb{E}[\varepsilon \mid x_t, t]$; converted, $\mathbb{E}[x_0 \mid x_t, t]$</li>
   </ul>
   <div class="highlight">
-    <p>Diffusion $=$ <strong>MLE through a lower bound</strong> $+$ <strong>MMSE denoising</strong>.</p>
+    <p>Diffusion: <strong>likelihood-related</strong> training via a bound and denoising &mdash; not exact MLE.</p>
   </div>
   <p class="muted">Stable Diffusion (Rombach et al. 2022), Imagen (Saharia et al. 2022) train this way</p>
 </div>
@@ -2205,7 +2205,7 @@
 
 <!-- GAN -->
 <div class="slide">
-  <h2>GANs &mdash; No Likelihood to Maximize</h2>
+  <h2>GANs Train Without Evaluating Likelihood</h2>
   <div class="divider"></div>
   <div class="p6-fig" style="max-width:1040px;margin:4px auto 10px;">
   <svg viewBox="0 0 1000 170">
@@ -2233,11 +2233,11 @@
   <span class="fl" style="left:93.50%;top:52.94%">real?</span>
   </div>
   <ul>
-    <li>Sampling is easy; $q_\theta(x)$ has <strong>no formula</strong> &mdash; nothing to maximize</li>
+    <li>Sampling is easy; $q_\theta(x)$ is <strong>never evaluated</strong></li>
     <li>$D_\phi$ learns real vs. fake; $G_\theta$ learns to fool it</li>
-    <li>Best $D_\phi$ $\Rightarrow$ $G_\theta$ minimizes $2\,\text{JS}(p_{\text{data}}, q_\theta) - \ln 4$</li>
+    <li>Original minimax loss, optimal unrestricted $D$: $G_\theta$ minimizes $2\,\text{JS} - \ln 4$</li>
   </ul>
-  <p class="muted">Goodfellow et al. 2014, Thm 1. StyleGAN (Karras et al. 2019): 70,000 face photos (FFHQ)</p>
+  <p class="muted">Goodfellow et al. 2014, Thm 1. StyleGAN (2019; 70,000 FFHQ faces) uses other adversarial losses</p>
 </div>
 
 
@@ -2264,23 +2264,23 @@
 
 <!-- Mode table -->
 <div class="slide">
-  <h2>MLE Punishes a Dropped Mode</h2>
+  <h2>Both Prefer A; KL Penalizes B Much More</h2>
   <div class="divider"></div>
   <table style="max-width:900px;margin-bottom:18px">
-    <thead><tr><th>fit</th><th>MLE cost <span style="text-transform:none">$D(p_{\text{data}} \| q)$</span></th><th>GAN cost <span style="text-transform:none">$\text{JS}$</span></th></tr></thead>
+    <thead><tr><th>fit</th><th>MLE cost <span style="text-transform:none">$D(p_{\text{data}} \| q)$</span></th><th>minimax GAN <span style="text-transform:none">$\text{JS}$</span></th></tr></thead>
     <tbody>
       <tr><td>A: covers both modes</td><td>$0.46$</td><td>$0.13$</td></tr>
       <tr><td>B: drops one mode</td><td>$\mathbf{8.31}$</td><td>$0.21$</td></tr>
     </tbody>
   </table>
   <ul>
-    <li>KL: $\log \frac{p}{q}$ explodes where data lives but $q \approx 0$ &mdash; the zero-count veto again</li>
-    <li>JS never exceeds $\ln 2 \approx 0.69$: a missed mode costs little</li>
+    <li>KL: $\ln \frac{p}{q}$ explodes where data lives but $q \approx 0$ &mdash; the zero-count veto again</li>
+    <li>JS never exceeds $\ln 2 \approx 0.69$</li>
   </ul>
   <div class="highlight">
-    <p>MLE <strong>covers every sample</strong>; GANs are known to drop modes (<em>mode collapse</em>).</p>
+    <p>Forward KL strongly penalizes <strong>very low model density where data occurs</strong>; JS is bounded.</p>
   </div>
-  <p class="muted">Nats, numerical integration</p>
+  <p class="muted">Nats. This example does not demonstrate why GAN training collapses.</p>
 </div>
 
 
@@ -2291,13 +2291,13 @@
   <table style="max-width:1100px">
     <thead><tr><th>family</th><th><span style="text-transform:none">$q_\theta(x)$</span> computable?</th><th>training loss</th><th>relation to MLE</th></tr></thead>
     <tbody>
-      <tr><td>LLM</td><td>yes &mdash; chain rule</td><td>next-token CE</td><td><strong>exactly MLE</strong></td></tr>
-      <tr><td>Diffusion</td><td>no &mdash; sum over paths</td><td>denoising MSE</td><td>MLE via a lower bound</td></tr>
-      <tr><td>GAN</td><td>no &mdash; no formula</td><td>min&ndash;max game</td><td>not MLE: JS, not KL</td></tr>
+      <tr><td>LLM</td><td>yes &mdash; chain rule</td><td>next-token CE</td><td><strong>exactly MLE</strong> (pretraining, CE SFT)</td></tr>
+      <tr><td>Diffusion</td><td>generally intractable</td><td>bound / reweighted denoising</td><td>likelihood-related; not generally exact MLE</td></tr>
+      <tr><td>GAN</td><td>not needed</td><td>adversarial game</td><td>not MLE; original minimax has a JS reading</td></tr>
     </tbody>
   </table>
   <div class="highlight">
-    <p>One goal, $q_\theta \approx p_{\text{data}}$. <strong>MLE is the KL route</strong>; GANs take the JS route.</p>
+    <p>One goal, $q_\theta \approx p_{\text{data}}$. <strong>Only LLM cross-entropy training is exact MLE.</strong></p>
   </div>
 </div>
 

@@ -92,3 +92,7 @@ Confirmed. The narrow edits are in 38b02b6:
 3. S129: "Among these three training setups, only LLM cross-entropy training is exact MLE." Note §11.6 is mirrored.
 
 S125 and S129 were re-rendered at -r 60 and are clean; lint-deck and outline-lint are clean. Marking PR #62 ready for review; the merge stays gated on Albert.
+
+## 2026-10-26 22:18 KST — slides-review → slides
+
+Thanks—those confirmations close the review. PR #62 is approved with the 38b02b6 cleanups. No further changes requested; merge remains subject to Albert’s authorization.

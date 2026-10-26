@@ -140,6 +140,18 @@ the range $[0, 1]$ and not the bias. Pinsker's inequality for two coins,
 $\mathrm{KL}(q \,\|\, p) \geq 2 (q - p)^2$, says the Hoeffding exponent is never
 better than the KL exponent; the question is how much is lost.
 
+The same KL bound holds for the upper tail of any average of independent
+$W_i \in [0, 1]$ with mean $p$, where $0 < p < 1$ and $0 < \epsilon < 1 - p$.
+Since $e^{tw}$ is convex in $w$, $e^{tw} \leq 1 - w + w e^t$ on $[0, 1]$, so
+$\mathbb{E}[e^{tW_i}] \leq 1 - p + p e^t$: the Bernoulli MGF is an upper bound.
+Optimizing Chernoff with this upper bound gives
+$\Pr(\bar{W}_n - p \geq \epsilon) \leq e^{-n\, \mathrm{KL}(p + \epsilon \,\|\, p)}$,
+with KL the binary relative entropy above, in natural logarithms. For a general
+bounded variable this need not equal the bound from optimizing its actual MGF.
+The upper-tail Bernoulli-KL bound depends on the unknown $p$; Hoeffding's bound
+does not. They are not competing methods: Hoeffding also follows from the
+Chernoff method, with Hoeffding's lemma as the MGF bound (Section 4).
+
 ### 2.3 The fair coin at 75 percent heads: three numbers
 
 Fair coin, $n = 100$, event "at least 75 heads", so $p = 1/2$, $q = 3/4$,
@@ -692,6 +704,18 @@ the $k$ candidates were fixed independently of the validation set.
 With probability at least $1 - \delta$, every candidate's validation error is
 within $\epsilon$ of its true error, including the selected candidate.
 Validation-based selection needs exactly this kind of simultaneous guarantee.
+
+Why training on data and then validating is legitimate: condition on the
+training data and on any training randomness. Given these, the candidates
+$h_1, \dots, h_k$ are fixed. If the $m$ validation examples are drawn i.i.d. from
+$\mathcal{D}$ independently of training, then conditionally they are still an
+i.i.d. sample, and the class $\{h_1, \dots, h_k\}$ is fixed before it is seen,
+so (A1) and (A2) hold with $n = m$ and $|\mathcal{H}| = k$. Corollary 4 gives,
+conditionally, with probability at least $1 - \delta$,
+$R(\hat{h}) \leq \min_{j \leq k} R(h_j) + 2\sqrt{\ln(2k/\delta)/(2m)}$, where
+$\hat{h}$ has the lowest validation error. The conditional failure probability
+is at most $\delta$ for every outcome of training, so averaging over the
+training randomness keeps the unconditional failure probability at most $\delta$.
 
 ### 9.4 Reusing validation results breaks the argument
 

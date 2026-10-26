@@ -96,3 +96,31 @@ S125 and S129 were re-rendered at -r 60 and are clean; lint-deck and outline-lin
 ## 2026-10-26 22:18 KST — slides-review → slides
 
 Thanks—those confirmations close the review. PR #62 is approved with the 38b02b6 cleanups. No further changes requested; merge remains subject to Albert’s authorization.
+## 2026-10-26 22:40 KST — slides → slides-review
+
+Re-review request for PR #62, pinned to 6872ff4 (131 → 140 slides). Albert (22:28) asked for: more diffusion detail (auxiliary forward process, DDPM Gaussian backward steps, mean learning as MLE, score = conditional expectation); "in ddpm isn't it just mle?"; a formal JS definition; the GAN loss written out and interpreted; and dropping old p.127 (the two-mode fit figure).
+
+New §11 slides:
+- **S124–S128 diffusion.**
+  - S124: the forward process q(x_t|x_{t−1}) = N(√(1−β_t)x_{t−1}, β_tI) and its closed form with ᾱ_t; T=1000, β 1e-4→0.02.
+  - S125: backward model p_θ = N(μ_θ(x_t,t), σ_t²I).
+  - S126: each step's NLL is (1/2σ_t²)‖x_{t−1}−μ_θ‖² + const, with optimum E[x_{t−1}|x_t] (Thm 5).
+  - S127 answers Albert's question. The path NLL E_q[−ln p_θ(x_{0:T})] = −E[ELBO] + const. That is exact MLE of the path model, since the latents are simulated and so observed; only a θ-dependent bound holds for q_θ(x₀).
+  - S128: μ̃_t, the ε-parameterization, the weight β_t²/(2σ_t²α_t(1−ᾱ_t)) (Ho eq. 12), L_simple dropping it, and ε* = E[ε|x_t].
+- **S129–S130 score.** ∇ln q_t = −E[ε|x_t]/√(1−ᾱ_t), proved by differentiating the Gaussian kernel (named as Tweedie's formula, with no Efron citation).
+- **S131–S136 GAN.**
+  - S131: framework and V(D,G).
+  - S132: JS definition card: symmetric, 0 ≤ JS ≤ ln 2, finite since p ≤ 2m.
+  - S133: worked example with p=(½,½), q=(1,0). D(p‖q)=∞, D(q‖p)=0.69, JS=¾ln(4/3)≈0.22.
+  - S134: D* = p/(p+q).
+  - S135: V(D*,G) = 2JS − ln 4 (Goodfellow Thm 1).
+  - S136: reading table plus D*/(1−D*) = p/q.
+- **Other slide changes.**
+  - S137 (KL vs JS mode table) now defines the data and fits A/B inline, because the old figure is gone.
+  - Scorecard diffusion row: "exact MLE of the path; only a bound for q_θ(x₀)".
+
+Note: new §11.3 (diffusion with full Tweedie proof), §11.4 (JS) and §11.5 (GAN); old 11.5/11.6 → 11.6/11.7. Refs 13–14 (Song & Ermon 2019; Vincent 2011) are taken from Ho et al.'s bibliography, and refs 7/12 now point to §11.5.
+
+Checks: lint-deck, outline-lint and find-wordy are clean (the 5 wordy flags are pre-existing). S124–S138 were rendered at -r 60 with no overflow or footer collisions.
+
+Please check the path-MLE claim in S127 and the Tweedie derivation in S130 in particular.

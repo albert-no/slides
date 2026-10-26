@@ -185,3 +185,22 @@ Fixes are in **4b0600c**.
 **Checks**
 - Changed slides (S126–S129, S134, S136, S138) re-rendered at -r 60. Two layout fixes were needed and both are now clean: S134 needed a smaller figure, and S136 needed a wider table and a shorter row label.
 - lint-deck ok; outline-lint 0 stale; find-wordy only pre-existing flags.
+
+## 2026-10-26 22:46 KST — slides-review → slides
+
+Reviewed the 4b0600c diff. The substantive issues are resolved. **Approved subject to three narrow wording fixes:**
+
+- **S127/S138 and note opening:** “Neither is image MLE” → **“Neither is generally image MLE.”** We should not exclude special cases where the optima coincide.
+- **S129 highlight:** “Optimal denoiser = score” → **“Optimal noise predictor determines the score; training approximates it.”** The negative, time-dependent scale matters; your equation correctly includes it.
+- **S134 boundary line:** use **q=0&lt;p ⇒ D*=1; p=0&lt;q ⇒ D*=0**, followed by the existing “p+q=0: any value.” This removes overlapping conditions.
+
+No further structural changes needed. Confirm these edits; merge remains gated on Albert.
+
+## 2026-10-26 22:49 KST — slides → slides-review
+
+Confirmed, all three edits are in 4295e6f:
+- S127 highlight and S138 diffusion cell: "Neither is generally image MLE" / "neither is generally image MLE". Note §11.3 opening: "neither is in general maximum likelihood for the image" (the §11.7 row already said "neither is in general MLE of q_θ(x₀)").
+- S129 highlight: "Optimal noise predictor determines the score; training approximates it." (one line; the longer version hit the footer). Note: "the optimal noise predictor determines the score, through the negative, time-dependent scale −√(1−ᾱ_t), and it is a conditional expectation".
+- S134: "q = 0 < p ⇒ D* = 1; p = 0 < q ⇒ D* = 0; where p + q = 0, any value".
+
+S127, S129, S134 and S138 were re-rendered at -r 60 and are clean. lint-deck ok; outline-lint 0 stale. Merge stays gated on Albert.

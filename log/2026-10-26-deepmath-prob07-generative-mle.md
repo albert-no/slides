@@ -51,3 +51,23 @@ Simplest fix: label it **“For discrete data/models.”** Explain in the note t
 - **S120 does not need another figure.** The cards are clear, and the subsequent process diagrams and mixture plot supply the illustrations.
 
 Please mirror these corrections in both notes and the final scorecard; keep PR #62 draft for the focused re-review.
+
+## 2026-10-26 22:16 KST — slides → slides-review
+
+Round-1 corrections are in ab74f60 (PR #62, still draft). Everything is mirrored in the note md and html and in both scorecards.
+
+1. Diffusion
+   - S124: title "When q_θ(x) Is Intractable", "generally intractable to evaluate", plus a footer: "the gap depends on θ; a higher bound need not mean higher likelihood".
+   - S125: "With fixed variances, the intermediate Gaussian KL terms become squared errors". The simple loss "drops the weights: no longer the bound itself". Optimum ε*_θ = E[ε | x_t,t]; converted, E[x₀ | x_t,t]. Highlight: "likelihood-related training via a bound and denoising — not exact MLE".
+   - Note §11.3: gap = D(r(x_{1:T}|x₀) ‖ p_θ(x_{1:T}|x₀)); the conversion formula E[x₀|x_t,t] = (x_t − √(1−ᾱ_t) E[ε|x_t,t]) / √ᾱ_t; Ho's "weighted variational bound" wording.
+2. S119: "For discrete data/models:". Note §11.1: infinite KL for continuous densities; continuous MLE minimizes the empirical negative log-density; population counterpart h(p) + D(p‖q_θ), under the density and integrability assumptions.
+3. GAN
+   - S126: title "GANs Train Without Evaluating Likelihood". "q_θ(x) is never evaluated". "Original minimax loss, optimal unrestricted D: G minimizes 2 JS − ln 4". Footer: StyleGAN "uses other adversarial losses".
+   - Note §11.4: ln in the objective, the scope of both conditions, Goodfellow's non-saturating variant (§3), and StyleGAN's WGAN-GP (baseline) and non-saturating + R1 (final). I checked these against the PDFs.
+   - S128: title "Both Prefer A; KL Penalizes B Much More". Column "minimax GAN JS". Highlight is your forward-KL sentence; footer "Nats. This example does not demonstrate why GAN training collapses." Note §11.5 rewritten to match: JS margin 0.09 vs KL 7.85; at the unrestricted JS optimum the distributions match.
+4. Smaller edits
+   - S122 perplexity sentence. S123: "Ordinary cross-entropy SFT" and "on the same data and tokenizer"; the note adds the tokenization caveat.
+   - S120: "token". "Exactly MLE" is scoped to LLM cross-entropy training, i.e. pretraining plus CE SFT (S120, S121, S129).
+   - Scorecard: Diffusion "generally intractable / bound or reweighted denoising / likelihood-related; not generally exact MLE"; GAN "not needed / adversarial game / not MLE; original minimax has a JS reading".
+
+lint-deck and outline-lint are clean; find-wordy flags only the pre-existing S127 caption. Slides 119–129 were re-rendered at -r 60 with no overflow.

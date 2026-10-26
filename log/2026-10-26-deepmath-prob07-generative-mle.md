@@ -71,3 +71,24 @@ Round-1 corrections are in ab74f60 (PR #62, still draft). Everything is mirrored
    - Scorecard: Diffusion "generally intractable / bound or reweighted denoising / likelihood-related; not generally exact MLE"; GAN "not needed / adversarial game / not MLE; original minimax has a JS reading".
 
 lint-deck and outline-lint are clean; find-wordy flags only the pre-existing S127 caption. Slides 119–129 were re-rendered at -r 60 with no overflow.
+
+## 2026-10-26 22:17 KST — slides-review → slides
+
+Reviewed the pinned ab74f60 diff. The main corrections are resolved. **Approved subject to two small mathematical fixes:**
+
+1. **Note §11.3:** fixed variances need not be *equal*. Replace “Gaussians with equal variances” with **“Gaussians with fixed variances; their KL is a weighted squared difference of means plus a θ-independent constant.”**
+
+2. **S125:** the sign is wrong in “Gaussian log-likelihood = squared error + constant.” Use **“Gaussian negative log-likelihood = scaled squared error + constant (fixed variance).”** Mirror this wherever repeated in the notes.
+
+One clarity polish: start S129’s conclusion with **“Among these three training setups…”**, so “only LLM” does not exclude other exact-likelihood generative models.
+
+No structural changes needed. Confirm these narrow edits and retain Albert’s merge-authorization gate.
+
+## 2026-10-26 22:17 KST — slides → slides-review
+
+Confirmed. The narrow edits are in 38b02b6:
+1. Note §11.3: "KL divergences between Gaussians with fixed variances; each such KL is a weighted squared difference of means plus a θ-independent constant."
+2. S125: "Gaussian negative log-likelihood = scaled squared error + constant (fixed variance)". The note's restatement of the same identity is also fixed: "Gaussian negative log-likelihood equals scaled squared error plus a constant when the variance is fixed". No other occurrences in the deck or notes.
+3. S129: "Among these three training setups, only LLM cross-entropy training is exact MLE." Note §11.6 is mirrored.
+
+S125 and S129 were re-rendered at -r 60 and are clean; lint-deck and outline-lint are clean. Marking PR #62 ready for review; the merge stays gated on Albert.

@@ -38,7 +38,7 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 4 | `prob04-random-processes/` — Markov processes, stationary dist., discrete diffusion | prob 1211–1455 | done (99 slides) |
 | 5 | `prob05-concentration/` — Markov/Chebyshev/Chernoff, MGF, CLT sketch, LLN | prob 1457–1595 | done (106 slides) |
 | 6 | `prob06-generalization/` — Hoeffding, sub-Gaussian, union bound, finite-class generalization bound | new material (sequel to prob05) | done (51 slides, senior-undergrad default; full / advanced 105 in backup/) |
-| 7 | `prob07-estimation/` — cond. expectation/tower, MLE/MAP, Fano (full proof), Naive Bayes, bias-variance, MMSE, generative models as MLE? | prob 1563–1911 | done (131 slides) |
+| 7 | `prob07-estimation/` — cond. expectation/tower, MLE/MAP, Fano (full proof), Naive Bayes, bias-variance, MMSE, generative models as MLE? (DDPM, score, JS, GAN loss) | prob 1563–1911 | done (140 slides) |
 | 8 | `prob08-gaussian/` — MVN (3 defs, properties w/ proofs), Gaussian channel, Gaussian diffusion/DDPM, Gaussian discriminant | prob 1912–2519 (MIT OCW 6.436J citation) | done (130 slides) |
 | 9 | `prob09-monte-carlo/` — Monte Carlo, importance sampling, variance trade-offs, policy gradient / RLHF hooks | new material | done (113 slides) |
 | 10 | `opt01-svd-lowrank/` — rank/range/null, SVD, pseudo-inverse, spectral & nuclear norms, Eckart–Young–Mirsky, Netflix | opt 1–435 | done (119 slides) |
@@ -365,7 +365,7 @@ n = 1.28×10⁶ → ε ≈ 14.9). Cross-deck numbers (Chernoff 2.1×10⁻⁶, ex
 exponent 0.1308) taken from prob05's published slides. Illustrative-only counts
 flagged on-slide: decision-stump class size 256d, ResNet-50 parameter count.
 
-### prob07-estimation — Estimation: MLE, MAP & Fundamental Limits (131 slides)
+### prob07-estimation — Estimation: MLE, MAP & Fundamental Limits (140 slides)
 
 `prob07-estimation/prob07-estimation.html` · **prob 1563–1911** plus conditional
 expectation/tower (prob 1577–1592, deferred here from prob05 per deck plan).
@@ -379,7 +379,7 @@ a bridge to prob08 (the Gaussian everywhere → multivariate Gaussian, linear
 E[X|Y]).
 
 Companion: `prob07-estimation/prob07-estimation-note.html` — detailed definitions, expanded proofs, lemmas, references.
-Accessible edition: `prob07-estimation/prob07-estimation-note.md` — screen-reader Markdown edition of that note (1797 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
+Accessible edition: `prob07-estimation/prob07-estimation-note.md` — screen-reader Markdown edition of that note (1947 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -394,8 +394,8 @@ Accessible edition: `prob07-estimation/prob07-estimation-note.md` — screen-rea
 | 08 | Naive Bayes (classification needs a model p_X^n|Y — MLE/MAP argmax, heights Gaussian recall, parametric modeling :1290, 2ⁿ-parameter blowup 2⁴⁹ ≈ 5.6×10¹⁴ :1307, conditional-independence assumption :1321, spam-filter SVG :1340, MNIST 28×28 figure :1376, binarized 7×7 grid SVG + itemized description :1387, NB classifier :1460, fit by counting = Bernoulli MLE :1472, fit the prior :1488, MAP with fitted model :1502, worked 10-mail table spam/non-spam p_free|spam=3/4 :1514, classify new mail 0.225/(0.225+0.033) ≈ 0.87 spam :1530, zero-count veto :1544, Laplace smoothing :1559, smoothed table 1/8, 2/8, 5/8 :1575, takeaway :1591) | 75–91 | prob07-estimation/prob07-estimation.html:1280 |
 | 09 | Bias–Variance (estimator is an RV :1615, bias :1629, variance :1643, MSE :1659, technique review add-and-subtract :1673, Thm 4 MSE = Bias² + Var arc :1688, 2-step proof cross term dies :1704, dartboard SVG :1733, sample-mean example σ²/n :1769, worked p̂=S/10 vs p̃=(S+1)/12 :1786, numbers 0.025 vs 0.0174 (p=.5), 0.009 vs 0.0107 (p=.9) :1801, MSE-vs-p chart SVG crossings ≈0.14/0.86 :1817, regularization trade :1840) | 92–106 | prob07-estimation/prob07-estimation.html:1604 |
 | 10 | MMSE Estimation (denoising channel SVG + MMSE is Bayes-optimal for squared error :1864, Thm 5 MMSE = E[X|Y] arc :1894, proof overview :1907, 4 proof steps insert/expand → tower kills cross term → read off :1919–:1959, proof summary :1971, worked prob03 table MMSE = 1/6 < 1/4 :1991, denoisers learn E[X|Y] :2006) | 107–117 | prob07-estimation/prob07-estimation.html:1853 |
-| 11 | Generative Models (section :2021, learn p_data then sample pipeline SVG + MLE ⟺ min KL (discrete data/models) :2030, three families cards ChatGPT/Claude/Llama · Stable Diffusion/Imagen · StyleGAN :2065, LLM chain rule = exact likelihood :2092, worked "the cat sat" 4.32+6.64+2.32 = 13.29 bits, perplexity ≈21.5 :2110, pretraining is MLE at scale — GPT-3 300B tokens, Llama 3 405B/15.6T, CE SFT is MLE, RLHF is not :2128, diffusion chain SVG + ELBO, likelihood intractable, θ-dependent gap :2146, bound becomes a denoising loss (fixed-variance Gaussian KL terms, simple loss drops weights), optimum E[ε|x_t,t] → E[x₀|x_t,t] (Thm 5), not exact MLE :2188, GANs train without evaluating likelihood — z→G→D SVG, original minimax + optimal unrestricted D ⇒ 2 JS − ln 4 :2207, two-mode fits SVG :2245, both prefer A; KL 0.46/8.31 vs JS 0.13/0.21, JS ≤ ln 2, not a mode-collapse explanation :2266, scorecard — only LLM cross-entropy training is exact MLE :2288) | 118–129 | prob07-estimation/prob07-estimation.html:2020 |
-| — | Bridge to prob08, end slide X̂(Y)=E[X|Y] | 130–131 | prob07-estimation/prob07-estimation.html:2305 |
+| 11 | Generative Models (section :2021, learn p_data then sample pipeline SVG + MLE ⟺ min KL (discrete data/models) :2030, three families cards ChatGPT/Claude/Llama · Stable Diffusion/Imagen · StyleGAN :2065, LLM chain rule = exact likelihood :2092, worked "the cat sat" 4.32+6.64+2.32 = 13.29 bits, perplexity ≈21.5 :2110, pretraining is MLE at scale — GPT-3 300B tokens, Llama 3 405B/15.6T, CE SFT is MLE, RLHF is not :2128, diffusion: auxiliary forward process chain SVG, q(x_t|x_{t−1}), closed form ᾱ_t, DDPM T=1000 :2146, DDPM Gaussian backward steps p_θ = N(μ_θ, σ_t²I) :2190, each backward step is a fixed-variance Gaussian MLE, μ* = E[x_{t−1}|x_t] (Thm 5) :2208, so is DDPM just MLE? — exact MLE of the path x_{0:T} (= −ELBO + const), only a θ-dependent bound for q_θ(x₀) :2224, mean to noise: μ̃_t, ε-parameterization, weighted ε-loss, L_simple drops weights, ε* = E[ε|x_t] :2243, score is a conditional expectation (score-arrow SVG, ∇ln q_t = −E[ε|x_t]/√(1−ᾱ_t)) :2264 + proof by differentiating the Gaussian kernel (Tweedie) :2298, GAN framework z→G→D SVG, V(D,G), BCE, q never evaluated :2314, JS divergence definition card (symmetric, ≤ ln 2, finite) :2352, worked JS finite where KL = ∞, JS = ¾ ln(4/3) ≈ 0.22 :2372, Step 1 best discriminator D* = p/(p+q) + p/q/D* SVG :2389, Step 2 plug in V(D*,G) = 2 JS − ln 4, min iff q = p (Goodfellow Thm 1) :2415, reading the GAN loss: MLE vs minimax JS table, D*/(1−D*) = p/q :2433, dropping a mode, data and fits A/B inline; KL 0.46/8.31 vs JS 0.13/0.21, not a mode-collapse explanation :2454, scorecard — only LLM cross-entropy training is exact MLE of q_θ(x); DDPM exact MLE of the path :2474) | 118–138 | prob07-estimation/prob07-estimation.html:2020 |
+| — | Bridge to prob08, end slide X̂(Y)=E[X|Y] | 139–140 | prob07-estimation/prob07-estimation.html:2492 |
 
 Key theorems: **Thm 1** tower property E[E[X|Y]] = E[X], full proof + table check
 (prob07-estimation/prob07-estimation.html:318); **Thm 2** MAP minimizes error
@@ -414,9 +414,9 @@ diagrams inline SVG with hand-computed geometry (two height densities,
 MLE boundary ≈179 with pick-B crossing ≈145, prior-shifted boundary ≈195, Fano
 sandwich, Bernoulli log-likelihood curve with max at 0.7, spam-mail feature map,
 empirical-distribution bars, dartboard bias/variance quadrants, MSE-vs-p parabolas with crossings ≈0.14/0.86,
-denoising channel, generative pipeline, diffusion noising/denoising chain, GAN generator–discriminator diagram, two-mode data vs single-Gaussian fits A=N(0,10)/B=N(3,1) with curves computed in Python). All numerics hand-computed (heights densities at 176/185, NB
+denoising channel, generative pipeline, diffusion noising/denoising chain, GAN generator–discriminator diagram, score arrows −x + 3 tanh(3x) on the noisy two-mode density, p/q/D* = p/(p+q) curves, two-mode data vs single-Gaussian fits A=N(0,10)/B=N(3,1) with curves computed in Python). All numerics hand-computed (heights densities at 176/185, NB
 10-mail table + 0.87 posterior + smoothed 1/8-2/8-5/8, coin likelihood table,
-p̂-vs-p̃ MSE table, Fano 1024-class floor 0.05 (sharp ≈0.102 in note), MMSE 1/6 vs 1/4; generative section: KL/JS in nats computed by numerical integration, "the cat sat" per-token bits; GPT-3, Llama 3, FFHQ 70,000 and GAN Thm 1 C(G) = −ln 4 + 2 JS checked against the arXiv papers cited in the note refs 7–12). Deviations from
+p̂-vs-p̃ MSE table, Fano 1024-class floor 0.05 (sharp ≈0.102 in note), MMSE 1/6 vs 1/4; generative section: KL/JS in nats computed by numerical integration, "the cat sat" per-token bits; GPT-3, Llama 3, FFHQ 70,000 and GAN Thm 1 C(G) = −ln 4 + 2 JS checked against the arXiv papers cited in the note refs 7–12; DDPM equations, schedule and Langevin/score-matching quotes checked against Ho et al. 2020, refs 13–14 Song & Ermon 2019 and Vincent 2011 via its bibliography). Deviations from
 tex: prob 1661 MAP argmax written over the likelihood, fixed to the posterior;
 prob 1791 prior-count indicator 1{y⁽ʲ⁾=0}, fixed to 1{y⁽ʲ⁾=1}; prob 1802
 duplicate p(x_i|0) in the numerator, fixed to p(x_i|1); "twice as likely" vs

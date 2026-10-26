@@ -849,7 +849,9 @@ deck from 118 to 117 slides.
 `midterm26-review/midterm26-review.html` · solution lecture for `exam/midterm26.tex` (exam 2026-10-20). Theme
 (Albert, 2026-10-22): entropy / MI / KL and the inequalities are tools for understanding phenomena —
 every problem gets its motivation and intuition before the computation. Built by
-a generator script (not committed); no speaker note, no tech supplement.
+a generator script (not committed); no tech supplement.
+
+Companion: `midterm26-review/midterm26-review-note.html` (§1–9 + refs [1]–[6]) — full solutions in prose, the derivations the slides compress (asymptotic H(K), label-W bounds with equality cases, general I(ε) formula, n=3 shuffle matrix and exact distributions, δ-move, e^t=7 optimality), all numbers re-derived. Generated from the accessible edition `midterm26-review/midterm26-review-note.md` (829 lines; same text and sections, LaTeX math, tables as lists).
 
 | # | Section | Slides | Location |
 |---|---|---|---|

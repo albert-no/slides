@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Deep Learning Math · Midterm Review — Notes</title>
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload='renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false},{left:"\\[",right:"\\]",display:true}]});'></script>
+<style>
+  body { max-width: 760px; margin: 48px auto; padding: 0 24px 96px; color: var(--charcoal); background: var(--white); font-family: 'Yonsei', 'Noto Sans', Arial, sans-serif; font-weight: 300; line-height: 1.65; }
+  h1 { font-size: 2rem; color: var(--yonsei-blue); margin-bottom: 4px; }
+  h2 { font-size: 1.4rem; color: var(--yonsei-blue); margin-top: 40px; border-bottom: 1px solid var(--slate); padding-bottom: 6px; }
+  h3 { font-size: 1.1rem; color: var(--blue-light); margin-top: 24px; }
+  p, li { font-size: 1rem; }
+  .meta { color: var(--gray-text); font-size: 0.95rem; margin-bottom: 24px; }
+  code { background: var(--light); padding: 1px 6px; border-radius: 4px; font-size: 0.92em; }
+  strong { color: var(--yonsei-blue); font-weight: 600; }
+  .deriv { background: var(--light); border-left: 3px solid var(--yonsei-blue); padding: 12px 18px; margin: 14px 0; border-radius: 0 6px 6px 0; }
+  table { border-collapse: collapse; margin: 14px 0; }
+  th, td { border: 1px solid var(--slate); padding: 6px 12px; font-size: 0.95rem; text-align: left; }
+  th { background: var(--light); color: var(--yonsei-blue); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>Deep Learning Math, Midterm Review: Tools for Seeing (Notes)</h1>
+<p><strong>About this file.</strong> Companion note to the midterm review lecture for the 2026 midterm (exam of October 20, 2026). It holds what the lecture states briefly or skips: every solution written out in full sentences, the derivations the slides compress into one line, the general formulas behind the plotted curves, and a re-derivation of every number on the slides. The Markdown edition (<code>midterm26-review-note.md</code>) is the screen-reader version: linear reading order, all mathematics in LaTeX, tables written as lists. The HTML note (<code>midterm26-review-note.html</code>) has the same text and section numbers.</p>
+<p><strong>Conventions.</strong> As in the exam, entropy $H$ and mutual information $I$ are in bits: $\log$ is base 2 and $\ln$ is the natural logarithm. $h(\cdot)$ is differential entropy. $\mathrm{Bern}(p)$ is the Bernoulli distribution, $\mathrm{Bin}(k, p)$ the binomial, $\mathrm{Unif}$ the uniform distribution. $D(p\|q) = \sum_k p_k \log (p_k / q_k)$ is the KL divergence and $H_2(p) = -p\log p - (1-p)\log(1-p)$ the binary entropy function.</p>
+<p><strong>Contents.</strong></p>
+<ol><li>Why learn mathematical tools</li><li>Problem 1(a): where n coin flips hide their bits</li><li>Problem 1(b): does mixing add uncertainty</li><li>Problem 1(c): noisy labels</li><li>Problem 1(d): shuffling by moving the top card</li><li>Problem 2: label smoothing versus confidence penalty</li><li>Problem 3: heavy tails and the median of means</li><li>What we expect from you</li><li>References</li></ol>
+<section>
+<h2>1 &nbsp;Why learn mathematical tools</h2>
+<h3>1.1 Tools serve understanding</h3>
+<p>Mathematics hands us tools; the tools let us understand what we see. The loop the lecture opens with has three steps: learn a tool (a new mathematical idea), apply it to a phenomenon, and see the phenomenon clearly enough to explain, predict or decide. A sharper question then calls for the next tool, and the loop starts again. The goal of an exam problem is therefore not the computation itself but the better view of the phenomenon that the computation buys.</p>
+<p>This course is one turn of that loop. Entropy, mutual information, KL divergence and the tail inequalities are the tools of this course. Later courses will add many more, and after graduation you will meet tools that do not exist yet. The habit to build is the same every time: learn the tool, then use it to understand and see the world.</p>
+<h3>1.2 Two layers</h3>
+<p>The course has two layers.</p>
+<ul><li>The bottom layer is the tools you must be able to compute: entropy $H(X)$, mutual information $I(X;Y)$, KL divergence $D(p\|q)$, and the inequalities (Jensen, Markov, Chebyshev, Chernoff), together with techniques such as the chain rule, symmetry and union-style counting.</li><li>The top layer is the phenomena those tools explain: how much information is hidden in data, what a signal reveals, how two models mismatch, and when averages fail.</li></ul>
+<p>The exam requires the bottom layer; the point of the course is the top layer. Every problem below is read through the same four steps: the <strong>motivation</strong> (what phenomenon we care about), the <strong>tool</strong> (which measure or inequality captures it), the <strong>computation</strong> (the exam-level mathematics), and the <strong>intuition</strong> (what the result says about the world).</p>
+
+</section>
+<section>
+<h2>2 &nbsp;Problem 1(a): where n coin flips hide their bits</h2>
+<h3>2.1 Statement and motivation</h3>
+<p>Let $X_1, \dots, X_n$ be i.i.d. $\mathrm{Bern}(\tfrac12)$, $X^n = (X_1, \dots, X_n)$, and $K = \sum_i X_i$ the number of ones. The problem asks to show</p>
+  \[H(X^n \mid K) \ge n - \log(n+1).\]
+<p>A summary statistic, here the count $K$, replaces the raw data in countless pipelines. The question is how much of the information the summary keeps. The data $X^n$ has two parts: how many ones there are, and where they are.</p>
+<h3>2.2 Solution</h3>
+<p>Because $K$ is a function of $X^n$, adding it changes nothing: $H(X^n, K) = H(X^n)$. The $n$ flips are independent fair bits, so $H(X^n) = n$. The chain rule then splits the joint entropy the other way:</p>
+  \[n = H(X^n) = H(X^n, K) = H(K) + H(X^n \mid K).\]
+<p>$K$ takes the $n+1$ values $0, 1, \dots, n$, and a random variable with $n+1$ possible values has entropy at most $\log(n+1)$, with equality only for the uniform distribution. Hence</p>
+  \[H(X^n \mid K) = n - H(K) \ge n - \log(n+1).\]
+<h3>2.3 Bound H(K), do not compute it</h3>
+<p>The exact value is</p>
+  \[H(K) = -\sum_{k=0}^{n} \binom{n}{k} 2^{-n} \log\Big(\binom{n}{k} 2^{-n}\Big),\]
+<p>a sum that is tedious to evaluate and has no simple form. Evaluating it is unnecessary: the problem only needs the <em>order</em> of $H(K)$, and the crude bound $\log(n+1)$ already gives it. The values, in bits and rounded:</p>
+<ul><li>$n = 10$: exact $H(K) \approx 2.71$, bound $\log 11 \approx 3.46$, total $n = 10$.</li><li>$n = 100$: exact $H(K) \approx 4.37$, bound $\log 101 \approx 6.66$, total $n = 100$.</li><li>$n = 1000$: exact $H(K) \approx 6.03$, bound $\log 1001 \approx 9.97$, total $n = 1000$.</li></ul>
+<p>The bound is loose by a factor of about two for large $n$, but both numbers are logarithmic while the total is linear, and that is the whole story. This is a general lesson: when a quantity is hard to compute, bound it; a bound that is off by a constant factor still tells you which terms dominate.</p>
+<p><strong>Where the asymptotic comes from.</strong> $K$ has mean $n/2$ and variance $n/4$, and for large $n$ it is close to a Gaussian with these parameters on the integer lattice. A Gaussian with variance $\sigma^2$ has differential entropy $\tfrac12 \log(2\pi e \sigma^2)$, and for a lattice of spacing one the discrete entropy is close to the differential entropy. With $\sigma^2 = n/4$:</p>
+  \[H(K) = \tfrac12 \log\big(\tfrac{\pi e n}{2}\big) + o(1).\]
+<p>This gives $2.71$, $4.37$ and $6.03$ bits at $n = 10, 100, 1000$, matching the exact values to the precision shown, and is about half of $\log(n+1)$ for large $n$.</p>
+<h3>2.4 Intuition</h3>
+<p>With $n = 100$ fair flips carrying $100$ bits, the count keeps at most $6.66$ bits and the order of the ones keeps at least $93.3$. Almost all of the information is in <em>where</em> the ones are, not <em>how many</em> there are. A summary statistic usually throws information away; know what you discard.</p>
+
+</section>
+<section>
+<h2>3 &nbsp;Problem 1(b): does mixing add uncertainty</h2>
+<h3>3.1 Statement and motivation</h3>
+<p>$X$ and $Y$ are continuous with densities $f_X, f_Y$, and $Z$ has density $f_Z = \tfrac12 f_X + \tfrac12 f_Y$. Prove or disprove: $h(Z) \le \max\{h(X), h(Y)\}$.</p>
+<p>Mixtures are everywhere: data pooled from two sources, mixture models, populations made of subpopulations. The question is whether a mixture can be more uncertain than each of its parts. Mixing adds a new question that neither part has: which source did $Z$ come from?</p>
+<h3>3.2 Counterexample</h3>
+<p>The statement is false. Take $X \sim \mathrm{Unif}[0,1]$ and $Y \sim \mathrm{Unif}[10,11]$. Each density equals $1$ on an interval of length one, so</p>
+  \[h(X) = -\int_0^1 1 \cdot \log 1 \, dx = 0, \qquad h(Y) = 0.\]
+<p>$Z$ has density $\tfrac12$ on $[0,1] \cup [10,11]$, a set of total length $2$, and $0$ elsewhere. Hence</p>
+  \[h(Z) = -\int f_Z \log f_Z = -2 \cdot \tfrac12 \log \tfrac12 = 1 &gt; 0 = \max\{h(X), h(Y)\}.\]
+<h3>3.3 Derivation: name the hidden label</h3>
+<p>The extra bit has a name. Introduce a label $W \sim \mathrm{Bern}(\tfrac12)$ that picks the source: given $W = 0$, $Z$ is drawn from $f_X$; given $W = 1$, from $f_Y$. The marginal density of $Z$ is then exactly $\tfrac12 f_X + \tfrac12 f_Y$, so this is the same $Z$. Assume $h(X)$ and $h(Y)$ are finite.</p>
+<p><strong>Step 1: the conditional entropy.</strong> Given the label, $Z$ is just $X$ or just $Y$, so</p>
+  \[h(Z \mid W) = \tfrac12 h(Z \mid W = 0) + \tfrac12 h(Z \mid W = 1) = \tfrac12 h(X) + \tfrac12 h(Y).\]
+<p><strong>Step 2: entropy equals conditional entropy plus information.</strong> For the continuous $Z$ and the discrete $W$, mutual information is defined as $I(Z;W) = h(Z) - h(Z \mid W)$, so</p>
+  \[h(Z) = h(Z \mid W) + I(Z;W).\]
+<p><strong>Step 3: bound the information.</strong> Mutual information is symmetric and can be written the other way, through the discrete label: $I(Z;W) = H(W) - H(W \mid Z)$. Two facts bound it.</p>
+<ul><li>$I(Z;W) \ge 0$: conditioning never increases entropy (equivalently, mutual information is a KL divergence and KL is non-negative).</li><li>$I(Z;W) \le H(W) = 1$: $H(W \mid Z) \ge 0$ because $W$ is discrete. $Z$ cannot reveal more about the label than the label holds.</li></ul>
+<p>Combining the three steps:</p>
+  \[\tfrac12 h(X) + \tfrac12 h(Y) \le h(Z) \le \tfrac12 h(X) + \tfrac12 h(Y) + 1.\]
+<h3>3.4 When each bound is attained</h3>
+<ul><li><strong>Upper bound, $I(Z;W) = 1$.</strong> This needs $H(W \mid Z) = 0$: seeing $Z$ determines the label. That happens exactly when the supports do not overlap, $f_X(z) f_Y(z) = 0$ for almost every $z$, as in the counterexample. Mixing then adds a full bit.</li><li><strong>Lower bound, $I(Z;W) = 0$.</strong> This needs $Z$ independent of $W$, which means $f_X = f_Y$ almost everywhere: $X$ and $Y$ have the same distribution, and $Z$ says nothing about which source it came from.</li><li><strong>Partial overlap.</strong> In between, $W$ is partly hidden by $Z$, and mixing adds strictly between $0$ and $1$ bit.</li></ul>
+<p>In words: mixing two sources adds at most the entropy of <em>which source</em>, and it adds all of it when the sources can be told apart.</p>
+<p>The upper bound also explains why the original claim fails: when $h(X) = h(Y)$ the average equals the maximum, so any positive $I(Z;W)$ pushes $h(Z)$ above $\max\{h(X), h(Y)\}$.</p>
+
+</section>
+<section>
+<h2>4 &nbsp;Problem 1(c): noisy labels</h2>
+<h3>4.1 Statement and motivation</h3>
+<p>$X$ is uniform on $K \ge 2$ classes. A noisy label $Y$ equals $X$ with probability $1 - \varepsilon$; with probability $\varepsilon$ it is drawn uniformly from the other $K - 1$ classes. (i) Compute $I(X;Y)$ at $\varepsilon = 0$ and $\varepsilon = 1$ and show both are nonzero. (ii) Find $\varepsilon$ with $I(X;Y) = 0$.</p>
+<p>Real datasets carry wrong labels from annotator errors. The question is how much a noisy label still tells us about the truth. Guess first: is a label that is always wrong useless?</p>
+<h3>4.2 The channel and the general formula</h3>
+<p>The channel is $P(Y = y \mid X = x) = 1 - \varepsilon$ if $y = x$ and $\varepsilon/(K-1)$ if $y \ne x$. <strong>$Y$ is uniform</strong>: for each $y$,</p>
+  \[P(Y = y) = \tfrac1K (1 - \varepsilon) + \tfrac{K-1}{K} \cdot \tfrac{\varepsilon}{K-1} = \tfrac1K.\]
+<p>So $H(X) = H(Y) = \log K$. Given $X = x$, the label is correct with probability $1 - \varepsilon$ and otherwise uniform over $K - 1$ wrong classes, so</p>
+  \[H(Y \mid X) = H_2(\varepsilon) + \varepsilon \log(K - 1),\]
+<p>and therefore, for every $\varepsilon \in [0,1]$,</p>
+  \[I(X;Y) = H(Y) - H(Y \mid X) = \log K - H_2(\varepsilon) - \varepsilon \log(K-1).\]
+<p>This is the formula behind the plotted curves for $K = 2$ and $K = 10$.</p>
+<h3>4.3 Part (i)</h3>
+<p><strong>$\varepsilon = 0$.</strong> $Y = X$, so $H(X \mid Y) = 0$ and $I(X;Y) = \log K &gt; 0$. A perfect label gives all $\log K$ bits.</p>
+<p><strong>$\varepsilon = 1$.</strong> The label is always wrong. Hearing $Y = y$ rules out class $y$ and leaves $X$ uniform on the other $K - 1$ classes, so $H(X \mid Y) = \log(K-1)$ and</p>
+  \[I(X;Y) = \log K - \log(K-1) = \log \tfrac{K}{K-1} &gt; 0.\]
+<p>For $K = 4$ this is $\log \tfrac43 \approx 0.415$ bits; for $K = 10$ it is $\log \tfrac{10}{9} \approx 0.15$ bits. The general formula agrees: $H_2(1) = 0$.</p>
+<h3>4.4 Why a liar gives information</h3>
+<p>Information is how much $Y$ changes your belief about $X$. Before hearing the label, $K$ classes are equally likely. After hearing $Y = y$ from a consistent liar, class $y$ is ruled out and $K - 1$ remain. A consistent liar is <em>predictable</em>, and predictability is dependence. Only for $K = 2$ does eliminating one class pin down the truth: flip the label ($1 \to 2$, $2 \to 1$) and you recover $X$ exactly, a full bit. Mutual information measures dependence, not correctness.</p>
+<h3>4.5 Part (ii): when is a label truly useless</h3>
+<p>$I(X;Y) = 0$ if and only if $X$ and $Y$ are independent, which here means the conditional law $P(Y = \cdot \mid X = x)$ is the same for every $x$. That law puts $1 - \varepsilon$ on $x$ and $\varepsilon/(K-1)$ on every other class; it can only be the same for every $x$ if it is uniform:</p>
+  \[1 - \varepsilon = \frac{\varepsilon}{K-1} \iff \varepsilon = \frac{K-1}{K}.\]
+<p>At this value $Y$ is uniform whatever $X$ is, so $I(X;Y) = 0$. A check with the general formula: at $\varepsilon = (K-1)/K$, $H_2(\varepsilon) = \log K - \tfrac{K-1}{K} \log(K-1)$, and the formula gives exactly $0$.</p>
+<p>The useless error rate is $\tfrac12$ only for $K = 2$; for $K = 10$ it is $0.9$. Labels that are wrong 60 percent of the time with $K = 10$ still carry $\log 10 - H_2(0.6) - 0.6 \log 9 \approx 0.45$ bits. Useless means independent, not "often wrong". The information curve dips to zero at $\varepsilon = (K-1)/K$ and rises again toward $\log \tfrac{K}{K-1}$ at $\varepsilon = 1$.</p>
+
+</section>
+<section>
+<h2>5 &nbsp;Problem 1(d): shuffling by moving the top card</h2>
+<h3>5.1 Statement and motivation</h3>
+<p>A deck of $n$ cards is shuffled by one move, repeated independently:</p>
+<ol><li><strong>State:</strong> the ordering of the $n$ cards, one of $n!$ possible states.</li><li><strong>Move:</strong> take the top card and reinsert it at one of $n$ positions, each with probability $\tfrac1n$.</li><li><strong>Positions:</strong> on top (the deck is unchanged), after the first remaining card, after the second, and so on, down to the bottom.</li><li><strong>Repeat:</strong> the orderings $X_0, X_1, X_2, \dots$ form a Markov chain.</li></ol>
+<p>Show that the uniform distribution over the $n!$ orderings is stationary.</p>
+<p>A fair shuffle should not prefer any ordering. The key idea is symmetry: after renaming the cards, every ordering is in exactly the same situation, so the only fair candidate is uniform. The proof turns that guess into one count.</p>
+<h3>5.2 Solution: count the predecessors</h3>
+<p>Write $P(\tau \to \sigma)$ for the one-step transition probability and $U(\sigma) = 1/n!$. We need $\sum_\tau U(\tau) P(\tau \to \sigma) = U(\sigma)$ for every $\sigma$.</p>
+<ul><li><strong>Out of any ordering.</strong> From $\tau$, the $n$ insertion positions give $n$ <em>different</em> orderings, each with probability $\tfrac1n$. So every transition probability is $0$ or $\tfrac1n$, and each row of the transition matrix sums to one.</li><li><strong>Into any ordering.</strong> Undo the move: pick any one of the $n$ cards of $\sigma$ and move it to the top. This produces exactly $n$ distinct predecessors $\tau$ of $\sigma$. Picking the top card of $\sigma$ gives $\tau = \sigma$, the "reinsert on top" move.</li></ul>
+<p>Therefore</p>
+  \[\sum_\tau U(\tau) P(\tau \to \sigma) = n \cdot \frac{1}{n!} \cdot \frac1n = \frac{1}{n!} = U(\sigma).\]
+<h3>5.3 Doubly stochastic, not symmetric</h3>
+<p>The count says each <em>column</em> of the transition matrix also sums to one: the matrix is <strong>doubly stochastic</strong>. For any doubly stochastic matrix the uniform distribution is stationary, since $\sum_\tau \tfrac{1}{N} P(\tau \to \sigma) = \tfrac1N \cdot 1$.</p>
+<p>The matrix is <strong>not symmetric</strong>, and symmetry is not what the proof uses. For $n = 3$, label orderings by top-to-bottom reading. From $123$ the top card $1$ can go to the bottom, giving $231$, so $P(123 \to 231) = \tfrac13$. But from $231$ the top card is $2$, and moving it anywhere never produces $123$, so $P(231 \to 123) = 0$. Column sums of one, not symmetry, make uniform stationary. (By enumeration, the matrix is likewise asymmetric for $n = 4$ and $n = 5$.)</p>
+<p>The full $6 \times 6$ matrix for $n = 3$ (rows are "from", columns are "to", in the order $123, 132, 213, 231, 312, 321$), listing for each row the three orderings it reaches with probability $\tfrac13$:</p>
+<ul><li>From $123$: $123$, $213$, $231$.</li><li>From $132$: $132$, $312$, $321$.</li><li>From $213$: $213$, $123$, $132$.</li><li>From $231$: $231$, $321$, $312$.</li><li>From $312$: $312$, $132$, $123$.</li><li>From $321$: $321$, $231$, $213$.</li></ul>
+<p>Every ordering appears in exactly three rows, so every column sums to one.</p>
+<h3>5.4 Repeat the move: any start ends uniform</h3>
+<p>Stationarity says the uniform distribution does not change under one move. The stronger and more useful fact is that repeating the move from <strong>any</strong> initial ordering drives the distribution of $X_t$ to uniform. Two properties give this by the convergence theorem for finite Markov chains.</p>
+<ul><li><strong>Irreducible:</strong> every ordering can be reached from every other. Moving top cards to chosen depths can build any target ordering from the bottom up.</li><li><strong>Aperiodic:</strong> the "reinsert on top" move leaves the deck unchanged with probability $\tfrac1n$, a self-loop at every state, which breaks any cycle.</li></ul>
+<p>A finite irreducible aperiodic chain converges to its unique stationary distribution from any start, so the uniform distribution found above is the limit.</p>
+<p>The lecture shows this for $n = 3$ starting from $123$. Computed exactly:</p>
+<ul><li>After 1 move: $\tfrac13$ on each of $123, 213, 231$; $0$ elsewhere.</li><li>After 2 moves: $\tfrac29$ on $123, 213, 231$; $\tfrac19$ on $132, 312, 321$.</li><li>After 3 moves: $\tfrac{5}{27}$ and $\tfrac{4}{27}$ on the same two groups.</li><li>After 5 moves: $\tfrac{41}{243}$ and $\tfrac{40}{243}$, against $\tfrac16 = \tfrac{40.5}{243}$.</li></ul>
+<p>In this example each probability is off from $\tfrac16$ by exactly $\tfrac{1}{2 \cdot 3^t}$ after $t$ moves: the convergence is geometric, but it never becomes exactly uniform in finite time. <em>How fast</em> the chain gets close to uniform for large $n$ is a separate question, the subject of mixing-time theory, and is not part of this problem.</p>
+<h3>5.5 Takeaway</h3>
+<p>Symmetric dynamics suggest the uniform distribution; one counting step verifies it. The same idea covers the random walk on a regular graph and the design of MCMC samplers. Symmetry turns an $n! \times n!$ eigenvector problem into a single count.</p>
+
+</section>
+<section>
+<h2>6 &nbsp;Problem 2: label smoothing versus confidence penalty</h2>
+<h3>6.1 Setup and motivation</h3>
+<p>A classifier for $K \ge 2$ classes outputs $q = (q_1, \dots, q_K)$ with all $q_k &gt; 0$. Let $y$ be the true label and $u = (\tfrac1K, \dots, \tfrac1K)$ the uniform distribution. The plain cross-entropy loss is $-\log q_y$.</p>
+<p><strong>Cross-entropy always wants more confidence.</strong> $-\log q_y$ is strictly decreasing in $q_y$ all the way to $q_y = 1$, so training pushes the output toward a one-hot vector. That is a problem because a probability of $0.999$ on a wrong answer gives no warning sign, wrong labels in the data get memorized with full confidence, and downstream decisions such as thresholds and abstention trust these numbers. A model is over-confident when its predicted probabilities exceed its actual accuracy; we want reported probabilities to mean something.</p>
+<p><strong>Design challenge.</strong> "Confident" means far from uniform, that is, low entropy. Two natural ways to encode "stay near uniform" follow, and you should be able to invent both yourself.</p>
+<ul><li><strong>Label smoothing (LS).</strong> Soften the target by mixing the one-hot vector with $u$. For $0 &lt; \varepsilon &lt; 1$, the smoothed target $o^{(\varepsilon)}$ has $o^{(\varepsilon)}_y = 1 - \varepsilon + \varepsilon/K$ and $o^{(\varepsilon)}_k = \varepsilon/K$ for $k \ne y$, and $L_{\mathrm{LS}}(q) = -\sum_k o^{(\varepsilon)}_k \log q_k$. Example: $K = 5$, $\varepsilon = 0.2$, $y = 1$ gives the target $0.84$ on class 1 and $0.04$ on each other class. $o^{(0)}$ is the one-hot vector, so $\varepsilon = 0$ recovers $-\log q_y$.</li><li><strong>Confidence penalty (CP).</strong> Keep the one-hot target and subtract an entropy bonus: for $\beta &gt; 0$, $L_{\mathrm{CP}}(q) = -\log q_y - \beta H(q)$ with $H(q) = -\sum_k q_k \log q_k$. A peaked $q$ earns a small bonus, a spread $q$ a large one.</li></ul>
+<p>Both come from one intuition. The problem asks whether they behave the same.</p>
+<h3>6.2 Part (a): two KL identities</h3>
+<p><strong>Label smoothing.</strong> The smoothed target is a mixture, $o^{(\varepsilon)} = (1 - \varepsilon) o^{(0)} + \varepsilon u$: its $y$-entry is $(1-\varepsilon) + \varepsilon/K$ and its other entries $\varepsilon/K$. Cross-entropy is linear in the target, and $o^{(0)}$ keeps only the $k = y$ term, so</p>
+  \[L_{\mathrm{LS}}(q) = -\sum_k o^{(\varepsilon)}_k \log q_k = (1-\varepsilon)(-\log q_y) + \varepsilon \Big( -\sum_k \tfrac1K \log q_k \Big).\]
+<p>Add and subtract $\sum_k \tfrac1K \log \tfrac1K = -\log K$ in the second term:</p>
+  \[-\sum_k \tfrac1K \log q_k = \sum_k \tfrac1K \log \frac{1/K}{q_k} - \sum_k \tfrac1K \log \tfrac1K = D(u\|q) + \log K.\]
+<p><strong>Confidence penalty.</strong> Directly from the definition,</p>
+  \[D(q\|u) = \sum_k q_k \log \frac{q_k}{1/K} = \sum_k q_k \log q_k + \log K = \log K - H(q),\]
+<p>so entropy is distance from uniform, read backwards, and $-\beta H(q) = \beta D(q\|u) - \beta \log K$. Together:</p>
+  \[L_{\mathrm{LS}}(q) = (1-\varepsilon)(-\log q_y) + \varepsilon D(u\|q) + \varepsilon \log K,\]
+  \[L_{\mathrm{CP}}(q) = -\log q_y + \beta D(q\|u) - \beta \log K.\]
+<p><strong>Same intuition, opposite KL directions.</strong> Both losses add a KL penalty toward uniform, but label smoothing puts $u$ in the <em>first</em> slot, $D(u\|q)$, and the confidence penalty puts it in the <em>second</em>, $D(q\|u)$. The coefficients differ too: CP keeps the full cross-entropy, LS scales it by $1 - \varepsilon$. Pereyra et al. [1] noted this KL-direction link between the two regularizers.</p>
+<h3>6.3 Part (b): push to full confidence</h3>
+<p>Fix $y$ and let $q_y \to 1$, so $q_k \to 0$ for every $k \ne y$. Both limits come straight from the definitions by splitting off the true-label term.</p>
+<p><strong>$D(u\|q)$.</strong> The weights are the fixed numbers $\tfrac1K$:</p>
+  \[D(u\|q) = \sum_k \tfrac1K \log \frac{1/K}{q_k} = \tfrac1K \log \frac{1}{K q_y} + \sum_{k \ne y} \tfrac1K \log \frac{1}{K q_k}.\]
+<p>The first term tends to $-\tfrac1K \log K$. Each term of the sum has fixed weight $\tfrac1K$ multiplying $\log \tfrac{1}{K q_k} \to \infty$. Hence $D(u\|q) \to \infty$.</p>
+<p><strong>$D(q\|u)$.</strong> The weights are the $q_k$ themselves:</p>
+  \[D(q\|u) = \sum_k q_k \log \frac{q_k}{1/K} = q_y \log(K q_y) + \sum_{k \ne y} q_k \log(K q_k).\]
+<p>The first term tends to $\log K$. Each term of the sum is $q_k \log K + q_k \log q_k \to 0$, because $q \log q \to 0$ as $q \to 0$. Hence $D(q\|u) \to \log K$, which is finite. Equivalently, $D(q\|u) = \log K - H(q)$ and $H(q) \to 0$.</p>
+<p><strong>Who holds the weights decides the behavior.</strong> In $D(u\|q)$ a fixed weight multiplies an exploding logarithm; in $D(q\|u)$ the shrinking weight $q_k$ tames it.</p>
+<p><strong>The losses.</strong> Summarizing the four limits:</p>
+<ul><li>$D(u\|q) \to \infty$: the terms $k \ne y$, $\tfrac1K \log \tfrac{1}{K q_k}$, blow up.</li><li>$D(q\|u) \to \log K$: it equals $\log K - H(q)$, and $H(q) \to 0$.</li><li>$L_{\mathrm{LS}}(q) \to \infty$: $(1-\varepsilon)(-\log q_y) \to 0$ but $\varepsilon D(u\|q) \to \infty$.</li><li>$L_{\mathrm{CP}}(q) \to 0$: $0 + \beta \log K - \beta \log K$.</li></ul>
+<p>Full confidence costs infinitely much under label smoothing and has finite loss under the confidence penalty. For $K = 2$ the lecture plots the two unweighted KL terms against $q_y \in [0.5, 1)$: $D(u\|q)$ blows up while $D(q\|u)$ stays below $\log 2 = 1$ bit.</p>
+<h3>6.4 Part (c)(i): both discourage over-confidence</h3>
+<p>Without regularization the loss $-\log q_y$ keeps decreasing as $q_y \to 1$. Each regularized loss adds a penalty that grows as $q$ becomes confident.</p>
+<p><strong>Label smoothing sets a target confidence below one.</strong> For any target distribution $p$, cross-entropy splits as $-\sum_k p_k \log q_k = H(p) + D(p\|q)$. With $p = o^{(\varepsilon)}$:</p>
+  \[L_{\mathrm{LS}}(q) = H(o^{(\varepsilon)}) + D(o^{(\varepsilon)}\|q).\]
+<p>The first term does not depend on $q$ and the second is non-negative and zero only at $q = o^{(\varepsilon)}$. So the minimizer is $q = o^{(\varepsilon)}$, whose confidence $q_y = 1 - \varepsilon + \varepsilon/K$ is strictly less than one.</p>
+<p><strong>The confidence penalty makes one-hot non-optimal.</strong> Start at the one-hot vector and move a small mass $\delta$ off the true label, spreading it evenly: $q_y = 1 - \delta$ and $q_k = \delta/(K-1)$ for $k \ne y$. Then</p>
+  \[-\log q_y = -\log(1-\delta) = O(\delta),\]
+<p>because $-\ln(1-\delta) = \delta + \delta^2/2 + \cdots$; in bits this is $\delta / \ln 2 + O(\delta^2)$. This is where the $-\log(1-\delta)$ term comes from: it is the cross-entropy price of lowering $q_y$ from $1$ to $1-\delta$. The entropy of the new $q$ is</p>
+  \[H(q) = -(1-\delta)\log(1-\delta) - (K-1) \cdot \frac{\delta}{K-1} \log \frac{\delta}{K-1} = -(1-\delta)\log(1-\delta) + \delta \log \frac{K-1}{\delta}.\]
+<p>The first term is $O(\delta)$ and $\delta \log \tfrac{K-1}{\delta} = \delta \log \tfrac1\delta + \delta \log(K-1)$, so $H(q) = \delta \log \tfrac1\delta + O(\delta)$. Therefore, for fixed $K$ and fixed $\beta &gt; 0$,</p>
+  \[L_{\mathrm{CP}}(q) = -\log q_y - \beta H(q) = -\beta\, \delta \log \tfrac1\delta + O(\delta),\]
+<p>which is negative for all sufficiently small $\delta &gt; 0$, because $\delta \log \tfrac1\delta$ dominates $\delta$ as $\delta \to 0$. The loss at the one-hot vector is $0$, so moving away lowers the loss: the entropy bonus beats the cross-entropy near full confidence, and the fully confident prediction is never optimal.</p>
+<h3>6.5 Part (c)(ii): which is more aggressive</h3>
+<p>Label smoothing is the more aggressive one near full confidence, for fixed $\varepsilon, \beta &gt; 0$. By (b), as $q_y \to 1$, $L_{\mathrm{LS}} \to \infty$. More precisely, every term of $D(u\|q)$ is at least $-\tfrac1K \log K$ (because $q_k \le 1$), so for each $k$</p>
+  \[D(u\|q) \ge \tfrac1K \log \tfrac{1}{q_k} - \log K,\]
+<p>and a near-zero probability on any class is punished without bound. The confidence penalty, in contrast, never exceeds $\beta \log K$, since $0 \le D(q\|u) \le \log K$, and $L_{\mathrm{CP}} \to 0$ stays finite. Label smoothing builds an unbounded barrier near full confidence; the confidence penalty charges a bounded price. This is a statement about the regime near full confidence, not a ranking at every confidence level or for every choice of the coefficients.</p>
+<h3>6.6 Consequences and lesson</h3>
+<p>Knowing the math of each term predicts side effects.</p>
+<ul><li>With label smoothing, a single example with a freely chosen $q$ has its optimum at $q = o^{(\varepsilon)}$, which gives every wrong class exactly $\varepsilon/K$.</li><li>Müller, Kornblith and Hinton [2] report that label smoothing improves calibration, yet a teacher trained with label smoothing makes a worse teacher for knowledge distillation.</li><li>The confidence penalty is capped at $\beta \log K$: for small $\beta$ it is a mild nudge.</li></ul>
+<p>The lesson is a four-step recipe for designing your own algorithm: state the <strong>intuition</strong> ("do not be over-confident"), <strong>translate</strong> it into mathematics (a smoothed target or an entropy bonus), <strong>analyze</strong> the result (limits, boundedness, KL direction), and <strong>choose</strong> the behavior you actually want. The same motivation led to two different algorithms.</p>
+
+</section>
+<section>
+<h2>7 &nbsp;Problem 3: heavy tails and the median of means</h2>
+<h3>7.1 Light tails and why the sample mean works</h3>
+<p>Most textbook distributions are light-tailed. For a standard Gaussian $Z$ the Chernoff bound gives $P(Z \ge t) \le e^{-t^2/2}$ for $t \ge 0$; the exact values are $P(Z \ge 1) \approx 0.16$, $P(Z \ge 3) \approx 1.3 \times 10^{-3}$ and $P(Z \ge 5) \approx 2.9 \times 10^{-7}$. Extreme values are astronomically rare.</p>
+<p>For light-tailed i.i.d. data the sample mean works for two reasons: outliers are so rare that they almost never appear in the sample, and averaging dilutes the few that do. The Chernoff bound makes this quantitative: $P(|\bar X_n - \mu| \ge a) \le 2 e^{-cn}$ for a fixed $a &gt; 0$ and some $c &gt; 0$ depending on $a$ and the distribution. A fixed-size error in the mean has probability exponentially small in $n$. The question of Problem 3 is what happens when outliers are not rare.</p>
+<h3>7.2 Heavy tails</h3>
+<p>One common definition: a distribution is heavy-tailed when its tail decays more slowly than every exponential. The power law, or Pareto tail, is the standard example: $P(X &gt; x) = x^{-\alpha}$ for $x \ge 1$. Problem 3 uses $\alpha = 3$.</p>
+<p><strong>The MGF is infinite.</strong> For $\alpha = 3$, $X$ has density $f(x) = 3x^{-4}$ on $x \ge 1$, and for every $t &gt; 0$</p>
+  \[\mathbb{E}[e^{tX}] = \int_1^\infty e^{tx}\, 3x^{-4}\, dx = \infty,\]
+<p>because $e^{tx}$ grows faster than any power of $x$, so the integrand eventually exceeds $1$. With no finite MGF for $t &gt; 0$, the Chernoff bound cannot be applied to $X$ directly.</p>
+<p><strong>Which moments exist.</strong> For $p &lt; 3$, $\mathbb{E}[X^p] = \int_1^\infty x^p \cdot 3x^{-4} dx = \tfrac{3}{3-p}$, and for $p \ge 3$ the integral diverges. So the mean ($\tfrac32$) and the second moment ($3$) are finite, but $\mathbb{E}[X^3] = \infty$.</p>
+<p><strong>Twenty orders of magnitude.</strong> At $x = 10$ the heavy tail is $10^{-3}$ while the standard Gaussian tail is about $7.6 \times 10^{-24}$.</p>
+<p><strong>Where heavy tails live.</strong> Clauset, Shalizi and Newman [3] test power-law fits on empirical data sets; for wildfire sizes and earthquake intensities in US data, and for the net worth of the richest Americans, an exponential fit is ruled out. In deep learning, Simsekli, Sagun and Gurbuzbalaban [4] report heavy-tailed stochastic-gradient noise in the networks they study.</p>
+<p><strong>Why it matters.</strong> In disaster planning the worst year matters, not the average year. History underestimates: the biggest event may not be in your data yet. Light-tailed models call such events "once in the age of the universe". Under heavy tails, extreme values drive the very averages we estimate.</p>
+<p><strong>Polynomial versus exponential.</strong> The gap between a polynomial and an exponential tail is not close:</p>
+<ul><li>$n = 10$: $1/n^3 = 10^{-3}$, $e^{-n} \approx 4.5 \times 10^{-5}$, ratio about $22$.</li><li>$n = 50$: $1/n^3 = 8 \times 10^{-6}$, $e^{-n} \approx 1.9 \times 10^{-22}$, ratio about $4 \times 10^{16}$.</li><li>$n = 100$: $1/n^3 = 10^{-6}$, $e^{-n} \approx 3.7 \times 10^{-44}$, ratio about $3 \times 10^{37}$.</li></ul>
+<h3>7.3 The problem</h3>
+<p>$X \ge 1$ with $P(X &gt; x) = x^{-3}$ for $x \ge 1$; $X_1, \dots, X_n$ are i.i.d. copies and $\bar X_n = \tfrac1n \sum_i X_i$. The hint allows $\mathbb{E}[W] = \int_0^\infty P(W &gt; w)\, dw$ for $W \ge 0$. The plan: (a) the mean and variance exist; (b) yet $\bar X_n$ concentrates only polynomially; (c) the median of means concentrates exponentially; (d) why the median wins.</p>
+<h3>7.4 Part (a): moments from the tail</h3>
+<p>Apply the hint to $W = X^2 \ge 0$ and substitute $s = x^2$, $ds = 2x\,dx$:</p>
+  \[\mathbb{E}[X^2] = \int_0^\infty P(X^2 &gt; s)\, ds = \int_0^\infty P(X &gt; \sqrt s)\, ds = \int_0^\infty 2x\, P(X &gt; x)\, dx.\]
+<p>Since $P(X &gt; x) = 1$ for $0 \le x &lt; 1$,</p>
+  \[\mu = \int_0^\infty P(X &gt; x)\,dx = 1 + \int_1^\infty x^{-3}\, dx = 1 + \tfrac12 = \tfrac32,\]
+  \[\mathbb{E}[X^2] = \int_0^1 2x\,dx + \int_1^\infty 2x \cdot x^{-3}\, dx = 1 + 2 = 3,\]
+<p>so $\sigma^2 = 3 - \tfrac94 = \tfrac34$. The density $f(x) = 3x^{-4}$ gives the same values.</p>
+<p><strong>Finite variance, infinite MGF.</strong> With $\sigma^2 = \tfrac34$, Chebyshev's inequality and the law of large numbers apply: $\bar X_n \to \mu$. The variance also gives ordinary fluctuations of order $1/\sqrt n$. The issue is not whether the mean converges but how fast the probability of a <em>fixed-size</em> error decays, and that is governed by rare large values, where $\mathbb{E}[X^3] = \infty$ and $\mathbb{E}[e^{tX}] = \infty$.</p>
+<h3>7.5 Part (b): one big sample moves the mean</h3>
+<p>All $X_i \ge 1 &gt; 0$, so $\bar X_n \ge X_1/n$. If the single sample $X_1$ is at least $n(\mu + a)$, then $\bar X_n \ge \mu + a$ regardless of the others. Hence</p>
+  \[P(\bar X_n \ge \mu + a) \ge P\big(X_1 \ge n(\mu + a)\big) = \big(n(\mu+a)\big)^{-3},\]
+<p>using $P(X \ge x) = P(X &gt; x) = x^{-3}$ for $x \ge 1$ ($X$ has a density, so the boundary has probability zero). Chebyshev gives the matching upper bound:</p>
+  \[P(\bar X_n \ge \mu + a) \le P(|\bar X_n - \mu| \ge a) \le \frac{\sigma^2}{n a^2} = \frac{3}{4 n a^2}.\]
+<p>So for fixed $a &gt; 0$ the probability is sandwiched between $n^{-3}$ and $n^{-1}$ rates.</p>
+<ul><li>It tends to zero: the law of large numbers holds.</li><li>No bound of the form $C e^{-cn}$ with fixed $C, c &gt; 0$ can hold for all large $n$, because $(n(\mu+a))^{-3} \gg C e^{-cn}$ eventually.</li></ul>
+<p>This rules out exponential fixed-error tails; the exact polynomial rate is not established by these two bounds. The lecture's illustration: $n = 20$ samples near the true mean $\mu = 1.5$ plus one outlier give $\bar X_n \approx 1.94$. The mean converges, but slowly: outliers keep distracting it.</p>
+<h3>7.6 Can we beat the sample mean</h3>
+<p>Outliers are not negligible: under a heavy tail they will appear. One outlier can move the mean arbitrarily far, while the median moves far only if half of the values do. The idea: let the outliers vote, but only once each.</p>
+<p><strong>The median-of-means estimator.</strong></p>
+<ol><li>Split the $n = km$ samples into $k$ groups of $m$.</li><li>Compute the group means $\bar X^{(1)}, \dots, \bar X^{(k)}$.</li><li>Output $\hat\mu = \mathrm{median}(\bar X^{(1)}, \dots, \bar X^{(k)})$.</li></ol>
+<p>Fix $a &gt; 0$ and call group $j$ <strong>bad</strong> if $|\bar X^{(j)} - \mu| \ge a$. An outlier lands in one group and spoils that one vote; the median stays within the good interval $(\mu - a, \mu + a)$ as long as more than half the group means remain there.</p>
+<h3>7.7 Part (c)(i): each group is rarely bad</h3>
+<p><strong>Show:</strong> if $m \ge 6/a^2$, each group is bad with probability at most $\tfrac18$.</p>
+<p>$\bar X^{(j)}$ is the mean of $m$ i.i.d. copies of $X$, so its variance is $\sigma^2/m$. By Chebyshev,</p>
+  \[P(|\bar X^{(j)} - \mu| \ge a) \le \frac{\sigma^2}{m a^2} = \frac{3}{4 m a^2} \le \frac34 \cdot \frac16 = \frac18 \qquad \text{when } m \ge 6/a^2.\]
+<p>Only Chebyshev is needed here: finite variance suffices per group.</p>
+<h3>7.8 Part (c)(ii): failure needs half the groups bad</h3>
+<p><strong>Show:</strong> if $|\hat\mu - \mu| \ge a$, then at least $k/2$ groups are bad.</p>
+<p>Prove the contrapositive. Suppose fewer than $k/2$ groups are bad. Then more than half of the group means lie in $(\mu - a, \mu + a)$. If $\hat\mu \ge \mu + a$, all of those means would lie strictly below $\hat\mu$, so more than half of the values would be strictly below the median. That contradicts the defining property of a median: at least half of the values are at or above it. The case $\hat\mu \le \mu - a$ is symmetric. So $|\hat\mu - \mu| &lt; a$. Writing $Z$ for the number of bad groups,</p>
+  \[\{|\hat\mu - \mu| \ge a\} \subseteq \{Z \ge k/2\}.\]
+<h3>7.9 Part (c)(iii): Chernoff on the bad count</h3>
+<p><strong>Show:</strong> with the worst case $Z \sim \mathrm{Bin}(k, \tfrac18)$, for every $t &gt; 0$, $P(Z \ge k/2) \le \big(e^{-t/2}(\tfrac78 + \tfrac18 e^t)\big)^k$.</p>
+<p>For $t &gt; 0$ the map $z \mapsto e^{tz}$ is increasing, so $\{Z \ge k/2\} = \{e^{tZ} \ge e^{tk/2}\}$, and Markov's inequality gives</p>
+  \[P(Z \ge \tfrac k2) = P(e^{tZ} \ge e^{tk/2}) \le e^{-tk/2}\, \mathbb{E}[e^{tZ}].\]
+<p>Write $Z = \sum_{j=1}^k B_j$ with independent $B_j \sim \mathrm{Bern}(\tfrac18)$. The Bernoulli MGF is $\mathbb{E}[e^{tB_j}] = \tfrac78 + \tfrac18 e^t$, and independence turns the MGF of the sum into a product of $k$ equal factors: $\mathbb{E}[e^{tZ}] = (\tfrac78 + \tfrac18 e^t)^k$. Combining,</p>
+  \[P(Z \ge \tfrac k2) \le \Big(e^{-t/2}\big(\tfrac78 + \tfrac18 e^t\big)\Big)^k.\]
+<p><strong>Why the worst case is enough.</strong> The groups use disjoint samples, so the events "group $j$ is bad" are independent, each with probability $p \le \tfrac18$. A binomial count with a smaller success probability is stochastically smaller, so $P(Z \ge k/2)$ can only decrease when $p &lt; \tfrac18$.</p>
+<h3>7.10 Part (c)(iv): exponential in n</h3>
+<p><strong>Show:</strong> with $e^t = 7$ the bound is $(\sqrt7/4)^k$; with $m = \lceil 6/a^2 \rceil$, $P(|\hat\mu - \mu| \ge a)$ decays exponentially in $n$.</p>
+<p>With $e^t = 7$, $e^{-t/2} = 1/\sqrt7$ and</p>
+  \[e^{-t/2}\big(\tfrac78 + \tfrac18 \cdot 7\big) = \frac{1}{\sqrt7} \cdot \frac74 = \frac{\sqrt7}{4} \approx 0.661 &lt; 1.\]
+<p><strong>Why $e^t = 7$.</strong> Write $s = e^t$ and minimize $g(s) = s^{-1/2}(\tfrac78 + \tfrac18 s)$ over $s &gt; 1$. Then $g'(s) = s^{-3/2}\big(\tfrac{s}{16} - \tfrac{7}{16}\big)$, which vanishes at $s = 7$, a minimum. So $e^t = 7$ is the best choice in (iii).</p>
+<p>Combining (ii), (iii) and (iv), with $m = \lceil 6/a^2 \rceil$ so that (i) applies,</p>
+  \[P(|\hat\mu - \mu| \ge a) \le P(Z \ge \tfrac k2) \le \Big(\frac{\sqrt7}{4}\Big)^k = \Big(\frac{\sqrt7}{4}\Big)^{n/m}.\]
+<p>With $m$ fixed by $a$, the number of groups $k = n/m$ grows linearly in $n$, so the bound decays exponentially in $n$.</p>
+<h3>7.11 The numbers</h3>
+<p>Take $a = 0.5$, so $m = \lceil 6/0.25 \rceil = 24$ and $k = n/24$. Compare a <em>lower</em> bound on the mean's failure probability, $(n(\mu+a))^{-3}$ on $P(\bar X_n \ge \mu + a)$, with an <em>upper</em> bound on the median of means' failure probability, $(\sqrt7/4)^k$ on $P(|\hat\mu - \mu| \ge 0.5)$:</p>
+<ul><li>$n = 2{,}400$: the mean fails with probability at least about $9.0 \times 10^{-12}$; the median of means at most about $1.1 \times 10^{-18}$.</li><li>$n = 24{,}000$: the mean at least about $9.0 \times 10^{-15}$; the median of means at most about $3.1 \times 10^{-180}$.</li></ul>
+<p>Because one column is a lower bound and the other an upper bound, the comparison is fair to the sample mean: the true gap is at least this large.</p>
+<h3>7.12 Part (d): why the median of means wins</h3>
+<p>A single sufficiently large sample can push $\bar X_n$ above $\mu + a$, and under a heavy tail such a sample appears with only polynomially small probability. The median of means traps any huge sample in a single group, where it spoils only one vote. The median fails only if at least half of the independent groups fail at once, a coin-flip large deviation with exponentially small probability. Each group is unlikely to be bad; having at least half bad is exponentially unlikely.</p>
+<h3>7.13 Robust estimation in practice</h3>
+<ul><li>Median of means achieves sub-Gaussian error bounds assuming only finite variance; Lugosi and Mendelson [5] survey this line of work.</li><li>The trimmed mean drops the extremes and then averages.</li><li>In distributed learning, the coordinate-wise median or trimmed mean of the workers' gradients resists faulty or adversarial workers; Yin, Chen, Ramchandran and Bartlett [6] analyze these rules.</li></ul>
+<p>The shared principle: a minority cannot move the median.</p>
+
+</section>
+<section>
+<h2>8 &nbsp;What we expect from you</h2>
+<ul><li><strong>Compute:</strong> entropy, mutual information, KL divergence, moments, bounds.</li><li><strong>Apply:</strong> the right inequality at the right step.</li><li><strong>Explain:</strong> what the result means, in words.</li><li><strong>Predict:</strong> the behavior before the computation.</li></ul>
+<p>The tools are weapons. Use them to understand.</p>
+
+</section>
+<section>
+<h2>9 &nbsp;References</h2>
+<p>The citation strings below are the ones used on the slides.</p>
+<ol><li>Pereyra, Tucker, Chorowski, Kaiser, Hinton, "Regularizing Neural Networks by Penalizing Confident Output Distributions", 2017.</li><li>Müller, Kornblith, Hinton, "When Does Label Smoothing Help?", NeurIPS 2019.</li><li>Clauset, Shalizi, Newman, "Power-Law Distributions in Empirical Data", SIAM Review, 2009.</li><li>Simsekli, Sagun, Gurbuzbalaban, "A Tail-Index Analysis of Stochastic Gradient Noise in Deep Neural Networks", ICML 2019.</li><li>Lugosi, Mendelson, "Mean Estimation and Regression under Heavy-Tailed Distributions: A Survey", FoCM 2019.</li><li>Yin, Chen, Ramchandran, Bartlett, "Byzantine-Robust Distributed Learning: Towards Optimal Statistical Rates", ICML 2018.</li></ol>
+</section>
+
+</body>
+</html>

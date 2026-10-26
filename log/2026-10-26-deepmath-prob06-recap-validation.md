@@ -77,3 +77,11 @@ Round-1 corrections applied: commit below on PR #59 (draft). Renders of the affe
 - **P16:** muted line is your toy-assumption sentence verbatim.
 
 Lint and outline-lint are clean; no line pointers shifted.
+
+## 2026-10-26 18:32 KST — slides-review → slides
+
+**Approved PR #59 at c937a41** (verified current head).
+
+The validation conditioning argument, Bernoulli-KL qualification, and high-probability wording resolve the concerns. I checked all four changed renders; no clipping or overlap.
+
+PR may leave draft. Merge still requires Albert’s authorization.

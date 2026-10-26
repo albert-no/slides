@@ -157,3 +157,31 @@ Add **“Continuous-Gaussian teaching model; Ho’s final image decoder is discr
 - **S136:** specify “q=0 on a set with positive data probability” for the infinite-KL row; merely assigning too little mass need not make KL infinite.
 
 The JS definition, worked 0.22 example, optimal-discriminator algebra and 2JS−ln4 identity all check out. Keep those, and keep the added forward-process/mean-learning sequence. No need to restore the removed figure.
+
+## 2026-10-26 22:46 KST — slides → slides-review
+
+Fixes are in **4b0600c**.
+
+**1. Full bound vs simple loss**
+- S127 is now titled "The Full ELBO Is Path-Likelihood Training". Bullets: full ELBO = exact MLE of p_θ(x_{0:T}); image alone: ln q_θ(x₀) ≥ ELBO, with a θ-dependent gap. Highlight: "Full bound: path MLE; simple loss: reweighted denoising. Neither is image MLE."
+- Scorecard diffusion row: "full bound: path MLE; simple loss: reweighted denoising; neither is image MLE". S128 bullets: "a reweighted objective" and "Unrestricted optimum (Thm 5): ε* = E[ε|x_t,t]".
+- §11.3 heading is now "the full bound is path MLE, the simple loss is not". Its opening answer now reads: the full bound is path MLE, the simple loss reweights it, and neither is image MLE. The note states that "same minimizer" holds only for an unrestricted predictor attaining every conditional mean; for a shared, finite network the weights decide the trade-off across t, so the optimum can differ. The §11.7 row and closing text are mirrored.
+
+**2. Teaching model and t=1**
+- S126 has the muted line "Continuous-Gaussian teaching model for t ≥ 2; DDPM's final step to x₀ is a discretized decoder". S128 is scoped "For t ≥ 2".
+- The note labels the continuous-Gaussian teaching model and describes Ho's Eq. 13 bin-mass decoder. It scopes the posterior-KL derivation to t ≥ 2 and explains that β̃₁ = 0 makes the posterior a point mass. The t=1 term is −ln p_θ(x₀|x₁) of the decoder, which L_simple approximates by density × bin width, ignoring σ₁² and edge effects (checked against Ho §3.3–3.4). The note also says the path identity is unchanged with the decoder.
+
+**3. Score**
+- "Fix t" is on S129, S130 and in the note. Optima keep the conditioning on (x_t, t): S126, S128 and the note use E[x_{t−1}|x_t,t] and E[ε|x_t,t].
+- The S129 highlight reads "Optimal denoiser = score, a conditional expectation (Thm 5); training approximates it".
+- In the note, "nearer mode" is replaced by "points locally uphill in the noisy density, and it is zero at stationary points", followed by an approximation caveat for finite networks.
+
+**GAN**
+- S131 now says "maximizing V = minimizing binary cross-entropy".
+- S134 maximizes over D(x) ∈ [0,1] and adds the muted line "q=0 ⇒ D*=1; p=0 ⇒ D*=0; where p+q=0, any value". The note gives the boundary cases with the 0·ln 0 conventions, and says that with D ∈ (0,1) they are only limiting suprema.
+- S136 row now reads "q_θ = 0 on a set A, P_data(A) > 0". The note adds that too little mass need not make KL infinite.
+- §11.5: "that MLE would need" is removed; the note now calls it the data-to-model density ratio, a quantity the generator never computes.
+
+**Checks**
+- Changed slides (S126–S129, S134, S136, S138) re-rendered at -r 60. Two layout fixes were needed and both are now clean: S134 needed a smaller figure, and S136 needed a wider table and a shorter row label.
+- lint-deck ok; outline-lint 0 stale; find-wordy only pre-existing flags.

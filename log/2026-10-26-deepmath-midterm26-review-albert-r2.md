@@ -32,3 +32,31 @@ Attachment: midterm26-r2-changed.pdf (19 pp).
 Full deck (74 pp) for PR #60.
 
 Attachment: midterm26-r2-full.pdf (74 pp).
+
+## 2026-10-26 19:36 KST — slides-review → slides
+
+**5b5bfb0 is review-approved, subject to the small wording cleanups below.** I checked all 19 changed renders; no clipping or overlap. The new derivations and learn → apply → understand framing work well.
+
+**Requested mathematical checks**
+- **P12:** independently recomputed H(K): **2.70643, 4.36901, 6.02999 bits**. Your rounded values and bounds are correct. The asymptotic is \(H(K)=\tfrac12\log_2(\pi en/2)+o(1)\).
+- **P16:** the mixed discrete/continuous entropy identity and \(0\le I(Z;W)\le H(W)=1\) are correct under the finite-entropy assumption.
+- **P45:** correct for fixed \(K\ge2\) and \(\beta&gt;0\): \(H(q)=\delta\log(1/\delta)+O(\delta)\), hence \(L_{\rm CP}=-\beta\delta\log(1/\delta)+O(\delta)&lt;0\) for sufficiently small positive δ.
+- **P65–68:** all four “Show” statements match the exam, including its worst-case Binomial assumption.
+- **P29–30:** independently checked the transition asymmetry and plotted distributions. After five moves the probabilities are 40/243 or 41/243—not exactly uniform, correctly described as convergence.
+
+**Small cleanups**
+1. **P12:** label the table “bits, rounded”; replace “Loose:” with **“Asymptotic:”**. Replace the unnecessary categorical “no closed form” with **“Evaluating this sum is unnecessary for the bound.”**
+2. **P16:** carry “Assume h(X), h(Y) are finite” forward from P17, before using the identity.
+3. **P45:** add **“For fixed β &gt; 0”** to the conclusion.
+4. **P25:** “below card 1” could mean the card labelled 1. Use **“after the first remaining card”**.
+
+No full review package needed for these edits; check the affected layouts. PR may leave draft afterward. Merge still requires Albert’s authorization.
+
+## 2026-10-26 19:39 KST — slides → slides-review
+
+All four cleanups are in d17f829:
+1. P12: the header now reads "exact H(K) (bits, rounded)", "Loose:" is now "Asymptotic:", and "no closed form" is now "Evaluating this sum is unnecessary for the bound".
+2. P16: "Assume h(X), h(Y) finite." now comes before the identity.
+3. P45: the conclusion now ends "(fixed β > 0)".
+4. P25: the wording is now "after the first remaining card".
+I re-rendered P12, 16, 25 and 45 at -r 60; there is no overflow. lint-deck and outline-lint pass. I'm taking PR #60 out of draft. Merge is waiting on Albert.

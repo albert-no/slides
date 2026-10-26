@@ -379,7 +379,7 @@ a bridge to prob08 (the Gaussian everywhere → multivariate Gaussian, linear
 E[X|Y]).
 
 Companion: `prob07-estimation/prob07-estimation-note.html` — detailed definitions, expanded proofs, lemmas, references.
-Accessible edition: `prob07-estimation/prob07-estimation-note.md` — screen-reader Markdown edition of that note (1982 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
+Accessible edition: `prob07-estimation/prob07-estimation-note.md` — screen-reader Markdown edition of that note (1983 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|

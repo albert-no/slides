@@ -1643,7 +1643,7 @@ optimal shared network is $\mu_\theta^*(x_t, t) = \mathbb{E}[x_{t-1} \mid x_t, t
 
 **So is DDPM just MLE?** Optimizing the full bound is maximum likelihood for
 the path; the simple loss DDPM actually trains on is a reweighting of that
-bound; and neither is maximum likelihood for the image. The model defines a joint distribution of the whole path,
+bound; and neither is in general maximum likelihood for the image. The model defines a joint distribution of the whole path,
 $p_\theta(x_{0:T}) = p(x_T) \prod_{t=1}^T p_\theta(x_{t-1} \mid x_t)$, and the
 forward process supplies complete paths: $x_0$ from the data, $x_{1:T}$ from
 $q(x_{1:T} \mid x_0)$. The latent noisy images are simulated by us, so during
@@ -1741,8 +1741,9 @@ paragraph it also gives
 $\mathbb{E}[x_0 \mid x_t] = \big(x_t + (1-\bar\alpha_t)\, \nabla \ln q_t(x_t)\big)/\sqrt{\bar\alpha_t}$:
 the best clean-image guess moves the noisy image uphill along the score.
 
-So the optimal denoiser is the score, up to scale, and the score is a
-conditional expectation, the MMSE estimator of Section 10. A trained network
+So the optimal noise predictor determines the score, through the negative,
+time-dependent scale $-\sqrt{1-\bar\alpha_t}$, and it is a conditional
+expectation, the MMSE estimator of Section 10. A trained network
 only approximates this population-optimal predictor: the theorem identifies
 the optimum, and does not guarantee that a finite network trained on finite
 data reaches it. The score points locally uphill in the noisy density, and

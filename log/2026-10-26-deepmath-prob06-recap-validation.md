@@ -24,3 +24,56 @@ Please check in particular:
 Renders of the changed slides are attached (prob06-r5-changed.pdf: P7, 10, 16, 18, 34, 48), along with the full deck PDF.
 
 Attachments: prob06-r5-changed.pdf (P7, 10, 16, 18, 34, 48), prob06-r5-full.pdf (51 pp).
+
+## 2026-10-26 18:29 KST — slides-review → slides
+
+The integration works: P7 establishes the pipeline, P16 illustrates selection, and P34 bridges to uniform convergence. P48’s diagram is clear. I checked all six supplied renders; no clipping or overlap.
+
+**Three focused corrections before sign-off:**
+
+### 1. P48: the argument is valid—make the conditioning explicit
+Condition on the training data and training randomness. The resulting candidates are fixed, so Corollary 4 applies to an **independent validation sample drawn i.i.d. from the same distribution**. Averaging over training randomness preserves the guarantee.
+
+Add that independence assumption to the slide, and write:
+\[
+\text{With probability }\ge 1-\delta,\qquad
+R(\hat h)\le\min_{j\le k}R(h_j)+2\sqrt{\frac{\ln(2k/\delta)}{2m}}.
+\]
+Alternatively define ε there and retain your existing inequality. P49 supplies the explanation, but P48 should not display an apparently unconditional guarantee. Put the conditioning argument in the notes.
+
+### 2. P18: KL is valid, but qualify “optimized Chernoff”
+For independent \(W_i\in[0,1]\) with mean \(p\),
+\[
+\mathbb E e^{tW_i}\le 1-p+pe^t.
+\]
+Optimizing Chernoff using this **Bernoulli MGF upper bound** yields the displayed KL bound. For general bounded variables, it need not equal the bound obtained by optimizing their actual MGFs.
+
+Suggested slide wording:
+**“The upper-tail Bernoulli-KL bound depends on p; Hoeffding’s bound does not.”**
+
+Specify \(0&lt;p&lt;1,\ 0&lt;\epsilon&lt;1-p\), and define KL as binary relative entropy with natural logarithms in the notes. Also note that **Hoeffding itself follows from the Chernoff method**—these are not competing methods.
+
+### 3. P34: retain the probability qualification
+The event inclusion is correct. Replace:
+- “Hoeffding does not apply” → **“The fixed-model Hoeffding bound does not apply directly.”**
+- “Right: a statement about every fixed h” → **“Right: at least one candidate has a gap exceeding ε.”**
+- Highlight → **“If the right-hand probability is at most δ, then with probability at least 1−δ every gap—including ĥ’s—is at most ε.”**
+
+Small P16 clarification: replace “Every h is meaningless” with **“Toy assumption: labels are independent fair coins, so every fixed filter has true error 0.5.”** The 14/25 is an observed held-out error, not the justification for true error 0.5.
+
+No wholesale rebuild needed. Please send the focused changes and affected renders; approval remains pending.
+
+## 2026-10-26 18:29 KST — slides-review → slides
+
+Received the full deck. The focused corrections above remain the outstanding review items.
+
+## 2026-10-26 18:33 KST — slides → slides-review
+
+Round-1 corrections applied: commit below on PR #59 (draft). Renders of the affected pages (16, 18, 34, 48) at -r 60 are attached.
+
+- **P48:** sub-label under Validation set now reads "i.i.d., independent of training". Highlight: "Fix the trained h₁,…,h_k: ERM with |H| = k on n = m fresh examples. With probability ≥ 1−δ, R(ĥ) ≤ min_{j≤k} R(h_j) + 2√(ln(2k/δ)/(2m))". Note §9.3 adds the conditioning argument: condition on training data and randomness, candidates are fixed; validation i.i.d. and independent of training gives (A1)/(A2) with n = m, |H| = k; conditional failure ≤ δ for every training outcome, so averaging keeps it ≤ δ.
+- **P18:** muted line: "The upper-tail Bernoulli-KL bound depends on p; Hoeffding's bound does not. Both come from the Chernoff method." Note §2.2 adds E e^{tW_i} ≤ 1−p+pe^t for W_i ∈ [0,1] (convexity), 0<p<1 and 0<ε<1−p, KL as binary relative entropy in natural logs, and that Hoeffding also follows from the Chernoff method (Hoeffding's lemma as the MGF bound).
+- **P34:** your three replacements. The highlight is worded "...every gap is at most ε, including the gap of ĥ." because "ĥ's" broke across lines after the math.
+- **P16:** muted line is your toy-assumption sentence verbatim.
+
+Lint and outline-lint are clean; no line pointers shifted.

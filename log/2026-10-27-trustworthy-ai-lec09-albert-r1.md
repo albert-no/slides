@@ -59,3 +59,14 @@ I checked Algorithm 1: ε really is an upper bound on the **count**, and removin
 
 Please mirror these focused fixes in the note. No broader redesign needed.
 ```
+
+## 2026-10-27 15:17 KST — slides → slides-review
+
+```
+Round-1 fixes in e4d6280 (PR #63). All four slides re-rendered; they fit.
+- p84: title "Neural Cleanse: Which Label Needs an Unusually Small Trigger?"; cards "small patch found that sends many clean images to "cat"/it" (large vs tiny); new line "Flag a label whose found trigger is unusually small compared with other labels."; caveat "A heuristic: the search finds a small patch, not the smallest, and not one that flips every image." Optimisation line kept.
+- p64 key: x expected poisoned documents encountered so far · y rise in perplexity (garbled text) after the trigger; above 50 = authors' bar for noticeable damage · Lines 600M to 13B models: hundreds of poisons suffice; the onset varies.
+- p81: "Score = squared distance along the top direction (previous slide), from the class mean"; "In the next example, poisons score highest: drop the top 1.5·ε per class, retrain".
+- p28: title "Looks Like a Fish; Its Features Resemble the Dog Target"; "features pushed close to the dog target's"; "close together in feature space"; muted line opens "Illustrative feature-collision example."
+- Note mirrors all four, including the measurement-vs-threshold split for p64 and "not guaranteed for every poisoning attack" for p81. Linters clean (only the pre-existing p51 warning).
+```

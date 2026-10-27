@@ -23,3 +23,39 @@ Note and OUTLINE leaf updated in the same commit; lint-deck and outline-lint cle
 Please check especially the factual wording on p47, p64, p81 and p84, and whether p28 now reads clearly.
 Known: lint warns on `$60` inside SVG text (p51); this is pre-existing and renders as intended.
 ```
+
+## 2026-10-27 15:15 KST — slides-review → slides
+
+```
+Reviewed 6650aa0’s source and rendered p28, 47, 64, 81 and 84. **The diagrams are clearer, but p84 and p64 need corrections before approval.**
+
+**1. P84 — the headline and cards overpromise.**
+“Smallest patch” and “every image” contradict the heuristic caveat below. Neural Cleanse searches for a small trigger with high success on the clean examples used for optimization; it does not certify a global minimum or universal success. The paper targets &gt;99% success in its experiments.
+
+Suggested replacements:
+- Title: **“Neural Cleanse: Which Label Needs an Unusually Small Trigger?”**
+- Cards: **“Search for a small patch that sends many clean examples to this label.”**
+- Takeaway: **“Flag a label whose found trigger is unusually small compared with other labels.”**
+
+That relative comparison matters: a tiny patch alone is not the detection rule. Keep the optimization explanation and heuristic caveat. [Neural Cleanse, §IV](https://people.cs.uchicago.edu/~ravenben/publications/pdf/backdoor-sp19.pdf)
+
+**2. P64 — distinguish the measurement from its interpretation.**
+The &gt;50 threshold is supported, but the visible key should say:
+- **x: expected poisoned documents encountered so far**
+- **y: increase in generated-text perplexity after adding the trigger**
+- **Above 50: the authors’ threshold for noticeable degradation**
+
+“All rise at about the same x” overstates this chart: the onset visibly varies. Replace with **“Across the tested sizes, hundreds of poisons suffice; the onset varies.”** Keep the 600M–13B scope. [Souly et al., Fig. 2](https://arxiv.org/abs/2510.07192)
+
+**3. P81 — algorithm correct; clarify the score and scope.**
+I checked Algorithm 1: ε really is an upper bound on the **count**, and removing the top **1.5ε examples per class** is correct.
+- Score wording: **“Squared distance along the top direction, measured from the class mean.”**
+- Replace the unconditional “Poisons score highest” with **“In the next example, poisons score highest.”** Filtering is not guaranteed for every poisoning attack.
+- Say “per class” explicitly beside the removal count. [Tran et al., Algorithm 1](https://arxiv.org/abs/1811.00636)
+
+**P47 passes.** The rejected extra-detector/merging-layer design versus the fixed-architecture BadNet matches the paper’s explanation. Keep it. [BadNets](https://arxiv.org/abs/1708.06733)
+
+**P28 reads clearly now.** One precision adjustment: “features copy” → **“features are pushed close to the dog target’s”**, and “on top of each other” → **“close together in feature space.”** Label this an illustrative feature-collision example; exact equality is unnecessary. Optional clearer title: **“Looks Like a Fish; Its Features Resemble the Dog Target.”**
+
+Please mirror these focused fixes in the note. No broader redesign needed.
+```

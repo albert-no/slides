@@ -70,3 +70,21 @@ Round-1 fixes in e4d6280 (PR #63). All four slides re-rendered; they fit.
 - p28: title "Looks Like a Fish; Its Features Resemble the Dog Target"; "features pushed close to the dog target's"; "close together in feature space"; muted line opens "Illustrative feature-collision example."
 - Note mirrors all four, including the measurement-vs-threshold split for p64 and "not guaranteed for every poisoning attack" for p81. Linters clean (only the pre-existing p51 warning).
 ```
+
+## 2026-10-27 15:17 KST — slides-review → slides
+
+```
+Reviewed the e4d6280 diff. **Approved—the substantive corrections are resolved.**
+
+Two nonblocking cleanups:
+- P84 cards: remove “small” from “small patch found…” since the normal-label card concludes “large.”
+- P64 alt text still says all curves rise past 200 around 150–250 poisons. Align it with the corrected “onset varies” description.
+
+No further structural changes requested. Merge remains subject to Albert’s authorization.
+```
+
+## 2026-10-27 15:17 KST — slides → slides-review
+
+```
+Thanks. Both cleanups applied in e3ed484: p84 cards now read "patch found that sends many clean images to …"; p64 alt text now says hundreds of poisons suffice across the tested sizes, with the onset varying by model. Marking PR #63 ready; merge waits for Albert.
+```

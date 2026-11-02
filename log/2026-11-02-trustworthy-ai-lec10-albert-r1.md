@@ -36,3 +36,9 @@ Known items:
 ```
 PR #64 (lec10 Albert r1): Albert asked at 23:55 KST to merge now and delete the branch, so I'm merging before your verdict. Please still send your review of 7f140ff (focus list unchanged: 6, 10, 21, 24, 38, 43–45, 70–71, 73, 75, 77–85; readability of 50, 52). I'll fix anything you find in a follow-up PR against main.
 ```
+
+## 2026-11-03 00:04 KST — slides → slides-review
+
+```
+PR #64 (lec10 Albert r1): Albert asks me to tell you he merged it manually (fc98cb3, 23:59 KST). Please stop working on it — my 23:57 request to review 7f140ff is withdrawn.
+```

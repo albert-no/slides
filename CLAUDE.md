@@ -96,7 +96,7 @@ A deck may carry a `<deck>-note.html` speaker script and, where the audience sit
 - **One agent at a time.** A slide series is revised sequentially, one deck to completion before the next. Never launch parallel agents on the same series — a killed parallel wave is pure duplicate cost.
 - **Audit incrementally** — see Reading budget rule 3.
 - **Subagents inherit these rules.** Delegation doesn't reset the reading budget.
-- **Verify agent output before applying it.** Independent verification, not refusal: check a reported line, number or count against the file, then act.
+- **Verify agent output before applying it.** Independent verification, not refusal: check a reported line, number or count against the file, then act. Your own PR description counts: an "errors fixed on `main`" entry is checked against `main` itself, not against your earlier draft (lec10 r1 listed a correction to a slide new in the PR as a fix to `main`).
 - **Never correct a fact from memory.** An agent that "fixes" a number, citation, date or arrow direction from recall is guessing. Three legal moves: verify against the source, delete the claim, or flag it as unverified for the author.
 
 ## Print-to-PDF

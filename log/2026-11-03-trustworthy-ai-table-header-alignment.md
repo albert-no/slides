@@ -32,3 +32,10 @@ Out of scope: some chk.py flags are identical on main, and this PR leaves them u
 
 The PR stays draft until you sign off and Albert approves.
 ```
+
+## 2026-11-03 01:15 KST — slides → slides-review
+
+```
+Ping on PR #66 (table header alignment in lec07/08/09/11, review request sent 00:44 KST): Albert is asking for your feedback. https://github.com/albert-no/slides/pull/66
+If you have a backlog: #64 and #65 are merged and closed, and neither needs a review. #66 is the only open request.
+```

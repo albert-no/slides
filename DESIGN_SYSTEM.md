@@ -20,12 +20,12 @@ Normative authoring rules for slide decks. Academic conference talks and master-
 | 4 | Components | Which class exists | 204–217 | `offset=204, limit=14` |
 | 5 | Audience modes and math | Concept-first vs rigorous mode; theorem / proof / intuition / build-up | 219–266 | `offset=219, limit=48` |
 | 6 | Conventions | Page numbers, citations | 268–295 | `offset=268, limit=28` |
-| 7 | Patterns | Markup for a slide type → copy the exemplar | 297–343 | `offset=297, limit=47` |
-| 8 | Visual richness | Figures, diagrams, TODO-marks; figure size, labels, chart keys, crops | 345–415 | `offset=345, limit=71` |
-| 9 | Companion decks | Note files, technical supplements | 417–432 | `offset=417, limit=16` |
-| 10 | Outlines | OUTLINE.md read/write rules | 434–454 | `offset=434, limit=21` |
-| 11 | No-toolchain fallback | Chrome / poppler / python3 all missing | 456–473 | `offset=456, limit=18` |
-| 12 | Extension checklist | Adding a new component | 475–477 | `offset=475, limit=3` |
+| 7 | Patterns | Markup for a slide type → copy the exemplar | 297–344 | `offset=297, limit=48` |
+| 8 | Visual richness | Figures, diagrams, TODO-marks; figure size, labels, chart keys, crops | 346–416 | `offset=346, limit=71` |
+| 9 | Companion decks | Note files, technical supplements | 418–433 | `offset=418, limit=16` |
+| 10 | Outlines | OUTLINE.md read/write rules | 435–455 | `offset=435, limit=21` |
+| 11 | No-toolchain fallback | Chrome / poppler / python3 all missing | 457–474 | `offset=457, limit=18` |
+| 12 | Extension checklist | Adding a new component | 476–478 | `offset=476, limit=3` |
 
 <!-- doc-index:end -->
 
@@ -330,6 +330,7 @@ Format: `Authors (in venue order), "Title", Venue YYYY` — no arXiv ID unless a
   ```
 
 - **Tables: every header sits over its column** (Albert, lec10 r1: "Use better alignment of the table in all slides (column title vs the contents)"). `deck.css` left-aligns every cell and has no numeric class, so a deck that right-aligns numbers with `td.num` alone leaves each header off its column. Copy lec10's deck-local `td.num { text-align: right; font-variant-numeric: tabular-nums; }`, `th.num { text-align: right; }`, `th { vertical-align: bottom; }`, and put `class="num"` on the numeric `th` as well as its `td`s.
+  - **Row headers keep their place** — the bare `th` rule also drops a row label (a `th` beside `td`s) to the bottom of its row. In a deck with row headers, scope it to header rows: `tr:not(:has(td)) > th { vertical-align: bottom; }` (lec07, lec09).
   - **One attribute per column** — lec10 "Safety Has a Cost: Refusing Safe Requests" moved "+ system prompt" / ", no system prompt" out of the model labels into a System prompt column.
   - **Space around a table is paid from the vertical budget** (Priority 2), and a deck-local `table` rule reaches every table in the deck (GOTCHAS §3). lec10 settled on `margin: 10px 0 16px`.
   - **A table comparing magnitudes becomes bars** — lec10 "A Found Jailbreak Often Fails When Resent" (Albert: "the table is hard to read").

@@ -8,13 +8,13 @@ Symptom → cause → fix. Search by **symptom**, not topic. `DESIGN_SYSTEM.md` 
 |---|---|---|---|---|
 | 1 | KaTeX & math rendering | Garbled math, italic prose, raw `$…$` | 23–42 | `offset=23, limit=20` |
 | 2 | Fonts & canonical tokens | Type renders small / thin | 44–55 | `offset=44, limit=12` |
-| 3 | Overflow | Content clips the footer or the right edge | 57–85 | `offset=57, limit=29` |
-| 4 | Prose & line breaks | Wrapping, orphans, dashes, wordiness | 87–110 | `offset=87, limit=24` |
-| 5 | Citations | Author order, wrapping cites, title cards | 112–123 | `offset=112, limit=12` |
-| 6 | Diagrams & SVG | SVG too small, overlays drift, flow wraps | 125–154 | `offset=125, limit=30` |
-| 7 | Proof & structure drift | Outline/recap drift, animation, lost trims | 156–188 | `offset=156, limit=33` |
-| 8 | Engine & audit false alarms | Page numbers, footer, false audit flags | 190–222 | `offset=190, limit=33` |
-| 9 | Toolchain: rendering, figures, bundling | Headless render, fonts, crops, bundle size | 224–244 | `offset=224, limit=21` |
+| 3 | Overflow | Content clips the footer or the right edge | 57–91 | `offset=57, limit=35` |
+| 4 | Prose & line breaks | Wrapping, orphans, dashes, wordiness | 93–116 | `offset=93, limit=24` |
+| 5 | Citations | Author order, wrapping cites, title cards | 118–129 | `offset=118, limit=12` |
+| 6 | Diagrams & SVG | SVG too small, overlays drift, flow wraps | 131–163 | `offset=131, limit=33` |
+| 7 | Proof & structure drift | Outline/recap drift, animation, lost trims | 165–197 | `offset=165, limit=33` |
+| 8 | Engine & audit false alarms | Page numbers, footer, false audit flags | 199–234 | `offset=199, limit=36` |
+| 9 | Toolchain: rendering, figures, bundling | Headless render, fonts, crops, bundle size | 236–256 | `offset=236, limit=21` |
 
 <!-- doc-index:end -->
 
@@ -81,6 +81,12 @@ The px arithmetic is in DESIGN_SYSTEM §1 → Priority 2. These are the ways the
 
 **Tall image overlaps the `.cite` / footer.** Both are absolutely positioned at the slide bottom; the flex column reserves no space for them.
 → Cap at `max-height: 470px` when the slide has both a tall figure and a cite. On the wrapping `.grid-2` use `align-items: start` — with `center`, a short bullet column floats halfway down the figure and reads as a void.
+
+**The blue rule under the title is missing.** The slide overflows and the 4 px `.divider` absorbs it first: it is the one flex item with no content to hold its height, so `flex-shrink` squeezes it to zero while the text spills into the bottom padding, still visible.
+→ Treat it as overflow (DESIGN_SYSTEM §1 Priority 2): split or restructure, never shrink type. In a headless check, a `.divider` under 3 px tall is the cheapest overflow flag; lec10 r1's table-margin regression (next entry) showed up exactly this way on three slides.
+
+**A new deck-local element rule pushed other slides over.** For one table that needed room (Albert: "Use spacing around the table"), lec10 r1 added `table { margin: 14px 0 22px; }` to the deck `<style>`. It reached every table in the deck and collapsed the divider on three other slides, one 27 px over.
+→ Before adding a rule on a bare element selector, `grep -n '<table' <deck>.html` (or the selector's equivalent) and re-render every slide it matches. Keep the value small (lec10 settled on `10px 0 16px`), restructure any slide still over, and give a one-slide need a one-slide class.
 
 ---
 
@@ -151,6 +157,9 @@ The px arithmetic is in DESIGN_SYSTEM §1 → Priority 2. These are the ways the
 **`.diagram-flow` inside `.cols`/`.grid-*` wraps into a 2D mess.** It's `display: flex; flex-wrap: wrap`; in a narrow container the boxes wrap, and `<br>` inside labels then stacks each box vertically.
 → `.diagram-flow` goes at **full slide width only**, never inside a column or a card in a column. Prose above (full width), flow below (full width). Single-line labels (`Genomic DBs`, not `Genomic<br>Databases`). 4+ boxes that won't fit one row → vertical layout or split slides.
 
+**After a font-size bump, SVG text runs past its box.** `<text>` neither wraps nor clips to the `<rect>` behind it, so a larger size pushes a line over the border (lec10 r1's diagram-font pass, 21 → 29 px: the card line "request: one try" on "Every Attack Success Rate Needs Four Labels" overran its card).
+→ Re-break the line with `<tspan>`s, reword, or widen the box; confirm on the render, or with `getComputedTextLength()` against the box width. Never go back below the DESIGN_SYSTEM §8 label sizes.
+
 ---
 
 ## 7. Proof & structure drift
@@ -218,6 +227,9 @@ The px arithmetic is in DESIGN_SYSTEM §1 → Priority 2. These are the ways the
 
 **"Use the empty bottom half."** `.slide` is a flex column with `justify-content: flex-start`, so sparse content sits at top.
 → Usually the user has an unsurfaced takeaway: add structural content that *closes* the slide (a summary math-block, a `.highlight`, a recall card). Only re-balance with `justify-content: center` when the content is genuinely complete. Never spacers or fake `<br>` rows.
+
+**`find-dense.py` flags a chart or diagram slide that has little prose.** It strips the tags and counts every remaining word against its 80-word threshold — SVG `<text>` labels, bar values and the `.cite` line included (lec10 "Better Optimization Broke the Circuit Breakers": 149 words, of which 53 are SVG labels and 41 the cite).
+→ A review prompt, not a failure: judge the prose alone. Never cut labels or the citation to quiet it.
 
 ---
 

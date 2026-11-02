@@ -41,7 +41,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 7 | `lec07-alignment-failures.html` | Alignment failures: sycophancy, reward hacking, explanation faithfulness | **new 2026-10**, example-first revision 2026-10-14 (75 sl, 13 real figure crops from 9 source figures, 90 min, no activities; note 75 entries; tech 12 sl). Blocks: hook 1–13 (alignment as goal/HHH/values, reported shortcuts, 2026 OpenAI–Hugging Face incident 8–10) · intent→reward 14–21 (win-rate definition 19) · sycophancy 22–27 · gaming 28–37 (o3 after-the-fact question 36) · controlled studies 38–55 (alignment-faking contrast 40, transcript 42, told vs trained 44, one hack 47, eval pipeline / separate graders 49, chat tests with exact prompts 50, monitor disruption 51, frame colleague 52) · faithfulness 56–68 (Lanham worked examples 60–62, hint test vs STaR 64) · synthesis 69–75 (Pachocki 2026 view 73). Korean backup explainers (not slides): `lec07-backup-korean-note-for-study1.html` (Study 1, slides 40–45) and `lec07-backup-korean-note-for-study2.html` (Study 2, slides 46–55). Former Wk 7 interpretability deck → `backup-interpretability.html` |
 | 8 | `lec08-adversarial.html` | Adversarial robustness: threat models, FGSM → PGD, honest evaluation, certificates | **new 2026-10**, motivation revision 2026-10-20, Albert feedback round 2026-10-21 (101 sl, 15 real figure crops + 3 charts redrawn from tables, 90 min, no activities; note 101 entries; tech 24 sl). Blocks: why robustness 3–11 (Geirhos texture 7–8) · tiny nudge 12–18 · why it happens 19–36 (Nguyen 22, like-you're-five linearity 24–28) · who attacks 37–52 (motives 38–40, ℓ∞/ℓ2 2-D 43–45) · worst case 53–61 · defenses 62–84 (accuracy under attack 74–75, certificate 81) · off the screen 85–90 · LLMs 91–97 (overlaps lec10/lec13 on purpose) · wrap-up 98–101 |
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **rebuilt 2026-10**, motivation revision 2026-10-25 (91 sl, 90 min, concept-first, no activities; note 91 entries). Blocks: integrity 3–14 · who poisons 15–18 · poisoning 19–32 · backdoors 33–47 · web-scale data 48–57 · language models 58–75 (in the wild 68–71) · defenses 76–91 |
-| 10 | `lec10-jailbreak.html` | Jailbreaks: safety training, fragility, search, budget, evaluation & defenses | **rebuilt 2026-10** (58 sl, 90 min, concept-first, no activities; note 58 entries; tech 21 sl) |
+| 10 | `lec10-jailbreak.html` | Jailbreaks: safety training, fragility, search, budget, evaluation & defenses, self-assessment monitoring | **rebuilt 2026-10**, Albert feedback round 2026-11-02 (88 sl, 90 min, concept-first, no activities; note 88 entries; tech 21 sl). Blocks: what safety training adds 3–13 (motivation 4–6, Wei example 7, safety and refusal 9–10) · fragility 14–30 · search 31–41 · attack budget 42–59 (test-time scaling 43–45, in-context learning 47) · evaluation & defenses 60–76 · self-assessment 77–85 · wrap-up 86–88 |
 | 11 | `lec11-synthetic-media.html` | Synthetic media: text watermarks, robustness, detection without a watermark, provenance (C2PA) & labelling law | **new 2026-10** (56 sl, 8 real figure crops + 5 tables/figures redrawn, 90 min, concept-first, no activities; note 56 entries; tech 13 sl). Former Wk 11 prompt injection → rebuilt as Wk 13; former Wk 12 watermark deck replaced |
 | 12 | `lec12-fairness.html` | Fairness: where bias enters, criteria, COMPAS and impossibility, mitigation, audits beyond classifiers | **new 2026-10** (56 sl, 17 real figure crops, 90 min, concept-first, no activities; note 56 entries; tech 17 sl). Merges the former Wk 13–14 fairness decks → `backup-fairness-defs.html`, `backup-fairness-mitigation.html` |
 | 13 | `lec13-prompt-injection.html` | Prompt injection: direct and indirect, agents, three incidents, why it is hard, measured defenses and CaMeL | **new 2026-10** (53 sl, 7 real figure crops, 90 min, concept-first, no activities; note 53 entries; tech 15 sl). Replaces `backup-prompt-injection.html` (deleted) |
@@ -347,49 +347,63 @@ Fine-Pruning, STRIP, hashes); the worked-example code is in entry 42.
 ## lec10-jailbreak.html
 
 **Topic:** Jailbreaks (90 min; mixed-major sophomores/juniors; concept-first, light math, no proofs;
-**no activities**; no working jailbreak strings). Jailbreak defined as bypassing safeguards *through inputs*;
-prompt injection, poisoning and weight-level safety removal separated (the last as a labelled contrast).
-Brief RLHF / Constitutional AI refresher (two approaches, not two stages). Under- vs over-refusal; access
-ladder; every ASR needs denominator, budget, model/version, judge. Fragility: Wei's two failure modes and
-Table 1; shallow alignment (Qi 2025 Figs 1–2, Table 2) and one refusal direction (Arditi Fig 1) as findings in
-tested settings; fine-tuning contrast (Qi 2024 Tables 1–3). Search: GCG (≈256K evaluations; transfer Table 2,
-ensemble 86.6/46.9 is any-of-4) vs PAIR (≤ 90 queries, Table 2). Budget: any-of-N illustration, many-shot
-(Fig 2; intercept not slope; 61% → 2% warning, non-adaptive), Best-of-N (Fig 3; resend reliability Table 1),
-languages/ciphers on one slide with the StrongREJECT re-check. Evaluation: judge ladder, PAIR judge Table 1,
-StrongREJECT Fig 1 (redrawn, redacted), HarmBench length, XSTest over-refusal, Ganguli κ = 0.32. Defenses:
-Constitutional Classifiers (Fig 1 redrawn; costs) and circuit breakers (Table 1) + Schwinn &amp; Geisler adaptive
-re-attack. Excludes prompt injection (lec13), poisoning (lec09). Math in `lec10tech.html`.
+**no activities**; no working jailbreak strings). Opens general before specific: assistants help but decline some
+requests, why getting around refusal matters (uplift, scale, agency), jailbreak prompts shared in the wild (Shen
+et al.), then Wei Fig 1 as the example. Jailbreak defined as bypassing safeguards *through inputs*; prompt
+injection, poisoning and weight-level safety removal separated (the last as a labelled contrast). Alignment →
+safety training → refusal made explicit (Ouyang; Bai), with Llama 2 Chat's safety recipe (Touvron §4.2) as the
+worked example. Under- vs over-refusal; access ladder; every ASR needs denominator, budget, model/version, judge.
+Fragility: Wei's two failure modes and Table 1; shallow alignment step by step (Qi 2025: stock opening, forced
+openings on the base model, Figs 1–2, recovery-example construction, Table 2) and one refusal direction (Arditi:
+method in three steps, then Fig 1) as findings in tested settings; fine-tuning as a service explained before the
+Qi 2024 contrast (Tables 1–3). Search: GCG (≈256K evaluations; transfer Table 2, ensemble 86.6/46.9 is any-of-4)
+vs PAIR (attacker, target and judge models pass only text; ≤ 90 queries, Table 2). Budget: test-time scaling in
+general (Brown; Snell), any-of-N illustration, in-context learning → many-shot (Fig 2; Fig 5 axes explained;
+intercept not slope; 61% → 2% warning, non-adaptive), Best-of-N (Fig 3; resend reliability Table 1), translation
+and cipher attacks on separate slides with the StrongREJECT re-check. Evaluation: judge ladder, PAIR judge
+Table 1, StrongREJECT Fig 1 (redrawn, redacted), HarmBench length, XSTest over-refusal, Ganguli κ = 0.32.
+Defenses: Constitutional Classifiers (Fig 1 redrawn; two tests, each with its cost) and circuit breakers (one-line
+idea, two training losses, Table 1) + adaptive re-attack (Schwinn &amp; Geisler; BoN). Monitoring: Anthropic's
+self-assessment (Zhang et al., Safeguards blog, Oct 2026) with self-attribution bias (Khullar et al. 2026) as the
+main limit. Excludes prompt injection (lec13), poisoning (lec09). Math in `lec10tech.html`.
 
-### Sections (58 slides, 90 min: safety training 10 · fragility 20 · search 20 · attack budget 20 · evaluation + defenses 20)
+### Sections (88 slides, 90 min: safety training 13 · fragility 17 · search 11.5 · attack budget 18.5 · evaluation + defenses 17.5 · self-assessment 9 · wrap-up 3.5)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
-| Title / Contents | 1–2 | `:30`, `:42` | |
-| **01 — What Safety Training Adds** | 3–9 | `:71` | refused then answered (Wei Fig 1, redacted) `:79` · definition + neighbouring threats `:90` · RLHF / CAI refresher (SVG) `:106` · two ways to fail (SVG) `:115` · access ladder (SVG) `:123` · four ASR labels `:131` |
-| **02 — Why Refusal Is Fragile** | 10–20 | `:141` | two hypotheses `:149` · competing objectives (SVG) `:158` · mismatched generalization (SVG) `:168` · Wei Table 1 (HTML) `:177` · per-token KL (Qi 2025 Fig 1) `:193` · prefilling (Qi 2025 Fig 2) `:210` · recovery augmentation (Table 2, HTML) `:227` · refusal direction (Arditi Fig 1) `:243` · fine-tuning contrast (Qi 2024, HTML) `:254` · findings × access `:270` |
-| **03 — Searching for Jailbreaks** | 21–30 | `:285` | families (SVG) `:293` · search loop (SVG) `:302` · GCG objective (SVG) `:310` · GCG step + 256K budget `:321` · transfer (GCG Fig 1) `:330` · transfer table (GCG Table 2, HTML) `:346` · PAIR (Chao Fig 2, redacted) `:361` · PAIR vs GCG (Chao Table 2, HTML) `:371` · gradient vs LLM search `:388` |
-| **04 — Scaling the Attack Budget** | 31–41 | `:403` | any-of-N bars (SVG, illustrative) `:411` · many-shot schematic (redacted SVG) `:420` · MSJ Fig 2 `:430` · intercept vs slope (MSJ Fig 5 middle panel) `:448` · BoN augmentations `:465` · BoN Fig 3 (Text panel + legend) `:476` · resend reliability (Table 1, HTML) `:492` · languages + ciphers (two studies, two protocols) `:508` · adversarial example vs jailbreak (SVG) `:533` · budget summary `:541` |
-| **05 — Evaluation and Defenses** | 42–58 | `:554` | judge ladder (SVG) `:562` · PAIR judge table `:570` · StrongREJECT (Fig 1 redrawn, redacted) `:585` · HarmBench Fig 2 `:594` · XSTest (HTML) `:611` · Ganguli Fig 1 `:626` · three defense places (SVG) `:642` · Constitutional Classifiers (Fig 1 redrawn) `:650` · CC: two systems, two kinds of evidence `:659` · circuit breakers (CB Fig 1 top row) `:683` · CB Table 1 `:692` · adaptive re-attack with access + budget (Schwinn &amp; Geisler; BoN) `:707` · asymmetry `:723` · checklist (7 questions incl. access, denominator) `:731` · takeaways `:747` · closer `:760` |
+| Title / Contents | 1–2 | `:38`, `:50` | |
+| **01 — What Safety Training Adds** | 3–13 | `:83` | assistants help, decline some (SVG) `:91` · why it matters: uplift, scale, agency (SVG) `:100` · in the wild (Shen et al., stat tiles) `:109` · refused then answered (Wei Fig 1, redacted) `:125` · definition + neighbouring threats (HTML) `:136` · alignment → safety training → refusal (SVG) `:152` · Llama 2 Chat safety recipe (SVG) `:162` · two ways to fail (SVG) `:172` · access ladder (SVG) `:180` · four ASR labels (SVG) `:188` |
+| **02 — Why Refusal Is Fragile** | 14–30 | `:198` | two hypotheses (SVG) `:206` · competing objectives (SVG) `:216` · key-wording ablations (SVG) `:225` · mismatched generalization (SVG) `:235` · Wei Table 1 (HTML) `:244` · stock opening phrase (SVG) `:260` · base model with forced openings (bars) `:271` · per-token KL (Qi 2025 Fig 1) `:282` · prefilling (Qi 2025 Fig 2) `:299` · recovery-example construction (SVG) `:316` · recovery augmentation (Table 2, HTML) `:326` · refusal-direction method, three steps (SVG) `:343` · refusal direction (Arditi Fig 1) `:353` · fine-tuning as a service (SVG) `:363` · fine-tuning contrast (Qi 2024, HTML) `:373` · findings × access (HTML) `:389` |
+| **03 — Searching for Jailbreaks** | 31–41 | `:404` | families (SVG) `:412` · search loop (SVG) `:421` · GCG objective (SVG) `:430` · GCG step + 256K budget (SVG) `:441` · transfer (GCG Fig 1) `:450` · transfer table (GCG Table 2, HTML) `:466` · PAIR's three models: Mixtral attacker, target, Llama Guard judge (SVG) `:481` · one round (Chao Fig 2, redacted) `:491` · PAIR vs GCG (Chao Table 2, HTML) `:500` · gradient vs LLM search (HTML) `:517` |
+| **04 — Scaling the Attack Budget** | 42–59 | `:533` | test-time scaling (SVG) `:541` · Brown: 250 samples, 15.9% → 56% (SVG) `:550` · Snell: 4× / 14× (stat tiles) `:561` · any-of-N bars (SVG, illustrative) `:575` · in-context learning (SVG) `:584` · many-shot schematic: fake question, fake compliant answer (SVG) `:595` · MSJ Fig 2 `:605` · intercept vs slope, axes explained (MSJ Fig 5 middle panel) `:623` · BoN augmentations (SVG) `:641` · BoN Fig 3 (Text panel + legend) `:652` · resend reliability (Table 1 as bars) `:670` · translation protocol (SVG) `:682` · translation results (bars) `:694` · CipherChat (SVG) `:705` · two studies, two protocols (HTML) `:716` · adversarial example vs jailbreak (SVG) `:732` · budget summary `:740` |
+| **05 — Evaluation and Defenses** | 60–76 | `:753` | judge ladder (SVG) `:761` · PAIR judge table (HTML) `:769` · StrongREJECT (Fig 1 redrawn, redacted) `:785` · HarmBench Fig 2 `:796` · XSTest with system-prompt column (HTML) `:813` · Ganguli setup: four model kinds (HTML) `:830` · Ganguli Fig 1 left panel `:847` · three defense places (SVG) `:865` · Constitutional Classifiers (Fig 1 redrawn) `:873` · CC test 1: bug bounty (stat tiles) `:882` · CC test 2: Haiku classifiers (bars) `:898` · circuit breakers (CB Fig 1 top row) `:910` · CB training: two losses (SVG) `:920` · CB Table 1 (HTML) `:931` · better optimization (Schwinn &amp; Geisler; BoN; bars) `:946` · asymmetry (SVG) `:958` |
+| **06 — Monitoring With Self-Assessment** | 77–85 | `:966` | why monitor, not only block (SVG) `:974` · existing monitors: cheap vs flexible (SVG) `:985` · one extra question per reply: KV cache, ≈10 tokens (SVG) `:995` · distillation from a costly teacher (SFT + RL, SVG) `:1005` · recall 78% / 94% at 1% FPR (stat tiles) `:1017` · leave-one-out (SVG) `:1033` · weak real-time blocker: 13/24 vs 6/24 (bars) `:1045` · limits: self-attribution bias (SVG) `:1057` |
+| Wrap-up | 86–88 | — | checklist (7 questions incl. access, denominator; HTML) `:1066` · takeaways `:1082` · closer `:1096` |
 
-**Key citations (checked against saved PDFs, 2026-10-10):** Wei, Haghtalab &amp; Steinhardt NeurIPS 2023
-(Fig 1, §3, Table 1); Ouyang et al. NeurIPS 2022; Bai et al. 2022 (arXiv 2212.08073); Qi et al. ICLR 2025
-(arXiv 2406.05946; Figs 1–2, Table 2); Arditi et al. NeurIPS 2024 (Fig 1); Qi et al. ICLR 2024 (arXiv 2310.03693;
-Tables 1–3); Zou et al. 2023 GCG (arXiv 2307.15043; Fig 1, Algorithm 1, Table 2 — ensemble 86.6% GPT-3.5 /
-46.9% GPT-4, single suffix ≈34%; the old "84%" claim was wrong); Chao et al. PAIR (arXiv 2310.08419; Fig 2,
-Tables 1–2); Anil et al. NeurIPS 2024 (Figs 1, 2, 5; §5.4); Hughes et al. BoN (arXiv 2412.03556; §2, Fig 3,
-§3.1, Table 1, §5.4); Yong et al. 2023 (arXiv 2310.02446); Yuan et al. CipherChat ICLR 2024; Souly et al.
-StrongREJECT NeurIPS 2024 (Fig 1); Mazeika et al. HarmBench ICML 2024 (Fig 2, §3.2); Röttger et al. XSTest
-NAACL 2024 (Table 2); Ganguli et al. 2022 (Fig 1, §3.4–3.5); Sharma et al. 2025 (arXiv 2501.18837; Fig 1, §3–5);
-Zou et al. Circuit Breakers NeurIPS 2024 (Fig 1, Table 1); Schwinn &amp; Geisler 2024 (arXiv 2407.15902; Table 1).
-Notes only: Perez et al. EMNLP 2022.
+**Key citations (checked against saved PDFs, 2026-10-10; new sources 2026-11-02):** Shen et al. ACM CCS 2024
+(arXiv 2308.03825; Abstract, §1, §4.1); Touvron et al. 2023 Llama 2 (arXiv 2307.09288; §4.2); Wei, Haghtalab &amp;
+Steinhardt NeurIPS 2023 (Fig 1, §3, Table 1); Ouyang et al. NeurIPS 2022; Bai et al. 2022 (arXiv 2212.08073); Qi
+et al. ICLR 2025 (arXiv 2406.05946; §2.2, Table 1, Figs 1–2, §3.1, Table 2); Arditi et al. NeurIPS 2024 (Fig 1); Qi et al. ICLR
+2024 (arXiv 2310.03693; Tables 1–3); Zou et al. 2023 GCG (arXiv 2307.15043; Fig 1, Algorithm 1, Table 2 — ensemble
+86.6% GPT-3.5 / 46.9% GPT-4, single suffix ≈34%; the old "84%" claim was wrong); Chao et al. PAIR (arXiv
+2310.08419; Fig 2, Tables 1–2); Brown et al. 2024 (arXiv 2407.21787; Abstract, §1, Fig 1); Snell et al. 2024
+(arXiv 2408.03314; §2, §7, Figs 5 and 9); Anil et al. NeurIPS 2024 (Figs 1, 2, 5; §4.1, §5.4); Hughes et al. BoN
+(arXiv 2412.03556; §2, Fig 3, §3.1, Table 1, §5.4); Yong et al. 2023 (arXiv 2310.02446; Table 1); Yuan et al.
+CipherChat ICLR 2024; Souly et al. StrongREJECT NeurIPS 2024 (Fig 1, Table 2); Mazeika et al. HarmBench ICML 2024
+(Fig 2, §3.2); Röttger et al. XSTest NAACL 2024 (Table 1); Ganguli et al. 2022 (Fig 1 left panel, §3.4–3.5, §4);
+Sharma et al. 2025 (arXiv 2501.18837; Fig 1, §3–5, Fig 6); Zou et al. Circuit Breakers NeurIPS 2024 (Fig 1,
+Algorithm 1, Table 1); Schwinn &amp; Geisler 2024 (arXiv 2407.15902; Table 1); Zhang et al., "Scaling Misuse
+Detection with Self-Assessment", Anthropic Safeguards blog, Oct 2026 (Figs 1–5); Khullar et al. 2026 (arXiv
+2603.04582). Notes only: Perez et al. EMNLP 2022.
 
-**Figures (13 cited image files in `figs/`):** `wei-jailbroken-redacted.png` `:79` · `qi25-kl.png` `:193` ·
-`qi25-prefill.png` `:210` · `arditi-fig1.png` `:243` · `gcg-schematic.png` `:330` · `pair-fig2-redacted.png` `:361` ·
-`msj-fig2ab.png` `:430` · `bon-fig3-text.png` + `bon-fig3-legend.png` `:476` · `harmbench-fig2.png` `:594` · `ganguli-redteam.png` `:626` ·
-`cb-top.png` `:683`. `msj-fig5-rl.png` (MSJ Fig 5 middle panel). Redacted by the lecturer, with disclosure in the
-cite and note: Wei Fig 1 (demanded-opening wording, Base64 payload) and PAIR Fig 2 (rewritten prompt, reply);
-`wei-jailbroken.png` (unredacted) is kept only for lec01. Redrawn as SVG with disclosure: MSJ Fig 1 (redacted),
-StrongREJECT Fig 1 (redacted), Constitutional Classifiers Fig 1 (simplified).
+**Figures (13 cited image files in `figs/`):** `wei-jailbroken-redacted.png` `:125` · `qi25-kl.png` `:282` ·
+`qi25-prefill.png` `:299` · `arditi-fig1.png` `:353` · `gcg-schematic.png` `:450` · `pair-fig2-redacted.png` `:491` ·
+`msj-fig2ab.png` `:605` · `msj-fig5-rl.png` (MSJ Fig 5 middle panel) `:623` · `bon-fig3-text.png` +
+`bon-fig3-legend.png` `:652` · `harmbench-fig2.png` `:796` · `ganguli-redteam.png` (Fig 1 left panel) `:847` ·
+`cb-top.png` `:910`. Redacted by the lecturer, with disclosure in the cite and note: Wei Fig 1 (demanded-opening
+wording, Base64 payload) and PAIR Fig 2 (rewritten prompt, reply); `wei-jailbroken.png` (unredacted) is kept only
+for lec01. Redrawn as SVG with disclosure: MSJ Fig 1 (schematic, dialogue contents not shown), StrongREJECT Fig 1
+(redacted), Constitutional Classifiers Fig 1 (simplified).
 
 **2026-10 rebuild (60 → 58):** rebuilt to the slides-review brief (#118). Persona/fake-authority/obfuscation
 zoo, system-prompt hardening, demo and "frontier" slides removed; evaluation and defenses expanded to 20 min.
@@ -397,12 +411,27 @@ Figures `ouyang-3steps`, `ouyang-winrate`, `bai-cai`, `qishallow-kl`, `arditi-re
 `gcg-transfer`, `pair-schematic`, `msj-powerlaw`, `yong-translate`, `yong-table`, `cipher-overview`,
 `qift-overview`, `szegedy-ostrich`, `ganguli-success`, `perez-overview`, `sharma-overview`, `cb-overview`,
 `bon-powerlaw` were deleted. Review round 2 (slides-review #120) deleted the unredacted PAIR Fig 2 and
-full three-panel BoN Fig 3 crops (replaced by the redacted / text-panel versions) and replaced the slide 35 sketch with the real Fig 5 panel.
+full three-panel BoN Fig 3 crops (replaced by the redacted / text-panel versions) and replaced the old slide 35
+sketch with the real Fig 5 panel.
 
-**Note:** `lec10-jailbreak-note.html` — 58 entries. Each entry has a minute budget and elapsed time, a script,
+**2026-11-02 Albert feedback round (58 → 88):** diagram labels enlarged and every table re-aligned (headers
+over their columns); generic motivation (4–6) before the Wei example (7), whose point is now its title; safety
+training and refusal introduced explicitly, with Llama 2 Chat as the example (9–10); shallow alignment step by
+step (20–25, incl. what the Augmented model was trained on); Arditi's method before its figure (26–27);
+fine-tuning as a service explained (28); GCG Fig 1 author note moved to the cite (36); PAIR's judge made explicit
+(38–39); test-time scaling (43–45) and in-context learning (47) added before the budget attacks; many-shot
+schematic without "[redacted]" (48); MSJ Fig 5 and BoN Fig 3 axes stated first (50, 52); resend reliability as
+bars (53); crowded slides split: competing objectives (16–17), translation/ciphers (54–57), Ganguli (66–67),
+Constitutional Classifiers evidence (70–71), circuit breakers (72–73, one-line idea and what it does not
+break); the re-attack framed as better optimization (75); new Section 06 on Anthropic's self-assessment monitor
+(77–85). Fixes: aligned model shown at 0% on slide 21 (was 2.1%); XSTest is Table 1; Ganguli is the Fig 1 left
+panel; a "universal" Constitutional Classifiers jailbreak means all 10 questions at half the detail of an
+unguarded model.
+
+**Note:** `lec10-jailbreak-note.html` — 88 entries. Each entry has a minute budget and elapsed time, a script,
 and a key takeaway. Content slides add the figure, setup/model/date, what the slide establishes and does not
-establish, assumptions, and primary-source links (20 sources). The BoN reliability inconsistency (Table 1
-caption vs body vs rows) is recorded in entry 38.
+establish, assumptions, and primary-source links (26 sources). The BoN reliability inconsistency (Table 1
+caption vs body vs rows) is recorded in entry 53; the Brown plateau inconsistency (abstract vs §4) in entry 44.
 
 **Tech:** `lec10tech.html` — 21 slides:
 - ASR estimate + binomial SE (4)

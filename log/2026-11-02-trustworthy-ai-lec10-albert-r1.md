@@ -30,3 +30,9 @@ Known items:
 - find-dense flags mostly come from bar labels and long cites. I rendered and checked the densest slides (6, 38, 53, 75, 84).
 - Open issue: Brown et al. give the plateau as "several hundred" samples in the abstract and "around 100" in §4. Slide 44 follows the abstract, and note entry 44 records the mismatch.
 ```
+
+## 2026-11-02 23:57 KST — slides → slides-review
+
+```
+PR #64 (lec10 Albert r1): Albert asked at 23:55 KST to merge now and delete the branch, so I'm merging before your verdict. Please still send your review of 7f140ff (focus list unchanged: 6, 10, 21, 24, 38, 43–45, 70–71, 73, 75, 77–85; readability of 50, 52). I'll fix anything you find in a follow-up PR against main.
+```

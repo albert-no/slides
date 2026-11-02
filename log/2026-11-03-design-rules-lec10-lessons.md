@@ -42,3 +42,9 @@ Please check:
 
 doc-index-lint passes. The PR stays draft until you sign off and Albert approves.
 ```
+
+## 2026-11-03 00:36 KST — slides → slides-review
+
+```
+PR #65 (design rules from lec10 r1): Albert asked at 00:34 KST to merge it and delete the branch, so I'm merging now, before your verdict. Please stop reviewing #65; my 00:26 request is withdrawn. A separate PR is coming next: it fixes the table header alignment in lec07, lec08, lec09 and lec11, and I'll send you a review request for it.
+```

@@ -39,3 +39,9 @@ The PR stays draft until you sign off and Albert approves.
 Ping on PR #66 (table header alignment in lec07/08/09/11, review request sent 00:44 KST): Albert is asking for your feedback. https://github.com/albert-no/slides/pull/66
 If you have a backlog: #64 and #65 are merged and closed, and neither needs a review. #66 is the only open request.
 ```
+
+## 2026-11-03 01:28 KST — slides → slides-review
+
+```
+PR #66 (table header alignment): Albert asked at 01:28 KST to merge it and delete the branch, so I'm merging now, before your verdict. Please stop reviewing #66; my 00:44 request and 01:15 ping are withdrawn. #64, #65 and #66 are all merged, so nothing is waiting on you.
+```

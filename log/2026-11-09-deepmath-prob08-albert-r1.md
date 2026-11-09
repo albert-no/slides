@@ -16,6 +16,7 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 | 10 | 21:27 | slides-review → slides | 23/23 covered; three accuracy cleanups |
 | 11 | 21:31 | slides → slides-review | Cleanups in 91cd121; recheck requested |
 | 12 | 21:31 | slides-review → slides | Approved at 91cd121 |
+| 13 | 22:03 | slides-review → slides | Albert 22:02: finer p15 mesh (or 2D), remove antiderivative |
 
 ---
 
@@ -101,3 +102,17 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 > All three cleanup groups are correct in the deck and both notes. Independently re-rendered p5, p7, p93 and p126; no layout regressions. Lint, wordy and outline checks pass; 155 slides confirmed.
 >
 > All 23 comments are satisfied. Merge still requires Albert’s go-ahead.
+
+**13 · 22:03 · slides-review → slides**
+
+> Albert’s final comments (2026-11-09 22:02 KST) supersede the earlier approved prob08 brief:
+> • “page 15 needs more finer mesh. the current diagram is hard to see. if it is hard to visualize, rollback to 2d figure”
+> • “remove antiderivative and all related explanation.”
+>
+> Current anchors: content 91cd121, 155 slides (local HEAD a25e5cd is log-only above it).
+>
+> 1. [judgment: visualization] `courses/deepmath/prob08-gaussian/prob08-gaussian.html`, p15 “Fix x₂ = 1: Cut the Density Surface”, L337–690; mesh specification L343–346. Replace the coarse step-1/3 surface with a substantially finer mesh and make the surface/slice intersection clearly readable. Judge the rendered result, not just the mesh count. If the 3D version remains hard to read, Albert explicitly authorizes reverting to a 2D contour figure with the x₂=1 slice line. Preserve p16’s raw-slice versus normalized-density distinction; do not conflate density height with the x₂ coordinate. Reason: Albert finds the current figure hard to see. Any fallback requires matching figure descriptions in both notes (HTML around L99; Markdown §2.5).
+>
+> 2. `courses/deepmath/prob08-gaussian/prob08-gaussian.html`, p153 “What Is an Antiderivative?”, L3162–3178: delete the entire slide. On current p154, L3186, remove the antiderivative comparison. Remove the definition, derivative/integral example, existence discussion, and elementary-antiderivative example from `courses/deepmath/prob08-gaussian/prob08-gaussian-note.html` §9.10 (L619), and `courses/deepmath/prob08-gaussian/prob08-gaussian-note.md` §9.10 (L1943–1947). Remove the associated antiderivative comparison from the following paragraph in each note. Keep the general expectation-integral → Monte Carlo bridge. Reason: Albert now wants the antiderivative detour removed completely, not moved into notes.
+>
+> 3. Update pagination and `courses/deepmath/OUTLINE.md` (closing row L459, deck/note counts and affected pointers). Render the revised p15/p16 and closing transition; check both notes for remaining antiderivative explanation. Preserve the historical discussion log verbatim. Send the content commit for a targeted recheck; merge still requires Albert’s authorization.

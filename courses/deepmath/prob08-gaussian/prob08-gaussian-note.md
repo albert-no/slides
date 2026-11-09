@@ -275,9 +275,9 @@ $x_1 = 0.6$, shifted right of the origin and narrower than the marginal. The
 slides split this into two steps.
 
 *Cut.* The plane meets the surface along the curve $x_1 \mapsto f(x_1, 1)$.
-In the 3D figure the half of the surface on the viewer's side of the plane is
-drawn as a wireframe, so the shaded cross-section and the red slice curve are
-visible. The raw slice is not yet a density: its area is
+In the 3D figure (a fine mesh) the half of the surface on the viewer's side
+of the plane is drawn translucent, so the shaded cross-section and the red
+slice curve are visible. The raw slice is not yet a density: its area is
 
 $$ \int f(x_1, 1)\, dx_1 = f_{X_2}(1) = \varphi(1)
    = \tfrac{1}{\sqrt{2\pi}} e^{-1/2} \approx 0.24197, $$
@@ -1940,17 +1940,10 @@ midpoint threshold shifted by the prior derived there.
 
 ### 9.10 Closing: when closed form runs out
 
-An *antiderivative* of $h$ is a function $H$ with $H' = h$. For $h(x) = 2x$,
-$H(x) = x^2$ works, and $\int_a^b 2x\,dx = H(b) - H(a) = b^2 - a^2$. Every
-continuous $h$ has one, $H(x) = \int_0^x h(t)\,dt$, but often there is no
-closed-form formula for it: $e^{-t^2/2}$ has no elementary antiderivative,
-which is why the standard normal distribution function is tabulated.
-
 The Gaussian models of this lecture gave closed-form answers. More general
 models do not: many expectations
-$\mathbb E[g(X)] = \int g(x) f_X(x)\,dx$ lack a convenient closed form, and in
-high dimensions the integral is over $\mathbb R^n$, not one scalar
-antiderivative. The Monte Carlo idea is to sample instead: draw
+$\mathbb E[g(X)] = \int g(x) f_X(x)\,dx$ lack a convenient closed form,
+especially in high dimensions, where the integral is over $\mathbb R^n$. The Monte Carlo idea is to sample instead: draw
 $X^{(1)}, \dots, X^{(N)}$ independent and identically distributed from $f_X$
 and use $\frac1N\sum_{i=1}^N g(X^{(i)})$. For finite $N$ this is an
 *estimate*, not an equality. It is unbiased, and by the law of large numbers

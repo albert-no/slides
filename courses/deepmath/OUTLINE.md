@@ -39,7 +39,7 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 5 | `prob05-concentration/` — Markov/Chebyshev/Chernoff, MGF, CLT sketch, LLN | prob 1457–1595 | done (106 slides) |
 | 6 | `prob06-generalization/` — Hoeffding, sub-Gaussian, union bound, finite-class generalization bound | new material (sequel to prob05) | done (51 slides, senior-undergrad default; full / advanced 105 in backup/) |
 | 7 | `prob07-estimation/` — cond. expectation/tower, MLE/MAP, Fano (full proof), Naive Bayes, bias-variance, MMSE, generative models as MLE? (DDPM, JS, GAN loss) | prob 1563–1911 | done (137 slides) |
-| 8 | `prob08-gaussian/` — MVN (3 defs, properties w/ proofs), Gaussian channel, Gaussian diffusion/DDPM, Gaussian discriminant | prob 1912–2519 (MIT OCW 6.436J citation) | done (155 slides) |
+| 8 | `prob08-gaussian/` — MVN (3 defs, properties w/ proofs), Gaussian channel, Gaussian diffusion/DDPM, Gaussian discriminant | prob 1912–2519 (MIT OCW 6.436J citation) | done (154 slides) |
 | 9 | `prob09-monte-carlo/` — Monte Carlo, importance sampling, variance trade-offs, policy gradient / RLHF hooks | new material | done (113 slides) |
 | 10 | `opt01-svd-lowrank/` — rank/range/null, SVD, pseudo-inverse, spectral & nuclear norms, Eckart–Young–Mirsky, Netflix | opt 1–435 | done (119 slides) |
 | 11 | `opt02-regression-erm/` — least squares θ\*=A†B (full proof), ERM/Bayes risk, ridge + closed form | opt 436–794, 1463–1517 | done (110 slides) |
@@ -427,7 +427,7 @@ slide, Fano technique-review slides, CE-loss=MLE bridge slides, and all worked
 numeric examples above (the tex states the estimators but computes none of
 them).
 
-### prob08-gaussian — The Multivariate Gaussian (155 slides)
+### prob08-gaussian — The Multivariate Gaussian (154 slides)
 
 `prob08-gaussian/prob08-gaussian.html` · source: prob 1912–2519.
 **Attribution: the tex credits MIT OpenCourseWare 6.436J / 15.085J Fundamentals of
@@ -442,33 +442,33 @@ forward process + Gaussian reverse-step form, no variational objective); ends on
 bridge to prob09 (integrals stop closing → Monte Carlo).
 
 Companion: `prob08-gaussian/prob08-gaussian-note.html` — detailed definitions, expanded proofs, lemmas, references.
-Accessible edition: `prob08-gaussian/prob08-gaussian-note.md` — screen-reader Markdown edition of that note (1993 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
+Accessible edition: `prob08-gaussian/prob08-gaussian-note.md` — screen-reader Markdown edition of that note (1986 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + TOC | 1–2 | prob08-gaussian/prob08-gaussian.html:47 |
 | 01 | Why Gaussians? (default noise model cards, recall, 1D-so-far gap, today's claims) | 3–7 | prob08-gaussian/prob08-gaussian.html:139 |
-| 02 | Warm-Up: Two Dimensions (jointly Gaussian pair :224, joint density :239, coupling picture, running example :278, eigenpairs orient the ellipse :292, Thm 1 statement :325, 3D surface cut :337, normalize the slice :693, worked conditional :730, what the general case needs) | 8–18 | prob08-gaussian/prob08-gaussian.html:215 |
-| 03 | Positive Semidefinite Matrices (PD/PSD def :766, bowl-vs-trough SVG, PD certificate :821, linear-algebra facts, eigendecomposition in matrix form :849, spectral decomposition :884, worked eigenpairs :899, symmetric square root :913 + worked :926, inverse, factorization exercise + solution, λ_min integrability bound :977) | 19–32 | prob08-gaussian/prob08-gaussian.html:758 |
-| 04 | Multivariate Normal — three equivalent definitions (overview :999, Def 1 density :1024, white noise :1038, Def 2 constructive X=DW+μ :1051 + coloring SVG, Def 3 projection :1092 + shadow SVG, degeneracy :1128, equivalence diagram: what is proved :1160) | 33–42 | prob08-gaussian/prob08-gaussian.html:991 |
-| 05 | Vector Means & Covariances (mean vector :1206, covariance matrix :1218, self-covariance :1234, PSD exercise + solution :1247, correlation coefficient :1274) | 43–49 | prob08-gaussian/prob08-gaussian.html:1198 |
-| 06 | The Properties Theorem — state one part, prove it (Def-2 standing assumption :1296; part 1 projections :1312; part 2 mean/Cov=DD^T :1357; part 3 affine closure :1398 + marginals by selection :1423; part 4 density :1550 via volume intuition :1564–:1629 + proof :1646; part 5 MGF :1702; part 6 coordinates & blocks :1759 + counterexample :1774; part 7 setup :1859, statement :1874, proof :1890–:1947, orthogonality test :1963–:1992, projection picture :2004, affine vs conditional mean :2038, residual :2056–:2102; conditional assembled :2123; Thm 1 proved :2138; summaries parts 1–3/4–6/7 :2152–:2181) | 50–102 | prob08-gaussian/prob08-gaussian.html:1288 |
-| 07 | The Gaussian Channel (Y=X+Z setup + block SVG :2202, joint covariance :2229, read off part 7 :2243, promise kept (prob07 MMSE) :2257, shrinkage SVG :2270, two extremes :2290, two sampling orderings :2306, why the second matters :2331) | 103–111 | prob08-gaussian/prob08-gaussian.html:2196 |
-| 08 | Gaussian Diffusion (back from prob07 :2351, today's questions :2392, noising recursion :2406, variance preserving :2418, noising-chain figure :2432, source exercise :2463, MGF telescope :2476–:2506, Thm 3 chain forgets :2520, closed form :2537, DDPM ᾱ notation :2550, worked β=0.02 schedule :2564, three reverse objects :2588, exact reverse given x_0 :2603, stationary Gaussian benchmark :2619, vectors :2635, simplified reverse sampler :2648, prob07's learning view :2673 + target :2700) | 112–132 | prob08-gaussian/prob08-gaussian.html:2344 |
-| 09 | Gaussian Discriminant Analysis (spam filter, new likelihood :2724, one Gaussian per class :2745, Mahalanobis distance :2761 + figure :2777, decision rule :2816, curved boundary SVG :2832, back to MLE :2949, log-likelihood :2962, fit μ :2975, variance→covariance goal :2992, precision reparam :3006, why the trace trick :3021 + calculation :3050, scatter matrix :3069, matrix derivatives :3081, solve :3097, Thm 4 :3114, source exercises :3132, GDA pipeline :3147) | 133–152 | prob08-gaussian/prob08-gaussian.html:2717 |
-| — | What is an antiderivative?, bridge to prob09, end slide X=DW+μ | 153–155 | prob08-gaussian/prob08-gaussian.html:3163 |
+| 02 | Warm-Up: Two Dimensions (jointly Gaussian pair :224, joint density :239, coupling picture, running example :278, eigenpairs orient the ellipse :292, Thm 1 statement :325, 3D surface cut :337, normalize the slice :477, worked conditional :514, what the general case needs) | 8–18 | prob08-gaussian/prob08-gaussian.html:215 |
+| 03 | Positive Semidefinite Matrices (PD/PSD def :550, bowl-vs-trough SVG, PD certificate :605, linear-algebra facts, eigendecomposition in matrix form :633, spectral decomposition :668, worked eigenpairs :683, symmetric square root :697 + worked :710, inverse, factorization exercise + solution, λ_min integrability bound :761) | 19–32 | prob08-gaussian/prob08-gaussian.html:542 |
+| 04 | Multivariate Normal — three equivalent definitions (overview :783, Def 1 density :808, white noise :822, Def 2 constructive X=DW+μ :835 + coloring SVG, Def 3 projection :876 + shadow SVG, degeneracy :912, equivalence diagram: what is proved :944) | 33–42 | prob08-gaussian/prob08-gaussian.html:775 |
+| 05 | Vector Means & Covariances (mean vector :990, covariance matrix :1002, self-covariance :1018, PSD exercise + solution :1031, correlation coefficient :1058) | 43–49 | prob08-gaussian/prob08-gaussian.html:982 |
+| 06 | The Properties Theorem — state one part, prove it (Def-2 standing assumption :1080; part 1 projections :1096; part 2 mean/Cov=DD^T :1141; part 3 affine closure :1182 + marginals by selection :1207; part 4 density :1334 via volume intuition :1348–:1413 + proof :1430; part 5 MGF :1486; part 6 coordinates & blocks :1543 + counterexample :1558; part 7 setup :1643, statement :1658, proof :1674–:1731, orthogonality test :1747–:1776, projection picture :1788, affine vs conditional mean :1822, residual :1840–:1886; conditional assembled :1907; Thm 1 proved :1922; summaries parts 1–3/4–6/7 :1936–:1965) | 50–102 | prob08-gaussian/prob08-gaussian.html:1072 |
+| 07 | The Gaussian Channel (Y=X+Z setup + block SVG :1986, joint covariance :2013, read off part 7 :2027, promise kept (prob07 MMSE) :2041, shrinkage SVG :2054, two extremes :2074, two sampling orderings :2090, why the second matters :2115) | 103–111 | prob08-gaussian/prob08-gaussian.html:1980 |
+| 08 | Gaussian Diffusion (back from prob07 :2135, today's questions :2176, noising recursion :2190, variance preserving :2202, noising-chain figure :2216, source exercise :2247, MGF telescope :2260–:2290, Thm 3 chain forgets :2304, closed form :2321, DDPM ᾱ notation :2334, worked β=0.02 schedule :2348, three reverse objects :2372, exact reverse given x_0 :2387, stationary Gaussian benchmark :2403, vectors :2419, simplified reverse sampler :2432, prob07's learning view :2457 + target :2484) | 112–132 | prob08-gaussian/prob08-gaussian.html:2128 |
+| 09 | Gaussian Discriminant Analysis (spam filter, new likelihood :2508, one Gaussian per class :2529, Mahalanobis distance :2545 + figure :2561, decision rule :2600, curved boundary SVG :2616, back to MLE :2733, log-likelihood :2746, fit μ :2759, variance→covariance goal :2776, precision reparam :2790, why the trace trick :2805 + calculation :2834, scatter matrix :2853, matrix derivatives :2865, solve :2881, Thm 4 :2898, source exercises :2916, GDA pipeline :2931) | 133–152 | prob08-gaussian/prob08-gaussian.html:2501 |
+| — | Bridge to prob09, end slide X=DW+μ | 153–154 | prob08-gaussian/prob08-gaussian.html:2947 |
 
 Key theorems: **Thm 1** 2D conditional X|Y=y ~ N(μ₁+σ₁₂/σ₂₂(y−μ₂), σ₁₁−σ₁₂σ₂₁/σ₂₂),
 stated in §02, proved as part-7 corollary
-(prob08-gaussian/prob08-gaussian.html:325, proof :2138); **Thm 2** seven properties
+(prob08-gaussian/prob08-gaussian.html:325, proof :1922); **Thm 2** seven properties
 of the multivariate normal (affine closure, Cov = DD^T, marginals, density when
 V ≻ 0, MGF exp(s^Tμ + s^TVs/2), uncorrelated = independent, conditionals with
 linear mean + variance shrinkage), each part stated then proved, summaries at
-(prob08-gaussian/prob08-gaussian.html:2152); **Thm 3** diffusion limit
+(prob08-gaussian/prob08-gaussian.html:1936); **Thm 3** diffusion limit
 X_n →d N(0,1) for any X₀ with an MGF, via MGF telescope
-(prob08-gaussian/prob08-gaussian.html:2520); **Thm 4** Gaussian MLE μ̂ = sample
+(prob08-gaussian/prob08-gaussian.html:2304); **Thm 4** Gaussian MLE μ̂ = sample
 mean, Σ̂ = S/N via trace trick + matrix derivatives, biasedness remarked
-(prob08-gaussian/prob08-gaussian.html:3114).
+(prob08-gaussian/prob08-gaussian.html:2898).
 Figures: all diagrams inline SVG with hand-computed geometry (running
 2D ellipse + slice, bowl-vs-trough quadratic surfaces, coloring-white-noise map,
 projection shadows, channel block diagram, shrinkage line, noising chain, β=0.02

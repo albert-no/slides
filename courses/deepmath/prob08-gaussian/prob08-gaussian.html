@@ -2340,58 +2340,233 @@
 <div class="slide section-slide left">
   <div class="section-num">09</div>
   <h1>Gaussian Discriminant Analysis</h1>
-  <p class="subtitle">Fit one Gaussian per class &mdash; and the trace trick that fits it</p>
+  <p class="subtitle">The spam filter again &mdash; one Gaussian per class, fitted by MLE</p>
+</div>
+
+<!-- E1: prob07 spam callback -->
+<div class="slide">
+  <h2>Same Spam Filter, New Likelihood</h2>
+  <div class="divider"></div>
+  <p>prob07's task: label a mail $Y = 1$ (spam) or $Y = 0$ (non-spam) by Bayes</p>
+  <div class="math-block" style="margin:8px 0">$$\hat{y}(x) = \arg\max_{y}\; \pi_y\, p(x \mid y),
+    \qquad \pi_y = \mathbb{P}(Y = y)$$</div>
+  <div class="grid-2" style="gap:40px">
+    <div>
+      <h3>prob07: Bernoulli Naive Bayes</h3>
+      <p>$x_i = 1$ iff word $i$ appears: &ldquo;free&rdquo;, &ldquo;meeting&rdquo;, &ldquo;winner&rdquo;</p>
+      <p>$p(x \mid y) = \prod_i p_{i|y}^{\,x_i}\,(1 - p_{i|y})^{1 - x_i}$</p>
+    </div>
+    <div>
+      <h3>Today: one Gaussian per class</h3>
+      <p>$x \in \mathbb{R}^n$: continuous mail features</p>
+      <p>$p(x \mid y) = \mathcal{N}(x;\, \mu_y, \Sigma_y)$</p>
+    </div>
+  </div>
+  <p class="muted">Same decision rule; only the class model $p(x \mid y)$ changes</p>
 </div>
 
 <div class="slide">
   <h2>Setup &mdash; One Gaussian per Class</h2>
   <div class="divider"></div>
-  <ul>
-    <li>Classifying heights &mdash; the 1D version of today</li>
-    <li>Now features $x \in \mathbb{R}^n$, classes $y \in \{0, 1\}$</li>
-  </ul>
+  <p>Illustrative features: $x_1$ = log word count, $x_2$ = links per 100 words</p>
   <div class="math-block" style="margin:8px 0">$$X \mid Y = y \;\sim\; \mathcal{N}(\mu_y,\, \Sigma_y),
-    \qquad \mathbb{P}(Y = y) = \pi_y$$</div>
+    \qquad \mathbb{P}(Y = y) = \pi_y, \qquad y \in \{0, 1\}$$</div>
   <ul>
-    <li>A <strong>generative</strong> classifier: model how each class produces data</li>
+    <li><strong>Generative</strong> model per class: a modeling choice, not a fact about spam</li>
+    <li>Not prob07's binary word indicators: new, continuous features</li>
+    <li>Full $\Sigma_y$: correlated features within a class allowed</li>
+    <li>Diagonal $\Sigma_y$: Gaussian Naive Bayes, still not Bernoulli</li>
   </ul>
+  <p class="muted">1D analogue: prob07's heights, one Gaussian per group</p>
+</div>
+
+<!-- E2: Mahalanobis definition, before its first use -->
+<div class="slide">
+  <h2>Distance Measured in Standard Deviations</h2>
+  <div class="divider"></div>
+  <p>For $\Sigma \succ 0$, the <strong>Mahalanobis distance</strong> from $x$ to $\mu$:</p>
+  <div class="math-block" style="margin:8px 0">$$d_\Sigma(x, \mu) = \sqrt{(x - \mu)^\top \Sigma^{-1} (x - \mu)}
+    = \big\| \Sigma^{-1/2} (x - \mu) \big\|_2$$</div>
+  <ul>
+    <li>Euclidean distance after removing scale and correlation</li>
+    <li>Whitening: $\operatorname{Cov}(X) = \Sigma$ gives $\operatorname{Cov}\big(\Sigma^{-1/2}(X - \mu)\big) = I$</li>
+    <li>$\Sigma^{-1/2}$: inverse of the symmetric square root (spectral decomposition)</li>
+  </ul>
+  <div class="highlight">
+    <p>Gaussian exponent $= -\tfrac12\, d_\Sigma(x, \mu)^2$: the <strong>squared</strong> Mahalanobis distance</p>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Same Euclidean Distance, Different Mahalanobis Distance</h2>
+  <div class="divider"></div>
+<!-- check A=(2, 0): Euclid 2.000, Mahalanobis 1.000, d^2 1.000, z=(1.0,0.0) -->
+<!-- check B=(0, 2): Euclid 2.000, Mahalanobis 2.000, d^2 4.000, z=(0.0,2.0) -->
+<!-- coordinate map: left origin (270,165), right origin (860,165), 52 px/unit, y up; viewBox 1060x345. Left ellipses: semi-axes (2r,r)*s for d_Sigma=r, r=1,2; dashed circle Euclid radius 2. Right: z=(x1/2,x2), circles radius 1,2. Generator: /workspace/agent/prob08r1/pkgE/e_mahal.py -->
+<div class="p8-fig" style="max-width:1000px;margin:4px auto;">
+  <svg viewBox="0 0 1060 345">
+    <line x1="25.599999999999994" y1="165" x2="514.4" y2="165" stroke="#5b6770" stroke-width="1.5"/>
+    <line x1="270" y1="24.599999999999994" x2="270" y2="305.4" stroke="#5b6770" stroke-width="1.5"/>
+    <line x1="719.6" y1="165" x2="1000.4" y2="165" stroke="#5b6770" stroke-width="1.5"/>
+    <line x1="860" y1="24.599999999999994" x2="860" y2="305.4" stroke="#5b6770" stroke-width="1.5"/>
+    <ellipse cx="270" cy="165" rx="104" ry="52" fill="none" stroke="#003876" stroke-width="2.5" opacity="1.0"/>
+    <ellipse cx="270" cy="165" rx="208" ry="104" fill="none" stroke="#003876" stroke-width="2.5" opacity="0.55"/>
+    <circle cx="270" cy="165" r="104" fill="none" stroke="#666" stroke-width="2" stroke-dasharray="7 5"/>
+    <circle cx="860" cy="165" r="52" fill="none" stroke="#003876" stroke-width="2.5" opacity="1.0"/>
+    <circle cx="860" cy="165" r="104" fill="none" stroke="#003876" stroke-width="2.5" opacity="0.55"/>
+    <circle cx="374" cy="165" r="7" fill="#c0392b"/>
+    <circle cx="270" cy="61" r="7" fill="#1a7a3d"/>
+    <circle cx="912" cy="165" r="7" fill="#c0392b"/>
+    <circle cx="860" cy="61" r="7" fill="#1a7a3d"/>
+    <defs><marker id="pkgE-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b6770"/></marker></defs>
+    <line x1="525" y1="165" x2="709" y2="165" stroke="#5b6770" stroke-width="2.5" marker-end="url(#pkgE-arr)"/>
+  </svg>
+  <span class="fl fl-red" style="left:37.17%;top:40.87%">$A$</span>
+  <span class="fl fl-green" style="left:27.74%;top:11.30%">$B$</span>
+  <span class="fl fl-sub fl-blue" style="left:20.75%;top:54.20%">$d_\Sigma{=}1$</span>
+  <span class="fl fl-sub fl-blue" style="left:6.34%;top:76.41%">$d_\Sigma{=}2$</span>
+  <span class="fl fl-sub fl-grey" style="left:37.74%;top:83.30%">Euclidean radius $2$</span>
+  <span class="fl fl-sub fl-grey" style="left:58.21%;top:40.87%">$z = \Sigma^{-1/2}x$</span>
+  <span class="fl fl-sub fl-red" style="left:87.74%;top:54.78%">$A$</span>
+  <span class="fl fl-sub fl-green" style="left:83.21%;top:13.04%">$B$</span>
+  <span class="fl fl-sub fl-grey" style="left:25.47%;top:95.94%">$x$-space, $\Sigma = \mathrm{diag}(4,1)$</span>
+  <span class="fl fl-sub fl-grey" style="left:81.13%;top:95.94%">whitened: circles</span>
+</div>
+  <p class="muted">Points $A = (2, 0)$ and $B = (0, 2)$: &nbsp;$d_\Sigma(A, 0) = \sqrt{2^2/4} = 1$ &nbsp;&middot;&nbsp; $d_\Sigma(B, 0) = \sqrt{2^2/1} = 2$</p>
+  <p>Wide direction (variance $4$) tolerates the bigger step &nbsp;&middot;&nbsp; equal-distance sets are ellipses</p>
 </div>
 
 <div class="slide">
   <h2>The Decision Rule</h2>
   <div class="divider"></div>
-  <p>Classify a new $x$ by the larger posterior (Bayes):</p>
-  <div class="math-block" style="margin:8px 0">$$\hat{y}(x) = \arg\max_{y}\; \pi_y\, f_{X|Y=y}(x)
-    = \arg\max_{y}\; \pi_y \cdot
-    \frac{\exp\!\big( -\tfrac{1}{2}(x - \mu_y)^\top \Sigma_y^{-1} (x - \mu_y) \big)}{(2\pi)^{n/2} |\Sigma_y|^{1/2}}$$</div>
+  <p>Bayes with Definition 1's density, then natural $\log$:</p>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \hat{y}(x) &amp;= \arg\max_{y}\; \pi_y\, f_{X|Y=y}(x) \\[4pt]
+    &amp;= \arg\max_{y}\; \Big[ \log \pi_y - \tfrac{1}{2}\log|\Sigma_y| - \tfrac{1}{2}\, d_{\Sigma_y}(x, \mu_y)^2 \Big]
+  \end{aligned}$$</div>
+  <p class="muted">Dropped: the shared constant $-\tfrac{n}{2}\log 2\pi$</p>
   <ul>
-    <li>Definition 1's density, twice &mdash; compare and pick</li>
-    <li>Equal priors and equal $|\Sigma_y|$: pick the class whose <strong>Mahalanobis distance</strong> is smaller</li>
+    <li>Equal priors and equal $|\Sigma_y|$: nearest <strong>Mahalanobis</strong> mean wins</li>
+    <li>Otherwise the prior and $\log|\Sigma_y|$ terms also count</li>
   </ul>
 </div>
 
+<!-- E1: spam scatter with fitted Gaussians and the exact boundary -->
 <div class="slide">
-  <h2>Picture &mdash; Two Classes, One Boundary</h2>
+  <h2>Unequal Spam Covariances Curve the Boundary</h2>
   <div class="divider"></div>
-  <div class="p8-fig" style="max-width:1060px;margin:6px auto;">
+<!-- class 0: n=50 pi=0.625 mu=(4.980,1.338) Sigma=[[0.269,0.064],[0.064,0.137]] min x2=0.31 -->
+<!-- class 1: n=30 pi=0.375 mu=(4.094,3.333) Sigma=[[0.181,-0.085],[-0.085,0.366]] min x2=2.05 -->
+<!-- boundary root counts per column inside window: [1] -->
+<!-- coordinate map: x1 in [2.9,6.5] -> px [90,760]; x2 in [-0.2,5.4] -> px [360,20] (y down); viewBox 1060x400. Points = synthetic sample (seed 8); crosses = 1/N MLE means; ellipses = fitted Mahalanobis d=1 (solid), d=2 (faded); dashed = exact QDA tie set with pi_hat = counts. Generator: /workspace/agent/prob08r1/pkgE/e_spam.py -->
+<div class="p8-fig" style="max-width:960px;margin:4px auto;">
   <svg viewBox="0 0 1060 400">
-    <g transform="rotate(-20 340 190)">
-      <ellipse cx="340" cy="190" rx="200" ry="100" fill="none" stroke="#003876" stroke-width="2.5"/>
-      <ellipse cx="340" cy="190" rx="133" ry="66"  fill="none" stroke="#003876" stroke-width="2.5" opacity="0.6"/>
-      <ellipse cx="340" cy="190" rx="66"  ry="33"  fill="none" stroke="#003876" stroke-width="2.5" opacity="0.35"/>
-    </g>
-    <g transform="rotate(15 770 190)">
-      <ellipse cx="770" cy="190" rx="170" ry="92" fill="none" stroke="#c0392b" stroke-width="2.5"/>
-      <ellipse cx="770" cy="190" rx="112" ry="60" fill="none" stroke="#c0392b" stroke-width="2.5" opacity="0.6"/>
-      <ellipse cx="770" cy="190" rx="56"  ry="30" fill="none" stroke="#c0392b" stroke-width="2.5" opacity="0.35"/>
-    </g>
-    <path d="M580,20 C550,130 600,270 565,385" fill="none" stroke="#333" stroke-width="2.5" stroke-dasharray="8 5"/>
+    <line x1="90" y1="360" x2="760" y2="360" stroke="#5b6770" stroke-width="1.5"/>
+    <line x1="90" y1="360" x2="90" y2="20" stroke="#5b6770" stroke-width="1.5"/>
+    <polyline points="90.0,239.9 91.7,239.9 93.3,239.9 95.0,239.9 96.7,239.9 98.4,239.9 100.0,239.9 101.7,239.9 103.4,239.9 105.1,239.9 106.7,239.9 108.4,239.9 110.1,239.9 111.8,239.9 113.4,239.9 115.1,239.9 116.8,239.9 118.5,239.9 120.1,239.9 121.8,239.9 123.5,239.9 125.2,239.9 126.8,239.8 128.5,239.8 130.2,239.8 131.9,239.8 133.5,239.8 135.2,239.8 136.9,239.8 138.6,239.7 140.2,239.7 141.9,239.7 143.6,239.7 145.3,239.7 146.9,239.6 148.6,239.6 150.3,239.6 152.0,239.6 153.7,239.5 155.3,239.5 157.0,239.5 158.7,239.5 160.4,239.4 162.0,239.4 163.7,239.4 165.4,239.3 167.1,239.3 168.7,239.3 170.4,239.2 172.1,239.2 173.8,239.2 175.4,239.1 177.1,239.1 178.8,239.1 180.5,239.0 182.1,239.0 183.8,238.9 185.5,238.9 187.1,238.9 188.8,238.8 190.5,238.8 192.2,238.7 193.9,238.7 195.5,238.6 197.2,238.6 198.9,238.5 200.5,238.5 202.2,238.4 203.9,238.4 205.6,238.3 207.2,238.3 208.9,238.2 210.6,238.1 212.3,238.1 213.9,238.0 215.6,238.0 217.3,237.9 219.0,237.8 220.6,237.8 222.3,237.7 224.0,237.6 225.7,237.6 227.3,237.5 229.0,237.4 230.7,237.4 232.4,237.3 234.1,237.2 235.7,237.1 237.4,237.1 239.1,237.0 240.8,236.9 242.4,236.8 244.1,236.7 245.8,236.7 247.5,236.6 249.1,236.5 250.8,236.4 252.5,236.3 254.2,236.2 255.8,236.1 257.5,236.0 259.2,235.9 260.8,235.9 262.5,235.8 264.2,235.7 265.9,235.6 267.6,235.5 269.2,235.4 270.9,235.3 272.6,235.2 274.2,235.1 275.9,234.9 277.6,234.8 279.3,234.7 281.0,234.6 282.6,234.5 284.3,234.4 286.0,234.3 287.6,234.2 289.3,234.0 291.0,233.9 292.7,233.8 294.3,233.7 296.0,233.6 297.7,233.4 299.4,233.3 301.0,233.2 302.7,233.1 304.4,232.9 306.1,232.8 307.8,232.7 309.4,232.5 311.1,232.4 312.8,232.2 314.4,232.1 316.1,232.0 317.8,231.8 319.5,231.7 321.1,231.5 322.8,231.4 324.5,231.2 326.2,231.1 327.9,230.9 329.5,230.8 331.2,230.6 332.9,230.5 334.6,230.3 336.2,230.1 337.9,230.0 339.6,229.8 341.2,229.6 342.9,229.5 344.6,229.3 346.3,229.1 347.9,229.0 349.6,228.8 351.3,228.6 353.0,228.4 354.7,228.2 356.3,228.1 358.0,227.9 359.7,227.7 361.4,227.5 363.0,227.3 364.7,227.1 366.4,226.9 368.1,226.7 369.7,226.5 371.4,226.3 373.1,226.1 374.7,225.9 376.4,225.7 378.1,225.5 379.8,225.3 381.4,225.1 383.1,224.9 384.8,224.7 386.5,224.5 388.1,224.3 389.8,224.0 391.5,223.8 393.2,223.6 394.9,223.4 396.5,223.1 398.2,222.9 399.9,222.7 401.5,222.4 403.2,222.2 404.9,222.0 406.6,221.7 408.2,221.5 409.9,221.3 411.6,221.0 413.3,220.8 414.9,220.5 416.6,220.3 418.3,220.0 420.0,219.8 421.7,219.5 423.3,219.2 425.0,219.0 426.7,218.7 428.4,218.4 430.0,218.2 431.7,217.9 433.4,217.6 435.0,217.4 436.7,217.1 438.4,216.8 440.1,216.5 441.8,216.3 443.4,216.0 445.1,215.7 446.8,215.4 448.4,215.1 450.1,214.8 451.8,214.5 453.5,214.2 455.2,213.9 456.8,213.6 458.5,213.3 460.2,213.0 461.8,212.7 463.5,212.4 465.2,212.1 466.9,211.8 468.6,211.5 470.2,211.1 471.9,210.8 473.6,210.5 475.2,210.2 476.9,209.8 478.6,209.5 480.3,209.2 482.0,208.8 483.6,208.5 485.3,208.2 487.0,207.8 488.6,207.5 490.3,207.1 492.0,206.8 493.7,206.5 495.3,206.1 497.0,205.7 498.7,205.4 500.4,205.0 502.1,204.7 503.7,204.3 505.4,204.0 507.1,203.6 508.8,203.2 510.4,202.8 512.1,202.5 513.8,202.1 515.5,201.7 517.1,201.3 518.8,201.0 520.5,200.6 522.1,200.2 523.8,199.8 525.5,199.4 527.2,199.0 528.9,198.6 530.5,198.2 532.2,197.8 533.9,197.4 535.6,197.0 537.2,196.6 538.9,196.2 540.6,195.8 542.2,195.4 543.9,195.0 545.6,194.6 547.3,194.1 549.0,193.7 550.6,193.3 552.3,192.9 554.0,192.5 555.7,192.0 557.3,191.6 559.0,191.2 560.7,190.7 562.4,190.3 564.0,189.8 565.7,189.4 567.4,189.0 569.1,188.5 570.7,188.1 572.4,187.6 574.1,187.2 575.8,186.7 577.4,186.3 579.1,185.8 580.8,185.3 582.5,184.9 584.1,184.4 585.8,183.9 587.5,183.5 589.1,183.0 590.8,182.5 592.5,182.1 594.2,181.6 595.9,181.1 597.5,180.6 599.2,180.1 600.9,179.7 602.5,179.2 604.2,178.7 605.9,178.2 607.6,177.7 609.2,177.2 610.9,176.7 612.6,176.2 614.3,175.7 616.0,175.2 617.6,174.7 619.3,174.2 621.0,173.7 622.7,173.2 624.3,172.7 626.0,172.1 627.7,171.6 629.4,171.1 631.0,170.6 632.7,170.1 634.4,169.6 636.0,169.0 637.7,168.5 639.4,168.0 641.1,167.4 642.8,166.9 644.4,166.4 646.1,165.8 647.8,165.3 649.5,164.8 651.1,164.2 652.8,163.7 654.5,163.1 656.2,162.6 657.8,162.0 659.5,161.5 661.2,160.9 662.9,160.4 664.5,159.8 666.2,159.3 667.9,158.7 669.6,158.1 671.2,157.6 672.9,157.0 674.6,156.5 676.2,155.9 677.9,155.3 679.6,154.8 681.3,154.2 683.0,153.6 684.6,153.0 686.3,152.5 688.0,151.9 689.6,151.3 691.3,150.7 693.0,150.1 694.7,149.5 696.3,149.0 698.0,148.4 699.7,147.8 701.4,147.2 703.1,146.6 704.7,146.0 706.4,145.4 708.1,144.8 709.8,144.2 711.4,143.6 713.1,143.0 714.8,142.4 716.5,141.8 718.1,141.2 719.8,140.6 721.5,140.0 723.1,139.4 724.8,138.8 726.5,138.2 728.2,137.5 729.9,136.9 731.5,136.3 733.2,135.7 734.9,135.1 736.6,134.4 738.2,133.8 739.9,133.2 741.6,132.6 743.3,131.9 744.9,131.3 746.6,130.7 748.3,130.1 749.9,129.4 751.6,128.8 753.3,128.2 755.0,127.5 756.6,126.9 758.3,126.2 760.0,125.6" fill="none" stroke="#333" stroke-width="2.5" stroke-dasharray="8 5"/>
+    <polygon points="570.8,254.2 569.5,253.2 567.9,252.3 566.0,251.4 563.9,250.6 561.6,249.8 559.0,249.0 556.2,248.3 553.2,247.7 550.0,247.1 546.6,246.5 543.0,246.0 539.2,245.6 535.3,245.2 531.2,244.9 526.9,244.6 522.5,244.4 518.0,244.3 513.3,244.2 508.6,244.2 503.8,244.2 498.9,244.3 493.9,244.5 488.9,244.7 483.9,245.0 478.9,245.3 473.8,245.7 468.7,246.2 463.7,246.7 458.7,247.3 453.8,247.9 448.9,248.6 444.1,249.3 439.4,250.1 434.8,250.9 430.3,251.7 426.0,252.6 421.8,253.6 417.7,254.6 413.8,255.6 410.1,256.6 406.5,257.7 403.2,258.8 400.0,259.9 397.1,261.0 394.3,262.1 391.9,263.3 389.6,264.5 387.6,265.6 385.8,266.8 384.3,268.0 383.0,269.2 382.0,270.3 381.2,271.5 380.7,272.6 380.5,273.7 380.6,274.9 380.9,275.9 381.4,277.0 382.3,278.0 383.4,279.0 384.7,280.0 386.3,280.9 388.1,281.8 390.2,282.6 392.6,283.4 395.1,284.2 397.9,284.9 400.9,285.5 404.1,286.2 407.5,286.7 411.1,287.2 414.9,287.6 418.9,288.0 423.0,288.3 427.3,288.6 431.7,288.8 436.2,289.0 440.8,289.0 445.5,289.1 450.4,289.0 455.3,288.9 460.2,288.7 465.2,288.5 470.2,288.2 475.3,287.9 480.4,287.5 485.4,287.0 490.4,286.5 495.4,285.9 500.3,285.3 505.2,284.6 510.0,283.9 514.7,283.1 519.3,282.3 523.8,281.5 528.2,280.6 532.4,279.6 536.5,278.7 540.4,277.6 544.1,276.6 547.6,275.5 551.0,274.4 554.1,273.3 557.1,272.2 559.8,271.1 562.3,269.9 564.6,268.7 566.6,267.6 568.4,266.4 569.9,265.2 571.1,264.0 572.2,262.9 572.9,261.7 573.4,260.6 573.6,259.5 573.6,258.4 573.3,257.3 572.7,256.2 571.9,255.2 570.8,254.2" fill="none" stroke="#003876" stroke-width="2.5" opacity="1.0"/>
+    <polygon points="664.5,241.8 661.8,239.9 658.6,238.0 654.9,236.2 650.7,234.6 646.1,233.0 641.0,231.4 635.4,230.0 629.4,228.7 623.0,227.5 616.1,226.4 608.9,225.4 601.4,224.5 593.5,223.8 585.2,223.1 576.7,222.6 567.9,222.2 558.9,221.9 549.6,221.7 540.1,221.7 530.5,221.8 520.7,222.0 510.8,222.3 500.8,222.8 490.7,223.3 480.6,224.0 470.5,224.8 460.4,225.8 450.4,226.8 440.4,227.9 430.5,229.2 420.8,230.5 411.2,232.0 401.8,233.5 392.6,235.2 383.6,236.9 374.9,238.7 366.4,240.6 358.3,242.5 350.5,244.5 343.0,246.6 335.9,248.7 329.2,250.9 322.9,253.1 317.1,255.4 311.6,257.7 306.6,260.0 302.1,262.3 298.1,264.7 294.5,267.0 291.5,269.4 288.9,271.7 286.9,274.1 285.4,276.4 284.4,278.6 284.0,280.9 284.0,283.1 284.7,285.3 285.8,287.4 287.4,289.4 289.6,291.4 292.3,293.3 295.5,295.2 299.2,297.0 303.4,298.7 308.1,300.3 313.2,301.8 318.8,303.2 324.8,304.5 331.2,305.7 338.0,306.8 345.2,307.8 352.8,308.7 360.7,309.4 368.9,310.1 377.4,310.6 386.2,311.0 395.3,311.3 404.6,311.5 414.0,311.5 423.7,311.4 433.5,311.2 443.4,310.9 453.4,310.4 463.4,309.9 473.5,309.2 483.6,308.4 493.7,307.4 503.8,306.4 513.7,305.3 523.6,304.0 533.4,302.7 543.0,301.2 552.4,299.7 561.6,298.0 570.6,296.3 579.3,294.5 587.7,292.6 595.8,290.7 603.6,288.7 611.1,286.6 618.2,284.5 624.9,282.3 631.2,280.1 637.1,277.8 642.5,275.5 647.5,273.2 652.0,270.9 656.1,268.5 659.6,266.2 662.7,263.8 665.2,261.5 667.2,259.2 668.8,256.8 669.7,254.6 670.2,252.3 670.1,250.1 669.5,247.9 668.4,245.8 666.7,243.8 664.5,241.8" fill="none" stroke="#003876" stroke-width="2.5" opacity="0.55"/>
+    <polygon points="269.5,109.8 266.1,110.3 262.8,110.9 259.6,111.6 256.6,112.4 253.7,113.2 251.0,114.2 248.5,115.2 246.1,116.3 244.0,117.6 242.0,118.8 240.2,120.2 238.6,121.6 237.2,123.1 236.0,124.7 235.0,126.3 234.2,127.9 233.6,129.6 233.3,131.4 233.2,133.2 233.3,135.0 233.6,136.9 234.1,138.7 234.8,140.6 235.8,142.6 236.9,144.5 238.3,146.4 239.9,148.3 241.6,150.2 243.6,152.1 245.7,154.0 248.1,155.9 250.6,157.7 253.3,159.5 256.1,161.2 259.1,163.0 262.2,164.6 265.5,166.2 268.9,167.8 272.4,169.3 276.1,170.7 279.8,172.1 283.6,173.4 287.5,174.6 291.5,175.7 295.5,176.8 299.6,177.7 303.7,178.6 307.8,179.4 311.9,180.1 316.1,180.7 320.2,181.2 324.3,181.6 328.4,181.9 332.4,182.1 336.4,182.2 340.3,182.2 344.1,182.1 347.9,181.9 351.5,181.6 355.1,181.2 358.5,180.7 361.8,180.1 365.0,179.5 368.0,178.7 370.8,177.8 373.6,176.9 376.1,175.8 378.4,174.7 380.6,173.5 382.6,172.2 384.4,170.8 386.0,169.4 387.4,167.9 388.6,166.4 389.6,164.8 390.4,163.1 390.9,161.4 391.3,159.6 391.4,157.9 391.3,156.0 391.0,154.2 390.5,152.3 389.8,150.4 388.8,148.5 387.7,146.6 386.3,144.6 384.7,142.7 383.0,140.8 381.0,138.9 378.8,137.0 376.5,135.2 374.0,133.3 371.3,131.6 368.5,129.8 365.5,128.1 362.4,126.4 359.1,124.8 355.7,123.2 352.2,121.7 348.5,120.3 344.8,119.0 341.0,117.7 337.1,116.4 333.1,115.3 329.1,114.3 325.0,113.3 320.9,112.4 316.8,111.6 312.7,110.9 308.5,110.3 304.4,109.8 300.3,109.4 296.2,109.1 292.2,108.9 288.2,108.8 284.3,108.8 280.4,108.9 276.7,109.1 273.1,109.4 269.5,109.8" fill="none" stroke="#c0392b" stroke-width="2.5" opacity="1.0"/>
+    <polygon points="226.7,74.1 219.9,75.1 213.3,76.3 207.0,77.6 200.9,79.2 195.2,80.9 189.8,82.8 184.7,84.9 180.0,87.2 175.6,89.6 171.6,92.1 168.0,94.9 164.8,97.7 162.0,100.7 159.6,103.8 157.7,107.0 156.1,110.3 155.0,113.8 154.3,117.3 154.1,120.9 154.2,124.5 154.9,128.2 155.9,132.0 157.4,135.8 159.3,139.6 161.6,143.4 164.3,147.3 167.4,151.1 171.0,154.9 174.9,158.7 179.2,162.5 183.9,166.2 188.9,169.9 194.2,173.5 199.9,177.0 205.9,180.4 212.1,183.7 218.7,187.0 225.5,190.1 232.5,193.1 239.8,195.9 247.3,198.7 254.9,201.2 262.7,203.7 270.6,205.9 278.7,208.0 286.8,210.0 295.0,211.7 303.3,213.3 311.6,214.7 319.8,215.9 328.1,216.9 336.3,217.7 344.5,218.3 352.5,218.7 360.5,218.9 368.3,218.9 376.0,218.7 383.5,218.3 390.8,217.7 397.9,216.9 404.7,216.0 411.3,214.8 417.6,213.4 423.7,211.9 429.4,210.1 434.8,208.2 439.9,206.1 444.6,203.9 449.0,201.5 453.0,198.9 456.6,196.2 459.8,193.3 462.6,190.3 464.9,187.2 466.9,184.0 468.5,180.7 469.6,177.3 470.3,173.8 470.5,170.2 470.4,166.5 469.7,162.8 468.7,159.1 467.2,155.3 465.3,151.4 463.0,147.6 460.3,143.8 457.1,139.9 453.6,136.1 449.7,132.3 445.4,128.5 440.7,124.8 435.7,121.2 430.4,117.6 424.7,114.1 418.7,110.6 412.4,107.3 405.9,104.1 399.1,101.0 392.0,98.0 384.8,95.1 377.3,92.4 369.7,89.8 361.9,87.4 354.0,85.1 345.9,83.0 337.8,81.1 329.6,79.3 321.3,77.8 313.0,76.4 304.7,75.2 296.5,74.2 288.3,73.4 280.1,72.8 272.0,72.3 264.1,72.1 256.3,72.1 248.6,72.3 241.1,72.7 233.8,73.3 226.7,74.1" fill="none" stroke="#c0392b" stroke-width="2.5" opacity="0.55"/>
+    <circle cx="518.9" cy="221.3" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="592.5" cy="247.2" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="546.9" cy="264.2" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="550.7" cy="272.0" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="409.8" cy="295.8" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="366.8" cy="273.0" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="549.0" cy="235.8" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="543.8" cy="264.2" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="560.5" cy="269.5" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="297.0" cy="258.7" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="444.5" cy="269.6" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="464.3" cy="212.2" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="611.7" cy="258.3" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="373.4" cy="258.6" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="398.4" cy="251.8" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="333.2" cy="281.0" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="590.4" cy="286.0" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="504.1" cy="268.1" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="592.2" cy="278.1" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="565.9" cy="224.7" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="336.0" cy="297.1" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="542.1" cy="283.8" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="350.9" cy="247.6" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="595.5" cy="243.8" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="608.4" cy="251.3" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="406.9" cy="326.3" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="547.7" cy="292.3" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="499.6" cy="263.1" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="361.1" cy="284.6" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="679.3" cy="247.1" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="322.5" cy="283.4" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="495.1" cy="259.3" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="574.0" cy="269.5" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="469.5" cy="254.0" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="342.5" cy="253.8" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="530.0" cy="280.9" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="432.0" cy="269.6" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="337.3" cy="328.9" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="532.7" cy="239.3" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="475.7" cy="272.0" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="489.2" cy="293.4" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="533.3" cy="253.4" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="492.8" cy="253.5" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="380.8" cy="272.2" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="409.4" cy="287.1" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="516.4" cy="268.6" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="577.8" cy="255.3" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="362.7" cy="251.4" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="320.9" cy="283.0" r="4.5" fill="#003876" opacity="0.55"/>
+    <circle cx="517.3" cy="274.3" r="4.5" fill="#003876" opacity="0.55"/>
+    <rect x="335.7" y="142.1" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="208.1" y="90.7" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="287.2" y="172.1" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="296.5" y="138.6" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="319.5" y="164.4" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="305.5" y="146.5" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="427.4" y="173.4" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="399.7" y="157.8" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="386.8" y="61.3" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="257.8" y="125.9" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="213.3" y="152.1" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="242.7" y="125.4" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="369.3" y="114.7" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="248.8" y="124.3" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="165.9" y="93.7" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="270.0" y="176.0" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="228.4" y="104.4" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="298.7" y="113.1" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="252.6" y="124.7" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="269.9" y="193.2" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="276.6" y="140.0" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="232.0" y="96.6" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="471.9" y="110.9" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="293.7" y="182.8" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="274.7" y="159.1" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="303.3" y="92.6" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="285.7" y="191.6" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="404.8" y="153.4" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="405.6" y="190.1" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <rect x="501.7" y="219.2" width="9.0" height="9.0" fill="#c0392b" opacity="0.55"/>
+    <path d="M467.1,256.6 L487.1,276.6 M467.1,276.6 L487.1,256.6" stroke="#003876" stroke-width="4"/>
+    <path d="M302.3,135.5 L322.3,155.5 M302.3,155.5 L322.3,135.5" stroke="#c0392b" stroke-width="4"/>
+    <path d="M792,82 L808,98 M792,98 L808,82" stroke="#c0392b" stroke-width="4"/>
+    <path d="M792,202 L808,218 M792,218 L808,202" stroke="#003876" stroke-width="4"/>
+    <line x1="785" y1="330" x2="815" y2="330" stroke="#333" stroke-width="2.5" stroke-dasharray="8 5"/>
+    <rect x="795" y="120" width="10" height="10" fill="#c0392b" opacity="0.55"/>
+    <circle cx="800" cy="245" r="5" fill="#003876" opacity="0.55"/>
   </svg>
-  <span class="fl fl-blue" style="left:28.30%;top:87.50%">class $0$</span>
-  <span class="fl fl-red"  style="left:74.53%;top:87.50%">class $1$</span>
-  <span class="fl fl-grey" style="left:66.04%;top:8.75%">boundary</span>
-  </div>
-  <p class="muted">Different $\Sigma_y$ &mdash; the boundary curves (quadratic); equal $\Sigma$ would make it a line</p>
+  <span class="fl fl-blue" style="left:77.55%;top:52.50%;transform:translate(0,-50%)">non-spam $\hat\mu_0$</span>
+  <span class="fl fl-red" style="left:77.55%;top:22.50%;transform:translate(0,-50%)">spam $\hat\mu_1$</span>
+  <span class="fl fl-grey" style="left:78.11%;top:82.50%;transform:translate(0,-50%)">boundary</span>
+  <span class="fl fl-sub fl-grey" style="left:40.09%;top:96.25%">$x_1$ = log word count</span>
+  <span class="fl fl-sub fl-grey" style="left:8.49%;top:4.50%;transform:translate(-50%,-100%)">$x_2$ = links / 100 words</span>
+  <span class="fl fl-sub fl-red" style="left:77.55%;top:31.25%;transform:translate(0,-50%)">$\hat\pi_1 = 30/80$</span>
+  <span class="fl fl-sub fl-blue" style="left:77.55%;top:61.25%;transform:translate(0,-50%)">$\hat\pi_0 = 50/80$</span>
+</div>
+<!-- check: g(mu0)=-6.79 (<0 -> non-spam), g(mu1)=20.70 (>0 -> spam) -->
+  <p class="muted">Synthetic data &nbsp;&middot;&nbsp; ellipses: fitted $d_\Sigma = 1, 2$ &nbsp;&middot;&nbsp; dashed: equal posteriors</p>
+  <p>With one shared $\Sigma$ the quadratic terms would cancel: a straight line</p>
 </div>
 
 <div class="slide">
@@ -2415,6 +2590,7 @@
     \;-\; \frac{1}{2}\sum_{i=1}^{N} (x^{(i)} - \mu)^\top \Sigma^{-1} (x^{(i)} - \mu)$$</div>
   <ul>
     <li>Sum of $N$ copies of $\log$ Definition 1</li>
+    <li>$\log$ = natural log &nbsp;&middot;&nbsp; $|\Sigma| = \det \Sigma$</li>
     <li>Two unknowns: a vector $\mu$ and a <strong>matrix</strong> $\Sigma$ &mdash; differentiate in turn</li>
   </ul>
 </div>
@@ -2435,43 +2611,93 @@
   </ul>
 </div>
 
+<!-- E3: the task before the technique -->
 <div class="slide">
-  <h2>Fit $\Sigma$ &mdash; Reparametrize First</h2>
+  <h2>Goal &mdash; From a Variance to a Covariance Matrix</h2>
   <div class="divider"></div>
-  <p>Differentiating in $\Sigma^{-1}$ is easier: set the <strong>precision</strong> $\Phi := \Sigma^{-1}$, use $|\Sigma| = |\Phi|^{-1}$:</p>
-  <div class="math-block" style="margin:8px 0">$$\ell(\mu, \Phi)
-    = -\frac{Nn}{2}\log 2\pi \;+\; \frac{N}{2}\log|\Phi|
-    \;-\; \frac{1}{2}\sum_{i=1}^{N} (x^{(i)} - \mu)^\top \Phi\, (x^{(i)} - \mu)$$</div>
+  <p>prob07, one feature: the Gaussian MLE of the variance</p>
+  <div class="math-block" style="margin:8px 0">$$\widehat{\sigma^2} = \frac{1}{N}\sum_{i=1}^{N} (x^{(i)} - \hat\mu)^2
+    \quad\leadsto\quad
+    \hat\Sigma \overset{?}{=} \frac{1}{N}\sum_{i=1}^{N} (x^{(i)} - \hat\mu)(x^{(i)} - \hat\mu)^\top$$</div>
   <ul>
-    <li>$\log|\Sigma|$ flipped sign &mdash; now everything is <em>increasing-friendly</em> in $\Phi$</li>
-    <li>Next obstacle: the sum of quadratic forms &mdash; enter the trace trick</li>
+    <li>Squared deviation $\to$ <strong>outer product</strong> of a deviation vector</li>
+    <li>Natural guess; deriving it is the multivariate MLE</li>
+    <li>Obstacle: $\Sigma$ sits inside an inverse and a determinant</li>
   </ul>
 </div>
 
 <div class="slide">
-  <h2>Technique &mdash; the Trace Trick</h2>
+  <h2>Fit $\Sigma$ &mdash; Reparametrize First</h2>
   <div class="divider"></div>
-  <p>A scalar equals its own trace; trace is cyclic:</p>
-  <div class="math-block" style="margin:8px 0">$$v^\top \Phi\, v
-    \stackrel{(1\times 1)}{=} \operatorname{tr}\!\big( v^\top \Phi\, v \big)
-    \stackrel{(\text{cyclic})}{=} \operatorname{tr}\!\big( v\, v^\top \Phi \big)$$</div>
+  <p>Plug in $\hat\mu$; set the <strong>precision</strong> $\Phi := \Sigma^{-1}$; use $|\Sigma| = |\Phi|^{-1}$:</p>
+  <div class="math-block" style="margin:8px 0">$$\ell(\hat\mu, \Phi)
+    = -\frac{Nn}{2}\log 2\pi \;+\; \frac{N}{2}\log|\Phi|
+    \;-\; \frac{1}{2}\sum_{i=1}^{N} (x^{(i)} - \hat\mu)^\top \Phi\, (x^{(i)} - \hat\mu)$$</div>
   <ul>
-    <li>Turns a quadratic form into a <strong>linear</strong> function of $\Phi$</li>
-    <li>Linear in $\Phi$ $\Rightarrow$ trivial to differentiate</li>
+    <li>$\hat\mu$ is the same for every $\Sigma$: safe to plug in first</li>
+    <li>No inverse left: the unknown matrix $\Phi$ appears directly</li>
+    <li>Remaining: $N$ quadratic forms, $\Phi$ sandwiched in each</li>
+  </ul>
+</div>
+
+<!-- E3: why the trace trick -->
+<div class="slide">
+  <h2>Why the Trace Trick?</h2>
+  <div class="divider"></div>
+  <p>Need $\nabla_\Phi$ of $\sum_i v_i^\top \Phi\, v_i$, residuals $v_i = x^{(i)} - \hat\mu$</p>
+<!-- coordinate map: viewBox 1060x210; boxes x=[20, 385, 750], width 290, y 30..150; labels at box centres. Generator: /workspace/agent/prob08r1/pkgE/e_flow.py -->
+<div class="p8-fig" style="max-width:1060px;margin:4px auto;">
+  <svg viewBox="0 0 1060 210">
+    <defs><marker id="pkgE-arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b6770"/></marker></defs>
+    <rect x="20" y="30" width="290" height="120" rx="12" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+    <rect x="385" y="30" width="290" height="120" rx="12" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+    <rect x="750" y="30" width="290" height="120" rx="12" fill="#fff" stroke="#003876" stroke-width="2"/>
+    <line x1="318" y1="90" x2="377" y2="90" stroke="#5b6770" stroke-width="2.5" marker-end="url(#pkgE-arr2)"/>
+    <line x1="683" y1="90" x2="742" y2="90" stroke="#5b6770" stroke-width="2.5" marker-end="url(#pkgE-arr2)"/>
+  </svg>
+  <span class="fl fl-blue" style="left:15.57%;top:33.33%">$N$ residuals</span>
+  <span class="fl" style="left:15.57%;top:54.76%">$v_1, \ldots, v_N$</span>
+  <span class="fl fl-blue" style="left:50.00%;top:33.33%">one scatter matrix</span>
+  <span class="fl" style="left:50.00%;top:54.76%">$S = \sum_i v_i v_i^\top$</span>
+  <span class="fl fl-blue" style="left:84.43%;top:33.33%">one derivative</span>
+  <span class="fl" style="left:84.43%;top:54.76%">$\nabla_\Phi \operatorname{tr}(\Phi S)$</span>
+  <span class="fl fl-sub fl-grey" style="left:32.78%;top:88.57%">trace trick</span>
+  <span class="fl fl-sub fl-grey" style="left:67.22%;top:88.57%">matrix calculus</span>
+</div>
+  <p class="muted">1D: $\sum_i \phi\, v_i^2 = \phi \sum_i v_i^2$ &nbsp;&middot;&nbsp; matrices: $\Phi$ is stuck between $v_i^\top$ and $v_i$</p>
+  <div class="highlight">
+    <p>Collect all data into $S$; expose the matrix parameter $\Phi$.</p>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Trace Trick &mdash; the Calculation</h2>
+  <div class="divider"></div>
+  <p>A scalar is its own trace; trace is cyclic: $\operatorname{tr}(AB) = \operatorname{tr}(BA)$</p>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    v_i^\top \Phi\, v_i
+    &amp;\stackrel{(1\times 1)}{=} \operatorname{tr}\!\big( v_i^\top \Phi\, v_i \big)
+    \stackrel{(\text{cyclic})}{=} \operatorname{tr}\!\big( \Phi\, v_i v_i^\top \big) \\[4pt]
+    \sum_{i=1}^{N} v_i^\top \Phi\, v_i
+    &amp;\stackrel{(\text{linear})}{=} \operatorname{tr}\!\Big( \Phi \sum_{i=1}^{N} v_i v_i^\top \Big)
+    = \operatorname{tr}(\Phi\, S)
+  \end{aligned}$$</div>
+  <ul>
+    <li>Cyclic: $A = v_i^\top$ moves from front to back</li>
+    <li>Not arbitrary reordering: $v_i^\top v_i \Phi$ is a different object</li>
+    <li>Already linear in $\Phi$: the trace makes it visible</li>
   </ul>
 </div>
 
 <div class="slide">
   <h2>Collect the Data &mdash; the Scatter Matrix</h2>
   <div class="divider"></div>
-  <div class="math-block" style="margin:8px 0">$$\begin{gathered}
-    S := \textstyle\sum_{i=1}^{N} (x^{(i)} - \mu)(x^{(i)} - \mu)^\top \\[6pt]
-    \Longrightarrow\quad \textstyle\sum_{i=1}^{N} (x^{(i)} - \mu)^\top \Phi (x^{(i)} - \mu) = \operatorname{tr}(S\, \Phi)
-  \end{gathered}$$</div>
-  <div class="math-block" style="margin:8px 0">$$\ell(\mu, \Phi)
-    = \text{const} \;+\; \frac{N}{2}\log|\Phi| \;-\; \frac{1}{2}\operatorname{tr}(S\, \Phi)$$</div>
+  <div class="math-block" style="margin:8px 0">$$S := \sum_{i=1}^{N} (x^{(i)} - \hat\mu)(x^{(i)} - \hat\mu)^\top = \sum_{i=1}^{N} v_i v_i^\top$$</div>
+  <div class="math-block" style="margin:8px 0">$$\ell(\Phi)
+    = \text{const} \;+\; \frac{N}{2}\log|\Phi| \;-\; \frac{1}{2}\operatorname{tr}(\Phi\, S)$$</div>
   <ul>
     <li>All $N$ data points compressed into one PSD matrix $S$</li>
+    <li>$S$ = scatter, a sum &nbsp;&middot;&nbsp; covariance estimate will be $S / N$</li>
   </ul>
 </div>
 
@@ -2482,10 +2708,11 @@
     \nabla_X \operatorname{tr}(A X) &amp;= A^\top
       &amp;&amp;\text{(trace is linear; exercise below)} \\[4pt]
     \nabla_X \log|X| &amp;= X^{-\top}
-      &amp;&amp;\text{(the matrix log-derivative; exercise below)}
+      &amp;&amp;\text{(}|X| = \det X \gt 0\text{; exercise below)}
   \end{aligned}$$</div>
   <ul>
-    <li>Both are the source's exercises &mdash; hints on the exercise slide</li>
+    <li>Here $X = \Phi \succ 0$: $|\Phi| \gt 0$, so $\log|\Phi|$ is defined</li>
+    <li>Both are the source's exercises; hints on the exercise slide</li>
     <li>Sanity, $1\times 1$ case: $\frac{d}{dx}(ax) = a$, $\;\frac{d}{dx}\log x = 1/x$ &#10003;</li>
   </ul>
 </div>
@@ -2503,6 +2730,7 @@
   \end{aligned}$$</div>
   <ul>
     <li>$\Phi^{-\top} = \Sigma^\top = \Sigma$ and $S^\top = S$: both symmetric</li>
+    <li>Scatter $S$ divided by $N$: the covariance estimate</li>
   </ul>
 </div>
 
@@ -2517,26 +2745,25 @@
       \hat\Sigma = \frac{1}{N}\sum_{i} (x^{(i)} - \hat\mu)(x^{(i)} - \hat\mu)^\top$$</div>
   </div>
   <ul>
-    <li>Sample mean, sample covariance &mdash; the intuitive answers, now <em>derived</em></li>
+    <li>Needs the centered scatter nonsingular: typically $N \gt n$, full-rank data</li>
+    <li>$n = 1$: prob07's variance MLE $\widehat{\sigma^2}$, same $1/N$</li>
     <li>Remark: $\hat\Sigma$ is <strong>biased</strong>; $1/(N-1)$ gives the unbiased version</li>
-    <li>Needs the centered scatter nonsingular &mdash; typically $N > n$ with full-rank data</li>
   </ul>
 </div>
 
+<!-- E4: content-sized exercise blocks (no .cols stretch) -->
 <div class="slide">
   <h2>Exercises (from the source)</h2>
   <div class="divider"></div>
-  <div class="cols">
-    <div class="card">
-      <h3>Exercise A.</h3>
-      <p>Show $\nabla_X \operatorname{tr}(AX) = A^\top$.</p>
-      <p class="muted">Hint: $\operatorname{tr}(AX) = \sum_{i,j} A_{ij} X_{ji}$ &mdash; read off $\partial / \partial X_{ji}$.</p>
-    </div>
-    <div class="card">
-      <h3>Exercise B.</h3>
-      <p>Show $\nabla_X \log|X| = X^{-\top}$.</p>
-      <p class="muted">Hint: cofactor expansion of $|X|$ along one row, then the adjugate formula for $X^{-1}$.</p>
-    </div>
+  <div class="card">
+    <h3>Exercise A.</h3>
+    <p>Show $\nabla_X \operatorname{tr}(AX) = A^\top$.</p>
+    <p class="muted">Hint: $\operatorname{tr}(AX) = \sum_{i,j} A_{ij} X_{ji}$; read off $\partial / \partial X_{ji}$.</p>
+  </div>
+  <div class="card" style="margin-top:20px">
+    <h3>Exercise B.</h3>
+    <p>For positive-definite $X$, show $\nabla_X \log|X| = X^{-\top}$, where $|X| = \det X$.</p>
+    <p class="muted">Hint: cofactor expansion of $|X|$ along one row, then the adjugate formula for $X^{-1}$.</p>
   </div>
 </div>
 
@@ -2544,7 +2771,7 @@
   <h2>GDA &mdash; the Full Pipeline</h2>
   <div class="divider"></div>
   <ul>
-    <li><strong>Fit</strong>: per class $y$, compute $\hat\mu_y$, $\hat\Sigma_y$ (Theorem 4) and $\hat\pi_y = N_y / N$</li>
+    <li><strong>Fit</strong>: per class (spam, non-spam), $\hat\mu_y$, $\hat\Sigma_y$ by Theorem 4; $\hat\pi_y = N_y / N$</li>
     <li><strong>Predict</strong>: plug into the decision rule &mdash; largest $\hat\pi_y\, f_{\mathcal{N}(\hat\mu_y, \hat\Sigma_y)}(x)$</li>
     <li>Closed form &mdash; no gradient descent, no tuning &mdash; if scatters are nonsingular</li>
     <li>High-dimensional GDA needs covariance regularization</li>
@@ -2555,33 +2782,38 @@
 </div>
 
 <!-- ============ CLOSE ============ -->
+<!-- E6: antiderivative vocabulary, then the bridge -->
 <div class="slide">
-  <h2>Recap &mdash; Every Tool, One Job</h2>
+  <h2>What Is an Antiderivative?</h2>
   <div class="divider"></div>
-  <table>
-    <thead><tr><th>Tool</th><th>Job today</th></tr></thead>
-    <tbody>
-      <tr><td>spectral decomposition</td><td>square root $V^{1/2}$ &mdash; Definition 2 exists</td></tr>
-      <tr><td>change of variables</td><td>the density (part 4)</td></tr>
-      <tr><td>MGF uniqueness</td><td>parts 5, 6 and the diffusion limit</td></tr>
-      <tr><td>orthogonality of MMSE</td><td>part 7 &mdash; conditionals</td></tr>
-      <tr><td>Gaussian channel</td><td>posterior shrinkage; reverse diffusion step</td></tr>
-      <tr><td>trace trick</td><td>$\hat\Sigma = S / N$ (Theorem 4)</td></tr>
-    </tbody>
-  </table>
-  <p class="muted">One object, three definitions, seven properties &mdash; and three AI systems fell out</p>
+  <div class="card">
+    <h3>Definition.</h3>
+    <p>An <strong>antiderivative</strong> of $h$ is a function $H$ with $H' = h$.</p>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$h(x) = 2x,\;\; H(x) = x^2
+    \quad\Longrightarrow\quad
+    \int_a^b 2x\, dx = H(b) - H(a) = b^2 - a^2$$</div>
+  <ul>
+    <li>Continuous $h$ always has one: $H(x) = \int_0^x h(t)\, dt$</li>
+    <li>The catch: often no closed-form formula for $H$</li>
+    <li>Example: $e^{-t^2/2}$ has no elementary antiderivative</li>
+  </ul>
 </div>
 
 <div class="slide">
   <h2>Bridge &mdash; When Closed Form Runs Out</h2>
   <div class="divider"></div>
   <ul>
-    <li>Everything today was exact <strong>because everything was Gaussian</strong></li>
-    <li>Non-Gaussian posterior? Nonlinear model? The integrals stop closing</li>
-    <li>$\mathbb{E}[g(X)]$ with no antiderivative &mdash; what then?</li>
+    <li>Gaussian models gave us closed-form answers</li>
+    <li>More general models: many expectation integrals lack a convenient closed form</li>
+    <li>High dimensions: an integral over $\mathbb{R}^n$, not one scalar antiderivative</li>
   </ul>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}[g(X)] = \int g(x)\, f_X(x)\, dx
+    \quad\leadsto\quad
+    \frac{1}{N}\sum_{i=1}^{N} g\big(X^{(i)}\big), \qquad X^{(i)} \overset{\text{i.i.d.}}{\sim} f_X$$</div>
+  <p class="muted">Right side: a Monte Carlo <strong>estimate</strong> from samples, not an equality for finite $N$</p>
   <div class="highlight">
-    <p><strong>Next:</strong> when you can't integrate &mdash; <em>sample</em>. Monte Carlo methods.</p>
+    <p><strong>Next:</strong> when you can't integrate, <em>sample</em>: Monte Carlo methods.</p>
   </div>
 </div>
 

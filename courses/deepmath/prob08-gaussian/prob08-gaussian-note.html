@@ -467,31 +467,44 @@
 <section>
   <h2>9 &nbsp;Gaussian Discriminant Analysis</h2>
 
-  <h3>9.1 The model and the decision rule</h3>
+  <h3>9.1 Back to the spam filter: same Bayes rule, new class model</h3>
+  <p>prob07 classified e-mail with $Y = 1$ for spam and $Y = 0$ for non-spam, binary word indicators $X_i = 1$ iff word $i$ appears, and Bernoulli Naive Bayes, $p(x \mid y) = \prod_i p_{i|y}^{x_i}(1 - p_{i|y})^{1 - x_i}$. The decision rule $\hat y(x) = \arg\max_y \pi_y\, p(x \mid y)$ does not depend on that choice of class model. This section keeps $Y$ and the rule and changes only the class model: continuous features &mdash; for illustration $x_1$ = log word count, $x_2$ = links per 100 words &mdash; with one Gaussian per class. That is a modeling choice, not a fact about e-mail; binary indicators are not Gaussian and are not modeled as Gaussian here.</p>
+  <p>A full $\Sigma_y$ lets the features be correlated within a class. A diagonal $\Sigma_y$ makes the coordinates conditionally independent given the class: Gaussian Naive Bayes, the continuous counterpart of prob07's model, not the same model. The deck's scatter figure uses <em>synthetic</em> data &mdash; 50 non-spam and 30 spam points drawn from fixed Gaussians by a seeded generator &mdash; with each class's $\hat\mu_y, \hat\Sigma_y$ fitted by Theorem 4 and $\hat\pi_y = 50/80, 30/80$.</p>
+
+  <h3>9.2 Mahalanobis distance: distance measured in standard deviations</h3>
+  <div class="deriv">
+    <p style="margin:0 0 6px;"><strong>Definition.</strong> For $\Sigma \succ 0$,</p>
+    \[ d_\Sigma(x, \mu) = \sqrt{(x - \mu)^{\mathsf T}\Sigma^{-1}(x - \mu)} = \big\| \Sigma^{-1/2}(x - \mu) \big\|, \]
+    <p style="margin:8px 0 6px;">where $\Sigma^{-1/2} = Q\Lambda^{-1/2}Q^{\mathsf T}$ (from the spectral decomposition $\Sigma = Q\Lambda Q^{\mathsf T}$) is the symmetric inverse square root. The two forms agree: $\|\Sigma^{-1/2}v\|^2 = v^{\mathsf T}\Sigma^{-1/2}\Sigma^{-1/2}v = v^{\mathsf T}\Sigma^{-1}v$.</p>
+    <p style="margin:8px 0 6px;"><em>Whitening.</em> If $X \sim \mathcal N(\mu, \Sigma)$, then $Z = \Sigma^{-1/2}(X - \mu)$ has $\operatorname{Cov}(Z) = \Sigma^{-1/2}\Sigma\Sigma^{-1/2} = I$: the map removes both scale and correlation. So $d_\Sigma$ is Euclidean distance after whitening, and the exponent of the Definition 1 density is exactly $-\tfrac12 d_\Sigma(x, \mu)^2$, the squared distance.</p>
+    <p style="margin:8px 0 0;"><em>Example.</em> $\mu = 0$, $\Sigma = \operatorname{diag}(4, 1)$. The points $A = (2, 0)$ and $B = (0, 2)$ are both at Euclidean distance $2$, but $d_\Sigma(A, 0) = \sqrt{2^2/4} = 1$ and $d_\Sigma(B, 0) = \sqrt{2^2/1} = 2$: the wide direction (variance $4$) tolerates the bigger step. Level sets $x_1^2/4 + x_2^2 = r^2$ are ellipses with semi-axes $2r$ and $r$; whitening, $z = (x_1/2, x_2)$, turns them into circles of radius $r$.</p>
+  </div>
+
+  <h3>9.3 The model and the decision rule</h3>
   <p>Labels $Y \in \{0, 1, \dots\}$ with priors $\pi_y = \mathbb P(Y = y)$; class-conditional features $X \mid Y = y \sim \mathcal N(\mu_y, \Sigma_y)$ on $\mathbb{R}^n$, each $\Sigma_y \succ 0$. Classification is prob07's MAP rule, with the density standing in for the likelihood:</p>
   \[ \hat y(x) = \arg\max_y \; \pi_y \, f(x \mid \mu_y, \Sigma_y)
      = \arg\max_y \Big[ \log \pi_y - \tfrac12 \log \det \Sigma_y
        - \tfrac12 (x - \mu_y)^{\mathsf T} \Sigma_y^{-1} (x - \mu_y) \Big], \]
-  <p>taking logs (monotone) and dropping the shared $-\tfrac n2 \log 2\pi$. By prob07's Bayes-optimality theorem, if the model is correct this rule minimizes the probability of error among <em>all</em> classifiers.</p>
+  <p>taking logs (monotone; natural logs throughout) and dropping the shared $-\tfrac n2 \log 2\pi$. In the notation of Section 9.2 the score is $\log\pi_y - \tfrac12\log\det\Sigma_y - \tfrac12 d_{\Sigma_y}(x, \mu_y)^2$; with equal priors and equal determinants the rule picks the nearest mean in Mahalanobis distance. By prob07's Bayes-optimality theorem, if the model is correct this rule minimizes the probability of error among <em>all</em> classifiers.</p>
 
-  <h3>9.2 The boundary: quadratic in general, linear for shared $\Sigma$ (the SVG's caption, proved)</h3>
+  <h3>9.4 The boundary: quadratic in general, linear for shared $\Sigma$ (the SVG's caption, proved)</h3>
   <div class="deriv">
     <p style="margin:0 0 6px;"><strong>Derivation (two classes).</strong> The boundary is where the two bracketed scores tie. Their difference is</p>
     \[ \tfrac12 (x-\mu_1)^{\mathsf T}\Sigma_1^{-1}(x-\mu_1) - \tfrac12 (x-\mu_0)^{\mathsf T}\Sigma_0^{-1}(x-\mu_0)
        + \tfrac12 \log\frac{\det\Sigma_1}{\det\Sigma_0} + \log\frac{\pi_0}{\pi_1} = 0, \]
-    <p style="margin:8px 0 6px;">whose $x$-quadratic part is $\tfrac12 x^{\mathsf T}(\Sigma_1^{-1} - \Sigma_0^{-1})x$: a genuine quadric surface whenever $\Sigma_0 \neq \Sigma_1$ &mdash; the curved boundary in the deck's SVG. If $\Sigma_0 = \Sigma_1 = \Sigma$, the quadratic terms cancel; expanding $(x-\mu)^{\mathsf T}\Sigma^{-1}(x-\mu) = x^{\mathsf T}\Sigma^{-1}x - 2\mu^{\mathsf T}\Sigma^{-1}x + \mu^{\mathsf T}\Sigma^{-1}\mu$ for both classes, the difference collapses to the <em>linear</em> equation</p>
+    <p style="margin:8px 0 6px;">whose $x$-quadratic part is $\tfrac12 x^{\mathsf T}(\Sigma_1^{-1} - \Sigma_0^{-1})x$: a genuine quadric surface whenever $\Sigma_0 \neq \Sigma_1$ &mdash; the curved boundary in the deck's synthetic spam figure, whose dashed curve is the exact tie set of the two fitted scores. If $\Sigma_0 = \Sigma_1 = \Sigma$, the quadratic terms cancel; expanding $(x-\mu)^{\mathsf T}\Sigma^{-1}(x-\mu) = x^{\mathsf T}\Sigma^{-1}x - 2\mu^{\mathsf T}\Sigma^{-1}x + \mu^{\mathsf T}\Sigma^{-1}\mu$ for both classes, the difference collapses to the <em>linear</em> equation</p>
     \[ (\mu_0 - \mu_1)^{\mathsf T} \Sigma^{-1} x \;=\;
        \tfrac12\big( \mu_0^{\mathsf T}\Sigma^{-1}\mu_0 - \mu_1^{\mathsf T}\Sigma^{-1}\mu_1 \big) + \log\frac{\pi_1}{\pi_0}, \]
     <p style="margin:8px 0 0;">a hyperplane with normal $w = \Sigma^{-1}(\mu_0 - \mu_1)$ &mdash; linear discriminant analysis [4, Ch. 4.2], and (one sigmoid away) the functional form of logistic regression. $\blacksquare$</p>
   </div>
 
-  <h3>9.3 The likelihood, assembled</h3>
+  <h3>9.5 The likelihood, assembled</h3>
   <p>Estimation decouples across classes (each sample's log-likelihood only involves its own class's parameters), so fix one class with samples $x^{(1)}, \dots, x^{(N)}$ i.i.d. $\mathcal N(\mu, \Sigma)$. The log-likelihood, from Definition 1 and independence:</p>
   \[ \ell(\mu, \Sigma) = -\frac{Nn}{2}\log 2\pi \; - \; \frac N2 \log\det\Sigma
      \; - \; \frac12 \sum_{i=1}^N (x^{(i)} - \mu)^{\mathsf T} \Sigma^{-1} (x^{(i)} - \mu), \]
   <p>matching the deck's display ✓ (prob07's recipe: log of a product of densities).</p>
 
-  <h3>9.4 Maximizing over $\mu$</h3>
+  <h3>9.6 Maximizing over $\mu$</h3>
   <div class="deriv">
     <p style="margin:0 0 6px;"><strong>Lemma 9.1 (gradient of a quadratic form).</strong> For symmetric $M$: $\nabla_\mu\, (x - \mu)^{\mathsf T} M (x - \mu) = -2M(x - \mu)$.</p>
     <p style="margin:8px 0 6px;"><em>Proof.</em> Expand: $(x-\mu)^{\mathsf T}M(x-\mu) = x^{\mathsf T}Mx - 2\mu^{\mathsf T}Mx + \mu^{\mathsf T}M\mu$ (merging the cross terms by symmetry). Gradients in $\mu$: $0 - 2Mx + 2M\mu = -2M(x - \mu)$, using $\nabla_\mu (\mu^{\mathsf T} a) = a$ and $\nabla_\mu(\mu^{\mathsf T}M\mu) = 2M\mu$ for symmetric $M$ (both from the entrywise definition of the gradient). $\blacksquare$</p>
@@ -503,16 +516,18 @@
     <p style="margin:8px 0 0;">since $\Sigma^{-1}$ is invertible. It is a maximum in $\mu$: $\ell$ is a concave quadratic in $\mu$ (Hessian $-N\Sigma^{-1} \prec 0$). The sample mean &mdash; the same answer as prob07's 1D Gaussian MLE, now in vector form. $\blacksquare$</p>
   </div>
 
-  <h3>9.5 Reparameterizing in the precision $\Phi = \Sigma^{-1}$, and the trace trick</h3>
-  <p>Maximizing over $\Sigma$ directly puts the variable inside an inverse <em>and</em> a determinant. The deck's move: optimize over the precision $\Phi = \Sigma^{-1}$ instead (a bijection of PD matrices, $\log\det\Sigma = -\log\det\Phi$), and flatten the quadratic forms with the <strong>trace trick</strong>:</p>
+  <h3>9.7 Reparameterizing in the precision $\Phi = \Sigma^{-1}$, and the trace trick</h3>
+  <p>Maximizing over $\Sigma$ directly puts the variable inside an inverse <em>and</em> a determinant. The deck's move: optimize over the precision $\Phi = \Sigma^{-1}$ instead (a bijection of PD matrices, $\log\det\Sigma = -\log\det\Phi$), and flatten the quadratic forms with the <strong>trace trick</strong>.</p>
+  <p><em>Why the trace.</em> The goal is the matrix analogue of prob07's variance estimate $\widehat{\sigma^2} = \frac1N\sum_i (x_i - \hat\mu)^2$; the natural guess replaces the squared deviation by an outer product. After plugging in $\hat\mu$, the $\Phi$-dependent data term is $\sum_i v_i^{\mathsf T}\Phi v_i$ with residuals $v_i = x^{(i)} - \hat\mu$. In one dimension the parameter factors out, $\sum_i \phi v_i^2 = \phi\sum_i v_i^2$; with matrices, $\Phi$ is stuck between $v_i^{\mathsf T}$ and $v_i$. The trace trick rewrites each term as $\operatorname{tr}(\Phi v_i v_i^{\mathsf T})$, and linearity of the trace collects the sum into $\operatorname{tr}(\Phi S)$: all the data in one matrix $S$, the matrix parameter $\Phi$ exposed, ready for Lemma 9.3.</p>
   <div class="deriv">
     <p style="margin:0 0 6px;"><strong>Lemma 9.2.</strong> $v^{\mathsf T} \Phi v = \operatorname{tr}(v v^{\mathsf T} \Phi)$ for any vector $v$ and square $\Phi$.</p>
     <p style="margin:8px 0 6px;"><em>Proof.</em> $v^{\mathsf T}\Phi v$ is a scalar, hence equals its own trace; and $\operatorname{tr}(AB) = \operatorname{tr}(BA)$ (both equal $\sum_{i,j} A_{ij}B_{ji}$) with $A = v^{\mathsf T}$, $B = \Phi v$ gives $\operatorname{tr}(v^{\mathsf T} \cdot \Phi v) = \operatorname{tr}(\Phi v \cdot v^{\mathsf T}) = \operatorname{tr}(v v^{\mathsf T} \Phi)$. $\blacksquare$</p>
     <p style="margin:8px 0 0;">Summing over samples at $\mu = \hat\mu$, with the <em>scatter matrix</em> $S = \sum_{i=1}^N (x^{(i)} - \hat\mu)(x^{(i)} - \hat\mu)^{\mathsf T}$ (all the data the likelihood ever sees about $\Sigma$):</p>
     \[ \ell(\hat\mu, \Phi) = \text{const} + \frac N2 \log\det\Phi - \frac12 \operatorname{tr}(S\,\Phi). \]
+    <p style="margin:8px 0 0;">The deck writes the middle form $\operatorname{tr}(\Phi v v^{\mathsf T})$, equal by the same cyclic rule. $S$ is a sum, the scatter matrix; the covariance estimate will be $S/N$ (Section 9.9), not $S$ itself.</p>
   </div>
 
-  <h3>9.6 The two matrix-calculus identities (deck's Exercises A and B), proved</h3>
+  <h3>9.8 The two matrix-calculus identities (deck's Exercises A and B), proved</h3>
   <div class="deriv">
     <p style="margin:0 0 6px;"><strong>Lemma 9.3 (Exercise A).</strong> $\nabla_X \operatorname{tr}(AX) = A^{\mathsf T}$, where $(\nabla_X f)_{ij} = \partial f / \partial X_{ij}$ and $X$ has independent entries.</p>
     <p style="margin:8px 0 6px;"><em>Proof.</em> $\operatorname{tr}(AX) = \sum_k (AX)_{kk} = \sum_{k,l} A_{kl} X_{lk}$ (the deck's hint). Each entry $X_{ij}$ appears exactly once, with coefficient $A_{ji}$; so $\partial \operatorname{tr}(AX)/\partial X_{ij} = A_{ji}$, i.e. $\nabla_X \operatorname{tr}(AX) = A^{\mathsf T}$. $\blacksquare$</p>
@@ -520,7 +535,7 @@
     <p style="margin:8px 0 0;"><em>Proof.</em> Cofactor-expand along row $i$: $\det X = \sum_l X_{il} C_{il}$, where the cofactor $C_{il}$ ($(-1)^{i+l}$ times the minor deleting row $i$, column $l$) contains no entry of row $i$. So $\partial \det X / \partial X_{ij} = C_{ij}$, i.e. $\nabla_X \det X = C$. Cramer's adjugate identity $X^{-1} = \operatorname{adj}(X)/\det X$ with $\operatorname{adj}(X) = C^{\mathsf T}$ gives $C = \det X \cdot (X^{-1})^{\mathsf T}$. Chain rule: $\nabla_X \log\det X = \tfrac{1}{\det X}\, C = (X^{-1})^{\mathsf T}$. $\blacksquare$ (For symmetric PD $\Phi$, $(\Phi^{-1})^{\mathsf T} = \Phi^{-1}$, as the source's exercise remarks &mdash; the standard caveat that treating symmetric entries as constrained changes off-diagonal derivatives by a factor of 2 does not change the stationary point, since the unconstrained critical point found below is already symmetric.)</p>
   </div>
 
-  <h3>9.7 Solving for $\Sigma$, and Theorem 4</h3>
+  <h3>9.9 Solving for $\Sigma$, and Theorem 4</h3>
   <div class="deriv">
     <p style="margin:0 0 6px;"><strong>Derivation.</strong> By Lemmas 9.3 and 9.4,</p>
     \[ \nabla_\Phi\, \ell = \frac N2 (\Phi^{-1})^{\mathsf T} - \frac12 S^{\mathsf T}
@@ -528,14 +543,17 @@
        \quad\Longrightarrow\quad
        \hat\Sigma = \frac1N S = \frac1N \sum_{i=1}^N (x^{(i)} - \hat\mu)(x^{(i)} - \hat\mu)^{\mathsf T}, \]
     <p style="margin:8px 0 6px;">using symmetry of $\Phi^{-1} = \Sigma$ and $S$ to drop the transposes &mdash; exactly the deck's display ✓. <em>That it is the global maximum, not a saddle:</em> $\Phi \mapsto \log\det\Phi$ is concave on PD matrices (standard; Boyd &amp; Vandenberghe [7, §3.1.5]) and $\operatorname{tr}(S\Phi)$ is linear, so $\ell(\hat\mu, \cdot)$ is concave and the unique critical point is the global maximizer. (When $S \succ 0$ &mdash; guaranteed a.s. once $N \gt n$ &mdash; $\ell \to -\infty$ on the boundary and at infinity, so the maximum is attained.) $\blacksquare$</p>
-    <p style="margin:0 0 6px;"><strong>Theorem 4 (Gaussian MLE).</strong> For i.i.d. $\mathcal N(\mu, \Sigma)$ samples, the maximum-likelihood estimates are $\hat\mu = \tfrac1N\sum_i x^{(i)}$ and $\hat\Sigma = \tfrac1N\sum_i (x^{(i)} - \hat\mu)(x^{(i)} - \hat\mu)^{\mathsf T}$; in GDA, applied per class with $\hat\pi_y = N_y / N$ (the count MLE, prob07's Bernoulli/multinomial estimate).</p>
+    <p style="margin:0 0 6px;"><strong>Theorem 4 (Gaussian MLE).</strong> For i.i.d. $\mathcal N(\mu, \Sigma)$ samples, the maximum-likelihood estimates are $\hat\mu = \tfrac1N\sum_i x^{(i)}$ and $\hat\Sigma = \tfrac1N\sum_i (x^{(i)} - \hat\mu)(x^{(i)} - \hat\mu)^{\mathsf T}$, provided the centered scatter $S$ is nonsingular (typically $N \gt n$ with full-rank data). The divisor is $N$, not $N - 1$; for $n = 1$ this is prob07's variance estimate with the same $1/N$. In GDA, applied per class with $\hat\pi_y = N_y / N$ (the count MLE, prob07's Bernoulli/multinomial estimate).</p>
   </div>
   <div class="deriv">
     <p style="margin:0 0 6px;"><strong>Bias remark, computed.</strong> $\mathbb E[\hat\Sigma] = \tfrac{N-1}{N}\Sigma$: writing $\bar x = \hat\mu$,</p>
     \[ \sum_i (x^{(i)} - \bar x)(x^{(i)} - \bar x)^{\mathsf T} = \sum_i x^{(i)} x^{(i)\mathsf T} - N \bar x \bar x^{\mathsf T}, \]
     <p style="margin:8px 0 0;">(expand and use $\sum_i x^{(i)} = N\bar x$); take expectations with $\mathbb E[x x^{\mathsf T}] = \Sigma + \mu\mu^{\mathsf T}$ and $\mathbb E[\bar x \bar x^{\mathsf T}] = \tfrac1N \Sigma + \mu\mu^{\mathsf T}$ (the latter since $\operatorname{Cov}(\bar x) = \Sigma / N$ for i.i.d. samples): $N(\Sigma + \mu\mu^{\mathsf T}) - N(\tfrac1N\Sigma + \mu\mu^{\mathsf T}) = (N-1)\Sigma$. Divide by $N$. Same $\tfrac{N-1}{N}$ shrinkage as prob07's 1D variance MLE; vanishes as $N \to \infty$ (asymptotically unbiased), and $n$ plays no role in the factor. $\blacksquare$</p>
   </div>
-  <p><em>Pipeline check (deck's closing slide):</em> fit $(\hat\pi_y, \hat\mu_y, \hat\Sigma_y)$ per class by Theorem 4, classify by Section 9.1's rule &mdash; and in one dimension with two classes and shared variance this collapses exactly to prob07's two-Gaussian height classifier, with the 9.2 boundary reducing to the midpoint-shifted-by-prior threshold derived there.</p>
+  <p><em>Pipeline check (deck's closing slide):</em> fit $(\hat\pi_y, \hat\mu_y, \hat\Sigma_y)$ per class by Theorem 4, classify by Section 9.3's rule &mdash; and in one dimension with two classes and shared variance this collapses exactly to prob07's two-Gaussian height classifier, with the 9.4 boundary reducing to the midpoint-shifted-by-prior threshold derived there.</p>
+  <h3>9.10 Closing: when closed form runs out</h3>
+  <p>An <em>antiderivative</em> of $h$ is a function $H$ with $H' = h$. For $h(x) = 2x$, $H(x) = x^2$ works, and $\int_a^b 2x\,dx = H(b) - H(a) = b^2 - a^2$. Every continuous $h$ has one, $H(x) = \int_0^x h(t)\,dt$, but often there is no closed-form formula for it: $e^{-t^2/2}$ has no elementary antiderivative, which is why the standard normal distribution function is tabulated.</p>
+  <p>The Gaussian models of this lecture gave closed-form answers. More general models do not: many expectations $\mathbb E[g(X)] = \int g(x) f_X(x)\,dx$ lack a convenient closed form, and in high dimensions the integral is over $\mathbb R^n$, not one scalar antiderivative. The Monte Carlo idea is to sample instead: draw $X^{(1)}, \dots, X^{(N)}$ i.i.d. from $f_X$ and use $\frac1N\sum_{i=1}^N g(X^{(i)})$. For finite $N$ this is an <em>estimate</em>, not an equality; it is unbiased, and by the law of large numbers it converges to $\mathbb E[g(X)]$ when $\mathbb E|g(X)| \lt \infty$.</p>
 </section>
 
 <section>
@@ -549,7 +567,7 @@
     <li>Companion notes in this series: <code>prob03</code> (max-entropy, 1D Gaussian normalization), <code>prob04</code> (independence, Markov chains), <code>prob05</code> (MGFs, uniqueness statement, CLT), <code>prob07</code> (conditional expectation, orthogonality/MMSE, MLE recipe, MAP/Bayes optimality, bias) &mdash; <code>../prob0N-&lt;topic&gt;/prob0N-&lt;topic&gt;-note.html</code>.</li>
   <li>S. Boyd, L. Vandenberghe, <em>Convex Optimization</em>, Cambridge University Press, 2004 &mdash;
     &sect;3.1.5 for the concavity of $\log\det$ on the positive-definite cone, the fact that makes the
-    critical point of Section 9.7 the global maximizer. <a href="https://web.stanford.edu/~boyd/cvxbook/">web.stanford.edu/~boyd/cvxbook</a>.</li>
+    critical point of Section 9.9 the global maximizer. <a href="https://web.stanford.edu/~boyd/cvxbook/">web.stanford.edu/~boyd/cvxbook</a>.</li>
   </ol>
 </section>
 

@@ -1046,6 +1046,17 @@ exactly this reversal, one diffusion step at a time.
 
 ## 8 Gaussian Diffusion
 
+As we briefly discussed in prob07, a diffusion model learns to reverse a
+fixed Gaussian noising process: each backward step is modeled as a Gaussian
+whose mean is fit by least squares. This section derives the probability
+facts behind that construction. Three objects must be kept apart throughout:
+the forward conditional $q(x_n \mid x_0)$ and the reverse posterior
+$q(x_{n-1} \mid x_n, x_0)$ for $n \ge 2$ are *exactly* Gaussian (Sections 8.5
+and 8.7); the true reverse marginal $q(x_{n-1} \mid x_n)$ is in general *not*
+Gaussian, since it mixes the posterior over the unknown $x_0$; and the model
+$p_\theta(x_{n-1} \mid x_n)$ is Gaussian *by choice*. Section 8.10 connects
+these to prob07's least-squares target.
+
 ### 8.1 The forward recursion and its kernel
 
 Fix $\beta \in (0, 1)$. Given $X_0$, any starting distribution whose MGF is
@@ -1123,9 +1134,18 @@ neighborhood of $0$; and MGF convergence on a neighborhood of $0$ implies
 convergence in distribution, by the continuity theorem cited alongside MGF
 uniqueness in Lecture 5 and in [1]. **End of proof.**
 
-The striking part is that the limit is the same for *every* starting
-distribution. The forward process is a data destroyer by design, and its
-destination is exactly the fixed point of Section 8.2.
+The striking part is that the limit does not depend on the starting
+distribution. The MGF hypothesis is a convenience of this proof, not of the
+result: unrolling the recursion as in Section 8.5 gives
+$X_n \overset{d}{=} a_n X_0 + \sqrt{1 - a_n^2}\, Z$ with
+$a_n = (1-\beta)^{n/2} \to 0$ and $Z \sim \mathcal N(0,1)$ independent of
+$X_0$. Since $X_0$ is finite, $a_n X_0 \to 0$ in probability, and Slutsky's
+theorem gives $X_n \to \mathcal N(0,1)$ in distribution for *every* $X_0$,
+with no moment assumption. The forward process is a data destroyer by design,
+and its destination is exactly the fixed point of Section 8.2. At any finite
+$n$ the law of $X_n$ is only close to $\mathcal N(0,1)$, never equal to it
+unless $X_0 \sim \mathcal N(0,1)$: the late chain is noise-dominated, not
+pure noise.
 
 ### 8.5 The closed form for $X_n$ given $X_0$, two ways
 
@@ -1234,27 +1254,50 @@ $$ \tilde\mu_n = \frac{\beta(1-\bar\alpha_{n-1})}{1-\bar\alpha_n}
 
 - At $n = 1$: $\bar\alpha_0 = 1$ gives $\tilde\beta_1 = 0$ and
   $\tilde\mu_1 = x_0$. Conditioning on both endpoints of a one-step chain pins
-  $X_0$ exactly.
+  $X_0$ exactly. The "posterior" is then a point mass, which is why the
+  slide states the Gaussian claim for $n \ge 2$, where $\tilde\beta_n > 0$.
+- Numerically, at $\beta = 0.02$ and $n = 100$:
+  $\tilde\mu_{100} \approx 0.987\,x_n + 0.008\,x_0$ and
+  $\tilde\beta_{100} \approx 0.0199$ (computed in double precision; the
+  completing-the-square result and the part-7 route agree).
 - The coefficients of $x_n$ and of $x_0$ in $\tilde\mu_n$ sum to
   $\tfrac{\sqrt\alpha(1-\bar\alpha_{n-1}) + \sqrt{\bar\alpha_{n-1}}\beta}{1-\bar\alpha_n}$,
   which tends to $1$ as $\alpha \to 1$: a convex-combination flavour.
 - $\tilde\beta_n < \beta$: the reverse step, once told $x_0$, is *less* noisy
   than the forward kernel.
 
-This exact posterior is what diffusion training actually regresses against;
-its mean, reparameterized through the noise, is the target of the
-$\epsilon_\theta$ network in [2]. At generation time $x_0$ is unknown, and the
-network's prediction stands in for it. The lecture deliberately stops at the
-approximation of Section 8.8, and this subsection is the missing rigorous step
-between the two.
+*Second route, by part 7.* Given $X_0 = x_0$, the pair $(X_{n-1}, X_n)$ is
+jointly Gaussian with $\operatorname{Var}(X_{n-1}) = 1 - \bar\alpha_{n-1}$,
+$\operatorname{Var}(X_n) = 1 - \bar\alpha_n$ and covariance
+$\sqrt\alpha\,(1 - \bar\alpha_{n-1})$. Part 7 of Theorem 2 gives variance
+$(1-\bar\alpha_{n-1}) - \alpha(1-\bar\alpha_{n-1})^2/(1-\bar\alpha_n)
+= (1-\bar\alpha_{n-1})\beta/(1-\bar\alpha_n) = \tilde\beta_n$, and mean
+$\sqrt{\bar\alpha_{n-1}}x_0 + \tfrac{\sqrt\alpha(1-\bar\alpha_{n-1})}{1-\bar\alpha_n}
+(x_n - \sqrt{\bar\alpha_n}x_0) = \tilde\mu_n$. This is the route the deck
+shows.
 
-### 8.8 The lecture's approximation: one reverse step via the channel
+This exact posterior is what diffusion training regresses against; its mean,
+reparameterized through the noise, is the target of the $\epsilon_\theta$
+network in [2]. At generation time $x_0$ is unknown, so the true reverse step
+$q(x_{n-1} \mid x_n)$ is the mixture of these Gaussians over the conditional
+law of $X_0$ given $X_n = x_n$, which is in general not Gaussian. The model
+$p_\theta$ is a Gaussian by choice.
 
-**Claim (stationary regime).** If $X_{n-1} \sim \mathcal N(0,1)$, which holds
-late in the chain and is justified by Theorem 3 and the fixed point of Section
-8.2, then *exactly*
+### 8.8 A stationary Gaussian benchmark
+
+**Claim (stationary benchmark).** *If* $X_{n-1} \sim \mathcal N(0,1)$
+exactly, then exactly
 
 $$ X_{n-1} \mid X_n = x_n \;\sim\; \mathcal N\big( \sqrt{1-\beta}\; x_n, \;\; \beta \big). $$
+
+The hypothesis holds exactly when the data are already standard normal,
+$X_0 \sim \mathcal N(0,1)$, by the fixed point of Section 8.2; then it holds
+at every step. For real data it never holds exactly at any finite $n$.
+Theorem 3 says the law of $X_{n-1}$ approaches $\mathcal N(0,1)$ as $n$
+grows, so the benchmark describes the noise-dominated end of the chain, but
+convergence of the marginal gives no pointwise error bound on the reverse
+kernel at finite $n$. This is a benchmark, not a derivation of the reverse
+step.
 
 *Proof.* The pair $(X_{n-1}, X_n)$ is jointly Gaussian with
 $\operatorname{Var}(X_{n-1}) = 1$,
@@ -1264,20 +1307,26 @@ By part 7 of Theorem 2 the mean is
 $\tfrac{\sqrt{1-\beta}}{1} x_n = \sqrt{1-\beta}\, x_n$ and the variance is
 $1 - \tfrac{(\sqrt{1-\beta})^2}{1} = 1 - (1-\beta) = \beta$. **End of proof.**
 
-*Where the approximation actually sits.* The lecture's headline result
-$\mathcal N(\sqrt{1-\beta}\,x_n,\, \beta)$ is exactly right, and so is its
-variance step: $1 - (1-\beta) = \beta$, with no small-$\beta$ approximation
-anywhere in the algebra. The tempting wrong route reads off the Section-7
-posterior variance of the *scaled signal* $\sqrt{1-\beta}\,X_{n-1}$ (a channel
-with $\sigma_x^2 = 1-\beta$ and $\sigma_z^2 = \beta$ gives
-$\tfrac{(1-\beta)\beta}{1}$) and stops there; that is the variance of the
-scaled variable, and dividing by the square of the scale, $1-\beta$, returns
-$\beta$ for $X_{n-1}$ itself. The one genuine approximation is the one the
-slide labels: the use of the stationary $\mathcal N(0,1)$ for $X_{n-1}$, which
-is only asymptotically true early in the chain. Consistency check against Section 8.7: averaging the exact
-posterior over the conditional distribution of $x_0$ given $x_n$ at
-stationarity indeed returns $\mathcal N(\sqrt{\alpha}\,x_n, \beta)$, which
-matches.
+*Where the assumption sits.* Under its hypothesis the algebra is exact:
+$1 - (1-\beta) = \beta$, with no small-$\beta$ approximation. The tempting
+wrong route reads off the Section-7 posterior variance of the *scaled signal*
+$\sqrt{1-\beta}\,X_{n-1}$ (a channel with $\sigma_x^2 = 1-\beta$ and
+$\sigma_z^2 = \beta$ gives $\tfrac{(1-\beta)\beta}{1}$) and stops there;
+that is the variance of the scaled variable, and dividing by the square of
+the scale, $1-\beta$, returns $\beta$ for $X_{n-1}$ itself. The single
+modelling step is the hypothesis $X_{n-1} \sim \mathcal N(0,1)$. A Monte
+Carlo check with $X_{n-1} \sim \mathcal N(0,1)$, $\beta = 0.02$ and $x_n$
+near $1$ gave conditional mean $\approx 0.988$ against
+$\sqrt{0.98} \approx 0.990$ and conditional variance $\approx 0.0205$
+against $0.02$ (a windowed estimate around $x_n = 1$, so agreement is only
+to about two digits).
+
+*Consistency with Section 8.7.* Take $X_0 \sim \mathcal N(0,1)$, so that
+every $X_k \sim \mathcal N(0,1)$. Averaging the exact posterior
+$\mathcal N(\tilde\mu_n(x_n, X_0), \tilde\beta_n)$ over the conditional
+law of $X_0$ given $X_n = x_n$ then returns $\mathcal N(\sqrt\alpha\,x_n, \beta)$,
+as it must, since both describe the same jointly Gaussian pair. For
+non-Gaussian data the same average is a non-Gaussian mixture.
 
 ### 8.9 Vectors, and the generation skeleton
 
@@ -1285,15 +1334,54 @@ Everything above is coordinatewise independent, so it lifts to $\mathbb{R}^d$
 verbatim: $X_n = \sqrt{1-\beta}\,X_{n-1} + \sqrt{\beta}\,Z_n$ with
 $Z_n \sim \mathcal N(0, I_d)$, closed form
 $X_n \mid X_0 = x_0 \sim \mathcal N(\sqrt{\bar\alpha_n}\, x_0,\; (1 - \bar\alpha_n) I_d)$,
-and limit $\mathcal N(0, I_d)$. All covariances stay multiples of $I_d$, since
-the recursion never mixes coordinates.
+and limit $\mathcal N(0, I_d)$. Given $X_0 = x_0$, all conditional
+covariances stay multiples of $I_d$, since the recursion never mixes
+coordinates. With random $X_0$ of covariance $\Sigma_0$ the marginal
+covariance is $(1-\beta)^n \Sigma_0 + (1 - (1-\beta)^n) I_d$: same
+eigenvectors as $\Sigma_0$, eigenvalues pulled toward $1$, so dependence
+between coordinates attenuates but persists at every finite $n$ unless
+$\Sigma_0$ is diagonal.
 
-The sampler is Algorithm 2 of [2]: draw $x_T \sim \mathcal N(0, I_d)$; for
-$n = T, T-1, \dots, 1$ sample
+The deck's sampler is a *simplified Gaussian reverse sampler*: draw
+$x_T \sim \mathcal N(0, I_d)$, which is close to the law of $X_T$ for large
+$T$ by Theorem 3; for $n = T, T-1, \dots, 1$ sample
 $x_{n-1} \sim \mathcal N(\mu_\theta(x_n, n),\, \beta I_d)$; return $x_0$. Every
 line is a Gaussian sample, and all the learning is hidden in the mean function
-$\mu_\theta$, the network's stand-in for the exact $\tilde\mu_n$ of Section
-8.7, whose dependence on $x_0$ is what must be learned.
+$\mu_\theta$; the output is close to the data law only if $\mu_\theta$ is
+accurate. It has the shape of Algorithm 2 of [2] but is not that algorithm
+verbatim: [2] uses a step-dependent schedule $\beta_t$, parameterizes the
+mean through a noise predictor $\epsilon_\theta$, uses
+$\sigma_t^2 = \beta_t$ or $\sigma_t^2 = \tilde\beta_t$ (reporting similar
+results for the two), sets $z = 0$ at the final step, and ends with a
+discrete decoder for image data.
+
+### 8.10 The connection to prob07's least-squares target
+
+prob07 fit the backward mean by least squares. Over *unrestricted*
+functions, the squared-error-optimal predictor of $X_{n-1}$ from $X_n$ is the
+conditional mean
+
+$$ \mu^*(x_n, n) = \mathbb E[X_{n-1} \mid X_n = x_n]. $$
+
+By the tower rule, conditioning first on $(X_n, X_0)$ and then on $X_n$, and
+using Section 8.7,
+
+$$ \mu^*(x_n, n) = \mathbb E\big[ \tilde\mu_n(x_n, X_0) \mid X_n = x_n \big]
+   = c_n\, x_n + d_n\, \mathbb E[X_0 \mid X_n = x_n], $$
+
+with $c_n = \sqrt\alpha\,(1-\bar\alpha_{n-1})/(1-\bar\alpha_n)$ and
+$d_n = \sqrt{\bar\alpha_{n-1}}\,\beta/(1-\bar\alpha_n)$, because
+$\tilde\mu_n$ is linear in $x_0$. This needs only an integrable $X_0$ and
+the Markov property, valid for every $n \ge 1$. The coefficients are exact
+Gaussian facts; the remaining unknown, $\mathbb E[X_0 \mid X_n = x_n]$,
+depends on the data distribution, and that is what the network learns. A
+trained network approximates $\mu^*$; it does not compute it. (prob07
+indexed steps by $t$; here they are indexed by $n$.)
+
+*Check.* For two-point data $X_0 = \pm 1$ with equal probability,
+$\beta = 0.02$, $n = 2$ and $x_n = 0.7$, the formula gives
+$\mu^* \approx 0.8500$, and a Monte Carlo estimate of
+$\mathbb E[X_1 \mid X_2 \approx 0.7]$ gave $\approx 0.851$.
 
 *Scope.* What this lecture does not cover, namely the variational training
 objective, its decomposition into Kullback-Leibler terms, score matching, and
@@ -1507,7 +1595,7 @@ midpoint threshold shifted by the prior derived there.
 2. J. Ho, A. Jain, P. Abbeel, "Denoising Diffusion Probabilistic Models,"
    NeurIPS 2020. Source of the $\bar\alpha$ notation of Section 8.6, the exact
    reverse posterior of Section 8.7, its equations (6) and (7), and the sampler
-   of Section 8.9, its Algorithm 2. arXiv:2006.11239
+   of Section 8.9, compared against its Algorithm 2. arXiv:2006.11239
    https://arxiv.org/abs/2006.11239
 3. J. Sohl-Dickstein, E. Weiss, N. Maheswaranathan, S. Ganguli, "Deep
    Unsupervised Learning using Nonequilibrium Thermodynamics," ICML 2015. The

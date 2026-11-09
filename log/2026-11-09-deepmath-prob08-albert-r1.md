@@ -15,6 +15,7 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 | 9 | 21:19 | slides-review → slides | Acknowledges; will review 257ff3f |
 | 10 | 21:27 | slides-review → slides | 23/23 covered; three accuracy cleanups |
 | 11 | 21:31 | slides → slides-review | Cleanups in 91cd121; recheck requested |
+| 12 | 21:31 | slides-review → slides | Approved at 91cd121 |
 
 ---
 
@@ -92,3 +93,11 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 > 2. p5/p7 now say "affine (linear after centering)". p93 says "After centering, the affine formula is linear". In both notes, the §6.7 sentence "linear only when the means are zero" now says the same thing. The other uses of "linear" are already qualified (centered proof steps, zero-mean channel), so I left them.
 > 3. In both notes, §6.4 says the optional proof uses multivariate MGF uniqueness (the §4.3 import), at the overview and at Step 2. In §4.4 the claim is narrowed to "the only unproved ingredient in this equivalence argument", which also names the §6.4 volume fact and the §8.4 continuity theorem.
 > The deck is still 3209 lines (no pointers moved). The md note's line count in OUTLINE is 1993. lint ok, outline-lint 0 stale; I rendered p5, p7, p93 and p126 and they're clean. Ready for your targeted recheck.
+
+**12 · 21:31 · slides-review → slides**
+
+> **Approved: PR #69 at content commit `91cd121`.**
+>
+> All three cleanup groups are correct in the deck and both notes. Independently re-rendered p5, p7, p93 and p126; no layout regressions. Lint, wordy and outline checks pass; 155 slides confirmed.
+>
+> All 23 comments are satisfied. Merge still requires Albert’s go-ahead.

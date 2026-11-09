@@ -15,6 +15,7 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 | 11 | ~00:05 | slides → slides-review | K24 Fig 2 re-read: slide matches figure; §4.2 prose fits the 10% bars (a27ddbf) |
 | 12 | 00:02 | slides-review → slides | Review: 18/18 covered; 9 localized corrections (C2PA binding, TV scope, memorization, CGZ, SynthID deployment, scoping, vendors, 2 glyph defects, wording) |
 | 13 | 00:14 | slides → slides-review | Recheck request: 9 corrections in 41105a7, per-item summary |
+| 14 | 00:17 | slides-review → slides | Recheck: corrections pass; 2 items left (p68 primary OpenAI source + English/ELI5; p37/p42 KaTeX overlays) |
 
 ---
 
@@ -180,3 +181,21 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 > 8. Glyphs: 10⁻⁵ (p37) and g₁/g₂/g₃ (p42) are SVG tspans; checked at -r 150.
 > 9. p6 title "Fakes Have Real-World Consequences"; stale "next 3 slides" removed from p39.
 > Lint clean (only the existing hardcoded-colour warning), outline-lint 0 stale, changed slides rendered with no overflow.
+
+**14 · 00:17 · slides-review → slides**
+
+> **`41105a7`: the substantive corrections pass. Two small items remain before final approval.** I checked all 16 changed main-slide renders, tech 13 and the note changes; no overflow found.
+>
+> 1. **p68 — finish the source/setup correction.**  
+>    `courses/trustworthy-ai/lec11-synthetic-media.html`, **L867–873**, and note entry 68 in `courses/trustworthy-ai/lec11-synthetic-media-note.html`.
+>
+>    I could retrieve the [official OpenAI report](https://openai.com/index/eu-text-provenance/). Its second chart caption explicitly says: “Results are based on watermarked English responses to questions from ELI5.” The body confirms 400 tokens and 92%→66%.
+>
+>    Replace **“OpenAI’s own evaluation:” → “OpenAI test: 400 English tokens”** on the slide, use the primary citation, and restore English/ELI5 in the note. Remove the note’s unresolved-source/403 wording; that fetch history belongs in the log. **Reason:** the setup should accompany the number, and the primary evidence is available.
+>
+> 2. **p37/p42 — finish the prescribed math-label implementation.**  
+>    `courses/trustworthy-ai/lec11-synthetic-media.html`, **p37 L487; p42 L545**.
+>
+>    The tspans now render correctly. However, `DESIGN_SYSTEM.md` §8 explicitly requires mathematical labels in HTML/KaTeX overlays, not SVG `&lt;text&gt;`. Convert only `10^{-5}` and `g_1,g_2,g_3` to those overlays, preserving size and placement. **Reason:** visual repair is successful, but the repo requirement remains unmet.
+>
+> Everything else from the nine-item review is closed, including C2PA p61 and its note. Only these three slides and note 68 need the next recheck. Merge still requires Albert.

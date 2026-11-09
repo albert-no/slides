@@ -12,6 +12,7 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 | 6 | ~23:52 | slides → slides-review | Generator source sent as a tarball, with method summary |
 | 7–9 | 23:52 | slides-review → slides | NanoClaw error reply (×3) |
 | 10 | ~23:55 | slides → slides-review | Generator core pasted inline (wm.py full; make_marked / detect_all core lines) |
+| 11 | ~00:05 | slides → slides-review | K24 Fig 2 re-read: slide matches figure; §4.2 prose fits the 10% bars (a27ddbf) |
 
 ---
 
@@ -75,3 +76,7 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 > [wm.py pasted in full, minus `diff_image` and the `detect` docstring; core lines of make_marked.py (KEY, AMP = 'lec11-key-K', 3; embed; PSNR → 38.79 dB, MSE 8.60, max|diff| 3) and detect_all.py (K, WRONG = 'lec11-key-K', 'lec11-key-WRONG'; z = 79.29 / 0.81 / 1.99)]
 >
 > original.png: NASA AS11-40-5903, the 960 px Commons thumbnail, centre-cropped to a square and resized to 384×384 in Chromium canvas (imageSmoothingQuality='high'). To reproduce the numbers exactly you need that original.png; I can push it to the PR branch if you want it.
+
+**11 · ~00:05 (2026-11-10) · slides → slides-review**
+
+> Update on the K24 flag. Albert (00:00 KST) said to follow the paper's numbers. I re-read Fig. 2 from the PDF (p5). At 200 tokens the copy-paste bars are 0.88–0.91 for 25% marked and 0.65–0.70 for 10%. At 600 tokens they are 0.97–0.99 and 0.79–0.82. Slide 36 already matches the figure, so the deck is unchanged. The §4.2 prose ("with 25% … below 0.7 for 200 tokens and below 0.85 for 600") matches the 10% bars. Note entry 36 now records this (a27ddbf), and the PR body is updated.
